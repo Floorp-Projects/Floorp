@@ -402,63 +402,6 @@ nsSoftwareUpdate::SetProgramDirectory(nsIFileSpec *aDir)
 }
 
 
-
-/////////////////////////////////////////////////////////////////////////
-// 
-/////////////////////////////////////////////////////////////////////////
-static PRInt32 gSoftwareUpdateLock        = 0;
-
-nsSoftwareUpdateFactory::nsSoftwareUpdateFactory(void)
-{
-    NS_INIT_ISUPPORTS();
-}
-
-nsSoftwareUpdateFactory::~nsSoftwareUpdateFactory(void)
-{
-}
-
-
-
-NS_IMPL_ISUPPORTS(nsSoftwareUpdateFactory,kIFactoryIID)
-
-NS_IMETHODIMP
-nsSoftwareUpdateFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult)
-{
-    if (aResult == NULL)
-    {
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    *aResult = NULL;
-
-    nsSoftwareUpdate *inst = nsSoftwareUpdate::GetInstance();
-
-    if (inst == NULL)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    nsresult result =  inst->QueryInterface(aIID, aResult);
-
-    if (NS_FAILED(result)) 
-    {
-        *aResult = NULL;
-    }
-
-    return result;
-}
-
-NS_IMETHODIMP
-nsSoftwareUpdateFactory::LockFactory(PRBool aLock)
-{
-    if (aLock)
-        PR_AtomicIncrement(&gSoftwareUpdateLock);
-    else
-        PR_AtomicDecrement(&gSoftwareUpdateLock);
-
-    return NS_OK;
-}
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 // nsSoftwareUpdateNameSet
 ////////////////////////////////////////////////////////////////////////////////
@@ -525,160 +468,333 @@ nsSoftwareUpdateNameSet::AddNameSet(nsIScriptContext* aScriptContext)
 
     return result;
 }
+            
+//----------------------------------------------------------------------
 
-////////////////////////////////////////////////////////////////////////////////
-// DLL Entry Points:
-////////////////////////////////////////////////////////////////////////////////
+// Functions used to create new instances of a given object by the
+// generic factory.
 
-extern "C" NS_EXPORT PRBool
-NSCanUnload(nsISupports* aServMgr)
-{
-    return PR_FALSE;
+static NS_IMETHODIMP      
+CreateNewSoftwareUpdate(nsISupports* aOuter, REFNSIID aIID, void **aResult)
+{                                                                  
+    if (!aResult) {                                                
+        return NS_ERROR_INVALID_POINTER;                           
+    }                                                              
+    if (aOuter) {                                                  
+        *aResult = nsnull;                                         
+        return NS_ERROR_NO_AGGREGATION;                              
+    }                                                                
+    nsSoftwareUpdate* inst = nsSoftwareUpdate::GetInstance();
+    if (inst == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    
+    nsresult rv = inst->QueryInterface(aIID, aResult);                        
+    if (NS_FAILED(rv)) {                                             
+        *aResult = nsnull;                                           
+    }                                                                
+    return rv;                                                       
 }
 
-extern "C" NS_EXPORT nsresult
-NSRegisterSelf(nsISupports* aServMgr, const char *path)
+
+static NS_IMETHODIMP      
+CreateNewInstallTrigger(nsISupports* aOuter, REFNSIID aIID, void **aResult)
+{                                                                  
+    if (!aResult) {                                                
+        return NS_ERROR_INVALID_POINTER;                           
+    }                                                              
+    if (aOuter) {                                                  
+        *aResult = nsnull;                                         
+        return NS_ERROR_NO_AGGREGATION;                              
+    }                                                                
+    nsInstallTrigger* inst = new nsInstallTrigger();
+    if (inst == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    
+    NS_ADDREF(inst);
+    nsresult rv = inst->QueryInterface(aIID, aResult);                        
+    if (NS_FAILED(rv)) {                                             
+        *aResult = nsnull;                                           
+    }  
+    NS_RELEASE(inst);
+    return rv;                                                       
+}
+
+static NS_IMETHODIMP      
+CreateNewInstallVersion(nsISupports* aOuter, REFNSIID aIID, void **aResult)
+{                                                                  
+    if (!aResult) {                                                
+        return NS_ERROR_INVALID_POINTER;                           
+    }                                                              
+    if (aOuter) {                                                  
+        *aResult = nsnull;                                         
+        return NS_ERROR_NO_AGGREGATION;                              
+    }                                                                
+    nsInstallVersion* inst = new nsInstallVersion();
+    if (inst == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(inst);
+    nsresult rv = inst->QueryInterface(aIID, aResult);                        
+    if (NS_FAILED(rv)) {                                             
+        *aResult = nsnull;                                           
+    }  
+    NS_RELEASE(inst);             /* get rid of extra refcnt */ 
+    return rv;                                                       
+}
+
+//----------------------------------------------------------------------
+
+nsSoftwareUpdateModule::nsSoftwareUpdateModule()
+    : mInitialized(PR_FALSE)
+{
+    NS_INIT_ISUPPORTS();
+}
+
+nsSoftwareUpdateModule::~nsSoftwareUpdateModule()
+{
+    Shutdown();
+}
+
+NS_IMPL_ISUPPORTS(nsSoftwareUpdateModule, NS_GET_IID(nsIModule))
+
+// Perform our one-time intialization for this module
+nsresult
+nsSoftwareUpdateModule::Initialize()
+{
+    if (mInitialized) {
+        return NS_OK;
+    }
+    mInitialized = PR_TRUE;
+    return NS_OK;
+}
+
+// Shutdown this module, releasing all of the module resources
+void
+nsSoftwareUpdateModule::Shutdown()
+{
+    // Release the factory objects
+    mSoftwareUpdateFactory = nsnull;
+    mInstallTriggerFactory = nsnull;
+    mInstallVersionFactory = nsnull;
+}
+
+// Create a factory object for creating instances of aClass.
+NS_IMETHODIMP
+nsSoftwareUpdateModule::GetClassObject(nsIComponentManager *aCompMgr,
+                               const nsCID& aClass,
+                               const nsIID& aIID,
+                               void** r_classObj)
 {
     nsresult rv;
 
-    nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-    if (NS_FAILED(rv)) return rv;
+    // Defensive programming: Initialize *r_classObj in case of error below
+    if (!r_classObj) {
+        return NS_ERROR_INVALID_POINTER;
+    }
+    *r_classObj = NULL;
 
-    nsIComponentManager* compMgr;
-    rv = servMgr->GetService(kComponentManagerCID, 
-                             nsIComponentManager::GetIID(), 
-                             (nsISupports**)&compMgr);
-    if (NS_FAILED(rv)) return rv;
+    // Do one-time-only initialization if necessary
+    if (!mInitialized) {
+        rv = Initialize();
+        if (NS_FAILED(rv)) {
+            // Initialization failed! yikes!
+            return rv;
+        }
+    }
 
-#ifdef NS_DEBUG
+    // Choose the appropriate factory, based on the desired instance
+    // class type (aClass).
+    nsCOMPtr<nsIGenericFactory> fact;
+    if (aClass.Equals(kSoftwareUpdate_CID)) {
+        if (!mSoftwareUpdateFactory) {
+            // Create and save away the factory object for creating
+            // new instances of SoftwareUpdate. This way if we are called
+            // again for the factory, we won't need to create a new
+            // one.
+            rv = NS_NewGenericFactory(getter_AddRefs(mSoftwareUpdateFactory),
+                                      CreateNewSoftwareUpdate);
+        }
+        fact = mSoftwareUpdateFactory;
+    }
+    else if (aClass.Equals(kInstallTrigger_CID)) {
+        if (!mInstallTriggerFactory) {
+            // Create and save away the factory object for creating
+            // new instances of InstallTrigger. This way if we are called
+            // again for the factory, we won't need to create a new
+            // one.
+            rv = NS_NewGenericFactory(getter_AddRefs(mInstallTriggerFactory),
+                                      CreateNewInstallTrigger);
+        }
+        fact = mInstallTriggerFactory;
+    }
+    else if (aClass.Equals(kInstallVersion_CID)) {
+        if (!mInstallVersionFactory) {
+            // Create and save away the factory object for creating
+            // new instances of InstallVersion. This way if we are called
+            // again for the factory, we won't need to create a new
+            // one.
+            rv = NS_NewGenericFactory(getter_AddRefs(mInstallVersionFactory),
+                                      CreateNewInstallVersion);
+        }
+        fact = mInstallVersionFactory;
+    }
+    else {
+        rv = NS_ERROR_FACTORY_NOT_REGISTERED;
+#ifdef DEBUG
+        char* cs = aClass.ToString();
+        printf("+++ nsSoftwareUpdateModule: unable to create factory for %s\n", cs);
+        nsCRT::free(cs);
+#endif
+    }
+
+    if (fact) {
+        rv = fact->QueryInterface(aIID, r_classObj);
+    }
+
+    return rv;
+}
+
+//----------------------------------------
+
+struct Components {
+    const char* mDescription;
+    const nsID* mCID;
+    const char* mProgID;
+};
+
+// The list of components we register
+static Components gComponents[] = {
+    { "SoftwareUpdate Component", &kSoftwareUpdate_CID,
+      NS_IXPINSTALLCOMPONENT_PROGID, },
+    { "InstallTrigger Component", &kInstallTrigger_CID,
+      NS_INSTALLTRIGGERCOMPONENT_PROGID, },
+    { "InstallVersion Component", &kInstallVersion_CID,
+      NS_INSTALLVERSIONCOMPONENT_PROGID, },
+};
+#define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
+
+NS_IMETHODIMP
+nsSoftwareUpdateModule::RegisterSelf(nsIComponentManager *aCompMgr,
+                             nsIFileSpec* aPath,
+                             const char* registryLocation,
+                             const char* componentType)
+{
+    nsresult rv = NS_OK;
+
+#ifdef DEBUG
     printf("*** XPInstall is being registered\n");
 #endif
 
-    rv = compMgr->RegisterComponent( kSoftwareUpdate_CID,
-                                     NS_IXPINSTALLCOMPONENT_CLASSNAME,
-                                     NS_IXPINSTALLCOMPONENT_PROGID,
-                                     path,
-                                     PR_TRUE,
-                                     PR_TRUE );
-
-    if (NS_FAILED(rv)) goto done;
-    
-    nsIRegistry *registry; 
-    rv = servMgr->GetService( NS_REGISTRY_PROGID, 
-                              nsIRegistry::GetIID(), 
-                              (nsISupports**)&registry );
-
+    Components* cp = gComponents;
+    Components* end = cp + NUM_COMPONENTS;
+    rv = aCompMgr->RegisterComponentSpec(*cp->mCID, cp->mDescription,
+                                             cp->mProgID, aPath, PR_TRUE,
+                                             PR_TRUE);
     if ( NS_SUCCEEDED( rv ) ) 
     {
-        registry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
-        char buffer[256];
-        char *cid = nsSoftwareUpdate::GetCID().ToString();
-        PR_snprintf( buffer,
-                     sizeof buffer,
-                     "%s/%s",
-                     NS_IAPPSHELLCOMPONENT_KEY,
-                     cid ? cid : "unknown" );
-        nsCRT::free(cid);
+        // get the registry
+        nsIRegistry* registry;
+        rv = nsServiceManager::GetService(NS_REGISTRY_PROGID,
+                                          nsIRegistry::GetIID(),
+                                          (nsISupports**)&registry);
+        if ( NS_SUCCEEDED( rv ) ) 
+        {
+            registry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
+            char buffer[256];
+            char *cid = nsSoftwareUpdate::GetCID().ToString();
+            PR_snprintf( buffer,
+                         sizeof buffer,
+                         "%s/%s",
+                         NS_IAPPSHELLCOMPONENT_KEY,
+                         cid ? cid : "unknown" );
+            nsCRT::free(cid);
 
-        nsRegistryKey key;
-        rv = registry->AddSubtree( nsIRegistry::Common,
-                                   buffer,
-                                   &key );
-        servMgr->ReleaseService( NS_REGISTRY_PROGID, registry );
-    }
-
-    rv = compMgr->RegisterComponent(kInstallTrigger_CID, NULL, NULL, path, PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) goto done;
-    
-    rv = compMgr->RegisterComponent(kInstallVersion_CID, NULL, NULL, path, PR_TRUE, PR_TRUE);
-  
-done:
-    (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
-    return rv;
-}
-
-
-extern "C" NS_EXPORT nsresult
-NSUnregisterSelf(nsISupports* aServMgr, const char *path)
-{
-nsresult rv;
-
-    nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-    if (NS_FAILED(rv)) return rv;
-
-    nsIComponentManager* compMgr;
-    rv = servMgr->GetService(kComponentManagerCID, 
-                             nsIComponentManager::GetIID(), 
-                             (nsISupports**)&compMgr);
-    if (NS_FAILED(rv)) return rv;
-
-#ifdef NS_DEBUG
-    printf("*** XPInstall is being unregistered\n");
+            nsRegistryKey key;
+            rv = registry->AddSubtree( nsIRegistry::Common,
+                                       buffer,
+                                       &key );
+            nsServiceManager::ReleaseService(NS_REGISTRY_PROGID, registry);
+        }
+        cp++;
+        while (cp < end) {
+            rv = aCompMgr->RegisterComponentSpec(*cp->mCID, cp->mDescription,
+                                                 cp->mProgID, aPath, PR_TRUE,
+                                                 PR_TRUE);
+            if (NS_FAILED(rv)) {
+#ifdef DEBUG
+                printf("nsSoftwareUpdateModule: unable to register %s component => %x\n",
+                       cp->mDescription, rv);
 #endif
-    
-    rv = compMgr->UnregisterComponent(kSoftwareUpdate_CID, path);
-    if (NS_FAILED(rv)) goto done;
-    rv = compMgr->UnregisterComponent(kInstallTrigger_CID, path);
-    if (NS_FAILED(rv)) goto done;
-    rv = compMgr->UnregisterComponent(kInstallVersion_CID, path);
+                break;
+            }
+            cp++;
+        }
+    }
 
-  done:
-    (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
     return rv;
 }
 
-
-
-extern "C" NS_EXPORT nsresult
-NSGetFactory(nsISupports* serviceMgr,
-             const nsCID &aClass,
-             const char *aClassName,
-             const char *aProgID,
-             nsIFactory **aFactory)
+NS_IMETHODIMP
+nsSoftwareUpdateModule::UnregisterSelf(nsIComponentManager* aCompMgr,
+                               nsIFileSpec* aPath,
+                               const char* registryLocation)
 {
-
-    if (aFactory == NULL)
-    {
-        return NS_ERROR_NULL_POINTER;
+#ifdef DEBUG
+    printf("*** Unregistering SoftwareUpdate components\n");
+#endif
+    Components* cp = gComponents;
+    Components* end = cp + NUM_COMPONENTS;
+    while (cp < end) {
+        nsresult rv = aCompMgr->UnregisterComponentSpec(*cp->mCID, aPath);
+        if (NS_FAILED(rv)) {
+#ifdef DEBUG
+            printf("nsSoftwareUpdateModule: unable to unregister %s component => %x\n",
+                   cp->mDescription, rv);
+#endif
+        }
+        cp++;
     }
 
-    *aFactory = NULL;
-    nsISupports *inst;
+    return NS_OK;
+}
 
-    
-    if (aClass.Equals(kInstallTrigger_CID) )
-    {
-        inst = new nsInstallTriggerFactory();
+NS_IMETHODIMP
+nsSoftwareUpdateModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnload)
+{
+    if (!okToUnload) {
+        return NS_ERROR_INVALID_POINTER;
     }
-    else if (aClass.Equals(kInstallVersion_CID) )
-    {
-        inst = new nsInstallVersionFactory();
-    }
-    else if (aClass.Equals(kSoftwareUpdate_CID) )
-    {
-        inst = new nsSoftwareUpdateFactory();
-    }
-    else
-    {
-        return NS_ERROR_ILLEGAL_VALUE;
-    }
+    *okToUnload = PR_FALSE;
+    return NS_ERROR_FAILURE;
+}
 
+//----------------------------------------------------------------------
 
-    if (inst == NULL)
-    {   
+static nsSoftwareUpdateModule *gModule = NULL;
+
+extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
+                                          nsIFileSpec* location,
+                                          nsIModule** return_cobj)
+{
+    nsresult rv = NS_OK;
+
+    NS_ENSURE_ARG_POINTER(return_cobj);
+    NS_ENSURE_NOT(gModule, NS_ERROR_FAILURE);
+
+    // Create and initialize the module instance
+    nsSoftwareUpdateModule *m = new nsSoftwareUpdateModule();
+    if (!m) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-
-    nsresult res = inst->QueryInterface(kIFactoryIID, (void**) aFactory);
-
-    if (NS_FAILED(res)) 
-    {   
-        delete inst;
+    // Increase refcnt and store away nsIModule interface to m in return_cobj
+    rv = m->QueryInterface(NS_GET_IID(nsIModule), (void**)return_cobj);
+    if (NS_FAILED(rv)) {
+        delete m;
+        m = nsnull;
     }
-
-    return res;
-
+    gModule = m;                  // WARNING: Weak Reference
+    return rv;
 }
 
 

@@ -51,22 +51,5 @@ class nsInstallTrigger: public nsIScriptObjectOwner, public nsIDOMInstallTrigger
 
 };
 
-
-class nsInstallTriggerFactory : public nsIFactory 
-{
-    public:
-        
-        nsInstallTriggerFactory();
-        virtual ~nsInstallTriggerFactory();
-        
-        NS_DECL_ISUPPORTS
-
-              NS_IMETHOD CreateInstance(nsISupports *aOuter,
-                                        REFNSIID aIID,
-                                        void **aResult);
-
-              NS_IMETHOD LockFactory(PRBool aLock);
-
-};
-
+#define NS_INSTALLTRIGGERCOMPONENT_PROGID NS_IXPINSTALLCOMPONENT_PROGID "/installtrigger"
 #endif
