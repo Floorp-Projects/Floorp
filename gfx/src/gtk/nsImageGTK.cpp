@@ -295,19 +295,6 @@ void nsImageGTK::ImageUpdated(nsIDeviceContext *aContext,
 #endif
 
   mFlags = aFlags; // this should be 0'd out by Draw()
-
-  // check if the image has an all-opaque 8-bit alpha mask
-  if ((mAlphaDepth==8) && !mAlphaValid) {
-    for (int y=mDecodedY1; y<mDecodedY2; y++) {
-      unsigned char *alpha = mAlphaBits + mAlphaRowBytes*y + mDecodedX1;
-      for (int x=mDecodedX1; x<mDecodedX2; x++)
-        if (*(alpha++)!=255) {
-          mAlphaValid=PR_TRUE;
-          return;
-        }
-    }
-  }
-
 }
 
 #ifdef CHEAP_PERFORMANCE_MEASURMENT
@@ -1355,5 +1342,18 @@ nsImageGTK::SetDecodedRect(PRInt32 x1, PRInt32 y1, PRInt32 x2, PRInt32 y2 )
   mDecodedY1 = y1; 
   mDecodedX2 = x2; 
   mDecodedY2 = y2; 
+
+  // check if the image has an all-opaque 8-bit alpha mask
+  if ((mAlphaDepth==8) && !mAlphaValid) {
+    for (int y=mDecodedY1; y<mDecodedY2; y++) {
+      unsigned char *alpha = mAlphaBits + mAlphaRowBytes*y + mDecodedX1;
+      for (int x=mDecodedX1; x<mDecodedX2; x++)
+        if (*(alpha++)!=255) {
+          mAlphaValid=PR_TRUE;
+          return;
+        }
+    }
+  }
+
   return NS_OK;
 }
