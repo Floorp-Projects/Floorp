@@ -175,6 +175,7 @@ function HandleDeleteOrMoveMsgCompleted(folder)
 	var folderUri = folderResource.Value;
 	if((folderUri == gCurrentFolderUri) && gCurrentMessageIsDeleted)
 	{
+    gDBView.onDeleteCompleted(true);
     gCurrentMessageIsDeleted = false;
     if (gNextMessageViewIndexAfterDelete != nsMsgKey_None) 
     {
@@ -201,6 +202,7 @@ function HandleDeleteOrMoveMsgFailed(folder)
      return;
 
   var folderUri = folderResource.Value;
+  gDBView.onDeleteCompleted(false);
   if((folderUri == gCurrentFolderUri) && gCurrentMessageIsDeleted)
   {
     gCurrentMessageIsDeleted = false;
@@ -210,7 +212,7 @@ function HandleDeleteOrMoveMsgFailed(folder)
 function OnLoadMessageWindow()
 {
 	HideMenus();
-  	AddMailOfflineObserver();
+  AddMailOfflineObserver();
 	CreateMailWindowGlobals();
 	CreateMessageWindowGlobals();
 	verifyAccounts(null);

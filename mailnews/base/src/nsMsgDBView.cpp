@@ -5030,7 +5030,7 @@ nsMsgDBView::OnDeleteCompleted(PRBool aSucceeded)
 {
   if (m_deletingRows)
   { 
-    if (aSucceeded)
+    if (aSucceeded && mTreeSelection)
     {
 
       PRInt32 selectionCount; 
