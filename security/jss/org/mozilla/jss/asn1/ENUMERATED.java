@@ -64,6 +64,13 @@ public class ENUMERATED extends INTEGER implements ASN1Value {
         return longValue();
     }
 
+    private static final ENUMERATED.Template templateInstance =
+                                            new ENUMERATED.Template();
+    public static ASN1Template getTemplate() {
+        return templateInstance;
+    }
+
+
 /**
  * A template for decoding ENUMERATED values from their BER encodings.
  * The template reads the value as an INTEGER.  It does not check that it
