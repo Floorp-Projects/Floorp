@@ -54,12 +54,12 @@
 #include "nsMacResources.h"
 #include "nsRegionMac.h"
 #include "nsIRollupListener.h"
+
 #if TARGET_CARBON
 #include <CFString.h>
-#include <Gestalt.h>
-
 #endif
 
+#include <Gestalt.h>
 #include <Quickdraw.h>
 
 #if UNIVERSAL_INTERFACES_VERSION < 0x0340
@@ -89,6 +89,7 @@ extern nsIWidget         * gRollupWidget;
 pascal long BorderlessWDEF ( short inCode, WindowPtr inWindow, short inMessage, long inParam ) ;
 long CallSystemWDEF ( short inCode, WindowPtr inWindow, short inMessage, long inParam ) ;
 #endif
+PRBool OnMacOSX();
 
 #define kWindowPositionSlop 20
 
@@ -1077,24 +1078,35 @@ NS_METHOD nsMacWindow::SetSizeMode(PRInt32 aMode)
 
 void nsMacWindow::CalculateAndSetZoomedSize()
 {
-	StPortSetter setOurPort(mWindowPtr);
+  StPortSetter setOurPort(mWindowPtr);
 
-	// calculate current window portbounds
-	Rect windRect;
-	::GetWindowPortBounds(mWindowPtr, &windRect);
-	::LocalToGlobal((Point *)&windRect.top);
-	::LocalToGlobal((Point *)&windRect.bottom);
+  // calculate current window portbounds
+  Rect windRect;
+  ::GetWindowPortBounds(mWindowPtr, &windRect);
+  ::LocalToGlobal((Point *)&windRect.top);
+  ::LocalToGlobal((Point *)&windRect.bottom);
 
-	// calculate window's titlebar height
-	short wTitleHeight;
-	RgnHandle structRgn = ::NewRgn();
-	::GetWindowRegion(mWindowPtr, kWindowStructureRgn, structRgn);
-	Rect structRgnBounds;
-	::GetRegionBounds(structRgn, &structRgnBounds);
-	wTitleHeight = windRect.top - 1 - structRgnBounds.top;
-	::DisposeRgn(structRgn);
+  // calculate window's borders on each side, these differ in Aqua / Platinum
+  short wTitleHeight;
+  short wLeftBorder;
+  short wRightBorder;
+  short wBottomBorder;
+       
+  RgnHandle structRgn = ::NewRgn();
+  ::GetWindowRegion(mWindowPtr, kWindowStructureRgn, structRgn);
+  Rect structRgnBounds;
+  ::GetRegionBounds(structRgn, &structRgnBounds);
+  wTitleHeight = windRect.top - structRgnBounds.top;
+  wLeftBorder = windRect.left - structRgnBounds.left;
+  wRightBorder =  structRgnBounds.right - windRect.right;
+  wBottomBorder = structRgnBounds.bottom - windRect.bottom;
 
-	windRect.top -= wTitleHeight;
+  ::DisposeRgn(structRgn);
+
+  windRect.top -= wTitleHeight;
+  windRect.bottom += wBottomBorder;
+  windRect.right += wRightBorder;
+  windRect.left -= wLeftBorder;
 
   // find which screen the window is (mostly) on and get its rect. GetAvailRect()
   // handles subtracting out the menubar and the dock for us. Set the zoom rect
@@ -1111,15 +1123,22 @@ void nsMacWindow::CalculateAndSetZoomedSize()
       // leave room for icons on primary screen
       nsCOMPtr<nsIScreen> primaryScreen;
       screenMgr->GetPrimaryScreen ( getter_AddRefs(primaryScreen) );
-      if ( screen == primaryScreen )
-        newWindowRect.width -= 64;
+      if (screen == primaryScreen) {
+        int iconSpace = 96;
+#if TARGET_CARBON
+        if(::OnMacOSX()) {
+          iconSpace = 128;  //icons/grid is wider on Mac OS X
+        }
+#endif
+        newWindowRect.width -= iconSpace;
+      }
 
     	Rect zoomRect;
     	::SetRect(&zoomRect,
-    		newWindowRect.x + 7,
-    		newWindowRect.y + wTitleHeight + 3,
-    		newWindowRect.x + newWindowRect.width - 12,
-    		newWindowRect.y + newWindowRect.height - 8);
+                  newWindowRect.x + wLeftBorder,
+                  newWindowRect.y + wTitleHeight,
+                  newWindowRect.x + newWindowRect.width - wRightBorder,
+                  newWindowRect.y + newWindowRect.height - wBottomBorder); 
     	::SetWindowStandardState ( mWindowPtr, &zoomRect );
     }
   }
@@ -1269,29 +1288,21 @@ PRBool nsMacWindow::OnPaint(nsPaintEvent &event)
 NS_IMETHODIMP nsMacWindow::SetTitle(const nsString& aTitle)
 {
 #if TARGET_CARBON
-    static gInitVer = PR_FALSE;
-    static gOnMacOSX = PR_FALSE;
-    if(! gInitVer) {
-        long version;
-    	OSErr err = ::Gestalt(gestaltSystemVersion, &version);
-    	gOnMacOSX = (err == noErr && version >= 0x00001000);
-    	gInitVer = PR_TRUE;
+  if(::OnMacOSX()) {
+    // On MacOS X try to use the unicode friendly CFString version first
+    CFStringRef labelRef = ::CFStringCreateWithCharacters(kCFAllocatorDefault, (UniChar*)aTitle.get(), aTitle.Length());
+    if(labelRef) {
+      ::SetWindowTitleWithCFString(mWindowPtr, labelRef);
+      ::CFRelease(labelRef);
+      return NS_OK;
     }
-    if(gOnMacOSX) {
-	    // On MacOS X try to use the unicode friendly CFString version first
-	    CFStringRef labelRef = ::CFStringCreateWithCharacters(kCFAllocatorDefault, (UniChar*)aTitle.get(), aTitle.Length());
-	    if(labelRef) {
-	       ::SetWindowTitleWithCFString(mWindowPtr, labelRef);
-	       ::CFRelease(labelRef);
-	       return NS_OK;
-	    }
-    }
+  }
 #endif
-	Str255 title;
-	// unicode to file system charset
-	nsMacControl::StringToStr255(aTitle, title);
-	::SetWTitle(mWindowPtr, title);
-	return NS_OK;
+  Str255 title;
+  // unicode to file system charset
+  nsMacControl::StringToStr255(aTitle, title);
+  ::SetWTitle(mWindowPtr, title);
+  return NS_OK;
 }
 
 
@@ -1442,6 +1453,25 @@ CallSystemWDEF ( short inCode, WindowPtr inWindow, short inMessage, long inParam
   return retval;
 }
 
+
 #pragma options align=reset
 
 #endif
+
+//
+// Return true if we are on Mac OS X, caching the result after the first call
+//
+PRBool
+OnMacOSX()
+{
+
+  static PRBool gInitVer = PR_FALSE;
+  static PRBool gOnMacOSX = PR_FALSE;
+  if(! gInitVer) {
+    long version;
+    OSErr err = ::Gestalt(gestaltSystemVersion, &version);
+    gOnMacOSX = (err == noErr && version >= 0x00001000);
+    gInitVer = PR_TRUE;
+  }
+  return gOnMacOSX;
+}
