@@ -474,7 +474,7 @@
               newTitle += this.ownerDocument.documentElement.getAttribute("titlemenuseparator");
             }
             newTitle += this.ownerDocument.documentElement.getAttribute("titlemodifier");
-            window.title = newTitle;
+            this.ownerDocument.title = newTitle;
           ]]>
         </body>
       </method>

@@ -89,7 +89,7 @@ function filepickerLoad() {
     const filterTypes = o.filters.types;
     const numFilters = filterTitles.length;
 
-    window.title = title;
+    document.title = title;
 
     if (initialText) {
       textInput.value = initialText;
