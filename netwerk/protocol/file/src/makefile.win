@@ -30,6 +30,7 @@ LLIBS= $(LLIBS)                 \
 	$(NULL)
 
 CPP_OBJS=                                      \
+        .\$(OBJDIR)\nsDirectoryIndexStream.obj \
 	.\$(OBJDIR)\nsFileChannel.obj          \
 	.\$(OBJDIR)\nsFileProtocolHandler.obj  \
 	.\$(OBJDIR)\nsFileProtocolFactory.obj  \
