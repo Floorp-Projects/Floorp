@@ -117,7 +117,7 @@ function flashInit()
 function flashReload(url, pollInterval)
 {
     // Reload the specified datasource and reschedule.
-    dump('Reload(' + url + ', ' + pollInterval + ')\n');
+    dump('flashReload(' + url + ', ' + pollInterval + ')\n');
 
     var datasource = RDF.GetDataSource(url);
     datasource = datasource.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
@@ -131,7 +131,7 @@ function flashReload(url, pollInterval)
 
 function flashSchedule(url, pollInterval)
 {
-    setTimeout('Reload("' + url + '", ' + pollInterval + ')', pollInterval * 1000);
+    setTimeout('flashReload("' + url + '", ' + pollInterval + ')', pollInterval * 1000);
 }
 
 function flashOpenURL(node)
