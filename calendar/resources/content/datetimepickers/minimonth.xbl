@@ -1,86 +1,103 @@
 <?xml version="1.0"?>
 
-<bindings id="xulCalendar"
+<!--
+/* MiniMonth Calendar: day-of-month grid XBL component.
+   Displays month name above days of month in grid, by week rows.
+   Arrows beside month move forward or back a month.
+   Clicking on a day cell calls onchange attribute.
+   Clicking on month arrows calls onmonthchange attribute.
+
+   Used in datepicker.xbl and as mini-month in calendar.xul of Calendar.
+
+   At site, can provide id, and code to run when value changed by picker.
+     <calendar id="my-date-picker" onchange="myDatePick( this );"/>
+
+   May get/set value in javascript with 
+     document.getElementById("my-date-picker").value = new Date();
+*/
+-->
+<bindings id="xulMiniMonth"
     xmlns="http://www.mozilla.org/xbl"
+    xmlns:xbl="http://www.mozilla.org/xbl"
     xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-    <binding id="calendar" extends="xul:box">
+    <binding id="minimonth" extends="xul:box" xbl:inherits="onchange,onmonthchange">
 
         <!-- ::::::::::::::::: CONTENT ::::::::::::::::::::::::: -->
         <content>
 
-        <xul:vbox class="cal-mainbox"  flex="1">
-          <xul:hbox class="cal-month-box">
-            <xul:image class="cal-navbtn" dir="-1"/>
+        <xul:vbox class="minimonth-mainbox"  flex="1">
+          <xul:hbox class="minimonth-month-box">
+            <xul:image class="minimonth-navbtn" dir="-1"/>
             <xul:spacer flex="1"/>
-            <xul:text id="month-name" class="cal-month-name" value="Month"/>
+            <xul:text id="month-name" class="minimonth-month-name" value="Month"/>
             <xul:spacer flex="1"/>
-            <xul:image class="cal-navbtn" dir="1"/>
+            <xul:image class="minimonth-navbtn" dir="1"/>
           </xul:hbox>
-          <xul:vbox class="cal-cal-box" flex="1">
-            <xul:hbox class="cal-row-head" equalsize="always">
-                <xul:text class="cal-header" flex="1"/>
-                <xul:text class="cal-header" flex="1"/>
-                <xul:text class="cal-header" flex="1"/>
-                <xul:text class="cal-header" flex="1"/>
-                <xul:text class="cal-header" flex="1"/>
-                <xul:text class="cal-header" flex="1"/>
-                <xul:text class="cal-header" flex="1"/>
+          <xul:vbox class="minimonth-cal-box" flex="1">
+            <xul:hbox class="minimonth-row-head" equalsize="always">
+                <xul:text class="minimonth-header" flex="1"/>
+                <xul:text class="minimonth-header" flex="1"/>
+                <xul:text class="minimonth-header" flex="1"/>
+                <xul:text class="minimonth-header" flex="1"/>
+                <xul:text class="minimonth-header" flex="1"/>
+                <xul:text class="minimonth-header" flex="1"/>
+                <xul:text class="minimonth-header" flex="1"/>
             </xul:hbox>
-            <xul:hbox class="cal-row-body" equalsize="always" flex="1">
-                <xul:text class="cal-day" flex="1" />
-                <xul:text class="cal-day" flex="1" />
-                <xul:text class="cal-day" flex="1"/>
-                <xul:text class="cal-day" flex="1"/>
-                <xul:text class="cal-day" flex="1"/>
-                <xul:text class="cal-day" flex="1"/>
-                <xul:text class="cal-day" flex="1"/>
+            <xul:hbox class="minimonth-row-body" equalsize="always" flex="1">
+                <xul:text class="minimonth-day" flex="1" />
+                <xul:text class="minimonth-day" flex="1" />
+                <xul:text class="minimonth-day" flex="1"/>
+                <xul:text class="minimonth-day" flex="1"/>
+                <xul:text class="minimonth-day" flex="1"/>
+                <xul:text class="minimonth-day" flex="1"/>
+                <xul:text class="minimonth-day" flex="1"/>
             </xul:hbox>
-            <xul:hbox class="cal-row-body" equalsize="always" flex="1">
-                <xul:text class="cal-day" flex="1"/>
-                <xul:text class="cal-day" flex="1"/>
-                <xul:text class="cal-day" flex="1"/>
-                <xul:text class="cal-day" flex="1"/>
-                <xul:text class="cal-day" flex="1"/>
-                <xul:text class="cal-day" flex="1"/>
-                <xul:text class="cal-day" flex="1"/>
+            <xul:hbox class="minimonth-row-body" equalsize="always" flex="1">
+                <xul:text class="minimonth-day" flex="1"/>
+                <xul:text class="minimonth-day" flex="1"/>
+                <xul:text class="minimonth-day" flex="1"/>
+                <xul:text class="minimonth-day" flex="1"/>
+                <xul:text class="minimonth-day" flex="1"/>
+                <xul:text class="minimonth-day" flex="1"/>
+                <xul:text class="minimonth-day" flex="1"/>
             </xul:hbox>
-            <xul:hbox class="cal-row-body" equalsize="always" flex="1">
-                <xul:text class="cal-day" flex="1"/>
-                <xul:text class="cal-day" flex="1"/>
-                <xul:text class="cal-day" flex="1"/>
-                <xul:text class="cal-day" flex="1"/>
-                <xul:text class="cal-day" flex="1"/>
-                <xul:text class="cal-day" flex="1"/>
-                <xul:text class="cal-day" flex="1"/>
+            <xul:hbox class="minimonth-row-body" equalsize="always" flex="1">
+                <xul:text class="minimonth-day" flex="1"/>
+                <xul:text class="minimonth-day" flex="1"/>
+                <xul:text class="minimonth-day" flex="1"/>
+                <xul:text class="minimonth-day" flex="1"/>
+                <xul:text class="minimonth-day" flex="1"/>
+                <xul:text class="minimonth-day" flex="1"/>
+                <xul:text class="minimonth-day" flex="1"/>
             </xul:hbox>
-            <xul:hbox class="cal-row-body" equalsize="always" flex="1">
-                <xul:text class="cal-day" flex="1"/>
-                <xul:text class="cal-day" flex="1"/>
-                <xul:text class="cal-day" flex="1"/>
-                <xul:text class="cal-day" flex="1"/>
-                <xul:text class="cal-day" flex="1"/>
-                <xul:text class="cal-day" flex="1"/>
-                <xul:text class="cal-day" flex="1"/>
+            <xul:hbox class="minimonth-row-body" equalsize="always" flex="1">
+                <xul:text class="minimonth-day" flex="1"/>
+                <xul:text class="minimonth-day" flex="1"/>
+                <xul:text class="minimonth-day" flex="1"/>
+                <xul:text class="minimonth-day" flex="1"/>
+                <xul:text class="minimonth-day" flex="1"/>
+                <xul:text class="minimonth-day" flex="1"/>
+                <xul:text class="minimonth-day" flex="1"/>
             </xul:hbox>
-            <xul:hbox class="cal-row-body" equalsize="always" flex="1">
-                <xul:text class="cal-day" flex="1"/>
-                <xul:text class="cal-day" flex="1"/>
-                <xul:text class="cal-day" flex="1"/>
-                <xul:text class="cal-day" flex="1"/>
-                <xul:text class="cal-day" flex="1"/>
-                <xul:text class="cal-day" flex="1"/>
-                <xul:text class="cal-day" flex="1"/>
+            <xul:hbox class="minimonth-row-body" equalsize="always" flex="1">
+                <xul:text class="minimonth-day" flex="1"/>
+                <xul:text class="minimonth-day" flex="1"/>
+                <xul:text class="minimonth-day" flex="1"/>
+                <xul:text class="minimonth-day" flex="1"/>
+                <xul:text class="minimonth-day" flex="1"/>
+                <xul:text class="minimonth-day" flex="1"/>
+                <xul:text class="minimonth-day" flex="1"/>
             </xul:hbox>
-            <xul:hbox class="cal-row-body" equalsize="always" flex="1">
-                <xul:text class="cal-day" flex="1"/>
-                <xul:text class="cal-day" flex="1"/>
-                <xul:text class="cal-day" flex="1"/>
-                <xul:text class="cal-day" flex="1"/>
-                <xul:text class="cal-day" flex="1"/>
-                <xul:text class="cal-day" flex="1"/>
-                <xul:text class="cal-day" flex="1"/>
+            <xul:hbox class="minimonth-row-body" equalsize="always" flex="1">
+                <xul:text class="minimonth-day" flex="1"/>
+                <xul:text class="minimonth-day" flex="1"/>
+                <xul:text class="minimonth-day" flex="1"/>
+                <xul:text class="minimonth-day" flex="1"/>
+                <xul:text class="minimonth-day" flex="1"/>
+                <xul:text class="minimonth-day" flex="1"/>
+                <xul:text class="minimonth-day" flex="1"/>
             </xul:hbox>
           </xul:vbox>
         </xul:vbox>
@@ -387,7 +404,7 @@
 
     </binding>
 
-    <binding id="cal-navbtn" inherits="dir">
+    <binding id="minimonth-navbtn" inherits="dir">
         <!-- ::::::::::::::::: HANDLERS ::::::::::::::::::::::::: -->
         <handlers>
             <handler event="click">
@@ -398,7 +415,7 @@
         </handlers>
     </binding>
 
-    <binding id="cal-day" extends="xul:text">
+    <binding id="minimonth-day" extends="xul:text">
         <!-- ::::::::::::::::: HANDLERS ::::::::::::::::::::::::: -->
         <handlers>
             <handler event="click" action="this.calendar.dayClicked(this)"/>

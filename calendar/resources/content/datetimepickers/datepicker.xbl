@@ -103,7 +103,7 @@
             <xul:menu class="datepicker-button" xbl:inherits="disabled">
                 <xul:menupopup popupanchor="bottomright" popupalign="topright" 
                     onpopupshowing="onPopup()">
-                    <xul:calendar onchange="this.kDatePicker.clickDate(this); "/>
+                    <xul:minimonth onchange="this.kDatePicker.clickDate(this); "/>
                 </xul:menupopup>
             </xul:menu>
 

@@ -1,4 +1,4 @@
-@import url("chrome://calendar/content/datetimepickers/calendar.css");
+@import url("chrome://calendar/content/datetimepickers/minimonth.css");
 
 datepicker {
   -moz-binding: url("chrome://calendar/content/datetimepickers/datepicker.xbl#datepicker");

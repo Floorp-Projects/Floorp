@@ -1,20 +1,20 @@
 
-calendar {
-	-moz-binding: url("chrome://calendar/content/datetimepickers/calendar.xbl#calendar");
+minimonth {
+	-moz-binding: url("chrome://calendar/content/datetimepickers/minimonth.xbl#minimonth");
 }
 
-.cal-mainbox {
+.minimonth-mainbox {
 	min-width: 130px;
 	background-color: #ffffff;
 	border: 1px outset #ffffff;
 	padding: 0px;
 }
 
-.cal-month-box {
+.minimonth-month-box {
 	background-color: #EEEEEE;
 }
 
-.cal-month-name {
+.minimonth-month-name {
 	font-family: Arial;
 	font-size: 12pt;
 	font-weight: bold;
@@ -22,76 +22,76 @@ calendar {
 	text-align: center;
 }
 
-.cal-navbtn {
+.minimonth-navbtn {
 	min-width: 10px;
-	-moz-binding: url("chrome://calendar/content/datetimepickers/calendar.xbl#cal-navbtn");
+	-moz-binding: url("chrome://calendar/content/datetimepickers/minimonth.xbl#minimonth-navbtn");
 }
 
-.cal-navbtn[dir="-1"] {
+.minimonth-navbtn[dir="-1"] {
 	background: url("chrome://calendar/skin/datetimepickers/left-arrow.gif") no-repeat 50% 50%;
 }
 
-.cal-navbtn[dir="1"] {
+.minimonth-navbtn[dir="1"] {
 	background: url("chrome://calendar/skin/datetimepickers/right-arrow.gif") no-repeat 50% 50%;
 }
 
-.cal-navbtn[dir="-1"]:hover {
+.minimonth-navbtn[dir="-1"]:hover {
 	background: url("chrome://calendar/skin/datetimepickers/left-arrow-hover.gif") no-repeat 50% 50%;
 }
 
-.cal-navbtn[dir="1"]:hover {
+.minimonth-navbtn[dir="1"]:hover {
 	background: url("chrome://calendar/skin/datetimepickers/right-arrow-hover.gif") no-repeat 50% 50%;
 }
 
-.cal-navbtn:active {
+.minimonth-navbtn:active {
 	left: 2px;
 	top: 2px;
 }
 
-.cal-cal-box {
+.minimonth-cal-box {
 }
 
-.cal-header {
+.minimonth-header {
 	font-family: Arial;
 	color: blue;
 	text-align: center;
 }
 
-.cal-row-body {
+.minimonth-row-body {
 }
 
-.cal-day {
+.minimonth-day {
 	font-family: Arial;
 	color: #000000;
 	border: 1px solid transparent;
 	text-align: center;
-	-moz-binding: url("chrome://calendar/content/datetimepickers/calendar.xbl#cal-day");
+	-moz-binding: url("chrome://calendar/content/datetimepickers/minimonth.xbl#minimonth-day");
 }
 
-.cal-day[othermonth="true"] {
+.minimonth-day[othermonth="true"] {
 	color: #d2d2d2;
 }
 
-.cal-day[budy="true"] {
+.minimonth-day[budy="true"] {
 	font-weight : bold;
 }
 
-.cal-day[selected="true"] {
+.minimonth-day[selected="true"] {
 	background-color: #778899;
 	color: #ffffff;
 }
 
-.cal-day[busy="true"]
+.minimonth-day[busy="true"]
 {
    font-weight    : bold;
 }
 
-.cal-day:hover {
+.minimonth-day:hover {
 	color: #ff0000;
 	border: 1px solid #d2d2d2;
 }
 
-.cal-day:active {
+.minimonth-day:active {
 	background-color: #d2d2d2;
 }
 
