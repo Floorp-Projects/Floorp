@@ -704,8 +704,8 @@ nsFormControlList::Clear()
 
 // XPConnect interface list for nsFormControlList
 NS_CLASSINFO_MAP_BEGIN(HTMLFormControlCollection)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLFormControlList)
   NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLCollection)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLFormControlList)
 NS_CLASSINFO_MAP_END
 
 
@@ -714,8 +714,7 @@ NS_INTERFACE_MAP_BEGIN(nsFormControlList)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLFormControlList)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLCollection)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMHTMLCollection)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO_WITH_NAME(HTMLFormControlCollection,
-                                                     HTMLCollection)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLFormControlCollection)
 NS_INTERFACE_MAP_END
 
 

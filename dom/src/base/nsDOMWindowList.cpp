@@ -114,11 +114,13 @@ nsDOMWindowList::Item(PRUint32 aIndex, nsIDOMWindow** aReturn)
     }
 
     mDocShellNode->GetChildAt(aIndex, getter_AddRefs(item));
-    
+
     nsCOMPtr<nsIScriptGlobalObject> globalObject(do_GetInterface(item));
-    NS_ASSERTION(globalObject, "Couldn't get to the globalObject");
+    NS_WARN_IF_FALSE(!item || (item && globalObject),
+                     "Couldn't get to the globalObject");
+
     if (globalObject) {
-      CallQueryInterface(globalObject.get(), aReturn);
+      CallQueryInterface(globalObject, aReturn);
     }
   }
   return NS_OK;

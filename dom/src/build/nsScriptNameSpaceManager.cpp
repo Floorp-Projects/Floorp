@@ -95,8 +95,10 @@ nsScriptNameSpaceManager::FillHash(nsICategoryManager *aCategoryManager,
       continue;
     }
 
+    // XXX Mac chokes _later_ if we put the |NS_Conv...| right in
+    // the |nsStringKey| ctor, so make a temp
     NS_ConvertASCIItoUCS2 temp(categoryEntry);
-      // XXX Mac chokes _later_ if we put the |NS_Conv...| right in the |nsStringKey| ctor, so make a temp
+
     nsStringKey key(temp);
 
     if (!mGlobalNames.Get(&key)) {
@@ -106,7 +108,12 @@ nsScriptNameSpaceManager::FillHash(nsICategoryManager *aCategoryManager,
       s->mType = aType;
       s->mCID = cid;
 
-      mGlobalNames.Put(&key, s);
+      nsGlobalNameStruct *old =
+        (nsGlobalNameStruct *)mGlobalNames.Put(&key, s);
+
+      NS_WARN_IF_FALSE(!old, "Redefining name in global namespace hash!");
+
+      delete old;
     } else {
       NS_WARNING("Global script name not overwritten!");
     }
@@ -194,7 +201,10 @@ nsScriptNameSpaceManager::FillHashWithDOMInterfaces()
 
         nsStringKey key(NS_ConvertASCIItoUCS2(if_name.get() + strlen(NS_DOM_INTERFACE_PREFIX)));
 
-        mGlobalNames.Put(&key, s);
+        nsGlobalNameStruct *old =
+          (nsGlobalNameStruct *)mGlobalNames.Put(&key, s);
+
+        delete old;
       }
     }
   }
@@ -215,7 +225,7 @@ nsScriptNameSpaceManager::Init()
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = FillHash(cm, JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY,
-                nsGlobalNameStruct::eTypeConstructor);
+                nsGlobalNameStruct::eTypeExternalConstructor);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = FillHash(cm, JAVASCRIPT_GLOBAL_PROPERTY_CATEGORY,
@@ -272,3 +282,76 @@ nsScriptNameSpaceManager::LookupName(const nsAReadableString& aName,
   return NS_OK;
 }
 
+nsresult
+nsScriptNameSpaceManager::RegisterClassName(const char *aClassName,
+                                            PRInt32 aDOMClassInfoID)
+{
+  nsAutoString name;
+  CopyASCIItoUCS2(nsDependentCString(aClassName), name);
+
+  nsStringKey key(name);
+
+  nsGlobalNameStruct *s = (nsGlobalNameStruct *)mGlobalNames.Get(&key);
+
+  if (s && s->mType == nsGlobalNameStruct::eTypeClassConstructor) {
+    return NS_OK;
+  }
+
+  // If a external constructor is already defined with aClassName we
+  // won't overwrite it.
+
+  if (s && s->mType == nsGlobalNameStruct::eTypeExternalConstructor) {
+    return NS_OK;
+  }
+
+  NS_ASSERTION(!(s && s->mType != nsGlobalNameStruct::eTypeInterface),
+               "Whaa, JS environment name clash!");
+
+  if (!s) {
+    s = new nsGlobalNameStruct;
+    NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
+  }
+  // else reuse the one already found in the hash
+
+  s->mType = nsGlobalNameStruct::eTypeClassConstructor;
+  s->mDOMClassInfoID = aDOMClassInfoID;
+
+  mGlobalNames.Put(&key, s);
+
+  return NS_OK;
+}
+
+nsresult
+nsScriptNameSpaceManager::RegisterClassProto(const char *aClassName,
+                                             const nsIID *aConstructorProtoIID,
+                                             PRBool *aFoundOld)
+{
+  NS_ENSURE_ARG_POINTER(aConstructorProtoIID);
+
+  *aFoundOld = PR_FALSE;
+
+  nsAutoString name;
+  CopyASCIItoUCS2(nsDependentCString(aClassName), name);
+
+  nsStringKey key(name);
+
+  nsGlobalNameStruct *s = (nsGlobalNameStruct *)mGlobalNames.Get(&key);
+
+  if (s && s->mType != nsGlobalNameStruct::eTypeInterface) {
+    *aFoundOld = PR_TRUE;
+
+    return NS_OK;
+  }
+
+  if (!s) {
+    s = new nsGlobalNameStruct;
+    NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
+  }
+
+  s->mType = nsGlobalNameStruct::eTypeClassProto;
+  s->mIID = *aConstructorProtoIID;
+
+  mGlobalNames.Put(&key, s);
+
+  return NS_OK;
+}

@@ -37,8 +37,7 @@ class nsIDOMEventListener;
 
 class nsIDOMScriptObjectFactory : public nsISupports {
 public:  
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOM_SCRIPT_OBJECT_FACTORY_IID; return iid; }
-
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOM_SCRIPT_OBJECT_FACTORY_IID)
 
   NS_IMETHOD NewScriptContext(nsIScriptGlobalObject *aGlobal,
                               nsIScriptContext **aContext) = 0;
@@ -49,10 +48,7 @@ public:
 
   NS_IMETHOD NewScriptGlobalObject(nsIScriptGlobalObject **aGlobal) = 0;
 
-  NS_IMETHOD_(nsISupports *)
-    GetClassInfoInstance(nsDOMClassInfoID aID,
-                         GetDOMClassIIDsFnc aGetIIDsFptr,
-                         const char *aName) = 0;
+  NS_IMETHOD_(nsISupports *)GetClassInfoInstance(nsDOMClassInfoID aID) = 0;
 };
 
 #endif /* nsIDOMScriptObjectFactory_h__ */

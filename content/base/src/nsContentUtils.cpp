@@ -321,9 +321,7 @@ nsContentUtils::Shutdown()
 
 // static
 nsISupports *
-nsContentUtils::GetClassInfoInstance(nsDOMClassInfoID aID,
-                                     GetDOMClassIIDsFnc aGetIIDsFptr,
-                                     const char *aName)
+nsContentUtils::GetClassInfoInstance(nsDOMClassInfoID aID)
 {
   if (!sDOMScriptObjectFactory) {
     static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
@@ -338,8 +336,7 @@ nsContentUtils::GetClassInfoInstance(nsDOMClassInfoID aID,
     }
   }
 
-  return sDOMScriptObjectFactory->GetClassInfoInstance(aID, aGetIIDsFptr,
-                                                       aName);
+  return sDOMScriptObjectFactory->GetClassInfoInstance(aID);
 }
 
 // static

@@ -100,7 +100,7 @@ nsXMLElement::nsXMLElement() : mNameSpace(nsnull)
     kEmbedAtom = NS_NewAtom("embed");
   }
 }
- 
+
 nsXMLElement::~nsXMLElement()
 {
   if (0 == --kElementCount) {
@@ -122,6 +122,7 @@ nsXMLElement::~nsXMLElement()
 NS_CLASSINFO_MAP_BEGIN(Element)
   NS_CLASSINFO_MAP_ENTRY(nsIDOMElement)
   NS_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
 NS_CLASSINFO_MAP_END
 
 
@@ -146,9 +147,7 @@ nsXMLElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   } else if (aIID.Equals(NS_GET_IID(nsIXMLContent))) {
     inst = NS_STATIC_CAST(nsIXMLContent *, this);
   } else if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {
-    inst = nsContentUtils::GetClassInfoInstance(eDOMClassInfo_Element_id,
-                                                GetElementIIDs,
-                                                "Element");
+    inst = nsContentUtils::GetClassInfoInstance(eDOMClassInfo_Element_id);
     NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
   } else {
     return NS_NOINTERFACE;

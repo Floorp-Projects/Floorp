@@ -1075,15 +1075,33 @@ nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
                                               NS_GET_IID(nsISupports),
                                               PR_FALSE,
                                               getter_AddRefs(holder));
+    NS_ENSURE_SUCCESS(rv, rv);
   } else {
     // If there's already a global object in mContext we're called
     // after ::JS_ClearScope() was called. We'll haveto tell XPConnect
     // to re-initialize the global object to do things like define the
     // Components object on the global again.
     rv = xpc->InitClasses(mContext, global);
-  }
+    NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIClassInfo> ci(do_QueryInterface(aGlobalObject));
+
+    if (ci) {
+      nsCOMPtr<nsIXPConnectJSObjectHolder> proto_holder;
+
+      rv = xpc->GetWrappedNativePrototype(mContext, global, ci,
+                                          getter_AddRefs(proto_holder));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      JSObject *proto = nsnull;
+      rv = proto_holder->GetJSObject(&proto);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (!::JS_SetPrototype(mContext, global, proto)) {
+        return NS_ERROR_FAILURE;
+      }
+    }
+  }
 
   rv = InitClasses(); // this will complete global object initialization
   NS_ENSURE_SUCCESS(rv, rv);

@@ -762,13 +762,11 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
         NS_WITH_SERVICE(nsIXBLService, xblService, "@mozilla.org/xbl;1", &rv);
         xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), &dummy, getter_AddRefs(tag));
         if (tag.get() == nsXULAtoms::tree) {
-            inst = nsContentUtils::GetClassInfoInstance(eDOMClassInfo_XULTreeElement_id,
-                                                        GetXULTreeElementIIDs,
-                                                        "XULTreeElement");
+            inst = nsContentUtils::
+                GetClassInfoInstance(eDOMClassInfo_XULTreeElement_id);
         } else {
-            inst = nsContentUtils::GetClassInfoInstance(eDOMClassInfo_XULElement_id,
-                                                        GetXULElementIIDs,
-                                                        "XULElement");
+            inst = nsContentUtils::
+                GetClassInfoInstance(eDOMClassInfo_XULElement_id);
         }
 
         NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);

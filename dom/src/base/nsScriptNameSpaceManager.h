@@ -39,17 +39,28 @@
 #include "nsIScriptNameSpaceManager.h"
 #include "nsHashtable.h"
 
-typedef struct {
+struct nsGlobalNameStruct
+{
   enum nametype {
     eTypeInterface,
     eTypeProperty,
-    eTypeConstructor,
+    eTypeExternalConstructor,
     eTypeStaticNameSet,
-    eTypeDynamicNameSet
+    eTypeDynamicNameSet,
+    eTypeClassConstructor,
+    eTypeClassProto
   } mType;
 
-  nsCID mCID;
-} nsGlobalNameStruct;
+  union {
+    nsCID mCID;
+    nsIID mIID;
+    PRInt32 mDOMClassInfoID;
+  };
+
+private:
+
+  // copy constructor
+};
 
 
 class nsIScriptContext;
@@ -67,6 +78,13 @@ public:
 
   nsresult LookupName(const nsAReadableString& aName,
                       const nsGlobalNameStruct **aNameStruct);
+
+  nsresult RegisterClassName(const char *aClassName,
+                             PRInt32 aDOMClassInfoID);
+
+  nsresult RegisterClassProto(const char *aClassName,
+                              const nsIID *aConstructorProtoIID,
+                              PRBool *aFoundOld);
 
 protected:
   nsresult FillHash(nsICategoryManager *aCategoryManager,

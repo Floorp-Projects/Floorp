@@ -28,6 +28,9 @@
 #include "nsIJSContextStack.h"
 #include "nsIScriptContext.h"
 #include "nsIXPCSecurityManager.h"
+#include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
+#include "xptcall.h"
 
 // JavaScript includes
 #include "jsapi.h"
@@ -56,10 +59,13 @@
 #include "nsIDOMPlugin.h"
 #include "nsIDOMMimeTypeArray.h"
 #include "nsIDOMMimeType.h"
+#include "nsIDOMNSLocation.h"
 #include "nsIDOMLocation.h"
 #include "nsIDOMWindowInternal.h"
+#include "nsIDOMJSWindow.h"
 #include "nsIDOMWindowCollection.h"
 #include "nsIDOMHistory.h"
+#include "nsIDOMNSHistory.h"
 #include "nsIDOMMediaList.h"
 
 // DOM core includes
@@ -122,22 +128,136 @@
 #include "nsIScriptGlobalObject.h"
 
 
+// includes needed for the prototype chain interfaces
+#include "nsIDOMNavigator.h"
+#include "nsIDOMBarProp.h"
+#include "nsIDOMScreen.h"
+#include "nsIDOMDocumentType.h"
+#include "nsIDOMDOMImplementation.h"
+#include "nsIDOMDocumentFragment.h"
+#include "nsIDOMDocumentEvent.h"
+#include "nsIDOMAttr.h"
+#include "nsIDOMText.h"
+#include "nsIDOMComment.h"
+#include "nsIDOMCDATASection.h"
+#include "nsIDOMProcessingInstruction.h"
+#include "nsIDOMEntity.h"
+#include "nsIDOMEntityReference.h"
+#include "nsIDOMNotation.h"
+#include "nsIDOMMouseEvent.h"
+#include "nsIDOMMutationEvent.h"
+#include "nsIDOMDocumentStyle.h"
+#include "nsIDOMDocumentRange.h"
+#include "nsIDOMDocumentXBL.h"
+#include "nsIDOMDocumentView.h"
+#include "nsIDOMElementCSSInlineStyle.h"
+#include "nsIDOMLinkStyle.h"
+#include "nsIDOMHTMLDocument.h"
+#include "nsIDOMNSHTMLDocument.h"
+#include "nsIDOMNSHTMLElement.h"
+#include "nsIDOMHTMLAnchorElement.h"
+#include "nsIDOMNSHTMLAnchorElement.h"
+#include "nsIDOMHTMLAppletElement.h"
+#include "nsIDOMHTMLAreaElement.h"
+#include "nsIDOMNSHTMLAreaElement.h"
+#include "nsIDOMHTMLBRElement.h"
+#include "nsIDOMHTMLBaseElement.h"
+#include "nsIDOMHTMLBaseFontElement.h"
+#include "nsIDOMHTMLBodyElement.h"
+#include "nsIDOMHTMLButtonElement.h"
+#include "nsIDOMNSHTMLButtonElement.h"
+#include "nsIDOMHTMLDListElement.h"
+#include "nsIDOMHTMLDirectoryElement.h"
+#include "nsIDOMHTMLDivElement.h"
+#include "nsIDOMHTMLEmbedElement.h"
+#include "nsIDOMHTMLFieldSetElement.h"
+#include "nsIDOMHTMLFontElement.h"
+#include "nsIDOMNSHTMLFormElement.h"
+#include "nsIDOMHTMLFrameElement.h"
+#include "nsIDOMHTMLFrameSetElement.h"
+#include "nsIDOMHTMLHRElement.h"
+#include "nsIDOMHTMLHeadElement.h"
+#include "nsIDOMHTMLHeadingElement.h"
+#include "nsIDOMHTMLHtmlElement.h"
+#include "nsIDOMHTMLIFrameElement.h"
+#include "nsIDOMHTMLImageElement.h"
+#include "nsIDOMNSHTMLImageElement.h"
+#include "nsIDOMHTMLInputElement.h"
+#include "nsIDOMNSHTMLInputElement.h"
+#include "nsIDOMHTMLIsIndexElement.h"
+#include "nsIDOMHTMLLIElement.h"
+#include "nsIDOMHTMLLabelElement.h"
+#include "nsIDOMHTMLLegendElement.h"
+#include "nsIDOMHTMLLinkElement.h"
+#include "nsIDOMHTMLMapElement.h"
+#include "nsIDOMHTMLMenuElement.h"
+#include "nsIDOMHTMLMetaElement.h"
+#include "nsIDOMHTMLModElement.h"
+#include "nsIDOMHTMLOListElement.h"
+#include "nsIDOMHTMLObjectElement.h"
+#include "nsIDOMHTMLOptGroupElement.h"
+#include "nsIDOMHTMLParagraphElement.h"
+#include "nsIDOMHTMLParamElement.h"
+#include "nsIDOMHTMLPreElement.h"
+#include "nsIDOMHTMLQuoteElement.h"
+#include "nsIDOMHTMLScriptElement.h"
+#include "nsIDOMNSHTMLSelectElement.h"
+#include "nsIDOMHTMLStyleElement.h"
+#include "nsIDOMHTMLTableCaptionElem.h"
+#include "nsIDOMHTMLTableCellElement.h"
+#include "nsIDOMHTMLTableColElement.h"
+#include "nsIDOMHTMLTableElement.h"
+#include "nsIDOMHTMLTableRowElement.h"
+#include "nsIDOMHTMLTableSectionElem.h"
+#include "nsIDOMHTMLTextAreaElement.h"
+#include "nsIDOMNSHTMLTextAreaElement.h"
+#include "nsIDOMHTMLTitleElement.h"
+#include "nsIDOMHTMLUListElement.h"
+#include "nsIDOMNSUIEvent.h"
+#include "nsIDOMCSS2Properties.h"
+#include "nsIDOMCSSCharsetRule.h"
+#include "nsIDOMCSSImportRule.h"
+#include "nsIDOMCSSMediaRule.h"
+#include "nsIDOMCSSPrimitiveValue.h"
+#include "nsIDOMCSSStyleRule.h"
+#include "nsIDOMCSSStyleSheet.h"
+#include "nsIDOMRange.h"
+#include "nsIDOMNSRange.h"
+#include "nsIDOMXULDocument.h"
+#include "nsIDOMXULElement.h"
+#include "nsIDOMXULTreeElement.h"
+#include "nsIDOMXULCommandDispatcher.h"
+#include "nsIDOMCrypto.h"
+#include "nsIDOMCRMFObject.h"
+#include "nsIDOMPkcs11.h"
+#include "nsIControllers.h"
+#include "nsISelection.h"
+#include "nsIBoxObject.h"
+#include "nsIOutlinerSelection.h"
+#include "nsIXMLHttpRequest.h"
+#include "nsIDOMSerializer.h"
+#include "nsIDOMParser.h"
+#include "nsIDocumentTransformer.h"
+#include "nsIXPathNodeSelector.h"
+
+
 static NS_DEFINE_IID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
 
 #define DEFAULT_SCRIPTABLE_FLAGS                                              \
-  nsIXPCScriptable::USE_JSSTUB_FOR_ADDPROPERTY |                              \
-  nsIXPCScriptable::USE_JSSTUB_FOR_DELPROPERTY |                              \
-  nsIXPCScriptable::USE_JSSTUB_FOR_SETPROPERTY |                              \
-  nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE |                          \
-  nsIXPCScriptable::ALLOW_PROP_MODS_TO_PROTOTYPE |                            \
-  nsIXPCScriptable::DONT_ASK_INSTANCE_FOR_SCRIPTABLE |                        \
-  nsIXPCScriptable::DONT_REFLECT_INTERFACE_NAMES |                            \
-  nsIXPCScriptable::WANT_CHECKACCESS
+  (nsIXPCScriptable::USE_JSSTUB_FOR_ADDPROPERTY |                             \
+   nsIXPCScriptable::USE_JSSTUB_FOR_DELPROPERTY |                             \
+   nsIXPCScriptable::USE_JSSTUB_FOR_SETPROPERTY |                             \
+   nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE |                         \
+   nsIXPCScriptable::ALLOW_PROP_MODS_TO_PROTOTYPE |                           \
+   nsIXPCScriptable::DONT_ASK_INSTANCE_FOR_SCRIPTABLE |                       \
+   nsIXPCScriptable::DONT_REFLECT_INTERFACE_NAMES |                           \
+   nsIXPCScriptable::WANT_CHECKACCESS |                                       \
+   nsIXPCScriptable::WANT_POSTCREATE)
 
 #define DOM_DEFAULT_SCRIPTABLE_FLAGS                                          \
-  DEFAULT_SCRIPTABLE_FLAGS |                                                  \
-  nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE |                               \
-  nsIXPCScriptable::CLASSINFO_INTERFACES_ONLY
+  (DEFAULT_SCRIPTABLE_FLAGS |                                                 \
+   nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE |                              \
+   nsIXPCScriptable::CLASSINFO_INTERFACES_ONLY)
 
 #define NODE_SCRIPTABLE_FLAGS                                                 \
  ((DOM_DEFAULT_SCRIPTABLE_FLAGS |                                             \
@@ -145,16 +265,19 @@ static NS_DEFINE_IID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
    nsIXPCScriptable::WANT_NEWRESOLVE |                                        \
    nsIXPCScriptable::WANT_ADDPROPERTY |                                       \
    nsIXPCScriptable::WANT_SETPROPERTY) &                                      \
-  ~nsIXPCScriptable::USE_JSSTUB_FOR_ADDPROPERTY )
+  ~nsIXPCScriptable::USE_JSSTUB_FOR_ADDPROPERTY)
+
+// We need to let JavaScript QI elements to interfaces that are not in
+// the classinfo since XBL can be used to dynamically implement new
+// unknown interfaces on elements, accessibility relies on this being
+// possible.
 
 #define ELEMENT_SCRIPTABLE_FLAGS                                              \
-  ((NODE_SCRIPTABLE_FLAGS |                                                   \
-    nsIXPCScriptable::WANT_POSTCREATE ) &                                     \
-   ~nsIXPCScriptable::CLASSINFO_INTERFACES_ONLY ) /* to fix accessibility */
+  (NODE_SCRIPTABLE_FLAGS & ~nsIXPCScriptable::CLASSINFO_INTERFACES_ONLY)
 
 #define ARRAY_SCRIPTABLE_FLAGS                                                \
-  DOM_DEFAULT_SCRIPTABLE_FLAGS |                                              \
-  nsIXPCScriptable::WANT_GETPROPERTY
+  (DOM_DEFAULT_SCRIPTABLE_FLAGS |                                             \
+  nsIXPCScriptable::WANT_GETPROPERTY)
 
 
 typedef nsIClassInfo* (*nsDOMClassInfoConstructorFnc)
@@ -163,12 +286,13 @@ typedef nsIClassInfo* (*nsDOMClassInfoConstructorFnc)
 struct nsDOMClassInfoData
 {
   const char *mName;
-  GetDOMClassIIDsFnc mGetIIDsFptr;
   nsDOMClassInfoConstructorFnc mConstructorFptr;
   nsIClassInfo *mCachedClassInfo;
+  const nsIID *mProtoChainInterface;
+  const nsIID **mInterfaces;
   PRUint32 mScriptableFlags;
 #ifdef NS_DEBUG
-  PRUint32 mID;
+  PRUint32 mDebugID;
 #endif
 };
 
@@ -181,14 +305,20 @@ struct nsDOMClassInfoData
   // nothing
 #endif
 
-#define NS_DEFINE_CLASSINFO_DATA(_class, _helper, _flags)                     \
-  { nsnull,                                                                   \
-    nsnull,                                                                   \
+
+#define NS_DEFINE_CLASSINFO_DATA_WITH_NAME(_class, _name, _helper,            \
+                                           _flags)                            \
+  { #_name,                                                                   \
     _helper::doCreate,                                                        \
+    nsnull,                                                                   \
+    nsnull,                                                                   \
     nsnull,                                                                   \
     _flags,                                                                   \
     NS_DEFINE_CLASSINFO_DATA_DEBUG(_class)                                    \
   },
+
+#define NS_DEFINE_CLASSINFO_DATA(_class, _helper, _flags)                     \
+  NS_DEFINE_CLASSINFO_DATA_WITH_NAME(_class, _class, _helper, _flags)
 
 
 // This list of NS_DEFINE_CLASSINFO_DATA macros is what gives the DOM
@@ -201,7 +331,7 @@ struct nsDOMClassInfoData
 // 2. Scriptable helper class
 // 3. nsIClassInfo/nsIXPCScriptable flags (i.e. for GetScriptableFlags)
 
-nsDOMClassInfoData sClassInfoData[] = {
+static nsDOMClassInfoData sClassInfoData[] = {
   // Base classes
   NS_DEFINE_CLASSINFO_DATA(Window, nsWindowSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS |
@@ -246,26 +376,22 @@ nsDOMClassInfoData sClassInfoData[] = {
                            NODE_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(Comment, nsNodeSH,
                            NODE_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(CDATASection, nsNodeSH,
-                           NODE_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(CDATASection, nsNodeSH, NODE_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(ProcessingInstruction, nsNodeSH,
                            NODE_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(Entity, nsNodeSH,
-                           NODE_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(EntityReference, nsNodeSH,
-                           NODE_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(Notation, nsNodeSH,
-                           NODE_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(NodeList, nsArraySH,
-                           ARRAY_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(Entity, nsNodeSH, NODE_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(EntityReference, nsNodeSH, NODE_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(Notation, nsNodeSH, NODE_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(NodeList, nsArraySH, ARRAY_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(NamedNodeMap, nsNamedNodeMapSH,
                            ARRAY_SCRIPTABLE_FLAGS)
 
   // Misc Core related classes
 
   // StyleSheet classes
-  NS_DEFINE_CLASSINFO_DATA(DocumentStyleSheetList, nsStyleSheetListSH,
-                           ARRAY_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA_WITH_NAME(DocumentStyleSheetList, StyleSheetList,
+                                     nsStyleSheetListSH,
+                                     ARRAY_SCRIPTABLE_FLAGS)
 
   // Event
   NS_DEFINE_CLASSINFO_DATA(Event, nsDOMGenericSH,
@@ -283,11 +409,12 @@ nsDOMClassInfoData sClassInfoData[] = {
                            nsHTMLOptionCollectionSH,
                            ARRAY_SCRIPTABLE_FLAGS |
                            nsIXPCScriptable::WANT_SETPROPERTY)
-  NS_DEFINE_CLASSINFO_DATA(HTMLFormControlCollection,
-                           nsFormControlListSH,
-                           ARRAY_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(HTMLGenericCollection, nsHTMLCollectionSH,
-                           ARRAY_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA_WITH_NAME(HTMLFormControlCollection, HTMLCollection,
+                                     nsFormControlListSH,
+                                     ARRAY_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA_WITH_NAME(HTMLGenericCollection, HTMLCollection,
+                                     nsHTMLCollectionSH,
+                                     ARRAY_SCRIPTABLE_FLAGS)
 
   // HTML element classes
   NS_DEFINE_CLASSINFO_DATA(HTMLAnchorElement, nsElementSH,
@@ -454,12 +581,12 @@ nsDOMClassInfoData sClassInfoData[] = {
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(XULCommandDispatcher, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(XULNodeList, nsArraySH,
-                           ARRAY_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(XULNamedNodeMap, nsNamedNodeMapSH,
-                           ARRAY_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(XULAttr, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA_WITH_NAME(XULNodeList, NodeList, nsArraySH,
+                                     ARRAY_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA_WITH_NAME(XULNamedNodeMap, NamedNodeMap,
+                                     nsNamedNodeMapSH, ARRAY_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA_WITH_NAME(XULAttr, Attr, nsDOMGenericSH,
+                                     DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(XULControllers, nsDOMGenericSH,
                            DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(BoxObject, nsDOMGenericSH,
@@ -538,12 +665,14 @@ JSString *nsDOMClassInfo::sOnpaint_id         = nsnull;
 JSString *nsDOMClassInfo::sOnresize_id        = nsnull;
 JSString *nsDOMClassInfo::sOnscroll_id        = nsnull;
 
+const JSClass *nsDOMClassInfo::sObjectClass   = nsnull;
+
+
 // static
 nsresult
 nsDOMClassInfo::DefineStaticJSStrings(JSContext *cx)
 {
-  sTop_id = ::JS_InternString(cx, "top");
-
+  sTop_id            = ::JS_InternString(cx, "top");
   sScrollbars_id     = ::JS_InternString(cx, "scrollbars");
   sLocation_id       = ::JS_InternString(cx, "location");
   sComponents_id     = ::JS_InternString(cx, "Components");
@@ -632,28 +761,800 @@ NS_INTERFACE_MAP_BEGIN(nsDOMClassInfo)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCScriptable)
 NS_INTERFACE_MAP_END
 
+
+JSClass nsDOMClassInfo::sDOMConstructorProtoClass = {
+  "DOM Constructor.prototype", 0,
+  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub
+};
+
+
+static const char *
+CutPrefix(const char *aName) {
+  static const char prefix_nsIDOM[] = "nsIDOM";
+  static const char prefix_nsI[]    = "nsI";
+
+  if (nsCRT::strncmp(aName, prefix_nsIDOM, sizeof(prefix_nsIDOM) - 1) == 0) {
+    return aName + sizeof(prefix_nsIDOM) - 1;
+  }
+
+
+  if (nsCRT::strncmp(aName, prefix_nsI, sizeof(prefix_nsI) - 1) == 0) {
+    return aName + sizeof(prefix_nsI) - 1;
+  }
+
+  return aName;
+}
+
+// static
+nsresult
+nsDOMClassInfo::RegisterClassName(PRInt32 aClassInfoID)
+{
+  extern nsScriptNameSpaceManager *gNameSpaceManager;
+  NS_ENSURE_TRUE(gNameSpaceManager, NS_ERROR_NOT_INITIALIZED);
+
+  gNameSpaceManager->RegisterClassName(sClassInfoData[aClassInfoID].mName,
+                                       aClassInfoID);
+
+  return NS_OK;
+}
+
+// static
+nsresult
+nsDOMClassInfo::RegisterClassProtos(PRInt32 aClassInfoID)
+{
+  extern nsScriptNameSpaceManager *gNameSpaceManager;
+  NS_ENSURE_TRUE(gNameSpaceManager, NS_ERROR_NOT_INITIALIZED);
+  PRBool found_old;
+
+  const nsIID *primary_iid = sClassInfoData[aClassInfoID].mProtoChainInterface;
+
+  if (!primary_iid || primary_iid == &NS_GET_IID(nsISupports)) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIInterfaceInfoManager> iim =
+    dont_AddRef(XPTI_GetInterfaceInfoManager());
+  NS_ENSURE_TRUE(iim, NS_ERROR_NOT_AVAILABLE);
+
+  nsCOMPtr<nsIInterfaceInfo> if_info;
+  PRBool first = PR_TRUE;
+
+  iim->GetInfoForIID(primary_iid, getter_AddRefs(if_info));
+
+  while (if_info) {
+    nsIID *iid = nsnull;
+
+    if_info->GetIID(&iid);
+    NS_ENSURE_TRUE(iid, NS_ERROR_UNEXPECTED);
+
+    if (iid->Equals(NS_GET_IID(nsISupports))) {
+      nsMemory::Free(iid);
+
+      break;
+    }
+
+    nsXPIDLCString name;
+    if_info->GetName(getter_Copies(name));
+
+    gNameSpaceManager->RegisterClassProto(CutPrefix(name), iid, &found_old);
+
+    nsMemory::Free(iid);
+
+    if (first) {
+      first = PR_FALSE;
+    } else if (found_old) {
+      break;
+    }
+
+    nsIInterfaceInfo *tmp = if_info;
+    tmp->GetParent(getter_AddRefs(if_info));
+  }
+
+  return NS_OK;
+}
+
+
+#define _DOM_CLASSINFO_MAP_BEGIN(_class, _ifptr)                              \
+  {                                                                           \
+    nsDOMClassInfoData &d = sClassInfoData[eDOMClassInfo_##_class##_id];      \
+    NS_ASSERTION(!d.mProtoChainInterface, "Redeclaration of DOM classinfo "   \
+                 "proto chain interface!");                                   \
+    NS_ASSERTION(!d.mInterfaces, "Redeclaration of DOM classinfo "            \
+                 "interface list!");                                          \
+    d.mProtoChainInterface = _ifptr;                                          \
+    static const nsIID *interface_list[] = {
+
+#define DOM_CLASSINFO_MAP_BEGIN(_class, _interface)                           \
+  _DOM_CLASSINFO_MAP_BEGIN(_class, &NS_GET_IID(_interface))
+
+#define DOM_CLASSINFO_MAP_BEGIN_NO_PIMARY_INTERFACE(_class)                   \
+  _DOM_CLASSINFO_MAP_BEGIN(_class, nsnull)
+
+#define DOM_CLASSINFO_MAP_ENTRY(_if)                                          \
+      &NS_GET_IID(_if),
+
+#define DOM_CLASSINFO_MAP_END                                                 \
+      nsnull                                                                  \
+    };                                                                        \
+                                                                              \
+    d.mInterfaces = interface_list;                                           \
+  }
+
+#define DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES                                \
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLElement)                              \
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMElementCSSInlineStyle)                      \
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)                                \
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
+
 nsresult
 nsDOMClassInfo::Init()
 {
   NS_ENSURE_TRUE(!sIsInitialized, NS_ERROR_ALREADY_INITIALIZED);
 
+  DOM_CLASSINFO_MAP_BEGIN(Window, nsIDOMWindow)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSWindow)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindowInternal)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventReceiver)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMViewCSS)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMAbstractView)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(Location, nsIDOMLocation)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMLocation)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSLocation)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(Navigator, nsIDOMNavigator)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigator)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSNavigator)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(Plugin, nsIDOMPlugin)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMPlugin)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(PluginArray, nsIDOMPluginArray)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMPluginArray)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSPluginArray)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(MimeType, nsIDOMMimeType)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMMimeType)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(MimeTypeArray, nsIDOMMimeTypeArray)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMMimeTypeArray)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(BarProp, nsIDOMBarProp)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMBarProp)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(History, nsIDOMHistory)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHistory)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(Screen, nsIDOMScreen)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMScreen)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(Document, nsIDOMDocument)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocument)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSDocument)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentEvent)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentStyle)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentView)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentRange)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentXBL)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(DocumentType, nsIDOMDocumentType)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentType)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(DOMImplementation, nsIDOMDOMImplementation)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMImplementation)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(DocumentFragment, nsIDOMDocumentFragment)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentFragment)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(Element, nsIDOMElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(Attr, nsIDOMAttr)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMAttr)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(Text, nsIDOMText)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMText)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(Comment, nsIDOMComment)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMComment)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(CDATASection, nsIDOMCDATASection)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCDATASection)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(ProcessingInstruction, nsIDOMProcessingInstruction)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMProcessingInstruction)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMLinkStyle)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(Entity, nsIDOMEntity)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEntity)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(EntityReference, nsIDOMEntityReference)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEntityReference)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(Notation, nsIDOMNotation)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNotation)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(NodeList, nsIDOMNodeList)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeList)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(NamedNodeMap, nsIDOMNamedNodeMap)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNamedNodeMap)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(DocumentStyleSheetList, nsIDOMStyleSheetList)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMStyleSheetList)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(Event, nsIDOMEvent)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMKeyEvent)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMMouseEvent)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSUIEvent)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(MutationEvent, nsIDOMMutationEvent)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMMutationEvent)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLDocument, nsIDOMHTMLDocument)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLDocument)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLDocument)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSDocument)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentEvent)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentStyle)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentView)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentRange)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentXBL)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLCollection, nsIDOMHTMLCollection)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeList)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLCollection)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLOptionCollection, nsIDOMHTMLCollection)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLOptionCollection)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLCollection)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLFormControlCollection, nsIDOMHTMLCollection)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLCollection)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLFormControlList)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLGenericCollection, nsIDOMHTMLCollection)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLCollection)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLAnchorElement, nsIDOMHTMLAnchorElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLAnchorElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLAnchorElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLAppletElement, nsIDOMHTMLAppletElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLAppletElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLAreaElement, nsIDOMHTMLAreaElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLAreaElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLAreaElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLBRElement, nsIDOMHTMLBRElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLBRElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLBaseElement, nsIDOMHTMLBaseElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLBaseElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLBaseFontElement, nsIDOMHTMLBaseFontElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLBaseFontElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLBodyElement, nsIDOMHTMLBodyElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLBodyElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLButtonElement, nsIDOMHTMLButtonElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLButtonElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLButtonElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLDListElement, nsIDOMHTMLDListElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLDListElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLDelElement, nsIDOMHTMLElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLModElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLDirectoryElement, nsIDOMHTMLDirectoryElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLDirectoryElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLDivElement, nsIDOMHTMLDivElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLDivElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLEmbedElement, nsIDOMHTMLEmbedElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLEmbedElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLFieldSetElement, nsIDOMHTMLFieldSetElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLFieldSetElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLFontElement, nsIDOMHTMLFontElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLFontElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLFormElement, nsIDOMHTMLFormElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLFormElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLFormElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLFrameElement, nsIDOMHTMLFrameElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLFrameElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLFrameSetElement, nsIDOMHTMLFrameSetElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLFrameSetElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLHRElement, nsIDOMHTMLHRElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLHRElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLHeadElement, nsIDOMHTMLHeadElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLHeadElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLHeadingElement, nsIDOMHTMLHeadingElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLHeadingElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLHtmlElement, nsIDOMHTMLHtmlElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLHtmlElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLIFrameElement, nsIDOMHTMLIFrameElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLIFrameElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLImageElement, nsIDOMHTMLImageElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLImageElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLImageElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLInputElement, nsIDOMHTMLInputElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLInputElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLInputElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLInsElement, nsIDOMHTMLElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLModElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLIsIndexElement, nsIDOMHTMLIsIndexElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLIsIndexElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLLIElement, nsIDOMHTMLLIElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLLIElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLLabelElement, nsIDOMHTMLLabelElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLLabelElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLLegendElement, nsIDOMHTMLLegendElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLLegendElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLLinkElement, nsIDOMHTMLLinkElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLLinkElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMLinkStyle)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLMapElement, nsIDOMHTMLMapElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLMapElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLMenuElement, nsIDOMHTMLMenuElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLMenuElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLMetaElement, nsIDOMHTMLMetaElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLMetaElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLModElement, nsIDOMHTMLModElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLModElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLOListElement, nsIDOMHTMLOListElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLOListElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLObjectElement, nsIDOMHTMLObjectElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLObjectElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLOptGroupElement, nsIDOMHTMLOptGroupElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLOptGroupElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLOptionElement, nsIDOMHTMLOptionElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLOptionElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLParagraphElement, nsIDOMHTMLParagraphElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLParagraphElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLParamElement, nsIDOMHTMLParamElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLParamElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLPreElement, nsIDOMHTMLPreElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLPreElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLQuoteElement, nsIDOMHTMLQuoteElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLQuoteElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLScriptElement, nsIDOMHTMLScriptElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLScriptElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLSelectElement, nsIDOMHTMLSelectElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLSelectElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLSelectElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLSpacerElement, nsIDOMHTMLElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLSpanElement, nsIDOMHTMLElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLStyleElement, nsIDOMHTMLStyleElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLStyleElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMLinkStyle)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLTableCaptionElement,
+                          nsIDOMHTMLTableCaptionElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLTableCaptionElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLTableCellElement, nsIDOMHTMLTableCellElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLTableCellElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLTableColElement, nsIDOMHTMLTableColElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLTableColElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLTableColGroupElement, nsIDOMHTMLTableColElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLTableColElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLTableElement, nsIDOMHTMLTableElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLTableElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLTableRowElement, nsIDOMHTMLTableRowElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLTableRowElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLTableSectionElement,
+                          nsIDOMHTMLTableSectionElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLTableSectionElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLTextAreaElement, nsIDOMHTMLTextAreaElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLTextAreaElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLTextAreaElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLTitleElement, nsIDOMHTMLTitleElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLTitleElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLUListElement, nsIDOMHTMLUListElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLUListElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLUnknownElement, nsIDOMHTMLElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLWBRElement, nsIDOMHTMLElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(CSSStyleRule, nsIDOMCSSStyleRule)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSStyleRule)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(CSSCharsetRule, nsIDOMCSSCharsetRule)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSRule)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(CSSImportRule, nsIDOMCSSImportRule)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSRule)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(CSSMediaRule, nsIDOMCSSMediaRule)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSRule)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(CSSNameSpaceRule, nsIDOMCSSRule)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSRule)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(CSSRuleList, nsIDOMCSSRuleList)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSRuleList)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(MediaList, nsIDOMMediaList)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMMediaList)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(StyleSheetList, nsIDOMStyleSheetList)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMStyleSheetList)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(CSSStyleSheet, nsIDOMCSSStyleSheet)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSStyleSheet)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(CSSStyleDeclaration, nsIDOMCSSStyleDeclaration)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSStyleDeclaration)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSS2Properties)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSCSS2Properties)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(ComputedCSSStyleDeclaration,
+                          nsIDOMCSSStyleDeclaration)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSStyleDeclaration)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(ROCSSPrimitiveValue, nsIDOMCSSPrimitiveValue)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSPrimitiveValue)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(Range, nsIDOMRange)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMRange)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSRange)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(Selection, nsISelection)
+    DOM_CLASSINFO_MAP_ENTRY(nsISelection)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(XULDocument, nsIDOMXULDocument)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMXULDocument)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSDocument)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentEvent)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentView)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentXBL)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentStyle)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentRange)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(XULElement, nsIDOMXULElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMXULElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(XULTreeElement, nsIDOMXULTreeElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMXULElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMXULTreeElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(XULCommandDispatcher, nsIDOMXULCommandDispatcher)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMXULCommandDispatcher)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(XULNodeList, nsIDOMNodeList)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeList)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(XULNamedNodeMap, nsIDOMNamedNodeMap)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNamedNodeMap)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(XULAttr, nsIDOMAttr)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMAttr)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(XULControllers, nsIControllers)
+    DOM_CLASSINFO_MAP_ENTRY(nsIControllers)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(BoxObject, nsIBoxObject)
+    DOM_CLASSINFO_MAP_ENTRY(nsIBoxObject)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(OutlinerSelection, nsIOutlinerSelection)
+    DOM_CLASSINFO_MAP_ENTRY(nsIOutlinerSelection)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(Crypto, nsIDOMCrypto)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCrypto)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(CRMFObject, nsIDOMCRMFObject)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCRMFObject)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(Pkcs11, nsIDOMPkcs11)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMPkcs11)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN_NO_PIMARY_INTERFACE(XMLHttpRequest)
+    DOM_CLASSINFO_MAP_ENTRY(nsIXMLHttpRequest)
+    DOM_CLASSINFO_MAP_ENTRY(nsIJSXMLHttpRequest)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN_NO_PIMARY_INTERFACE(DOMSerializer)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSerializer)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN_NO_PIMARY_INTERFACE(DOMParser)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMParser)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN_NO_PIMARY_INTERFACE(XSLTProcessor)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDocumentTransformer)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN_NO_PIMARY_INTERFACE(XPathProcessor)
+    DOM_CLASSINFO_MAP_ENTRY(nsIXPathNodeSelector)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(NodeSet, nsIDOMNodeList)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeList)
+  DOM_CLASSINFO_MAP_END
+
+
 #ifdef NS_DEBUG
-  PRUint32 i = sizeof(sClassInfoData) / sizeof(sClassInfoData[0]);
+  {
+    PRUint32 i = sizeof(sClassInfoData) / sizeof(sClassInfoData[0]);
 
-  if (i != eDOMClassInfoIDCount) {
-    NS_ERROR("The number of items in sClassInfoData doesn't match the "
-             "number of nsIDOMClassInfo ID's, this is bad! Fix it!");
-
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  for (i = 0; i < eDOMClassInfoIDCount; i++) {
-    if (!sClassInfoData[i].mConstructorFptr || sClassInfoData[i].mID != i) {
-      NS_ERROR("Class info data out of sync, you forgot to update "
-               "nsDOMClassInfo.h and nsDOMClassInfo.cpp! Fix this, "
-               "mozilla will not work without this fixed!");
+    if (i != eDOMClassInfoIDCount) {
+      NS_ERROR("The number of items in sClassInfoData doesn't match the "
+               "number of nsIDOMClassInfo ID's, this is bad! Fix it!");
 
       return NS_ERROR_NOT_INITIALIZED;
+    }
+
+    for (i = 0; i < eDOMClassInfoIDCount; i++) {
+      if (!sClassInfoData[i].mConstructorFptr ||
+          sClassInfoData[i].mDebugID != i) {
+        NS_ERROR("Class info data out of sync, you forgot to update "
+                 "nsDOMClassInfo.h and nsDOMClassInfo.cpp! Fix this, "
+                 "mozilla will not work without this fixed!");
+
+        return NS_ERROR_NOT_INITIALIZED;
+      }
+    }
+
+    for (i = 0; i < eDOMClassInfoIDCount; i++) {
+      if (!sClassInfoData[i].mInterfaces) {
+        NS_ERROR("Class info data without an interface list! Fix this, "
+                 "mozilla will not work without this fixed!");
+
+        return NS_ERROR_NOT_INITIALIZED;
+      }
     }
   }
 #endif
@@ -687,6 +1588,19 @@ nsDOMClassInfo::Init()
 
   // Initialize static JSString's
   DefineStaticJSStrings(cx);
+
+  extern nsScriptNameSpaceManager *gNameSpaceManager;
+  NS_ENSURE_TRUE(gNameSpaceManager, NS_ERROR_NOT_INITIALIZED);
+
+  PRInt32 i;
+
+  for (i = 0; i < eDOMClassInfoIDCount; ++i) {
+    RegisterClassName(i);
+  }
+
+  for (i = 0; i < eDOMClassInfoIDCount; ++i) {
+    RegisterClassProtos(i);
+  }
 
   sIsInitialized = PR_TRUE;
 
@@ -723,33 +1637,37 @@ nsDOMClassInfo::GetArrayIndexFromId(JSContext *cx, jsval id, PRBool *aIsNumber)
 NS_IMETHODIMP
 nsDOMClassInfo::GetInterfaces(PRUint32 *aCount, nsIID ***aArray)
 {
-  nsAutoVoidArray void_array;
+  PRUint32 count = 0;
 
-  sClassInfoData[mID].mGetIIDsFptr(void_array);
+  const nsDOMClassInfoData& data = sClassInfoData[mID];
 
-  *aCount = void_array.Count();
+  while (data.mInterfaces[count]) {
+    count++;
+  }
 
-  if (!*aCount) {
+  *aCount = count;
+
+  if (!count) {
     *aArray = nsnull;
 
     return NS_OK;
   }
 
   *aArray =
-    NS_STATIC_CAST(nsIID **, nsMemory::Alloc(*aCount * sizeof(nsIID *)));
+    NS_STATIC_CAST(nsIID **, nsMemory::Alloc(count * sizeof(nsIID *)));
   NS_ENSURE_TRUE(*aArray, NS_ERROR_OUT_OF_MEMORY);
 
   PRUint32 i;
-  for (i = 0; i < *aCount; i++) {
-    nsIID *iid = NS_STATIC_CAST(nsIID *, nsMemory::Alloc(sizeof(nsIID)));
+  for (i = 0; i < count; i++) {
+    nsIID *iid =
+      NS_STATIC_CAST(nsIID *, nsMemory::Clone(data.mInterfaces[i],
+                                              sizeof(nsIID)));
 
     if (!iid) {
       NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(i, *aArray);
 
       return NS_ERROR_OUT_OF_MEMORY;
     }
-
-    *iid = *NS_STATIC_CAST(nsIID *, void_array.ElementAt(i));
 
     *((*aArray) + i) = iid;
   }
@@ -849,9 +1767,61 @@ NS_IMETHODIMP
 nsDOMClassInfo::PostCreate(nsIXPConnectWrappedNative *wrapper,
                            JSContext *cx, JSObject *obj)
 {
-  NS_ERROR("Don't call me!");
+  static const nsIID *sSupportsIID = &NS_GET_IID(nsISupports);
 
-  return NS_ERROR_UNEXPECTED;
+  // This is safe because...
+  if (sClassInfoData[mID].mProtoChainInterface == sSupportsIID ||
+      !sClassInfoData[mID].mProtoChainInterface) {
+    return NS_OK;
+  }
+
+  JSObject *proto = nsnull;
+
+  wrapper->GetJSObjectPrototype(&proto);
+
+  JSObject *proto_proto = ::JS_GetPrototype(cx, proto);
+
+  JSClass *proto_proto_class = JS_GET_CLASS(cx, proto_proto);
+
+  if (!sObjectClass) {
+    sObjectClass = proto_proto_class;
+  }
+
+  if (proto_proto_class != sObjectClass) {
+    // We've just wrapped an object of a type that has been wrapped on
+    // this scope already so the prototype of the xpcwrapped native's
+    // prototype is already set up.
+
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIInterfaceInfoManager> iim =
+    dont_AddRef(XPTI_GetInterfaceInfoManager());
+  NS_ENSURE_TRUE(iim, NS_ERROR_NOT_AVAILABLE);
+
+  nsCOMPtr<nsIInterfaceInfo> if_info;
+  nsXPIDLCString name;
+
+  nsresult rv = iim->GetInfoForIID(sClassInfoData[mID].mProtoChainInterface,
+                                   getter_AddRefs(if_info));
+  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && if_info, NS_OK);
+
+  rv = if_info->GetName(getter_Copies(name));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  JSObject *global = obj;
+  JSObject *tmp;
+
+  while (tmp = ::JS_GetParent(cx, global)) {
+    global = tmp;
+  }
+
+  jsval val;
+  if (!::JS_GetProperty(cx, global, CutPrefix(name), &val)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1019,10 +1989,8 @@ nsDOMClassInfo::Mark(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
 
 // static
-nsISupports *
-nsDOMClassInfo::GetClassInfoInstance(nsDOMClassInfoID aID,
-                                     GetDOMClassIIDsFnc aGetIIDsFptr,
-                                     const char *aName)
+nsIClassInfo *
+nsDOMClassInfo::GetClassInfoInstance(nsDOMClassInfoID aID)
 {
   if (aID >= eDOMClassInfoIDCount) {
     NS_ERROR("Bad ID!");
@@ -1043,15 +2011,9 @@ nsDOMClassInfo::GetClassInfoInstance(nsDOMClassInfoID aID,
     NS_ENSURE_TRUE(data.mCachedClassInfo, nsnull);
 
     NS_ADDREF(data.mCachedClassInfo);
-
-    data.mGetIIDsFptr = aGetIIDsFptr;
-    data.mName = aName;
   }
 
-  NS_ABORT_IF_FALSE(sClassInfoData[aID].mGetIIDsFptr == aGetIIDsFptr,
-                    "Multiple GetIIDs function for the same nsDOMClassInfoID");
-
-  nsISupports *classinfo = sClassInfoData[aID].mCachedClassInfo;
+  nsIClassInfo *classinfo = sClassInfoData[aID].mCachedClassInfo;
 
   NS_ADDREF(classinfo);
 
@@ -1368,7 +2330,7 @@ StubConstructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   nsresult rv = gNameSpaceManager->LookupName(nameStr, &name_struct);
 
   if (NS_FAILED(rv) || !name_struct ||
-      name_struct->mType != nsGlobalNameStruct::eTypeConstructor) {
+      name_struct->mType != nsGlobalNameStruct::eTypeExternalConstructor) {
     return JS_FALSE;
   }
 
@@ -1408,57 +2370,129 @@ StubConstructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 }
 
 
+static JSObject *
+GetInterfaceObject(JSContext *cx, JSObject *obj, const char *aName)
+{
+  jsval components_val;
+
+  if (!::JS_GetProperty(cx, obj, "Components", &components_val)) {
+    return nsnull;
+  }
+
+  if (!JSVAL_IS_OBJECT(components_val)) {
+    return nsnull;
+  }
+
+  jsval if_val = JSVAL_VOID;
+
+  if (!::JS_GetProperty(cx, JSVAL_TO_OBJECT(components_val), "interfaces",
+                        &if_val)) {
+    return nsnull;
+  }
+
+  if (!JSVAL_IS_OBJECT(if_val)) {
+    return nsnull;
+  }
+
+  jsval val;
+
+  if (!::JS_GetProperty(cx, JSVAL_TO_OBJECT(if_val), aName, &val)) {
+    return nsnull;
+  }
+
+  if (!JSVAL_IS_OBJECT(val)) {
+    return nsnull;
+  }
+
+  return JSVAL_TO_OBJECT(val);
+}
+
 // static
 nsresult
 nsWindowSH::DefineInterfaceProperty(JSContext *cx, JSObject *obj,
                                     JSString *str)
 {
-  jsval components_val;
+  nsCAutoString name("nsIDOM");
+  name.Append(::JS_GetStringBytes(str));
 
-  if (!::JS_GetProperty(cx, obj, "Components", &components_val)) {
+  JSObject *if_object = GetInterfaceObject(cx, obj, name);
+
+  if (!if_object) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  if (!JSVAL_IS_OBJECT(components_val)) {
-    return NS_OK;
-  }
-
-  jsval if_val = JSVAL_VOID;
-
-  // XXX: Once the security manager lets me make this call I should
-  // check for failure here...
-  ::JS_GetProperty(cx, JSVAL_TO_OBJECT(components_val), "interfaces", &if_val);
-
-  if (!JSVAL_IS_OBJECT(if_val)) {
-    return NS_OK;
-  }
-
-  jsval val;
-
-  nsAutoString if_name;
-  if_name.AssignWithConversion("nsIDOM");
-
-  const jschar *name = ::JS_GetStringChars(str);
-
-  if_name.Append(NS_REINTERPRET_CAST(const PRUnichar *, name),
-                 ::JS_GetStringLength(str));
-
-  if (!::JS_GetUCProperty(cx, JSVAL_TO_OBJECT(if_val),
-                          NS_REINTERPRET_CAST(const jschar *, if_name.get()),
-                          if_name.Length(), &val)) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  if (!JSVAL_IS_OBJECT(val)) {
-    return NS_OK;
-  }
-
-  if (!::JS_DefineUCProperty(cx, obj, name, ::JS_GetStringLength(str),
-                             val, nsnull, nsnull, 0)) {
+  if (!::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
+                             ::JS_GetStringLength(str),
+                             OBJECT_TO_JSVAL(if_object), nsnull, nsnull, 0)) {
     return NS_ERROR_FAILURE;
   }
 
   return NS_OK;
+}
+
+static nsresult
+DefineInterfaceConstants(JSContext *cx, JSObject *obj, const nsIID *aIID)
+{
+  nsCOMPtr<nsIInterfaceInfoManager> iim =
+    dont_AddRef(XPTI_GetInterfaceInfoManager());
+  NS_ENSURE_TRUE(iim, NS_ERROR_UNEXPECTED);
+
+  nsCOMPtr<nsIInterfaceInfo> if_info;
+
+  nsresult rv = iim->GetInfoForIID(aIID, getter_AddRefs(if_info));
+  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && if_info, rv);
+
+  PRUint16 constant_count;
+
+  if_info->GetConstantCount(&constant_count);
+
+  if (!constant_count) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIInterfaceInfo> parent_if_info;
+
+  rv = if_info->GetParent(getter_AddRefs(parent_if_info));
+  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && parent_if_info, rv);
+
+  PRUint16 parent_constant_count, i;
+  parent_if_info->GetConstantCount(&parent_constant_count);
+
+  for (i = parent_constant_count; i < constant_count; i++) {
+    const nsXPTConstant *c = nsnull;
+
+    rv = if_info->GetConstant(i, &c);
+    NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && c, rv);
+
+    PRUint16 type = c->GetType().TagPart();
+
+    if (type == nsXPTType::T_I8 || type == nsXPTType::T_I16 ||
+        type == nsXPTType::T_I32 || type == nsXPTType::T_U8 ||
+        type == nsXPTType::T_U16 || type == nsXPTType::T_U32) {
+      jsval v = INT_TO_JSVAL(c->GetValue()->val.u16);
+
+      if (!::JS_DefineProperty(cx, obj, c->GetName(), v, nsnull, nsnull,
+                               JSPROP_ENUMERATE)) {
+        return NS_ERROR_UNEXPECTED;
+      }
+    }
+#ifdef NS_DEBUG
+    else {
+      NS_ERROR("Non-numeric constant found in interface.");
+    }
+#endif
+  }
+
+  return NS_OK;
+}
+
+JSBool JS_DLL_CALLBACK
+NativeConstructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                  jsval *rval)
+{
+  *rval = JSVAL_VOID;
+
+  return JS_TRUE;
 }
 
 nsresult
@@ -1494,7 +2528,133 @@ nsWindowSH::GlobalResolve(nsISupports *native, JSContext *cx, JSObject *obj,
     return NS_OK;
   }
 
-  if (name_struct->mType == nsGlobalNameStruct::eTypeConstructor) {
+  if (name_struct->mType == nsGlobalNameStruct::eTypeClassConstructor ||
+      name_struct->mType == nsGlobalNameStruct::eTypeClassProto) {
+    JSFunction *cfnc = ::JS_DefineFunction(cx, obj,
+                                           NS_ConvertUCS2toUTF8(name).get(),
+                                           NativeConstructor, 0, 0);
+    if (!cfnc) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    JSObject *cfnc_obj = ::JS_GetFunctionObject(cfnc);
+
+    if (!cfnc_obj) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    nsIID primary_iid = NS_GET_IID(nsISupports);
+
+    if (name_struct->mType == nsGlobalNameStruct::eTypeClassProto) {
+      primary_iid = name_struct->mIID;
+    } else if (name_struct->mDOMClassInfoID >= 0) {
+      primary_iid =
+        *sClassInfoData[name_struct->mDOMClassInfoID].mProtoChainInterface;
+    }
+
+    NS_ABORT_IF_FALSE(!primary_iid.Equals(NS_GET_IID(nsISupports)),
+                      "Class with nsISupports as primary IID seen in the "
+                      "resolver");
+
+    nsXPIDLCString parent_if_name;
+
+    if (!primary_iid.Equals(NS_GET_IID(nsISupports))) {
+      rv = DefineInterfaceConstants(cx, cfnc_obj, &primary_iid);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nsCOMPtr<nsIInterfaceInfoManager> iim =
+        dont_AddRef(XPTI_GetInterfaceInfoManager());
+      NS_ENSURE_TRUE(iim, NS_ERROR_NOT_AVAILABLE);
+
+      nsCOMPtr<nsIInterfaceInfo> if_info;
+      iim->GetInfoForIID(&primary_iid, getter_AddRefs(if_info));
+      NS_ENSURE_TRUE(if_info, NS_ERROR_UNEXPECTED);
+
+      nsCOMPtr<nsIInterfaceInfo> parent;
+      if_info->GetParent(getter_AddRefs(parent));
+      NS_ENSURE_TRUE(parent, NS_ERROR_UNEXPECTED);
+
+      nsIID *iid = nsnull;
+
+      parent->GetIID(&iid);
+
+      if (iid) {
+        if (!iid->Equals(NS_GET_IID(nsISupports))) {
+          parent->GetName(getter_Copies(parent_if_name));
+        }
+
+        nsMemory::Free(iid);
+      }
+    }
+
+    JSObject *proto = nsnull;
+
+    if (parent_if_name) {
+      jsval val;
+
+      if (!::JS_GetProperty(cx, obj, CutPrefix(parent_if_name), &val)) {
+        return NS_ERROR_UNEXPECTED;
+      }
+
+      JSObject *tmp = JSVAL_IS_OBJECT(val) ? JSVAL_TO_OBJECT(val) : nsnull;
+
+      if (tmp) {
+        if (!::JS_GetProperty(cx, tmp, "prototype", &val)) {
+          return NS_ERROR_UNEXPECTED;
+        }
+
+        if (JSVAL_IS_OBJECT(val)) {
+          proto = JSVAL_TO_OBJECT(val);
+        }
+      }
+    }
+
+    JSObject *dot_prototype = nsnull;
+
+    if (name_struct->mType == nsGlobalNameStruct::eTypeClassConstructor) {
+      NS_ABORT_IF_FALSE(name_struct->mDOMClassInfoID >= 0,
+                        "Negative DOM clssinfo?!?");
+
+      nsDOMClassInfoID ci_id = (nsDOMClassInfoID)name_struct->mDOMClassInfoID;
+
+      nsCOMPtr<nsIClassInfo> ci(dont_AddRef(GetClassInfoInstance(ci_id)));
+      NS_ENSURE_TRUE(ci, NS_ERROR_UNEXPECTED);
+
+      nsCOMPtr<nsIXPConnectJSObjectHolder> proto_holder;
+
+      nsresult rv =
+        sXPConnect->GetWrappedNativePrototype(cx, obj, ci,
+                                              getter_AddRefs(proto_holder));
+      NS_ENSURE_SUCCESS(rv, NS_ERROR_UNEXPECTED);
+
+      rv = proto_holder->GetJSObject(&dot_prototype);
+      NS_ENSURE_SUCCESS(rv, NS_ERROR_UNEXPECTED);
+
+      JSObject *xpc_proto_proto = ::JS_GetPrototype(cx, dot_prototype);
+
+      if (proto && JS_GET_CLASS(cx, xpc_proto_proto) == sObjectClass) {
+        if (!::JS_SetPrototype(cx, dot_prototype, proto)) {
+          return NS_ERROR_UNEXPECTED;
+        }
+      }
+    } else {
+      dot_prototype = ::JS_NewObject(cx, &sDOMConstructorProtoClass, proto,
+                                     obj);
+      NS_ENSURE_TRUE(dot_prototype, NS_ERROR_OUT_OF_MEMORY);
+    }
+
+    jsval v = OBJECT_TO_JSVAL(dot_prototype);
+
+    if (!::JS_SetProperty(cx, cfnc_obj, "prototype", &v)) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    *did_resolve = PR_TRUE;
+
+    return NS_OK;
+  }
+
+  if (name_struct->mType == nsGlobalNameStruct::eTypeExternalConstructor) {
     // If there was a JS_DefineUCFunction() I could use it here, but
     // no big deal...
     JSFunction *f = ::JS_DefineFunction(cx, obj, ::JS_GetStringBytes(str),
@@ -1602,15 +2762,21 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       return NS_OK;
     }
 
-    nsresult rv = GlobalResolve(native, cx, obj, str, flags, &did_resolve);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsresult rv = NS_OK;
 
-    if (did_resolve) {
-      // GlobalResolve() resolved something, we're done here then.
+    if (!(flags & JSRESOLVE_ASSIGNING)) {
+      // If we're resolving for assignment it's not worth calling
+      // GlobalResolve()
+      rv = GlobalResolve(native, cx, obj, str, flags, &did_resolve);
+      NS_ENSURE_SUCCESS(rv, rv);
 
-      *objp = obj;
+      if (did_resolve) {
+        // GlobalResolve() resolved something, we're done here then.
 
-      return NS_OK;
+        *objp = obj;
+
+        return NS_OK;
+      }
     }
 
     // Hmm, we do an aweful lot of QI's here, maybe we should add a
@@ -2047,6 +3213,9 @@ NS_IMETHODIMP
 nsElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj)
 {
+  nsresult rv = nsNodeSH::PostCreate(wrapper, cx, obj);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCOMPtr<nsISupports> native;
 
   wrapper->GetNative(getter_AddRefs(native));
@@ -2059,7 +3228,7 @@ nsElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   content->GetDocument(*getter_AddRefs(doc));
 
   if (!doc) {
-    // There's not baseclass that cares about this call so we just
+    // There's no baseclass that cares about this call so we just
     // return here.
 
     return NS_OK;

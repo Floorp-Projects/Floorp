@@ -27,8 +27,6 @@
 #include "nsIClassInfo.h"
 #include "nsVoidArray.h"
 
-typedef void (*GetDOMClassIIDsFnc)(nsVoidArray& aArray);
-
 enum nsDOMClassInfoID {
   // Base classes
   eDOMClassInfo_Window_id,
@@ -189,22 +187,15 @@ enum nsDOMClassInfoID {
  * nsIClassInfo helper macros
  */
 
-#define NS_CLASSINFO_MAP_BEGIN(_class)                                        \
-static void Get##_class##IIDs(nsVoidArray& aArray)                            \
-{
+#define NS_CLASSINFO_MAP_BEGIN(_class)
 
-#define NS_CLASSINFO_MAP_BEGIN_EXPORTED(_class)                               \
-void Get##_class##IIDs(nsVoidArray& aArray)                                   \
-{
+#define NS_CLASSINFO_MAP_BEGIN_EXPORTED(_class)
 
-#define NS_CLASSINFO_MAP_ENTRY(_interface)                                    \
-  aArray.AppendElement((void *)&NS_GET_IID(_interface));
+#define NS_CLASSINFO_MAP_ENTRY(_interface)
 
-#define NS_CLASSINFO_MAP_ENTRY_FUNCTION(_function)                            \
-  _function(aArray);
+#define NS_CLASSINFO_MAP_ENTRY_FUNCTION(_function)
 
-#define NS_CLASSINFO_MAP_END                                                  \
-}
+#define NS_CLASSINFO_MAP_END
 
 
 #include "nsIServiceManager.h"
@@ -218,8 +209,7 @@ void Get##_class##IIDs(nsVoidArray& aArray)                                   \
     nsCOMPtr<nsIDOMScriptObjectFactory> sof(do_GetService(kDOMSOF_CID));      \
     if (sof) {                                                                \
       foundInterface =                                                        \
-        sof->GetClassInfoInstance(eDOMClassInfo_##_class##_id,                \
-                                  Get##_class##IIDs, #_class);                \
+        sof->GetClassInfoInstance(eDOMClassInfo_##_class##_id);               \
                                                                               \
       if (foundInterface) {                                                   \
         *aInstancePtr = foundInterface;                                       \
