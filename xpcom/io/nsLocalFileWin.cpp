@@ -1222,15 +1222,15 @@ nsLocalFile::Remove(PRBool recursive)
                 iterator->HasMoreElements(&more);
             }
         }
-        rmdir(filePath);  // todo: save return value?
+        rv = rmdir(filePath);  // todo: save return value?
     }
     else
     {
-        remove(filePath); // todo: save return value?
+        rv = remove(filePath); // todo: save return value?
     }
     
     MakeDirty();
-    return NS_OK;
+    return rv;
 }
 
 NS_IMETHODIMP  
