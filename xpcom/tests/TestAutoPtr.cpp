@@ -55,15 +55,15 @@ class TestObject : public TestObjectBaseA, public TestObjectBaseB {
 class TestRefObjectBaseA {
     public:
         int fooA;
-        virtual void AddRef() const = 0;
-        virtual void Release() const = 0;
+        virtual void AddRef() = 0;
+        virtual void Release() = 0;
 };
 
 class TestRefObjectBaseB {
     public:
         int fooB;
-        virtual void AddRef() const = 0;
-        virtual void Release() const = 0;
+        virtual void AddRef() = 0;
+        virtual void Release() = 0;
 };
 
 class TestRefObject : public TestRefObjectBaseA, public TestRefObjectBaseB {
@@ -81,21 +81,18 @@ class TestRefObject : public TestRefObjectBaseA, public TestRefObjectBaseB {
                    NS_STATIC_CAST(void*, this));
         }
 
-        // These are |const| as a test -- that's not the normal way of
-        // implementing |AddRef| and |Release|, but it's a possibility,
-        // so we should test it here.
-        void AddRef() const
+        void AddRef()
         {
-            ++NS_CONST_CAST(TestRefObject*, this)->mRefCount;
+            ++mRefCount;
             printf("  AddRef to %d on TestRefObject %p.\n",
-                   mRefCount, NS_STATIC_CAST(const void*, this));
+                   mRefCount, NS_STATIC_CAST(void*, this));
         }
 
-        void Release() const
+        void Release()
         {
-            --NS_CONST_CAST(TestRefObject*, this)->mRefCount;
+            --mRefCount;
             printf("  Release to %d on TestRefObject %p.\n",
-                   mRefCount, NS_STATIC_CAST(const void*, this));
+                   mRefCount, NS_STATIC_CAST(void*, this));
             if (mRefCount == 0)
                 delete NS_CONST_CAST(TestRefObject*, this);
         }
@@ -226,20 +223,6 @@ int main()
     }
 
     {
-        nsRefPtr<const TestRefObject> p1( new TestRefObject() );
-        nsRefPtr<TestRefObject> p2( NS_CONST_CAST(TestRefObject*, NS_STATIC_CAST(const TestRefObject*, p1.get())) );
-        printf("equality %s.\n",
-               ((p1 == p2) && !(p1 != p2)) ? "OK" : "broken");
-    }
-
-    {
-        const nsRefPtr<const TestRefObject> p1( new TestRefObject() );
-        nsRefPtr<TestRefObject> p2( NS_CONST_CAST(TestRefObject*, NS_STATIC_CAST(const TestRefObject*, p1.get())) );
-        printf("equality %s.\n",
-               ((p1 == p2) && !(p1 != p2)) ? "OK" : "broken");
-    }
-
-    {
         nsRefPtr<TestRefObject> p1( new TestRefObject() );
         const nsRefPtr<TestRefObject> p2( p1 );
         printf("equality %s.\n",
@@ -254,76 +237,6 @@ int main()
     }
 
     {
-        nsRefPtr<const TestRefObject> p1( new TestRefObject() );
-        const nsRefPtr<TestRefObject> p2( NS_CONST_CAST(TestRefObject*, NS_STATIC_CAST(const TestRefObject*, p1.get())) );
-        printf("equality %s.\n",
-               ((p1 == p2) && !(p1 != p2)) ? "OK" : "broken");
-    }
-
-    {
-        const nsRefPtr<const TestRefObject> p1( new TestRefObject() );
-        const nsRefPtr<TestRefObject> p2( NS_CONST_CAST(TestRefObject*, NS_STATIC_CAST(const TestRefObject*, p1.get())) );
-        printf("equality %s.\n",
-               ((p1 == p2) && !(p1 != p2)) ? "OK" : "broken");
-    }
-
-    {
-        nsRefPtr<TestRefObject> p1( new TestRefObject() );
-        nsRefPtr<const TestRefObject> p2( p1 );
-        printf("equality %s.\n",
-               ((p1 == p2) && !(p1 != p2)) ? "OK" : "broken");
-    }
-
-    {
-        const nsRefPtr<TestRefObject> p1( new TestRefObject() );
-        nsRefPtr<const TestRefObject> p2( p1 );
-        printf("equality %s.\n",
-               ((p1 == p2) && !(p1 != p2)) ? "OK" : "broken");
-    }
-
-    {
-        nsRefPtr<const TestRefObject> p1( new TestRefObject() );
-        nsRefPtr<const TestRefObject> p2( p1 );
-        printf("equality %s.\n",
-               ((p1 == p2) && !(p1 != p2)) ? "OK" : "broken");
-    }
-
-    {
-        const nsRefPtr<const TestRefObject> p1( new TestRefObject() );
-        nsRefPtr<const TestRefObject> p2( p1 );
-        printf("equality %s.\n",
-               ((p1 == p2) && !(p1 != p2)) ? "OK" : "broken");
-    }
-
-    {
-        nsRefPtr<TestRefObject> p1( new TestRefObject() );
-        const nsRefPtr<const TestRefObject> p2( p1 );
-        printf("equality %s.\n",
-               ((p1 == p2) && !(p1 != p2)) ? "OK" : "broken");
-    }
-
-    {
-        const nsRefPtr<TestRefObject> p1( new TestRefObject() );
-        const nsRefPtr<const TestRefObject> p2( p1 );
-        printf("equality %s.\n",
-               ((p1 == p2) && !(p1 != p2)) ? "OK" : "broken");
-    }
-
-    {
-        nsRefPtr<const TestRefObject> p1( new TestRefObject() );
-        const nsRefPtr<const TestRefObject> p2( p1 );
-        printf("equality %s.\n",
-               ((p1 == p2) && !(p1 != p2)) ? "OK" : "broken");
-    }
-
-    {
-        const nsRefPtr<const TestRefObject> p1( new TestRefObject() );
-        const nsRefPtr<const TestRefObject> p2( p1 );
-        printf("equality %s.\n",
-               ((p1 == p2) && !(p1 != p2)) ? "OK" : "broken");
-    }
-
-    {
         nsRefPtr<TestRefObject> p1( new TestRefObject() );
         TestRefObject * p2 = p1;
         printf("equality %s.\n",
@@ -333,20 +246,6 @@ int main()
     {
         const nsRefPtr<TestRefObject> p1( new TestRefObject() );
         TestRefObject * p2 = p1;
-        printf("equality %s.\n",
-               ((p1 == p2) && !(p1 != p2) && (p2 == p1) && !(p2 != p1)) ? "OK" : "broken");
-    }
-
-    {
-        nsRefPtr<const TestRefObject> p1( new TestRefObject() );
-        TestRefObject * p2 = NS_CONST_CAST(TestRefObject*, NS_STATIC_CAST(const TestRefObject*, p1.get()));
-        printf("equality %s.\n",
-               ((p1 == p2) && !(p1 != p2) && (p2 == p1) && !(p2 != p1)) ? "OK" : "broken");
-    }
-
-    {
-        const nsRefPtr<const TestRefObject> p1( new TestRefObject() );
-        TestRefObject * p2 = NS_CONST_CAST(TestRefObject*, NS_STATIC_CAST(const TestRefObject*, p1.get()));
         printf("equality %s.\n",
                ((p1 == p2) && !(p1 != p2) && (p2 == p1) && !(p2 != p1)) ? "OK" : "broken");
     }
@@ -368,20 +267,6 @@ int main()
 #endif /* Things that MSVC++ 6.0 can't be coaxed to accept */
 
     {
-        nsRefPtr<const TestRefObject> p1( new TestRefObject() );
-        TestRefObject * const p2 = NS_CONST_CAST(TestRefObject*, NS_STATIC_CAST(const TestRefObject*, p1.get()));
-        printf("equality %s.\n",
-               ((p1 == p2) && !(p1 != p2) && (p2 == p1) && !(p2 != p1)) ? "OK" : "broken");
-    }
-
-    {
-        const nsRefPtr<const TestRefObject> p1( new TestRefObject() );
-        TestRefObject * const p2 = NS_CONST_CAST(TestRefObject*, NS_STATIC_CAST(const TestRefObject*, p1.get()));
-        printf("equality %s.\n",
-               ((p1 == p2) && !(p1 != p2) && (p2 == p1) && !(p2 != p1)) ? "OK" : "broken");
-    }
-
-    {
         nsRefPtr<TestRefObject> p1( new TestRefObject() );
         const TestRefObject * p2 = p1;
         printf("equality %s.\n",
@@ -396,20 +281,6 @@ int main()
     }
 
     {
-        nsRefPtr<const TestRefObject> p1( new TestRefObject() );
-        const TestRefObject * p2 = p1;
-        printf("equality %s.\n",
-               ((p1 == p2) && !(p1 != p2) && (p2 == p1) && !(p2 != p1)) ? "OK" : "broken");
-    }
-
-    {
-        const nsRefPtr<const TestRefObject> p1( new TestRefObject() );
-        const TestRefObject * p2 = p1;
-        printf("equality %s.\n",
-               ((p1 == p2) && !(p1 != p2) && (p2 == p1) && !(p2 != p1)) ? "OK" : "broken");
-    }
-
-    {
         nsRefPtr<TestRefObject> p1( new TestRefObject() );
         const TestRefObject * const p2 = p1;
         printf("equality %s.\n",
@@ -418,20 +289,6 @@ int main()
 
     {
         const nsRefPtr<TestRefObject> p1( new TestRefObject() );
-        const TestRefObject * const p2 = p1;
-        printf("equality %s.\n",
-               ((p1 == p2) && !(p1 != p2) && (p2 == p1) && !(p2 != p1)) ? "OK" : "broken");
-    }
-
-    {
-        nsRefPtr<const TestRefObject> p1( new TestRefObject() );
-        const TestRefObject * const p2 = p1;
-        printf("equality %s.\n",
-               ((p1 == p2) && !(p1 != p2) && (p2 == p1) && !(p2 != p1)) ? "OK" : "broken");
-    }
-
-    {
-        const nsRefPtr<const TestRefObject> p1( new TestRefObject() );
         const TestRefObject * const p2 = p1;
         printf("equality %s.\n",
                ((p1 == p2) && !(p1 != p2) && (p2 == p1) && !(p2 != p1)) ? "OK" : "broken");
@@ -615,58 +472,6 @@ int main()
 
     {
         printf("Should create one |TestObject|:\n");
-        nsAutoPtr<const TestObject> pobj(new TestObject());
-        printf("Should do something with one |TestObject|:\n");
-        DoSomethingWithConstTestObject(pobj);
-        printf("Should destroy one |TestObject|:\n");
-    }
-
-    {
-        printf("Should create 3 |TestObject|s:\n");
-        nsAutoArrayPtr<const TestObject> pobj(new TestObject[3]);
-        printf("Should do something with one |TestObject|:\n");
-        DoSomethingWithConstTestObject(&pobj[1]);
-        printf("Should do something with one |TestObject|:\n");
-        DoSomethingWithConstTestObject(pobj + 1);
-        printf("Should destroy 3 |TestObject|s:\n");
-    }
-
-    {
-        printf("Should create and AddRef one |TestRefObject|:\n");
-        nsRefPtr<const TestRefObject> pobj = new TestRefObject();
-        printf("Should do something with one |TestRefObject|:\n");
-        DoSomethingWithConstTestRefObject(pobj);
-        printf("Should Release and destroy one |TestRefObject|:\n");
-    }
-
-    {
-        printf("Should create one |TestObject|:\n");
-        nsAutoPtr<const TestObject> pobj(new TestObject());
-        printf("Should do something with one |TestObject|:\n");
-        DoSomethingWithConstTestObjectBaseB(pobj);
-        printf("Should destroy one |TestObject|:\n");
-    }
-
-    {
-        printf("Should create 3 |TestObject|s:\n");
-        nsAutoArrayPtr<const TestObject> pobj(new TestObject[3]);
-        printf("Should do something with one |TestObject|:\n");
-        DoSomethingWithConstTestObjectBaseB(&pobj[1]);
-        printf("Should do something with one |TestObject|:\n");
-        DoSomethingWithConstTestObjectBaseB(pobj + 1);
-        printf("Should destroy 3 |TestObject|s:\n");
-    }
-
-    {
-        printf("Should create and AddRef one |TestRefObject|:\n");
-        nsRefPtr<const TestRefObject> pobj = new TestRefObject();
-        printf("Should do something with one |TestRefObject|:\n");
-        DoSomethingWithConstTestRefObjectBaseB(pobj);
-        printf("Should Release and destroy one |TestRefObject|:\n");
-    }
-
-    {
-        printf("Should create one |TestObject|:\n");
         const nsAutoPtr<TestObject> pobj(new TestObject());
         printf("Should do something with one |TestObject|:\n");
         DoSomethingWithTestObject(pobj);
@@ -728,58 +533,6 @@ int main()
         const nsRefPtr<TestRefObject> pobj = new TestRefObject();
         printf("Should do something with one |TestRefObject|:\n");
         DoSomethingWithTestRefObjectBaseB(pobj);
-        printf("Should do something with one |TestRefObject|:\n");
-        DoSomethingWithConstTestRefObjectBaseB(pobj);
-        printf("Should Release and destroy one |TestRefObject|:\n");
-    }
-
-    {
-        printf("Should create one |TestObject|:\n");
-        const nsAutoPtr<const TestObject> pobj(new TestObject());
-        printf("Should do something with one |TestObject|:\n");
-        DoSomethingWithConstTestObject(pobj);
-        printf("Should destroy one |TestObject|:\n");
-    }
-
-    {
-        printf("Should create 3 |TestObject|s:\n");
-        const nsAutoArrayPtr<const TestObject> pobj(new TestObject[3]);
-        printf("Should do something with one |TestObject|:\n");
-        DoSomethingWithConstTestObject(&pobj[1]);
-        printf("Should do something with one |TestObject|:\n");
-        DoSomethingWithConstTestObject(pobj + 1);
-        printf("Should destroy 3 |TestObject|s:\n");
-    }
-
-    {
-        printf("Should create and AddRef one |TestRefObject|:\n");
-        const nsRefPtr<const TestRefObject> pobj = new TestRefObject();
-        printf("Should do something with one |TestRefObject|:\n");
-        DoSomethingWithConstTestRefObject(pobj);
-        printf("Should Release and destroy one |TestRefObject|:\n");
-    }
-
-    {
-        printf("Should create one |TestObject|:\n");
-        const nsAutoPtr<const TestObject> pobj(new TestObject());
-        printf("Should do something with one |TestObject|:\n");
-        DoSomethingWithConstTestObjectBaseB(pobj);
-        printf("Should destroy one |TestObject|:\n");
-    }
-
-    {
-        printf("Should create 3 |TestObject|s:\n");
-        const nsAutoArrayPtr<const TestObject> pobj(new TestObject[3]);
-        printf("Should do something with one |TestObject|:\n");
-        DoSomethingWithConstTestObjectBaseB(&pobj[1]);
-        printf("Should do something with one |TestObject|:\n");
-        DoSomethingWithConstTestObjectBaseB(pobj + 1);
-        printf("Should destroy 3 |TestObject|s:\n");
-    }
-
-    {
-        printf("Should create and AddRef one |TestRefObject|:\n");
-        const nsRefPtr<const TestRefObject> pobj = new TestRefObject();
         printf("Should do something with one |TestRefObject|:\n");
         DoSomethingWithConstTestRefObjectBaseB(pobj);
         printf("Should Release and destroy one |TestRefObject|:\n");
