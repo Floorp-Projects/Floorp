@@ -944,7 +944,7 @@ int32 gdiff_valCRC32( pDIFFDATA dd, PRFileDesc* fh, uint32 chksum )
  *  opened, GDIFF header read, and all other setup complete
  *
  *  The GDIFF patch is processed sequentially which random
- *  access is neccessary for the source file.
+ *  access is necessary for the source file.
  *---------------------------------------------------------
  */
 static

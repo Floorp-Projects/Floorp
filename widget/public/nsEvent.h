@@ -41,7 +41,7 @@
 /*
  * This is in a separate header file because it needs to be included
  * in many places where including nsGUIEvent.h would bring in many
- * header files that are totally unneccessary.
+ * header files that are totally unnecessary.
  */
 
 /**

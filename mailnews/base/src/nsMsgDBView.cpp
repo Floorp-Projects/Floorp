@@ -3719,7 +3719,7 @@ nsMsgViewIndex nsMsgDBView::GetIndexOfFirstDisplayedKeyInThread(nsIMsgThread *th
 	PRUint32	childIndex = 0;
 	// We could speed up the unreadOnly view by starting our search with the first
 	// unread message in the thread. Sometimes, that will be wrong, however, so
-	// let's skip it until we're sure it's neccessary.
+	// let's skip it until we're sure it's necessary.
 //	(m_viewFlags & nsMsgViewFlagsType::kUnreadOnly) 
 //		? threadHdr->GetFirstUnreadKey(m_db) : threadHdr->GetChildAt(0);
   PRUint32 numThreadChildren;

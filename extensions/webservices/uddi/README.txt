@@ -1,6 +1,6 @@
 The contents of this directory constitute the UDDI support of mozilla.
 Currently the UDDI Inquiry API is completely implemented, but not tested. In
-addition it is neccessary to add these files to a chrome resource somewhere in
+addition it is necessary to add these files to a chrome resource somewhere in
 order to make the calls. During development I had these file in the
 mozilla/extensions/webservices/build/src directory and included the js files
 in a jar.mn in the same directory.

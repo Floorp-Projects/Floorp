@@ -547,7 +547,7 @@ nsTransactionManager::SetMaxTransactionCount(PRInt32 aMaxCount)
     --numUndoItems;
   }
 
-  // If neccessary, get rid of some transactions on the redo stack! Start at
+  // If necessary, get rid of some transactions on the redo stack! Start at
   // the bottom of the stack and pop towards the top.
 
   while (numRedoItems > 0 && (numRedoItems + numUndoItems) > aMaxCount) {

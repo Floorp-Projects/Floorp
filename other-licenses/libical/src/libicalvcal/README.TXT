@@ -752,7 +752,7 @@ of Example.vcf and its VObject Representation
     Note the presence of VCBase64Prop will cause the
     writeVObject API to output the binary data as BASE64 text.
     For VCard/VCalendar application, having the VCBase64Prop
-    property is pratically always neccessary for property with
+    property is pratically always necessary for property with
     binary data as its value.
 	
 * Note on Quoted-Printable String

@@ -43,7 +43,7 @@
  When there's no alt text, we always write 'alt=""' as the attribute, since "alt" is a required attribute.
  We allow users to not have alt text by checking a "Don't use alterate text" radio button,
  and we don't accept spaces as valid alt text. A space used to be required to avoid the error message
- if user didn't enter alt text, but is uneccessary now that we no longer annoy the user 
+ if user didn't enter alt text, but is unnecessary now that we no longer annoy the user 
  with the error dialog if alt="" is present on an img element.
  We trim all spaces at the beginning and end of user's alt text
 */
