@@ -741,19 +741,25 @@ nsEventStateManager :: GenerateDragGesture ( nsIPresContext* aPresContext, nsGUI
       event.isAlt = ((nsMouseEvent*)aEvent)->isAlt;
       event.isMeta = ((nsMouseEvent*)aEvent)->isMeta;
 
-      // dispatch to the DOM
+      // Dispatch to the DOM. We have to fake out the ESM and tell it that the
+      // current target frame is actually where the mouseDown occurred, otherwise it
+      // will use the frame the mouse is currently over which may or may not be
+      // the same. (Note: saari and I have decided that we don't have to reset |mCurrentTarget|
+      // when we're through because no one else is doing anything more with this
+      // event and it will get reset on the very next event to the correct frame).
+      mCurrentTarget = mGestureDownFrame;
       nsCOMPtr<nsIContent> lastContent;
       if ( mGestureDownFrame ) {
         mGestureDownFrame->GetContentForEvent(aPresContext, aEvent, getter_AddRefs(lastContent));
         if ( lastContent )
-          lastContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
+          lastContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
       }
       
       // dispatch to the frame
       if ( mGestureDownFrame )
         mGestureDownFrame->HandleEvent(aPresContext, &event, &status);   
 
-      StopTrackingDragGesture();              
+      StopTrackingDragGesture();
     }
   }
 } // GenerateDragGesture
