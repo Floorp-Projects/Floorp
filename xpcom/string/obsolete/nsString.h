@@ -156,26 +156,10 @@ public:
 
 
   /**
-   * Converts chars in this to lowercase, and
-   * stores them in aOut
-   * @update  gess 7/27/98
-   * @param   aOut is a string to contain result
-   */
-  void ToLowerCase(nsCString& aString) const;
-
-  /**
    * Converts chars in this to uppercase
    * @update  gess 7/27/98
    */
   void ToUpperCase();
-
-  /**
-   * Converts chars in this to lowercase, and
-   * stores them in a given output string
-   * @update  gess 7/27/98
-   * @param   aOut is a string to contain result
-   */
-  void ToUpperCase(nsCString& aString) const;
 
 
   /**

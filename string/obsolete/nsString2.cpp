@@ -263,28 +263,6 @@ void nsString::ToUpperCase() {
 }
 
 /**
- * Converts chars in this to uppercase, and
- * stores them in aString
- * @update  gess 01/04/99
- * @param   aOut is a string to contain result
- */
-void nsString::ToLowerCase(nsString& aString) const {
-  aString=*this;
-  nsStr::ChangeCase(aString,PR_FALSE);
-}
-
-/**
- * Converts chars in this to uppercase, and
- * stores them in a given output string
- * @update  gess 01/04/99
- * @param   aOut is a string to contain result
- */
-void nsString::ToUpperCase(nsString& aString) const {
-  aString=*this;
-  nsStr::ChangeCase(aString,PR_TRUE);
-}
-
-/**
  *  This method is used to remove all occurances of the
  *  characters found in aSet from this string.
  *  

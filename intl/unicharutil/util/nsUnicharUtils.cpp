@@ -31,7 +31,6 @@
 
 // global cache of the case conversion service
 static nsICaseConversion *gCaseConv = nsnull;
-static NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
 
 class nsShutdownObserver : public nsIObserver
 {
@@ -59,9 +58,7 @@ static nsresult NS_InitCaseConversion() {
 
     nsresult rv;
     
-    rv = nsServiceManager::GetService(kUnicharUtilCID,
-                                      NS_GET_IID(nsICaseConversion),
-                                      (nsISupports**)&gCaseConv);
+    rv = CallGetService(NS_UNICHARUTIL_CONTRACTID, &gCaseConv);
 
     if (NS_SUCCEEDED(rv)) {
         nsCOMPtr<nsIObserverService> obs =
@@ -76,28 +73,63 @@ static nsresult NS_InitCaseConversion() {
     return NS_OK;
 }
 
-
-// to be turned on for bug 100214
-//#if 0
 class ConvertToLowerCase
 {
 public:
     typedef PRUnichar value_type;
     
-    PRUint32 write( const PRUnichar* aSource, PRUint32 aSourceLength)
+    ConvertToLowerCase()
     {
         NS_InitCaseConversion();
+    }
+
+    PRUint32 write( const PRUnichar* aSource, PRUint32 aSourceLength)
+    {
         gCaseConv->ToLower(aSource, NS_CONST_CAST(PRUnichar*,aSource), aSourceLength);
         return aSourceLength;
     }
 };
 
 void
-ToLowerCase( nsAString& aString)
+ToLowerCase( nsAString& aString )
   {
     nsAString::iterator fromBegin, fromEnd;
     ConvertToLowerCase converter;
     copy_string(aString.BeginWriting(fromBegin), aString.EndWriting(fromEnd), converter);
+  }
+
+class CopyToLowerCase
+  {
+    public:
+      typedef PRUnichar value_type;
+    
+      CopyToLowerCase( nsAString::iterator& aDestIter )
+        : mIter(aDestIter)
+        {
+          NS_InitCaseConversion();
+        }
+
+      PRUint32 write( const PRUnichar* aSource, PRUint32 aSourceLength )
+        {
+          PRUint32 len = PR_MIN(PRUint32(mIter.size_forward()), aSourceLength);
+          PRUnichar* dest = NS_CONST_CAST(PRUnichar*, mIter.get());
+          gCaseConv->ToLower(aSource, dest, len);
+          mIter.advance(len);
+          return len;
+        }
+
+    protected:
+      nsAString::iterator& mIter;
+  };
+
+void
+ToLowerCase( const nsAString& aSource, nsAString& aDest )
+  {
+    nsAString::const_iterator fromBegin, fromEnd;
+    nsAString::iterator toBegin;
+    aDest.SetLength(aSource.Length());
+    CopyToLowerCase converter(aDest.BeginWriting(toBegin));
+    copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), converter);
   }
 
 class ConvertToUpperCase
@@ -105,9 +137,13 @@ class ConvertToUpperCase
 public:
     typedef PRUnichar value_type;
     
-    PRUint32 write( const PRUnichar* aSource, PRUint32 aSourceLength)
+    ConvertToUpperCase()
     {
         NS_InitCaseConversion();
+    }
+    
+    PRUint32 write( const PRUnichar* aSource, PRUint32 aSourceLength)
+    {
         gCaseConv->ToUpper(aSource, NS_CONST_CAST(PRUnichar*,aSource), aSourceLength);
         return aSourceLength;
     }
@@ -119,6 +155,40 @@ ToUpperCase( nsAString& aString )
     nsAString::iterator fromBegin, fromEnd;
     ConvertToUpperCase converter;
     copy_string(aString.BeginWriting(fromBegin), aString.EndWriting(fromEnd), converter);
+  }
+
+class CopyToUpperCase
+  {
+    public:
+      typedef PRUnichar value_type;
+    
+      CopyToUpperCase( nsAString::iterator& aDestIter )
+        : mIter(aDestIter)
+        {
+          NS_InitCaseConversion();
+        }
+
+      PRUint32 write( const PRUnichar* aSource, PRUint32 aSourceLength )
+        {
+          PRUint32 len = PR_MIN(PRUint32(mIter.size_forward()), aSourceLength);
+          PRUnichar* dest = NS_CONST_CAST(PRUnichar*, mIter.get());
+          gCaseConv->ToUpper(aSource, dest, len);
+          mIter.advance(len);
+          return len;
+        }
+
+    protected:
+      nsAString::iterator& mIter;
+  };
+
+void
+ToUpperCase( const nsAString& aSource, nsAString& aDest )
+  {
+    nsAString::const_iterator fromBegin, fromEnd;
+    nsAString::iterator toBegin;
+    aDest.SetLength(aSource.Length());
+    CopyToUpperCase converter(aDest.BeginWriting(toBegin));
+    copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), converter);
   }
 
 PRBool
@@ -150,8 +220,6 @@ nsCaseInsensitiveStringComparator::operator()( PRUnichar lhs, PRUnichar rhs ) co
       if (lhs < rhs) return -1;
       return 1;
   }
-
-///#endif
 
 PRUnichar
 ToLowerCase(PRUnichar aChar)
