@@ -17,8 +17,6 @@
  */
 
 #include "nsFtpConnectionThread.h"
-//#include "nsFtpStreamListenerEvent.h" // the various events we fire off to the
-                                      // owning thread.
 #include "nsCOMPtr.h"
 #include "nsIChannel.h"
 #include "nsISocketTransportService.h"
