@@ -49,6 +49,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NavigationImpl
     
     PRUnichar	*	urlStringChars = (PRUnichar *) ::util_GetStringChars(env,
                                                                          urlString);
+    PRInt32         urlLength = (PRInt32) ::util_GetStringLength(env, urlString);
     
     if (::util_ExceptionOccurred(env)) {
 	::util_ThrowExceptionToJava(env, "raptorWebShellLoadURL Exception: unable to extract Java string");
@@ -67,7 +68,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NavigationImpl
     }
     
     if (initContext->initComplete) {
-      wsLoadURLEvent	* actionEvent = new wsLoadURLEvent(initContext->webNavigation, urlStringChars);
+      wsLoadURLEvent	* actionEvent = new wsLoadURLEvent(initContext->webNavigation, urlStringChars, urlLength);
       PLEvent			* event       = (PLEvent*) *actionEvent;
       
       ::util_PostEvent(initContext, event);

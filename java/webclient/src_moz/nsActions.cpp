@@ -120,12 +120,12 @@ wsResizeEvent::handleEvent ()
  * wsLoadURLEvent
  */
 
-wsLoadURLEvent::wsLoadURLEvent(nsIWebNavigation* webNavigation, PRUnichar * urlString) :
+wsLoadURLEvent::wsLoadURLEvent(nsIWebNavigation* webNavigation, PRUnichar * urlString, PRInt32 urlLength) :
         nsActionEvent(),
         mWebNavigation(webNavigation),
         mURL(nsnull)
 {
-        mURL = new nsString(urlString);
+        mURL = new nsString(urlString, urlLength);
 }
 
 

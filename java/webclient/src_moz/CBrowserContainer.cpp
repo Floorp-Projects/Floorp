@@ -1511,13 +1511,13 @@ jboolean initStringConstants()
         return JNI_FALSE;
     }
     if (nsnull == (DOCUMENT_LOAD_LISTENER_CLASSNAME = (jstring)
-                   ::util_NewGlobalRef(env, 
+                   ::util_NewGlobalRef(env, (jobject)
                                        ::util_NewStringUTF(env, 
                                                            gSupportedListenerInterfaces[DOCUMENT_LOAD_LISTENER])))) {
         return JNI_FALSE;
     }
     if (nsnull == (MOUSE_LISTENER_CLASSNAME = (jstring)
-                   ::util_NewGlobalRef(env, 
+                   ::util_NewGlobalRef(env, (jobject)
                                        ::util_NewStringUTF(env, 
                                                            gSupportedListenerInterfaces[MOUSE_LISTENER])))) {
         return JNI_FALSE;

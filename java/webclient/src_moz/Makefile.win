@@ -75,9 +75,19 @@ LLIBS = \
 	$(DIST)\lib\nspr4.lib \
 	$(DIST)\lib\plc4.lib \
 	$(DIST)\lib\plds4.lib \
-	$(DIST)\lib\wc_share.lib \
 #	$(DEPTH)\xpfe\bootstrap\$(OBJDIR)\nsSetupRegistry.obj \
 	$(NULL)  
+
+!ifdef BAL_INTERFACE
+LLIBS = $(LLIBS) \
+	$(DIST)\lib\wc_share_bal.lib \
+	$(NULL)
+!else
+LLIBS = $(LLIBS) \
+	$(DIST)\lib\wc_share.lib \
+	$(NULL)
+!endif
+
 
 WIN_LIBS = \
   version.lib
@@ -130,3 +140,6 @@ clobber::
 	rm -f nsSetupRegistry.cpp
 	rm -f runem.bat
 
+
+edburns:
+	echo $(LLIBS)

@@ -121,7 +121,7 @@ protected:
 
 class wsLoadURLEvent : public nsActionEvent {
 public:
-                        wsLoadURLEvent (nsIWebNavigation* webNavigation, PRUnichar * urlString);
+                        wsLoadURLEvent (nsIWebNavigation* webNavigation, PRUnichar * urlString, PRInt32 urlLength);
                        ~wsLoadURLEvent ();
         void    *       handleEvent    (void);
 

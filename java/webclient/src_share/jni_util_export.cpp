@@ -97,6 +97,18 @@ JNIEXPORT void JNICALL util_ReleaseStringChars(JNIEnv *env, jstring inString,
 
 }
 
+JNIEXPORT jsize  JNICALL util_GetStringLength(JNIEnv *env, 
+                                                    jstring inString)
+{
+    jsize result = 0;
+#ifdef BAL_INTERFACE
+    result = bal_jstring_getLength(inString);
+#else
+    result = env->GetStringLength(inString);
+#endif
+    return result;
+}
+
 JNIEXPORT jstring JNICALL util_NewStringUTF(JNIEnv *env, const char *inString)
 {
     jstring result = nsnull;
