@@ -92,8 +92,16 @@ public:
   an nsParser.
  ***************************************************************/
 
+#if defined(XP_PC)
+#pragma warning( disable : 4275 )
+#endif
 
-class CNavDTD : public nsIDTD {
+CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
+
+#if defined(XP_PC)
+#pragma warning( default : 4275 )
+#endif
+
   public:
     /**
      *  
