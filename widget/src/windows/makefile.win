@@ -23,7 +23,20 @@ REQUIRES=xpcom gfxwin raptor dom network netlib
 DEFINES =-D_IMPL_NS_WIDGET
 
 CPPSRCS =              \
-	nsDropTarget.cpp      \
+	nsDraggedObject.cpp      \
+	nsDragTarget.cpp      \
+	nsDragSource.cpp      \
+	nsDragService.cpp      \
+	Ienumfe.cpp      \
+	nsDataObj.cpp      \
+	nsClipboard.cpp      \
+	nsTransferable.cpp      \
+	nsDataFlavor.cpp      \
+#	DataObj.cpp      \
+#	DragDrop.cpp      \
+#	DropSrc.cpp      \
+#	DropTar.cpp      \
+#	nsDropTarget.cpp      \
 	nsPopUpMenu.cpp      \
 	nsMenuBar.cpp        \
 	nsMenu.cpp           \
@@ -53,7 +66,20 @@ CPPSRCS =              \
 MODULE=raptor 
 
 OBJS =                             \
-	.\$(OBJDIR)\nsDropTarget.obj  \
+	.\$(OBJDIR)\nsDraggedObject.obj  \
+	.\$(OBJDIR)\nsDragSource.obj  \
+	.\$(OBJDIR)\nsDragTarget.obj  \
+	.\$(OBJDIR)\nsDragService.obj  \
+	.\$(OBJDIR)\Ienumfe.obj  \
+	.\$(OBJDIR)\nsDataObj.obj  \
+	.\$(OBJDIR)\nsClipboard.obj  \
+	.\$(OBJDIR)\nsTransferable.obj  \
+	.\$(OBJDIR)\nsDataFlavor.obj  \
+#	.\$(OBJDIR)\DataObj.obj  \
+#	.\$(OBJDIR)\DragDrop.obj  \
+#	.\$(OBJDIR)\DropSrc.obj  \
+#	.\$(OBJDIR)\DropTar.obj  \
+#	.\$(OBJDIR)\nsDropTarget.obj  \
 	.\$(OBJDIR)\nsPopUpMenu.obj  \
 	.\$(OBJDIR)\nsMenuBar.obj  \
 	.\$(OBJDIR)\nsMenu.obj  \
@@ -93,6 +119,9 @@ LCFLAGS =                               \
 	$(LCFLAGS)                      \
   $(DEFINES) \
 	$(NULL)
+
+LLIBS=                                  \
+ ole32.lib                           
 
 include <$(DEPTH)\config\rules.mak>
 
