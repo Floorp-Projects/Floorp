@@ -50,3 +50,8 @@ tr.bz_secure td.first-child {
   background-color: inherit;
 }
 
+tr.bz_secure_mode_implied td.first-child {
+}
+
+tr.bz_secure_mode_manual td.first-child {
+}

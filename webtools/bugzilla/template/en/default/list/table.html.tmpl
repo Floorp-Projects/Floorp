@@ -152,7 +152,8 @@
              bz_[% bug.priority FILTER css_class_quote %]
              bz_[% bug.bug_status FILTER css_class_quote %]
              [%+ "bz_$bug.resolution" FILTER css_class_quote IF bug.resolution %]
-             [%+ "bz_secure" IF bug.isingroups %]
+             [%+ "bz_secure" IF bug.secure_mode %]
+             [%+ "bz_secure_mode_$bug.secure_mode" FILTER css_class_quote IF bug.secure_mode %]
              [%+ count % 2 == 1 ? "bz_odd" : "bz_even" %]
              ">
              

@@ -812,7 +812,7 @@ while (my @row = FetchSQLData()) {
     $bugproducts->{$bug->{'product'}} = 1 if $bug->{'product'};
     $bugstatuses->{$bug->{'bug_status'}} = 1 if $bug->{'bug_status'};
 
-    $bug->{isingroups} = 0;
+    $bug->{'secure_mode'} = undef;
 
     # Add the record to the list.
     push(@bugs, $bug);
@@ -821,20 +821,29 @@ while (my @row = FetchSQLData()) {
     push(@bugidlist, $bug->{'bug_id'});
 }
 
-# Check for bug privacy and set $bug->{isingroups} = 1 if private 
-# to 1 or more groups
-my %privatebugs;
+# Check for bug privacy and set $bug->{'secure_mode'} to 'implied' or 'manual'
+# based on whether the privacy is simply product implied (by mandatory groups)
+# or because of human choice
+my %min_membercontrol;
 if (@bugidlist) {
-    SendSQL("SELECT DISTINCT bugs.bug_id FROM bugs, bug_group_map " .
+    SendSQL("SELECT DISTINCT bugs.bug_id, MIN(group_control_map.membercontrol) " .
+            "FROM bugs, bug_group_map " .
+            "LEFT JOIN group_control_map " .
+            "ON group_control_map.product_id=bugs.product_id " .
+            "AND group_control_map.group_id=bug_group_map.group_id " .
             "WHERE bugs.bug_id = bug_group_map.bug_id " .
-            "AND bugs.bug_id IN (" . join(',',@bugidlist) . ")");
+            "AND bugs.bug_id IN (" . join(',',@bugidlist) . ") " .
+            "GROUP BY bugs.bug_id");
     while (MoreSQLData()) {
-        my ($bug_id) = FetchSQLData();
-        $privatebugs{$bug_id} = 1;
+        my ($bug_id, $min_membercontrol) = FetchSQLData();
+        $min_membercontrol{$bug_id} = $min_membercontrol;
     }
     foreach my $bug (@bugs) {
-        if ($privatebugs{$bug->{'bug_id'}}) {
-            $bug->{isingroups} = 1;
+        if ($min_membercontrol{$bug->{'bug_id'}} == CONTROLMAPSHOWN
+              || $min_membercontrol{$bug->{'bug_id'}} == CONTROLMAPDEFAULT) {
+            $bug->{'secure_mode'} = 'manual';
+        } elsif ($min_membercontrol{$bug->{'bug_id'}} == CONTROLMAPMANDATORY) {
+            $bug->{'secure_mode'} = 'implied';
         }
     }
 }
