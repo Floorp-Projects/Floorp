@@ -20,14 +20,12 @@
 #   Blake Ross <blaker@netscape.com>
 
 <!-- extracted from bookmarksManager.xul -->
-<!ENTITY menuBar.tooltip               "Menu Bar">
-<!ENTITY bookmarkToolbar.tooltip       "Bookmark Toolbar">
 <!ENTITY menuitem.newBookmark.label    "New Bookmark...">
-<!ENTITY command.newBookmark.accesskey "B">
-<!ENTITY button.newFolder.label        "New Folder...">
-<!ENTITY command.newFolder.accesskey   "F">
-<!ENTITY button.newSeparator.label     "New Separator">
-<!ENTITY command.newSeparator.accesskey "S">
+<!ENTITY menuitem.newBookmark.accesskey "B">
+<!ENTITY menuitem.newFolder.label        "New Folder...">
+<!ENTITY menuitem.newFolder.accesskey    "F">
+<!ENTITY menuitem.newSeparator.label     "New Separator">
+<!ENTITY menuitem.newSeparator.accesskey "S">
 <!ENTITY menuitem.import.label         "Import...">
 <!ENTITY menuitem.import.accesskey     "i">
 <!ENTITY menuitem.export.label         "Export...">
@@ -40,12 +38,14 @@
 <!ENTITY command.properties.accesskey  "i">
 <!ENTITY edit.properties.keybinding    "i">
 <!ENTITY command.rename.label          "Rename...">
+<!ENTITY command.rename.accesskey      "R">
 <!ENTITY command.delete.label          "Delete">
+<!ENTITY command.delete.accesskey      "D">
 <!ENTITY command.moveBookmark.label    "Move Bookmark(s)...">
+<!ENTITY command.moveBookmarkShort.label "Move...">
 <!ENTITY command.moveBookmark.accesskey "M">
 <!ENTITY command.addBookmark.label     "Add...">
 <!ENTITY command.manageBookmarks.label "Manage">
-
 
 <!ENTITY menuitem.view.command.toolbar.label        "Toolbar">
 <!ENTITY menuitem.view.command.toolbar.accesskey    "t">

@@ -3,6 +3,9 @@
   -moz-box-orient: vertical;
 }
 
+toolbarbutton#newbookmark {
+  -moz-image-region: rect(0px, 32px, 32px, 0px);
+}
 toolbarbutton#newfolder {
   -moz-image-region: rect(0px, 32px, 32px, 0px);
 }
