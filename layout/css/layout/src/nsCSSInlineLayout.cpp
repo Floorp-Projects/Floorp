@@ -147,7 +147,8 @@ nsCSSInlineLayout::ReflowAndPlaceFrame(nsIFrame* aFrame)
   }
 
   // Setup reflow state for reflowing the frame
-  nsReflowState reflowState(aFrame, *mContainerReflowState, maxSize, reason);
+  nsReflowState reflowState(aFrame, *mContainerReflowState, maxSize);
+  reflowState.reason = reason;
   nsInlineReflowStatus rs;
   nsSize frameMaxElementSize;
   nsReflowMetrics metrics(mComputeMaxElementSize
