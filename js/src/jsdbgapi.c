@@ -232,6 +232,7 @@ JS_ClearInterrupt(JSRuntime *rt, JSTrapHandler *handlerp, void **closurep)
     return JS_TRUE;
 }
 
+/************************************************************************/
 
 typedef struct JSWatchPoint {
     JSCList             links;
@@ -269,6 +270,18 @@ DropWatchPoint(JSContext *cx, JSWatchPoint *wp)
     js_RemoveRoot(cx->runtime, &wp->closure);
     JS_free(cx, wp);
     return JS_TRUE;
+}
+
+void
+js_MarkWatchPoints(JSRuntime *rt)
+{
+    JSWatchPoint *wp;
+
+    for (wp = (JSWatchPoint *)rt->watchPointList.next;
+         wp != (JSWatchPoint *)&rt->watchPointList;
+         wp = (JSWatchPoint *)wp->links.next) {
+        MARK_SCOPE_PROPERTY(wp->sprop);
+    }
 }
 
 static JSWatchPoint *
@@ -352,7 +365,11 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                 frame.fun = fun;
                 frame.down = cx->fp;
                 cx->fp = &frame;
-                ok = !wp->setter || wp->setter(cx, obj, id, vp);
+                ok = !wp->setter ||
+                     ((sprop->attrs & JSPROP_SETTER)
+                      ? js_InternalCall(cx, obj, OBJECT_TO_JSVAL(wp->setter),
+                                        1, vp, vp)
+                      : wp->setter(cx, OBJ_THIS_OBJECT(cx, obj), userid, vp));
                 cx->fp = frame.down;
             }
             return DropWatchPoint(cx, wp);
@@ -360,6 +377,45 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     }
     JS_ASSERT(0);       /* XXX can't happen */
     return JS_FALSE;
+}
+
+JSBool JS_DLL_CALLBACK
+js_watch_set_wrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                     jsval *rval)
+{
+    JSObject *funobj;
+    JSFunction *wrapper;
+    jsval userid;
+
+    funobj = JSVAL_TO_OBJECT(argv[-2]);
+    wrapper = (JSFunction *) JS_GetPrivate(cx, funobj);
+    userid = ATOM_KEY(wrapper->atom);
+    *rval = argv[0];
+    return js_watch_set(cx, obj, userid, rval);
+}
+
+extern JSPropertyOp
+js_WrapWatchedSetter(JSContext *cx, jsid id, uintN attrs, JSPropertyOp setter)
+{
+    JSAtom *atom;
+    JSFunction *wrapper;
+
+    if (!(attrs & JSPROP_SETTER))
+        return js_watch_set;
+
+    if (!JSVAL_IS_INT(id)) {
+        atom = (JSAtom *)id;
+    } else {
+        atom = js_AtomizeInt(cx, JSVAL_TO_INT(id), 0);
+        if (!atom)
+            return NULL;
+    }
+    wrapper = js_NewFunction(cx, NULL, js_watch_set_wrapper, 1, 0,
+                             OBJ_GET_PARENT(cx, (JSObject *)setter),
+                             atom);
+    if (!wrapper)
+        return NULL;
+    return (JSPropertyOp) wrapper->object;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -372,6 +428,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval id,
     JSScopeProperty *sprop;
     JSRuntime *rt;
     JSWatchPoint *wp;
+    JSPropertyOp watcher;
 
     if (!OBJ_IS_NATIVE(obj)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_WATCH,
@@ -436,6 +493,10 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval id,
 
     wp = FindWatchPoint(rt, OBJ_SCOPE(obj), propid);
     if (!wp) {
+        watcher = js_WrapWatchedSetter(cx, propid, sprop->attrs, sprop->setter);
+        if (!watcher)
+            return JS_FALSE;
+
         wp = (JSWatchPoint *) JS_malloc(cx, sizeof *wp);
         if (!wp)
             return JS_FALSE;
@@ -452,7 +513,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval id,
         wp->setter = sprop->setter;
         wp->nrefs = 1;
         sprop = js_ChangeNativePropertyAttrs(cx, obj, sprop, 0, sprop->attrs,
-                                             sprop->getter, js_watch_set);
+                                             sprop->getter, watcher);
         if (!sprop)
             return DropWatchPoint(cx, wp);
     }
@@ -522,6 +583,8 @@ JS_ClearAllWatchPoints(JSContext *cx)
     return JS_TRUE;
 }
 
+/************************************************************************/
+
 JS_PUBLIC_API(uintN)
 JS_PCToLineNumber(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
@@ -546,6 +609,7 @@ JS_GetScriptPrincipals(JSContext *cx, JSScript *script)
     return script->principals;
 }
 
+/************************************************************************/
 
 /*
  *  Stack Frame Iterator
