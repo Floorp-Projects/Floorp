@@ -3579,10 +3579,9 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             // create the COM accessible object
             if (acc) 
             {
-              HWND wnd = GetWindowHandle();
+               HWND wnd = GetWindowHandle();
                mRootAccessible = new RootAccessible(acc, wnd); // ref is 0       
                mRootAccessible->AddRef();
-               CoInitialize(NULL);
             }
           }
           if (mRootAccessible) {
@@ -4361,7 +4360,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
 
 //-------------------------------------------------------------------------
 //
-// Deal with all sort of mouse event
+// Deal with accessibile event
 //
 //-------------------------------------------------------------------------
 PRBool nsWindow::DispatchAccessibleEvent(PRUint32 aEventType, nsIAccessible** aAcc, nsPoint* aPoint)

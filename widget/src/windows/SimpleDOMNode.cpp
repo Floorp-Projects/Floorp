@@ -335,18 +335,12 @@ ISimpleDOMNode* SimpleDOMNode::MakeSimpleDOMNode(nsIDOMNode *node)
   if (!doc)
     return NULL;
 
-  nsCOMPtr<nsIPresShell> shell;
-  doc->GetShellAt(0, getter_AddRefs(shell));
-  if (!shell)
-    return NULL;
-
   nsCOMPtr<nsIAccessibilityService> accService(do_GetService("@mozilla.org/accessibilityService;1"));
   if (!accService)
     return NULL;
 
   nsCOMPtr<nsIAccessible> nsAcc;
-  nsCOMPtr<nsIWeakReference> wr (getter_AddRefs(NS_GetWeakReference(shell)));
-  accService->GetAccessibleFor(wr, node, getter_AddRefs(nsAcc));
+  accService->GetAccessibleFor(node, getter_AddRefs(nsAcc));
   if (nsAcc) {
     nsCOMPtr<nsIAccessibleDocument> nsAccDoc(do_QueryInterface(nsAcc));
     if (nsAccDoc) 

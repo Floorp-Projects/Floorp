@@ -406,16 +406,11 @@ PRBool nsDOMTreeWalker::GetAccessible()
 {
   mAccessible = nsnull;
 
-  if (!mAccService) 
-    return PR_FALSE;
-
-  mAccService->GetAccessibleFor(mPresShell, mDOMNode, getter_AddRefs(mAccessible));
-
-  if (mAccessible)
-    return PR_TRUE;
-
-  return PR_FALSE;
+  return (mAccService &&
+          NS_SUCCEEDED(mAccService->GetAccessibleFor(mDOMNode, getter_AddRefs(mAccessible))) &&
+          mAccessible);
 }
+
 
 /*
  * Class nsAccessible
