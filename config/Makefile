@@ -31,6 +31,9 @@ PLSRCS		= nfspwd.pl revdepth.pl
 
 TARGETS		= $(PROGRAM) $(PLSRCS:.pl=)
 
+# Generate the build number on the fly.
+TARGETS		+= $(DEPTH)/build/build_number
+
 ifneq ($(subst /,_,$(shell uname -s)),WINNT)
 PROGRAM		= nsinstall$(BIN_SUFFIX)
 TARGETS		+= $(OBJDIR)/bsdecho$(BIN_SUFFIX)
@@ -118,6 +121,18 @@ $(OBJDIR)/gtscc$(BIN_SUFFIX):	$(OBJDIR)/gtscc.o
 	@$(MAKE_OBJDIR)
 	$(CCF) $(LDFLAGS) -o $@ $< -lelf
 	$(INSTALL) -m 444 $@ $(DIST)/bin
+
+#update build number from within make script
+$(DEPTH)/build/build_number: $(OBJDIR)/bdate$(BIN_SUFFIX) FORCE
+	$(RM) $@
+	$(OBJDIR)/bdate$(BIN_SUFFIX) > $@
+
+$(OBJDIR)/bdate$(BIN_SUFFIX): $(OBJDIR)/bdate.o
+	@$(MAKE_OBJDIR)
+	$(CCF) $(LDFLAGS) -o $@ $<
+	$(INSTALL) -m 444 $@ $(DIST)/bin
+
+FORCE:
 
 ifdef MKDEPEND_DIR
 clean clobber realclean clobber_all::
