@@ -52,7 +52,6 @@ bin/libjsj.so
 bin/libmsgbaseutil.so
 bin/libprotocol.so
 bin/libgkgfx.so
-bin/libgkplugin.so
 bin/run-mozilla.sh
 bin/regExport
 bin/regxpcom
@@ -99,6 +98,7 @@ bin/components/libpsmglue.so
 bin/components/libpref.so
 bin/components/libprofile.so
 bin/components/libgklayout.so
+bin/components/libgkplugin.so
 bin/components/libhtmlpars.so
 bin/components/libgkview.so
 bin/components/librdf.so

@@ -62,7 +62,6 @@ viewer:Plugins:MRJPlugin.jar
 viewer:Essential Files:gfx.shlb 
 viewer:Essential Files:libimg.shlb 
 viewer:Essential Files:libutil.shlb 
-viewer:Essential Files:plugin.shlb 
 viewer:Essential Files:RaptorShell.shlb 
 viewer:Essential Files:widget.shlb 
 
@@ -115,6 +114,7 @@ viewer:Components:nslocale.shlb
 viewer:Components:nsLocale.xpt 
 viewer:Components:nsSidebar.js
 viewer:Components:oji.xpt 
+viewer:Components:plugin.shlb 
 viewer:Components:pngdecoder.shlb 
 viewer:Components:prefm.shlb 
 viewer:Components:prefm.xpt 
