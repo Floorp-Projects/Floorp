@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+#if defined(XP_PC)
+#include <windows.h> // Interlocked increment...
+#endif
+
 #include "nspr.h"
 #include "nsCRT.h"
 #include "nscore.h"
@@ -31,56 +35,46 @@
 nsSocketState gStateTable[eSocketOperation_Max][eSocketState_Max] = {
   // eSocketOperation_None:
   {
-    eSocketState_Error,         // Created     -> Error
-    eSocketState_Error,         // WaitDNS     -> Error
-    eSocketState_Error,         // Closed      -> Error
-    eSocketState_Error,         // WaitConnect -> Error
-    eSocketState_Error,         // Connected   -> Error
-    eSocketState_Error,         // WaitRead    -> Error
-    eSocketState_Error,         // WaitWrite   -> Error
-    eSocketState_Error,         // Done        -> Error
-    eSocketState_Error,         // Timeout     -> Error
-    eSocketState_Error          // Error       -> Error
+    eSocketState_Error,         // Created        -> Error
+    eSocketState_Error,         // WaitDNS        -> Error
+    eSocketState_Error,         // Closed         -> Error
+    eSocketState_Error,         // WaitConnect    -> Error
+    eSocketState_Error,         // Connected      -> Error
+    eSocketState_Error,         // WaitReadWrite  -> Error
+    eSocketState_Error,         // DoneRead       -> Error
+    eSocketState_Error,         // DoneWrite      -> Error
+    eSocketState_Error,         // Done           -> Error
+    eSocketState_Error,         // Timeout        -> Error
+    eSocketState_Error          // Error          -> Error
   },
   // eSocketOperation_Connect:
   {
-    eSocketState_WaitDNS,       // Created     -> WaitDNS
-    eSocketState_Closed,        // WaitDNS     -> Closed
-    eSocketState_WaitConnect,   // Closed      -> WaitConnect
-    eSocketState_Connected,     // WaitConnect -> Connected
-    eSocketState_Connected,     // Connected   -> Done
-    eSocketState_Error,         // WaitRead    -> Error
-    eSocketState_Error,         // WaitWrite   -> Error
-    eSocketState_Connected,     // Done        -> Connected
-    eSocketState_Error,         // Timeout     -> Error
-    eSocketState_Closed         // Error       -> Closed
+    eSocketState_WaitDNS,       // Created        -> WaitDNS
+    eSocketState_Closed,        // WaitDNS        -> Closed
+    eSocketState_WaitConnect,   // Closed         -> WaitConnect
+    eSocketState_Connected,     // WaitConnect    -> Connected
+    eSocketState_Connected,     // Connected      -> Done
+    eSocketState_Error,         // WaitReadWrite  -> Error
+    eSocketState_Error,         // DoneRead       -> Error
+    eSocketState_Error,         // DoneWrite      -> Error
+    eSocketState_Connected,     // Done           -> Connected
+    eSocketState_Error,         // Timeout        -> Error
+    eSocketState_Closed         // Error          -> Closed
   },
-  // eSocketOperation_Read:
+  // eSocketOperation_ReadWrite:
   {
-    eSocketState_WaitDNS,       // Created     -> WaitDNS
-    eSocketState_Closed,        // WaitDNS     -> Closed
-    eSocketState_WaitConnect,   // Closed      -> WaitConnect
-    eSocketState_Connected,     // WaitConenct -> Connected
-    eSocketState_WaitRead,      // Connected   -> WaitRead
-    eSocketState_Done,          // WaitRead    -> Done
-    eSocketState_Error,         // WaitWrite   -> Error
-    eSocketState_Connected,     // Done        -> Connected
-    eSocketState_Error,         // Timeout     -> Error
-    eSocketState_Connected      // Error       -> Connected
+    eSocketState_WaitDNS,       // Created        -> WaitDNS
+    eSocketState_Closed,        // WaitDNS        -> Closed
+    eSocketState_WaitConnect,   // Closed         -> WaitConnect
+    eSocketState_Connected,     // WaitConenct    -> Connected
+    eSocketState_WaitReadWrite, // Connected      -> WaitReadWrite
+    eSocketState_Done,          // WaitReadWrite  -> Done
+    eSocketState_Connected,     // DoneRead       -> Connected
+    eSocketState_Connected,     // DoneWrite      -> Connected
+    eSocketState_Connected,     // Done           -> Connected
+    eSocketState_Error,         // Timeout        -> Error
+    eSocketState_Closed         // Error          -> Closed
   },
-    // eSocketOperation_Write:
-  {
-    eSocketState_WaitDNS,       // Created     -> WaitDNS
-    eSocketState_Closed,        // WaitDNS     -> Closed
-    eSocketState_WaitConnect,   // Closed      -> WaitConnect
-    eSocketState_Connected,     // WaitConenct -> Connected
-    eSocketState_WaitWrite,     // Connected   -> WaitWrite
-    eSocketState_Error,         // WaitRead    -> Error
-    eSocketState_Done,          // WaitWrite   -> Done
-    eSocketState_Connected,     // Done        -> Connected
-    eSocketState_Error,         // Timeout     -> Error
-    eSocketState_Connected      // Error       -> Connected
-  }
 };
 
 //
@@ -120,11 +114,15 @@ nsSocketTransport::nsSocketTransport()
   mSelectFlags  = 0;
 
   mReadStream   = nsnull;
-  mWriteStream  = nsnull;
-  mListener     = nsnull;
-  mContext      = nsnull;
-  mSourceOffset = 0;
-  mService      = nsnull;
+  mReadContext  = nsnull;
+  mReadListener = nsnull;
+
+  mWriteStream    = nsnull;
+  mWriteContext   = nsnull;
+  mWriteObserver  = nsnull;
+
+  mSourceOffset   = 0;
+  mService        = nsnull;
 
   //
   // Set up Internet defaults...
@@ -144,10 +142,14 @@ nsSocketTransport::nsSocketTransport()
 
 nsSocketTransport::~nsSocketTransport()
 {
-  NS_IF_RELEASE(mContext);
-  NS_IF_RELEASE(mListener);
+  NS_IF_RELEASE(mReadListener);
   NS_IF_RELEASE(mReadStream);
+  NS_IF_RELEASE(mReadContext);
+
+  NS_IF_RELEASE(mWriteObserver);
   NS_IF_RELEASE(mWriteStream);
+  NS_IF_RELEASE(mWriteContext);
+  
   NS_IF_RELEASE(mService);
 
   if (mHostName) {
@@ -199,23 +201,49 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
         break;
 
       case eSocketState_Connected:
-        if (mListener) {
-          mListener->OnStartBinding(mContext);
+        // Fire a notification for read...
+        if (mReadListener) {
+          mReadListener->OnStartBinding(mReadContext);
+        }
+        // Fire a notification for write...
+        if (mWriteObserver) {
+          mWriteObserver->OnStartBinding(mWriteContext);
         }
         break;
 
       case eSocketState_Done:
       case eSocketState_Error:
-        if (mListener) {
-          mListener->OnStopBinding(mContext, rv, nsnull);
+      case eSocketState_DoneRead:
+      case eSocketState_DoneWrite:
+        // Fire a notification that the read has finished...
+        if (eSocketState_DoneWrite != mCurrentState) {
+          if (mReadListener) {
+            mReadListener->OnStopBinding(mReadContext, rv, nsnull);
+            NS_RELEASE(mReadListener);
+            NS_IF_RELEASE(mReadContext);
+          }
         }
-        NS_IF_RELEASE(mContext);
+
+        // Fire a notification that the write has finished...
+        if (eSocketState_DoneRead != mCurrentState) {
+          if (mWriteObserver) {
+            mWriteObserver->OnStopBinding(mWriteContext, rv, nsnull);
+            NS_RELEASE(mWriteStream);
+            NS_RELEASE(mWriteObserver);
+            NS_IF_RELEASE(mWriteContext);
+          }
+        }
+
         //
         // Set up the connection for the next operation...
         //
-        mCurrentState = gStateTable[mOperation][mCurrentState];
-        mOperation    = eSocketOperation_None;
-        done = PR_TRUE;
+        if (mReadListener || mWriteObserver) {
+          mCurrentState = eSocketState_WaitReadWrite;
+        } else {
+          mCurrentState = gStateTable[mOperation][mCurrentState];
+          mOperation    = eSocketOperation_None;
+          done = PR_TRUE;
+        }
         continue;
 
       case eSocketState_WaitDNS:
@@ -226,12 +254,22 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
         rv = doConnection(aSelectFlags);
         break;
 
-      case eSocketState_WaitRead:
-        rv = doRead(aSelectFlags);
-        break;
+      case eSocketState_WaitReadWrite:
+        if (mReadListener) {
+          rv = doRead(aSelectFlags);
+          if (NS_OK == rv) {
+            mCurrentState = eSocketState_DoneRead;
+            continue;
+          }
+        }
 
-      case eSocketState_WaitWrite:
-        rv = doWrite(aSelectFlags);
+        if (NS_SUCCEEDED(rv) && mWriteObserver) {
+          rv = doWrite(aSelectFlags);
+          if (NS_OK == rv) {
+            mCurrentState = eSocketState_DoneWrite;
+            continue;
+          }
+        }
         break;
 
       case eSocketState_Timeout:
@@ -439,7 +477,7 @@ nsresult nsSocketTransport::doRead(PRInt16 aSelectFlags)
   PRErrorCode code;
   nsresult rv = NS_OK;
 
-  NS_ASSERTION(eSocketState_WaitRead == mCurrentState, "Wrong state.");
+  NS_ASSERTION(eSocketState_WaitReadWrite == mCurrentState, "Wrong state.");
 
   //
   // Check for an error during PR_Poll(...)
@@ -509,7 +547,7 @@ nsresult nsSocketTransport::doRead(PRInt16 aSelectFlags)
   // been filled into the stream as possible...
   //
   if (totalBytesWritten) {
-    mListener->OnDataAvailable(mContext, mReadStream, mSourceOffset, totalBytesWritten);
+    mReadListener->OnDataAvailable(mReadContext, mReadStream, mSourceOffset, totalBytesWritten);
     mSourceOffset += totalBytesWritten;
   }
 
@@ -517,7 +555,7 @@ nsresult nsSocketTransport::doRead(PRInt16 aSelectFlags)
   // Set up the select flags for connect...
   //
   if (NS_BASE_STREAM_WOULD_BLOCK == rv) {
-    mSelectFlags = (PR_POLL_READ | PR_POLL_EXCEPT);
+    mSelectFlags |= (PR_POLL_READ | PR_POLL_EXCEPT);
   }
 
   return rv;
@@ -542,7 +580,7 @@ nsresult nsSocketTransport::doWrite(PRInt16 aSelectFlags)
   PRErrorCode code;
   nsresult rv = NS_OK;
 
-  NS_ASSERTION(eSocketState_WaitWrite == mCurrentState, "Wrong state.");
+  NS_ASSERTION(eSocketState_WaitReadWrite == mCurrentState, "Wrong state.");
 
   //
   // Check for an error during PR_Poll(...)
@@ -572,6 +610,7 @@ nsresult nsSocketTransport::doWrite(PRInt16 aSelectFlags)
       // The write operation has completed...
       //
       else if (bytesRead == 0) {
+        mSelectFlags &= (~PR_POLL_WRITE);
         rv = NS_OK;
         break;
       }
@@ -582,7 +621,7 @@ nsresult nsSocketTransport::doWrite(PRInt16 aSelectFlags)
   // Set up the select flags for connect...
   //
   if (NS_BASE_STREAM_WOULD_BLOCK == rv) {
-    mSelectFlags = (PR_POLL_WRITE | PR_POLL_EXCEPT);
+    mSelectFlags |= (PR_POLL_WRITE | PR_POLL_EXCEPT);
   }
 
   return rv;
@@ -615,7 +654,8 @@ nsresult nsSocketTransport::CloseConnection(void)
 // nsISupports implementation...
 // --------------------------------------------------------------------------
 //
-NS_IMPL_ISUPPORTS(nsSocketTransport, nsITransport::GetIID());
+
+NS_IMPL_THREADSAFE_ISUPPORTS(nsSocketTransport, nsITransport::GetIID());
 
 
 //
@@ -656,7 +696,7 @@ nsSocketTransport::AsyncRead(nsISupports* aContext,
 {
   nsresult rv = NS_OK;
 
-  if (eSocketOperation_None != mOperation) {
+  if (mReadListener) {
     rv = NS_ERROR_IN_PROGRESS;
   }
 
@@ -666,16 +706,15 @@ nsSocketTransport::AsyncRead(nsISupports* aContext,
   }
 
   if (NS_SUCCEEDED(rv)) {
-    NS_IF_RELEASE(mContext);
-    mContext = aContext;
-    NS_IF_ADDREF(mContext);
+    NS_IF_RELEASE(mReadContext);
+    mReadContext = aContext;
+    NS_IF_ADDREF(mReadContext);
 
-    NS_IF_RELEASE(mListener);
-    rv = NS_NewAsyncStreamListener(&mListener, aAppEventQueue, aListener);
+    rv = NS_NewAsyncStreamListener(&mReadListener, aAppEventQueue, aListener);
   }
 
   if (NS_SUCCEEDED(rv)) {
-    mOperation = eSocketOperation_Read;
+    mOperation = eSocketOperation_ReadWrite;
 
     rv = mService->AddToWorkQ(this);
   }
@@ -692,28 +731,24 @@ nsSocketTransport::AsyncWrite(nsIInputStream* aFromStream,
 {
   nsresult rv = NS_OK;
 
-  if (eSocketOperation_None != mOperation) {
+  if (mWriteStream) {
     rv = NS_ERROR_IN_PROGRESS;
   }
 
   if (NS_SUCCEEDED(rv)) {
-    NS_IF_RELEASE(mWriteStream);
     mWriteStream = aFromStream;
     NS_ADDREF(mWriteStream);
 
-    NS_IF_RELEASE(mContext);
-    mContext = aContext;
-    NS_IF_ADDREF(mContext);
+    NS_IF_RELEASE(mWriteContext);
+    mWriteContext = aContext;
+    NS_IF_ADDREF(mWriteContext);
 
-    NS_IF_RELEASE(mListener);
-    nsIStreamObserver* aListener;
-    rv = NS_NewAsyncStreamObserver(&aListener, aAppEventQueue, aObserver);
-    // XXX:  This is really evil...
-    mListener = (nsIStreamListener*)aListener;
+    NS_IF_RELEASE(mWriteObserver);
+    rv = NS_NewAsyncStreamObserver(&mWriteObserver, aAppEventQueue, aObserver);
   }
 
   if (NS_SUCCEEDED(rv)) {
-    mOperation = eSocketOperation_Write;
+    mOperation = eSocketOperation_ReadWrite;
     rv = mService->AddToWorkQ(this);
   }
 
@@ -736,15 +771,15 @@ nsSocketTransport::OpenInputStream(nsIInputStream* *result)
   }
 
   if (NS_SUCCEEDED(rv)) {
-    NS_IF_RELEASE(mContext);
-    mContext = nsnull;
+    NS_IF_RELEASE(mReadContext);
+    mReadContext = nsnull;
 
-    NS_IF_RELEASE(mListener);
-    rv = NS_NewSyncStreamListener(&mListener, result);
+    NS_IF_RELEASE(mReadListener);
+    rv = NS_NewSyncStreamListener(&mReadListener, result);
   }
 
   if (NS_SUCCEEDED(rv)) {
-    mOperation = eSocketOperation_Read;
+    mOperation = eSocketOperation_ReadWrite;
 
     rv = mService->AddToWorkQ(this);
   }
@@ -776,10 +811,11 @@ nsSocketTransport::OpenOutputStream(nsIOutputStream* *result)
   }
 
   if (NS_SUCCEEDED(rv)) {
-    mOperation = eSocketOperation_Write;
+    mOperation = eSocketOperation_ReadWrite;
     // Start the crank.
     rv = mService->AddToWorkQ(this);
   }
+
   return rv;
 }
 

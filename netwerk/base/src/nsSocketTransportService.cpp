@@ -145,15 +145,19 @@ nsresult nsSocketTransportService::Init(void)
 nsresult nsSocketTransportService::AddToWorkQ(nsSocketTransport* aTransport)
 {
   PRStatus status;
-  PRBool bFireEvent;
+  PRBool bFireEvent = PR_FALSE;
   nsresult rv = NS_OK;
 
-  NS_ADDREF(aTransport);
   Lock();
-  bFireEvent = PR_CLIST_IS_EMPTY(&mWorkQ);
-  PR_APPEND_LINK(aTransport, &mWorkQ);
+  //
+  // Only add the transport if it is *not* already on the list...
+  //
+  if (PR_CLIST_IS_EMPTY(aTransport)) {
+    NS_ADDREF(aTransport);
+    bFireEvent = PR_CLIST_IS_EMPTY(&mWorkQ);
+    PR_APPEND_LINK(aTransport, &mWorkQ);
+  }
   Unlock();
-
   //
   // Only fire an event if this is the first entry in the workQ.  Otherwise,
   // the event has already been fired and the transport thread will process
@@ -214,15 +218,25 @@ nsresult nsSocketTransportService::AddToSelectList(nsSocketTransport* aTransport
 
   if (aTransport && (MAX_OPEN_CONNECTIONS > mSelectFDSetCount) ) {
     PRPollDesc* pfd;
+    int i;
+
+    // Check to see if the transport is already in the list...
+    for (i=1; i<mSelectFDSetCount; i++) {
+      if (mActiveTransportList[i] == aTransport) {
+        break;
+      }
+    }
     // Add the FileDesc to the PRPollDesc list...
-    pfd = &mSelectFDSet[mSelectFDSetCount];
-    pfd->fd        = aTransport->GetSocket();;
-    pfd->in_flags  = aTransport->GetSelectFlags();
-    pfd->out_flags = 0;
-    // Add the transport instance to the corresponding active transport list...
-    NS_ADDREF(aTransport);
-    mActiveTransportList[mSelectFDSetCount] = aTransport;
-    mSelectFDSetCount += 1;
+    if (i == mSelectFDSetCount) {
+      pfd = &mSelectFDSet[mSelectFDSetCount];
+      pfd->fd        = aTransport->GetSocket();;
+      pfd->in_flags  = aTransport->GetSelectFlags();
+      pfd->out_flags = 0;
+      // Add the transport instance to the corresponding active transport list...
+      NS_ADDREF(aTransport);
+      mActiveTransportList[mSelectFDSetCount] = aTransport;
+      mSelectFDSetCount += 1;
+    }
   }
   else {
     rv = NS_ERROR_FAILURE;

@@ -28,25 +28,25 @@
 #include "nsIByteBufferInputStream.h"
 
 enum nsSocketState {
-  eSocketState_Created      = 0,
-  eSocketState_WaitDNS      = 1,
-  eSocketState_Closed       = 2,
-  eSocketState_WaitConnect  = 3,
-  eSocketState_Connected    = 4,
-  eSocketState_WaitRead     = 5,
-  eSocketState_WaitWrite    = 6,
-  eSocketState_Done         = 7,
-  eSocketState_Timeout      = 8,
-  eSocketState_Error        = 9,
-  eSocketState_Max          = 10
+  eSocketState_Created        = 0,
+  eSocketState_WaitDNS        = 1,
+  eSocketState_Closed         = 2,
+  eSocketState_WaitConnect    = 3,
+  eSocketState_Connected      = 4,
+  eSocketState_WaitReadWrite  = 5,
+  eSocketState_DoneRead       = 6,
+  eSocketState_DoneWrite      = 7,
+  eSocketState_Done           = 8,
+  eSocketState_Timeout        = 9,
+  eSocketState_Error          = 10,
+  eSocketState_Max            = 11
 };
 
 enum nsSocketOperation {
-  eSocketOperation_None     = 0,
-  eSocketOperation_Connect  = 1,
-  eSocketOperation_Read     = 2,
-  eSocketOperation_Write    = 3,
-  eSocketOperation_Max      = 4
+  eSocketOperation_None       = 0,
+  eSocketOperation_Connect    = 1,
+  eSocketOperation_ReadWrite  = 2,
+  eSocketOperation_Max        = 3
 };
 
 
@@ -106,10 +106,14 @@ protected:
   char*         mHostName;
   PRInt32       mPort;
 
-  nsISupports* mContext;
-  nsIStreamListener* mListener;
+  nsISupports*              mReadContext;
+  nsIStreamListener*        mReadListener;
   nsIByteBufferInputStream* mReadStream;
-  nsIInputStream* mWriteStream;
+
+  nsISupports*              mWriteContext;
+  nsIStreamObserver*        mWriteObserver;
+  nsIInputStream*           mWriteStream;
+  
   PRUint32 mSourceOffset;
 
   nsSocketTransportService* mService;
