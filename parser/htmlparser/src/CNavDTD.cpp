@@ -698,7 +698,7 @@ PRBool DoesRequireBody(CToken* aToken,nsITokenizer* aTokenizer) {
         PRInt32 ac=aToken->GetAttributeCount();
         for(PRInt32 i=0; i<ac; ++i) {
           CAttributeToken* attr=NS_STATIC_CAST(CAttributeToken*,aTokenizer->GetTokenAt(i));
-          const nsAString& name=attr->GetKey();
+          const nsSubstring& name=attr->GetKey();
           const nsAString& value=attr->GetValue();
 
           if((name.EqualsLiteral("type") || 
@@ -2192,7 +2192,7 @@ nsresult CNavDTD::HandleEntityToken(CToken* aToken) {
 
   nsresult  result=NS_OK;
 
-  const nsAString& theStr = aToken->GetStringValue();
+  const nsSubstring& theStr = aToken->GetStringValue();
 
   if((kHashsign!=theStr.First()) && (-1==nsHTMLEntities::EntityToUnicode(theStr))){
     CToken *theToken=0;

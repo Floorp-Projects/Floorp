@@ -181,15 +181,15 @@ public:
     mIndirectString=0;
   }
   
-  void SetIndirectString(const nsAString& aString) {
+  void SetIndirectString(const nsSubstring& aString) {
     mIndirectString=&aString;
   }
 
-  virtual const nsAString& GetStringValue(void){
-    return (const nsAString&)*mIndirectString;
+  virtual const nsSubstring& GetStringValue(void){
+    return (const nsSubstring&)*mIndirectString;
   }
 
-  const nsAString* mIndirectString;
+  const nsSubstring* mIndirectString;
 };
 
 
@@ -954,14 +954,14 @@ nsresult CViewSourceHTML::WriteAttributes(PRInt32 attrCount, PRBool aOwnerInErro
           theContext.mTokenNode.AddAttribute(theToken);  //and add it to the node.
 
           CAttributeToken* theAttrToken = (CAttributeToken*)theToken;
-          const nsAString& theKey = theAttrToken->GetKey();
+          const nsSubstring& theKey = theAttrToken->GetKey();
           
           // The attribute is only in error if its owner is NOT in error.
           const PRBool attributeInError =
             !aOwnerInError && theAttrToken->IsInError();
 
           result = WriteTag(mKey,theKey,0,attributeInError);
-          const nsAString& theValue = theAttrToken->GetValue();
+          const nsSubstring& theValue = theAttrToken->GetValue();
 
           if(!theValue.IsEmpty() || theAttrToken->mHasEqualWithoutValue){
             result = WriteTag(mValue,theValue,0,attributeInError);
@@ -982,7 +982,7 @@ nsresult CViewSourceHTML::WriteAttributes(PRInt32 attrCount, PRBool aOwnerInErro
  *  @param   
  *  @return  result status
  */
-nsresult CViewSourceHTML::WriteTag(PRInt32 aTagType,const nsAString & aText,PRInt32 attrCount,PRBool aTagInError) {
+nsresult CViewSourceHTML::WriteTag(PRInt32 aTagType,const nsSubstring & aText,PRInt32 attrCount,PRBool aTagInError) {
   nsresult result=NS_OK;
 
   // adjust line number to what it will be after we finish writing this tag
@@ -1132,7 +1132,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
       {
         ++mTagCount;
 
-        const nsAString& startValue = aToken->GetStringValue();
+        const nsSubstring& startValue = aToken->GetStringValue();
         result=WriteTag(mStartTag,startValue,aToken->GetAttributeCount(),aToken->IsInError());
 
         if((ePlainText!=mDocType) && mParser && (NS_OK==result)) {
@@ -1147,7 +1147,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
           mTags.Truncate(mTags.Length()-1);
         }
 
-        const nsAString& endValue = aToken->GetStringValue();
+        const nsSubstring& endValue = aToken->GetStringValue();
         result=WriteTag(mEndTag,endValue,aToken->GetAttributeCount(),aToken->IsInError());
       }
       break;
@@ -1186,14 +1186,14 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
 
     case eToken_doctypeDecl:
       {
-        const nsAString& doctypeValue = aToken->GetStringValue();
+        const nsSubstring& doctypeValue = aToken->GetStringValue();
         result=WriteTag(mDocTypeTag,doctypeValue,0,aToken->IsInError());
       }
       break;
 
     case eToken_newline:
       {
-        const nsAString& newlineValue = aToken->GetStringValue();
+        const nsSubstring& newlineValue = aToken->GetStringValue();
         result=WriteTag(mText,newlineValue,0,PR_FALSE);
         ++mTokenCount;
         if (NS_VIEWSOURCE_TOKENS_PER_BLOCK > 0 &&
@@ -1204,7 +1204,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
 
     case eToken_whitespace:
       {
-        const nsAString& wsValue = aToken->GetStringValue();
+        const nsSubstring& wsValue = aToken->GetStringValue();
         result=WriteTag(mText,wsValue,0,PR_FALSE);
         ++mTokenCount;
         if (NS_VIEWSOURCE_TOKENS_PER_BLOCK > 0 &&
@@ -1219,7 +1219,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
 
     case eToken_text:
       {
-        const nsAString& str = aToken->GetStringValue();         
+        const nsSubstring& str = aToken->GetStringValue();         
         result=WriteTag(mText,str,aToken->GetAttributeCount(),aToken->IsInError());
         ++mTokenCount;
         if (NS_VIEWSOURCE_TOKENS_PER_BLOCK > 0 &&

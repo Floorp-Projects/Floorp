@@ -83,7 +83,7 @@ public:
 
 private:
     nsresult WriteTag(PRInt32 tagType,
-                      const nsAString &aText,
+                      const nsSubstring &aText,
                       PRInt32 attrCount,
                       PRBool aTagInError);
     
