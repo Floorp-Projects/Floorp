@@ -68,6 +68,7 @@ CSRCS = \
 	dersubr.c \
 	dertime.c \
 	nssb64d.c \
+	nssb64e.c \
 	nssrwlk.c \
 	nsslocks.c \
 	portreg.c \
