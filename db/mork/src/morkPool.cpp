@@ -332,6 +332,7 @@ morkPool::CutRowCells(morkEnv* ev, morkRow* ioRow,
       morkCell* newCells = this->NewCells(ev, inNewSize, ioZone);
       if ( newCells )
       {
+        morkCell* saveNewCells = newCells; // Keep newcell pos
         morkCell* oldCells = ioRow->mRow_Cells;
         morkCell* oldEnd = oldCells + fill; // one past all old cells
         morkCell* newEnd = oldCells + inNewSize; // copy only kept old cells
@@ -346,7 +347,7 @@ morkPool::CutRowCells(morkEnv* ev, morkRow* ioRow,
           ++oldCells;
         }
         oldCells = ioRow->mRow_Cells;
-        ioRow->mRow_Cells = newCells;
+        ioRow->mRow_Cells = saveNewCells;
         ioRow->mRow_Length = (mork_u2) inNewSize;
         ++ioRow->mRow_Seed;
         
