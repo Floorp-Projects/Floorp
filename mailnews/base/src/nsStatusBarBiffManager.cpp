@@ -122,11 +122,14 @@ nsresult nsStatusBarBiffManager::PerformStatusBarBiff(PRUint32 newBiffFlag)
       if (!mSound)
         mSound = do_CreateInstance("@mozilla.org/sound;1");
       
-      nsXPIDLCString soundURLspec;
-      rv = pref->GetCharPref(PREF_NEW_MAIL_URL, getter_Copies(soundURLspec));
-      if (NS_SUCCEEDED(rv) && !soundURLspec.IsEmpty()) {
+      nsXPIDLCString soundURLSpec;
+      rv = pref->GetCharPref(PREF_NEW_MAIL_URL, getter_Copies(soundURLSpec));
+
+      // if this is a file url, try to play it.
+      // otherwise, treat it as a system sound.
+      if (NS_SUCCEEDED(rv) && !strncmp(soundURLSpec.get(), "file://", 7)) {
         nsCOMPtr<nsIFileURL> soundURL = do_CreateInstance("@mozilla.org/network/standard-url;1");
-        rv = soundURL->SetSpec(soundURLspec);                                       
+        rv = soundURL->SetSpec(soundURLSpec);                                       
         NS_ENSURE_SUCCESS(rv,rv);
         
         nsCOMPtr<nsIFile> soundFile;
@@ -141,7 +144,13 @@ nsresult nsStatusBarBiffManager::PerformStatusBarBiff(PRUint32 newBiffFlag)
             customSoundPlayed = PR_TRUE;
         }
       }
+      else if (!soundURLSpec.IsEmpty()) {
+        rv = mSound->PlaySystemSound(soundURLSpec.get());
+        if (NS_SUCCEEDED(rv))
+          customSoundPlayed = PR_TRUE;
+      }
       
+      // if nothing played, play the default
       if (!customSoundPlayed) {
         rv = mSound->PlaySystemSound("_moz_mailbeep");
         NS_ENSURE_SUCCESS(rv,rv);
