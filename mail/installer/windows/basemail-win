@@ -13,6 +13,7 @@ bin\defaults\profile\US\mimeTypes.rdf
 [deflenus]
 bin\defaults\messenger\mailViews.dat
 bin\defaults\profile\localstore.rdf
+bin\defaults\profile\prefs.js
 bin\defaults\profile\mimeTypes.rdf
 bin\defaults\profile\extensions\*
 bin\defaults\profile\extensions\{972ce4c6-7e08-4474-a285-3208198ce6fd}\install.rdf
