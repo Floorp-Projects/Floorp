@@ -23,6 +23,7 @@
 
 #include "nsIInterfaceRequestor.h"
 
+#if 0
 nsresult
 nsGetInterface::operator()( const nsIID& aIID, void** aInstancePtr ) const
 	{
@@ -37,3 +38,4 @@ nsGetInterface::operator()( const nsIID& aIID, void** aInstancePtr ) const
 			*mErrorPtr = status;
 		return status;
 	}
+#endif
