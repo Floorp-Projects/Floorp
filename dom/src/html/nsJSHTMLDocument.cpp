@@ -841,7 +841,7 @@ NSHTMLDocumentGetSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
 {
   nsIDOMHTMLDocument *privateThis = (nsIDOMHTMLDocument*)JS_GetPrivate(cx, obj);
   nsIDOMNSHTMLDocument *nativeThis = nsnull;
-  if (NS_OK != privateThis->QueryInterface(kINSHTMLDocumentIID, (void **)nativeThis)) {
+  if (NS_OK != privateThis->QueryInterface(kINSHTMLDocumentIID, (void **)&nativeThis)) {
     JS_ReportError(cx, "Object must be of type NSHTMLDocument");
     return JS_FALSE;
   }
@@ -881,7 +881,7 @@ NSHTMLDocumentNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 {
   nsIDOMHTMLDocument *privateThis = (nsIDOMHTMLDocument*)JS_GetPrivate(cx, obj);
   nsIDOMNSHTMLDocument *nativeThis = nsnull;
-  if (NS_OK != privateThis->QueryInterface(kINSHTMLDocumentIID, (void **)nativeThis)) {
+  if (NS_OK != privateThis->QueryInterface(kINSHTMLDocumentIID, (void **)&nativeThis)) {
     JS_ReportError(cx, "Object must be of type NSHTMLDocument");
     return JS_FALSE;
   }

@@ -38,6 +38,8 @@
 #include "nsIDOMComment.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMText.h"
+#include "nsExpatDTD.h"
+#include "nsINameSpaceManager.h"
 
 // XXX The XML world depends on the html atoms
 #include "nsHTMLAtoms.h"
@@ -513,22 +515,62 @@ nsXMLDocument::CreateProcessingInstruction(const nsString& aTarget, const nsStri
   return NS_ERROR_NOT_IMPLEMENTED;  
 }
  
+static char kNameSpaceSeparator[] = ":";
+
 NS_IMETHODIMP    
 nsXMLDocument::CreateElement(const nsString& aTagName, 
                               nsIDOMElement** aReturn)
 {
-  // XXX Should actually check parse namespace, determine
-  // current namespace scope and, potentially, create new
-  // HTML content form tags with a HTML prefix.
   nsIXMLContent* content;
   nsIAtom* tag = NS_NewAtom(aTagName);
   nsresult rv = NS_NewXMLElement(&content, tag);
   NS_RELEASE(tag);
-  
+   
   if (NS_OK != rv) {
     return rv;
   }
   rv = content->QueryInterface(kIDOMElementIID, (void**)aReturn);
+  
+  return rv;
+}
+
+NS_IMETHODIMP    
+nsXMLDocument::CreateElementWithNameSpace(const nsString& aTagName, 
+                                            const nsString& aNameSpace, 
+                                            nsIDOMElement** aReturn)
+{
+  PRInt32 nsID = kNameSpaceID_None;
+  nsresult rv = NS_OK;
+
+  if ((0 < aNameSpace.Length() && (nsnull != mNameSpaceManager))) {
+    mNameSpaceManager->GetNameSpaceID(aNameSpace, nsID);
+  }
+
+  nsIContent* content;
+  if (nsID == kNameSpaceID_HTML) {
+    nsIHTMLContent* htmlContent;
+    
+    rv = NS_CreateHTMLElement(&htmlContent, aTagName);
+    content = (nsIContent*)htmlContent;
+  }
+  else {
+    nsIXMLContent* xmlContent;
+    nsIAtom* tag;
+
+    tag = NS_NewAtom(aTagName);
+    rv = NS_NewXMLElement(&xmlContent, tag);
+    NS_RELEASE(tag);
+    if (NS_OK == rv) {
+      xmlContent->SetNameSpaceID(nsID);
+    }
+    content = (nsIXMLContent*)xmlContent;
+  }
+
+  if (NS_OK != rv) {
+    return rv;
+  }
+  rv = content->QueryInterface(kIDOMElementIID, (void**)aReturn);
+  
   return rv;
 }
  

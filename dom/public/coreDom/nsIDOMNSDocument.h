@@ -24,6 +24,7 @@
 #include "nsString.h"
 #include "nsIScriptContext.h"
 
+class nsIDOMElement;
 class nsIDOMStyleSheetCollection;
 
 #define NS_IDOMNSDOCUMENT_IID \
@@ -35,16 +36,20 @@ public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMNSDOCUMENT_IID; return iid; }
 
   NS_IMETHOD    GetStyleSheets(nsIDOMStyleSheetCollection** aStyleSheets)=0;
+
+  NS_IMETHOD    CreateElementWithNameSpace(const nsString& aTagName, const nsString& aNameSpace, nsIDOMElement** aReturn)=0;
 };
 
 
 #define NS_DECL_IDOMNSDOCUMENT   \
   NS_IMETHOD    GetStyleSheets(nsIDOMStyleSheetCollection** aStyleSheets);  \
+  NS_IMETHOD    CreateElementWithNameSpace(const nsString& aTagName, const nsString& aNameSpace, nsIDOMElement** aReturn);  \
 
 
 
 #define NS_FORWARD_IDOMNSDOCUMENT(_to)  \
   NS_IMETHOD    GetStyleSheets(nsIDOMStyleSheetCollection** aStyleSheets) { return _to##GetStyleSheets(aStyleSheets); } \
+  NS_IMETHOD    CreateElementWithNameSpace(const nsString& aTagName, const nsString& aNameSpace, nsIDOMElement** aReturn) { return _to##CreateElementWithNameSpace(aTagName, aNameSpace, aReturn); }  \
 
 
 #endif // nsIDOMNSDocument_h__

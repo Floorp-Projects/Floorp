@@ -565,6 +565,52 @@ DocumentGetElementsByTagName(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
 
 
 //
+// Native method CreateElementWithNameSpace
+//
+PR_STATIC_CALLBACK(JSBool)
+NSDocumentCreateElementWithNameSpace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMDocument *privateThis = (nsIDOMDocument*)JS_GetPrivate(cx, obj);
+  nsIDOMNSDocument *nativeThis = nsnull;
+  if (NS_OK != privateThis->QueryInterface(kINSDocumentIID, (void **)&nativeThis)) {
+    JS_ReportError(cx, "Object must be of type NSDocument");
+    return JS_FALSE;
+  }
+
+  JSBool rBool = JS_FALSE;
+  nsIDOMElement* nativeRet;
+  nsAutoString b0;
+  nsAutoString b1;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 2) {
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+    nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
+
+    if (NS_OK != nativeThis->CreateElementWithNameSpace(b0, b1, &nativeRet)) {
+      return JS_FALSE;
+    }
+
+    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
+  }
+  else {
+    JS_ReportError(cx, "Function createElementWithNameSpace requires 2 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method CaptureEvent
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -572,7 +618,7 @@ EventCapturerCaptureEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 {
   nsIDOMDocument *privateThis = (nsIDOMDocument*)JS_GetPrivate(cx, obj);
   nsIDOMEventCapturer *nativeThis = nsnull;
-  if (NS_OK != privateThis->QueryInterface(kIEventCapturerIID, (void **)nativeThis)) {
+  if (NS_OK != privateThis->QueryInterface(kIEventCapturerIID, (void **)&nativeThis)) {
     JS_ReportError(cx, "Object must be of type EventCapturer");
     return JS_FALSE;
   }
@@ -614,7 +660,7 @@ EventCapturerReleaseEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 {
   nsIDOMDocument *privateThis = (nsIDOMDocument*)JS_GetPrivate(cx, obj);
   nsIDOMEventCapturer *nativeThis = nsnull;
-  if (NS_OK != privateThis->QueryInterface(kIEventCapturerIID, (void **)nativeThis)) {
+  if (NS_OK != privateThis->QueryInterface(kIEventCapturerIID, (void **)&nativeThis)) {
     JS_ReportError(cx, "Object must be of type EventCapturer");
     return JS_FALSE;
   }
@@ -693,6 +739,7 @@ static JSFunctionSpec DocumentMethods[] =
   {"createAttribute",          DocumentCreateAttribute,     1},
   {"createEntityReference",          DocumentCreateEntityReference,     1},
   {"getElementsByTagName",          DocumentGetElementsByTagName,     1},
+  {"createElementWithNameSpace",          NSDocumentCreateElementWithNameSpace,     2},
   {"captureEvent",          EventCapturerCaptureEvent,     1},
   {"releaseEvent",          EventCapturerReleaseEvent,     1},
   {0}

@@ -280,7 +280,7 @@ NSHTMLButtonElementBlur(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 {
   nsIDOMHTMLButtonElement *privateThis = (nsIDOMHTMLButtonElement*)JS_GetPrivate(cx, obj);
   nsIDOMNSHTMLButtonElement *nativeThis = nsnull;
-  if (NS_OK != privateThis->QueryInterface(kINSHTMLButtonElementIID, (void **)nativeThis)) {
+  if (NS_OK != privateThis->QueryInterface(kINSHTMLButtonElementIID, (void **)&nativeThis)) {
     JS_ReportError(cx, "Object must be of type NSHTMLButtonElement");
     return JS_FALSE;
   }
@@ -319,7 +319,7 @@ NSHTMLButtonElementFocus(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 {
   nsIDOMHTMLButtonElement *privateThis = (nsIDOMHTMLButtonElement*)JS_GetPrivate(cx, obj);
   nsIDOMNSHTMLButtonElement *nativeThis = nsnull;
-  if (NS_OK != privateThis->QueryInterface(kINSHTMLButtonElementIID, (void **)nativeThis)) {
+  if (NS_OK != privateThis->QueryInterface(kINSHTMLButtonElementIID, (void **)&nativeThis)) {
     JS_ReportError(cx, "Object must be of type NSHTMLButtonElement");
     return JS_FALSE;
   }

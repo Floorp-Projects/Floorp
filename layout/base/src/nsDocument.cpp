@@ -1569,6 +1569,14 @@ nsDocument::GetStyleSheets(nsIDOMStyleSheetCollection** aStyleSheets)
   return NS_OK;
 }
 
+NS_IMETHODIMP    
+nsDocument::CreateElementWithNameSpace(const nsString& aTagName, 
+                                       const nsString& aNameSpace, 
+                                       nsIDOMElement** aReturn)
+{
+  return NS_OK;
+}
+
 //
 // nsIDOMNode methods
 //
