@@ -83,6 +83,7 @@ nsElementMap::ReleaseContentList(PLHashEntry* aHashEntry, PRIntn aIndex, void* a
     while (head) {
         ContentListItem* doomed = head;
         head = head->mNext;
+        NS_RELEASE(doomed->mContent);
         delete doomed;
     }
 
