@@ -114,7 +114,10 @@ nsNoAuthURLParser::ParseAtHost(const char* i_Spec, char* *o_Host,
                      PRInt32 *o_Port, char* *o_Path)
 {
     nsresult rv = NS_OK;
-    // There is no Host
+    // There is no Host, but take care of a localhost
+    if ((nsCRT::strcasecmp(i_Spec,"localhost")==0) || 
+        (PL_strcasestr(i_Spec,"localhost/")==i_Spec))
+        return ParseAtPath(i_Spec+9,o_Path);
     rv = ParseAtPath(i_Spec, o_Path);
     return rv;
 }
