@@ -12,3 +12,7 @@
 <!ENTITY popups.label "Popup Windows">
 <!ENTITY scriptsAndWindows.label "JavaScript">
 <!ENTITY tabs.label "Tabbed Browsing">
+<!ENTITY urlbar.label "Control+Enter in the Location bar">
+#ifdef XP_WIN
+<!ENTITY winhooks.label                   "System">
+#endif

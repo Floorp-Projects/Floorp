@@ -22,8 +22,6 @@
 #   Ben Goodger <ben@netscape.com>
 #   Dave Hyatt (hyatt@apple.com)
 
-<?xul-overlay href="chrome://browser/content/pref/platformPrefOverlay.xul"?>
-
 <!DOCTYPE window SYSTEM "chrome://browser/locale/pref/preftree.dtd" >
 
 <overlay id="prefTreeOverlay"
@@ -96,6 +94,13 @@
             <treecell url="chrome://browser/content/pref/pref-tabs.xul" label="&tabs.label;"/> 
           </treerow>
         </treeitem>
+#ifdef XP_WIN
+        <treeitem id="winhooks">
+          <treerow>
+            <treecell url="chrome://communicator/content/pref/pref-winhooks.xul" label="&winhooks.label;"/>
+          </treerow>
+        </treeitem> 
+#endif
       </treechildren>
     </treeitem>
   </treechildren>
