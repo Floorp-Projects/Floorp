@@ -22,7 +22,6 @@
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsWidgetsCID.h"
-#include "nsIContentConnector.h"
 #include "nsViewsCID.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
@@ -269,7 +268,6 @@ static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 static NS_DEFINE_IID(kIHTMLContentIID, NS_IHTMLCONTENT_IID);
 static NS_DEFINE_IID(kILinkHandlerIID, NS_ILINKHANDLER_IID);
 static NS_DEFINE_IID(kCAppShellCID, NS_APPSHELL_CID);
-static NS_DEFINE_IID(kIContentConnectorIID, NS_ICONTENTCONNECTOR_IID);
 static NS_DEFINE_IID(kIPluginHostIID, NS_IPLUGINHOST_IID);
 static NS_DEFINE_IID(kIContentViewerContainerIID, NS_ICONTENT_VIEWER_CONTAINER_IID);
 
@@ -957,14 +955,6 @@ nsObjectFrame::InstantiateWidget(nsIPresContext&          aPresContext,
   parentWithView->GetOffsetFromWidget(nsnull, nsnull, parent);
   mWidget->Create(parent, r, nsnull, nsnull);
 
-  // See if the widget implements the CONTENT CONNECTOR interface.  If it
-  // does, we can hand it the content subtree for further processing.
-  nsIContentConnector* cc;
-  if ((rv = mWidget->QueryInterface(kIContentConnectorIID, (void**)&cc)) == NS_OK)
-  {
-    cc->SetContentRoot(mContent);
-    NS_IF_RELEASE(cc); 
-  }
   mWidget->Show(PR_TRUE);
   return rv;
 }
