@@ -981,10 +981,10 @@ SameCOMIdentity( nsISupports* lhs, nsISupports* rhs )
     return nsCOMPtr<nsISupports>( do_QueryInterface(lhs) ) == nsCOMPtr<nsISupports>( do_QueryInterface(rhs) );
   }
 
-template <class T>
+template <class SourceType, class DestinationType>
 inline
 nsresult
-CallQueryInterface( nsCOMPtr<T>& aSourcePtr, T** aDestPtr )
+CallQueryInterface( nsCOMPtr<SourceType>& aSourcePtr, DestinationType** aDestPtr )
 	{
 		return CallQueryInterface(aSourcePtr.get(), aDestPtr);
 	}
