@@ -65,7 +65,7 @@
   // for |nsresult|, |NS_ADDREF|, |NS_GET_IID| et al
 #endif
 
-#ifndef nscore_h__
+#ifndef nscore_h___
 #include "nscore.h"
   // for |NS_..._CAST|, |NS_EXPORT|
 #endif
