@@ -87,13 +87,6 @@ public:
 
 	NS_IMETHOD OnStopRequest(nsIChannel * aChannel,nsISupports *ctxt, nsresult aStatus, const PRUnichar *aMsg);
 
-	// Ideally, a protocol should only have to support the stream listener methods covered above. 
-	// However, we don't have this nsIStreamListenerLite interface defined yet. Until then, we are using
-	// nsIStreamListener so we need to add stubs for the heavy weight stuff we don't want to use.
-
-	NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax) { return NS_OK;}
-	NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg) { return NS_OK;}
-
 	// This is evil, I guess, but this is used by libmsg to tell a running imap url
 	// about headers it should download to update a local database.
 	NS_IMETHOD NotifyHdrsToDownload(PRUint32 *keys, PRUint32 keyCount);
