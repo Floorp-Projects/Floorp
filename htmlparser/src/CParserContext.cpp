@@ -20,7 +20,7 @@
 #include "CParserContext.h"
 #include "nsToken.h"
 
-
+MOZ_DECL_CTOR_COUNTER(CParserContext);
 /**
  * Your friendly little constructor. Ok, it's not the friendly, but the only guy
  * using it is the parser.
@@ -33,6 +33,8 @@ CParserContext::CParserContext(nsScanner* aScanner,void* aKey,nsIStreamObserver*
   mSourceType()
   //,mTokenDeque(gTokenDeallocator)
 {
+  MOZ_COUNT_CTOR(CParserContext);
+
   mScanner=aScanner;
   mKey=aKey;
   mPrevContext=0;
@@ -56,6 +58,8 @@ CParserContext::CParserContext(nsScanner* aScanner,void* aKey,nsIStreamObserver*
  * @update	gess7/11/98
  */
 CParserContext::~CParserContext(){
+
+  MOZ_COUNT_DTOR(CParserContext);
 
   if(mScanner)
     delete mScanner;

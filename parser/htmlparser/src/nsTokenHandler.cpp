@@ -30,6 +30,7 @@
 #include "nsToken.h"
 #include "nsIParser.h"
 
+MOZ_DECL_CTOR_COUNTER(CTokenHandler);
 
 /**
  *  
@@ -39,6 +40,9 @@
  *  @return  
  */
 CTokenHandler::CTokenHandler(dispatchFP aFP,PRInt32 aType){
+
+  MOZ_COUNT_CTOR(CTokenHandler);
+
   mType=aType;
   mFP=aFP;
 }
@@ -52,6 +56,7 @@ CTokenHandler::CTokenHandler(dispatchFP aFP,PRInt32 aType){
  *  @return  
  */
 CTokenHandler::~CTokenHandler(){
+  MOZ_COUNT_DTOR(CTokenHandler);
 }
 
 

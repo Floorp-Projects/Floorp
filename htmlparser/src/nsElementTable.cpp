@@ -1328,12 +1328,12 @@ void InitializeElementTable(void) {
 
     Initialize( 
       /*tag*/                             eHTMLTag_userdefined,
-      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-      /*autoclose starttags and endtags*/ 0,0,0,0,
-      /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
-      /*special props, prop-range*/       kOmitEndTag, kNoPropRange,
-      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_frameset,
+	    /*rootnodes,endrootnodes*/          &gInHTML,&gInHTML,	
+      /*autoclose starttags and endtags*/ &gBodyAutoClose,0,0,0,
+      /*parent,incl,exclgroups*/          kHTMLContent, (kFlowEntity|kSelf), kNone,	
+      /*special props, prop-range*/       kOmitEndTag|kLegalOpen, kBodyPropRange,
+      /*special parents,kids,skip*/       &gInNoframes,&gBodyKids,eHTMLTag_unknown);
   }//if
 };
 
