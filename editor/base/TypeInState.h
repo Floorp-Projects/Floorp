@@ -21,7 +21,7 @@
 
 #include "nsIDOMSelectionListener.h"
 #include "nsColor.h"
-#include "nscoord.h"
+#include "nsCoord.h"
 
 class TypeInState : public nsIDOMSelectionListener
 {
