@@ -44,10 +44,123 @@ class nsRDFDOMDataSource : public nsIRDFDataSource,
   virtual ~nsRDFDOMDataSource();
   
   NS_DECL_ISUPPORTS
+    
+  /* void Init (in string uri); */
+  NS_IMETHOD Init(const char *uri);
 
-  NS_DECL_NSIRDFDATASOURCE
+  /* readonly attribute string URI; */
+  NS_IMETHOD GetURI(char * *aURI);
 
-  NS_DECL_NSIDOMDATASOURCE
+  /* nsIRDFResource GetSource (in nsIRDFResource aProperty,
+     in nsIRDFNode aTarget,
+     in boolean aTruthValue); */
+  NS_IMETHOD GetSource(nsIRDFResource *aProperty,
+                       nsIRDFNode *aTarget,
+                       PRBool aTruthValue,
+                       nsIRDFResource **_retval);
+
+  /* nsISimpleEnumerator GetSources (in nsIRDFResource aProperty,
+     in nsIRDFNode aTarget,
+     in boolean aTruthValue); */
+  NS_IMETHOD GetSources(nsIRDFResource *aProperty,
+                        nsIRDFNode *aTarget,
+                        PRBool aTruthValue,
+                        nsISimpleEnumerator **_retval);
+
+  /* nsIRDFNode GetTarget (in nsIRDFResource aSource,
+     in nsIRDFResource aProperty,
+     in boolean aTruthValue); */
+  NS_IMETHOD GetTarget(nsIRDFResource *aSource,
+                       nsIRDFResource *aProperty,
+                       PRBool aTruthValue,
+                       nsIRDFNode **_retval);
+
+  /* nsISimpleEnumerator GetTargets (in nsIRDFResource aSource,
+     in nsIRDFResource aProperty,
+     in boolean aTruthValue); */
+  NS_IMETHOD GetTargets(nsIRDFResource *aSource,
+                        nsIRDFResource *aProperty,
+                        PRBool aTruthValue,
+                        nsISimpleEnumerator **_retval);
+
+  /* void Assert (in nsIRDFResource aSource,
+     in nsIRDFResource aProperty,
+     in nsIRDFNode aTarget,
+     in boolean aTruthValue); */
+  NS_IMETHOD Assert(nsIRDFResource *aSource,
+                    nsIRDFResource *aProperty,
+                    nsIRDFNode *aTarget,
+                    PRBool aTruthValue);
+
+  /* void Unassert (in nsIRDFResource aSource,
+     in nsIRDFResource aProperty,
+     in nsIRDFNode aTarget); */
+  NS_IMETHOD Unassert(nsIRDFResource *aSource,
+                      nsIRDFResource *aProperty,
+                      nsIRDFNode *aTarget);
+
+  /* boolean HasAssertion (in nsIRDFResource aSource,
+     in nsIRDFResource aProperty,
+     in nsIRDFNode aTarget,
+     in boolean aTruthValue); */
+  NS_IMETHOD HasAssertion(nsIRDFResource *aSource,
+                          nsIRDFResource *aProperty,
+                          nsIRDFNode *aTarget,
+                          PRBool aTruthValue,
+                          PRBool *_retval);
+
+  /* void AddObserver (in nsIRDFObserver aObserver); */
+  NS_IMETHOD AddObserver(nsIRDFObserver *aObserver);
+
+  /* void RemoveObserver (in nsIRDFObserver aObserver); */
+  NS_IMETHOD RemoveObserver(nsIRDFObserver *aObserver);
+
+  /* nsISimpleEnumerator ArcLabelsIn (in nsIRDFNode aNode); */
+  NS_IMETHOD ArcLabelsIn(nsIRDFNode *aNode,
+                         nsISimpleEnumerator **_retval);
+
+  /* nsISimpleEnumerator ArcLabelsOut (in nsIRDFResource aSource); */
+  NS_IMETHOD ArcLabelsOut(nsIRDFResource *aSource,
+                          nsISimpleEnumerator **_retval);
+
+  /* nsISimpleEnumerator GetAllResources (); */
+  NS_IMETHOD GetAllResources(nsISimpleEnumerator **_retval);
+
+  /* void Flush (); */
+  NS_IMETHOD Flush();
+
+  /* nsIEnumerator GetAllCommands (in nsIRDFResource aSource); */
+  NS_IMETHOD GetAllCommands(nsIRDFResource *aSource,
+                            nsIEnumerator **_retval);
+
+  /* nsISimpleEnumerator GetAllCmds (in nsIRDFResource aSource); */
+  NS_IMETHOD GetAllCmds(nsIRDFResource *aSource,
+                            nsISimpleEnumerator **_retval);
+
+  /* boolean IsCommandEnabled (in nsISupportsArray aSources,
+     in nsIRDFResource aCommand,
+     in nsISupportsArray aArguments); */
+  NS_IMETHOD IsCommandEnabled(nsISupportsArray *aSources,
+                              nsIRDFResource *aCommand,
+                              nsISupportsArray *aArguments,
+                              PRBool *_retval);
+
+  /* void DoCommand (in nsISupportsArray aSources,
+     in nsIRDFResource aCommand,
+     in nsISupportsArray aArguments); */
+  NS_IMETHOD DoCommand(nsISupportsArray *aSources,
+                       nsIRDFResource *aCommand,
+                       nsISupportsArray *aArguments);
+
+  NS_IMETHOD SetWindow(nsIDOMWindow *window);
+
+  NS_IMETHOD Change(nsIRDFResource*, nsIRDFResource*,
+                    nsIRDFNode*, nsIRDFNode*)
+        {return NS_ERROR_NOT_IMPLEMENTED;}
+    
+  NS_IMETHOD Move(nsIRDFResource*, nsIRDFResource*,
+                  nsIRDFResource*, nsIRDFNode*)
+        {return NS_ERROR_NOT_IMPLEMENTED;}
     
   static NS_METHOD  Create(nsISupports* aOuter,
                        const nsIID& iid,
@@ -66,7 +179,6 @@ class nsRDFDOMDataSource : public nsIRDFDataSource,
 
     PRBool init;
     nsIRDFService *mRDFService;
-    PRInt32 mMode;
     nsVoidArray *mObservers;
 
     nsCOMPtr<nsIDOMDocument> mDocument;
@@ -76,7 +188,6 @@ class nsRDFDOMDataSource : public nsIRDFDataSource,
     nsIRDFResource* kNC_Type;
     nsIRDFResource* kNC_Child;
     nsIRDFResource* kNC_DOMRoot;
-
 };
 
 #endif
