@@ -161,40 +161,55 @@ function createShortcuts()
     winreg.setRootKey(winreg.HKEY_CURRENT_USER);
     registerProgramFolderKey(winreg, fFolderPath);
 
-	/* setup turbo mode */
+    /* remove turbo mode shortcut */
 
-    logComment( "Windows Shortcut: " + szStartupFolder + "\\$MainExeFile$" );
+    fFolderPath = getFolder("file:///", szStartupFolder);
+									
+    /* remove shortcut from the startup folder */
 
-	subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Setup";
-	valname = "browserargs";
-	regvalue = winreg.getValueString(subkey, valname);
-	if (regvalue && regvalue != undefined && regvalue.length != 0) {
-		var value = new String(regvalue);
-		var index = value.indexOf("turbo");
-		if (index != -1) {
-			var index2 = value.indexOf("=", index);
-			if (index2 != -1) {
-				var turboarg = value.slice(index2 + 1, index2 + 2);
- 				fFolderPath = getFolder("file:///", szStartupFolder);
- 				if (turboarg == "y" || turboarg == "Y") {
-					/* add shortcut in the startup folder if doesn't exist */
+    basename = "$MainExeFile$"
+    fTemp = fFolderPath + basename + ".lnk";
+    fFolderPath = getFolder("file:///", fTemp);
+    if (File.exists(fFolderPath)) 
+    { 
+        logComment("Removing Quick Launch shortcut from Windows startup folder\n");
+        fileDelete(fFolderPath);
+    }
 
-					logComment("Adding Quick Launch shortcut to Windows startup folder\n");
-					File.windowsShortcut(fileExe, fFolderPath, "$MainExeFile$", fProgram, "-turbo", fileExe, 0); 
-				} else {
-					/* remove shortcut from the startup folder */
+    subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Setup";
+    valname = "browserargs";
+    regvalue = winreg.getValueString(subkey, valname);
 
-					basename = "$MainExeFile$"
-					fTemp = fFolderPath + basename + ".lnk";
-					fFolderPath = getFolder("file:///", fTemp);
-					if (File.exists(fFolderPath)) { 
-						logComment("Removing Quick Launch shortcut from Windows startup folder\n");
-						fileDelete(fFolderPath);
-					} 
-				}
-			}
-		}
-	}
+    /* log this so if the user turns on turbo mode in the browser the uninstaller will undo it */
+
+    logComment( "store registry value string: HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run [Mozilla QuickLaunch]");
+    if (regvalue && regvalue != undefined && regvalue.length != 0) 
+    {
+        var value = new String(regvalue);
+        var index = value.indexOf("turbo");
+        if (index != -1) 
+        {
+            var index2 = value.indexOf("=", index);
+            if (index2 != -1) 
+            {
+                turboarg = value.slice(index2 + 1, index2 + 2);
+                winreg.setRootKey(winreg.HKEY_CURRENT_USER);
+                subkey = "Software\\Microsoft\\Windows\\CurrentVersion\\Run";
+                valname = "Mozilla QuickLaunch";
+                if ( turboarg == "Y" || turboarg == "y") 
+                {
+                    fTemp = fileExe;
+                    fileExe = getFolder("file:///", fTemp);
+                    newKey = fileExe + ' -turbo';
+                    winreg.setValueString(subkey, valname, newKey);
+                } 
+                else 
+                {
+                    winreg.deleteValue(subkey, valname);
+                }
+            }
+        }
+    }
   }
   else
   {
