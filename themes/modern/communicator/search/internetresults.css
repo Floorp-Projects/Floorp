@@ -1,18 +1,15 @@
-window {
-	margin-top: 2px;
-}
 
 #multi-results-header {
-	background-color: #003366; 
-	color: #CCFFFF; 
+	background-color: #000000;
+	color: #ffffff;; 
 	font-weight: bold;
-	padding: 1px 4px 3px 6px;
-	-moz-border-radius: 8px 0px 0px 0px;
+	padding: 5px 6px 5px 6px;
 }
 
 #engineTabs {
 	/*don't know why its not setting the color*/
 	background-color: #666666;
+  padding-left: 3px;
 }
 
 #engineTabs > text {
