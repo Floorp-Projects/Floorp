@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -30,11 +31,10 @@
  *      in method DocumentFunctionCall::retrieveDocument
  */
 
-/**
+/*
  * DocumentFunctionCall
  * A representation of the XSLT additional function: document()
  */
-
 
 #include "XSLTFunctions.h"
 #include "XMLParser.h"
@@ -42,17 +42,15 @@
 #include "URIUtils.h"
 #include "Names.h"
 
-/**
+/*
  * Creates a new DocumentFunctionCall.
-**/
-DocumentFunctionCall::DocumentFunctionCall(ProcessorState* ps, Document* xslDocument) : FunctionCall(DOCUMENT_FN)
+ */
+DocumentFunctionCall::DocumentFunctionCall(ProcessorState* aPs) : FunctionCall(DOCUMENT_FN)
 {
-    this->processorState = ps;
-    this->xslDocument = xslDocument; //this is just untill we can get the actuall xsl tag
-} //-- DocumentFunctionCall
+    mProcessorState = aPs;
+}
 
-
-/**
+/*
  * Evaluates this Expr based on the given context node and processor state
  * NOTE: the implementation is incomplete since it does not make use of the
  * second argument (base URI)
@@ -60,12 +58,13 @@ DocumentFunctionCall::DocumentFunctionCall(ProcessorState* ps, Document* xslDocu
  * @param ps the ContextState containing the stack information needed
  * for evaluation
  * @return the result of the evaluation
-**/
-ExprResult* DocumentFunctionCall::evaluate(Node* context, ContextState* cs) {
+ */
+ExprResult* DocumentFunctionCall::evaluate(Node* context, ContextState* cs)
+{
     NodeSet* nodeSet = new NodeSet();
 
-    //-- document( object, node-set? )
-    if ( requireParams(1, 2, cs) ) {
+    // document(object, node-set?)
+    if (requireParams(1, 2, cs)) {
         ListIterator* iter = params.iterator();
         Expr* param1 = (Expr*) iter->next();
         ExprResult* exprResult1 = param1->evaluate(context, cs);
@@ -73,11 +72,11 @@ ExprResult* DocumentFunctionCall::evaluate(Node* context, ContextState* cs) {
         MBool baseURISet = MB_FALSE;
 
         if (iter->hasNext()) {
-            // we have 2 arguments, get baseURI from the first node
+            // We have 2 arguments, get baseURI from the first node
             // in the resulting nodeset
             Expr* param2 = (Expr*) iter->next();
             ExprResult* exprResult2 = param2->evaluate(context, cs);
-            if ( exprResult2->getResultType() != ExprResult::NODESET ) {
+            if (exprResult2->getResultType() != ExprResult::NODESET) {
                 String err("node-set expected as second argument to document(): ");
                 toString(err);
                 cs->recieveError(err);
@@ -87,21 +86,22 @@ ExprResult* DocumentFunctionCall::evaluate(Node* context, ContextState* cs) {
 
             // Make this true, even if nodeSet2 is empty. For relative URLs,
             // we'll fail to load the document with an empty base URI, and for
-            // absolute URLs, the base URI doesn't matter.
+            // absolute URLs, the base URI doesn't matter
             baseURISet = MB_TRUE;
 
             NodeSet* nodeSet2 = (NodeSet*) exprResult2;
             if (!nodeSet2->isEmpty()) {
-                processorState->sortByDocumentOrder(nodeSet2);
+                mProcessorState->sortByDocumentOrder(nodeSet2);
                 baseURI = nodeSet2->get(0)->getBaseURI();
             }
             delete exprResult2;
         }
 
-        if ( exprResult1->getResultType() == ExprResult::NODESET ) {
+        if (exprResult1->getResultType() == ExprResult::NODESET) {
             // The first argument is a NodeSet, iterate on its nodes
             NodeSet* nodeSet1 = (NodeSet*) exprResult1;
-            for (int i=0; i<nodeSet1->size(); i++) {
+            int i;
+            for (i = 0; i < nodeSet1->size(); i++) {
                 Node* node = nodeSet1->get(i);
                 String uriStr;
                 XMLDOMUtils::getNodeValue(node, &uriStr);
@@ -110,29 +110,29 @@ ExprResult* DocumentFunctionCall::evaluate(Node* context, ContextState* cs) {
                     // the baseUri of node itself
                     retrieveDocument(uriStr, node->getBaseURI(), *nodeSet, cs);
                 }
-                else
+                else {
                     retrieveDocument(uriStr, baseURI, *nodeSet, cs);
+                }
             }
         }
-
         else {
             // The first argument is not a NodeSet
             String uriStr;
             evaluateToString(param1, context, cs, uriStr);
             if (!baseURISet) {
-                // XXX TODO: find the current xsl tag and get its base URI
-                // until then we use the xslDocument
-                retrieveDocument(uriStr, xslDocument->getBaseURI(), *nodeSet, cs);
+                Node* xsltElement = mProcessorState->peekAction();
+                retrieveDocument(uriStr, xsltElement->getBaseURI(), *nodeSet, cs);
             }
-            else
+            else {
                 retrieveDocument(uriStr, baseURI, *nodeSet, cs);
+            }
         }
         delete exprResult1;
         delete iter;
     }
 
     return nodeSet;
-} //-- evaluate
+}
 
 
 /**
@@ -145,20 +145,33 @@ ExprResult* DocumentFunctionCall::evaluate(Node* context, ContextState* cs) {
  * @param resultNodeSet the NodeSet to append the document to
  * @param cs the ContextState, used for reporting errors
  */
-void DocumentFunctionCall::retrieveDocument(const String& uri, const String& baseUri, NodeSet& resultNodeSet, ContextState* cs)
+void DocumentFunctionCall::retrieveDocument(const String& uri,
+                                            const String& baseUri,
+                                            NodeSet& resultNodeSet,
+                                            ContextState* cs)
 {
     String absUrl, frag;
+    Document* xmlDoc;
+
     URIUtils::resolveHref(uri, baseUri, absUrl);
     URIUtils::getFragmentIdentifier(absUrl, frag);
-    
+
     // try to get already loaded document
-    Document* xmlDoc = processorState->getLoadedDocument(absUrl);
-    
-    if(!xmlDoc) {
+    xmlDoc = mProcessorState->getLoadedDocument(absUrl);
+
+    if (!xmlDoc) {
         // open URI
         String errMsg;
         XMLParser xmlParser;
-        xmlDoc = xmlParser.getDocumentFromURI(uri, baseUri, errMsg);
+        Node* xsltElement;
+
+        xsltElement = mProcessorState->peekAction();
+        if (!xsltElement) {
+            // no xslt element
+            return;
+        }
+
+        xmlDoc = xmlParser.getDocumentFromURI(absUrl, "", xsltElement->getOwnerDocument(), errMsg);
         if (!xmlDoc) {
             String err("error in document() function: ");
             err.append(errMsg);
@@ -166,18 +179,17 @@ void DocumentFunctionCall::retrieveDocument(const String& uri, const String& bas
             return;
         }
         // add to ProcessorState list of documents
-        processorState->addLoadedDocument(xmlDoc, absUrl);
+        mProcessorState->addLoadedDocument(xmlDoc, absUrl);
     }
 
-
-    // append the to resultNodeSet
-    if(frag.length()) {
+    // append the document or the fragment to resultNodeSet
+    if (frag.length() > 0) {
         Node* node = xmlDoc->getElementById(frag);
-        if(node)
+        if (node) {
             resultNodeSet.add(node);
+        }
     }
-    else
+    else {
         resultNodeSet.add(xmlDoc);
+    }
 }
-
-

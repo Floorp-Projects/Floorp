@@ -366,9 +366,6 @@ class Document : public Node
 
         Element* getElementById(const String aID);
 
-        //Override to return documentBaseURI
-        String getBaseURI();
-
     private:
         PRBool bInHashTableDeletion;
 

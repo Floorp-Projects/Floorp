@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -26,19 +27,13 @@
  *        URIUtils.cpp to here
  *
  * Peter Van der Beken
- *   -- 20000326
- *     -- added Mozilla integration code
  *
  */
 
 #include "URIUtils.h"
 
 #ifndef TX_EXE
-#include "nsIServiceManager.h"
-#include "nsIIOService.h"
-#include "nsIURL.h"
-#include "nsXPIDLString.h"
-#include "nsNetCID.h"
+#include "nsNetUtil.h"
 #endif
 
 /**
@@ -151,29 +146,24 @@ void URIUtils::getDocumentBase(const String& href, String& dest) {
  * if necessary.
  * The new resolved href will be appended to the given dest String
 **/
-void URIUtils::resolveHref(const String& href, const String& base, String& dest) {
+void URIUtils::resolveHref(const String& href, const String& base,
+                           String& dest) {
+    if (base.length() == 0) {
+        dest.append(href);
+        return;
+    }
+    if (href.length() == 0) {
+        dest.append(base);
+        return;
+    }
+
 #ifndef TX_EXE
     nsCOMPtr<nsIURI> pURL;
-    nsresult result = NS_OK;
-
-    nsCOMPtr<nsIIOService> pService(do_GetService(NS_IOSERVICE_CONTRACTID,
-                                                  &result));
+    String resultHref;
+    nsresult result = NS_NewURI(getter_AddRefs(pURL), base.getConstNSString());
     if (NS_SUCCEEDED(result)) {
-        // XXX This is ugly, there must be an easier (cleaner way).
-        char *baseStr = (base.getConstNSString()).ToNewCString();
-        result = pService->NewURI(baseStr, nsnull, getter_AddRefs(pURL));
-        nsCRT::free(baseStr);
-        if (NS_SUCCEEDED(result)) {
-            nsXPIDLCString newURL;
-
-            // XXX This is ugly, there must be an easier (cleaner way).
-            char *hrefStr = (href.getConstNSString()).ToNewCString();
-            result = pURL->Resolve(hrefStr, getter_Copies(newURL));
-            nsCRT::free(hrefStr);
-            if (NS_SUCCEEDED(result)) {
-                dest = (const char *)newURL;
-            }
-        }
+        NS_MakeAbsoluteURI(resultHref.getNSString(), href.getConstNSString(), pURL);
+        dest.append(resultHref);
     }
 #else
     String documentBase;
@@ -233,7 +223,7 @@ void URIUtils::getDocumentURI(const String& href, String& docUri) {
         href.subString(0,pos,docUri);
     else
         docUri = href;
-} //-- getFragmentIdentifier
+} //-- getDocumentURI
 
 #ifdef TX_EXE
 istream* URIUtils::openStream(ParsedURI* uri) {

@@ -107,6 +107,7 @@ public:
    * Return the URL for the document. May return null.
    */
   NS_IMETHOD GetDocumentURL(nsIURI** aURL) const = 0;
+  NS_IMETHOD SetDocumentURL(nsIURI* aURL) = 0;
 
   /**
    * Return the principal responsible for this document.

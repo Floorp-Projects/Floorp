@@ -623,24 +623,3 @@ TxObject* Document::removeWrapper(MozillaObjectWrapper* aObject)
     nsISupportsKey key(aObject->getNSObj());
     return (TxObject*)wrapperHashTable->Remove(&key);
 }
-
-
-String Document::getBaseURI()
-{
-    NSI_FROM_TX(Document)
-    String url;
-
-    nsIURI* docURL = nsnull;
-    nsCOMPtr<nsIDocument> sourceNsDocument(do_QueryInterface(nsDocument));
-    if (sourceNsDocument)
-        sourceNsDocument->GetBaseURL(docURL);
-    if (docURL) {
-        char* urlString;
-        docURL->GetSpec(&urlString);
-        url = urlString;
-        nsCRT::free(urlString);
-        NS_IF_RELEASE(docURL);
-    }
-    
-    return url;
-}

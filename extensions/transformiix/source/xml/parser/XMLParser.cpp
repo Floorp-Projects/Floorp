@@ -37,14 +37,12 @@
  */
 
 #include "XMLParser.h"
+#include "URIUtils.h"
 #ifndef TX_EXE
 #include "nsSyncLoader.h"
-#include "URIUtils.h"
-#include "nsIIOService.h"
-#include "nsIURL.h"
-#include "nsNetCID.h"
-#include "nsIServiceManager.h"
+#include "nsNetUtil.h"
 #endif
+
 /**
  *  Implementation of an In-Memory DOM based XML parser.  The actual XML
  *  parsing is provided by EXPAT.
@@ -66,31 +64,31 @@ XMLParser::~XMLParser()
     //-- clean up
 } //-- ~XMLParser
 
-Document* XMLParser::getDocumentFromURI
-    (const String& href, const String& baseUri, String& errMsg)
+Document* XMLParser::getDocumentFromURI(const String& href,
+                                        const String& baseUri,
+                                        Document* aLoader,
+                                        String& errMsg)
 {
-
     String documentURL;
     URIUtils::resolveHref(href, baseUri, documentURL);
 
 #ifndef TX_EXE
-    nsresult rv = NS_OK;
     nsCOMPtr<nsIURI> documentURI;
-    nsCOMPtr<nsIIOService> pService(do_GetService(NS_IOSERVICE_CONTRACTID,
-                                                  &rv));
-    if (NS_FAILED(rv)) return NULL;
+    nsresult rv = NS_NewURI(getter_AddRefs(documentURI), documentURL.getConstNSString());
+    NS_ENSURE_SUCCESS(rv, NULL);
 
-    char *hrefStr = (documentURL.getConstNSString()).ToNewCString();
-    rv = pService->NewURI(hrefStr, nsnull, getter_AddRefs(documentURI));
-    nsCRT::free(hrefStr);
-    if (NS_FAILED(rv)) return NULL;
+    nsCOMPtr<nsISyncLoader> loader = do_CreateInstance(TRANSFORMIIX_SYNCLOADER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, NULL);
 
-    nsCOMPtr<nsISyncLoader>aLoader = do_CreateInstance( TRANSFORMIIX_SYNCLOADER_CONTRACTID, &rv );
-    if (NS_FAILED(rv)) return NULL;
-
-    nsCOMPtr <nsIDOMDocument> theDocument;
-    rv = aLoader->LoadDocument(documentURI, getter_AddRefs(theDocument));
-    if (NS_FAILED(rv)) return NULL;
+    nsCOMPtr<nsIDOMDocument> theDocument;
+    nsCOMPtr<nsIDocument> loaderDocument = do_QueryInterface(aLoader->getNSObj());
+    rv = loader->LoadDocument(documentURI, loaderDocument, getter_AddRefs(theDocument));
+    if (NS_FAILED(rv) || !theDocument) {
+        errMsg.append("Document load of ");
+        errMsg.append(href);
+        errMsg.append(" failed.");
+        return NULL;
+    }
 
     return new Document(theDocument);
 #else

@@ -516,7 +516,7 @@ public:
   NS_IMETHOD_(PRBool) EventCaptureRegistration(PRInt32 aCapturerIncrement);
 
 
-  virtual nsresult SetDocumentURL(nsIURI* aURI);
+  NS_IMETHOD SetDocumentURL(nsIURI* aURI);
 
 protected:
   NS_IMETHOD GetDTD(nsIDTD** aDTD) const;

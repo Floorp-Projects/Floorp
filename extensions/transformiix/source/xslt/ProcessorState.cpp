@@ -61,6 +61,7 @@ const String ProcessorState::wrapperNS        = "http://www.mitre.org/TransforMi
  * Creates a new ProcessorState
 **/
 ProcessorState::ProcessorState() {
+    this->mSourceDocument = NULL;
     this->xslDocument = NULL;
     this->resultDocument = NULL;
     currentAction = 0;
@@ -71,7 +72,8 @@ ProcessorState::ProcessorState() {
  * Creates a new ProcessorState for the given XSL document
  * and resultDocument
 **/
-ProcessorState::ProcessorState(Document& xslDocument, Document& resultDocument) {
+ProcessorState::ProcessorState(Document& sourceDocument, Document& xslDocument, Document& resultDocument) {
+    this->mSourceDocument = &sourceDocument;
     this->xslDocument = &xslDocument;
     this->resultDocument = &resultDocument;
     currentAction = 0;
@@ -551,6 +553,17 @@ MBool ProcessorState::isXSLStripSpaceAllowed(Node* node) {
 } //--isXSLStripSpaceAllowed
 
 /**
+ * Returns the current XSLT action from the top of the stack.
+ * @returns the XSLT action from the top of the stack
+**/
+Node* ProcessorState::peekAction() {
+    NS_ASSERTION(currentAction, "currentAction is NULL, this is very bad");
+    if (currentAction)
+        return currentAction->node;
+    return NULL;
+}
+
+/**
  * Removes the current XSLT action from the top of the stack.
  * @returns the XSLT action after removing from the top of the stack
 **/
@@ -680,7 +693,13 @@ void ProcessorState::addLoadedDocument(Document* doc, String& url) {
 Document* ProcessorState::getLoadedDocument(String& url) {
     String docUrl;
     URIUtils::getDocumentURI(url, docUrl);
-    return (Document*) loadedDocuments.get(docUrl);
+    if ((mMainStylesheetURL.length() > 0) && docUrl.isEqual(mMainStylesheetURL)) {
+        return xslDocument;
+    }
+    else if ((mMainSourceURL.length() > 0) && docUrl.isEqual(mMainSourceURL)) {
+        return mSourceDocument;
+    }
+    return (Document*)loadedDocuments.get(docUrl);
 }
 
 /**
@@ -823,7 +842,7 @@ FunctionCall* ProcessorState::resolveFunctionCall(const String& name) {
    String err;
 
    if (DOCUMENT_FN.isEqual(name)) {
-       return new DocumentFunctionCall(this, xslDocument);
+       return new DocumentFunctionCall(this);
    }
    else if (KEY_FN.isEqual(name)) {
        return new txKeyFunctionCall(this);
@@ -868,20 +887,23 @@ FunctionCall* ProcessorState::resolveFunctionCall(const String& name) {
  * Note: I will be moving this functionality elsewhere soon
 **/
 void ProcessorState::sortByDocumentOrder(NodeSet* nodes) {
-    if ((!nodes) || (nodes->size() < 2)) return;
+    if (!nodes || (nodes->size() < 2))
+        return;
 
     NodeSet sorted(nodes->size());
     sorted.setDuplicateChecking(MB_FALSE);
     sorted.add(nodes->get(0));
 
-    int i = 1;
-    for ( ; i < nodes->size(); i++) {
+    int i, k;
+    for (i = 1; i < nodes->size(); i++) {
         Node* node = nodes->get(i);
-        for (int k = i-1; k >= 0; k--) {
+        for (k = i - 1; k >= 0; k--) {
             Node* tmpNode = sorted.get(k);
-            if (domHelper.appearsFirst(node, tmpNode) == tmpNode) {
-                if (k == i-1) sorted.add(node);
-                else sorted.add(k, node);
+            if (domHelper.appearsFirst(tmpNode, node) == tmpNode) {
+                if (k == i - 1)
+                    sorted.add(node);
+                else
+                    sorted.add(k, node);
                 break;
             }
             else if (k == 0) {
@@ -969,8 +991,12 @@ void ProcessorState::initialize() {
 
     //-- determine xsl properties
     Element* element = NULL;
+    if (mSourceDocument) {
+        mMainSourceURL = mSourceDocument->getBaseURI();
+    }
     if (xslDocument) {
         element = xslDocument->getDocumentElement();
+        mMainStylesheetURL = xslDocument->getBaseURI();
     }
     if ( element ) {
 

@@ -26,6 +26,7 @@
 #include "nsISupports.idl"
 
 interface nsIURI;
+interface nsIDocument;
 interface nsIDOMDocument;
 
 /**
@@ -40,10 +41,11 @@ interface nsISyncLoader : nsISupports {
      * Synchronously load the document specified in documentURI.
      *
      * @param documentURI The URI of the document to load.
+     * @param aLoader The document that is trying to load this document.
      *
      * @returns The document loaded from the URI.
      */
-    nsIDOMDocument loadDocument(in nsIURI aDocumentURI);
+    nsIDOMDocument loadDocument(in nsIURI aDocumentURI, in nsIDocument aLoader);
 };
 
 %{ C++

@@ -60,7 +60,7 @@
 #include "nsNetCID.h"
 #include "nsIDOMClassInfo.h"
 #include "nsIConsoleService.h"
-//#include "nslog.h"
+#include "nslog.h"
 #else
 #include "printers.h"
 #include "TxLog.h"
@@ -458,7 +458,7 @@ void XSLTProcessor::processTopLevel(Document* aSource,
                     String errMsg;
                     XMLParser xmlParser;
 
-                    Document* xslDoc = xmlParser.getDocumentFromURI(href, element->getBaseURI(), errMsg);
+                    Document* xslDoc = xmlParser.getDocumentFromURI(href, element->getBaseURI(), aStylesheet->getOwnerDocument(), errMsg);
 
                     if (!xslDoc) {
                         String err("error including XSL stylesheet: ");
@@ -575,7 +575,7 @@ Document* XSLTProcessor::process
     Document* result = new Document();
 
     //-- create a new ProcessorState
-    ProcessorState ps(xslDocument, *result);
+    ProcessorState ps(xmlDocument, xslDocument, *result);
 
     //-- add error observers
     ListIterator* iter = errorObservers.iterator();
@@ -618,7 +618,7 @@ void XSLTProcessor::process
     Document* result = new Document();
 
     //-- create a new ProcessorState
-    ProcessorState ps(xslDocument, *result);
+    ProcessorState ps(xmlDocument, xslDocument, *result);
 
     //-- add error observers
     ListIterator* iter = errorObservers.iterator();
@@ -924,7 +924,6 @@ void XSLTProcessor::processAction
             //-- xsl:apply-templates
             case XSLType::APPLY_TEMPLATES :
             {
-
                 String* mode = 0;
                 Attr* modeAttr = actionElement->getAttributeNode(MODE_ATTR);
                 if ( modeAttr ) mode = new String(modeAttr->getValue());
@@ -1716,7 +1715,6 @@ void XSLTProcessor::processTemplateParams
             else if (nodeType == Node::TEXT_NODE) {
                 if (!XMLUtils::isWhitespace(((Text*)tmpNode)->getData())) break;
             }
-            else break;
             tmpNode = tmpNode->getNextSibling();
         }
     }
@@ -1863,8 +1861,8 @@ void XSLTProcessor::xslCopyOf(ExprResult* exprResult, ProcessorState* ps) {
 } //-- xslCopyOf
 
 #ifndef TX_EXE
-//#define PRINTF NS_LOG_PRINTF(XSLT)
-//#define FLUSH  NS_LOG_FLUSH(XSLT)
+#define PRINTF NS_LOG_PRINTF(XSLT)
+#define FLUSH  NS_LOG_FLUSH(XSLT)
 NS_IMETHODIMP
 XSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
                                  nsIDOMNode* aStyleDOM,
@@ -1909,7 +1907,7 @@ XSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
     Document* resultDocument = new Document(aOutputDoc);
 
     //-- create a new ProcessorState
-    ProcessorState* ps = new ProcessorState(*xslDocument, *resultDocument);
+    ProcessorState* ps = new ProcessorState(*sourceDocument, *xslDocument, *resultDocument);
 
     //-- add error observers
 
