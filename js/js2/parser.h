@@ -148,13 +148,16 @@ namespace JavaScript {
 //
 
 	class Token {
+		static const char *const kindNames[];
 	  public:
-		enum Kind {
+		enum Kind {	// Keep synchronized with kindNames table
+		  // Special
 			End,						// End of token stream
 
 			Id,							// Non-keyword identifier (may be same as a keyword if it contains an escape code)
 			Num,						// Numeral
-			Str,						// String or unit after numeral
+			Str,						// String
+			Unit,						// Unit after numeral
 			RegExp,						// Regular expression
 
 		  // Punctuators
@@ -286,23 +289,28 @@ namespace JavaScript {
 			Method,						// method
 			Override,					// override
 			Set,						// set
-			Version						// version
+			Version,					// version
+			
+			KeywordsEnd,				// End of range of special identifier tokens
+			KeywordsBegin = Abstract,	// Beginning of range of special identifier tokens
+			KindsEnd = KeywordsEnd		// End of token kinds
 		};
 
 		Kind kind;						// The token's kind
 		bool lineBreak;					// True if line break precedes this token
 		uint32 lineNum;					// One-based source line number
 		uint32 charPos;					// Zero-based character offset of this token in source line
-		StringAtom *identifier;			// The token's characters (identifiers, keywords, and regular expressions only)
-		auto_ptr<String> chars;			// The token's characters (strings, numbers, and regular expression flags only)
+		StringAtom *identifier;			// The token's characters; non-null for identifiers, keywords, and regular expressions only
+		String chars;					// The token's characters; valid for strings, units, numbers, and regular expression flags only
 		float64 value;					// The token's value (numbers only)
 		
-		void setChars(const String &s);
+		static void initKeywords(World &world);
+
+		friend String &operator+=(String &s, Kind k) {ASSERT(uint(k) < KindsEnd); return s += kindNames[k];}
+		friend String &operator+=(String &s, const Token &t) {t.print(s); return s;}
+		void print(String &dst, bool debug = false) const;
 	};
 
-
-	void initKeywords(World &world);
-	
 
 	class Lexer {
 		static const int tokenBufferSize = 3;	// Token lookahead buffer size
@@ -338,7 +346,7 @@ namespace JavaScript {
 		char16 lexEscape(bool unicodeOnly);
 		bool lexIdentifier(String &s, bool allowLeadingDigit);
 		bool lexNumeral();
-		String lexString(char16 separator);
+		void lexString(String &s, char16 separator);
 		void lexRegExp();
 		void lexToken(bool preferRegExp);
 	  public:
