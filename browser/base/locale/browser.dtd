@@ -256,6 +256,10 @@
 <!ENTITY newTabButton.tooltip           "Opens a new tab">
 <!ENTITY newWindowButton.tooltip        "Opens a new window">
 
+<!ENTITY cutButton.tooltip              "Cut">
+<!ENTITY copyButton.tooltip             "Copy">
+<!ENTITY pasteButton.tooltip            "Paste">
+
 <!ENTITY findOnSearchBarCmd.label       "Find in this Page">
 <!ENTITY currentDownloads.label          "Current Downloads">
 <!ENTITY openDownloadsSidebar.commandkey "E">
