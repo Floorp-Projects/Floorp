@@ -28,7 +28,7 @@
 #define nsIString_h__
 
 #include "nsISupports.h"
-struct nsStr;
+#include "nsStr.h"        // need to include it for eCharSize
 
 // {4C541410-E0B9-11d2-BDB3-000064657374}
 #define NS_ISTRING_IID \
@@ -38,6 +38,13 @@ class nsIString : public nsISupports
 {
 public:
   static const nsID& GetIID() { static nsIID iid = NS_ISTRING_IID; return iid; }
+
+  /**
+   * Set the character size to something other than the default character
+   * size. By default, nsIString objects will have kDefaultCharSize (as defined
+   * in nsStr.h) as the default char size for their representation.
+   */
+  NS_IMETHOD Init(eCharSize aCharSize) = 0;
 
   /** 
    * Copy the caller's nsStr into the object's internal nsStr. The copy is "deep"; 
