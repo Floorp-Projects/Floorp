@@ -3,9 +3,9 @@
 
 <!DOCTYPE window> 
 
-<xul:window xmlns:html="http://www.w3.org/TR/REC-html40"
-			xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"> 
-  
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+			xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  			onConstruction="Startup()">
   <html:style>
 	  #toolbar {
         position: fixed;
@@ -69,25 +69,119 @@
 </html:style>
 
 
-<html:div html:id="toolbar">
-<html:iframe html:src="msgbar.xul" html:name="browser.toolbar" html:width="100%" html:height="56" > </html:iframe>
+<html:script>
+function StartUp()
+{
+	dump("StartUp: MsgAppCore\n");
+   var appCore = XPAppCoresManager.Find("MsgAppCore");
+   if (appCore == null) {
+	 dump("StartUp: Creating AppCore\n");
+     appCore = new MsgAppCore();
+   }
+   dump("AppCore probably found\n");
+   if (appCore != null) {
+	  dump("Initializing AppCore and setting Window\n");
+      appCore.Init("MsgAppCore");
+      appCore.SetWindow(window);
+   }
+}
+
+function OpenURL(url)
+{
+	dump("\n\nOpenURL from XUL\n\n\n");
+	var appCore = new MsgAppCore();
+	if (appCore != null) {
+	  dump("Initializing AppCore and setting Window\n");
+      appCore.Init("MsgAppCore");
+      appCore.SetWindow(window);
+	  appCore.OpenURL(url);
+   }
+}
+
+</html:script>
+
+  <menubar>
+    <menu name="File">
+      <menuitem name="New Message" onClick="NewMessage();"/>
+      <separator/>
+      <menuitem name="Get New Message" onClick="GetMessage();"/>
+      <menuitem name="Subscribe" onClick="Subscribe();"/>
+      <separator/>
+      <menuitem name="Rename Folder.." onClick="RenameFolder();"/>
+      <menuitem name="Empty Trash" onClick="EmptyTrash();"/>
+      <separator/>
+      <menuitem name="Print" onClick="Print();"/>
+      <separator/>
+      <menuitem name="Close" onClick="Close();"/>
+      <menuitem name="Exit" onClick="Exit();"/>
+    </menu>
+    <menu name="Edit">
+      <menuitem name="Delete Message" onClick="DeleteMessage();"/>
+    </menu>
+    <menu name="View">
+      <menuitem name="View Attachments Inline" onClick="ViewAttachInline();"/>
+      <menuitem name="Wrap Long Lines" onClick="WrapLongLines();"/>
+      <separator/>
+      <menuitem name="Page Source" onClick="ViewPageSource();"/>
+      <menuitem name="Page Info" onClick="ViewPageInfo();"/>
+    </menu>
+    <menu name="Go">
+      <menuitem name="Next Message" onClick="NextMessage();"/>
+      <menuitem name="Next Unread Message" onClick="NextUnreadMessage();"/>
+    </menu>
+    <menu name="Message">
+      <menuitem name="New Message" onClick="NewMessage();"/>
+      <menuitem name="Reply" onClick="ReplyMessage();"/>
+      <menuitem name="Forward" onClick="ForwardMessage();"/>
+     </menu>
+    <menu name="Demo">
+      <menuitem name="News Message 1" onClick="OpenURL('news://news.mcom.com:119/35BE6AB1.55A14AE4@netscape.com');"/>
+      <menuitem name="News Message 2" onClick="OpenURL('news://news.mozilla.org:119/36BC8178.5BE93104@netscape.com');"/>
+    </menu>
+  </menubar>
+
+<html:div html:id="header">
+	<toolbox>
+    <toolbar>
+	  <titledbutton src="resource:/res/toolbar/Mail_Forward.gif" align="bottom" value="Get Msg" onClick="GetMessage()">
+	  </titledbutton>
+
+	  <titledbutton src="resource:/res/toolbar/Mail_NewMsg.gif" align="bottom" value="New Msg" onClick="NewMessage()">
+	  </titledbutton>
+
+	  <titledbutton src="resource:/res/toolbar/Mail_Reply.gif" align="bottom" value="Reply" onClick="ReplyMessage()">
+	  </titledbutton>
+
+	  <titledbutton src="resource:/res/toolbar/Mail_Forward.gif" align="bottom" value="Forward" onClick="ForwardMessage()">
+	  </titledbutton>
+
+	  <titledbutton src="resource:/res/samples/delmsg.gif" align="bottom" value="Delete" onClick="DeleteMessage()">
+	  </titledbutton>
+
+	  <titledbutton src="resource:/res/toolbar/Mail_NewMsg.gif" align="bottom" value="Load Msg" onClick=""OpenURL('news://news.mcom.com:119/35BE6AB1.55A14AE4@netscape.com')">
+	  </titledbutton>
+
+	  <titledbutton src="resource:/res/throbber/anims00.gif" align="right" onClick="window.frames[0].home()"/>
+
+    </toolbar>
+	</toolbox>
 </html:div>
 
 <html:div html:id="thread">
-<html:iframe html:src="threadPane.xul" html:name="browser.foo" html:width="100%" html:height="80" > </html:iframe>
+<html:iframe html:align=right html:src="threadPane.xul" html:name="browser.foo" html:width="650" html:height="370" > </html:iframe>
 </html:div>
 
 <html:div html:id="message">
-<html:iframe html:src="message.html" html:name="browser.webwindow" html:width="100%" html:height="400" > </html:iframe>
+<html:iframe html:align=right html:src="message.html" html:name="browser.webwindow" html:width="650" html:height="370" > </html:iframe>
 </html:div>
 
 <html:div html:id="folder">
-<html:iframe html:src="folderPane.xul" name="browser.sidebar" width="100%" height="200"></html:iframe>
+<html:iframe html:src="folderPane.xul" html:name="browser.sidebar" html:width="340" html:height="740"></html:iframe>
 </html:div>
 
 <html:div html:id="footer">
 <html:iframe html:src="status.html" html:name="browser.status" html:width="100%" html:height="34" > </html:iframe>
 </html:div>
 
-</xul:window>
+</window>
 
