@@ -108,3 +108,4 @@ void nsImportStringBundle::Cleanup( void)
 		m_pBundle->Release();
 	m_pBundle = nsnull;
 }
+
