@@ -6850,11 +6850,11 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsIPresShell*            aPresShell,
     isFixedPositioned = PR_TRUE;
   }
 
-  if (aTag == nsMathMLAtoms::mi_)
-     rv = NS_NewMathMLmiFrame(aPresShell, &newFrame);
-  else if (aTag == nsMathMLAtoms::mtext_ ||
-           aTag == nsMathMLAtoms::mn_)
-     rv = NS_NewMathMLmtextFrame(aPresShell, &newFrame);
+  if (aTag == nsMathMLAtoms::mi_ ||
+      aTag == nsMathMLAtoms::mn_ ||
+      aTag == nsMathMLAtoms::ms_ ||
+      aTag == nsMathMLAtoms::mtext_)
+     rv = NS_NewMathMLTokenFrame(aPresShell, &newFrame);
   else if (aTag == nsMathMLAtoms::mo_)
      rv = NS_NewMathMLmoFrame(aPresShell, &newFrame);
   else if (aTag == nsMathMLAtoms::mfrac_)
@@ -6877,8 +6877,6 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsIPresShell*            aPresShell,
      rv = NS_NewMathMLmpaddedFrame(aPresShell, &newFrame);
   else if (aTag == nsMathMLAtoms::mspace_)
      rv = NS_NewMathMLmspaceFrame(aPresShell, &newFrame);
-  else if (aTag == nsMathMLAtoms::ms_)
-     rv = NS_NewMathMLmsFrame(aPresShell, &newFrame);
   else if (aTag == nsMathMLAtoms::mfenced_)
      rv = NS_NewMathMLmfencedFrame(aPresShell, &newFrame);
   else if (aTag == nsMathMLAtoms::mmultiscripts_)

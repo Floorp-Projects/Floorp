@@ -17,25 +17,36 @@
  * 
  * Contributor(s): 
  *   Roger B. Sidje <rbs@maths.uq.edu.au>
- *   David J. Fiddes <D.J.Fiddes@hw.ac.uk>
  */
 
-#ifndef nsMathMLmiFrame_h___
-#define nsMathMLmiFrame_h___
+#ifndef nsMathMLTokenFrame_h___
+#define nsMathMLTokenFrame_h___
 
 #include "nsCOMPtr.h"
 #include "nsMathMLContainerFrame.h"
 
 //
-// <mi> -- identifier 
+// Base class to handle token elements
 //
 
-class nsMathMLmiFrame : public nsMathMLContainerFrame {
+class nsMathMLTokenFrame : public nsMathMLContainerFrame {
 public:
-  friend nsresult NS_NewMathMLmiFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+  friend nsresult NS_NewMathMLTokenFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
   NS_IMETHOD
-  TransmitAutomaticData(nsIPresContext* aPresContext);
+  GetFrameType(nsIAtom** aType) const;
+
+  NS_IMETHOD
+  Init(nsIPresContext*  aPresContext,
+       nsIContent*      aContent,
+       nsIFrame*        aParent,
+       nsIStyleContext* aContext,
+       nsIFrame*        aPrevInFlow);
+
+  NS_IMETHOD
+  SetInitialChildList(nsIPresContext* aPresContext,
+                      nsIAtom*        aListName,
+                      nsIFrame*       aChildList);
 
   NS_IMETHOD
   Reflow(nsIPresContext*          aPresContext,
@@ -53,18 +64,29 @@ public:
   ReflowDirtyChild(nsIPresShell* aPresShell,
                    nsIFrame*     aChild);
 
+  NS_IMETHOD
+  AttributeChanged(nsIPresContext* aPresContext,
+                   nsIContent*     aChild,
+                   PRInt32         aNameSpaceID,
+                   nsIAtom*        aAttribute,
+                   PRInt32         aModType, 
+                   PRInt32         aHint);
 protected:
-  nsMathMLmiFrame();
-  virtual ~nsMathMLmiFrame();
+  nsMathMLTokenFrame();
+  virtual ~nsMathMLTokenFrame();
 
   virtual PRIntn GetSkipSides() const { return 0; }
 
- /* <mi> needs to switch to a normal-font (rather than italics) if
-  * its text content is not a single character (as per the MathML REC).
-  * special care is also needed for style-invariant chars - bug 65951
-  */
-  void
+  // hook to perform MathML-specific actions depending on the tag
+  virtual void
   ProcessTextData(nsIPresContext* aPresContext);
+
+  // helper to set the style of <mi> which has to be italic or normal
+  // depending on its textual content
+  void SetTextStyle(nsIPresContext* aPresContext);
+
+  // helper to set the quotes of <ms>
+  void SetQuotes(nsIPresContext* aPresContext);
 };
 
-#endif /* nsMathMLmiFrame_h___ */
+#endif /* nsMathMLTokentFrame_h___ */

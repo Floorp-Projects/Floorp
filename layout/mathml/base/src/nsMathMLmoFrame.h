@@ -25,13 +25,13 @@
 #define nsMathMLmoFrame_h___
 
 #include "nsCOMPtr.h"
-#include "nsMathMLContainerFrame.h"
+#include "nsMathMLTokenFrame.h"
 
 //
 // <mo> -- operator, fence, or separator
 //
 
-class nsMathMLmoFrame : public nsMathMLContainerFrame {
+class nsMathMLmoFrame : public nsMathMLTokenFrame {
 public:
   friend nsresult NS_NewMathMLmoFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
@@ -44,11 +44,6 @@ public:
   NS_IMETHOD
   GetAdditionalStyleContext(PRInt32           aIndex, 
                             nsIStyleContext** aStyleContext) const;
-
-  NS_IMETHOD
-  SetInitialChildList(nsIPresContext* aPresContext,
-                      nsIAtom*        aListName,
-                      nsIFrame*       aChildList);
 
   NS_IMETHOD
   Paint(nsIPresContext*      aPresContext,
@@ -69,12 +64,6 @@ public:
          nsHTMLReflowMetrics&     aDesiredSize,
          const nsHTMLReflowState& aReflowState,
          nsReflowStatus&          aStatus);
-
-  NS_IMETHOD
-  Place(nsIPresContext*      aPresContext,
-        nsIRenderingContext& aRenderingContext,
-        PRBool               aPlaceOrigin,
-        nsHTMLReflowMetrics& aDesiredSize);
 
   NS_IMETHOD
   ReflowDirtyChild(nsIPresShell* aPresShell,
@@ -108,8 +97,8 @@ protected:
   float            mMinSize;
   float            mMaxSize;
 
-  // helper to get the text that we enclose and setup our nsMathMLChar
-  void
+  // overload the base method so that we can setup our nsMathMLChar
+  virtual void
   ProcessTextData(nsIPresContext* aPresContext);
 
   // helper to get our 'form' and lookup in the Operator Dictionary to fetch 

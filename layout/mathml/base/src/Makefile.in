@@ -58,6 +58,8 @@ CPPSRCS =         nsMathMLChar.cpp		        \
                   nsMathMLFrame.cpp		\
                   nsMathMLContainerFrame.cpp		\
                   nsMathMLForeignFrameWrapper.cpp		\
+                  nsMathMLTokenFrame.cpp		\
+                  nsMathMLmoFrame.cpp			\
                   nsMathMLmrowFrame.cpp		        \
                   nsMathMLmphantomFrame.cpp		\
                   nsMathMLmfencedFrame.cpp		\
@@ -66,16 +68,12 @@ CPPSRCS =         nsMathMLChar.cpp		        \
                   nsMathMLmsubFrame.cpp			\
                   nsMathMLmsubsupFrame.cpp		\
                   nsMathMLmmultiscriptsFrame.cpp	\
-                  nsMathMLmiFrame.cpp			\
-                  nsMathMLmtextFrame.cpp		\
                   nsMathMLmtableFrame.cpp		\
-                  nsMathMLmoFrame.cpp			\
                   nsMathMLmunderFrame.cpp		\
                   nsMathMLmoverFrame.cpp		\
                   nsMathMLmunderoverFrame.cpp		\
                   nsMathMLmpaddedFrame.cpp		\
                   nsMathMLmspaceFrame.cpp		\
-                  nsMathMLmsFrame.cpp			\
                   nsMathMLmstyleFrame.cpp		\
                   nsMathMLmsqrtFrame.cpp		\
                   nsMathMLmrootFrame.cpp		\

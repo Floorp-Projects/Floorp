@@ -156,8 +156,8 @@ nsMathMLmoFrame::Paint(nsIPresContext*      aPresContext,
 
   if (!useMathMLChar || NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
     // let the base class paint the background, border, outline
-    rv = nsMathMLContainerFrame::Paint(aPresContext, aRenderingContext,
-                                       aDirtyRect, aWhichLayer);
+    rv = nsMathMLTokenFrame::Paint(aPresContext, aRenderingContext,
+                                   aDirtyRect, aWhichLayer);
   }
   if (useMathMLChar) {
     // make our char selected if our inner child text frame is selected
@@ -928,28 +928,12 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmoFrame::SetInitialChildList(nsIPresContext* aPresContext,
-                                     nsIAtom*        aListName,
-                                     nsIFrame*       aChildList)
-{
-  // First, let the base class do its work
-  nsresult rv = nsMathMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
-  if (NS_FAILED(rv)) return rv;
-
-  // No need to tract the style context given to our MathML char. 
-  // The Style System will use Get/SetAdditionalStyleContext() to keep it
-  // up-to-date if dynamic changes arise.
-  ProcessTextData(aPresContext);
-  return rv;
-}
-
-NS_IMETHODIMP
 nsMathMLmoFrame::InheritAutomaticData(nsIPresContext* aPresContext,
                                       nsIFrame*       aParent)
 {
   // retain our native direction, it only changes if our text content changes
   nsStretchDirection direction = mEmbellishData.direction;
-  nsMathMLContainerFrame::InheritAutomaticData(aPresContext, aParent);
+  nsMathMLTokenFrame::InheritAutomaticData(aPresContext, aParent);
   mEmbellishData.direction = direction;
   return NS_OK;
 }
@@ -974,18 +958,8 @@ nsMathMLmoFrame::Reflow(nsIPresContext*          aPresContext,
   // certain values use units that depend on our style context, so
   // it is safer to just process the whole lot here
   ProcessOperatorData(aPresContext);
-  return ReflowTokenFor(this, aPresContext, aDesiredSize,
-                        aReflowState, aStatus);
-}
-
-NS_IMETHODIMP
-nsMathMLmoFrame::Place(nsIPresContext*      aPresContext,
-                       nsIRenderingContext& aRenderingContext,
-                       PRBool               aPlaceOrigin,
-                       nsHTMLReflowMetrics& aDesiredSize)
-{
-  return PlaceTokenFor(this, aPresContext, aRenderingContext,
-                       aPlaceOrigin, aDesiredSize);
+  return nsMathMLTokenFrame::Reflow(aPresContext, aDesiredSize,
+                                    aReflowState, aStatus);
 }
 
 NS_IMETHODIMP
@@ -1039,12 +1013,13 @@ nsMathMLmoFrame::AttributeChanged(nsIPresContext* aPresContext,
     return ReLayoutChildren(aPresContext, target);
   }
 
-  return nsMathMLContainerFrame::
+  return nsMathMLTokenFrame::
          AttributeChanged(aPresContext, aContent, aNameSpaceID,
                           aAttribute, aModType, aHint);
 }
 
 // ----------------------
+// No need to tract the style context given to our MathML char. 
 // the Style System will use these to pass the proper style context to our MathMLChar
 NS_IMETHODIMP
 nsMathMLmoFrame::GetAdditionalStyleContext(PRInt32           aIndex,

@@ -786,37 +786,6 @@ nsMathMLContainerFrame::Paint(nsIPresContext*      aPresContext,
   return rv;
 }
 
-static void
-CompressWhitespace(nsIContent* aContent)
-{
-  nsCOMPtr<nsIAtom> tag;
-  aContent->GetTag(*getter_AddRefs(tag));
-  if (tag.get() == nsMathMLAtoms::mo_ ||
-      tag.get() == nsMathMLAtoms::mi_ ||
-      tag.get() == nsMathMLAtoms::mn_ ||
-      tag.get() == nsMathMLAtoms::ms_ ||
-      tag.get() == nsMathMLAtoms::mtext_) {
-    PRInt32 numKids;
-    aContent->ChildCount(numKids);
-    for (PRInt32 kid = 0; kid < numKids; kid++) {
-      nsCOMPtr<nsIContent> kidContent;
-      aContent->ChildAt(kid, *getter_AddRefs(kidContent));
-      if (kidContent.get()) {       
-        nsCOMPtr<nsIDOMText> kidText(do_QueryInterface(kidContent));
-        if (kidText.get()) {
-          nsCOMPtr<nsITextContent> tc(do_QueryInterface(kidContent));
-          if (tc) {
-            nsAutoString text;
-            tc->CopyText(text);
-            text.CompressWhitespace();
-            tc->SetText(text, PR_FALSE); // not meant to be used if notify is needed
-          }
-        }
-      }
-    }
-  }
-}
-
 // This method is called in a top-down manner, as we descend the frame tree
 // during its construction
 NS_IMETHODIMP
@@ -826,11 +795,6 @@ nsMathMLContainerFrame::Init(nsIPresContext*  aPresContext,
                              nsIStyleContext* aContext,
                              nsIFrame*        aPrevInFlow)
 {
-  // leading and trailing whitespace doesn't count -- bug 15402
-  // brute force removal for people who do <mi> a </mi> instead of <mi>a</mi>
-  // XXX the best fix is to skip these in nsTextFrame
-  CompressWhitespace(aContent);
-
   MapAttributesIntoCSS(aPresContext, aContent);
 
   // let the base class do its Init()
@@ -1083,132 +1047,6 @@ nsMathMLContainerFrame::AttributeChanged(nsIPresContext* aPresContext,
   return ReflowDirtyChild(presShell, nsnull);
 }
 
-// helper function to reflow token elements
-// note that mBoundingMetrics is computed here
-nsresult
-nsMathMLContainerFrame::ReflowTokenFor(nsIFrame*                aFrame,
-                                       nsIPresContext*          aPresContext,
-                                       nsHTMLReflowMetrics&     aDesiredSize,
-                                       const nsHTMLReflowState& aReflowState,
-                                       nsReflowStatus&          aStatus)
-{
-  NS_PRECONDITION(aFrame, "null arg");
-  nsresult rv = NS_OK;
-
-  // See if this is an incremental reflow
-  if (aReflowState.reason == eReflowReason_Incremental) {
-#ifdef MATHML_NOISY_INCREMENTAL_REFLOW
-printf("nsMathMLContainerFrame::ReflowTokenFor:IncrementalReflow received by: ");
-nsFrame::ListTag(stdout, aFrame);
-printf("\n");
-#endif
-  }
-
-  // initializations needed for empty markup like <mtag></mtag>
-  aDesiredSize.width = aDesiredSize.height = 0;
-  aDesiredSize.ascent = aDesiredSize.descent = 0;
-  aDesiredSize.mBoundingMetrics.Clear();
-
-  // ask our children to compute their bounding metrics
-  nsHTMLReflowMetrics childDesiredSize(aDesiredSize.maxElementSize,
-                      aDesiredSize.mFlags | NS_REFLOW_CALC_BOUNDING_METRICS);
-  nsSize availSize(aReflowState.mComputedWidth, aReflowState.mComputedHeight);
-  PRInt32 count = 0;
-  nsIFrame* childFrame;
-  aFrame->FirstChild(aPresContext, nsnull, &childFrame);
-  while (childFrame) {
-    nsHTMLReflowState childReflowState(aPresContext, aReflowState,
-                                       childFrame, availSize);
-    rv = NS_STATIC_CAST(nsMathMLContainerFrame*,
-                        aFrame)->ReflowChild(childFrame,
-                                             aPresContext, childDesiredSize,
-                                             childReflowState, aStatus);
-    //NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
-    if (NS_FAILED(rv)) return rv;
-
-    // origins are used as placeholders to store the child's ascent and descent.
-    childFrame->SetRect(aPresContext,
-                        nsRect(childDesiredSize.descent, childDesiredSize.ascent,
-                               childDesiredSize.width, childDesiredSize.height));
-    // compute and cache the bounding metrics
-    if (0 == count)
-      aDesiredSize.mBoundingMetrics  = childDesiredSize.mBoundingMetrics;
-    else
-      aDesiredSize.mBoundingMetrics += childDesiredSize.mBoundingMetrics;
-
-    count++;
-    childFrame->GetNextSibling(&childFrame);
-  }
-
-  // cache the frame's mBoundingMetrics
-  NS_STATIC_CAST(nsMathMLContainerFrame*,
-                 aFrame)->SetBoundingMetrics(aDesiredSize.mBoundingMetrics);
-
-  // place and size children
-  NS_STATIC_CAST(nsMathMLContainerFrame*,
-                 aFrame)->FinalizeReflow(aPresContext, *aReflowState.rendContext,
-                                         aDesiredSize);
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
-  return NS_OK;
-}
-
-// helper function to place token elements
-// mBoundingMetrics is computed at the ReflowToken pass, it is
-// not computed here because our children may be text frames that
-// do not implement the GetBoundingMetrics() interface.
-nsresult
-nsMathMLContainerFrame::PlaceTokenFor(nsIFrame*            aFrame,
-                                      nsIPresContext*      aPresContext,
-                                      nsIRenderingContext& aRenderingContext,
-                                      PRBool               aPlaceOrigin,
-                                      nsHTMLReflowMetrics& aDesiredSize)
-{
-  aDesiredSize.width = aDesiredSize.height = 0;
-  aDesiredSize.ascent = aDesiredSize.descent = 0;
-
-  const nsStyleFont* font;
-  aFrame->GetStyleData(eStyleStruct_Font, (const nsStyleStruct*&)font);
-  nsCOMPtr<nsIFontMetrics> fm;
-  aPresContext->GetMetricsFor(font->mFont, getter_AddRefs(fm));
-  nscoord ascent, descent;
-  fm->GetMaxAscent(ascent);
-  fm->GetMaxDescent(descent);
-
-  nsBoundingMetrics bm;
-  NS_STATIC_CAST(nsMathMLContainerFrame*, aFrame)->GetBoundingMetrics(bm);
-  aDesiredSize.mBoundingMetrics = bm;
-  aDesiredSize.width = bm.width;
-  aDesiredSize.ascent = PR_MAX(bm.ascent, ascent);
-  aDesiredSize.descent = PR_MAX(bm.descent, descent);
-  aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
-
-  if (aPlaceOrigin) {
-    nscoord dy, dx = 0;
-    nsRect rect;
-    nsIFrame* childFrame;
-    aFrame->FirstChild(aPresContext, nsnull, &childFrame);
-    while (childFrame) {
-      childFrame->GetRect(rect);
-      nsHTMLReflowMetrics childSize(nsnull);
-      childSize.width = rect.width;
-      childSize.height = aDesiredSize.height; //rect.height;
-
-      // place and size the child
-      dy = aDesiredSize.ascent - rect.y;
-      NS_STATIC_CAST(nsMathMLContainerFrame*,
-                     aFrame)->FinishReflowChild(childFrame, aPresContext, nsnull,
-                                                childSize, dx, dy, 0);
-      dx += rect.width;
-      childFrame->GetNextSibling(&childFrame);
-    }
-  }
-
-  NS_STATIC_CAST(nsMathMLContainerFrame*,
-                 aFrame)->SetReference(nsPoint(0, aDesiredSize.ascent));
-
-  return NS_OK;
-}
-
 // We are an inline frame, so we handle dirty request like nsInlineFrame
 NS_IMETHODIMP
 nsMathMLContainerFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
@@ -1347,25 +1185,9 @@ nsMathMLContainerFrame::GetFrameType(nsIAtom** aType) const
       mEmbellishData.coreFrame) {
     return mEmbellishData.coreFrame->GetFrameType(aType);
   }
-  else {
-    nsCOMPtr<nsIAtom> tag;
-    mContent->GetTag(*getter_AddRefs(tag));
-    // see if this is a token element (mapped to 'Ord'in TeX)
-    if (tag == nsMathMLAtoms::mi_ ||
-        tag == nsMathMLAtoms::mn_ ||
-        tag == nsMathMLAtoms::ms_ ||
-        tag == nsMathMLAtoms::mtext_) {
-      *aType = nsMathMLAtoms::ordinaryMathMLFrame;
-    }
-    else if (tag == nsMathMLAtoms::mo_ ) {
-      // this is an empty <mo></mo> that wasn't treated as embellished above
-      *aType = nsMathMLAtoms::operatorInvisibleMathMLFrame;
-    }
-    else {
-      // everything else is a schematta element (mapped to 'Inner' in TeX)
-      *aType = nsMathMLAtoms::schemataMathMLFrame;
-    }
-  }
+
+  // everything else is a schematta element (mapped to 'Inner' in TeX)
+  *aType = nsMathMLAtoms::schemataMathMLFrame;
   NS_ADDREF(*aType);
   return NS_OK;
 }
