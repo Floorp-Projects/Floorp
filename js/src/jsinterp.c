@@ -4428,6 +4428,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                 }
             }
             PUSH_OPND(OBJECT_TO_JSVAL(obj));
+            obj = NULL;
             break;
 
           case JSOP_NAMEDFUNOBJ:
@@ -4517,6 +4518,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
              * 6. Return Result(3).
              */
             PUSH_OPND(OBJECT_TO_JSVAL(obj));
+            obj = NULL;
             break;
 
           case JSOP_CLOSURE:
