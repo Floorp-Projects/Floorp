@@ -68,9 +68,9 @@ DIRS = \
   cmd\winfe\prefs		\
 !endif
 # the following are associated with the layout engine
-  editor 			\
   expat				\
   htmlparser			\
+  editor 			\
   gfx				\
   dom				\
   view				\
