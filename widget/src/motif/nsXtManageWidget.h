@@ -24,7 +24,7 @@
 #ifndef _FE_NEWMANAGE_H_
 #define _FE_NEWMANAGE_H_
 
-#include <Xm/Xm.h>
+#include "Xm/Xm.h"
 
 extern WidgetClass newManageClass;
 typedef struct _NewManageClassRec *NewManageClass;
