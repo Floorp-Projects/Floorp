@@ -60,6 +60,9 @@ class nsINNTPNewsgroup : public nsISupports {
   /*  <IDL>  */
   NS_IMETHOD IsWantNewTotals(PRBool *aIsWantNewTotals) = 0;
   NS_IMETHOD SetWantNewTotals(PRBool aWantNewTotals) = 0;
+
+  /*  <IDL>  */
+  NS_IMETHOD UpdateSummaryFromNNTPInfo(PRInt32 oldest, PRInt32 youngest, PRInt32 total_messages) = 0;
 };
 
 #endif /* __gen_nsINNTPNewsgroup_h__ */

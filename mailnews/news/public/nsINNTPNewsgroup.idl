@@ -45,6 +45,9 @@ interface nsINNTPNewsgroup : nsISupports {
   attribute boolean subscribed;
   attribute boolean wantNewTotals;
 
+  void UpdateSummaryFromNNTPInfo(in long oldest,
+                                 in long youngest,
+                                 in long total_messages);
 };
 
 
