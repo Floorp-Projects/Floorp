@@ -236,7 +236,7 @@ nsContentSink::ScriptAvailable(nsresult aResult,
   } else {
     mScriptElements.RemoveObjectAt(count - 1);
 
-    if (mParser && aWasPending) {
+    if (mParser && aWasPending && aResult != NS_BINDING_ABORTED) {
       // Loading external script failed!. So, resume
       // parsing since the parser got blocked when loading
       // external script. - Ref. Bug: 94903
