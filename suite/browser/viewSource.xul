@@ -5,6 +5,7 @@
 <!DOCTYPE window SYSTEM "chrome://navigator/locale/viewSource.dtd" >
 <window id="main-window" xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="onLoadViewSource()"
         onunload="Shutdown()"
         title="&mainWindow.title;" titlemodifier="&mainWindow.titlemodifier;" 
         titleseperator ="&mainWindow.titlemodifierseperator;"  windowtype="navigator:viewsource"
