@@ -69,6 +69,8 @@ public:
   NS_IMETHOD VerifyTree() const;
 
 protected:
+  PRBool  mIsPseudoFrame;
+
   nsBodyFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 
   ~nsBodyFrame();
@@ -76,7 +78,6 @@ protected:
   void ComputeDesiredSize(const nsRect& aDesiredRect,
                           const nsSize& aMaxSize,
                           const nsMargin& aBorderPadding,
-                          PRBool aIsPseudoFrame,
                           nsReflowMetrics& aDesiredSize);
 
   virtual PRIntn GetSkipSides() const;
