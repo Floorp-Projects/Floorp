@@ -284,6 +284,7 @@ nsresult OpenWebPage(const char *url)
            nsnull, &chrome);
     if (NS_SUCCEEDED(rv))
     {
+        WebBrowserChromeUI::ShowWindow(chrome, PR_TRUE);
         // Start loading a page
         nsCOMPtr<nsIWebBrowser> newBrowser;
         chrome->GetWebBrowser(getter_AddRefs(newBrowser));
@@ -408,7 +409,7 @@ void SaveWebPage(nsIWebBrowser *aWebBrowser)
 //
 //  FUNCTION: ResizeEmbedding()
 //
-//  PURPOSE: Resizes the webbrowser window to fit it's container.
+//  PURPOSE: Resizes the webbrowser window to fit its container.
 //
 nsresult ResizeEmbedding(nsIWebBrowserChrome* chrome)
 {
@@ -1205,6 +1206,21 @@ void WebBrowserChromeUI::ShowTooltip(nsIWebBrowserChrome *aChrome, PRInt32 aXCoo
 void WebBrowserChromeUI::HideTooltip(nsIWebBrowserChrome *aChrome)
 {
     // TODO code to hide a tooltip should go here
+}
+
+void WebBrowserChromeUI::ShowWindow(nsIWebBrowserChrome *aChrome, PRBool aShow)
+{
+  HWND win = GetBrowserDlgFromChrome(aChrome);
+  ::ShowWindow(win, aShow ? SW_RESTORE : SW_HIDE);
+}
+
+void WebBrowserChromeUI::SizeTo(nsIWebBrowserChrome *aChrome, PRInt32 aWidth, PRInt32 aHeight)
+{
+  HWND win = GetBrowserDlgFromChrome(aChrome);
+  RECT winRect;
+
+  ::GetWindowRect(win, &winRect);
+  ::MoveWindow(win, winRect.left, winRect.top, aWidth, aHeight, TRUE);
 }
 
 //

@@ -56,6 +56,8 @@ public:
     static void ShowContextMenu(nsIWebBrowserChrome *aChrome, PRUint32 aContextFlags, nsIDOMEvent *aEvent, nsIDOMNode *aNode);
     static void ShowTooltip(nsIWebBrowserChrome *aChrome, PRInt32 aXCoords, PRInt32 aYCoords, const PRUnichar *aTipText);
     static void HideTooltip(nsIWebBrowserChrome *aChrome);
+    static void ShowWindow(nsIWebBrowserChrome *aChrome, PRBool aShow);
+    static void SizeTo(nsIWebBrowserChrome *aChrome, PRInt32 aWidth, PRInt32 aHeight);
 };
 
 class WebBrowserChrome   : public nsIWebBrowserChrome,
@@ -92,9 +94,12 @@ public:
 protected:
     nsresult SendHistoryStatusMessage(nsIURI * aURI, char * operation, PRInt32 info1=0, PRUint32 info2=0);
 
+    void ContentFinishedLoading();
+
     nativeWindow mNativeWindow;
     PRUint32     mChromeFlags;
     PRBool       mContinueModalLoop;
+    PRBool       mSizeSet;
 
     nsCOMPtr<nsIWebBrowser> mWebBrowser;
     nsCOMPtr<nsIWebBrowserChrome> mDependentParent; // opener (for dependent windows only)
