@@ -291,10 +291,13 @@ nsPrintingPromptService::DoDialog(nsIDOMWindow *aParent,
 NS_IMETHODIMP 
 nsPrintingPromptService::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRUint32 aStateFlags, nsresult aStatus)
 {
-  if (aStateFlags & STATE_STOP) {
+  if ((aStateFlags & STATE_STOP) && mWebProgressListener) {
     mWebProgressListener->OnStateChange(aWebProgress, aRequest, aStateFlags, aStatus);
-    mPrintProgress->CloseProgressDialog(PR_TRUE);
-    mPrintProgress = nsnull;
+    if (mPrintProgress) {
+      mPrintProgress->CloseProgressDialog(PR_TRUE);
+    }
+    mPrintProgress       = nsnull;
+    mWebProgressListener = nsnull;
   }
   return NS_OK;
 }
