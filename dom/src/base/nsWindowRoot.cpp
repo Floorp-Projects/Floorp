@@ -102,8 +102,7 @@ nsWindowRoot::DispatchEvent(nsIDOMEvent* aEvt, PRBool *_retval)
   nsIPresShell *shell = doc->GetShellAt(0);
   
   // Retrieve the context
-  nsCOMPtr<nsPresContext> aPresContext;
-  shell->GetPresContext(getter_AddRefs(aPresContext));
+  nsCOMPtr<nsPresContext> aPresContext = shell->GetPresContext();
 
   return aPresContext->EventStateManager()->
     DispatchNewEvent(NS_STATIC_CAST(nsIDOMEventReceiver*, this),

@@ -289,8 +289,7 @@ nsWebCrawler::DumpRegressionData()
       nsIFrame* root;
       shell->GetRootFrame(&root);
       if (nsnull != root) {
-        nsCOMPtr<nsPresContext> presContext;
-        shell->GetPresContext(getter_AddRefs(presContext));
+        nsPresContext *presContext = shell->GetPresContext();
         
         if (mOutputDir.Length() > 0) {
           nsAutoString regressionFileName;

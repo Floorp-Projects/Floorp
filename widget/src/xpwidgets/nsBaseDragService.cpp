@@ -264,7 +264,7 @@ nsBaseDragService :: GetFrameFromNode ( nsIDOMNode* inNode, nsIFrame** outFrame,
     if (doc) {
       nsIPresShell *presShell = doc->GetShellAt(0);
       if (presShell) 	{
-      	presShell->GetPresContext(outContext);
+        NS_IF_ADDREF(*outContext = presShell->GetPresContext());
       	presShell->GetPrimaryFrameFor(contentNode, outFrame);
         NS_ASSERTION ( *outFrame, "Can't get frame for this dom node" );
       }

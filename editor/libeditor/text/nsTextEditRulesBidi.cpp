@@ -60,10 +60,7 @@ nsTextEditRules::CheckBidiLevelForDeletion(nsIDOMNode           *aSelNode,
   if (!shell)
     return NS_ERROR_NULL_POINTER;
   
-  nsCOMPtr<nsPresContext> context;
-  res = shell->GetPresContext(getter_AddRefs(context));
-  if (NS_FAILED(res))
-    return res;
+  nsPresContext *context = shell->GetPresContext();
   if (!context)
     return NS_ERROR_NULL_POINTER;
   

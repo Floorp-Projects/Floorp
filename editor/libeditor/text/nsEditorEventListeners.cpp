@@ -971,8 +971,7 @@ IsTargetFocused(nsIDOMEventTarget* aTarget)
   if (!shell)
     return PR_FALSE;
 
-  nsCOMPtr<nsPresContext> presContext;
-  shell->GetPresContext(getter_AddRefs(presContext));
+  nsPresContext *presContext = shell->GetPresContext();
   if (!presContext)
     return PR_FALSE;
 

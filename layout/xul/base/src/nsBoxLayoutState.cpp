@@ -81,8 +81,8 @@ nsBoxLayoutState::nsBoxLayoutState(nsIPresShell* aShell):mReflowState(nsnull),
                                                          mLayoutFlags(0),
                                                          mPaintingDisabled(PR_FALSE)
 {
-   aShell->GetPresContext(getter_AddRefs(mPresContext));
-   NS_ASSERTION(mPresContext, "PresContext must be non-null");
+  mPresContext = aShell->GetPresContext();
+  NS_ASSERTION(mPresContext, "PresContext must be non-null");
 }
 
 nsBoxLayoutState::nsBoxLayoutState(nsPresContext* aPresContext, 

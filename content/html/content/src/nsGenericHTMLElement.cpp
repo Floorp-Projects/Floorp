@@ -598,9 +598,7 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
   }
 
   // Get the Presentation Context from the Shell
-  nsCOMPtr<nsPresContext> context;
-  presShell->GetPresContext(getter_AddRefs(context));
-
+  nsPresContext *context = presShell->GetPresContext();
   if (!context) {
     return;
   }
@@ -973,8 +971,7 @@ nsGenericHTMLElement::GetScrollInfo(nsIScrollableView **aScrollableView,
   }
 
   // Get the presentation context
-  nsCOMPtr<nsPresContext> presContext;
-  presShell->GetPresContext(getter_AddRefs(presContext));
+  nsPresContext *presContext = presShell->GetPresContext();
   if (!presContext) {
     return;
   }
@@ -2368,21 +2365,20 @@ nsGenericHTMLElement::RestoreFormControlState(nsIHTMLContent* aContent,
 }
 
 // XXX This creates a dependency between content and frames
-nsresult
-nsGenericHTMLElement::GetPresContext(nsIHTMLContent* aContent,
-                                     nsPresContext** aPresContext)
+nsPresContext*
+nsGenericHTMLElement::GetPresContext()
 {
   // Get the document
-  nsIDocument* doc = aContent->GetDocument();
+  nsIDocument* doc = GetDocument();
   if (doc) {
     // Get presentation shell 0
     nsIPresShell *presShell = doc->GetShellAt(0);
     if (presShell) {
-      return presShell->GetPresContext(aPresContext);
+      return presShell->GetPresContext();
     }
   }
 
-  return NS_NOINTERFACE;
+  return nsnull;
 }
 
 // XXX check all mappings against ebina's usage
@@ -3617,8 +3613,7 @@ nsGenericHTMLFrameElement::HandleChromeEvent(nsPresContext* aPresContext,
 void
 nsGenericHTMLElement::SetElementFocus(PRBool aDoFocus)
 {
-  nsCOMPtr<nsPresContext> presContext;
-  GetPresContext(this, getter_AddRefs(presContext));
+  nsCOMPtr<nsPresContext> presContext = GetPresContext();
   if (!presContext)
     return;
 
@@ -3702,8 +3697,7 @@ nsGenericHTMLElement::RegUnRegAccessKey(PRBool aDoReg)
   }
 
   // We have an access key, so get the ESM from the pres context.
-  nsCOMPtr<nsPresContext> presContext;
-  GetPresContext(this, getter_AddRefs(presContext));
+  nsPresContext *presContext = GetPresContext();
 
   if (presContext) {
     nsIEventStateManager *esm = presContext->EventStateManager();

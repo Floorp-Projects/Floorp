@@ -702,8 +702,7 @@ nsHTMLInputElement::SetValueInternal(const nsAString& aValue,
     }
     // If the frame owns the value, set the value in the frame
     if (frameOwnsValue) {
-      nsCOMPtr<nsPresContext> presContext;
-      GetPresContext(this, getter_AddRefs(presContext));
+      nsCOMPtr<nsPresContext> presContext = GetPresContext();
       formControlFrame->SetProperty(presContext, nsHTMLAtoms::value, aValue);
       return NS_OK;
     }
@@ -979,8 +978,7 @@ nsHTMLInputElement::SetCheckedInternal(PRBool aChecked, PRBool aNotify)
   //
   nsIFrame* frame = GetPrimaryFrame(PR_FALSE);
   if (frame) {
-    nsCOMPtr<nsPresContext> presContext;
-    GetPresContext(this, getter_AddRefs(presContext));
+    nsPresContext *presContext = GetPresContext();
 
     if (mType == NS_FORM_INPUT_CHECKBOX) {
       nsICheckboxControlFrame* checkboxFrame = nsnull;
@@ -1015,10 +1013,9 @@ nsHTMLInputElement::FireOnChange()
   //
   // Since the value is changing, send out an onchange event (bug 23571)
   //
-  nsCOMPtr<nsPresContext> presContext;
-  GetPresContext(this, getter_AddRefs(presContext));
   nsEventStatus status = nsEventStatus_eIgnore;
   nsEvent event(NS_FORM_CHANGE);
+  nsCOMPtr<nsPresContext> presContext = GetPresContext();
   HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
 }
 
@@ -1101,8 +1098,7 @@ nsHTMLInputElement::Select()
     // XXX Bug?  We have to give the input focus before contents can be
     // selected
 
-    nsCOMPtr<nsPresContext> presContext;
-    GetPresContext(this, getter_AddRefs(presContext)); 
+    nsCOMPtr<nsPresContext> presContext = GetPresContext();
 
     // If the window is not active, do not allow the select to bring the
     // window to the front.  We update the focus controller, but do
@@ -1200,12 +1196,11 @@ nsHTMLInputElement::Click()
 
     // Strong in case the event kills it
     nsCOMPtr<nsIDocument> doc = GetOwnerDoc();
-    nsCOMPtr<nsPresContext> context;
 
     nsIPresShell *shell = doc->GetShellAt(0);
 
     if (shell) {
-      shell->GetPresContext(getter_AddRefs(context));
+      nsCOMPtr<nsPresContext> context = shell->GetPresContext();
 
       if (context) {
         nsEventStatus status = nsEventStatus_eIgnore;

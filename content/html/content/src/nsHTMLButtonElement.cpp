@@ -203,8 +203,7 @@ nsHTMLButtonElement::Click()
   if (doc) {
     nsIPresShell *shell = doc->GetShellAt(0);
     if (shell) {
-      nsCOMPtr<nsPresContext> context;
-      shell->GetPresContext(getter_AddRefs(context));
+      nsCOMPtr<nsPresContext> context = shell->GetPresContext();
       if (context) {
         nsEventStatus status = nsEventStatus_eIgnore;
         nsMouseEvent event(NS_MOUSE_LEFT_CLICK);

@@ -319,8 +319,6 @@ nsXULCommandDispatcher::RemoveCommandUpdater(nsIDOMElement* aElement)
 NS_IMETHODIMP
 nsXULCommandDispatcher::UpdateCommands(const nsAString& aEventName)
 {
-  nsresult rv;
-
   EnsureFocusController();
   NS_ENSURE_TRUE(mFocusController, NS_ERROR_FAILURE);
 
@@ -328,7 +326,7 @@ nsXULCommandDispatcher::UpdateCommands(const nsAString& aEventName)
   nsCOMPtr<nsIDOMElement> element;
   mFocusController->GetFocusedElement(getter_AddRefs(element));
   if (element) {
-    rv = element->GetAttribute(NS_LITERAL_STRING("id"), id);
+    nsresult rv = element->GetAttribute(NS_LITERAL_STRING("id"), id);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get element's id");
     if (NS_FAILED(rv)) return rv;
   }
@@ -377,9 +375,7 @@ nsXULCommandDispatcher::UpdateCommands(const nsAString& aEventName)
       nsIPresShell *shell = document->GetShellAt(i);
 
       // Retrieve the context in which our DOM event will fire.
-      nsCOMPtr<nsPresContext> context;
-      rv = shell->GetPresContext(getter_AddRefs(context));
-      if (NS_FAILED(rv)) return rv;
+      nsCOMPtr<nsPresContext> context = shell->GetPresContext();
 
       // Handle the DOM event
       nsEventStatus status = nsEventStatus_eIgnore;

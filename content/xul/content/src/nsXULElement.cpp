@@ -2016,10 +2016,7 @@ nsXULElement::UnregisterAccessKey(const nsAString& aOldValue)
             }
 
             if (validElement) {
-                nsCOMPtr<nsPresContext> presContext;
-                shell->GetPresContext(getter_AddRefs(presContext));
-
-                presContext->EventStateManager()->
+                shell->GetPresContext()->EventStateManager()->
                     UnregisterAccessKey(this, aOldValue.First());
             }
         }
@@ -3716,12 +3713,9 @@ nsXULElement::Focus()
 
     nsIPresShell *shell = mDocument->GetShellAt(0);
 
-    // Retrieve the context
-    nsCOMPtr<nsPresContext> presContext;
-    shell->GetPresContext(getter_AddRefs(presContext));
-
     // Set focus
-    SetFocus(presContext);
+    nsCOMPtr<nsPresContext> context = shell->GetPresContext();
+    SetFocus(context);
 
     return NS_OK;
 }
@@ -3739,12 +3733,9 @@ nsXULElement::Blur()
 
     nsIPresShell *shell = mDocument->GetShellAt(0);
 
-    // Retrieve the context
-    nsCOMPtr<nsPresContext> presContext;
-    shell->GetPresContext(getter_AddRefs(presContext));
-
     // Set focus
-    RemoveFocus(presContext);
+    nsCOMPtr<nsPresContext> context = shell->GetPresContext();
+    RemoveFocus(context);
 
     return NS_OK;
 }
@@ -3760,11 +3751,12 @@ nsXULElement::Click()
     nsCOMPtr<nsIDocument> doc = mDocument; // Strong just in case
     if (doc) {
         PRUint32 numShells = doc->GetNumberOfShells();
+        // strong ref to PresContext so events don't destroy it
         nsCOMPtr<nsPresContext> context;
 
         for (PRUint32 i = 0; i < numShells; ++i) {
             nsIPresShell *shell = doc->GetShellAt(i);
-            shell->GetPresContext(getter_AddRefs(context));
+            context = shell->GetPresContext();
 
             nsMouseEvent eventDown(NS_MOUSE_LEFT_BUTTON_DOWN),
                 eventUp(NS_MOUSE_LEFT_BUTTON_UP),
@@ -3801,7 +3793,7 @@ nsXULElement::DoCommand()
 
         for (PRUint32 i = 0; i < numShells; ++i) {
             nsIPresShell *shell = doc->GetShellAt(i);
-            shell->GetPresContext(getter_AddRefs(context));
+            context = shell->GetPresContext();
 
             nsEventStatus status = nsEventStatus_eIgnore;
             nsMouseEvent event(NS_XUL_COMMAND);
@@ -4031,8 +4023,7 @@ nsXULElement::HideWindowChrome(PRBool aShouldHide)
         nsIFrame* frame = nsnull;
         shell->GetPrimaryFrameFor(content, &frame);
 
-        nsCOMPtr<nsPresContext> presContext;
-        shell->GetPresContext(getter_AddRefs(presContext));
+        nsPresContext *presContext = shell->GetPresContext();
 
         if (frame && presContext) {
             nsIView* view = frame->GetClosestView();

@@ -276,8 +276,7 @@ nsHTMLTextAreaElement::Select()
   // selected
 
   // Just like SetFocus() but without the ScrollIntoView()!
-  nsCOMPtr<nsPresContext> presContext;
-  GetPresContext(this, getter_AddRefs(presContext)); 
+  nsCOMPtr<nsPresContext> presContext = GetPresContext();
 
   nsEventStatus status = nsEventStatus_eIgnore;
   nsGUIEvent event(NS_FORM_SELECTED);
@@ -401,10 +400,8 @@ nsHTMLTextAreaElement::SetValueInternal(const nsAString& aValue,
     textControlFrame->OwnsValue(&frameOwnsValue);
   }
   if (frameOwnsValue) {
-    nsCOMPtr<nsPresContext> presContext;
-    GetPresContext(this, getter_AddRefs(presContext));
-
-    formControlFrame->SetProperty(presContext, nsHTMLAtoms::value, aValue);
+    formControlFrame->SetProperty(GetPresContext(),
+                                  nsHTMLAtoms::value, aValue);
   }
   else {
     if (mValue) {

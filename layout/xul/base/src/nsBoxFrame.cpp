@@ -691,9 +691,7 @@ nsBoxFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
    // if we receive a ReflowDirtyChild it is because there is an HTML frame 
    // just inside us. So must find the adaptor that contains the child and
    // tell it that things are dirty.
-   nsCOMPtr<nsPresContext> context;
-   aPresShell->GetPresContext(getter_AddRefs(context));
-   nsBoxLayoutState state(context);
+   nsBoxLayoutState state(aPresShell->GetPresContext());
 
    nsIBox* box = nsnull;
    GetChildBox(&box);

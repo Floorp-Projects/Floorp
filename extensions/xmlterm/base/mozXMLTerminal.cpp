@@ -595,10 +595,7 @@ NS_IMETHODIMP mozXMLTerminal::ScreenSize(PRInt32* rows, PRInt32* cols,
     return NS_ERROR_FAILURE;
 
   // Get presentation context
-  nsCOMPtr<nsPresContext> presContext;
-  result = presShell->GetPresContext( getter_AddRefs(presContext) );
-  if (NS_FAILED(result))
-    return result;
+  nsPresContext *presContext = presShell->GetPresContext();
 
   // Get the default fixed pitch font
   const nsFont* defaultFixedFont =

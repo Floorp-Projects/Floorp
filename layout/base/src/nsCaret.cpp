@@ -117,13 +117,9 @@ NS_IMETHODIMP nsCaret::Init(nsIPresShell *inPresShell)
 
   // get nsILookAndFeel from the pres context, which has one cached.
   nsILookAndFeel *lookAndFeel = nsnull;
+  nsPresContext *presContext = inPresShell->GetPresContext();
   
-  nsCOMPtr<nsPresContext> presContext;
-  inPresShell->GetPresContext(getter_AddRefs(presContext));
-  if (presContext)
-    lookAndFeel = presContext->LookAndFeel();
-  if (lookAndFeel)
-  {
+  if (presContext && (lookAndFeel = presContext->LookAndFeel())) {
     PRInt32 tempInt;
     if (NS_SUCCEEDED(lookAndFeel->GetMetric(nsILookAndFeel::eMetric_SingleLineCaretWidth, tempInt)))
       mCaretPixelsWidth = (nscoord)tempInt;
@@ -340,11 +336,8 @@ NS_IMETHODIMP nsCaret::GetCaretCoordinates(EViewCoordinates aRelativeToType, nsI
     return NS_ERROR_UNEXPECTED;
   // ramp up to make a rendering context for measuring text.
   // First, we get the pres context ...
-  nsCOMPtr<nsPresContext> presContext;
-  err = presShell->GetPresContext(getter_AddRefs(presContext));
-  if (NS_FAILED(err))
-    return err;
-  
+  nsPresContext *presContext = presShell->GetPresContext();
+
   // ... then tell it to make a rendering context
   nsCOMPtr<nsIRenderingContext> rendContext;  
   err = presContext->DeviceContext()->
@@ -562,9 +555,7 @@ PRBool nsCaret::SetupDrawingFrameAndOffset(nsIDOMNode* aNode, PRInt32 aOffset, n
   // NS_STYLE_DIRECTION_LTR : LTR or Default
   // NS_STYLE_DIRECTION_RTL
   // NS_STYLE_DIRECTION_INHERIT
-  nsCOMPtr<nsPresContext> presContext;
-  rv = presShell->GetPresContext(getter_AddRefs(presContext));
-
+  nsPresContext *presContext = presShell->GetPresContext();
   if (presContext && presContext->BidiEnabled())
   {
     presShell->GetCaretBidiLevel(&bidiLevel);
@@ -761,16 +752,14 @@ void nsCaret::GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordTy
   if (!presShell)
     return;
   
-  nsCOMPtr<nsPresContext>  presContext;
-  presShell->GetPresContext(getter_AddRefs(presContext));
-
   viewOffset.x = 0;
   viewOffset.y = 0;
   
   nsPoint   withinViewOffset(0, 0);
   // get the offset of this frame from its parent view (walks up frame hierarchy)
   nsIView* theView = nsnull;
-  caretFrame->GetOffsetFromView(presContext, withinViewOffset, &theView);
+  caretFrame->GetOffsetFromView(presShell->GetPresContext(),
+                                withinViewOffset, &theView);
   if (theView == nsnull) return;
 
   if (outRelativeView && coordType == eClosestViewCoordinates)
@@ -953,9 +942,7 @@ void nsCaret::GetCaretRectAndInvert()
   nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
   if (!presShell) return;
   
-  nsCOMPtr<nsPresContext> presContext;
-  if (NS_FAILED(presShell->GetPresContext(getter_AddRefs(presContext))))
-    return;
+  nsPresContext *presContext = presShell->GetPresContext();
 
   // if the view changed, or we don't have a rendering context, make one
   // because of drawing issues, always make a new RC at the moment. See bug 28068

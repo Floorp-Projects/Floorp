@@ -390,9 +390,7 @@ FocusElementButNotDocument(nsIDocument* aDocument, nsIContent* aContent)
   focusController->SetFocusedElement(newFocusedElement);
 
   nsIPresShell* presShell = aDocument->GetShellAt(0);
-  nsCOMPtr<nsPresContext> presContext;
-  presShell->GetPresContext(getter_AddRefs(presContext));
-  nsIEventStateManager* esm = presContext->EventStateManager();
+  nsIEventStateManager* esm = presShell->GetPresContext()->EventStateManager();
 
   // Temporarily set esm::mCurrentFocus so that esm::GetContentState() tells 
   // layout system to show focus on this element. 
@@ -457,8 +455,7 @@ void nsWebBrowserFind::SetSelectionAndScroll(nsIDOMWindow* aWindow,
       FocusElementButNotDocument(doc, content);
     }
     else {
-      nsCOMPtr<nsPresContext> presContext;
-      presShell->GetPresContext(getter_AddRefs(presContext));
+      nsCOMPtr<nsPresContext> presContext = presShell->GetPresContext();
       PRBool isSelectionWithFocus;
       presContext->EventStateManager()->
         MoveFocusToCaret(PR_TRUE, &isSelectionWithFocus);
@@ -834,9 +831,7 @@ nsWebBrowserFind::GetFrameSelection(nsIDOMWindow* aWindow,
 
   // text input controls have their independent selection controllers
   // that we must use when they have focus.
-
-  nsCOMPtr<nsPresContext> presContext;
-  presShell->GetPresContext(getter_AddRefs(presContext));
+  nsPresContext *presContext = presShell->GetPresContext();
 
   nsIFrame *frame = nsnull;
   presContext->EventStateManager()->GetFocusedFrame(&frame);

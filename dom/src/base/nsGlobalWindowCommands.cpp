@@ -235,8 +235,7 @@ nsSelectionCommandsBase::GetEventStateManagerForWindow(nsIDOMWindow *aWindow,
   GetPresShellFromWindow(aWindow, getter_AddRefs(presShell));
   if (presShell)
   {
-    nsCOMPtr<nsPresContext> presContext;
-    presShell->GetPresContext(getter_AddRefs(presContext));
+    nsPresContext *presContext = presShell->GetPresContext();
     if (presContext) {
       NS_ADDREF(*aEventStateManager = presContext->EventStateManager());
       return NS_OK;

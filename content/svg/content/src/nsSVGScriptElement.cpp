@@ -232,7 +232,7 @@ nsSVGScriptElement::ScriptAvailable(nsresult aResult,
     if (IsInDoc()) {
       nsIPresShell *presShell = GetOwnerDoc()->GetShellAt(0);
       if (presShell)
-        presShell->GetPresContext(getter_AddRefs(presContext));
+        presContext = presShell->GetPresContext();
     }
 
     nsEventStatus status = nsEventStatus_eIgnore;
@@ -272,7 +272,7 @@ nsSVGScriptElement::ScriptEvaluated(nsresult aResult,
     if (IsInDoc()) {
       nsIPresShell *presShell = GetOwnerDoc()->GetShellAt(0);
       if (presShell)
-        presShell->GetPresContext(getter_AddRefs(presContext));
+        presContext = presShell->GetPresContext();
     }
 
     nsEventStatus status = nsEventStatus_eIgnore;

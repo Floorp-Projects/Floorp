@@ -334,9 +334,7 @@ nsHTMLBodyElement::Get##func_(nsAString& aColor)                    \
   if (NS_CONTENT_ATTR_NOT_THERE ==                                  \
       GetAttr(kNameSpaceID_None, nsHTMLAtoms::attr_, color)) {      \
                                                                     \
-    nsCOMPtr<nsPresContext> presContext;                           \
-    GetPresContext(this, getter_AddRefs(presContext));              \
-                                                                    \
+    nsPresContext *presContext = GetPresContext();                  \
     if (presContext) {                                              \
       attrColor = presContext->Default##default_();                 \
       NS_RGBToHex(attrColor, aColor);                               \

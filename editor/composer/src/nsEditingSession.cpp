@@ -395,9 +395,7 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
   if (!presShell) return NS_ERROR_FAILURE;
 
   // Disable animation of images in this document:
-  nsCOMPtr<nsPresContext> presContext;
-  rv = presShell->GetPresContext(getter_AddRefs(presContext));
-  if (NS_FAILED(rv)) return rv;
+  nsPresContext *presContext = presShell->GetPresContext();
   if (!presContext) return NS_ERROR_FAILURE;
 
   presContext->SetImageAnimationMode(imgIContainer::kDontAnimMode);

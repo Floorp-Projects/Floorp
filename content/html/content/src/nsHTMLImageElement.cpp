@@ -272,9 +272,7 @@ nsHTMLImageElement::GetXY()
   }
 
   // Get the Presentation Context from the Shell
-  nsCOMPtr<nsPresContext> context;
-  presShell->GetPresContext(getter_AddRefs(context));
-
+  nsPresContext *context = presShell->GetPresContext();
   if (!context) {
     return point;
   }
@@ -357,9 +355,7 @@ nsHTMLImageElement::GetWidthHeight()
     size.height -= margin.top + margin.bottom;
     size.width -= margin.left + margin.right;
 
-    nsCOMPtr<nsPresContext> context;
-    GetPresContext(this, getter_AddRefs(context));
-
+    nsPresContext *context = GetPresContext();
     if (context) {
       float t2p;
       t2p = context->TwipsToPixels();

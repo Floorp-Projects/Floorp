@@ -598,8 +598,8 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
               if (doc) {
                 nsIPresShell *shell = doc->GetShellAt(0);
                 if (shell) {
-                  nsCOMPtr<nsPresContext> oldPresContext;
-                  shell->GetPresContext(getter_AddRefs(oldPresContext));
+                  nsCOMPtr<nsPresContext> oldPresContext =
+                    shell->GetPresContext();
 
                   nsCOMPtr<nsIEventStateManager> esm;
                   esm = oldPresContext->EventStateManager();
@@ -732,8 +732,8 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
             if (doc) {
               nsIPresShell *shell = doc->GetShellAt(0);
               if (shell) {
-                nsCOMPtr<nsPresContext> oldPresContext;
-                shell->GetPresContext(getter_AddRefs(oldPresContext));
+                nsCOMPtr<nsPresContext> oldPresContext =
+                  shell->GetPresContext();
 
                 nsCOMPtr<nsIEventStateManager> esm =
                   oldPresContext->EventStateManager();
@@ -822,8 +822,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
           if (shell) {
             if (focusedElement) {
               nsCOMPtr<nsIContent> focusContent = do_QueryInterface(focusedElement);
-              nsCOMPtr<nsPresContext> context;
-              shell->GetPresContext(getter_AddRefs(context));
+              nsCOMPtr<nsPresContext> context = shell->GetPresContext();
               focusContent->SetFocus(context);
             }
 
@@ -887,8 +886,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
         if (gLastFocusedContent) {
           nsIPresShell *shell = gLastFocusedDocument->GetShellAt(0);
           if (shell) {
-            nsCOMPtr<nsPresContext> oldPresContext;
-            shell->GetPresContext(getter_AddRefs(oldPresContext));
+            nsCOMPtr<nsPresContext> oldPresContext = shell->GetPresContext();
 
             nsCOMPtr<nsIDOMElement> focusedElement;
             if (focusController)
@@ -1091,8 +1089,7 @@ nsEventStateManager::HandleAccessKey(nsPresContext* aPresContext,
           continue;
         }
 
-        subPS->GetPresContext(getter_AddRefs(subPC));
-        NS_ASSERTION(subPC, "PresShell without PresContext");
+        nsPresContext *subPC = subPS->GetPresContext();
 
         nsEventStateManager* esm =
           NS_STATIC_CAST(nsEventStateManager *, subPC->EventStateManager());
@@ -1122,12 +1119,11 @@ nsEventStateManager::HandleAccessKey(nsPresContext* aPresContext,
       docShell->GetChildOffset(&myOffset);
 
       nsCOMPtr<nsIPresShell> parentPS;
-      nsCOMPtr<nsPresContext> parentPC;
 
       parentDS->GetPresShell(getter_AddRefs(parentPS));
       NS_ASSERTION(parentPS, "Our PresShell exists but the parent's does not?");
 
-      parentPS->GetPresContext(getter_AddRefs(parentPC));
+      nsPresContext *parentPC = parentPS->GetPresContext();
       NS_ASSERTION(parentPC, "PresShell without PresContext");
 
       nsEventStateManager* esm =
@@ -1575,8 +1571,7 @@ nsEventStateManager::ChangeTextSize(PRInt32 change)
 
   nsIPresShell *presShell = doc->GetShellAt(0);
   if(!presShell) return NS_ERROR_FAILURE;
-  nsCOMPtr<nsPresContext> presContext;
-  presShell->GetPresContext(getter_AddRefs(presContext));
+  nsPresContext *presContext = presShell->GetPresContext();
   if(!presContext) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsISupports> pcContainer = presContext->GetContainer();
@@ -1826,7 +1821,7 @@ nsEventStateManager::GetParentScrollingView(nsInputEvent *aEvent,
   pPresShell->GetPrimaryFrameFor(frameContent, &frameFrame);
   if (!frameFrame) return NS_ERROR_FAILURE;
 
-  pPresShell->GetPresContext(&presCtxOuter); //addrefs
+  NS_IF_ADDREF(presCtxOuter = pPresShell->GetPresContext());
   targetOuterFrame = frameFrame;
 
   return NS_OK;
@@ -3297,9 +3292,7 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
           nsIDocument *parent_doc = parentShell->GetDocument();
           nsIContent *docContent = parent_doc->FindContentForSubDocument(mDocument);
 
-          nsCOMPtr<nsPresContext> parentPC;
-          parentShell->GetPresContext(getter_AddRefs(parentPC));
-
+          nsCOMPtr<nsPresContext> parentPC = parentShell->GetPresContext();
           nsIEventStateManager *parentESM = parentPC->EventStateManager();
 
           SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
@@ -3976,8 +3969,7 @@ nsEventStateManager::SendFocusBlur(nsPresContext* aPresContext,
         if (shell) {
           kungFuDeathGrip = shell->GetViewManager();
 
-          nsCOMPtr<nsPresContext> oldPresContext;
-          shell->GetPresContext(getter_AddRefs(oldPresContext));
+          nsCOMPtr<nsPresContext> oldPresContext = shell->GetPresContext();
 
           //fire blur
           nsEventStatus status = nsEventStatus_eIgnore;

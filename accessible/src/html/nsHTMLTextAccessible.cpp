@@ -82,8 +82,6 @@ NS_IMETHODIMP nsHTMLTextAccessible::GetState(PRUint32 *aState)
      return NS_ERROR_FAILURE;  
   }
 
-  nsCOMPtr<nsPresContext> context;
-  shell->GetPresContext(getter_AddRefs(context));
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   nsIFrame *frame = nsnull;
   // The root frame and all text frames in the document share the same
@@ -91,7 +89,8 @@ NS_IMETHODIMP nsHTMLTextAccessible::GetState(PRUint32 *aState)
   shell->GetRootFrame(&frame);
   if (frame) {
     nsCOMPtr<nsISelectionController> selCon;
-    frame->GetSelectionController(context, getter_AddRefs(selCon));
+    frame->GetSelectionController(shell->GetPresContext(),
+                                  getter_AddRefs(selCon));
     if (selCon) {
       nsCOMPtr<nsISelection> domSel;
       selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSel));

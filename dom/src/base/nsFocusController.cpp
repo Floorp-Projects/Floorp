@@ -264,8 +264,7 @@ nsFocusController::MoveFocus(PRBool aForward, nsIDOMElement* aElt)
     return NS_OK;
 
   // Retrieve the context
-  nsCOMPtr<nsPresContext> presContext;
-  shell->GetPresContext(getter_AddRefs(presContext));
+  nsCOMPtr<nsPresContext> presContext = shell->GetPresContext();
 
   // Make this ESM shift the focus per our instructions.
   presContext->EventStateManager()->ShiftFocus(aForward, content);

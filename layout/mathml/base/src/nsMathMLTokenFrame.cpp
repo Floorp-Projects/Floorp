@@ -246,9 +246,7 @@ nsMathMLTokenFrame::ReflowDirtyChild(nsIPresShell* aPresShell,
   // if we get this, it means it was called by the nsTextFrame beneath us, and
   // this means something changed in the text content. So re-process our text
 
-  nsCOMPtr<nsPresContext> presContext;
-  aPresShell->GetPresContext(getter_AddRefs(presContext));
-  ProcessTextData(presContext);
+  ProcessTextData(aPresShell->GetPresContext());
 
   mState |= NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN;
   return mParent->ReflowDirtyChild(aPresShell, this);

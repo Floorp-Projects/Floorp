@@ -282,9 +282,7 @@ nsMediaDocument::StartLayout()
     shell->BeginObservingDocument();
 
     // Initial-reflow this time.
-    nsCOMPtr<nsPresContext> context;
-    shell->GetPresContext(getter_AddRefs(context));
-    nsRect visibleArea = context->GetVisibleArea();
+    nsRect visibleArea = shell->GetPresContext()->GetVisibleArea();
     shell->InitialReflow(visibleArea.width, visibleArea.height);
 
     // Now trigger a refresh.

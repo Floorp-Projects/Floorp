@@ -75,11 +75,10 @@ nsAccessibleHyperText::nsAccessibleHyperText(nsIDOMNode* aDomNode, nsIWeakRefere
       nsIFrame *parentFrame = nsAccessible::GetParentBlockFrame(frame);
       NS_ASSERTION(parentFrame, "Error: HyperText can't get parent block frame");
       if (parentFrame) {
-        nsCOMPtr<nsPresContext> presContext;
-        shell->GetPresContext(getter_AddRefs(presContext));
         nsIFrame* childFrame = parentFrame->GetFirstChild(nsnull);
         PRBool bSave = PR_FALSE;
-        GetAllTextChildren(presContext, childFrame, aDomNode, bSave);
+        GetAllTextChildren(shell->GetPresContext(), childFrame,
+                           aDomNode, bSave);
       }
     }
   }

@@ -358,8 +358,7 @@ nsSVGSVGElement::GetPixelUnitToMillimeterX(float *aPixelUnitToMillimeterX)
   if (!presShell) return NS_OK;
   
   // Get the Presentation Context from the Shell
-  nsCOMPtr<nsPresContext> context;
-  presShell->GetPresContext(getter_AddRefs(context));
+  nsPresContext *context = presShell->GetPresContext();
   if (!context) return NS_OK;
 
   *aPixelUnitToMillimeterX = context->ScaledPixelsToTwips() / TWIPS_PER_POINT_FLOAT / (72.0f * 0.03937f);
@@ -388,8 +387,7 @@ nsSVGSVGElement::GetScreenPixelToMillimeterX(float *aScreenPixelToMillimeterX)
   if (!presShell) return NS_OK;
   
   // Get the Presentation Context from the Shell
-  nsCOMPtr<nsPresContext> context;
-  presShell->GetPresContext(getter_AddRefs(context));
+  nsPresContext *context = presShell->GetPresContext();
   if (!context) return NS_OK;
 
   float TwipsPerPx;
@@ -1192,8 +1190,7 @@ void nsSVGSVGElement::GetScreenPosition(PRInt32 &x, PRInt32 &y)
     return;
   }
 
-  nsCOMPtr<nsPresContext> context;
-  presShell->GetPresContext(getter_AddRefs(context));
+  nsPresContext *context = presShell->GetPresContext();
   if (!context) {
     NS_ERROR("couldn't get prescontext");
     return;

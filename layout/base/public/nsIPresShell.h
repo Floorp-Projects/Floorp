@@ -90,8 +90,8 @@ class nsIStyleSheet;
 class nsCSSFrameConstructor;
 
 #define NS_IPRESSHELL_IID     \
-{ 0xde106833, 0xf56c, 0x4062, \
-  {0x9c, 0x7c, 0x60, 0x67, 0x40, 0x7e, 0x88, 0x4a} }
+{ 0x16c9c6ee, 0xd9c0, 0x463d, \
+  {0xbc, 0x5e, 0x4d, 0xdf, 0x60, 0xdd, 0x73, 0xfc} }
 
 // Constants uses for ScrollFrameIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -165,7 +165,6 @@ public:
   
   nsIDocument* GetDocument() { return mDocument; }
 
-  NS_IMETHOD GetPresContext(nsPresContext** aResult) = 0;
   nsPresContext* GetPresContext() { return mPresContext; }
 
   NS_IMETHOD GetViewManager(nsIViewManager** aResult) = 0;

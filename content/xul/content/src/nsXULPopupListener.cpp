@@ -329,7 +329,6 @@ XULPopupListenerImpl::FireFocusOnTargetContent(nsIDOMNode* aTargetNode)
   rv = aTargetNode->GetOwnerDocument(getter_AddRefs(domDoc));
   if(NS_SUCCEEDED(rv) && domDoc)
   {
-    nsCOMPtr<nsPresContext> context;
     nsCOMPtr<nsIDocument> tempdoc = do_QueryInterface(domDoc);
 
     // Get nsIDOMElement for targetNode
@@ -337,7 +336,8 @@ XULPopupListenerImpl::FireFocusOnTargetContent(nsIDOMNode* aTargetNode)
     if (!shell)
       return NS_ERROR_FAILURE;
 
-    shell->GetPresContext(getter_AddRefs(context));
+    // strong reference to keep this from going away between events
+    nsCOMPtr<nsPresContext> context = shell->GetPresContext();
  
     nsCOMPtr<nsIContent> content = do_QueryInterface(aTargetNode);
     nsIFrame* targetFrame;

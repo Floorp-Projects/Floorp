@@ -123,9 +123,7 @@ HandleImagePLEvent(nsIContent *aContent, PRUint32 aMessage, PRUint32 aFlags)
     return;
   }
 
-  nsCOMPtr<nsPresContext> pres_context;
-  pres_shell->GetPresContext(getter_AddRefs(pres_context));
-
+  nsCOMPtr<nsPresContext> pres_context = pres_shell->GetPresContext();
   if (!pres_context) {
     return;
   }

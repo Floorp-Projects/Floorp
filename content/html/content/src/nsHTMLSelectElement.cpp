@@ -537,9 +537,9 @@ nsHTMLSelectElement::InsertOptionsIntoList(nsIContent* aOptions,
     // get into the right state once it's created.
     nsISelectControlFrame* selectFrame = GetSelectFrame();
 
-    nsCOMPtr<nsPresContext> presContext;
+    nsPresContext *presContext = nsnull;
     if (selectFrame) {
-      GetPresContext(this, getter_AddRefs(presContext));
+      presContext = GetPresContext();
     }
 
     // Actually select the options if the added options warrant it
@@ -626,8 +626,7 @@ nsHTMLSelectElement::RemoveOptionsFromList(nsIContent* aOptions,
     // Tell the widget we removed the options
     nsISelectControlFrame* selectFrame = GetSelectFrame();
     if (selectFrame) {
-      nsCOMPtr<nsPresContext> presContext;
-      GetPresContext(this, getter_AddRefs(presContext));
+      nsPresContext *presContext = GetPresContext();
       for (int i = aListIndex; i < aListIndex + numRemoved; ++i) {
         selectFrame->RemoveOption(presContext, i);
       }
@@ -1243,8 +1242,7 @@ nsHTMLSelectElement::SetOptionsSelectedByIndex(PRInt32 aStartIndex,
   nsISelectControlFrame *selectFrame = nsnull;
   PRBool did_get_frame = PR_FALSE;
 
-  nsCOMPtr<nsPresContext> presContext;
-  GetPresContext(this, getter_AddRefs(presContext));
+  nsPresContext *presContext = GetPresContext();
 
   if (aIsSelected) {
     // Only select the first value if it's not multiple

@@ -551,9 +551,6 @@ nsHTMLScriptElement::ScriptAvailable(nsresult aResult,
                                      const nsAString& aScript)
 {
   if (!aIsInline && NS_FAILED(aResult)) {
-    nsCOMPtr<nsPresContext> presContext;
-    GetPresContext(this, getter_AddRefs(presContext));
-
     nsEventStatus status = nsEventStatus_eIgnore;
     nsScriptErrorEvent event(NS_SCRIPT_ERROR);
 
@@ -568,8 +565,8 @@ nsHTMLScriptElement::ScriptAvailable(nsresult aResult,
     NS_ConvertUTF8toUCS2 fileName(spec);
     event.fileName = fileName.get();
 
-    HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT,
-                   &status);
+    nsCOMPtr<nsPresContext> presContext = GetPresContext();
+    HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
   }
 
   return NS_OK;
@@ -587,11 +584,9 @@ nsHTMLScriptElement::ScriptEvaluated(nsresult aResult,
 {
   nsresult rv = NS_OK;
   if (!aIsInline) {
-    nsCOMPtr<nsPresContext> presContext;
-    GetPresContext(this, getter_AddRefs(presContext));
-
     nsEventStatus status = nsEventStatus_eIgnore;
     nsEvent event(NS_SUCCEEDED(aResult) ? NS_SCRIPT_LOAD : NS_SCRIPT_ERROR);
+    nsCOMPtr<nsPresContext> presContext = GetPresContext();
     rv = HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT,
                         &status);
   }

@@ -104,9 +104,8 @@ nsresult nsAccessibleText::GetSelections(nsISelectionController **aSelCon, nsISe
   // Get the selection and selection controller
   nsCOMPtr<nsISelectionController> selCon;
   nsCOMPtr<nsISelection> domSel;
-  nsCOMPtr<nsPresContext> context;
-  shell->GetPresContext(getter_AddRefs(context));
-  frame->GetSelectionController(context, getter_AddRefs(selCon));
+  frame->GetSelectionController(shell->GetPresContext(),
+                                getter_AddRefs(selCon));
   if (selCon)
     selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSel));
 
@@ -648,8 +647,7 @@ NS_IMETHODIMP nsAccessibleText::GetCharacterExtents(PRInt32 aOffset,
   nsIPresShell *shell = doc->GetShellAt(0);
   NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsPresContext> context;
-  shell->GetPresContext(getter_AddRefs(context));
+  nsPresContext *context = shell->GetPresContext();
   NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(mTextNode));

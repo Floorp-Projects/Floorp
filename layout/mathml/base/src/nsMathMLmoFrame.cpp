@@ -974,9 +974,7 @@ nsMathMLmoFrame::ReflowDirtyChild(nsIPresShell* aPresShell,
   // an re-build the automatic data from the parent of our outermost embellished
   // container (we ensure that we are the core, not just a sibling of the core)
 
-  nsCOMPtr<nsPresContext> presContext;
-  aPresShell->GetPresContext(getter_AddRefs(presContext));
-
+  nsPresContext *presContext = aPresShell->GetPresContext();
   ProcessTextData(presContext);
 
   nsIFrame* target = this;

@@ -429,12 +429,9 @@ DumpFramesRecur(nsIDocShell* aDocShell, FILE* out)
             nsIFrame* root;
             shell->GetRootFrame(&root);
             if (root) {
-                nsCOMPtr<nsPresContext> presContext;
-                shell->GetPresContext(getter_AddRefs(presContext));
-
                 nsIFrameDebug* fdbg;
                 if (NS_SUCCEEDED(CallQueryInterface(root, &fdbg))) {
-                    fdbg->List(presContext, out, 0);
+                    fdbg->List(shell->GetPresContext(), out, 0);
                 }
             }
         }
