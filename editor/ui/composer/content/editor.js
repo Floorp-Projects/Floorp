@@ -845,9 +845,11 @@ function GetObjectForProperties()
   {
     // Start at actual selected node
     var offset = editorShell.editorSelection.anchorOffset;
-    node = anchorNode.childNodes.item(offset)
+    // Note: If collapsed, offset points to element AFTER caret,
+    //  thus node may be null
+    node = anchorNode.childNodes.item(offset);
   }
-  else
+  if (!node)
     node = anchorNode;
 
   while (node)
@@ -1123,10 +1125,12 @@ function EditorToggleParagraphMarks()
 
 function EditorInitEditMenu()
 {
+/*
   // Fake the keybinding hint for the "Clear" item
   // (Don't bother for Mac?)
   if (!gIsMac)
     document.getElementById("menu_clear").setAttribute("acceltext", GetString("Del"));
+*/
 
   //TODO: We should modify the Paste menuitem to build a submenu 
   //      with multiple paste format types
