@@ -41,6 +41,7 @@
 #include "nsITextControlElement.h"
 #include "nsIRadioControlElement.h"
 #include "nsIRadioVisitor.h"
+#include "nsIPhonetic.h"
 
 #include "nsIControllers.h"
 #include "nsIFocusController.h"
@@ -132,7 +133,8 @@ class nsHTMLInputElement : public nsGenericHTMLLeafFormElement,
                            public nsIDOMHTMLInputElement,
                            public nsIDOMNSHTMLInputElement,
                            public nsITextControlElement,
-                           public nsIRadioControlElement
+                           public nsIRadioControlElement,
+                           public nsIPhonetic
 {
 public:
   nsHTMLInputElement(PRBool aFromParser);
@@ -155,6 +157,9 @@ public:
 
   // nsIDOMNSHTMLInputElement
   NS_DECL_NSIDOMNSHTMLINPUTELEMENT
+
+  // nsIPhonetic
+  NS_DECL_NSIPHONETIC
 
   // Overriden nsIFormControl methods
   NS_IMETHOD GetType(PRInt32* aType);
@@ -403,6 +408,7 @@ NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLInputElement,
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLInputElement)
   NS_INTERFACE_MAP_ENTRY(nsITextControlElement)
   NS_INTERFACE_MAP_ENTRY(nsIRadioControlElement)
+  NS_INTERFACE_MAP_ENTRY(nsIPhonetic)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLInputElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
@@ -2199,6 +2205,23 @@ nsHTMLInputElement::GetSelectionRange(PRInt32* aSelectionStart,
 
     if (textControlFrame)
       textControlFrame->GetSelectionRange(aSelectionStart, aSelectionEnd);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLInputElement::GetPhonetic(nsAString& aPhonetic)
+{
+  aPhonetic.Truncate(0);
+  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
+
+  if (formControlFrame) {
+    nsCOMPtr<nsIPhonetic>
+      phonetic(do_QueryInterface(formControlFrame));
+
+    if (phonetic)
+      phonetic->GetPhonetic(aPhonetic);
   }
 
   return NS_OK;

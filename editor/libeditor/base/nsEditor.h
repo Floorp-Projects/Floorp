@@ -45,6 +45,7 @@
 
 #include "nsIEditor.h"
 #include "nsIEditorIMESupport.h"
+#include "nsIPhonetic.h"
 
 #include "nsIDOMDocument.h"
 #include "nsISelection.h"
@@ -92,7 +93,8 @@ class nsISelectionController;
  */
 class nsEditor : public nsIEditor,
                  public nsIEditorIMESupport,
-                 public nsSupportsWeakReference
+                 public nsSupportsWeakReference,
+                 public nsIPhonetic
 {
 public:
 
@@ -148,6 +150,10 @@ public:
   NS_IMETHOD EndComposition(void);
   NS_IMETHOD ForceCompositionEnd(void);
   NS_IMETHOD GetReconversionString(nsReconversionEventReply *aReply);
+  
+  // nsIPhonetic
+  NS_DECL_NSIPHONETIC
+
 
 public:
 
@@ -572,6 +578,8 @@ protected:
   PRInt8                        mDocDirtyState;		// -1 = not initialized
   nsWeakPtr        mDocWeak;  // weak reference to the nsIDOMDocument
   nsCOMPtr<nsIDTD> mDTD;
+
+  nsString* mPhonetic;
 
   static PRInt32 gInstanceCount;
 

@@ -172,6 +172,7 @@ nsEditor::nsEditor()
 ,  mEditorObservers(nsnull)
 ,  mDocDirtyState(-1)
 ,  mDocWeak(nsnull)
+,  mPhonetic(nsnull)
 {
   //initialize member variables here
   NS_INIT_ISUPPORTS();
@@ -250,6 +251,8 @@ nsEditor::~nsEditor()
   /* shut down all classes that needed initialization */
   InsertTextTxn::ClassShutdown();
   IMETextTxn::ClassShutdown();
+
+  delete mPhonetic;
  
   PR_AtomicDecrement(&gInstanceCount);
 
@@ -261,7 +264,7 @@ nsEditor::~nsEditor()
 
 NS_IMPL_ADDREF(nsEditor)
 NS_IMPL_RELEASE(nsEditor)
-NS_IMPL_QUERY_INTERFACE3(nsEditor, nsIEditor, nsIEditorIMESupport, nsISupportsWeakReference)
+NS_IMPL_QUERY_INTERFACE4(nsEditor, nsIEditor, nsIEditorIMESupport, nsISupportsWeakReference, nsIPhonetic)
 
 #ifdef XP_MAC
 #pragma mark -
@@ -1913,6 +1916,8 @@ nsEditor::BeginComposition(nsTextEventReply* aReply)
 #endif
   nsresult ret = QueryComposition(aReply);
   mInIMEMode = PR_TRUE;
+  if (mPhonetic)
+    mPhonetic->Truncate(0);
   return ret;
 }
 
@@ -1953,6 +1958,18 @@ nsEditor::SetCompositionString(const nsAString& aCompositionString, nsIPrivateTe
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+NS_IMETHODIMP
+nsEditor::GetPhonetic(nsAString& aPhonetic)
+{
+  if (mPhonetic)
+    aPhonetic = *mPhonetic;
+  else
+    aPhonetic.Truncate(0);
+
+  return NS_OK;
+}
+
 
 static nsresult
 GetEditorContentWindow(nsIPresShell *aPresShell, nsIDOMElement *aRoot, nsIWidget **aResult)
@@ -2406,6 +2423,44 @@ NS_IMETHODIMP nsEditor::InsertTextIntoTextNodeImpl(const nsAString& aStringToIns
       mIMETextNode = aTextNode;
       mIMETextOffset = aOffset;
     }
+    PRUint16 len ;
+    result = mIMETextRangeList->GetLength(&len);
+    if (NS_SUCCEEDED(result) && len > 0)
+    {
+      nsCOMPtr<nsIPrivateTextRange> range;
+      for (PRUint16 i = 0; i < len; i++) 
+      {
+        result = mIMETextRangeList->Item(i, getter_AddRefs(range));
+        if (NS_SUCCEEDED(result) && range)
+        {
+          PRUint16 type;
+          result = range->GetRangeType(&type);
+          if (NS_SUCCEEDED(result)) 
+          {
+            if (type == nsIPrivateTextRange::TEXTRANGE_RAWINPUT) 
+            {
+              PRUint16 start, end;
+              result = range->GetRangeStart(&start);
+              if (NS_SUCCEEDED(result)) 
+              {
+                result = range->GetRangeEnd(&end);
+                if (NS_SUCCEEDED(result)) 
+                {
+                  if (!mPhonetic)
+                    mPhonetic = new nsString();
+                  if (mPhonetic)
+                  {
+                    nsAutoString tmp(aStringToInsert);                  
+                    tmp.Mid(*mPhonetic, start, end-start);
+                  }
+                }
+              }
+            } // if
+          }
+        } // if
+      } // for
+    } // if
+
     result = CreateTxnForIMEText(aStringToInsert, (IMETextTxn**)&txn);
   }
   else

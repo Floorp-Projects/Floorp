@@ -50,6 +50,7 @@
 #include "nsIFontMetrics.h"
 #include "nsWeakReference.h" //for service and presshell pointers
 #include "nsIScrollableViewProvider.h"
+#include "nsIPhonetic.h"
 
 class nsIPresState;
 class nsISupportsArray;
@@ -68,7 +69,8 @@ class nsIAccessible;
 class nsTextControlFrame : public nsStackFrame,
                            public nsIAnonymousContentCreator,
                            public nsITextControlFrame,
-                           public nsIScrollableViewProvider
+                           public nsIScrollableViewProvider,
+                           public nsIPhonetic
 
 {
 public:
@@ -164,6 +166,9 @@ public:
   NS_IMETHOD    SetSelectionRange(PRInt32 aSelectionStart, PRInt32 aSelectionEnd);
   NS_IMETHOD    GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd);
   NS_IMETHOD    GetSelectionContr(nsISelectionController **aSelCon);
+
+  // nsIPhonetic
+  NS_DECL_NSIPHONETIC
 
 //==== END NSIGFXTEXTCONTROLFRAME2
 //==== OVERLOAD of nsIFrame
