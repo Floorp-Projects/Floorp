@@ -38,5 +38,3 @@ MODULE		= raptor
 
 include $(topsrcdir)/config/rules.mk
 
-#LCFLAGS	+= -D_IMPL_NS_GFXONXP
-
