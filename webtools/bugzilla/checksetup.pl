@@ -133,6 +133,10 @@ use Bugzilla::Constants;
 
 my $silent;
 
+my %switch;
+$switch{'no_templates'} = grep(/^--no-templates$/, @ARGV) 
+    || grep(/^-t$/, @ARGV);
+
 # The use of some Bugzilla modules brings in modules we need to test for
 # Check first, via BEGIN
 BEGIN {
@@ -151,10 +155,16 @@ sub help_page {
     $programname =~ s#^\./##;
     print "$programname - checks your setup and updates your Bugzilla installation\n";
     print "\nUsage: $programname [SCRIPT [--verbose]] [--check-modules|--help]\n";
+    print "                     [--no-templates]\n";
     print "\n";
     print "   --help           Display this help text.\n";
     print "   --check-modules  Only check for correct module dependencies and quit thereafter;\n";
     print "                    does not perform any changes.\n";
+    print "   --no-templates (-t)  Don't compile the templates at all. Existing\n"; 
+    print "                        compiled templates will remain; missing compiled\n";
+    print "                        templates will not be created. (Used primarily by\n";
+    print "                        developers to speed up checksetup.)  Use this\n";
+    print "                        switch at your own risk.\n";
     print "    SCRIPT          Name of script to drive non-interactive mode.\n";
     print "                    This script should define an \%answer hash whose\n"; 
     print "                    keys are variable names and the values answers to\n";
@@ -173,7 +183,7 @@ sub help_page {
 # Grep this file for references to that hash to see the tags to use for the 
 # possible answers. One example is ADMIN_EMAIL.
 ###########################################################################
-if ($ARGV[0] && ($ARGV[0] !~ /^--/)) {
+if ($ARGV[0] && ($ARGV[0] !~ /^-/)) {
     do $ARGV[0] 
         or ($@ && die("Error $@ processing $ARGV[0]"))
         or die("Error $! processing $ARGV[0]");
@@ -1175,7 +1185,7 @@ END
     }
 }
 
-{
+unless ($switch{'no_templates'}) {
     if (-e "$datadir/template") {
         print "Removing existing compiled templates ...\n" unless $silent;
 
