@@ -251,9 +251,10 @@ nsForm::~nsForm()
   int numChildren = GetFormControlCount();
   for (int i = 0; i < numChildren; i++) {
     nsIFormControl* child = GetFormControlAt(i);
-    RemoveFormControl(child, PR_FALSE);
-    child->SetFormManager(nsnull, PR_FALSE);
-    NS_RELEASE(child);
+    if (child) {
+      RemoveFormControl(child, PR_FALSE);
+      child->SetFormManager(nsnull, PR_FALSE);
+    }
   }
   if (nsnull != mAction) delete mAction;
   if (nsnull != mEncoding) delete mEncoding;
@@ -309,13 +310,9 @@ nsrefcnt nsForm::Release()
   PRBool externalRefsToChildren = PR_FALSE;  // are there refs to any children besides my ref
   for (int i = 0; i < numChildren; i++) {
     nsIFormControl* child = GetFormControlAt(i);
-    if (child) {
-      PRInt32 refCnt = child->GetRefCount();
-      NS_RELEASE(child);
-      if (refCnt > 1) {
-        externalRefsToChildren = PR_TRUE;
-        break;
-      }
+    if (child && (child->GetRefCount() > 1)) {
+      externalRefsToChildren = PR_TRUE;
+      break;
     }
   }
   if (!externalRefsToChildren && ((int)mRefCnt == numChildren)) {
@@ -335,8 +332,8 @@ nsForm::GetFormControlCount() const
 nsIFormControl* 
 nsForm::GetFormControlAt(PRInt32 aIndex) const 
 { 
+  // do not addref ctl
   nsIFormControl* ctl = (nsIFormControl*) mChildren.ElementAt(aIndex);
-  NS_IF_ADDREF(ctl);
   return ctl;
 }
 
@@ -983,7 +980,6 @@ void nsForm::Init(PRBool aReinit)
 	      }
       }
     }
-    NS_RELEASE(control);
   }
 
   // if there is only one text field, it can submit on "return" 
@@ -1190,7 +1186,6 @@ nsForm::NamedItem(const nsString& aName, nsIDOMElement** aReturn)
         }
         NS_RELEASE(content);
       }
-      NS_RELEASE(control);
     }
   }
   
@@ -1473,7 +1468,6 @@ nsFormElementList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
     control = mForm->GetFormControlAt(aIndex);
     if (nsnull != control) {
       res = control->QueryInterface(kIDOMNodeIID, (void**)aReturn);
-      NS_RELEASE(control);
     }
     else {
       *aReturn = nsnull;
@@ -1510,7 +1504,6 @@ nsFormElementList::NamedItem(const nsString& aName, nsIDOMNode** aReturn)
         }
         NS_RELEASE(content);
       }
-      NS_RELEASE(control);
     }
   }
   

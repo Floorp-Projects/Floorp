@@ -65,7 +65,7 @@ nsInput::~nsInput()
     delete mName;
   }
   if (nsnull != mValue) {
-    delete mName;
+    delete mValue;
   }
   if (nsnull != mFormMan) {
     // prevent mFormMan from decrementing its ref count on us
@@ -160,7 +160,7 @@ PRBool nsInput::IsSuccessful(nsIFormControl* aSubmitter) const
 nsrefcnt nsInput::Release()
 {
   --mRefCnt;
-	if (mRefCnt == 0) {
+	if (mRefCnt <= 0) {
     delete this;                                       
     return 0;                                          
   }
@@ -175,9 +175,7 @@ nsrefcnt nsInput::Release()
   } else {
     for (int i = 0; i < numSiblings; i++) {
       nsIFormControl* sibling = mFormMan->GetFormControlAt(i);
-      PRInt32 refCnt = sibling->GetRefCount();
-      NS_RELEASE(sibling);
-      if (refCnt > 1) {
+      if (sibling->GetRefCount() > 1) {
         externalRefs = PR_TRUE;
         break;
       }

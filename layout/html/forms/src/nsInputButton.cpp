@@ -158,9 +158,6 @@ nsInputButton::nsInputButton(nsIAtom* aTag, nsIFormManager* aManager,
 
 nsInputButton::~nsInputButton()
 {
-  if (nsnull != mValue) {
-    delete mValue;
-  }
 }
 
 PRBool nsInputButton::IsSuccessful(nsIFormControl* aSubmitter) const
