@@ -2,35 +2,42 @@ interface Range {
  /* IID: { 0xa6cf90ce, 0x15b3, 0x11d2, \
   { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
 
-    attribute boolean   isPositioned;
+	const unsigned short START_TO_START = 0;
+	const unsigned short START_TO_END = 1;
+	const unsigned short END_TO_START = 2;
+	const unsigned short END_TO_END = 3;
 
-    attribute Node      startParent;
-    attribute long      startOffset;
-    attribute Node      endParent;
-    attribute long      endOffset;
+    readonly attribute Node startParent;
+    readonly attribute long startOffset;
+    readonly attribute Node endParent;
+    readonly attribute long endOffset;
 
-    void                setStart(in Node parent, in long offset);
-    void                setEnd(in Node parent, in long offset);
+    readonly attribute boolean isCollapsed;
+    readonly attribute Node commonParent;
 
-    void                collapse(in boolean toStart);
-    attribute boolean   isCollapsed;
+    void setStart(in Node parent, in long offset);
+    void setStartBefore(in Node sibling);
+    void setStartAfter(in Node sibling);
+    void setEnd(in Node parent, in long offset);
+    void setEndBefore(in Node sibling);
+    void setEndAfter(in Node sibling);
 
-    void                unposition();
+    void collapse(in boolean toStart);
 
-    void                selectNode(in Node n);
-    void                selectNodeContents(in Node n);
+    void selectNode(in Node n);
+    void selectNodeContents(in Node n);
 
-    void                deleteContents();
+	int  compareEndPoints(in unsigned short how, in Range srcRange);
 
-    DocumentFragment    extractContents();
-    DocumentFragment    copyContents();
+    void deleteContents();
 
-    void                insertNode(in Node n);
-    void                surroundContents(in Node n);
+    DocumentFragment extractContents();
+    DocumentFragment cloneContents();
 
-    Range               clone();
+    void insertNode(in Node n);
+    void surroundContents(in Node n);
 
-    attribute Node      commonParent;
+    Range clone();
 
-    DOMString           toString();
+    DOMString toString();
  };
