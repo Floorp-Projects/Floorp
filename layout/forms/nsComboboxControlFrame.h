@@ -63,8 +63,8 @@
 #include "nsITextContent.h"
 #include "nsIScrollableViewProvider.h"
 #include "nsIStatefulFrame.h"
+#include "nsIDOMMouseListener.h"
 
-class nsIDOMMouseListener;
 class nsIView;
 class nsStyleContext;
 class nsIHTMLContent;

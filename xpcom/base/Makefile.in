@@ -36,7 +36,6 @@ REQUIRES	= string \
 
 CPPSRCS		= \
 		nsAllocator.cpp \
-		nsCWeakReference.cpp \
 		nsConsoleMessage.cpp \
 		nsConsoleService.cpp \
 		nsDebugImpl.cpp \
@@ -56,7 +55,6 @@ endif
 EXPORTS		= \
 		nsAgg.h \
 		nsAutoPtr.h \
-		nsCWeakReference.h \
 		nsCom.h \
 		nsComObsolete.h \
 		nsDebugImpl.h \
