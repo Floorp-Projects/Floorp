@@ -793,7 +793,6 @@ NS_IMETHODIMP
 LocationImpl::Reload(JSContext *cx, jsval *argv, PRUint32 argc)
 {
   // XXX Security manager needs to be called
-  nsresult result = NS_OK;
   JSBool force = JS_FALSE;
 
   if (argc > 0) {

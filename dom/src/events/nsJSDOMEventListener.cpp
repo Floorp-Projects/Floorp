@@ -68,7 +68,6 @@ NS_IMPL_RELEASE(nsJSDOMEventListener)
 
 nsresult nsJSDOMEventListener::HandleEvent(nsIDOMEvent* aEvent)
 {
-  jsval result;
   jsval argv[1];
   JSObject *eventObj;
 

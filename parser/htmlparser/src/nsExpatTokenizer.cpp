@@ -432,7 +432,7 @@ void nsExpatTokenizer::HandleCharacterData(void *userData, const XML_Char *s, in
     }
     
     if(newToken) {
-      if ((s[0] != kNewLine) && (s[0] != CR)) {
+      if ((s[0] != (XML_Char)kNewLine) && (s[0] != (XML_Char)kCR)) {
         nsString& theString=newToken->GetStringValueXXX();
         theString.Append((PRUnichar *) s,len);
       }
