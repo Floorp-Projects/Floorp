@@ -385,7 +385,7 @@ nsMsgDraft::OpenEditorTemplate(const PRUnichar *msgURI, nsIMessage **aMsgToRepla
 PRUnichar *
 HackUpAURIToPlayWith(void)
 {
-  PRUnichar           *playURI = nsnull;
+  //PRUnichar           *playURI = nsnull;
   char                *folderURI = nsnull;
   nsresult            rv = NS_OK;
 
