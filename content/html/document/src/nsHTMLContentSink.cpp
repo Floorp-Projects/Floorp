@@ -224,7 +224,7 @@ HTMLContentSink::HTMLContentSink()
   // Set the first update delta to be 50ms
   LL_I2L(mUpdateDelta, PR_USEC_PER_MSEC * 50);
 }
-
+ 
 HTMLContentSink::~HTMLContentSink()
 {
   NS_IF_RELEASE(mBody);
@@ -263,8 +263,7 @@ nsresult HTMLContentSink::Init(nsIDocument* aDoc, nsIURL* aDocURL)
 
 NS_IMPL_ISUPPORTS(HTMLContentSink,kIHTMLContentSinkIID)
 
-PRBool HTMLContentSink::OpenHTML(const nsIParserNode& aNode)
-{
+PRInt32 HTMLContentSink::OpenHTML(const nsIParserNode& aNode) {
   NOISY_SINK_TRACE("OpenHTML", aNode)
   NS_PRECONDITION(0 == mStackPos, "bad stack pos");
 
@@ -272,10 +271,10 @@ PRBool HTMLContentSink::OpenHTML(const nsIParserNode& aNode)
   mContainerStack[0] = mRoot;
   mStackPos = 1;
 
-  return PR_TRUE;
+  return 0;
 }
 
-PRBool HTMLContentSink::CloseHTML(const nsIParserNode& aNode)
+PRInt32 HTMLContentSink::CloseHTML(const nsIParserNode& aNode)
 {
   NOISY_SINK_TRACE("CloseHTML", aNode)
 
@@ -292,27 +291,27 @@ PRBool HTMLContentSink::CloseHTML(const nsIParserNode& aNode)
   }
   NS_IF_RELEASE(mCurrentForm);
 
-  return PR_TRUE; 
+  return 0; 
 }
 
-PRBool HTMLContentSink::OpenHead(const nsIParserNode& aNode)
+PRInt32 HTMLContentSink::OpenHead(const nsIParserNode& aNode)
 {
   NOISY_SINK_TRACE("OpenHead", aNode)
 
   mNodeStack[mStackPos++] = (eHTMLTags)aNode.GetNodeType();
-  return PR_TRUE;
+  return 0;
 }
 
-PRBool HTMLContentSink::CloseHead(const nsIParserNode& aNode)
+PRInt32 HTMLContentSink::CloseHead(const nsIParserNode& aNode)
 {
   NOISY_SINK_TRACE("CloseHead", aNode)
 
   NS_ASSERTION(mStackPos > 0, "bad bad");
   mNodeStack[--mStackPos] = eHTMLTag_unknown;
-  return PR_TRUE;
+  return 0;
 }
 
-PRBool HTMLContentSink::SetTitle(const nsString& aValue)
+PRInt32 HTMLContentSink::SetTitle(const nsString& aValue)
 {
   if (nsnull == mTitle) {
     mTitle = new nsString(aValue);
@@ -322,10 +321,10 @@ PRBool HTMLContentSink::SetTitle(const nsString& aValue)
   }
   mTitle->CompressWhitespace(PR_TRUE, PR_TRUE);
   ((nsHTMLDocument*)mDocument)->SetTitle(*mTitle);
-  return PR_TRUE;
+  return 0;
 }
 
-PRBool HTMLContentSink::OpenBody(const nsIParserNode& aNode)
+PRInt32 HTMLContentSink::OpenBody(const nsIParserNode& aNode)
 {
   NOISY_SINK_TRACE("OpenBody", aNode)
 
@@ -359,10 +358,10 @@ PRBool HTMLContentSink::OpenBody(const nsIParserNode& aNode)
     StartLayout();
   }
 
-  return PR_TRUE;
+  return 0;
 }
 
-PRBool HTMLContentSink::CloseBody(const nsIParserNode& aNode)
+PRInt32 HTMLContentSink::CloseBody(const nsIParserNode& aNode)
 {
   NOISY_SINK_TRACE("CloseBody", aNode)
 
@@ -372,12 +371,12 @@ PRBool HTMLContentSink::CloseBody(const nsIParserNode& aNode)
   // Reflow any lingering content
   ReflowNewContent();
 
-  return PR_TRUE;
+  return 0;
 }
 
 static NS_DEFINE_IID(kIFormManagerIID, NS_IFORMMANAGER_IID);
 
-PRBool HTMLContentSink::OpenForm(const nsIParserNode& aNode)
+PRInt32 HTMLContentSink::OpenForm(const nsIParserNode& aNode)
 {
   NOISY_SINK_TRACE("OpenForm", aNode)
 
@@ -447,10 +446,10 @@ PRBool HTMLContentSink::OpenForm(const nsIParserNode& aNode)
     }
   }
 
-  return PR_TRUE;
+  return 0;
 }
 
-PRBool HTMLContentSink::CloseForm(const nsIParserNode& aNode)
+PRInt32 HTMLContentSink::CloseForm(const nsIParserNode& aNode)
 {
   NOISY_SINK_TRACE("CloseForm", aNode)
 
@@ -458,26 +457,26 @@ PRBool HTMLContentSink::CloseForm(const nsIParserNode& aNode)
 	  NS_RELEASE(mCurrentForm);
     mCurrentForm = nsnull;
   }
-  return PR_TRUE;
+  return 0;
 }
 
-PRBool HTMLContentSink::OpenFrameset(const nsIParserNode& aNode)
+PRInt32 HTMLContentSink::OpenFrameset(const nsIParserNode& aNode)
 {
   NOISY_SINK_TRACE("OpenFrameset", aNode)
 
   mNodeStack[mStackPos++] = (eHTMLTags)aNode.GetNodeType();
-  return PR_TRUE;
+  return 0;
 }
 
-PRBool HTMLContentSink::CloseFrameset(const nsIParserNode& aNode)
+PRInt32 HTMLContentSink::CloseFrameset(const nsIParserNode& aNode)
 {
   NOISY_SINK_TRACE("CloseFrameset", aNode)
 
   mNodeStack[--mStackPos] = eHTMLTag_unknown;
-  return PR_TRUE;
+  return 0;
 }
 
-PRBool HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
+PRInt32 HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
 {
   NOISY_SINK_TRACE("OpenContainer", aNode)
 
@@ -569,23 +568,23 @@ PRBool HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
   }
 
   NS_RELEASE(atom);
-  return PR_TRUE;
+  return 0;
 }
 
-PRBool HTMLContentSink::CloseContainer(const nsIParserNode& aNode)
+PRInt32 HTMLContentSink::CloseContainer(const nsIParserNode& aNode)
 {
   NOISY_SINK_TRACE("CloseContainer", aNode)
 
   switch (aNode.GetNodeType()) {
   case eHTMLTag_map:
     NS_IF_RELEASE(mCurrentMap);
-    return PR_TRUE;
+    return 0;
   }
 
   // XXX we could assert things about the top tag name == aNode.getText
   if (0 == mStackPos) {
     // Can't pop empty stack
-    return PR_TRUE;
+    return 0;
   }
 
   --mStackPos;
@@ -639,7 +638,7 @@ PRBool HTMLContentSink::CloseContainer(const nsIParserNode& aNode)
     break;
   }
 
-  return PR_TRUE;
+  return 0;
 }
 
 void HTMLContentSink::StartLayout()
@@ -697,7 +696,7 @@ nsIHTMLContent* HTMLContentSink::GetCurrentContainer(eHTMLTags* aType)
 
 // Leaf tag handling code
 
-PRBool HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
+PRInt32 HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
 {
   REALLY_NOISY_SINK_TRACE("AddLeaf", aNode)
 
@@ -705,14 +704,14 @@ PRBool HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
   switch (aNode.GetNodeType()) {
   case eHTMLTag_style:
     ProcessSTYLETag(aNode);
-    return PR_TRUE;
+    return 0;
 
   case eHTMLTag_script:
-    return PR_TRUE;
+    return 0;
 
   case eHTMLTag_area:
     ProcessAREATag(aNode);
-    return PR_TRUE;
+    return 0;
   }
 
   eHTMLTags parentType;
@@ -730,12 +729,12 @@ PRBool HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
   */
   case eHTMLTag_option:
     ProcessOPTIONTagContent(aNode);
-    return PR_TRUE;
+    return 0;
 
   case eHTMLTag_select:
     // Discard content in a select that's not an option
     if (eHTMLTag_option != aNode.GetNodeType()) {
-      return PR_TRUE;
+      return 0;
     }
     break;
   }
@@ -814,7 +813,7 @@ PRBool HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
   }
   NS_IF_RELEASE(leaf);
 
-  return PR_TRUE;
+  return 0;
 }
 
 void HTMLContentSink::GetAttributeValueAt(const nsIParserNode& aNode,
