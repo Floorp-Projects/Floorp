@@ -40,6 +40,7 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsCOMPtr.h"
 #include "nsLineLayout.h"
+#include "nsBlockFrame.h"
 #include "nsInlineFrame.h"
 #include "nsStyleConsts.h"
 #include "nsHTMLContainerFrame.h"
