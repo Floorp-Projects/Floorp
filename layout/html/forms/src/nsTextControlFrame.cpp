@@ -100,6 +100,7 @@
 #include "nsIDOMEventGroup.h"
 #include "nsIDOM3EventTarget.h"
 #include "nsIDOMNSUIEvent.h"
+#include "nsIEventStateManager.h"
 
 #include "nsIDOMFocusListener.h" //onchange events
 #include "nsIDOMCharacterData.h" //for selection setting helper func
@@ -2076,11 +2077,26 @@ nsTextControlFrame::GetFormControlType() const
   return nsFormControlHelper::GetType(mContent);
 }
 
+static PRBool
+IsFocusedContent(nsIPresContext* aPresContext, nsIContent* aContent)
+{
+  nsCOMPtr<nsIContent> focusedContent;
+  aPresContext->EventStateManager()->
+    GetFocusedContent(getter_AddRefs(focusedContent));
+  return focusedContent == aContent;
+}
+
 void    nsTextControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 {
   if (!aOn || !mSelCon)
     return;
-    
+
+  // onfocus="some_where_else.focus()" can trigger several focus
+  // in succession. Here, we only care if we are the winner.
+  // @see also nsTextEditorFocusListener::Focus()
+  if (!IsFocusedContent(GetPresContext(), mContent))
+    return;
+
   // tell the caret to use our selection
 
   nsCOMPtr<nsISelection> ourSel;
@@ -2667,13 +2683,14 @@ nsTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
     if (NS_CONTENT_ATTR_NOT_THERE != rv) 
     { // set readonly
       flags |= nsIPlaintextEditor::eEditorReadonlyMask;
-      if (mSelCon)
+      if (mSelCon && IsFocusedContent(aPresContext, mContent))
         mSelCon->SetCaretEnabled(PR_FALSE);
     }
     else 
     { // unset readonly
       flags &= ~(nsIPlaintextEditor::eEditorReadonlyMask);
-      if (mSelCon && !(flags & nsIPlaintextEditor::eEditorDisabledMask))
+      if (mSelCon && !(flags & nsIPlaintextEditor::eEditorDisabledMask) &&
+          IsFocusedContent(aPresContext, mContent))
         mSelCon->SetCaretEnabled(PR_TRUE);
     }    
     mEditor->SetFlags(flags);
@@ -2694,8 +2711,9 @@ nsTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
       flags |= nsIPlaintextEditor::eEditorDisabledMask;
       if (mSelCon)
       {
-        mSelCon->SetCaretEnabled(PR_FALSE);
         mSelCon->SetDisplaySelection(nsISelectionController::SELECTION_OFF);
+        if (IsFocusedContent(aPresContext, mContent))
+          mSelCon->SetCaretEnabled(PR_FALSE);
       }
     }
     else 
