@@ -715,6 +715,7 @@ xpfe/browser/resources/locale/Makefile
 xpfe/browser/resources/locale/en-US/Makefile
 xpfe/browser/resources/locale/en-US/unix/Makefile
 xpfe/global/Makefile
+xpfe/global/buildconfig.html
 xpfe/global/resources/Makefile
 xpfe/global/resources/content/Makefile
 xpfe/global/resources/content/os2/Makefile
