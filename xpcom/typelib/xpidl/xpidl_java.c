@@ -182,6 +182,15 @@ interface_declaration(TreeState *state)
         }
 
         fprintf(state->file, "_STRING =\n        \"%s\";\n\n", iid);
+
+        fputs("    public static final nsID ", state->file);
+
+        /* XXX s.b just "IID" ? */
+        if (!write_classname_iid_define(state->file, interface_name)) {
+            return FALSE;
+        }
+
+        fprintf(state->file, " =\n        new nsID(\"%s\");\n\n", iid);
     }
 
     /*
@@ -627,6 +636,7 @@ attribute_declaration(TreeState *state)
 
     gboolean method_noscript = 
         (IDL_tree_property_get(ATTR_PROPS(state->tree), "noscript") != NULL);
+
 
     /* Comment */
     xpidl_write_comment(state, 4);
