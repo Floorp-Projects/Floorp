@@ -2506,6 +2506,43 @@ void nsMsgCompose::CleanUpRecipients(nsString& recipients)
   recipients = newRecipient;
 }
 
+NS_IMETHODIMP nsMsgCompose::RememberQueuedDisposition()
+{
+  // need to find the msg hdr in the saved folder and then set a property on 
+  // the header that we then look at when we actually send the message.
+  if (mType == nsIMsgCompType::Reply || 
+    mType == nsIMsgCompType::ReplyAll ||
+    mType == nsIMsgCompType::ReplyToGroup ||
+    mType == nsIMsgCompType::ReplyToSender ||
+    mType == nsIMsgCompType::ReplyToSenderAndGroup ||
+    mType == nsIMsgCompType::ForwardAsAttachment ||              
+    mType == nsIMsgCompType::ForwardInline)
+  {
+    if (!mOriginalMsgURI.IsEmpty())
+    {
+      nsMsgKey msgKey;
+      if (mMsgSend)
+      {
+        mMsgSend->GetMessageKey(&msgKey);
+        const char *dispositionSetting = "replied";
+        if (mType == nsIMsgCompType::ForwardAsAttachment ||              
+          mType == nsIMsgCompType::ForwardInline)
+          dispositionSetting = "forwarded";
+        nsCAutoString msgUri(m_folderName);
+        msgUri.Insert("-message", 7); // "mailbox: -> "mailbox-message:"
+        msgUri.Append('#');
+        msgUri.AppendInt(msgKey);
+        nsCOMPtr <nsIMsgDBHdr> msgHdr;
+        nsresult rv = GetMsgDBHdrFromURI(msgUri.get(), getter_AddRefs(msgHdr));
+        NS_ENSURE_SUCCESS(rv, rv);
+        msgHdr->SetStringProperty(ORIG_URI_PROPERTY, mOriginalMsgURI.get());
+        msgHdr->SetStringProperty(QUEUED_DISPOSITION_PROPERTY, dispositionSetting);
+      }
+    }
+  }
+  return NS_OK;
+}
+
 nsresult nsMsgCompose::ProcessReplyFlags()
 {
   nsresult rv;
@@ -2808,6 +2845,9 @@ nsMsgComposeSendListener::OnStopCopy(nsresult aStatus)
   nsCOMPtr<nsIMsgCompose>compose = do_QueryReferent(mWeakComposeObj);
   if (compose)
   {
+    if (mDeliverMode == nsIMsgSend::nsMsgQueueForLater)
+      compose->RememberQueuedDisposition();
+      
     // Ok, if we are here, we are done with the send/copy operation so
     // we have to do something with the window....SHOW if failed, Close
     // if succeeded
@@ -2952,15 +2992,15 @@ nsMsgComposeSendListener::RemoveCurrentDraftMessage(nsIMsgCompose *compObj, PRBo
           NS_ASSERTION(str, "Failed to get current draft id url");
           if (str)
           {
-          nsMsgKeyArray messageID;
-          nsCAutoString srcStr(str+1);
-          PRInt32 num=0, err;
-          num = srcStr.ToInteger(&err);
-          if (num != nsMsgKey_None)
-          {
-                                                messageID.Add(num);
-            rv = imapFolder->StoreImapFlags(kImapMsgDeletedFlag, PR_TRUE, messageID.GetArray(), messageID.GetSize());
-          }
+            nsMsgKeyArray messageID;
+            nsCAutoString srcStr(str+1);
+            PRInt32 num=0, err;
+            num = srcStr.ToInteger(&err);
+            if (num != nsMsgKey_None)
+            {
+              messageID.Add(num);
+              rv = imapFolder->StoreImapFlags(kImapMsgDeletedFlag, PR_TRUE, messageID.GetArray(), messageID.GetSize());
+            }
           }
         }
       }
@@ -3404,9 +3444,9 @@ nsMsgCompose::BuildBodyMessageAndSignature()
   switch (mType)
   {
     case nsIMsgCompType::New :
-    case nsIMsgCompType::Reply :        /* should not append! but just in case */
-    case nsIMsgCompType::ReplyAll :       /* should not append! but just in case */
-    case nsIMsgCompType::ForwardAsAttachment :  /* should not append! but just in case */
+    case nsIMsgCompType::Reply :        /* should not happen! but just in case */
+    case nsIMsgCompType::ReplyAll :       /* should not happen! but just in case */
+    case nsIMsgCompType::ForwardAsAttachment :  /* should not happen! but just in case */
     case nsIMsgCompType::ForwardInline :
     case nsIMsgCompType::NewsPost :
     case nsIMsgCompType::ReplyToGroup :

@@ -184,7 +184,7 @@ nsMsgCopy::nsMsgCopy()
 
 nsMsgCopy::~nsMsgCopy()
 {
-  PR_FREEIF(mSavePref);
+  PR_Free(mSavePref);
 }
 
 nsresult
@@ -222,25 +222,22 @@ nsMsgCopy::StartCopyOperation(nsIMsgIdentity       *aUserIdentity,
   {
     rv = GetDraftsFolder(aUserIdentity, getter_AddRefs(dstFolder), &waitForUrl);
     isDraft = PR_TRUE;
-    if (!dstFolder || NS_FAILED(rv)) {
-	    return NS_MSG_UNABLE_TO_SAVE_DRAFT;
-    } 
+    if (!dstFolder || NS_FAILED(rv))
+      return NS_MSG_UNABLE_TO_SAVE_DRAFT;
   }
   else if (aMode == nsIMsgSend::nsMsgSaveAsTemplate) // SaveAsTemplate (Templates)
   {
     rv = GetTemplatesFolder(aUserIdentity, getter_AddRefs(dstFolder), &waitForUrl);
     isDraft = PR_FALSE;
-    if (!dstFolder || NS_FAILED(rv) || CHECK_SIMULATED_ERROR(SIMULATED_SEND_ERROR_5)) {
+    if (!dstFolder || NS_FAILED(rv) || CHECK_SIMULATED_ERROR(SIMULATED_SEND_ERROR_5))
 	    return NS_MSG_UNABLE_TO_SAVE_TEMPLATE;
-    } 
   }
   else // SaveInSentFolder (Sent) -  nsMsgDeliverNow or nsMsgSendUnsent
   {
     rv = GetSentFolder(aUserIdentity, getter_AddRefs(dstFolder), &waitForUrl);
     isDraft = PR_FALSE;
-    if (!dstFolder || NS_FAILED(rv)) {
-	    return NS_MSG_COULDNT_OPEN_FCC_FOLDER;
-    }
+    if (!dstFolder || NS_FAILED(rv)) 
+      return NS_MSG_COULDNT_OPEN_FCC_FOLDER;
   }
 
   mMode = aMode;

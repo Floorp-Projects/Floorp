@@ -115,9 +115,9 @@ private:
   nsCString                     m_folderName;
 
  private:
-	nsresult _SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *identity, PRBool entityConversionDone);
-	nsresult CreateMessage(const char * originalMsgURI, MSG_ComposeType type, nsIMsgCompFields* compFields);
-	void CleanUpRecipients(nsString& recipients);
+  nsresult _SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *identity, PRBool entityConversionDone);
+  nsresult CreateMessage(const char * originalMsgURI, MSG_ComposeType type, nsIMsgCompFields* compFields);
+  void CleanUpRecipients(nsString& recipients);
   nsresult GetABDirectories(const nsACString& dirUri, nsISupportsArray* directoriesArray, PRBool searchSubDirectory);
   nsresult BuildMailListArray(nsIAddrDatabase* database, nsIAbDirectory* parentDir, nsISupportsArray* array);
   nsresult GetMailListAddresses(nsString& name, nsISupportsArray* mailListArray, nsISupportsArray** addresses);
@@ -125,6 +125,8 @@ private:
   nsresult _BodyConvertible(nsIDOMNode *node, PRInt32 *_retval);
   nsresult SetBodyAttribute(nsIEditor* editor, nsIDOMElement* element, nsString& name, nsString& value);
   nsresult SetBodyAttributes(nsString& attributes);
+
+
 #if !defined(XP_MAC)
   PRBool IsLastWindow();
 #endif /* XP_MAC */

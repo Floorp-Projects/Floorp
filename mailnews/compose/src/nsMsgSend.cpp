@@ -461,6 +461,8 @@ nsMsgComposeAndSend::Clear()
 
       m_attachments[i].mURL = nsnull;
 
+      // is this needed? the destructor for the attachments
+      // should be freeing these strings.
       PR_FREEIF (m_attachments [i].m_type);
       PR_FREEIF (m_attachments [i].m_charset);
       PR_FREEIF (m_attachments [i].m_override_type);
@@ -2737,7 +2739,7 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
       if (printfString)
       {
         SetStatusMessage(printfString); 
-        PR_FREEIF(printfString);  
+        PR_Free(printfString);  
       }
       
       /* As SnarfAttachment will call GatherMimeAttachments when it will be done (this is an async process),
@@ -3200,24 +3202,14 @@ nsMsgComposeAndSend::DeliverMessage()
   PRBool mail_p = ((mCompFields->GetTo() && *mCompFields->GetTo()) || 
           (mCompFields->GetCc() && *mCompFields->GetCc()) || 
           (mCompFields->GetBcc() && *mCompFields->GetBcc()));
-  PRBool news_p = (mCompFields->GetNewsgroups() && 
-            *(mCompFields->GetNewsgroups()) ? PR_TRUE : PR_FALSE);
-
-  if ( m_deliver_mode != nsMsgSaveAsDraft && m_deliver_mode != nsMsgSaveAsTemplate ) {
-    NS_ASSERTION(mail_p || news_p, "message without destination");
-  }
+  PRBool news_p = mCompFields->GetNewsgroups() && *(mCompFields->GetNewsgroups());
+  NS_ASSERTION(!( m_deliver_mode != nsMsgSaveAsDraft && m_deliver_mode != nsMsgSaveAsTemplate)  || (mail_p || news_p), "message without destination");
   if (m_deliver_mode == nsMsgQueueForLater) 
-  {
     return QueueForLater();
-  }
   else if (m_deliver_mode == nsMsgSaveAsDraft) 
-  {
     return SaveAsDraft();
-  }
   else if (m_deliver_mode == nsMsgSaveAsTemplate)
-  {
     return SaveAsTemplate();
-  }
 
   //
   // Ok, we are about to send the file that we have built up...but what
@@ -3246,29 +3238,32 @@ nsMsgComposeAndSend::DeliverMessage()
         {
           nsresult ignoreMe;
           Fail(NS_ERROR_BUT_DONT_SHOW_ALERT, printfString, &ignoreMe);
-          PR_FREEIF(printfString);
+          PR_Free(printfString);
           return NS_ERROR_FAILURE;
         }
         else
-          PR_FREEIF(printfString);
+          PR_Free(printfString);
       }
 
     }
   }
 
-  if (news_p) {
-      if (mail_p) {
-        mSendMailAlso = PR_TRUE;
-      }
-      return DeliverFileAsNews();   /* will call DeliverFileAsMail if it needs to */
-    }
-  else if (mail_p) {
+  if (news_p) 
+  {
+    if (mail_p) 
+      mSendMailAlso = PR_TRUE;
+
+    return DeliverFileAsNews();   /* will call DeliverFileAsMail if it needs to */
+  }
+  else if (mail_p) 
+  {
     return DeliverFileAsMail();
-    }
-  else {
-      return NS_ERROR_UNEXPECTED;
-    }
-    
+  }
+  else
+  {
+    return NS_ERROR_UNEXPECTED;
+  }
+  
   return NS_OK;
 }
 
@@ -4274,7 +4269,8 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
   else
     turi = GetFolderURIFromUserPrefs(mode, mUserIdentity);
   status = MessageFolderIsLocal(mUserIdentity, mode, turi, &folderIsLocal);
-  if (NS_FAILED(status)) { goto FAIL; }
+  if (NS_FAILED(status))
+    goto FAIL;
 
   // Tell the user we are copying the message... 
   mComposeBundle->GetStringByID(NS_MSG_START_COPY_MESSAGE, getter_Copies(msg));
@@ -4296,7 +4292,7 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
     if (printfString)
     {
       SetStatusMessage(printfString); 
-      PR_FREEIF(printfString);  
+      PR_Free(printfString);  
     }
   }
 
@@ -4340,7 +4336,7 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
     {
       PRInt32   len = PL_strlen(buf);
       n = tempOutfile.write(buf, len);
-      PR_FREEIF(buf);
+      PR_Free(buf);
       if (n != len)
       {
         status = NS_ERROR_FAILURE;
@@ -4361,7 +4357,7 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
     {
       PRInt32   len = PL_strlen(buf);
       n = tempOutfile.write(buf, len);
-      PR_FREEIF(buf);
+      PR_Free(buf);
       if (n != len)
       {
         status = NS_ERROR_FAILURE;
@@ -4471,7 +4467,7 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
     PRInt32   len = strlen(buf);
     n = tempOutfile.write(buf, len);
     PR_Free(buf);
-    PR_FREEIF(convBcc);
+    PR_Free(convBcc);
     if (n != len)
     {
       status = NS_ERROR_FAILURE;
@@ -4513,7 +4509,6 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
                    host_and_port ? host_and_port : "",
                    secure_p ? "/secure" : "");
       PR_FREEIF(orig_hap);
-      orig_hap = 0;
       if (!line)
       {
         status = NS_ERROR_OUT_OF_MEMORY;
@@ -4522,7 +4517,7 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
 
       PRInt32   len = PL_strlen(line);
       n = tempOutfile.write(line, len);
-      PR_FREEIF(line);
+      PR_Free(line);
       if (n != len)
       {
         status = NS_ERROR_FAILURE;
@@ -4530,8 +4525,7 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
       }
     }
 
-    PR_FREEIF(orig_hap);
-    orig_hap = 0;
+    PR_Free(orig_hap);
   }
 
   //
@@ -4573,10 +4567,9 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
   }
 
 FAIL:
-  if (ibuffer)
-    PR_FREEIF(ibuffer);
-  if (obuffer && obuffer != ibuffer)
-    PR_FREEIF(obuffer);
+  PR_Free(ibuffer);
+  if (obuffer != ibuffer)
+    PR_Free(obuffer);
 
 
   if (tempOutfile.is_open()) 
@@ -4605,7 +4598,7 @@ FAIL:
     //
     status = StartMessageCopyOperation(mCopyFileSpec, mode, turi);
   }
-  PR_FREEIF(turi);
+  PR_Free(turi);
   return status;
 }
 
@@ -4664,8 +4657,7 @@ NS_IMETHODIMP
 nsMsgComposeAndSend::GetSendReport(nsIMsgSendReport * *aSendReport)
 {
   NS_ENSURE_ARG_POINTER(aSendReport);
-  *aSendReport = mSendReport;
-  NS_IF_ADDREF(*aSendReport);
+  NS_IF_ADDREF(*aSendReport = mSendReport);
   return NS_OK;
 }
 
@@ -4746,8 +4738,7 @@ NS_IMETHODIMP nsMsgComposeAndSend::GetDeliveryMode(nsMsgDeliverMode *aDeliveryMo
 NS_IMETHODIMP nsMsgComposeAndSend::GetProgress(nsIMsgProgress **_retval)
 {
   NS_ENSURE_ARG(_retval);
-  *_retval = mSendProgress;
-  NS_IF_ADDREF(*_retval);
+  NS_IF_ADDREF(*_retval = mSendProgress);
   return NS_OK;
 }
 
@@ -4763,8 +4754,7 @@ NS_IMETHODIMP nsMsgComposeAndSend::GetOutputStream(nsOutputFileStream * *_retval
 NS_IMETHODIMP nsMsgComposeAndSend::GetRunningRequest(nsIRequest **request)
 {
   NS_ENSURE_ARG(request);
-  *request = mRunningRequest;
-  NS_IF_ADDREF(*request);
+  NS_IF_ADDREF(*request = mRunningRequest);
   return NS_OK;
 }
 NS_IMETHODIMP nsMsgComposeAndSend::SetRunningRequest(nsIRequest *request)
@@ -4789,8 +4779,7 @@ NS_IMETHODIMP nsMsgComposeAndSend::SetStatus(nsresult aStatus)
 NS_IMETHODIMP nsMsgComposeAndSend::GetCryptoclosure(nsIMsgComposeSecure ** aCryptoclosure)
 {
   NS_ENSURE_ARG(aCryptoclosure);
-  *aCryptoclosure = m_crypto_closure;
-  NS_IF_ADDREF(*aCryptoclosure);
+  NS_IF_ADDREF(*aCryptoclosure = m_crypto_closure);
   return NS_OK;
 }
 

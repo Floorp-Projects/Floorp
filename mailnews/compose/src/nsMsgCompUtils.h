@@ -50,6 +50,12 @@ class nsIPrompt;
 
 #define ANY_SERVER "anyfolder://"
 
+// these are msg hdr property names for storing the original
+// msg uri's and disposition(replied/forwarded) when queuing
+// messages to send later.
+#define ORIG_URI_PROPERTY "origURIs"
+#define QUEUED_DISPOSITION_PROPERTY "queuedDisposition"
+
 class nsMsgCompUtils : public nsIMsgCompUtils
 {
 public:

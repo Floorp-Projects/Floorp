@@ -195,18 +195,16 @@ public:
   // internal callback only. This way, no thread boundry issues and
   // we can get away without all of the listener array code.
   //
-  void (*m_attachments_done_callback) (
-									   nsresult                 status,
-									   const PRUnichar              *error_msg,
-									   struct nsMsgAttachedFile *attachments);
+  void (*m_attachments_done_callback) (nsresult  status, 
+        const PRUnichar *error_msg, struct nsMsgAttachedFile *attachments);
   
   //
   // Define QueryInterface, AddRef and Release for this class 
   //
-	NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS
 
   nsMsgComposeAndSend();
-	virtual     ~nsMsgComposeAndSend();
+  virtual     ~nsMsgComposeAndSend();
 
 
   // Delivery and completion callback routines...
@@ -235,11 +233,11 @@ public:
   //
   // FCC operations...
   //
-  nsresult    MimeDoFCC (nsFileSpec           *input_file,  
-			                   nsMsgDeliverMode     mode,
-			                   const char           *bcc_header,
-			                   const char           *fcc_header,
-			                   const char           *news_url);
+  nsresult    MimeDoFCC (nsFileSpec *input_file,  
+    nsMsgDeliverMode mode,
+    const char *bcc_header,
+    const char *fcc_header,
+    const char *news_url);
   
   // Init() will allow for either message creation without delivery or full
   // message creation and send operations

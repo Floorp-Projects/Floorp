@@ -100,7 +100,7 @@ public:
   nsresult                  CompleteMailFileSend();
 
   nsresult                  DeleteCurrentMessage();
-
+  nsresult                  SetOrigMsgDisposition();
   // Necessary for creating a valid list of recipients
   nsresult                  BuildHeaders();
   nsresult                  DeliverQueuedLine(char *line, PRInt32 length);

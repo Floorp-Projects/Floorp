@@ -236,6 +236,7 @@ interface nsIMsgCompose : nsISupports {
 
   /* set any reply flags on the original message's folder */
   [noscript] void processReplyFlags();
+  [noscript] void rememberQueuedDisposition();
 
   /* ... */
   [noscript] void convertAndLoadComposeWindow(in nsStringRef aPrefix,

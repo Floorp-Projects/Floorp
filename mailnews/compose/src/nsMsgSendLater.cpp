@@ -393,6 +393,7 @@ SendOperationListener::OnStopSending(const char *aMsgID, nsresult aStatus, const
       if (NS_SUCCEEDED(rv) && prefs)
         prefs->GetBoolPref("mail.really_delete_draft", &deleteMsgs);
 
+      mSendLater->SetOrigMsgDisposition();
       if (deleteMsgs)
       {
         mSendLater->DeleteCurrentMessage();
@@ -717,6 +718,48 @@ nsMsgSendLater::SendUnsentMessages(nsIMsgIdentity *identity)
   mMessagesToSend->Enumerate(getter_AddRefs(mEnumerator));
 
   return StartNextMailFileSend();
+}
+
+nsresult nsMsgSendLater::SetOrigMsgDisposition()
+{
+  // We're finished sending a queued message. We need to look at mMessage 
+  // and see if we need to set replied/forwarded
+  // flags for the original message that this message might be a reply to
+  // or forward of.
+  nsXPIDLCString originalMsgURIs;
+  nsXPIDLCString queuedDisposition;
+  mMessage->GetStringProperty(ORIG_URI_PROPERTY, getter_Copies(originalMsgURIs));
+  mMessage->GetStringProperty(QUEUED_DISPOSITION_PROPERTY, getter_Copies(queuedDisposition));
+  if (!queuedDisposition.IsEmpty())
+  {
+    char *uriList = PL_strdup(originalMsgURIs.get());
+    if (!uriList)
+      return NS_ERROR_OUT_OF_MEMORY;
+    char *newStr = uriList;
+    char *uri;
+    while (nsnull != (uri = nsCRT::strtok(newStr, ",", &newStr)))
+    {
+      nsCOMPtr <nsIMsgDBHdr> msgHdr;
+      nsresult rv = GetMsgDBHdrFromURI(uri, getter_AddRefs(msgHdr));
+      NS_ENSURE_SUCCESS(rv,rv);
+      if (msgHdr)
+      {
+        // get the folder for the message resource
+        nsCOMPtr<nsIMsgFolder> msgFolder;
+        msgHdr->GetFolder(getter_AddRefs(msgFolder));
+        if (msgFolder)
+        {
+          nsMsgDispositionState dispositionSetting = nsIMsgFolder::nsMsgDispositionState_Replied;
+          if (queuedDisposition.Equals("forwarded"))
+            dispositionSetting = nsIMsgFolder::nsMsgDispositionState_Forwarded;
+          
+          msgFolder->AddMessageDispositionState(msgHdr, dispositionSetting);
+        }
+      }
+    }
+    PR_Free(uriList);
+  }
+  return NS_OK;
 }
 
 nsresult
