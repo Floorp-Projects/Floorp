@@ -160,7 +160,7 @@ nsresult nsCollationUnix::GetSortKeyLen(const nsCollationStrength strength,
   res = mCollation->UnicodeToChar(stringNormalized, &str, mCharset);
   if (NS_SUCCEEDED(res) && str != NULL) {
     char *cstr = mLocale.ToNewCString();
-    char *old_locale =  setlocale(LC_COLLATE, NULL);
+    char *old_locale =  setlocale(LC_COLLATE, "");
     (void) setlocale(LC_COLLATE, cstr);
     // call strxfrm to calculate a key length 
     int len = strxfrm(NULL, str, 0) + 1;
@@ -188,7 +188,7 @@ nsresult nsCollationUnix::CreateRawSortKey(const nsCollationStrength strength,
   res = mCollation->UnicodeToChar(stringNormalized, &str, mCharset);
   if (NS_SUCCEEDED(res) && str != NULL) {
     char *cstr = mLocale.ToNewCString();
-    char *old_locale =  setlocale(LC_COLLATE, NULL);
+    char *old_locale =  setlocale(LC_COLLATE, "");
     (void) setlocale(LC_COLLATE, cstr);
     // call strxfrm to generate a key 
     int len = strxfrm((char *) key, str, strlen(str));
