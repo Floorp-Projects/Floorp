@@ -59,65 +59,6 @@ try to avoid clutter and feel free to waste space in the code to make it more re
 
   <bookinfo>
     <title>The Bugzilla Guide</title>
-    <pubdate>2001-04-25</pubdate>
-    <revhistory>
-      <revision>
-	<revnumber>v2.11</revnumber>
-	<date>20 December 2000</date>
-	<authorinitials>MPB</authorinitials>
-	<revremark>
-	  Converted the README, FAQ, and DATABASE information into
-	  SGML docbook format.
-	</revremark>
-      </revision>
-
-      <revision>
-	<revnumber>2.11.1</revnumber>
-	<date>06 March 2001</date>
-	<authorinitials>MPB</authorinitials>
-	<revremark>
-	  Took way too long to revise this for 2.12 release. Updated
-	  FAQ to use qandaset tags instead of literallayout, cleaned
-	  up administration section, added User Guide section,
-	  miscellaneous FAQ updates and third-party integration
-	  information. From this point on all new tags are lowercase
-	  in preparation for the 2.13 release of the Guide in XML
-	  format instead of SGML.
-	</revremark>
-      </revision>
-      
-      <revision>
-	<revnumber>2.12.0</revnumber>
-	<date>24 April 2001</date>
-	<authorinitials>MPB</authorinitials>
-	<revremark>
-	  Things fixed this release: Elaborated on queryhelp
-	  interface, added FAQ regarding moving bugs from one keyword
-	  to another, clarified possible problems with the Landfill
-	  tutorial, fixed a boatload of typos and unclear sentence
-	  structures.  Incorporated the README into the UNIX
-	  installation section, and changed the README to indicate the
-	  deprecated status.  Things I know need work:  Used
-	  "simplelist" a lot, where I should have used "procedure" to
-	  tag things.  Need to lowercase all tags to be XML compliant.
-	</revremark>
-      </revision>
-      
-      <revision>
-	<revnumber>2.14.0</revnumber>
-	<date>07 August 2001</date>
-	<authorinitials>MPB</authorinitials>
-	<revremark>
-	  Attempted to integrate relevant portions of the UNIX and
-	  Windows installation instructions, moved some data from FAQ
-	  to Install, removed references to README from text, added
-	  Mac OS X install instructions, fixed a bunch
-	  of tpyos (Mark Harig), linked text that referenced other
-	  parts of the Guide, and nuked the old MySQL permissions
-	  section.
-	</revremark>
-      </revision>
-    </revhistory>
 
     <authorgroup>
 
@@ -126,41 +67,23 @@ try to avoid clutter and feel free to waste space in the code to make it more re
 	<othername>P.</othername>
 	<surname>Barnson</surname>
 	<affiliation>
-	  <address><email>barnboy@trilobyte.net</email></address>
+	  <address><email>mbarnson@sisna.com</email></address>
 	</affiliation>
       </author>
-
-      <collab>
-	<collabname>Zach Lipton</collabname>
-	<affiliation>
-	  <address><email>zach AT zachlipton DOT com</email></address>
-	</affiliation>
-      </collab>
-
     </authorgroup>
 
     <abstract>
       <para>
-	This is the documentation for Bugzilla, the Mozilla
+	This is the documentation for Bugzilla, the mozilla.org
 	bug-tracking system.
-      </para>
-      <para>
-	Bugzilla is an enterprise-class set of software utilities
-	that, when used together, power issue-tracking for hundreds of
+	Bugzilla is an enterprise-class piece of software
+	that powers issue-tracking for hundreds of
 	organizations around the world, tracking millions of bugs.
-	While it is easy to use and quite flexible, it is
-	difficult for a novice to install and maintain.  Although we
-	have provided step-by-step directions, Bugzilla is not always
-	easy to get working.  Please be sure the person responsible
-	for installing and maintaining this software is a qualified
-	professional for the operating system upon which you install
-	Bugzilla.
       </para>
       <para>
-	THIS DOCUMENTATION IS MAINTAINED IN DOCBOOK 4.1.2 XML FORMAT.
-	IF YOU WISH TO MAKE CORRECTIONS, PLEASE MAKE THEM IN PLAIN
-	TEXT OR SGML DIFFS AGAINST THE SOURCE.  I CANNOT ACCEPT
-	ADDITIONS TO THE GUIDE WRITTEN IN HTML!
+	This documentation is maintained in DocBook 4.1.2 XML format.
+  Changes are best submitted as plain text or SGML diffs, attached
+  to a Bugzilla bug.
       </para>
     </abstract>
 
