@@ -38,7 +38,7 @@
  * Olivier Gerardin
  *    -- Changed behavior of passing parameters to templates
  *
- * $Id: XSLTProcessor.cpp,v 1.42 2001/04/12 14:04:45 peterv%netscape.com Exp $
+ * $Id: XSLTProcessor.cpp,v 1.43 2001/04/17 11:13:13 peterv%netscape.com Exp $
  */
 
 #include "XSLTProcessor.h"
@@ -55,6 +55,10 @@
 #include "nsIObserverService.h"
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
+#include "nsIIOService.h"
+#include "nsILoadGroup.h"
+#include "nsIChannel.h"
+#include "nsNetCID.h"
 //#include "nslog.h"
 #else
 #include "printers.h"
@@ -68,7 +72,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL stylesheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.42 $ $Date: 2001/04/12 14:04:45 $
+ * @version $Revision: 1.43 $ $Date: 2001/04/17 11:13:13 $
 **/
 
 /**
@@ -1741,6 +1745,24 @@ XSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
     }
     Document* xslDocument = new Document(styleDOMDocument);
 
+    nsCOMPtr<nsILoadGroup> loadGroup;
+    nsCOMPtr<nsIChannel> channel;
+    nsCOMPtr<nsIDocument> inputDocument(do_QueryInterface(sourceDOMDocument));
+    if (inputDocument) {
+        inputDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
+        nsCOMPtr<nsIIOService> serv(do_GetService(NS_IOSERVICE_CONTRACTID));
+        if (serv) {
+            // Create a temporary channel to get nsIDocument->Reset to
+            // do the right thing. We want the output document to get
+            // much of the input document's characteristics.
+            serv->NewChannelFromURI(inputDocument->GetDocumentURL(),
+                                    getter_AddRefs(channel));
+        }
+    }
+ 
+    nsCOMPtr<nsIDocument> outputDocument(do_QueryInterface(aOutputDoc));
+    outputDocument->Reset(channel, loadGroup);
+
     Document* resultDocument = new Document(aOutputDoc);
 
     //-- create a new ProcessorState
@@ -1770,9 +1792,9 @@ XSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
         nsCOMPtr<nsIObserverService> anObserverService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &res);
         if (NS_SUCCEEDED(res)) {
             Node* docElement = resultDocument->getDocumentElement();
-            nsIDOMNode* nsDocElement;
+            nsISupports* nsDocElement;
             if (docElement) {
-                nsDocElement = NS_STATIC_CAST(nsIDOMNode*, docElement->getNSObj());
+                nsDocElement = docElement->getNSObj();
             }
             else {
                 nsDocElement = nsnull;
