@@ -42,6 +42,7 @@
 #include "nsCOMPtr.h"
 #include "nsSVGCairoCanvas.h"
 #include "nsISVGCairoCanvas.h"
+#include "nsIDOMSVGMatrix.h"
 #include "nsIRenderingContext.h"
 #include "nsIDeviceContext.h"
 #include "nsTransform2D.h"
@@ -215,5 +216,91 @@ nsSVGCairoCanvas::Clear(nscolor color)
 NS_IMETHODIMP
 nsSVGCairoCanvas::Flush()
 {
+  return NS_OK;
+}
+
+/** Implements pushClip(); */
+NS_IMETHODIMP
+nsSVGCairoCanvas::PushClip()
+{
+  cairo_save(mCR);
+  return NS_OK;
+}
+
+/** Implements popClip(); */
+NS_IMETHODIMP
+nsSVGCairoCanvas::PopClip()
+{
+  cairo_restore(mCR);
+  return NS_OK;
+}
+
+/** Implements setClipRect(in nsIDOMSVGMatrix canvasTM, in float x, in float y,
+    in float width, in float height); */
+NS_IMETHODIMP
+nsSVGCairoCanvas::SetClipRect(nsIDOMSVGMatrix *aCTM, float aX, float aY,
+                              float aWidth, float aHeight)
+{
+  if (!aCTM)
+    return NS_ERROR_FAILURE;
+
+  cairo_save(mCR);
+
+  float m[6];
+  float val;
+  aCTM->GetA(&val);
+  m[0] = val;
+    
+  aCTM->GetB(&val);
+  m[1] = val;
+    
+  aCTM->GetC(&val);  
+  m[2] = val;  
+    
+  aCTM->GetD(&val);  
+  m[3] = val;  
+  
+  aCTM->GetE(&val);
+  m[4] = val;
+  
+  aCTM->GetF(&val);
+  m[5] = val;
+
+  cairo_matrix_t *matrix = cairo_matrix_create();
+  if (!matrix) {
+    cairo_restore(mCR);
+    return NS_ERROR_FAILURE;
+  }
+
+  cairo_matrix_set_affine(matrix, m[0], m[1], m[2], m[3], m[4], m[5]);
+  cairo_concat_matrix(mCR, matrix);
+  cairo_matrix_destroy(matrix);
+
+  double x[4], y[4];
+  x[0] = aX;
+  y[0] = aY;
+  x[1] = aX + aWidth;
+  y[1] = aY;
+  x[2] = aX + aWidth;
+  y[2] = aY + aHeight;
+  x[3] = aX;
+  y[3] = aY + aHeight;
+
+  cairo_transform_point(mCR, &x[0], &y[0]);
+  cairo_transform_point(mCR, &x[1], &y[1]);
+  cairo_transform_point(mCR, &x[2], &y[2]);
+  cairo_transform_point(mCR, &x[3], &y[3]);
+
+  cairo_restore(mCR);
+
+  cairo_new_path(mCR);
+  cairo_move_to(mCR, x[0], y[0]);
+  cairo_line_to(mCR, x[1], y[1]);
+  cairo_line_to(mCR, x[2], y[2]);
+  cairo_line_to(mCR, x[3], y[3]);
+  cairo_close_path(mCR);
+  cairo_clip(mCR);
+  cairo_new_path(mCR);
+
   return NS_OK;
 }

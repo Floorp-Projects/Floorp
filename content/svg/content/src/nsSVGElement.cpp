@@ -428,6 +428,14 @@ nsSVGElement::sGradientStopMap[] = {
   { nsnull }
 };
 
+// PresentationAttributes-Viewports
+/* static */ const nsGenericElement::MappedAttributeEntry
+nsSVGElement::sViewportsMap[] = {
+  { &nsSVGAtoms::overflow },
+  { &nsSVGAtoms::clip },
+  { nsnull }
+};
+
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 

@@ -49,6 +49,7 @@ typedef PRUint32 nscolor;
 
 interface nsIRenderingContext;
 interface nsPresContext;
+interface nsIDOMSVGMatrix;
 
 /**
  * \addtogroup renderer_interfaces Rendering Engine Interfaces
@@ -67,7 +68,7 @@ interface nsPresContext;
  * Mozilla-native rendering object with a call to
  * nsISVGRenderer::createCanvas().
  */
-[scriptable, uuid(a1d9f15e-ee63-4ce1-9fe7-b6cdb09a48a0)]
+[scriptable, uuid(90be3072-6a88-4dc3-a3f0-c8f2907078d8)]
 interface nsISVGRendererCanvas : nsISupports
 {
   /**
@@ -104,6 +105,18 @@ interface nsISVGRendererCanvas : nsISupports
    * Mozilla-native rendering context.
    */
   void flush();
+
+  /**
+   * Push/Pop clip path.
+   */
+  void pushClip();
+  void popClip();
+
+  /**
+   * Set rectangular clip region.
+   */
+  void setClipRect(in nsIDOMSVGMatrix canvasTM, in float x, in float y,
+                   in float width, in float height);
 };
 
 /** @} */

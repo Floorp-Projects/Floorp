@@ -313,3 +313,29 @@ nsSVGLibartCanvas::GetArtColor(nscolor rgb, ArtColor& artColor)
   }
 }
 
+/** Implements void flush(); */
+NS_IMETHODIMP
+nsSVGLibartCanvas::PushClip()
+{
+  // XXX
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/** Implements pushClip(); */
+NS_IMETHODIMP
+nsSVGLibartCanvas::PopClip()
+{
+  // XXX
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/** Implements setClipRect(in nsIDOMSVGMatrix canvasTM, in float x, in float y,
+    in float width, in float height); */
+NS_IMETHODIMP
+nsSVGLibartCanvas::SetClipRect(nsIDOMSVGMatrix *aCTM, float aX, float aY,
+                              float aWidth, float aHeight)
+{
+  // XXX
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+

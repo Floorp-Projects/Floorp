@@ -46,6 +46,8 @@
 #include "nsIDOMSVGSVGElement.h"
 #include "nsISVGSVGElement.h"
 #include "nsIDOMSVGAnimatedLength.h"
+#include "nsIDOMSVGAnimatedRect.h"
+#include "nsIDOMSVGFitToViewBox.h"
 #include "nsSVGLength.h"
 #include "nsISVGValue.h"
 #include "nsISVGValueObserver.h"
@@ -349,6 +351,29 @@ nsSVGInnerSVGFrame::Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectT
 #ifdef DEBUG
 //  printf("nsSVGInnerSVG(%p)::Paint\n", this);
 #endif
+
+  canvas->PushClip();
+
+  if (GetStyleDisplay()->IsScrollableOverflow()) {
+    nsCOMPtr<nsIDOMSVGRect> vb;
+    nsCOMPtr<nsIDOMSVGAnimatedRect> viewBox;
+    nsCOMPtr<nsIDOMSVGFitToViewBox> svgElement = do_QueryInterface(mContent);
+
+    if (svgElement)
+      svgElement->GetViewBox(getter_AddRefs(viewBox));
+    if (viewBox)
+      viewBox->GetAnimVal(getter_AddRefs(vb));
+    if (vb) {
+      float x, y, width, height;
+      vb->GetX(&x);
+      vb->GetY(&y);
+      vb->GetWidth(&width);
+      vb->GetHeight(&height);
+      nsCOMPtr<nsIDOMSVGMatrix> ctm = GetCanvasTM();
+      canvas->SetClipRect(ctm, x, y, width, height);
+    }
+  }
+
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
        kid = kid->GetNextSibling()) {
     nsISVGChildFrame* SVGFrame=nsnull;
@@ -356,6 +381,8 @@ nsSVGInnerSVGFrame::Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectT
     if (SVGFrame)
       SVGFrame->Paint(canvas, dirtyRectTwips);
   }
+
+  canvas->PopClip();
 
   return NS_OK;
 }
