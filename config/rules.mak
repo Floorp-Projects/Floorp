@@ -786,7 +786,7 @@ $(CHROME_MISC:.\=CLOBBER\.\):
 
 !endif # miscellaneous chrome
 
-!ifdef $MOZ_DISABLE_JAR_PACKAGING
+!ifdef MOZ_DISABLE_JAR_PACKAGING
 !if "$(CHROME_TYPE)" != "$(NULL)"
 chrome::
     -for %t in ($(CHROME_TYPE)) do echo %t,install,url,resource:/chrome/$(CHROME_DIR:\=/)/ >>$(DIST)\bin\chrome\installed-chrome.txt
