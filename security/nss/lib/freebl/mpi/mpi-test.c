@@ -38,7 +38,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- * $Id: mpi-test.c,v 1.2 2000/07/17 22:23:23 nelsonb%netscape.com Exp $
+ * $Id: mpi-test.c,v 1.3 2000/07/27 00:23:17 nelsonb%netscape.com Exp $
  */
 
 #include <stdio.h>
@@ -1125,7 +1125,7 @@ int test_mod_d(void)
 
   mp_init(&a); mp_read_radix(&a, mp5, 16);
   mp_mod_d(&a, md5, &r);
-  sprintf(g_intbuf, DIGIT_FMT, r);
+  sprintf(g_intbuf, "%X", r);
   mp_clear(&a);
 
   if(strcmp(g_intbuf, r_mp5d5) != 0) {
