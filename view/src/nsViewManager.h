@@ -180,8 +180,7 @@ public:
 
   NS_IMETHOD  SetViewVisibility(nsIView *aView, nsViewVisibility aVisible);
 
-  NS_IMETHOD  SetViewZIndex(nsIView *aView, PRBool aAuto, PRInt32 aZIndex);
-
+  NS_IMETHOD  SetViewZIndex(nsIView *aView, PRBool aAuto, PRInt32 aZIndex, PRBool aTopMost=PR_FALSE);
   NS_IMETHOD  SetViewContentTransparency(nsIView *aView, PRBool aTransparent);
   NS_IMETHOD  SetViewOpacity(nsIView *aView, float aOpacity);
 
