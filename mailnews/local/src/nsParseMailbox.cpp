@@ -1843,6 +1843,19 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
   if (NS_FAILED(err))
     return err;        
 
+  // check if the destination is a real folder (by checking for null parent)
+  // and if it can file messages (e.g., servers or news folders can't file messages).
+  // Or read only imap folders...
+  PRBool canFileMessages = PR_TRUE;
+  nsCOMPtr<nsIFolder> parentFolder;
+  destIFolder->GetParent(getter_AddRefs(parentFolder));
+  destIFolder->GetCanFileMessages(&canFileMessages);
+  if (!parentFolder || !canFileMessages)
+  {
+    filter->SetEnabled(PR_FALSE);
+    return NS_MSG_NOT_A_MAIL_FOLDER;
+  }
+
   nsCOMPtr <nsIFileSpec> destIFolderSpec;
 
 	nsFileSpec destFolderSpec;

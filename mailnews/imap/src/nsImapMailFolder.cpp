@@ -2492,6 +2492,18 @@ nsresult nsImapMailFolder::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 
     if (destIFolder)
     {
+      // check if the destination is a real folder (by checking for null parent)
+      // and if it can file messages (e.g., servers or news folders can't file messages).
+      // Or read only imap folders...
+      PRBool canFileMessages = PR_TRUE;
+      nsCOMPtr<nsIFolder> parentFolder;
+      destIFolder->GetParent(getter_AddRefs(parentFolder));
+      destIFolder->GetCanFileMessages(&canFileMessages);
+      if (!parentFolder || !canFileMessages)
+      {
+        filter->SetEnabled(PR_FALSE);
+        return NS_MSG_NOT_A_MAIL_FOLDER;
+      }
       // put the header into the source db, since it needs to be there when we copy it
       // and we need a valid header to pass to StartAsyncCopyMessagesInto
       nsMsgKey keyToFilter;
