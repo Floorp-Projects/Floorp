@@ -81,7 +81,7 @@
 #define NS_APPSTARTUPNOTIFIER_CLASSNAME  "AppStartup Notifier"
 
 #define APPSTARTUP_CATEGORY "app-startup"
-#define APPSTARTUP_TOPIC (NS_LITERAL_STRING(APPSTARTUP_CATEGORY).get())
+#define APPSTARTUP_TOPIC (NS_LITERAL_STRING("app-startup").get())
 
 
 /*
