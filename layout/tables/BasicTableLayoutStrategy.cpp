@@ -108,8 +108,7 @@ BasicTableLayoutStrategy::~BasicTableLayoutStrategy()
   MOZ_COUNT_DTOR(BasicTableLayoutStrategy);
 }
 
-PRBool BasicTableLayoutStrategy::Initialize(nsIPresContext*          aPresContext,
-                                            const nsHTMLReflowState& aReflowState)
+PRBool BasicTableLayoutStrategy::Initialize(const nsHTMLReflowState& aReflowState)
 {
 #ifdef DEBUG_TABLE_REFLOW_TIMING
   nsTableFrame::DebugTimeMethod(nsTableFrame::eInit, *mTableFrame, (nsHTMLReflowState&)aReflowState, PR_TRUE);
@@ -122,21 +121,18 @@ PRBool BasicTableLayoutStrategy::Initialize(nsIPresContext*          aPresContex
   mCellSpacingTotal = 0;
   mCols             = mTableFrame->GetEffectiveCOLSAttribute();
 
-  float p2t;
-  aPresContext->GetScaledPixelsToTwips(&p2t);
-
   mTableFrame->SetHasPctCol(PR_FALSE);
 
-  nscoord boxWidth = mTableFrame->CalcBorderBoxWidth(aPresContext, aReflowState);
-  PRBool hasPctCol = AssignNonPctColumnWidths(aPresContext, boxWidth, aReflowState, p2t);
+  nscoord boxWidth = mTableFrame->CalcBorderBoxWidth(aReflowState);
+  PRBool hasPctCol = AssignNonPctColumnWidths(boxWidth, aReflowState);
 
   mTableFrame->SetHasPctCol(hasPctCol);
 
   // calc the min, desired, preferred widths from what we know so far
   nscoord minWidth, prefWidth;
-  mTableFrame->CalcMinAndPreferredWidths(aPresContext, aReflowState, PR_FALSE, minWidth, prefWidth);
+  mTableFrame->CalcMinAndPreferredWidths(aReflowState, PR_FALSE, minWidth, prefWidth);
   if (hasPctCol && mTableFrame->IsAutoWidth()) {
-    prefWidth = CalcPctAdjTableWidth(*aPresContext, aReflowState, boxWidth, p2t);
+    prefWidth = CalcPctAdjTableWidth(aReflowState, boxWidth);
   }
   // calc the desired width, considering if there is a specified width. 
   // don't use nsTableFrame::CalcDesiredWidth because it is based on table column widths.
@@ -165,8 +161,7 @@ void BasicTableLayoutStrategy::ContinuingFrameCheck()
 #endif
 }
 
-PRBool BCW_Wrapup(nsIPresContext*           aPresContext,
-                  const nsHTMLReflowState&  aReflowState,
+PRBool BCW_Wrapup(const nsHTMLReflowState&  aReflowState,
                   BasicTableLayoutStrategy* aStrategy, 
                   nsTableFrame*             aTableFrame, 
                   PRInt32*                  aAllocTypes)
@@ -174,7 +169,7 @@ PRBool BCW_Wrapup(nsIPresContext*           aPresContext,
   if (aAllocTypes)
     delete [] aAllocTypes;
 #ifdef DEBUG_TABLE_STRATEGY
-  printf("BalanceColumnWidths ex \n"); aTableFrame->Dump(aPresContext, PR_FALSE, PR_TRUE, PR_FALSE);
+  printf("BalanceColumnWidths ex \n"); aTableFrame->Dump(PR_FALSE, PR_TRUE, PR_FALSE);
 #endif
 #ifdef DEBUG_TABLE_REFLOW_TIMING
   nsTableFrame::DebugTimeMethod(nsTableFrame::eBalanceCols, *aTableFrame, (nsHTMLReflowState&)aReflowState, PR_FALSE);
@@ -198,18 +193,16 @@ ResetPctValues(nsTableFrame* aTableFrame,
 }
 
 PRBool 
-BasicTableLayoutStrategy::BalanceColumnWidths(nsIPresContext*          aPresContext,
-                                              const nsHTMLReflowState& aReflowState)
+BasicTableLayoutStrategy::BalanceColumnWidths(const nsHTMLReflowState& aReflowState)
 {
-  if (!aPresContext) ABORT1(PR_FALSE);
 #ifdef DEBUG_TABLE_STRATEGY
-  printf("BalanceColumnWidths en count=%d \n", gsDebugCount++); mTableFrame->Dump(aPresContext, PR_FALSE, PR_TRUE, PR_FALSE);
+  printf("BalanceColumnWidths en count=%d \n", gsDebugCount++); mTableFrame->Dump(PR_FALSE, PR_TRUE, PR_FALSE);
 #endif
 #ifdef DEBUG_TABLE_REFLOW_TIMING
   nsTableFrame::DebugTimeMethod(nsTableFrame::eBalanceCols, *mTableFrame, (nsHTMLReflowState&)aReflowState, PR_TRUE);
 #endif
   float p2t;
-  aPresContext->GetScaledPixelsToTwips(&p2t);
+  mTableFrame->GetPresContext()->GetScaledPixelsToTwips(&p2t);
 
   ContinuingFrameCheck();
 
@@ -218,16 +211,11 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIPresContext*          aPresCont
 
   nscoord horOffset; 
   // get the reduction in available horizontal space due to borders and padding
-  if (mTableFrame->IsBorderCollapse()) {
-    nsMargin offset = mTableFrame->GetChildAreaOffset(aPresContext, &aReflowState);
-    horOffset = offset.left + offset.right;
-  }
-  else {
-    horOffset = aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
-  }
+  nsMargin offset = mTableFrame->GetChildAreaOffset(&aReflowState);
+  horOffset = offset.left + offset.right;
 
   // determine if the table is auto/fixed and get the fixed width if available
-  nscoord maxWidth = mTableFrame->CalcBorderBoxWidth(aPresContext, aReflowState);
+  nscoord maxWidth = mTableFrame->CalcBorderBoxWidth(aReflowState);
   if (NS_UNCONSTRAINEDSIZE == maxWidth) {
     maxWidth = PR_MIN(maxWidth, aReflowState.availableWidth);
     if (NS_UNCONSTRAINEDSIZE == maxWidth) {
@@ -241,7 +229,7 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIPresContext*          aPresCont
   // An auto table returns a new table width based on percent cells/cols if they exist
   nscoord perAdjTableWidth = 0;
   if (mTableFrame->HasPctCol()) {
-    perAdjTableWidth = AssignPctColumnWidths(*aPresContext, aReflowState, maxWidth, tableIsAutoWidth, p2t);
+    perAdjTableWidth = AssignPctColumnWidths(aReflowState, maxWidth, tableIsAutoWidth, p2t);
     if (perAdjTableWidth > 0) {
       // if an auto table has a pct col or cell, set the preferred table width 
       // here so that CalcPctAdjTableWidth wont't need to be called by the table
@@ -286,13 +274,13 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIPresContext*          aPresCont
 
   // if the max width available is less than the min content width for fixed table, we're done
   if (!tableIsAutoWidth && (maxWidth < minTableWidth)) {
-    return BCW_Wrapup(aPresContext, aReflowState, this, mTableFrame, nsnull);
+    return BCW_Wrapup(aReflowState, this, mTableFrame, nsnull);
   }
 
   // if the max width available is less than the min content width for auto table
   // that had no % cells/cols, we're done
   if (tableIsAutoWidth && (maxWidth < minTableWidth) && (0 == perAdjTableWidth)) {
-    return BCW_Wrapup(aPresContext, aReflowState, this, mTableFrame, nsnull);
+    return BCW_Wrapup(aReflowState, this, mTableFrame, nsnull);
   }
 
   // the following are of size NUM_WIDTHS, but only MIN_CON, DES_CON, FIX, FIX_ADJ, PCT
@@ -325,7 +313,7 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIPresContext*          aPresCont
     }
     else {
       AllocateConstrained(maxWidth - totalAllocated, PCT, PR_FALSE, allocTypes, p2t);
-      return BCW_Wrapup(aPresContext, aReflowState, this, mTableFrame, allocTypes);
+      return BCW_Wrapup(aReflowState, this, mTableFrame, allocTypes);
     }
   }
   // allocate FIX cols
@@ -336,7 +324,7 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIPresContext*          aPresCont
     }
     else {
       AllocateConstrained(maxWidth - totalAllocated, FIX, PR_TRUE, allocTypes, p2t);
-      return BCW_Wrapup(aPresContext, aReflowState, this, mTableFrame, allocTypes);
+      return BCW_Wrapup(aReflowState, this, mTableFrame, allocTypes);
     }
   }
   // allocate fixed adjusted cols
@@ -347,7 +335,7 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIPresContext*          aPresCont
     }
     else {
       AllocateConstrained(maxWidth - totalAllocated, FIX_ADJ, PR_TRUE, allocTypes, p2t);
-      return BCW_Wrapup(aPresContext, aReflowState, this, mTableFrame, allocTypes);
+      return BCW_Wrapup(aReflowState, this, mTableFrame, allocTypes);
     }
   }
 
@@ -360,13 +348,13 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIPresContext*          aPresCont
     }
     else {
       AllocateConstrained(maxWidth - totalAllocated, DES_CON, PR_TRUE, allocTypes, p2t);
-      return BCW_Wrapup(aPresContext, aReflowState, this, mTableFrame, allocTypes);
+      return BCW_Wrapup(aReflowState, this, mTableFrame, allocTypes);
     }
   }
 
   // if this is a nested non auto table and pass1 reflow, we are done
   if ((maxWidth == NS_UNCONSTRAINEDSIZE) && (!tableIsAutoWidth))  {
-    return BCW_Wrapup(aPresContext, aReflowState, this, mTableFrame, allocTypes);
+    return BCW_Wrapup(aReflowState, this, mTableFrame, allocTypes);
   }
 
   // allocate the rest to auto columns, with some exceptions
@@ -387,7 +375,7 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIPresContext*          aPresCont
     }
   }
 
-  return BCW_Wrapup(aPresContext, aReflowState, this, mTableFrame, allocTypes);
+  return BCW_Wrapup(aReflowState, this, mTableFrame, allocTypes);
 }
 
 nscoord GetColWidth(nsTableColFrame* aColFrame,
@@ -962,16 +950,14 @@ BasicTableLayoutStrategy::ComputeNonPctColspanWidths(PRInt32           aWidthInd
 // Determine min, desired, fixed, and proportional sizes for the cols and 
 // and calculate min/max table width. Return true if there is at least one pct cell or col
 PRBool 
-BasicTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPresContext,
-                                                   nscoord                  aMaxWidth,
-                                                   const nsHTMLReflowState& aReflowState,
-                                                   float                    aPixelToTwips)
+BasicTableLayoutStrategy::AssignNonPctColumnWidths(nscoord                  aMaxWidth,
+                                                   const nsHTMLReflowState& aReflowState)
 {
 #ifdef DEBUG_TABLE_REFLOW_TIMING
   nsTableFrame::DebugTimeMethod(nsTableFrame::eNonPctCols, *mTableFrame, (nsHTMLReflowState&)aReflowState, PR_TRUE);
 #endif
 #ifdef DEBUG_TABLE_STRATEGY
-  printf("AssignNonPctColWidths en max=%d count=%d \n", aMaxWidth, gsDebugCount++); mTableFrame->Dump(aPresContext, PR_FALSE, PR_TRUE, PR_FALSE);
+  printf("AssignNonPctColWidths en max=%d count=%d \n", aMaxWidth, gsDebugCount++); mTableFrame->Dump(PR_FALSE, PR_TRUE, PR_FALSE);
 #endif
   PRInt32 numRows = mTableFrame->GetRowCount();
   PRInt32 numCols = mTableFrame->GetColCount();
@@ -979,6 +965,8 @@ BasicTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
   PRInt32 colX, rowX; 
   mCellSpacingTotal = 0;
   PRBool hasPctCol = PR_FALSE; // return value
+  float pixelToTwips;
+  mTableFrame->GetPresContext()->GetScaledPixelsToTwips(&pixelToTwips);
 
   PRInt32 rawPropTotal = -1; // total of numbers of the type 1*, 2*, etc 
   PRInt32 numColsForColsAttr = 0; // Nav Quirks cols attribute for equal width cols
@@ -1030,7 +1018,7 @@ BasicTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
         if (coordValue > 0) { // ignore if width == 0
           // need to add border and padding into fixed width
           nsSize percentBase(aReflowState.mComputedWidth, 0);
-          nsMargin borderPadding = nsTableFrame::GetBorderPadding(percentBase, aPixelToTwips, cellFrame);
+          nsMargin borderPadding = nsTableFrame::GetBorderPadding(percentBase, pixelToTwips, cellFrame);
           nscoord newFixWidth = coordValue + borderPadding.left + borderPadding.right;
           // 2nd part of condition is Nav/IE Quirk like below
           if ((newFixWidth > fixWidth) || ((newFixWidth == fixWidth) && (desContributor == cellFrame))) {
@@ -1113,7 +1101,7 @@ BasicTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
     }
   }
   PRBool* pctRequest = (hasPctCol) ? nsnull : &hasPctCol;
-  ComputeNonPctColspanWidths(aReflowState, PR_FALSE, aPixelToTwips, pctRequest);
+  ComputeNonPctColspanWidths(aReflowState, PR_FALSE, pixelToTwips, pctRequest);
   PRInt32 numEffCols = mTableFrame->GetEffectiveColCount();
   // figure the proportional widths for porportional cols
   if (rawPropTotal > 0)  {
@@ -1136,7 +1124,7 @@ BasicTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
       if (rawProp > 0) {
         nscoord desWidth = colFrame->GetDesWidth();
         nscoord propTotal = NSToCoordRound( ((float)desWidth) * ((float)rawPropTotal) / (float)rawProp );
-        nsTableFrame::RoundToPixel(propTotal, aPixelToTwips);
+        nsTableFrame::RoundToPixel(propTotal, pixelToTwips);
         maxPropTotal = PR_MAX(maxPropTotal, propTotal);
       }
     }
@@ -1151,7 +1139,7 @@ BasicTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
       }
       else if ((rawProp > 0) && (rawPropTotal > 0)) {
         nscoord propWidth = NSToCoordRound( ((float)maxPropTotal) * ((float)rawProp) / (float)rawPropTotal ) ;
-        propWidth = nsTableFrame::RoundToPixel(propWidth, aPixelToTwips);
+        propWidth = nsTableFrame::RoundToPixel(propWidth, pixelToTwips);
         colFrame->SetWidth(MIN_PRO, PR_MAX(propWidth, colFrame->GetMinWidth()));
       }
     }
@@ -1166,7 +1154,7 @@ BasicTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
   }
 
 #ifdef DEBUG_TABLE_STRATEGY
-  printf("AssignNonPctColWidths ex\n"); mTableFrame->Dump(aPresContext, PR_FALSE, PR_TRUE, PR_FALSE);
+  printf("AssignNonPctColWidths ex\n"); mTableFrame->Dump(PR_FALSE, PR_TRUE, PR_FALSE);
 #endif
 #ifdef DEBUG_TABLE_REFLOW_TIMING
   nsTableFrame::DebugTimeMethod(nsTableFrame::eNonPctCols, *mTableFrame, (nsHTMLReflowState&)aReflowState, PR_FALSE);
@@ -1218,16 +1206,16 @@ inline nscoord WrapupAssignPctColumnWidths(nsTableFrame*            aTableFrame,
 #endif
 
 nscoord 
-BasicTableLayoutStrategy::CalcPctAdjTableWidth(nsIPresContext&          aPresContext,
-                                               const nsHTMLReflowState& aReflowState,
-                                               nscoord                  aAvailWidthIn,
-                                               float                    aPixelToTwips)
+BasicTableLayoutStrategy::CalcPctAdjTableWidth(const nsHTMLReflowState& aReflowState,
+                                               nscoord                  aAvailWidthIn)
 {
   NS_ASSERTION(mTableFrame->IsAutoWidth() && mTableFrame->HasPctCol(), "invalid call");
 
   PRInt32 numRows  = mTableFrame->GetRowCount();
   PRInt32 numCols  = mTableFrame->GetColCount(); // consider cols at end without orig cells 
   PRInt32 colX, rowX; 
+  float pixelToTwips;
+  mTableFrame->GetPresContext()->GetScaledPixelsToTwips(&pixelToTwips);
 
   // For an auto table, determine the potentially new percent adjusted width based 
   // on percent cells/cols. This probably should only be a NavQuirks thing, since
@@ -1239,7 +1227,7 @@ BasicTableLayoutStrategy::CalcPctAdjTableWidth(nsIPresContext&          aPresCon
     rawPctValues[colX] = 0.0f;
   }
 
-  nsMargin borderPadding = mTableFrame->GetContentAreaOffset(&aPresContext, &aReflowState);
+  nsMargin borderPadding = mTableFrame->GetContentAreaOffset(&aReflowState);
   nscoord availWidth = aAvailWidthIn;
   if (NS_UNCONSTRAINEDSIZE != availWidth) {
     // adjust the avail width to exclude table border, padding and cell spacing
@@ -1273,7 +1261,7 @@ BasicTableLayoutStrategy::CalcPctAdjTableWidth(nsIPresContext&          aPresCon
           }
           // consider the cell's preferred width 
           cellDesWidth = PR_MAX(cellDesWidth, cellFrame->GetMaximumWidth());
-          nscoord colBasis = nsTableFrame::RoundToPixel(NSToCoordRound((float)cellDesWidth / percent), aPixelToTwips);
+          nscoord colBasis = nsTableFrame::RoundToPixel(NSToCoordRound((float)cellDesWidth / percent), pixelToTwips);
           maxColBasis = PR_MAX(maxColBasis, colBasis);
         }
       }
@@ -1287,7 +1275,7 @@ BasicTableLayoutStrategy::CalcPctAdjTableWidth(nsIPresContext&          aPresCon
         if (percent > 0.0f) {
           rawPctValues[colX] = PR_MAX(rawPctValues[colX], percent);
           nscoord desWidth = colFrame->GetWidth(DES_CON); // don't consider DES_ADJ
-          maxColBasis = nsTableFrame::RoundToPixel(NSToCoordRound((float)desWidth / percent), aPixelToTwips);
+          maxColBasis = nsTableFrame::RoundToPixel(NSToCoordRound((float)desWidth / percent), pixelToTwips);
         }
       }
     }
@@ -1329,7 +1317,7 @@ BasicTableLayoutStrategy::CalcPctAdjTableWidth(nsIPresContext&          aPresCon
 
   // compute a basis considering total percentages and the desired width of everything else
   if ((perTotal > 0.0f) && (perTotal < 1.0f)) {
-    nscoord otherBasis = nsTableFrame::RoundToPixel(NSToCoordRound((float)fixDesTotalNoPct / (1.0f - perTotal)), aPixelToTwips);
+    nscoord otherBasis = nsTableFrame::RoundToPixel(NSToCoordRound((float)fixDesTotalNoPct / (1.0f - perTotal)), pixelToTwips);
     basis = PR_MAX(basis, otherBasis);
   }
   else if ((fixDesTotalNoPct > 0) && (NS_UNCONSTRAINEDSIZE != availWidth)) { // make the basis as big as possible 
@@ -1348,8 +1336,7 @@ BasicTableLayoutStrategy::CalcPctAdjTableWidth(nsIPresContext&          aPresCon
 
 // Determine percentage col widths for each col frame
 nscoord 
-BasicTableLayoutStrategy::AssignPctColumnWidths(nsIPresContext&          aPresContext,
-                                                const nsHTMLReflowState& aReflowState,
+BasicTableLayoutStrategy::AssignPctColumnWidths(const nsHTMLReflowState& aReflowState,
                                                 nscoord                  aAvailWidth,
                                                 PRBool                   aTableIsAutoWidth,
                                                 float                    aPixelToTwips)
@@ -1369,11 +1356,11 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(nsIPresContext&          aPresCo
   // on percent cells/cols. This probably should only be a NavQuirks thing, since
   // a percentage based cell or column on an auto table should force the column to auto
   nscoord basis = (aTableIsAutoWidth) 
-                  ? CalcPctAdjTableWidth(aPresContext, aReflowState, aAvailWidth, aPixelToTwips)
+                  ? CalcPctAdjTableWidth(aReflowState, aAvailWidth)
                   : aAvailWidth;
 
   // adjust the basis to exclude table border, padding and cell spacing
-  nsMargin borderPadding = mTableFrame->GetContentAreaOffset(&aPresContext, &aReflowState);
+  nsMargin borderPadding = mTableFrame->GetContentAreaOffset(&aReflowState);
   basis -= borderPadding.left + borderPadding.right + mCellSpacingTotal;
 
   nscoord colPctTotal = 0;

@@ -68,11 +68,9 @@ public:
   virtual ~FixedTableLayoutStrategy();
 
   /** Called during resize reflow to determine the new column widths
-   * @param aPresContext - the presentation context
    * @param aReflowState - the reflow state for mTableFrame
    */
-  virtual PRBool  BalanceColumnWidths(nsIPresContext*          aPresContext,
-                                      const nsHTMLReflowState& aReflowState);
+  virtual PRBool  BalanceColumnWidths(const nsHTMLReflowState& aReflowState);
   
   /**
     * Calculate the basis for percent width calculations of the table elements

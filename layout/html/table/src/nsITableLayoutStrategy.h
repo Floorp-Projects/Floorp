@@ -52,32 +52,25 @@ class nsITableLayoutStrategy
 public:
   virtual ~nsITableLayoutStrategy() {};
 
-  /** call once every time any table thing changes (content, structure, or style) 
-    * @param aPresContext - the presentation context
-	   * @param aReflowState - the reflow state for mTableFrame
+  /** call once every time any table thing changes (content, structure, or style)
+    * @param aReflowState - the reflow state for mTableFrame
     */
-  virtual PRBool Initialize(nsIPresContext*          aPresContext,
-                            const nsHTMLReflowState& aReflowState)=0;
+  virtual PRBool Initialize(const nsHTMLReflowState& aReflowState)=0;
 
   /** assign widths for each column, taking into account the table content, the effective style, 
     * the layout constraints, and the compatibility mode.  Sets mColumnWidths as a side effect.
-    * @param aPresContext - the presentation context
 	   * @param aReflowState - the reflow state for mTableFrame
     */
-  virtual PRBool BalanceColumnWidths(nsIPresContext*          aPresContext,
-                                     const nsHTMLReflowState& aReflowState)=0;
+  virtual PRBool BalanceColumnWidths(const nsHTMLReflowState& aReflowState)=0;
 
   /**
     * Calculate the basis for percent width calculations of the table elements
     * @param aReflowState   - the reflow state of the table
     * @param aAvailWidth    - the available width for the table
-    * @param aPixelToTwips  - the number of twips in a pixel.
     * @return               - the basis for percent calculations
     */
-  virtual nscoord CalcPctAdjTableWidth(nsIPresContext&          aPresContext,
-                                       const nsHTMLReflowState& aReflowState,
-                                       nscoord                  aAvailWidth,
-                                       float                    aPixelToTwips)=0;
+  virtual nscoord CalcPctAdjTableWidth(const nsHTMLReflowState& aReflowState,
+                                       nscoord                  aAvailWidth)=0;
 };
 
 #endif

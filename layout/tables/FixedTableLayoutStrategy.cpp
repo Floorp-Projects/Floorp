@@ -50,8 +50,7 @@ FixedTableLayoutStrategy::~FixedTableLayoutStrategy()
 {
 }
 
-PRBool FixedTableLayoutStrategy::BalanceColumnWidths(nsIPresContext*          aPresContext,
-                                                     const nsHTMLReflowState& aReflowState)
+PRBool FixedTableLayoutStrategy::BalanceColumnWidths(const nsHTMLReflowState& aReflowState)
 {
   return PR_TRUE;
 }
