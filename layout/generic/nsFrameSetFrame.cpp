@@ -295,6 +295,8 @@ void nsHTMLFramesetFrame::CalculateRowCol(nsIPresContext* aPresContext, nscoord 
   if (relativeTotal != relativeMax) { 
     Scale(relativeMax, numRelative, relative, aValues);
   }
+  
+  delete [] fixed; delete [] percent; delete [] relative;
 }
 
 
