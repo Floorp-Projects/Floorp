@@ -2070,23 +2070,29 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
       }
       mHead->AppendChildTo(it, PR_FALSE);
 
-      // If we are processing an HTTP url, handle the Refresh Case. We
-      // could also handle the other http-equiv cases here such as
-      // "Content-type".
+      // If we are processing an HTTP url, handle meta http-equiv cases
       nsIHttpUrl* httpUrl = nsnull;
       rv = mDocumentURL->QueryInterface(kIHTTPUrlIID, (void **)&httpUrl);
       if (NS_OK == rv) {
-        nsAutoString result;
-        it->GetAttribute(nsHTMLAtoms::httpEquiv, result);
-        if (result.EqualsIgnoreCase("REFRESH")) {
+        nsAutoString header;
+        it->GetAttribute(nsHTMLAtoms::httpEquiv, header);
+        if (header.Length() > 0) {
+          nsAutoString result;
           it->GetAttribute(nsHTMLAtoms::content, result);
           if (result.Length() > 0) {
-            char* value = result.ToNewCString();
+            char* value = result.ToNewCString(), *csHeader;
             if (!value) {
               NS_RELEASE(it);
               return NS_ERROR_OUT_OF_MEMORY;
             }
-            httpUrl->AddMimeHeader("REFRESH", value);
+            csHeader = header.ToNewCString();
+            if (!csHeader) {
+                delete value;
+                NS_RELEASE(it);
+                return NS_ERROR_OUT_OF_MEMORY;
+            }
+            httpUrl->AddMimeHeader(csHeader, value);
+            delete csHeader;
             delete value;
           }
         }
