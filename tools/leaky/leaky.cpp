@@ -367,24 +367,19 @@ void leaky::displayStackTrace(FILE* out, malloc_log_entry* lep)
   u_int n = (lep->numpcs < stackDepth) ? lep->numpcs : stackDepth;
   for (u_int i = 0; i < n; i++, pcp++) {
     u_long addr = (u_long) *pcp;
-    static char buf[20];
-    char* symbolName;
     Symbol* sp = findSymbol(addr);
     if (sp) {
-      symbolName = sp->name;
+      fputs(sp->name, out);
+      if (showAddress) {
+	fprintf(out, "[%p]", (char*)addr);
+      }
     }
     else {
-      sprintf(buf, "<0x%lx>", addr);
-      symbolName = buf;
+      fprintf(out, "<%p>", (char*)addr);
     }
-    if (showAddress) {
-      fprintf(out, "%s[%p] ", symbolName, *pcp);
-    }
-    else {
-      fprintf(out, "%s ", symbolName);
-    }
+    fputc(' ', out);
   }
-  fprintf(out, "\n");
+  fputc('\n', out);
 }
 
 char* typeFromLog[] = {
@@ -408,7 +403,7 @@ void leaky::dumpEntryToLog(malloc_log_entry* lep)
   else {
     printf("%08lx", lep->oldaddress);
   }
-  printf(" (%ld)-->", lep->numpcs);
+  printf(" --> ");
   displayStackTrace(stdout, lep);
 }
 
