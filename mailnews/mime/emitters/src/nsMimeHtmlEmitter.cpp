@@ -52,8 +52,6 @@ static NS_DEFINE_CID(kDateTimeFormatCID,    NS_DATETIMEFORMAT_CID);
  */
 nsMimeHtmlDisplayEmitter::nsMimeHtmlDisplayEmitter() : nsMimeBaseEmitter()
 {
-  mFirst = PR_TRUE;
-  mSkipAttachment = PR_FALSE; 
 }
 
 nsMimeHtmlDisplayEmitter::~nsMimeHtmlDisplayEmitter(void)
@@ -303,151 +301,62 @@ nsresult
 nsMimeHtmlDisplayEmitter::StartAttachment(const char *name, const char *contentType, const char *url,
                                           PRBool aNotDownloaded)
 {
-
   nsresult rv = NS_OK;
   nsCOMPtr<nsIMsgHeaderSink> headerSink; 
   rv = GetHeaderSink(getter_AddRefs(headerSink));
   
-  if (headerSink)
+  if (NS_FAILED(rv) || !headerSink)
+    return NS_OK;   //If we don't need or cannot broadcast attachment info, just ignore it and return NS_OK
+    
+  char * escapedUrl = nsEscape(url, url_Path);
+  nsXPIDLCString uriString;
+
+  nsCOMPtr<nsIMsgMessageUrl> msgurl (do_QueryInterface(mURL, &rv));
+  if (NS_SUCCEEDED(rv))
   {
-    char * escapedUrl = nsEscape(url, url_Path);
-    nsXPIDLCString uriString;
-
-    nsCOMPtr<nsIMsgMessageUrl> msgurl (do_QueryInterface(mURL, &rv));
-    if (NS_SUCCEEDED(rv))
-    {
-      // HACK: news urls require us to use the originalSpec. everyone else uses GetURI
-      // to get the RDF resource which describes the message.
-      nsCOMPtr<nsINntpUrl> nntpUrl (do_QueryInterface(mURL, &rv));
-      if (NS_SUCCEEDED(rv) && nntpUrl)
-        rv = msgurl->GetOriginalSpec(getter_Copies(uriString));
-      else
-        rv = msgurl->GetUri(getter_Copies(uriString));
-    }
-
-    // we need to convert the attachment name from UTF-8 to unicode before
-    // we emit it...
-    nsXPIDLString unicodeHeaderValue;
-
-    rv = NS_ERROR_FAILURE;  // use failure to mean that we couldn't decode
-    if (mUnicodeConverter)
-  	  rv = mUnicodeConverter->DecodeMimeHeader(name,
-                                               getter_Copies(unicodeHeaderValue));
-
-    if (NS_FAILED(rv))
-    {
-      unicodeHeaderValue.Adopt(NS_ConvertUTF8toUCS2(name).ToNewUnicode());
-
-        // but it's not really a failure if we didn't have a converter in the first place
-      if ( !mUnicodeConverter )
-        rv = NS_OK;
-    }
-
-    headerSink->HandleAttachment(contentType, url /* was escapedUrl */, unicodeHeaderValue, uriString, aNotDownloaded);
-
-    nsCRT::free(escapedUrl);
-    mSkipAttachment = PR_TRUE;
+    // HACK: news urls require us to use the originalSpec. everyone else uses GetURI
+    // to get the RDF resource which describes the message.
+    nsCOMPtr<nsINntpUrl> nntpUrl (do_QueryInterface(mURL, &rv));
+    if (NS_SUCCEEDED(rv) && nntpUrl)
+      rv = msgurl->GetOriginalSpec(getter_Copies(uriString));
+    else
+      rv = msgurl->GetUri(getter_Copies(uriString));
   }
-  else
-    // then we need to deal with the attachments in the body by inserting them into a table..
-    return StartAttachmentInBody(name, contentType, url);
+
+  // we need to convert the attachment name from UTF-8 to unicode before
+  // we emit it...
+  nsXPIDLString unicodeHeaderValue;
+
+  rv = NS_ERROR_FAILURE;  // use failure to mean that we couldn't decode
+  if (mUnicodeConverter)
+  	rv = mUnicodeConverter->DecodeMimeHeader(name,
+                                             getter_Copies(unicodeHeaderValue));
+
+  if (NS_FAILED(rv))
+  {
+    unicodeHeaderValue.Adopt(NS_ConvertUTF8toUCS2(name).ToNewUnicode());
+
+      // but it's not really a failure if we didn't have a converter in the first place
+    if ( !mUnicodeConverter )
+      rv = NS_OK;
+  }
+
+  headerSink->HandleAttachment(contentType, url /* was escapedUrl */, unicodeHeaderValue, uriString, aNotDownloaded);
+
+  nsCRT::free(escapedUrl);
 
   return rv;
-}
-
-// Attachment handling routines
-// Ok, we are changing the way we handle these now...It used to be that we output 
-// HTML to make a clickable link, etc... but now, this should just be informational
-// and only show up in quoting
-//
-nsresult
-nsMimeHtmlDisplayEmitter::StartAttachmentInBody(const char *name, const char *contentType, const char *url)
-{
-  if ( (contentType) &&
-        ((!nsCRT::strcmp(contentType, APPLICATION_XPKCS7_MIME)) ||
-         (!nsCRT::strcmp(contentType, APPLICATION_XPKCS7_SIGNATURE)) ||
-         (!nsCRT::strcmp(contentType, TEXT_VCARD))
-        )
-     )
-  {
-    mSkipAttachment = PR_TRUE;
-    return NS_OK;
-  }
-  else
-    mSkipAttachment = PR_FALSE;
-
-  if (!mFirst)
-    UtilityWrite("<hr width=\"90%\" size=4>");
-
-  mFirst = PR_FALSE;
-
-  UtilityWrite("<CENTER>");
-  UtilityWrite("<table border>");
-  UtilityWrite("<tr>");
-  UtilityWrite("<td>");
-
-  UtilityWrite("<div align=right class=\"headerdisplayname\" style=\"display:inline;\">");
-
-  UtilityWrite(name);
-
-  UtilityWrite("</div>");
-
-  UtilityWrite("</td>");
-  UtilityWrite("<td>");
-  UtilityWrite("<table border=0>");
-  return NS_OK;
 }
 
 nsresult
 nsMimeHtmlDisplayEmitter::AddAttachmentField(const char *field, const char *value)
 {
-  if (mSkipAttachment || BroadCastHeadersAndAttachments())
-    return NS_OK;
-
-  // Don't let bad things happen
-  if ( (!value) || (!*value) )
-    return NS_OK;
-
-  // Don't output this ugly header...
-  if (!nsCRT::strcmp(field, HEADER_X_MOZILLA_PART_URL))
-    return NS_OK;
-
-  char  *newValue = nsEscapeHTML(value);
-
-  UtilityWrite("<tr>");
-
-  UtilityWrite("<td>");
-  UtilityWrite("<div align=right class=\"headerdisplayname\" style=\"display:inline;\">");
-
-  UtilityWrite(field);
-  UtilityWrite(":");
-  UtilityWrite("</div>");
-  UtilityWrite("</td>");
-  UtilityWrite("<td>");
-
-  UtilityWrite(newValue);
-
-  UtilityWrite("</td>");
-  UtilityWrite("</tr>");
-
-  PR_FREEIF(newValue);
   return NS_OK;
 }
 
 nsresult
 nsMimeHtmlDisplayEmitter::EndAttachment()
 {
-  mSkipAttachment = PR_FALSE;
-  if (BroadCastHeadersAndAttachments())
-    return NS_OK;
-  
-  UtilityWrite("</table>");
-  UtilityWrite("</td>");
-  UtilityWrite("</tr>");
-
-  UtilityWrite("</table>");
-  UtilityWrite("</center>");
-  UtilityWrite("<br>");
   return NS_OK;
 }
 
