@@ -200,28 +200,23 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData()
 //-------------------------------------------------------------------------
 nsresult nsClipboard::GetGlobalData(HGLOBAL aHGBL, void ** aData, PRUint32 * aLen)
 {
-  // Allocate a new memory buffer and
-  // copy the data from global memory 
+  // Allocate a new memory buffer and copy the data from global memory.
+  // Recall that win98 allocates to nearest DWORD boundary.
   nsresult  result = NS_ERROR_FAILURE;
-  LPSTR     lpStr; 
-  DWORD     dataSize;
   if (aHGBL != NULL) {
-    lpStr       = (LPSTR)::GlobalLock(aHGBL);
-    dataSize    = ::GlobalSize(aHGBL);
-    *aLen       = dataSize;
-    char * data = new char[dataSize];
-
-    char*    ptr  = data;
-    LPSTR    pMem = lpStr;
-    PRUint32 inx;
-    for (inx=0; inx < dataSize; inx++) {
-	    *ptr++ = *pMem++;
+    LPSTR lpStr = (LPSTR)::GlobalLock(aHGBL);
+    DWORD allocSize = ::GlobalSize(aHGBL);
+    char* data = NS_STATIC_CAST(char*, nsAllocator::Alloc(allocSize));
+    if ( data ) {    
+       nsCRT::memcpy ( data, lpStr, allocSize );
+    
+      ::GlobalUnlock(aHGBL);
+      *aData = data;
+      *aLen = allocSize;
+      result = NS_OK;
     }
-    ::GlobalUnlock(aHGBL);
-
-    *aData = data;
-    result = NS_OK;
-  } else {
+  } 
+  else {
     // We really shouldn't ever get here
     // but just in case
     *aData = nsnull;
@@ -402,25 +397,31 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
           switch (fe.cfFormat) {
             case CF_TEXT:
               {
-				// strip off any trailing null because other platforms don't
-                // use nulls to terminate their clipboard strings.
-                result = GetGlobalData(stm.hGlobal, aData, aLen);
-                char * str = (char *)*aData;
-                while (str[*aLen-1] == 0) {
-                  (*aLen)--;
+                // Get the data out of the global data handle. The size we return
+                // should not include the null because the other platforms don't
+                // use nulls, so just return the length we get back from strlen(),
+                // since we know CF_TEXT is null terminated. Recall that GetGlobalData() 
+                // returns the size of the allocated buffer, not the size of the data 
+                // (on 98, these are not the same) so we can't use that.
+                PRUint32 allocLen = 0;
+                if ( NS_SUCCEEDED(GetGlobalData(stm.hGlobal, aData, &allocLen)) ) {
+                  *aLen = nsCRT::strlen ( NS_REINTERPRET_CAST(char*, *aData) );
+                  result = NS_OK;
                 }
               } break;
 
 			case CF_UNICODETEXT:
               {
-				// strip off any trailing null because other platforms don't
-                // use nulls to terminate their clipboard strings. Since we're
-				// dealing with two-byte strings here, we have to back off two
-				// characters at a time.
-                result = GetGlobalData(stm.hGlobal, aData, aLen);
-                char * str = (char *)*aData;
-                while ( NS_STATIC_CAST(PRUint16, str[*aLen-2]) == 0x0000 ) {
-                  (*aLen) -= 2;
+                // Get the data out of the global data handle. The size we return
+                // should not include the null because the other platforms don't
+                // use nulls, so just return the length we get back from strlen(),
+                // since we know CF_UNICODETEXT is null terminated. Recall that GetGlobalData() 
+                // returns the size of the allocated buffer, not the size of the data 
+                // (on 98, these are not the same) so we can't use that.
+                PRUint32 allocLen = 0;
+                if ( NS_SUCCEEDED(GetGlobalData(stm.hGlobal, aData, &allocLen)) ) {
+                  *aLen = nsCRT::strlen(NS_REINTERPRET_CAST(PRUnichar*, *aData)) * 2;
+                  result = NS_OK;
                 }
               } break;
 
