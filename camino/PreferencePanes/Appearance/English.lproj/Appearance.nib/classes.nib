@@ -23,8 +23,9 @@
                 advancedFontsDone = id; 
                 buttonClicked = id; 
                 colorChanged = id; 
-                fontChoiceButtonClicked = id; 
                 fontRegionPopupClicked = id; 
+                monospaceFontChoiceButtonClicked = id; 
+                proportionalFontChoiceButtonClicked = id; 
                 showAdvancedFontsDialog = id; 
             }; 
             CLASS = OrgMozillaChimeraPreferenceAppearance; 
@@ -34,6 +35,8 @@
                 advancedFontsLabel = NSTextField; 
                 checkboxUnderlineLinks = NSButton; 
                 checkboxUseMyColors = NSButton; 
+                chooseMonospaceFontButton = NSButton; 
+                chooseProportionalFontButton = NSButton; 
                 colorwellBackgroundColor = NSColorWell; 
                 colorwellTextColor = NSColorWell; 
                 colorwellUnvisitedLinks = NSColorWell; 
@@ -43,7 +46,6 @@
                 fantasyFontPopup = NSPopUpButton; 
                 fontSampleMonospace = NSTextField; 
                 fontSampleProportional = NSTextField; 
-                matrixChooseFont = NSMatrix; 
                 minFontSizePopup = NSPopUpButton; 
                 popupFontRegion = NSPopUpButton; 
                 proportionalSampleLabel = NSTextField; 

@@ -41,20 +41,21 @@
 
 @interface OrgMozillaChimeraPreferenceAppearance : PreferencePaneBase 
 {
-  IBOutlet NSTabView 		*tabView;
+  IBOutlet NSTabView    *tabView;
 
-  IBOutlet NSButton 		*checkboxUnderlineLinks;
-  IBOutlet NSButton 		*checkboxUseMyColors;
-  IBOutlet NSColorWell 	*colorwellBackgroundColor;
-  IBOutlet NSColorWell 	*colorwellTextColor;
-  IBOutlet NSColorWell 	*colorwellUnvisitedLinks;
-  IBOutlet NSColorWell 	*colorwellVisitedLinks;  
+  IBOutlet NSButton     *checkboxUnderlineLinks;
+  IBOutlet NSButton     *checkboxUseMyColors;
+  IBOutlet NSColorWell  *colorwellBackgroundColor;
+  IBOutlet NSColorWell  *colorwellTextColor;
+  IBOutlet NSColorWell  *colorwellUnvisitedLinks;
+  IBOutlet NSColorWell  *colorwellVisitedLinks;  
 
-  IBOutlet NSMatrix		 	 *matrixChooseFont;
+  IBOutlet NSButton      *chooseProportionalFontButton;
+  IBOutlet NSButton      *chooseMonospaceFontButton;
   IBOutlet NSPopUpButton *popupFontRegion;
 
-  IBOutlet NSTextField	*fontSampleProportional;
-  IBOutlet NSTextField	*fontSampleMonospace;
+  IBOutlet NSTextField *fontSampleProportional;
+  IBOutlet NSTextField *fontSampleMonospace;
 
   IBOutlet NSTextField	*proportionalSampleLabel;
 
@@ -65,13 +66,14 @@
   IBOutlet NSPopUpButton *cursiveFontPopup;
   IBOutlet NSPopUpButton *fantasyFontPopup;
   IBOutlet NSPopUpButton *minFontSizePopup;
-
-  IBOutlet NSTextField   *advancedFontsLabel;
-
-  IBOutlet NSMatrix      *defaultFontMatrix;
+  IBOutlet NSTextField *advancedFontsLabel;
+  IBOutlet NSMatrix *defaultFontMatrix;
   
-  NSArray								*regionMappingTable;
-  NSString              *defaultFontType;
+  
+  NSArray  *regionMappingTable;
+  NSString *defaultFontType;
+  
+  NSButton *fontButtonForEditor;
 }
 
 - (void)mainViewDidLoad;
@@ -79,7 +81,8 @@
 - (IBAction)buttonClicked:(id)sender; 
 - (IBAction)colorChanged:(id)sender;
 
-- (IBAction)fontChoiceButtonClicked:(id)sender;
+- (IBAction)proportionalFontChoiceButtonClicked:(id)sender;
+- (IBAction)monospaceFontChoiceButtonClicked:(id)sender;
 - (IBAction)fontRegionPopupClicked:(id)sender;
 
 - (IBAction)showAdvancedFontsDialog:(id)sender;
