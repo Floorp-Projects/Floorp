@@ -272,14 +272,13 @@ NS_METHOD nsBodyFrame::IncrementalReflow(nsIPresContext*  aPresContext,
   nsSize  columnMaxSize = GetColumnAvailSpace(aPresContext, mySpacing,
                                               aMaxSize);
 
-  // Pass the command along to our child frame
-  nsIRunaround* reflowRunaround;
-  nsRect        desiredRect;
+  // Pass the command along to our column pseudo frame
+  nsRect      desiredRect;
+  nsIFrame*   nextFrame;
 
   NS_ASSERTION(nsnull != mFirstChild, "no first child");
-  mFirstChild->QueryInterface(kIRunaroundIID, (void**)&reflowRunaround);
-  reflowRunaround->IncrementalReflow(aPresContext, mSpaceManager,
-    columnMaxSize, desiredRect, aReflowCommand, aStatus);
+  aStatus = aReflowCommand.Next(mSpaceManager, desiredRect, columnMaxSize,
+                                nextFrame);
 
   // Place and size the frame
   desiredRect.x += leftInset;
