@@ -321,6 +321,10 @@ public:
 
   void PaintFocus(nsIRenderingContext& aRC, nsFramePaintLayer aWhichLayer);
 
+#ifdef ACCESSIBILITY
+  void FireMenuItemActiveEvent(); // Inform assistive tech what got focused
+#endif
+
 protected:
 
   nsresult   IsOptionDisabled(PRInt32 anIndex, PRBool &aIsDisabled);
