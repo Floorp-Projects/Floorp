@@ -195,7 +195,6 @@ NS_IMETHODIMP nsMsgHeaderParserResult::GetNext(nsISupports ** aNextResultPair)
 #undef FREEIF
 #define FREEIF(obj) do { if (obj) { PR_Free (obj); obj = 0; }} while (0)
 
-#define CHARSET(charset)            ((nsnull == charset) ? "us-ascii" : charset)
 #define COPY_CHAR(_D,_S)            do { if (!_S || !*_S) { *_D++ = 0; }\
                                          else { int _LEN = NextChar_UTF8((char *)_S) - _S;\
                                                 nsCRT::memcpy(_D,_S,_LEN); _D += _LEN; } } while (0)
@@ -275,53 +274,29 @@ NS_IMETHODIMP nsMsgHeaderParser::ParseHeadersWithEnumerator(const PRUnichar *lin
 
 nsresult nsMsgHeaderParser::ParseHeaderAddresses (const char *charset, const char *line, char **names, char **addresses, PRUint32 *numAddresses)
 {
-  char *utf8Str, *outStrings;
-  nsresult rv=NS_OK;
+#if DEBUG
+  (void) NS_ConvertUTF8toUCS2(line).get(); // asserts if invalid UTF-8
+#endif
 
-  if (nsnull == line || MIME_ConvertString(CHARSET(charset), "UTF-8", line, &utf8Str) != 0) {
-    utf8Str = nsnull;
-  }
-  
-  *numAddresses = msg_parse_Header_addresses((const char *) utf8Str, names, addresses);
-
-  PR_FREEIF(utf8Str);
+  *numAddresses = msg_parse_Header_addresses(line, names, addresses);
 
   if (nsnull != names && nsnull != *names) {
     char *s = *names;
-    PRInt32 i, len, len_all = 0, outStrLen;
+    PRInt32 i, len, len_all = 0;
     for (i = 0; i < (PRInt32) *numAddresses; i++) {
       len = nsCRT::strlen(s) + 1;
       len_all += len;
       s += len;
     }
-    // convert array of strings
-  	if (charset) {
-  		rv = MIME_ConvertCharset(PR_FALSE, "UTF-8", CHARSET(charset), *names, 
-                              len_all, &outStrings, &outStrLen, NULL) ; 
-  	  if (NS_SUCCEEDED(rv)) {
-        PR_Free(*names);
-        *names = outStrings;
-      }
-  	}
   }
   if (nsnull != addresses && nsnull != *addresses) {
     char *s = *addresses;
-    PRInt32 i, len, len_all = 0, outStrLen;
+    PRInt32 i, len, len_all = 0;
     for (i = 0; i < (PRInt32) *numAddresses; i++) {
       len = nsCRT::strlen(s) + 1;
       len_all += len;
       s += len;
     }
-    // convert array of strings
-  	if (charset)
-  	{
-  		rv = MIME_ConvertCharset(PR_FALSE, "UTF-8", CHARSET(charset), *addresses, 
-                              len_all, &outStrings, &outStrLen, NULL);
-    	if (NS_SUCCEEDED(rv)) {
-          PR_Free(*addresses);
-          *addresses = outStrings;
-      }
-  	}
   }
 
 	return NS_OK;
@@ -331,21 +306,11 @@ nsresult nsMsgHeaderParser::ExtractHeaderAddressMailboxes (const char *charset, 
 {
 	if (mailboxes)
 	{
-    char *utf8Str, *outCStr;
+#if DEBUG
+    (void) NS_ConvertUTF8toUCS2(line).get(); // asserts if invalid UTF-8
+#endif
 
-    if (nsnull == line || MIME_ConvertString(CHARSET(charset), "UTF-8", line, &utf8Str) != 0) {
-      utf8Str = nsnull;
-    }
-		
-    *mailboxes = msg_extract_Header_address_mailboxes((const char *) utf8Str);
-		
-    PR_FREEIF(utf8Str);
-
-    if (nsnull != *mailboxes && MIME_ConvertString("UTF-8", CHARSET(charset), *mailboxes, &outCStr) == 0) {
-      PR_Free(*mailboxes);
-      *mailboxes = outCStr;
-    }
-
+    *mailboxes = msg_extract_Header_address_mailboxes(line);
     return NS_OK;
 	}
 	else
@@ -356,21 +321,11 @@ nsresult nsMsgHeaderParser::ExtractHeaderAddressNames (const char *charset, cons
 {
 	if (names)
 	{
-    char *utf8Str, *outCStr;
+#if DEBUG
+    (void) NS_ConvertUTF8toUCS2(line).get(); // asserts if invalid UTF-8
+#endif
 
-    if (nsnull == line || MIME_ConvertString(CHARSET(charset), "UTF-8", line, &utf8Str) != 0) {
-      utf8Str = nsnull;
-    }
-
-    *names = msg_extract_Header_address_names((const char *) utf8Str);
-
-    PR_FREEIF(utf8Str);
-
-    if (nsnull != *names && MIME_ConvertString("UTF-8", CHARSET(charset), *names, &outCStr) == 0) {
-      PR_Free(*names);
-      *names = outCStr;
-    }
-
+    *names = msg_extract_Header_address_names(line);
     return NS_OK;
 	}
 	else
@@ -382,21 +337,11 @@ nsresult nsMsgHeaderParser::ExtractHeaderAddressName (const char *charset, const
 {
 	if (name)
 	{
-    char *utf8Str, *outCStr;
+#if DEBUG
+    (void) NS_ConvertUTF8toUCS2(line).get(); // asserts if invalid UTF-8
+#endif
 
-    if (nsnull == line || MIME_ConvertString(CHARSET(charset), "UTF-8", line, &utf8Str) != 0) {
-      utf8Str = nsnull;
-    }
-
-		*name = msg_extract_Header_address_name((const char *) utf8Str);
-
-    PR_FREEIF(utf8Str);
-
-    if (nsnull != *name && MIME_ConvertString("UTF-8", CHARSET(charset), *name, &outCStr) == 0) {
-      PR_Free(*name);
-      *name = outCStr;
-    }
-
+		*name = msg_extract_Header_address_name(line);
 		return NS_OK;
 	}
 	else
@@ -407,21 +352,11 @@ nsresult nsMsgHeaderParser::ReformatHeaderAddresses (const char *charset, const 
 {
 	if (reformattedAddress)
 	{
-    char *utf8Str, *outCStr;
+#if DEBUG
+    (void) NS_ConvertUTF8toUCS2(line).get(); // asserts if invalid UTF-8
+#endif
 
-    if (nsnull == line || MIME_ConvertString(CHARSET(charset), "UTF-8", line, &utf8Str) != 0) {
-      utf8Str = nsnull;
-    }
-
-		*reformattedAddress = msg_reformat_Header_addresses((const char *) utf8Str);
-
-    PR_FREEIF(utf8Str);
-
-    if (nsnull != *reformattedAddress && MIME_ConvertString("UTF-8", CHARSET(charset), *reformattedAddress, &outCStr) == 0) {
-      PR_Free(*reformattedAddress);
-      *reformattedAddress = outCStr;
-    }
-
+		*reformattedAddress = msg_reformat_Header_addresses(line);
     return NS_OK;
 	}
 	else
@@ -432,25 +367,12 @@ nsresult nsMsgHeaderParser::RemoveDuplicateAddresses (const char *charset, const
 {
 	if (newOutput)
 	{
-    char *utf8Str1, *utf8Str2, *outCStr;
+#if DEBUG
+  (void) NS_ConvertUTF8toUCS2(addrs).get(); // asserts if invalid UTF-8
+  (void) NS_ConvertUTF8toUCS2(other_addrs).get();
+#endif
 
-    if (nsnull == addrs || MIME_ConvertString(CHARSET(charset), "UTF-8", addrs, &utf8Str1) != 0) {
-      utf8Str1 = nsnull;
-    }
-    if (nsnull == other_addrs || MIME_ConvertString(CHARSET(charset), "UTF-8", other_addrs, &utf8Str2) != 0) {
-      utf8Str2 = nsnull;
-    }
-
-		*newOutput = msg_remove_duplicate_addresses((const char *) utf8Str1, (const char *) utf8Str2, removeAliasesToMe);
-
-    PR_FREEIF(utf8Str1);
-    PR_FREEIF(utf8Str2);
-
-    if (nsnull != *newOutput && MIME_ConvertString("UTF-8", CHARSET(charset), *newOutput, &outCStr) == 0) {
-      PR_Free(*newOutput);
-      *newOutput = outCStr;
-    }
-
+		*newOutput = msg_remove_duplicate_addresses(addrs, other_addrs, removeAliasesToMe);
 		return NS_OK;
 	}
 	else
@@ -461,25 +383,11 @@ nsresult nsMsgHeaderParser::MakeFullAddress (const char *charset, const char* na
 {
 	if (fullAddress)
 	{
-    char *utf8Str1, *utf8Str2, *outCStr;
+#if DEBUG
+    (void) NS_ConvertUTF8toUCS2(addr).get(); // asserts if invalid UTF-8
+#endif
 
-    if (nsnull == name || MIME_ConvertString(CHARSET(charset), "UTF-8", name, &utf8Str1) != 0) {
-      utf8Str1 = nsnull;
-    }
-    if (nsnull == addr || MIME_ConvertString(CHARSET(charset), "UTF-8", addr, &utf8Str2) != 0) {
-      utf8Str2 = nsnull;
-    }
-
-		*fullAddress = msg_make_full_address((const char *) utf8Str1, (const char *) utf8Str2);
-
-    PR_FREEIF(utf8Str1);
-    PR_FREEIF(utf8Str2);
-
-    if (nsnull != *fullAddress && MIME_ConvertString("UTF-8", CHARSET(charset), *fullAddress, &outCStr) == 0) {
-      PR_Free(*fullAddress);
-      *fullAddress = outCStr;
-    }
-
+		*fullAddress = msg_make_full_address(name, addr);
 		return NS_OK;
 	}
 	else
@@ -488,22 +396,11 @@ nsresult nsMsgHeaderParser::MakeFullAddress (const char *charset, const char* na
 
 nsresult nsMsgHeaderParser::UnquotePhraseOrAddr (const char *charset, const char *line, char** lineout)
 {
-  char *utf8Str, *outCStr;
+#if DEBUG
+  (void) NS_ConvertUTF8toUCS2(line).get(); // asserts if invalid UTF-8
+#endif
 
-  if (nsnull == line || MIME_ConvertString(CHARSET(charset), "UTF-8", line, &utf8Str) != 0) {
-    utf8Str = nsnull;
-  }
-
-  msg_unquote_phrase_or_addr((const char *) utf8Str, lineout);
-
-  PR_FREEIF(utf8Str);
-
-  if (nsnull != lineout && nsnull != *lineout && 
-      MIME_ConvertString("UTF-8", CHARSET(charset), *lineout, &outCStr) == 0) {
-    PR_Free(*lineout);
-    *lineout = outCStr;
-  }
-
+  msg_unquote_phrase_or_addr(line, lineout);
   return NS_OK;
 }
 
