@@ -142,6 +142,7 @@
    
    <menu id="tasksMenu">
       <menupopup id="taskPopup">
+         <menuitem id="calendar-wizard-menu" key="wizard_key" label="Launch Wizard" observes="wizard_command"/>
          <menuitem id="calendar-import-menu" key="import_key" label="&calendar.import.label;" accesskey="&calendar.import.accesskey;" observes="import_command"/>
          <menuitem id="calendar-export-menu" key="export_key" label="&calendar.export.label;" accesskey="&calendar.export.accesskey;" observes="export_command"/>
          <menuitem id="calendar-addserver-menu" label="&calendar.subscribe.label;"    observes="new_server_command"/>
