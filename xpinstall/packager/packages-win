@@ -185,6 +185,7 @@ bin\chrome\pref\*
 bin\chrome\profile\*
 bin\chrome\related\*
 bin\chrome\sidebar\*
+bin\chrome\timebomb\*
 bin\chrome\wallet\*
 bin\chrome\xpinstall\*
 bin\chrome\layout\*

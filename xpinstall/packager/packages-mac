@@ -185,6 +185,7 @@ viewer:chrome:related:*
 viewer:chrome:RegViewer:*
 viewer:chrome:Search:*
 viewer:chrome:sidebar:* 
+viewer:chrome:timebomb:*
 viewer:chrome:wallet:*
 viewer:chrome:xpinstall:* 
 viewer:chrome:xul.css
