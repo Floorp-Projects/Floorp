@@ -359,8 +359,7 @@ nsImgManager::GetRootDocShell(nsIDOMWindow *aWindow, nsIDocShell **result)
 {
   nsresult rv;
 
-  nsCOMPtr<nsIScriptGlobalObject> globalObj;
-  aWindow->QueryInterface(NS_GET_IID(nsIScriptGlobalObject), getter_AddRefs(globalObj));
+  nsCOMPtr<nsIScriptGlobalObject> globalObj(do_QueryInterface(aWindow));
   if (!globalObj)
     return NS_ERROR_FAILURE;
 
@@ -378,5 +377,5 @@ nsImgManager::GetRootDocShell(nsIDOMWindow *aWindow, nsIDocShell **result)
   if (NS_FAILED(rv))
     return rv;
 
-  return rootItem->QueryInterface(NS_GET_IID(nsIDocShell), (void **)result);
+  return CallQueryInterface(rootItem, result);
 }
