@@ -1240,6 +1240,12 @@ nsHTMLDocument::ContentRemoved(nsIContent* aContainer, nsIContent* aContent,
 {
   NS_ABORT_IF_FALSE(aContent, "Null content!");
 
+  if (aContainer == mRootContent) {
+    // Reset mBodyContent in case we got a new body.
+
+    mBodyContent = nsnull;
+  }
+
   nsresult rv = UnregisterNamedItems(aContent);
 
   if (NS_FAILED(rv)) {
@@ -1713,7 +1719,7 @@ nsHTMLDocument::GetBody(nsIDOMHTMLElement** aBody)
   nsISupports* element = nsnull;
   nsCOMPtr<nsIDOMNode> node;
 
-  if (mBodyContent || (GetBodyContent() && mBodyContent)) {
+  if (mBodyContent || GetBodyContent()) {
     // There is a body element, return that as the body.
     element = mBodyContent;
   } else {
@@ -1744,50 +1750,24 @@ nsHTMLDocument::GetBody(nsIDOMHTMLElement** aBody)
 NS_IMETHODIMP
 nsHTMLDocument::SetBody(nsIDOMHTMLElement* aBody)
 {
-  nsCOMPtr<nsIDOMHTMLBodyElement> bodyElement(do_QueryInterface(aBody));
+  nsCOMPtr<nsIContent> body(do_QueryInterface(aBody));
+  nsCOMPtr<nsIDOMElement> root(do_QueryInterface(mRootContent));
 
-  // Hmm, this is wrong, and not XHTML cool. The body can be a
-  // frameset too!
-
-  // The body element must be of type nsIDOMHTMLBodyElement.
-  if (!bodyElement) {
+  // The body element must be either a body tag or a frameset tag.
+  if (!body || !root || !(body->Tag() == nsHTMLAtoms::body ||
+                          body->Tag() == nsHTMLAtoms::frameset)) {
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
-  nsCOMPtr<nsIDOMElement> root;
-  GetDocumentElement(getter_AddRefs(root));
+  nsCOMPtr<nsIDOMNode> tmp;
 
-  if (!root) {
-    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+  if (mBodyContent || GetBodyContent()) {
+    root->ReplaceChild(aBody, mBodyContent, getter_AddRefs(tmp));
+  } else {
+    root->AppendChild(aBody, getter_AddRefs(tmp));
   }
 
-  NS_NAMED_LITERAL_STRING(bodyStr, "BODY");
-  nsCOMPtr<nsIDOMNode> child;
-  root->GetFirstChild(getter_AddRefs(child));
-
-  while (child) {
-    nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(child));
-
-    if (domElement) {
-      nsAutoString tagName;
-
-      domElement->GetTagName(tagName);
-
-      ToUpperCase(tagName);
-      if (bodyStr.Equals(tagName)) {
-        nsCOMPtr<nsIDOMNode> ret;
-
-        nsresult rv = root->ReplaceChild(aBody, child, getter_AddRefs(ret));
-
-        mBodyContent = nsnull;
-
-        return rv;
-      }
-    }
-
-    nsIDOMNode *tmpNode = child;
-    tmpNode->GetNextSibling(getter_AddRefs(child));
-  }
+  mBodyContent = aBody;
 
   return PR_FALSE;
 }
@@ -1948,7 +1928,8 @@ nsHTMLDocument::SetCookie(const nsAString& aCookie)
   nsCOMPtr<nsICookieService> service = do_GetService(kCookieServiceCID);
   if (service && mDocumentURI) {
     nsCOMPtr<nsIPrompt> prompt;
-    nsCOMPtr<nsIDOMWindowInternal> window (do_QueryInterface(GetScriptGlobalObject()));
+    nsCOMPtr<nsIDOMWindowInternal> window =
+      do_QueryInterface(GetScriptGlobalObject());
     if (window) {
       window->GetPrompter(getter_AddRefs(prompt));
     }

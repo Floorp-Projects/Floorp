@@ -728,7 +728,7 @@ protected:
    * accesskey attribute.
    * @param aDoReg true to register, false to unregister
    */
-  nsresult RegUnRegAccessKey(PRBool aDoReg);
+  void RegUnRegAccessKey(PRBool aDoReg);
 
   /**
    * Determine whether an attribute is an event (onclick, etc.)
