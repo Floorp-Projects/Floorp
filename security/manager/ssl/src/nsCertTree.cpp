@@ -500,7 +500,7 @@ nsCertTree::GetCellText(PRInt32 row, const PRUnichar *colID,
       _retval.SetCapacity(0);
     return NS_OK;
   }
-  nsCOMPtr<nsIX509Cert> cert = GetCertAtIndex(row);
+  nsCOMPtr<nsIX509Cert> cert = dont_AddRef(GetCertAtIndex(row));
   if (cert == nsnull) return NS_ERROR_FAILURE;
   char *str = NULL;
   PRUnichar *wstr = NULL;
@@ -686,7 +686,7 @@ nsCertTree::dumpMap()
       nsAutoString td(el->orgName);
       PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("thread desc[%d]: %s", i, NS_LossyConvertUCS2toASCII(td).get()));
     }
-    nsCOMPtr<nsIX509Cert> ct = GetCertAtIndex(i);
+    nsCOMPtr<nsIX509Cert> ct = dont_AddRef(GetCertAtIndex(i));
     if (ct != nsnull) {
       PRUnichar *goo;
       ct->GetCommonName(&goo);
