@@ -658,7 +658,7 @@ nsStreamConverterService::AsyncConvertData(const PRUnichar *aFromType,
                 return rv;
             }
 
-            nsCOMPtr<nsIStreamListener> listener(do_QueryInterface(converter, &rv));
+            nsCOMPtr<nsIStreamListener> chainListener(do_QueryInterface(converter, &rv));
             if (NS_FAILED(rv)) {
                 delete converterChain;
                 return rv;
@@ -666,9 +666,9 @@ nsStreamConverterService::AsyncConvertData(const PRUnichar *aFromType,
 
             // store the listener of the first converter in the chain.
             if (!fromListener)
-                fromListener = listener;
+                fromListener = chainListener;
 
-            forwardListener = listener;
+            forwardListener = chainListener;
         }
         delete converterChain;
         // return the first listener in the chain.
