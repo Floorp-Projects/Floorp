@@ -2013,7 +2013,7 @@ nsRangeList::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
     printf("    direction = 1  LEFT TO RIGHT\n");
   else
     printf("    direction = 0  RIGHT TO LEFT\n");
-#endif 0
+#endif
   SetDirection(dir);
   /*hack*/
   range->GetStartParent(getter_AddRefs(startNode));
