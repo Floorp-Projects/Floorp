@@ -59,6 +59,7 @@ class CBrowserImpl :
 	 public nsIStreamListener,			// de: added this in 6/29
 	 public nsITooltipListener   		// de: added this in 7/25
 //	 public nsITooltipTextProvider		// de: added this in 7/25
+//	 public nsIURIContentListener
 {
 public:
     CBrowserImpl();
@@ -79,6 +80,7 @@ public:
 	NS_DECL_NSIREQUESTOBSERVER		 // de: added this in 6/29
 	NS_DECL_NSITOOLTIPLISTENER		 // de: added this in 7/25
 	//NS_DECL_NSITOOLTIPTEXTPROVIDER   // de: added this in 7/25
+	//NS_DECL_NSIURICONTENTLISTENER
 protected:
 
     PBROWSERFRAMEGLUE  m_pBrowserFrameGlue;

@@ -59,11 +59,6 @@
 class CBrowserImpl;
 class CBrowserView;
 
-/*
-class CTests:public CWnd,
-					nsIXPIDialogService,
-					nsIXPIProgressDialog
-*/
 class CTests:public CWnd
 {
 public:
@@ -82,10 +77,6 @@ public:
 	nsCOMPtr<nsIBaseWindow> qaBaseWindow;
 	nsCOMPtr<nsIWebNavigation> qaWebNav;	
 	CBrowserImpl	*qaBrowserImpl;
-
-//  NS_DECL_ISUPPORTS
-//  NS_DECL_NSIXPIDIALOGSERVICE
-//	NS_DECL_NSIXPIPROGRESSDIALOG
 
 	// local test methods
 
