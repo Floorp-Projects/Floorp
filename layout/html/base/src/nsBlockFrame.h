@@ -25,6 +25,7 @@ class nsBlockReflowState;
 class nsBulletFrame;
 class nsLineBox;
 class nsTextRun;
+class nsFirstLineFrame;
 
 /**
  * Child list name indices
@@ -37,8 +38,9 @@ class nsTextRun;
 /**
  * Additional frame-state bits
  */
-#define NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET 0x10000
-#define NS_BLOCK_IS_HTML_PARAGRAPH        0x20000
+#define NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET 0x80000000
+#define NS_BLOCK_IS_HTML_PARAGRAPH        0x40000000
+#define NS_BLOCK_HAS_FIRST_LINE_STYLE     0x20000000
 
 #define nsBlockFrameSuper nsHTMLContainerFrame
 
@@ -107,7 +109,7 @@ public:
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
-  NS_IMETHOD MoveInSpaceManager(nsIPresContext& aPresContext,
+  NS_IMETHOD MoveInSpaceManager(nsIPresContext* aPresContext,
                                 nsISpaceManager* aSpaceManager,
                                 nscoord aDeltaX, nscoord aDeltaY);
 
@@ -140,6 +142,8 @@ protected:
   nsBlockFrame();
   virtual ~nsBlockFrame();
 
+  nsIStyleContext* GetFirstLineStyle(nsIPresContext* aPresContext);
+
   void SetFlags(PRUint32 aFlags) {
     mFlags = aFlags;
   }
@@ -148,11 +152,11 @@ protected:
     return 0 != (mState & NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET);
   }
 
-  void SlideLine(nsIPresContext& aPresContext,
+  void SlideLine(nsIPresContext* aPresContext,
                  nsISpaceManager* aSpaceManager,
                  nsLineBox* aLine, nscoord aDY);
 
-  void SlideFloaters(nsIPresContext& aPresContext,
+  void SlideFloaters(nsIPresContext* aPresContext,
                      nsISpaceManager* aSpaceManager,
                      nsLineBox* aLine, nscoord aDY);
 
@@ -164,16 +168,35 @@ protected:
                                 nsBlockReflowState&  aState,
                                 nsHTMLReflowMetrics& aMetrics);
 
-  void MarkEmptyLines(nsIPresContext& aPresContext);
+  void MarkEmptyLines(nsIPresContext* aPresContext);
 
-  nsresult AppendNewFrames(nsIPresContext& aPresContext, nsIFrame*);
+  nsresult AddFrames(nsIPresContext* aPresContext,
+                     nsIFrame* aFrameList,
+                     nsIFrame* aPrevSibling);
 
-  nsresult InsertNewFrames(nsIPresContext&  aPresContext,
-                           nsIFrame* aFrameList,
-                           nsIFrame* aPrevSibling);
+  nsresult AddInlineFrames(nsIPresContext* aPresContext,
+                           nsLineBox** aPrevLinep,
+                           nsIFrame* aFirstInlineFrame,
+                           PRInt32 aPendingInlines);
 
-  nsresult DoRemoveFrame(nsIPresContext& aPresContext,
+  nsresult AddFirstLineFrames(nsIPresContext* aPresContext,
+                              nsFirstLineFrame* aLineFrame,
+                              nsIFrame* aFrameList,
+                              nsIFrame* aPrevSibling);
+
+  nsIFrame* TakeKidsFromLineFrame(nsFirstLineFrame* aLineFrame,
+                                  nsIFrame* aFromKid);
+
+  void FixParentAndView(nsIPresContext* aPresContext, nsIFrame* aFrame);
+
+  nsresult DoRemoveFrame(nsIPresContext* aPresContext,
                          nsIFrame* aDeletedFrame);
+
+  nsresult RemoveFirstLineFrame(nsIPresContext* aPresContext,
+                                nsFirstLineFrame* aLineFrame,
+                                nsIFrame* aDeletedFrame);
+
+  nsresult WrapFramesInFirstLineFrame(nsIPresContext* aPresContext);
 
   nsresult PrepareInitialReflow(nsBlockReflowState& aState);
 
@@ -192,9 +215,6 @@ protected:
   //----------------------------------------
   // Methods for line reflow
   // XXX nuke em
-
-  void WillReflowLine(nsBlockReflowState& aState,
-                      nsLineBox* aLine);
 
   nsresult ReflowLine(nsBlockReflowState& aState,
                       nsLineBox* aLine,
@@ -226,10 +246,6 @@ protected:
 
   //----------------------------------------
   // Methods for individual frame reflow
-
-  void WillReflowFrame(nsBlockReflowState& aState,
-                       nsLineBox* aLine,
-                       nsIFrame* aFrame);
 
   PRBool ShouldApplyTopMargin(nsBlockReflowState& aState,
                               nsLineBox* aLine);
@@ -296,7 +312,7 @@ protected:
                              nsLineBox* aLine,
                              nscoord aDeltaY);
 
-  nsresult ComputeTextRuns(nsIPresContext& aPresContext);
+  nsresult ComputeTextRuns(nsIPresContext* aPresContext);
 
   void BuildFloaterList();
 
@@ -307,11 +323,11 @@ protected:
   void ReflowBullet(nsBlockReflowState& aState,
                     nsHTMLReflowMetrics& aMetrics);
 
-  void RestoreStyleFor(nsIPresContext& aPresContext, nsIFrame* aFrame);
+  nsIFrame* LastChild();
 
 #ifdef NS_DEBUG
   PRBool IsChild(nsIFrame* aFrame);
-  void VerifyFrameCount(nsLineBox* line);
+  void VerifyLines(PRBool aFinalCheckOK);
   void VerifyOverflowSituation();
   PRInt32 GetDepth() const;
 #endif
@@ -322,10 +338,6 @@ protected:
 
   // XXX subclass!
   PRUint32 mFlags;
-
-  nsIStyleContext* mFirstLineStyle;
-
-  nsIStyleContext* mFirstLetterStyle;
 
   // Text run information
   nsTextRun* mTextRuns;
@@ -353,7 +365,7 @@ protected:
 // container of the anonymous block).
 class nsAnonymousBlockFrame : public nsAnonymousBlockFrameSuper {
 public:
-  friend nsresult NS_NewAnonymousBlockFrame(nsIFrame*& aNewFrame);
+  friend nsresult NS_NewAnonymousBlockFrame(nsIFrame** aNewFrame);
 
   // nsIFrame overrides
 
@@ -375,19 +387,19 @@ public:
 
   // These methods are used by the parent frame to actually modify the
   // child frames of the anonymous block frame.
-  nsresult AppendFrames2(nsIPresContext& aPresContext,
-                         nsIPresShell&   aPresShell,
+  nsresult AppendFrames2(nsIPresContext* aPresContext,
+                         nsIPresShell*   aPresShell,
                          nsIAtom*        aListName,
                          nsIFrame*       aFrameList);
 
-  nsresult InsertFrames2(nsIPresContext& aPresContext,
-                         nsIPresShell&   aPresShell,
+  nsresult InsertFrames2(nsIPresContext* aPresContext,
+                         nsIPresShell*   aPresShell,
                          nsIAtom*        aListName,
                          nsIFrame*       aPrevFrame,
                          nsIFrame*       aFrameList);
 
-  nsresult RemoveFrame2(nsIPresContext& aPresContext,
-                        nsIPresShell&   aPresShell,
+  nsresult RemoveFrame2(nsIPresContext* aPresContext,
+                        nsIPresShell*   aPresShell,
                         nsIAtom*        aListName,
                         nsIFrame*       aOldFrame);
 
