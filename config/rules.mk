@@ -616,8 +616,8 @@ run_viewer: $(DIST)/bin/viewer
 	viewer
 
 clean clobber realclean clobber_all:: $(SUBMAKEFILES)
-	-rm -f $(ALL_TRASH); \
-	rm -rf $(ALL_TRASH_DIRS)
+	-rm -f $(ALL_TRASH)
+	-rm -rf $(ALL_TRASH_DIRS)
 	+$(LOOP_OVER_DIRS)
 	+$(LOOP_OVER_EXPORT_DIRS)
 
