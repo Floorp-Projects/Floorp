@@ -1,6 +1,6 @@
 /*
  *******************************************************************************
- * $Id: constant.h,v 1.5 1998/07/29 02:58:54 leif Exp $
+ * $Id: constant.h,v 1.6 1998/08/03 00:26:37 clayton Exp $
  *
  * The contents of this file are subject to the Mozilla Public License
  * Version 1.0 (the "License"); you may not use this file except in
@@ -51,14 +51,11 @@ char *name;
 int arg;
 {
     errno = 0;
-    switch (*name) {
-    case 'L':
-	if (strEQ(name, "LDAPS_PORT"))
-#ifdef LDAPS_PORT
-	    return LDAPS_PORT;
-#else
-	    goto not_there;
-#endif
+    if (name[0] == 'L' && name[1] == 'D' && name[2] == 'A' && name[3] == 'P'
+       && name[4] == '_')
+    {
+      switch (name[5]) {
+       case 'A':
 	if (strEQ(name, "LDAP_ADMINLIMIT_EXCEEDED"))
 #ifdef LDAP_ADMINLIMIT_EXCEEDED
 	    return LDAP_ADMINLIMIT_EXCEEDED;
@@ -119,12 +116,16 @@ int arg;
 #else
 	    goto not_there;
 #endif
+        break;
+      case 'B':
 	if (strEQ(name, "LDAP_BUSY"))
 #ifdef LDAP_BUSY
 	    return LDAP_BUSY;
 #else
 	    goto not_there;
 #endif
+	break;
+      case 'C':
 	if (strEQ(name, "LDAP_CACHE_CHECK"))
 #ifdef LDAP_CACHE_CHECK
 	    return LDAP_CACHE_CHECK;
@@ -215,6 +216,8 @@ int arg;
 #else
 	    goto not_there;
 #endif
+	break;
+      case 'D':
 	if (strEQ(name, "LDAP_DEREF_ALWAYS"))
 #ifdef LDAP_DEREF_ALWAYS
 	    return LDAP_DEREF_ALWAYS;
@@ -239,12 +242,16 @@ int arg;
 #else
 	    goto not_there;
 #endif
+	break;
+      case 'E':
 	if (strEQ(name, "LDAP_ENCODING_ERROR"))
 #ifdef LDAP_ENCODING_ERROR
 	    return LDAP_ENCODING_ERROR;
 #else
 	    goto not_there;
 #endif
+	break;
+      case 'F':
 	if (strEQ(name, "LDAP_FILTER_ERROR"))
 #ifdef LDAP_FILTER_ERROR
 	    return LDAP_FILTER_ERROR;
@@ -257,6 +264,8 @@ int arg;
 #else
 	    goto not_there;
 #endif
+	break;
+      case 'I':
 	if (strEQ(name, "LDAP_INAPPROPRIATE_AUTH"))
 #ifdef LDAP_INAPPROPRIATE_AUTH
 	    return LDAP_INAPPROPRIATE_AUTH;
@@ -299,6 +308,8 @@ int arg;
 #else
 	    goto not_there;
 #endif
+	break;
+      case 'L':
 	if (strEQ(name, "LDAP_LOCAL_ERROR"))
 #ifdef LDAP_LOCAL_ERROR
 	    return LDAP_LOCAL_ERROR;
@@ -311,6 +322,8 @@ int arg;
 #else
 	    goto not_there;
 #endif
+	break;
+      case 'M':
 	if (strEQ(name, "LDAP_MOD_ADD"))
 #ifdef LDAP_MOD_ADD
 	    return LDAP_MOD_ADD;
@@ -359,6 +372,8 @@ int arg;
 #else
 	    goto not_there;
 #endif
+	break;
+      case 'N':
 	if (strEQ(name, "LDAP_NAMING_VIOLATION"))
 #ifdef LDAP_NAMING_VIOLATION
 	    return LDAP_NAMING_VIOLATION;
@@ -419,6 +434,8 @@ int arg;
 #else
 	    goto not_there;
 #endif
+	break;
+      case 'O':
 	if (strEQ(name, "LDAP_OBJECT_CLASS_VIOLATION"))
 #ifdef LDAP_OBJECT_CLASS_VIOLATION
 	    return LDAP_OBJECT_CLASS_VIOLATION;
@@ -599,6 +616,8 @@ int arg;
 #else
 	    goto not_there;
 #endif
+	break;
+      case 'P':
 	if (strEQ(name, "LDAP_PARAM_ERROR"))
 #ifdef LDAP_PARAM_ERROR
 	    return LDAP_PARAM_ERROR;
@@ -629,6 +648,8 @@ int arg;
 #else
 	    goto not_there;
 #endif
+	break;
+      case 'R':
 	if (strEQ(name, "LDAP_REFERRAL"))
 #ifdef LDAP_REFERRAL
 	    return LDAP_REFERRAL;
@@ -719,6 +740,8 @@ int arg;
 #else
 	    goto not_there;
 #endif
+	break;
+      case 'S':
 	if (strEQ(name, "LDAP_SASL_BIND_IN_PROGRESS"))
 #ifdef LDAP_SASL_BIND_IN_PROGRESS
 	    return LDAP_SASL_BIND_IN_PROGRESS;
@@ -791,6 +814,8 @@ int arg;
 #else
 	    goto not_there;
 #endif
+	break;
+      case 'T':
 	if (strEQ(name, "LDAP_TIMELIMIT_EXCEEDED"))
 #ifdef LDAP_TIMELIMIT_EXCEEDED
 	    return LDAP_TIMELIMIT_EXCEEDED;
@@ -809,6 +834,8 @@ int arg;
 #else
 	    goto not_there;
 #endif
+	break;
+      case 'U':
 	if (strEQ(name, "LDAP_UNAVAILABLE"))
 #ifdef LDAP_UNAVAILABLE
 	    return LDAP_UNAVAILABLE;
@@ -875,6 +902,8 @@ int arg;
 #else
 	    goto not_there;
 #endif
+	break;
+      case 'V':
 	if (strEQ(name, "LDAP_VERSION"))
 #ifdef LDAP_VERSION
 	    return LDAP_VERSION;
@@ -906,7 +935,16 @@ int arg;
 	    goto not_there;
 #endif
 	break;
+      }
+    } else {
+	if (strEQ(name, "LDAPS_PORT"))
+#ifdef LDAPS_PORT
+	    return LDAPS_PORT;
+#else
+	    goto not_there;
+#endif
     }
+
     errno = EINVAL;
     return 0;
 

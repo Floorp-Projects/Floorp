@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 #############################################################################
-# $Id: api.pl,v 1.3 1998/07/31 21:16:30 clayton Exp $
+# $Id: api.pl,v 1.4 1998/08/03 00:26:38 clayton Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -32,13 +32,13 @@
 use Mozilla::LDAP::API qw(:api :constant);
 use strict;
 
-my $BASE = "ou=Test,o=Motorola,c=US";
-my $DN = "cn=DSManager,o=Motorola,c=US";
+my $BASE = "ou=Test,o=Test,c=US";
+my $DN = "cn=Directory Manager";
 my $PASS = "abcd1234";
 my $HOST = "localhost";
 my $PORT = 389;
 
-$howmany = 50;
+my $howmany = 10;
 
 # Initialize the Connection
 {
@@ -88,12 +88,8 @@ if (ldap_simple_bind_s($ld,$DN,$PASS) != LDAP_SUCCESS)
 
 # Set Rebind Process
 my $rebindproc = sub { return($DN,$PASS,LDAP_AUTH_SIMPLE); };
-if (ldap_set_rebind_proc($ld,$rebindproc) != LDAP_SUCCESS)
-{
-   print "set_rebind	- Failed!\n";
-} else {
-   print "set_rebind	- OK\n";
-}
+ldap_set_rebind_proc($ld,$rebindproc);
+print "set_rebind	- OK\n";
 
 # Add an OrgUnit Entry
 my $entry = {
@@ -118,7 +114,7 @@ foreach my $number (1..$howmany)
 	"sn" => ["$number"],
    };
    if (ldap_add_s($ld,"cn=Mozilla $number,$BASE",$entry)
-         != LDAP_SUCCESS)
+	 != LDAP_SUCCESS)
    {
       print "add_user_$number	- Failed!\n";
    } else {
@@ -134,7 +130,7 @@ foreach my $number (1..$howmany)
 	"telephoneNumber" => "800-555-111$number",
    };
    if (ldap_modify_s($ld,"cn=Mozilla $number,$BASE",$entry)
-          != LDAP_SUCCESS)
+	  != LDAP_SUCCESS)
    {
       print "mod_user_$number	- Failed!\n";
    } else {
@@ -235,14 +231,14 @@ if ($#vals < 0)
 }
 
 # Free structures pointed to by $ber and $res to prevent memory leak
-ldap_ber_free($ber,0);
+ldap_ber_free($ber,1);
 ldap_msgfree($res);
 
 # Compare Attribute Values
 foreach my $number (1..$howmany)
 {
    if(ldap_compare_s($ld,"cn=Mozilla $number,$BASE","sn",$number)
-         != LDAP_COMPARE_TRUE)
+	 != LDAP_COMPARE_TRUE)
    {
       print "comp_user_$number	- Failed!\n";
    } else {
