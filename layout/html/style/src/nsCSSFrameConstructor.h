@@ -148,7 +148,6 @@ protected:
                           nsFrameConstructorState& aState,
                           nsIContent*              aContent,
                           nsIFrame*                aParentFrame,
-                          PRBool                   aHaveFirstLetterStyle,
                           nsFrameItems&            aFrameItems);
 
   nsresult ConstructDocElementFrame(nsIPresContext*          aPresContext,
@@ -506,7 +505,6 @@ protected:
                                        nsIContent*              aContent,
                                        nsIFrame*                aParentFrame,
                                        nsIStyleContext*         aStyleContext,
-                                       PRBool                   aHaveFirstLetterStyle,
                                        nsFrameItems&            aFrameItems);
 
   nsresult GetAdjustedParentFrame(nsIFrame*  aCurrentParentFrame, 
@@ -662,13 +660,49 @@ InitializeSelectFrame(nsIPresContext*          aPresContext,
                           nsIStyleContext*         aStyleContext,
                           nsIFrame*                aNewFrame);
 
+  nsresult ProcessBlockChildren(nsIPresContext*          aPresContext,
+                                nsFrameConstructorState& aState,
+                                nsIContent*              aContent,
+                                nsIFrame*                aFrame,
+                                PRBool                   aCanHaveGeneratedContent,
+                                nsFrameItems&            aFrameItems,
+                                PRBool                   aParentIsBlock);
+
   nsresult ConstructInline(nsIPresContext*          aPresContext,
                            nsFrameConstructorState& aState,
                            const nsStyleDisplay*    aDisplay,
                            nsIContent*              aContent,
                            nsIFrame*                aParentFrame,
                            nsIStyleContext*         aStyleContext,
-                           nsIFrame*                aNewFrame);
+                           nsIFrame*                aNewFrame,
+                           nsIFrame**               aNewBlockFrame,
+                           nsIFrame**               aNextInlineFrame);
+
+  nsresult ProcessInlineChildren(nsIPresContext*          aPresContext,
+                                 nsFrameConstructorState& aState,
+                                 nsIContent*              aContent,
+                                 nsIFrame*                aFrame,
+                                 PRBool                   aCanHaveGeneratedContent,
+                                 nsFrameItems&            aFrameItems,
+                                 PRBool*                  aKidsAllInline);
+
+  PRBool AreAllKidsInline(nsIFrame* aFrameList);
+
+  PRBool IsFrameSpecial(nsIFrameManager* aFrameManager, nsIFrame* aFrame);
+
+  PRBool IsFrameSpecial(nsIPresContext* aPresContext, nsIFrame* aFrame);
+
+  void SetFrameIsSpecial(nsIFrameManager* aFrameManager, nsIFrame* aFrame);
+
+  PRBool WipeContainingBlock(nsIPresContext* aPresContext,
+                             nsFrameConstructorState& aState,
+                             nsIContent* blockContent,
+                             nsIFrame* aFrame,
+                             nsIFrame* aFrameList);
+
+  nsresult ReframeContainingBlock(nsIPresContext* aPresContext, nsIFrame* aFrame);
+
+  nsresult RecreateEntireFrameTree(nsIPresContext* aPresContext);
 
   //----------------------------------------
 
@@ -756,9 +790,6 @@ InitializeSelectFrame(nsIPresContext*          aPresContext,
                                  nsIFrame**               aParentFrame,
                                  nsIFrame*                aPrevSibling,
                                  nsFrameItems&            aFrameItems);
-
-  nsresult MaybeCreateContainerFrame(nsIPresContext* aPresContext,
-                                     nsIContent* aContainer);
 
 protected:
   nsIDocument*        mDocument;

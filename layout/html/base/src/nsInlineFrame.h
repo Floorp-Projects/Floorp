@@ -30,6 +30,12 @@ class nsAnonymousBlockFrame;
 
 #define nsInlineFrameSuper nsHTMLContainerFrame
 
+/**
+ * Inline frame class.
+ *
+ * This class manages a list of child frames that are inline frames. Working with
+ * nsLineLayout, the class will reflow and place inline frames on a line.
+ */
 class nsInlineFrame : public nsInlineFrameSuper
 {
 public:
@@ -39,9 +45,6 @@ public:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   // nsIFrame overrides
-  NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
-                                 nsIAtom* aListName,
-                                 nsIFrame* aChildList);
   NS_IMETHOD AppendFrames(nsIPresContext& aPresContext,
                           nsIPresShell& aPresShell,
                           nsIAtom* aListName,
@@ -55,7 +58,11 @@ public:
                          nsIPresShell& aPresShell,
                          nsIAtom* aListName,
                          nsIFrame* aOldFrame);
-  NS_IMETHOD Destroy(nsIPresContext& aPresContext);
+  NS_IMETHOD ReplaceFrame(nsIPresContext& aPresContext,
+                          nsIPresShell& aPresShell,
+                          nsIAtom* aListName,
+                          nsIFrame* aOldFrame,
+                          nsIFrame* aNewFrame);
   NS_IMETHOD GetFrameName(nsString& aResult) const;
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
 
@@ -65,14 +72,14 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
   NS_IMETHOD FindTextRuns(nsLineLayout& aLineLayout);
-#if XXX_fix_me
-  NS_IMETHOD AdjustFrameSize(nscoord aExtraSpace, nscoord& aUsedSpace);
-  NS_IMETHOD TrimTrailingWhiteSpace(nsIPresContext& aPresContext,
-                                    nsIRenderingContext& aRC,
-                                    nscoord& aDeltaWidth);
-#endif
 
   static nsIID kInlineFrameCID;
+
+  // Take all of the frames away from this frame. The caller is
+  // presumed to keep them alive.
+  void StealAllFrames() {
+    mFrames.SetFrames(nsnull);
+  }
 
 protected:
   // Additional reflow state used during our reflow methods
@@ -82,75 +89,15 @@ protected:
     nsInlineFrame* mNextInFlow;
   };
 
-  // A helper class that knows how to take a list of frames and chop
-  // it up into 3 sections.
-  struct SectionData {
-    SectionData(nsIFrame* aFrameList);
-
-    PRBool SplitFrameList(nsFrameList& aSection1,
-                          nsFrameList& aSection2,
-                          nsFrameList& aSection3);
-
-    PRBool HasABlock() const {
-      return nsnull != firstBlock;
-    }
-
-    nsIFrame* firstBlock;
-    nsIFrame* prevFirstBlock;
-    nsIFrame* lastBlock;
-    nsIFrame* firstFrame;
-    nsIFrame* lastFrame;
-  };
-
   nsInlineFrame();
 
   virtual PRIntn GetSkipSides() const;
 
-  PRBool HaveAnonymousBlock() const {
-    return mFrames.NotEmpty()
-      ? nsLineLayout::TreatFrameAsBlock(mFrames.FirstChild())
-      : PR_FALSE;
-  }
-
-  static PRBool ParentIsInlineFrame(nsIFrame* aFrame, nsIFrame** aParent) {
-    void* tmp;
-    nsIFrame* parent;
-    aFrame->GetParent(&parent);
-    *aParent = parent;
-    if (NS_SUCCEEDED(parent->QueryInterface(kInlineFrameCID, &tmp))) {
-      return PR_TRUE;
-    }
-    return PR_FALSE;
-  }
-
-  nsAnonymousBlockFrame* FindPrevAnonymousBlock(nsInlineFrame** aBlockParent);
-
-  nsAnonymousBlockFrame* FindAnonymousBlock(nsInlineFrame** aBlockParent);
-
-  nsresult CreateAnonymousBlock(nsIPresContext& aPresContext,
-                                nsIFrame* aFrameList,
-                                nsIFrame** aResult);
-
-  nsresult AppendFrames(nsIPresContext& aPresContext,
-                        nsIPresShell& aPresShell,
-                        nsIFrame* aFrameList,
-                        PRBool aGenerateReflowCommands);
-
-  nsresult InsertBlockFrames(nsIPresContext& aPresContext,
-                             nsIPresShell& aPresShell,
-                             nsIFrame* aPrevFrame,
-                             nsIFrame* aFrameList);
-
-  nsresult InsertInlineFrames(nsIPresContext& aPresContext,
-                              nsIPresShell& aPresShell,
-                              nsIFrame* aPrevFrame,
-                              nsIFrame* aFrameList);
-
-  nsresult ReflowInlineFrames(nsIPresContext* aPresContext,
-                              const nsHTMLReflowState& aReflowState,
-                              InlineReflowState& rs,
-                              nsHTMLReflowMetrics& aMetrics,
-                              nsReflowStatus& aStatus);
+  nsresult ReflowFrames(nsIPresContext* aPresContext,
+                        const nsHTMLReflowState& aReflowState,
+                        InlineReflowState& rs,
+                        nsHTMLReflowMetrics& aMetrics,
+                        nsReflowStatus& aStatus);
 
   nsresult ReflowInlineFrame(nsIPresContext* aPresContext,
                              const nsHTMLReflowState& aReflowState,
@@ -158,29 +105,23 @@ protected:
                              nsIFrame* aFrame,
                              nsReflowStatus& aStatus);
 
-  virtual nsIFrame* PullInlineFrame(nsIPresContext* aPresContext,
-                                    InlineReflowState& rs,
-                                    PRBool* aIsComplete);
+  virtual nsIFrame* PullOneFrame(nsIPresContext* aPresContext,
+                                 InlineReflowState& rs,
+                                 PRBool* aIsComplete);
 
   virtual void PushFrames(nsIPresContext* aPresContext,
                           nsIFrame* aFromChild,
                           nsIFrame* aPrevSibling);
 
   virtual void DrainOverflow(nsIPresContext* aPresContext);
-
-  nsIFrame* PullAnyFrame(nsIPresContext* aPresContext, InlineReflowState& rs);
-
-  nsresult ReflowBlockFrame(nsIPresContext* aPresContext,
-                            const nsHTMLReflowState& aReflowState,
-                            InlineReflowState& rs,
-                            nsHTMLReflowMetrics& aMetrics,
-                            nsReflowStatus& aStatus);
 };
 
 //----------------------------------------------------------------------
 
-// Variation on inline-frame used to manage lines for line layout in
-// special situations.
+/**
+ * Variation on inline-frame used to manage lines for line layout in
+ * special situations (:first-line style in particular).
+ */
 class nsFirstLineFrame : public nsInlineFrame {
 public:
   friend nsresult NS_NewFirstLineFrame(nsIFrame** aNewFrame);
@@ -192,61 +133,19 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
 
-#ifdef BLOCK_DOES_FIRST_LINE
-  // AppendFrames/InsertFrames/RemoveFrame are implemented to forward
-  // the method call to the parent frame.
-#endif
-  NS_IMETHOD AppendFrames(nsIPresContext& aPresContext,
-                          nsIPresShell& aPresShell,
-                          nsIAtom* aListName,
-                          nsIFrame* aFrameList);
-  NS_IMETHOD InsertFrames(nsIPresContext& aPresContext,
-                          nsIPresShell& aPresShell,
-                          nsIAtom* aListName,
-                          nsIFrame* aPrevFrame,
-                          nsIFrame* aFrameList);
-  NS_IMETHOD RemoveFrame(nsIPresContext& aPresContext,
-                         nsIPresShell& aPresShell,
-                         nsIAtom* aListName,
-                         nsIFrame* aOldFrame);
-
-#ifdef BLOCK_DOES_FIRST_LINE
-  // These methods are used by the parent frame to actually modify the
-  // child frames of the line frame. These methods do not generate
-  // reflow commands.
-  nsresult AppendFrames2(nsIPresContext* aPresContext,
-                         nsIFrame*       aFrameList);
-
-  nsresult InsertFrames2(nsIPresContext* aPresContext,
-                         nsIFrame*       aPrevFrame,
-                         nsIFrame*       aFrameList);
-
-  nsresult RemoveFrame2(nsIPresContext* aPresContext,
-                        nsIFrame*       aOldFrame);
-
-#endif
   // Take frames starting at aFrame until the end of the frame-list
   // away from this frame. The caller is presumed to keep them alive.
   void StealFramesFrom(nsIFrame* aFrame);
 
-  // Take all of the frames away from this frame. The caller is
-  // presumed to keep them alive.
-  void StealAllFrames() {
-    mFrames.SetFrames(nsnull);
-  }
-
 protected:
   nsFirstLineFrame();
 
-  virtual nsIFrame* PullInlineFrame(nsIPresContext* aPresContext,
-                                    InlineReflowState& rs,
-                                    PRBool* aIsComplete);
+  virtual nsIFrame* PullOneFrame(nsIPresContext* aPresContext,
+                                 InlineReflowState& rs,
+                                 PRBool* aIsComplete);
 
   virtual void DrainOverflow(nsIPresContext* aPresContext);
 };
-
-extern nsresult NS_NewFirstLineFrame(nsIFrame** aNewFrame);
-
 
 //----------------------------------------------------------------------
 
