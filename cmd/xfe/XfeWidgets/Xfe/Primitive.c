@@ -882,7 +882,7 @@ SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
     }
 
     /* pretend_sensitive */
-    if (_XfeIsSensitive(nw) != _XfeIsSensitive(ow))
+    if (_XfePretendSensitive(nw) != _XfePretendSensitive(ow))
     {
 		_XfeConfigFlags(nw) |= XfeConfigExpose;
     }
