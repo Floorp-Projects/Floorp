@@ -19,7 +19,7 @@
       border              : 1px solid transparent;
     }
     
-  .button-toolbar-1:hover, .button-toolbar:hover, .button-toolbar-2:hover
+  .button-toolbar-1:hover, .button-toolbar:hover, .button-toolbar-2:hover, .button-toolbar-4:hover
     {
       border              : 1px solid threeddarkshadow;
       color               : #0000FF;

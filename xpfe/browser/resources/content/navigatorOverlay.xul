@@ -156,12 +156,12 @@ Contributor(s): ______________________________________. -->
 	      <menuitem id="menu_close"/>
 		    <menuitem id="context-savepage" key="savePage" observes="Browser:SavePage"/>
 		    <menuitem id="savepage" value="&saveFrameCmd.label;" accesskey="&saveFrameCmd.accesskey;" oncommand="savePage(gFocusedURL);" hidden="true"/>
-	      <menuseparator/>
+	      <menuseparator id="file_moduleSeparator"/>
 	      <menuitem accesskey="&editPageCmd.accesskey;" observes="Browser:EditPage" />
 	      <menuseparator/>
 	      <menuitem accesskey="&printSetupCmd.accesskey;" observes="Browser:PrintSetup"/>
 	      <menuitem accesskey="&printPreviewCmd.accesskey;" observes="Browser:PrintPreview"/>
-	      <menuitem accesskey="&printCmd.accesskey;" key="printKb" observes="Browser:Print"/>
+	      <menuitem id="printMenuItem" accesskey="&printCmd.accesskey;" key="printKb" observes="Browser:Print"/>
 	      <menuseparator />
 	      <menu id="offlineMenu">
 	        <menupopup id="offlineMenuPopup"/>
@@ -188,7 +188,7 @@ Contributor(s): ______________________________________. -->
 
   <menu id="menu_View" accesskey="v" value="&viewMenu.label;">
     <menupopup id="menu_View_Popup">
-    	 <menu value="&toolbarsCmd.label;"  >
+    	 <menu value="&toolbarsCmd.label;" id="view_toolbars">
 		  	<menupopup> 
 		  		<menuitem value="&navbarCmd.label;" observes="cmd_viewnavbar"  />
 		  		<menuitem value="&personalbarCmd.label;" observes="cmd_viewpersonaltoolbar" />
@@ -489,7 +489,6 @@ END of Deprecated -->
     <statusbarpanel id="offline-status"/>
     <progressmeter class="progressmeter-statusbar" statusbar="true" id="statusbar-icon" mode="normal" value="0"/>
     <statusbarpanel id="statusbar-display" value="&statusText.label;" crop="right" flex="1"/>
-    <statusbarpanel id="statusbar-buildid" value="&buildId.label;"/>
     <statusbarpanel id="security-button"/>
   </statusbar>
 

@@ -48,7 +48,7 @@
   </script>         
          
   <box id="taskButtons">
-    <button class="button-toolbar-4 plain taskbutton" id="mini-mail" onclick="toMessengerWindow()" 
+    <button class="button-toolbar-4 taskbutton" id="mini-mail" onclick="toMessengerWindow()" 
             position="2" tooltip="aTooltip" tooltiptext="&taskMessenger.tooltip;"/>
   </box>
   

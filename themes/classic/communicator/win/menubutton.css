@@ -52,3 +52,46 @@
      border-bottom          : 1px solid #CCCCCC;
    }
 
+/* toolbar menubuttons */   
+menubutton.button-toolbar-4
+  {
+    behavior                : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-toolbar-single");
+    border                  : 1px solid threedface;
+  }
+  
+menubutton.button-toolbar-4:hover
+  {
+    border                  : 1px solid threeddarkshadow;
+  }
+  
+.menubutton-toolbar-single-internal-box
+  {
+    border                  : 1px solid threedface;
+    padding                 : 1px 4px 1px 4px;
+  }  
+  
+menubutton.button-toolbar-4:hover > .menubutton-toolbar-single-internal-box
+  {
+    border-left             : 1px solid threedhighlight;
+    border-top              : 1px solid threedhighlight;
+    border-right            : 1px solid threedshadow;
+    border-bottom           : 1px solid threedshadow;
+  }  
+  
+menubutton.button-toolbar-4:hover:active > .menubutton-toolbar-single-internal-box,
+menubutton.button-toolbar-4[open="true"] > .menubutton-toolbar-single-internal-box
+  {
+    border-left             : 1px solid threedshadow;
+    border-top              : 1px solid threedshadow;
+    border-right            : 1px solid threedhighlight;
+    border-bottom           : 1px solid threedhighlight;
+    padding                 : 2px 3px 0px 5px;
+  }  
+  
+.menubutton-toolbar-single-dropmarker
+  {
+    padding-left            : 4px;
+    list-style-image        : url("chrome://global/skin/scroll-up.gif");
+  } 
+  
+  
