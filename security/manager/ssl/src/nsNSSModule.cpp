@@ -33,10 +33,20 @@
 
 #include "nsCURILoader.h"
 
+#include "nsSDR.h"
+
+#ifdef USE_NSCERTIFICATEDB
+#include "nsCertificateDB.h"
+#endif
+
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNSSComponent, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSecureBrowserUIImpl)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSSLSocketProvider)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTLSSocketProvider)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSecretDecoderRing)
+#ifdef USE_NSCERTIFICATEDB
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsCertificateDB)
+#endif
 
 static nsModuleComponentInfo components[] =
 {
@@ -109,6 +119,22 @@ static nsModuleComponentInfo components[] =
     NS_ISSLFHSOCKETPROVIDER_CONTRACTID,
     nsSSLSocketProviderConstructor
   },
+
+  {
+    NS_SDR_CLASSNAME,
+    NS_SDR_CID,
+    NS_SDR_CONTRACTID,
+    nsSecretDecoderRingConstructor
+  },
+
+#ifdef USE_NSCERTIFICATEDB
+  {
+    "Certificate Database",
+    NS_CERTIFICATEDB_CID,
+    NS_CERTIFICATEDB_CONTRACTID,
+    nsCertificateDBConstructor
+  },
+#endif
 
   {
     "Entropy Collector",

@@ -73,6 +73,7 @@ CPPSRCS = 				\
 	nsSSLSocketProvider.cpp		\
 	nsSecureBrowserUIImpl.cpp	\
 	nsTLSSocketProvider.cpp		\
+	nsSDR.cpp			\
 	$(NULL)
 
 REQUIRES = nspr security

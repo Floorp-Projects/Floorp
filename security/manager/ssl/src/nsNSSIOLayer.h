@@ -27,13 +27,15 @@
 #include "prtypes.h"
 #include "prio.h"
 #include "nsString.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsIChannelSecurityInfo.h"
 #include "nsISSLSocketControl.h"
 
 class nsIChannel;
 
 class nsNSSSocketInfo : public nsIChannelSecurityInfo,
-                        public nsISSLSocketControl
+                        public nsISSLSocketControl,
+			public nsIInterfaceRequestor
 {
 public:
   nsNSSSocketInfo();
@@ -42,6 +44,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSICHANNELSECURITYINFO
   NS_DECL_NSISSLSOCKETCONTROL
+  NS_DECL_NSIINTERFACEREQUESTOR
 
   nsresult SetHostName(const char *aHostName);
   nsresult SetProxyName(const char *aName);
