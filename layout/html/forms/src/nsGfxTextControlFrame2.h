@@ -46,6 +46,7 @@ class nsISelectionController;
 class nsTextInputSelectionImpl;
 class nsTextInputListener;
 class nsIDOMCharacterData;
+class nsIScrollableView;
 
 
 class nsGfxTextControlFrame2 : public nsStackFrame,
@@ -251,6 +252,7 @@ private:
   nsFormFrame *mFormFrame;
   nsTextInputSelectionImpl *mTextSelImpl;
   nsTextInputListener *mTextListener;
+  nsIScrollableView *mScrollableView;
 };
 
 #endif

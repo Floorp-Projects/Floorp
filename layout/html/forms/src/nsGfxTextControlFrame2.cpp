@@ -1075,6 +1075,7 @@ nsGfxTextControlFrame2::nsGfxTextControlFrame2(nsIPresShell* aShell):nsStackFram
   mCachedState = nsnull;
   mSuggestedWidth = NS_FORMSIZE_NOTSET;
   mSuggestedHeight = NS_FORMSIZE_NOTSET;
+  mScrollableView = nsnull;
 }
 
 nsGfxTextControlFrame2::~nsGfxTextControlFrame2()
@@ -3035,7 +3036,14 @@ nsGfxTextControlFrame2::SetTextControlFrameState(const nsAReadableString& aValue
       if (domSel)
         domSel->EndBatchChanges();
     }
-    mTextSelImpl->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL,nsISelectionController::SELECTION_FOCUS_REGION);
+
+    if (mScrollableView)
+    {
+      // Scroll the upper left corner of the text control's
+      // content area back into view.
+
+      mScrollableView->ScrollTo(0, 0, NS_VMREFRESH_NO_SYNC);
+    }
   }
   else
   {
@@ -3109,6 +3117,7 @@ nsGfxTextControlFrame2::SetInitialChildList(nsIPresContext* aPresContext,
       view->QueryInterface(NS_GET_IID(nsIScrollableView),(void **)&scrollView);
       if (scrollView)
       {
+        mScrollableView = scrollView; // Note: views are not addref'd
         mTextSelImpl->SetScrollableView(scrollView);
         break;
       }
