@@ -17,6 +17,7 @@
 
 import xpcom
 import xpcom.client
+import xpcom.server
 import xpcom._xpcom
 import xpcom.components
 import string
@@ -24,6 +25,9 @@ import string
 import traceback, getopt, sys
 
 verbose_level = 0
+
+class SampleComponentsMissing(Exception):
+    pass
 
 def DumpEveryInterfaceUnderTheSun():
     "Dump every interface under the sun!"
@@ -40,7 +44,7 @@ def DumpEveryInterfaceUnderTheSun():
         item = enum.CurrentItem(xpcom._xpcom.IID_nsIInterfaceInfo)
         try:
             iid = item.GetIID()
-        except xpcom.Exception:
+        except xpcom.COMException:
             if verbose_level:
                 print "Can't dump", item
             continue # Dont bother dumping this.
@@ -74,7 +78,11 @@ def TestSampleComponent(test_flat = 0):
     """Test the standard Netscape 'sample' sample"""
     # contractid = "mozilla.jssample.1" # the JS version
     contractid = "@mozilla.org/sample;1" # The C++ version.
-    c = xpcom.components.classes[contractid].createInstance()
+    try:
+        c = xpcom.components.classes[contractid].createInstance()
+    except xpcom.COMException:
+        raise SampleComponentsMissing
+
     if not test_flat:
         c = c.queryInterface(xpcom.components.interfaces.nsISample)
     assert c.value == "initial value"
@@ -96,8 +104,12 @@ def TestHash():
     "Test that hashing COM objects works"
     d = {}
     contractid = "@mozilla.org/sample;1" # The C++ version.
-    c = xpcom.components.classes[contractid].createInstance() \
-        .queryInterface(xpcom.components.interfaces.nsISample)
+    try:
+        c = xpcom.components.classes[contractid].createInstance() \
+            .queryInterface(xpcom.components.interfaces.nsISample)
+    except xpcom.COMException:
+        raise SampleComponentsMissing
+
     d[c] = None
     if not d.has_key(c):
         raise RuntimeError, "Can't get the exact same object back!"
@@ -130,6 +142,24 @@ def TestIIDs():
     assert dict.has_key(IID(iid_str.upper()))
     print "The IID tests seemed to work"
     
+def TestUnwrap():
+    "Test the unwrap facilities"
+    # First test that a Python object can be unwrapped.
+    ob = xpcom.components.classes["Python.TestComponent"].createInstance()
+    pyob = xpcom.server.UnwrapObject(ob)
+    if not str(pyob).startswith("<component:py_test_component.PythonTestComponent"):
+        print "It appears we got back an invalid unwrapped object", pyob
+    # Test that a non-Python implemented object can NOT be unwrapped.
+    try:
+        ob = xpcom.components.classes["@mozilla.org/sample;1"].createInstance()
+    except xpcom.COMException:
+        raise SampleComponentsMissing
+    try:
+        pyob = xpcom.server.UnwrapObject(ob)
+        print "Eeek - was able to unwrap a C++ implemented component!!"
+    except ValueError:
+        pass
+    print "The unwrapping tests seemed to work"
 
 def usage(tests):
     import os
@@ -174,9 +204,29 @@ def main():
     if not len(dotests):
         print "Nothing to do!"
         usage(tests)
+    reportedSampleMissing = 0
     for test in dotests:
         try:
             test()
+        except SampleComponentsMissing:
+            if not reportedSampleMissing:
+                print "***"
+                print "*** This test requires an XPCOM sample component,"
+                print "*** which does not exist.  To build this test, you"
+                print "*** should change to the 'mozilla/xpcom/sample' directory,"
+                print "*** and execute the standard Mozilla build process"
+                if sys.platform.startswith("win"):
+                    print "*** ie, 'nmake -f makefile.win'"
+                else:
+                    print "*** ie, 'make'"
+                print "*** then run this test again."
+                print "***"
+                print "*** If this is the only failure messages from this test,"
+                print "*** you can almost certainly ignore this message, and assume"
+                print "*** that PyXPCOM is working correctly."
+                print "***"
+                reportedSampleMissing = 1
+
         except:
             print "Test %s failed" % test.__name__
             traceback.print_exc()
