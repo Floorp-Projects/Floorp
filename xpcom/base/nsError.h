@@ -107,12 +107,6 @@ typedef PRUint32 nsresult;
  * @name Standard Macros for retrieving error bits
  */
 
-#if PR_BYTES_PER_INT == 4
-#define NS_IS_ERROR(err)           (((nsresult)(err))<0)
-#else
-#define NS_IS_ERROR(err)           (((((PRUint32)(err)) >> 31) & 0x1) == NS_ERROR_SEVERITY_ERROR)
-#endif
-
 #define NS_ERROR_GET_CODE(err)     ((err) & 0xffff)
 #define NS_ERROR_GET_MODULE(err)   (((((err) >> 16) - NS_ERROR_MODULE_BASE_OFFSET) & 0x1fff))
 #define NS_ERROR_GET_SEVERITY(err) (((err) >> 31) & 0x1)
