@@ -3,8 +3,15 @@
 # Todo:
 # - eliminate arcs implied by transitive dependancies
 #   (i.e. in a -> b -> c; a->c;, eliminate a->c;
+#   (discovered that "tred" will do this, but isn't super-helpful)
 # - group together strongly-connected components, where strongly connected
 #   means there exists a cycle, and all dependancies off the cycle.
+
+if ($^O eq "linux") {
+  $makecommand = "make";
+} elsif ($^O eq "MSWin32") {
+  $makecommand = "nmake /nologo /f makefile.win";
+}
 
 use Cwd;
 $curdir = getcwd();
@@ -26,7 +33,7 @@ while ($#dirs != -1) {
 
   chdir "$curdir";
   $current_dirs = "";
-  open(MAKEOUT, "nmake /nologo /f makefile.win echo-dirs echo-module echo-requires|") || die "Can't make: $!\n";
+  open(MAKEOUT, "$makecommand echo-dirs echo-module echo-requires|") || die "Can't make: $!\n";
 
   $current_dirs = <MAKEOUT>; $current_dirs && chop $current_dirs;
   $current_module = <MAKEOUT>; $current_module && chop $current_module;
