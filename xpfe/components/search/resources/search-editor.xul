@@ -42,7 +42,7 @@
 	onload="doLoad()" onunload="doUnload()"
 	>
 
-	<html:script language="Javascript" src="chrome://global/content/globalOverlay.js"/>  
+	<html:script language="Javascript" src="chrome://global/content/strres.js"/>
 	<html:script language="Javascript" src="chrome://search/content/search-editor.js" />
 
 	<titledbox orient="vertical" flex="1" >
@@ -78,11 +78,11 @@
 					</treechildren>
 				</template>
 
-				<treecol id="EngineColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name" sortActive="true" sortDirection="ascending" />
+				<treecol id="EngineColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name" />
 
 				<treehead>
 					<treerow>
-						<treecell observes="EngineColumn" align="center" value="&engine.column.label;" resource="http://home.netscape.com/NC-rdf#Name" onclick="return doSort('EngineColumn', null);" sortActive="true" sortDirection="ascending" flex="1"/>
+						<treecell observes="EngineColumn" align="center" value="&engine.column.label;" resource="http://home.netscape.com/NC-rdf#Name" flex="1"/>
 					</treerow>
 				</treehead>
 			</tree>
@@ -98,8 +98,8 @@
 				<!-- The 'reorder' buttons -->
 				<box id="reorder" align="vertical" autostretch="never">
 					<spring flex="1"/>
-					<button oncommand="MoveUp();" id="up" class="up small" />
-					<button oncommand="MoveDown();" id="down" class="down small" />
+					<titledbutton oncommand="MoveUp();" id="up" class="up small dialog toolbar-non-iconic" />
+					<titledbutton oncommand="MoveDown();" id="down" class="down small dialog toolbar-non-iconic" />
 					<spring flex="1"/>
 				</box>
 
@@ -138,7 +138,7 @@
 
 	<box autostretch="never">
 		<spring flex="1"/>
-		<box id="okCancelButtons"/>
+		<titledbutton id="done.button" onclick="Commit()" value="&done.label;" class="dialog toolbar-non-iconic" />
 	</box>
 
 </window>

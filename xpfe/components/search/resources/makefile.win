@@ -64,6 +64,7 @@ CHROME_L10N = \
 	.\locale\en-US\internetresults.dtd \
 	.\locale\en-US\search.dtd \
 	.\locale\en-US\search-editor.dtd \
+	.\locale\en-US\search-editor.properties \
 	.\locale\en-US\search-panel.dtd \
 	.\locale\en-US\search-panel.properties \
 	$(NULL)
