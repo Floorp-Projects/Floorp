@@ -106,14 +106,14 @@
       </menu>
     
   <toolbox id="taskbar">
-    <toolbar class="toolbar-standard chromeclass-status" persist="collapsed" style="min-width: 1px;" 
+    <toolbar id="taskbar-toolbar" class="toolbar-standard chromeclass-status" persist="collapsed" style="min-width: 1px;" 
              grippytooltip="aTooltip" grippytooltiptext="&taskBar.tooltip;">
       <box id="taskButtons">
-        <button class="button-toolbar-4 plain taskbutton" id="mini-nav" onclick="toNavigator();" 
+        <button class="button-toolbar-4 taskbutton" id="mini-nav" onclick="toNavigator();" 
                 tooltip="aTooltip" tooltiptext="&taskNavigator.tooltip;"/>
-        <button class="button-toolbar-4 plain taskbutton" id="mini-comp" onclick="toEditor();" 
+        <button class="button-toolbar-4 taskbutton" id="mini-comp" onclick="toEditor();" 
                 tooltip="aTooltip" tooltiptext="&taskComposer.tooltip;"/>
-        <button class="button-toolbar-4 plain taskbutton" id="mini-addr" onclick="toAddressBook()"
+        <button class="button-toolbar-4 taskbutton" id="mini-addr" onclick="toAddressBook()"
                 tooltip="aTooltip" tooltiptext="&taskAddressBook.tooltip;"/>
       </box>
       <box id="taskbarMenuBox"/>
