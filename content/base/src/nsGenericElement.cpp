@@ -2189,14 +2189,6 @@ nsGenericElement::Compact()
 }
 
 NS_IMETHODIMP
-nsGenericElement::SetHTMLAttribute(nsIAtom* aAttribute,
-                                   const nsHTMLValue& aValue,
-                                   PRBool aNotify)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsGenericElement::GetHTMLAttribute(nsIAtom* aAttribute,
                                    nsHTMLValue& aValue) const
 {

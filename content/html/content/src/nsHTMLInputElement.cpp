@@ -468,6 +468,10 @@ nsHTMLInputElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                   const nsAString* aValue,
                                   PRBool aNotify)
 {
+  if (aNameSpaceID != kNameSpaceID_None) {
+    return;
+  }
+
   //
   // When name or type changes, radio should be removed from radio group.
   // (type changes are handled in the form itself currently)
@@ -478,10 +482,11 @@ nsHTMLInputElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       (mForm || !(GET_BOOLBIT(mBitField, BF_PARSER_CREATING)))) {
     WillRemoveFromRadioGroup();
   } else if (aNotify && aName == nsHTMLAtoms::src &&
-             aNameSpaceID == kNameSpaceID_None &&
              aValue && mType == NS_FORM_INPUT_IMAGE) {
     // Null value means the attr got unset; don't trigger on that
     ImageURIChanged(*aValue);
+  } else if (aNotify && aName == nsHTMLAtoms::disabled) {
+    SET_BOOLBIT(mBitField, BF_DISABLED_CHANGED, PR_TRUE);
   }
 }
 
@@ -490,6 +495,10 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                  const nsAString* aValue,
                                  PRBool aNotify)
 {
+  if (aNameSpaceID != kNameSpaceID_None) {
+    return;
+  }
+
   //
   // When name or type changes, radio should be added to radio group.
   // (type changes are handled in the form itself currently)
@@ -570,54 +579,14 @@ nsHTMLInputElement::GetForm(nsIDOMHTMLFormElement** aForm)
   return nsGenericHTMLFormElement::GetForm(aForm);
 }
 
-NS_IMETHODIMP 
-nsHTMLInputElement::GetDefaultValue(nsAString& aDefaultValue)
-{
-  return GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, aDefaultValue);
-}
-
-NS_IMETHODIMP 
-nsHTMLInputElement::SetDefaultValue(const nsAString& aDefaultValue)
-{
-  return SetAttr(kNameSpaceID_None, nsHTMLAtoms::value, aDefaultValue,
-                 PR_TRUE); 
-}
-
-NS_IMETHODIMP 
-nsHTMLInputElement::GetDefaultChecked(PRBool* aDefaultChecked)
-{
-  nsHTMLValue val;
-  nsresult rv;
-  rv = GetHTMLAttribute(nsHTMLAtoms::checked, val);       
-
-  *aDefaultChecked = (NS_CONTENT_ATTR_NOT_THERE != rv);                        
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLInputElement::SetDefaultChecked(PRBool aDefaultChecked)
-{
-  nsresult rv;
-
-  if (aDefaultChecked) {
-    rv = SetAttr(kNameSpaceID_None, nsHTMLAtoms::checked, EmptyString(),
-                 PR_TRUE);
-  } else {
-    rv = UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::checked, PR_TRUE);
-  }
-  
-  return rv;
-}
-  
-//NS_IMPL_STRING_ATTR(nsHTMLInputElement, DefaultValue, defaultvalue)
-//NS_IMPL_BOOL_ATTR(nsHTMLInputElement, DefaultChecked, defaultchecked)
+NS_IMPL_STRING_ATTR(nsHTMLInputElement, DefaultValue, value)
+NS_IMPL_BOOL_ATTR(nsHTMLInputElement, DefaultChecked, checked)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, Accept, accept)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, AccessKey, accesskey)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, Align, align)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, Alt, alt)
 //NS_IMPL_BOOL_ATTR(nsHTMLInputElement, Checked, checked)
-//NS_IMPL_BOOL_ATTR(nsHTMLInputElement, Disabled, disabled)
+NS_IMPL_BOOL_ATTR(nsHTMLInputElement, Disabled, disabled)
 NS_IMPL_INT_ATTR(nsHTMLInputElement, MaxLength, maxlength)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, Name, name)
 NS_IMPL_BOOL_ATTR(nsHTMLInputElement, ReadOnly, readonly)
@@ -625,28 +594,8 @@ NS_IMPL_STRING_ATTR(nsHTMLInputElement, Src, src)
 NS_IMPL_INT_ATTR(nsHTMLInputElement, TabIndex, tabindex)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, UseMap, usemap)
 //NS_IMPL_STRING_ATTR(nsHTMLInputElement, Value, value)
-
-NS_IMETHODIMP 
-nsHTMLInputElement::GetDisabled(PRBool* aDisabled)
-{
-  nsHTMLValue val;
-  nsresult rv = GetHTMLAttribute(nsHTMLAtoms::disabled, val);
-  *aDisabled = (NS_CONTENT_ATTR_NOT_THERE != rv);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLInputElement::SetDisabled(PRBool aDisabled)
-{
-  SET_BOOLBIT(mBitField, BF_DISABLED_CHANGED, PR_TRUE);
-
-  if (aDisabled) {
-    return SetHTMLAttribute(nsHTMLAtoms::disabled, nsHTMLValue(), PR_TRUE);
-  }
-
-  UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, PR_TRUE);
-  return NS_OK;
-}
+//NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLInputElement, Size, size, 0)
+NS_IMPL_STRING_ATTR_DEFAULT_VALUE(nsHTMLInputElement, Type, type, "text")
 
 NS_IMETHODIMP
 nsHTMLInputElement::GetSize(PRUint32* aValue)
@@ -666,27 +615,10 @@ nsHTMLInputElement::GetSize(PRUint32* aValue)
 NS_IMETHODIMP
 nsHTMLInputElement::SetSize(PRUint32 aValue)
 {
-  nsHTMLValue value(aValue, eHTMLUnit_Integer);
-  return SetHTMLAttribute(nsHTMLAtoms::size, value, PR_TRUE);
-}
+  nsAutoString val;
+  val.AppendInt(aValue);
 
-NS_IMETHODIMP
-nsHTMLInputElement::GetType(nsAString& aValue)
-{
-  nsresult rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, aValue);
-
-  if (rv == NS_CONTENT_ATTR_NOT_THERE)
-    aValue.Assign(NS_LITERAL_STRING("text"));
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLInputElement::SetType(const nsAString& aValue)
-{
-  return SetAttr(kNameSpaceID_None,
-                 nsHTMLAtoms::type, aValue,
-                 PR_TRUE);
+  return SetAttr(kNameSpaceID_None, nsHTMLAtoms::size, val, PR_TRUE);
 }
 
 NS_IMETHODIMP 

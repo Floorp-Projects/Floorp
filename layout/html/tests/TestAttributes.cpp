@@ -50,18 +50,14 @@
 #include "nsINameSpaceManager.h"
 
 void testAttributes(nsIHTMLContent* content) {
-  nsHTMLValue nullValue;
-
   nsIAtom* sBORDER = NS_NewAtom("border");
-  nsIAtom* sWIDTH = NS_NewAtom("width");
   nsIAtom* sHEIGHT = NS_NewAtom("height");
   nsIAtom* sSRC = NS_NewAtom("src");
   nsIAtom* sBAD = NS_NewAtom("badattribute");
   nsString sempty;
   nsString sfoo_gif(NS_LITERAL_STRING("foo.gif"));
 
-  content->SetHTMLAttribute(sBORDER, nullValue, PR_FALSE);
-  content->SetHTMLAttribute(sWIDTH, nsHTMLValue(5, eHTMLUnit_Integer), PR_FALSE);
+  content->SetAttr(kNameSpaceID_None, sBORDER, EmptyString(), PR_FALSE);
   content->SetAttribute(kNameSpaceID_None, sHEIGHT, sempty, PR_FALSE);
   content->SetAttribute(kNameSpaceID_None, sSRC, sfoo_gif, PR_FALSE);
 
@@ -70,11 +66,6 @@ void testAttributes(nsIHTMLContent* content) {
   rv = content->GetHTMLAttribute(sBORDER, ret);
   if (rv == NS_CONTENT_ATTR_NOT_THERE || ret.GetUnit() != eHTMLUnit_String) {
     printf("test 0 failed\n");
-  }
-
-  rv = content->GetHTMLAttribute(sWIDTH, ret);
-  if (rv != NS_CONTENT_ATTR_HAS_VALUE || !(ret == nsHTMLValue(5, eHTMLUnit_Integer))) {
-    printf("test 1 failed\n");
   }
 
   rv = content->GetHTMLAttribute(sBAD, ret);

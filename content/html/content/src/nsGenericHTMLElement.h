@@ -201,8 +201,6 @@ public:
   nsresult GetHrefURIForAnchors(nsIURI** aURI);
 
   // Implementation for nsIHTMLContent
-  NS_IMETHOD SetHTMLAttribute(nsIAtom* aAttribute, const nsHTMLValue& aValue,
-                              PRBool aNotify);
   NS_IMETHOD GetHTMLAttribute(nsIAtom* aAttribute, nsHTMLValue& aValue) const;
   NS_IMETHOD GetID(nsIAtom** aResult) const;
   NS_IMETHOD GetClasses(nsVoidArray& aArray) const;
@@ -463,12 +461,6 @@ public:
    */
   static PRBool ScrollingValueToString(const nsHTMLValue& aValue,
                                        nsAString& aResult);
-
-  /**
-   * Take an attribute name, and return the value of that attribute,
-   * resolved to an absolute URI.  Used by NS_IMPL_URI_ATTR macro.
-   */
-  nsresult AttrToURI(nsIAtom* aAttrName, nsAString& aAbsoluteURI);
 
   /**
    * Create the style struct from the style attr.  Used when an element is first
@@ -777,6 +769,7 @@ protected:
    * @param aNotify whether to notify the document of child adds/removes
    */
   nsresult ReplaceContentsWithText(const nsAString& aText, PRBool aNotify);
+
   /**
    * GetContentsAsText will take all the textnodes that are children
    * of |this| and concatenate the text in them into aText.  It
@@ -787,6 +780,63 @@ protected:
    * @param aText the resulting text [OUT]
    */
   nsresult GetContentsAsText(nsAString& aText);
+
+  /**
+   * Helpermethod for NS_IMPL_STRING_ATTR_DEFAULT_VALUE macro.
+   * Gets the value of an attribute, returns specified default value if the
+   * attribute isn't set. Only works for attributes in null namespace.
+   *
+   * @param aAttr    name of attribute.
+   * @param aDefault default-value to return if attribute isn't set.
+   * @param aResult  result value [out]
+   */
+  void GetStringAttrWithDefault(nsIAtom* aAttr,
+                                const nsAString& aDefault,
+                                nsAString& aResult);
+
+  /**
+   * Helpermethod for NS_IMPL_BOOL_ATTR macro.
+   * Sets value of boolean attribute by removing attribute or setting it to
+   * the empty string. Only works for attributes in null namespace.
+   *
+   * @param aAttr    name of attribute.
+   * @param aValue   Boolean value of attribute.
+   */
+  nsresult SetBoolAttr(nsIAtom* aAttr, PRBool aValue);
+
+  /**
+   * Helpermethod for NS_IMPL_INT_ATTR macro.
+   * Gets the integer-value of an attribute, returns specified default value
+   * if the attribute isn't set or isn't set to an integer. Only works for
+   * attributes in null namespace.
+   *
+   * @param aAttr    name of attribute.
+   * @param aDefault default-value to return if attribute isn't set.
+   * @param aResult  result value [out]
+   */
+  void GetIntAttr(nsIAtom* aAttr, PRInt32 aDefault, PRInt32* aValue);
+
+  /**
+   * Helpermethod for NS_IMPL_INT_ATTR macro.
+   * Sets value of attribute to specified integer. Only works for attributes
+   * in null namespace.
+   *
+   * @param aAttr    name of attribute.
+   * @param aValue   Integer value of attribute.
+   */
+  nsresult SetIntAttr(nsIAtom* aAttr, PRInt32 aValue);
+
+  /**
+   * Helpermethod for NS_IMPL_URI_ATTR macro.
+   * Gets the absolute URI value of an attribute, by resolving any relative
+   * URIs in the attribute against the baseuri of the element. If the attribute
+   * isn't a relative URI the value of the attribute is returned as is. Only
+   * works for attributes in null namespace.
+   *
+   * @param aAttr    name of attribute.
+   * @param aResult  result value [out]
+   */
+  void GetURIAttr(nsIAtom* aAttr, nsAString& aResult);
 };
 
 
@@ -858,7 +908,19 @@ protected:
  * SetAttr methods.
  */
 #define NS_IMPL_STRING_ATTR(_class, _method, _atom)                  \
-  NS_IMPL_STRING_ATTR_DEFAULT_VALUE(_class, _method, _atom, "")
+  NS_IMETHODIMP                                                      \
+  _class::Get##_method(nsAString& aValue)                            \
+  {                                                                  \
+    GetAttr(kNameSpaceID_None, nsHTMLAtoms::_atom, aValue);          \
+                                                                     \
+    return NS_OK;                                                    \
+  }                                                                  \
+  NS_IMETHODIMP                                                      \
+  _class::Set##_method(const nsAString& aValue)                      \
+  {                                                                  \
+    return SetAttr(kNameSpaceID_None, nsHTMLAtoms::_atom, aValue,    \
+                   PR_TRUE);                                         \
+  }
 
 /**
  * A macro to implement the getter and setter for a given string
@@ -869,11 +931,10 @@ protected:
   NS_IMETHODIMP                                                      \
   _class::Get##_method(nsAString& aValue)                            \
   {                                                                  \
-    nsresult rv = GetAttr(kNameSpaceID_None,                         \
-                          nsHTMLAtoms::_atom, aValue);               \
-    if (rv == NS_CONTENT_ATTR_NOT_THERE) {                           \
-      aValue.Assign(NS_LITERAL_STRING(_default));                    \
-    }                                                                \
+    GetStringAttrWithDefault(nsHTMLAtoms::_atom,                     \
+                             NS_LITERAL_STRING(_default),            \
+                             aValue);                                \
+                                                                     \
     return NS_OK;                                                    \
   }                                                                  \
   NS_IMETHODIMP                                                      \
@@ -892,20 +953,14 @@ protected:
   NS_IMETHODIMP                                                       \
   _class::Get##_method(PRBool* aValue)                                \
   {                                                                   \
-    nsHTMLValue val;                                                  \
-    nsresult rv = GetHTMLAttribute(nsHTMLAtoms::_atom, val);          \
-    *aValue = NS_CONTENT_ATTR_NOT_THERE != rv;                        \
+    *aValue = HasAttr(kNameSpaceID_None, nsHTMLAtoms::_atom);         \
+                                                                      \
     return NS_OK;                                                     \
   }                                                                   \
   NS_IMETHODIMP                                                       \
   _class::Set##_method(PRBool aValue)                                 \
   {                                                                   \
-    if (aValue) {                                                     \
-      return SetHTMLAttribute(nsHTMLAtoms::_atom, nsHTMLValue(),      \
-                              PR_TRUE);                               \
-    }                                                                 \
-    UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::_atom, PR_TRUE);        \
-    return NS_OK;                                                     \
+    return SetBoolAttr(nsHTMLAtoms::_atom, aValue);                   \
   }
 
 /**
@@ -916,30 +971,18 @@ protected:
 #define NS_IMPL_INT_ATTR(_class, _method, _atom)                    \
   NS_IMPL_INT_ATTR_DEFAULT_VALUE(_class, _method, _atom, -1)
 
-/**
- * A macro to implement the getter and setter for a given integer
- * valued content property with a default value.
- * The method uses the generic GetAttr and SetAttr methods.
- */
-#define NS_IMPL_INT_ATTR_DEFAULT_VALUE(_class, _method, _atom, _default) \
-  NS_IMETHODIMP                                                     \
-  _class::Get##_method(PRInt32* aValue)                             \
-  {                                                                 \
-    nsHTMLValue value;                                              \
-    *aValue = _default;                                             \
-    if (NS_CONTENT_ATTR_HAS_VALUE ==                                \
-        GetHTMLAttribute(nsHTMLAtoms::_atom, value)) {              \
-      if (value.GetUnit() == eHTMLUnit_Integer) {                   \
-        *aValue = value.GetIntValue();                              \
-      }                                                             \
-    }                                                               \
-    return NS_OK;                                                   \
-  }                                                                 \
-  NS_IMETHODIMP                                                     \
-  _class::Set##_method(PRInt32 aValue)                              \
-  {                                                                 \
-    nsHTMLValue value(aValue, eHTMLUnit_Integer);                   \
-    return SetHTMLAttribute(nsHTMLAtoms::_atom, value, PR_TRUE);    \
+#define NS_IMPL_INT_ATTR_DEFAULT_VALUE(_class, _method, _atom, _default)  \
+  NS_IMETHODIMP                                                           \
+  _class::Get##_method(PRInt32* aValue)                                   \
+  {                                                                       \
+    GetIntAttr(nsHTMLAtoms::_atom, _default, aValue);                     \
+                                                                          \
+    return NS_OK;                                                         \
+  }                                                                       \
+  NS_IMETHODIMP                                                           \
+  _class::Set##_method(PRInt32 aValue)                                    \
+  {                                                                       \
+    return SetIntAttr(nsHTMLAtoms::_atom, aValue);                        \
   }
 
 /**
@@ -949,22 +992,20 @@ protected:
  * like the NS_IMPL_STRING_ATTR macro, except we make sure the URI is
  * absolute.
  */
-#define NS_IMPL_URI_ATTR_GETTER(_class, _method, _atom)             \
+#define NS_IMPL_URI_ATTR(_class, _method, _atom)                    \
   NS_IMETHODIMP                                                     \
   _class::Get##_method(nsAString& aValue)                           \
   {                                                                 \
-    return AttrToURI(nsHTMLAtoms::_atom, aValue);                   \
-  }
-#define NS_IMPL_URI_ATTR_SETTER(_class, _method, _atom)             \
+    GetURIAttr(nsHTMLAtoms::_atom, aValue);                         \
+                                                                    \
+    return NS_OK;                                                   \
+  }                                                                 \
   NS_IMETHODIMP                                                     \
   _class::Set##_method(const nsAString& aValue)                     \
   {                                                                 \
     return SetAttr(kNameSpaceID_None, nsHTMLAtoms::_atom, aValue,   \
                    PR_TRUE);                                        \
   }
-#define NS_IMPL_URI_ATTR(_class, _method, _atom) \
-  NS_IMPL_URI_ATTR_GETTER(_class, _method, _atom) \
-  NS_IMPL_URI_ATTR_SETTER(_class, _method, _atom)
 
 /**
  * QueryInterface() implementation helper macros

@@ -195,7 +195,5 @@ nsHTMLBaseFontElement::GetSize(PRInt32 *aSize)
 NS_IMETHODIMP
 nsHTMLBaseFontElement::SetSize(PRInt32 aSize)
 {
-  nsHTMLValue value(aSize, eHTMLUnit_Integer);
-
-  return SetHTMLAttribute(nsHTMLAtoms::size, value, PR_TRUE);
+  return SetIntAttr(nsHTMLAtoms::size, aSize);
 }

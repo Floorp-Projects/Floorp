@@ -68,95 +68,8 @@ public:
   // nsIDOMNode
   NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLFormElement::)
 
-  // nsIDOMElement, because of the "htmlFor" attribute handling we can't
-  // use the NS_FORWARD_NSIDOMHTMLELEMENT macro here...
-  NS_IMETHOD GetTagName(nsAString& aTagName) {
-    return nsGenericHTMLFormElement::GetTagName(aTagName);
-  }
-  NS_IMETHOD GetAttribute(const nsAString& aName,
-                          nsAString& aReturn) {
-    nsAutoString name(aName);
-    if (name.EqualsIgnoreCase("htmlfor")) {
-      return nsGenericHTMLFormElement::GetAttribute(NS_LITERAL_STRING("for"), aReturn);
-    }
-    return nsGenericHTMLFormElement::GetAttribute(aName, aReturn);
-  }
-  NS_IMETHOD SetAttribute(const nsAString& aName,
-                          const nsAString& aValue) {
-    nsAutoString name(aName);
-    if (name.EqualsIgnoreCase("htmlfor")) {
-      return nsGenericHTMLFormElement::SetAttribute(NS_LITERAL_STRING("for"), aValue);
-    }
-    return nsGenericHTMLFormElement::SetAttribute(aName, aValue);
-  }
-  NS_IMETHOD RemoveAttribute(const nsAString& aName) {
-    nsAutoString name(aName);
-    if (name.EqualsIgnoreCase("htmlfor")) {
-      return nsGenericHTMLFormElement::RemoveAttribute(NS_LITERAL_STRING("for"));
-    }
-    return nsGenericHTMLFormElement::RemoveAttribute(aName);
-  }
-  NS_IMETHOD GetAttributeNode(const nsAString& aName,
-                              nsIDOMAttr** aReturn) {
-    nsAutoString name(aName);
-    if (name.EqualsIgnoreCase("htmlfor")) {
-      return nsGenericHTMLFormElement::GetAttributeNode(NS_LITERAL_STRING("for"), aReturn);
-    }
-    return nsGenericHTMLFormElement::GetAttributeNode(aName, aReturn);
-  }
-  NS_IMETHOD SetAttributeNode(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn) {
-    return nsGenericHTMLFormElement::SetAttributeNode(aNewAttr, aReturn);
-  }
-  NS_IMETHOD RemoveAttributeNode(nsIDOMAttr* aOldAttr, nsIDOMAttr** aReturn) {
-    return nsGenericHTMLFormElement::RemoveAttributeNode(aOldAttr, aReturn);
-  }
-  NS_IMETHOD GetElementsByTagName(const nsAString& aTagname,
-                                  nsIDOMNodeList** aReturn) {
-    return nsGenericHTMLFormElement::GetElementsByTagName(aTagname, aReturn);
-  }
-  NS_IMETHOD GetAttributeNS(const nsAString& aNamespaceURI,
-                            const nsAString& aLocalName,
-                            nsAString& aReturn) {
-    return nsGenericHTMLFormElement::GetAttributeNS(aNamespaceURI, aLocalName,
-                                                    aReturn);
-  }
-  NS_IMETHOD SetAttributeNS(const nsAString& aNamespaceURI,
-                            const nsAString& aQualifiedName,
-                            const nsAString& aValue) {
-    return nsGenericHTMLFormElement::SetAttributeNS(aNamespaceURI,
-                                                    aQualifiedName,
-                                                    aValue);
-  }
-  NS_IMETHOD RemoveAttributeNS(const nsAString& aNamespaceURI,
-                               const nsAString& aLocalName) {
-    return nsGenericHTMLFormElement::RemoveAttributeNS(aNamespaceURI,
-                                                       aLocalName);
-  }
-  NS_IMETHOD GetAttributeNodeNS(const nsAString& aNamespaceURI,
-                                const nsAString& aLocalName,
-                                nsIDOMAttr** aReturn) {
-    return nsGenericHTMLFormElement::GetAttributeNodeNS(aNamespaceURI,
-                                                        aLocalName, aReturn);
-  }
-  NS_IMETHOD SetAttributeNodeNS(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn) {
-    return nsGenericHTMLFormElement::SetAttributeNodeNS(aNewAttr, aReturn);
-  }
-  NS_IMETHOD GetElementsByTagNameNS(const nsAString& aNamespaceURI,
-                                    const nsAString& aLocalName,
-                                    nsIDOMNodeList** aReturn) {
-    return nsGenericHTMLFormElement::GetElementsByTagNameNS(aNamespaceURI,
-                                                            aLocalName,
-                                                            aReturn);
-  }
-  NS_IMETHOD HasAttribute(const nsAString& aName, PRBool* aReturn) {
-    return nsGenericHTMLFormElement::HasAttribute(aName, aReturn);
-  }
-  NS_IMETHOD HasAttributeNS(const nsAString& aNamespaceURI,
-                            const nsAString& aLocalName,
-                            PRBool* aReturn) {
-    return nsGenericHTMLFormElement::HasAttributeNS(aNamespaceURI, aLocalName,
-                                                    aReturn);
-  }
+  // nsIDOMElement
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLFormElement::)
 
   // nsIDOMHTMLElement
   NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLFormElement::)
@@ -287,26 +200,7 @@ nsHTMLLabelElement::GetForm(nsIDOMHTMLFormElement** aForm)
 
 
 NS_IMPL_STRING_ATTR(nsHTMLLabelElement, AccessKey, accesskey)
-//NS_IMPL_STRING_ATTR(nsHTMLLabelElement, HtmlFor, _for)
-
-NS_IMETHODIMP
-nsHTMLLabelElement::GetHtmlFor(nsAString& aValue)
-{
-  nsGenericHTMLFormElement::GetAttr(kNameSpaceID_None, nsHTMLAtoms::_for,
-                                    aValue);
-  return NS_OK;                                                    
-}  
-
-NS_IMETHODIMP
-nsHTMLLabelElement::SetHtmlFor(const nsAString& aValue)
-{
-  // trim leading and trailing whitespace 
-  static char whitespace[] = " \r\n\t";
-  nsAutoString value(aValue);
-  value.Trim(whitespace, PR_TRUE, PR_TRUE);
-  return nsGenericHTMLFormElement::SetAttr(kNameSpaceID_None,
-                                           nsHTMLAtoms::_for, value, PR_TRUE);
-}
+NS_IMPL_STRING_ATTR(nsHTMLLabelElement, HtmlFor, _for)
 
 void
 nsHTMLLabelElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,

@@ -1658,12 +1658,7 @@ nsHTMLSelectElement::SetFocus(nsIPresContext* aPresContext)
     return;
 
   // first see if we are disabled or not. If disabled then do nothing.
-  nsAutoString disabled;
-
-  if (NS_CONTENT_ATTR_HAS_VALUE ==
-      nsGenericHTMLFormElement::GetAttr(kNameSpaceID_None,
-                                        nsHTMLAtoms::disabled,
-                                        disabled)) {
+  if (HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled)) {
     return;
   }
 

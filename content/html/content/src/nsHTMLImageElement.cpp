@@ -265,7 +265,7 @@ NS_IMPL_INT_ATTR(nsHTMLImageElement, Hspace, hspace)
 NS_IMPL_BOOL_ATTR(nsHTMLImageElement, IsMap, ismap)
 NS_IMPL_URI_ATTR(nsHTMLImageElement, LongDesc, longdesc)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, Lowsrc, lowsrc)
-NS_IMPL_URI_ATTR_GETTER(nsHTMLImageElement, Src, src)
+NS_IMPL_URI_ATTR(nsHTMLImageElement, Src, src)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, UseMap, usemap)
 NS_IMPL_INT_ATTR(nsHTMLImageElement, Vspace, vspace)
 
@@ -593,7 +593,34 @@ nsHTMLImageElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   // image load from SetParent.  Skip the ImageURIChanged call in that case.
   if (aNotify &&
       aNameSpaceID == kNameSpaceID_None && aName == nsHTMLAtoms::src) {
+
+    // If caller is not chrome and dom.disable_image_src_set is true,
+    // prevent setting image.src by exiting early
+    nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+    if (prefBranch) {
+      PRBool disableImageSrcSet = PR_FALSE;
+      prefBranch->GetBoolPref("dom.disable_image_src_set", &disableImageSrcSet);
+
+      if (disableImageSrcSet && !nsContentUtils::IsCallerChrome()) {
+        return NS_OK;
+      }
+    }
+
+    nsCOMPtr<imgIRequest> oldCurrentRequest = mCurrentRequest;
+
     ImageURIChanged(aValue);
+
+    if (mCurrentRequest && !mPendingRequest &&
+        oldCurrentRequest != mCurrentRequest) {
+      // We have a current request, and it's not the same one as we used
+      // to have, and we have no pending request.  So imglib already had
+      // that image.  Reset the animation on it -- see bug 210001
+      nsCOMPtr<imgIContainer> container;
+      mCurrentRequest->GetImage(getter_AddRefs(container));
+      if (container) {
+        container->ResetAnimation();
+      }
+    }
   }
     
   return nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix, aValue,
@@ -648,9 +675,7 @@ nsHTMLImageElement::Initialize(JSContext* aContext, JSObject *aObj,
   JSBool ret = JS_ValueToInt32(aContext, argv[0], &width);
   NS_ENSURE_TRUE(ret, NS_ERROR_INVALID_ARG);
 
-  nsHTMLValue widthVal((PRInt32)width, eHTMLUnit_Integer);
-
-  nsresult rv = SetHTMLAttribute(nsHTMLAtoms::width, widthVal, PR_FALSE);
+  nsresult rv = SetIntAttr(nsHTMLAtoms::width, NS_STATIC_CAST(PRInt32, width));
 
   if (NS_SUCCEEDED(rv) && (argc > 1)) {
     // The second (optional) argument is the height of the image
@@ -658,52 +683,10 @@ nsHTMLImageElement::Initialize(JSContext* aContext, JSObject *aObj,
     ret = JS_ValueToInt32(aContext, argv[1], &height);
     NS_ENSURE_TRUE(ret, NS_ERROR_INVALID_ARG);
 
-    nsHTMLValue heightVal((PRInt32)height, eHTMLUnit_Integer);
-
-    rv = SetHTMLAttribute(nsHTMLAtoms::height, heightVal, PR_FALSE);
+    rv = SetIntAttr(nsHTMLAtoms::height, NS_STATIC_CAST(PRInt32, height));
   }
 
   return rv;
-}
-
-NS_IMETHODIMP
-nsHTMLImageElement::SetSrc(const nsAString& aSrc)
-{
-  /*
-   * If caller is not chrome and dom.disable_image_src_set is true,
-   * prevent setting image.src by exiting early
-   */
-
-  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
-  if (prefBranch) {
-    PRBool disableImageSrcSet = PR_FALSE;
-    prefBranch->GetBoolPref("dom.disable_image_src_set", &disableImageSrcSet);
-
-    if (disableImageSrcSet && !nsContentUtils::IsCallerChrome()) {
-      return NS_OK;
-    }
-  }
-
-  nsCOMPtr<imgIRequest> oldCurrentRequest = mCurrentRequest;
-  
-  // Call ImageURIChanged first so that our image load will kick off
-  // before the SetAttr triggers a reflow
-  ImageURIChanged(aSrc);
-
-  if (mCurrentRequest && !mPendingRequest &&
-      oldCurrentRequest != mCurrentRequest) {
-    // We have a current request, and it's not the same one as we used
-    // to have, and we have no pending request.  So imglib already had
-    // that image.  Reset the animation on it -- see bug 210001
-    nsCOMPtr<imgIContainer> container;
-    mCurrentRequest->GetImage(getter_AddRefs(container));
-    if (container) {
-      container->ResetAnimation();
-    }
-  }
-  
-  return nsGenericHTMLElement::SetAttr(kNameSpaceID_None, nsHTMLAtoms::src,
-                                       aSrc, PR_TRUE);
 }
 
 NS_IMETHODIMP
