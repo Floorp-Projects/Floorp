@@ -52,7 +52,6 @@ NS_IMETHODIMP  nsTextToSubURI::ConvertAndEscape(
   const char *charset, const PRUnichar *text, char **_retval) 
 {
   *_retval = nsnull;
-  nsresult res = NS_OK;
   char* convert;
   nsAutoString charsetStr(charset);
   nsIUnicodeEncoder *encoder = nsnull;
