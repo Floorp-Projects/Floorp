@@ -57,10 +57,6 @@
 #include "nsIHttpEventSink.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIHttpHeaderVisitor.h"
-#include "nsIProgressEventSink.h"
-
-#include "nsIDOMLSProgressEvent.h"
-
 class nsILoadGroup;
 
 class nsXMLHttpRequest : public nsIXMLHttpRequest,
@@ -70,7 +66,6 @@ class nsXMLHttpRequest : public nsIXMLHttpRequest,
                          public nsIStreamListener,
                          public nsIHttpEventSink,
                          public nsIInterfaceRequestor,
-                         public nsIProgressEventSink,
                          public nsSupportsWeakReference
 {
 public:
@@ -106,9 +101,6 @@ public:
 
   // nsIHttpEventSink
   NS_DECL_NSIHTTPEVENTSINK
-
-  // nsIProgressEventSink
-  NS_DECL_NSIPROGRESSEVENTSINK
 
   // nsIInterfaceRequestor
   NS_DECL_NSIINTERFACEREQUESTOR
@@ -147,7 +139,6 @@ protected:
 
   nsCOMPtr<nsIDOMEventListener> mOnLoadListener;
   nsCOMPtr<nsIDOMEventListener> mOnErrorListener;
-  nsCOMPtr<nsIDOMEventListener> mOnProgressListener;
 
   nsCOMPtr<nsIOnReadyStateChangeHandler> mOnReadystatechangeListener;
 
@@ -171,25 +162,6 @@ protected:
   nsCString mOverrideMimeType;
 
   PRUint32 mState;
-};
-
-
-// helper class to expose a progress DOM Event
-
-class nsXMLHttpProgressEvent : public nsIDOMLSProgressEvent
-{
-public:
-  nsXMLHttpProgressEvent(nsIDOMEvent * aInner, PRUint32 aCurrentProgress, PRUint32 aMaxProgress);
-  virtual ~nsXMLHttpProgressEvent();
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMLSPROGRESSEVENT
-  NS_DECL_NSIDOMEVENT
-
-protected:
-  nsCOMPtr<nsIDOMEvent> mInner;
-  PRUint32 mCurProgress;
-  PRUint32 mMaxProgress;
 };
 
 #endif
