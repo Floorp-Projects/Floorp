@@ -162,6 +162,9 @@ pref("nglayout.widget.gfxscrollbars", true);
 // use nsViewManager2
 pref("nglayout.view.useViewManager2", true);
 
+// css2 hover pref
+pref("nglayout.events.showHierarchicalHover", true);
+
 // Smart Browsing prefs
 pref("browser.related.enabled", true);
 pref("browser.related.autoload", 1);  // 0 = Always, 1 = After first use, 2 = Never
