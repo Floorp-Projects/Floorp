@@ -22,6 +22,7 @@
 #include "nsIStreamListener.h"
 #include "nsIOutputStream.h"
 #include "nsIURI.h"
+#include "prlock.h"
 
 #include "nsString2.h"
 #include "nsIEventQueue.h"
@@ -172,6 +173,9 @@ private:
 
     nsIStreamListener*  mListener;          // the listener we want to call
                                             // during our event firing.
+
+    PRLock              *mLock;
+    PRThread            *mThread;
 };
 
 #define NS_FTP_THREAD_SEGMENT_SIZE      (4*1024)
