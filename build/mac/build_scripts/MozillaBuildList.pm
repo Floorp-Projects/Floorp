@@ -1261,6 +1261,13 @@ sub BuildClientDist()
         InstallFromManifest(":mozilla:calendar:libxpical:MANIFEST_IDL", "$distdirectory:idl:");
     }
 
+	 #WEBSERVICES
+    if ($main::options{webservices})
+    {
+        InstallFromManifest(":mozilla:extensions:webservices:public:MANIFEST_IDL", "$distdirectory:idl:");
+        InstallFromManifest(":mozilla:extensions:webservices:public:MANIFEST",     "$distdirectory:websrvcs:");
+    }
+
     print("--- Client Dist export complete ----\n");
 }
 
@@ -1600,6 +1607,11 @@ sub BuildIDLProjects()
     if ($main::options{calendar})
     {
         BuildIDLProject(":mozilla:calendar:macbuild:calendarIDL.xml", "calendar");
+    }
+
+    if ($main::options{webservices})
+    {
+        BuildIDLProject(":mozilla:extensions:webservices:macbuild:websrvcsIDL.xml", "websrvcs");
     }
 
     EndBuildModule("idl");

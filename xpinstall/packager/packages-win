@@ -142,10 +142,6 @@ bin\components\nsDictionary.js
 bin\components\nsProxyAutoConfig.js
 bin\components\nsXmlRpcClient.js
 bin\plugins\npnul32.dll
-bin\components\xmlsoap.xpt
-bin\components\xmlschema.xpt
-bin\components\wsdl.xpt
-bin\components\wsproxy.xpt
 bin\components\helperAppDlg.xpt
 bin\components\nsKillAll.js
 bin\components\progressDlg.xpt
@@ -157,6 +153,10 @@ bin\components\typeaheadfind.xpt
 bin\components\typeaheadfind.dll
 bin\components\nsAxSecurityPolicy.js
 bin\components\nsCloseAllWindows.js
+
+; webservices
+bin\components\websrvcs.dll
+bin\components\websrvcs.xpt
 
 ; LDAP components need to be in the browser for AutoConfig
 bin\components\mozldap.dll

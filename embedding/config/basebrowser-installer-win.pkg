@@ -216,7 +216,6 @@ nssckbi.dll
 ; xmlextras, optional for XMLHttpRequest support
 components\xmlextras.dll
 components\xmlextras.xpt
-components\xmlextras_interfaceinfo.xpt
 
 ;
 ; MathML, optional for MathML charset conversion

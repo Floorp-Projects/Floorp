@@ -174,11 +174,6 @@ bin/components/commandhandler.xpt
 bin/components/webbrowserpersist.xpt
 bin/components/windowwatcher.xpt
 bin/components/xmlextras.xpt
-bin/components/xmlextras_interfaceinfo.xpt
-bin/components/xmlsoap.xpt
-bin/components/xmlschema.xpt
-bin/components/wsdl.xpt
-bin/components/wsproxy.xpt
 bin/components/nsHelperAppDlg.js
 bin/components/helperAppDlg.xpt
 bin/components/nsProgressDialog.js
@@ -188,7 +183,6 @@ bin/components/filepicker.xpt
 bin/components/mozldap.xpt
 bin/components/typeaheadfind.xpt
 bin/components/nsCloseAllWindows.js
-
 bin/chrome/help.jar
 bin/chrome/toolkit.jar
 bin/chrome/comm.jar
@@ -197,6 +191,11 @@ bin/chrome/modern.jar
 bin/chrome/classic.jar
 bin/chrome/installed-chrome.txt
 bin/chrome/chromelist.txt
+
+; webservices
+bin/components/libwebsrvcs.so
+bin/components/websrvcs.xpt
+
 ;-bin/chrome/comm/content/editor/EditorInitPage.html
 ;-bin/chrome/comm/content/editor/content/EditorInitPagePlain.html
 ;Include this for "debug" testing - remove for actual beta release:

@@ -194,11 +194,6 @@ bin\components\nsDictionary.js
 bin\components\nsProxyAutoConfig.js
 bin\components\nsXmlRpcClient.js
 bin\components\xmlextras.xpt
-bin\components\xmlextras_interfaceinfo.xpt
-bin\components\xmlsoap.xpt
-bin\components\xmlschema.xpt
-bin\components\wsdl.xpt
-bin\components\wsproxy.xpt
 bin\components\nsHelperAppDlg.js
 bin\components\helperAppDlg.xpt
 bin\components\nsKillAll.js
@@ -207,6 +202,10 @@ bin\components\progressDlg.xpt
 bin\components\nsDownloadProgressListener.js
 bin\components\typeaheadfind.xpt
 bin\components\nsCloseAllWindows.js
+
+; webservices
+bin\components\websrvcs.dll
+bin\components\websrvcs.xpt
 
 ; p3p
 bin\components\p3p.dll

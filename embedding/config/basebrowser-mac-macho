@@ -210,7 +210,6 @@ libwidget.rsrc
 ; xmlextras, optional for XMLHttpRequest support
 components/libxmlextras.dylib
 components/xmlextras.xpt
-components/xmlextras_interfaceinfo.xpt
 
 ; xpconnect
 components/libxpconnect.dylib
