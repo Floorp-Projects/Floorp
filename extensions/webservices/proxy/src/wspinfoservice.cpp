@@ -41,89 +41,6 @@
 #include "wspprivate.h"
 
 /***************************************************************************/
-
-// XXX IsArray is being obseleted.
-
-//static
-PRBool nsWSPInterfaceInfoService::IsArray(nsIWSDLPart* aPart)
-{
-  static const NS_NAMED_LITERAL_STRING(sArrayStr, "Array");
-  nsresult rv;
-
-  // If the binding is 'literal' then we consider this as DOM element
-  // and thus it is not 'really' an array for out purposes.
-  nsCOMPtr<nsIWSDLBinding> binding;
-  rv = aPart->GetBinding(getter_AddRefs(binding));
-  if (NS_FAILED(rv)) {
-    return PR_FALSE;
-  }
-
-  nsCOMPtr<nsISOAPPartBinding> soapPartBinding(do_QueryInterface(binding));
-  if (soapPartBinding) {
-    PRUint16 use;
-    rv = soapPartBinding->GetUse(&use);
-    if (NS_FAILED(rv)) {
-      return PR_FALSE;
-    }
-
-    if (use == nsISOAPPartBinding::USE_LITERAL) {
-      return PR_FALSE;
-    }
-  }
-
-  nsCOMPtr<nsISchemaComponent> schemaComponent;
-  rv = aPart->GetSchemaComponent(getter_AddRefs(schemaComponent));
-  if (NS_FAILED(rv)) {
-    return PR_FALSE;
-  }
-
-  nsCOMPtr<nsISchemaType> type;
-  nsCOMPtr<nsISchemaElement> element = do_QueryInterface(schemaComponent);
-  if (element) {
-    rv = element->GetType(getter_AddRefs(type));
-    if (NS_FAILED(rv)) {
-      return PR_FALSE;
-    }
-  }
-  else {
-    type = do_QueryInterface(schemaComponent, &rv);
-    if (NS_FAILED(rv)) {
-      return PR_FALSE;
-    }
-  }
-
-  nsCOMPtr<nsISchemaComplexType> complexType(do_QueryInterface(type));
-  if (!complexType) {
-    return PR_FALSE;
-  }
-
-  while (complexType) {
-    PRUint16 derivation;
-    complexType->GetDerivation(&derivation);
-    if (derivation == nsISchemaComplexType::DERIVATION_SELF_CONTAINED) {
-      break;
-    }
-    nsCOMPtr<nsISchemaType> base;
-    complexType->GetBaseType(getter_AddRefs(base));
-    complexType = do_QueryInterface(base);
-  }
-
-  // If the base type is not a complex type, then we're done
-  if (!complexType) {
-    return PR_FALSE;
-  }
-
-  nsAutoString name, ns;
-  complexType->GetName(name);
-  complexType->GetTargetNamespace(ns);
-
-  return name.Equals(sArrayStr) &&
-         (ns.Equals(*nsSOAPUtils::kSOAPEncURI[nsISOAPMessage::VERSION_1_1]) ||
-          ns.Equals(*nsSOAPUtils::kSOAPEncURI[nsISOAPMessage::VERSION_1_2]));
-}
-
-
-/***************************************************************************/
 // SetException sets a global exception representing the given nsresult. It
 // is guaranteed to also return that nsresult. It is to be used when failing.
 //
@@ -332,37 +249,21 @@ static nsresult AppendStandardInterface(const nsIID& iid,
 }
 
 /***************************************************************************/
-// BuildPrimaryInterfaceName is used to construct the name of the primary
-// interface based on the qualifier and protname.
+// BuildInterfaceName is used to construct the name of an interface
+// based on three AStrings.
 
-static void BuildPrimaryInterfaceName(const nsAReadableString& qualifier,
-                                      const nsAReadableString& portName,
-                                      nsAWritableCString& aCIdentifier)
+static void BuildInterfaceName(const nsAReadableString& qualifier,
+                               const nsAReadableString& name,
+                               const nsAReadableString& uri,
+                               nsAWritableCString& aCIdentifier)
 {
   nsCAutoString temp;
   aCIdentifier.Truncate();
   WSPFactory::XML2C(qualifier, temp);
   aCIdentifier.Append(temp);
-  WSPFactory::XML2C(portName, temp);
+  WSPFactory::XML2C(name, temp);
   aCIdentifier.Append(temp);
-}
-
-/***************************************************************************/
-// BuildStructInterfaceName is used to construct the names of 'struct' 
-// interfaces that we synthesize to hold compound data types.
-
-static void BuildStructInterfaceName(const nsAReadableString& qualifier,
-                                     const nsAReadableString& typeName,
-                                     const nsAReadableString& namespaceName,
-                                     nsAWritableCString& aCIdentifier)
-{
-  nsCAutoString temp;
-  aCIdentifier.Truncate();
-  WSPFactory::XML2C(qualifier, temp);
-  aCIdentifier.Append(temp);
-  WSPFactory::XML2C(typeName, temp);
-  aCIdentifier.Append(temp);
-  WSPFactory::XML2C(namespaceName, temp);
+  WSPFactory::XML2C(uri, temp);
   aCIdentifier.Append(temp);
 }
 
@@ -553,7 +454,7 @@ static nsresult FindOrConstructInterface(nsIInterfaceInfoSuperManager* iism,
     return rv;
   }
 
-  BuildStructInterfaceName(qualifier, name, ns, qualifiedName);
+  BuildInterfaceName(qualifier, name, ns, qualifiedName);
 
   // Does the interface already exist?
 
@@ -1044,8 +945,8 @@ nsWSPInterfaceInfoService::~nsWSPInterfaceInfoService()
 // It returns the interface info and optionally the interface info set - 
 // which allows the caller to gather information on the referenced interfaces. 
 
-/* nsIInterfaceInfo infoForPort (in nsIWSDLPort aPort, in AString qualifier, in PRBool isAsync, out nsIInterfaceInfoManager aSet); */
-NS_IMETHODIMP nsWSPInterfaceInfoService::InfoForPort(nsIWSDLPort *aPort, const nsAString & qualifier, PRBool isAsync, nsIInterfaceInfoManager **aSet, nsIInterfaceInfo **_retval)
+/* nsIInterfaceInfo infoForPort (in nsIWSDLPort aPort, in AString aPortURL, in AString aQualifier, in PRBool aIsAsync, out nsIInterfaceInfoManager aSet); */
+NS_IMETHODIMP nsWSPInterfaceInfoService::InfoForPort(nsIWSDLPort *aPort, const nsAString & aPortURL, const nsAString & aQualifier, PRBool aIsAsync, nsIInterfaceInfoManager **aSet, nsIInterfaceInfo **_retval)
 {
   nsresult rv;
 
@@ -1097,15 +998,15 @@ NS_IMETHODIMP nsWSPInterfaceInfoService::InfoForPort(nsIWSDLPort *aPort, const n
     return rv;
   }
 
-  BuildPrimaryInterfaceName(qualifier, portName, primaryName);
+  BuildInterfaceName(aQualifier, portName, aPortURL, primaryName);
   primaryAsyncName.Assign(primaryName);
   primaryAsyncName.Append("Async");
 
   // With luck the work has already been done and we can just return the
   // existing info.
 
-  if (NS_SUCCEEDED(FindInterfaceByName(isAsync ? primaryAsyncName.get() :
-                                                 primaryName.get(),
+  if (NS_SUCCEEDED(FindInterfaceByName(aIsAsync ? primaryAsyncName.get() :
+                                                  primaryName.get(),
                                        iism, aSet, _retval))) {
     return NS_OK;
   }
@@ -1201,7 +1102,7 @@ NS_IMETHODIMP nsWSPInterfaceInfoService::InfoForPort(nsIWSDLPort *aPort, const n
     return rv;
   }
 
-  // Add the setListener method.
+  // Add the setListener method to the primaryAsync interface.
   // void setListener(in 'OurType'Listener listener);
 
   rv = set->AllocateParamArray(1, &tempParamArray);
@@ -1219,6 +1120,33 @@ NS_IMETHODIMP nsWSPInterfaceInfoService::InfoForPort(nsIWSDLPort *aPort, const n
   methodDesc.num_args = 1;
 
   rv = primaryAsyncInfo->AppendMethod(&methodDesc, &ignoredIndex);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // Add the onError method to the listener interface.
+  // void onError(in nsIException error, in nsIWebServiceCallContext cx);
+
+  rv = set->AllocateParamArray(2, &tempParamArray);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  tempParamArray[0].type.prefix.flags = TD_INTERFACE_TYPE | XPT_TDP_POINTER;
+  tempParamArray[0].type.type.iface = iidx.Get(IIDX::IDX_nsIException);
+  tempParamArray[0].flags = XPT_PD_IN;
+
+  tempParamArray[1].type.prefix.flags = TD_INTERFACE_TYPE | XPT_TDP_POINTER;
+  tempParamArray[1].type.type.iface = iidx.Get(IIDX::IDX_nsIWebServiceCallContext);
+  tempParamArray[1].flags = XPT_PD_IN;
+
+  methodDesc.name     = "onError";
+  methodDesc.params   = tempParamArray;
+  methodDesc.result   = defaultResult;
+  methodDesc.flags    = 0;
+  methodDesc.num_args = 2;
+
+  rv = listenerInfo->AppendMethod(&methodDesc, &ignoredIndex);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -1249,7 +1177,7 @@ NS_IMETHODIMP nsWSPInterfaceInfoService::InfoForPort(nsIWSDLPort *aPort, const n
     
     inParams.Clear();
     rv = AccumulateParamsForMessage(iism, set, msg, iidx, defaultResult, 
-                                    qualifier, &inParams);
+                                    aQualifier, &inParams);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -1263,7 +1191,7 @@ NS_IMETHODIMP nsWSPInterfaceInfoService::InfoForPort(nsIWSDLPort *aPort, const n
 
     outParams.Clear();
     rv = AccumulateParamsForMessage(iism, set, msg, iidx, defaultResult, 
-                                    qualifier, &outParams);
+                                    aQualifier, &outParams);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -1368,16 +1296,16 @@ NS_IMETHODIMP nsWSPInterfaceInfoService::InfoForPort(nsIWSDLPort *aPort, const n
     
     }
 
-    // Add the leading 'in nsIException error' param for listener
-
-    paramDesc.type.prefix.flags = TD_INTERFACE_TYPE | XPT_TDP_POINTER;
-    paramDesc.type.type.iface = iidx.Get(IIDX::IDX_nsIException);
-    paramDesc.flags = XPT_PD_IN;
-    listenerParamArray[0] = paramDesc;
-
-    memcpy(listenerParamArray + 1, 
+    memcpy(listenerParamArray, 
            outParams.GetArray(), 
            outParams.GetCount() * sizeof(XPTParamDescriptor));
+
+    // Add the trailing 'in nsIWebServiceCallContext cx' param for listener
+
+    paramDesc.type.prefix.flags = TD_INTERFACE_TYPE | XPT_TDP_POINTER;
+    paramDesc.type.type.iface = iidx.Get(IIDX::IDX_nsIWebServiceCallContext);
+    paramDesc.flags = XPT_PD_IN;
+    listenerParamArray[listenerParamCount-1] = paramDesc;
     // listenerParamArray is done now.
 
     rv = op->GetName(tempString);
@@ -1441,7 +1369,7 @@ NS_IMETHODIMP nsWSPInterfaceInfoService::InfoForPort(nsIWSDLPort *aPort, const n
 
   // Return the appropriate interface info.
 
-  if (isAsync) {
+  if (aIsAsync) {
     NS_ADDREF(*_retval = primaryAsyncInfo);
   }
   else {
@@ -1449,31 +1377,5 @@ NS_IMETHODIMP nsWSPInterfaceInfoService::InfoForPort(nsIWSDLPort *aPort, const n
   }
 
   return NS_OK;
-}
-
-/***************************************************************************/
-// XXX It is not clear whether or not we want to expose the following three
-// methods on our interface.
-
-/* AString identifier_C2XML (in string aCIdentifier); */
-NS_IMETHODIMP nsWSPInterfaceInfoService::Identifier_C2XML(const char *aCIdentifier, nsAString & _retval)
-{
-  return WSPFactory::C2XML(nsCString(aCIdentifier), _retval);
-}
-
-/* string identifier_XML2C (in AString aXMLIndentifier); */
-NS_IMETHODIMP nsWSPInterfaceInfoService::Identifier_XML2C(const nsAString & aXMLIndentifier, char **_retval)
-{
-  nsCAutoString temp;
-
-  WSPFactory::XML2C(aXMLIndentifier, temp);
-  *_retval = (char*) nsMemory::Clone(temp.get(), temp.Length()+1);
-  return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-}
-
-/* [notxpcom] nsresult newUniqueID (out nsID aID); */
-NS_IMETHODIMP_(nsresult) nsWSPInterfaceInfoService::NewUniqueID(nsID *aID)
-{
-    return ::NewUniqueID(aID);
 }
 
