@@ -50,27 +50,23 @@ public:
     mColumn = 0;
     mSkipLeadingWS = PR_TRUE;
     mBRFrame = nsnull;
-#ifdef NS_DEBUG
     mPlacedFrames.Clear();
-#endif
     ForgetWordFrames();
   }
 
   // Add to the placed-frame count
-#ifdef NS_DEBUG
   void AddPlacedFrame(nsIFrame* aFrame) {
     mTotalPlacedFrames++;
     mPlacedFrames.AppendElement(aFrame);
   }
-#else
-  void AddPlacedFrame() {
-    mTotalPlacedFrames++;
-  }
-#endif
 
   // Get the placed-frame count
   PRInt32 GetPlacedFrames() const {
     return mTotalPlacedFrames;
+  }
+
+  const nsVoidArray& PlacedFrames() const {
+    return mPlacedFrames;
   }
 
   void SetBRFrame(nsIFrame* aFrame) {
@@ -180,9 +176,7 @@ protected:
   nsIFrame* mBRFrame;
 
   PRInt32 mTotalPlacedFrames;
-#ifdef NS_DEBUG
   nsVoidArray mPlacedFrames;
-#endif
 
   nsVoidArray mWordFrames;
 
