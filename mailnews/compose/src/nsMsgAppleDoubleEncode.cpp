@@ -42,12 +42,6 @@
 #include "m_cvstrm.h"
 
 #pragma cplusplus on
-//RICHIEDELETE #include "InternetConfig.h"
-//RICHIEDELETE #include "ufilemgr.h"
-//RICHIEDELETE #include "BufferStream.h"
-//RICHIEDELETE #include "Umimemap.h"
-//RICHIEDELETE #include "uprefd.h"
-//RICHIEDELETE #include "ulaunch.h"
 
 OSErr my_FSSpecFromPathname(char* src_filename, FSSpec* fspec)
 {
@@ -93,11 +87,11 @@ nsMsgIsMacFile(char *aUrlString)
     return PR_TRUE;
 }
 
-/* Netlib utility routine, should be ripped out */
-void	MacGetFileType(nsFileSpec   *path, 
-                     PRBool       *useDefault, 
-                     char         **fileType, 
-                     char         **encoding)
+void	
+MacGetFileType(nsFileSpec   *path, 
+               PRBool       *useDefault, 
+               char         **fileType, 
+               char         **encoding)
 {
 	if ((path == NULL) || (fileType == NULL) || (encoding == NULL))
 		return;
