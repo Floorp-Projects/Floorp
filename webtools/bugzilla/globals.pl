@@ -148,6 +148,8 @@ sub GetFieldID {
 
 # XXXX - this needs to go away
 sub GenerateVersionTable {
+    my $dbh = Bugzilla->dbh;
+
     SendSQL("SELECT versions.value, products.name " .
             "FROM versions, products " .
             "WHERE products.id = versions.product_id " .
@@ -217,9 +219,8 @@ sub GenerateVersionTable {
         $::prodmaxvotes{$p} = $votesperuser;
     }
             
-    my $cols = LearnAboutColumns("bugs");
+    @::log_columns = $dbh->bz_table_columns('bugs');
     
-    @::log_columns = @{$cols->{"-list-"}};
     foreach my $i ("bug_id", "creation_ts", "delta_ts", "lastdiffed") {
         my $w = lsearch(\@::log_columns, $i);
         if ($w >= 0) {
@@ -980,26 +981,6 @@ sub GetLongDescriptionAsText {
     }
 
     return ($result, $anyprivate);
-}
-
-# Fills in a hashtable with info about the columns for the given table in the
-# database.  The hashtable has the following entries:
-#   -list-  the list of column names
-#   <name>,type  the type for the given name
-
-sub LearnAboutColumns {
-    my ($table) = (@_);
-    my %a;
-    SendSQL("show columns from $table");
-    my @list = ();
-    my @row;
-    while (@row = FetchSQLData()) {
-        my ($name,$type) = (@row);
-        $a{"$name,type"} = $type;
-        push @list, $name;
-    }
-    $a{"-list-"} = \@list;
-    return \%a;
 }
 
 # Returns a list of all the legal values for a field that has a

@@ -456,6 +456,13 @@ sub bz_get_index_def ($$) {
    }
 }
 
+# XXX - Should be updated to use _bz_real_schema when we have that,
+#       if we ever need it.
+sub bz_table_columns {
+    my ($self, $table) = @_;
+    return $self->_bz_schema->get_table_columns($table);
+}
+
 # XXX - Needs to be made cross-db compatible
 sub bz_table_exists ($) {
    my ($self, $table) = @_;
