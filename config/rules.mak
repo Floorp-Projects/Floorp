@@ -229,7 +229,7 @@ $(JAVA_DESTPATH)\$(PACKAGE): $(JAVA_DESTPATH)
 $(JMCSRCDIR):
     -mkdir $(JMCSRCDIR)
 
-$(XPDIST)\include:
+$(PUBLIC):
     -mkdir $(XPDIST:/=\)\include
 
 !ifdef IDL_GEN
@@ -606,7 +606,7 @@ export:: $(JMC_STUBS) $(OBJDIR) $(JMC_OBJS)
 #//
 #//------------------------------------------------------------------------
 !if "$(EXPORTS)" != "$(NULL)"
-export:: $(XPDIST)\include
+export:: $(PUBLIC)
     for %f in ($(EXPORTS)) do $(MAKE_INSTALL:/=\) %f $(XPDIST:/=\)\include
 
 clobber::
@@ -700,10 +700,10 @@ export:: $(XPDIST)\idl
         @echo.
         -for %i in ($(XPIDLSRCS:/=\)) do $(MAKE_INSTALL) %i $(XPDIST)\idl
 
-export:: $(XPIDL_GEN_DIR) $(XPIDL_HEADERS) $(XPDIST)\include
+export:: $(XPIDL_GEN_DIR) $(XPIDL_HEADERS) $(PUBLIC)
         @echo +++ make: exporting generated XPIDL header files
         @echo.
-        -for %i in ($(XPIDL_HEADERS:/=\)) do $(MAKE_INSTALL) %i $(XPDIST)\include
+        -for %i in ($(XPIDL_HEADERS:/=\)) do $(MAKE_INSTALL) %i $(PUBLIC)
 
 !ifndef NO_GEN_XPT
 install:: $(XPIDL_GEN_DIR) $(TYPELIB)

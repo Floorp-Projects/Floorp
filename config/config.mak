@@ -99,7 +99,7 @@ LCFLAGS=$(LCFLAGS) -DSMOOTH_PROGRESS
 !endif
 
 XPDIST=$(DEPTH)\dist
-PUBLIC=$(XPDIST)\public
+PUBLIC=$(XPDIST)\include
 
 #//-----------------------------------------------------------------------
 #// OBJDIR is NOT the same as DIST for Win16. The Win16 dist stuff can
@@ -154,7 +154,7 @@ NGLAYOUT_DIST=$(XPDIST)\NGL$(MOZ_BITS)_D.OBJ
 
 CFGFILE=$(OBJDIR)\cmd.cfg
 
-INCS=$(INCS) -I$(XPDIST)\include -I$(DIST)\include -I$(DEPTH)\include
+INCS=$(INCS) -I$(PUBLIC) -I$(DIST)\include -I$(DEPTH)\include
 
 # Perhaps we should add MOZ_LITENESS_FLAGS to 16 bit build
 !if "$(MOZ_BITS)" == "16"
