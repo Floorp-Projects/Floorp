@@ -44,7 +44,7 @@
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
 #include "nsUnicharUtils.h"
-#include "nsAbMDBCard.h"
+#include "nsIAbMDBCard.h"
 #include "nsAbCardProperty.h"
 #include "prdtoa.h"
 
