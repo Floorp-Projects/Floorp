@@ -177,8 +177,8 @@ _MSC_VER=1020
 !if "$(MOZ_BITS)"=="32"
 #CFLAGS_RELEASE=/DNDEBUG \
 CFLAGS_RELEASE=/DNDEBUG /DCookieManagement /DSingleSignon \
-!ifdef MOZ_PRIVACY
-/DTRANSACTION_RECEIPTS /DPRIVACY_POLICIES \
+!ifdef MOZ_TRANSACTION_RECEIPTS 
+/DTRANSACTION_RECEIPTS \
 !endif
 !else
 CFLAGS_RELEASE=/DNDEBUG \
@@ -222,8 +222,8 @@ MOZ_STACK=33679
 VERSTR=Dbg
 !if "$(MOZ_BITS)"=="32"
 CFLAGS_DEBUG=$(MOZ_DEBUG_FLAG) /Bd /DDEBUG /D_DEBUG $(MOZ_USERDEBUG) /DCookieManagement /DSingleSignon \
-!ifdef MOZ_PRIVACY
-/DTRANSACTION_RECEIPTS /DPRIVACY_POLICIES\
+!ifdef MOZ_TRANSACTION_RECEIPTS
+/DTRANSACTION_RECEIPTS \
 !endif
 !else
 CFLAGS_DEBUG=$(MOZ_DEBUG_FLAG) /Bd /DDEBUG /D_DEBUG $(MOZ_USERDEBUG)\
@@ -440,9 +440,7 @@ LINK_LIBS= \
 !ifndef MOZ_NGLAYOUT
     $(DIST)\lib\winfont.lib \
 !endif
-!ifdef MOZ_PRIVACY
     $(DIST)\lib\privacy.lib \
-!endif
     $(DIST)\lib\abouturl.lib \
     $(DIST)\lib\dataurl.lib \
     $(DIST)\lib\fileurl.lib \
@@ -714,9 +712,7 @@ CDISTINCLUDES2= \
 !if defined(MOZ_NGLAYOUT)
 	/I$(XPDIST)\public\raptor \
 !endif
-!if defined(MOZ_PRIVACY)
     /I$(XPDIST)\public\privacy \
-!endif
     /I$(XPDIST)\public\util 
 
 CDISTINCLUDES = $(CDISTINCLUDES1) $(CDISTINCLUDES2) $(CDISTINCLUDES3)
@@ -2556,9 +2552,7 @@ BUILD_SOURCE: $(OBJ_FILES)
     $(DIST)\lib\xpcom16.lib +
     $(DIST)\lib\rdf16.lib +
     $(DIST)\lib\xpstrdll.lib +
-!ifdef MOZ_PRIVACY
     $(DIST)\lib\privacy.lib +
-!endif
     $(DIST)\lib\abouturl.lib +
     $(DIST)\lib\dataurl.lib +
     $(DIST)\lib\fileurl.lib +
