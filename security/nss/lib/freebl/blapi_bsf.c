@@ -62,13 +62,12 @@
 **      numbers generated using the same seed will differ across 
 **      implementations.
 **
-**  3.  PQG_VerifyParams is not implemented here.  While BSAFE Crypto-C 4.1 
-**      provides accessors to most of the values used in PQG param generation, 
-**      it does not provide access to h, so steps 11 and 12 as defined in 
-**      blapi.h cannot be executed.  The value h is an integer between 1 and 
-**      p-1, and is use to generate g from p and q.  Since this is the most 
-**      interesting step in PQG parameter verification, this implementation 
-**      will set a PR_NOT_IMPLEMENTED_ERROR in a call to PQG_VerifyParams.
+**  3.  PQG_VerifyParams is not implemented here.  BSAFE Crypto-C 4.1 
+**      allows access to the seed and counter values used in generating
+**      p and q, but does not provide a mechanism for verifying that
+**      p, q, and g were generated from that seed and counter.  At this
+**      time, this implementation will set a PR_NOT_IMPLEMENTED_ERROR 
+**      in a call to PQG_VerifyParams.
 **
 */
 
