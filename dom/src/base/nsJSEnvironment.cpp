@@ -574,7 +574,13 @@ nsJSContext::DOMBranchCallback(JSContext *cx, JSScript *script)
                           stopButton, waitButton,
                           nsnull, nsnull, nsnull, &buttonPressed);
 
-  return NS_FAILED(rv) || buttonPressed != 0;
+  if (NS_FAILED(rv) || (buttonPressed == 1)) {
+    // Allow the script to run this long again
+    ctx->mBranchCallbackTime = PR_Now();
+    return JS_TRUE;
+  }
+
+  return JS_FALSE;
 }
 
 #define JS_OPTIONS_DOT_STR "javascript.options."
