@@ -86,7 +86,7 @@
 #include "nsXPIDLString.h"
 #include "nsIFile.h"
 
-#define kWindowPositionSlop 10
+#define kWindowPositionSlop 20
 
 #ifndef SPI_GETWHEELSCROLLLINES
 #define SPI_GETWHEELSCROLLLINES 104
