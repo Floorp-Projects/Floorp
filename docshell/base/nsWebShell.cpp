@@ -110,10 +110,7 @@ void nsWebShell_SetUnixEventQueue(PLEventQueue* aEventQueue)
   gWebShell_UnixEventQueue = aEventQueue;
 }
 #endif  /* OLD_EVENT_QUEUE  */
-#if XP_MAC
-// This has all the same problems as the above
-extern "C" PLEventQueue* GetMacPLEventQueue();
-#endif
+
 
 //----------------------------------------------------------------------
 
@@ -1855,14 +1852,9 @@ OnLinkClickEvent::OnLinkClickEvent(nsWebShell* aHandler,
                (PLHandleEventProc) ::HandlePLEvent,
                (PLDestroyEventProc) ::DestroyPLEvent);
 
-// XXX: The MAC ifdef should be replaced by the one in #else when
-// it uses EventQueueService...
 
-#ifdef XP_MAC 
-	eventQueue = GetMacPLEventQueue();
-#else
   eventQueue = aHandler->GetEventQueue();
-#endif
+
 
 	PL_PostEvent(eventQueue, this);
 }
