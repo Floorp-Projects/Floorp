@@ -149,7 +149,7 @@ License File=license.txt
 ;*** LOCALIZE ME BABY ***
 Message0=Please read the following license agreement.  Use the scroll bar to view the rest of this agreement.
 ;*** LOCALIZE ME BABY ***
-Message1=Click Accept if you accept the terms of the preceeding license agreement.  If No is clicked, setup will quit.
+Message1=Click Accept if you accept the terms of the preceeding license agreement.  If Decline is clicked, setup will quit.
 
 [Dialog Setup Type]
 Show Dialog=TRUE
