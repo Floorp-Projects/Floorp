@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ * Sergei Dolgov <sergei_d@fi.tartu.ee>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -37,9 +38,11 @@
 
 #include "nsLookAndFeel.h"
 #include "nsFont.h"
+#include "nsSize.h"
 
 #include <InterfaceDefs.h>
- 
+#include <Menu.h>
+
 nsLookAndFeel::nsLookAndFeel() : nsXPLookAndFeel()
 {
 }
@@ -51,7 +54,7 @@ nsLookAndFeel::~nsLookAndFeel()
 nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
 {
   nsresult res = NS_OK;
-
+  rgb_color color;
   /*
    * There used to be an entirely separate list of these colors in
    * nsDeviceContextBeOS::GetSystemAttribute.  The colors given there
@@ -63,142 +66,188 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
   int idx;
   switch (aID) {
     case eColor_WindowBackground:
-      aColor = NS_RGB(0xff,0xff,0xff);
+      aColor = NS_RGB(0xff, 0xff, 0xff); 
       break;
     case eColor_WindowForeground:
-      aColor = NS_RGB(0x00,0x00,0x00);        
+      aColor = NS_RGB(0x00, 0x00, 0x00);        
       break;
     case eColor_WidgetBackground:
-      aColor = NS_RGB(192, 192, 192);
+      aColor = NS_RGB(0xdd, 0xdd, 0xdd);
       break;
     case eColor_WidgetForeground:
-      aColor = NS_RGB(0x00,0x00,0x00);        
+      aColor = NS_RGB(0x00, 0x00, 0x00);        
       break;
     case eColor_WidgetSelectBackground:
-      aColor = NS_RGB(0x80,0x80,0x80);
+      {
+        color = ui_color(B_MENU_SELECTION_BACKGROUND_COLOR);
+        aColor = NS_RGB(color.red, color.green, color.blue);
+      }
       break;
     case eColor_WidgetSelectForeground:
-      aColor = NS_RGB(0x00,0x00,0x80);
+      aColor = NS_RGB(0x00, 0x00, 0x80);
       break;
     case eColor_Widget3DHighlight:
-      aColor = NS_RGB(0xa0,0xa0,0xa0);
+      aColor = NS_RGB(0xa0, 0xa0, 0xa0);
       break;
     case eColor_Widget3DShadow:
-      aColor = NS_RGB(0x40,0x40,0x40);
+      aColor = NS_RGB(0x40, 0x40, 0x40);
       break;
     case eColor_TextBackground:
-      aColor = NS_RGB(0xff,0xff,0xff);
+      aColor = NS_RGB(0xff, 0xff, 0xff);
       break;
     case eColor_TextForeground: 
-      aColor = NS_RGB(0x00,0x00,0x00);
+      aColor = NS_RGB(0x00, 0x00, 0x00);
       break;
     case eColor_TextSelectBackground:
-      aColor = NS_RGB(0x00,0x00,0x00);
+      {
+        // looks good in Mozilla, though, never noticed this color in BeOS menu
+        color = ui_color(B_MENU_SELECTION_BACKGROUND_COLOR);
+        aColor = NS_RGB(color.red, color.green, color.blue);
+      }
       break;
     case eColor_TextSelectForeground:
-      aColor = NS_RGB(0xff,0xff,0xff);
+      {
+        color = ui_color(B_MENU_SELECTED_ITEM_TEXT_COLOR);
+        aColor = NS_RGB(color.red, color.green, color.blue);
+      }
       break;
-
-    // New CSS 2 Color definitions
+	// two following colors get initialisation in XPLookAndFeel.
+	//eColor_TextSelectBackgroundDisabled,
+    //eColor_TextSelectBackgroundAttention,
+    
+    //  CSS 2 Colors
     case eColor_activeborder:
-      aColor = NS_RGB(0x00,0x00,0xff);
+      aColor = NS_RGB(0x88, 0x88, 0x88);
       break;
+    // active titletab
     case eColor_activecaption:
-      aColor = NS_RGB(0x00,0x00,0xff);
+      {
+        color = ui_color(B_WINDOW_TAB_COLOR);
+        aColor = NS_RGB(color.red, color.green, color.blue);
+      }    
       break;
+    //MDI color
     case eColor_appworkspace:
-      aColor = NS_RGB(0xa0,0xa0,0xa0);
+      aColor = NS_RGB(0xd8, 0xd8, 0xd8);
       break;
+    //incidentally, this is supposed to be the colour of the desktop, though how anyone
+    //is supposed to guess that from the name?
     case eColor_background:
-      aColor = NS_RGB(0x80,0x80,0x80);
+      {
+        color = ui_color(B_DESKTOP_COLOR);
+        aColor = NS_RGB(color.red, color.green, color.blue);
+      }
       break;
     case eColor_buttonface:
-      aColor = NS_RGB(0xa0,0xa0,0xa0);
+      aColor = NS_RGB(0xdd, 0xdd, 0xdd);
       break;
+    //should be lighter of 2 possible highlight colours available
     case eColor_buttonhighlight:
-      aColor = NS_RGB(0xff,0xff,0xff);
+      aColor = NS_RGB(0xff, 0xff, 0xff);
       break;
+    //darker of 2 possible shadow colours available
     case eColor_buttonshadow:
-      aColor = NS_RGB(0x70,0x70,0x70);
+      aColor = NS_RGB(0x77, 0x77, 0x77);
       break;
     case eColor_buttontext:
-      aColor = NS_RGB(0x00,0x00,0x00);
+      aColor = NS_RGB(0x00, 0x00, 0x00);
       break;
     case eColor_captiontext:
-      aColor = NS_RGB(0x00,0x00,0x00);
+      aColor = NS_RGB(0x00, 0x00, 0x00);
       break;
     case eColor_graytext:
-      aColor = NS_RGB(0x50,0x50,0x50);
+      aColor = NS_RGB(0x77, 0x77, 0x77);
       break;
     case eColor_highlight:
-      aColor = NS_RGB(0xe0,0xc0,0xff);
+      {
+        // B_MENU_SELECTION_BACKGROUND_COLOR  is used for text selection
+        // this blue colors seems more suitable
+        color = ui_color(B_KEYBOARD_NAVIGATION_COLOR);
+        aColor = NS_RGB(color.red, color.green, color.blue);
+      }
       break;
     case eColor_highlighttext:
-      aColor = NS_RGB(0x00,0x00,0x00);
+      {
+        color = ui_color(B_MENU_SELECTED_ITEM_TEXT_COLOR);
+        aColor = NS_RGB(color.red, color.green, color.blue);
+      }
       break;
     case eColor_inactiveborder:
-      aColor = NS_RGB(0x00,0x00,0x00);
+      aColor = NS_RGB(0x55, 0x55, 0x55);
       break;
     case eColor_inactivecaption:
-      aColor = NS_RGB(0xa0,0xa0,0xa0);
+      aColor = NS_RGB(0xdd, 0xdd, 0xdd);
       break;
     case eColor_inactivecaptiontext:
-      aColor = NS_RGB(0x00,0x00,0x00);
+      aColor = NS_RGB(0x77, 0x77, 0x77);
       break;
     case eColor_infobackground:
-      aColor = NS_RGB(0xff,0xff,0xff);
+      // tooltips
+      aColor = NS_RGB(0xff, 0xff, 0xd0);
       break;
     case eColor_infotext:
-      aColor = NS_RGB(0x00,0x00,0x00);
+      aColor = NS_RGB(0x00, 0x00, 0x00);
       break;
     case eColor_menu:
-      aColor = NS_RGB(0xa0,0xa0,0xa0);
+      {
+        color = ui_color(B_MENU_BACKGROUND_COLOR);
+        aColor = NS_RGB(color.red, color.green, color.blue);
+      }
       break;
     case eColor_menutext:
-      aColor = NS_RGB(0x00,0x00,0x00);
+      {
+        color = ui_color(B_MENU_ITEM_TEXT_COLOR);
+        aColor = NS_RGB(color.red, color.green, color.blue);
+      }
       break;
     case eColor_scrollbar:
-      aColor = NS_RGB(0xa0,0xa0,0xa0);
+      aColor = NS_RGB(0xaa, 0xaa, 0xaa);
       break;
     case eColor_threeddarkshadow:
-      aColor = NS_RGB(0x50,0x50,0x50);
+      aColor = NS_RGB(0x77, 0x77, 0x77);
       break;
     case eColor_threedface:
-      aColor = NS_RGB(0xd8,0xd8,0xd8);
+      aColor = NS_RGB(0xdd, 0xdd, 0xdd);
       break;
     case eColor_threedhighlight:
-      aColor = NS_RGB(0xf0,0xf0,0xf0);
+      aColor = NS_RGB(0xff, 0xff, 0xff);
       break;
     case eColor_threedlightshadow:
-      aColor = NS_RGB(0xa0,0xa0,0xa0);
+      aColor = NS_RGB(0xdd, 0xdd, 0xdd);
       break;
     case eColor_threedshadow:
-      aColor = NS_RGB(0x80,0x80,0x80);
+      aColor = NS_RGB(0x99, 0x99, 0x99);
       break;
     case eColor_window:
-      aColor = NS_RGB(0xd8,0xd8,0xd8);
+      aColor = NS_RGB(0xff, 0xff, 0xff);
       break;
     case eColor_windowframe:
-      aColor = NS_RGB(0x00,0x00,0x00);
+      aColor = NS_RGB(0xcc, 0xcc, 0xcc);
       break;
     case eColor_windowtext:
-      aColor = NS_RGB(0x00,0x00,0x00);
+      aColor = NS_RGB(0x00, 0x00, 0x00);
       break;
-    case eColor__moz_field: /* normal widget background */
-      aColor = NS_RGB(0xff,0xff,0xff);
+    // CSS3 candidates
+    case eColor__moz_field: 
+      // normal widget background
+      aColor = NS_RGB(0xff, 0xff, 0xff);
       break;  
     case eColor__moz_fieldtext:
-      aColor = NS_RGB(0x00,0x00,0x00);
+      aColor = NS_RGB(0x00, 0x00, 0x00);
       break;  
     case eColor__moz_dialog:
-      aColor = NS_RGB(0xd8,0xd8,0xd8);
+      //all bars  including MenuBar
+      aColor = NS_RGB(0xdd, 0xdd, 0xdd);
       break;  
     case eColor__moz_dialogtext:
-      aColor = NS_RGB(0x00,0x00,0x00);
+      aColor = NS_RGB(0x00, 0x00, 0x00);
       break;  
- 
+    case eColor__moz_dragtargetzone:
+      aColor = NS_RGB(0x63, 0x63, 0xCE);
+    break;
+    case eColor_LAST_COLOR:
     default:
-      aColor = NS_RGB(0x00,0x00,0x00);
+      aColor = NS_RGB(0xff, 0xff, 0xff);
       res    = NS_ERROR_FAILURE;
       break;
   }
@@ -224,16 +273,17 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
   switch (aID) 
   {
     case eMetric_WindowTitleHeight:
-      aMetric = 0;
+      // 2*horizontal scrollbar height
+      aMetric = 28;
       break;
     case eMetric_WindowBorderWidth:
-      aMetric = 0;
+      aMetric = 2;
       break;
     case eMetric_WindowBorderHeight:
-      aMetric = 0;
+      aMetric = 2;
       break;
     case eMetric_Widget3DBorder:
-      aMetric = 0;
+      aMetric = 5;
       break;
     case eMetric_TextFieldBorder:
       aMetric = 3;
@@ -241,6 +291,18 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     case eMetric_TextFieldHeight:
       aMetric = 24;
       break;
+    case eMetric_TextVerticalInsidePadding:
+      aMetric = 0;
+      break;    
+    case eMetric_TextShouldUseVerticalInsidePadding:
+      aMetric = 0;
+      break;
+    case eMetric_TextHorizontalInsideMinimumPadding:
+      aMetric = 3;
+      break;
+    case eMetric_TextShouldUseHorizontalInsideMinimumPadding:
+      aMetric = 1;
+      break;    
     case eMetric_ButtonHorizontalInsidePaddingNavQuirks:
       aMetric = 10;
       break;
@@ -253,32 +315,23 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     case eMetric_RadioboxSize:
       aMetric = 12;
       break;
-    case eMetric_TextHorizontalInsideMinimumPadding:
-      aMetric = 3;
-      break;
-    case eMetric_TextVerticalInsidePadding:
-      aMetric = 0;
-      break;
-    case eMetric_TextShouldUseVerticalInsidePadding:
-      aMetric = 0;
-      break;
-    case eMetric_TextShouldUseHorizontalInsideMinimumPadding:
-      aMetric = 1;
-      break;
+
     case eMetric_ListShouldUseHorizontalInsideMinimumPadding:
       aMetric = 0;
       break;
     case eMetric_ListHorizontalInsideMinimumPadding:
       aMetric = 3;
       break;
+      
     case eMetric_ListShouldUseVerticalInsidePadding:
       aMetric = 0;
       break;
     case eMetric_ListVerticalInsidePadding:
       aMetric = 0;
       break;
+      
     case eMetric_CaretBlinkTime:
-      aMetric = 500;
+      aMetric = 300;
       break;
     case eMetric_SingleLineCaretWidth:
       aMetric = 1;
@@ -286,8 +339,17 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     case eMetric_MultiLineCaretWidth:
       aMetric = 2;
       break;
+    case eMetric_ShowCaretDuringSelection:
+      aMetric =0;
+      break;
     case eMetric_SubmenuDelay:
-      aMetric = 200;
+      aMetric = 500;
+      break;
+    case eMetric_MenusCanOverlapOSBar: // can popups overlap menu/task bar?
+      aMetric = 0;
+      break;
+    case eMetric_DragFullWindow:
+      aMetric = 0;
       break;
     case eMetric_ScrollArrowStyle:
       {
