@@ -88,16 +88,4 @@ $problemTypes['Compatibility']['3_4'] = 'Doesn\'t Load';
 $problemTypes['Compatibility']['3_5'] = 'Mozilla Blocked / ("Netscape Not Supported")';
 $problemTypes['Compatibility']['3_6'] = 'Appears Wrong';
 
-
-
-// DB Debug code
-function handleErrors($error) {
-	echo "<hr />";
-	echo "An error occurred while trying to run your query.<br>\n";
-	echo "Error message: " . $error->getMessage() . "<br>\n";
-	echo "A more detailed error description: " . $error->getDebugInfo() . "<br>\n";
-	echo "<hr />";
-	exit;
-}
-
 ?>
