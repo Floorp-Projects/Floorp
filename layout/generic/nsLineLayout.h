@@ -267,7 +267,6 @@ protected:
   // This state is constant for a given block frame doing line layout
   nsSpaceManager* mSpaceManager;
   const nsStyleText* mStyleText; // for the block
-  const nsStyleTextReset* mStyleTextReset; // for the block
   const nsHTMLReflowState* mBlockReflowState;
 
   // XXX remove this when landing bug 154892 (splitting absolute positioned frames)
