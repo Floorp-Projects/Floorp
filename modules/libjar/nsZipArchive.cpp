@@ -42,6 +42,7 @@
 #define ZFILE_CREATE    PR_WRONLY | PR_CREATE_FILE
 #define READTYPE  PRInt32
 #include "zlib.h"
+#include "nsISupportsUtils.h"
 
 #else
 
@@ -1183,9 +1184,17 @@ PRInt32 nsZipArchive::ReadInflatedItem( const nsZipItem* aItem,
 // nsZipArchive constructor and destructor
 //------------------------------------------
 
+#ifndef STANDALONE
+MOZ_DECL_CTOR_COUNTER(nsZipArchive);
+#endif
+
 nsZipArchive::nsZipArchive()
   : kMagic(ZIP_MAGIC), mFd(0)
 {
+#ifndef STANDALONE
+  MOZ_COUNT_CTOR(nsZipArchive);
+#endif
+
   // initialize the table to NULL
   for ( int i = 0; i < ZIP_TABSIZE; ++i) {
     mFiles[i] = 0;
@@ -1196,6 +1205,10 @@ nsZipArchive::nsZipArchive()
 nsZipArchive::~nsZipArchive()
 {
   (void)CloseArchive();
+
+#ifndef STANDALONE
+  MOZ_COUNT_DTOR(nsZipArchive);
+#endif
 }
 
 
@@ -1205,12 +1218,25 @@ nsZipArchive::~nsZipArchive()
 // nsZipItem constructor and destructor
 //------------------------------------------
 
-nsZipItem::nsZipItem() : name(0),next(0) {}
+#ifndef STANDALONE
+MOZ_DECL_CTOR_COUNTER(nsZipItem);
+#endif
+
+nsZipItem::nsZipItem() : name(0),next(0) 
+{
+#ifndef STANDALONE
+  MOZ_COUNT_CTOR(nsZipItem);
+#endif
+}
 
 nsZipItem::~nsZipItem()
 {
   if (name != 0 )
     delete [] name;
+
+#ifndef STANDALONE
+  MOZ_COUNT_DTOR(nsZipItem);
+#endif
 }
 
 PRInt32
@@ -1239,21 +1265,37 @@ nsZipItem::Init(nsZipItem* other)
 // nsZipRead constructor and destructor
 //------------------------------------------
 
+#ifndef STANDALONE
+MOZ_DECL_CTOR_COUNTER(nsZipRead);
+#endif
+
 nsZipRead::nsZipRead( nsZipArchive* aZipArchive, nsZipItem* aZipItem )
 : mArchive(aZipArchive), 
   mItem(aZipItem), 
   mCurPos(0), 
   mInflatedFileBuffer(0)
-{}
+{
+#ifndef STANDALONE
+  MOZ_COUNT_CTOR(nsZipRead);
+#endif
+}
 
 nsZipRead::~nsZipRead()
 {
   PR_FREEIF(mInflatedFileBuffer);
+
+#ifndef STANDALONE
+  MOZ_COUNT_DTOR(nsZipRead);
+#endif
 }
 
 //------------------------------------------
 // nsZipFind constructor and destructor
 //------------------------------------------
+
+#ifndef STANDALONE
+MOZ_DECL_CTOR_COUNTER(nsZipFind);
+#endif
 
 nsZipFind::nsZipFind( nsZipArchive* aZip, char* aPattern, PRBool aRegExp )
 : kMagic(ZIPFIND_MAGIC), 
@@ -1262,12 +1304,20 @@ nsZipFind::nsZipFind( nsZipArchive* aZip, char* aPattern, PRBool aRegExp )
   mSlot(0), 
   mItem(0), 
   mRegExp(aRegExp) 
-{}
+{
+#ifndef STANDALONE
+  MOZ_COUNT_CTOR(nsZipFind);
+#endif
+}
 
 nsZipFind::~nsZipFind()
 {
   if (mPattern != 0 )
     PL_strfree( mPattern );
+
+#ifndef STANDALONE
+  MOZ_COUNT_DTOR(nsZipFind);
+#endif
 }
 
 //------------------------------------------
