@@ -101,7 +101,7 @@ function ArrangeAccountCentralItems(server, protocolInfo, msgFolder)
         SetItemDisplay("ComposeMessage", showComposeMsgLink);
     
         // Junk mail settings
-        var canControlJunkEmail = protocolInfo.canGetIncomingMessages && protocolInfo.canGetMessages & false;  // && false, until ready for prime time
+        var canControlJunkEmail = protocolInfo.canGetIncomingMessages && protocolInfo.canGetMessages && false;  // && false, until ready for prime time
         SetItemDisplay("JunkSettingsMail", canControlJunkEmail);
 
         var displayEmailHeader = canGetMessages || showComposeMsgLink || canControlJunkEmail;
