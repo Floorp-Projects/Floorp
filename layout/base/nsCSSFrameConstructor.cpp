@@ -174,6 +174,9 @@ nsresult
 NS_NewBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot);
 
 nsresult
+NS_NewXULButtonFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+
+nsresult
 NS_NewSliderFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 
 nsresult
@@ -4018,7 +4021,7 @@ nsCSSFrameConstructor::CreateAnonymousTreeCellFrames(nsIPresShell*        aPresS
 
 #ifdef INCLUDE_XUL
 nsresult
-nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*        aPresShell, 
+nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell, 
                                          nsIPresContext*          aPresContext,
                                          nsFrameConstructorState& aState,
                                          nsIContent*              aContent,
@@ -4026,6 +4029,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*        aPresShell,
                                          nsIAtom*                 aTag,
                                          nsIStyleContext*         aStyleContext,
                                          nsFrameItems&            aFrameItems,
+                                         PRBool                   aXBLBaseTag,
                                          PRBool&                  aHaltProcessing)
 { 
   PRBool    primaryFrameSet = PR_FALSE;
@@ -4051,10 +4055,48 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*        aPresShell,
   if (aTag == nsnull)
     return NS_OK;
 
+  
   PRInt32 nameSpaceID;
   if (NS_SUCCEEDED(aContent->GetNameSpaceID(nameSpaceID)) &&
       nameSpaceID == nsXULAtoms::nameSpaceID) {
-      
+  
+    // The following code allows the user to specify the base tag
+    // of a XUL object using XBL.  XUL objects (like boxes, menus, etc.)
+    // can then be extended arbitrarily.
+    if (!aXBLBaseTag) {
+      const nsStyleUserInterface* ui= (const nsStyleUserInterface*)
+          aStyleContext->GetStyleData(eStyleStruct_UserInterface);
+
+      // Ensure that our XBL bindings are installed.
+      if (ui->mBehavior != "") {
+        // Get the XBL loader.
+        nsresult rv;
+        NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
+        if (!xblService)
+          return rv;
+
+        // Load the bindings.
+        xblService->LoadBindings(aContent, ui->mBehavior);
+
+        nsCOMPtr<nsIAtom> baseTag;
+        xblService->GetBaseTag(aContent, getter_AddRefs(baseTag));
+   
+        if (baseTag) {
+          // Construct the frame using the XBL base tag.
+          return ConstructXULFrame( aPresShell, 
+                                    aPresContext,
+                                    aState,
+                                    aContent,
+                                    aParentFrame,
+                                    baseTag,
+                                    aStyleContext,
+                                    aFrameItems,
+                                    PR_TRUE,
+                                    aHaltProcessing );
+        }
+      }
+    }
+
     // See if the element is absolutely positioned
     const nsStylePosition* position = (const nsStylePosition*)
       aStyleContext->GetStyleData(eStyleStruct_Position);
@@ -4090,6 +4132,32 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*        aPresShell,
 
       } 
     } // End of BOX CONSTRUCTION logic
+    
+    // BUTTON CONSTRUCTION
+    else if (aTag == nsXULAtoms::button) {
+      processChildren = PR_TRUE;
+      isReplaced = PR_TRUE;
+      rv = NS_NewXULButtonFrame(aPresShell, &newFrame);
+
+      const nsStyleDisplay* display = (const nsStyleDisplay*)
+           aStyleContext->GetStyleData(eStyleStruct_Display);
+
+      // Boxes can scroll.
+      if (IsScrollable(aPresContext, display)) {
+
+        // set the top to be the newly created scrollframe
+        BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
+                         topFrame, aStyleContext);
+
+        // we have a scrollframe so the parent becomes the scroll frame.
+        newFrame->GetParent(&aParentFrame);
+
+        primaryFrameSet = PR_TRUE;
+
+        frameHasBeenInitialized = PR_TRUE;
+
+      } 
+    } // End of BUTTON CONSTRUCTION logic
 
          // TITLED BUTTON CONSTRUCTION
     else if (aTag == nsXULAtoms::titledbutton ||
@@ -4415,14 +4483,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*        aPresShell,
     }
     // End of SCROLLBUTTON CONSTRUCTION logic
 
-    // THUMB CONSTRUCTION
-    else if (aTag == nsXULAtoms::thumb) {
-      processChildren = PR_TRUE;
-      isReplaced = PR_TRUE;
-      rv = NS_NewThumbFrame(aPresShell, &newFrame);
-    }
-    // End of THUMB CONSTRUCTION logic
-
     // SPLITTER CONSTRUCTION
     else if (aTag == nsXULAtoms::splitter) {
       processChildren = PR_TRUE;
@@ -4482,7 +4542,12 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*        aPresShell,
       
 
       // if there are any anonymous children create frames for them
-      CreateAnonymousFrames(aPresShell, aPresContext, aTag, aState, aContent, newFrame,
+        nsCOMPtr<nsIAtom> tag(aTag);
+        if (aXBLBaseTag) {
+          aContent->GetTag(*getter_AddRefs(tag));
+        }
+          
+        CreateAnonymousFrames(aPresShell, aPresContext, tag, aState, aContent, newFrame,
                             childItems);
 
       // Set the frame's initial child list
@@ -5566,7 +5631,7 @@ nsCSSFrameConstructor::ConstructFrame(nsIPresShell*        aPresShell,
                              (lastChild == aFrameItems.lastChild))) {
         PRBool haltProcessing = PR_FALSE;
         rv = ConstructXULFrame(aPresShell, aPresContext, aState, aContent, aParentFrame,
-                               tag, styleContext, aFrameItems, haltProcessing);
+                               tag, styleContext, aFrameItems, PR_FALSE, haltProcessing);
         if (haltProcessing) {
           return rv;
         }
