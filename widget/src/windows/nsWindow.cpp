@@ -3436,6 +3436,7 @@ DWORD nsWindow::GetWindowType(nsWindowType aWindowType)
 
 DWORD nsWindow::GetBorderStyle(nsBorderStyle aBorderStyle)
 {
+  return 0;
   /*
   switch(aBorderStyle)
   {
