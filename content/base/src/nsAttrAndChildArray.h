@@ -88,7 +88,6 @@ public:
   }
   nsresult InsertChildAt(nsIContent* aChild, PRUint32 aPos);
   void RemoveChildAt(PRUint32 aPos);
-  void ReplaceChildAt(nsIContent* aChild, PRUint32 aPos);
   PRInt32 IndexOfChild(nsIContent* aPossibleChild) const;
 
   PRUint32 AttrCount() const;

@@ -1579,15 +1579,6 @@ nsWebShellWindow::ContentInserted(nsIDocument *aDocument,
 }
 
 void
-nsWebShellWindow::ContentReplaced(nsIDocument *aDocument,
-                            nsIContent* aContainer,
-                            nsIContent* aOldChild,
-                            nsIContent* aNewChild,
-                            PRInt32 aIndexInContainer)
-{
-}
-
-void
 nsWebShellWindow::ContentRemoved(nsIDocument *aDocument,
                            nsIContent* aContainer,
                            nsIContent* aChild,

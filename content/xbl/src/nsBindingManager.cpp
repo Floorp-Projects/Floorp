@@ -375,11 +375,6 @@ public:
                               nsIContent* aContainer,
                               nsIContent* aChild,
                               PRInt32 aIndexInContainer);
-  virtual void ContentReplaced(nsIDocument *aDocument,
-                               nsIContent* aContainer,
-                               nsIContent* aOldChild,
-                               nsIContent* aNewChild,
-                               PRInt32 aIndexInContainer);
 
 protected:
   nsresult GetXBLChildNodesInternal(nsIContent* aContent,
@@ -1479,16 +1474,6 @@ nsBindingManager::ContentRemoved(nsIDocument* aDocument,
       }
     }
   }
-}
-
-void nsBindingManager::ContentReplaced(nsIDocument *aDocument,
-                                       nsIContent* aContainer,
-                                       nsIContent* aOldChild,
-                                       nsIContent* aNewChild,
-                                       PRInt32 aIndexInContainer)
-{
-  ContentRemoved(aDocument, aContainer, aOldChild, aIndexInContainer);
-  ContentInserted(aDocument, aContainer, aNewChild, aIndexInContainer);
 }
 
 

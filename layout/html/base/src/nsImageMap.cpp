@@ -987,16 +987,6 @@ nsImageMap::ContentInserted(nsIDocument *aDocument,
 }
 
 void
-nsImageMap::ContentReplaced(nsIDocument *aDocument,
-                            nsIContent* aContainer,
-                            nsIContent* aOldChild,
-                            nsIContent* aNewChild,
-                            PRInt32 aIndexInContainer)
-{
-  MaybeUpdateAreas(aContainer);
-}
-
-void
 nsImageMap::ContentRemoved(nsIDocument *aDocument,
                            nsIContent* aContainer,
                            nsIContent* aChild,

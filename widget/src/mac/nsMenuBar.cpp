@@ -662,13 +662,6 @@ nsMenuBar::ContentAppended( nsIDocument * aDocument, nsIContent  * aContainer,
 }
 
 NS_IMETHODIMP
-nsMenuBar::ContentReplaced( nsIDocument * aDocument, nsIContent * aContainer, nsIContent * aOldChild,
-                          nsIContent * aNewChild, PRInt32 aIndexInContainer)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsMenuBar::DocumentWillBeDestroyed( nsIDocument * aDocument )
 {
   mDocument = nsnull; // just for yucks

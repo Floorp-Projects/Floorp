@@ -2506,44 +2506,6 @@ nsGenericElement::InsertChildAt(nsIContent* aKid,
 }
 
 nsresult
-nsGenericElement::ReplaceChildAt(nsIContent* aKid,
-                                 PRUint32 aIndex,
-                                 PRBool aNotify,
-                                 PRBool aDeepSetDocument)
-{
-  NS_PRECONDITION(aKid, "null ptr");
-  nsCOMPtr<nsIContent> oldKid = GetChildAt(aIndex);
-  mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, aNotify);
-
-  nsRange::OwnerChildReplaced(this, aIndex, oldKid);
-  mAttrsAndChildren.ReplaceChildAt(aKid, aIndex);
-  
-  aKid->SetParent(this);
-
-  if (mDocument) {
-    aKid->SetDocument(mDocument, aDeepSetDocument, PR_TRUE);
-    if (aNotify) {
-      mDocument->ContentReplaced(this, oldKid, aKid, aIndex);
-    }
-    if (HasMutationListeners(this, NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED)) {
-      nsMutationEvent mutation(NS_MUTATION_SUBTREEMODIFIED, this);
-      mutation.mRelatedNode = do_QueryInterface(oldKid);
-    
-      nsEventStatus status = nsEventStatus_eIgnore;
-      HandleDOMEvent(nsnull, &mutation, nsnull,
-                     NS_EVENT_FLAG_INIT, &status);
-    }
-  }
-
-  if (oldKid) {
-    oldKid->SetDocument(nsnull, PR_TRUE, PR_TRUE);
-    oldKid->SetParent(nsnull);
-  }
-  
-  return NS_OK;
-}
-
-nsresult
 nsGenericElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
                                 PRBool aDeepSetDocument)
 {
@@ -2884,18 +2846,11 @@ nsGenericElement::doReplaceChild(nsIContent* aElement, nsIDOMNode* aNewChild,
   nsresult res = NS_OK;
   PRInt32 oldPos = 0;
 
-  nsCOMPtr<nsIContent> oldContent(do_QueryInterface(aOldChild, &res));
+  nsCOMPtr<nsIContent> oldContent = do_QueryInterface(aOldChild);
 
-  if (NS_FAILED(res)) {
-    /*
-     * If aOldChild doesn't support the nsIContent interface it can't be
-     * an existing child of this node.
-     */
-    return NS_ERROR_DOM_NOT_FOUND_ERR;
-  }
-
+  // if oldContent is null IndexOf will return < 0, which is what we want
+  // since aOldChild couldn't be a child.
   oldPos = aElement->IndexOf(oldContent);
-
   if (oldPos < 0) {
     return NS_ERROR_DOM_NOT_FOUND_ERR;
   }
@@ -2933,8 +2888,10 @@ nsGenericElement::doReplaceChild(nsIContent* aElement, nsIDOMNode* aNewChild,
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
+  nsIDocument* elemDoc = aElement->GetDocument();
+
   nsCOMPtr<nsIDocument> old_doc = newContent->GetDocument();
-  if (old_doc && old_doc != aElement->GetDocument() &&
+  if (old_doc && old_doc != elemDoc &&
       !nsContentUtils::CanCallerAccess(aNewChild)) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
@@ -2948,6 +2905,9 @@ nsGenericElement::doReplaceChild(nsIContent* aElement, nsIDOMNode* aNewChild,
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
+  // We're ready to start inserting children, so let's start a batch
+  mozAutoDocUpdate updateBatch(elemDoc, UPDATE_CONTENT_MODEL, PR_TRUE);
+
   /*
    * Check if this is a document fragment. If it is, we need
    * to remove the children of the document fragment and add them
@@ -2956,6 +2916,8 @@ nsGenericElement::doReplaceChild(nsIContent* aElement, nsIDOMNode* aNewChild,
   if (nodeType == nsIDOMNode::DOCUMENT_FRAGMENT_NODE) {
     nsCOMPtr<nsIContent> childContent;
     PRUint32 i, count = newContent->GetChildCount();
+    res = aElement->RemoveChildAt(oldPos, PR_TRUE);
+    NS_ENSURE_SUCCESS(res, res);
 
     /*
      * Iterate through the fragments children, removing each from
@@ -2966,33 +2928,19 @@ nsGenericElement::doReplaceChild(nsIContent* aElement, nsIDOMNode* aNewChild,
       // Always get and remove the first child, since the child indexes
       // change as we go along.
       childContent = newContent->GetChildAt(0);
-
       res = newContent->RemoveChildAt(0, PR_FALSE);
-
-      if (NS_FAILED(res)) {
-        return res;
-      }
+      NS_ENSURE_SUCCESS(res, res);
 
       // Insert the child and increment the insertion position
-      if (i) {
-        res = aElement->InsertChildAt(childContent, oldPos++, PR_TRUE,
-                                      PR_TRUE);
-      } else {
-        res = aElement->ReplaceChildAt(childContent, oldPos++, PR_TRUE,
-                                       PR_TRUE);
-      }
-
-      if (NS_FAILED(res)) {
-        return res;
-      }
+      res = aElement->InsertChildAt(childContent, oldPos++, PR_TRUE,
+                                    PR_TRUE);
+      NS_ENSURE_SUCCESS(res, res);
     }
-  } else {
+  }
+  else {
     nsCOMPtr<nsIDOMNode> oldParent;
     res = aNewChild->GetParentNode(getter_AddRefs(oldParent));
-
-    if (NS_FAILED(res)) {
-      return res;
-    }
+    NS_ENSURE_SUCCESS(res, res);
 
     /*
      * Remove the element from the old parent if one exists, since oldParent
@@ -3001,13 +2949,12 @@ nsGenericElement::doReplaceChild(nsIContent* aElement, nsIDOMNode* aNewChild,
      * new child is alleady a child of this node-- jst@citec.fi
      */
     if (oldParent) {
-      nsCOMPtr<nsIDOMNode> tmpNode;
-
       PRUint32 origChildCount = aElement->GetChildCount();
 
       /*
        * We don't care here if the return fails or not.
        */
+      nsCOMPtr<nsIDOMNode> tmpNode;
       oldParent->RemoveChild(aNewChild, getter_AddRefs(tmpNode));
 
       PRUint32 newChildCount = aElement->GetChildCount();
@@ -3035,21 +2982,15 @@ nsGenericElement::doReplaceChild(nsIContent* aElement, nsIDOMNode* aNewChild,
                                              aElement->GetDocument(), old_doc);
     }
 
-    if (aNewChild == aOldChild) {
-      // We're replacing a child with itself. In this case the child
-      // has already been removed from this element once we get here
-      // so we can't call ReplaceChildAt() (since aOldChild is no
-      // longer at oldPos). In stead we'll call InsertChildAt() to put
-      // the child back where it was.
-
-      res = aElement->InsertChildAt(newContent, oldPos, PR_TRUE, PR_TRUE);
-    } else {
-      res = aElement->ReplaceChildAt(newContent, oldPos, PR_TRUE, PR_TRUE);
+    // If we're replacing a child with itself the child
+    // has already been removed from this element once we get here.
+    if (aNewChild != aOldChild) {
+      res = aElement->RemoveChildAt(oldPos, PR_TRUE);
+      NS_ENSURE_SUCCESS(res, res);
     }
 
-    if (NS_FAILED(res)) {
-      return res;
-    }
+    res = aElement->InsertChildAt(newContent, oldPos, PR_TRUE, PR_TRUE);
+    NS_ENSURE_SUCCESS(res, res);
   }
 
   return CallQueryInterface(replacedChild, aReturn);

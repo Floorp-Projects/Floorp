@@ -942,17 +942,6 @@ nsTreeContentView::ContentInserted(nsIDocument *aDocument,
 }
 
 void
-nsTreeContentView::ContentReplaced(nsIDocument *aDocument,
-                                      nsIContent* aContainer,
-                                      nsIContent* aOldChild,
-                                      nsIContent* aNewChild,
-                                      PRInt32 aIndexInContainer)
-{
-  ContentRemoved(aDocument, aContainer, aOldChild, aIndexInContainer);
-  ContentInserted(aDocument, aContainer, aNewChild, aIndexInContainer);
-}
-
-void
 nsTreeContentView::ContentRemoved(nsIDocument *aDocument,
                                      nsIContent* aContainer,
                                      nsIContent* aChild,

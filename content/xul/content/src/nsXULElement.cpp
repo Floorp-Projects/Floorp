@@ -1773,60 +1773,6 @@ nsXULElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
 }
 
 nsresult
-nsXULElement::ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
-                             PRBool aDeepSetDocument)
-{
-    nsresult rv = EnsureContentsGenerated();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    NS_PRECONDITION(nsnull != aKid, "null ptr");
-    if (!aKid)
-        return NS_ERROR_NULL_POINTER;
-
-    nsCOMPtr<nsIContent> oldKid = mAttrsAndChildren.GetSafeChildAt(aIndex);
-    NS_ASSERTION(oldKid != nsnull, "out-of-bounds");
-    if (!oldKid) {
-      return NS_ERROR_FAILURE;
-    }
-
-    if (oldKid == aKid)
-        return NS_OK;
-
-    mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, aNotify);
-    
-    mAttrsAndChildren.ReplaceChildAt(aKid, aIndex);
-
-    aKid->SetParent(this);
-    //nsRange::OwnerChildReplaced(this, aIndex, oldKid);
-
-    if (mDocument) {
-        aKid->SetDocument(mDocument, aDeepSetDocument, PR_TRUE);
-
-        if (aNotify) {
-            mDocument->ContentReplaced(this, oldKid, aKid, aIndex);
-        }
-        if (HasMutationListeners(this,
-                                 NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED)) {
-            nsMutationEvent mutation(NS_MUTATION_SUBTREEMODIFIED, this);
-            mutation.mRelatedNode = do_QueryInterface(oldKid);
-
-            nsEventStatus status = nsEventStatus_eIgnore;
-            HandleDOMEvent(nsnull, &mutation, nsnull,
-                           NS_EVENT_FLAG_INIT, &status);
-        }
-    }
-
-    // This will cause the script object to be unrooted for each
-    // element in the subtree.
-    oldKid->SetDocument(nsnull, PR_TRUE, PR_TRUE);
-
-    // We've got no mo' parent.
-    oldKid->SetParent(nsnull);
-
-    return NS_OK;
-}
-
-nsresult
 nsXULElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
                             PRBool aDeepSetDocument)
 {
