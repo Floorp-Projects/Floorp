@@ -518,37 +518,37 @@ NI_RGB    *map;
   mapptr = new PRUint8[256*3];
   invermap = mapptr;
   for(i=0;i<216;i++){
-    *invermap=map->red;
+    *invermap=map->blue;
     invermap++;
     *invermap=map->green;
     invermap++;
-    *invermap=map->blue;
+    *invermap=map->red;
     invermap++;
     map++;
   }
   for(i=216;i<256;i++){
-    *invermap=255;
+    *invermap=0;
     invermap++;
-    *invermap=255;
+    *invermap=0;
     invermap++;
-    *invermap=255;
+    *invermap=0;
     invermap++;
   }
 
   quantlevel = aBlendQuality+2;
-  quantlevel = 4;                   // 4  
-  shiftnum = (8-quantlevel)+8;      // 12
-  tnum = 2;                         // 2
-  for(i=1;i<quantlevel;i++)
-    tnum = 2*tnum;                  // 2, 4, 8, tnum = 16 
+  quantlevel = 4;                   // 4                                          5
+  shiftnum = (8-quantlevel)+8;      // 12                                         11 
+  tnum = 2;                         // 2                                          2
+  for(i=1;i<=quantlevel;i++)
+    tnum = 2*tnum;                  // 2, 4, 8, tnum = 16                         32
 
-  num = tnum;                       // num = 16
+  num = tnum;                       // num = 16                                   32
   for(i=1;i<3;i++)
-    num = num*tnum;                 // 256, 4096
+    num = num*tnum;                 // 256, 4096                                  32768
 
-  distbuffer = new PRUint32[num];   // new PRUint[4096]
-  invermap  = new PRUint8[num*3];   // new PRUint8[12288]
-  inv_colormap(256,mapptr,quantlevel,distbuffer,invermap );  // 216,mapptr[],4,distbuffer[4096],invermap[12288])
+  distbuffer = new PRUint32[num];   // new PRUint[4096]                           32768
+   invermap = new PRUint8[num];
+  inv_colormap(216,mapptr,quantlevel,distbuffer,invermap );  // 216,mapptr[],4,distbuffer[4096],invermap[12288])
 
   // now go thru the image and blend (remember, its bottom upwards)
   s1 = aSImage;
@@ -558,38 +558,42 @@ NI_RGB    *map;
   xinc = 1;
   yinc = 1;
 
+ 
   for(y = 0; y < aNumlines; y++){
     s2 = s1;
     d2 = d1;
-
+ 
     for(x = 0; x < aNumbytes; x++){
       i = (*d2);
+      i-=10;
       r = mapptr[(3 * i) + 2];
       g = mapptr[(3 * i) + 1];
       b = mapptr[(3 * i)];
-
+ 
       i =(*s2);
+      i-=10;
       r1 = mapptr[(3 * i) + 2];
       g1 = mapptr[(3 * i) + 1];
       b1 = mapptr[(3 * i)];
 
-      //r = ((r*val1)+(r1*val2))>>shiftnum;
-      r=r>>quantlevel;
+      r = ((r*val1)+(r1*val2))>>shiftnum;
+      //r=r>>quantlevel;
       if(r>tnum)
         r = tnum;
 
-      //g = ((g*val1)+(g1*val2))>>shiftnum;
-      g=g>>quantlevel;
+      g = ((g*val1)+(g1*val2))>>shiftnum;
+      //g=g>>quantlevel;
       if(g>tnum)
         g = tnum;
 
-      //b = ((b*val1)+(b1*val2))>>shiftnum;
-      b=b>>quantlevel;
+      b = ((b*val1)+(b1*val2))>>shiftnum;
+      //b=b>>quantlevel;
       if(b>tnum)
         b = tnum;
 
       r = (r<<(2*quantlevel))+(g<<quantlevel)+b;
-      (*d2) = invermap[r];
+      r = (invermap[r]+10);
+      (*d2)=r;
       d2++;
       s2++;
     }
@@ -630,22 +634,22 @@ static PRInt32 blueloop( PRInt32 );
  * @return VOID
  */
 void
-inv_colormap(PRInt16 colors,PRUint8 *aCMap,PRInt16 aBits,PRUint32 *dist_buf,PRUint8 *aRGBMap )
+inv_colormap(PRInt16 aNumColors,PRUint8 *aCMap,PRInt16 aBits,PRUint32 *dist_buf,PRUint8 *aRGBMap )
 {
-PRInt32         nbits = 8 - aBits;
+PRInt32         nbits = 8 - aBits;               // 3
 PRUint32        r,g,b;
 
-  colormax = 1 << aBits;
-  x = 1 << nbits;
-  xsqr = 1 << (2 * nbits);
+  colormax = 1 << aBits;                        // 32
+  x = 1 << nbits;                               // 8
+  xsqr = 1 << (2 * nbits);                      // 64   
 
   // Compute "strides" for accessing the arrays. */
-  gstride = colormax;
-  rstride = colormax * colormax;
+  gstride = colormax;                           // 32
+  rstride = colormax * colormax;                // 1024
 
   maxfill( dist_buf, colormax );
 
-  for (cindex = 0;cindex < colors;cindex++ ){
+  for (cindex = 0;cindex < aNumColors;cindex++ ){
     r = aCMap[(3 * cindex) + 2];
     g = aCMap[(3 * cindex) + 1];
     b = aCMap[(3 * cindex)];
@@ -664,8 +668,8 @@ PRUint32        r,g,b;
 	  cbinc = 2 * ((bcenter + 1) * xsqr - (b * x));
 
 	  // Array starting points.
-	  cdp = dist_buf + rcenter * rstride + gcenter * gstride + bcenter;
-	  crgbp = aRGBMap + rcenter * rstride + gcenter * gstride + bcenter;
+	  cdp = dist_buf + rcenter * rstride + gcenter * gstride + bcenter;   // dist 01533120 .. 
+	  crgbp = aRGBMap + rcenter * rstride + gcenter * gstride + bcenter;  // aRGBMap 01553168
 
 	  (void)redloop();
   }
@@ -685,10 +689,10 @@ static PRInt32 rxx;
 
   detect = 0;
 
-  rdist = cdist;
-  rxx = crinc;
+  rdist = cdist;   // 48
+  rxx = crinc;     // 128
   rdp = cdp;
-  rrgbp = crgbp;
+  rrgbp = crgbp;   // 01553168
   first = 1;
   for (r=rcenter;r<colormax;r++,rdp+=rstride,rrgbp+=rstride,rdist+=rxx,rxx+=txsqr,first=0){
     if ( greenloop( first ) )
@@ -897,7 +901,7 @@ register PRInt32 maxv = ~0L;
 register PRInt32 i;
 register PRUint32 *bp;
 
-  for (i=side*side*side,bp=buffer;i>0;i--,bp++)
+  for (i=side*side*side,bp=buffer;i>0;i--,bp++)         // side*side*side = 32768
     *bp = maxv;
 }
 
