@@ -232,6 +232,8 @@ int showHelp(void)
 " -a<num>                               Set an allocation alignment boundry.\n"
 "                                     All allocations are a factor of <num>.\n"
 "      Meaning, an allocation of 1 byte would actually count as <num> bytes.\n"
+            );
+        PR_fprintf(PR_STDOUT,
 "              Set <num> to '1' in order to see the actual allocation sizes.\n"
 "              Alignment is taken into account prior to allocation overhead.\n"
 "                                                    By default, <num> is %u.\n"
@@ -1211,8 +1213,12 @@ int appendAllocation(STRun* aRun, STAllocation* aAllocation)
                 PRUint32 size = byteSize(aAllocation);
                 PRUint64 weight64 = LL_INIT(0, 0);
                 PRUint32 heapCost = aAllocation->mHeapRuntimeCost;
+                PRUint64 timeval64 = LL_INIT(0, 0);
+                PRUint64 size64 = LL_INIT(0, 0);
 
-                LL_MUL(weight64, (PRUint64)timeval, (PRUint64)size);
+                LL_UI2L(timeval64, timeval);
+                LL_UI2L(size64, size);
+                LL_MUL(weight64, timeval64, size64);
 
                 /*
                 ** First, update this run.
@@ -1220,7 +1226,7 @@ int appendAllocation(STRun* aRun, STAllocation* aAllocation)
                 aRun->mStats.mCompositeCount++;
                 aRun->mStats.mHeapRuntimeCost += heapCost;
                 aRun->mStats.mSize += size;
-                LL_ADD(aRun->mStats.mTimeval64, aRun->mStats.mTimeval64, (PRUint64)timeval);
+                LL_ADD(aRun->mStats.mTimeval64, aRun->mStats.mTimeval64, timeval64);
                 LL_ADD(aRun->mStats.mWeight64, aRun->mStats.mWeight64, weight64);
 
                 /*
@@ -1270,7 +1276,7 @@ int appendAllocation(STRun* aRun, STAllocation* aAllocation)
                             callsiteRun->mStats.mCompositeCount++;
                             callsiteRun->mStats.mHeapRuntimeCost += heapCost;
                             callsiteRun->mStats.mSize += size;
-                            LL_ADD(callsiteRun->mStats.mTimeval64, callsiteRun->mStats.mTimeval64, (PRUint64)timeval);
+                            LL_ADD(callsiteRun->mStats.mTimeval64, callsiteRun->mStats.mTimeval64, timeval64);
                             LL_ADD(callsiteRun->mStats.mWeight64, callsiteRun->mStats.mWeight64, weight64);
                         }
                         
@@ -1387,6 +1393,8 @@ int harvestRun(const STRun* aInRun, STRun* aOutRun, STOptions* aOptions)
                 PRUint32 lifetime = 0;
                 PRUint32 bytesize = 0;
                 PRUint64 weight64 = LL_INIT(0, 0);
+                PRUint64 bytesize64 = LL_INIT(0, 0);
+                PRUint64 lifetime64 = LL_INIT(0, 0);
                 int appendRes = 0;
 
                 /*
@@ -1456,7 +1464,9 @@ int harvestRun(const STRun* aInRun, STRun* aOutRun, STOptions* aOptions)
                 /*
                 ** Check weight restrictions.
                 */
-                LL_MUL(weight64, (PRUint64)bytesize, (PRUint64)lifetime);
+                LL_UI2L(bytesize64, bytesize);
+                LL_UI2L(lifetime64, lifetime);
+                LL_MUL(weight64, bytesize64, lifetime64);
                 if(LL_UCMP(weight64, <, aOptions->mWeightMin64))
                 {
                     continue;
@@ -1521,16 +1531,24 @@ int compareAllocations(const void* aAlloc1, const void* aAlloc2, void* aContext)
             {
                 case ST_COUNT:
                     /*
-                    ** By count on a single allocation means nothing, so just
+                    ** "By count" on a single allocation means nothing,
                     **  fall through to weight.
                     */
                 case ST_WEIGHT:
                 {
                     PRUint64 weight164 = LL_INIT(0, 0);
                     PRUint64 weight264 = LL_INIT(0, 0);
+                    PRUint64 bytesize164 = LL_INIT(0, 0);
+                    PRUint64 bytesize264 = LL_INIT(0, 0);
+                    PRUint64 timeval164 = LL_INIT(0, 0);
+                    PRUint64 timeval264 = LL_INIT(0, 0);
 
-                    LL_MUL(weight164, (PRUint64)byteSize(alloc1), (PRUint64)(alloc1->mMaxTimeval - alloc1->mMinTimeval));
-                    LL_MUL(weight264, (PRUint64)byteSize(alloc2), (PRUint64)(alloc2->mMaxTimeval - alloc2->mMinTimeval));
+                    LL_UI2L(bytesize164, byteSize(alloc1));
+                    LL_UI2L(timeval164, (alloc1->mMaxTimeval - alloc1->mMinTimeval));
+                    LL_MUL(weight164, bytesize164, timeval164);
+                    LL_UI2L(bytesize264, byteSize(alloc2));
+                    LL_UI2L(timeval264, (alloc2->mMaxTimeval - alloc2->mMinTimeval));
+                    LL_MUL(weight264, bytesize264, timeval264);
 
                     if(LL_UCMP(weight164, <, weight264))
                     {
@@ -3014,9 +3032,13 @@ int displayTopAllocations(STRun* aRun, int aWantCallsite)
                     PRUint32 size = byteSize(current);
                     PRUint32 heapCost = current->mHeapRuntimeCost;
                     PRUint64 weight64 = LL_INIT(0, 0);
+                    PRUint64 size64 = LL_INIT(0, 0);
+                    PRUint64 lifespan64 = LL_INIT(0, 0);
                     char buffer[32];
 
-                    LL_MUL(weight64, (PRUint64)size, (PRUint64)lifespan);
+                    LL_UI2L(size64, size);
+                    LL_UI2L(lifespan64, lifespan);
+                    LL_MUL(weight64, size64, lifespan64);
 
                     PR_fprintf(globals.mRequest.mFD, "<tr>\n");
 
@@ -3128,9 +3150,13 @@ int displayMemoryLeaks(STRun* aRun)
                     PRUint32 size = byteSize(current);
                     PRUint32 heapCost = current->mHeapRuntimeCost;
                     PRUint64 weight64 = LL_INIT(0, 0);
+                    PRUint64 size64 = LL_INIT(0, 0);
+                    PRUint64 lifespan64 = LL_INIT(0, 0);
                     char buffer[32];
                     
-                    LL_MUL(weight64, (PRUint64)size, (PRUint64)lifespan);
+                    LL_UI2L(size64, size);
+                    LL_UI2L(lifespan64, lifespan);
+                    LL_MUL(weight64, size64, lifespan64);
 
                     /*
                     ** One more shown.
@@ -3351,10 +3377,14 @@ int displayAllocationDetails(STAllocation* aAllocation)
         PRUint32 timeval = aAllocation->mMaxTimeval - aAllocation->mMinTimeval;
         PRUint32 heapCost = aAllocation->mHeapRuntimeCost;
         PRUint64 weight64 = LL_INIT(0, 0);
+        PRUint64 bytesize64 = LL_INIT(0, 0);
+        PRUint64 timeval64 = LL_INIT(0, 0);
         PRUint32 cacheval = 0;
         int displayRes = 0;
 
-        LL_MUL(weight64, (PRUint64)bytesize, (PRUint64)timeval);
+        LL_UI2L(bytesize64, bytesize);
+        LL_UI2L(timeval64, timeval);
+        LL_MUL(weight64, bytesize64, timeval64);
 
         PR_fprintf(globals.mRequest.mFD, "Allocation %u Details:<p>\n", aAllocation->mRunIndex);
 
