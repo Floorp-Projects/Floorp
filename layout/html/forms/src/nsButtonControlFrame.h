@@ -23,6 +23,8 @@
 
 class nsButtonControlFrame : public nsFormControlFrame {
 public:
+
+  nsButtonControlFrame();
    // nsFormControlFrame overrides
   nsresult RequiresWidget(PRBool &aHasWidget);
 
@@ -82,6 +84,10 @@ public:
                             const nsRect& aDirtyRect,
                             nsString& aLabel);
 
+   NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
+                         nsGUIEvent* aEvent,
+                         nsEventStatus& aEventStatus);
+
 protected:
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsHTMLReflowState& aReflowState,
@@ -90,9 +96,20 @@ protected:
 
 
   
+  virtual void Redraw();
+  virtual void SetFocus(PRBool aOn, PRBool aRepaint);
 
 
   nsIFormControlFrame* mMouseListener; // for browse buttons only
+
+   //GFX-rendered state variables
+  nsMouseState mLastMouseState;
+  PRBool mGotFocus;
+  PRBool mPressed;
+  PRBool mInside;
+
+  // KLUDGE variable to make sure disabling works.
+  PRBool mDisabled;
 };
 
 

@@ -340,7 +340,10 @@ public:
   static void PaintRectangularButton(nsIPresContext& aPresContext,
                             nsIRenderingContext& aRenderingContext,
                             const nsRect& aDirtyRect, PRUint32 aWidth, 
-                            PRUint32 aHeight, PRBool aShift, PRBool aShowFocus,
+                            PRUint32 aHeight, PRBool aShift, PRBool aShowFocus, PRBool aDisabled,
+							PRBool aDrawOutline,
+							nsIStyleContext* aOutlineStyle,
+							nsIStyleContext* aFocusStyle,
                             nsIStyleContext* aStyleContext, nsString& aLabel, 
                             nsIFrame* aForFrame);
    /**

@@ -698,8 +698,15 @@ void
 nsFormControlHelper::PaintRectangularButton(nsIPresContext& aPresContext,
                             nsIRenderingContext& aRenderingContext,
                             const nsRect& aDirtyRect, PRUint32 aWidth, 
-                            PRUint32 aHeight, PRBool aShift, PRBool aShowFocus,
-                            nsIStyleContext* aStyleContext, nsString& aLabel, 
+                            PRUint32 aHeight, 
+							PRBool aPressed, 
+							PRBool aShowFocus, 
+							PRBool aDisabled,
+							PRBool aDrawOutline,
+							nsIStyleContext* outlineStyle,
+							nsIStyleContext* focusStyle,
+                            nsIStyleContext* aStyleContext, 
+							nsString& aLabel, 
                             nsIFrame* aForFrame)
                           
 {
@@ -710,20 +717,73 @@ nsFormControlHelper::PaintRectangularButton(nsIPresContext& aPresContext,
     }
 
     aRenderingContext.PushState();
-      // Draw border using CSS
+     // Draw border using CSS
      // Get the Scrollbar's Arrow's Style structs
     const nsStyleSpacing* spacing =
     (const nsStyleSpacing*)aStyleContext->GetStyleData(eStyleStruct_Spacing);
     const nsStyleColor* color =
     (const nsStyleColor*)aStyleContext->GetStyleData(eStyleStruct_Color);
+
+	
     nsRect rect(0, 0, aWidth, aHeight);
-    nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, aForFrame,
+
+	const nsStyleSpacing* outline = (const nsStyleSpacing*)outlineStyle->GetStyleData(eStyleStruct_Spacing);
+  	const nsStyleSpacing* focus = (const nsStyleSpacing*)focusStyle->GetStyleData(eStyleStruct_Spacing);
+ 
+	nsMargin outlineBorder;
+    outline->CalcBorderFor(aForFrame, outlineBorder);
+
+ 	nsMargin focusBorder;
+    focus->CalcBorderFor(aForFrame, focusBorder);
+
+	int left = (focusBorder.left > outlineBorder.left) ? focusBorder.left : outlineBorder.left;
+	int right = (focusBorder.right > outlineBorder.right) ? focusBorder.right : outlineBorder.right;
+	int top = (focusBorder.top > outlineBorder.top) ? focusBorder.top : outlineBorder.top;
+	int bottom = (focusBorder.bottom > outlineBorder.bottom) ? focusBorder.bottom : outlineBorder.bottom;
+
+	if (aShowFocus) {
+		int l = left - focusBorder.left;
+		int t = top - focusBorder.top;
+		int b = bottom - focusBorder.bottom;
+		int r = right - focusBorder.right;
+
+		int w = aWidth - (l + r);
+		int h = aHeight - (t + b);
+
+		nsRect focusRect(l, t, w, h);
+
+		nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, aForFrame,
+								   aDirtyRect, focusRect, *focus, aStyleContext, 0);
+	} 
+	
+	if (aDrawOutline) {
+		int l = left - outlineBorder.left;
+		int t = top - outlineBorder.top;
+		int b = bottom - outlineBorder.bottom;
+		int r = right - outlineBorder.right;
+
+		int w = aWidth - (l + r);
+		int h = aHeight - (t + b);
+
+		nsRect outlineRect(l, t, w, h);
+
+		nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, aForFrame,
+								   aDirtyRect, outlineRect, *outline, aStyleContext, 0);
+	}
+
+	rect.x += left;
+	rect.y += right;
+	rect.width -= (left + right);
+	rect.height -= (top + bottom);
+
+	nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, aForFrame,
                                     aDirtyRect, rect,  *color, *spacing, 0, 0);
     nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, aForFrame,
                                aDirtyRect, rect, *spacing,aStyleContext, 0);
 
     nsMargin border;
     spacing->CalcBorderFor(aForFrame, border);
+
 
     float p2t;
     aPresContext.GetScaledPixelsToTwips(p2t);
@@ -736,11 +796,14 @@ nsFormControlHelper::PaintRectangularButton(nsIPresContext& aPresContext,
     nsRect inside(outside);
     inside.Deflate(onePixel, onePixel);
 
-
+/*
     if (aShowFocus) { 
       PaintFocus(aRenderingContext,
                  aDirtyRect, inside, outside);
     }
+	*/
+
+	aRenderingContext.SetColor(NS_RGB(255,255,255));
 
     float appUnits;
     float devUnits;
@@ -752,29 +815,39 @@ nsFormControlHelper::PaintRectangularButton(nsIPresContext& aPresContext,
     context->GetAppUnitsToDevUnits(devUnits);
     context->GetDevUnitsToAppUnits(appUnits);
 
-    aRenderingContext.SetColor(NS_RGB(0,0,0));
- 
     nsFont font(aPresContext.GetDefaultFixedFont()); 
     formFrame->GetFont(&aPresContext, font);
 
     aRenderingContext.SetFont(font);
 
+    nscoord ascent;
+    nscoord descent;
+  
     nscoord textWidth;
     nscoord textHeight;
     aRenderingContext.GetWidth(aLabel, textWidth);
 
     nsIFontMetrics* metrics;
     context->GetMetricsFor(font, metrics);
-    metrics->GetMaxAscent(textHeight);
+    metrics->GetMaxAscent(ascent);
+    metrics->GetMaxDescent(descent);
+    textHeight = ascent + descent;
 
     nscoord x = ((inside.width  - textWidth) / 2)  + inside.x;
     nscoord y = ((inside.height - textHeight) / 2) + inside.y;
-    if (PR_TRUE == aShift) {
+    if (PR_TRUE == aPressed) {
       x += onePixel;
       y += onePixel;
     }
 
+	if (aDisabled) {
+	   aRenderingContext.SetColor(NS_RGB(255,255,255));
+       aRenderingContext.DrawString(aLabel, x+onePixel, y+onePixel);
+	}
+
+	aRenderingContext.SetColor(color->mColor);
     aRenderingContext.DrawString(aLabel, x, y);
+
     NS_RELEASE(context);
     PRBool clipEmpty;
     aRenderingContext.PopState(clipEmpty);
