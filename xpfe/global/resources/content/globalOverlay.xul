@@ -8,6 +8,7 @@
 		 xmlns:html="http://www.w3.org/TR/REC-html40"
 		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
+<!-- html:script language="JavaScript" src="chrome://global/content/strres.js"/ -->
 <html:script language="JavaScript" src="chrome://global/content/globalOverlay.js"/>
 
 	<!-- File Menu -->
@@ -43,6 +44,7 @@
 	<!-- Edit Menu -->
 	<menu id="menu_Edit" value="&editMenu.label;" accesskey="&editMenu.accesskey;"/>
 	<menuitem id="menu_undo" value="&undoCmd.label;" key="key_undo" accesskey="&undoCmd.accesskey;" observes="cmd_undo"/>
+	<menuitem id="menu_redo" value="&redoCmd.label;" key="key_redo" accesskey="&redoCmd.accesskey;" observes="cmd_redo"/>
 	<menuitem id="menu_cut" value="&cutCmd.label;" key="key_cut" accesskey="&cutCmd.accesskey;" observes="cmd_cut"/>
 	<menuitem id="menu_copy" value="&copyCmd.label;" key="key_copy" accesskey="&copyCmd.accesskey;" observes="cmd_copy"/>
 	<menuitem id="menu_paste" value="&pasteCmd.label;" key="key_paste" accesskey="&pasteCmd.accesskey;" observes="cmd_paste"/>
@@ -50,6 +52,7 @@
 	<menuitem id="menu_selectAll" value="&selectAllCmd.label;" key="key_selectAll" accesskey="&selectAllCmd.accesskey;" observes="cmd_selectAll"/>
 	
 	<key id="key_undo" xulkey="true" key="&undoCmd.key;" observes="cmd_undo"/>
+	<key id="key_redo" xulkey="true" key="&redoCmd.key;" observes="cmd_redo"/>
 	<key id="key_cut" xulkey="true" key="&cutCmd.key;" observes="cmd_cut"/>
 	<key id="key_copy" xulkey="true" key="&copyCmd.key;" observes="cmd_copy"/>
 	<key id="key_paste" xulkey="true" key="&pasteCmd.key;" observes="cmd_paste"/>

@@ -33,6 +33,9 @@
 <!ENTITY undoCmd.label						"Undo">  
 <!ENTITY undoCmd.key						"Z">  
 <!ENTITY undoCmd.accesskey					"u"> 
+<!ENTITY redoCmd.label						"Redo">  
+<!ENTITY redoCmd.key						"Y">  
+<!ENTITY redoCmd.accesskey					"r"> 
 <!ENTITY cutCmd.label						"Cut">  
 <!ENTITY cutCmd.key							"X">  
 <!ENTITY cutCmd.accesskey					"t"> 
