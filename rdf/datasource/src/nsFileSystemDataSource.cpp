@@ -81,6 +81,7 @@ private:
 	static nsIRDFResource		*kRDF_type;
 
 #ifdef	XP_WIN
+	static nsIRDFResource		*kNC_IEFavoriteObject;
 	static char			*ieFavoritesDir;
 #endif
 
@@ -160,6 +161,10 @@ public:
     static nsresult GetURL(nsIRDFResource *source, nsIRDFLiteral** aResult);
     static PRBool   isVisible(const nsNativeFileSpec& file);
 
+#ifdef	XP_WIN
+    static PRBool   isValidFolder(nsIRDFResource *source);
+#endif
+
 };
 
 
@@ -179,6 +184,7 @@ nsIRDFResource		*FileSystemDataSource::kRDF_InstanceOf;
 nsIRDFResource		*FileSystemDataSource::kRDF_type;
 
 #ifdef	XP_WIN
+nsIRDFResource		*FileSystemDataSource::kNC_IEFavoriteObject;
 char			*FileSystemDataSource::ieFavoritesDir;
 #endif
 
@@ -226,6 +232,7 @@ FileSystemDataSource::FileSystemDataSource(void)
 		{
 			ieFavoritesDir = nsCRT::strdup(ieFavoritesURI);
 		}
+		gRDFService->GetResource(NC_NAMESPACE_URI "IEFavorite",       &kNC_IEFavoriteObject);
 #endif
 
 		gRDFService->GetResource(kURINC_FileSystemRoot,               &kNC_FileSystemRoot);
@@ -259,6 +266,8 @@ FileSystemDataSource::~FileSystemDataSource (void)
         NS_RELEASE(kRDF_type);
 
 #ifdef	XP_WIN
+	NS_RELEASE(kNC_IEFavoriteObject);
+
         if (ieFavoritesDir)
         {
         	nsCRT::free(ieFavoritesDir);
@@ -384,11 +393,28 @@ FileSystemDataSource::GetTarget(nsIRDFResource *source,
 		}
 		else if (property == kRDF_type)
 		{
-			nsXPIDLCString uri;
-			rv = kNC_FileSystemObject->GetValue( getter_Copies(uri) );
-			if (NS_FAILED(rv)) return rv;
+			const char	*type;
+			rv = kNC_FileSystemObject->GetValueConst(&type);
+			if (NS_FAILED(rv)) return(rv);
 
-			nsAutoString	url(uri);
+#ifdef	XP_WIN
+			// under Windows, if its an IE favorite, return that type
+			if (ieFavoritesDir)
+			{
+				const char		*uri;
+				rv = source->GetValueConst(&uri);
+				if (NS_FAILED(rv)) return(rv);
+
+				nsAutoString		theURI(uri);
+				if (theURI.Find(ieFavoritesDir) == 0)
+				{
+					rv = kNC_IEFavoriteObject->GetValueConst(&type);
+					if (NS_FAILED(rv)) return rv;
+				}
+			}
+#endif
+
+			nsAutoString	url(type);
 			nsIRDFLiteral	*literal;
 			gRDFService->GetLiteral(url.GetUnicode(), &literal);
 			rv = literal->QueryInterface(nsIRDFNode::GetIID(), (void**) target);
@@ -701,7 +727,14 @@ FileSystemDataSource::ArcLabelsOut(nsIRDFResource *source,
 		nsFileURL	fileURL(uri);
 		nsFileSpec	fileSpec(fileURL);
 		if (fileSpec.IsDirectory()) {
+#ifdef	XP_WIN
+			if (isValidFolder(source) == PR_TRUE)
+			{
+				array->AppendElement(kNC_Child);
+			}
+#else
 			array->AppendElement(kNC_Child);
+#endif
 			array->AppendElement(kNC_pulse);
 		}
 
@@ -902,6 +935,59 @@ FileSystemDataSource::isVisible(const nsNativeFileSpec& file)
 	PRBool isVisible = (!file.IsHidden());
 	return(isVisible);
 }
+
+
+
+#ifdef	XP_WIN
+PRBool
+FileSystemDataSource::isValidFolder(nsIRDFResource *source)
+{
+	PRBool	isValid = PR_TRUE;
+	if (!ieFavoritesDir)	return(isValid);
+
+	nsresult		rv;
+	const char		*uri;
+	rv = source->GetValueConst(&uri);
+	if (NS_FAILED(rv)) return(isValid);
+
+	PRBool			isIEFavorite = PR_FALSE;
+	nsAutoString		theURI(uri);
+	if (theURI.Find(ieFavoritesDir) == 0)
+	{
+		isValid = PR_FALSE;
+
+		nsCOMPtr<nsISimpleEnumerator>	folderEnum;
+		if (NS_SUCCEEDED(rv = GetFolderList(source, getter_AddRefs(folderEnum))))
+		{
+			PRBool		hasMore;
+			while (NS_SUCCEEDED(folderEnum->HasMoreElements(&hasMore)) &&
+					(hasMore == PR_TRUE))
+			{
+				nsCOMPtr<nsISupports>		isupports;
+				if (NS_FAILED(rv = folderEnum->GetNext(getter_AddRefs(isupports))))
+					break;
+				nsCOMPtr<nsIRDFResource>	res = do_QueryInterface(isupports);
+				if (!res)	break;
+
+				nsCOMPtr<nsIRDFLiteral>		nameLiteral;
+				if (NS_FAILED(rv = GetName(res, getter_AddRefs(nameLiteral))))
+					break;
+				
+				const PRUnichar			*uniName;
+				if (NS_FAILED(rv = nameLiteral->GetValueConst(&uniName)))
+					break;
+				nsAutoString			name(uniName);
+				if (!name.EqualsIgnoreCase("desktop.ini"))
+				{
+					isValid = PR_TRUE;
+					break;
+				}
+			}
+		}
+	}
+	return(isValid);
+}
+#endif
 
 
 
