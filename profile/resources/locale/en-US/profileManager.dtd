@@ -1,12 +1,13 @@
 <!-- extracted from pm.xul -->
 
 <!ENTITY reg.gif "reg.gif">
-<!ENTITY intro "Mozilla stores information about your settings, preferences, bookmarks, and stored messages in your personal Mozilla Name.">
-<!ENTITY intro.new "Click New to create a new Mozilla Name."> 
-<!ENTITY intro.delete "Click Delete to remove a selected Mozilla Name."> 
-<!ENTITY intro.rename "Click Rename to change the name of a selected Mozilla Name.">
+<!ENTITY intro "Mozilla stores information about your settings, preferences, bookmarks, and stored messages in your personal Mozilla profile.">
+<!ENTITY intro.new "Click New to create a new Mozilla profile."> 
+<!ENTITY intro.delete "Click Delete to remove a selected Mozilla profile."> 
+<!ENTITY intro.rename "Click Rename to change the name of a selected Mozilla profile.">
+<!ENTITY intro.start "Click Start to start up Mozilla with selected profile.  (This will also migrate the profile if is unmigrated.)">
 <!ENTITY migration.label "Migration">
-<!ENTITY user.label "User Name">
+<!ENTITY user.label "Profile Name">
 <!ENTITY newCmd.label "New...">
 <!ENTITY renameCmd.label "Rename...">
 <!ENTITY deleteCmd.label "Delete">

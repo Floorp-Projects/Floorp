@@ -17,19 +17,20 @@
 <html:script language="javascript" src="chrome://profile/content/confirmMigration.js"/> 
     
     <box align="horizontal" flex="100%">
+	<html:div>
+    	<html:img src="chrome://global/skin/question-icon.gif"/>
+	</html:div>
+        <spring style="height: 4em;"/>
     	<box align="vertical" flex="100%">
-		<html:div>
-		&confirmMigrationPart1.label;
-		</html:div>
-		<html:div>
-		&confirmMigrationPart2.label;
-		</html:div>
-		<html:div>
-		&confirmMigrationPart3.label;
-		</html:div>
+		<html:center>
+		<html:div> &confirmMigrationPart1.label; </html:div>
+		<html:div> &confirmMigrationPart2.label; </html:div>
+		<html:div> &confirmMigrationPart3.label; </html:div>
+		<html:div> &confirmMigrationPart4.label; </html:div>
+		</html:center>
 	</box>
     </box>
-
+    <spring style="height: 1em;"/>
     <box id="okCancelButtons"/>
-	
+    <spring style="height: 1em;"/>
 </window>

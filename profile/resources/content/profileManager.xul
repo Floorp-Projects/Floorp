@@ -42,6 +42,7 @@
 						<html:div>&intro.new;</html:div> 
 						<html:div>&intro.delete;</html:div> 
 						<html:div>&intro.rename;</html:div>
+						<html:div>&intro.start;</html:div>
 						<spring style="height: 1em;"/>
 <box id="table-box" align="horizontal">
 	<html:div id="table-housing" flex="100%">

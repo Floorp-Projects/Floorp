@@ -38,6 +38,8 @@ FILES=\
 	renameProfile.xul		\
 	profileSelection.xul		\
 	profileSelection.js		\
+	confirmMigration.xul		\
+	confirmMigration.js		\
         $(NULL)
 
 install::
