@@ -91,7 +91,7 @@ public:
                           nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
 
-  NS_IMETHOD CreatePopup(nsIFrame* aElementFrame, nsIContent* aPopupContent, 
+  NS_IMETHOD CreatePopup(nsIContent* aElementContent, nsIContent* aPopupContent, 
                          PRInt32 aXPos, PRInt32 aYPos, 
                          const nsString& aPopupType, const nsString& anAnchorAlignment,
                          const nsString& aPopupAlignment);
@@ -126,7 +126,7 @@ protected:
   nsFrameList mPopupFrames;
   nsIPresContext* mPresContext; // Our pres context.
 
-  nsIFrame* mElementFrame; // The frame that is having something popped up over it.
+  nsIContent* mElementContent; // The content that is having something popped up over it <weak>
 
   PRInt32 mXPos;                // Active child's x position
   PRInt32 mYPos;                // Active child's y position

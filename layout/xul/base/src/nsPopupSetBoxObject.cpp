@@ -136,12 +136,7 @@ nsPopupSetBoxObject::CreatePopup(nsIDOMElement* aSrcContent,
   if (!shell)
     return NS_OK;
 
-  nsIFrame* srcFrame;
-  shell->GetPrimaryFrameFor(srcContent, &srcFrame);
-  if (!srcFrame)
-    return NS_OK;
-
-  return popupFrame->CreatePopup(srcFrame, popupContent, aXPos, aYPos, aPopupType, anAnchorAlignment, aPopupAlignment);
+  return popupFrame->CreatePopup(srcContent, popupContent, aXPos, aYPos, aPopupType, anAnchorAlignment, aPopupAlignment);
 }
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////
