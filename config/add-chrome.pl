@@ -5,7 +5,7 @@ use Getopt::Std;
 use IO::File;
 use mozLock;
 
-getopts("l");
+getopts("lx");
 
 my $installedChromeFile = $ARGV[0];
 my $disableJarPackaging = $ARGV[1];
@@ -41,6 +41,12 @@ sub foreignPlatformFile
 my $nofilelocks = 0;
 if (defined($::opt_l)) {
     $nofilelocks = 1;
+}
+
+if (defined($::opt_x)) {
+    $win32 = 0;
+    $macos = 0;
+    $unix = 1;
 }
 
 if ($jarFileName =~ /(.*)\.jar/) {
