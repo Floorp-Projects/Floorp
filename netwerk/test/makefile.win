@@ -31,7 +31,11 @@ PROG6 = .\$(OBJDIR)\urltest.exe
 PROG7 = .\$(OBJDIR)\TestFileInput2.exe
 PROG8 = .\$(OBJDIR)\TestFileTransport.exe
 PROG9 = .\$(OBJDIR)\TestRes.exe
-PROGRAMS = $(PROG1) $(PROG2) $(PROG3) $(PROG4) $(PROG5) $(PROG6) $(PROG7) $(PROG8) $(PROG9)
+PROGA = .\$(OBJDIR)\TestRawCache.exe
+PROGB = .\$(OBJDIR)\TestCacheMgr.exe
+PROGRAMS = \
+$(PROG1) $(PROG2) $(PROG3) $(PROG4) $(PROG5) $(PROG6) $(PROG7) $(PROG8) $(PROG9)\
+          $(PROGA) $(PROGB)
 
 LCFLAGS=-DUSE_NSREG -GX
 
@@ -71,3 +75,7 @@ $(PROG7): $(OBJDIR) TestFileInput2.cpp
 $(PROG8): $(OBJDIR) TestFileTransport.cpp
 
 $(PROG9): $(OBJDIR) TestRes.cpp
+
+$(PROGA): $(OBJDIR) TestRawCache.cpp
+
+$(PROGB): $(OBJDIR) TestCacheMgr.cpp
