@@ -81,7 +81,7 @@ DIRS           += widget/src/gtksuperwin widget/src/gtkxtbin
 endif
 
 # Linux and Solaris installer needs standalone libjar, hence standalone zlib
-ifeq (,$(filter Linux SunOS5,$(OS_ARCH)))
+ifneq (,$(filter Linux SunOS5,$(OS_ARCH)))
 DIRS		+= modules/zlib/standalone
 endif
 
