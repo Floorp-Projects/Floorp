@@ -166,7 +166,8 @@ inFlasher::DrawElementOutline(nsIDOMElement* aElement)
   nsCOMPtr<nsIDOMWindowInternal> window = inLayoutUtils::GetWindowFor(aElement);
   if (!window) return NS_OK;
   nsCOMPtr<nsIPresShell> presShell = inLayoutUtils::GetPresShellFor(window);
-
+  if (!presShell) return NS_OK;
+  
   nsPresContext *presContext = presShell->GetPresContext();
 
   float p2t = presContext->PixelsToTwips();
@@ -210,7 +211,9 @@ inFlasher::ScrollElementIntoView(nsIDOMElement *aElement)
   }
 
   nsCOMPtr<nsIPresShell> presShell = inLayoutUtils::GetPresShellFor(window);
-  NS_ASSERTION(presShell, "Dude, where's my pres shell?!");
+  if (!presShell) {
+    return NS_OK;
+  }
   nsIFrame* frame = inLayoutUtils::GetFrameFor(aElement, presShell);
   if (!frame) {
     return NS_OK;
