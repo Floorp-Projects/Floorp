@@ -16,7 +16,7 @@
  * Reserved.
  */
 
-/* The code are copy from mozilla/nsprpub/src/io/prprf.c */
+/* The code are copy from rev 3.7 mozilla/nsprpub/src/io/prprf.c */
 /*
 ** Port from prprf.c by : Frank Yung-Fong Tang 
 */
@@ -480,7 +480,7 @@ static PRUnichar* UTF8ToUCS2(const char *aSrc, PRUint32 aSrcLen, PRUnichar* aDes
         if(0x80 == (0xC0 & (*in)))
         {
             PRUint32 tmp = (*in);
-            int shift = state * 6;
+            int shift = (state-1) * 6;
             tmp = (tmp << shift ) & ( 0x0000003FL << shift);
             ucs4 |= tmp;
             if(0 == --state)
