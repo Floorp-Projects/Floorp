@@ -49,7 +49,7 @@ LLIBS=				\
  $(DIST)\lib\nglhtmlcon_s.lib	\
  $(DIST)\lib\raptorhtmlstyle_s.lib	\
  $(DIST)\lib\raptorlayout_s.lib	\
- $(DIST)\lib\raptorgfx.lib	\
+ $(DIST)\lib\raptorgfxwin.lib	\
  $(DIST)\lib\raptorbase.lib	\
  $(DIST)\lib\raptorevents_s.lib	\
  $(DIST)\lib\img3240.lib	\

@@ -264,7 +264,7 @@ ImageRendererImpl::GetIconDimensions(void* aDisplayContext,
     nsIRenderingContext *rc = (nsIRenderingContext *)aDisplayContext;
 }
 
-nsresult
+extern "C" NS_GFX_(nsresult)
 NS_NewImageRenderer(ilIImageRenderer  **aInstancePtrResult)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");

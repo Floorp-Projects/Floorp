@@ -112,7 +112,7 @@ public:
 };
 
 /// Factory method for creating an image group
-extern NS_GFX nsresult
+extern "C" NS_GFX_(nsresult)
   NS_NewImageGroup(nsIImageGroup **aInstancePtrResult);                   
 
 #endif

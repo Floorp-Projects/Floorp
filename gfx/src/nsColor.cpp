@@ -39,7 +39,7 @@ static int ComponentValue(const char* aColorSpec, int dpc)
 // bina's original code. However, it is pickyer with respect to what a
 // legal color is and will only return true for perfectly legal color
 // values.
-NS_GFX PRBool NS_HexToRGB(const char* aColorSpec, nscolor* aResult)
+extern "C" NS_GFX_(PRBool) NS_HexToRGB(const char* aColorSpec, nscolor* aResult)
 {
   NS_PRECONDITION(nsnull != aColorSpec, "null ptr");
   if (nsnull == aColorSpec) {
@@ -97,7 +97,7 @@ NS_GFX PRBool NS_HexToRGB(const char* aColorSpec, nscolor* aResult)
   return PR_FALSE;
 }
 
-PRBool NS_ColorNameToRGB(const char* aColorName, nscolor* aResult)
+extern "C" NS_GFX_(PRBool) NS_ColorNameToRGB(const char* aColorName, nscolor* aResult)
 {
   PRInt32 id = nsColorNames::LookupName(aColorName);
   if (id >= 0) {

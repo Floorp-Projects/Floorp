@@ -122,7 +122,7 @@ void FontCacheImpl::Flush()
   mFontMetrics.Clear();
 }
 
-NS_GFX nsresult
+extern "C" NS_GFX_(nsresult)
 NS_NewFontCache(nsIFontCache **aInstancePtrResult)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
