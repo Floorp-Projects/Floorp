@@ -23,6 +23,7 @@
 #include "nsIGlobalHistory.h"
 #include "nsIDOMXPConnectFactory.h"
 #include "nsAppShellCIDs.h"
+#include "nsIFileLocator.h"
 
 #include "nsIEditor.h"
 
@@ -68,9 +69,10 @@ static NS_DEFINE_IID(kRDFCoreCID,          NS_RDFCORE_CID);
 
 #endif // XP_PC
 
-// Class ID's
+// Class IDs
 static NS_DEFINE_IID(kCAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_IID(kCCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
+static NS_DEFINE_IID(kFileLocatorCID,     NS_FILELOCATOR_CID);
 static NS_DEFINE_IID(kXPConnectFactoryCID, NS_XPCONNECTFACTORY_CID);
 static NS_DEFINE_IID(kGlobalHistoryCID,    NS_GLOBALHISTORY_CID);
 
@@ -101,6 +103,7 @@ NS_SetupRegistry_1()
 
   nsComponentManager::RegisterComponent(kCAppShellServiceCID, NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kCCmdLineServiceCID,  NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kFileLocatorCID,  NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kXPConnectFactoryCID, NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kGlobalHistoryCID, NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
 
