@@ -697,13 +697,23 @@ void
 gif_delay_time_callback(void *closure)
 {
   il_container *ic = (il_container*)closure;
-  gif_struct *gs = (gif_struct *)ic->ds;
+  gif_struct *gs = NULL;
+  
+  if((ic)&&(ic->ds))
+     gs = (gif_struct *)ic->ds;
+  else
+     return;   //error
 
-    PR_ASSERT(gs->state == gif_delay);
 
-    gs->delay_timeout = NULL;
+  PR_ASSERT(gs->state == gif_delay);
+  gs->delay_timeout = NULL;
 
-    if (gs->ic->state == IC_ABORT_PENDING)
+  if(gs->ic)
+        gs->ic->type = nsCRT::strdup("image/gif"); //mime string
+  else
+      return;  //error
+
+  if (gs->ic->state == IC_ABORT_PENDING)
         return;
     
     gs->delay_time = 0;         /* Reset for next image */
