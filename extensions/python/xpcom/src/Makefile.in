@@ -107,3 +107,5 @@ endif
 	rm -f $(DIST)/bin/$(SHARED_LIBRARY)
 	rm -f $(DIST)/lib/$(IMPORT_LIBRARY)
 
+clobber::
+	rm -f *.ilk
