@@ -418,7 +418,6 @@ nsEditorShell::IsSupportedTextType(const char* aMIMEType, PRBool *aResult)
 nsresult    
 nsEditorShell::PrepareDocumentForEditing(nsIDOMWindow* aDOMWindow, nsIURI *aUrl)
 {
-  printf("----------------------\nPrepareDocumentForEditing\n");
   if (!mContentAreaDocShell || !mContentWindow)
     return NS_ERROR_NOT_INITIALIZED;
 
