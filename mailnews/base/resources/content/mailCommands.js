@@ -431,13 +431,11 @@ function ViewPageSource(messages)
 			url += "?header=src";
         }
     
-		// Use a browser window to view source
-		window.openDialog( getBrowserURL(),
-						   "_blank",
-						   "scrollbars,resizable,chrome,dialog=no",
-							url,
-							"view-source" );
-	}
+        window.openDialog( "chrome://navigator/content/viewSource.xul",
+                           "_blank",
+                           "scrollbars,resizable,chrome,dialog=no",
+                           url);
+        }
         return true;
 }
 
