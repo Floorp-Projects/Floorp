@@ -446,7 +446,8 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
           }
         }
         // Process the write request...
-        if (NS_SUCCEEDED(rv) && (GetWriteType() != eSocketWrite_None)) {
+        if ((NS_SUCCEEDED(rv) || rv == NS_BASE_STREAM_WOULD_BLOCK)
+            && (GetWriteType() != eSocketWrite_None)) {
           rv = doWrite(aSelectFlags);
           if (NS_OK == rv) {
             SetFlag(eSocketWrite_Done);
@@ -472,11 +473,11 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
     if (NS_OK == rv) {
       mCurrentState = gStateTable[mOperation][mCurrentState];
     } 
-    else if (NS_FAILED(rv)) {
-      mCurrentState = eSocketState_Error;
-    }
     else if (NS_BASE_STREAM_WOULD_BLOCK == rv) {
       done = PR_TRUE;
+    }
+    else if (NS_FAILED(rv)) {
+      mCurrentState = eSocketState_Error;
     }
     // 
     // Any select flags are *only* valid the first time through the loop...
@@ -1011,7 +1012,7 @@ nsresult nsSocketTransport::doWriteFromBuffer(PRUint32 *aCount)
     mSelectFlags &= (~PR_POLL_WRITE);
     rv = NS_OK;
   }
-  else if (NS_SUCCEEDED(rv)) {
+  else if (NS_SUCCEEDED(rv) || rv == NS_BASE_STREAM_WOULD_BLOCK) {
     //
     // If the buffer is empty, then notify the reader and stop polling
     // for write until there is data in the buffer.  See the OnWrite()
@@ -1062,7 +1063,7 @@ nsresult nsSocketTransport::doWriteFromStream(PRUint32 *aCount)
 #else
     rv = mWriteFromStream->Read(gIOBuffer, maxBytesToRead, &bytesRead);
 #endif
-    if (NS_SUCCEEDED(rv) && bytesRead) {
+    if ((NS_SUCCEEDED(rv) || rv == NS_BASE_STREAM_WOULD_BLOCK) && bytesRead) {
       // Update the counters...
       *aCount += bytesRead;
       if (mWriteCount > 0) {
@@ -1435,8 +1436,8 @@ nsSocketTransport::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
     rv = NS_NewPipe(getter_AddRefs(mReadPipeIn),
                     getter_AddRefs(mReadPipeOut),
                     this,       // nsIPipeObserver
-                    MAX_IO_BUFFER_SIZE/2, 
-                    2*MAX_IO_BUFFER_SIZE);
+                    NS_SOCKET_TRANSPORT_SEGMENT_SIZE,
+                    NS_SOCKET_TRANSPORT_BUFFER_SIZE);
     if (NS_SUCCEEDED(rv)) {
       rv = mReadPipeIn->SetNonBlocking(PR_TRUE);
     }
@@ -1593,8 +1594,8 @@ nsSocketTransport::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
     rv = NS_NewPipe(getter_AddRefs(mReadPipeIn),
                     getter_AddRefs(mReadPipeOut),
                     this,       // nsIPipeObserver
-                    MAX_IO_BUFFER_SIZE/2, 
-                    2*MAX_IO_BUFFER_SIZE);
+                    NS_SOCKET_TRANSPORT_SEGMENT_SIZE,
+                    NS_SOCKET_TRANSPORT_BUFFER_SIZE);
     if (NS_SUCCEEDED(rv)) {
       rv = mReadPipeOut->SetNonBlocking(PR_TRUE);
       *result = mReadPipeIn;
@@ -1656,7 +1657,8 @@ nsSocketTransport::OpenOutputStream(PRUint32 startPosition, nsIOutputStream* *re
 #else
     rv = NS_NewPipe(getter_AddRefs(in), getter_AddRefs(out),
                     this,       // nsIPipeObserver
-                    MAX_IO_BUFFER_SIZE, MAX_IO_BUFFER_SIZE);
+                    NS_SOCKET_TRANSPORT_SEGMENT_SIZE,
+                    NS_SOCKET_TRANSPORT_BUFFER_SIZE);
     if (NS_SUCCEEDED(rv)) {
       rv = in->SetNonBlocking(PR_TRUE);
     }

@@ -323,23 +323,18 @@ nsPipe::nsPipeInputStream::GetLength(PRUint32 *result)
     nsAutoCMonitor mon(pipe);
 
     PRUint32 len = pipe->mBuffer.GetSize();
-    if (pipe->mReadCursor) {
-        char* end = (pipe->mReadLimit == pipe->mWriteLimit)
-            ? pipe->mWriteCursor
-            : pipe->mReadLimit;
-        len -= pipe->mBuffer.GetSegmentSize() - (end - pipe->mReadCursor);
-    }
-//    if (pipe->mWriteCursor)
-        //len -= pipe->mWriteLimit - pipe->mWriteCursor;
+    if (pipe->mReadCursor) 
+        len -= pipe->mBuffer.GetSegmentSize() - (pipe->mReadLimit - pipe->mReadCursor);
+    if (pipe->mWriteCursor)
+        len -= pipe->mWriteLimit - pipe->mWriteCursor;
 
-	if (result)
-		*result = len;
+    *result = len;
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsPipe::nsPipeInputStream::ReadSegments(nsWriteSegmentFun writer, 
-                                        void* closure, 
+                                        void* closure,  
                                         PRUint32 count,
                                         PRUint32 *readCount)
 {
@@ -360,11 +355,13 @@ nsPipe::nsPipeInputStream::ReadSegments(nsWriteSegmentFun writer,
             if (*readCount > 0 || NS_FAILED(rv))
                 goto done;      // don't Fill if we've got something
             if (pipe->mObserver) {
+                PR_CExitMonitor(pipe);
                 rv = pipe->mObserver->OnEmpty(pipe);
+                PR_CEnterMonitor(pipe);
                 if (NS_FAILED(rv)) goto done;
             }
             rv = Fill();
-            if (rv == NS_BASE_STREAM_WOULD_BLOCK || NS_FAILED(rv)) 
+            if (/*rv == NS_BASE_STREAM_WOULD_BLOCK || */NS_FAILED(rv)) 
                 goto done;
             // else we filled the pipe, so go around again
             continue;
@@ -375,18 +372,18 @@ nsPipe::nsPipeInputStream::ReadSegments(nsWriteSegmentFun writer,
             PRUint32 writeCount;
             rv = writer(closure, readBuffer, *readCount, readBufferLen, &writeCount);
             NS_ASSERTION(rv != NS_BASE_STREAM_EOF, "Write should not return EOF");
-            if (NS_FAILED(rv)) 
-                goto done;
             if (writeCount == 0 || rv == NS_BASE_STREAM_WOULD_BLOCK) {
                 rv = pipe->mCondition;
                 if (*readCount > 0 || NS_FAILED(rv))
                     goto done;      // don't Fill if we've got something
                 rv = Fill();
-                if (rv == NS_BASE_STREAM_WOULD_BLOCK || NS_FAILED(rv))
+                if (/*rv == NS_BASE_STREAM_WOULD_BLOCK || */NS_FAILED(rv))
                     goto done;
                 // else we filled the pipe, so go around again
                 continue;
             }
+            if (NS_FAILED(rv)) 
+                goto done;
             NS_ASSERTION(writeCount <= readBufferLen, "writer returned bad writeCount");
             readBuffer += writeCount;
             readBufferLen -= writeCount;
@@ -399,7 +396,9 @@ nsPipe::nsPipeInputStream::ReadSegments(nsWriteSegmentFun writer,
             pipe->mReadLimit = nsnull;
             PRBool empty = pipe->mBuffer.DeleteFirstSegment();
             if (empty && pipe->mObserver) {
+                PR_CExitMonitor(pipe);
                 rv = pipe->mObserver->OnEmpty(pipe);
+                PR_CEnterMonitor(pipe);
                 if (NS_FAILED(rv))
                     goto done;
             }
@@ -610,11 +609,13 @@ nsPipe::nsPipeOutputStream::WriteSegments(nsReadSegmentFun reader,
                 goto done;
             if (writeBufLen == 0) {
                 if (pipe->mObserver && *writeCount == 0) {
+                    PR_CExitMonitor(pipe);
                     rv = pipe->mObserver->OnFull(pipe);
+                    PR_CEnterMonitor(pipe);
                     if (NS_FAILED(rv)) goto done;
                 }
                 rv = Flush();
-                if (rv == NS_BASE_STREAM_WOULD_BLOCK || NS_FAILED(rv))
+                if (/*rv == NS_BASE_STREAM_WOULD_BLOCK || */NS_FAILED(rv))
                     goto done;
                 // else we flushed, so go around again
                 continue;
@@ -624,20 +625,20 @@ nsPipe::nsPipeOutputStream::WriteSegments(nsReadSegmentFun reader,
             while (writeBufLen > 0) {
                 PRUint32 readCount = 0;
                 rv = reader(closure, writeBuf, *writeCount, writeBufLen, &readCount);
-                if (NS_FAILED(rv)) {
-                    // save the failure condition so that we can get it again later
-                    pipe->mCondition = rv;
-                    goto done;
-                }
-                if (readCount == 0) {
+                if (rv == NS_BASE_STREAM_WOULD_BLOCK || readCount == 0) {
                     // The reader didn't have anything else to put in the buffer, so
                     // call flush to notify the guy downstream, hoping that he'll somehow
                     // wake up the guy upstream to eventually produce more data for us.
                     nsresult rv2 = Flush();
-                    if (rv2 == NS_BASE_STREAM_WOULD_BLOCK || NS_FAILED(rv2))
+                    if (/*rv2 == NS_BASE_STREAM_WOULD_BLOCK || */NS_FAILED(rv2))
                         goto done;
                     // else we flushed, so go around again
                     continue;
+                }
+                if (NS_FAILED(rv)) {
+                    // save the failure condition so that we can get it again later
+                    pipe->mCondition = rv;
+                    goto done;
                 }
                 NS_ASSERTION(readCount <= writeBufLen, "reader returned bad readCount");
                 writeBuf += readCount;
