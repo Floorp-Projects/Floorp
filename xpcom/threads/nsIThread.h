@@ -107,9 +107,7 @@ public:
 
     NS_IMETHOD DispatchRequest(nsIRunnable* runnable) = 0;
 
-    NS_IMETHOD Join() = 0;
-
-    NS_IMETHOD Interrupt() = 0;
+    NS_IMETHOD Shutdown() = 0;
 };
 
 extern NS_BASE nsresult
