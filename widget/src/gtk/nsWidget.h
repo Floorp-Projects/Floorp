@@ -179,6 +179,7 @@ protected:
 
 
   PRBool DispatchWindowEvent(nsGUIEvent* event);
+  PRBool DispatchWindowEvent(nsGUIEvent* event, nsEventStatus &aEventStatus);
 
   // Return the Gdk window whose background should change
   virtual GdkWindow *GetWindowForSetBackground();
