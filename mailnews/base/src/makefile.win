@@ -71,6 +71,8 @@ EXPORTS=                \
 	nsMsgMailSession.h  \
 	nsMsgAppCore.h		\
 	nsMessageViewDataSource.h \
+    nsMsgAccount.h      \
+    nsMsgAccountManager.h   \
 	$(NULL)
 
 LINCS=                       \
