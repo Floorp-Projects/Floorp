@@ -238,8 +238,8 @@ function onOK()
     }
 
     try {
-      // false means don't delete selected text when inserting
-      editorShell.InsertElementAtSelection(tableElement, false);
+      // true means delete selection when inserting
+      editorShell.InsertElementAtSelection(tableElement, true);
     } catch (e) {
       dump("Exception occured in InsertElementAtSelection\n");
     }
