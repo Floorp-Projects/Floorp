@@ -572,7 +572,7 @@ public abstract class ScriptableObject implements Scriptable {
                 {
                     return val;
                 }
-                if (val instanceof Wrapper) {
+                if (val instanceof NativeJavaObject) {
                     // Let a wrapped java.lang.String pass for a primitive 
                     // string.
                     Object u = ((Wrapper) val).unwrap();
