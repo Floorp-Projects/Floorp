@@ -25,13 +25,8 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS=   xpcom		\
-	util		\
-	webshell	\
+DIRS=   util		\
+	webclient	\
 	$(NULL)
-
-ifeq ($(OS_ARCH),BeOS)
-EXTRA_DSO_LDOPTS += -lbe
-endif
 
 include $(topsrcdir)/config/rules.mk
