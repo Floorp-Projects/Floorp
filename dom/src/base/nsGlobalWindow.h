@@ -209,6 +209,7 @@ protected:
   nsresult GetScrollInfo(nsIScrollableView** aScrollableView, float* aP2T,
                          float* aT2P);
   nsresult SecurityCheckURL(const char *aURL);
+  PRBool   CheckForAbusePoint();
 
   void FlushPendingNotifications();
   nsresult CheckSecurityWidthAndHeight(PRInt32* width, PRInt32* height);
@@ -247,6 +248,7 @@ protected:
   PRPackedBool                  mTimeoutsWereCleared;
   PRPackedBool                  mFirstDocumentLoad;
   PRPackedBool                  mIsScopeClear;
+  PRPackedBool                  mIsDocumentLoaded; // true between onload and onunload events
   nsString                      mStatus;
   nsString                      mDefaultStatus;
   nsString                      mTitle;
