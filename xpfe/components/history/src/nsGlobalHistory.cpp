@@ -1165,7 +1165,10 @@ nsGlobalHistory::ArcLabelsOut(nsIRDFResource* aSource,
     rv = NS_NewISupportsArray(getter_AddRefs(array));
     if (NS_FAILED(rv)) return rv;
 
-    array->AppendElement(kNC_child);
+//  XXX rjc: comment this out for the short term;
+//  Note: shouldn't return kNC_child unless its really a container
+//  array->AppendElement(kNC_child);
+
     array->AppendElement(kNC_Date);
     array->AppendElement(kNC_VisitCount);
     array->AppendElement(kNC_Name);
