@@ -107,7 +107,7 @@ calEvent.prototype = {
     set icalComponent(event) {
         if (this.mImmutable)
             throw Components.results.NS_ERROR_FAILURE;
-        if (event.componentType != "VEVENT"); {
+        if (event.componentType != "VEVENT") {
             event = event.getFirstSubcomponent("VEVENT");
             if (!event)
 
