@@ -263,11 +263,13 @@ protected:
   /**
    * @param  aContainer a content node which could be a descendant of
    *         mRootContent
+
    * @return PR_TRUE if mRootContent is null, PR_FALSE if aContainer
-   *         is null, PR_TRUE if aContainer is a descendant of mRootContent,
-   *         PR_FALSE otherwise
+   *         is null, PR_TRUE if aContainer is a descendant of mRootContent
+   *         (though if mDeep is false, only aContainer == mRootContent
+   *         counts), PR_FALSE otherwise
    */
-  PRBool IsDescendantOfRoot(nsIContent* aContainer);
+  PRBool MayContainRelevantNodes(nsIContent* aContainer);
   /**
    * Does this subtree contain our mRootContent?
    *
