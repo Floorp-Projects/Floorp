@@ -88,6 +88,7 @@
     {
       border              : 1px solid threedface;
       padding             : 1px 1px 1px 5px;
+      min-width           : 1px;
     }
 
   .box-texttab:hover > .sidebar-panel-header-box

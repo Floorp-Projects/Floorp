@@ -22,6 +22,8 @@
 DEPTH		= ..\..\..\..
 THEME_ROOT_DEPTH = ..\..
 
+DIRS= win
+
 include <$(DEPTH)\config\rules.mak>
 include <$(THEME_ROOT_DEPTH)\theme.mk>
 
