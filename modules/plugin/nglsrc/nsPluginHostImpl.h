@@ -340,6 +340,7 @@ private:
   char        *mPluginPath;
   nsPluginTag *mPlugins;
   PRBool      mPluginsLoaded;
+  PRBool      mDontShowBadPluginMessage;
 
   nsActivePluginList mActivePluginList;
 };
