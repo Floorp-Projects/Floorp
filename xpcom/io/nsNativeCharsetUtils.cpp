@@ -839,6 +839,7 @@ NS_ShutdownNativeCharsetUtils()
 #elif defined(XP_BEOS)
 
 #include "nsAString.h"
+#include "nsReadableUtils.h"
 #include "nsString.h"
 
 NS_COM nsresult
