@@ -185,11 +185,11 @@ public:
  * @return
  */
 inline PRInt32 IndexOfTagInSet(PRInt32 aTag,const eHTMLTags aTagSet[],PRInt32 aCount)  {
-  PRInt32 index;
+  PRInt32 theIndex;
 
-  for(index=0;index<aCount;index++)
-    if(aTag==aTagSet[index]) {
-      return index;
+  for(theIndex=0;theIndex<aCount;theIndex++)
+    if(aTag==aTagSet[theIndex]) {
+      return theIndex;
     }
   return kNotFound;
 }
