@@ -611,7 +611,8 @@ NS_IMETHODIMP nsFileControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
 
 #ifndef DEBUG_NEWFRAME
   if (nsHTMLAtoms::value == aName) {
-    mTextFrame->GetTextControlFrameState(aValue);
+    if (mTextFrame)
+      mTextFrame->GetTextControlFrameState(aValue);
   }
 #endif
   return NS_OK;
