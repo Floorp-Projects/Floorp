@@ -23,6 +23,8 @@
 
 #include "CAutoCompleteURLEditField.h"
 
+#include <string>
+#include "CAutoPtrXP.h"
 #include <PP_Types.h>		// for Char16 typedef
 #include <UKeyFilters.h>	// for UKeyFilters::IsPrintingChar proto
 #include <LowMem.h>			// for LMGetTicks() proto
@@ -30,13 +32,12 @@
 #include "xp_mem.h"	// for XP_FREE macro
 #include "glhist.h"	// for urlMatch proto
 
-#include "PascalString.h"	// for CString/CStr255 stuff
 
-const UInt32 CAutoCompleteURLEditField::matchDelay = 20;
 
 CAutoCompleteURLEditField::CAutoCompleteURLEditField(LStream* inStream)
-:	CURLEditField(inStream),
-		lastKeyPressTicks(0)
+:	CURLEditField(inStream)
+	,	mNextMatchTime(ULONG_MAX)
+	,	mStartOver(true)
 {
 }
 
@@ -44,46 +45,125 @@ CAutoCompleteURLEditField::CAutoCompleteURLEditField(LStream* inStream)
 // i18n unfriendly, but that's just a guess.
 Boolean CAutoCompleteURLEditField::HandleKeyPress(const EventRecord& inKeyEvent)
 {
-	Char16 theChar = inKeyEvent.message & charCodeMask;
+	Char16	theChar = inKeyEvent.message & charCodeMask;
+
+	// NOTE: I believe UKeyFilters::IsPrintingChar() makes this method
+	// i18n unfriendly, but that's just a guess.
 	if (UKeyFilters::IsPrintingChar(theChar))
-		lastKeyPressTicks = LMGetTicks();
-	return CURLEditField::HandleKeyPress(inKeyEvent);
+		mNextMatchTime = ::LMGetTicks() + kMatchDelay;
+	
+	// urlMatch is optimized to search from the current entry when
+	// the search string is simply getting longer. But if the user
+	// edits the existing text, we want to search again from the start
+	if (UKeyFilters::IsTEDeleteKey(theChar) ||
+		UKeyFilters::IsTECursorKey(theChar) ||
+		UKeyFilters::IsExtraEditKey(theChar))
+	{
+		mStartOver = true;
+	}
+		
+	return Inherited::HandleKeyPress(inKeyEvent);
 }
+
+void CAutoCompleteURLEditField::ClickSelf(const SMouseDownEvent& inMouseDown)
+{
+	Inherited::ClickSelf(inMouseDown);
+	// this click can result in a selection that allows the user to
+	// overtype selected text. So autocomplete on the whole thing
+	// again
+	mStartOver = true;
+}
+
+#pragma mark -
+
+class CAutocompleteTypingAction : public LTETypingAction
+{
+	public:
+		CAutocompleteTypingAction()
+			: LTETypingAction(nil, nil, nil) {}
+		void UpdateAfterAutocomplete(Int16 inNewLength);
+};
+
+void CAutocompleteTypingAction::UpdateAfterAutocomplete(Int16 inNewLength)
+{
+	mTypingEnd = inNewLength;
+}
+
+#pragma mark -
 
 void CAutoCompleteURLEditField::SpendTime(const EventRecord	&inMacEvent)
 {
-	if (lastKeyPressTicks && (LMGetTicks() - lastKeyPressTicks > matchDelay))
+	if (LMGetTicks() >= mNextMatchTime)
 	{
-		char *result = NULL;
-		CStr255 str;
-		GetDescriptor(str);
-		if (str.Length() > 0)
+		autoCompStatus status = notFoundDone;	// safe in case of throw below
+		
+		try
 		{
-			// remove selection from search string
-			if ((**GetMacTEH()).selEnd - (**GetMacTEH()).selStart > 0)
-				str.Delete((**GetMacTEH()).selStart, kStr255Len);
-			autoCompStatus status = stillSearching;
-			bool firstTime = true;
-			while (status == stillSearching)
+			char urlText[2048];
+			Int32 urlLength = sizeof(urlText);
+			GetDescriptor(urlText, urlLength);
+			if (urlLength > 0)
 			{
-				status = urlMatch(str, &result, firstTime, false);
-				firstTime = false;
-			}
-			if (status == foundDone)
-			{
-				unsigned char selStart = str.Length();
-				// append search result
-				str += (result + str.Length());
-				SetDescriptor(str);
-				FocusDraw();			// SetDescriptor() mucks with the port rect
+				string originalText = urlText;
+				// remove selection from search string
+				UInt16 selStart = (**GetMacTEH()).selStart;
+				UInt16 selEnd = (**GetMacTEH()).selEnd;
+				if (selEnd - selStart > 0)
+					memmove(urlText + selStart,
+						urlText + selEnd,
+						1 + (**GetMacTEH()).teLength - selEnd);
 				
-				// then set selection
-				::TESetSelect(selStart, str.Length() + 1, GetMacTEH());
-				XP_FREE(result);	// urlMatch uses XP_STRDUP to pass back a new string
+#ifdef DEBUG
+				if (mStartOver)
+					mTimesSearched = 0;
+				
+				mTimesSearched ++;
+#endif
+				char* tempResult = NULL;
+				status = urlMatch(urlText, &tempResult, mStartOver, false);
+				CAutoPtrXP<char> result = tempResult;
+				mStartOver = false;
+
+				// urlMatch will return foundDone even if it is returning the same
+				// string it found last time.  So don't bother doing all the
+				// processing if that is the case.
+				if (status == foundDone && result.get() && result.get() != originalText )
+				{
+					selEnd = strlen(result.get());
+					SetDescriptor(result.get(), selEnd);
+
+					FocusDraw();			// SetDescriptor() mucks with the port rect					
+					// then set selection
+					::TESetSelect(selStart, selEnd, GetMacTEH());
+
+					if (mTypingAction)
+					{
+						// If the user undoes, she wants to undo the autocompleted text AND the typing.
+						// This is a static cast, whose purpose is to get at the protected member
+						// mTypingEnd of the LTETypingAction class.  Being a static_cast of one kind
+						// of class to another kind of class, it is, officially, skanky.  If you don't
+						// want to be skanky, you could just cancel
+						// the undoability of the user's typed characters after a successful
+						// autocomplete, by calling PostAction(nil) instead.
+						// This would be doing the user a disservice, though.
+						CAutocompleteTypingAction* acTypingAction
+							= dynamic_cast<CAutocompleteTypingAction*>(mTypingAction);
+						acTypingAction->UpdateAfterAutocomplete(selEnd);
+					}
+				}
 			}
 		}
-		lastKeyPressTicks = 0;
+		catch(...)
+		{
+		}
+		// we want to keep searching next time we are called. mNextMatchTime is thus only
+		// updated when the user starts typing again, or we complete (successfully or not)
+		if (status != stillSearching)
+		{
+			mStartOver = true;
+			mNextMatchTime = ULONG_MAX;
+		}
 	}
 	
-	CURLEditField::SpendTime(inMacEvent);
+	Inherited::SpendTime(inMacEvent);
 }

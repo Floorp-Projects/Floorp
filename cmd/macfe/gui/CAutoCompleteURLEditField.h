@@ -16,10 +16,12 @@
  * Reserved.
  */
 
+//
 // CAutoCompleteURLEditField.h
-
+//
 // Subclass of CURLEditField that calls urlMatch function to do
-// URL string matching
+// URL string completion
+//
 
 #pragma once
 
@@ -28,23 +30,27 @@
 #include <Types.h>	// for UInt32 typedef
 #include <LStream.h>
 
+
 class CAutoCompleteURLEditField : public CURLEditField
 {
-private:
-
 	typedef CURLEditField	Inherited;
 	
 public:
 	enum {	class_ID = 'AcUF' };
-	
-	const static UInt32 matchDelay;	// ticks before we start URL matching
-	
+	enum { kMatchDelay = 20 };			// ticks before we start URL matching
+
 	CAutoCompleteURLEditField(LStream* inStream);
 
-	virtual Boolean		HandleKeyPress(const EventRecord& inKeyEvent);
+protected:
 
+	virtual Boolean		HandleKeyPress(const EventRecord& inKeyEvent);
+	virtual void		ClickSelf ( const SMouseDownEvent & inMouseDown );
 	virtual	void		SpendTime(const EventRecord	&inMacEvent);
 
-protected:
-	UInt32	lastKeyPressTicks;	// contains tick count of last key press
-};
+	UInt32		mNextMatchTime;	// contains tick count for next match action
+	bool		mStartOver;		// true to start the search from scratch (url changed)
+#ifdef DEBUG
+	Int32		mTimesSearched;	// how many times we searched
+#endif
+
+}; // class CAutoCompleteURLEditField
