@@ -206,7 +206,9 @@ stub_op_dcl(TreeState *state)
     struct stub_private *priv = state->priv;
     IDL_tree iface, iter, param;
     char *className;
-
+    gboolean has_parameters = (op->parameter_dcls!=NULL);
+    gboolean has_retval = (op->op_type_spec != NULL);
+    
     if (op->f_noscript)
         return TRUE;
 
@@ -255,33 +257,46 @@ stub_op_dcl(TreeState *state)
     fputs("))\n"
           "    return JS_FALSE;\n",
           state->file);
-
-    if (op->op_type_spec) {
+    
+    /* declare the variable which will hold the return value */
+    if (has_retval) {
         state->tree = op->op_type_spec;
         fputs("  ", state->file);
         xpcom_type(state);
         fputs(" retval;\n", state->file);
+    }
 
-        fprintf(state->file,
-                "  nsresult result = priv->%s(",
-                IDL_IDENT(op->ident).str);
-        for (iter = op->parameter_dcls; iter; iter = IDL_LIST(iter).next) {
+    fprintf(state->file,
+            "  nsresult result = priv->%s(",
+            IDL_IDENT(op->ident).str);
+    for (iter = op->parameter_dcls; iter; iter = IDL_LIST(iter).next) {
             param = IDL_LIST(iter).data;
             fprintf(state->file,
-                    "%s, ",
+                    "%s",
                     IDL_IDENT(IDL_PARAM_DCL(param).simple_declarator).str);
-        }
+            if (IDL_LIST(iter).next)
+                fputs(", ",state->file);
+    }
+
+    /* the retval is the last parameter */
+    if (has_retval) {
+        if (has_parameters) fputs(", ", state->file);
         fputs("&retval);\n", state->file);
+    } else {
+        fputs(");\n", state->file);
+    }
 
-        fputs("  if (NS_FAILED(result)) {\n"
-              "    JS_ReportError(cx, XXXnsresult2string(result));\n"
-              "    return JS_FALSE;\n"
-              "  }\n",
-              state->file);
-
+    fputs("  if (NS_FAILED(result)) {\n"
+          "    JS_ReportError(cx, XXXnsresult2string(result));\n"
+          "    return JS_FALSE;\n"
+          "  }\n",
+          state->file);
+    
+    if (has_retval) {
         if (!emit_convert_result(state, "retval", "rval", ""))
             return FALSE;
     }
+    
     fputs("  return JS_TRUE;\n"
           "}\n",
           state->file);
