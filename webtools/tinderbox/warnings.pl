@@ -263,7 +263,7 @@ __END_HEADER
         if ($warn_rec->{count} == 1) {
           print "See build log";
         } else {
-          print "See 1st of $warn_rec->{count} occurances in build log";
+          print "See 1st of $warn_rec->{count} occurrences in build log";
         }
         print "</a>)<br>";
         
