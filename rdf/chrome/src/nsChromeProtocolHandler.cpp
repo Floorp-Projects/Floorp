@@ -90,13 +90,21 @@ nsChromeProtocolHandler::MakeAbsolute(const char* aSpec,
                                       nsIURI* aBaseURI,
                                       char* *result)
 {
-    // presumably, there's no such thing as a relative about: URI,
-    // so just copy the input spec
-    char* dup = nsCRT::strdup(aSpec);
-    if (dup == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    *result = dup;
-    return NS_OK;
+    nsresult rv;
+
+    nsIURI* url;
+    if (aBaseURI)
+        rv = aBaseURI->Clone(&url);
+    else
+        rv = nsComponentManager::CreateInstance(kStandardURLCID, nsnull, nsCOMTypeInfo<nsIURI>::GetIID(), (void**)&url);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = url->SetSpec((char*)aSpec);
+
+    url->GetSpec(result);
+    NS_RELEASE(url);
+    return rv;
+
 }
 
 NS_IMETHODIMP
