@@ -327,25 +327,17 @@ void nsWindow::InitCallbacks(char * aName)
 // Return some native data according to aDataType
 //
 //-------------------------------------------------------------------------
-void *nsWindow::GetNativeData(PRUint32 aDataType)
+void * nsWindow::GetNativeData(PRUint32 aDataType)
 {
-  switch(aDataType)
+  if (aDataType == NS_NATIVE_WINDOW)
   {
-  case NS_NATIVE_WINDOW:
-    return (void *)GTK_LAYOUT(mWidget)->bin_window;
-  case NS_NATIVE_DISPLAY:
-    return (void *)GDK_DISPLAY();
-  case NS_NATIVE_WIDGET:
-  case NS_NATIVE_PLUGIN_PORT:
-    return (void *)mWidget;
-  case NS_NATIVE_GRAPHIC:
-    /* GetSharedGC ups the ref count on the GdkGC so make sure you release
-     * it afterwards. */
-    return (void *)((nsToolkit *)mToolkit)->GetSharedGC();
-  default:
-    break;
+    // The GTK layout widget uses a clip window to do scrolling.
+    // All the action happens on that window - called the 'bin_window'
+    if (mWidget)
+      return (void *) GTK_LAYOUT(mWidget)->bin_window;
   }
-  return nsnull;
+
+  return nsWidget::GetNativeData(aDataType);
 }
 
 //-------------------------------------------------------------------------
@@ -412,7 +404,10 @@ nsresult nsWindow::SetIcon(GdkPixmap *pixmap,
   return NS_OK;
 }
 
+// Uncommenting this will cause OnPaint() to printf what it is doing
 #undef TRACE_PAINT
+
+// Uncommenting this will cause the OnPaint() area rect to flash
 #undef TRACE_PAINT_FLASH
 
 #ifdef TRACE_PAINT_FLASH
@@ -464,7 +459,24 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
     result = DispatchWindowEvent(&event);
 
 #ifdef TRACE_PAINT_FLASH
-    nsGtkUtils::gdk_window_flash(renderWindow,2,100000);
+    GdkRectangle ar;
+    GdkRectangle * area = NULL;
+
+    if (event.rect)
+    {
+      ar.x = event.rect->x;
+      ar.y = event.rect->y;
+
+      ar.width = event.rect->width;
+      ar.height = event.rect->height;
+
+      area = &ar;
+    }
+
+    nsGtkUtils::gdk_window_flash(renderWindow,
+                                 1,
+                                 100000,
+                                 area);
 #endif
   }
   return result;
