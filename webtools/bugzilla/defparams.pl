@@ -19,6 +19,7 @@
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 Dawn Endico <endico@mozilla.org>
+#                 Dan Mosedale <dmose@mozilla.org>
 
 
 # This file defines all the parameters that we have a GUI to edit within
@@ -368,7 +369,14 @@ DefParam("allowbugdeletion",
          "b",
          0);
 
+DefParam("strictvaluechecks",
+         "Do stricter integrity checking on both form submission values and values read in from the database.",
+         "b",
+         0);
 
-
+DefParam("browserbugmessage",
+         "If strictvaluechecks is on, and the bugzilla gets unexpected data from the browser, in addition to displaying the cause of the problem, it will output this HTML as well.",
+         "l",
+         "this may indicate a bug in your browser.\n");
 1;
 

@@ -19,6 +19,7 @@
 # Rights Reserved.
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
+#                 Dan Mosedale <dmose@mozilla.org>
 
 use diagnostics;
 use strict;
@@ -39,8 +40,26 @@ PutHeader ("Bug processed");
 
 GetVersionTable();
 
+if ( Param("strictvaluechecks") ) {
+    CheckFormFieldDefined(\%::FORM, 'product');
+    CheckFormFieldDefined(\%::FORM, 'version');
+    CheckFormFieldDefined(\%::FORM, 'component');
+}
+
 if ($::FORM{'product'} ne $::dontchange) {
+    if ( Param("strictvaluechecks") ) {
+        CheckFormField(\%::FORM, 'product', \@::legal_product);
+    }
     my $prod = $::FORM{'product'};
+
+    # note that when this script is called from buglist.cgi (rather
+    # than show_bug.cgi), it's possible that the product will be changed
+    # but that the version and/or component will be set to 
+    # "--dont_change--" but still happen to be correct.  in this case,
+    # the if statement will incorrectly trigger anyway.  this is a 
+    # pretty weird case, and not terribly unreasonable behavior, but 
+    # worthy of a comment, perhaps.
+    #
     my $vok = lsearch($::versions{$prod}, $::FORM{'version'}) >= 0;
     my $cok = lsearch($::components{$prod}, $::FORM{'component'}) >= 0;
     if (!$vok || !$cok) {
@@ -79,10 +98,36 @@ if ($::FORM{'product'} ne $::dontchange) {
 
 my @idlist;
 if (defined $::FORM{'id'}) {
+
+    # since this means that we were called from show_bug.cgi, now is a good
+    # time to do a whole bunch of error checking that can't easily happen when
+    # we've been called from buglist.cgi, because buglist.cgi only tweaks
+    # values that have been changed instead of submitting all the new values.
+    # (XXX those error checks need to happen too, but implementing them 
+    # is more work in the current architecture of this script...)
+    #
+    if ( Param('strictvaluechecks') ) { 
+        CheckFormField(\%::FORM, 'rep_platform', \@::legal_platform);
+        CheckFormField(\%::FORM, 'priority', \@::legal_priority);
+        CheckFormField(\%::FORM, 'bug_severity', \@::legal_severity);
+        CheckFormField(\%::FORM, 'component', 
+                       \@{$::components{$::FORM{'product'}}});
+        CheckFormFieldDefined(\%::FORM, 'bug_file_loc');
+        CheckFormFieldDefined(\%::FORM, 'short_desc');
+        CheckFormField(\%::FORM, 'product', \@::legal_product);
+        CheckFormField(\%::FORM, 'version', 
+                       \@{$::versions{$::FORM{'product'}}});
+        CheckFormField(\%::FORM, 'op_sys', \@::legal_opsys);
+        CheckFormFieldDefined(\%::FORM, 'longdesclength');
+        CheckPosInt($::FORM{'id'});
+    }
     push @idlist, $::FORM{'id'};
 } else {
     foreach my $i (keys %::FORM) {
         if ($i =~ /^id_/) {
+            if ( Param('strictvaluechecks') ) { 
+                CheckPosInt(substr($i, 3));
+            }
             push @idlist, substr($i, 3);
         }
     }
@@ -92,6 +137,8 @@ if (!defined $::FORM{'who'}) {
     $::FORM{'who'} = $::COOKIE{'Bugzilla_login'};
 }
 
+# the common updates to all bugs in @idlist start here
+#
 print "<TITLE>Update Bug " . join(" ", @idlist) . "</TITLE>\n";
 if (defined $::FORM{'id'}) {
     navigation_header();
@@ -138,10 +185,9 @@ foreach my $b (grep(/^bit-\d*$/, keys %::FORM)) {
     }
 }
 
-
-foreach my $field ("rep_platform", "priority", "bug_severity", "url",
+foreach my $field ("rep_platform", "priority", "bug_severity",          
                    "summary", "component", "bug_file_loc", "short_desc",
-                   "product", "version", "component", "op_sys",
+                   "product", "version", "op_sys",
                    "target_milestone", "status_whiteboard") {
     if (defined $::FORM{$field}) {
         if ($::FORM{$field} ne $::dontchange) {
@@ -167,6 +213,9 @@ if (defined $::FORM{'qa_contact'}) {
 
 ConnectToDatabase();
 
+if ( Param('strictvaluechecks') ) {
+    CheckFormFieldDefined(\%::FORM, 'knob');
+}
 SWITCH: for ($::FORM{'knob'}) {
     /^none$/ && do {
         last SWITCH;
@@ -187,6 +236,14 @@ SWITCH: for ($::FORM{'knob'}) {
     /^reassign$/ && do {
         ChangeStatus('NEW');
         DoComma();
+        if ( Param("strictvaluechecks") ) {
+          if ( !defined$::FORM{'assigned_to'} ||
+               trim($::FORM{'assigned_to'}) eq "") {
+            print "You cannot reassign to a bug to noone.  Unless you intentionally cleared out the \"Reassign bug to\" field, ";
+            print Param("browserbugmessage");
+            exit 0;
+          }
+        }
         my $newid = DBNameToIdAndCheck($::FORM{'assigned_to'});
         $::query .= "assigned_to = $newid";
         last SWITCH;
@@ -222,18 +279,24 @@ SWITCH: for ($::FORM{'knob'}) {
     /^duplicate$/ && do {
         ChangeStatus('RESOLVED');
         ChangeResolution('DUPLICATE');
+        if ( Param('strictvaluechecks') ) {
+            CheckFormFieldDefined(\%::FORM,'dup_id');
+        }
         my $num = trim($::FORM{'dup_id'});
         if ($num !~ /^[0-9]*$/) {
             print "You must specify a bug number of which this bug is a\n";
             print "duplicate.  The bug has not been changed.\n";
             exit;
         }
-        if ($::FORM{'dup_id'} == $::FORM{'id'}) {
+        if (defined($::FORM{'id'}) && $::FORM{'dup_id'} == $::FORM{'id'}) {
             print "Nice try, $::FORM{'who'}.  But it doesn't really make sense to mark a\n";
             print "bug as a duplicate of itself, does it?\n";
             exit;
         }
         AppendComment($::FORM{'dup_id'}, $::FORM{'who'}, "*** Bug $::FORM{'id'} has been marked as a duplicate of this bug. ***");
+        if ( Param('strictvaluechecks') ) {
+          CheckFormFieldDefined(\%::FORM,'comment');
+        }
         $::FORM{'comment'} .= "\n\n*** This bug has been marked as a duplicate of $::FORM{'dup_id'} ***";
 
         print "<TABLE BORDER=1><TD><H2>Notation added to bug $::FORM{'dup_id'}</H2>\n";
@@ -301,7 +364,10 @@ sub LogDependencyActivity {
     return 0;
 }
 
-
+# this loop iterates once for each bug to be processed (eg when this script
+# is called by  with multiple bugs selected from buglist.cgi instead of
+# show_bug.cgi).
+#
 foreach my $id (@idlist) {
     my %dependencychanged;
     SendSQL("lock tables bugs write, bugs_activity write, cc write, profiles write, dependencies write, votes write");
@@ -317,6 +383,7 @@ The changes made were:
         DumpBugActivity($id, $delta_ts);
         my $longdesc = GetLongDescription($id);
         my $longchanged = 0;
+
         if (length($longdesc) > $::FORM{'longdesclength'}) {
             $longchanged = 1;
             print "<P>Added text to the long description:<blockquote><pre>";
@@ -476,6 +543,10 @@ The changes made were:
     }
 
 
+    # get a snapshot of the newly set values out of the database, 
+    # and then generate any necessary bug activity entries by seeing 
+    # what has changed since before we wrote out the new values.
+    #
     my @newvalues = SnapShotBug($id);
     foreach my $col (@::log_columns) {
         my $old = shift @oldvalues;

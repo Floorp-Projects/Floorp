@@ -19,6 +19,7 @@
 # Rights Reserved.
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
+#                 Dan Mosedale <dmose@mozilla.org>
 
 use diagnostics;
 use strict;
@@ -755,7 +756,7 @@ document.write(\" <input type=button value=\\\"Uncheck All\\\" onclick=\\\"SetCh
 <BR>
 <TEXTAREA WRAP=HARD NAME=comment ROWS=5 COLS=80></TEXTAREA><BR>";
 
-if ($::usergroupset ne '0' && $buggroupset =~ /^\d*$/) {
+if ($::usergroupset ne '0' && $buggroupset =~ /^\d+$/) {
     SendSQL("select bit, description, (bit & $buggroupset != 0) from groups where bit & $::usergroupset != 0 and isbuggroup != 0 order by bit");
     while (MoreSQLData()) {
         my ($bit, $description, $ison) = (FetchSQLData());

@@ -19,7 +19,7 @@
 # Rights Reserved.
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
-
+#                 Dan Mosedale <dmose@mozilla.org>
 
 use diagnostics;
 use strict;
@@ -63,7 +63,6 @@ if (!defined $::FORM{'component'} || $::FORM{'component'} eq "") {
     print "and choose a component.\n";
     exit 0
 }
-    
 
 if (!defined $::FORM{'short_desc'} || trim($::FORM{'short_desc'}) eq "") {
     print "You must enter a summary for this bug.  Please hit the\n";
@@ -71,6 +70,22 @@ if (!defined $::FORM{'short_desc'} || trim($::FORM{'short_desc'}) eq "") {
     exit;
 }
 
+if ( Param("strictvaluechecks") ) {
+    GetVersionTable();  
+    CheckFormField(\%::FORM, 'reporter');
+    CheckFormField(\%::FORM, 'product', \@::legal_product);
+    CheckFormField(\%::FORM, 'version', \@{$::versions{$::FORM{'product'}}});
+    CheckFormField(\%::FORM, 'rep_platform', \@::legal_platform);
+    CheckFormField(\%::FORM, 'bug_severity', \@::legal_severity);
+    CheckFormField(\%::FORM, 'priority', \@::legal_priority);
+    CheckFormField(\%::FORM, 'op_sys', \@::legal_opsys);
+    CheckFormFieldDefined(\%::FORM, 'assigned_to');
+    CheckFormField(\%::FORM, 'bug_status', \@::legal_bug_status);
+    CheckFormFieldDefined(\%::FORM, 'bug_file_loc');
+    CheckFormField(\%::FORM, 'component', 
+                   \@{$::components{$::FORM{'product'}}});
+    CheckFormFieldDefined(\%::FORM, 'comment');
+}
 
 my $forceAssignedOK = 0;
 if ($::FORM{'assigned_to'} eq "") {
@@ -87,8 +102,7 @@ $::FORM{'reporter'} = DBNameToIdAndCheck($::FORM{'reporter'});
 
 my @bug_fields = ("reporter", "product", "version", "rep_platform",
                   "bug_severity", "priority", "op_sys", "assigned_to",
-                  "bug_status", "bug_file_loc", "short_desc", "component",
-                  "status_whiteboard", "target_milestone");
+                  "bug_status", "bug_file_loc", "short_desc", "component");
 
 if (Param("useqacontact")) {
     SendSQL("select initialqacontact from components where program=" .

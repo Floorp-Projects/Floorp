@@ -18,6 +18,7 @@
 # Rights Reserved.
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
+#                 Dan Mosedale <dmose@mozilla.org>
 
 # Contains some global routines used throughout the CGI scripts of Bugzilla.
 
@@ -169,10 +170,56 @@ sub ProcessMultipartFormFields {
         $::FORM{$i} =~ s/\r$//;
     }
 }
-        
 
 
+# check and see if a given field exists, is non-empty, and is set to a 
+# legal value.  assume a browser bug and abort appropriately if not.
+# if $legalsRef is not passed, just check to make sure the value exists and 
+# is non-NULL
+# 
+sub CheckFormField (\%$;\@) {
+    my ($formRef,                # a reference to the form to check (a hash)
+        $fieldname,              # the fieldname to check
+        $legalsRef               # (optional) ref to a list of legal values 
+       ) = @_;
 
+    if ( !defined $formRef->{$fieldname} ||
+         trim($formRef->{$fieldname}) eq "" ||
+         (defined($legalsRef) && 
+          lsearch($legalsRef, $formRef->{$fieldname})<0) ){
+
+        print "A legal $fieldname was not set; ";
+        print Param("browserbugmessage");
+        exit 0;
+      }
+}
+
+# check and see if a given field is defined, and abort if not
+# 
+sub CheckFormFieldDefined (\%$) {
+    my ($formRef,                # a reference to the form to check (a hash)
+        $fieldname,              # the fieldname to check
+       ) = @_;
+
+    if ( !defined $formRef->{$fieldname} ) {
+        print "$fieldname was not defined; ";
+        print Param("browserbugmessage");
+        exit 0;
+      }
+}
+
+# check and see if a given string actually represents a positive
+# integer, and abort if not.
+# 
+sub CheckPosInt($) {
+    my ($number) = @_;              # the fieldname to check
+
+    if ( $number !~ /^[1-9][0-9]*$/ ) {
+        print "Received string \"$number\" when postive integer expected; ";
+        print Param("browserbugmessage");
+        exit 0;
+      }
+}
 
 sub FormData {
     my ($field) = (@_);
@@ -247,7 +294,17 @@ sub make_options {
         }
     }
     if (!$found && $default ne "") {
+      if ( Param("strictvaluechecks") && 
+           ($default ne $::dontchange) && ($default ne "-All-") ) {
+        print "Possible bug database corruption has been detected.  " .
+              "Please send mail to " . Param("maintainer") . " with " .
+              "details of what you were doing when this message " . 
+              "appeared.  Thank you.\n";
+        exit 0;
+              
+      } else {
 	$popup .= "<OPTION SELECTED>$default";
+      }
     }
     return $popup;
 }
