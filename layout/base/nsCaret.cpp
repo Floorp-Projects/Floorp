@@ -1049,15 +1049,39 @@ void nsCaret::DrawCaret()
     // erased properly if the frame's right edge gets
     // invalidated.
 
-    nscoord cX = caretRect.x + caretRect.width;
-    nscoord fX = frameRect.x + frameRect.width;
+    nscoord caretXMost = caretRect.XMost();
+    nscoord frameXMost = frameRect.XMost();
 
-    if (caretRect.x <= fX && cX > fX)
+    if (caretRect.x <= frameXMost && caretXMost > frameXMost)
     {
-      caretRect.x -= cX - fX;
+      caretRect.x -= caretXMost - frameXMost;
 
-      if (caretRect.x < frameRect.x)
-        caretRect.x = frameRect.x;
+      const nsStyleVisibility* vis;
+      const nsStyleText* textStyle;
+      mLastCaretFrame->GetStyleData(eStyleStruct_Text, (const nsStyleStruct*&)textStyle);
+      mLastCaretFrame->GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&)vis);
+
+      if ((vis->mDirection == NS_STYLE_DIRECTION_LTR &&
+           textStyle->mTextAlign == NS_STYLE_TEXT_ALIGN_RIGHT) ||
+          (vis->mDirection == NS_STYLE_DIRECTION_RTL &&
+           textStyle->mTextAlign == NS_STYLE_TEXT_ALIGN_DEFAULT))
+      {
+        // If the frame is aligned right, stick the caret to the left
+        // edge of the frame.
+        if (caretRect.XMost() >= frameXMost)
+        {
+          caretRect.x = frameXMost - caretRect.width - 1;
+        }
+      }
+      else
+      {
+        // If the frame is aligned left, stick the caret to the right
+        // edge of the frame.
+        if (caretRect.x < frameRect.x)
+        {
+          caretRect.x = frameRect.x;
+        }
+      }
     }
 
     mCaretRect.IntersectRect(clipRect, caretRect);
