@@ -252,8 +252,7 @@ function DropOnFolderTree(event)
 		messageList.AppendElement(sourceNode);
 	}
 
-    if (sourceID.substring(0,6) == "news:/")
-		isNews = true;
+	isNews = isNewsURI(sourceID);
 
 	var targetNode = RDF.GetResource(targetID, true);
 	if (!targetNode)	return(false);

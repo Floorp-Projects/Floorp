@@ -96,8 +96,13 @@ function ChangeFolderByDOMNode(folderNode)
   }
   var uri = folderNode.getAttribute('id');
   dump(uri + "\n");
-  
+
   var isThreaded = folderNode.getAttribute('threaded');
+
+  if ((isThreaded == "") && isNewsURI(uri)) {
+    isThreaded = "true";
+  }
+
   var sortResource = folderNode.getAttribute('sortResource');
   if(!sortResource)
 	sortResource = "";
@@ -212,6 +217,16 @@ function ChangeFolderByURI(uri, isThreaded, sortID, sortDirection)
   }
 }
 
+function isNewsURI(uri)
+{
+    if (uri[0] != 'n') {
+        return false;
+    }
+    else {
+        return (uri.substring(0,6) == "news:/");
+    }
+}
+
 function RerootFolder(uri, newFolder, isThreaded, sortID, sortDirection)
 {
   dump('In reroot folder\n');
@@ -250,7 +265,7 @@ function RerootFolder(uri, newFolder, isThreaded, sortID, sortDirection)
 
   //Clear out the thread pane so that we can sort it with the new sort id without taking any time.
   folder.setAttribute('ref', "");
-   if ( uri.substring(0,6) == "news:/" )
+   if (isNewsURI(uri))
        SetNewsFolderColumns(true);
    else
        SetNewsFolderColumns(false);

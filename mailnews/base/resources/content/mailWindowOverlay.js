@@ -237,8 +237,7 @@ function MsgDeleteMessage(reallyDelete, fromToolbar)
     {
         var folderResource = srcFolder.QueryInterface(Components.interfaces.nsIRDFResource);
         var uri = folderResource.Value;
-        //dump("uri[0:6]=" + uri.substring(0,6) + "\n");
-        if (uri.substring(0,6) == "news:/")
+        if (isNewsURI(uri))
         {
             //dump("delete ignored!\n");
             return;
@@ -286,7 +285,7 @@ function MsgMoveMessage(destFolder)
 
         var srcResource = srcFolder.QueryInterface(Components.interfaces.nsIRDFResource);
         var srcUri = srcResource.Value;
-        if (srcUri.substring(0,6) == "news:/")
+        if (isNewsURI(srcUri))
         {
             CopyMessages(compositeDataSource, srcFolder, destMsgFolder, messages, false);
         }
