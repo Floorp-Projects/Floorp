@@ -17,8 +17,8 @@
  */
 
 #include "nsRegionMac.h"
+#include "nsScriptableRegion.h"
 #include "prmem.h"
-
 
 NS_EXPORT nsNativeRegionPool sNativeRegionPool;
 
@@ -105,9 +105,6 @@ void nsNativeRegionPool::ReleaseRegion(RgnHandle aRgnHandle)
 
 
 #pragma mark -
-//------------------------------------------------------------------------
-
-static NS_DEFINE_IID(kRegionIID, NS_IREGION_IID);
 
 //---------------------------------------------------------------------
 
@@ -128,9 +125,34 @@ nsRegionMac::~nsRegionMac()
 	}
 }
 
-NS_IMPL_QUERY_INTERFACE(nsRegionMac, kRegionIID);
 NS_IMPL_ADDREF(nsRegionMac);
 NS_IMPL_RELEASE(nsRegionMac);
+
+NS_IMETHODIMP nsRegionMac::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+	if (NULL == aInstancePtr) {
+		return NS_ERROR_NULL_POINTER;
+	}
+
+	*aInstancePtr = NULL;
+
+	if (aIID.Equals(NS_GET_IID(nsIRegion)) || aIID.Equals(NS_GET_IID(nsISupports))) {
+		*aInstancePtr = (void*) this;
+		NS_ADDREF_THIS();
+		return NS_OK;
+	}
+	if (aIID.Equals(NS_GET_IID(nsIScriptableRegion))) {
+		nsScriptableRegion* scriptableRegion = new nsScriptableRegion(this);
+		if (scriptableRegion != nsnull) {
+			*aInstancePtr = (void*) scriptableRegion;
+			NS_ADDREF(scriptableRegion);
+			return NS_OK;
+		}
+		return NS_ERROR_OUT_OF_MEMORY;
+	}
+
+	return NS_NOINTERFACE;
+}
 
 //---------------------------------------------------------------------
 
