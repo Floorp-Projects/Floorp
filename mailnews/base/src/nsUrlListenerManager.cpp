@@ -23,7 +23,9 @@
 #include <windows.h>    // for InterlockedIncrement
 #endif
 
-nsUrlListenerManager::nsUrlListenerManager()
+nsUrlListenerManager::nsUrlListenerManager() :
+    mRefCnt(0),
+    m_listeners(nsnull)
 {
 	NS_INIT_REFCNT();
 	// create a new isupports array to store our listeners in...
