@@ -250,7 +250,7 @@
 #define NS_STYLE_BORDER_STYLE_BG_SOLID          12
 // a bit ORed onto the style for table border collapsing indicating that the style was 
 // derived from a table with its rules attribute set
-#define NS_STYLE_BORDER_STYLE_RULES_MASK      0x10  
+#define NS_STYLE_BORDER_STYLE_RULES_MARKER      0x10  
 
 // See nsStyleDisplay
 #define NS_STYLE_CLEAR_NONE                     0
