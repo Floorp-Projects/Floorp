@@ -186,6 +186,12 @@ IMPORT_LIBRARY		:= $(NULL)
 endif
 endif
 
+ifdef FORCE_SHARED_LIB
+ifndef FORCE_STATIC_LIB
+LIBRARY			:= $(NULL)
+endif
+endif
+
 ifeq ($(OS_ARCH),WINNT)
 
 ifdef LIBRARY_NAME
@@ -834,7 +840,10 @@ ifneq ($(OS_ARCH),OS2)
 # that are built using other static libraries.  Confused...?
 #
 ifdef SHARED_LIBRARY_LIBS
-ifneq (,$(filter OSF1 BSD_OS FreeBSD NetBSD OpenBSD SunOS Darwin WINNT,$(OS_ARCH)))
+ifeq ($(OS_ARCH),WINNT)
+LOBJS	+= $(SHARED_LIBRARY_LIBS)
+else
+ifneq (,$(filter OSF1 BSD_OS FreeBSD NetBSD OpenBSD SunOS Darwin,$(OS_ARCH)))
 CLEANUP1	:= | egrep -v '(________64ELEL_|__.SYMDEF)'
 CLEANUP2	:= rm -f ________64ELEL_ __.SYMDEF
 else
@@ -842,18 +851,15 @@ CLEANUP2	:= true
 endif
 SUB_LOBJS	= $(shell for lib in $(SHARED_LIBRARY_LIBS); do $(AR_LIST) $${lib} $(CLEANUP1); done;)
 endif
-
-ifeq ($(OS_ARCH),WINNT)
-ifdef SHARED_LIBRARY_LIBS
-SUB_LOBJS	= $(SHARED_LIBRARY_LIBS)
-endif
 endif
 
 $(LIBRARY): $(OBJS) $(LOBJS) $(SHARED_LIBRARY_LIBS) Makefile Makefile.in
 	rm -f $@
+ifneq ($(OS_ARCH),WINNT)
 ifdef SHARED_LIBRARY_LIBS
 	@rm -f $(SUB_LOBJS)
 	@for lib in $(SHARED_LIBRARY_LIBS); do $(AR_EXTRACT) $${lib}; $(CLEANUP2); done
+endif
 endif
 	$(AR) $(AR_FLAGS) $(OBJS) $(LOBJS) $(SUB_LOBJS)
 	$(RANLIB) $@

@@ -57,14 +57,16 @@ LOCAL_INCLUDES = -I$(srcdir)/../../base/src
 # prevents building on Mac OS X (DARWIN).
 EXTRA_DSO_LIBS = rdfutil_s gkgfx gkconshared_s
 
-ifeq ($(OS_ARCH),WINNT)
-LOCAL_INCLUDES += -I$(srcdir)/../../base/src/win
-EXTRA_DSO_LIBS += inscreencap_s
-endif
-
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/$(LIB_PREFIX)inspector_s.$(LIB_SUFFIX) \
 		$(NULL)
+
+ifeq ($(OS_ARCH),WINNT)
+LOCAL_INCLUDES += -I$(srcdir)/../../base/src/win
+SHARED_LIBRARY_LIBS += \
+		$(DIST)/lib/$(LIB_PREFIX)inscreencap_s.$(LIB_SUFFIX) \
+		$(NULL)
+endif
 
 EXTRA_DSO_LDOPTS += \
 	$(LIBS_DIR) \

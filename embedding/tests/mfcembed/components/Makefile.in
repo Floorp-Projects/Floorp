@@ -52,6 +52,8 @@ EXTRA_DSO_LDOPTS += \
 	$(NSPR_LIBS) \
 	$(NULL)
 
+FORCE_SHARED_LIB = 1
+
 include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS	+= /D "WIN32_LEAN_AND_MEAN" /D "_AFXDLL" /D "USE_SINGLE_SIGN_ON" /D "_USRDLL" /D "_WINDLL"

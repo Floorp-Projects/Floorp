@@ -343,6 +343,32 @@ DSO_PIC_CFLAGS=
 MKSHLIB=
 endif
 
+# Force _all_ exported methods to be |_declspec(dllexport)| when we're
+# building them into the executable.
+ifeq ($(OS_ARCH),WINNT)
+ifdef MOZ_STATIC_COMPONENT_LIBS
+DEFINES	+= \
+	-D_IMPL_NS_APPSHELL \
+	-D_IMPL_NS_COOKIE \
+	-D_IMPL_NS_DOM \
+	-D_IMPL_NS_GFX \
+	-D_IMPL_NS_HTML \
+	-D_IMPL_NS_HTMLPARS \
+	-D_IMPL_NS_INTL \
+	-D_IMPL_NS_LAYOUT \
+	-D_IMPL_NS_MSG_BASE \
+	-D_IMPL_NS_NET \
+	-D_IMPL_NS_PICS \
+	-D_IMPL_NS_PLUGIN \
+	-D_IMPL_NS_RDF \
+	-D_IMPL_NS_VIEW \
+	-D_IMPL_NS_WEB \
+	-D_IMPL_NS_WIDGET \
+	$(NULL)
+endif
+endif
+
+
 #
 # Personal makefile customizations go in these optional make include files.
 #
