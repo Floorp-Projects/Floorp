@@ -67,9 +67,14 @@ The interpreter mode in Rhino implements tail call elimination to avoid excessiv
 See <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=257128">Bugzilla 257128</a>.
 </p>
 
-<h4>Experimental support for continuations in the interpreter</h4>
+<h4>Support for continuations in the interpreter</h4>
 <p>
-The interpreter mode in Rhino contains an experimental support for continuations. It is based on the original implementation of Christopher Oliver and ideas from <a href="http://sisc.sourceforge.net/">SISC</a> project. To enable the continuation support make sure that the interpreter mode is selected when you use Rhino through <a href="apidocs/org/mozilla/javascript/Context.html#setOptimizationLevel(int)">setting</a> the optimization level to -1 or if you use <a href="shell.html">shell</a> by passing <tt>-opt -1</tt> to the shell command line.
+The interpreter mode in Rhino supports continuations. The code is based on the ideas from the original implementation of Christopher Oliver and  
+<a href="http://sisc.sourceforge.net/">SISC</a> project. To use the
+continuations make sure that the interpreter mode is selected through <a
+href="apidocs/org/mozilla/javascript/Context.html#setOptimizationLevel(int)">setting</a>
+the optimization level to -1 or by adding <tt>-opt -1</tt> to the command line
+of <a href="shell.html">Rhino shell</a>.
 </p>
 <p> 
 Please note that the details of implementation and Java and JavaScript API for continuations may change in future in incompatible way.
