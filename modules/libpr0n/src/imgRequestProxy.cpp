@@ -342,10 +342,14 @@ NS_IMETHODIMP imgRequestProxy::Clone(imgIDecoderObserver* aObserver,
     return rv;
   }
 
+  // Assign to *aClone before calling NotifyProxyListener so that if
+  // the caller expects to only be notified for requests it's already
+  // holding pointers to it won't be surprised.
+  *aClone = clone;
+
   // Send the notifications to the clone's observer
   mOwner->NotifyProxyListener(clone);
 
-  *aClone = clone;
   return NS_OK;
 }
 
