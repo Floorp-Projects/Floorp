@@ -49,6 +49,8 @@
 
   <property name="jaas.dir"         value="../ldapjdk/lib"/>
   <property name="jsse.dir"         value="../ldapjdk/lib"/>
+  <property name="jnet.dir"         value="../ldapjdk/lib"/>
+  <property name="sasl.dir"         value="../ldapjdk/lib"/>
 
   <!-- ##################################################### -->
   <!-- # construct the classpath                           # -->
@@ -56,6 +58,8 @@
   <path id="class.path">
     <pathelement location="${jaas.dir}/jaas.jar"/>
     <pathelement location="${jsse.dir}/jsse.jar"/>
+    <pathelement location="${jsse.dir}/jnet.jar"/>
+    <pathelement location="${sasl.dir}/sasl.jar"/>
     <pathelement location="${build.dest}"/>
     <pathelement location="."/>
   </path>
