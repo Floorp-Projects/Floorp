@@ -41,7 +41,7 @@ if [ -z "$O_TBX" -o "$O_TBX" != "ON" ] ; then
                         # creates to implement a primitive locking mechanism
 fi
 
-KILL_SELFSERV=ON        # cleanup will also kill the leftover selfserv processes
+KILL_SELFSERV=OFF       # cleanup will also kill the leftover selfserv processes
 
 ################################ check_distdir #########################
 # local shell function to check if the DIST directory exists, if not there 
@@ -77,7 +77,7 @@ check_distdir()
 run_all()        
 {
     check_distdir || return 1
-    kill_by_name selfserv
+    #kill_by_name selfserv
     ask "Testing $OBJDIR continue with all.sh" "y" "n" || Exit
 
     Debug "running all.sh in `pwd`"
