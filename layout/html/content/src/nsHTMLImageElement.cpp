@@ -26,14 +26,24 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
+#include "nsIPresShell.h"
 #include "nsIHTMLAttributes.h"
 #include "nsIJSScriptObject.h"
 #include "nsIJSNativeInitializer.h"
+#include "nsSize.h"
+#include "nsIDocument.h"
+#include "nsIDOMWindow.h"
+#include "nsIDOMDocument.h"
+#include "nsIScriptContext.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIURL.h"
 
 // XXX nav attrs: suppress
 
 static NS_DEFINE_IID(kIDOMHTMLImageElementIID, NS_IDOMHTMLIMAGEELEMENT_IID);
 static NS_DEFINE_IID(kIJSNativeInitializerIID, NS_IJSNATIVEINITIALIZER_IID);
+static NS_DEFINE_IID(kIDOMWindowIID, NS_IDOMWINDOW_IID);
+static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
 
 class nsHTMLImageElement : public nsIDOMHTMLImageElement,
                            public nsIScriptObjectOwner,
@@ -93,7 +103,7 @@ public:
   NS_IMPL_IDOMEVENTRECEIVER_USING_GENERIC(mInner)
 
   // nsIContent
-  NS_IMPL_ICONTENT_USING_GENERIC(mInner)
+  NS_IMPL_ICONTENT_NO_SETDOCUMENT_USING_GENERIC(mInner)
 
   // nsIHTMLContent
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
@@ -113,6 +123,7 @@ public:
 
 protected:
   nsGenericHTMLLeafElement mInner;
+  nsIDocument* mOwnerDocument;  // Only used if this is a script constructed image
 };
 
 nsresult
@@ -133,10 +144,12 @@ nsHTMLImageElement::nsHTMLImageElement(nsIAtom* aTag)
 {
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
+  mOwnerDocument = nsnull;
 }
 
 nsHTMLImageElement::~nsHTMLImageElement()
 {
+  NS_IF_RELEASE(mOwnerDocument);
 }
 
 NS_IMPL_ADDREF(nsHTMLImageElement)
@@ -162,9 +175,9 @@ nsHTMLImageElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (aIID.Equals(kIJSNativeInitializerIID)) {
     nsIJSNativeInitializer* tmp = this;
     *aInstancePtr = (void*) tmp;
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
-  }                                                             
+  }
   return NS_NOINTERFACE;
 }
 
@@ -188,7 +201,6 @@ NS_IMPL_STRING_ATTR(nsHTMLImageElement, Height, height)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, Hspace, hspace)
 NS_IMPL_BOOL_ATTR(nsHTMLImageElement, IsMap, ismap)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, LongDesc, longdesc)
-NS_IMPL_STRING_ATTR(nsHTMLImageElement, Src, src)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, UseMap, usemap)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, Vspace, vspace)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, Width, width)
@@ -363,11 +375,6 @@ nsHTMLImageElement::Finalize(JSContext *aContext)
   mInner.Finalize(aContext);
 }
 
-NS_IMETHODIMP    
-nsHTMLImageElement::Initialize(JSContext* aContext, PRUint32 argc, jsval *argv)
-{
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsHTMLImageElement::GetStyleHintForAttributeChange(
@@ -385,4 +392,173 @@ nsHTMLImageElement::GetStyleHintForAttributeChange(
     nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, aAttribute, aHint);
   }
   return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLImageElement::Initialize(JSContext* aContext, 
+                               PRUint32 argc, 
+                               jsval *argv)
+{
+  nsresult result = NS_OK;
+
+  // XXX This element is created unattached to any document.  Later
+  // on, it might be used to preload the image cache.  For that, we
+  // need a document (actually a pres context).  The only way to get
+  // one is to associate the image with one at creation time, through
+  // the JSContext passed in.  This mechanism is **UGLY** and makes
+  // some hard assumptions about the relationship between JSContexts
+  // and documents.
+
+  nsIScriptContext* scriptContext;
+  scriptContext = (nsIScriptContext*)JS_GetContextPrivate(aContext);
+  if (nsnull != scriptContext) {
+    nsIScriptGlobalObject* globalObject = scriptContext->GetGlobalObject();
+    if (nsnull != globalObject) {
+      nsIDOMWindow* domWindow;
+      result = globalObject->QueryInterface(kIDOMWindowIID, (void**)&domWindow);
+      if (NS_SUCCEEDED(result)) {
+        nsIDOMDocument* domDocument;
+        result = domWindow->GetDocument(&domDocument);
+        if (NS_SUCCEEDED(result)) {
+          // Maintain the reference
+          result = domDocument->QueryInterface(kIDocumentIID, 
+                                               (void**)&mOwnerDocument);
+          NS_RELEASE(domDocument);
+        }
+        NS_RELEASE(domWindow);
+      }
+    }
+  }
+
+  if (NS_SUCCEEDED(result) && (argc > 0)) {
+    // The first (optional) argument is the width of the image
+    int32 width;
+    JSBool ret = JS_ValueToInt32(aContext, argv[0], &width);
+    if (ret) {
+      nsHTMLValue widthVal((PRInt32)width, eHTMLUnit_Integer);
+
+      result = mInner.SetHTMLAttribute(nsHTMLAtoms::width,
+                                       widthVal, PR_FALSE);
+      
+      if (NS_SUCCEEDED(result) && (argc > 1)) {
+        // The second (optional) argument is the height of the image
+        int32 height;
+        ret = JS_ValueToInt32(aContext, argv[1], &height);
+        if (ret) {
+          nsHTMLValue heightVal((PRInt32)height, eHTMLUnit_Integer);
+          
+          result = mInner.SetHTMLAttribute(nsHTMLAtoms::height,
+                                           heightVal, PR_FALSE);
+        }
+        else {
+          result = NS_ERROR_INVALID_ARG;
+        }
+      }
+    }
+    else {
+      result = NS_ERROR_INVALID_ARG;
+    }
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP 
+nsHTMLImageElement::SetDocument(nsIDocument* aDocument, 
+                                PRBool aDeep)
+{
+  // If we've been added to the document, we can get rid of 
+  // our owner document reference so as to avoid a circular
+  // reference.
+  NS_IF_RELEASE(mOwnerDocument);
+  return mInner.SetDocument(aDocument, aDeep);
+}
+
+NS_IMETHODIMP
+nsHTMLImageElement::GetSrc(nsString& aSrc)
+{
+  mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, aSrc);
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsHTMLImageElement::SetSrc(const nsString& aSrc)
+{
+  nsresult result = NS_OK;
+
+  if (nsnull != mOwnerDocument) {
+    
+    PRInt32 i, count = mOwnerDocument->GetNumberOfShells();
+    nsIPresShell* shell;
+
+    for (i = 0; i < count; i++) {
+      shell = mOwnerDocument->GetShellAt(i);
+      if (nsnull != shell) {
+        nsIPresContext* context;
+        
+        result = shell->GetPresContext(&context);
+        if (NS_SUCCEEDED(result)) {
+          nsSize size;
+          nsHTMLValue val;
+          float p2t;
+          
+          context->GetScaledPixelsToTwips(&p2t);
+          result = mInner.GetHTMLAttribute(nsHTMLAtoms::width, val);
+          if (NS_CONTENT_ATTR_HAS_VALUE == result) {
+            size.width = NSIntPixelsToTwips(val.GetIntValue(), p2t);
+          }
+          else {
+            size.width = 0;
+          }
+          result = mInner.GetHTMLAttribute(nsHTMLAtoms::height, val);
+          if (NS_CONTENT_ATTR_HAS_VALUE == result) {
+            size.height = NSIntPixelsToTwips(val.GetIntValue(), p2t);
+          }
+          else {
+            size.height = 0;
+          }
+
+          nsAutoString url, empty;
+          nsIURL* baseURL;
+
+          empty.Truncate();
+          result = mOwnerDocument->GetBaseURL(baseURL);
+          if (NS_SUCCEEDED(result)) {
+            result = NS_MakeAbsoluteURL(baseURL, empty, aSrc, url);
+            if (NS_FAILED(result)) {
+              url = aSrc;
+            }
+            NS_RELEASE(baseURL);
+          }
+          else {
+            url = aSrc;
+          }
+
+          nsSize* specifiedSize = nsnull;
+          if ((size.width > 0) || (size.height > 0)) {
+            specifiedSize = &size;
+          }
+
+          // Start the image loading. We don't care about notification
+          // or holding on to the image loader.
+          result = context->StartLoadImage(url, nsnull, specifiedSize,
+                                           nsnull, nsnull, nsnull,
+                                           nsnull);
+          NS_RELEASE(context);
+        }
+        
+        NS_RELEASE(shell);
+      }
+    }
+
+    // Only do this the first time since it's only there for
+    // backwards compatability
+    NS_RELEASE(mOwnerDocument);
+  }
+
+  if (NS_SUCCEEDED(result)) {
+    result = mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, aSrc, PR_TRUE);
+  }
+
+  return result;
 }

@@ -755,6 +755,7 @@ NS_IMPL_RELEASE_INHERITED(nsOptionList, nsGenericDOMHTMLCollection)
 nsresult
 nsOptionList::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
+  if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
   if (aIID.Equals(kIJSScriptObjectIID)) {
     *aInstancePtr = (void*)(nsIJSScriptObject*) this;
     NS_ADDREF_THIS();
