@@ -266,9 +266,7 @@ void CStartToken::DebugDumpSource(nsOutputStream& out) {
 void CStartToken::GetSource(nsString& anOutputString){
   anOutputString="<";
   anOutputString+=mTextValue;
-  if(mTrailingContent.Length()>0)
-    anOutputString+=mTrailingContent;
-  else anOutputString+='>';
+  anOutputString+=mTrailingContent;
 }
 
 /*
