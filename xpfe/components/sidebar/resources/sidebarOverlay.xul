@@ -130,8 +130,12 @@
 
   <!-- View->Sidebar toggle -->
   <menupopup id="menu_View_Popup">
-    <menuitem id="sidebar-menu" type="checkbox" value="&sidebarCmd.label;"
-      oncommand="SidebarShowHide();" position="2"/>
+     <menuitem id="sidebar-menu" type="checkbox"
+	value="&sidebarCmd.label;"
+ 	accesskey="&sidebarCmd.accesskey;"
+ 	oncommand="SidebarShowHide();"
+ 	position="2"
+     />
   </menupopup>
 
   <!-- open/close grippy for status (not yet)
