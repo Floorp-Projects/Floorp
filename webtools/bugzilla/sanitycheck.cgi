@@ -55,6 +55,36 @@ sub AlertBadVoteCache {
     $offervotecacherebuild = 1;
 }
 
+sub CrossCheck {
+    my $table = shift @_;
+    my $field = shift @_;
+    Status("Checking references to $table.$field");
+    SendSQL("SELECT DISTINCT $field FROM $table");
+    my %valid;
+    while (MoreSQLData()) {
+        $valid{FetchOneColumn()} = 1;
+    }
+    while (@_) {
+        my $ref = shift @_;
+        my $t2 = shift @$ref;
+        my $f2 = shift @$ref;
+        my %exceptions;
+        foreach my $v (@$ref) {
+            $exceptions{$v} = 1;
+        }
+        Status("... from $t2.$f2");
+        SendSQL("SELECT DISTINCT $f2 FROM $t2");
+        while (MoreSQLData()) {
+            my $value = FetchOneColumn();
+            if (!$valid{$value} && !$exceptions{$value}) {
+                Alert("Bad value $value found in $t2.$f2");
+            }
+        }
+    }
+}
+
+    
+
 
 my @row;
 my @checklist;
@@ -79,6 +109,34 @@ if (exists $::FORM{'rebuildvotecache'}) {
 }
 
 print "OK, now running sanity checks.<P>\n";
+
+CrossCheck("keyworddefs", "id",
+           ["keywords", "keywordid"]);
+
+CrossCheck("fielddefs", "fieldid",
+           ["bugs_activity", "fieldid"]);
+           
+
+CrossCheck("bugs", "bug_id",
+           ["bugs_activity", "bug_id"],
+           ["attachments", "bug_id"],
+           ["cc", "bug_id"],
+           ["longdescs", "bug_id"],
+           ["dependencies", "blocked"],
+           ["dependencies", "dependson"],
+           ["votes", "bug_id"],
+           ["keywords", "bug_id"]);
+
+CrossCheck("profiles", "userid",
+           ["bugs", "reporter"],
+           ["bugs", "assigned_to"],
+           ["bugs", "qa_contact", 0],
+           ["attachments", "submitter_id"],
+           ["bugs_activity", "who"],
+           ["cc", "who"],
+           ["votes", "who"],
+           ["longdescs", "who"]);
+
 
 Status("Checking passwords");
 SendSQL("SELECT COUNT(*) FROM profiles WHERE cryptpassword != ENCRYPT(password, left(cryptpassword, 2))");
@@ -154,47 +212,28 @@ foreach my $ref (@checklist) {
 }
 
 
-Status("Checking profile ids");
-
-SendSQL("select userid,login_name from profiles");
-
-my %profid;
+Status("Checking profile logins");
 
 my $emailregexp = Param("emailregexp");
 
-while (@row = FetchSQLData()) {
-    my ($id, $email) = (@row);
-    if ($email =~ /$emailregexp/o) {
-        $profid{$id} = 1;
-    } else {
-        Alert "Bad profile id $id &lt;$email&gt;."
-    }
+SendSQL("SELECT userid, login_name FROM profiles " .
+        "WHERE login_name NOT REGEXP " . SqlQuote($emailregexp));
+
+
+while (my ($id,$email) = (FetchSQLData())) {
+    Alert "Bad profile email address, id=$id,  &lt;$email&gt;."
 }
 
 
-undef $profid{0};
-
-
-Status("Checking reporter/assigned_to/qa_contact ids");
-SendSQL("SELECT bug_id,reporter,assigned_to,qa_contact,votes,keywords " .
-        "FROM bugs");
+SendSQL("SELECT bug_id,votes,keywords FROM bugs " .
+        "WHERE votes != 0 OR keywords != ''");
 
 my %votes;
 my %bugid;
 my %keyword;
 
 while (@row = FetchSQLData()) {
-    my($id, $reporter, $assigned_to, $qa_contact, $v, $k) = (@row);
-    $bugid{$id} = 1;
-    if (!defined $profid{$reporter}) {
-        Alert("Bad reporter $reporter in " . BugLink($id));
-    }
-    if (!defined $profid{$assigned_to}) {
-        Alert("Bad assigned_to $assigned_to in" . BugLink($id));
-    }
-    if ($qa_contact != 0 && !defined $profid{$qa_contact}) {
-        Alert("Bad qa_contact $qa_contact in" . BugLink($id));
-    }
+    my($id, $v, $k) = (@row);
     if ($v != 0) {
         $votes{$id} = $v;
     }
@@ -247,9 +286,6 @@ my $lastid;
 my $lastk;
 while (@row = FetchSQLData()) {
     my ($id, $k) = (@row);
-    if (!defined $bugid{$id}) {
-        Alert("Bad bugid " . BugLink($id));
-    }
     if (!$keywordids{$k}) {
         Alert("Bogus keywordids $k found in keywords table");
     }
@@ -323,58 +359,6 @@ if (@fixlist) {
     }
 }
 
-
-
-Status("Checking CC table");
-
-SendSQL("select bug_id,who from cc");
-while (@row = FetchSQLData()) {
-    my ($id, $cc) = (@row);
-    if (!defined $profid{$cc}) {
-        Alert("Bad cc $cc in " . BugLink($id));
-    }
-}
-
-
-Status("Checking activity table");
-
-SendSQL("select bug_id,who,fieldid from bugs_activity");
-
-my @fieldids;
-
-while (@row = FetchSQLData()) {
-    my ($id, $who, $f) = (@row);
-    if (!defined $bugid{$id}) {
-        Alert("Bad bugid " . BugLink($id));
-    }
-    if (!defined $profid{$who}) {
-        Alert("Bad who $who in " . BugLink($id));
-    }
-    $fieldids[$f] = 1;
-}
-
-for (my $f = 0 ; $f < @fieldids ; $f++) {
-    if ($fieldids[$f]) {
-        SendSQL("SELECT name FROM fielddefs WHERE fieldid = $f");
-        my $name = FetchOneColumn();
-        if (!$name) {
-            Alert("Bad fieldid $f in bugs_activity");
-        }
-    }
-}
-
-Status("Checking dependency table");
-
-SendSQL("select blocked, dependson from dependencies");
-while (@row = FetchSQLData()) {
-    my ($blocked, $dependson) = (@row);
-    if (!defined $bugid{$blocked}) {
-        Alert("Bad blocked " . BugLink($blocked));
-    }
-    if (!defined $bugid{$dependson}) {
-        Alert("Bad dependson " . BugLink($dependson));
-    }
-}
 
 
 
