@@ -1015,6 +1015,19 @@ nsFontMetricsXlib::Init(const nsFont& aFont, nsIAtom* aLangGroup,
   mFont = new nsFont(aFont);
   mLangGroup = aLangGroup;
 
+/* enable hack "fix" for bug 88554 ("Xprint module should avoid using GFX
+ * fonts unless there is no other option...") until bug 93771 ("Mozilla
+ * uses low-resolution bitmap fonts on high resolution X11 displays") get's
+ * fixed. */
+#ifdef _IMPL_NS_XPRINT
+#define XPRINT_FONT_HACK 1
+#endif /* _IMPL_NS_XPRINT */
+
+#ifdef XPRINT_FONT_HACK
+  nsString savedName = mFont->name;
+  mFont->name = NS_LITERAL_STRING("serif");
+#endif  /* XPRINT_FONT_HACK */
+  
   mDeviceContext = aContext;
 
   float app2dev;
@@ -1026,7 +1039,7 @@ nsFontMetricsXlib::Init(const nsFont& aFont, nsIAtom* aLangGroup,
   mPixelSize = NSToIntRound(app2dev * textZoom * mFont->size);
   mStretchIndex = 4; // Normal
   mStyleIndex = mFont->style;
- 
+
   mFont->EnumerateFamilies(FontEnumCallback, this);
 
   nsXPIDLCString value;
@@ -1112,6 +1125,9 @@ nsFontMetricsXlib::Init(const nsFont& aFont, nsIAtom* aLangGroup,
 
   RealizeFont();
 
+#ifdef XPRINT_FONT_HACK
+  mFont->name = savedName;
+#endif /* XPRINT_FONT_HACK */
   return NS_OK;
 }
 
