@@ -48,6 +48,7 @@ nsCacheEntry::nsCacheEntry(nsCString *          key,
       mData(nsnull),
       mMetaData(nsnull)
 {
+    MOZ_COUNT_CTOR(nsCacheEntry);
     PR_INIT_CLIST(this);
     PR_INIT_CLIST(&mRequestQ);
     PR_INIT_CLIST(&mDescriptorQ);
@@ -59,6 +60,7 @@ nsCacheEntry::nsCacheEntry(nsCString *          key,
 
 nsCacheEntry::~nsCacheEntry()
 {
+    MOZ_COUNT_DTOR(nsCacheEntry);
     delete mKey;
     delete mMetaData;
     
@@ -456,11 +458,13 @@ nsCacheEntryHashTable::ops =
 nsCacheEntryHashTable::nsCacheEntryHashTable()
     : initialized(PR_FALSE)
 {
+    MOZ_COUNT_CTOR(nsCacheEntryHashTable);
 }
 
 
 nsCacheEntryHashTable::~nsCacheEntryHashTable()
 {
+    MOZ_COUNT_DTOR(nsCacheEntryHashTable);
     if (initialized)
         Shutdown();
 }
@@ -587,7 +591,7 @@ nsCacheEntryHashTable::MatchEntry(PLDHashTable *       /* table */,
     NS_ASSERTION(key !=  nsnull, "### nsCacheEntryHashTable::MatchEntry : null key");
     nsCacheEntry *cacheEntry = ((nsCacheEntryHashTableEntry *)hashEntry)->cacheEntry;
 
-    return nsStr::StrCompare(*cacheEntry->mKey, *(nsCString *)key, -1, PR_FALSE) == 0;
+    return Compare(*cacheEntry->mKey, *(nsCString *)key) == 0;
 }
 
 

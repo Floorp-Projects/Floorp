@@ -50,6 +50,7 @@ private:
           mLock(nsnull),
           mCondVar(nsnull)
     {
+        MOZ_COUNT_CTOR(nsCacheRequest);
         PR_INIT_CLIST(this);
         SetAccessRequested(accessRequested);
         SetStoragePolicy(session->StoragePolicy());
@@ -61,6 +62,7 @@ private:
     
     ~nsCacheRequest()
     {
+        MOZ_COUNT_DTOR(nsCacheRequest);
         delete mKey;
         if (mLock)    PR_DestroyLock(mLock);
         if (mCondVar) PR_DestroyCondVar(mCondVar);
