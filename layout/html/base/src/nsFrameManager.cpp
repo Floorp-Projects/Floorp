@@ -1700,7 +1700,8 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
         }
       }
       else {
-        oldContext->RemapStyle(aPresContext, PR_FALSE);
+        // XXXdwh figure this out.
+        // oldContext->RemapStyle(aPresContext, PR_FALSE);
         if (aAttribute && (aMinChange < NS_STYLE_HINT_REFLOW) &&
             HasAttributeContent(oldContext, aAttrNameSpaceID, aAttribute)) {
           aChangeList.AppendChange(aFrame, content, NS_STYLE_HINT_REFLOW);
@@ -1735,7 +1736,8 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
               }
             }
             else {
-              oldExtraContext->RemapStyle(aPresContext, PR_FALSE);
+              // XXXdwh figure this out.
+              // oldExtraContext->RemapStyle(aPresContext, PR_FALSE);
               if (aAttribute && (aMinChange < NS_STYLE_HINT_REFLOW) &&
                   HasAttributeContent(oldContext, aAttrNameSpaceID, aAttribute)) {
                 aChangeList.AppendChange(aFrame, content, NS_STYLE_HINT_REFLOW);
@@ -1769,7 +1771,8 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
         NS_IF_RELEASE(pseudoTag);
         if (undisplayedContext) {
           if (undisplayedContext == undisplayed->mStyle) {
-            undisplayedContext->RemapStyle(aPresContext);
+            // XXXdwh figure this out.
+            // undisplayedContext->RemapStyle(aPresContext);
           }
           const nsStyleDisplay* display = 
                 (const nsStyleDisplay*)undisplayedContext->GetStyleData(eStyleStruct_Display);
@@ -1912,7 +1915,8 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
         }
       }
       else {
-        oldContext->RemapStyle(aPresContext, PR_FALSE);
+        // XXXdwh figure this out.
+        // oldContext->RemapStyle(aPresContext, PR_FALSE);
         if (aAttribute && (aMinChange < NS_STYLE_HINT_REFLOW) &&
             HasAttributeContent(oldContext, aAttrNameSpaceID, aAttribute)) {
           aChangeList.AppendChange(aFrame, content, NS_STYLE_HINT_REFLOW);
@@ -1947,7 +1951,8 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
               }
             }
             else {
-              oldExtraContext->RemapStyle(aPresContext, PR_FALSE);
+              // XXXdwh figure this out.
+              // oldExtraContext->RemapStyle(aPresContext, PR_FALSE);
               if (aAttribute && (aMinChange < NS_STYLE_HINT_REFLOW) &&
                   HasAttributeContent(oldContext, aAttrNameSpaceID, aAttribute)) {
                 aChangeList.AppendChange(aFrame, content, NS_STYLE_HINT_REFLOW);
@@ -1981,7 +1986,8 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
         NS_IF_RELEASE(pseudoTag);
         if (undisplayedContext) {
           if (undisplayedContext == undisplayed->mStyle) {
-            undisplayedContext->RemapStyle(aPresContext);
+            // XXXdwh figure this out.
+            // undisplayedContext->RemapStyle(aPresContext);
           }
           const nsStyleDisplay* display = 
                 (const nsStyleDisplay*)undisplayedContext->GetStyleData(eStyleStruct_Display);

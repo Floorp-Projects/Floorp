@@ -10020,25 +10020,9 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
   }
   else if (restyle) {
     if (inlineStyle) {
-      if (styleContext) {
-        nsCOMPtr<nsIRuleNode> ruleNode;
-        styleContext->GetRuleNode(getter_AddRefs(ruleNode));
-        ruleNode->ClearCachedData(rule); // XXXdwh.  If we're willing to *really* special case
-                                         // inline style, we could only invalidate the struct data
-                                         // that actually changed.  For example, if someone changes
-                                         // style.left, we really only need to blow away cached
-                                         // data in the position struct.
-      }
-      else {
-        // Ok, our only option left is to just crawl the entire rule
-        // tree and blow away the data that way.
-        nsCOMPtr<nsIStyleSet> set;
-        shell->GetStyleSet(getter_AddRefs(set));
-        nsCOMPtr<nsIRuleNode> rootNode;
-        set->GetRuleTree(getter_AddRefs(rootNode));
-        if (rootNode)
-          rootNode->ClearCachedDataInSubtree(rule);
-      }
+      nsCOMPtr<nsIStyleSet> set;
+      shell->GetStyleSet(getter_AddRefs(set));
+      set->ClearStyleData(aPresContext, rule, styleContext);
     }
 
     // If there is no frame then there is no point in re-styling it,
@@ -10164,10 +10148,9 @@ nsCSSFrameConstructor::StyleRuleChanged(nsIPresContext* aPresContext,
   }
 
   if (restyle) {
-    nsIStyleContext* sc;
-    frame->GetStyleContext(&sc);
-    sc->RemapStyle(aPresContext);
-    NS_RELEASE(sc);
+    nsCOMPtr<nsIStyleSet> set;
+    shell->GetStyleSet(getter_AddRefs(set));
+    set->ClearStyleData(aPresContext, aStyleRule, nsnull);
   }
 
   if (reframe) {

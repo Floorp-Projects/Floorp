@@ -25,6 +25,7 @@
 #include "nsIPresShell.h"
 #include "nsIPref.h"
 #include "nsILinkHandler.h"
+#include "nsIDocShellTreeItem.h"
 #include "nsIStyleSet.h"
 #include "nsFrameImageLoader.h"
 #include "nsIFrameManager.h"
@@ -399,21 +400,20 @@ nsPresContext::GetCachedBoolPref(PRUint32 prefType, PRBool &aValue)
 }
 
 NS_IMETHODIMP
-nsPresContext::RemapStyleAndReflow()
+nsPresContext::ClearStyleDataAndReflow()
 {
   if (mShell) {
+    // Clear out all our style data.
+    nsCOMPtr<nsIStyleSet> set;
+    mShell->GetStyleSet(getter_AddRefs(set));
+    set->ClearStyleData(this, nsnull, nsnull);
+
     // Have the root frame's style context remap its style based on the
     // user preferences
     nsIFrame* rootFrame;
 
     mShell->GetRootFrame(&rootFrame);
     if (rootFrame) {
-      nsIStyleContext*  rootStyleContext;
-
-      rootFrame->GetStyleContext(&rootStyleContext);
-      rootStyleContext->RemapStyle(this);
-      NS_RELEASE(rootStyleContext);
-  
       // boxes know how to coelesce style changes. So if our root frame is a box
       // then tell it to handle it. If its a block we are stuck with a full top to bottom
       // reflow. -EDV
@@ -440,6 +440,14 @@ nsPresContext::RemapStyleAndReflow()
 void
 nsPresContext::PreferenceChanged(const char* aPrefName)
 {
+  nsCOMPtr<nsIDocShellTreeItem> docShell(do_QueryInterface(mContainer));
+  if (docShell) {
+    PRInt32 docShellType;
+    docShell->GetItemType(&docShellType);
+    if (nsIDocShellTreeItem::typeChrome == docShellType)
+      return;
+  }
+
   // XXX for WM_FONTCHANGE messages, only flush the font cache (bug=89493)
  //     because nsObjectFrame can't handle a reframe at this time              
   if (strcmp(aPrefName,"font.internaluseonly.changed") == 0) {
@@ -459,7 +467,7 @@ nsPresContext::PreferenceChanged(const char* aPrefName)
 
   if (mDeviceContext) {
     mDeviceContext->FlushFontCache();
-    RemapStyleAndReflow();
+    ClearStyleDataAndReflow();
   }
 }
 
@@ -1551,7 +1559,7 @@ NS_IMETHODIMP   nsPresContext::SetBidi(PRUint32 aSource, PRBool aForceReflow)
     SetVisualMode(IsVisualCharset(mCharset) );
   }
   if (mShell && aForceReflow) {
-    RemapStyleAndReflow();
+    ClearStyleDataAndReflow();
   }
   return NS_OK;
 }

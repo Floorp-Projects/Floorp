@@ -101,10 +101,12 @@ public:
   // display.  Don't add support for new structs or use this method without careful consideration! -dwh
   virtual nsStyleStruct* GetUniqueStyleData(nsIPresContext* aPresContext, const nsStyleStructID& aSID) = 0;
 
+  // Used to clear away the style data for a given style context if it matches the specified |aRule|.
+  // If |aRule| is null, then the style data is always blown away.
+  virtual nsresult ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule) = 0;
+ 
   // call this to prevent context from getting shared
   virtual void  ForceUnique(void) = 0;
-
-  NS_IMETHOD RemapStyle(nsIPresContext* aPresContext, PRBool aRecurse = PR_TRUE) = 0;
 };
 
 
