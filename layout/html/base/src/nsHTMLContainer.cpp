@@ -107,10 +107,10 @@ nsHTMLContainer::InsertChildAt(nsIContent* aKid, PRInt32 aIndex,
   if (rv) {
     NS_ADDREF(aKid);
     aKid->SetParent(this);
-    if (aNotify) {
-      nsIDocument* doc = mDocument;
-      if (nsnull != doc) {
-        aKid->SetDocument(doc);
+    nsIDocument* doc = mDocument;
+    if (nsnull != doc) {
+      aKid->SetDocument(doc);
+      if (aNotify) {
         doc->ContentInserted(this, aKid, aIndex);
       }
     }
@@ -128,10 +128,10 @@ nsHTMLContainer::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex,
   if (rv) {
     NS_ADDREF(aKid);
     aKid->SetParent(this);
-    if (aNotify) {
-      nsIDocument* doc = mDocument;
-      if (nsnull != doc) {
-        aKid->SetDocument(doc);
+    nsIDocument* doc = mDocument;
+    if (nsnull != doc) {
+      aKid->SetDocument(doc);
+      if (aNotify) {
         doc->ContentReplaced(this, oldKid, aKid, aIndex);
       }
     }
@@ -150,10 +150,10 @@ nsHTMLContainer::AppendChild(nsIContent* aKid, PRBool aNotify)
   if (rv) {
     NS_ADDREF(aKid);
     aKid->SetParent(this);
-    if (aNotify) {
-      nsIDocument* doc = mDocument;
-      if (nsnull != doc) {
-        aKid->SetDocument(doc);
+    nsIDocument* doc = mDocument;
+    if (nsnull != doc) {
+      aKid->SetDocument(doc);
+      if (aNotify) {
         doc->ContentAppended(this);
       }
     }
