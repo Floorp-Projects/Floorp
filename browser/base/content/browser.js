@@ -1036,29 +1036,29 @@ function stylesheetSwitchAll(frameset, title) {
 }
 
 
-function URLBarFocusHandler(aEvent)
+function URLBarFocusHandler(aEvent, aElt)
 {
   if (gIgnoreFocus)
     gIgnoreFocus = false;
   else if (gClickSelectsAll)
-    gURLBar.select();
+    aElt.select();
 }
 
-function URLBarMouseDownHandler(aEvent)
+function URLBarMouseDownHandler(aEvent, aElt)
 {
-  if (gURLBar.hasAttribute("focused")) {
+  if (aElt.hasAttribute("focused")) {
     gIgnoreClick = true;
   } else {
     gIgnoreFocus = true;
     gIgnoreClick = false;
-    gURLBar.setSelectionRange(0, 0);
+    aElt.setSelectionRange(0, 0);
   }
 }
 
-function URLBarClickHandler(aEvent)
+function URLBarClickHandler(aEvent, aElt)
 {
-  if (!gIgnoreClick && gClickSelectsAll && gURLBar.selectionStart == gURLBar.selectionEnd)
-    gURLBar.select();
+  if (!gIgnoreClick && gClickSelectsAll && aElt.selectionStart == aElt.selectionEnd)
+    aElt.select();
 }
 
 // This function gets the "windows hooks" service and has it check its setting
