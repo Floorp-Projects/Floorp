@@ -337,6 +337,8 @@
 }
 
 #go-button {
+  font: message-box;
+  font-weight: bold;
   margin-right: 6px;
   margin-left: 0px;
   min-width: 0px;

@@ -179,6 +179,12 @@
     margin-right: 2px;
     font-weight: bold;
   }
+
+#go-button {
+   margin: 0px 5px 0px 0px;
+   font: message-box;
+   font-weight: bold;
+  }
   
 #statusbar-icon
   {
