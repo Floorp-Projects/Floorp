@@ -1,0 +1,957 @@
+ /** this should only contain XUL dialog and document window widget defaults. Defaults for widgets of
+    a particular application should be in that application's style sheet.
+	For example style definitions for navigator can be found in navigator.css
+
+**/
+
+window { 
+  background-color:#CCCCDD;
+  //background-image: url(resource:/res/src/bg.jpg);
+  display: block; 
+  overflow: hidden;
+  font: 3mm tahoma,arial,helvetica,sans-serif;
+  padding: 0px;
+  height: 100%;
+  width: 100%;
+}
+
+window.dialog { 
+  background-color:#CCCCDD;
+  display: block; 
+  overflow: hidden;
+  font: 3mm tahoma,arial,helvetica,sans-serif;
+  padding-left: 11px;
+  padding-right: 10px;
+  padding-top: 10px;
+  padding-bottom: 11px;
+}
+
+/* generic elements*/
+
+
+box {
+  	display: block;
+  	font: inherit;
+}
+
+popup {
+	display: none;
+}
+
+div {
+	background-color:inherit;
+	background-image:inherit;
+}
+
+div.textline {
+	background-color:inherit;
+	background-image:inherit;
+}
+
+
+spring {
+   display: block;
+}
+
+
+/* toolbar stuff*/
+
+
+toolbox { 
+      background-color:darkgray;
+		display: block;
+}
+
+:toolbox-normal {
+	background-color: #666699;
+	background-image: url("resource:/res/toolbar/TB_Tab.gif");
+	background-repeat: no-repeat;
+	color: lightgray;
+	border: solid darkGray 1px;
+
+}
+
+:toolbox-rollover {
+	background-color: #ccccff;
+	background-image: url("resource:/res/toolbar/TB_Tab_mo.gif");
+	background-repeat: no-repeat;
+	color: green;
+	border: outset #ccccff 1px;
+}
+
+toolbar {
+    display:block;
+    background-color: #CCCCDD;
+    border-bottom: 1px solid #9999cc;
+    font: inherit;
+    min-height: 2em;
+    width: 100%;
+}
+
+toolbar[collapsed="true"] {
+	display:none;
+}
+toolbar[hidden="true"] {
+	display:none;
+}
+
+
+
+/* misc input elements */
+
+fieldset {
+	margin-bottom: 6px;
+	margin-top: 5px;
+	margin-left: 6px;
+	margin-right: 5px;
+	padding: 5px; 
+	border: 2px groove white;
+}
+
+
+legend {
+	border: none;
+	margin-bottom: 5px;
+	margin-top: 0px;
+	margin-left: 4px;
+	margin-right: 3px;
+}
+
+label {
+  display: inline;
+	padding-bottom: 4px;
+	//background-color: inherit;
+	background-color:#CCCCDD;
+	background-image: inherit;
+}
+
+textarea {
+  border: 1px inset #DDDDDD;
+  padding-top: 1px;
+  padding-bottom: 2px;
+  padding-left: 4px;
+  padding-right: 3px;
+  margin-top: 1px;
+  margin-bottom: 2px;
+  margin-left: 4px;
+  margin-right: 3px;
+  background-color: white;
+  color: black;
+}
+
+input[type=text] {
+  border: 1px inset yellow;
+  padding-top: 3px;
+  padding-bottom: 2px;
+  padding-left: 4px;
+  padding-right: 3px;
+  margin-top: 0px;
+  margin-bottom: 2px;
+  margin-left: 4px;
+  margin-right: 3px;
+  background-color: white;
+  color: black;
+  min-height: 1.75em;
+}
+
+input[type=password] {
+  border: 1px inset rgb(192, 192, 192);
+  padding-top: 3px;
+  padding-bottom: 2px;
+  padding-left: 4px;
+  padding-right: 3px;
+  margin-top: 1px;
+  margin-bottom: 2px;
+  margin-left: 4px;
+  margin-right: 3px;
+  background-color: white;
+  color: black;
+  min-height: 1.75em;
+}
+
+input {
+  vertical-align: bottom;
+  border: 2px inset rgb(192, 192, 192);
+  background-color: transparent;
+  color: black;
+}
+
+input[type=radio] {
+  margin-left:   3px;   
+  margin-right:  5px;  
+  margin-top:    3px; 
+  margin-bottom: 3px; 
+  //border: 2px inset rgb(192, 192, 192);
+  background-color: inherit;
+  background-image: inherit;
+  color:black;
+  width:12px;
+  height:12px;
+}
+
+input[type=checkbox] {
+  margin-left:   3px;   
+  margin-right:  5px;  
+  margin-top:    3px; 
+  margin-bottom: 4px;
+  border: 1px inset rgb(192, 192, 192);
+  color:black;
+}
+
+checkbox {
+  margin-left:   3px;   
+  margin-right:  5px;  
+  margin-top:    3px; 
+  margin-bottom: 4px;
+  border: 1px inset white;
+  background-color: white;
+  color:black;
+  min-width: .7em;
+  min-height: .7em;
+}
+
+checkbox[depress] {
+   background-color: gray;
+   border: 1px inset white;
+}
+
+progressmeter {
+        display:inline;
+        border: 1px grey;
+        color : #9999CC; 
+        height: 1em;        
+}
+
+div.pmBackground {
+	border: 1px inset white; 
+	padding: 1px;
+	margin: 1em;
+	margin-bottom: 3px;
+	background-color: #CCCCCC;
+}
+
+:progressmeter-stripe {
+	color: #BBBBCC;
+}
+
+broadcaster {
+	display: none;
+}
+
+observes {
+	display: none;
+}
+
+menubar {
+	display: none;
+}
+
+menu {
+	display: none;
+}
+
+menuitem {
+	display: none;
+}
+
+progressmeter {
+        display:inline;
+        border: 1px #666699;
+        color : #9999CC;         
+}
+
+:progressmeter-stripe {
+	color: #BBBBCC;
+}
+
+
+/* titledbuttons are the preferred means of generating UI buttons in XUL (see below) */
+
+button {
+  display: inline;
+  color:black; 
+   // -moz-border-radius: 2px;
+  border: 1px outset white;
+  padding: 2px;
+  margin: 2px;
+	text-align: center;
+  font: inherit;
+	background-color: inherit;
+	background-image: inherit;
+	min-height: 1.25em;
+	max-height: 1.25em;
+	min-width: 7em;
+}
+
+button[default] {
+  font-weight: bold;
+}
+
+button:hover {
+  border: 1px outset white;
+	color:#333366;
+	text-decoration:underline;
+  padding: 2px;
+}
+ 
+button:hover:-moz-outline {
+   border : 1px solid black;
+   color:#666699;
+   padding: 2px;
+}
+ 
+button:active {
+
+  text-decoration:none;
+  border: 1px inset;
+
+  padding-left: 3px;
+  padding-right: 1px;
+  padding-top: 3px;
+  padding-bottom: 1px;
+}
+
+button:active:-moz-outline {
+   border : 1px solid black;
+
+}
+ 
+button[disabled] {
+	background-color: inherit;
+	background-image: inherit;
+	border : 1px solid #999999;
+	color: #999999;
+	text-decoration: none;
+}
+
+/* titledbuttons recommended for use with most XUL UI */
+
+titledbutton {
+  display: inline;
+  color:black; 
+   // -moz-border-radius: 2px;
+  border: 1px outset white;
+  padding: 2px;
+  margin: 2px;
+  text-align: center;
+  font: inherit;
+  background-color:inherit;
+  background-image: inherit;
+}
+
+window.dialog titledbutton{
+	min-width: 5em;
+}
+
+titledbutton[class~=popup] {
+	list-style-image:url(resource:/res/toolbar/TB_popup.gif);
+}
+
+titledbutton:hover {
+  border: 1px outset white;
+	color:#333366;
+	text-decoration:underline;
+  padding: 2px;
+}
+ 
+titledbutton:hover:-moz-outline {
+   border : 1px solid black;
+   color:#666699;
+   padding: 2px;
+}
+ 
+titledbutton:active {
+
+  text-decoration:none;
+  border: 1px inset;
+
+  padding-left: 3px;
+  padding-right: 1px;
+  padding-top: 3px;
+  padding-bottom: 1px;
+}
+
+titledbutton[toggled="1"] {
+  border: 1px inset;
+
+  padding-left: 3px;
+  padding-right: 1px;
+  padding-top: 3px;
+  padding-bottom: 1px;
+}
+
+titledbutton[toggled="2"] {
+   background-color: lightgray;
+   border: 1px solid gray;
+}
+
+titledbutton[default] {
+	//border-color: black;
+	font-weight: bold;
+	list-style-image: url("resource:/res/src/return.gif");
+}
+
+titledbutton:active:-moz-outline {
+   border : 1px solid black;
+
+}
+ 
+titledbutton[disabled="true"] {
+	background-color:inherit;
+  	background-image: inherit;
+	border : 1px solid #999999;
+	color: #999999;
+	text-decoration: none;
+}
+
+titledbutton[disabled="true"]:hover {
+  	background-color:inherit;
+  	background-image: inherit;
+	border : 1px solid #999999;
+	color: #999999;
+	text-decoration: none;
+}
+
+titledbutton[disabled="true"]:active {
+  	background-color:inherit;
+  	background-image: inherit;
+	border : 1px solid #999999;
+	color: #999999;
+	text-decoration: none;
+}
+
+/* special class for plain titledbuttons */
+
+titledbutton[class~=plain] {
+  border: 1px solid transparent;
+  padding: 2px;
+  font: inherit;
+}
+
+titledbutton[class~=plain]:hover {
+  border: 1px solid transparent;
+  padding: 2px;
+  text-decoration: none;
+  color: inherit;
+}
+ 
+titledbutton[class~=plain]:active {
+  border: 1px solid transparent;
+  padding: 2px;
+   text-decoration: none;
+  color: inherit;
+}
+
+titledbutton[class~=plain][disabled] {
+	border: 1px solid transparent;
+	padding: 2px;
+}
+
+titledbutton[class~=plain][disabled]:hover {
+	border: 1px solid transparent;
+	padding: 2px;
+}
+
+titledbutton[class~=plain][disabled]:active {
+	border: 1px solid transparent;
+	padding: 2px;
+}
+
+
+/* special class for borderless buttons */
+/* titled button on toolbars are automatically set to be borderless (see below) */
+
+titledbutton[class~=borderless] {
+  border: 1px solid transparent;
+}
+
+titledbutton[class~=borderless]:hover {
+  border: 1px outset white;
+  color:#333366;
+  text-decoration: underline;
+}
+ 
+titledbutton[class~=borderless]:hover:-moz-outline {
+   border : 1px solid black;
+}
+ 
+titledbutton[class~=borderless]:active {
+  text-decoration:none;
+  border: 1px inset;
+}
+
+titledbutton[class~=borderless]:active:-moz-outline {
+   border : 1px solid black;
+}
+ 
+titledbutton[class~=borderless][disabled] {
+	border: 1px solid transparent;
+}
+
+titledbutton[class~=borderless][disabled]:hover {
+	border: 1px solid transparent;
+}
+
+titledbutton[class~=borderless][disabled]:active {
+	border: 1px solid transparent;
+	padding: 2px;
+}
+
+/* as a convenience predefined for toolbar as being same as class borderless */
+
+toolbar titledbutton {
+  border: 1px solid transparent;
+}
+
+toolbar.main-bar titledbutton[align="bottom"]{
+	min-width: 3.5em;
+}
+
+toolbar titledbutton:hover {
+  border: 1px outset white;
+  color:#333366;
+  text-decoration: underline;
+}
+ 
+toolbar titledbutton:hover:-moz-outline {
+   border : 1px solid black;
+}
+ 
+toolbar titledbutton:active {
+  text-decoration:none;
+  border: 1px inset;
+}
+
+toolbar titledbutton:active:-moz-outline {
+   border : 1px solid black;
+}
+ 
+toolbar titledbutton[disabled="true"] {
+	border: 1px solid transparent;
+}
+
+toolbar titledbutton[disabled="true"]:hover {
+	border: 1px solid transparent;
+}
+
+toolbar titledbutton[disabled="true"]:active {
+	border: 1px solid transparent;
+	padding: 2px;
+}
+
+toolbar titledbutton[toggled="1"] {
+  border: 1px inset white;
+
+  padding-left: 3px;
+  padding-right: 1px;
+  padding-top: 3px;
+  padding-bottom: 1px;
+}
+
+/* tree related stuff */
+
+tree {
+ display: table;
+ background-color: white;
+ border: none;
+ border-spacing: 0px;
+ width: 100%;
+ table-layout: fixed;
+ font: inherit;
+}
+
+treeitem { 
+ display: table-row-group; 
+ font: inherit;
+} 
+
+treerow {
+ display: table-row;
+ font: inherit;
+}
+
+treehead { 
+ display: table-header-group; 
+ font: inherit;
+} 
+
+treechildren { 
+ display: table-row-group;
+ font: inherit; 
+} 
+
+treerow[selectedrow="true"] { 
+ color: white;
+ background-color: #666699;
+ font: inherit; 
+}
+
+treecell { 
+ display: table-cell; 
+ white-space: nowrap;
+ font: inherit;
+} 
+
+treehead treerow treecell { 
+ font-size: 10pt;
+ background-color: #a0a0a0; 
+ border: 1px white transparent;
+ color: black;
+} 
+
+treeitem > treechildren {
+  visibility: collapse;
+}
+
+treeitem[open="true"] > treechildren {
+  visibility: visible;
+}
+
+treecol {
+ display: table-column;
+}
+
+/* tabs related stuff */
+
+tab { 
+  display: inline;
+  cursor: default;
+
+  border: 1px outset white;
+  //-moz-border-radius: 90;
+
+  color:black; 
+}
+
+tab:active { 
+  display: inline;
+  cursor: default;
+
+  border: 1px outset white;
+  //-moz-border-radius: 90;
+
+  color:red; 
+}
+
+tabbox { 
+  
+
+  //border-bottom: 1px outset white;
+}
+
+tabcontrol[align="vertical"] tabpanel + tabbox[align="horizontal"]  tab { 
+	//bottom tabs
+  border-left: 1px outset white;
+  border-right: 1px outset white;
+  border-top: none;
+  border-bottom: 1px outset white;
+  
+  padding-right: 3px;
+  padding-left: 3px;
+  padding-top: 1px;
+  padding-bottom: 3px;
+
+  margin-right: 2px;
+  margin-left: 2px;
+  margin-top: 1px;
+  margin-bottom: 1px;
+  
+}
+
+tabcontrol[align="vertical"] tabbox[align="horizontal"] tab { 
+  //top tabs
+  border-left: 1px outset white;
+  border-right: 1px outset white;
+  border-top: 1px outset white;
+  border-bottom: none;
+
+  padding-right: 3px;
+  padding-left: 3px;
+  padding-top: 3px;
+  padding-bottom: 1px;
+
+  margin-right: 2px;
+  margin-left: 2px;
+  margin-top: 1px;
+  margin-bottom: 1px;
+
+}
+
+tabcontrol[align="horizontal"] tabbox[align="vertical"] tab { 
+	//left tabs
+  border-left: 1px outset white;
+  border-right: none;
+  border-top: 1px outset white;
+  border-bottom: 1px outset white;
+  
+  padding-right: 1px;
+  padding-left: 3px;
+  padding-top: 3px;
+  padding-bottom: 3px;
+
+  margin-right: 1px;
+  margin-left: 1px;
+  margin-top: 2px;
+  margin-bottom: 2px;
+  
+}
+
+tabcontrol[align="horizontal"] tabpanel + tabbox[align="vertical"]  tab { 
+	//right tabs
+  border-left: none;
+  border-right: 1px outset white;
+  border-top: 1px outset white;
+  border-bottom: 1px outset white;
+  
+  padding-right: 3px;
+  padding-left: 1px;
+  padding-top: 3px;
+  padding-bottom: 3px;
+
+  margin-right: 1px;
+  margin-left: 1px;
+  margin-top: 2px;
+  margin-bottom: 2px;
+  
+}
+
+
+tab:hover { 
+ color: #000033;
+ text-decoration:underline;
+}
+
+tabcontrol { 
+  display: block;
+  cursor: default;
+
+  border: none; 
+}
+
+:-moz-deck-hidden {
+   visibility: hidden;
+}
+
+/* all the debug stuff
+is here */
+
+box[debug] box {
+  border: 1px solid blue;
+}
+
+box[debug][align="vertical"] {
+   border: 1px solid red;
+}
+
+box[debug][align="horizontal"] {
+   border: 1px solid blue;
+}
+
+box[debug] box[align="vertical"] {
+   border: 1px solid red;
+}
+
+box[debug] spring {
+   background-color: green;
+}
+
+box[debug] div{
+	background-color:inherit;
+	background-image:inherit;
+	border: 1px dashed yellow;
+}
+
+box[debug] div.textline {
+	background-color:inherit;
+	background-image:none;
+	border: 1px solid yellow;
+}
+
+box[debug] span{
+	background-color:inherit;
+	background-image:inherit;
+	border: 1px dotted yellow;
+}
+
+box[debug] button{
+	border: 1px outset yellow;
+}
+
+box[debug] button:active{
+	border: 1px inset yellow;
+}
+
+box[debug] titledbutton{
+	border: 1px outset yellow;
+}
+
+box[debug] titledbutton:active{
+	border: 1px inset yellow;
+}
+
+box[debug] legend {
+	border: 1px solid white;
+}
+
+box[debug] label {
+	border: 1px solid yellow;
+}
+
+box[debug] textarea {
+	border: 1px inset yellow;
+}
+
+box[debug] input[type=text]{
+	border: 2px inset yellow;
+}
+
+box[debug] input[type=password]{
+	border: 2px inset yellow;
+}
+
+box[debug] input{
+	border: 2px inset yellow;
+}
+
+box[debug] input[type=radio]{
+	border: 2px inset yellow;
+}
+
+box[debug] input[type=checkbox]{
+	border: 1px inset yellow;
+}
+
+box[debug] checkbox{
+	background-color: white;
+	border: 1px inset yellow;
+}
+
+box[debug] checkbox[depress]{
+	border: 1px inset yellow;
+}
+
+box[debug] div.pmBackground {
+	border: 1px inset yellow; 
+	padding: 1px;
+	background-color: #CCCCCC;
+}
+
+box[debug] progressmeter {
+        display:inline;
+        border: 1px yellow;
+        color : #9999CC;         
+}
+
+
+thumb {
+   background-color: rgb(206, 207, 206);
+   border: 2px outset rgb(156, 154, 156);
+   list-style-image: url(resource:/res/src/scrollThumb.gif)
+}
+
+thumb:hover {
+   list-style-image: url(resource:/res/src/scrollThumb_mo.gif);
+}
+
+thumb[disabled="true"] {
+   list-style-image: url(resource:/res/src/scrollThumb_dis.gif);
+}
+
+thumb:active {
+   background-color: rgb(220, 210, 210);
+}
+
+slider {
+   border: 1px solid black;
+   background-color: rgb(240,240,240);
+}
+
+scrollbarbutton {
+  display: inline;
+  vertical-align: bottom;
+  cursor: default;
+
+  border: 2px outset rgb(156, 154, 156);
+  background-color: rgb(206, 207, 206);
+  color:black; 
+
+  padding: 1px;
+}
+
+scrollbarbutton:active {
+  border-style: inset;
+
+  padding-left: 2px;
+  padding-right: 0px;
+  padding-top: 2px;
+  padding-bottom: 0px;
+}
+
+scrollbarbutton.decrement {
+   list-style-image: url(resource:/res/src/scrollUp.gif)
+}
+
+scrollbarbutton.decrement:hover {
+   list-style-image: url(resource:/res/src/scrollUp_mo.gif)
+}
+
+scrollbarbutton.decrement[disabled="true"] {
+   list-style-image: url(resource:/res/src/scrollUp_dis.gif) 
+}
+
+scrollbarbutton.increment {
+   list-style-image: url(resource:/res/src/scrollDown.gif)
+}
+
+scrollbarbutton.increment:hover {
+   list-style-image: url(resource:/res/src/scrollDown_mo.gif)
+}
+
+scrollbarbutton.increment[disabled="true"] {
+   list-style-image: url(resource:/res/src/scrollDown_dis.gif) 
+}
+
+treepusher.increment {
+   list-style-image: url(resource:/res/src/moreCols_mo.gif)
+}
+
+treepusher.increment:hover {
+   list-style-image: url(resource:/res/src/moreCols_mo.gif)
+}
+
+treepusher.increment[disabled="true"] {
+   list-style-image: url(resource:/res/src/moreCols_dis.gif)
+}
+
+treepusher.decrement {
+   list-style-image: url(resource:/res/src/lessCols_mo.gif)
+}
+
+treepusher.decrement:hover {
+   list-style-image: url(resource:/res/src/lessCols_mo.gif)
+}
+
+treepusher.decrement[disabled="true"] {
+   list-style-image: url(resource:/res/src/lessCols_dis.gif)
+}
+
+splitter {
+   display: block;
+}
+
+grippy {
+   border: 1px outset white;
+   list-style-image: url(resource:/res/toolbar/grippy-horizontal-before.gif);
+   background-color: rgb(198,198,198);
+   display: block;
+   margin: 1px;
+}
+
+box[align="vertical"] splitter[collapse="after"] grippy {
+   list-style-image: url(resource:/res/toolbar/grippy-vertical-after.gif);
+}
+
+box splitter[collapse="after"] grippy {
+   list-style-image: url(resource:/res/toolbar/grippy-horizontal-after.gif);
+}
+
