@@ -16,6 +16,7 @@
       background-color    : buttonface;
       min-width           : 8em;
       font                : button;
+      color               : buttontext;
     }
   
   .button-box-1  

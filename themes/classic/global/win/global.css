@@ -116,6 +116,28 @@
 /**
  * status-bar
  */
+  statusbar
+    {
+      background-color    : threedface;
+      overflow            : hidden;
+      min-width           : 1px;
+    }
+  
+  statusbarpanel  
+    {
+      border-left         : 1px solid threedshadow;
+      border-top          : 1px solid threedshadow;
+      border-right        : 1px solid threedhighlight;
+      border-bottom       : 1px solid threedhighlight;
+      padding             : 1px 1px 0px 1px;
+      margin              : 1px;
+    }
+
+  .statusbar-panel-icon
+    {
+      list-style-image    : inherit;
+    }    
+/*  
   #status-bar 
     {
       border-top          : 1px solid threedhighlight;
@@ -123,6 +145,7 @@
   	  user-focus          : ignore;
       overflow            : hidden
     }
+*/
 
 /**
  * html|iframe default sizing 
@@ -144,35 +167,48 @@
       background-image    : url(chrome://global/skin/progressmeter-busy.gif);
     }
  
-  progressmeter[mode="undetermined"] > .progressmeter-internal-box > .progressmeter-stack > .progressmeter-progressbar {
-      visibility: collapse;
-  }
+  progressmeter[mode="undetermined"] > .progressmeter-internal-box > .progressmeter-stack > .progressmeter-progressbar 
+    {
+      visibility          : collapse;
+    }
 
   progressmeter 
     {
       min-width           : 100px;
-      margin              : 0px 4px 0px 4px;
-      border              : 1px inset #CCCCCC;
-      max-height          : 1.5em;
+      margin              : 1px;
+      border-left         : 1px solid threedshadow;
+      border-top          : 1px solid threedshadow;
+      border-right        : 1px solid threedhighlight;
+      border-bottom       : 1px solid threedhighlight;
+      background-color    : threedface;
+      color               : highlighttext;
     }
 
-  progressmeter > .progressmeter-internal-box 
+  .progressmeter-internal-box
     {
-      border              : 1px solid #000000;
+      border              : 1px solid threedface;
+      padding             : 1px;
+    }
+  
+  .progressmeter-inset  
+    {
+      margin              : 1px 5px 2px 5px;
+    }
+  
+  .progressmeter-inset > .progressmeter-internal-box 
+    {
+      border-left         : 1px solid threeddarkshadow;
+      border-top          : 1px solid threeddarkshadow;
+      border-right        : 1px solid threedhighlight;
+      border-bottom       : 1px solid threedhighlight;
     }
 
 /* progress indicators */
   .progress-bar 
     {
-	    background-color    : #6699cc;
-      border-right        : 1px outset #6699cc;
+	    background-color    : highlight;
     }
   
-  .progress-remainder 
-    {
-	    background-color    : #999999;
-    }
-
 /** XUL <scrollbar> element **/
   scrollbar 
     { 

@@ -29,13 +29,6 @@ include $(DEPTH)/config/autoconf.mk
 include $(THEME_ROOT_DEPTH)/theme.mk
 
 EXPORT_RESOURCE = \
-		$(srcdir)/brand.css \
-		$(srcdir)/box.css \
-		$(srcdir)/button.css \
-		$(srcdir)/communicator.css \
-		$(srcdir)/formatting.css \
-		$(srcdir)/menubuttonBindings.xml \
-		$(srcdir)/menubutton.css \
 		$(srcdir)/navbar-endbox.gif \
 		$(srcdir)/tb-menubutton-dm.gif \
 		$(srcdir)/tb-menubutton-dm-disabled.gif \

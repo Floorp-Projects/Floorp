@@ -1,11 +1,4 @@
 #!dest communicator:skin
-box.css
-brand.css
-button.css
-communicator.css
-formatting.css
-menubutton.css
 navbar-endbox.gif
-menubuttonBindings.xml
 tb-menubutton-dm.gif
 tb-menubutton-dm-disabled.gif

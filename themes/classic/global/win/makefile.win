@@ -55,3 +55,7 @@ install::
 	$(MAKE_INSTALL) menulistBindings.xml $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) treeBindings.xml $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) scrollbar-slider-bg.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) error-icon.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) message-icon.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) question-icon.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) alert-icon.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin

@@ -22,19 +22,12 @@
 DEPTH		= ..\..\..
 THEME_ROOT_DEPTH = ..
 
-DIRS= bookmarks directory profile regviewer related search sidebar wallet xpinstall
+DIRS= bookmarks directory profile regviewer related search sidebar wallet win xpinstall
 
 include <$(DEPTH)\config\rules.mak>
 include <$(THEME_ROOT_DEPTH)\theme.mk>
 
 install:: 
-	$(MAKE_INSTALL) box.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
-	$(MAKE_INSTALL) menubuttonBindings.xml $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
-	$(MAKE_INSTALL) brand.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
-	$(MAKE_INSTALL) button.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
-	$(MAKE_INSTALL) communicator.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
-	$(MAKE_INSTALL) formatting.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
-	$(MAKE_INSTALL) menubutton.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
 	$(MAKE_INSTALL) navbar-endbox.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
 	$(MAKE_INSTALL) tb-menubutton-dm.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
 	$(MAKE_INSTALL) tb-menubutton-dm-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin

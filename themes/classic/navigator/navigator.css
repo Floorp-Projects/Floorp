@@ -5,6 +5,22 @@
 @import url(chrome://communicator/skin/bookmarks/bookmarks.css);
 @import url(chrome://communicator/skin/sidebar/sidebar.css);
 
+#content
+  {
+    border-left           : 1px solid threeddarkshadow;
+    border-top            : 1px solid threeddarkshadow;
+    border-right          : 1px solid threedface;
+    border-bottom         : 1px solid threedface;
+  }
+
+#browser
+  {
+    border-left           : 1px solid threedshadow;
+    border-top            : 1px solid threedshadow;
+    border-right          : 1px solid threedhighlight;
+    border-bottom         : 1px solid threedhighlight;
+  }  
+  
 /*
  * Rules for 'hiding' portions of the chrome for special
  * kinds of browser windows.
@@ -41,7 +57,9 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
     list-style-image      : url("chrome://navigator/skin/back.gif");
   }
 
-#back-button[disabled="true"]
+#back-button[disabled="true"],
+#back-button[disabled="true"]:hover,
+#back-button[disabled="true"]:hover:active
   {
     list-style-image      : url("chrome://navigator/skin/back-disabled.gif");
   }
@@ -57,7 +75,9 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
     list-style-image      : url("chrome://navigator/skin/forward.gif");
   }
 
-#forward-button[disabled="true"]
+#forward-button[disabled="true"],
+#forward-button[disabled="true"]:hover,
+#forward-button[disabled="true"]:hover:active
   {
     list-style-image      : url("chrome://navigator/skin/forward-disabled.gif");
   }
@@ -73,7 +93,9 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 	  list-style-image      : url("chrome://navigator/skin/stop.gif");
   } 
 
-#stop-button[disabled="true"]
+#stop-button[disabled="true"],
+#stop-button[disabled="true"]:hover,
+#stop-button[disabled="true"]:hover:active
   {
 	  list-style-image      : url("chrome://navigator/skin/stop-disabled.gif");
   } 
@@ -88,6 +110,19 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 	  list-style-image      : url("chrome://navigator/skin/reload.gif");
   }
 
+#reload-button:hover
+  {
+	  list-style-image      : url("chrome://navigator/skin/reload-hover.gif");
+  }
+
+#reload-button[disabled="true"],
+#reload-button[disabled="true"]:hover,
+#reload-button[disabled="true"]:hover:active
+  {
+	  list-style-image      : url("chrome://navigator/skin/reload.gif");
+  }
+  
+  
 /*all the urlbar stuff*/
 #page-proxy-button 
   {
@@ -115,11 +150,6 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
     min-height            : 0px;
   }
 
-#statusbar-icon 
-  {
-    width                 : 100px;
-  }
-  
 #go-button  
   {
     display               : none;
@@ -143,4 +173,9 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 .menuitem-iconic
   {
     padding               : 2px;
+  }
+
+#statusbar-icon
+  {
+    margin-left           : 0px;
   }
