@@ -446,8 +446,6 @@ printf("nsTextEditor.cpp: failed to get TextEvent Listener\n");
     NS_ASSERTION(NS_SUCCEEDED(result), "failed to register key listener in system group");
   }
 
-  result = erP->AddEventListenerByIID(mKeyListenerP, NS_GET_IID(nsIDOMKeyListener));
-  NS_ASSERTION(NS_SUCCEEDED(result), "failed to register key listener");
   if (NS_SUCCEEDED(result))
   {
     result = erP->AddEventListenerByIID(mMouseListenerP, NS_GET_IID(nsIDOMMouseListener));
