@@ -390,6 +390,7 @@ MimeInlineText_open_dam(MimeObject *obj)
   const char* detectedCharset;
   nsresult res;
   int status;
+  PRInt32 i;
 
   res = MIME_detect_charset(text->lineDamBuffer, text->curDamOffset, &detectedCharset);  
   if (NS_SUCCEEDED(res) && detectedCharset && *detectedCharset) 
@@ -402,7 +403,7 @@ MimeInlineText_open_dam(MimeObject *obj)
     text->defaultCharset = nsnull;
   }
 
-  for (PRInt32 i = 0; i < text->lastLineInDam-1; i++)
+  for (i = 0; i < text->lastLineInDam-1; i++)
   {
     status = MimeInlineText_convert_and_parse_line(
               text->lineDamPtrs[i],  
