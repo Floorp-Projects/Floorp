@@ -16,8 +16,8 @@
  * Reserved.
  */
 
-#ifndef _MD_X86_FREEBSD_ASM_H_
-#define _MD_X86_FREEBSD_ASM_H_
+#ifndef _MD_X86ASM_GAS_H_
+#define _MD_X86ASM_GAS_H_
 
 #define SYMBOL_NAME_STR(name) #name
 #define SYMBOL_NAME(name) name
@@ -45,4 +45,4 @@
 
 #define TEXT_SEGMENT .text
 #define DATA_SEGMENT .data
-#endif /* _MD_X86_FREEBSD_ASM_H_ */
+#endif /* _MD_X86ASM_GAS_H_ */
