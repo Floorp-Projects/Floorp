@@ -12,11 +12,11 @@
 				<string>html</string>
 				<string>htm</string>
 				<string>shtml</string>
-				<string>xml</string>
+				<string>xht</string>
 				<string>xhtml</string>
 			</array>
 			<key>CFBundleTypeIconFile</key>
-			<string>fileHtml.icns</string>
+			<string>document.icns</string>
 			<key>CFBundleTypeName</key>
 			<string>HTML Document</string>
 			<key>CFBundleTypeOSTypes</key>
@@ -26,57 +26,17 @@
 			<key>CFBundleTypeRole</key>
 			<string>Viewer</string>
 		</dict>
-		<dict>
-			<key>CFBundleTypeExtensions</key>
-			<array>
-				<string>txt</string>
-				<string>text</string>
-			</array>
-			<key>CFBundleTypeIconFile</key>
-			<string>fileBookmark.icns</string>
-			<key>CFBundleTypeName</key>
-			<string>Text Document</string>
-			<key>CFBundleTypeOSTypes</key>
-			<array>
-				<string>TEXT</string>
-				<string>utxt</string>
-			</array>
-			<key>CFBundleTypeRole</key>
-			<string>Viewer</string>
-		</dict>
-		<dict>
-			<key>CFBundleTypeExtensions</key>
-			<array>
-				<string>jpeg</string>
-				<string>jpg</string>
-				<string>png</string>
-				<string>gif</string>
-				<string>mng</string>
-			</array>
-			<key>CFBundleTypeIconFile</key>
-			<string>fileBookmark.icns</string>
-			<key>CFBundleTypeName</key>
-			<string>Image Document</string>
-			<key>CFBundleTypeOSTypes</key>
-			<array>
-				<string>GIFf</string>
-				<string>JPEG</string>
-				<string>PNGf</string>
-			</array>
-			<key>CFBundleTypeRole</key>
-			<string>Viewer</string>
-		</dict>
 	</array>
 	<key>CFBundleExecutable</key>
 	<string>firefox-bin</string>
 	<key>CFBundleGetInfoString</key>
-	<string>Firefox APP_VERSION, © 1998-2004 Contributors</string>
+	<string>Firefox @APP_VERSION@, © 1998-2004 Contributors</string>
 	<key>CFBundleIconFile</key>
-	<string>mach</string>
+	<string>firefox</string>
 	<key>CFBundleIdentifier</key>
-	<string>org.mozilla.mozilla</string>
+	<string>org.mozilla.firefox</string>
 	<key>CFBundleInfoDictionaryVersion</key>
-	<string>6.0</string>
+	<string>@APP_VERSION@</string>
 	<key>CFBundleName</key>
 	<string>Firefox</string>
 	<key>CFBundlePackageType</key>
@@ -89,7 +49,7 @@
 	<array>
 		<dict>
 			<key>CFBundleURLIconFile</key>
-			<string>fileHtml.icns</string>
+			<string>document.icns</string>
 			<key>CFBundleURLName</key>
 			<string>http URL</string>
 			<key>CFBundleURLSchemes</key>
@@ -99,7 +59,7 @@
 		</dict>
 		<dict>
 			<key>CFBundleURLIconFile</key>
-			<string>fileHtml.icns</string>
+			<string>document.icns</string>
 			<key>CFBundleURLName</key>
 			<string>https URL</string>
 			<key>CFBundleURLSchemes</key>
