@@ -3517,3 +3517,23 @@ nsGfxTextControlFrame2::SetValueChanged(PRBool aValueChanged)
     elem->SetValueChanged(aValueChanged);
   }
 }
+
+NS_IMETHODIMP 
+nsGfxTextControlFrame2::HandleEvent(nsIPresContext* aPresContext, 
+                                       nsGUIEvent*     aEvent,
+                                       nsEventStatus*  aEventStatus)
+{
+  NS_ENSURE_ARG_POINTER(aEventStatus);
+
+  // temp fix until Bug 124990 gets fixed
+  PRBool isPaginated = PR_FALSE;
+  aPresContext->IsPaginated(&isPaginated);
+  if (isPaginated && NS_IS_MOUSE_EVENT(aEvent)) {
+    return NS_OK;
+  }
+
+  return nsStackFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
+    
+}
+
+
