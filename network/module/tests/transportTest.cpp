@@ -220,7 +220,7 @@ NS_IMETHODIMP TestConsumer::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
         nsString str(aMsg);
         char* c = str.ToNewCString();
         fputs(c, stdout);
-        free(c);
+        delete[] c;
         fputs("\n", stdout);
     }
 

@@ -304,7 +304,7 @@ nsIImageRequest* nsHTTreeDataModel::RequestImage(nsString& reqUrl) const
 								 (nsIImageRequestObserver*)this,
 								 NULL, 0, 0,  
 								 0);
-	delete url;
+	delete[] url;
 
 	return request;
 }

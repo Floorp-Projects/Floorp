@@ -863,7 +863,7 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode, ostream& a
     char*   buffer = new char[size+1];
     data.ToCString(buffer,size+1);
     aStream << buffer;
-    delete buffer;
+    delete[] buffer;
   }
   else
   {

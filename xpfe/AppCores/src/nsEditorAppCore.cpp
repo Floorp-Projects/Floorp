@@ -124,7 +124,9 @@ static NS_DEFINE_CID(kHTMLEditorCID, NS_HTMLEDITOR_CID);
 
 nsEditorAppCore::nsEditorAppCore()
 {
-  if (APP_DEBUG) printf("Created nsEditorAppCore\n");
+#ifdef APP_DEBUG
+  printf("Created nsEditorAppCore\n");
+#endif
 
   mScriptObject         = nsnull;
   mToolbarWindow        = nsnull;
@@ -405,7 +407,11 @@ nsEditorAppCore::SetWebShellWindow(nsIDOMWindow* aWin)
     webShell->GetName( &name);
     nsAutoString str(name);
 
-    if (APP_DEBUG) printf("Attaching to WebShellWindow[%s]\n", str.ToNewCString());
+#ifdef APP_DEBUG
+    char* cstr = str.ToNewCString();
+    printf("Attaching to WebShellWindow[%s]\n", str.ToNewCString());
+    delete[] cstr;
+#endif
 
     nsIWebShellContainer * webShellContainer;
     webShell->GetContainer(webShellContainer);
@@ -542,7 +548,9 @@ done:
 void GenerateBarItem(FILE * fd, char * aFileName, const nsString & aDesc, void * aData, PRUint32 aLen) 
 {
 	fprintf(fd, "<titledbutton src=\"resource:/res/toolbar/TB_PersonalIcon.gif\" align=\"right\" value=");
-  fprintf(fd, "\"%s\"", aDesc.ToNewCString());
+  char* desc_str= aDesc.ToNewCString();
+  fprintf(fd, "\"%s\"", desc_str);
+  delete[] desc_str;
   fprintf(fd, " onclick=\"LoadURL('%s')\"/>\n", aFileName);
 
   char name[256];
@@ -842,7 +850,13 @@ nsEditorAppCore::ExecuteScript(nsIScriptContext * aContext, const nsString& aScr
     const char* url = "";
     PRBool isUndefined = PR_FALSE;
     nsString rVal;
-    if (APP_DEBUG) printf("Executing [%s]\n", aScript.ToNewCString());
+
+#ifdef APP_DEBUG
+    char* script_str = aScript.ToNewCString();
+    printf("Executing [%s]\n", aScript.ToNewCString());
+    delete[] script_str;
+#endif
+
     aContext->EvaluateString(aScript, url, 0, rVal, &isUndefined);
   } 
   return NS_OK;

@@ -1139,7 +1139,7 @@ NET_I_XP_FileOpen(const char * name, XP_FileType type, const XP_FilePerm perm)
 
     rv = fileMgr->OpenFile( (aName ? aName : name), mode, &nsFp);
     if (aName)
-        delete aName;
+        delete[] aName;
     if (NS_OK != rv) {
         return NULL;
     }
@@ -1275,7 +1275,7 @@ NET_I_XP_FileRemove(const char * name, XP_FileType type)
 
     rv = fileMgr->FileRemove((aName ? aName : name));
     if (aName)
-        delete aName;
+        delete[] aName;
     if (rv != NS_OK)
         return -1;
 
@@ -1305,16 +1305,19 @@ NET_I_XP_Stat(const char * name, XP_StatStruct * info, XP_FileType type)
 
             if (!fileMgr) {
                 if (NS_NewINetFile(&fileMgr, nsnull) != NS_OK) {
+                    delete[] newName;
                     return NULL;
                 }
             }
 
             rv = fileMgr->GetFilePath(newName, &path);
-            if (rv != NS_OK)
+            if (rv != NS_OK) {
+                delete[] newName;
                 return -1;
+            }
             status = PR_GetFileInfo(path, &fileInfo);
             PR_Free(path);
-            delete newName;
+            delete[] newName;
             if (status == PR_SUCCESS) {
                 // transfer the pr stat info over to the xp stat object.
                 // right now just moving over the size.

@@ -73,7 +73,7 @@
 
 #define NS_FREE_CHAR_BUF(aBuf) \
 if (! _ns_smallBufUsed) \
-    delete aBuf; 
+    delete[] aBuf; 
 
 
 #endif  // NSStringUtil

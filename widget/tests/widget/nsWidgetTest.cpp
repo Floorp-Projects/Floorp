@@ -223,7 +223,7 @@ void listSelfTest(FILE * fd, char * aTitle, nsIListWidget * listBox) {
   fprintf(fd, "\nTesting GetSelectedItem\n");
   fprintf(fd, "\tSelection should be [%s] is [%s]  Test: [%s]\n", 
           item4, selStr, eval(!strcmp(item4, selStr))); fflush(fd);
-  if (nsnull != selStr) delete selStr;
+  if (nsnull != selStr) delete[] selStr;
 
   int    sel    = listBox->GetSelectedIndex();
   fprintf(fd, "\nTesting GetSelectedIndex\n");fflush(fd);
@@ -238,7 +238,7 @@ void listSelfTest(FILE * fd, char * aTitle, nsIListWidget * listBox) {
   listBox->GetItemAt(buf, 4);
   selStr = buf.ToNewCString();
   fprintf(fd, "\nTesting GetItemAt\n\tItem %d should be [%s] is [%s]  Test: [%s]\n", inx, item4, selStr, eval(strcmp(selStr, item4) == 0)); fflush(fd);
-  if (nsnull != selStr) delete selStr;
+  if (nsnull != selStr) delete[] selStr;
 
   listBox->SelectItem(2);
   inx = listBox->GetSelectedIndex();
@@ -252,7 +252,7 @@ void listSelfTest(FILE * fd, char * aTitle, nsIListWidget * listBox) {
 
     fprintf(fd, "Item %d [%s]\n", i, str);fflush(fd);
 
-    if (nsnull != str) delete str;
+    if (nsnull != str) delete[] str;
   }
   fprintf(fd, "Removing Item #4\n");fflush(fd);
   listBox->RemoveItemAt(4);
@@ -267,7 +267,7 @@ void listSelfTest(FILE * fd, char * aTitle, nsIListWidget * listBox) {
 
     fprintf(fd, "Item %d [%s]\n", i, str);fflush(fd);
 
-    if (nsnull != str) delete str;
+    if (nsnull != str) delete[] str;
   }
   listBox->Deselect();
   fprintf(fd, "\nTesting Deselect\n\t Selected Item [%d]  Test:[%s]\n", (int)listBox->GetSelectedIndex(), (-1 == (int)listBox->GetSelectedIndex()?"PASSED":"FAILED")); fflush(fd);
@@ -308,7 +308,7 @@ void textSelfTest(FILE * fd, char * aTitle, nsITextWidget * aTextWidget) {
   char * s2 = "1xxx234567890";
   fprintf(fd, "Tested InsertText Test [%s] is [%s] [%s]\n", s2, s, eval(!strcmp(s2, s)));
   fprintf(fd, "Tested InsertText Test [%s]\n", s);
-  delete s;
+  delete[] s;
 
 }
 
@@ -333,7 +333,7 @@ void multiListSelfTest(FILE * fd, char * aTitle, nsIListBox * listBox) {
   selStr = buf.ToNewCString();
   fprintf(fd, "\nTesting GetItemAt\n\tItem %d should be [%s] is [%s]  Test: [%s]\n", inx, item4, selStr, 
           eval(strcmp(selStr, item4) == 0)); fflush(fd);
-  if (nsnull != selStr) delete selStr;
+  if (nsnull != selStr) delete[] selStr;
 
 
   multi->Deselect();
@@ -356,7 +356,7 @@ void multiListSelfTest(FILE * fd, char * aTitle, nsIListBox * listBox) {
   selStr = selItem.ToNewCString();
   fprintf(fd, "\nTesting GetSelectedItem\n\t is [%s] should be [%s] Test: [%s]\n", 
     selStr, item0,  eval(!strcmp(selStr, item0))); fflush(fd);
-  if (nsnull != selStr) delete selStr;*/ 
+  if (nsnull != selStr) delete[] selStr;*/ 
 
   int status = 1;
   count = multi->GetSelectedCount();
@@ -387,7 +387,7 @@ void multiListSelfTest(FILE * fd, char * aTitle, nsIListBox * listBox) {
 
     fprintf(fd, "Item %d [%s]\n", i, str);fflush(fd);
 
-    if (nsnull != str) delete str;
+    if (nsnull != str) delete[] str;
   }
   fprintf(fd, "Removing Item #4\n");fflush(fd);
   multi->RemoveItemAt(4);
@@ -402,7 +402,7 @@ void multiListSelfTest(FILE * fd, char * aTitle, nsIListBox * listBox) {
 
     fprintf(fd, "Item %d [%s]\n", i, str);fflush(fd);
 
-    if (nsnull != str) delete str;
+    if (nsnull != str) delete[] str;
   }
   fprintf(fd, "Done with Mulitple List Box\n");
 }
@@ -508,7 +508,7 @@ nsEventStatus PR_CALLBACK GenericListHandleEvent(nsGUIEvent *aEvent, char * aTit
       statusText->SetText(str,actualSize);
       gFailedMsg = "List::RemoveItemAt && FindItem";
     }
-    delete title;
+    delete[] title;
     //NS_RELEASE(btn);
   }
   return nsEventStatus_eIgnore;
@@ -598,7 +598,7 @@ nsEventStatus PR_CALLBACK MultiListBoxTestHandleEvent(nsGUIEvent *aEvent)
       statusText->SetText(str,actualSize);
       gFailedMsg = "Multi-List::FindItem && RemoveItemAt";
     }
-    delete title;
+    delete[] title;
     //NS_RELEASE(btn);
   }
   return nsEventStatus_eIgnore;
@@ -769,7 +769,7 @@ nsEventStatus PR_CALLBACK GenericTextTestHandleEvent(char           *aTitle,
       statusText->SetText(str,actualSize);
       gFailedMsg = "nsITextWidget::SetSelection";
     }
-    delete title;
+    delete[] title;
     //NS_RELEASE(btn);
   }
   return nsEventStatus_eIgnore;
@@ -807,7 +807,7 @@ nsEventStatus PR_CALLBACK ButtonTestHandleEvent(nsGUIEvent *aEvent)
       gFailedMsg = "nsIWidget::Show(TRUE)";
     }
 
-    delete title;
+    delete[] title;
     //NS_RELEASE(btn);
     
   }
@@ -1031,8 +1031,10 @@ nsEventStatus PR_CALLBACK HandleFileButtonEvent(nsGUIEvent *aEvent)
       if (result) {
         nsString file;
         fileWidget->GetFile(file);
-        printf("file widget contents %s\n", file.ToNewCString());
-        statusText->SetText(file.ToNewCString(),actualSize);
+        char* filestr = file.ToNewCString();
+        printf("file widget contents %s\n", filestr);
+        statusText->SetText(filestr,actualSize);
+        delete[] filestr;
       }
       else
         statusText->SetText("Cancel selected",actualSize);

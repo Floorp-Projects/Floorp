@@ -120,6 +120,7 @@ main(int argc, char *argv[])
     }
     char *value = v.ToNewCString();
     cout << "\"" << i << "\"=\"" << value << "\"" << endl;
+    delete[] value;
     i++;
   }
 

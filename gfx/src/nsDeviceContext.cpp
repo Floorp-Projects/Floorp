@@ -87,7 +87,7 @@ DeviceContextImpl :: ~DeviceContextImpl()
 
   if (nsnull != mGammaTable)
   {
-    delete mGammaTable;
+    delete[] mGammaTable;
     mGammaTable = nsnull;
   }
 

@@ -426,7 +426,7 @@ nsresult nsHttpUrlImpl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
     if (!isAbsolute) {
         // relative spec
         if (nsnull == aURL) {
-            delete cSpec;
+            delete[] cSpec;
 
             NS_UNLOCK_INSTANCE();
             return NS_ERROR_ILLEGAL_VALUE;
@@ -447,7 +447,7 @@ nsresult nsHttpUrlImpl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
                 // Strip out old tail component and put in the new one
                 char* dp = PL_strrchr(uFile, '/');
                 if (!dp) {
-                    delete cSpec;
+                    delete[] cSpec;
                     NS_UNLOCK_INSTANCE();
                     return NS_ERROR_ILLEGAL_VALUE;
                 }
@@ -533,7 +533,7 @@ nsresult nsHttpUrlImpl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
                     }
                 }
             } else {
-                delete cSpec;
+                delete[] cSpec;
                 
                 NS_UNLOCK_INSTANCE();
                 return NS_ERROR_ILLEGAL_VALUE;
@@ -617,7 +617,7 @@ nsresult nsHttpUrlImpl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
     }
 
 //printf("protocol='%s' host='%s' file='%s'\n", mProtocol, mHost, mFile);
-    delete cSpec;
+    delete[] cSpec;
 
     NS_UNLOCK_INSTANCE();
     return NS_OK;

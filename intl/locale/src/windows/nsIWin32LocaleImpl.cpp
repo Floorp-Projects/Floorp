@@ -234,10 +234,11 @@ nsIWin32LocaleImpl::GetPlatformLocale(const nsString* locale,LCID* winLCID)
 			{
 
 				*winLCID = MAKELCID(language_list[i].lang_code,SORT_DEFAULT);
+				delete[] locale_string;
 				return NS_OK;
 			}
 		}
-
+		delete[] locale_string;
 		return NS_ERROR_FAILURE;
 	}
 

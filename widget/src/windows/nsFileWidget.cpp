@@ -92,11 +92,11 @@ PRBool nsFileWidget::Show()
   VERIFY(::GetCurrentDirectory(MAX_PATH, newCurrentDirectory) > 0);
   mDisplayDirectory.SetLength(0);
   mDisplayDirectory.Append(newCurrentDirectory);
-  delete newCurrentDirectory;
+  delete[] newCurrentDirectory;
 
 
   VERIFY(::SetCurrentDirectory(currentDirectory));
-  delete currentDirectory;
+  delete[] currentDirectory;
   
    // Clean up filter buffers
   delete[] filterBuffer;

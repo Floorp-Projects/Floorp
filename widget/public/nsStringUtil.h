@@ -47,7 +47,7 @@
 
 #define NS_FREE_STR_BUF(varName)                              \
  if (! _ns_smallBufUsed)                                      \
-    delete varName;
+    delete[] varName;
 
 // Create temporary char[] macro
 //
@@ -73,7 +73,7 @@
 
 #define NS_FREE_CHAR_BUF(aBuf) \
 if (! _ns_smallBufUsed) \
-    delete aBuf; 
+    delete[] aBuf; 
 
 
 #endif  // NSStringUtil
