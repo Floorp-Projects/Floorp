@@ -66,21 +66,30 @@
   </script>
 
   <table>
-    <tr>
-      <td>
-        <input type="radio" id="cmdtype-doit"
-               name="cmdtype" value="doit" checked="checked">
-        <label for="cmdtype-doit">Run this search</label>
-      </td>
-      <td>&nbsp;</td>
-    </tr>
-    
+    [% IF namedqueries.size > 0 %]
+      <tr>
+        <td>
+          <input type="radio" id="cmdtype-doit"
+                 name="cmdtype" value="doit" checked="checked">
+          <label for="cmdtype-doit">Run this search</label>
+        </td>
+        <td>&nbsp;</td>
+      </tr>
+    [% END %]
     <tr>
       <td valign="top">
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        [% IF namedqueries.size > 0 %]
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        [% END %]
         <input type="checkbox" id="remember" name="remember" value="1" 
                onclick="remCheckboxChanged()">
-        <label for="remember">and remember it</label>
+        [% IF namedqueries.size > 0 %]
+          <label for="remember">and remember it</label>
+        [% ELSE %]
+          <label for="remember">Remember this search</label>
+          <input type="hidden" id="cmdtype-doit"
+                 name="cmdtype" value="doit">
+        [% END %]
       </td>
       <td>
         <input type="radio" id="remtype-asnamed"
