@@ -743,7 +743,7 @@ Wallet_Confirm(PRUnichar * szMessage, nsIDOMWindow* window)
 
   nsresult res;  
   nsCOMPtr<nsIPrompt> dialog; 
-  window->GetPrompterer(getter_AddRefs(dialog)); 
+  window->GetPrompter(getter_AddRefs(dialog)); 
   if (!dialog) {
     return retval;
   } 
