@@ -66,10 +66,10 @@ $seiFileNameSpecificStub  = "mozilla-win32-stub-installer.exe";
 $seuFileNameSpecific  = "MozillaUninstall.exe";
 
 # set environment vars for use by other .pl scripts called from this script.
-$ENV{WIZ_userAgent}            = "0.9 (en)";
-$ENV{WIZ_userAgentShort}       = "0.9";
-$ENV{WIZ_xpinstallVersion}     = "0.9.0";
-$ENV{WIZ_nameCompany}          = "Mozilla.org";
+$ENV{WIZ_userAgent}            = "0.9.1 (en)"; # ie: "0.9 (en)"
+$ENV{WIZ_userAgentShort}       = "0.9.1";      # ie: "0.9"
+$ENV{WIZ_xpinstallVersion}     = "0.9.1";      # ie: "0.9.0"
+$ENV{WIZ_nameCompany}          = "mozilla.org";
 $ENV{WIZ_nameProduct}          = "Mozilla";
 $ENV{WIZ_fileMainExe}          = "Mozilla.exe";
 $ENV{WIZ_fileUninstall}        = $seuFileNameSpecific;

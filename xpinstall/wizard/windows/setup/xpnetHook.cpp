@@ -23,6 +23,7 @@
 #include <windows.h>
 #include <string.h>
 #include <time.h>
+#include <sys\stat.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -40,9 +41,16 @@ extern "C"
 
 #include "nsFTPConn.h"
 #include "nsHTTPConn.h"
+#include "nsSocket.h"
 
 #define UPDATE_INTERVAL_STATUS          1
 #define UPDATE_INTERVAL_PROGRESS_BAR    1
+
+/* Cancel Status */
+#define CS_NONE         0x00000000
+#define CS_CANCEL       0x00000001
+#define CS_PAUSE        0x00000002
+#define CS_RESUME       0x00000003
 
 const int  kProxySrvrLen = 1024;
 const char kHTTP[8]      = "http://";
@@ -51,18 +59,21 @@ const char kLoclFile[7]  = "zzzFTP";
 
 static long             glLastBytesSoFar;
 static long             glAbsoluteBytesSoFar;
+static long             glBytesResumedFrom;
 static long             glTotalKb;
 char                    gszStrCopyingFile[MAX_BUF_MEDIUM];
 char                    gszCurrentDownloadPath[MAX_BUF];
 char                    gszCurrentDownloadFilename[MAX_BUF_TINY];
 char                    gszCurrentDownloadFileDescription[MAX_BUF_TINY];
 char                    gszUrl[MAX_BUF];
+char                    gszTo[MAX_BUF];
+char                    gszFileInfo[MAX_BUF];
 char                    *gszConfigIniFile;
 BOOL                    gbDlgDownloadMinimized;
 BOOL                    gbDlgDownloadJustMinimized;
 BOOL                    gbUrlChanged;
-BOOL                    gbCancelDownload;
 BOOL                    gbShowDownloadRetryMsg;
+DWORD                   gdwDownloadDialogStatus;
 int                     giIndex;
 int                     giTotalArchivesToDownload;
 
@@ -88,6 +99,16 @@ struct ExtractFilesDlgInfo
 	int		nArchiveBars;		  // current number of bars to display
 } dlgInfo;
 
+struct TickInfo
+{
+  DWORD dwTickBegin;
+  DWORD dwTickEnd;
+  DWORD dwTickDif;
+  BOOL  bTickStarted;
+  BOOL  bTickDownloadResumed;
+};
+
+struct TickInfo gtiPaused;
 
 BOOL CheckInterval(long *lModLastValue, int iInterval)
 {
@@ -111,42 +132,213 @@ BOOL CheckInterval(long *lModLastValue, int iInterval)
   return(bRv);
 }
 
+char *GetTimeLeft(DWORD dwTimeLeft,
+                  char *szTimeString,
+                  DWORD dwTimeStringBufSize)
+{
+  DWORD      dwTimeLeftPP;
+  SYSTEMTIME stTime;
+
+  ZeroMemory(&stTime, sizeof(stTime));
+  dwTimeLeftPP         = dwTimeLeft + 1;
+  stTime.wHour         = (unsigned)(dwTimeLeftPP / 60 / 60);
+  stTime.wMinute       = (unsigned)((dwTimeLeftPP / 60) % 60);
+  stTime.wSecond       = (unsigned)(dwTimeLeftPP % 60);
+
+  ZeroMemory(szTimeString, dwTimeStringBufSize);
+  /* format time string using user's local time format information */
+  GetTimeFormat(LOCALE_USER_DEFAULT,
+                TIME_NOTIMEMARKER|TIME_FORCE24HOURFORMAT,
+                &stTime,
+                NULL,
+                szTimeString,
+                dwTimeStringBufSize);
+
+  return(szTimeString);
+}
+
+DWORD AddToTick(DWORD dwTick, DWORD dwTickMoreToAdd)
+{
+  DWORD dwTickLeftTillWrap = 0;
+
+  /* Since GetTickCount() is the number of milliseconds since the system
+   * has been on and the return value is a DWORD, this value will wrap
+   * every 49.71 days or 0xFFFFFFFF milliseconds. */
+  dwTickLeftTillWrap = 0xFFFFFFFF - dwTick;
+  if(dwTickMoreToAdd > dwTickLeftTillWrap)
+    dwTick = dwTickMoreToAdd - dwTickLeftTillWrap;
+  else
+    dwTick = dwTick + dwTickMoreToAdd;
+
+  return(dwTick);
+}
+
+DWORD GetTickDif(DWORD dwTickEnd, DWORD dwTickStart)
+{
+  DWORD dwTickDif;
+
+  /* Since GetTickCount() is the number of milliseconds since the system
+   * has been on and the return value is a DWORD, this value will wrap
+   * every 49.71 days or 0xFFFFFFFF milliseconds. 
+   *
+   * Assumption: dwTickEnd has not wrapped _and_ passed dwTickStart */
+  if(dwTickEnd < dwTickStart)
+    dwTickDif = 0xFFFFFFFF - dwTickStart + dwTickEnd;
+  else
+    dwTickDif = dwTickEnd - dwTickStart;
+
+  return(dwTickDif);
+}
+
+void InitTickInfo(void)
+{
+  gtiPaused.dwTickBegin          = 0;
+  gtiPaused.dwTickEnd            = 0;
+  gtiPaused.dwTickDif            = 0;
+  gtiPaused.bTickStarted         = FALSE;
+  gtiPaused.bTickDownloadResumed = FALSE;
+}
+
+DWORD RoundDouble(double dValue)
+{
+  if(0.5 <= (dValue - (DWORD)dValue))
+    return((DWORD)dValue + 1);
+  else
+    return((DWORD)dValue);
+}
+
 void SetStatusStatus(void)
 {
   char        szStatusStatusLine[MAX_BUF_MEDIUM];
   char        szCurrentStatusInfo[MAX_BUF_MEDIUM];
+  char        szPercentString[MAX_BUF_MEDIUM];
+  char        szPercentageCompleted[MAX_BUF_MEDIUM];
   static long lModLastValue = 0;
+  double        dRate;
+  static double dRateCounter;
+  static DWORD  dwTickStart = 0;
+  DWORD         dwTickNow;
+  DWORD         dwTickDif;
+  DWORD         dwKBytesSoFar;
+  DWORD         dwRoundedRate;
+  char          szTimeLeft[MAX_BUF_TINY];
 
+  /* If the user just clicked on the Resume button, then the time lapsed
+   * between dwTickStart and when the Resume button was clicked needs to
+   * be subtracted taken into account when calculating dwTickDif.  So
+   * "this" lapsed time needs to be added to dwTickStart. */
+  if(gtiPaused.bTickDownloadResumed)
+  {
+    dwTickStart = AddToTick(dwTickStart, gtiPaused.dwTickDif);
+    InitTickInfo();
+  }
+
+  /* GetTickCount() returns time in milliseconds.  This is more accurate,
+   * which will allow us to get at a 2 decimal precision value for the
+   * download rate. */
+  dwTickNow = GetTickCount();
+  if(dwTickStart == 0)
+    dwTickNow = dwTickStart = GetTickCount();
+
+  dwTickDif = GetTickDif(dwTickNow, dwTickStart);
+
+  /* Only update the UI every UPDATE_INTERVAL_STATUS interval,
+   * which is currently set to 1 sec. */
   if(!CheckInterval(&lModLastValue, UPDATE_INTERVAL_STATUS))
     return;
 
+  if(glAbsoluteBytesSoFar == 0)
+    dRateCounter = 0.0;
+  else
+    dRateCounter = dwTickDif / 1000;
+
+  if(dRateCounter == 0.0)
+    dRate = 0.0;
+  else
+    dRate = (glAbsoluteBytesSoFar - glBytesResumedFrom) / dRateCounter / 1024;
+
+  dwKBytesSoFar = glAbsoluteBytesSoFar / 1024;
+
+  /* Use a rate that is rounded to the nearest integer.  If dRate used directly,
+   * the "Time Left" will jump around quite a bit due to the rate usually 
+   * varying up and down by quite a bit. The rounded rate give a "more linear"
+   * count down of the "Time Left". */
+  dwRoundedRate = RoundDouble(dRate);
+  if(dwRoundedRate > 0)
+    GetTimeLeft((glTotalKb - dwKBytesSoFar) / dwRoundedRate,
+                 szTimeLeft,
+                 sizeof(szTimeLeft));
+  else
+    lstrcpy(szTimeLeft, "00:00:00");
+
   if(!gbShowDownloadRetryMsg)
   {
-    GetPrivateProfileString("Strings", "Status Download", "", szStatusStatusLine, sizeof(szStatusStatusLine), szFileIniConfig);
+    GetPrivateProfileString("Strings",
+                            "Status Download",
+                            "",
+                            szStatusStatusLine,
+                            sizeof(szStatusStatusLine),
+                            szFileIniConfig);
     if(*szStatusStatusLine != '\0')
-      wsprintf(szCurrentStatusInfo, szStatusStatusLine, (giIndex + 1), giTotalArchivesToDownload, (glAbsoluteBytesSoFar / 1024), glTotalKb, (int)GetPercentSoFar());
+      sprintf(szCurrentStatusInfo,
+              szStatusStatusLine,
+              szTimeLeft,
+              dRate,
+              dwKBytesSoFar,
+              glTotalKb);
     else
-      wsprintf(szCurrentStatusInfo, "Downloading file %d of %d (%uKB of %uKB total - %d%%)", (giIndex + 1), giTotalArchivesToDownload, (glAbsoluteBytesSoFar / 1024), glTotalKb, (int)GetPercentSoFar());
+      sprintf(szCurrentStatusInfo,
+              "%s at %.2fKB/sec (%uKB of %uKB downloaded)",
+              szTimeLeft,
+              dRate,
+              dwKBytesSoFar,
+              glTotalKb);
   }
   else
   {
-    GetPrivateProfileString("Strings", "Status Retry", "", szStatusStatusLine, sizeof(szStatusStatusLine), szFileIniConfig);
+    GetPrivateProfileString("Strings",
+                            "Status Retry",
+                            "",
+                            szStatusStatusLine,
+                            sizeof(szStatusStatusLine),
+                            szFileIniConfig);
     if(*szStatusStatusLine != '\0')
-      wsprintf(szCurrentStatusInfo, szStatusStatusLine, (giIndex + 1), giTotalArchivesToDownload, (glAbsoluteBytesSoFar / 1024), glTotalKb, (int)GetPercentSoFar());
+      sprintf(szCurrentStatusInfo,
+              szStatusStatusLine,
+              szTimeLeft,
+              dRate,
+              dwKBytesSoFar,
+              glTotalKb);
     else
-      wsprintf(szCurrentStatusInfo, "Redownloading file %d of %d (%uKB of %uKB total - %d%%)", (giIndex + 1), giTotalArchivesToDownload, (glAbsoluteBytesSoFar / 1024), glTotalKb, (int)GetPercentSoFar());
+      sprintf(szCurrentStatusInfo,
+              "%s at %.2KB/sec (%uKB of %uKB downloaded)",
+              szTimeLeft,
+              dRate,
+              dwKBytesSoFar,
+              glTotalKb);
   }
+
+  GetPrivateProfileString("Strings",
+                          "Status Percentage Completed",
+                          "",
+                          szPercentageCompleted,
+                          sizeof(szPercentageCompleted),
+                          szFileIniConfig);
+  wsprintf(szPercentString, szPercentageCompleted, (int)GetPercentSoFar());
 
   /* Set the download dialog title */
   SetDlgItemText(dlgInfo.hWndDlg, IDC_STATUS_STATUS, szCurrentStatusInfo);
+  SetDlgItemText(dlgInfo.hWndDlg, IDC_PERCENTAGE, szPercentString);
 }
 
 void SetStatusFile(void)
 {
-  /* Set the download dialog status*/
-  SetDlgItemText(dlgInfo.hWndDlg, IDC_STATUS_FILE, gszCurrentDownloadFileDescription);
-  SetStatusStatus();
+  char szString[MAX_BUF];
 
+  /* Set the download dialog status*/
+  wsprintf(szString, gszFileInfo, gszCurrentDownloadFileDescription);
+  SetDlgItemText(dlgInfo.hWndDlg, IDC_STATUS_FILE, szString);
+  SetStatusStatus();
 }
 
 void SetStatusUrl(void)
@@ -155,7 +347,9 @@ void SetStatusUrl(void)
   if(gbUrlChanged)
   {
     char szUrlPathBuf[MAX_BUF];
+    char szToPathBuf[MAX_BUF];
     HWND hStatusUrl = NULL;
+    HWND hStatusTo  = NULL;
 
     hStatusUrl = GetDlgItem(dlgInfo.hWndDlg, IDC_STATUS_URL);
     if(hStatusUrl)
@@ -163,7 +357,14 @@ void SetStatusUrl(void)
     else
       lstrcpy(szUrlPathBuf, gszUrl);
 
+    hStatusTo = GetDlgItem(dlgInfo.hWndDlg, IDC_STATUS_TO);
+    if(hStatusTo)
+      TruncateString(hStatusTo, gszTo, szToPathBuf, sizeof(szToPathBuf));
+    else
+      lstrcpy(szToPathBuf, gszTo);
+
     SetDlgItemText(dlgInfo.hWndDlg, IDC_STATUS_URL, szUrlPathBuf);
+    SetDlgItemText(dlgInfo.hWndDlg, IDC_STATUS_TO,  szToPathBuf);
     SetStatusFile();
     gbUrlChanged = FALSE;
   }
@@ -357,7 +558,7 @@ int DownloadViaFTP(char *szUrl)
   if(strrchr(path, '/') != (path + strlen(path)))
     file = strrchr(path, '/') + 1; // set to leaf name
 
-  rv = conn->Get(path, file, nsFTPConn::BINARY, 1, ProgressCB);
+  rv = conn->Get(path, file, nsFTPConn::BINARY, TRUE, ProgressCB);
   conn->Close();
 
   if(host)
@@ -368,6 +569,21 @@ int DownloadViaFTP(char *szUrl)
     delete(conn);
 
   return(rv);
+}
+
+void PauseTheDownload(int rv, int *iFileDownloadRetries)
+{
+  if(rv != nsFTPConn::E_USER_CANCEL)
+  {
+    SendMessage(dlgInfo.hWndDlg, WM_COMMAND, IDPAUSE, 0);
+    --*iFileDownloadRetries;
+  }
+
+  while(gdwDownloadDialogStatus == CS_PAUSE)
+  {
+    SleepEx(200, FALSE);
+    ProcessWindowsMessages();
+  }
 }
 
 int DownloadFiles(char *szInputIniFile,
@@ -392,6 +608,7 @@ int DownloadFiles(char *szInputIniFile,
   int       iFileDownloadRetries;
   int       iIgnoreFileNetworkError;
   DWORD     dwTotalEstDownloadSize;
+  char      szPartiallyDownloadedFilename[MAX_BUF];
 
   if(szInputIniFile == NULL)
     return(WIZ_ERROR_UNDEFINED);
@@ -399,6 +616,7 @@ int DownloadFiles(char *szInputIniFile,
   if(szFailedFile)
     ZeroMemory(szFailedFile, dwFailedFileSize);
 
+  InitTickInfo();
   GetCurrentDirectory(sizeof(szSavedCwd), szSavedCwd);
   SetCurrentDirectory(szDownloadDir);
 
@@ -407,16 +625,19 @@ int DownloadFiles(char *szInputIniFile,
   giTotalArchivesToDownload = 0;
   glLastBytesSoFar          = 0;
   glAbsoluteBytesSoFar      = 0;
+  glBytesResumedFrom        = 0;
   gbUrlChanged              = TRUE;
   gbDlgDownloadMinimized    = FALSE;
   gbDlgDownloadJustMinimized = FALSE;
-  gbCancelDownload          = FALSE;
+  gdwDownloadDialogStatus   = CS_NONE;
   gbShowDownloadRetryMsg    = bShowRetryMsg;
   gszConfigIniFile          = szInputIniFile;
 
   GetTotalArchivesToDownload(&giTotalArchivesToDownload,
                              &dwTotalEstDownloadSize);
   glTotalKb                 = dwTotalEstDownloadSize;
+  GetSetupCurrentDownloadFile(szPartiallyDownloadedFilename,
+                              sizeof(szPartiallyDownloadedFilename));
 
   InitDownloadDlg();
 
@@ -448,6 +669,29 @@ int DownloadFiles(char *szInputIniFile,
                             0,
                             gszConfigIniFile);
 
+    /* save the file name to be downloaded */
+    ParsePath(gszUrl,
+              szCurrentFile,
+              sizeof(szCurrentFile),
+              TRUE,
+              PP_FILENAME_ONLY);
+
+    if((*szPartiallyDownloadedFilename != 0) &&
+       (lstrcmpi(szPartiallyDownloadedFilename, szCurrentFile) == 0))
+    {
+      struct stat statBuf;
+
+      if(stat(szPartiallyDownloadedFilename, &statBuf) != -1)
+      {
+        glAbsoluteBytesSoFar += statBuf.st_size;
+        glBytesResumedFrom    = statBuf.st_size;
+      }
+    }
+
+    lstrcpy(gszTo, szDownloadDir);
+    AppendBackSlash(gszTo, sizeof(gszTo));
+    lstrcat(gszTo, szCurrentFile);
+
     if(gbDlgDownloadMinimized)
       SetMinimizedDownloadTitle((int)GetPercentSoFar());
     else
@@ -456,16 +700,11 @@ int DownloadFiles(char *szInputIniFile,
       SetRestoredDownloadTitle();
     }
 
+    SetSetupCurrentDownloadFile(szCurrentFile);
     iFileDownloadRetries = 0;
     do
     {
-      /* save the file name to be downloaded */
-      ParsePath(gszUrl,
-                szCurrentFile,
-                sizeof(szCurrentFile),
-                TRUE,
-                PP_FILENAME_ONLY);
-
+      ProcessWindowsMessages();
       /* Download starts here */
       if((szProxyServer != NULL) && (szProxyPort != NULL) &&
          (*szProxyServer != '\0') && (*szProxyPort != '\0'))
@@ -485,23 +724,65 @@ int DownloadFiles(char *szInputIniFile,
           rv = DownloadViaFTP(gszUrl);
       }
 
-      if(rv == nsFTPConn::E_USER_CANCEL)
+      if((rv == nsFTPConn::E_USER_CANCEL) ||
+         (gdwDownloadDialogStatus == CS_PAUSE))
       {
-        char szFile[MAX_BUF];
+        if(gdwDownloadDialogStatus == CS_PAUSE)
+        {
+          PauseTheDownload(rv, &iFileDownloadRetries);
 
-        lstrcpy(szFile, szDownloadDir);
-        AppendBackSlash(szFile, sizeof(szFile));
-        lstrcat(szFile, szCurrentFile);
+          /* rv needs to be set to something
+           * other than E_USER_CANCEL or E_OK */
+          rv = nsFTPConn::E_CMD_UNEXPECTED;
+        }
+        else
+        {
+          /* break out of the do loop */
+          break;
+        }
+      }
+      else if((rv != nsFTPConn::OK) &&
+              (rv != nsFTPConn::E_CMD_FAIL) &&
+              (gdwDownloadDialogStatus != CS_CANCEL))
+      {
+        char szTitle[MAX_BUF_SMALL];
+        char szMsgDownloadPaused[MAX_BUF];
 
-        if(FileExists(szFile))
-          DeleteFile(szFile);
+        /* Start the pause tick counter here because we don't know how
+         * long before the user will dismiss the MessageBox() */
+        if(!gtiPaused.bTickStarted)
+        {
+          gtiPaused.dwTickBegin          = GetTickCount();
+          gtiPaused.bTickStarted         = TRUE;
+          gtiPaused.bTickDownloadResumed = FALSE;
+        }
 
-        /* break out of the do loop */
-        break;
+        /* The connection exepectedly dropped for some reason, so inform
+         * the user that the download will be Paused, and then update the
+         * Download dialog to show the Paused state. */
+        GetPrivateProfileString("Messages",
+                                "MB_WARNING_STR",
+                                "",
+                                szTitle,
+                                sizeof(szTitle),
+                                szFileIniInstall);
+        GetPrivateProfileString("Strings",
+                                "Message Download Paused",
+                                "",
+                                szMsgDownloadPaused,
+                                sizeof(szMsgDownloadPaused),
+                                szFileIniConfig);
+        MessageBox(dlgInfo.hWndDlg,
+                   szMsgDownloadPaused,
+                   szTitle,
+                   MB_ICONEXCLAMATION);
+        PauseTheDownload(rv, &iFileDownloadRetries);
       }
 
       ++iFileDownloadRetries;
-      if(iFileDownloadRetries > MAX_FILE_DOWNLOAD_RETRIES)
+      if((iFileDownloadRetries > MAX_FILE_DOWNLOAD_RETRIES) &&
+         (rv != nsFTPConn::E_USER_CANCEL) &&
+         (gdwDownloadDialogStatus != CS_CANCEL))
       {
         /* since the download retries maxed out, increment the counter
          * to read the next url for the current file */
@@ -520,11 +801,12 @@ int DownloadFiles(char *szInputIniFile,
            * file download retries to 0 since it's a new url. */
           gbUrlChanged = TRUE;
           iFileDownloadRetries = 0;
+          SetStatusUrl();
         }
       }
-
     } while((rv != nsFTPConn::E_USER_CANCEL) &&
             (rv != nsFTPConn::OK) &&
+            (gdwDownloadDialogStatus != CS_CANCEL) &&
             (iFileDownloadRetries <= MAX_FILE_DOWNLOAD_RETRIES));
 
     if((iFileDownloadRetries > MAX_FILE_DOWNLOAD_RETRIES) && iNetRetries)
@@ -534,8 +816,13 @@ int DownloadFiles(char *szInputIniFile,
        * because each retry should not count as a new download. */
       *iNetRetries = iFileDownloadRetries - 1;
 
-    if(rv == nsFTPConn::E_USER_CANCEL)
+    if((rv == nsFTPConn::E_USER_CANCEL) ||
+       (gdwDownloadDialogStatus == CS_CANCEL))
     {
+      /* make sure rv is E_USER_CANCEL when gdwDownloadDialogStatus
+       * is CS_CANCEL */
+      rv = nsFTPConn::E_USER_CANCEL;
+
       if(szFailedFile && ((DWORD)lstrlen(szCurrentFile) <= dwFailedFileSize))
         lstrcpy(szFailedFile, gszCurrentDownloadFileDescription);
 
@@ -574,6 +861,8 @@ int DownloadFiles(char *szInputIniFile,
     }
     else if(bIgnoreAllNetworkErrors || iIgnoreFileNetworkError)
       rv = nsFTPConn::OK;
+
+    UnsetSetupCurrentDownloadFile();
   }
 
   DeInitDownloadDlg();
@@ -583,9 +872,9 @@ int DownloadFiles(char *szInputIniFile,
 
 int ProgressCB(int aBytesSoFar, int aTotalFinalSize)
 {
-  long lBytesDiffSoFar;
+  long   lBytesDiffSoFar;
   double dPercentSoFar;
-  int  iRv = nsFTPConn::OK;
+  int    iRv = nsFTPConn::OK;
 
   if(sgProduct.dwMode != SILENT)
   {
@@ -610,7 +899,8 @@ int ProgressCB(int aBytesSoFar, int aTotalFinalSize)
     UpdateGaugeFileProgressBar(dPercentSoFar);
     SetStatusStatus();
 
-    if(gbCancelDownload)
+    if((gdwDownloadDialogStatus == CS_CANCEL) ||
+       (gdwDownloadDialogStatus == CS_PAUSE))
       iRv = nsFTPConn::E_USER_CANCEL;
   }
 
@@ -639,32 +929,45 @@ CenterWindow(HWND hWndDlg)
 LRESULT CALLBACK
 DownloadDlgProc(HWND hWndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	switch (msg)
+  switch (msg)
   {
-		case WM_INITDIALOG:
-		  DisableSystemMenuItems(hWndDlg, FALSE);
-				CenterWindow(hWndDlg);
-		  if(gbShowDownloadRetryMsg)
-			SetDlgItemText(hWndDlg, IDC_MESSAGE0, diDownload.szMessageRetry0);
-		  else
-			SetDlgItemText(hWndDlg, IDC_MESSAGE0, diDownload.szMessageDownload0);
+    case WM_INITDIALOG:
+      GetPrivateProfileString("Strings",
+                              "Status File Info",
+                              "",
+                              gszFileInfo,
+                              sizeof(gszFileInfo),
+                              szFileIniConfig);
+      DisableSystemMenuItems(hWndDlg, FALSE);
+      CenterWindow(hWndDlg);
+      if(gbShowDownloadRetryMsg)
+        SetDlgItemText(hWndDlg, IDC_MESSAGE0, diDownload.szMessageRetry0);
+      else
+        SetDlgItemText(hWndDlg, IDC_MESSAGE0, diDownload.szMessageDownload0);
 
-		  SetDlgItemText(hWndDlg, IDC_STATIC1, sgInstallGui.szStatus);
-		  SetDlgItemText(hWndDlg, IDC_STATIC2, sgInstallGui.szFile);
-		  SetDlgItemText(hWndDlg, IDC_STATIC3, sgInstallGui.szUrl);
-		  SetDlgItemText(hWndDlg, IDCANCEL, sgInstallGui.szCancel);
-		  SendDlgItemMessage (hWndDlg, IDC_STATIC1, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
-		  SendDlgItemMessage (hWndDlg, IDC_STATIC2, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
-		  SendDlgItemMessage (hWndDlg, IDC_STATIC3, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
-		  SendDlgItemMessage (hWndDlg, IDCANCEL, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
-		  SendDlgItemMessage (hWndDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
-		  SendDlgItemMessage (hWndDlg, IDC_STATUS_STATUS, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
-		  SendDlgItemMessage (hWndDlg, IDC_STATUS_FILE, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
-		  SendDlgItemMessage (hWndDlg, IDC_STATUS_URL, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      EnableWindow(GetDlgItem(hWndDlg, IDRESUME), FALSE);
+      SetDlgItemText(hWndDlg, IDC_STATIC1, sgInstallGui.szStatus);
+      SetDlgItemText(hWndDlg, IDC_STATIC2, sgInstallGui.szFile);
+      SetDlgItemText(hWndDlg, IDC_STATIC4, sgInstallGui.szTo);
+      SetDlgItemText(hWndDlg, IDC_STATIC3, sgInstallGui.szUrl);
+      SetDlgItemText(hWndDlg, IDCANCEL, sgInstallGui.szCancel_);
+      SetDlgItemText(hWndDlg, IDPAUSE, sgInstallGui.szPause_);
+      SetDlgItemText(hWndDlg, IDRESUME, sgInstallGui.szResume_);
+      SendDlgItemMessage (hWndDlg, IDC_STATIC1, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hWndDlg, IDC_STATIC2, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hWndDlg, IDC_STATIC3, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hWndDlg, IDCANCEL, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hWndDlg, IDPAUSE, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hWndDlg, IDRESUME, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hWndDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hWndDlg, IDC_STATUS_STATUS, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hWndDlg, IDC_STATUS_FILE, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hWndDlg, IDC_STATUS_URL, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hWndDlg, IDC_STATUS_TO, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
 
-			return FALSE;
+      return FALSE;
 
-		case WM_SIZE:
+    case WM_SIZE:
       switch(wParam)
       {
         case SIZE_MINIMIZED:
@@ -681,22 +984,45 @@ DownloadDlgProc(HWND hWndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
       }
       return(FALSE);
 
-		case WM_COMMAND:
+    case WM_COMMAND:
       switch(LOWORD(wParam))
       {
         case IDCANCEL:
           if(AskCancelDlg(hWndDlg))
-            gbCancelDownload = TRUE;
+            gdwDownloadDialogStatus = CS_CANCEL;
+          break;
 
+        case IDPAUSE:
+          if(!gtiPaused.bTickStarted)
+          {
+            gtiPaused.dwTickBegin          = GetTickCount();
+            gtiPaused.bTickStarted         = TRUE;
+            gtiPaused.bTickDownloadResumed = FALSE;
+          }
+
+          EnableWindow(GetDlgItem(hWndDlg, IDPAUSE),  FALSE);
+          EnableWindow(GetDlgItem(hWndDlg, IDRESUME), TRUE);
+          gdwDownloadDialogStatus = CS_PAUSE;
+          break;
+
+        case IDRESUME:
+          gtiPaused.dwTickEnd = GetTickCount();
+          gtiPaused.dwTickDif = GetTickDif(gtiPaused.dwTickEnd,
+                                           gtiPaused.dwTickBegin);
+          gtiPaused.bTickDownloadResumed = TRUE;
+
+          EnableWindow(GetDlgItem(hWndDlg, IDRESUME), FALSE);
+          EnableWindow(GetDlgItem(hWndDlg, IDPAUSE),  TRUE);
+          gdwDownloadDialogStatus = CS_NONE;
           break;
 
         default:
           break;
       }
-			return(TRUE);
-	}
+      return(TRUE);
+  }
 
-	return(FALSE);  // didn't handle the message
+  return(FALSE);  // didn't handle the message
 }
 
 // This routine will update the File Gauge progress bar to the specified percentage

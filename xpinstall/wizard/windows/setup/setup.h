@@ -212,6 +212,10 @@ typedef int PRInt32;
 #define DSR_TEMP                        2
 #define DSR_DOWNLOAD_SIZE               3
 
+/* SS: Site Selector */
+#define SS_HIDE                         0
+#define SS_SHOW                         1
+
 typedef struct dlgSetup
 {
   DWORD   dwDlgID;
@@ -445,6 +449,7 @@ typedef struct dlgInstall
     char szStatus[MAX_BUF];
     char szFile[MAX_BUF];
     char szUrl[MAX_BUF];
+    char szTo[MAX_BUF];
     char szAccept_[MAX_BUF];
     char szNo_[MAX_BUF];
     char szProgramFolder_[MAX_BUF];
@@ -464,6 +469,8 @@ typedef struct dlgInstall
     char szDelete_[MAX_BUF];
     char szExtracting[MAX_BUF];
     char szReadme_[MAX_BUF];
+    char szPause_[MAX_BUF];
+    char szResume_[MAX_BUF];
 } installGui;
 
 /* structure message stream */

@@ -1632,9 +1632,18 @@ LRESULT CALLBACK DlgProcProgramFolder(HWND hDlg, UINT msg, WPARAM wParam, LONG l
   return(0);
 }
 
+void SaveDownloadProtocolOption(HWND hDlg)
+{
+  if(IsDlgButtonChecked(hDlg, IDC_USE_FTP) == BST_CHECKED)
+    diDownloadOptions.dwUseProtocol = UP_FTP;
+  else if(IsDlgButtonChecked(hDlg, IDC_USE_HTTP) == BST_CHECKED)
+    diDownloadOptions.dwUseProtocol = UP_HTTP;
+}
+
 LRESULT CALLBACK DlgProcAdvancedSettings(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 {
   RECT  rDlg;
+  char  szBuf[MAX_BUF];
 
   switch(msg)
   {
@@ -1656,6 +1665,11 @@ LRESULT CALLBACK DlgProcAdvancedSettings(HWND hDlg, UINT msg, WPARAM wParam, LON
                      0,
                      SWP_NOSIZE);
 
+      GetPrivateProfileString("Strings", "IDC Use Ftp", "", szBuf, sizeof(szBuf), szFileIniConfig);
+      SetDlgItemText(hDlg, IDC_USE_FTP, szBuf);
+      GetPrivateProfileString("Strings", "IDC Use Http", "", szBuf, sizeof(szBuf), szFileIniConfig);
+      SetDlgItemText(hDlg, IDC_USE_HTTP, szBuf);
+
       SetDlgItemText(hDlg, IDC_STATIC, sgInstallGui.szProxySettings);
       SetDlgItemText(hDlg, IDC_STATIC1, sgInstallGui.szServer);
       SetDlgItemText(hDlg, IDC_STATIC2, sgInstallGui.szPort);
@@ -1675,6 +1689,35 @@ LRESULT CALLBACK DlgProcAdvancedSettings(HWND hDlg, UINT msg, WPARAM wParam, LON
       SendDlgItemMessage (hDlg, IDC_EDIT_PROXY_PORT, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
       SendDlgItemMessage (hDlg, IDC_EDIT_PROXY_USER, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
       SendDlgItemMessage (hDlg, IDC_EDIT_PROXY_PASSWD, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_USE_FTP, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hDlg, IDC_USE_HTTP, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+
+      switch(diDownloadOptions.dwUseProtocol)
+      {
+        case UP_HTTP:
+          CheckDlgButton(hDlg, IDC_USE_FTP,  BST_UNCHECKED);
+          CheckDlgButton(hDlg, IDC_USE_HTTP, BST_CHECKED);
+          break;
+
+        case UP_FTP:
+        default:
+          CheckDlgButton(hDlg, IDC_USE_FTP,  BST_CHECKED);
+          CheckDlgButton(hDlg, IDC_USE_HTTP, BST_UNCHECKED);
+          break;
+
+      }
+
+      if((diDownloadOptions.bShowProtocols) && (diDownloadOptions.bUseProtocolSettings))
+      {
+        ShowWindow(GetDlgItem(hDlg, IDC_USE_FTP),  SW_SHOW);
+        ShowWindow(GetDlgItem(hDlg, IDC_USE_HTTP), SW_SHOW);
+      }
+      else
+      {
+        ShowWindow(GetDlgItem(hDlg, IDC_USE_FTP),  SW_HIDE);
+        ShowWindow(GetDlgItem(hDlg, IDC_USE_HTTP), SW_HIDE);
+      }
+
       break;
 
     case WM_COMMAND:
@@ -1689,6 +1732,7 @@ LRESULT CALLBACK DlgProcAdvancedSettings(HWND hDlg, UINT msg, WPARAM wParam, LON
           GetDlgItemText(hDlg, IDC_EDIT_PROXY_USER,   diAdvancedSettings.szProxyUser,   MAX_BUF);
           GetDlgItemText(hDlg, IDC_EDIT_PROXY_PASSWD, diAdvancedSettings.szProxyPasswd, MAX_BUF);
 
+          SaveDownloadProtocolOption(hDlg);
           DestroyWindow(hDlg);
           DlgSequenceNext();
           break;
@@ -1720,12 +1764,6 @@ void SaveDownloadOptions(HWND hDlg, HWND hwndCBSiteSelector)
     diDownloadOptions.bSaveInstaller = TRUE;
   else
     diDownloadOptions.bSaveInstaller = FALSE;
-
-  if(IsDlgButtonChecked(hDlg, IDC_USE_FTP) == BST_CHECKED)
-    diDownloadOptions.dwUseProtocol = UP_FTP;
-  else if(IsDlgButtonChecked(hDlg, IDC_USE_HTTP) == BST_CHECKED)
-    diDownloadOptions.dwUseProtocol = UP_HTTP;
-
 }
 
 LRESULT CALLBACK DlgProcDownloadOptions(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
@@ -1742,15 +1780,17 @@ LRESULT CALLBACK DlgProcDownloadOptions(HWND hDlg, UINT msg, WPARAM wParam, LONG
   switch(msg)
   {
     case WM_INITDIALOG:
+      if(gdwSiteSelectorStatus == SS_HIDE)
+      {
+        ShowWindow(GetDlgItem(hDlg, IDC_MESSAGE0),  SW_HIDE);
+        ShowWindow(GetDlgItem(hDlg, IDC_LIST_SITE_SELECTOR),  SW_HIDE);
+      }
+
       DisableSystemMenuItems(hDlg, FALSE);
       SetWindowText(hDlg, diDownloadOptions.szTitle);
       SetDlgItemText(hDlg, IDC_MESSAGE0, diDownloadOptions.szMessage0);
       SetDlgItemText(hDlg, IDC_MESSAGE1, diDownloadOptions.szMessage1);
 
-      GetPrivateProfileString("Strings", "IDC Use Ftp", "", szBuf, sizeof(szBuf), szFileIniConfig);
-      SetDlgItemText(hDlg, IDC_USE_FTP, szBuf);
-      GetPrivateProfileString("Strings", "IDC Use Http", "", szBuf, sizeof(szBuf), szFileIniConfig);
-      SetDlgItemText(hDlg, IDC_USE_HTTP, szBuf);
       GetPrivateProfileString("Strings", "IDC Save Installer Files", "", szBuf, sizeof(szBuf), szFileIniConfig);
       SetDlgItemText(hDlg, IDC_CHECK_SAVE_INSTALLER_FILES, szBuf);
 
@@ -1770,8 +1810,6 @@ LRESULT CALLBACK DlgProcDownloadOptions(HWND hDlg, UINT msg, WPARAM wParam, LONG
       SendDlgItemMessage (hDlg, IDC_MESSAGE1, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
       SendDlgItemMessage (hDlg, IDC_CHECK_SAVE_INSTALLER_FILES, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
       SendDlgItemMessage (hDlg, IDC_EDIT_LOCAL_INSTALLER_PATH, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
-      SendDlgItemMessage (hDlg, IDC_USE_FTP, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
-      SendDlgItemMessage (hDlg, IDC_USE_HTTP, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
 
       if(GetClientRect(hDlg, &rDlg))
         SetWindowPos(hDlg,
@@ -1809,32 +1847,6 @@ LRESULT CALLBACK DlgProcDownloadOptions(HWND hDlg, UINT msg, WPARAM wParam, LONG
         CheckDlgButton(hDlg, IDC_CHECK_SAVE_INSTALLER_FILES, BST_CHECKED);
       else
         CheckDlgButton(hDlg, IDC_CHECK_SAVE_INSTALLER_FILES, BST_UNCHECKED);
-
-      switch(diDownloadOptions.dwUseProtocol)
-      {
-        case UP_HTTP:
-          CheckDlgButton(hDlg, IDC_USE_FTP,  BST_UNCHECKED);
-          CheckDlgButton(hDlg, IDC_USE_HTTP, BST_CHECKED);
-          break;
-
-        case UP_FTP:
-        default:
-          CheckDlgButton(hDlg, IDC_USE_FTP,  BST_CHECKED);
-          CheckDlgButton(hDlg, IDC_USE_HTTP, BST_UNCHECKED);
-          break;
-
-      }
-
-      if((diDownloadOptions.bShowProtocols) && (diDownloadOptions.bUseProtocolSettings))
-      {
-        ShowWindow(GetDlgItem(hDlg, IDC_USE_FTP),  SW_SHOW);
-        ShowWindow(GetDlgItem(hDlg, IDC_USE_HTTP), SW_SHOW);
-      }
-      else
-      {
-        ShowWindow(GetDlgItem(hDlg, IDC_USE_FTP),  SW_HIDE);
-        ShowWindow(GetDlgItem(hDlg, IDC_USE_HTTP), SW_HIDE);
-      }
 
       break;
 
@@ -2867,3 +2879,4 @@ HFONT myGetSysFont()
 
   return fontDlg;
 }
+

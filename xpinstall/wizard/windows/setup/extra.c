@@ -275,6 +275,69 @@ BOOL CheckForPreviousUnfinishedDownload()
   return(bRv);
 }
 
+void UnsetSetupCurrentDownloadFile(void)
+{
+  char szKey[MAX_BUF];
+
+  wsprintf(szKey,
+           "Software\\%s\\%s\\%s",
+           sgProduct.szCompanyName,
+           sgProduct.szProductName,
+           sgProduct.szUserAgent);
+  DeleteWinRegValue(HKEY_LOCAL_MACHINE,
+                    szKey,
+                    "Setup Current Download");
+}
+
+void SetSetupCurrentDownloadFile(char *szCurrentFilename)
+{
+  char szKey[MAX_BUF];
+
+  wsprintf(szKey,
+           "Software\\%s\\%s\\%s",
+           sgProduct.szCompanyName,
+           sgProduct.szProductName,
+           sgProduct.szUserAgent);
+  SetWinReg(HKEY_LOCAL_MACHINE,
+            szKey,
+            TRUE,
+            "Setup Current Download",
+            TRUE,
+            REG_SZ,
+            szCurrentFilename,
+            lstrlen(szCurrentFilename),
+            FALSE,
+            FALSE);
+}
+
+char *GetSetupCurrentDownloadFile(char *szCurrentDownloadFile,
+                                  DWORD dwCurrentDownloadFileBufSize)
+{
+  char szKey[MAX_BUF];
+
+  if(!szCurrentDownloadFile)
+    return(NULL);
+
+  ZeroMemory(szCurrentDownloadFile, dwCurrentDownloadFileBufSize);
+  if(sgProduct.szCompanyName &&
+     sgProduct.szProductName &&
+     sgProduct.szUserAgent)
+  {
+    wsprintf(szKey,
+             "Software\\%s\\%s\\%s",
+             sgProduct.szCompanyName,
+             sgProduct.szProductName,
+             sgProduct.szUserAgent);
+    GetWinReg(HKEY_LOCAL_MACHINE,
+              szKey,
+              "Setup Current Download", 
+              szCurrentDownloadFile,
+              dwCurrentDownloadFileBufSize);
+  }
+
+  return(szCurrentDownloadFile);
+}
+
 BOOL UpdateFile(char *szInFilename, char *szOutFilename, char *szIgnoreStr)
 {
   FILE *ifp;
@@ -476,6 +539,7 @@ HRESULT Initialize(HINSTANCE hInstance)
   bCreateDestinationDir = FALSE;
   bReboot               = FALSE;
   gdwUpgradeValue       = UG_NONE;
+  gdwSiteSelectorStatus = SS_SHOW;
   gbILUseTemp           = TRUE;
   gbIgnoreRunAppX        = FALSE;
   gbIgnoreProgramFolderX = FALSE;
@@ -1410,6 +1474,7 @@ long RetrieveArchives()
   char      szCorruptedArchiveList[MAX_BUF];
   char      szFailedFile[MAX_BUF];
   char      szBuf[MAX_BUF];
+  char      szPartiallyDownloadedFilename[MAX_BUF];
   int       iCRCRetries;
   int       iNetRetries;
   int       iRv;
@@ -1421,6 +1486,8 @@ long RetrieveArchives()
   lstrcpy(szFileIdiGetArchives, szTempDir);
   AppendBackSlash(szFileIdiGetArchives, sizeof(szFileIdiGetArchives));
   lstrcat(szFileIdiGetArchives, FILE_IDI_GETARCHIVES);
+  GetSetupCurrentDownloadFile(szPartiallyDownloadedFilename,
+                              sizeof(szPartiallyDownloadedFilename));
 
   bDownloadTriggered = FALSE;
   lResult            = WIZ_OK;
@@ -1433,8 +1500,15 @@ long RetrieveArchives()
     {
       /* If a previous unfinished setup was detected, then
        * include the TEMP dir when searching for archives.
-       * Only download jars if not already in the local machine */
-      if(LocateJar(siCObject, NULL, 0, gbPreviousUnfinishedDownload) == AP_NOT_FOUND)
+       * Only download jars if not already in the local machine.
+       * Also if the last file being downloaded should be resumed.
+       * The resume detection is done automatically. */
+      if((LocateJar(siCObject,
+                    NULL,
+                    0,
+                    gbPreviousUnfinishedDownload) == AP_NOT_FOUND) ||
+         (lstrcmpi(szPartiallyDownloadedFilename,
+                   siCObject->szArchiveName) == 0))
       {
         wsprintf(szSection, "File%d", dwFileCounter);
         if((lResult = AddArchiveToIdiFile(siCObject,
@@ -4886,12 +4960,15 @@ int CRCCheckArchivesStartup(char *szCorruptedArchiveList, DWORD dwCorruptedArchi
   char  szArchivePathWithFilename[MAX_BUF];
   char  szArchivePath[MAX_BUF];
   char  szMsgCRCCheck[MAX_BUF];
+  char  szPartiallyDownloadedFilename[MAX_BUF];
   int   iRv;
   int   iResult;
 
   if(szCorruptedArchiveList != NULL)
     ZeroMemory(szCorruptedArchiveList, dwCorruptedArchiveListSize);
 
+  GetSetupCurrentDownloadFile(szPartiallyDownloadedFilename,
+                              sizeof(szPartiallyDownloadedFilename));
   GetPrivateProfileString("Strings", "Message Verifying Archives", "", szMsgCRCCheck, sizeof(szMsgCRCCheck), szFileIniConfig);
   ShowMessage(szMsgCRCCheck, TRUE);
   
@@ -4903,7 +4980,9 @@ int CRCCheckArchivesStartup(char *szCorruptedArchiveList, DWORD dwCorruptedArchi
   {
     /* only download jars if not already in the local machine */
     iRv = LocateJar(siCObject, szArchivePath, sizeof(szArchivePath), bIncludeTempPath);
-    if(iRv != AP_NOT_FOUND)
+    if((iRv != AP_NOT_FOUND) &&
+       (lstrcmpi(szPartiallyDownloadedFilename,
+                 siCObject->szArchiveName) != 0))
     {
       if(lstrlen(szArchivePath) < sizeof(szArchivePathWithFilename))
         lstrcpy(szArchivePathWithFilename, szArchivePath);
@@ -5226,28 +5305,6 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   if(lstrcmpi(szBuf, "TRUE") == 0)
     diDownloadOptions.bSaveInstaller = TRUE;
 
-  GetPrivateProfileString("Dialog Download Options",       "Use Protocol",   "", szBuf,                            sizeof(szBuf), szFileIniConfig);
-  if(lstrcmpi(szBuf, "HTTP") == 0)
-    diDownloadOptions.dwUseProtocol = UP_HTTP;
-  else
-    diDownloadOptions.dwUseProtocol = UP_FTP;
-
-  GetPrivateProfileString("Dialog Download Options",       "Use Protocol Settings", "", szBuf,                     sizeof(szBuf), szFileIniConfig);
-  if(lstrcmpi(szBuf, "DISABLED") == 0)
-    diDownloadOptions.bUseProtocolSettings = FALSE;
-  else
-    diDownloadOptions.bUseProtocolSettings = TRUE;
-
-  GetPrivateProfileString("Dialog Download Options",
-                          "Show Protocols",
-                          "",
-                          szBuf,
-                          sizeof(szBuf), szFileIniConfig);
-  if(lstrcmpi(szBuf, "FALSE") == 0)
-    diDownloadOptions.bShowProtocols = FALSE;
-  else
-    diDownloadOptions.bShowProtocols = TRUE;
-
   if(lstrcmpi(szShowDialog, "TRUE") == 0)
     diDownloadOptions.bShowDialog = TRUE;
 
@@ -5261,6 +5318,28 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   GetPrivateProfileString("Dialog Advanced Settings",       "Proxy Password", "", diAdvancedSettings.szProxyPasswd, MAX_BUF, szFileIniConfig);
   if(lstrcmpi(szShowDialog, "TRUE") == 0)
     diAdvancedSettings.bShowDialog = TRUE;
+
+  GetPrivateProfileString("Dialog Advanced Settings",       "Use Protocol",   "", szBuf,                            sizeof(szBuf), szFileIniConfig);
+  if(lstrcmpi(szBuf, "HTTP") == 0)
+    diDownloadOptions.dwUseProtocol = UP_HTTP;
+  else
+    diDownloadOptions.dwUseProtocol = UP_FTP;
+
+  GetPrivateProfileString("Dialog Advanced Settings",       "Use Protocol Settings", "", szBuf,                     sizeof(szBuf), szFileIniConfig);
+  if(lstrcmpi(szBuf, "DISABLED") == 0)
+    diDownloadOptions.bUseProtocolSettings = FALSE;
+  else
+    diDownloadOptions.bUseProtocolSettings = TRUE;
+
+  GetPrivateProfileString("Dialog Advanced Settings",
+                          "Show Protocols",
+                          "",
+                          szBuf,
+                          sizeof(szBuf), szFileIniConfig);
+  if(lstrcmpi(szBuf, "FALSE") == 0)
+    diDownloadOptions.bShowProtocols = FALSE;
+  else
+    diDownloadOptions.bShowProtocols = TRUE;
 
   /* Start Install dialog */
   GetPrivateProfileString("Dialog Start Install",       "Show Dialog",      "", szShowDialog,                     sizeof(szShowDialog), szFileIniConfig);
@@ -5324,6 +5403,11 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   /* check to see if the checkbox needs to be checked by default or not */
   if(lstrcmpi(szBuf, "TRUE") == 0)
     diWindowsIntegration.wiCB3.bCheckBoxState = TRUE;
+
+  /* Read in the Site Selector Status */
+  GetPrivateProfileString("Site Selector", "Status", "", szBuf, sizeof(szBuf), szFileIniConfig);
+  if(lstrcmpi(szBuf, "HIDE") == 0)
+    gdwSiteSelectorStatus = SS_HIDE;
 
   switch(sgProduct.dwMode)
   {
@@ -5477,6 +5561,7 @@ HRESULT ParseInstallIni()
   GetPrivateProfileString("General", "STATUS", "", sgInstallGui.szStatus, sizeof(sgInstallGui.szStatus), szFileIniInstall);
   GetPrivateProfileString("General", "FILE", "", sgInstallGui.szFile, sizeof(sgInstallGui.szFile), szFileIniInstall);
   GetPrivateProfileString("General", "URL", "", sgInstallGui.szUrl, sizeof(sgInstallGui.szUrl), szFileIniInstall);
+  GetPrivateProfileString("General", "TO", "", sgInstallGui.szTo, sizeof(sgInstallGui.szTo), szFileIniInstall);
   GetPrivateProfileString("General", "ACCEPT_", "", sgInstallGui.szAccept_, sizeof(sgInstallGui.szAccept_), szFileIniInstall);
   GetPrivateProfileString("General", "NO_", "", sgInstallGui.szNo_, sizeof(sgInstallGui.szNo_), szFileIniInstall);
   GetPrivateProfileString("General", "PROGRAMFOLDER_", "", sgInstallGui.szProgramFolder_, sizeof(sgInstallGui.szProgramFolder_), szFileIniInstall);
@@ -5496,6 +5581,8 @@ HRESULT ParseInstallIni()
   GetPrivateProfileString("General", "DELETE_", "", sgInstallGui.szDelete_, sizeof(sgInstallGui.szDelete_), szFileIniInstall);
   GetPrivateProfileString("General", "EXTRACTING", "", sgInstallGui.szExtracting, sizeof(sgInstallGui.szExtracting), szFileIniInstall);
   GetPrivateProfileString("General", "README", "", sgInstallGui.szReadme_, sizeof(sgInstallGui.szReadme_), szFileIniInstall);
+  GetPrivateProfileString("General", "PAUSE_", "", sgInstallGui.szPause_, sizeof(sgInstallGui.szPause_), szFileIniInstall);
+  GetPrivateProfileString("General", "RESUME_", "", sgInstallGui.szResume_, sizeof(sgInstallGui.szResume_), szFileIniInstall);
 
   return(0);
 }
