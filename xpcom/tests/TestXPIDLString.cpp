@@ -4,7 +4,7 @@
 static void
 nsXPIDLStringTest_Value(PRUnichar** aResult)
 {
-    nsAutoString s("Hello, World");
+    nsAutoString s(NS_ConvertASCIItoUCS2("Hello, World"));
     *aResult = nsXPIDLString::Copy(s.GetUnicode());
 }
 
