@@ -141,9 +141,9 @@ jref NP_LOADDS NPP_GetJavaClass(void)
 		return NULL;			/* Java disabled */
 	}
 
-	myClass = use_netscape_npasw_SetupPlugin(env);
-	register_netscape_npasw_SetupPlugin(env); //Not necessary?
+	//register_netscape_npasw_SetupPlugin(env); //Not desirable
 	use_netscape_plugin_Plugin( env );
+	myClass = use_netscape_npasw_SetupPlugin(env);
 	
     return (jref)myClass;
 }
@@ -172,8 +172,9 @@ void NPP_Shutdown(void)
 #endif
 		
 	if (env) {
-		unregister_netscape_npasw_SetupPlugin(env); //Not necessary?
 		unuse_netscape_npasw_SetupPlugin(env);
+		unuse_netscape_plugin_Plugin(env);
+		//unregister_netscape_npasw_SetupPlugin(env);
 	//	SetupPlugin::_unregister(env);
 	//	SetupPlugin::_unuse(env);
 		//unregister_java_lang_String(env); //Not necessary?

@@ -39,15 +39,17 @@ INCS= \
 	-I$(MOZ_SRC)\ns\lib\plugin \
 	$(INCS)
 
-# Tim, why is netscape_plugin_Plugin commented out?
+# Do NOT define these, they're not necessary
+#	-DIMPLEMENT_netscape_plugin_Plugin
+#	-DIMPLEMENT_java_lang_String
+#
+# Defining NO_JDK for SetupPlugin prevents necessary things from being emitted
+#	-DNO_JDK
+#
 CFLAGS= \
 	-DASW_PLUGIN \
 	-DJRI_NO_CPLUSPLUS \
-	-DNO_JDK \
 	-DIMPLEMENT_netscape_npasw_SetupPlugin \
-#	-DIMPLEMENT_netscape_plugin_Plugin \
-	-DIMPLEMENT_java_lang_String \
-#	-P \
 	$(CFLAGS)
 
 !if "$(MOZ_BITS)" == "16"
@@ -57,8 +59,10 @@ RCFLAGS = -I..\include $(RCFLAGS)
 OBJS=.\$(OBJDIR)\plugn32.res
 !endif
 
+# java_lang_String is in a wrapper because it MUST have NO_JDK defined (see above)
+#	.\$(OBJDIR)\java_lang_String.obj \
 C_OBJS=.\$(OBJDIR)\netscape_npasw_SetupPlugin.obj \
-	.\$(OBJDIR)\java_lang_String.obj \
+	.\$(OBJDIR)\jlStringWrapper.obj \
 	.\$(OBJDIR)\netscape_plugin_Plugin.obj \
 !ifdef MOZ_PRIV
 	.\$(OBJDIR)\algrc4.obj \
