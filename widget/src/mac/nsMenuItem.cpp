@@ -173,7 +173,7 @@ NS_METHOD nsMenuItem::Create(nsIMenu        *aParent,
   }
 
  // Create(widget, GetNativeParent(), aLabel, aCommand);
-  aParent->AddItem(this);
+  aParent->AddMenuItem(this);
 
   return NS_OK;
 }
@@ -204,6 +204,13 @@ NS_METHOD nsMenuItem::Create(nsIPopUpMenu   *aParent,
 NS_METHOD nsMenuItem::GetLabel(nsString &aText)
 {
   aText = mLabel;
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::SetLabel(nsString &aText)
+{
+  mLabel = aText;
   return NS_OK;
 }
 

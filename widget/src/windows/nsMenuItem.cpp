@@ -150,6 +150,15 @@ NS_METHOD nsMenuItem::GetLabel(nsString &aText)
 }
 
 //-------------------------------------------------------------------------
+NS_METHOD nsMenu::SetLabel(nsString &aText)
+{
+   mLabel = aText;
+  
+  return NS_OK;
+}
+
+
+//-------------------------------------------------------------------------
 NS_METHOD nsMenuItem::GetCommand(PRUint32 & aCommand)
 {
   aCommand = mCommand;
