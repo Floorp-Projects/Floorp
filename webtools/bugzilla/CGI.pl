@@ -228,14 +228,11 @@ sub CheckFormField (\%$;\@) {
         SendSQL("SELECT description FROM fielddefs WHERE name=" . SqlQuote($fieldname));
         my $result = FetchOneColumn();
         if ($result) {
-            PuntTryAgain("A legal $result was not set.");
+            ThrowCodeError("A legal $result was not set.", undef, "abort");
         }
         else {
-            PuntTryAgain("A legal $fieldname was not set.");
-            print Param("browserbugmessage");
+            ThrowCodeError("A legal $fieldname was not set.", undef, "abort");
         }
-        PutFooter();
-        exit 0;
       }
 }
 
@@ -965,9 +962,11 @@ sub DisplayError {
 # For "this shouldn't happen"-type places in the code.
 # $vars->{'variables'} is a reference to a hash of useful debugging info.
 sub ThrowCodeError {
-  ($vars->{'error'}, $vars->{'variables'}) = (@_);
+  ($vars->{'error'}, $vars->{'variables'}, my $unlock_tables) = (@_);
   $vars->{'title'} = "Code Error";
 
+  SendSQL("UNLOCK TABLES") if $unlock_tables;
+  
   # We may optionally log something to file here.
   
   print "Content-type: text/html\n\n" if !$vars->{'header_done'};
@@ -1014,18 +1013,6 @@ sub ThrowTemplateError {
 END
 
     exit;  
-}
-
-# PuntTryAgain is deprecated. Use UserError with the unlock_tables parameter. 
-sub PuntTryAgain ($) {
-    ($vars->{'error'}) = (@_);
-    
-    SendSQL("UNLOCK TABLES");
-
-    $vars->{'header_done'} = "true";
-    $template->process("global/user-error.html.tmpl", $vars)
-      || ThrowTemplateError($template->error());
-    exit;
 }
 
 sub CheckIfVotedConfirmed {

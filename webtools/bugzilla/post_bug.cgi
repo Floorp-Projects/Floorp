@@ -220,15 +220,15 @@ foreach my $b (grep(/^bit-\d*$/, keys %::FORM)) {
     if ($::FORM{$b}) {
         my $v = substr($b, 4);
         $v =~ /^(\d+)$/
-          || PuntTryAgain("One of the group bits submitted was invalid.");
+          || ThrowCodeError("One of the group bits submitted was invalid.",
+                                                                undef, "abort");
         if (!GroupIsActive($v)) {
             # Prevent the user from adding the bug to an inactive group.
             # Should only happen if there is a bug in Bugzilla or the user
             # hacked the "enter bug" form since otherwise the UI 
             # for adding the bug to the group won't appear on that form.
-            PuntTryAgain("You can't add this bug to the inactive group " . 
-                         "identified by the bit '$v'. This shouldn't happen, " .
-                         "so it may indicate a bug in Bugzilla.");
+            ThrowCodeError("Attempted to add bug to an inactive group, " . 
+                           "identified by the bit '$v'.", undef, "abort");
         }
         $sql .= " + $v";    # Carefully written so that the math is
                             # done by MySQL, which can handle 64-bit math,
