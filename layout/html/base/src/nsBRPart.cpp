@@ -17,7 +17,6 @@
  */
 #include "nsFrame.h"
 #include "nsHTMLParts.h"
-#include "nsHTMLTagContent.h"
 #include "nsHTMLIIDs.h"
 #include "nsIPresContext.h"
 #include "nsIInlineReflow.h"
@@ -50,6 +49,18 @@ public:
 protected:
   virtual ~BRFrame();
 };
+
+nsresult
+NS_NewBRFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+              nsIFrame*& aResult)
+{
+  nsIFrame* frame = new BRFrame(aContent, aParentFrame);
+  if (nsnull == frame) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  aResult = frame;
+  return NS_OK;
+}
 
 BRFrame::BRFrame(nsIContent* aContent,
                  nsIFrame* aParentFrame)
@@ -127,119 +138,4 @@ BRFrame::InlineReflow(nsCSSLineLayout&      aLineLayout,
 
   return NS_INLINE_BREAK | NS_INLINE_BREAK_AFTER |
     NS_INLINE_MAKE_BREAK_TYPE(breakType);
-}
-
-//----------------------------------------------------------------------
-
-class BRPart : public nsHTMLTagContent {
-public:
-  BRPart(nsIAtom* aTag);
-
-  NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
-                          PRBool aNotify);
-  NS_IMETHOD MapAttributesInto(nsIStyleContext* aContext,
-                               nsIPresContext* aPresContext);
-  NS_IMETHOD CreateFrame(nsIPresContext* aPresContext,
-                         nsIFrame* aParentFrame,
-                         nsIStyleContext* aStyleContext,
-                         nsIFrame*& aResult);
-  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
-                               nsHTMLValue& aValue,
-                               nsString& aResult) const;
-
-protected:
-  virtual ~BRPart();
-};
-
-BRPart::BRPart(nsIAtom* aTag)
-  : nsHTMLTagContent(aTag)
-{
-}
-
-BRPart::~BRPart()
-{
-}
-
-NS_IMETHODIMP
-BRPart::CreateFrame(nsIPresContext*  aPresContext,
-                    nsIFrame*        aParentFrame,
-                    nsIStyleContext* aStyleContext,
-                    nsIFrame*&       aResult)
-{
-  nsIFrame* frame = new BRFrame(this, aParentFrame);
-  if (nsnull == frame) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  frame->SetStyleContext(aPresContext, aStyleContext);
-  aResult = frame;
-  return NS_OK;
-}
-
-static nsHTMLTagContent::EnumTable kClearTable[] = {
-  { "left", NS_STYLE_CLEAR_LEFT },
-  { "right", NS_STYLE_CLEAR_RIGHT },
-  { "all", NS_STYLE_CLEAR_LEFT_AND_RIGHT },
-  { "both", NS_STYLE_CLEAR_LEFT_AND_RIGHT },
-  { 0 }
-};
-
-NS_IMETHODIMP
-BRPart::SetAttribute(nsIAtom* aAttribute, const nsString& aString,
-                     PRBool aNotify)
-{
-  if (aAttribute == nsHTMLAtoms::clear) {
-    nsHTMLValue value;
-    if (ParseEnumValue(aString, kClearTable, value)) {
-      nsHTMLTagContent::SetAttribute(aAttribute, value, aNotify);
-    }
-    return NS_OK;
-  }
-  return nsHTMLTagContent::SetAttribute(aAttribute, aString, aNotify);
-}
-
-NS_IMETHODIMP
-BRPart::MapAttributesInto(nsIStyleContext* aContext,
-                          nsIPresContext* aPresContext)
-{
-  if (nsnull != mAttributes) {
-    nsStyleDisplay* display = (nsStyleDisplay*)
-      aContext->GetMutableStyleData(eStyleStruct_Display);
-    nsHTMLValue value;
-    GetAttribute(nsHTMLAtoms::clear, value);
-    if (value.GetUnit() == eHTMLUnit_Enumerated) {
-      display->mBreakType = value.GetIntValue();
-    }
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-BRPart::AttributeToString(nsIAtom*     aAttribute,
-                          nsHTMLValue& aValue,
-                          nsString&    aResult) const
-{
-  if (aAttribute == nsHTMLAtoms::clear) {
-    if ((eHTMLUnit_Enumerated == aValue.GetUnit()) &&
-        (NS_STYLE_CLEAR_NONE != aValue.GetIntValue())) {
-      EnumValueToString(aValue, kClearTable, aResult);
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
-  }
-  return NS_CONTENT_ATTR_NOT_THERE;
-}
-
-//----------------------------------------------------------------------
-
-nsresult
-NS_NewHTMLBreak(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
-{
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIHTMLContent* it = new BRPart(aTag);
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
