@@ -235,8 +235,8 @@ public:
   virtual ~ChromeContextMenuListener ( ) ;
 
     // nsIDOMContextMenuListener
-	NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) {	return NS_OK; }
-  NS_IMETHOD ContextMenu ( nsIDOMEvent* aEvent );
+	virtual nsresult HandleEvent(nsIDOMEvent* aEvent) {	return NS_OK; }
+  virtual nsresult ContextMenu ( nsIDOMEvent* aEvent );
 
     // Add/remove the relevant listeners, based on what interfaces
     // the embedding chrome implements.
