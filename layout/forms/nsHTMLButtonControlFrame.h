@@ -99,6 +99,9 @@ public:
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aFrameList);
+
+  NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
+
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const {
     return MakeFrameName("ButtonControl", aResult);

@@ -144,19 +144,21 @@ nsImageFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   } else if (aIID.Equals(NS_GET_IID(nsISupports))) {
     *aInstancePtr = NS_STATIC_CAST(nsIImageFrame*,this);
     return NS_OK;
-  } else if (aIID.Equals(NS_GET_IID(nsIAccessible))) {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIAccessibilityService, accService, "@mozilla.org/accessibilityService;1", &rv);
-    if (accService) {
-      nsIAccessible* acc = nsnull;
-      accService->CreateHTMLImageAccessible(NS_STATIC_CAST(nsIFrame*, this),&acc);
-      *aInstancePtr = acc;
-      return NS_OK;
-    }
-    return NS_ERROR_FAILURE;
-  } 
+  }
 
   return NS_NOINTERFACE;
+}
+
+NS_IMETHODIMP nsImageFrame::GetAccessible(nsIAccessible** aAccessible)
+{
+  nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
+
+  if (accService) {
+    nsIAccessible* acc = nsnull;
+    return accService->CreateHTMLImageAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
+  }
+
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP_(nsrefcnt) nsImageFrame::AddRef(void)

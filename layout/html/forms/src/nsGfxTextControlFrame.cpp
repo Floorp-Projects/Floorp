@@ -406,20 +406,20 @@ nsGfxTextControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     *aInstancePtr = (void*)(nsIStatefulFrame*) this;
     return NS_OK;                                                        
   }
-
-  if (aIID.Equals(NS_GET_IID(nsIAccessible))) {
-    nsresult rv = NS_OK;
-    NS_WITH_SERVICE(nsIAccessibilityService, accService, "@mozilla.org/accessibilityService;1", &rv);
-    if (accService) {
-      nsIAccessible* acc = nsnull;
-      accService->CreateHTMLTextFieldAccessible(NS_STATIC_CAST(nsIFrame*, this), &acc);
-      *aInstancePtr = acc;
-      return NS_OK;
-    }
-  return NS_ERROR_FAILURE;
-  } 
   
   return nsFormControlFrame::QueryInterface(aIID, aInstancePtr);
+}
+
+NS_IMETHODIMP nsGfxTextControlFrame::GetAccessible(nsIAccessible** aAccessible)
+{
+  nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
+
+  if (accService) {
+    nsIAccessible* acc = nsnull;
+    return accService->CreateHTMLTextFieldAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
+  }
+
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP

@@ -152,6 +152,9 @@ public:
                               PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
                               PRInt32 aHint);
+
+  NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
+
   NS_IMETHOD  VerifyTree() const;
   PRBool IsInline();
 
@@ -238,6 +241,18 @@ nsHTMLFrameOuterFrame::~nsHTMLFrameOuterFrame()
   //printf("nsHTMLFrameOuterFrame destructor %X \n", this);
 }
 
+NS_IMETHODIMP nsHTMLFrameOuterFrame::GetAccessible(nsIAccessible** aAccessible)
+{
+  nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
+
+  if (accService) {
+    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(mContent);
+    return accService->CreateHTMLIFrameAccessible(node, mPresContext, aAccessible);
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
 //--------------------------------------------------------------
 // Frames are not refcounted, no need to AddRef
 NS_IMETHODIMP
@@ -247,20 +262,6 @@ nsHTMLFrameOuterFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-
-  if (aIID.Equals(NS_GET_IID(nsIAccessible))) {
-    nsresult rv = NS_OK;
-    NS_WITH_SERVICE(nsIAccessibilityService, accService, "@mozilla.org/accessibilityService;1", &rv);
-    if (accService) {
-     nsCOMPtr<nsIDOMNode> node = do_QueryInterface(mContent);
-     nsIAccessible* acc = nsnull;
-     accService->CreateHTMLIFrameAccessible(node, mPresContext, &acc);
-     NS_IF_ADDREF(acc);
-     *aInstancePtr = acc;
-     return NS_OK;
-    }
-    return NS_ERROR_FAILURE;
-  } 
 
   return nsHTMLFrameOuterFrameSuper::QueryInterface(aIID, aInstancePtr);
 }

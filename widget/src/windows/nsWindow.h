@@ -377,6 +377,7 @@ protected:
 
 private:
 
+
 #ifdef DEBUG
   void DebugPrintEvent(nsGUIEvent &   aEvent,
                        HWND           aWnd);

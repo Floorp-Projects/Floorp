@@ -462,6 +462,18 @@ nsGfxButtonControlFrame::CreateFrameFor(nsIPresContext*   aPresContext,
   return rv;
 }
 
+NS_IMETHODIMP nsGfxButtonControlFrame::GetAccessible(nsIAccessible** aAccessible)
+{
+  nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
+
+  if (accService) {
+    nsIAccessible* acc = nsnull;
+    return accService->CreateHTMLButtonAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
 // Frames are not refcounted, no need to AddRef
 NS_IMETHODIMP
 nsGfxButtonControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
@@ -472,18 +484,7 @@ nsGfxButtonControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     *aInstancePtr = NS_STATIC_CAST(nsIAnonymousContentCreator*, this);
   } else if (aIID.Equals(NS_GET_IID(nsIStatefulFrame))) {
     *aInstancePtr = NS_STATIC_CAST(nsIStatefulFrame*, this);
-  } else if (aIID.Equals(NS_GET_IID(nsIAccessible))) {
-    nsresult rv = NS_OK;
-    NS_WITH_SERVICE(nsIAccessibilityService, accService, "@mozilla.org/accessibilityService;1", &rv);
-    if (accService) {
-     nsIAccessible* acc = nsnull;
-     accService->CreateHTMLButtonAccessible(NS_STATIC_CAST(nsIFrame*, this), &acc);
-     *aInstancePtr = acc;
-     return NS_OK;
-    }
-    return NS_ERROR_FAILURE;
-
-  } 
+  }
 else {
     return nsHTMLButtonControlFrame::QueryInterface(aIID, aInstancePtr);
   }

@@ -69,7 +69,7 @@ class nsRootAccessible : public nsAccessible,
     NS_IMETHOD Input(nsIDOMEvent* aEvent);
 
 protected:
-  virtual void GetBounds(nsRect& aRect);
+  virtual void GetBounds(nsRect& aRect, nsIFrame** aRelativeFrame);
   virtual nsIFrame* GetFrame();
   virtual nsIAccessible* CreateNewAccessible(nsIAccessible* aAccessible, nsIDOMNode* aNode, nsIWeakReference* aShell);
 

@@ -63,6 +63,7 @@ class nsDOMAccessible : public nsGenericAccessible
     NS_IMETHOD AccTakeSelection(void); 
     NS_IMETHOD AccTakeFocus(void); 
     NS_IMETHOD AccRemoveSelection(void);
+    NS_IMETHOD AccGetDOMNode(nsIDOMNode **_retval);
 
   protected:
     NS_IMETHOD AppendFlatStringFromSubtree(nsIContent *aContent, nsAWritableString *aFlatString);

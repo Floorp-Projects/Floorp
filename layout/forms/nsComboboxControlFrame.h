@@ -86,6 +86,8 @@ public:
                             nsIContent *      aContent,
                             nsIFrame**        aFrame);
 
+  NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
+
    // nsIFrame
   NS_IMETHOD Init(nsIPresContext*  aPresContext,
               nsIContent*      aContent,

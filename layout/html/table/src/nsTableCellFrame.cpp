@@ -1174,19 +1174,21 @@ nsresult nsTableCellFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr
   if (aIID.Equals(NS_GET_IID(nsITableCellLayout))) {
     *aInstancePtr = (void*) (nsITableCellLayout *)this;
     return NS_OK;
-  } else if (aIID.Equals(NS_GET_IID(nsIAccessible))) {
-    nsresult rv = NS_OK;
-    NS_WITH_SERVICE(nsIAccessibilityService, accService, "@mozilla.org/accessibilityService;1", &rv);
-    if (accService) {
-      nsIAccessible* acc = nsnull;
-      accService->CreateHTMLTableCellAccessible(NS_STATIC_CAST(nsIFrame*, this), &acc);
-      *aInstancePtr = acc;
-      return NS_OK;
-    }
-    return NS_ERROR_FAILURE;
-  } else {
-    return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
   }
+
+  return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
+}
+
+NS_IMETHODIMP nsTableCellFrame::GetAccessible(nsIAccessible** aAccessible)
+{
+  nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
+
+  if (accService) {
+    nsIAccessible* acc = nsnull;
+    return accService->CreateHTMLTableCellAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
+  }
+
+  return NS_ERROR_FAILURE;
 }
 
 /* This is primarily for editor access via nsITableLayout */

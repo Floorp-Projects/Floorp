@@ -40,6 +40,8 @@
 
 #include "nsString.h"
 
+typedef LRESULT (STDAPICALLTYPE *LPFNNOTIFYWINEVENT)(DWORD event,HWND hwnd,LONG idObjectType,LONG idObject);
+
 class Accessible : public IAccessible
 {
   public: // construction, destruction
@@ -155,7 +157,7 @@ class Accessible : public IAccessible
   // load the library only if needed.
   static STDMETHODIMP AccessibleObjectFromWindow(HWND hwnd,DWORD dwObjectID,REFIID riid,void **ppvObject);
   static STDMETHODIMP_(LRESULT) LresultFromObject(REFIID riid,WPARAM wParam,LPUNKNOWN pAcc);
-
+  static STDMETHODIMP NotifyWinEvent(DWORD event,HWND hwnd,LONG idObjectType,LONG idObject);
   
   static ULONG g_cRef;              // the cum reference count of all instances
     ULONG        m_cRef;              // the reference count
@@ -173,8 +175,11 @@ class Accessible : public IAccessible
 private:
     /// the accessible library and cached methods
     static HINSTANCE gmAccLib;
+    static HINSTANCE gmUserLib;
     static LPFNACCESSIBLEOBJECTFROMWINDOW gmAccessibleObjectFromWindow;
     static LPFNLRESULTFROMOBJECT gmLresultFromObject;
+
+    static LPFNNOTIFYWINEVENT gmNotifyWinEvent;
 
 };
 

@@ -117,8 +117,12 @@ STDMETHODIMP_(ULONG) Accessible::Release()
 }
 
 HINSTANCE Accessible::gmAccLib = 0;
+HINSTANCE Accessible::gmUserLib = 0;
 LPFNACCESSIBLEOBJECTFROMWINDOW Accessible::gmAccessibleObjectFromWindow = 0;
 LPFNLRESULTFROMOBJECT Accessible::gmLresultFromObject = 0;
+
+
+LPFNNOTIFYWINEVENT Accessible::gmNotifyWinEvent = 0;
 
 //-----------------------------------------------------
 // IAccessible methods
@@ -139,10 +143,33 @@ STDMETHODIMP Accessible::AccessibleObjectFromWindow(
       if (!gmAccessibleObjectFromWindow)
        gmAccessibleObjectFromWindow = (LPFNACCESSIBLEOBJECTFROMWINDOW)GetProcAddress(gmAccLib,"AccessibleObjectFromWindow");
 
-      return gmAccessibleObjectFromWindow(hwnd, dwObjectID, riid, ppvObject);
+      if (gmAccessibleObjectFromWindow)
+        return gmAccessibleObjectFromWindow(hwnd, dwObjectID, riid, ppvObject);
     }
     
 
+    return S_FALSE;
+}
+
+STDMETHODIMP Accessible::NotifyWinEvent(
+  DWORD event,
+  HWND hwnd,
+  LONG idObjectType,
+  LONG idObject)
+{
+
+  // open the dll dynamically
+    if (!gmUserLib) 
+       gmUserLib =::LoadLibrary("USER32.DLL");  
+
+    if (gmUserLib) {
+      if (!gmNotifyWinEvent)
+       gmNotifyWinEvent = (LPFNNOTIFYWINEVENT)GetProcAddress(gmUserLib,"NotifyWinEvent");
+
+      if (gmNotifyWinEvent)
+         return gmNotifyWinEvent(event, hwnd, idObjectType, idObject);
+    }
+    
     return S_FALSE;
 }
 
@@ -161,7 +188,8 @@ STDMETHODIMP_(LRESULT) Accessible::LresultFromObject(
       if (!gmAccessibleObjectFromWindow)
        gmLresultFromObject = (LPFNLRESULTFROMOBJECT)GetProcAddress(gmAccLib,"LresultFromObject");
 
-      return gmLresultFromObject(riid,wParam,pAcc);
+      if (gmLresultFromObject)
+         return gmLresultFromObject(riid,wParam,pAcc);
     }
 
     return 0;

@@ -50,8 +50,6 @@ class nsAccessible : public nsIAccessible
   // nsIAccessibilityService methods:
   NS_DECL_NSIACCESSIBLE
 
-  //NS_IMETHOD AccGetWidget(nsIWidget**);
-
   public:
     nsAccessible(nsIAccessible* aAccessible, nsIDOMNode* aNode, nsIWeakReference* aShell);
     virtual ~nsAccessible();
@@ -87,7 +85,7 @@ class nsAccessible : public nsIAccessible
 protected:
   virtual nsIFrame* GetFrame();
   virtual nsIFrame* GetBoundsFrame();
-  virtual void GetBounds(nsRect& aRect);
+  virtual void GetBounds(nsRect& aRect, nsIFrame** aRelativeFrame);
   virtual void GetPresContext(nsCOMPtr<nsIPresContext>& aContext);
   virtual nsIAccessible* CreateNewNextAccessible(nsIAccessible* aAccessible, nsIDOMNode* aNode, nsIWeakReference* aShell);
   virtual nsIAccessible* CreateNewPreviousAccessible(nsIAccessible* aAccessible, nsIDOMNode* aNode, nsIWeakReference* aShell);

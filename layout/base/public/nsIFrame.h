@@ -77,6 +77,8 @@ class  nsICaret;
 class  nsISelectionController;
 struct PRLogModuleInfo;
 
+class nsIAccessible;
+
 // IID for the nsIFrame interface 
 // a6cf9050-15b3-11d2-932e-00805f8add32
 #define NS_IFRAME_IID \
@@ -1090,6 +1092,15 @@ public:
    */
 
   NS_IMETHOD ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild) = 0;
+
+  /**
+   * Called to retrieve this frame's accessible.
+   * If this frame implements Accessibility return a valid accessible
+   * If not return NS_ERROR_NOT_IMPLEMENTED.
+   * Note: nsAccessible must be refcountable. Do not implement directly on your frame
+   * Use a mediatior of some kind.
+   */
+  NS_IMETHOD GetAccessible(nsIAccessible** aAccessible) = 0;
 
   /**
    *  Called during appending or cancelling a reflow command to give frames notice

@@ -305,22 +305,23 @@ nsComboboxControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   } else if (aIID.Equals(NS_GET_IID(nsIScrollableViewProvider))) {
     *aInstancePtr = (void*)(nsIScrollableViewProvider*)this;
     return NS_OK;
-  } else if (aIID.Equals(NS_GET_IID(nsIAccessible))) {
-    nsresult rv = NS_OK;
-    NS_WITH_SERVICE(nsIAccessibilityService, accService, "@mozilla.org/accessibilityService;1", &rv);
-    if (accService) {
-     nsCOMPtr<nsIDOMNode> node = do_QueryInterface(mContent);
-     nsIAccessible* acc = nsnull;
-     accService->CreateHTMLSelectAccessible(nsLayoutAtoms::popupList, node, mPresContext, &acc);
-     *aInstancePtr = acc;
-     return NS_OK;
-    }
-    return NS_ERROR_FAILURE;
   } 
   
-
   return nsAreaFrame::QueryInterface(aIID, aInstancePtr);
 }
+
+NS_IMETHODIMP nsComboboxControlFrame::GetAccessible(nsIAccessible** aAccessible)
+{
+  nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
+
+  if (accService) {
+    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(mContent);
+    return accService->CreateHTMLSelectAccessible(nsLayoutAtoms::popupList, node, mPresContext, aAccessible);
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
 
 
 NS_IMETHODIMP

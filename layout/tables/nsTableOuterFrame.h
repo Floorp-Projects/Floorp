@@ -107,6 +107,8 @@ public:
                          nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
 
+  NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
+
   /** @see nsIFrame::Paint */
   NS_IMETHOD Paint(nsIPresContext* aPresContext,
                    nsIRenderingContext& aRenderingContext,
