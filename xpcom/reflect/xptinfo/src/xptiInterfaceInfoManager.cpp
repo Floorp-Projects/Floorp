@@ -23,6 +23,7 @@
 /* Implementation of xptiInterfaceInfoManager. */
 
 #include "xptiprivate.h"
+#include "nsDirectoryServiceDefs.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(xptiInterfaceInfoManager, nsIInterfaceInfoManager)
 
@@ -158,7 +159,7 @@ xptiInterfaceInfoManager::GetComponentsDir(nsILocalFile** aDir)
     if(dirService)
     {
         nsCOMPtr<nsILocalFile> dir;
-        dirService->Get("xpcom.currentProcess.componentDirectory", 
+        dirService->Get(NS_XPCOM_COMPONENT_DIR, 
                         NS_GET_IID(nsIFile), getter_AddRefs(dir));
         if(dir)
         {

@@ -53,6 +53,7 @@
 #include "nsIProxyObjectManager.h"
 #include "nsIDOMWindow.h"
 #include "nsDirectoryService.h"
+#include "nsDirectoryServiceDefs.h"
 #include "nsFileLocations.h"
 
 #include "nsProxiedService.h"
@@ -621,7 +622,7 @@ nsXPInstallManager::GetDestinationFile(nsString& url, nsILocalFile* *file)
         if (NS_SUCCEEDED(rv))
         {
             nsCOMPtr<nsILocalFile> temp;
-            directoryService->Get("system.OS_TemporaryDirectory",
+            directoryService->Get(NS_OS_TEMP_DIR,
                                   NS_GET_IID(nsIFile), 
                                   getter_AddRefs(temp));
             temp->AppendUnicode(leaf.GetUnicode());

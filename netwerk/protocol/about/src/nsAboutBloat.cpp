@@ -30,6 +30,7 @@
 #include "nsCOMPtr.h"
 #include "nsIFileStreams.h"
 #include "nsNetUtil.h"
+#include "nsDirectoryServiceDefs.h"
 
 #ifdef XP_MAC
 extern "C" void GC_gcollect(void);
@@ -97,7 +98,7 @@ nsAboutBloat::NewChannel(nsIURI *aURI, nsIChannel **result)
     }
     else {
         nsCOMPtr<nsIFile> file;
-        rv = NS_GetSpecialDirectory("xpcom.currentProcess.componentDirectory", 
+        rv = NS_GetSpecialDirectory(NS_XPCOM_COMPONENT_DIR, 
                                     getter_AddRefs(file));       
         if (NS_FAILED(rv)) return rv;
 

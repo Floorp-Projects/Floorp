@@ -38,6 +38,7 @@
 #include "NSReg.h"
 #include "VerReg.h"
 #include "nsIDirectoryService.h"
+#include "nsDirectoryServiceDefs.h"
 
 #include "nsInstall.h"
 #include "nsSoftwareUpdateIIDs.h"
@@ -144,7 +145,7 @@ nsSoftwareUpdate::nsSoftwareUpdate()
     if(!directoryService) return;
     
     nsCOMPtr<nsILocalFile> dir;
-    directoryService->Get("xpcom.currentProcess", NS_GET_IID(nsIFile), getter_AddRefs(dir));
+    directoryService->Get(NS_XPCOM_CURRENT_PROCESS_DIR, NS_GET_IID(nsIFile), getter_AddRefs(dir));
     if (dir)
     {
         char* nativePath;

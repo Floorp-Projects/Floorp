@@ -31,6 +31,7 @@
 #include "nsFileSpec.h"
 #include "nsFileStream.h"
 #include "nsDirectoryService.h"
+#include "nsDirectoryServiceDefs.h"
 
 #include "nspr.h"
 
@@ -68,7 +69,7 @@ nsLoggingProgressListener::BeforeJavascriptEvaluation(const PRUnichar *URL)
         NS_WITH_SERVICE(nsIProperties, dirSvc, 
                         NS_DIRECTORY_SERVICE_PROGID, &rv);
         if (!dirSvc) return NS_ERROR_FAILURE;
-        dirSvc->Get("system.OS_CurrentProcessDirectory", NS_GET_IID(nsIFile),
+        dirSvc->Get(NS_OS_CURRENT_PROCESS_DIR, NS_GET_IID(nsIFile),
                     getter_AddRefs(iFile));
     }
     // In stub installer

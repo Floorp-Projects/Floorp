@@ -23,6 +23,7 @@
 #include "nsIRegistry.h"
 #include "nsIEnumerator.h"
 #include "nsDirectoryService.h"
+#include "nsDirectoryServiceDefs.h"
 #include "NSReg.h"
 #include "prmem.h"
 #include "prlock.h"
@@ -444,7 +445,7 @@ NS_IMETHODIMP nsRegistry::OpenWellKnownRegistry( nsWellKnownRegistry regid ) {
                                             NS_GET_IID(nsIProperties), 
                                             getter_AddRefs(directoryService));
             if (NS_FAILED(rv)) return rv;
-            directoryService->Get("xpcom.currentProcess.componentRegistry", NS_GET_IID(nsIFile), 
+            directoryService->Get(NS_XPCOM_COMPONENT_REGISTRY_FILE, NS_GET_IID(nsIFile), 
                                           getter_AddRefs(registryLocation));
 
             if (registryLocation)

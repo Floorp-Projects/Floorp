@@ -30,6 +30,7 @@
 #include "nsInstallTrigger.h"
 #include "nsIChromeRegistry.h"
 #include "nsIDirectoryService.h"
+#include "nsDirectoryServiceDefs.h"
 
 MOZ_DECL_CTOR_COUNTER(nsRegisterItem);
 
@@ -132,7 +133,7 @@ PRInt32 nsRegisterItem::Complete()
                             NS_DIRECTORY_SERVICE_PROGID, &rv);
             if(NS_SUCCEEDED(rv) && directoryService)
             {
-                directoryService->Get("xpcom.currentProcess",
+                directoryService->Get(NS_XPCOM_CURRENT_PROCESS_DIR,
                             NS_GET_IID(nsIFile), getter_AddRefs(progDir));
             }
         }
