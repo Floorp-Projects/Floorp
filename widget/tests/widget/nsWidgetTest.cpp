@@ -91,6 +91,12 @@ char * gFailedMsg = NULL;
 #define TEXT_HEIGHT 30
 #endif
 
+#ifdef XP_MAC
+#define WIDGET_DLL "raptorwidget.shlb"
+#define GFX_DLL "libgfxunix.so"
+#define TEXT_HEIGHT 30
+#endif
+
 #define DEBUG_MOUSE 0
 
 #define NUM_COMBOBOX_ITEMS 8
@@ -1117,6 +1123,8 @@ nsresult WidgetTest(int *argc, char **argv)
 
     // register widget classes
     NSRepository::RegisterFactory(kCWindowCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+    
+#ifdef NOTNOW       
     NSRepository::RegisterFactory(kCChildCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
     NSRepository::RegisterFactory(kCButtonCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
     NSRepository::RegisterFactory(kCCheckButtonCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
@@ -1143,6 +1151,7 @@ nsresult WidgetTest(int *argc, char **argv)
     NSRepository::RegisterFactory(kCDeviceContextIID, GFX_DLL, PR_FALSE, PR_FALSE); 
     NSRepository::RegisterFactory(kCFontMetricsIID, GFX_DLL, PR_FALSE, PR_FALSE); 
     NSRepository::RegisterFactory(kCImageIID, GFX_DLL, PR_FALSE, PR_FALSE); 
+#endif
 
       // Create a application shell
     nsIAppShell *appShell;
@@ -1153,6 +1162,7 @@ nsresult WidgetTest(int *argc, char **argv)
       printf("AppShell is null!\n");
     }
 
+#ifdef NOTNOW
     nsIDeviceContext* deviceContext = 0;
 
     // Create a device context for the widgets
@@ -1532,8 +1542,9 @@ nsresult WidgetTest(int *argc, char **argv)
     // show
     window->Show(PR_TRUE);
     window->SetCursor(eCursor_hyperlink);
-
-    return(appShell->Run());
+#endif
+	if(appShell)
+    	return(appShell->Run());
 }
 
 
