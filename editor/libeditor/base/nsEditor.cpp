@@ -1861,22 +1861,11 @@ nsEditor::ReplaceContainer(nsIDOMNode *inNode,
   }
   
   // notify our internal selection state listener
+  // (Note: A nsAutoSelectionReset object must be created
+  //  before calling this to initialize mSavedSel)
   nsAutoReplaceContainerSelNotify selStateNotify(mSavedSel, inNode, *outNode);
   
-  // insert new container into tree
-  res = InsertNode( *outNode, parent, offset);
-  if (NS_FAILED(res)) return res;
-  
-  // We sometimes insert default <br> (like in a table cell),
-  //   so save this to delete later
-  nsCOMPtr<nsIDOMNode> newNodeDefaultChild;
-  nsresult resFirstChild = (*outNode)->GetFirstChild(getter_AddRefs(newNodeDefaultChild));
-
-  // move children into new container
-
   nsCOMPtr<nsIDOMNode> child;
-/*
-// This doesn't work when used with table cells!
   PRBool bHasMoreChildren;
   inNode->HasChildNodes(&bHasMoreChildren);
   while (bHasMoreChildren)
@@ -1888,32 +1877,10 @@ nsEditor::ReplaceContainer(nsIDOMNode *inNode,
     if (NS_FAILED(res)) return res;
     inNode->HasChildNodes(&bHasMoreChildren);
   }
-*/
-  // Insert at start of the new node
-  PRInt32 insertIndex = 0;
-  res = inNode->GetFirstChild(getter_AddRefs(child));
+
+  // insert new container into tree
+  res = InsertNode( *outNode, parent, offset);
   if (NS_FAILED(res)) return res;
-  while (child)
-  {
-    nsCOMPtr<nsIDOMNode> nextChild;
-    res = child->GetNextSibling(getter_AddRefs(nextChild));
-    if (NS_FAILED(res)) return res;
-
-    res = DeleteNode(child);
-    if (NS_FAILED(res)) return res;
-
-    res = InsertNode(child, *outNode, insertIndex);
-    if (NS_FAILED(res)) return res;
-
-    child = nextChild;
-    insertIndex++;
-  }
-  // Now that we have some real content in the new node,
-  //   delete the default first child
-  // (We must do this AFTER moving the other nodes
-  //  because rules would reinsert it if we did it first!)
-  if (NS_SUCCEEDED(resFirstChild) && newNodeDefaultChild)
-    DeleteNode(newNodeDefaultChild);
   
   // delete old container
   return DeleteNode(inNode);

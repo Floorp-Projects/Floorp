@@ -28,6 +28,7 @@
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMCharacterData.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMSelection.h"
 #include "nsIDOMEventTarget.h"
@@ -162,19 +163,49 @@ nsEditorShellMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
   nsresult res = mouseEvent->GetButton(&buttonNumber);
   if (NS_FAILED(res)) return res;
 
-  nsCOMPtr<nsIDOMEventTarget> targetNode;
-  res = aMouseEvent->GetTarget(getter_AddRefs(targetNode));
+  nsCOMPtr<nsIDOMEventTarget> target;
+  res = aMouseEvent->GetTarget(getter_AddRefs(target));
   if (NS_FAILED(res)) return res;
-  if (!targetNode) return NS_ERROR_NULL_POINTER;
+  if (!target) return NS_ERROR_NULL_POINTER;
+  nsCOMPtr<nsIDOMElement> element = do_QueryInterface(target);
 
-  nsCOMPtr<nsIDOMElement> element = do_QueryInterface(targetNode);
+  PRInt32 clickCount;
+  res = mouseEvent->GetDetail(&clickCount);
+  if (NS_FAILED(res)) return res;
+
+  if (buttonNumber == 3 || (buttonNumber == 1 && clickCount == 2))
+  {
+    /**XXX Context menu design is flawed:
+      *    Mouse message arrives here first,
+      *    then to XULPopupListenerImpl::MouseDown,
+      *    and never bubbles to frame.
+      *    So we don't reposition the caret correctly
+      *    within a text node and don't detect if clicking 
+      *    on a selection. (Logic for both is in frame code.)
+      *    Kludge: Set selection to beginning of text node.
+      *    TODO: try to solve click within selection with a new 
+      *    nsSelection method.
+      *    We also want to do this for double-click to detect
+      *    a link enclosing the text node
+      */  
+
+    nsCOMPtr<nsIDOMCharacterData> textNode = do_QueryInterface(target);
+    if (textNode)
+    {
+      //XXX We should do this only if not clicking inside an existing selection!
+      nsCOMPtr<nsIDOMSelection> selection;
+      mEditorShell->GetEditorSelection(getter_AddRefs(selection));
+      if (selection)
+        selection->Collapse(textNode, 0);
+      
+      // Get enclosing link
+      res = mEditorShell->GetElementOrParentByTagName(NS_LITERAL_STRING("href"), textNode, getter_AddRefs(element));
+      if (NS_FAILED(res)) return res;
+    }
+  }
 
   if (buttonNumber == 1)
   {
-    PRInt32 clickCount;
-    nsresult res = mouseEvent->GetDetail(&clickCount);
-    if (NS_FAILED(res)) return res;
-
 #ifdef DEBUG_cmanske
 printf("nsEditorShellMouseListener::MouseDown: clickCount=%d\n",clickCount);
 #endif
@@ -201,9 +232,6 @@ printf("nsEditorShellMouseListener::MouseDown-DoubleClick in cell\n");
 #endif
     }
     // No table or cell -- look for other element (ignore text nodes)
-    if (!element)
-      element = do_QueryInterface(targetNode);
-
     if (element)
     {
       PRInt32 x,y;

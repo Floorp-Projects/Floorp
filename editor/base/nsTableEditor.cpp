@@ -134,16 +134,19 @@ nsHTMLEditor::InsertCell(nsIDOMElement *aCell, PRInt32 aRowSpan, PRInt32 aColSpa
     *aNewCell = newCell.get();
     NS_ADDREF(*aNewCell);
   }
+
   if( aRowSpan > 1)
   {
-    nsAutoString newRowSpan(aRowSpan);
-    // Note: Do NOT use editor txt for this
+    // Note: Do NOT use editor transaction for this
+    nsAutoString newRowSpan;
+    newRowSpan.AppendInt(aRowSpan, 10);
     newCell->SetAttribute(NS_LITERAL_STRING("rowspan"), newRowSpan);
   }
   if( aColSpan > 1)
   {
-    nsAutoString newColSpan(aColSpan);
-    // Note: Do NOT use editor txt for this
+    // Note: Do NOT use editor transaction for this
+    nsAutoString newColSpan;
+    newColSpan.AppendInt(aColSpan, 10);
     newCell->SetAttribute(NS_LITERAL_STRING("colspan"), newColSpan);
   }
   if(aAfter) cellOffset++;
@@ -385,6 +388,8 @@ nsHTMLEditor::InsertTableColumn(PRInt32 aNumber, PRBool aAfter)
   if (!curCell) return NS_ERROR_FAILURE;
 
   nsAutoEditBatch beginBatching(this);
+  // Prevent auto insertion of BR in new cell until we're done
+  nsAutoRules beginRulesSniffing(this, kOpInsertNode, nsIEditor::eNext);
 
   // Use column after current cell if requested
   if (aAfter)
@@ -517,6 +522,8 @@ nsHTMLEditor::InsertTableRow(PRInt32 aNumber, PRBool aAfter)
   if (!parentOfRow)   return NS_ERROR_NULL_POINTER;
 
   nsAutoEditBatch beginBatching(this);
+  // Prevent auto insertion of BR in new cell until we're done
+  nsAutoRules beginRulesSniffing(this, kOpInsertNode, nsIEditor::eNext);
 
   if (aAfter)
   {
@@ -626,8 +633,10 @@ nsHTMLEditor::InsertTableRow(PRInt32 aNumber, PRBool aAfter)
 
 // Editor helper only
 NS_IMETHODIMP
-nsHTMLEditor::DeleteTable2(nsCOMPtr<nsIDOMElement> &aTable, nsCOMPtr<nsIDOMSelection> &aSelection)
+nsHTMLEditor::DeleteTable2(nsIDOMElement *aTable, nsIDOMSelection *aSelection)
 {
+  if (!aTable || !aSelection) return NS_ERROR_NULL_POINTER;
+
   nsCOMPtr<nsIDOMNode> tableParent;
   PRInt32 tableOffset;
   if(!aTable || NS_FAILED(aTable->GetParentNode(getter_AddRefs(tableParent))) || !tableParent)
@@ -638,11 +647,12 @@ nsHTMLEditor::DeleteTable2(nsCOMPtr<nsIDOMElement> &aTable, nsCOMPtr<nsIDOMSelec
     return NS_ERROR_FAILURE;
 
   nsresult res = DeleteNode(aTable);
+  if (NS_FAILED(res)) return res;
 
   // Place selection just before the table
   aSelection->Collapse(tableParent, tableOffset);
   
-  return res;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -654,12 +664,13 @@ nsHTMLEditor::DeleteTable()
                                 getter_AddRefs(table), 
                                 nsnull, nsnull, nsnull, nsnull, nsnull);
     
-  if (NS_SUCCEEDED(res))
-  {
-    nsAutoEditBatch beginBatching(this);
-    res = DeleteTable2(table, selection);
-  }
-  return res;
+  if (NS_FAILED(res)) return res;
+
+  nsAutoEditBatch beginBatching(this);
+  res = DeleteTable2(table, selection);
+  if (NS_FAILED(res)) return res;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -670,13 +681,134 @@ nsHTMLEditor::DeleteTableCell(PRInt32 aNumber)
   nsCOMPtr<nsIDOMElement> cell;
   PRInt32 startRowIndex, startColIndex;
 
-  nsresult res = GetSelection(getter_AddRefs(selection));
+
+  nsresult res = GetCellContext(getter_AddRefs(selection),
+                         getter_AddRefs(table), 
+                         getter_AddRefs(cell), 
+                         nsnull, nsnull,
+                         &startRowIndex, &startColIndex);
+
   if (NS_FAILED(res)) return res;
-  if (!selection) return NS_ERROR_FAILURE;
+  // Don't fail if we didn't find a table or cell
+  if (!table || !cell) return NS_EDITOR_ELEMENT_NOT_FOUND;
 
   nsAutoEditBatch beginBatching(this);
+  // Prevent rules testing until we're done
+  nsAutoRules beginRulesSniffing(this, kOpDeleteNode, nsIEditor::eNext);
 
-  for (PRInt32 i = 0; i < aNumber; i++)
+  nsCOMPtr<nsIDOMElement> firstCell;
+  nsCOMPtr<nsIDOMRange> range;
+  res = GetFirstSelectedCell(getter_AddRefs(firstCell), getter_AddRefs(range));
+  if (NS_FAILED(res)) return res;
+
+  PRInt32 rangeCount;
+  res = selection->GetRangeCount(&rangeCount);
+  if (NS_FAILED(res)) return res;
+
+  if (firstCell && rangeCount > 1)
+  {
+    // When > 1 selected cell,
+    //  ignore aNumber and use selected cells
+    cell = firstCell;
+
+    PRInt32 rowCount, colCount;
+    res = GetTableSize(table, rowCount, colCount);
+    if (NS_FAILED(res)) return res;
+
+    // Get indexes -- may be different than original cell
+    res = GetCellIndexes(cell, startRowIndex, startColIndex);
+    if (NS_FAILED(res)) return res;
+
+    // The setCaret object will call SetSelectionAfterTableEdit in it's destructor
+    nsSetSelectionAfterTableEdit setCaret(this, table, startRowIndex, startColIndex, ePreviousColumn, PR_FALSE);
+    nsAutoTxnsConserveSelection dontChangeSelection(this);
+
+    PRInt32 currentRow = -1;
+    PRInt32 currentCol = -1;
+    while (cell)
+    {
+      PRBool deleteRow = PR_FALSE;
+      PRBool deleteCol = PR_FALSE;
+
+      if (startRowIndex != currentRow)
+      {
+        // Optimize to delete an entire row
+        // Remember index so we don't repeat AllCellsInRowSelected within the same row
+        currentRow = startRowIndex;
+
+        deleteRow = AllCellsInRowSelected(table, startRowIndex, colCount);
+        if (deleteRow)
+        {
+          // First, find the next cell in a different row
+          //   to continue after we delete this row
+          PRInt32 nextRow = startRowIndex;
+          while (nextRow == startRowIndex)
+          {
+            res = GetNextSelectedCell(getter_AddRefs(cell), nsnull);
+            if (NS_FAILED(res)) return res;
+            if (!cell) break;
+            res = GetCellIndexes(cell, nextRow, startColIndex);
+            if (NS_FAILED(res)) return res;
+          }
+          // Delete entire row
+          res = DeleteRow(table, startRowIndex);          
+          if (NS_FAILED(res)) return res;
+          // For the next cell
+          if (cell) startRowIndex = nextRow;
+        }
+      }
+      if (!deleteRow)
+      {
+        if (startColIndex != currentCol)
+        {
+          // Optimize to delete an entire column
+          // Remember index so we don't repeat AllCellsInColSelected within the same Col
+          currentCol = startColIndex;
+
+          deleteCol = AllCellsInColumnSelected(table, startColIndex, colCount);
+          if (deleteCol)
+          {
+            // First, find the next cell in a different column
+            //   to continue after we delete this column
+            PRInt32 nextCol = startColIndex;
+            while (nextCol == startColIndex)
+            {
+              res = GetNextSelectedCell(getter_AddRefs(cell), nsnull);
+              if (NS_FAILED(res)) return res;
+              if (!cell) break;
+              res = GetCellIndexes(cell, startRowIndex, nextCol);
+              if (NS_FAILED(res)) return res;
+            }
+            // Delete entire Col
+            res = DeleteColumn(table, startColIndex);          
+            if (NS_FAILED(res)) return res;
+            // For the next cell
+            if (cell) startColIndex = nextCol;
+          }
+        }
+        if (!deleteCol)
+        {
+          // First get the next cell to delete
+          nsCOMPtr<nsIDOMElement> nextCell;
+          res = GetNextSelectedCell(getter_AddRefs(nextCell), getter_AddRefs(range));
+          if (NS_FAILED(res)) return res;
+
+          // Then delete the cell
+          res = DeleteNode(cell);
+          if (NS_FAILED(res)) return res;
+          
+          // The next cell to delete
+          cell = nextCell;
+          if (cell)
+          {
+            res = GetCellIndexes(cell, startRowIndex, startColIndex);
+            if (NS_FAILED(res)) return res;
+          }
+        }
+      }
+    }
+  }
+  else for (PRInt32 i = 0; i < aNumber; i++)
   {
     res = GetCellContext(getter_AddRefs(selection),
                          getter_AddRefs(table), 
@@ -723,7 +855,7 @@ nsHTMLEditor::DeleteTableCell(PRInt32 aNumber)
       if (NS_FAILED(res)) return res;
     }
   }
-  return res;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -744,33 +876,64 @@ nsHTMLEditor::DeleteTableCellContents()
   // Don't fail if no cell found
   if (!cell) return NS_EDITOR_ELEMENT_NOT_FOUND;
 
-  // We clear the selection to avoid problems when nodes in the selection are deleted,
-  selection->ClearSelection();
-  nsSetSelectionAfterTableEdit setCaret(this, table, startRowIndex, startColIndex, ePreviousColumn, PR_FALSE);
+
+  nsAutoEditBatch beginBatching(this);
+  // Prevent rules testing until we're done
+  nsAutoRules beginRulesSniffing(this, kOpDeleteNode, nsIEditor::eNext);
   //Don't let Rules System change the selection
   nsAutoTxnsConserveSelection dontChangeSelection(this);
 
-  nsAutoEditBatch beginBatching(this);
 
-  nsCOMPtr<nsIDOMNodeList> nodeList;
-  res = cell->GetChildNodes(getter_AddRefs(nodeList));
+  nsCOMPtr<nsIDOMElement> firstCell;
+  nsCOMPtr<nsIDOMRange> range;
+  res = GetFirstSelectedCell(getter_AddRefs(firstCell), getter_AddRefs(range));
   if (NS_FAILED(res)) return res;
 
-  if (!nodeList) return NS_ERROR_FAILURE;
-  PRUint32 nodeListLength; 
-  res = nodeList->GetLength(&nodeListLength);
-  if (NS_FAILED(res)) return res;
 
-  for (PRUint32 i = 0; i < nodeListLength; i++)
+  if (firstCell)
   {
-    
-    nsCOMPtr<nsIDOMNode> child;
-    res = cell->GetLastChild(getter_AddRefs(child));
-    if (NS_FAILED(res)) return res;
-    res = DeleteNode(child);
+    cell = firstCell;
+    res = GetCellIndexes(cell, startRowIndex, startColIndex);
     if (NS_FAILED(res)) return res;
   }
-  return res;
+
+  nsSetSelectionAfterTableEdit setCaret(this, table, startRowIndex, startColIndex, ePreviousColumn, PR_FALSE);
+
+  while (cell)
+  {
+    DeleteCellContents(cell);
+    if (firstCell)
+    {
+      // We doing a selected cells, so do all of them
+      res = GetNextSelectedCell(getter_AddRefs(cell), nsnull);
+      if (NS_FAILED(res)) return res;
+    }
+    else
+      cell = nsnull;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLEditor::DeleteCellContents(nsIDOMElement *aCell)
+{
+  if (!aCell) return NS_ERROR_NULL_POINTER;
+
+  // Prevent rules testing until we're done
+  nsAutoRules beginRulesSniffing(this, kOpDeleteNode, nsIEditor::eNext);
+
+  nsCOMPtr<nsIDOMNode> child;
+  PRBool hasChild;
+  aCell->HasChildNodes(&hasChild);
+
+  while (hasChild)
+  {
+    aCell->GetLastChild(getter_AddRefs(child));
+    nsresult res = DeleteNode(child);
+    if (NS_FAILED(res)) return res;
+    aCell->HasChildNodes(&hasChild);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -779,18 +942,15 @@ nsHTMLEditor::DeleteTableColumn(PRInt32 aNumber)
   nsCOMPtr<nsIDOMSelection> selection;
   nsCOMPtr<nsIDOMElement> table;
   nsCOMPtr<nsIDOMElement> cell;
-  PRInt32 startRowIndex, startColIndex;
-  PRInt32 rowCount, colCount;
-  nsresult res = NS_OK;
-
-  res = GetCellContext(getter_AddRefs(selection),
-                       getter_AddRefs(table), 
-                       getter_AddRefs(cell), 
-                       nsnull, nsnull,
-                       &startRowIndex, &startColIndex);
+  PRInt32 startRowIndex, startColIndex, rowCount, colCount;
+  nsresult res = GetCellContext(getter_AddRefs(selection),
+                                getter_AddRefs(table), 
+                                getter_AddRefs(cell), 
+                                nsnull, nsnull,
+                                &startRowIndex, &startColIndex);
   if (NS_FAILED(res)) return res;
   // Don't fail if no cell found
-  if (!cell) return NS_EDITOR_ELEMENT_NOT_FOUND;
+  if (!table || !cell) return NS_EDITOR_ELEMENT_NOT_FOUND;
 
   res = GetTableSize(table, rowCount, colCount);
   if (NS_FAILED(res)) return res;
@@ -799,99 +959,163 @@ nsHTMLEditor::DeleteTableColumn(PRInt32 aNumber)
   if(startColIndex == 0 && aNumber >= colCount)
     return DeleteTable2(table, selection);
 
-  nsAutoEditBatch beginBatching(this);
-
   // Check for counts too high
   aNumber = PR_MIN(aNumber,(colCount-startColIndex));
 
-  // Scan through cells in row to do rowspan adjustments
-  nsCOMPtr<nsIDOMElement> curCell;
-  PRInt32 curStartRowIndex, curStartColIndex, rowSpan, colSpan, actualRowSpan, actualColSpan;
+  nsAutoEditBatch beginBatching(this);
+  // Prevent rules testing until we're done
+  nsAutoRules beginRulesSniffing(this, kOpDeleteNode, nsIEditor::eNext);
+
+  // Test if deletion is controlled by selected cells
+  nsCOMPtr<nsIDOMElement> firstCell;
+  nsCOMPtr<nsIDOMRange> range;
+  res = GetFirstSelectedCell(getter_AddRefs(firstCell), getter_AddRefs(range));
+  if (NS_FAILED(res)) return res;
+
+  PRInt32 rangeCount;
+  res = selection->GetRangeCount(&rangeCount);
+  if (NS_FAILED(res)) return res;
+
+  if (firstCell && rangeCount > 1)
+  {
+    // Fetch indexes again - may be different for selected cells
+    res = GetCellIndexes(firstCell, startRowIndex, startColIndex);
+    if (NS_FAILED(res)) return res;
+  }
+  //We control selection resetting after the insert...
+  nsSetSelectionAfterTableEdit setCaret(this, table, startRowIndex, startColIndex, ePreviousRow, PR_FALSE);
+
+  if (firstCell && rangeCount > 1)
+  {
+    // Use selected cells to determine what rows to delete
+    cell = firstCell;
+
+    PRBool deleteCol = PR_FALSE;
+    while (cell)
+    {
+      if (cell != firstCell)
+      {
+        res = GetCellIndexes(cell, startRowIndex, startColIndex);
+        if (NS_FAILED(res)) return res;
+      }
+      // Find the next cell in a different column
+      // to continue after we delete this column
+      PRInt32 nextCol = startColIndex;
+      while (nextCol == startColIndex)
+      {
+        res = GetNextSelectedCell(getter_AddRefs(cell), getter_AddRefs(range));
+        if (NS_FAILED(res)) return res;
+        if (!cell) break;
+        res = GetCellIndexes(cell, startRowIndex, nextCol);
+        if (NS_FAILED(res)) return res;
+      }
+      res = DeleteColumn(table, startColIndex);          
+      if (NS_FAILED(res)) return res;
+    }
+  }
+  else for (PRInt32 i = 0; i < aNumber; i++)
+  {
+    res = DeleteColumn(table, startColIndex);
+    if (NS_FAILED(res)) return res;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLEditor::DeleteColumn(nsIDOMElement *aTable, PRInt32 aColIndex)
+{
+  if (!aTable) return NS_ERROR_NULL_POINTER;
+
+  nsCOMPtr<nsIDOMElement> cell;
+  nsCOMPtr<nsIDOMElement> cellInDeleteCol;
+  PRInt32 startRowIndex, startColIndex, rowSpan, colSpan, actualRowSpan, actualColSpan;
   PRBool  isSelected;
   PRInt32 rowIndex = 0;
+  nsresult res = NS_OK;
+   
+  do {
+    res = GetCellDataAt(aTable, rowIndex, aColIndex, *getter_AddRefs(cell),
+                        startRowIndex, startColIndex, rowSpan, colSpan, 
+                        actualRowSpan, actualColSpan, isSelected);
 
-  for (PRInt32 i = 0; i < aNumber; i++)
-  {
-    do {
-      res = GetCellDataAt(table, rowIndex, startColIndex, *getter_AddRefs(curCell),
-                          curStartRowIndex, curStartColIndex, rowSpan, colSpan, 
-                          actualRowSpan, actualColSpan, isSelected);
+    if (NS_FAILED(res)) return res;
 
-      if (NS_FAILED(res)) return res;
+    if (cell)
+    {
+      // This must always be >= 1
+      NS_ASSERTION((actualRowSpan > 0),"Actual ROWSPAN = 0 in DeleteTableColumn");
 
-      if (curCell)
+      // Find cells that don't start in column we are deleting
+      if (startColIndex < aColIndex || colSpan > 1 || colSpan == 0)
       {
-        // This must always be >= 1
-        NS_ASSERTION((actualRowSpan > 0),"Actual ROWSPAN = 0 in DeleteTableColumn");
-
-        // Find cells that don't start in column we are deleting
-        if (curStartColIndex < startColIndex || colSpan > 1 || colSpan == 0)
+        // We have a cell spanning this location
+        // Decrease its colspan to keep table rectangular,
+        // but if colSpan=0, it will adjust automatically
+        if (colSpan > 0)
         {
-          // We have a cell spanning this location
-          // Decrease its colspan to keep table rectangular,
-          // but if colSpan=0, it will adjust automatically
-          if (colSpan > 0)
+          NS_ASSERTION((colSpan > 1),"Bad COLSPAN in DeleteTableColumn");
+          SetColSpan(cell, colSpan-1);
+        }
+        if (startColIndex == aColIndex)
+        {
+          // Cell is in column to be deleted, but must have colspan > 1,
+          // so delete contents of cell instead of cell itself
+          // (We must have reset colspan above)
+          DeleteCellContents(cell);
+        }
+        // To next cell in column
+        rowIndex += actualRowSpan;
+      } 
+      else 
+      {
+        // Delete the cell
+        if (1 == GetNumberOfCellsInRow(aTable, rowIndex))
+        {
+          // Only 1 cell in row - delete the row
+          nsCOMPtr<nsIDOMElement> parentRow;
+          res = GetElementOrParentByTagName(NS_LITERAL_STRING("tr"), cell, getter_AddRefs(parentRow));
+          if (NS_FAILED(res)) return res;
+          if(!parentRow) return NS_ERROR_NULL_POINTER;
+
+          //  But first check if its the only row left
+          //  so we can delete the entire table
+          //  (This should never happen but it's the safe thing to do)
+          PRInt32 rowCount, colCount;
+          res = GetTableSize(aTable, rowCount, colCount);
+          if (NS_FAILED(res)) return res;
+
+          if (rowCount == 1)
           {
-            NS_ASSERTION((colSpan > 1),"Bad COLSPAN in DeleteTableColumn");
-            SetColSpan(curCell,colSpan-1);
+            nsCOMPtr<nsIDOMSelection> selection;
+            nsresult res = GetSelection(getter_AddRefs(selection));
+            if (NS_FAILED(res)) return res;
+            if (!selection) return NS_ERROR_FAILURE;
+            return DeleteTable2(aTable, selection);
           }
-          if (curStartColIndex == startColIndex)
-          {
-            // Cell is in column to be deleted, 
-            // but delete contents of cell instead of cell itself
-            selection->Collapse(curCell,0);
-            DeleteTableCellContents();
-          }
-          // To next cell in column
+    
+          // Delete the row by placing caret in cell we were to delete
+          // We need to call DeleteTableRow to handle cells with rowspan 
+          res = DeleteRow(aTable, startRowIndex);
+          if (NS_FAILED(res)) return res;
+
+          // Note that we don't incremenet rowIndex
+          // since a row was deleted and "next" 
+          // row now has current rowIndex
+        } 
+        else 
+        {
+          // A more "normal" deletion
+          res = DeleteNode(cell);
+          if (NS_FAILED(res)) return res;
+
+          //Skip over any rows spanned by this cell
           rowIndex += actualRowSpan;
-        } else {
-          // Delete the cell
-          if (1 == GetNumberOfCellsInRow(table, rowIndex))
-          {
-            // Only 1 cell in row - delete the row
-            nsCOMPtr<nsIDOMElement> parentRow;
-            res = GetElementOrParentByTagName(NS_LITERAL_STRING("tr"), cell, getter_AddRefs(parentRow));
-            if (NS_FAILED(res)) return res;
-            if(!parentRow) return NS_ERROR_NULL_POINTER;
-
-            //  But first check if its the only row left
-            //  so we can delete the entire table
-            //  (This should never happen but it's the safe thing to do)
-            PRInt32 rowCount, colCount;
-            res = GetTableSize(table, rowCount, colCount);
-            if (NS_FAILED(res)) return res;
-
-            if (rowCount == 1)
-              return DeleteTable2(table, selection);
-      
-            // Delete the row by placing caret in cell we were to delete
-            // We need to call DeleteTableRow to handle cells with rowspan 
-            selection->Collapse(cell,0);
-            res = DeleteTableRow(1);
-            if (NS_FAILED(res)) return res;
-
-            // Note that we don't incremenet rowIndex
-            // since a row was deleted and "next" 
-            // row now has current rowIndex
-          } else {
-
-            selection->ClearSelection();
-            nsSetSelectionAfterTableEdit setCaret(this, table, curStartRowIndex, curStartColIndex, 
-                                              ePreviousColumn, PR_FALSE);
-            //Don't let Rules System change the selection
-            nsAutoTxnsConserveSelection dontChangeSelection(this);
-
-            res = DeleteNode(curCell);
-            if (NS_FAILED(res)) return res;
-
-            //Skipover any rows spanned by this cell
-            rowIndex += actualRowSpan;
-          }
         }
       }
-    } while (curCell);    
-  }
-  return res;
+    }
+  } while (cell);    
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -902,13 +1126,11 @@ nsHTMLEditor::DeleteTableRow(PRInt32 aNumber)
   nsCOMPtr<nsIDOMElement> cell;
   PRInt32 startRowIndex, startColIndex;
   PRInt32 rowCount, colCount;
-  nsresult res = NS_OK;
-
-  res = GetCellContext(getter_AddRefs(selection),
-                       getter_AddRefs(table), 
-                       getter_AddRefs(cell), 
-                       nsnull, nsnull,
-                       &startRowIndex, &startColIndex);
+  nsresult res =  GetCellContext(getter_AddRefs(selection),
+                                 getter_AddRefs(table), 
+                                 getter_AddRefs(cell), 
+                                 nsnull, nsnull,
+                                 &startRowIndex, &startColIndex);
   if (NS_FAILED(res)) return res;
   // Don't fail if no cell found
   if (!cell) return NS_EDITOR_ELEMENT_NOT_FOUND;
@@ -921,71 +1143,151 @@ nsHTMLEditor::DeleteTableRow(PRInt32 aNumber)
     return DeleteTable2(table, selection);
 
   nsAutoEditBatch beginBatching(this);
+  // Prevent rules testing until we're done
+  nsAutoRules beginRulesSniffing(this, kOpDeleteNode, nsIEditor::eNext);
 
+  nsCOMPtr<nsIDOMElement> firstCell;
+  nsCOMPtr<nsIDOMRange> range;
+  res = GetFirstSelectedCell(getter_AddRefs(firstCell), getter_AddRefs(range));
+  if (NS_FAILED(res)) return res;
+
+  PRInt32 rangeCount;
+  res = selection->GetRangeCount(&rangeCount);
+  if (NS_FAILED(res)) return res;
+
+  if (firstCell && rangeCount > 1)
+  {
+    // Fetch indexes again - may be different for selected cells
+    res = GetCellIndexes(firstCell, startRowIndex, startColIndex);
+    if (NS_FAILED(res)) return res;
+  }
   //We control selection resetting after the insert...
   nsSetSelectionAfterTableEdit setCaret(this, table, startRowIndex, startColIndex, ePreviousRow, PR_FALSE);
 
-  // Check for counts too high
-  aNumber = PR_MIN(aNumber,(rowCount-startRowIndex));
+  if (firstCell && rangeCount > 1)
+  {
+    // Use selected cells to determine what rows to delete
+    cell = firstCell;
 
-  // We clear the selection to avoid problems when nodes in the selection are deleted,
-  // Be sure to set it correctly later (in SetSelectionAfterTableEdit)!
-  selection->ClearSelection();
+    PRBool deleteRow = PR_FALSE;
+    while (cell)
+    {
+      if (cell != firstCell)
+      {
+        res = GetCellIndexes(cell, startRowIndex, startColIndex);
+        if (NS_FAILED(res)) return res;
+      }
+      // Find the next cell in a different row
+      // to continue after we delete this row
+      PRInt32 nextRow = startRowIndex;
+      while (nextRow == startRowIndex)
+      {
+        res = GetNextSelectedCell(getter_AddRefs(cell), getter_AddRefs(range));
+        if (NS_FAILED(res)) return res;
+        if (!cell) break;
+        res = GetCellIndexes(cell, nextRow, startColIndex);
+        if (NS_FAILED(res)) return res;
+      }
+      // Delete entire row
+      res = DeleteRow(table, startRowIndex);          
+      if (NS_FAILED(res)) return res;
+    }
+  }
+  else
+  {
+    // Check for counts too high
+    aNumber = PR_MIN(aNumber,(rowCount-startRowIndex));
+
+    // We clear the selection to avoid problems when nodes in the selection are deleted,
+    // Be sure to set it correctly later (in SetSelectionAfterTableEdit)!
+    selection->ClearSelection();
   
-  // Scan through cells in row to do rowspan adjustments
-  nsCOMPtr<nsIDOMElement> curCell;
+    for (PRInt32 i = 0; i < aNumber; i++)
+    {
+      res = DeleteRow(table, startRowIndex);
+      // If failed in current row, try the next
+      if (NS_FAILED(res))
+        startRowIndex++;
+    
+      // Check if there's a cell in the "next" row
+      res = GetCellAt(table, startRowIndex, startColIndex, *getter_AddRefs(cell));
+      if (NS_FAILED(res)) return res;
+      if(!cell)
+        break;
+    }
+  }
+  return NS_OK;
+}
+
+// Helper that doesn't batch or change the selection
+NS_IMETHODIMP
+nsHTMLEditor::DeleteRow(nsIDOMElement *aTable, PRInt32 aRowIndex)
+{
+  if (!aTable) return NS_ERROR_NULL_POINTER;
+
+  nsCOMPtr<nsIDOMElement> cell;
+  nsCOMPtr<nsIDOMElement> cellInDeleteRow;
   PRInt32 curStartRowIndex, curStartColIndex, rowSpan, colSpan, actualRowSpan, actualColSpan;
   PRBool  isSelected;
   PRInt32 colIndex = 0;
+  nsresult res = NS_OK;
+   
+  // Scan through cells in row to do rowspan adjustments
+  // Note that after we delete row, startRowIndex will point to the
+  //   cells in the next row to be deleted
   do {
-    res = GetCellDataAt(table, startRowIndex, colIndex, *getter_AddRefs(curCell),
+    nsCOMPtr<nsIDOMElement> cell;
+    res = GetCellDataAt(aTable, aRowIndex, colIndex, *getter_AddRefs(cell),
                         curStartRowIndex, curStartColIndex, rowSpan, colSpan, 
                         actualRowSpan, actualColSpan, isSelected);
-    
+  
     // We don't fail if we don't find a cell, so this must be real bad
     if(NS_FAILED(res)) return res;
 
     // Find cells that don't start in row we are deleting
-    if (curCell)
+    if (cell)
     {
       //Real colspan must always be >= 1
       NS_ASSERTION((actualColSpan > 0),"Effective COLSPAN = 0 in DeleteTableRow");
-      if (curStartRowIndex < startRowIndex)
+      if (curStartRowIndex < aRowIndex)
       {
         // We have a cell spanning this location
         // Decrease its rowspan to keep table rectangular
         //  but we don't need to do this if rowspan=0,
         //  since it will automatically adjust
         if (rowSpan > 0)
-          SetRowSpan(curCell, PR_MAX((startRowIndex - curStartRowIndex), actualRowSpan - aNumber));
+          SetRowSpan(cell, PR_MAX((aRowIndex - curStartRowIndex), actualRowSpan-1));
+      }
+      else if (!cellInDeleteRow)
+      {
+        cellInDeleteRow = cell;
       }
       // Skip over locations spanned by this cell
       colIndex += actualColSpan;
     }
-  } while (curCell);
+  } while (cell);
 
-  for (PRInt32 i = 0; i < aNumber; i++)
+  // Things are messed up if we didn't find a cell in the row!
+  if (!cellInDeleteRow)
+    return NS_ERROR_FAILURE;
+
+  //TODO: To minimize effect of deleting cells that have rowspan > 1:
+  //      Scan for rowspan > 1 and insert extra emtpy cells in 
+  //      appropriate rows to take place of spanned regions.
+  //      (Hard part is finding appropriate neighbor cell before/after in correct row)
+
+  // Delete the row
+  nsCOMPtr<nsIDOMElement> parentRow;
+  res = GetElementOrParentByTagName(NS_LITERAL_STRING("tr"), cellInDeleteRow, getter_AddRefs(parentRow));
+  if (NS_FAILED(res)) return res;
+
+  if (parentRow)
   {
-    //TODO: To minimize effect of deleting cells that have rowspan > 1:
-    //      Scan for rowspan > 1 and insert extra emtpy cells in 
-    //      appropriate rows to take place of spanned regions.
-    //      (Hard part is finding appropriate neighbor cell before/after in correct row)
-
-    // Delete the row
-    nsCOMPtr<nsIDOMElement> parentRow;
-    res = GetElementOrParentByTagName(NS_LITERAL_STRING("tr"), cell, getter_AddRefs(parentRow));
-    if (NS_SUCCEEDED(res) && parentRow)
-      res = DeleteNode(parentRow);
-    if (NS_FAILED(res))
-      startRowIndex++;
-
-    res = GetCellAt(table, startRowIndex, startColIndex, *getter_AddRefs(cell));
-    if(!cell)
-      break;
+    res = DeleteNode(parentRow);
+    if (NS_FAILED(res)) return res;
   }
-  return res;
+  return NS_OK;
 }
-
 
 
 NS_IMETHODIMP 
@@ -1346,6 +1648,8 @@ nsHTMLEditor::SplitTableCell()
     return NS_OK;
   
   nsAutoEditBatch beginBatching(this);
+  // Prevent auto insertion of BR in new cell until we're done
+  nsAutoRules beginRulesSniffing(this, kOpInsertNode, nsIEditor::eNext);
 
   // We reset selection  
   nsSetSelectionAfterTableEdit setCaret(this, table, startRowIndex, startColIndex, ePreviousColumn, PR_FALSE);
@@ -1493,11 +1797,11 @@ nsHTMLEditor::SplitCellIntoRows(nsIDOMElement *aTable, PRInt32 aRowIndex, PRInt3
     insertAfter = PR_TRUE; // Should always be true, but let's be sure
   }
 
-  res = InsertCell(cell2, aRowSpanBelow, actualColSpan, insertAfter, PR_FALSE, aNewCell);
+  // Reduce rowspan of cell to split
+  res = SetRowSpan(cell, aRowSpanAbove);
   if (NS_FAILED(res)) return res;
 
-  // Reduce rowspan of cell to split
-  return SetRowSpan(cell, aRowSpanAbove);
+  return InsertCell(cell2, aRowSpanBelow, actualColSpan, insertAfter, PR_FALSE, aNewCell);
 }
 
 NS_IMETHODIMP
@@ -1506,6 +1810,9 @@ nsHTMLEditor::SwitchTableCellHeaderType(nsIDOMElement *aSourceCell, nsIDOMElemen
   if (!aSourceCell) return NS_ERROR_NULL_POINTER;
 
   nsAutoEditBatch beginBatching(this);
+  // Prevent auto insertion of BR in new cell created by ReplaceContainer
+  nsAutoRules beginRulesSniffing(this, kOpInsertNode, nsIEditor::eNext);
+
   nsCOMPtr<nsIDOMNode> sourceNode = do_QueryInterface(aSourceCell);
   nsCOMPtr<nsIDOMNode> newNode;
 
@@ -1513,10 +1820,19 @@ nsHTMLEditor::SwitchTableCellHeaderType(nsIDOMElement *aSourceCell, nsIDOMElemen
   nsAutoString tagName;
   GetTagString(aSourceCell, tagName);
   nsString newCellType = (tagName == NS_LITERAL_STRING("td")) ? NS_LITERAL_STRING("th") : NS_LITERAL_STRING("td");
-  
+
+  // Save current selection to restore when done
+  // This is needed so ReplaceContainer can monitor selection
+  //  when replacing nodes
+  nsCOMPtr<nsIDOMSelection>selection;
+  nsresult res = GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(res)) return res;
+  if (!selection) return NS_ERROR_FAILURE;
+  nsAutoSelectionReset selectionResetter(selection, this);
+
   // This creates new node, moves children, copies attributes (PR_TRUE)
   //   and manages the selection!
-  nsresult res = ReplaceContainer(sourceNode, &newNode, newCellType, nsnull, nsnull, PR_TRUE);
+  res = ReplaceContainer(sourceNode, &newNode, newCellType, nsnull, nsnull, PR_TRUE);
   if (NS_FAILED(res)) return res;
   if (!newNode) return NS_ERROR_FAILURE;
 
@@ -1532,7 +1848,7 @@ nsHTMLEditor::SwitchTableCellHeaderType(nsIDOMElement *aSourceCell, nsIDOMElemen
 }
 
 NS_IMETHODIMP 
-nsHTMLEditor::JoinTableCells()
+nsHTMLEditor::JoinTableCells(PRBool aMergeNonContiguousContents)
 {
   nsCOMPtr<nsIDOMElement> table;
   nsCOMPtr<nsIDOMElement> targetCell;
@@ -1555,6 +1871,10 @@ nsHTMLEditor::JoinTableCells()
   //Don't let Rules System change the selection
   nsAutoTxnsConserveSelection dontChangeSelection(this);
 
+  // Note: We dont' use nsSetSelectionAfterTableEdit here so the selection
+  //  is retained after joining. This leaves the target cell selected
+  //  as well as the "non-contiguous" cells, so user can see what happened.
+
   nsCOMPtr<nsIDOMElement> firstCell;
   PRInt32 firstRowIndex, firstColIndex;
   res = GetFirstSelectedCellInTable(getter_AddRefs(firstCell), &firstRowIndex, &firstColIndex);
@@ -1563,7 +1883,7 @@ nsHTMLEditor::JoinTableCells()
 
   if (firstCell)
   {
-    // We have selected cells: Join contiguous cells
+    // We have selected cells: Join just contiguous cells
     //  and just merge contents if not contiguous
 
     PRInt32 rowCount, colCount;
@@ -1574,9 +1894,6 @@ nsHTMLEditor::JoinTableCells()
     PRInt32 firstRowSpan, firstColSpan;
     res = GetCellSpansAt( table, firstRowIndex, firstColIndex, firstRowSpan, firstColSpan);
     if (NS_FAILED(res)) return res;
-
-    //We reset caret in destructor. Last param = true to select cell when done
-    nsSetSelectionAfterTableEdit setCaret(this, table, firstRowIndex, firstColIndex, ePreviousColumn, PR_TRUE);
 
     // This defines the last indexes along the "edges"
     //  of the contiguous block of cells, telling us
@@ -1714,7 +2031,6 @@ nsHTMLEditor::JoinTableCells()
             //  Instead, build a list of cells to delete and do it later
             NS_ASSERTION(startRowIndex2 == rowIndex, "JoinTableCells: StartRowIndex is in row above");
 
-#if 0
             //Check if cell "hangs" off the boundary because of colspan or rowspan > 1
             //  Use split methods to chop off excess
             PRInt32 extraColSpan = lastColIndex - (startColIndex2 + actualColSpan2);
@@ -1724,7 +2040,6 @@ nsHTMLEditor::JoinTableCells()
                                          actualColSpan2-extraColSpan, extraColSpan, nsnull);
               if (NS_FAILED(res)) return res;
             }
-#endif
             res = MergeCells(firstCell, cell2, PR_FALSE);
             if (NS_FAILED(res)) return res;
             
@@ -1732,7 +2047,7 @@ nsHTMLEditor::JoinTableCells()
             // Add cell to list to delete
             deleteList.AppendElement((void *)cell2.get());
           }
-          else
+          else if (aMergeNonContiguousContents)
           {
             // Cell is outside join region -- just merge the contents
             res = MergeCells(firstCell, cell2, PR_FALSE);
@@ -1743,11 +2058,14 @@ nsHTMLEditor::JoinTableCells()
     }
 
     // All cell contents are merged. Delete the empty cells we accumulated
+    // Prevent rules testing until we're done
+    nsAutoRules beginRulesSniffing(this, kOpDeleteNode, nsIEditor::eNext);
+
     nsIDOMElement *elementPtr;
     PRInt32 count;
     while ((count = deleteList.Count()))
     {
-      // go backwards to keep nsVoidArray from memmoving everything each time
+      // go backwards to keep nsVoidArray from mem-moving everything each time
       count--; // nsVoidArray is zero based
       elementPtr = (nsIDOMElement*)deleteList.ElementAt(count);
       deleteList.RemoveElementAt(count);
@@ -1780,9 +2098,6 @@ nsHTMLEditor::JoinTableCells()
     if (NS_FAILED(res)) return res;
     if (!targetCell) return NS_ERROR_NULL_POINTER;
 
-    //We reset caret in destructor. Select cell when done if target was already selected
-    nsSetSelectionAfterTableEdit setCaret(this, table, startRowIndex, startColIndex, ePreviousColumn, isSelected);
-
     // Get data for cell to the right
     res = GetCellDataAt(table, startRowIndex, startColIndex+actualColSpan, *getter_AddRefs(cell2),
                         startRowIndex2, startColIndex2, rowSpan2, colSpan2, 
@@ -1790,16 +2105,50 @@ nsHTMLEditor::JoinTableCells()
     if (NS_FAILED(res)) return res;
     if(!cell2) return NS_OK; // Don't fail if there's no cell
 
-    if( actualRowSpan2 > actualRowSpan )
+    // sanity check
+    NS_ASSERTION((startRowIndex >= startRowIndex2),"JoinCells: startRowIndex < startRowIndex2");
+
+    // Figure out span of merged cell starting from target's starting row
+    // to handle case of merged cell starting in a row above
+    PRInt32 spanAboveMergedCell = startRowIndex - startRowIndex2;
+    PRInt32 effectiveRowSpan2 = actualRowSpan2 - spanAboveMergedCell;
+
+    if (effectiveRowSpan2 > actualRowSpan)
     {
-      //TODO: SPLIT CELL 
+      // Cell to the right spans into row below target
+      // Split off portion below target cell's bottom-most row
+      res = SplitCellIntoRows(table, startRowIndex2, startColIndex2,
+                              spanAboveMergedCell+actualRowSpan, 
+                              effectiveRowSpan2-actualRowSpan, nsnull);
+      if (NS_FAILED(res)) return res;
     }
 
-    // Move contents and delete cell to the right
-    res = MergeCells(targetCell, cell2, PR_TRUE);
+    // Move contents from cell to the right
+    // Delete the cell now only if it starts in the same row
+    //   and has enough row "height"
+    res = MergeCells(targetCell, cell2, 
+                     (startRowIndex2 == startRowIndex) && 
+                     (effectiveRowSpan2 >= actualRowSpan));
     if (NS_FAILED(res)) return res;
 
-    // Reset target cell's spans
+    if (effectiveRowSpan2 < actualRowSpan)
+    {
+      // Merged cell is "shorter" 
+      // (there are cells(s) below it that are row-spanned by target cell)
+      // We could try splitting those cells, but that's REAL messy,
+      //  so the safest thing to do is NOT really join the cells
+      return NS_OK;
+    }
+
+    if( spanAboveMergedCell > 0 )
+    {
+      // Cell we merged started in a row above the target cell
+      // Reduce rowspan to give room where target cell will extend it's colspan
+      res = SetRowSpan(cell2, spanAboveMergedCell);
+      if (NS_FAILED(res)) return res;
+    }
+
+    // Reset target cell's colspan to encompass cell to the right
     res = SetColSpan(targetCell, actualColSpan+actualColSpan2);
     if (NS_FAILED(res)) return res;
   }
@@ -1817,6 +2166,9 @@ nsHTMLEditor::MergeCells(nsCOMPtr<nsIDOMElement> aTargetCell,
   if(!targetCell || !cellToMerge) return NS_ERROR_NULL_POINTER;
 
   nsresult res = NS_OK;
+
+  // Prevent rules testing until we're done
+  nsAutoRules beginRulesSniffing(this, kOpDeleteNode, nsIEditor::eNext);
 
   // Get index of last child in target cell
   nsCOMPtr<nsIDOMNodeList> childNodes;
@@ -1838,7 +2190,10 @@ nsHTMLEditor::MergeCells(nsCOMPtr<nsIDOMElement> aTargetCell,
       {
         // Delete the empty node
         nsCOMPtr<nsIDOMNode> tempNode;
-        DeleteNode(cellChild);
+        res = childNodes->Item(0, getter_AddRefs(cellChild));
+        if (NS_FAILED(res)) return res;
+        res = DeleteNode(cellChild);
+        if (NS_FAILED(res)) return res;
         insertIndex = 0;
       }
     }
@@ -1846,22 +2201,19 @@ nsHTMLEditor::MergeCells(nsCOMPtr<nsIDOMElement> aTargetCell,
       insertIndex = (PRInt32)len;
   }
 
-  res = cellToMerge->GetFirstChild(getter_AddRefs(cellChild));
-  if (NS_FAILED(res)) return res;
-  while (cellChild)
+  // Move the contents
+  PRBool hasChild;
+  cellToMerge->HasChildNodes(&hasChild);
+  while (hasChild)
   {
-    nsCOMPtr<nsIDOMNode> nextChild;
-    res = cellChild->GetNextSibling(getter_AddRefs(nextChild));
-    if (NS_FAILED(res)) return res;
-
-    res = DeleteNode(cellChild);
+    cellToMerge->GetLastChild(getter_AddRefs(cellChild));
+    nsresult res = DeleteNode(cellChild);
     if (NS_FAILED(res)) return res;
 
     res = InsertNode(cellChild, targetCell, insertIndex);
     if (NS_FAILED(res)) return res;
 
-    cellChild = nextChild;
-    insertIndex++;
+    cellToMerge->HasChildNodes(&hasChild);
   }
 
   // Delete cells whose contents were moved
@@ -1877,18 +2229,18 @@ nsHTMLEditor::FixBadRowSpan(nsIDOMElement *aTable, PRInt32 aRowIndex, PRInt32& a
 {
   if (!aTable) return NS_ERROR_NULL_POINTER;
 
-  PRInt32 colCount;
-  nsresult res = GetTableSize(aTable, colCount, colCount);
+  PRInt32 rowCount, colCount;
+  nsresult res = GetTableSize(aTable, rowCount, colCount);
   if (NS_FAILED(res)) return res;
 
   nsCOMPtr<nsIDOMElement> cell;
   PRInt32 startRowIndex, startColIndex, rowSpan, colSpan, actualRowSpan, actualColSpan;
   PRBool  isSelected;
 
-  PRInt32 minRowSpan = 0x7fffffff; //XXX: Shouldn't there be a define somewhere for MaxInt for PRInt32
+  PRInt32 minRowSpan = -1;
   PRInt32 colIndex;
   
-  for( colIndex = 0; colIndex < colCount; colIndex++)
+  for( colIndex = 0; colIndex < colCount; colIndex += actualColSpan)
   {
     res = GetCellDataAt(aTable, aRowIndex, colIndex, *getter_AddRefs(cell),
                         startRowIndex, startColIndex, rowSpan, colSpan, 
@@ -1896,37 +2248,113 @@ nsHTMLEditor::FixBadRowSpan(nsIDOMElement *aTable, PRInt32 aRowIndex, PRInt32& a
     // NOTE: This is a *real* failure. 
     // GetCellDataAt passes if cell is missing from cellmap
     if(NS_FAILED(res)) return res;
-    if(cell && rowSpan > 0 && rowSpan < minRowSpan)
+    if (!cell) break;
+    if(rowSpan > 0 && 
+       startRowIndex == aRowIndex &&
+       (rowSpan < minRowSpan || minRowSpan == -1))
+    {
       minRowSpan = rowSpan;
+    }
+    // Find cases that would yield infinite loop
+    NS_ASSERTION((actualColSpan > 0),"ActualColSpan = 0 in FixBadRowSpan");
+    actualColSpan = PR_MAX(actualColSpan, 1);
   }
   if(minRowSpan > 1)
   {
-    // The amount to reduce everyones rowspan
+    // The amount to reduce everyone's rowspan
     // so at least one cell has rowspan = 1
     PRInt32 rowsReduced = minRowSpan - 1;
-    for(colIndex = 0; colIndex < colCount; colIndex++)
+    for(colIndex = 0; colIndex < colCount; colIndex += actualColSpan)
     {
       res = GetCellDataAt(aTable, aRowIndex, colIndex, *getter_AddRefs(cell),
                           startRowIndex, startColIndex, rowSpan, colSpan, 
                           actualRowSpan, actualColSpan, isSelected);
       if(NS_FAILED(res)) return res;
-      // Fixup rowspans for cells starting in current row
+      // Fixup rowspans only for cells starting in current row
       if(cell && rowSpan > 0 &&
          startRowIndex == aRowIndex && 
          startColIndex ==  colIndex )
       {
-        return SetRowSpan(cell, rowSpan-rowsReduced);
+        res = SetRowSpan(cell, rowSpan-rowsReduced);
+        if(NS_FAILED(res)) return res;
       }
+      NS_ASSERTION((actualColSpan > 0),"ActualColSpan = 0 in FixBadRowSpan");
+      actualColSpan = PR_MAX(actualColSpan, 1);
     }
   }
   return GetTableSize(aTable, aNewRowCount, colCount);
 }
 
 NS_IMETHODIMP 
+nsHTMLEditor::FixBadColSpan(nsIDOMElement *aTable, PRInt32 aColIndex, PRInt32& aNewColCount)
+{
+  if (!aTable) return NS_ERROR_NULL_POINTER;
+
+  PRInt32 rowCount, colCount;
+  nsresult res = GetTableSize(aTable, rowCount, colCount);
+  if (NS_FAILED(res)) return res;
+
+  nsCOMPtr<nsIDOMElement> cell;
+  PRInt32 startRowIndex, startColIndex, rowSpan, colSpan, actualRowSpan, actualColSpan;
+  PRBool  isSelected;
+
+  PRInt32 minColSpan = -1;
+  PRInt32 rowIndex;
+  
+  for( rowIndex = 0; rowIndex < rowCount; rowIndex += actualRowSpan)
+  {
+    res = GetCellDataAt(aTable, rowIndex, aColIndex, *getter_AddRefs(cell),
+                        startRowIndex, startColIndex, rowSpan, colSpan, 
+                        actualRowSpan, actualColSpan, isSelected);
+    // NOTE: This is a *real* failure. 
+    // GetCellDataAt passes if cell is missing from cellmap
+    if(NS_FAILED(res)) return res;
+    if (!cell) break;
+    if(colSpan > 0 && 
+       startColIndex == aColIndex &&
+       (colSpan < minColSpan || minColSpan == -1))
+    {
+      minColSpan = colSpan;
+    }
+    // Find cases that would yield infinite loop
+    NS_ASSERTION((actualRowSpan > 0),"ActualRowSpan = 0 in FixBadColSpan");
+    actualRowSpan = PR_MAX(actualRowSpan, 1);
+  }
+  if(minColSpan > 1)
+  {
+    // The amount to reduce everyone's colspan
+    // so at least one cell has colspan = 1
+    PRInt32 colsReduced = minColSpan - 1;
+    for(rowIndex = 0; rowIndex < rowCount; rowIndex += actualRowSpan)
+    {
+      res = GetCellDataAt(aTable, rowIndex, aColIndex, *getter_AddRefs(cell),
+                          startRowIndex, startColIndex, rowSpan, colSpan, 
+                          actualRowSpan, actualColSpan, isSelected);
+      if(NS_FAILED(res)) return res;
+      // Fixup colspans only for cells starting in current column
+      if(cell && colSpan > 0 &&
+         startColIndex == aColIndex && 
+         startRowIndex ==  rowIndex )
+      {
+        res = SetColSpan(cell, colSpan-colsReduced);
+        if(NS_FAILED(res)) return res;
+      }
+      NS_ASSERTION((actualRowSpan > 0),"ActualRowSpan = 0 in FixBadColSpan");
+      actualRowSpan = PR_MAX(actualRowSpan, 1);
+    }
+  }
+  return GetTableSize(aTable, rowCount, aNewColCount);
+}
+
+NS_IMETHODIMP 
 nsHTMLEditor::NormalizeTable(nsIDOMElement *aTable)
 {
+  nsCOMPtr<nsIDOMSelection>selection;
+  nsresult res = GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(res)) return res;
+  if (!selection) return NS_ERROR_FAILURE;
+
   nsCOMPtr<nsIDOMElement> table;
-  nsresult res = NS_ERROR_FAILURE;
   res = GetElementOrParentByTagName(NS_LITERAL_STRING("table"), aTable, getter_AddRefs(table));
   if (NS_FAILED(res)) return res;
   // Don't fail if we didn't find a table
@@ -1936,17 +2364,27 @@ nsHTMLEditor::NormalizeTable(nsIDOMElement *aTable)
   res = GetTableSize(table, rowCount, colCount);
   if (NS_FAILED(res)) return res;
 
+  // Save current selection
+  nsAutoSelectionReset selectionResetter(selection, this);
+
   nsAutoEditBatch beginBatching(this);
+  // Prevent auto insertion of BR in new cell until we're done
+  nsAutoRules beginRulesSniffing(this, kOpInsertNode, nsIEditor::eNext);
 
   nsCOMPtr<nsIDOMElement> cell;
   PRInt32 startRowIndex, startColIndex, rowSpan, colSpan, actualRowSpan, actualColSpan;
   PRBool  isSelected;
 
-  // First scan all cells in each row to detect bad rowspan values
+  // Scan all cells in each row to detect bad rowspan values
   for(rowIndex = 0; rowIndex < rowCount; rowIndex++)
   {
-    
-    res = FixBadRowSpan(aTable, rowIndex, rowCount);
+    res = FixBadRowSpan(table, rowIndex, rowCount);
+    if (NS_FAILED(res)) return res;
+  }
+  // and same for colspans
+  for(colIndex = 0; colIndex < colCount; colIndex++)
+  {
+    res = FixBadColSpan(table, colIndex, colCount);
     if (NS_FAILED(res)) return res;
   }
 
@@ -1957,7 +2395,7 @@ nsHTMLEditor::NormalizeTable(nsIDOMElement *aTable)
 
     for(colIndex = 0; colIndex < colCount; colIndex++)
     {
-      res = GetCellDataAt(aTable, rowIndex, colIndex, *getter_AddRefs(cell),
+      res = GetCellDataAt(table, rowIndex, colIndex, *getter_AddRefs(cell),
                           startRowIndex, startColIndex, rowSpan, colSpan, 
                           actualRowSpan, actualColSpan, isSelected);
       // NOTE: This is a *real* failure. 
@@ -2276,6 +2714,54 @@ nsHTMLEditor::GetCellContext(nsIDOMSelection **aSelection,
   return res;
 }
 
+nsresult 
+nsHTMLEditor::GetCellFromRange(nsIDOMRange *aRange, nsIDOMElement **aCell)
+{
+  // Note: this might return a node that is outside of the range.
+  // Use carefully.
+  if (!aRange || !aCell) return NS_ERROR_NULL_POINTER;
+
+  *aCell = nsnull;
+
+  nsCOMPtr<nsIDOMNode> startParent;
+  nsresult res = aRange->GetStartParent(getter_AddRefs(startParent));
+  if (NS_FAILED(res)) return res;
+  if (!startParent) return NS_ERROR_FAILURE;
+
+  PRInt32 startOffset;
+  res = aRange->GetStartOffset(&startOffset);
+  if (NS_FAILED(res)) return res;
+
+  nsCOMPtr<nsIDOMNode> childNode = GetChildAt(startParent, startOffset);
+  // This means selection is probably at a text node (or end of doc?)
+  if (!childNode) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMNode> endParent;
+  res = aRange->GetEndParent(getter_AddRefs(endParent));
+  if (NS_FAILED(res)) return res;
+  if (!startParent) return NS_ERROR_FAILURE;
+
+  PRInt32 endOffset;
+  res = aRange->GetEndOffset(&endOffset);
+  if (NS_FAILED(res)) return res;
+  
+  // If a cell is deleted, the range is collapse
+  //   (startOffset == endOffset)
+  //   so tell caller the cell wasn't found
+  if (startParent == endParent && 
+      endOffset == startOffset+1 &&
+      IsTableCell(childNode))
+  {
+    // Should we also test if frame is selected? (Use GetCellDataAt())
+    // (Let's not for now -- more efficient)
+    nsCOMPtr<nsIDOMElement> cellElement = do_QueryInterface(childNode);
+    *aCell = cellElement.get();
+    NS_ADDREF(*aCell);
+    return NS_OK;
+  }
+  return NS_EDITOR_ELEMENT_NOT_FOUND;
+}
+
 NS_IMETHODIMP 
 nsHTMLEditor::GetFirstSelectedCell(nsIDOMElement **aCell, nsIDOMRange **aRange)
 {
@@ -2296,25 +2782,19 @@ nsHTMLEditor::GetFirstSelectedCell(nsIDOMElement **aCell, nsIDOMRange **aRange)
   mSelectedCellIndex = 0;
 
   nsCOMPtr<nsIDOMNode> cellNode;
-  res = GetFirstNodeInRange(range, getter_AddRefs(cellNode));
-  // Failure here means selection is in a text node,
+
+  res = GetCellFromRange(range, aCell);
+  // Failure here probably means selection is in a text node,
   //  so there's no selected cell
   if (NS_FAILED(res)) return NS_EDITOR_ELEMENT_NOT_FOUND;
-  if (!cellNode) return NS_EDITOR_ELEMENT_NOT_FOUND;
+  // No cell means range was collapsed (cell was deleted)
+  if (!*aCell) return NS_EDITOR_ELEMENT_NOT_FOUND;
 
-  if (IsTableCell(cellNode))
+  if (aRange)
   {
-    nsCOMPtr<nsIDOMElement> cellElement = do_QueryInterface(cellNode);
-    *aCell = cellElement.get();
-    NS_ADDREF(*aCell);
-    if (aRange)
-    {
-      *aRange = range.get();
-      NS_ADDREF(*aRange);
-    }
+    *aRange = range.get();
+    NS_ADDREF(*aRange);
   }
-  else 
-    return NS_EDITOR_ELEMENT_NOT_FOUND;
 
   // Setup for next cell
   mSelectedCellIndex = 1;
@@ -2340,36 +2820,37 @@ nsHTMLEditor::GetNextSelectedCell(nsIDOMElement **aCell, nsIDOMRange **aRange)
 
   // Don't even try if index exceeds range count
   if (mSelectedCellIndex >= rangeCount) 
-  {
-    // Should we reset index? 
-    // Maybe better to force recalling GetFirstSelectedCell()
-    //mSelectedCellIndex = 0;
     return NS_EDITOR_ELEMENT_NOT_FOUND;
-  }
 
-  // Get first node in next range of selection - test if it's a cell
+  // Scan through ranges to find next valid selected cell
   nsCOMPtr<nsIDOMRange> range;
-  res = selection->GetRangeAt(mSelectedCellIndex, getter_AddRefs(range));
-  if (NS_FAILED(res)) return res;
-  if (!range) return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDOMNode> cellNode;
-  res = GetFirstNodeInRange(range, getter_AddRefs(cellNode));
-  if (NS_FAILED(res)) return res;
-  if (!cellNode) return NS_ERROR_FAILURE;
-  if (IsTableCell(cellNode))
+  for (; mSelectedCellIndex < rangeCount; mSelectedCellIndex++)
   {
-    nsCOMPtr<nsIDOMElement> cellElement = do_QueryInterface(cellNode);
-    *aCell = cellElement.get();
-    NS_ADDREF(*aCell);
-    if (aRange)
-    {
-      *aRange = range.get();
-      NS_ADDREF(*aRange);
-    }
+    res = selection->GetRangeAt(mSelectedCellIndex, getter_AddRefs(range));
+    if (NS_FAILED(res)) return res;
+    if (!range) return NS_ERROR_FAILURE;
+
+    res = GetCellFromRange(range, aCell);
+    // Failure here means the range doesn't contain a cell
+    if (NS_FAILED(res)) return NS_EDITOR_ELEMENT_NOT_FOUND;
+    
+    // We found a selected cell
+    if (*aCell) break;
+#ifdef DEBUG_cmanske
+    else
+      printf("GetNextSelectedCell: Collapsed range found\n");
+#endif
+
+    // If we didn't find a cell, continue to next range in selection
   }
-  else 
-    res = NS_EDITOR_ELEMENT_NOT_FOUND;
+  // No cell means all remaining ranges were collapsed (cells were deleted)
+  if (!*aCell) return NS_EDITOR_ELEMENT_NOT_FOUND;
+
+  if (aRange)
+  {
+    *aRange = range.get();
+    NS_ADDREF(*aRange);
+  }
 
   // Setup for next cell
   mSelectedCellIndex++;
@@ -2669,7 +3150,7 @@ nsHTMLEditor::GetSelectedCellsType(nsIDOMElement *aElement, PRUint32 &aSelection
   // Store indexes of each row/col to avoid duplication of searches
   nsVoidArray indexArray;
 
-  PRBool allCellsInRowAreSelected = PR_TRUE;
+  PRBool allCellsInRowAreSelected = PR_FALSE;
   PRBool allCellsInColAreSelected = PR_FALSE;
   while (NS_SUCCEEDED(res) && selectedCell)
   {
