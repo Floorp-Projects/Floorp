@@ -127,14 +127,14 @@
   
     <content> 
       <RDF:Description about="chrome://editor/content/">
-	    <base>resource:/chrome/editor/composer/content/default/</base>
+	    <base>resource:/chrome/editor/content/default/</base>
         <main>EditorAppShell.xul</main> 
       </RDF:Description> 
     </content> 
   
     <skin> 
       <RDF:Description about="chrome://editor/skin/">
-	    <base>resource:/chrome/editor/composer/skin/default/</base>
+	    <base>resource:/chrome/editor/skin/default/</base>
         <main>Editor.css</main> 
       </RDF:Description> 
     </skin> 
@@ -147,28 +147,6 @@
 
   </chrome>
   
-  <chrome about="chrome://editordlgs/">
-    <skin> 
-      <RDF:Description about="chrome://editordlgs/skin/">
-	    <base>resource:/chrome/editor/dialogs/skin/default/</base>
-        <main>EditorDialog.css</main> 
-      </RDF:Description> 
-    </skin> 
-
-    <content> 
-      <RDF:Description about="chrome://editordlgs/content/">
-	    <base>resource:/chrome/editor/dialogs/content/default/</base>
-      </RDF:Description>
-    </content> 
-
-    <locale> 
-      <RDF:Description about="chrome://editordlgs/locale/">
-        <name>en-US</name>
-      </RDF:Description> 
-    </locale> 
-
-  </chrome>
- 
   <chrome about="chrome://addressbook/"> 
 
     <skin> 
