@@ -93,9 +93,7 @@ nsLeafFrame::AddBordersAndPadding(nsIPresContext* aPresContext,
                                   nsHTMLReflowMetrics& aMetrics,
                                   nsMargin& aBorderPadding)
 {
-  nsHTMLReflowState::ComputeBorderPaddingFor(this,
-                                             aReflowState.parentReflowState,
-                                             aBorderPadding);
+  aBorderPadding = aReflowState.mComputedBorderPadding;
   aMetrics.width += aBorderPadding.left + aBorderPadding.right;
   aMetrics.height += aBorderPadding.top + aBorderPadding.bottom;
   aMetrics.ascent = aMetrics.height;

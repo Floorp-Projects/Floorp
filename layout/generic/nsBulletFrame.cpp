@@ -412,10 +412,7 @@ nsBulletFrame::Reflow(nsIPresContext& aPresContext,
 
   // Add in the border and padding; split the top/bottom between the
   // ascent and descent to make things look nice
-  nsMargin borderPadding;
-  nsHTMLReflowState::ComputeBorderPaddingFor(this,
-                                             aReflowState.parentReflowState,
-                                             borderPadding);
+  const nsMargin& borderPadding = aReflowState.mComputedBorderPadding;
   aMetrics.width += borderPadding.left + borderPadding.right;
   aMetrics.height += borderPadding.top + borderPadding.bottom;
   aMetrics.ascent += borderPadding.top;

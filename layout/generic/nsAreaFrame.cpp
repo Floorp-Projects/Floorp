@@ -520,12 +520,8 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
     if (floaterYMost > 0) {
       // What we need to check for is if the bottom most floater extends below
       // the content area of the desired size
-      nsMargin  borderPadding;
-      nscoord   contentYMost;
-  
-      nsHTMLReflowState::ComputeBorderPaddingFor(this, aReflowState.parentReflowState,
-                                                 borderPadding);
-      contentYMost = aDesiredSize.height - borderPadding.bottom;
+      nscoord   contentYMost = aDesiredSize.height -
+                               aReflowState.mComputedBorderPadding.bottom;
   
       if (floaterYMost > contentYMost) {
         aDesiredSize.height += floaterYMost - contentYMost;
@@ -623,18 +619,14 @@ nsAreaFrame::ReflowAbsoluteFrame(nsIPresContext&          aPresContext,
       kidReflowState.reason = eReflowReason_Initial;
     }
 
-    // XXX Temporary hack until the block/inline code starts using 'computedWidth'
-    kidReflowState.availableWidth = kidReflowState.computedWidth;
     rv = htmlReflow->Reflow(aPresContext, kidDesiredSize, kidReflowState, aStatus);
 
     // XXX If the child had a fixed height, then make sure it respected it...
     if (NS_AUTOHEIGHT != kidReflowState.computedHeight) {
       if (kidDesiredSize.height < kidReflowState.computedHeight) {
         kidDesiredSize.height = kidReflowState.computedHeight;
-
-        nsMargin  borderPadding;
-        nsHTMLReflowState::ComputeBorderPaddingFor(aKidFrame, &aReflowState, borderPadding);
-        kidDesiredSize.height += borderPadding.top + borderPadding.bottom;
+        kidDesiredSize.height += kidReflowState.mComputedBorderPadding.top +
+                                 kidReflowState.mComputedBorderPadding.bottom;
       }
     }
     
