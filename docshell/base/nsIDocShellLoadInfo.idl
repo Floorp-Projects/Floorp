@@ -42,5 +42,5 @@ interface nsIDocShellLoadInfo : nsISupports
 		If set to true, this will replace the current history entry without
 		adding it to session history.
 	*/
-	attribute boolean replaceHistorySlot;
+	attribute boolean replaceSessionHistorySlot;
 };

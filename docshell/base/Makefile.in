@@ -43,6 +43,7 @@ XPIDLSRCS	= \
 
 CPPSRCS		= \
 		nsDocShell.cpp		\
+		nsDocShellLoadInfo.cpp		\
 		nsDSURIContentListener.cpp		\
 		nsDSWebProgressListener.cpp		\
 		$(NULL)

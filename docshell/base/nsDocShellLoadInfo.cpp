@@ -27,7 +27,7 @@
 //***    nsDocShellLoadInfo: Object Management
 //*****************************************************************************
 
-nsDocShellLoadInfo::nsDocShellLoadInfo() : mReplaceHistorySlot(PR_FALSE)
+nsDocShellLoadInfo::nsDocShellLoadInfo() : mReplaceSessionHistorySlot(PR_FALSE)
 {
 	NS_INIT_REFCNT();
 }
@@ -61,21 +61,25 @@ NS_IMETHODIMP nsDocShellLoadInfo::GetReferrer(nsIURI** aReferrer)
    return NS_OK;
 }
 
-NS_IMETOHDIMP nsDocShellLoadInfo::SetReferrer(nsIURI* aReferrer)
+NS_IMETHODIMP nsDocShellLoadInfo::SetReferrer(nsIURI* aReferrer)
 {
    mReferrer = aReferrer;
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellLoadInfo::
-	attribute nsIURI referrer;
+NS_IMETHODIMP nsDocShellLoadInfo::GetReplaceSessionHistorySlot(PRBool* aReplace)
+{
+   NS_ENSURE_ARG_POINTER(aReplace);
 
-	/*
-		If set to true, this will replace the current history entry without
-		adding it to session history.
-	*/
-	attribute boolean replaceHistorySlot;
+   *aReplace = mReplaceSessionHistorySlot;
+   return NS_OK;
+}
 
+NS_IMETHODIMP nsDocShellLoadInfo::SetReplaceSessionHistorySlot(PRBool aReplace)
+{
+   mReplaceSessionHistorySlot = aReplace;
+   return NS_OK;
+}
 
 //*****************************************************************************
 // nsDocShellLoadInfo: Helpers
