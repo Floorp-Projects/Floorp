@@ -64,6 +64,9 @@ extern nsresult
 extern nsresult
   NS_NewHTMLSpacer(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag);
 
+extern nsresult
+  NS_NewHTMLBullet(nsIHTMLContent** aInstancePtrResult);
+
 // Create a new text content object. The memory for the unicode string
 // will be allocated from the heap. The object returned will support
 // the nsIHTMLContent interface as well as the nsITextContent
