@@ -20,6 +20,7 @@
 #include "nsGenericHTMLElement.h"
 #include "nsIEventListenerManager.h"
 #include "nsIDocument.h"
+#include "nsIDOMRange.h"
 #include "nsXIFConverter.h"
 #include "nsSelectionRange.h"
 #include "nsCRT.h"
@@ -49,12 +50,14 @@ nsGenericDOMDataNode::nsGenericDOMDataNode()
   mContent = nsnull;
   mScriptObject = nsnull;
   mListenerManager = nsnull;
+  mRangeList = nsnull;
 }
 
 nsGenericDOMDataNode::~nsGenericDOMDataNode()
 {
   NS_IF_RELEASE(mListenerManager);
   // XXX what about mScriptObject? its now safe to GC it...
+  delete mRangeList;
 }
 
 void
@@ -627,6 +630,35 @@ nsGenericDOMDataNode::HandleDOMEvent(nsIPresContext& aPresContext,
     aDOMEvent = nsnull;
   }
   return ret;
+}
+
+
+nsresult 
+nsGenericDOMDataNode::RangeAdd(nsIDOMRange& aRange)
+{
+  // lazy allocation of range list
+  if (nsnull == mRangeList) {
+    mRangeList = new nsVoidArray();
+  }
+  if (nsnull == mRangeList) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  // dont need to addref - this call is made by the range object itself
+  PRBool rv = mRangeList->AppendElement(&aRange);
+  if (rv)  return NS_OK;
+  return NS_ERROR_FAILURE;
+}
+
+
+nsresult 
+nsGenericDOMDataNode::RangeRemove(nsIDOMRange& aRange)
+{
+  if (mRangeList) {
+    // dont need to release - this call is made by the range object itself
+    PRBool rv = mRangeList->RemoveElement(&aRange);
+    if (rv)  return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
 }
 
 //----------------------------------------------------------------------

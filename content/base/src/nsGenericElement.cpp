@@ -27,6 +27,7 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentFragment.h"
+#include "nsIDOMRange.h"
 #include "nsIEventListenerManager.h"
 #include "nsILinkHandler.h"
 #include "nsIScriptContextOwner.h"
@@ -583,6 +584,7 @@ nsGenericElement::nsGenericElement()
   mContent = nsnull;
   mDOMSlots = nsnull;
   mListenerManager = nsnull;
+  mRangeList = nsnull;
 }
 
 nsGenericElement::~nsGenericElement()
@@ -601,6 +603,7 @@ nsGenericElement::~nsGenericElement()
     // XXX Should really be arena managed
     PR_DELETE(mDOMSlots);
   }
+  delete mRangeList;
 }
 
 nsDOMSlots *
@@ -999,6 +1002,35 @@ nsGenericElement::HandleDOMEvent(nsIPresContext& aPresContext,
     aDOMEvent = nsnull;
   }
   return ret;
+}
+  
+  
+nsresult 
+nsGenericElement::RangeAdd(nsIDOMRange& aRange)
+{
+  // lazy allocation of range list
+  if (nsnull == mRangeList) {
+    mRangeList = new nsVoidArray();
+  }
+  if (nsnull == mRangeList) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  // dont need to addref - this call is made by the range object itself
+  PRBool rv = mRangeList->AppendElement(&aRange);
+  if (rv)  return NS_OK;
+  return NS_ERROR_FAILURE;
+}
+
+
+nsresult 
+nsGenericElement::RangeRemove(nsIDOMRange& aRange)
+{
+  if (mRangeList) {
+    // dont need to release - this call is made by the range object itself
+    PRBool rv = mRangeList->RemoveElement(&aRange);
+    if (rv)  return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
 }
 
 //----------------------------------------------------------------------
@@ -1485,6 +1517,9 @@ nsGenericContainerElement::GetChildNodes(nsIDOMNodeList** aChildNodes)
 
   if (nsnull == slots->mChildNodes) {
     slots->mChildNodes = new nsChildContentList(mContent);
+    if (nsnull == slots->mChildNodes) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
     NS_ADDREF(slots->mChildNodes);
   }
 

@@ -150,6 +150,8 @@ struct nsGenericDOMDataNode {
                           nsIDOMEvent** aDOMEvent,
                           PRUint32 aFlags,
                           nsEventStatus& aEventStatus);
+  nsresult RangeAdd(nsIDOMRange& aRange);
+  nsresult RangeRemove(nsIDOMRange& aRange);
 
   // Implementation for nsIHTMLContent
   nsresult Compact();
@@ -258,6 +260,7 @@ struct nsGenericDOMDataNode {
   nsIEventListenerManager* mListenerManager;
 
   nsTextFragment mText;
+  nsVoidArray *mRangeList;
 };
 
 //----------------------------------------------------------------------
@@ -461,7 +464,15 @@ struct nsGenericDOMDataNode {
                             nsEvent* aEvent,                               \
                             nsIDOMEvent** aDOMEvent,                       \
                             PRUint32 aFlags,                               \
-                            nsEventStatus& aEventStatus);
+                            nsEventStatus& aEventStatus);                  \
+  NS_IMETHOD RangeAdd(nsIDOMRange& aRange){                                \
+    return _g.RangeAdd(aRange);                                            \
+  }                                                                        \
+  NS_IMETHOD RangeRemove(nsIDOMRange& aRange){                             \
+    return _g.RangeRemove(aRange);                                         \
+  }                                                                        
+
+
 
 #define NS_IMPL_IHTMLCONTENT_USING_GENERIC_DOM_DATA(_g)                \
   NS_IMETHOD Compact() {                                               \
