@@ -297,8 +297,11 @@
                              ondragenter="nsDragAndDrop.dragEnter(event, BookmarksMenuDNDObserver); event.preventBubble()"
                              ondragexit="nsDragAndDrop.dragExit(event, BookmarksMenuDNDObserver); event.preventBubble()"
                              ondragover="nsDragAndDrop.dragOver(event, BookmarksMenuDNDObserver); event.preventBubble()">
-                <menupopup contextmenu="bookmarks-context-menu"
-                           onpopupshowing="if (event.target == this) BookmarksToolbar.updateOverflowMenu(this);"/>
+                <menupopup onpopupshowing="if (event.target == this) BookmarksToolbar.updateOverflowMenu(this);"
+#ifndef XP_MACOSX
+                           contextmenu="bookmarks-context-menu"
+#endif
+                           />
               </toolbarbutton>
             </hbox>
             <toolbarbutton class="bookmark-item bookmarks-toolbar-customize" mousethrough="never"
