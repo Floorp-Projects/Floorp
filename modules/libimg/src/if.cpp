@@ -1267,6 +1267,63 @@ il_image_abort(il_container *ic)
     }
 }
 
+static void
+IL_ChromeAlphaAbuseCheck(il_container *ic)
+{
+  IL_Pixmap *mask = ic->mask;
+  NI_PixmapHeader *header = &mask->header;
+  PRUint8 *alpha = (PRUint8 *)mask->bits;
+        
+  if (ic->image->header.alpha_bits == 8) {
+    unsigned num000 = 0, num255 = 0;
+    for (unsigned y=0; y<header->height; y++, alpha+=header->widthBytes)
+      for (unsigned x=0; x<header->width; x++) {
+        if (alpha[x] == 0)
+          num000++;
+        else if (alpha[x] == 255)
+          num255++;
+      }
+    if (num000+num255 == header->width*header->height) {
+      fprintf(stderr, "CHROME ALPHA ABUSE\n");
+      fprintf(stderr, "\tusing an 8-bit alpha channel to represent binary alpha\n");
+      fprintf(stderr, "\t%s\n", ic->url_address);
+      fprintf(stderr, "\tnum000=%d num255=%d sum=%d w*h=%d\n",
+              num000, num255, num000+num255, header->width*header->height);
+    }
+  } else if (ic->image->header.alpha_bits == 1) {
+    PRBool constAlpha=PR_TRUE;
+
+    /* check full bytes */
+    for (unsigned y=0; 
+         y<header->height && constAlpha; 
+         y++, alpha+=header->widthBytes)
+      for (unsigned x=0; x<header->width/8; x++)
+        if (alpha[x] != 255) {
+          constAlpha = PR_FALSE;
+          break;
+        }
+    
+    /* check trailing bits */
+    PRUint8 mask = 255;
+    mask <<= 8-(header->width&7);
+    if (mask && constAlpha)
+      for (unsigned y=0; 
+           y<header->height; 
+           y++, alpha+=header->widthBytes)
+        if ((alpha[header->width/8]&mask) != mask) {
+          constAlpha = PR_FALSE;
+          break;
+        }
+    
+    if (constAlpha) {
+      fprintf(stderr, "CHROME ALPHA ABUSE\n");
+      fprintf(stderr, "\tfully opaque 1-bit alpha mask\n");
+      fprintf(stderr, "\t%s\n", ic->url_address);
+    }
+  }
+}
+
+
 void
 IL_StreamComplete(il_container *ic, PRBool is_multipart)
 {
@@ -1287,6 +1344,10 @@ IL_StreamComplete(il_container *ic, PRBool is_multipart)
     ILTRACE(1, ("il: complete: %d seconds for %s\n",
                 difference, ic->url_address));
 #endif /* DEBUG */
+
+    /* Check for abuse of alpha in chrome images */
+    if ((ic->moz_type == TYPE_CHROME) && ic->image->header.alpha_bits)
+        IL_ChromeAlphaAbuseCheck(ic);
 
     ic->is_multipart = is_multipart;
 
