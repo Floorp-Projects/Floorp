@@ -246,7 +246,7 @@ HRESULT STDMETHODCALLTYPE CDropTarget::Drop(/* [unique][in] */ IDataObject __RPC
 	}
 	
 	// Does the data object point to a wide character file?
-	formatetc.cfFormat = g_cfFileName;
+	formatetc.cfFormat = g_cfFileNameW;
 	if (m_spDataObject->GetData(&formatetc, &stgmedium) == S_OK)
 	{
 		USES_CONVERSION;
