@@ -299,7 +299,7 @@ void nsMsgDatabase::DumpCache()
 
 nsMsgDatabase::nsMsgDatabase()
     : m_dbFolderInfo(nsnull), m_mdbEnv(nsnull), m_mdbStore(nsnull),
-      m_mdbAllMsgHeadersTable(nsnull), m_mdbAllThreadsTable(nsnull), m_dbName(""), m_newSet(nsnull),
+      m_mdbAllMsgHeadersTable(nsnull), m_dbName(""), m_newSet(nsnull),
       m_mdbTokensInitialized(PR_FALSE), m_ChangeListeners(nsnull),
       m_hdrRowScopeToken(0),
       m_hdrTableKindToken(0),
@@ -341,9 +341,6 @@ nsMsgDatabase::~nsMsgDatabase()
 	}
 	if (m_mdbAllMsgHeadersTable)
 		m_mdbAllMsgHeadersTable->Release();
-
-	if (m_mdbAllThreadsTable)
-		m_mdbAllThreadsTable->Release();
 
 	if (m_mdbEnv)
 	{
@@ -813,8 +810,6 @@ nsresult nsMsgDatabase::InitNewDB()
             mdberr = (nsresult) store->NewTable(GetEnv(), m_hdrRowScopeToken, 
 				m_hdrTableKindToken, PR_FALSE, nsnull, &m_mdbAllMsgHeadersTable);
 //			m_mdbAllMsgHeadersTable->BecomeContent(GetEnv(), &gAllMsgHdrsTableOID);
-            mdberr = (nsresult) store->NewTable(GetEnv(), m_threadRowScopeToken, 
-				m_allThreadsTableKindToken, PR_FALSE, nsnull, &m_mdbAllThreadsTable);
 
 			m_dbFolderInfo = dbFolderInfo;
 
@@ -844,11 +839,6 @@ nsresult nsMsgDatabase::InitExistingDB()
 			}
 		}
 		err = GetStore()->GetTable(GetEnv(), &gAllThreadsTableOID, &m_mdbAllThreadsTable);
-		// this may be a db without this table - let's just create one.
-		if (!m_mdbAllThreadsTable)
-            err = (nsresult) GetStore()->NewTable(GetEnv(), m_threadRowScopeToken, 
-				m_allThreadsTableKindToken, PR_FALSE, nsnull, &m_mdbAllThreadsTable);
-
 	}
 	return err;
 }
@@ -2376,7 +2366,7 @@ nsresult nsMsgDatabase::CreateNewThread(nsMsgKey threadId, const char *subject, 
 	struct mdbOid threadTableOID;
 	struct mdbOid allThreadsTableOID;
 
-	if (!pnewThread || !m_mdbAllThreadsTable || !m_mdbStore)
+	if (!pnewThread || !m_mdbStore)
 		return NS_ERROR_NULL_POINTER;
 
 	threadTableOID.mOid_Scope = m_hdrRowScopeToken;

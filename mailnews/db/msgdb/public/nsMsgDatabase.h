@@ -297,7 +297,6 @@ protected:
 	nsIMdbEnv		    *m_mdbEnv;	// to be used in all the db calls.
 	nsIMdbStore	 	    *m_mdbStore;
 	nsIMdbTable		    *m_mdbAllMsgHeadersTable;
-	nsIMdbTable			*m_mdbAllThreadsTable;
 	nsFileSpec		    m_dbName;
 	nsMsgKeySet		    *m_newSet;	// new messages since last open.
 	PRBool				m_mdbTokensInitialized;
