@@ -50,7 +50,6 @@ namespace ICG {
     using namespace VM;
     using namespace JSTypes;
     using namespace JSClasses;
-    
 
     struct VariableList {       // Maps from variable (parameter) name to a TypedRegister.
                                 // But because we also want to map from a register number to
@@ -155,7 +154,7 @@ namespace ICG {
     
     class ICodeGenerator {
     public:
-        friend ICodeModule;
+        friend class ICodeModule;
         typedef enum { kNoFlags = 0, kIsTopLevel = 0x01, kIsStaticMethod = 0x02, kIsWithinWith = 0x04 } ICodeGeneratorFlags;
     private:
         InstructionStream *iCode;

@@ -119,7 +119,7 @@ namespace JavaScript {
         VariableBinding(uint32 pos, ExprNode *name, ExprNode *type,
                         ExprNode *initializer, bool constant):
                 ParseNode(pos), next(0), aliases(0), name(name), type(type),
-                initializer(initializer) {}
+                initializer(initializer), constant(constant) {}
         
         void print(PrettyPrinter &f, bool printConst) const;
     };
