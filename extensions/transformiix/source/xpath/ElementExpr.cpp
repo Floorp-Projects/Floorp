@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: ElementExpr.cpp,v 1.6 2001/05/14 14:22:46 axel%pike.org Exp $
+ * $Id: ElementExpr.cpp,v 1.7 2001/07/02 20:10:51 sicking%bigfoot.com Exp $
  */
 
 #include "Expr.h"
@@ -37,19 +37,20 @@ const String ElementExpr::WILD_CARD = "*";
 
 
 //- Constructors -/
-ElementExpr::ElementExpr() {
-    //-- do nothing
-} //-- ElementExpr
+ElementExpr::ElementExpr(String& name)
+{
+    int idx = name.indexOf(':');
+    if (idx >= 0)
+       name.subString(0, idx, prefix);
+    else
+       idx = -1;
 
-ElementExpr::ElementExpr(String& name) {
-    setName(name);
-} //-- ElementExpr
+    name.subString(idx+1, this->name);
 
-/**
- * Destructor
-**/
-ElementExpr::~ElementExpr() {
-} //-- ~ElementExpr
+    //-- set flags
+    isNameWild = this->name.isEqual(WILD_CARD);
+    isNamespaceWild = (isNameWild && (prefix.length() == 0));
+} //-- ElementExpr
 
   //------------------/
  //- Public Methods -/
@@ -88,39 +89,9 @@ double ElementExpr::getDefaultPriority(Node* node, Node* context, ContextState* 
     return 0.0;
 } //-- getDefaultPriority
 
-/**
- * Returns the name of this ElementExpr
- * @return the name of this ElementExpr
-**/
-const String& ElementExpr::getName() {
-    return (const String&) this->name;
-} //-- getName
-
-void ElementExpr::setName(const String& name) {
-    int idx = name.indexOf(':');
-    if ( idx >= 0 )
-       name.subString(0,idx, this->prefix);
-    else
-       idx = -1;
-    name.subString(idx+1, this->name);
-
-    //-- set flags
-    this->isNameWild = this->name.isEqual(WILD_CARD);
-    this->isNamespaceWild = (isNameWild && (this->prefix.length() == 0));
-} //-- setName
-
-
   //-----------------------------/
  //- Methods from NodeExpr.cpp -/
 //-----------------------------/
-
-/**
- * Returns the type of this NodeExpr
- * @return the type of this NodeExpr
-**/
-short ElementExpr::getType() {
-    return NodeExpr::ELEMENT_EXPR;
-} //-- getType
 
 /**
  * Determines whether this NodeExpr matches the given node within

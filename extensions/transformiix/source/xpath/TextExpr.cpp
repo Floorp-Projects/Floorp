@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: TextExpr.cpp,v 1.4 2001/05/14 14:22:47 axel%pike.org Exp $
+ * $Id: TextExpr.cpp,v 1.5 2001/07/02 20:11:05 sicking%bigfoot.com Exp $
  */
 
 #include "Expr.h"
@@ -58,14 +58,6 @@ ExprResult* TextExpr::evaluate(Node* context, ContextState* cs) {
 double TextExpr::getDefaultPriority(Node* node, Node* context, ContextState* cs) {
     return -0.5;
 } //-- getDefaultPriority
-
-/**
- * Returns the type of this NodeExpr
- * @return the type of this NodeExpr
-**/
-short TextExpr::getType() {
-    return NodeExpr::TEXT_EXPR;
-} //-- getType
 
 /**
  * Determines whether this NodeExpr matches the given node within

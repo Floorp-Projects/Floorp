@@ -29,7 +29,7 @@
  *       - foo//bar would not match properly if there was more than
  *         one node in the NodeSet (nodes) on the final iteration
  *
- * $Id: PathExpr.cpp,v 1.8 2001/07/02 09:24:32 peterv%netscape.com Exp $
+ * $Id: PathExpr.cpp,v 1.9 2001/07/02 20:11:01 sicking%bigfoot.com Exp $
  */
 
 #include "Expr.h"
@@ -62,21 +62,6 @@ PathExpr::~PathExpr()
     }
     delete iter;
 } //-- ~PathExpr
-
-/**
- * Adds the Expr to this PathExpr
- * @param expr the Expr to add to this PathExpr
- * @param index the index at which to add the given Expr
-**/
-void PathExpr::addExpr(int index, Expr* expr, short ancestryOp)
-{
-    if (expr) {
-        PathExprItem* pxi = new PathExprItem;
-        pxi->expr = expr;
-        pxi->ancestryOp = ancestryOp;
-        expressions.insert(index, pxi);
-    }
-} //-- addPattenExpr
 
 /**
  * Adds the Expr to this PathExpr

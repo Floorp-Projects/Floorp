@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: NumberExpr.cpp,v 1.2 2001/01/22 09:36:18 kvisco%ziplink.net Exp $
+ * $Id: NumberExpr.cpp,v 1.3 2001/07/02 20:11:00 sicking%bigfoot.com Exp $
  */
 
 #include "Expr.h"
@@ -30,16 +30,9 @@
  //- NumberExpr -/
 //--------------/
 
-NumberExpr::NumberExpr() {
-    _value = 0.0;
-} //-- NumberExpr
-
 NumberExpr::NumberExpr(double dbl) {
     _value = dbl;
 } //-- NumberExpr
-
-NumberExpr::~NumberExpr() {
-} //-- ~NumberExpr
 
 /**
  * Evaluates this Expr based on the given context node and processor state

@@ -23,7 +23,7 @@
  * Bob Miller, kbob@oblix.com
  *    -- plugged core leak.
  *    
- * $Id: FilterExpr.cpp,v 1.1 2000/04/06 07:45:30 kvisco%ziplink.net Exp $
+ * $Id: FilterExpr.cpp,v 1.2 2001/07/02 20:10:56 sicking%bigfoot.com Exp $
  */
 
 #include "Expr.h"
@@ -31,14 +31,10 @@
 
 /**
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.1 $ $Date: 2000/04/06 07:45:30 $
+ * @version $Revision: 1.2 $ $Date: 2001/07/02 20:10:56 $
 **/
 //-- Implementation of FilterExpr --/
 
-
-FilterExpr::FilterExpr() : PredicateList() {
-    expr = 0;
-}
 
 /**
  * Creates a new FilterExpr using the given Expr
@@ -54,15 +50,6 @@ FilterExpr::FilterExpr(Expr* expr) : PredicateList() {
 FilterExpr::~FilterExpr() {
     delete expr;
 } //-- ~FilterExpr
-
-/**
- * Sets the Expr of this FilterExpr for use during evaluation
- * @param expr the Expr to use for evaluation
-**/
-void FilterExpr::setExpr(Expr* expr) {
-    this->expr = expr;
-} //-- setExpr
-
 
   //------------------------------------/
  //- Virtual methods from PatternExpr -/

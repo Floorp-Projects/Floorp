@@ -21,14 +21,10 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: RootExpr.cpp,v 1.1 2000/04/06 07:45:39 kvisco%ziplink.net Exp $
+ * $Id: RootExpr.cpp,v 1.2 2001/07/02 20:11:03 sicking%bigfoot.com Exp $
  */
 
 #include "Expr.h"
-
-MBool RootExpr::isAbsolute() {
-    return MB_TRUE;
-} //-- isAbsolute
 
 /**
  * Evaluates this Expr based on the given context node and processor state

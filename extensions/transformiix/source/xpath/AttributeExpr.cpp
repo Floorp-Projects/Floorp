@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: AttributeExpr.cpp,v 1.5 2001/06/26 14:07:18 peterv%netscape.com Exp $
+ * $Id: AttributeExpr.cpp,v 1.6 2001/07/02 20:10:49 sicking%bigfoot.com Exp $
  */
 
 #include "Expr.h"
@@ -36,22 +36,26 @@ const String AttributeExpr::WILD_CARD = "*";
 
 //- Constructors -/
 
-AttributeExpr::AttributeExpr() {
-    this->isNameWild      = MB_FALSE;
-    this->isNamespaceWild = MB_FALSE;
-} //-- AttributeExpr
+AttributeExpr::AttributeExpr(String& name)
+{
+    if (name.isEqual(WILD_CARD)) {
+        isNameWild      = MB_TRUE;
+        isNamespaceWild = MB_TRUE;
+        return;
+    }
 
-AttributeExpr::AttributeExpr(String& name) {
-    this->isNameWild      = MB_FALSE;
-    this->isNamespaceWild = MB_FALSE;
-    setName(name);
-} //-- AttributeExpr
+    int idx = name.indexOf(':');
+    if (idx >= 0)
+       name.subString(0, idx, prefix);
+    else
+       idx = -1;
 
-/**
- * Destructor
-**/
-AttributeExpr::~AttributeExpr() {
-} //-- ~AttributeExpr
+    name.subString(idx+1, this->name);
+
+    //-- set flags
+    isNamespaceWild = MB_FALSE;
+    isNameWild      = this->name.isEqual(WILD_CARD);
+} //-- AttributeExpr
 
   //------------------/
  //- Public Methods -/
@@ -98,51 +102,9 @@ double AttributeExpr::getDefaultPriority(Node* node, Node* context, ContextState
     return 0.0;
 } //-- getDefaultPriority
 
-/**
- * Returns the name of this ElementExpr
- * @return the name of this ElementExpr
-**/
-const String& AttributeExpr::getName() {
-    return (const String&) this->name;
-} //-- getName
-
-void AttributeExpr::setName(const String& name) {
-
-    if (name.isEqual(WILD_CARD)) {
-        this->isNameWild      = MB_TRUE;
-        this->isNamespaceWild = MB_TRUE;
-        return;
-    }
-
-    int idx = name.indexOf(':');
-    if ( idx >= 0 )
-       name.subString(0,idx, this->prefix);
-    else
-       idx = -1;
-
-    name.subString(idx+1, this->name);
-
-    //-- set flags
-    this->isNamespaceWild = MB_FALSE;
-    this->isNameWild      = this->name.isEqual(WILD_CARD);
-
-} //-- setName
-
-void AttributeExpr::setWild(MBool isWild) {
-    this->isNameWild      = isWild;
-    this->isNamespaceWild = isWild;
-} //-- setWild
   //-----------------------------/
  //- Methods from NodeExpr.cpp -/
 //-----------------------------/
-
-/**
- * Returns the type of this NodeExpr
- * @return the type of this NodeExpr
-**/
-short AttributeExpr::getType() {
-    return NodeExpr::ATTRIBUTE_EXPR;
-} //-- getType
 
 /**
  * Determines whether this NodeExpr matches the given node within
