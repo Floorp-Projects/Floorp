@@ -1,0 +1,40 @@
+/* These are critical - should be in xul.css */
+window#main-window {
+   width: 100%; 
+   height: 100%;
+}
+
+box#outer-box {
+  width: 100%;
+  height: 100%;
+}
+
+select#paraFormat {
+}
+
+select#fontFace {
+}
+
+select#fontSize {
+}
+
+select.combobox {
+  font-family: Sans-Serif;
+  font-size: 8pt;
+  border-top: 3px;
+  border-left: 4px;
+  border-right: 4px;
+  border-style: outset;
+  //background: silver;
+}
+
+select[pseudoclass~="hover"] {
+/* NOT WORKING */
+  background: red;
+}
+
+p, br, td {
+  font-color: red;
+  background-color: #ffffcc
+}
+

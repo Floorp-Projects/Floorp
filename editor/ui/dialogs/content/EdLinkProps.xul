@@ -2,40 +2,38 @@
 <?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?> 
 <?xml-stylesheet href="chrome://editordlgs/skin/EditorDialog.css" type="text/css"?>
 <!DOCTYPE window>
-<xul:window width="380" height="240"
-    xmlns:html="http://www.w3.org/TR/REC-html40"
+<xul:window width="320" height="255" title="Link Properties"
     xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    xmlns="http://www.w3.org/TR/REC-html40"
     onload = "Startup()">
 
-  <html:script>
-  </html:script>
-
-  <html:script language="JavaScript" src="chrome://editordlgs/content/EdLinkProps.js">
-  </html:script>
-
-  <html:table>
-    <html:tr>
-      <html:td>
-        <html:fieldset><html:legend align="left">Link source </html:legend>
-          Enter text to display for a new link:<html:br/>
-          <html:input type="text" size="25" length="25" maxlength="100" name="textLink" html:id="textLink"></html:input>
-        </html:fieldset>
-      </html:td>
-    </html:tr>
-    <html:tr>
-      <html:td>
-        <html:fieldset><html:legend align="left">Link to </html:legend>
-          Enter a web page location or local file:<html:br/>
-          <html:input type="text" size="25" length="25" maxlength="100" name="textHREF" html:id="textHREF"></html:input>
-        </html:fieldset>
-      </html:td>
-    </html:tr>
-    <html:tr>
-      <html:td align = "right">
-        <html:button onclick="onOK();">OK</html:button>  
-        <html:button onclick="onCancel();">Cancel</html:button>
-      </html:td>
-    </html:tr>
-  </html:table>
-
+  <script language="JavaScript" src="chrome://editordlgs/content/EdLinkProps.js">
+  </script>
+  <table>
+    <tr>
+      <td>
+        <fieldset><legend align="left">Link source </legend>
+          <p class="smallmargin" id="linkMessage"> Enter text to display for a new link:</p>
+          <input type="text" size="25" length="25" maxlength="100" id="linkTextInput"></input>
+        </fieldset>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <fieldset><legend align="left">Link to </legend>
+          <p class="smallmargin">Enter a web page location or local file: 
+          <button class="ChooseFile" id="ChooseFile" align="top">Choose File</button></p>
+          <input type="text" size="25" length="25" maxlength="100" id="hrefInput"></input>
+        </fieldset>
+      </td>
+    </tr>
+    <tr>
+      <td  align = "right">
+        <button class="spaced" id="OK" onclick="onOK()" width="50">OK</button>  
+        <button class="spaced" id="Preview" onclick="applyChanges()" width="50">Preview</button>
+        <button class="spaced" id="Undo" onclick="onUndo()" width="50">Undo</button>  
+        <button class="spaced" id="Cancel" onclick="onCancel()" width="50">Cancel</button>
+      </td>
+    </tr>
+  </table>
 </xul:window>

@@ -9,15 +9,40 @@ window, WINDOW {
   font-size: 8pt;
 }
 
-/* Defeat the default behavior of borderless until rollover */
-button { border: 2px outset }
-
 /* values = margin, padding. Padding doesn't work yet */
-checkbox, CHECKBOX { margin: 5px 3px }
+checkbox { margin: 5px 3px }
 
-radio, RADIO { margin: 5px 3px }
+tristatecheckbox {
+ /* DOESN'T WORK! */
+  margin-top: 3px;
+  margin-bottom:3px;
+  margin-left: 2px;
+  margin-right: 2px;
+  border-style: inset;
+  background-color: #ffffff;
+  valign: center;
+  align: center;
+}
 
-tree, TREE {
+select.combobox {
+  font-family: Sans-Serif;
+  font-size: 8pt;
+  border-top: 2px;
+  border-left: 4px;
+  border-right: 2px;
+  border-style: outset;
+}
+
+.checkboxtext {
+  margin-top: -9px;
+  margin-left: 3px;
+  margin-right: 5px;
+  margin-bottom: 2px;
+}
+
+radio { margin: 5px 3px }
+
+tree  {
 	display: table;
 	background-color: #000000;
 	border: none;
@@ -30,10 +55,8 @@ tree, TREE {
 /* Force all rows to line up cell contents at the top */
 tr, TR { vertical-align: top }
 
-/* FOR DEBUG PURPOSE -- SHOW CELL BORDER */
-td, TD { border-width: 0px; border-style: inset }
-
-table, TABLE { border-width: 0px }
+/* FOR DEBUG PURPOSE -- use border-width: 1px */
+td, table { border-width: 0px; }
 
 p, br, td {
   font-family: Sans-Serif;
@@ -42,15 +65,18 @@ p, br, td {
   margin-bottom: 4px
 }
 
-fieldset, FIELDSET {
-  border-width: 3px;
+p.smallmargin { margin-bottom: 2px }
+
+fieldset {
+  border-width: 2px;
   border-style: groove;
-  padding: 3px;
-  margin: 5px;
+  padding: 5px;
+/* BUG: If this is set, border is chopped off at the right */
+/*  margin: 5px; */
   text-align: left;
 }
 
-legend, LEGEND {
+legend {
   font-family: Sans-Serif;
   font-size: 10pt;
   border-width: 0;
@@ -58,14 +84,27 @@ legend, LEGEND {
 }
 
 /* CLASSES */
-[CLASS~=GrooveBorder] { border: 2px groove; padding: 3px }
+/* Use these primarily with TD to create 3D "panels" */
+.GrooveBorder { border: 2px groove; padding: 5px }
 
-[CLASS~=RidgeBorder] { border: 2px ridge; padding: 3px  }
+.RidgeBorder { border: 2px ridge; padding: 5px  }
 
-[CLASS~=OutsetBorder] { border: 1px outset; padding: 3px  }
+.OutsetBorder { border: 1px outset; padding: 5px  }
 
-[CLASS~=InsetBorder] { border: 1px inset; padding: 3px  }
+.InsetBorder { border: 1px inset; padding: 5px  }
 
+button.spaced { 
+/* BUG - Setting size doesn't work?
+  width: 80px;
+  height: 20px;
+*/
+  margin: 5px;
+}
+
+button.ChooseFile {
+  margin-bottom: 3px;
+  margin-right: 5px;
+}
 
 .tableCenterAlign {
   vertical-align: middle;
@@ -77,6 +116,14 @@ legend, LEGEND {
   margin-top: 5px;
   margin-bottom: 5px;
 }
+
+.spacedtext {
+  margin-top: 0px;
+  margin-left: 3px;
+  margin-right: 5px;
+  margin-bottom: 2px;
+}
+
 
 /* IDs only one button per dialog */
 #okbutton {

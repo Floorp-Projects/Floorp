@@ -57,6 +57,8 @@ public:
                              const nsString *aAttribute,
                              const nsString *aValue,
                              PRBool &aFirst, PRBool &aAll, PRBool &aAny)=0;
+  NS_IMETHOD GetParagraphFormat(nsString& aParagraphFormat)=0;
+  NS_IMETHOD SetParagraphFormat(const nsString& aParagraphFormat)=0;
   NS_IMETHOD RemoveTextProperty(nsIAtom *aProperty, const nsString *aAttribute)=0;
   NS_IMETHOD DeleteSelection(nsIEditor::ECollapsedSelectionAction aAction)=0;
   NS_IMETHOD InsertText(const nsString& aStringToInsert)=0;
