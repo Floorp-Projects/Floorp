@@ -715,6 +715,8 @@ NS_IMETHODIMP nsDocShell::GetTreeOwner(nsIDocShellTreeOwner** aTreeOwner)
 NS_IMETHODIMP nsDocShell::SetTreeOwner(nsIDocShellTreeOwner* aTreeOwner)
 {
    mTreeOwner = aTreeOwner; // Weak reference per API
+   nsCOMPtr<nsIWebProgressListener> progressListener(do_QueryInterface(aTreeOwner));
+   mOwnerProgressListener = progressListener; // Weak reference per API
 
    PRInt32 i, n = mChildren.Count();
    for(i = 0; i < n; i++)
@@ -2296,6 +2298,7 @@ NS_IMETHODIMP nsDocShell::OnLoadingSite(nsIURI* aURI)
 void nsDocShell::SetCurrentURI(nsIURI* aURI)
 {
    mCurrentURI = aURI; //This assignment addrefs
+   FireOnLocationChange(aURI);
 }
 
 void nsDocShell::SetReferrerURI(nsIURI* aURI)
@@ -2324,8 +2327,11 @@ NS_IMETHODIMP nsDocShell::ShouldAddToSessionHistory(nsIURI* aURI,
 NS_IMETHODIMP nsDocShell::ShouldPersistInSessionHistory(nsIURI* aURI,
    PRBool* aShouldAdd)
 {
+   *aShouldAdd = PR_TRUE;
+
    // XXXTAB Do testing here if there are some things that shouldn't stay in 
    // session history
+
    return NS_OK;
 }
 
@@ -2334,8 +2340,18 @@ NS_IMETHODIMP nsDocShell::AddToSessionHistory(nsIURI* aURI)
    PRBool shouldPersist = PR_FALSE;
    ShouldPersistInSessionHistory(aURI, &shouldPersist);
 
-   // XXXTAB
-   //NS_ERROR("Haven't Implemented this yet");
+   nsCOMPtr<nsISHEntry> entry(do_CreateInstance(NS_SHENTRY_PROGID));
+   NS_ENSURE_TRUE(entry, NS_ERROR_FAILURE);
+
+   nsCOMPtr<nsIInputStream> inputStream;
+   nsCOMPtr<nsISupports> layoutState;
+
+   NS_ENSURE_SUCCESS(entry->Create(aURI, mTitle.GetUnicode(), nsnull, 
+      inputStream, layoutState), NS_ERROR_FAILURE);
+
+   NS_ENSURE_SUCCESS(mSessionHistory->AddEntry(entry, shouldPersist),
+      NS_ERROR_FAILURE);
+
    return NS_OK;
 }
 
@@ -2403,6 +2419,136 @@ NS_IMETHODIMP nsDocShell::AddToGlobalHistory(nsIURI* aURI)
 NS_IMETHODIMP nsDocShell::UpdateCurrentGlobalHistory()
 {
    // XXX Add code here that needs to update the current history item
+   return NS_OK;
+}
+
+//*****************************************************************************
+// nsDocShell: WebProgressListener Firing
+//*****************************************************************************   
+
+NS_IMETHODIMP nsDocShell::EnsureWebProgressListener()
+{
+   //XXXTAB
+   NS_ERROR("Not yet IMplemented");
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::FireOnProgressChange(nsIChannel* aChannel,
+   PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress, 
+   PRInt32 aCurTotalProgress, PRInt32 aMaxTotalProgress)
+{
+   if(mOwnerProgressListener)
+      mOwnerProgressListener->OnProgressChange(aChannel, aCurSelfProgress, 
+         aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress);
+
+   if(!mWebProgressListenerList)
+      return NS_OK;
+
+   PRUint32 count = 0;
+   mWebProgressListenerList->Count(&count);
+   for(PRUint32 x = 0; x < count; x++)
+      {
+      nsCOMPtr<nsISupports> element;
+      mWebProgressListenerList->GetElementAt(x, getter_AddRefs(element));
+      nsCOMPtr<nsIWebProgressListener> listener(do_QueryInterface(element));
+      if(!listener) 
+         continue;
+      listener->OnProgressChange(aChannel, aCurSelfProgress, aMaxSelfProgress,
+         aCurTotalProgress, aMaxTotalProgress);
+      }
+   return NS_OK;
+}
+      
+NS_IMETHODIMP nsDocShell::FireOnChildProgressChange(nsIChannel* aChannel,
+   PRInt32 aCurChildProgress, PRInt32 aMaxChildProgress)
+{
+   if(mOwnerProgressListener)
+      mOwnerProgressListener->OnChildProgressChange(aChannel, aCurChildProgress, 
+         aMaxChildProgress);
+
+   if(!mWebProgressListenerList)
+      return NS_OK;
+
+   PRUint32 count = 0;
+   mWebProgressListenerList->Count(&count);
+   for(PRUint32 x = 0; x < count; x++)
+      {
+      nsCOMPtr<nsISupports> element;
+      mWebProgressListenerList->GetElementAt(x, getter_AddRefs(element));
+      nsCOMPtr<nsIWebProgressListener> listener(do_QueryInterface(element));
+      if(!listener) 
+         continue;
+      listener->OnChildProgressChange(aChannel, aCurChildProgress, 
+         aMaxChildProgress);
+      }
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::FireOnStatusChange(nsIChannel* aChannel,
+   PRInt32 aProgressStatusFlags)
+{
+   if(mOwnerProgressListener)
+      mOwnerProgressListener->OnStatusChange(aChannel, aProgressStatusFlags); 
+
+   if(!mWebProgressListenerList)
+      return NS_OK;
+
+   PRUint32 count = 0;
+   mWebProgressListenerList->Count(&count);
+   for(PRUint32 x = 0; x < count; x++)
+      {
+      nsCOMPtr<nsISupports> element;
+      mWebProgressListenerList->GetElementAt(x, getter_AddRefs(element));
+      nsCOMPtr<nsIWebProgressListener> listener(do_QueryInterface(element));
+      if(!listener) 
+         continue;
+      listener->OnStatusChange(aChannel, aProgressStatusFlags);
+      }
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::FireOnChildStatusChange(nsIChannel* aChannel,
+   PRInt32 aProgressStatusFlags)
+{
+   if(mOwnerProgressListener)
+      mOwnerProgressListener->OnStatusChange(aChannel, aProgressStatusFlags); 
+
+   if(!mWebProgressListenerList)
+      return NS_OK;
+
+   PRUint32 count = 0;
+   mWebProgressListenerList->Count(&count);
+   for(PRUint32 x = 0; x < count; x++)
+      {
+      nsCOMPtr<nsISupports> element;
+      mWebProgressListenerList->GetElementAt(x, getter_AddRefs(element));
+      nsCOMPtr<nsIWebProgressListener> listener(do_QueryInterface(element));
+      if(!listener) 
+         continue;
+      listener->OnChildStatusChange(aChannel, aProgressStatusFlags);
+      }
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::FireOnLocationChange(nsIURI* aURI)
+{
+   if(mOwnerProgressListener)
+      mOwnerProgressListener->OnLocationChange(aURI);
+
+   if(!mWebProgressListenerList)
+      return NS_OK;
+
+   PRUint32 count = 0;
+   mWebProgressListenerList->Count(&count);
+   for(PRUint32 x = 0; x < count; x++)
+      {
+      nsCOMPtr<nsISupports> element;
+      mWebProgressListenerList->GetElementAt(x, getter_AddRefs(element));
+      nsCOMPtr<nsIWebProgressListener> listener(do_QueryInterface(element));
+      if(!listener) 
+         continue;
+      listener->OnLocationChange(aURI);
+      }
    return NS_OK;
 }
 
