@@ -1187,7 +1187,7 @@ nsresult nsTableOuterFrame::IR_TargetIsMe(nsIPresContext*           aPresContext
 
 nsresult 
 nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext*           aPresContext,
-                                       nsHTMLReflowMetrics&      aDesiredSize,
+                                       nsHTMLReflowMetrics&      aOuterMet,
                                        const nsHTMLReflowState&  aOuterRS,
                                        nsReflowStatus&           aStatus)
 {
@@ -1201,10 +1201,11 @@ nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext*           aPresContext,
   nsMargin innerMargin, innerMarginNoAuto, innerPadding;
 
   // pass along the reflow command to the inner table
-  nsHTMLReflowMetrics innerMet(aDesiredSize.maxElementSize);
+  nsHTMLReflowMetrics innerMet(aOuterMet.maxElementSize);
 
-  // Always request the maximum width if we are an auto layout table XXX why?
-  if (((nsTableFrame*)mInnerTableFrame)->IsAutoLayout()) {
+  // request the maximum of the inner table if requested of the outer 
+  if ((aOuterMet.mFlags & NS_REFLOW_CALC_MAX_WIDTH) &&
+      ((nsTableFrame*)mInnerTableFrame)->IsAutoLayout()) {
     innerMet.mFlags |= NS_REFLOW_CALC_MAX_WIDTH;
   }
   nsresult rv = OuterReflowChild(aPresContext, mInnerTableFrame, aOuterRS, innerMet,
@@ -1276,9 +1277,9 @@ nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext*           aPresContext,
   FinishReflowChild(mInnerTableFrame, aPresContext, innerMet,
                     innerOrigin.x, innerOrigin.y, 0);
 
-  UpdateReflowMetrics(captionSide, aDesiredSize, innerMargin, innerMarginNoAuto, 
+  UpdateReflowMetrics(captionSide, aOuterMet, innerMargin, innerMarginNoAuto, 
                       innerPadding, captionMargin, captionMarginNoAuto);
-  nsSize desSize(aDesiredSize.width, aDesiredSize.height);
+  nsSize desSize(aOuterMet.width, aOuterMet.height);
   InvalidateDamage(aPresContext, captionSide, desSize, PR_FALSE, captionMoved);
 
   return rv;
