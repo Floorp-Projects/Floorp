@@ -715,7 +715,8 @@ lm_ReallyInitMocha(void)
     lm_crippled_context = lm_crippled_decoder->js_context;
 
 #if defined(OJI)
-    (void)JVM_MaybeStartupLiveConnect(lm_crippled_context, JS_GetGlobalObject(lm_crippled_context));
+    if (JVM_MaybeStartupLiveConnect())
+        JSJ_InitJSContext(lm_crippled_context, JS_GetGlobalObject(lm_crippled_context), NULL);
 
 #elif defined(JAVA)
     LJ_JSJ_Init();

@@ -3238,8 +3238,10 @@ lm_InitWindowContent(MochaDecoder *decoder)
         return JS_FALSE;
 
 #if defined(OJI)
-    JVM_MaybeStartupLiveConnect(cx, obj);
-#if 0
+#if 1
+    if (JVM_MaybeStartupLiveConnect())
+	    JSJ_InitJSContext(cx, obj, NULL);
+#else
     {
       PRBool  jvmMochaPrefsEnabled = PR_FALSE;
       if (NPL_IsJVMAndMochaPrefsEnabled() == PR_TRUE) {

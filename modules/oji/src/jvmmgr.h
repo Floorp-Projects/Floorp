@@ -76,7 +76,7 @@ public:
     const char* GetJavaErrorString(JNIEnv* env);
 
     nsresult    AddToClassPath(const char* dirPath);
-    PRBool      MaybeStartupLiveConnect(JSContext* cx, JSObject* obj);
+    PRBool      MaybeStartupLiveConnect(void);
     PRBool      MaybeShutdownLiveConnect(void);
     PRBool      IsLiveConnectEnabled(void);
     JSJavaVM*   GetJSJavaVM() { return fJSJavaVM; }
@@ -213,7 +213,7 @@ PR_EXTERN(JNIEnv*)
 JVM_GetJNIEnv(void);
 
 PR_EXTERN(PRBool)
-JVM_MaybeStartupLiveConnect(JSContext* cx, JSObject* obj);
+JVM_MaybeStartupLiveConnect(void);
 
 PR_EXTERN(PRBool)
 JVM_MaybeShutdownLiveConnect(void);
