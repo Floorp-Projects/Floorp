@@ -429,7 +429,11 @@ nsScrollBoxFrame::DoLayout(nsBoxLayoutState& aState)
      nsCOMPtr<nsIViewManager> vm;
      view->GetViewManager(*getter_AddRefs(vm));
      nsRect r(0, 0, childRect.width, childRect.height);
-     vm->ResizeView(view, r);
+     nsRect bnds;
+     view->GetBounds(bnds);
+     if (bnds != r) {
+       vm->ResizeView(view, r);
+     }
   }
 
   nsIScrollableView* scrollingView;
