@@ -20,6 +20,8 @@
  *   Patrick C. Beard <beard@netscape.com>
  */
 
+#if defined(GC_LEAK_DETECTOR)
+
 #include "nsLeakDetector.h"
 #include "nsComponentManager.h"
 #include "nsIGenericFactory.h"
@@ -117,3 +119,5 @@ nsresult NS_ShutdownLeakDetector()
 
 	return NS_OK;	
 }
+
+#endif /* defined(GC_LEAK_DETECTOR) */
