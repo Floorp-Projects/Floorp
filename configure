@@ -1,6 +1,5 @@
 #! /bin/sh
 
-# Silly whitespace change to force reconfigure to fix tinderboxes
 # Read in '.mozconfig' script to set the initial options.
 # See the mozconfig2configure script for more details.
 _AUTOCONF_TOOLS_DIR=`dirname $0`/./build/autoconf
