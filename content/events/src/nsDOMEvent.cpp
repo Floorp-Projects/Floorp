@@ -428,18 +428,20 @@ nsDOMEvent::GetView(nsIDOMAbstractView** aView)
   *aView = nsnull;
   nsresult rv = NS_OK;
 
-  nsCOMPtr<nsISupports> container;
-  rv = mPresContext->GetContainer(getter_AddRefs(container));
-  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && container, rv);
-
-  nsCOMPtr<nsIInterfaceRequestor> ifrq(do_QueryInterface(container));
-  NS_ENSURE_TRUE(ifrq, NS_OK);
-
-  nsCOMPtr<nsIDOMWindowInternal> window;
-  ifrq->GetInterface(NS_GET_IID(nsIDOMWindowInternal), getter_AddRefs(window));
-  NS_ENSURE_TRUE(window, NS_OK);
-
-  window->QueryInterface(NS_GET_IID(nsIDOMAbstractView), (void **)aView);
+  if (mPresContext) {
+    nsCOMPtr<nsISupports> container;
+    rv = mPresContext->GetContainer(getter_AddRefs(container));
+    NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && container, rv);
+    
+    nsCOMPtr<nsIInterfaceRequestor> ifrq(do_QueryInterface(container));
+    NS_ENSURE_TRUE(ifrq, NS_OK);
+    
+    nsCOMPtr<nsIDOMWindowInternal> window;
+    ifrq->GetInterface(NS_GET_IID(nsIDOMWindowInternal), getter_AddRefs(window));
+    NS_ENSURE_TRUE(window, NS_OK);
+    
+    window->QueryInterface(NS_GET_IID(nsIDOMAbstractView), (void **)aView);
+  }
 
   return rv;
 }
@@ -592,7 +594,8 @@ NS_METHOD nsDOMEvent::GetScreenY(PRInt32* aScreenY)
 NS_METHOD nsDOMEvent::GetClientX(PRInt32* aClientX)
 {
   if (!mEvent || 
-       (mEvent->eventStructType != NS_MOUSE_EVENT && mEvent->eventStructType != NS_DRAGDROP_EVENT) ) {
+       (mEvent->eventStructType != NS_MOUSE_EVENT && mEvent->eventStructType != NS_DRAGDROP_EVENT) ||
+      !mPresContext) {
     *aClientX = 0;
     return NS_OK;
   }
@@ -637,7 +640,8 @@ NS_METHOD nsDOMEvent::GetClientX(PRInt32* aClientX)
 NS_METHOD nsDOMEvent::GetClientY(PRInt32* aClientY)
 {
   if (!mEvent || 
-       (mEvent->eventStructType != NS_MOUSE_EVENT && mEvent->eventStructType != NS_DRAGDROP_EVENT) ) {
+       (mEvent->eventStructType != NS_MOUSE_EVENT && mEvent->eventStructType != NS_DRAGDROP_EVENT) ||
+      !mPresContext) {
     *aClientY = 0;
     return NS_OK;
   }
@@ -791,7 +795,8 @@ NS_METHOD nsDOMEvent::GetRelatedTarget(nsIDOMEventTarget** aRelatedTarget)
   nsIContent *relatedContent = nsnull;
   nsresult ret = NS_OK;
 
-  if (NS_OK == mPresContext->GetEventStateManager(&manager)) {
+  if (mPresContext && 
+      (NS_OK == mPresContext->GetEventStateManager(&manager))) {
     manager->GetEventRelatedContent(&relatedContent);
     NS_RELEASE(manager);
   }
@@ -810,7 +815,8 @@ NS_METHOD nsDOMEvent::GetRelatedTarget(nsIDOMEventTarget** aRelatedTarget)
 // nsINSEventInterface
 NS_METHOD nsDOMEvent::GetLayerX(PRInt32* aLayerX)
 {
-  if (!mEvent || mEvent->eventStructType != NS_MOUSE_EVENT) {
+  if (!mEvent || (mEvent->eventStructType != NS_MOUSE_EVENT) ||
+      !mPresContext) {
     *aLayerX = 0;
     return NS_OK;
   }
@@ -823,7 +829,8 @@ NS_METHOD nsDOMEvent::GetLayerX(PRInt32* aLayerX)
 
 NS_METHOD nsDOMEvent::GetLayerY(PRInt32* aLayerY)
 {
-  if (!mEvent || mEvent->eventStructType != NS_MOUSE_EVENT) {
+  if (!mEvent || (mEvent->eventStructType != NS_MOUSE_EVENT) ||
+      !mPresContext) {
     *aLayerY = 0;
     return NS_OK;
   }
@@ -837,6 +844,11 @@ NS_METHOD nsDOMEvent::GetLayerY(PRInt32* aLayerY)
 nsresult nsDOMEvent::GetScrollInfo(nsIScrollableView** aScrollableView,
    float* aP2T, float* aT2P)
 {
+  if (!mPresContext) {
+    *aScrollableView = nsnull;
+    return NS_ERROR_FAILURE;
+  }
+
   mPresContext->GetPixelsToTwips(aP2T);
   mPresContext->GetTwipsToPixels(aT2P);
 
@@ -939,10 +951,11 @@ NS_METHOD nsDOMEvent::GetWhich(PRUint32* aWhich)
 
 NS_METHOD nsDOMEvent::GetRangeParent(nsIDOMNode** aRangeParent)
 {
-  nsIFrame* targetFrame;
+  nsIFrame* targetFrame = nsnull;
   nsIEventStateManager* manager;
 
-  if (NS_OK == mPresContext->GetEventStateManager(&manager)) {
+  if (mPresContext && 
+      (NS_OK == mPresContext->GetEventStateManager(&manager))) {
     manager->GetEventTarget(&targetFrame);
     NS_RELEASE(manager);
   }
@@ -970,10 +983,11 @@ NS_METHOD nsDOMEvent::GetRangeParent(nsIDOMNode** aRangeParent)
 
 NS_METHOD nsDOMEvent::GetRangeOffset(PRInt32* aRangeOffset)
 {
-  nsIFrame* targetFrame;
+  nsIFrame* targetFrame = nsnull;
   nsIEventStateManager* manager;
 
-  if (NS_OK == mPresContext->GetEventStateManager(&manager)) {
+  if (mPresContext && 
+      (NS_OK == mPresContext->GetEventStateManager(&manager))) {
     manager->GetEventTarget(&targetFrame);
     NS_RELEASE(manager);
   }
