@@ -265,7 +265,7 @@ function SetStatusText( val)
 function SetProgress( val)
 {
   var progressMeter = document.getElementById("progressMeter");
-  progressMeter.setAttribute( "label", val);
+  progressMeter.setAttribute( "value", val);
 }
 
 function ContinueImportCallback()
