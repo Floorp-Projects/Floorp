@@ -37,79 +37,157 @@ TextServicesDocument interface to outside world
 
 
 /**
- * A text services specific interface. 
- * <P>
- * It's implemented by an object that executes some behavior that must be
- * tracked by the transaction manager.
+ * The nsITextServicesDocument presents the document in as a
+ * bunch of flattened text blocks. Each text block can be retrieved
+ * as an nsString (array of characters).
  */
 class nsITextServicesDocument  : public nsISupports{
 public:
 
   static const nsIID& GetIID() { static nsIID iid = NS_ITEXTSERVICESDOCUMENT_IID; return iid; }
 
-  /**
-   *
-   */
-  NS_IMETHOD Init(nsIDOMDocument *aDOMDocument, nsIPresShell *aPresShell) = 0;
+  typedef enum { eDSNormal=0, eDSUndlerline } TSDDisplayStyle;
 
   /**
-   *
+   * Initailizes the text services document to use a particular
+   * DOM document.
+   * @param aDOMDocument is the document to use. It is AddRef'd
+   * by this method.
+   * @param aPresShell is the presentation shell to use when
+   * setting the selection. It is AddRef'd by this method.
    */
-  NS_IMETHOD SetEditor(nsIEditor *aEditor) = 0;
+  NS_IMETHOD InitWithDocument(nsIDOMDocument *aDOMDocument, nsIPresShell *aPresShell) = 0;
 
   /**
-   *
+   * Initializes the text services document to use a particular
+   * editor. The text services document will use the DOM document
+   * and presentation shell used by the editor.
+   * @param aEditor is the editor to use. The editor is AddRef'd
+   * by this method.
+   */
+  NS_IMETHOD InitWithEditor(nsIEditor *aEditor) = 0;
+
+  /**
+   * Returns true if the document can be modified with calls
+   * to DeleteSelection() and InsertText().
+   * @param aCanEdit is true if the document can be modified,
+   * false if it can't.
+   */
+  NS_IMETHOD CanEdit(PRBool *aCanEdit) = 0;
+
+  /**
+   * Returns the text in the current text block.
+   * @param aStr will contain the text.
    */
 
   NS_IMETHOD GetCurrentTextBlock(nsString *aStr) = 0;
 
   /**
-   *
+   * Tells the document to point to the first text block
+   * in the document. This method does not adjust the current
+   * cursor position or selection.
    */
 
   NS_IMETHOD FirstBlock() = 0;
 
   /**
-   *
+   * Tells the document to point to the last text block in the
+   * document. This method does not adjust the current cursor
+   * position or selection.
    */
 
   NS_IMETHOD LastBlock() = 0;
 
   /**
-   *
+   * Tells the document to point to the first text block that
+   * contains the current selection or caret.
+   * @param aSelectionOffset will contain the offset into the
+   * string returned by GetCurrentTextBlock() where the selection
+   * begins.
+   * @param aLength will contain the number of characters that are
+   * selected in the string.
+   */
+
+  NS_IMETHOD FirstSelectedBlock(PRInt32 *aSelectionOffset, PRInt32 *aSelectionLength) = 0;
+
+  /**
+   * Tells the document to point to the last text block that
+   * contains the current selection or caret.
+   * @param aSelectionOffset will contain the offset into the
+   * string returned by GetCurrentTextBlock() where the selection
+   * begins.
+   * @param aLength will contain the number of characters that are
+   * selected in the string.
+   */
+
+  NS_IMETHOD LastSelectedBlock(PRInt32 *aSelectionOffset, PRInt32 *aSelectionLength) = 0;
+
+  /**
+   * Tells the document to point to the text block before
+   * the current one. This method will return NS_OK, even
+   * if there is no previous block. Callers should call IsDone()
+   * to check if we have gone beyond the first text block in
+   * the document.
    */
 
   NS_IMETHOD PrevBlock() = 0;
 
   /**
-   *
+   * Tells the document to point to the text block after
+   * the current one. This method will return NS_OK, even
+   * if there is no next block. Callers should call IsDone()
+   * to check if we have gone beyond the last text block
+   * in the document.
    */
 
   NS_IMETHOD NextBlock() = 0;
 
   /**
-   *
+   * IsDone() will always set aIsDone == PR_FALSE unless
+   * the document contains no text, PrevBlock() was called
+   * while the document was already pointing to the first
+   * text block in the document, or NextBlock() was called
+   * while the document was already pointing to the last
+   * text block in the document.
+   * @param aIsDone will contain the result.
    */
 
-  NS_IMETHOD IsDone() = 0;
+  NS_IMETHOD IsDone(PRBool *aIsDone) = 0;
 
   /**
-   *
+   * SetSelection() allows the caller to set the selection
+   * based on an offset into the string returned by
+   * GetCurrentTextBlock(). A length of zero places the cursor
+   * at that offset. A positive non-zero length "n" selects
+   * n characters in the string.
+   * @param aOffset offset into string returned by GetCurrentTextBlock().
+   * @param aLength number characters selected.
    */
 
   NS_IMETHOD SetSelection(PRInt32 aOffset, PRInt32 aLength) = 0;
 
   /**
-   *
+   * Deletes the text selected by SetSelection(). Calling
+   * DeleteSelection with nothing selected, or with a collapsed
+   * selection (cursor) does nothing and returns NS_OK.
    */
 
   NS_IMETHOD DeleteSelection() = 0;
 
   /**
-   *
+   * Inserts the given text at the current cursor position.
+   * If there is a selection, it will be deleted before the
+   * text is inserted.
    */
 
   NS_IMETHOD InsertText(const nsString *aText) = 0;
+
+  /**
+   * Sets the display style for the text selected by SetSelection().
+   * @param aStyle is the style to apply to the selected text.
+   */
+
+  NS_IMETHOD SetDisplayStyle(TSDDisplayStyle aStyle) = 0;
 };
 
 #endif // nsITextServicesDocument_h__

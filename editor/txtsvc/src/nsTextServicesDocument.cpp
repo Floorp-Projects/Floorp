@@ -235,7 +235,7 @@ nsTextServicesDocument::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP
-nsTextServicesDocument::Init(nsIDOMDocument *aDOMDocument, nsIPresShell *aPresShell)
+nsTextServicesDocument::InitWithDocument(nsIDOMDocument *aDOMDocument, nsIPresShell *aPresShell)
 {
   nsresult result = NS_OK;
 
@@ -257,7 +257,15 @@ nsTextServicesDocument::Init(nsIDOMDocument *aDOMDocument, nsIPresShell *aPresSh
   mPresShell   = do_QueryInterface(aPresShell);
   mDOMDocument = do_QueryInterface(aDOMDocument);
 
-  InitContentIterator();
+  result = InitContentIterator();
+
+  if (NS_FAILED(result))
+  {
+    UNLOCK_DOC(this);
+    return result;
+  }
+
+  result = FirstBlock();
 
   UNLOCK_DOC(this);
 
@@ -265,7 +273,7 @@ nsTextServicesDocument::Init(nsIDOMDocument *aDOMDocument, nsIPresShell *aPresSh
 }
 
 NS_IMETHODIMP
-nsTextServicesDocument::SetEditor(nsIEditor *aEditor)
+nsTextServicesDocument::InitWithEditor(nsIEditor *aEditor)
 {
   nsresult result = NS_OK;
   nsCOMPtr<nsIPresShell> presShell;
@@ -315,7 +323,22 @@ nsTextServicesDocument::SetEditor(nsIEditor *aEditor)
 
   if (!mDOMDocument) {
     mDOMDocument = doc;
-    InitContentIterator();
+
+    result = InitContentIterator();
+
+    if (NS_FAILED(result))
+    {
+      UNLOCK_DOC(this);
+      return result;
+    }
+
+    result = FirstBlock();
+
+    if (NS_FAILED(result))
+    {
+      UNLOCK_DOC(this);
+      return result;
+    }
   }
 
   mEditor = do_QueryInterface(aEditor);
@@ -337,6 +360,17 @@ nsTextServicesDocument::SetEditor(nsIEditor *aEditor)
   UNLOCK_DOC(this);
 
   return result;
+}
+
+NS_IMETHODIMP
+nsTextServicesDocument::CanEdit(PRBool *aCanEdit)
+{
+  if (!aCanEdit)
+    return NS_ERROR_NULL_POINTER;
+
+  *aCanEdit = (mEditor) ? PR_TRUE : PR_FALSE;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -436,39 +470,51 @@ nsTextServicesDocument::GetCurrentTextBlock(nsString *aStr)
 NS_IMETHODIMP
 nsTextServicesDocument::PrevBlock()
 {
-  nsresult result;
+  nsresult result = NS_OK;
 
   if (!mIterator)
     return NS_ERROR_FAILURE;
 
   LOCK_DOC(this);
 
-  if (mIteratorStatus == nsTextServicesDocument::eValid || mIteratorStatus == nsTextServicesDocument::eNext)
+  switch (mIteratorStatus)
   {
-    result = FirstTextNodeInPrevBlock();
+    case nsTextServicesDocument::eValid:
+    case nsTextServicesDocument::eNext:
 
-    if (NS_FAILED(result))
-    {
-      UNLOCK_DOC(this);
-      return result;
-    }
+     result = FirstTextNodeInPrevBlock();
 
-    // XXX: Check to make sure the iterator is pointing
-    //      to a valid text block, and set mIteratorStatus
-    //      accordingly!
-  }
-  else if (mIteratorStatus == nsTextServicesDocument::ePrev)
-  {
-    // The iterator already points to the previous
-    // block, so don't do anything.
+     if (NS_FAILED(result))
+     {
+       UNLOCK_DOC(this);
+       return result;
+     }
 
-    mIteratorStatus = nsTextServicesDocument::eValid;
+     // XXX: Check to make sure the iterator is pointing
+     //      to a valid text block, and set mIteratorStatus
+     //      accordingly!
+
+     mIteratorStatus = nsTextServicesDocument::eValid;
+     break;
+
+    case nsTextServicesDocument::ePrev:
+
+      // The iterator already points to the previous
+      // block, so don't do anything.
+
+      mIteratorStatus = nsTextServicesDocument::eValid;
+      break;
+
+    default:
+
+     mIteratorStatus = nsTextServicesDocument::eInvalid;
+     break;
   }
 
   // Keep track of prev and next blocks, just in case
   // the text service blows away the current block.
 
-  if (eValid)
+  if (mIteratorStatus == nsTextServicesDocument::eValid)
   {
     result = FindFirstTextNodeInPrevBlock(getter_AddRefs(mPrevTextBlock));
     result = FindFirstTextNodeInNextBlock(getter_AddRefs(mNextTextBlock));
@@ -482,39 +528,49 @@ nsTextServicesDocument::PrevBlock()
 NS_IMETHODIMP
 nsTextServicesDocument::NextBlock()
 {
-  nsresult result;
+  nsresult result = NS_OK;
 
   if (!mIterator)
     return NS_ERROR_FAILURE;
 
   LOCK_DOC(this);
 
-  if (mIteratorStatus == nsTextServicesDocument::eValid)
+  switch (mIteratorStatus)
   {
-    result = FirstTextNodeInNextBlock();
+    case nsTextServicesDocument::eValid:
 
-    if (NS_FAILED(result))
-    {
-      UNLOCK_DOC(this);
-      return result;
-    }
+      result = FirstTextNodeInNextBlock();
 
-    // XXX: check if the iterator is pointing to a text node,
-    //      then set mIteratorStatus.
-  }
-  else if (mIteratorStatus == nsTextServicesDocument::eNext)
-  {
-    // The iterator already points to the next block,
-    // so don't do anything to it!
+      if (NS_FAILED(result))
+      {
+        UNLOCK_DOC(this);
+        return result;
+      }
 
-    mIteratorStatus = nsTextServicesDocument::eValid;
-  }
-  else if (mIteratorStatus == nsTextServicesDocument::ePrev)
-  {
-    // If the iterator is pointing to the previous block,
-    // we know that there is no next text block!
+      // XXX: check if the iterator is pointing to a text node,
+      //      then set mIteratorStatus.
 
-    mIteratorStatus = nsTextServicesDocument::eInvalid;
+      mIteratorStatus = nsTextServicesDocument::eValid;
+     break;
+
+    case nsTextServicesDocument::eNext:
+
+      // The iterator already points to the next block,
+      // so don't do anything to it!
+
+      mIteratorStatus = nsTextServicesDocument::eValid;
+      break;
+
+    case nsTextServicesDocument::ePrev:
+
+      // If the iterator is pointing to the previous block,
+      // we know that there is no next text block! Just
+      // fall through to the default case!
+
+    default:
+
+      mIteratorStatus = nsTextServicesDocument::eInvalid;
+      break;
   }
 
   // Keep track of prev and next blocks, just in case
@@ -533,14 +589,36 @@ nsTextServicesDocument::NextBlock()
 }
 
 NS_IMETHODIMP
-nsTextServicesDocument::IsDone()
+nsTextServicesDocument::IsDone(PRBool *aIsDone)
 {
+  nsresult result = NS_OK;
+
   if (!mIterator)
     return NS_ERROR_FAILURE;
 
+  if (!aIsDone)
+    return NS_ERROR_NULL_POINTER;
+
+  *aIsDone = PR_FALSE;
+
   LOCK_DOC(this);
 
-  nsresult result = mIterator->IsDone();
+  // XXX: Take into account the iterator status!
+
+  if (mIteratorStatus == eInvalid && !mPrevTextBlock && !mNextTextBlock)
+  {
+    // We have an empty document!
+    *aIsDone = PR_TRUE;
+  }
+  else
+  {
+    result = mIterator->IsDone();
+
+    if (result != NS_COMFALSE)
+      *aIsDone = PR_TRUE;
+    else
+      result = NS_OK;
+  }
 
   UNLOCK_DOC(this);
 
@@ -552,7 +630,7 @@ nsTextServicesDocument::SetSelection(PRInt32 aOffset, PRInt32 aLength)
 {
   nsresult result       = NS_OK;
 
-  if ((!mPresShell && !mEditor) || aOffset < 0 || aLength < 0)
+  if (!mPresShell || aOffset < 0 || aLength < 0)
     return NS_ERROR_FAILURE;
 
   LOCK_DOC(this);
@@ -696,9 +774,9 @@ nsTextServicesDocument::DeleteSelection()
   LOCK_DOC(this);
 
   //**** KDEBUG ****
-  printf("\n---- Before Delete\n");
-  printf("Sel: (%2d, %4d) (%2d, %4d)\n", mSelStartIndex, mSelStartOffset, mSelEndIndex, mSelEndOffset);
-  PrintOffsetTable();
+  // printf("\n---- Before Delete\n");
+  // printf("Sel: (%2d, %4d) (%2d, %4d)\n", mSelStartIndex, mSelStartOffset, mSelEndIndex, mSelEndOffset);
+  // PrintOffsetTable();
   //**** KDEBUG ****
 
   PRInt32 i, selLength;
@@ -888,9 +966,9 @@ nsTextServicesDocument::DeleteSelection()
   result = RemoveInvalidOffsetEntries();
 
   //**** KDEBUG ****
-  printf("\n---- After Delete\n");
-  printf("Sel: (%2d, %4d) (%2d, %4d)\n", mSelStartIndex, mSelStartOffset, mSelEndIndex, mSelEndOffset);
-  PrintOffsetTable();
+  // printf("\n---- After Delete\n");
+  // printf("Sel: (%2d, %4d) (%2d, %4d)\n", mSelStartIndex, mSelStartOffset, mSelEndIndex, mSelEndOffset);
+  // PrintOffsetTable();
   //**** KDEBUG ****
 
   UNLOCK_DOC(this);
@@ -1145,6 +1223,12 @@ nsTextServicesDocument::InsertText(const nsString *aText)
   UNLOCK_DOC(this);
 
   return result;
+}
+
+NS_IMETHODIMP
+nsTextServicesDocument::SetDisplayStyle(TSDDisplayStyle aStyle)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult
@@ -1755,7 +1839,7 @@ nsTextServicesDocument::SelectionIsValid()
   return(mSelStartIndex >= 0);
 }
 
-nsresult
+NS_IMETHODIMP
 nsTextServicesDocument::FirstBlock()
 {
   nsresult result;
@@ -1811,7 +1895,7 @@ nsTextServicesDocument::FirstBlock()
   return result;
 }
 
-nsresult
+NS_IMETHODIMP
 nsTextServicesDocument::LastBlock()
 {
   nsresult result;
@@ -1873,6 +1957,18 @@ nsTextServicesDocument::LastBlock()
   }
 
   return result;
+}
+
+NS_IMETHODIMP
+nsTextServicesDocument::FirstSelectedBlock(PRInt32 *aSelOffset, PRInt32 *aSelLength)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsTextServicesDocument::LastSelectedBlock(PRInt32 *aSelOffset, PRInt32 *aSelLength)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult
