@@ -120,19 +120,16 @@ nsXIFFormatConverter::GetOutputDataFlavors(nsISupportsArray **_retval)
   
   nsresult rv = NS_NewISupportsArray ( _retval );  // addrefs for us
   if ( NS_SUCCEEDED(rv) ) {
-    rv = AddFlavorToList ( *_retval, kXIFMime );
+    rv = AddFlavorToList ( *_retval, kHTMLMime );
     if ( NS_FAILED(rv) )
       return rv;
-    rv = AddFlavorToList ( *_retval, kHTMLMime );
+    rv = AddFlavorToList ( *_retval, kAOLMailMime );
     if ( NS_FAILED(rv) )
       return rv;
     rv = AddFlavorToList ( *_retval, kUnicodeMime );
     if ( NS_FAILED(rv) )
       return rv;
     rv = AddFlavorToList ( *_retval, kTextMime );
-    if ( NS_FAILED(rv) )
-      return rv;
-    rv = AddFlavorToList ( *_retval, kAOLMailMime );
     if ( NS_FAILED(rv) )
       return rv;
   }
