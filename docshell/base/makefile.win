@@ -29,6 +29,7 @@ XPIDLSRCS=						\
 		.\nsIDocShellEdit.idl	\
 		.\nsIGenericWindow.idl	\
 		.\nsIScrollable.idl		\
+		.\nsITextScroll.idl		\
 		$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
