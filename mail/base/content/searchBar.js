@@ -345,7 +345,10 @@ function createSearchTermsWithList(aTermsArray)
   searchTermsArray.Clear();
 
   var selectedFolder = GetThreadPaneFolder();
-  gSearchSession.addScopeTerm(nsMsgSearchScope.offlineMail, selectedFolder);
+  var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                  .getService(Components.interfaces.nsIIOService);
+
+  gSearchSession.addScopeTerm(gSearchInput.searchMode == kQuickSearchBody && !ioService.offline ? nsMsgSearchScope.onlineMail : nsMsgSearchScope.offlineMail, selectedFolder);
 
   // add each item in termsArray to the search session
 
@@ -371,59 +374,59 @@ function createSearchTerms()
   // they just might get more false positives
   if (!gSearchInput.showingSearchCriteria) // ignore the text box value if it's just showing the search criteria string
   {
-  var termList = gSearchInput.value.split("|");
-  for (var i = 0; i < termList.length; i ++)
-  {
-    // if the term is empty, skip it
-    if (termList[i] == "")
-      continue;
-
-    // create, fill, and append the subject term
-    var term;
-    var value;
-
-    // if our search criteria is subject or subject|sender then add a term for the subject
-    if (gSearchInput.searchMode == kQuickSearchSubject || gSearchInput.searchMode == kQuickSearchSenderOrSubject)
+    var termList = gSearchInput.value.split("|");
+    for (var i = 0; i < termList.length; i ++)
     {
-       term = gSearchSession.createTerm();
-       value = term.value;
-    value.str = termList[i];
-    term.value = value;
-    term.attrib = nsMsgSearchAttrib.Subject;
-    term.op = nsMsgSearchOp.Contains;
-    term.booleanAnd = false;
-    searchTermsArray.AppendElement(term);
-     }
+      // if the term is empty, skip it
+      if (termList[i] == "")
+        continue;
 
-     if (gSearchInput.searchMode == kQuickSearchBody)
-     {
-       // what do we do for news and imap users that aren't configured for offline use?
-       // in these cases the body search will never return any matches. Should we try to 
-       // see if body is a valid search scope in this particular case before doing the search?
-       // should we switch back to a subject/sender search behind the scenes?
-       term = gSearchSession.createTerm();
-       value = term.value;
-       value.str = termList[i];
-       term.value = value;
-       term.attrib = nsMsgSearchAttrib.Body;
-       term.op = nsMsgSearchOp.Contains; 
-       term.booleanAnd = false;
-       searchTermsArray.AppendElement(term);       
-     }
+      // create, fill, and append the subject term
+      var term;
+      var value;
 
-    // create, fill, and append the sender (or recipient) term
-    if (gSearchInput.searchMode == kQuickSearchSender || gSearchInput.searchMode == kQuickSearchSenderOrSubject)
-    {
-    term = gSearchSession.createTerm();
-    value = term.value;
-    value.str = termList[i];
-    term.value = value;
-    term.attrib = searchAttrib;
-    term.op = nsMsgSearchOp.Contains; 
-    term.booleanAnd = false;
-    searchTermsArray.AppendElement(term);
-  }
-  }
+      // if our search criteria is subject or subject|sender then add a term for the subject
+      if (gSearchInput.searchMode == kQuickSearchSubject || gSearchInput.searchMode == kQuickSearchSenderOrSubject)
+      {
+        term = gSearchSession.createTerm();
+        value = term.value;
+        value.str = termList[i];
+        term.value = value;
+        term.attrib = nsMsgSearchAttrib.Subject;
+        term.op = nsMsgSearchOp.Contains;
+        term.booleanAnd = false;
+        searchTermsArray.AppendElement(term);
+      }
+
+      if (gSearchInput.searchMode == kQuickSearchBody)
+      {
+        // what do we do for news and imap users that aren't configured for offline use?
+        // in these cases the body search will never return any matches. Should we try to 
+        // see if body is a valid search scope in this particular case before doing the search?
+        // should we switch back to a subject/sender search behind the scenes?
+        term = gSearchSession.createTerm();
+        value = term.value;
+        value.str = termList[i];
+        term.value = value;
+        term.attrib = nsMsgSearchAttrib.Body;
+        term.op = nsMsgSearchOp.Contains; 
+        term.booleanAnd = false;
+        searchTermsArray.AppendElement(term);       
+      }
+
+      // create, fill, and append the sender (or recipient) term
+      if (gSearchInput.searchMode == kQuickSearchSender || gSearchInput.searchMode == kQuickSearchSenderOrSubject)
+      {
+        term = gSearchSession.createTerm();
+        value = term.value;
+        value.str = termList[i];
+        term.value = value;
+        term.attrib = searchAttrib;
+        term.op = nsMsgSearchOp.Contains; 
+        term.booleanAnd = false;
+        searchTermsArray.AppendElement(term);
+      }
+    }
   }
 
   // now append the default view criteria to the quick search so we don't lose any default
