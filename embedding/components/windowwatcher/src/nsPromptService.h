@@ -52,7 +52,6 @@
 
 class nsIDOMWindow;
 class nsIDialogParamBlock;
-class nsIPrintSettings;
 
 class nsPromptService: public nsIPromptService,
                        public nsPIPromptService {
