@@ -71,6 +71,7 @@ MAC_LCPPSRCS = \
 		nsMimeMapper.cpp \
 		nsSound.cpp \
 		nsStylClipboardUtils.cpp \
+		nsToolkitBase.cpp \
 		nsTSMStrategy.cpp \
 		$(NULL)
 
@@ -135,9 +136,9 @@ LOCAL_INCLUDES	= \
 	-I/System/Library/Frameworks/Cocoa.Framework/Headers \
 	$(NULL)
 
-# for "EnterMovies" in nsSound.cpp
 LDFLAGS	+= \
 	-framework QuickTime \
+	-framework IOKit \
 	-framework Cocoa \
 	$(NULL)
 

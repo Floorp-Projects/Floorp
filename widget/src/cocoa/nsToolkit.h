@@ -38,10 +38,9 @@
 #ifndef TOOLKIT_H      
 #define TOOLKIT_H
 
-#include "nsIToolkit.h"
+#include "nsToolkitBase.h"
 
 #include "nsCOMPtr.h"
-#include "nsIEventQueueService.h"
 
 /**
  * The toolkit abstraction is necessary because the message pump must
@@ -68,24 +67,16 @@
 
 struct PRThread;
 
-class nsToolkit : public nsIToolkit
+class nsToolkit : public nsToolkitBase
 {
-
 public:
-  nsToolkit();
+                nsToolkit();
   virtual				~nsToolkit();
-  
-  NS_DECL_ISUPPORTS
-    
-  NS_IMETHOD  	Init(PRThread *aThread);
-  
-protected:
 
-  static int QuartzChangedCallback(const char* pref, void* data);
-  static void SetupQuartzRendering();
+protected:    
 
-  bool          mInited;
-  static bool   sInForeground;
+  virtual nsresult  InitEventQueue(PRThread * aThread);
+
 };
 
 
