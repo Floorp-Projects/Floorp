@@ -13,6 +13,7 @@ navigator.xul
 navigator.js
 unknownContent.xul
 viewSource.xul
+viewSource.js
 downloadProgress.xul
 downloadProgress.css
 navigator-shiny.css

@@ -2,303 +2,247 @@
 <?xml-stylesheet href="xul.css" type="text/css"?> 
 <?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
 
-<!DOCTYPE window> 
+<!DOCTYPE window
+[
+<!ENTITY mainWindow.title "Mozilla"> 
+<!ENTITY fileMenu.label "File">
+<!ENTITY browserCmd.label "New Browser Window">
+<!ENTITY newMenu.label "New">
+<!ENTITY newMailCmd.label "Mail Message">
+<!ENTITY newChatCmd.label "Chat Window">
+<!ENTITY newBlankPageCmd.label "Chat Window">
+<!ENTITY newPageFromTemplateCmd.label "Page Using Template">
+<!ENTITY newPageFromDraftCmd.label "Page using Draft">
+<!ENTITY openCmd.label "Open">
+<!ENTITY sendPageCmd.label "Send Page">
+<!ENTITY offlineMenu.label "Offline">
+<!ENTITY offlineGoOfflineCmd.label "Go Offline">
+<!ENTITY offlineSynchronizeCmd.label "Synchronize">
+<!ENTITY printSetupCmd.label "Print Setup">
+<!ENTITY printPreviewCmd.label "Print Preview">
+<!ENTITY printCmd.label "Print">
+<!ENTITY closeCmd.label ".Close">
+<!ENTITY quitCmd.label "Quit">
+<!ENTITY editMenu.label "Edit">
+<!ENTITY undoCmd.label "Undo">
+<!ENTITY redoCmd.label "Redo">
+<!ENTITY cutCmd.label "Cut">
+<!ENTITY copyCmd.label "Copy">
+<!ENTITY pasteCmd.label "Paste">
+<!ENTITY deleteCmd.label "Delete">
+<!ENTITY walletMenu.label "Wallet">
+<!ENTITY walletSafeFillCmd.label "Safe Form Fill">
+<!ENTITY walletQuickFillCmd.label "Quick Form Fill">
+<!ENTITY walletContentsCmd.label "Wallet Contents">
+<!ENTITY walletDisplaySignonsCmd.label "Display Signons">
+<!ENTITY walletDisplayCookiesCmd.label "Display Cookies">
+<!ENTITY walletSamplesCmd.label "Samples">
+<!ENTITY walletChangePasswordCmd.label "Change Password">
+<!ENTITY selectAllCmd.label "Select All">
+<!ENTITY preferences.label "Preferences">
+<!ENTITY viewMenu.label "View">
+<!ENTITY toolbarsCmd.label "Toolbars">
+<!ENTITY sidebarCmd.label "Sidebar">
+<!ENTITY enlargeTextSizeCmd.label "Enlarge Text Size">
+<!ENTITY reduceTextSizeCmd.label "Reduce Text Size">
+<!ENTITY useStyleSheetMenu.label "Use Stylesheet">
+<!ENTITY useStyleSheetDefaultCmd.label "Default">
+<!ENTITY useStyleSheetEasyReadingCmd.label "Easy Reading">
+<!ENTITY useStyleSheetMaximumInformationCmd.label "Maximum Information">
+<!ENTITY useStlyleSheetBizarreCmd.label "Bizarre">
+<!ENTITY reloadCmd.label "Reload">
+<!ENTITY showImagesCmd.label "Show Images">
+<!ENTITY stopCmd.label "Stop">
+<!ENTITY pageSourceCmd.label "Page Source">
+<!ENTITY pageInfoCmd.label "Page Info">
+<!ENTITY charSetMenu.label "Character Set"> 
+<!ENTITY charWesternCmd.label "Latin1">  
+<!ENTITY charJapaneseCmd.label "Japanese (ISO-2022-JP)">  
+<!ENTITY charShiftJisCmd.label "Shift_JIS">
+<!ENTITY charEupCmd.label "EUC-JP">
+<!ENTITY searchMenu.label "Search">
+<!ENTITY findOnCmd.label "Find On this page...">
+<!ENTITY findAgainCmd.label "Find Again">
+<!ENTITY searchParentCmd.label "Search Parent Item...">
+<!ENTITY searchParenet2Cmd.label "Search Parent2 Item">
+<!ENTITY appSpecificCmd.label "App Specific">
+<!ENTITY searchInternetCmd.label "Search the Internet...">
+<!ENTITY searchAllMailCmd.label "Search All Mail....">
+<!ENTITY searchBookmarksCmd.label "Search Bookmarks...">
+<!ENTITY searchPeopleCmd.label "Search People...">
+<!ENTITY searchComputerCmd.label "Search on this Computer...">
+<!ENTITY goMenu.label "Menu">
+<!ENTITY goBackCmd.label "Go Back">
+<!ENTITY goForwardCmd.label "Go Forward">
+<!ENTITY goHomeCmd.label "Home">
+<!ENTITY tasksMenu.label "Tasks">
+<!ENTITY navigatorCmd.label "Navigator">
+<!ENTITY messengerCmd.label "Messenger">
+<!ENTITY editorCmd.label "Editor">
+<!ENTITY manageHistoryCmd.label "Manage History">
+<!ENTITY chatCmd.label "Chat">
+<!ENTITY shoppingCartCmd.label "Shopping Cart">
+<!ENTITY toolsMenu.label "Tools">
+<!ENTITY toolsPluginsInfoCmd.label "Plugins Info">
+<!ENTITY toolsJavaConsoleCmd.label "Java/JS Console">
+<!ENTITY toolsServerToolsCmd.label "Server Tools">
+<!ENTITY toolsJavascriptDebuggerCmd.label "JavaScipt Debugger">
+<!ENTITY securityInfo.label "Security Info">
+<!ENTITY window1Cmd.label "Window 1">
+<!ENTITY window2Cmd.label "Window 2">
+<!ENTITY window3Cmd.label "Window 3">
+<!ENTITY helpMenuCmd.label "Help">
+<!ENTITY helpContentsCmd.label "Help Contents">
+<!ENTITY howTutorialCmd.label "How to Tutorial">
+<!ENTITY helpChannelCmd.label "Help Channel">
+<!ENTITY softwareUpdatesCmd.label "Software Updates">
+<!ENTITY technicalSupportCmd.label "Technical Support">
+<!ENTITY releaseNotesCmd.label "Release Notes">
+<!ENTITY aboutCommunicatorCmd.label "About Communicator Prototype">
+
+
+]>
 
 <window id="main-window" xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="Startup()" title="Mozilla"> 
-
-  <html:script>
-
-  var coreName;
-  var appCore;
-
-  function Startup() {
-    // Generate unique name.
-    coreName = "ViewSource." + ( new Date() ).getTime().toString();
-    
-    // Create and initialize the browser app core.
-    appCore = new BrowserAppCore();
-    appCore.Init( coreName );
-    appCore.setContentWindow(window.frames[0]);
-    appCore.setWebShellWindow(window);
-    appCore.setToolbarWindow(window);
-    
-    // Get url whose source to view.
-    var url = document.getElementById("args").getAttribute("value");
-
-    // Load the source (the app core will magically know what to do).
-    XPAppCoresManager.Find( coreName ).loadUrl(url);
-  }
-
-  function BrowserNewWindow()
-  {
-    if (appCore != null) {
-	    dump("Opening New Window\n");
-      appCore.newWindow();
-    } else {
-      dump("BrowserAppCore has not been created!\n");
-    }
-  }
-
-  function BrowserOpenWindow()
-  {
-    if (appCore != null) {
-	    dump("Opening New Window\n");
-      appCore.openWindow();
-    } else {
-      dump("BrowserAppCore has not been created!\n");
-    }
-  }
-
-  function BrowserCopy()
-  {
-    if (appCore != null) {
-	    dump("Copying\n");
-      appCore.copy();
-    } else {
-      dump("BrowserAppCore has not been created!\n");
-    }
-  }
-
-  function BrowserEditBookmarks()
-  {
-    var toolkitCore = XPAppCoresManager.Find("toolkitCore");
-    if (!toolkitCore) {
-      toolkitCore = new ToolkitCore();
-      if (toolkitCore) {
-        toolkitCore.Init("toolkitCore");
-      }
-    }
-    if (toolkitCore) {
-      toolkitCore.ShowWindow("resource://res/rdf/bookmarks.xul",window);
-    }
-  }
-
-  function BrowserPrintPreview()
-  {
-    // Borrowing this method to show how to 
-    // dynamically change icons
-    dump("BrowserPrintPreview\n");
-    if (appCore != null) {
-	    dump("Changing Icons\n");
-      appCore.printPreview();
-    } else {
-      dump("BrowserAppCore has not been created!\n");
-    }
-  }
-
-  function BrowserPrint()
-  {
-    // Borrowing this method to show how to 
-    // dynamically change icons
-    if (appCore != null) {
-      appCore.print();
-    }
-  }
-
-  function BrowserSetDocumentCharacterSet(aCharset)
-  {
-    if (appCore != null) {
-      appCore.SetDocumentCharset(aCharset);
-    } else {
-      dump("BrowserAppCore has not been created!\n");
-    }
-  }
-
-  function BrowserClose()
-  {
-    dump("BrowserClose\n");
-  }
-
-  function BrowserExit()
-  {
-    if (appCore != null) {
-	    dump("Exiting\n");
-      appCore.exit();
-    } else {
-      dump("BrowserAppCore has not been created!\n");
-    }
-  }
-
-  function OpenMessenger()
-  {
-    var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
-    if (!toolkitCore) {
-      toolkitCore = new ToolkitCore();
-      if (toolkitCore) {
-        toolkitCore.Init("ToolkitCore");
-      }
-    }
-    if (toolkitCore) {
-      toolkitCore.ShowWindow("resource:/res/mailnews/messenger/mailshell.xul",
-                             window);
-    }
-  }
-
-  function DoPreferences()
-  {
-    var prefsCore = XPAppCoresManager.Find("PrefsCore");
-    if (!prefsCore) {
-      prefsCore = new PrefsCore();
-      if (prefsCore) {
-        prefsCore.Init("PrefsCore");
-      }
-    }
-    if (prefsCore) {
-      prefsCore.ShowWindow(window);
-    }
-  }
-
-  function OpenEditor()
-  {
-    var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
-    if (!toolkitCore) {
-      toolkitCore = new ToolkitCore();
-      if (toolkitCore) {
-        toolkitCore.Init("ToolkitCore");
-      }
-    }
-    if (toolkitCore) {
-      toolkitCore.ShowWindow("resource:/res/samples/EditorAppShell.xul",
-                             window);
-    }
-  }
-
-  </html:script>
+        onload="Startup1()" title="Mozilla"> 
+  
+  <html:script src="navigator.js"></html:script>
+  <html:script src="viewsource.js"></html:script>
 
   <broadcaster id="args" value="http://www.mozilla.org/"/>
   <broadcaster id="canPrint"/>
+  <broadcaster id="canGoBack" disabled="true"/>
   <broadcaster id="Browser:LoadingProgress"/>
   <broadcaster id="Browser:Status"/>
+  <broadcaster id="Browser:OnStartBinding"/>
+  <broadcaster id="Browser:OnStopBinding"/>
   <broadcaster id="Browser:Throbber" busy="false"/>
   
   <menubar>
-      <menu name="File">
-      <menuitem name="New Browser Window" onclick="BrowserNewWindow();"/>
-      	<menu name="New">
-      		<menuitem name="Mail Message" onclick="MsgNewMessage();"/>
-		      <menuitem name="Chat Window" onclick=""/>
+      <menu name="&fileMenu.label;">
+      <menuitem name="&browserCmd.label;" onclick="BrowserNewWindow();"/>
+      	<menu name="&newMenu.label;">
+      		<menuitem name="&newMailCmd.label;" onclick="MsgNewMessage();"/>
+		      <menuitem name="&newChatCmd.label;" onclick=""/>
 		      <separator />
-		      <menuitem name="Blank Page" onclick="BrowserNewWindow();"/>
-		      <menuitem name="Page Using Template..." onclick="BrowserNewWindow();"/>
-		      <menuitem name="Page Using Draft..." onclick="BrowserNewWindow();"/>
+		      <menuitem name="&newBlankPageCmd.label;" onclick="BrowserNewWindow();"/>
+		      <menuitem name="&newPageFromTemplateCmd.label;" onclick="BrowserNewWindow();"/>
+		      <menuitem name="&newPageFromDraftCmd.label;" onclick="BrowserNewWindow();"/>
     		</menu>
-      <menuitem name="Open" onclick="BrowserOpenWindow();"/>
+      <menuitem name="&openCmd.label;" onclick="BrowserOpenWindow();"/>
       <separator />
-      <menuitem name="Send Page" onclick="NotImplementedYet();"/>
+      <menuitem name="&sendPageCmd.label;" onclick="NotImplementedYet();"/>
 	   <separator />
-      <menu name="Offline">
-	      <menuitem name="Go Offline" onclick="NotImplementedYet();"/>
+      <menu name="&offlineMenu.label;">
+	      <menuitem name="&offlineGoOfflineCmd.label;" onclick="NotImplementedYet();"/>
 	      <separator />
-	      <menuitem name="Synchronize..." onclick="NotImplementedYet();"/>
+	      <menuitem name="&offlineSynchronizeCmd.label;" onclick="NotImplementedYet();"/>
       </menu>
       <separator />
-      <menuitem name="Print Setup" onclick=";"/>
-      <menuitem name="Print Preview" onclick=""/>
-      <menuitem name="Print" onclick="BrowserPrint()"/>
+      <menuitem name="&printSetupCmd.label;" onclick=";"/>
+      <menuitem name="&printPreviewCmd.label;" onclick=""/>
+      <menuitem name="&printCmd.label;" onclick="BrowserPrint()"/>
       <separator />
-      <menuitem name=".Close" onclick="BrowserClose();"/>
-      <menuitem name="Quit" onclick="BrowserExit();"/>
     </menu>
-	<menu name="Edit"> 
-      <menuitem name="Undo" onclick="NotImplementedYet();" disabled=""/> 
-      <menuitem name="Redo" onclick="NotImplementedYet();" disabled=""/> 
+	<menu name="&editMenu.label;"> 
+      <menuitem name="&undoCmd.label;" onclick="NotImplementedYet();" disabled=""/> 
+      <menuitem name="&redoCmd.label;" onclick="NotImplementedYet();" disabled=""/> 
       <separator /> 
-      <menuitem name="Cut" onclick="NotImplementedYet();" disabled=""/> 
-      <menuitem name="Copy" onclick="BrowserCopy();"/> 
-      <menuitem name="Paste" onclick="NotImplementedYet();" disabled=""/> 
-      <menuitem name="Delete" onclick="NotImplementedYet();" disabled=""/> 
+      <menuitem name="&cutCmd.label;" onclick="NotImplementedYet();" disabled=""/> 
+      <menuitem name="&copyCmd.label;" onclick="BrowserCopy();"/> 
+      <menuitem name="&pasteCmd.label;" onclick="NotImplementedYet();" disabled=""/> 
+      <menuitem name="&deleteCmd.label;" onclick="NotImplementedYet();" disabled=""/> 
       <separator /> 
-      <menuitem name="Select All" onclick="NotImplementedYet();"/> 
+      <menuitem name="&selectAllCmd.label;" onclick="NotImplementedYet();"/> 
       <separator /> 
-      <menuitem name="Preferences..." onclick="DoPreferences();"/> 
+      <menuitem name="&preferences.label;" onclick="DoPreferences();"/> 
     </menu> 
 
-    <menu name="View">
-      <menuitem name="Toolbars" onclick="NotImplementedYet();" disabled=""/>
-      <menuitem name="Sidebar" onclick="NotImplementedYet();" disabled=""/>
+    <menu name="&viewMenu.label;">
+      <menuitem name="&toolbarsCmd.label;" onclick="NotImplementedYet();" disabled=""/>
+      <menuitem name="&sidebarCmd.label;" onclick="NotImplementedYet();" disabled=""/>
       <separator />
-      <menuitem name="Enlarge Text Size" onclick="NotImplementedYet();" disabled=""/>
+      <menuitem name="&enlargeTextSizeCmd.label;" onclick="NotImplementedYet();" disabled=""/>
       <menuitem name="Reduce Text Size" onclick="NotImplementedYet();" disabled=""/>
       <separator />
-      <menu name="Use Stylesheet" onclick="NotImplementedYet();">
-	      <menuitem name="Default" onclick="NotImplementedYet();" disabled=""/>
+      <menu name="&useStyleSheetMenu.label;" onclick="NotImplementedYet();">
+	      <menuitem name="&useStyleSheetDefaultCmd.label;" onclick="NotImplementedYet();" disabled=""/>
 	      <separator />
-	      <menuitem name="Easy Reading" onclick="NotImplementedYet();" disabled=""/>
-	      <menuitem name="Maximum Information" onclick="NotImplementedYet();" disabled=""/>
-	      <menuitem name="Bizarre" onclick="NotImplementedYet();" disabled=""/>
+	      <menuitem name="&useStyleSheetEasyReadingCmd.label;" onclick="NotImplementedYet();" disabled=""/>
+	      <menuitem name="&useStyleSheetMaximumInformationCmd.label;" onclick="NotImplementedYet();" disabled=""/>
+	      <menuitem name="&useStlyleSheetBizarreCmd.label;" onclick="NotImplementedYet();" disabled=""/>
       </menu>
       <separator />
-      <menuitem name="Reload" onclick="BrowserReload();" disabled=""/>
-      <menuitem name="Show Images" onclick="NotImplementedYet();" disabled=""/>
-      <menuitem name="Stop" onclick="NotImplementedYet();"/>
+      <menuitem name="&reloadCmd.label;" onclick="BrowserReload();" disabled=""/>
+      <menuitem name="&showImagesCmd.label;" onclick="NotImplementedYet();" disabled=""/>
+      <menuitem name="&stopCmd.label;" onclick="NotImplementedYet();"/>
       <separator />
-      <menuitem name="Page Source" onclick="BrowserViewSource();" disabled=""/>
-      <menuitem name="Page Info" onclick="NotImplementedYet();"/>
+      <menuitem name="&pageSourceCmd.label;" onclick="BrowserViewSource();" disabled=""/>
+      <menuitem name="&pageInfoCmd.label;" onclick="NotImplementedYet();"/>
       <separator />
-      <menu name="Character Set">
-	      <menuitem name="Latin1" onclick="BrowserSetDocumentCharacterSet('ISO-8859-1');"/>
-	      <menuitem name="ISO-2022-JP" onclick="BrowserSetDocumentCharacterSet('ISO-2022-JP');"/>
-	      <menuitem name="Shift_JIS" onclick="BrowserSetDocumentCharacterSet('Shift_JIS');"/>
-	      <menuitem name="EUC-JP" onclick="BrowserSetDocumentCharacterSet('EUC-JP');"/>
+      <menu name="&charSetMenu.label;">
+	      <menuitem name="&charWesternCmd.label;" onclick="BrowserSetDocumentCharacterSet('ISO-8859-1');"/>
+	      <menuitem name="&charJapaneseCmd.label;" onclick="BrowserSetDocumentCharacterSet('ISO-2022-JP');"/>
+	      <menuitem name="&charShiftJisCmd.label;" onclick="BrowserSetDocumentCharacterSet('Shift_JIS');"/>
+	      <menuitem name="&charEupCmd.label;" onclick="BrowserSetDocumentCharacterSet('EUC-JP');"/>
 	   </menu>
     </menu>
-    <menu name="Search">
-      <menuitem name="Find On This page..." onclick="NotImplementedYet();" disabled=""/>
-      <menuitem name="Find Again" onclick="NotImplementedYet();" disabled=""/>
+    <menu name="&searchMenu.label;">
+      <menuitem name="&findOnCmd.label;" onclick="BrowserFind();;" disabled=""/>
+      <menuitem name="&findAgainCmd.label;" onclick="BrowserFindAgain();" disabled=""/>
       <separator />
-      <menuitem name="Search Parent Item..." onclick="NotImplementedYet();" disabled=""/>
-      <menuitem name="Search Parent2 Item..." onclick="NotImplementedYet();" disabled=""/>
-      <menuitem name="App Specific" onclick="NotImplementedYet();" disabled=""/>
-      <menuitem name="App Specific" onclick="NotImplementedYet();" disabled=""/>
+      <menuitem name="&searchParentCmd.label;" onclick="NotImplementedYet();" disabled=""/>
+      <menuitem name="&searchParenet2Cmd.label;" onclick="NotImplementedYet();" disabled=""/>
+      <menuitem name="&appSpecificCmd.label;" onclick="NotImplementedYet();" disabled=""/>
+      <menuitem name="&appSpecificCmd.label;" onclick="NotImplementedYet();" disabled=""/>
       <separator />
-      <menuitem name="Search The Internet..." onclick="NotImplementedYet();" disabled=""/>
-      <menuitem name="Search All Mail..." onclick="NotImplementedYet();" disabled=""/>
-      <menuitem name="Search Bookmarks" onclick="NotImplementedYet();" disabled=""/>
-      <menuitem name="Search People" onclick="NotImplementedYet();" disabled=""/>
+      <menuitem name="&searchInternetCmd.label;" onclick="NotImplementedYet();" disabled=""/>
+      <menuitem name="&searchAllMailCmd.label;" onclick="NotImplementedYet();" disabled=""/>
+      <menuitem name="&searchBookmarksCmd.label;" onclick="NotImplementedYet();" disabled=""/>
+      <menuitem name="&searchPeopleCmd.label;" onclick="NotImplementedYet();" disabled=""/>
       <separator />
-      <menuitem name="Search On This Computer..." onclick="NotImplementedYet();" disabled=""/>
+      <menuitem name="&searchComputerCmd.label;" onclick="NotImplementedYet();" disabled=""/>
     </menu>
-    <menu name="Go">
-      <menuitem name="Back" onclick="BrowserBack();" disabled=""/>
-      <menuitem name="Forward" onclick="BrowserForward();" disabled=""/>
-      <menuitem name="Home" onclick="BrowserHome();" disabled=""/>
+    <menu name="&goMenu.label;">
+      <menuitem name="&goBackCmd.label;" onclick="BrowserBack();" disabled=""/>
+      <menuitem name="&goForwardCmd.label;" onclick="BrowserForward();" disabled=""/>
+      <menuitem name="&goHomeCmd.label;" onclick="BrowserHome();" disabled=""/>
     </menu>
-	 <menu name="Tasks">
-      <menuitem name="Navigator" onclick="NotImplementedYet();" disabled=""/>
-      <menuitem name="Messenger" onclick="OpenMessenger();" />
-      <menuitem name="Editor"    onclick="OpenEditor();" />
-      <menuitem name="Manage History"    onclick="OpenHistoryView();" />
-      <menuitem name="Chat" onclick="NotImplementedYet();" disabled=""/>
-      <menuitem name="Shopping Cart" onclick="NotImplementedYet();" disabled=""/>
-      <menu name="Tools">
-	      <menuitem name="Plugins Info" onclick="NotImplementedYet();" disabled=""/>
-	      <menuitem name="Server Tools" onclick="NotImplementedYet();" disabled=""/>
-	      <menuitem name="Java/JS Console" onclick="NotImplementedYet();" disabled=""/>
-	      <menuitem name="JavaScript Debugger" onclick="NotImplementedYet();" disabled=""/>
+	 <menu name="&tasksMenu.label;">
+      <menuitem name="&navigatorCmd.label;" onclick="NotImplementedYet();" disabled=""/>
+      <menuitem name="&messengerCmd.label;" onclick="OpenMessenger();" />
+      <menuitem name="&editorCmd.label;"    onclick="OpenEditor();" />
+      <menuitem name="&manageHistoryCmd.label;"    onclick="OpenHistoryView();" />
+      <menuitem name="&chatCmd.label;" onclick="NotImplementedYet();" disabled=""/>
+      <menuitem name="&shoppingCartCmd.label;" onclick="NotImplementedYet();" disabled=""/>
+      <menu name="&toolsMenu.label;">
+	      <menuitem name="&toolsPluginsInfoCmd.label;" onclick="NotImplementedYet();" disabled=""/>
+	      <menuitem name="&toolsServerToolsCmd.label;" onclick="NotImplementedYet();" disabled=""/>
+	      <menuitem name="&toolsJavaConsoleCmd.label;" onclick="NotImplementedYet();" disabled=""/>
+	      <menuitem name="&toolsJavascriptDebuggerCmd.label;" onclick="NotImplementedYet();" disabled=""/>
       </menu>
       <separator />
-      <menuitem name="Security Info" onclick="NotImplementedYet();" disabled=""/>
+      <menuitem name="&securityInfo.label;" onclick="NotImplementedYet();" disabled=""/>
       <separator/>
-      <menuitem name="Window 1" onclick="NotImplementedYet();" key="1" disabled=""/>
-      <menuitem name="Window 2" onclick="NotImplementedYet();" disabled=""/>
-      <menuitem name="Window 3" onclick="NotImplementedYet();" disabled=""/>
+      <menuitem name="&window1Cmd.label;" onclick="NotImplementedYet();" key="1" disabled=""/>
+      <menuitem name="&window2Cmd.label;" onclick="NotImplementedYet();" disabled=""/>
+      <menuitem name="&window3Cmd.label;" onclick="NotImplementedYet();" disabled=""/>
     </menu>
     
-     <menu name="Help">
-      <menuitem name="Help Contents" onclick="window.frames[0].location.href = 'http://www.mozilla.org/projects/user-docs/local/browserhelp/browsertop.html'" disabled=""/>
+     <menu name="&helpMenuCmd.label;">
+      <menuitem name="&helpContentsCmd.label;" onclick="window.frames[0].location.href = 'http://www.mozilla.org/projects/user-docs/local/browserhelp/browsertop.html'" disabled=""/>
       <separator />
-      <menuitem name="How To Tutorial" onclick="NotImplementedYet();" disabled=""/>
-      <menuitem name="Help Channel" onclick="NotImplementedYet();" disabled=""/>
+      <menuitem name="&howTutorialCmd.label;" onclick="NotImplementedYet();" disabled=""/>
+      <menuitem name="&helpChannelCmd.label;" onclick="NotImplementedYet();" disabled=""/>
       <separator />
-      <menuitem name="Software Updates" onclick="NotImplementedYet();" disabled=""/>
-      <menuitem name="Technical Support" onclick="NotImplementedYet();" disabled=""/>
-      <menuitem name="Release Notes" 
+      <menuitem name="&softwareUpdatesCmd.label;" onclick="NotImplementedYet();" disabled=""/>
+      <menuitem name="&technicalSupportCmd.label;" onclick="NotImplementedYet();" disabled=""/>
+      <menuitem name="&releaseNotesCmd.label;" 
 	            onclick="window.frames[0].location.href='http://www.mozilla.org/projects/seamonkey/release-notes/index.html'" disabled=""/>
       
       <separator />
-      <menuitem name="About Communicator Prototype" 
+      <menuitem name="&aboutCommunicatorCmd.label;" 
 	            onclick="window.frames[0].location.href='http://www.mozilla.org/projects/seamonkey/release-notes/index.html'" disabled=""/>
     </menu>
   </menubar>
@@ -307,49 +251,6 @@
 
   <html:iframe id="content-frame" html:name="content" html:src="about:blank" flex="100%"/>
  
-  <html:script>
-        var bindCount = 0;
-        function onStatus() {
-            var status = document.getElementById("Browser:Status");
-            if ( status ) {
-                var text = status.getAttribute("text");
-                var statusText = document.getElementById("statusText");
-                if ( statusText ) {
-                    statusText.setAttribute( "value", text );
-                }
-            } else {
-                dump("Can't find status broadcaster!\n");
-            }
-        }
-        function onProgress() {
-            var throbber = document.getElementById("Browser:Throbber");
-            var meter    = document.getElementById("Browser:LoadingProgress");
-            if ( throbber &amp;&amp; meter ) {
-                var busy = throbber.getAttribute("busy");
-                if ( busy == "true" ) {
-                    mode = "undetermined";
-                } else {
-                    mode = "normal";
-                }
-                meter.setAttribute("mode",mode);
-                if ( mode == "normal" ) {
-                    var status = document.getElementById("Browser:Status");
-                    if ( status ) {
-                        status.setAttribute("value","Document: Done");
-                    }
-                }
-            }
-        }
-        function dumpProgress() {
-            var broadcaster = document.getElementById("Browser:LoadingProgress");
-            var meter       = document.getElementById("meter");
-            dump( "bindCount=" + bindCount + "\n" );
-            dump( "broadcaster mode=" + broadcaster.getAttribute("mode") + "\n" );
-            dump( "broadcaster value=" + broadcaster.getAttribute("value") + "\n" );
-            dump( "meter mode=" + meter.getAttribute("mode") + "\n" );
-            dump( "meter value=" + meter.getAttribute("value") + "\n" );
-        }
-    </html:script>
 
   <box align="horizontal" id="status-bar">
  
@@ -363,7 +264,7 @@
 			<spring flex="100%"/>
 		</box>
 
-		<titledbutton id="statusText" align="right" flex="1%" value="Document: Done" style="font-family:sans-serif;font-size:2.5mm">
+		<titledbutton id="statusText" align="right" flex="100%" value="Document: Done" style="font-family:sans-serif;font-size:2.5mm">
 					   <observes element="Browser:Status" attribute="value" onchange="onStatus()"/>			
 		</titledbutton>
 
@@ -372,6 +273,6 @@
 		<titledbutton align="right" value="Build ID: 1999040601" style="font-family:sans-serif;font-size:2.5mm;"/>
      </box>
   </box>
-
+ 
   </box>
 </window>
