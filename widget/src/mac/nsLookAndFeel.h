@@ -49,6 +49,8 @@ public:
 
 protected:
   nsCOMPtr<nsILookAndFeel> mXPLookAndFeel;
+  NS_IMETHOD GetMacBrushColor(const PRInt32 aBrushType, nscolor & aColor, const nscolor & aDefaultColor);
+  NS_IMETHOD GetMacTextColor(const PRInt32 aTextType, nscolor & aColor, const nscolor & aDefaultColor);
 };
 
 #endif
