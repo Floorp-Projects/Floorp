@@ -3959,19 +3959,6 @@ PRInt32 nsTableFrame::GetColumnWidth(PRInt32 aColIndex)
     if (colFrame) {
       result = colFrame->GetWidth(FINAL);
     }
-    else {
-      NS_ASSERTION(PR_FALSE, "null col frame");
-      result = 0;
-    }
-#if 0
-    nsTableCellMap* cellMap = GetCellMap();
-    if (!cellMap) {
-      NS_ASSERTION(PR_FALSE, "no cell map");
-      return 0;
-    }
-    PRInt32 numCols = cellMap->GetColCount();
-    NS_ASSERTION (numCols > aColIndex, "bad arg, col index out of bounds");
-#endif
   }
   else {
     result = firstInFlow->GetColumnWidth(aColIndex);
@@ -5029,7 +5016,7 @@ BCMapCellIterator::First(BCMapCellInfo& aMapInfo)
         SetInfo(mRow, mAreaStart.x, cellData, aMapInfo);
       }
       else {
-        NS_ASSERTION(PR_FALSE, "damage area expanded incorrectly");
+        NS_ASSERTION(((0 == mAreaStart.x) && (mRowGroupStart == mAreaStart.y)) , "damage area expanded incorrectly");
         mAtEnd = PR_TRUE;
       }
       break;
