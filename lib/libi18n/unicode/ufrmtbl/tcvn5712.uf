@@ -1,0 +1,215 @@
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+/*========================================================
+  This is a Generated file. Please don't edit it.
+
+  The tool which used to generate this file is called fromu.
+  If you have any problem of this file. Please contact 
+  Netscape Client International Team or 
+  ftang@netscape <Frank Tang> 
+
+              Table in Debug form 
+Begin of Item 0000
+ Format 0
+  srcBegin = 0007
+  srcEnd = 0010
+  destBegin = 0007
+End of Item 0000 
+
+Begin of Item 0001
+ Format 0
+  srcBegin = 0018
+  srcEnd = 007F
+  destBegin = 0018
+End of Item 0001 
+
+Begin of Item 0002
+ Format 1
+  srcBegin = 0000
+  srcEnd = 0003
+  mappingOffset = 0000
+ Mapping  = 
+  0000 FFFD FFFD 0003 
+End of Item 0002 
+
+Begin of Item 0003
+ Format 2
+  srcBegin = 00A0
+  destBegin = 00A0
+End of Item 0003 
+
+Begin of Item 0004
+ Format 1
+  srcBegin = 00C0
+  srcEnd = 0103
+  mappingOffset = 0004
+ Mapping  = 
+  0080 0083 00A2 0082 FFFD FFFD FFFD FFFD 
+  0087 008A 00A3 FFFD 008D 0090 FFFD FFFD 
+  FFFD FFFD 0092 0095 00A4 0094 FFFD FFFD 
+  FFFD 009D 0001 FFFD FFFD 0016 FFFD FFFD 
+  00B5 00B8 00A9 00B7 FFFD FFFD FFFD FFFD 
+  00CC 00D0 00AA FFFD 00D7 00DD FFFD FFFD 
+  FFFD FFFD 00DF 00E3 00AB 00E2 FFFD FFFD 
+  FFFD 00EF 00F3 FFFD FFFD 00FD FFFD FFFD 
+  FFFD FFFD 00A1 00A8 
+End of Item 0004 
+
+Begin of Item 0005
+ Format 1
+  srcBegin = 0110
+  srcEnd = 0111
+  mappingOffset = 0048
+ Mapping  = 
+  00A7 00AE 
+End of Item 0005 
+
+Begin of Item 0006
+ Format 1
+  srcBegin = 0128
+  srcEnd = 0129
+  mappingOffset = 004A
+ Mapping  = 
+  008F 00DC 
+End of Item 0006 
+
+Begin of Item 0007
+ Format 1
+  srcBegin = 0168
+  srcEnd = 0169
+  mappingOffset = 004C
+ Mapping  = 
+  009F 00F2 
+End of Item 0007 
+
+Begin of Item 0008
+ Format 1
+  srcBegin = 01A0
+  srcEnd = 01A1
+  mappingOffset = 004E
+ Mapping  = 
+  00A5 00AC 
+End of Item 0008 
+
+Begin of Item 0009
+ Format 1
+  srcBegin = 01AF
+  srcEnd = 01B0
+  mappingOffset = 0050
+ Mapping  = 
+  00A6 00AD 
+End of Item 0009 
+
+Begin of Item 000A
+ Format 1
+  srcBegin = 0300
+  srcEnd = 0309
+  mappingOffset = 0052
+ Mapping  = 
+  00B0 00B3 FFFD 00B2 FFFD FFFD FFFD FFFD 
+  FFFD 00B1 
+End of Item 000A 
+
+Begin of Item 000B
+ Format 2
+  srcBegin = 0323
+  destBegin = 00B4
+End of Item 000B 
+
+Begin of Item 000C
+ Format 1
+  srcBegin = 1EA0
+  srcEnd = 1EF9
+  mappingOffset = 005C
+ Mapping  = 
+  0084 00B9 0081 00B6 00C4 00CA 00C1 00C7 
+  00C2 00C8 00C3 00C9 0086 00CB 00C0 00BE 
+  00AF 00BB 00BA 00BC 00BF 00BD 0085 00C6 
+  008B 00D1 0088 00CE 0089 00CF 00DA 00D5 
+  00C5 00D2 00CD 00D3 00D9 00D4 008C 00D6 
+  008E 00D8 0091 00DE 0096 00E4 0093 00E1 
+  00FF 00E8 00DB 00E5 00E0 00E6 00F0 00E7 
+  0097 00E9 009B 00ED 0098 00EA 0099 00EB 
+  009A 00EC 009C 00EE 0002 00F4 009E 00F1 
+  0011 00F8 0004 00F5 0005 00F6 0006 00F7 
+  0012 00F9 0013 00FA 0017 00FE 0014 00FB 
+  0015 00FC 
+End of Item 000C 
+
+========================================================*/
+/* Offset=0x0000  ItemOfList */
+  0x000D,
+/*-------------------------------------------------------*/
+/* Offset=0x0001  offsetToFormatArray */
+  0x0004,
+/*-------------------------------------------------------*/
+/* Offset=0x0002  offsetToMapCellArray */ 
+  0x0008,
+/*-------------------------------------------------------*/
+/* Offset=0x0003  offsetToMappingTable */ 
+  0x002F,
+/*-------------------------------------------------------*/
+/*       Offset=0x0004   Start of Format Array */ 
+/*	Total of Format 0 : 0x0002			 */
+/*	Total of Format 1 : 0x0009			 */
+/*	Total of Format 2 : 0x0002			 */
+/*	Total of Format 3 : 0x0000			 */
+
+0x2100, 0x1111, 0x2111, 0x0001, 
+/*-------------------------------------------------------*/
+/*       Offset=0x0008   Start of MapCell Array */ 
+/* 0000 */    0x0007, 0x0010, 0x0007, 
+/* 0001 */    0x0018, 0x007F, 0x0018, 
+/* 0002 */    0x0000, 0x0003, 0x0000, 
+/* 0003 */    0x00A0, 0x0000, 0x00A0, 
+/* 0004 */    0x00C0, 0x0103, 0x0004, 
+/* 0005 */    0x0110, 0x0111, 0x0048, 
+/* 0006 */    0x0128, 0x0129, 0x004A, 
+/* 0007 */    0x0168, 0x0169, 0x004C, 
+/* 0008 */    0x01A0, 0x01A1, 0x004E, 
+/* 0009 */    0x01AF, 0x01B0, 0x0050, 
+/* 000A */    0x0300, 0x0309, 0x0052, 
+/* 000B */    0x0323, 0x0000, 0x00B4, 
+/* 000C */    0x1EA0, 0x1EF9, 0x005C, 
+/*-------------------------------------------------------*/
+/*       Offset=0x002F   Start of MappingTable */ 
+
+/* 0000 */    0x0000, 0xFFFD, 0xFFFD, 0x0003, 0x0080, 0x0083, 0x00A2, 0x0082, 
+/* 0008 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x0087, 0x008A, 0x00A3, 0xFFFD, 
+/* 0010 */    0x008D, 0x0090, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x0092, 0x0095, 
+/* 0018 */    0x00A4, 0x0094, 0xFFFD, 0xFFFD, 0xFFFD, 0x009D, 0x0001, 0xFFFD, 
+/* 0020 */    0xFFFD, 0x0016, 0xFFFD, 0xFFFD, 0x00B5, 0x00B8, 0x00A9, 0x00B7, 
+/* 0028 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x00CC, 0x00D0, 0x00AA, 0xFFFD, 
+/* 0030 */    0x00D7, 0x00DD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x00DF, 0x00E3, 
+/* 0038 */    0x00AB, 0x00E2, 0xFFFD, 0xFFFD, 0xFFFD, 0x00EF, 0x00F3, 0xFFFD, 
+/* 0040 */    0xFFFD, 0x00FD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x00A1, 0x00A8, 
+/* 0048 */    0x00A7, 0x00AE, 0x008F, 0x00DC, 0x009F, 0x00F2, 0x00A5, 0x00AC, 
+/* 0050 */    0x00A6, 0x00AD, 0x00B0, 0x00B3, 0xFFFD, 0x00B2, 0xFFFD, 0xFFFD, 
+/* 0058 */    0xFFFD, 0xFFFD, 0xFFFD, 0x00B1, 0x0084, 0x00B9, 0x0081, 0x00B6, 
+/* 0060 */    0x00C4, 0x00CA, 0x00C1, 0x00C7, 0x00C2, 0x00C8, 0x00C3, 0x00C9, 
+/* 0068 */    0x0086, 0x00CB, 0x00C0, 0x00BE, 0x00AF, 0x00BB, 0x00BA, 0x00BC, 
+/* 0070 */    0x00BF, 0x00BD, 0x0085, 0x00C6, 0x008B, 0x00D1, 0x0088, 0x00CE, 
+/* 0078 */    0x0089, 0x00CF, 0x00DA, 0x00D5, 0x00C5, 0x00D2, 0x00CD, 0x00D3, 
+/* 0080 */    0x00D9, 0x00D4, 0x008C, 0x00D6, 0x008E, 0x00D8, 0x0091, 0x00DE, 
+/* 0088 */    0x0096, 0x00E4, 0x0093, 0x00E1, 0x00FF, 0x00E8, 0x00DB, 0x00E5, 
+/* 0090 */    0x00E0, 0x00E6, 0x00F0, 0x00E7, 0x0097, 0x00E9, 0x009B, 0x00ED, 
+/* 0098 */    0x0098, 0x00EA, 0x0099, 0x00EB, 0x009A, 0x00EC, 0x009C, 0x00EE, 
+/* 00A0 */    0x0002, 0x00F4, 0x009E, 0x00F1, 0x0011, 0x00F8, 0x0004, 0x00F5, 
+/* 00A8 */    0x0005, 0x00F6, 0x0006, 0x00F7, 0x0012, 0x00F9, 0x0013, 0x00FA, 
+/* 00B0 */    0x0017, 0x00FE, 0x0014, 0x00FB, 0x0015, 0x00FC, 
+/*	End of table Total Length = 0x00E5 * 2 */
