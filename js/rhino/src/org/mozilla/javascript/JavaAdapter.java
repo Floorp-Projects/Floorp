@@ -81,8 +81,8 @@ public class JavaAdapter extends ScriptableObject {
         return self.get(adapter);
     }
 
-    public static Object js_JavaAdapter(Context cx, Object[] args, 
-                                        Function ctorObj, boolean inNewExpr)
+    public static Object jsConstructor(Context cx, Object[] args, 
+                                       Function ctorObj, boolean inNewExpr)
         throws InstantiationException, NoSuchMethodException, 
                IllegalAccessException, InvocationTargetException,
                ClassNotFoundException, NoSuchFieldException
@@ -279,8 +279,7 @@ public class JavaAdapter extends ScriptableObject {
         }
         byte[] bytes = out.toByteArray();
         
-        if (nameHelper != null)
-        {
+        if (nameHelper != null) {
             if (nameHelper.getGeneratingDirectory() != null) {
                 try {
                     int lastDot = adapterName.lastIndexOf('.');
@@ -298,11 +297,9 @@ public class JavaAdapter extends ScriptableObject {
             } else {
                 try {
                     ClassOutput classOutput = nameHelper.getClassOutput();
-
                     if (classOutput != null) {
                         OutputStream cOut =
-                            classOutput.getOutputStream(adapterName);
-
+                            classOutput.getOutputStream(adapterName, true);
                         cOut.write(bytes);
                         cOut.close();
                     }
