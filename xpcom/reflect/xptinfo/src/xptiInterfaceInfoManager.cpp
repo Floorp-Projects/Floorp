@@ -237,13 +237,13 @@ PRBool xptiInterfaceInfoManager::BuildFileSearchPath(nsISupportsArray** aPath)
     if(!searchPath)
         return PR_FALSE;
     
-    nsCOMPtr<nsILocalFile> dir;
+    nsCOMPtr<nsILocalFile> compDir;
 
     // Always put components directory first
 
     if(NS_FAILED(GetDirectoryFromDirService(NS_XPCOM_COMPONENT_DIR, 
-                                            getter_AddRefs(dir))) ||
-       !searchPath->AppendElement(dir))
+                                            getter_AddRefs(compDir))) ||
+       !searchPath->AppendElement(compDir))
     {
         return PR_FALSE;
     }
@@ -264,7 +264,12 @@ PRBool xptiInterfaceInfoManager::BuildFileSearchPath(nsISupportsArray** aPath)
                                     getter_AddRefs(greComponentDirectory));
     if (NS_SUCCEEDED(rv))
     {
-        searchPath->AppendElement(greComponentDirectory);
+        // make sure we only append a directory if its a different one
+        PRBool equalsCompDir = PR_FALSE;
+        greComponentDirectory->Equals(compDir, &equalsCompDir);
+
+        if (!equalsCompDir)
+            searchPath->AppendElement(greComponentDirectory);
     }
 
     (void) AppendFromDirServiceList(NS_APP_PLUGINS_DIR_LIST, searchPath);
