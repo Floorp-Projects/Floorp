@@ -2673,17 +2673,9 @@ GlobalWindowImpl::SizeToContent()
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
-  NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIDocShellTreeItem> docShellParent;
-  docShellAsItem->GetSameTypeParent(getter_AddRefs(docShellParent));
-
-  // It's only valid to access this from a top window. Doesn't work from
-  // sub-frames.
-  if (docShellParent)
-    return NS_ERROR_FAILURE;
-
+  // The content viewer does a check to make sure that it's a content
+  // viewer for a toplevel docshell.
+  
   nsCOMPtr<nsIContentViewer> cv;
   mDocShell->GetContentViewer(getter_AddRefs(cv));
   nsCOMPtr<nsIMarkupDocumentViewer> markupViewer(do_QueryInterface(cv));
