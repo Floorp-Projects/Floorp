@@ -76,7 +76,9 @@ public:
     CParserContext( const CParserContext& aContext);
     ~CParserContext();
 
-    nsresult GetTokenizer(PRInt32 aType, nsITokenizer*& aTokenizer);
+    nsresult GetTokenizer(PRInt32 aType,
+                          nsIContentSink* aSink,
+                          nsITokenizer*& aTokenizer);
     void  SetMimeType(const nsACString& aMimeType);
 
     nsCOMPtr<nsIRequest> mRequest; // provided by necko to differnciate different input streams
