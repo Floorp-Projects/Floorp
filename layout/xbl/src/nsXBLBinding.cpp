@@ -184,8 +184,10 @@ nsXBLBinding::kEventHandlerMap[] = {
     { "command",       nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
     { "broadcast",     nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
     { "commandupdate", nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
-    { "overflow",      nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
-    { "underflow",     nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
+
+    { "overflow",        nsnull, &NS_GET_IID(nsIDOMScrollListener)    },
+    { "underflow",       nsnull, &NS_GET_IID(nsIDOMScrollListener)    },
+    { "overflowchanged", nsnull, &NS_GET_IID(nsIDOMScrollListener)    },
 
     { "focus",         nsnull, &NS_GET_IID(nsIDOMFocusListener)       },
     { "blur",          nsnull, &NS_GET_IID(nsIDOMFocusListener)       },
@@ -513,10 +515,11 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement)
         GetEventHandlerIID(eventAtom, &iid, &found);
         if (found) {
           // Add an event listener for mouse and key events only.
-          PRBool mouse = IsMouseHandler(type);
-          PRBool key = IsKeyHandler(type);
-          PRBool focus = IsFocusHandler(type);
-          PRBool xul = IsXULHandler(type);
+          PRBool mouse  = IsMouseHandler(type);
+          PRBool key    = IsKeyHandler(type);
+          PRBool focus  = IsFocusHandler(type);
+          PRBool xul    = IsXULHandler(type);
+          PRBool scroll = IsScrollHandler(type);
 
           nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(mBoundElement);
           nsAutoString attachType;
@@ -562,6 +565,8 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement)
               receiver->AddEventListener(type, (nsIDOMKeyListener*)handler, useCapture);
             else if(focus)
               receiver->AddEventListener(type, (nsIDOMFocusListener*)handler, useCapture);
+            else if (scroll)
+              receiver->AddEventListener(type, (nsIDOMScrollListener*)handler, useCapture);
             else
               receiver->AddEventListener(type, (nsIDOMMenuListener*)handler, useCapture);
 
@@ -1430,9 +1435,15 @@ PRBool
 nsXBLBinding::IsXULHandler(const nsString& aName)
 {
   return ((aName.EqualsWithConversion("create")) || (aName.EqualsWithConversion("destroy")) || (aName.EqualsWithConversion("broadcast")) ||
-          (aName.EqualsWithConversion("command")) || (aName.EqualsWithConversion("commandupdate")) || (aName.EqualsWithConversion("close")) ||
-          (aName.EqualsWithConversion("overflow")) ||
-          (aName.EqualsWithConversion("underflow")) );
+          (aName.EqualsWithConversion("command")) || (aName.EqualsWithConversion("commandupdate")) || (aName.EqualsWithConversion("close")));
+}
+
+PRBool
+nsXBLBinding::IsScrollHandler(const nsString& aName)
+{
+  return (aName.EqualsWithConversion("overflow") ||
+          aName.EqualsWithConversion("underflow") ||
+          aName.EqualsWithConversion("overflowchanged"));
 }
 
 NS_IMETHODIMP

@@ -55,6 +55,7 @@
 #include "nsIDOMKeyListener.h"
 #include "nsIDOMFormListener.h"
 #include "nsIDOMMenuListener.h"
+#include "nsIDOMScrollListener.h"
 #include "nsIDOMDragListener.h"
 #include "nsIRDFNode.h"
 #include "nsINameSpace.h"
@@ -218,8 +219,10 @@ nsXULContentUtils::kEventHandlerMap[] = {
     { "oncommand",       nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
     { "onbroadcast",     nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
     { "oncommandupdate", nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
-    { "onoverflow",      nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
-    { "onunderflow",     nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
+
+    { "onoverflow",       nsnull, &NS_GET_IID(nsIDOMScrollListener)     },
+    { "onunderflow",      nsnull, &NS_GET_IID(nsIDOMScrollListener)     },
+    { "onoverflowchanged",nsnull, &NS_GET_IID(nsIDOMScrollListener)     },
 
     { "onfocus",         nsnull, &NS_GET_IID(nsIDOMFocusListener)       },
     { "onblur",          nsnull, &NS_GET_IID(nsIDOMFocusListener)       },

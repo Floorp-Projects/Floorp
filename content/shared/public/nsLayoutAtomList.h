@@ -162,7 +162,7 @@ LAYOUT_ATOM(onunload, "onunload")
 // scrolling
 LAYOUT_ATOM(onoverflow, "onoverflow")
 LAYOUT_ATOM(onunderflow, "onunderflow")
-
+LAYOUT_ATOM(onoverflowchanged, "onoverflowchanged")
 
 #ifdef DEBUG
   // Alphabetical list of atoms used by debugging code

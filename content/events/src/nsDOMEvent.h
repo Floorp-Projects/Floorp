@@ -86,7 +86,8 @@ public:
     eDOMEvents_resize,
     eDOMEvents_scroll,
     eDOMEvents_overflow,
-    eDOMEvents_underflow
+    eDOMEvents_underflow,
+    eDOMEvents_overflowchanged
   };
 
   nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent, const nsString& aEventType);

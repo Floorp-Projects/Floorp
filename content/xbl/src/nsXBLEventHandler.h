@@ -29,6 +29,7 @@
 #include "nsIDOMKeyListener.h"
 #include "nsIDOMMenuListener.h"
 #include "nsIDOMFocusListener.h"
+#include "nsIDOMScrollListener.h"
 
 class nsIXBLBinding;
 class nsIDOMEvent;
@@ -42,7 +43,8 @@ class nsIController;
 class nsXBLEventHandler : public nsIDOMKeyListener, 
                           public nsIDOMMouseListener,
                           public nsIDOMMenuListener,
-                          public nsIDOMFocusListener
+                          public nsIDOMFocusListener,
+                          public nsIDOMScrollListener
 {
 public:
   nsXBLEventHandler(nsIContent* aBoundElement, nsIContent* aHandlerElement, const nsString& aEventName);
@@ -64,14 +66,18 @@ public:
   virtual nsresult Focus(nsIDOMEvent* aMouseEvent);
   virtual nsresult Blur(nsIDOMEvent* aMouseEvent);
 
+  // menu
   NS_IMETHOD Create(nsIDOMEvent* aEvent);
   NS_IMETHOD Close(nsIDOMEvent* aEvent);
   NS_IMETHOD Destroy(nsIDOMEvent* aEvent);
   NS_IMETHOD Action(nsIDOMEvent* aEvent);
   NS_IMETHOD Broadcast(nsIDOMEvent* aEvent);
   NS_IMETHOD CommandUpdate(nsIDOMEvent* aEvent);
+
+  // scroll
   NS_IMETHOD Overflow(nsIDOMEvent* aEvent);
   NS_IMETHOD Underflow(nsIDOMEvent* aEvent);
+  NS_IMETHOD OverflowChanged(nsIDOMEvent* aEvent);
 
   NS_DECL_ISUPPORTS
 

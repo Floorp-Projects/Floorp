@@ -103,7 +103,7 @@ nsXBLEventHandler::~nsXBLEventHandler()
   }
 }
 
-NS_IMPL_ISUPPORTS4(nsXBLEventHandler, nsIDOMKeyListener, nsIDOMMouseListener, nsIDOMMenuListener, nsIDOMFocusListener)
+NS_IMPL_ISUPPORTS5(nsXBLEventHandler, nsIDOMKeyListener, nsIDOMMouseListener, nsIDOMMenuListener, nsIDOMFocusListener, nsIDOMScrollListener)
 
 nsresult nsXBLEventHandler::HandleEvent(nsIDOMEvent* aEvent)
 {
@@ -290,6 +290,15 @@ nsresult nsXBLEventHandler::Underflow(nsIDOMEvent* aEvent)
     return NS_OK;
 
   ExecuteHandler(NS_ConvertASCIItoUCS2("underflow"), aEvent);
+  return NS_OK;
+}
+
+nsresult nsXBLEventHandler::OverflowChanged(nsIDOMEvent* aEvent)
+{
+  if (!mEventName.EqualsWithConversion("underflowchanged"))
+    return NS_OK;
+
+  ExecuteHandler(NS_ConvertASCIItoUCS2("underflowchanged"), aEvent);
   return NS_OK;
 }
 
@@ -666,6 +675,7 @@ nsXBLEventHandler::RemoveEventHandlers()
     PRBool key = nsXBLBinding::IsKeyHandler(type);
     PRBool focus = nsXBLBinding::IsFocusHandler(type);
     PRBool xul = nsXBLBinding::IsXULHandler(type);
+    PRBool scroll = nsXBLBinding::IsScrollHandler(type);
 
     // Remove the event listener.
     if (mouse)
@@ -674,6 +684,8 @@ nsXBLEventHandler::RemoveEventHandlers()
       receiver->RemoveEventListener(type, (nsIDOMKeyListener*)this, useCapture);
     else if(focus)
       receiver->RemoveEventListener(type, (nsIDOMFocusListener*)this, useCapture);
+    else if(scroll)
+      receiver->RemoveEventListener(type, (nsIDOMScrollListener*)this, useCapture);
     else
       receiver->RemoveEventListener(type, (nsIDOMMenuListener*)this, useCapture);
   }
