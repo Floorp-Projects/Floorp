@@ -69,7 +69,7 @@
 #include "nsIFrameManager.h"
 #include "nsGUIEvent.h"
 #include "nsIRootBox.h"
-#include "nsIDOMXULPopupElement.h"
+#include "nsIMenuElement.h"
 #ifdef XP_WIN
 #include "nsISound.h"
 #endif
@@ -1442,9 +1442,8 @@ NS_IMETHODIMP nsMenuPopupFrame::SetCurrentMenuItem(nsIMenuFrame* aMenuItem)
     frame->GetContent(getter_AddRefs(newContent));
   }
 
-  nsCOMPtr<nsIDOMXULPopupElement> popupEl = do_QueryInterface(mContent);
-  nsCOMPtr<nsIDOMElement> domEl = do_QueryInterface(newContent);
-  popupEl->SetActiveItem(domEl);
+  nsCOMPtr<nsIMenuElement> popupEl = do_QueryInterface(mContent);
+  popupEl->SetActiveItem(newContent);
 
   // Send menuactive state notification.
   if (mCurrentMenu)
@@ -1880,7 +1879,7 @@ NS_IMETHODIMP
 nsMenuPopupFrame::Destroy(nsIPresContext* aPresContext)
 {
   // Make sure the content node doesn't think we still have an active item.
-  nsCOMPtr<nsIDOMXULPopupElement> popupEl = do_QueryInterface(mContent);
+  nsCOMPtr<nsIMenuElement> popupEl = do_QueryInterface(mContent);
   if (popupEl)
     popupEl->SetActiveItem(nsnull);
 

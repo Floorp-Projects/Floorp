@@ -98,10 +98,9 @@
 #include "nsISizeOfHandler.h"
 #include "nsStyleUtil.h"
 #include "nsQuickSort.h"
+#include "nsIMenuElement.h"
 #ifdef MOZ_XUL
 #include "nsIXULContent.h"
-#include "nsIDOMXULPopupElement.h"
-#include "nsIDOMXULMenuBarElement.h"
 #include "nsXULAtoms.h"
 #endif
 
@@ -3342,21 +3341,9 @@ RuleProcessorData::RuleProcessorData(nsIPresContext* aPresContext,
         (mContent->IsContentOfType(nsIContent::eXUL) &&
          (mContentTag == nsXULAtoms::menuitem || mContentTag == nsXULAtoms::menu))) {
       
-      nsCOMPtr<nsIDOMElement> currentItem;
-      nsCOMPtr<nsIDOMXULPopupElement> popupEl = do_QueryInterface(mParentContent);
-      if (popupEl)
-        popupEl->GetActiveItem(getter_AddRefs(currentItem));
-      else {
-        nsCOMPtr<nsIDOMXULMenuBarElement> menubar = do_QueryInterface(mParentContent);
-        if (menubar)
-          menubar->GetActiveMenu(getter_AddRefs(currentItem));
-      }
-
-      if (currentItem) {
-        nsCOMPtr<nsIDOMElement> element = do_QueryInterface(mContent);
-        if (currentItem == element)
-          mIsMenuActive = PR_TRUE;
-      }
+      nsCOMPtr<nsIMenuElement> menuEl = do_QueryInterface(mParentContent);
+      if (menuEl)
+        mIsMenuActive = (mContent == menuEl->GetActiveItem());
     }
   }
 }
