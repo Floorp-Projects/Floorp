@@ -315,13 +315,6 @@ modules/mpfilelocprovider/src/Makefile
 
 MAKEFILES_libimg="
 modules/libimg/Makefile
-modules/libimg/public/Makefile
-modules/libimg/public_com/Makefile
-modules/libimg/src/Makefile
-modules/libimg/gifcom/Makefile
-modules/libimg/jpgcom/Makefile
-modules/libimg/pngcom/Makefile
-modules/libimg/mngcom/Makefile
 "
 
 MAKEFILES_libjar="
