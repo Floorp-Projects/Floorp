@@ -174,6 +174,7 @@ protected:
   PRPackedBool mIsFindingText; 
   PRPackedBool mIsMenuBarActive;
   PRPackedBool mIsMenuPopupActive;
+  PRPackedBool mIsFirstVisiblePreferred;
   PRInt32 mBadKeysSinceMatch;
   PRInt32 mRepeatingMode;
   PRInt32 mTimeoutLength; // time in ms before find is automatically cancelled

@@ -137,7 +137,7 @@ nsTypeAheadFind::nsTypeAheadFind():
   mLiteralTextSearchOnly(PR_FALSE), mDontTryExactMatch(PR_FALSE),
   mLinksOnlyManuallySet(PR_FALSE), mIsFindingText(PR_FALSE),
   mIsMenuBarActive(PR_FALSE), mIsMenuPopupActive(PR_FALSE),
-  mBadKeysSinceMatch(0),
+  mIsFirstVisiblePreferred(PR_FALSE), mBadKeysSinceMatch(0),
   mRepeatingMode(eRepeatingNone), mTimeoutLength(0)
 {
   NS_INIT_ISUPPORTS();
@@ -578,7 +578,6 @@ nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
     return NS_OK;
   }
 
-  PRBool isFirstVisiblePreferred = PR_FALSE;
   PRBool isBackspace = PR_FALSE;  // When backspace is pressed
 
   // ------------- Escape pressed ---------------------
@@ -726,8 +725,8 @@ nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
 
       // If true, we will scan from top left of visible area
       // If false, we will scan from start of selection
-      isFirstVisiblePreferred = !mCaretBrowsingOn && isSelectionCollapsed;
-      if (isFirstVisiblePreferred) {
+      mIsFirstVisiblePreferred = !mCaretBrowsingOn && isSelectionCollapsed;
+      if (mIsFirstVisiblePreferred) {
         // Get focused content from esm. If it's null, the document is focused.
         // If not, make sure the selection is in sync with the focus, so we can 
         // start our search from there.
@@ -743,7 +742,7 @@ nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
         if (focusedContent) {
           mIsFindingText = PR_TRUE; // prevent selection listener from calling CancelFind()
           esm->MoveCaretToFocus();
-          isFirstVisiblePreferred = PR_FALSE;
+          mIsFirstVisiblePreferred = PR_FALSE;
         }
       }
     }
@@ -764,14 +763,14 @@ nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
       // Regular find, not repeated char find
 
       // Prefer to find exact match
-      rv = FindItNow(PR_FALSE, mLinksOnly, isFirstVisiblePreferred, isBackspace);
+      rv = FindItNow(PR_FALSE, mLinksOnly, mIsFirstVisiblePreferred, isBackspace);
     }
 
 #ifndef NO_LINK_CYCLE_ON_SAME_CHAR
     if (NS_FAILED(rv) && !mLiteralTextSearchOnly &&
         mRepeatingMode == eRepeatingChar) {
       mDontTryExactMatch = PR_TRUE;  // Repeated character find mode
-      rv = FindItNow(PR_TRUE, PR_TRUE, isFirstVisiblePreferred, isBackspace);
+      rv = FindItNow(PR_TRUE, PR_TRUE, mIsFirstVisiblePreferred, isBackspace);
     }
 #endif
   }
