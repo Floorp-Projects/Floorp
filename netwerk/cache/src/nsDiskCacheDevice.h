@@ -63,7 +63,7 @@ private:
     nsresult getFileForKey(const char* key, PRBool meta, nsIFile**);
     static nsresult getTransportForFile(nsIFile* file, nsCacheAccessMode mode, nsITransport ** result);
 
-    nsresult scanEntries(void);
+    nsresult visitEntries(nsICacheVisitor * visitory);
     nsresult updateDiskCacheEntry(nsCacheEntry* entry);
     nsresult readDiskCacheEntry(nsCString * key, nsCacheEntry ** entry);
     nsresult deleteDiskCacheEntry(nsCacheEntry* entry);
