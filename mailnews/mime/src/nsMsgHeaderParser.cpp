@@ -890,8 +890,8 @@ msg_quote_phrase_or_addr(char *address, PRInt32 length, PRBool addr_p)
             /* If the name contains quotes, they must be escaped. */
             unquotable_count++, in_quote = !in_quote;
 
-        else if (   *in >= 127 || *in < 0
-		         || *in == ';' || *in == '$' || *in == '(' || *in == ')'
+        else if (  /* *in >= 127 || *in < 0  ducarroz: 8bits characters will be mime encoded therefore they are not a problem
+		         ||*/ *in == ';' || *in == '$' || *in == '(' || *in == ')'
                  || *in == '<' || *in == '>' || *in == '@' || *in == ',') 
             /* If the name contains control chars or Header specials, it needs to
              * be enclosed in quotes.  Double-quotes and backslashes will be dealt
@@ -1218,7 +1218,9 @@ msg_format_Header_addresses (const char *names, const char *addrs,
 	const char *s1, *s2;
 	PRUint32 i, size = 0;
 	PRUint32 column = 10;
-  PRUint32   len1, len2;
+	PRUint32 len1, len2;
+	PRUint32 name_maxlen = 0;
+	PRUint32 addr_maxlen = 0;
 
 	if (count <= 0)
 		return 0;
@@ -1231,11 +1233,24 @@ msg_format_Header_addresses (const char *names, const char *addrs,
 		len2 = nsCRT::strlen(s2);
 		s1 += len1 + 1;
 		s2 += len2 + 1;
+		
+		len1 = (len1 * 2) + 2;  //(N*2) + 2 in case we need to quote it
+		len2 = (len2 * 2) + 2;
+		name_maxlen = PR_MAX(name_maxlen, len1);
+		addr_maxlen = PR_MAX(addr_maxlen, len2);
 		size += len1 + len2 + 10;
 	}
 
 	result = (char *)PR_Malloc(size + 1);
-	if (!result) return 0;
+	char *aName = (char *)PR_Malloc(name_maxlen + 1);
+	char *anAddr = (char *)PR_Malloc(addr_maxlen + 1);
+	if (!result || !aName || !anAddr)
+	{
+		PR_FREEIF(result);
+		PR_FREEIF(aName);
+		PR_FREEIF(anAddr);
+		return 0;
+	}
 
 	out = result;
 	s1 = names;
@@ -1244,8 +1259,11 @@ msg_format_Header_addresses (const char *names, const char *addrs,
 	for (i = 0; (int)i < count; i++)
 	{
 		char *o;
-		len1 = nsCRT::strlen(s1);
-		len2 = nsCRT::strlen(s2);
+		
+		PL_strncpy(aName, s1, name_maxlen);
+		PL_strncpy(anAddr, s2, addr_maxlen);
+		len1 = msg_quote_phrase_or_addr(aName, nsCRT::strlen(s1), PR_FALSE);
+		len2 = msg_quote_phrase_or_addr(anAddr, nsCRT::strlen(s2), PR_TRUE);
 
 		if (   wrap_lines_p && i > 0
 		    && (column + len1 + len2 + 3 + (((int)(i+1) < count) ? 2 : 0) > 76))
@@ -1262,12 +1280,12 @@ msg_format_Header_addresses (const char *names, const char *addrs,
 
 		if (len1)
 		{
-			nsCRT::memcpy(out, s1, len1);
+			nsCRT::memcpy(out, aName, len1);
 			out += len1;
 			*out++ = ' ';
 			*out++ = '<';
 		}
-		nsCRT::memcpy(out, s2, len2);
+		nsCRT::memcpy(out, anAddr, len2);
 		out += len2;
 		if (len1)
 			*out++ = '>';
@@ -1277,12 +1295,16 @@ msg_format_Header_addresses (const char *names, const char *addrs,
 			*out++ = ',';
 			*out++ = ' ';
 		}
-		s1 += len1 + 1;
-		s2 += len2 + 1;
+		s1 += nsCRT::strlen(s1) + 1;
+		s2 += nsCRT::strlen(s2) + 1;
 
 		column += (out - o);
 	}
 	*out = 0;
+	
+	PR_FREEIF(aName);
+	PR_FREEIF(anAddr);
+	
 	return result;
 }
 
