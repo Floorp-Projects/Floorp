@@ -1520,6 +1520,8 @@ nsLineLayout::AlignChildren()
     blockSC->GetData(eStyleStruct_Font);
   nsStyleText* blockText = (nsStyleText*)
     blockSC->GetData(eStyleStruct_Text);
+  nsStyleDisplay* blockDisplay = (nsStyleDisplay*)
+    blockSC->GetData(eStyleStruct_Display);
 
   // First vertically align the children on the line; this will
   // compute the actual line height for us.
@@ -1531,7 +1533,9 @@ nsLineLayout::AlignChildren()
                                          mAscents, mState.mMaxAscent); 
 
   // Now horizontally place the children
-  nsCSSLayout::HorizontallyPlaceChildren(mPresContext, mBlock, blockText,
+  nsCSSLayout::HorizontallyPlaceChildren(mPresContext, mBlock,
+                                         blockText->mTextAlign,
+                                         blockDisplay->mDirection,
                                          mLine->mFirstChild,
                                          mLine->mChildCount,
                                          mState.mX - mLeftEdge,
