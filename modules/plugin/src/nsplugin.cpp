@@ -1027,8 +1027,6 @@ nsPluginInstancePeer::GetNPP()
     return fNPP;
 }
 
-extern "C" JSContext *lm_crippled_context; /* XXX kill me */
-
 JSContext *
 nsPluginInstancePeer::GetJSContext(void)
 {
@@ -1044,7 +1042,7 @@ nsPluginInstancePeer::GetJSContext(void)
     }
     else
     {
-       pJSCX = lm_crippled_context;
+       pJSCX = LM_GetCrippledContext();
     }
     return pJSCX;
 }
