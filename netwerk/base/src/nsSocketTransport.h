@@ -386,6 +386,7 @@ public:
     PRBool      GotWouldBlock() { return mError == PR_WOULD_BLOCK_ERROR; }
     PRBool      GotError() { return mError != 0; }
     PRErrorCode GetError() { return mError; }
+    void        ClearError() { mError = 0; }
 
 private:
     PRUint32    mOffset;
@@ -413,6 +414,7 @@ public:
     PRBool      GotWouldBlock() { return mError == PR_WOULD_BLOCK_ERROR; }
     PRBool      GotError() { return mError != 0; }
     PRErrorCode GetError() { return mError; }
+    void        ClearError() { mError = 0; }
 
 private:
     static NS_METHOD WriteFromSegments(nsIInputStream *, void *, const char *,
