@@ -48,6 +48,10 @@ public:
 
 	virtual void GetTextForColumn(nsTreeColumn* pColumn, nsString& nodeText) const = 0;
 
+	virtual void GetTreeItemRectangle(nsRect& rect) const = 0;
+	virtual void SetTreeItemRectangle(const nsRect& rect) = 0;
+	virtual void GetTriggerRectangle(nsRect& rect) const = 0;
+	virtual void SetTriggerRectangle(const nsRect& rect) = 0;
 };
 
 #endif /* nsTreeItem_h___ */

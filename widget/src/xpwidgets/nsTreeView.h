@@ -115,6 +115,12 @@ protected:
 
 	// Event handlers for specific mouse actions
 	void HandleMouseMove(nsGUIEvent* aEvent);
+	void HandleMouseUp(nsGUIEvent* aEvent);
+
+	// Helper for determining hit locations.
+	enum nsHitLocation { eTriggerHit, eContentHit, eBackgroundHit };
+	void DetermineHitLocation(const nsPoint& point, 
+						      PRUint32& row, PRUint32& column, nsHitLocation& location);
 
 protected:
 	// Data members (*** these should both be smart pointers***)
