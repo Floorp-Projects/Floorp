@@ -33,7 +33,8 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/dexsimplemaster.xul \
 	$(srcdir)/dexsimpledialog.xul \
 	$(srcdir)/tab.xul \
-	$(NULL)
+        $(srcdir)/xpmenu.xul \
+        $(NULL)
 
 install:: 
 	$(INSTALL) $(EXPORT_RESOURCE_SAMPLES) $(DIST)/bin/res/samples
