@@ -259,7 +259,7 @@ setup_shlib_access()
 	if [ z$TEST_SSL = z"yes" ]; then
 # Copy root cert shared library to cert DB location
 		ROOT_CERT_SO_DST_PATH=$CERTDB/$ROOT_CERT_SO
-		if [ "$COPY_ROOT_CERT_LIB" -eq 0 ]; then
+		if [ "$COPY_ROOT_CERT_LIB" -ne 0 ]; then
 			echo setup_shlib_access: cp -p $NSS_LIB_PATH/$ROOT_CERT_SO $ROOT_CERT_SO_DST_PATH
 			cp -p $NSS_LIB_PATH/$ROOT_CERT_SO $ROOT_CERT_SO_DST_PATH
 		fi
@@ -270,7 +270,7 @@ setup_shlib_access()
 # ROOT_CERT_SO_DST_PATH must be set
 cleanup_shlib_access()
 {
-	if [ "$COPY_ROOT_CERT_LIB" -eq 0 ]; then
+	if [ "$COPY_ROOT_CERT_LIB" -ne 0 ]; then
 		echo cleanup_shlib_access: rm $ROOT_CERT_SO_DST_PATH
 		rm $ROOT_CERT_SO_DST_PATH
 	fi
