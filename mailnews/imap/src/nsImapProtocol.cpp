@@ -6826,6 +6826,7 @@ PRBool nsImapProtocol::TryToLogon()
                 m_hostSessionList->SetPasswordForHost(GetImapServerKey(), nsnull);
                 m_currentBiffState = nsIMsgFolder::nsMsgBiffState_Unknown;
                 SendSetBiffIndicatorEvent(m_currentBiffState);
+                password.Truncate();
             } // if we didn't receive the death signal...
           } // if login failed
       else  // login succeeded
@@ -7228,19 +7229,24 @@ nsImapMockChannel::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry, nsCache
       // use a stream listener Tee to force data into the cache and to our current channel listener...
       nsCOMPtr<nsIStreamListener> newListener;
       nsCOMPtr<nsIStreamListenerTee> tee = do_CreateInstance(kStreamListenerTeeCID, &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (NS_SUCCEEDED(rv))
+      {
 
       nsCOMPtr<nsITransport> transport;
       rv = entry->GetTransport(getter_AddRefs(transport));
-      if (NS_FAILED(rv)) return rv;
-
+        if (NS_SUCCEEDED(rv))
+        {
       nsCOMPtr<nsIOutputStream> out;
+          // this will fail with the mem cache turned off, so we need to fall through
+          // to ReadFromImapConnection instead of aborting with NS_ENSURE_SUCCESS(rv,rv)
       rv = transport->OpenOutputStream(0, PRUint32(-1), 0, getter_AddRefs(out));
-      NS_ENSURE_SUCCESS(rv, rv);
-
+          if (NS_SUCCEEDED(rv))
+          {
       rv = tee->Init(m_channelListener, out);
       m_channelListener = do_QueryInterface(tee);
-      NS_ENSURE_SUCCESS(rv, rv);
+          }
+        }
+      }
     }
     else
     {

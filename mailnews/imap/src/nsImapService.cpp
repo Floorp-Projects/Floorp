@@ -3429,7 +3429,9 @@ NS_IMETHODIMP nsImapService::NewChannel(nsIURI *aURI, nsIChannel **_retval)
         if (aFolder)
           aFolder->GetParent(getter_AddRefs(parent));
       }
-      if (!parent && !folderName.IsEmpty())
+      // if we couldn't get the fullFolderName, then we probably couldn't find
+      // the other user's namespace, in which case, we shouldn't try to subscribe to it.
+      if (!parent && !folderName.IsEmpty() && fullFolderName)
       {
         // this folder doesn't exist - check if the user wants to subscribe to this folder.
         nsCOMPtr<nsIPrompt> dialog;
