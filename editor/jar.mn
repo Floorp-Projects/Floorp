@@ -178,7 +178,6 @@ locales/en-US.jar:
 	editor/locale/pref-publish.dtd             (ui/composer/locale/en-US/pref-publish.dtd) 
 	editor/locale/sidebar-editor-rdf.dtd       (ui/composer/locale/en-US/sidebar-editor-rdf.dtd)
 	editor/locale/sidebar-editor.dtd           (ui/composer/locale/en-US/sidebar-editor.dtd)
-	editor/locale/viewSource.dtd               (ui/composer/locale/en-US/viewSource.dtd) 
 	editor/locale/editorOverlay.dtd            (ui/composer/locale/en-US/editorOverlay.dtd) 
 	editor/locale/editor.properties            (ui/composer/locale/en-US/editor.properties) 
 	editor/locale/EditorHLineProperties.dtd    (ui/dialogs/locale/en-US/EditorHLineProperties.dtd) 
