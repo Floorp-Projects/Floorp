@@ -30,6 +30,7 @@ MODULE		= xpcom
 DIRS		= dynamic services
 REQUIRES	= necko \
 		  string \
+		  uconv \
 		  $(NULL)
 
 CPPSRCS		= \
@@ -61,7 +62,6 @@ include $(topsrcdir)/config/config.mk
 # These won't link on BSD/OS, due to multiply defined symbols.
 ifneq ($(OS_ARCH),BSD_OS)
 CPPSRCS		+= \
-		CvtURL.cpp \
 		PropertiesTest.cpp \
 		$(NULL)
 endif
