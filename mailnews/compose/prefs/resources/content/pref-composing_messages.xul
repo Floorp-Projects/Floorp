@@ -16,7 +16,7 @@
     
   <script language="JavaScript">
   <![CDATA[
-    var _elementIDs = ["forwardMessageMode", "autoQuote", "replyOnTop", "spellCheckBeforeSend", "sendStruct", "strictlyMime", "wrapLength", "sendDefaultCharsetList", "addressingAutocomplete"];
+    var _elementIDs = ["forwardMessageMode", "autoQuote", "replyOnTop", "spellCheckBeforeSend", "strictlyMime", "wrapLength", "sendDefaultCharsetList", "addressingAutocomplete"];
     
     function Startup()
     {
