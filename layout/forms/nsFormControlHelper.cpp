@@ -247,7 +247,7 @@ nsFormControlHelper::CalcNavQuirkSizing(nsIPresContext*      aPresContext,
   nscoord width;
   nscoord hgt;
   nscoord height;
-  nscoord average;
+  nscoord average = 0;
   if ((NS_FORM_INPUT_TEXT == type) || (NS_FORM_INPUT_PASSWORD == type)) {
     average = (char1Width + char2Width) / 2;
     width   = maxCharWidth;
@@ -619,7 +619,7 @@ nsFormControlHelper::GetFont(nsIFormControlFrame * aFormFrame,
     case NS_FORM_INPUT_TEXT:
     case NS_FORM_TEXTAREA:
     case NS_FORM_INPUT_PASSWORD:
-      aFont = &styleFont->mFixedFont;
+      aFont = &styleFont->mFont;
       break;
     case NS_FORM_INPUT_BUTTON:
     case NS_FORM_INPUT_SUBMIT:
