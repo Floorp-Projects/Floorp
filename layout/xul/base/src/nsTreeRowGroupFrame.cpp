@@ -1843,6 +1843,10 @@ nsTreeRowGroupFrame::GetCellFrameAtIndex(PRInt32 aRowIndex, PRInt32 aColIndex,
 #ifdef DEBUG_tree
   printf("Looking for cell (%d, %d)..", aRowIndex, aColIndex);
 #endif
+
+  // Init the result to null.
+  *aResult = nsnull;
+
   // The screen index = (aRowIndex - mCurrentIndex)
   PRInt32 screenIndex = aRowIndex - mCurrentIndex;
 
@@ -1858,7 +1862,7 @@ nsTreeRowGroupFrame::GetCellFrameAtIndex(PRInt32 aRowIndex, PRInt32 aColIndex,
   
   nsTableCellMap * cellMap = tableFrame->GetCellMap();
   CellData* cellData = cellMap->GetCellAt(screenIndex, aColIndex);
-  if (cellData->IsOrig()) { // the cell originates at (rowX, colX)
+  if (cellData && cellData->IsOrig()) { // the cell originates at (rowX, colX)
     cellFrame = cellData->GetCellFrame();
     if (cellFrame) { 
       *aResult = (nsTreeCellFrame*)cellFrame; // XXX I am evil.
