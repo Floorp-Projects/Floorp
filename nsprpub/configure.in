@@ -1326,16 +1326,12 @@ mips-sony-newsos*)
     AC_DEFINE(HAVE_POINTER_LOCALTIME_R)
     MDCPUCFG_H=_nto.cfg
     PR_MD_CSRCS=nto.c
-    MKSHLIB='qcc -Vgcc_ntox86 -shared -Wl,-h$(@:$(OBJDIR)/%.so=%.so) -M -o $(@:$(OBJDIR)/%.so=%.so)'
-    CFLAGS="$CFLAGS -Wc,-Wall -Wc,-Wno-parentheses -shared"
+    MKSHLIB='$(CC) $(DSO_LDOPTS) -Wl,-soname -Wl,$(notdir $@) -o $@'
+    DSO_CFLAGS=-fPIC
+    DSO_LDOPTS=-shared
     OS_LIBS="$OS_LIBS -lsocket"
     _OPTIMIZE_FLAGS="-O1"
-    _DEBUG_FLAGS="-O1 -gstabs"
-    CC="qcc -Vgcc_ntox86 -w"
-    CXX='$(CC)'
-    LD="qcc -Vgcc_ntox86 -nostdlib"
-    AR="qcc -Vgcc_ntox86 -M -a $@"
-    AR_FLAGS=
+    _DEBUG_FLAGS="-gstabs"
 	;;
 
 *-openbsd*)
@@ -2113,6 +2109,12 @@ case "$target" in
                 PR_MD_ASFILES="$PR_MD_ASFILES os_SunOS_32.s"
             fi
         fi
+    fi
+    ;;
+*-nto*)
+    if test -n "$USE_PTHREADS"; then
+        AC_DEFINE(_PR_HAVE_GETHOST_R)
+        AC_DEFINE(_PR_HAVE_GETHOST_R_POINTER)
     fi
     ;;
 esac
