@@ -429,6 +429,13 @@ nsAppShellService::Quit()
   if (! mShuttingDown) {
     mShuttingDown = PR_TRUE;
 
+    // Shutdown native app support; doing this first will prevent new
+    // requests to open additional windows coming in.
+    if ( mNativeAppSupport ) {
+        mNativeAppSupport->Quit();
+        mNativeAppSupport = 0;
+    }
+
     // Enumerate through each open window and close it
     if (mWindowMediator) {
       nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
