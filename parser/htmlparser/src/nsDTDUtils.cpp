@@ -461,10 +461,14 @@ public:
 void CTokenRecycler::RecycleToken(CToken* aToken) {
   if(aToken) {
     PRInt32 theType=aToken->GetTokenType();
+    mTokenCache[theType-1]->Push(aToken);
+
+#if 0
+  //This should be disabled since it's only debug code.
     CTokenFinder finder(aToken);
     CToken* theMatch;
     theMatch=(CToken*)mTokenCache[theType-1]->FirstThat(finder);
-    mTokenCache[theType-1]->Push(aToken);
+#endif
   }
 }
 
