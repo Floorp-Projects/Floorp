@@ -733,21 +733,18 @@ xpidl_process_idl(char *filename, IncludePathEntry *include_path,
     if (strcmp(outname, "-")) {
         const char *fopen_mode;
         const char *out_basename;
-#if defined(XP_UNIX)
-        const char os_separator = '/';
-#elif defined(XP_WIN)
-        const char os_separator = '\\';
-#endif
 
         /* explicit_output_filename can't be true without a filename */
         if (explicit_output_filename) {
             real_outname = g_strdup(outname);
         } else {
-
+/* 
+ *This combination seems a little strange, what about OS/2?
+ * Assume it's some build issue
+ */
 #if defined(XP_UNIX) || defined(XP_WIN)
-            tmp = strrchr(outname, os_separator);
-            if (!file_basename && tmp) {
-                out_basename = tmp + 1;
+            if (!file_basename) {
+                out_basename = xpidl_basename(outname);
             } else {
                 out_basename = outname;
             }

@@ -60,7 +60,7 @@ write_indent(FILE *outfile) {
 static gboolean
 header_prolog(TreeState *state)
 {
-    const char *define = g_basename(state->basename);
+    const char *define = xpidl_basename(state->basename);
     fprintf(state->file, "/*\n * DO NOT EDIT.  THIS FILE IS GENERATED FROM"
             " %s.idl\n */\n", state->basename);
     fprintf(state->file,
@@ -116,7 +116,7 @@ header_prolog(TreeState *state)
 static gboolean
 header_epilog(TreeState *state)
 {
-    const char *define = g_basename(state->basename);
+    const char *define = xpidl_basename(state->basename);
     fprintf(state->file, "\n#endif /* __gen_%s_h__ */\n", define);
     return TRUE;
 }
