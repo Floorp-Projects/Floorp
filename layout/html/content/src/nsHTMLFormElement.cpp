@@ -848,16 +848,16 @@ nsFormControlList::GetNamedObject(JSContext* aContext, jsval aID, JSObject** aOb
   char* str = JS_GetStringBytes(JS_ValueToString(aContext, aID));
   nsAutoString name(str); 
   nsCOMPtr<nsIDocument> document;
-  nsCOMPtr<nsIContent> content;
+  nsCOMPtr<nsIContent> form;
 
   *aObj = nsnull;
   if (nsnull == mForm) {
     return NS_OK;
   }
   
-  content = do_QueryInterface(mForm);
-  if (content) {
-    result = content->GetDocument(*getter_AddRefs(document));
+  form = do_QueryInterface(mForm);
+  if (form) {
+    result = form->GetDocument(*getter_AddRefs(document));
     if (NS_FAILED(result)) {
       return result;
     }

@@ -489,7 +489,6 @@ nsresult nsEventListenerManager::SetJSEventListener(nsIScriptContext *aContext,
                                                     REFNSIID aIID,
                                                     PRBool aIsString)
 {
-  nsIDOMEventListener* theListener = nsnull;
   nsresult result = NS_OK;
   nsListenerStruct *ls;
 

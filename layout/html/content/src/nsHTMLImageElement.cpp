@@ -358,8 +358,6 @@ nsHTMLImageElement::DeleteProperty(JSContext *aContext, JSObject *aObj, jsval aI
 PRBool    
 nsHTMLImageElement::GetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
 {
-  PRBool result = PR_TRUE;
-
   // XXX Security manager needs to be called
   if (JSVAL_IS_STRING(aID)) {
     char* cString = JS_GetStringBytes(JS_ValueToString(aContext, aID));
