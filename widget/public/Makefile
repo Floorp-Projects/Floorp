@@ -47,6 +47,19 @@ EXPORTS =               \
 	nsIDialog.h \
 	nsILabel.h \
 	nsWidgetSupport.h \
+	nsIMenuBar.h \
+	nsIMenu.h \
+	nsIMenuItem.h \
+	nsIToolbar.h \
+	nsIImageButton.h \
+	nsIToolbar.h \
+	nsIToolbarManager.h \
+	nsIToolbarManagerListener.h \
+	nsIToolbarItem.h \
+	nsIToolbarItemHolder.h \
+	nsIPopUpMenu.h \
+	nsIMenuButton.h \
+	nsIImageButtonListener.h \
         $(NULL)
 
 MODULE = raptor
