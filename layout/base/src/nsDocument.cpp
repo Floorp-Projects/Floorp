@@ -2058,11 +2058,13 @@ nsDocument::GetDocumentElement(nsIDOMElement** aDocumentElement)
     return NS_ERROR_NULL_POINTER;
   }
 
-  nsresult res = NS_ERROR_FAILURE;
+  nsresult res = NS_OK;
 
   if (nsnull != mRootContent) {
     res = mRootContent->QueryInterface(NS_GET_IID(nsIDOMElement), (void**)aDocumentElement);
     NS_ASSERTION(NS_OK == res, "Must be a DOM Element");
+  } else {
+    *aDocumentElement = nsnull;
   }
   
   return res;
