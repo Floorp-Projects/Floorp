@@ -4373,7 +4373,7 @@ nsElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   const nsStyleDisplay* display;
   pctx->ResolveStyleContextAndGetStyleData(content, eStyleStruct_Display,
-                                           (const nsStyleStruct*) display);
+                                           (const nsStyleStruct*&) display);
   NS_ENSURE_TRUE(display, NS_ERROR_UNEXPECTED);
 
   if (display->mBinding.IsEmpty()) {
