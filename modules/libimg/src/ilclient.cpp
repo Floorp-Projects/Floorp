@@ -776,12 +776,29 @@ void
 il_reduce_image_cache_size_to(PRUint32 new_size)
 {
     int32 last_size = 0;
+#ifdef XP_PC
+/*
+We are limiting he number of items(containers)  in the 
+imagelib cache to 192 for windows only.We need to limit 
+the number of containers in the image cache for win95/98,
+because each container contains an nsIImage instance, and 
+each nsIImage instance on window (nsImageWin) holds onto 
+a HBITMAP which is a GDI resource. The number of GDI resources 
+is limited on windows. Hence by limiting the number
+of items in the cache, we ensure that we do not run
+ out of resources. Note that even if we limit the number of
+items in the cache to 192, the actual number of items may be more
+than this, depending on the actual number of nsIImage instances in use. 
+Currently, we are making this restriction only on platforms where 
+there is a known problem.
+*/
     int32 last_num_items = 0;
 
     while ((il_cache.items > (int32)max_cache_items) && (il_cache.items != last_num_items)) {
         last_num_items = il_cache.items;
         IL_ShrinkCache();
     }
+#endif
 
     while ((il_cache.bytes > (int32)new_size) && (il_cache.bytes != last_size)) {
         last_size = il_cache.bytes;
