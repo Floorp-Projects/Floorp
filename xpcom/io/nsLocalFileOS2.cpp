@@ -29,6 +29,8 @@
 
 #include "nsLocalFileOS2.h"
 
+#include <uconv.h>
+
 #include "nsISimpleEnumerator.h"
 #include "nsIComponentManager.h"
 #include "prtypes.h"
@@ -40,6 +42,7 @@
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "prproces.h"
+#include "prthread.h"
 
 
 static unsigned char* PR_CALLBACK
@@ -2230,4 +2233,254 @@ static int isleadbyte(int c)
   }
 
   return retval;
+}
+
+static UconvObject  UnicodeConverter = NULL;
+
+nsresult NS_CreateUnicodeConverters()
+{
+    ULONG ulLength;
+    ULONG ulCodePage;
+    DosQueryCp(sizeof(ULONG), &ulCodePage, &ulLength);
+
+    UniChar codepage[20];
+    int unirc = ::UniMapCpToUcsCp(ulCodePage, codepage, 20);
+    if (unirc == ULS_SUCCESS) {
+        unirc = ::UniCreateUconvObject(codepage, &UnicodeConverter);
+        if (unirc == ULS_SUCCESS) {
+            uconv_attribute_t attr;
+            ::UniQueryUconvObject(UnicodeConverter, &attr, sizeof(uconv_attribute_t), 
+                                  NULL, NULL, NULL);
+            attr.options = UCONV_OPTION_SUBSTITUTE_BOTH;
+            attr.subchar_len=1;
+            attr.subchar[0]='_';
+            ::UniSetUconvObject(UnicodeConverter, &attr);
+        }
+    }
+}
+
+void NS_DestroyUnicodeConverters()
+{
+    ::UniFreeUconvObject(UnicodeConverter);
+}
+
+static nsresult
+UCS2toFS(const PRUnichar *aBuffer, char **aResult)
+{
+    size_t   inLength   = UniStrlen(aBuffer)+1;
+    size_t   outLength  = CCHMAXPATH;
+    UniChar *inString   = (UniChar*)aBuffer;
+    char    *outString  = (char*)nsMemory::Alloc(outLength);
+    size_t   cSubs      = 0;
+
+    char    *tempString = outString;
+  
+    int unirc = ::UniUconvFromUcs(UnicodeConverter, &inString, &inLength,
+                                  (void**)&tempString, &outLength, &cSubs);
+
+    NS_ASSERTION(unirc != UCONV_E2BIG, "Path too big");
+  
+    if( unirc != ULS_SUCCESS )
+      return NS_ERROR_FAILURE;
+
+    *aResult = outString;
+  
+    return NS_OK;
+}
+
+static nsresult
+FStoUCS2(const char* aBuffer, PRUnichar **aResult)
+{
+    size_t   inLength   = strlen(aBuffer)+1;
+    size_t   outLength  = CCHMAXPATH;
+    char    *inString   = (char*)aBuffer;
+    UniChar *outString  = (UniChar*)nsMemory::Alloc(outLength);
+                       
+    size_t   cSubs      = 0;
+
+    UniChar *tempString = outString;
+  
+    int unirc = ::UniUconvToUcs(UnicodeConverter, (void**)&inString, &inLength,
+                                &tempString, &outLength, &cSubs);
+                                 
+    NS_ASSERTION(unirc != UCONV_E2BIG, "Path too big");
+
+    if( unirc != ULS_SUCCESS )
+      return NS_ERROR_FAILURE;
+  
+    *aResult = (PRUnichar*)outString;
+  
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLocalFile::InitWithUnicodePath(const PRUnichar *filePath)
+{
+
+    NS_ENSURE_ARG(filePath);
+
+    if (nsCRT::strlen(filePath) == 0)
+        return NS_ERROR_INVALID_ARG;
+
+    nsXPIDLCString tmp;
+    nsresult rv = UCS2toFS(filePath, getter_Copies(tmp));
+
+    if (NS_SUCCEEDED(rv))
+        return InitWithPath(tmp);
+
+    return rv;
+}
+
+NS_IMETHODIMP
+nsLocalFile::AppendUnicode(const PRUnichar *node)
+{
+    NS_ENSURE_ARG(node);
+
+    if (nsCRT::strlen(node) == 0)
+        return NS_OK;
+
+    nsXPIDLCString tmp;
+    nsresult rv = UCS2toFS(node, getter_Copies(tmp));
+
+    if (NS_SUCCEEDED(rv))
+        return Append(tmp);
+
+    return rv;
+}
+
+NS_IMETHODIMP
+nsLocalFile::AppendRelativeUnicodePath(const PRUnichar *node)
+{
+    NS_ENSURE_ARG(node);
+
+    if (nsCRT::strlen(node) == 0)
+        return NS_OK;
+
+    nsXPIDLCString tmp;
+
+    if (tmp.IsEmpty())
+        return NS_OK;
+
+    nsresult rv = UCS2toFS(node, getter_Copies(tmp));
+
+    if (NS_SUCCEEDED(rv))
+        return AppendRelativePath(tmp);
+
+    return rv;
+}
+
+NS_IMETHODIMP
+nsLocalFile::GetUnicodeLeafName(PRUnichar **aLeafName)
+{
+    NS_ENSURE_ARG_POINTER(aLeafName);
+    nsXPIDLCString tmp;
+    nsresult rv = GetLeafName(getter_Copies(tmp));
+
+    if (NS_SUCCEEDED(rv))
+        return FStoUCS2(tmp, aLeafName);
+
+    return rv;
+}
+
+NS_IMETHODIMP
+nsLocalFile::SetUnicodeLeafName(const PRUnichar *aLeafName)
+{
+    NS_ENSURE_ARG(aLeafName);
+
+    if (nsCRT::strlen(aLeafName) == 0)
+        return NS_OK;
+
+    nsXPIDLCString tmp;
+    nsresult rv = UCS2toFS(aLeafName, getter_Copies(tmp));
+
+    if (NS_SUCCEEDED(rv))
+        return SetLeafName(tmp);
+
+    return rv;
+}
+
+NS_IMETHODIMP
+nsLocalFile::GetUnicodePath(PRUnichar **_retval)
+{
+    NS_ENSURE_ARG_POINTER(_retval);
+    nsXPIDLCString tmp;
+    nsresult rv = GetPath(getter_Copies(tmp));
+
+    if (NS_SUCCEEDED(rv))
+        return FStoUCS2(tmp, _retval);
+
+    return rv;
+}
+
+NS_IMETHODIMP
+nsLocalFile::CopyToUnicode(nsIFile *newParentDir, const PRUnichar *newName)
+{
+    if (!newName || nsCRT::strlen(newName) == 0)
+        return CopyTo(newParentDir, nsnull);
+
+    nsXPIDLCString tmp;
+    nsresult rv = UCS2toFS(newName, getter_Copies(tmp));
+
+    if (NS_SUCCEEDED(rv))
+        return CopyTo(newParentDir, tmp);
+
+    return rv;
+}
+
+NS_IMETHODIMP
+nsLocalFile::CopyToFollowingLinksUnicode(nsIFile *newParentDir, const PRUnichar *newName)
+{
+    if (!newName || nsCRT::strlen(newName) == 0)
+        return CopyToFollowingLinks(newParentDir, nsnull);
+
+    nsXPIDLCString tmp;
+    nsresult rv = UCS2toFS(newName, getter_Copies(tmp));
+
+    if (NS_SUCCEEDED(rv))
+        return CopyToFollowingLinks(newParentDir, tmp);
+
+    return rv;
+}
+
+NS_IMETHODIMP
+nsLocalFile::MoveToUnicode(nsIFile *newParentDir, const PRUnichar *newName)
+{
+    if (!newName || nsCRT::strlen(newName) == 0)
+        return MoveTo(newParentDir, nsnull);
+
+    nsXPIDLCString tmp;
+    nsresult rv = UCS2toFS(newName, getter_Copies(tmp));
+
+    if (NS_SUCCEEDED(rv))
+        return MoveTo(newParentDir, tmp);
+
+    return rv;
+}
+
+NS_IMETHODIMP
+nsLocalFile::GetUnicodeTarget(PRUnichar **_retval)
+{
+    NS_ENSURE_ARG_POINTER(_retval);
+    nsXPIDLCString tmp;
+    nsresult rv = GetTarget(getter_Copies(tmp));
+
+    if (NS_SUCCEEDED(rv))
+        return FStoUCS2(tmp, _retval);
+
+    return rv;
+}
+
+nsresult
+NS_NewUnicodeLocalFile(const PRUnichar* path, PRBool followLinks, nsILocalFile* *result)
+{
+    if (!path || nsCRT::strlen(path) == 0)
+        return NS_ERROR_INVALID_ARG;
+
+    nsXPIDLCString tmp;
+    nsresult rv = UCS2toFS(path, getter_Copies(tmp));
+
+    if (NS_SUCCEEDED(rv))
+        return NS_NewLocalFile(tmp, followLinks, result);
+
+    return NS_OK;
 }

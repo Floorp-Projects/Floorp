@@ -51,14 +51,22 @@ void NS_StartupLocalFile()
   nsresult rv = NS_CreateShortcutResolver();
   NS_ASSERTION(NS_SUCCEEDED(rv), "Shortcut resolver could not be created");
 #endif
+#ifdef XP_OS2
+  nsresult rv = NS_CreateUnicodeConverters();
+#endif
 }
 
 void NS_ShutdownLocalFile()
 {
+#ifndef XP_OS2
   NS_ShutdownLocalFileUnicode();
+#endif
   
 #ifdef XP_WIN
   NS_DestroyShortcutResolver();
+#endif
+#ifdef XP_OS2
+  NS_DestroyUnicodeConverters();
 #endif
 }
 
