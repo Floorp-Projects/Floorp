@@ -76,8 +76,8 @@ nsImapFactory::nsImapFactory(const nsCID &aClass, const char* aClassName, const 
 nsImapFactory::~nsImapFactory()   
 {
 	NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
-	delete[] mClassName;
-	delete[] mProgID;
+	nsCRT::free(mClassName);
+	nsCRT::free(mProgID);
 }   
 
 nsresult nsImapFactory::QueryInterface(const nsIID &aIID, void **aResult)   
