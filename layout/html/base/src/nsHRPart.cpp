@@ -30,7 +30,6 @@
 #include "nsIHTMLAttributes.h"
 #include "nsStyleConsts.h"
 #include "nsCSSRendering.h"
-#include "nsCSSLayout.h"
 
 #undef DEBUG_HR_REFCNT
 
@@ -81,8 +80,9 @@ protected:
   virtual ~HRuleFrame();
 
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
-                              nsReflowMetrics& aDesiredSize,
-                              const nsSize& aMaxSize);
+                              const nsReflowState& aReflowState,
+                              const nsSize& aMaxSize,
+                              nsReflowMetrics& aDesiredSize);
 };
 
 HRuleFrame::HRuleFrame(nsIContent* aContent,
@@ -110,10 +110,12 @@ HRuleFrame::Paint(nsIPresContext&      aPresContext,
   nscoord thickness = nscoord(p2t * ((HRulePart*)mContent)->GetThickness());
 
   // Get style data
-  nsStyleSpacing* spacing =
-    (nsStyleSpacing*)mStyleContext->GetData(eStyleStruct_Spacing);
-  nsStyleColor* color =
-    (nsStyleColor*)mStyleContext->GetData(eStyleStruct_Color);
+  nsStyleSpacing* spacing = (nsStyleSpacing*)
+    mStyleContext->GetData(eStyleStruct_Spacing);
+  nsStyleColor* color = (nsStyleColor*)
+    mStyleContext->GetData(eStyleStruct_Color);
+  nsStylePosition* position = (nsStylePosition*)
+    mStyleContext->GetData(eStyleStruct_Position);
   nsMargin borderPadding;
   spacing->CalcBorderPaddingFor(this, borderPadding);
   nscoord x0 = borderPadding.left;
@@ -122,30 +124,35 @@ HRuleFrame::Paint(nsIPresContext&      aPresContext,
     (borderPadding.left + borderPadding.right);
   nscoord height = mRect.height -
     (borderPadding.top + borderPadding.bottom);
-  nsSize size;
-  PRIntn sf = nsCSSLayout::GetStyleSize(&aPresContext, this, size);
-  if (NS_SIZE_HAS_WIDTH & sf) {
-    // Use width from style. Get alignment
-    if (size.width < width) {
-      // center or right align rule within the extra space
-      nsStyleText* text =
-        (nsStyleText*) mStyleContext->GetData(eStyleStruct_Text);
-      switch (text->mTextAlign) {
-      case NS_STYLE_TEXT_ALIGN_RIGHT:
-        x0 += width - size.width;
-        break;
 
-      case NS_STYLE_TEXT_ALIGN_LEFT:
-        break;
-
-      default:
-      case NS_STYLE_TEXT_ALIGN_CENTER:
-        x0 += (width - size.width) / 2;
-        break;
-      }
-    }
-    width = size.width;
+  nscoord newWidth = width;
+  if (position->mWidth.GetUnit() == eStyleUnit_Coord) {
+    newWidth = position->mWidth.GetIntValue();
   }
+  else if (position->mWidth.GetUnit() == eStyleUnit_Percent) {
+    // Width is (mostly) interpreted at rendering time
+    float pct = position->mWidth.GetPercentValue();
+    newWidth = nscoord(pct * mRect.width);
+  }
+  if (newWidth < width) {
+    // center or right align rule within the extra space
+    nsStyleText* text =
+      (nsStyleText*) mStyleContext->GetData(eStyleStruct_Text);
+    switch (text->mTextAlign) {
+    case NS_STYLE_TEXT_ALIGN_RIGHT:
+      x0 += width - newWidth;
+      break;
+
+    case NS_STYLE_TEXT_ALIGN_LEFT:
+      break;
+
+    default:
+    case NS_STYLE_TEXT_ALIGN_CENTER:
+      x0 += (width - newWidth) / 2;
+      break;
+    }
+  }
+  width = newWidth;
 
   // Center hrule vertically within the available space
   y0 += (height - thickness) / 2;
@@ -217,24 +224,20 @@ HRuleFrame::Paint(nsIPresContext&      aPresContext,
   return NS_OK;
 }
 
-void HRuleFrame::GetDesiredSize(nsIPresContext* aPresContext,
-                                nsReflowMetrics& aDesiredSize,
-                                const nsSize& aMaxSize)
+void
+HRuleFrame::GetDesiredSize(nsIPresContext* aPresContext,
+                           const nsReflowState& aReflowState,
+                           const nsSize& aMaxSize,
+                           nsReflowMetrics& aDesiredSize)
 {
-  nsSize size;
-  PRIntn sf = nsCSSLayout::GetStyleSize(aPresContext, this, size);
-  if (NS_SIZE_HAS_WIDTH & sf) {
-    aDesiredSize.width = size.width;
-    if (aMaxSize.width != NS_UNCONSTRAINEDSIZE) {
-      // Use larger of specified width and max-size (HR's can be sized
-      // larger than the parent which causes the parent to be grown).
-      // When HR's are smaller than the parent then they can be
-      // aligned with the parent via the text-align css property OR
-      // the align tag attribute.
-      if (size.width < aMaxSize.width) {
-        aDesiredSize.width = aMaxSize.width;
-      }
-    }
+  nsStylePosition* position = (nsStylePosition*)
+    mStyleContext->GetData(eStyleStruct_Position);
+  if (position->mWidth.GetUnit() == eStyleUnit_Coord) {
+    aDesiredSize.width = position->mWidth.GetIntValue();
+  }
+  else if (position->mWidth.GetUnit() == eStyleUnit_Percent) {
+    float pct = position->mWidth.GetPercentValue();
+    aDesiredSize.width = nscoord(pct * aMaxSize.width);
   }
   else {
     if (aMaxSize.width == NS_UNCONSTRAINEDSIZE) {
@@ -243,26 +246,29 @@ void HRuleFrame::GetDesiredSize(nsIPresContext* aPresContext,
       aDesiredSize.width = aMaxSize.width;
     }
   }
-
-  nscoord lineHeight;
-  if (NS_SIZE_HAS_HEIGHT & sf) {
-    lineHeight = size.height;
-  }
-  else {
-    // Get the thickness of the rule (this is not css's height property)
-    float p2t = aPresContext->GetPixelsToTwips();
-    nscoord thickness = nscoord(p2t * ((HRulePart*)mContent)->GetThickness());
-
-    // Compute height of "line" that hrule will layout within. Use the
-    // default font to do this.
-    lineHeight = thickness + nscoord(p2t * 2);
-    const nsFont& defaultFont = aPresContext->GetDefaultFont();
-    nsIFontMetrics* fm = aPresContext->GetMetricsFor(defaultFont);
-    nscoord defaultLineHeight = fm->GetHeight();
-    NS_RELEASE(fm);
-    if (lineHeight < defaultLineHeight) {
-      lineHeight = defaultLineHeight;
+  if (aMaxSize.width != NS_UNCONSTRAINEDSIZE) {
+    if (aDesiredSize.width  < aMaxSize.width) {
+      aDesiredSize.width = aMaxSize.width;
     }
+  }
+
+  // XXX should we interpret css's height property as thickness? or as
+  // line-height? In the meantime, ignore it...
+  nscoord lineHeight;
+
+  // Get the thickness of the rule (this is not css's height property)
+  float p2t = aPresContext->GetPixelsToTwips();
+  nscoord thickness = nscoord(p2t * ((HRulePart*)mContent)->GetThickness());
+
+  // Compute height of "line" that hrule will layout within. Use the
+  // default font to do this.
+  lineHeight = thickness + nscoord(p2t * 2);
+  const nsFont& defaultFont = aPresContext->GetDefaultFont();
+  nsIFontMetrics* fm = aPresContext->GetMetricsFor(defaultFont);
+  nscoord defaultLineHeight = fm->GetHeight();
+  NS_RELEASE(fm);
+  if (lineHeight < defaultLineHeight) {
+    lineHeight = defaultLineHeight;
   }
 
   aDesiredSize.height = lineHeight;
