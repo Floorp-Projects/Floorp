@@ -49,12 +49,14 @@ CPPSRCS		= \
 		nsCP857ToUnicode.cpp \
 		nsCP862ToUnicode.cpp \
 		nsCP864ToUnicode.cpp \
+		nsCP864iToUnicode.cpp \
 		nsUnicodeToCP850.cpp \
 		nsUnicodeToCP852.cpp \
 		nsUnicodeToCP855.cpp \
 		nsUnicodeToCP857.cpp \
 		nsUnicodeToCP862.cpp \
 		nsUnicodeToCP864.cpp \
+		nsUnicodeToCP864i.cpp \
 		nsUCvIBMSupport.cpp \
 		nsUCvIBMModule.cpp \
 		$(NULL)
