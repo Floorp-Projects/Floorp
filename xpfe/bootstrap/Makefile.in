@@ -1,0 +1,118 @@
+#!gmake
+#
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+
+
+DEPTH = ../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+include $(topsrcdir)/config/config.mk
+
+PROGS= $(OBJDIR)/apprunner
+
+MODULE=raptor
+
+REQUIRES=raptor xpcom base netlib pref js dom
+
+INCLUDES+= -I../public -I$(PUBLIC)/raptor	\
+	   -I$(PUBLIC)/xpcom	\
+	   -I$(PUBLIC)/base	\
+	   -I$(PUBLIC)/netlib	\
+	   -I$(PUBLIC)/pref	\
+	   -I$(PUBLIC)/js	\
+	   -I$(PUBLIC)/dom
+
+EX_LIBS=\
+	-L$(DIST)/bin	\
+	$(DIST)/lib/libnsappshell.a \
+	-lxpcom		\
+	-lraptorbase	\
+	-lwidgetgtk	\
+	-lraptorgfx	\
+	-lgfxgtk	\
+	-lgmbasegtk	\
+	-lreg		\
+	-labouturl	\
+	-lhttpurl	\
+	-lfileurl	\
+	-lgophurl	\
+	-lftpurl	\
+	-lremoturl	\
+	-lxp		\
+	-lnetutil	\
+	-lnetcache	\
+	-lnetcnvts	\
+	-lmimetype	\
+	-lnetwork	\
+	-lnetlib	\
+	-lraptorwebwidget	\
+	$(DIST)/lib/libraptorhtmlbase_s.a \
+	$(DIST)/lib/libraptorlayout_s.a \
+	$(DIST)/lib/libraptorevents_s.a	\
+	$(DIST)/lib/libraptorhtmlstyle_s.a \
+	$(DIST)/lib/libjsdombase_s.a	\
+	$(DIST)/lib/libjsdomhtml_s.a	\
+	$(DIST)/lib/libjsdomcss_s.a	\
+	$(DIST)/lib/libjsdomcore_s.a	\
+	-ljsurl		\
+	-lraptorbase	\
+	-lsecfree	\
+	-ljs		\
+	$(JSJ_LIB)	\
+	-lpref		\
+	-limg		\
+	$(JPEG_LIBS)	\
+	$(PNG_LIBS)	\
+	-lxp		\
+	-lxpcom		\
+	$(NSPR_LIBS)	\
+	$(ZLIB_LIBS)	\
+	-lpwcac		\
+	$(NULL)
+
+
+CPPSRCS= \
+	nsAppRunner.cpp 	\
+	nsSetupRegistry.cpp	\
+	nsUnixStubs.cpp		\
+	$(NULL)
+
+CPP_OBJS=			\
+ ./$(OBJDIR)/nsAppRunner.o  	\
+ ./$(OBJDIR)/nsSetupRegistry.o	\
+ ./$(OBJDIR)/nsUnixStubs.o	\
+ $(NULL)
+
+
+TARGETS = $(PROGS)
+
+include $(topsrcdir)/config/rules.mk
+
+$(PROGS) : $(OBJS)
+	@$(MAKE_OBJDIR)
+	$(CCC) -o $@ $(OBJS) $(LDFLAGS) $(EX_LIBS) $(OS_LIBS)
+
+install:: $(TARGETS)
+	$(INSTALL) $(PROGS) $(DIST)/bin
+
+clobber::
+	rm -rf $(OBJDIR)/*.o
+	rm -rf $(OBJDIR)/$(PROGS)
+
