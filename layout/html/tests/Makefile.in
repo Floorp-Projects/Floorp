@@ -22,7 +22,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-
 CPPSRCS = \
 	TestCSSParser.cpp	\
 	TestCSSPropertyLookup.cpp	\
@@ -64,6 +63,7 @@ LIBS = \
 	-lxpcom \
 	-lxp \
 	-lraptorhtmlpars \
+	$(DIST)/bin/components/libraptorhtml.so \
 	-lexpat \
 	-lxmltok \
 	-ljsurl \
