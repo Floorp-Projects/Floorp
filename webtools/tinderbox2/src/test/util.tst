@@ -5,8 +5,8 @@
 # Util.tst - simple regression tests for the Util.pm module
 
 
-# $Revision: 1.1 $ 
-# $Date: 2000/09/18 19:33:13 $ 
+# $Revision: 1.2 $ 
+# $Date: 2000/09/22 14:56:14 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/util.tst,v $ 
 # $Name:  $ 
@@ -237,7 +237,7 @@ sub median_tst {
 {
   set_static_vars();	
 
-  extract_digit_tst();
+  extract_digits_tst();
   extract_user_tst();
   extract_html_chars_tst();
   is_time_valid_tst();
