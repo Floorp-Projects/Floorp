@@ -113,7 +113,7 @@ NS_IMETHODIMP
 HistoryImpl::GetCurrent(nsString& aCurrent)
 {
   PRInt32 curIndex;
-  PRUnichar* curURL = nsnull;
+  const PRUnichar* curURL = nsnull;
 
   if (nsnull != mWebShell && NS_OK == mWebShell->GetHistoryIndex(curIndex)) {
     mWebShell->GetURL(curIndex, &curURL);
@@ -127,7 +127,7 @@ NS_IMETHODIMP
 HistoryImpl::GetPrevious(nsString& aPrevious)
 {
   PRInt32 curIndex;
-  PRUnichar* prevURL = nsnull;
+  const PRUnichar* prevURL = nsnull;
 
   if (nsnull != mWebShell && NS_OK == mWebShell->GetHistoryIndex(curIndex)) {
     mWebShell->GetURL(curIndex-1, &prevURL);
@@ -141,7 +141,7 @@ NS_IMETHODIMP
 HistoryImpl::GetNext(nsString& aNext)
 {
   PRInt32 curIndex;
-  PRUnichar* nextURL = nsnull;
+  const PRUnichar* nextURL = nsnull;
 
   if (nsnull != mWebShell && NS_OK == mWebShell->GetHistoryIndex(curIndex)) {
     mWebShell->GetURL(curIndex+1, &nextURL);
