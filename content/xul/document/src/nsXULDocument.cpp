@@ -2623,7 +2623,7 @@ nsXULDocument::PrepareToWalk()
     nsCOMPtr<nsIContent> root;
 
     if (mState == eState_Master) {
-        rv = CreateElement(proto, getter_AddRefs(root));
+        rv = CreateElementFromPrototype(proto, getter_AddRefs(root));
         if (NS_FAILED(rv)) return rv;
 
         SetRootContent(root);
@@ -2770,7 +2770,8 @@ nsXULDocument::ResumeWalk()
                     // and attach them to the parent node.
                     NS_ASSERTION(element != nsnull, "no element on context stack");
 
-                    rv = CreateElement(protoele, getter_AddRefs(child));
+                    rv = CreateElementFromPrototype(protoele,
+                                                    getter_AddRefs(child));
                     if (NS_FAILED(rv)) return rv;
 
                     // ...and append it to the content model.
@@ -3290,7 +3291,8 @@ nsXULDocument::ExecuteScript(JSObject* aScriptObject)
 
 
 nsresult
-nsXULDocument::CreateElement(nsXULPrototypeElement* aPrototype, nsIContent** aResult)
+nsXULDocument::CreateElementFromPrototype(nsXULPrototypeElement* aPrototype,
+                                          nsIContent** aResult)
 {
     // Create a content model element from a prototype element.
     NS_PRECONDITION(aPrototype != nsnull, "null ptr");

@@ -365,7 +365,8 @@ protected:
     /**
      * Create a delegate content model element from a prototype.
      */
-    nsresult CreateElement(nsXULPrototypeElement* aPrototype, nsIContent** aResult);
+    nsresult CreateElementFromPrototype(nsXULPrototypeElement* aPrototype,
+                                        nsIContent** aResult);
 
     /**
      * Create a temporary 'overlay' element to which content nodes
