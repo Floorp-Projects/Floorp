@@ -413,6 +413,10 @@ JS_StringToVersion(const char *string);
  */
 #define JSOPTION_STRICT         JS_BIT(0)       /* warn on dubious practice */
 #define JSOPTION_WERROR         JS_BIT(1)       /* convert warning to error */
+#define JSOPTION_VAROBJFIX      JS_BIT(2)       /* make JS_EvaluateScript use
+                                                   the last object on its 'obj'
+                                                   param's scope chain as the
+                                                   ECMA 'variables object' */
 
 extern JS_PUBLIC_API(uint32)
 JS_GetOptions(JSContext *cx);
@@ -1116,6 +1120,41 @@ JS_DecompileFunction(JSContext *cx, JSFunction *fun, uintN indent);
 extern JS_PUBLIC_API(JSString *)
 JS_DecompileFunctionBody(JSContext *cx, JSFunction *fun, uintN indent);
 
+/*
+ * NB: JS_ExecuteScript, JS_ExecuteScriptPart, and the JS_Evaluate*Script*
+ * quadruplets all use the obj parameter as the initial scope chain header,
+ * the 'this' keyword value, and the variables object (ECMA parlance for where
+ * 'var' and 'function' bind names) of the execution context for script.
+ *
+ * Using obj as the variables object is problematic if obj's parent (which is
+ * the scope chain link; see JS_SetParent and JS_NewObject) is not null: in
+ * this case, variables created by 'var x = 0', e.g., go in obj, but variables
+ * created by assignment to an unbound id, 'x = 0', go in the last object on
+ * the scope chain linked by parent.
+ *
+ * ECMA calls that last scoping object the "global object", but note that many
+ * embeddings have several such objects.  ECMA requires that "global code" be
+ * executed with the variables object equal to this global object.  But these
+ * JS API entry points provide freedom to execute code against a "sub-global",
+ * i.e., a parented or scoped object, in which case the variables object will
+ * differ from the last object on the scope chain, resulting in confusing and
+ * non-ECMA explicit vs. implicit variable creation.
+ *
+ * Caveat embedders: unless you already depend on this buggy variables object
+ * binding behavior, you should call JS_SetOptions(cx, JSOPTION_VAROBJFIX) or
+ * JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_VAROBJFIX) -- the latter if
+ * someone may have set other options on cx already -- for each context in the
+ * application, if you pass parented objects as the obj parameter, or may ever
+ * pass such objects in the future.
+ *
+ * Why a runtime option?  The alternative is to add six or so new API entry
+ * points with signatures matching the following six, and that doesn't seem
+ * worth the code bloat cost.  Such new entry points would probably have less
+ * obvious names, too, so would not tend to be used.  The JS_SetOption call,
+ * OTOH, can be more easily hacked into existing code that does not depend on
+ * the bug; such code can continue to use the familiar JS_EvaluateScript,
+ * etc., entry points.
+ */
 extern JS_PUBLIC_API(JSBool)
 JS_ExecuteScript(JSContext *cx, JSObject *obj, JSScript *script, jsval *rval);
 
