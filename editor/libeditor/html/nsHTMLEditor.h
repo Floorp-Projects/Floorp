@@ -32,10 +32,6 @@
  */
 class nsHTMLEditor  : public nsTextEditor, public nsIHTMLEditor
 {
-private:
-  // So we can use "Inherited::foo()" instead of "nsTextEditor::foo()"
-  typedef nsTextEditor Inherited;
-
 public:
   // see nsIHTMLEditor for documentation
 

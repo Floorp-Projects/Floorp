@@ -35,10 +35,6 @@ class nsIDOMRange;
  */
 class nsTextEditor  : public nsEditor, public nsITextEditor
 {
-private:
-  // So we can use "Inherited::foo()" instead of "nsEditor::foo()"
-  typedef nsEditor Inherited;
-
 public:
   // see nsITextEditor for documentation
 
