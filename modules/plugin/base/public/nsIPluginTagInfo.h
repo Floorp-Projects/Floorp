@@ -81,19 +81,6 @@ public:
      */
     NS_IMETHOD
     GetAttribute(const char* name, const char* *result) = 0;
-
-    /**
-     * Returns the DOM element corresponding to the tag which references
-     * this plugin in the document.
-     *
-     * REMIND: do we need to expose as an nsISupports * to avoid
-     * introducing runtime dependencies on XPCOM?
-     *
-     * @param result - resulting DOM element
-     * @result - NS_OK if this operation was successful
-     */
-    NS_IMETHOD
-    GetDOMElement(nsIDOMElement* *result) = 0;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
