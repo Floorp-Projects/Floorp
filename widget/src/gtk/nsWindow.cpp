@@ -2513,15 +2513,6 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
          aWidth, aHeight);
 #endif
   
-  PRInt32 screenWidth = gdk_screen_width();
-  PRInt32 screenHeight = gdk_screen_height();
-    
-  if(aWidth > screenWidth)
-    aWidth = screenWidth;
-    
-  if(aHeight > screenHeight)
-    aHeight = screenHeight;
-
   mBounds.width  = aWidth;
   mBounds.height = aHeight;
 
