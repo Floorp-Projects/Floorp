@@ -2351,6 +2351,9 @@ NS_IMETHODIMP nsHTMLEditor::InsertHTMLWithCharset(const nsString& aInputString,
   res = DeleteSelectionAndPrepareToCreateNode(parentNode, offsetOfNewNode);
   if (NS_FAILED(res)) return res;
 
+  // pasting does not inherit local inline styles
+  RemoveAllInlineProperties();
+
   res = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
   if (!selection) return NS_ERROR_NULL_POINTER;
@@ -2363,6 +2366,22 @@ NS_IMETHODIMP nsHTMLEditor::InsertHTMLWithCharset(const nsString& aInputString,
   if (cancel) return NS_OK; // rules canceled the operation
   if (!handled)
   {
+    // The rules code (WillDoAction above) might have changed the selection.  
+    // refresh our memory...
+    res = GetStartNodeAndOffset(selection, &parentNode, &offsetOfNewNode);
+    if (!parentNode) res = NS_ERROR_FAILURE;
+    if (NS_FAILED(res)) return res;
+    
+    // are we in a text node?  If so, split it.
+    if (IsTextNode(parentNode))
+    {
+      nsCOMPtr<nsIDOMNode> temp;
+      res = SplitNode(parentNode, offsetOfNewNode, getter_AddRefs(temp));
+      if (NS_FAILED(res)) return res;
+      res = GetNodeLocation(parentNode, &temp, &offsetOfNewNode);
+      if (NS_FAILED(res)) return res;
+      parentNode = temp;
+    }
     // Get the first range in the selection, for context:
     nsCOMPtr<nsIDOMRange> range;
     res = selection->GetRangeAt(0, getter_AddRefs(range));
@@ -4352,6 +4371,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
   PRUint32 len = 0;
   if ( NS_SUCCEEDED(transferable->GetAnyTransferData(&bestFlavor, getter_AddRefs(genericDataObj), &len)) )
   {
+    nsAutoTxnsConserveSelection dontSpazMySelection(this);
     nsAutoString stuffToPaste;
     nsAutoString flavor;
     flavor.AssignWithConversion( bestFlavor );   // just so we can use flavor.Equals()
@@ -4379,6 +4399,8 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
         textDataObj->ToString ( &text );
         stuffToPaste.Assign ( text, len / 2 );
         nsAutoEditBatch beginBatching(this);
+        // pasting does not inherit local inline styles
+        RemoveAllInlineProperties();
         rv = InsertText(stuffToPaste);
       }
     }

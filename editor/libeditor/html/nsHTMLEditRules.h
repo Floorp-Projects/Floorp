@@ -85,6 +85,8 @@ protected:
 
 
   // nsHTMLEditRules implementation methods
+  nsresult WillInsert(nsIDOMSelection *aSelection, PRBool *aCancel);
+  nsresult DidInsert(nsIDOMSelection *aSelection, nsresult aResult);
   nsresult WillInsertText(  PRInt32          aAction,
                             nsIDOMSelection *aSelection, 
                             PRBool          *aCancel,
