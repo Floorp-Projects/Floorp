@@ -195,7 +195,7 @@ function addThis()
  */
 function stripWhite(str)
 {
-  var re = /([ \t\n\v\f\r]|\\t|\\n)/g;
+  var re = /\s|\\t|\\n/g;
   return str.replace(re, '');
 }
 
