@@ -1,8 +1,8 @@
-nsConverterCID.h
-nsICharsetConverterInfo.h
 nsICharsetConverterManager.h
+nsICharsetConverterInfo.h
 nsIUnicodeDecoder.h
 nsIUnicodeDecodeUtil.h
 nsIUnicodeEncoder.h
+nsIUnicodeEncodeHelper.h
 nsIPlatformCharset.h
 uconvutil.h
