@@ -2064,7 +2064,7 @@ nsGlyphAgent gGlyphAgent;
 // the common part of GetBoundingMetrics used by nsFontWinUnicode
 // and 'wide' nsFontWinNonUnicode.
 static nsresult 
-GetBoundingMetricsCommon(HDC aDC, const PRUnichar* aString, PRUint32 aLength, 
+GetBoundingMetricsCommon(HDC aDC, LONG aOverhangCorrection, const PRUnichar* aString, PRUint32 aLength, 
   nsBoundingMetrics& aBoundingMetrics, PRUnichar* aGlyphStr)
 {
   // measure the string
@@ -2099,6 +2099,7 @@ GetBoundingMetricsCommon(HDC aDC, const PRUnichar* aString, PRUint32 aLength,
     // get the final rightBearing and width. Possible kerning is taken into account.
     SIZE size;
     ::GetTextExtentPointW(aDC, aString, aLength, &size);
+    size.cx -= aOverhangCorrection;
     aBoundingMetrics.width = size.cx;
     aBoundingMetrics.rightBearing = size.cx - gm.gmCellIncX + gm.gmptGlyphOrigin.x + gm.gmBlackBoxX;
   }
@@ -2107,7 +2108,7 @@ GetBoundingMetricsCommon(HDC aDC, const PRUnichar* aString, PRUint32 aLength,
 }
 
 static nsresult 
-GetBoundingMetricsCommonA(HDC aDC, const char* aString, PRUint32 aLength, 
+GetBoundingMetricsCommonA(HDC aDC, LONG aOverhangCorrection, const char* aString, PRUint32 aLength, 
   nsBoundingMetrics& aBoundingMetrics)
 {
   // measure the string
@@ -2143,6 +2144,7 @@ GetBoundingMetricsCommonA(HDC aDC, const char* aString, PRUint32 aLength,
     // get the final rightBearing and width. Possible kerning is taken into account.
     SIZE size;
     ::GetTextExtentPointA(aDC, aString, aLength, &size);
+    size.cx -= aOverhangCorrection;
     aBoundingMetrics.width = size.cx;
     aBoundingMetrics.rightBearing = size.cx - gm.gmCellIncX + gm.gmBlackBoxX;
   }
@@ -2227,6 +2229,10 @@ nsFontMetricsWin::InitMetricsFor(HDC aDC, nsFontWin* aFont)
   ::GetTextMetrics(aDC, &metrics);
   aFont->mMaxAscent = NSToCoordRound(metrics.tmAscent * dev2app);
   aFont->mMaxDescent = NSToCoordRound(metrics.tmDescent * dev2app);
+  aFont->mOverhangCorrection = (IsWin95OrWin98() ? metrics.tmOverhang : 0);
+  aFont->mMaxCharWidthMetric = metrics.tmMaxCharWidth;
+  aFont->mMaxHeightMetric = metrics.tmHeight;
+  aFont->mPitchAndFamily = metrics.tmPitchAndFamily;
 }
 
 HFONT
@@ -3644,6 +3650,7 @@ nsFontMetricsWin::RealizeFont()
   // Cache the width of a single space.
   SIZE  size;
   ::GetTextExtentPoint32(dc, " ", 1, &size);
+  size.cx -= font->mOverhangCorrection;
   mSpaceWidth = NSToCoordRound(size.cx * dev2app);
 
   ::SelectObject(dc, oldfont);
@@ -3985,14 +3992,56 @@ nsFontWin::GetWidth(HDC aDC, const char* aString, PRUint32 aLength)
 {
   SIZE size;
   ::GetTextExtentPoint32(aDC, aString, aLength, &size);
+  size.cx -= mOverhangCorrection;
   return size.cx;
+}
+
+PRBool
+nsFontWin::FillClipRect(PRInt32 aX, PRInt32 aY, UINT aLength, UINT uOptions, RECT& clipRect)
+{
+  if (!(uOptions & (ETO_CLIPPED | ETO_OPAQUE)) &&
+      mOverhangCorrection > 0 && !(mPitchAndFamily & TMPF_FIXED_PITCH)) {
+    // bug 52596 - although the clipping rectangle is said to be optional, we
+    // have to use a clipping rectange to work around a GDI bug on
+    // Win9X-Japanese that causes the text to be truncated incorrectly.
+    clipRect.top = aY - mMaxHeightMetric;
+    clipRect.bottom = aY + mMaxHeightMetric;
+    clipRect.left = aX;
+    clipRect.right = aX + mMaxCharWidthMetric * aLength;
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+static PRBool
+NS_ExtTextOutA(HDC aDC, nsFontWin* aFont, PRInt32 aX, PRInt32 aY, UINT uOptions,
+  LPCRECT lprc, LPCSTR aString, UINT aLength, INT *lpDx)
+{
+  RECT clipRect;
+  if (!lpDx && !lprc && aFont->FillClipRect(aX, aY, aLength, uOptions, clipRect)) {
+    lprc = &clipRect;
+    uOptions |= ETO_CLIPPED;
+  }
+  return ::ExtTextOutA(aDC, aX, aY, uOptions, lprc, aString, aLength, lpDx);
+}
+
+static PRBool
+NS_ExtTextOutW(HDC aDC, nsFontWin* aFont, PRInt32 aX, PRInt32 aY, UINT uOptions,
+  LPCRECT lprc, LPCWSTR aString, UINT aLength, INT *lpDx)
+{
+  RECT clipRect;
+  if (!lpDx && !lprc && aFont->FillClipRect(aX, aY, aLength, uOptions, clipRect)) {
+    lprc = &clipRect;
+    uOptions |= ETO_CLIPPED;
+  }
+  return ::ExtTextOutW(aDC, aX, aY, uOptions, lprc, aString, aLength, lpDx);
 }
 
 void
 nsFontWin::DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
   const char* aString, PRUint32 aLength, INT* lpDx)
 {
-  ::ExtTextOut(aDC, aX, aY, 0, NULL, aString, aLength, lpDx);
+  NS_ExtTextOutA(aDC, this, aX, aY, 0, NULL, aString, aLength, lpDx);
 }
 
 #ifdef MOZ_MATHML
@@ -4002,7 +4051,7 @@ nsFontWin::GetBoundingMetrics(HDC                aDC,
                               PRUint32           aLength,
                               nsBoundingMetrics& aBoundingMetrics)
 {
-  return GetBoundingMetricsCommonA(aDC, aString, aLength, aBoundingMetrics);
+  return GetBoundingMetricsCommonA(aDC, mOverhangCorrection, aString, aLength, aBoundingMetrics);
 }
 #endif
 
@@ -4025,6 +4074,7 @@ nsFontWinUnicode::GetWidth(HDC aDC, const PRUnichar* aString, PRUint32 aLength)
 {
   SIZE size;
   ::GetTextExtentPoint32W(aDC, aString, aLength, &size);
+  size.cx -= mOverhangCorrection;
   return size.cx;
 }
 
@@ -4049,19 +4099,20 @@ nsFontWinUnicode::DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
       // bug in WIN95.
       SIZE size;
       ::GetTextExtentPoint32W(aDC, aString, aLength, &size);
+      size.cx -= mOverhangCorrection;
       RECT clipRect;
       clipRect.top = aY - size.cy;
       clipRect.bottom = aY + size.cy; // Make it plenty large to allow for character descent.
                                       // Not necessary to clip vertically, only horizontally
       clipRect.left = aX;
       clipRect.right = aX + size.cx;
-      ::ExtTextOutW(aDC, aX, aY, ETO_CLIPPED, &clipRect, aString, aLength, NULL); 
+      NS_ExtTextOutW(aDC, this, aX, aY, ETO_CLIPPED, &clipRect, aString, aLength, NULL); 
       return;
     }
   } 
 
   // Do normal non-WIN95 text output without clipping
-  ::ExtTextOutW(aDC, aX, aY, 0, NULL, aString, aLength, NULL);  
+  NS_ExtTextOutW(aDC, this, aX, aY, 0, NULL, aString, aLength, NULL);  
 }
 
 #ifdef MOZ_MATHML
@@ -4086,7 +4137,7 @@ nsFontWinUnicode::GetBoundingMetrics(HDC                aDC,
     }
   }
 
-  return GetBoundingMetricsCommon(aDC, aString, aLength, aBoundingMetrics, buffer.GetArray());
+  return GetBoundingMetricsCommon(aDC, mOverhangCorrection, aString, aLength, aBoundingMetrics, buffer.GetArray());
 }
 
 #ifdef NS_DEBUG
@@ -4127,6 +4178,7 @@ nsFontWinNonUnicode::GetWidth(HDC aDC, const PRUnichar* aString,
     ::GetTextExtentPoint32A(aDC, buffer.GetArray(), destLength, &size);
   else
     ::GetTextExtentPoint32W(aDC, (PRUnichar*) buffer.GetArray(), destLength / 2, &size);
+  size.cx -= mOverhangCorrection;
 
   return size.cx;
 }
@@ -4144,9 +4196,9 @@ nsFontWinNonUnicode::DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
   }
 
   if (!mIsWide)
-    ::ExtTextOutA(aDC, aX, aY, 0, NULL, buffer.GetArray(), aLength, NULL);
+    NS_ExtTextOutA(aDC, this, aX, aY, 0, NULL, buffer.GetArray(), aLength, NULL);
   else 
-    ::ExtTextOutW(aDC, aX, aY, 0, NULL, (PRUnichar*) buffer.GetArray(), destLength / 2, NULL);
+    NS_ExtTextOutW(aDC, this, aX, aY, 0, NULL, (PRUnichar*) buffer.GetArray(), destLength / 2, NULL);
 }
 
 #ifdef MOZ_MATHML
@@ -4182,12 +4234,12 @@ nsFontWinNonUnicode::GetBoundingMetrics(HDC                aDC,
 
     // buffer.mBuffer is now a pseudo-Unicode string so that we can use 
     // GetBoundingMetricsCommon() also used by nsFontWinUnicode. 
-    return  GetBoundingMetricsCommon(aDC, (PRUint16*) buffer.GetArray(), 
+    return  GetBoundingMetricsCommon(aDC, mOverhangCorrection, (PRUint16*) buffer.GetArray(), 
               destLength / 2, aBoundingMetrics, buf.GetArray());
 
   }
 
-  return GetBoundingMetricsCommonA(aDC, buffer.GetArray(), destLength, 
+  return GetBoundingMetricsCommonA(aDC, mOverhangCorrection, buffer.GetArray(), destLength, 
                                    aBoundingMetrics);
 }
 
@@ -4284,6 +4336,7 @@ nsFontWinSubstitute::GetWidth(HDC aDC, const PRUnichar* aString,
 
   SIZE size;
   ::GetTextExtentPoint32W(aDC, buffer.GetArray(), aLength, &size);
+  size.cx -= mOverhangCorrection;
 
   return size.cx;
 }
@@ -4296,7 +4349,7 @@ nsFontWinSubstitute::DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
   nsresult rv = SubstituteChars(PR_FALSE, aString, aLength, buffer, &aLength);
   if (NS_FAILED(rv) || !aLength) return;
 
-  ::ExtTextOutW(aDC, aX, aY, 0, NULL, buffer.GetArray(), aLength, NULL);
+  NS_ExtTextOutW(aDC, this, aX, aY, 0, NULL, buffer.GetArray(), aLength, NULL);
 }
 
 #ifdef MOZ_MATHML
@@ -4327,7 +4380,7 @@ nsFontWinSubstitute::GetBoundingMetrics(HDC                aDC,
     }
   }
 
-  return GetBoundingMetricsCommon(aDC, buffer.GetArray(), aLength, 
+  return GetBoundingMetricsCommon(aDC, mOverhangCorrection, buffer.GetArray(), aLength, 
                                   aBoundingMetrics, buf.GetArray());
 }
 
@@ -4497,6 +4550,7 @@ nsFontSubset::GetWidth(HDC aDC, const PRUnichar* aString, PRUint32 aLength)
   if (aLength) {
     SIZE size;
     ::GetTextExtentPoint32A(aDC, buffer.GetArray(), aLength, &size);
+    size.cx -= mOverhangCorrection;
     return size.cx;
   }
   return 0;
@@ -4509,7 +4563,7 @@ nsFontSubset::DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
   nsAutoCharBuffer buffer;
   Convert(aString, aLength, buffer, &aLength);
   if (aLength) {
-    ::ExtTextOutA(aDC, aX, aY, 0, NULL, buffer.GetArray(), aLength, NULL);
+    NS_ExtTextOutA(aDC, this, aX, aY, 0, NULL, buffer.GetArray(), aLength, NULL);
   }
 }
 
@@ -4524,7 +4578,7 @@ nsFontSubset::GetBoundingMetrics(HDC                aDC,
   nsAutoCharBuffer buffer;
   Convert(aString, aLength, buffer, &aLength);
   if (aLength) {
-    return GetBoundingMetricsCommonA(aDC, buffer.GetArray(), aLength, 
+    return GetBoundingMetricsCommonA(aDC, mOverhangCorrection, buffer.GetArray(), aLength, 
                                      aBoundingMetrics);
   }
   return NS_OK;

@@ -117,6 +117,14 @@ public:
 
   nscoord         mMaxAscent;
   nscoord         mMaxDescent;
+
+  // Note: these are in device units (pixels) -- not twips like the others
+  LONG            mOverhangCorrection;
+  LONG            mMaxCharWidthMetric;
+  LONG            mMaxHeightMetric;
+  BYTE            mPitchAndFamily;
+
+  PRBool FillClipRect(PRInt32 aX, PRInt32 aY, UINT aLength, UINT uOptions, RECT& clipRect);
 };
 
 // A "substitute font" to deal with missing glyphs -- see bug 6585
