@@ -56,7 +56,7 @@ struct nsIWalletService : public nsISupports
         (char* URLNAME, char* name, char** value)=0;
 
     NS_IMETHOD SI_PromptUsernameAndPassword
-        (char *prompt, char **username, char **password, char *URLName)=0;
+        (char *prompt, char **username, char **password, char *URLName, PRBool &status)=0;
     NS_IMETHOD SI_PromptPassword
         (char *prompt, char **password, char *URLName, PRBool pickFirstUser)=0;
     NS_IMETHOD SI_Prompt

@@ -95,8 +95,8 @@ NS_IMETHODIMP nsWalletlibService::SI_RestoreSignonData
 }
 
 NS_IMETHODIMP nsWalletlibService::SI_PromptUsernameAndPassword
-        (char *prompt, char **username, char **password, char *URLName) {
-    ::SINGSIGN_PromptUsernameAndPassword(prompt, username, password, URLName);
+        (char *prompt, char **username, char **password, char *URLName, PRBool &status) {
+    status = ::SINGSIGN_PromptUsernameAndPassword(prompt, username, password, URLName);
     return NS_OK;
 }
 

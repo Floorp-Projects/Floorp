@@ -40,7 +40,7 @@ public:
     NS_IMETHOD SI_RestoreSignonData
         (char* URLNAME, char* name, char** value);
     NS_IMETHOD SI_PromptUsernameAndPassword
-        (char *prompt, char **username, char **password, char *URLName);
+        (char *prompt, char **username, char **password, char *URLName, PRBool &status);
     NS_IMETHOD SI_PromptPassword
         (char *prompt, char **password, char *URLName, PRBool pickFirstUser);
     NS_IMETHOD SI_Prompt

@@ -39,7 +39,7 @@ SINGSIGN_RememberSignonData(char* URLName, char** name_array, char** value_array
 extern void
 SINGSIGN_RestoreSignonData(char* URLName, char* name, char** value);
 
-extern int
+extern PRBool
 SINGSIGN_PromptUsernameAndPassword 
     (char *prompt, char **username, char **password, char *URLName);
 

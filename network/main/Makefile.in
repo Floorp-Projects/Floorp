@@ -33,7 +33,6 @@ CSRCS		= \
 	mkconect.c	\
 	mkfsort.c	\
 	mkgeturl.c	\
-	singsign.c	\
 	mkhelp.c	\
 	mkmessag.c	\
 	mkpadpac.c	\
@@ -46,6 +45,10 @@ CSRCS		= \
 	mkutils.c	\
 	prefetch.c	\
 	unix-dns.c	\
+	$(NULL)
+
+CPPSRCS	=	\
+	singsignStub.cpp	\
 	$(NULL)
 
 ifndef MODULAR_NETLIB

@@ -2474,11 +2474,11 @@ si_RestoreOldSignonDataFromBrowser
 }
 
 /* Browser-generated prompt for user-name and password */
-PUBLIC int
+PUBLIC PRBool
 SINGSIGN_PromptUsernameAndPassword
     (char *prompt, char **username, char **password, char *URLName)
 {
-    int status;
+    PRBool status;
     char *copyOfPrompt=0;
 
     /* just for safety -- really is a problem in SINGSIGN_Prompt */
@@ -3324,7 +3324,7 @@ SINGSIGN_DisplaySignonInfoAsHTML()
 
 int
 SINGSIGN_PromptUsernameAndPassword
-    (char *prompt, char **username, char **password, char *URLName)
+    (char *prompt, char **username, char **password, char *URLName, PRInt32 &status)
 {
 }
 

@@ -746,29 +746,6 @@ nsNetlibService::SetCookieString(nsIURL *aURL, const nsString& aCookie)
     return NS_OK;
 }
 
-#ifdef SingleSignon
-NS_IMETHODIMP
-nsNetlibService::SI_DisplaySignonInfoAsHTML(){
-    ::SI_DisplaySignonInfoAsHTML(NULL);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNetlibService::SI_RememberSignonData
-       (char* URLName, char** name_array, char** value_array, char** type_array, PRInt32 value_cnt) {
-   ::SI_RememberSignonData(URLName, name_array, value_array, type_array, value_cnt);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNetlibService::SI_RestoreSignonData
-        (char* URLName, char* name, char** value) {
-    ::SI_RestoreSignonData(URLName, name, value);
-    return NS_OK;
-}
-
-#endif
-
 #ifdef CookieManagement
 NS_IMETHODIMP
 nsNetlibService::NET_DisplayCookieInfoAsHTML(){

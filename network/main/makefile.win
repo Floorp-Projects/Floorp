@@ -65,7 +65,7 @@ OBJS=   \
     .\$(OBJDIR)\prefetch.obj    \
     .\$(OBJDIR)\mkgeturl.obj    \
     .\$(OBJDIR)\win-dns.obj     \
-    .\$(OBJDIR)\singsign.obj    \
+    .\$(OBJDIR)\singsignStub.obj    \
     $(NULL)
 
 
@@ -79,7 +79,6 @@ CSRCS = \
     mkformat.c  \
     mkfsort.c   \
     mkgeturl.c  \
-    singsign.c  \
     mkhelp.c    \
     mkinit.c    \
     mkmessag.c  \
@@ -98,6 +97,7 @@ CSRCS = \
 
 CPPSRCS = \
     win-dns.cpp \
+    singsignStub.cpp  \
     $(NULL)
 
 MODULE=network 
@@ -170,6 +170,9 @@ LINCS=-I$(PUBLIC)\jtools    \
     -I$(PUBLIC)\certurl         \
     -I$(PUBLIC)\pop3url         \
     -I$(PUBLIC)\mailbxurl   \
+    -I$(PUBLIC)\wallet   \
+    -I$(PUBLIC)\raptor   \
+    -I$(PUBLIC)\netlib   \
     -I$(PUBLIC)\xpcom
 #!endif
 
