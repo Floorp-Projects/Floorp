@@ -54,6 +54,7 @@
 #include "jsapi.h"
 
 #include "nsQuickSort.h"
+#include "nsXPIDLString.h"
 
 #ifdef _WIN32
 #include "windows.h"
@@ -114,6 +115,9 @@ protected:
     
     nsIFileSpec*                    mFileSpec;
     nsIFileSpec*                    mLIFileSpec;
+
+    static nsresult convertUTF8ToUnicode(const char *utf8String,
+                                         PRUnichar **aResult);
 }; // class nsPref
 
 nsPref* nsPref::gInstance = NULL;
@@ -655,6 +659,22 @@ NS_IMETHODIMP nsPref::SetDefaultCharPref(const char *pref,const char* value)
     return _convertRes(PREF_SetDefaultCharPref(pref, value));
 }
 
+NS_IMETHODIMP nsPref::SetDefaultUnicharPref(const char *pref,
+                                            const PRUnichar *value)
+{
+    nsresult rv;
+    nsAutoString str(value);
+
+    char *utf8String = str.ToNewUTF8String();
+
+    if (!utf8String) return NS_ERROR_OUT_OF_MEMORY;
+
+    rv = SetDefaultCharPref(pref, utf8String);
+    nsCRT::free(utf8String);
+
+    return NS_OK;
+}
+
 NS_IMETHODIMP nsPref::SetDefaultIntPref(const char *pref,PRInt32 value)
 {
     return _convertRes(PREF_SetDefaultIntPref(pref, value));
@@ -710,21 +730,27 @@ NS_IMETHODIMP nsPref::CopyUnicharPref(const char *pref, PRUnichar ** return_buf)
     nsresult rv;
     
     // get the UTF8 string for conversion
-    char *utf8String;
-    rv = CopyCharPref(pref, &utf8String);
+    nsXPIDLCString utf8String;
+    rv = CopyCharPref(pref, getter_Copies(utf8String));
     if (NS_FAILED(rv)) return rv;
-    
+
+    return convertUTF8ToUnicode(utf8String, return_buf);
+}
+
+nsresult
+nsPref::convertUTF8ToUnicode(const char *utf8String, PRUnichar ** aResult)
+{
+    NS_ENSURE_ARG_POINTER(aResult);
     // convert to PRUnichar using nsTextFormatter
     // this is so ugly, it allocates memory at least 4 times :(
     PRUnichar *unicodeString =
         nsTextFormatter::smprintf(unicodeFormatter, utf8String);
-    PL_strfree(utf8String);
     if (!unicodeString) return NS_ERROR_OUT_OF_MEMORY;
 
     // use the right allocator
-    *return_buf = nsCRT::strdup(unicodeString);
+    *aResult = nsCRT::strdup(unicodeString);
     nsTextFormatter::smprintf_free(unicodeString);
-    if (!*return_buf) return NS_ERROR_OUT_OF_MEMORY;
+    if (!*aResult) return NS_ERROR_OUT_OF_MEMORY;
 
     return NS_OK;
 }
@@ -739,6 +765,18 @@ NS_IMETHODIMP nsPref::CopyDefaultCharPref( const char *pref,
                          char ** return_buffer )
 {
     return _convertRes(PREF_CopyDefaultCharPref(pref, return_buffer));
+}
+
+NS_IMETHODIMP nsPref::CopyDefaultUnicharPref( const char *pref,
+                                              PRUnichar ** return_buf)
+{
+    nsresult rv;
+    
+    nsXPIDLCString utf8String;
+    rv = CopyDefaultCharPref(pref, getter_Copies(utf8String));
+    if (NS_FAILED(rv)) return rv;
+    
+    return convertUTF8ToUnicode(utf8String, return_buf);
 }
 
 NS_IMETHODIMP nsPref::CopyDefaultBinaryPref(const char *pref, 

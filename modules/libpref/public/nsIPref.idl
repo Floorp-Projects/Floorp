@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -138,6 +138,7 @@ interface nsIPref : nsISupports {
 
   /* set defaults */
   void SetDefaultCharPref(in string pref, in string value);
+  void SetDefaultUnicharPref(in string pref, in wstring value);
   void SetDefaultIntPref(in string pref, in long value);
   void SetDefaultBoolPref(in string pref, in boolean value);
   [noscript] void SetDefaultBinaryPref(in string pref, in voidStar value, in unsigned long size);
@@ -153,6 +154,7 @@ interface nsIPref : nsISupports {
   [noscript] voidStar CopyBinaryPref(in string pref, out long size);
   
   string CopyDefaultCharPref(in string pref);
+  wstring CopyDefaultUnicharPref(in string pref);
   [noscript] voidStar CopyDefaultBinaryPref(in string pref, out long size);
 
   nsIFileSpec GetFilePref(in string pref);
