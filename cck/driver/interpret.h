@@ -37,6 +37,7 @@ public:
 	void ExecuteCommand(char *command, int showflag);
 	BOOL IterateListBox(char *parms);
 	CString replaceVars(char *str, char *listval);
+	BOOL CallDLL(char *dll, char *proc, char *parms);
 	BOOL interpret(CString cmds, WIDGET *curWidget);
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -46,6 +47,7 @@ public:
 	//}}AFX_VIRTUAL
 
 // Implementation
+	DLLINFO m_DLLs;
 };
 
 

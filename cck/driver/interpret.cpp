@@ -39,6 +39,9 @@ extern _declspec (dllimport) WIDGET ptr_ga[1000];
 
 CInterpret::CInterpret()
 {
+	// Init linked list to avoid messing operations
+	m_DLLs.dllName = "";
+	m_DLLs.procName = "";
 }
 
 CInterpret::~CInterpret()
@@ -206,6 +209,45 @@ CString CInterpret::replaceVars(char *str, char *listval)
 	return CString(buf);
 }
 
+BOOL CInterpret::CallDLL(char *dll, char *proc, char *parms)
+{
+	// When searching for DLL info, the m_DLLs is a dummy object
+	// with its names set to the null string so it will never
+	// match.  This simplifies the handling of the linked list.
+	
+	DLLINFO *dllp = &m_DLLs;
+	DLLINFO *last = NULL;
+	int found = FALSE;
+	while (!found && dllp)
+	{
+		last = dllp;
+		if (strcmp(dllp->dllName, dll) == 0 && strcmp(dllp->procName, proc) == 0)
+			found = TRUE;
+		else
+			dllp = dllp->next;
+	}
+
+	// If we didn't find a match, then create a new entry in the list
+	// and load the library and procedure
+	if (!found)
+	{
+		dllp = (DLLINFO *) GlobalAlloc(0, sizeof(DLLINFO));
+		dllp->dllName = CString(dll);
+		dllp->procName = CString(proc);
+		VERIFY(dllp->hDLL = ::LoadLibrary(dll));
+		VERIFY(dllp->procAddr = (DLLPROC *) ::GetProcAddress(dllp->hDLL, proc));
+		dllp->next = NULL;
+
+		last->next = dllp;
+	}
+
+	// OK, if we get this far we've got a valid DLLINFO struct so call the procedure
+	if (!(*dllp->procAddr)(CString(parms)))
+		return FALSE;
+
+	return TRUE;
+}
+
 BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 {
 		// Make modifiable copy of string's buffer
@@ -234,9 +276,21 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 		{
 			char *pcmd = strtok(cmdList[i], "(");
 			char *parms = strtok(NULL, ")");
+
 			if (pcmd)
 			{
-				if (strcmp(pcmd, "command") == 0)
+				// Only do this AFTER we're done with previous set
+				char *dll   = strtok(pcmd, ".");
+				char *proc = strtok(NULL, "(");  // guaranteed no "(" will match
+				if (proc)
+				{
+					if (!proc)
+						return FALSE;
+
+					if (!CallDLL(dll, proc, parms))
+						return FALSE;
+				}
+				else if (strcmp(pcmd, "command") == 0)
 				{
 					CString p = replaceVars(parms, NULL);
 					ExecuteCommand((char *) (LPCSTR) p, SW_SHOWDEFAULT);
@@ -268,6 +322,20 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 				}
 				else if (strcmp(pcmd, "Reload") == 0)
 				{
+					// Enforce the rule that Reload() cannot be followed by any 
+					// further commands to interpret
+					if (i < numCmds-1)
+					{
+						CWnd myWnd;
+						myWnd.MessageBox(
+							"No commands allowed after a Reload().  File = " + CachePath, 
+							"Information", MB_OK);
+						exit(-30);
+					}
+
+					// Write out the current cache
+					theApp.CreateNewCache();
+
 					// Reload sets the CachePath and reloads the cache from the new file
 					CString newDir = replaceVars(parms, NULL);
 					CachePath = Path + newDir + "\\" + CacheFile;

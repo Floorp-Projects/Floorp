@@ -120,4 +120,17 @@ typedef struct NODE
 	BOOL isWidgetsSorted;
 }NODE;
 
+//-----------------------------------------------------------
+
+typedef int (DLLPROC)(CString parms);
+
+typedef struct DLLINFO
+{
+	CString dllName;
+	CString procName;
+	HMODULE hDLL;
+	DLLPROC *procAddr;
+	DLLINFO *next;
+} DLLINFO;
+
 #endif //WIZARDTYPES
