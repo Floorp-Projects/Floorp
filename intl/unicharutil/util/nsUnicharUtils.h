@@ -41,6 +41,7 @@
 #ifndef nsAString_h___
 #include "nsAString.h"
 #endif
+#include "nsReadableUtils.h"
 
 void ToLowerCase( nsAString& );
 void ToUpperCase( nsAString& );
@@ -54,8 +55,6 @@ void ToUpperCase( nsString& );
 void ToLowerCase( const nsAString& aSource, nsAString& aDest );
 void ToUpperCase( const nsAString& aSource, nsAString& aDest );
 
-PRBool CaseInsensitiveFindInReadable( const nsAString& aPattern, nsAString::const_iterator&, nsAString::const_iterator& );
-
 class nsCaseInsensitiveStringComparator
     : public nsStringComparator
   {
@@ -64,6 +63,21 @@ class nsCaseInsensitiveStringComparator
       virtual int operator()( PRUnichar, PRUnichar ) const;
   };
 
+inline PRBool CaseInsensitiveFindInReadable( const nsAString& aPattern,
+                                             nsAString::const_iterator& aSearchStart,
+                                             nsAString::const_iterator& aSearchEnd ) {
+  return FindInReadable(aPattern, aSearchStart, aSearchEnd,
+                        nsCaseInsensitiveStringComparator());
+}
+
+inline PRBool CaseInsensitiveFindInReadable( const nsAString& aPattern,
+                                             const nsAString& aHay ) {
+  nsAString::const_iterator searchBegin, searchEnd;
+  return FindInReadable(aPattern, 
+                        aHay.BeginReading(searchBegin),
+                        aHay.EndReading(searchEnd),
+                        nsCaseInsensitiveStringComparator());
+}
 
 PRUnichar ToUpperCase(PRUnichar);
 PRUnichar ToLowerCase(PRUnichar);

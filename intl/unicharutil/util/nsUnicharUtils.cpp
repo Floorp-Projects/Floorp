@@ -38,7 +38,6 @@
 
 #include "nsString.h"
 #include "nsUnicharUtils.h"
-#include "nsReadableUtils.h"
 #include "nsUnicharUtilCIID.h"
 #include "nsICaseConversion.h"
 #include "nsIServiceManager.h"
@@ -262,13 +261,6 @@ ToUpperCase( const nsAString& aSource, nsAString& aDest )
     CopyToUpperCase converter(aDest.BeginWriting(toBegin));
     copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), converter);
   }
-
-PRBool
-CaseInsensitiveFindInReadable( const nsAString& aPattern, nsAString::const_iterator& aSearchStart, nsAString::const_iterator& aSearchEnd )
-{
-    return FindInReadable(aPattern, aSearchStart, aSearchEnd, nsCaseInsensitiveStringComparator());
-}
-
 
 int
 nsCaseInsensitiveStringComparator::operator()( const PRUnichar* lhs, const PRUnichar* rhs, PRUint32 aLength ) const
