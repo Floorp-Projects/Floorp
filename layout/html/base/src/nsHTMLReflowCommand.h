@@ -127,6 +127,14 @@ public:
   nsresult GetAttribute(nsIAtom *& aAttribute) const;
 
   /**
+   * Return the reflow command's path. The path is stored in
+   * <em>reverse</em> order in the array; i.e., the first element in
+   * the array is the target frame, the last element in the array is
+   * the current frame.
+   */
+  nsVoidArray *GetPath() { return &mPath; }
+
+  /**
    * Get the child frame associated with the reflow command.
    */
   nsresult GetChildFrame(nsIFrame*& aChildFrame) const;

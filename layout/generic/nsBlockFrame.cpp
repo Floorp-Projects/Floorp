@@ -87,7 +87,6 @@
 #include "nsPrintfCString.h"
 #include "nsBlockDebugFlags.h"
 
-
 PRBool nsBlockFrame::gLamePaintMetrics;
 PRBool nsBlockFrame::gLameReflowMetrics;
 PRBool nsBlockFrame::gNoisy;
@@ -2375,6 +2374,34 @@ nsBlockFrame::DeleteLine(nsBlockReflowState& aState,
   }
 }
 
+static void
+RetargetReflowToPrimaryFrames(nsHTMLReflowCommand *aReflowCommand)
+{
+  // Get the reflow path, which is stored as a stack (i.e., the next
+  // frame in the reflow is at the _end_ of the array).
+  nsVoidArray *path = aReflowCommand->GetPath();
+
+  for (PRInt32 i = path->Count() - 1; i >= 0; --i) {
+    nsIFrame *frame = NS_STATIC_CAST(nsIFrame *, path->ElementAt(i));
+
+    // Stop if we encounter a non-inline frame in the reflow path.
+    const nsStyleDisplay *display;
+    GetStyleData(frame, &display);
+
+    if (NS_STYLE_DISPLAY_INLINE != display->mDisplay)
+      break;
+
+    // Walk back to the primary frame.
+    nsIFrame *prevFrame;
+    do {
+      frame->GetPrevInFlow(&prevFrame);
+    } while (prevFrame && (frame = prevFrame));
+
+    path->ReplaceElementAt(frame, i);
+  }
+}
+
+
 /**
  * Reflow a line. The line will either contain a single block frame
  * or contain 1 or more inline frames. aKeepReflowGoing indicates
@@ -2482,20 +2509,54 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
     PRBool isBeginningLine = aState.mCurrentLine == begin_lines() ||
                              !aState.mCurrentLine.prev()->IsLineWrapped();
     if (aState.GetFlag(BRS_COMPUTEMAXWIDTH) && isBeginningLine) {
+      // First reflow the line with an unconstrained width. 
       nscoord oldY = aState.mY;
       nsCollapsingMargin oldPrevBottomMargin(aState.mPrevBottomMargin);
       PRBool  oldUnconstrainedWidth = aState.GetFlag(BRS_UNCONSTRAINEDWIDTH);
 
-      // First reflow the line with an unconstrained width. When doing this
-      // we need to set the block reflow state's "mUnconstrainedWidth" variable
-      // to PR_TRUE so if we encounter a placeholder and then reflow its
-      // associated floater we don't end up resetting the line's right edge and
-      // have it think the width is unconstrained...
+      // If this incremental reflow is targeted at a continuing frame,
+      // we've got to retarget it to the primary frame. The
+      // unconstrained reflow will destroy all of the continuations.
+      //
+      // XXXwaterson if we implement some sort of ``reflow root''
+      // frame, rather than requiring incremental reflows to always
+      // walk from the real root frame, this code may not be needed
+      // anymore. Or will it?
+      if (aState.mNextRCFrame) {
+        NS_ASSERTION(aState.GetFlag(BRS_ISINLINEINCRREFLOW),
+                     "expected to be inline incremental reflow");
+
+        nsIFrame *prevInFlow;
+        aState.mNextRCFrame->GetPrevInFlow(&prevInFlow);
+        if (prevInFlow) {
+          // Fix aState's mNextRCFrame
+          while (prevInFlow) {
+            aState.mNextRCFrame = prevInFlow;
+            aState.mNextRCFrame->GetPrevInFlow(&prevInFlow);
+          }
+
+          // Fix any frames deeper in the reflow path.
+          RetargetReflowToPrimaryFrames(aState.mReflowState.reflowCommand);
+        }
+      }
+
+      // When doing this we need to set the block reflow state's
+      // "mUnconstrainedWidth" variable to PR_TRUE so if we encounter
+      // a placeholder and then reflow its associated floater we don't
+      // end up resetting the line's right edge and have it think the
+      // width is unconstrained...
       aState.SetFlag(BRS_UNCONSTRAINEDWIDTH, PR_TRUE);
       ReflowInlineFrames(aState, aLine, aKeepReflowGoing, aDamageDirtyArea, PR_TRUE);
       aState.mY = oldY;
       aState.mPrevBottomMargin = oldPrevBottomMargin;
       aState.SetFlag(BRS_UNCONSTRAINEDWIDTH, oldUnconstrainedWidth);
+
+#ifdef DEBUG_waterson
+      // XXXwaterson if oldUnconstrainedWidth was set, why do we need
+      // to do the second reflow, below?
+      if (oldUnconstrainedWidth)
+        printf("+++ possibly doing an unnecessary second-pass unconstrained reflow\n");
+#endif
 
       // Update the line's maximum width
       aLine->mMaximumWidth = aLine->mBounds.XMost();
