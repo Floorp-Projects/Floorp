@@ -65,11 +65,11 @@ extern "C" void NS_SetupRegistry();
 
 static NS_DEFINE_IID(kAppShellCID, NS_APPSHELL_CID);
 static NS_DEFINE_IID(kBrowserWindowCID, NS_BROWSER_WINDOW_CID);
-static NS_DEFINE_IID(kXPDialogWindowCID, NS_XPDIALOG_WINDOW_CID);
+static NS_DEFINE_IID(kXPBaseWindowCID, NS_XPBASE_WINDOW_CID);
 
 static NS_DEFINE_IID(kIAppShellIID, NS_IAPPSHELL_IID);
 static NS_DEFINE_IID(kIBrowserWindowIID, NS_IBROWSER_WINDOW_IID);
-static NS_DEFINE_IID(kIXPDialogWindowIID, NS_IXPDIALOG_WINDOW_IID);
+static NS_DEFINE_IID(kIXPBaseWindowIID, NS_IXPBASE_WINDOW_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 
@@ -150,7 +150,7 @@ nsViewerApp::SetupRegistry()
   nsRepository::RegisterFactory(kBrowserWindowCID, bwf, PR_FALSE);
 
   NS_NewXPBaseWindowFactory(&bwf);
-  nsRepository::RegisterFactory(kXPDialogWindowCID, bwf, PR_FALSE);
+  nsRepository::RegisterFactory(kXPBaseWindowCID, bwf, PR_FALSE);
 
   return NS_OK;
 }
