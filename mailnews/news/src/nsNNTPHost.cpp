@@ -17,7 +17,7 @@
  */
 
 #include "msgCore.h"
-#include "msgFolderFlags.h"
+#include "nsMsgFolderFlags.h"
 
 #include "nntpCore.h"
 #include "nsINNTPHost.h"
