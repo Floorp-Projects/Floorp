@@ -2246,7 +2246,7 @@ nsPrintEngine::ShowPrintErrorDialog(nsresult aPrintError, PRBool aIsPrinting)
 
   PR_PL(("ShowPrintErrorDialog:  stringName='%s'\n", stringName.get()));
 
-  nsString msg, title;
+  nsXPIDLString msg, title;
   nsresult rv =
     nsContentUtils::GetLocalizedString(nsContentUtils::ePRINTING_PROPERTIES,
                                        stringName.get(), msg);

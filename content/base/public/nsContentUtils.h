@@ -499,7 +499,7 @@ public:
    */
   static nsresult GetLocalizedString(PropertiesFile aFile,
                                      const char* aKey,
-                                     nsString& aResult);
+                                     nsXPIDLString& aResult);
 
   /**
    * Fill (with the parameters given) the localized string named |aKey| in
@@ -509,7 +509,7 @@ public:
                                         const char* aKey,
                                         const PRUnichar **aParams,
                                         PRUint32 aParamsLength,
-                                        nsString& aResult);
+                                        nsXPIDLString& aResult);
 
 
 private:

@@ -10500,9 +10500,9 @@ nsCSSFrameConstructor::WillDestroyFrameTree()
 }
 
 //STATIC
-void nsCSSFrameConstructor::GetAlternateTextFor(nsIContent* aContent,
-                                                nsIAtom*    aTag,  // content object's tag
-                                                nsString&   aAltText)
+void nsCSSFrameConstructor::GetAlternateTextFor(nsIContent*    aContent,
+                                                nsIAtom*       aTag,  // content object's tag
+                                                nsXPIDLString& aAltText)
 {
   nsresult  rv;
 
@@ -10536,7 +10536,7 @@ nsCSSFrameConstructor::ConstructAlternateFrame(nsIPresShell*    aPresShell,
                                                nsIFrame*&       aFrame)
 {
   nsresult rv;
-  nsAutoString  altText;
+  nsXPIDLString  altText;
 
   // Initialize OUT parameter
   aFrame = nsnull;

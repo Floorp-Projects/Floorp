@@ -1260,7 +1260,7 @@ nsImageFrame::DisplayAltFeedback(nsPresContext*      aPresContext,
   if (!inner.IsEmpty()) {
     nsIContent* content = GetContent();
     if (content) {
-      nsAutoString altText;
+      nsXPIDLString altText;
       nsCSSFrameConstructor::GetAlternateTextFor(content, content->Tag(),
                                                  altText);
       DisplayAltText(aPresContext, aRenderingContext, altText, inner);

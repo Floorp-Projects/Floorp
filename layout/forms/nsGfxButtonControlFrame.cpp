@@ -157,9 +157,10 @@ nsGfxButtonControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
 
   // Get the text from the "value" attribute.
   // If it is zero length, set it to a default value (localized)
-  nsAutoString initvalue, value;
+  nsAutoString initvalue;
   result = GetValue(&initvalue);
-  value = initvalue;
+  nsXPIDLString value;
+  value.Assign(initvalue);
   if (result != NS_CONTENT_ATTR_HAS_VALUE && value.IsEmpty()) {
     // Generate localized label.
     // We can't make any assumption as to what the default would be
@@ -283,7 +284,7 @@ else {
 // label from a string bundle as is done for all other UI strings.
 // See bug 16999 for further details.
 nsresult
-nsGfxButtonControlFrame::GetDefaultLabel(nsString& aString) 
+nsGfxButtonControlFrame::GetDefaultLabel(nsXPIDLString& aString) 
 {
   nsresult rv = NS_OK;
   PRInt32 type = GetFormControlType();

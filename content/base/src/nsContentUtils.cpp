@@ -2238,18 +2238,14 @@ nsContentUtils::EnsureStringBundle(PropertiesFile aFile)
 /* static */
 nsresult nsContentUtils::GetLocalizedString(PropertiesFile aFile,
                                             const char* aKey,
-                                            nsString& aResult)
+                                            nsXPIDLString& aResult)
 {
   nsresult rv = EnsureStringBundle(aFile);
   NS_ENSURE_SUCCESS(rv, rv);
   nsIStringBundle *bundle = sStringBundles[aFile];
 
-  nsXPIDLString result;
-  rv = bundle->GetStringFromName(NS_ConvertASCIItoUCS2(aKey).get(),
-                                 getter_Copies(result));
-  NS_ENSURE_SUCCESS(rv, rv);
-  aResult = result;
-  return NS_OK;
+  return bundle->GetStringFromName(NS_ConvertASCIItoUCS2(aKey).get(),
+                                   getter_Copies(aResult));
 }
 
 /* static */
@@ -2257,19 +2253,15 @@ nsresult nsContentUtils::FormatLocalizedString(PropertiesFile aFile,
                                                const char* aKey,
                                                const PRUnichar **aParams,
                                                PRUint32 aParamsLength,
-                                               nsString& aResult)
+                                               nsXPIDLString& aResult)
 {
   nsresult rv = EnsureStringBundle(aFile);
   NS_ENSURE_SUCCESS(rv, rv);
   nsIStringBundle *bundle = sStringBundles[aFile];
 
-  nsXPIDLString result;
-  rv = bundle->FormatStringFromName(NS_ConvertASCIItoUCS2(aKey).get(),
-                                    aParams, aParamsLength,
-                                    getter_Copies(result));
-  NS_ENSURE_SUCCESS(rv, rv);
-  aResult = result;
-  return NS_OK;
+  return bundle->FormatStringFromName(NS_ConvertASCIItoUCS2(aKey).get(),
+                                      aParams, aParamsLength,
+                                      getter_Copies(aResult));
 }
 
 /* static */ nsresult
@@ -2290,7 +2282,7 @@ nsContentUtils::ReportToConsole(PropertiesFile aFile,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsString errorText;
+  nsXPIDLString errorText;
   rv = FormatLocalizedString(aFile, aMessageName, aParams, aParamsLength,
                              errorText);
   NS_ENSURE_SUCCESS(rv, rv);

@@ -984,7 +984,7 @@ DocumentViewerImpl::PermitUnload(PRBool *aPermitUnload)
     nsCOMPtr<nsIPrompt> prompt(do_GetInterface(mContainer));
 
     if (prompt) {
-      nsString preMsg, postMsg;
+      nsXPIDLString preMsg, postMsg;
       rv = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
                                               "OnBeforeUnloadPreMessage",
                                               preMsg);
