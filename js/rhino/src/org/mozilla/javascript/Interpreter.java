@@ -59,12 +59,11 @@ public class Interpreter {
 
     // Exception handling implementation
         ENDTRY                          = TokenStream.LAST_TOKEN + 6,
-        JTHROW                          = TokenStream.LAST_TOKEN + 7,
-        GOSUB                           = TokenStream.LAST_TOKEN + 8,
-        RETSUB                          = TokenStream.LAST_TOKEN + 9,
+        GOSUB                           = TokenStream.LAST_TOKEN + 7,
+        RETSUB                          = TokenStream.LAST_TOKEN + 8,
 
     // Last icode
-        END_ICODE                       = TokenStream.LAST_TOKEN + 10;
+        END_ICODE                       = TokenStream.LAST_TOKEN + 9;
 
 
     public IRFactory createIRFactory(Context cx, TokenStream ts)
@@ -374,11 +373,11 @@ public class Interpreter {
             case TokenStream.TARGET : {
                 markTargetLabel(node, iCodeTop);
                 // if this target has a FINALLY_PROP, it is a JSR target
-                // and so has a PC value on the top of the stack.
-                // In addition, when called from exception handler, it
-                // will have js object to rethrow behind it
+                // and so on the top of the stack it has either a PC value 
+                // when called from GOSUB or exception object to rethrow
+                // when called from exception handler
                 if (node.getProp(Node.FINALLY_PROP) != null) {
-                    itsStackDepth = 2;
+                    itsStackDepth = 1;
                     if (itsStackDepth > itsData.itsMaxStack)
                         itsData.itsMaxStack = itsStackDepth;
                 }
@@ -845,6 +844,7 @@ public class Interpreter {
                     itsData.itsMaxTryDepth = itsTryDepth;
                 Node catchTarget = (Node)node.getProp(Node.TARGET_PROP);
                 Node finallyTarget = (Node)node.getProp(Node.FINALLY_PROP);
+
                 int tryStart = iCodeTop;
                 iCodeTop = addByte(TokenStream.TRY, iCodeTop);
                 iCodeTop = addShort(0, iCodeTop); // placeholder for catch pc
@@ -882,23 +882,15 @@ public class Interpreter {
                         int catchOffset = iCodeTop - tryStart;
                         recordJumpOffset(tryStart + 1, catchOffset);
                     }
+                    if (child == finallyTarget) {
+                        int finallyOffset = iCodeTop - tryStart;
+                        recordJumpOffset(tryStart + 3, finallyOffset);
+                    }
                     iCodeTop = generateICode(child, iCodeTop);
                     lastChild = child;
                     child = nextSibling;
                 }
                 itsStackDepth = 0;
-                if (finallyTarget != null) {
-                    // normal flow goes around the finally handler stublet
-                    int skippyJumpStart = iCodeTop;
-                    iCodeTop = addForwardGoto(TokenStream.GOTO, iCodeTop);
-                    int finallyOffset = iCodeTop - tryStart;
-                    recordJumpOffset(tryStart + 3, finallyOffset);
-                    // Stack depth is handled during generation of
-                    // finallyTarget
-                    iCodeTop = addGoto(finallyTarget, GOSUB, iCodeTop);
-                    iCodeTop = addByte(JTHROW, iCodeTop);
-                    resolveForwardGoto(skippyJumpStart, iCodeTop);
-                }
                 itsTryDepth--;
                 break;
             }
@@ -1199,7 +1191,6 @@ public class Interpreter {
                     case INTNUMBER_ICODE:    return "intnumber";
                     case RETURN_UNDEF_ICODE: return "return_undef";
                     case ENDTRY:             return "endtry";
-                    case JTHROW:             return "jthrow";
                     case GOSUB:              return "gosub";
                     case RETSUB:             return "retsub";
                     case END_ICODE:          return "end";
@@ -1369,7 +1360,6 @@ public class Interpreter {
             case ENDTRY :
             case TokenStream.CATCH:
             case TokenStream.THROW :
-            case JTHROW :
             case TokenStream.GETTHIS :
             case TokenStream.SETELEM :
             case TokenStream.GETELEM :
@@ -1773,6 +1763,9 @@ public class Interpreter {
             stack[stackTop] = ScriptRuntime.getCatchObject(cx, scope,
                                                            javaException);
         } else {
+            // Call finally handler with javaException on stack top to 
+            // distinguish from normal invocation through GOSUB
+            // which would contain DBL_MRK on the stack
             stack[stackTop] = javaException;
         }
         // clear exception
@@ -1790,17 +1783,12 @@ public class Interpreter {
         pcPrevBranch = pc = pcNew;
         continue Loop;
     }
-    case TokenStream.THROW:
-    case JTHROW: {
-        if ((iCode[pc] & 0xff) == TokenStream.THROW) {
-            Object value = stack[stackTop];
-            if (value == DBL_MRK) value = doubleWrap(sDbl[stackTop]);
-            javaException = new JavaScriptException(value);
-        } else {
-            // No need to check for DBL_MRK: stack[stackTop] must be Throwable
-            javaException = (Throwable)stack[stackTop];
-        }
+    case TokenStream.THROW: {
+        Object value = stack[stackTop];
+        if (value == DBL_MRK) value = doubleWrap(sDbl[stackTop]);
         --stackTop;
+
+        javaException = new JavaScriptException(value);
 
         if (instructionThreshold != 0) {
             instructionCount += pc + 1 - pcPrevBranch;
@@ -1975,7 +1963,9 @@ public class Interpreter {
         pcPrevBranch = pc = getTarget(iCode, pc + 1);
         continue Loop;
     case GOSUB :
-        sDbl[++stackTop] = pc + 3;
+        ++stackTop;
+        stack[stackTop] = DBL_MRK;
+        sDbl[stackTop] = pc + 3;
         if (instructionThreshold != 0) {
             instructionCount += pc + 3 - pcPrevBranch;
             if (instructionCount > instructionThreshold) {
@@ -1993,7 +1983,17 @@ public class Interpreter {
                 instructionCount = 0;
             }
         }
-        pcPrevBranch = pc = (int)sDbl[LOCAL_SHFT + slot];
+        int newPC;
+        Object value = stack[LOCAL_SHFT + slot];
+        if (value != DBL_MRK) {
+            // Invocation from exception handler, restore object to rethrow
+            javaException = (Throwable)value;
+            newPC = getJavaCatchPC(iCode);
+        } else {
+            // Normal return from GOSUB
+            newPC = (int)sDbl[LOCAL_SHFT + slot];
+        }
+        pcPrevBranch = pc = newPC;
         continue Loop;
     }
     case TokenStream.POP :
@@ -2960,7 +2960,7 @@ public class Interpreter {
     private int itsDoubleTableTop;
     private ObjToIntMap itsStrings = new ObjToIntMap(20);
     private String lastAddString;
-
+    
     private int version;
     private boolean inLineStepMode;
     private String debugSource;
