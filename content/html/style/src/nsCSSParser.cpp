@@ -1913,8 +1913,7 @@ PRBool CSSParserImpl::ParseBackground(PRInt32* aErrorCode, nsICSSDeclaration* aD
   }
   if ((found & 2) == 0) {
     aDeclaration->AppendValue(kBackgroundNames[1], 
-                              nsCSSValue(NS_STYLE_BG_IMAGE_NONE,
-                                         eCSSUnit_Enumerated));
+                              nsCSSValue(eCSSUnit_None));
   }
   if ((found & 4) == 0) {
     aDeclaration->AppendValue(kBackgroundNames[2], 
