@@ -130,6 +130,7 @@ pref("compose.throbber.url","chrome://messenger-region/locale/region.properties"
 pref("addressbook.throbber.url","chrome://messenger-region/locale/region.properties");
 
 pref("network.image.imageBehavior", 2);
+pref("network.cookie.cookieBehavior", 2); // 0-Accept, 1-dontAcceptForeign, 2-dontUse, 3-p3p
 
 /////////////////////////////////////////////////////////////////
 // End seamonkey suite mailnews.js pref overrides
