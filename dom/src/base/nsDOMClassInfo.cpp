@@ -890,7 +890,6 @@ jsval nsDOMClassInfo::sDocument_id        = JSVAL_VOID;
 jsval nsDOMClassInfo::sWindow_id          = JSVAL_VOID;
 jsval nsDOMClassInfo::sFrames_id          = JSVAL_VOID;
 jsval nsDOMClassInfo::sSelf_id            = JSVAL_VOID;
-jsval nsDOMClassInfo::sSubmit_id          = JSVAL_VOID;
 
 const JSClass *nsDOMClassInfo::sObjectClass   = nsnull;
 
@@ -993,7 +992,6 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSVAL_TO_STRING(sWindow_id,          cx, "window");
   SET_JSVAL_TO_STRING(sFrames_id,          cx, "frames");
   SET_JSVAL_TO_STRING(sSelf_id,            cx, "self");
-  SET_JSVAL_TO_STRING(sSubmit_id,          cx, "submit");
 
   return NS_OK;
 }
@@ -2831,7 +2829,6 @@ nsDOMClassInfo::ShutDown()
   sWindow_id          = JSVAL_VOID;
   sFrames_id          = JSVAL_VOID;
   sSelf_id            = JSVAL_VOID;
-  sSubmit_id          = JSVAL_VOID;
 
   NS_IF_RELEASE(sXPConnect);
   NS_IF_RELEASE(sSecMan);
@@ -5282,11 +5279,7 @@ nsHTMLFormElementSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
                                 PRUint32 flags, JSObject **objp,
                                 PRBool *_retval)
 {
-  // If we're resolving a string other than "submit", and we're not
-  // resolving for assignment, check if the form knows about the
-  // resolved string.
-  if ((!(JSRESOLVE_ASSIGNING & flags)) && JSVAL_IS_STRING(id) &&
-      id != sSubmit_id) {
+  if ((!(JSRESOLVE_ASSIGNING & flags)) && JSVAL_IS_STRING(id)) {
     nsCOMPtr<nsISupports> native;
 
     wrapper->GetNative(getter_AddRefs(native));
@@ -6285,7 +6278,6 @@ nsEventListenerThisTranslator::TranslateThis(nsISupports *aInitialThis,
   NS_ENSURE_TRUE(event, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<nsIDOMEventTarget> target;
-
   event->GetCurrentTarget(getter_AddRefs(target));
 
   *_retval = target;
