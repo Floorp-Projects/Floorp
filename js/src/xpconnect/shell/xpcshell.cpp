@@ -346,8 +346,10 @@ my_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber)
 }
 
 #ifdef EDITLINE
+extern "C" {
 extern char     *readline(const char *prompt);
 extern void     add_history(char *line);
+}
 #endif
 
 static JSBool
