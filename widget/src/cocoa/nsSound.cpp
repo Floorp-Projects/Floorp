@@ -38,6 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nscore.h"
+#include "nsCRT.h"
 #include "nsIAllocator.h"
 #include "plstr.h"
 #include "nsVoidArray.h"
