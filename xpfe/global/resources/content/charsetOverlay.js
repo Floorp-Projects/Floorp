@@ -22,7 +22,7 @@ function SetDefaultCharacterSet(charset)
 
 function SelectDetector(event)
 {
-	dump("Charset Detector menu item pressed: " + event.node.getAttribute('id') + "\n");
+	dump("Charset Detector menu item pressed: " + event.target.getAttribute('id') + "\n");
 
     uri =  event.target.getAttribute("id");
     prefvalue = uri.substring('charsetDetector.'.length, uri.length);
