@@ -1,0 +1,53 @@
+#!nmake
+#
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+# 
+# The Original Code is mozilla.org code.
+# 
+# The Initial Developer of the Original Code is Tim Rowley.
+# Portions created by Tim Rowley are 
+# Copyright (C) 2001 Tim Rowley.  Rights Reserved.
+# 
+# Contributor(s): 
+#   Tim Rowley <tor@cs.brown.edu>
+
+DEPTH=..\..\..\..
+include <$(DEPTH)/config/config.mak>
+
+MODULE		= imgmng
+LIBRARY_NAME	= imgmng
+DLL		= $(OBJDIR)\$(LIBRARY_NAME).dll
+MAKE_OBJ_TYPE	= DLL
+
+OBJS	= \
+		.\$(OBJDIR)\nsMNGDecoder.obj \
+		.\$(OBJDIR)\imgContainerMNG.obj \
+		.\$(OBJDIR)\nsMNGFactory.obj \
+		$(NULL)
+
+LLIBS=\
+	$(LIBNSPR) \
+	$(DIST)\lib\xpcom.lib \
+	$(DIST)\lib\mng.lib \
+	$(DIST)\lib\jpeg3250.lib \
+	$(DIST)\lib\zlib.lib \
+	$(DIST)\lib\gkgfxwin.lib \
+	$(NULL)
+
+include <$(DEPTH)\config\rules.mak>
+
+install:: $(DLL)
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(LIBRARY_NAME).dll $(DIST)\bin\components
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(LIBRARY_NAME).lib $(DIST)\lib
+
+clobber::
+	rm -f $(DIST)\bin\components\$(LIBRARY_NAME).dll
+	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
