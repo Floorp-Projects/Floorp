@@ -529,7 +529,7 @@ nsresult nsMsgFilterList::ParseCondition(nsString2 &value)
 		{
 			nsMsgSearchTerm	*newTerm = new nsMsgSearchTerm;
 			if (newTerm)
-				newTerm->m_booleanOp = ANDTerm ? nsMsgSearchBooleanOp::BooleanAND : nsMsgSearchBooleanOp::BooleanOR;
+				newTerm->m_booleanOp = (nsMsgSearchBooleanOperator) (ANDTerm ? nsMsgSearchBooleanOp::BooleanAND : nsMsgSearchBooleanOp::BooleanOR);
 			if (newTerm->DeStreamNew(termDup, PL_strlen(termDup)) == NS_OK)
 				m_curFilter->GetTermList()->AppendElement(newTerm);
 			PR_FREEIF(termDup);
