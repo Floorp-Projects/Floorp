@@ -90,6 +90,7 @@ function setHomePageToCurrentPage(folderFieldId)
   var url = parent.opener._content.location.href;
   if( url )
     homePageField.value = url;
+  return true;
 }
 
 function prefClearUrlbarHistory()
