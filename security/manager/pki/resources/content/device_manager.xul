@@ -109,7 +109,7 @@
       <hbox>
         <button id="help_button" 
                 label="&help.label;" 
-                oncommand="openHelp('chrome://help/content/help.xul?sec_devices');"/> 
+                oncommand="openHelp('sec_devices');"/> 
         <button id="ok_button" 
                 label="&ok.label;" 
                 oncommand="window.close();"/> 

@@ -56,7 +56,7 @@
   <button id="cancel-button" label="&cancel.label;"
           oncommand="doCancel();"/> 
   <button id="help-button" label="&help.label;"
-          oncommand="openHelp('chrome://help/content/help.xul?priv_key_copy');"/> 
+          oncommand="openHelp('priv_key_copy');"/> 
   </hbox>
 </vbox>
 </window>

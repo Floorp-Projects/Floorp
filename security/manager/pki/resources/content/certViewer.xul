@@ -68,7 +68,7 @@
           <button id="HelpButton"
                   label="&certmgr.help.label;" 
                   accesskey="&certmgr.helpButtonAccessKey;"
-                  oncommand="openHelp('chrome://help/content/help.xul?cert_details');"/>
+                  oncommand="openHelp('cert_details');"/>
           <button id="closeButton"
                   label="&certmgr.close.label;" 
                   accesskey="&certmgr.closeWindowAccessKey;"

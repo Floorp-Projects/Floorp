@@ -64,7 +64,7 @@
       <button id="cancel-button" label="&certmgr.cancel.label;"
               oncommand="window.close();"/> 
       <button id="help-button" label="&certmgr.help.label;"
-              oncommand="openHelp('chrome://help/content/help.xul?edit_web_certs');"/>
+              oncommand="openHelp('edit_web_certs');"/>
     </hbox>
   </vbox>
 
