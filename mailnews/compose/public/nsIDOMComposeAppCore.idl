@@ -34,7 +34,8 @@ interface nsIDOMComposeAppCore : nsIDOMBaseAppCore {
     void SetWindow(in nsIDOMWindow ptr);
     void SetEditor(in nsIDOMEditorAppCore ptr);
     void CompleteCallback(in nsAutoString script);
-    void NewMessage(in nsAutoString url, 
+    void NewMessage(in nsAutoString url,
+			in nsAutoString args, 
 			in nsIDOMXULTreeElement tree, 
 			in nsIDOMNodeList node, 
 			in nsIDOMMsgAppCore msgAppCore, 
