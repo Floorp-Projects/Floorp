@@ -427,7 +427,7 @@ NS_IMETHODIMP nsScrollingView :: SetDimensions(nscoord width, nscoord height, PR
   //but unfortunately it will also cause scrollbar flashing. so long as
   //all resize operations happen through the viewmanager, this is not
   //an issue. we'll see. MMP
-//  ComputeContainerSize();
+  ComputeContainerSize();
 
   NS_RELEASE(dx);
   return NS_OK;
