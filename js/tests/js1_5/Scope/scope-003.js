@@ -37,13 +37,13 @@
 * > [object Object]
 * > [object Call]
 *
-*    Note: the results should be:
+* Note the results should be:
 *
 *   [object global]
 *   [object Object]
 *   [object global]
 *
-*   and this is what we are testing for in this testcase -
+* This is what we are checking for in this testcase -
 */
 //-------------------------------------------------------------------------------------------------
 var UBound = 0;
@@ -76,8 +76,8 @@ function a()
 }
 
 
-var a = new a();  // sets actualvalues[0]
-a.f();            // sets actualvalues[1], actualvalues[2]
+var obj = new a();  // captures actualvalues[0]
+obj.f();            // captures actualvalues[1], actualvalues[2]
 
 
 // The values we expect - see introduction above -
