@@ -26,6 +26,7 @@ class nsTableCell;
 class nsVoidArray;
 class nsTableCellFrame;
 class CellData;
+class nsITableLayoutStrategy;
 struct InnerTableReflowState;
 struct nsStylePosition;
 struct nsStyleSpacing;
@@ -151,7 +152,6 @@ public:
   /** set the width of the column at aColIndex to aWidth    */
           void SetColumnWidth(PRInt32 aColIndex, PRInt32 aWidth);
 
-
           
   /**
     * Calculate Layout Information
@@ -275,116 +275,6 @@ protected:
                                    const nsSize&    aMaxSize, 
                                    nsSize*          aMaxElementSize);
 
-  /** assign widths for each column that has fixed width.  
-    * Computes the minimum and maximum table widths. 
-    * Sets mColumnWidths as a side effect.
-    *
-    * @param aPresContext     the presentation context
-    * @param aMaxWidth        the maximum width of the table
-    * @param aNumCols         the total number of columns in the table
-    * @param aTableStyle      the resolved style for the table
-    * @param aTotalFixedWidth out param, the sum of the fixed width columns
-    * @param aMinTableWidth   out param, the min possible table width
-    * @param aMaxTableWidth   out param, the max table width
-    *
-    * @return PR_TRUE if all is well, PR_FALSE if there was an unrecoverable error
-    *
-    * TODO: should be renamed to "AssignKnownWidthInformation
-    */
-  virtual PRBool AssignFixedColumnWidths(nsIPresContext* aPresContext, 
-                                         PRInt32   aMaxWidth, 
-                                         PRInt32   aNumCols, 
-                                         PRInt32 & aTotalFixedWidth,
-                                         PRInt32 & aMinTableWidth, 
-                                         PRInt32 & aMaxTableWidth);
-
-  /** assign widths for each column that has proportional width inside a table that 
-    * has a fixed width.
-    * Sets mColumnWidths as a side effect.
-    *
-    * @param aPresContext     the presentation context
-    * @param aTableStyle      the resolved style for the table
-    * @param aAvailWidth      the remaining amount of horizontal space available
-    * @param aMaxWidth        the total amount of horizontal space available
-    * @param aMinTableWidth   the min possible table width
-    * @param aMaxTableWidth   the max table width
-    *
-    * @return PR_TRUE if all is well, PR_FALSE if there was an unrecoverable error
-    *
-    * TODO: rename this method to reflect that it is a Nav4 compatibility method
-    */
-  virtual PRBool BalanceProportionalColumnsForSpecifiedWidthTable(nsIPresContext*  aPresContext,
-                                                                  PRInt32 aAvailWidth,
-                                                                  PRInt32 aMaxWidth,
-                                                                  PRInt32 aMinTableWidth, 
-                                                                  PRInt32 aMaxTableWidth);
-
-  /** assign widths for each column that has proportional width inside a table that 
-    * has auto width (width set by the content and available space.)
-    * Sets mColumnWidths as a side effect.
-    *
-    * @param aPresContext     the presentation context
-    * @param aTableStyle      the resolved style for the table
-    * @param aAvailWidth      the remaining amount of horizontal space available
-    * @param aMaxWidth        the total amount of horizontal space available
-    * @param aMinTableWidth   the min possible table width
-    * @param aMaxTableWidth   the max table width
-    *
-    * @return PR_TRUE if all is well, PR_FALSE if there was an unrecoverable error
-    *
-    * TODO: rename this method to reflect that it is a Nav4 compatibility method
-    */
-  virtual PRBool BalanceProportionalColumnsForAutoWidthTable(nsIPresContext*  aPresContext,
-                                                             PRInt32 aAvailWidth,
-                                                             PRInt32 aMaxWidth,
-                                                             PRInt32 aMinTableWidth, 
-                                                             PRInt32 aMaxTableWidth);
-
-  /** assign the minimum allowed width for each column that has proportional width.
-    * Typically called when the min table width doesn't fit in the available space.
-    * Sets mColumnWidths as a side effect.
-    *
-    * @param aPresContext     the presentation context
-    *
-    * @return PR_TRUE if all is well, PR_FALSE if there was an unrecoverable error
-    */
-  virtual PRBool SetColumnsToMinWidth(nsIPresContext* aPresContext);
-
-  /** assign the maximum allowed width for each column that has proportional width.
-    * Typically called when the desired max table width fits in the available space.
-    * Sets mColumnWidths as a side effect.
-    *
-    * @param aPresContext     the presentation context
-    * @param aTableStyle      the resolved style for the table
-    * @param aAvailWidth      the remaining amount of horizontal space available
-    *
-    * @return PR_TRUE if all is well, PR_FALSE if there was an unrecoverable error
-    */
-  virtual PRBool BalanceColumnsTableFits(nsIPresContext*  aPresContext, 
-                                         PRInt32          aAvailWidth);
-
-  /** assign widths for each column that has proportional width inside a table that 
-    * has auto width (width set by the content and available space) according to the
-    * HTML 4 specification.
-    * Sets mColumnWidths as a side effect.
-    *
-    * @param aPresContext     the presentation context
-    * @param aTableStyle      the resolved style for the table
-    * @param aAvailWidth      the remaining amount of horizontal space available
-    * @param aMaxWidth        the total amount of horizontal space available
-    * @param aMinTableWidth   the min possible table width
-    * @param aMaxTableWidth   the max table width
-    *
-    * @return PR_TRUE if all is well, PR_FALSE if there was an unrecoverable error
-    *
-    * TODO: rename this method to reflect that it is a Nav4 compatibility method
-    */
-  virtual PRBool BalanceColumnsHTML4Constrained(nsIPresContext*  aPresContext,
-                                                PRInt32 aAvailWidth,
-                                                PRInt32 aMaxWidth,
-                                                PRInt32 aMinTableWidth, 
-                                                PRInt32 aMaxTableWidth);
-
   /** sets the width of the table according to the computed widths of each column. */
   virtual void SetTableWidth(nsIPresContext*  aPresContext);
 
@@ -394,18 +284,6 @@ protected:
                                         nscoord* aAscents,
                                         nscoord aMaxAscent,
                                         nscoord aMaxHeight);
-
-  /** support routine returns PR_TRUE if the table should be sized "automatically" 
-    * according to its content.  
-    * In NAV4, this is the default (no WIDTH, no COLS).
-    */
-  virtual PRBool TableIsAutoWidth();
-
-  /** support routine returns PR_TRUE if the table columns should be sized "automatically" 
-    * according to its content.  
-    * In NAV4, this is when there is a COLS attribute on the table.
-    */
-  virtual PRBool AutoColumnWidths();
 
   /** given the new parent size, do I really need to do a reflow? */
   virtual PRBool NeedsReflow(const nsSize& aMaxSize);
@@ -433,7 +311,7 @@ private:
   PRBool       mFirstPassValid;     // PR_TRUE if first pass data is still legit
   PRInt32      mPass;               // which Reflow pass are we currently in?
   PRBool       mIsInvariantWidth;   // PR_TRUE if table width cannot change
-
+  nsITableLayoutStrategy * mTableLayoutStrategy; // the layout strategy for this frame
 };
 
 #endif
