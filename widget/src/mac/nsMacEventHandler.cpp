@@ -380,6 +380,7 @@ void nsMacEventHandler::ConvertOSEventToMouseEvent(
 
 	// get the widget hit and its hit point
 	Point hitPoint = aOSEvent.where;
+	::SetPort(static_cast<GrafPort*>(mTopLevelWidget->GetNativeData(NS_NATIVE_DISPLAY)));
 	::SetOrigin(0, 0);
 	::GlobalToLocal(&hitPoint);
 	nsPoint widgetHitPoint(hitPoint.h, hitPoint.v);
