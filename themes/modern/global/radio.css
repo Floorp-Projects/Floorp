@@ -31,6 +31,13 @@
       -moz-border-radius: 50%;
     }
 
+  /* ensure that no list-style-image is inherited in from the Outside */
+  .checkmark-box
+    {
+      list-style-image: none;
+    }
+  
+
   radio[checked="true"] > .internal-box > .checkmark-box > image 
     {
       list-style-image: url(chrome://global/skin/check-radio.gif);
