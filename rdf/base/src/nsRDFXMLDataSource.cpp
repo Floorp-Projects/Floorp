@@ -518,11 +518,6 @@ static const char kResourceURIPrefix[] = "resource:";
 
     nsresult rv;
 
-    // XXX this is a hack: any "file:" URI is considered writable. All
-    // others are considered read-only.
-    if (PL_strncmp(uri, kFileURIPrefix, sizeof(kFileURIPrefix) - 1) != 0)
-        mIsWritable = PR_FALSE;
-
     nsIRDFService* rdfService = nsnull;
     nsINameSpaceManager* ns = nsnull;
     nsIRDFContentSink* sink = nsnull;
@@ -530,11 +525,20 @@ static const char kResourceURIPrefix[] = "resource:";
     nsIDTD* dtd             = nsnull;
     nsIStreamListener* lsnr = nsnull;
     nsIURL* url             = nsnull;
+    const char* realURL;
 
     if (NS_FAILED(rv = NS_NewURL(&url, uri)))
         goto done;
 
-    if (NS_FAILED(rv = mInner->Init(uri)))
+    // XXX this is a hack: any "file:" URI is considered writable. All
+    // others are considered read-only.
+    url->GetSpec(&realURL);
+    if ((PL_strncmp(realURL, kFileURIPrefix, sizeof(kFileURIPrefix) - 1) != 0) &&
+        (PL_strncmp(realURL, kResourceURIPrefix, sizeof(kResourceURIPrefix) - 1) != 0)) {
+        mIsWritable = PR_FALSE;
+    }
+
+    if (NS_FAILED(rv = mInner->Init(realURL)))
         goto done;
 
     if (NS_FAILED(rv = nsServiceManager::GetService(kRDFServiceCID,
