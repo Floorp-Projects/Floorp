@@ -48,13 +48,28 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsLDAPURL, nsILDAPURL, nsIURI)
 nsLDAPURL::nsLDAPURL()
     : mPort(0),
       mScope(SCOPE_BASE),
-      mOptions(0)
+      mOptions(0),
+      mAttributes(0)
 {
     NS_INIT_ISUPPORTS();
 }
 
 nsLDAPURL::~nsLDAPURL()
 {
+}
+
+nsresult
+nsLDAPURL::Init()
+{
+    if (!mAttributes) {
+        mAttributes = new nsCStringArray();
+        if (!mAttributes) {
+            NS_ERROR("nsLDAPURL::Init: out of memory ");
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+    }
+
+    return NS_OK;
 }
 
 // A string representation of the URI. Setting the spec 
@@ -68,6 +83,7 @@ NS_IMETHODIMP
 nsLDAPURL::GetSpec(char **_retval)
 {
     nsCAutoString spec;
+    PRUint32 count;
     
     if (!_retval) {
         NS_ERROR("nsLDAPURL::GetSpec: null pointer ");
@@ -80,22 +96,28 @@ nsLDAPURL::GetSpec(char **_retval)
         spec.Append(mHost);
     }
     if (mPort > 0) {
-        spec.Append(":");
+        spec.Append(':');
         spec.AppendInt(mPort);
     }
-    spec.Append("/");
+    spec.Append('/');
     if (mDN.Length() > 0) {
         spec.Append(mDN);
     }
 
-    // XXXleif: Here we need to add attributes...
-    // This is bug: 70611
-    if (0) {
-        // Code to handle attributes
+    if ((count = mAttributes->Count())) {
+        PRUint32 index = 0;
+
+        spec.Append('?');
+        while (index < count) {
+            spec.Append((mAttributes->CStringAt(index++))->ToNewCString());
+            if (index < count) {
+                spec.Append(',');
+            }
+        }
     }
 
     if ((mScope) || mFilter.Length()) {
-        spec.Append("??");  // XXXleif: This needs to be changed with bug 70611
+        spec.Append((count ? "?" : "??"));
         if (mScope) {
             if (mScope == SCOPE_ONELEVEL) {
                 spec.Append("one");
@@ -104,13 +126,14 @@ nsLDAPURL::GetSpec(char **_retval)
             }
         }
         if (mFilter.Length()) {
-            spec.Append("?");
+            spec.Append('?');
             spec.Append(mFilter);
         }
     }
 
     *_retval = spec.ToNewCString();
     if (!*_retval) {
+        NS_ERROR("nsLDAPURL::GetSpec: out of memory ");
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
@@ -119,22 +142,42 @@ nsLDAPURL::GetSpec(char **_retval)
 NS_IMETHODIMP 
 nsLDAPURL::SetSpec(const char *aSpec)
 {
-    PRUint32 rc;
+    PRUint32 rv, count;
     LDAPURLDesc *desc;
+    nsCString str;
+    char **attributes;
 
     // This is from the LDAP C-SDK, which currently doesn't
     // support everything from RFC 2255... :(
-    rc = ldap_url_parse(aSpec, &desc);
-    switch (rc) {
-
+    //
+    rv = ldap_url_parse(aSpec, &desc);
+    switch (rv) {
     case LDAP_SUCCESS:
         mHost = desc->lud_host;
         mPort = desc->lud_port;
         mDN = desc->lud_dn;
-        // XXXLeif: Need code for lud_attrs here, see 70611
         mScope = desc->lud_scope;
         mFilter = desc->lud_filter;
         mOptions = desc->lud_options;
+
+        // Set the attributes array, need to count it first.
+        //
+        count = 0;
+        attributes = desc->lud_attrs;
+        while (attributes && *attributes++) {
+            count++;
+        }
+        if (count) {
+            rv = SetAttributes(count,
+                               NS_CONST_CAST(const char **, desc->lud_attrs));
+            // This error could only be out-of-memory, so pass it up
+            //
+            if (NS_FAILED(rv)) {
+                return rv;
+            }
+        } else {
+            mAttributes->Clear();
+        }
 
         ldap_free_urldesc(desc);
         return NS_OK;
@@ -145,6 +188,7 @@ nsLDAPURL::SetSpec(const char *aSpec)
         return NS_ERROR_MALFORMED_URI;
 
     case LDAP_URL_ERR_MEM:
+        NS_ERROR("nsLDAPURL::SetSpec: out of memory ");
         return NS_ERROR_OUT_OF_MEMORY;
 
     case LDAP_URL_ERR_PARAM: 
@@ -179,6 +223,7 @@ NS_IMETHODIMP nsLDAPURL::GetScheme(char **_retval)
     *_retval = nsCRT::strdup((mOptions & OPT_SECURE) ? kLDAPSSLScheme :
                              kLDAPScheme);
     if (!*_retval) {
+        NS_ERROR("nsLDAPURL::GetScheme: out of memory ");
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
@@ -248,6 +293,7 @@ nsLDAPURL::GetHost(char **_retval)
 
     *_retval = mHost.ToNewCString();
     if (!*_retval) {
+        NS_ERROR("nsLDAPURL::GetHost: out of memory ");
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
@@ -306,6 +352,7 @@ NS_IMETHODIMP nsLDAPURL::GetPath(char **_retval)
 
     *_retval = mDN.ToNewCString();
     if (!*_retval) {
+        NS_ERROR("nsLDAPURL::GetPath: out of memory ");
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
@@ -366,6 +413,7 @@ NS_IMETHODIMP nsLDAPURL::GetDn(char **_retval)
 
     *_retval = mDN.ToNewCString();
     if (!*_retval) {
+        NS_ERROR("nsLDAPURL::GetDN: out of memory ");
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
@@ -377,12 +425,111 @@ NS_IMETHODIMP nsLDAPURL::SetDn(const char *aDn)
     return NS_OK;
 }
 
-// void getAttributes (out unsigned long count, 
-//                     [array, size_is (count), retval] out string values);
+// void getAttributes (out unsigned long aCount, 
+//                     [array, size_is (aCount), retval] out string aAttrs);
 //
-NS_IMETHODIMP nsLDAPURL::GetAttributes(PRUint32 *count, char ***values)
+NS_IMETHODIMP nsLDAPURL::GetAttributes(PRUint32 *aCount, char ***_retval)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    PRUint32 index = 0;
+    PRUint32 count;
+    char **cArray;
+
+    if (!_retval) {
+        NS_ERROR("nsLDAPURL::GetAttributes: null pointer ");
+        return NS_ERROR_NULL_POINTER;
+    }
+
+    count = mAttributes->Count();
+    cArray = NS_STATIC_CAST(char **, nsMemory::Alloc(count * sizeof(char *)));
+    if (!cArray) {
+        NS_ERROR("nsLDAPURL::GetAttributes: out of memory ");
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    // Loop through the string array, and build up the C-array.
+    //
+    while (index < count) {
+        if (!(cArray[index] = (mAttributes->CStringAt(index))->ToNewCString())) {
+            NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(index, cArray);
+            NS_ERROR("nsLDAPURL::GetAttributes: out of memory ");
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+        index++;
+    }
+    *aCount = count;
+    *_retval = cArray;
+
+    return NS_OK;
+}
+// void setAttributes (in unsigned long aCount,
+//                     [array, size_is (aCount)] in string aAttrs); */
+NS_IMETHODIMP nsLDAPURL::SetAttributes(PRUint32 count, const char **aAttrs)
+{
+    PRUint32 index = 0;
+    nsCString str;
+    
+    mAttributes->Clear();
+    while (index < count) {
+        // Have to assign the str into this temporary nsCString, to make
+        // the compilers happy...
+        //
+        str = nsDependentCString(aAttrs[index]);
+        if (!mAttributes->InsertCStringAt(str, index++)) {
+            NS_ERROR("nsLDAPURL::SetAttributes: out of memory ");
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+    }
+
+    return NS_OK;
+}
+// void addAttribute (in string aAttribute);
+//
+NS_IMETHODIMP nsLDAPURL::AddAttribute(const char *aAttribute)
+{
+    nsCString str;
+
+    str = nsDependentCString(aAttribute);
+    if (mAttributes->IndexOfIgnoreCase(str) >= 0) {
+        return NS_OK;
+    }
+
+    if (!mAttributes->InsertCStringAt(str, mAttributes->Count())) {
+        NS_ERROR("nsLDAPURL::AddAttribute: out of memory ");
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    return NS_OK;
+}
+// void removeAttribute (in string aAttribute);
+//
+NS_IMETHODIMP nsLDAPURL::RemoveAttribute(const char *aAttribute)
+{
+    nsCString str;
+
+    str = nsDependentCString(aAttribute);
+    mAttributes->RemoveCString(str);
+
+    return NS_OK;
+}
+// boolean hasAttribute (in string aAttribute);
+//
+NS_IMETHODIMP nsLDAPURL::HasAttribute(const char *aAttribute, PRBool *_retval)
+{
+    nsCString str;
+
+    if (!_retval) {
+        NS_ERROR("nsLDAPURL::HasAttribute: null pointer ");
+        return NS_ERROR_NULL_POINTER;
+    }
+
+    str = nsDependentCString(aAttribute);
+    if (mAttributes->IndexOfIgnoreCase(str) >= 0) {
+        *_retval = PR_TRUE;
+    } else {
+        *_retval = PR_FALSE;
+    }
+    
+    return NS_OK;
 }
 
 // attribute long scope;
@@ -422,6 +569,7 @@ NS_IMETHODIMP nsLDAPURL::GetFilter(char **_retval)
 
     *_retval = mFilter.ToNewCString();
     if (!*_retval) {
+        NS_ERROR("nsLDAPURL::GetFilter: out of memory ");
         return NS_ERROR_OUT_OF_MEMORY;
     }
     

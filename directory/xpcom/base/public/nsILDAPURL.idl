@@ -39,26 +39,62 @@
 interface nsILDAPURL : nsIURI {
 
     /**
-     * the distinguished name of the URL (ie the base DN for the search)
+     * The distinguished name of the URL (ie the base DN for the search)
      *
      * for the getter:
      *
      * @exception NS_ERROR_NULL_POINTER     NULL pointer to GET method
-     * @exception NS_ERROR_OUT_OF_MEMORY	ran out of memory
+     * @exception NS_ERROR_OUT_OF_MEMORY	Ran out of memory
      */
     attribute string dn;
 
     /**
-     * the LDAP attributes to return.  defaults to all attributes.
-     * This is currently not implemented, and the setter is also
-     * missing.
+     * Return all LDAP attributes currently set. The empty array indicates
+     * that all attributes are requested.
      *
+     * @exception NS_ERROR_NULL_POINTER     NULL pointer to GET method
+     * @exception NS_ERROR_OUT_OF_MEMORY	Ran out of memory
      */
-    void getAttributes(out unsigned long count, 
-                       [retval, array, size_is(count)] out string values);
+    void getAttributes(out unsigned long aCount, 
+                       [retval, array, size_is(aCount)] out string aAttrs);
 
     /**
-     * the scope of the search.  defaults to SCOPE_BASE. 
+     * Set the array of attributes, dropping whatever was there before.
+     *
+     * @param aAttrs                        An array of LDAP attributes
+     * @exception NS_ERROR_OUT_OF_MEMORY	Ran out of memory
+     */
+    void setAttributes(in unsigned long aCount,
+                       [array, size_is(aCount)] in string aAttrs);
+
+    /**
+     * Add one attribute to the array of attributes to request. If the
+     * attribute is already in our array, this becomes a noop.
+     *
+     * @param aAttribute          An LDAP attribute (e.g. "cn")
+     */
+    void addAttribute(in string aAttribute);
+
+    /**
+     * Remove one attribute from the array of attributes to request. If
+     * the attribute didn't exist in the array, this becomes a noop.
+     *
+     * @param aAttribute                    An LDAP attribute (e.g. "cn")
+     * @exception NS_ERROR_OUT_OF_MEMORY	Ran out of memory
+     */
+    void removeAttribute(in string aAttribute);
+
+    /**
+     * Test if an attribute is in our list of attributes already
+     *
+     * @param aAttribute                    An LDAP attribute (e.g. "cn")
+     * @return boolean                      Truth value
+     * @exception NS_ERROR_NULL_POINTER     NULL pointer to GET method
+     */
+    boolean hasAttribute(in string aAttribute);
+
+    /**
+     * The scope of the search.  defaults to SCOPE_BASE. 
      *
      * @exception NS_ERROR_NULL_POINTER     NULL pointer to GET method
      * @exception NS_ERROR_MALFORMED_URI	Illegal base to SET method
@@ -66,35 +102,35 @@ interface nsILDAPURL : nsIURI {
     attribute long scope;
 
     /**
-     * search just the base object
+     * Search just the base object
      */
     const long SCOPE_BASE = 0;
     
     /** 
-     * search only the children of the base object
+     * Search only the children of the base object
      */
     const long SCOPE_ONELEVEL = 1;
 
     /**
-     * search the entire subtree under and including the base object
+     * Search the entire subtree under and including the base object
      */
     const long SCOPE_SUBTREE = 2;
 
     /**
-     * the search filter. "(objectClass=*)" is the default.
+     * The search filter. "(objectClass=*)" is the default.
      */
     attribute string filter;
 
     /**
-     * any options defined for this URL (check options using a bitwise and)
+     * Any options defined for this URL (check options using a bitwise and)
      * 
      * @exception NS_ERROR_NULL_POINTER     NULL pointer to GET method
-     * @exception NS_ERROR_OUT_OF_MEMORY    ran out of memory
+     * @exception NS_ERROR_OUT_OF_MEMORY    Ran out of memory
      */
     attribute unsigned long options;
 
     /**
-     * if this is set/true, this is an ldaps: URL, not an ldap: URL
+     * If this is set/true, this is an ldaps: URL, not an ldap: URL
      */
     const unsigned long OPT_SECURE = 0x01;
 

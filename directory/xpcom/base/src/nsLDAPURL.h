@@ -36,6 +36,7 @@
 #include "nsLDAP.h"
 #include "ldap.h"
 #include "nsString.h"
+#include "nsVoidArray.h"
 #include "nsILDAPURL.h"
 
 // cb7c67f8-0053-4072-89e9-501cbd1b35ab
@@ -52,15 +53,14 @@ class nsLDAPURL : public nsILDAPURL
 
     nsLDAPURL();
     virtual ~nsLDAPURL();
+    nsresult Init();
 
   protected:
-    nsCString mHost;		// Host name of this Directory server
-    PRInt32 mPort;			// LDAP port number
-    nsCString mDN;			// Base Distinguished Name (Base DN)
-
-    // Need array for attrs here... See bug: 70611.
-
-    PRInt32 mScope;			// Search scope (base, one or sub)
-    nsCString mFilter;		// LDAP search filter
-    PRUint32 mOptions;		// Options
+    nsCString mHost;              // Host name of this Directory server
+    PRInt32 mPort;                // LDAP port number
+    nsCString mDN;                // Base Distinguished Name (Base DN)
+    PRInt32 mScope;               // Search scope (base, one or sub)
+    nsCString mFilter;            // LDAP search filter
+    PRUint32 mOptions;            // Options
+    nsCStringArray *mAttributes;  // List of attributes
 };
