@@ -699,7 +699,7 @@ struct nsStyleVisibility : public nsStyleStruct {
   PRUint8 mDirection;                  // [inherited] see nsStyleConsts.h NS_STYLE_DIRECTION_*
   PRUint8   mVisible;                  // [inherited]
   nsCOMPtr<nsILanguageAtom> mLanguage; // [inherited]
-  float mOpacity;                      // [inherited] percentage
+  float mOpacity;                      // [inherited]
  
   PRBool IsVisible() const {
 		return (mVisible == NS_STYLE_VISIBILITY_VISIBLE);

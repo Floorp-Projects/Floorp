@@ -2121,7 +2121,7 @@ MapDisplayForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, ns
     }
   }
   else if (aID == eStyleStruct_Visibility) {
-    // opacity: factor, percent, inherit
+    // opacity: factor, inherit
     if (aDisplay.mOpacity.GetUnit() == eCSSUnit_Null && ourDisplay->mOpacity.GetUnit() != eCSSUnit_Null)
       aDisplay.mOpacity = ourDisplay->mOpacity;
 

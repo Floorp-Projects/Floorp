@@ -3015,20 +3015,8 @@ nsRuleNode::ComputeVisibilityData(nsStyleStruct* aStartStruct,
   if (!parentVisibility)
     parentVisibility = visibility;
 
-  // opacity: factor, percent, inherit
-  if (eCSSUnit_Percent == displayData.mOpacity.GetUnit()) {
-    inherited = PR_TRUE;
-    float opacity = parentVisibility->mOpacity * displayData.mOpacity.GetPercentValue();
-    if (opacity < 0.0f) {
-      visibility->mOpacity = 0.0f;
-    } else if (1.0 < opacity) {
-      visibility->mOpacity = 1.0f;
-    }
-    else {
-      visibility->mOpacity = opacity;
-    }
-  }
-  else if (eCSSUnit_Number == displayData.mOpacity.GetUnit()) {
+  // opacity: factor, inherit
+  if (eCSSUnit_Number == displayData.mOpacity.GetUnit()) {
     visibility->mOpacity = displayData.mOpacity.GetFloatValue();
   }
   else if (eCSSUnit_Inherit == displayData.mOpacity.GetUnit()) {
