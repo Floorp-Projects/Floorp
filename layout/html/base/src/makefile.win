@@ -34,7 +34,6 @@ REQUIRES	= xpcom \
 		  htmlparser \
 		  webshell \
 		  plugin \
-		  gkplugin \
 		  timer \
 		  docshell \
 		  mimetype \

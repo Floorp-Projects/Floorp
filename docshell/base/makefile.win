@@ -42,7 +42,6 @@ REQUIRES	= xpcom \
 		  shistory \
 		  intl \
 		  plugin \
-		  gkplugin \
 		  webshell \
 		  chardet \
 		  uconv \

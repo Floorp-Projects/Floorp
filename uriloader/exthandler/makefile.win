@@ -30,7 +30,6 @@ REQUIRES	= xpcom \
 		  webshell \
 		  helperAppDlg \
 		  plugin \
-		  gkplugin \
 		  pref \
 		  raptor \
 		  $(NULL)

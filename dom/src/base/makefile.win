@@ -55,7 +55,6 @@ REQUIRES	= xpcom \
 		  uconv \
 		  shistory \
 		  plugin \
-		  gkplugin \
 		  windowwatcher \
 		  htmlparser \
 		  chardet \
