@@ -2085,6 +2085,9 @@ nsGenericHTMLElement::GetPrimaryPresState(nsIHTMLContent* aContent,
                                           nsIStatefulFrame::StateType aStateType,
                                           nsIPresState** aPresState)
 {
+  NS_ENSURE_ARG_POINTER(aPresState);
+  *aPresState = nsnull;
+
   nsresult result = NS_OK;
 
    // Get the document
