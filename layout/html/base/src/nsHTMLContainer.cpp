@@ -494,6 +494,16 @@ void nsHTMLContainer::SetAttribute(nsIAtom* aAttribute,
       nsHTMLTagContent::SetAttribute(aAttribute, val);
       return;
     }
+    if (aAttribute == nsHTMLAtoms::marginwidth) {
+      ParseValue(aValue, 0, val, eHTMLUnit_Pixel);
+      nsHTMLTagContent::SetAttribute(aAttribute, val);
+      return;
+    }
+    if (aAttribute == nsHTMLAtoms::marginheight) {
+      ParseValue(aValue, 0, val, eHTMLUnit_Pixel);
+      nsHTMLTagContent::SetAttribute(aAttribute, val);
+      return;
+    }
   }
 
   // Use default attribute catching code
@@ -819,6 +829,26 @@ void nsHTMLContainer::MapAttributesInto(nsIStyleContext* aContext,
           }
         }
         NS_RELEASE(htmlDoc);
+      }
+
+      GetAttribute(nsHTMLAtoms::marginwidth, value);
+      if (eHTMLUnit_Pixel == value.GetUnit()) {
+        float p2t = aPresContext->GetPixelsToTwips();
+        nsStyleSpacing* spacing = (nsStyleSpacing*)
+          aContext->GetMutableStyleData(eStyleStruct_Spacing);
+        nsStyleCoord  coord(NSIntPixelsToTwips(value.GetPixelValue(), p2t));
+        spacing->mPadding.SetLeft(coord);
+        spacing->mPadding.SetRight(coord);
+      }
+
+      GetAttribute(nsHTMLAtoms::marginheight, value);
+      if (eHTMLUnit_Pixel == value.GetUnit()) {
+        float p2t = aPresContext->GetPixelsToTwips();
+        nsStyleSpacing* spacing = (nsStyleSpacing*)
+          aContext->GetMutableStyleData(eStyleStruct_Spacing);
+        nsStyleCoord  coord(NSIntPixelsToTwips(value.GetPixelValue(), p2t));
+        spacing->mPadding.SetTop(coord);
+        spacing->mPadding.SetBottom(coord);
       }
 
       // set up the basefont (defaults to 3)
