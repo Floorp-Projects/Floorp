@@ -10060,7 +10060,7 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList,
   aChangeList.Clear();
   return NS_OK;
 }
-/*
+
 NS_IMETHODIMP
 nsCSSFrameConstructor::ContentStatesChanged(nsIPresContext* aPresContext, 
                                             nsIContent* aContent1,
@@ -10255,7 +10255,7 @@ nsCSSFrameConstructor::ContentStatesChanged(nsIPresContext* aPresContext,
   }
   return result;
 }
-*/
+
 NS_IMETHODIMP
 nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
                                         nsIContent* aContent,
