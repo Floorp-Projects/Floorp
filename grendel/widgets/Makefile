@@ -20,6 +20,8 @@ SRCS=					\
 	Animation.java			\
 	CellEditor.java			\
 	CellRenderer.java		\
+	Collapsible.java		\
+	CollapsiblePanel.java		\
 	Column.java			\
 	ColumnChangeListener.java	\
 	ColumnHeader.java		\
@@ -29,6 +31,7 @@ SRCS=					\
 	ColumnModelListener.java	\
 	DefaultCellRenderer.java	\
 	DefaultHeaderRenderer.java	\
+	GrendelToolBar.java		\
 	HeaderRenderer.java		\
 	MultiSelectionManager.java	\
 	SelectionEvent.java		\
@@ -36,6 +39,7 @@ SRCS=					\
 	SelectionManager.java		\
 	SingleSelectionManager.java	\
 	Splitter.java			\
+	Spring.java			\
 	StatusEvent.java		\
 	TextCellEditor.java		\
 	ToggleCellEditor.java		\
@@ -46,7 +50,6 @@ SRCS=					\
 	TreeTableModelBroadcaster.java	\
 	TreeTableModelEvent.java	\
 	TreeTableModelListener.java	\
-	Util.java			\
 	$(NULL)
 
 include ../rules.mk
