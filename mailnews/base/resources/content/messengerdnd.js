@@ -297,8 +297,8 @@ function DropOnFolderOutliner(row, orientation)
     var targetServer = targetFolder.server;
 
     if (dropMessage) {
-        // fix this, to get the folder from the sourceUri.  this won't work with multiple 3 panes
-        sourceFolder = GetThreadPaneFolder();
+        var sourceMsgHdr = list.GetElementAt(0).QueryInterface(Components.interfaces.nsIMsgDBHdr);
+        sourceFolder = sourceMsgHdr.folder;
         sourceServer = sourceFolder.server;
 
         try {
@@ -307,9 +307,6 @@ function DropOnFolderOutliner(row, orientation)
                 messenger.CopyMessages(sourceFolder, targetFolder, list, false);
             }
             else {
-                // fix this, will not work for multiple 3 panes
-                if (dragSession.dragAction == nsIDragService.DRAGDROP_ACTION_MOVE)
-                    SetNextMessageAfterDelete();
                 var dragAction = dragSession.dragAction;
                 if (dragAction == nsIDragService.DRAGDROP_ACTION_COPY)
                     messenger.CopyMessages(sourceFolder, targetFolder, list, false);
@@ -375,6 +372,12 @@ function BeginDragThreadPane(event)
 
     var threadOutliner = GetThreadOutliner();
     var selectedMessages = GetSelectedMessages();
+
+    //A message can be dragged from one window and dropped on another window
+    //therefore setNextMessageAfterDelete() here 
+    //no major disadvantage even if it is a copy operation
+
+    SetNextMessageAfterDelete();
     return BeginDragOutliner(event, threadOutliner, selectedMessages, "text/x-moz-message-or-folder");
 }
 
