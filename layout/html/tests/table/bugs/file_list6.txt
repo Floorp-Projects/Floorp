@@ -1,3 +1,5 @@
+file:///s|/mozilla/layout/html/tests/table/bugs/bug61042-1.html
+file:///s|/mozilla/layout/html/tests/table/bugs/bug61042-2.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug6184.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug625.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug6304.html
