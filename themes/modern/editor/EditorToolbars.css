@@ -69,9 +69,9 @@
   background-color: #999999;
   overflow:      hidden;
 }
-/* BORDERS ARE NOT WORKING! globalb class="plain" is fighting us! */
-button.plain:hover, button.plain:hover:active,
-button.plain {
+/* BORDERS ARE NOT WORKING! global class="plain" is fighting us! */
+button.edit-mode:hover, button.edit-mode:hover:active,
+button.edit-mode {
   -moz-border-radius: 0px 0px 7px 7px;
   padding: 0px 4px 1px 4px;
   margin: 0px;
@@ -83,16 +83,16 @@ button.plain {
   border-right: 1px solid #666666;
 }
 
-button.plain:hover {
+button.edit-mode:hover {
   border:  1px solid white;
 }
 
-button.plain:hover:active {
+button.edit-mode:hover:active {
   padding: 1px 5px 0px 3px;
   border:  1px solid white;
 }
 
-button.plain[selected="1"] {
+button.edit-mode[selected="1"] {
   padding: 0px 4px 1px 4px;
   margin: -1px 0px 0px 0px;
 /* Not resizing well! - use color instead
@@ -101,8 +101,8 @@ button.plain[selected="1"] {
   background-color: #FFFFFF;
 }
 
-button.plain[selected="1"]:active,
-button.plain[selected="1"]:hover:active {
+button.edit-mode[selected="1"]:active,
+button.edit-mode[selected="1"]:hover:active {
   padding: 1px 5px 0px 3px;
 }
 
