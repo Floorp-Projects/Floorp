@@ -114,15 +114,14 @@ function (iid) {
 }
 
 XMLTermContentHandler.prototype.handleContent =
-function (aContentType, aCommand, aWindowContext, aRequest)
+function (aContentType, aWindowContext, aRequest)
 {
     var e;
 
     var aChannel = aRequest.QueryInterface(Components.interfaces.nsIChannel);
 		
     debug("XMLTermContentHandler.handleContent (" + aContentType + ", " +
-          aCommand + ", " + aWindowContext + ", " +
-          aChannel.URI.spec + ")\n");
+          aWindowContext + ", " + aChannel.URI.spec + ")\n");
 
     var xmltermChromeURL = "chrome://xmlterm/content/xmlterm.xul?"+aChannel.URI.spec;
     //dump("XMLTermContentHandler:xmltermChromeURL = " + xmltermChromeURL + "\n");

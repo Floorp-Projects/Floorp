@@ -78,7 +78,6 @@
 #include "nsXPIDLString.h"
 #include "nsIXULWindow.h"
 #include "nsIChromeRegistry.h"
-#include "nsIContentHandler.h"
 #include "nsIEventQueueService.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsBuildID.h"

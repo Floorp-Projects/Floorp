@@ -356,13 +356,12 @@ nsURLFetcher::FireURLRequest(nsIURI *aURL, nsILocalFile *localFile, nsIFileOutpu
   nsCOMPtr<nsIURILoader> pURILoader (do_GetService(NS_URI_LOADER_CONTRACTID));
   NS_ENSURE_TRUE(pURILoader, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsISupports> cntListener (do_QueryInterface(NS_STATIC_CAST(nsIStreamListener *, this)));
   nsCOMPtr<nsIChannel> channel;
   nsCOMPtr<nsILoadGroup> loadGroup;
-  pURILoader->GetLoadGroupForContext(cntListener, getter_AddRefs(loadGroup));
+  pURILoader->GetLoadGroupForContext(this, getter_AddRefs(loadGroup));
   NS_ENSURE_SUCCESS(NS_NewChannel(getter_AddRefs(channel), aURL, nsnull, loadGroup, this), NS_ERROR_FAILURE);
  
-  return pURILoader->OpenURI(channel, PR_FALSE, cntListener);
+  return pURILoader->OpenURI(channel, PR_FALSE, this);
 }
 
 nsresult

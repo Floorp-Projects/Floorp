@@ -415,7 +415,7 @@ function jsdh_qi(iid)
 }
 
 JSDContentHandler.prototype.handleContent =
-function jsdh_handle(contentType, command, windowTarget, request)
+function jsdh_handle(contentType, windowTarget, request)
 {
     var e;
     var channel = request.QueryInterface(nsIChannel);

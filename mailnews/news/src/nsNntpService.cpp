@@ -1740,7 +1740,7 @@ NS_IMETHODIMP nsNntpService::GetChromeUrlForTask(char **aChromeUrlForTask)
 }
 
 NS_IMETHODIMP 
-nsNntpService::HandleContent(const char * aContentType, const char * aCommand, nsISupports * aWindowContext, nsIRequest *request)
+nsNntpService::HandleContent(const char * aContentType, nsIInterfaceRequestor* aWindowContext, nsIRequest *request)
 {
   nsresult rv;
   NS_ENSURE_ARG_POINTER(request);

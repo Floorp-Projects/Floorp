@@ -811,7 +811,7 @@ XRemoteService::OpenURL(nsCString &aArgument,
       return NS_ERROR_FAILURE;
 
     // load it
-    rv = loader->OpenURI(channel, PR_TRUE, listenerRef);
+    rv = loader->OpenURI(channel, PR_TRUE, listener);
   }
 
   else if (newTab && aOpenBrowser) {

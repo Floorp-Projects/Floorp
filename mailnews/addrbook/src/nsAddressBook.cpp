@@ -2009,8 +2009,9 @@ static void convertFromVObject(VObject *vObj, nsIAbCard *aCard)
     return;
 }
 
-NS_IMETHODIMP nsAddressBook::HandleContent(const char * aContentType, const char * aCommand,
-                                           nsISupports * aWindowContext, nsIRequest *request)
+NS_IMETHODIMP nsAddressBook::HandleContent(const char * aContentType,
+                                           nsIInterfaceRequestor * aWindowContext,
+                                           nsIRequest *request)
 {
   NS_ENSURE_ARG_POINTER(request);
   

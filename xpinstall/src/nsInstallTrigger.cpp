@@ -111,8 +111,7 @@ nsInstallTrigger::SetScriptObject(void *aScriptObject)
 
 NS_IMETHODIMP
 nsInstallTrigger::HandleContent(const char * aContentType,
-                                const char * aCommand,
-                                nsISupports* aWindowContext,
+                                nsIInterfaceRequestor* aWindowContext,
                                 nsIRequest* request)
 {
     nsresult rv = NS_OK;

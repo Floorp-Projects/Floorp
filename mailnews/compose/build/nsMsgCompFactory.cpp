@@ -67,7 +67,6 @@
 #include "nsSmtpServer.h"
 #include "nsSmtpDataSource.h"
 #include "nsSmtpDelegateFactory.h"
-#include "nsIContentHandler.h"
 #include "nsMsgRecipientArray.h"
 #include "nsMsgComposeStringBundle.h"
 #include "nsMsgCompUtils.h"

@@ -108,14 +108,14 @@ function (iid) {
 }
 
 ICALContentHandler.prototype.handleContent =
-function (aContentType, aCommand, aWindowTarget, aRequest)
+function (aContentType, aWindowTarget, aRequest)
 {
     var e;
     var channel = aRequest.QueryInterface(nsIChannel);
     
     /*
     dump ("ICALContentHandler.handleContent (" + aContentType + ", " +
-          aCommand + ", " + aWindowTarget + ", " + channel.URI.spec + ")\n");
+           aWindowTarget + ", " + channel.URI.spec + ")\n");
     */
 
     var windowManager =

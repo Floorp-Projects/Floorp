@@ -115,7 +115,7 @@ function (iid)
 }
 
 IRCContentHandler.prototype.handleContent =
-function (contentType, command, windowTarget, request)
+function (contentType, windowTarget, request)
 {
     var e;
     var channel = request.QueryInterface(nsIChannel);

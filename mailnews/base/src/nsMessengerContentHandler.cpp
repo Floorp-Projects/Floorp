@@ -59,8 +59,8 @@ nsMessengerContentHandler::~nsMessengerContentHandler()
 {
 }
 
-NS_IMETHODIMP nsMessengerContentHandler::HandleContent(const char * aContentType, const char * aCommand,
-                                                nsISupports * aWindowContext, nsIRequest *request)
+NS_IMETHODIMP nsMessengerContentHandler::HandleContent(const char * aContentType,
+                                                nsIInterfaceRequestor* aWindowContext, nsIRequest *request)
 {
   nsresult rv = NS_OK;
   if (!request)

@@ -45,6 +45,7 @@
 #include "nsReadableUtils.h"
 #include "nsIRequest.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsIInterfaceRequestor.h"
 
 
 // used to manage our in memory data source of helper applications
@@ -490,7 +491,7 @@ nsresult nsExternalHelperAppService::InitDataSource()
 
 NS_IMETHODIMP nsExternalHelperAppService::DoContent(const nsACString& aMimeContentType,
                                                     nsIRequest *aRequest,
-                                                    nsISupports *aWindowContext,
+                                                    nsIInterfaceRequestor *aWindowContext,
                                                     nsIStreamListener ** aStreamListener)
 {
   nsAutoString fileName;
@@ -622,7 +623,7 @@ nsExternalAppHandler * nsExternalHelperAppService::CreateNewExternalHandler(nsIM
                                                                             const nsCSubstring& aTempFileExtension,
                                                                             const nsAString& aFileName,
                                                                             PRBool aIsAttachment,
-                                                                            nsISupports * aWindowContext)
+                                                                            nsIInterfaceRequestor * aWindowContext)
 {
   nsExternalAppHandler* handler = nsnull;
   NS_NEWXPCOM(handler, nsExternalAppHandler);
@@ -1767,7 +1768,7 @@ nsresult nsExternalAppHandler::ExecuteDesiredAction()
 
 nsresult nsExternalAppHandler::Init(nsIMIMEInfo * aMIMEInfo,
                                     const nsCSubstring& aTempFileExtension,
-                                    nsISupports * aWindowContext,
+                                    nsIInterfaceRequestor* aWindowContext,
                                     const nsAString& aSuggestedFilename,
                                     PRBool aIsAttachment)
 {

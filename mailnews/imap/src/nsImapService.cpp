@@ -3581,7 +3581,7 @@ NS_IMETHODIMP nsImapService::GetCacheSession(nsICacheSession **result)
 }
 
 NS_IMETHODIMP 
-nsImapService::HandleContent(const char * aContentType, const char * aCommand, nsISupports * aWindowContext, nsIRequest *request)
+nsImapService::HandleContent(const char * aContentType, nsIInterfaceRequestor* aWindowContext, nsIRequest *request)
 {
   nsresult rv;
   NS_ENSURE_ARG_POINTER(request);

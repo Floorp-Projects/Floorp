@@ -387,8 +387,7 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID & aIID, void **aSink)
         NS_ENSURE_TRUE(uriLoader, NS_ERROR_FAILURE);
         nsCOMPtr<nsIDocumentLoader> docLoader;
         NS_ENSURE_SUCCESS(uriLoader->
-                          GetDocumentLoaderForContext(NS_STATIC_CAST
-                                                      (nsIDocShell *, this),
+                          GetDocumentLoaderForContext(this,
                                                       getter_AddRefs
                                                       (docLoader)),
                           NS_ERROR_FAILURE);
@@ -5338,8 +5337,7 @@ nsDocShell::DoURILoad(nsIURI * aURI,
 
     // we need to get the load group from our load cookie so we can pass it into open uri...
     nsCOMPtr<nsILoadGroup> loadGroup;
-    rv = uriLoader->GetLoadGroupForContext(NS_STATIC_CAST
-                                           (nsIDocShell *, this),
+    rv = uriLoader->GetLoadGroupForContext(this,
                                            getter_AddRefs(loadGroup));
     if (NS_FAILED(rv)) return rv;
 
@@ -5709,7 +5707,7 @@ nsresult nsDocShell::DoChannelLoad(nsIChannel * aChannel,
 
     rv = aURILoader->OpenURI(aChannel,
                              (mLoadType == LOAD_LINK),
-                             NS_STATIC_CAST(nsIDocShell *, this));
+                             this);
     
     return rv;
 }
