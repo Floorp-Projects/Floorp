@@ -189,7 +189,7 @@ char *stub_Prompt(MWContext *context,
 
     printf("%s\n", msg);
     printf("%cPrompt (default=%s): ", '\007', def);
-    gets(buf);
+    fgets(buf, sizeof buf, stdin);
     if (PL_strlen(buf)) {
       result = PL_strdup(buf);
     } else {
@@ -228,13 +228,13 @@ stub_PromptUsernameAndPassword(MWContext *context,
 
     printf("%s\n", msg);
     printf("%cUser (default=%s): ", '\007', *username);
-    gets(buf);
+    fgets(buf, sizeof buf, stdin);
     if (strlen(buf)) {
       *username = PL_strdup(buf);
     }
 
     printf("%cPassword (default=%s): ", '\007', *password);
-    gets(buf);
+    fgets(buf, sizeof buf, stdin);
     if (strlen(buf)) {
       *password = PL_strdup(buf);
     }
@@ -273,7 +273,7 @@ char *stub_PromptPassword(MWContext *context,
 
     printf("%s\n", msg);
     printf("%cPassword: ", '\007');
-    gets(buf);
+    fgets(buf, sizeof buf, stdin);
     if (PL_strlen(buf)) {
       result = PL_strdup(buf);
     }
