@@ -481,6 +481,7 @@ EncodeSimpleValue(nsISOAPEncoding * aEncoding,
                   nsIDOMElement * aDestination, nsIDOMElement ** _retval)
 {
   nsresult rc;
+  PRBool needType = PR_FALSE;
   nsAutoString typeName;
   nsAutoString typeNS;
   if (aSchemaType) {
@@ -490,6 +491,7 @@ EncodeSimpleValue(nsISOAPEncoding * aEncoding,
     rc = aSchemaType->GetTargetNamespace(typeNS);
     if (NS_FAILED(rc))
       return rc;
+    needType = !(typeName.Equals(kAnyTypeSchemaType) && typeNS.Equals(nsSOAPUtils::kXSURI));
   }
   nsAutoString name;      //  First choose the appropriate name and namespace for the element.
   nsAutoString ns;
@@ -497,7 +499,8 @@ EncodeSimpleValue(nsISOAPEncoding * aEncoding,
     ns = nsSOAPUtils::kSOAPEncURI;
     nsAutoString currentURI = ns;
     nsCOMPtr<nsISchemaType>currentType = aSchemaType;
-    while (!(typeNS.Equals(nsSOAPUtils::kXSURI)
+    while (currentType
+      && !(typeNS.Equals(nsSOAPUtils::kXSURI)
       || typeNS.Equals(nsSOAPUtils::kSOAPEncURI))) {
       nsCOMPtr<nsISchemaType> supertype;
       rc = GetSupertype(aEncoding, currentType, getter_AddRefs(supertype));
@@ -516,9 +519,11 @@ EncodeSimpleValue(nsISOAPEncoding * aEncoding,
       rc = aSchemaType->GetName(name);
       if (NS_FAILED(rc))
         return rc;
+      needType = needType && (currentType != aSchemaType);  //  We may not need type
     }
     else {
       name = kAnyTypeSchemaType;
+      needType = PR_FALSE;
     }
     rc = aEncoding->GetExternalSchemaURI(nsSOAPUtils::kSOAPEncURI, ns);
   }
@@ -540,7 +545,7 @@ EncodeSimpleValue(nsISOAPEncoding * aEncoding,
   rc = aDestination->AppendChild(element, getter_AddRefs(ignore));
   if (NS_FAILED(rc))
     return rc;
-  if (!typeName.IsEmpty()) {
+  if (needType) {
     nsAutoString type;
     rc = nsSOAPUtils::MakeNamespacePrefix(aEncoding, element,
                                             typeNS, type);
