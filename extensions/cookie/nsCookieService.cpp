@@ -201,7 +201,7 @@ nsCookieService::SetCookieStringFromHttp(nsIURI *aURL, nsIURI *aFirstURL, nsIPro
     char *firstSpec = NULL;
     rv = aFirstURL->GetSpec(&firstSpec);
     if (NS_FAILED(rv)) return rv;
-    COOKIE_SetCookieStringFromHttp(spec, firstSpec, aPrompter, (char *)aCookie, (char *)aExpires);
+    COOKIE_SetCookieStringFromHttp(spec, firstSpec, aPrompter, aCookie, (char *)aExpires);
     nsCRT::free(firstSpec);
   }
   nsCRT::free(spec);

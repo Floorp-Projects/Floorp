@@ -6,6 +6,7 @@ comm.jar:
     content/cookie/pref-cookies.xul                (resources/content/pref-cookies.xul)
     content/cookie/pref-images.xul                 (resources/content/pref-images.xul)
     content/cookie/cookieOverlay.js                (resources/content/cookieOverlay.js)
+    content/cookie/p3p.xul                         (resources/content/p3p.xul)
 
 en-US.jar:
     locale/en-US/cookie/contents.rdf               (resources/locale/en-US/contents.rdf)
@@ -14,3 +15,4 @@ en-US.jar:
     locale/en-US/cookie/cookiePrefsOverlay.dtd     (resources/locale/en-US/cookiePrefsOverlay.dtd)
     locale/en-US/cookie/pref-cookies.dtd           (resources/locale/en-US/pref-cookies.dtd)
     locale/en-US/cookie/pref-images.dtd            (resources/locale/en-US/pref-images.dtd)
+    locale/en-US/cookie/p3p.dtd                    (resources/locale/en-US/p3p.dtd)

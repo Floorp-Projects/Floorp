@@ -381,6 +381,11 @@ pref("network.accept_cookies",              0);     // 0 = Always, 1 = warn, 2 =
 pref("network.foreign_cookies",             0); // 0 = Accept, 1 = Don't accept
 pref("network.cookie.cookieBehavior",       0); // 0-Accept, 1-dontAcceptForeign, 2-dontUse
 pref("network.cookie.warnAboutCookies",     false);
+pref("network.cookie.lifetime.enabled",     false);
+pref("network.cookie.lifetime.behavior",    0);
+pref("network.cookie.lifetime.days",        90);
+pref("network.cookie.p3p",                  "drdraaaa");
+pref("network.cookie.p3plevel",             1);
 pref("signon.rememberSignons",              true);
 pref("network.enablePad",                   false); // Allow client to do proxy autodiscovery
 pref("converter.html2txt.structs",          true); // Output structured phrases (strong, em, code, sub, sup, b, i, u)
