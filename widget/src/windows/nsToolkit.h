@@ -27,9 +27,7 @@
 #include "nsIToolkit.h"
 
 #ifdef MOZ_AIMM
-struct IUnknown;
 struct IActiveIMMApp;
-struct IActiveIMMMessagePumpOwner;
 #endif
 
 struct MethodInfo;
@@ -81,6 +79,7 @@ public:
 #ifdef MOZ_AIMM
     // Active Input Method support
     static IActiveIMMApp *gAIMMApp;
+    static PRInt32       gAIMMCount;
 #endif
 };
 
