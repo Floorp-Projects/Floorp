@@ -80,6 +80,8 @@ CPPSRCS		= \
 		nsPrintOptionsPh.cpp \
 		$(NULL)
 
+EXTRA_DSO_LDOPTS = $(DIST)/lib/$(LIB_PREFIX)gfxshared_s.$(LIB_SUFFIX)
+
 include $(topsrcdir)/config/rules.mk
 
 
@@ -89,7 +91,6 @@ CFLAGS		+= $(TK_CFLAGS)
 
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) \
 		-lgkgfx \
-		-lgfxshared_s \
 		$(NULL)
 
 DEFINES		+= -D_IMPL_NS_GFXNONXP

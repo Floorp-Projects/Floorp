@@ -105,6 +105,8 @@ endif
 
 GARBAGE         += $(X11SHARED_LCPPSRCS) $(wildcard *.$(OBJ_SUFFIX))
 
+EXTRA_DSO_LDOPTS = $(DIST)/lib/$(LIB_PREFIX)gfxshared_s.$(LIB_SUFFIX)
+
 include $(topsrcdir)/config/rules.mk
 
 EXTRA_DSO_LDOPTS += -L$(DIST)/bin -lxlibrgb $(MOZ_XLIB_LDFLAGS)
@@ -120,7 +122,6 @@ EXTRA_DSO_LDOPTS += \
 		$(NSPR_LIBS)	\
 		-lxpcom		\
 		-lgkgfx		\
-		-lgfxshared_s   \
 		$(GFX_XIE_LIBS) \
 		$(MOZ_UNICHARUTIL_LIBS) \
 		$(NULL)

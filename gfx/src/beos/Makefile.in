@@ -77,6 +77,8 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  $(NULL)
 
+EXTRA_DSO_LDOPTS = $(DIST)/lib/$(LIB_PREFIX)gfxshared_s.$(LIB_SUFFIX)
+
 include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS	+= $(TK_CFLAGS)
@@ -84,7 +86,6 @@ INCLUDES	+= $(TK_CFLAGS)
 
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) $(MOZ_JS_LIBS) \
 	-lgkgfx \
-	-lgfxshared_s \
 	$(XPCOM_LIBS) \
 	$(TK_LIBS) \
 	$(NSPR_LIBS)

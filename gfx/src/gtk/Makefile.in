@@ -162,6 +162,8 @@ ifdef MOZ_ENABLE_FREETYPE2
 SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)gfxft2_s.$(LIB_SUFFIX)
 endif
 
+EXTRA_DSO_LDOPTS = $(DIST)/lib/$(LIB_PREFIX)gfxshared_s.$(LIB_SUFFIX)
+
 include $(topsrcdir)/config/rules.mk
 
 ifdef MOZ_ENABLE_XINERAMA
@@ -172,7 +174,6 @@ ifdef MOZ_ENABLE_GTK
 EXTRA_DSO_LDOPTS += \
 		$(LIBS_DIR) \
 		-lgkgfx \
-		-lgfxshared_s \
 		$(GFX_XINERAMA_LIBS) \
 		-lgtksuperwin \
 		$(MOZ_COMPONENT_LIBS) \
@@ -193,7 +194,6 @@ ifdef MOZ_ENABLE_GTK2
 EXTRA_DSO_LDOPTS += \
 		$(LIBS_DIR) \
 		-lgkgfx \
-		-lgfxshared_s \
 		$(GFX_XINERAMA_LIBS) \
 		$(MOZ_JS_LIBS) \
 		$(MOZ_UNICHARUTIL_LIBS) \
