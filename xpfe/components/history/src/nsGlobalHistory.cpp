@@ -1680,7 +1680,7 @@ nsGlobalHistory::Unassert(nsIRDFResource* aSource,
 {
   // translate into an appropriate removehistory call
   nsresult rv;
-  if ((aSource == kNC_HistoryRoot || IsFindResource(aSource)) &&
+  if ((aSource == kNC_HistoryRoot || aSource == kNC_HistoryByDate || IsFindResource(aSource)) &&
       aProperty == kNC_child) {
 
     nsCOMPtr<nsIRDFResource> resource = do_QueryInterface(aTarget, &rv);

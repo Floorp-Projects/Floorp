@@ -22,7 +22,6 @@
 -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/skin/bookmarks/bookmarks.css" type="text/css"?>
 <?xul-overlay href="chrome://communicator/content/history/historyTreeOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 
@@ -31,31 +30,23 @@
 <window id="history-panel"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="HistoryInit();">
-  <script type="application/x-javascript" src="chrome://communicator/content/history/history.js"/>
 
   <!-- use deep merging to hide certain columns by default -->
-  <tree id="historyTree">
-    <treecolgroup id="theColumns">
-      <treecol id="Name"/>
-      <splitter id="pre-URL-splitter"/>
-      <treecol id="URL" hidden="true"/>
-
-      <splitter id="pre-Date-splitter"/>
-      <treecol id="Date" hidden="true"/>
-
-      <splitter id="pre-FirstVisitDate-splitter"/>
-      <treecol id="FirstVisitDate" hidden="true"/>
-
-      <splitter id="pre-Hostname-splitter"/>
-      <treecol id="Hostname" hidden="true"/>
-
-      <splitter id="pre-Referrer-splitter"/>
-      <treecol id="Referrer" hidden="true"/>
-
-      <splitter id="pre-VisitCount-splitter"/>
-      <treecol id="VisitCount" hidden="true"/>
-    </treecolgroup>
-  </tree>
+  <outliner id="historyOutliner">
+    <outlinercol id="Name"/>
+    <splitter id="pre-URL-splitter"/>
+    <outlinercol id="URL" hidden="true"/>
+    <splitter id="pre-Date-splitter"/>
+    <outlinercol id="Date" hidden="true"/>
+    <splitter id="pre-FirstVisitDate-splitter"/>
+    <outlinercol id="FirstVisitDate" hidden="true"/>
+    <splitter id="pre-Hostname-splitter"/>
+    <outlinercol id="Hostname" hidden="true"/>
+    <splitter id="pre-Referrer-splitter"/>
+    <outlinercol id="Referrer" hidden="true"/>
+    <splitter id="pre-VisitCount-splitter"/>
+    <outlinercol id="VisitCount" hidden="true"/>
+  </outliner>
 
 
 </window>

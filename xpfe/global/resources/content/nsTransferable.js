@@ -55,7 +55,9 @@ var nsTransferable = {
           var length = 0;
           if (currData.flavour.dataIIDKey == "nsISupportsWString")
             {
-              supports = nsJSSupportsUtils.createSupportsWString();
+              supports = Components.classes["@mozilla.org/supports-wstring;1"]
+                                   .createInstance(Components.interfaces.nsISupportsWString);
+
               supports.data = currData.supports;
               length = supports.data.length;
             }

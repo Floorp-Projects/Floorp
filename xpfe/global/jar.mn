@@ -28,7 +28,9 @@ toolkit.jar:
         content/global/wizardOverlay.xul            (resources/content/wizardOverlay.xul) 
         content/global/treePopups.js                (resources/content/treePopups.js) 
         content/global/nsTreeController.js          (resources/content/nsTreeController.js) 
+        content/global/nsOutlinerController.js      (resources/content/nsOutlinerController.js) 
         content/global/nsTreeUtils.js               (resources/content/nsTreeUtils.js) 
+        content/global/nsOutlinerSorting.js         (resources/content/nsOutlinerSorting.js) 
         content/global/nsClipboard.js               (resources/content/nsClipboard.js) 
         content/global/nsDragAndDrop.js             (resources/content/nsDragAndDrop.js) 
         content/global/nsJSSupportsUtils.js         (resources/content/nsJSSupportsUtils.js) 
@@ -83,6 +85,8 @@ en-US.jar:
     locale/en-US/global/regionNames.properties      (resources/locale/en-US/regionNames.properties) 
     locale/en-US/global/about.html                  (resources/locale/en-US/about.html) 
     locale/en-US/global/commonDialogs.properties    (resources/locale/en-US/commonDialogs.properties) 
+    locale/en-US/global/nsOutlinerSorting.properties (resources/locale/en-US/nsOutlinerSorting.properties)
+    locale/en-US/global/platformKeys.properties     (resources/locale/en-US/platformKeys.properties)
 US.jar:
     locale/US/global-region/contents.rdf            (resources/locale/en-US/contents-region.rdf) 
     locale/US/global-region/region.dtd              (resources/locale/en-US/region.dtd)

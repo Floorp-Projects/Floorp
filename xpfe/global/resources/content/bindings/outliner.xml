@@ -524,7 +524,7 @@
       </xul:box>
     </content>
     <handlers>
-      <handler event="click" action="if (event.originalTarget == this) { this.parentNode.outlinerBoxObject.view.cycleHeader(this.id, this); }"/>
+      <handler event="click" button="0" action="if (event.originalTarget == this) { this.parentNode.outlinerBoxObject.view.cycleHeader(this.id, this); }"/>
     </handlers>
   </binding>
 
@@ -535,7 +535,7 @@
       </xul:box>
     </content>
     <handlers>
-      <handler event="click" action="this.parentNode.outlinerBoxObject.view.cycleHeader(this.id, this)"/>
+      <handler event="click" button="0" action="this.parentNode.outlinerBoxObject.view.cycleHeader(this.id, this)"/>
     </handlers>
   </binding>
 
