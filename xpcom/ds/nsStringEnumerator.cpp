@@ -41,6 +41,7 @@
 #include "prtypes.h"
 #include "nsCRT.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsISimpleEnumerator.h"
 #include "nsSupportsPrimitives.h"
 
@@ -168,10 +169,8 @@ nsStringEnumerator::GetNext(nsACString& aResult)
 {
     NS_ENSURE_TRUE(mIndex < Count(), NS_ERROR_UNEXPECTED);
     
-    // XXX this needs CopyUCS2toUTF8(aResult,
-    // *mArray->StringAt(mIndex++));
     if (mIsUnicode)
-        aResult = NS_ConvertUCS2toUTF8(*mArray->StringAt(mIndex++));
+        CopyUTF16toUTF8(*mArray->StringAt(mIndex++), aResult);
     else
         aResult = *mCArray->CStringAt(mIndex++);
     

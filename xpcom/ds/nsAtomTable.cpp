@@ -358,7 +358,7 @@ void* PermanentAtomImpl::operator new ( size_t size, AtomImpl* aAtom ) CPP_THROW
 NS_IMETHODIMP 
 AtomImpl::ToString(nsAString& aBuf)
 {
-  aBuf.Assign(NS_ConvertUTF8toUCS2(mString));
+  CopyUTF8toUTF16(nsDependentCString(mString), aBuf);
   return NS_OK;
 }
 
