@@ -80,11 +80,11 @@ protected:
 
   NS_IMETHOD DoCharsetConversion(const PRUnichar *inString, char **outString);
 
-  NS_IMETHOD DoConversionFallBack(PRUnichar inCharacter, char *outString, PRInt32 bufferLength);
+  NS_IMETHOD DoConversionFallBack(PRUint32 inUCS4, char *outString, PRInt32 bufferLength);
 
   // do the fallback, reallocate the buffer if necessary
   // need to pass destination buffer info (size, current position and estimation of rest of the conversion)
-  NS_IMETHOD HandleFallBack(PRUnichar character, char **outString, PRInt32 *bufferLength, 
+  NS_IMETHOD HandleFallBack(PRUint32 character, char **outString, PRInt32 *bufferLength, 
                             PRInt32 *currentPos, PRInt32 estimatedLength);
 
   nsresult SetupUnicodeEncoder(const char* charset);
