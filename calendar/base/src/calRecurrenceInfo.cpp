@@ -179,7 +179,9 @@ calRecurrenceInfo::GetRecurCount(PRInt32 *aRecurCount)
 NS_IMETHODIMP
 calRecurrenceInfo::SetRecurCount(PRInt32 aRecurCount)
 {
-    mIcalRecur->count = aRecurCount;
+    if (aRecurCount != -1) {
+        mIcalRecur->count = aRecurCount;
+    }
     mIcalRecur->until = icaltime_null_time();
 
     return NS_OK;
@@ -246,10 +248,15 @@ calRecurrenceInfo::GetRecurEnd(calIDateTime * *aRecurEnd)
 NS_IMETHODIMP
 calRecurrenceInfo::SetRecurEnd(calIDateTime * aRecurEnd)
 {
-    struct icaltimetype itt;
-    aRecurEnd->ToIcalTime(&itt);
+    if (aRecurEnd) {
+        struct icaltimetype itt;
+        aRecurEnd->ToIcalTime(&itt);
 
-    mIcalRecur->until = itt;
+        mIcalRecur->until = itt;
+    } else {
+        mIcalRecur->until = icaltime_null_time();
+    }
+
     mIcalRecur->count = 0;
 
     return NS_OK;
