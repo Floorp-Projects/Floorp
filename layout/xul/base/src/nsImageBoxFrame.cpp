@@ -234,7 +234,10 @@ nsImageBoxFrame::Init(nsIPresContext*  aPresContext,
     // check to see if the uri we are about to load is the same as the
     // one the image request came from.
     nsCOMPtr<nsIURI> requestURI;
-    mImageRequest->GetURI(getter_AddRefs(requestURI));
+    rv = mImageRequest->GetURI(getter_AddRefs(requestURI));
+    NS_ASSERTION(NS_SUCCEEDED(rv) && requestURI,"no request URI");
+    if (NS_FAILED(rv) || !requestURI) return NS_ERROR_UNEXPECTED;
+
     PRBool eq;
     requestURI->Equals(srcURI, &eq);
 
@@ -328,7 +331,10 @@ nsImageBoxFrame::UpdateImage(nsIPresContext*  aPresContext, PRBool& aResize)
 
   if (mImageRequest) {
     nsCOMPtr<nsIURI> requestURI;
-    mImageRequest->GetURI(getter_AddRefs(requestURI));
+    nsresult rv = mImageRequest->GetURI(getter_AddRefs(requestURI));
+    NS_ASSERTION(NS_SUCCEEDED(rv) && requestURI,"no request URI");
+    if (NS_FAILED(rv) || !requestURI) return;
+
     PRBool eq;
     requestURI->Equals(srcURI, &eq);
     // if the source uri and the current one are the same, return
