@@ -46,12 +46,16 @@
 
 #include "nsInterfaceState.h"
 
-
-
 nsInterfaceState::nsInterfaceState()
 :  mEditor(nsnull)
 ,  mChromeDoc(nsnull)
 ,  mDOMWindow(nsnull)
+,  mUpdateParagraph(PR_FALSE)
+,  mUpdateFont(PR_FALSE)
+,  mUpdateList(PR_FALSE)
+,  mUpdateBold(PR_FALSE)
+,  mUpdateItalics(PR_FALSE)
+,  mUpdateUnderline(PR_FALSE)
 ,  mBoldState(eStateUninitialized)
 ,  mItalicState(eStateUninitialized)
 ,  mUnderlineState(eStateUninitialized)
@@ -81,6 +85,17 @@ nsInterfaceState::Init(nsIHTMLEditor* aEditor, nsIDOMXULDocument *aChromeDoc)
 
   mEditor = aEditor;		// no addreffing here
   mChromeDoc = aChromeDoc;
+  
+  // it sucks explicitly naming XUL nodes here. Would be better to have
+  // some way to register things that we want to observe from JS
+  mUpdateParagraph = XULNodeExists("ParagraphSelect");
+  mUpdateFont = XULNodeExists("FontFaceSelect");
+  mUpdateList = XULNodeExists("ulButton") ||  XULNodeExists("olButton");
+  
+  mUpdateBold = XULNodeExists("boldButton");
+  mUpdateItalics = XULNodeExists("italicButton");
+  mUpdateUnderline = XULNodeExists("underlineButton");
+  
   return NS_OK;
 }
 
@@ -96,7 +111,7 @@ nsInterfaceState::NotifyDocumentWillBeDestroyed()
   // cancel any outstanding udpate timer
   if (mUpdateTimer)
     mUpdateTimer->Cancel();
-
+  
   return NS_OK;
 }
 
@@ -283,24 +298,48 @@ nsInterfaceState::ForceUpdate()
   // we don't really care if any of these fail.
   
   // update bold
-  rv = UpdateTextState("b", "Editor:Bold", "bold", mBoldState);
+  if (mUpdateBold)
+  {
+    rv = UpdateTextState("b", "Editor:Bold", "bold", mBoldState);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to update state");
+  }
   
   // update italic
-  rv = UpdateTextState("i", "Editor:Italic", "italic", mItalicState);
+  if (mUpdateItalics)
+  {
+    rv = UpdateTextState("i", "Editor:Italic", "italic", mItalicState);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to update state");
+  }
 
   // update underline
-  rv = UpdateTextState("u", "Editor:Underline", "underline", mUnderlineState);
+  if (mUpdateUnderline)
+  {
+    rv = UpdateTextState("u", "Editor:Underline", "underline", mUnderlineState);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to update state");
+  }
   
   // update the paragraph format popup
-  rv = UpdateParagraphState("Editor:Paragraph:Format", "format", mParagraphFormat);
+  if (mUpdateParagraph)
+  {
+    rv = UpdateParagraphState("Editor:Paragraph:Format", "format", mParagraphFormat);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to update state");
+  }
 
   // udpate the font face
-  rv = UpdateFontFace("Editor:Font:Face", "font", mFontString);
+  if (mUpdateFont)
+  {
+    rv = UpdateFontFace("Editor:Font:Face", "font", mFontString);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to update state");
+  }
   
   // TODO: FINISH FONT FACE AND ADD FONT SIZE ("Editor:Font:Size", "fontsize", mFontSize)
 
   // update the list buttons
-  rv = UpdateListState("Editor:Paragraph:ListType");
+  if (mUpdateList)
+  {
+    rv = UpdateListState("Editor:Paragraph:ListType");
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to update state");
+  }
 
   return NS_OK;
 }
@@ -338,7 +377,7 @@ nsInterfaceState::UpdateParagraphState(const char* observerName, const char* att
   PRBool selectionCollapsed = PR_FALSE;
   rv = domSelection->GetIsCollapsed(&selectionCollapsed);
   if (NS_FAILED(rv)) return rv;
-  
+
   // Get anchor and focus nodes:
   nsCOMPtr<nsIDOMNode> anchorNode;
   rv = domSelection->GetAnchorNode(getter_AddRefs(anchorNode));
@@ -358,7 +397,7 @@ nsInterfaceState::UpdateParagraphState(const char* observerName, const char* att
   if (isBlock)
   {
     anchorNodeBlockParent = anchorNode;
-  } 
+  }
   else
   {
     // Get block parent of anchorNode node
@@ -385,7 +424,7 @@ nsInterfaceState::UpdateParagraphState(const char* observerName, const char* att
   if (!anchorNodeBlockParent) return NS_ERROR_NULL_POINTER;
 
   nsAutoString tagName;
-  
+
   // Check if we have a selection that extends into multiple nodes,
   //  so we can check for "mixed" selection state
   if (selectionCollapsed || focusNode == anchorNode)
@@ -476,11 +515,16 @@ nsInterfaceState::UpdateFontFace(const char* observerName, const char* attribute
   rv = mEditor->GetInlineProperty(styleAtom, &faceStr, &thisFace, firstOfSelectionHasProp, anyOfSelectionHasProp, allOfSelectionHasProp);
   if( !anyOfSelectionHasProp )
   {
-    // No font face set -- check for "tt"
+    // No font face set -- check for "tt". This can return an error if the selection isn't in a node
     rv = mEditor->GetInlineProperty(fixedStyleAtom, nsnull, nsnull, firstOfSelectionHasProp, anyOfSelectionHasProp, allOfSelectionHasProp);
-    testBoolean = anyOfSelectionHasProp;
-    if (anyOfSelectionHasProp)
-      thisFace = "tt";
+    if (NS_SUCCEEDED(rv))
+    {
+      testBoolean = anyOfSelectionHasProp;
+      if (anyOfSelectionHasProp)
+        thisFace = "tt";
+    }
+    else
+      rv = NS_OK;   // we don't want to propagate this error
   }
 
   // TODO: HANDLE "MIXED" STATE
@@ -520,7 +564,7 @@ nsInterfaceState::UpdateTextState(const char* tagName, const char* observerName,
 	  ioState = testBoolean;
   }
   
-  return rv;
+  return NS_OK;
 }
 
 nsresult
@@ -539,6 +583,20 @@ nsInterfaceState::UpdateDirtyState(PRBool aNowDirty)
   return NS_OK;  
 }
 
+
+PRBool
+nsInterfaceState::XULNodeExists(const char* nodeID)
+{
+  nsresult rv;
+
+  if (!mChromeDoc)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  nsCOMPtr<nsIDOMElement> elem;
+  rv = mChromeDoc->GetElementById( nodeID, getter_AddRefs(elem) );
+  
+  return NS_SUCCEEDED(rv) && elem;
+}
 
 nsresult
 nsInterfaceState::SetNodeAttribute(const char* nodeID, const char* attributeName, const nsString& newValue)
