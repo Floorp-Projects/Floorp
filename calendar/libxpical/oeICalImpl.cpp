@@ -172,26 +172,36 @@ oeDateEnumerator::HasMoreElements(PRBool *result)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-oeDateEnumerator::GetNext(nsISupports **_retval)
-{
-        
-    if( mCurrentIndex >= mIdVector.size() )
-    {
-        *_retval = nsnull;
-    }
-    else
-    {
-        nsISupportsPRTime* date = new nsSupportsPRTimeImpl();
-        date->AddRef();
-        date->SetData( mIdVector[ mCurrentIndex ] );
-        *_retval = date;
-        ++mCurrentIndex;
-    }
-    
-    return NS_OK;
-}
+NS_IMETHODIMP 
+oeDateEnumerator::GetNext(nsISupports **_retval) 
+{ 
 
+    if( mCurrentIndex >= mIdVector.size() ) 
+    { 
+        *_retval = nsnull; 
+    } 
+    else 
+    { 
+        nsresult rv; 
+        nsCOMPtr<nsISupportsPRTime> nsPRTime = do_CreateInstance( NS_SUPPORTS_PRTIME_CONTRACTID , &rv); 
+        if( NS_FAILED( rv ) ) { 
+            *_retval = NULL; 
+            return rv; 
+        } 
+        nsISupportsPRTime* date; 
+        rv = nsPRTime->QueryInterface(NS_GET_IID(nsISupportsPRTime), (void **)&date); 
+        if( NS_FAILED( rv ) ) { 
+            *_retval = NULL; 
+            return rv; 
+        } 
+
+        date->SetData( mIdVector[ mCurrentIndex ] ); 
+        *_retval = date; 
+        ++mCurrentIndex; 
+    } 
+
+    return NS_OK; 
+} 
 
 NS_IMETHODIMP
 oeDateEnumerator::AddDate(PRTime date)
