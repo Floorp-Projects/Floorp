@@ -339,6 +339,14 @@ NS_NewServiceManager(nsIServiceManager* *result);
 extern NS_COM nsresult
 NS_InitXPCOM(nsIServiceManager* *result, nsFileSpec* binDirectory);
 
+////////////////////////////////////////////////////////////////////////////////
+// Shutdown of XPCOM. XPCOM hosts an observer (NS_XPCOM_SHUTDOWN_OBSERVER_ID)
+// for modules to observer the shutdown. The first thing NS_ShutdownXPCOM()
+// does is to notify observers of NS_XPCOM_SHUTDOWN_OBSERVER_ID. After the
+// observers have been notified, access to ServiceManager will return
+// NS_ERROR_UNEXPECTED.
+//
+
 extern NS_COM nsresult
 NS_ShutdownXPCOM(nsIServiceManager* servMgr);
 
