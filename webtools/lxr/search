@@ -1,5 +1,5 @@
 #!/usr/bonsaitools/bin/perl
-# $Id: search,v 1.1 1998/06/11 23:56:17 jwz Exp $
+# $Id: search,v 1.2 1998/06/12 21:42:37 jwz Exp $
 
 # search --	Freetext search
 #
@@ -51,7 +51,7 @@ sub search {
 #	  $Query->popup_menu("fuzz",[0,1,2,3,4,5,6,7],0),
 	  "</form>\n",
 
-	  "<a href=\"search_help.html\">Hints</a> ",
+	  "<a href=\"search-help.html\">Hints</a> ",
 	  "making queries.\n");
     
     $| = 1; print('');
@@ -61,7 +61,7 @@ sub search {
 	unless (open(GLIMPSE, "-|")) {
 	    open(STDERR, ">&STDOUT");
 	    $!='';
-	    exec($Conf->glimpsebin,"-H".$Conf->dbdir,'-y','-n',$searchtext);
+	    exec($Conf->glimpsebin,"-i","-H".$Conf->dbdir,'-y','-n',$searchtext);
 	    print("Glimpse subprocess died unexpextedly: $!\n");
 	    exit;
 	}
