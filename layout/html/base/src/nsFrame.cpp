@@ -1592,9 +1592,8 @@ nsFrame::GetChildFrameContainingOffset(PRInt32 inContentOffset, PRInt32* outFram
 }
 
 NS_IMETHODIMP
-nsFrame::PeekOffsetPeekOffset(nsSelectionAmount aAmount, nsDirection aDirection,  
-                         PRInt32 aStartOffset, nsIContent **aResultContent, 
-                         PRInt32 *aResultOffset, PRBool aEatingWS) const
+nsFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection,  PRInt32 aStartOffset, 
+                         nsIContent **aResultContent, PRInt32 *aResultOffset, PRBool aEatingWS) const
 {
 /*  //this will use the nsFrameTraversal as the default peek method.
   //this should change to use geometry and also look to ALL the child lists
