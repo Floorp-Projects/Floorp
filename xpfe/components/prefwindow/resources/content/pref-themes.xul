@@ -76,7 +76,7 @@
 		</html:legend>
 		<html:div>Author: Mozilla.org</html:div>
 		<html:div>Version: 1.0</html:div>
-		<html:div>Site: <html:a href="http://www.mozilla.org">http://www.mozilla.org</html:a></html:div>
+		<html:div>Site: <html:a href="http://www.mozilla.org" target="_blank">http://www.mozilla.org</html:a></html:div>
 		<html:div>Preview Image:<html:br/>The thumbnail image would go here.</html:div>
 		<html:div>
 		    <titledbutton class="push dialog" value="Apply Theme"/>
