@@ -408,7 +408,7 @@ MakeDay(jsdouble year, jsdouble month, jsdouble date)
 
     year += floor(month / 12);
 
-    month = fmod(month, 12);
+    month = fmod(month, 12.0);
     if (month < 0)
 	month += 12;
 

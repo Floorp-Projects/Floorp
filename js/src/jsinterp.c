@@ -331,7 +331,7 @@ js_GetArgument(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     fun = (JSFunction *) JS_GetPrivate(cx, obj);
     for (fp = cx->fp; fp; fp = fp->down) {
         /* Find most recent non-native function frame. */
-        if (fp->fun && !fp->fun->call) {
+        if (fp->fun && !fp->fun->native) {
             if (fp->fun == fun) {
                 JS_ASSERT((uintN)JSVAL_TO_INT(id) < fp->fun->nargs);
                 *vp = fp->argv[JSVAL_TO_INT(id)];
@@ -352,7 +352,7 @@ js_SetArgument(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     fun = (JSFunction *) JS_GetPrivate(cx, obj);
     for (fp = cx->fp; fp; fp = fp->down) {
         /* Find most recent non-native function frame. */
-        if (fp->fun && !fp->fun->call) {
+        if (fp->fun && !fp->fun->native) {
             if (fp->fun == fun) {
                 JS_ASSERT((uintN)JSVAL_TO_INT(id) < fp->fun->nargs);
                 fp->argv[JSVAL_TO_INT(id)] = *vp;
@@ -374,7 +374,7 @@ js_GetLocalVariable(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     fun = (JSFunction *) JS_GetPrivate(cx, obj);
     for (fp = cx->fp; fp; fp = fp->down) {
         /* Find most recent non-native function frame. */
-        if (fp->fun && !fp->fun->call) {
+        if (fp->fun && !fp->fun->native) {
             if (fp->fun == fun) {
                 slot = JSVAL_TO_INT(id);
                 JS_ASSERT((uintN)slot < fp->fun->nvars);
@@ -398,7 +398,7 @@ js_SetLocalVariable(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     fun = (JSFunction *) JS_GetPrivate(cx, obj);
     for (fp = cx->fp; fp; fp = fp->down) {
         /* Find most recent non-native function frame. */
-        if (fp->fun && !fp->fun->call) {
+        if (fp->fun && !fp->fun->native) {
             if (fp->fun == fun) {
                 slot = JSVAL_TO_INT(id);
                 JS_ASSERT((uintN)slot < fp->fun->nvars);
@@ -559,7 +559,7 @@ js_Invoke(JSContext *cx, uintN argc, uintN flags)
         /* Get private data and set derived locals from it. */
         fun = (JSFunction *) JS_GetPrivate(cx, funobj);
 have_fun:
-        native = fun->call;
+        native = fun->native;
         script = fun->script;
         minargs = fun->nargs + fun->extra;
         nvars = fun->nvars;
@@ -2390,7 +2390,7 @@ js_Interpret(JSContext *cx, jsval *result)
             if (JSVAL_IS_FUNCTION(cx, lval) &&
                 (obj = JSVAL_TO_OBJECT(lval),
                  fun = (JSFunction *) JS_GetPrivate(cx, obj),
-                 fun->script &&
+                 !fun->native &&
                  fun->flags == 0 &&
                  argc >= (uintN)(fun->nargs + fun->extra)))
           /* inline_call: */

@@ -18,7 +18,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -45,16 +45,15 @@ JS_BEGIN_EXTERN_C
 struct JSFunction {
     jsrefcount	 nrefs;		/* number of referencing objects */
     JSObject     *object;       /* back-pointer to GC'ed object header */
-    JSNative     call;          /* native method pointer or null */
+    JSNative     native;        /* native method pointer or null */
+    JSScript     *script;       /* interpreted bytecode descriptor or null */
     uint16       nargs;         /* minimum number of actual arguments */
     uint16       extra;         /* number of arg slots for local GC roots */
     uint16       nvars;         /* number of local variables */
     uint8        flags;         /* bound method and other flags, see jsapi.h */
     uint8        spare;         /* reserved for future use */
     JSAtom       *atom;         /* name for diagnostics and decompiling */
-    JSScript     *script;       /* interpreted bytecode descriptor or null */
-    JSClass      *clasp;        /* this function is a constructor for objects 
-                                 * of this class */
+    JSClass      *clasp;        /* if non-null, constructor for this class */
 };
 
 extern JSClass js_ArgumentsClass;
@@ -80,7 +79,7 @@ extern JSBool
 js_InitArgsAndCallClasses(JSContext *cx, JSObject *obj);
 
 extern JSFunction *
-js_NewFunction(JSContext *cx, JSObject *funobj, JSNative call, uintN nargs,
+js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
 	       uintN flags, JSObject *parent, JSAtom *atom);
 
 extern JSObject *
@@ -90,7 +89,7 @@ extern JSBool
 js_LinkFunctionObject(JSContext *cx, JSFunction *fun, JSObject *object);
 
 extern JSFunction *
-js_DefineFunction(JSContext *cx, JSObject *obj, JSAtom *atom, JSNative call,
+js_DefineFunction(JSContext *cx, JSObject *obj, JSAtom *atom, JSNative native,
 		  uintN nargs, uintN flags);
 
 extern JSFunction *

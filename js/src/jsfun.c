@@ -1025,7 +1025,8 @@ fun_hasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
             if (JSVAL_IS_FUNCTION(cx, cval)) {
                 cfun = (JSFunction *) JS_GetPrivate(cx, JSVAL_TO_OBJECT(cval));
                 ofun = (JSFunction *) JS_GetPrivate(cx, obj);
-                if (cfun->call == ofun->call && cfun->script == ofun->script) {
+                if (cfun->native == ofun->native &&
+                    cfun->script == ofun->script) {
                     *bp = JS_TRUE;
                     break;
                 }
@@ -1596,7 +1597,7 @@ js_InitArgsAndCallClasses(JSContext *cx, JSObject *obj)
 }
 
 JSFunction *
-js_NewFunction(JSContext *cx, JSObject *funobj, JSNative call, uintN nargs,
+js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
                uintN flags, JSObject *parent, JSAtom *atom)
 {
     JSFunction *fun;
@@ -1620,14 +1621,14 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative call, uintN nargs,
     /* Initialize all function members. */
     fun->nrefs = 0;
     fun->object = NULL;
-    fun->call = call;
+    fun->native = native;
+    fun->script = NULL;
     fun->nargs = nargs;
     fun->extra = 0;
     fun->nvars = 0;
     fun->flags = flags & JSFUN_FLAGS_MASK;
     fun->spare = 0;
     fun->atom = atom;
-    fun->script = NULL;
     fun->clasp = NULL;
 
     /* Link fun to funobj and vice versa. */
@@ -1669,12 +1670,12 @@ js_LinkFunctionObject(JSContext *cx, JSFunction *fun, JSObject *funobj)
 }
 
 JSFunction *
-js_DefineFunction(JSContext *cx, JSObject *obj, JSAtom *atom, JSNative call,
+js_DefineFunction(JSContext *cx, JSObject *obj, JSAtom *atom, JSNative native,
                   uintN nargs, uintN attrs)
 {
     JSFunction *fun;
 
-    fun = js_NewFunction(cx, NULL, call, nargs, attrs, obj, atom);
+    fun = js_NewFunction(cx, NULL, native, nargs, attrs, obj, atom);
     if (!fun)
         return NULL;
     if (!OBJ_DEFINE_PROPERTY(cx, obj, (jsid)atom, OBJECT_TO_JSVAL(fun->object),

@@ -608,7 +608,7 @@ JS_GetFramePrincipalArray(JSContext *cx, JSStackFrame *fp)
 JS_PUBLIC_API(JSBool)
 JS_IsNativeFrame(JSContext *cx, JSStackFrame *fp)
 {
-    return fp->fun && fp->fun->call;
+    return fp->fun && fp->fun->native;
 }
 
 /* this is deprecated, use JS_GetFrameScopeChain instead */

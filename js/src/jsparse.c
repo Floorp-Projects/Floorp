@@ -2366,8 +2366,10 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     JSTokenType tt;
     JSParseNode *pn, *pn2, *pn3;
     char *badWord;
+#if JS_HAS_GETTER_SETTER
     JSAtom *atom;
     JSRuntime *rt;
+#endif
 
 #if JS_HAS_SHARP_VARS
     JSParseNode *defsharp;

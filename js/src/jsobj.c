@@ -238,9 +238,11 @@ MarkSharpObjects(JSContext *cx, JSObject *obj, JSIdArray **idap)
     JSBool ok;
     jsint i, length;
     jsid id;
+#if JS_HAS_GETTER_SETTER
     JSObject *obj2;
     JSProperty *prop;
     uintN attrs;
+#endif
     jsval val;
 
     map = &cx->sharpObjectMap;
@@ -444,13 +446,13 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     char *comma;
     jsint i, j, length, valcnt;
     jsid id;
+#if JS_HAS_GETTER_SETTER
     JSObject *obj2;
     JSProperty *prop;
     uintN attrs;
-    jsval val[2];
-#if JS_HAS_GETTER_SETTER
-    JSString *gsop[2];
 #endif
+    jsval val[2];
+    JSString *gsop[2];
     JSString *idstr, *valstr, *str;
 
     /*
@@ -503,7 +505,9 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     for (i = 0, length = ida->length; i < length; i++) {
 	/* Get strings for id and value and GC-root them via argv. */
 	id = ida->vector[i];
+
 #if JS_HAS_GETTER_SETTER
+
 	ok = OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop);
 	if (!ok)
 	    goto error;
@@ -545,10 +549,15 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         }
         if (prop)
             OBJ_DROP_PROPERTY(cx, obj2, prop);
-#else
+
+#else  /* !JS_HAS_GETTER_SETTER */
+
         valcnt = 1;
+        gsop[0] = NULL;
         ok = OBJ_GET_PROPERTY(cx, obj, id, &val[0]);
-#endif
+
+#endif /* !JS_HAS_GETTER_SETTER */
+
         if (!ok)
             goto error;
 
@@ -583,7 +592,7 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
             vlength = valstr->length;
 
 #ifndef OLD_GETTER_SETTER
-            /* Remove 'function ' from beginning of valstr*/
+            /* Remove 'function ' from beginning of valstr. */
             if (gsop[j]) {
                 int n = strlen(js_function_str) + 1;
                 vchars += n;
@@ -620,9 +629,7 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                 realloc((ochars = chars),
                         (nchars + (comma ? 2 : 0) +
                          idstr->length + 1 +
-#if JS_HAS_GETTER_SETTER
                          (gsop[j] ? 1 + gsop[j]->length : 0) +
-#endif
                          vsharplength + vlength +
                          (outermost ? 2 : 1) + 1) * sizeof(jschar));
             if (!chars) {
@@ -641,13 +648,11 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 #ifdef OLD_GETTER_SETTER
             js_strncpy(&chars[nchars], idstr->chars, idstr->length);
             nchars += idstr->length;
-#if JS_HAS_GETTER_SETTER
             if (gsop[j]) {
                 chars[nchars++] = ' ';
                 js_strncpy(&chars[nchars], gsop[j]->chars, gsop[j]->length);
                 nchars += gsop[j]->length;
             }
-#endif
             chars[nchars++] = ':';
 #else
             if (gsop[j]) {
@@ -2607,15 +2612,15 @@ js_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     clasp = OBJ_GET_CLASS(cx, JSVAL_TO_OBJECT(argv[-2]));
     if (!clasp->call) {
         /* 
-         * The decompiler may need to access the args of the function
-         * in progress, so we switch the function pointer in the
-         * frame to the function below us, rather than the one we had
-         * hoped to call.
+         * The decompiler may need to access the args of the function in
+         * progress, so we switch the function pointer in the frame to the
+         * function below us, rather than the one we had hoped to call.
+         * XXXbe doesn't this case arise for js_Construct too?
          */
         JSStackFrame *fp = cx->fp;
         JSFunction *fun = fp->fun;
         if (fp->down)   /* guaranteed ? */
-           fp->fun = fp->down->fun;
+            fp->fun = fp->down->fun;
 	js_ReportIsNotFunction(cx, &argv[-2], JS_FALSE);
         fp->fun = fun;
 	return JS_FALSE;
