@@ -11,16 +11,15 @@
 <!ENTITY newMessage.accesskey "M">
 <!ENTITY newCard.label "Address Book Card...">
 <!ENTITY newCard.accesskey "c">
-<!ENTITY attachFileCmd.label "Attach File...">
+<!ENTITY attachMenu.label "Attach">
+<!ENTITY attachMenu.accesskey "t">
+<!ENTITY attachFileCmd.label "File(s)...">
 <!ENTITY attachFileCmd.accesskey "F">
-<!ENTITY attachFileButton.label "File(s)...">
-<!ENTITY attachPageCmd.label "Attach Web Page...">
+<!ENTITY attachPageCmd.label "Web Page...">
 <!ENTITY attachPageCmd.accesskey "W">
-<!ENTITY attachPageButton.label "Web Page...">
+<!--LOCALIZATION NOTE attachVCardCmd.label Don't translate the term 'vCard' -->
+<!ENTITY attachVCardCmd.label "Personal Card (vCard)">
 <!ENTITY attachVCardCmd.accesskey "P">
-<!--LOCALIZATION NOTE attachVCardButton.label Don't translate the term 'vCard' -->
-<!ENTITY attachVCardButton.label "Personal Card (vCard)">
-
 <!ENTITY closeCmd.label "Close">
 <!ENTITY closeCmd.key "W">
 <!ENTITY closeCmd.accesskey "c">
@@ -121,9 +120,9 @@
 <!ENTITY quoteCmd.label "Quote Message">
 <!ENTITY quoteCmd.accesskey "Q">
 
-<!--LOCALIZATION NOTE attachVCardCmd.label Don't translate the term 'vCard' -->
-<!ENTITY attachVCardMenu.label "Attach Personal Card (vCard)"> 
-<!ENTITY attachVCardMenu.accesskey "v">
+<!--LOCALIZATION NOTE attachVCard.label Don't translate the term 'vCard' -->
+<!ENTITY attachVCard.label "Attach Personal Card (vCard)">
+<!ENTITY attachVCard.accesskey "v">
 
 <!ENTITY returnReceiptMenu.label "Return Receipt">
 <!ENTITY returnReceiptMenu.accesskey "t">
@@ -247,6 +246,10 @@
 <!ENTITY delete.accesskey "D">
 <!ENTITY selectAll.label "Select All">
 <!ENTITY selectAll.accesskey "A">
+<!ENTITY attachFile.label "Attach File(s)...">
+<!ENTITY attachFile.accesskey "F">
+<!ENTITY attachPage.label "Attach Web Page...">
+<!ENTITY attachPage.accesskey "W">
 
 <!-- Title for the address picker panel -->
 <!ENTITY addressesSidebarTitle.label "Contacts">
