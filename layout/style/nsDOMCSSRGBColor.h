@@ -14,9 +14,8 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is:
- *   Christopher A. Aillon <christopher@aillon.com>
- *
+ * The Initial Developer of the Original Code is
+ * Christopher A. Aillon <christopher@aillon.com>
  * Portions created by the Initial Developer are Copyright (C) 2002
  * the Initial Developer. All Rights Reserved.
  *
