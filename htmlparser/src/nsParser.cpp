@@ -1320,7 +1320,13 @@ nsParser::CancelParsingEvents() {
     if (mEventQueue != nsnull) {
       mEventQueue->RevokeEvents(this);
     } 
+
     mPendingContinueEvent=PR_FALSE;
+    /* Since we are taking this off of the queue, we need to do the NS_RELEASE
+     * that nsParserContinueEvent::HandleEvent would have done.
+     */
+    nsParser* me = this; 
+    NS_RELEASE(me);
   }
   return NS_OK;
 }
@@ -1454,6 +1460,14 @@ nsresult nsParser::Terminate(void){
       // Hack - Hold a reference until we are completely done...
       nsCOMPtr<nsIParser> kungFuDeathGrip(this); 
       mInternalState=result;
+
+      // CancelParsingEvents must be called to avoid leaking the nsParser object
+      // @see bug 108049
+      // If mPendingContinueEvents is PR_TRUE CancelParsingEvents will reset 
+      // the mPendingContinueEvent to PR_FALSE so DidBuildModel will call 
+      // DidBuildModel on the DTD. Note: The IsComplete() call inside of DidBuildModel
+      // looks at the mPendingContinueEvents flag.
+      CancelParsingEvents();
       DidBuildModel(result);
     }
   }
