@@ -20,6 +20,8 @@
  * Original Author: David W. Hyatt (hyatt@netscape.com)
  *
  * Contributor(s): 
+ *   Dean Tessman <dean_tessman@hotmail.com>
+ *   Mark Hammond <markh@ActiveState.com>
  */
 
 #include "nsMenuListener.h"
@@ -185,6 +187,13 @@ nsMenuListener::KeyPress(nsIDOMEvent* aKeyEvent)
     // Open one level.
     mMenuParent->Enter();
   }
+#ifdef XP_WIN
+  else if (theChar == NS_VK_F10) {
+    // doesn't matter what modifier keys are down in Windows
+    // if the menu bar is active and F10 is pressed - deactivate it
+    mMenuParent->DismissChain();
+  }
+#endif // XP_WIN
   else {
     PRInt32 menuAccessKey = -1;
     nsMenuBarListener::GetMenuAccessKey(&menuAccessKey);
