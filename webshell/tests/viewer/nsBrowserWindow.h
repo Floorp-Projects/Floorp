@@ -67,7 +67,7 @@ public:
   NS_IMETHOD GetBounds(nsRect& aBounds);
   NS_IMETHOD Show();
   NS_IMETHOD Hide();
-  NS_IMETHOD OpenWindow(const nsString& aURL, PRUint32 aNewChromeMask, nsIBrowserWindow*& aNewWindow);
+  NS_IMETHOD OpenWindow(PRUint32 aNewChromeMask, nsIBrowserWindow*& aNewWindow);
   NS_IMETHOD ChangeChrome(PRUint32 aNewChromeMask);
   NS_IMETHOD GetChrome(PRUint32& aChromeMaskResult);
   NS_IMETHOD LoadURL(const nsString& aURL);

@@ -774,9 +774,9 @@ nsBrowserWindow::Hide()
 }
 
 NS_IMETHODIMP
-nsBrowserWindow::OpenWindow(const nsString& aURL, PRUint32 aNewChromeMask, nsIBrowserWindow*& aNewWindow)
+nsBrowserWindow::OpenWindow(PRUint32 aNewChromeMask, nsIBrowserWindow*& aNewWindow)
 {
-  return mApp->OpenWindow(aURL, aNewChromeMask, aNewWindow);
+  return mApp->OpenWindow(aNewChromeMask, aNewWindow);
 }
 
 NS_IMETHODIMP
