@@ -135,7 +135,7 @@ nsPersistentProperties::Load(nsIInputStream *aIn)
             c = SkipWhiteSpace(c);
           }
           else {
-            value.Append('\\');
+            value.AppendWithConversion('\\');
           }
         }
         value.Append((PRUnichar) c);
