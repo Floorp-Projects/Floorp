@@ -52,6 +52,8 @@ OBJS =                                   \
 	.\$(OBJDIR)\nsTooltipWidget.obj  \
 	.\$(OBJDIR)\nsAppShell.obj       \
 	.\$(OBJDIR)\nsLookAndFeel.obj    \
+	.\$(OBJDIR)\nsDialog.obj    \
+	.\$(OBJDIR)\nsLabel.obj    \
 	$(NULL)
 
 LINCS=                                  \

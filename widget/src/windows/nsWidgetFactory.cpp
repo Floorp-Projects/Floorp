@@ -37,6 +37,8 @@
 #include "nsTabWidget.h"
 #include "nsTooltipWidget.h"
 #include "nsWindow.h"
+#include "nsDialog.h"
+#include "nsLabel.h"
 #include "nsAppShell.h"
 
 static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
@@ -56,6 +58,8 @@ static NS_DEFINE_IID(kCTabWidget,     NS_TABWIDGET_CID);
 static NS_DEFINE_IID(kCTooltipWidget, NS_TOOLTIPWIDGET_CID);
 static NS_DEFINE_IID(kCAppShell,      NS_APPSHELL_CID);
 static NS_DEFINE_IID(kCLookAndFeel,   NS_LOOKANDFEEL_CID);
+static NS_DEFINE_IID(kCDialog,        NS_DIALOG_CID);
+static NS_DEFINE_IID(kCLabel,         NS_LABEL_CID);
 
 static NS_DEFINE_IID(kISupportsIID,   NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,    NS_IFACTORY_IID);
@@ -201,6 +205,12 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     }
     else if (mClassID.Equals(kCLookAndFeel)) {
         inst = (nsObject*)new nsLookAndFeel(aOuter);
+    }
+    else if (mClassID.Equals(kCDialog)) {
+        inst = (nsObject*)new nsDialog(aOuter);
+    }
+    else if (mClassID.Equals(kCLabel)) {
+        inst = (nsObject*)new nsLabel(aOuter);
     }
   
     if (inst == NULL) {  
