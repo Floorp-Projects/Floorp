@@ -76,9 +76,14 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
         ::GetPort(&thePort);
        	if (thePort)
        	{
-       		GrafVars** grafVars = (GrafVars**)((CGrafPtr)thePort)->grafVars;
-       		RGBColor macColor = (*grafVars)->rgbHiliteColor;
-       		aColor = NS_RGB(macColor.red>>8, macColor.green>>8, macColor.blue>>8);
+          RGBColor macColor;
+#if TARGET_CARBON
+          GetPortHiliteColor(thePort,&macColor);
+#else
+          GrafVars** grafVars = (GrafVars**)((CGrafPtr)thePort)->grafVars;
+          macColor = (*grafVars)->rgbHiliteColor;
+#endif
+          aColor = NS_RGB(macColor.red>>8, macColor.green>>8, macColor.blue>>8);
        	}
        	else
         	aColor = NS_RGB(0x00,0x00,0x00);

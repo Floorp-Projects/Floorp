@@ -76,9 +76,15 @@ nsMacTSMMessagePump::~nsMacTSMMessagePump()
 	err = AERemoveEventHandler(kTextServiceClass,kUpdateActiveInputArea,mUpdateUPP,false);
 	NS_ASSERTION(err==noErr,"nsMacTSMMessagePump::InstallTSMAEHandlers: AEInstallEventHandlers[Update] failed");
 
+#if TARGET_CARBON
+ 	(void)DisposeAEEventHandlerUPP(mPos2OffsetUPP);
+ 	(void)DisposeAEEventHandlerUPP(mOffset2PosUPP);
+ 	(void)DisposeAEEventHandlerUPP(mUpdateUPP);
+#else
 	(void)DisposeRoutineDescriptor(mPos2OffsetUPP);
 	(void)DisposeRoutineDescriptor(mOffset2PosUPP);
 	(void)DisposeRoutineDescriptor(mUpdateUPP);
+#endif
 
 }
 
@@ -88,7 +94,7 @@ nsMacTSMMessagePump::~nsMacTSMMessagePump()
 //
 //-------------------------------------------------------------------------
 
-OSErr nsMacTSMMessagePump::PositionToOffsetHandler(const AppleEvent *theAppleEvent, AppleEvent *reply, UInt32 handlerRefcon)
+pascal OSErr nsMacTSMMessagePump::PositionToOffsetHandler(const AppleEvent *theAppleEvent, AppleEvent *reply, UInt32 handlerRefcon)
 {
 	OSErr 				err;
 	DescType			returnedType;
@@ -133,7 +139,7 @@ OSErr nsMacTSMMessagePump::PositionToOffsetHandler(const AppleEvent *theAppleEve
 
 	return noErr;
 }
-OSErr nsMacTSMMessagePump::OffsetToPositionHandler(const AppleEvent *theAppleEvent, AppleEvent *reply, UInt32 handlerRefcon)
+pascal OSErr nsMacTSMMessagePump::OffsetToPositionHandler(const AppleEvent *theAppleEvent, AppleEvent *reply, UInt32 handlerRefcon)
 {
 	OSErr 				err;
 	DescType			returnedType;
@@ -175,7 +181,7 @@ OSErr nsMacTSMMessagePump::OffsetToPositionHandler(const AppleEvent *theAppleEve
 	
 	return noErr;
 }
-OSErr nsMacTSMMessagePump::UpdateHandler(const AppleEvent *theAppleEvent, AppleEvent *reply, UInt32 handlerRefcon)
+pascal OSErr nsMacTSMMessagePump::UpdateHandler(const AppleEvent *theAppleEvent, AppleEvent *reply, UInt32 handlerRefcon)
 {
 	OSErr 					err;
 	DescType				returnedType;
@@ -211,9 +217,15 @@ OSErr nsMacTSMMessagePump::UpdateHandler(const AppleEvent *theAppleEvent, AppleE
 	err = AEGetParamPtr(theAppleEvent,keyAEFixLength,typeLongInteger,&returnedType,
 						&fixLength,sizeof(fixLength),&actualSize);
 	NS_ASSERTION(err==noErr,"nsMacTSMMessagePump::UpdateHandler: AEGetParamPtr[fixlen] failed.");
-	if (err!=noErr) return err;
-	
-	rv = eventHandler->HandleUpdate(text.dataHandle,textScript,fixLength);
+  	if (err!=noErr) return err;
+#if TARGET_CARBON
+	void* textPtr;
+ 	err = AEGetDescData(&text,(unsigned long)typeChar,textPtr,fixLength);
+ 	if (err!=noErr) return err; 								 
+ 	rv = eventHandler->HandleUpdate((char**)&textPtr,textScript,fixLength);
+#else	
+ 	rv = eventHandler->HandleUpdate(text.dataHandle,textScript,fixLength);
+#endif
 	NS_ASSERTION(rv==PR_TRUE,"nsMAcMessagePump::UpdateHandler: HandleUpdated failed.");
 	if (rv!=PR_TRUE) return paramErr;
 	

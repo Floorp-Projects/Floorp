@@ -92,9 +92,15 @@ NS_IMETHODIMP nsFontMetricsMac :: Init(const nsFont& aFont, nsIDeviceContext* aC
 		return NS_ERROR_FAILURE;
 	}
 
+#if TARGET_CARBON
+	short saveFont = GetPortTextFont(thePort);
+ 	short saveFace = GetPortTextFace(thePort);
+ 	short saveSize = GetPortTextSize(thePort);		
+#else
 	short saveFont = thePort->txFont;
 	short saveSize = thePort->txSize;
 	short saveFace = thePort->txFace;
+#endif
 	::TextFont(theStyle.tsFont);
 	::TextSize(theStyle.tsSize);
 	::TextFace(theStyle.tsFace);

@@ -115,8 +115,14 @@ PRInt32	bufferdepth;
 		mThePixelmap.packSize = 0;
 		mThePixelmap.hRes = nsDeviceContextMac::GetScreenResolution()<<16;
 		mThePixelmap.vRes = nsDeviceContextMac::GetScreenResolution()<<16;
-		mThePixelmap.planeBytes = 0;
-		mThePixelmap.pmReserved = 0;
+#if TARGET_CARBON
+		mThePixelmap.pixelFormat = 0;				/*fourCharCode representation*/
+		mThePixelmap.pmTable	= 0;					/*color map for this pixMap*/
+		mThePixelmap.pmExt = 0;	
+#else
+  		mThePixelmap.planeBytes = 0;
+  		mThePixelmap.pmReserved = 0;
+#endif
 		mThePixelmap.pmVersion = 0;
 		mWidth = aWidth;
 		mHeight = aHeight;

@@ -801,7 +801,7 @@ NS_IMETHODIMP	nsWindow::Update()
 #if TARGET_CARBON
 		//¥PINK - hrm, can't do this in Carbon for re-entrancy reasons
 		// ::CopyRgn(saveUpdateRgn, ((WindowRecord*)mWindowPtr)->updateRgn);
-		::InvalRgn(saveUpdateRgn);
+		::InvalWindowRgn(mWindowPtr, saveUpdateRgn);
 #else
 		::CopyRgn(saveUpdateRgn, ((WindowRecord*)mWindowPtr)->updateRgn);
 #endif
