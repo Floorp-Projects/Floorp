@@ -828,8 +828,7 @@ nsBrowserInstance::WalletPreview(nsIDOMWindow* aWin, nsIDOMWindow* aForm, PRBool
                                      kIWalletServiceIID,
                                      (nsISupports **)&walletservice);
   if (NS_SUCCEEDED(res) && (nsnull != walletservice)) {
-// commenting out temporarily till I figure out why it broke the mac build
-//    res = walletservice->WALLET_Prefill(presShell, PR_FALSE, doPrefillMessage);
+    res = walletservice->WALLET_Prefill(presShell, PR_FALSE, doPrefillMessage);
     nsServiceManager::ReleaseService(kWalletServiceCID, walletservice);
     if (NS_FAILED(res)) { /* this just means that there was nothing to prefill */
       return NS_OK;
@@ -872,8 +871,7 @@ nsBrowserInstance::WalletChangePassword(PRBool* status)
                                      kIWalletServiceIID,
                                      (nsISupports **)&walletservice);
   if ((NS_OK == res) && (nsnull != walletservice)) {
-// commenting out temporarily till I figure out why it broke the mac build
-//    res = walletservice->WALLET_ChangePassword(status);
+    res = walletservice->WALLET_ChangePassword(status);
     nsServiceManager::ReleaseService(kWalletServiceCID, walletservice);
   }
   return NS_OK;
@@ -902,8 +900,7 @@ nsBrowserInstance::WalletQuickFillin(nsIDOMWindow* aWin, PRBool* doPrefillMessag
                                      kIWalletServiceIID,
                                      (nsISupports **)&walletservice);
   if ((NS_OK == res) && (nsnull != walletservice)) {
-// commenting out temporarily till I figure out why it broke the mac build
-//    res = walletservice->WALLET_Prefill(presShell, PR_TRUE, doPrefillMessage);
+    res = walletservice->WALLET_Prefill(presShell, PR_TRUE, doPrefillMessage);
     nsServiceManager::ReleaseService(kWalletServiceCID, walletservice);
     return NS_OK;
   } else {
@@ -932,8 +929,7 @@ nsBrowserInstance::WalletRequestToCapture(nsIDOMWindow* aWin, PRUint32* status)
                                      kIWalletServiceIID,
                                      (nsISupports **)&walletservice);
   if ((NS_OK == res) && (nsnull != walletservice)) {
-// commenting out temporarily till I figure out why it broke the mac build
-//    res = walletservice->WALLET_RequestToCapture(presShell, status);
+    res = walletservice->WALLET_RequestToCapture(presShell, status);
     nsServiceManager::ReleaseService(kWalletServiceCID, walletservice);
     return NS_OK;
   } else {
