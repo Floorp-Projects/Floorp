@@ -404,11 +404,6 @@ sub MakeResourceAliases()
 
 	BuildFolderResourceAliases(":mozilla:xpfe:browser:samples:",						"$samples_dir");
 	_MakeAlias(":mozilla:xpfe:browser:samples:sampleimages:",							"$samples_dir");
-	BuildFolderResourceAliases(":mozilla:xpfe:AppCores:xul:",							"$samples_dir");
-
-	my($toolbar_dir) = "$resource_dir" . "toolbar:";
-	BuildFolderResourceAliases(":mozilla:xpfe:AppCores:xul:resources:",					"$toolbar_dir");
-	_MakeAlias(":mozilla:xpfe:AppCores:xul:resources:throbbingN.gif",					"$throbber_dir");
 		
 	# if ($main::build{editor})
 	{
@@ -924,7 +919,6 @@ sub BuildClientDist()
 	 _InstallFromManifest(":mozilla:xpfe:components:regviewer:MANIFEST_IDL",		"$distdirectory:idl:");
 
 	# XPAPPS
-	_InstallFromManifest(":mozilla:xpfe:AppCores:public:MANIFEST",					"$distdirectory:xpfe:");
 	_InstallFromManifest(":mozilla:xpfe:appshell:public:MANIFEST",					"$distdirectory:xpfe:");
 	_InstallFromManifest(":mozilla:xpfe:appshell:public:MANIFEST_IDL",				"$distdirectory:idl:");
 	_InstallFromManifest(":mozilla:xpfe:browser:public:MANIFEST_IDL",				"$distdirectory:idl:");
@@ -1592,7 +1586,6 @@ sub BuildXPAppProjects()
 	
 	# Applications
 	BuildOneProject(":mozilla:xpfe:appshell:macbuild:AppShell.mcp",				"AppShell$D.shlb", "AppShell.toc", 1, $main::ALIAS_SYM_FILES, 0);
-	BuildOneProject(":mozilla:xpfe:AppCores:macbuild:AppCores.mcp",				"AppCores$D.shlb", "AppCores.toc", 1, $main::ALIAS_SYM_FILES, 0);
 	BuildOneProject(":mozilla:xpfe:browser:macbuild:mozBrowser.mcp",			"mozBrowser$D.shlb", "mozBrowser.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
 	print("--- XPApp projects complete ----\n");
