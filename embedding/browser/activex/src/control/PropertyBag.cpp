@@ -78,7 +78,8 @@ HRESULT STDMETHODCALLTYPE CPropertyBag::Read(/* [in] */ LPCOLESTR pszPropName, /
             return S_OK;
         }
     }
-    return S_OK;
+    // Property does not exist in the bag
+    return E_INVALIDARG;
 }
 
 
