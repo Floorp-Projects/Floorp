@@ -10,7 +10,7 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  * 
- * The Original Code is nsICacheService.idl, released February 23, 2001.
+ * The Original Code is nsICacheSession.idl, released February 23, 2001.
  * 
  * The Initial Developer of the Original Code is Netscape Communications
  * Corporation.  Portions created by Netscape are
@@ -18,36 +18,36 @@
  * Rights Reserved.
  * 
  * Contributor(s): 
- *    Gordon Sheridan, 23-February-2001
+ *    Gordon Sheridan <gordon@netscape.com>
+ *    Patrick Beard   <beard@netscape.com>
+ *    Darin Fisher    <darin@netscape.com>
  */
 
 
 #include "nsISupports.idl"
-#include "nsICacheEntryDescriptor.idl"
+#include "nsICache.idl"
+
+interface nsICacheEntryDescriptor;
+interface nsICacheListener;
+
 
 [scriptable, uuid(b4b419ad-28b7-4d25-9988-20fa98505a19)]
 interface nsICacheSession : nsISupports
 {
-    
-
     /*
      * Synchronous cache access. This returns a unique descriptor each
      * time it is called, even if the same key is specified. When
      * called by multiple threads for write access, only one writeable
      * descriptor will be granted.
      */
-    nsICacheEntryDescriptor  openCacheEntry(in string         key,
-                                            in unsigned long  accessFlagsRequested);
+    nsICacheEntryDescriptor  openCacheEntry(in string             key,
+                                            in nsCacheAccessMode  accessRequested);
 
 
     /*
      * Asynchronous cache access. Does not block the calling thread.
      */
-    void asyncOpenCacheEntry(in string           clientID,
-                             in string           key,
-                             in unsigned long    accessFlagsRequested,
-                             in boolean          streamBased,
-                             in nsICacheListener listener);
-
-
+    void asyncOpenCacheEntry(in string            key,
+                             in nsCacheAccessMode accessRequested,
+                             in nsICacheListener  listener);
 };

@@ -1,0 +1,120 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is nsICache.idl, released February 23, 2001.
+ * 
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corporation.  Portions created by Netscape are
+ * Copyright (C) 2001 Netscape Communications Corporation.  All
+ * Rights Reserved.
+ * 
+ * Contributor(s): 
+ *    Gordon Sheridan <gordon@netscape.com>
+ *    Patrick Beard   <beard@netscape.com>
+ *    Darin Fisher    <darin@netscape.com>
+ */
+
+
+
+typedef long nsCacheStoragePolicy;
+typedef long nsCacheAccessMode;
+
+[scriptable, uuid(ec1c0063-197d-44bb-84ba-7525d50fc937)]
+interface nsICache
+{
+    /**
+     * Cache Access Mode
+     *
+     *
+     * Mode Requested | Not Cached          | Cached
+     * --------------------------------------------------------------------------
+     * READ           | NS_NOT_IN_CACHE     | NS_OK
+     *                | Flags = 0           | Flags = READ
+     *                | No Channel          | Channel
+     * --------------------------------------------------------------------------
+     * WRITE          | NS_OK               | NS_OK            (Cache manager
+     *                | Flags = WRITE       | Flags = WRITE     dooms existing
+     *                | Channel             | Channel           cache object)
+     * --------------------------------------------------------------------------
+     * READ|WRITE     | NS_OK               | NS_OK
+     * (1st req.)     | Flags = WRITE       | Flags = READ|WRITE
+     *                | Channel             | Channel
+     * --------------------------------------------------------------------------
+     * READ|WRITE     | N/A                 | NS_OK
+     * (Nth req.)     |                     | Flags = READ
+     *                |                     | Channel
+     * --------------------------------------------------------------------------
+     *
+     *
+     * If you think that you might need to modify cached data or meta data, then
+     * you must open a cache entry with the WRITE flag set.  Only one cache 
+     * entry descriptor, per cache entry, will be granted WRITE permission.
+     * 
+     * Usually, you will set both the READ and WRITE flags in order to first test
+     * the meta data and informational fields to determine if a write (ie. going
+     * to the net) may actually be necessary.  If you determine that it is not,
+     * then you would mark the cache entry as valid (using MarkValid) and then 
+     * simply read the data from the cache.
+     *
+     * A descriptor granted WRITE access has exclusive access to the cache entry
+     * up until the point at which it marks it as valid.  Once the
+     * cache entry has been "validated", other descriptors with READ access may be
+     * opened to the cache entry.
+     *
+     * If you make a request for READ|WRITE access to a cache entry, the cache
+     * service will downgrade your access to READ if there is already a
+     * cache entry descriptor open with WRITE access.
+     *
+     * If you make a request for WRITE access to a cache entry (without the READ
+     * flag set) and another descriptor with WRITE access is currently
+     * open, then the existing cache entry will be 'doomed', and you will be given
+     * a descriptor (with WRITE access only) to a new cache entry.
+     *
+     * Access Requested:
+     * READ	       - I only want to READ, if there isn't an entry just fail
+     * WRITE       - I have something new I want to write into the cache, make me a new
+     *               entry and doom the old one, if any.
+     * READ_WRITE  - I want to READ, but I'm willing to update an existing entry if
+     *               necessary, or create a new one if none exists.
+     *
+     * Access Granted:
+     * NO_ACCESS   - No descriptor is provided. You get zilch. Nada. Nothing.
+     * READ		   - You can READ from this descriptor
+     * WRITE	   - You must WRITE to this descriptor because the cache entry was just
+     *               created for you
+     * READ_WRITE  - You can READ the descriptor to determine if it's valid,
+     *               you may WRITE if it needs updating
+     */
+    const nsCacheAccessMode  ACCESS_NONE       = 0;
+    const nsCacheAccessMode  ACCESS_READ       = 1;
+    const nsCacheAccessMode  ACCESS_WRITE      = 2;
+    const nsCacheAccessMode  ACCESS_READ_WRITE = 3;
+
+    /**
+     * Storage Policy
+     */
+    const nsCacheStoragePolicy  STORE_ANYWHERE  = 0;
+    const nsCacheStoragePolicy  STORE_IN_MEMORY = 1;
+    const nsCacheStoragePolicy  STORE_ON_DISK   = 2;
+};
+
+
+
+%{C++
+
+#define NS_ERROR_CACHE_KEY_NOT_FOUND        NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 60)
+#define NS_ERROR_CACHE_DATA_IS_STREAM       NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 61)
+#define NS_ERROR_CACHE_DATA_IS_NOT_STREAM   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 62)
+#define NS_ERROR_CACHE_WAIT_FOR_VALIDATION  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 63)
+#define NS_ERROR_CACHE_ENTRY_DOOMED         NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 64)
+
+%}
