@@ -38,7 +38,7 @@ EXPORT_RESOURCE_SAMPLES = \
 	editor.css \
 	$(NULL)
 
-DIRS =  images win
+DIRS =  images
 
 include $(topsrcdir)/config/rules.mk
 
