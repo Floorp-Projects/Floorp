@@ -331,6 +331,16 @@ public:
                                     nsISupports* aRef) = 0;
 
   /**
+   * Store a single script object to be unrooted from the script garbage
+   * collector in the implementation's destructor. This obvious hack
+   * is used to delay the unrooting of an object until that point.
+   * (At time of writing, it's used only on the window script object).
+   * This should never be called twice (the stored object will never
+   * be replaced.)
+   */
+  NS_IMETHOD SetRootedScriptObject(void *aObject) = 0;
+
+  /**
    * Called to disable/enable script execution in this context.
    */
   NS_IMETHOD GetScriptsEnabled(PRBool *aEnabled) = 0;

@@ -49,6 +49,7 @@ private:
   nsCOMPtr<nsISupports> mRef;
   PRBool mScriptsEnabled;
   PRUint32 mBranchCallbackCount;
+  void *mRootedScriptObject; // special case for the window script object
 
   static JSBool PR_CALLBACK DOMBranchCallback(JSContext *cx, JSScript *script);
   
@@ -127,6 +128,7 @@ public:
   NS_IMETHOD GetOwner(nsIScriptContextOwner** owner);
   NS_IMETHOD SetTerminationFunction(nsScriptTerminationFunc aFunc,
                                     nsISupports* aRef);
+  NS_IMETHOD SetRootedScriptObject(void *aObject);
   NS_IMETHOD GetScriptsEnabled(PRBool *aEnabled);
   NS_IMETHOD SetScriptsEnabled(PRBool aEnabled);
 
