@@ -147,7 +147,7 @@ function setTitleFromFolder(msgfolder, subject)
 #ifndef XP_MACOSX
     title += " - " + gBrandBundle.getString("brandShortName");
 #endif
-    window.title = title;
+    document.title = title;
 }
 
 function UpdateMailToolbar(caller)

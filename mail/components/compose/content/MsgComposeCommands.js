@@ -2156,7 +2156,7 @@ function SetComposeWindowTitle()
     newTitle = sComposeMsgsBundle.getString("defaultSubject");
 
   newTitle += GetCharsetUIString();
-  window.title = sComposeMsgsBundle.getString("windowTitlePrefix") + " " + newTitle;
+  document.title = sComposeMsgsBundle.getString("windowTitlePrefix") + " " + newTitle;
 }
 
 // Check for changes to document and allow saving before closing
