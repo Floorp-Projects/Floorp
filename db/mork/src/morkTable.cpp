@@ -149,8 +149,8 @@ morkTable::morkTable(morkEnv* ev, /*i*/
       {
         if ( inMustBeUnique )
           this->SetTableUnique();
-        morkStore::SlotWeakStore(ioStore, ev, &mTable_Store);
-        morkRowSpace::SlotWeakRowSpace(ioRowSpace, ev, &mTable_RowSpace);
+        mTable_Store = ioStore;
+        mTable_RowSpace = ioRowSpace;
         if ( inOptionalMetaRowOid )
           mTable_MetaRowOid = *inOptionalMetaRowOid;
         else
@@ -187,9 +187,8 @@ morkTable::CloseTable(morkEnv* ev) /*i*/ // called by CloseMorkNode();
       morkRowMap::SlotStrongRowMap((morkRowMap*) 0, ev, &mTable_RowMap);
       // mTable_RowMap.CloseMorkNode(ev);
       mTable_RowArray.CloseMorkNode(ev);
-      morkStore::SlotWeakStore((morkStore*) 0, ev, &mTable_Store);
-      morkRowSpace::SlotWeakRowSpace((morkRowSpace*) 0,
-         ev, &mTable_RowSpace);
+      mTable_Store = 0;
+      mTable_RowSpace = 0;
       this->MarkShut();
     }
     else

@@ -58,7 +58,7 @@ public: // state is public because the entire Mork system is private
   NS_DECL_ISUPPORTS_INHERITED
   
   morkRow*    mRowObject_Row;     // non-refcounted alias to morkRow
-  morkStore*  mRowObject_Store;   // weak ref to store containing row
+  morkStore*  mRowObject_Store;   // non-refcounted ptr to store containing row
   
 // { ===== begin morkNode interface =====
 public: // morkNode virtual methods
