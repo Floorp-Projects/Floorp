@@ -17,6 +17,10 @@ if [ -z "$BUILDNUMBER" ]
 then
     BUILDNUMBER=1
 fi
+if [ `uname` = "Linux" ] ; then
+    PATH=".:/u/sonmi/bin:/u/sonmi/bin/linux:/usr/bsd:/usr/ucb/:/bin:/usr/bin:/usr/ccs/bin:/usr/sbin:/usr/bin/X11:/usr/etc:/etc:/usr/demos:/usr/demos/bin:/usr/local/bin:/usr/local/X11/bin:/tools/ns/bin"
+    export PATH
+fi
 
 Echo()
 {
@@ -189,6 +193,7 @@ eval_opts()
   DO_CLEAN=OFF
   O_SILENT=OFF
   O_INCREMENTAL=OFF
+  O_MAIL=OFF
   BUILDDATE=`date +%m%d`
   NSSVER=tip
 
@@ -199,6 +204,16 @@ eval_opts()
     case $1 in
         -d)
             DO_DQA=ON
+            ;;
+        -m)
+            O_MAIL=ON
+            shift
+            MAILINGLIST=$1
+            if [ -z "$MAILINGLIST" ]
+            then
+                echo "Error: -m requires a mailinglist to follow, for example sonmi@iplanet.com"
+                exit
+            fi
             ;;
         -ti)
             DO_TBX=ON
@@ -235,6 +250,9 @@ if [ "$DO_CLEAN" = "ON" ] ; then
 fi
 if [ "$DO_DQA" = "ON" ] ; then
     qa_stage_dqa 
+    if [ "$O_MAIL" = "ON" ] ; then
+         cat $DQA_STAGE/result.html | /usr/sbin/sendmail $MAILINGLIST 
+    fi
 fi
 if [ "$DO_TBX" = "ON" ] ; then
     qa_stage_tbx
