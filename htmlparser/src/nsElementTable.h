@@ -48,7 +48,7 @@ public:
 
   PRInt32 GetTopmostIndexOf(nsTagStack& aTagStack);
   PRInt32 GetBottommostIndexOf(nsTagStack& aTagStack,PRInt32 aStartOffset);
-  inline PRBool  Contains(eHTMLTags aTag);
+  PRBool  Contains(eHTMLTags aTag);
 
   eHTMLTags   mTags[5];
   eHTMLTags*  mTagList;
