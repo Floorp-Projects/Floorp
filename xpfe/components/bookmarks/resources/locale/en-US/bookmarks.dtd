@@ -48,7 +48,7 @@
 <!ENTITY edit.find.keybinding          "f">
 <!ENTITY command.properties.label      "Properties...">
 <!ENTITY button.properties.accesskey  "P">
-<!ENTITY command.properties.accesskey  "r">
+<!ENTITY command.properties.accesskey  "o">
 <!ENTITY edit.properties.keybinding    "i">
 <!ENTITY command.rename.label          "Rename...">
 <!ENTITY button.rename.accesskey      "R">
