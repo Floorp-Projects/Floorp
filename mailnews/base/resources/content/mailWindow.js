@@ -70,6 +70,8 @@ function CreateMailWindowGlobals()
 	pref = Components.classes[prefProgID].getService(Components.interfaces.nsIPref);
 
 	//Create windows status feedback
+  // set the JS implementation of status feedback before creating the c++ one..
+  window.MsgStatusFeedback = new nsMsgStatusFeedback();
 	statusFeedback           = Components.classes[statusFeedbackProgID].createInstance();
 	statusFeedback = statusFeedback.QueryInterface(Components.interfaces.nsIMsgStatusFeedback);
 
@@ -95,7 +97,7 @@ function CreateMailWindowGlobals()
 	msgComposeFormat = Components.interfaces.nsIMsgCompFormat;
 
 	Bundle = srGetStrBundle("chrome://messenger/locale/messenger.properties");
-    BrandBundle = srGetStrBundle("chrome://global/locale/brand.properties");
+  BrandBundle = srGetStrBundle("chrome://global/locale/brand.properties");
 
 	//Create datasources
 	accountManagerDataSource = Components.classes[accountManagerDSProgID].createInstance();
@@ -109,7 +111,7 @@ function InitMsgWindow()
 	msgWindow.statusFeedback = statusFeedback;
 	msgWindow.messageView = messageView;
 	msgWindow.msgHeaderSink = messageHeaderSink;
-    msgWindow.SetDOMWindow(window);
+  msgWindow.SetDOMWindow(window);
 }
 
 function AddDataSources()
@@ -150,23 +152,6 @@ function SetupMoveCopyMenus(menuid, accountManagerDataSource, folderDataSource)
 	}
 }
 
-function onStatus() {
-    if (!gStatusObserver)
-        gStatusObserver = document.getElementById("Messenger:Status");
-    if ( gStatusObserver ) {
-        var text = gStatusObserver.getAttribute("value");
-        if ( text == "" ) {
-            text = defaultStatus;
-        }
-        var statusText = document.getElementById("statusText");
-        if ( statusText ) {
-            statusText.setAttribute( "value", text );
-        }
-    } else {
-        dump("Can't find status broadcaster!\n");
-    }
-}
-
 function onProgress() {
     if (!gThrobberObserver)
         gThrobberObserver = document.getElementById("Messenger:Throbber");
@@ -178,20 +163,19 @@ function onProgress() {
         if ( busy == "true" ) {
             if ( wasBusy == "false" ) {
                 // Remember when loading commenced.
-    			startTime = (new Date()).getTime();
+    			      startTime = (new Date()).getTime();
                 // Turn progress meter on.
                 gMeterObserver.setAttribute("mode","undetermined");
             }
             // Update status bar.
         } else if ( busy == "false" && wasBusy == "true" ) {
             // Record page loading time.
-            if (!gStatusObserver)
-                gStatusObserver = document.getElementById("Messenger:Status");
-            if ( gStatusObserver ) {
-				var elapsed = ( (new Date()).getTime() - startTime ) / 1000;
-				var msg = "Document: Done (" + elapsed + " secs)";
-				dump( msg + "\n" );
-                gStatusObserver.setAttribute("value",msg);
+            if (window.MsgStatusFeedback)
+            {
+				        var elapsed = ( (new Date()).getTime() - startTime ) / 1000;
+				        var msg = "Document: Done (" + elapsed + " secs)";
+				        dump( msg + "\n" );
+                window.MsgStatusFeedback.ShowStatusString(msg);
                 defaultStatus = msg;
             }
             // Turn progress meter off.
@@ -208,4 +192,53 @@ function dumpProgress() {
     dump( "broadcaster value=" + broadcaster.getAttribute("value") + "\n" );
     dump( "meter mode=" + meter.getAttribute("mode") + "\n" );
     dump( "meter value=" + meter.getAttribute("value") + "\n" );
+}
+
+// We're going to implement our status feedback for the mail window in JS now.
+// the following contains the implementation of our status feedback object
+
+function nsMsgStatusFeedback()
+{
+}
+
+nsMsgStatusFeedback.prototype = 
+{
+	QueryInterface : function(iid)
+		{
+		if(iid.equals(Components.interfaces.nsIMsgStatusFeedback))
+			return this;
+		throw Components.results.NS_NOINTERFACE;
+		},
+	ShowStatusString : function(statusText)
+		{
+       if ( statusText == "" )
+           statusText = defaultStatus;
+       var statusTextNode = document.getElementById("statusText");
+        if ( statusTextNode ) 
+            statusTextNode.setAttribute( "value", statusText );
+		},
+	StartMeteors : function()
+		{
+    var progressNode = document.getElementById('Messenger:Throbber');
+    if (progressNode)
+      progressNode.setAttribute("busy", "true");
+      onProgress();
+		},
+	StopMeteors : function()
+		{
+      var progressNode = document.getElementById('Messenger:Throbber');
+      if (progressNode)
+        progressNode.setAttribute("busy", "false");
+      onProgress();
+		},
+	ShowProgress : function(percentage)
+		{
+      var progressNode = document.getElementById('Messenger:LoadingProgress');
+      if (percentage >= 0)
+        progressNode.setAttribute("mode", "normal");
+      progressNode.setAttribute("value", percentage);
+		},
+	CloseWindow : function(percent)
+		{
+		}
 }
