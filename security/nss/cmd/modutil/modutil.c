@@ -506,7 +506,7 @@ init_crypto(PRBool create, PRBool readOnly)
 #endif
 	Error retval;
 	SECStatus rv;
-	int flags = 0;
+	PRUint32 flags = 0;
 
 
 	if(SECU_ConfigDirectory(dbdir)[0] == '\0') {
