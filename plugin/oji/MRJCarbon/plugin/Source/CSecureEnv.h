@@ -401,10 +401,10 @@ public:
 protected:
     MRJPlugin*                  mPlugin;
     JNIEnv*                     mProxyEnv;
+    JNIEnv*                     mJavaEnv;
     MRJSession*                 mSession;
     nsIThreadManager*           mThreadManager;
     
-    JNIEnv*                     mJavaEnv;
     jboolean*                   mIsRunning;
     JavaMessageQueue*           mJavaQueue;
     JavaMessageQueue*           mNativeQueue;

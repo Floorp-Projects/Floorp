@@ -45,9 +45,12 @@
 #include "MRJPlugin.h"
 #include "MRJSession.h"
 #include "MRJContext.h"
-#include "MRJFrame.h"
 #include "MRJConsole.h"
 #include "EmbeddedFramePluginInstance.h"
+
+#if !TARGET_CARBON
+#include "MRJFrame.h"
+#endif
 
 #include "nsIServiceManager.h"
 #include "nsIServiceManagerObsolete.h"
@@ -65,6 +68,7 @@
 #include <Resources.h>
 #include <LaunchServices.h>
 #include <string>
+#include <CFBundle.h>
 
 nsIPluginManager* thePluginManager = NULL;
 nsIPluginManager2* thePluginManager2 = NULL;
@@ -146,6 +150,8 @@ nsresult NSGetFactory(nsISupports* serviceManager, const nsCID &aClass, const ch
 
 #pragma export off
 
+#if TARGET_RT_MAC_CFM
+
 extern "C" {
 
 pascal OSErr __initialize(const CFragInitBlock *initBlock);
@@ -198,6 +204,41 @@ pascal void MRJPlugin__terminate()
     __terminate();
 }
 
+#endif /* TARGET_RT_MAC_CFM */
+
+#if TARGET_RT_MAC_MACHO
+
+extern "C" {
+CF_EXPORT Boolean CFURLGetFSRef(CFURLRef url, FSRef *fsRef);
+}
+
+static CFBundleRef getPluginBundle()
+{
+    printf("### MRJPlugin:  getPluginBundle() here. ###\n");
+    CFBundleRef bundle = CFBundleGetBundleWithIdentifier(CFSTR("com.netscape.MRJPlugin"));
+    if (bundle) {
+        printf("### MRJPlugin:  CFBundleGetBundleWithIdentifier() succeeded. ###\n");
+        // initialize thePluginSpec for later use. open our resource fork as well?
+        CFURLRef url = CFBundleCopyExecutableURL(bundle);
+        if (url) {
+            FSRef ref;
+            if (CFURLGetFSRef(url, &ref)) {
+                printf("### MRJPlugin:  CFURLGetFSRef() succeeded. ###\n");
+                FSGetCatalogInfo(&ref, kFSCatInfoNone, NULL, NULL, &thePluginSpec, NULL);
+
+                // Open plugin's resource fork for read-only access. is this really necessary?
+                thePluginRefnum = ::CFBundleOpenBundleResourceMap(bundle);
+            }
+            CFRelease(url);
+        }
+    }
+    return bundle;
+}
+
+CFBundleRef thePluginBundle = getPluginBundle();
+
+#endif /* TARGET_RT_MAC_MACHO */
+
 //
 // The MEAT of the plugin.
 //
@@ -216,7 +257,7 @@ const UInt32 MRJPlugin::kInterfaceCount = sizeof(sInterfaces) / sizeof(Interface
 
 MRJPlugin::MRJPlugin()
     :   SupportsMixin(this, sInterfaces, kInterfaceCount),
-        mManager(NULL), mThreadManager(NULL), mSession(NULL), mConsole(NULL), mIsEnabled(false), mPluginThreadID(NULL)
+        mManager(NULL), mThreadManager(NULL), mSession(NULL), mConsole(NULL), mPluginThreadID(NULL), mIsEnabled(false)
 {
 }
 
@@ -797,8 +838,8 @@ NS_METHOD MRJPluginInstance::HandleEvent(nsPluginEvent* pluginEvent, PRBool* eve
         inspectInstance(isUpdate);
     
         if (event->what == nullEvent) {
-            // Give MRJ another quantum of time.
-            mSession->idle(kDefaultJMTime); // now SpendTime does this.
+            // Give Java another quantum of time. We don't need this on Mac OS X.
+            mSession->idle(0x00000400); // now SpendTime does this.
         } else {
 #if TARGET_CARBON
             *eventHandled = mContext->handleEvent(event);
@@ -858,6 +899,8 @@ NS_METHOD MRJPluginInstance::GetValue(nsPluginInstanceVariable variable, void *v
         break;
     case nsPluginInstanceVariable_DoCacheBool:
         *(PRBool*)value = PR_FALSE;
+        break;
+    default:
         break;
     }
     return NS_OK;

@@ -244,10 +244,13 @@ OSStatus MRJSession::open(const char* consolePath)
        	// create a monitor for the message queue to unblock Java threads.
 		mMessageMonitor = new MRJMonitor(this);
     }
-    
+
+    printf("### MRJPlugin:  MRJSession::open() here. ###\n");
+
     JNIEnv* env = mMainEnv;
     jclass session = env->FindClass("netscape/oji/MRJSession");
     if (session) {
+        printf("### MRJPlugin:  MRJSession::open() loaded the session class. ###\n");
         mSession = (jclass) env->NewGlobalRef(session);
         jmethodID openMethod = env->GetStaticMethodID(session, "open", "(Ljava/lang/String;)V");
         if (openMethod) {
@@ -258,6 +261,8 @@ OSStatus MRJSession::open(const char* consolePath)
             }
         }
         env->DeleteLocalRef(session);
+    } else {
+        printf("### MRJPlugin:  MRJSession::open() couldn't load the session class. ###\n");
     }
 
     if (mStatus == noErr)
@@ -285,7 +290,7 @@ OSStatus MRJSession::close()
     	if (mMessageMonitor != NULL) {
     		mMessageMonitor->notifyAll();
     		delete mMessageMonitor;
-    		mMessageMonitor;
+    		mMessageMonitor = NULL;
     	}
     	
     	if (mSession) {
@@ -512,7 +517,9 @@ string MRJSession::getClassPath()
             ++i;
         }
     }
-    
+
+    printf("### MRJPlugin:  classPath = %s ###\n", classPath.c_str());
+
     return classPath;
 }
 
@@ -528,6 +535,8 @@ string MRJSession::getPluginHome()
             pluginHome += path;
         }
     }
+
+    printf("### MRJPlugin:  pluginHome = %s ###\n", pluginHome.c_str());
     
     return pluginHome;
 }
