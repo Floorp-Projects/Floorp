@@ -940,10 +940,6 @@
         {
         },
 
-        getImageSource: function BMOLBuilderObserver_getImageSource(aItemIndex, aColumnID)
-        {
-        },
-        
         onSetCellText: function BMOLBuilderObserver_onSetCellText(aItemIndex, aColumnID, aValue)
         {
         },
