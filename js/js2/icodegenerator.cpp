@@ -1167,7 +1167,7 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
                         args->push_back(Argument(genExpr(p->value), &mContext->getWorld().identifiers[(static_cast<StringExprNode *>(p->field))->str]));
                     else {
                         s << (uint32)args->size();
-                        args->push_back(Argument(genExpr(p->value), &mContext->getWorld().identifiers[s] ));
+                        args->push_back(Argument(genExpr(p->value), &mContext->getWorld().identifiers[s.getString()] ));
                         s.clear();
                     }
                 }
@@ -1229,7 +1229,7 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
                         args->push_back(Argument(genExpr(p->value), &mContext->getWorld().identifiers[(static_cast<StringExprNode *>(p->field))->str]));
                     else {
                         s << (uint32)args->size();
-                        args->push_back(Argument(genExpr(p->value), &mContext->getWorld().identifiers[s] ));
+                        args->push_back(Argument(genExpr(p->value), &mContext->getWorld().identifiers[s.getString()] ));
                         s.clear();
                     }
                 }
@@ -1698,7 +1698,7 @@ ICodeModule *ICodeGenerator::genFunction(FunctionStmtNode *f, bool isConstructor
                 if (unnamed) {
                     positionalCount++;
                     s << r.first - 1;  // the first positional parameter is '0'
-                    icg.parameterList->add(mContext->getWorld().identifiers[s], r, (v->initializer != NULL));
+                    icg.parameterList->add(mContext->getWorld().identifiers[s.getString()], r, (v->initializer != NULL));
                     s.clear();
                 }
             }

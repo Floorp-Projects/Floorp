@@ -1304,8 +1304,7 @@ namespace JavaScript {
 		String s;
 
 	  public:
-		operator String &() {return s;}
-		operator const String &() const {return s;}
+        const String& getString() { return s; }
 		void clear() {JavaScript::clear(s);}
 	  protected:
 		void printChar8(char ch);
