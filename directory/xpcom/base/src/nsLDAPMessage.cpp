@@ -60,13 +60,11 @@ nsLDAPMessage::~nsLDAPMessage(void)
     if (mMsgHandle) {
         int rc = ldap_msgfree(mMsgHandle);
 
-// for some reason, the following switch statement is causing Sun's Forte 6
-// Update 1 (CC -v sez "CC: Sun WorkShop 6 update 1 C++ 5.2 Patch 109508-01
-// 2001/01/31") to crash during the compile.  Since all it does is log 
-// something which is pretty unlikely to happen anyway, I'm gonna ifdef this 
-// code out on that compiler.
-// 
-#if __SUNPRO_CC != 0x520  
+// If you are having problems compiling the following code on a Solaris
+// machine with the Forte 6 Update 1 compilers, then you need to make 
+// sure you have applied all the required patches. See:
+// http://www.mozilla.org/unix/solaris-build.html for more details.
+
         switch(rc) {
         case LDAP_RES_BIND:
         case LDAP_RES_SEARCH_ENTRY:
@@ -96,7 +94,6 @@ nsLDAPMessage::~nsLDAPMessage(void)
                     "failed: %s\n", ldap_err2string(rc)));
             break;
         }
-#endif /* __SUNPRO_CC */
     }
 
     if (mMatchedDn) {
