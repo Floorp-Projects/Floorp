@@ -1,0 +1,29 @@
+#!/usr/local/bin/perl -w
+use Time::HiRes qw(time); 
+use Data::Dumper;
+
+use strict;
+use Sys::Hostname;
+use FindBin;
+
+use lib $FindBin::RealBin;
+
+use config;
+use DB::Util;
+use DB::Select;
+use DB::Update;
+use DB::Insert;
+
+my $runtime;
+
+&DB::Util::connect(); 
+$main::host_id = &DB::Util::id("mh_hostname", Sys::Hostname::hostname());
+$runtime = &DB::Select::runtime($main::host_id);
+$runtime = &DB::Select::runtime($main::host_id);
+	unless ($::mirror_delay    = $runtime->{'mirror_delay'}   ) { $::mirror_delay    = $default::mirror_delay    };
+	unless ($::min_scan_time   = $runtime->{'min_scan_time'}  ) { $::min_scan_time   = $default::min_scan_time   };
+	unless ($::throttle_time   = $runtime->{'throttle_time'}  ) { $::throttle_time   = $default::throttle_time   };
+	unless ($::max_addcheckins = $runtime->{'max_addcheckins'}) { $::max_addcheckins = $default::max_addcheckins };
+&DB::Util::disconnect();
+
+__END__
