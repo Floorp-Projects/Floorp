@@ -39,12 +39,12 @@
 
 // Defining this will trace the allocation of images.  This includes
 // ctor, dtor and update.
-//#define TRACE_IMAGE_ALLOCATION
+// #define TRACE_IMAGE_ALLOCATION
 
 //#define CHEAP_PERFORMANCE_MEASURMENT 1
 
 // Define this to see tiling debug output
-//#define DEBUG_TILING
+// #define DEBUG_TILING
 
 /* XXX we are simply creating a GC and setting its function to Copy.
    we shouldn't be doing this every time this method is called.  this creates
@@ -269,9 +269,8 @@ void nsImageGTK::ImageUpdated(nsIDeviceContext *aContext,
 void nsImageGTK::UpdateCachedImage()
 {
 #ifdef TRACE_IMAGE_ALLOCATION
-  printf("nsImageGTK::ImageUpdated(this=%p,%d)\n",
-         this,
-         aFlags);
+  printf("nsImageGTK::ImageUpdated(this=%p)\n",
+         this);
 #endif
 
   nsRegionRectIterator ri(mUpdateRegion);
@@ -1576,7 +1575,6 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
          aTileRect.x, aTileRect.y,
          aTileRect.width, aTileRect.height, this);
 #endif
-
   if (mPendingUpdate)
     UpdateCachedImage();
 
@@ -1627,8 +1625,9 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
     // Set up clipping and call Draw().
     PRBool clipState;
     aContext.PushState();
-    aContext.SetClipRect(aTileRect, nsClipCombine_kIntersect,
-                         clipState);
+    ((nsRenderingContextGTK&)aContext).SetClipRectInPixels(
+      aTileRect, nsClipCombine_kIntersect, clipState);
+    ((nsRenderingContextGTK&)aContext).UpdateGC();
 
     if (mAlphaDepth==8) {
       DrawCompositeTile(aContext, aSurface,

@@ -242,6 +242,8 @@ public:
     return gdk_gc_ref(mGC);
   }
 
+  void SetClipRectInPixels(const nsRect& aRect, nsClipCombine aCombine, PRBool &aClipEmpty);
+
   // cause the GC to be updated
   void UpdateGC();
 
