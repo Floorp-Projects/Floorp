@@ -38,7 +38,7 @@ class nsFloaterCacheFreeList;
 class nsFloaterCache {
 public:
   nsFloaterCache();
-#ifdef DEBUG
+#ifdef NS_BUILD_REFCNT_LOGGING
   ~nsFloaterCache();
 #else
   ~nsFloaterCache() { }

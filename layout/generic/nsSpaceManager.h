@@ -72,7 +72,7 @@ protected:
     FrameInfo*      mNext;
 
     FrameInfo(nsIFrame* aFrame, const nsRect& aRect);
-#ifdef DEBUG
+#ifdef NS_BUILD_REFCNT_LOGGING
     ~FrameInfo();
 #endif
   };
