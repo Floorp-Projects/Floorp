@@ -63,9 +63,9 @@ nsToolbarManager::nsToolbarManager() : ChildWindow(), nsIToolbarManager(), nsIIm
   mNumTabsSave = 0;
 
   // XXX Needs to be changed to a Vector class
-  mToolbars = (nsIToolbar **)new PRInt32[kMaxNumToolbars];
-  mTabs     = (TabInfo **)new PRInt32[kMaxNumToolbars];
-  mTabsSave = (TabInfo **)new PRInt32[kMaxNumToolbars];
+  mToolbars = new nsIToolbar* [kMaxNumToolbars];
+  mTabs     = new TabInfo* [kMaxNumToolbars];
+  mTabsSave = new TabInfo* [kMaxNumToolbars];
 
   PRInt32 i;
   for (i=0;i<kMaxNumToolbars;i++) {
