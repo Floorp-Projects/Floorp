@@ -913,6 +913,55 @@ use constant ABSTRACT_SCHEMA => {
         ],
     },
 
+    # SETTINGS
+    # --------
+    # setting          - each global setting will have exactly one entry
+    #                    in this table.
+    # setting_value    - stores the list of acceptable values for each
+    #                    setting, and a sort index that controls the order
+    #                    in which the values are displayed.
+    # profile_setting  - If a user has chosen to use a value other than the
+    #                    global default for a given setting, it will be
+    #                    stored in this table. Note: even if a setting is
+    #                    later changed so is_enabled = false, the stored
+    #                    value will remain in case it is ever enabled again.
+    #
+    setting => {
+        FIELDS => [
+            name          => {TYPE => 'varchar(32)', NOTNULL => 1,
+                              PRIMARYKEY => 1}, 
+            default_value => {TYPE => 'varchar(32)', NOTNULL => 1},
+            is_enabled    => {TYPE => 'BOOLEAN', NOTNULL => 1,
+                              DEFAULT => 'TRUE'},
+        ],
+    },
+
+    setting_value => {
+        FIELDS => [
+            name        => {TYPE => 'varchar(32)', NOTNULL => 1},
+            value       => {TYPE => 'varchar(32)', NOTNULL => 1},
+            sortindex   => {TYPE => 'INT2', NOTNULL => 1},
+        ],
+        INDEXES => [
+            setting_value_nv_unique_idx  => {FIELDS => [qw(name value)],
+                                             TYPE => 'UNIQUE'},
+            setting_value_ns_unique_idx  => {FIELDS => [qw(name sortindex)],
+                                             TYPE => 'UNIQUE'},
+        ],
+     },
+
+    profile_setting => {
+        FIELDS => [
+            user_id       => {TYPE => 'INT3', NOTNULL => 1},
+            setting_name  => {TYPE => 'varchar(32)', NOTNULL => 1},
+            setting_value => {TYPE => 'varchar(32)', NOTNULL => 1},
+        ],
+        INDEXES => [
+            profile_setting_value_unique_idx  => {FIELDS => [qw(user_id setting_name)],
+                                                  TYPE => 'UNIQUE'},
+        ],
+     },
+
 };
 #--------------------------------------------------------------------------
 

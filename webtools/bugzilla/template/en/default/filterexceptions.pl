@@ -634,6 +634,11 @@
   'deleted_bug_count'
 ],
 
+'admin/settings/edit.html.tmpl' => [
+  'name',
+  'checkbox_name'
+],
+
 'account/login.html.tmpl' => [
   'target', 
 ],
@@ -654,6 +659,11 @@
   'tab.description', 
   'current_tab.name', 
   'current_tab.description', 
+],
+
+'account/prefs/settings.html.tmpl' => [
+  'name',
+  'default_name'
 ],
 
 );

@@ -1479,6 +1479,10 @@ if ($^O !~ /MSWin32/i) {
 require Bugzilla::Auth;
 import Bugzilla::Auth 'bz_crypt';
 
+# This is done so we can add new settings as developers need them.
+require Bugzilla::User::Setting;
+import Bugzilla::User::Setting qw(add_setting);
+
 # globals.pl clears the PATH, but File::Find uses Cwd::cwd() instead of
 # Cwd::getcwd(), which we need to do because `pwd` isn't in the path - see
 # http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-09/msg00115.html

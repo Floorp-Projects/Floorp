@@ -22,6 +22,7 @@
 #                 Bradley Baetz <bbaetz@acm.org>
 #                 Joel Peshkin <bugreport@peshkin.net> 
 #                 Byron Jones <bugzilla@glob.com.au>
+#                 Shane H. W. Travis <travis@sedsystems.ca>
 #                 Max Kanat-Alexander <mkanat@kerio.com>
 
 ################################################################################
@@ -38,6 +39,7 @@ use Bugzilla::Config;
 use Bugzilla::Error;
 use Bugzilla::Util;
 use Bugzilla::Constants;
+use Bugzilla::User::Setting;
 use Bugzilla::Auth;
 
 use base qw(Exporter);
@@ -222,6 +224,23 @@ sub queries {
     $self->{queries} = \@queries;
 
     return $self->{queries};
+}
+
+sub settings {
+    my ($self) = @_;
+
+    return $self->{'settings'} if (defined $self->{'settings'});
+
+    # IF the user is logged in
+    # THEN get the user's settings
+    # ELSE get default settings
+    if ($self->id) {
+        $self->{'settings'} = get_all_settings($self->id);
+    } else {
+        $self->{'settings'} = get_defaults();
+    }
+
+    return $self->{'settings'};
 }
 
 sub flush_queries_cache {
@@ -1147,6 +1166,20 @@ linkinfooter - Whether or not the query should be displayed in the footer.
 =item C<disabledtext>
 
 Returns the disable text of the user, if any.
+
+=item C<settings>
+
+Returns a hash of hashes which holds the user's settings. The first key is
+the name of the setting, as found in setting.name. The second key is one of:
+is_enabled     - true if the user is allowed to set the preference themselves;
+                 false to force the site defaults
+                 for themselves or must accept the global site default value
+default_value  - the global site default for this setting
+value          - the value of this setting for this user. Will be the same
+                 as the default_value if the user is not logged in, or if 
+                 is_default is true.
+is_default     - a boolean to indicate whether the user has chosen to make
+                 a preference for themself or use the site default.
 
 =item C<flush_queries_cache>
 

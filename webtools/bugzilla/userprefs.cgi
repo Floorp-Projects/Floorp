@@ -20,6 +20,7 @@
 #                 Christopher Aillon <christopher@aillon.com>
 #                 Gervase Markham <gerv@gerv.net>
 #                 Vlad Dascalu <jocuri@softhome.net>
+#                 Shane H. W. Travis <travis@sedsystems.ca>
 
 use strict;
 
@@ -138,6 +139,39 @@ sub SaveAccount {
             " WHERE userid = $userid");
 }
 
+
+sub DoSettings {
+    $vars->{'settings'} = Bugzilla->user->settings;
+
+    my @setting_list = keys %{Bugzilla->user->settings};
+    $vars->{'setting_names'} = \@setting_list;
+}
+
+sub SaveSettings {
+    my $cgi = Bugzilla->cgi;
+
+    my $settings = Bugzilla->user->settings;
+    my @setting_list = keys %{Bugzilla->user->settings};
+
+    foreach my $name (@setting_list) {
+        next if ! ($settings->{$name}->{'is_enabled'});
+        my $value = $cgi->param($name);
+
+        # de-taint the value.
+        if ($value =~ /^([-\w]+)$/ ) {
+            $value = $1;
+        }
+        if ($value eq "${name}-isdefault" ) {
+            if (! $settings->{$name}->{'is_default'}) {
+                 $settings->{$name}->reset_to_default;
+            }
+        }
+        else {
+           $settings->{$name}->set($value);
+        }
+    }
+    $vars->{'settings'} = Bugzilla->user->settings(1);
+}
 
 sub DoEmail {
     my $dbh = Bugzilla->dbh;
@@ -365,6 +399,11 @@ SWITCH: for ($current_tab_name) {
     /^account$/ && do {
         SaveAccount() if $cgi->param('dosave');
         DoAccount();
+        last SWITCH;
+    };
+    /^settings$/ && do {
+        SaveSettings() if $cgi->param('dosave');
+        DoSettings();
         last SWITCH;
     };
     /^email$/ && do {

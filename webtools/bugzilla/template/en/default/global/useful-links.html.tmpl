@@ -74,7 +74,8 @@
     <div class="links">
 
         <a href="userprefs.cgi">Prefs</a>
-        [% ' | <a href="editparams.cgi">Parameters</a>' 
+        [% ' | <a href="editparams.cgi">Parameters</a> ' _
+           ' | <a href="editsettings.cgi">User Settings</a>' 
                                                   IF user.groups.tweakparams %]
         [% ' | <a href="editusers.cgi">Users</a>'     IF user.groups.editusers 
                                                   || user.can_bless %]

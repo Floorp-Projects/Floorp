@@ -216,6 +216,15 @@
     [%+ ELSIF fld == "z" %]the multiple tables/images
     [%+ ELSE %]a report axis[% END %] field.
 
+  [% ELSIF error == "setting_info_invalid" %]
+    To create a new setting, you must supply a setting name, a list of 
+    value/sortindex pairs, and the devault value.
+
+  [% ELSIF error == "setting_name_invalid" %]
+    The setting name <em>[% name FILTER html %]</em> is not a valid
+    option. Setting names must begin with a letter, and contain only
+    letters, digits, or the symbols '_', '-', '.', or ':'.
+
   [% ELSIF error == "token_generation_error" %]
     Something is seriously wrong with the token generation system.
 
