@@ -300,22 +300,6 @@ nsViewerApp::Initialize(int argc, char** argv)
     return rv;
   }
 
-  // Create the Event Queue for the UI thread...
-  rv = nsServiceManager::GetService(kEventQueueServiceCID,
-                                    kIEventQueueServiceIID,
-                                    (nsISupports **)&mEventQService);
-  if (NS_OK != rv) {
-     NS_ASSERTION(PR_FALSE, "Could not obtain the event queue service");
-     return rv;
-  }
-
-  printf("Going to create the event queue\n");
-  rv = mEventQService->CreateThreadEventQueue();
-  if (NS_OK != rv) {
-     NS_ASSERTION(PR_FALSE, "Could not create the event queue for the the thread");
-     return rv;
-  }
-
   InitializeWindowCreator();
 
   // Create widget application shell
