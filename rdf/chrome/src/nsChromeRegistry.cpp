@@ -70,6 +70,7 @@
 #include "nsIIOService.h"
 #include "nsIResProtocolHandler.h"
 #include "nsLayoutCID.h"
+#include "nsIPref.h"
 
 static char kChromePrefix[] = "chrome://";
 
@@ -78,6 +79,7 @@ static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID, NS_RDFXMLDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFContainerUtilsCID,      NS_RDFCONTAINERUTILS_CID);
 static NS_DEFINE_CID(kCSSLoaderCID, NS_CSS_LOADER_CID);
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 class nsChromeRegistry;
 
@@ -410,17 +412,19 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
   nsCAutoString finalURL;
   GetBaseURL(package, provider, finalURL);
   if (finalURL.IsEmpty()) {
-/* to test the themes / skin switching stuff I'm doing */
-#if defined(DEBUG_sspitzer) || defined(DEBUG_seth)
-    if (provider.Equals("skin")) {
+    nsCOMPtr <nsIPref> prefService = do_GetService(kPrefServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    PRBool enableSwitching = PR_FALSE;
+    rv = prefService->GetBoolPref("skins.enable.switching",&enableSwitching);
+    if (NS_FAILED(rv)) return rv;
+
+    if (provider.Equals("skin") && enableSwitching) {
       finalURL = "resource:/chrome/modern/";
     }
     else {
       finalURL = "resource:/chrome/";
     }
-#else
-    finalURL = "resource:/chrome/";
-#endif
   } 
 
   finalURL += package;
