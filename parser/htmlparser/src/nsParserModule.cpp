@@ -187,6 +187,7 @@ Initialize(nsIModule* aSelf)
     nsHTMLEntities::AddRefTable();
     InitializeElementTable();
     CNewlineToken::AllocNewline();
+    CObserverService::InitGlobals();
     gInitialized = PR_TRUE;
   }
   return NS_OK;
@@ -202,6 +203,7 @@ Shutdown(nsIModule* aSelf)
     nsParser::FreeSharedObjects();
     DeleteElementTable();
     CNewlineToken::FreeNewline();
+    CObserverService::ReleaseGlobals();
     gInitialized = PR_FALSE;
   }
 }

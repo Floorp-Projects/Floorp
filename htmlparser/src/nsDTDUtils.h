@@ -44,6 +44,7 @@
 #include "nsIParserNode.h"
 #include "nsFixedSizeAllocator.h"
 #include "nsVoidArray.h"
+#include "nsIObserverService.h"
 
 #define IF_HOLD(_ptr) \
  PR_BEGIN_MACRO       \
@@ -553,10 +554,16 @@ public:
   nsObserverTopic* GetTopic(const nsString& aTopic);
   nsObserverTopic* CreateTopic(const nsString& aTopic);
 
+  // Do allocation and release of gObserverService
+  // These are called from the module init and shutdown
+  static nsresult InitGlobals();
+  static void ReleaseGlobals();
+
 protected:
   void      RegisterObservers(const nsString& aTopic);
   void      UnregisterObservers(const nsString& aTopic);
   nsDeque   mTopics;  //each topic holds a list of observers per tag.
+  static nsIObserverService *gObserverService;
 };
 
 /*********************************************************************************************/

@@ -27,8 +27,9 @@
 #include "nsIParserNode.h" 
 #include "nsParserNode.h" 
 
-#include "nsIObserverService.h"
 #include "nsIServiceManager.h"
+
+nsIObserverService *CObserverService::gObserverService = NULL;
 
 MOZ_DECL_CTOR_COUNTER(nsEntryStack)
 MOZ_DECL_CTOR_COUNTER(nsDTDContext)
@@ -1595,6 +1596,23 @@ nsresult nsObserverTopic::Notify(eHTMLTags aTag,nsIParserNode& aNode,void* aUniq
   observers by topic. Up till now, they've all just be thrown into the same
   observer list, which was wrong. This fixes bug #28825.
  ******************************************************************************/
+nsresult
+CObserverService::InitGlobals() {
+  if (!gObserverService) {
+    nsresult rv = NS_OK;
+    nsCOMPtr<nsIObserverService> obs(do_GetService(NS_OBSERVERSERVICE_CONTRACTID,&rv));
+    if (NS_SUCCEEDED(rv)) {
+      gObserverService = obs.get();
+      NS_IF_ADDREF(gObserverService);
+    }
+  }
+  return NS_OK;
+}
+
+void
+CObserverService::ReleaseGlobals() {
+  NS_IF_RELEASE(gObserverService);
+}
 
 CObserverService::CObserverService() : mTopics(0) {
 
@@ -1653,13 +1671,9 @@ nsObserverTopic* CObserverService::CreateTopic(const nsString& aTopic) {
 
 void CObserverService::RegisterObservers(const nsString& aTopic) {
   nsresult result = NS_OK;
-  nsIObserverService* theObserverService = nsnull;
-  result = nsServiceManager::GetService(NS_OBSERVERSERVICE_CONTRACTID, NS_GET_IID(nsIObserverService),
-                                      (nsISupports**) &theObserverService, nsnull);
-  if(result == NS_OK){
+  if (gObserverService) {
     nsIEnumerator* theEnum = nsnull;
-    result = theObserverService->EnumerateObserverList(aTopic.get(), &theEnum);
-    nsServiceManager::ReleaseService(NS_OBSERVERSERVICE_CONTRACTID, theObserverService);
+    result = gObserverService->EnumerateObserverList(aTopic.get(), &theEnum);
 
     if(result == NS_OK) {
       nsCOMPtr<nsIElementObserver> theElementObserver;
