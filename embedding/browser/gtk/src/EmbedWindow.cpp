@@ -258,13 +258,23 @@ EmbedWindow::ExitModalEventLoop(nsresult aStatus)
 NS_IMETHODIMP
 EmbedWindow::FocusNextElement()
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  GtkWidget* parent = GTK_WIDGET(mOwner->mOwningWidget)->parent;
+
+  if (GTK_IS_CONTAINER(parent))
+    gtk_container_focus(GTK_CONTAINER(parent),
+                        GTK_DIR_TAB_FORWARD);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 EmbedWindow::FocusPrevElement()
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  GtkWidget* parent = GTK_WIDGET(mOwner->mOwningWidget)->parent;
+
+  if (GTK_IS_CONTAINER(parent))
+    gtk_container_focus(GTK_CONTAINER(parent),
+                        GTK_DIR_TAB_BACKWARD);
+  return NS_OK;
 }
 
 // nsIEmbeddingSiteWindow
