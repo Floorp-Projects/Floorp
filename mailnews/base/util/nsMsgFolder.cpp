@@ -287,6 +287,7 @@ NS_IMETHODIMP nsMsgFolder::Shutdown(PRBool shutdownChildren)
   // Reset incoming server pointer and pathname.
   mServer = nsnull;
   mPath = nsnull;
+  mSubFolders->Clear();  //clear mSubFolders array on shutdown, will come here if shutDownChildren is true
 	return NS_OK;
 }
 
