@@ -87,13 +87,13 @@ void CALLBACK FireTimeout(HWND aWindow,
   if (!sTimerQueue) return;
 
   QMSG wmsg;
-  bool eventQueueEmpty = !(WinPeekMsg(NULLHANDLE, &wmsg, NULLHANDLE,
+  BOOL eventQueueEmpty = !(WinPeekMsg(NULLHANDLE, &wmsg, NULLHANDLE,
                                       0, WM_TIMER-1, PM_NOREMOVE) ||
                            WinPeekMsg(NULLHANDLE, &wmsg, NULLHANDLE,
                                       WM_TIMER+1, WM_USER-1, PM_NOREMOVE));
 
   if (aTimerID != HEARTBEATTIMERID) {
-    bool timerQueueEmpty = !sTimerQueue->HasReadyTimers(NS_PRIORITY_LOWEST);
+    BOOL timerQueueEmpty = !sTimerQueue->HasReadyTimers(NS_PRIORITY_LOWEST);
 
     if ((timerQueueEmpty && eventQueueEmpty) || 
         timer->GetPriority() >= NS_PRIORITY_IMMEDIATE) {
@@ -130,7 +130,7 @@ nsTimer::nsTimer() : nsITimer()
   mCallback = nsnull;
   mClosure = nsnull;
   mTimerID = 0;
-  mTimerRunning = false;
+  mTimerRunning = PR_FALSE;
 
   static int cachedService = 0;
   if (cachedService == 0) {
@@ -195,7 +195,7 @@ nsresult nsTimer::Init(PRUint32 aDelay,
   // prevent timer being released before
   // it has fired or is canceled
   NS_ADDREF_THIS();
-  mTimerRunning = true;
+  mTimerRunning = PR_TRUE;
 
   mDelay = aDelay;
 
@@ -212,7 +212,7 @@ void nsTimer::Fire()
 {
   // prevent a canceled timer which is 
   // already in ready queue from firing
-  if (mTimerRunning == false) return;
+  if (mTimerRunning == PR_FALSE) return;
 
   // prevent notification routine 
   // from releasing timer by canceling it
@@ -233,8 +233,8 @@ void nsTimer::Fire()
   } else if (GetType() == NS_TYPE_ONE_SHOT) {
 
     // timer finished
-    if (mTimerRunning == true) {
-      mTimerRunning = false;
+    if (mTimerRunning == PR_TRUE) {
+      mTimerRunning = PR_FALSE;
 
       NS_RELEASE_THIS();
     }
@@ -249,8 +249,8 @@ NS_IMETHODIMP_(void) nsTimer::Cancel()
   KillOSTimer();
 
   // timer finished
-  if (mTimerRunning == true) {
-    mTimerRunning = false;
+  if (mTimerRunning == PR_TRUE) {
+    mTimerRunning = PR_FALSE;
 
     NS_RELEASE_THIS();
   }

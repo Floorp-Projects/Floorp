@@ -94,7 +94,7 @@ private:
 
   UINT mTimerID;
 
-  bool mTimerRunning;
+  PRBool mTimerRunning;
 };
 
 #endif // __nsTimer_h
