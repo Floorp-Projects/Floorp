@@ -42,8 +42,13 @@
 #include "nsHTMLBase.h"
 #include "prprf.h"
 #include "nsISizeOfHandler.h"
+#include "nsIFontMetrics.h"
+#include "nsCSSRendering.h"
 
 #define BROKEN_IMAGE_URL "resource:/res/html/broken-image.gif"
+
+#define XP_IS_SPACE(_ch) \
+  (((_ch) == ' ') || ((_ch) == '\t') || ((_ch) == '\n'))
 
 // XXX image frame layout can be 100% decoupled from the content
 // object; all it needs are attributes to work properly
@@ -119,6 +124,17 @@ protected:
 
   PRBool IsServerImageMap();
   PRIntn GetSuppress();
+
+  nscoord MeasureString(nsIFontMetrics*  aFontMetrics,
+                        const PRUnichar* aString,
+                        PRInt32          aLength,
+                        nscoord          aMaxWidth,
+                        PRUint32&        aMaxFit);
+
+  void DisplayAltText(nsIPresContext&      aPresContext,
+                      nsIRenderingContext& aRenderingContext,
+                      const nsString&      aAltText,
+                      const nsRect&        aRect);
 };
 
 // Value's for mSuppress
@@ -390,6 +406,141 @@ ImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
   }
 }
 
+// Computes the width of the specified string. aMaxWidth specifies the maximum
+// width available. Once this limit is reached no more characters are measured.
+// The number of characters that fit within the maximum width are returned in
+// aMaxFit
+nscoord
+ImageFrame::MeasureString(nsIFontMetrics*  aFontMetrics,
+                          const PRUnichar* aString,
+                          PRInt32          aLength,
+                          nscoord          aMaxWidth,
+                          PRUint32&        aMaxFit)
+{
+  nscoord totalWidth = 0;
+  nscoord spaceWidth = aFontMetrics->GetWidth(' ');
+
+  aMaxFit = 0;
+  while (aLength > 0) {
+    // Find the next place we can line break
+    PRUint32  len = aLength;
+    PRBool    trailingSpace = PR_FALSE;
+    for (PRInt32 i = 0; i < aLength; i++) {
+      if (XP_IS_SPACE(aString[i]) && (i > 0)) {
+        len = i;  // don't include the space when measuring
+        trailingSpace = PR_TRUE;
+        break;
+      }
+    }
+  
+    // Measure this chunk of text, and see if it fits
+    nscoord width = aFontMetrics->GetWidth(aString, len);
+    PRBool  fits = (totalWidth + width) <= aMaxWidth;
+
+    // If it fits on the line, or it's the first word we've processed then
+    // include it
+    if (fits || (0 == totalWidth)) {
+      // New piece fits
+      totalWidth += width;
+
+      // If there's a trailing space then see if it fits as well
+      if (trailingSpace) {
+        if ((totalWidth + spaceWidth) <= aMaxWidth) {
+          totalWidth += spaceWidth;
+        } else {
+          // Space won't fit. Leave it at the end but don't include it in
+          // the width
+          fits = PR_FALSE;
+        }
+
+        len++;
+      }
+
+      aMaxFit += len;
+      aString += len;
+      aLength -= len;
+    }
+
+    if (!fits) {
+      break;
+    }
+  }
+
+  return totalWidth;
+}
+
+// Formats the alt-text to fit within the specified rectangle. Breaks lines
+// between words if a word would extend past the edge of the rectangle
+void
+ImageFrame::DisplayAltText(nsIPresContext&      aPresContext,
+                           nsIRenderingContext& aRenderingContext,
+                           const nsString&      aAltText,
+                           const nsRect&        aRect)
+{
+  // Clip so we don't render outside of the rect.
+  aRenderingContext.PushState();
+  aRenderingContext.SetClipRect(aRect, nsClipCombine_kReplace);
+
+  const nsStyleColor* color =
+    (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+  const nsStyleFont* font =
+    (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
+
+  // Set font and color
+  aRenderingContext.SetColor(color->mColor);
+  aRenderingContext.SetFont(font->mFont);
+
+  // Format the text to display within the formatting rect
+  nsIFontMetrics* fm = aRenderingContext.GetFontMetrics();
+
+  nscoord maxDescent = fm->GetMaxDescent();
+  nscoord height = fm->GetHeight();
+
+  // XXX It would be nice if there was a way to have the font metrics tell
+  // use where to break the text given a maximum width. At a minimum we need
+  // to be able to get the break character...
+  const PRUnichar* str = aAltText.GetUnicode();
+  PRInt32          strLen = aAltText.Length();
+  nscoord          y = aRect.y;
+  while ((strLen > 0) && ((y + maxDescent) < aRect.YMost())) {
+    // Determine how much of the text to display on this line
+    PRUint32  maxFit;  // number of characters that fit
+    nscoord   width = MeasureString(fm, str, strLen, aRect.width, maxFit);
+    
+    // Display the text
+    aRenderingContext.DrawString(str, maxFit, aRect.x, y, 0);
+
+    // Move to the next line
+    str += maxFit;
+    strLen -= maxFit;
+    y += height;
+  }
+
+  aRenderingContext.PopState();
+}
+
+struct nsRecessedBorder : public nsStyleSpacing {
+  nsRecessedBorder(nscoord aBorderWidth)
+    : nsStyleSpacing()
+  {
+    nsStyleCoord  styleCoord(aBorderWidth);
+
+    mBorder.SetLeft(styleCoord);
+    mBorder.SetTop(styleCoord);
+    mBorder.SetRight(styleCoord);
+    mBorder.SetBottom(styleCoord);
+    mBorderStyle[0] = NS_STYLE_BORDER_STYLE_INSET;
+    mBorderStyle[1] = NS_STYLE_BORDER_STYLE_INSET;
+    mBorderStyle[2] = NS_STYLE_BORDER_STYLE_INSET;
+    mBorderStyle[3] = NS_STYLE_BORDER_STYLE_INSET;
+    mBorderColor[0] = 0;
+    mBorderColor[1] = 0;
+    mBorderColor[2] = 0;
+    mBorderColor[3] = 0;
+    mHasCachedMargin = mHasCachedPadding = mHasCachedBorder = PR_FALSE;
+  }
+};
+
 NS_METHOD
 ImageFrame::Paint(nsIPresContext& aPresContext,
                   nsIRenderingContext& aRenderingContext,
@@ -409,11 +560,30 @@ ImageFrame::Paint(nsIPresContext& aPresContext,
     // First paint background and borders
     nsLeafFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
 
-    // XXX when we don't have the image, draw the we-don't-have-an-image look
-
     nsIImage* image = mImageLoader.GetImage();
     if (nsnull == image) {
-      // No image yet
+      // No image yet. Draw the icon that indicates we're loading, and display
+      // the alt-text
+      nsAutoString altText;
+      if (eContentAttr_HasValue == mContent->GetAttribute("ALT", altText)) {
+        // Display a recessed one-pixel border in the inner area
+        nsRect  inner;
+        GetInnerArea(&aPresContext, inner);
+
+        nscoord p2t = (nscoord)aPresContext.GetPixelsToTwips();
+        nsRecessedBorder recessedBorder(p2t);
+        nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this, inner,
+                                    inner, recessedBorder, 0);
+        inner.Deflate(p2t, p2t);
+
+        // Leave a 8 pixel left/right padding, and a 5 pixel top/bottom padding
+        inner.Deflate(8 * p2t, 5 * p2t);
+
+        // If there's room, then display the alt-text
+        if (!inner.IsEmpty()) {
+          DisplayAltText(aPresContext, aRenderingContext, altText, inner);
+        }
+      }
       return NS_OK;
     }
 
