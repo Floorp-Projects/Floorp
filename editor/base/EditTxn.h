@@ -24,8 +24,10 @@
 #define EditTxn_h__
 
 #include "nsITransaction.h"
-#include "nsITransactionDescription.h"
+#include "nsIOutputStream.h"
+#include "nsString.h"
 #include "nsCOMPtr.h"
+#include "nsPIEditorTransaction.h"
 
 #define EDIT_TXN_CID \
 {/* c5ea31b0-ac48-11d2-86d8-000064657374 */ \
@@ -39,7 +41,7 @@
  * it is never seen by the user or by any external entity.
  */
 class EditTxn : public nsITransaction
-              , public nsITransactionDescription
+              , public nsPIEditorTransaction
 {
 public:
 
@@ -51,27 +53,17 @@ public:
   virtual ~EditTxn();
 
 
-  NS_IMETHOD Do(void);
+  NS_IMETHOD DoTransaction(void);
 
-  NS_IMETHOD Undo(void);
+  NS_IMETHOD UndoTransaction(void);
 
-  NS_IMETHOD Redo(void);
+  NS_IMETHOD RedoTransaction(void);
 
   NS_IMETHOD GetIsTransient(PRBool *aIsTransient);
 
-  NS_IMETHOD Merge(PRBool *aDidMerge, nsITransaction *aTransaction);
+  NS_IMETHOD Merge(nsITransaction *aTransaction, PRBool *aDidMerge);
 
-  NS_IMETHOD Write(nsIOutputStream *aOutputStream);
-
-  NS_IMETHOD GetUndoString(nsString *aString);
-
-  NS_IMETHOD GetRedoString(nsString *aString);
-
-  enum { kTransactionID = 11100 };
-
-  NS_DECL_NSITRANSACTIONDESCRIPTION
-  nsString mLogDescription;
-  int mTransactionID;
+  NS_IMETHOD GetTxnDescription(nsAWritableString& aTxnDescription);
 };
 
 #endif

@@ -21,13 +21,13 @@
  */
 
 #include "nsITransaction.h"
-#include "nsITransactionManager.h"
 #include "nsITransactionListener.h"
 
 #include "nsTransactionItem.h"
 #include "nsTransactionStack.h"
 #include "nsVoidArray.h"
 #include "nsTransactionManager.h"
+#include "nsTransactionList.h"
 
 #include "nsCOMPtr.h"
 
@@ -86,16 +86,16 @@ nsrefcnt nsTransactionManager::Release(void)
   return mRefCnt;
 }
 
-NS_IMPL_QUERY_INTERFACE1(nsTransactionManager, nsITransactionManager)
+NS_IMPL_QUERY_INTERFACE2(nsTransactionManager, nsITransactionManager, nsISupportsWeakReference)
 
 #else
 
-NS_IMPL_ISUPPORTS(nsTransactionManager, NS_GET_IID(nsITransactionManager))
+NS_IMPL_ISUPPORTS2(nsTransactionManager, nsITransactionManager, nsISupportsWeakReference)
 
 #endif
 
 NS_IMETHODIMP
-nsTransactionManager::Do(nsITransaction *aTransaction)
+nsTransactionManager::DoTransaction(nsITransaction *aTransaction)
 {
   nsresult result;
 
@@ -139,16 +139,16 @@ nsTransactionManager::Do(nsITransaction *aTransaction)
 }
 
 NS_IMETHODIMP
-nsTransactionManager::Undo()
+nsTransactionManager::UndoTransaction()
 {
   nsresult result       = NS_OK;
   nsTransactionItem *tx = 0;
 
   LOCK_TX_MANAGER(this);
 
-  // It is illegal to call Undo() while the transaction manager is
-  // executing a  transaction's Do() method! If this happens, the Undo()
-  // request is ignored, and we return NS_ERROR_FAILURE.
+  // It is illegal to call UndoTransaction() while the transaction manager is
+  // executing a  transaction's DoTransaction() method! If this happens,
+  // the UndoTransaction() request is ignored, and we return NS_ERROR_FAILURE.
 
   result = mDoStack.Peek(&tx);
 
@@ -200,7 +200,7 @@ nsTransactionManager::Undo()
     return NS_OK;
   }
 
-  result = tx->Undo(this);
+  result = tx->UndoTransaction(this);
 
   if (NS_SUCCEEDED(result)) {
     result = mUndoStack.Pop(&tx);
@@ -220,16 +220,16 @@ nsTransactionManager::Undo()
 }
 
 NS_IMETHODIMP
-nsTransactionManager::Redo()
+nsTransactionManager::RedoTransaction()
 {
   nsresult result       = NS_OK;
   nsTransactionItem *tx = 0;
 
   LOCK_TX_MANAGER(this);
 
-  // It is illegal to call Redo() while the transaction manager is
-  // executing a  transaction's Do() method! If this happens, the Redo()
-  // request is ignored, and we return NS_ERROR_FAILURE.
+  // It is illegal to call RedoTransaction() while the transaction manager is
+  // executing a  transaction's DoTransaction() method! If this happens,
+  // the RedoTransaction() request is ignored, and we return NS_ERROR_FAILURE.
 
   result = mDoStack.Peek(&tx);
 
@@ -281,7 +281,7 @@ nsTransactionManager::Redo()
     return NS_OK;
   }
 
-  result = tx->Redo(this);
+  result = tx->RedoTransaction(this);
 
   if (NS_SUCCEEDED(result)) {
     result = mRedoStack.Pop(&tx);
@@ -371,7 +371,7 @@ nsTransactionManager::EndBatch()
   // XXX: Need to add some mechanism to detect the case where the transaction
   //      at the top of the do stack isn't the dummy transaction, so we can
   //      throw an error!! This can happen if someone calls EndBatch() within
-  //      the Do() method of a transaction.
+  //      the DoTransaction() method of a transaction.
   //
   //      For now, we can detect this case by checking the value of the
   //      dummy transaction's mTransaction field. If it is our dummy
@@ -445,6 +445,19 @@ nsTransactionManager::GetNumberOfRedoItems(PRInt32 *aNumItems)
 }
 
 NS_IMETHODIMP
+nsTransactionManager::GetMaxTransactionCount(PRInt32 *aMaxCount)
+{
+  if (!aMaxCount)
+    return NS_ERROR_NULL_POINTER;
+
+  LOCK_TX_MANAGER(this);
+  *aMaxCount = mMaxTransactionCount;
+  UNLOCK_TX_MANAGER(this);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsTransactionManager::SetMaxTransactionCount(PRInt32 aMaxCount)
 {
   PRInt32 numUndoItems  = 0, numRedoItems = 0, total = 0;
@@ -454,9 +467,10 @@ nsTransactionManager::SetMaxTransactionCount(PRInt32 aMaxCount)
   LOCK_TX_MANAGER(this);
 
   // It is illegal to call SetMaxTransactionCount() while the transaction
-  // manager is executing a  transaction's Do() method because the undo and
-  // redo stacks might get pruned! If this happens, the SetMaxTransactionCount()
-  // request is ignored, and we return NS_ERROR_FAILURE.
+  // manager is executing a  transaction's DoTransaction() method because
+  // the undo and redo stacks might get pruned! If this happens, the
+  // SetMaxTransactionCount() request is ignored, and we return
+  // NS_ERROR_FAILURE.
 
   result = mDoStack.Peek(&tx);
 
@@ -570,6 +584,8 @@ nsTransactionManager::PeekUndoStack(nsITransaction **aTransaction)
 
   UNLOCK_TX_MANAGER(this);
 
+  NS_IF_ADDREF(*aTransaction);
+
   return result;
 }
 
@@ -597,24 +613,35 @@ nsTransactionManager::PeekRedoStack(nsITransaction **aTransaction)
 
   UNLOCK_TX_MANAGER(this);
 
+  NS_IF_ADDREF(*aTransaction);
+
   return result;
 }
 
 NS_IMETHODIMP
-nsTransactionManager::Write(nsIOutputStream *aOutputStream)
+nsTransactionManager::GetUndoList(nsITransactionList **aTransactionList)
 {
-  PRUint32 len;
-
-  if (!aOutputStream)
+  if (!aTransactionList)
     return NS_ERROR_NULL_POINTER;
 
-  aOutputStream->Write("UndoStack:\n\n", 12, &len);
-  mUndoStack.Write(aOutputStream);
+  *aTransactionList = (nsITransactionList *)new nsTransactionList(this, &mUndoStack);
 
-  aOutputStream->Write("\nRedoStack:\n\n", 13, &len);
-  mRedoStack.Write(aOutputStream);
+  NS_IF_ADDREF(*aTransactionList);
 
-  return NS_OK;
+  return (! *aTransactionList) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+}
+
+NS_IMETHODIMP
+nsTransactionManager::GetRedoList(nsITransactionList **aTransactionList)
+{
+  if (!aTransactionList)
+    return NS_ERROR_NULL_POINTER;
+
+  *aTransactionList = (nsITransactionList *)new nsTransactionList(this, &mRedoStack);
+
+  NS_IF_ADDREF(*aTransactionList);
+
+  return (! *aTransactionList) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1030,7 +1057,7 @@ nsTransactionManager::BeginTransaction(nsITransaction *aTransaction)
     return result;
   }
 
-  result = tx->Do();
+  result = tx->DoTransaction();
 
   if (NS_FAILED(result)) {
     mDoStack.Pop(&tx);
@@ -1137,7 +1164,7 @@ nsTransactionManager::EndTransaction()
         return result;
 
       if (!doInterrupt) {
-        result = topTransaction->Merge(&didMerge, tint);
+        result = topTransaction->Merge(tint, &didMerge);
 
         nsresult result2 = DidMergeNotify(topTransaction, tint, didMerge, result);
 

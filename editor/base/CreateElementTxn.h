@@ -63,23 +63,17 @@ public:
 
   virtual ~CreateElementTxn();
 
-  NS_IMETHOD Do(void);
+  NS_IMETHOD DoTransaction(void);
 
-  NS_IMETHOD Undo(void);
+  NS_IMETHOD UndoTransaction(void);
 
-  NS_IMETHOD Redo(void);
+  NS_IMETHOD RedoTransaction(void);
 
-  NS_IMETHOD Merge(PRBool *aDidMerge, nsITransaction *aTransaction);
+  NS_IMETHOD Merge(nsITransaction *aTransaction, PRBool *aDidMerge);
 
-  NS_IMETHOD Write(nsIOutputStream *aOutputStream);
-
-  NS_IMETHOD GetUndoString(nsString *aString);
-
-  NS_IMETHOD GetRedoString(nsString *aString);
+  NS_IMETHOD GetTxnDescription(nsAWritableString& aTxnDescription);
 
   NS_IMETHOD GetNewNode(nsIDOMNode **aNewNode);
-
-  enum { kTransactionID = 11140 };
 
 protected:
   

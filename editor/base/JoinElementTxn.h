@@ -39,7 +39,8 @@ class nsEditor;
  * A transaction that joins two elements E1 (left node) and E2 (right node)
  * into a single node E.  
  * The children of E are the children of E1 followed by the children of E2.
- * After Do() and Redo(), E1 is removed from the content tree and E2 remains.
+ * After DoTransaction() and RedoTransaction(), E1 is removed from the content
+ * tree and E2 remains.
  */
 class JoinElementTxn : public EditTxn
 {
@@ -62,23 +63,17 @@ public:
 
   virtual ~JoinElementTxn();
 
-  NS_IMETHOD Do(void);
+  NS_IMETHOD DoTransaction(void);
 
-  NS_IMETHOD Undo(void);
+  NS_IMETHOD UndoTransaction(void);
 
-//  NS_IMETHOD Redo(void);
+//  NS_IMETHOD RedoTransaction(void);
 
   NS_IMETHOD GetIsTransient(PRBool *aIsTransient);
 
-  NS_IMETHOD Merge(PRBool *aDidMerge, nsITransaction *aTransaction);
+  NS_IMETHOD Merge(nsITransaction *aTransaction, PRBool *aDidMerge);
 
-  NS_IMETHOD Write(nsIOutputStream *aOutputStream);
-
-  NS_IMETHOD GetUndoString(nsString *aString);
-
-  NS_IMETHOD GetRedoString(nsString *aString);
-
-  enum { kTransactionID = 11200 };
+  NS_IMETHOD GetTxnDescription(nsAWritableString& aTxnDescription);
 
 protected:
   

@@ -385,3 +385,69 @@ function EditorTableize()
   window._content.focus();
 }
 
+// --------------------------- TransactionManager ---------------------------
+
+
+function DumpUndoStack()
+{
+  try {
+    var txmgr = editorShell.transactionManager;
+
+    if (!txmgr)
+    {
+      dump("**** Editor has no TransactionManager!\n");
+      return;
+    }
+
+    dump("---------------------- BEGIN UNDO STACK DUMP\n");
+    dump("<!-- Bottom of Stack -->\n");
+    PrintTxnList(txmgr.getUndoList(), "");
+    dump("<!--  Top of Stack  -->\n");
+    dump("Num Undo Items: " + txmgr.numberOfUndoItems + "\n");
+    dump("---------------------- END   UNDO STACK DUMP\n");
+  } catch (e) {
+    dump("ERROR: DumpUndoStack() failed: " + e);
+  }
+}
+
+function DumpRedoStack()
+{
+  try {
+    var txmgr = editorShell.transactionManager;
+
+    if (!txmgr)
+    {
+      dump("**** Editor has no TransactionManager!\n");
+      return;
+    }
+
+    dump("---------------------- BEGIN REDO STACK DUMP\n");
+    dump("<!-- Bottom of Stack -->\n");
+    PrintTxnList(txmgr.getRedoList(), "");
+    dump("<!--  Top of Stack  -->\n");
+    dump("Num Redo Items: " + txmgr.numberOfRedoItems + "\n");
+    dump("---------------------- END   REDO STACK DUMP\n");
+  } catch (e) {
+    dump("ERROR: DumpUndoStack() failed: " + e);
+  }
+}
+
+function PrintTxnList(txnList, prefixStr)
+{
+  var i;
+
+  for (i=0 ; i < txnList.numItems; i++)
+  {
+    var txn = txnList.getItem(i);
+    var desc = "TXMgr Batch";
+
+    if (txn)
+    {
+      txn = txn.QueryInterface(Components.interfaces.nsPIEditorTransaction);
+      desc = txn.txnDescription;
+    }
+    dump(prefixStr + "+ " + desc + "\n");
+    PrintTxnList(txnList.getChildListForItem(i), prefixStr + "|    ");
+  }
+}
+

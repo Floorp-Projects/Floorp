@@ -38,8 +38,6 @@ AddStyleSheetTxn::AddStyleSheetTxn()
 :  EditTxn()
 ,  mEditor(NULL)
 {
-  SetTransactionDescriptionID( kTransactionID );
-  /* log description initialized in parent constructor */
 }
 
 AddStyleSheetTxn::~AddStyleSheetTxn()
@@ -63,7 +61,7 @@ AddStyleSheetTxn::Init(nsIEditor *aEditor, nsICSSStyleSheet *aSheet)
 
 
 NS_IMETHODIMP
-AddStyleSheetTxn::Do()
+AddStyleSheetTxn::DoTransaction()
 {
   if (!mEditor || !mSheet)
     return NS_ERROR_NOT_INITIALIZED;
@@ -100,7 +98,7 @@ AddStyleSheetTxn::Do()
 }
 
 NS_IMETHODIMP
-AddStyleSheetTxn::Undo()
+AddStyleSheetTxn::UndoTransaction()
 {
   if (!mEditor || !mSheet)
     return NS_ERROR_NOT_INITIALIZED;
@@ -136,13 +134,13 @@ AddStyleSheetTxn::Undo()
 }
 
 NS_IMETHODIMP
-AddStyleSheetTxn::Redo()
+AddStyleSheetTxn::RedoTransaction()
 {
-   return Do();
+   return DoTransaction();
 }
 
 NS_IMETHODIMP
-AddStyleSheetTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
+AddStyleSheetTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
 {
   // set out param default value
   if (!aDidMerge)
@@ -153,28 +151,9 @@ AddStyleSheetTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
 }
 
 NS_IMETHODIMP
-AddStyleSheetTxn::Write(nsIOutputStream *aOutputStream)
+AddStyleSheetTxn::GetTxnDescription(nsAWritableString& aString)
 {
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-AddStyleSheetTxn::GetUndoString(nsString *aString)
-{
-  if (aString)
-  {
-    aString->AssignWithConversion("Remove Style Sheet");
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-AddStyleSheetTxn::GetRedoString(nsString *aString)
-{
-  if (aString)
-  {
-    aString->AssignWithConversion("Add Style Sheet");
-  }
+  aString.Assign(NS_LITERAL_STRING("AddStyleSheetTxn"));
   return NS_OK;
 }
 
@@ -187,7 +166,6 @@ RemoveStyleSheetTxn::RemoveStyleSheetTxn()
 :  EditTxn()
 ,  mEditor(NULL)
 {
-  SetTransactionDescriptionID( kTransactionID );
 }
 
 RemoveStyleSheetTxn::~RemoveStyleSheetTxn()
@@ -211,7 +189,7 @@ RemoveStyleSheetTxn::Init(nsIEditor *aEditor, nsICSSStyleSheet *aSheet)
 
 
 NS_IMETHODIMP
-RemoveStyleSheetTxn::Do()
+RemoveStyleSheetTxn::DoTransaction()
 {
   if (!mEditor || !mSheet)
     return NS_ERROR_NOT_INITIALIZED;
@@ -247,7 +225,7 @@ RemoveStyleSheetTxn::Do()
 }
 
 NS_IMETHODIMP
-RemoveStyleSheetTxn::Undo()
+RemoveStyleSheetTxn::UndoTransaction()
 {
   if (!mEditor || !mSheet)
     return NS_ERROR_NOT_INITIALIZED;
@@ -283,13 +261,13 @@ RemoveStyleSheetTxn::Undo()
 }
 
 NS_IMETHODIMP
-RemoveStyleSheetTxn::Redo()
+RemoveStyleSheetTxn::RedoTransaction()
 {
-   return Do();
+   return DoTransaction();
 }
 
 NS_IMETHODIMP
-RemoveStyleSheetTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
+RemoveStyleSheetTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
 {
   // set out param default value
   if (!aDidMerge)
@@ -300,27 +278,8 @@ RemoveStyleSheetTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
 }
 
 NS_IMETHODIMP
-RemoveStyleSheetTxn::Write(nsIOutputStream *aOutputStream)
+RemoveStyleSheetTxn::GetTxnDescription(nsAWritableString& aString)
 {
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-RemoveStyleSheetTxn::GetUndoString(nsString *aString)
-{
-  if (aString)
-  {
-    aString->AssignWithConversion("Add Style Sheet");
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-RemoveStyleSheetTxn::GetRedoString(nsString *aString)
-{
-  if (aString)
-  {
-    aString->AssignWithConversion("Remove Style Sheet");
-  }
+  aString.Assign(NS_LITERAL_STRING("RemoveStyleSheetTxn"));
   return NS_OK;
 }

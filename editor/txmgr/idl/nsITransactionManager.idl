@@ -24,7 +24,6 @@
 #include "nsITransaction.idl"
 #include "nsITransactionList.idl"
 #include "nsITransactionListener.idl"
-#include "nsIOutputStream.idl"
 
 %{ C++
 
@@ -137,14 +136,6 @@ interface nsITransactionManager : nsISupports
    * index 'n-1' in the list, where 'n' is the number of items in the list.
    */
   nsITransactionList getRedoList();
-
-  /**
-   * Writes a stream representation of the transaction manager and it's
-   * execution stacks. Calls the Write() method of each transaction on the
-   * execution stacks.
-   * @param aOutputStream the stream to write to.
-   */
-  void Write(in nsIOutputStream aOutputStream);
 
   /**
    * Adds a listener to the transaction manager's notification list. Listeners

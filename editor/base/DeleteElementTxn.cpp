@@ -35,8 +35,6 @@ static const PRBool gNoisy = PR_FALSE;
 DeleteElementTxn::DeleteElementTxn()
   : EditTxn()
 {
-  SetTransactionDescriptionID( kTransactionID );
-  /* log description initialized in parent constructor */
 }
 
 NS_IMETHODIMP DeleteElementTxn::Init(nsIDOMNode *aElement)
@@ -54,7 +52,7 @@ DeleteElementTxn::~DeleteElementTxn()
 {
 }
 
-NS_IMETHODIMP DeleteElementTxn::Do(void)
+NS_IMETHODIMP DeleteElementTxn::DoTransaction(void)
 {
   if (gNoisy) { printf("%p Do Delete Element element = %p\n", this, mElement.get()); }
   if (!mElement) return NS_ERROR_NOT_INITIALIZED;
@@ -96,7 +94,7 @@ NS_IMETHODIMP DeleteElementTxn::Do(void)
   return result;
 }
 
-NS_IMETHODIMP DeleteElementTxn::Undo(void)
+NS_IMETHODIMP DeleteElementTxn::UndoTransaction(void)
 {
   if (gNoisy) { printf("%p Undo Delete Element element = %p, parent = %p\n", this, mElement.get(), mParent.get()); }
   if (!mParent) { return NS_OK; } // this is a legal state, the txn is a no-op
@@ -132,7 +130,7 @@ NS_IMETHODIMP DeleteElementTxn::Undo(void)
   return result;
 }
 
-NS_IMETHODIMP DeleteElementTxn::Redo(void)
+NS_IMETHODIMP DeleteElementTxn::RedoTransaction(void)
 {
   if (gNoisy) { printf("%p Redo Delete Element element = %p, parent = %p\n", this, mElement.get(), mParent.get()); }
   if (!mParent) { return NS_OK; } // this is a legal state, the txn is a no-op
@@ -144,32 +142,15 @@ NS_IMETHODIMP DeleteElementTxn::Redo(void)
 }
 
 
-NS_IMETHODIMP DeleteElementTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
+NS_IMETHODIMP DeleteElementTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
 {
   if (nsnull!=aDidMerge)
     *aDidMerge=PR_FALSE;
   return NS_OK;
 }
 
-NS_IMETHODIMP DeleteElementTxn::Write(nsIOutputStream *aOutputStream)
+NS_IMETHODIMP DeleteElementTxn::GetTxnDescription(nsAWritableString& aString)
 {
-  return NS_OK;
-}
-
-NS_IMETHODIMP DeleteElementTxn::GetUndoString(nsString *aString)
-{
-  if (nsnull!=aString)
-  {
-    aString->AssignWithConversion("Insert Element: ");
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP DeleteElementTxn::GetRedoString(nsString *aString)
-{
-  if (nsnull!=aString)
-  {
-    aString->AssignWithConversion("Remove Element: ");
-  }
+  aString.Assign(NS_LITERAL_STRING("DeleteElementTxn"));
   return NS_OK;
 }

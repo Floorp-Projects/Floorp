@@ -20,18 +20,21 @@
 # Contributor(s): 
 # 
 
-DEPTH		= ../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH     = ../../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= txmgr
+MODULE = txmgr
 
-XPIDLSRCS = \
-		nsITransactionDescription.idl \
-		$(NULL)
+XPIDLSRCS =                               \
+            nsITransaction.idl            \
+            nsITransactionList.idl        \
+            nsITransactionListener.idl    \
+            nsITransactionManager.idl     \
+            $(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

@@ -24,6 +24,7 @@
 #define nsTransactionList_h__
 
 #include "nsWeakReference.h"
+#include "nsITransactionList.h"
 
 class nsITransaction;
 class nsITransactionManager;

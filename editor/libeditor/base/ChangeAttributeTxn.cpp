@@ -27,8 +27,6 @@
 ChangeAttributeTxn::ChangeAttributeTxn()
   : EditTxn()
 {
-  SetTransactionDescriptionID( kTransactionID );
-  /* log description initialized in parent constructor */
 }
 
 ChangeAttributeTxn::~ChangeAttributeTxn()
@@ -54,7 +52,7 @@ NS_IMETHODIMP ChangeAttributeTxn::Init(nsIEditor      *aEditor,
   return NS_OK;
 }
 
-NS_IMETHODIMP ChangeAttributeTxn::Do(void)
+NS_IMETHODIMP ChangeAttributeTxn::DoTransaction(void)
 {
 	NS_ASSERTION(mEditor && mElement, "bad state");
 	if (!mEditor || !mElement) { return NS_ERROR_NOT_INITIALIZED; }
@@ -75,7 +73,7 @@ NS_IMETHODIMP ChangeAttributeTxn::Do(void)
   return result;
 }
 
-NS_IMETHODIMP ChangeAttributeTxn::Undo(void)
+NS_IMETHODIMP ChangeAttributeTxn::UndoTransaction(void)
 {
 	NS_ASSERTION(mEditor && mElement, "bad state");
 	if (!mEditor || !mElement) { return NS_ERROR_NOT_INITIALIZED; }
@@ -89,7 +87,7 @@ NS_IMETHODIMP ChangeAttributeTxn::Undo(void)
   return result;
 }
 
-NS_IMETHODIMP ChangeAttributeTxn::Redo(void)
+NS_IMETHODIMP ChangeAttributeTxn::RedoTransaction(void)
 {
 	NS_ASSERTION(mEditor && mElement, "bad state");
 	if (!mEditor || !mElement) { return NS_ERROR_NOT_INITIALIZED; }
@@ -104,40 +102,21 @@ NS_IMETHODIMP ChangeAttributeTxn::Redo(void)
   return result;
 }
 
-NS_IMETHODIMP ChangeAttributeTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
+NS_IMETHODIMP ChangeAttributeTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
 {
   if (nsnull!=aDidMerge)
     *aDidMerge=PR_FALSE;
   return NS_OK;
 }
 
-NS_IMETHODIMP ChangeAttributeTxn::Write(nsIOutputStream *aOutputStream)
+NS_IMETHODIMP ChangeAttributeTxn::GetTxnDescription(nsAWritableString& aString)
 {
-  return NS_OK;
-}
+  aString.Assign(NS_LITERAL_STRING("ChangeAttributeTxn: "));
 
-NS_IMETHODIMP ChangeAttributeTxn::GetUndoString(nsString *aString)
-{
-  if (nsnull!=aString)
-  {
-    if (PR_FALSE==mRemoveAttribute)
-      aString->AssignWithConversion("Change Attribute: ");
-    else
-      aString->AssignWithConversion("Remove Attribute: ");
-    *aString += mAttribute;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP ChangeAttributeTxn::GetRedoString(nsString *aString)
-{
-  if (nsnull!=aString)
-  {
-    if (PR_FALSE==mRemoveAttribute)
-      aString->AssignWithConversion("Change Attribute: ");
-    else
-      aString->AssignWithConversion("Add Attribute: ");
-    *aString += mAttribute;
-  }
+  if (PR_FALSE==mRemoveAttribute)
+    aString += NS_LITERAL_STRING("[mRemoveAttribute == false] ");
+  else
+    aString += NS_LITERAL_STRING("[mRemoveAttribute == true] ");
+  aString += mAttribute;
   return NS_OK;
 }

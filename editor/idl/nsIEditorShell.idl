@@ -26,6 +26,7 @@
 #include "nsISupportsArray.idl"
 #include "nsIDocumentStateListener.idl"
 #include "nsISelectionController.idl"
+#include "nsITransactionManager.idl"
 
 %{C++
 
@@ -42,15 +43,16 @@ interface nsIEditor;
 [scriptable, uuid(9afff72b-ca9a-11d2-96c9-0060b0fb9956)]
 interface nsIEditorShell : nsISupports
 {
-  readonly attribute nsIDOMDocument    editorDocument;
-  readonly attribute nsISelection   editorSelection;
-  readonly attribute nsISelectionController   selectionController;
+  readonly attribute nsIDOMDocument         editorDocument;
+  readonly attribute nsISelection           editorSelection;
+  readonly attribute nsISelectionController selectionController;
+  readonly attribute nsITransactionManager  transactionManager;
   
-           attribute nsIDOMWindowInternal      webShellWindow;
-           attribute nsIDOMWindowInternal      contentWindow;
-           attribute wstring           editorType;
+  attribute nsIDOMWindowInternal webShellWindow;
+  attribute nsIDOMWindowInternal contentWindow;
+  attribute wstring              editorType;
            
-  [noscript] readonly attribute nsIEditor         editor;
+  [noscript] readonly attribute nsIEditor editor;
   
 %{C++
 

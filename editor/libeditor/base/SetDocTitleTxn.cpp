@@ -36,8 +36,6 @@ SetDocTitleTxn::SetDocTitleTxn()
   : EditTxn()
 , mIsTransient(PR_FALSE)
 {
-  SetTransactionDescriptionID( kTransactionID );
-  /* log description initialized in parent constructor */
 }
 
 NS_IMETHODIMP SetDocTitleTxn::Init(nsIHTMLEditor *aEditor,
@@ -57,7 +55,7 @@ SetDocTitleTxn::~SetDocTitleTxn()
 {
 }
 
-NS_IMETHODIMP SetDocTitleTxn::Do(void)
+NS_IMETHODIMP SetDocTitleTxn::DoTransaction(void)
 {
   nsresult res = SetDomTitle(mValue);
   if (NS_FAILED(res)) return res;
@@ -65,12 +63,12 @@ NS_IMETHODIMP SetDocTitleTxn::Do(void)
   return SetDocTitle(mValue);
 }
 
-NS_IMETHODIMP SetDocTitleTxn::Undo(void)
+NS_IMETHODIMP SetDocTitleTxn::UndoTransaction(void)
 {
   return SetDocTitle(mUndoValue);
 }
 
-NS_IMETHODIMP SetDocTitleTxn::Redo(void)
+NS_IMETHODIMP SetDocTitleTxn::RedoTransaction(void)
 {
   return SetDocTitle(mValue);
 }
@@ -208,35 +206,17 @@ nsresult SetDocTitleTxn::SetDomTitle(nsString& aTitle)
   return res;
 }
 
-NS_IMETHODIMP SetDocTitleTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
+NS_IMETHODIMP SetDocTitleTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
 {
   if (nsnull!=aDidMerge)
     *aDidMerge=PR_FALSE;
   return NS_OK;
 }
 
-NS_IMETHODIMP SetDocTitleTxn::Write(nsIOutputStream *aOutputStream)
+NS_IMETHODIMP SetDocTitleTxn::GetTxnDescription(nsAWritableString& aString)
 {
-  return NS_OK;
-}
-
-NS_IMETHODIMP SetDocTitleTxn::GetUndoString(nsString *aString)
-{
-  if (nsnull!=aString)
-  {
-    aString->AssignWithConversion("Restore Document Title: ");
-    *aString += mUndoValue;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP SetDocTitleTxn::GetRedoString(nsString *aString)
-{
-  if (nsnull!=aString)
-  {
-    aString->AssignWithConversion("Set Document Title: ");
-    *aString += mValue;
-  }
+  aString.Assign(NS_LITERAL_STRING("SetDocTitleTxn: "));
+  aString += mValue;
   return NS_OK;
 }
 

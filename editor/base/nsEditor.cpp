@@ -423,10 +423,10 @@ nsEditor::Do(nsITransaction *aTxn)
 
     selPrivate->StartBatchChanges();
     if (mTxnMgr) {
-      result = mTxnMgr->Do(aTxn);
+      result = mTxnMgr->DoTransaction(aTxn);
     }
     else {
-      result = aTxn->Do();
+      result = aTxn->DoTransaction();
     }
     if (NS_SUCCEEDED(result)) {
       result = DoAfterDoTransaction(aTxn);
@@ -500,7 +500,7 @@ nsEditor::Undo(PRUint32 aCount)
     PRUint32 i=0;
     for ( ; i<aCount; i++)
     {
-      result = mTxnMgr->Undo();
+      result = mTxnMgr->UndoTransaction();
 
       if (NS_SUCCEEDED(result))
         result = DoAfterUndoTransaction();
@@ -544,7 +544,7 @@ nsEditor::Redo(PRUint32 aCount)
     PRUint32 i=0;
     for ( ; i<aCount; i++)
     {
-      result = mTxnMgr->Redo();
+      result = mTxnMgr->RedoTransaction();
 
       if (NS_SUCCEEDED(result))
         result = DoAfterRedoTransaction();
@@ -1015,7 +1015,7 @@ NS_IMETHODIMP nsEditor::CreateNode(const nsString& aTag,
     if (NS_SUCCEEDED(result)) 
     {
       result = txn->GetNewNode(aNewNode);
-      NS_ASSERTION((NS_SUCCEEDED(result)), "GetNewNode can't fail if txn::Do succeeded.");
+      NS_ASSERTION((NS_SUCCEEDED(result)), "GetNewNode can't fail if txn::DoTransaction succeeded.");
     }
   }
   // The transaction system (if any) has taken ownwership of txn
@@ -1771,9 +1771,8 @@ nsEditor::EndComposition(void)
   // Note that this means IME won't work without an undo stack!
   if (mTxnMgr) 
   {
-    nsITransaction *txn;
-    result = mTxnMgr->PeekUndoStack(&txn);  
-    // PeekUndoStack does not addref
+    nsCOMPtr<nsITransaction> txn;
+    result = mTxnMgr->PeekUndoStack(getter_AddRefs(txn));  
     nsCOMPtr<nsIAbsorbingTransaction> plcTxn = do_QueryInterface(txn);
     if (plcTxn)
     {

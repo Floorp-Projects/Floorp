@@ -24,9 +24,10 @@
 #define nsTransactionManager_h__
 
 #include "prmon.h"
+#include "nsWeakReference.h"
+#include "nsITransactionManager.h"
 
 class nsITransaction;
-class nsITransactionManager;
 class nsITransactionListener;
 class nsTransactionItem;
 class nsTransactionStack;
@@ -37,6 +38,7 @@ class nsVoidArray;
  *
  */
 class nsTransactionManager : public nsITransactionManager
+                           , public nsSupportsWeakReference
 {
 private:
 
@@ -62,27 +64,14 @@ public:
   NS_DECL_ISUPPORTS
 
   /* nsITransactionManager method implementations. */
-  NS_IMETHOD Do(nsITransaction *aTransaction);
-  NS_IMETHOD Undo(void);
-  NS_IMETHOD Redo(void);
-  NS_IMETHOD Clear(void);
-  NS_IMETHOD BeginBatch(void);
-  NS_IMETHOD EndBatch(void);
-  NS_IMETHOD GetNumberOfUndoItems(PRInt32 *aNumItems);
-  NS_IMETHOD GetNumberOfRedoItems(PRInt32 *aNumItems);
-  NS_IMETHOD SetMaxTransactionCount(PRInt32 aMaxCount);
-  NS_IMETHOD PeekUndoStack(nsITransaction **aTransaction);
-  NS_IMETHOD PeekRedoStack(nsITransaction **aTransaction);
-  NS_IMETHOD Write(nsIOutputStream *aOutputStream);
-  NS_IMETHOD AddListener(nsITransactionListener *aListener);
-  NS_IMETHOD RemoveListener(nsITransactionListener *aListener);
+  NS_DECL_NSITRANSACTIONMANAGER
 
   /* nsTransactionManager specific methods. */
   virtual nsresult ClearUndoStack(void);
   virtual nsresult ClearRedoStack(void);
 
   virtual nsresult WillDoNotify(nsITransaction *aTransaction, PRBool *aInterrupt);
-  virtual nsresult DidDoNotify(nsITransaction *aTransaction, nsresult aDoResult);
+  virtual nsresult DidDoNotify(nsITransaction *aTransaction, nsresult aExecuteResult);
   virtual nsresult WillUndoNotify(nsITransaction *aTransaction, PRBool *aInterrupt);
   virtual nsresult DidUndoNotify(nsITransaction *aTransaction, nsresult aUndoResult);
   virtual nsresult WillRedoNotify(nsITransaction *aTransaction, PRBool *aInterrupt);

@@ -39,7 +39,6 @@ CPPSRCS =                         \
       DeleteTextTxn.cpp           \
       EditAggregateTxn.cpp        \
       EditTxn.cpp                 \
-      IMECommitTxn.cpp            \
       IMETextTxn.cpp              \
       InsertElementTxn.cpp        \
       InsertTextTxn.cpp           \
@@ -70,7 +69,6 @@ CPP_OBJS =                                \
   .\$(OBJDIR)\DeleteTextTxn.obj           \
   .\$(OBJDIR)\EditAggregateTxn.obj        \
   .\$(OBJDIR)\EditTxn.obj                 \
-  .\$(OBJDIR)\IMECommitTxn.obj            \
   .\$(OBJDIR)\IMETextTxn.obj              \
   .\$(OBJDIR)\InsertElementTxn.obj        \
   .\$(OBJDIR)\InsertTextTxn.obj           \

@@ -50,21 +50,17 @@ public:
 
   virtual ~EditAggregateTxn();
 
-  NS_IMETHOD Do(void);
+  NS_IMETHOD DoTransaction(void);
 
-  NS_IMETHOD Undo(void);
+  NS_IMETHOD UndoTransaction(void);
 
-  NS_IMETHOD Redo(void);
+  NS_IMETHOD RedoTransaction(void);
 
   NS_IMETHOD GetIsTransient(PRBool *aIsTransient);
 
-  NS_IMETHOD Merge(PRBool *aDidMerge, nsITransaction *aTransaction);
+  NS_IMETHOD Merge(nsITransaction *aTransaction, PRBool *aDidMerge);
 
-  NS_IMETHOD Write(nsIOutputStream *aOutputStream);
-
-  NS_IMETHOD GetUndoString(nsString *aString);
-
-  NS_IMETHOD GetRedoString(nsString *aString);
+  NS_IMETHOD GetTxnDescription(nsAWritableString& aTxnDescription);
 
   /** append a transaction to this aggregate */
   NS_IMETHOD AppendChild(EditTxn *aTxn);
@@ -84,8 +80,6 @@ public:
 
   /** get the name assigned to this txn */
   NS_IMETHOD GetName(nsIAtom **aName);
-
-  enum { kTransactionID = 11210 };
 
 protected:
 

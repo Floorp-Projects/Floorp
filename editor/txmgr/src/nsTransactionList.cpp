@@ -22,7 +22,6 @@
 
 #include "nsITransactionManager.h"
 #include "nsTransactionItem.h"
-#include "nsITransactionList.h"
 #include "nsTransactionList.h"
 #include "nsTransactionStack.h"
 
