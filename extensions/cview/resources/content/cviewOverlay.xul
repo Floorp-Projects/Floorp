@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+
+<!--
+  The contents of this file are subject to the Mozilla Public
+  License Version 1.1 (the "License"); you may not use this file
+  except in compliance with the License. You may obtain a copy of
+  the License at http://www.mozilla.org/MPL/
+ 
+  Software distributed under the License is distributed on an "AS
+  IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  implied. See the License for the specific language governing
+  rights and limitations under the License.
+ 
+  The Original Code is mozilla.org code
+ 
+  The Initial Developer of the Original Code is Netscape
+  Communications Corporation.  Portions created by Netscape are
+  Copyright (C) 1998 Netscape Communications Corporation. All
+  Rights Reserved.
+ 
+  Contributor(s):
+   Robert Ginda, rginda@nestcape.com, original author
+-->
+
+<!--
+  This file is designed to overlay the tasks menu (which itself is an overlay),
+  placing the "Component Viewer" menu item under the tools submenu.
+
+  The mainfest.rdf tells mozilla that this file exists, without the correct
+  entry in manifest.rdf, this file will be ignored.
+-->
+
+<!DOCTYPE window SYSTEM "chrome://cview/locale/cviewOverlay.dtd" >
+
+<overlay id="CViewTaskMenuID"
+    xmlns:html="http://www.w3.org/TR/REC-html40"
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<html:script language="JavaScript"
+  src="chrome://cview/content/cviewOverlay.js"/>
+
+<!--
+  This is the id that the menuitem will be appended to.  see tasksOverlay.xul
+-->
+<menupopup id="toolsPopup">
+	<menuitem position="5" value="&cviewCmd.label;" oncommand="toCView()"/>
+</menupopup>
+
+</overlay>

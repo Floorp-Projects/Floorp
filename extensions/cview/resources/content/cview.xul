@@ -1,0 +1,226 @@
+<?xml version="1.0"?>
+
+<!--
+  The contents of this file are subject to the Mozilla Public
+  License Version 1.1 (the "License"); you may not use this file
+  except in compliance with the License. You may obtain a copy of
+  the License at http://www.mozilla.org/MPL/
+ 
+  Software distributed under the License is distributed on an "AS
+  IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  implied. See the License for the specific language governing
+  rights and limitations under the License.
+ 
+  The Original Code is mozilla.org code
+ 
+  The Initial Developer of the Original Code is Netscape
+  Communications Corporation.  Portions created by Netscape are
+  Copyright (C) 1998 Netscape Communications Corporation. All
+  Rights Reserved.
+ 
+  Contributor(s):
+   Robert Ginda, rginda@nestcape.com, original author
+-->
+
+<!DOCTYPE window>
+
+<?xml-stylesheet href="chrome://cview/skin" type="text/css"?>
+
+<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
+<?xul-overlay href="chrome://global/content/tasksOverlay.xul"?>
+<!--
+  including tasksOverlay.xul imports the tasks menu, it will appear
+  under the 'tasksMenu' <menu> below.
+-->
+
+<window id="main-window"
+        xmlns:html="http://www.w3.org/TR/REC-html40"
+        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns:xpcom="http://home.netscape.com/NC-xpcom#"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        align="vertical" onload="onLoad();" onunload="onUnload();"
+        persist="width height" title="XPCOM Component Viewer">
+<!--
+  note the xmlns:xpcom in the <window> tag, it's used in the <rule>s
+  below.
+  The persist attribute contains attributes that should be saved to
+  localstore.rdf when the window closes.  The next time this window is
+  opened, persisted properties will be automatically restored.
+-->
+  <html:script>
+    var DEBUG = true;
+  </html:script>
+<!--
+  debug needs to be set before loading the utility library.
+-->
+  <html:script src="chrome://cview/content/cview-utils.js"/>
+  <html:script src="chrome://cview/content/cview-rdf.js"/>
+  <html:script src="chrome://cview/content/cview-static.js"/>
+  <html:script src="chrome://cview/content/cview-handlers.js"/>
+
+  <popupset>
+    <popup id="interfacePopup">
+	  <menuitem value="LXR filename lookup"
+        oncommand="onLXRIFCLookup(event,'find?string=');"/>
+	  <menuitem value="LXR text lookup"
+        oncommand="onLXRIFCLookup(event, 'search?string=');"/>
+    </popup>
+  </popupset>
+<!--
+  This popup is the context menu for elements in the interfaces list.
+-->
+
+  <toolbox>
+    <menubar id="main-menubar">
+      <menu id="view-menu" value="View">
+        <menupopup>
+          <menu value="Components">
+            <menupopup>
+              <menuitem id="menu-cmp-show-all" value="All" checked="true"
+                type="checkbox"
+                oncommand="onChangeDisplayMode(event);"/>
+              <menuitem id="menu-cmp-show-contains"
+                value="Containing..." type="checkbox"
+                oncommand="onChangeDisplayMode(event);"/>
+              <menuitem id="menu-cmp-show-starts-with"
+                value="Starting with..." type="checkbox"
+                oncommand="onChangeDisplayMode(event);"/>
+            </menupopup>
+          </menu>
+          <menu value="Interfaces">
+            <menupopup>
+              <menuitem id="menu-ifc-show-all" value="All" checked="true"
+                type="checkbox"
+                oncommand="onChangeDisplayMode(event);"/>
+              <menuitem id="menu-ifc-show-contains"
+                value="Containing..." type="checkbox"
+                oncommand="onChangeDisplayMode(event);"/>
+              <menuitem id="menu-ifc-show-starts-with"
+                value="Starting with..." type="checkbox"
+                oncommand="onChangeDisplayMode(event);"/>
+              <menuitem id="menu-ifc-show-implemented-by"
+                value="Implemented by selected component" 
+                type="checkbox"
+                oncommand="onChangeDisplayMode(event);"/>
+            </menupopup>
+          </menu>
+        </menupopup>  
+      </menu>
+      <menu id="tasksMenu"/>
+    </menubar>
+  </toolbox>
+
+  <box id="outer-box" flex="1">
+    <box id="component-box" align="vertical" flex="1">
+    <text id="component-label" value="Components..."/>
+    <tree id="component-list" container="true" datasources="rdf:null" flex="1"
+      containment="http://home.netscape.com/NC-xpcom#component">
+
+      <template>
+        <rule xpcom:show="false"/>
+<!--
+  xpcom: here refers to the namespace declared in the <window> tag.  If the
+  resource has a http://home.netscape.com/NC-xpcom#show arc pointing the
+  literal value "false", no content will be created for that resource
+-->
+        <rule xpcom:show="true">
+<!--
+  If, on the otherhand, the resource has a
+  http://home.netscape.com/NC-xpcom#show arc pointing the literal value
+  "true", the following content will be created.
+-->
+        <treechildren>
+          <treeitem uri="...">
+            <treerow onclick="onComponentClick(event);"
+              progid="rdf:http://home.netscape.com/NC-xpcom#progid">
+<!--
+  Even though we specified the onClick handler as an attribute of the
+  <treerow> tag, the event's target will be the <treecell>.  We compensate
+  by looking at the target's parentNode.  See
+  cview-handlers.js:onComponentClick().
+-->
+                <treecell>
+                  <text value="rdf:http://home.netscape.com/NC-xpcom#progid"/>
+                </treecell>
+                <treecell>
+                  <text value="rdf:http://home.netscape.com/NC-xpcom#clsid"/>
+                </treecell>
+            </treerow>
+          </treeitem>
+        </treechildren>
+        </rule>
+      </template>
+
+      <treecolgroup>
+        <treecol
+          rdf:resource="http://home.netscape.com/NC-xpcom#progid"/>
+        <treecol
+          rdf:resource="http://home.netscape.com/NC-xpcom#clsid"/>
+      </treecolgroup>
+
+      <treehead>
+        <treerow>
+          <treecell id="componentcol-progid"
+            rdf:resource="http://home.netscape.com/NC-xpcom#progid"
+            class="treecell-header sortDirectionIndicator" value="ProgID"
+            onclick="return onSortCol('componentcol-progid');"/>
+          <treecell id="componentcol-clsid"
+            rdf:resource="http://home.netscape.com/NC-xpcom#clsid"
+            class="treecell-header sortDirectionIndicator" value="CLSID"
+            onclick="return onSortCol('componentcol-clsid');"/>
+        </treerow>
+      </treehead>
+    </tree>
+    </box>
+
+    <splitter id="main-splitter" align="vertical" collapse="before"/>
+
+    <box id="interface-box" align="vertical" flex="1">
+    <text id="interface-label" value="Interfaces..."/>
+    <tree id="interface-list" container="true" datasources="rdf:null" flex="1"
+      containment="http://home.netscape.com/NC-xpcom#interface">
+
+      <template>
+        <rule xpcom:show="false"/>
+        <rule xpcom:show="true">
+        <treechildren>
+          <treeitem uri="...">
+            <treerow onclick="onInterfaceClick(event);"
+              iname="rdf:http://home.netscape.com/NC-xpcom#iname"
+              context="interfacePopup">
+                <treecell>
+                  <text value="rdf:http://home.netscape.com/NC-xpcom#iname"/>
+                </treecell>
+                <treecell>
+                  <text value="rdf:http://home.netscape.com/NC-xpcom#iid"/>
+                </treecell>
+            </treerow>
+          </treeitem>
+        </treechildren>
+        </rule>
+      </template>
+
+      <treecolgroup>
+        <treecol
+          rdf:resource="http://home.netscape.com/NC-xpcom#iname"/>
+        <treecol
+          rdf:resource="http://home.netscape.com/NC-xpcom#iid"/>
+      </treecolgroup>
+
+      <treehead>
+        <treerow>
+          <treecell id="interfacecol-iname"
+            rdf:resource="http://home.netscape.com/NC-xpcom#iname"
+            class="treecell-header sortDirectionIndicator" value="Interface"
+            onclick="return onSortCol('interfacecol-iname');"/>
+          <treecell id="interfacecol-iid"
+            rdf:resource="http://home.netscape.com/NC-xpcom#iid"
+            class="treecell-header sortDirectionIndicator" value="IID"
+            onclick="return onSortCol('interfacecol-iid');"/>
+        </treerow>
+      </treehead>
+    </tree>
+    </box>
+
+  </box>
+</window>
