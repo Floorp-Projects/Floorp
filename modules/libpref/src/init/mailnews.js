@@ -335,8 +335,7 @@ pref("ldap_2.servers.switchboard.serverName",					"ldap.switchboard.com");
 pref("ldap_2.user_id",											0);
 pref("ldap_2.version",											1); /* Update kCurrentListVersion in include/dirprefs.h if you change this */
 
-/* until bug #7417 gets fix, or until beta */
-pref("mailnews.start_page.url", "http://people.netscape.com/sspitzer/startpage.html");
+pref("mailnews.start_page.url", "http://messenger.netscape.com/bookmark/4_5/messengerstart.html");
 pref("mailnews.start_page.enabled", true);
 
 /* default prefs for Mozilla 5.0 */
