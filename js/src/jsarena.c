@@ -63,7 +63,7 @@ static JSArenaStats *arena_stats_list;
 #define JS_ARENA_DEFAULT_ALIGN  sizeof(double)
 
 JS_PUBLIC_API(void)
-JS_InitArenaPool(JSArenaPool *pool, const char *name, JSUint32 size, JSUint32 align)
+JS_InitArenaPool(JSArenaPool *pool, const char *name, size_t size, size_t align)
 {
 #ifdef JS_THREADSAFE
     /* Must come through here once in primordial thread to init safely! */
@@ -89,56 +89,92 @@ JS_InitArenaPool(JSArenaPool *pool, const char *name, JSUint32 size, JSUint32 al
 }
 
 /*
- * An allocation that consumes more than pool->arenasize also has a footer
- * pointing back to its previous arena's next member.  This footer is not
+ * An allocation that consumes more than pool->arenasize also has a header
+ * pointing back to its previous arena's next member.  This header is not
  * included in [a->base, a->limit), so its space can't be wrongly claimed.
  *
- * As the footer is a pointer, it must be well-aligned.  If pool->mask is
- * greater than or equal to POINTER_MASK, the footer starting at a->avail
- * for an oversized arena a is well-aligned.  If pool->mask is less than
- * POINTER_MASK, we must include enough space in FOOTER_SIZE to align the
- * back-pointer.  Given power-of-two alignment restrictions, that space is
- * POINTER_MASK - pool->mask.
+ * As the header is a pointer, it must be well-aligned.  If pool->mask is
+ * greater than or equal to POINTER_MASK, the header just preceding a->base
+ * for an oversized arena a is well-aligned, because a->base is well-aligned.
+ * However, we may need to add more space to pad the JSArena ** back-pointer
+ * so that it lies just behind a->base, because a might not be aligned such
+ * that (jsuword)(a + 1) is on a pointer boundary.
+ *
+ * By how much must we pad?  Let M be the alignment modulus for pool and P
+ * the modulus for a pointer.  Given M >= P, the greatest distance between a
+ * pointer aligned on an M boundary and one aligned on a P boundary is M-P.
+ * If M and P are powers of two, then M-P = (pool->mask - POINTER_MASK).
+ *
+ * How much extra padding might spill over unused into the remainder of the
+ * allocation, in the worst case (where M > P)?
+ *
+ * If we add M-P to the nominal back-pointer address and then round down to
+ * align on a P boundary, we will use at most M-P bytes of padding, and at
+ * least P (M > P => M >= 2P; M == 2P gives the least padding, P).  So if we
+ * use P bytes of padding, then we will overallocate a by P+M-1 bytes, as we
+ * also add M-1 to the estimated size in case malloc returns an odd pointer.
+ * a->limit must include this overestimation to satisfy a->avail in [a->base,
+ * a->limit].
+ *
+ * Similarly, if pool->mask is less than POINTER_MASK, we must include enough
+ * space in the header size to align the back-pointer on a P boundary so that
+ * it can be found by subtracting P from a->base.  This means a->base must be
+ * on a P boundary, even though subsequent allocations from a may be aligned
+ * on a lesser (M) boundary.  Given powers of two M and P as above, the extra
+ * space needed when P > M is P-M or POINTER_MASK - pool->mask.
+ *
+ * The size of a header including padding is given by the HEADER_SIZE macro,
+ * below, for any pool (for any value of M).
+ *
+ * The mask to align a->base for any pool is (pool->mask | POINTER_MASK), or
+ * HEADER_BASE_MASK(pool).
+ *
+ * PTR_TO_HEADER computes the address of the back-pointer, given an oversized
+ * allocation at p.  By definition, p must be a->base for the arena a that
+ * contains p.  GET_HEADER and SET_HEADER operate on an oversized arena a, in
+ * the case of SET_HEADER with back-pointer ap.
  */
 #define POINTER_MASK            ((jsuword)(JS_ALIGN_OF_POINTER - 1))
-#define FOOTER_MASK(pool)       (((pool)->mask < POINTER_MASK)                \
-                                 ? POINTER_MASK                               \
-                                 : (jsuword)0)
-#define FOOTER_SIZE(pool)       (sizeof(JSArena **)                           \
+#define HEADER_SIZE(pool)       (sizeof(JSArena **)                           \
                                  + (((pool)->mask < POINTER_MASK)             \
-                                    ? POINTER_MASK - pool->mask               \
-                                    : (jsuword)0))
-#define FOOTER_ALIGN(pool,q)    (((q) + FOOTER_MASK(pool)) & ~FOOTER_MASK(pool))
-#define FOOTER_ADDRESS(pool,q)  ((JSArena ***)FOOTER_ALIGN(pool, q))
-#define GET_FOOTER(pool,a)      (*FOOTER_ADDRESS(pool, (a)->avail))
-#define SET_FOOTER(pool,a,ap)   (*FOOTER_ADDRESS(pool, (a)->avail) = (ap))
+                                    ? POINTER_MASK - (pool)->mask             \
+                                    : (pool)->mask - POINTER_MASK))
+#define HEADER_BASE_MASK(pool)  ((pool)->mask | POINTER_MASK)
+#define PTR_TO_HEADER(pool,p)   (JS_ASSERT(((jsuword)(p)                      \
+                                            & HEADER_BASE_MASK(pool))         \
+                                           == 0),                             \
+                                 (JSArena ***)(p) - 1)
+#define GET_HEADER(pool,a)      (*PTR_TO_HEADER(pool, (a)->base))
+#define SET_HEADER(pool,a,ap)   (*PTR_TO_HEADER(pool, (a)->base) = (ap))
 
 JS_PUBLIC_API(void *)
-JS_ArenaAllocate(JSArenaPool *pool, JSUint32 nb)
+JS_ArenaAllocate(JSArenaPool *pool, size_t nb)
 {
     JSArena **ap, **bp, *a, *b;
-    JSUint32 extra, gross, sz;
+    jsuword extra, hdrsz, gross, sz;
     void *p;
 
-    ap = NULL;
+    /* Search pool from current forward till we find or make enough space. */
     JS_ASSERT((nb & pool->mask) == 0);
-    extra = (nb > pool->arenasize) ? FOOTER_SIZE(pool) : 0;
-    gross = nb + extra;
     for (a = pool->current; a->avail + nb > a->limit; pool->current = a) {
         ap = &a->next;
         if (!*ap) {
+            /* Not enough space in pool -- try to reclaim a free arena. */
+            extra = (nb > pool->arenasize) ? HEADER_SIZE(pool) : 0;
+            hdrsz = sizeof *a + extra + pool->mask;
+            gross = hdrsz + JS_MAX(nb, pool->arenasize);
             bp = &arena_freelist;
             JS_ACQUIRE_LOCK(arena_freelist_lock);
-            while ((b = *bp) != NULL) {         /* reclaim a free arena */
+            while ((b = *bp) != NULL) {
                 /*
-                 * Insist on exact arenasize match if gross is not greater than
+                 * Insist on exact arenasize match if nb is not greater than
                  * arenasize.  Otherwise take any arena big enough, but not by
                  * more than gross + arenasize.
                  */
-                sz = (JSUint32)(b->limit - b->base);
-                if ((gross > pool->arenasize)
+                sz = JS_UPTRDIFF(b->limit, b);
+                if (extra
                     ? sz >= gross && sz <= gross + pool->arenasize
-                    : sz == pool->arenasize) {
+                    : sz == gross) {
                     *bp = b->next;
                     JS_RELEASE_LOCK(arena_freelist_lock);
                     b->next = NULL;
@@ -147,49 +183,51 @@ JS_ArenaAllocate(JSArenaPool *pool, JSUint32 nb)
                 }
                 bp = &b->next;
             }
+
+            /* Nothing big enough on the freelist, so we must malloc. */
             JS_RELEASE_LOCK(arena_freelist_lock);
-            sz = JS_MAX(pool->arenasize, nb);   /* allocate a new arena */
-            sz += sizeof *a + pool->mask;       /* header and alignment slop */
-            b = (JSArena *) malloc(sz + extra); /* footer if oversized load */
+            b = (JSArena *) malloc(gross);
             if (!b)
                 return 0;
             b->next = NULL;
-            b->limit = (jsuword)b + sz;
+            b->limit = (jsuword)b + gross;
             JS_COUNT_ARENA(pool,++);
             COUNT(pool, nmallocs);
+
         claim:
+            /* If oversized, store ap in the header, just before a->base. */
             *ap = a = b;
-            a->base = a->avail = JS_ARENA_ALIGN(pool, a + 1);
+            JS_ASSERT(gross <= JS_UPTRDIFF(a->limit, a));
+            if (extra) {
+                a->base = a->avail =
+                    ((jsuword)a + hdrsz) & ~HEADER_BASE_MASK(pool);
+                SET_HEADER(pool, a, ap);
+            } else {
+                a->base = a->avail = JS_ARENA_ALIGN(pool, a + 1);
+            }
             continue;
         }
         a = *ap;                                /* move to next arena */
     }
+
     p = (void *)a->avail;
     a->avail += nb;
-
-    /*
-     * If oversized, store ap in the footer, which lies at a->avail, but which
-     * can't be overwritten by a further small allocation, because a->limit is
-     * at most pool->mask bytes after a->avail, and no allocation can be fewer
-     * than (pool->mask + 1) bytes.
-     */
-    if (extra && ap)
-        SET_FOOTER(pool, a, ap);
+    JS_ASSERT(a->base <= a->avail && a->avail <= a->limit);
     return p;
 }
 
 JS_PUBLIC_API(void *)
-JS_ArenaRealloc(JSArenaPool *pool, void *p, JSUint32 size, JSUint32 incr)
+JS_ArenaRealloc(JSArenaPool *pool, void *p, size_t size, size_t incr)
 {
     JSArena **ap, *a;
-    jsuword boff, aoff, netsize, gross;
+    jsuword boff, aoff, extra, hdrsz, gross;
 
     /*
-     * Use the oversized-single-allocation footer to avoid searching for ap.
-     * See JS_ArenaAllocate, the extra variable.
+     * Use the oversized-single-allocation header to avoid searching for ap.
+     * See JS_ArenaAllocate, the SET_HEADER call.
      */
     if (size > pool->arenasize) {
-        ap = *FOOTER_ADDRESS(pool, (jsuword)p + JS_ARENA_ALIGN(pool, size));
+        ap = *PTR_TO_HEADER(pool, p);
         a = *ap;
     } else {
         ap = &pool->first.next;
@@ -198,10 +236,11 @@ JS_ArenaRealloc(JSArenaPool *pool, void *p, JSUint32 size, JSUint32 incr)
     }
     JS_ASSERT(a->base == (jsuword)p);
     boff = JS_UPTRDIFF(a->base, a);
-    aoff = netsize = size + incr;
-    JS_ASSERT(netsize > pool->arenasize);
-    netsize += sizeof *a + pool->mask;          /* header and alignment slop */
-    gross = netsize + FOOTER_SIZE(pool);        /* oversized footer holds ap */
+    aoff = size + incr;
+    JS_ASSERT(aoff > pool->arenasize);
+    extra = HEADER_SIZE(pool);                  /* oversized header holds ap */
+    hdrsz = sizeof *a + extra + pool->mask;     /* header and alignment slop */
+    gross = hdrsz + aoff;
     a = (JSArena *) realloc(a, gross);
     if (!a)
         return NULL;
@@ -211,21 +250,22 @@ JS_ArenaRealloc(JSArenaPool *pool, void *p, JSUint32 size, JSUint32 incr)
 #ifdef JS_ARENAMETER
     pool->stats.nreallocs++;
 #endif
-    a->base = JS_ARENA_ALIGN(pool, a + 1);
-    a->limit = (jsuword)a + netsize;
+    a->base = ((jsuword)a + hdrsz) & ~HEADER_BASE_MASK(pool);
+    a->limit = (jsuword)a + gross;
     a->avail = JS_ARENA_ALIGN(pool, a->base + aoff);
+    JS_ASSERT(a->base <= a->avail && a->avail <= a->limit);
 
     /* Check whether realloc aligned differently, and copy if necessary. */
     if (boff != JS_UPTRDIFF(a->base, a))
         memmove((void *)a->base, (char *)a + boff, size);
 
-    /* Store ap in the oversized load footer. */
-    SET_FOOTER(pool, a, ap);
+    /* Store ap in the oversized-load arena header. */
+    SET_HEADER(pool, a, ap);
     return (void *)a->base;
 }
 
 JS_PUBLIC_API(void *)
-JS_ArenaGrow(JSArenaPool *pool, void *p, JSUint32 size, JSUint32 incr)
+JS_ArenaGrow(JSArenaPool *pool, void *p, size_t size, size_t incr)
 {
     void *newp;
 
@@ -293,8 +333,11 @@ JS_ArenaRelease(JSArenaPool *pool, char *mark)
     JSArena *a;
 
     for (a = &pool->first; a; a = a->next) {
+	JS_ASSERT(a->base <= a->avail && a->avail <= a->limit);
+
 	if (JS_UPTRDIFF(mark, a->base) <= JS_UPTRDIFF(a->avail, a->base)) {
 	    a->avail = JS_ARENA_ALIGN(pool, mark);
+            JS_ASSERT(a->avail <= a->limit);
 	    FreeArenaList(pool, a, JS_TRUE);
 	    return;
 	}
@@ -302,24 +345,26 @@ JS_ArenaRelease(JSArenaPool *pool, char *mark)
 }
 
 JS_PUBLIC_API(void)
-JS_ArenaFreeAllocation(JSArenaPool *pool, void *p, JSUint32 size)
+JS_ArenaFreeAllocation(JSArenaPool *pool, void *p, size_t size)
 {
-    jsuword q;
     JSArena **ap, *a, *b;
+    jsuword q;
 
     /*
-     * If the allocation is oversized, it consumes an entire arena, and there
-     * is a footer pointing back to its predecessor's next member.  Otherwise,
-     * we have to search pool for a.
+     * If the allocation is oversized, it consumes an entire arena, and it has
+     * a header just before the allocation pointing back to its predecessor's
+     * next member.  Otherwise, we have to search pool for a.
      */
-    q = (jsuword)p + size;
-    q = JS_ARENA_ALIGN(pool, q);
     if (size > pool->arenasize) {
-        ap = *FOOTER_ADDRESS(pool, q);
+        ap = *PTR_TO_HEADER(pool, p);
         a = *ap;
     } else {
+        q = (jsuword)p + size;
+        q = JS_ARENA_ALIGN(pool, q);
         ap = &pool->first.next;
         while ((a = *ap) != NULL) {
+            JS_ASSERT(a->base <= a->avail && a->avail <= a->limit);
+
             if (a->avail == q) {
                 /*
                  * If a is consumed by the allocation at p, we can free it to
@@ -349,12 +394,12 @@ JS_ArenaFreeAllocation(JSArenaPool *pool, void *p, JSUint32 size)
 
     /*
      * This is a non-LIFO deallocation, so take care to fix up a->next's back
-     * pointer in its footer, if a->next is oversized.
+     * pointer in its header, if a->next is oversized.
      */
     *ap = b = a->next;
     if (b && b->avail - b->base > pool->arenasize) {
-        JS_ASSERT(GET_FOOTER(pool, b) == &a->next);
-        SET_FOOTER(pool, b, ap);
+        JS_ASSERT(GET_HEADER(pool, b) == &a->next);
+        SET_HEADER(pool, b, ap);
     }
     JS_CLEAR_ARENA(a);
     JS_COUNT_ARENA(pool,--);
@@ -390,20 +435,6 @@ JS_FinishArenaPool(JSArenaPool *pool)
 }
 
 JS_PUBLIC_API(void)
-JS_CompactArenaPool(JSArenaPool *pool)
-{
-#if 0 /* XP_MAC */
-    JSArena *a = pool->first.next;
-
-    while (a) {
-        reallocSmaller(a, a->avail - (jsuword)a);
-        a->limit = a->avail;
-        a = a->next;
-    }
-#endif
-}
-
-JS_PUBLIC_API(void)
 JS_ArenaFinish()
 {
     JSArena *a, *next;
@@ -432,7 +463,7 @@ JS_ArenaShutDown(void)
 
 #ifdef JS_ARENAMETER
 JS_PUBLIC_API(void)
-JS_ArenaCountAllocation(JSArenaPool *pool, JSUint32 nb)
+JS_ArenaCountAllocation(JSArenaPool *pool, size_t nb)
 {
     pool->stats.nallocs++;
     pool->stats.nbytes += nb;
@@ -442,13 +473,13 @@ JS_ArenaCountAllocation(JSArenaPool *pool, JSUint32 nb)
 }
 
 JS_PUBLIC_API(void)
-JS_ArenaCountInplaceGrowth(JSArenaPool *pool, JSUint32 size, JSUint32 incr)
+JS_ArenaCountInplaceGrowth(JSArenaPool *pool, size_t size, size_t incr)
 {
     pool->stats.ninplace++;
 }
 
 JS_PUBLIC_API(void)
-JS_ArenaCountGrowth(JSArenaPool *pool, JSUint32 size, JSUint32 incr)
+JS_ArenaCountGrowth(JSArenaPool *pool, size_t size, size_t incr)
 {
     pool->stats.ngrows++;
     pool->stats.nbytes += incr;

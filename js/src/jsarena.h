@@ -95,7 +95,7 @@ struct JSArenaPool {
  * per ALLOCATE and GROW.
  */
 #ifdef JS_ARENA_CONST_ALIGN_MASK
-#define JS_ARENA_ALIGN(pool, n) (((jsuword)(n) + JS_ARENA_CONST_ALIGN_MASK) \
+#define JS_ARENA_ALIGN(pool, n) (((jsuword)(n) + JS_ARENA_CONST_ALIGN_MASK)   \
 				 & ~(jsuword)JS_ARENA_CONST_ALIGN_MASK)
 
 #define JS_INIT_ARENA_POOL(pool, name, size) \
@@ -169,6 +169,7 @@ struct JSArenaPool {
         if (_a != &(pool)->first &&                                           \
             JS_UPTRDIFF(_m, _a->base) <= JS_UPTRDIFF(_a->avail, _a->base)) {  \
             _a->avail = (jsuword)JS_ARENA_ALIGN(pool, _m);                    \
+            JS_ASSERT(_a->avail <= _a->limit);                                \
             JS_CLEAR_UNUSED(_a);                                              \
             JS_ArenaCountRetract(pool, _m);                                   \
         } else {                                                              \
@@ -198,8 +199,8 @@ struct JSArenaPool {
  * with a minimum size per arena of size bytes.
  */
 extern JS_PUBLIC_API(void)
-JS_InitArenaPool(JSArenaPool *pool, const char *name, JSUint32 size,
-                 JSUint32 align);
+JS_InitArenaPool(JSArenaPool *pool, const char *name, size_t size,
+                 size_t align);
 
 /*
  * Free the arenas in pool.  The user may continue to allocate from pool
@@ -214,12 +215,6 @@ JS_FreeArenaPool(JSArenaPool *pool);
  */
 extern JS_PUBLIC_API(void)
 JS_FinishArenaPool(JSArenaPool *pool);
-
-/*
- * Compact all of the arenas in a pool so that no space is wasted.
- */
-extern JS_PUBLIC_API(void)
-JS_CompactArenaPool(JSArenaPool *pool);
 
 /*
  * Finish using arenas, freeing all memory associated with them except for
@@ -246,13 +241,13 @@ JS_ArenaShutDown(void);
  * Friend functions used by the JS_ARENA_*() macros.
  */
 extern JS_PUBLIC_API(void *)
-JS_ArenaAllocate(JSArenaPool *pool, JSUint32 nb);
+JS_ArenaAllocate(JSArenaPool *pool, size_t nb);
 
 extern JS_PUBLIC_API(void *)
-JS_ArenaRealloc(JSArenaPool *pool, void *p, JSUint32 size, JSUint32 incr);
+JS_ArenaRealloc(JSArenaPool *pool, void *p, size_t size, size_t incr);
 
 extern JS_PUBLIC_API(void *)
-JS_ArenaGrow(JSArenaPool *pool, void *p, JSUint32 size, JSUint32 incr);
+JS_ArenaGrow(JSArenaPool *pool, void *p, size_t size, size_t incr);
 
 extern JS_PUBLIC_API(void)
 JS_ArenaRelease(JSArenaPool *pool, char *mark);
@@ -262,20 +257,20 @@ JS_ArenaRelease(JSArenaPool *pool, char *mark);
  * an entire JSArena, in which case the arena is returned to the malloc heap.
  */
 extern JS_PUBLIC_API(void)
-JS_ArenaFreeAllocation(JSArenaPool *pool, void *p, JSUint32 size);
+JS_ArenaFreeAllocation(JSArenaPool *pool, void *p, size_t size);
 
 #ifdef JS_ARENAMETER
 
 #include <stdio.h>
 
 extern JS_PUBLIC_API(void)
-JS_ArenaCountAllocation(JSArenaPool *pool, JSUint32 nb);
+JS_ArenaCountAllocation(JSArenaPool *pool, size_t nb);
 
 extern JS_PUBLIC_API(void)
-JS_ArenaCountInplaceGrowth(JSArenaPool *pool, JSUint32 size, JSUint32 incr);
+JS_ArenaCountInplaceGrowth(JSArenaPool *pool, size_t size, size_t incr);
 
 extern JS_PUBLIC_API(void)
-JS_ArenaCountGrowth(JSArenaPool *pool, JSUint32 size, JSUint32 incr);
+JS_ArenaCountGrowth(JSArenaPool *pool, size_t size, size_t incr);
 
 extern JS_PUBLIC_API(void)
 JS_ArenaCountRelease(JSArenaPool *pool, char *mark);
