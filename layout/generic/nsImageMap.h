@@ -150,7 +150,7 @@ protected:
   nsresult ChangeFocus(nsIDOMEvent* aEvent, PRBool aFocus);
   nsresult Invalidate(nsIPresContext* aPresContext, nsIFrame* aFrame, nsRect& aRect);
 
-  nsIDocument* mDocument;
+  nsIDocument* mDocument; // WEAK - the imagemap will not outlive the document
   nsIDOMHTMLMapElement* mDomMap;
   nsIContent* mMap;
   nsVoidArray mAreas;

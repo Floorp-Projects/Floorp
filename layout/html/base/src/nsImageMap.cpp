@@ -826,9 +826,7 @@ nsImageMap::~nsImageMap()
   FreeAreas();
   if (nsnull != mDocument) {
     mDocument->RemoveObserver(NS_STATIC_CAST(nsIDocumentObserver*, this));
-    NS_RELEASE(mDocument);
   }
-  NS_IF_RELEASE(mDomMap);
   NS_IF_RELEASE(mMap);
 }
 
@@ -877,13 +875,15 @@ nsImageMap::Init(nsIDOMHTMLMapElement* aMap)
     return NS_ERROR_NULL_POINTER;
   }
   mDomMap = aMap;
-  NS_ADDREF(aMap);
 
   nsresult rv = aMap->QueryInterface(kIContentIID, (void**) &mMap);
   if (NS_SUCCEEDED(rv)) {
     rv = mMap->GetDocument(mDocument);
     if (NS_SUCCEEDED(rv) && (nsnull != mDocument)) {
       mDocument->AddObserver(NS_STATIC_CAST(nsIDocumentObserver*, this));
+      // mDocument is a weak reference, so release the reference we got
+      nsIDocument *temp = mDocument;
+      NS_RELEASE(temp);
     }
   }
 
