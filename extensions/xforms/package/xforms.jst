@@ -1,4 +1,4 @@
-var err = initInstall("Mozilla XForms", "XForms", "0.1");
+var err = initInstall("Mozilla XForms", "XForms", "$Version$");
 logComment("initInstall: " + err);
 
 var fProgram = getFolder("Program");
@@ -7,9 +7,9 @@ var srComponents = $SpaceRequired$:components;
 
 if (verifyDiskSpace(fProgram, srChrome + srComponents))
 {
-  err = addDirectory("", "0.1", "components", fProgram, "components", true);
+  err = addDirectory("", "$Version$", "components", fProgram, "components", true);
   logComment("addDirectory components: " + err);
-  err = addDirectory("", "0.1", "chrome", fProgram, "chrome", true);
+  err = addDirectory("", "$Version$", "chrome", fProgram, "chrome", true);
   logComment("addDirectory chrome: " + err);
 
   registerChrome(PACKAGE | DELAYED_CHROME, getFolder("Chrome", "xforms.jar"),

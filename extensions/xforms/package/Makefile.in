@@ -58,6 +58,9 @@ PACKAGE_FILE = packages-unix
 endif
 endif
 
+GARBAGE		+= xforms.js xforms.template
+GARBAGE_DIRS	+= stage
+
 PACKAGE_VERSION = 0.1
 
 xpi:
