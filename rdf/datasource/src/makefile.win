@@ -27,6 +27,7 @@ CPP_OBJS=\
         .\$(OBJDIR)\nsFileSystemDataSource.obj  \
         .\$(OBJDIR)\nsFindDataSource.obj        \
         .\$(OBJDIR)\nsFTPDataSource.obj         \
+        .\$(OBJDIR)\nsLocalStore.obj            \
         .\$(OBJDIR)\nsXULContentSink.obj        \
         .\$(OBJDIR)\nsXULDataSource.obj         \
 	$(NULL)
