@@ -29,9 +29,9 @@
 
 // Sort State enum
 enum nsColumnSortState {
-	eColumnSortState_Unsorted;
-	eColumnSortState_Ascending;
-	eColumnSortState_Descending;
+	eColumnSortState_Unsorted,
+	eColumnSortState_Ascending,
+	eColumnSortState_Descending
 };
 
 class nsITreeColumn : public nsISupports
