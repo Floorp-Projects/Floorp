@@ -77,7 +77,6 @@ nsHTTPHandler::NewChannel(const char* verb, nsIURI* i_URL,
     {
         i_URL->GetScheme(&scheme);
         PRBool isHttp = PL_strcasecmp(scheme, "http") == 0;
-        nsCRT::free(scheme);
         if (isHttp)
         {
             nsHTTPChannel* pConn = nsnull;
