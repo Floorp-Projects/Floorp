@@ -1,9 +1,7 @@
 include $(top_srcdir)/common.mk
 
-noinst_LIBRARIES = libjs2.a
-
 bin_PROGRAMS = epimetheus
-
+DEFS = -DEPIMETHEUS
 epimetheus_DEPENDENCIES = $(LIBFDLIBM)
 epimetheus_SOURCES =  \
 	bytecodecontainer.cpp \

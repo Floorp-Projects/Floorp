@@ -64,7 +64,7 @@
                     js2val protoVal;
                     JS2Object *protoObj = meta->objectClass->prototype;
                     Multiname mn(prototype_StringAtom);
-                    LookupKind lookup(false, NULL);
+                    LookupKind lookup(false, JS2VAL_NULL);
                     if (meta->readProperty(a, &mn, &lookup, RunPhase, &protoVal)) {
                         if (!JS2VAL_IS_OBJECT(protoVal))
                             meta->reportError(Exception::badValueError, "Non-object prototype value", errorPos());

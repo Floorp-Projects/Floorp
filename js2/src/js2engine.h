@@ -149,6 +149,7 @@ class Frame;
 class JS2Object;
 class JS2Metadata;
 class BytecodeContainer;
+class JS2Class;
 
 class JS2Engine {
 public:

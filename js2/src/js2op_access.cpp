@@ -34,7 +34,7 @@
     // Read a multiname property from a base object, push the value onto the stack
     case eDotRead:
         {
-            LookupKind lookup(false, NULL);
+            LookupKind lookup(false, JS2VAL_NULL);
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
             b = pop();
@@ -46,7 +46,7 @@
 
     case eDotDelete:
         {
-            LookupKind lookup(false, NULL);
+            LookupKind lookup(false, JS2VAL_NULL);
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
             b = pop();
@@ -63,7 +63,7 @@
     case eDotWrite:
         {
             a = pop();
-            LookupKind lookup(false, NULL);
+            LookupKind lookup(false, JS2VAL_NULL);
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
             b = pop();
@@ -75,7 +75,7 @@
     // Read the multiname property, but leave the base and the value on the stack
     case eDotRef:
         {
-            LookupKind lookup(false, NULL);
+            LookupKind lookup(false, JS2VAL_NULL);
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
             b = top();
@@ -127,7 +127,7 @@
     // Read an index property from a base object, push the value onto the stack
     case eBracketRead:
         {
-            LookupKind lookup(false, NULL);
+            LookupKind lookup(false, JS2VAL_NULL);
             indexVal = pop();
             b = pop();
             const String *indexStr = meta->toString(indexVal);
@@ -141,7 +141,7 @@
 
     case eBracketDelete:
         {
-            LookupKind lookup(false, NULL);
+            LookupKind lookup(false, JS2VAL_NULL);
             indexVal = pop();
             b = pop();
             const String *indexStr = meta->toString(indexVal);
@@ -159,7 +159,7 @@
     // the value on the stack top
     case eBracketWrite:
         {
-            LookupKind lookup(false, NULL);
+            LookupKind lookup(false, JS2VAL_NULL);
             a = pop();
             indexVal = pop();
             b = pop();
@@ -174,7 +174,7 @@
     // Leave the base object on the stack and push the property value
     case eBracketRef:
         {
-            LookupKind lookup(false, NULL);
+            LookupKind lookup(false, JS2VAL_NULL);
             indexVal = pop();
             b = top();
             const String *indexStr = meta->toString(indexVal);
@@ -189,7 +189,7 @@
     // Leave the base object and index value, push the value
     case eBracketReadForRef:
         {
-            LookupKind lookup(false, NULL);
+            LookupKind lookup(false, JS2VAL_NULL);
             indexVal = pop();
             b = top();
             const String *indexStr = meta->toString(indexVal);
@@ -205,7 +205,7 @@
     // Beneath the value is a reference pair (base and index), write to that location but leave just the value
     case eBracketWriteRef:
         {
-            LookupKind lookup(false, NULL);
+            LookupKind lookup(false, JS2VAL_NULL);
             a = pop();
             indexVal = pop();
             ASSERT(JS2VAL_IS_STRING(indexVal));

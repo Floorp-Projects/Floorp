@@ -889,7 +889,7 @@
 
     case eDotPostInc:
         {
-            LookupKind lookup(false, NULL);
+            LookupKind lookup(false, JS2VAL_NULL);
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
             baseVal = pop();
@@ -903,7 +903,7 @@
         break;
     case eDotPostDec:
         {
-            LookupKind lookup(false, NULL);
+            LookupKind lookup(false, JS2VAL_NULL);
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
             baseVal = pop();
@@ -917,7 +917,7 @@
         break;
     case eDotPreInc:
         {
-            LookupKind lookup(false, NULL);
+            LookupKind lookup(false, JS2VAL_NULL);
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
             baseVal = pop();
@@ -931,7 +931,7 @@
         break;
     case eDotPreDec:
         {
-            LookupKind lookup(false, NULL);
+            LookupKind lookup(false, JS2VAL_NULL);
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
             baseVal = pop();
@@ -946,7 +946,7 @@
 
     case eBracketPostInc:
         {
-            LookupKind lookup(false, NULL);
+            LookupKind lookup(false, JS2VAL_NULL);
             indexVal = pop();
             baseVal = pop();
             const String *indexStr = meta->toString(indexVal);
@@ -962,7 +962,7 @@
         break;
     case eBracketPostDec:
         {
-            LookupKind lookup(false, NULL);
+            LookupKind lookup(false, JS2VAL_NULL);
             indexVal = pop();
             baseVal = pop();
             const String *indexStr = meta->toString(indexVal);
@@ -978,7 +978,7 @@
         break;
     case eBracketPreInc:
         {
-            LookupKind lookup(false, NULL);
+            LookupKind lookup(false, JS2VAL_NULL);
             indexVal = pop();
             baseVal = pop();
             const String *indexStr = meta->toString(indexVal);
@@ -994,7 +994,7 @@
         break;
     case eBracketPreDec:
         {
-            LookupKind lookup(false, NULL);
+            LookupKind lookup(false, JS2VAL_NULL);
             indexVal = pop();
             baseVal = pop();
             const String *indexStr = meta->toString(indexVal);

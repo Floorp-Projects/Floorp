@@ -3707,7 +3707,7 @@ deleteClassProperty:
         // if that's not available or returns a non primitive, throw a TypeError
 
         Multiname mn(engine->toString_StringAtom, publicNamespace);
-        LookupKind lookup(false, NULL);
+        LookupKind lookup(false, JS2VAL_NULL);
         js2val result;
         if (readProperty(x, &mn, &lookup, RunPhase, &result)) {
             if (JS2VAL_IS_OBJECT(result)) {

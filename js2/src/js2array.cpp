@@ -60,7 +60,7 @@ namespace MetaData {
 uint32 getLength(JS2Metadata *meta, JS2Object *obj)
 {
     Multiname mn(meta->engine->length_StringAtom, meta->publicNamespace);
-    LookupKind lookup(false, NULL);
+    LookupKind lookup(false, JS2VAL_NULL);
     uint32 length = 0;
     js2val result;
     if (meta->readDynamicProperty(obj, &mn, &lookup, RunPhase, &result))
@@ -121,7 +121,7 @@ static js2val Array_toString(JS2Metadata *meta, const js2val thisValue, js2val *
         return STRING_TO_JS2VAL(meta->engine->allocString(meta->engine->Empty_StringAtom));
     else {
         Multiname mn(NULL, meta->publicNamespace);
-        LookupKind lookup(false, NULL);
+        LookupKind lookup(false, JS2VAL_NULL);
         js2val result;
         String *s = new String();
         for (uint32 i = 0; i < length; i++) {
@@ -152,7 +152,7 @@ static js2val Array_toSource(JS2Metadata *meta, const js2val thisValue, js2val *
         return meta->engine->allocString("[]");
     else {
         Multiname mn(NULL, meta->publicNamespace);
-        LookupKind lookup(false, NULL);
+        LookupKind lookup(false, JS2VAL_NULL);
         js2val result;
         String *s = new String();
         for (uint32 i = 0; i < length; i++) {
@@ -195,7 +195,7 @@ static js2val Array_pop(JS2Metadata *meta, const js2val thisValue, js2val * /*ar
 
     if (length > 0) {
         Multiname mn(numberToString(length - 1), meta->publicNamespace);
-        LookupKind lookup(false, NULL);
+        LookupKind lookup(false, JS2VAL_NULL);
         const String *id = numberToString(length - 1);
         js2val result = JS2VAL_UNDEFINED;
         bool deleteResult;
@@ -218,7 +218,7 @@ js2val Array_concat(JS2Metadata *meta, const js2val thisValue, js2val *argv, uin
     uint32 n = 0;
     uint32 i = 0;
     Multiname mn(NULL, meta->publicNamespace);
-    LookupKind lookup(false, NULL);
+    LookupKind lookup(false, JS2VAL_NULL);
 
     do {
         if (meta->objectType(E) != meta->arrayClass) {
@@ -260,7 +260,7 @@ static js2val Array_join(JS2Metadata *meta, const js2val thisValue, js2val *argv
 
     String *S = new String();
     Multiname mn(NULL, meta->publicNamespace);
-    LookupKind lookup(false, NULL);
+    LookupKind lookup(false, JS2VAL_NULL);
 
     for (uint32 k = 0; k < length; k++) {
         js2val result = JS2VAL_UNDEFINED;
@@ -285,7 +285,7 @@ static js2val Array_reverse(JS2Metadata *meta, const js2val thisValue, js2val * 
 
     Multiname mn1(NULL, meta->publicNamespace);
     Multiname mn2(NULL, meta->publicNamespace);
-    LookupKind lookup(false, NULL);
+    LookupKind lookup(false, JS2VAL_NULL);
 
     uint32 halfway = length / 2;
 
@@ -340,7 +340,7 @@ static js2val Array_shift(JS2Metadata *meta, const js2val thisValue, js2val * /*
 
     Multiname mn1(NULL, meta->publicNamespace);
     Multiname mn2(NULL, meta->publicNamespace);
-    LookupKind lookup(false, NULL);
+    LookupKind lookup(false, JS2VAL_NULL);
     js2val result;
     bool deleteResult;
     mn1.name = numberToString((int32)0);
@@ -419,7 +419,7 @@ static js2val Array_slice(JS2Metadata *meta, const js2val thisValue, js2val *arg
     
     Multiname mn1(NULL, meta->publicNamespace);
     Multiname mn2(NULL, meta->publicNamespace);
-    LookupKind lookup(false, NULL);
+    LookupKind lookup(false, JS2VAL_NULL);
     uint32 n = 0;
     while (start < end) {
         mn1.name = numberToString(start);
@@ -575,7 +575,7 @@ static js2val Array_sort(JS2Metadata *meta, const js2val thisValue, js2val *argv
         js2val *vec = new js2val[length];
         
         Multiname mn(NULL, meta->publicNamespace);
-        LookupKind lookup(false, NULL);
+        LookupKind lookup(false, JS2VAL_NULL);
         for (i = 0; i < length; i++) {
             mn.name = numberToString(i);
             meta->readDynamicProperty(thisObj, &mn, &lookup, RunPhase, &vec[i]);
@@ -634,7 +634,7 @@ static js2val Array_splice(JS2Metadata *meta, const js2val thisValue, js2val *ar
         
         Multiname mn1(NULL, meta->publicNamespace);
         Multiname mn2(NULL, meta->publicNamespace);
-        LookupKind lookup(false, NULL);
+        LookupKind lookup(false, JS2VAL_NULL);
         for (k = 0; k < deleteCount; k++) {
             mn1.name = numberToString(start + k);
             if (meta->hasOwnProperty(thisObj, mn1.name)) {
@@ -711,7 +711,7 @@ static js2val Array_unshift(JS2Metadata *meta, const js2val thisValue, js2val *a
 
     Multiname mn1(NULL, meta->publicNamespace);
     Multiname mn2(NULL, meta->publicNamespace);
-    LookupKind lookup(false, NULL);
+    LookupKind lookup(false, JS2VAL_NULL);
 
     for (k = length; k > 0; k--) {
         bool deleteResult;
