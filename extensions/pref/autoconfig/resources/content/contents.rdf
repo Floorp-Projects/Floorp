@@ -12,7 +12,7 @@
         chrome:displayName="AutoConfig"
         chrome:author="mozilla.org"
         chrome:name="autoconfig"
- 	chrome:localeVersion="1.2">
+ 	chrome:localeVersion="1.3b">
   </RDF:Description>
 
 </RDF:RDF>

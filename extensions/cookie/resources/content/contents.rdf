@@ -12,7 +12,7 @@
         chrome:displayName="Cookie Manager"
         chrome:author="mozilla.org"
         chrome:name="cookie"
- 	chrome:localeVersion="1.2">
+ 	chrome:localeVersion="1.3b">
   </RDF:Description>
 
   <!-- overlay information -->

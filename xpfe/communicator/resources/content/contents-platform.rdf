@@ -12,6 +12,6 @@
         chrome:displayName="Platform Specific Bindings"
         chrome:author="mozilla.org"
         chrome:name="communicator-platform"
- 	chrome:localeVersion="1.2">
+ 	chrome:localeVersion="1.3b">
   </RDF:Description>
 </RDF:RDF>

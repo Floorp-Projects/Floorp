@@ -11,7 +11,7 @@
   <RDF:Description about="urn:mozilla:package:messenger-region"
         chrome:author="mozilla.org"
         chrome:name="messenger-region"
-	chrome:localeVersion="1.2">
+	chrome:localeVersion="1.3b">
   </RDF:Description>
 
 </RDF:RDF>

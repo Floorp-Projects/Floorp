@@ -12,7 +12,7 @@
         chrome:displayName="Editor"
         chrome:author="mozilla.org"
         chrome:name="editor"
-        chrome:localeVersion="1.2"
+        chrome:localeVersion="1.3b"
         chrome:skinVersion="1.2">
   </RDF:Description>
   

@@ -11,7 +11,7 @@
   <RDF:Description about="urn:mozilla:package:chatzilla"
         chrome:displayName="Chatzilla"
         chrome:author="mozilla.org"
-        chrome:localeVersion="1.2"
+        chrome:localeVersion="1.3b"
         chrome:name="chatzilla">
   </RDF:Description>
 
