@@ -237,7 +237,7 @@ function calendarFinish()
 
 function launchPreferences()
 {
-   goPreferences( "calendarPanel", "chrome://calendar/content/pref/calendarPref.xul", "calendar" );
+   goPreferences( "calendarPanel", "chrome://calendar/content/pref/calendarPref.xul", "calendarPanel" );
 }
 
 
