@@ -384,8 +384,7 @@ xpcom/sample/Makefile
 xpcom/src/Makefile
 xpcom/tests/Makefile
 xpcom/tests/dynamic/Makefile
-# -dp- Temporary until I fix the Makefile.in
-# -dp-  xpcom/tests/services/Makefile
+xpcom/tests/services/Makefile
 xpcom/threads/Makefile
 xpcom/tools/Makefile
 xpcom/tools/registry/Makefile
