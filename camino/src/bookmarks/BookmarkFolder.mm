@@ -111,6 +111,9 @@ NSString* BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
 -(void)dealloc
 {
   [[[BookmarkManager sharedBookmarkManager] undoManager] removeAllActionsWithTarget:self];
+  if ([mSpecialFlag unsignedIntValue] & kBookmarkDockMenuFolder)
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:BookmarkFolderDockMenuChangeNotificaton object:nil];
+
   // set our all children to have a null parent.
   // important if they've got timers running.
   NSEnumerator *enumerator = [mChildArray objectEnumerator];
@@ -241,13 +244,20 @@ NSString* BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
 
 -(void) setSpecialFlag:(unsigned)aFlag
 {
+  unsigned oldFlag = [mSpecialFlag unsignedIntValue];
   [mSpecialFlag release];
   mSpecialFlag = [[NSNumber alloc] initWithUnsignedInt:aFlag];
-  if ((aFlag & kBookmarkFolderGroup) != 0)
-    [self setIcon:[NSImage imageNamed:@"groupbookmark"]];
-  else
-    [self setIcon:[NSImage imageNamed:@"folder"]];
+  if ((oldFlag & kBookmarkFolderGroup) != (aFlag & kBookmarkFolderGroup)) {
+    // only change the group/folder icon if we're changing that flag
+    if ((aFlag & kBookmarkFolderGroup) != 0)
+      [self setIcon:[NSImage imageNamed:@"groupbookmark"]];
+    else
+      [self setIcon:[NSImage imageNamed:@"folder"]];
+  }
   if ((aFlag & kBookmarkDockMenuFolder) != 0) {
+    // if we're the dock menu folder, tell the previous dock folder that 
+    // they're no longer it and register for the same notification in
+    // case it changes again.
     NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
     [nc postNotificationName:BookmarkFolderDockMenuChangeNotificaton object:self];
     [nc addObserver:self selector:@selector(dockMenuChanged:) name:BookmarkFolderDockMenuChangeNotificaton object:nil];
