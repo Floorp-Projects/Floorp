@@ -68,6 +68,12 @@ LIBS := \
 	-l$(MOZ_LIB_JS_PREFIX)js \
 	-lwidget$(MOZ_TOOLKIT) \
 	-lxp \
+	-lraptorhtmlpars \
+	-lexpat \
+	-lxmltok \
+	-ljsurl \
+	-ljsdom \
+	-lraptorgfx \
 	$(ZLIB_LIBS) \
 	$(NSPR_LIBS) \
 	$(NULL)
