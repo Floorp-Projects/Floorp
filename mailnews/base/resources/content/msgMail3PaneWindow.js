@@ -67,6 +67,8 @@ var folderListener = {
 	OnItemIntPropertyChanged: function(item, property, oldValue, newValue)
 	{
 		var currentLoadedFolder = GetThreadPaneFolder();
+        if (!currentLoadedFolder) return;
+
 		var currentURI = currentLoadedFolder.URI;
 
 		//if we don't have a folder loaded, don't bother.
