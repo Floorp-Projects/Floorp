@@ -120,8 +120,6 @@ public:
                       nsWidgetInitData& widgetInitData);
   nsIWidget* GetWidget(void) { return mWindow; }
 
-  void SetIntrinsicallySized(PRBool isIntrinsicallySized) { mIntrinsicallySized = isIntrinsicallySized; };
-
   void DoContextMenu(
 	  nsMenuEvent * aMenuEvent,
 	  nsIDOMNode  * aMenuNode, 
@@ -231,8 +229,6 @@ protected:
   
   PRInt32 GetDocHeight(nsIDocument * aDoc);
  
-  NS_IMETHOD GetPresShell(nsIPresShell** aResult);
-
   void LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWindow);
   void DynamicLoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWindow);
   nsCOMPtr<nsIDOMNode>     FindNamedDOMNode(const nsString &aName, nsIDOMNode * aParent, PRInt32 & aCount, PRInt32 aEndCount);
