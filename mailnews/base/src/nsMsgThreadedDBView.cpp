@@ -613,10 +613,8 @@ nsresult nsMsgThreadedDBView::OnNewHeader(nsMsgKey newKey, nsMsgKey aParentKey, 
           // removing it, installing this header as king, and expanding it.
           if (level == 0)	
           {
-            CollapseByIndex(threadIndex, nsnull);
-            // call base class, so child won't get promoted.
-            nsMsgDBView::RemoveByIndex(threadIndex);	
-            newFlags |= MSG_VIEW_FLAG_ISTHREAD | MSG_VIEW_FLAG_HASCHILDREN | MSG_FLAG_ELIDED;
+            newFlags |= MSG_VIEW_FLAG_ISTHREAD | MSG_VIEW_FLAG_HASCHILDREN;
+            insertIndex = threadIndex;
           }
           m_keys.InsertAt(insertIndex, newKey);
           m_flags.InsertAt(insertIndex, newFlags, 1);
@@ -625,10 +623,16 @@ nsresult nsMsgThreadedDBView::OnNewHeader(nsMsgKey newKey, nsMsgKey aParentKey, 
 
           // the call to NoteChange() has to happen after we add the key
           // as NoteChange() will call RowCountChanged() which will call our GetRowCount()
-          NoteChange(insertIndex, 1, nsMsgViewNotificationCode::insertOrDelete);
+          if (level != 0)
+            NoteChange(insertIndex, 1, nsMsgViewNotificationCode::insertOrDelete);
 
           if (level == 0)
+          {
+            CollapseByIndex(threadIndex, nsnull);
+            // call base class, so child won't get promoted.
+            // nsMsgDBView::RemoveByIndex(threadIndex);	
             ExpandByIndex(threadIndex, nsnull);
+          }
         }
       }
       else // adding msg to thread that's not in view.
