@@ -10,7 +10,7 @@
 
   <!-- package information -->
   <RDF:Description about="urn:mozilla:package:messenger-offline"
-        chrome:displayName="Offline"
+        chrome:displayName="Offline Support"
         chrome:author="mozilla.org"
         chrome:name="messenger-offline"
         chrome:description="This extension adds offline support to Mozilla Thunderbird." 
