@@ -52,7 +52,7 @@ nsTextHelper::~nsTextHelper()
 //-------------------------------------------------------------------------
 NS_METHOD nsTextHelper::SetMaxTextLength(PRUint32 aChars)
 {
-// This is a normal entry only thing, not a text box
+  // This is a normal entry only thing, not a text box
   gtk_entry_set_max_length(GTK_ENTRY(mWidget), (int)aChars);
   return NS_OK;
 }
@@ -62,14 +62,14 @@ NS_METHOD  nsTextHelper::GetText(nsString& aTextBuffer, PRUint32 aBufferSize, PR
 {
   char *str;
   if (GTK_IS_ENTRY(mWidget))
-  {
-    str = gtk_entry_get_text(GTK_ENTRY(mWidget));
-  }
+    {
+      str = gtk_entry_get_text(GTK_ENTRY(mWidget));
+    }
   else if (GTK_IS_TEXT(mWidget))
-  {
-    str = gtk_editable_get_chars (GTK_EDITABLE (mWidget), 0,
-                 gtk_text_get_length (GTK_TEXT (mWidget)));
-  }
+    {
+      str = gtk_editable_get_chars (GTK_EDITABLE (mWidget), 0,
+                                    gtk_text_get_length (GTK_TEXT (mWidget)));
+    }
   aTextBuffer.SetLength(0);
   aTextBuffer.Append(str);
   PRUint32 len = (PRUint32)strlen(str);
@@ -115,7 +115,7 @@ NS_METHOD  nsTextHelper::RemoveText()
     gtk_entry_set_text(GTK_ENTRY(mWidget), "");
   } else if (GTK_IS_TEXT(mWidget)) {
     gtk_editable_delete_text(GTK_EDITABLE(mWidget), 0,
-           gtk_text_get_length(GTK_TEXT (mWidget)));
+                             gtk_text_get_length(GTK_TEXT (mWidget)));
   }
   return NS_OK;
 }
@@ -123,8 +123,10 @@ NS_METHOD  nsTextHelper::RemoveText()
 //-------------------------------------------------------------------------
 NS_METHOD  nsTextHelper::SetPassword(PRBool aIsPassword)
 {
+  mIsPassword = aIsPassword?PR_FALSE:PR_TRUE;
   if (GTK_IS_ENTRY(mWidget)) {
-    gtk_entry_set_visibility(GTK_ENTRY(mWidget), aIsPassword);
+    g_print("gtk_entry_set_visibility(GTK_ENTRY(%p), %d);\n",mWidget, mIsPassword);
+    gtk_entry_set_visibility(GTK_ENTRY(mWidget), mIsPassword);
   }
   // this won't work for gtk_texts
   return NS_OK;
@@ -136,8 +138,9 @@ NS_METHOD  nsTextHelper::SetReadOnly(PRBool aReadOnlyFlag, PRBool& aOldReadOnlyF
   NS_ASSERTION(nsnull != mWidget,
                "SetReadOnly - Widget is NULL, Create may not have been called!");
   aOldReadOnlyFlag = mIsReadOnly;
-  mIsReadOnly = aReadOnlyFlag;
-  gtk_editable_set_editable(GTK_EDITABLE(mWidget), aReadOnlyFlag);
+  mIsReadOnly = aReadOnlyFlag?PR_FALSE:PR_TRUE;
+  g_print("gtk_editable_set_editable(GTK_EDITABLE(%p), %d);\n",mWidget, mIsReadOnly);
+  gtk_editable_set_editable(GTK_EDITABLE(mWidget), mIsReadOnly);
   return NS_OK;
 }
 
