@@ -101,8 +101,18 @@ var component_exceptions = new Array(
   //        //                                            ^^^^
 );
 
+// Queryable Fields
+// ================
+[% PROCESS "global/field-descs.none.tmpl" %]
+var field = [
+[% FOREACH x = field %]
+  { name:        '[% x.name FILTER js %]', 
+    description: '[% (field_descs.${x.name} OR x.description) FILTER js %]' },
+[% END %]
+];
+
 // Deprecated Variables
-// ================================
+// ====================
 //
 // Other names for various variables.  These are deprecated
 // and could go away at any time.  Use them at your own risk!

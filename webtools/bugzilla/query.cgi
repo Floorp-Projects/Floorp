@@ -314,19 +314,7 @@ $vars->{'bug_severity'} = \@::legal_severity;
 # Boolean charts
 my @fields;
 push(@fields, { name => "noop", description => "---" });
-SendSQL("SELECT name, description FROM fielddefs ORDER BY sortkey");
-while (MoreSQLData()) {
-    my ($name, $description) = FetchSQLData();
-    if (($name eq "estimated_time" ||
-         $name eq "remaining_time" ||
-         $name eq "work_time" ||
-         $name eq "percentage_complete" ) &&
-        (!UserInGroup(Param('timetrackinggroup')))) {
-        next;
-    }
-    push(@fields, { name => $name, description => $description });
-}
-
+push(@fields, GetFieldDefs());
 $vars->{'fields'} = \@fields;
 
 # Creating new charts - if the cmd-add value is there, we define the field

@@ -87,6 +87,9 @@ foreach my $status (@::legal_bug_status) {
 $vars->{'open_status'} = \@open_status;
 $vars->{'closed_status'} = \@closed_status;
 
+# Generate a list of fields that can be queried.
+$vars->{'field'} = [GetFieldDefs()];
+
 # Determine how the user would like to receive the output; 
 # default is JavaScript.
 my $format = GetFormat("config", $::FORM{'format'}, $::FORM{'ctype'} || "js");

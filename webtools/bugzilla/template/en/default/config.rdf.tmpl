@@ -180,6 +180,19 @@
     </bz:target_milestones>
   [% END %]
 
+  <bz:fields>
+    <Seq>
+      [% PROCESS "global/field-descs.none.tmpl" %]
+      [% FOREACH item = field %]
+        <li>
+          <bz:field rdf:about="[% Param('urlbase') %]field.cgi?name=[% item.name FILTER uri %]">
+            <bz:name>[% item.name FILTER html %]</bz:name>
+            <bz:description>[% (field_descs.${item.name} OR item.description) FILTER html %]</bz:description>
+          </bz:field>
+        </li>
+      [% END %]
+    </Seq>
+  </bz:fields>
 </bz:installation>
 
 </RDF>
