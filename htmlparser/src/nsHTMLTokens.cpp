@@ -549,8 +549,10 @@ nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScann
       static nsAutoString theEndings("\n\"\'");
       temp += aChar;
       result=aScanner.ReadUntil(temp,theEndings,PR_TRUE,PR_FALSE);
-      result=aScanner.GetChar(aChar);
-      if(result==NS_OK) temp += aChar; // consume the character that stopped the scan
+      if(result==NS_OK) {
+        result=aScanner.GetChar(aChar);
+        if(result==NS_OK) temp += aChar; // consume the character that stopped the scan
+      }
     }
     else if(0<=theWhitespace2.BinarySearch(aChar)) { 
       static CWhitespaceToken theWS; 
