@@ -2483,7 +2483,6 @@ void CFrontApp::FindCommandStatus( CommandT command, Boolean& enabled,
 		
 		case cmd_BookmarksWindow:
 		case cmd_HistoryWindow:
-		case cmd_NCNewWindow:
 			enabled = !Memory_MemoryIsLow();
 			break;
 			
@@ -2603,7 +2602,6 @@ Boolean CFrontApp::ObeyCommand(CommandT inCommand, void* ioParam)
 			break;
 			
 		case cmd_BookmarksWindow:
-		case cmd_NCNewWindow:
 		{
 			CNavCenterWindow* navCenter = dynamic_cast<CNavCenterWindow*>(URobustCreateWindow::CreateWindow(CNavCenterWindow::res_ID, this));
 			navCenter->BringPaneToFront ( HT_VIEW_BOOKMARK );
