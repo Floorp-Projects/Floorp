@@ -39,7 +39,8 @@
 
     <key id="openeditorkb"   key="&fileopen.keybinding;"   observes="cmd_open"  modifiers="accel"/>
     <key id="openremoteeditorkb"  key="&fileopenremote.keybinding;"  observes="cmd_openRemote"  modifiers="accel,shift"/>
-    <key id="savekb"         key="&filesave.keybinding;"   observes="cmd_save" modifiers="accel"/>
+    <key id="savekb"         key="&filesave.keybinding;"   observes="cmd_save"   modifiers="accel"/>
+    <key id="publishkb"      key="&filesave.keybinding;"   observes="cmd_publish" modifiers="accel,shift"/>
     <key id="closekb"        key="&fileclose.keybinding;"  observes="cmd_close"  modifiers="accel"/>
     <key id="printkb"        key="&fileprint.keybinding;"  observes="cmd_print"  modifiers="accel"/>
     <key id="key_quit"/>
@@ -314,12 +315,13 @@
       <menuitem id="saveMenuitem" accesskey="&filesave.accesskey;" key="savekb" observes="cmd_save"/>
       <menuitem accesskey="&filesaveas.accesskey;" observes="cmd_saveAs"/>
       <menuitem accesskey="&filesaveascharset.accesskey;" observes="cmd_saveAsCharset"/>
-      <menuitem id="publishMenuitem" accesskey="&publishcmd.accesskey;" observes="cmd_publish"/>
+      <menuseparator/>
+      <menuitem id="publishMenuitem" accesskey="&publishcmd.accesskey;" key="publishkb" observes="cmd_publish"/>
       <menuitem accesskey="&publishas.accesskey;" observes="cmd_publishAs"/>
       <menuseparator/>
-      <menuitem accesskey="&fileexporttotext.accesskey;"                    observes="cmd_exportToText" id="fileExportToText"/>
       <menuitem accesskey="&filerevert.accesskey;" observes="cmd_revert"/>
       <menuseparator/>
+      <menuitem id="fileExportToText"  accesskey="&fileexporttotext.accesskey;" observes="cmd_exportToText"/>
       <menuitem id="previewInBrowser" label="&previewCmd.label;"  accesskey="&filepreview.accesskey;" observes="cmd_preview"/>
       <!-- menuitem id="menu_SendPage" is merged here from mailEditorOverlay.xul,
            where "position" is assumed to be just after 'previewInBrowser'  -->
@@ -386,12 +388,12 @@
 
   <!-- Insert menu -->
   <menu id="insertMenu" label="&insertMenu.label;" accesskey="&insertmenu.accesskey;">
-    <menupopup>
+    <menupopup id="insertMenuPopup">
+      <menuitem accesskey="&insertimage.accesskey;"      observes="cmd_image"       label="&insertImageCmd.label;"/>
+      <menuitem accesskey="&inserttable.accesskey;"      observes="cmd_InsertTable" label="&insertTableCmd.label;"/>
       <menuitem accesskey="&insertlink.accesskey;"       observes="cmd_link"        label="&insertLinkCmd.label;"   key="insertlinkkb"/>
       <menuitem accesskey="&insertanchor.accesskey;"     observes="cmd_anchor"      label="&insertAnchorCmd.label;"/>
-      <menuitem accesskey="&insertimage.accesskey;"      observes="cmd_image"       label="&insertImageCmd.label;"/>
       <menuitem accesskey="&inserthline.accesskey;"      observes="cmd_hline"       label="&insertHLineCmd.label;"/>
-      <menuitem accesskey="&inserttable.accesskey;"      observes="cmd_InsertTable" label="&insertTableCmd.label;"/>
       <menuitem accesskey="&HTMLSourceMode.accesskey;"   observes="cmd_insertHTML"  key="inserthtmlkb"/>
       <menuitem accesskey="&insertchars.accesskey;"      observes="cmd_insertChars" />
       <menuseparator/>
@@ -673,7 +675,7 @@
                  tooltiptext="&saveToolbarCmd.tooltip;"/>
   <toolbarbutton id="publishButton" class="toolbarbutton-1"
                  observes="cmd_publish"
-                 tooltiptext="&publishToolbarCmd.tooltip;" hidden="true"/>
+                 tooltiptext="&publishToolbarCmd.tooltip;"/>
   <toolbarbutton id="previewButton" class="toolbarbutton-1"
                  label="&previewToolbarCmd.label;" observes="cmd_preview"
                  tooltiptext="&previewToolbarCmd.tooltip;"/>

@@ -176,10 +176,10 @@
     <toolbarbutton id="spellingButton"/>
     <toolbarseparator class="toolbarseparator-primary"/>
     <toolbarbutton id="imageButton"/>
-    <toolbarbutton id="hlineButton"/>
     <toolbarbutton id="tableButton"/>
     <toolbarbutton id="linkButton"/>
-    <toolbarbutton id="namedAnchorButton"/>
+    <toolbarbutton id="namedAnchorButton" hidden="true"/>
+    <toolbarbutton id="hlineButton" hidden="true"/>
     <spacer flex="1"/>
     <hbox id="throbber-box" align="center">
       <button id="navigator-throbber" oncommand="goClickThrobber('editor.throbber.url')" tooltiptext="&throbber.tooltip;">

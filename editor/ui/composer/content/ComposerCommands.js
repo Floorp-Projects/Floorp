@@ -340,10 +340,13 @@ var nsSaveCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
+    // Always allow saving when editing a remote document,
+    //  otherwise the document modified state would prevent that
+    //  when you first open a remote file.
+    var docUrl = GetDocumentUrl();
     return window.editorShell && window.editorShell.documentEditable &&
-      (window.editorShell.documentModified || 
-       IsUrlAboutBlank(GetDocumentUrl()) ||
-       window.gHTMLSourceChanged);
+      (window.editorShell.documentModified || window.gHTMLSourceChanged ||
+       IsUrlAboutBlank(docUrl) || GetScheme(docUrl) != "file");
   },
   
   doCommand: function(aCommand)
@@ -351,18 +354,8 @@ var nsSaveCommand =
     var result = false;
     if (window.editorShell)
     {
-      // XXX Switching keybinding from Save to Publish isn't working now :(
-      //     so do publishing if editing remote url
-      var docUrl = GetDocumentUrl();
-      var scheme = GetScheme(docUrl);
-      if (scheme && scheme != "file")
-      {
-        goDoCommand("cmd_publish");
-        return true;
-      }
-
       FinishHTMLSource();
-      result = SaveDocument(IsUrlAboutBlank(docUrl), false, editorShell.contentsMIMEType);
+      result = SaveDocument(IsUrlAboutBlank(GetDocumentUrl()), false, editorShell.contentsMIMEType);
       window._content.focus();
     }
     return result;
@@ -1401,12 +1394,9 @@ function SaveDocument(aSaveAs, aSaveCopy, aMimeType)
   var urlstring = GetDocumentUrl();
   var mustShowFileDialog = (aSaveAs || IsUrlAboutBlank(urlstring) || (urlstring == ""));
 
-  // If not doing "Save As" and editing a remote URL, do publishing instead
+  // If editing a remote URL, force SaveAs dialog
   if (!mustShowFileDialog && GetScheme(urlstring) != "file")
-  {
-    goDoCommand("cmd_publish");
-    return true;
-  }
+    mustShowFileDialog = true;
 
   var replacing = !aSaveAs;
   var titleChanged = false;
@@ -1716,61 +1706,11 @@ function GetDocUrlFromPublishData(publishData)
   return url;
 }
 
-// Depending on editing local vs. remote files:
-//   * Switch the "Save" and "Publish" buttons on toolbars,
-//   * Shift accel+S keybinding to Save or Publish commands
-// Note: A new, unsaved file is treated as a local file
-//     (XXX Have a pref to treat as remote for user's who mostly edit remote?)
 function SetSaveAndPublishUI(urlstring)
 {
-  // Associate the "save" keybinding with Save for local files, 
-  //   or with Publish for remote files
-  var scheme = GetScheme(urlstring);
-  var menuItem1;
-  var menuItem2;
-  var saveButton = document.getElementById("saveButton");
-  var publishButton = document.getElementById("publishButton");
-  var command;
-
-  if (!scheme || scheme == "file")
-  {
-    // Editing a new or local file
-    menuItem1 = document.getElementById("publishMenuitem");
-    menuItem2 = document.getElementById("saveMenuitem");
-    command = "cmd_save";
-
-    // Hide "Publish". Show "Save" toolbar and menu items
-    if (publishButton) publishButton.setAttribute("hidden", "true");
-    if (saveButton) saveButton.removeAttribute("hidden");
-  }
-  else
-  {
-    // Editing a remote file
-    menuItem1 = document.getElementById("saveMenuitem");
-    menuItem2 = document.getElementById("publishMenuitem");
-    command = "cmd_publish";
-
-    // Hide "Save", show "Publish" toolbar and menuitems
-    if (saveButton) saveButton.setAttribute("hidden", "true");
-    if (publishButton) publishButton.removeAttribute("hidden");
-  }
-
-//  Use this to hide "Save" menuitem if editing remote, Hide "Publish" if editing local
-//  menuItem1.setAttribute("hidden", "true");
-//  menuItem2.removeAttribute("hidden");
-
-  var key = document.getElementById("savekb");
-  if (key && command)
-    key.setAttribute("observes", command);
-
-  if (menuItem1 && menuItem2)
-  {
-    menuItem1.removeAttribute("key");
-    menuItem2.setAttribute("key","savekb");
-  }
-
-  // Be sure enabled state of toolbar button is correct
-  goUpdateCommand(command);
+  // Be sure enabled state of toolbar buttons are correct
+  goUpdateCommand("cmd_save");
+  goUpdateCommand("cmd_publish");
 }
 
 function SetDocumentEditable(isDocEditable)
