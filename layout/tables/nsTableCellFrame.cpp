@@ -738,6 +738,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   if (NS_UNCONSTRAINEDSIZE==aReflowState.availableWidth)
     pMaxElementSize = &maxElementSize;
 
+  PRBool contentEmptyBeforeReflow = GetContentEmpty();
   /* XXX: remove tableFrame when border-collapse inherits */
   nsTableFrame* tableFrame=nsnull;
   rv = nsTableFrame::GetTableFrame(this, tableFrame);
@@ -746,7 +747,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   nsMargin borderPadding = aReflowState.mComputedPadding;
   nsMargin border;
   GetCellBorder(border, tableFrame);
-  if ((NS_UNCONSTRAINEDSIZE == availSize.width) || !GetContentEmpty()) {
+  if ((NS_UNCONSTRAINEDSIZE == availSize.width) || !contentEmptyBeforeReflow) {
     borderPadding += border;
   }
   
@@ -861,6 +862,14 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   }
   else {
     SetContentEmpty(PR_FALSE);
+    if ((eReflowReason_Incremental == aReflowState.reason) && contentEmptyBeforeReflow) {
+      // need to consider borders, since they were factored out above
+      leftInset   += border.left;
+      rightInset  += border.right;
+      topInset    += border.top;
+      bottomInset += border.bottom;
+      kidOrigin.MoveTo(leftInset, topInset);
+    }
   }
 
   const nsStylePosition* pos;

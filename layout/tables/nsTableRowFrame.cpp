@@ -785,6 +785,7 @@ CalcAvailWidth(nsTableFrame&     aTableFrame,
   PRInt32 colIndex;
   aCellFrame.GetColIndex(colIndex);
   PRInt32 colspan = aTableFrame.GetEffectiveColSpan(aCellFrame);
+  nscoord cellSpacing = 0;
 
   for (PRInt32 spanX = 0; spanX < colspan; spanX++) {
     nscoord colWidth = aTableFrame.GetColumnWidth(colIndex + spanX);
@@ -792,9 +793,12 @@ CalcAvailWidth(nsTableFrame&     aTableFrame,
       aColAvailWidth += colWidth;
     }
     if ((spanX > 0) && (aTableFrame.GetNumCellsOriginatingInCol(colIndex + spanX) > 0)) {
-      aColAvailWidth += aCellSpacingX;
+      cellSpacing += aCellSpacingX;
     }
   }
+  if (aColAvailWidth > 0) {
+    aColAvailWidth += cellSpacing;
+  } 
   aCellAvailWidth = aColAvailWidth;
 
   // for a cell with a colspan > 1, use its fix width (if set) as the  avail width 
