@@ -1,0 +1,13 @@
+toolkit.jar:
+* content/global/filepicker.xul                     (content/filepicker.xul)
+* content/global/filepicker.js                      (content/filepicker.js)
+
+en-US.jar:
+  locale/en-US/global/filepicker.dtd                (locale/filepicker.dtd)
+  locale/en-US/global/filepicker.properties         (locale/filepicker.properties)
+
+classic.jar:
++  skin/classic/global/filepicker.css               (skin/filepicker.css)
++  skin/classic/global/filepicker/folder-home.gif   (skin/folder-home.gif)
++  skin/classic/global/filepicker/folder-new.gif    (skin/folder-new.gif)
++  skin/classic/global/filepicker/folder-up.gif     (skin/folder-up.gif)

@@ -6,7 +6,6 @@ classic.jar:
 +  skin/classic/global/customizeToolbar.css
 +  skin/classic/global/contents.rdf
 +  skin/classic/global/dialog.css
-+  skin/classic/global/filepicker.css
 +  skin/classic/global/formatting.css
 +  skin/classic/global/global.css
 +  skin/classic/global/groupbox.css
@@ -52,9 +51,6 @@ classic.jar:
 +  skin/classic/global/arrow/arrow-up.gif                         (arrow/arrow-up.gif)
 +  skin/classic/global/checkbox/cbox-check-dis.gif                (checkbox/cbox-check-dis.gif)
 +  skin/classic/global/checkbox/cbox-check.gif                    (checkbox/cbox-check.gif)
-+  skin/classic/global/filepicker/folder-home.gif                 (filepicker/folder-home.gif)
-+  skin/classic/global/filepicker/folder-new.gif                  (filepicker/folder-new.gif)
-+  skin/classic/global/filepicker/folder-up.gif                   (filepicker/folder-up.gif)
 +  skin/classic/global/icons/Error.png                            (icons/Error.png)
 +  skin/classic/global/icons/folder-item.png                      (icons/folder-item.png)
 +  skin/classic/global/icons/page-loading.png                      (icons/page-loading.png)
