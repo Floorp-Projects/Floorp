@@ -28,9 +28,11 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kClassIID, NS_PARSER_NODE_IID); 
 static NS_DEFINE_IID(kIParserNodeIID, NS_IPARSER_NODE_IID); 
 
-nsAutoString& GetEmptyString() {
-  static nsAutoString theEmptyString("");
-  return theEmptyString;
+nsString& GetEmptyString() {
+  static nsString* gEmptyStr=0;
+  if(!gEmptyStr)
+    gEmptyStr=new nsString("");
+  return *gEmptyStr;
 }
 
 /**

@@ -146,6 +146,14 @@ void nsHTMLTokenizer::AddToken(CToken*& aToken,nsresult aResult,nsDeque& aDeque,
  * @return  ptr to recycler (or null)
  */
 nsITokenRecycler* nsHTMLTokenizer::GetTokenRecycler(void) {
+#if 0
+    //let's move to this once we eliminate the leaking of tokens...
+  static CTokenRecycler* gTokenRecycler=0;
+  if(!gTokenRecycler)
+    gTokenRecycler=new CTokenRecycler();
+  return gTokenRecycler;
+#endif
+  
   static CTokenRecycler gTokenRecycler;
   return (nsITokenRecycler*)&gTokenRecycler;
 }

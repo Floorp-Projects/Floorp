@@ -430,8 +430,12 @@ nsresult nsScanner::PutBack(PRUnichar aChar) {
  *  @return  error status
  */
 nsresult nsScanner::SkipWhitespace(void) {
-  static nsAutoString chars(" \n\r\t\b");
-  return SkipOver(chars);
+  static const char* gSpaces=" \n\r\t\b";
+  
+  int len=strlen(gSpaces);
+  CBufDescriptor buf(gSpaces,PR_TRUE,len+1,len);
+  nsAutoString theWS(buf);
+  return SkipOver(theWS);
 }
 
 /**
@@ -562,6 +566,72 @@ nsresult nsScanner::ReadWhile(nsString& aString,
 }
 
 /**
+ *  Consume chars as long as they are <i>in</i> the 
+ *  given validSet of input chars.
+ *  
+ *  @update  gess 3/25/98
+ *  @param   aString will contain the result of this method
+ *  @param   aValidSet is an ordered string that contains the
+ *           valid characters
+ *  @return  error code
+ */
+nsresult nsScanner::ReadWhile(nsString& aString,
+                             nsCString& aValidSet,
+                             PRBool anOrderedSet,
+                             PRBool addTerminal){
+
+  NS_ASSERTION(((PR_FALSE==anOrderedSet) || aValidSet.IsOrdered()),kUnorderedStringError);
+
+  PRUnichar theChar=0;
+  nsresult   result=NS_OK;
+
+  while(NS_OK==result) {
+    result=GetChar(theChar);
+    if(NS_OK==result) {
+      PRInt32 pos=(anOrderedSet) ? aValidSet.BinarySearch(theChar) : aValidSet.FindChar(theChar);
+      if(kNotFound==pos) {
+        if(addTerminal)
+          aString+=theChar;
+        else PutBack(theChar);
+        break;
+      }
+      else aString+=theChar;
+    }
+  }
+  return result;
+}
+
+/**
+ *  Consume chars as long as they are <i>in</i> the 
+ *  given validSet of input chars.
+ *  
+ *  @update  gess 3/25/98
+ *  @param   aString will contain the result of this method
+ *  @param   anInputSet contains the legal input chars
+ *           valid characters
+ *  @return  error code
+ */
+nsresult nsScanner::ReadWhile(nsString& aString,
+                             const char* anInputSet,
+                             PRBool anOrderedSet,
+                             PRBool addTerminal)
+{
+
+  nsresult   result=NS_OK;
+  if(anInputSet) {
+    PRInt32 len=nsCRT::strlen(anInputSet);
+    if(0<len) {
+
+      CBufDescriptor buf(anInputSet,PR_TRUE,len+1,len);
+      nsCAutoString theSet(buf);
+
+      result=ReadWhile(aString,theSet,anOrderedSet,addTerminal);
+    } //if
+  }//if
+  return result;
+}
+
+/**
  *  Consume characters until you encounter one contained in given
  *  input set.
  *  
@@ -597,6 +667,70 @@ nsresult nsScanner::ReadUntil(nsString& aString,
   return result;
 }
 
+/**
+ *  Consume characters until you encounter one contained in given
+ *  input set.
+ *  
+ *  @update  gess 3/25/98
+ *  @param   aString will contain the result of this method
+ *  @param   aTerminalSet is an ordered string that contains
+ *           the set of INVALID characters
+ *  @return  error code
+ */
+nsresult nsScanner::ReadUntil(nsString& aString,
+                             nsCString& aTerminalSet,
+                             PRBool anOrderedSet,
+                             PRBool addTerminal){
+  
+  NS_ASSERTION(((PR_FALSE==anOrderedSet) || aTerminalSet.IsOrdered()),kUnorderedStringError);
+
+  PRUnichar theChar=0;
+  nsresult  result=NS_OK;
+
+  while(NS_OK == result) {
+    result=GetChar(theChar);
+    if(NS_OK==result) {
+      PRInt32 pos=(anOrderedSet) ? aTerminalSet.BinarySearch(theChar) : aTerminalSet.FindChar(theChar);
+      if(kNotFound!=pos) {
+        if(addTerminal)
+          aString+=theChar;
+        else PutBack(theChar);
+        break;
+      }
+      else aString+=theChar;
+    }
+  }
+  return result;
+}
+
+/**
+ *  Consume characters until you encounter one contained in given
+ *  input set.
+ *  
+ *  @update  gess 3/25/98
+ *  @param   aString will contain the result of this method
+ *  @param   aTerminalSet is an ordered string that contains
+ *           the set of INVALID characters
+ *  @return  error code
+ */
+nsresult nsScanner::ReadUntil(nsString& aString,
+                              const char* aTerminalSet,
+                             PRBool anOrderedSet,
+                             PRBool addTerminal)
+{
+  nsresult   result=NS_OK;
+  if(aTerminalSet) {
+    PRInt32 len=nsCRT::strlen(aTerminalSet);
+    if(0<len) {
+
+      CBufDescriptor buf(aTerminalSet,PR_TRUE,len+1,len);
+      nsCAutoString theSet(buf);
+
+      result=ReadUntil(aString,theSet,anOrderedSet,addTerminal);
+    } //if
+  }//if
+  return result;
+}
 
 /**
  *  Consumes chars until you see the given terminalChar

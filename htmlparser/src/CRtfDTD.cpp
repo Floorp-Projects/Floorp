@@ -506,8 +506,8 @@ PRInt32 CRTFControlWord::GetTokenType() {
 }
 
 nsresult CRTFControlWord::Consume(PRUnichar aChar,nsScanner& aScanner) {
-  static nsString     gAlphaChars("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
-  static nsAutoString gDigits("-0123456789");
+  const char* gAlphaChars="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+  const char* gDigits="-0123456789";
 
   PRInt32 result=aScanner.ReadWhile(mTextValue,gAlphaChars,PR_TRUE,PR_FALSE);
   if(NS_OK==result) {
@@ -585,7 +585,7 @@ PRInt32 CRTFContent::GetTokenType() {
  */
 
 nsresult CRTFContent::Consume(PRUnichar aChar,nsScanner& aScanner) {
-  static nsString textTerminators("\\{}");
+  static const char* textTerminators="\\{}";
   PRInt32 result=aScanner.ReadUntil(mTextValue,textTerminators,PR_FALSE,PR_FALSE);
   return result;
 }
