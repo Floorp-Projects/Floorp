@@ -43,6 +43,7 @@
 #endif
 #include "prlog.h"
 #include "plhash.h"
+#include "prnetdb.h"
 #include "nsTraceMalloc.h"
 #include "tmreader.h"
 
@@ -169,6 +170,8 @@ static int get_tmevent(FILE *fp, tmevent *event)
       case TM_EVENT_FREE:
         if (!get_uint32(fp, &event->u.alloc.interval))
             return 0;
+        if (!get_uint32(fp, &event->u.alloc.cost))
+            return 0;
         if (!get_uint32(fp, &event->u.alloc.ptr))
             return 0;
         if (!get_uint32(fp, &event->u.alloc.size))
@@ -176,10 +179,23 @@ static int get_tmevent(FILE *fp, tmevent *event)
         event->u.alloc.oldserial = 0;
         event->u.alloc.oldptr = 0;
         event->u.alloc.oldsize = 0;
+#if defined(DEBUG_dp)
+        if (c == TM_EVENT_MALLOC)
+            printf("%d malloc %d 0x%p\n", event->u.alloc.cost,
+                   event->u.alloc.size, event->u.alloc.ptr);
+        else if (c == TM_EVENT_CALLOC)
+            printf("%d calloc %d 0x%p\n", event->u.alloc.cost,
+                   event->u.alloc.size, event->u.alloc.ptr);
+        else
+            printf("%d free %d 0x%p\n", event->u.alloc.cost,
+                   event->u.alloc.size, event->u.alloc.ptr);
+#endif
         break;
 
       case TM_EVENT_REALLOC:
         if (!get_uint32(fp, &event->u.alloc.interval))
+            return 0;
+        if (!get_uint32(fp, &event->u.alloc.cost))
             return 0;
         if (!get_uint32(fp, &event->u.alloc.ptr))
             return 0;
@@ -191,6 +207,10 @@ static int get_tmevent(FILE *fp, tmevent *event)
             return 0;
         if (!get_uint32(fp, &event->u.alloc.oldsize))
             return 0;
+#if defined(DEBUG_dp)
+        printf("%d realloc %d 0x%p %d\n", event->u.alloc.cost,
+               event->u.alloc.size, event->u.alloc.ptr, event->u.alloc.oldsize);
+#endif
         break;
 
       case TM_EVENT_STATS:
@@ -391,6 +411,16 @@ int tmreader_eventloop(tmreader *tmr, const char *filename,
         return 0;
     }
 
+    /* Read in ticks per second. Used to convert platform specific intervals to time values */
+    if (read(fileno(fp), &tmr->ticksPerSec, sizeof tmr->ticksPerSec) != sizeof tmr->ticksPerSec) {
+        fprintf(stderr, "%s: Cannot read ticksPerSec. Log file read error.\n",
+                tmr->program);
+        return 0;
+    }
+    tmr->ticksPerSec = PR_ntohl(tmr->ticksPerSec);
+#ifdef DEBUG_dp
+    printf("DEBUG: ticks per sec = %d\n", tmr->ticksPerSec);
+#endif
     while (get_tmevent(fp, &event)) {
         switch (event.type) {
           case TM_EVENT_LIBRARY: {
