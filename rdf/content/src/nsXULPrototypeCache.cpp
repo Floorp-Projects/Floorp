@@ -37,6 +37,7 @@
 #include "nsHashtable.h"
 #include "nsXPIDLString.h"
 #include "plstr.h"
+#include "nsIDocument.h"
 
 
 class nsXULPrototypeCache : public nsIXULPrototypeCache
@@ -53,6 +54,14 @@ public:
     NS_IMETHOD PutStyleSheet(nsICSSStyleSheet* aStyleSheet);
     NS_IMETHOD FlushStyleSheets();
 
+    NS_IMETHOD GetXBLDocument(const nsCString& aString, nsIDocument** _result);
+    NS_IMETHOD PutXBLDocument(nsIDocument* aDocument);
+
+    NS_IMETHOD GetXBLDocScriptAccess(const nsCString& aString, nsIDocument** _result);
+    NS_IMETHOD PutXBLDocScriptAccess(nsIDocument* aDocument);
+
+    NS_IMETHOD FlushXBLInformation();
+
     NS_IMETHOD Flush();
 
 protected:
@@ -64,7 +73,8 @@ protected:
 
     nsSupportsHashtable mPrototypeTable;
     nsSupportsHashtable mStyleSheetTable;
-
+    nsSupportsHashtable mXBLDocTable;
+    nsSupportsHashtable mScriptAccessTable;
 
     class nsIURIKey : public nsHashKey {
     protected:
@@ -189,6 +199,50 @@ nsXULPrototypeCache::PutStyleSheet(nsICSSStyleSheet* aStyleSheet)
 
 
 NS_IMETHODIMP
+nsXULPrototypeCache::GetXBLDocument(const nsCString& aString, nsIDocument** _result)
+{
+    nsStringKey key(aString);
+    *_result = NS_STATIC_CAST(nsIDocument*, mXBLDocTable.Get(&key));
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULPrototypeCache::PutXBLDocument(nsIDocument *aDocument)
+{
+    nsCOMPtr<nsIURI> uri(aDocument->GetDocumentURL());
+    char* aString;
+    uri->GetSpec(&aString);
+
+    nsStringKey key(aString);
+    nsIDocument* olddoc = NS_STATIC_CAST(nsIDocument*, mXBLDocTable.Put(&key, aDocument));
+    NS_IF_RELEASE(olddoc);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULPrototypeCache::GetXBLDocScriptAccess(const nsCString& aString, nsIDocument** _result)
+{
+    nsStringKey key(aString);
+    *_result = NS_STATIC_CAST(nsIDocument*, mScriptAccessTable.Get(&key));
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULPrototypeCache::PutXBLDocScriptAccess(nsIDocument *aDocument)
+{
+    nsCOMPtr<nsIURI> uri(aDocument->GetDocumentURL());
+    char* aString;
+    uri->GetSpec(&aString);
+
+    nsStringKey key(aString);
+    nsIDocument* olddoc = NS_STATIC_CAST(nsIDocument*, mScriptAccessTable.Put(&key, aDocument));
+    NS_IF_RELEASE(olddoc);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXULPrototypeCache::FlushStyleSheets()
 {
     mStyleSheetTable.Reset();
@@ -197,10 +251,19 @@ nsXULPrototypeCache::FlushStyleSheets()
 
 
 NS_IMETHODIMP
+nsXULPrototypeCache::FlushXBLInformation()
+{
+    mXBLDocTable.Reset();
+    mScriptAccessTable.Reset();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXULPrototypeCache::Flush()
 {
     FlushPrototypes();
     FlushStyleSheets();
+    FlushXBLInformation();
     return NS_OK;
 }
 
