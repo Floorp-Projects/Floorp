@@ -52,58 +52,25 @@
 /*********************
  * Java JNI globals
  *********************/
-extern jclass classClass;
-extern jmethodID getNameMID;
-
-extern jclass objectClass;
-extern jmethodID hashCodeMID;
-
-extern jclass booleanClass;
-extern jclass booleanArrayClass;
-extern jmethodID booleanInitMID;
-extern jmethodID booleanValueMID;
-
-extern jclass charClass;
-extern jclass charArrayClass;
-extern jmethodID charInitMID;
-extern jmethodID charValueMID;
-
-extern jclass byteClass;
-extern jclass byteArrayClass;
-extern jmethodID byteInitMID;
-extern jmethodID byteValueMID;
-
-extern jclass shortClass;
-extern jclass shortArrayClass;
-extern jmethodID shortInitMID;
-extern jmethodID shortValueMID;
-
 extern jclass intClass;
 extern jclass intArrayClass;
-extern jmethodID intInitMID;
+extern jclass stringClass;
+extern jclass nsISupportsClass;
+extern jclass xpcomExceptionClass;
+
+extern jmethodID hashCodeMID;
+extern jmethodID booleanValueMID;
+extern jmethodID charValueMID;
+extern jmethodID byteValueMID;
+extern jmethodID shortValueMID;
 extern jmethodID intValueMID;
-
-extern jclass longClass;
-extern jclass longArrayClass;
-extern jmethodID longInitMID;
 extern jmethodID longValueMID;
-
-extern jclass floatClass;
-extern jclass floatArrayClass;
-extern jmethodID floatInitMID;
 extern jmethodID floatValueMID;
-
-extern jclass doubleClass;
-extern jclass doubleArrayClass;
-extern jmethodID doubleInitMID;
 extern jmethodID doubleValueMID;
 
-extern jclass stringClass;
-extern jclass stringArrayClass;
-
-extern jclass nsISupportsClass;
-
-extern jclass xpcomExceptionClass;
+#ifdef DEBUG
+extern jmethodID getNameMID;
+#endif
 
 PRBool InitializeJavaGlobals(JNIEnv *env);
 void FreeJavaGlobals(JNIEnv* env);
