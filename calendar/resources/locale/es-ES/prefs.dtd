@@ -48,30 +48,30 @@
 <!ENTITY prefWindow.category         "Categoría">
 
 <!ENTITY pref.mainbox.label         "Configuración general" >
-<!ENTITY pref.alarmgoesoff.label "Cuando se apague la alarma:">
+<!ENTITY pref.alarmgoesoff.label "Cuando salte una alarma:">
 <!ENTITY pref.playasound  "Reproducir un sonido" >
 
 <!ENTITY pref.alarmbox.label    "Alarmas" >
 <!ENTITY pref.showalarmbox    "Mostrar un cuadro de alarma" >
-<!ENTITY pref.defaultemail.label "Dirección de correo predeterminado para enviar alarmas:">
+<!ENTITY pref.defaultemail.label "Dirección de correo predet. donde enviar alarmas:">
 <!ENTITY pref.defaulttext.label "Texto predeterminado para alarmas:">
-<!ENTITY pref.missedalarms    "Mostrar alarmas fallidas" >
-<!ENTITY pref.defalarm4events.label "Opción predeterminada de alarma para eventos:">
-<!ENTITY pref.defalarm4todos.label "Opción predeterminada de alarma para tareas:">
+<!ENTITY pref.missedalarms    "Mostrar alarmas no atendidas" >
+<!ENTITY pref.defalarm4events.label "Opción predet. alarma para eventos:">
+<!ENTITY pref.defalarm4todos.label "Opción predet. alarma para tareas:">
 <!ENTITY pref.alarm.on "Activada">
 <!ENTITY pref.alarm.off "Desactivada">
-<!ENTITY pref.defalarmlen4events.label "Tiempo predeterminado para que una alarma se apague antes de un evento:">
-<!ENTITY pref.defalarmlen4todos.label "Tiempo predeterminado para que una alarma se apague antes de una tarea:">
+<!ENTITY pref.defalarmlen4events.label "Preaviso predet. antes de un evento:">
+<!ENTITY pref.defalarmlen4todos.label "Preaviso predet. antes de una tarea:">
 
 <!ENTITY pref.dateformat.label      "Formato del texto de la fecha:" >
 <!ENTITY pref.dateformat.long       "Largo" >
 <!ENTITY pref.dateformat.short      "Corto"  >
-<!ENTITY pref.dateformat.storeingmt "Store dates in Universal Time" >
-<!ENTITY pref.defaultlength.label   "Duración predeterminado de evento:" >
-<!ENTITY pref.defaultsnoozelength.label   "Duración predeterminada del aviso:" >
+<!ENTITY pref.dateformat.storeingmt "Guardar fechas en formato de hora universal." >
+<!ENTITY pref.defaultlength.label   "Duración predeterminada de evento:" >
+<!ENTITY pref.defaultsnoozelength.label   "Duración predeterminada hasta nuevo aviso:" >
 
 <!ENTITY pref.weekstarts.label     "Primer día de la semana:" >
-<!ENTITY pref.daysoff.label     "Day(s) Off Each Week:" >
+<!ENTITY pref.daysoff.label     "Días de descanso cada semana:" >
 
 <!ENTITY pref.numberofweeks.label     "Número predeterminado total de semanas:" >
 <!ENTITY pref.numberofweeks.0      "Ninguna" >
@@ -124,22 +124,22 @@
 
 <!ENTITY pref.categories.help.description   "Use una coma entre cada categoría que quiera añadir.">
 
-<!ENTITY pref.categories.add.title    "Add Category">
-<!ENTITY pref.categories.add.prompt   "Enter the name of the category">
-<!ENTITY pref.categories.edit.title   "Edit Category">
+<!ENTITY pref.categories.add.title    "Añadir categoría">
+<!ENTITY pref.categories.add.prompt   "Introduzca el nombre de la categoría">
+<!ENTITY pref.categories.edit.title   "Editar categoría">
 
 
 <!ENTITY pref.reloadonlaunch       "Recargar calendarios remotos al iniciar">
 
 <!ENTITY pref.publish.caption        "Opciones de publicación">
-<!ENTITY pref.publish.path.label     "Nombre de fichero predeterminado">
+<!ENTITY pref.publish.path.label     "Nombre de archivo predeterminado">
 
 <!ENTITY pref.minutes.label "Minutos">
 
 <!-- Calendar Timezone preferences information -->
 <!ENTITY pref.calendar.timezone.label "Mi zona horaria">
 <!ENTITY pref.calendar.timezone.caption "Zona horaria">
-<!ENTITY pref.calendar.timezone.description "Timezone ID is (continent or ocean)/(largest city in legal timezone region).">
+<!ENTITY pref.calendar.timezone.description "La ID de zona horaria es (continente u océano)/(mayor ciudad en la región legal de esa zona horaria).">
 <!ENTITY pref.defaultzone.label     "Zona horaria predeterminada:" >
 
 <!ENTITY pref.timezone.Africa.Abidjan "Africa/Abidjan" >

@@ -68,7 +68,7 @@
 <!ENTITY calendar.pagesetup.label   "Configurar página...">
 <!ENTITY calendar.pagesetup.accesskey   "u">
 
-<!ENTITY calendar.import.label  "Importar de fichero...">
+<!ENTITY calendar.import.label  "Importar de archivo...">
 <!ENTITY calendar.import.accesskey  "I">
 
 <!ENTITY calendar.wizard.label  "Cargar asistente">
@@ -107,7 +107,7 @@
 <!ENTITY goTodayCmd.label               "Ir a hoy">
 <!ENTITY goTodayCmd.accesskey           "h">
 
-<!ENTITY goDateCmd.label                "Ir a fecha">
+<!ENTITY goDateCmd.label                "Ir a la fecha">
 <!ENTITY goDateCmd.accesskey            "f">
 
 <!ENTITY goPreviousCmd.label            "Anterior">
@@ -122,37 +122,37 @@
 <!ENTITY toolsMenu.label                "Herramientas">
 <!ENTITY toolsMenu.accesskey            "H">
 
-<!ENTITY javaScriptConsoleCmd.label     "JavaScript Console">
+<!ENTITY javaScriptConsoleCmd.label     "Consola de JavaScript">
 <!ENTITY javaScriptConsoleCmd.accesskey "S">
 
-<!ENTITY navigatorCmd.label     "Browser">
+<!ENTITY navigatorCmd.label     "Navegador">
 <!ENTITY navigatorCmd.accesskey "B">
 
-<!ENTITY messengerCmd.label     "Mail">
+<!ENTITY messengerCmd.label     "Correo">
 <!ENTITY messengerCmd.accesskey "M">
 
 <!ENTITY addressBookCmd.label     "Libreta de direcciones">
 <!ENTITY addressBookCmd.accesskey "A">
 
-<!ENTITY helpMenu.label         "Help"> 
-<!ENTITY helpMenu.accesskey            "H">
+<!ENTITY helpMenu.label         "Ayuda"> 
+<!ENTITY helpMenu.accesskey            "u">
 
-<!ENTITY walletPasswordManager.label     "Password Manager">
-<!ENTITY walletPasswordManager.accesskey "p">
+<!ENTITY walletPasswordManager.label     "Administrador de contraseñas">
+<!ENTITY walletPasswordManager.accesskey "A">
 
 <!-- Toolbar items -->
-<!ENTITY fileMenu.label         "File"> 
-<!ENTITY fileMenu.accesskey       "F">
+<!ENTITY fileMenu.label         "Archivo"> 
+<!ENTITY fileMenu.accesskey       "A">
 
-<!ENTITY editMenu.label         "Edit"> 
+<!ENTITY editMenu.label         "Editar"> 
 <!ENTITY editMenu.accesskey       "E"> 
-<!ENTITY preferencesCmd.label       "Options...">
+<!ENTITY preferencesCmd.label       "Opciones...">
 <!ENTITY preferencesCmd.accesskey     "O"> 
 
-<!ENTITY viewMenu.label         "View"> 
+<!ENTITY viewMenu.label         "Ver"> 
 <!ENTITY viewMenu.accesskey       "V"> 
 
-<!ENTITY releaseCmd.label       "Release Notes">
-<!ENTITY releaseCmd.accesskey       "R">
-<!ENTITY aboutCmd.label         "About &brandFullName;">
+<!ENTITY releaseCmd.label       "Notas de publicación">
+<!ENTITY releaseCmd.accesskey       "N">
+<!ENTITY aboutCmd.label         "Acerca de &brandFullName;">
 <!ENTITY aboutCmd.accesskey       "A">

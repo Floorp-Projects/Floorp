@@ -35,29 +35,29 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <!ENTITY time.midnight "Medianoche" >
-<!ENTITY time.1 "1:00 AM" >
-<!ENTITY time.2 "2:00 AM" >
-<!ENTITY time.3 "3:00 AM" >
-<!ENTITY time.4 "4:00 AM" >
-<!ENTITY time.5 "5:00 AM" >
-<!ENTITY time.6 "6:00 AM" >
-<!ENTITY time.7 "7:00 AM" >
-<!ENTITY time.8 "8:00 AM" >
-<!ENTITY time.9 "9:00 AM" >
-<!ENTITY time.10 "10:00 AM" >
-<!ENTITY time.11 "11:00 AM" >
+<!ENTITY time.1 "01:00" >
+<!ENTITY time.2 "02:00" >
+<!ENTITY time.3 "03:00" >
+<!ENTITY time.4 "04:00" >
+<!ENTITY time.5 "05:00" >
+<!ENTITY time.6 "06:00" >
+<!ENTITY time.7 "07:00" >
+<!ENTITY time.8 "08:00" >
+<!ENTITY time.9 "09:00" >
+<!ENTITY time.10 "10:00" >
+<!ENTITY time.11 "11:00" >
 <!ENTITY time.noon "Mediodía" >
-<!ENTITY time.13 "1:00 PM" >
-<!ENTITY time.14 "2:00 PM" >
-<!ENTITY time.15 "3:00 PM" >
-<!ENTITY time.16 "4:00 PM" >
-<!ENTITY time.17 "5:00 PM" >
-<!ENTITY time.18 "6:00 PM" >
-<!ENTITY time.19 "7:00 PM" >
-<!ENTITY time.20 "8:00 PM" >
-<!ENTITY time.21 "9:00 PM" >
-<!ENTITY time.22 "10:00 PM" >
-<!ENTITY time.23 "11:00 PM" >
+<!ENTITY time.13 "13:00" >
+<!ENTITY time.14 "14:00" >
+<!ENTITY time.15 "15:00" >
+<!ENTITY time.16 "16:00" >
+<!ENTITY time.17 "17:00" >
+<!ENTITY time.18 "18:00" >
+<!ENTITY time.19 "19:00" >
+<!ENTITY time.20 "20:00" >
+<!ENTITY time.21 "21:00" >
+<!ENTITY time.22 "22:00" >
+<!ENTITY time.23 "23:00" >
 
 <!-- Month Names -->
 <!ENTITY day.1.Ddd "Dom" >
@@ -106,6 +106,6 @@
 <!ENTITY more.label "MAS" >
 <!ENTITY less.label "MENOS" >
 
-<!ENTITY add.label     "Add">
-<!ENTITY edit.label    "Edit">
-<!ENTITY remove.label  "Remove">
+<!ENTITY add.label     "Añadir">
+<!ENTITY edit.label    "Editar">
+<!ENTITY remove.label  "Eliminar">
