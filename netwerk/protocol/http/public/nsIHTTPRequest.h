@@ -20,7 +20,7 @@
 #define _nsIHTTPRequest_h_
 
 #include "nsIHTTPCommonHeaders.h"
-#include "nsIHTTPHandler.h" 
+// #include "nsIHTTPHandler.h" 
 #include "nsHTTPEnums.h"
 /* 
     The nsIHTTPRequest class is the interface to an intance
