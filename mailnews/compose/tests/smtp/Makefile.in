@@ -57,6 +57,17 @@ LIBS = \
 	-lpref	\
 	-ljs	\
 	-lraptorbase \
+	-lraptorhtml	\
+	-lraptorhtmlpars \
+	-lraptorgfx	\
+	-ljsdom	\
+	-ljsurl	\
+	-lgfxgtk	\
+	-limg	\
+	-lpng	\
+	-ljpeg	\
+	-lxp	\
+	-lmozutil \
 	-lgmbase$(MOZ_TOOLKIT) \
 	-lsecfree \
 	-lz \
