@@ -469,6 +469,15 @@ print("inout of interface tests - "+
 echo.SetReceiver(null);
 
 /***************************************************************************/
+
+try {
+    echo.MethodWithForwardDeclaredParam(new Object());
+    print("method with forward declared param test  -  passed");
+} catch(e) {
+    print("method with forward declared param test  -  failed");
+}    
+
+/***************************************************************************/
 // Components object test...
 // print(".......................................");
 
