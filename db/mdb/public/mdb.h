@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Blake Ross (blake@blakeross.com)
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -2156,6 +2157,19 @@ public:
     nsIMdbEnv* ev, // context
     nsIMdbRow** acqRow, // acquire next row in table
     mdb_pos* outRowPos) = 0;    // zero-based position of the row in table
+
+  NS_IMETHOD PrevRowOid( // get row id of previous row in the table
+    nsIMdbEnv* ev, // context
+    mdbOid* outOid, // out row oid
+    mdb_pos* outRowPos) = 0;    // zero-based position of the row in table
+  // } ----- end oid iteration methods -----
+
+  // { ----- begin row iteration methods -----
+  NS_IMETHOD PrevRow( // get row cells from table for cells already in row
+    nsIMdbEnv* ev, // context
+    nsIMdbRow** acqRow, // acquire previous row in table
+    mdb_pos* outRowPos) = 0;    // zero-based position of the row in table
+
   // } ----- end row iteration methods -----
 
   // { ----- begin copy iteration methods -----

@@ -124,12 +124,20 @@ public:
     nsIMdbEnv* ev, // context
     mdbOid* outOid, // out row oid
     mdb_pos* outRowPos);    // zero-based position of the row in table
+  NS_IMETHOD PrevRowOid( // get row id of previous row in the table
+    nsIMdbEnv* ev, // context
+    mdbOid* outOid, // out row oid
+    mdb_pos* outRowPos);    // zero-based position of the row in table
   // } ----- end oid iteration methods -----
 
   // { ----- begin row iteration methods -----
   NS_IMETHOD NextRow( // get row cells from table for cells already in row
     nsIMdbEnv* ev, // context
     nsIMdbRow** acqRow, // acquire next row in table
+    mdb_pos* outRowPos);    // zero-based position of the row in table
+  NS_IMETHOD PrevRow( // get row cells from table for cells already in row
+    nsIMdbEnv* ev, // context
+    nsIMdbRow** acqRow, // acquire previous row in table
     mdb_pos* outRowPos);    // zero-based position of the row in table
   // } ----- end row iteration methods -----
 
@@ -144,6 +152,7 @@ public: // typing
 
 public: // oid only iteration
   mdb_pos NextRowOid(morkEnv* ev, mdbOid* outOid);
+  mdb_pos PrevRowOid(morkEnv* ev, mdbOid* outOid);
 
 public: // other table row cursor methods
 
@@ -151,6 +160,7 @@ public: // other table row cursor methods
   virtual mork_count GetMemberCount(morkEnv* ev);
 
   virtual morkRow* NextRow(morkEnv* ev, mdbOid* outOid, mdb_pos* outPos);
+  virtual morkRow* PrevRow(morkEnv* ev, mdbOid* outOid, mdb_pos* outPos);
 
 public: // typesafe refcounting inlines calling inherited morkNode methods
   static void SlotWeakTableRowCursor(morkTableRowCursor* me,
