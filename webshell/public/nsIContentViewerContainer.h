@@ -25,6 +25,7 @@
 
 class nsIContentViewer;
 class nsIURL;
+class nsIDocumentLoader;
 
 #define NS_ICONTENT_VIEWER_CONTAINER_IID \
  { 0xa6cf9055, 0x15b3, 0x11d2,{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
@@ -46,9 +47,10 @@ public:
 
   NS_IMETHOD GetContentViewer(nsIContentViewer** aResult) = 0;
 
-  NS_IMETHOD HandleUnknownContentType( nsIURL* aURL,
-                                       const char *aContentType,
-                                       const char *aCommand ) = 0;
+  NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* aLoader,
+                                      nsIURL* aURL,
+                                      const char *aContentType,
+                                      const char *aCommand ) = 0;
 };
 
 #endif /* nsIContentViewerContainer_h___ */

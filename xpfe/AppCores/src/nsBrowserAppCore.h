@@ -88,23 +88,24 @@ class nsBrowserAppCore : public nsBaseAppCore,
     NS_IMETHOD    LoadInitialPage();
 
     // nsIDocumentLoaderObserver
-    NS_IMETHOD OnStartDocumentLoad(nsIURL* aURL, const char* aCommand);
-    NS_IMETHOD OnEndDocumentLoad(nsIURL *aUrl, PRInt32 aStatus);
-    NS_IMETHOD OnStartURLLoad(nsIURL* aURL, const char* aContentType, 
+    NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURL* aURL, const char* aCommand);
+    NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURL *aUrl, PRInt32 aStatus);
+    NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, nsIURL* aURL, const char* aContentType, 
                             nsIContentViewer* aViewer);
-    NS_IMETHOD OnProgressURLLoad(nsIURL* aURL, PRUint32 aProgress, 
+    NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader, nsIURL* aURL, PRUint32 aProgress, 
                                PRUint32 aProgressMax);
-    NS_IMETHOD OnStatusURLLoad(nsIURL* aURL, nsString& aMsg);
-    NS_IMETHOD OnEndURLLoad(nsIURL* aURL, PRInt32 aStatus);
+    NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader, nsIURL* aURL, nsString& aMsg);
+    NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIURL* aURL, PRInt32 aStatus);
+    NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* loader,
+                                        nsIURL *aURL,
+                                        const char *aContentType,
+                                        const char *aCommand );
 
 
     // nsINetSupport
     NS_IMETHOD_(void) Alert(const nsString &aText);
   
     NS_IMETHOD_(PRBool) Confirm(const nsString &aText);
-  NS_IMETHOD HandleUnknownContentType( nsIURL *aURL,
-                                       const char *aContentType,
-                                       const char *aCommand );
 
 
     NS_IMETHOD_(PRBool) Prompt(const nsString &aText,

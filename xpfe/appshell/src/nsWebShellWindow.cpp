@@ -1087,13 +1087,15 @@ nsWebShellWindow::DestroyModalDialogEvent(PLEvent *aEvent)
 // nsIDocumentLoaderObserver implementation
 //----------------------------------------
 NS_IMETHODIMP
-nsWebShellWindow::OnStartDocumentLoad(nsIURL* aURL, const char* aCommand)
+nsWebShellWindow::OnStartDocumentLoad(nsIDocumentLoader* loader, 
+                                      nsIURL* aURL, const char* aCommand)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsWebShellWindow::OnEndDocumentLoad(nsIURL* aURL, PRInt32 aStatus)
+nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader, 
+                                    nsIURL* aURL, PRInt32 aStatus)
 {
 #ifdef DEBUG_MENUSDEL
   printf("OnEndDocumentLoad\n");
@@ -1187,32 +1189,40 @@ nsWebShellWindow::OnEndDocumentLoad(nsIURL* aURL, PRInt32 aStatus)
 }
 
 NS_IMETHODIMP 
-nsWebShellWindow::OnStartURLLoad(nsIURL* aURL, const char* aContentType, nsIContentViewer* aViewer)
+nsWebShellWindow::OnStartURLLoad(nsIDocumentLoader* loader, 
+                                 nsIURL* aURL, 
+                                 const char* aContentType, 
+                                 nsIContentViewer* aViewer)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsWebShellWindow::OnProgressURLLoad(nsIURL* aURL, PRUint32 aProgress, 
+nsWebShellWindow::OnProgressURLLoad(nsIDocumentLoader* loader, 
+                                    nsIURL* aURL, 
+                                    PRUint32 aProgress, 
                                     PRUint32 aProgressMax)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsWebShellWindow::OnStatusURLLoad(nsIURL* aURL, nsString& aMsg)
+nsWebShellWindow::OnStatusURLLoad(nsIDocumentLoader* loader, 
+                                  nsIURL* aURL, nsString& aMsg)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsWebShellWindow::OnEndURLLoad(nsIURL* aURL, PRInt32 aStatus)
+nsWebShellWindow::OnEndURLLoad(nsIDocumentLoader* loader, 
+                               nsIURL* aURL, PRInt32 aStatus)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsWebShellWindow::HandleUnknownContentType(nsIURL* aURL,
+nsWebShellWindow::HandleUnknownContentType(nsIDocumentLoader* loader, 
+                                           nsIURL* aURL,
                                            const char *aContentType,
                                            const char *aCommand )
 {
