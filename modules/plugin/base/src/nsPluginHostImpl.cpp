@@ -1423,6 +1423,7 @@ nsPluginHostImpl::nsPluginHostImpl()
 {
   NS_INIT_REFCNT();
   mPluginsLoaded = PR_FALSE;
+  mDontShowBadPluginMessage = PR_FALSE;
 }
 
 nsPluginHostImpl::~nsPluginHostImpl()
@@ -3641,6 +3642,9 @@ NS_IMETHODIMP nsPluginHostImpl::SetCookie(const char* inCookieURL, const void* i
 NS_IMETHODIMP nsPluginHostImpl::HandleBadPlugin(PRLibrary* aLibrary)
 {
   nsresult rv = NS_OK;
+
+  if(mDontShowBadPluginMessage)
+    return rv;
   
   nsCOMPtr<nsIPrompt> prompt(do_GetService(kNetSupportDialogCID));
   nsCOMPtr<nsIIOService> io(do_GetService(kIOServiceCID));
@@ -3716,6 +3720,9 @@ NS_IMETHODIMP nsPluginHostImpl::HandleBadPlugin(PRLibrary* aLibrary)
                                0, /* number of edit fields */
                                0, /* is first edit field a password field */
                                &buttonPressed);
+
+  if (checkboxState)
+    mDontShowBadPluginMessage = PR_TRUE;
 
   nsMemory::Free((void *)title);
   nsMemory::Free((void *)message);
