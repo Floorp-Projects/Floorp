@@ -47,6 +47,7 @@
 #include "nsXPIDLString.h"
 #include "prmem.h"
 #include "nsIObserverService.h"
+#include "nsIServiceManager.h"
 
 #include "nsOS2Uni.h"
 
