@@ -45,6 +45,7 @@ EXPORTS =				\
   nsIDeviceContextSpec.h \
   nsIDeviceContextSpecFactory.h \
   nsIDrawingSurface.h \
+  nsCompressedCharMap.h \
 	$(NULL)
 
 MODULE=gfx 

@@ -54,8 +54,9 @@ OBJS =                                  \
 	.\$(OBJDIR)\nsDeviceContextSpecFactoryW.obj          \
 	.\$(OBJDIR)\nsScreenWin.obj          \
 	.\$(OBJDIR)\nsScreenManagerWin.obj          \
-  .\$(OBJDIR)\nsPrintOptionsWin.obj     \
+	.\$(OBJDIR)\nsPrintOptionsWin.obj     \
 	.\$(OBJDIR)\nsGfxFactoryWin.obj          \
+	.\$(OBJDIR)\nsCompressedCharMap.obj          \
 	$(NULL)
 
 EXPORTS= nsIRenderingContextWin.h \
@@ -96,6 +97,9 @@ WIN_LIBS=                                       \
 
 LLFLAGS = 	$(LLFLAGS)		 
 include <$(DEPTH)\config\rules.mak>
+
+export::
+  $(MAKE_INSTALL) ..\nsCompressedCharMap.cpp .
 
 install::
 	$(MAKE_INSTALL) fontEncoding.properties $(DIST)\bin\res\fonts
