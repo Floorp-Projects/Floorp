@@ -54,6 +54,7 @@ typedef nsEventStatus (*PR_CALLBACK EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_NATIVE_WINDOW    0
 #define NS_NATIVE_GRAPHIC   1
 #define NS_NATIVE_COLORMAP  2
+#define NS_NATIVE_WIDGET    3
 
 // {18032AD5-B265-11d1-AA2A-000000000000}
 #define NS_IWIDGET_IID \
