@@ -62,7 +62,8 @@ protected:
     nsCOMPtr<nsILoadGroup>      mLoadGroup;
     nsCOMPtr<nsIStreamListener> mListener;
     nsCOMPtr<nsISupports>       mContext;
-	nsLoadFlags					mLoadAttributes;
+    nsLoadFlags                 mLoadAttributes;
+    nsCOMPtr<nsISupports>       mOwner;
 
 public:
     static nsresult
@@ -248,16 +249,16 @@ nsCachedChromeChannel::GetContentLength(PRInt32 *aContentLength)
 NS_IMETHODIMP
 nsCachedChromeChannel::GetOwner(nsISupports * *aOwner)
 {
-    NS_NOTREACHED("don't do that");
-    *aOwner = nsnull;
-    return NS_ERROR_FAILURE;
+    *aOwner = mOwner.get();
+    NS_IF_ADDREF(*aOwner);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsCachedChromeChannel::SetOwner(nsISupports * aOwner)
 {
-    NS_NOTREACHED("don't do that");
-    return NS_ERROR_FAILURE;
+    mOwner = aOwner;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
