@@ -36,8 +36,7 @@ print STDERR "Building hash of file names...";
 print STDERR "done.\n";
 
 for $br (last_successful_builds($tree)) {
-  next unless $br->{errorparser} eq 'unix';
-  next unless $br->{buildname} =~ /\b(Clobber|Clbr)\b/;
+  next unless $br->{buildname} =~ /shrike.*\b(Clobber|Clbr)\b/;
 
   my $log_file = "$br->{logfile}";
 
@@ -75,7 +74,7 @@ sub build_file_hash {
   
   while (<LXR_FILENAMES>) {
     my ($base, $dir, $ext) = fileparse($_,'\.[^/]*');
-    next unless $ext =~ /^\.(cpp|h|C|s|c)$/;
+    next unless $ext =~ /^\.(cpp|h|C|s|c|mk|in)$/;
     $base = "$base$ext";
 
     unless (exists $bases{$base}) {
@@ -144,30 +143,31 @@ sub gcc_parser {
     }
     my $file = "$dir/$filename";
 
-    unless (defined($warnings{"$file:$line"})) {
+    unless (defined($warnings{$file}{$line})) {
       # Remember where in the build log the warning occured
 
-      $warnings{"$file:$line"} = {
+      $warnings{$file}{$line} = {
          first_seen_line => $.,
          log_file        => $log_file,
-         count           => 0,
          warning_text    => $warning_text,
       };
     }
-    $warnings{"$file:$line"}->{count}++;
-    $warnings_per_file{$file}{$line}=1;
+    $warnings{$file}{$line}->{count}++;
+    $total_warnings_count++;
   }
 }
 
 
 sub dump_warning_data {
-  while (my ($file_and_line, $record) = each %warnings) {
-    print join ':', 
-      "$file_and_line",
+  while (my ($file, $lines_hash) = each %warnings) {
+    while (my ($line, $record) = each %{$lines_hash}) {
+      print join ':', 
+      $file,$line,
       $record->{first_seen_line},
       $record->{count},
       $record->{warning_text};
-    print "\n";
+      print "\n";
+    }
   }
 }
 
@@ -176,24 +176,27 @@ sub build_blame {
   require 'utils.pl';
   require 'cvsblame.pl';
 
-  while (($file, $lines) = each %warnings_per_file) {
+  while (($file, $lines_hash) = each %warnings) {
+
+    # Special case for Makefiles
+    $file =~ s/Makefile$/Makefile.in/;
 
     my $rcs_filename = "$cvsroot/$file,v";
 
     unless (-e $rcs_filename) {
       warn "Unable to find $rcs_filename\n";
+      $unblamed{$file} = 1;
       next;
     }
 
     my $revision = &parse_cvs_file($rcs_filename);
     @text = &extract_revision($revision);
-    for $line (keys %{$lines}) {
+    while (my ($line, $warn_rec) = each %{$lines_hash}) {
       my $line_rev = $revision_map[$line-1];
       my $who = $revision_author{$line_rev};
       my $source_text = join '', @text[$line-4..$line+2];
       chomp $source_text;
       
-      my $warn_rec = $warnings{"$file:$line"};
       $warn_rec->{line_rev} = $line_rev;
       $warn_rec->{source}   = $source_text;
 
@@ -223,7 +226,8 @@ sub print_warnings_as_html {
         Blamed Build Warnings
       </b></font><br>
       <font size="+1" face="Helvetica,Arial">
-        $buildname on $time_str
+        $buildname on $time_str<br>
+        $total_warnings_count total warnings
       </font><p>
     
 __END_HEADER
@@ -245,53 +249,33 @@ __END_HEADER
     for $file (sort keys %{$warnings_by_who{$who}}) {
       for $linenum (sort keys %{$warnings_by_who{$who}{$file}}) {
         my $warn_rec = $warnings_by_who{$who}{$file}{$linenum};
-        my $warning = $warn_rec->{warning_text};
-        print "<li>";
-        # File link
-        print "<a target='_other' href='"
-              .file_url($file,$linenum)."'>";
-        print   "$file:$linenum";
-        print "</a> ";
-        print "<br>";
-        # Warning text
-        print "\u$warning";
-        # Build log link
-        my $log_line = $warn_rec->{first_seen_line};
-        print " (<a href='"
-          .build_url($tree, $br, $log_line)
-          ."'target='_other'>";
-        if ($warn_rec->{count} == 1) {
-          print "See build log";
-        } else {
-          print "See 1st of $warn_rec->{count} occurrences in build log";
-        }
-        print "</a>)<br>";
-        
-        # Source code fragment
-        #
-        my ($keyword) = $warning =~ /\`([^\']*)\'/;
-        print "<table cellpadding=4><tr><td bgcolor='#ededed'>";
-        print "<pre><font size='-1'>";
 
-        my $source_text = $warn_rec->{source};
-        my @source_lines = split /\n/, $source_text;
-        my $line_index = $linenum - 3;
-        for $line (@source_lines) {
-          $line =~ s/&/&amp;/g;
-          $line =~ s/</&lt;/g;
-          $line =~ s/>/&gt;/g;
-          $line =~ s|$keyword|<b>$keyword</b>|g;
-          print "<font color='red'>" if $line_index == $linenum;
-          print "$line_index $line<BR>";
-          print "</font>" if $line_index == $linenum;
-          $line_index++;
-        }
-        print "</font>"; #</pre>";
-        print "</td></tr></table>\n";
+        print_warning($tree, $br, $file, $linenum, $warn_rec);
+        print_source_code($linenum, $warn_rec);
       }
     }
     print "</ol>\n"
   }
+
+  # Unblamed warnings
+  #
+  my $total_unblamed_warnigns=0;
+  for my $file (keys %unblamed) {
+    for my $linenum (keys %{$warnings{$file}}) {
+      $total_unblamed_warnings++;
+    }
+  }
+  print "<font size='+1' face='Helvetica,Arial'><b>";
+  print "Unblamed ($total_unblamed_warnings warnings)";
+  print "</b></font>";
+  print "<ul>";
+  for my $file (sort keys %unblamed) {
+    for my $linenum (sort keys %{$warnings{$file}}) {
+      my $warn_rec = $warnings{$file}{$linenum};
+      print_warning($tree, $br, $file, $linenum, $warn_rec);
+    }
+  }
+  print "</ul>";
 
   print <<"__END_FOOTER";
   <p>
@@ -303,6 +287,60 @@ __END_FOOTER
 
   # Change default destination back.
   select($old_fh);
+}
+
+sub print_warning {
+  my ($tree, $br, $file, $linenum, $warn_rec) = @_;
+
+  my $warning = $warn_rec->{warning_text};
+  print "<li>";
+
+  # File link
+  print "<a target='_other' href='"
+    .file_url($file,$linenum)."'>";
+  print   "$file:$linenum";
+  print "</a> ";
+  print "<br>";
+  # Warning text
+  print "\u$warning";
+  # Build log link
+  my $log_line = $warn_rec->{first_seen_line};
+  print " (<a href='"
+    .build_url($tree, $br, $log_line)
+      ."'target='_other'>";
+  if ($warn_rec->{count} == 1) {
+    print "See build log";
+  } else {
+    print "See 1st of $warn_rec->{count} occurrences in build log";
+  }
+  print "</a>)<br>";
+}
+
+sub print_source_code {
+  my ($linenum, $warn_rec) = @_;
+  my $warning = $warn_rec->{warning_text};
+
+  # Source code fragment
+  #
+  my ($keyword) = $warning =~ /\`([^\']*)\'/;
+  print "<table cellpadding=4><tr><td bgcolor='#ededed'>";
+  print "<pre><font size='-1'>";
+  
+  my $source_text = $warn_rec->{source};
+  my @source_lines = split /\n/, $source_text;
+  my $line_index = $linenum - 3;
+  for $line (@source_lines) {
+    $line =~ s/&/&amp;/g;
+    $line =~ s/</&lt;/g;
+    $line =~ s/>/&gt;/g;
+    $line =~ s|$keyword|<b>$keyword</b>|g;
+    print "<font color='red'>" if $line_index == $linenum;
+    print "$line_index $line<BR>";
+    print "</font>" if $line_index == $linenum;
+    $line_index++;
+  }
+  print "</font>"; #</pre>";
+  print "</td></tr></table>\n";
 }
 
 sub build_url {
