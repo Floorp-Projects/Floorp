@@ -131,9 +131,21 @@
 
 - (void)constructMenu:(NSMenu *)menu forBookmarkFolder:(BookmarkFolder *)aFolder
 {
-  unsigned i, childCount = [aFolder count];
-  for (i = 0; i < childCount; i++)
+  unsigned long childCount = [aFolder count];
+  for (unsigned long i = 0; i < childCount; i++)
     [self addItem:[aFolder objectAtIndex:i] toMenu:menu atIndex:i];
+  
+  // add the "Open In Tabs" option to open all items in this subfolder (not the main bookmark
+  // folder) as a tabgroup.
+  if (aFolder != [[BookmarkManager sharedBookmarkManager] bookmarkMenuFolder] && childCount > 0) {
+    [menu addItem:[NSMenuItem separatorItem]];
+
+    NSMenuItem *menuItem = [[[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Open in Tabs", nil) action:nil keyEquivalent:@""] autorelease];
+    [menu addItem:menuItem];
+    [menuItem setTarget:[NSApp delegate]];
+    [menuItem setAction:@selector(openMenuBookmark:)];
+    [menuItem setRepresentedObject:aFolder];
+  }
 }
 
 - (void)addItem:(BookmarkItem *)anItem toMenu:(NSMenu *)aMenu atIndex:(int)aIndex
