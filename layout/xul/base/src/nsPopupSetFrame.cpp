@@ -519,3 +519,4 @@ nsPopupSetFrame::GetActiveChildElement(nsIContent** aResult)
     child->GetContent(aResult);
   }
 }
+
