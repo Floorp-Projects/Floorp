@@ -195,10 +195,11 @@ nsBulletFrame::Paint(nsIPresContext*      aPresContext,
     const nsStyleList* myList = (const nsStyleList*)mStyleContext->GetStyleData(eStyleStruct_List);
     PRUint8 listStyleType = myList->mListStyleType;
 
-    if (myList->mListStyleImage.Length() > 0 && mImageRequest) {
+    if (!myList->mListStyleImage.IsEmpty() && mImageRequest) {
       PRUint32 status;
       mImageRequest->GetImageStatus(&status);
-      if (status & imgIRequest::STATUS_LOAD_COMPLETE) {
+      if (status & imgIRequest::STATUS_LOAD_COMPLETE &&
+          !(status & imgIRequest::STATUS_ERROR)) {
         nsCOMPtr<imgIContainer> imageCon;
         mImageRequest->GetImage(getter_AddRefs(imageCon));
         if (imageCon) {
@@ -1267,106 +1268,98 @@ nsBulletFrame::GetDesiredSize(nsIPresContext*  aCX,
   const nsStyleList* myList = (const nsStyleList*)mStyleContext->GetStyleData(eStyleStruct_List);
   nscoord ascent;
 
-  if (!myList->mListStyleImage.IsEmpty()) {
-    nscoord widthConstraint = NS_INTRINSICSIZE;
-    nscoord heightConstraint = NS_INTRINSICSIZE;
-    PRBool fixedContentWidth = PR_FALSE;
-    PRBool fixedContentHeight = PR_FALSE;
+  if (!myList->mListStyleImage.IsEmpty() && mImageRequest) {
+    PRUint32 status;
+    mImageRequest->GetImageStatus(&status);
+    if (status & imgIRequest::STATUS_SIZE_AVAILABLE &&
+        !(status & imgIRequest::STATUS_ERROR)) {
+      nscoord widthConstraint = NS_INTRINSICSIZE;
+      nscoord heightConstraint = NS_INTRINSICSIZE;
+      PRBool fixedContentWidth = PR_FALSE;
+      PRBool fixedContentHeight = PR_FALSE;
 
-    nscoord minWidth, maxWidth, minHeight, maxHeight;
+      nscoord minWidth, maxWidth, minHeight, maxHeight;
+      
+      // Determine whether the image has fixed content width
+      widthConstraint = aReflowState.mComputedWidth;
+      minWidth = aReflowState.mComputedMinWidth;
+      maxWidth = aReflowState.mComputedMaxWidth;
+      if (widthConstraint != NS_INTRINSICSIZE) {
+        fixedContentWidth = PR_TRUE;
+      }
 
-    // Determine whether the image has fixed content width
-    widthConstraint = aReflowState.mComputedWidth;
-    minWidth = aReflowState.mComputedMinWidth;
-    maxWidth = aReflowState.mComputedMaxWidth;
-    if (widthConstraint != NS_INTRINSICSIZE) {
-      fixedContentWidth = PR_TRUE;
-    }
+      // Determine whether the image has fixed content height
+      heightConstraint = aReflowState.mComputedHeight;
+      minHeight = aReflowState.mComputedMinHeight;
+      maxHeight = aReflowState.mComputedMaxHeight;
+      if (heightConstraint != NS_UNCONSTRAINEDSIZE) {
+        fixedContentHeight = PR_TRUE;
+      }
 
-    // Determine whether the image has fixed content height
-    heightConstraint = aReflowState.mComputedHeight;
-    minHeight = aReflowState.mComputedMinHeight;
-    maxHeight = aReflowState.mComputedMaxHeight;
-    if (heightConstraint != NS_UNCONSTRAINEDSIZE) {
-      fixedContentHeight = PR_TRUE;
-    }
+      PRBool haveComputedSize = PR_FALSE;
+      PRBool needIntrinsicImageSize = PR_FALSE;
 
-    PRBool haveComputedSize = PR_FALSE;
-    PRBool needIntrinsicImageSize = PR_FALSE;
-
-    nscoord newWidth=0, newHeight=0;
-    if (fixedContentWidth) {
-      newWidth = MINMAX(widthConstraint, minWidth, maxWidth);
-      if (fixedContentHeight) {
-        newHeight = MINMAX(heightConstraint, minHeight, maxHeight);
-        haveComputedSize = PR_TRUE;
-      } else {
-        // We have a width, and an auto height. Compute height from
-        // width once we have the intrinsic image size.
-        if (mIntrinsicSize.height != 0) {
-          newHeight = (mIntrinsicSize.height * newWidth) / mIntrinsicSize.width;
+      nscoord newWidth=0, newHeight=0;
+      if (fixedContentWidth) {
+        newWidth = MINMAX(widthConstraint, minWidth, maxWidth);
+        if (fixedContentHeight) {
+          newHeight = MINMAX(heightConstraint, minHeight, maxHeight);
           haveComputedSize = PR_TRUE;
         } else {
-          newHeight = 0;
+          // We have a width, and an auto height. Compute height from
+          // width once we have the intrinsic image size.
+          if (mIntrinsicSize.height != 0) {
+            newHeight = (mIntrinsicSize.height * newWidth) / mIntrinsicSize.width;
+            haveComputedSize = PR_TRUE;
+          } else {
+            newHeight = 0;
+            needIntrinsicImageSize = PR_TRUE;
+          }
+        }
+      } else if (fixedContentHeight) {
+        // We have a height, and an auto width. Compute width from height
+        // once we have the intrinsic image size.
+        newHeight = MINMAX(heightConstraint, minHeight, maxHeight);
+        if (mIntrinsicSize.width != 0) {
+          newWidth = (mIntrinsicSize.width * newHeight) / mIntrinsicSize.height;
+          haveComputedSize = PR_TRUE;
+        } else {
+          newWidth = 0;
           needIntrinsicImageSize = PR_TRUE;
         }
-      }
-    } else if (fixedContentHeight) {
-      // We have a height, and an auto width. Compute width from height
-      // once we have the intrinsic image size.
-      newHeight = MINMAX(heightConstraint, minHeight, maxHeight);
-      if (mIntrinsicSize.width != 0) {
-        newWidth = (mIntrinsicSize.width * newHeight) / mIntrinsicSize.height;
-        haveComputedSize = PR_TRUE;
       } else {
-        newWidth = 0;
-        needIntrinsicImageSize = PR_TRUE;
+        // auto size the image
+        if (mIntrinsicSize.width == 0 && mIntrinsicSize.height == 0)
+          needIntrinsicImageSize = PR_TRUE;
+        else
+          haveComputedSize = PR_TRUE;
+
+        newWidth = mIntrinsicSize.width;
+        newHeight = mIntrinsicSize.height;
       }
-    } else {
-      // auto size the image
-      if (mIntrinsicSize.width == 0 && mIntrinsicSize.height == 0)
-        needIntrinsicImageSize = PR_TRUE;
-      else
-        haveComputedSize = PR_TRUE;
 
-      newWidth = mIntrinsicSize.width;
-      newHeight = mIntrinsicSize.height;
-    }
-
-    mComputedSize.width = newWidth;
-    mComputedSize.height = newHeight;
+      mComputedSize.width = newWidth;
+      mComputedSize.height = newHeight;
 
 #if 0 // don't do scaled images in bullets
-    if (mComputedSize == mIntrinsicSize) {
-      mTransform.SetToIdentity();
-    } else {
-      if (mComputedSize.width != 0 && mComputedSize.height != 0) {
-        mTransform.SetToScale(float(mIntrinsicSize.width) / float(mComputedSize.width),
-                              float(mIntrinsicSize.height) / float(mComputedSize.height));
+      if (mComputedSize == mIntrinsicSize) {
+        mTransform.SetToIdentity();
+      } else {
+        if (mComputedSize.width != 0 && mComputedSize.height != 0) {
+          mTransform.SetToScale(float(mIntrinsicSize.width) / float(mComputedSize.width),
+                                float(mIntrinsicSize.height) / float(mComputedSize.height));
+        }
       }
-    }
 #endif
 
-    aMetrics.width = mComputedSize.width;
-    aMetrics.height = mComputedSize.height;
+      aMetrics.width = mComputedSize.width;
+      aMetrics.height = mComputedSize.height;
 
-#if 0
-    mImageLoader.GetDesiredSize(aCX, &aReflowState, aMetrics);
-    if (!mImageLoader.GetLoadImageFailed()) {
-      nsHTMLContainerFrame::CreateViewForFrame(aCX, this, mStyleContext, nsnull,
-                                               PR_FALSE);
       aMetrics.ascent = aMetrics.height;
       aMetrics.descent = 0;
+
       return;
     }
-
-#endif
-
-    aMetrics.ascent = aMetrics.height;
-    aMetrics.descent = 0;
-
-    return;
-
   }
 
   const nsStyleFont* myFont =
@@ -1581,7 +1574,14 @@ nsBulletFrame::Reflow(nsIPresContext* aPresContext,
 NS_IMETHODIMP nsBulletFrame::OnStartContainer(imgIRequest *aRequest, nsIPresContext *aPresContext, imgIContainer *aImage)
 {
   if (!aImage) return NS_ERROR_INVALID_ARG;
+  if (!aRequest) return NS_ERROR_INVALID_ARG;
 
+  PRUint32 status;
+  aRequest->GetImageStatus(&status);
+  if (status & imgIRequest::STATUS_ERROR) {
+    return NS_OK;
+  }
+  
   nscoord w, h;
   aImage->GetWidth(&w);
   aImage->GetHeight(&h);
@@ -1626,6 +1626,8 @@ NS_IMETHODIMP nsBulletFrame::OnDataAvailable(imgIRequest *aRequest, nsIPresConte
 {
   if (!aRect) return NS_ERROR_NULL_POINTER;
 
+  // XXX Should we do anything here if an error occured in the decode?
+  
   nsRect r(*aRect);
 
   /* XXX Why do we subtract 1 here?  The rect is (for example): (0, 0, 600, 1)..
