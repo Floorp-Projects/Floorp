@@ -319,7 +319,7 @@
         <menupopup>	
           <menuitem value="&selectAddressCmd.label;" accesskey="&selectAddressCmd.accesskey;" observes="cmd_selectAddress"/>
           <menuitem value="&checkSpellingCmd.label;" id="menu_checkspelling" accesskey="&checkSpellingCmd.accesskey;" key="key_checkspelling" observes="cmd_spelling"/>
-          <menuitem value="&quoteOrigCmd.label;" accesskey="&quoteOrigCmd.accesskey;" observes="cmd_quoteMessage"/>	
+          <!--menuitem value="&quoteOrigCmd.label;" accesskey="&quoteOrigCmd.accesskey;" observes="cmd_quoteMessage"/-->	
           <menuitem value="&editRewrapCmd.label;" observes="cmd_rewrap" oncommand="editorShell.Rewrap(false)"/>
           <menuseparator/>
           <menu value="&outputFormatMenu.label;" observes="cmd_outputFormat">
@@ -392,7 +392,7 @@
           <menuitem value="&attachVCardCmd.label;" disabled="true" accesskey="&attachVCardCmd.accesskey;" oncommand="AttachVCard()"/-->    	
         </menupopup>
       </menu>
-      <menu id="debugMenu"/>
+      <!--menu id="debugMenu"/-->
       <menu id="tasksMenu"/>
       <menu id="menu_Help"/>
     </menubar>
