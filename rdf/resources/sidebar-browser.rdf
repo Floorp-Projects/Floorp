@@ -24,6 +24,7 @@
          <NC:title>&sidebar.flash.label;</NC:title>
          <NC:content>resource://res/rdf/flash.xul</NC:content>
          <NC:customize>resource://res/rdf/flash-cust.xul</NC:customize>
+         <NC:height>5em</NC:height>
        </RDF:Description>
     </RDF:li>
     <RDF:li>

@@ -28,12 +28,9 @@ include $(topsrcdir)/config/rules.mk
 
 FILES = \
 	article.gif                     \
-	dialog.js                       \
-	dialog.xul                      \
-	dialogFrame.html                \
-	dialogSidebar.js                \
-	dialogSidebar.xul               \
-	sidebar-registry.rdf            \
+	customize.css                   \
+	customize.js                    \
+	customize.xul                   \
 	document.gif			\
 	dom-test-1.xul			\
 	dom-test-2.xul			\
@@ -52,15 +49,15 @@ FILES = \
 	folder-closed.gif		\
 	folder-open.gif			\
 	ignore-test.xul			\
+	list-down.gif                   \
+	list-up.gif                     \
 	loading.gif			\
 	online.gif			\
-	remote-flash-1.rdf		\
-	remote-flash-2.rdf		\
-	remote-flash-3.rdf		\
 	sidebar.css			\
 	sidebar.js			\
 	sidebar-browser.rdf		\
 	sidebar-browser.xul		\
+	sidebar-registry.rdf            \
 	stock.gif			\
 	unread.gif			\
 	xpidl-test-1.xul		\

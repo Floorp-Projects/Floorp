@@ -6,7 +6,7 @@
 [
 <!ENTITY sidebar.title.label         "Sidebar">
 <!ENTITY sidebar.reload.label        "reload">
-<!ENTITY sidebar.customize.label     "customize">
+<!ENTITY sidebar.customize.label     "customize...">
 ]>
 
 <window
@@ -26,7 +26,7 @@
                 onclick="window.location.reload()" />
   <titledbutton class="borderless paneltitle" 
                 value="&sidebar.customize.label;" 
-				onclick="dialogWindow=makeDialog()" />
+				onclick="dialogWindow=customize();" />
  </box>
 </box>
 </window>

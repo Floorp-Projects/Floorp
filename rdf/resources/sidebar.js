@@ -85,34 +85,22 @@ function createPanel(registry, service) {
 
   box.setAttribute('align', 'vertical');
   iframe.setAttribute('src', panel_content);
-  if (panel_height)
-    iframe.setAttribute('style', 'height:' + panel_height);
+  if (panel_height) {
+    var height_style = 'height:' + panel_height + ';';
+	  iframe.setAttribute('style',       height_style);
+		iframe.setAttribute('save_height', height_style);
+	}
   box.appendChild(panelbar);
   box.appendChild(iframe);
 
   return box;
 }
 
-function resize(id) {
-  var box = document.getElementById('sidebox');
-  var iframe = document.getElementById(id);
-  var height = iframe.getAttribute('height');
-  dump ('height='+height+'\n');
-
-  if (iframe.getAttribute('display') == 'none') {
-    iframe.setAttribute('style', 'height:'+ height +'px; visibility:visible');
-    iframe.setAttribute('display','block');
-  } else {
-    iframe.setAttribute('style', 'height:0px; visibility:hidden');
-    iframe.setAttribute('display','none');
-  }
-}
-
 function createPanelTitle(titletext, id)
 {
   var panelbar  = document.createElement('box');
   var title     = document.createElement('titledbutton');
-  var spring     = document.createElement('spring');
+  var spring    = document.createElement('spring');
 
   title.setAttribute('value', titletext);
   title.setAttribute('class', 'borderless paneltitle');
@@ -138,8 +126,22 @@ function getAttr(registry,service,attr_name) {
   return attr;
 }
 
-function makeDialog() {
-	var newWin = window.openDialog('resource://res/rdf/dialogSidebar.xul','New','chrome', sidebar.db, sidebar.resource);
+function resize(id) {
+  var box = document.getElementById('sidebox');
+  var iframe = document.getElementById(id);
+
+  if (iframe.getAttribute('display') == 'none') {
+		var height_style = iframe.getAttribute('save_height');
+    iframe.setAttribute('style', height_style + 'visibility:visible');
+    iframe.setAttribute('display','block');
+  } else {
+    iframe.setAttribute('style', 'height:0px; visibility:hidden');
+    iframe.setAttribute('display','none');
+  }
+}
+
+function customize() {
+	var newWin = window.openDialog('resource://res/rdf/customize.xul','New','chrome', sidebar.db, sidebar.resource);
 	return newWin;
 }
 

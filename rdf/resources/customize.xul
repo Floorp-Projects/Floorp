@@ -1,0 +1,103 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://sidebar/skin/" type="text/css"?>
+<?xml-stylesheet href="resource://res/rdf/customize.css" type="text/css"?>
+
+<!DOCTYPE window> 
+
+<window
+  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  onload="Init();">
+
+<html:script src="resource://res/rdf/customize.js" />
+
+<box align="vertical" flex="100%" id="main-box">
+
+  <html:div class="title">
+    Current Panels
+  </html:div>
+
+  <box align="horizontal" class="box-group">
+
+    <box align="vertical">
+      <spring flex="50%"/>
+      <titledbutton onclick="moveUp();"   class="borderless up" />
+      <titledbutton onclick="moveDown();" class="borderless down" />
+      <spring flex="50%"/>
+    </box>
+
+    <html:form name="one" >
+      <html:select name="two" id="selectList" size="10">
+      </html:select>
+    </html:form>
+
+    <box align="vertical" class="button-group">
+      <spring flex="50%"/>
+      <titledbutton onclick="" value="Customize" />
+      <titledbutton onclick="deleteOption()" value="Remove" />
+      <spring flex="50%"/>
+    </box>
+
+  </box>
+
+  <html:hr/>
+
+  <html:div class="title">
+    Select a Panel to Add
+  </html:div>
+
+  <box align="horizontal"  class="box-group">
+
+      <tree id="tree" style="width:15em;"
+            datasources="resource:/res/rdf/sidebar-registry.rdf"
+    		onclick="selected(event,event.target.parentNode)" >
+    
+        <!-- The template we'll use to build rows in the content model. -->
+        <template>
+          <rule rootcontainment="treechildren" subcontainment="treechildren">
+            <treeitem uri="...">
+              <treerow>
+                <treecell>
+                  <treeindentation />
+                  <titledbutton align="right"
+                     value="rdf:http://home.netscape.com/NC-rdf#title" />
+                </treecell>
+              </treerow>
+            </treeitem>
+          </rule>
+        </template>
+    
+        <!-- The tree header: display some column info. -->
+        <treehead>
+          <treerow>
+          </treerow>
+        </treehead>
+    
+        <!-- The tree body: it's rooted at sitemap1.rdf's root -->
+        <treechildren ref="NC:BrowserSidebarRoot" open="true" />
+      </tree>
+  
+    <box align="vertical" class="button-group">
+      <spring flex="50%"/>
+      <titledbutton  onclick="Addit()" value="Add"/>
+      <titledbutton  onclick=""        value="Preview..."/>
+      <spring flex="50%"/>
+    </box>
+
+  </box> 
+
+  <html:hr/>
+
+  <box align="horizontal">
+    <spring flex="48%"/>
+    <titledbutton onclick="Cancel();" value="Cancel" />
+    <spring flex="4%"/>
+    <titledbutton onclick="Save();" value="Save" disabled="true"/>
+    <spring flex="48%"/>
+  </box>
+
+</box>
+
+</window>

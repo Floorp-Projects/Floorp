@@ -22,13 +22,6 @@
 <?xml-stylesheet href="chrome://sidebar/skin/" type="text/css"?>
 <?xml-stylesheet href="resource:/res/rdf/flash.css" type="text/css"?>
 
-<!DOCTYPE window
-[
-<!ENTITY tree.header.source.label      "Source">
-<!ENTITY tree.header.description.label "Description">
-<!ENTITY tree.header.time.label        "Time">
-]>
-
 <window
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -70,13 +63,7 @@
     <treecol rdf:resource="http://home.netscape.com/NC-rdf#description" />
     <treecol rdf:resource="http://home.netscape.com/NC-rdf#timestamp" />
 
-    <!-- XXX We probably won't have a treehead in the end, but we'll put it here for now... -->
     <treehead>
-      <treerow>
-        <treecell>&tree.header.source.label;</treecell>
-        <treecell>&tree.header.description.label;</treecell>
-        <treecell>&tree.header.time.label;</treecell>
-      </treerow>
     </treehead>
 
     <treechildren ref="NC:FlashRoot" rdf:containment="http://home.netscape.com/NC-rdf#child" open="true" />

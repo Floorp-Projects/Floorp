@@ -1,13 +1,16 @@
 // -*- Mode: Java -*-
 
 // the rdf service
-var RDF = Components.classes['component://netscape/rdf/rdf-service'].getService();
-RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
+var RDF;
 
-var sidebar = new Object;
+var sidebar;
 
 function Init()
 {
+  RDF=Components.classes['component://netscape/rdf/rdf-service'].getService();
+  RDF=RDF.QueryInterface(Components.interfaces.nsIRDFService);
+ 
+  sidebar          = new Object;
   sidebar.db       = window.arguments[0];
   sidebar.resource = window.arguments[1];
 
@@ -117,34 +120,24 @@ function Reload(url, pollInterval)
     Schedule(url, pollInterval);
 }
 
-function Schedule(url, pollInterval)
-{
-    setTimeout('Reload("' + url + '", ' + pollInterval + ')', pollInterval * 1000);
-}
-
-function OpenURL(node)
-{
-    dump("open-url(" + node + ")\n");
-}
-
 function moveUp() {
-    var list = document.getElementById('selectList'); 
-	var listSelect = list.selectedIndex;
-	
-	if (list.selectedIndex != -1) {
-		var listOption = list.childNodes.item(listSelect).cloneNode(true);
-		var listOptionBefore = list.childNodes.item(listSelect-1);	
-		list.remove(listSelect);
-		list.insertBefore(listOption, listOptionBefore);
-		dump("\n" + listOption + "\n");
-	}
-	 
+  var list = document.getElementById('selectList'); 
+  var listSelect = list.selectedIndex;
+  dump('selected=' + list.selectedIndex + '\n');
+  if (list.selectedIndex > 0) {
+    var listOption = list.childNodes.item(listSelect).cloneNode(true);
+    var listOptionBefore = list.childNodes.item(listSelect-1);	
+    list.remove(listSelect);
+    list.insertBefore(listOption, listOptionBefore);
+    dump("\n" + listOption + "\n");
+  }
 }
    
 function moveDown() {
   var list = document.getElementById('selectList');	
   var listSelect = list.selectedIndex;
-  dump("list\n" + listSelect);	
+  dump('list\n' + listSelect);	
+  dump('selected=' + list.selectedIndex + '\n');
   if (list.selectedIndex != -1) {
     var listOption = list.childNodes.item(listSelect);
     var listOptionBefore = list.childNodes.item(listSelect+1).cloneNode(true);
@@ -156,13 +149,14 @@ function moveDown() {
 
 function deleteOption()
 {
-	var list = document.getElementById('selectList');	
-	var listSelect = list.selectedIndex;
-	if (list.selectedIndex != -1) {
+  var list = document.getElementById('selectList');	
+  var listSelect = list.selectedIndex;
+  dump("selected=" + list.selectedIndex +"\n");
+  if (list.selectedIndex != -1) {
     var list = document.getElementById('selectList');
     var listSelect = list.selectedIndex;
-	list.remove(listSelect);
-	}
+    list.remove(listSelect);
+  }
 }
 
 function DumpIt() {
@@ -263,4 +257,26 @@ function writeRDF(title,content,customize,append)
     // Now serialize it back to disk
     datasource.Flush();
     dump("wrote " + FileURL + " back to disk.\n");
+}
+
+function selected(event, node)
+{ 
+   dump('node:\n' + node);
+   selectedNode_Title = node.getAttribute('title');
+   selectedNode_Content = node.getAttribute('content');
+   selectedNode_Customize = node.getAttribute('customize');
+}
+
+function Addit() 
+{
+	if (window.frames[0].selectedNode_Title != null) {
+	dump(window.frames[0].selectedNode_Title + '\n');
+	createOption();
+      } else {
+	  dump('Nothing selected');
+	  }
+}
+
+function Cancel() {
+  window.close();
 }
