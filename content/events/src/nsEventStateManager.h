@@ -111,6 +111,8 @@ public:
   //Method for centralized distribution of new DOM events
   NS_IMETHOD DispatchNewEvent(nsISupports* aTarget, nsIDOMEvent* aEvent);
 
+  NS_IMETHOD MoveFocus(PRBool aDirection, nsIContent* aRoot);
+
 protected:
   void UpdateCursor(nsIPresContext* aPresContext, nsEvent* aEvent, nsIFrame* aTargetFrame, nsEventStatus* aStatus);
   void GenerateMouseEnterExit(nsIPresContext* aPresContext, nsGUIEvent* aEvent);
@@ -118,7 +120,7 @@ protected:
   NS_IMETHOD SetClickCount(nsIPresContext* aPresContext, nsMouseEvent *aEvent, nsEventStatus* aStatus);
   NS_IMETHOD CheckForAndDispatchClick(nsIPresContext* aPresContext, nsMouseEvent *aEvent, nsEventStatus* aStatus);
   PRBool ChangeFocus(nsIContent* aFocus, nsIFrame* aFocusFrame, PRBool aSetFocus);
-  void ShiftFocus(PRBool foward);
+  void ShiftFocus(PRBool foward, nsIContent* aRoot=nsnull);
   NS_IMETHOD GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* aFrame, PRBool foward, nsIContent** aResult);
   PRInt32 GetNextTabIndex(nsIContent* aParent, PRBool foward);
   NS_IMETHOD SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aContent);

@@ -2330,8 +2330,15 @@ nsEventStateManager::ChangeFocus(nsIContent* aFocusContent, nsIFrame* aTargetFra
   return PR_FALSE;
 }
 
+NS_IMETHODIMP
+nsEventStateManager::MoveFocus(PRBool aDirection, nsIContent* aRoot)
+{
+  ShiftFocus(aDirection, aRoot);
+  return NS_OK;
+}
+
 void
-nsEventStateManager::ShiftFocus(PRBool forward)
+nsEventStateManager::ShiftFocus(PRBool forward, nsIContent* aRoot)
 {
   PRBool topOfDoc = PR_FALSE;
 
@@ -2344,7 +2351,13 @@ nsEventStateManager::ShiftFocus(PRBool forward)
     return;
   }
   
-  if (nsnull == mCurrentFocus) {
+  if (aRoot) {
+    NS_IF_RELEASE(mCurrentFocus);
+    mCurrentFocus = aRoot;
+    NS_ADDREF(mCurrentFocus);
+    mCurrentTabIndex = forward ? 1 : 0;
+  }
+  else if (nsnull == mCurrentFocus) {
     mCurrentFocus = mDocument->GetRootContent();
     if (nsnull == mCurrentFocus) {
       return;
