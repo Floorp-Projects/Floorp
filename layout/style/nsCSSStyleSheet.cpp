@@ -100,6 +100,7 @@
 #include "nsContentUtils.h"
 #include "nsIJSContextStack.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsAttrValue.h"
 
 struct RuleValue {
   /**
@@ -343,7 +344,7 @@ public:
   ~RuleHash();
   void PrependRule(RuleValue *aRuleInfo);
   void EnumerateAllRules(PRInt32 aNameSpace, nsIAtom* aTag, nsIAtom* aID,
-                         const nsVoidArray& aClassList,
+                         const nsAttrValue* aClassList,
                          RuleEnumFunc aFunc, void* aData);
   void EnumerateTagRules(nsIAtom* aTag,
                          RuleEnumFunc aFunc, void* aData);
@@ -531,10 +532,11 @@ void RuleHash::PrependRule(RuleValue *aRuleInfo)
 #endif
 
 void RuleHash::EnumerateAllRules(PRInt32 aNameSpace, nsIAtom* aTag,
-                                 nsIAtom* aID, const nsVoidArray& aClassList,
+                                 nsIAtom* aID, const nsAttrValue* aClassList,
                                  RuleEnumFunc aFunc, void* aData)
 {
-  PRInt32 classCount = aClassList.Count();
+  PRInt32 classCount = aClassList ? aClassList->GetAtomCount() : 0;
+
   // assume 1 universal, tag, id, and namespace, rather than wasting
   // time counting
   PRInt32 testCount = classCount + 4;
@@ -586,9 +588,9 @@ void RuleHash::EnumerateAllRules(PRInt32 aNameSpace, nsIAtom* aTag,
   }
   { // extra scope to work around compiler bugs with |for| scoping.
     for (PRInt32 index = 0; index < classCount; ++index) {
-      nsIAtom* classAtom = (nsIAtom*)aClassList.ElementAt(index);
       RuleHashTableEntry *entry = NS_STATIC_CAST(RuleHashTableEntry*,
-          PL_DHashTableOperate(&mClassTable, classAtom, PL_DHASH_LOOKUP));
+        PL_DHashTableOperate(&mClassTable, aClassList->AtomAt(index),
+                             PL_DHASH_LOOKUP));
       if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
         RuleValue *value = entry->mRules;
         mEnumList[valueCount++] = value;
@@ -3895,13 +3897,17 @@ CSSRuleProcessor::RulesMatching(ElementRuleProcessorData *aData,
   RuleCascadeData* cascade = GetRuleCascade(aData->mPresContext, aMedium);
 
   if (cascade) {
-    nsAutoVoidArray classArray;
-
     nsIStyledContent* styledContent = aData->mStyledContent;
+    const nsAttrValue* classes = nsnull;
     if (styledContent)
-      styledContent->GetClasses(classArray);
-
-    cascade->mRuleHash.EnumerateAllRules(aData->mNameSpaceID, aData->mContentTag, aData->mContentID, classArray, ContentEnumFunc, aData);
+      classes = styledContent->GetClasses();
+    
+    cascade->mRuleHash.EnumerateAllRules(aData->mNameSpaceID,
+                                         aData->mContentTag,
+                                         aData->mContentID,
+                                         classes,
+                                         ContentEnumFunc,
+                                         aData);
   }
   return NS_OK;
 }

@@ -45,6 +45,7 @@ class nsString;
 class nsICSSStyleRule;
 class nsISupportsArray;
 class nsRuleWalker;
+class nsAttrValue;
 
 // IID for the nsIStyledContent class
 #define NS_ISTYLEDCONTENT_IID   \
@@ -61,7 +62,7 @@ public:
   // corresponds to the attribute nsHTMLAtoms::kClass.  If this becomes
   // incorrect, then new methods need to be added here.
   NS_IMETHOD GetID(nsIAtom** aResult) const = 0;
-  NS_IMETHOD GetClasses(nsVoidArray& aArray) const = 0;
+  virtual const nsAttrValue* GetClasses() const = 0;
   NS_IMETHOD_(PRBool) HasClass(nsIAtom* aClass, PRBool aCaseSensitive) const = 0;
 
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker) = 0;

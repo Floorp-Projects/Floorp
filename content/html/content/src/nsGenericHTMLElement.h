@@ -203,7 +203,7 @@ public:
   // Implementation for nsIHTMLContent
   NS_IMETHOD GetHTMLAttribute(nsIAtom* aAttribute, nsHTMLValue& aValue) const;
   NS_IMETHOD GetID(nsIAtom** aResult) const;
-  NS_IMETHOD GetClasses(nsVoidArray& aArray) const;
+  virtual const nsAttrValue* GetClasses() const;
   virtual nsIAtom *GetIDAttributeName() const;
   virtual nsIAtom *GetClassAttributeName() const;
   NS_IMETHOD_(PRBool) HasClass(nsIAtom* aClass, PRBool aCaseSensitive) const;

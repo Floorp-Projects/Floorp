@@ -86,7 +86,7 @@ public:
 
   // nsIStyledContent
   NS_IMETHOD GetID(nsIAtom** aResult) const;
-//   NS_IMETHOD GetClasses(nsVoidArray& aArray) const;
+//   virtual const nsAttrValue* GetClasses() const;
 //   NS_IMETHOD HasClass(nsIAtom* aClass) const;
   
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);

@@ -2080,11 +2080,10 @@ nsGenericElement::GetID(nsIAtom** aResult) const
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsGenericElement::GetClasses(nsVoidArray& aArray) const
+const nsAttrValue*
+nsGenericElement::GetClasses() const
 {
-  aArray.Clear();
-  return NS_OK;
+  return nsnull;
 }
 
 NS_IMETHODIMP_(PRBool)

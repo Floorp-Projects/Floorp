@@ -474,6 +474,37 @@ nsAttrValue::GetColorValue(nscolor& aColor) const
   return PR_TRUE;
 }
 
+PRInt32
+nsAttrValue::GetAtomCount() const
+{
+  ValueType type = Type();
+
+  if (type == eAtom) {
+    return 1;
+  }
+
+  if (type == eAtomArray) {
+    return GetAtomArrayValue()->Count();
+  }
+
+  return 0;
+}
+
+nsIAtom*
+nsAttrValue::AtomAt(PRInt32 aIndex) const
+{
+  NS_PRECONDITION(aIndex >= 0, "Index must not be negative");
+  NS_PRECONDITION(GetAtomCount() > aIndex, "aIndex out of range");
+  
+  if (BaseType() == eAtomBase) {
+    return GetAtomValue();
+  }
+
+  NS_ASSERTION(Type() == eAtomArray, "GetAtomCount must be confused");
+  
+  return GetAtomArrayValue()->ObjectAt(aIndex);
+}
+
 PRUint32
 nsAttrValue::HashValue() const
 {
