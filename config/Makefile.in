@@ -123,7 +123,7 @@ libs::
 ifndef DISABLE_DIST_GRE
 	$(INSTALL) $(DIST)/sdk/lib/$(DLL_PREFIX)nspr4$(DLL_SUFFIX) $(DIST)/sdk/lib/$(DLL_PREFIX)plc4$(DLL_SUFFIX) $(DIST)/sdk/lib/$(DLL_PREFIX)plds4$(DLL_SUFFIX) $(GRE_DIST)
 endif
-ifeq ($(OS_ARCH),WINNT)
+ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 	$(RM) -f $(DIST)/sdk/lib/$(DLL_PREFIX)nspr4$(DLL_SUFFIX) $(DIST)/sdk/lib/$(DLL_PREFIX)plc4$(DLL_SUFFIX) $(DIST)/sdk/lib/$(DLL_PREFIX)plds4$(DLL_SUFFIX)
 endif
 endif
