@@ -242,6 +242,13 @@ NS_IMETHODIMP nsMailDatabase::StartBatch()
 {
   if (!m_folderStream)  //only if we create a stream, set m_ownFolderStream to true.
   {
+    PRBool isLocked;
+    m_folder->GetLocked(&isLocked);
+    if (isLocked)
+    {
+      NS_ASSERTION(PR_FALSE, "Some other operation is in progress");
+      return NS_MSG_FOLDER_BUSY;
+    }
     m_folderStream = new nsIOFileStream(nsFileSpec(*m_folderSpec));
     m_ownFolderStream = PR_TRUE;
   }
@@ -270,6 +277,13 @@ NS_IMETHODIMP nsMailDatabase::DeleteMessages(nsMsgKeyArray* nsMsgKeys, nsIDBChan
 	nsresult ret = NS_OK;
   if (!m_folderStream)
   {
+    PRBool isLocked;
+    m_folder->GetLocked(&isLocked);
+    if (isLocked)
+    {
+      NS_ASSERTION(PR_FALSE, "Some other operation is in progress");
+      return NS_MSG_FOLDER_BUSY;
+    }
 	  m_folderStream = new nsIOFileStream(nsFileSpec(*m_folderSpec));
     m_ownFolderStream = PR_TRUE;
   }
@@ -288,13 +302,22 @@ NS_IMETHODIMP nsMailDatabase::DeleteMessages(nsMsgKeyArray* nsMsgKeys, nsIDBChan
 	return ret;
 }
 
-
 // Helper routine - lowest level of flag setting
 PRBool nsMailDatabase::SetHdrFlag(nsIMsgDBHdr *msgHdr, PRBool bSet, MsgFlags flag)
 {
   nsIOFileStream *fileStream = NULL;
   PRBool		ret = PR_FALSE;
 
+  if (!m_folderStream)  //we are going to create a stream so try to get the lock
+  {
+    PRBool isLocked;
+    m_folder->GetLocked(&isLocked);
+    if (isLocked)
+    {
+      NS_ASSERTION(PR_FALSE, "Some other operation is in progress");
+      return PR_FALSE;
+    }
+  }
   if (nsMsgDatabase::SetHdrFlag(msgHdr, bSet, flag))
   {
     UpdateFolderFlag(msgHdr, bSet, flag, &fileStream);

@@ -1608,22 +1608,30 @@ nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
           nsCOMPtr<nsISupports> msgSupport;
           MarkMsgsOnPop3Server(messages, PR_TRUE);
 
-          if (NS_FAILED(rv)) return rv;
-          EnableNotifications(allMessageCountNotifications, PR_FALSE, PR_TRUE /*dbBatching*/);
-          for(PRUint32 i = 0; i < messageCount; i++)
+          rv = EnableNotifications(allMessageCountNotifications, PR_FALSE, PR_TRUE /*dbBatching*/);
+          if (NS_SUCCEEDED(rv))
           {
-            msgSupport = getter_AddRefs(messages->ElementAt(i));
-            if (msgSupport)
-              DeleteMessage(msgSupport, msgWindow, PR_TRUE, PR_FALSE);
+            for(PRUint32 i = 0; i < messageCount; i++)
+            {
+              msgSupport = getter_AddRefs(messages->ElementAt(i));
+              if (msgSupport)
+                DeleteMessage(msgSupport, msgWindow, PR_TRUE, PR_FALSE);
+            }
           }
+          else if (rv == NS_MSG_FOLDER_BUSY)
+            ThrowAlertMsg("deletingMsgsFailed", msgWindow);
+
           // we are the source folder here for a move or shift delete
           //enable notifications first, because that will close the file stream
           // we've been caching, and truly make the summary valid.
           EnableNotifications(allMessageCountNotifications, PR_TRUE, PR_TRUE /*dbBatching*/);
-          mDatabase->SetSummaryValid(PR_TRUE);
-          mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
+          if (NS_SUCCEEDED(rv))
+          {
+            mDatabase->SetSummaryValid(PR_TRUE);
+            mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
+          }
 		      if(!isMove)
-            NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
+            NotifyFolderEvent(NS_SUCCEEDED(rv) ? mDeleteOrMoveMsgCompletedAtom : mDeleteOrMoveMsgFailedAtom);
       }
   }
   return rv;
@@ -2673,21 +2681,21 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndMove(PRBool moveSucceeded)
     if(srcFolder)
     {
       // lets delete these all at once - much faster that way
-      result = srcFolder->DeleteMessages(mCopyState->m_messages, nsnull, PR_TRUE, PR_TRUE, nsnull, mCopyState->m_allowUndo);
-      srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
+      result = srcFolder->DeleteMessages(mCopyState->m_messages, mCopyState->m_msgWindow, PR_TRUE, PR_TRUE, nsnull, mCopyState->m_allowUndo);
+      srcFolder->NotifyFolderEvent(NS_SUCCEEDED(result) ? mDeleteOrMoveMsgCompletedAtom : mDeleteOrMoveMsgFailedAtom);
     }
       
     // enable the dest folder
     EnableNotifications(allMessageCountNotifications, PR_TRUE, PR_FALSE /*dbBatching*/); //dest folder doesn't need db batching
       
-    if (mCopyState->m_msgWindow && mCopyState->m_undoMsgTxn)
+    if (NS_SUCCEEDED(result) && mCopyState->m_msgWindow && mCopyState->m_undoMsgTxn)
     {
       nsCOMPtr<nsITransactionManager> txnMgr;
       mCopyState->m_msgWindow->GetTransactionManager(getter_AddRefs(txnMgr));
       if (txnMgr)
         txnMgr->DoTransaction(mCopyState->m_undoMsgTxn);
     }
-    (void) OnCopyCompleted(mCopyState->m_srcSupport, PR_TRUE);  //clear the copy state so that the next message from a different folder can be move
+    (void) OnCopyCompleted(mCopyState->m_srcSupport, NS_SUCCEEDED(result) ? PR_TRUE : PR_FALSE);  //clear the copy state so that the next message from a different folder can be move
   }
   
   return NS_OK;

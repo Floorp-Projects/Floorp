@@ -2586,7 +2586,7 @@ NS_IMETHODIMP nsMsgFolder::EnableNotifications(PRInt32 notificationType, PRBool 
       UpdateSummaryTotals(PR_TRUE);
     }
     else if (database)
-      database->StartBatch();
+      return database->StartBatch();
 
     return NS_OK;
   }
