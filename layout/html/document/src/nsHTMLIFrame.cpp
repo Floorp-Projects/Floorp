@@ -313,6 +313,14 @@ nsHTMLIFrameOuterFrame::Reflow(nsIPresContext*      aPresContext,
   mFirstChild->SetRect(rect);
   mFirstChild->DidReflow(*aPresContext, NS_FRAME_REFLOW_FINISHED);
 
+  // XXX what should the max-element-size of an iframe be? Shouldn't
+  // iframe's normally shrink wrap around their content when they
+  // don't have a specified width/height?
+  if (nsnull != aDesiredSize.maxElementSize) {
+    aDesiredSize.maxElementSize->width = aDesiredSize.width;
+    aDesiredSize.maxElementSize->height = aDesiredSize.height;
+  }
+
   return NS_OK;
 }
 
