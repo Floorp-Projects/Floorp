@@ -547,13 +547,14 @@ typedef struct FileData
 
 static PRBool FindProviderFile(nsISupports* aElement, void *aData)
 {
+  nsresult rv;
   nsCOMPtr<nsIDirectoryServiceProvider> prov = do_QueryInterface(aElement);
   if (!prov)
     return PR_FALSE;
 
   FileData* fileData = (FileData*)aData;
-  prov->GetFile(fileData->property, &fileData->persistent, &(fileData->file) );
-  if (fileData->file)
+  rv = prov->GetFile(fileData->property, &fileData->persistent, &(fileData->file) );
+  if (NS_SUCCEEDED(rv) && fileData->file)
     return PR_FALSE;
 
   return PR_TRUE;
@@ -661,12 +662,25 @@ nsDirectoryService::RegisterProvider(nsIDirectoryServiceProvider *prov)
 
     // AppendElement returns TRUE if it succeeded.
     // Until this is fixed, fix up the result here.
-    nsresult invertedResult;
-    invertedResult = mProviders->AppendElement(supports);
-    return invertedResult ? NS_OK : NS_ERROR_FAILURE;
+    rv = mProviders->AppendElement(supports) ? NS_OK : NS_ERROR_FAILURE;
+    return rv;
 }
 
+NS_IMETHODIMP
+nsDirectoryService::UnregisterProvider(nsIDirectoryServiceProvider *prov)
+{
+    nsresult rv;
+    if (!prov)
+        return NS_ERROR_FAILURE;
 
+    nsCOMPtr<nsISupports> supports = do_QueryInterface(prov, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    // AppendElement returns TRUE if it succeeded.
+    // Until this is fixed, fix up the result here.
+    rv = mProviders->RemoveElement(supports) ? NS_OK : NS_ERROR_FAILURE;
+    return rv;
+}
 
 // DO NOT ADD ANY LOCATIONS TO THIS FUNCTION UNTIL YOU TALK TO: dougt@netscape.com.
 // This is meant to be a place of xpcom or system specific file locations, not
