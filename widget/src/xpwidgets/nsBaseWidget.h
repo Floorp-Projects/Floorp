@@ -118,7 +118,9 @@ protected:
       ~Enumerator();
 
       NS_IMETHOD_(nsISupports*) Next();
+      NS_IMETHOD_(nsISupports*) Previous();
       NS_IMETHOD_(void) Reset();
+      NS_IMETHOD_(void) ResetToLast();
 
       void Append(nsIWidget* aWidget);
       void Remove(nsIWidget* aWidget);

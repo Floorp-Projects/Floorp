@@ -452,6 +452,24 @@ nsISupports* nsBaseWidget::Enumerator::Next()
   return NULL;
 }
 
+//-------------------------------------------------------------------------
+//
+// Get enumeration previous element. Return null at the end
+//
+//-------------------------------------------------------------------------
+nsISupports* nsBaseWidget::Enumerator::Previous()
+{
+  if (mCurrentPosition > 0) {
+    mCurrentPosition--;
+    nsIWidget*  widget = (nsIWidget*)mChildren.ElementAt(mCurrentPosition);
+
+    NS_IF_ADDREF(widget);
+    return widget;
+  }
+
+  return NULL;
+}
+
 
 //-------------------------------------------------------------------------
 //
@@ -461,6 +479,17 @@ nsISupports* nsBaseWidget::Enumerator::Next()
 void nsBaseWidget::Enumerator::Reset()
 {
   mCurrentPosition = 0;
+}
+
+
+//-------------------------------------------------------------------------
+//
+// Reset enumerator internal pointer to the end
+//
+//-------------------------------------------------------------------------
+void nsBaseWidget::Enumerator::ResetToLast()
+{
+  mCurrentPosition = mChildren.Count();
 }
 
 
