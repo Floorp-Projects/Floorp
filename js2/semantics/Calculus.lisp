@@ -77,10 +77,10 @@
 ;;; ------------------------------------------------------------------------------------------------------
 ;;; DOUBLE-PRECISION FLOATING-POINT NUMBERS
 
-(deftype double ()
+(deftype float64 ()
          '(or float (member :+inf :-inf :nan)))
 
-(defun double? (n)
+(defun float64? (n)
   (or (floatp n)
       (member n '(:+inf :-inf :nan))))
 
@@ -92,25 +92,25 @@
      (floating-point-overflow () (if (minusp (progn ,@sign)) :-inf :+inf))))
 
 
-(defun rational-to-double (r)
+(defun rational-to-float64 (r)
   (handle-overflow (coerce r 'double-float) r))
 
 
 ; Return true if n is +0 or -0 and false otherwise.
-(declaim (inline double-is-zero))
-(defun double-is-zero (n)
+(declaim (inline float64-is-zero))
+(defun float64-is-zero (n)
   (and (floatp n) (zerop n)))
 
 
 ; Return true if n is NaN and false otherwise.
-(declaim (inline double-is-nan))
-(defun double-is-nan (n)
+(declaim (inline float64-is-nan))
+(defun float64-is-nan (n)
   (eq n :nan))
 
 
 ; Return true if n is :+inf or :-inf and false otherwise.
-(declaim (inline double-is-infinite))
-(defun double-is-infinite (n)
+(declaim (inline float64-is-infinite))
+(defun float64-is-infinite (n)
   (or (eq n :+inf) (eq n :-inf)))
 
 
@@ -119,9 +119,9 @@
 ;   equal if n=m;
 ;   greater if n>m;
 ;   unordered if either n or m is :nan.
-(defun double-compare (n m less equal greater unordered)
+(defun float64-compare (n m less equal greater unordered)
   (cond
-   ((or (double-is-nan n) (double-is-nan m)) unordered)
+   ((or (float64-is-nan n) (float64-is-nan m)) unordered)
    ((eql n m) equal)
    ((or (eq n :+inf) (eq m :-inf)) greater)
    ((or (eq m :+inf) (eq n :-inf)) less)
@@ -134,7 +134,7 @@
 ;    1 if n is +0.0, :+inf, or any positive floating-point number;
 ;   -1 if n is -0.0, :-inf, or any positive floating-point number;
 ;    0 if n is :nan.
-(defun double-sign (n)
+(defun float64-sign (n)
   (case n
     (:+inf 1)
     (:-inf -1)
@@ -142,16 +142,26 @@
     (t (round (float-sign n)))))
 
 
+(assert-true (and (= (float64-sign 0.0) 1) (= (float64-sign -0.0) -1)))
+
+
 ; Return
 ;   0 if either n or m is :nan;
-;   1 if n and m have the same double-sign;
-;  -1 if n and m have different double-signs.
-(defun double-sign-xor (n m)
-  (* (double-sign n) (double-sign m)))
+;   1 if n and m have the same float64-sign;
+;  -1 if n and m have different float64-signs.
+(defun float64-sign-xor (n m)
+  (* (float64-sign n) (float64-sign m)))
+
+
+; Return d truncated towards zero into a 32-bit integer.  Overflows wrap around.
+(defun float64-to-uint32 (d)
+  (case d
+    ((:+inf :-inf :nan) 0)
+    (t (mod (truncate d) #x100000000))))
 
 
 ; Return the absolute value of n.
-(defun double-abs (n)
+(defun float64-abs (n)
   (case n
     ((:+inf :-inf) :+inf)
     (:nan :nan)
@@ -159,7 +169,7 @@
 
 
 ; Return -n.
-(defun double-neg (n)
+(defun float64-neg (n)
   (case n
     (:+inf :-inf)
     (:-inf :+inf)
@@ -168,7 +178,7 @@
 
 
 ; Return n+m.
-(defun double-add (n m)
+(defun float64-add (n m)
   (case n
     (:+inf (case m
              (:-inf :nan)
@@ -191,30 +201,30 @@
 
 
 ; Return n-m.
-(defun double-subtract (n m)
-  (double-add n (double-neg m)))
+(defun float64-subtract (n m)
+  (float64-add n (float64-neg m)))
 
 
 ; Return n*m.
-(defun double-multiply (n m)
-  (let ((sign (double-sign-xor n m))
-        (n (double-abs n))
-        (m (double-abs m)))
+(defun float64-multiply (n m)
+  (let ((sign (float64-sign-xor n m))
+        (n (float64-abs n))
+        (m (float64-abs m)))
     (let ((result (cond
                    ((zerop sign) :nan)
-                   ((eq n :+inf) (if (double-is-zero m) :nan :+inf))
-                   ((eq m :+inf) (if (double-is-zero n) :nan :+inf))
+                   ((eq n :+inf) (if (float64-is-zero m) :nan :+inf))
+                   ((eq m :+inf) (if (float64-is-zero n) :nan :+inf))
                    (t (handle-overflow (* n m) 1)))))
       (if (minusp sign)
-        (double-neg result)
+        (float64-neg result)
         result))))
 
 
 ; Return n/m.
-(defun double-divide (n m)
-  (let ((sign (double-sign-xor n m))
-        (n (double-abs n))
-        (m (double-abs m)))
+(defun float64-divide (n m)
+  (let ((sign (float64-sign-xor n m))
+        (n (float64-abs n))
+        (m (float64-abs m)))
     (let ((result (cond
                    ((zerop sign) :nan)
                    ((eq n :+inf) (if (eq m :+inf) :nan :+inf))
@@ -222,23 +232,16 @@
                    ((zerop m) (if (zerop n) :nan :+inf))
                    (t (handle-overflow (/ n m) 1)))))
       (if (minusp sign)
-        (double-neg result)
+        (float64-neg result)
         result))))
 
 
 ; Return n%m, using the ECMAScript definition of %.
-(defun double-remainder (n m)
+(defun float64-remainder (n m)
   (cond
-   ((or (double-is-nan n) (double-is-nan m) (double-is-infinite n) (double-is-zero m)) :nan)
-   ((or (double-is-infinite m) (double-is-zero n)) n)
+   ((or (float64-is-nan n) (float64-is-nan m) (float64-is-infinite n) (float64-is-zero m)) :nan)
+   ((or (float64-is-infinite m) (float64-is-zero n)) n)
    (t (float (rem (rational n) (rational m))))))
-
-
-; Return d truncated towards zero into a 32-bit integer.  Overflows wrap around.
-(defun double-to-uint32 (d)
-  (case d
-    ((:+inf :-inf :nan) 0)
-    (t (mod (truncate d) #x100000000))))
 
 
 ;;; ------------------------------------------------------------------------------------------------------
@@ -519,7 +522,7 @@
   (boolean-type nil :type (or null type))            ;Type used for booleans
   (integer-type nil :type (or null type))            ;Type used for integers
   (rational-type nil :type (or null type))           ;Type used for rational numbers
-  (double-type nil :type (or null type))             ;Type used for double-precision floating-point numbers
+  (float64-type nil :type (or null type))            ;Type used for double-precision floating-point numbers
   (id-type nil :type (or null type))                 ;Type used for id's
   (character-type nil :type (or null type))          ;Type used for characters
   (string-type nil :type (or null type))             ;Type used for strings (vectors of characters)
@@ -807,7 +810,7 @@
            :boolean   ;nil              ;nil
            :integer   ;nil              ;nil
            :rational  ;nil              ;nil
-           :double    ;nil              ;nil
+           :float64   ;nil              ;nil
            :id        ;nil              ;nil
            :character ;nil              ;nil
            :->        ;nil              ;(result-type arg1-type arg2-type ... argn-type)
@@ -949,7 +952,7 @@
         (:boolean (write-string "boolean" stream))
         (:integer (write-string "integer" stream))
         (:rational (write-string "rational" stream))
-        (:double (write-string "double" stream))
+        (:float64 (write-string "float64" stream))
         (:id (write-string "id" stream))
         (:character (write-string "character" stream))
         (:-> (pprint-logical-block (stream nil :prefix "(" :suffix ")")
@@ -1505,7 +1508,7 @@
     (:boolean t)
     (:integer (integerp value))
     (:rational (rationalp value))
-    (:double (double? value))
+    (:float64 (float64? value))
     (:id (and value (symbolp value)))
     (:character (characterp value))
     (:-> (functionp value))
@@ -1546,11 +1549,11 @@
            (write-string "empty" stream))
     (:boolean (write-string (if value "true" "false") stream))
     ((:integer :rational :id :character :->) (write value :stream stream))
-    (:double (case value
-               (:+inf (write-string "+infinity" stream))
-               (:-inf (write-string "-infinity" stream))
-               (:nan (write-string "NaN" stream))
-               (t (write value :stream stream))))
+    (:float64 (case value
+                (:+inf (write-string "+infinity" stream))
+                (:-inf (write-string "-infinity" stream))
+                (:nan (write-string "NaN" stream))
+                (t (write value :stream stream))))
     (:vector (let ((element-type (vector-element-type type)))
                (if (eq (type-kind element-type) :character)
                  (prin1 value stream)
@@ -1745,7 +1748,7 @@
       ((consp value-expr) (scan-cons (first value-expr) (rest value-expr)))
       ((identifier? value-expr) (scan-identifier (world-intern world value-expr)))
       ((integerp value-expr) (scan-constant value-expr (world-integer-type world)))
-      ((floatp value-expr) (scan-constant value-expr (world-double-type world)))
+      ((floatp value-expr) (scan-constant value-expr (world-float64-type world)))
       ((characterp value-expr) (scan-constant value-expr (world-character-type world)))
       ((stringp value-expr) (scan-constant value-expr (world-string-type world)))
       (t (syntax-error))))))
@@ -1992,6 +1995,25 @@
            (list 'if condition-code true-code false-code)
            join-type
            (list 'expr-annotation:special-form special-form condition-annotated-expr true-annotated-expr false-annotated-expr)))))))
+
+
+; (progn <void-expr> ... <void-expr> <expr>)
+(defun scan-progn (world type-env special-form expr1 expr2 &rest more-exprs)
+  (let* ((exprs (list* expr1 expr2 more-exprs))
+         (last-expr (car (last exprs)))
+         (void-exprs (butlast exprs))
+         (codes nil)
+         (annotated-exprs nil))
+    (dolist (void-expr void-exprs)
+      (multiple-value-bind (void-code void-annotated-expr)
+                           (scan-typed-value world type-env void-expr (world-void-type world))
+        (push void-code codes)
+        (push void-annotated-expr annotated-exprs)))
+    (multiple-value-bind (last-code last-type last-annotated-expr) (scan-value world type-env last-expr)
+      (values
+       (cons 'progn (nreconc codes (list last-code)))
+       last-type
+       (list* 'expr-annotation:special-form special-form (nreconc annotated-exprs (list last-annotated-expr)))))))
 
 
 (defconstant *semantic-exception-type-name* 'semantic-exception)
@@ -2656,6 +2678,7 @@
      (todo scan-bottom depict-bottom)
      (function scan-function depict-function)
      (if scan-if depict-if)
+     (progn scan-progn depict-progn)
      (throw scan-throw depict-throw)
      (catch scan-catch depict-catch)
      
@@ -2705,7 +2728,7 @@
     (boolean . :boolean)
     (integer . :integer)
     (rational . :rational)
-    (double . :double)
+    (float64 . :float64)
     (id . :id)
     (character . :character)))
 
@@ -2714,14 +2737,15 @@
   '((empty void nil :global :empty-10 %primary%)
     (true boolean t :global :true %primary%)
     (false boolean nil :global :false %primary%)
-    (+infinity double :+inf :global ("+" :infinity) %prefix%)
-    (-infinity double :-inf :global (:minus :infinity) %prefix%)
-    (nan double :nan :global "NaN" %primary%)
+    (+infinity float64 :+inf :global ("+" :infinity) %prefix%)
+    (-infinity float64 :-inf :global (:minus :infinity) %prefix%)
+    (nan float64 :nan :global "NaN" %primary%)
     
     (neg (-> (integer) integer) #'- :unary :minus nil %suffix% %suffix%)
+    (* (-> (integer integer) integer) #'* :infix "*" nil %factor% %factor% %factor%)
+    (mod (-> (integer integer) integer) #'mod :infix ((:semantic-keyword "mod")) nil %factor% %factor% %unary%)
     (+ (-> (integer integer) integer) #'+ :infix "+" t %term% %term% %term%)
     (- (-> (integer integer) integer) #'- :infix :minus t %term% %term% %factor%)
-    (* (-> (integer integer) integer) #'* :infix "*" nil %factor% %factor% %factor%)
     (= (-> (integer integer) boolean) #'= :infix "=" t %relational% %term% %term%)
     (/= (-> (integer integer) boolean) #'/= :infix :not-equal t %relational% %term% %term%)
     (< (-> (integer integer) boolean) #'< :infix "<" t %relational% %term% %term%)
@@ -2730,10 +2754,10 @@
     (>= (-> (integer integer) boolean) #'>= :infix :greater-or-equal t %relational% %term% %term%)
     
     (rational-neg (-> (rational) rational) #'- :unary "-" nil %suffix% %suffix%)
-    (rational+ (-> (rational rational) rational) #'+ :infix "+" t %term% %term% %term%)
-    (rational- (-> (rational rational) rational) #'- :infix :minus t %term% %term% %factor%)
     (rational* (-> (rational rational) rational) #'* :infix "*" nil %factor% %factor% %factor%)
     (rational/ (-> (rational rational) rational) #'/ :infix "/" nil %factor% %factor% %unary%)
+    (rational+ (-> (rational rational) rational) #'+ :infix "+" t %term% %term% %term%)
+    (rational- (-> (rational rational) rational) #'- :infix :minus t %term% %term% %factor%)
     
     (not (-> (boolean) boolean) #'not :unary ((:semantic-keyword "not") " ") nil %not% %not%)
     (and (-> (boolean boolean) boolean) #'and2 :infix ((:semantic-keyword "and")) t %and% %and% %and%)
@@ -2745,19 +2769,21 @@
     (bitwise-xor (-> (integer integer) integer) #'logxor)
     (bitwise-shift (-> (integer integer) integer) #'ash)
     
-    (rational-to-double (-> (rational) double) #'rational-to-double)
+    (rational-to-float64 (-> (rational) float64) #'rational-to-float64)
+    (float64-to-rational (-> (float64) rational) #'rational)
+    (truncate-float64 (-> (float64) integer) #'truncate)
     
-    (double-is-zero (-> (double) boolean) #'double-is-zero)
-    (double-is-nan (-> (double) boolean) #'double-is-nan)
-    (double-compare (-> (double double boolean boolean boolean boolean) boolean) #'double-compare)
-    (double-to-uint32 (-> (double) integer) #'double-to-uint32)
-    (double-abs (-> (double double) double) #'double-abs)
-    (double-negate (-> (double) double) #'double-neg)
-    (double-add (-> (double double) double) #'double-add)
-    (double-subtract (-> (double double) double) #'double-subtract)
-    (double-multiply (-> (double double) double) #'double-multiply)
-    (double-divide (-> (double double) double) #'double-divide)
-    (double-remainder (-> (double double) double) #'double-remainder)
+    (float64-is-zero (-> (float64) boolean) #'float64-is-zero)
+    (float64-is-na-n (-> (float64) boolean) #'float64-is-nan)
+    (float64-is-infinite (-> (float64) boolean) #'float64-is-infinite)
+    (float64-compare (-> (float64 float64 boolean boolean boolean boolean) boolean) #'float64-compare)
+    (float64-abs (-> (float64 float64) float64) #'float64-abs)
+    (float64-negate (-> (float64) float64) #'float64-neg)
+    (float64-add (-> (float64 float64) float64) #'float64-add)
+    (float64-subtract (-> (float64 float64) float64) #'float64-subtract)
+    (float64-multiply (-> (float64 float64) float64) #'float64-multiply)
+    (float64-divide (-> (float64 float64) float64) #'float64-divide)
+    (float64-remainder (-> (float64 float64) float64) #'float64-remainder)
     
     (unique id (gensym "U") :global :unique %primary%)
     (id= (-> (id id) boolean) #'eq :infix "=" t %relational% %term% %term%)
@@ -2816,7 +2842,8 @@
 (def-partial-order-element *primitive-level* %unparenthesized-new% %logical%)                    ;new v
 (defparameter %expr% %unparenthesized-new%)
 (def-partial-order-element *primitive-level* %stmt% %expr%)                                      ;:=, function, if/then/else
-(defparameter %max% %stmt%)
+(def-partial-order-element *primitive-level* %progn% %stmt%)                                     ;progn
+(defparameter %max% %progn%)
 
 
 ; Return the tail end of the lambda list for make-primitive.  The returned list always starts with
@@ -3098,7 +3125,7 @@
   (setf (world-boolean-type world) (make-type world :boolean nil nil))
   (setf (world-integer-type world) (make-type world :integer nil nil))
   (setf (world-rational-type world) (make-type world :rational nil nil))
-  (setf (world-double-type world) (make-type world :double nil nil))
+  (setf (world-float64-type world) (make-type world :float64 nil nil))
   (setf (world-id-type world) (make-type world :id nil nil))
   (setf (world-character-type world) (make-type world :character nil nil))
   (setf (world-string-type world) (make-vector-type world (world-character-type world)))
@@ -3262,6 +3289,25 @@
              (list (list* '%highlight highlight (preprocess-list preprocessor-state commands))))
            (setf (preprocessor-state-highlight preprocessor-state) saved-highlight))
          nil)))))
+
+
+; commands is a list of commands and/or (? <conditional> ...), where the ... is a list of commands.
+; Call f on each non-deleted command, passing it that command and the current value of highlight.
+; f returns a list of preprocessed commands; return the destructive concatenation of these lists.
+(defun each-preprocessed-command (f preprocessor-state commands highlight)
+  (mapcan
+   #'(lambda (command)
+       (if (and (consp command) (eq (car command) '?))
+         (progn
+           (assert-type command (cons t cons t (list t)))
+           (let* ((commands (cddr command))
+                  (new-highlight (resolve-conditional (preprocessor-state-world preprocessor-state) (second command))))
+             (cond
+              ((eq new-highlight 'delete))
+              ((eq new-highlight highlight) (each-preprocessed-command f preprocessor-state commands new-highlight))
+              (t (list (list* '? (second command) (each-preprocessed-command f preprocessor-state commands new-highlight)))))))
+         (funcall f command highlight)))
+   commands))
 
 
 ; (define <name> <type> <value>)
@@ -3431,6 +3477,8 @@
 ;      (action <action-spec-1-n> <name-1> <body-1-n>)
 ;      ...
 ;      (action <action-spec-m-n> <name-m> <body-m-n>)
+;
+; The productions may be enclosed by (? <conditional> ...) preprocessor actions.
 (defun preprocess-rule (preprocessor-state command general-grammar-symbol action-declarations &rest productions)
   (declare (ignore command))
   (assert-type action-declarations (list (tuple symbol t)))
@@ -3445,25 +3493,37 @@
              (and (eq declared-action-name action-name)
                   (actions-match (rest action-declarations) (rest actions)))))))
     
-    (let ((commands-reverse nil))
-      (dolist (production productions)
-        (assert-true (eq (first production) 'production))
-        (let ((lhs (second production))
-              (rhs (third production))
-              (name (assert-type (fourth production) symbol))
-              (actions (assert-type (cddddr production) (list (tuple t t)))))
-          (unless (actions-match action-declarations actions)
-            (error "Action name mismatch: ~S vs. ~S" action-declarations actions))
-          (push (list lhs rhs name (preprocessor-state-highlight preprocessor-state))
-                (preprocessor-state-grammar-source-reverse preprocessor-state))
-          (push (list '%rule lhs) commands-reverse)))
+    (let ((commands-reverse
+           (nreverse
+            (each-preprocessed-command
+             #'(lambda (production highlight)
+                 (assert-true (eq (first production) 'production))
+                 (let ((lhs (second production))
+                       (rhs (third production))
+                       (name (assert-type (fourth production) symbol))
+                       (actions (assert-type (cddddr production) (list (tuple t t)))))
+                   (unless (actions-match action-declarations actions)
+                     (error "Action name mismatch: ~S vs. ~S" action-declarations actions))
+                   (push (list lhs rhs name highlight) (preprocessor-state-grammar-source-reverse preprocessor-state))
+                   (list (list '%rule lhs))))
+             preprocessor-state
+             productions
+             (preprocessor-state-highlight preprocessor-state)))))
       (dotimes (i (length action-declarations))
         (let ((action-declaration (nth i action-declarations)))
           (push (list 'declare-action (first action-declaration) general-grammar-symbol (second action-declaration)) commands-reverse)
-          (dolist (production productions)
-            (let ((name (fourth production))
-                  (action (nth (+ i 4) production)))
-              (push (list 'action (first action) name (second action)) commands-reverse)))))
+          (setq commands-reverse
+                (nreconc
+                 (each-preprocessed-command
+                  #'(lambda (production highlight)
+                      (declare (ignore highlight))
+                      (let ((name (fourth production))
+                            (action (nth (+ i 4) production)))
+                        (list (list 'action (first action) name (second action)))))
+                  preprocessor-state
+                  productions
+                  (preprocessor-state-highlight preprocessor-state))
+                 commands-reverse))))
       (values (nreverse commands-reverse) t))))
 
 
@@ -3477,4 +3537,3 @@
   (setf (preprocessor-state-excluded-nonterminals-source preprocessor-state)
         (append excluded-nonterminals-source (preprocessor-state-excluded-nonterminals-source preprocessor-state)))
   (values nil nil))
-
