@@ -162,7 +162,8 @@ public:
   static void PositionView(nsIPresContext* aPresContext,
                            nsIFrame*       aFrame);
 
-  static void ZeroAutoMargin(nsMargin& aMargin);
+  static void ZeroAutoMargin(nsHTMLReflowState& aReflowState,
+                             nsMargin&          aMargin);
 
 protected:
 
@@ -319,6 +320,7 @@ protected:
                               nscoord*                  aAvailWidth,
                               nsSize&                   aDesiredSize,
                               nsMargin&                 aMargin,
+                              nsMargin&                 aMarginNoAuto,
                               nsMargin&                 aPadding,
                               nsReflowReason            aReflowReason,
                               nsReflowStatus&           aStatus);
@@ -326,8 +328,10 @@ protected:
   void UpdateReflowMetrics(PRUint8              aCaptionSide,
                            nsHTMLReflowMetrics& aMet,
                            const nsMargin&      aInnerMargin,
+                           const nsMargin&      aInnerMarginNoAuto,
                            const nsMargin&      aInnerPadding,
-                           const nsMargin&      aCaptionPadding);
+                           const nsMargin&      aCaptionMargin,
+                           const nsMargin&      aCaptionMargionNoAuto);
 
   void InvalidateDamage(nsIPresContext* aPresContext,
                         PRUint8         aCaptionSide,
