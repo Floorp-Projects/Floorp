@@ -34,7 +34,7 @@
  * platform-specific code, you can't throw across an XPCOM method boundary.)
  */
 
-const DEBUG = true; /* set to false to suppress debug messages */
+const DEBUG = false; /* set to false to suppress debug messages */
 const PANELS_RDF_FILE  = 66626; /* the magic number to find panels.rdf */
 
 const SIDEBAR_PROGID   = "component://mozilla/sidebar";
