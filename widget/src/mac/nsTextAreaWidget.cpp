@@ -203,6 +203,7 @@ PRBool nsTextAreaWidget::DispatchMouseEvent(nsMouseEvent &aEvent)
 	PRBool result = PR_FALSE;
 	switch (aEvent.message)
 	{
+		case NS_MOUSE_LEFT_DOUBLECLICK:
 		case NS_MOUSE_LEFT_BUTTON_DOWN:
 			Point mouseLoc;
 			mouseLoc.h = aEvent.point.x;
@@ -349,19 +350,19 @@ PRBool nsTextAreaWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 								PRUint32 startSel = 0, endSel = 0;
 								GetSelection ( &startSel, &endSel );
 								if ( startSel != endSel ) {
-									const Uint32 selectionLen = (endSel - startSel) + 1;
+									const Uint32 selectionLen = endSel - startSel;
 									
 									// extract out the selection into a different nsString so
 									// we can keep it unicode as long as possible
 									PRUint32 unused = 0;
 									nsString str, selection;
-									GetText ( str, 0, unused );
-									str.Mid ( selection, startSel, (endSel-startSel)+1 );
+									GetText(str, 0, unused );
+									str.Mid(selection, startSel, selectionLen);
 									
 									// now |selection| holds the current selection in unicode.
 									// We need to convert it to a c-string for MacOS.
-									auto_ptr<char> cRepOfSelection ( new char[selection.Length() + 1] );
-									selection.ToCString ( cRepOfSelection.get(), selectionLen );
+									auto_ptr<char> cRepOfSelection(new char[selectionLen + 1]);
+									selection.ToCString(cRepOfSelection.get(), selectionLen + 1);
 									
 									// copy it to the scrapMgr
 									::ZeroScrap();
@@ -374,6 +375,7 @@ PRBool nsTextAreaWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 										SetText ( str, unused );
 									}
 								} // if there is a selection
+								eventHandled = PR_TRUE;
 								break;
 							}
 								
@@ -387,9 +389,9 @@ PRBool nsTextAreaWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 									::HLock(scrapH);
 
 									// truncate to the first line
-									char* cr = strchr((char*)*scrapH, '\r');
-									if (cr != nil)
-										scrapLen = cr - *scrapH;
+									//char* cr = strchr((char*)*scrapH, '\r');
+									//if (cr != nil)
+									//	scrapLen = cr - *scrapH;
 
 									// paste text
 									nsString str;
@@ -398,10 +400,13 @@ PRBool nsTextAreaWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 									GetSelection(&startSel, &endSel);
 									PRUint32 outSize;
 									InsertText(str, startSel, endSel, outSize);
+									startSel += str.Length();
+									SetSelection(startSel, startSel);
 
 									::HUnlock(scrapH);
 								}
 								::DisposeHandle(scrapH);
+								eventHandled = PR_TRUE;
 								break;
 							}
 							case cmd_Clear:
@@ -409,11 +414,13 @@ PRBool nsTextAreaWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 								nsString str;
 								PRUint32 outSize;
 								SetText(str, outSize);
+								eventHandled = PR_TRUE;
 								break;
 							}
 							case cmd_SelectAll:
 							{
 								SelectAll();
+								eventHandled = PR_TRUE;
 								break;
 							}
 						}
@@ -595,13 +602,11 @@ PRUint32  nsTextAreaWidget::InsertText(const nsString &aText, PRUint32 aStartPos
 	if (! mTE_Data)
 		return NS_ERROR_NOT_INITIALIZED;
 
-	const unsigned int bufferSize = aSize + 1;	// add 1 for null
- 
- 	this->RemoveText();
-	auto_ptr<char> buffer(new char[bufferSize]);
+	const unsigned int bufferSize = aText.Length();
+	auto_ptr<char> buffer(new char[bufferSize + 1]);	// add 1 for null
 	if (buffer.get())
 	{
-		aText.ToCString(buffer.get(), bufferSize);
+		aText.ToCString(buffer.get(), bufferSize + 1);
 
 		char* occur = buffer.get();		// replace LineFeed with Return
 		while ((occur = strchr(occur, '\n')) != nil) {
@@ -609,13 +614,18 @@ PRUint32  nsTextAreaWidget::InsertText(const nsString &aText, PRUint32 aStartPos
 		}
 		
 		StartDraw();
+		if (aStartPos == (PRUint32)-1L)
+			aStartPos = WEGetTextLength(mTE_Data);
+		if (aEndPos == (PRUint32)-1L)
+			aEndPos = WEGetTextLength(mTE_Data);
 		WESetSelection(aStartPos, aEndPos, mTE_Data);
-		WEInsert(buffer.get(), aSize, 0, 0, mTE_Data);
+		WEInsert(buffer.get(), bufferSize, 0, 0, mTE_Data);
 		EndDraw();
 	}
 	else
 		return NS_ERROR_OUT_OF_MEMORY;
 
+	aSize = WEGetTextLength(mTE_Data);
 	return NS_OK;
 }
 

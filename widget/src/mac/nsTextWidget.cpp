@@ -129,28 +129,31 @@ PRBool nsTextWidget::DispatchMouseEvent(nsMouseEvent &aEvent)
 
 	if ((! eventHandled) && (mControl != nsnull))
 	{
-		if (aEvent.message == NS_MOUSE_LEFT_BUTTON_DOWN)
+		switch (aEvent.message)
 		{
-			Point thePoint;
-			thePoint.h = aEvent.point.x;
-			thePoint.v = aEvent.point.y;
+			case NS_MOUSE_LEFT_DOUBLECLICK:
+			case NS_MOUSE_LEFT_BUTTON_DOWN:
+				Point thePoint;
+				thePoint.h = aEvent.point.x;
+				thePoint.v = aEvent.point.y;
 
-			short theModifiers;
-			EventRecord* theOSEvent = (EventRecord*)aEvent.nativeMsg;
-			if (theOSEvent)
-			{
-				theModifiers = theOSEvent->modifiers;
-			}
-			else
-			{
-				if (aEvent.isShift)		theModifiers = shiftKey;
-				if (aEvent.isControl)	theModifiers |= controlKey;
-				if (aEvent.isAlt)		theModifiers |= optionKey;
-			}
-			StartDraw();
-			::HandleControlClick(mControl, thePoint, theModifiers, nil);
-			EndDraw();
-			eventHandled = PR_TRUE;
+				short theModifiers;
+				EventRecord* theOSEvent = (EventRecord*)aEvent.nativeMsg;
+				if (theOSEvent)
+				{
+					theModifiers = theOSEvent->modifiers;
+				}
+				else
+				{
+					if (aEvent.isShift)		theModifiers = shiftKey;
+					if (aEvent.isControl)	theModifiers |= controlKey;
+					if (aEvent.isAlt)		theModifiers |= optionKey;
+				}
+				StartDraw();
+				::HandleControlClick(mControl, thePoint, theModifiers, nil);
+				EndDraw();
+				eventHandled = PR_TRUE;
+				break;
 		}
 	}
 	return (eventHandled);
@@ -224,19 +227,19 @@ PRBool nsTextWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 									PRUint32 startSel = 0, endSel = 0;
 									GetSelection ( &startSel, &endSel );
 									if ( startSel != endSel ) {
-										const Uint32 selectionLen = (endSel - startSel) + 1;
+										const Uint32 selectionLen = endSel - startSel;
 										
 										// extract out the selection into a different nsString so
 										// we can keep it unicode as long as possible
 										PRUint32 unused = 0;
 										nsString str, selection;
-										GetText ( str, 0, unused );
-										str.Mid ( selection, startSel, (endSel-startSel)+1 );
+										GetText(str, 0, unused );
+										str.Mid(selection, startSel, selectionLen);
 										
 										// now |selection| holds the current selection in unicode.
 										// We need to convert it to a c-string for MacOS.
-										auto_ptr<char> cRepOfSelection ( new char[selection.Length() + 1] );
-										selection.ToCString ( cRepOfSelection.get(), selectionLen );
+										auto_ptr<char> cRepOfSelection(new char[selectionLen + 1]);
+										selection.ToCString(cRepOfSelection.get(), selectionLen + 1);
 										
 										// copy it to the scrapMgr
 										::ZeroScrap();
@@ -249,6 +252,7 @@ PRBool nsTextWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 											SetText ( str, unused );
 										}
 									} // if there is a selection
+									eventHandled = PR_TRUE;
 									break;
 								}
 									
@@ -273,10 +277,13 @@ PRBool nsTextWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 										GetSelection(&startSel, &endSel);
 										PRUint32 outSize;
 										InsertText(str, startSel, endSel, outSize);
+										startSel += str.Length();
+										SetSelection(startSel, startSel);
 
 										::HUnlock(scrapH);
 									}
 									::DisposeHandle(scrapH);
+									eventHandled = PR_TRUE;
 									break;
 								}
 								case cmd_Clear:
@@ -284,11 +291,13 @@ PRBool nsTextWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 									nsString str;
 									PRUint32 outSize;
 									SetText(str, outSize);
+									eventHandled = PR_TRUE;
 									break;
 								}
 								case cmd_SelectAll:
 								{
 									SelectAll();
+									eventHandled = PR_TRUE;
 									break;
 								}
 							}
