@@ -671,6 +671,9 @@ nsImageGTK::DrawComposited(nsIRenderingContext &aContext,
                            PRInt32 aX, PRInt32 aY,
                            PRInt32 aWidth, PRInt32 aHeight)
 {
+  if ((aWidth==0) || (aHeight==0))
+    return;
+
   nsDrawingSurfaceGTK* drawing = (nsDrawingSurfaceGTK*) aSurface;
   GdkVisual *visual = gdk_rgb_get_visual();
     
@@ -717,6 +720,11 @@ nsImageGTK::DrawComposited(nsIRenderingContext &aContext,
   XImage *ximage = XGetImage(dpy, drawable,
                              readX, readY, readWidth, readHeight, 
                              AllPlanes, ZPixmap);
+
+  NS_ASSERTION((ximage!=NULL), "XGetImage() failed");
+  if (!ximage)
+    return;
+
   unsigned char *readData = new unsigned char[3*readWidth*readHeight];
 
 
