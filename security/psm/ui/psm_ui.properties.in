@@ -3639,8 +3639,8 @@ crlclose_doclose_js_type="text/html"
 crlclose_doclose_js_hdrs=""
 crlclose_doclose_js_content:
 <script language=javascript>
-top.advisor.reload();
 top.closewin();
+top.advisor.open(top.advisor.location, 'content');
 </script>
 :crlclose_doclose_js_content
 
