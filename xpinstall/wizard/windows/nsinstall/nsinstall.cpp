@@ -797,14 +797,14 @@ DrawGaugeBorder(HWND hWnd)
 	ReleaseDC(hWnd, hDC);
 }
 
-// Draws the blue progress bar
+// Draws the progress bar
 static void
 DrawProgressBar(HWND hWnd)
 {
 	PAINTSTRUCT	ps;
 	HDC			hDC = BeginPaint(hWnd, &ps);
 	RECT		rect;
-	HBRUSH		hBlueBrush = CreateSolidBrush(RGB(0, 0, 128));
+	HBRUSH		hBrush = CreateSolidBrush(GetSysColor(COLOR_HIGHLIGHT));
 
 	// Draw the bars
 	GetClientRect(hWnd, &rect);
@@ -816,11 +816,11 @@ DrawProgressBar(HWND hWnd)
 		RECT	dest;
 
 		if (IntersectRect(&dest, &ps.rcPaint, &rect))
-			FillRect(hDC, &rect, hBlueBrush);
+			FillRect(hDC, &rect, hBrush);
 		OffsetRect(&rect, BAR_WIDTH + BAR_SPACING, 0);
 	}
 
-	DeleteObject(hBlueBrush);
+	DeleteObject(hBrush);
 	EndPaint(hWnd, &ps);
 }
 
