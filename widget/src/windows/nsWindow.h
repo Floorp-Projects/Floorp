@@ -83,15 +83,17 @@ class nsIFile;
  * For example, changing the window classes
  * could break touchpad scrolling or screen readers.
  */
-const PRUint32 kMaxClassNameLength  = 40;
-const LPCWSTR kWClassNameHidden     = L"MozillaHiddenWindowClass";
-const LPCWSTR kWClassNameUI         = L"MozillaUIWindowClass";
-const LPCWSTR kWClassNameContent    = L"MozillaContentWindowClass";
-const LPCWSTR kWClassNameGeneral    = L"MozillaWindowClass";
-const LPCSTR kClassNameHidden       = "MozillaHiddenWindowClass";
-const LPCSTR kClassNameUI           = "MozillaUIWindowClass";
-const LPCSTR kClassNameContent      = "MozillaContentWindowClass";
-const LPCSTR kClassNameGeneral      = "MozillaWindowClass";
+const PRUint32 kMaxClassNameLength    = 40;
+const LPCWSTR kWClassNameHidden       = L"MozillaHiddenWindowClass";
+const LPCWSTR kWClassNameUI           = L"MozillaUIWindowClass";
+const LPCWSTR kWClassNameContent      = L"MozillaContentWindowClass";
+const LPCWSTR kWClassNameContentFrame = L"MozillaContentFrameWindowClass";
+const LPCWSTR kWClassNameGeneral      = L"MozillaWindowClass";
+const LPCSTR kClassNameHidden         = "MozillaHiddenWindowClass";
+const LPCSTR kClassNameUI             = "MozillaUIWindowClass";
+const LPCSTR kClassNameContent        = "MozillaContentWindowClass";
+const LPCSTR kClassNameContentFrame   = "MozillaContentFrameWindowClass";
+const LPCSTR kClassNameGeneral        = "MozillaWindowClass";
 
 /**
 * Native IMM wrapper

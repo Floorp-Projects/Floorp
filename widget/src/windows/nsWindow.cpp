@@ -4281,6 +4281,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       nsToolkit::mGetClassName((HWND)wParam, className, kMaxClassNameLength);
       if (wcscmp(className, kWClassNameUI) &&
           wcscmp(className, kWClassNameContent) &&
+          wcscmp(className, kWClassNameContentFrame) &&
           wcscmp(className, kWClassNameGeneral)) {
         isMozWindowTakingFocus = PR_FALSE;
       }
@@ -4398,6 +4399,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
           nsToolkit::mGetClassName((HWND)wParam, className, kMaxClassNameLength);
           if (wcscmp(className, kWClassNameUI) &&
               wcscmp(className, kWClassNameContent) &&
+              wcscmp(className, kWClassNameContentFrame) &&
               wcscmp(className, kWClassNameGeneral)) {
             isMozWindowTakingFocus = PR_FALSE;
           }
@@ -4791,6 +4793,11 @@ LPCWSTR nsWindow::WindowClassW()
     BOOL succeeded =  nsToolkit::mRegisterClass(&wc) != 0;
     nsWindow::sIsRegistered = succeeded;
 
+    wc.lpszClassName = kWClassNameContentFrame;
+    if (!nsToolkit::mRegisterClass(&wc)) {
+      nsWindow::sIsRegistered = FALSE;
+    }
+
     wc.lpszClassName = kWClassNameContent;
     if (!nsToolkit::mRegisterClass(&wc)) {
       nsWindow::sIsRegistered = FALSE;
@@ -4816,6 +4823,9 @@ LPCWSTR nsWindow::WindowClassW()
   }
   if (mContentType == eContentTypeContent) {
     return kWClassNameContent;
+  }
+  if (mContentType == eContentTypeContentFrame) {
+    return kWClassNameContentFrame;
   }
   if (mContentType == eContentTypeUI) {
     return kWClassNameUI;
@@ -4869,6 +4879,9 @@ LPCTSTR nsWindow::WindowClass()
   }
   if (classNameW == kWClassNameContent) {
     return kClassNameContent;
+  }
+  if (classNameW == kWClassNameContentFrame) {
+    return kClassNameContentFrame;
   }
   return kClassNameGeneral;
 }
