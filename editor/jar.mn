@@ -1,5 +1,6 @@
 comm.jar:       
         content/editor/contents.rdf                              (ui/composer/content/contents.rdf)
+        content/editor-region/contents.rdf                       (ui/composer/content/contents-region.rdf)
 	content/editor/editor.xul                                (ui/composer/content/editor.xul) 
 	content/editor/TextEditorAppShell.xul                    (ui/composer/content/TextEditorAppShell.xul) 
 	content/editor/editor.js                                 (ui/composer/content/editor.js) 
@@ -210,3 +211,6 @@ en-US.jar:
 	locale/en-US/editor/EditConflict.dtd             (ui/dialogs/locale/en-US/EditConflict.dtd) 
 	locale/en-US/editor/EditorSaveAsCharset.dtd      (ui/dialogs/locale/en-US/EditorSaveAsCharset.dtd) 
 
+US.jar:
+        locale/US/editor-region/contents.rdf             (ui/composer/locale/en-US/contents-region.rdf)
+        locale/US/editor-region/region.properties        (ui/composer/locale/en-US/region.properties)

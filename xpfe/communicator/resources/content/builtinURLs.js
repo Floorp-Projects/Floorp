@@ -84,7 +84,7 @@ function loadDS()
     gTitleArc   = gRDFService.GetResource("http://home.netscape.com/NC-rdf#title");
     gContentArc = gRDFService.GetResource("http://home.netscape.com/NC-rdf#content");
 
-    var ds_uri = "chrome://global/locale/builtinURLs.rdf";
+    var ds_uri = "chrome://global-region/locale/builtinURLs.rdf";
     var url_ds = gRDFService.GetDataSource(ds_uri); // return nsIRDFDataSource
 	if (!url_ds) {
 		debug_dump("\n >>Can't get " + ds_uri + "<-\n");
@@ -93,7 +93,7 @@ function loadDS()
 	
 	if (url_ds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource).loaded)
 	{
-        ds_uri = "chrome://global/locale/builtinURLs.rdf";
+        ds_uri = "chrome://global-region/locale/builtinURLs.rdf";
         gBuiltinUrlsDataSource = gRDFService.GetDataSource(ds_uri); // return nsIRDFDataSource
 	    gDataSourceLoaded = (gBuiltinUrlsDataSource != null);
 	}

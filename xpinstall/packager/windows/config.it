@@ -165,6 +165,7 @@ C2=Component PSM
 C3=Component Uninstaller
 C4=Component US English Profile Defaults
 C5=Component En US lang pack
+C6=Component US region pack
 
 [Setup Type1]
 ;*** LOCALIZE ME BABY ***
@@ -183,6 +184,7 @@ C4=Component Uninstaller
 C5=Component Chatzilla
 C6=Component US English Profile Defaults
 C7=Component En US lang pack
+C8=Component US region pack
 
 [Setup Type2]
 ;*** LOCALIZE ME BABY ***
@@ -203,6 +205,7 @@ C4=Component Uninstaller
 C5=Component Chatzilla
 C6=Component US English Profile Defaults
 C7=Component En US lang pack
+C8=Component US region pack
 
 
 
@@ -441,6 +444,18 @@ $InstallSizeSystem$
 $InstallSizeArchive$:langenus.xpi
 Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE
 Force Upgrade File0=[SETUP PATH]\Chrome\en-US.jar
+
+[Component US region pack]
+;*** LOCALIZE ME BABY ***
+Description Short=US region pack
+;*** LOCALIZE ME BABY ***
+Description Long=Regional contents for US users
+Archive=regus.xpi
+$InstallSize$:regus
+$InstallSizeSystem$
+$InstallSizeArchive$:regus.xpi
+Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE
+Force Upgrade File0=[SETUP PATH]\Chrome\US.jar
 
 [Component PSM]
 Description Short=Personal Security Manager

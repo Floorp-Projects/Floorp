@@ -34,4 +34,4 @@ FILES=\
 
 install::
         -for %i in ($(FILES:/=\)) do $(MAKE_INSTALL) %i $(DIST)\bin\defaults\profile
-        -for %i in ($(FILES:/=\)) do $(MAKE_INSTALL) %i $(DIST)\bin\defaults\profile\en-US
+        -for %i in ($(FILES:/=\)) do $(MAKE_INSTALL) %i $(DIST)\bin\defaults\profile\US

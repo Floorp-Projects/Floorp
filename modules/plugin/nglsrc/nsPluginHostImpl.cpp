@@ -145,6 +145,7 @@ static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
 #define PLUGIN_PROPERTIES_URL "chrome://global/locale/downloadProgress.properties"
+#define PLUGIN_REGIONAL_URL "chrome://global-region/locale/region.properties"
 
 // #defines for reading prefs and extra search plugin paths from windows registry
 #define _MAXKEYVALUE_ 8196
@@ -207,6 +208,7 @@ void DisplayNoDefaultPluginDialog(const char *mimeType)
   nsCOMPtr<nsIIOService> io(do_GetService(kIOServiceCID));
   nsCOMPtr<nsIStringBundleService> strings(do_GetService(kStringBundleServiceCID));
   nsCOMPtr<nsIStringBundle> bundle;
+  nsCOMPtr<nsIStringBundle> regionalBundle;
   nsCOMPtr<nsIURI> uri;
   char *spec = nsnull;
   nsILocale* locale = nsnull;
@@ -228,20 +230,12 @@ void DisplayNoDefaultPluginDialog(const char *mimeType)
   
   // Taken from mozilla\extensions\wallet\src\wallet.cpp
   // WalletLocalize().
-
-  rv = io->NewURI(PLUGIN_PROPERTIES_URL, nsnull, getter_AddRefs(uri));
+  rv = strings->CreateBundle(PLUGIN_PROPERTIES_URL, locale, getter_AddRefs(bundle));
   if (NS_FAILED(rv)) {
     return;
   }
-
-  rv = uri->GetSpec(&spec);
-  if (NS_FAILED(rv)) {
-    nsCRT::free(spec);
-    return;
-  }
-
-  rv = strings->CreateBundle(spec, locale, getter_AddRefs(bundle));
-  nsCRT::free(spec);
+  rv = strings->CreateBundle(PLUGIN_REGIONAL_URL, locale, 
+                             getter_AddRefs(regionalBundle));
   if (NS_FAILED(rv)) {
     return;
   }
@@ -254,8 +248,8 @@ void DisplayNoDefaultPluginDialog(const char *mimeType)
   if (NS_FAILED(rv)) {
     goto EXIT_DNDPD;
   }
-  rv = bundle->GetStringFromName(NS_LITERAL_STRING("noDefaultPluginMessage").get(), 
-                                 &messageUni);
+  rv = regionalBundle->GetStringFromName(NS_LITERAL_STRING("noDefaultPluginMessage").get(), 
+                                         &messageUni);
   if (NS_FAILED(rv)) {
     goto EXIT_DNDPD;
   }

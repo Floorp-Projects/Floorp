@@ -11,13 +11,18 @@
 [langenus]
 ;
 ; en-US 
-viewer:defaults:profile:en-US:*
 viewer:chrome:en-US.jar
+
+[regus]
+;
+; US 
+viewer:chrome:US.jar
+viewer:defaults:profile:US:*
 viewer:Search Plugins:*
 
 [deflenus]
 ;
-; default files for en-US
+; default files for US
 viewer:defaults:profile:bookmarks.html
 viewer:defaults:profile:panels.rdf
 viewer:defaults:profile:localstore.rdf

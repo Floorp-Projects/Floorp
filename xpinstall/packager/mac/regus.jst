@@ -1,0 +1,47 @@
+var srDest = $SpaceRequired$;
+
+var err;
+var fProgram;
+
+// --- LOCALIZATION NOTE: translate only these ---
+var prettyName = "US Region Pack";
+var regName    = "locales/mozilla/US";
+var chromeName = "US.jar";
+// --- END LOCALIZABLE RESOURCES ---
+
+err = initInstall(prettyName, regName, "$Version$"); 
+logComment("initInstall: " + err);
+
+fProgram = getFolder("Program");
+logComment("fProgram: " + fProgram);
+
+if (verifyDiskSpace(fProgram, srDest))
+{
+    err = addDirectory("",
+                   "$Version$",
+                   "viewer",
+                   fProgram,
+                   "",
+                   true);
+    logComment("addDirectory() returned: " + err);
+
+    var cf = getFolder("Chrome");
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), "locale/US/global-region/");
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), "locale/US/communicator-region/");
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), "locale/US/editor-region/");
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), "locale/US/messenger-region/");
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), "locale/US/navigator-region/");
+
+    if(err == SUCCESS)
+    {
+        err = performInstall(); 
+        logComment("performInstall() returned: " + err);
+    }
+    else
+    {
+        cancelInstall(err);
+        logComment("cancelInstall due to error: " + err);
+    }
+}
+else
+    cancelInstall(INSUFFICIENT_DISK_SPACE);

@@ -3,10 +3,14 @@ var srDest;
 var err;
 var fProgram;
 
-$Ren8dot3List$
+// ----LOCALIZATION NOTE: translate only these ------
+var prettyName = "US Region Pack";
+var regName    = "locales/mozilla/US";
+var chromeName = "US.jar";
+// --- END CHANGABLE STUFF ---
 
 srDest = $SpaceRequired$:bin;
-err    = initInstall("Mozilla Mail", "Mail", "$Version$"); 
+err    = initInstall(prettyName, regName, "$Version$"); 
 logComment("initInstall: " + err);
 
 fProgram = getFolder("Program");
@@ -15,9 +19,6 @@ logComment("fProgram: " + fProgram);
 if(verifyDiskSpace(fProgram, srDest))
 {
   setPackageFolder(fProgram);
-
-  $Ren8dot3Call$
-
   err = addDirectory("",
                      "$Version$",
                      "bin",              // dir name in jar to extract 
@@ -27,13 +28,12 @@ if(verifyDiskSpace(fProgram, srDest))
   logComment("addDirectory() returned: " + err);
 
   // register chrome
-  err = registerChrome(CONTENT | DELAYED_CHROME, 
-                       getFolder("Chrome","messenger.jar"),
-                       "content/messenger/");
-  err = registerChrome(CONTENT | DELAYED_CHROME, 
-                       getFolder("Chrome","messenger.jar"),
-                       "content/messenger-region/");
-  logComment("registerChrome() returned: "+err);
+  var cf = getFolder("Chrome");
+  registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), "locale/US/global-region/");
+  registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), "locale/US/communicator-region/");
+  registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), "locale/US/editor-region/");
+  registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), "locale/US/messenger-region/");
+  registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), "locale/US/navigator-region/");
 
   // check return value
   if(err == SUCCESS)

@@ -120,7 +120,7 @@ pref("mailnews.force_ascii_search",         false);
 pref("mailnews.autolookup_unknown_mime_types",  true);
 
 pref("mailnews.send_default_charset",       "chrome://messenger/locale/messenger.properties");
-pref("mailnews.view_default_charset",       "chrome://messenger/locale/messenger.properties");
+pref("mailnews.view_default_charset",       "chrome://messenger-region/locale/region.properties");
 pref("mailnews.force_charset_override",     false);
 
 pref("mailnews.language_sensitive_font",    true);
@@ -222,7 +222,7 @@ pref("ldap_2.version",											3); /* Update kCurrentListVersion in include/di
 
 pref("mailnews.confirm.moveFoldersToTrash", true);
 
-pref("mailnews.start_page.url", "chrome://messenger/locale/messenger.properties");
+pref("mailnews.start_page.url", "chrome://messenger-region/locale/region.properties");
 pref("mailnews.start_page.enabled", true);
 
 pref("mailnews.account_central_page.url", "chrome://messenger/locale/messenger.properties");
@@ -290,9 +290,9 @@ pref("mail.startup.enabledMailCheckOnce", false);
 
 pref("mailnews.max_header_display_length",3); // number of addresses to show
 
-pref("messenger.throbber.url","chrome://messenger/locale/messenger.properties");
-pref("compose.throbber.url","chrome://messenger/locale/messenger.properties");
-pref("addressbook.throbber.url","chrome://messenger/locale/messenger.properties");
+pref("messenger.throbber.url","chrome://messenger-region/locale/region.properties");
+pref("compose.throbber.url","chrome://messenger-region/locale/region.properties");
+pref("addressbook.throbber.url","chrome://messenger-region/locale/region.properties");
 
 pref("mailnews.send_plaintext_flowed", true); // RFC 2646=======
 pref("mailnews.display.disable_format_flowed_support", false);

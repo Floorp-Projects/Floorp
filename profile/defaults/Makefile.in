@@ -39,4 +39,4 @@ FILES := $(addprefix $(srcdir)/, $(FILES))
 
 install::
 	$(INSTALL) $(FILES) $(DIST)/bin/defaults/profile
-	$(INSTALL) $(FILES) $(DIST)/bin/defaults/profile/en-US
+	$(INSTALL) $(FILES) $(DIST)/bin/defaults/profile/US
