@@ -20,15 +20,19 @@
 #ifndef nsCP1253ToUnicode_h___
 #define nsCP1253ToUnicode_h___
 
-#include "ns1ByteToUnicodeBase.h"
+#include "nsUCvLatinSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsCP1253ToUnicode [declaration]
 
-class nsCP1253ToUnicode : public ns1ByteToUnicodeBase
+/**
+ * A character set converter from CP1253 to Unicode.
+ *
+ * @created         24/Mar/1999
+ * @author  Catalin Rotaru [CATA]
+ */
+class nsCP1253ToUnicode : public nsTableDecoderSupport
 {
-  NS_DECL_ISUPPORTS
-
 public:
 
   /**
@@ -37,21 +41,17 @@ public:
   nsCP1253ToUnicode();
 
   /**
-   * Class destructor.
-   */
-  virtual ~nsCP1253ToUnicode();
-
-  /**
    * Static class constructor.
    */
   static nsresult CreateInstance(nsISupports **aResult);
 
 protected:
-  virtual uMappingTable* GetMappingTable();
-  virtual PRUnichar* GetFastTable();
-  virtual PRBool GetFastTableInitState();
-  virtual void SetFastTableInit();
 
+  //--------------------------------------------------------------------
+  // Subclassing of nsDecoderSupport class [declaration]
+
+  NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength, 
+      PRInt32 * aDestLength);
 };
 
-#endif 
+#endif /* nsCP1253ToUnicode_h___ */

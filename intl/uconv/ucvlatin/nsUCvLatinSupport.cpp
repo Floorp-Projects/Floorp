@@ -420,17 +420,11 @@ nsresult nsDecoderSupport::QueryInterface(REFNSIID aIID,
 //----------------------------------------------------------------------
 // Interface nsIUnicodeDecoder [implementation]
 
-NS_IMETHODIMP nsDecoderSupport::Convert(PRUnichar * aDest, 
-                                        PRInt32 aDestOffset, 
-                                        PRInt32 * aDestLength, 
-                                        const char * aSrc, 
-                                        PRInt32 aSrcOffset, 
-                                        PRInt32 * aSrcLength)
+NS_IMETHODIMP nsDecoderSupport::Convert(const char * aSrc, 
+                                        PRInt32 * aSrcLength,
+                                        PRUnichar * aDest, 
+                                        PRInt32 * aDestLength)
 {
-  // XXX this will go away when interface is cleaned
-  aSrc += aSrcOffset;
-  aDest += aDestOffset;
-
   // we do all operations using pointers internally
   const char * src = aSrc;
   const char * srcEnd = aSrc + *aSrcLength;
@@ -498,6 +492,24 @@ NS_IMETHODIMP nsDecoderSupport::Convert(PRUnichar * aDest,
   return res;
 }
 
+NS_IMETHODIMP nsDecoderSupport::Reset()
+{
+  mBufferLength = 0;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDecoderSupport::Convert(PRUnichar * aDest, 
+                                        PRInt32 aDestOffset, 
+                                        PRInt32 * aDestLength, 
+                                        const char * aSrc, 
+                                        PRInt32 aSrcOffset, 
+                                        PRInt32 * aSrcLength)
+{
+  // XXX deprecated
+  return Convert(aSrc + aSrcOffset, aSrcLength, aDest + aDestOffset, 
+    aDestLength);
+}
+
 NS_IMETHODIMP nsDecoderSupport::Finish(PRUnichar * aDest, PRInt32 aDestOffset, 
                                        PRInt32 * aDestLength)
 {
@@ -508,15 +520,8 @@ NS_IMETHODIMP nsDecoderSupport::Finish(PRUnichar * aDest, PRInt32 aDestOffset,
 NS_IMETHODIMP nsDecoderSupport::Length(const char * aSrc, PRInt32 aSrcOffset, 
                                        PRInt32 aSrcLength, PRInt32 * aDestLength) 
 {
-  // XXX this will silently go away when interface will change and the right 
-  // method will be called because it's already there!!!
+  // XXX deprecated
   return GetMaxLength(aSrc + aSrcOffset, aSrcLength, aDestLength);
-}
-
-NS_IMETHODIMP nsDecoderSupport::Reset()
-{
-  mBufferLength = 0;
-  return NS_OK;
 }
 
 NS_IMETHODIMP nsDecoderSupport::SetInputErrorBehavior(PRInt32 aBehavior)
@@ -561,5 +566,48 @@ NS_IMETHODIMP nsTableDecoderSupport::ConvertNoBuff(const char * aSrc,
 
   res = mHelper->ConvertByTable(aSrc, aSrcLength, aDest, aDestLength, 
       mShiftTable, mMappingTable);
+  return res;
+}
+
+//----------------------------------------------------------------------
+// Class nsTablesDecoderSupport [implementation]
+
+nsTablesDecoderSupport::nsTablesDecoderSupport(PRInt32 aTableCount,
+                                               uRange * aRangeArray, 
+                                               uShiftTable ** aShiftTable, 
+                                               uMappingTable ** aMappingTable) 
+: nsDecoderSupport()
+{
+  mHelper = NULL;
+  mTableCount = aTableCount;
+  mRangeArray = aRangeArray;
+  mShiftTable = aShiftTable;
+  mMappingTable = aMappingTable;
+}
+
+nsTablesDecoderSupport::~nsTablesDecoderSupport() 
+{
+  NS_IF_RELEASE(mHelper);
+}
+
+//----------------------------------------------------------------------
+// Subclassing of nsDecoderSupport class [implementation]
+
+NS_IMETHODIMP nsTablesDecoderSupport::ConvertNoBuff(const char * aSrc, 
+                                                   PRInt32 * aSrcLength, 
+                                                   PRUnichar * aDest, 
+                                                   PRInt32 * aDestLength)
+{
+  nsresult res;
+
+  if (mHelper == nsnull) {
+    res = nsComponentManager::CreateInstance(kUnicodeDecodeHelperCID, NULL, 
+        kIUnicodeDecodeHelperIID, (void**) & mHelper);
+    
+    if (NS_FAILED(res)) return NS_ERROR_UDEC_NOHELPER;
+  }
+
+  res = mHelper->ConvertByTables(aSrc, aSrcLength, aDest, aDestLength, 
+      mTableCount, mRangeArray, mShiftTable, mMappingTable);
   return res;
 }
