@@ -234,6 +234,7 @@
 <!ENTITY insertmenu.accesskey "i">
 <!ENTITY insertLinkCmd.label "Link...">
 <!ENTITY insertlink.accesskey "l">
+<!ENTITY insertlink.keybinding "l">
 <!ENTITY insertAnchorCmd.label "Named Anchor...">
 <!ENTITY insertanchor.accesskey "a">
 <!ENTITY insertImageCmd.label "Image...">
@@ -293,10 +294,10 @@
 <!ENTITY FontSizeSelect.tooltip "Choose a font size">
 <!ENTITY decreaseFontSize.label "Smaller">
 <!ENTITY decreasefontsize.accesskey "r">
-<!ENTITY decreaseFontSize.keybinding "[">
+<!ENTITY decreaseFontSize.keybinding "-">
 <!ENTITY increaseFontSize.label "Larger">
 <!ENTITY increasefontsize.accesskey "g">
-<!ENTITY increaseFontSize.keybinding "]">
+<!ENTITY increaseFontSize.keybinding "=">
 
 <!ENTITY fontsizeMenu.label "Size">
 <!ENTITY formatsizemenu.accesskey "z">
@@ -357,11 +358,11 @@
 <!ENTITY tableOrCellColor.label "Table or Cell Background Color...">
 <!ENTITY tableOrCellColor.accesskey "b">
 
-<!ENTITY formatremovestyles.keybinding "k">
-<!ENTITY formatremovelinks.keybinding "l">
+<!ENTITY formatremovestyles.keybinding "t">
+<!ENTITY formatremovelinks.keybinding "k">
 
-<!ENTITY formatindent.keybinding "=">
-<!ENTITY formatoutdent.keybinding "-">
+<!ENTITY formatindent.keybinding "]">
+<!ENTITY formatoutdent.keybinding "[">
 <!ENTITY paragraphMenu.label "Paragraph">
 <!ENTITY formatparagraphmenu.accesskey "p">
 <!ENTITY paragraphParagraphCmd.label "Paragraph">  
