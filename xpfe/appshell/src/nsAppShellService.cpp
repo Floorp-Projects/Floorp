@@ -45,6 +45,12 @@
 #include "fullsoft.h"
 #endif
 
+#ifdef XP_PC
+#include "nsIPICS.h"
+static NS_DEFINE_IID(kIPICSIID, NS_IPICS_IID);
+static NS_DEFINE_IID(kPICSCID, NS_PICS_CID);
+#endif
+
 /* Define Class IDs */
 static NS_DEFINE_IID(kAppShellCID,          NS_APPSHELL_CID);
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
@@ -122,6 +128,9 @@ NS_IMETHODIMP
 nsAppShellService::Initialize(void)
 {
   nsresult rv;
+#ifdef XP_PC
+  nsIPICS *pics = NULL;
+#endif
   
 #ifdef MOZ_FULLCIRCLE
   FCInitialize();
@@ -155,6 +164,14 @@ nsAppShellService::Initialize(void)
   if (NS_FAILED(rv)) {
     goto done;
   }
+
+#ifdef XP_PC
+  rv = nsComponentManager::CreateInstance(kPICSCID,
+							   NULL,
+							   kIPICSIID,
+							  (void **) &pics);
+ 
+#endif
 
   // Initialise the global History
   nsIGlobalHistory *  gHistory;
