@@ -746,6 +746,38 @@ embedding/config/Makefile
 embedding/tests/gtkEmbed/Makefile
 "
 
+MAKEFILES_psm2="
+security/manager/Makefile
+security/manager/ssl/Makefile
+security/manager/ssl/src/Makefile
+security/manager/ssl/resources/Makefile
+security/manager/ssl/public/Makefile
+security/manager/pki/Makefile
+security/manager/pki/resources/Makefile
+security/manager/pki/src/Makefile
+netwerk/protocol/http/public/Makefile
+netwerk/build/Makefile
+netwerk/base/public/Makefile
+netwerk/socket/base/Makefile
+uriloader/base/Makefile
+intl/locale/idl/Makefile
+intl/strres/public/Makefile
+dom/public/Makefile
+dom/public/base/Makefile
+rdf/base/idl/Makefile
+xpfe/appshell/public/Makefile
+caps/idl/Makefile
+layout/html/forms/public/Makefile
+gfx/public/Makefile
+gfx/idl/Makefile
+widget/public/Makefile
+layout/base/public/Makefile
+docshell/base/Makefile
+modules/libpref/public/Makefile
+content/base/public/Makefile
+intl/locale/public/Makefile
+"
+
 MAKEFILES_security="
 security/Makefile
 security/psm/Makefile
@@ -1056,6 +1088,8 @@ else
                  $MAKEFILES_netwerk $MAKEFILES_dbm $MAKEFILES_xpcom"
 		;;
 	    psm) add_makefiles "$MAKEFILES_dbm $MAKEFILES_xpcom $MAKEFILES_security $MAKEFILES_js $MAKEFILES_psm_glue"
+		;;
+	    psm2) add_makefiles "$MAKEFILES_dbm $MAKEFILES_js $MAKEFILES_xpcom $MAKEFILES_psm2"
 		;;
             string) add_makefiles "$MAKEFILES_string"
                 ;;

@@ -56,13 +56,15 @@ DEFAULT_GMAKE_FLAGS += SOURCE_BIN_DIR=$(CORECONF_DIST)/bin
 DEFAULT_GMAKE_FLAGS += SOURCE_XP_DIR=$(CORECONF_DIST)
 
 
-DIRS		= ssl pki
-
 include $(topsrcdir)/config/rules.mk
 
 ABS_topsrcdir   := $(shell cd $(topsrcdir); pwd)
 
 export::
+	$(MAKE) -C ssl $@
+	$(MAKE) -C pki $@
+
+install::
 ifneq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
 	if test ! -d $(MOZ_BUILD_ROOT)/security/nss; then                   \
 		cp -r $(topsrcdir)/security/nss $(MOZ_BUILD_ROOT)/security; \
@@ -71,18 +73,22 @@ ifneq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
 		cp -r $(topsrcdir)/security/coreconf $(MOZ_BUILD_ROOT)/security; \
 	fi;
 endif
-	cd $(MOZ_BUILD_ROOT)/security/coreconf; gmake $(DEFAULT_GMAKE_FLAGS)
-	cd $(MOZ_BUILD_ROOT)/security/nss; gmake $(DEFAULT_GMAKE_FLAGS) moz_import
-	cd $(MOZ_BUILD_ROOT)/security/nss/lib; gmake $(DEFAULT_GMAKE_FLAGS)
+	cd $(MOZ_BUILD_ROOT)/security/coreconf; $(MAKE) $(DEFAULT_GMAKE_FLAGS)
+	cd $(MOZ_BUILD_ROOT)/security/nss; $(MAKE) $(DEFAULT_GMAKE_FLAGS) moz_import
+	cd $(MOZ_BUILD_ROOT)/security/nss/lib; $(MAKE) $(DEFAULT_GMAKE_FLAGS)
 	$(INSTALL) -m 755 $(CORECONF_INSTALL)/lib/$(LOADABLE_ROOT_MODULE) $(DIST)/bin
 	$(INSTALL) -m 644 $(CORECONF_INSTALL)/public $(DIST)
+	$(MAKE) -C ssl $@
+	$(MAKE) -C pki $@
 
 clean clobber clobber_all realclean distclean::
+	$(MAKE) -C ssl $@
+	$(MAKE) -C pki $@
 ifeq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
-	cd $(MOZ_BUILD_ROOT)/security/coreconf; gmake $(DEFAULT_GMAKE_FLAGS) clean
-	cd $(MOZ_BUILD_ROOT)/security/nss; gmake $(DEFAULT_GMAKE_FLAGS) clean
-	cd $(MOZ_BUILD_ROOT)/security/psm/ui; gmake $(DEFAULT_GMAKE_FLAGS) clean
-	cd $(MOZ_BUILD_ROOT)/security/psm/server; gmake $(DEFAULT_GMAKE_FLAGS) clean
+	cd $(MOZ_BUILD_ROOT)/security/coreconf; $(MAKE) $(DEFAULT_GMAKE_FLAGS) clean
+	cd $(MOZ_BUILD_ROOT)/security/nss; $(MAKE) $(DEFAULT_GMAKE_FLAGS) clean
+	cd $(MOZ_BUILD_ROOT)/security/psm/ui; $(MAKE) $(DEFAULT_GMAKE_FLAGS) clean
+	cd $(MOZ_BUILD_ROOT)/security/psm/server; $(MAKE) $(DEFAULT_GMAKE_FLAGS) clean
 else
 	if test -d $(MOZ_BUILD_ROOT)/security/nss; then \
 		rm -rf $(MOZ_BUILD_ROOT)/security/nss;  \

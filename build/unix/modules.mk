@@ -97,6 +97,40 @@ BM_DEP_DIRS_psm	= $(BM_DEP_DIRS_dbm) $(BM_DEP_DIRS_xpcom) $(BM_DEP_DIRS_js) intl
 BM_CVS_psm	= $(BM_CVS_dbm) $(BM_CVS_xpcom) $(BM_CVS_js) security netwerk/base/public netwerk/socket/base dom/public $(BM_CVS_js) extensions/psm-glue
 BM_CVS_NS_psm	= $(BM_CVS_NS_dbm) $(BM_CVS_NS_xpcom) $(BM_CVS_NS_js) intl/locale/idl intl/locale/public intl/strres/public uriloader/base modules/libpref/public profile/public caps/idl netwerk/protocol/http/public gfx/idl gfx/public rdf/base/idl xpfe/appshell/public widget/public docshell/base layout/html/forms/public layout/base/public content/base/public dom/src/base modules/oji/public caps/include netwerk/build
 
+#
+# psm2
+#
+BM_DIRS_psm2	= $(BM_DIRS_dbm) $(BM_DIRS_js) $(BM_DIRS_xpcom) security/manager
+BM_DEP_DIRS_psm2= \
+	$(BM_DEP_DIRS_xpcom) \
+	netwerk/base/public netwerk/protocol/http/public netwerk/build \
+	netwerk/socket/base \
+	uriloader/base \
+	intl/locale/idl intl/strres/public \
+	dom/public rdf/base/idl xpfe/appshell/public \
+	caps/idl \
+	layout/html/forms/public \
+	gfx/public gfx/idl widget/public layout/base/public docshell/base \
+	modules/libpref/public \
+	content/base/public \
+	intl/locale/public
+BM_CVS_psm2	= $(BM_CVS_dbm) $(BM_CVS_js) $(BM_CVS_xpcom) security/manager \
+	dom/public
+BM_CVS_NS_psm2	= \
+	$(BM_CVS_NS_dbm) \
+	$(BM_CVS_NS_js) \
+	$(BM_CVS_NS_xpcom) \
+	netwerk/base/public netwerk/protocol/http/public netwerk/build \
+	netwerk/socket/base \
+	uriloader/base \
+	intl/locale/idl intl/strres/public \
+	rdf/base/idl xpfe/appshell/public \
+	caps/idl \
+	layout/html/forms/public \
+	gfx/public gfx/idl widget/public layout/base/public docshell/base \
+	modules/libpref/public \
+	content/base/public \
+	intl/locale/public
 
 #
 # Tally
