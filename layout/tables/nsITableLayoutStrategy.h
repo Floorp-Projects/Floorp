@@ -34,17 +34,22 @@ public:
     * the layout constraints, and the compatibility mode.  Sets mColumnWidths as a side effect.
     * @param aPresContext     the presentation context
     * @param aTableStyle      the resolved style for the table
-    * @param aMaxSize         the height and width constraints
-    * @param aMaxElementSize  the min size of the largest indivisible object
+    * @param aReflowState     the reflow state for the calling table frame
+    * @param aMaxWidth        the width constraint
+    * @param aNumCols         the number of columns
+    * @param aTotalFixedWidth [OUT] the computed fixed width of the table
+    * @param aMinTableWidth   [OUT] the computed min width of the table
+    * @param aMinTableWidth   [OUT] the computed max width of the table
+    * @param aMaxElementSize  [OUT] the min size of the largest indivisible object
     */
   virtual PRBool BalanceColumnWidths(nsIPresContext* aPresContext,
                                      nsIStyleContext *aTableStyle,
                                      const nsReflowState& aReflowState,
-                                     PRInt32 maxWidth, 
+                                     nscoord aMaxWidth, 
                                      PRInt32 aNumCols,
-                                     PRInt32 &aTotalFixedWidth,
-                                     PRInt32 &aMinTableWidth,
-                                     PRInt32 &aMaxTableWidth,
+                                     nscoord &aTotalFixedWidth,
+                                     nscoord &aMinTableWidth,
+                                     nscoord &aMaxTableWidth,
                                      nsSize* aMaxElementSize)=0;
 };
 
