@@ -257,7 +257,7 @@ JSObject *JSArray::ArrayPrototypeObject = NULL;
 static JSValue array_constructor(Context *, const JSValues& argv)
 {
     // argv[0] will be NULL
-    int argCount = argv.size();
+    uint32 argCount = argv.size();
     if (argCount > 1)
         if (argCount > 2) { // then it's a bunch of elements
             JSArray *result = new JSArray(argCount - 1);
