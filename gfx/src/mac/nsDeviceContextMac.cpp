@@ -395,8 +395,8 @@ NS_IMETHODIMP nsDeviceContextMac::EndDocument(void)
 
 NS_IMETHODIMP nsDeviceContextMac::BeginPage(void)
 {
- 	if(((nsDeviceContextSpecMac*)(this->mSpec))->mPrintManagerOpen) 
 #if !TARGET_CARBON
+ 	if(((nsDeviceContextSpecMac*)(this->mSpec))->mPrintManagerOpen) 
 		::PrOpenPage(((nsDeviceContextSpecMac*)(this->mSpec))->mPrinterPort,nsnull);
 #endif
   return NS_OK;
@@ -407,12 +407,12 @@ NS_IMETHODIMP nsDeviceContextMac::BeginPage(void)
 
 NS_IMETHODIMP nsDeviceContextMac::EndPage(void)
 {
+#if !TARGET_CARBON
  	if(((nsDeviceContextSpecMac*)(this->mSpec))->mPrintManagerOpen) {
  		::SetPort((GrafPtr)(((nsDeviceContextSpecMac*)(this->mSpec))->mPrinterPort));
-#if !TARGET_CARBON
 		::PrClosePage(((nsDeviceContextSpecMac*)(this->mSpec))->mPrinterPort);
-#endif
 	}
+#endif
   return NS_OK;
 }
 
