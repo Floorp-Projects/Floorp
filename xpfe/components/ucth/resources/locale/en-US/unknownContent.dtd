@@ -1,0 +1,36 @@
+<!--
+    Localization notes for translators:
+    
+    The HTML markup:
+    
+        <html:strong>
+        <html:div id="dialog.contentType"
+                  style="display:inline;">
+        </html:div>
+        </html:strong>
+    
+    in the entity value below will generate a 'mime-type' value at runtime
+    and result in a string like this:
+    
+        "You have started to download a file of type <mime-type>."
+    
+    
+    Please do not translate the markups.
+  -->
+<!-- extracted from unknownContent.xul -->
+
+<!ENTITY unknownWindow.title "Unknown File Type">
+<!-- The <html:div> below *should* look like this:
+                                <html:div id=&quot;dialog.contentType&quot; style=&quot;display:inline;&quot;>
+     but that crashes at the moment. -->
+<!ENTITY startDownload  "You have started to download a file of type
+                            <html:strong>
+                                <html:div>
+                                </html:div>
+                            </html:strong>
+                        ">
+<!ENTITY dialogMore.label "More Info...">
+<!ENTITY dialogPick.label "Pick App...">
+<!ENTITY dialogSave.label "Save File...">
+<!ENTITY dialogCancel.label "Cancel">
+
