@@ -82,6 +82,34 @@ nsMenuListener::KeyUp(nsIDOMEvent* aKeyEvent)
 nsresult
 nsMenuListener::KeyDown(nsIDOMEvent* aKeyEvent)
 {
+#ifndef XP_UNIX
+  // See if the ALT key goes down by itself.
+  // If so, then close up the menu completely.
+  nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
+  PRUint32 theChar;
+	keyEvent->GetKeyCode(&theChar);
+  PRBool alt;
+  keyEvent->GetAltKey(&alt);
+  if (theChar == NS_VK_ALT && alt) {
+    // No other modifiers can be down.
+    // Especially CTRL.  CTRL+ALT == AltGR, and
+    // we'll fuck up on non-US enhanced 102-key
+    // keyboards if we don't check this.
+    PRBool ctrl,shift,meta;
+    keyEvent->GetCtrlKey(&ctrl);
+    keyEvent->GetShiftKey(&shift);
+    keyEvent->GetMetaKey(&meta);
+    if (!(ctrl || shift || meta)) {
+      // The ALT key just went down by itself. This means kill
+      // the menu.
+      PRBool handled = PR_FALSE;
+      mMenuParent->Escape(handled);
+      if (!handled)
+        mMenuParent->DismissChain();
+    }
+  }
+#endif
+
   aKeyEvent->PreventBubble();
 	aKeyEvent->PreventCapture();
   aKeyEvent->PreventDefault();

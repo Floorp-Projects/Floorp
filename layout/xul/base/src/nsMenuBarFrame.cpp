@@ -461,6 +461,9 @@ nsMenuBarFrame::Escape(PRBool& aHandledFlag)
   // Clear our current menu item if we've got one.
   SetCurrentMenuItem(nsnull);
 
+  // Remove our keyboard navigator
+  RemoveKeyboardNavigator();
+
   // Clear out our dismissal listener
   if (nsMenuFrame::mDismissalListener)
     nsMenuFrame::mDismissalListener->Unregister();
