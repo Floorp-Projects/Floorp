@@ -759,9 +759,10 @@ nsresult nsMsgDatabase::InitNewDB()
 	err = InitMDBInfo();
 	if (err == NS_OK)
 	{
-		nsDBFolderInfo *dbFolderInfo = new nsDBFolderInfo(this);
+		nsDBFolderInfo *dbFolderInfo = new nsDBFolderInfo(this); // this is bad!! Should go through component manager
 		if (dbFolderInfo)
 		{
+			NS_ADDREF(dbFolderInfo); // mscott: shouldn't have to do this...go through c. manager
 			err = dbFolderInfo->AddToNewMDB();
 			dbFolderInfo->SetVersion(GetCurVersion());
 			nsIMdbStore *store = GetStore();
@@ -788,9 +789,13 @@ nsresult nsMsgDatabase::InitExistingDB()
 		err = GetStore()->GetTable(GetEnv(), &gAllMsgHdrsTableOID, &m_mdbAllMsgHeadersTable);
 		if (err == NS_OK)
 		{
-			m_dbFolderInfo = new nsDBFolderInfo(this);
+			m_dbFolderInfo = new nsDBFolderInfo(this);	 // mscott: This is bad!!! Should be going through component manager
 			if (m_dbFolderInfo)
+			{
+				NS_ADDREF(m_dbFolderInfo); // mscott: acquire a ref count. we shouldn't do this & should be going through
+									       // the component manager instead.
 				m_dbFolderInfo->InitFromExistingDB();
+			}
 		}
 
 	}
