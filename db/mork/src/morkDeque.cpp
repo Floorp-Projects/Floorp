@@ -72,7 +72,7 @@ morkNext::MakeNewNext(size_t inSize, nsIMdbHeap& ioHeap, morkEnv* ev)
 /*static*/
 void morkNext::ZapOldNext(morkEnv* ev, nsIMdbHeap* ioHeap)
 {
-  if ( &ioHeap )
+  if ( ioHeap )
   {
     if ( this )
       ioHeap->Free(ev->AsMdbEnv(), this);
@@ -189,7 +189,7 @@ morkLink::MakeNewLink(size_t inSize, nsIMdbHeap& ioHeap, morkEnv* ev)
 /*static*/
 void morkLink::ZapOldLink(morkEnv* ev, nsIMdbHeap* ioHeap)
 {
-  if ( &ioHeap )
+  if ( ioHeap )
   {
     if ( this )
       ioHeap->Free(ev->AsMdbEnv(), this);
