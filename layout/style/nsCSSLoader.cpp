@@ -220,9 +220,9 @@ CSSLoaderImpl::CSSLoaderImpl(void)
 
 CSSLoaderImpl::~CSSLoaderImpl(void)
 {
-  NS_ASSERTION(mLoadingDatas.Count() == 0,
+  NS_ASSERTION((!mLoadingDatas.IsInitialized()) || mLoadingDatas.Count() == 0,
                "How did we get destroyed when there are loading data?");
-  NS_ASSERTION(mPendingDatas.Count() == 0,
+  NS_ASSERTION((!mPendingDatas.IsInitialized()) || mPendingDatas.Count() == 0,
                "How did we get destroyed when there are pending data?");
 }
 
@@ -238,6 +238,7 @@ NS_IMETHODIMP
 CSSLoaderImpl::Init(nsIDocument* aDocument)
 {
   NS_ASSERTION(! mDocument, "already initialized");
+
   if (! mDocument) {
     mDocument = aDocument;
     return NS_OK;
@@ -245,14 +246,11 @@ CSSLoaderImpl::Init(nsIDocument* aDocument)
   return NS_ERROR_ALREADY_INITIALIZED;
 }
 
-PR_STATIC_CALLBACK(PRIntn)
-StartAlternateLoads(nsHashKey *aKey, void *aData, void* aClosure)
+PR_STATIC_CALLBACK(PLDHashOperator)
+StartAlternateLoads(nsIURI *aKey, SheetLoadData* &aData, void* aClosure)
 {
-  SheetLoadData* data = NS_STATIC_CAST(SheetLoadData*, aData);
-  CSSLoaderImpl* loader = NS_STATIC_CAST(CSSLoaderImpl*, aClosure);
-
-  loader->LoadSheet(data, eSheetNeedsParser);
-  return kHashEnumerateRemove;
+  NS_STATIC_CAST(CSSLoaderImpl*,aClosure)->LoadSheet(aData, eSheetNeedsParser);
+  return PL_DHASH_REMOVE;
 }
 
 NS_IMETHODIMP
@@ -280,21 +278,20 @@ CSSLoaderImpl::SetCompatibilityMode(nsCompatibility aCompatMode)
   return NS_OK;
 }
 
-PR_STATIC_CALLBACK(PRIntn)
-StartNonAlternates(nsHashKey *aKey, void *aData, void* aClosure)
+PR_STATIC_CALLBACK(PLDHashOperator)
+StartNonAlternates(nsIURI *aKey, SheetLoadData* &aData, void* aClosure)
 {
   NS_PRECONDITION(aData, "Must have a data");
   NS_PRECONDITION(aClosure, "Must have a loader");
   
-  SheetLoadData* data = NS_STATIC_CAST(SheetLoadData*, aData);
   CSSLoaderImpl* loader = NS_STATIC_CAST(CSSLoaderImpl*, aClosure);
-  if (loader->IsAlternate(data->mTitle)) {
-    return kHashEnumerateNext;
+  if (loader->IsAlternate(aData->mTitle)) {
+    return PL_DHASH_NEXT;
   }
 
   // Need to start the load
-  loader->LoadSheet(data, eSheetNeedsParser);
-  return kHashEnumerateRemove;
+  loader->LoadSheet(aData, eSheetNeedsParser);
+  return PL_DHASH_REMOVE;
 }
 
 NS_IMETHODIMP
@@ -960,6 +957,11 @@ CSSLoaderImpl::CreateSheet(nsIURI* aURI,
 {
   LOG(("CSSLoaderImpl::CreateSheet"));
   NS_PRECONDITION(aSheet, "Null out param!");
+
+  NS_ENSURE_TRUE((mCompleteSheets.IsInitialized() || mCompleteSheets.Init()) &&
+                   (mLoadingDatas.IsInitialized() || mLoadingDatas.Init()) &&
+                   (mPendingDatas.IsInitialized() || mPendingDatas.Init()),
+                 NS_ERROR_OUT_OF_MEMORY);
   
   nsresult rv = NS_OK;
   *aSheet = nsnull;
@@ -986,16 +988,14 @@ CSSLoaderImpl::CreateSheet(nsIURI* aURI,
 
     if (!sheet) {
       // Then complete sheets
-      URLKey key(aURI);
-      sheet = dont_AddRef(NS_STATIC_CAST(nsICSSStyleSheet*,
-                                         mCompleteSheets.Get(&key)));
+      mCompleteSheets.Get(aURI, getter_AddRefs(sheet));
       LOG(("  From completed: %p", sheet.get()));
     
       // Then loading sheets
       if (!sheet && !aSyncLoad) {
         aSheetState = eSheetLoading;
-        SheetLoadData* loadData =
-          NS_STATIC_CAST(SheetLoadData*, mLoadingDatas.Get(&key));
+        SheetLoadData* loadData = nsnull;
+        mLoadingDatas.Get(aURI, &loadData);
         if (loadData) {
           sheet = loadData->mSheet;
           LOG(("  From loading: %p", sheet.get()));
@@ -1004,8 +1004,8 @@ CSSLoaderImpl::CreateSheet(nsIURI* aURI,
         // Then alternate sheets
         if (!sheet) {
           aSheetState = eSheetPending;
-          SheetLoadData* loadData =
-            NS_STATIC_CAST(SheetLoadData*, mPendingDatas.Get(&key));
+          SheetLoadData* loadData = nsnull;
+          mPendingDatas.Get(aURI, &loadData);
           if (loadData) {
             sheet = loadData->mSheet;
             LOG(("  From pending: %p", sheet.get()));
@@ -1214,6 +1214,7 @@ CSSLoaderImpl::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
   NS_PRECONDITION(aLoadData->mURI, "Need a URI to load");
   NS_PRECONDITION(aLoadData->mSheet, "Need a sheet to load into");
   NS_PRECONDITION(aSheetState != eSheetComplete, "Why bother?");
+  NS_ASSERTION(mLoadingDatas.IsInitialized(), "mLoadingDatas should be initialized by now.");
 
   LOG_URI("  Load from: '%s'", aLoadData->mURI);
   
@@ -1269,15 +1270,14 @@ CSSLoaderImpl::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
     return rv;
   }
 
-  URLKey key(aLoadData->mURI);
   SheetLoadData* existingData = nsnull;
 
   if (aSheetState == eSheetLoading) {
-    existingData = NS_STATIC_CAST(SheetLoadData*, mLoadingDatas.Get(&key));
+    mLoadingDatas.Get(aLoadData->mURI, &existingData);
     NS_ASSERTION(existingData, "CreateSheet lied about the state");
   }
   else if (aSheetState == eSheetPending){
-    existingData = NS_STATIC_CAST(SheetLoadData*, mPendingDatas.Get(&key));
+    mPendingDatas.Get(aLoadData->mURI, &existingData);
     NS_ASSERTION(existingData, "CreateSheet lied about the state");
   }
   
@@ -1290,11 +1290,15 @@ CSSLoaderImpl::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
     data->mNext = aLoadData; // transfer ownership
     if (aSheetState == eSheetPending && !IsAlternate(aLoadData->mTitle)) {
       // Kick the load off; someone cares about it right away
+
 #ifdef DEBUG
-      SheetLoadData* removedData =
+      SheetLoadData* removedData;
+      NS_ASSERTION(mPendingDatas.Get(aLoadData->mURI, &removedData) &&
+                   removedData == existingData,
+                   "Bad pending table.");
 #endif
-        NS_STATIC_CAST(SheetLoadData*, mPendingDatas.Remove(&key));
-      NS_ASSERTION(removedData == existingData, "Broken pending table");
+
+      mPendingDatas.Remove(aLoadData->mURI);
 
       LOG(("  Forcing load of pending data"));
       LoadSheet(existingData, eSheetNeedsParser);
@@ -1367,7 +1371,7 @@ CSSLoaderImpl::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
     return rv;
   }
 
-  mLoadingDatas.Put(&key, aLoadData);
+  mLoadingDatas.Put(aLoadData->mURI, aLoadData);
   aLoadData->mIsLoading = PR_TRUE;
   
   return NS_OK;
@@ -1450,6 +1454,7 @@ CSSLoaderImpl::SheetComplete(SheetLoadData* aLoadData, PRBool aSucceeded)
   LOG(("CSSLoaderImpl::SheetComplete"));
   NS_PRECONDITION(aLoadData, "Must have a load data!");
   NS_PRECONDITION(aLoadData->mSheet, "Must have a sheet");
+  NS_ASSERTION(mLoadingDatas.IsInitialized(),"mLoadingDatas should be initialized by now.");
 
   LOG(("Load completed: %d", aSucceeded));
 
@@ -1457,14 +1462,8 @@ CSSLoaderImpl::SheetComplete(SheetLoadData* aLoadData, PRBool aSucceeded)
   if (aLoadData->mURI) {
     LOG_URI("  Finished loading: '%s'", aLoadData->mURI);
     // Remove the data from the list of loading datas
-    URLKey key(aLoadData->mURI);
     if (aLoadData->mIsLoading) {
-      
-#ifdef DEBUG
-      SheetLoadData* loadingData =
-#endif
-        NS_STATIC_CAST(SheetLoadData*, mLoadingDatas.Remove(&key));
-      NS_ASSERTION(loadingData == aLoadData, "Broken loading table");
+      mLoadingDatas.Remove(aLoadData->mURI);
       aLoadData->mIsLoading = PR_FALSE;
     }
   }
@@ -1537,8 +1536,7 @@ CSSLoaderImpl::SheetComplete(SheetLoadData* aLoadData, PRBool aSucceeded)
     }
     else {
 #endif
-      URLKey key(aLoadData->mURI);
-      mCompleteSheets.Put(&key, aLoadData->mSheet);
+      mCompleteSheets.Put(aLoadData->mURI, aLoadData->mSheet);
 #ifdef MOZ_XUL
     }
 #endif
@@ -1683,8 +1681,7 @@ CSSLoaderImpl::LoadStyleLink(nsIContent* aElement,
   if (aURL && state == eSheetNeedsParser && mLoadingDatas.Count() != 0 &&
       IsAlternate(aTitle)) {
     LOG(("  Deferring alternate sheet load"));
-    URLKey key(aURL);
-    mPendingDatas.Put(&key, data);
+    mPendingDatas.Put(aURL, data);
     return NS_OK;
   }
 
@@ -1883,21 +1880,18 @@ nsresult NS_NewCSSLoader(nsICSSLoader** aLoader)
   return CallQueryInterface(it, aLoader);
 }
 
-PR_STATIC_CALLBACK(PRIntn)
-StopLoadingSheetCallback(nsHashKey* aKey, void* aData, void* aClosure)
+PR_STATIC_CALLBACK(PLDHashOperator)
+StopLoadingSheetCallback(nsIURI* aKey, SheetLoadData*& aData, void* aClosure)
 {
   NS_PRECONDITION(aData, "Must have a data!");
   NS_PRECONDITION(aClosure, "Must have a loader");
 
-  SheetLoadData* data = NS_STATIC_CAST(SheetLoadData*, aData);
-  CSSLoaderImpl* loader = NS_STATIC_CAST(CSSLoaderImpl*, aClosure);
-
-  data->mIsLoading = PR_FALSE; // we will handle the removal right here
-  data->mIsCancelled = PR_TRUE;
+  aData->mIsLoading = PR_FALSE; // we will handle the removal right here
+  aData->mIsCancelled = PR_TRUE;
   
-  loader->SheetComplete(data, PR_FALSE);
+  NS_STATIC_CAST(CSSLoaderImpl*,aClosure)->SheetComplete(aData, PR_FALSE);
 
-  return kHashEnumerateRemove;
+  return PL_DHASH_REMOVE;
 }
 
 NS_IMETHODIMP
@@ -1917,15 +1911,15 @@ CSSLoaderImpl::StopLoadingSheet(nsIURI* aURL)
 {
   NS_ENSURE_TRUE(aURL, NS_ERROR_NULL_POINTER);
   if (mLoadingDatas.Count() > 0 || mPendingDatas.Count() > 0) {
-    URLKey key(aURL);
-    SheetLoadData* loadData =
-      NS_STATIC_CAST(SheetLoadData*, mLoadingDatas.Get(&key));
+    
+    SheetLoadData* loadData = nsnull;
+    mLoadingDatas.Get(aURL, &loadData);
     if (!loadData) {
-      loadData = NS_STATIC_CAST(SheetLoadData*, mPendingDatas.Get(&key));
+      mPendingDatas.Get(aURL, &loadData);
       if (loadData) {
         // have to remove from mPendingDatas ourselves, since
         // SheetComplete won't do that.
-        mPendingDatas.Remove(&key);
+        mPendingDatas.Remove(aURL);
       }
     }
     

@@ -23,6 +23,7 @@
  *   Chris Waterson <waterson@netscape.com>
  *   Brendan Eich <brendan@mozilla.org>
  *   Ben Goodger <ben@netscape.com>
+ *   Benjamin Smedberg <bsmedberg@covad.net>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -39,12 +40,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/*
-
-
-
- */
-
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 #include "nsICSSStyleSheet.h"
@@ -53,7 +48,6 @@
 #include "nsIXULDocument.h"
 #include "nsIURI.h"
 #include "nsIURL.h"
-#include "nsHashtable.h"
 #include "nsXPIDLString.h"
 #include "plstr.h"
 #include "nsIDocument.h"
@@ -72,6 +66,9 @@
 #include "nsIObjectOutputStream.h"
 
 #include "nsNetUtil.h"
+#include "nsURIHashKey.h"
+#include "nsInterfaceHashtable.h"
+#include "nsDataHashtable.h"
 #include "nsAppDirectoryServiceDefs.h"
 
 class nsXULPrototypeCache : public nsIXULPrototypeCache
@@ -113,45 +110,19 @@ protected:
     nsXULPrototypeCache();
     virtual ~nsXULPrototypeCache();
 
-    static PRBool PR_CALLBACK UnlockJSObjectCallback(nsHashKey* aKey, void* aData, void* aClosure);
     JSRuntime*  GetJSRuntime();
 
-    nsSupportsHashtable mPrototypeTable;
-    nsSupportsHashtable mStyleSheetTable;
-    nsHashtable         mScriptTable;
-    nsSupportsHashtable mXBLDocTable;
+    nsInterfaceHashtable<nsURIHashKey,nsIXULPrototypeDocument> mPrototypeTable;
+    nsInterfaceHashtable<nsURIHashKey,nsICSSStyleSheet>        mStyleSheetTable;
+    nsDataHashtable<nsURIHashKey,void*>                        mScriptTable;
+    nsInterfaceHashtable<nsCStringHashKey,nsIXBLDocumentInfo>  mXBLDocTable;
 
     JSRuntime*          mJSRuntime;
 
-    class nsIURIKey : public nsHashKey {
-    protected:
-        nsCOMPtr<nsIURI> mKey;
-
-    public:
-        nsIURIKey(nsIURI* key) : mKey(key) {}
-        ~nsIURIKey(void) {}
-
-        PRUint32 HashCode(void) const {
-            nsCAutoString spec;
-            mKey->GetSpec(spec);
-            return (PRUint32) PL_HashString(spec.get());
-        }
-
-        PRBool Equals(const nsHashKey *aKey) const {
-            PRBool eq;
-            mKey->Equals( ((nsIURIKey*) aKey)->mKey, &eq );
-            return eq;
-        }
-
-        nsHashKey *Clone(void) const {
-            return new nsIURIKey(mKey);
-        }
-    };
-
-
     ///////////////////////////////////////////////////////////////////////////
     // FastLoad
-    nsSupportsHashtable mFastLoadURITable;
+    // this is really a hash set, with a dummy data parameter
+    nsDataHashtable<nsURIHashKey,PRUint32> mFastLoadURITable;
 
     static nsIFastLoadService*    gFastLoadService;
     static nsIFile*               gFastLoadFile;
@@ -220,6 +191,15 @@ NS_NewXULPrototypeCache(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 
     nsresult rv;
 
+    if (!(result->mPrototypeTable.Init() &&
+          result->mStyleSheetTable.Init() &&
+          result->mScriptTable.Init() &&
+          result->mXBLDocTable.Init() &&
+          result->mFastLoadURITable.Init())) {
+        delete result;
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
     nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
     if (NS_SUCCEEDED(rv)) {
         // XXX Ignore return values.
@@ -243,8 +223,7 @@ nsXULPrototypeCache::GetPrototype(nsIURI* aURI, nsIXULPrototypeDocument** _resul
 {
     nsresult rv = NS_OK;
 
-    nsIURIKey key(aURI);
-    *_result = NS_STATIC_CAST(nsIXULPrototypeDocument*, mPrototypeTable.Get(&key));
+    mPrototypeTable.Get(aURI, _result);
 
     if (! *_result) {
         // No prototype in XUL memory cache. Spin up FastLoad Service and
@@ -289,11 +268,8 @@ nsXULPrototypeCache::PutPrototype(nsIXULPrototypeDocument* aDocument)
     nsCOMPtr<nsIURI> uri;
     rv = aDocument->GetURI(getter_AddRefs(uri));
 
-    nsIURIKey key(uri);
-
-    // Put() w/o  a third parameter with a destination for the
-    // replaced value releases it
-    mPrototypeTable.Put(&key, aDocument);
+    // Put() releases any old value
+    mPrototypeTable.Put(uri, aDocument);
 
     return NS_OK;
 }
@@ -313,7 +289,7 @@ nsXULPrototypeCache::GetJSRuntime()
 NS_IMETHODIMP
 nsXULPrototypeCache::FlushPrototypes()
 {
-    mPrototypeTable.Reset();
+    mPrototypeTable.Clear();
 
     // Clear the script cache, as it refers to prototype-owned mJSObjects.
     FlushScripts();
@@ -324,8 +300,7 @@ nsXULPrototypeCache::FlushPrototypes()
 NS_IMETHODIMP
 nsXULPrototypeCache::GetStyleSheet(nsIURI* aURI, nsICSSStyleSheet** _result)
 {
-    nsIURIKey key(aURI);
-    *_result = NS_STATIC_CAST(nsICSSStyleSheet*, mStyleSheetTable.Get(&key));
+    mStyleSheetTable.Get(aURI, _result);
     return NS_OK;
 }
 
@@ -336,18 +311,17 @@ nsXULPrototypeCache::PutStyleSheet(nsICSSStyleSheet* aStyleSheet)
     nsresult rv;
     nsCOMPtr<nsIURI> uri;
     rv = aStyleSheet->GetURL(*getter_AddRefs(uri));
+    if (NS_SUCCEEDED(rv))
+        mStyleSheetTable.Put(uri, aStyleSheet);
 
-    nsIURIKey key(uri);
-    mStyleSheetTable.Put(&key, aStyleSheet);
-
-    return NS_OK;
+    return rv;
 }
 
 
 NS_IMETHODIMP
 nsXULPrototypeCache::FlushStyleSheets()
 {
-    mStyleSheetTable.Reset();
+    mStyleSheetTable.Clear();
     return NS_OK;
 }
 
@@ -355,8 +329,9 @@ nsXULPrototypeCache::FlushStyleSheets()
 NS_IMETHODIMP
 nsXULPrototypeCache::GetScript(nsIURI* aURI, void** aScriptObject)
 {
-    nsIURIKey key(aURI);
-    *aScriptObject = mScriptTable.Get(&key);
+    if (!mScriptTable.Get(aURI, aScriptObject))
+        *aScriptObject = nsnull;
+
     return NS_OK;
 }
 
@@ -364,8 +339,7 @@ nsXULPrototypeCache::GetScript(nsIURI* aURI, void** aScriptObject)
 NS_IMETHODIMP
 nsXULPrototypeCache::PutScript(nsIURI* aURI, void* aScriptObject)
 {
-    nsIURIKey key(aURI);
-    mScriptTable.Put(&key, aScriptObject);
+    NS_ENSURE_TRUE(mScriptTable.Put(aURI, aScriptObject), NS_ERROR_OUT_OF_MEMORY);
 
     // Lock the object from being gc'd until it is removed from the cache
     JS_LockGCThingRT(GetJSRuntime(), aScriptObject);
@@ -373,18 +347,18 @@ nsXULPrototypeCache::PutScript(nsIURI* aURI, void* aScriptObject)
 }
 
 /* static */
-PRBool
-nsXULPrototypeCache::UnlockJSObjectCallback(nsHashKey *aKey, void *aData, void* aClosure)
+PR_STATIC_CALLBACK(PLDHashOperator)
+ReleaseJSObjectCallback(nsIURI* aKey, void* &aData, void* aClosure)
 {
     JS_UnlockGCThingRT((JSRuntime*) aClosure, aData);
-    return PR_TRUE;
+    return PL_DHASH_REMOVE;
 }
 
 NS_IMETHODIMP
 nsXULPrototypeCache::FlushScripts()
 {
     // This callback will unlock each object so it can once again be gc'd.
-    mScriptTable.Reset(UnlockJSObjectCallback, (void*) GetJSRuntime());
+    mScriptTable.Enumerate(ReleaseJSObjectCallback, (void*) GetJSRuntime());
     return NS_OK;
 }
 
@@ -392,8 +366,7 @@ nsXULPrototypeCache::FlushScripts()
 NS_IMETHODIMP
 nsXULPrototypeCache::GetXBLDocumentInfo(const nsCString& aURL, nsIXBLDocumentInfo** aResult)
 {
-    nsCStringKey key(aURL);
-    *aResult = NS_STATIC_CAST(nsIXBLDocumentInfo*, mXBLDocTable.Get(&key)); // Addref happens here.
+    mXBLDocTable.Get(aURL, aResult);
     return NS_OK;
 }
 
@@ -410,10 +383,10 @@ nsXULPrototypeCache::PutXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo)
     nsCAutoString str;
     uri->GetSpec(str);
 
-    nsCStringKey key(str.get());
-    nsCOMPtr<nsIXBLDocumentInfo> info = getter_AddRefs(NS_STATIC_CAST(nsIXBLDocumentInfo*, mXBLDocTable.Get(&key)));
+    nsCOMPtr<nsIXBLDocumentInfo> info;
+    mXBLDocTable.Get(str, getter_AddRefs(info));
     if (!info)
-        mXBLDocTable.Put(&key, aDocumentInfo);
+        mXBLDocTable.Put(str, aDocumentInfo);
 
     return NS_OK;
 }
@@ -422,99 +395,66 @@ nsXULPrototypeCache::PutXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo)
 NS_IMETHODIMP
 nsXULPrototypeCache::FlushXBLInformation()
 {
-    mXBLDocTable.Reset();
+    mXBLDocTable.Clear();
     return NS_OK;
 }
 
-struct nsHashKeyEntry {
-  nsHashKey* mKey;
-  nsHashKeyEntry* mNext;
-
-  nsHashKeyEntry(nsHashKey* aKey, nsHashKeyEntry* aNext = nsnull) {
-    mKey = aKey;
-    mNext = aNext;
-  }
-
-  ~nsHashKeyEntry() {
-    delete mNext;
-  }
-};
-
-struct nsHashKeys {
-  nsHashKeyEntry* mFirst;
-
-  nsHashKeys() { mFirst = nsnull; };
-  ~nsHashKeys() { Clear(); };
-
-  void AppendKey(nsHashKey* aKey) {
-    mFirst = new nsHashKeyEntry(aKey, mFirst);
-  }
-
-  void Clear() {
-    delete mFirst;
-    mFirst = nsnull;
-  }
-};
-
-PRBool PR_CALLBACK FlushSkinXBL(nsHashKey* aKey, void* aData, void* aClosure)
+PR_STATIC_CALLBACK(PLDHashOperator)
+FlushSkinXBL(const nsACString& key, nsCOMPtr<nsIXBLDocumentInfo>& aDocInfo, void* aClosure)
 {
-  nsIXBLDocumentInfo* docInfo = (nsIXBLDocumentInfo*)aData;
   nsCOMPtr<nsIDocument> doc;
-  docInfo->GetDocument(getter_AddRefs(doc));
+  aDocInfo->GetDocument(getter_AddRefs(doc));
   nsCOMPtr<nsIURI> uri;
   doc->GetDocumentURL(getter_AddRefs(uri));
   nsCAutoString str;
   uri->GetPath(str);
+
+  PLDHashOperator ret = PL_DHASH_NEXT;
+
   if (!strncmp(str.get(), "/skin", 5)) {
-    // This is a skin binding. Add the key to the list.
-    nsHashKeys* list = (nsHashKeys*)aClosure;
-    list->AppendKey(aKey);
+    ret = PL_DHASH_REMOVE;
   }
-  return PR_TRUE;
+
+  return ret;
 }
 
-PRBool PR_CALLBACK FlushSkinSheets(nsHashKey* aKey, void* aData, void* aClosure)
+PR_STATIC_CALLBACK(PLDHashOperator)
+FlushSkinSheets(nsIURI* aKey, nsCOMPtr<nsICSSStyleSheet>& aSheet, void* aClosure)
 {
-  nsICSSStyleSheet* sheet = (nsICSSStyleSheet*)aData;
   nsCOMPtr<nsIURI> uri;
-  sheet->GetURL(*getter_AddRefs(uri));
+  aSheet->GetURL(*getter_AddRefs(uri));
   nsCAutoString str;
   uri->GetPath(str);
+
+  PLDHashOperator ret = PL_DHASH_NEXT;
+
   if (!strncmp(str.get(), "/skin", 5)) {
     // This is a skin binding. Add the key to the list.
-    nsHashKeys* list = (nsHashKeys*)aClosure;
-    list->AppendKey(aKey);
+    ret = PL_DHASH_REMOVE;
   }
-  return PR_TRUE;
+  return ret;
 }
 
-PRBool PR_CALLBACK FlushScopedSkinStylesheets(nsHashKey* aKey, void* aData, void* aClosure)
+PR_STATIC_CALLBACK(PLDHashOperator)
+FlushScopedSkinStylesheets(const nsACString& aKey, nsCOMPtr<nsIXBLDocumentInfo> &aDocInfo, void* aClosure)
 {
-  nsIXBLDocumentInfo* docInfo = (nsIXBLDocumentInfo*)aData;
-  docInfo->FlushSkinStylesheets();
-  return PR_TRUE;
+  aDocInfo->FlushSkinStylesheets();
+  return PL_DHASH_NEXT;
 }
 
 NS_IMETHODIMP
 nsXULPrototypeCache::FlushSkinFiles()
 {
   // Flush out skin XBL files from the cache.
-  nsHashKeys keysToRemove;
-  nsHashKeyEntry* curr;
-  mXBLDocTable.Enumerate(FlushSkinXBL, &keysToRemove);
-  for (curr = keysToRemove.mFirst; curr; curr = curr->mNext)
-    mXBLDocTable.Remove(curr->mKey);
+  mXBLDocTable.Enumerate(FlushSkinXBL, nsnull);
 
   // Now flush out our skin stylesheets from the cache.
-  keysToRemove.Clear();
-  mStyleSheetTable.Enumerate(FlushSkinSheets, &keysToRemove);
-  for (curr = keysToRemove.mFirst; curr; curr = curr->mNext)
-    mStyleSheetTable.Remove(curr->mKey);
+  mStyleSheetTable.Enumerate(FlushSkinSheets, nsnull);
 
   // Iterate over all the remaining XBL and make sure cached
   // scoped skin stylesheets are flushed and refetched by the
   // prototype bindings.
-  mXBLDocTable.Enumerate(FlushScopedSkinStylesheets);
+  mXBLDocTable.Enumerate(FlushScopedSkinStylesheets, nsnull);
   return NS_OK;
 }
 
@@ -564,7 +504,7 @@ nsXULPrototypeCache::AbortFastLoads()
     Flush();
 
     // Clear the FastLoad set
-    mFastLoadURITable.Reset();
+    mFastLoadURITable.Clear();
 
     if (! gFastLoadService)
         return NS_OK;
@@ -622,9 +562,7 @@ nsXULPrototypeCache::AbortFastLoads()
 NS_IMETHODIMP
 nsXULPrototypeCache::RemoveFromFastLoadSet(nsIURI* aURI)
 {
-    nsIURIKey key(aURI);
-    mFastLoadURITable.Remove(&key);
-
+    mFastLoadURITable.Remove(aURI);
     return NS_OK;
 }
 
@@ -830,8 +768,6 @@ nsXULPrototypeCache::StartFastLoad(nsIURI* aURI)
     if (!StringEndsWith(path, NS_LITERAL_CSTRING(".xul")))
         return NS_ERROR_NOT_AVAILABLE;
 
-    nsIURIKey key(aURI);
-
     // Test gFastLoadFile to decide whether this is the first nsXULDocument
     // participating in FastLoad.  If gFastLoadFile is non-null, this document
     // must not be first, but it can join the FastLoad process.  Examples of
@@ -844,7 +780,7 @@ nsXULPrototypeCache::StartFastLoad(nsIURI* aURI)
     // XXXbe we do not yet use nsFastLoadPtrs, but once we do, we must keep
     // the FastLoad input stream open for the life of the app.
     if (gFastLoadService && gFastLoadFile) {
-        mFastLoadURITable.Put(&key, aURI);
+        mFastLoadURITable.Put(aURI, 1);
 
         return NS_OK;
     }
@@ -1030,7 +966,7 @@ nsXULPrototypeCache::StartFastLoad(nsIURI* aURI)
 
     // Success!  Insert this URI into the mFastLoadURITable
     // and commit locals to globals.
-    mFastLoadURITable.Put(&key, aURI);
+    mFastLoadURITable.Put(aURI, 1);
 
     NS_ADDREF(gFastLoadService = fastLoadService);
     NS_ADDREF(gFastLoadFile = file);
