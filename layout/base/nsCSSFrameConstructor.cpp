@@ -13588,7 +13588,9 @@ nsCSSFrameConstructor::ConstructInline(nsIPresShell*            aPresShell,
   nsHTMLContainerFrame::CreateViewForFrame(aPresContext, blockFrame,
                                            aStyleContext, nsnull, PR_FALSE);
 
-  if (aIsPositioned) {
+  nsIView* view;
+  blockFrame->GetView(aPresContext, &view);
+  if (view) {
     // Move list2's frames into the new view
     nsIFrame* oldParent;
     list2->GetParent(&oldParent);
@@ -13621,7 +13623,9 @@ nsCSSFrameConstructor::ConstructInline(nsIPresShell*            aPresShell,
     nsHTMLContainerFrame::CreateViewForFrame(aPresContext, inlineFrame,
                                              aStyleContext, nsnull, PR_FALSE);
 
-    if (aIsPositioned) {
+    nsIView* inlineView;
+    inlineFrame->GetView(aPresContext, &inlineView);
+    if (inlineView) {
       // Move list3's frames into the new view
       nsIFrame* oldParent;
       list3->GetParent(&oldParent);
