@@ -435,13 +435,13 @@ class Separator extends JComponent {
       // XXX AWT bug work around
       // mousePressed gets called again if the cursor leaves the
       // frame. grr.
-      if (!fDragging) {
+         if (!fDragging) {
         hitX = aEvent.getX();
         hitY = aEvent.getY();
         fDelta = 0;
 
         fDragging = true;
-      }
+       }
     }
 
     public void mouseReleased(MouseEvent aEvent) {
