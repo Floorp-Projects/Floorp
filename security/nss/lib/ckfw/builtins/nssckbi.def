@@ -34,7 +34,7 @@
 ;+# the terms of any one of the MPL, the GPL or the LGPL.
 ;+#
 ;+# ***** END LICENSE BLOCK *****
-
+;+#
 ;+# OK, this file is meant to support SUN, LINUX, AIX and WINDOWS
 ;+#   1. For all unix platforms, the string ";-"  means "remove this line"
 ;+#   2. For all unix platforms, the string " DATA " will be removed from any 
@@ -47,7 +47,6 @@
 ;+#    And for AIX, the first ";" will also be removed.
 ;+#  This file is passed directly to windows. Since ';' is a comment, all UNIX
 ;+#   directives are hidden behind ";", ";+", and ";-"
-
 ;+
 ;+NSS_3.1 {       # NSS 3.1 release
 ;+    global:
