@@ -43,7 +43,6 @@
 #include "nsClipboard.h"
 #include "nsTransferable.h"
 #include "nsXIFFormatConverter.h"
-#include "nsDataFlavor.h"
 #include "nsDragService.h"
 
 #include "nsTextAreaWidget.h"
@@ -256,9 +255,6 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     else if (mClassID.Equals(kCPopUpMenu)) {
  //       inst = (nsISupports*)new nsPopUpMenu();
 					NS_NOTYETIMPLEMENTED("nsPopUpMenu");
-    }
-    else if (mClassID.Equals(kCDataFlavor)) {
-        inst = (nsISupports*)new nsDataFlavor();
     }
     else if (mClassID.Equals(kCTransferable)) {
         inst = (nsISupports*)new nsTransferable();
