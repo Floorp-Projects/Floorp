@@ -59,10 +59,7 @@
 
 
 #ifdef NECKO
-#include "nsIIOService.h"
-#include "nsIURL.h"
-#include "nsIServiceManager.h"
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#include "nsNeckoUtil.h"
 #else
 #include "nsIURL.h"
 #endif // NECKO
@@ -570,15 +567,7 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell)
 #ifndef NECKO
     result = NS_NewURL(getter_AddRefs(url), nsString(EDITOR_BUNDLE_URL));
 #else
-    NS_WITH_SERVICE(nsIIOService, ioService, kIOServiceCID, &result);
-    if (NS_FAILED(result)) return result;
-
-    nsIURI *uri = nsnull;
-    result = ioService->NewURI(EDITOR_BUNDLE_URL, nsnull, &uri);
-    if (NS_FAILED(result)) return result;
-
-    result = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
-    NS_RELEASE(uri);
+    result = NS_NewURI(getter_AddRefs(url), nsString(EDITOR_BUNDLE_URL));
 #endif // NECKO
 
     if (NS_SUCCEEDED(result) && url)
@@ -1384,15 +1373,7 @@ NS_IMETHODIMP nsEditor::ApplyStyleSheet(const nsString& aURL)
 #ifndef NECKO
   rv = NS_NewURL(&uaURL, aURL);
 #else
-  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  nsIURI *uri = nsnull;
-  rv = service->NewURI(aURL, nsnull, &uri);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&uaURL);
-  NS_RELEASE(uri);
+  rv = NS_NewURI(&uaURL, aURL);
 #endif // NECKO
 
   if (NS_SUCCEEDED(rv)) {
