@@ -25,7 +25,7 @@
 * Same as class-001.js - but testing the constructors here, not object instances.
 * Therefore we expect the [[Class]] property to equal 'Function' in each case. 
 *
-* The getClass() function we use is in a utility file, e.g. "shell.js"
+* The getJSClass() function we use is in a utility file, e.g. "shell.js"
 */
 //-------------------------------------------------------------------------------------------------
 var i = 0;
@@ -42,47 +42,47 @@ var expect= ''; var expectedvalue = [ ];
  * We expect 'Function' every time; see discussion above -
  */
 status = 'Object';
-actual = getClass(Object);
+actual = getJSClass(Object);
 expect = 'Function';
 addThis();
 
 status = 'Function';
-actual = getClass(Function);
+actual = getJSClass(Function);
 expect = 'Function';
 addThis();
 
 status = 'Array';
-actual = getClass(Array);
+actual = getJSClass(Array);
 expect = 'Function';
 addThis();
 
 status = 'String';
-actual = getClass(String);
+actual = getJSClass(String);
 expect = 'Function';
 addThis();
 
 status = 'Boolean';
-actual = getClass(Boolean);
+actual = getJSClass(Boolean);
 expect = 'Function';
 addThis();
 
 status = 'Number';
-actual = getClass(Number);
+actual = getJSClass(Number);
 expect = 'Function';
 addThis();
 
 status = 'Date';
-actual = getClass(Date);
+actual = getJSClass(Date);
 expect = 'Function';
 addThis();
 
 status = 'RegExp';
-actual = getClass(RegExp);
+actual = getJSClass(RegExp);
 expect = 'Function';
 addThis();
 
 status = 'Error';
-actual = getClass(Error);
+actual = getJSClass(Error);
 expect = 'Function';
 addThis();
 

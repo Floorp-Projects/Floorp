@@ -25,7 +25,7 @@
 * Same as class-001.js - but testing user-defined types here, not native types.
 * Therefore we expect the [[Class]] property to equal 'Object' in each case - 
 *
-* The getClass() function we use is in a utility file, e.g. "shell.js"
+* The getJSClass() function we use is in a utility file, e.g. "shell.js"
 */
 //-------------------------------------------------------------------------------------------------
 var i = 0;
@@ -45,12 +45,12 @@ Calf.prototype= new Cow();
  * We expect 'Object' every time; see discussion above -
  */
 status = 'new Cow()';
-actual = getClass(new Cow());
+actual = getJSClass(new Cow());
 expect = 'Object';
 addThis();
 
 status = 'new Calf()';
-actual = getClass(new Calf());
+actual = getJSClass(new Calf());
 expect = 'Object';
 addThis();
 
