@@ -218,6 +218,8 @@ protected:
   nsresult AddAttributes(const nsIParserNode& aNode,
                          nsIHTMLContent* aInstancePtrResult);
 
+  void AddBaseTagInfo(nsIHTMLContent* aContent);
+
   nsIHTMLContent* GetBodyOrFrameset() { if (mBody) return mBody; else return mFrameset; }
 
   nsresult LoadStyleSheet(nsIURL* aURL,
@@ -804,17 +806,19 @@ HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
   if (nsnull != container) {
     container->SetDocument(mDocument);
     rv = AddAttributes(aNode, container);
-    if ((eHTMLTag_a == nodeType) && (nsnull != mRef) &&
-        (nsnull == mRefContent)) {
-      nsHTMLValue value;
-      container->GetAttribute(nsHTMLAtoms::name, value);
-      if (eHTMLUnit_String == value.GetUnit()) {
-        nsAutoString tmp;
-        value.GetStringValue(tmp);
-        if (mRef->EqualsIgnoreCase(tmp)) {
-          // Winner. We just found the content that is the named anchor
-          mRefContent = container;
-          NS_ADDREF(container);
+    if (eHTMLTag_a == nodeType) {
+      AddBaseTagInfo(container);
+      if ((nsnull != mRef) && (nsnull == mRefContent)) {
+        nsHTMLValue value;
+        container->GetAttribute(nsHTMLAtoms::name, value);
+        if (eHTMLUnit_String == value.GetUnit()) {
+          nsAutoString tmp;
+          value.GetStringValue(tmp);
+          if (mRef->EqualsIgnoreCase(tmp)) {
+            // Winner. We just found the content that is the named anchor
+            mRefContent = container;
+            NS_ADDREF(container);
+          }
         }
       }
     }
@@ -1202,6 +1206,10 @@ NS_IMETHODIMP HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
     FlushText();
     ProcessMETATag(aNode);
     return NS_OK;
+
+  case eHTMLTag_base:
+    ProcessBASETag(aNode);
+    return NS_OK;
   }
 
   eHTMLTags parentType;
@@ -1517,12 +1525,26 @@ nsresult HTMLContentSink::AddAttributes(const nsIParserNode& aNode,
   return NS_OK;
 }
 
+void
+HTMLContentSink::AddBaseTagInfo(nsIHTMLContent* aContent)
+{
+  if (mBaseHREF.Length() > 0) {
+    nsHTMLValue value(mBaseHREF);
+    aContent->SetAttribute(nsHTMLAtoms::_baseHref, value);
+  }
+  if (mBaseTarget.Length() > 0) {
+    nsHTMLValue value(mBaseTarget);
+    aContent->SetAttribute(nsHTMLAtoms::_baseTarget, value);
+  }
+}
+
 nsresult HTMLContentSink::ProcessAREATag(const nsIParserNode& aNode)
 {
   if (nsnull != mCurrentMap) {
     nsAutoString shape, coords, href, target(mBaseTarget), alt;
     PRInt32 ac = aNode.GetAttributeCount();
     PRBool suppress = PR_FALSE;
+    PRBool setTarget = PR_TRUE;
     for (PRInt32 i = 0; i < ac; i++) {
       // Get upper-cased key
       const nsString& key = aNode.GetKeyAt(i);
@@ -1558,16 +1580,9 @@ nsresult HTMLContentSink::ProcessBASETag(const nsIParserNode& aNode)
   for (PRInt32 i = 0; i < ac; i++) {
     const nsString& key = aNode.GetKeyAt(i);
     if (key.EqualsIgnoreCase("href")) {
-      const nsString& href = aNode.GetValueAt(i);
-      if (href.Length() > 0) {
-        mBaseHREF = href;
-      }
+      GetAttributeValueAt(aNode, i, mBaseHREF);
     } else if (key.EqualsIgnoreCase("target")) {
-
-      const nsString& target= aNode.GetValueAt(i);
-      if (target.Length() > 0) {
-        mBaseTarget = target;
-      }
+      GetAttributeValueAt(aNode, i, mBaseTarget);
     }
   }
   return NS_OK;
@@ -1641,8 +1656,9 @@ nsresult HTMLContentSink::ProcessIMGTag(nsIHTMLContent** aInstancePtrResult,
   nsresult rv = NS_NewHTMLImage(aInstancePtrResult, atom);
   if (NS_OK == rv) {
     rv = AddAttributes(aNode, *aInstancePtrResult);
-    // XXX get base url to image
+    AddBaseTagInfo(*aInstancePtrResult);
   }
+
   NS_RELEASE(atom);
   return rv;
 }
@@ -1684,12 +1700,13 @@ nsresult HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
   if (nsnull != src) {
     // Use the SRC attribute value to open a blocking stream
     nsIURL* url = nsnull;
-    nsAutoString absURL, baseURL;/* XXX */
+    nsAutoString absURL;
     nsIURL* docURL = mDocument->GetDocumentURL();
-    rv = NS_MakeAbsoluteURL(docURL, baseURL, *src, absURL);
+    rv = NS_MakeAbsoluteURL(docURL, mBaseHREF, *src, absURL);
     if (NS_OK != rv) {
       return rv;
     }
+    NS_RELEASE(docURL);
     rv = NS_NewURL(&url, nsnull, absURL);
     delete src;
     if (NS_OK != rv) {
@@ -1763,6 +1780,8 @@ nsresult HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
 
 // 3 ways to load a style sheet: inline, style src=, link tag
   // XXX What does nav do if we have SRC= and some style data inline?
+
+// XXX This code and ProcessSCRIPTTag share alot in common; clean that up!
 nsresult HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
 {
   nsresult rv = NS_OK;
@@ -1795,9 +1814,14 @@ nsresult HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
   } else {
     // src with immediate style data doesn't add up
     // XXX what does nav do?
-    char* spec = src->ToNewCString();
-    rv = NS_NewURL(&url, nsnull, spec);
-    delete spec;
+    nsAutoString absURL;
+    nsIURL* docURL = mDocument->GetDocumentURL();
+    rv = NS_MakeAbsoluteURL(docURL, mBaseHREF, *src, absURL);
+    if (NS_OK != rv) {
+      return rv;
+    }
+    NS_RELEASE(docURL);
+    rv = NS_NewURL(&url, nsnull, absURL);
     delete src;
     if (NS_OK != rv) {
       return rv;
