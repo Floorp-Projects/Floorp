@@ -167,7 +167,7 @@ public:
         mDataLocation |= (size << eFileSizeOffset) & eFileSizeMask;
     }
 
-    PRUint16   DataFileGeneration() const
+    PRUint8   DataFileGeneration() const
     {
         return (mDataLocation & eFileGenerationMask);
     }
@@ -230,7 +230,7 @@ public:
         mMetaLocation |= (size << eFileSizeOffset) & eFileSizeMask;
     }
 
-    PRUint16   MetaFileGeneration() const
+    PRUint8   MetaFileGeneration() const
     {
         return (mMetaLocation & eFileGenerationMask);
     }
