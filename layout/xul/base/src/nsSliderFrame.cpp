@@ -348,6 +348,9 @@ nsSliderFrame::HandleEvent(nsIPresContext& aPresContext,
        // convert coord to pixels
       nscoord pos = isHorizontal ? aEvent->point.x : aEvent->point.y;
 
+       // mDragStartPx is in pixels and is in our client areas coordinate system. 
+       // so we need to first convert it so twips and then get it into our coordinate system.
+
        // convert start to twips
        nscoord startpx = mDragStartPx;
               
@@ -357,8 +360,19 @@ nsSliderFrame::HandleEvent(nsIPresContext& aPresContext,
        nscoord start = startpx*onePixel;
 
        nsIFrame* thumbFrame = mFrames.FirstChild();
-       
-       // convert it to the thumb coordinate system.
+
+       // get it into our coordintate system by subtracting our parents offsets.
+       nsIFrame* parent = this;
+       while(parent != nsnull)
+       {
+         nsRect r;
+         parent->GetRect(r);
+         isHorizontal ? start -= r.x : start -= r.y;
+         parent->GetParent(&parent);
+       }
+
+      //printf("Translated to start=%d\n",start);
+
        start -= mThumbStart;
 
        // take our current position and substract the start location
@@ -553,7 +567,7 @@ nsSliderFrame::SetCurrentPosition(nsIPresContext& aPresContext, nsIContent* scro
   // set the new position
   scrollbar->SetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, nsString(ch), PR_TRUE);
 
-  printf("Current Pos=%d\n",newpos);
+  //printf("Current Pos=%d\n",newpos);
   
 }
 
@@ -660,7 +674,7 @@ nsSliderFrame::MouseDown(nsIDOMEvent* aMouseEvent)
   else
      mThumbStart = thumbRect.y;
      
-  //printf("Pressed y=%d\n",c);
+  //printf("Pressed mDragStartPx=%d\n",mDragStartPx);
   
   return NS_OK;
 }
