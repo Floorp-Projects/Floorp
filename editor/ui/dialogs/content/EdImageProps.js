@@ -318,9 +318,11 @@ function doDimensionEnabling( doEnable )
   SetElementEnabledByID( "heightLabel", enable );
   SetElementEnabledByID( "heightUnitsSelect", enable );
 
-
-  SetElementEnabledByID( "constrainCheckbox", enable );
-  SetElementEnabledByID( "constrainLabel", enable );
+  var constrainEnable = enable 
+         && ( dialog.widthUnitsSelect.selectedIndex == 0 )
+         && ( dialog.heightUnitsSelect.selectedIndex == 0 );
+  SetElementEnabledByID( "constrainCheckbox", constrainEnable );
+  SetElementEnabledByID( "constrainLabel", constrainEnable );
 }
 
 function doOverallEnabling()
@@ -380,6 +382,7 @@ function constrainProportions( srcID, destID )
   // now find out if we should be constraining or not
 
   var constrainChecked = (dialog.constrainCheckbox.checked);
+  constrainChecked = constrainChecked && !dialog.constrainCheckbox.disabled;
   if ( !constrainChecked )
     return;
   
