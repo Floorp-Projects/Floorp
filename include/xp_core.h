@@ -186,7 +186,7 @@
 #endif
 
 /* this should just go away, as nspr has it. */
-#if !defined(XP_WIN) && !defined(XP_UNIX)
+#if !defined(XP_WIN) && !defined(XP_UNIX) && !defined(XP_OS2)
 typedef int (*FARPROC)();
 #endif
 
@@ -197,7 +197,7 @@ typedef int (*FARPROC)();
 #define MIN(a, b)     min((a), (b))
 #endif
 
-#if defined(XP_OS2)
+#if defined(XP_OS2_VACPP)
 #ifndef MIN
 #define MIN(a, b)     min((a), (b))
 #endif
