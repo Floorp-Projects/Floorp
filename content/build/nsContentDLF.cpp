@@ -62,6 +62,8 @@
 #include "nsIXULContentSink.h"
 #include "nsIDocStreamLoaderFactory.h"
 
+#include "nsString.h"
+
 // URL for the "user agent" style sheet
 #define UA_CSS_URL "resource:/res/ua.css"
 
@@ -175,8 +177,6 @@ nsContentDLF::CreateInstance(const char* aCommand,
                              nsIStreamListener** aDocListener,
                              nsIContentViewer** aDocViewer)
 {
-  nsresult rv = NS_OK;
-
   EnsureUAStyleSheet();
 
   // Check aContentType to see if it's a view-source type
@@ -262,14 +262,16 @@ nsContentDLF::CreateInstance(const char* aCommand,
   }
 
   // Try image types
-  typeIndex = 0;
-  while(gImageTypes[typeIndex]) {
-    if (0== PL_strcmp(gImageTypes[typeIndex++], aContentType)) {
-      return CreateDocument(aCommand, 
-                            aChannel, aLoadGroup,
-                            aContainer, kImageDocumentCID,
-                            aDocListener, aDocViewer);
-    }
+  nsCOMPtr<nsIComponentRegistrar> reg;
+  NS_GetComponentRegistrar(getter_AddRefs(reg));
+  PRBool isReg = PR_FALSE;
+  nsCAutoString decoderId(NS_LITERAL_CSTRING("@mozilla.org/image/decoder;2?type=") + nsDependentCString(aContentType));
+  reg->IsContractIDRegistered(decoderId.get(),  &isReg);
+  if (isReg) {
+    return CreateDocument(aCommand, 
+                          aChannel, aLoadGroup,
+                          aContainer, kImageDocumentCID,
+                          aDocListener, aDocViewer);
   }
 
   // If we get here, then we weren't able to create anything. Sorry!
