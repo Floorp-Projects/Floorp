@@ -41,25 +41,36 @@ validateRepository($CVS_ROOT);
 my $CVS_REPOS_SUFIX = $CVS_ROOT;
 $CVS_REPOS_SUFIX =~ s/\//_/g;
     
-ConnectToDatabase();
+&ConnectToDatabase();
 
-my $f = SqlQuote($file);
-my $qstring = "select distinct dirs.dir from checkins,dirs,files,repositories where dirs.id=dirid and files.id=fileid and repositories.id=repositoryid and repositories.repository='$CVS_ROOT' and files.file=$f order by dirs.dir";
+my @bind_values = ( $CVS_ROOT, $file );
+my $qstring = "SELECT DISTINCT dirs.dir FROM checkins,dirs,files," .
+    "repositories WHERE dirs.id=dirid AND files.id=fileid AND " .
+    "repositories.id=repositoryid AND repositories.repository=? AND " .
+    "files.file=? ORDER BY dirs.dir";
 
 if ($debug) {
-    print "<pre wrap>$qstring</pre>\n";
+    print "<pre wrap>\n";
+    print &html_quote($qstring) . "\n";
+    print "With values:\n";
+    foreach my $v (@bind_values) {
+        print "\t" . &html_quote($v) . "\n";
+    }
+    print "</pre>\n";
 }
 
 my (@row, $d, @fl, $s);
 
-SendSQL($qstring);
-while(@row = FetchSQLData()){
+&SendSQL($qstring, @bind_values);
+while(@row = &FetchSQLData()){
     $d = $row[0];
     push @fl, "$d/$file";
 }
+&DisconnectFromDatabase();
 
 if( @fl == 0 ){
-    print "<h3>No files matched this file name.  It may have been added recently.</h3>";
+    print "<h3>No files matched this file name: " . &html_quote($file) . 
+        ".  It may have been added recently.</h3>";
 }
 elsif( @fl == 1 ){
     $s = &url_quote($fl[0]);
@@ -73,6 +84,6 @@ else {
     print "<h3>Pick the file that best matches the one you are looking for:</h3>\n";
     for $s (@fl) {
         print "<dt><a href=cvsblame.cgi?file=" . &url_quote($s) . 
-            "&rev=$rev&mark=$mark#$ln>$s</a>";
+            "&rev=$rev&mark=$mark#$ln>" . &html_quote($s) . "</a>";
     }
 }

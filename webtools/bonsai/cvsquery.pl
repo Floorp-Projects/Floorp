@@ -85,6 +85,7 @@ sub query_checkins {
     my (%mod_map) = @_;
     my ($ci,$result,$lastlog,$rev,$begin_tag,$end_tag);
     my $have_mod_map;
+    my @bind_values;
 
     $::query_module = 'all' unless defined $::query_module;
     if( $::query_module ne 'all' && $::query_module ne 'allrepositories' && @::query_dirs == 0 ){
@@ -121,82 +122,96 @@ sub query_checkins {
 
     $result = [];
 
-    ConnectToDatabase();
+    &ConnectToDatabase();
 
-    my $qstring = "select type, UNIX_TIMESTAMP(ci_when), people.who, repositories.repository, dirs.dir, files.file, revision, stickytag, branches.branch, addedlines, removedlines, descs.description from checkins,people,repositories,dirs,files,branches,descs where people.id=whoid and repositories.id=repositoryid and dirs.id=dirid and files.id=fileid and branches.id=branchid and descs.id=descid";
+    my $qstring = "SELECT type, UNIX_TIMESTAMP(ci_when), people.who, " .
+        "repositories.repository, dirs.dir, files.file, revision, " .
+        "stickytag, branches.branch, addedlines, removedlines, " .
+        "descs.description FROM checkins,people,repositories,dirs,files," .
+        "branches,descs WHERE people.id=whoid AND " .
+        "repositories.id=repositoryid AND dirs.id=dirid AND " .
+        "files.id=fileid AND branches.id=branchid AND descs.id=descid";
 
     if( $::query_module ne 'allrepositories' ){
-        $qstring .= " and repositories.repository = '$::CVS_ROOT'";
+        $qstring .= " AND repositories.repository = ?";
+        push(@bind_values, $::CVS_ROOT);
     }
 
     if ($::query_date_min) {
-        my $t = formatSqlTime($::query_date_min);
-        $qstring .= " and ci_when >= '$t'";
+        $qstring .= " AND ci_when >= ?";
+        push(@bind_values, &formatSqlTime($::query_date_min));
     }
     if ($::query_date_max) {
-        my $t = formatSqlTime($::query_date_max);
-        $qstring .= " and ci_when <= '$t'";
+        $qstring .= " AND ci_when <= ?";
+        push(@bind_values, &formatSqlTime($::query_date_max));
     }
     if ($::query_branch_head) {
-        $qstring .= " and branches.branch = ''";
+        $qstring .= " AND branches.branch = ''";
     } elsif ($::query_branch ne '') {
-        my $q = SqlQuote($::query_branch);
         if ($::query_branchtype eq 'regexp') {
-            $qstring .=
-                " and branches.branch regexp $q";
+            $qstring .= " AND branches.branch REGEXP ?";
+            push(@bind_values, $::query_branch);
         } elsif ($::query_branchtype eq 'notregexp') {
             if ($::query_branch eq 'HEAD') {
-                $qstring .= " and branches.branch != ''";
+                $qstring .= " AND branches.branch != ''";
             } else {
-                $qstring .= " and not (branches.branch regexp $q) ";
+                $qstring .= " and not (branches.branch REGEXP ?)";
+                push(@bind_values, $::query_branch);
             }
         } else {
             $qstring .=
-                " and (branches.branch = $q or branches.branch = ";
-            $qstring .= SqlQuote("T$::query_branch") . ")";
+                " AND (branches.branch = ? OR branches.branch = ?)";
+            push(@bind_values, $::query_branch);
+            push(@bind_values, "T$::query_branch");
         }
     }
 
     if (0 < @::query_dirs) {
         my @list;
         foreach my $i (@::query_dirs) {
-            push(@list, "dirs.dir like " . SqlQuote("$i%"));
+            push(@list, "dirs.dir LIKE ?");
+            push(@bind_values, "$i%");
         }
-        $qstring .= "and (" . join(" or ", @list) . ")";
+        $qstring .= "AND (" . join(" OR ", @list) . ")";
     }
 
     if (defined $::query_file && $::query_file ne '') {
-        my $q = SqlQuote($::query_file);
         $::query_filetype ||= "exact";
         if ($::query_filetype eq 'regexp') {
-            $qstring .= " and files.file regexp $q";
-		} elsif ($::query_filetype eq 'notregexp') {
-            $qstring .= " and not (files.file regexp $q)";
+            $qstring .= " AND files.file REGEXP ?";
+        } elsif ($::query_filetype eq 'notregexp') {
+            $qstring .= " AND NOT (files.file REGEXP ?)";
         } else {
-            $qstring .= " and files.file = $q";
+            $qstring .= " AND files.file = ?";
         }
+        push(@bind_values, $::query_file);
     }
     if (defined $::query_who && $::query_who ne '') {
-        my $q = SqlQuote($::query_who);
         $::query_whotype ||= "exact";
         if ($::query_whotype eq 'regexp') {
-            $qstring .= " and people.who regexp $q";
+            $qstring .= " AND people.who REGEXP ?";
         }
         elsif ($::query_whotype eq 'notregexp') {
-            $qstring .= " and not (people.who regexp $q)";
+            $qstring .= " AND NOT (people.who REGEXP ?)";
 
         } else {
-            $qstring .= " and people.who = $q";
+            $qstring .= " AND people.who = ?";
         }
+        push(@bind_values, $::query_who);
     }
 
     if (defined($::query_logexpr) && $::query_logexpr ne '') {
-        my $q = SqlQuote($::query_logexpr);
-        $qstring .= " and descs.description regexp $q";
+        $qstring .= " AND descs.description regexp ?";
+        push(@bind_values, $::query_logexpr);
     }
     
     if ($::query_debug) {
-        print "<pre wrap> Query: $qstring\nTreeID is $::TreeID\n";
+        print "<pre wrap> Query: " . &html_quote($qstring) . "\n";
+        print "With values:\n";
+        foreach my $v (@bind_values) {
+            print "\t" . &html_quote($v) . "\n";
+        }
+        print "\nTreeID is $::TreeID\n";
         if ($have_mod_map) {
             print "Dump of module map:\n";
             foreach my $k (sort(keys %mod_map)) {
@@ -211,7 +226,7 @@ sub query_checkins {
         print "</pre>\n";
     }
 
-    SendSQL($qstring);
+    &SendSQL($qstring, @bind_values);
 
     $lastlog = 0;
     my @row;

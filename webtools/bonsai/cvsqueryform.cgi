@@ -337,11 +337,11 @@ sub refigureStartDateIfNecessary {
         return;
     }
 
-    ConnectToDatabase();
-    SendSQL("select min(ci_when) 
-               from checkins,repositories 
-               where repositories.id = repositoryid and 
-                     repository = '$::CVS_ROOT'");
+    &ConnectToDatabase();
+    &SendSQL("SELECT MIN(ci_when) 
+               FROM checkins,repositories 
+               WHERE repositories.id = repositoryid and 
+                     repository = ?", $::CVS_ROOT);
 
     my $startdate = FetchOneColumn();
     if ($startdate eq "") {

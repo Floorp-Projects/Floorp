@@ -125,13 +125,28 @@ sub DisconnectFromDatabase {
 }
 
 sub SendSQL {
-    my ($str) = (@_);
-    my ($rows);
+    my ($str, @bind_values) = (@_);
+    my $status = 0;
 
-    $::currentquery = $::db->prepare($str)
-	|| die "'$str': ". $::db->errstr;
-    $rows = $::currentquery->execute
-        || die "'$str': Can't execute the query: " . $::currentquery->errstr;
+    $::currentquery = $::db->prepare($str) || $status++;
+    if ($status) {
+        print STDERR "SendSQL prepare error: '$str' with values (";
+        foreach my $v (@bind_values) {
+            print STDERR "'" . &shell_escape($v) . "', ";
+        }
+        print STDERR ") :: " . $::db->errstr . "\n";
+        die "Cannot prepare SQL query. Please contact system administrator.\n";
+    }
+
+    $::currentquery->execute(@bind_values) || $status++;
+    if ($status) {
+        print STDERR "SendSQL execute error: '$str' with values (";
+        foreach my $v (@bind_values) {
+            print STDERR "'" . &shell_escape($v) . "', ";
+        }
+        print STDERR ") :: " . $::currentquery->errstr . "\n";
+        die "Cannot execute SQL query. Please contact system administrator.\n";
+    }
 }
 
 sub MoreSQLData {
@@ -150,26 +165,13 @@ sub FetchSQLData {
 	undef @::fetchahead;
 	return @result;
     }
-    return $::currentquery->fetchrow();
+    return $::currentquery->fetchrow_array();
 }
 
 
 sub FetchOneColumn {
     my @row = FetchSQLData();
     return $row[0];
-}
-
-
-# This routine is largely copied from Mysql.pm.
-
-sub SqlQuote {
-    my ($str) = (@_);
-#     if (!defined $str) {
-#         confess("Undefined passed to SqlQuote");
-#     }
-    $str =~ s/([\\\'])/\\$1/g;
-    $str =~ s/\0/\\0/g;
-    return "'$str'";
 }
 
 
@@ -182,10 +184,10 @@ sub SqlQuote {
 sub LearnAboutColumns {
     my ($table) = (@_);
     my %a;
-    SendSQL("show columns from $table");
+    &SendSQL("SHOW columns FROM $table");
     my @list = ();
     my @row;
-    while (@row = FetchSQLData()) {
+    while (@row = &FetchSQLData()) {
         my ($name,$type) = (@row);
         $a{"$name,type"} = $type;
         push @list, $name;
@@ -224,9 +226,9 @@ sub SplitEnumType {
 sub PerlQuote {
     my ($str) = (@_);
 
-    $str = SqlQuote($str);
-
-    return $str;
+    $str =~ s/([\\\'])/\\$1/g;
+    $str =~ s/\0/\\0/g;
+    return "'$str'";
 }
 
 sub GenerateArrayCode {
@@ -328,20 +330,19 @@ undef %lastidcache;
 
 sub GetId {
      my ($table, $field, $value) = @_;
-     my ($index, $qvalue, $id);
+     my ($index, $id);
 
      $index = "$table|$field|$value";
      return ($lastidcache{$index})
           if (exists $lastidcache{$index});
 
-     $qvalue = SqlQuote($value);
-     SendSQL("select id from $table where $field = $qvalue");
-     ($id) = FetchSQLData();
+     &SendSQL("SELECT id FROM $table WHERE $field = ?", $value);
+     ($id) = &FetchSQLData();
 
      unless ($id) {
-         SendSQL("insert into $table ($field) values ($qvalue)");
-         SendSQL("select LAST_INSERT_ID()");
-         ($id) = FetchSQLData();
+         &SendSQL("INSERT INTO $table ($field) VALUES (?)", $value);
+         &SendSQL("SELECT LAST_INSERT_ID()");
+         ($id) = &FetchSQLData();
      }
 
      return ($lastidcache{$index} = $id);
@@ -350,16 +351,15 @@ sub GetId {
 
 sub GetId_NoCache {
      my ($table, $field, $value) = @_;
-     my ($qvalue, $id);
+     my ($id);
 
-     $qvalue = SqlQuote($value);
-     SendSQL("select id from $table where $field = $qvalue");
-     ($id) = FetchSQLData();
+     &SendSQL("SELECT id FROM $table WHERE $field = ?", $value);
+     ($id) = &FetchSQLData();
 
      unless ($id) {
-         SendSQL("insert into $table ($field) values ($qvalue)");
-         SendSQL("select LAST_INSERT_ID()");
-         ($id) = FetchSQLData();
+         &SendSQL("INSERT INTO $table ($field) values (?)", $value);
+         &SendSQL("SELECT LAST_INSERT_ID()");
+         ($id) = &FetchSQLData();
      }
 
      return $id;
@@ -386,17 +386,18 @@ sub MakeValueHash {
 
 sub GetHashedId {
      my ($table, $field, $value) = @_;
-     my ($qvalue, $id, $hash);
+     my (@bind_values, $id);
 
-     $hash = MakeValueHash($value);
-     $qvalue = SqlQuote($value);
-     SendSQL("select id from $table where hash = $hash and $field = $qvalue");
-     ($id) = FetchSQLData();
+     @bind_values = (&MakeValueHash($value), $value);
+     &SendSQL("SELECT id FROM $table WHERE hash = ? AND $field = ?", 
+              @bind_values);
+     ($id) = &FetchSQLData();
 
      unless ($id) {
-         SendSQL("insert into $table (hash, $field) values ($hash, $qvalue)");
-         SendSQL("select LAST_INSERT_ID()");
-         ($id) = FetchSQLData();
+         &SendSQL("INSERT INTO $table (hash, $field) values (?, ?)",
+                  @bind_values);
+         &SendSQL("SELECT LAST_INSERT_ID()");
+         ($id) = &FetchSQLData();
      }
 
      return $id;
@@ -410,7 +411,7 @@ undef $lastdescription;
 
 sub AddToDatabase {
      my ($lines, $desc) = @_;
-     my ($descid, $basequery, $query, $line, $quoted);
+     my ($descid, $basequery, $query, $line, @bind_values);
      my ($chtype, $date, $name, $repository, $dir);
      my ($file, $version, $sticky, $branch, $addlines, $removelines);
 
@@ -426,12 +427,12 @@ sub AddToDatabase {
      }
 
      # Build the query...
-     $basequery = "replace into
+     $basequery = "REPLACE INTO
                       checkins(
                           type, ci_when, whoid, repositoryid, dirid,
                           fileid, revision, stickytag, branchid, addedlines,
                           removedlines, descid)
-                      values (";
+                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
      foreach $line (split(/\n/, $lines)) {
           next if ($line =~ /^\s*$/);
@@ -455,8 +456,7 @@ sub AddToDatabase {
 
           # Find the description id, if it isn't already set
           if (!defined($descid)) {
-               $descid = GetHashedId('descs', 'description', $desc);
-               $quoted = SqlQuote($desc);
+               $descid = &GetHashedId('descs', 'description', $desc);
                $lastdescriptionid = $descid;
                $lastdescription = $desc;
           }
@@ -464,28 +464,27 @@ sub AddToDatabase {
           # Build the final query
           $query = $basequery;
           if ($chtype eq "C") {
-               $query .= "'Change'";
+              $chtype = 'Change';
           } elsif ($chtype eq "A") {
-               $query .= "'Append'";
+              $chtype = 'Append';
           } elsif ($chtype eq "R") {
-               $query .= "'Remove'";
+              $chtype = 'Remove';
           } else {
-               $query .= "NULL";
+              $chtype = "NULL";
           }
-
-          $query .= ", '$date'";
-          $query .= ", " . GetId("people", "who", $name);
-          $query .= ", " . GetId("repositories", "repository", $repository);
-          $query .= ", " . GetId("dirs", "dir", $dir);
-          $query .= ", " . GetId("files", "file", $file);
-          $query .= ", " . SqlQuote($version);
-          $query .= ", " . SqlQuote($sticky);
-          $query .= ", " . GetId("branches", "branch", $branch);
-          $query .= ", $addlines";
-          $query .= ", $removelines";
-          $query .= ", $descid)";
-
-          SendSQL($query);
+          @bind_values = ($chtype,
+                          $date,
+                          &GetId("people", "who", $name),
+                          &GetId("repositories", "repository", $repository),
+                          &GetId("dirs", "dir", $dir),
+                          &GetId("files", "file", $file),
+                          $version,
+                          $sticky,
+                          &GetId("branches", "branch", $branch),
+                          $addlines,
+                          $removelines,
+                          $descid);
+          &SendSQL($query, @bind_values);
      }
 }
 
