@@ -16,7 +16,7 @@
       command line. They live in the 
       <filename class="directory">contrib/cmdline</filename> directory.
       There are three files - <filename>query.conf</filename>,
-     <filename>buglist</filename> and <filename>bugs</filename>.
+      <filename>buglist</filename> and <filename>bugs</filename>.
     </para>
 
     <warning>
@@ -83,7 +83,7 @@
 
     <para>
       To accomplish this task, <filename>sendunsentbugmail.pl</filename> uses
-      the same mechanism as the <filename>sanitycheck.cgi<filename> script; it
+      the same mechanism as the <filename>sanitycheck.cgi</filename> script; it
       it scans through the entire database looking for bugs with changes that
       were made more than 30 minutes ago, but where there is no record of
       anyone related to that bug having been sent mail. Having compiled a list,
