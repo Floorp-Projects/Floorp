@@ -75,12 +75,7 @@ public:
 private:
     PRPackedBool            mHaveLock;
 
-#if defined (XP_MAC)
-  #if TARGET_CARBON
-    int                     mLockFileDesc;
-  #endif
-    nsCOMPtr<nsILocalFile>  mLockFile;
-#elif defined (XP_WIN)
+#if defined (XP_WIN)
     HANDLE                  mLockFileHandle;
 #elif defined (XP_OS2)
     LHANDLE                 mLockFileHandle;
@@ -88,6 +83,10 @@ private:
     static void             RemovePidLockFiles();
     static void             FatalSignalHandler(int signo);
     static PRCList          mPidLockList;
+
+    nsresult                LockWithFcntl(const nsACString& lockFilePath);
+    nsresult                LockWithSymlink(const nsACString& lockFilePath);
+
     char*                   mPidLockFileName;
     int                     mLockFileDesc;
 #endif
