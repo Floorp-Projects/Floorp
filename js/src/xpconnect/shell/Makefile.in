@@ -48,6 +48,7 @@ SIMPLE_PROGRAMS	= xpcshell$(BIN_SUFFIX)
 REQUIRES	= xpconnect \
 		  xpcom \
 		  js \
+		  caps \
 		  $(NULL)
 
 CPPSRCS		= xpcshell.cpp
