@@ -19,8 +19,6 @@
 #ifndef __WPREFID_H_
 #define __WPREFID_H_
 
-#ifndef MOZ_COMMUNICATOR_IIDS
-
 // {464DC700-2727-11d2-8043-00600811A9C3}
 DEFINE_GUID(IID_IWindowsPrefs, 
 0x464dc700, 0x2727, 0x11d2, 0x80, 0x43, 0x0, 0x60, 0x8, 0x11, 0xa9, 0xc3);
@@ -29,16 +27,18 @@ DEFINE_GUID(IID_IWindowsPrefs,
 DEFINE_GUID(CLSID_WindowsPrefs, 
 0x464dc701, 0x2727, 0x11d2, 0x80, 0x43, 0x0, 0x60, 0x8, 0x11, 0xa9, 0xc3);
 
-#else /* MOZ_COMMUNICATOR_IIDS */
+class nsIDefaultBrowser;
 
-// {464DC700-2727-11d2-8043-00600811A9C3}
-DEFINE_GUID(IID_IWindowsPrefs, 
-0x464dc700, 0x2727, 0x11d2, 0x80, 0x43, 0x0, 0x60, 0x8, 0x11, 0xa9, 0xc3);
+// IWindowsPrefs
+DECLARE_INTERFACE_(IWindowsPrefs, IUnknown)
+{
+	// IUnknown methods
+	STDMETHOD(QueryInterface)(THIS_ REFIID riid, LPVOID FAR* ppvObj) PURE;
+	STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+	STDMETHOD_(ULONG,Release)(THIS) PURE;
 
-// {464DC701-2727-11d2-8043-00600811A9C3}
-DEFINE_GUID(CLSID_WindowsPrefs, 
-0x464dc701, 0x2727, 0x11d2, 0x80, 0x43, 0x0, 0x60, 0x8, 0x11, 0xa9, 0xc3);
-
-#endif /* MOZ_COMMUNICATOR_IIDS */
+	// IWindowsPrefs methods
+	STDMETHOD(SetDefaultBrowser)(THIS_ nsIDefaultBrowser* pDefaultBrowser) PURE;
+};
 
 #endif /* __WPREFID_H_ */

@@ -22,6 +22,8 @@
 #include "cppageex.h"
 #include "xp_list.h"
 
+#include "nsIDefaultBrowser.h"
+
 //also in brpref\src\advpages.cpp, winfe\mnprefs.cpp
 #define WINPREF_PrefIsLocked(pPrefName) PREF_PrefIsLocked(pPrefName)
 
@@ -37,7 +39,8 @@ PREF_GetStringPref(LPCSTR lpszPref, CString &str);
 
 class CBasicWindowsPrefs : public CPropertyPageEx {
 	public:
-		CBasicWindowsPrefs();
+		CBasicWindowsPrefs(nsIDefaultBrowser *pDefaultBrowser);
+        ~CBasicWindowsPrefs();
 
 	protected:
 		BOOL		 InitDialog();
@@ -50,7 +53,10 @@ class CBasicWindowsPrefs : public CPropertyPageEx {
 		BOOL	OnCommand(int id, HWND hwndCtl, UINT notifyCode);
 
 	private:
-
+        nsIDefaultBrowser* m_pDefaultBrowser;
+        BOOL m_bCheckOnStart;
+        nsIDefaultBrowser::Prefs m_originalPrefs;
+        nsIDefaultBrowser::Prefs m_currentPrefs;
 };
 
 #endif /* __PAGES_H_ */

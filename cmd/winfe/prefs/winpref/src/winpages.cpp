@@ -26,23 +26,38 @@
 #include "structs.h"
 #include "xp_help.h"
 
+#include "nsIDefaultBrowser.h"
+
 /////////////////////////////////////////////////////////////////////////////
 // CBasicWindowsPrefs implementation
-CBasicWindowsPrefs::CBasicWindowsPrefs()
-	: CPropertyPageEx(CComDll::m_hInstance, IDD_BASICWINPREFS, "" ) {
+CBasicWindowsPrefs::CBasicWindowsPrefs(nsIDefaultBrowser*pDefaultBrowser)
+	: CPropertyPageEx(CComDll::m_hInstance, IDD_BASICWINPREFS, "" ),
+      m_pDefaultBrowser( pDefaultBrowser ) {
 	// Set member data using XP preferences
+    assert( m_pDefaultBrowser );
+}
+
+CBasicWindowsPrefs::~CBasicWindowsPrefs() {
+    m_pDefaultBrowser->Release();
 }
 
 BOOL CBasicWindowsPrefs::InitDialog()
 {
-	// Check for locked preferences
-
 	return CPropertyPageEx::InitDialog();
 }
 
 STDMETHODIMP CBasicWindowsPrefs::Activate(HWND hwndParent, LPCRECT lprc, BOOL bModal)
 {
 	if (!m_bHasBeenActivated) {
+        // Get user preferences and remember them.
+        nsresult result = m_pDefaultBrowser->GetPreferences( m_originalPrefs );
+        assert( result == NS_OK );
+
+        BOOL bIgnore = FALSE;
+        PREF_GetBoolPref( "browser.wfe.ignore_def_check", &bIgnore );
+        m_bCheckOnStart = !bIgnore;
+    
+        m_currentPrefs = m_originalPrefs;
 	} 
 
 	return CPropertyPageEx::Activate(hwndParent, lprc, bModal);
@@ -50,11 +65,32 @@ STDMETHODIMP CBasicWindowsPrefs::Activate(HWND hwndParent, LPCRECT lprc, BOOL bM
 
 BOOL CBasicWindowsPrefs::DoTransfer(BOOL bSaveAndValidate)
 {
+    // Synchronize dialog checkboxes from current preferences.
+    CheckBoxTransfer( IDC_HANDLEFILES, m_currentPrefs.bHandleFiles, bSaveAndValidate );
+    CheckBoxTransfer( IDC_HANDLESHORTCUTS, m_currentPrefs.bHandleShortcuts, bSaveAndValidate );
+    CheckBoxTransfer( IDC_INTEGRATEWITHACTIVEDESKTOP, m_currentPrefs.bIntegrateWithActiveDesktop, bSaveAndValidate );
+    CheckBoxTransfer( IDC_CHECKONSTART, m_bCheckOnStart, bSaveAndValidate );
+
 	return TRUE;
 }
 
 BOOL CBasicWindowsPrefs::ApplyChanges()
 {
+    // Set "ignore on start" pref based on "check on start" status.
+    BOOL bIgnore = !m_bCheckOnStart;
+    PREF_SetBoolPref( "browser.wfe.ignore_def_check", bIgnore );
+
+    // If other prefs changed, store them.
+    if ( XP_MEMCMP( &m_currentPrefs, &m_originalPrefs, sizeof( nsIDefaultBrowser::Prefs ) ) != 0 ) {
+        // Store them in registry.
+        nsresult result = m_pDefaultBrowser->SetPreferences( m_currentPrefs );
+        assert( result == NS_OK );
+
+        // Apply those preferences.
+        result = m_pDefaultBrowser->HandlePerPreferences();
+        assert( result == NS_OK );
+    }
+
 	return TRUE;
 }
 
@@ -65,20 +101,46 @@ LRESULT	CBasicWindowsPrefs::WindowProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 class CWinPrefDialog : public CDialog {
 	public:
-		CWinPrefDialog( int id );
+		CWinPrefDialog( int id, nsIDefaultBrowser::Prefs &prefs );
 
 	protected:
-		BOOL	InitDialog() { return TRUE; }
-		BOOL	DoTransfer(BOOL bSaveAndValidate) { return TRUE; }
+		BOOL	DoTransfer(BOOL bSaveAndValidate);
 		
-		// Event processing
-		void	OnOK() { return; }
-
 	private:
+        nsIDefaultBrowser::Prefs &m_prefs;
 };
 
-CWinPrefDialog::CWinPrefDialog( int id )
-    : CDialog( CComDll::m_hInstance, id ) {
+CWinPrefDialog::CWinPrefDialog( int id, nsIDefaultBrowser::Prefs &prefs )
+    : CDialog( CComDll::m_hInstance, id ), m_prefs( prefs ) {
+}
+
+CWinPrefDialog::DoTransfer( BOOL bSaveAndValidate ) {
+    switch( m_nTemplateID ) {
+        case IDD_WINFILETYPES:
+            CheckBoxTransfer( IDC_HANDLEHTML, m_prefs.bHandleHTML, bSaveAndValidate );
+            CheckBoxTransfer( IDC_HANDLEJPEG, m_prefs.bHandleJPEG, bSaveAndValidate );
+            CheckBoxTransfer( IDC_HANDLEGIF, m_prefs.bHandleGIF, bSaveAndValidate );
+            CheckBoxTransfer( IDC_HANDLEJS, m_prefs.bHandleJS, bSaveAndValidate );
+            CheckBoxTransfer( IDC_HANDLEXBM, m_prefs.bHandleXBM, bSaveAndValidate );
+            CheckBoxTransfer( IDC_HANDLETXT, m_prefs.bHandleTXT, bSaveAndValidate );
+            break;
+
+        case IDD_WINSHORTCUTTYPES:
+            CheckBoxTransfer( IDC_HANDLEHTTP, m_prefs.bHandleHTTP, bSaveAndValidate );
+            CheckBoxTransfer( IDC_HANDLESHTTP, m_prefs.bHandleHTTPS, bSaveAndValidate );
+            CheckBoxTransfer( IDC_HANDLEFTP, m_prefs.bHandleFTP, bSaveAndValidate );
+            break;
+    
+        case IDD_WINACTIVEDESKTOPSETTINGS:
+            CheckBoxTransfer( IDC_USEINTERNETKEYWORDS, m_prefs.bUseInternetKeywords, bSaveAndValidate );
+            CheckBoxTransfer( IDC_USENETCENTERSEARCH, m_prefs.bUseNetcenterSearch, bSaveAndValidate );
+            CheckBoxTransfer( IDC_DISABLEACTIVEDESKTOP, m_prefs.bDisableActiveDesktop, bSaveAndValidate );
+            break;
+
+        default:
+            break;
+    }
+    return TRUE;
 }
 
 BOOL CBasicWindowsPrefs::OnCommand(int id, HWND hwndCtl, UINT notifyCode)
@@ -90,7 +152,7 @@ BOOL CBasicWindowsPrefs::OnCommand(int id, HWND hwndCtl, UINT notifyCode)
             case IDD_WINSHORTCUTTYPES:
             case IDD_WINACTIVEDESKTOPSETTINGS:
                 {
-                    CWinPrefDialog dialog( id );
+                    CWinPrefDialog dialog( id, m_currentPrefs );
                     dialog.DoModal(GetParent(m_hwndDlg));
                 }
                 break;

@@ -305,15 +305,19 @@ protected:
 
 #define CDefaultBrowserDlgBase	CDialog
 
+class nsIDefaultBrowser;
+
 class  CDefaultBrowserDlg : public  CDefaultBrowserDlgBase
 {
 	public:
-		CDefaultBrowserDlg(CWnd* pParent = NULL);
+		CDefaultBrowserDlg(CWnd* pParent = NULL, nsIDefaultBrowser* pDefaultBrowser = NULL);
+        CDefaultBrowserDlg(nsIDefaultBrowser* pDefaultBrowser);
+        ~CDefaultBrowserDlg();
 		 
 	// Dialog Data
 	//{{AFX_DATA(CDefaultBrowserDlg)
 	enum { IDD = IDD_DEFAULT_BROWSER };
-	BOOL	m_bIgnore;
+	BOOL	m_bPerformCheck;
 	CListBox	m_Listbox;
 	//}}AFX_DATA
 		
@@ -338,6 +342,9 @@ class  CDefaultBrowserDlg : public  CDefaultBrowserDlgBase
 	
 	
 	DECLARE_MESSAGE_MAP()
+
+    private:
+        nsIDefaultBrowser* m_pDefaultBrowser; // nsIDefaultBrowser interface pointer.
 
 }; // END OF CLASS  CDefaultBrowserDlg()
 

@@ -23,6 +23,9 @@
 #include "helper.h"
 #include "nethelp.h"
 
+#include "nsIDefaultBrowser.h"
+#include "prefapi.h"
+
 #ifdef _DEBUG
 #undef THIS_FILE
 static char BASED_CODE THIS_FILE[] = __FILE__;
@@ -775,14 +778,34 @@ END_MESSAGE_MAP()
 *
 ****************************************************************************/
 
-CDefaultBrowserDlg::CDefaultBrowserDlg(CWnd* pParent /*=NULL*/)
+CDefaultBrowserDlg::CDefaultBrowserDlg(CWnd* pParent /*=NULL*/, nsIDefaultBrowser* pDefaultBrowser /*=NULL*/)
 	: CDefaultBrowserDlgBase(CDefaultBrowserDlg::IDD, pParent)
 {
 	//{{AFX_DATA_INIT(CDefaultBrowserDlg)
-	m_bIgnore = FALSE;
+	m_bPerformCheck = TRUE; // If false, we wouldn't be here, now would we?
+    m_pDefaultBrowser = pDefaultBrowser;
+    if ( m_pDefaultBrowser ) {
+        m_pDefaultBrowser->AddRef();
+    }
 	//}}AFX_DATA_INIT
 	
 } // END OF	FUNCTION CDefaultBrowserDlg::CDefaultBrowserDlg()
+
+CDefaultBrowserDlg::CDefaultBrowserDlg(nsIDefaultBrowser* pDefaultBrowser)
+    : CDefaultBrowserDlgBase(CDefaultBrowserDlg::IDD, NULL)
+{
+    m_bPerformCheck = TRUE; // If false, we wouldn't be here, now would we?
+    m_pDefaultBrowser = pDefaultBrowser;
+    if ( m_pDefaultBrowser ) {
+        m_pDefaultBrowser->AddRef();
+    }
+}
+
+CDefaultBrowserDlg::~CDefaultBrowserDlg() {
+    if ( m_pDefaultBrowser ) {
+        m_pDefaultBrowser->Release();
+    }
+}
 
 /****************************************************************************
 *
@@ -804,7 +827,7 @@ void CDefaultBrowserDlg::DoDataExchange(CDataExchange* pDX)
 	CDefaultBrowserDlgBase::DoDataExchange(pDX);
 	
 	//{{AFX_DATA_MAP(CDefaultBrowserDlg)
-	DDX_Check(pDX, IDC_IGNORE, m_bIgnore);
+	DDX_Check(pDX, IDC_IGNORE, m_bPerformCheck);
 	DDX_Control(pDX, IDC_LIST1, m_Listbox);
 	//}}AFX_DATA_MAP
 	
@@ -831,6 +854,12 @@ void CDefaultBrowserDlg::OnNo()
 	if (UpdateData(TRUE))
 	{
 		EndDialog(ID_NO);
+
+        // Update "perform check" preference per check-box setting.
+        if ( !m_bPerformCheck ) {
+            PREF_SetBoolPref("browser.wfe.ignore_def_check",TRUE);
+        }
+    
 	}  /* end if */
 	
 } // END OF	FUNCTION CDefaultBrowserDlg::OnNo()
@@ -856,6 +885,7 @@ void CDefaultBrowserDlg::OnDetails()
 	if (UpdateData(TRUE))
 	{
 		EndDialog(IDC_SHOW_DESKTOP_PREFS);
+
 	}  /* end if */
 	
 } // END OF	FUNCTION CDefaultBrowserDlg::OnDetails()
@@ -937,6 +967,21 @@ static BOOL IsListItemSelected(int* selArray, int count, int i)
 
 void CDefaultBrowserDlg::OnOK()
 {
+    // Dismiss the dialog.
+    CDefaultBrowserDlgBase::OnOK();
+
+    // Update "perform check" preference per check-box setting.
+    if ( !m_bPerformCheck ) {
+        PREF_SetBoolPref("browser.wfe.ignore_def_check",TRUE);
+    }
+
+    if ( m_pDefaultBrowser ) {
+        // synchronize registry with these preferences.
+        nsresult result = m_pDefaultBrowser->HandlePerPreferences();
+        ASSERT( result == NS_OK );
+    }
+
+#if 0 // Old code.
 	// Let's do it. Selected items become owned.
 	// Unselected items become ignored (if the checkbox is checked)
 	CDefaultBrowserDlgBase::OnOK();
@@ -968,6 +1013,7 @@ void CDefaultBrowserDlg::OnOK()
 			theItem->SetIgnored(TRUE);
 		}
 	}	
+#endif
 }
 
 /* CCheckConfirmDialog: a generic "confirm" dialog including a checkbox.

@@ -642,15 +642,14 @@ void CNetscapeApp::CheckDefaultBrowser()
 {
 // We're only worrying about this for Win32
 #ifdef XP_WIN32
-    
-	// Construct the App's owned and lost list.  Used to determine exactly which
-	// file types were lost.  This construction should perform the comparison and
-	// update the lost list.  The result will be written out to the registry.
-	m_OwnedAndLostList.ConstructLists();
+
+	XP_Bool prefBool = FALSE;
+
+	PREF_GetBoolPref("browser.wfe.ignore_def_check",&prefBool);
 	
-	MakeDefaultBrowser();
-	
-	m_OwnedAndLostList.WriteLists();
+    if ( !prefBool ) {
+    	MakeDefaultBrowser();
+    }
 
 #endif // XP_WIN32
 } // END OF	FUNCTION CNetscapeApp::CheckDefaultBrowser()

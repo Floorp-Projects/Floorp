@@ -22,6 +22,7 @@
 #include "wprefid.h"
 #include "prefuiid.h"
 #include "isppageo.h"
+#include "nsIDefaultBrowser.h"
 #include <assert.h>
 
 // Create a new instance of our derived class and return it.
@@ -35,7 +36,7 @@ DLL_ConsumerCreateInstance()
 // CSpecifyPropertyPageObjects
 
 // Abstract class that supports aggregation as an inner object
-class CCategory : public IUnknown {
+class CCategory : public IWindowsPrefs {
 	public:
 		CCategory();
 
@@ -43,6 +44,9 @@ class CCategory : public IUnknown {
 		STDMETHODIMP QueryInterface(REFIID riid, LPVOID FAR* ppvObj) PURE;
 		STDMETHODIMP_(ULONG) AddRef();
 		STDMETHODIMP_(ULONG) Release();
+
+        // IWindowsPrefs methods.
+        STDMETHODIMP SetDefaultBrowser(nsIDefaultBrowser* pDefaultBrowser) PURE;
 
 	public:
 		// Abstract nested class that implements ISpecifyPropertyPageObjects
@@ -136,25 +140,40 @@ CCategory::CSpecifyPageObjects::Release()
 class CWindowsCategory : public CCategory {
 	public:
 		CWindowsCategory(LPUNKNOWN pUnkOuter);
+        ~CWindowsCategory();
 
 		// IUnknown methods. Doesn't delegate (explicit IUnknown)
 		STDMETHODIMP QueryInterface(REFIID riid, LPVOID FAR* ppvObj);
+
+        // IwindowsPrefs methods.
+        STDMETHODIMP SetDefaultBrowser(nsIDefaultBrowser* pDefaultBrowser);
 
 	private:
 		class CSpecifyWindowsPageObjects : public CCategory::CSpecifyPageObjects {
 			public:
 				CSpecifyWindowsPageObjects(CCategory *pBackObj, LPUNKNOWN pUnkOuter);
+                ~CSpecifyWindowsPageObjects();
 
 				// ISpecifyPropertyPageObjects methods
 				STDMETHODIMP GetPageObjects(CAPPAGE *pPages);
+
+                // nsIDefaultBrowser interface pointer.
+                nsIDefaultBrowser* m_pDefaultBrowser;
 		};
 
 		CSpecifyWindowsPageObjects m_innerObj;
+        nsIDefaultBrowser* m_pDefaultBrowser;
 };
 
 CWindowsCategory::CWindowsCategory(LPUNKNOWN pUnkOuter)
-	: m_innerObj(this, pUnkOuter)
+	: m_innerObj(this, pUnkOuter), m_pDefaultBrowser(NULL)
 {
+}
+
+CWindowsCategory::~CWindowsCategory() {
+    if ( m_pDefaultBrowser ) {
+        m_pDefaultBrowser->Release();
+    }
 }
 
 STDMETHODIMP
@@ -162,6 +181,11 @@ CWindowsCategory::QueryInterface(REFIID riid, LPVOID FAR* ppvObj)
 {
 	if (riid == IID_IUnknown) {
 		*ppvObj = (LPVOID)this;
+		AddRef();
+		return NOERROR;
+
+    } else if (riid == IID_IWindowsPrefs) {
+		*ppvObj = (LPVOID)(IWindowsPrefs*)this;
 		AddRef();
 		return NOERROR;
 	
@@ -176,9 +200,28 @@ CWindowsCategory::QueryInterface(REFIID riid, LPVOID FAR* ppvObj)
 	}
 }
 
+STDMETHODIMP
+CWindowsCategory::SetDefaultBrowser(nsIDefaultBrowser* pDefaultBrowser) {
+    m_pDefaultBrowser = pDefaultBrowser;
+    if ( m_pDefaultBrowser ) {
+        // Once for me.
+        m_pDefaultBrowser->AddRef();
+        // Once for my inner 'self'.
+        m_innerObj.m_pDefaultBrowser = m_pDefaultBrowser;
+        m_innerObj.m_pDefaultBrowser->AddRef();
+    }
+    return NOERROR;
+}
+
 CWindowsCategory::CSpecifyWindowsPageObjects::CSpecifyWindowsPageObjects(CCategory *pBackObj, LPUNKNOWN pUnkOuter)
-	: CSpecifyPageObjects(pBackObj, pUnkOuter)
+	: CSpecifyPageObjects(pBackObj, pUnkOuter), m_pDefaultBrowser(NULL)
 {
+}
+
+CWindowsCategory::CSpecifyWindowsPageObjects::~CSpecifyWindowsPageObjects() {
+    if ( m_pDefaultBrowser ) {
+        m_pDefaultBrowser->Release();
+    }
 }
 
 STDMETHODIMP
@@ -192,7 +235,9 @@ CWindowsCategory::CSpecifyWindowsPageObjects::GetPageObjects(CAPPAGE *pPages)
 	if (!pPages->pElems)
 		return ResultFromScode(E_OUTOFMEMORY);
 
-	pPages->pElems[0] = new CBasicWindowsPrefs;
+    assert( m_pDefaultBrowser );
+
+	pPages->pElems[0] = new CBasicWindowsPrefs(m_pDefaultBrowser);
 
 	for (ULONG i = 0; i < pPages->cElems; i++)
 		pPages->pElems[i]->AddRef();

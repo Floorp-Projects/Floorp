@@ -26,6 +26,7 @@
 #include "winprefs/isppageo.h"
 #include "winprefs/brprefid.h"
 #include "winprefs/wprefid.h"
+#include "nsIDefaultBrowser.h"
 #ifdef MOZ_LOC_INDEP
 #include "winprefs/liprefid.h"
 #include "winprefs/iliprefs.h"
@@ -2370,7 +2371,12 @@ wfe_DisplayPreferences(CGenericFrame *pFrame)
                                            CLSCTX_INPROC_SERVER,
                                            IID_ISpecifyPropertyPageObjects,
                                            (LPVOID *)&categories[nCategories]))) {
-            nDesktopCategory = nCategories++;
+            IWindowsPrefs *pWinPrefs;
+            if( SUCCEEDED( categories[nCategories]->QueryInterface( IID_IWindowsPrefs, (LPVOID*)&pWinPrefs ) ) ) {
+                pWinPrefs->SetDefaultBrowser( nsIDefaultBrowser::GetInterface() );
+                pWinPrefs->Release();
+                nDesktopCategory = nCategories++;
+            }
         } else {
             // Register DLL and try again.
             RegisterCLSIDForDll( "winpref.dll" );
@@ -2379,7 +2385,12 @@ wfe_DisplayPreferences(CGenericFrame *pFrame)
                                                CLSCTX_INPROC_SERVER,
                                                IID_ISpecifyPropertyPageObjects,
                                                (LPVOID *)&categories[nCategories]))) {
-                nDesktopCategory = nCategories++;
+                IWindowsPrefs *pWinPrefs;
+                if( SUCCEEDED( categories[nCategories]->QueryInterface( IID_IWindowsPrefs, (LPVOID*)&pWinPrefs ) ) ) {
+                    pWinPrefs->SetDefaultBrowser( nsIDefaultBrowser::GetInterface() );
+                    pWinPrefs->Release();
+                    nDesktopCategory = nCategories++;
+                }
             }
         }
              

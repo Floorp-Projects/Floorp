@@ -50,7 +50,7 @@ CPP_OBJS=.\$(OBJDIR)\winpref.obj .\$(OBJDIR)\winpages.obj
 LINCS=-I$(XPDIST)\public\dllcom -I$(XPDIST)\public\winprefs \
     -I$(XPDIST)\public\pref -I$(XPDIST)\public\dbm \
     -I$(XPDIST)\public\nspr -I$(XPDIST)\public\js \
-    -I$(XPDIST)\public\libreg
+    -I$(XPDIST)\public\libreg -I$(DEPTH)\cmd\winfe -I$(XPDIST)\public\xpcom
 
 !include "$(DEPTH)\config\rules.mak"
 

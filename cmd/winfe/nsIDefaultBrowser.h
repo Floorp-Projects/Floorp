@@ -41,6 +41,60 @@ class nsIDefaultBrowser : public nsISupports {
 
     // DisplayDialog - displays the "default browser" dialog (intended for browser startup).
     NS_IMETHOD_(int)    DisplayDialog() = 0;
+
+    // Prefs - nested structure defining default-browser related prefs.
+    struct Prefs {
+        PRBool bHandleFiles;
+        PRBool bHandleShortcuts;
+        PRBool bIntegrateWithActiveDesktop;
+        // Internet shortcut protocols.
+        struct {
+            PRBool bHandleHTTP;
+            PRBool bHandleHTTPS;
+            PRBool bHandleFTP;
+        };
+        // File types.
+        struct {
+            PRBool bHandleHTML;
+            PRBool bHandleJPEG;
+            PRBool bHandleGIF;
+            PRBool bHandleJS;
+            PRBool bHandleXBM;
+            PRBool bHandleTXT;
+        };
+        // "Active desktop" stuff.
+        struct {
+            PRBool bUseInternetKeywords;
+            PRBool bUseNetcenterSearch;
+            PRBool bDisableActiveDesktop;
+        };
+    };
+
+    // GetPreferences - Returns Prefs structure filled in with user's preferences.
+    NS_IMETHOD GetPreferences( Prefs &prefs ) = 0;
+
+    // SetPreferences - Sets user preferences from Prefs structure contents.
+    NS_IMETHOD SetPreferences( const Prefs &prefs ) = 0;
+
+    // Things - enumeration of protocols/files that Mozilla can handle.
+    enum Thing {
+        kHTTP, kHTTPS, kFTP, kMaxProtocol = kFTP,
+        kHTML, kJPEG, kGIF, kJS, kXBM, kTXT, kMaxFileType = kTXT,
+        kInternetKeywords, kNetcenterSearch, kActiveDesktop
+    };
+
+    // IsHandling - returns whether Mozilla is handling a given thing.
+    NS_IMETHOD_(PRBool) IsHandling( Thing thing ) = 0;
+
+    // StartHandling - does necessary stuff to have Mozilla take over handling of a
+    //                 given thing.
+    NS_IMETHOD StartHandling( Thing extOrProtocol ) = 0;
+
+    // StopHandling - vice versa
+    NS_IMETHOD StopHandling( Thing extOrProtocol ) = 0;
+
+    // HandlePerPreferences - Apply preferences to registry.
+    NS_IMETHOD HandlePerPreferences() = 0;
 };
 
 #endif // _NSIDEFAULTBROWSER_H_
