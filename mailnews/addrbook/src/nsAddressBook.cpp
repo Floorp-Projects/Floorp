@@ -1476,7 +1476,10 @@ nsAddressBook::ExportDirectoryToDelimitedText(nsIAbDirectory *aDirectory, const 
             if (EXPORT_ATTRIBUTES_TABLE[i].includeForPlainText) {
               rv = card->GetCardValue(EXPORT_ATTRIBUTES_TABLE[i].abColName, getter_Copies(value));
               NS_ENSURE_SUCCESS(rv,rv);
-             
+
+              // For notes, make sure CR/LF is converted to spaces 
+              // to avoid creating multiple lines for a single card.
+              //
               // the import code expects .txt, .tab, .csv files to
               // have non-ASCII data in the system charset
               //
@@ -1486,7 +1489,19 @@ nsAddressBook::ExportDirectoryToDelimitedText(nsIAbDirectory *aDirectory, const 
               //
               // the solution is to export / import as LDIF.
               // non-ASCII data is treated as base64 encoded UTF-8 in LDIF
-              rv = importService->SystemStringFromUnicode(value.get(), valueCStr);
+              if (!strcmp(EXPORT_ATTRIBUTES_TABLE[i].abColName, kNotesColumn))
+              {
+                nsAutoString tempStr(value.get());
+                if (!tempStr.IsEmpty())
+                {
+                  tempStr.ReplaceChar(nsCRT::CR, ' ');
+                  tempStr.ReplaceChar(nsCRT::LF, ' ');
+                }
+                rv = importService->SystemStringFromUnicode(tempStr.get(), valueCStr);
+              }
+              else
+                rv = importService->SystemStringFromUnicode(value.get(), valueCStr);
+
               if (NS_FAILED(rv)) {
                 NS_ASSERTION(0, "failed to convert string to system charset.  use LDIF");
                 valueCStr = "?";
