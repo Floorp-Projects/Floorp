@@ -184,7 +184,7 @@
         
         nsAutoString href;
         bookmarkElt->GetAttribute(NS_LITERAL_STRING("href"), href);
-        NSString* url = [NSString stringWith_nsString: &href];
+        NSString* url = [NSString stringWith_nsAString: href];
   
         nsAutoString group;
         bookmarkElt->GetAttribute(NS_LITERAL_STRING("group"), group);

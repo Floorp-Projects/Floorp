@@ -70,8 +70,8 @@ CocoaPromptService::Alert(nsIDOMWindow *parent,
     return NS_ERROR_FAILURE;
   }
 
-  NSString* titleStr = [NSString stringWithCharacters:dialogTitle length:(dialogTitle ? nsCRT::strlen(dialogTitle) : 0)];
-  NSString* textStr = [NSString stringWithCharacters:text length:(text ? nsCRT::strlen(text) : 0)];
+  NSString* titleStr = [NSString stringWithPRUnichars:dialogTitle];
+  NSString* textStr = [NSString stringWithPRUnichars:text];
   NSWindow* window = GetNSWindowForDOMWindow(parent);
   if (!window)
     return NS_ERROR_FAILURE;
@@ -94,9 +94,9 @@ CocoaPromptService::AlertCheck(nsIDOMWindow *parent,
     return NS_ERROR_FAILURE;
   }
 
-  NSString* titleStr = [NSString stringWithCharacters:dialogTitle length:(dialogTitle ? nsCRT::strlen(dialogTitle) : 0)];
-  NSString* textStr = [NSString stringWithCharacters:text length:(text ? nsCRT::strlen(text) : 0)];
-  NSString* msgStr = [NSString stringWithCharacters:checkMsg length:(checkMsg ? nsCRT::strlen(checkMsg) : 0)];
+  NSString* titleStr = [NSString stringWithPRUnichars:dialogTitle];
+  NSString* textStr = [NSString stringWithPRUnichars:text];
+  NSString* msgStr = [NSString stringWithPRUnichars:checkMsg];
   NSWindow* window = GetNSWindowForDOMWindow(parent);
 
   if (checkValue) {
@@ -125,8 +125,8 @@ CocoaPromptService::Confirm(nsIDOMWindow *parent,
     return NS_ERROR_FAILURE;
   }
 
-  NSString* titleStr = [NSString stringWithCharacters:dialogTitle length:(dialogTitle ? nsCRT::strlen(dialogTitle) : 0)];
-  NSString* textStr = [NSString stringWithCharacters:text length:(text ? nsCRT::strlen(text) : 0)];
+  NSString* titleStr = [NSString stringWithPRUnichars:dialogTitle];
+  NSString* textStr = [NSString stringWithPRUnichars:text];
   NSWindow* window = GetNSWindowForDOMWindow(parent);
 
   *_retval = (PRBool)[controller confirm:window title:titleStr text:textStr];
@@ -147,9 +147,9 @@ CocoaPromptService::ConfirmCheck(nsIDOMWindow *parent,
     return NS_ERROR_FAILURE;
   }
 
-  NSString* titleStr = [NSString stringWithCharacters:dialogTitle length:(dialogTitle ? nsCRT::strlen(dialogTitle) : 0)];
-  NSString* textStr = [NSString stringWithCharacters:text length:(text ? nsCRT::strlen(text) : 0)];
-  NSString* msgStr = [NSString stringWithCharacters:checkMsg length:(checkMsg ? nsCRT::strlen(checkMsg) : 0)];
+  NSString* titleStr = [NSString stringWithPRUnichars:dialogTitle];
+  NSString* textStr = [NSString stringWithPRUnichars:text];
+  NSString* msgStr = [NSString stringWithPRUnichars:checkMsg];
   NSWindow* window = GetNSWindowForDOMWindow(parent);
 
   if (checkValue) {
@@ -190,9 +190,9 @@ CocoaPromptService::ConfirmEx(nsIDOMWindow *parent,
     return NS_ERROR_FAILURE;
   }
 
-  NSString* titleStr = [NSString stringWithCharacters:dialogTitle length:(dialogTitle ? nsCRT::strlen(dialogTitle) : 0)];
-  NSString* textStr = [NSString stringWithCharacters:text length:(text ? nsCRT::strlen(text) : 0)];
-  NSString* msgStr = [NSString stringWithCharacters:checkMsg length:(checkMsg ? nsCRT::strlen(checkMsg) : 0)];
+  NSString* titleStr = [NSString stringWithPRUnichars:dialogTitle];
+  NSString* textStr = [NSString stringWithPRUnichars:text];
+  NSString* msgStr = [NSString stringWithPRUnichars:checkMsg];
   NSWindow* window = GetNSWindowForDOMWindow(parent);
 
   NSString* btn1Str = GetButtonStringFromFlags(buttonFlags, kButton0, button0Title);
@@ -233,10 +233,11 @@ CocoaPromptService::Prompt(nsIDOMWindow *parent,
     return NS_ERROR_FAILURE;
   }
 
-  NSString* titleStr = [NSString stringWithCharacters:dialogTitle length:(dialogTitle ? nsCRT::strlen(dialogTitle) : 0)];
-  NSString* textStr = [NSString stringWithCharacters:text length:(text ? nsCRT::strlen(text) : 0)];
-  NSString* msgStr = [NSString stringWithCharacters:checkMsg length:(checkMsg ? nsCRT::strlen(checkMsg) : 0)];
-  NSMutableString* valueStr = [NSMutableString stringWithCharacters:*value length:(*value ? nsCRT::strlen(*value) : 0)];
+  NSString* titleStr = [NSString stringWithPRUnichars:dialogTitle];
+  NSString* textStr = [NSString stringWithPRUnichars:text];
+  NSString* msgStr = [NSString stringWithPRUnichars:checkMsg];
+
+  NSMutableString* valueStr = [NSMutableString stringWithPRUnichars:*value];
 
   BOOL valueBool;
   if (checkValue) {
@@ -274,11 +275,11 @@ CocoaPromptService::PromptUsernameAndPassword(nsIDOMWindow *parent,
     return NS_ERROR_FAILURE;
   }
 
-  NSString* titleStr = [NSString stringWithCharacters:dialogTitle length:(dialogTitle ? nsCRT::strlen(dialogTitle) : 0)];
-  NSString* textStr = [NSString stringWithCharacters:text length:(text ? nsCRT::strlen(text) : 0)];
-  NSString* msgStr = [NSString stringWithCharacters:checkMsg length:(checkMsg ? nsCRT::strlen(checkMsg) : 0)];
-  NSMutableString* userNameStr = [NSMutableString stringWithCharacters:*username length:(*username ? nsCRT::strlen(*username) : 0)];
-  NSMutableString* passwordStr = [NSMutableString stringWithCharacters:*password length:(*password ? nsCRT::strlen(*password) : 0)];
+  NSString* titleStr = [NSString stringWithPRUnichars:dialogTitle];
+  NSString* textStr = [NSString stringWithPRUnichars:text];
+  NSString* msgStr = [NSString stringWithPRUnichars:checkMsg];
+  NSMutableString* userNameStr = [NSMutableString stringWithPRUnichars:*username];
+  NSMutableString* passwordStr = [NSMutableString stringWithPRUnichars:*password];
 
   BOOL valueBool;
   if (checkValue) {
@@ -322,10 +323,10 @@ CocoaPromptService::PromptPassword(nsIDOMWindow *parent,
     return NS_ERROR_FAILURE;
   }
 
-  NSString* titleStr = [NSString stringWithCharacters:dialogTitle length:(dialogTitle ? nsCRT::strlen(dialogTitle) : 0)];
-  NSString* textStr = [NSString stringWithCharacters:text length:(text ? nsCRT::strlen(text) : 0)];
-  NSString* msgStr = [NSString stringWithCharacters:checkMsg length:(checkMsg ? nsCRT::strlen(checkMsg) : 0)];
-  NSMutableString* passwordStr = [NSMutableString stringWithCharacters:*password length:(*password ? nsCRT::strlen(*password) : 0)];
+  NSString* titleStr = [NSString stringWithPRUnichars:dialogTitle];
+  NSString* textStr = [NSString stringWithPRUnichars:text];
+  NSString* msgStr = [NSString stringWithPRUnichars:checkMsg];
+  NSMutableString* passwordStr = [NSMutableString stringWithPRUnichars:*password];
 
   BOOL valueBool;
   if (checkValue) {
@@ -412,7 +413,7 @@ CocoaPromptService::GetCommonDialogLocaleString(const char *key)
   rv = mCommonDialogStringBundle->GetStringFromName(NS_ConvertASCIItoUCS2(key).get(), getter_Copies(string));
   if (NS_FAILED(rv)) return returnValue;
 
-  returnValue = [NSString stringWithCharacters:string length:(string ? nsCRT::strlen(string) : 0)];
+  returnValue = [NSString stringWithPRUnichars:string];
   return returnValue;
 }
 
@@ -445,7 +446,7 @@ CocoaPromptService::GetButtonStringFromFlags(PRUint32 btnFlags,
       btnStr = GetCommonDialogLocaleString("Revert");
       break;
     case BUTTON_TITLE_IS_STRING:
-      btnStr = [NSString stringWithCharacters:btnTitle length:(btnTitle ? nsCRT::strlen(btnTitle) : 0)];
+      btnStr = [NSString stringWithPRUnichars:btnTitle];
   }
 
   return btnStr;

@@ -263,7 +263,7 @@
     nsXPIDLString literalValue;
     valueLiteral->GetValue(getter_Copies(literalValue));
 
-    return [NSString stringWithCharacters: literalValue.get() length:literalValue.Length()];
+    return [NSString stringWith_nsAString: literalValue];
 }
 
 - (void) outlineView: (NSOutlineView*) aOutlineView setObjectValue: (id) aObject

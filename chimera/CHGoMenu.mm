@@ -129,9 +129,9 @@ static const NSString *kEllipsis = @"...";
     nsCOMPtr<nsIHistoryEntry> entry;
     sessionHistory->GetEntryAtIndex(i, PR_FALSE, getter_AddRefs(entry));
 
-    PRUnichar *text;
-    entry->GetTitle(&text);
-    NSString* title = [NSString stringWithCharacters: text length: nsCRT::strlen(text)];
+    nsXPIDLString textStr;
+    entry->GetTitle(getter_Copies(textStr));
+    NSString* title = [NSString stringWith_nsAString: textStr];
     
     // if the title is too long, crop it in the middle
     if ([title length] > kMaxTitleLength) {

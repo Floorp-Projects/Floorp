@@ -69,7 +69,7 @@
     valueLiteral->GetValue(getter_Copies(literalValue));
 
     //Set cell's textual contents
-    [cellValue replaceCharactersInRange:NSMakeRange(0, [cellValue length]) withString:[NSString stringWithCharacters: literalValue.get() length:literalValue.Length()]];
+    [cellValue replaceCharactersInRange:NSMakeRange(0, [cellValue length]) withString:[NSString stringWith_nsAString:literalValue]];
     
     if ([columnPropertyURI isEqualToString: @"http://home.netscape.com/NC-rdf#Name"])
     {
@@ -147,7 +147,7 @@
     nsXPIDLString literalValue;
     valueLiteral->GetValue(getter_Copies(literalValue));
 
-    NSString* url = [NSString stringWithCharacters: literalValue.get() length: literalValue.Length()];
+    NSString* url = [NSString stringWith_nsAString: literalValue];
     [[[mBrowserWindowController getBrowserWrapper] getBrowserView] loadURI: url referrer: nil flags: NSLoadFlagsNone];
     // Focus and activate our content area.
     [[[mBrowserWindowController getBrowserWrapper] getBrowserView] setActive: YES];

@@ -263,7 +263,7 @@ nsDownloadListener::InitDialog()
 
   nsAutoString pathStr;
   mDestination->GetPath(pathStr);
-  [mDownloadDisplay setDestinationPath: [NSString stringWithCharacters:pathStr.get() length:pathStr.Length()]];
+  [mDownloadDisplay setDestinationPath: [NSString stringWith_nsAString:pathStr]];
 }
 
 void

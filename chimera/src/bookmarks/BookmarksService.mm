@@ -287,8 +287,7 @@ BookmarksService::BookmarkChanged(nsIContent* aItem, bool shouldFlush = true)
       NSMenuItem* childItem = [menu itemWithTag: contentID];
       nsAutoString name;
       aItem->GetAttr(kNameSpaceID_None, gNameAtom, name);
-      NSString* title = [NSString stringWithCharacters: name.get() length: name.Length()];
-      [childItem setTitle: title];
+      [childItem setTitle: [NSString stringWith_nsAString: name]];
     }
     
   }
@@ -741,7 +740,7 @@ BookmarksService::AddMenuBookmark(NSMenu* aMenu, nsIContent* aParent, nsIContent
 {
   nsAutoString name;
   aChild->GetAttr(kNameSpaceID_None, gNameAtom, name);
-  NSString* title = [NSString stringWithCharacters: name.get() length: name.Length()];
+  NSString* title = [NSString stringWith_nsAString: name];
 
   // Create a menu or menu item for the child.
   NSMenuItem* menuItem = [[[NSMenuItem alloc] initWithTitle: title action: NULL keyEquivalent: @""] autorelease];
@@ -806,7 +805,7 @@ BookmarksService::OpenMenuBookmark(BrowserWindowController* aController, id aMen
   if (href.IsEmpty())
     return;
 
-  NSString* url = [NSString stringWithCharacters: href.get() length: href.Length()];
+  NSString* url = [NSString stringWith_nsAString: href];
 
   // Now load the URL in the window.
   [aController loadURL:url referrer:nil];
@@ -1023,7 +1022,7 @@ BookmarksService::OpenBookmarkGroup(id aTabView, nsIDOMElement* aFolder)
       nsAutoString href;
       elt->GetAttribute(NS_LITERAL_STRING("href"), href);
       if (!href.IsEmpty()) {
-        NSString* url = [NSString stringWithCharacters: href.get() length: href.Length()];
+        NSString* url = [NSString stringWith_nsAString: href];
         NSTabViewItem* tabViewItem = nil;
         if (currentIndex >= total) {
           // We need to make a new tab.
@@ -1055,7 +1054,7 @@ NSString*
 BookmarksService::ResolveKeyword(NSString* aKeyword)
 {
   nsAutoString keyword;
-  [aKeyword assignTo_nsString:&keyword];
+  [aKeyword assignTo_nsAString:keyword];
 
   if (keyword.IsEmpty())
     return [NSString string];
@@ -1072,7 +1071,7 @@ BookmarksService::ResolveKeyword(NSString* aKeyword)
   nsAutoString url;
   if (content) {
     content->GetAttr(kNameSpaceID_None, gHrefAtom, url);
-    return [NSString stringWithCharacters: url.get() length: url.Length()];
+    return [NSString stringWith_nsAString: url];
   }
   return [NSString stringWithCString:""];
 }
@@ -1217,8 +1216,8 @@ BookmarksService::PerformProxyDrop(BookmarkItem* parentItem, BookmarkItem* befor
   nsCOMPtr<nsIDOMElement> beforeElt;
   beforeElt = do_QueryInterface([beforeItem contentNode]);
 
-  nsAutoString url; [[data objectForKey:@"url"] assignTo_nsString:&url];
-  nsAutoString title; [[data objectForKey:@"title"] assignTo_nsString:&title];
+  nsAutoString url; [[data objectForKey:@"url"] assignTo_nsAString:url];
+  nsAutoString title; [[data objectForKey:@"title"] assignTo_nsAString:title];
   BookmarksService::AddBookmarkToFolder(url, title, parentElt, beforeElt);
   return YES;  
 }
