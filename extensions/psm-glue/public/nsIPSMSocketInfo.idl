@@ -44,6 +44,8 @@ interface nsIPSMSocketInfo : nsISupports {
     readonly attribute psmtControlStar  controlPtr;
     readonly attribute cmSocketStar     socketPtr;
     readonly attribute nsFileDescStar   fileDescPtr;
+
+    attribute boolean                   forceHandshake;
     
     void getPickledStatus(out charPtr pickledStatus);
     

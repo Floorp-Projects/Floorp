@@ -857,8 +857,15 @@ nsresult nsSocketTransport::doConnection(PRInt16 aSelectFlags)
               if (!NS_SUCCEEDED(rv) || !mSocketFD) break;
 
               // if the service was ssl, we want to hold onto the socket info
-              if (nsCRT::strcmp(mSocketTypes[type], "ssl") == 0)
+              if (nsCRT::strcmp(mSocketTypes[type], "ssl") == 0) {
                   mSecurityInfo = socketInfo;
+              }
+              else if (nsCRT::strcmp(mSocketTypes[type], "ssl-forcehandshake") == 0) {
+                  mSecurityInfo = socketInfo;
+                  nsCOMPtr<nsIPSMSocketInfo> securityInfo = do_QueryInterface(mSecurityInfo, &rv);
+                  if (NS_SUCCEEDED(rv) && securityInfo)
+                      securityInfo->SetForceHandshake(PR_TRUE);
+              }
               else if (nsCRT::strcmp(mSocketTypes[type], "socks") == 0) {
                   // since socks is transparent, any layers above
                   // it do not have to worry about proxy stuff

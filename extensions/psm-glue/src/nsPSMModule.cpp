@@ -118,6 +118,13 @@ static nsModuleComponentInfo components[] =
         nsSSLSocketProvider::Create 
     },
 
+    { 
+        NS_ISSLFHSOCKETPROVIDER_CLASSNAME,
+        NS_SSLSOCKETPROVIDER_CID,
+        NS_ISSLFHSOCKETPROVIDER_PROGID,
+        nsSSLSocketProvider::Create 
+    },
+
     {
         NS_SDR_CLASSNAME,
         NS_SDR_CID,
