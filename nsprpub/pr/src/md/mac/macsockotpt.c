@@ -1931,8 +1931,6 @@ PRInt32 _MD_poll(PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
     
     PRThread    *thread = _PR_MD_CURRENT_THREAD();
     PRInt32     ready;
-    intn        is;
-    PRBool      needsToWait = PR_FALSE;
     
     if (npds > DESCRIPTOR_FLAGS_ARRAY_SIZE)
     {
@@ -1948,40 +1946,45 @@ PRInt32 _MD_poll(PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
         readFlags = ioFlags;
         writeFlags = &ioFlags[npds];
     }
-    
-    (void)CheckPollDescMethods(pds, npds, readFlags, writeFlags);
 
-    _PR_INTSOFF(is);
-    PR_Lock(thread->md.asyncIOLock);
-    
-    (void)CheckPollDescEndpoints(pds, npds, readFlags, writeFlags);
-    ready = CountReadyPollDescs(pds, npds);
-    
-    if ((ready == 0) && (timeout != PR_INTERVAL_NO_WAIT))
-    {
-        PrepareForAsyncCompletion(thread, 0);
-        SetDescPollThread(pds, npds, thread);
-        needsToWait = PR_TRUE;
-    }    
+    if (timeout != PR_INTERVAL_NO_WAIT) {
+        intn        is;
         
-    PR_Unlock(thread->md.asyncIOLock);
-    _PR_INTSON(is);
-
-    if (needsToWait)
-    {
-        WaitOnThisThread(thread, timeout);
-
-        // since we may have been woken by a pollable event
-        // firing, we have to check both poll methods and
-        // endpoints.
+        // we have to be outside the lock when calling this, since
+        // it can call arbitrary user code (including other socket
+        // entry points)
         (void)CheckPollDescMethods(pds, npds, readFlags, writeFlags);
+
+        _PR_INTSOFF(is);
+        PR_Lock(thread->md.asyncIOLock);
+        PrepareForAsyncCompletion(thread, 0);
+
+        SetDescPollThread(pds, npds, thread);
+
         (void)CheckPollDescEndpoints(pds, npds, readFlags, writeFlags);
+
+        PR_Unlock(thread->md.asyncIOLock);
+        _PR_FAST_INTSON(is);
+
         ready = CountReadyPollDescs(pds, npds);
 
+        if (ready == 0) {
+            WaitOnThisThread(thread, timeout);
+
+            // since we may have been woken by a pollable event firing,
+            // we have to check both poll methods and endpoints.
+            (void)CheckPollDescMethods(pds, npds, readFlags, writeFlags);
+            (void)CheckPollDescEndpoints(pds, npds, readFlags, writeFlags);
+            ready = CountReadyPollDescs(pds, npds);
+        }
+        
+        thread->io_pending = PR_FALSE;
         SetDescPollThread(pds, npds, NULL);
     }
     else {
-        thread->io_pending = PR_FALSE;
+        (void)CheckPollDescMethods(pds, npds, readFlags, writeFlags);
+        (void)CheckPollDescEndpoints(pds, npds, readFlags, writeFlags);
+        ready = CountReadyPollDescs(pds, npds);    
     }
 
     if (readFlags != readFlagsArray)
