@@ -314,8 +314,8 @@ NS_IMPL_ISUPPORTS2(nsMsgAccountManager, nsIMsgAccountManager, nsIObserver)
 nsMsgAccountManager::nsMsgAccountManager() :
   m_accountsLoaded(PR_FALSE),
   m_defaultAccount(null_nsCOMPtr()),
-  m_prefs(0),
-  m_haveShutdown(PR_FALSE)
+  m_haveShutdown(PR_FALSE),
+  m_prefs(0)
 {
   NS_INIT_REFCNT();
 

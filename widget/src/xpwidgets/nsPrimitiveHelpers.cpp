@@ -57,7 +57,7 @@ nsPrimitiveHelpers :: CreatePrimitiveForData ( const char* aFlavor, void* aDataB
     nsCOMPtr<nsISupportsWString> primitive;
     nsresult rv = nsComponentManager::CreateInstance(NS_SUPPORTS_WSTRING_PROGID, nsnull, 
                                                       NS_GET_IID(nsISupportsWString), getter_AddRefs(primitive));
-    if ( primitive ) {
+    if (NS_SUCCEEDED(rv) && primitive ) {
       primitive->SetData ( (unsigned short*)aDataBuff );
       nsCOMPtr<nsISupports> genericPrimitive ( do_QueryInterface(primitive) );
       *aPrimitive = genericPrimitive;
