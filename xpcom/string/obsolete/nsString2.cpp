@@ -204,10 +204,12 @@ void nsString::SetLength(PRUint32 anIndex) {
  * @return
  */
 void nsString::SetCapacity(PRUint32 aLength) {
-  if(aLength>mCapacity) {
-    GrowCapacity(*this,aLength);
+  if(aLength) {
+    if(aLength>mCapacity) {
+      GrowCapacity(*this,aLength);
+    }
+    AddNullTerminator(*this);
   }
-  AddNullTerminator(*this);
 }
 
 /**********************************************************************
