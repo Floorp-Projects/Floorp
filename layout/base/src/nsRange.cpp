@@ -30,9 +30,10 @@
 #include "nsIDocument.h"
 #include "nsVoidArray.h"
 #include "nsIDOMText.h"
-#include "nsContentIterator.h"
+#include "nsIContentIterator.h"
 #include "nsIDOMNodeList.h"
 
+#include "nsCOMPtr.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 nsVoidArray* nsRange::mStartAncestors = nsnull;      
@@ -40,6 +41,7 @@ nsVoidArray* nsRange::mEndAncestors = nsnull;
 nsVoidArray* nsRange::mStartAncestorOffsets = nsnull; 
 nsVoidArray* nsRange::mEndAncestorOffsets = nsnull;  
 
+nsresult NS_NewContentIterator(nsIContentIterator** aInstancePtrResult);
 
 /******************************************************
  * non members
@@ -152,33 +154,6 @@ inSameDoc_err_label:
   NS_IF_RELEASE(doc1);
   NS_IF_RELEASE(doc2);
   return retval;
-
-/* Beats me why GetOwnerDocument always returns not succeeded...
-  nsresult res;
-  nsIDOMDocument* document1;
-  res = aNode1->GetOwnerDocument(&document1);
-  if (!NS_SUCCEEDED(res))
-    return PR_FALSE;
-
-  nsIDOMDocument* document2;
-  res = aNode2->GetOwnerDocument(&document2);
-  if (!NS_SUCCEEDED(res))
-  {
-    NS_IF_RELEASE(document1);
-    return PR_FALSE;
-  }
-
-  PRBool retval = PR_FALSE;
-
-  // Now compare the two documents: is direct comparison safe?
-  if (document1 == document2)
-    retval = PR_TRUE;
-
-  NS_IF_RELEASE(document1);
-  NS_IF_RELEASE(document2);
-
-  return retval;
-*/
 }
 
 
@@ -632,13 +607,15 @@ nsresult nsRange::PopRanges(nsIDOMNode* aDestNode, PRInt32 aOffset, nsIContent* 
   // utility routine to pop all the range endpoints inside the content subtree defined by 
   // aSourceNode, into the node/offset represented by aDestNode/aOffset.
   
-  nsContentIterator iter(aSourceNode);
+  nsCOMPtr<nsIContentIterator> iter;
+  nsresult res = NS_NewContentIterator(getter_AddRefs(iter));
+  iter->Init(aSourceNode);
+
   nsIContent* cN;
   nsVoidArray* theRangeList;
-  nsresult res;
   
-  res = iter.CurrentNode(&cN);
-  while (NS_COMFALSE == iter.IsDone())
+  res = iter->CurrentNode(&cN);
+  while (NS_COMFALSE == iter->IsDone())
   {
     cN->GetRangeList(theRangeList);
     if (theRangeList)
@@ -671,9 +648,9 @@ nsresult nsRange::PopRanges(nsIDOMNode* aDestNode, PRInt32 aOffset, nsIContent* 
        } 
       
     }
-    iter.Next();
+    iter->Next();
     NS_IF_RELEASE(cN);  // balances addref inside CurrentNode()
-    res = iter.CurrentNode(&cN);
+    res = iter->CurrentNode(&cN);
   }
   
   return NS_OK;
@@ -978,9 +955,13 @@ nsresult nsRange::DeleteContents()
   
   // get start node ancestors
   nsVoidArray startAncestorList;
+  
   FillArrayWithAncestors(&startAncestorList,mStartParent);
+  
+  nsCOMPtr<nsIContentIterator> iter;
+  res = NS_NewContentIterator(getter_AddRefs(iter));
+  iter->Init(this);
 
-  nsContentIterator iter(this);
   nsVoidArray deleteList;
   nsIContent *cN;
   nsIContent *cParent;
@@ -989,17 +970,17 @@ nsresult nsRange::DeleteContents()
   // loop through the content iterator, which returns nodes in the range in 
   // close tag order, and mark for deletion any node that is not an ancestor
   // of the start node.
-  res = iter.CurrentNode(&cN);
-  while (NS_COMFALSE == iter.IsDone())
+  res = iter->CurrentNode(&cN);
+  while (NS_COMFALSE == iter->IsDone())
   {
     // if node is not an ancestor of start node, delete it
     if (mStartAncestors->IndexOf(NS_STATIC_CAST(void*,cN)) == -1)
     {
       deleteList.AppendElement(NS_STATIC_CAST(void*,cN));
     }
-    iter.Next();
+    iter->Next();
     NS_IF_RELEASE(cN);  // balances addref inside CurrentNode()
-    res = iter.CurrentNode(&cN);
+    res = iter->CurrentNode(&cN);
   }
   
   // remove the nodes on the delete list
@@ -1009,10 +990,30 @@ nsresult nsRange::DeleteContents()
     res = cN->GetParent(cParent);
     res = cParent->IndexOf(cN,indx);
     res = cParent->RemoveChildAt(indx, PR_TRUE);
+    deleteList.RemoveElementAt(0);
   }
   
   NS_IF_RELEASE(cStart);
   NS_IF_RELEASE(cEnd);
+
+  // If mStartParent is a text node, delete the text after start offset
+  nsIDOMText *textNode;
+  res = mStartParent->QueryInterface(nsIDOMText::IID(), (void**)&textNode);
+  if (NS_SUCCEEDED(res)) 
+  {
+    res = textNode->DeleteData(mStartOffset, 0xFFFFFFFF); // del to end
+    if (!NS_SUCCEEDED(res))
+      return res;  // XXX need to switch over to nsCOMPtr to avoid leaks here
+  }
+
+  // If mEndParent is a text node, delete the text before end offset
+  res = mEndParent->QueryInterface(nsIDOMText::IID(), (void**)&textNode);
+  if (NS_SUCCEEDED(res)) 
+  {
+    res = textNode->DeleteData(0, mEndOffset); // del from start
+    if (!NS_SUCCEEDED(res))
+      return res;  // XXX need to switch over to nsCOMPtr to avoid leaks here
+  }
 
   // Collapse to start point:
   NS_IF_RELEASE(mEndParent);
@@ -1323,15 +1324,18 @@ toStringComplexLabel:
   /* complex case: cStart != cEnd, or cStart not a text node
      revisit - there are potential optimizations here and also tradeoffs.
   */
+
+  nsCOMPtr<nsIContentIterator> iter;
+  res = NS_NewContentIterator(getter_AddRefs(iter));
+  iter->Init(this);
   
-  nsContentIterator iter(this);
   nsString tempString;
   nsIContent *cN;
  
   // loop through the content iterator, which returns nodes in the range in 
   // close tag order, and grab the text from any text node
-  res = iter.CurrentNode(&cN);
-  while (NS_COMFALSE == iter.IsDone())
+  res = iter->CurrentNode(&cN);
+  while (NS_COMFALSE == iter->IsDone())
   {
     nsIDOMText *textNode;
     res = cN->QueryInterface(nsIDOMText::IID(), (void**)&textNode);
@@ -1356,9 +1360,9 @@ toStringComplexLabel:
       }
       NS_IF_RELEASE(textNode);
     }
-    iter.Next();
+    iter->Next();
     NS_IF_RELEASE(cN);  // balances addref inside CurrentNode()
-    res = iter.CurrentNode(&cN);
+    res = iter->CurrentNode(&cN);
   }
 
   NS_IF_RELEASE(cStart);
