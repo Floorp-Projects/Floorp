@@ -1220,6 +1220,17 @@ jsdService::OnForRuntime (JSRuntime *rt)
     if (!mCx)
         return NS_ERROR_FAILURE;
 
+    JSContext *cx   = JSD_GetDefaultJSContext (mCx);
+    JSObject  *glob = JS_GetGlobalObject (cx);
+
+    /* init xpconnect on the debugger's context in case xpconnect tries to
+     * use it for stuff. */
+    nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());
+    if (!xpc)
+        return NS_ERROR_FAILURE;
+    
+    xpc->InitClasses (cx, glob);
+    
     /* If any of these mFooHook objects are installed, do the required JSD
      * hookup now.   See also, jsdService::SetFooHook().
      */
