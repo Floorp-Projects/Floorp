@@ -23,9 +23,9 @@ certificate. Then run "gmake generate".
     % addbuiltin -n "Name of the Root Certificate" -t C,C,C < newroot.der >> certdata.txt
     % gmake generate
 
-5. Edit constants.c to bump the version of the module.
+5. Edit nssckbi.h to bump the version of the module.
 
 6. Run gmake in this directory to build the nssckbi module.
 
 7. After you verify that the new nssckbi module is correct, check in
-certdata.txt, certdata.c, and constants.c.
+certdata.txt, certdata.c, and nssckbi.h.
