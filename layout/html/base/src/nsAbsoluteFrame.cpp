@@ -49,10 +49,10 @@ nsAbsoluteFrame::~nsAbsoluteFrame()
 {
 }
 
-NS_METHOD nsAbsoluteFrame::Reflow(nsIPresContext*      aPresContext,
-                                  nsReflowMetrics&     aDesiredSize,
-                                  const nsReflowState& aReflowState,
-                                  nsReflowStatus&      aStatus)
+NS_IMETHODIMP nsAbsoluteFrame::Reflow(nsIPresContext*      aPresContext,
+                                      nsReflowMetrics&     aDesiredSize,
+                                      const nsReflowState& aReflowState,
+                                      nsReflowStatus&      aStatus)
 {
   // Have we created the absolutely positioned item yet?
   if (nsnull == mFrame) {
@@ -91,6 +91,87 @@ NS_METHOD nsAbsoluteFrame::Reflow(nsIPresContext*      aPresContext,
 
   // Return our desired size as (0, 0)
   return nsFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+}
+
+NS_IMETHODIMP nsAbsoluteFrame::ContentAppended(nsIPresShell*   aShell,
+                                               nsIPresContext* aPresContext,
+                                               nsIContent*     aContainer)
+{
+  NS_ASSERTION(mContent == aContainer, "bad content-appended target");
+
+  // Forward the notification to the absolutely positioned frame
+  if (nsnull != mFrame) {
+    return mFrame->ContentAppended(aShell, aPresContext, aContainer);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAbsoluteFrame::ContentInserted(nsIPresShell*   aShell,
+                                               nsIPresContext* aPresContext,
+                                               nsIContent*     aContainer,
+                                               nsIContent*     aChild,
+                                               PRInt32         aIndexInParent)
+{
+  NS_ASSERTION(mContent == aContainer, "bad content-inserted target");
+
+  // Forward the notification to the absolutely positioned frame
+  if (nsnull != mFrame) {
+    return mFrame->ContentInserted(aShell, aPresContext, aContainer, aChild,
+                                   aIndexInParent);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAbsoluteFrame::ContentReplaced(nsIPresShell*   aShell,
+                                               nsIPresContext* aPresContext,
+                                               nsIContent*     aContainer,
+                                               nsIContent*     aOldChild,
+                                               nsIContent*     aNewChild,
+                                               PRInt32         aIndexInParent)
+{
+  NS_ASSERTION(mContent == aContainer, "bad content-replaced target");
+
+  // Forward the notification to the absolutely positioned frame
+  if (nsnull != mFrame) {
+    return mFrame->ContentReplaced(aShell, aPresContext, aContainer,
+                                   aOldChild, aNewChild, aIndexInParent);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAbsoluteFrame::ContentDeleted(nsIPresShell*   aShell,
+                                              nsIPresContext* aPresContext,
+                                              nsIContent*     aContainer,
+                                              nsIContent*     aChild,
+                                              PRInt32         aIndexInParent)
+{
+  NS_ASSERTION(mContent == aContainer, "bad content-deleted target");
+
+  // Forward the notification to the absolutely positioned frame
+  if (nsnull != mFrame) {
+    return mFrame->ContentDeleted(aShell, aPresContext, aContainer, aChild,
+                                  aIndexInParent);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAbsoluteFrame::ContentChanged(nsIPresShell*   aShell,
+                                              nsIPresContext* aPresContext,
+                                              nsIContent*     aChild,
+                                              nsISupports*    aSubContent)
+{
+  NS_ASSERTION(mContent == aChild, "bad content-changed target");
+
+  // Forward the notification to the absolutely positioned frame
+  if (nsnull != mFrame) {
+    return mFrame->ContentChanged(aShell, aPresContext, aChild, aSubContent);
+  }
+
+  return NS_OK;
 }
 
 nsIFrame* nsAbsoluteFrame::GetContainingBlock() const
@@ -135,7 +216,7 @@ nsIFrame* nsAbsoluteFrame::GetContainingBlock() const
   return result;
 }
 
-NS_METHOD nsAbsoluteFrame::ListTag(FILE* out) const
+NS_IMETHODIMP nsAbsoluteFrame::ListTag(FILE* out) const
 {
   fputs("*absolute", out);
   PRInt32 contentIndex;
