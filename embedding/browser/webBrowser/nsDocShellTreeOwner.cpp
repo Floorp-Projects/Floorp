@@ -1496,6 +1496,12 @@ ChromeContextMenuListener :: ContextMenu ( nsIDOMEvent* aMouseEvent )
         }
         break; // exit do-while
       }
+      else if ( tag.EqualsWithConversion("object", PR_TRUE) ||  /* XXX what about images and documents? */
+                tag.EqualsWithConversion("embed",  PR_TRUE) ||
+                tag.EqualsWithConversion("applet", PR_TRUE) )
+      {                // always consume events for plugins and Java 
+        return NS_OK;  // who may throw their own context menus
+      }
 
       // Test if the element has an associated link
       nsCOMPtr<nsIDOMNamedNodeMap> attributes;
