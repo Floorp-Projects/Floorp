@@ -3650,7 +3650,8 @@ PresShell::GetViewToScroll(nsLayoutUtils::Direction aDirection)
       // For example, this happens in the case of overflow:scroll.
       // In that case we still use GetNearestScrollingView() because
       // we need a scrolling view that matches aDirection.
-      nsIView* startView = svp? svp->GetScrollableView()->View() : startFrame->GetClosestView();
+      nsIScrollableView* sv;
+      nsIView* startView = svp && (sv = svp->GetScrollableView()) ? sv->View() : startFrame->GetClosestView();
       NS_ASSERTION(startView, "No view to start searching for scrollable view from");
       scrollView = nsLayoutUtils::GetNearestScrollingView(startView, aDirection);
     }
