@@ -340,7 +340,7 @@ function MsgEditMessageAsNew() {}
 function MsgAddSenderToAddressBook() {}
 function MsgAddAllToAddressBook() {}
 
-function MsgMarkMsgAsRead()
+function MsgMarkMsgAsRead(markRead)
 {
   dump("\MsgMarkMsgAsRead from XUL\n");
   var tree = frames[0].frames[1].document.getElementById('threadTree');
@@ -349,7 +349,7 @@ function MsgMarkMsgAsRead()
     appCore.SetWindow(window);
 	//get the selected elements
     var messageList = tree.getElementsByAttribute("selected", "true");
-    appCore.MarkMessagesRead(tree.database, messageList, true);
+    appCore.MarkMessagesRead(tree.database, messageList, markRead);
   }
 
 }

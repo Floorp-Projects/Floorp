@@ -133,6 +133,7 @@
 <!ENTITY addAllToAddressBookCmd.label ".Add All to Address Book">  
 <!ENTITY markMenu.label "Mark">  
 <!ENTITY markAsReadCmd.label "As Read">  
+<!ENTITY markAsUnreadCmd.label "As Unread">  
 <!ENTITY markThreadAsReadCmd.label ".Thread As Read">  
 <!ENTITY markByDateCmd.label ".by Date...">  
 <!ENTITY markAllReadCmd.label ".All Read">  
@@ -371,7 +372,8 @@
       <menuitem name="&addAllToAddressBookCmd.label;" onclick="MsgAddAllToAddressBook();"/>
       <separator/>
       <menu name="&markMenu.label;">
-        <menuitem name="&markAsReadCmd.label;" onclick="MsgMarkMsgAsRead();"/>
+        <menuitem name="&markAsReadCmd.label;" onclick="MsgMarkMsgAsRead(true);"/>
+        <menuitem name="&markAsUnreadCmd.label;" onclick="MsgMarkMsgAsRead(false);"/>
         <menuitem name="&markThreadAsReadCmd.label;" onclick="MsgMarkThreadAsRead();"/>
         <menuitem name="&markByDateCmd.label;" onclick="MsgMarkByDate();"/>
         <menuitem name="&markAllReadCmd.label;" onclick="MsgMarkAllRead();"/>

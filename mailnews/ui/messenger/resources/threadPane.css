@@ -41,7 +41,7 @@ treeitem[Status=""] {
 	font-weight: bold;
 }
 
-treeitem[Status="New"] {
+treeitem[Status="new"] {
 	font-weight: bold;
 }
 
