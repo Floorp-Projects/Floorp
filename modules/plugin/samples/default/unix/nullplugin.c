@@ -38,7 +38,7 @@
 #include <gdk/gdkkeysyms.h>
 
 /* Xlib/Xt stuff */
-#ifndef NO_X11
+#ifdef MOZ_X11
 #include <X11/Xlib.h>
 #include <X11/Intrinsic.h>
 #include <X11/cursorfont.h>
@@ -351,7 +351,7 @@ static GdkPixmap *nullPluginGdkPixmap = 0;
 
 static GdkWindow *getGdkWindow(PluginInstance *This)
 {
-#ifndef NO_X11
+#ifdef MOZ_X11
     GdkWindow *gdk_window;
     Window xwin = (Window) This->window;
     Widget xt_w = XtWindowToWidget(This->display, xwin);
@@ -393,7 +393,7 @@ createPixmap(PluginInstance *This)
            style = gtk_widget_get_style(widget);
            nullPluginGdkPixmap = gdk_pixmap_create_from_xpm_d(gdk_window , &mask,
                                              &style->bg[GTK_STATE_NORMAL], npnul320_xpm);
-#ifndef NO_X11
+#ifdef MOZ_X11
 	   /* Pixmap is created on original X session but used by new session */
 	   XSync(GDK_DISPLAY(), False);
 #endif
@@ -412,7 +412,7 @@ drawPixmap(PluginInstance *This)
         dest_y = This->height/2 - pixmap_height/2;
         if (dest_x >= 0 && dest_y >= 0)
         {
-#ifndef NO_X11
+#ifdef MOZ_X11
             GC gc;
             gc = XCreateGC(This->display, This->window, 0, NULL);
             XCopyArea(This->display, GDK_WINDOW_XWINDOW(nullPluginGdkPixmap) , This->window, gc,
@@ -426,7 +426,7 @@ drawPixmap(PluginInstance *This)
 static void
 setCursor (PluginInstance *This)
 {
-#ifndef NO_X11
+#ifdef MOZ_X11
     static Cursor nullPluginCursor = 0;
     if (!nullPluginCursor)
     {
@@ -439,7 +439,7 @@ setCursor (PluginInstance *This)
 #endif
 }
 
-#ifndef NO_X11
+#ifdef MOZ_X11
 static void
 xt_event_handler(Widget xt_w, PluginInstance *This, XEvent *xevent, Boolean *b)
 {
@@ -462,7 +462,7 @@ xt_event_handler(Widget xt_w, PluginInstance *This, XEvent *xevent, Boolean *b)
 static void
 addXtEventHandler(PluginInstance *This)
 {
-#ifndef NO_X11
+#ifdef MOZ_X11
      Display *dpy = (Display*) This->display;
      Window xwin = (Window) This->window;
      Widget xt_w = XtWindowToWidget(dpy, xwin);

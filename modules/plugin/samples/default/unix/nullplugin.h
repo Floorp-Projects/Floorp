@@ -64,7 +64,7 @@ Click OK to download Plugin."
 typedef struct _PluginInstance
 {
     uint16 mode;
-#ifndef NO_X11
+#ifdef MOZ_X11
     Window window;
     Display *display;
 #endif
@@ -77,7 +77,7 @@ typedef struct _PluginInstance
     char *pluginsPageUrl;
     char *pluginsFileUrl;
     NPBool pluginsHidden;
-#ifndef NO_X11
+#ifdef MOZ_X11
     Visual* visual;
     Colormap colormap;
 #endif

@@ -55,7 +55,7 @@
 #   include <MacWindows.h>
 #endif
 
-#if defined(XP_UNIX) && !defined(NO_X11)
+#if defined(XP_UNIX) && defined(MOZ_X11)
 #   include <X11/Xlib.h>
 #   include <X11/Xutil.h>
 #endif
@@ -156,7 +156,7 @@ struct nsPluginAnyCallbackStruct {
     PRInt32     type;
 };
 
-#ifndef NO_X11
+#ifdef MOZ_X11
 struct nsPluginSetWindowCallbackStruct {
     PRInt32     type;
     Display*    display;
@@ -246,7 +246,7 @@ struct nsPluginPort;
 typedef HRGN            nsPluginRegion;
 typedef HWND            nsPluginPlatformWindowRef;
 
-#elif defined(XP_UNIX) && !defined(NO_X11)
+#elif defined(XP_UNIX) && defined(MOZ_X11)
 
 struct nsPluginPort;
 typedef Region          nsPluginRegion;
@@ -314,7 +314,7 @@ struct nsPluginEvent {
     uint32      wParam;
     uint32      lParam;
 
-#elif defined(XP_UNIX) && !defined(NO_X11)
+#elif defined(XP_UNIX) && defined(MOZ_X11)
     XEvent      event;
 #else
     void        *event;
