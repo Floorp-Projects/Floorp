@@ -31,9 +31,12 @@ endif
 #
 # Name of the binary code directories
 #
+ifndef IMPL_STRATEGY
+IMPL_STRATEGY		= _PTH
+endif
 
 OBJDIR_NAME	= $(OS_TARGET)$(CPU_ARCH_TAG)$(OBJDIR_TAG).OBJ
-NSPR_OBJDIR     = $(OS_CONFIG)$(CPU_ARCH_TAG)_PTH$(OBJDIR_TAG).OBJ
+NSPR_OBJDIR     = $(OS_CONFIG)$(CPU_ARCH_TAG)$(IMPL_STRATEGY)$(OBJDIR_TAG).OBJ
 
 #
 # Install
