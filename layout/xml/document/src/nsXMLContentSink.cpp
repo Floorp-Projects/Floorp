@@ -68,7 +68,9 @@
 #include "nsXSLContentSink.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
+#ifdef XP_PC
 #include <windows.h>
+#endif
 #include "nsISupports.h"
 #include "nsParserCIID.h"
 #include "nsIIOService.h"
