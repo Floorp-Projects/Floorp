@@ -2563,7 +2563,7 @@ _COMPILER_PREFIX=
 if test "$GNU_CC"; then
     MKSHLIB='$(CXX) $(DSO_LDOPTS)'
     MKCSHLIB='$(CC) $(DSO_LDOPTS)'
-    DSO_LDOPTS='-shared -Wl,-h -Wl,$(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
+    DSO_LDOPTS='-shared -Wl,-h -Wl,$@'
     DSO_CFLAGS=''
     DSO_PIC_CFLAGS='-fPIC'
 
@@ -2583,7 +2583,7 @@ if test "$GNU_CC"; then
 else
     MKSHLIB='$(LD) $(DSO_LDOPTS)'
     MKCSHLIB='$(LD) $(DSO_LDOPTS)'
-    DSO_LDOPTS='-shared -h $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
+    DSO_LDOPTS='-shared -h $@'
     DSO_CFLAGS=''
     DSO_PIC_CFLAGS='-KPIC'
     _DEFINES_CFLAGS='$(ACDEFINES)'
@@ -2804,7 +2804,7 @@ alpha*-*-linux*)
     DLL_SUFFIX="so.1.0"
     DSO_CFLAGS=''
     DSO_PIC_CFLAGS='-fPIC'
-    DSO_LDOPTS='-shared -h $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
+    DSO_LDOPTS='-shared -h $@'
     MKSHLIB='$(LD) $(DSO_LDOPTS)'
     MKCSHLIB='$(LD) $(DSO_LDOPTS)'
     if $CC -E - -dM </dev/null | grep -v __ELF__ >/dev/null; then
@@ -2824,11 +2824,11 @@ alpha*-*-linux*)
 
 alpha*-*-osf*)
     if test "$GNU_CC"; then
-	DSO_LDOPTS='-shared -Wl,-soname -Wl,$(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
+	DSO_LDOPTS='-shared -Wl,-soname -Wl,$@'
     else
 	CFLAGS="$CFLAGS -std1 -ieee_with_inexact"
 	CXXFLAGS="$CXXFLAGS -std1 -ieee_with_inexact"
-	DSO_LDOPTS='-shared -msym -expect_unresolved \* -soname $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
+	DSO_LDOPTS='-shared -msym -expect_unresolved \* -soname $@'
 	DSO_CFLAGS=
 	MKSHLIB='-$(LD) $(DSO_LDOPTS)'
 	MKCSHLIB='-$(LD) $(DSO_LDOPTS)'
@@ -2871,7 +2871,7 @@ EOF
 *-sco*) 
     CXXFLAGS="$CXXFLAGS -I/usr/include/CC"
     if test ! "$GNU_CC"; then
-       DSO_LDOPTS='-G -h $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
+       DSO_LDOPTS='-G -h $@'
     fi
     ;;
 
@@ -2890,7 +2890,7 @@ EOF
        MKCSHLIB='$(CC) $(DSO_LDOPTS)'
        MKSHLIB_FORCE_ALL='-z allextract'
        MKSHLIB_UNFORCE_ALL=''
-       DSO_LDOPTS='-G -h $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
+       DSO_LDOPTS='-G -h $@'
        AR='$(CXX) -xar -o $@'
        AS='/usr/ccs/bin/as'
        AS_DASH_C_FLAG=''
@@ -2913,7 +2913,7 @@ EOF
        MKSHLIB_FORCE_ALL='-z allextract'
        MKSHLIB_UNFORCE_ALL=''
        fi
-       DSO_LDOPTS='-G -h $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
+       DSO_LDOPTS='-G -h $@'
        _WARNINGS_CFLAGS=''
        _WARNINGS_CXXFLAGS=''
     fi
