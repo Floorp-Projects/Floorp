@@ -234,8 +234,6 @@ function SetTextboxFocus(textbox)
   if (textbox)
   {
     // Select entire contents
-    // This "fixes" bug 48400 temporarily by
-    //   not calling "select" on empty textboxes
     if (textbox.value.length > 0)
       textbox.select();
 
@@ -902,6 +900,7 @@ function GetLocalFileURL(filterType)
   {
     fp.init(window, GetString("SelectImageFile"), nsIFilePicker.modeOpen);
     fp.appendFilters(nsIFilePicker.filterImages);
+    fp.appendFilters(nsIFilePicker.filterAll);
   }
   else
   {
