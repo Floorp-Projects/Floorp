@@ -70,25 +70,5 @@
     <html>&description.label;</html>
 	</titledbox>
 
- 	<titledbox orient="vertical">
-  	<title><text value="&cookies;"/></title>  
-
-    <html>&cookieDetails;</html>
-
-    <radiogroup id="networkCookieBehaviour" orient="vertical" autostretch="never"
-                pref="true" preftype="int" prefstring="network.cookie.cookieBehavior"
-                prefattribute="data">
-      <radio data="0" value="&accAllCookiesRadio.label;" accesskey="&accAllCookiesRadio.accesskey;"/>
-      <radio data="1" value="&accOrgCookiesRadio.label;" accesskey="&accOrgCookiesRadio.accesskey;"/>
-      <radio data="2" value="&disableCookies.label;" accesskey="&disableCookies.accesskey;"/>
-    </radiogroup>
-    <checkbox class="indent" id="networkWarnAboutCookies" value="&warnAboutCookies.label;" accesskey="&warnAboutCookies.accesskey;"
-              pref="true" preftype="bool" prefstring="network.cookie.warnAboutCookies"
-              prefattribute="checked"/>
-    <box autostretch="never" halign="right">
-      <button class="dialog" value="&viewCookies.label;" accesskey="&viewCookies.accesskey;" oncommand="viewCookies();"/>
-    </box>              
-  </titledbox>
-            
             
 </window>
