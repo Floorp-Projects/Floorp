@@ -38,8 +38,8 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
 
-#include "errno.h"
 #include "prprf.h"
 #include "prio.h"
 #include "secutil.h"
