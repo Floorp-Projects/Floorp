@@ -122,14 +122,8 @@ endif
 #
 # tier 2 - base libraries
 # 
-tier_2_dirs	= js
-
-# MacOSX needs to build lib for MoreFiles before xpcom
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-tier_2_dirs += lib/mac/MoreFiles
-endif
-
-tier_2_dirs	+= \
+tier_2_dirs	= \
+		js \
 		xpcom \
 		modules/libreg \
 		xpcom/obsolete \
