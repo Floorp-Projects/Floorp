@@ -178,6 +178,8 @@ OurNavEventFunction(NavEventCallbackMessage callBackSelector, NavCBRecPtr callBa
 	} 
 }
 
+static Boolean bFirstFolderSelection = true;
+
 void 
 InSetupTypeContent(EventRecord* evt, WindowPtr wCurrPtr)
 {	
@@ -195,6 +197,7 @@ InSetupTypeContent(EventRecord* evt, WindowPtr wCurrPtr)
 	AEDesc				resultDesc, initDesc;
 	FSSpec				folderSpec, tmp;
 	OSErr				err;
+	long				realDirID;
 
 	GrafPtr				oldPort;
 	GetPort(&oldPort);
@@ -248,7 +251,15 @@ InSetupTypeContent(EventRecord* evt, WindowPtr wCurrPtr)
 		err = NavGetDefaultDialogOptions(&dlgOpts);
 		GetIndString( dlgOpts.message, rStringList, sFolderDlgMsg );
 		eventProc = NewNavEventProc( (ProcPtr) OurNavEventFunction );
-		FSMakeFSSpec(gControls->opt->vRefNum, gControls->opt->dirID, gControls->opt->folder, &tmp);
+		
+		if (!bFirstFolderSelection)
+			GetParentID(gControls->opt->vRefNum, gControls->opt->dirID, "\p", &realDirID);
+		else
+		{
+			realDirID = gControls->opt->dirID;
+			bFirstFolderSelection = false;
+		}
+		FSMakeFSSpec(gControls->opt->vRefNum, realDirID, "\p", &tmp);
 		ERR_CHECK(AECreateDesc(typeFSS, (void*) &tmp, sizeof(FSSpec), &initDesc));
 		err = NavChooseFolder( &initDesc, &reply, &dlgOpts, eventProc, NULL, NULL );
 		
@@ -307,6 +318,15 @@ InSetupTypeContent(EventRecord* evt, WindowPtr wCurrPtr)
 		part = TrackControl(gControls->nextB, evt->where, NULL);
 		if (part)
 		{
+			/* check if folder location contains legacy apps */
+			if (gControls->cfg->numLegacyChecks > 0)
+				if (LegacyFileCheck(gControls->opt->vRefNum, gControls->opt->dirID))
+				{
+					/* user indicated reselection desired so don't do anything */
+					return;
+				}
+				/* else move on to next screen */
+			
 			ClearDiskSpaceMsgs();
 			KillControls(gWPtr);
 			/* treat last setup type selection as custom */
@@ -734,6 +754,212 @@ GetAllVInfo( unsigned char **volName, short *count)
 		currVCB = (VCB *)currVCB->qLink;
 	}
 	*count = i;
+}
+
+Boolean
+LegacyFileCheck(short vRefNum, long dirID)
+{
+	Boolean 	bRetry = false;
+	int			i, diffLevel;
+	StringPtr	pFilename, pMessage;
+	FSSpec		legacy;
+	OSErr		err = noErr;
+	short		dlgRV = 0;
+	
+	for (i = 0; i < gControls->cfg->numLegacyChecks; i++)
+	{
+		/* construct legacy files' FSSpecs in program dir */
+		HLock(gControls->cfg->checks[i].filename);
+		pFilename = CToPascal(*gControls->cfg->checks[i].filename);
+		HUnlock(gControls->cfg->checks[i].filename);
+		if (!pFilename)
+			continue;
+			
+		err = FSMakeFSSpec(vRefNum, dirID, pFilename, &legacy);
+		if (pFilename)
+			DisposePtr((Ptr)pFilename);
+			
+		/* if legacy file exists */
+		if (err == noErr)
+		{
+			/* if new version is greater than old version */
+			diffLevel = CompareVersion( gControls->cfg->checks[i].version, 
+										gControls->cfg->checks[i].filename );
+			if (diffLevel > 0)
+			{
+				/* set up message dlg */
+				if (!gControls->cfg->checks[i].message || !(*gControls->cfg->checks[i].message))
+					continue;
+				HLock(gControls->cfg->checks[i].message);
+				pMessage = CToPascal(*gControls->cfg->checks[i].message);
+				HUnlock(gControls->cfg->checks[i].message);
+				if (!pMessage)
+					continue;
+				ParamText(pMessage, "\p", "\p", "\p");
+				
+				/* set bRetry to retval of show message dlg */
+				dlgRV = CautionAlert(rAlrtSelectCont, nil);
+				if (dlgRV == 1) /* default button id  ("Select Again") */
+					bRetry = true;
+
+				if (pMessage)
+					DisposePtr((Ptr) pMessage);
+			}
+		}
+	}
+	
+	return bRetry;
+}
+
+int
+CompareVersion(Handle newVersion, Handle filename)
+{
+	int			diffLevel = 0, intVal;
+	OSErr		err = noErr;
+	FSSpec		file;
+	StringPtr	pFilename;
+	short		fileRef;
+	Handle		versRsrc = nil;
+	char		oldRel, oldRev, oldFix, oldInternalStage, oldDevStage, oldRev_n_Fix;
+	char		*newRel, *newRev, newFix[2], *newInternalStage, newDevStage, *newFix_n_DevStage;
+	Ptr			newVerCopy;
+	
+	/* no version supplied means show check always */
+	if (!newVersion || !(*newVersion))
+		return 6;
+	
+	/* if no valid filename then error so don't show message */
+	if (!filename || !(*filename))
+		return -6;	
+		
+	/* get version from 'vers' res ID = 1 */
+	HLock(filename);
+	pFilename = CToPascal(*filename);
+	HUnlock(filename);
+	if (!pFilename)
+		return -7;
+		
+	err = FSMakeFSSpec(gControls->opt->vRefNum, gControls->opt->dirID, pFilename, &file);
+	if (pFilename)
+		DisposePtr((Ptr) pFilename);
+	if (err != noErr)
+		return -8;
+		
+	fileRef = FSpOpenResFile(&file, fsRdPerm);
+	if (fileRef == -1)
+		return -9;
+		
+	versRsrc = Get1Resource('vers', 1);
+	if (versRsrc == nil)
+	{
+		CloseResFile(fileRef);
+		return -10;
+	}
+	
+	// rel, rev, fix, internalStage, devStage
+	HLock(versRsrc);
+	oldRel = *(*versRsrc);
+	oldRev_n_Fix = *((*versRsrc)+1);
+	oldDevStage = *((*versRsrc)+2);
+	oldInternalStage = *((*versRsrc)+3);
+	HUnlock(versRsrc);
+	CloseResFile(fileRef);
+	
+	oldRev = (oldRev_n_Fix & 0xF0) >> 4;
+	oldFix =  oldRev_n_Fix & 0x0F;
+	
+	/* parse new version */
+	HLock(newVersion);
+	newVerCopy = NewPtrClear(strlen(*newVersion));
+	BlockMove(*newVersion, newVerCopy, strlen(*newVersion));
+	newRel = strtok(newVerCopy, ".");
+	newRev = strtok(NULL, ".");
+	newFix_n_DevStage = strtok(NULL, ".");
+	newInternalStage = strtok(NULL, ".");
+	HUnlock(newVersion);
+	
+	/* resolve fix and devStage 
+	 *(defaulting devStage to 0x80(==release) if not detected) 
+	 */
+	newDevStage = 0x80; 					/* release */
+	if (NULL != strchr(newFix_n_DevStage, 'd')) 
+		newDevStage = 0x20;					/* development */
+	else if (NULL != strchr(newFix_n_DevStage, 'a'))
+		newDevStage = 0x40;					/* alpha */
+	else if (NULL != strchr(newFix_n_DevStage, 'b')) 
+		newDevStage = 0x60;					/* beta */
+	 	
+	newFix[0] = *newFix_n_DevStage;
+	newFix[1] = 0;
+	
+	/* compare 'vers' -- old version -- with supplied new version */
+	intVal = atoi(newRel);
+	if (oldRel < intVal)
+	{
+		diffLevel = 5;
+		goto au_revoir;
+	}
+	else if (oldRel > intVal)
+	{
+		diffLevel = -5;
+		goto au_revoir;
+	}
+		
+	intVal = atoi(newRev);
+	if (oldRev < intVal)
+	{
+		diffLevel = 4;
+		goto au_revoir;
+	}
+	else if (oldRev > intVal)
+	{
+		diffLevel = -4;
+		goto au_revoir;
+	}
+		
+	intVal = atoi(newFix);
+	if (oldFix < intVal)
+	{	
+		diffLevel = 3;
+		goto au_revoir;
+	}
+	else if (oldFix > intVal)
+	{
+		diffLevel = -3;
+		goto au_revoir;
+	}
+	
+	intVal = atoi(newInternalStage);
+	if (oldInternalStage < intVal)
+	{
+		diffLevel = 2;
+		goto au_revoir;
+	}
+	else if (oldInternalStage > intVal)
+	{
+		diffLevel = -2;
+		goto au_revoir;
+	}
+	
+	if (oldDevStage < newDevStage)
+	{
+		diffLevel = 1;
+		goto au_revoir;
+	}
+	else if (oldDevStage > newDevStage)
+	{
+		diffLevel = -1;
+		goto au_revoir;
+	}
+	
+	/* else they are equal */
+	diffLevel = 0;
+
+au_revoir:
+	if (newVerCopy)
+		DisposePtr(newVerCopy);
+			
+	return diffLevel;
 }
 
 void

@@ -226,14 +226,6 @@ ShowReadmeButton(void)
 	}
 }
 	
-#define UNIFY_CHAR_CODE(_targetUint32, _src1char, _src2char, _src3char, _src4char) 	\
-	_targetUint32 = 																\
-	( (unsigned long) 																\
-	(((unsigned long)((_src1char & 0x000000FF) << 24) 								\
-	|(unsigned long)((_src2char & 0x000000FF) << 16) 								\
-	|(unsigned long)((_src3char & 0x000000FF) << 8)									\
-	|(unsigned long)((_src4char & 0x000000FF)))))
-	
 void
 ShowReadme(void)
 {
@@ -258,7 +250,7 @@ ShowReadme(void)
 		goto au_revoir;
 	}
 	
-	file = CToPascal(*gControls->cfg->readmeFile);
+	file = CToPascal(*gControls->cfg->readmeFile); 
 	GetCWD(&currDirID, &currVRefNum);
 	err = FSMakeFSSpec(currVRefNum, currDirID, file, &docSpec);
 	if (err != noErr)

@@ -76,6 +76,14 @@ if (err) 								\
 	ErrorHandler();						\
 	return _rv;							\
 }
+	
+#define UNIFY_CHAR_CODE(_targetUint32, _src1char, _src2char, _src3char, _src4char) 	\
+	_targetUint32 = 																\
+	( (unsigned long) 																\
+	(((unsigned long)((_src1char & 0x000000FF) << 24) 								\
+	| (unsigned long)((_src2char & 0x000000FF) << 16) 								\
+	| (unsigned long)((_src3char & 0x000000FF) << 8)								\
+	| (unsigned long)((_src4char & 0x000000FF)))))
 											
 									
 #define NUM_WINS 		5
@@ -131,7 +139,9 @@ if (err) 								\
 #define kDependencyOn	1
 #define kInvalidCompIdx -999
 #define kMaxCoreFiles	256		
-#define kMaxProgUnits	100.0	/* end constants */
+#define kMaxProgUnits	100.0	
+#define kMaxRunApps		32
+#define kMaxLegacyChecks 32		/* end constants */
 
 
 #define rRootWin 		128		/* widget rsrc ids */
@@ -160,6 +170,8 @@ if (err) 								\
 #define rPerXPIProgBar	162
 
 #define rGrayPixPattern 128
+
+#define rAlrtSelectCont	150
 
 	
 #define rMBar			128		/* menu rsrc ids */	
@@ -260,6 +272,15 @@ if (err) 								\
 #define sDependency		31
 #define sRandomInstall	34
 
+#define sRunApp			35
+#define sTargetApp		36
+#define sTargetDoc		37
+
+#define sLegacyCheck	38
+#define	sFilename		39
+#define sVersion		40
+#define sMessage		41
+
 #define sTermDlg		27
 		
 #define	sSELECTED		28
@@ -307,8 +328,23 @@ typedef struct SetupType {
 	short	numComps;
 } SetupType;
 		
-typedef struct Config {
+typedef struct RunApp {
+	Handle 	targetApp;
+	Handle	targetDoc;
+} RunApp;
 
+typedef struct LegacyCheck {
+	Handle	filename;
+	Handle	version;
+	Handle	message;
+} LegacyCheck;
+
+typedef struct Config {
+	
+	/*------------------------------------------------------------*
+	 *   Dialog Keys 
+	 *------------------------------------------------------------*/
+	 
 	/* LicenseWin */
 	Handle	licFileName;
 	
@@ -338,6 +374,18 @@ typedef struct Config {
 	Handle	silent;
 	Handle	execution;
 	Handle	confirmInstall;
+	
+	/*------------------------------------------------------------*
+	 *   Miscellaneous Keys
+	 *------------------------------------------------------------*/
+	
+	/* RunApp instances */
+	RunApp		apps[kMaxRunApps];
+	long		numRunApps;
+	
+	/* LegacyCheck instances */
+	LegacyCheck	checks[kMaxLegacyChecks];
+	long		numLegacyChecks;
 	
 } Config;
 
@@ -461,12 +509,14 @@ OSErr		PopulateSetupTypeWinKeys(char *);
 OSErr		PopulateCompWinKeys(char *);
 OSErr		PopulateTermWinKeys(char *);
 OSErr		PopulateIDIKeys(char *);
+OSErr		PopulateMiscKeys(char *);
 OSErr		MapDependencies(void);
 Boolean		RandomSelect(long);
 short		GetComponentIndex(Handle);
 Boolean 	FillKeyValueForIDIKey(short, Handle, char *);
 Boolean		FillKeyValueUsingResID(short, short, Handle, char *);
 Boolean		FillKeyValueUsingSLID(short, short, short, Handle, char *);
+Boolean		FillKeyValueSecNameKeyID(short, char *, short, Handle, char *);
 Boolean		FillKeyValueUsingName(char *, char *, Handle, char *);
 Boolean 	FindKeyValue(const char *, const char *, const char *, char *);
 Boolean		GetNextSection(char **, char *, char *);
@@ -558,6 +608,8 @@ void		InitRowHighlight(int);
 void		UpdateRowHighlight(Point);
 void		UpdateLongDesc(int);
 void		UpdateDependencies(int, EventRecord*);
+Boolean		LegacyFileCheck(short, long);
+int			CompareVersion(Handle, Handle);
 void		EnableComponentsWin(void);
 void		DisableComponentsWin(void);
 
@@ -588,6 +640,7 @@ Boolean 	GenerateIDIFromOpt(Str255, long, short, FSSpec *);
 void		AddKeyToIDI(short, Handle, char *);
 Boolean		ExistArchives(short, long);
 void		LaunchApps(short, long);
+void		RunApps(void);
 void		DeleteXPIs(short, long);
 void		InitProgressBar(void);
 Boolean		InitSDLib(void);
