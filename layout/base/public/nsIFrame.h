@@ -130,8 +130,11 @@ class nsIFrame : public nsISupports
 {
 public:
   /**
-   * Called to initialize the frame. This is the first thing that happens
-   * after creating the frame.
+   * Called to initialize the frame. This is called immediately after creating
+   * the frame.
+   *
+   * If you want a view associated with your frame you should create the view
+   * now.
    *
    * @param   aContent the content object associated with the frame
    * @param   aParent  the parent frame
