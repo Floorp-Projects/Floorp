@@ -637,7 +637,7 @@ done:
  */
 static REGERR vr_FindKey(char *component_path, HREG *hreg, RKEY *key)
 {
-    REGERR err;
+    REGERR err = REGERR_NOFIND;
     RKEY rootkey;
 
 #if !defined(STANDALONE_REGISTRY) && defined(XP_UNIX) && !defined(XP_MACOSX)
