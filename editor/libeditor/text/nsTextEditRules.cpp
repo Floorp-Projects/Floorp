@@ -456,13 +456,37 @@ nsTextEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel, P
               && isMozQuote)
           {
             printf("It's a moz quote -- splitting\n");
-            res = mEditor->SplitNodeDeep(preNode, selNode, selOffset, &newOffset);
+            nsCOMPtr<nsIDOMNode> outLeftNode;
+            nsCOMPtr<nsIDOMNode> outRightNode;
+            res = mEditor->SplitNodeDeep(preNode, selNode, selOffset, &newOffset, &outLeftNode, &outRightNode);
             if (NS_FAILED(res)) return res;
+            PRBool bIsEmptyNode;
+            if (outLeftNode)
+            {
+              res = IsEmptyNode(outLeftNode, &bIsEmptyNode, PR_TRUE, PR_FALSE);
+              if (NS_FAILED(res)) return res;
+              if (bIsEmptyNode) mEditor->DeleteNode(outLeftNode);
+            }
+            if (outRightNode)
+            {
+              // HACK alert: consume a br if there s one at front of node
+              nsCOMPtr<nsIDOMNode> firstNode;
+              res =  mEditor->GetFirstEditableNode(outRightNode, &firstNode);
+              if (firstNode &&  nsHTMLEditUtils::IsBreak(firstNode))
+              {
+                mEditor->DeleteNode(firstNode);
+              }
+                
+              res = IsEmptyNode(outRightNode, &bIsEmptyNode, PR_TRUE, PR_FALSE);
+              if (NS_FAILED(res)) return res;
+              if (bIsEmptyNode) mEditor->DeleteNode(outRightNode);
+            }
             res = preNode->GetParentNode(getter_AddRefs(selNode));
             if (NS_FAILED(res)) return res;
             nsCOMPtr<nsIDOMNode> brNode;
             // last ePrevious param causes selection to be set before the break
             res = mEditor->CreateBR(selNode, newOffset, &brNode, nsIEditor::ePrevious);
+            *aHandled = PR_TRUE;
           }
         }
       }
@@ -1300,5 +1324,103 @@ nsTextEditRules::CreateMozBR(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<ns
   return res;
 }
 
+///////////////////////////////////////////////////////////////////////////
+// IsEmptyNode: figure out if aNode is an empty node.
+//               A block can have children and still be considered empty,
+//               if the children are empty or non-editable.
+//                  
+nsresult 
+nsTextEditRules::IsEmptyNode( nsIDOMNode *aNode, 
+                              PRBool *outIsEmptyNode, 
+                              PRBool aMozBRDoesntCount,
+                              PRBool aListItemsNotEmpty)
+{
+  if (!aNode || !outIsEmptyNode) return NS_ERROR_NULL_POINTER;
+  *outIsEmptyNode = PR_TRUE;
+  
+  // effeciency hack - special case if it's a text node
+  if (nsEditor::IsTextNode(aNode))
+  {
+    PRUint32 length = 0;
+    nsCOMPtr<nsIDOMCharacterData>nodeAsText;
+    nodeAsText = do_QueryInterface(aNode);
+    nodeAsText->GetLength(&length);
+    if (length) *outIsEmptyNode = PR_FALSE;
+    return NS_OK;
+  }
+
+  // if it's not a text node (handled above) and it's not a container,
+  // then we dont call it empty (it's an <hr>, or <br>, etc).
+  // Also, if it's an anchor then dont treat it as empty - even though
+  // anchors are containers, named anchors are "empty" but we don't
+  // want to treat them as such.  Also, don't call ListItems or table
+  // cells empty if caller desires.
+  if (!mEditor->IsContainer(aNode) || nsHTMLEditUtils::IsAnchor(aNode) || 
+       (aListItemsNotEmpty && nsHTMLEditUtils::IsListItem(aNode)) ||
+       (aListItemsNotEmpty && nsHTMLEditUtils::IsTableCell(aNode)) ) 
+  {
+    *outIsEmptyNode = PR_FALSE;
+    return NS_OK;
+  }
+  
+  // iterate over node. if no children, or all children are either 
+  // empty text nodes or non-editable, then node qualifies as empty
+  nsCOMPtr<nsIContentIterator> iter;
+  nsCOMPtr<nsIContent> nodeAsContent = do_QueryInterface(aNode);
+  if (!nodeAsContent) return NS_ERROR_FAILURE;
+  nsresult res = nsComponentManager::CreateInstance(kContentIteratorCID,
+                                        nsnull,
+                                        NS_GET_IID(nsIContentIterator), 
+                                        getter_AddRefs(iter));
+  if (NS_FAILED(res)) return res;
+  res = iter->Init(nodeAsContent);
+  if (NS_FAILED(res)) return res;
+    
+  while (NS_ENUMERATOR_FALSE == iter->IsDone())
+  {
+    nsCOMPtr<nsIDOMNode> node;
+    nsCOMPtr<nsIContent> content;
+    res = iter->CurrentNode(getter_AddRefs(content));
+    if (NS_FAILED(res)) return res;
+    node = do_QueryInterface(content);
+    if (!node) return NS_ERROR_FAILURE;
+ 
+    // is the node editable and non-empty?  if so, return false
+    if (mEditor->IsEditable(node))
+    {
+      if (nsEditor::IsTextNode(node))
+      {
+        PRUint32 length = 0;
+        nsCOMPtr<nsIDOMCharacterData>nodeAsText;
+        nodeAsText = do_QueryInterface(node);
+        nodeAsText->GetLength(&length);
+        if (length) *outIsEmptyNode = PR_FALSE;
+      }
+      else  // an editable, non-text node. we aren't an empty block 
+      {
+        // is it the node we are iterating over?
+        if (node.get() == aNode) break;
+        // is it a moz-BR and did the caller ask us not to consider those relevant?
+        if (!(aMozBRDoesntCount && nsHTMLEditUtils::IsMozBR(node))) 
+        {
+          // is it an empty node of some sort?
+          PRBool isEmptyNode;
+          res = IsEmptyNode(node, &isEmptyNode, aMozBRDoesntCount, aListItemsNotEmpty);
+          if (NS_FAILED(res)) return res;
+          if (!isEmptyNode) 
+          {
+            // otherwise it ain't empty
+            *outIsEmptyNode = PR_FALSE;
+            break;
+          }
+        }
+      }
+    }
+    res = iter->Next();
+    if (NS_FAILED(res)) return res;
+  }
+  
+  return NS_OK;
+}
 
 

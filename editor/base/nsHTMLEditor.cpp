@@ -4676,8 +4676,11 @@ nsHTMLEditor::InsertAsPlaintextQuotation(const nsString& aQuotedText,
       // Do this after the insertion, so that 
       nsCOMPtr<nsIDOMElement> preElement (do_QueryInterface(preNode));
       if (preElement)
+      {
         preElement->SetAttribute(NS_ConvertASCIItoUCS2("_moz_quote"), NS_ConvertASCIItoUCS2("true"));
-
+        // set style to not have unwanted vertical margins
+        preElement->SetAttribute(NS_ConvertASCIItoUCS2("style"), NS_ConvertASCIItoUCS2("margin: 0 0 0 0px;"));
+      }
       // and set the selection inside it:
       selection->Collapse(preNode, 0);
     }
