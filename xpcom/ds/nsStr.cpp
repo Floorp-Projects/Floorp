@@ -450,21 +450,11 @@ PRInt32 nsStr::FindSubstr(const nsStr& aDest,const nsStr& aTarget, PRBool aIgnor
       PRBool  matches=PR_TRUE;
       while((++theSubIndex<theTargetMax) && (matches)){
         PRUnichar theChar=GetCharAt(aDest,index+theSubIndex);
-        if(theSubIndex>0) {
-          if(theFirstTargetChar==theChar){
-            PRUnichar theDestJumpChar=GetCharAt(aDest,index+theTargetMax);
-            if(theDestJumpChar==theLastTargetChar) {
-              theNewStartPos=index; //this lets us jump ahead during our search where possible.
-            }//if
-          }//if
-        }//if
         PRUnichar theTargetChar=GetCharAt(aTarget,theSubIndex);
         matches=PRBool(theChar==theTargetChar);
       }
-      if(matches)
+      if(matches) {
         return index;
-      if(-1<theNewStartPos){
-        index=theNewStartPos-1;
       }
     }
   }//if
@@ -524,22 +514,12 @@ PRInt32 nsStr::RFindSubstr(const nsStr& aDest,const nsStr& aTarget, PRBool aIgno
       if(anOffset+aTarget.mLength<=aDest.mLength) {
         while((++theSubIndex<theTargetMax) && (matches)){
           PRUnichar theChar=GetCharAt(aDest,index+theSubIndex);
-          if(theSubIndex>0) {
-            if(theFirstTargetChar==theChar){
-              PRUnichar theDestJumpChar=GetCharAt(aDest,index+theTargetMax);
-              if(theDestJumpChar==theLastTargetChar) {
-                theNewStartPos=index; //this lets us jump ahead during our search where possible.
-              }//if
-            }//if
-          }//if
           PRUnichar theTargetChar=GetCharAt(aTarget,theSubIndex);
           matches=PRBool(theChar==theTargetChar);
         } //while
       } //if
-      if(matches)
+      if(matches) {
         return index;
-      if(-1<theNewStartPos){
-        index=theNewStartPos-1;
       }
     }
   }//if
