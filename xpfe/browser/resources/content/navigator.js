@@ -368,9 +368,6 @@ function Startup()
   // hook up UI through progress listener
   getBrowser().addProgressListener(window.XULBrowserWindow);
 
-  // XXXjag see bug 68662 (needed to hook up web progress listener)
-  getBrowser().boxObject.setPropertyAsSupports("listenerkungfu", window.XULBrowserWindow);
-
   // load appropriate initial page from commandline
   var isPageCycling = false;
 
@@ -481,10 +478,6 @@ function Shutdown()
                               .getService(Components.interfaces.nsIXRemoteService);
     remoteService.removeBrowserInstance(window);
   }
-
-  var browser = getBrowser();
-
-  browser.boxObject.removeProperty("listenerkungfu");
 
   try {
     getBrowser().removeProgressListener(window.XULBrowserWindow);

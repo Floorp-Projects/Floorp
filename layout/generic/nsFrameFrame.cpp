@@ -96,18 +96,6 @@
 #endif
 #include "nsIServiceManager.h"
 
-#ifdef INCLUDE_XUL
-#include "nsIDOMXULElement.h"
-#include "nsIBoxObject.h"
-#include "nsIBrowserBoxObject.h"
-#include "nsISHistory.h"
-#include "nsIWebProgress.h"
-#include "nsIWebProgressListener.h"
-#include "nsISecureBrowserUI.h"
-#include "nsIDOMWindowInternal.h"
-#include "nsIDOMDocument.h"
-#endif
-
 class nsHTMLFrame;
 
 static NS_DEFINE_IID(kIFramesetFrameIID, NS_IFRAMESETFRAME_IID);
@@ -658,29 +646,6 @@ nsHTMLFrameInnerFrame::~nsHTMLFrameInnerFrame()
 {
    //printf("nsHTMLFrameInnerFrame destructor %X \n", this);
 
-#ifdef INCLUDE_XUL
-  nsCOMPtr<nsIDOMXULElement> xulElt(do_QueryInterface(mContent));
-  if (xulElt && mSubShell) {
-    // We might be a XUL browser and may need to store the current URL in our box object.
-    nsCOMPtr<nsIBoxObject> boxObject;
-    xulElt->GetBoxObject(getter_AddRefs(boxObject));
-    if (boxObject) {
-      nsCOMPtr<nsIBrowserBoxObject> browser(do_QueryInterface(boxObject));
-      if (browser) {
-        nsCOMPtr<nsIWebNavigation> webShell(do_QueryInterface(mSubShell));
-        nsCOMPtr<nsISHistory> hist;
-        webShell->GetSessionHistory(getter_AddRefs(hist));
-        if (hist)
-          boxObject->SetPropertyAsSupports(NS_LITERAL_STRING("history").get(), hist);
-        nsCOMPtr<nsISupports> supports;
-        boxObject->GetPropertyAsSupports(NS_LITERAL_STRING("listenerkungfu").get(), getter_AddRefs(supports));
-        if (supports)
-          boxObject->SetPropertyAsSupports(NS_LITERAL_STRING("listener").get(), supports);
-      }
-    }
-  }
-#endif
-
   nsCOMPtr<nsIDOMWindow> win(do_GetInterface(mSubShell));
   nsCOMPtr<nsIDOMEventTarget> eventTarget(do_QueryInterface(win));
   nsCOMPtr<nsIDOMEventListener> eventListener(do_QueryInterface(mContent));
@@ -1152,71 +1117,6 @@ nsHTMLFrameInnerFrame::CreateDocShell(nsIPresContext* aPresContext)
   return NS_OK;
 }
 
-static PRBool CheckForBrowser(nsIContent* aContent, nsIBaseWindow* aShell)
-{
-  PRBool didReload = PR_FALSE;
-#ifdef INCLUDE_XUL
-  // XXXjag see bug 68662
-  nsCOMPtr<nsIDOMXULElement> xulElt(do_QueryInterface(aContent));
-  if (xulElt) {
-    // We might be a XUL browser and may have stored state in our box object.
-    nsCOMPtr<nsIBoxObject> boxObject;
-    xulElt->GetBoxObject(getter_AddRefs(boxObject));
-    if (boxObject) {
-      nsCOMPtr<nsIBrowserBoxObject> browser(do_QueryInterface(boxObject));
-      if (browser) {
-        nsCOMPtr<nsISupports> supp;
-        /* reregister the progress listener */
-        boxObject->GetPropertyAsSupports(NS_LITERAL_STRING("listener").get(), getter_AddRefs(supp));
-        if (supp) {
-          nsCOMPtr<nsIWebProgressListener> listener(do_QueryInterface(supp));
-          if (listener) {
-            nsCOMPtr<nsIDocShell> docShell;
-            browser->GetDocShell(getter_AddRefs(docShell));
-            nsCOMPtr<nsIWebProgress> webProgress(do_GetInterface(docShell));
-            webProgress->AddProgressListener(listener);
-            boxObject->RemoveProperty(NS_LITERAL_STRING("listener").get());
-          }
-        }
-
-        /* reinitialize the security module */
-        boxObject->GetPropertyAsSupports(NS_LITERAL_STRING("xulwindow").get(), getter_AddRefs(supp));
-        nsCOMPtr<nsIDOMWindowInternal> domWindow(do_QueryInterface(supp));
-        boxObject->GetPropertyAsSupports(NS_LITERAL_STRING("secureBrowserUI").get(), getter_AddRefs(supp));
-        nsCOMPtr<nsISecureBrowserUI> secureBrowserUI(do_QueryInterface(supp));
-        if (domWindow && secureBrowserUI) {
-          nsCOMPtr<nsIDOMWindow> contentWindow;
-          domWindow->GetContent(getter_AddRefs(contentWindow));
-          nsCOMPtr<nsIDOMDocument> doc;
-          domWindow->GetDocument(getter_AddRefs(doc));
-          if (contentWindow && doc) {
-            nsCOMPtr<nsIDOMElement> button;
-            doc->GetElementById(NS_LITERAL_STRING("security-button"), getter_AddRefs(button));
-            if (button)
-              secureBrowserUI->Init(contentWindow, button);
-          }
-        }
-
-        /* set session history on the new docshell */
-        boxObject->GetPropertyAsSupports(NS_LITERAL_STRING("history").get(), getter_AddRefs(supp));
-        if (supp) {
-          nsCOMPtr<nsISHistory> hist(do_QueryInterface(supp));
-          if (hist) {
-            nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(aShell));
-            webNav->SetSessionHistory(hist);
-            nsCOMPtr<nsIWebNavigation> histNav(do_QueryInterface(hist));
-            histNav->Reload(0);
-            didReload = PR_TRUE;
-            boxObject->RemoveProperty(NS_LITERAL_STRING("history").get());
-          }
-        }
-      }
-    }
-  }
-#endif
-  return didReload;
-}
-
 nsresult
 nsHTMLFrameInnerFrame::DoLoadURL(nsIPresContext* aPresContext)
 {
@@ -1232,94 +1132,90 @@ nsHTMLFrameInnerFrame::DoLoadURL(nsIPresContext* aPresContext)
   nsresult rv = GetParentContent(*getter_AddRefs(parentContent));
   NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && parentContent, rv);
 
-  PRBool load = !CheckForBrowser(parentContent, mSubShell);
+  nsAutoString url;
+  GetURL(parentContent, url);
+  url.Trim(" \t\n\r");
+  if (url.IsEmpty())  // Load about:blank into a frame if not URL is specified (bug 35986)
+    url = NS_LITERAL_STRING("about:blank");
 
-  if (load) {
-    nsAutoString url;
-    GetURL(parentContent, url);
-    url.Trim(" \t\n\r");
-    if (url.IsEmpty())  // Load about:blank into a frame if not URL is specified (bug 35986)
-      url = NS_LITERAL_STRING("about:blank");
-
-    // Make an absolute URL
-    nsCOMPtr<nsIURI> baseURL;
-    nsCOMPtr<nsIHTMLContent> htmlContent = do_QueryInterface(parentContent, &rv);
-    if (NS_SUCCEEDED(rv) && htmlContent) {
-      htmlContent->GetBaseURL(*getter_AddRefs(baseURL));
-    }
-    else {
-      nsCOMPtr<nsIDocument> doc;
-      rv = parentContent->GetDocument(*getter_AddRefs(doc));
-      if (NS_SUCCEEDED(rv) && doc) {
-        doc->GetBaseURL(*getter_AddRefs(baseURL));
-      }
-    }
-    if (!baseURL) return NS_ERROR_NULL_POINTER;
-
-    nsAutoString absURL;
-    rv = NS_MakeAbsoluteURI(absURL, url, baseURL);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIURI> uri;
-    NS_NewURI(getter_AddRefs(uri), absURL, nsnull);
-
-    // Check for security
-    nsCOMPtr<nsIScriptSecurityManager> secMan = 
-             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // Get base URL
-    nsCOMPtr<nsIURI> baseURI;
-    rv = aPresContext->GetBaseURL(getter_AddRefs(baseURI));
-
-    // Get docshell and create load info
-    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mSubShell));
-    NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
-    nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
-    docShell->CreateLoadInfo(getter_AddRefs(loadInfo));
-    NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
-
-    // Get referring URL
-    nsCOMPtr<nsIURI> referrer;
-    nsCOMPtr<nsIPrincipal> principal;
-    rv = secMan->GetSubjectPrincipal(getter_AddRefs(principal));
-    NS_ENSURE_SUCCESS(rv, rv);
-    // If we were called from script, get the referring URL from the script
-    if (principal) {
-      nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal);
-      if (codebase) {
-        rv = codebase->GetURI(getter_AddRefs(referrer));
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-      // Pass the script principal to the docshell
-      nsCOMPtr<nsISupports> owner = do_QueryInterface(principal);
-      loadInfo->SetOwner(owner);
-    }
-    if (!referrer) { // We're not being called form script, tell the docshell
-                     // to inherit an owner from the current document.
-      loadInfo->SetInheritOwner(PR_TRUE);
-      referrer = baseURI;
-    }
-
-    loadInfo->SetReferrer(referrer);
-
-    // Check if we are allowed to load absURL
-    nsCOMPtr<nsIURI> newURI;
-    rv = NS_NewURI(getter_AddRefs(newURI), absURL, baseURI);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = secMan->CheckLoadURI(referrer, newURI, nsIScriptSecurityManager::STANDARD);
-    if (NS_FAILED(rv))
-      return rv; // We're not
-
-    nsCOMPtr<nsIWebProgress> webProgress(do_GetInterface(mSubShell));
-
-    if (webProgress) {
-      webProgress->AddProgressListener(this);
-    }
-
-    rv = docShell->LoadURI(uri, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to load URL");
+  // Make an absolute URL
+  nsCOMPtr<nsIURI> baseURL;
+  nsCOMPtr<nsIHTMLContent> htmlContent = do_QueryInterface(parentContent, &rv);
+  if (NS_SUCCEEDED(rv) && htmlContent) {
+    htmlContent->GetBaseURL(*getter_AddRefs(baseURL));
   }
+  else {
+    nsCOMPtr<nsIDocument> doc;
+    rv = parentContent->GetDocument(*getter_AddRefs(doc));
+    if (NS_SUCCEEDED(rv) && doc) {
+      doc->GetBaseURL(*getter_AddRefs(baseURL));
+    }
+  }
+  if (!baseURL) return NS_ERROR_NULL_POINTER;
+
+  nsAutoString absURL;
+  rv = NS_MakeAbsoluteURI(absURL, url, baseURL);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIURI> uri;
+  NS_NewURI(getter_AddRefs(uri), absURL, nsnull);
+
+  // Check for security
+  nsCOMPtr<nsIScriptSecurityManager> secMan = 
+           do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Get base URL
+  nsCOMPtr<nsIURI> baseURI;
+  rv = aPresContext->GetBaseURL(getter_AddRefs(baseURI));
+
+  // Get docshell and create load info
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mSubShell));
+  NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
+  docShell->CreateLoadInfo(getter_AddRefs(loadInfo));
+  NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
+
+  // Get referring URL
+  nsCOMPtr<nsIURI> referrer;
+  nsCOMPtr<nsIPrincipal> principal;
+  rv = secMan->GetSubjectPrincipal(getter_AddRefs(principal));
+  NS_ENSURE_SUCCESS(rv, rv);
+  // If we were called from script, get the referring URL from the script
+  if (principal) {
+    nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal);
+    if (codebase) {
+      rv = codebase->GetURI(getter_AddRefs(referrer));
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    // Pass the script principal to the docshell
+    nsCOMPtr<nsISupports> owner = do_QueryInterface(principal);
+    loadInfo->SetOwner(owner);
+  }
+  if (!referrer) { // We're not being called form script, tell the docshell
+                   // to inherit an owner from the current document.
+    loadInfo->SetInheritOwner(PR_TRUE);
+    referrer = baseURI;
+  }
+
+  loadInfo->SetReferrer(referrer);
+
+  // Check if we are allowed to load absURL
+  nsCOMPtr<nsIURI> newURI;
+  rv = NS_NewURI(getter_AddRefs(newURI), absURL, baseURI);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = secMan->CheckLoadURI(referrer, newURI, nsIScriptSecurityManager::STANDARD);
+  if (NS_FAILED(rv))
+    return rv; // We're not
+
+  nsCOMPtr<nsIWebProgress> webProgress(do_GetInterface(mSubShell));
+
+  if (webProgress) {
+    webProgress->AddProgressListener(this);
+  }
+
+  rv = docShell->LoadURI(uri, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to load URL");
 
   return rv;
 }
