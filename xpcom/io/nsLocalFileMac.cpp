@@ -36,7 +36,11 @@
 #include "nsIMIMEInfo.h"
 #include "prtypes.h"
 #include "prerror.h"
+#ifdef MACOSX
+#include "private/pprio.h"
+#else
 #include "pprio.h" // Include this rather than prio.h so we get def of PR_ImportFile
+#endif
 #include "prmem.h"
 #include "plbase64.h"
 
@@ -44,7 +48,6 @@
 #include "FileCopy.h"
 #include "MoreFilesExtras.h"
 #include "DirectoryCopy.h"
-#include <Errors.h>
 #include <Script.h>
 #include <Processes.h>
 #include <StringCompare.h>
@@ -63,7 +66,10 @@
 // Stupid @#$% header looks like its got extern mojo but it doesn't really
 extern "C"
 {
+#ifndef MACOSX
+// BADPINK - this MSL header doesn't exist under macosx :-(
 #include <FSp_fopen.h>
+#endif
 }
 
 #pragma mark [Constants]
@@ -1123,8 +1129,13 @@ nsLocalFile::OpenANSIFileDesc(const char *mode, FILE * *_retval)
       spec = mTargetSpec; 
     }
 		
+#ifdef MACOSX
+// BADPINK - FSp_fopen() doesn't exist under macosx :-(
+  *_retval = nsnull;
+#else
 	*_retval = FSp_fopen(&spec, mode);
-	
+#endif
+
 	if (*_retval)
 		return NS_OK;
 
@@ -1252,6 +1263,7 @@ nsLocalFile::GetLeafName(char * *aLeafName)
 	switch (mInitType)
 	{
 		case eInitWithPath:
+    {
 			const char* temp = mWorkingPath.get();
 			if (temp == nsnull)
 				return NS_ERROR_FILE_UNRECOGNIZED_PATH;
@@ -1266,9 +1278,11 @@ nsLocalFile::GetLeafName(char * *aLeafName)
 
 			*aLeafName = (char*) nsMemory::Clone(leaf, strlen(leaf)+1);
 			break;
+		}
 		
 		case eInitWithFSSpec:
-			// See if we've had a path appended
+    {
+ 			// See if we've had a path appended
 			if (mAppendedPath.Length())
 			{
 				const char* temp = mAppendedPath.get();
@@ -1297,6 +1311,7 @@ nsLocalFile::GetLeafName(char * *aLeafName)
 				*aLeafName = leafName;
 			}
 			break;
+		}
 			
 		default:
 			// !!!!! Danger Will Robinson !!!!!
@@ -1318,6 +1333,7 @@ nsLocalFile::SetLeafName(const char * aLeafName)
 	switch (mInitType)
 	{
 		case eInitWithPath:
+		{
 			PRInt32 offset = mWorkingPath.RFindChar(':');
 			if (offset)
 			{
@@ -1325,8 +1341,10 @@ nsLocalFile::SetLeafName(const char * aLeafName)
 			}
 			mWorkingPath.Append(aLeafName);
 			break;
+		}
 		
 		case eInitWithFSSpec:
+    {
 			// See if we've had a path appended
 			if (mAppendedPath.Length())
 			{	// Lop off the end of the appended path and replace it with the new leaf name
@@ -1343,6 +1361,7 @@ nsLocalFile::SetLeafName(const char * aLeafName)
 				myPLstrcpy(mSpec.name, aLeafName);
 			}
 			break;
+		}
 			
 		default:
 			// !!!!! Danger Will Robinson !!!!!
@@ -1622,8 +1641,7 @@ nsLocalFile::GetLastModificationDateOfLink(PRInt64 *aLastModificationDate)
 {
 	NS_ENSURE_ARG(aLastModificationDate);
 	
-	aLastModificationDate->hi = 0;
-	aLastModificationDate->lo = 0;
+	*aLastModificationDate = LL_Zero();
 
 	NS_ASSERTION(0, "Not implemented");
 	return NS_ERROR_NOT_IMPLEMENTED;
@@ -1644,9 +1662,8 @@ nsLocalFile::GetFileSize(PRInt64 *aFileSize)
 {
 	NS_ENSURE_ARG(aFileSize);
 	
-	aFileSize->hi = 0;
-	aFileSize->lo = 0;
-
+  *aFileSize = LL_Zero();
+  
 	ResolveAndStat(PR_TRUE);
 	
 	long dataSize = 0;
@@ -1716,8 +1733,7 @@ nsLocalFile::GetFileSizeOfLink(PRInt64 *aFileSize)
 {
 	NS_ENSURE_ARG(aFileSize);
 	
-	aFileSize->hi = 0;
-	aFileSize->lo = 0;
+	*aFileSize = LL_Zero();
 
 	ResolveAndStat(PR_TRUE);
 	
@@ -1768,8 +1784,12 @@ nsLocalFile::GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable)
 	if (err == noErr)
 	{
 		const UnsignedWide& freeBytes = UInt64ToUnsignedWide(pb.ioVFreeBytes);
+#ifdef MACOSX
+    space64Bits = UnsignedWideToUInt64(freeBytes);
+#else
 		space64Bits.lo = freeBytes.lo;
 		space64Bits.hi = freeBytes.hi;
+#endif
 	}
 		
 	*aDiskSpaceAvailable = space64Bits;
@@ -2620,7 +2640,7 @@ nsresult nsLocalFile::MyLaunchAppWithDoc(const FSSpec& appSpec, const FSSpec* aD
 
 
 #pragma mark -
-#pragma mark [Methods that won't be implemented on Mac]
+#pragma mark [Methods that will not be implemented on Mac]
 
 NS_IMETHODIMP
 nsLocalFile::Normalize()
@@ -2828,8 +2848,7 @@ nsLocalFile::GetFileSizeWithResFork(PRInt64 *aFileSize)
 {
 	NS_ENSURE_ARG(aFileSize);
 	
-	aFileSize->hi = 0;
-	aFileSize->lo = 0;
+	*aFileSize = LL_Zero();
 
 	ResolveAndStat(PR_TRUE);
 	
