@@ -1478,7 +1478,7 @@ void nsDocShell::SetCurrentURI(nsIURI* aUri)
 }
 
 nsresult nsDocShell::CreateContentViewer(const char* aContentType, 
-   const char* aCommand, nsIChannel* aOpenedChannel, 
+   nsURILoadCommand aCommand, nsIChannel* aOpenedChannel, 
    nsIStreamListener** aContentHandler)
 {
    NS_ENSURE_STATE(mCreated);
@@ -1500,7 +1500,7 @@ nsresult nsDocShell::CreateContentViewer(const char* aContentType,
 }
 
 nsresult nsDocShell::NewContentViewerObj(const char* aContentType,
-   const char* aCommand, nsIChannel* aOpenedChannel, 
+   nsURILoadCommand aCommand, nsIChannel* aOpenedChannel, 
    nsIStreamListener** aContentHandler)
 {
    //XXX This should probably be some category thing....
@@ -1514,7 +1514,9 @@ nsresult nsDocShell::NewContentViewerObj(const char* aContentType,
 
    nsCOMPtr<nsILoadGroup> loadGroup(do_QueryInterface(mLoadCookie));
    // Now create an instance of the content viewer
-   NS_ENSURE_SUCCESS(docLoaderFactory->CreateInstance(aCommand, aOpenedChannel,
+   // eventually content viewer is going to have to understand nsURILoadCommands...
+   // until that time, pass in "view" as the string command
+   NS_ENSURE_SUCCESS(docLoaderFactory->CreateInstance("view", aOpenedChannel,
       loadGroup, aContentType, NS_STATIC_CAST(nsIContentViewerContainer*, this),
       nsnull /*XXXQ Need ExtraInfo???*/,
       aContentHandler, getter_AddRefs(mContentViewer)), NS_ERROR_FAILURE);
