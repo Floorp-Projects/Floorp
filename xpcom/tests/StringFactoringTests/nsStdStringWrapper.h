@@ -144,7 +144,7 @@ class basic_nsStdStringWrapper
     // ...
   };
 
-NS_DEF_STRING_COMPARISONS(basic_nsStdStringWrapper<CharT>)
+NS_DEF_TEMPLATE_STRING_COMPARISON_OPERATORS(basic_nsStdStringWrapper<CharT>, CharT)
 
 
 

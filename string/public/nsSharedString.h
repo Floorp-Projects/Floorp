@@ -82,7 +82,7 @@ class basic_nsSharedString
       size_t            mLength;
   };
 
-NS_DEF_STRING_COMPARISONS(basic_nsSharedString<CharT>)
+NS_DEF_TEMPLATE_STRING_COMPARISON_OPERATORS(basic_nsSharedString<CharT>, CharT)
 
 template <class CharT>
 const CharT*

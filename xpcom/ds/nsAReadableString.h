@@ -447,36 +447,49 @@ operator!=( const nsReadingIterator<CharT>& lhs, const nsReadingIterator<CharT>&
   }
 #endif
 
-#define NS_DEF_1_STRING_COMPARISON_OPERATOR(comp, T1, T2) \
-  inline                                        \
-  PRBool                                        \
-  operator comp( T1 lhs, T2 rhs )               \
-    {                                           \
-      return PRBool(Compare(lhs, rhs) comp 0);  \
+
+#define NS_DEF_1_STRING_PTR_COMPARISON_OPERATOR(comp, _StringT, _CharT)   \
+  inline                                                                  \
+  PRBool                                                                  \
+  operator comp( const _StringT& lhs, const _CharT* rhs )                 \
+    {                                                                     \
+      return PRBool(Compare(NS_READABLE_CAST(_CharT, lhs), rhs) comp 0);  \
     }
 
-#define NS_DEF_STRING_COMPARISON_OPERATORS(T1, T2) \
-  template <class CharT> NS_DEF_1_STRING_COMPARISON_OPERATOR(!=, T1, T2) \
-  template <class CharT> NS_DEF_1_STRING_COMPARISON_OPERATOR(< , T1, T2) \
-  template <class CharT> NS_DEF_1_STRING_COMPARISON_OPERATOR(<=, T1, T2) \
-  template <class CharT> NS_DEF_1_STRING_COMPARISON_OPERATOR(==, T1, T2) \
-  template <class CharT> NS_DEF_1_STRING_COMPARISON_OPERATOR(>=, T1, T2) \
-  template <class CharT> NS_DEF_1_STRING_COMPARISON_OPERATOR(> , T1, T2)
+#define NS_DEF_1_PTR_STRING_COMPARISON_OPERATOR(comp, _StringT, _CharT)   \
+  inline                                                                  \
+  PRBool                                                                  \
+  operator comp( const _CharT* lhs, const _StringT& rhs )                 \
+    {                                                                     \
+      return PRBool(Compare(lhs, NS_READABLE_CAST(_CharT, rhs)) comp 0);  \
+    }
 
-#define NS_DEF_NON_TEMPLATE_STRING_COMPARISON_OPERATORS(T1, T2) \
-  NS_DEF_1_STRING_COMPARISON_OPERATOR(!=, T1, T2) \
-  NS_DEF_1_STRING_COMPARISON_OPERATOR(< , T1, T2) \
-  NS_DEF_1_STRING_COMPARISON_OPERATOR(<=, T1, T2) \
-  NS_DEF_1_STRING_COMPARISON_OPERATOR(==, T1, T2) \
-  NS_DEF_1_STRING_COMPARISON_OPERATOR(>=, T1, T2) \
-  NS_DEF_1_STRING_COMPARISON_OPERATOR(> , T1, T2)
+#define NS_DEF_2_TEMPLATE_STRING_COMPARISON_OPERATORS(comp, _StringT, _CharT) \
+  template <class _CharT> NS_DEF_1_STRING_PTR_COMPARISON_OPERATOR(comp, _StringT, _CharT) \
+  template <class _CharT> NS_DEF_1_PTR_STRING_COMPARISON_OPERATOR(comp, _StringT, _CharT)
 
-#define NS_DEF_STRING_COMPARISONS(T) \
-  NS_DEF_STRING_COMPARISON_OPERATORS(const T&, const CharT*) \
-  NS_DEF_STRING_COMPARISON_OPERATORS(const CharT*, const T&)
+#define NS_DEF_2_STRING_COMPARISON_OPERATORS(comp, _StringT, _CharT)  \
+  NS_DEF_1_STRING_PTR_COMPARISON_OPERATOR(comp, _StringT, _CharT) \
+  NS_DEF_1_PTR_STRING_COMPARISON_OPERATOR(comp, _StringT, _CharT)
+
+#define NS_DEF_TEMPLATE_STRING_COMPARISON_OPERATORS(_StringT, _CharT) \
+  NS_DEF_2_TEMPLATE_STRING_COMPARISON_OPERATORS(!=, _StringT, _CharT) \
+  NS_DEF_2_TEMPLATE_STRING_COMPARISON_OPERATORS(< , _StringT, _CharT) \
+  NS_DEF_2_TEMPLATE_STRING_COMPARISON_OPERATORS(<=, _StringT, _CharT) \
+  NS_DEF_2_TEMPLATE_STRING_COMPARISON_OPERATORS(==, _StringT, _CharT) \
+  NS_DEF_2_TEMPLATE_STRING_COMPARISON_OPERATORS(>=, _StringT, _CharT) \
+  NS_DEF_2_TEMPLATE_STRING_COMPARISON_OPERATORS(> , _StringT, _CharT)
+
+#define NS_DEF_STRING_COMPARISON_OPERATORS(_StringT, _CharT) \
+  NS_DEF_2_STRING_COMPARISON_OPERATORS(!=, _StringT, _CharT) \
+  NS_DEF_2_STRING_COMPARISON_OPERATORS(< , _StringT, _CharT) \
+  NS_DEF_2_STRING_COMPARISON_OPERATORS(<=, _StringT, _CharT) \
+  NS_DEF_2_STRING_COMPARISON_OPERATORS(==, _StringT, _CharT) \
+  NS_DEF_2_STRING_COMPARISON_OPERATORS(>=, _StringT, _CharT) \
+  NS_DEF_2_STRING_COMPARISON_OPERATORS(> , _StringT, _CharT)
 
 
-NS_DEF_STRING_COMPARISONS(basic_nsAReadableString<CharT>)
+NS_DEF_TEMPLATE_STRING_COMPARISON_OPERATORS(basic_nsAReadableString<CharT>, CharT)
 
 
 
@@ -660,7 +673,7 @@ class basic_nsLiteralString
       const CharT* mEnd;
   };
 
-NS_DEF_STRING_COMPARISONS(basic_nsLiteralString<CharT>)
+NS_DEF_TEMPLATE_STRING_COMPARISON_OPERATORS(basic_nsLiteralString<CharT>, CharT)
 
 template <class CharT>
 const CharT*
@@ -858,7 +871,7 @@ class nsPromiseConcatenation
       PRUint32 mFragmentIdentifierMask;
   };
 
-NS_DEF_STRING_COMPARISONS(nsPromiseConcatenation<CharT>)
+NS_DEF_TEMPLATE_STRING_COMPARISON_OPERATORS(nsPromiseConcatenation<CharT>, CharT)
 
 template <class CharT>
 PRUint32
@@ -997,7 +1010,7 @@ class nsPromiseSubstring
       PRUint32 mLength;
   };
 
-NS_DEF_STRING_COMPARISONS(nsPromiseSubstring<CharT>)
+NS_DEF_TEMPLATE_STRING_COMPARISON_OPERATORS(nsPromiseSubstring<CharT>, CharT)
 
 template <class CharT>
 PRUint32
