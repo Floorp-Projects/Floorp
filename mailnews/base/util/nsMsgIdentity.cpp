@@ -425,15 +425,29 @@ NS_IMPL_IDPREF_STR (BccList, "bcc_other_list");
 
 NS_IMPL_FOLDERPREF_STR (DraftFolder, "draft_folder");
 NS_IMPL_FOLDERPREF_STR (StationeryFolder, "stationery_folder");
-NS_IMPL_IDPREF_STR (JunkMailFolder, "spam_folder");
+NS_IMPL_FOLDERPREF_STR (JunkMailFolder, "spam_folder");
+
 NS_IMPL_IDPREF_BOOL(ShowSaveMsgDlg, "showSaveMsgDlg");
 
 NS_IMPL_IDPREF_BOOL(Valid, "valid");
 
 nsresult 
-nsMsgIdentity::getFolderPref(const char *prefname, char **retval)
+nsMsgIdentity::getFolderPref(const char *prefname, char **retval, PRBool mustHaveDefault)
 {
-    return getCharPref(prefname, retval);
+  nsresult rv = getCharPref(prefname, retval);
+  if (!mustHaveDefault) return rv;
+
+  // Use default value if fail to get or not set
+  if (NS_FAILED(rv) || !*retval || !nsCRT::strlen(*retval))
+  {
+    PR_FREEIF(*retval);	// free the empty string
+    rv = getDefaultCharPref(prefname, retval);
+    if (NS_SUCCEEDED(rv) && *retval)
+    {
+      rv = setFolderPref(prefname, (const char *)*retval);
+    }
+  }
+  return rv;
 }
 
 nsresult 
@@ -455,7 +469,8 @@ nsMsgIdentity::setFolderPref(const char *prefname, const char *value)
     else
         return NS_ERROR_FAILURE;
 
-    rv = getFolderPref(prefname, getter_Copies(oldpref));
+    // get the old folder, and clear the special folder flag on it
+    rv = getFolderPref(prefname, getter_Copies(oldpref), PR_FALSE);
     if (NS_SUCCEEDED(rv) && (const char*)oldpref)
     {
         rv = rdf->GetResource(oldpref, getter_AddRefs(res));
@@ -466,6 +481,8 @@ nsMsgIdentity::setFolderPref(const char *prefname, const char *value)
                 rv = folder->ClearFlag(folderflag);
         }
     }
+   
+    // set the new folder, and set the special folder flags on it
     rv = setCharPref(prefname, value);
     if (NS_SUCCEEDED(rv))
     {

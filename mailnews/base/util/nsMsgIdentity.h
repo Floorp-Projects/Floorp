@@ -67,7 +67,7 @@ protected:
   nsresult getDefaultIntPref(const char *pref, PRInt32 *);
   nsresult setIntPref(const char *pref, PRInt32);
 
-  nsresult getFolderPref(const char *pref, char **);
+  nsresult getFolderPref(const char *pref, char **, PRBool);
   nsresult setFolderPref(const char *pref, const char *);
 
 private:
@@ -131,7 +131,7 @@ nsMsgIdentity::Set##_postfix(PRInt32 value)		\
 NS_IMETHODIMP								   	\
 nsMsgIdentity::Get##_postfix(char **retval)   	\
 {											   	\
-  return getFolderPref(_prefname, retval);		\
+  return getFolderPref(_prefname, retval, PR_TRUE);		\
 }												\
 NS_IMETHODIMP	   								\
 nsMsgIdentity::Set##_postfix(const char *value)		\
