@@ -500,7 +500,7 @@ else
 AR_LIST		:= ar t
 AR_EXTRACT	:= ar x
 endif
-ifneq (,$(filter OSF1 BSD_OS,$(OS_ARCH)))
+ifneq (,$(filter OSF1 BSD_OS NetBSD,$(OS_ARCH)))
 CLEANUP1	:= | egrep -v '(________64ELEL_|__.SYMDEF)'
 CLEANUP2	:= rm -f ________64ELEL_ __.SYMDEF
 else
