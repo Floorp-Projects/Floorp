@@ -3558,6 +3558,7 @@ macbrowser)
   MOZ_APP_DISPLAYNAME=Camino
   MOZ_APP_VERSION=$MOZILLA_VERSION
   MOZ_EXTENSIONS_DEFAULT=" cookie xmlextras universalchardet typeaheadfind transformiix"
+  AC_DEFINE(MOZ_MACBROWSER)
   ;;
 
 standalone) 
