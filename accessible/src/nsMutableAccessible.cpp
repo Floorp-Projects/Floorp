@@ -176,7 +176,12 @@ NS_IMETHODIMP nsMutableAccessible::GetAccRole(PRUnichar **_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMutableAccessible::GetAccState(PRUnichar **_retval)
+NS_IMETHODIMP nsMutableAccessible::GetAccState(PRUint32 *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsMutableAccessible::GetAccExtState(PRUint32 *_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

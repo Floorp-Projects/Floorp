@@ -616,14 +616,20 @@ NS_IMETHODIMP nsAccessible::GetAccRole(PRUnichar * *aAccRole)
 }
 
   /* readonly attribute wstring accState; */
-NS_IMETHODIMP nsAccessible::GetAccState(PRUnichar * *aAccState) 
+NS_IMETHODIMP nsAccessible::GetAccState(PRUint32 *aAccState) 
 { 
   // delegate
-  if (mAccessible) {
-    nsresult rv = mAccessible->GetAccState(aAccState);
-    if (NS_SUCCEEDED(rv) && *aAccState != nsnull)
-      return rv;
-  }
+  if (mAccessible) 
+    return mAccessible->GetAccState(aAccState);
+
+  return NS_ERROR_NOT_IMPLEMENTED;  
+}
+
+NS_IMETHODIMP nsAccessible::GetAccExtState(PRUint32 *aAccExtState) 
+{ 
+  // delegate
+  if (mAccessible) 
+    return mAccessible->GetAccExtState(aAccExtState);
 
   return NS_ERROR_NOT_IMPLEMENTED;  
 }

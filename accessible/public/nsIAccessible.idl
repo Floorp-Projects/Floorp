@@ -40,7 +40,7 @@ interface nsIAccessible : nsISupports
   attribute wstring accValue;
   readonly attribute wstring accDescription;
   readonly attribute wstring accRole;
-  readonly attribute wstring accState;
+  readonly attribute unsigned long accState;
   readonly attribute wstring accHelp;
   readonly attribute wstring accDefaultAction;
   readonly attribute boolean accFocused;
@@ -60,7 +60,8 @@ interface nsIAccessible : nsISupports
 
   wstring getAccDescription();
   wstring getAccRole();
-  wstring getAccState();
+  unsigned long getAccState();
+  unsigned long getAccExtState();
   wstring getAccDefaultAction();
   wstring getAccHelp();
   boolean getAccFocused();
@@ -83,4 +84,122 @@ interface nsIAccessible : nsISupports
   void accTakeSelection();
   void accTakeFocus();
   void accDoDefaultAction();
+
+ // MSAA State flags - used for bitfield. More than 1 allowed.
+  const unsigned long  STATE_UNAVAILABLE        = 0x00000001;  // Disabled, maps to opposite of Java ENABLED, Gnome/ATK SENSITIVE?
+  const unsigned long  STATE_SELECTED           = 0x00000002;
+  const unsigned long  STATE_FOCUSED            = 0x00000004;
+  const unsigned long  STATE_PRESSED            = 0x00000008;
+  const unsigned long  STATE_CHECKED            = 0x00000010;
+  const unsigned long  STATE_MIXED              = 0x00000020; // 3-state checkbox or toolbar button
+  const unsigned long  STATE_READONLY           = 0x00000040; // Maps to opposite of Java/Gnome/ATK EDITABLE state
+  const unsigned long  STATE_HOTTRACKED         = 0x00000080;
+  const unsigned long  STATE_DEFAULT            = 0x00000100;
+  const unsigned long  STATE_EXPANDED           = 0x00000200;
+  const unsigned long  STATE_COLLAPSED          = 0x00000400;
+  const unsigned long  STATE_BUSY               = 0x00000800;
+  const unsigned long  STATE_FLOATING           = 0x00001000;  // Children "owned" not "contained" by parent
+  const unsigned long  STATE_MARQUEED           = 0x00002000;
+  const unsigned long  STATE_ANIMATED           = 0x00004000;
+  const unsigned long  STATE_INVISIBLE          = 0x00008000;
+  const unsigned long  STATE_OFFSCREEN          = 0x00010000;
+  const unsigned long  STATE_SIZEABLE           = 0x00020000;
+  const unsigned long  STATE_MOVEABLE           = 0x00040000;
+  const unsigned long  STATE_SELFVOICING        = 0x00080000;
+  const unsigned long  STATE_FOCUSABLE          = 0x00100000;
+  const unsigned long  STATE_SELECTABLE         = 0x00200000;
+  const unsigned long  STATE_LINKED             = 0x00400000;
+  const unsigned long  STATE_TRAVERSED          = 0x00800000;
+  const unsigned long  STATE_MULTISELECTABLE    = 0x01000000;  // Supports multiple selection
+  const unsigned long  STATE_EXTSELECTABLE      = 0x02000000;  // Supports extended selection
+  const unsigned long  STATE_ALERT_LOW          = 0x04000000;  // This information is of low priority
+  const unsigned long  STATE_ALERT_MEDIUM       = 0x08000000;  // This information is of medium priority
+  const unsigned long  STATE_ALERT_HIGH         = 0x10000000;  // This information is of high priority
+  const unsigned long  STATE_PROTECTED          = 0x20000000;  // Maps to Gnome's *Role* ATK_ROLE_PASSWD_TEXT, nothing for Java?
+  const unsigned long  STATE_HASPOPUP           = 0x40000000;  // New in MSAA 2.0
+
+// Extended state flags (for now non-MSAA, for Java and Gnome/ATK support)
+// This is only the states that there isn't already a mapping for in MSAA
+// See www.accessmozilla.org/article.php?sid=11 for information on the mappings between accessibility API states
+  const unsigned long  STATE_INVALID            = 0x00200000;  // No explanation given    
+  const unsigned long  STATE_ACTIVE             = 0x00400000;  // This window is currently the active window    
+  const unsigned long  STATE_EXPANDABLE         = 0x00800000;  // An item that can be expanded, such as a tree item with children    
+  const unsigned long  STATE_MODAL              = 0x01000000;  // Must do something with control before leaving it    
+  const unsigned long  STATE_MULTI_LINE         = 0x02000000;  // Edit control that can take multiple lines    
+  const unsigned long  STATE_SENSITIVE          = 0x04000000;  // No explanation given    
+  const unsigned long  STATE_RESIZABLE          = 0x08000000;  // Object can be resized    
+  const unsigned long  STATE_SHOWING            = 0x10000000;  // This object and all of it's ancestors are visible    
+  const unsigned long  STATE_SINGLE_LINE        = 0x20000000;  // This text object can only contain 1 line of text    
+  const unsigned long  STATE_TRANSIENT          = 0x40000000;  // Tells accessibility aid "Don't add event listener - this object doesn't generate any". For example, could be used with higher level containers.    
+  const unsigned long  STATE_VERTICAL           = 0x80000000;  // Especially used for sliders and scrollbars  
+
+
+/*
+// MSAA Roles - only one per nsIAccessible or IAccessible
+  const unsigned long  ROLE_TITLEBAR            = 0x00000001;
+  const unsigned long  ROLE_MENUBAR             = 0x00000002;
+  const unsigned long  ROLE_SCROLLBAR           = 0x00000003;
+  const unsigned long  ROLE_GRIP                = 0x00000004;
+  const unsigned long  ROLE_SOUND               = 0x00000005;
+  const unsigned long  ROLE_CURSOR              = 0x00000006;
+  const unsigned long  ROLE_CARET               = 0x00000007;
+  const unsigned long  ROLE_ALERT               = 0x00000008;
+  const unsigned long  ROLE_WINDOW              = 0x00000009;
+  const unsigned long  ROLE_CLIENT              = 0x0000000A;
+  const unsigned long  ROLE_MENUPOPUP           = 0x0000000B;
+  const unsigned long  ROLE_MENUITEM            = 0x0000000C;
+  const unsigned long  ROLE_TOOLTIP             = 0x0000000D;
+  const unsigned long  ROLE_APPLICATION         = 0x0000000E;
+  const unsigned long  ROLE_DOCUMENT            = 0x0000000F;
+  const unsigned long  ROLE_PANE                = 0x00000010;
+  const unsigned long  ROLE_CHART               = 0x00000011;
+  const unsigned long  ROLE_DIALOG              = 0x00000012;
+  const unsigned long  ROLE_BORDER              = 0x00000013;
+  const unsigned long  ROLE_GROUPING            = 0x00000014;
+  const unsigned long  ROLE_SEPARATOR           = 0x00000015;
+  const unsigned long  ROLE_TOOLBAR             = 0x00000016;
+  const unsigned long  ROLE_STATUSBAR           = 0x00000017;
+  const unsigned long  ROLE_TABLE               = 0x00000018;
+  const unsigned long  ROLE_COLUMNHEADER        = 0x00000019;
+  const unsigned long  ROLE_ROWHEADER           = 0x0000001A;
+  const unsigned long  ROLE_COLUMN              = 0x0000001B;
+  const unsigned long  ROLE_ROW                 = 0x0000001C;
+  const unsigned long  ROLE_CELL                = 0x0000001D;
+  const unsigned long  ROLE_LINK                = 0x0000001E;
+  const unsigned long  ROLE_HELPBALLOON         = 0x0000001F;
+  const unsigned long  ROLE_CHARACTER           = 0x00000020;
+  const unsigned long  ROLE_LIST                = 0x00000021;
+  const unsigned long  ROLE_LISTITEM            = 0x00000022;
+  const unsigned long  ROLE_OUTLINE             = 0x00000023;
+  const unsigned long  ROLE_OUTLINEITEM         = 0x00000024;
+  const unsigned long  ROLE_PAGETAB             = 0x00000025;
+  const unsigned long  ROLE_PROPERTYPAGE        = 0x00000026;
+  const unsigned long  ROLE_INDICATOR           = 0x00000027;
+  const unsigned long  ROLE_GRAPHIC             = 0x00000028;
+  const unsigned long  ROLE_STATICTEXT          = 0x00000029;
+  const unsigned long  ROLE_TEXT                = 0x0000002A;  // Editable, selectable, etc.
+  const unsigned long  ROLE_PUSHBUTTON          = 0x0000002B;
+  const unsigned long  ROLE_CHECKBUTTON         = 0x0000002C;
+  const unsigned long  ROLE_RADIOBUTTON         = 0x0000002D;
+  const unsigned long  ROLE_COMBOBOX            = 0x0000002E;
+  const unsigned long  ROLE_DROPLIST            = 0x0000002F;
+  const unsigned long  ROLE_PROGRESSBAR         = 0x00000030;
+  const unsigned long  ROLE_DIAL                = 0x00000031;
+  const unsigned long  ROLE_HOTKEYFIELD         = 0x00000032;
+  const unsigned long  ROLE_SLIDER              = 0x00000033;
+  const unsigned long  ROLE_SPINBUTTON          = 0x00000034;
+  const unsigned long  ROLE_DIAGRAM             = 0x00000035;
+  const unsigned long  ROLE_ANIMATION           = 0x00000036;
+  const unsigned long  ROLE_EQUATION            = 0x00000037;
+  const unsigned long  ROLE_BUTTONDROPDOWN      = 0x00000038;
+  const unsigned long  ROLE_BUTTONMENU          = 0x00000039;
+  const unsigned long  ROLE_BUTTONDROPDOWNGRID  = 0x0000003A;
+  const unsigned long  ROLE_WHITESPACE          = 0x0000003B;
+  const unsigned long  ROLE_PAGETABLIST         = 0x0000003C;
+  const unsigned long  ROLE_CLOCK               = 0x0000003D;
+  const unsigned long  ROLE_SPLITBUTTON         = 0x0000003E;   // New in MSAA 2.0 
+  const unsigned long  ROLE_IPADDRESS           = 0x0000003F;   // New in MSAA 2.0 
+
+  */
+
 };

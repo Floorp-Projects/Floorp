@@ -87,7 +87,8 @@ public:
   NS_IMETHOD GetAccChildCount(PRInt32 *_retval);
   NS_IMETHOD GetAccName(PRUnichar **_retval);
   NS_IMETHOD GetAccRole(PRUnichar **_retval);
-  NS_IMETHOD GetAccState(PRUnichar **_retval);
+  NS_IMETHOD GetAccState(PRUint32 *_retval);
+  NS_IMETHOD GetAccExtState(PRUint32 *_retval);
   
   // popup listener
   NS_IMETHOD Create(nsIDOMEvent* aEvent);
@@ -498,7 +499,7 @@ NS_IMETHODIMP nsSelectWindowAccessible::Close(nsIDOMEvent* aEvent)
 }
 
 
-NS_IMETHODIMP nsSelectWindowAccessible::GetAccState(PRUnichar **_retval)
+NS_IMETHODIMP nsSelectWindowAccessible::GetAccState(PRUint32 *_retval)
 {
   // not not already one register ourselves as a popup listener
    
@@ -506,14 +507,14 @@ NS_IMETHODIMP nsSelectWindowAccessible::GetAccState(PRUnichar **_retval)
 
      nsCOMPtr<nsIDOMEventReceiver> eventReceiver = do_QueryInterface(mContent);
      if (!eventReceiver) {
-       *_retval = nsnull;
+       *_retval = 0;
        return NS_ERROR_NOT_IMPLEMENTED;
      }
 
      nsresult rv = eventReceiver->AddEventListener(NS_LITERAL_STRING("create"), this, PR_TRUE);   
 
      if (NS_FAILED(rv)) {
-       *_retval = nsnull;
+       *_retval = 0;
        return rv;
      }
 
@@ -522,14 +523,18 @@ NS_IMETHODIMP nsSelectWindowAccessible::GetAccState(PRUnichar **_retval)
 
   // if open we are visible if closed we are invisible
    // set _retval to it.
-   nsAutoString a;
    if (mOpen)
-      a.AssignWithConversion("default");
+     *_retval |= STATE_DEFAULT;
    else
-      a.AssignWithConversion("invisible");
+     *_retval |= STATE_INVISIBLE;
 
-   *_retval = a.ToNewUnicode();
+   return NS_OK;
+}
 
+
+NS_IMETHODIMP nsSelectWindowAccessible::GetAccExtState(PRUint32 *_retval)
+{
+	*_retval=0;
    return NS_OK;
 }
 
