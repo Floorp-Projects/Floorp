@@ -1,9 +1,0 @@
-LIBRARY wf_moz6
-
-EXPORTS
-	JVMP_GetExtension
-	Java_sun_jvmp_mozilla_MozillaAppletPeer_getParams
-	Java_sun_jvmp_mozilla_MozillaAppletPeer_nativeShowDocument
-	Java_sun_jvmp_mozilla_MozillaAppletPeer_nativeShowStatus
-	
-	
