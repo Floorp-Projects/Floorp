@@ -257,7 +257,7 @@ nsresult nsTestUConv::TestCharsetManager()
     mLog.PrintError("get()", res);
     return res;
   }
-  if (!csName.Equals(NS_LossyConvertUCS2toASCII(name).get())) {
+  if (!csName.Equals(nsDependentString(name))) {
     mLog.PrintError("Equals()", "unexpected charset name");
     return NS_ERROR_UNEXPECTED;
   }
@@ -274,7 +274,7 @@ nsresult nsTestUConv::TestCharsetManager()
     mLog.PrintError("get()", res);
     return res;
   }
-  if (!csAlias2.EqualsWithConversion(NS_LossyConvertUCS2toASCII(name).get())) {
+  if (!csAlias2.Equals(nsDependentString(name))) {
     mLog.PrintError("Equals()", "unexpected charset name");
     return NS_ERROR_UNEXPECTED;
   }
