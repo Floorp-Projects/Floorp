@@ -54,6 +54,8 @@ typedef int PRInt32;
 #define FILE_LOG_INSTALL                "install_wizard.log"
 #define WIZ_TEMP_DIR                    "ns_temp"
 
+#define MAX_KILL_PROCESS_RETRIES        10
+
 /* WTD: What To Do */
 #define WTD_ASK                         0
 #define WTD_CANCEL                      1
@@ -61,6 +63,14 @@ typedef int PRInt32;
 #define WTD_NO_TO_ALL                   3
 #define WTD_YES                         4
 #define WTD_YES_TO_ALL                  5
+
+/* WS: WinSpawn wait values */
+#define WS_DO_NOT_WAIT                  FALSE
+#define WS_WAIT                         TRUE
+
+/* CI: Check Instance */
+#define CI_FORCE_QUIT_PROCESS           TRUE
+#define CI_CLOSE_PROCESS                FALSE
 
 /* PP: Parse Path */
 #define PP_FILENAME_ONLY                1

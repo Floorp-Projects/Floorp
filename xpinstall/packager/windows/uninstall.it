@@ -2,8 +2,8 @@
 ; Run Mode values:
 ;   Normal - Shows all dialogs.  Requires user input.
 ;   Auto   - Shows some dialogs, but none requiring user input.  It will
-;            automatically install the product using default values.
-;   Silent - Show no dialogs at all.  It will install product using default
+;            automatically uninstall the product using default values.
+;   Silent - Show no dialogs at all.  It will uninstall product using default
 ;            values.
 Run Mode=Normal
 
@@ -60,15 +60,50 @@ Defaults Info Filename=defaults_info.ini
 [Check Instance0]
 Class Name=MozillaMessageWindow
 Window Name=
+Process Name=$MainExeFile$
+Pretty Name=$ProductNameInternal$
 ;*** LOCALIZE ME BABY ***
-Message=$ProductName$ is detected to be currently running.  Please quit $ProductName$ before continuing.  Click Retry to perform the check again, or Cancel to exit the uninstaller.
+Message=$ProductNameInternal$ is detected to be currently running.  Please quit $ProductNameInternal$ before continuing.  Click OK to exit $ProductNameInternal$ automatically and proceed with uninstallation.
+;*** LOCALIZE ME BABY ***
+Message wait=Shutting down $ProductNameInternal$.  Please wait...
+
+; This key indicates whether or not to close all the windows associated with
+; the process id of this app instance window found.
+Close All Process Windows=TRUE
 
 ; These keys are not normally necessary for checking instances.  They are
 ; set here because Mozilla requires a way to shut down it's turbo mode.
-Extra Cmd Reg Key Root=HKEY_LOCAL_MACHINE
-Extra Cmd Reg Key=Software\Microsoft\Windows\CurrentVersion\App Paths\$MainExeFile$
-Extra Cmd Reg Name=
-Extra Cmd Parameter=-kill
+Extra Cmd0 Reg Key Root=HKEY_LOCAL_MACHINE
+Extra Cmd0 Reg Key=Software\Microsoft\Windows\CurrentVersion\App Paths\$MainExeFile$
+Extra Cmd0 Reg Name=
+Extra Cmd0 Parameter=-kill
+
+[Check Instance1]
+Class Name=Netscape6MessageWindow
+Window Name=
+Process Name=Netscp.exe
+Pretty Name=Netscape
+;*** LOCALIZE ME BABY ***
+Message=Netscape is detected to be currently running.  Please quit Netscape before continuing.  Click OK to exit Netscape automatically and proceed with uninstallation.
+;*** LOCALIZE ME BABY ***
+Message wait=Shutting down Netscape.  Please wait...
+
+; This key indicates whether or not to close all the windows associated with
+; the process id of this app instance window found.
+Close All Process Windows=TRUE
+
+; These keys are not normally necessary for checking instances.  They are
+; set here because Netscape 6 requires a way to shut down it's turbo mode.
+; This will stop at the first one that succeeds (key and file found).
+Extra Cmd0 Reg Key Root=HKEY_LOCAL_MACHINE
+Extra Cmd0 Reg Key=Software\Microsoft\Windows\CurrentVersion\App Paths\Netscp6.exe
+Extra Cmd0 Reg Name=
+Extra Cmd0 Parameter=-kill
+
+Extra Cmd1 Reg Key Root=HKEY_LOCAL_MACHINE
+Extra Cmd1 Reg Key=Software\Microsoft\Windows\CurrentVersion\App Paths\Netscp.exe
+Extra Cmd1 Reg Name=
+Extra Cmd1 Parameter=-kill
 
 
 [Dialog Uninstall]
@@ -98,15 +133,6 @@ NoToAll=N&o to all
 Yes=&Yes
 YesToAll=Y&es to all
 
-;[Check Instance0]
-;Class Name=MozillaWindowClass
-;Window Name=
-;Message=Setup has detected that an instance of Seamonkey is currently running.  Please quit Seamonkey before continuing Setup.
-
-;[Check Instance1]
-;Process Name=psm.exe
-;Message=Setup has detected that an instance of Personal Security Manager is currently running.  Personal Security Manager will quit by itself when there are no other applications running that require it.  A reboot might be necessary.  Setup will then be able to continue.
-
 ; This section attempts to restore/undo the desktop integration performed by the browser/mail
 [Restore Desktop Integration]
 Enabled=TRUE
@@ -126,11 +152,14 @@ DLGQUITTITLE=Question
 DLGQUITMSG=Are you sure you want to cancel?
 ERROR_GET_SYSTEM_DIRECTORY_FAILED=GetSystemDirectory() failed.
 ERROR_GET_WINDOWS_DIRECTORY_FAILED=GetWindowsDirectory() failed.
-ERROR_CREATE_TEMP_DIR=Setup was unable to create the TEMP directory: %s
-ERROR_SETUP_REQUIREMENT=Windows95 or greater Operating System is required!  Exiting setup...
+ERROR_CREATE_TEMP_DIR=Uninstall was not able to create the TEMP directory: %s
+ERROR_SETUP_REQUIREMENT=Windows95 or greater Operating System is required!  Exiting Uninstall...
 MB_WARNING_STR=Warning
 ERROR_UNINSTALL_LOG_FOLDER=Uninstall log folder not found:%s
 MB_MESSAGE_STR=Message
 DLG_REMOVE_FILE_TITLE=Remove File?
 ERROR_GETVERSION=GetVersionEx() failed!
+MB_ATTENTION_STR=Attention
+MSG_FORCE_QUIT_PROCESS=Uninstall has detected that %s (%s) is still running.  Click OK to quit %s and proceed with uninstallation. Alternatively, use the Windows Task Manager to quit %s, and then click OK to continue with uninstallation.
+MSG_FORCE_QUIT_PROCESS_FAILED=Uninstall will now exit.  Uninstall could not continue because %s (%s) is still running. Try manually quitting %s using Windows Task Manager, and then run Uninstall again.
 

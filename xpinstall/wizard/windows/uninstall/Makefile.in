@@ -42,6 +42,7 @@ CSRCS		= \
 		parser.c \
 		ifuncns.c \
 		rdi.c \
+		process.c \
 		$(NULL)
 
 LOCAL_INCLUDES	= -I$(srcdir)
