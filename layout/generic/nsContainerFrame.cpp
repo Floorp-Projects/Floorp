@@ -190,14 +190,14 @@ NS_METHOD nsContainerFrame::FirstChild(nsIFrame*& aFirstChild) const
 
 NS_IMETHODIMP
 nsContainerFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
-                                        nsIStyleContext* aNewParentContext)
+                                        nsIStyleContext* aParentContext)
 {
   nsIStyleContext*  oldContext = mStyleContext;
-  nsresult result = nsFrame::ReResolveStyleContext(aPresContext, aNewParentContext);
+  nsresult result = nsFrame::ReResolveStyleContext(aPresContext, aParentContext);
   if (oldContext != mStyleContext) {
     nsIFrame* child = mFirstChild;
     while ((NS_SUCCEEDED(result)) && (nsnull != child)) {
-      result = child->ReResolveStyleContext(aPresContext, nsnull);
+      result = child->ReResolveStyleContext(aPresContext, mStyleContext);
       child->GetNextSibling(child);
     }
   }

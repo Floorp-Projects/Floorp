@@ -1969,7 +1969,15 @@ HTMLStyleSheetImpl::AttributeChanged(nsIPresContext* aPresContext,
 
     // apply changes
     if (PR_TRUE == restyle) {
-      frame->ReResolveStyleContext(aPresContext, nsnull);
+      nsIStyleContext* frameContext;
+      frame->GetStyleContext(frameContext);
+      NS_ASSERTION(nsnull != frameContext, "frame must have style context");
+      if (nsnull != frameContext) {
+        nsIStyleContext*  parentContext = frameContext->GetParent();
+        frame->ReResolveStyleContext(aPresContext, parentContext);
+        NS_IF_RELEASE(parentContext);
+        NS_RELEASE(frameContext);
+      }
     }
     if (PR_TRUE == reframe) {
       NS_NOTYETIMPLEMENTED("frame change reflow");

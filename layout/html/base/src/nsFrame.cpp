@@ -387,26 +387,19 @@ NS_IMETHODIMP nsFrame::GetStyleData(nsStyleStructID aSID, const nsStyleStruct*& 
 }
 
 NS_IMETHODIMP nsFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
-                                             nsIStyleContext* aNewParentContext)
+                                             nsIStyleContext* aParentContext)
 {
   NS_ASSERTION(nsnull != mStyleContext, "null style context");
   if (nsnull != mStyleContext) {
     nsIAtom*  pseudoTag = nsnull;
     mStyleContext->GetPseudoType(pseudoTag);
-    nsIStyleContext*  parent = aNewParentContext;
-    if (nsnull == aNewParentContext) {
-      parent = mStyleContext->GetParent();
-    }
     nsIStyleContext*  newContext;
     if (nsnull != pseudoTag) {
       newContext = 
-        aPresContext->ResolvePseudoStyleContextFor(mContent, pseudoTag, parent);
+        aPresContext->ResolvePseudoStyleContextFor(mContent, pseudoTag, aParentContext);
     }
     else {
-      newContext = aPresContext->ResolveStyleContextFor(mContent, parent);
-    }
-    if (nsnull == aNewParentContext) {
-      NS_IF_RELEASE(parent);
+      newContext = aPresContext->ResolveStyleContextFor(mContent, aParentContext);
     }
 
     NS_ASSERTION(nsnull != newContext, "failed to get new style context");
