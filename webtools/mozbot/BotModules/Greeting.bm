@@ -52,6 +52,11 @@ sub RegisterConfig {
         ['hitIndex', 1, 1, 0],
         ['hitProtected', 1, 1, {'hixie' => '%target: %source wanted me to hurt you but don\'t worry, i wuv you, i\'d never hurt you...', 'me' => '/me wacks %source in the legs with a crowbar', '' => '%source: Oh you\'d like that, wouldn\'t you, you sadist pervert.', 'yourself' => 'hey look everyone! %source likes to see others hurt themselves!', 'urself' => 'oh my! %source can\'t even spell! It\'s written "yourself", moron!'}],
         ['hitEnabled', 1, 1, 1], # set to 0 to disable hitting
+        ['pat', 1, 1, ['/me patpats %target', '%target: yes dear, *pat* *pat*', '/me pats %target condescendingly', '%target: *pat* *pat*']],
+        ['patIndex', 1, 1, 0],
+        ['patProtected', 1, 1, {'' => '%source: what did I do now?', '%source: why? what did i do wrong?'}],
+        ['hug', 1, 1, ['/me hugs %target', '%target: *hug*', '/me hugs %target lovingly', '%target: come \'ere! *hugs and kisses*']],
+        ['hugIndex', 1, 1, 0],
         ['yousuck', 1, 1, ['%: no, *you* suck!', '/me pouts', '/me cries', '/me . o O ( now what have i done... )']],
         ['yousuckIndex', 1, 1, 0],
         ['thanks', 1, 1, ['sure thing %', 'np', '%: np', '%: just doing my job!']],
@@ -141,6 +146,10 @@ sub Told {
         if ($self->{'hitEnabled'}) {
             $self->PerformOnOther($event, 'hit', $1);
         }
+    } elsif ($message =~ /^\s*(?:please[\s,.]+)?(?:(?:would|will)\s+you\s+)?(?:pat|pat\s*pat)\s+(\S+?)(?:[\s,.]+please)?[.!?\s]*\s*$/osi) {
+        $self->PerformOnOther($event, 'pat', $1);
+    } elsif ($message =~ /^\s*(?:please[\s,.]+)?(?:(?:would|will)\s+you\s+)?(?:hug)\s+(\S+?)(?:[\s,.]+please)?[.!?\s]*\s*$/osi) {
+        $self->PerformOnOther($event, 'hug', $1);
     } elsif ($message =~ /^\s*(?:useless|die|get\s+a\s+life|kiss\s+my\s+ass|you\s+stupid\s+piece\s+o[f']?\s+code)[!1.\s]*$/osi) {
         $self->Perform($event, 'unhappy');
     } elsif ($message =~ /^\s*sorry\b/osi) { # note that any trailing text is ignored
@@ -390,6 +399,9 @@ sub PerformOnOther {
         $data = $self->{"${list}Protected"}->{lc $other};
     } else {
         $data = $self->GetNext($list);
+    }
+    if ($other eq 'me') {
+        $other = $event->{'from'};
     }
     $data =~ s/%source/$event->{'from'}/gos;
     $data =~ s/%target/$other/gos;
