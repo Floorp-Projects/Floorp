@@ -54,6 +54,7 @@ typedef enum {
 class nsIDateTimeFormat : public nsISupports {
 
 public: 
+  static const nsIID& GetIID() { static nsIID iid = NS_IDATETIMEFORMAT_IID; return iid; }
 
   // performs a locale sensitive date formatting operation on the time_t parameter
   NS_IMETHOD FormatTime(nsILocale* locale, 
