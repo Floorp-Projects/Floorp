@@ -83,48 +83,85 @@
         <xul:button class="menubutton-dual-button top" allowevents="true" 
                     inherits="buttontooltiptext:tooltiptext,buttonaction:oncommand,src,value,crop,accesskey"/>
         <xul:box class="menubutton-dual-dropmarker-box" autostretch="never" valign="middle">
-          <xul:image class="menubutton-dropmarker"/>
+          <xul:image class="menubutton-dropmarker" inherits="disabled"/>
         </xul:box>
       </xul:box>
     </content>
+    <handlers>
+      <handler type="mouseover">
+      <![CDATA[
+        this.setAttribute("mouseover","true"); // hack to pass mouseover event inwards
+      ]]>
+      </handler>
+      <handler type="mouseout">
+      <![CDATA[
+        this.removeAttribute("mouseover");
+      ]]>
+      </handler>
+    </handlers>
   </binding>
 
-  <binding id="menubutton-dual-left">
+  <binding id="menubutton-dual-left" extends="chrome://global/content/menulistBindings.xml#menubutton-dual-top">
     <content excludes="template,observes,menupopup">
       <xul:box class="menubutton-internal-box">
         <xul:button class="menubutton-dual-button left" allowevents="true" 
                     inherits="buttontooltiptext:tooltiptext,buttonaction:oncommand,src,value,crop,accesskey"/>
         <xul:box class="menubutton-dual-dropmarker-box" autostretch="never" valign="middle">
-          <xul:image class="menubutton-dropmarker"/>
+          <xul:image class="menubutton-dropmarker" inherits="disabled"/>
         </xul:box>
       </xul:box>
     </content>
   </binding>
 
-  <binding id="menubutton-dual-right">
+  <binding id="menubutton-dual-right" extends="chrome://global/content/menulistBindings.xml#menubutton-dual-top">
     <content excludes="template,observes,menupopup">
       <xul:box class="menubutton-internal-box">
         <xul:button class="menubutton-dual-button right" allowevents="true" 
                     inherits="buttontooltiptext:tooltiptext,buttonaction:oncommand,src,value,crop,accesskey"/>
         <xul:box class="menubutton-dual-dropmarker-box" autostretch="never" valign="middle">
-          <xul:image class="menubutton-dropmarker"/>
+          <xul:image class="menubutton-dropmarker" inherits="disabled"/>
         </xul:box>
       </xul:box>
     </content>
   </binding>
 
-  <binding id="menubutton-dual-bottom">
+  <binding id="menubutton-dual-bottom" extends="chrome://global/content/menulistBindings.xml#menubutton-dual-top">
     <content excludes="template,observes,menupopup">
       <xul:box class="menubutton-internal-box">
         <xul:button class="menubutton-dual-button bottom" allowevents="true" 
                     inherits="buttontooltiptext:tooltiptext,buttonaction:oncommand,src,value,crop,accesskey"/>
         <xul:box class="menubutton-dual-dropmarker-box" autostretch="never" valign="middle">
-          <xul:image class="menubutton-dropmarker"/>
+          <xul:image class="menubutton-dropmarker" inherits="disabled"/>
         </xul:box>
       </xul:box>
     </content>
   </binding>
 
+  <!-- need ability to fire events -->
+  <binding id="menubutton-toolbar">
+    <content excludes="observes,template,menupopup">
+      <xul:button class="menubutton-dual-button button-toolbar-1 top" allowevents="true" 
+                  inherits="buttontooltiptext:tooltiptext,buttonaction:oncommand,src,value,crop,accesskey,disabled"
+                  onmouseover="parentNode.setAttribute('buttonover','true');"
+                  onmouseout="parentNode.removeAttribute('buttonover');"/>
+      <xul:box class="menubutton-dual-dropmarker-box" autostretch="never" valign="middle" flex="1">
+        <xul:image class="menubutton-dual-dropmarker" inherits="disabled"/>
+      </xul:box>
+    </content>
+    <handlers>
+      <handler type="mouseover">
+      <![CDATA[
+        this.setAttribute('markerover','true');
+      ]]>
+      </handler>
+      <handler type="mouseout">
+      <![CDATA[
+        this.removeAttribute('markerover');
+      ]]>
+      </handler>
+    </handlers>
+  </binding>  
+  
 <!--
   BINDING : menubutton-item
   XUL REPRESENTATION : menuitem

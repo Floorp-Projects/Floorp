@@ -32,6 +32,7 @@ CHROME_MISC = \
 
 CHROME_L10N = \
 	.\utilityOverlay.dtd \
+	.\utilityOverlay.properties \
 	$(NULL)
   
 include <$(DEPTH)\config\rules.mak>

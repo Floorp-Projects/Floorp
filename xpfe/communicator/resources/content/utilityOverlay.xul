@@ -15,7 +15,7 @@
   	<broadcaster id="Communicator:Synchronize" value="&offlineSynchronizeCmd.label;" disabled="true" />
 	  <broadcaster id="Communicator:WorkMode" value="&offlineGoOfflineCmd.label;" oncommand="setOfflineStatus(true);"/>
   </broadcasterset>
-  <statusbarpanel id="offline-status" observes="Communicator:WorkMode"/>
+  <statusbarpanel id="offline-status" tooltip="aTooltip" observes="Communicator:WorkMode"/>
   <menu id="offlineMenu" value="&offlineMenu.label;" accesskey="&offlineMenu.accesskey;">
     <menupopup id="offlineMenuPopup">
       <menuitem position="1" accesskey="&offlineGoOfflineCmd.accesskey;" observes="Communicator:WorkMode"/>
