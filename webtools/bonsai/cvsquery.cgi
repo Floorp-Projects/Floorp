@@ -130,7 +130,7 @@ $::query_logexpr = $::FORM{'logexpr'};
 #
 # date
 #
-$::query_date_type = $::FORM{'date'};
+$::query_date_type = $::FORM{'date'} || 'nothing';
 my $query_hours;
 if( $::query_date_type eq 'hours' ){
     $query_hours = &ExpectDigit('hours', $::FORM{'hours'});
@@ -653,7 +653,7 @@ sub query_to_english {
         $english .= "by " . html_quote($::query_who) . " ";
     }
 
-    $::query_date_type = $::FORM{'date'};
+    $::query_date_type = $::FORM{'date'} || 'nothing';
     if( $::query_date_type eq 'hours' ){
         $english .="in the last $query_hours hours";
     }
