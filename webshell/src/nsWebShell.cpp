@@ -1436,7 +1436,6 @@ nsWebShell::HandleEvent(nsGUIEvent *aEvent)
   return nsEventStatus_eIgnore;
 }
 
-
 NS_IMETHODIMP
 nsWebShell::SetDocLoaderObserver(nsIDocumentLoaderObserver* anObserver)
 {
@@ -1978,6 +1977,11 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
   nsresult rv = NS_OK;
   rv = aUri->GetSpec(getter_Copies(urlSpec));
   if (NS_FAILED(rv)) return rv;
+
+  /* mURL is being set the value again so that calls to DoLoadURL() from Viewer 
+   * will work right. This statement could go to Goto(), but that really is
+   * Vidur's call 
+   */
   mURL = urlSpec;
 
   mReferrer = aReferrer;
@@ -2089,7 +2093,6 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
 
  /* WebShell was primarily passing the buck when it came to streamObserver.
   * So, pass on the observer which is already a streamObserver to DocLoder.
-  *  - Radha
   */
 
   return mDocLoader->LoadDocument(aUri,        // URL string
@@ -2129,53 +2132,7 @@ nsWebShell::LoadURI(nsIURI * aUri,
   rv = aUri->GetSpec(getter_Copies(spec));
   if (NS_FAILED(rv)) return rv;
 
-  /*
-   * Before the new page is added to the session history,
-   * save the history information of the previous page in
-   * session history
-   */
-
-   nsCOMPtr<nsISupports> historyState;
-
-   // Get the history object for the previous page.
-   rv = GetHistoryState(getter_AddRefs(historyState));
-   nsCOMPtr<nsIWebShell> rootWebShell;
-   rv = GetRootWebShell(*getter_AddRefs(rootWebShell));
-   if (NS_SUCCEEDED(rv) && rootWebShell) {
-      nsCOMPtr<nsISessionHistory> shist;
-      rv = rootWebShell->GetSessionHistory(*getter_AddRefs(shist));
-      if (NS_SUCCEEDED(rv) && shist) {
-        PRInt32 indix=0;
-        shist->getCurrentIndex(indix);
-        // Save it in session history
-        shist->SetHistoryObjectForIndex(indix, historyState);
-      }
-   }
-
-
-
-  /* If this is one of the frames, get it from the top level shell */
-
-  if (aModifyHistory) {
-    if (rootWebShell) {
-      nsCOMPtr<nsISessionHistory> shist;
-      rootWebShell->GetSessionHistory(*getter_AddRefs(shist));
-      /* Add yourself to the Session History */
-      if (shist) {
-        PRInt32  ret=0;
-        ret = shist->add(this);
-      }
-    }
-  }
-
-  /* Set the History state object for the current page in the
-   * presentation shell. If it is a new page being visited,
-   * aHistoryState is null. If the load is coming from
-   * session History, it will be set to the cached history object by
-   * session History.
-   */
-  SetHistoryState(aHistoryState);
-
+  
   nsString* url = new nsString(uriSpec);
   if (aModifyHistory) {
     // Discard part of history that is no longer reachable
@@ -2202,9 +2159,6 @@ nsWebShell::LoadURI(nsIURI * aUri,
   ShowHistory();
 
 
-  /* The session History may have changed the URL. So pass on the
-   * right one for loading
-   */
   // Give web-shell-container right of refusal
   if (nsnull != mContainer) {
     nsAutoString str(spec);
@@ -2233,6 +2187,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
   nsAutoString urlStr(aURLSpec);
   // first things first. try to create a uri out of the string.
   nsCOMPtr<nsIURI> uri;
+  nsXPIDLCString  spec;
   rv = NS_NewURI(getter_AddRefs(uri), urlStr, nsnull);
   if (NS_FAILED(rv)) {
     // no dice.
@@ -2283,37 +2238,92 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
 
     //Take care of mailto: url
   PRBool  isMail= PR_FALSE;
+  rv = uri->GetSpec(getter_Copies(spec));
+  if (NS_FAILED(rv))
+	   return rv;
 
-  nsAutoString urlAStr(aURLSpec);
+  nsAutoString urlAStr(spec);
   if ((urlAStr.Find("mailto", PR_TRUE)) >= 0) {
      isMail = PR_TRUE;
   }
 
+  // Get hold of Root webshell
   nsCOMPtr<nsIWebShell>  root;
+  nsCOMPtr<nsISessionHistory> shist;
   rv = GetRootWebShell(*getter_AddRefs(root));
+  // Get hold of session History
+  if (NS_SUCCEEDED(rv) && root) {    
+    root->GetSessionHistory(*getter_AddRefs(shist));
+  }
 
   /* Ask the URL dispatcher to take care of this URL only if it is a
-   * mailto: link clicked inside a browser or any link clicked
-   * inside a *non-browser* window. Note this mechanism s'd go away once
-   * we have the protocol registry and window manager available
+   * mailto: link clicked inside a browser. Note this mechanism s'd go 
+   * away once we have URL dispatcher in place.
    */
-  if (NS_SUCCEEDED(rv) && root && isMail) {
-
+  if (root && isMail) {
       //Ask the url Dispatcher to load the appropriate component for the URL.
       nsCOMPtr<nsIUrlDispatcher>  urlDispatcher;
       rv = root->GetUrlDispatcher(*getter_AddRefs(urlDispatcher));
       if (NS_SUCCEEDED(rv) && urlDispatcher) {
-        printf("calling HandleUrl\n");
         urlDispatcher->HandleUrl(LinkCommand.GetUnicode(),
                                  urlAStr.GetUnicode(), aPostDataStream);
         return NS_OK;
       }
   }
 
+  /*
+   * Before the new page is added to the session history,
+   * save the history information of the previous page in
+   * session history
+   */
 
+   nsCOMPtr<nsISupports>  historyState=nsnull;
+   rv = GetHistoryState(getter_AddRefs(historyState));
+   // Get the history object for the previous page.
+   if (NS_SUCCEEDED(rv) && shist) {
+        PRInt32 indix=0;
+        shist->getCurrentIndex(indix);
+        // Save it in session history
+        shist->SetHistoryObjectForIndex(indix, historyState);
+   }
+  /* Set the History state object for the current page in the
+   * presentation shell. If it is a new page being visited,
+   * aHistoryState is null. If the load is coming from
+   * session History, it will be set to the cached history object by
+   * session History.
+   */
+  SetHistoryState(aHistoryState);
+ 
+  /*
+   * Set mURL to spec so that session history can get 
+   * hold of the url and change it if it has to.
+   * See comments below.
+   */
 
-  // now that we have a uri, call the REAL LoadURI method which requires a nsIURI.
-  return LoadURI(uri, aCommand, aPostDataStream, aModifyHistory, aType, aLocalIP, aHistoryState, aReferrer);
+  mURL = spec;
+
+  /* Add the page to session history */
+  if (aModifyHistory && shist)  {
+        PRInt32  ret;
+        ret = shist->add(this);
+  }
+
+  /* If  we are going "Back" from a non-frame page to a frame page,
+   * session history  will change the mURL to the right value
+   * for smoother redraw. So, create a new nsIURI based on mURL,
+   * so that it will work right in such situations.
+   */
+
+  nsAutoString urlstr(mURL);
+  nsCOMPtr<nsIURI>   newURI;
+  rv = NS_NewURI(getter_AddRefs(newURI), urlstr, nsnull);
+
+  if (NS_SUCCEEDED(rv)) {
+    // now that we have a uri, call the REAL LoadURI method which requires a nsIURI.
+    return LoadURI(newURI, aCommand, aPostDataStream, aModifyHistory, aType, aLocalIP, aHistoryState, aReferrer);
+  }
+  return rv;
+
 }
 
 
@@ -2772,6 +2782,7 @@ nsWebShell::GetHistoryState(nsISupports** aLayoutHistoryState)
       rv = docv->GetPresShell(*getter_AddRefs(shell));
       if (NS_SUCCEEDED(rv)) {
         rv = shell->GetHistoryState((nsILayoutHistoryState**) aLayoutHistoryState);
+		NS_ADDREF(*aLayoutHistoryState);
       }
     }
   }

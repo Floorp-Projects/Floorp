@@ -158,6 +158,16 @@ public:
    * Set the History state of the index
    */
   NS_IMETHOD SetHistoryObjectForIndex(PRInt32 aIndex, nsISupports * aState) = 0;
+
+  /** 
+   *  Clear all history load flags 
+   */
+  NS_IMETHOD  ClearLoadingFlags(void) = 0;
+
+  /**
+   *   Reconcile history status with the actual page load status 
+   */
+  NS_IMETHOD UpdateStatus(nsIWebShell * aWebShell, nsresult aStatus) = 0;
 };
 
 
