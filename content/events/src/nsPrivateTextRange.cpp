@@ -87,8 +87,12 @@ nsPrivateTextRangeList::nsPrivateTextRangeList(PRUint16 aLength,nsIPrivateTextRa
 nsPrivateTextRangeList::~nsPrivateTextRangeList(void)
 {
 	int	i;
-	for(i=0;i<mLength;i++)
-		mList[i]->Release();
+        if(mList) {
+		for(i=0;i<mLength;i++)
+			mList[i]->Release();
+		delete [] mList;
+	}
+
 }
 
 NS_IMPL_ISUPPORTS1(nsPrivateTextRangeList, nsIPrivateTextRangeList)
