@@ -1303,22 +1303,8 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
         //mListControlFrame->SetOverrideReflowOptimization(PR_TRUE);
 
       } else if (targetFrame == mDisplayFrame || targetFrame == buttonFrame) {
-        if (targetFrame == mDisplayFrame) {
-          nsresult rv = ReflowComboChildFrame(mDisplayFrame, aPresContext, aDesiredSize, 
-                                              aReflowState, aStatus,
-                                              mCacheSize.width, 
-                                              aReflowState.availableHeight);
-          NS_ASSERTION(aDesiredSize.width != kSizeNotSet,  "aDesiredSize.width != kSizeNotSet");
-          NS_ASSERTION(aDesiredSize.height != kSizeNotSet, "aDesiredSize.height != kSizeNotSet");
-          aDesiredSize.mOverflowArea.x      = 0;
-          aDesiredSize.mOverflowArea.y      = 0;
-          aDesiredSize.mOverflowArea.width  = aDesiredSize.width;
-          aDesiredSize.mOverflowArea.height = aDesiredSize.height;
-          return rv;
-        }
-
-        // The incremental reflow is targeted at either the block or the button
         REFLOW_DEBUG_MSG2("-----------------Target is %s------------\n", (targetFrame == mDisplayFrame?"DisplayItem Frame":"DropDown Btn Frame"));
+        // The incremental reflow is targeted at either the block or the button
         REFLOW_DEBUG_MSG("---- Doing AreaFrame Reflow and then bailing out\n");
         // Do simple reflow and bail out
         ReflowCombobox(aPresContext, firstPassState, aDesiredSize, aStatus, 
