@@ -1139,7 +1139,10 @@ chrome::
 
 install:: chrome
 
-REGCHROME = $(PERL) $(MOZILLA_DIR)/config/add-chrome.pl $(DIST)/bin/chrome/installed-chrome.txt
+REGCHROME = echo $(PERL) $(MOZILLA_DIR)/config/add-chrome.pl $(DIST)/bin/chrome/installed-chrome.txt; \
+	    pwd; \
+	    ls $(MOZILLA_DIR)/config; \
+	    $(PERL) $(MOZILLA_DIR)/config/add-chrome.pl $(DIST)/bin/chrome/installed-chrome.txt
 
 ##############################################################################
 
