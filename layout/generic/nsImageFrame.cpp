@@ -80,6 +80,11 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 // Default alignment value (so we can tell an unset value from a set value)
 #define ALIGN_UNSET PRUint8(-1)
 
+// use the data in the reflow state to decide if the image has a constrained size
+// (i.e. width and height that are based on the containing block size and not the image size) 
+// so we can avoid animated GIF related reflows
+static void HaveFixedSize(const nsHTMLReflowState& aReflowState, PRPackedBool& aConstrainedSize);
+
 nsresult
 NS_NewImageFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
@@ -98,6 +103,9 @@ NS_NewImageFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 nsImageFrame::nsImageFrame() :
   mLowSrcImageLoader(nsnull)
 {
+  // Size is constrained if we have a width and height. 
+  // - Set in reflow in case the attributes are changed
+  mSizeConstrained = PR_FALSE;
 }
 
 nsImageFrame::~nsImageFrame()
@@ -290,12 +298,20 @@ nsImageFrame::UpdateImage(nsIPresContext* aPresContext, PRUint32 aStatus, void* 
       }
     }
   } else if (NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE & aStatus) {
-    if (mParent) {
-      mState |= NS_FRAME_IS_DIRTY;
-	    mParent->ReflowDirtyChild(presShell, (nsIFrame*) this);
-    }
-    else {
-      NS_ASSERTION(0, "No parent to pass the reflow request up to.");
+    // see if the image is ready in this notification as well, and if the size is not needed
+    // check if we have a constrained size: if so, no need to reflow since we cannot change our size
+    if(!mSizeConstrained) {
+      if (mParent) {
+        mState |= NS_FRAME_IS_DIRTY;
+	      mParent->ReflowDirtyChild(presShell, (nsIFrame*) this);
+      }
+      else {
+        NS_ASSERTION(0, "No parent to pass the reflow request up to.");
+      }
+    } else {
+#ifdef NOISY_IMAGE_LOADING
+      printf("Image has frozen size: skipping reflow for NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE status\n");
+#endif
     }
   }
 
@@ -394,6 +410,9 @@ nsImageFrame::Reflow(nsIPresContext*          aPresContext,
                   aReflowState.availableWidth, aReflowState.availableHeight));
 
   NS_PRECONDITION(mState & NS_FRAME_IN_REFLOW, "frame is not in reflow");
+
+  // see if we have a frozen size (i.e. a fixed width and height)
+  HaveFixedSize(aReflowState, mSizeConstrained);
 
   GetDesiredSize(aPresContext, aReflowState, aMetrics);
   AddBordersAndPadding(aPresContext, aReflowState, aMetrics, mBorderPadding);
@@ -1101,6 +1120,7 @@ nsImageFrame::AttributeChanged(nsIPresContext* aPresContext,
     aPresContext->GetShell(getter_AddRefs(presShell));
     mState |= NS_FRAME_IS_DIRTY;
 	  mParent->ReflowDirtyChild(presShell, (nsIFrame*) this);
+    // NOTE: mSizeFixed will be updated in Reflow...
   }
 
   return NS_OK;
@@ -1136,6 +1156,21 @@ nsImageFrame::IsImageComplete(PRBool* aComplete)
   NS_ENSURE_ARG_POINTER(aComplete);
   *aComplete = ((mImageLoader.GetLoadStatus() & NS_IMAGE_LOAD_STATUS_IMAGE_READY) != 0);
   return NS_OK;
+}
+
+void HaveFixedSize(const nsHTMLReflowState& aReflowState, PRPackedBool& aConstrainedSize)
+{
+  // check the width and height values in the reflow state's style struct
+  // - if width and height are specified as either coord or percentage, then
+  //   the size of the image frame is constrained
+  nsStyleUnit widthUnit = aReflowState.mStylePosition->mWidth.GetUnit();
+  nsStyleUnit heightUnit = aReflowState.mStylePosition->mHeight.GetUnit();
+
+  aConstrainedSize = 
+    ((widthUnit  == eStyleUnit_Coord ||
+      widthUnit  == eStyleUnit_Percent) &&
+     (heightUnit == eStyleUnit_Coord ||
+      heightUnit == eStyleUnit_Percent));
 }
 
 #ifdef DEBUG

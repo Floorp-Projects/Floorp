@@ -142,11 +142,12 @@ protected:
   nsHTMLImageLoader   mImageLoader;
   nsHTMLImageLoader * mLowSrcImageLoader;
   nsImageMap*         mImageMap;
-  PRPackedBool        mSizeFrozen;
+  PRPackedBool        mSizeConstrained;
   PRPackedBool        mInitialLoadCompleted;
   PRPackedBool        mCanSendLoadEvent;
   nsMargin            mBorderPadding;
-  PRUint32 mNaturalImageWidth, mNaturalImageHeight;
+  PRUint32            mNaturalImageWidth, 
+                      mNaturalImageHeight;
 };
 
 #endif /* nsImageFrame_h___ */
