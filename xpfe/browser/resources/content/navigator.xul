@@ -222,7 +222,7 @@ Contributor(s): ______________________________________. -->
       // we can get this button into rdf. We can't allow drags on this
       // container so we have to be able to identify it (bug 19588).
       //     - pinkerton
-      <menu datasources="rdf:bookmarks" ref="NC:BookmarksRoot">
+      <menu datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch" ref="NC:BookmarksRoot">
         <titledbutton class="bookmarkFolder" align="right" container="true"
           value="&bookmarksButton.label;" crop="right"/>
         <template>
