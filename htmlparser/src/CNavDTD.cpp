@@ -505,9 +505,6 @@ nsresult CNavDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsString
 
     if(aSink && (!mSink)) {
       result=aSink->QueryInterface(kIHTMLContentSinkIID, (void **)&mSink);
-      if(result==NS_OK) {
-        NS_ADDREF(mSink);
-      }
     }
 
 
