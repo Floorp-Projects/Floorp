@@ -3382,10 +3382,6 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
                                nsIMsgCopyServiceListener* listener)
 {
     nsresult rv = NS_OK;
-    char *uri = nsnull;
-    char *hostname1 = nsnull, *hostname2 = nsnull, *username1 = nsnull,
-        *username2 = nsnull;
-    nsAutoString protocolType;
     nsCString messageIds;
     nsMsgKeyArray srcKeyArray;
     nsCOMPtr<nsIUrlListener> urlListener;
@@ -3403,26 +3399,21 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
     NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
 
     if (!srcFolder || !messages) return NS_ERROR_NULL_POINTER;
-    rv = srcFolder->GetURI(&uri);
-    if (NS_FAILED(rv)) goto done;
-    rv = nsURI2ProtocolType(uri, protocolType);
-    if (NS_FAILED(rv)) goto done;
-    if (!protocolType.EqualsIgnoreCase("imap"))
-    {
-        rv = CopyMessagesWithStream(srcFolder, messages, isMove, msgWindow, listener);
-        goto done;
-    }
-    rv = srcFolder->GetHostname(&hostname1);
-    if (NS_FAILED(rv)) goto done;
-    rv = srcFolder->GetUsername(&username1);
-    if (NS_FAILED(rv)) goto done;
-    rv = GetHostname(&hostname2);
+    nsCOMPtr <nsIMsgIncomingServer> srcServer;
+    nsCOMPtr <nsIMsgIncomingServer> dstServer;
+    
+    rv = srcFolder->GetServer(getter_AddRefs(srcServer));
     if(NS_FAILED(rv)) goto done;
-    rv = GetUsername(&username2);
+
+    rv = GetServer(getter_AddRefs(dstServer));
+    if(NS_FAILED(rv)) goto done;
+
+    PRBool sameServer;
+    rv = dstServer->Equals(srcServer, &sameServer);
     if (NS_FAILED(rv)) goto done;
-    if (PL_strcmp(hostname1, hostname2) || // *** different server or account
-        PL_strcmp(username1, username2))   // do stream base copy
-    {
+
+    // if the folders aren't on the same server, do a stream base copy
+    if (!sameServer) {
         rv = CopyMessagesWithStream(srcFolder, messages, isMove, msgWindow, listener);
         goto done;
     }
@@ -3456,12 +3447,6 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
     }
 
 done:
-    
-    PR_FREEIF(uri);
-    PR_FREEIF(username1);
-    PR_FREEIF(username2);
-    PR_FREEIF(hostname1);
-    PR_FREEIF(hostname2);
     return rv;
 }
 

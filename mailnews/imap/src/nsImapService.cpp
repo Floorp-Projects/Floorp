@@ -1296,39 +1296,22 @@ nsImapService::OnlineMessageCopy(nsIEventQueue* aClientEventQueue,
         return NS_ERROR_NULL_POINTER;
 
     nsresult rv = NS_ERROR_FAILURE;
-    char *srcHostname = nsnull, *srcUsername = nsnull;
-    char *dstHostname = nsnull, *dstUsername = nsnull;
-    rv = aSrcFolder->GetHostname(&srcHostname);
-    if (NS_FAILED(rv)) return rv;
-    rv = aDstFolder->GetHostname(&dstHostname);
-    if (NS_FAILED(rv))
-    {
-        PR_FREEIF(srcHostname);
-        return rv;
-    }
-    rv = aSrcFolder->GetUsername(&srcUsername);
-    if (NS_FAILED(rv))
-    {
-        PR_FREEIF(srcHostname);
-        PR_FREEIF(dstHostname);
-        return rv;
-    }
-    rv = aDstFolder->GetUsername(&dstUsername);
-    if (NS_FAILED(rv))
-    {
-        PR_FREEIF(srcHostname);
-        PR_FREEIF(srcUsername);
-        PR_FREEIF(dstHostname);
-        return rv;
-    }
-    if (PL_strcmp(srcHostname, dstHostname) ||
-        PL_strcmp(srcUsername, dstUsername))
-    {
+
+    nsCOMPtr <nsIMsgIncomingServer> srcServer;
+    nsCOMPtr <nsIMsgIncomingServer> dstServer;
+
+    rv = aSrcFolder->GetServer(getter_AddRefs(srcServer));
+    if(NS_FAILED(rv)) return rv;
+
+    rv = aDstFolder->GetServer(getter_AddRefs(dstServer));
+    if(NS_FAILED(rv)) return rv;
+
+    PRBool sameServer;
+    rv = dstServer->Equals(srcServer, &sameServer);
+    if(NS_FAILED(rv)) return rv;
+
+    if (!sameServer) {
         // *** can only take message from the same imap host and user accnt
-        PR_FREEIF(srcHostname);
-        PR_FREEIF(srcUsername);
-        PR_FREEIF(dstHostname);
-        PR_FREEIF(dstUsername);
         return NS_ERROR_FAILURE;
     }
 
@@ -1371,10 +1354,6 @@ nsImapService::OnlineMessageCopy(nsIEventQueue* aClientEventQueue,
             rv = GetImapConnectionAndLoadUrl(aClientEventQueue, imapUrl,
                                              nsnull, aURL);
     }
-    PR_FREEIF(srcHostname);
-    PR_FREEIF(srcUsername);
-    PR_FREEIF(dstHostname);
-    PR_FREEIF(dstUsername);
     return rv;
 }
 
