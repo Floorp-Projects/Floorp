@@ -69,6 +69,8 @@ class nsEditorAppCore : public nsBaseAppCore,
     NS_IMETHOD    GetEditorDocument(nsIDOMDocument** aEditorDocument);
     NS_IMETHOD    GetSelectedElement(const nsString& aTagName, nsIDOMElement** aReturn);
     NS_IMETHOD    CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement** aReturn);
+
+  // XXX  aReturn in InsertElement is always forced to zero, should be removed
     NS_IMETHOD    InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection, nsIDOMElement** aReturn);
     NS_IMETHOD    InsertLinkAroundSelection(nsIDOMElement* aAnchorElement);
     NS_IMETHOD    SelectElement(nsIDOMElement* aElement);
