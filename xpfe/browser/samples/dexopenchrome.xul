@@ -1,181 +1,154 @@
 <?xml version="1.0"?>
+<?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
 <!DOCTYPE window>
 <!-- DO NOT LOCALIZE: this file is source documentation; not part of the build -->
 <!-- Sample interface for bringing up and passing parameters to a dialog -->
-<xul:window
-    xmlns:html="http://www.w3.org/1999/xhtml"
-    xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    title = "Chrome Features Test">
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        orient="horizontal"
+        title = "Chrome Features Test">
 
-  <html:script>
-    <![CDATA[
-    var featureList = new Array("all",
-                        "close", "titlebar", "resizable", "scrollbars",
-                        "menubar", "toolbar", "status", "location",
-                        "chrome", "dialog", "modal", "dependent",
-                        "centerscreen",
-                        "alwaysLowered", "alwaysRaised");
+<script>
+<![CDATA[
+  var featureList = new Array("all",
+                      "close", "titlebar", "resizable", "scrollbars",
+                      "menubar", "toolbar", "status", "location",
+                      "chrome", "dialog", "modal", "dependent",
+                      "centerscreen",
+                      "alwaysLowered", "alwaysRaised");
 
-    function OpenWindow(extension) {
-      var features = CalculateFeatures();
-      dump("******* begin open window\n");
-      window.open("dexparamdialog."+extension, "_blank", features);
-      dump("******* end open window\n");
-    }
-    function OpenDialog(extension) {
-      var features = CalculateFeatures();
-      dump("******* begin opendialog\n");
-      window.openDialog("dexparamdialog."+extension, "_blank", features,
-                        {remind:true});
-      dump("******* end opendialog\n");
-    }
-    function CalculateFeatures() {
-      var ctr;
-      var features;
-      var element;
+  function OpenWindow(extension) {
+    var features = CalculateFeatures();
+    dump("******* begin open window\n");
+    window.open("dexparamdialog."+extension, "_blank", features);
+    dump("******* end open window\n");
+  }
+  function OpenDialog(extension) {
+    var features = CalculateFeatures();
+    dump("******* begin opendialog\n");
+    window.openDialog("dexparamdialog."+extension, "_blank", features,
+                      {remind:true});
+    dump("******* end opendialog\n");
+  }
+  function CalculateFeatures() {
+    var ctr;
+    var features;
+    var element;
 
-      features = "";
+    features = "";
 
-      // read checkboxes
-      for (ctr = 0; ctr < featureList.length; ctr++) {
-        element = document.getElementById(featureList[ctr]);
-        if (element.checked) {
+    // read checkboxes
+    for (ctr = 0; ctr < featureList.length; ctr++) {
+      element = document.getElementById(featureList[ctr]);
+      if (element.checked) {
+        if (features.length > 0)
+          features = features + ",";
+        features = features + featureList[ctr];
+      } else {
+        element = document.getElementById(featureList[ctr]+"-ex");
+        if (element && element.checked) { // titlebar, close, dialog
           if (features.length > 0)
             features = features + ",";
-          features = features + featureList[ctr];
-        } else {
-          element = document.getElementById(featureList[ctr]+"-ex");
-          if (element && element.checked) { // titlebar, close, dialog
-            if (features.length > 0)
-              features = features + ",";
-            features = features + featureList[ctr] + "=no";
-          }
+          features = features + featureList[ctr] + "=no";
         }
       }
-      dump("******* " + features + "\n");
-      return features;
     }
-    ]]>
-  </html:script>
+    dump("******* " + features + "\n");
+    return features;
+  }
+]]>
+</script>
 
-<!--  <html:div> -->
-
-  <html:table>
-    <html:tr>
-      <html:td>
-        <html:input type="checkbox" id="all"/>all
-      </html:td><html:td>
-        <html:input type="checkbox" id="all-ex"/>explicit
-      </html:td>
-    </html:tr>
-    <html:tr>
-      <html:td>
-        <html:input type="checkbox" id="close"/>close
-      </html:td><html:td>
-        <html:input type="checkbox" id="close-ex"/>explicit
-      </html:td>
-    </html:tr>
-    <html:tr>
-      <html:td>
-        <html:input type="checkbox" id="titlebar"/>titlebar
-      </html:td><html:td>
-        <html:input type="checkbox" id="titlebar-ex"/>explicit
-      </html:td>
-    </html:tr>
-    <html:tr>
-      <html:td>
-        <html:input type="checkbox" id="resizable"/>resizable
-      </html:td>
-    </html:tr>
-    <html:tr>
-      <html:td>
-        <html:input type="checkbox" id="scrollbars"/>scrollbars
-      </html:td>
-    </html:tr>
-    <html:tr>
-      <html:td>
-        <html:input type="checkbox" id="alwaysRaised"/>raised
-      </html:td>
-    </html:tr>
-    <html:tr>
-      <html:td>
-        <html:input type="checkbox" id="alwaysLowered"/>lowered
-      </html:td>
-    </html:tr>
-    <html:tr>
-      <html:td>
-        <html:input type="checkbox" id="menubar"/>menubar
-      </html:td>
-    </html:tr>
-    <html:tr>
-      <html:td>
-        <html:input type="checkbox" id="toolbar"/>toolbar
-      </html:td>
-    </html:tr>
-    <html:tr>
-      <html:td>
-        <html:input type="checkbox" id="status"/>status
-      </html:td>
-    </html:tr>
-    <html:tr>
-      <html:td>
-        <html:input type="checkbox" id="location"/>location
-      </html:td>
-    </html:tr>
-    <html:tr>
-      <html:td>
-        <html:input type="checkbox" id="chrome"/>chrome
-      </html:td>
-    </html:tr>
-    <html:tr>
-      <html:td>
-        <html:input type="checkbox" id="dialog"/>dialog
-      </html:td><html:td>
-        <html:input type="checkbox" id="dialog-ex"/>explicit
-      </html:td>
-    </html:tr>
-    <html:tr>
-      <html:td>
-        <html:input type="checkbox" id="modal"/>modal
-      </html:td>
-    </html:tr>
-    <html:tr>
-      <html:td>
-        <html:input type="checkbox" id="dependent"/>dependent
-      </html:td>
-    </html:tr>
-    <html:tr>
-      <html:td>
-        <html:input type="checkbox" id="centerscreen"/>centered
-      </html:td>
-    </html:tr>
-  </html:table>
-  <html:table>
-    <html:tr>
-      <html:td colspan="2">
-        <html:center>Open</html:center>
-      </html:td>
-    </html:tr>
-    <html:tr>
-      <html:td>
-        <xul:titledbutton value="HTML Window" onclick="OpenWindow('html')"
-                          style="background-color:rgb(192,192,192);"/>
-      </html:td>
-      <html:td>
-        <xul:titledbutton value="XUL Window" onclick="OpenWindow('xul')"
-                          style="background-color:rgb(192,192,192);"/>
-      </html:td>
-    </html:tr>
-    <html:tr>
-      <html:td>
-        <xul:titledbutton value="HTML Dialog" onclick="OpenDialog('html')"
-                          style="background-color:rgb(192,192,192);"/>
-      </html:td>
-      <html:td>
-        <xul:titledbutton value="XUL Dialog" onclick="OpenDialog('xul')"
-                          style="background-color:rgb(192,192,192);"/>
-      </html:td>
-    </html:tr>
-  </html:table>
-<!--  </html:div> -->
-</xul:window>
+<box orient="vertical">
+  <grid>
+    <columns><column/><column/></columns>
+    <rows>
+      <row>
+        <checkbox id="all" value="all"/>
+        <checkbox id="all-ex" value="explicit"/>
+      </row>
+      <row>
+        <checkbox id="close" value="close"/>
+        <checkbox id="close-ex" value="explicit"/>
+      </row>
+      <row>
+        <checkbox id="titlebar" value="titlebar"/>
+        <checkbox id="titlebar-ex" value="explicit"/>
+      </row>
+      <row>
+        <checkbox id="resizable" value="resizable"/>
+        <spring/>
+      </row>
+      <row>
+        <checkbox id="scrollbars" value="scrollbars"/>
+        <spring/>
+      </row>
+      <row>
+        <checkbox id="alwaysRaised" value="raised"/>
+        <spring/>
+      </row>
+      <row>
+        <checkbox id="alwaysLowered" value="lowered"/>
+        <spring/>
+      </row>
+      <row>
+        <checkbox id="menubar" value="menubar"/>
+        <spring/>
+      </row>
+      <row>
+        <checkbox id="toolbar" value="toolbar"/>
+        <spring/>
+      </row>
+      <row>
+        <checkbox id="status" value="status"/>
+        <spring/>
+      </row>
+      <row>
+        <checkbox id="location" value="location"/>
+        <spring/>
+      </row>
+      <row>
+        <checkbox id="chrome" value="chrome"/>
+        <spring/>
+      </row>
+      <row>
+        <checkbox id="dialog" value="dialog"/>
+        <checkbox id="dialog-ex" value="explicit"/>
+      </row>
+      <row>
+        <checkbox id="modal" value="modal"/>
+        <spring/>
+      </row>
+      <row>
+        <checkbox id="dependent" value="dependent"/>
+        <spring/>
+      </row>
+      <row>
+        <checkbox id="centerscreen" value="centered"/>
+        <spring/>
+      </row>
+    </rows>
+  </grid>
+</box>
+<spring style="width: 8px"/>
+<box orient="vertical">
+  <box orient="horizontal">
+    <spring flex="1"/>
+    <text value="Open"/>
+    <spring flex="1"/>
+  </box>
+  <grid>
+    <columns><column/><column/></columns>
+    <rows>
+      <row>
+        <button value="HTML Window" onclick="OpenWindow('html')"/>
+        <button value="XUL Window" onclick="OpenWindow('xul')"/>
+      </row>
+      <row>
+        <button value="HTML Dialog" onclick="OpenDialog('html')"/>
+        <button value="XUL Dialog" onclick="OpenDialog('xul')"/>
+      </row>
+    </rows>
+  </grid>
+</box>
+</window>
