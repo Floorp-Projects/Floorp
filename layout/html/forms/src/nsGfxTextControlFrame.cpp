@@ -2090,11 +2090,14 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
   printf("gfxTCF: reflow reason=%d\n", aReflowState.reason);
 #endif
 
+  // Turning off optimization for now
+#if 0
   nsresult skiprv = SkipResizeReflow(mCacheSize, mCachedMaxElementSize, aPresContext, 
                                      aDesiredSize, aReflowState, aStatus);
   if (NS_SUCCEEDED(skiprv)) {
     return skiprv;
   }
+#endif
 
   // Figure out if we are doing Quirks or Standard
   nsCompatibility mode;
@@ -2165,8 +2168,10 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
   }
 #endif
 
+  // Turning off optimization for now
+#if 0
   SetupCachedSizes(mCacheSize, mCachedMaxElementSize, aDesiredSize);
-
+#endif
 
 #ifdef NOISY
   printf ("exit nsGfxTextControlFrame::Reflow: size=%d,%d\n",
