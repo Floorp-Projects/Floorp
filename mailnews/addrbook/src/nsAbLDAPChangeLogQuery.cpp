@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Rajiv Dayal <rdayal@netscape.com>
+ *   David Bienvenu <bienvenu@nventure.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -120,6 +121,9 @@ NS_IMETHODIMP nsAbLDAPChangeLogQuery::QueryAuthDN(const nsACString & aValueUsedT
     if(NS_FAILED(rv)) 
         return rv;
 
+    rv = CreateNewLDAPOperation();
+    NS_ENSURE_SUCCESS(rv, rv);
+
     return mOperation->SearchExt(dn, nsILDAPURL::SCOPE_SUBTREE, filter, 
                                attributes.GetSize(), attributes.GetArray(),
                                0, 0);
@@ -130,8 +134,9 @@ NS_IMETHODIMP nsAbLDAPChangeLogQuery::QueryRootDSE()
     if(!mInitialized) 
         return NS_ERROR_NOT_INITIALIZED;
 
-    return
-      mOperation->SearchExt(EmptyCString(), nsILDAPURL::SCOPE_BASE, 
+    nsresult rv = CreateNewLDAPOperation();
+    NS_ENSURE_SUCCESS(rv, rv);
+    return mOperation->SearchExt(EmptyCString(), nsILDAPURL::SCOPE_BASE, 
 			    NS_LITERAL_CSTRING("objectclass=*"), 
 			    MozillaLdapPropertyRelator::rootDSEAttribCount, 
 			    MozillaLdapPropertyRelator::changeLogRootDSEAttribs,
@@ -150,6 +155,9 @@ NS_IMETHODIMP nsAbLDAPChangeLogQuery::QueryChangeLog(const nsACString & aChangeL
     // also condition '>' doesnot work, it should be '>='/
     nsCAutoString filter (NS_LITERAL_CSTRING("changenumber>="));
     filter.AppendInt(mDirServer->replInfo->lastChangeNumber+1);
+
+    nsresult rv = CreateNewLDAPOperation();
+    NS_ENSURE_SUCCESS(rv, rv);
 
     return mOperation->SearchExt(aChangeLogDN, 
                                nsILDAPURL::SCOPE_ONELEVEL,
@@ -181,6 +189,8 @@ NS_IMETHODIMP nsAbLDAPChangeLogQuery::QueryChangedEntries(const nsACString & aCh
     if(NS_FAILED(rv)) 
         return rv;
 
+    rv = CreateNewLDAPOperation();
+    NS_ENSURE_SUCCESS(rv, rv);
     return mOperation->SearchExt(aChangedEntryDN, scope, urlFilter, 
                                attributes.GetSize(), attributes.GetArray(),
                                0, 0);

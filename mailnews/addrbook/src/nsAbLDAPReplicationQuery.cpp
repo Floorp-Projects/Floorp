@@ -111,6 +111,18 @@ nsresult nsAbLDAPReplicationQuery::InitLDAPData()
     return rv;
 }
 
+nsresult nsAbLDAPReplicationQuery::CreateNewLDAPOperation()
+{
+  nsresult rv;
+  nsCOMPtr <nsILDAPMessageListener> oldListener;
+  mOperation->GetMessageListener(getter_AddRefs(oldListener));
+  // release old and create a new instance
+  mOperation = do_CreateInstance(NS_LDAPOPERATION_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return mOperation->Init(mConnection, oldListener, nsnull);
+}
+
+
 NS_IMETHODIMP nsAbLDAPReplicationQuery::ConnectToLDAPServer(nsILDAPURL *aURL, const nsACString & aAuthDN)
 {
     NS_ENSURE_ARG_POINTER(aURL);
@@ -232,6 +244,8 @@ NS_IMETHODIMP nsAbLDAPReplicationQuery::QueryAllEntries()
     if (NS_FAILED(rv)) 
         return rv;
 
+    rv = CreateNewLDAPOperation();
+    NS_ENSURE_SUCCESS(rv, rv);
     return mOperation->SearchExt(dn, scope, urlFilter, 
                                attributes.GetSize(), attributes.GetArray(),
                                0, 0);

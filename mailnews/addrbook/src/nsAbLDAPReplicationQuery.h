@@ -58,6 +58,7 @@ public:
   virtual ~nsAbLDAPReplicationQuery();
 
   nsresult InitLDAPData();
+  nsresult CreateNewLDAPOperation();
 
 protected :
   // pointer to interfaces used by this object
