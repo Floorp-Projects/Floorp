@@ -1,7 +1,6 @@
       interface Window {
 /* IID: { 0xa6cf906b, 0x15b3, 0x11d2, \
   { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
- 
         readonly attribute  Window window;
         readonly attribute  Window self;
         readonly attribute  Document document;
@@ -25,6 +24,8 @@
                  attribute  long pageXOffset;
                  attribute  long pageYOffset;
 
+        boolean Equals(in Window window);
+ 
         void  dump(in wstring str);
         void  alert(in wstring str);
         void  focus();
