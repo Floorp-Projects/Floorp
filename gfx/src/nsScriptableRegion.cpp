@@ -36,29 +36,7 @@ nsScriptableRegion::~nsScriptableRegion()
 	NS_IF_RELEASE(mRegion);
 }
 
-NS_IMPL_ADDREF(nsScriptableRegion)
-NS_IMPL_RELEASE(nsScriptableRegion)
-
-NS_IMETHODIMP nsScriptableRegion::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-	if (NULL == aInstancePtr) {
-		return NS_ERROR_NULL_POINTER;
-	}
-
-	*aInstancePtr = NULL;
-
-	if (aIID.Equals(NS_GET_IID(nsIScriptableRegion)) || aIID.Equals(NS_GET_IID(nsISupports))) {
-		*aInstancePtr = (void*) this;
-		NS_ADDREF_THIS();
-		return NS_OK;
-	}
-	if (aIID.Equals(NS_GET_IID(nsIRegion))) {
-		*aInstancePtr = (void*) mRegion;
-		NS_ADDREF(mRegion);
-		return NS_OK;
-	}
-	return NS_NOINTERFACE;
-}
+NS_IMPL_ISUPPORTS1(nsScriptableRegion, nsIScriptableRegion)
 
 NS_IMETHODIMP nsScriptableRegion::Init()
 {
