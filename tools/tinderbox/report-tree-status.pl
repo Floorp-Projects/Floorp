@@ -80,7 +80,7 @@ sub is_tree_open {
 
     # Scan for sheriff string & save it off for HTTP submit later.
     if(/^<br><a NAME="sheriff"><\/a>/) {
-      chop;
+      chomp;
       $sheriff_string = $_;
 
       # Strip out content to save space.
@@ -92,6 +92,7 @@ sub is_tree_open {
       # Order is important, pick off easy tags, then make it legal cgi,
       # then shorten it up.
       $sheriff_string =~ s/<[pP]>//g;
+      $sheriff_string =~ s/\015//g;   # ^M
       $sheriff_string =~ s/<br>//g;
       $sheriff_string =~ s/<\/a>//g;
       $sheriff_string =~ s/<//g;
