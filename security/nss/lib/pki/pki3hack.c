@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.30 $ $Date: 2002/02/01 17:25:15 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.31 $ $Date: 2002/02/04 23:04:08 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -516,6 +516,8 @@ nssDecodedPKIXCertificate_Destroy
 )
 {
     CERTCertificate *cert = (CERTCertificate *)dc->data;
+    PRBool freeSlot = cert->ownSlot;
+    PK11SlotInfo *slot = cert->slot;
     PRArenaPool *arena  = cert->arena;
     /* zero cert before freeing. Any stale references to this cert
      * after this point will probably cause an exception.  */
@@ -523,6 +525,9 @@ nssDecodedPKIXCertificate_Destroy
     /* free the arena that contains the cert. */
     PORT_FreeArena(arena, PR_FALSE);
     nss_ZFreeIf(dc);
+    if (slot && freeSlot) {
+	PK11_FreeSlot(slot);
+    }
     return PR_SUCCESS;
 }
 
