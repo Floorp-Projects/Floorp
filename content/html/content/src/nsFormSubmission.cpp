@@ -98,7 +98,8 @@ public:
   // nsIFormSubmission
   //
   NS_IMETHOD SubmitTo(nsIURI* aActionURL, const nsAString& aTarget,
-                      nsIContent* aSource, nsIPresContext* aPresContext);
+                      nsIContent* aSource, nsIPresContext* aPresContext,
+                      nsIDocShell** aDocShell, nsIRequest** aRequest);
 
 
   NS_IMETHOD Init() = 0;
@@ -719,7 +720,8 @@ GetSubmissionFromForm(nsIForm* aForm,
 
 NS_IMETHODIMP
 nsFormSubmission::SubmitTo(nsIURI* aActionURL, const nsAString& aTarget,
-                           nsIContent* aSource, nsIPresContext* aPresContext)
+                           nsIContent* aSource, nsIPresContext* aPresContext,
+                           nsIDocShell** aDocShell, nsIRequest** aRequest)
 {
   nsresult rv;
 
@@ -739,9 +741,11 @@ nsFormSubmission::SubmitTo(nsIURI* aActionURL, const nsAString& aTarget,
     nsCAutoString actionURLSpec;
     aActionURL->GetSpec(actionURLSpec);
 
-    handler->OnLinkClick(aSource, eLinkVerb_Replace,
-                         NS_ConvertUTF8toUCS2(actionURLSpec).get(),
-                         PromiseFlatString(aTarget).get(), postDataStream);
+    handler->OnLinkClickSync(aSource, eLinkVerb_Replace,
+                             NS_ConvertUTF8toUCS2(actionURLSpec).get(),
+                             PromiseFlatString(aTarget).get(),
+                             postDataStream, nsnull,
+                             aDocShell, aRequest);
   }
 
   return rv;

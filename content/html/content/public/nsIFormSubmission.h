@@ -48,8 +48,10 @@ class nsIPresContext;
 class nsIContent;
 class nsIFormControl;
 class nsIDOMHTMLElement;
+class nsIDocShell;
+class nsIRequest;
 
-#define NS_IFORMSUBMITTER_IID   \
+#define NS_IFORMSUBMISSION_IID   \
 { 0x7ee38e3a, 0x1dd2, 0x11b2, \
   {0x89, 0x6f, 0xab, 0x28, 0x03, 0x96, 0x25, 0xa9} }
 
@@ -61,7 +63,7 @@ class nsIFormSubmission : public nsISupports
 {
 public:
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFORMSUBMITTER_IID)
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFORMSUBMISSION_IID)
 
   /**
    * Find out whether or not this form submission accepts files
@@ -77,9 +79,13 @@ public:
    * @param aTarget the target window
    * @param aSource the element responsible for the submission (for web shell)
    * @param aPresContext the presentation context
+   * @param aDocShell (out param) the DocShell in which the submission was
+   *        loaded
+   * @param aRequest (out param) the Request for the submission
    */
   NS_IMETHOD SubmitTo(nsIURI* aActionURL, const nsAString& aTarget,
-                      nsIContent* aSource, nsIPresContext* aPresContext) = 0;
+                      nsIContent* aSource, nsIPresContext* aPresContext,
+                      nsIDocShell** aDocShell, nsIRequest** aRequest) = 0;
 
   /**
    * Submit a name/value pair

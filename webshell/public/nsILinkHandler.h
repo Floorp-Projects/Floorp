@@ -40,6 +40,8 @@
 #include "nsISupports.h"
 
 class nsIInputStream;
+class nsIDocShell;
+class nsIRequest;
 class nsIContent;
 class nsString;
 struct nsGUIEvent;
@@ -73,11 +75,16 @@ public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ILINKHANDLER_IID)
 
   /**
-   * Process a click on a link. aContent is the content for the frame 
-   * that generated the trigger. aURLSpec is an absolute url spec that 
-   * defines the destination for the link. aTargetSpec indicates where 
-   * the link is targeted (it may be an empty string). aVerb indicates
-   * the verb to use when the link is triggered.
+   * Process a click on a link.
+   *
+   * @param aContent the content for the frame that generated the trigger
+   * @param aVerb the verb to use when the link is triggered
+   * @param aURLSpec an absolute URL spec that defines the destination for the
+   *        link
+   * @param aTargetSpec indicates where the link is targeted (may be an empty
+   *        string)
+   * @param aPostDataStream the POST data to send
+   * @param aHeadersDataStream ???
    */
   NS_IMETHOD OnLinkClick(nsIContent* aContent, 
                          nsLinkVerb aVerb,
@@ -87,10 +94,39 @@ public:
                          nsIInputStream* aHeadersDataStream = 0) = 0;
 
   /**
-   * Process a mouse-over a link. aContent is the 
-   * linked content. aURLSpec is an absolute url spec that defines the
-   * destination for the link. aTargetSpec indicates where the link is
-   * targeted (it may be an empty string).
+   * Process a click on a link.
+   *
+   * Works the same as OnLinkClick() except it happens immediately rather than
+   * through an event.
+   *
+   * @param aContent the content for the frame that generated the trigger
+   * @param aVerb the verb to use when the link is triggered
+   * @param aURLSpec an absolute URL spec that defines the destination for the
+   *        link
+   * @param aTargetSpec indicates where the link is targeted (may be an empty
+   *        string)
+   * @param aPostDataStream the POST data to send
+   * @param aHeadersDataStream ???
+   * @param aDocShell (out-param) the DocShell that the request was opened on
+   * @param aRequest the request that was opened
+   */
+  NS_IMETHOD OnLinkClickSync(nsIContent* aContent, 
+                             nsLinkVerb aVerb,
+                             const PRUnichar* aURLSpec,
+                             const PRUnichar* aTargetSpec,
+                             nsIInputStream* aPostDataStream = 0,
+                             nsIInputStream* aHeadersDataStream = 0,
+                             nsIDocShell** aDocShell = 0,
+                             nsIRequest** aRequest = 0) = 0;
+
+  /**
+   * Process a mouse-over a link.
+   *
+   * @param aContent the linked content.
+   * @param aURLSpec an absolute url spec that defines the destination for the
+   *        link
+   * @param aTargetSpec indicates where the link is targeted (it may be an empty
+   *        string)
    */
   NS_IMETHOD OnOverLink(nsIContent* aContent, 
                         const PRUnichar* aURLSpec,

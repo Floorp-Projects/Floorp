@@ -44,6 +44,7 @@ interface nsIDocumentCharsetInfo;
 interface nsIWebNavigation;
 interface nsISimpleEnumerator;
 interface nsIInputStream;
+interface nsIRequest;
 interface nsISHEntry;
 
 [scriptable, uuid(69E5DE00-7B8B-11d3-AF61-00A024FFC08C)]
@@ -123,7 +124,9 @@ interface nsIDocShell : nsISupports
                               in nsIInputStream aHeadersStream,
                               in unsigned long aLoadFlags,
                               in nsISHEntry aSHEntry,
-                              in boolean firstParty);
+                              in boolean firstParty,
+                              out nsIDocShell aDocShell,
+                              out nsIRequest aRequest);
 
   /**
    * Creates a DocShellLoadInfo object that you can manipulate and then pass
