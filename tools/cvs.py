@@ -20,7 +20,7 @@
 # Contributor(s): Stephen Lamm <slamm@netscape.com>
 # 
 
-# Version: $Id: cvs.py,v 1.4 2000/01/28 23:17:43 slamm%netscape.com Exp $
+# Version: $Id: cvs.py,v 1.5 2000/01/29 02:04:43 slamm%netscape.com Exp $
 
 # module cvs -- Add multithreading to the cvs client.
 
@@ -88,9 +88,8 @@ class CVS:
                 members[module] = re.split(spc_pat, line)
             else:
                 space_split = re.split(spc_pat, line)[1:]
-                members[module].extend(space_split)
+                members[module] = members[module] + space_split
         members = self._flatten_module(members, self.module)
-
 	def compare(x, y, self=self):
 	    return ( cmp(self._get_dir_part(x), self._get_dir_part(y)) or
 		     self._is_file(y) - self._is_file(x) )
@@ -101,7 +100,7 @@ class CVS:
         result = []
         for member in  members[module]:
             if members.has_key(member):
-                result.extend(self._flatten_module(members,member))
+                result = result + self._flatten_module(members,member)
             else:
                 result.append(member)
         return result
@@ -209,7 +208,7 @@ class XArgsThread(threading.Thread):
                     next_file_group = self.queue.get_nowait()
                 except Queue.Empty:
                     break
-                files.extend(next_file_group)
+                files = files + next_file_group
             if self.error_event and self.error_event.isSet():
                 sys.exit()
             if files:
