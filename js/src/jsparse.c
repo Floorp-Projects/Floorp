@@ -946,34 +946,32 @@ Condition(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
      * Check for (a = b) and "correct" it to (a == b).
      * XXX not ECMA, but documented in several books -- need a compile option
      */
-    if (pn->pn_type == TOK_ASSIGN && pn->pn_op == JSOP_NOP) {
-        JSBool rewrite = JS_HAS_STRICT_OPTION(cx) ||
-                         !JSVERSION_IS_ECMA(cx->version);
+    if (!JSVERSION_IS_ECMA(cx->version) &&
+        pn->pn_type == TOK_ASSIGN &&
+        pn->pn_op == JSOP_NOP) {
         if (!js_ReportCompileErrorNumber(cx, ts, NULL,
                                          JSREPORT_WARNING | JSREPORT_STRICT,
                                          JSMSG_EQUAL_AS_ASSIGN,
-                                         rewrite
+                                         (!JS_HAS_WERROR_OPTION(cx))
                                          ? "\nAssuming equality test"
                                          : "")) {
             return NULL;
         }
-        if (rewrite) {
-            pn->pn_type = TOK_EQOP;
-            pn->pn_op = (JSOp)cx->jsop_eq;
-            pn2 = pn->pn_left;
-            switch (pn2->pn_op) {
-              case JSOP_SETNAME:
-                pn2->pn_op = JSOP_NAME;
-                break;
-              case JSOP_SETPROP:
-                pn2->pn_op = JSOP_GETPROP;
-                break;
-              case JSOP_SETELEM:
-                pn2->pn_op = JSOP_GETELEM;
-                break;
-              default:
-                JS_ASSERT(0);
-            }
+        pn->pn_type = TOK_EQOP;
+        pn->pn_op = (JSOp)cx->jsop_eq;
+        pn2 = pn->pn_left;
+        switch (pn2->pn_op) {
+          case JSOP_SETNAME:
+            pn2->pn_op = JSOP_NAME;
+            break;
+          case JSOP_SETPROP:
+            pn2->pn_op = JSOP_GETPROP;
+            break;
+          case JSOP_SETELEM:
+            pn2->pn_op = JSOP_GETELEM;
+            break;
+          default:
+            JS_ASSERT(0);
         }
     }
     return pn;
