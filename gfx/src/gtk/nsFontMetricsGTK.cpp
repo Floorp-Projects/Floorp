@@ -1031,13 +1031,11 @@ NS_IMETHODIMP nsFontMetricsGTK::Init(const nsFont& aFont, nsIAtom* aLangGroup,
   mStyleIndex = mFont->style;
 
   mFont->EnumerateFamilies(FontEnumCallback, this);
-  char* value = nsnull;
+  nsXPIDLCString value;
   if (!mGeneric) {
-    gPref->CopyCharPref("font.default", &value);
-    if (value) {
-      mDefaultFont = value;
-      nsMemory::Free(value);
-      value = nsnull;
+    gPref->CopyCharPref("font.default", getter_Copies(value));
+    if (value.get()) {
+      mDefaultFont = value.get();
     }
     else {
       mDefaultFont = "serif";
@@ -1100,11 +1098,9 @@ NS_IMETHODIMP nsFontMetricsGTK::Init(const nsFont& aFont, nsIAtom* aLangGroup,
     name.Append(*mGeneric);
     name.Append(char('.'));
     name.Append(USER_DEFINED);
-    gPref->CopyCharPref(name.get(), &value);
-    if (value) {
-      mUserDefined = value;
-      nsMemory::Free(value);
-      value = nsnull;
+    gPref->CopyCharPref(name.get(), getter_Copies(value));
+    if (value.get()) {
+      mUserDefined = value.get();
       mIsUserDefined = 1;
     }
   }
@@ -3772,16 +3768,14 @@ nsFontMetricsGTK::FindLangGroupPrefFont(nsIAtom* aLangGroup, PRUnichar aChar)
     const PRUnichar* langGroup = nsnull;
     aLangGroup->GetUnicode(&langGroup);
     pref.AppendWithConversion(langGroup);
-    char* value = nsnull;
-    gPref->CopyCharPref(pref.get(), &value);
+    nsXPIDLCString value;
+    gPref->CopyCharPref(pref.get(), getter_Copies(value));
     nsCAutoString str;
     nsCAutoString str_user;
-    if (value) {
-      str = value;
-      str_user = value;
+    if (value.get()) {
+      str = value.get();
+      str_user = value.get();
       FIND_FONT_PRINTF(("      user pref %s = %s", pref.get(), str.get()));
-      nsMemory::Free(value);
-      value = nsnull;
       font = TryNode(&str, aChar);
       if (font) {
         NS_ASSERTION(font->SupportsChar(aChar), "font supposed to support this char");
@@ -3793,16 +3787,13 @@ nsFontMetricsGTK::FindLangGroupPrefFont(nsIAtom* aLangGroup, PRUnichar aChar)
         return font;
       }
     }
-    value = nsnull;
     // check factory set pref
-    gPref->CopyDefaultCharPref(pref.get(), &value);
-    if (value) {
-      str = value;
+    gPref->CopyDefaultCharPref(pref.get(), getter_Copies(value));
+    if (value.get()) {
+      str = value.get();
       // check if we already tried this name
       if (str != str_user) {
         FIND_FONT_PRINTF(("      default pref %s = %s", pref.get(), str.get()));
-        nsMemory::Free(value);
-        value = nsnull;
         font = TryNode(&str, aChar);
         if (font) {
           NS_ASSERTION(font->SupportsChar(aChar), "font supposed to support this char");
