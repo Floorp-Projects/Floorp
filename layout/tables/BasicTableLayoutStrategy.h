@@ -124,13 +124,15 @@ public:
     *
     * @param aPresContext     the presentation context
     * @param aAvailWidth      the remaining amount of horizontal space available
+    * @param aMaxWidth        the total amount of horizontal space available
     * @param aTableFixedWidth the specified width of the table.  If there is none,
     *                         this param is 0
     * 
     * @return PR_TRUE if all is well, PR_FALSE if there was an unrecoverable error
     */
   virtual PRBool BalanceColumnsTableFits(nsIPresContext*  aPresContext, 
-                                         PRInt32          aAvailWidth,
+                                         nscoord          aAvailWidth,
+                                         nscoord          aMaxWidth,
                                          nscoord          aTableFixedWidth);
 
   /** assign widths for each column that has proportional width inside a table that 
@@ -155,10 +157,11 @@ public:
                                            PRInt32 aMinTableWidth, 
                                            PRInt32 aMaxTableWidth);
 
-  /** return true if the style indicates that the width is proportional 
-    * for the purposes of column width determination
+  /** return true if the style indicates that the width is a specific width 
+    * for the purposes of column width determination.
+    * return false if the width changes based on content, parent size, etc.
     */
-  virtual PRBool IsProportionalWidth(nsStylePosition* aStylePosition);
+  virtual PRBool IsFixedWidth(nsStylePosition* aStylePosition);
 
   virtual PRBool IsAutoWidth(nsStylePosition* aStylePosition);
 

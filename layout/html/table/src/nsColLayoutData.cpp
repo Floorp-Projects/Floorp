@@ -24,6 +24,7 @@ nsColLayoutData::nsColLayoutData(nsTableCol *aCol)
 {
   mCol = aCol;
   mCells = new nsVoidArray();
+  mColFrame = nsnull;
 }
 
 nsColLayoutData::~nsColLayoutData()
@@ -55,7 +56,17 @@ void nsColLayoutData::SetCol(nsTableCol * aCol)
     NS_IF_RELEASE(mCol);
     mCol = aCol; 
   }
-};
+}
+
+nsTableColFrame * nsColLayoutData::GetColFrame()
+{
+  return mColFrame;
+}
+
+void nsColLayoutData::SetColFrame(nsTableColFrame *aColFrame)
+{
+  mColFrame = aColFrame;
+}
 
 
 nsCellLayoutData* nsColLayoutData::ElementAt(PRInt32 aIndex) const

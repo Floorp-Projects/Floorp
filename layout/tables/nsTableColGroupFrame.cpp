@@ -135,48 +135,52 @@ NS_METHOD nsTableColGroupFrame::SetStyleContextForFirstPass(nsIPresContext* aPre
   result = table->GetAttribute(nsHTMLAtoms::cols, value);
   
   // if COLS is set, then map it into the COL frames
-  // chicken and egg problem here.  I don't have any children yet, so I 
-  // don't know how many columns there are, so I can't do this!
-  // I need to just set some state, and let the individual columns query up into me
-  // in their own hooks
-  PRInt32 numCols;
-  if (result == eContentAttr_NoValue)
-    ChildCount(numCols);
-  else if (result == eContentAttr_HasValue)
+  if (eContentAttr_NotThere != result)
   {
-    nsHTMLUnit unit = value.GetUnit();
-    if (eHTMLUnit_Empty==unit)
+    PRInt32 numCols=0;
+    if (eContentAttr_NoValue == result)
       ChildCount(numCols);
-    else
-      numCols = value.GetIntValue();
-  }
+    else if (eContentAttr_HasValue == result)
+    {
+      nsHTMLUnit unit = value.GetUnit();
+      if (eHTMLUnit_Empty==unit)
+        ChildCount(numCols);
+      else
+        numCols = value.GetIntValue();
+    }
 
-  PRInt32 colIndex=0;
-  nsIFrame *colFrame;
-  FirstChild(colFrame);
-  for (; colIndex<numCols; colIndex++)
-  {
-    if (nsnull==colFrame)
-      break;  // the attribute value specified was greater than the actual number of columns
-    nsStylePosition * colPosition=nsnull;
-    colFrame->GetStyleData(eStyleStruct_Position, (nsStyleStruct*&)colPosition);
-    nsStyleCoord width (1, eStyleUnit_Proportional);
-    colPosition->mWidth = width;
-    colFrame->GetNextSibling(colFrame);
-  }
-  // if there are more columns, there width is set to "minimum"
-  PRInt32 numChildFrames;
-  ChildCount(numChildFrames);
-  for (; colIndex<numChildFrames; colIndex++)
-  {
-    nsStylePosition * colPosition=nsnull;
-    colFrame->GetStyleData(eStyleStruct_Position, (nsStyleStruct*&)colPosition);
-    nsStyleCoord width (0, eStyleUnit_Integer);
-    colPosition->mWidth = width;
-    colFrame->GetNextSibling(colFrame);
-  }
+    PRInt32 colIndex=0;
+    nsIFrame *colFrame=nsnull;
+    nsIStyleContext *colStyleContext;
+    for (; colIndex<numCols; colIndex++)
+    {
+      ChildAt(colIndex, colFrame);
+      if (nsnull==colFrame)
+        break;  // the attribute value specified was greater than the actual number of columns
+      nsStylePosition * colPosition=nsnull;
+      colFrame->GetStyleData(eStyleStruct_Position, (nsStyleStruct*&)colPosition);
+      nsStyleCoord width (1, eStyleUnit_Proportional);
+      colPosition->mWidth = width;
+      colFrame->GetStyleContext(aPresContext, colStyleContext);
+      colStyleContext->RecalcAutomaticData(aPresContext);
+    }
+    // if there are more columns, there width is set to "minimum"
+    PRInt32 numChildFrames;
+    ChildCount(numChildFrames);
+    for (; colIndex<numChildFrames; colIndex++)
+    {
+      ChildAt(colIndex, colFrame);
+      NS_ASSERTION(nsnull!=colFrame, "bad first column frame");
+      nsStylePosition * colPosition=nsnull;
+      colFrame->GetStyleData(eStyleStruct_Position, (nsStyleStruct*&)colPosition);
+      nsStyleCoord width (0, eStyleUnit_Integer);
+      colPosition->mWidth = width;
+      colFrame->GetStyleContext(aPresContext, colStyleContext);
+      colStyleContext->RecalcAutomaticData(aPresContext);
+    }
 
-  mStyleContext->RecalcAutomaticData(aPresContext);
+    mStyleContext->RecalcAutomaticData(aPresContext);
+  }
   return NS_OK;
 }
 

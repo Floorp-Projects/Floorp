@@ -16,6 +16,7 @@
  * Reserved.
  */
 #include "nsTableCol.h"
+#include "nsTableColFrame.h"
 #include "nsTableColGroup.h"
 #include "nsTablePart.h"
 #include "nsHTMLParts.h"
@@ -34,29 +35,6 @@ static PRBool gsNoisyRefs = PR_FALSE;
 static const PRBool gsDebug = PR_FALSE;
 static const PRBool gsNoisyRefs = PR_FALSE;
 #endif
-
-class nsTableColFrame : public nsFrame {
-public:
-  static nsresult NewFrame(nsIFrame** aInstancePtrResult,
-                           nsIContent* aContent,
-                           nsIFrame*   aParent);
-
-  NS_IMETHOD Paint(nsIPresContext& aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect& aDirtyRect);
-
-  NS_IMETHOD Reflow(nsIPresContext*      aPresContext,
-                    nsReflowMetrics&     aDesiredSize,
-                    const nsReflowState& aReflowState,
-                    nsReflowStatus&      aStatus);
-
-protected:
-
-  nsTableColFrame(nsIContent* aContent, nsIFrame* aParentFrame);
-
-  ~nsTableColFrame();
-
-};
 
 
 
