@@ -67,8 +67,43 @@ function setDivText(divname, value) {
 
 function openImapAdvanced()
 {
+    var imapServer = getImapServer();
     window.openDialog("chrome://messenger/content/am-imap-advanced.xul",
                       "_blank",
-                      "chrome,modal");
+                      "chrome,modal", imapServer);
 
+    saveServerLocally(imapServer);
+}
+
+function getImapServer() {
+    var imapServer = new Array;
+
+    var controls = document.controls;
+
+    // boolean prefs, need to do special convertion    
+    imapServer.dualUseFolders = (controls["imap.dualUseFolders"].value == "true" ? true : false);
+    imapServer.usingSubscription = (controls["imap.usingSubscription"].value == "true" ? true : false);
+
+    // string prefs
+    imapServer.personalNamespace = controls["imap.personalNamespace"].value;
+    imapServer.publicNamespace = controls["imap.publicNamespace"].value;
+    imapServer.otherUsersNamespace = controls["imap.otherUsersNamespace"].value;
+    return imapServer;
+}
+
+function saveServerLocally(imapServer)
+{
+    dump("Saving server..\n");
+    var controls = document.controls;
+
+    // boolean prefs, JS does the conversion for us
+    controls["imap.dualUseFolders"].value = imapServer.dualUseFolders;
+    controls["imap.usingSubscription"].value = imapServer.usingSubscription;
+
+    // string prefs
+    controls["imap.personalNamespace"].value = imapServer.personalNamespace;
+    controls["imap.publicNamespace"].value = imapServer.publicNamespace;
+    controls["imap.otherUsersNamespace"].value = imapServer.otherUsersNamespace;
+
+    dump("Done.\n");
 }

@@ -32,6 +32,7 @@ Rights Reserved.
     height="400" width="500" class="dialog"
     onload="onLoad();">
 
+<keyset id="keyset"/>
 <html:script src="chrome://global/content/strres.js"/>
 <html:script src="chrome://global/content/wizardOverlay.js"/>
 <html:script src="chrome://global/content/wizardHandlerSet.js"/>

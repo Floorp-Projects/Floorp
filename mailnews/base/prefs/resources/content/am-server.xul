@@ -21,7 +21,6 @@
     <titledbutton class="right-header-text" value=""/>
   </box>
   <box align="vertical">
-  <html:fieldset style="width:100%">
   <html:table>
   <html:tr>
     <html:td>&serverType.label;</html:td>
@@ -38,7 +37,6 @@
       <html:td><html:div id="username.verbose"/></html:td>
     </html:tr>
   </html:table>
-  </html:fieldset>
   <html:div><html:input name="server.isSecure"
                         type="checkbox"/>&isSecure.label;</html:div>
   <html:div><html:input name="server.rememberPassword"
@@ -79,6 +77,11 @@
             value="&advancedButton.label;"
             onclick="openImapAdvanced(event);"/>
         </box>
+        <html:input type="hidden" name="imap.dualUseFolders"/>
+        <html:input type="hidden" name="imap.usingSubscription"/>
+        <html:input type="hidden" name="imap.personalNamespace"/>
+        <html:input type="hidden" name="imap.publicNamespace"/>
+        <html:input type="hidden" name="imap.otherUsersNamespace"/>
       </box>
       <!-- News -->
       <box align="vertical" flex="100%">

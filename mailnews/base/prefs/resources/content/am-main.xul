@@ -19,34 +19,37 @@
     <box align="vertical">
 	    <html:div class="secDesc">&accountSettingsDesc.label;</html:div>
 	    <html:div>&accountNameDesc.label;</html:div>
-	    <box align="horizontal">
-	      <html:div>&accountName.label;</html:div>
-          <html:spacer/>
-	      <html:input type="text" name="server.prettyName" flex="100%"/>
-	    </box>
+	    <html:div>
+	      <html:label for="server.prettyName">&accountName.label;</html:label>
+	      <html:input type="text" name="server.prettyName" id="server.prettyName" flex="100%"/>
+	    </html:div>
     </box>
-
+    <spring class="spacer"/>
     <html:div class="secTitle">&identityTitle.label;</html:div>
-    <box align="vertical">
+    <spring class="spacer"/>
     <html:div class="secDesc">&identityDesc.label;</html:div>
-    <html:div style="width: 100%">
     <html:table width="100%">
+    <html:colgroup>
+      <html:col width="1*"/>
+      <html:col width="4*"/>
+    </html:colgroup>
     <html:tr>
       <html:td>&name.label;</html:td>
-      <html:td align="right"><html:input name="identity.fullName" type="text" size="30"/></html:td>
+      <html:td><html:input name="identity.fullName" type="text" size="30"/></html:td>
     </html:tr>
     <html:tr>
       <html:td>&email.label;</html:td>
-      <html:td align="right"><html:input name="identity.email" type="text" size="30"/></html:td>
+      <html:td><html:input name="identity.email" type="text" size="30"/></html:td>
     </html:tr>
     <html:tr>
       <html:td flex="40%">&replyTo.label;</html:td>
-      <html:td align="right"><html:input name="identity.replyTo" type="text" size="30"/></html:td>
+      <html:td><html:input name="identity.replyTo" type="text" size="30"/></html:td>
     </html:tr>
     <html:tr>
       <html:td flex="40%">&organization.label;</html:td>
-      <html:td align="right"><html:input name="identity.organization" type="text" size="30"/></html:td>
+      <html:td><html:input name="identity.organization" type="text" size="30"/></html:td>
     </html:tr>
+    </html:table>
 <!-- no vcard in PR1
     <html:tr class="checkboxrow">
       <html:td colspan="2">
@@ -56,14 +59,13 @@
       </html:td>
       </html:tr>    
 -->
-      <html:tr class="checkboxrow">
-      <html:td colspan="3">
-        <html:input name="identity.attachSignature" type="checkbox"/>
-        &signature.label;
+      <html:div>
+        <html:input name="identity.attachSignature" id="identity.attachSignature" type="checkbox"/>
+        <html:label for="identity.attachSignature">&signature.label;</html:label>
         <html:input type="text" id="identity.signature" datatype="nsIFileSpec" flex="100%" name="identity.signature"/>
-	<titledbutton class="dialog push" name="browse" type="button" value="&choose.label;" onclick="PrefNavSelectFile('identity.signature')"/>
-      </html:td>
-      </html:tr>
+        <titledbutton class="dialog push" name="browse" type="button" value="&choose.label;" onclick="PrefNavSelectFile('identity.signature')"/>
+      </html:div>
+
 <!--
       <html:select flex="100%">
          <html:option value="sig1">&sampleSig1.label;</html:option>
@@ -73,16 +75,10 @@
       <titledbutton value="&edit.label;"/>
 
 -->
-    
-    </html:table>
-    </html:div>
-    </box>
 
-    <html:table>
-      <html:tr class="checkboxrow"><html:td>
-        <html:input name="identity.composeHtml" type="checkbox"/>
-        &useHtml.label;
-      </html:td></html:tr>
-    </html:table>
+    <html:div>
+        <html:input name="identity.composeHtml" id="composeHtml" type="checkbox"/>
+        <html:label for="identity.composeHtml">&useHtml.label;</html:label>
+    </html:div>
 
 </window>

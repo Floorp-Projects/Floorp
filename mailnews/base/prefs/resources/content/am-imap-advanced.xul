@@ -9,9 +9,12 @@
       class="dialog"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       style="padding: 10px"
+      onload="onLoad();"
       align="vertical">
 
 <keyset id="keyset"/>
+
+<html:script src="am-imap-advanced.js"/>
 
 <html:div>
   <html:label for="serverDirectory">&serverDirectory.label;</html:label>

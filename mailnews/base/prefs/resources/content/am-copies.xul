@@ -24,35 +24,32 @@
       <spring class="header-spring" flex="1"/>
       <titledbutton class="right-header-text" value=""/>
     </box>
-<box align="vertical" flex="100%">
+<box align="vertical">
 <html:div>&sendingPrefix.label;</html:div>
 
-  <box align="horizontal">
-    <html:input name="identity.doFcc" type="checkbox"/>
-    <html:div>&fccMailFolder.label;</html:div>
+  <html:div>
+    <html:input name="identity.doFcc" id="identity.doFcc" type="checkbox"/>
+    <html:label for="identity.doFcc">&fccMailFolder.label;</html:label>
 
 	<!-- name="identity.fccFolder" -->
-	<box align="horizontal">
+	<box align="horizontal" style="display:inline">
 		<menu id="msgFccFolderPicker"/>
 		<spring flex="100%"/>
 	</box>
-    
-  </box>
-  <box align="horizontal">
-    <html:input name="identity.bccSelf" type="checkbox"/>
-    <html:div>&bccAccount.label;</html:div>
-    <spring class="spacer"/>
-    <html:span>
-      <html:div before="&lt;" id="bccemail" after="&gt;"/>
-    </html:span>
-  </box>
-  <box align="horizontal">
-    <html:input name="identity.bccOthers" type="checkbox"/>
-    <html:div>&bccAddress.label;</html:div>
-    <html:input type="text" name="identity.bccList"/> 
-  </box>
+  </html:div>
+  <html:div>
+    <html:input name="identity.bccSelf" id="identity.bccSelf" type="checkbox"/>
+    <html:label for="identity.bccSelf">&bccAccount.label; <html:div style="display:inline" before=" &lt;" id="bccemail" after="&gt;"/>
+</html:label>
+  </html:div>
+  <html:div>
+    <html:input name="identity.bccOthers" id="identity.bccOthers" type="checkbox"/>
+    <html:label for="identity.bccOthers">&bccAddress.label;</html:label>
+    <html:input type="text" name="identity.bccList"/>
+  </html:div>
 </box>
-
+<spring class="spacer"/>
+<spring class="spacer"/>
 <html:div><html:b>&specialFolderTitle.label;</html:b></html:div>
 <box align="vertical" flex="100%">
   <box align="horizontal">

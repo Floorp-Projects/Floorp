@@ -18,11 +18,11 @@
 	<keyset id="keyset"/>
 
 	<box align="horizontal" flex="100%" style="padding: 5px">
-		<box align="vertical" flex="25%">
+		<box align="vertical" flex="1">
          <tree rdf:datasources="rdf:msgaccountmanager" flex="100%"
           rdf:containment="http://home.netscape.com/NC-rdf#Settings"
           onselect="onAccountClick(event.target)" id="accounttree"
-          style="height: 100%"
+          style="width:50px"
           class="inset"
           ref="msgaccounts:/">
           <template>
@@ -46,7 +46,7 @@
          </box>
 		</box>
         <spring style="width: 5px"/>
-        <box flex="70%">
+        <box flex="5">
            <tabcontrol flex="100%" align="vertical">
              <deck id="mydeck" flex="100%">
                 <box id="am-main.xul" flex="100%">
