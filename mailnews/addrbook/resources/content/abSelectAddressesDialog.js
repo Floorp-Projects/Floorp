@@ -272,11 +272,11 @@ function RemoveSelectedFromBucket()
     var selection = bucketTree.view.selection;
     var rangeCount = selection.getRangeCount();
 
-    for (i = rangeCount-1; i >= 0; --i)
+    for (var i = rangeCount-1; i >= 0; --i)
     {
       var start = {}, end = {};
       selection.getRangeAt(i,start,end);
-      for (j = end.value; j >= start.value; --j)
+      for (var j = end.value; j >= start.value; --j)
       {
         var item = bucketTree.contentView.getItemAtIndex(j);
         body.removeChild(item);

@@ -38,12 +38,14 @@ Contributor(s):
 %abResultsPaneOverlayDTD;
 ]>
 
-<window xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+<window id="selectAddressesWindow"
+        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-		xmlns:nc="http://home.netscape.com/NC-rdf#"
+        xmlns:nc="http://home.netscape.com/NC-rdf#"
         title="&selectAddressWindow.title;"
         class="dialog"
-        width="680" height="480"
+        style="width: 50em; height: 35em;"
+        persist="width height screenX screenY"
         onload="OnLoadSelectAddress()"
         onunload="OnUnloadSelectAddress()">
 
@@ -62,13 +64,13 @@ Contributor(s):
     <hbox id="topBox" align="center">
       <label value="&lookIn.label;" accesskey="&lookIn.accesskey;" control="addressbookList"/>
       <menulist id="addressbookList" 
-	            ref="moz-abdirectory://" 
+                ref="moz-abdirectory://" 
                 datasources="rdf:addressdirectory"
                 containment="http://home.netscape.com/NC-rdf#child"
                 sortActive="true"
                 sortDirection="ascending"
                 sortResource="http://home.netscape.com/NC-rdf#DirTreeNameSort"
-				oncommand="DirPaneSelectionChangeMenulist(); document.commandDispatcher.updateCommands('addrbook-select');">
+                oncommand="DirPaneSelectionChangeMenulist(); document.commandDispatcher.updateCommands('addrbook-select');">
         <template>
           <rule nc:IsMailList="false">
             <menupopup>
@@ -79,11 +81,11 @@ Contributor(s):
           </rule>
         </template>
       </menulist>  
-	  <label value="&for.label;" accesskey="&for.accesskey;" control="searchInput"/> 
-	  <textbox id="searchInput" flex="1"
-      oninput="onAbSearchInput(false);"
-      onkeypress="onAbSearchKeyPress(event);"/>  
-	  <button id="clear" label="&clearButton.label;" disabled="true" accesskey="&clearButton.accesskey;" oncommand="onAbClearSearch();"/>
+      <label value="&for.label;" accesskey="&for.accesskey;" control="searchInput"/>
+      <textbox id="searchInput" flex="1"
+               oninput="onAbSearchInput(false);"
+               onkeypress="onAbSearchKeyPress(event);"/>
+      <button id="clear" label="&clearButton.label;" disabled="true" accesskey="&clearButton.accesskey;" oncommand="onAbClearSearch();"/>
     </hbox>
     
     <hbox flex="1">    
