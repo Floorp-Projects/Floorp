@@ -203,6 +203,7 @@ I18N_COMPONENTS = \
 	$(DIST)/lib/libunicharutil.$(DLL_SUFFIX) \
 	$(DIST)/lib/libuconv.$(DLL_SUFFIX) \
 	$(DIST)/lib/libucvlatin.$(DLL_SUFFIX) \
+	$(DIST)/lib/libnslocale.$(DLL_SUFFIX) \
 	$(NULL)
 
 XPCOM_LIBS = \
