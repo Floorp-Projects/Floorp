@@ -526,6 +526,9 @@ sub MakeResouceAliases()
 
 	my($rdf_dir) = "$resource_dir" . "rdf:";
 	BuildFolderResourceAliases(":mozilla:rdf:resources:",								"$rdf_dir");
+	
+	# NOTE: this will change as we move the toolbar/appshell chrome files to a real place
+	BuildFolderResourceAliases(":mozilla:xpfe:browser:src:", 							"$samples_dir");
 }
 
 
