@@ -524,13 +524,13 @@ NS_IMETHODIMP nsWidget::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth,
 // Send a resize message to the listener
 //
 //-------------------------------------------------------------------------
-PRBool nsWidget::OnResize(nsSizeEvent event)
+PRBool nsWidget::OnResize(nsSizeEvent *event)
 {
 
-  mBounds.width = event.mWinWidth;
-  mBounds.height = event.mWinHeight;
+  mBounds.width = event->mWinWidth;
+  mBounds.height = event->mWinHeight;
 
-  return DispatchWindowEvent(&event);
+  return DispatchWindowEvent(event);
 }
 
 
@@ -553,7 +553,7 @@ PRBool nsWidget::OnResize(nsRect &aRect)
   mBounds.height = aRect.height;
 
   NS_ADDREF_THIS();
-  PRBool result = OnResize(event);
+  PRBool result = OnResize(&event);
   NS_RELEASE_THIS();
 
   return result;
