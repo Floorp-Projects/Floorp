@@ -400,7 +400,6 @@ nsHTMLButtonControlFrame::Paint(nsIPresContext& aPresContext,
                                 const nsRect& aDirtyRect,
                                 nsFramePaintLayer aWhichLayer)
 {
-  printf("*********** nsHTMLButtonControlFrame::Paint\n");
  	const nsStyleDisplay* disp = (const nsStyleDisplay*)
 	mStyleContext->GetStyleData(eStyleStruct_Display);
 	if (disp->mVisible)
