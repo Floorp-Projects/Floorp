@@ -711,8 +711,6 @@ function OutputEmailAddresses(headerEntry, emailAddresses)
 
 function setFromBuddyIcon(email)
 {
-   //dump("XXX email = " + email + "\n");
-
    var fromBuddyIcon = document.getElementById("fromBuddyIcon");
 
    try {
@@ -838,20 +836,40 @@ function createNewAttachmentInfo(contentType, url, displayName, uri, notDownload
   this.notDownloaded = notDownloaded;
 }
 
-function saveAttachment(contentType, url, displayName, messageUri)
+function dofunc(aFunctionName, aFunctionArg)
 {
-  messenger.saveAttachment(contentType, url, displayName, messageUri);
+  if (aFunctionName == "saveAttachment") 
+    saveAttachment(aFunctionArg); 
+  else if (aFunctionName == "openAttachment") 
+    openAttachment(aFunctionArg); 
+  else if (aFunctionName == "printAttachment") 
+    printAttachment(aFunctionArg);
 }
 
-function openAttachment(contentType, url, displayName, messageUri)
+function saveAttachment(aAttachment)
 {
-  messenger.openAttachment(contentType, url, displayName, messageUri);
+  messenger.saveAttachment(aAttachment.contentType, 
+                           aAttachment.url, 
+                           aAttachment.displayName, 
+                           aAttachment.messageUri);
 }
 
-function printAttachmentAttachment(contentType, url, displayName, messageUri)
+function openAttachment(aAttachment)
 {
-  // we haven't implemented the ability to print attachments yet...
-  // messenger.printAttachment(contentType, url, displayName, messageUri);
+  messenger.openAttachment(aAttachment.contentType, 
+                           aAttachment.url, 
+                           aAttachment.displayName, 
+                           aAttachment.messageUri);
+}
+
+function printAttachment(aAttachment)
+{
+  /* we haven't implemented the ability to print attachments yet...
+  messenger.printAttachment(aAttachment.contentType, 
+                            aAttachment.url, 
+                            aAttachment.displayName, 
+                            aAttachment.messageUri);
+  */
 }
 
 function onShowAttachmentContextMenu()
@@ -885,32 +903,31 @@ function attachmentListClick(event)
       var target = event.target;
       if (target.localName == "listitem")
       {
-	    var commandStringSuffix = target.getAttribute("commandSuffix");
-        var openString = 'openAttachment' + commandStringSuffix;
-        eval(openString);
+	dofunc("openAttachment", target.attachment);
       }
     }
 }
 
 // on command handlers for the attachment list context menu...
-// commandPrefix matches one of our existing functions (openAttachment, saveAttachment, etc.) which we'll add to the command suffix
-// found on the listitem....
+// commandPrefix matches one of our existing functions 
+// (openAttachment, saveAttachment, etc.)
 function handleAttachmentSelection(commandPrefix)
 {
-  // get the selected attachment...and call openAttachment on it...
   var attachmentList = document.getElementById('attachmentList');
   var selectedAttachments = attachmentList.selectedItems;
   var listItem = selectedAttachments[0];
-  var commandStringSuffix = listItem.getAttribute("commandSuffix");
-  var openString = commandPrefix + commandStringSuffix;
-  eval(openString);
+
+  dofunc(commandPrefix, listItem.attachment);
 }
 
-function generateCommandSuffixForAttachment(attachment)
+function cloneAttachment(aAttachment)
 {
-  // replace ' in url with \' so we can eval() correctly
-  var attachmentUrl = attachment.url.replace(/'/g,"\\\'");
-  return "('" + attachment.contentType + "', '" + attachmentUrl + "', '" + escape(attachment.displayName) + "', '" + attachment.uri + "')";
+  var obj = new Object();
+  obj.contentType = aAttachment.contentType;
+  obj.url = aAttachment.url;
+  obj.displayName = aAttachment.displayName;
+  obj.messageUri = aAttachment.uri;
+  return obj;
 }
 
 function displayAttachmentsForExpandedView()
@@ -922,20 +939,21 @@ function displayAttachmentsForExpandedView()
     for (index in currentAttachments)
     {
       var attachment = currentAttachments[index];
+
       // we need to create a listitem to insert the attachment
       // into the attachment list..
-
-	    var item = document.createElement("listitem");
-
+      var item = document.createElement("listitem");
       item.setAttribute("class", "listitem-iconic"); 
       item.setAttribute("label", attachment.displayName);
       item.setAttribute("tooltip", "attachmentListTooltip");
-      item.setAttribute("commandSuffix", generateCommandSuffixForAttachment(attachment)); // set the command suffix on the listitem...
+
+      item.attachment = cloneAttachment(attachment);
+
       item.setAttribute("attachmentUrl", attachment.url);
       item.setAttribute("attachmentContentType", attachment.contentType);
       item.setAttribute("attachmentUri", attachment.uri);
       setApplicationIconForAttachment(attachment, item);
-  	  attachmentList.appendChild(item);
+      attachmentList.appendChild(item);
     } // for each attachment
     gBuildAttachmentsForCurrentMsg = true;
   }
@@ -1031,13 +1049,13 @@ function addAttachmentToPopup(popup, attachment, attachmentIndex)
       item.setAttribute('label', formattedDisplayNameString); 
       item.setAttribute('accesskey', attachmentIndex); 
 
-      var oncommandPrefix = generateCommandSuffixForAttachment(attachment);
-
       var openpopup = document.createElement('menupopup');
       openpopup = item.appendChild(openpopup);
 
       var menuitementry = document.createElement('menuitem');     
-      menuitementry.setAttribute('oncommand', 'openAttachment' + oncommandPrefix); 
+
+      menuitementry.attachment = cloneAttachment(attachment);
+      menuitementry.setAttribute('oncommand', 'openAttachment(this.attachment)'); 
 
       if (!gSaveLabel)
         gSaveLabel = gMessengerBundle.getString("saveLabel");
@@ -1056,7 +1074,8 @@ function addAttachmentToPopup(popup, attachment, attachmentIndex)
       openpopup.appendChild(menuseparator);
       
       menuitementry = document.createElement('menuitem');
-      menuitementry.setAttribute('oncommand', 'saveAttachment' + oncommandPrefix); 
+      menuitementry.attachment = cloneAttachment(attachment);
+      menuitementry.setAttribute('oncommand', 'saveAttachment(this.attachment)'); 
       menuitementry.setAttribute('label', gSaveLabel); 
       menuitementry.setAttribute('accesskey', gSaveLabelAccesskey); 
       menuitementry = openpopup.appendChild(menuitementry);
