@@ -3219,11 +3219,12 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
     }
 
     if (sub_shell) {
-      SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
-
+      // Make sure to scroll before possibly dispatching focus/blur events.
       presShell->ScrollFrameIntoView(nextFocusFrame,
                                      NS_PRESSHELL_SCROLL_ANYWHERE,
                                      NS_PRESSHELL_SCROLL_ANYWHERE);
+
+      SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
 
       // if we are in the middle of tabbing into
       // sub_shell, bail out, to avoid recursion
