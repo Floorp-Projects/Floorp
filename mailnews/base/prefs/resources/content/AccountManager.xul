@@ -58,9 +58,6 @@
 
 	  <treecol style="width: 100%" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
 	  <treehead>
-		<treerow>
-	      <treecell value="&nameCol.label;"/>
-		</treerow>
 	  </treehead>
 
 	</tree>
