@@ -46,6 +46,12 @@ nsNetModuleMgr::RegisterModule(const char *aTopic, nsIEventQueue *aEventQueue, n
     nsresult rv;
     PRUint32 cnt;
 
+
+    // XXX before registering an object for a particular topic
+    // XXX QI the nsINetNotify interface passed in for the interfaces
+    // XXX supported by the topic.
+
+    PR_Lock(mLock);
     nsINetModRegEntry* newEntryI = nsnull;
     nsNetModRegEntry *newEntry =
         new nsNetModRegEntry(aTopic, aEventQueue, aNotify, *aCID);
@@ -56,13 +62,15 @@ nsNetModuleMgr::RegisterModule(const char *aTopic, nsIEventQueue *aEventQueue, n
     if (NS_FAILED(rv)) return rv;
 
     // Check for a previous registration
-    PR_Lock(mLock);
     mEntries->Count(&cnt);
     for (PRUint32 i = 0; i < cnt; i++) {
         nsINetModRegEntry* curEntry = NS_STATIC_CAST(nsINetModRegEntry*, mEntries->ElementAt(i));
         PRBool same = PR_FALSE;
         rv = newEntryI->Equals(curEntry, &same);
-        if (NS_FAILED(rv)) return rv;
+        if (NS_FAILED(rv)) {
+            PR_Unlock(mLock);
+            return rv;
+        }
 
         // if we've already got this one registered, yank it, and replace it with the new one
         if (same) {
@@ -100,7 +108,10 @@ nsNetModuleMgr::UnregisterModule(const char *aTopic, nsIEventQueue *aEventQueue,
         NS_ADDREF(curEntry); // get our ref to it
         PRBool same = PR_FALSE;
         rv = tmpEntryI->Equals(curEntry, &same);
-        if (NS_FAILED(rv)) return rv;
+        if (NS_FAILED(rv)) {
+            PR_Unlock(mLock);
+            return rv;
+        }
         if (same) {
             NS_RELEASE(curEntry);
             mEntries->DeleteElementAt(i);
@@ -122,6 +133,7 @@ nsNetModuleMgr::EnumerateModules(const char *aTopic, nsISimpleEnumerator **aEnum
 
     // get all the entries for this topic
     
+    PR_Lock(mLock);
     rv = mEntries->Count(&cnt);
     if (NS_FAILED(rv)) return rv;
 
@@ -138,6 +150,7 @@ nsNetModuleMgr::EnumerateModules(const char *aTopic, nsISimpleEnumerator **aEnum
         if (NS_FAILED(rv)) {
             NS_RELEASE(topicEntries);
             NS_RELEASE(entry);
+            PR_Unlock(mLock);
             return rv;
         }
 
@@ -149,6 +162,7 @@ nsNetModuleMgr::EnumerateModules(const char *aTopic, nsISimpleEnumerator **aEnum
             if (NS_FAILED(rv)) {
                 NS_RELEASE(topicEntries);
                 NS_RELEASE(entry);
+                PR_Unlock(mLock);
                 return rv;
             }
         }
@@ -171,6 +185,7 @@ nsNetModuleMgr::EnumerateModules(const char *aTopic, nsISimpleEnumerator **aEnum
         return rv;
     }
     *aEnumerator = outEnum;
+    PR_Unlock(mLock);
     return NS_OK;
 }
 
