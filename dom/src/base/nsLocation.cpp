@@ -47,6 +47,7 @@
 #include "nsCDefaultURIFixup.h"
 #include "nsIURIFixup.h"
 #include "nsIURL.h"
+#include "nsIJARURI.h"
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
 #include "nsNetUtil.h"
@@ -255,7 +256,7 @@ LocationImpl::FindUsableBaseURI(nsIURI * aBaseURI, nsIDocShell * aParent, nsIURI
 
 
 nsresult
-LocationImpl::GetURI(nsIURI** aURI)
+LocationImpl::GetURI(nsIURI** aURI, PRBool aGetInnermostURI)
 {
   *aURI = nsnull;
 
@@ -275,6 +276,16 @@ LocationImpl::GetURI(nsIURI** aURI)
   if (!uri) {
     return NS_OK;
   }
+
+  if (aGetInnermostURI) {
+    nsCOMPtr<nsIJARURI> jarURI(do_QueryInterface(uri));
+    while (jarURI) {
+      jarURI->GetJARFile(getter_AddRefs(uri));
+      jarURI = do_QueryInterface(uri);
+    }
+  }
+
+  NS_ASSERTION(uri, "nsJARURI screwed up?");
 
   nsCOMPtr<nsIURIFixup> urifixup(do_GetService(NS_URIFIXUP_CONTRACTID, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -379,7 +390,7 @@ LocationImpl::GetHost(nsAString& aHost)
   nsCOMPtr<nsIURI> uri;
   nsresult result;
 
-  result = GetURI(getter_AddRefs(uri));
+  result = GetURI(getter_AddRefs(uri), PR_TRUE);
 
   if (uri) {
     nsCAutoString hostport;
@@ -418,7 +429,7 @@ LocationImpl::GetHostname(nsAString& aHostname)
   nsCOMPtr<nsIURI> uri;
   nsresult result;
 
-  result = GetURI(getter_AddRefs(uri));
+  result = GetURI(getter_AddRefs(uri), PR_TRUE);
 
   if (uri) {
     nsCAutoString host;
@@ -642,7 +653,7 @@ LocationImpl::GetPort(nsAString& aPort)
   nsCOMPtr<nsIURI> uri;
   nsresult result = NS_OK;
 
-  result = GetURI(getter_AddRefs(uri));
+  result = GetURI(getter_AddRefs(uri), PR_TRUE);
 
   if (uri) {
     PRInt32 port;
