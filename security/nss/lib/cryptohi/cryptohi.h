@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: cryptohi.h,v 1.8 2004/04/27 23:04:35 gerv%gerv.net Exp $ */
+/* $Id: cryptohi.h,v 1.9 2005/03/08 07:08:48 julien.pierre.bugs%sun.com Exp $ */
 
 #ifndef _CRYPTOHI_H_
 #define _CRYPTOHI_H_
@@ -172,6 +172,14 @@ extern SECStatus SEC_DerSignData(PRArenaPool *arena, SECItem *result,
 **	"freeit" if PR_TRUE then free the object as well as its sub-objects
 */
 extern void SEC_DestroySignedData(CERTSignedData *sd, PRBool freeit);
+
+/*
+** Get the hash algorithm tag number for the given type of the key and
+** algorithm tag. Returns SEC_OID_UNKNOWN if key and algorithm
+** are not match.
+*/
+extern SECOidTag SEC_GetSignatureAlgorithmOidTag(KeyType keyType,
+                                                 SECOidTag hashAlgTag);
 
 /****************************************/
 /*

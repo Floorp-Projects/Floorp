@@ -37,7 +37,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.51 2005/02/25 00:54:29 julien.pierre.bugs%sun.com Exp $
+ * $Id: cert.h,v 1.52 2005/03/08 07:08:43 julien.pierre.bugs%sun.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -977,7 +977,20 @@ extern SECStatus CERT_FindCRLExtension
 extern SECStatus
    CERT_FindInvalidDateExten (CERTCrl *crl, int64 *value);
 
-extern void *CERT_StartCRLExtensions (CERTCrl *crl);
+/*
+** Set up a crl for adding X509v3 extensions.  Returns an opaque handle
+** used by routines that take an exthandle (void*) argument .
+**	"crl" is the CRL we are adding extensions to
+*/
+extern void *CERT_StartCRLExtensions(CERTCrl *crl);
+
+/*
+** Set up a crl entry for adding X509v3 extensions.  Returns an opaque handle
+** used by routines that take an exthandle (void*) argument .
+**	"crl" is the crl we are adding certs entries to
+**      "entry" is the crl entry we are adding extensions to
+*/
+extern void *CERT_StartCRLEntryExtensions(CERTCrl *crl, CERTCrlEntry *entry);
 
 extern CERTCertNicknames *CERT_GetCertNicknames (CERTCertDBHandle *handle,
 						 int what, void *wincx);

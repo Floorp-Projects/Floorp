@@ -37,7 +37,7 @@
 /*
  * Code for dealing with x.509 v3 crl and crl entries extensions.
  *
- * $Id: crlv2.c,v 1.2 2004/04/25 15:03:03 gerv%gerv.net Exp $
+ * $Id: crlv2.c,v 1.3 2005/03/08 07:08:47 julien.pierre.bugs%sun.com Exp $
  */
 
 #include "cert.h"
@@ -78,6 +78,19 @@ CERT_StartCRLExtensions(CERTCrl *crl)
     return (cert_StartExtensions ((void *)crl, crl->arena, SetCrlExts));
 }
 
+static void
+SetCrlEntryExts(void *object, CERTCertExtension **exts)
+{
+    CERTCrlEntry *crlEntry = (CERTCrlEntry *)object;
+
+    crlEntry->extensions = exts;
+}
+
+void *
+CERT_StartCRLEntryExtensions(CERTCrl *crl, CERTCrlEntry *entry)
+{
+    return (cert_StartExtensions (entry, crl->arena, SetCrlEntryExts));
+}
 
 SECStatus CERT_FindCRLNumberExten (CERTCrl *crl, CERTCrlNumber *value)
 {

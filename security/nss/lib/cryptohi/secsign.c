@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: secsign.c,v 1.8 2004/04/27 23:04:35 gerv%gerv.net Exp $ */
+/* $Id: secsign.c,v 1.9 2005/03/08 07:08:48 julien.pierre.bugs%sun.com Exp $ */
 
 #include <stdio.h>
 #include "cryptohi.h"
@@ -521,4 +521,50 @@ SGN_Digest(SECKEYPrivateKey *privKey,
 	PORT_FreeArena(arena, PR_FALSE);
     }
     return rv;
+}
+
+SECOidTag
+SEC_GetSignatureAlgorithmOidTag(KeyType keyType, SECOidTag hashAlgTag)
+{
+    SECOidTag sigTag = SEC_OID_UNKNOWN;
+
+    switch (keyType) {
+    case rsaKey:
+	switch (hashAlgTag) {
+	case SEC_OID_MD2:
+	    sigTag = SEC_OID_PKCS1_MD2_WITH_RSA_ENCRYPTION;	break;
+	case SEC_OID_UNKNOWN:	/* default for RSA if not specified */
+	case SEC_OID_MD5:
+	    sigTag = SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION;	break;
+	case SEC_OID_SHA1:
+	    sigTag = SEC_OID_PKCS1_SHA1_WITH_RSA_ENCRYPTION;	break;
+	case SEC_OID_SHA256:
+	    sigTag = SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION;	break;
+	case SEC_OID_SHA384:
+	    sigTag = SEC_OID_PKCS1_SHA384_WITH_RSA_ENCRYPTION;	break;
+	case SEC_OID_SHA512:
+	    sigTag = SEC_OID_PKCS1_SHA512_WITH_RSA_ENCRYPTION;	break;
+	default:
+	    break;
+	}
+	break;
+    case dsaKey:
+	switch (hashAlgTag) {
+	case SEC_OID_UNKNOWN:	/* default for DSA if not specified */
+	case SEC_OID_SHA1:
+	    sigTag = SEC_OID_ANSIX9_DSA_SIGNATURE_WITH_SHA1_DIGEST; break;
+	default:
+	    break;
+	}
+	break;
+#ifdef NSS_ENABLE_ECC
+    case ecKey:
+        /* XXX For now only ECDSA with SHA1 is supported */
+        sigTag = SEC_OID_ANSIX962_ECDSA_SIGNATURE_WITH_SHA1_DIGEST;
+	break;
+#endif /* NSS_ENABLE_ECC */
+    default:
+    	break;
+    }
+    return sigTag;
 }
