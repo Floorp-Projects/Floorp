@@ -153,6 +153,18 @@ extern JSD_PUBLIC_API(JSContext*)
 JSD_GetDefaultJSContext(JSDContext* jsdc);
 
 /*
+* Set the private data for this context, returns previous value
+*/
+extern JSD_PUBLIC_API(void *)
+JSD_SetContextPrivate(JSDContext *jsdc, void *data);
+
+/*
+* Get the private data for this context
+*/
+extern JSD_PUBLIC_API(void *)
+JSD_GetContextPrivate(JSDContext *jsdc);
+
+/*
 * Notify JSD that this JSContext is 'in use'. This allows JSD to hook the
 * ErrorReporter. For the most part this is done automatically whenever
 * events like script loading happen. But, it is a good idea to call this
@@ -206,6 +218,18 @@ JSD_UnlockScriptSubsystem(JSDContext* jsdc);
 */
 extern JSD_PUBLIC_API(JSDScript*)
 JSD_IterateScripts(JSDContext* jsdc, JSDScript **iterp);
+
+/*
+* Set the private data for this script, returns previous value
+*/
+extern JSD_PUBLIC_API(void *)
+JSD_SetScriptPrivate(JSDScript *jsdscript, void *data);
+
+/*
+* Get the private data for this script
+*/
+extern JSD_PUBLIC_API(void *)
+JSD_GetScriptPrivate(JSDScript *jsdscript);
 
 /*
 * Determine if this script is still loaded in the interpreter
@@ -693,10 +717,19 @@ JSD_GetThisForStackFrame(JSDContext* jsdc,
                          JSDStackFrameInfo* jsdframe);
 
 /*
-* Evaluate the given source code in the context of the given stack frame.
+* Evaluate the given unicode source code in the context of the given stack frame.
 * returns JS_TRUE and puts result in rval on success, JS_FALSE on failure.
 * NOTE: The ErrorReporter hook might be called if this fails.
 */
+extern JSD_PUBLIC_API(JSBool)
+JSD_EvaluateUCScriptInStackFrame(JSDContext* jsdc,
+                                 JSDThreadState* jsdthreadstate,
+                                 JSDStackFrameInfo* jsdframe,
+                                 const jschar *bytes, uintN length,
+                                 const char *filename, uintN lineno,
+                                 jsval *rval);
+
+/* single byte character version of JSD_EvaluateUCScriptInStackFrame */
 extern JSD_PUBLIC_API(JSBool)
 JSD_EvaluateScriptInStackFrame(JSDContext* jsdc,
                                JSDThreadState* jsdthreadstate,
@@ -995,9 +1028,9 @@ JSD_GetCountOfProperties(JSDContext* jsdc, JSDValue* jsdval);
 extern JSD_PUBLIC_API(JSDProperty*)
 JSD_IterateProperties(JSDContext* jsdc, JSDValue* jsdval, JSDProperty **iterp);
 
-/*
-* Get the JSDValue for the property of this JSDVal with this name.
-* NOTE: must eventually release by calling JSD_DropValue (if not NULL)
+/* 
+* Get the JSDProperty for the property of this JSDVal with this name.
+* NOTE: must eventually release by calling JSD_DropProperty (if not NULL)
 * *** new for version 1.1 ****
 */
 extern JSD_PUBLIC_API(JSDProperty*)
