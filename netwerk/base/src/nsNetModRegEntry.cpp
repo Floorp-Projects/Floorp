@@ -83,7 +83,7 @@ nsNetModRegEntry::Equals(nsINetModRegEntry* aEntry, PRBool *_retVal)
 	topic=0;
 	}
     
-    if (PL_strcmp(topic, mTopic)) 
+    if (topic && PL_strcmp(topic, mTopic)) 
         return NS_OK;
 
     nsCOMPtr<nsIEventQueue> entryEventQ;
