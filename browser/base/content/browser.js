@@ -1297,6 +1297,11 @@ function canonizeUrl(aTriggeringEvent)
     return;
   
   var url = gURLBar.value;
+
+  // Prevent suffix when already exists www , http , /
+  if (url.match(/^(www|http)|\/\s*$/i))
+    return;
+
   if (aTriggeringEvent && 'ctrlKey' in aTriggeringEvent &&
       aTriggeringEvent.ctrlKey && 'shiftKey' in aTriggeringEvent &&
       aTriggeringEvent.shiftKey)
