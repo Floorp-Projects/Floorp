@@ -96,7 +96,8 @@ private:
   static PRUint32   CalculateChromeFlags(const char *aFeatures,
                                          PRBool aFeaturesSpecified,
                                          PRBool aDialog,
-                                         PRBool aChromeURL);
+                                         PRBool aChromeURL,
+                                         PRBool aHasChromeParent);
   static PRInt32    WinHasOption(const char *aOptions, const char *aName,
                                  PRInt32 aDefault, PRBool *aPresenceFlag);
   static nsresult   ReadyOpenedDocShellItem(nsIDocShellTreeItem *aOpenedItem,

@@ -55,6 +55,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMWindow.h"
+#include "nsIDOMChromeWindow.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIScreen.h"
 #include "nsIScreenManager.h"
@@ -463,13 +464,13 @@ nsWindowWatcher::OpenWindow(nsIDOMWindow *aParent,
 
 NS_IMETHODIMP
 nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
-                            const char *aUrl,
-                            const char *aName,
-                            const char *aFeatures,
-                            PRBool aDialog,
-                            PRUint32 argc,
-                            jsval *argv,
-                            nsIDOMWindow **_retval)
+                              const char *aUrl,
+                              const char *aName,
+                              const char *aFeatures,
+                              PRBool aDialog,
+                              PRUint32 argc,
+                              jsval *argv,
+                              nsIDOMWindow **_retval)
 {
   nsresult                        rv = NS_OK;
   PRBool                          nameSpecified,
@@ -513,8 +514,11 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
     features.StripWhitespace();
   }
 
-  chromeFlags = CalculateChromeFlags(features.get(), featuresSpecified, aDialog,
-                  uriToLoadIsChrome);
+  nsCOMPtr<nsIDOMChromeWindow> chromeParent(do_QueryInterface(aParent));
+
+  chromeFlags = CalculateChromeFlags(features.get(), featuresSpecified,
+                                     aDialog, uriToLoadIsChrome,
+                                     !aParent || chromeParent);
 
   // try to find an extant window with the given name
   if (nameSpecified) {
@@ -1158,7 +1162,7 @@ void nsWindowWatcher::CheckWindowName(nsString& aName)
 
 #define NS_CALCULATE_CHROME_FLAG_FOR(feature, flag)               \
     prefBranch->GetBoolPref(feature, &forceEnable);               \
-    if (forceEnable && !isChrome) {                               \
+    if (forceEnable && !(isChrome && aHasChromeParent)) {         \
       chromeFlags |= flag;                                        \
     } else {                                                      \
       chromeFlags |= WinHasOption(aFeatures, feature,             \
@@ -1177,7 +1181,8 @@ void nsWindowWatcher::CheckWindowName(nsString& aName)
 PRUint32 nsWindowWatcher::CalculateChromeFlags(const char *aFeatures,
                                                PRBool aFeaturesSpecified,
                                                PRBool aDialog,
-                                               PRBool aChromeURL)
+                                               PRBool aChromeURL,
+                                               PRBool aHasChromeParent)
 {
    if(!aFeaturesSpecified || !aFeatures) {
       if(aDialog)
@@ -1304,9 +1309,11 @@ PRUint32 nsWindowWatcher::CalculateChromeFlags(const char *aFeatures,
   PRBool enabled;
   nsresult res =
     securityManager->IsCapabilityEnabled("UniversalBrowserWrite", &enabled);
- 
-  if (NS_FAILED(res) || !enabled) {
-    //If priv check fails, set all elements to minimum reqs., else leave them alone.
+
+  if (NS_FAILED(res) || !enabled || (isChrome && !aHasChromeParent)) {
+    // If priv check fails (or if we're called from chrome, but the
+    // parent is not a chrome window), set all elements to minimum
+    // reqs., else leave them alone.
     chromeFlags |= nsIWebBrowserChrome::CHROME_TITLEBAR;
     chromeFlags |= nsIWebBrowserChrome::CHROME_WINDOW_CLOSE;
     chromeFlags &= ~nsIWebBrowserChrome::CHROME_WINDOW_LOWERED;
@@ -1556,9 +1563,20 @@ nsWindowWatcher::SizeOpenedDocShellItem(nsIDocShellTreeItem *aDocShellItem,
   nsCOMPtr<nsIScriptSecurityManager>
     securityManager(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
   if (securityManager) {
-    res = securityManager->IsCapabilityEnabled("UniversalBrowserWrite", &enabled);
+    res = securityManager->IsCapabilityEnabled("UniversalBrowserWrite",
+                                               &enabled);
     if (NS_FAILED(res))
       enabled = PR_FALSE;
+    else if (enabled && aParent) {
+      nsCOMPtr<nsIDOMChromeWindow> chromeWin(do_QueryInterface(aParent));
+
+      PRBool isChrome = PR_FALSE;
+      securityManager->SubjectPrincipalIsSystem(&isChrome);
+
+      // Only enable special priveleges for chrome when chrome calls
+      // open() on a chrome window
+      enabled = !(isChrome && chromeWin == nsnull);
+    }
   }
 
   if (!enabled) {
