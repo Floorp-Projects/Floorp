@@ -2639,9 +2639,7 @@ CNavDTD::OpenContainer(const nsIParserNode& aNode,PRBool aClosedByStartTag){
 
     case eHTMLTag_textarea:
       {
-        PRInt32 theCount;
         nsCParserNode& theCNode=*(nsCParserNode*)&aNode;
-        CollectSkippedContent(theCNode,theCount);
         result=AddLeaf(theCNode);
       }
       break;
