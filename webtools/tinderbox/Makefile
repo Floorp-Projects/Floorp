@@ -10,16 +10,16 @@
 # License for the specific language governing rights and limitations
 # under the License.
 #
-# The Original Code is the Bonsai CVS tool.
+# The Original Code is the Tinderbox build tool.
 #
 # The Initial Developer of the Original Code is Netscape Communications
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 
 
-# This Makefile helps you install Bonsai.  Define PERL and MYSQLTCL to
+# This Makefile helps you install Tinderbox.  Define PERL and MYSQLTCL to
 # the full pathnames of where you have these utilities.  Define PREFIX
-# to where you will install the running Bonsai.  Then "make install" should
+# to where you will install the running Tinderbox.  Then "make install" should
 # copy things for you.
 
 #BONSAI = /home/httpd/html/bonsai
