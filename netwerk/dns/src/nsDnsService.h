@@ -36,7 +36,6 @@ class nsDNSLookup;
 
 class nsDNSService : public nsIDNSService,
                      public nsIRunnable
-
 {
 public:
     NS_DECL_ISUPPORTS
@@ -56,7 +55,9 @@ public:
 
 protected:
     friend class nsDNSLookup;
+#ifdef XP_MAC
     friend pascal void  nsDnsServiceNotifierRoutine(void * contextPtr, OTEventCode code, OTResult result, void * cookie);
+#endif
 
     nsIThread *   mThread;
     PRBool        mThreadRunning;

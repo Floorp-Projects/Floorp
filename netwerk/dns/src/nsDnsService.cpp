@@ -85,8 +85,9 @@ public:
 
 
 protected:
+#ifdef XP_MAC
     friend pascal void  nsDnsServiceNotifierRoutine(void * contextPtr, OTEventCode code, OTResult result, void * cookie);
-
+#endif
     char *                      mHostName;
     nsHostEnt                   mHostEntry;
     PRBool                      mComplete;
@@ -97,11 +98,11 @@ protected:
     nsCOMPtr<nsISupportsArray>  mRequestQueue;     // XXX - maintain a list of nsDNSRequests.
 
 #if defined(XP_MAC)
-	nsLookupElement     mLookupElement;
+    nsLookupElement     mLookupElement;
     nsInetHostInfo      mInetHostInfo;
+#endif
     nsIDNSListener *    mListener;        // belongs with nsDNSRequest
     nsISupports *       mContext;         // belongs with nsDNSRequest
-#endif
 };
 
 NS_IMPL_ISUPPORTS1(nsDNSLookup, nsISupports)
@@ -477,35 +478,36 @@ nsDNSService::Lookup(nsISupports*    clientContext,
                      nsIRequest*     *DNSRequest)
 {
     nsresult	rv, result = NS_OK;
+    nsISupports* ctxt = nsnull;
 
     //    initateLookupNeeded = false;
-	//    lock dns service
-	//    search cache for existing nsDNSLookup with matching hostname
-	//    if (exists) {
-	//        if (complete) {
+    //    lock dns service
+    //    search cache for existing nsDNSLookup with matching hostname
+    //    if (exists) {
+    //        if (complete) {
     //            AddRef lookup
-	//            unlock cache
-	//            OnStartLookup
-	//            OnFound
-	//            OnStopLookup
+    //            unlock cache
+    //            OnStartLookup
+    //            OnFound
+    //            OnStopLookup
     //            Release lookup
-	//            return
-	//        }
-	//    } else {
-	//        create nsDNSLookup
+    //            return
+    //        }
+    //    } else {
+    //        create nsDNSLookup
     //        iniateLookupNeeded = true
     //    }
-	//    create nsDNSRequest & queue on nsDNSLookup
-	//    unlock dns service
-	//    OnStartLookup
-	//    if (iniateLookupNeeded) {
-	//        initiate async lookup
-	//    }
-	//    
+    //    create nsDNSRequest & queue on nsDNSLookup
+    //    unlock dns service
+    //    OnStartLookup
+    //    if (iniateLookupNeeded) {
+    //        initiate async lookup
+    //    }
+    //    
 
 #if defined(XP_MAC)
 
-	// create nsDNSLookup
+    // create nsDNSLookup
     nsDNSLookup * lookup = new nsDNSLookup(clientContext, hostName, listener);
     if (lookup == nsnull)
     	return NS_ERROR_OUT_OF_MEMORY;
@@ -513,8 +515,8 @@ nsDNSService::Lookup(nsISupports*    clientContext,
     rv = listener->OnStartLookup(clientContext, hostName);
     // what do we do with the return value here?
 
-	// initiate async lookup
-	rv = lookup->InitiateDNSLookup(this);	
+    // initiate async lookup
+    rv = lookup->InitiateDNSLookup(this);	
 
     return rv;
     
