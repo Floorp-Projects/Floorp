@@ -111,6 +111,19 @@ typedef void * nsNativeDeviceContext;
 /* print: print while in print preview */
 #define NS_ERROR_GFX_PRINTER_PRINT_WHILE_PREVIEW          \
   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+18)
+/* requested page size not supported by printer */
+#define NS_ERROR_GFX_PRINTER_PAPER_SIZE_NOT_SUPPORTED \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+19)
+/* requested page orientation not supported */
+#define NS_ERROR_GFX_PRINTER_ORIENTATION_NOT_SUPPORTED \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+20)
+/* requested colorspace not supported (like printing "color" on a "grayscale"-only printer) */
+#define NS_ERROR_GFX_PRINTER_COLORSPACE_NOT_SUPPORTED \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+21)
+/* too many copies requested */
+#define NS_ERROR_GFX_PRINTER_TOO_MANY_COPIES \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+22)
+
 
 /**
  * Conts need for Print Preview
