@@ -88,6 +88,31 @@ JS_InitArenaPool(JSArenaPool *pool, const char *name, JSUint32 size, JSUint32 al
 #endif
 }
 
+/*
+ * An allocation that consumes more than pool->arenasize also has a footer
+ * pointing back to its previous arena's next member.  This footer is not
+ * included in [a->base, a->limit), so its space can't be wrongly claimed.
+ *
+ * As the footer is a pointer, it must be well-aligned.  If pool->mask is
+ * greater than or equal to POINTER_MASK, the footer starting at a->avail
+ * for an oversized arena a is well-aligned.  If pool->mask is less than
+ * POINTER_MASK, we must include enough space in FOOTER_SIZE to align the
+ * back-pointer.  Given power-of-two alignment restrictions, that space is
+ * POINTER_MASK - pool->mask.
+ */
+#define POINTER_MASK            ((jsuword)(JS_ALIGN_OF_POINTER - 1))
+#define FOOTER_MASK(pool)       (((pool)->mask < POINTER_MASK)                \
+                                 ? POINTER_MASK                               \
+                                 : (jsuword)0)
+#define FOOTER_SIZE(pool)       (sizeof(JSArena **)                           \
+                                 + (((pool)->mask < POINTER_MASK)             \
+                                    ? POINTER_MASK - pool->mask               \
+                                    : (jsuword)0))
+#define FOOTER_ALIGN(pool,q)    (((q) + FOOTER_MASK(pool)) & ~FOOTER_MASK(pool))
+#define FOOTER_ADDRESS(pool,q)  ((JSArena ***)FOOTER_ALIGN(pool, q))
+#define GET_FOOTER(pool,a)      (*FOOTER_ADDRESS(pool, (a)->avail))
+#define SET_FOOTER(pool,a,ap)   (*FOOTER_ADDRESS(pool, (a)->avail) = (ap))
+
 JS_PUBLIC_API(void *)
 JS_ArenaAllocate(JSArenaPool *pool, JSUint32 nb)
 {
@@ -95,14 +120,9 @@ JS_ArenaAllocate(JSArenaPool *pool, JSUint32 nb)
     JSUint32 extra, gross, sz;
     void *p;
 
-    /*
-     * An allocation that consumes more than pool->arenasize also has a footer
-     * pointing back to its previous arena's next member.  This footer is not
-     * included in [a->base, a->limit), so its space can't be wrongly claimed.
-     */
     ap = NULL;
     JS_ASSERT((nb & pool->mask) == 0);
-    extra = (nb > pool->arenasize) ? sizeof(JSArena **) : 0;
+    extra = (nb > pool->arenasize) ? FOOTER_SIZE(pool) : 0;
     gross = nb + extra;
     for (a = pool->current; a->avail + nb > a->limit; pool->current = a) {
         ap = &a->next;
@@ -154,7 +174,7 @@ JS_ArenaAllocate(JSArenaPool *pool, JSUint32 nb)
      * than (pool->mask + 1) bytes.
      */
     if (extra && ap)
-        *(JSArena ***)a->avail = ap;
+        SET_FOOTER(pool, a, ap);
     return p;
 }
 
@@ -169,7 +189,7 @@ JS_ArenaRealloc(JSArenaPool *pool, void *p, JSUint32 size, JSUint32 incr)
      * See JS_ArenaAllocate, the extra variable.
      */
     if (size > pool->arenasize) {
-        ap = *(JSArena ***)((jsuword)p + JS_ARENA_ALIGN(pool, size));
+        ap = *FOOTER_ADDRESS(pool, (jsuword)p + JS_ARENA_ALIGN(pool, size));
         a = *ap;
     } else {
         ap = &pool->first.next;
@@ -181,7 +201,7 @@ JS_ArenaRealloc(JSArenaPool *pool, void *p, JSUint32 size, JSUint32 incr)
     aoff = netsize = size + incr;
     JS_ASSERT(netsize > pool->arenasize);
     netsize += sizeof *a + pool->mask;          /* header and alignment slop */
-    gross = netsize + sizeof(JSArena **);       /* oversized footer holds ap */
+    gross = netsize + FOOTER_SIZE(pool);        /* oversized footer holds ap */
     a = (JSArena *) realloc(a, gross);
     if (!a)
         return NULL;
@@ -200,7 +220,7 @@ JS_ArenaRealloc(JSArenaPool *pool, void *p, JSUint32 size, JSUint32 incr)
         memmove((void *)a->base, (char *)a + boff, size);
 
     /* Store ap in the oversized load footer. */
-    *(JSArena ***)a->avail = ap;
+    SET_FOOTER(pool, a, ap);
     return (void *)a->base;
 }
 
@@ -295,7 +315,7 @@ JS_ArenaFreeAllocation(JSArenaPool *pool, void *p, JSUint32 size)
     q = (jsuword)p + size;
     q = JS_ARENA_ALIGN(pool, q);
     if (size > pool->arenasize) {
-        ap = *(JSArena ***)q;
+        ap = *FOOTER_ADDRESS(pool, q);
         a = *ap;
     } else {
         ap = &pool->first.next;
@@ -333,8 +353,8 @@ JS_ArenaFreeAllocation(JSArenaPool *pool, void *p, JSUint32 size)
      */
     *ap = b = a->next;
     if (b && b->avail - b->base > pool->arenasize) {
-        JS_ASSERT(*(JSArena ***)b->avail == &a->next);
-        *(JSArena ***)b->avail = ap;
+        JS_ASSERT(GET_FOOTER(pool, b) == &a->next);
+        SET_FOOTER(pool, b, ap);
     }
     JS_CLEAR_ARENA(a);
     JS_COUNT_ARENA(pool,--);
