@@ -105,7 +105,7 @@ protected:
                                   const nsStylePosition*   aPosition,
                                   nsRect&                  aRect) const;
 
-  void AddFrame(nsIFrame* aFrame);
+  void AddAbsoluteFrame(nsIFrame* aFrame);
 
 private:
   nsSpaceManager* mSpaceManager;

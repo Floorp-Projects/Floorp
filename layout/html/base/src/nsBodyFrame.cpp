@@ -713,7 +713,7 @@ nsBodyFrame::ComputeDesiredSize(nsIPresContext& aPresContext,
 }
 
 // Add the frame to the end of the child list
-void nsBodyFrame::AddFrame(nsIFrame* aFrame)
+void nsBodyFrame::AddAbsoluteFrame(nsIFrame* aFrame)
 {
   nsIFrame* lastChild = LastFrame(mFirstChild);
 
@@ -933,7 +933,7 @@ nsBodyFrame::ReflowAbsoluteItems(nsIPresContext& aPresContext,
       absoluteFrame->SetGeometricParent(this);
 
       // Add the absolutely positioned frame to the end of the child list
-      AddFrame(absoluteFrame);
+      AddAbsoluteFrame(absoluteFrame);
 
       // Make sure the frame has a view
       nsIView*  view;
