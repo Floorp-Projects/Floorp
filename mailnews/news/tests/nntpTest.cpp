@@ -66,6 +66,7 @@
 #include "nsMacRepository.h"
 #else
 #define NETLIB_DLL "libnetlib.so"
+#define XPCOM_DLL  "libxpcom.so"
 #endif
 #endif
 
@@ -89,8 +90,15 @@ static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 #define DEFAULT_PORT	NEWS_PORT		/* we get this value from nntpCore.h */
 #define DEFAULT_URL_TYPE  "sockstub://"	/* do NOT change this value until netlib re-write is done...*/
 
-extern NET_StreamClass *MIME_MessageConverter(int format_out, void *closure, 
-											  URL_Struct *url, MWContext *context);
+//extern NET_StreamClass *MIME_MessageConverter(int format_out, void *closure, 
+//											  URL_Struct *url, MWContext *context);
+
+#ifdef XP_UNIX
+extern "C" char *fe_GetConfigDir(void) {
+  printf("XXX: return /tmp for fe_GetConfigDir\n");
+  return strdup("/tmp");
+}
+#endif /* XP_UNIX */
 
 /////////////////////////////////////////////////////////////////////////////////
 // This function is used to load and prepare an nntp url which can be run by
@@ -606,7 +614,6 @@ int main()
     nsresult result;
     nsIURL * pURL = NULL;
 
-    PL_InitializeEventsLib("");
     nsRepository::RegisterFactory(kNetServiceCID, NETLIB_DLL, PR_FALSE, PR_FALSE);
 	nsRepository::RegisterFactory(kEventQueueServiceCID, XPCOM_DLL, PR_FALSE, PR_FALSE);
 
@@ -629,8 +636,8 @@ int main()
 	}
 
 	// now register a mime converter....
-	NET_RegisterContentTypeConverter (MESSAGE_RFC822, FO_NGLAYOUT, NULL, MIME_MessageConverter);
-	NET_RegisterContentTypeConverter (MESSAGE_RFC822, FO_CACHE_AND_NGLAYOUT, NULL, MIME_MessageConverter);
+    //	NET_RegisterContentTypeConverter (MESSAGE_RFC822, FO_NGLAYOUT, NULL, MIME_MessageConverter);
+    //	NET_RegisterContentTypeConverter (MESSAGE_RFC822, FO_CACHE_AND_NGLAYOUT, NULL, MIME_MessageConverter);
 
 	// okay, everything is set up, now we just need to create a test driver and run it...
 	nsNntpTestDriver * driver = new nsNntpTestDriver(pNetService);
