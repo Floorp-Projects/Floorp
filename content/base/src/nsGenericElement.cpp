@@ -2161,13 +2161,13 @@ NS_IMETHODIMP
 nsGenericElement::GetClasses(nsVoidArray& aArray) const
 {
   aArray.Clear();
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsGenericElement::HasClass(nsIAtom* aClass, PRBool aCaseSensitive) const
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_COMFALSE;
 }
 
 NS_IMETHODIMP
