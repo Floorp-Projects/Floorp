@@ -1909,7 +1909,6 @@ NS_IMETHODIMP nsProfile::UpdateMozProfileRegistry()
 									printf("NULL value received for directory name.\n" );
 								#endif
 							}
-							delete [] profileDirString;
 						}
 						else
 						{
