@@ -59,7 +59,6 @@
 #include "nsLocaleCID.h"
 #include "nsLWBrkCIID.h"
 
-#include "nsIEditor.h"
 #include "nsIAllocator.h"
 #include "nsIGenericFactory.h"
 
@@ -210,9 +209,6 @@ static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 #ifdef ClientWallet
 static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 #endif
-static NS_DEFINE_IID(kIEditFactoryIID, NS_IEDITORFACTORY_IID);
-static NS_DEFINE_IID(kITextEditFactoryIID, NS_ITEXTEDITORFACTORY_IID);
-static NS_DEFINE_IID(kIHTMLEditFactoryIID, NS_IHTMLEDITORFACTORY_IID);
 
 #if defined(XP_MAC) || defined (XP_UNIX) // XXX somebody please make dynamic registration work on Mac
 static NS_DEFINE_CID(kRDFBookMarkDataSourceCID, NS_RDFBOOKMARKDATASOURCE_CID);
@@ -319,9 +315,6 @@ NS_SetupRegistry()
 #ifdef ClientWallet
   nsComponentManager::RegisterComponent(kWalletServiceCID, NULL, NULL, WALLETLIB_DLL, PR_FALSE, PR_FALSE);
 #endif
-  nsComponentManager::RegisterComponent(kIEditFactoryIID, NULL, NULL, EDITOR_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kITextEditFactoryIID, NULL, NULL, EDITOR_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kIHTMLEditFactoryIID, NULL, NULL, EDITOR_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kCEventListenerManagerCID, NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
 
 #if defined(XP_MAC) || defined (XP_UNIX) // XXX somebody please make dynamic registration work on Mac
