@@ -2197,6 +2197,59 @@ void InvalidateContextAndWrapperCache()
   cached_cx = nsnull;
 }
 
+// static helper that determines if a security manager check is needed
+// by checking if the callee's context is the same as the caller's
+// context
+
+static inline PRBool
+needsSecurityCheck(JSContext *cx, nsIXPConnectWrappedNative *wrapper)
+{
+  // Cache a pointer to a wrapper and a context and set these pointers
+  // to point to the wrapper and context that doesn't need a security
+  // check, thus we avoid doing all this work to find out if we need
+  // to do the security check, in most cases this check would end up
+  // being two pointer compares.
+
+  if (cx == cached_cx && wrapper == cached_wrapper) {
+    return PR_FALSE;
+  }
+
+  cached_cx = nsnull;
+  cached_wrapper = nsnull;
+
+  nsCOMPtr<nsISupports> native;
+  wrapper->GetNative(getter_AddRefs(native));
+
+  nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(native));
+
+  if (!sgo) {
+    NS_ERROR("Huh, global not a nsIScriptGlobalObject?");
+
+    return PR_FALSE;
+  }
+
+  nsCOMPtr<nsIScriptContext> otherScriptContext;
+  sgo->GetContext(getter_AddRefs(otherScriptContext));
+
+  if (!otherScriptContext) {
+    return PR_FALSE;
+  }
+
+  // If the caller's context is the same as the callee's, we assume
+  // they have the same origin, and we can allow the call without an
+  // additional security check.
+
+  if (cx == (JSContext *)otherScriptContext->GetNativeContext()) {
+    cached_cx = cx;
+    cached_wrapper = wrapper;
+
+    return PR_FALSE;
+  }
+
+  return PR_TRUE;
+}
+
+
 // Window helper
 
 nsresult
@@ -2313,15 +2366,17 @@ nsWindowSH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 {
   nsresult rv = NS_OK;
 
-  rv = doCheckReadAccess(cx, obj, id, wrapper);
+  if (needsSecurityCheck(cx, wrapper)) {
+    rv = doCheckReadAccess(cx, obj, id, wrapper);
 
-  if (NS_FAILED(rv)) {
-    // Security check failed. The security manager set a JS
-    // exception, we must make sure that exception is propagated.
+    if (NS_FAILED(rv)) {
+      // Security check failed. The security manager set a JS
+      // exception, we must make sure that exception is propagated.
 
-    *_retval = PR_FALSE;
+      *_retval = PR_FALSE;
 
-    return NS_OK;
+      return NS_OK;
+    }
   }
 
   if (JSVAL_IS_NUMBER(id)) {
@@ -2353,14 +2408,17 @@ NS_IMETHODIMP
 nsWindowSH::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj, jsval id, jsval *vp, PRBool *_retval)
 {
-  nsresult rv = doCheckWriteAccess(cx, obj, id, wrapper);
+  if (needsSecurityCheck(cx, wrapper)) {
+    nsresult rv = doCheckWriteAccess(cx, obj, id, wrapper);
 
-  if (NS_FAILED(rv)) {
-    // Security check failed. The security manager set a JS
-    // exception, we must make sure that exception is propagated.
+    if (NS_FAILED(rv)) {
+      // Security check failed. The security manager set a JS
+      // exception, we must make sure that exception is propagated.
 
-    *_retval = PR_FALSE;
-    return NS_OK;
+      *_retval = PR_FALSE;
+
+      return NS_OK;
+    }
   }
 
   if (JSVAL_IS_STRING(id)) {
