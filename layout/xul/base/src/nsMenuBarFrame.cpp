@@ -235,7 +235,9 @@ nsMenuBarFrame::SetActive(PRBool aActiveFlag)
 
     document->GetShellAt(0, getter_AddRefs(presShell));
     nsCOMPtr<nsISelectionController> selCon(do_QueryInterface(presShell));
-    NS_ASSERTION(selCon, "No selection controller for presShell");
+    // there is no selection controller for full page plugins
+    if (!selCon)
+      break;
 
     if (mIsActive) {// store whether caret was visible so that we can restore that state when menu is closed
       PRBool isCaretVisible;
