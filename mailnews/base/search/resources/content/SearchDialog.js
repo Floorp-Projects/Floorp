@@ -34,7 +34,9 @@ var nsMsgSearchScope = Components.interfaces.nsMsgSearchScope;
 var gFolderDatasource;
 var gFolderPicker;
 var gThreadTree;
+var gStatusBar = null;
 var gStatusFeedback = new nsMsgStatusFeedback;
+var gNumOfSearchHits = 0;
 var RDF;
 var Bundle;
 
@@ -42,7 +44,6 @@ var Bundle;
 // and unregistered in different functions.
 var gDataSourceSearchListener;
 
-var gIsSearchHit = false;
 var gButton;
 
 // Controller object for search results thread pane
@@ -93,23 +94,27 @@ var gSearchNotificationListener =
 {
     onSearchHit: function(header, folder) 
     {
-        if (!gIsSearchHit) {
-            gIsSearchHit = true;		
-        }
+        gNumOfSearchHits++;
     },
 
     onSearchDone: function(status) 
     {
         gButton.setAttribute("value", Bundle.GetStringFromName("labelForSearchButton"));
+
+        var statusMsg;
         // if there are no hits, it means no matches were found in the search.
-        if (!gIsSearchHit) {
-            gStatusFeedback.ShowStatusString(Bundle.GetStringFromName("searchFailureMessage"));
+        if (gNumOfSearchHits == 0) {
+            statusMsg = Bundle.GetStringFromName("searchFailureMessage");
         }
         else
         {
-            gStatusFeedback.ShowStatusString(Bundle.GetStringFromName("searchSuccessMessage"));
-            gIsSearchHit = false;
+            statusMsg = gNumOfSearchHits+" "+Bundle.GetStringFromName("searchSuccessMessage");
+            gNumOfSearchHits = 0;
         }
+
+        gStatusFeedback.showProgress(100);
+        gStatusFeedback.showStatusString(statusMsg);
+        gStatusBar.setAttribute("mode","normal");
     },
 	
     onNewSearch: function() 
@@ -118,7 +123,10 @@ var gSearchNotificationListener =
         if (gThreadTree)
             gThreadTree.clearItemSelection();
         ThreadTreeUpdate_Search();
-        gStatusFeedback.ShowStatusString(Bundle.GetStringFromName("searchingMessage"));
+
+        gStatusFeedback.showProgress(0);
+        gStatusFeedback.showStatusString(Bundle.GetStringFromName("searchingMessage"));
+        gStatusBar.setAttribute("mode","undetermined");
     }
 }
 
@@ -155,6 +163,7 @@ function initializeSearchWindowWidgets()
     gFolderPicker = document.getElementById("searchableFolders");
     gThreadTree = document.getElementById("threadTree");
     gButton = document.getElementById("search-button");
+    gStatusBar = document.getElementById('statusbar-icon');
 
     msgWindow = Components.classes[msgWindowContractID].createInstance(nsIMsgWindow);
     msgWindow.statusFeedback = gStatusFeedback;
