@@ -2888,6 +2888,12 @@ fe_mocha_submit_form_cb (MWContext *context, LO_Element *element, int32 event,
   }
 
   NET_AddLOSubmitDataToURLStruct (data, url);
+  if (data->window_target)
+  {
+      context = XP_FindNamedContextInList(context, data->window_target);
+      data->window_target = NULL;
+ }
+
 
   fe_GetURL (context, url, FALSE);
   LO_FreeSubmitData (data);
