@@ -50,3 +50,14 @@ void main(int argc, char **argv)
 
 }
 #endif
+
+#ifdef XP_MAC
+void main(int argc, char **argv)
+{
+  int argC = argc;
+
+  WidgetTest(&argC, argv);
+
+}
+#endif
+
