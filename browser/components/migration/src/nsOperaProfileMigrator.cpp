@@ -1119,7 +1119,7 @@ nsOperaProfileMigrator::CopySmartKeywords(nsIBookmarksService* aBMS,
                                   descStrings, 2, getter_Copies(keywordDesc));
 
     rv = aBMS->CreateBookmarkInContainer(nameStr.get(), 
-                                         url.get(), 
+                                         NS_ConvertUTF8toUCS2(url).get(), 
                                          NS_ConvertUTF8toUCS2(keyword).get(), 
                                          keywordDesc.get(), 
                                          nsnull, 
@@ -1269,7 +1269,7 @@ nsOperaProfileMigrator::ParseBookmarksFolder(nsILineInputStream* aStream,
       if (entryType == EntryType_BOOKMARK) {
         if (!name.IsEmpty() && !url.IsEmpty()) {
           rv = aBMS->CreateBookmarkInContainer(name.get(), 
-                                               url.get(), 
+                                               NS_ConvertUTF8toUCS2(url).get(), 
                                                keyword.get(), 
                                                description.get(), 
                                                nsnull, 

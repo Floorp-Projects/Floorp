@@ -1151,7 +1151,7 @@ nsIEProfileMigrator::CopySmartKeywords(nsIRDFResource* aParentFolder)
           rv = bundle->FormatStringFromName(NS_LITERAL_STRING("importedSearchUrlDesc").get(),
                                             descStrings, 2, getter_Copies(keywordDesc));
           bms->CreateBookmarkInContainer(keywordName.get(), 
-                                         (char*)url, 
+                                         NS_ConvertUTF8toUCS2(url).get(), 
                                          keyword.get(), 
                                          keywordDesc.get(), 
                                          NS_LITERAL_STRING("").get(), 
@@ -1273,7 +1273,7 @@ nsIEProfileMigrator::ParseFavoritesFolder(nsIFile* aDirectory,
 
       nsCOMPtr<nsIRDFResource> bookmark;
       aBookmarksService->CreateBookmarkInContainer(bookmarkName.get(), 
-                                                   spec.get(), 
+                                                   NS_ConvertUTF8toUCS2(spec).get(), 
                                                    nsnull,
                                                    nsnull, 
                                                    nsnull, 
@@ -1338,7 +1338,7 @@ nsIEProfileMigrator::ParseFavoritesFolder(nsIFile* aDirectory,
 
       nsCOMPtr<nsIRDFResource> bookmark;
       rv = aBookmarksService->CreateBookmarkInContainer(name.get(), 
-                                                        resolvedURL.get(), 
+                                                        NS_ConvertUTF8toUCS2(resolvedURL).get(), 
                                                         nsnull, 
                                                         nsnull, 
                                                         nsnull, 
