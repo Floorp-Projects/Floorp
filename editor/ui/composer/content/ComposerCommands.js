@@ -338,7 +338,7 @@ var nsSaveCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return window.editorShell && 
+    return window.editorShell && window.editorShell.documentEditable &&
       (window.editorShell.documentModified || 
        IsUrlAboutBlank(GetDocumentUrl()) ||
        window.gHTMLSourceChanged);
@@ -445,10 +445,10 @@ var nsPublishCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return window.editorShell && 
-      (window.editorShell.documentModified || 
-       IsUrlAboutBlank(GetDocumentUrl()) ||
-       window.gHTMLSourceChanged);
+    return window.editorShell && window.editorShell.documentEditable
+              && (window.editorShell.documentModified || 
+                  IsUrlAboutBlank(GetDocumentUrl()) ||
+                  window.gHTMLSourceChanged);
   },
   
   doCommand: function(aCommand)
@@ -458,30 +458,41 @@ var nsPublishCommand =
       var docUrl = GetDocumentUrl();
       var filename = GetFilename(docUrl);
       var publishData;
-      if (filename)
+      var showPublishDialog = false;
+
+      // First check pref to always show publish dialog
+      try {
+        var prefs = GetPrefs();
+        if (prefs)
+          showPublishDialog = prefs.getBoolPref("editor.always_show_publish_dialog");
+      } catch(e) {}
+
+      if (!showPublishDialog && filename)
       {
-        // Try to get site data from the document url
+        // Try to get publish data from the document url
         publishData = CreatePublishDataFromUrl(docUrl);
 
         // If none, use default publishing site
-        //XXX Should we do this? Maybe bring up dialog instead?
         if (!publishData)
-        {
-         dump(" *** PUBLISHING TO DEFAULT SITE\n");
           publishData = GetPublishDataFromSiteName(GetDefaultPublishSiteName(), filename);
-        }
-
-        if (publishData)
-        {
-          FinishHTMLSource();
-          return Publish(publishData);
-        }
       }
 
-      // User needs to supply a filename or we didn't find publish data above
-      // Bring up the dialog via cmd_publishAs, 
-      goDoCommand("cmd_publishAs")
-      return true;
+      if (showPublishDialog || !publishData)
+      {
+        // Show the publish dialog
+        publishData = {};
+        window.ok = false;
+        window.openDialog("chrome://editor/content/EditorPublish.xul","_blank", 
+                          "chrome,close,titlebar,modal", "", "", publishData);
+        window._content.focus();
+        if (!window.ok)
+          return false;
+      }
+      if (publishData)
+      {
+        FinishHTMLSource();
+        return Publish(publishData);
+      }
     }
     return false;
   }
@@ -782,7 +793,8 @@ function GetWrapColumn()
 {
   var wrapCol = 72;
   try {
-    wrapCol = window.editorShell.editor.wrapWidth;
+    var textEditor = window.editorShell.editor.QueryInterface(nsIPlaintextEditor);
+    wrapCol = textEditor.wrapWidth;
   }
   catch (e) {}
 
@@ -802,25 +814,30 @@ function GetPromptService()
 
 const gShowDebugOutputStateChange = false;
 const gShowDebugOutputProgress = false;
-const gShowDebugOutputLocationChange = false;
 const gShowDebugOutputStatusChange = false;
+
+const gShowDebugOutputLocationChange = false;
 const gShowDebugOutputSecurityChange = false;
 
+const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
+const nsIChannel = Components.interfaces.nsIChannel
 var gEditorOutputProgressListener =
 {
   onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus)
   {
     // Use this to access onStateChange flags
-    const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
     var requestSpec;
     try {
-      var channel = aRequest.QueryInterface(Components.interfaces.nsIChannel);
-      if (channel)
-        requestSpec = StripUsernamePasswordFromURI(channel.URI);
+      var channel = aRequest.QueryInterface(nsIChannel);
+      requestSpec = StripUsernamePasswordFromURI(channel.URI);
     } catch (e) {
       if ( gShowDebugOutputStateChange)
         dump("***** onStateChange; NO REQUEST CHANNEL\n");
     }
+
+    var pubSpec;
+    if (gPublishData)
+      pubSpec = gPublishData.publishUrl + gPublishData.docDir + gPublishData.filename;
 
     if (gShowDebugOutputStateChange)
     {
@@ -834,20 +851,42 @@ var gEditorOutputProgressListener =
       if (aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK)
         dump(" STATE_IS_NETWORK ");
 
-      dump("\n");
+      dump("\n * requestSpec="+requestSpec+", pubSpec="+pubSpec+", aStatus="+aStatus+"\n");
     }
-    // Detect end of file upload of HTML file:
-    if (gPublishData)
-    {
-      var pubSpec = gPublishData.publishUrl + gPublishData.docDir + gPublishData.filename;
 
-      if ((aStateFlags & nsIWebProgressListener.STATE_STOP) &&
-          (aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK)
-           && requestSpec && requestSpec == pubSpec)
+    // Detect start of file upload of any file:
+    if ((aStateFlags & nsIWebProgressListener.STATE_START)
+         && requestSpec && gProgressDialog)
+    {
+      try {
+        // Add url to progress dialog's list showing each file uploading
+        // Note that even though we create dialog before calling OutputFileWithPersistAPI,
+        //  we can get here before dialog is initialized.
+        //  This will cause exception calling AddProgressListitem,
+        //  But we'll add any missed files in dialog later
+        gProgressDialog.SetProgressStatus(GetFilename(requestSpec), "busy");
+      } catch(e) {
+        dump(" Exception error calling SetProgressStatus\n");
+      }
+    }
+
+    // Detect end of file upload of HTML file:
+    if ((aStateFlags & nsIWebProgressListener.STATE_STOP) && requestSpec)
+    {
+      // Show final status in progress dialog when we receive the STOP
+      //  notification for the destination file
+      if (gProgressDialog)
       {
-        // Get the new docUrl from the "browse location" in case "publish location" was FTP
-        var urlstring = GetDocUrlFromPublishData(gPublishData);
-        
+        try {
+          gProgressDialog.SetProgressFinished(GetFilename(requestSpec), aStatus);
+        } catch(e) {
+          dump(" Exception error calling SetProgressFinished\n");
+        }
+      }
+      if ((aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK))
+      {
+        // FINISHED ALL PUBLISHING
+
         try {
           // check http channel for response: 200 range is ok; other ranges are not
           var httpChannel = aRequest.QueryInterface(Components.interfaces.nsIHttpChannel);
@@ -858,17 +897,38 @@ var gEditorOutputProgressListener =
 
         if (aStatus)
         {
-          // we should cancel the publish transaction here!
+          // Cancel the publish 
+          gPersistObj.cancelSave();
 
-          // we should provide more meaningful errors (if possible)
-          var saveDocStr = GetString("Publish");
+          //XXX TODO: we should provide more meaningful errors (if possible)
           var failedStr = GetString("PublishFailed");
-          AlertWithTitle(saveDocStr, failedStr);
+          
+          // Show error in progress dialog and let user close it
+          if (gProgressDialog)
+          {
+            try {
+              // Tell dialog final status value so it can show appropriate message
+              gProgressDialog.SetProgressFinished(null, aStatus);
+            } catch (e) { 
+              dump(" **** EXCEPTION ERROR CALLING ProgressDialog.SetProgressFinished\n");
+              AlertWithTitle(GetString("Publish"), failedStr); 
+            }
+          }
+          else
+          {
+            // In case we ever get final alert with no dialog
+            AlertWithTitle(GetString("Publish"), failedStr);
 
+            // Final cleanup
+            FinishPublishing();
+          }
           return;  // we don't want to change location or reset mod count, etc.
         }
 
         try {
+          // Get the new docUrl from the "browse location" in case "publish location" was FTP
+          var urlstring = GetDocUrlFromPublishData(gPublishData);
+
           window.editorShell.doAfterSave(true, urlstring);  // we need to update the url before notifying listeners
           var editor = window.editorShell.editor.QueryInterface(Components.interfaces.nsIEditor);
           editor.resetModificationCount();
@@ -876,7 +936,21 @@ var gEditorOutputProgressListener =
 
           // Set UI based on whether we're editing a remote or local url
           SetSaveAndPublishUI(urlstring);
+
+          // Save publishData to prefs
+          if (publishData.savePublishData)
+            SavePublishDataToPrefs(publishData);
+          else
+            SavePassword();
+
         } catch (e) {}
+
+        // Ask progress dialog to close, 
+        // "false" =  don't force it if user checked checkbox to keep it open
+        if (gProgressDialog)
+          gProgressDialog.CloseDialog(false);
+        else
+          FinishPublishing();
       }
     }
   },
@@ -887,7 +961,7 @@ var gEditorOutputProgressListener =
     if (gShowDebugOutputProgress)
     {
       try {
-      var channel = aRequest.QueryInterface(Components.interfaces.nsIChannel);
+      var channel = aRequest.QueryInterface(nsIChannel);
       dump("***** onProgressChange request: " + channel.URI.spec + "\n");
       }
       catch (e) {}
@@ -903,6 +977,9 @@ var gEditorOutputProgressListener =
         else if(gPersistObj.currentState == gPersistObj.PERSIST_STATE_FINISHED)
         {
           dump(" PERSISTER HAS FINISHED SAVING DATA\n\n\n");
+          // Allow editing again
+          // XXXX WE REALLY SHOULDN'T DO THIS!!!
+//          SetDocumentEditable(true);
         }
       }
     }
@@ -913,7 +990,7 @@ var gEditorOutputProgressListener =
     if (gShowDebugOutputLocationChange)
     {
       dump("***** onLocationChange: "+aLocation.spec+"\n");
-      var channel = aRequest.QueryInterface(Components.interfaces.nsIChannel);
+      var channel = aRequest.QueryInterface(nsIChannel);
       dump("*****          request: " + channel.URI.spec + "\n");
     }
   },
@@ -924,7 +1001,7 @@ var gEditorOutputProgressListener =
     {
       dump("***** onStatusChange: "+aMessage+"\n");
       try {
-        var channel = aRequest.QueryInterface(Components.interfaces.nsIChannel);
+        var channel = aRequest.QueryInterface(nsIChannel);
         dump("*****        request: " + channel.URI.spec + "\n");
       }
       catch (e) { dump("          couldn't get request\n"); }
@@ -976,8 +1053,10 @@ var gEditorOutputProgressListener =
   {
     if (gShowDebugOutputSecurityChange)
     {
-      var channel = aRequest.QueryInterface(Components.interfaces.nsIChannel);
-      dump("***** onSecurityChange request: " + channel.URI.spec + "\n");
+      try {
+        var channel = aRequest.QueryInterface(nsIChannel);
+        dump("***** onSecurityChange request: " + channel.URI.spec + "\n");
+      } catch (e) {}
     }
   },
 
@@ -995,12 +1074,25 @@ var gEditorOutputProgressListener =
 // nsIPrompt
   alert : function(dlgTitle, text)
   {
-    AlertWithTitle(dlgTitle, text);
+    // If Progress dialog is up, put message in there instead of Alert
+    if (gProgressDialog)
+    {
+      try {
+        gProgressDialog.SetStatusMessage(failedStr);
+      } catch (e) {
+        dump(" nsIPrompt::Alert EXCEPTION ERROR CALLING ProgressDialog.SetStatusMessage\n");
+        AlertWithTitle(dlgTitle, text);
+      }
+    }
+    else
+    {
+      AlertWithTitle(dlgTitle, text);
+      CancelPublishing();
+    }
   },
   alertCheck : function(dialogTitle, text, checkBoxLabel, checkValue)
   {
     AlertWithTitle(dialogTitle, text);
-    dump("***** warning: checkbox not shown to user\n");
   },
   confirm : function(dlgTitle, text)
   {
@@ -1039,7 +1131,10 @@ var gEditorOutputProgressListener =
     if (!promptServ)
       return false;
 
-    return promptServ.promptPassword(window, dlgTitle, text, password, checkBoxLabel, checkValue);
+    var ret = promptServ.promptPassword(window, dlgTitle, text, password, checkBoxLabel, checkValue);
+    if (!ret)
+      setTimeout("CancelPublishing()",0);
+    return ret;
   },
   promptUsernameAndPassword : function(dlgTitle, text, login, pw, checkBoxLabel, checkValue)
   {
@@ -1047,7 +1142,10 @@ var gEditorOutputProgressListener =
     if (!promptServ)
       return false;
 
-    return promptServ.promptUsernameAndPassword(window, dlgTitle, text, login, pw, checkBoxLabel, checkValue);
+    var ret = promptServ.promptUsernameAndPassword(window, dlgTitle, text, login, pw, checkBoxLabel, checkValue);
+    if (!ret)
+      setTimeout("CancelPublishing()",0);
+    return ret;
   },
   select : function(dlgTitle, text, count, selectList, outSelection)
   {
@@ -1061,79 +1159,102 @@ var gEditorOutputProgressListener =
 // nsIAuthPrompt
   prompt : function(dlgTitle, text, pwrealm, savePW, defaultText, result)
   {
-    dump("authprompt prompt! pwrealm="+pwrealm+"\n");
     var promptServ = GetPromptService();
     if (!promptServ)
       return false;
 
     var saveCheck = {value:savePW};
-    return promptServ.prompt(window, dlgTitle, text, defaultText, pwrealm, saveCheck);
-  },
-  promptUsernameAndPassword : function(dlgTitle, text, pwrealm, savePW, user, pw)
-  {
-    dump("authprompt promptUsernameAndPassword!  "+dlgTitle+" "+text+", pwrealm="+pwrealm+"\n");
-    var promptServ = GetPromptService();
-    if (!promptServ)
-      return false;
-
-    var saveCheck = {value:savePW};
-    // Initialize with user's previous preference for this site
-    if (gPublishData)
-      saveCheck.value = gPublishData.savePassword;
-
-    var ret = promptServ.promptUsernameAndPassword(window, dlgTitle, text, user, pw, GetString("SavePassword"), saveCheck);
-
-    //XXX We really shouldn't do this until publishing completed successfully
-    if (ret && gPublishData)
-      SaveUsernamePasswordFromPrompt(gPublishData, user.value, pw.value, saveCheck.value);
-
+    var ret = promptServ.prompt(gProgressDialog ? gProgressDialog : window,
+                                dlgTitle, text, defaultText, pwrealm, saveCheck);
+    if (!ret)
+      setTimeout("CancelPublishing()",0);
     return ret;
   },
-  promptPassword : function(dlgTitle, text, pwrealm, savePW, pw)
+
+  promptUsernameAndPassword : function(dlgTitle, text, pwrealm, savePW, userObj, pwObj)
   {
-    dump("auth promptPassword!  "+dlgTitle+" "+text+", pwrealm="+pwrealm+"\n");
-    var promptServ = GetPromptService();
-    if (!promptServ)
-      return false;
+    var ret = PromptUsernameAndPassword(dlgTitle, text, savePW, userObj, pwObj);
+    if (!ret)
+      setTimeout("CancelPublishing()",0);
+    return ret;
+  },
 
-    var saveCheck = {value:savePW};
-    // Initialize with user's previous preference for this site
-    if (gPublishData)
-      saveCheck.value = gPublishData.savePassword;
+  promptPassword : function(dlgTitle, text, pwrealm, savePW, pwObj)
+  {
+    var ret = false;
+    try {
+      var promptServ = GetPromptService();
+      if (!promptServ)
+        return false;
 
-    var ret = promptServ.promptPassword(window, dlgTitle, text, pw, GetString("SavePassword"), saveCheck);
+      var saveCheck = {value:savePW};
+      // Initialize with user's previous preference for this site
+      if (gPublishData)
+        saveCheck.value = gPublishData.savePassword;
 
-    //XXX We really shouldn't do this until publishing completed successfully
-    if (ret && gPublishData)
-      SaveUsernamePasswordFromPrompt(gPublishData, gPublishData.username, pw.value, saveCheck.value);
+      ret = promptServ.promptPassword(gProgressDialog ? gProgressDialog : window,
+                                      dlgTitle, text, pwObj, GetString("SavePassword"), saveCheck);
+
+      if (ret && gPublishData)
+        UpdateUsernamePasswordFromPrompt(gPublishData, gPublishData.username, pwObj.value, saveCheck.value);
+    } catch(e) {}
 
     return ret;
   }
 }
 
-// Save any data that the user supplied in a prompt dialog
-function SaveUsernamePasswordFromPrompt(publishData, username, password, savePassword)
+function PromptUsernameAndPassword(dlgTitle, text, savePW, userObj, pwObj)
 {
-  if (!publishData || !username)
-    return;
+  // HTTP prompts us twice even if user Cancels from 1st attempt!
+  // So never put up dialog if there's no publish data
+  if (!gPublishData)
+    return false
 
-  var usernameChanged = gPublishData.username != username;
-  var savePasswordChanged = gPublishData.savePassword != savePassword;
+  var ret = false;
+  try {
+    var promptServ = GetPromptService();
+    if (!promptServ)
+      return false;
+
+    var saveCheck = {value:savePW};
+
+    // Initialize with user's previous preference for this site
+    if (gPublishData)
+    {
+      // HTTP put uses this dialog if either username or password is bad,
+      //   so prefill username input field with the previous value for modification
+      saveCheck.value = gPublishData.savePassword;
+      if (!userObj.value)
+        userObj.value = gPublishData.username;
+    }
+
+    ret = promptServ.promptUsernameAndPassword(gProgressDialog ? gProgressDialog : window, 
+                                               dlgTitle, text, userObj, pwObj, 
+                                               GetString("SavePassword"), saveCheck);
+    if (ret && gPublishData)
+      UpdateUsernamePasswordFromPrompt(gPublishData, userObj.value, pwObj.value, saveCheck.value);
+
+  } catch (e) {}
+
+  return ret;
+}
+
+// Update any data that the user supplied in a prompt dialog
+function UpdateUsernamePasswordFromPrompt(publishData, username, password, savePassword)
+{
+  if (!publishData)
+    return;
+  
+  // Set flag to save publish data after publishing if it changed in dialog 
+  //  and the "SavePassword" checkbox was checked
+  //  or we already had site data for this site
+  // (Thus we don't automatically create a site until user brings up Publish As dialog)
+  publishData.savePublishData = (gPublishData.username != username || gPublishData.password != password)
+                                && (savePassword || !publishData.notInSiteData);
+
   publishData.username = username;
   publishData.password = password;
   publishData.savePassword = savePassword;
-  
-  if (usernameChanged || savePasswordChanged)
-  {
-    // A publishing pref item was changed (this will also save the password)
-    SavePublishDataToPrefs(publishData);
-  }
-  else if (savePassword)
-  {
-    // Publish pref data is correct.
-    // Probably user error in publish dialog, so save just password
-    SavePassword(publishData);
-  }
 }
 
 // throws an error or returns true if user attempted save; false if user canceled save
@@ -1216,7 +1337,11 @@ function SaveDocument(aSaveAs, aSaveCopy, aMimeType)
     // this is the location where the related files will go
     var parentDir;
     try {
-      if (tempLocalFile)
+      // First check pref for saving associated files
+      var prefs = GetPrefs();
+      var saveAssociatedFiles = prefs.getBoolPref("editor.save_associated_files");
+
+      if (saveAssociatedFiles && tempLocalFile)
       {
         if (!aSaveAs)         // we are saving an existing local file
           parentDir = null;   // don't change links or move files
@@ -1225,7 +1350,7 @@ function SaveDocument(aSaveAs, aSaveCopy, aMimeType)
           // if we are saving to the same parent directory, don't set parentDir
           // grab old location, chop off file
           // grab new location, chop off file, compare
-          var oldLocation = GetDocumentURI(editorDoc);
+          var oldLocation = GetDocumentUrl();
           var oldLocationLastSlash = oldLocation.lastIndexOf("\/");
           if (oldLocationLastSlash != -1)
             oldLocation = oldLocation.slice(0, oldLocationLastSlash);
@@ -1291,14 +1416,11 @@ function SaveDocument(aSaveAs, aSaveCopy, aMimeType)
 
 //-------------------------------  Publishing
 var gPublishData;
+var gProgressDialog;
 
 function Publish(publishData)
 {
   if (!publishData)
-    return false;
-
-  var docURI = CreateURIFromPublishData(publishData, true);
-  if (!docURI)
     return false;
 
   // Set data in global for username password requests
@@ -1306,11 +1428,91 @@ function Publish(publishData)
   //  and we are sure file transfer was successful
   gPublishData = publishData;
 
-  var otherFilesURI = CreateURIFromPublishData(publishData, false);
-  var success = OutputFileWithPersistAPI(window.editorShell.editorDocument, 
-                                         docURI, otherFilesURI, window.editorShell.contentsMIMEType);
+  gPublishData.docURI = CreateURIFromPublishData(publishData, true);
+  if (!gPublishData.docURI)
+    return false;
 
-  return success;
+  gPublishData.otherFilesURI = CreateURIFromPublishData(publishData, false);
+
+  if (gShowDebugOutputStateChange)
+  {
+    dump("\n *** publishData: PublishUrl="+publishData.publishUrl+", BrowseUrl="+publishData.browseUrl+
+      ", Username="+publishData.username+", Dir="+publishData.docDir+
+      ", Filename="+publishData.filename+"\n");
+    dump(" * gPublishData.docURI.spec="+gPublishData.docURI.spec+"\n");
+  }
+
+  // XXX Missing username or password will make FTP fail 
+  // and it won't call us for prompt dialog (bug 132320),
+  // so we should do the prompt before trying to publish
+  if (GetScheme(publishData.publishUrl) == "ftp" &&
+      (!publishData.username || !publishData.password))
+  {
+    var message = GetString("PromptFTPUsernamePassword").replace(/%host%/, GetHost(publishData.publishUrl));
+    var savePWobj = {value:publishData.savePassword};
+    var userObj = {value:publishData.username};
+    var pwObj = {value:publishData.password};
+    if (!PromptUsernameAndPassword(GetString("Prompt"), message, savePWobj, userObj, pwObj))
+      return false; // User canceled out of dialog
+
+    // Reset data in URI objects
+    gPublishData.docURI.username = publishData.username;
+    gPublishData.docURI.password = publishData.password;
+
+    gPublishData.otherFilesURI.username = publishData.username;
+    gPublishData.otherFilesURI.password = publishData.password;
+  }
+
+  try {
+    // We launch dialog as a dependent 
+    // Don't allow editing document!
+    SetDocumentEditable(false);
+
+    // Start progress monitoring
+    gProgressDialog =
+      window.openDialog("chrome://editor/content/EditorPublishProgress.xul", "_blank",
+                        "chrome,dependent", gPublishData, gPersistObj);
+
+  } catch (e) {}
+
+  // Network transfer is often too quick for the progress dialog to be initialized
+  //  and we can completely miss messages for quickly-terminated bad URLs,
+  //  so we can't call OutputFileWithPersistAPI right away.
+  // StartPublishing() is called at the end of the dialog's onload method
+  return true;
+}
+
+function StartPublishing()
+{
+  if (gPublishData && gPublishData.docURI)
+    OutputFileWithPersistAPI(window.editorShell.editorDocument, 
+                             gPublishData.docURI, gPublishData.otherFilesURI, 
+                             window.editorShell.contentsMIMEType);
+}
+
+function CancelPublishing()
+{
+  try {
+    gPersistObj.cancelSave(); // Cancel all networking transactions
+  } catch (e) {}
+
+  if (gProgressDialog)
+  {
+    // Close Progress dialog 
+    // "true" will force close,
+    // (this will call FinishPublishing())
+    gProgressDialog.CloseDialog(true);
+  }
+  else
+    FinishPublishing();
+}
+
+function FinishPublishing()
+{
+  SetDocumentEditable(true);
+  gProgressDialog = null;
+  gPublishData = null;
+  window._content.focus();
 }
 
 // Create a nsIURI object filled in with all required publishing info
@@ -1418,6 +1620,23 @@ function SetSaveAndPublishUI(urlstring)
   }
 }
 
+function SetDocumentEditable(isDocEditable)
+{
+  if (window.editorShell.editorDocument)
+  {
+    try {
+      var flags = window.editorShell.editor.flags;
+      window.editorShell.editor.flags = isDocEditable ?  
+            flags &= ~nsIPlaintextEditor.eEditorReadonlyMask :
+            flags | nsIPlaintextEditor.eEditorReadonlyMask;
+
+      // update all commands
+      window.updateCommands("create");
+
+    } catch(e) {}
+  }  
+}
+
 // ****** end of save / publish **********//
 
 //-----------------------------------------------------------------------------------
@@ -1447,7 +1666,7 @@ var nsRevertCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && 
+    return (window.editorShell && window.editorShell.documentEditable &&
             window.editorShell.documentModified &&
             !IsUrlAboutBlank(GetDocumentUrl()));
   },
@@ -1535,7 +1754,9 @@ var nsPreviewCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && IsEditorContentHTML() && (DocumentHasBeenSaved() || window.editorShell.documentModified));
+    return (window.editorShell && window.editorShell.documentEditable && 
+            IsEditorContentHTML() && 
+            (DocumentHasBeenSaved() || window.editorShell.documentModified));
   },
 
   doCommand: function(aCommand)
@@ -1589,7 +1810,8 @@ var nsSendPageCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell != null && (DocumentHasBeenSaved() || window.editorShell.documentModified));
+    return (window.editorShell != null && window.editorShell.documentEditable &&
+            (DocumentHasBeenSaved() || window.editorShell.documentModified));
   },
 
   doCommand: function(aCommand)
@@ -1800,7 +2022,7 @@ var nsCheckLinksCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell != null);
+    return (window.editorShell && window.editorShell.documentEditable);
   },
 
   doCommand: function(aCommand)
@@ -2391,7 +2613,7 @@ var nsNormalModeCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return IsEditorContentHTML(); //(window.editorShell && window.editorShell.documentEditable);
+    return IsEditorContentHTML() && window.editorShell.documentEditable;
   },
   doCommand: function(aCommand)
   {
