@@ -32,7 +32,6 @@ nsWidgetsCID.h
 nsITabWidget.h
 nsITooltipWidget.h
 nsIAppShell.h
-nsIDialog.h
 nsILabel.h
 nsILookAndFeel.h
 nsWidgetSupport.h
