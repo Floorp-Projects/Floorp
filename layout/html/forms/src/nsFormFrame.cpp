@@ -43,7 +43,6 @@
 #include "nsRadioControlFrame.h"
 #include "nsIRadioButton.h"
 #include "nsDocument.h"
-#include "nsHTMLContainer.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMNSHTMLFormElement.h"
 #include "nsLeafFrame.h"

@@ -23,7 +23,6 @@
 #include "nsIHTMLAttributes.h"
 #include "nsHTMLAtoms.h"
 #include "nsIContent.h"
-#include "nsHTMLTagContent.h"
 #include "nsTableFrame.h"
 #include "nsTableCellFrame.h"
 #include "nsIView.h"

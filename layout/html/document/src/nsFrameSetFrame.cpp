@@ -17,7 +17,7 @@
  */
 
 #include "nsFrameSetFrame.h"
-#include "nsHTMLContainer.h"
+#include "nsIHTMLContent.h"
 #include "nsLeafFrame.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsIWebShell.h"

@@ -20,7 +20,7 @@
 
 #include "nsHTMLAtoms.h"
 #include "nsHTMLContainerFrame.h"
-#include "nsHTMLContainer.h"
+#include "nsColor.h"
 
 class  nsIContent;
 struct nsReflowMetrics;
