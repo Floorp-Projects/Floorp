@@ -485,6 +485,7 @@ nsFormControlFrame::GetWidget(nsIView* aView, nsIWidget** aWidget)
     if (NS_FAILED(result)) {
       NS_ASSERTION(0, "The widget interface is invalid");  // need to print out more details of the widget
     }
+    NS_RELEASE(widget);
   }
 
   return result;
