@@ -333,7 +333,7 @@ extern nsresult NS_NewFirstLetterFrame(nsIPresShell* aPresShell, nsIFrame** aNew
 extern nsresult NS_NewFirstLineFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
 // forms
-extern nsresult NS_NewFormFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
+extern nsresult NS_NewFormFrame(nsIPresShell* aPresShell, nsIFrame** aResult, PRUint32 aFlags);
 extern nsresult NS_NewGfxButtonControlFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
 extern nsresult NS_NewNativeButtonControlFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
 extern nsresult NS_NewImageControlFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
