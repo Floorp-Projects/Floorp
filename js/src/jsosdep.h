@@ -62,7 +62,7 @@ JS_END_EXTERN_C
 #elif defined(IRIX)
 #define HAVE_LONG_LONG
 
-#elif defined(LINUX)
+#elif defined(linux)
 #undef HAVE_LONG_LONG
 
 #elif defined(OSF1)

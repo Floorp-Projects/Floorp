@@ -345,7 +345,7 @@
 #define PR_WORDS_PER_DWORD_LOG2  1L
 
 
-#elif defined(LINUX)
+#elif defined(linux)
 
 #ifdef __powerpc__
 #undef  IS_LITTLE_ENDIAN
