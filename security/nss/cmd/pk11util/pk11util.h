@@ -14,6 +14,7 @@ typedef enum {
 #undef CK_NEED_ARG_LISt
 #undef CK_PKCS11_FUNCTION_INFO
     F_SetVar,
+    F_SetStringVar,
     F_NewArray,
     F_NewTemplate,
     F_NewMechanism,
@@ -28,6 +29,7 @@ typedef enum {
     F_Load,
     F_Unload,
     F_System,
+    F_Help,
     F_Quit,
 } FunctionType;
 
@@ -55,6 +57,8 @@ typedef enum {
     ArgArray = 0x200,
     ArgNew = 0x400,
     ArgFile = 0x800,
+    ArgStatic = 0x1000,
+    ArgOpt = 0x2000,
 } ArgType;
 
 typedef enum _constType
@@ -76,7 +80,9 @@ typedef enum _constType
     ConstAttribute,
     ConstMechanism,
     ConstResult,
-    ConstTrust
+    ConstTrust,
+    ConstAvailableSizes,
+    ConstCurrentSize
 } ConstType;
 
 typedef struct _constant {
@@ -120,6 +126,7 @@ struct _variable {
 typedef struct _commands {
     char	*fname;
     FunctionType	fType;
+    char	*helpString;
     ArgType	args[MAX_ARGS];
 } Commands;
 
