@@ -65,6 +65,13 @@
               var item = items[i];
               if (!item) continue;
 
+              if (item.localName == "separator") {
+                var sep = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                                   "toolbarseparator");
+                this.insertBefore(sep, this.afterPalette);
+                continue;
+              }
+
               // Attempt to locate the item within the palette's list of children.
               var paletteItem = node.firstChild;
               while (paletteItem) {
