@@ -25,6 +25,7 @@
 
 #include "gtkxtbin.h"
 #include <gtk/gtkcontainer.h>
+#include <gtk/gtkmain.h>
 #include <gdk/gdkx.h>
 #include <glib.h>
 #include <assert.h>
@@ -41,6 +42,12 @@
 #include <X11/Intrinsic.h>
 #include <X11/StringDefs.h>
 
+/* uncomment this if you want debugging information about widget
+   creation and destruction */
+/* #define DEBUG_XTBIN */
+
+#define XTBIN_MAX_EVENTS 30
+
 static void            gtk_xtbin_class_init (GtkXtBinClass *klass);
 static void            gtk_xtbin_init       (GtkXtBin      *xtbin);
 static void            gtk_xtbin_realize    (GtkWidget      *widget);
@@ -51,7 +58,8 @@ static void            gtk_xtbin_show       (GtkWidget *widget);
 static GtkWidgetClass *parent_class = NULL;
 
 static String          *fallback = NULL;
-static int              xt_is_initialized = 0;
+static gboolean         xt_is_initialized = FALSE;
+static gint             num_widgets = 0;
 
 static GPollFD          xt_event_poll_fd;
 
@@ -61,19 +69,13 @@ xt_event_prepare (gpointer  source_data,
                    gint     *timeout,
                    gpointer  user_data)
 {   
-  XtAppContext ac;
-  XtInputMask mask;  
-
-  ac = XtDisplayToApplicationContext((Display *)user_data);
+  int mask;
 
   GDK_THREADS_ENTER();
-  mask = XtAppPending(ac);
+  mask = XPending((Display *)user_data);
   GDK_THREADS_LEAVE();
 
-  if (mask)
-	return TRUE;
-  else
-	return FALSE;
+  return (gboolean)mask;
 }
 
 static gboolean
@@ -81,23 +83,20 @@ xt_event_check (gpointer  source_data,
                  GTimeVal *current_time,
                  gpointer  user_data)
 {
-  Display * display;
-  XtAppContext ac;
-  XtInputMask mask;
-
   GDK_THREADS_ENTER ();
 
-  display = (Display *)user_data;
-  ac = XtDisplayToApplicationContext(display);
+  if (xt_event_poll_fd.revents & G_IO_IN) {
+    int mask;
 
-  mask = XtAppPending(ac);
+    mask = XPending((Display *)user_data);
+    
+    GDK_THREADS_LEAVE ();
+
+    return (gboolean)mask;
+  }
 
   GDK_THREADS_LEAVE ();
-
-  if (mask)
-    return TRUE;
-  else
-    return FALSE;
+  return FALSE;
 }   
 
 static gboolean
@@ -108,14 +107,24 @@ xt_event_dispatch (gpointer  source_data,
   XEvent event;
   Display * display;
   XtAppContext ac;
-  XtInputMask mask;
+  int i = 0;
 
   display = (Display *)user_data;
   ac = XtDisplayToApplicationContext(display);
 
   GDK_THREADS_ENTER ();
-  while((mask = XtAppPending(ac)) > 0)
-    XtAppProcessEvent(ac, mask);
+
+  /* Process only real X traffic here.  We only look for data on the
+   * pipe, limit it to XTBIN_MAX_EVENTS and only call
+   * XtAppProcessEvent so that it will look for X events.  There's no
+   * timer processing here since we already have a timer callback that
+   * does it.  */
+  for (i=0; i < XTBIN_MAX_EVENTS && XPending(display); i++) {
+    XtAppProcessEvent(ac, XtIMXEvent);
+  }
+
+  printf("dispatch %d\n", i);
+
   GDK_THREADS_LEAVE ();
 
   return TRUE;  
@@ -126,7 +135,26 @@ static GSourceFuncs xt_event_funcs = {
   xt_event_check,
   xt_event_dispatch,
   (GDestroyNotify)g_free
-};  
+};
+
+static gint             xt_polling_timer_id = 0;
+
+static gboolean
+xt_event_polling_timer_callback(gpointer user_data)
+{
+  Display * display;
+  XtAppContext ac;
+
+  display = (Display *)user_data;
+  ac = XtDisplayToApplicationContext(display);
+
+  /* don't starve the primary event queue - just process one event */
+  if (XtAppPending(ac))
+    XtAppProcessEvent(ac, XtIMAll);
+
+  /* restart the timer */
+  return TRUE;
+}
 
 GtkType
 gtk_xtbin_get_type (void)
@@ -192,6 +220,10 @@ gtk_xtbin_realize (GtkWidget *widget)
   Widget        top_widget;
   Window        win;
   Widget        embeded;
+
+#ifdef DEBUG_XTBIN
+  printf("gtk_xtbin_realize()\n");
+#endif
 
   g_return_if_fail (GTK_IS_XTBIN (widget));
 
@@ -333,11 +365,10 @@ gtk_xtbin_new (GdkWindow *parent_window, String * f)
     return (GtkWidget*)NULL;
 
   /* Initialize the Xt toolkit */
-  if (xt_is_initialized == 0) {
+  if (!xt_is_initialized) {
     char         *mArgv[1];
     int           mArgc = 0;
     XtAppContext  app_context;
-    int           cnumber;
 
 #ifdef DEBUG_XTBIN
     printf("starting up Xt stuff\n");
@@ -366,6 +397,13 @@ gtk_xtbin_new (GdkWindow *parent_window, String * f)
       return (GtkWidget *)NULL;
     }
 
+    xt_is_initialized = TRUE;
+  }
+
+  /* If this is the first running widget, hook this display into the
+     mainloop */
+  if (0 == num_widgets) {
+    int           cnumber;
     /*
      * hook Xt event loop into the glib event loop.
      */
@@ -383,9 +421,17 @@ gtk_xtbin_new (GdkWindow *parent_window, String * f)
     xt_event_poll_fd.events = G_IO_IN; 
     xt_event_poll_fd.revents = 0;    /* hmm... is this correct? */
 
-    g_main_add_poll (&xt_event_poll_fd, G_PRIORITY_DEFAULT);
-    xt_is_initialized++; /* bump up our count here */
+    g_main_add_poll (&xt_event_poll_fd, G_PRIORITY_LOW);
+
+    /* add a timer so that we can poll and process Xt timers */
+    xt_polling_timer_id =
+      gtk_timeout_add(25,
+                      (GtkFunction)xt_event_polling_timer_callback,
+                      xtdisplay);
   }
+
+  /* Bump up our usage count */
+  num_widgets++;
 
   xtbin->xtdisplay = xtdisplay;
   xtbin->parent_window = parent_window;
@@ -470,34 +516,25 @@ gtk_xtbin_destroy (GtkObject *object)
 
   XtDestroyWidget(xtbin->xtwidget);
 
-#if 0
-  xt_is_initialized--; /* reduce our count here */
+  num_widgets--; /* reduce our usage count */
 
-  /* Initialize the Xt toolkit */
-  if (xt_is_initialized == 0) {
+  /* If this is the last running widget, remove the Xt display
+     connection from the mainloop */
+  if (0 == num_widgets) {
     XtAppContext  ac;
 
 #ifdef DEBUG_XTBIN
-    printf("shutting down Xt stuff\n");
+    printf("removing the Xt connection from the main loop\n");
 #endif
-
-    /*
-     * Shutdown Xt stuff
-     */
 
     g_main_remove_poll(&xt_event_poll_fd);
     g_source_remove_by_user_data(xtbin->xtdisplay);
 
-    ac = XtDisplayToApplicationContext(xtbin->xtdisplay);
-    XtDestroyApplicationContext(ac);
+    gtk_timeout_remove(xt_polling_timer_id);
+    xt_polling_timer_id = 0;
 
-    /*
-     * XtDestroyApplicationContext destroys the display for us
-     */
-    /* XtCloseDisplay(xtbin->xtdisplay); */
-    xtbin->xtdisplay = NULL;
   }
-#endif
+
   GTK_OBJECT_CLASS(parent_class)->destroy(object);
 }
 
