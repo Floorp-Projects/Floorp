@@ -55,6 +55,15 @@ var onTable  = false;
 var onTitle  = false;
 var onLang   = false;
 
+const nsICacheService = Components.interfaces.nsICacheService;
+const cacheService = Components.classes["@mozilla.org/network/cache-service;1"]
+                     .getService(nsICacheService);
+var httpCacheSession = cacheService.createSession("HTTP", 0, true);
+httpCacheSession.doomEntriesIfExpired = false;
+var ftpCacheSession = cacheService.createSession("FTP", 0, true);
+ftpCacheSession.doomEntriesIfExpired = false;
+
+
 function onLoad()
 {
     gMetadataBundle = document.getElementById("bundle_metadata");
@@ -167,15 +176,22 @@ function checkForImage(elem, htmllocalname)
 
     if (img) {
         setInfo("image-url", img.src);
+
+        var size = getSize(img.src);
+        if (size != -1) {
+            var kbSize = size / 1024;
+            kbSize = Math.round(kbSize*100)/100;
+            setInfo("image-filesize", gMetadataBundle.getFormattedString("imageSize", [kbSize, size]));
+        }
         if ("width" in img) {
             setInfo("image-width", img.width);
             setInfo("image-height", img.height);
         }
-	else {
-	    setInfo("image-width", "");
-	    setInfo("image-height", "");
-	}	
-	 
+        else {
+            setInfo("image-width", "");
+            setInfo("image-height", "");
+        }        
+         
         if (imgType == "img") {
             setInfo("image-desc", getAbsoluteURL(img.longDesc, img));
         } else {
@@ -530,4 +546,23 @@ function convertLanguageCode(abbr)
     }
 
     return result;
+}
+
+// Returns the size of the URL in bytes; must be cached and therefore an HTTP or FTP URL
+function getSize(url) {
+    try
+    {
+        var cacheEntryDescriptor = httpCacheSession.openCacheEntry(url, Components.interfaces.nsICache.ACCESS_READ, false);
+        if(cacheEntryDescriptor)
+          return cacheEntryDescriptor.dataSize;
+    }
+    catch(ex) {}
+    try
+    {
+        cacheEntryDescriptor = ftpCacheSession.openCacheEntry(url, Components.interfaces.nsICache.ACCESS_READ, false);
+        if (cacheEntryDescriptor)
+            return cacheEntryDescriptor.dataSize;
+    }
+    catch(ex) {}
+    return -1;
 }
