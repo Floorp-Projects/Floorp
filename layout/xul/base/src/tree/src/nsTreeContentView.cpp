@@ -62,20 +62,6 @@
 #define ROW_FLAG_EMPTY          0x04
 #define ROW_FLAG_SEPARATOR      0x08
 
-class Property
-{
-  public:
-    Property(nsIAtom* aAtom)
-      : mAtom(aAtom), mNext(nsnull) {
-    }
-    ~Property() {
-      delete mNext;
-    }
-
-    nsCOMPtr<nsIAtom>   mAtom;
-    Property*           mNext;
-};
-
 class Row
 {
   public:
@@ -94,11 +80,10 @@ class Row
 
     Row(nsIContent* aContent, PRInt32 aParentIndex)
       : mContent(aContent), mParentIndex(aParentIndex),
-        mSubtreeSize(0), mProperty(nsnull), mFlags(0) {
+        mSubtreeSize(0), mFlags(0) {
     }
 
     ~Row() {
-      delete mProperty;
     }
 
     void SetContainer(PRBool aContainer) {
@@ -121,11 +106,6 @@ class Row
     }
     PRBool IsSeparator() { return mFlags & ROW_FLAG_SEPARATOR; }
 
-    void SetProperty(Property* aProperty) {
-      delete mProperty;
-      mProperty = aProperty;
-    }
-
     // Weak reference to a content item.
     nsIContent*         mContent;
 
@@ -134,9 +114,6 @@ class Row
 
     // Subtree size for this item.
     PRInt32             mSubtreeSize;
-
-    // List of parsed properties
-    Property*           mProperty;
 
   private:
     // Hide so that only Create() and Destroy() can be used to
@@ -156,7 +133,10 @@ class Row
 // document's observer list.
 
 nsTreeContentView::nsTreeContentView(void) :
-  mBoxObject(nsnull), mSelection(nsnull), mRoot(nsnull), mDocument(nsnull),
+  mBoxObject(nsnull),
+  mSelection(nsnull),
+  mRoot(nsnull),
+  mDocument(nsnull),
   mUpdateSelection(PR_FALSE)
 {
   static const size_t kBucketSizes[] = {
@@ -244,10 +224,17 @@ nsTreeContentView::GetRowProperties(PRInt32 aIndex, nsISupportsArray* aPropertie
     return NS_ERROR_INVALID_ARG;   
 
   Row* row = (Row*)mRows[aIndex];
-  Property* property = row->mProperty;
-  while (property) {
-    aProperties->AppendElement(property->mAtom);
-    property = property->mNext;
+  nsCOMPtr<nsIContent> realRow;
+  if (row->IsSeparator())
+    realRow = row->mContent;
+  else
+    nsTreeUtils::GetImmediateChild(row->mContent, nsXULAtoms::treerow, getter_AddRefs(realRow));
+
+  if (realRow) {
+    nsAutoString properties;
+    realRow->GetAttr(kNameSpaceID_None, nsXULAtoms::properties, properties);
+    if (!properties.IsEmpty())
+      nsTreeUtils::TokenizeProperties(properties, aProperties);
   }
 
   return NS_OK;
@@ -269,7 +256,7 @@ nsTreeContentView::GetCellProperties(PRInt32 aRow, const PRUnichar* aColID, nsIS
     if (cell) {
       nsAutoString properties;
       cell->GetAttr(kNameSpaceID_None, nsXULAtoms::properties, properties);
-      if (properties.Length())
+      if (!properties.IsEmpty())
         nsTreeUtils::TokenizeProperties(properties, aProperties);
     }
   }
@@ -282,7 +269,7 @@ nsTreeContentView::GetColumnProperties(const PRUnichar* aColID, nsIDOMElement* a
 {
   nsAutoString properties;
   aColElt->GetAttribute(NS_LITERAL_STRING("properties"), properties);
-  if (properties.Length())
+  if (!properties.IsEmpty())
     nsTreeUtils::TokenizeProperties(properties, aProperties);
 
   return NS_OK;
@@ -851,9 +838,6 @@ nsTreeContentView::AttributeChanged(nsIDocument *aDocument,
     PRInt32 index = FindContent(aContent);
     if (index >= 0) {
       if (aAttribute == nsXULAtoms::properties) {
-        Row* row = (Row*)mRows[index];
-        row->SetProperty(nsnull);
-        ParseProperties(aContent, &row->mProperty);
         mBoxObject->InvalidateRow(index);
       }
     }
@@ -865,9 +849,6 @@ nsTreeContentView::AttributeChanged(nsIDocument *aDocument,
       if (parent) {
         PRInt32 index = FindContent(parent);
         if (index >= 0) {
-          Row* row = (Row*)mRows[index];
-          row->SetProperty(nsnull);
-          ParseProperties(aContent, &row->mProperty);
           mBoxObject->InvalidateRow(index);
         }
       }
@@ -1020,6 +1001,8 @@ nsTreeContentView::ContentRemoved(nsIDocument *aDocument,
                                      nsIContent* aChild,
                                      PRInt32 aIndexInContainer)
 {
+  NS_ASSERTION(aChild, "null ptr");
+
   // Make sure this notification concerns us.
   // First check the tag to see if it's one that we care about.
   nsCOMPtr<nsIAtom> tag;
@@ -1155,11 +1138,6 @@ nsTreeContentView::SerializeItem(nsIContent* aContent, PRInt32 aParentIndex, PRI
   Row* row = Row::Create(mAllocator, aContent, aParentIndex);
   aRows.AppendElement(row);
 
-  nsCOMPtr<nsIContent> realRow;
-  nsTreeUtils::GetImmediateChild(aContent, nsXULAtoms::treerow, getter_AddRefs(realRow));
-  if (realRow)
-    ParseProperties(realRow, &row->mProperty);
-
   nsAutoString container;
   aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::container, container);
   if (container.Equals(NS_LITERAL_STRING("true"))) {
@@ -1199,8 +1177,6 @@ nsTreeContentView::SerializeSeparator(nsIContent* aContent, PRInt32 aParentIndex
   Row* row = Row::Create(mAllocator, aContent, aParentIndex);
   row->SetSeparator(PR_TRUE);
   aRows.AppendElement(row);
-
-  ParseProperties(aContent, &row->mProperty);
 }
 
 void
@@ -1521,50 +1497,6 @@ nsTreeContentView::GetNamedCell(nsIContent* aContainer, const PRUnichar* aColID,
     }
   }
   NS_IF_ADDREF(*aResult);
-
-  return NS_OK;
-}
-
-nsresult
-nsTreeContentView::ParseProperties(nsIContent* aContent, Property** aProperty)
-{
-  nsAutoString properties;
-  aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::properties, properties);
-  if (properties.Length()) {
-    Property* lastProperty = *aProperty;
-
-    nsAString::const_iterator end;
-    properties.EndReading(end);
-
-    nsAString::const_iterator iter;
-    properties.BeginReading(iter);
-
-    do {
-      // Skip whitespace
-      while (iter != end && nsCRT::IsAsciiSpace(*iter))
-        ++iter;
-
-      // If only whitespace, we're done
-      if (iter == end)
-        break;
-
-      // Note the first non-whitespace character
-      nsAString::const_iterator first = iter;
-
-      // Advance to the next whitespace character
-      while (iter != end && ! nsCRT::IsAsciiSpace(*iter))
-        ++iter;
-
-      nsCOMPtr<nsIAtom> atom = dont_AddRef(NS_NewAtom(Substring(first, iter)));
-      Property* newProperty = new Property(atom);
-      if (lastProperty)
-        lastProperty->mNext = newProperty;
-      else
-        *aProperty = newProperty;
-      lastProperty = newProperty;
-
-    } while (iter != end);
-  }
 
   return NS_OK;
 }
