@@ -77,7 +77,6 @@ BOOL Config(CString globalsName, CString DialogTitle, WIDGET* curWidget)
 	SetGlobal("LargeAnimPath", newDir + "\\Workspace\\AnimLogo\\animlogo32.gif");
 	SetGlobal("LargeStillPath", newDir + "\\Workspace\\AnimLogo\\staticlogo32.gif");
 	SetGlobal("ReadMeFile", newDir + "\\Workspace\\readme.txt");
-	SetGlobal("CustomBookmarkFile", newDir + "\\Workspace\\Bkmarks\\bookmarks.html");
 	SetGlobal("ShellBgBitmap", newDir + "\\Workspace\\Autorun\\Shell\\bmps\\install.bmp");
 	SetGlobal("ShellInstallTextFile", newDir + "\\Workspace\\Autorun\\install.txt");
 
