@@ -5,8 +5,8 @@
 # customizable settings.
 
 
-# $Revision: 1.18 $ 
-# $Date: 2002/04/25 22:57:59 $ 
+# $Revision: 1.19 $ 
+# $Date: 2002/04/25 23:05:24 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TinderConfig.pm,v $ 
 # $Name:  $ 
@@ -73,13 +73,13 @@ $URL_BIN = "http://lounge.mozilla.org/cgi-bin/cgiwrap/cgiwrap_exe/tbox";
 
 # The url to the tinderbox server HTML directory
 
-$URL_HTML = "http://lounge.mozilla.org/webtools/tinderbox2";
+$URL_HTML = "http://lounge.mozilla.org/tinderbox2";
 
 # The full path name tinderbox will use to access the tinderbox
 # servers root data directory where the html will be written.
 
 #$TINDERBOX_HTML_DIR = "/home/httpd/html/tinderbox";
-$TINDERBOX_HTML_DIR = "/opt/apache/htdocs/webtools/tinderbox2";
+$TINDERBOX_HTML_DIR = "/opt/apache/htdocs/tinderbox2";
 
 # The full path name tinderbox will use to access the tinderbox
 # servers root data directory where the data will be written.  For
