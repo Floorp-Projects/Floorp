@@ -30,3 +30,4 @@ nsITextContent.h
 nsIContentList.h
 nsIFrameLoader.h
 mozISanitizingSerializer.h
+nsContentCID.h

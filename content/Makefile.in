@@ -32,7 +32,7 @@ ifdef MOZ_SVG
 DIRS		+= svg
 endif
 
-DIRS           += events shared build
+DIRS           += events shared
 
 include $(topsrcdir)/config/rules.mk
 

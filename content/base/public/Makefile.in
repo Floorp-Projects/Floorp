@@ -60,6 +60,7 @@ nsIHTMLToTextSink.h \
 mozISanitizingSerializer.h \
 nsIContentList.h \
 nsIFrameLoader.h \
+nsContentCID.h \
 $(NULL)
 
 SDK_XPIDLSRCS   = \

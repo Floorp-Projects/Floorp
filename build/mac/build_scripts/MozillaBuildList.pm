@@ -955,7 +955,6 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:content:base:public:MANIFEST",                   "$distdirectory:content:");
     InstallFromManifest(":mozilla:content:base:public:MANIFEST_IDL",               "$distdirectory:idl:");
     InstallFromManifest(":mozilla:content:base:src:MANIFEST",                      "$distdirectory:content:");
-    InstallFromManifest(":mozilla:content:build:MANIFEST",                         "$distdirectory:content:");
     InstallFromManifest(":mozilla:content:events:public:MANIFEST",                 "$distdirectory:content:");
     InstallFromManifest(":mozilla:content:events:src:MANIFEST",                    "$distdirectory:content:");
     InstallFromManifest(":mozilla:content:html:content:public:MANIFEST",           "$distdirectory:content:");
@@ -2021,7 +2020,7 @@ sub BuildLayoutProjects()
         BuildOneProject(":mozilla:content:macbuild:contentSVG.xml",             "contentSVG$D.o stub", 0, 0, 0);
     }
 
-    BuildOneProject(":mozilla:content:macbuild:content.xml",                    "content$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:content:macbuild:content.xml",                    "content$D.o", 0, 0, 0);
     if ($main::options{mathml})
     {
         BuildProject(":mozilla:layout:macbuild:layoutmathml.xml",                "layoutmathml$D.o");
