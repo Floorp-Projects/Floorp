@@ -568,9 +568,11 @@ NET_ParseDate(char *date_string)
 	/* try using PR_ParseTimeString instead
 	 */
 	
-	if(PR_ParseTimeString(date_string, TRUE, &prdate))
+	if(PR_ParseTimeString(date_string, TRUE, &prdate) == PR_SUCCESS)
 	  {
-        LL_L2I(date, prdate);
+        PRInt64 r;
+        LL_DIV(r, prdate, PR_USEC_PER_SEC);
+        LL_L2I(date, r);
 		TRACEMSG(("Parsed date as GMT: %s\n", asctime(gmtime(&date))));
 		TRACEMSG(("Parsed date as local: %s\n", ctime(&date)));
 	  }
@@ -579,7 +581,7 @@ NET_ParseDate(char *date_string)
 		TRACEMSG(("Could not parse date"));
 	  }
 
-	return((time_t) date);
+	return (date);
 
 #else
     struct tm time_info;         /* Points to static tm structure */
@@ -1667,8 +1669,10 @@ net_parse_http_index_201_line(HTTPIndexParserData *obj, char *data_line)
 			case LAST_MODIFIED_TOKEN:
                 {
                     PRTime prtime;
+                    PRInt64 r;
 				    PR_ParseTimeString(token, TRUE, &prtime);
-                    LL_L2I(file_struct->date, prtime);
+                    LL_DIV(r, prtime, PR_USEC_PER_SEC);
+                    LL_L2I(file_struct->date, r);
                 }
 				break;
 
