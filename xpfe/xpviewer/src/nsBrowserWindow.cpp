@@ -2569,12 +2569,18 @@ nsBrowserWindow::Prompt(const nsString &aText,
   char buf[256];
 
   str = aText.ToNewCString();
-  printf("%cBrowser Window: %s\n", '\007', str);
+  printf("Browser Window: %s\n", str);
   PR_Free(str);
 
-  printf("Prompt: ");
-  scanf("%s", buf);
-  aResult = buf;
+  str = aDefault.ToNewCString();
+  printf("%cPrompt (default=%s): ", '\007', str);
+  gets(buf);
+  if (strlen(buf)) {
+    aResult = buf;
+  } else {
+    aResult = aDefault;
+  }
+  PR_Free(str);
   
   return (aResult.Length() > 0);
 }
@@ -2592,12 +2598,21 @@ nsBrowserWindow::PromptUserAndPassword(const nsString &aText,
   printf("Browser Window: %s\n", str);
   PR_Free(str);
 
-  printf("%cUser: ", '\007');
-  scanf("%s", buf);
-  aUser = buf;
-  printf("%cPassword: ", '\007');
-  scanf("%s", buf);
-  aPassword = buf;
+  str = aUser.ToNewCString();
+  printf("%cUser (default=%s): ", '\007', str);
+  gets(buf);
+  if (strlen(buf)) {
+    aUser = buf;
+  }
+  PR_Free(str);
+
+  str = aPassword.ToNewCString();
+  printf("%cPassword (default=%s): ", '\007', str);
+  gets(buf);
+  if (strlen(buf)) {
+    aPassword = buf;
+  }
+  PR_Free(str);
   
   return (aUser.Length() > 0);
 }
@@ -2611,11 +2626,11 @@ nsBrowserWindow::PromptPassword(const nsString &aText,
   char buf[256];
   
   str = aText.ToNewCString();
-  printf("%cBrowser Window: %s\n", '\007', str);
+  printf("Browser Window: %s\n", str);
   PR_Free(str);
 
-  printf("Password: ");
-  scanf("%s", buf);
+  printf("%cPassword: ", '\007');
+  gets(buf);
   aPassword = buf;
  
   return PR_TRUE;
