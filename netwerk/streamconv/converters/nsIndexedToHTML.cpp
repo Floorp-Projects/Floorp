@@ -116,16 +116,16 @@ nsIndexedToHTML::Init(nsIStreamListener* aListener) {
 
 NS_IMETHODIMP
 nsIndexedToHTML::Convert(nsIInputStream* aFromStream,
-                         const PRUnichar* aFromType,
-                         const PRUnichar* aToType,
+                         const char* aFromType,
+                         const char* aToType,
                          nsISupports* aCtxt,
                          nsIInputStream** res) {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsIndexedToHTML::AsyncConvertData(const PRUnichar *aFromType,
-                                  const PRUnichar *aToType,
+nsIndexedToHTML::AsyncConvertData(const char *aFromType,
+                                  const char *aToType,
                                   nsIStreamListener *aListener,
                                   nsISupports *aCtxt) {
     return Init(aListener);

@@ -111,8 +111,8 @@ NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
 nsUnknownDecoder::Convert(nsIInputStream *aFromStream,
-                          const PRUnichar *aFromType,
-                          const PRUnichar *aToType,
+                          const char *aFromType,
+                          const char *aToType,
                           nsISupports *aCtxt, 
                           nsIInputStream **aResultStream) 
 {
@@ -120,8 +120,8 @@ nsUnknownDecoder::Convert(nsIInputStream *aFromStream,
 }
 
 NS_IMETHODIMP
-nsUnknownDecoder::AsyncConvertData(const PRUnichar *aFromType, 
-                                   const PRUnichar *aToType,
+nsUnknownDecoder::AsyncConvertData(const char *aFromType, 
+                                   const char *aToType,
                                    nsIStreamListener *aListener, 
                                    nsISupports *aCtxt)
 {

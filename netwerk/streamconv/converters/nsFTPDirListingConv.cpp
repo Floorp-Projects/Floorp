@@ -84,8 +84,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsFTPDirListingConv,
 // nsIStreamConverter implementation
 NS_IMETHODIMP
 nsFTPDirListingConv::Convert(nsIInputStream *aFromStream,
-                             const PRUnichar *aFromType,
-                             const PRUnichar *aToType,
+                             const char *aFromType,
+                             const char *aToType,
                              nsISupports *aCtxt, nsIInputStream **_retval) {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -93,7 +93,7 @@ nsFTPDirListingConv::Convert(nsIInputStream *aFromStream,
 
 // Stream converter service calls this to initialize the actual stream converter (us).
 NS_IMETHODIMP
-nsFTPDirListingConv::AsyncConvertData(const PRUnichar *aFromType, const PRUnichar *aToType,
+nsFTPDirListingConv::AsyncConvertData(const char *aFromType, const char *aToType,
                                       nsIStreamListener *aListener, nsISupports *aCtxt) {
     NS_ASSERTION(aListener && aFromType && aToType, "null pointer passed into FTP dir listing converter");
     nsresult rv;

@@ -232,8 +232,8 @@ nsMsgQuote::QuoteMessage(const char *msgURI, PRBool quoteHeaders, nsIStreamListe
   NS_ENSURE_SUCCESS(rv,rv);
 
   nsCOMPtr<nsIStreamListener> convertedListener;
-  rv = streamConverterService->AsyncConvertData(NS_LITERAL_STRING("message/rfc822").get(),
-                                                NS_LITERAL_STRING("application/vnd.mozilla.xul+xml").get(),
+  rv = streamConverterService->AsyncConvertData("message/rfc822",
+                                                "application/vnd.mozilla.xul+xml",
                                                 mStreamListener,
                                                 quoteSupport,
                                                 getter_AddRefs(convertedListener));

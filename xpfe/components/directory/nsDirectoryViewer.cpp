@@ -1478,8 +1478,8 @@ nsDirectoryViewerFactory::CreateInstance(const char *aCommand,
   nsCOMPtr<nsIStreamConverterService> scs = do_GetService("@mozilla.org/streamConverters;1", &rv);
   if (NS_FAILED(rv)) return rv;
 
-  rv = scs->AsyncConvertData(NS_LITERAL_STRING("application/http-index-format").get(),
-                             NS_LITERAL_STRING("text/html").get(),
+  rv = scs->AsyncConvertData("application/http-index-format",
+                             "text/html",
                              listener,
                              nsnull,
                              aDocListenerResult);

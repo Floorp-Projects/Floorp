@@ -202,11 +202,11 @@ main(int argc, char* argv[])
         if (NS_FAILED(rv)) return rv;
 
         // Define the *from* content type and *to* content-type for conversion.
-        nsString fromStr(NS_LITERAL_STRING("a/foo"));
-        nsString toStr(NS_LITERAL_STRING("c/foo"));
+        static const char fromStr[] = "a/foo";
+        static const char toStr[] = "c/foo";
     
 #ifdef ASYNC_TEST
-        // ASYNCRONOUS conversion
+        // ASYNCHRONOUS conversion
 
         // Build up a channel that represents the content we're
         // starting the transaction with.
@@ -241,7 +241,7 @@ main(int argc, char* argv[])
         // unconverted data of fromType, and the final listener in the chain (in this case
         // the dataReceiver.
         nsIStreamListener *converterListener = nsnull;
-        rv = StreamConvService->AsyncConvertData(fromStr.get(), toStr.get(),
+        rv = StreamConvService->AsyncConvertData(fromStr, toStr,
                                                  dataReceiver, nsnull, &converterListener);
         if (NS_FAILED(rv)) return rv;
         NS_RELEASE(dataReceiver);
@@ -265,9 +265,9 @@ main(int argc, char* argv[])
 
         NS_RELEASE(converterListener);
 #else
-        // SYNCRONOUS conversion
+        // SYNCHRONOUS conversion
         nsCOMPtr<nsIInputStream> convertedData;
-        rv = StreamConvService->Convert(inputData, fromStr.get(), toStr.get(),
+        rv = StreamConvService->Convert(inputData, fromStr, toStr,
                                         nsnull, getter_AddRefs(convertedData));
         if (NS_FAILED(rv)) return rv;
 #endif

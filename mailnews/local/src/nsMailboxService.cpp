@@ -53,7 +53,6 @@
 #include "nsIDocShell.h"
 #include "nsIPop3Service.h"
 #include "nsMsgUtils.h"
-#include "nsIStreamConverterService.h"
 #include "nsNetUtil.h"
 #include "nsIDocShellLoadInfo.h"
 #include "nsIWebNavigation.h"

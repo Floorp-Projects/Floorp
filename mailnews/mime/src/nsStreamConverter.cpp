@@ -1062,8 +1062,8 @@ nsresult nsStreamConverter::Close()
 
 // No syncronous conversion at this time.
 NS_IMETHODIMP nsStreamConverter::Convert(nsIInputStream  *aFromStream,
-                                         const PRUnichar *aFromType,
-                                         const PRUnichar *aToType,
+                                         const char *aFromType,
+                                         const char *aToType,
                                          nsISupports     *aCtxt, 
                                          nsIInputStream **_retval) 
 {
@@ -1071,8 +1071,8 @@ NS_IMETHODIMP nsStreamConverter::Convert(nsIInputStream  *aFromStream,
 }
 
 // Stream converter service calls this to initialize the actual stream converter (us).
-NS_IMETHODIMP nsStreamConverter::AsyncConvertData(const PRUnichar   *aFromType, 
-                                                  const PRUnichar   *aToType,
+NS_IMETHODIMP nsStreamConverter::AsyncConvertData(const char   *aFromType, 
+                                                  const char   *aToType,
                                                   nsIStreamListener *aListener, 
                                                   nsISupports       *aCtxt) 
 {

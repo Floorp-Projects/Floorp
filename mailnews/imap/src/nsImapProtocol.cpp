@@ -8143,7 +8143,7 @@ nsresult nsImapMockChannel::SetupPartExtractorListener(nsIImapUrl * aUrl, nsIStr
     if (converter && aConsumer)
     {
       nsCOMPtr<nsIStreamListener> newConsumer;
-      converter->AsyncConvertData(NS_LITERAL_STRING("message/rfc822").get(), NS_LITERAL_STRING("*/*").get(),
+      converter->AsyncConvertData("message/rfc822", "*/*",
            aConsumer, NS_STATIC_CAST(nsIChannel *, this), getter_AddRefs(newConsumer));
       if (newConsumer)
         m_channelListener = newConsumer;

@@ -616,10 +616,10 @@ nsHttpChannel::ApplyContentConversions()
         // stream converter service.. carry on..
         if (NS_SUCCEEDED(rv)) {
             nsCOMPtr<nsIStreamListener> converter;
-            NS_ConvertASCIItoUTF16 from(val);
+            nsCAutoString from(val);
             ToLowerCase(from);
             rv = serv->AsyncConvertData(from.get(),
-                                        NS_LITERAL_STRING("uncompressed").get(),
+                                        "uncompressed",
                                         mListener,
                                         mListenerContext,
                                         getter_AddRefs(converter));
@@ -648,10 +648,9 @@ nsHttpChannel::CallOnStartRequest()
                 GetStreamConverterService(getter_AddRefs(serv));
             // If we failed, we just fall through to the "normal" case
             if (NS_SUCCEEDED(rv)) {
-                NS_ConvertASCIItoUCS2 from(UNKNOWN_CONTENT_TYPE);
                 nsCOMPtr<nsIStreamListener> converter;
-                rv = serv->AsyncConvertData(from.get(),
-                                            NS_LITERAL_STRING("*/*").get(),
+                rv = serv->AsyncConvertData(UNKNOWN_CONTENT_TYPE,
+                                            "*/*",
                                             mListener,
                                             mListenerContext,
                                             getter_AddRefs(converter));

@@ -481,8 +481,8 @@ nsresult nsMailboxProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
           nsCOMPtr<nsIChannel> channel;
           QueryInterface(NS_GET_IID(nsIChannel), getter_AddRefs(channel));
 
-          rv = streamConverter->AsyncConvertData(NS_LITERAL_STRING("message/rfc822").get(),
-                                                 NS_LITERAL_STRING("*/*").get(),
+          rv = streamConverter->AsyncConvertData("message/rfc822",
+                                                 "*/*",
                                                  consumer, channel, getter_AddRefs(m_channelListener));
       }
       

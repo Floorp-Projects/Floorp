@@ -82,7 +82,7 @@
  * @see nsIStreamConverterService
  */
 
-[scriptable, uuid(46484B30-3BD2-11d3-A16C-0050041CAF44)]
+[scriptable, uuid(0b6e2c69-5cf5-48b0-9dfd-c95950e2cc7b)]
 interface nsIStreamConverter : nsIStreamListener {
 
     /**
@@ -102,8 +102,8 @@ interface nsIStreamConverter : nsIStreamListener {
      *                      buffering the converted data until it is used.
      */
     nsIInputStream convert(in nsIInputStream aFromStream,
-                           in wstring aFromType,
-                           in wstring aToType,
+                           in string aFromType,
+                           in string aToType,
                            in nsISupports aCtxt);
 
     /**
@@ -121,8 +121,8 @@ interface nsIStreamConverter : nsIStreamListener {
      * @param aCtxt         Either an opaque context, or a converter specific context
      *                      (implementation specific).
      */
-    void asyncConvertData(in wstring aFromType,
-                          in wstring aToType,
+    void asyncConvertData(in string aFromType,
+                          in string aToType,
                           in nsIStreamListener aListener,
                           in nsISupports aCtxt);
 };

@@ -475,8 +475,8 @@ nsStreamConverterService::FindConverter(const char *aContractID, nsCStringArray 
 // nsIStreamConverter methods
 NS_IMETHODIMP
 nsStreamConverterService::Convert(nsIInputStream *aFromStream,
-                                  const PRUnichar *aFromType, 
-                                  const PRUnichar *aToType,
+                                  const char *aFromType, 
+                                  const char *aToType,
                                   nsISupports *aContext,
                                   nsIInputStream **_retval) {
     if (!aFromStream || !aFromType || !aToType || !_retval) return NS_ERROR_NULL_POINTER;
@@ -484,11 +484,11 @@ nsStreamConverterService::Convert(nsIInputStream *aFromStream,
 
     // first determine whether we can even handle this covnversion
     // build a CONTRACTID
-    nsCAutoString contractID(NS_ISTREAMCONVERTER_KEY);
-    contractID.Append("?from=");
-    contractID.AppendWithConversion(aFromType);
-    contractID.Append("&to=");
-    contractID.AppendWithConversion(aToType);
+    nsCAutoString contractID(
+        NS_LITERAL_CSTRING(NS_ISTREAMCONVERTER_KEY "?from=") +
+        nsDependentCString(aFromType) +
+        NS_LITERAL_CSTRING("&to=") +
+        nsDependentCString(aToType));
     const char *cContractID = contractID.get();
 
     nsCOMPtr<nsIStreamConverter> converter(do_CreateInstance(cContractID, &rv));
@@ -537,20 +537,7 @@ nsStreamConverterService::Convert(nsIInputStream *aFromStream,
                 return rv;
             }
 
-            PRUnichar *fromUni = ToNewUnicode(fromStr);
-            if (!fromUni) {
-                delete converterChain;
-                return NS_ERROR_OUT_OF_MEMORY;
-            }
-            PRUnichar *toUni   = ToNewUnicode(toStr);
-            if (!toUni) {
-                delete fromUni;
-                delete converterChain;
-                return NS_ERROR_OUT_OF_MEMORY;
-            }
-            rv = converter->Convert(dataToConvert, fromUni, toUni, aContext, getter_AddRefs(convertedData));
-            nsMemory::Free(fromUni);
-            nsMemory::Free(toUni);
+            rv = converter->Convert(dataToConvert, fromStr.get(), toStr.get(), aContext, getter_AddRefs(convertedData));
             dataToConvert = convertedData;
             if (NS_FAILED(rv)) {
                 delete converterChain;
@@ -572,8 +559,8 @@ nsStreamConverterService::Convert(nsIInputStream *aFromStream,
 
 
 NS_IMETHODIMP
-nsStreamConverterService::AsyncConvertData(const PRUnichar *aFromType, 
-                                           const PRUnichar *aToType, 
+nsStreamConverterService::AsyncConvertData(const char *aFromType, 
+                                           const char *aToType, 
                                            nsIStreamListener *aListener,
                                            nsISupports *aContext,
                                            nsIStreamListener **_retval) {
@@ -583,11 +570,11 @@ nsStreamConverterService::AsyncConvertData(const PRUnichar *aFromType,
 
     // first determine whether we can even handle this covnversion
     // build a CONTRACTID
-    nsCAutoString contractID(NS_ISTREAMCONVERTER_KEY);
-    contractID.Append("?from=");
-    contractID.AppendWithConversion(aFromType);
-    contractID.Append("&to=");
-    contractID.AppendWithConversion(aToType);
+    nsCAutoString contractID(
+        NS_LITERAL_CSTRING(NS_ISTREAMCONVERTER_KEY "?from=") +
+        nsDependentCString(aFromType) +
+        NS_LITERAL_CSTRING("&to=") +
+        nsDependentCString(aToType));
     const char *cContractID = contractID.get();
 
     nsCOMPtr<nsIStreamConverter> listener(do_CreateInstance(cContractID, &rv));
@@ -634,23 +621,8 @@ nsStreamConverterService::AsyncConvertData(const PRUnichar *aFromType,
                 return rv;
             }
 
-            PRUnichar *fromStrUni = ToNewUnicode(fromStr);
-            if (!fromStrUni) {
-                delete converterChain;
-                return NS_ERROR_OUT_OF_MEMORY;
-            }
-
-            PRUnichar *toStrUni   = ToNewUnicode(toStr);
-            if (!toStrUni) {
-                delete fromStrUni;
-                delete converterChain;
-                return NS_ERROR_OUT_OF_MEMORY;
-            }
-
             // connect the converter w/ the listener that should get the converted data.
-            rv = converter->AsyncConvertData(fromStrUni, toStrUni, finalListener, aContext);
-            nsMemory::Free(fromStrUni);
-            nsMemory::Free(toStrUni);
+            rv = converter->AsyncConvertData(fromStr.get(), toStr.get(), finalListener, aContext);
             if (NS_FAILED(rv)) {
                 delete converterChain;
                 return rv;

@@ -374,11 +374,9 @@ nsURLFetcher::InsertConverter(const char * aContentType)
   {
     nsCOMPtr<nsIStreamListener> toListener(mConverter);
     nsCOMPtr<nsIStreamListener> fromListener;
-    nsAutoString contentType;
-    
-    contentType.AssignWithConversion(aContentType);
-    rv = convServ->AsyncConvertData(contentType.get(),
-                                    NS_LITERAL_STRING("*/*").get(),
+
+    rv = convServ->AsyncConvertData(aContentType,
+                                    "*/*",
                                     toListener,
                                     nsnull,
                                     getter_AddRefs(fromListener));

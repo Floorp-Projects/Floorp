@@ -1081,8 +1081,8 @@ nsImapService::FetchMessage(nsIImapUrl * aImapUrl,
         nsCOMPtr<nsIStreamListener> conversionListener;
         nsCOMPtr<nsIStreamConverterService> streamConverter = do_GetService("@mozilla.org/streamConverters;1", &rv);
         NS_ENSURE_SUCCESS(rv, rv);
-        rv = streamConverter->AsyncConvertData(NS_LITERAL_STRING("message/rfc822").get(),
-                                               NS_LITERAL_STRING("*/*").get(),
+        rv = streamConverter->AsyncConvertData("message/rfc822",
+                                               "*/*",
                                                streamListener, channel, getter_AddRefs(conversionListener));
         NS_ENSURE_SUCCESS(rv, rv);
         streamListener = conversionListener; // this is our new listener.

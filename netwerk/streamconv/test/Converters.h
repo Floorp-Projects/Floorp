@@ -5,7 +5,7 @@
 
 /* This file defines stream converter components, and their accompanying factory class.
  * These converters implement the nsIStreamConverter interface and support both
- * asyncronous and syncronous stream conversion.
+ * asynchronous and synchronous stream conversion.
  */
 
 ///////////////////////////////////////////////
@@ -26,20 +26,20 @@ public:
     NS_DECL_NSISTREAMLISTENER
 
     TestConverter();
-    virtual ~TestConverter() {;};
+    virtual ~TestConverter() {}
 
     // nsIStreamConverter methods
-    NS_IMETHOD Convert(nsIInputStream *aFromStream, const PRUnichar *aFromType, 
-                       const PRUnichar *aToType, nsISupports *ctxt, nsIInputStream **_retval);
+    NS_IMETHOD Convert(nsIInputStream *aFromStream, const char *aFromType, 
+                       const char *aToType, nsISupports *ctxt, nsIInputStream **_retval);
 
 
-    NS_IMETHOD AsyncConvertData(const PRUnichar *aFromType, const PRUnichar *aToType, 
+    NS_IMETHOD AsyncConvertData(const char *aFromType, const char *aToType, 
                                 nsIStreamListener *aListener, nsISupports *ctxt);
 
     // member data
     nsCOMPtr<nsIStreamListener> mListener;
-    nsString fromType;
-    nsString toType;
+    nsCString fromType;
+    nsCString toType;
 };
 
 //////////////////////////////////////////////////

@@ -802,7 +802,7 @@ nsresult nsNNTPProtocol::SetupPartExtractorListener(nsIStreamListener * aConsume
       nsCOMPtr<nsIStreamListener> newConsumer;
       nsCOMPtr<nsIChannel> channel;
       QueryInterface(NS_GET_IID(nsIChannel), getter_AddRefs(channel));
-      converter->AsyncConvertData(NS_LITERAL_STRING("message/rfc822").get(), NS_LITERAL_STRING("*/*").get(),
+      converter->AsyncConvertData("message/rfc822", "*/*",
            aConsumer, channel, getter_AddRefs(newConsumer));
       if (newConsumer)
         m_channelListener = newConsumer;

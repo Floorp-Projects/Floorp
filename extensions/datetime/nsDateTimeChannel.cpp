@@ -220,11 +220,8 @@ nsDateTimeChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
              do_GetService(kStreamConverterServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    NS_NAMED_LITERAL_STRING(fromStr, "text/plain");
-    NS_NAMED_LITERAL_STRING(toStr, "text/html");
-
     nsCOMPtr<nsIStreamListener> convListener;
-    rv = scs->AsyncConvertData(fromStr.get(), toStr.get(), this, nsnull,
+    rv = scs->AsyncConvertData("text/plain", "text/html", this, nsnull,
                                getter_AddRefs(convListener));
     if (NS_FAILED(rv)) return rv;
 

@@ -602,9 +602,6 @@ nsDocumentOpenInfo::ConvertData(nsIRequest *request,
 
   LOG(("  Got converter service"));
   
-  NS_ConvertASCIItoUCS2 from_w(aSrcContentType);
-  NS_ConvertASCIItoUCS2 to_w(aOutContentType);
-      
   // When applying stream decoders, it is necessary to "insert" an 
   // intermediate nsDocumentOpenInfo instance to handle the targeting of
   // the "final" stream or streams.
@@ -636,8 +633,8 @@ nsDocumentOpenInfo::ConvertData(nsIRequest *request,
   // stream converter and sets the output end of the stream converter to
   // nextLink.  As we pump data into m_targetStreamListener the stream
   // converter will convert it and pass the converted data to nextLink.
-  return StreamConvService->AsyncConvertData(from_w.get(), 
-                                             to_w.get(), 
+  return StreamConvService->AsyncConvertData(PromiseFlatCString(aSrcContentType).get(), 
+                                             PromiseFlatCString(aOutContentType).get(), 
                                              nextLink, 
                                              request,
                                              getter_AddRefs(m_targetStreamListener));

@@ -1284,24 +1284,24 @@ mozTXTToHTMLConv::ScanHTML(nsString& aInString, PRUint32 whattodo, nsString &aOu
 
 NS_IMETHODIMP
 mozTXTToHTMLConv::Convert(nsIInputStream *aFromStream,
-                             const PRUnichar *aFromType,
-                             const PRUnichar *aToType,
-                             nsISupports *aCtxt, nsIInputStream **_retval)
+                          const char *aFromType,
+                          const char *aToType,
+                          nsISupports *aCtxt, nsIInputStream **_retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-mozTXTToHTMLConv::AsyncConvertData(const PRUnichar *aFromType,
-                                      const PRUnichar *aToType,
-                                      nsIStreamListener *aListener, nsISupports *aCtxt) {
+mozTXTToHTMLConv::AsyncConvertData(const char *aFromType,
+                                   const char *aToType,
+                                   nsIStreamListener *aListener, nsISupports *aCtxt) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 mozTXTToHTMLConv::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
-                                     nsIInputStream *inStr, PRUint32 sourceOffset,
-                                     PRUint32 count)
+                                 nsIInputStream *inStr, PRUint32 sourceOffset,
+                                 PRUint32 count)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

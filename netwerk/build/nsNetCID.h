@@ -689,4 +689,17 @@
     { 0xa6, 0x18, 0x00, 0x10, 0xa4, 0x01, 0xeb, 0x10 } \
 }
 
+/******************************************************************************
+ * netwerk/streamconv classes
+ */
+
+// service implementing nsIStreamConverterService
+#define NS_STREAMCONVERTERSERVICE_CID                \
+{ /* 892FFEB0-3F80-11d3-A16C-0050041CAF44 */         \
+    0x892ffeb0,                                      \
+    0x3f80,                                          \
+    0x11d3,                                          \
+    {0xa1, 0x6c, 0x00, 0x50, 0x04, 0x1c, 0xaf, 0x44} \
+}
+
 #endif // nsNetCID_h__

@@ -709,8 +709,8 @@ nsMessenger::SaveAttachment(nsIFileSpec * fileSpec,
         nsCOMPtr<nsIStreamConverterService> streamConverterService = do_GetService("@mozilla.org/streamConverters;1", &rv);
         nsCOMPtr<nsISupports> channelSupport = do_QueryInterface(saveListener->m_channel);
           
-        rv = streamConverterService->AsyncConvertData(NS_ConvertASCIItoUCS2(APPLICATION_BINHEX).get(),
-                                                      NS_LITERAL_STRING("*/*").get(), 
+        rv = streamConverterService->AsyncConvertData(APPLICATION_BINHEX,
+                                                      "*/*", 
                                                       listener,
                                                       channelSupport,
                                                       getter_AddRefs(convertedListener));
@@ -1143,8 +1143,8 @@ nsMessenger::SaveAs(const char *aURI, PRBool aAsFile, nsIMsgIdentity *aIdentity,
       // we can't go RFC822 to TXT until bug #1775 is fixed
       // so until then, do the HTML to TXT conversion in
       // nsSaveMsgListener::OnStopRequest(), see ConvertBufToPlainText()
-      rv = streamConverterService->AsyncConvertData(NS_LITERAL_STRING(MESSAGE_RFC822).get(),
-        NS_LITERAL_STRING(TEXT_HTML).get(), 
+      rv = streamConverterService->AsyncConvertData(MESSAGE_RFC822,
+        TEXT_HTML,
         saveListener,
         channelSupport,
         getter_AddRefs(convertedListener));

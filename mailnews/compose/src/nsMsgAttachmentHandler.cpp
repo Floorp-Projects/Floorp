@@ -61,7 +61,6 @@
 #include "nsEscape.h"
 #include "nsIURL.h"
 #include "nsNetCID.h"
-#include "nsIStreamConverterService.h"
 #include "nsIMimeStreamConverter.h"
 #include "nsMsgMimeCID.h"
 #include "nsNetUtil.h"
@@ -580,8 +579,8 @@ nsMsgAttachmentHandler::SnarfMsgAttachment(nsMsgCompFields *compFields)
         goto done;
 
       rv = m_mime_parser->AsyncConvertData(
-		    NS_LITERAL_STRING("message/rfc822").get(),
-		    NS_LITERAL_STRING("message/rfc822").get(),
+		    "message/rfc822",
+		    "message/rfc822",
 		    strListener, m_converter_channel);
       if (NS_FAILED(rv))
         goto done;
