@@ -24,24 +24,23 @@ SELECT#select1 {
 
 <BR>
 <FORM METHOD="GET" ACTION="http://search.yahoo.com/bin/search" NAME="searchform">
-<FIELDSET style="background-color: rgb(200, 220, 240);">
-<LEGEND style="background-color:rgb(180, 200, 220);" align=left>&nbsp; Find it <b>Fast</b> (this wide legend will get fixed)&nbsp;</LEGEND>
+<FIELDSET style="background-color: rgb(200, 220, 240); display: inline; border: 2px solid black; padding: 10px;">
+<LEGEND style="background-color:rgb(180, 200, 220);  border: 1px solid gray; padding: 0px;" align=left>&nbsp;Find it <b>Fast</b>&nbsp;</LEGEND>
 <INPUT type=text NAME="p" SIZE=15 MAXLENGTH=80 style="margin-right:10px; background-color: rgb(190, 190, 190);">
 <INPUT type=submit value="GO">
 <INPUT TYPE="HIDDEN" NAME="a" VALUE="n">
 </FIELDSET>
 &nbsp;&nbsp<INPUT type=image src=raptor.jpg width=50 height=50 name=imageSubmit> 
 </FORM>
-
-<FORM METHOD="POST" ACTION="http://www.mcp.com/cgi-bin/post-query" NAME="echo">
 <BR><BR>
-password:&nbsp;&nbsp;<INPUT TYPE="PASSWORD"> <BR>
+<FORM METHOD="POST" ACTION="http://www.mcp.com/cgi-bin/post-query" NAME="echo">
 <textarea name=a rows=4 cols=10 value="a textarea">a textarea</textarea>
 &nbsp;&nbsp;
 <textarea name=a id=textarea1 value="a textarea">another textarea
 size, font set by css</textarea>
 <BR><BR>
-a checkbox: <input type=checkbox name=check1 checked>
+a checkbox:&nbsp;&nbsp; <input type=checkbox name=check1 checked>
+&nbsp;&nbsp; a password:&nbsp;&nbsp;<INPUT TYPE="PASSWORD"> 
 <BR><BR>
 <input type=radio name=group1>  radio1
 <BR>

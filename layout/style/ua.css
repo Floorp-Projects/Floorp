@@ -291,7 +291,7 @@ NOBR {
   white-space: nowrap;
 }
 LEGEND {
-  display: block;
+  display: inline;
 	padding-left: 2px;
 	padding-right: 2px;
   border: 2px solid black;
