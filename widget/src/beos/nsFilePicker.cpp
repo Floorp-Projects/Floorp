@@ -119,7 +119,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
   // set initial directory
   nsCAutoString initialDir;
   mDisplayDirectory->GetNativePath(initialDir);
-  if(initialDir.IsEmpty()) {
+  if(initialDir.IsEmpty())
     ppanel->SetPanelDirectory(initialDir.get());
 
   // set modal feel
