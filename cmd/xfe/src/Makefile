@@ -30,9 +30,9 @@ LIBRARY_NAME	= xfe2
 REQUIRES	=\
 			XfeWidgets \
 			XfeBm \
+			XfeComboBox \
 			XfeToolBar \
 			XfeToolTip \
-			XfeComboBox \
 			Microline \
 			nspr \
 			layer \
