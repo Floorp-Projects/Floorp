@@ -684,9 +684,9 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
             First, make sure cookies are enabled in the user's browser.
           </para>
           <para>
-            If that doesn´t fix the problem, it may be that
-            the user´s ISP implements a rotating proxy server. This causes
-            the user´s effective IP address (the address which the Bugzilla server
+            If that doesn't fix the problem, it may be that
+            the user's ISP implements a rotating proxy server. This causes
+            the user's effective IP address (the address which the Bugzilla server
             perceives him coming from) to change periodically. Since
             Bugzilla cookies are tied to a specific IP address, each time
             the effective address changes, the user will have to log in again.
