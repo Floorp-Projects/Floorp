@@ -49,6 +49,12 @@ function searchOnLoad()
 
 }
 
+function searchOnUnload()
+{
+    // release this early because msgWindow holds a weak reference
+    msgWindow.rootDocShell = null;
+}
+
 function initializeSearchWindowWidgets()
 {
     gFolderPicker = document.getElementById("searchableFolders");
@@ -104,7 +110,6 @@ function selectFolder(folder) {
         if (elements && elements.length)
             gFolderPicker.selectedItem = elements[0];
     }
-    dump("Selected <" + gFolderPicker.selectedItem.localName + ">\n");
     updateSearchFolderPicker()
 }
 
@@ -130,6 +135,7 @@ function onChooseFolder(event) {
 
 function onSearch(event)
 {
+    dump("setting up search..\n");
     gSearchSession.clearScopes();
     // tell the search session what the new scope is
     gSearchSession.addScopeTerm(GetScopeForFolder(gCurrentFolder),
@@ -142,6 +148,7 @@ function onSearch(event)
     // refresh the tree after the search starts, because initiating the
     // search will cause the datasource to clear itself
     gThreadTree.setAttribute("ref", gThreadTree.getAttribute("ref"));
+    dump("Kicking it off with " + gThreadTree.getAttribute("ref") + "\n");
 }
 
 
@@ -223,6 +230,7 @@ function IsThreadAndMessagePaneSplitterCollapsed()
 
 function setMsgDatasourceWindow(ds, msgwindow)
 {
+    dump("setMsgDatasourceWindow(" + ds + ")\n");
     try {
         var msgDatasource = ds.QueryInterface(nsIMsgRDFDataSource);
         msgDatasource.window = msgwindow;

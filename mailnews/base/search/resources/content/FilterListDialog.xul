@@ -47,8 +47,8 @@ Rights Reserved.
     <rows>
       <row>
         <text class="label" value="&filtersForPrefix.label;"/>
-        <spring/>
-        <spring/>
+        <box/>
+        <box/>
       </row>
       <row>
         <menulist oncommand="onServerClick(event);" id="serverMenu">
@@ -60,13 +60,13 @@ Rights Reserved.
             </template>
           </menupopup>
         </menulist>
-        <spring/>
-        <spring/>
+        <box/>
+        <box/>
       </row>
       <row>
-        <separator class="thin"/>
-        <spring/>
-        <spring/>
+        <separator/>
+        <box/>
+        <box/>
       </row>
       <row>
         <box orient="vertical">
@@ -103,8 +103,8 @@ Rights Reserved.
             </template>
           
             <treecolgroup>
-              <treecol style="width: 0px" flex="75" rdf:resource="http://home.netscape.com/NC-rdf#Name" id="nameColumn"/>
-              <treecol style="width: 0px" flex="25" id="activeColumn"/>
+              <treecol style="width: 0px" flex="1" rdf:resource="http://home.netscape.com/NC-rdf#Name" id="nameColumn"/>
+              <treecol id="activeColumn"/>
             </treecolgroup>
           
             <treechildren flex="1"/>
@@ -113,8 +113,8 @@ Rights Reserved.
         </box>
         <box orient="vertical">
           <spring flex="1"/>
-          <button class="reorder-up top" oncommand="onUp(event);"/>
-          <button class="reorder-down top" oncommand="onDown(event);"/>
+          <button class="reorder-up" oncommand="onUp(event);"/>
+          <button class="reorder-down" oncommand="onDown(event);"/>
           <spring flex="1"/>
         </box>
         <box orient="vertical">

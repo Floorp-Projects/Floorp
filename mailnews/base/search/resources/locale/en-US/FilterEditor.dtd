@@ -29,3 +29,6 @@
 <!ENTITY normalPriorityCmd.label "Normal">
 <!ENTITY highPriorityCmd.label "High">
 <!ENTITY highestPriorityCmd.label "Highest">
+
+<!ENTITY conditionDesc.label "When new messages arrive in my Inbox, watch for messages that:">
+<!ENTITY conditions.label "Conditions">

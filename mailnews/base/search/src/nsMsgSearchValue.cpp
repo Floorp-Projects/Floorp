@@ -74,7 +74,7 @@ NS_IMETHODIMP
 nsMsgSearchValueImpl::SetPriority(nsMsgPriorityValue aValue)
 {
     NS_ENSURE_TRUE(mValue.attribute == nsMsgSearchAttrib::Priority, NS_ERROR_ILLEGAL_VALUE);
-    aValue = mValue.u.priority;
+    mValue.u.priority = aValue;
     return NS_OK;
 }
 

@@ -35,6 +35,7 @@ Rights Reserved.
   persist="width height screenX screenY"
   onload="filterEditorOnLoad('msgFccFolderPicker');">
 
+  <dummy class="usesMailWidgets"/>
   <script language="JavaScript" src="chrome://global/content/strres.js"/>
   <script language="JavaScript" src="chrome://messenger/content/FilterEditor.js"/>
 
@@ -45,12 +46,15 @@ Rights Reserved.
     <textfield flex="1" id="filterName"/>
   </box>
 
-  <titledbox id="searchTermListBox" flex="1"/>
+  <titledbox value="&conditions.label;" orient="vertical">
+    <text value="&conditionDesc.label;"/>
+    <box id="searchTermListBox" flex="1"/>
+  </titledbox>
 
-  <titledbox autostretch="never">
+  <titledbox autostretch="never" orient="horizontal">
     <title value="&filterAction.label;"/>
-    
-      <menulist id="actionMenu" flex="1" oncommand="onActionChanged(event)">
+    <box orient="horizontal" flex="1">
+      <menulist id="actionMenu" oncommand="onActionChanged(event)">
         <menupopup>
           <menuitem data="1" actionvalueindex="0" value="&moveToFolder.label;"/>
           <menuitem data="2" actionvalueindex="1" value="&changePriority.label;"/>
@@ -63,7 +67,7 @@ Rights Reserved.
       <deck id="actionValueDeck" flex="1">
         <menulist id="actionTargetFolder" flex="1"
                   oncommand="onTargetFolderSelected(event);"/>
-        <menulist id="actionValuePriority">
+        <menulist id="actionValuePriority" flex="1">
           <menupopup>
             <!-- see MailNewsTypes2.idl -->
             <menuitem data="6" value="&highestPriorityCmd.label;"/>
@@ -73,8 +77,9 @@ Rights Reserved.
             <menuitem data="2" value="&lowestPriorityCmd.label;"/>
           </menupopup>
         </menulist>
-        <text id="actionValueNone"/>
+        <text id="actionValueNone" flex="1"/>
       </deck>
+    </box>
   </titledbox>
 
   <separator/>

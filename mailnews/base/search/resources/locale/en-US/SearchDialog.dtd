@@ -7,3 +7,5 @@
 <!ENTITY optionsButton.label "Options">
 <!ENTITY closeButton.label "Close">
 <!ENTITY searchDialogTitle.label "Search Messages">
+<!ENTITY conditionDesc.label "Search for messages which:">
+<!ENTITY conditions.label "Criteria">

@@ -102,6 +102,7 @@ function initializeDialog(filter)
     showActionElementFor(gActionElement.selectedItem);
 
     if (filter.action == nsMsgFilterAction.MoveToFolder) {
+        dump("pre-selecting target folder: " + filter.actionTargetFolderUri + "\n");
         // there are multiple sub-items that have given attribute
         var targets = gActionTargetElement.getElementsByAttribute("data", filter.actionTargetFolderUri);
 

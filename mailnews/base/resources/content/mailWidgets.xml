@@ -3,7 +3,9 @@
 <bindings   id="mailBindings"
             xmlns="http://www.mozilla.org/xbl"
             xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  
+
+  <!-- dummy widget to force this file to load -->
+  <binding id="dummy" extends="xul:box"/>
   <!-- Message Pane Widgets -->
   <binding id="mail-emailaddress" extends="xul:box">
     <content>
@@ -66,9 +68,10 @@
         <setter>
           <![CDATA[
             // if scope isn't changing this is a noop
-            if (this.internalScope == val) return;
+            if (this.internalScope == val) return val;
 
             this.internalScope = val;
+            //dump("\trefreshList via .searchScope setter\n");
             this.refreshList();
             var targets = this.targets;
             if (targets) {
@@ -76,6 +79,7 @@
                 targets[i].searchScope = val;
               }
             }
+            return val;
           ]]>
         </setter>
       </property>
@@ -117,10 +121,23 @@
       <property name="value" onget="return document.getAnonymousNodes(this)[0].selectedItem.getAttribute('data');">
         <setter>
           <![CDATA[
+            dump("\tsetting value on id=" + this.id + "\n");
             var menulist = document.getAnonymousNodes(this)[0];
             var dataItems = menulist.getElementsByAttribute("data", val);
             if (dataItems.length > 0)
                 menulist.selectedItem = dataItems[0];
+
+            // now notify targets of new parent's value
+            var targets = this.targets;
+            if (targets) {
+              for (var i=0; i< targets.length; i++) {
+                //dump("setting parentValue via abstract .value on <" + this.localName +">\n");
+                targets[i].parentValue = val;
+              }
+            } else {
+                //dump("Doh! No targets!\n");
+            }
+            return val;
           ]]>
         </setter>
       </property>
@@ -218,9 +235,11 @@
       <property name="parentValue">
         <setter>
           <![CDATA[
-            if (this.searchAttribute == val) return;
+            if (this.searchAttribute == val) return val;
             this.searchAttribute = val;
+            //dump("\trefreshList via .parentValue on " + this.localName + "\n");
             this.refreshList();
+            return val;
           ]]>
         </setter>
         <getter>
@@ -243,11 +262,11 @@
       <xul:textfield flex="1" class="search-value-textfield"/>
       <xul:menulist flex="1" class="search-value-menulist">
         <xul:menupopup class="search-value-popup">
-          <xul:menuitem value="Lowest" class="search-value-menuitem"/>
-          <xul:menuitem value="Low" class="search-value-menuitem"/>
-          <xul:menuitem value="Normal" class="search-value-menuitem"/>
-          <xul:menuitem value="High" class="search-value-menuitem"/>
-          <xul:menuitem value="Highest" class="search-value-menuitem"/>
+          <xul:menuitem data="2" value="Lowest" class="search-value-menuitem"/>
+          <xul:menuitem data="3" value="Low" class="search-value-menuitem"/>
+          <xul:menuitem data="4" value="Normal" class="search-value-menuitem"/>
+          <xul:menuitem data="5" value="High" class="search-value-menuitem"/>
+          <xul:menuitem data="6" value="Highest" class="search-value-menuitem"/>
         </xul:menupopup>
       </xul:menulist>
       <xul:menulist flex="1" class="search-value-menulist">
@@ -259,13 +278,13 @@
     </content>
     <interface>
       <!-- parentValue forwards to the attribute -->
-      <property name="parentValue" onset="this.searchAttribute=val;"
+      <property name="parentValue" onset="return this.searchAttribute=val;"
                                    onget="return this.searchAttribute;"/>
       <property name="searchAttribute" onget="return this.internalAttribute;">
         <setter>
           <![CDATA[
             // noop if we're not changing it
-            if (this.internalAttribute == val) return;
+            if (this.internalAttribute == val) return val;
             this.internalAttribute = val;
             // we inherit from a deck, so just use it's index attribute
             // to hide/show widgets
@@ -275,22 +294,39 @@
               this.setAttribute("index", "2");
             else
               this.setAttribute("index", "0");
+            return val;
           ]]>
         </setter>
       </property>
       <property name="value" onget="return this.internalValue;">
         <setter>
           <![CDATA[
+          dump("\tsetting value on id=" + this.id + "\n");
           // val is a nsIMsgSearchValue object
           this.internalValue = val;
           var attrib = val.attrib;
+          var nsMsgSearchAttrib = Components.interfaces.nsMsgSearchAttrib;
+          var children = document.getAnonymousNodes(this);
           this.searchAttribute = attrib;
-          if (attrib == Components.interfaces.nsMsgSearchAttrib.Priority)
-            document.getAnonymousNodes(this)[1].data=val.priority;
-          else if (attrib == Components.interfaces.nsMsgSearchAttrib.MsgStatus)
-            document.getAnonymousNodes(this)[2].data=val.status;
+          if (attrib == nsMsgSearchAttrib.Priority) {
+            dump("Setting priority to " + val.priority + "..\n");
+            var matchingPriority =
+                children[1].getElementsByAttribute("data", val.priority);
+            dump("found " + matchingPriority.length + " matching priority nodes\n");
+            if (matchingPriority.length > 0)
+                children[1].selectedItem = matchingPriority[0];
+          }
+          else if (attrib == nsMsgSearchAttrib.MsgStatus) {
+            var matchingStatus =
+              children[2].getElementsByAttribute("data", val.status);
+            if (matchingStatus.length > 0) 
+              children[2].selectedItem = matchingStatus[0];
+          }
+          else if (attrib == nsMsgSearchAttrib.AgeInDays)
+            children[0].value = val.age;
           else
-            document.getAnonymousNodes(this)[0].value = val.str;
+            children[0].value = val.str;
+          return val;
           ]]>
         </setter>
       </property>
@@ -300,14 +336,19 @@
             var searchValue = this.value;
             var searchAttribute = this.searchAttribute;
             var nsMsgSearchAttrib = Components.interfaces.nsMsgSearchAttrib;
+            var children = document.getAnonymousNodes(this);
 
             searchValue.attrib = searchAttribute;
-            if (searchAttribute == nsMsgSearchAttrib.Priority)
-               searchValue.priority = document.getAnonymousNodes(this)[1].selectedItem.data;
+            if (searchAttribute == nsMsgSearchAttrib.Priority) {
+               dump("\tSaving priority " + children[1].selectedItem.data + "\n");
+               searchValue.priority = children[1].selectedItem.data;
+            }
             else if (searchAttribute == nsMsgSearchAttrib.MsgStatus)
-               searchValue.status = document.getAnonymousNodes(this)[2].selectedItem.data;
+               searchValue.status = children[2].selectedItem.data;
+            else if (searchAttribute == nsMsgSearchAttrib.AgeInDays)
+               searchValue.age = children[0].value;
             else
-               searchValue.str = document.getAnonymousNodes(this)[0].value;
+               searchValue.str = children[0].value;
           ]]>
         </body>
       </method>
@@ -316,122 +357,6 @@
         <body>
           <![CDATA[
             this.internalValue = searchValue;
-            this.save();
-          ]]>
-        </body>
-      </method>
-    </interface>
-  </binding>
-  <binding id="searchterm" name="searchTerm" extends="xul:box">
-    <interface>
-      <!-- the actual nsIMsgSearchTerm object -->
-      <property name="searchTerm" onget="return this.internalSearchTerm">
-        <setter>
-          <![CDATA[
-            this.internalSearchTerm = val;
-
-            var term = val;
-            // val is a nsIMsgSearchTerm
-            var searchAttribute=this.searchattribute;
-            var searchOperator=this.searchoperator;
-            var searchValue=this.searchvalue;
-
-            // now reflect all attributes of the searchterm into the widgets
-            if (searchAttribute) searchAttribute.value = term.attrib;
-            if (searchOperator) searchOperator.value = val.op;
-            if (searchValue) searchValue.value = term.value;
-
-            this.booleanAnd = val.booleanAnd;
-          ]]>
-        </setter>
-      </property>
- 
-      <property name="searchScope">
-        <getter>
-          <![CDATA[
-             var searchAttribute = this.searchattribute;
-             if (searchAttribute)
-               return searchAttribute.searchScope;
-             return undefined;
-           ]]>
-        </getter>
-        <setter>
-          <![CDATA[
-            var searchAttribute = this.searchattribute;
-            if (searchAttribute) searchAttribute.searchScope=val;
-           ]]>
-        </setter>
-      </property>
-      <!-- the three tags that make up a term - to use, set the
-           attribute in the XUL to the ID of the term.
-        -->
-      <property name="searchattribute" 
-                onget="return document.getElementById(this.getAttribute('searchattribute'));"
-                onset="this.setAttribute('searchattribute',val.id)"/>
-
-      <property name="searchoperator" 
-                onget="return document.getElementById(this.getAttribute('searchoperator'));"
-                onset="this.setAttribute('searchoperator',val.id)"/>
-
-      <property name="searchvalue" 
-                onget="return document.getElementById(this.getAttribute('searchvalue'));"
-                onset="this.setAttribute('searchvalue',val.id)"/>
-      <property name="booleanNodes">
-        <![CDATA[
-          null;
-        ]]>
-      </property>
-      <property name="stringBundle">
-          <![CDATA[
-             srGetStrBundle("chrome://messenger/locale/search.properties");
-          ]]>
-      </property>
-      <property name="booleanAnd" onget="return this.internalBooleanAnd">
-        <setter>
-          <![CDATA[
-            // whenever you set this, all nodes in booleanNodes
-            // are updated to reflect the string
-
-            if (this.internalBooleanAnd == val) return;
-            this.internalBooleanAnd = val;
-
-            var booleanNodes = this.booleanNodes;
-            if (!booleanNodes) return;
-
-            var stringBundle = this.stringBundle;
-            var andString = val ? "And" : "Or";
-            for (var i=0; i<booleanNodes.length; i++) {
-              try {              
-                var staticString =
-                    stringBundle.GetStringFromName("search" + andString + i);
-                if (staticString && staticString.length>0)
-                    booleanNodes[i].setAttribute("value", staticString);
-              } catch (ex) { /* no error, means string not found */}
-            }
-          ]]>
-        </setter>
-      </property>
-      <method name="save">
-        <body>
-          <![CDATA[
-            var searchTerm = this.searchTerm;
-            searchTerm.attrib = this.searchattribute.value;
-            searchTerm.op = this.searchoperator.value;
-            if (this.searchvalue.value)
-              this.searchvalue.save();
-            else
-              this.searchvalue.saveTo(searchTerm.value);
-            searchTerm.value = this.searchvalue.value;
-            searchTerm.booleanAnd = this.booleanAnd;
-          ]]>
-        </body>
-      </method>
-      <!-- if you have a search term element with no search term -->
-      <method name="saveTo">
-        <argument name="searchTerm"/>
-        <body>
-          <![CDATA[
-            this.internalSearchTerm = searchTerm;
             this.save();
           ]]>
         </body>

@@ -28,9 +28,8 @@
 
   <script src="chrome://messenger/content/searchTermOverlay.js"/>
 
-  <titledbox orient="vertical" id="searchTermListBox" value="&conditions.label;" flex="1">
+  <box orient="vertical" id="searchTermListBox">
 
-    <text class="label" value="&conditionDesc.label;"/>
 
     <radiogroup class="indent" id="booleanAndGroup" autostretch="never"
                 selectedItem="or" oncommand="booleanChanged(event);">
@@ -89,6 +88,6 @@
       <button id="more" value="&more.label;" onclick="onMore(event);"/>
       <button id="less" value="&less.label;" disabled="true" onclick="onLess(event);"/>
     </box>
-  </titledbox>
+  </box>
 
 </overlay>

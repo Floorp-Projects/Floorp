@@ -23,17 +23,126 @@
 
 var gTotalSearchTerms=0;
 var gSearchRowContainer;
-var gSearchTermContainer;
+var gSearchTerms = new Array;
 var gSearchRemovedTerms = new Array;
 var gSearchScope;
 var gSearchLessButton;
+
+//
+function searchTermContainer() {}
+
+searchTermContainer.prototype = {
+
+    // this.searchTerm: the actual nsIMsgSearchTerm object 
+    get searchTerm() { return this.internalSearchTerm; },
+    set searchTerm(val) {
+        this.internalSearchTerm = val;
+        
+        var term = val;
+        // val is a nsIMsgSearchTerm
+        var searchAttribute=this.searchattribute;
+        var searchOperator=this.searchoperator;
+        var searchValue=this.searchvalue;
+
+        // now reflect all attributes of the searchterm into the widgets
+        if (searchAttribute) searchAttribute.value = term.attrib;
+        if (searchOperator) searchOperator.value = val.op;
+        if (searchValue) searchValue.value = term.value;
+        
+        this.booleanAnd = val.booleanAnd;
+        return val;
+    },
+
+    // searchscope - just forward to the searchattribute
+    get searchScope() {
+        if (this.searchattribute)
+          return this.searchattribute.searchScope;
+        return undefined;
+    },
+    set searchScope(val) {
+        var searchAttribute = this.searchattribute;
+        if (searchAttribute) searchAttribute.searchScope=val;
+        return val;
+    },
+
+    saveId: function (element, slot) {
+        this[slot] = element.id;
+    },
+
+    getElement: function (slot) {
+        return document.getElementById(this[slot]);
+    },
+
+    // three well-defined properties:
+    // searchattribute, searchoperator, searchvalue
+    // the trick going on here is that we're storing the Element's Id,
+    // not the element itself, because the XBL object may change out
+    // from underneath us
+    get searchattribute() { return this.getElement("internalSearchAttributeId"); },
+    set searchattribute(val) {
+        this.saveId(val, "internalSearchAttributeId");
+        return val;
+    },
+    get searchoperator() { return this.getElement("internalSearchOperatorId"); },
+    set searchoperator(val) {
+        this.saveId(val, "internalSearchOperatorId");
+        return val;
+    },
+    get searchvalue() { return this.getElement("internalSearchValueId"); },
+    set searchvalue(val) {
+        this.saveId(val, "internalSearchValueId");
+        return val;
+    },
+
+    booleanNodes: null,
+    stringBundle: srGetStrBundle("chrome://messenger/locale/search.properties"),
+    get booleanAnd() { return this.internalBooleanAnd; },
+    set booleanAnd(val) {
+        // whenever you set this, all nodes in booleanNodes
+        // are updated to reflect the string
+        
+        if (this.internalBooleanAnd == val) return val;
+        this.internalBooleanAnd = val;
+        
+        var booleanNodes = this.booleanNodes;
+        if (!booleanNodes) return val;
+        
+        var stringBundle = this.stringBundle;
+        var andString = val ? "And" : "Or";
+        for (var i=0; i<booleanNodes.length; i++) {
+            try {              
+                var staticString =
+                    stringBundle.GetStringFromName("search" + andString + i);
+                if (staticString && staticString.length>0)
+                    booleanNodes[i].setAttribute("value", staticString);
+            } catch (ex) { /* no error, means string not found */}
+        }
+        return val;
+    },
+
+    save: function () {
+        var searchTerm = this.searchTerm;
+        searchTerm.attrib = this.searchattribute.value;
+        searchTerm.op = this.searchoperator.value;
+        if (this.searchvalue.value)
+          this.searchvalue.save();
+        else
+          this.searchvalue.saveTo(searchTerm.value);
+        searchTerm.value = this.searchvalue.value;
+        searchTerm.booleanAnd = this.booleanAnd;
+    },
+    // if you have a search term element with no search term
+    saveTo: function(searchTerm) {
+        this.internalSearchTerm = searchTerm;
+        this.save();
+    }
+}
 
 var nsIMsgSearchTerm = Components.interfaces.nsIMsgSearchTerm;
 
 function initializeSearchWidgets() {
     gSearchBooleanRadiogroup = document.getElementById("booleanAndGroup");
     gSearchRowContainer = document.getElementById("searchTermList");
-    gSearchTermContainer = document.getElementById("searchterms");
     gSearchLessButton = document.getElementById("less");
     if (!gSearchLessButton)
         dump("I couldn't find less button!");
@@ -43,7 +152,7 @@ function initializeBooleanWidgets() {
 
     var booleanAnd = true;
     // get the boolean value from the first term
-    var firstTerm = gSearchTermContainer.firstChild;
+    var firstTerm = gSearchTerms[0];
     if (firstTerm)
         booleanAnd = firstTerm.booleanAnd;
 
@@ -85,11 +194,9 @@ function onLess(event)
 function setSearchScope(scope) {
     dump("Setting search scope to " + scope + "\n");
     gSearchScope = scope;
-    var searchTermElements = gSearchTermContainer.childNodes;
-    if (!searchTermElements) return;
-    dump("..on " + searchTermElements.length + " elements.\n");
-    for (var i=0; i<searchTermElements.length; i++) {
-        searchTermElements[i].searchattribute.searchScope = scope;
+    dump("..on " + gSearchTerms.length + " elements.\n");
+    for (var i=0; i<gSearchTerms.length; i++) {
+        gSearchTerms[i].searchattribute.searchScope = scope;
     }
 }
 
@@ -99,11 +206,9 @@ function booleanChanged(event) {
 
     var newBoolValue =
         (event.target.getAttribute("data") == "and") ? true : false;
-    searchTermElements = gSearchTermContainer.childNodes;
-    if (!searchTermElements) return;
-    for (var i=0; i<searchTermElements.length; i++) {
-        var searchTerm = searchTermElements[i];
-        searchTerm.booleanAnd = newBoolValue;
+    for (var i=0; i<gSearchTerms.length; i++) {
+        var searchTerm = gSearchTerms[i];
+        gSearchTerms.booleanAnd = newBoolValue;
     }
     dump("Boolean is now " + event.target.data + "\n");
 }
@@ -130,25 +235,23 @@ function createSearchRow(index, scope, searchTerm)
 
     searchrow.id = "searchRow" + index;
 
-    // should this be done with XBL or just straight JS?
-    // probably straight JS but I don't know how that's done.
-    var searchTermElement = document.createElement("searchterm");
-    searchTermElement.id = "searchTerm" + index;
-    gSearchTermContainer.appendChild(searchTermElement);
-    searchTermElement = document.getElementById(searchTermElement.id);
+    var searchTermObj = new searchTermContainer;
+    // is this necessary?
+    //searchTermElement.id = "searchTerm" + index;
+    gSearchTerms[gSearchTerms.length] = searchTermObj;
     
-    searchTermElement.searchattribute = searchAttr;
-    searchTermElement.searchoperator = searchOp;
-    searchTermElement.searchvalue = searchVal;
+    searchTermObj.searchattribute = searchAttr;
+    searchTermObj.searchoperator = searchOp;
+    searchTermObj.searchvalue = searchVal;
 
     // now invalidate the newly created items because they've been inserted
     // into the document, and XBL bindings will be inserted in their place
-    searchAttr = searchOp = searchVal = undefined;
+    //searchAttr = searchOp = searchVal = undefined;
     
     // and/or string handling:
     // this is scary - basically we want to take every other
     // treecell, (note the i+=2) which will be a text label,
-    // and set the searchTermElement's
+    // and set the searchTermObj's
     // booleanNodes to that
     var stringNodes = new Array;
     var treecells = searchrow.firstChild.childNodes;
@@ -156,21 +259,27 @@ function createSearchRow(index, scope, searchTerm)
     for (var i=0; i<treecells.length; i+=2) {
         stringNodes[j++] = treecells[i];
     }
-    searchTermElement.booleanNodes = stringNodes;
+    searchTermObj.booleanNodes = stringNodes;
     
     gSearchRowContainer.appendChild(searchrow);
 
-    searchTermElement.searchScope = scope;
+    dump("createSearchRow: Setting searchScope = " + scope + "\n");
+    searchTermObj.searchScope = scope;
     // the search term will initialize the searchTerm element, including
     // .booleanAnd
-    if (searchTerm)
-        searchTermElement.searchTerm = searchTerm;
+    if (searchTerm) {
+        dump("\nHave a searchterm (" +
+             searchTerm.attrib + "/" +
+             searchTerm.op + "/" +
+             searchTerm.value + ")\n");
+        searchTermObj.searchTerm = searchTerm;
+    }
     
     // here, we don't have a searchTerm, so it's probably a new element -
     // we'll initialize the .booleanAnd from the existing setting in
     // the UI
     else
-        searchTermElement.booleanAnd = getBooleanAnd();
+        searchTermObj.booleanAnd = getBooleanAnd();
 
 }
 
@@ -188,6 +297,9 @@ function constructRow(treeCellChildren)
           treecell.setAttribute("allowevents", "true");
           treeCellChildren[i].setAttribute("flex", "1");
           treecell.appendChild(treeCellChildren[i]);
+          var child = treeCellChildren[i];
+          dump("Appended a " + child.localName + "\n");
+          
       }
       row.appendChild(treecell);
     }
@@ -198,15 +310,16 @@ function constructRow(treeCellChildren)
 function removeSearchRow(index)
 {
     dump("removing search term " + index + "\n");
-    var searchTermElement = document.getElementById("searchTerm" + index);
-    if (!searchTermElement) {
+    var searchTermObj = gSearchTerms[index];
+    if (!searchTermObj) {
         dump("removeSearchRow: couldn't find search term " + index + "\n");
         return;
     }
 
     // need to remove row from tree, so walk upwards from the
     // searchattribute to find the first <treeitem>
-    var treeItemRow = searchTermElement.searchattribute;
+    var treeItemRow = searchTermObj.searchattribute;
+    dump("removeSearchRow: " + treeItemRow + "\n");
     while (treeItemRow) {
         if (treeItemRow.localName == "treeitem") break;
         treeItemRow = treeItemRow.parentNode;
@@ -218,15 +331,19 @@ function removeSearchRow(index)
     }
 
 
-    if (searchTermElement.searchTerm) {
-        dump("That was a real row! queuing " + searchTermElement.searchTerm + " for disposal\n");
-        gSearchRemovedTerms[gSearchRemovedTerms.length] = searchTermElement.searchTerm;
+    if (searchTermObj.searchTerm) {
+        dump("That was a real row! queuing " + searchTermObj.searchTerm + " for disposal\n");
+        gSearchRemovedTerms[gSearchRemovedTerms.length] = searchTermObj.searchTerm;
     } else {
         dump("That wasn't real. ignoring \n");
     }
     
     treeItemRow.parentNode.removeChild(treeItemRow);
-    searchTermElement.parentNode.removeChild(searchTermElement);
+    // remove it from the list of terms - XXX this does it?
+    dump("Removing row " + index + " from " + gSearchTerms.length + " items\n");
+    // remove the last element
+    gSearchTerms.length--;
+    dump("Now there are " + gSearchTerms.length + " items\n");
 }
 
 function getBooleanAnd()
@@ -245,25 +362,23 @@ function getBooleanAnd()
 //               via XPCOM)
 function saveSearchTerms(searchTerms, termOwner)
 {
-    var searchTermElements =
-        gSearchTermContainer.childNodes;
     
-    for (var i = 0; i<searchTermElements.length; i++) {
+    for (var i = 0; i<gSearchTerms.length; i++) {
         try {
             dump("Saving search element " + i + "\n");
-            var searchTerm = searchTermElements[i].searchTerm;
+            var searchTerm = gSearchTerms[i].searchTerm;
             if (searchTerm)
-                searchTermElements[i].save();
+                gSearchTerms[i].save();
             else {
                 // need to create a new searchTerm, and somehow save it to that
                 dump("Need to create searchterm " + i + "\n");
                 searchTerm = termOwner.createTerm();
-                searchTermElements[i].saveTo(searchTerm);
+                gSearchTerms[i].saveTo(searchTerm);
                 termOwner.appendTerm(searchTerm);
             }
         } catch (ex) {
 
-            dump("** Error: " + ex + "\n");
+            dump("** Error saving element " + i + ": " + ex + "\n");
         }
     }
 

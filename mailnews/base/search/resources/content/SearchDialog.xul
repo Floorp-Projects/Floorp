@@ -33,9 +33,11 @@ Rights Reserved.
 <window xmlns:html="http://www.w3.org/1999/xhtml"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload="searchOnLoad();"
+    onunload="searchOnUnload();"
     title="&searchDialogTitle.label;"
     width="620" height="470"
     persist="screenX screenY width height"
+    class="color-dialog"
     orient="vertical">
 
   <keyset id="keyset"/>
@@ -43,8 +45,10 @@ Rights Reserved.
   <script src="chrome://global/content/strres.js"/>
   <script src="chrome://messenger/content/mailWindow.js"/>
   <script src="chrome://messenger/content/SearchDialog.js"/>
-  
-  <box orient="vertical" class="dialog box-padded">
+
+  <dummy class="usesMailWidgets"/>
+  <titledbox value="&conditions.label;" orient="vertical" class="dialog box-padded">
+
     <box autostretch="never">
       <text class="label" value="&searchHeading.label;"/>
       <menulist id="searchableFolders" flex="2"
@@ -54,18 +58,20 @@ Rights Reserved.
         <checkbox value="&searchSubfolders.label;"/>
       -->
     </box>
+    <separator/>
+    <text class="label" value="&conditionDesc.label;"/>
 
     <box flex="1">
-      <titledbox id="searchTermListBox" flex="1"/>
+      <box id="searchTermListBox" flex="1"/>
       <box orient="vertical">
         <button value="&searchButton.label;" oncommand="onSearch(event)"/>
         <button value="&resetButton.label;" oncommand="onReset(event)"/>
         <spring flex="1"/>
-        <button value="&closeButton.label;" onclick="window.close()"/>
+        <button value="&closeButton.label;" onclick="window.close();"/>
         <separator class="thin"/>
       </box>
     </box>
-  </box>
+  </titledbox>
     
   <splitter id="searchfields-splitter" collapse="before" persist="state hidden"
             autostretch="never" orient="vertical">
