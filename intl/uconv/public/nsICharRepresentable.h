@@ -37,6 +37,7 @@
 */
 #define IS_REPRESENTABLE(info, c) (((info)[(c) >> 5] >> ((c) & 0x1f)) & 1L)
 #define SET_REPRESENTABLE(info, c)  (info)[(c) >> 5] |= (1L << ((c) & 0x1f))
+#define CLEAR_REPRESENTABLE(info, c)  (info)[(c) >> 5] &= (~(1L << ((c) & 0x1f)))
 
 /**
  */
