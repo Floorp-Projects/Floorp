@@ -28,6 +28,12 @@ static NS_DEFINE_CID(kmozStorageConnectionCID, MOZ_STORAGE_CONNECTION_CID);
             return 0; \
             } } while (0)
 
+#ifdef XP_UNIX
+#define TEST_DB NS_LITERAL_CSTRING("/tmp/foo.sdb")
+#else
+#define TEST_DB NS_LITERAL_STRING("foo.sdb")
+#endif
+
 int gerr;
 nsCString gerrstr;
 
@@ -59,7 +65,7 @@ main (int argc, char **argv)
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsILocalFile> f;
-    rv = NS_NewNativeLocalFile (NS_LITERAL_CSTRING("foo.sdb"), PR_FALSE, getter_AddRefs(f));
+    rv = NS_NewNativeLocalFile (TEST_DB, PR_FALSE, getter_AddRefs(f));
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<mozIStorageConnection> dbConn;
