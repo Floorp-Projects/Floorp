@@ -409,13 +409,12 @@ function delayedStartup()
   }
 #endif
 
-  // now load bookmarks
-  BMSVC.readBookmarks();  
+  // now load bookmarks after a delay
+  var hasRead = BMSVC.readBookmarks();  
   var bt = document.getElementById("bookmarks-ptf");
   if (bt) {
-    var btf = BMSVC.getBookmarksToolbarFolder().Value
-    bt.ref = btf;
-    document.getElementById("bookmarks-chevron").ref = btf;
+    if (hasRead)
+      bt.builder.rebuild();
     bt.database.AddObserver(BookmarksToolbarRDFObserver);
   }
   window.addEventListener("resize", BookmarksToolbar.resizeFunc, false);

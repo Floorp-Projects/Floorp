@@ -50,7 +50,7 @@ function showDescription()
 
   gResource = RDF.GetResource(window.arguments[0]);
  
-  if (gResource == BMSVC.getBookmarksToolbarFolder()) {
+  if (BookmarksUtils.isPersonalToolbarFolder(gResource)) {
     var description = BookmarksUtils.getLocaleString("description_PersonalToolbarFolder");
     var box = document.getElementById("description-box");
     box.hidden = false;
