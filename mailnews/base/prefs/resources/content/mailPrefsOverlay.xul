@@ -21,7 +21,7 @@
       case "chrome://communicator/content/pref/pref-appearance.xul":
         _elementIDs.push("generalStartupMail");
         break;
-      case "chrome://cookie/content/pref-images.xul":
+      case "chrome://communicator/content/pref/pref-images.xul":
         _elementIDs.push("networkImageDisableImagesInMailNews");
         break;
       }

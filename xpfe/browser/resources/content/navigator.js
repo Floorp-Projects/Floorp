@@ -2304,7 +2304,7 @@ function onPopupWindow(aEvent) {
       }
     }
     if (showDialog) {
-      window.openDialog("chrome://communicator/content/aboutPopups.xul", "",
+      window.openDialog("chrome://communicator/content/permissions/aboutPopups.xul", "",
                         "chrome,centerscreen,dependent", true);
       pref.setBoolPref("privacy.popups.first_popup", false);
     }
@@ -2384,7 +2384,7 @@ function StatusbarViewPopupManager() {
   catch(ex) { }
   
   // open whitelist with site prefilled to unblock
-  window.openDialog("chrome://communicator/content/popupManager.xul", "",
+  window.openDialog("chrome://communicator/content/permissions/permissionsManager.xul", "",
                       "chrome,resizable=yes", hostPort);
 }
 

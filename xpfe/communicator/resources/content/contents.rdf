@@ -16,5 +16,30 @@
 #expand         chrome:skinVersion="__MOZILLA_SKIN_VERSION__">
   </RDF:Description>
 
+  <!-- overlay information -->
+  <RDF:Seq about="urn:mozilla:overlays">
+    <RDF:li resource="chrome://communicator/content/contentAreaContextOverlay.xul"/>
+    <RDF:li resource="chrome://communicator/content/pref/preftree.xul"/>
+    <RDF:li resource="chrome://navigator/content/navigatorOverlay.xul"/>
+    <RDF:li resource="chrome://messenger/content/mailWindowOverlay.xul"/>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://communicator/content/contentAreaContextOverlay.xul">
+    <RDF:li>chrome://communicator/content/permissions/imageContextOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://communicator/content/pref/preftree.xul">
+    <RDF:li>chrome://communicator/content/pref/permissionsPrefsOverlay.xul</RDF:li>
+  </RDF:Seq>
+  
+  <RDF:Seq about="chrome://navigator/content/navigatorOverlay.xul">
+    <RDF:li>chrome://communicator/content/permissions/permissionsNavigatorOverlay.xul</RDF:li>
+    <RDF:li>chrome://communicator/content/permissions/cookieTasksOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://messenger/content/mailWindowOverlay.xul">
+    <RDF:li>chrome://communicator/content/permissions/imageContextOverlay.xul</RDF:li>
+  </RDF:Seq>
+
 </RDF:RDF>
 

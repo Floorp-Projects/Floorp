@@ -54,6 +54,8 @@ modern.jar:
   skin/modern/communicator/icons/smileys/innocent_n.gif            (communicator/icons/smileys/innocent_n.gif)
   skin/modern/communicator/icons/smileys/cry_n.gif                 (communicator/icons/smileys/cry_n.gif)
   skin/modern/communicator/icons/smileys/sealed_n.gif              (communicator/icons/smileys/sealed_n.gif)
+  skin/modern/communicator/permissions/taskbar-cookie.gif          (communicator/permissions/taskbar-cookie.gif)
+  skin/modern/communicator/permissions/status-cookie.gif           (communicator/permissions/status-cookie.gif)
   skin/modern/communicator/profile/migrate.gif                     (communicator/profile/migrate.gif)
   skin/modern/communicator/profile/profile.gif                     (communicator/profile/profile.gif)
   skin/modern/communicator/profile/profile.css                     (communicator/profile/profile.css)

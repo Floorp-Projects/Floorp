@@ -333,7 +333,7 @@
 }
 
 #privacy-button {
-  list-style-image: url("chrome://communicator/skin/cookie/taskbar-cookie.gif");
+  list-style-image: url("chrome://communicator/skin/permissions/taskbar-cookie.gif");
 }
 
 #popupIcon {

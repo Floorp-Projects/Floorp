@@ -30,6 +30,8 @@ classic.jar:
   skin/classic/communicator/directory/folder-clsd.gif                   (communicator/directory/folder-clsd.gif)
   skin/classic/communicator/directory/folder-open.gif                   (communicator/directory/folder-open.gif)
   skin/classic/communicator/directory/file.gif                          (communicator/directory/file.gif)
+  skin/classic/communicator/permissions/taskbar-cookie.gif              (communicator/permissions/taskbar-cookie.gif)
+  skin/classic/communicator/permissions/status-cookie.gif               (communicator/permissions/status-cookie.gif)
   skin/classic/communicator/profile/migrate.gif                         (communicator/profile/migrate.gif)
   skin/classic/communicator/profile/profile.css                         (communicator/profile/profile.css)
   skin/classic/communicator/profile/profileManager.css                  (communicator/profile/profileManager.css)

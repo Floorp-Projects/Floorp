@@ -55,7 +55,7 @@
 
   <script src="chrome://communicator/content/wallet/SignonViewer.js"/>
   <script src="chrome://global/content/strres.js"/>
-  <script src="chrome://communicator/content/wallet/nsWalletTreeUtils.js"/>
+  <script src="chrome://communicator/content/permissions/treeUtils.js"/>
   <script src="chrome://help/content/contextHelp.js"/>
 
   <stringbundle id="signonBundle"

@@ -941,6 +941,7 @@ toolkit/components/commandlines/Makefile
 toolkit/components/commandlines/public/Makefile
 toolkit/components/commandlines/src/Makefile
 toolkit/components/console/Makefile
+toolkit/components/cookie/Makefile
 toolkit/components/downloads/public/Makefile
 toolkit/components/downloads/Makefile
 toolkit/components/downloads/src/Makefile

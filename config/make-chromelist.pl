@@ -142,7 +142,14 @@ while (<JARFILE>)
   if ($macos) { $chromefile =~ tr|/|:|; }
   if ($win32) { $chromefile =~ tr|/|\\|; }
 
-  $cvsfile = File::Spec::Unix->catfile($stub, $cvsfile);
+  # Deal with leading slashes, if there is one we do not need
+  # to add the stub and need to remove that slash
+  if ($cvsfile =~ m|^/|) {
+    $cvsfile =~ s/^\///;
+    $cvsfile = File::Spec::Unix->catfile($cvsfile);
+  } else {
+    $cvsfile = File::Spec::Unix->catfile($stub, $cvsfile);
+  }
   
   print BIGLIST "$chromefile ($cvsfile)\n";
 }

@@ -644,7 +644,7 @@ pref("network.cookie.prefsMigrated",        false);
 pref("network.cookie.lifetime.days",        90);
 
 // The following default value is for p3p medium mode.
-// See extensions/cookie/resources/content/p3p.xul for the definitions of low/medium/hi
+// See xpfe/components/permissions/content/cookieP3P.xul for the definitions of low/medium/hi
 pref("network.cookie.p3p",                  "ffffaaaa");
 pref("network.cookie.p3plevel",             1); // 0=low, 1=medium, 2=high, 3=custom
 
