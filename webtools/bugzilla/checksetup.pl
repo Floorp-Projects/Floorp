@@ -561,7 +561,7 @@ $table{bugs} =
     reporter mediumint not null,
     version varchar(16) not null,
     component varchar(50) not null,
-    resolution enum("", "FIXED", "INVALID", "WONTFIX", "LATER", "REMIND", "DUPLICATE", "WORKSFORME") not null,
+    resolution enum("", "FIXED", "INVALID", "WONTFIX", "LATER", "REMIND", "DUPLICATE", "WORKSFORME", "MOVED") not null,
     target_milestone varchar(20) not null default "---",
     qa_contact mediumint not null,
     status_whiteboard mediumtext not null,
@@ -1066,6 +1066,7 @@ sub CheckEnumField ($$@)
         $dbh->do("ALTER TABLE $table
                   CHANGE $field
                   $field $_");
+        $::regenerateshadow = 1;
     }
 }
 
@@ -1190,7 +1191,7 @@ sub DropField ($$)
 }
 
 
-my $regenerateshadow = 0;
+$::regenerateshadow = 0;
 
 
 
@@ -1435,7 +1436,7 @@ if (GetFieldDef('bugs', 'long_desc')) {
     DropField('bugs', 'long_desc');
 
     $dbh->do("UNLOCK TABLES");
-    $regenerateshadow = 1;
+    $::regenerateshadow = 1;
 
 }
 
@@ -1552,9 +1553,14 @@ AddField('namedqueries', 'linkinfooter', 'tinyint not null');
 # Added a user field which controls which groups a user can put other users 
 # into.
 
+my @resolutions = ("", "FIXED", "INVALID", "WONTFIX", "LATER", "REMIND",
+                  "DUPLICATE", "WORKSFORME", "MOVED", "BLAH");
+CheckEnumField('bugs', 'resolution', @resolutions);
+
 my @states = ("UNCONFIRMED", "NEW", "ASSIGNED", "REOPENED", "RESOLVED",
               "VERIFIED", "CLOSED");
 CheckEnumField('bugs', 'bug_status', @states);
+
 if (!GetFieldDef('bugs', 'everconfirmed')) {
     AddField('bugs', 'everconfirmed',  'tinyint not null');
     $dbh->do("UPDATE bugs SET everconfirmed = 1, delta_ts = delta_ts");
@@ -1646,7 +1652,7 @@ if ( CountIndexes('cc') != 3 ) {
     $dbh->do("ALTER TABLE cc ADD UNIQUE (bug_id,who)");
     $dbh->do("ALTER TABLE cc ADD INDEX (who)");
 
-    $regenerateshadow=1; # cc fields no longer have spaces in them
+    $::regenerateshadow=1; # cc fields no longer have spaces in them
 }    
 
 if ( CountIndexes('keywords') != 3 ) {
@@ -1672,7 +1678,7 @@ if ( CountIndexes('keywords') != 3 ) {
 #
 #
 # Final checks...
-if ($regenerateshadow) {
+if ($::regenerateshadow) {
     print "Now regenerating the shadow database for all bugs.\n";
     system("./processmail", "regenerate");
 }
