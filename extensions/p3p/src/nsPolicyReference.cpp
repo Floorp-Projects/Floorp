@@ -226,7 +226,7 @@ nsPolicyReference::SetupPolicyListener(nsIPolicyListener* aListener)
 nsresult
 nsPolicyReference::Load(const nsACString& aURI)
 {
-  NS_ASSERTION(aURI, "no uri to load");
+  NS_ASSERTION(aURI.Length(), "no uri to load");
 
   nsresult result = NS_OK;
 
