@@ -32,7 +32,7 @@ CONFIG_EXE_INC=1
 #// Rule to build a 16-bit executable using the PROGRAM target
 #//
 #//------------------------------------------------------------------------
-$(PROGRAM):: $(OBJDIR) $(OBJS) $(RESFILE) $(DEFFILE) $(MISCDEP)
+$(PROGRAM):: $(OBJDIR) $(OBJS) $(LLIBS) $(RESFILE) $(DEFFILE) $(MISCDEP)
 	echo +++ make: Creating EXE: $@
 #   //
 #   // create response file for the command.  The format is:
@@ -43,7 +43,7 @@ $(PROGRAM):: $(OBJDIR) $(OBJS) $(RESFILE) $(DEFFILE) $(MISCDEP)
         echo.                               >> $(CFGFILE)
         echo $(OBJDIR)\$(*B).exe,           >> $(CFGFILE)
         echo $(MAPFILE),                    >> $(CFGFILE)
-        echo $(LLIBS) $(OS_LIBS)            >> $(CFGFILE)
+        echo $(LLIBS) $(WIN_LIBS) $(OS_LIBS)>> $(CFGFILE)
 !ifdef DEFFILE
         echo $(DEFFILE),                    >> $(CFGFILE)
 !else
@@ -65,7 +65,7 @@ $(PROGRAM):: $(OBJDIR) $(OBJS) $(RESFILE) $(DEFFILE) $(MISCDEP)
 #// Rule to build a 32-bit executable using the PROGRAM target
 #//
 #//------------------------------------------------------------------------
-$(PROGRAM):: $(OBJDIR) $(OBJS) $(RESFILE) $(DEFFILE) $(MISCDEP)
+$(PROGRAM):: $(OBJDIR) $(OBJS) $(LLIBS) $(RESFILE) $(DEFFILE) $(MISCDEP)
 	echo +++ make: Creating EXE: $@
     $(LD) @<<$(CFGFILE)
         /NOLOGO /OUT:$@ 
@@ -80,7 +80,7 @@ $(PROGRAM):: $(OBJDIR) $(OBJS) $(RESFILE) $(DEFFILE) $(MISCDEP)
         $(LFLAGS)
         $(OBJS) 
         $(RESFILE)
-        $(LLIBS) $(OS_LIBS)
+        $(LLIBS) $(WIN_LIBS) $(OS_LIBS)
 <<KEEP
 !endif
 

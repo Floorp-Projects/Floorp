@@ -31,11 +31,14 @@ LINCS = \
 
 LLIBS = \
 	$(LIBNSPR)			\
-	$(DIST)\lib\plc3.lib	\
 	$(DIST)\lib\xppref32.lib	\
+	$(NULL)
+
+WIN_LIBS=   \
 	OLE32.lib			\
 	UUID.lib			\
-	$(NULL)
+    $(NULL)
+
 
 LIBNAME = .\$(OBJDIR)\ngprefs
 DLL = $(LIBNAME).dll

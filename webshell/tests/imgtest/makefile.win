@@ -36,8 +36,9 @@ LLIBS=				\
  $(LIBNSPR)			\
  $(DIST)\lib\plc3.lib		\
  $(DIST)\lib\img32$(VERSION_NUMBER).lib		\
- $(DIST)\lib\util.lib 		 \
- comdlg32.lib                 
+ $(DIST)\lib\util.lib
+
+WIN_LIBS= comdlg32.lib                 
 
 include <$(DEPTH)\config\rules.mak>
 

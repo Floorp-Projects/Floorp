@@ -42,8 +42,9 @@ OBJS = \
 
 LLIBS= \
  $(DIST)\lib\xpcom.lib	\
- $(LIBNSPR)                     \
-  -SUBSYSTEM:CONSOLE
+ $(LIBNSPR)
+
+LLFLAGS=-SUBSYSTEM:CONSOLE
 
 LINCS= \
   -I$(PUBLIC)\raptor \

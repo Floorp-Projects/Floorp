@@ -82,8 +82,9 @@ LLIBS=				\
 !else
  $(DIST)\lib\netlib.lib       \
 !endif
- $(LIBNSPR)                   \
- OLE32.LIB
+ $(LIBNSPR)
+
+WIN_LIBS= OLE32.LIB
 
 include <$(DEPTH)\config\rules.mak>
 
