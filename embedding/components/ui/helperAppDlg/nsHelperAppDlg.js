@@ -172,7 +172,7 @@ nsHelperAppDialog.prototype = {
          var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                     .getService( Components.interfaces.nsIWindowWatcher );
          ww.openWindow( null, // no parent
-                        "chrome://global/content/helperAppDldProgress.xul",
+                        "chrome://global/content/nsProgressDlg.xul",
                         null,
                         "chrome,titlebar,minimizable,dialog=yes",
                         aLauncher );
