@@ -1,0 +1,10 @@
+
+#classic
+  {
+    list-style-image : url("chrome://messenger/skin/winclassic.gif");
+  }
+
+#wide
+  {
+    list-style-image : url("chrome://messenger/skin/winwide.gif");
+  }

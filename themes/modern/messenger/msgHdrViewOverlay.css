@@ -1,0 +1,76 @@
+/*
+The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Mozilla Communicator client code, released
+March 31, 1998.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+ Copyright (C) 1998-1999 Netscape Communications Corporation. All
+Rights Reserved.
+*/
+
+
+/* These are the style attributes we are applying to the message header
+ * view overlay which shows the message headers for a selected message.
+ * some of this stuff originated from mailheaders.css
+ */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to HTML */
+@namespace html url("http://www.w3.org/TR/REC-html40"); /* namespace for XUL elements */
+
+spring.buttonTopSpacer     { height: .3em; }
+spring.buttonSpacer        { width: .5em; }
+box.headerBox              { overflow: hidden; min-width:50px;}
+box.header-part1           { background-color: #EEEEEE; border: none; }
+box.header-part2           { background-color: #CCCCCC; border: none; }
+box.header-part3           { background-color: #CCCCCC; border: none; }
+
+/* visibility: collapse ONLY works for things inside of boxes, if it isn't in a box, it won't 
+   work. Use hideNonBox for objects which aren't in a box such as the titlebutton for showing
+   more or fewer email addresses
+*/
+[hide] { visibility: collapse; } 
+[hideNonBox] { display: none;}
+
+#addToAddressBookButton {
+	list-style-image:url("chrome://messenger/skin/addtoab.gif");
+  min-height: 20px;
+  margin: 0px;
+}
+
+#attachmentButton {
+  list-style-image:url("chrome://messenger/skin/attach.gif");
+  min-height: 20px;
+  margin: 0px;
+}
+
+titledbutton.emailDisplayButton {
+  align: right;
+  color: blue;
+  text-decoration: underline;
+  cursor: pointer;
+  max-height: 15px;
+}
+
+titledbutton.showMoreAddressesButton {
+  list-style-image:url("chrome://messenger/skin/more.gif");
+}
+
+titledbutton.showFewerAddressesButton {
+  list-style-image:url("chrome://messenger/skin/less.gif");
+}
+
+html|div.headerValue   { white-space: normal; min-width: 50px; }
+html|div.subjectvalue      {font-weight: bold;}
+
+text.headerdisplayname { font-weight: bold; margin-right: .5em; margin-left: .5em; min-height: 18px }
+text.headerValue { white-space: normal; min-width: 50px; }
