@@ -13,7 +13,6 @@
           onclick="parent.onAccountClick(event)" id="accounttree"
           style="height: 100%"
           ref="msgaccounts:/">
-
 	  <template>
 	  	<rule>
             <treechildren>
@@ -22,6 +21,25 @@
 		  		<treerow >
 					<treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Name"/>
 		  		</treerow>
+<!--
+                <treechildren>
+                  <treeitem>
+                    <treerow>
+                      <treecell value="a"/>
+                    </treerow>
+                  </treeitem>
+                  <treeitem>
+                    <treerow>
+                      <treecell value="b"/>
+                    </treerow>
+                  </treeitem>
+                  <treeitem>
+                    <treerow>
+                      <treecell value="c"/>
+                    </treerow>
+                  </treeitem>
+                </treechildren>
+-->
 			</treeitem>
             </treechildren>
 		</rule>

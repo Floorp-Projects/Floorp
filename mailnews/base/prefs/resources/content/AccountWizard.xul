@@ -31,9 +31,10 @@ Rights Reserved.
     onload="onLoad();">
 
 <html:script language="JavaScript" src="AccountWizard.js"/>
-
-<box align="vertical" style="width: 100%; height: 100%">
-  <html:iframe flex="100%" style="width: 100%; height: 240px; border: none; margin: 5px;" src="aw-accounttype.xul" name="wizardContents" scrolling="auto"/>
+<box align="vertical" flex="100%">
+  <html:iframe flex="100%" style="width: 100%; height:100%; border: none"
+               src="aw-accounttype.xul"
+               name="wizardContents" scrolling="auto"/>
   <html:div>
     &instructions.label;
   </html:div>

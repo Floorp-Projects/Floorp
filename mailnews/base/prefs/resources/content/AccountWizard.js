@@ -156,3 +156,11 @@ function validateSmtp(win, hash) {
     return true;
 }
 
+function onFinish(event) {
+    var i;
+    dump("There are " + wizardContents.length + " elements\n");
+    for (i in wizardContents) {
+        dump("wizardContents[" + i + "] = " + wizardContents[i] + "\n");
+    }
+    
+}

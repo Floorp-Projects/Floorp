@@ -26,8 +26,8 @@ Rights Reserved.
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/aw-login.dtd" >
 <window id="loginpage" xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    align="vertical"
     onload="parent.wizardPageLoaded('login');">
-<box align="vertical" style="width: 100%; height: 100%">
   <box class="title" align="horizontal">
     <html:div class="title">&loginTitle.label;</html:div>
     <spring flex="100%"/>
@@ -58,5 +58,4 @@ Rights Reserved.
       </html:div>
     </html:div>
   </box>
-</box>
 </window>

@@ -28,7 +28,7 @@ Rights Reserved.
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload="parent.wizardPageLoaded('accounttype');">
 
-<box align="vertical" style="width: 100%; height: 100%">
+<box align="vertical" style="width: 100%; height: 100%" flex="100%">
 
   <box class="title" align="horizontal">
     <html:div class="title">&accountTypeTitle.label;</html:div>
