@@ -1,6 +1,6 @@
 <!-- LOCALIZATION NOTE : FILE "Windows integration" preferences -->
 
-<!ENTITY title.label "Desktop Integration">
+<!ENTITY title.label "Windows Integration">
 <!ENTITY info.label  "Configuration">
 
 <!-- These entities are used on the "File Types" section of the dialog. -->
