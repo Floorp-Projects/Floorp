@@ -3078,6 +3078,15 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
       y += change.y;
     }
 
+    // We must position the view correctly before positioning its
+    // descendants so that widgets are positioned properly (since only
+    // some views have widgets).
+    if (frame->HasView())
+      nsContainerFrame::SyncFrameViewAfterReflow(mPresContext, frame,
+                                                 frame->GetView(),
+                                                 &pfd->mCombinedArea, //ignored
+                                                 NS_FRAME_NO_SIZE_VIEW);
+
     // Note: the combined area of a child is in its coordinate
     // system. We adjust the childs combined area into our coordinate
     // system before computing the aggregated value by adding in
@@ -3088,6 +3097,15 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
       // aggregating it into our combined area.
       r = &spanCombinedArea;
       RelativePositionFrames(pfd->mSpan, spanCombinedArea);
+    } else {
+      // If we have something that's not an inline but with a complex frame
+      // hierarchy inside that contains views, they need to be
+      // positioned.
+      // All descendant views must be repositioned even if this frame
+      // does have a view in case this frame's view does not have a
+      // widget and some of the descendant views do have widgets --
+      // otherwise the widgets won't be repositioned.
+      nsContainerFrame::PositionChildViews(mPresContext, frame);
     }
 
     // Do this here (rather than along with NS_FRAME_OUTSIDE_CHILDREN
@@ -3095,7 +3113,8 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
     // about the root span, since it doesn't have a frame.
     if (frame->HasView())
       nsContainerFrame::SyncFrameViewAfterReflow(mPresContext, frame,
-                                                 frame->GetView(), r);
+                                                 frame->GetView(), r,
+                                                 NS_FRAME_NO_MOVE_VIEW);
 
     nscoord xl = x + r->x;
     if (xl < minX) {
