@@ -49,11 +49,11 @@ public:
   NS_IMETHOD Count(PRUint32 *result) {
     return mSubFolders->Count(result);
   }
-  NS_IMETHOD GetElementAt(PRUint32 index, nsISupports* *result) {
-    return mSubFolders->GetElementAt(index, result);
+  NS_IMETHOD GetElementAt(PRUint32 i, nsISupports* *result) {
+    return mSubFolders->GetElementAt(i, result);
   }
-  NS_IMETHOD SetElementAt(PRUint32 index, nsISupports* value) {
-    return mSubFolders->SetElementAt(index, value);
+  NS_IMETHOD SetElementAt(PRUint32 i, nsISupports* value) {
+    return mSubFolders->SetElementAt(i, value);
   }
   NS_IMETHOD AppendElement(nsISupports *aElement) {
     return mSubFolders->AppendElement(aElement);
