@@ -860,6 +860,7 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
   NPError error;
   
 #if defined (MOZ_WIDGET_GTK) || defined (MOZ_WIDGET_GTK2)
+  PRBool isXembed = PR_FALSE;
   // bug 108337, flash plugin on linux doesn't like window->width <= 0
   if ((PRInt32) window->width <= 0 || (PRInt32) window->height <= 0)
     return NS_OK;
@@ -881,6 +882,15 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
     GdkWindow *win = gdk_window_lookup((XID)window->window);
     if (!win)
       return NS_ERROR_FAILURE;
+    gpointer user_data = nsnull;
+    gdk_window_get_user_data(win, &user_data);
+    if (user_data) {
+      GtkWidget* widget = GTK_WIDGET(user_data);
+      if (GTK_IS_SOCKET(widget)) {
+	isXembed = PR_TRUE;
+      }
+    }
+    if (!isXembed)
     {  
 #ifdef NS_DEBUG      
       printf("About to create new xtbin of %i X %i from %p...\n",
@@ -929,7 +939,10 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
     ws->type = 0; // OK, that was a guess!!
 #ifdef MOZ_X11
     ws->depth = gdk_window_get_visual(win)->depth;
-    ws->display = GTK_XTBIN(mXtBin)->xtdisplay;
+    if (!isXembed)
+      ws->display = GTK_XTBIN(mXtBin)->xtdisplay;
+    else
+      ws->display = GDK_WINDOW_XDISPLAY(win);
     ws->visual = GDK_VISUAL_XVISUAL(gdk_window_get_visual(win));
     ws->colormap = GDK_COLORMAP_XCOLORMAP(gdk_window_get_colormap(win));
 
@@ -937,14 +950,16 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
 #endif
   } // !window->ws_info
 
-  if (!mXtBin)
+  if (!mXtBin && !isXembed)
     return NS_ERROR_FAILURE;
 
-  // And now point the NPWindow structures window 
-  // to the actual X window
-  window->window = (nsPluginPort *)GTK_XTBIN(mXtBin)->xtwindow;
-  
-  gtk_xtbin_resize(mXtBin, window->width, window->height);
+  if (!isXembed) {
+    // And now point the NPWindow structures window 
+    // to the actual X window
+    window->window = (nsPluginPort *)GTK_XTBIN(mXtBin)->xtwindow;
+    
+    gtk_xtbin_resize(mXtBin, window->width, window->height);
+  }
   
 #elif defined(MOZ_WIDGET_XLIB)
 

@@ -1225,6 +1225,17 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
   switch(variable) {
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
   case NPNVxDisplay : {
+#ifdef MOZ_WIDGET_GTK2
+    if(npp) {
+      ns4xPluginInstance *inst = (ns4xPluginInstance *) npp->ndata;
+      NPBool rtv = PR_FALSE;
+      inst->GetValue((nsPluginInstanceVariable)NPPVpluginNeedsXEmbed, &rtv);
+      if(rtv) {
+        (*(Display **)result) = GDK_DISPLAY();
+        return NPERR_NO_ERROR;
+      }
+    }
+#endif
 #if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_GTK2)
     // adobe nppdf calls XtGetApplicationNameAndClass(display, &instance, &class)
     // we have to init Xt toolkit before get XtDisplay
@@ -1336,6 +1347,30 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
       }
     }
     return NPERR_GENERIC_ERROR;
+  }
+
+  case NPNVToolkit: {
+#ifdef MOZ_WIDGET_GTK
+    *((NPNToolkitType*)result) = NPNVGtk12;
+#endif
+
+#ifdef MOZ_WIDGET_GTK2
+    *((NPNToolkitType*)result) = NPNVGtk2;
+#endif
+
+    if (result)
+        return NPERR_NO_ERROR;
+
+    return NPERR_GENERIC_ERROR;
+  }
+
+  case NPNVSupportsXEmbedBool: {
+#ifdef MOZ_WIDGET_GTK2
+    *(NPBool*)result = PR_TRUE; 
+#else
+    *(NPBool*)result = PR_FALSE; 
+#endif
+    return NPERR_NO_ERROR;
   }
   default : return NPERR_GENERIC_ERROR;
   }

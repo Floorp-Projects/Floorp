@@ -188,7 +188,8 @@ enum nsPluginVariable {
 
 enum nsPluginManagerVariable {
     nsPluginManagerVariable_XDisplay                 = 1,
-    nsPluginManagerVariable_XtAppContext             = 2
+    nsPluginManagerVariable_XtAppContext             = 2,
+    nsPluginManagerVariable_SupportsXEmbed            = 14
 };
 
 enum nsPluginInstancePeerVariable {
@@ -203,7 +204,8 @@ enum nsPluginInstanceVariable {
     nsPluginInstanceVariable_DoCacheBool             = 5,
     nsPluginInstanceVariable_CallSetWindowAfterDestroyBool = 6,
     nsPluginInstanceVariable_ScriptableInstance      = 10,
-    nsPluginInstanceVariable_ScriptableIID           = 11
+    nsPluginInstanceVariable_ScriptableIID           = 11,
+    nsPluginInstanceVariable_NeedsXEmbed             = 14
 };
 
 ////////////////////////////////////////////////////////////////////////////////

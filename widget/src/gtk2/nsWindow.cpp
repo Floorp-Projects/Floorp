@@ -55,6 +55,8 @@
 #include <gdk/gdkx.h>
 #include <gdk/gdkkeysyms.h>
 
+#include "gtk2xtbin.h"
+
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
 
@@ -233,12 +235,12 @@ nsWindow::nsWindow()
     mIsVisible           = PR_FALSE;
     mRetryPointerGrab    = PR_FALSE;
     mRetryKeyboardGrab   = PR_FALSE;
-    mHasNonXembedPlugin  = PR_FALSE;
     mActivatePending     = PR_FALSE;
     mTransientParent     = nsnull;
     mWindowType          = eWindowType_child;
     mSizeState           = nsSizeMode_Normal;
     mOldFocusWindow      = 0;
+    mPluginType          = PluginType_NONE;
 
     if (!gGlobalsInitialized) {
         gGlobalsInitialized = PR_TRUE;
@@ -2590,15 +2592,15 @@ nsWindow::SetDefaultIcon(void)
 }
 
 void
-nsWindow::SetPluginType(PRBool aIsXembed)
+nsWindow::SetPluginType(PluginType aPluginType)
 {
-    mHasNonXembedPlugin = !aIsXembed;
+    mPluginType = aPluginType;
 }
 
 void
 nsWindow::SetNonXEmbedPluginFocus()
 {
-    if (gPluginFocusWindow == this) {
+    if (gPluginFocusWindow == this || mPluginType!=PluginType_NONXEMBED) {
         return;
     }
 
@@ -2654,7 +2656,7 @@ nsWindow::LoseNonXEmbedPluginFocus()
 
     // This method is only for the nsWindow which contains a
     // Non-XEmbed plugin, for example, JAVA plugin.
-    if (gPluginFocusWindow != this) {
+    if (gPluginFocusWindow != this || mPluginType!=PluginType_NONXEMBED) {
         return;
     }
 
@@ -3246,16 +3248,19 @@ plugin_window_filter_func (GdkXEvent *gdk_xevent, GdkEvent *event, gpointer data
                 gdk_window_get_user_data(plugin_window, &user_data);
                 widget = GTK_WIDGET(user_data);
 
-                if (GTK_IS_SOCKET(widget)) {
+                if (GTK_IS_XTBIN(widget)) {
+                    nswindow->SetPluginType(nsWindow::PluginType_NONXEMBED);
+                    break;
+                }
+                else if(GTK_IS_SOCKET(widget)) {
+                    nswindow->SetPluginType(nsWindow::PluginType_XEMBED);
                     break;
                 }
             }
-            nswindow->SetPluginType(PR_FALSE);
+            nswindow->SetPluginType(nsWindow::PluginType_NONXEMBED);
             return_val = GDK_FILTER_REMOVE;
             break;
         case EnterNotify:
-            // Currently we consider all plugins are non-xembed and calls
-            // SetNonXEmbedPluginFocus without any checking.
             nswindow->SetNonXEmbedPluginFocus();
             break;
         case DestroyNotify:

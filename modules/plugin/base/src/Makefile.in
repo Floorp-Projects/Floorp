@@ -90,8 +90,13 @@ ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 	CPPSRCS += nsPluginsDirDarwin.cpp
 	CPPSRCS += nsPluginNativeWindow.cpp
 else
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+	CPPSRCS += nsPluginsDirUnix.cpp
+	CPPSRCS += nsPluginNativeWindowGtk2.cpp
+else
 	CPPSRCS += nsPluginsDirUnix.cpp
 	CPPSRCS += nsPluginNativeWindow.cpp
+endif
 endif
 endif
 endif

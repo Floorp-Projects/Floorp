@@ -38,7 +38,7 @@
 
 
 /*
- *  npapi.h $Revision: 3.31 $
+ *  npapi.h $Revision: 3.32 $
  *  Netscape client plug-in API spec
  */
 
@@ -387,7 +387,8 @@ typedef enum {
 
   /* 12 and over are available on Mozilla builds starting with 0.9.9 */
   NPPVjavascriptPushCallerBool = 12,
-  NPPVpluginKeepLibraryInMemory = 13   /* available in Mozilla 1.0 */
+  NPPVpluginKeepLibraryInMemory = 13,   /* available in Mozilla 1.0 */
+  NPPVpluginNeedsXEmbed         = 14
 } NPPVariable;
 
 /*
@@ -404,8 +405,18 @@ typedef enum {
   /* 10 and over are available on Mozilla builds starting with 0.9.4 */
   NPNVserviceManager = (10 | NP_ABI_MASK),
   NPNVDOMElement     = (11 | NP_ABI_MASK),   /* available in Mozilla 1.2 */
-  NPNVDOMWindow      = (12 | NP_ABI_MASK)
+  NPNVDOMWindow      = (12 | NP_ABI_MASK),
+  NPNVToolkit        = (13 | NP_ABI_MASK),
+  NPNVSupportsXEmbedBool = 14
 } NPNVariable;
+
+/*
+ * The type of Tookkit the widgets use
+ */
+typedef enum {
+  NPNVGtk12 = 1,
+  NPNVGtk2
+} NPNToolkitType;
 
 /*
  * The type of a NPWindow - it specifies the type of the data structure

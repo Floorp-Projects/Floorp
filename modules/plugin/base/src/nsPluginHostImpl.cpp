@@ -2095,7 +2095,10 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request, nsISupports* aCo
           // If we've got a native window, the let the plugin know
           // about it.
           if (window->window)
-            mInstance->SetWindow(window);
+          {
+            nsCOMPtr<nsIPluginInstance> inst = mInstance;
+            ((nsPluginNativeWindow*)window)->CallSetWindow(inst);
+          }
         }
       }
     }
@@ -2638,6 +2641,13 @@ NS_IMETHODIMP nsPluginHostImpl::GetValue(nsPluginManagerVariable aVariable, void
     }
   }
 #endif
+  if (nsPluginManagerVariable_SupportsXEmbed == aVariable) {
+#ifdef MOZ_WIDGET_GTK2
+    *(NPBool*)aValue = PR_TRUE;
+#else
+    *(NPBool*)aValue = PR_FALSE;
+#endif
+  }
   return rv;
 }
 
@@ -3454,7 +3464,10 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
 
     // If we've got a native window, the let the plugin know about it.
     if (window->window)
-      instance->SetWindow(window);
+    {
+      nsCOMPtr<nsIPluginInstance> inst = instance;
+      ((nsPluginNativeWindow*)window)->CallSetWindow(inst);
+    }
 
     // create an initial stream with data 
     // don't make the stream if it's a java applet or we don't have SRC or DATA attribute
@@ -3596,7 +3609,10 @@ nsresult nsPluginHostImpl::FindStoppedPluginForURL(nsIURI* aURL,
 
     // If we've got a native window, the let the plugin know about it.
     if (window->window)
-      instance->SetWindow(window);
+    {
+      nsCOMPtr<nsIPluginInstance> inst = instance;
+      ((nsPluginNativeWindow*)window)->CallSetWindow(inst);
+    }
 
     plugin->setStopped(PR_FALSE);
     return NS_OK;
@@ -6601,7 +6617,10 @@ nsresult nsPluginStreamListenerPeer::ServeStreamAsFile(nsIRequest *request,
       nsPluginWindow    *window = nsnull;
       owner->GetWindow(window);
       if (window->window)
-        mInstance->SetWindow(window);
+      {
+        nsCOMPtr<nsIPluginInstance> inst = mInstance;
+        ((nsPluginNativeWindow*)window)->CallSetWindow(inst);
+      }
     }
   }
   
