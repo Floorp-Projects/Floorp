@@ -29,6 +29,8 @@
 #include "nsIScriptContext.h"
 
 class nsIDOMElement;
+class nsIDOMDocument;
+class nsIDOMNode;
 class nsIDOMNodeList;
 
 #define NS_IDOMDOCUMENTXBL_IID \
@@ -45,7 +47,9 @@ public:
 
   NS_IMETHOD    RemoveBinding(nsIDOMElement* aElt, const nsAReadableString& aBindingURL)=0;
 
-  NS_IMETHOD    LoadBindingDocument(const nsAReadableString& aDocumentURL)=0;
+  NS_IMETHOD    GetBindingParent(nsIDOMNode* aNode, nsIDOMElement** aReturn)=0;
+
+  NS_IMETHOD    LoadBindingDocument(const nsAReadableString& aDocumentURL, nsIDOMDocument** aReturn)=0;
 };
 
 
@@ -53,7 +57,8 @@ public:
   NS_IMETHOD    GetAnonymousNodes(nsIDOMElement* aElt, nsIDOMNodeList** aReturn);  \
   NS_IMETHOD    AddBinding(nsIDOMElement* aElt, const nsAReadableString& aBindingURL);  \
   NS_IMETHOD    RemoveBinding(nsIDOMElement* aElt, const nsAReadableString& aBindingURL);  \
-  NS_IMETHOD    LoadBindingDocument(const nsAReadableString& aDocumentURL);  \
+  NS_IMETHOD    GetBindingParent(nsIDOMNode* aNode, nsIDOMElement** aReturn);  \
+  NS_IMETHOD    LoadBindingDocument(const nsAReadableString& aDocumentURL, nsIDOMDocument** aReturn);  \
 
 
 
@@ -61,7 +66,8 @@ public:
   NS_IMETHOD    GetAnonymousNodes(nsIDOMElement* aElt, nsIDOMNodeList** aReturn) { return _to GetAnonymousNodes(aElt, aReturn); }  \
   NS_IMETHOD    AddBinding(nsIDOMElement* aElt, const nsAReadableString& aBindingURL) { return _to AddBinding(aElt, aBindingURL); }  \
   NS_IMETHOD    RemoveBinding(nsIDOMElement* aElt, const nsAReadableString& aBindingURL) { return _to RemoveBinding(aElt, aBindingURL); }  \
-  NS_IMETHOD    LoadBindingDocument(const nsAReadableString& aDocumentURL) { return _to LoadBindingDocument(aDocumentURL); }  \
+  NS_IMETHOD    GetBindingParent(nsIDOMNode* aNode, nsIDOMElement** aReturn) { return _to GetBindingParent(aNode, aReturn); }  \
+  NS_IMETHOD    LoadBindingDocument(const nsAReadableString& aDocumentURL, nsIDOMDocument** aReturn) { return _to LoadBindingDocument(aDocumentURL, aReturn); }  \
 
 
 #endif // nsIDOMDocumentXBL_h__
