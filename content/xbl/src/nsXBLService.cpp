@@ -299,8 +299,16 @@ nsXBLStreamListener::OnStopRequest(nsIChannel* aChannel, nsISupports* aCtxt, nsr
      rv = mInner->OnStopRequest(aChannel, aCtxt, aStatus, aStatusArg);
   }
 
-  if (NS_FAILED(rv) || NS_FAILED(aStatus)) {
-    NS_WARNING("Failed to load XBL document!!!!!!!!!!!!!\n");
+  if (NS_FAILED(rv) || NS_FAILED(aStatus))
+  {
+  	if (aChannel)
+  	{
+      nsCOMPtr<nsIURI> channelURI;
+      aChannel->GetURI(getter_AddRefs(channelURI));
+      nsXPIDLCString str;
+      channelURI->GetSpec(getter_Copies(str));
+      printf("Failed to load XBL document %s\n", (const char*)str);
+  	}
 
     PRUint32 count = mBindingRequests.Count();
     for (PRUint32 i = 0; i < count; i++) {
