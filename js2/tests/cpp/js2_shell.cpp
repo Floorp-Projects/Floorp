@@ -272,7 +272,7 @@ static void testICG(World &world)
 
 static float64 testFunctionCall(World &world, float64 n)
 {
-    JSObject glob;
+    JSNamespace glob;
     Context cx(world, &glob);
     Tracer t;
     cx.addListener(&t);
@@ -325,7 +325,7 @@ static float64 testFunctionCall(World &world, float64 n)
 
 static float64 testFactorial(World &world, float64 n)
 {
-    JSObject glob;
+    JSNamespace glob;
     Context cx(world, &glob);
     // generate code for factorial, and interpret it.
     uint32 position = 0;
@@ -390,7 +390,7 @@ static float64 testFactorial(World &world, float64 n)
     
 static float64 testObjects(World &world, int32 n)
 {
-    JSObject glob;
+    JSNamespace glob;
     Context cx(world, &glob);
     // create some objects, put some properties, and retrieve them.
     uint32 position = 0;
@@ -456,7 +456,7 @@ static float64 testObjects(World &world, int32 n)
 
 static float64 testProto(World &world, int32 n)
 {
-    JSObject glob;
+    JSNamespace glob;
     Context cx(world, &glob);
 
     Tracer t;
@@ -515,8 +515,8 @@ static float64 testProto(World &world, int32 n)
     cx.interpret(initCode, args);
     
     // objects now exist, do real prototype chain manipulation.
-    JSObject* globalObject = glob.getProperty(global).object;
-    globalObject->setPrototype(glob.getProperty(proto).object);
+    JSObject* globalObject = glob.getVariable(global).object;
+    globalObject->setPrototype(glob.getVariable(proto).object);
     
     // generate call to global.increment()
     ICodeGenerator callCG;
@@ -533,7 +533,7 @@ static float64 testProto(World &world, int32 n)
     while (n-- > 0)
         (void) cx.interpret(callCode, args);
     
-    JSValue result = glob.getProperty(global).object->getProperty(counter);
+    JSValue result = glob.getVariable(global).object->getProperty(counter);
     
     stdOut << "result = " << result.f64 << "\n";
         
