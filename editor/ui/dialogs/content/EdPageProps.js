@@ -20,7 +20,7 @@
  * Contributor(s): 
  */
 
-var title = "";
+var newTitle = "";
 var author = "";
 var description = "";
 var authorElement;
@@ -130,7 +130,7 @@ function TextfieldChanged(ID)
 
 function ValidateData()
 {
-  title = dialog.TitleInput.value.trimString();
+  newTitle = dialog.TitleInput.value.trimString();
   author = dialog.AuthorInput.value.trimString();
   description = dialog.DescriptionInput.value.trimString();
   return true;
@@ -144,7 +144,7 @@ function onOK()
     {
       // Set title contents even if string is empty
       //  because TITLE is a required HTML element
-      editorShell.SetDocumentTitle(title);
+      editorShell.SetDocumentTitle(newTitle);
     }
     
     if (authorWasEdited)
