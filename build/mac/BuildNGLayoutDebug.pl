@@ -30,6 +30,7 @@ $DEBUG = 1;
 $ALIAS_SYM_FILES = $DEBUG;
 $CLOBBER_LIBS = 1;			# turn on to clobber existing libs and .xSYM files before
 							# building each project
+$MOZ_FULLCIRCLE = 0;
 
 $pull{all} = 0;
 $pull{lizard} = 0;
@@ -69,6 +70,12 @@ if ($build{all})
 
 chdir("::::");
 $MOZ_SRC = cwd();
+
+if ($MOZ_FULLCIRCLE = 1)
+{
+	#// Get the Build Number for the Master.ini(Full Circle) n'stuff
+	$buildnum = Moz::SetBuildNumber();
+}
 
 OpenErrorLog("NGLayoutDebugBuildLog");
 #OpenErrorLog("Mozilla.BuildLog");		# Tinderbox requires that name
