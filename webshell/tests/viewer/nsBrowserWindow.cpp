@@ -76,6 +76,7 @@
 #include "nsGUIEvent.h"
 #include "nsIWebProgress.h"
 #include "nsIWebBrowserSetup.h"
+#include "nsIWebBrowserPrint.h"
 
 #include "nsCWebBrowser.h"
 #include "nsUnicharUtils.h"
@@ -2206,11 +2207,13 @@ void nsBrowserWindow::DoPrint(void)
 
   mDocShell->GetContentViewer(getter_AddRefs(viewer));
 
-  if (viewer)
-  {
-    nsCOMPtr<nsIContentViewerFile> viewerFile = do_QueryInterface(viewer);
-    if (viewerFile) {
-      //viewerFile->Print(PR_FALSE, nsnull, (nsIWebProgressListener*)nsnull);
+  if (viewer) {
+    nsCOMPtr<nsIWebBrowserPrint> webBrowserPrint = do_QueryInterface(viewer);
+    if (webBrowserPrint) {
+      if (!mPrintSettings) {
+        webBrowserPrint->GetNewPrintSettings(getter_AddRefs(mPrintSettings));
+      }
+      webBrowserPrint->Print(mPrintSettings, (nsIWebProgressListener*)nsnull);
     }
   }
 }
