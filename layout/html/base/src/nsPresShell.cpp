@@ -84,6 +84,7 @@
 #include "nsXIFDTD.h"
 #include "nsIFrameSelection.h"
 #include "nsIDOMNSHTMLInputElement.h" //optimization for ::DoXXX commands
+#include "nsIDOMNSHTMLTextAreaElement.h"
 #include "nsViewsCID.h"
 #include "nsIFrameManager.h"
 #include "nsISupportsPrimitives.h"
@@ -2832,11 +2833,11 @@ PresShell::DoCopy()
     rv = manager->GetFocusedContent(getter_AddRefs(content));
     if (NS_SUCCEEDED(rv) && content)
     {
-    
       //check to see if we need to get selection from frame
       //optimization that MAY need to be expanded as more things implement their own "selection"
-      nsCOMPtr<nsIDOMNSHTMLInputElement> htmlElement(do_QueryInterface(content));
-      if (htmlElement)
+      nsCOMPtr<nsIDOMNSHTMLInputElement>    htmlInputElement(do_QueryInterface(content));
+      nsCOMPtr<nsIDOMNSHTMLTextAreaElement> htmlTextAreaElement(do_QueryInterface(content));
+      if (htmlInputElement || htmlTextAreaElement)
       {
         nsIFrame *htmlInputFrame;
         rv = GetPrimaryFrameFor(content, &htmlInputFrame);
