@@ -3467,7 +3467,18 @@ nsImapService::GetListOfFoldersWithPath(nsIImapIncomingServer *aServer, nsIMsgWi
     rv = pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
     if (NS_FAILED(rv)) return rv;
 
-	rv = DiscoverChildren(queue, rootMsgFolder, listener, folderPath, nsnull);
+  // Locate the folder so that the correct hierarchical delimiter is used in the folder
+  // pathnames, otherwise root's (ie, '^') is used and this is wrong.
+  nsCOMPtr<nsIMsgFolder> msgFolder;
+  nsCOMPtr<nsIFolder> subFolder;
+  if (rootMsgFolder && folderPath && (*folderPath))
+  {
+    rv = rootMsgFolder->FindSubFolder(folderPath, getter_AddRefs(subFolder));
+    if (NS_SUCCEEDED(rv))
+      msgFolder = do_QueryInterface(subFolder);
+  }
+
+	rv = DiscoverChildren(queue, msgFolder, listener, folderPath, nsnull);
     if (NS_FAILED(rv)) return rv;
 
 	return NS_OK;
