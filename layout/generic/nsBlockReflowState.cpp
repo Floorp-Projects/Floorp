@@ -2809,9 +2809,18 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
     if (aState.mComputeMaximumWidth && isBeginningLine) {
       nscoord oldY = aState.mY;
       nscoord oldPrevBottomMargin = aState.mPrevBottomMargin;
+      PRBool  oldUnconstrainedWidth = aState.mUnconstrainedWidth;
 
-      // First reflow the line with an unconstrained width
+      // First reflow the line with an unconstrained width. When doing this
+      // we need to set the block reflow state's "mUnconstrainedWidth" variable
+      // to PR_TRUE so if we encounter a placeholder and then reflow its
+      // associated floater we don't end up resetting the line's right edge and
+      // have it think the width is unconstrained...
+      aState.mUnconstrainedWidth = PR_TRUE;
       ReflowInlineFrames(aState, aLine, aKeepReflowGoing, PR_TRUE);
+      aState.mY = oldY;
+      aState.mPrevBottomMargin = oldPrevBottomMargin;
+      aState.mUnconstrainedWidth = oldUnconstrainedWidth;
 
       // Update the line's maximum width
       aLine->mMaximumWidth = aLine->mBounds.XMost();
@@ -2831,8 +2840,6 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
         
       aState.mComputeMaxElementSize = PR_FALSE;
       aState.mComputeMaximumWidth = PR_FALSE;
-      aState.mY = oldY;
-      aState.mPrevBottomMargin = oldPrevBottomMargin;
       rv = ReflowInlineFrames(aState, aLine, aKeepReflowGoing);
       aState.mComputeMaxElementSize = oldComputeMaxElementSize;
       aState.mComputeMaximumWidth = oldComputeMaximumWidth;
@@ -5216,7 +5223,7 @@ nsBlockReflowState::AddFloater(nsLineLayout& aLineLayout,
     // Pass on updated available space to the current inline reflow engine
     GetAvailableSpace();
     aLineLayout.UpdateBand(mAvailSpaceRect.x + BorderPadding().left, mY,
-                           mAvailSpaceRect.width,
+                           mUnconstrainedWidth ? NS_UNCONSTRAINEDSIZE : mAvailSpaceRect.width,
                            mAvailSpaceRect.height,
                            isLeftFloater,
                            aPlaceholder->GetOutOfFlowFrame());
