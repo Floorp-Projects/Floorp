@@ -1286,8 +1286,12 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
         }
       case nsIMsgCompType::ForwardAsAttachment:
         {
-        
+          PRUint32 flags;
+          
+          msgHdr->GetFlags(&flags);
           subjectStr.Append("[Fwd: ");
+          if (flags & MSG_FLAG_HAS_RE)
+            subjectStr.Append("Re: ");
           subjectStr.Append(subject);
           subjectStr.Append("]");
 
