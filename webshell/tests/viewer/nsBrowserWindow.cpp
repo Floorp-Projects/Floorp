@@ -617,6 +617,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
 
   case PRVCY_DISPLAY_WALLET:
 
+
   /* set a cookie for the javascript wallet editor */
   res = nsServiceManager::GetService(kWalletServiceCID,
                                      kIWalletServiceIID,
@@ -624,7 +625,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
   if ((NS_OK == res) && (nsnull != walletservice)) {
     nsIURL * url;
     if (!NS_FAILED(NS_NewURL(&url, WALLET_EDITOR_URL))) {
-      res = walletservice->WALLET_PreEdit(url);
+//      res = walletservice->WALLET_PreEdit(url);
       NS_RELEASE(walletservice);
     }
   }
