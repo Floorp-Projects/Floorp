@@ -44,8 +44,6 @@ CHROME_CONTENT = \
 	.\NetSupportConfirmCheckYN.xul \
 	.\tooltip.js \
 	.\nsContextMenu.js \
-	.\personalToolbar.js \
-	.\personalToolbarOverlay.xul \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
