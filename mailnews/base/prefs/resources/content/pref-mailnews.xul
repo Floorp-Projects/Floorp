@@ -88,12 +88,12 @@
 		</html:div>
 			
 		<html:div>
-			<html:input id="pref:1:bool:mailnews.remember_selected_message" type="checkbox"/>
+			<html:input id="pref:1:bool:mailnews.remember_selected_message" type="checkbox" reversed="true"/>
 			<html:label for="pref:1:bool:mailnews.remember_selected_message">&rememberLastMsg.label;</html:label>
 		</html:div>
 			
 		<html:div>
-			<html:input id="pref:1:bool:mailnews.confirm.moveFoldersToTrash" type="checkbox"/>
+			<html:input id="pref:1:bool:mailnews.confirm.moveFoldersToTrash" reverse="true" type="checkbox"/>
 			<html:label for="pref:1:bool:mailnews.confirm.moveFoldersToTrash">&confirmMove.label;</html:label>
 		</html:div>
 			
@@ -104,7 +104,7 @@
 		</html:div>
 
 		<!--html:table>
-			<html:tr><html:td><html:input type="checkbox" id="pref:1:bool:mail.play_sound"/>
+			<html:tr><html:td><html:input type="checkbox" reversed="true" id="pref:1:bool:mail.play_sound"/>
 			<html:label>&playSound.label;</html:label></html:td></html:tr>
 			<html:tr><html:td><html:input type="checkbox" id="pref:1:bool:mailnews.remember_selected_message"/>
 			<html:label>&rememberLastMsg.label;</html:label></html:td></html:tr>
