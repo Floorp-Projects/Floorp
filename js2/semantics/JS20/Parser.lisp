@@ -117,8 +117,8 @@
       (private-namespace namespace)
       (dynamic boolean)
       (final boolean)
-      (call (-> (object argument-list phase) object))
-      (construct (-> (argument-list phase) object))
+      (call (-> (object (vector object) phase) object))
+      (construct (-> ((vector object) phase) object))
       (is-instance-of (-> (object) boolean) :opt-const)
       (implicit-coerce (-> (object boolean) object) :opt-const)
       (default-value object))
@@ -154,8 +154,8 @@
       (sealed boolean)
       (type class)
       (slots (list-set slot) :var)
-      (call (union (-> (object argument-list environment phase) object) (tag none)))
-      (construct (union (-> (argument-list environment phase) object) (tag none)))
+      (call (union (-> (object (vector object) environment phase) object) (tag none)))
+      (construct (union (-> ((vector object) environment phase) object) (tag none)))
       (to-class class-opt)
       (env environment-opt))
     
@@ -171,8 +171,8 @@
       (type class)
       (default-slots (list-set slot))
       (build-prototype boolean)
-      (call (union (-> (object argument-list environment phase) object) (tag none)))
-      (construct (union (-> (argument-list environment phase) object) (tag none)))
+      (call (union (-> (object (vector object) environment phase) object) (tag none)))
+      (construct (union (-> ((vector object) environment phase) object) (tag none)))
       (instantiations (list-set simple-instance) :var))
     
     
@@ -238,7 +238,7 @@
     
     (deftuple bracket-reference
       (base obj-optional-limit)
-      (args argument-list))
+      (args (vector object)))
     
     (deftype reference (union lexical-reference dot-reference bracket-reference))
     (deftype obj-or-ref (union object reference))
@@ -249,14 +249,6 @@
     (deftag get)
     (deftag set)
     (deftype function-kind (tag normal get set))
-    
-    
-    (%heading (2 :semantics) "Argument Lists")
-    (deftuple named-argument (name string) (value object))
-    
-    (deftuple argument-list
-      (positional (vector object))
-      (named (list-set named-argument)))
     
     
     (%heading (2 :semantics) "Modes of expression evaluation")
@@ -306,21 +298,14 @@
       (this object-i-opt)
       (unchecked boolean)
       (prototype boolean)
-      (positional (vector parameter) :opt-var)
-      (named (list-set named-parameter) :opt-var)
+      (parameters (vector parameter) :opt-var)
       (rest (union variable (tag none)) :opt-var)
-      (rest-allows-names boolean :var)
       (return-type class :opt-const))
      
     (deftuple parameter
       (var (union dynamic-var variable))
       (default object-opt))
     
-    (deftuple named-parameter
-      (name string)
-      (var variable)
-      (default object))
-        
     (defrecord block-frame
       (local-bindings (list-set local-binding) :var)
       (plurality plurality))
@@ -387,7 +372,7 @@
       (multiname multiname :opt-const)
       (final boolean)
       (signature parameter-frame)
-      (call (-> (object argument-list phase) object)))
+      (call (-> (object (vector object) phase) object)))
     (deftype instance-method-opt (union instance-method (tag none)))
     
     (defrecord instance-getter
@@ -738,6 +723,13 @@
     (defprimitive float64-to-string (lambda (x) (float64-to-string x)))
     
     
+    (%heading (3 :semantics) (:global to-qualified-name nil))
+    (%text :comment (:global-call to-qualified-name o phase) " coerces an object " (:local o) " to a qualified name. If "
+           (:local phase) " is " (:tag compile) ", only compile-time conversions are permitted.")
+    (define (to-qualified-name (o object) (phase phase)) qualified-name
+      (return (new qualified-name public-namespace (to-string o phase))))
+    
+    
     (%heading (3 :semantics) (:global to-primitive nil))
     (define (to-primitive (o object) (hint object :unused) (phase phase)) primitive-object
       (case o
@@ -816,10 +808,10 @@
             (throw property-access-error)))
         (:narrow bracket-reference (return (bracket-read (& base r) (& args r) phase)))))
     
-    (define (bracket-read (a obj-optional-limit) (args argument-list) (phase phase)) object
-      (rwhen (or (/= (length (& positional args)) 1) (nonempty (& named args)))
+    (define (bracket-read (a obj-optional-limit) (args (vector object)) (phase phase)) object
+      (rwhen (/= (length args) 1)
         (throw argument-mismatch-error))
-      (const name string (to-string (nth (& positional args) 0) phase))
+      (const name string (to-string (nth args 0) phase))
       (const result object-opt (read-property a (list-set (new qualified-name public-namespace name)) property-lookup phase))
       (if (not-in result (tag none) :narrow-true)
         (return result)
@@ -842,12 +834,12 @@
       (rwhen (in result (tag none))
         (throw property-access-error)))
     
-    (define (bracket-write (a obj-optional-limit) (args argument-list) (new-value object) (phase phase)) (tag none ok)
+    (define (bracket-write (a obj-optional-limit) (args (vector object)) (new-value object) (phase phase)) (tag none ok)
       (rwhen (in phase (tag compile) :narrow-false)
         (throw compile-expression-error))
-      (rwhen (or (/= (length (& positional args)) 1) (nonempty (& named args)))
+      (rwhen (/= (length args) 1)
         (throw argument-mismatch-error))
-      (const name string (to-string (nth (& positional args) 0) phase))
+      (const name string (to-string (nth args 0) phase))
       (return (write-property a (list-set (new qualified-name public-namespace name)) property-lookup true new-value phase)))
     
     
@@ -868,12 +860,12 @@
         (return result)
         (return true)))
     
-    (define (bracket-delete (a obj-optional-limit) (args argument-list) (phase phase)) boolean-opt
+    (define (bracket-delete (a obj-optional-limit) (args (vector object)) (phase phase)) boolean-opt
       (rwhen (in phase (tag compile) :narrow-false)
         (throw compile-expression-error))
-      (rwhen (or (/= (length (& positional args)) 1) (nonempty (& named args)))
+      (rwhen (/= (length args) 1)
         (throw argument-mismatch-error))
-      (const name string (to-string (nth (& positional args) 0) phase))
+      (const name string (to-string (nth args 0) phase))
       (return (delete-property a (list-set (new qualified-name public-namespace name)) property-lookup phase)))
     
     
@@ -1142,8 +1134,8 @@
             parameter-frame
       (const singular-frame parameter-frame (new parameter-frame (list-set-of local-binding) singular singular-this
                                                  (& unchecked plural-frame) (& prototype plural-frame)
-                                                 :uninit :uninit :uninit
-                                                 (& rest-allows-names plural-frame) (&opt return-type plural-frame)))
+                                                 :uninit :uninit
+                                                 (&opt return-type plural-frame)))
       (const plural-members (list-set local-member)
         (map (& local-bindings plural-frame) b (& content b)))
       (const member-translations (list-set member-translation)
@@ -1152,10 +1144,8 @@
         (const mi member-translation (unique-elt-of member-translations mi (= (& plural-member mi) m local-member)))
         (return (& singular-member mi)))
       (&= local-bindings singular-frame (map (& local-bindings plural-frame) b (set-field b content (translate-member (& content b)))))
-      (&= positional singular-frame (map (&opt positional plural-frame) op
+      (&= parameters singular-frame (map (&opt parameters plural-frame) op
                                          (new parameter (assert-in (translate-member (& var op)) (union dynamic-var variable)) (& default op))))
-      (&= named singular-frame (map (&opt named plural-frame) np
-                                    (set-field np var (assert-in (translate-member (& var np)) variable))))
       (if (in (&opt rest plural-frame) (tag none))
         (&= rest singular-frame none)
         (&= rest singular-frame (assert-in (translate-member (assert-in (&opt rest plural-frame) variable)) variable)))
@@ -1335,8 +1325,7 @@
             (:select (tag none)
               (if (and (in kind (tag property-lookup))
                        (in container (union simple-instance date reg-exp global-object) :narrow-true)
-                       (not (& sealed container))
-                       (some multiname qname (= (& namespace qname) public-namespace namespace)))
+                       (not (& sealed container)))
                 (case phase
                   (:select (tag compile) (throw compile-expression-error))
                   (:select (tag run) (return undefined)))
@@ -1443,11 +1432,10 @@
           (const m (union (tag none) local-member instance-member) (find-common-member container multiname write true))
           (case m
             (:select (tag none)
-              (reserve qname)
               (when (and create-if-missing
                          (in container (union simple-instance date reg-exp global-object) :narrow-true)
-                         (not (& sealed container))
-                         (some multiname qname (= (& namespace qname) public-namespace namespace) :define-true))
+                         (not (& sealed container)))
+                (const qname qualified-name (select-primary-name multiname))
                 (note "Before trying to create a new dynamic property named " (:local qname)
                       ", check that there is no read-only fixed property with the same name.")
                 (rwhen (and (in (find-base-instance-member c (list-set qname) read) (tag none))
@@ -1487,6 +1475,16 @@
             (write-instance-member (& instance container) superclass m-base new-value phase)
             (return ok))
            (nil (return none))))))
+    
+    
+    (define (select-primary-name (multiname multiname)) qualified-name
+      (reserve qname)
+      (cond
+       ((= (length multiname) 1)
+        (return (unique-elt-of multiname)))
+       ((some multiname qname (= (& namespace qname) public-namespace namespace) :define-true)
+        (return qname))
+       (nil (throw property-access-error))))
     
     
     (define (write-instance-member (this object) (c class) (m-base instance-member) (new-value object) (phase (tag run)))
@@ -1612,8 +1610,7 @@
       (production :identifier (get) identifier-get (name "get"))
       (production :identifier (set) identifier-set (name "set"))
       (production :identifier (exclude) identifier-exclude (name "exclude"))
-      (production :identifier (include) identifier-include (name "include"))
-      (production :identifier (named) identifier-named (name "named")))
+      (production :identifier (include) identifier-include (name "include")))
     (%print-actions)
     
     (%heading 2 "Qualified Identifiers")
@@ -1813,85 +1810,84 @@
     (%heading 2 "Object Literals")
     (rule :object-literal ((validate (-> (context environment) void)) (setup (-> () void))
                            (eval (-> (environment phase) obj-or-ref)))
-      (production :object-literal (\{ \}) object-literal-empty
-        ((validate (cxt :unused) (env :unused)))
-        ((setup) :forward)
-        ((eval (env :unused) phase)
-         (rwhen (in phase (tag compile))
-           (throw compile-expression-error))
-         (return (new simple-instance (list-set-of local-binding) object-prototype false prototype-class (list-set-of slot) none none none none))))
       (production :object-literal (\{ :field-list \}) object-literal-list
-        ((validate cxt env) (exec ((validate :field-list) cxt env)))
-        ((setup) :forward)
+        ((validate cxt env) ((validate :field-list) cxt env))
+        ((setup) ((setup :field-list)))
         ((eval env phase)
          (rwhen (in phase (tag compile))
            (throw compile-expression-error))
          (const local-bindings (list-set local-binding) ((eval :field-list) env phase))
          (return (new simple-instance local-bindings object-prototype false prototype-class (list-set-of slot) none none none none)))))
     
-    (rule :field-list ((validate (-> (context environment) (list-set string))) (setup (-> () void))
-                       (eval (-> (environment phase) (list-set local-binding))))
-      (production :field-list (:literal-field) field-list-one
-        ((validate cxt env) (return ((validate :literal-field) cxt env)))
-        ((setup) :forward)
-        ((eval env phase)
-         (const na named-argument ((eval :literal-field) env phase))
-         (const qname qualified-name (new qualified-name public-namespace (& name na)))
-         (const p dynamic-var (new dynamic-var (& value na) false))
-         (return (list-set (new local-binding qname read-write p false)))))
-      (production :field-list (:field-list \, :literal-field) field-list-more
-        ((validate cxt env)
-         (const names1 (list-set string) ((validate :field-list) cxt env))
-         (const names2 (list-set string) ((validate :literal-field) cxt env))
-         (rwhen (nonempty (set* names1 names2))
-           (throw syntax-error))
-         (return (set+ names1 names2)))
-        ((setup) :forward)
-        ((eval env phase)
-         (const local-bindings (list-set local-binding) ((eval :field-list) env phase))
-         (const na named-argument ((eval :literal-field) env phase))
-         (const qname qualified-name (new qualified-name public-namespace (& name na)))
-         (rwhen (some local-bindings b (= (& qname b) qname qualified-name))
-           (throw argument-mismatch-error))
-         (const p dynamic-var (new dynamic-var (& value na) false))
-         (return (set+ local-bindings (list-set (new local-binding qname read-write p false)))))))
     
-    (rule :literal-field ((validate (-> (context environment) (list-set string))) (setup (-> () void))
-                          (eval (-> (environment phase) named-argument)))
+    (rule :field-list ((validate (-> (context environment) void)) (setup (-> () void))
+                       (eval (-> (environment phase) (list-set local-binding))))
+      (production :field-list () field-list-empty
+        ((validate cxt env) :forward)
+        ((setup) :forward)
+        ((eval (env :unused) (phase :unused)) (return (list-set-of local-binding))))
+      (production :field-list (:nonempty-field-list) field-list-nonempty
+        ((validate cxt env) :forward)
+        ((setup) :forward)
+        ((eval env phase) (return ((eval :nonempty-field-list) env phase)))))
+    
+    
+    (rule :nonempty-field-list ((validate (-> (context environment) void)) (setup (-> () void))
+                                (eval (-> (environment phase) (list-set local-binding))))
+      (production :nonempty-field-list (:literal-field) nonempty-field-list-one
+        ((validate cxt env) :forward)
+        ((setup) :forward)
+        ((eval env phase)
+         (const b local-binding ((eval :literal-field) env phase))
+         (return (list-set b))))
+      (production :nonempty-field-list (:nonempty-field-list \, :literal-field) nonempty-field-list-more
+        ((validate cxt env) :forward)
+        ((setup) :forward)
+        ((eval env phase)
+         (const local-bindings (list-set local-binding) ((eval :nonempty-field-list) env phase))
+         (const b local-binding ((eval :literal-field) env phase))
+         (rwhen (some local-bindings b2 (= (& qname b2) (& qname b) qualified-name))
+           (throw argument-mismatch-error))
+         (return (set+ local-bindings (list-set b))))))
+    
+    
+    (rule :literal-field ((validate (-> (context environment) void))
+                          (setup (-> () void))
+                          (eval (-> (environment phase) local-binding)))
       (production :literal-field (:field-name \: (:assignment-expression allow-in)) literal-field-assignment-expression
         ((validate cxt env)
-         (const names (list-set string) ((validate :field-name) cxt env))
-         ((validate :assignment-expression) cxt env)
-         (return names))
+         ((validate :field-name) cxt env)
+         ((validate :assignment-expression) cxt env))
+        ((setup)
+         ((setup :field-name))
+         ((setup :assignment-expression)))
+        ((eval env phase)
+         (const qname qualified-name ((eval :field-name) env phase))
+         (const value object (read-reference ((eval :assignment-expression) env phase) phase))
+         (const p dynamic-var (new dynamic-var value false))
+         (return (new local-binding qname read-write p false)))))
+    
+    
+    (rule :field-name ((validate (-> (context environment) void)) (setup (-> () void))
+                       (eval (-> (environment phase) qualified-name)))
+      (production :field-name (:qualified-identifier) field-name-identifier
+        ((validate cxt env) :forward)
+        ((setup) :forward)
+        ((eval env phase) (return (select-primary-name ((eval :qualified-identifier) env phase)))))
+      (production :field-name ($string) field-name-string
+        ((validate cxt env) :forward)
+        ((setup) :forward)
+        ((eval (env :unused) phase) (return (to-qualified-name (value $string) phase))))
+      (production :field-name ($number) field-name-number
+        ((validate cxt env) :forward)
+        ((setup) :forward)
+        ((eval (env :unused) phase) (return (to-qualified-name (value $number) phase))))
+      (production :field-name (:paren-expression) field-name-paren-expression
+        ((validate cxt env) :forward)
         ((setup) :forward)
         ((eval env phase)
-         (const name string ((eval :field-name) env phase))
-         (const value object (read-reference ((eval :assignment-expression) env phase) phase))
-         (return (new named-argument name value)))))
-    
-    (rule :field-name ((validate (-> (context environment) (list-set string))) (setup (-> () void))
-                       (eval (-> (environment phase) string)))
-      (production :field-name (:identifier) field-name-identifier
-        ((validate (cxt :unused) (env :unused)) (return (list-set (name :identifier))))
-        ((setup))
-        ((eval (env :unused) (phase :unused)) (return (name :identifier))))
-      (production :field-name ($string) field-name-string
-        ((validate (cxt :unused) (env :unused)) (return (list-set (value $string))))
-        ((setup))
-        ((eval (env :unused) (phase :unused)) (return (value $string))))
-      (production :field-name ($number) field-name-number
-        ((validate (cxt :unused) (env :unused)) (return (list-set (to-string (value $number) compile))))
-        ((setup))
-        ((eval (env :unused) (phase :unused)) (return (to-string (value $number) compile))))
-      (? js2
-        (production :field-name (:paren-expression) field-name-paren-expression
-          ((validate cxt env)
-           ((validate :paren-expression) cxt env)
-           (return (list-set-of string)))
-          ((setup) ((setup :paren-expression)))
-          ((eval env phase)
-           (const a object (read-reference ((eval :paren-expression) env phase) phase))
-           (return (to-string a phase))))))
+         (const a object (read-reference ((eval :paren-expression) env phase) phase))
+         (return (to-qualified-name a phase)))))
     (%print-actions ("Validation" validate) ("Setup" setup) ("Evaluation" eval))
     
     
@@ -2001,7 +1997,7 @@
          (const r obj-or-ref ((eval :attribute-expression) env phase))
          (const f object (read-reference r phase))
          (const base object (reference-base r))
-         (const args argument-list ((eval :arguments) env phase))
+         (const args (vector object) ((eval :arguments) env phase))
          (return (call base f args phase)))))
     
     (rule :full-postfix-expression ((strict (writable-cell boolean)) (validate (-> (context environment) void)) (setup (-> () void))
@@ -2047,7 +2043,7 @@
          (const r obj-or-ref ((eval :full-postfix-expression) env phase))
          (const f object (read-reference r phase))
          (const base object (reference-base r))
-         (const args argument-list ((eval :arguments) env phase))
+         (const args (vector object) ((eval :arguments) env phase))
          (return (call base f args phase))))
       (production :full-postfix-expression (:postfix-expression :no-line-break ++) full-postfix-expression-increment
         ((validate cxt env) ((validate :postfix-expression) cxt env))
@@ -2081,7 +2077,7 @@
         ((setup) :forward)
         ((eval env phase)
          (const f object (read-reference ((eval :full-new-subexpression) env phase) phase))
-         (const args argument-list ((eval :arguments) env phase))
+         (const args (vector object) ((eval :arguments) env phase))
          (return (construct f args phase)))))
     
     (rule :full-new-subexpression ((strict (writable-cell boolean)) (validate (-> (context environment) void)) (setup (-> () void))
@@ -2126,7 +2122,7 @@
         ((setup) :forward)
         ((eval env phase)
          (const f object (read-reference ((eval :short-new-subexpression) env phase) phase))
-         (return (construct f (new argument-list (vector-of object) (list-set-of named-argument)) phase)))))
+         (return (construct f (vector-of object) phase)))))
     
     (rule :short-new-subexpression ((validate (-> (context environment) void)) (setup (-> () void))
                                     (eval (-> (environment phase) obj-or-ref)))
@@ -2153,28 +2149,28 @@
             (:narrow limited-instance (return (& instance o)))))))
     
     
-    (define (call (this object) (a object) (args argument-list) (phase phase)) object
+    (define (call (this object) (a object) (args (vector object)) (phase phase)) object
       (case a
         (:select (union undefined null boolean general-number character string namespace compound-attribute date reg-exp package global-object)
           (throw bad-value-error))
         (:narrow class
           (return ((& call a) this args phase)))
         (:narrow simple-instance
-          (const f (union (-> (object argument-list environment phase) object) (tag none)) (& call a))
+          (const f (union (-> (object (vector object) environment phase) object) (tag none)) (& call a))
           (rwhen (in f (tag none) :narrow-false)
             (throw bad-value-error))
           (return (f this args (assert-not-in (& env a) (tag none)) phase)))
         (:narrow method-closure
           (return ((& call (& method a)) (& this a) args phase)))))
     
-    (define (construct (a object) (args argument-list) (phase phase)) object
+    (define (construct (a object) (args (vector object)) (phase phase)) object
       (case a
         (:select (union undefined null boolean general-number character string namespace compound-attribute method-closure date reg-exp package global-object)
           (throw bad-value-error))
         (:narrow class
           (return ((& construct a) args phase)))
         (:narrow simple-instance
-          (const f (union (-> (argument-list environment phase) object) (tag none)) (& construct a))
+          (const f (union (-> ((vector object) environment phase) object) (tag none)) (& construct a))
           (rwhen (in f (tag none) :narrow-false)
             (throw bad-value-error))
           (return (f args (assert-not-in (& env a) (tag none)) phase)))))
@@ -2193,81 +2189,30 @@
         ((validate cxt env) :forward)
         ((setup) :forward)
         ((eval env base phase)
-         (const args argument-list ((eval :brackets) env phase))
+         (const args (vector object) ((eval :brackets) env phase))
          (return (new bracket-reference base args)))))
     
     (rule :brackets ((validate (-> (context environment) void)) (setup (-> () void))
-                     (eval (-> (environment phase) argument-list)))
+                     (eval (-> (environment phase) (vector object))))
       (production :brackets ([ ]) brackets-none
         ((validate (cxt :unused) (env :unused)))
         ((setup) :forward)
-        ((eval (env :unused) (phase :unused)) (return (new argument-list (vector-of object) (list-set-of named-argument)))))
+        ((eval (env :unused) (phase :unused)) (return (vector-of object))))
       (production :brackets ([ (:list-expression allow-in) ]) brackets-unnamed
         ((validate cxt env) ((validate :list-expression) cxt env))
         ((setup) :forward)
-        ((eval env phase)
-         (const positional (vector object) ((eval-as-list :list-expression) env phase))
-         (return (new argument-list positional (list-set-of named-argument)))))
-      (production :brackets ([ :named-argument-list ]) brackets-named
-        ((validate cxt env) (exec ((validate :named-argument-list) cxt env)))
-        ((setup) :forward)
-        ((eval env phase) (return ((eval :named-argument-list) env phase)))))
+        ((eval env phase) (return ((eval-as-list :list-expression) env phase)))))
     
     (rule :arguments ((validate (-> (context environment) void)) (setup (-> () void))
-                      (eval (-> (environment phase) argument-list)))
-      (production :arguments (:paren-expressions) arguments-paren-expressions
-        ((validate cxt env) ((validate :paren-expressions) cxt env))
-        ((setup) :forward)
-        ((eval env phase) (return ((eval :paren-expressions) env phase))))
-      (production :arguments (\( :named-argument-list \)) arguments-named
-        ((validate cxt env) (exec ((validate :named-argument-list) cxt env)))
-        ((setup) :forward)
-        ((eval env phase) (return ((eval :named-argument-list) env phase)))))
-    
-    (rule :paren-expressions ((validate (-> (context environment) void)) (setup (-> () void))
-                              (eval (-> (environment phase) argument-list)))
-      (production :paren-expressions (\( \)) paren-expressions-none
+                      (eval (-> (environment phase) (vector object))))
+      (production :arguments (\( \)) arguments-none
         ((validate cxt env) :forward)
         ((setup) :forward)
-        ((eval (env :unused) (phase :unused)) (return (new argument-list (vector-of object) (list-set-of named-argument)))))
-      (production :paren-expressions (:paren-list-expression) paren-expressions-some
+        ((eval (env :unused) (phase :unused)) (return (vector-of object))))
+      (production :arguments (:paren-list-expression) arguments-some
         ((validate cxt env) :forward)
         ((setup) :forward)
-        ((eval env phase)
-         (const positional (vector object) ((eval-as-list :paren-list-expression) env phase))
-         (return (new argument-list positional (list-set-of named-argument))))))
-    
-    (rule :named-argument-list ((validate (-> (context environment) (list-set string))) (setup (-> () void))
-                                (eval (-> (environment phase) argument-list)))
-      (production :named-argument-list (:literal-field) named-argument-list-one
-        ((validate cxt env) (return ((validate :literal-field) cxt env)))
-        ((setup) :forward)
-        ((eval env phase)
-         (const na named-argument ((eval :literal-field) env phase))
-         (return (new argument-list (vector-of object) (list-set na)))))
-      (production :named-argument-list ((:list-expression allow-in) \, :literal-field) named-argument-list-unnamed
-        ((validate cxt env)
-         ((validate :list-expression) cxt env)
-         (return ((validate :literal-field) cxt env)))
-        ((setup) :forward)
-        ((eval env phase)
-         (const positional (vector object) ((eval-as-list :list-expression) env phase))
-         (const na named-argument ((eval :literal-field) env phase))
-         (return (new argument-list positional (list-set na)))))
-      (production :named-argument-list (:named-argument-list \, :literal-field) named-argument-list-more
-        ((validate cxt env)
-         (const names1 (list-set string) ((validate :named-argument-list) cxt env))
-         (const names2 (list-set string) ((validate :literal-field) cxt env))
-         (rwhen (nonempty (set* names1 names2))
-           (throw syntax-error))
-         (return (set+ names1 names2)))
-        ((setup) :forward)
-        ((eval env phase)
-         (const args argument-list ((eval :named-argument-list) env phase))
-         (const na named-argument ((eval :literal-field) env phase))
-         (rwhen (some (& named args) na2 (= (& name na2) (& name na) string))
-           (throw argument-mismatch-error))
-         (return (new argument-list (& positional args) (set+ (& named args) (list-set na)))))))
+        ((eval env phase) (return ((eval-as-list :paren-list-expression) env phase)))))
     (%print-actions ("Validation" validate) ("Setup" setup) ("Evaluation" eval))
     
     
@@ -4363,16 +4308,16 @@
                             (validate (-> (context environment (tag none inaccessible) boolean boolean) void))
                             (setup (-> () void))
                             (setup-override (-> (parameter-frame) void))
-                            (eval-static-call (-> (object argument-list environment phase) object))
-                            (eval-instance-call (-> (object argument-list phase) object))
-                            (eval-prototype-construct (-> (argument-list environment phase) object))
+                            (eval-static-call (-> (object (vector object) environment phase) object))
+                            (eval-instance-call (-> (object (vector object) phase) object))
+                            (eval-prototype-construct (-> ((vector object) environment phase) object))
                             (validate-static-function (-> (context environment (tag none inaccessible) boolean boolean) uninstantiated-function)))
       (production :function-common (\( :parameters \) :result :block) function-common-signatures-and-block
         (plain (and (plain :parameters) (plain :result)))
         ((validate cxt env this unchecked prototype)
          (const compile-frame parameter-frame (new parameter-frame (list-set-of local-binding) plural this unchecked prototype
-                                                   (vector-of parameter) (list-set-of named-parameter)
-                                                   none false :uninit))
+                                                   (vector-of parameter)
+                                                   none :uninit))
          (const compile-env environment (cons compile-frame env))
          (action<- (compile-frame :function-common 0) compile-frame)
          (action<- (compile-env :function-common 0) compile-env)
@@ -4430,7 +4375,7 @@
            (const initial-slots (list-set slot)
              (list-set (new slot
                          (assert-in (lookup-instance-member function-class (new qualified-name public-namespace "length") read) instance-variable)
-                         (real-to-float64 (n-fixed-parameters :parameters)))))
+                         (real-to-float64 (parameter-count :parameters)))))
            ;***** This would be better using a function that constructs the slots out of the Function type.
            (return (new uninstantiated-function function-class initial-slots false (eval-static-call :function-common 0) none (list-set-of simple-instance))))))))
 
@@ -4439,9 +4384,8 @@
                     ("Evaluation" eval-static-call eval-prototype-construct))
     
     
-    (define (assign-arguments (runtime-frame parameter-frame) (args argument-list)) void
-      (var positional (vector object) (& positional args))
-      (var named (list-set named-argument) (& named args))
+    (define (assign-arguments (runtime-frame parameter-frame) (args (vector object))) void
+      (var n integer 0)
       (// "This procedure performs a number of checks on the arguments, including checking their count, names, and values. "
           "Although this procedure performs these checks in a specific order for expository purposes, an implementation may perform these checks in a different "
           "order, which could have the effect of reporting a different error if there are multiple errors. "
@@ -4451,194 +4395,86 @@
       (when (& unchecked runtime-frame)
         ;***** Create arguments array
         (todo))
-      (for-each (&opt positional runtime-frame) parameter
+      (for-each (&opt parameters runtime-frame) parameter
         (var argument object-opt)
         (cond
-         ((empty positional)
+         ((= n (length args))
           (<- argument (& default parameter))
           (rwhen (in argument (tag none))
             (throw argument-mismatch-error)))
          (nil
-          (<- argument (nth positional 0))
-          (<- positional (subseq positional 1))))
+          (<- argument (nth args n))
+          (<- n (+ n 1))))
         (write-local-member (& var parameter) (assert-not-in argument (tag none)) run))
-      (for-each (&opt named runtime-frame) parameter
-        (var argument object)
-        (reserve na)
-        (cond
-         ((some named na (= (& name na) (& name parameter) string) :define-true)
-          (<- argument (& value na))
-          (<- named (set- named (list-set na))))
-         (nil
-          (<- argument (& default parameter))))
-        (write-local-member (& var parameter) argument run))
       (const rest (union variable (tag none)) (&opt rest runtime-frame))
       (cond
        ((in rest (tag none) :narrow-false)
-        (rwhen (or (nonempty positional) (nonempty named))
+        (rwhen (/= n (length args))
           (throw argument-mismatch-error)))
        (nil
-        (rwhen (and (nonempty named) (not (& rest-allows-names runtime-frame)))
-          (throw argument-mismatch-error))
         (todo))))
     
     
-    (rule :parameters ((plain boolean) (n-fixed-parameters integer)
+    (rule :parameters ((plain boolean) (parameter-count integer)
                        (validate (-> (context environment parameter-frame) void))
                        (setup (-> (environment parameter-frame) void))
                        (setup-override (-> (environment parameter-frame parameter-frame) void)))
       (production :parameters () parameters-none
         (plain true)
-        (n-fixed-parameters 0)
+        (parameter-count 0)
         ((validate cxt env compile-frame) :forward)
         ((setup compile-env compile-frame) :forward)
-        ((setup-override (compile-env :unused) compile-frame overridden-signature)
-         (rwhen (or (nonempty (&opt positional overridden-signature))
-                    (nonempty (&opt named overridden-signature))
+        ((setup-override (compile-env :unused) (compile-frame :unused) overridden-signature)
+         (rwhen (or (nonempty (&opt parameters overridden-signature))
                     (not-in (&opt rest overridden-signature) (tag none)))
            (throw definition-error))))
-      (production :parameters (:all-parameters) parameters-all-parameters
-        (plain (plain :all-parameters))
-        (n-fixed-parameters (n-fixed-parameters :all-parameters))
+      (production :parameters (:nonempty-parameters) parameters-nonempty
+        (plain (plain :nonempty-parameters))
+        (parameter-count (parameter-count :nonempty-parameters))
         ((validate cxt env compile-frame) :forward)
         ((setup compile-env compile-frame) :forward)
         ((setup-override compile-env compile-frame overridden-signature)
-         ((setup-override :all-parameters) compile-env compile-frame overridden-signature (&opt positional overridden-signature)))))
+         ((setup-override :nonempty-parameters) compile-env compile-frame overridden-signature (&opt parameters overridden-signature)))))
     
     
-    (rule :all-parameters ((plain boolean) (n-fixed-parameters integer)
-                           (validate (-> (context environment parameter-frame) void))
-                           (setup (-> (environment parameter-frame) void))
-                           (setup-override (-> (environment parameter-frame parameter-frame (vector parameter)) void)))
-      (production :all-parameters (:parameter) all-parameters-parameter
-        (plain (plain :parameter))
-        (n-fixed-parameters 1)
-        ((validate cxt env compile-frame) :forward)
-        ((setup compile-env compile-frame)
-         ((setup :parameter) compile-env compile-frame none))
-        ((setup-override compile-env compile-frame overridden-signature overridden-positional)
-         (rwhen (empty overridden-positional)
-           (throw definition-error))
-         ((setup-override :parameter) compile-env compile-frame none (nth overridden-positional 0))
-         (rwhen (or (/= (length overridden-positional) 1)
-                    (nonempty (&opt named overridden-signature))
-                    (not-in (&opt rest overridden-signature) (tag none)))
-           (throw definition-error))))
-      (production :all-parameters (:parameter \, :all-parameters) all-parameters-parameter-and-more
-        (plain (and (plain :parameter) (plain :all-parameters)))
-        (n-fixed-parameters (+ 1 (n-fixed-parameters :all-parameters)))
-        ((validate cxt env compile-frame) :forward)
-        ((setup compile-env compile-frame)
-         ((setup :parameter) compile-env compile-frame none)
-         ((setup :all-parameters) compile-env compile-frame))
-        ((setup-override compile-env compile-frame overridden-signature overridden-positional)
-         (rwhen (empty overridden-positional)
-           (throw definition-error))
-         ((setup-override :parameter) compile-env compile-frame none (nth overridden-positional 0))
-         ((setup-override :all-parameters) compile-env compile-frame overridden-signature (subseq overridden-positional 1))))
-      (production :all-parameters (:optional-parameters) all-parameters-optional-parameters
-        (plain false)
-        (n-fixed-parameters (n-fixed-parameters :optional-parameters))
-        ((validate cxt env compile-frame) :forward)
-        ((setup compile-env compile-frame)
-         ((setup :optional-parameters) compile-env compile-frame))
-        ((setup-override compile-env compile-frame overridden-signature overridden-positional)
-         ((setup-override :optional-parameters) compile-env compile-frame overridden-signature overridden-positional))))
-    
-    
-    (rule :optional-parameters ((n-fixed-parameters integer)
+    (rule :nonempty-parameters ((plain boolean) (parameter-count integer)
                                 (validate (-> (context environment parameter-frame) void))
                                 (setup (-> (environment parameter-frame) void))
                                 (setup-override (-> (environment parameter-frame parameter-frame (vector parameter)) void)))
-      (production :optional-parameters (:optional-parameter) optional-parameters-optional-parameter
-        (n-fixed-parameters 1)
+      (production :nonempty-parameters (:parameter-init) nonempty-parameters-parameter-init
+        (plain (plain :parameter-init))
+        (parameter-count 1)
         ((validate cxt env compile-frame) :forward)
         ((setup compile-env compile-frame) :forward)
-        ((setup-override compile-env compile-frame overridden-signature overridden-positional)
-         (rwhen (empty overridden-positional)
+        ((setup-override compile-env compile-frame overridden-signature overridden-parameters)
+         (rwhen (empty overridden-parameters)
            (throw definition-error))
-         ((setup-override :optional-parameter) compile-env compile-frame (nth overridden-positional 0))
-         (rwhen (or (/= (length overridden-positional) 1)
-                    (nonempty (&opt named overridden-signature))
+         ((setup-override :parameter-init) compile-env compile-frame (nth overridden-parameters 0))
+         (rwhen (or (/= (length overridden-parameters) 1)
                     (not-in (&opt rest overridden-signature) (tag none)))
            (throw definition-error))))
-      (production :optional-parameters (:optional-parameter \, :optional-parameters) optional-parameters-optional-parameter-and-more
-        (n-fixed-parameters (+ 1 (n-fixed-parameters :optional-parameters)))
+      (production :nonempty-parameters (:parameter-init \, :nonempty-parameters) nonempty-parameters-parameter-init-and-more
+        (plain (and (plain :parameter-init) (plain :nonempty-parameters)))
+        (parameter-count (+ 1 (parameter-count :nonempty-parameters)))
         ((validate cxt env compile-frame) :forward)
         ((setup compile-env compile-frame) :forward)
-        ((setup-override compile-env compile-frame overridden-signature overridden-positional)
-         (rwhen (empty overridden-positional)
+        ((setup-override compile-env compile-frame overridden-signature overridden-parameters)
+         (rwhen (empty overridden-parameters)
            (throw definition-error))
-         ((setup-override :optional-parameter) compile-env compile-frame (nth overridden-positional 0))
-         ((setup-override :optional-parameters) compile-env compile-frame overridden-signature (subseq overridden-positional 1))))
-      (production :optional-parameters (:rest-and-named-parameters) optional-parameters-rest-and-named-parameters
-        (n-fixed-parameters 0)
+         ((setup-override :parameter-init) compile-env compile-frame (nth overridden-parameters 0))
+         ((setup-override :nonempty-parameters) compile-env compile-frame overridden-signature (subseq overridden-parameters 1))))
+      (production :nonempty-parameters (:rest-parameter) nonempty-parameters-rest-parameter
+        (plain false)
+        (parameter-count 0)
         ((validate cxt env compile-frame) :forward)
         ((setup compile-env compile-frame) :forward)
-        ((setup-override compile-env compile-frame overridden-signature overridden-positional)
-         (rwhen (nonempty overridden-positional)
+        ((setup-override compile-env compile-frame overridden-signature overridden-parameters)
+         (rwhen (nonempty overridden-parameters)
            (throw definition-error))
-         ((setup-override :rest-and-named-parameters) compile-env compile-frame overridden-signature))))
-    
-    
-    (rule :rest-and-named-parameters ((validate (-> (context environment parameter-frame) void))
-                                      (setup (-> (environment parameter-frame) void))
-                                      (setup-override (-> (environment parameter-frame parameter-frame) void)))
-      (production :rest-and-named-parameters (:named-parameters) rest-and-named-parameters-named-parameters
-        ((validate cxt env compile-frame) :forward)
-        ((setup compile-env compile-frame) :forward)
-        ((setup-override compile-env compile-frame overridden-signature)
-         (rwhen (not-in (&opt rest overridden-signature) (tag none))
+         (const overridden-rest (union variable (tag none)) (&opt rest overridden-signature))
+         (rwhen (in overridden-rest (tag none) :narrow-false)
            (throw definition-error))
-         ((setup-override :named-parameters) compile-env compile-frame (&opt named overridden-signature))))
-      (production :rest-and-named-parameters (:rest-parameter) rest-and-named-parameters-rest-parameter
-        ((validate cxt env compile-frame) :forward)
-        ((setup compile-env compile-frame) :forward)
-        ((setup-override compile-env compile-frame overridden-signature)
-         (const rest (union variable (tag none)) (&opt rest overridden-signature))
-         (rwhen (or (in rest (tag none) :narrow-false)
-                    (& rest-allows-names overridden-signature)
-                    (nonempty (&opt named overridden-signature)))
-           (throw definition-error))
-         ((setup-override :rest-parameter) compile-env compile-frame rest)))
-      (production :rest-and-named-parameters (:rest-parameter \, :named-parameters) rest-and-named-parameters-rest-and-named-parameters
-        ((validate cxt env compile-frame) :forward)
-        ((setup compile-env compile-frame) :forward)
-        ((setup-override compile-env compile-frame overridden-signature)
-         (const rest (union variable (tag none)) (&opt rest overridden-signature))
-         (rwhen (or (in rest (tag none) :narrow-false)
-                    (& rest-allows-names overridden-signature))
-           (throw definition-error))
-         ((setup-override :rest-parameter) compile-env compile-frame rest)
-         ((setup-override :named-parameters) compile-env compile-frame (&opt named overridden-signature))))
-      (production :rest-and-named-parameters (:named-rest-parameter) rest-and-named-parameters-named-rest-parameter
-        ((validate cxt env compile-frame) :forward)
-        ((setup compile-env compile-frame) :forward)
-        ((setup-override compile-env compile-frame overridden-signature)
-         (const rest (union variable (tag none)) (&opt rest overridden-signature))
-         (rwhen (or (in rest (tag none) :narrow-false)
-                    (not (& rest-allows-names overridden-signature))
-                    (nonempty (&opt named overridden-signature)))
-           (throw definition-error))
-         ((setup-override :named-rest-parameter) compile-env compile-frame rest))))
-    
-    
-    (rule :named-parameters ((validate (-> (context environment parameter-frame) void))
-                             (setup (-> (environment parameter-frame) void))
-                             (setup-override (-> (environment parameter-frame (list-set named-parameter)) void)))
-      (production :named-parameters (:named-parameter) named-parameters-named-parameter
-        ((validate cxt env compile-frame) :forward)
-        ((setup compile-env compile-frame) :forward)
-        ((setup-override compile-env compile-frame overridden-named)
-         (const remaining-named (list-set named-parameter) ((setup-override :named-parameter) compile-env compile-frame overridden-named))
-         (rwhen (nonempty remaining-named)
-           (throw definition-error))))
-      (production :named-parameters (:named-parameter \, :named-parameters) named-parameters-named-parameter-and-more
-        ((validate cxt env compile-frame) :forward)
-        ((setup compile-env compile-frame) :forward)
-        ((setup-override compile-env compile-frame overridden-named)
-         (const remaining-named (list-set named-parameter) ((setup-override :named-parameter) compile-env compile-frame overridden-named))
-         ((setup-override :named-parameters) compile-env compile-frame remaining-named))))
+         ((setup-override :rest-parameter) compile-env compile-frame overridden-rest))))
     
     
     (rule :parameter-core ((plain boolean)
@@ -4661,6 +4497,9 @@
            (exec (define-local-member env name (list-set public-namespace) none false read-write v))))
          (action<- (compile-var :parameter-core 0) v))
         ((setup compile-env compile-frame default)
+         (rwhen (and (in default (tag none)) (some (&opt parameters compile-frame) p2 (not-in (& default p2) (tag none))))
+           (note "A required parameter cannot follow an optional one.")
+           (throw definition-error))
          (const v (union dynamic-var variable) (compile-var :parameter-core 0))
          (case v
            (:select dynamic-var)
@@ -4671,8 +4510,14 @@
              (&= type v (assert-not-in type (tag none)))
              (&= value v uninitialised)))
          (const p parameter (new parameter v default))
-         (&= positional compile-frame (append (&opt positional compile-frame) (vector p))))
+         (&= parameters compile-frame (append (&opt parameters compile-frame) (vector p))))
         ((setup-override compile-env compile-frame default overridden-parameter)
+         (var new-default object-opt default)
+         (when (in new-default (tag none))
+           (<- new-default (& default overridden-parameter)))
+         (rwhen (and (in default (tag none)) (some (&opt parameters compile-frame) p2 (not-in (& default p2) (tag none))))
+           (note "A required parameter cannot follow an optional one.")
+           (throw definition-error))
          (const v (union dynamic-var variable) (compile-var :parameter-core 0))
          (assert (not-in v dynamic-var :narrow-true))
          (var type class-opt ((setup-and-eval :typed-identifier) compile-env))
@@ -4682,11 +4527,8 @@
            (throw definition-error))
          (&= type v (assert-not-in type (tag none)))
          (&= value v uninitialised)
-         (var new-default object-opt default)
-         (when (in new-default (tag none))
-           (<- new-default (& default overridden-parameter)))
          (const p parameter (new parameter v new-default))
-         (&= positional compile-frame (append (&opt positional compile-frame) (vector p))))))
+         (&= parameters compile-frame (append (&opt parameters compile-frame) (vector p))))))
 
 
     (rule :parameter ((plain boolean)
@@ -4708,10 +4550,20 @@
         ((setup-override compile-env compile-frame default overridden-parameter) :forward)))
     
     
-    (rule :optional-parameter ((validate (-> (context environment parameter-frame) void))
-                               (setup (-> (environment parameter-frame) void))
-                               (setup-override (-> (environment parameter-frame parameter) void)))
-      (production :optional-parameter (:parameter = (:assignment-expression allow-in)) optional-parameter-assignment-expression
+    (rule :parameter-init ((plain boolean)
+                           (validate (-> (context environment parameter-frame) void))
+                           (setup (-> (environment parameter-frame) void))
+                           (setup-override (-> (environment parameter-frame parameter) void)))
+      (production :parameter-init (:parameter) parameter-init-parameter
+        (plain (plain :parameter))
+        ((validate cxt env compile-frame)
+         ((validate :parameter) cxt env compile-frame))
+        ((setup compile-env compile-frame)
+         ((setup :parameter) compile-env compile-frame none))
+        ((setup-override compile-env compile-frame overridden-parameter)
+         ((setup-override :parameter) compile-env compile-frame none overridden-parameter)))
+      (production :parameter-init (:parameter = (:assignment-expression allow-in)) parameter-init-initialiser
+        (plain false)
         ((validate cxt env compile-frame)
          ((validate :parameter) cxt env compile-frame)
          ((validate :assignment-expression) cxt env))
@@ -4725,38 +4577,6 @@
          ((setup-override :parameter) compile-env compile-frame default overridden-parameter))))
     
     
-    (rule :named-parameter-core ((validate (-> (context environment parameter-frame boolean) void))
-                                 (setup (-> (environment parameter-frame) void))
-                                 (setup-override (-> (environment parameter-frame (list-set named-parameter)) (list-set named-parameter))))
-      (production :named-parameter-core ((:typed-identifier allow-in) = (:assignment-expression allow-in)) named-parameter-core-assignment-expression
-        ((validate (cxt :unused) (env :unused) (compile-frame :unused) (immutable :unused)) (todo))
-        ((setup (compile-env :unused) (compile-frame :unused)) (todo))
-        ((setup-override (compile-env :unused) (compile-frame :unused) (overridden-named :unused)) (todo))))
-    
-    
-    (rule :named-parameter ((validate (-> (context environment parameter-frame) void))
-                            (setup (-> (environment parameter-frame) void))
-                            (setup-override (-> (environment parameter-frame (list-set named-parameter)) (list-set named-parameter))))
-      (production :named-parameter (named :named-parameter-core) named-parameter-named-named-parameter-core
-        ((validate cxt env compile-frame)
-         ((validate :named-parameter-core) cxt env compile-frame false))
-        ((setup compile-env compile-frame) :forward)
-        ((setup-override compile-env compile-frame overridden-named)
-         (return ((setup-override :named-parameter-core) compile-env compile-frame overridden-named))))
-      (production :named-parameter (const named :named-parameter-core) named-parameter-const-named-named-parameter-core
-        ((validate cxt env compile-frame)
-         ((validate :named-parameter-core) cxt env compile-frame true))
-        ((setup compile-env compile-frame) :forward)
-        ((setup-override compile-env compile-frame overridden-named)
-         (return ((setup-override :named-parameter-core) compile-env compile-frame overridden-named))))
-      (production :named-parameter (named const :named-parameter-core) named-parameter-named-const-named-parameter-core
-        ((validate cxt env compile-frame)
-         ((validate :named-parameter-core) cxt env compile-frame true))
-        ((setup compile-env compile-frame) :forward)
-        ((setup-override compile-env compile-frame overridden-named)
-         (return ((setup-override :named-parameter-core) compile-env compile-frame overridden-named)))))
-    
-    
     (rule :rest-parameter ((validate (-> (context environment parameter-frame) void))
                            (setup (-> (environment parameter-frame) void))
                            (setup-override (-> (environment parameter-frame variable) void)))
@@ -4765,23 +4585,6 @@
         ((setup (compile-env :unused) (compile-frame :unused)) (todo))
         ((setup-override (compile-env :unused) (compile-frame :unused) (overridden-rest :unused)) (todo)))
       (production :rest-parameter (\.\.\. :parameter) rest-parameter-parameter
-        ((validate (cxt :unused) (env :unused) (compile-frame :unused)) (todo))
-        ((setup (compile-env :unused) (compile-frame :unused)) (todo))
-        ((setup-override (compile-env :unused) (compile-frame :unused) (overridden-rest :unused)) (todo))))
-    
-    
-    (rule :named-rest-parameter ((validate (-> (context environment parameter-frame) void))
-                                 (setup (-> (environment parameter-frame) void))
-                                 (setup-override (-> (environment parameter-frame variable) void)))
-      (production :named-rest-parameter (\.\.\. named :identifier) named-rest-parameter-named-identifier
-        ((validate (cxt :unused) (env :unused) (compile-frame :unused)) (todo))
-        ((setup (compile-env :unused) (compile-frame :unused)) (todo))
-        ((setup-override (compile-env :unused) (compile-frame :unused) (overridden-rest :unused)) (todo)))
-      (production :named-rest-parameter (\.\.\. const named :identifier) named-rest-parameter-const-named-identifier
-        ((validate (cxt :unused) (env :unused) (compile-frame :unused)) (todo))
-        ((setup (compile-env :unused) (compile-frame :unused)) (todo))
-        ((setup-override (compile-env :unused) (compile-frame :unused) (overridden-rest :unused)) (todo)))
-      (production :named-rest-parameter (\.\.\. named const :identifier) named-rest-parameter-named-const-identifier
         ((validate (cxt :unused) (env :unused) (compile-frame :unused)) (todo))
         ((setup (compile-env :unused) (compile-frame :unused)) (todo))
         ((setup-override (compile-env :unused) (compile-frame :unused) (overridden-rest :unused)) (todo))))
@@ -4810,7 +4613,7 @@
          (&const= return-type compile-frame t)))
       ;(production :result ((:- {) (:type-expression allow-in)) result-type-expression)
       )
-    (%print-actions ("Validation" plain n-fixed-parameters compile-var validate) ("Setup" setup setup-override))
+    (%print-actions ("Validation" plain parameter-count compile-var validate) ("Setup" setup setup-override))
     
     
     (%heading 2 "Class Definition")
@@ -4826,9 +4629,9 @@
          (var a compound-attribute (to-compound-attribute attr))
          (rwhen (or (not (& complete superclass)) (& final superclass))
            (throw definition-error))
-         (function (call (this object :unused) (args argument-list :unused) (phase phase :unused)) object
+         (function (call (this object :unused) (args (vector object) :unused) (phase phase :unused)) object
            (todo))
-         (function (construct (args argument-list :unused) (phase phase :unused)) object
+         (function (construct (args (vector object) :unused) (phase phase :unused)) object
            (todo))
          (var prototype object null)
          (when (& prototype a)
@@ -4940,9 +4743,9 @@
     
     (%heading (1 :semantics) "Built-in Classes")
     (define (make-built-in-class (superclass class-opt) (typeof-string string) (dynamic boolean) (allow-null boolean) (final boolean) (default-value object)) class
-      (function (call (this object :unused) (args argument-list :unused) (phase phase :unused)) object
+      (function (call (this object :unused) (args (vector object) :unused) (phase phase :unused)) object
         (todo))
-      (function (construct (args argument-list :unused) (phase phase :unused)) object
+      (function (construct (args (vector object) :unused) (phase phase :unused)) object
         (todo))
       (function (implicit-coerce (o object :unused) (silent boolean :unused)) object
         (todo))
@@ -4957,9 +4760,9 @@
       (return c))
     
     (define (make-built-in-integer-class (low integer) (high integer)) class
-      (function (call (this object :unused) (args argument-list :unused) (phase phase :unused)) object
+      (function (call (this object :unused) (args (vector object) :unused) (phase phase :unused)) object
         (todo))
-      (function (construct (args argument-list :unused) (phase phase :unused)) object
+      (function (construct (args (vector object) :unused) (phase phase :unused)) object
         (todo))
       (function (is-instance-of (o object)) boolean
         (if (in o float64 :narrow-true)
