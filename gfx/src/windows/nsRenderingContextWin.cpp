@@ -870,7 +870,10 @@ void nsRenderingContextWin :: SetFont(nsIFontMetrics *aFontMetrics)
 const nsFont& nsRenderingContextWin :: GetFont()
 {
   const nsFont* font;
-  mFontMetrics->GetFont(font);
+
+  if (nsnull != mFontMetrics)
+    mFontMetrics->GetFont(font);
+
   return *font;
 }
 
@@ -1288,13 +1291,18 @@ nsRenderingContextWin :: GetWidth(const char* aString,
                                   PRUint32 aLength,
                                   nscoord& aWidth)
 {
-  SIZE  size;
+  if (nsnull != mFontMetrics)
+  {
+    SIZE  size;
 
-  SetupFontAndColor();
-  ::GetTextExtentPoint32(mDC, aString, aLength, &size);
-  aWidth = NSToCoordRound(float(size.cx) * mP2T);
+    SetupFontAndColor();
+    ::GetTextExtentPoint32(mDC, aString, aLength, &size);
+    aWidth = NSToCoordRound(float(size.cx) * mP2T);
 
-  return NS_OK;
+    return NS_OK;
+  }
+  else
+    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -1308,13 +1316,18 @@ nsRenderingContextWin :: GetWidth(const PRUnichar *aString,
                                   PRUint32 aLength,
                                   nscoord &aWidth)
 {
-  SIZE  size;
+  if (nsnull != mFontMetrics)
+  {
+    SIZE  size;
 
-  SetupFontAndColor();
-  ::GetTextExtentPoint32W(mDC, aString, aLength, &size);
-  aWidth = NSToCoordRound(float(size.cx) * mP2T);
+    SetupFontAndColor();
+    ::GetTextExtentPoint32W(mDC, aString, aLength, &size);
+    aWidth = NSToCoordRound(float(size.cx) * mP2T);
 
-  return NS_OK;
+    return NS_OK;
+  }
+  else
+    return NS_ERROR_FAILURE;
 }
 
 void nsRenderingContextWin :: DrawString(const char *aString, PRUint32 aLength,
@@ -1328,31 +1341,41 @@ void nsRenderingContextWin :: DrawString(const char *aString, PRUint32 aLength,
 	mTMatrix->TransformCoord(&x,&y);
   ::ExtTextOut(mDC,x,y,0,NULL,aString,aLength,NULL);
 
-  PRUint8 decorations = GetFont().decorations;
-  if (decorations & NS_FONT_DECORATION_OVERLINE) {
-    nscoord offset;
-    nscoord size;
-    mFontMetrics->GetUnderline(offset, size);
-    FillRect(aX, aY, aWidth, size);
+  if (nsnull != mFontMetrics)
+  {
+    PRUint8 decorations = GetFont().decorations;
+
+    if (decorations & NS_FONT_DECORATION_OVERLINE)
+    {
+      nscoord offset;
+      nscoord size;
+      mFontMetrics->GetUnderline(offset, size);
+      FillRect(aX, aY, aWidth, size);
+    }
   }
 }
 
 void nsRenderingContextWin :: DrawString(const PRUnichar *aString, PRUint32 aLength,
                                          nscoord aX, nscoord aY, nscoord aWidth)
 {
-	int		x = aX;
+  int		x = aX;
   int   y = aY;
 
   SetupFontAndColor();
 	mTMatrix->TransformCoord(&x,&y);
   ::ExtTextOutW(mDC,x,y,0,NULL,aString,aLength,NULL);
 
-  PRUint8 decorations = GetFont().decorations;
-  if (decorations & NS_FONT_DECORATION_OVERLINE) {
-    nscoord offset;
-    nscoord size;
-    mFontMetrics->GetUnderline(offset, size);
-    FillRect(aX, aY, aWidth, size);
+  if (nsnull != mFontMetrics)
+  {
+    PRUint8 decorations = GetFont().decorations;
+
+    if (decorations & NS_FONT_DECORATION_OVERLINE)
+    {
+      nscoord offset;
+      nscoord size;
+      mFontMetrics->GetUnderline(offset, size);
+      FillRect(aX, aY, aWidth, size);
+    }
   }
 }
 
@@ -1487,7 +1510,8 @@ HBRUSH nsRenderingContextWin :: SetupSolidBrush(void)
 
 void nsRenderingContextWin :: SetupFontAndColor(void)
 {
-  if ((mFontMetrics != mCurrFontMetrics) || (NULL == mCurrFontMetrics))
+  if (((mFontMetrics != mCurrFontMetrics) || (NULL == mCurrFontMetrics)) &&
+      (nsnull != mFontMetrics))
   {
     nsFontHandle  fontHandle;
     mFontMetrics->GetFontHandle(fontHandle);
@@ -1500,7 +1524,8 @@ void nsRenderingContextWin :: SetupFontAndColor(void)
 //printf("fonts: %d\n", ++numfont);
   }
 
-  if (mCurrentColor != mCurrTextColor) {
+  if (mCurrentColor != mCurrTextColor)
+  {
     ::SetTextColor(mDC, PALETTERGB_COLORREF(mColor));
     mStates->mTextColor = mCurrTextColor = mCurrentColor;
   }
@@ -1531,7 +1556,6 @@ HPEN nsRenderingContextWin :: SetupPen()
     default:
       pen = SetupSolidPen();
       break;
-
   }
 
   return pen;
