@@ -579,9 +579,11 @@ $(LIBRARY)(%.o): %.o
 $(LIBRARY:%.a=.%.timestamp) :
 	@touch $@
 
+ifneq (, $(LIBRARY))
 AR_FILES_TO_REMOVE := $(filter-out \
 	$(filter %.o, $(LIBRARY)($(OBJS) $(LOBJS)) ), \
 	$(shell [ -f $(LIBRARY) ] && $(AR_LIST) $(LIBRARY)))
+endif
 
 $(LIBRARY): $(LIBRARY)($(OBJS) $(LOBJS)) $(LIBRARY:%.a=.%.timestamp) Makefile.in Makefile
 	@touch $(LIBRARY:%.a=.%.timestamp)
