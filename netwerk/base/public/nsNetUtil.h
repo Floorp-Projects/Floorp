@@ -187,7 +187,7 @@ NS_NewPostDataStream(PRBool isFile, const char *data, PRUint32 encodeFlags,
 inline nsresult
 NS_NewInputStreamChannel(nsIURI* uri,
                          const char* contentType, 
-                         PRUint32 contentLength,
+                         PRInt32 contentLength,
                          nsIInputStream* inStr,
                          nsILoadGroup* group,
                          nsIInterfaceRequestor* notificationCallbacks,
