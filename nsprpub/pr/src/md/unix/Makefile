@@ -242,7 +242,7 @@ $(SHARED_LIBRARY): $(ULTRASPARC_ASOBJS)
 	$(INSTALL) -m 444 $(SHARED_LIBRARY) $(DIST)/lib
 
 $(ULTRASPARC_ASOBJS): $(ULTRASPARC_ASFILES)
-	/usr/ccs/bin/as -o $@ -K PIC -P -D_ASM -D__STDC__=0 -xarch=v8plus $(ULTRASPARC_ASFILES)
+	/usr/ccs/bin/as -o $@ -K PIC -P -D_ASM -D__STDC__=0 -xarch=v8plus $<
 endif
 endif
 endif
