@@ -62,6 +62,7 @@ LLIBS =                                \
         $(DIST)\lib\jsdomevents_s.lib    \
         $(DIST)\lib\raptorbase.lib     \
         $(LIBNSPR)                     \
+        $(DIST)\lib\plc3.lib           \
         $(NULL)
 
 
