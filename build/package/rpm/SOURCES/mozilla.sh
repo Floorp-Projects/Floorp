@@ -90,6 +90,15 @@ set_jvm_vars() {
     fi
 
     JVM_LINK=`readlink /usr/lib/mozilla/plugins/libjavaplugin_oji.so`
+
+    # is it relative?  if so append the full path
+
+    echo "${JVM_LINK}" | grep -e "^/"
+
+    if [ "$?" -ne "0" ]; then
+	JVM_LINK=/usr/lib/mozilla/plugins/${JVM_LINK}
+    fi
+
     JVM_BASE=`basename $JVM_LINK`
     JVM_DIR=`echo $JVM_LINK | sed -e s/$JVM_BASE//g`
     JVM_DIR=${JVM_DIR}../../../bin/
