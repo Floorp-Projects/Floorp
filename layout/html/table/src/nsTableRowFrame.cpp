@@ -199,7 +199,7 @@ nsTableRowFrame::DidResize(nsIPresContext& aPresContext,
         // resize the cell's height
         nsSize  cellFrameSize;
         cellFrame->GetSize(cellFrameSize);
-        if (cellFrameSize.height!=cellHeight)
+        //if (cellFrameSize.height!=cellHeight)
         {
           cellFrame->SizeTo(cellFrameSize.width, cellHeight);
           if (gsDebug) printf("given height %d\n", cellHeight);
@@ -209,7 +209,10 @@ nsTableRowFrame::DidResize(nsIPresContext& aPresContext,
                                            aReflowState, nsSize(cellFrameSize.width, cellHeight),
                                            eReflowReason_Resize);
           nsReflowStatus status;
-          ReflowChild(cellFrame, aPresContext, desiredSize, kidReflowState, status);
+          //XXX: the following reflow is necessary for any content of the cell
+          //     whose height is a percent of the cell's height (maybe indirectly.)
+          //     But some content crashes when this reflow is issued, to be investigated
+          //ReflowChild(cellFrame, aPresContext, desiredSize, kidReflowState, status);
           ((nsTableCellFrame *)cellFrame)->VerticallyAlignChild();
         }
       }
