@@ -143,7 +143,7 @@
 <!ENTITY selectAllCmd.key         "A">  
 <!ENTITY selectAllCmd.accesskey       "A"> 
 <!ENTITY preferencesCmd.label       "Options">
-<!ENTITY preferencesCmd.accesskey     "o"> 
+<!ENTITY preferencesCmd.accesskey     "O"> 
 
 <!ENTITY viewMenu.label         "View"> 
 <!ENTITY viewMenu.accesskey       "V"> 
