@@ -437,11 +437,7 @@ public class ScriptRuntime {
         }
 
         if (base != 10) {
-            /* Monkey see, Rhino do */
-            if (d < 0)
-                return "-" + Long.toString( ((long)-d) & 0xFFFFFFFFL, base);
-            else
-                return Long.toString( ((long)d) & 0xFFFFFFFFL, base);
+            return DToA.JS_dtobasestr(base, d);
         }
         else {
             // Okay, this is gross. But Java doesn't seem to have any number
@@ -2136,6 +2132,7 @@ public class ScriptRuntime {
     }
 
     static boolean hasProp(Scriptable start, String name) {
+
         Scriptable m = start;
         do {
             if (m.has(name, start))
