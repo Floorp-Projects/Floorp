@@ -50,7 +50,7 @@ Rights Reserved.
 				<menulist id="currentserver" value="...">
 					<menupopup>
 						<menuitem value="news.mozilla.org" uri="news://news.mozilla.org" />
-						<menuitem value="news.fresmeat.net" uri="news://news.freshmeant.net" />
+						<menuitem value="news.fresmeat.net" uri="news://news.freshmeat.net" />
 						<menuitem value="news.mcom.com" uri="news://news.mcom.com" />
 <!--
 					<menupopup datasources="rdf:msgaccountmanager" ref="msgaccounts:/">
@@ -84,7 +84,7 @@ Rights Reserved.
 					<treerow>
 						<treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Name"/>
 						<treecell value="rdf:http://home.netscape.com/NC-rdf#Subscribed"/>
-						<treecell value="rdf:http://home.netscape.com/NC-rdf#Count"/>
+						<treecell value="rdf:http://home.netscape.com/NC-rdf#TotalMessages"/>
 					</treerow>
 				</treeitem>
 			</treechildren>
@@ -94,7 +94,7 @@ Rights Reserved.
 	<treecolgroup id="theSubscribeColumns">
 		<treecol width="8*" id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
 		<treecol width="1*" id="SubscribedColumn" rdf:resource="http://home.netscape.com/NC-rdf#Subscribed"/>
-		<treecol width="1*" id="CountColumn" rdf:resource="http://home.netscape.com/NC-rdf#Count"/>
+		<treecol width="1*" id="TotalMessagesColumn" rdf:resource="http://home.netscape.com/NC-rdf#TotalMessages"/>
 	</treecolgroup>
 
 	<treehead>	
