@@ -62,18 +62,21 @@
 
 [% total_name = "Total" %]
 
-[% IF tbl_field %]
-  [%# Calculate and set up the Total table %]
-  
-  [% FOREACH tbl = tbl_names %]
-    [% FOREACH row = row_names %]
-      [% FOREACH col = col_names %]
+[% FOREACH tbl = tbl_names %]
+  [% FOREACH row = row_names %]
+    [% FOREACH col = col_names %]
+      [% data.$tbl.$col.$row  = (data.$tbl.$col.$row || 0) %]
+      
+      [% IF tbl_field %]
+        [%# Calculate values for the Total table %]
         [% data.$total_name.$col.$row = 
-           data.$total_name.$col.$row + data.$tbl.$col.$row %]
+          (data.$total_name.$col.$row || 0) + data.$tbl.$col.$row %]
       [% END %]
     [% END %]
   [% END %]
+[% END %]
   
+[% IF tbl_field %]
   [% tbl_names.push(total_name) %]
 [% END %]
 
@@ -140,8 +143,8 @@
       </td>
       [% FOREACH col = col_names %]
         [% row_total = row_total + data.$tbl.$col.$row %]
-        [% col_totals.$col = col_totals.$col + data.$tbl.$col.$row %]
         [% NEXT IF col == "" %]
+        [% col_totals.$col = col_totals.$col + data.$tbl.$col.$row %]
         
         [% col_idx = 1 - col_idx %]
         <td class="[% classes.$row_idx.$col_idx %]" align="center">

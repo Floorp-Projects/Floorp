@@ -21,7 +21,6 @@
 # Contributor(s): Gervase Markham <gerv@gerv.net>
 #                 <rdean@cambianetworks.com>
 
-use diagnostics;
 use strict;
 use lib ".";
 
@@ -92,8 +91,8 @@ my %names;
 # Read the bug data and increment the counts.
 while (MoreSQLData()) {
     my ($row, $col, $tbl) = FetchSQLData();
-    $col = "" if ($col == $columns{''});
-    $tbl = "" if ($tbl == $columns{''});
+    $col = "" if ($col eq $columns{''});
+    $tbl = "" if ($tbl eq $columns{''});
     
     $data{$tbl}{$col}{$row}++;
     $names{"col"}{$col}++;
@@ -118,6 +117,6 @@ $vars->{'buffer'} = $::buffer;
 
 # Generate and return the result from the appropriate template.
 my $format = GetFormat("reports/report", $::FORM{'format'}, $::FORM{'ctype'});
-print "Content-Type: $format->{'contenttype'}\n\n";
+print "Content-Type: $format->{'ctype'}\n\n";
 $template->process("$format->{'template'}", $vars)
   || ThrowTemplateError($template->error());
