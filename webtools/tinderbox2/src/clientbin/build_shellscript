@@ -2,7 +2,9 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# This script does not need to run under taint perl.
+# This script does not need to run under taint perl because it should
+# never be run by the web server. It should be run only by the build
+# user id which should have no priveldges.
 
 # A generic build script for tinderbox.  This script will run any
 # sequence of shell commands for building or testing an application.
@@ -33,8 +35,8 @@
 #     mozilla/webtools/tinderbox2/Contact file.
 # Contributor(s): 
 
-# $Revision: 1.18 $
-# $Date: 2003/12/23 12:51:50 $
+# $Revision: 1.19 $
+# $Date: 2004/01/07 01:47:09 $
 # $Author: kestes%walrus.com $
 # $Name:  $
 
@@ -190,10 +192,9 @@ meaningful and informative for your local environment.
 
 EXAMPLES
 
-build_shellscript --buildcf $dir/mozilla.unix.buildcf \
-		--build seamonkey:smoketest --test \
-			-- \
-		--tree treename
+/build_shellscript	--buildcf ./generic.sample.buildcf	\
+				--build construct --test 	\
+				--tree seamonkey
 
 EOF
   ;
@@ -647,7 +648,7 @@ sub system3 {
   
   # this check should be redundant but better safe than sorry
   ($child_pid) || 
-      die ("Open3() did not start: '@{$args{cmd_vec}'. $!\n");
+      die ("Open3() did not start: \'@{$args{cmd_vec}}\'. $!\n");
   
   close($fh_in) || 
     die("Could not close child stdin: $!\n");
