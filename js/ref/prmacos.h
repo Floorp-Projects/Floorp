@@ -30,6 +30,8 @@ PR_BEGIN_EXTERN_C
 
 extern void* reallocSmaller(void* block, size_t newSize);
 
+extern char* strdup(const char* str);
+
 PR_END_EXTERN_C
 
 #endif /* prmacos_h___ */
