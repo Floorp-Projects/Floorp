@@ -1132,7 +1132,7 @@ nsMsgAccountManagerDataSource::OnServerLoaded(nsIMsgIncomingServer* aServer)
     do_QueryInterface(serverFolder,&rv);
   if (NS_FAILED(rv)) return rv;
 
-#ifdef DEBUG_alecf
+#ifdef DEBUG_alecf_
   nsXPIDLCString serverUri;
   serverResource->GetValue(getter_Copies(serverUri));
   printf("nsMsgAccountmanagerDataSource::OnServerLoaded(%s)\n", (const char*)serverUri);
