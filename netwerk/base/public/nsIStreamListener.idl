@@ -119,3 +119,14 @@ interface nsIAsyncStreamListener : nsIStreamListener
     void init(in nsIStreamListener receiver,
               in nsIEventQueue eventQueue);
 };
+
+/**
+ * As data "flows" into a stream listener tee, it is copied to the output stream
+ * and then forwarded onto the real listener.
+ */
+[scriptable, uuid(fb683e76-d42b-41a4-8ae6-65a6c2b146e5)]
+interface nsIStreamListenerTee : nsIStreamListener
+{
+    void init(in nsIStreamListener listener,
+              in nsIOutputStream sink);
+};
