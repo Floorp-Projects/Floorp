@@ -486,9 +486,6 @@ void nsImageMac::ClearGWorld(GWorldPtr theGWorld)
 /** -----------------------------------------------------------------
  *	Allocate a GWorld, trying first in the heap, and then in temp mem.
  */
-#define kReserveHeapFreeSpace			(256 * 1024)
-#define kReserverHeapContigSpace	(64 * 1024)
-
 OSErr nsImageMac::AllocateGWorld(PRInt16 depth, CTabHandle colorTable, const Rect& bounds, GWorldPtr *outGWorld)
 {
 	*outGWorld = nsnull;
@@ -496,6 +493,9 @@ OSErr nsImageMac::AllocateGWorld(PRInt16 depth, CTabHandle colorTable, const Rec
 	// Quick and dirty check to make sure there is some memory available.
 	// GWorld allocations in temp mem can still fail if the heap is totally
 	// full, because some stuff is allocated in the heap
+	const long kReserveHeapFreeSpace = (256 * 1024);
+	const long kReserverHeapContigSpace	= (128 * 1024);
+	
 	long	totalSpace, contiguousSpace;
 	::PurgeSpace(&totalSpace, &contiguousSpace);		// this does not purge memory!
 	
