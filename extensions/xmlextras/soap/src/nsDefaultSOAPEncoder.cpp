@@ -44,6 +44,8 @@
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMAttr.h"
 #include "nsPrintfCString.h"
+#include "nsISOAPPropertyBagMutator.h"
+#include "nsIPropertyBag.h"
 
 NS_NAMED_LITERAL_STRING(kEmpty, "");
 
@@ -1213,8 +1215,48 @@ NS_IMETHODIMP
       return NS_OK;
     }
   }
-//  Here we have a complex value, hopefully a property bag.  Implement it later.
-  return NS_ERROR_NOT_IMPLEMENTED;
+
+//  Here we have a complex value, so produce a property bag.  Implement type-driven
+//  decoding later.
+
+  nsresult rc;
+  nsCOMPtr<nsISOAPPropertyBagMutator> c = do_CreateInstance(NS_SOAPPROPERTYBAGMUTATOR_CONTRACTID, &rc);
+  if (NS_FAILED(rc))
+    return rc;
+  nsCOMPtr<nsIDOMElement> child;
+  nsSOAPUtils::GetFirstChildElement(aSource, getter_AddRefs(child));
+  while (child != nsnull) {
+    nsAutoString name;
+    nsAutoString namespaceURI;
+    nsCOMPtr<nsIVariant>value;
+    rc = child->GetLocalName(name);
+    if (NS_FAILED(rc))
+      return rc;
+    rc = child->GetNamespaceURI(namespaceURI);
+    if (NS_FAILED(rc))
+      return rc;
+    if (!namespaceURI.IsEmpty()) {
+      return NS_ERROR_ILLEGAL_VALUE;  //  We only know how to put local values into structures.
+    }
+    rc = aEncoding->Decode(child, nsnull, aAttachments, getter_AddRefs(value));
+    if (NS_FAILED(rc))
+      return rc;
+    rc = c->AddProperty(name, value);
+    if (NS_FAILED(rc))
+      return rc;
+  }
+  nsCOMPtr<nsIPropertyBag> pb;
+  c->GetPropertyBag(getter_AddRefs(pb));
+  if (NS_FAILED(rc))
+    return rc;
+  nsCOMPtr<nsIWritableVariant > p =
+      do_CreateInstance(NS_VARIANT_CONTRACTID, &rc);
+  if (NS_FAILED(rc))
+    return rc;
+  p->SetAsInterface(NS_GET_IID(nsIPropertyBag), pb);
+  *_retval = p;
+  NS_ADDREF(*_retval);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
