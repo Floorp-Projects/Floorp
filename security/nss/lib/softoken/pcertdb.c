@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.40 2002/11/27 01:28:03 wtc%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.41 2002/12/13 19:02:13 relyea%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -2367,6 +2367,7 @@ DecodeDBSubjectEntry(certDBEntrySubject *entry, SECItem *dbentry,
     if ((eaddrlen == 0) && (tmpbuf+1 < end)) {
 	/* read in the additional email addresses */
 	entry->nemailAddrs = tmpbuf[0] << 8 | tmpbuf[1];
+	tmpbuf = tmpbuf + 2;
 	entry->emailAddrs = (char **)
 		PORT_ArenaAlloc(arena, entry->nemailAddrs * sizeof(char *));
 	if (entry->emailAddrs == NULL) {
