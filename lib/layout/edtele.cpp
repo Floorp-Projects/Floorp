@@ -5613,6 +5613,12 @@ void CEditTableCellElement::MergeCells(CEditTableCellElement* pCell)
     if( !pCell || pCell == this )
         return;
 
+    // Be sure cell is not selected
+    // We do this in cell's destructor when we delete it below,
+    //   but its contents will be moved so the wrong LO_CellStruct will
+    //   be found if we don't do this now.
+    GetEditBuffer()->SelectCell(FALSE, NULL, pCell);
+
     // Don't merge cells with only single, empty string as only element
     // Just delete the cell to be merged
     if( !pCell->IsEmpty() )

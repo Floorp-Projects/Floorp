@@ -4852,6 +4852,30 @@ Bool LO_Click(MWContext *context, int32 x, int32 y, Bool requireCaret,
                            layer);
 }
 
+/* Similar to lo_Click, but doesn't process click
+   Returns TRUE if line would be selected if user clicked here
+   We only use this in Editor, so we can assume "layer" is NULL
+*/
+Bool LO_CanSelectLine(MWContext *context, int32 x, int32 y)
+{
+    int32 doc_id;
+    lo_TopState *top_state;
+    lo_DocState *state;
+    LO_HitResult result;
+
+    doc_id = XP_DOCID(context);
+    top_state = lo_FetchTopState(doc_id);
+    if ((top_state == NULL)||(top_state->doc_state == NULL))
+    {
+        return FALSE;
+    }
+    state = top_state->doc_state;
+
+    LO_Hit(context, x, y, FALSE, &result, NULL);
+
+    return (result.lo_hitLine.region == LO_HIT_LINE_REGION_BEFORE);
+}
+
 Bool lo_ProcessClick(MWContext *context, lo_TopState *top_state, lo_DocState *state, LO_HitResult* result, Bool requireCaret, CL_Layer *layer)
 {
     switch ( result->type )

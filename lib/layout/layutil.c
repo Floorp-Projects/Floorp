@@ -3564,12 +3564,15 @@ XP_Bool lo_AllCellsSelectedInColumnOrRow( LO_CellStruct *pCell, XP_Bool bInColum
                 (!bInColumn && pCell->y == tptr->lo_any.y) )
             {
                 /* If any cell is not selected, return FALSE */
-                if( !(pCell->ele_attrmask & LO_ELE_SELECTED) )
+                if( !(tptr->lo_cell.ele_attrmask & LO_ELE_SELECTED) )
                     return FALSE;
             }
         }
-        tptr = tptr->lo_any.next;
-    } while (tptr != pLastCell); 
+        /* Edge case of only 1 cell in row/col */
+        if( tptr != pLastCell )
+            tptr = tptr->lo_any.next;
+
+    } while (tptr && tptr != pLastCell); 
 
     return TRUE;
 }

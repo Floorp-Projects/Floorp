@@ -4827,7 +4827,7 @@ XP_Bool CSizingObject::GetSizingRect(int32 xVal, int32 yVal, XP_Bool bLockAspect
         } else if( m_iStyle == ED_SIZE_ADD_COLS )
         {
             int iAddCols = iNewWidth / EDT_NEW_COL_WIDTH;
-            PR_snprintf(pMsg, 128, XP_GetString(XP_EDT_ADD_COLUMNS), iAddCols);
+            PR_snprintf(pMsg, 128, XP_GetString(XP_EDT_ADD_COLUMNS_STATUS), iAddCols);
             XP_Rect rect;
 
             // Erase all existing lines
@@ -4850,7 +4850,7 @@ XP_Bool CSizingObject::GetSizingRect(int32 xVal, int32 yVal, XP_Bool bLockAspect
         } else if(  m_iStyle == ED_SIZE_ADD_ROWS )
         {
             int iAddRows = iNewHeight / EDT_NEW_ROW_HEIGHT;
-            PR_snprintf(pMsg, 128, XP_GetString(XP_EDT_ADD_ROWS), iAddRows);
+            PR_snprintf(pMsg, 128, XP_GetString(XP_EDT_ADD_ROWS_STATUS), iAddRows);
             XP_Rect rect;
             
             // Erase all existing lines

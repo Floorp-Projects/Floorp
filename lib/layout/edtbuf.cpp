@@ -6559,12 +6559,18 @@ void CEditBuffer::MergeTableCells()
         // We are merging all selected cells
         for( int i = 1; i < iCount; i++ )
         {
+            // The "next" editor cell is always at index 1 because
+            //  we delete each "cell 1" and unselect it 
+            //  (i.e., delete pointer from m_SelectedEdCells) as we merge.
+            //  Note that corresponding LO_CellStruct was NOT deleted,
+            //   but its pointer is deleted from m_pSelectedLoCells list.
+            CEditTableCellElement *pNextCell = m_SelectedEdCells[1];
             // We must add all COLSPANs of all cells to be merged
-            pNextCellData = m_SelectedEdCells[i]->GetData();
+            pNextCellData = pNextCell->GetData();
             if( pNextCellData )
             {
                 // If y value is same, next cell is in same row, so do ColSpan
-                if( y == m_SelectedLoCells[i]->y )
+                if( y == m_SelectedLoCells[1]->y )
                 {
                     pFirstCellData->iColSpan += pNextCellData->iColSpan;
                 }
@@ -6572,13 +6578,14 @@ void CEditBuffer::MergeTableCells()
                 // If x value is same, next cell is in same col, so do RowSpan
                 // Note: This will work for strange selection sets, but if all
                 //  cells in largest bounding rect aren't selected, we can get some strange results!
-                if( x == m_SelectedLoCells[i]->x )
+                if( x == m_SelectedLoCells[1]->x )
                 {
                     pFirstCellData->iRowSpan += pNextCellData->iRowSpan;
                 }
                 EDT_FreeTableCellData(pNextCellData);
             }
-            pFirstCell->MergeCells(m_SelectedEdCells[i]);
+            // Move all contents of Next cell into First cell and delete Next cell
+            pFirstCell->MergeCells(pNextCell);
         }
     } else {
         // We are merging with just the next cell to the right
@@ -6591,7 +6598,7 @@ void CEditBuffer::MergeTableCells()
         }
         pFirstCell->MergeCells( pNextCell );
     }
-    // Set the SPAN data for the merged cell
+    // Set the COLSPAN and ROWSPAN data for the merged cell
     pFirstCell->SetData(pFirstCellData);
     EDT_FreeTableCellData(pFirstCellData);
 
@@ -6600,7 +6607,7 @@ void CEditBuffer::MergeTableCells()
     //   (else we crash in Relayout)
     SetTableInsertPoint(pFirstCell);
     
-    ClearTableAndCellSelection();
+    // Note: Only pFirstCell should now be selected
     
     // Relayout the entire table
     Relayout(pFirstCell->GetParentTable(), 0);
@@ -10098,25 +10105,25 @@ void CEditBuffer::FinishedLoad2()
     XP_Bool bIsNewDocument = EDT_IS_NEW_DOCUMENT(m_pContext)
                                     && !GetCommandLog()->InReload();
 
-    if( bIsNewDocument ){
+    if( bIsNewDocument )
+    {
+        m_bDummyCharacterAddedDuringLoad = TRUE; /* Sometimes it's a no-break space. */
         // This will call EDT_SetPageData(),
         // which calls RefreshLayout()
         FE_SetNewDocumentProperties(m_pContext);
-        m_bDummyCharacterAddedDuringLoad = TRUE; /* Sometimes it's a no-break space. */
         // Get rid of extra characters.
     }
-    RefreshLayout();
+    else
+        RefreshLayout();
 
     // Add GENERATOR meta-data. This tells us who most recently edited the doucment.
-    {
- 	    char generatorValue[300];
-	    XP_SPRINTF(generatorValue, "%.90s/%.100s [%.100s]", XP_AppCodeName, XP_AppVersion, XP_AppName);
+ 	char generatorValue[300];
+	XP_SPRINTF(generatorValue, "%.90s/%.100s [%.100s]", XP_AppCodeName, XP_AppVersion, XP_AppName);
 
-        EDT_MetaData *pData = MakeMetaData( FALSE, "GENERATOR", generatorValue);
+    EDT_MetaData *pData = MakeMetaData( FALSE, "GENERATOR", generatorValue);
 
-        SetMetaData( pData );
-        FreeMetaData( pData );
-    }
+    SetMetaData( pData );
+    FreeMetaData( pData );
 
     SetSelectionInNewDocument();
 
@@ -10985,7 +10992,7 @@ void CEditBuffer::StartSelection( int32 x, int32 y, XP_Bool doubleClick ){
     // Remove any existing table or cell selection
     // This is the best place to put this so all "normal" selection-setting
     //  clears the table selection, but it prevents moving caret without clearing table
-    ClearTableAndCellSelection();
+//    ClearTableAndCellSelection();
 
     FE_DestroyCaret(m_pContext);
     ClearMove(); // do this when moving caret and not up or down arrow
@@ -11181,8 +11188,10 @@ void CEditBuffer::ExtendSelection( int32 x, int32 y ){
         m_iCurrentOffset = 0;
         // We really did extend selection - 
         // Remove any existing table or cell selection
-        ClearTableAndCellSelection();
+//        ClearTableAndCellSelection();
      }
+     // Always clear table and cell selection
+     ClearTableAndCellSelection();
 }
 
 void CEditBuffer::ExtendSelectionElement( CEditLeafElement *pEle, int iOffset, XP_Bool bStickyAfter ){
@@ -11380,6 +11389,10 @@ void CEditBuffer::EndSelection(int32 /* x */, int32 /* y */){
 
 void CEditBuffer::EndSelection( )
 {
+    // Always clear any table and cell selection
+    // (We don't do this on mouse down now)
+    ClearTableAndCellSelection();
+
     // Clear the move just in case EndSelection is called out of order
     // (this seems to be happening in the WinFE when you click a lot.)
     // ClearMove has a side-effect of flushing the relayout timer.
@@ -12679,7 +12692,6 @@ EDT_ClipboardResult CEditBuffer::PasteHTML( IStreamIn& stream, XP_Bool /* bUndoR
 
     if ( pFirstInserted )
     {
-        CEditElement* pLast = pLastInserted->GetLastMostChild()->NextLeafAll();
         // Get the children early, because if we paste a single container,
         // it will be deleted when we merge the left edge
         CEditLeafElement* pFirstMostNewChild = pFirstInserted->GetFirstMostChild()->Leaf();
@@ -12736,11 +12748,16 @@ EDT_ClipboardResult CEditBuffer::PasteHTML( IStreamIn& stream, XP_Bool /* bUndoR
 #endif
 
         m_bNoRelayout = FALSE;
-        //FixupSpace( );
+        
+        //Fix for bug 174178. This used to be obtained before FinishedLoad,
+        // but when inserting before a single space in a table cell,
+        // that space is deleted during FinishedLoad.
+        CEditElement* pNextLeaf = pLastInserted->GetLastMostChild()->NextLeafAll();
+        
         // We need to reduce before we relayout because otherwise
         // null insert points mess up the setting of end-of-paragraph
         // marks.
-		CEditInsertPoint tmp(pLast,0);
+        CEditInsertPoint tmp(pNextLeaf,0);
 		CPersistentEditInsertPoint end2 = EphemeralToPersistent(tmp);
         Reduce( m_pRoot );
         CEditInsertPoint end3 = PersistentToEphemeral(end2);
@@ -14051,13 +14068,9 @@ ED_HitType CEditBuffer::GetTableHitRegion(int32 x, int32 y, LO_Element **ppEleme
     // Now check where in Table and Cell the cursor is over
     if (pTableElement)
     {
-        XP_Bool bCanDragTable = (!bModifierKeyPressed && (pTableElement->lo_table.ele_attrmask & LO_ELE_SELECTED));
-
         // First check for cell hit regions
         if(pCellElement)
         {
-            XP_Bool bCanDragCells = (!bModifierKeyPressed && (pCellElement->lo_cell.ele_attrmask & LO_ELE_SELECTED));
-
             // Return the cell found, even if result is ED_HIT_NONE
             if(ppElement) *ppElement = pCellElement;
             
@@ -14069,11 +14082,6 @@ ED_HitType CEditBuffer::GetTableHitRegion(int32 x, int32 y, LO_Element **ppEleme
                 if( x >= right_limit ||  // Anywhere in inter-cell space to the right of the cell
                    (y >= top_limit && y <= bottom_limit) ) // Inside cell, near right edge, excluding corners
                 {
-                    // If a selected cell - drag selection,
-                    //  except if modifier key is pressed for sizing
-                    if( bCanDragCells )
-                        return ED_HIT_DRAG_TABLE;
-                    
                     // Modifier key pressed an near right edge, excluding corners
                     return ED_HIT_SIZE_COL;
                 }
@@ -14104,12 +14112,6 @@ ED_HitType CEditBuffer::GetTableHitRegion(int32 x, int32 y, LO_Element **ppEleme
                 if( x <= right_limit )
                 {
                     // Near top border of cell, excluding corners
-
-                    // If a selected cell - drag selection,
-                    //  except if modifier key is pressed for sizing
-                    if( bCanDragCells )
-                        return ED_HIT_DRAG_TABLE;
-                
                     return ED_HIT_SEL_CELL;
                 }
                 // Upper right corner - leave for sizing image flush against borders
@@ -14118,21 +14120,24 @@ ED_HitType CEditBuffer::GetTableHitRegion(int32 x, int32 y, LO_Element **ppEleme
 
             if( y >= bottom_limit )  // Along bottom edge (including intercell region)
             {
-                // If a selected cell - drag selection,
-                //  except if modifier key is pressed for sizing
-                if( bCanDragCells )
-                    return ED_HIT_DRAG_TABLE;
-                
                 // Size the row
                 return ED_HIT_SIZE_ROW;
             }
 
 
-            // Inside of a cell and no hit regions
+            // Inside of a cell
+
+            // Can drag the cell or table if inside a selected cell
+            if( (pCellElement->lo_cell.ele_attrmask & LO_ELE_SELECTED) ||
+                (pTableElement->lo_table.ele_attrmask & LO_ELE_SELECTED) )
+            {
+                return ED_HIT_DRAG_TABLE;
+            }
+
             return ED_HIT_NONE;
         }
 
-        // Return the table element
+        // No cell selected - return the table element
         if( ppElement) *ppElement = pTableElement;
 
         // Set test limits for Table element
@@ -14144,12 +14149,6 @@ ED_HitType CEditBuffer::GetTableHitRegion(int32 x, int32 y, LO_Element **ppEleme
             if( y <= top_limit )
             {
                 // Upper left corner
-
-                // If a selected table - drag selection,
-                //  except if modifier key is pressed for sizing
-                if( bCanDragTable )
-                    return ED_HIT_DRAG_TABLE;
-
                 if( bModifierKeyPressed )
                     return ED_HIT_SEL_ALL_CELLS;
 
@@ -14172,32 +14171,17 @@ ED_HitType CEditBuffer::GetTableHitRegion(int32 x, int32 y, LO_Element **ppEleme
                 // Lower right corner
                 return ED_HIT_ADD_COLS;
 
-            // If a selected table - drag selection,
-            //  except if modifier key is pressed for sizing
-            if( bCanDragTable )
-                return ED_HIT_DRAG_TABLE;
-
             // Along right edge
             return ED_HIT_SIZE_TABLE_WIDTH;
         }
         else if( y >= bottom_limit )
         {
-            // If a selected table - drag selection,
-            //  except if modifier key is pressed for sizing
-            if( bCanDragTable )
-                return ED_HIT_DRAG_TABLE;
-
             // Below bottom, excluding corners
             return ED_HIT_SIZE_TABLE_HEIGHT;
         }
 
         if( y <= top_limit )
         {
-            // If a selected table - drag selection,
-            //  except if modifier key is pressed for sizing
-            if( bCanDragTable )
-                return ED_HIT_DRAG_TABLE;
-
             // Along top border - select column
             if( ppElement)
             { 
@@ -14205,7 +14189,11 @@ ED_HitType CEditBuffer::GetTableHitRegion(int32 x, int32 y, LO_Element **ppEleme
             }
             return ED_HIT_SEL_COL;
         }
+        // Inside a cell in a selected table
+        if( pTableElement->lo_table.ele_attrmask & LO_ELE_SELECTED )
+            return ED_HIT_DRAG_TABLE;
     }
+
     return ED_HIT_NONE;
 }
 
