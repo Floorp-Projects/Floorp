@@ -964,8 +964,12 @@ HTMLStyleSheetImpl::ConstructTableFrame(nsIPresContext*  aPresContext,
   NS_NewTableFrame(aContent, aNewFrame, innerFrame);
   childList = innerFrame;
 
-  // Have the inner table frame use the same style context as the outer table frame
-  innerFrame->SetStyleContext(aPresContext, aStyleContext);
+  // Have the inner table frame use a pseudo style context based on the outer table frame's
+  nsIStyleContext *innerTableStyleContext = 
+    aPresContext->ResolvePseudoStyleContextFor (aContent, 
+                                                nsHTMLAtoms::tablePseudo,
+                                                aStyleContext);
+  innerFrame->SetStyleContext(aPresContext, aStyleContext);//innerTableStyleContext);
 
   // Iterate the child content
   nsIFrame* lastChildFrame = nsnull;
@@ -1673,6 +1677,9 @@ HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
     // any frame at all.
     const nsStyleDisplay* display = (const nsStyleDisplay*)
       styleContext->GetStyleData(eStyleStruct_Display);
+    if (NS_STYLE_DISPLAY_TABLE==display->mDisplay)  {
+      printf ("HELP!!!\n");
+    }
     if (NS_STYLE_DISPLAY_NONE == display->mDisplay) {
       aFrameSubTree = nsnull;
       rv = NS_OK;
@@ -1713,7 +1720,7 @@ HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
         // If we're paginated then don't ever make the BODY scrollable
         // XXX Use a special BODY rule for paged media...
         if (!(aPresContext->IsPaginated() && (nsHTMLAtoms::body == tag))) {
-          if (display->IsBlockLevel() && IsScrollable(aPresContext, display)) {
+          if ((display->mDisplay!=NS_STYLE_DISPLAY_TABLE) && display->IsBlockLevel() && IsScrollable(aPresContext, display)) {
             // Create a scroll frame which will wrap the frame that needs to
             // be scrolled
             if NS_SUCCEEDED(NS_NewScrollFrame(aContent, aParentFrame, scrollFrame)) {
