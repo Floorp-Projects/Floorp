@@ -45,6 +45,7 @@
 @interface BookmarkButton : NSButton
 {
   BookmarkItem*  mItem;
+  BOOL lastEventWasMenu;
 }
 
 -(id)initWithFrame:(NSRect)frame item:(BookmarkItem*)item;

@@ -75,6 +75,7 @@
     [self setImagePosition: NSImageLeft];
     [self setRefusesFirstResponder: YES];
     [self setFont: [NSFont labelFontOfSize: 11.0]];
+    lastEventWasMenu = NO;
   }
   return self;
 }
@@ -172,6 +173,7 @@
 
 -(NSMenu*)menuForEvent:(NSEvent*)aEvent
 {
+  lastEventWasMenu = YES;
   return [[BookmarkManager sharedBookmarkManager] contextMenuForItem:[self BookmarkItem] fromView:nil target:self];
 }
 
@@ -207,6 +209,7 @@
   NSPopUpButtonCell	*popupCell = [[NSPopUpButtonCell alloc] initTextCell:@"" pullsDown:YES];
   [popupCell setMenu: popupMenu];
   [popupCell trackMouse:event inRect:[self bounds] ofView:self untilMouseUp:YES];
+  lastEventWasMenu = YES;
   [popupCell release];
   [bmMenu release];
   [popupMenu release];
@@ -214,6 +217,7 @@
 
 -(void)mouseDown:(NSEvent*)aEvent
 {
+  lastEventWasMenu = NO;
   [super mouseDown:aEvent];
   if ([[self cell] lastClickHoldTimedOut])
     [self showFolderPopup:aEvent];
@@ -229,6 +233,10 @@
 
 - (void) mouseDragged: (NSEvent*) aEvent
 {
+  // hack to prevent a drag while viewing a popup or context menu from moving the folder unexpectedly
+  // (unless the drag happens on the folder itself)
+  if (lastEventWasMenu && ([self hitTest:[[self superview] convertPoint:[aEvent locationInWindow] fromView:nil]] == nil))
+    return;
   BookmarkItem *item = [self BookmarkItem];
   BOOL isSingleBookmark = [item isKindOfClass:[Bookmark class]];
   NSPasteboard *pboard = [NSPasteboard pasteboardWithName:NSDragPboard];
