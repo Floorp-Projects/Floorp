@@ -33,10 +33,6 @@ HINSTANCE       hSetupRscInst;
 HINSTANCE       hSDInst;
 HINSTANCE       hXPIStubInst;
 
-HBITMAP         hbmpBoxChecked;
-HBITMAP         hbmpBoxCheckedDisabled;
-HBITMAP         hbmpBoxUnChecked;
-
 HWND            hDlgCurrent;
 HWND            hDlgMessage;
 HWND            hWndMain;
@@ -73,7 +69,6 @@ BOOL            gbPreviousUnfinishedDownload;
 BOOL            gbPreviousUnfinishedInstallXpi;
 BOOL            gbIgnoreRunAppX;
 BOOL            gbIgnoreProgramFolderX;
-BOOL            gbRestrictedAccess;
 BOOL            gbDownloadTriggered;
 
 setupGen        sgProduct;
@@ -118,7 +113,6 @@ int main(int argc, char *argv[], char *envp[])
   int   iRv = WIZ_OK;
   HWND  hwndFW;
   int rc = 0;
-  HENUM henum;
 
   hab = WinInitialize( 0 );
   hmq = WinCreateMsgQueue( hab, 0 );
@@ -130,34 +124,12 @@ int main(int argc, char *argv[], char *envp[])
   /* Iterate over top level windows searching for one of the required class
    * and a matching title.
    */
-#ifdef OLDCODE /* @MAK - for ease of debugging */
-  henum = WinBeginEnumWindows(HWND_DESKTOP);
-  while ((hwndFW = WinGetNextWindow(henum)) != NULLHANDLE)
-  {
-      char pszT[256];
-      HWND hwndClient = NULLHANDLE;
-
-      /* If the window is a frame window, use the client for the class
-       * comparison.
-       */
-      if (((ULONG)WinSendMsg(hwndFW, WM_QUERYFRAMEINFO, NULL, NULL)) & FI_FRAME)
-          hwndClient = WinWindowFromID(hwndFW, FID_CLIENT);
-
-      /* See if the class matches.
-       */
-      WinQueryClassName(hwndClient ? hwndClient : hwndFW, sizeof(pszT), pszT);
-      if (strcmp(pszT, CLASS_NAME_SETUP_DLG) == 0)
-        break;
-  }
-  WinEndEnumWindows(henum);
-#endif
-
-  if(hwndFW)
+  if((hwndFW = FindWindow(CLASS_NAME_SETUP_DLG, NULL)) != NULL)
   {
     WinSetWindowPos(hwndFW, 0, 0, 0, 0, 0, SWP_RESTORE);
     WinSetActiveWindow(HWND_DESKTOP, hwndFW);
     iRv = WIZ_SETUP_ALREADY_RUNNING;
-    rc = 1;
+    WinPostQueueMsg(0, WM_QUIT, 1, 0);
   }
   else if(Initialize(0, argv[0]))
     WinPostQueueMsg(0, WM_QUIT, 1, 0);

@@ -26,7 +26,7 @@ typedef QMSG MSG;
 typedef CHAR TCHAR;
 
 #define WM_INITDIALOG WM_INITDLG
-#define IDYES DID_OK
+#define IDYES MBID_YES
 #define MF_GRAYED 1
 #define MF_BYCOMMAND 1
 #define SWP_NOSIZE 1
@@ -36,11 +36,4 @@ typedef CHAR TCHAR;
 #define MAX_PATH CCHMAXPATH
 #define KEY_CREATE_FOLDER 1
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-ULONG GetPrivateProfileString(PCSZ, PCSZ, PCSZ, PSZ, ULONG, PCSZ);
-#ifdef __cplusplus
-}
-#endif
-
+#include "pplib.h"

@@ -53,7 +53,8 @@ CSRCS		= \
 
 CPPSRCS		= \
 		nsEscape.cpp \
-		nsINIParser.cpp \
+		pplib.cpp \
+		xpnetHook.cpp \
 		$(NULL)
 
 #		xpnetHook.cpp \

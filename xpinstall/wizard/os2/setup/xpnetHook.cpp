@@ -115,6 +115,7 @@ struct TickInfo
   BOOL  bTickDownloadResumed;
 } gtiPaused;
 
+#ifdef OLDCODE
 BOOL CheckInterval(long *lModLastValue, int iInterval)
 {
   BOOL bRv = FALSE;
@@ -248,8 +249,8 @@ void SetStatusStatus(void)
 
   /* Only update the UI every UPDATE_INTERVAL_STATUS interval,
    * which is currently set to 1 sec. */
-  if(!CheckInterval(&lModLastValue, UPDATE_INTERVAL_STATUS))
-    return;
+//  if(!CheckInterval(&lModLastValue, UPDATE_INTERVAL_STATUS))
+//    return;
 
   if(glAbsoluteBytesSoFar == 0)
     dRateCounter = 0.0;
@@ -334,6 +335,7 @@ void SetStatusStatus(void)
   WinSetDlgItemText(dlgInfo.hWndDlg, IDC_STATUS_STATUS, szCurrentStatusInfo);
   WinSetDlgItemText(dlgInfo.hWndDlg, IDC_PERCENTAGE, szPercentString);
 }
+#endif
 
 void SetStatusFile(void)
 {
@@ -342,7 +344,7 @@ void SetStatusFile(void)
   /* Set the download dialog status*/
   sprintf(szString, gszFileInfo, gszCurrentDownloadFileDescription);
   WinSetDlgItemText(dlgInfo.hWndDlg, IDC_STATUS_FILE, szString);
-  SetStatusStatus();
+//  SetStatusStatus();
 }
 
 void SetStatusUrl(void)
@@ -776,7 +778,7 @@ void PauseTheDownload(int rv, int *iFileDownloadRetries)
 {
   if(rv != nsFTPConn::E_USER_CANCEL)
   {
-    WinSendMsg(dlgInfo.hWndDlg, WM_COMMAND, IDPAUSE, 0);
+    WinSendMsg(dlgInfo.hWndDlg, WM_COMMAND, (MPARAM)IDPAUSE, 0);
     --*iFileDownloadRetries;
   }
 
@@ -863,8 +865,8 @@ int DownloadFiles(char *szInputIniFile,
   if(szFailedFile)
     memset(szFailedFile, 0, dwFailedFileSize);
 
-  InitTickInfo();
-  GetCurrentDirectory(sizeof(szSavedCwd), szSavedCwd);
+//  InitTickInfo();
+//  GetCurrentDirectory(sizeof(szSavedCwd), szSavedCwd);
   DosSetCurrentDir(szDownloadDir);
 
   rv                        = WIZ_OK;
@@ -927,10 +929,12 @@ int DownloadFiles(char *szInputIniFile,
                             gszCurrentDownloadFileDescription,
                             sizeof(gszCurrentDownloadFileDescription),
                             gszConfigIniFile);
+#ifdef OLDCODE
     iIgnoreFileNetworkError = GetPrivateProfileInt(szSection,
                             "Ignore File Network Error",
                             0,
                             gszConfigIniFile);
+#endif
 
     /* save the file name to be downloaded */
     ParsePath(szTempURL,
@@ -1048,7 +1052,7 @@ int DownloadFiles(char *szInputIniFile,
            * long before the user will dismiss the MessageBox() */
           if(!gtiPaused.bTickStarted)
           {
-            gtiPaused.dwTickBegin          = GetTickCount();
+//            gtiPaused.dwTickBegin          = GetTickCount();
             gtiPaused.bTickStarted         = TRUE;
             gtiPaused.bTickDownloadResumed = FALSE;
           }
@@ -1178,19 +1182,18 @@ int DownloadFiles(char *szInputIniFile,
   }
 
   CloseSocket(szProxyServer, szProxyPort);
-  DeInitDownloadDlg();
-  SetCurrentDirectory(szSavedCwd);
+//  DeInitDownloadDlg();
+//  SetCurrentDirectory(szSavedCwd);
   return(rv);
 }
 
-#ifdef OLDCODE
 int ProgressCB(int aBytesSoFar, int aTotalFinalSize)
 {
   long   lBytesDiffSoFar;
   double dPercentSoFar;
   int    iRv = nsFTPConn::OK;
 
-  if(sgProduct.dwMode != SILENT)
+  if(sgProduct.ulMode != SILENT)
   {
     SetStatusUrl();
 
@@ -1210,8 +1213,8 @@ int ProgressCB(int aBytesSoFar, int aTotalFinalSize)
     if(gbDlgDownloadMinimized)
       SetMinimizedDownloadTitle((int)dPercentSoFar);
 
-    UpdateGaugeFileProgressBar(dPercentSoFar);
-    SetStatusStatus();
+//    UpdateGaugeFileProgressBar(dPercentSoFar);
+//    SetStatusStatus();
 
     if((gdwDownloadDialogStatus == CS_CANCEL) ||
        (gdwDownloadDialogStatus == CS_PAUSE))
@@ -1226,6 +1229,7 @@ int ProgressCB(int aBytesSoFar, int aTotalFinalSize)
 // Progress bar
 // Centers the specified window over the desktop. Assumes the window is
 // smaller both horizontally and vertically than the desktop
+#ifdef OLDCODE
 static void
 CenterWindow(HWND hWndDlg)
 {
@@ -1238,28 +1242,29 @@ CenterWindow(HWND hWndDlg)
 
 	SetWindowPos(hWndDlg, NULL, iLeft, iTop, -1, -1, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
 }
+#endif
 
 // Window proc for dialog
-LRESULT CALLBACK
-DownloadDlgProc(HWND hWndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+MRESULT EXPENTRY
+DownloadDlgProc(HWND hWndDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
 {
   switch (msg)
   {
-    case WM_INITDIALOG:
+    case WM_INITDLG:
       GetPrivateProfileString("Strings",
                               "Status File Info",
                               "",
                               gszFileInfo,
                               sizeof(gszFileInfo),
                               szFileIniConfig);
-      DisableSystemMenuItems(hWndDlg, FALSE);
-      CenterWindow(hWndDlg);
+//      DisableSystemMenuItems(hWndDlg, FALSE);
+//      CenterWindow(hWndDlg);
       if(gbShowDownloadRetryMsg)
         WinSetDlgItemText(hWndDlg, IDC_MESSAGE0, diDownload.szMessageRetry0);
       else
         WinSetDlgItemText(hWndDlg, IDC_MESSAGE0, diDownload.szMessageDownload0);
 
-      EnableWindow(WinWindowFromID(hWndDlg, IDRESUME), FALSE);
+      WinEnableWindow(WinWindowFromID(hWndDlg, IDRESUME), FALSE);
       WinSetDlgItemText(hWndDlg, IDC_STATIC1, sgInstallGui.szStatus);
       WinSetDlgItemText(hWndDlg, IDC_STATIC2, sgInstallGui.szFile);
       WinSetDlgItemText(hWndDlg, IDC_STATIC4, sgInstallGui.szTo);
@@ -1267,6 +1272,7 @@ DownloadDlgProc(HWND hWndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
       WinSetDlgItemText(hWndDlg, IDCANCEL, sgInstallGui.szCancel_);
       WinSetDlgItemText(hWndDlg, IDPAUSE, sgInstallGui.szPause_);
       WinSetDlgItemText(hWndDlg, IDRESUME, sgInstallGui.szResume_);
+#ifdef OLDCODE
       SendDlgItemMessage (hWndDlg, IDC_STATIC1, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
       SendDlgItemMessage (hWndDlg, IDC_STATIC2, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
       SendDlgItemMessage (hWndDlg, IDC_STATIC3, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
@@ -1278,9 +1284,10 @@ DownloadDlgProc(HWND hWndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
       SendDlgItemMessage (hWndDlg, IDC_STATUS_FILE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
       SendDlgItemMessage (hWndDlg, IDC_STATUS_URL, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
       SendDlgItemMessage (hWndDlg, IDC_STATUS_TO, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+#endif
+      break;
 
-      return FALSE;
-
+#ifdef OLDCODE
     case WM_SIZE:
       switch(wParam)
       {
@@ -1334,11 +1341,13 @@ DownloadDlgProc(HWND hWndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
           break;
       }
       return(TRUE);
+#endif
   }
 
-  return(FALSE);  // didn't handle the message
+  return WinDefDlgProc(hWndDlg, msg, mp1, mp2);
 }
 
+#ifdef OLDCODE
 // This routine will update the File Gauge progress bar to the specified percentage
 // (value between 0 and 100)
 static void
@@ -1501,9 +1510,13 @@ GaugeDownloadWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 	return(DefWindowProc(hWnd, msg, wParam, lParam));
 }
+#endif
 
 void InitDownloadDlg(void)
 {
+    dlgInfo.hWndDlg = WinLoadDlg(HWND_DESKTOP, hWndMain, DownloadDlgProc, hSetupRscInst, DLG_DOWNLOADING, NULL);
+    WinShowWindow(dlgInfo.hWndDlg, TRUE);
+#ifdef OLDCODE
 	WNDCLASS	wc;
 
   if(sgProduct.dwMode != SILENT)
@@ -1521,8 +1534,10 @@ void InitDownloadDlg(void)
     UpdateWindow(dlgInfo.hWndDlg);
     UpdateGaugeFileProgressBar(0);
   }
+#endif
 }
 
+#ifdef OLDCODE
 void DeInitDownloadDlg()
 {
   if(sgProduct.dwMode != SILENT)

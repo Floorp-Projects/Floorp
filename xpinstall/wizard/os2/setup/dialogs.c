@@ -30,7 +30,6 @@
 #include "xpistub.h"
 #include "xpi.h"
 #include "logging.h"
-//#include <shlobj.h>
 #include <logkeys.h>
 
 static PFNWP OldListBoxWndProc;
@@ -70,35 +69,38 @@ BOOL AskCancelDlg(HWND hDlg)
   return(bRv);
 } 
 
-#ifdef OLDCODE
-void DisableSystemMenuItems(HWND hWnd, BOOL bDisableClose)
-{
-  EnableMenuItem(GetSystemMenu(hWnd, FALSE), SC_RESTORE,  MF_BYCOMMAND | MF_GRAYED);
-  EnableMenuItem(GetSystemMenu(hWnd, FALSE), SC_SIZE,     MF_BYCOMMAND | MF_GRAYED);
-  EnableMenuItem(GetSystemMenu(hWnd, FALSE), SC_MAXIMIZE, MF_BYCOMMAND | MF_GRAYED);
-
-  if(bDisableClose)
-    EnableMenuItem(GetSystemMenu(hWnd, FALSE), SC_CLOSE, MF_BYCOMMAND | MF_GRAYED);
-}
-#endif
-
 MRESULT EXPENTRY DlgProcWelcome(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
 {
   BOOL rc;
   char szBuf[MAX_BUF];
   SWP  swpDlg;
+  SWP  swpImage;
+  SWP  swpImageBorder;
   
   switch(msg)
   {
     case WM_INITDLG:
-//      DisableSystemMenuItems(hDlg, FALSE);
+      /* Initialize controls */
       WinSetWindowText(hDlg, diWelcome.szTitle);
-
       sprintf(szBuf, diWelcome.szMessage0, sgProduct.szProductName, sgProduct.szProductName);
       WinSetDlgItemText(hDlg, IDC_STATIC0, szBuf);
       WinSetDlgItemText(hDlg, IDC_STATIC1, diWelcome.szMessage1);
       WinSetDlgItemText(hDlg, IDC_STATIC2, diWelcome.szMessage2);
+      WinSetDlgItemText(hDlg, IDWIZNEXT, sgInstallGui.szNext_);
+      WinSetDlgItemText(hDlg, IDCANCEL, sgInstallGui.szCancel_);
 
+      /* Position image */
+      WinQueryWindowPos(WinWindowFromID(hDlg, IDC_MOZILLA), &swpImage);
+      WinQueryWindowPos(WinWindowFromID(hDlg, IDC_STATIC3), &swpImageBorder);
+      swpImageBorder.cx++;
+      WinSetWindowPos(WinWindowFromID(hDlg, IDC_STATIC3), 0, 0, 0,
+                      swpImageBorder.cx, swpImageBorder.cy, SWP_SIZE);
+      WinSetWindowPos(WinWindowFromID(hDlg, IDC_MOZILLA), 0, 
+                      swpImageBorder.x+((swpImageBorder.cx-swpImage.cx)/2),
+                      swpImageBorder.y+((swpImageBorder.cy-swpImage.cy)/2),
+                      0, 0, SWP_MOVE);
+
+      /* Center dialog */
       WinQueryWindowPos(hDlg, &swpDlg);
       WinSetWindowPos(hDlg,
                       HWND_TOP,
@@ -107,20 +109,11 @@ MRESULT EXPENTRY DlgProcWelcome(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
                       0,
                       0,
                       SWP_MOVE);
+      break;
 
-      WinSetDlgItemText(hDlg, IDWIZNEXT, sgInstallGui.szNext_);
-      WinSetDlgItemText(hDlg, IDCANCEL, sgInstallGui.szCancel_);
-      
-      rc = WinSetPresParam(WinWindowFromID(hDlg, IDC_STATIC0), PP_FONTNAMESIZE,
-                                           strlen(sgInstallGui.szDefinedFont), sgInstallGui.szDefinedFont);
-      rc = WinSetPresParam(WinWindowFromID(hDlg, IDC_STATIC1), PP_FONTNAMESIZE,
-                                           strlen(sgInstallGui.szDefinedFont), sgInstallGui.szDefinedFont);
-      rc = WinSetPresParam(WinWindowFromID(hDlg, IDC_STATIC2), PP_FONTNAMESIZE,
-                                           strlen(sgInstallGui.szDefinedFont), sgInstallGui.szDefinedFont);
-      rc = WinSetPresParam(WinWindowFromID(hDlg, IDWIZNEXT), PP_FONTNAMESIZE,
-                                           strlen(sgInstallGui.szDefinedFont), sgInstallGui.szDefinedFont);
-      rc = WinSetPresParam(WinWindowFromID(hDlg, IDCANCEL), PP_FONTNAMESIZE,
-                                           strlen(sgInstallGui.szDefinedFont), sgInstallGui.szDefinedFont);
+    case WM_CLOSE:
+      AskCancelDlg(hDlg);
+      return (MRESULT)TRUE;
       break;
 
     case WM_COMMAND:
@@ -131,8 +124,9 @@ MRESULT EXPENTRY DlgProcWelcome(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
           DlgSequence(NEXT_DLG);
           break;
 
-        case IDCANCEL:
+        case DID_CANCEL:
           AskCancelDlg(hDlg);
+          return (MRESULT)TRUE;
           break;
 
         default:
@@ -156,11 +150,15 @@ MRESULT EXPENTRY DlgProcLicense(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
   switch(msg)
   {
     case WM_INITDLG:
-//      DisableSystemMenuItems(hDlg, FALSE);
+      /* Initialize controls */
       WinSetWindowText(hDlg, diLicense.szTitle);
       WinSetDlgItemText(hDlg, IDC_MESSAGE0, diLicense.szMessage0);
       WinSetDlgItemText(hDlg, IDC_MESSAGE1, diLicense.szMessage1);
+      WinSetDlgItemText(hDlg, IDWIZBACK, sgInstallGui.szBack_);
+      WinSetDlgItemText(hDlg, IDWIZNEXT, sgInstallGui.szAccept_);
+      WinSetDlgItemText(hDlg, DID_CANCEL, sgInstallGui.szDecline_);
 
+      /* If LICENSE.TXT exists, read it into the MLE */
       strcpy(szBuf, szSetupDir);
       AppendBackSlash(szBuf, sizeof(szBuf));
       strcat(szBuf, diLicense.szLicenseFilename);
@@ -170,14 +168,16 @@ MRESULT EXPENTRY DlgProcLicense(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
         fseek(fLicense, 0L, SEEK_END);
         dwFileSize = ftell(fLicense);
         fseek(fLicense, 0L, SEEK_SET);
-        if((szLicenseFilenameBuf = NS_GlobalAlloc(dwFileSize)) != NULL) {
+        if((szLicenseFilenameBuf = NS_GlobalAlloc(dwFileSize+1)) != NULL) {
           dwBytesRead = fread(szLicenseFilenameBuf, sizeof(char), dwFileSize, fLicense);
+          szLicenseFilenameBuf[dwFileSize] = '\0';
           WinSetDlgItemText(hDlg, IDC_EDIT_LICENSE, szLicenseFilenameBuf);
           FreeMemory(&szLicenseFilenameBuf);
         }
         fclose(fLicense);
       }
 
+      /* Center dialog */
       WinQueryWindowPos(hDlg, &swpDlg);
       WinSetWindowPos(hDlg,
                       HWND_TOP,
@@ -186,18 +186,11 @@ MRESULT EXPENTRY DlgProcLicense(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
                       0,
                       0,
                       SWP_MOVE);
+      break;
 
-      WinSetDlgItemText(hDlg, IDWIZBACK, sgInstallGui.szBack_);
-      WinSetDlgItemText(hDlg, IDWIZNEXT, sgInstallGui.szAccept_);
-      WinSetDlgItemText(hDlg, DID_CANCEL, sgInstallGui.szDecline_);
-#ifdef OLDCODE
-      SendDlgItemMessage (hDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_MESSAGE1, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_EDIT_LICENSE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDWIZBACK, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDWIZNEXT, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDCANCEL, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-#endif
+    case WM_CLOSE:
+      AskCancelDlg(hDlg);
+      return (MRESULT)TRUE;
       break;
 
     case WM_COMMAND:
@@ -215,6 +208,7 @@ MRESULT EXPENTRY DlgProcLicense(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
 
         case IDCANCEL:
           AskCancelDlg(hDlg);
+          return (MRESULT)TRUE;
           break;
 
         default:
@@ -225,109 +219,125 @@ MRESULT EXPENTRY DlgProcLicense(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
   return(WinDefDlgProc(hDlg, msg, mp1, mp2));
 }
 
-#ifdef OLDCODE
-LRESULT CALLBACK ListBoxBrowseWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+/* This is our custom directory dialog - pulled from widget with extra voodoo */
+MRESULT EXPENTRY DirDialogProc( HWND hwndDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
 {
-  switch(uMsg)
-  {
-    case LB_SETCURSEL:
-      gdwIndexLastSelected = (DWORD)wParam;
-      break;
-  }
+   char szBuf[MAX_BUF];
+   PFILEDLG pfiledlg;
 
-  return(CallWindowProc(OldListBoxWndProc, hWnd, uMsg, wParam, lParam));
-}
+   switch ( msg ) {
+      case WM_INITDLG:
+         {
+         SWP swpDlgOrig;
+         SWP swpDlgNew;
+         SWP swpFileST;
+         SWP swpDirST;
+         SWP swpDirLB;
+         SWP swpDriveST;
+         SWP swpDriveCB;
+         SWP swpDriveCBEF;
+         SWP swpOK;
+         SWP swpCancel;
+         HWND hwndFileST;
+         HWND hwndDirST;
+         HWND hwndDirLB;
+         HWND hwndDriveST;
+         HWND hwndDriveCB;
+         HWND hwndOK;
+         HWND hwndCancel;
 
-LRESULT CALLBACK BrowseHookProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
-{
-  DWORD dwIndex;
-  DWORD dwLoop;
-  RECT  rDlg;
-  char  szBuf[MAX_BUF];
-  char  szBufIndex[MAX_BUF];
-  char  szPath[MAX_BUF];
-  HWND  hwndLBFolders;
+         hwndFileST = WinWindowFromID(hwndDlg, DID_FILENAME_TXT);
+         hwndDirST = WinWindowFromID(hwndDlg, DID_DIRECTORY_TXT);
+         hwndDirLB = WinWindowFromID(hwndDlg, DID_DIRECTORY_LB);
+         hwndDriveST = WinWindowFromID(hwndDlg, DID_DRIVE_TXT);
+         hwndDriveCB = WinWindowFromID(hwndDlg, DID_DRIVE_CB);
+         hwndOK = WinWindowFromID(hwndDlg, DID_OK);
+         hwndCancel = WinWindowFromID(hwndDlg, DID_CANCEL);
+         
+         // Reposition drives combobox
+         WinQueryWindowPos(hwndOK, &swpOK);
+         WinQueryWindowPos(hwndCancel, &swpCancel);
+         WinQueryWindowPos(hwndDriveCB, &swpDriveCB);
+         WinQueryWindowPos(WinWindowFromID(hwndDriveCB, CBID_EDIT), &swpDriveCBEF);
+         WinSetWindowPos(hwndDriveCB, 0, swpDriveCB.x,
+                                         swpOK.y+swpOK.cy+swpDriveCBEF.cy-swpDriveCB.cy+20,
+                                         swpCancel.x+swpCancel.cx-swpOK.x, swpDriveCB.cy, SWP_MOVE | SWP_SIZE);
 
-  switch(message)
-  {
-    case WM_INITDLG:		
-      hwndLBFolders  = WinWindowFromID(hDlg, 1121);
-      WinSetDlgItemText(hDlg, IDC_EDIT_DESTINATION, szTempSetupPath);
+         // Reposition drives text
+         WinQueryWindowPos(hwndDriveCB, &swpDriveCB);
+         WinQueryWindowPos(hwndDriveST, &swpDriveST);
+         WinSetWindowPos(hwndDriveST, 0, swpDriveST.x, swpDriveCB.y+swpDriveCB.cy+5,
+                                         swpDriveST.cx*2, swpDriveST.cy, SWP_MOVE | SWP_SIZE);
 
-      if(GetClientRect(hDlg, &rDlg))
-        SetWindowPos(hDlg,
-                     HWND_TOP,
-                     (gSystemInfo.lScreenX/2)-(rDlg.right/2),
-                     (gSystemInfo.lScreenY/2)-(rDlg.bottom/2),
-                     0,
-                     0,
-                     SWP_NOSIZE);
+         // Reposition directories listbox 
+         WinQueryWindowPos(hwndDriveST, &swpDriveST);
+         WinQueryWindowPos(hwndDirLB, &swpDirLB);
+         WinSetWindowPos(hwndDirLB, 0, swpDirLB.x, swpDriveST.y+swpDriveST.cy+10,
+                                       swpDirLB.cx*2, swpDirLB.cy, SWP_MOVE | SWP_SIZE);
 
-      OldListBoxWndProc    = SubclassWindow(hwndLBFolders, (WNDPROC)ListBoxBrowseWndProc);
-      gdwIndexLastSelected = SendDlgItemMessage(hDlg, 1121, LB_GETCURSEL, 0, (LPARAM)0);
+         // Reposition file text
+         WinQueryWindowPos(hwndDirLB, &swpDirLB);
+         WinQueryWindowPos(hwndFileST, &swpFileST);
+         WinSetWindowPos(hwndFileST, 0, swpFileST.x, swpDirLB.y+swpDirLB.cy+5,
+                                        swpFileST.cx*2, swpFileST.cy, SWP_MOVE | SWP_SIZE);
 
-      WinSetWindowText(hDlg, sgInstallGui.szSelectDirectory);
-      WinSetDlgItemText(hDlg, 1092, sgInstallGui.szDirectories_);
-      WinSetDlgItemText(hDlg, 1091, sgInstallGui.szDrives_);
-      WinSetDlgItemText(hDlg, 1, sgInstallGui.szOk);
-      WinSetDlgItemText(hDlg, IDCANCEL, sgInstallGui.szCancel);
-      SendDlgItemMessage (hDlg, DLG_BROWSE_DIR, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
-      SendDlgItemMessage (hDlg, 1092, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
-      SendDlgItemMessage (hDlg, 1091, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
-      SendDlgItemMessage (hDlg, 1, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
-      SendDlgItemMessage (hDlg, IDCANCEL, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
-      SendDlgItemMessage (hDlg, IDC_EDIT_DESTINATION, WM_SETFONT, (WPARAM)sgInstallGui.systemFont, 0L); 
-      SendDlgItemMessage (hDlg, 1121, WM_SETFONT, (WPARAM)sgInstallGui.systemFont, 0L); 
-      SendDlgItemMessage (hDlg, 1137, WM_SETFONT, (WPARAM)sgInstallGui.systemFont, 0L); 
-      break;
+         // Begin repositioning dialog
+         WinQueryWindowPos(hwndDlg, &swpDlgOrig);
+         swpDlgNew = swpDlgOrig;
+         swpDlgNew.cy -= swpFileST.y;
 
-    case WM_COMMAND:
-      switch ( SHORT1FROMMP( mp1 ) )
-      {
-        case 1121:
-          if(HIWORD(wParam) == LBN_DBLCLK)
-          {
-            dwIndex = SendDlgItemMessage(hDlg, 1121, LB_GETCURSEL, 0, (LPARAM)0);
-            SendDlgItemMessage(hDlg, 1121, LB_GETTEXT, 0, (LPARAM)szPath);
+         // Reposition directory text
+         WinQueryWindowPos(hwndFileST, &swpFileST);
+         WinQueryWindowPos(hwndDirST, &swpDirST);
+         WinSetWindowPos(hwndDirST, 0, swpDirST.x, swpFileST.y+swpFileST.cy+5,
+                                       swpDirST.cx*2, swpDirST.cy, SWP_MOVE | SWP_SIZE);
 
-            if(gdwIndexLastSelected < dwIndex)
-            {
-              for(dwLoop = 1; dwLoop <= gdwIndexLastSelected; dwLoop++)
-              {
-                SendDlgItemMessage(hDlg, 1121, LB_GETTEXT, dwLoop, (LPARAM)szBufIndex);
-                AppendBackSlash(szPath, sizeof(szPath));
-                strcat(szPath, szBufIndex);
-              }
+         // Size main dialog
+         swpDlgNew.cy += (swpFileST.y+swpFileST.cy+5);
+         swpDlgNew.cx = (swpDirLB.x*2)+swpDirLB.cx;
+         swpDlgNew.x += (swpDlgOrig.cx-swpDlgNew.cx)/2;
+         swpDlgNew.y += (swpDlgOrig.cy-swpDlgNew.cy)/2;
+         WinSetWindowPos(hwndDlg, 0, swpDlgNew.x, swpDlgNew.y,
+                                     swpDlgNew.cx, swpDlgNew.cy,
+                                     SWP_SIZE | SWP_MOVE);
 
-              SendDlgItemMessage(hDlg, 1121, LB_GETTEXT, dwIndex, (LPARAM)szBufIndex);
-              AppendBackSlash(szPath, sizeof(szPath));
-              strcat(szPath, szBufIndex);
-            }
-            else
-            {
-              for(dwLoop = 1; dwLoop <= dwIndex; dwLoop++)
-              {
-                SendDlgItemMessage(hDlg, 1121, LB_GETTEXT, dwLoop, (LPARAM)szBufIndex);
-                AppendBackSlash(szPath, sizeof(szPath));
-                strcat(szPath, szBufIndex);
-              }
-            }
-            WinSetDlgItemText(hDlg, IDC_EDIT_DESTINATION, szPath);
-          }
-          break;
+         // Hide unused stuff
+         WinShowWindow(WinWindowFromID(hwndDlg,DID_FILES_LB), FALSE);
+         WinShowWindow(WinWindowFromID(hwndDlg,DID_FILES_TXT), FALSE);
+         WinShowWindow(WinWindowFromID(hwndDlg,DID_FILTER_CB), FALSE);
+         WinShowWindow(WinWindowFromID(hwndDlg,DID_FILTER_TXT), FALSE);
+         WinShowWindow(WinWindowFromID(hwndDlg, DID_FILENAME_ED), FALSE);
+         WinShowWindow(WinWindowFromID(hwndDlg, 0x503D), FALSE);
 
+         // Create an entryfield
+         WinCreateWindow(hwndDlg, WC_ENTRYFIELD, "", ES_MARGIN | WS_VISIBLE, swpFileST.x, swpFileST.y,
+                         swpFileST.cx, swpFileST.cy, hwndDlg, HWND_TOP, 777, NULL, NULL);
+         WinShowWindow(hwndFileST, FALSE);
+
+         }
+         break;
+      case WM_CONTROL:
+         {
+           if (SHORT1FROMMP(mp1) != 777) {
+             pfiledlg = (PFILEDLG)WinQueryWindowPtr(hwndDlg, QWL_USER);
+             RemoveBackSlash(pfiledlg->szFullFile);
+             WinSetWindowText(WinWindowFromID(hwndDlg,777), pfiledlg->szFullFile);
+           }
+         }
+         break;
+      case WM_COMMAND:
+        switch ( SHORT1FROMMP( mp1 ) ) {
         case DID_OK:
-          WinQueryDlgItemText(hDlg, IDC_EDIT_DESTINATION, MAX_BUF, szBuf);
+          WinQueryDlgItemText(hwndDlg, 777, MAX_BUF, szBuf);
           if(*szBuf == '\0')
           {
             char szEDestinationPath[MAX_BUF];
 
             GetPrivateProfileString("Messages", "ERROR_DESTINATION_PATH", "", szEDestinationPath, sizeof(szEDestinationPath), szFileIniInstall);
-            WinMessageBox(HWND_DESKTOP, hDlg, szEDestinationPath, NULL, MB_OK | MB_ICONEXCLAMATION);
-            break;
+            WinMessageBox(HWND_DESKTOP, hwndDlg, szEDestinationPath, NULL, 0, MB_OK | MB_ICONEXCLAMATION);
+            return (MRESULT)TRUE;
           }
 
-          AppendBackSlash(szBuf, sizeof(szBuf));
           if(FileExists(szBuf) == FALSE)
           {
             char szMsgCreateDirectory[MAX_BUF];
@@ -345,10 +355,11 @@ LRESULT CALLBACK BrowseHookProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
               sprintf(szBufTemp2, szMsgCreateDirectory, szBufTemp);
             }
 
-            if(WinMessageBox(HWND_DESKTOP, hDlg, szBufTemp2, szStrCreateDirectory, 0, MB_YESNO | MB_ICONQUESTION) == IDYES)
+            if(WinMessageBox(HWND_DESKTOP, hwndDlg, szBufTemp2, szStrCreateDirectory, 0, MB_YESNO | MB_ICONQUESTION) == IDYES)
             {
               char szBuf2[MAX_PATH];
 
+              AppendBackSlash(szBuf, sizeof(szBuf));
               if(CreateDirectoriesAll(szBuf, TRUE) == FALSE)
               {
                 char szECreateDirectory[MAX_BUF];
@@ -361,112 +372,62 @@ LRESULT CALLBACK BrowseHookProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
                 if(GetPrivateProfileString("Messages", "ERROR_CREATE_DIRECTORY", "", szECreateDirectory, sizeof(szECreateDirectory), szFileIniInstall))
                   sprintf(szBuf, szECreateDirectory, szBufTemp);
 
-                WinMessageBox(HWND_DESKTOP, hDlg, szBuf, "", 0, MB_OK | MB_ERROR);
-                break;
+                WinMessageBox(HWND_DESKTOP, hwndDlg, szBuf, "", 0, MB_OK | MB_ERROR);
+                return (MRESULT)TRUE;
               }
-
-              if(*sgProduct.szSubPath != '\0')
-              {
-                 /* log the subpath for uninstallation.  This subpath does not normally get logged
-                  * for uninstallation due to a chicken and egg problem with creating the log file
-                  * and the directory its in */
-                strcpy(szBuf2, szBuf);
-                AppendBackSlash(szBuf2, sizeof(szBuf2));
-                strcat(szBuf2, sgProduct.szSubPath);
-                UpdateInstallLog(KEY_CREATE_FOLDER, szBuf2, FALSE);
-              }
-
-              bCreateDestinationDir = TRUE;
-            }
-            else
-            {
-              break;
+            } else {
+             return (MRESULT)TRUE;
             }
           }
-
+          RemoveBackSlash(szBuf);
           strcpy(szTempSetupPath, szBuf);
-          RemoveBackSlash(szTempSetupPath);
-          EndDialog(hDlg, 0);
           break;
-      }
-      break;
-  }
-  return(WinDefDlgProc(hDlg, msg, mp1, mp2));
+
+
+        }
+       break;
+   }      
+   return WinDefFileDlgProc(hwndDlg, msg, mp1, mp2);
 }
 
 BOOL BrowseForDirectory(HWND hDlg, char *szCurrDir)
 { 
-  OPENFILENAME   of;
+  FILEDLG        filedlg;
   char           ftitle[MAX_PATH];
-  char           fname[MAX_PATH];
-  char           szCDir[MAX_BUF];
   char           szBuf[MAX_BUF];
   char           szSearchPathBuf[MAX_BUF];
   char           szDlgBrowseTitle[MAX_BUF];
   BOOL           bRet;
 
-  /* save the current directory */
-  GetCurrentDirectory(MAX_BUF, szCDir);
-
   memset(szDlgBrowseTitle, 0, sizeof(szDlgBrowseTitle));
   GetPrivateProfileString("Messages", "DLGBROWSETITLE", "", szDlgBrowseTitle, sizeof(szDlgBrowseTitle), szFileIniInstall);
 
-  strcpy(szSearchPathBuf, szCurrDir);
-  if((*szSearchPathBuf != '\0') && ((strlen(szSearchPathBuf) != 1) || (*szSearchPathBuf != '\\')))
-  {
-    RemoveBackSlash(szSearchPathBuf);
-    while(FileExists(szSearchPathBuf) == FALSE)
-    {
-      RemoveBackSlash(szSearchPathBuf);
-      ParsePath(szSearchPathBuf, szBuf, sizeof(szBuf), FALSE, PP_PATH_ONLY);
-      strcpy(szSearchPathBuf, szBuf);
-    }
+  memset(&filedlg, 0, sizeof(FILEDLG));
+  filedlg.cbSize = sizeof(FILEDLG);
+  filedlg.pszTitle = szDlgBrowseTitle;
+  strcpy(filedlg.szFullFile, szCurrDir);
+  strncat(filedlg.szFullFile, "\\", 1);
+  strncat(filedlg.szFullFile, "^", 1);
+  filedlg.fl = FDS_OPEN_DIALOG | FDS_CENTER;
+  filedlg.pfnDlgProc = DirDialogProc;
+  WinFileDlg(HWND_DESKTOP, hDlg, &filedlg);
+  *(strstr(filedlg.szFullFile, "^")-1) = '\0';
+
+  if (filedlg.lReturn == DID_OK) {
+    bRet = TRUE;
+  } else {
+    strcpy(szTempSetupPath, szCurrDir);
+    bRet = FALSE;
   }
 
-  memset(ftitle, 0, sizeof(ftitle));
-  strcpy(fname, "*.*");
-  of.lStructSize        = sizeof(OPENFILENAME);
-  of.hwndOwner          = hDlg;
-  of.hInstance          = hSetupRscInst;
-  of.lpstrFilter        = NULL;
-  of.lpstrCustomFilter  = NULL;
-  of.nMaxCustFilter     = 0;
-  of.nFilterIndex       = 0;
-  of.lpstrFile          = fname;
-  of.nMaxFile           = MAX_PATH;
-  of.lpstrFileTitle     = ftitle;
-  of.nMaxFileTitle      = MAX_PATH;
-  of.lpstrInitialDir    = szSearchPathBuf;
-  of.lpstrTitle         = szDlgBrowseTitle;
-  of.Flags              = OFN_NONETWORKBUTTON |
-                          OFN_ENABLEHOOK      |
-                          OFN_NOCHANGEDIR  |
-                          OFN_ENABLETEMPLATE;
-  of.nFileOffset        = 0;
-  of.nFileExtension     = 0;
-  of.lpstrDefExt        = NULL;
-  of.lCustData          = 0;
-  of.lpfnHook           = BrowseHookProc;
-  of.lpTemplateName     = MAKEINTRESOURCE(DLG_BROWSE_DIR);
-
-  if(GetOpenFileName(&of))
-    bRet = TRUE;
-  else
-    bRet = FALSE;
-
-  /* restore the current directory */
-  SetCurrentDirectory(szCDir);
   return(bRet);
 }
 
 void TruncateString(HWND hWnd, LPSTR szInURL, LPSTR szOutString, DWORD dwOutStringBufSize)
 {
-  HDC           hdcWnd;
-  LOGFONT       logFont;
-  HFONT         hfontNew;
-  HFONT         hfontOld;
-  RECT          rWndRect;
-  SIZE          sizeString;
+  HPS           hpsWnd;
+  SWP           swpWnd;
+  RECTL         rectlString = {0,0,1000,1000};
   char          *ptr = NULL;
   int           iHalfLen;
   int           iOutStringLen;
@@ -477,40 +438,36 @@ void TruncateString(HWND hWnd, LPSTR szInURL, LPSTR szOutString, DWORD dwOutStri
   memset(szOutString, 0, dwOutStringBufSize);
   strcpy(szOutString, szInURL);
   iOutStringLen = strlen(szOutString);
-  hdcWnd        = GetWindowDC(hWnd);
-  GetClientRect(hWnd, &rWndRect);
-  SystemParametersInfo(SPI_GETICONTITLELOGFONT,
-                       sizeof(logFont),
-                       (PVOID)&logFont,
-                       0);
 
-  hfontNew = CreateFontIndirect(&logFont);
-  if(hfontNew)
+  hpsWnd = WinGetPS(hWnd);
+
+
+  WinQueryWindowPos(hWnd, &swpWnd);
+
+  WinDrawText(hpsWnd, iOutStringLen, szOutString,
+                              &rectlString, 0, 0, 
+                              DT_BOTTOM | DT_QUERYEXTENT | DT_TEXTATTRS);
+  while(rectlString.xRight > swpWnd.cx)
   {
-    hfontOld = (HFONT)SelectObject(hdcWnd, hfontNew);
+    iHalfLen = iOutStringLen / 2;
+    if(iHalfLen == 2)
+      break;
 
-    GetTextExtentPoint32(hdcWnd, szOutString, iOutStringLen, &sizeString);
-    while(sizeString.cx > rWndRect.right)
-    {
-      iHalfLen = iOutStringLen / 2;
-      if(iHalfLen == 2)
-        break;
-
-      ptr = szOutString + iHalfLen;
-      memmove(ptr - 1, ptr, strlen(ptr) + 1);
-      szOutString[iHalfLen - 2] = '.';
-      szOutString[iHalfLen - 1] = '.';
-      szOutString[iHalfLen]     = '.';
-      iOutStringLen = strlen(szOutString);
-      GetTextExtentPoint32(hdcWnd, szOutString, iOutStringLen, &sizeString);
-    }
+    ptr = szOutString + iHalfLen;
+    memmove(ptr - 1, ptr, strlen(ptr) + 1);
+    szOutString[iHalfLen - 2] = '.';
+    szOutString[iHalfLen - 1] = '.';
+    szOutString[iHalfLen]     = '.';
+    iOutStringLen = strlen(szOutString);
+    rectlString.xLeft = rectlString.yBottom = 0;
+    rectlString.xRight = rectlString.yTop = 1000;
+    WinDrawText(hpsWnd, iOutStringLen, szOutString,
+                &rectlString, 0, 0, 
+                DT_BOTTOM | DT_QUERYEXTENT | DT_TEXTATTRS);
   }
 
-  SelectObject(hdcWnd, hfontOld);
-  DeleteObject(hfontNew);
-  ReleaseDC(hWnd, hdcWnd);
+  WinReleasePS(hpsWnd);
 }
-#endif
 
 
 MRESULT EXPENTRY DlgProcSetupType(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
@@ -529,6 +486,7 @@ MRESULT EXPENTRY DlgProcSetupType(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
   char          szBuf[MAX_BUF];
   char          szBufTemp[MAX_BUF];
   char          szBufTemp2[MAX_BUF];
+  HOBJECT       hobject;
 
   hRadioSt0   = WinWindowFromID(hDlg, IDC_RADIO_ST0);
   hStaticSt0  = WinWindowFromID(hDlg, IDC_STATIC_ST0_DESCRIPTION);
@@ -543,11 +501,10 @@ MRESULT EXPENTRY DlgProcSetupType(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
   switch(msg)
   {
     case WM_INITDLG:
-//      DisableSystemMenuItems(hDlg, FALSE);
       WinSetWindowText(hDlg, diSetupType.szTitle);
 
       hDestinationPath = WinWindowFromID(hDlg, IDC_EDIT_DESTINATION); /* handle to the static destination path text window */
-//      TruncateString(hDestinationPath, szTempSetupPath, szBuf, sizeof(szBuf));
+      TruncateString(hDestinationPath, szTempSetupPath, szBuf, sizeof(szBuf));
 
       WinSetDlgItemText(hDlg, IDC_EDIT_DESTINATION, szBuf);
       WinSetDlgItemText(hDlg, IDC_STATIC_MSG0, diSetupType.szMessage0);
@@ -674,6 +631,11 @@ MRESULT EXPENTRY DlgProcSetupType(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
 
       break;
 
+    case WM_CLOSE:
+      AskCancelDlg(hDlg);
+      return (MRESULT)TRUE;
+      break;
+
     case WM_COMMAND:
       switch ( SHORT1FROMMP( mp1 ) )
       {
@@ -687,20 +649,26 @@ MRESULT EXPENTRY DlgProcSetupType(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
           else if(WinQueryButtonCheckstate(hDlg, IDC_RADIO_ST3) == 1)
             ulTempSetupType = ST_RADIO3;
 
-//          BrowseForDirectory(hDlg, szTempSetupPath);
+          BrowseForDirectory(hDlg, szTempSetupPath);
 
           hDestinationPath = WinWindowFromID(hDlg, IDC_EDIT_DESTINATION); /* handle to the static destination path text window */
-//          TruncateString(hDestinationPath, szTempSetupPath, szBuf, sizeof(szBuf));
+          TruncateString(hDestinationPath, szTempSetupPath, szBuf, sizeof(szBuf));
           WinSetDlgItemText(hDlg, IDC_EDIT_DESTINATION, szBuf);
+          return (MRESULT)TRUE;
           break;
 
         case IDC_README:
-#ifdef OLDCODE /* @MAK - need to port this */
-          if(*diSetupType.szReadmeApp == '\0')
-            WinSpawn(diSetupType.szReadmeFilename, NULL, szSetupDir, TRUENORMAL, FALSE);
-          else
-            WinSpawn(diSetupType.szReadmeApp, diSetupType.szReadmeFilename, szSetupDir, TRUENORMAL, FALSE);
+#ifdef OLDCODE /* NEeds to be written */
+//          if(*diSetupType.szReadmeApp == '\0') {
+            strcpy(szBuf, szSetupDir);
+            strcat(szBuf, diSetupType.szReadmeFilename);
+            WinOpenObject(WinQueryObject(szBuf), 0, TRUE);
+//            WinOpenObject(WinQueryObject(szBuf), 0, TRUE);
+//          }
+//          else
+//            WinSpawn(diSetupType.szReadmeApp, diSetupType.szReadmeFilename, szSetupDir, TRUENORMAL, FALSE);
 #endif
+          return (MRESULT)TRUE;
           break;
 
         case IDWIZNEXT:
@@ -809,6 +777,7 @@ MRESULT EXPENTRY DlgProcSetupType(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
         case IDCANCEL:
           strcpy(sgProduct.szPath, szTempSetupPath);
           AskCancelDlg(hDlg);
+          return (MRESULT)TRUE;
           break;
 
         default:
@@ -819,148 +788,63 @@ MRESULT EXPENTRY DlgProcSetupType(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
   return(WinDefDlgProc(hDlg, msg, mp1, mp2));
 }
 
-#ifdef OLDCODE
-void DrawLBText(LPDRAWITEMSTRUCT lpdis, DWORD dwACFlag)
+void DrawLBText(POWNERITEM poi, DWORD dwACFlag)
 {
   siC     *siCTemp  = NULL;
-  TCHAR   tchBuffer[MAX_BUF];
-  TEXTMETRIC tm;
+  CHAR   chBuffer[MAX_BUF];
   DWORD      y;
 
-  siCTemp = SiCNodeGetObject(lpdis->itemID, FALSE, dwACFlag);
+  siCTemp = SiCNodeGetObject(poi->idItem, FALSE, dwACFlag);
   if(siCTemp != NULL)
   {
-    SendMessage(lpdis->hwndItem, LB_GETTEXT, lpdis->itemID, (LPARAM)tchBuffer);
+    WinSendMsg(poi->hwnd, LM_QUERYITEMTEXT, MPFROM2SHORT(poi->idItem, MAX_BUF), (MPARAM)chBuffer);
 
-    if((lpdis->itemAction & ODA_FOCUS) && (lpdis->itemState & ODS_SELECTED))
-    {
-      // remove the focus rect on the previous selected item
-      DrawFocusRect(lpdis->hDC, &(lpdis->rcItem));
+    if (poi->fsState != poi->fsStateOld) {
+      if (!(siCTemp->dwAttributes & SIC_DISABLED))
+        WinInvertRect(poi->hps, &poi->rclItem);
+    } else {
+       ULONG flags = DT_TEXTATTRS | DT_LEFT | DT_VCENTER;
+       RECTL rclTemp = poi->rclItem;
+       rclTemp.xLeft += CX_CHECKBOX+4+4;
+       if(siCTemp->dwAttributes & SIC_DISABLED)
+         flags |= DT_HALFTONE;
+       WinDrawText(poi->hps, -1, chBuffer, &rclTemp, 0, 0,
+                   flags);
+       if (poi->fsState) {
+         WinInvertRect(poi->hps, &poi->rclItem);
+       }
     }
-
-    siCTemp = SiCNodeGetObject(lpdis->itemID, FALSE, dwACFlag);
-    if(lpdis->itemAction & ODA_FOCUS)
-    {
-      if((lpdis->itemState & ODS_SELECTED) &&
-        !(lpdis->itemState & ODS_FOCUS))
-      {
-        if(siCTemp->dwAttributes & SIC_DISABLED)
-          SetTextColor(lpdis->hDC,        GetSysColor(COLOR_GRAYTEXT));
-        else
-        {
-          SetTextColor(lpdis->hDC,        GetSysColor(COLOR_WINDOWTEXT));
-          SetBkColor(lpdis->hDC,          GetSysColor(COLOR_WINDOW));
-        }
-      }
-      else
-      {
-        if(siCTemp->dwAttributes & SIC_DISABLED)
-          SetTextColor(lpdis->hDC,        GetSysColor(COLOR_GRAYTEXT));
-        else
-        {
-          SetTextColor(lpdis->hDC,        GetSysColor(COLOR_HIGHLIGHTTEXT));
-          SetBkColor(lpdis->hDC,          GetSysColor(COLOR_HIGHLIGHT));
-        }
-      }
-    }
-    else if(lpdis->itemAction & ODA_DRAWENTIRE)
-    {
-      if(siCTemp->dwAttributes & SIC_DISABLED)
-        SetTextColor(lpdis->hDC, GetSysColor(COLOR_GRAYTEXT));
-      else
-        SetTextColor(lpdis->hDC, GetSysColor(COLOR_WINDOWTEXT));
-    }
-
-    // If a screen reader is being used we want to redraw the text whether
-    //   it has focus or not because the text changes whenever the checkbox
-    //   changes.
-    if( gSystemInfo.bScreenReader || (lpdis->itemAction & (ODA_DRAWENTIRE | ODA_FOCUS)) )
-    {
-      // Display the text associated with the item.
-      GetTextMetrics(lpdis->hDC, &tm);
-      y = (lpdis->rcItem.bottom + lpdis->rcItem.top - tm.tmHeight) / 2;
-
-      ExtTextOut(lpdis->hDC,
-                 CX_CHECKBOX + 5,
-                 y,
-                 ETO_OPAQUE | ETO_CLIPPED,
-                 &(lpdis->rcItem),
-                 tchBuffer,
-                 strlen(tchBuffer),
-                 NULL);
-    }
+    poi->fsState = poi->fsStateOld = 0;
   }
 }
 
-void DrawCheck(LPDRAWITEMSTRUCT lpdis, DWORD dwACFlag)
+void DrawCheck(POWNERITEM poi, DWORD dwACFlag)
 {
   siC     *siCTemp  = NULL;
-  HDC     hdcMem;
   HBITMAP hbmpCheckBox;
+  POINTL ptl;
 
-  siCTemp = SiCNodeGetObject(lpdis->itemID, FALSE, dwACFlag);
+  siCTemp = SiCNodeGetObject(poi->idItem, FALSE, dwACFlag);
   if(siCTemp != NULL)
   {
     if(!(siCTemp->dwAttributes & SIC_SELECTED))
       /* Component is not selected.  Use the unchecked bitmap regardless if the 
        * component is disabled or not.  The unchecked bitmap looks the same if
        * it's disabled or enabled. */
-      hbmpCheckBox = hbmpBoxUnChecked;
+      hbmpCheckBox = GpiLoadBitmap(poi->hps, hSetupRscInst, IDB_BOX_UNCHECKED, CX_CHECKBOX, CY_CHECKBOX);
     else if(siCTemp->dwAttributes & SIC_DISABLED)
       /* Component is checked and disabled */
-      hbmpCheckBox = hbmpBoxCheckedDisabled;
+      hbmpCheckBox = GpiLoadBitmap(poi->hps, hSetupRscInst, IDB_BOX_CHECKED_DISABLED, CX_CHECKBOX, CY_CHECKBOX);
     else
       /* Component is checked and enabled */
-      hbmpCheckBox = hbmpBoxChecked;
+      hbmpCheckBox = GpiLoadBitmap(poi->hps, hSetupRscInst, IDB_BOX_CHECKED, CX_CHECKBOX, CY_CHECKBOX);
 
-    SendMessage(lpdis->hwndItem, LB_SETITEMDATA, lpdis->itemID, (LPARAM)hbmpCheckBox);
-    if((hdcMem = CreateCompatibleDC(lpdis->hDC)) != NULL)
-    {
-      SelectObject(hdcMem, hbmpCheckBox);
-
-      // BitBlt() is used to prepare the checkbox icon into the list box item's device context.
-      // The SendMessage() function using LB_SETITEMDATA performs the drawing.
-      BitBlt(lpdis->hDC,
-             lpdis->rcItem.left + 2,
-             lpdis->rcItem.top + 2,
-             lpdis->rcItem.right - lpdis->rcItem.left,
-             lpdis->rcItem.bottom - lpdis->rcItem.top,
-             hdcMem,
-             0,
-             0,
-             SRCCOPY);
-
-      DeleteDC(hdcMem);
-    }
+    ptl.x = poi->rclItem.xLeft+4;
+    ptl.y = poi->rclItem.yBottom+4; 
+    WinDrawBitmap(poi->hps, hbmpCheckBox, NULL, &ptl, 0, 0, DBM_NORMAL);
+    GpiDeleteBitmap(hbmpCheckBox);
   }
 }
-#endif
-
-void lbAddItem(HWND hList, siC *siCComponent)
-{
-  DWORD dwItem;
-  CHAR tchBuffer[MAX_BUF];
-
-  strcpy(tchBuffer, siCComponent->szDescriptionShort);
-  if(gSystemInfo.bScreenReader)
-  {
-    strcat(tchBuffer, " - ");
-    if(!(siCComponent->dwAttributes & SIC_SELECTED))
-      strcat(tchBuffer, sgInstallGui.szUnchecked);
-    else
-      strcat(tchBuffer, sgInstallGui.szChecked);
-  }
-  dwItem = WinSendMsg(hList, LM_INSERTITEM, LIT_END, (LPARAM)tchBuffer);
-
-#ifdef OLDCODE
-  if(siCComponent->dwAttributes & SIC_DISABLED)
-    SendMessage(hList, LB_SETITEMDATA, dwItem, (LPARAM)hbmpBoxCheckedDisabled);
-  else if(siCComponent->dwAttributes & SIC_SELECTED)
-    SendMessage(hList, LB_SETITEMDATA, dwItem, (LPARAM)hbmpBoxChecked);
-  else
-    SendMessage(hList, LB_SETITEMDATA, dwItem, (LPARAM)hbmpBoxUnChecked);
-#endif
-} 
 
 void InvalidateLBCheckbox(HWND hwndListBox)
 {
@@ -1026,9 +910,9 @@ void ToggleCheck(HWND hwndListBox, DWORD dwIndex, DWORD dwACFlag)
 // ************************************************************************
 MRESULT APIENTRY NewListBoxWndProc(HWND hWnd, ULONG msg, MPARAM mp1, MPARAM mp2)
 {
-  DWORD  dwIndex;
   POINTS ptspointerpos;
   USHORT fsflags;
+  ULONG ulIndex;
   
   switch(msg)
   {
@@ -1036,28 +920,25 @@ MRESULT APIENTRY NewListBoxWndProc(HWND hWnd, ULONG msg, MPARAM mp1, MPARAM mp2)
       fsflags = SHORT1FROMMP(mp1);
       if (SHORT2FROMMP(mp2) == VK_SPACE) {
         if (!(fsflags & KC_KEYUP)) {
-          dwIndex = WinSendMsg(hWnd,
+          ulIndex = WinSendMsg(hWnd,
                                LM_QUERYSELECTION,
                                0,
                                0);
-          ToggleCheck(hWnd, dwIndex, gdwACFlag);
+          ToggleCheck(hWnd, ulIndex, gdwACFlag);
         }
       }
       break;
 
     case WM_BUTTON1DOWN:
       ptspointerpos.x = SHORT1FROMMP(mp1);
-      ptspointerpos.y = SHORT1FROMMP(mp1);
+      ptspointerpos.y = SHORT2FROMMP(mp1);
 
-      if((ptspointerpos.x > 1) && (ptspointerpos.y <= CX_CHECKBOX))
+      if((ptspointerpos.x >= 0) && (ptspointerpos.x <= CX_CHECKBOX+4+4))
       {
-#ifdef OLDCODE
-        dwIndex = LOWORD(SendMessage(hWnd,
-                                     LB_ITEMFROMPOINT,
-                                     0,
-                                     (LPARAM)MAKELPARAM(dwPosX, dwPosY)));
-#endif
-        ToggleCheck(hWnd, dwIndex, gdwACFlag);
+        MRESULT mr = (OldListBoxWndProc)(hWnd, msg, mp1, mp2);
+        ulIndex = WinSendMsg(hWnd, LM_QUERYSELECTION, LIT_FIRST, 0);
+        ToggleCheck(hWnd, ulIndex, gdwACFlag);
+        return mr;
       }
       break;
   }
@@ -1074,7 +955,7 @@ MRESULT EXPENTRY DlgProcSelectComponents(HWND hDlg, ULONG msg, MPARAM mp1, MPARA
   HWND                hwndLBComponents;
   SWP                 swpDlg;
   CHAR                tchBuffer[MAX_BUF];
-//  LPDRAWITEMSTRUCT    lpdis;
+  POWNERITEM          pOwnerItem;
   ULONG               ulDSBuf;
   char                szBuf[MAX_BUF];
 
@@ -1083,7 +964,6 @@ MRESULT EXPENTRY DlgProcSelectComponents(HWND hDlg, ULONG msg, MPARAM mp1, MPARA
   switch(msg)
   {
     case WM_INITDLG:
-//      DisableSystemMenuItems(hDlg, FALSE);
       WinSetWindowText(hDlg, diSelectComponents.szTitle);
       WinSetDlgItemText(hDlg, IDC_MESSAGE0, diSelectComponents.szMessage0);
 
@@ -1091,13 +971,13 @@ MRESULT EXPENTRY DlgProcSelectComponents(HWND hDlg, ULONG msg, MPARAM mp1, MPARA
       if(siCTemp != NULL)
       {
         if((!(siCTemp->dwAttributes & SIC_INVISIBLE)) && (!(siCTemp->dwAttributes & SIC_ADDITIONAL)))
-          lbAddItem(hwndLBComponents, siCTemp);
+          WinSendMsg(hwndLBComponents, LM_INSERTITEM, LIT_END, (MPARAM)siCTemp->szDescriptionShort);
 
         siCTemp = siCTemp->Next;
         while((siCTemp != siComponents) && (siCTemp != NULL))
         {
           if((!(siCTemp->dwAttributes & SIC_INVISIBLE)) && (!(siCTemp->dwAttributes & SIC_ADDITIONAL)))
-            lbAddItem(hwndLBComponents, siCTemp);
+            WinSendMsg(hwndLBComponents, LM_INSERTITEM, LIT_END, (MPARAM)siCTemp->szDescriptionShort);
 
           siCTemp = siCTemp->Next;
         }
@@ -1152,36 +1032,29 @@ MRESULT EXPENTRY DlgProcSelectComponents(HWND hDlg, ULONG msg, MPARAM mp1, MPARA
       OldListBoxWndProc = WinSubclassWindow(hwndLBComponents, (PFNWP)NewListBoxWndProc);
       break;
 
-#ifdef OLDCODE
+    case WM_MEASUREITEM:
+      return MRFROM2SHORT(CX_CHECKBOX+4+4, 0);
+
     case WM_DRAWITEM:
-      lpdis = (LPDRAWITEMSTRUCT)lParam;
+      pOwnerItem = (POWNERITEM)mp2;
 
       // If there are no list box items, skip this message.
-      if(lpdis->itemID == -1)
+      if(pOwnerItem->idItem == -1)
         break;
 
-      DrawLBText(lpdis, AC_COMPONENTS);
-      DrawCheck(lpdis, AC_COMPONENTS);
-
-      // draw the focus rect on the selected item
-      if((lpdis->itemAction & ODA_FOCUS) &&
-         (lpdis->itemState & ODS_FOCUS))
-      {
-        DrawFocusRect(lpdis->hDC, &(lpdis->rcItem));
-      }
-
-      bReturn = TRUE;
+      DrawLBText(pOwnerItem, AC_COMPONENTS);
+      DrawCheck(pOwnerItem, AC_COMPONENTS);
 
       /* update the disk space required info in the dialog.  It is already
          in Kilobytes */
-      ullDSBuf = GetDiskSpaceRequired(DSR_DOWNLOAD_SIZE);
-      _ui64toa(ullDSBuf, tchBuffer, 10);
+      ulDSBuf = GetDiskSpaceRequired(DSR_DOWNLOAD_SIZE);
+      itoa(ulDSBuf, tchBuffer, 10);
       strcpy(szBuf, tchBuffer);
       strcat(szBuf, " KB");
       
       WinSetDlgItemText(hDlg, IDC_DOWNLOAD_SIZE, szBuf);
+      return (MRESULT)TRUE;
       break;
-#endif
 
     case WM_CONTROL:
       switch ( SHORT1FROMMP( mp1 ) )
@@ -1194,159 +1067,9 @@ MRESULT EXPENTRY DlgProcSelectComponents(HWND hDlg, ULONG msg, MPARAM mp1, MPARA
       }
       break;
 
-    case WM_COMMAND:
-      switch ( SHORT1FROMMP( mp1 ) )
-      {
-        case IDWIZNEXT:
-          WinDestroyWindow(hDlg);
-          DlgSequence(NEXT_DLG);
-          break;
-
-        case IDWIZBACK:
-          WinDestroyWindow(hDlg);
-          DlgSequence(PREV_DLG);
-          break;
-
-        case IDCANCEL:
-          AskCancelDlg(hDlg);
-          break;
-
-        default:
-          break;
-      }
-      break;
-  }
-
-  return(WinDefDlgProc(hDlg, msg, mp1, mp2));
-}
-
-MRESULT EXPENTRY DlgProcSelectAdditionalComponents(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
-{
-  BOOL                bReturn = FALSE;
-  siC                 *siCTemp;
-  DWORD               dwIndex;
-  DWORD               dwItems = MAX_BUF;
-  HWND                hwndLBComponents;
-  SWP                 swpDlg;
-  TCHAR               tchBuffer[MAX_BUF];
-//  LPDRAWITEMSTRUCT    lpdis;
-  ULONGLONG           ullDSBuf;
-  char                szBuf[MAX_BUF];
-
-  hwndLBComponents  = WinWindowFromID(hDlg, IDC_LIST_COMPONENTS);
-
-  switch(msg)
-  {
-    case WM_INITDLG:
-//      DisableSystemMenuItems(hDlg, FALSE);
-      WinSetWindowText(hDlg, diSelectAdditionalComponents.szTitle);
-      WinSetDlgItemText(hDlg, IDC_MESSAGE0, diSelectAdditionalComponents.szMessage0);
-
-      siCTemp = siComponents;
-      if(siCTemp != NULL)
-      {
-        if((!(siCTemp->dwAttributes & SIC_INVISIBLE)) && (siCTemp->dwAttributes & SIC_ADDITIONAL))
-          lbAddItem(hwndLBComponents, siCTemp);
-
-        siCTemp = siCTemp->Next;
-        while((siCTemp != siComponents) && (siCTemp != NULL))
-        {
-          if((!(siCTemp->dwAttributes & SIC_INVISIBLE)) && (siCTemp->dwAttributes & SIC_ADDITIONAL))
-            lbAddItem(hwndLBComponents, siCTemp);
-
-          siCTemp = siCTemp->Next;
-        }
-        WinSetFocus(HWND_DESKTOP, hwndLBComponents);
-        WinSendMsg(hwndLBComponents, LM_SELECTITEM, 0, 0);
-        WinSetDlgItemText(hDlg, IDC_STATIC_DESCRIPTION, SiCNodeGetDescriptionLong(0, FALSE, AC_ADDITIONAL_COMPONENTS));
-      }
-
-      WinQueryWindowPos(hDlg, &swpDlg);
-      WinSetWindowPos(hDlg,
-                      HWND_TOP,
-                      (gSystemInfo.lScreenX/2)-(swpDlg.cx/2),
-                      (gSystemInfo.lScreenY/2)-(swpDlg.cy/2),
-                      0,
-                      0,
-                      SWP_MOVE);
-
-      /* update the disk space available info in the dialog.  GetDiskSpaceAvailable()
-         returns value in kbytes */
-      ullDSBuf = GetDiskSpaceAvailable(sgProduct.szPath);
-      itoa(ullDSBuf, tchBuffer, 10);
-      ParsePath(sgProduct.szPath, szBuf, sizeof(szBuf), FALSE, PP_ROOT_ONLY);
-      RemoveBackSlash(szBuf);
-      strcat(szBuf, "   ");
-      strcat(szBuf, tchBuffer);
-      strcat(szBuf, " KB");
-      WinSetDlgItemText(hDlg, IDC_SPACE_AVAILABLE, szBuf);
-
-      WinSetDlgItemText(hDlg, IDC_STATIC1, sgInstallGui.szAdditionalComponents_);
-      WinSetDlgItemText(hDlg, IDC_STATIC2, sgInstallGui.szDescription);
-      WinSetDlgItemText(hDlg, IDC_STATIC3, sgInstallGui.szTotalDownloadSize);
-      WinSetDlgItemText(hDlg, IDC_STATIC4, sgInstallGui.szSpaceAvailable);
-      WinSetDlgItemText(hDlg, IDWIZBACK, sgInstallGui.szBack_);
-      WinSetDlgItemText(hDlg, IDWIZNEXT, sgInstallGui.szNext_);
-      WinSetDlgItemText(hDlg, IDCANCEL, sgInstallGui.szCancel_);
-#ifdef OLDCODE
-      SendDlgItemMessage (hDlg, IDC_STATIC1, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_STATIC2, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_STATIC3, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_STATIC4, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDWIZBACK, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDWIZNEXT, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDCANCEL, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_LIST_COMPONENTS, WM_SETFONT, (WPARAM)sgInstallGui.systemFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_STATIC_DESCRIPTION, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_DOWNLOAD_SIZE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_SPACE_AVAILABLE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-#endif
-
-      gdwACFlag = AC_ADDITIONAL_COMPONENTS;
-      OldListBoxWndProc = WinSubclassWindow(hwndLBComponents, (WNDPROC)NewListBoxWndProc);
-      break;
-
-#ifdef OLDCODE
-    case WM_DRAWITEM:
-      lpdis = (LPDRAWITEMSTRUCT)lParam;
-
-      // If there are no list box items, skip this message.
-      if(lpdis->itemID == -1)
-        break;
-
-      DrawLBText(lpdis, AC_ADDITIONAL_COMPONENTS);
-      DrawCheck(lpdis, AC_ADDITIONAL_COMPONENTS);
-
-      // draw the focus rect on the selected item
-      if((lpdis->itemAction & ODA_FOCUS) &&
-         (lpdis->itemState & ODS_FOCUS))
-      {
-        DrawFocusRect(lpdis->hDC, &(lpdis->rcItem));
-      }
-
-      bReturn = TRUE;
-
-      /* update the disk space required info in the dialog.  It is already
-         in Kilobytes */
-      ullDSBuf = GetDiskSpaceRequired(DSR_DOWNLOAD_SIZE);
-      _ui64toa(ullDSBuf, tchBuffer, 10);
-      strcpy(szBuf, tchBuffer);
-      strcat(szBuf, " KB");
-      
-      WinSetDlgItemText(hDlg, IDC_DOWNLOAD_SIZE, szBuf);
-      break;
-#endif
-
-    case WM_CONTROL:
-      switch ( SHORT1FROMMP( mp1 ) )
-      {
-        case IDC_LIST_COMPONENTS:
-          /* to update the long description for each component the user selected */
-          if((dwIndex = WinSendMsg(hwndLBComponents, LM_QUERYSELECTION, 0, 0)) != LIT_NONE)
-            WinSetDlgItemText(hDlg, IDC_STATIC_DESCRIPTION, SiCNodeGetDescriptionLong(dwIndex, FALSE, AC_ADDITIONAL_COMPONENTS));
-          break;
-      }
+    case WM_CLOSE:
+      AskCancelDlg(hDlg);
+      return (MRESULT)TRUE;
       break;
 
     case WM_COMMAND:
@@ -1364,6 +1087,7 @@ MRESULT EXPENTRY DlgProcSelectAdditionalComponents(HWND hDlg, ULONG msg, MPARAM 
 
         case IDCANCEL:
           AskCancelDlg(hDlg);
+          return (MRESULT)TRUE;
           break;
 
         default:
@@ -1374,250 +1098,6 @@ MRESULT EXPENTRY DlgProcSelectAdditionalComponents(HWND hDlg, ULONG msg, MPARAM 
 
   return(WinDefDlgProc(hDlg, msg, mp1, mp2));
 }
-
-#ifdef OLDCODE
-LRESULT CALLBACK DlgProcWindowsIntegration(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
-{
-  HWND hcbCheck0;
-  HWND hcbCheck1;
-  HWND hcbCheck2;
-  HWND hcbCheck3;
-  RECT rDlg;
-
-  hcbCheck0 = WinWindowFromID(hDlg, IDC_CHECK0);
-  hcbCheck1 = WinWindowFromID(hDlg, IDC_CHECK1);
-  hcbCheck2 = WinWindowFromID(hDlg, IDC_CHECK2);
-  hcbCheck3 = WinWindowFromID(hDlg, IDC_CHECK3);
-
-  switch(msg)
-  {
-    case WM_INITDLG:
-      DisableSystemMenuItems(hDlg, FALSE);
-      WinSetWindowText(hDlg, diWindowsIntegration.szTitle);
-      WinSetDlgItemText(hDlg, IDC_MESSAGE0, diWindowsIntegration.szMessage0);
-      WinSetDlgItemText(hDlg, IDC_MESSAGE1, diWindowsIntegration.szMessage1);
-
-      if(diWindowsIntegration.wiCB0.bEnabled)
-      {
-        WinShowWindow(hcbCheck0, TRUE);
-        WinCheckButton(hDlg, IDC_CHECK0, diWindowsIntegration.wiCB0.bCheckBoxState);
-        WinSetDlgItemText(hDlg, IDC_CHECK0, diWindowsIntegration.wiCB0.szDescription);
-      }
-      else
-        WinShowWindow(hcbCheck0, FALSE);
-
-      if(diWindowsIntegration.wiCB1.bEnabled)
-      {
-        WinShowWindow(hcbCheck1, TRUE);
-        WinCheckButton(hDlg, IDC_CHECK1, diWindowsIntegration.wiCB1.bCheckBoxState);
-        WinSetDlgItemText(hDlg, IDC_CHECK1, diWindowsIntegration.wiCB1.szDescription);
-      }
-      else
-        WinShowWindow(hcbCheck1, FALSE);
-
-      if(diWindowsIntegration.wiCB2.bEnabled)
-      {
-        WinShowWindow(hcbCheck2, TRUE);
-        WinCheckButton(hDlg, IDC_CHECK2, diWindowsIntegration.wiCB2.bCheckBoxState);
-        WinSetDlgItemText(hDlg, IDC_CHECK2, diWindowsIntegration.wiCB2.szDescription);
-      }
-      else
-        WinShowWindow(hcbCheck2, FALSE);
-
-      if(diWindowsIntegration.wiCB3.bEnabled)
-      {
-        WinShowWindow(hcbCheck3, TRUE);
-        WinCheckButton(hDlg, IDC_CHECK3, diWindowsIntegration.wiCB3.bCheckBoxState);
-        WinSetDlgItemText(hDlg, IDC_CHECK3, diWindowsIntegration.wiCB3.szDescription);
-      }
-      else
-        WinShowWindow(hcbCheck3, FALSE);
-
-      if(GetClientRect(hDlg, &rDlg))
-        SetWindowPos(hDlg,
-                     HWND_TOP,
-                     (gSystemInfo.lScreenX/2)-(rDlg.right/2),
-                     (gSystemInfo.lScreenY/2)-(rDlg.bottom/2),
-                     0,
-                     0,
-                     SWP_NOSIZE);
-
-      WinSetDlgItemText(hDlg, IDWIZBACK, sgInstallGui.szBack_);
-      WinSetDlgItemText(hDlg, IDWIZNEXT, sgInstallGui.szNext_);
-      WinSetDlgItemText(hDlg, IDCANCEL, sgInstallGui.szCancel_);
-      SendDlgItemMessage (hDlg, IDWIZBACK, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDWIZNEXT, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDCANCEL, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_CHECK0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_CHECK1, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_CHECK2, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_CHECK3, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_MESSAGE1, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      break;
-
-    case WM_COMMAND:
-      switch ( SHORT1FROMMP( mp1 ) )
-      {
-        case IDWIZNEXT:
-          if(WinQueryButtonCheckstate(hDlg, IDC_CHECK0) == 1)
-          {
-          }
-
-          if(diWindowsIntegration.wiCB0.bEnabled)
-          {
-            if(WinQueryButtonCheckstate(hDlg, IDC_CHECK0) == 1)
-              diWindowsIntegration.wiCB0.bCheckBoxState = TRUE;
-            else
-              diWindowsIntegration.wiCB0.bCheckBoxState = FALSE;
-          }
-
-          if(diWindowsIntegration.wiCB1.bEnabled)
-          {
-            if(WinQueryButtonCheckstate(hDlg, IDC_CHECK1) == 1)
-              diWindowsIntegration.wiCB1.bCheckBoxState = TRUE;
-            else
-              diWindowsIntegration.wiCB1.bCheckBoxState = FALSE;
-          }
-
-          if(diWindowsIntegration.wiCB2.bEnabled)
-          {
-            if(WinQueryButtonCheckstate(hDlg, IDC_CHECK2) == 1)
-              diWindowsIntegration.wiCB2.bCheckBoxState = TRUE;
-            else
-              diWindowsIntegration.wiCB2.bCheckBoxState = FALSE;
-          }
-
-          if(diWindowsIntegration.wiCB3.bEnabled)
-          {
-            if(WinQueryButtonCheckstate(hDlg, IDC_CHECK3) == 1)
-              diWindowsIntegration.wiCB3.bCheckBoxState = TRUE;
-            else
-              diWindowsIntegration.wiCB3.bCheckBoxState = FALSE;
-          }
-
-          WinDestroyWindow(hDlg);
-          DlgSequence(NEXT_DLG);
-          break;
-
-        case IDWIZBACK:
-          WinDestroyWindow(hDlg);
-          DlgSequence(PREV_DLG);
-          break;
-
-        case IDCANCEL:
-          AskCancelDlg(hDlg);
-          break;
-
-        default:
-          break;
-      }
-      break;
-  }
-  return(WinDefDlgProc(hDlg, msg, mp1, mp2));
-}
-
-MRESULT EXPENTRY DlgProcProgramFolder(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
-{
-  char            szBuf[MAX_BUF];
-  HANDLE          hDir;
-  DWORD           dwIndex;
-  WIN32_FIND_DATA wfdFindFileData;
-  RECT            rDlg;
-
-  switch(msg)
-  {
-    case WM_INITDLG:
-//      DisableSystemMenuItems(hDlg, FALSE);
-      WinSetWindowText(hDlg, diProgramFolder.szTitle);
-      WinSetDlgItemText(hDlg, IDC_MESSAGE0, diProgramFolder.szMessage0);
-      WinSetDlgItemText(hDlg, IDC_EDIT_PROGRAM_FOLDER, sgProduct.szProgramFolderName);
-
-      strcpy(szBuf, sgProduct.szProgramFolderPath);
-      strcat(szBuf, "\\*.*");
-      if((hDir = FindFirstFile(szBuf , &wfdFindFileData)) != INVALID_HANDLE_VALUE)
-      {
-        if((wfdFindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && (strcmpi(wfdFindFileData.cFileName, ".") != 0) && (strcmpi(wfdFindFileData.cFileName, "..") != 0))
-        {
-          SendDlgItemMessage(hDlg, IDC_LIST, LB_ADDSTRING, 0, (LPARAM)wfdFindFileData.cFileName);
-        }
-
-        while(FindNextFile(hDir, &wfdFindFileData))
-        {
-          if((wfdFindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && (strcmpi(wfdFindFileData.cFileName, ".") != 0) && (strcmpi(wfdFindFileData.cFileName, "..") != 0))
-            SendDlgItemMessage(hDlg, IDC_LIST, LB_ADDSTRING, 0, (LPARAM)wfdFindFileData.cFileName);
-        }
-        FindClose(hDir);
-      }
-
-      if(GetClientRect(hDlg, &rDlg))
-        SetWindowPos(hDlg,
-                     HWND_TOP,
-                     (gSystemInfo.lScreenX/2)-(rDlg.right/2),
-                     (gSystemInfo.lScreenY/2)-(rDlg.bottom/2),
-                     0,
-                     0,
-                     SWP_NOSIZE);
-
-      WinSetDlgItemText(hDlg, IDC_STATIC1, sgInstallGui.szProgramFolder_);
-      WinSetDlgItemText(hDlg, IDC_STATIC2, sgInstallGui.szExistingFolder_);
-      WinSetDlgItemText(hDlg, IDWIZBACK, sgInstallGui.szBack_);
-      WinSetDlgItemText(hDlg, IDWIZNEXT, sgInstallGui.szNext_);
-      WinSetDlgItemText(hDlg, IDCANCEL, sgInstallGui.szCancel_);
-      SendDlgItemMessage (hDlg, IDC_STATIC1, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_STATIC2, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDWIZBACK, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDWIZNEXT, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDCANCEL, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_EDIT_PROGRAM_FOLDER, WM_SETFONT, (WPARAM)sgInstallGui.systemFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_LIST, WM_SETFONT, (WPARAM)sgInstallGui.systemFont, 0L);
-      break;
-
-    case WM_COMMAND:
-      switch ( SHORT1FROMMP( mp1 ) )
-      {
-        case IDWIZNEXT:
-          WinQueryDlgItemText(hDlg, IDC_EDIT_PROGRAM_FOLDER, MAX_BUF, szBuf);
-          if(*szBuf == '\0')
-          {
-            char szEProgramFolderName[MAX_BUF];
-
-            GetPrivateProfileString("Messages", "ERROR_PROGRAM_FOLDER_NAME", "", szEProgramFolderName, sizeof(szEProgramFolderName), szFileIniInstall);
-            WinMessageBox(HWND_DESKTOP, hDlg, szEProgramFolderName, NULL, 0, MB_OK | MB_ICONEXCLAMATION);
-            break;
-          }
-          strcpy(sgProduct.szProgramFolderName, szBuf);
-        
-          WinDestroyWindow(hDlg);
-          DlgSequence(NEXT_DLG);
-          break;
-
-        case IDWIZBACK:
-          WinDestroyWindow(hDlg);
-          DlgSequence(PREV_DLG);
-          break;
-
-        case IDC_LIST:
-          if((dwIndex = SendDlgItemMessage(hDlg, IDC_LIST, LB_GETCURSEL, 0, 0)) != LB_ERR)
-          {
-            SendDlgItemMessage(hDlg, IDC_LIST, LB_GETTEXT, dwIndex, (LPARAM)szBuf);
-            WinSetDlgItemText(hDlg, IDC_EDIT_PROGRAM_FOLDER, szBuf);
-          }
-          break;
-
-        case IDCANCEL:
-          AskCancelDlg(hDlg);
-          break;
-
-        default:
-          break;
-      }
-      break;
-  }
-  return(WinDefDlgProc(hDlg, msg, mp1, mp2));
-}
-#endif
 
 void SaveDownloadProtocolOption(HWND hDlg)
 {
@@ -1635,7 +1115,6 @@ MRESULT EXPENTRY DlgProcAdvancedSettings(HWND hDlg, ULONG msg, MPARAM mp1, MPARA
   switch(msg)
   {
     case WM_INITDLG:
-//      DisableSystemMenuItems(hDlg, FALSE);
       WinSetWindowText(hDlg, diAdvancedSettings.szTitle);
       WinSetDlgItemText(hDlg, IDC_MESSAGE0,          diAdvancedSettings.szMessage0);
       WinSetDlgItemText(hDlg, IDC_EDIT_PROXY_SERVER, diAdvancedSettings.szProxyServer);
@@ -1652,9 +1131,9 @@ MRESULT EXPENTRY DlgProcAdvancedSettings(HWND hDlg, ULONG msg, MPARAM mp1, MPARA
                       0,
                       SWP_MOVE);
 
-      GetPrivateProfileString("Strings", "IDC Use Ftp", "", szBuf, sizeof(szBuf), szFileIniConfig);
+      GetPrivateProfileString("Strings", "IDC Use FTP", "", szBuf, sizeof(szBuf), szFileIniConfig);
       WinSetDlgItemText(hDlg, IDC_USE_FTP, szBuf);
-      GetPrivateProfileString("Strings", "IDC Use Http", "", szBuf, sizeof(szBuf), szFileIniConfig);
+      GetPrivateProfileString("Strings", "IDC Use HTTP", "", szBuf, sizeof(szBuf), szFileIniConfig);
       WinSetDlgItemText(hDlg, IDC_USE_HTTP, szBuf);
 
       WinSetDlgItemText(hDlg, IDC_STATIC, sgInstallGui.szProxySettings);
@@ -1707,6 +1186,11 @@ MRESULT EXPENTRY DlgProcAdvancedSettings(HWND hDlg, ULONG msg, MPARAM mp1, MPARA
         WinShowWindow(WinWindowFromID(hDlg, IDC_USE_HTTP), FALSE);
       }
 
+      break;
+
+    case WM_CLOSE:
+      AskCancelDlg(hDlg);
+      return (MRESULT)TRUE;
       break;
 
     case WM_COMMAND:
@@ -1793,7 +1277,6 @@ MRESULT EXPENTRY DlgProcAdditionalOptions(HWND hDlg, ULONG msg, MPARAM mp1, MPAR
         WinShowWindow(WinWindowFromID(hDlg, IDC_BUTTON_PROXY_SETTINGS), FALSE);
       }
 
-//      DisableSystemMenuItems(hDlg, FALSE);
       WinSetWindowText(hDlg, diAdditionalOptions.szTitle);
       WinSetDlgItemText(hDlg, IDC_MESSAGE0, diAdditionalOptions.szMessage0);
       WinSetDlgItemText(hDlg, IDC_MESSAGE1, diAdditionalOptions.szMessage1);
@@ -1867,6 +1350,11 @@ MRESULT EXPENTRY DlgProcAdditionalOptions(HWND hDlg, ULONG msg, MPARAM mp1, MPAR
 
       break;
 
+    case WM_CLOSE:
+      AskCancelDlg(hDlg);
+      return (MRESULT)TRUE;
+      break;
+
     case WM_COMMAND:
       switch ( SHORT1FROMMP( mp1 ) )
       {
@@ -1890,6 +1378,7 @@ MRESULT EXPENTRY DlgProcAdditionalOptions(HWND hDlg, ULONG msg, MPARAM mp1, MPAR
 
         case IDCANCEL:
           AskCancelDlg(hDlg);
+          return (MRESULT)TRUE;
           break;
 
         default:
@@ -2000,13 +1489,6 @@ LPSTR GetStartInstallMessage()
   dwBufSize += 4; // take into account 4 indentation spaces
   dwBufSize += strlen(sgProduct.szPath) + 2; // the extra 2 bytes is for the \r\n characters
   dwBufSize += 2; // the extra 2 bytes is for the \r\n characters
-
-  /* program folder */
-  if(GetPrivateProfileString("Messages", "STR_PROGRAM_FOLDER", "", szBuf, sizeof(szBuf), szFileIniInstall))
-    dwBufSize += strlen(szBuf) + 2; // the extra 2 bytes is for the \r\n characters
-
-  dwBufSize += 4; // take into account 4 indentation spaces
-  dwBufSize += strlen(sgProduct.szProgramFolderName) + 2; // the extra 2 bytes is for the \r\n\r\n characters
 
   if(GetTotalArchivesToDownload() > 0)
   {
@@ -2165,109 +1647,6 @@ LPSTR GetStartInstallMessage()
   return(szMessageBuf);
 }
 
-#ifdef OLDCODE
-// XXX also defined in extra.c, need to factor out
-
-#define SETUP_STATE_REG_KEY "Software\\%s\\%s\\%s\\Setup"
-
-LRESULT CALLBACK DlgProcQuickLaunch(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
-{
-  RECT  rDlg;
-  LPSTR szMessage = NULL;
-  char  szBuf[MAX_BUF];
-
-  switch(msg)
-  {
-    case WM_INITDLG:
-      DisableSystemMenuItems(hDlg, FALSE);
-      WinSetWindowText(hDlg, diQuickLaunch.szTitle);
-
-      GetPrivateProfileString("Strings", "IDC Turbo Mode", "", szBuf, sizeof(szBuf), szFileIniConfig);
-      WinSetDlgItemText(hDlg, IDC_CHECK_TURBO_MODE, szBuf);
-      WinSetDlgItemText(hDlg, IDC_STATIC, sgInstallGui.szCurrentSettings);
-      WinSetDlgItemText(hDlg, IDWIZBACK, sgInstallGui.szBack_);
-      WinSetDlgItemText(hDlg, IDWIZNEXT, sgInstallGui.szNext_);
-      WinSetDlgItemText(hDlg, IDCANCEL, sgInstallGui.szCancel_);
-      SendDlgItemMessage (hDlg, IDC_STATIC, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDWIZBACK, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDWIZNEXT, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDCANCEL, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_MESSAGE1, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_MESSAGE2, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_CHECK_TURBO_MODE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-
-      if(GetClientRect(hDlg, &rDlg))
-        SetWindowPos(hDlg,
-                     HWND_TOP,
-                     (gSystemInfo.lScreenX/2)-(rDlg.right/2),
-                     (gSystemInfo.lScreenY/2)-(rDlg.bottom/2),
-                     0,
-                     0,
-                     SWP_NOSIZE);
-
-      {
-        WinSetDlgItemText(hDlg, IDC_MESSAGE0, diQuickLaunch.szMessage0);
-        WinSetDlgItemText(hDlg, IDC_MESSAGE1, diQuickLaunch.szMessage1);
-        WinSetDlgItemText(hDlg, IDC_MESSAGE2, diQuickLaunch.szMessage2);
-      }
-
-      if(diQuickLaunch.bTurboModeEnabled)
-        WinShowWindow(WinWindowFromID(hDlg, IDC_CHECK_TURBO_MODE),  TRUE);
-      else
-      {
-        WinShowWindow(WinWindowFromID(hDlg, IDC_CHECK_TURBO_MODE),  FALSE);
-        diQuickLaunch.bTurboMode = FALSE;
-      }
-
-      if(diQuickLaunch.bTurboMode)
-        WinCheckButton(hDlg, IDC_CHECK_TURBO_MODE, 1);
-      else
-        WinCheckButton(hDlg, IDC_CHECK_TURBO_MODE, 0);
-
-      break;
-
-    case WM_COMMAND:
-      switch ( SHORT1FROMMP( mp1 ) )
-      {
-        case IDWIZNEXT:
-          if(diQuickLaunch.bTurboModeEnabled)
-          {
-            if(WinQueryButtonCheckstate(hDlg, IDC_CHECK_TURBO_MODE) == 1)
-              diQuickLaunch.bTurboMode = TRUE;
-            else
-              diQuickLaunch.bTurboMode = FALSE;
-          }
- 
-          WinDestroyWindow(hDlg);
-          DlgSequence(NEXT_DLG);
-          break;
-
-        case IDWIZBACK:
-          /* remember the last state of the TurboMode checkbox */
-          if(WinQueryButtonCheckstate(hDlg, IDC_CHECK_TURBO_MODE) == 1) {
-            diQuickLaunch.bTurboMode = TRUE;
-          }
-          else {
-            diQuickLaunch.bTurboMode = FALSE;
-          }
-          WinDestroyWindow(hDlg);
-          DlgSequence(PREV_DLG);
-          break;
-
-        case IDCANCEL:
-          AskCancelDlg(hDlg);
-          break;
-
-        default:
-          break;
-      }
-      break;
-  }
-  return(WinDefDlgProc(hDlg, msg, mp1, mp2));
-}
-#endif
-
 MRESULT EXPENTRY DlgProcStartInstall(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
 {
   SWP   swpDlg;
@@ -2276,7 +1655,6 @@ MRESULT EXPENTRY DlgProcStartInstall(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp
   switch(msg)
   {
     case WM_INITDLG:
-//      DisableSystemMenuItems(hDlg, FALSE);
       WinSetWindowText(hDlg, diStartInstall.szTitle);
 
       WinSetDlgItemText(hDlg, IDC_STATIC, sgInstallGui.szCurrentSettings);
@@ -2320,6 +1698,11 @@ MRESULT EXPENTRY DlgProcStartInstall(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp
 
       break;
 
+    case WM_CLOSE:
+      AskCancelDlg(hDlg);
+      return (MRESULT)TRUE;
+      break;
+
     case WM_COMMAND:
       switch ( SHORT1FROMMP( mp1 ) )
       {
@@ -2335,6 +1718,7 @@ MRESULT EXPENTRY DlgProcStartInstall(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp
 
         case IDCANCEL:
           AskCancelDlg(hDlg);
+          return (MRESULT)TRUE;
           break;
 
         default:
@@ -2356,7 +1740,6 @@ MRESULT EXPENTRY DlgProcReboot(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
   switch(msg)
   {
     case WM_INITDLG:
-//      DisableSystemMenuItems(hDlg, FALSE);
       WinCheckButton(hDlg, IDC_RADIO_YES, 1);
       WinSetFocus(HWND_DESKTOP, hRadioYes);
 
@@ -2379,6 +1762,11 @@ MRESULT EXPENTRY DlgProcReboot(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
       SendDlgItemMessage (hDlg, IDC_RADIO_NO, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
       SendDlgItemMessage (hDlg, DID_OK, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
 #endif
+      break;
+
+    case WM_CLOSE:
+      AskCancelDlg(hDlg);
+      return (MRESULT)TRUE;
       break;
 
     case WM_COMMAND:
@@ -2449,6 +1837,11 @@ MRESULT EXPENTRY DlgProcMessage(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
                       0,
                       SWP_MOVE);
 
+      break;
+
+    case WM_CLOSE:
+      AskCancelDlg(hDlg);
+      return (MRESULT)TRUE;
       break;
 
     case WM_COMMAND:
@@ -2613,18 +2006,6 @@ void DlgSequence(int iDirection)
           ulWizardState = DLG_SELECT_COMPONENTS;
           break;
         case DLG_SELECT_COMPONENTS:
-          ulWizardState = DLG_SELECT_ADDITIONAL_COMPONENTS;
-          break;
-        case DLG_SELECT_ADDITIONAL_COMPONENTS:
-          ulWizardState = DLG_WINDOWS_INTEGRATION;
-          break;
-        case DLG_WINDOWS_INTEGRATION:
-          ulWizardState = DLG_PROGRAM_FOLDER;
-          break;
-        case DLG_PROGRAM_FOLDER:
-          ulWizardState = DLG_QUICK_LAUNCH;
-          break;
-        case DLG_QUICK_LAUNCH:
           ulWizardState = DLG_ADDITIONAL_OPTIONS;
           break;
         case DLG_ADDITIONAL_OPTIONS:
@@ -2655,20 +2036,8 @@ void DlgSequence(int iDirection)
         case DLG_SELECT_COMPONENTS:
           ulWizardState = DLG_SETUP_TYPE;
           break;
-        case DLG_SELECT_ADDITIONAL_COMPONENTS:
-          ulWizardState = DLG_SELECT_COMPONENTS;
-          break;
-        case DLG_WINDOWS_INTEGRATION:
-          ulWizardState = DLG_SELECT_ADDITIONAL_COMPONENTS;
-          break;
-        case DLG_PROGRAM_FOLDER:
-          ulWizardState = DLG_WINDOWS_INTEGRATION;
-          break;
-        case DLG_QUICK_LAUNCH:
-          ulWizardState = DLG_PROGRAM_FOLDER;
-          break;
         case DLG_ADDITIONAL_OPTIONS:
-          ulWizardState = DLG_QUICK_LAUNCH;
+          ulWizardState = DLG_SELECT_COMPONENTS;
           break;
         case DLG_START_INSTALL:
           ulWizardState = DLG_ADDITIONAL_OPTIONS;
@@ -2735,42 +2104,10 @@ void DlgSequence(int iDirection)
         }
         break;
 
-      case DLG_SELECT_ADDITIONAL_COMPONENTS:
-        if((diSelectAdditionalComponents.bShowDialog) && (GetAdditionalComponentsCount() > 0))
-        {
-//          hDlgCurrent = InstantiateDialog(hWndMain, ulWizardState, diSelectAdditionalComponents.szTitle, DlgProcSelectAdditionalComponents);
-          bDone = TRUE;
-        }
-        break;
-
-      case DLG_WINDOWS_INTEGRATION:
-        if(diWindowsIntegration.bShowDialog)
-        {
-//          hDlgCurrent = InstantiateDialog(hWndMain, ulWizardState, diWindowsIntegration.szTitle, DlgProcWindowsIntegration);
-          bDone = TRUE;
-        }
-        break;
-
-      case DLG_PROGRAM_FOLDER:
-        if(diProgramFolder.bShowDialog && (sgProduct.ulCustomType == ulSetupType))
-        {
-//          hDlgCurrent = InstantiateDialog(hWndMain, ulWizardState, diProgramFolder.szTitle, DlgProcProgramFolder);
-          bDone = TRUE;
-        }
-      break;
-
       case DLG_ADVANCED_SETTINGS:
         if(diAdvancedSettings.bShowDialog)
         {
           hDlgCurrent = InstantiateDialog(hWndMain, ulWizardState, diAdvancedSettings.szTitle, DlgProcAdvancedSettings);
-          bDone = TRUE;
-        }
-        break;
-
-     case DLG_QUICK_LAUNCH:
-        if(diQuickLaunch.bShowDialog)
-        {
-//          hDlgCurrent = InstantiateDialog(hWndMain, ulWizardState, diQuickLaunch.szTitle, DlgProcQuickLaunch);
           bDone = TRUE;
         }
         break;
@@ -2939,18 +2276,12 @@ void CommitInstall(void)
             /* DEPEND_REBOOT process file manipulation functions */
             ProcessFileOpsForAll(T_DEPEND_REBOOT);
 
-            // Refresh system icons if necessary
-            if(gSystemInfo.bRefreshIcons)
-              RefreshIcons();
-
             UnsetSetupState(); // clear setup state
             if(!gbIgnoreProgramFolderX)
               ProcessProgramFolderShowCmd();
 
-#ifdef OLDCODE
             CleanupArgsRegistry();
             CleanupPreviousVersionRegKeys();
-#endif
             if(NeedReboot())
             {
               CleanupXpcomFile();

@@ -33,10 +33,6 @@ extern HINSTANCE        hSetupRscInst;
 extern HINSTANCE        hSDInst;
 extern HINSTANCE        hXPIStubInst;
 
-extern HBITMAP          hbmpBoxChecked;
-extern HBITMAP          hbmpBoxCheckedDisabled;
-extern HBITMAP          hbmpBoxUnChecked;
-
 extern HWND             hDlgCurrent;
 extern HWND             hDlgMessage;
 extern HWND             hWndMain;
@@ -70,7 +66,6 @@ extern BOOL             gbILUseTemp;
 extern BOOL             gbPreviousUnfinishedDownload;
 extern BOOL             gbIgnoreRunAppX;
 extern BOOL             gbIgnoreProgramFolderX;
-extern BOOL             gbRestrictedAccess;
 extern BOOL             gbDownloadTriggered;
 
 extern setupGen         sgProduct;

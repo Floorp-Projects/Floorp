@@ -110,12 +110,11 @@ char *BuildNumberedString(DWORD dwIndex, char *szInputStringPrefix, char *szInpu
   return(szOutBuf);
 }
 
-#ifdef OLDCODE
 void GetUserAgentShort(char *szUserAgent, char *szOutUAShort, DWORD dwOutUAShortSize)
 {
   char *ptrFirstSpace = NULL;
 
-  ZeroMemory(szOutUAShort, dwOutUAShortSize);
+  memset(szOutUAShort, 0, dwOutUAShortSize);
   if((szUserAgent == NULL) || (*szUserAgent == '\0'))
     return;
 
@@ -128,22 +127,25 @@ void GetUserAgentShort(char *szUserAgent, char *szOutUAShort, DWORD dwOutUAShort
   }
 }
 
-DWORD GetWinRegSubKeyProductPath(HKEY hkRootKey, char *szInKey, char *szReturnSubKey, DWORD dwReturnSubKeySize, char *szInSubSubKey, char *szInName, char *szCompare, char *szInCurrentVersion)
+/* EXPLANATION
+Enumerate through a given subkey and check to see if any keys have the exact same install directory
+If they do, delete them. Very straightforward */
+DWORD GetWinRegSubKeyProductPath(char *szInKey, char *szReturnSubKey, DWORD dwReturnSubKeySize, char *szInSubSubKey, char *szInName, char *szCompare, char *szInCurrentVersion)
 {
   char      *szRv = NULL;
   char      szKey[MAX_BUF];
   char      szBuf[MAX_BUF];
-  HKEY      hkHandle;
+//  HKEY      hkHandle;
   DWORD     dwIndex;
   DWORD     dwBufSize;
   DWORD     dwTotalSubKeys;
   DWORD     dwTotalValues;
-  FILETIME  ftLastWriteFileTime;
+//  FILETIME  ftLastWriteFileTime;
   BOOL      bFoundSubKey;
 
   bFoundSubKey = FALSE;
 
-  if(RegOpenKeyEx(hkRootKey, szInKey, 0, KEY_READ, &hkHandle) != ERROR_SUCCESS)
+//  if(RegOpenKeyEx(hkRootKey, szInKey, 0, KEY_READ, &hkHandle) != ERROR_SUCCESS)
   {
     *szReturnSubKey = '\0';
     return(0);
@@ -151,11 +153,11 @@ DWORD GetWinRegSubKeyProductPath(HKEY hkRootKey, char *szInKey, char *szReturnSu
 
   dwTotalSubKeys = 0;
   dwTotalValues  = 0;
-  RegQueryInfoKey(hkHandle, NULL, NULL, NULL, &dwTotalSubKeys, NULL, NULL, &dwTotalValues, NULL, NULL, NULL, NULL);
+//  RegQueryInfoKey(hkHandle, NULL, NULL, NULL, &dwTotalSubKeys, NULL, NULL, &dwTotalValues, NULL, NULL, NULL, NULL);
   for(dwIndex = 0; dwIndex < dwTotalSubKeys; dwIndex++)
   {
     dwBufSize = dwReturnSubKeySize;
-    if(RegEnumKeyEx(hkHandle, dwIndex, szReturnSubKey, &dwBufSize, NULL, NULL, NULL, &ftLastWriteFileTime) == ERROR_SUCCESS)
+//    if(RegEnumKeyEx(hkHandle, dwIndex, szReturnSubKey, &dwBufSize, NULL, NULL, NULL, &ftLastWriteFileTime) == ERROR_SUCCESS)
     {
       if(  (*szInCurrentVersion != '\0') && (strcmpi(szInCurrentVersion, szReturnSubKey) != 0)  )
       {
@@ -173,7 +175,7 @@ DWORD GetWinRegSubKeyProductPath(HKEY hkRootKey, char *szInKey, char *szReturnSu
         else
           sprintf(szKey, "%s\\%s", szInKey, szReturnSubKey);
 
-        GetWinReg(hkRootKey, szKey, szInName, szBuf, sizeof(szBuf));
+  //      GetWinReg(hkRootKey, szKey, szInName, szBuf, sizeof(szBuf));
         AppendBackSlash(szBuf, sizeof(szBuf));
         if(strcmpi(szBuf, szCompare) == 0)
         {
@@ -185,7 +187,7 @@ DWORD GetWinRegSubKeyProductPath(HKEY hkRootKey, char *szInKey, char *szReturnSu
     }
   }
 
-  RegCloseKey(hkHandle);
+//  RegCloseKey(hkHandle);
   if(!bFoundSubKey)
     *szReturnSubKey = '\0';
   return(dwTotalSubKeys);
@@ -193,6 +195,12 @@ DWORD GetWinRegSubKeyProductPath(HKEY hkRootKey, char *szInKey, char *szReturnSu
 
 void CleanupPreviousVersionRegKeys(void)
 {
+/* OK, OS/2 things to do here */
+/* Look at all keys in OS2.INI beginning with Mozilla (Product Reg Key)*/
+/* If they contain an Install Directory that is the same as what we just installed, remove the app */
+
+
+
   DWORD dwIndex = 0;
   DWORD dwSubKeyCount;
   char  szBufTiny[MAX_BUF_TINY];
@@ -203,7 +211,7 @@ void CleanupPreviousVersionRegKeys(void)
   char  szPath[MAX_BUF];
   char  szKey[MAX_BUF];
   char  szCleanupProduct[MAX_BUF];
-  HKEY  hkeyRoot;
+//  HKEY  hkeyRoot;
   char  szSubSubKey[] = "Main";
   char  szName[] = "Install Directory";
   char  szWRMSUninstall[] = "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall";
@@ -224,7 +232,7 @@ void CleanupPreviousVersionRegKeys(void)
   {
     sprintf(szBufTiny, "Reg Key Root%d",dwIndex);
     GetPrivateProfileString(szSection, szBufTiny, "", szKeyRoot, sizeof(szKeyRoot), szFileIniConfig);
-    hkeyRoot = ParseRootKey(szKeyRoot);
+//    hkeyRoot = ParseRootKey(szKeyRoot);
 
     sprintf(szBufTiny, "Product Name%d", dwIndex);        
     GetPrivateProfileString(szSection, szBufTiny, "", szCleanupProduct, sizeof(szCleanupProduct), szFileIniConfig);
@@ -238,7 +246,7 @@ void CleanupPreviousVersionRegKeys(void)
     do
     {
       // if the current version is not found, we'll get null in szCurrentVersion and GetWinRegSubKeyProductPath() will do the right thing
-      dwSubKeyCount = GetWinRegSubKeyProductPath(hkeyRoot, szKey, szRvSubKey, sizeof(szRvSubKey), szSubSubKey, szName, szPath, szCurrentVersion);
+//      dwSubKeyCount = GetWinRegSubKeyProductPath(hkeyRoot, szKey, szRvSubKey, sizeof(szRvSubKey), szSubSubKey, szName, szPath, szCurrentVersion);
   	  
       if(*szRvSubKey != '\0')
       {
@@ -247,7 +255,7 @@ void CleanupPreviousVersionRegKeys(void)
           AppendBackSlash(szKey, sizeof(szKey));
           strcat(szKey, szRvSubKey);
         }
-        DeleteWinRegKey(hkeyRoot, szKey, TRUE);
+//        DeleteWinRegKey(hkeyRoot, szKey, TRUE);
 
         GetUserAgentShort(szRvSubKey, szUAShort, sizeof(szUAShort));
         if(*szUAShort != '\0')
@@ -257,14 +265,14 @@ void CleanupPreviousVersionRegKeys(void)
            *     Mozilla (0.8)
            */
           sprintf(szKey, "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\%s (%s)", szCleanupProduct, szUAShort);
-          DeleteWinRegKey(hkeyRoot, szKey, TRUE);
+//          DeleteWinRegKey(hkeyRoot, szKey, TRUE);
 
           /* delete uninstall key that contains product name and its user agent not in parenthesis,
            * for example:
            *     Mozilla 0.8
            */
           sprintf(szKey, "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\%s %s", szCleanupProduct, szUAShort);
-          DeleteWinRegKey(hkeyRoot, szKey, TRUE);
+//          DeleteWinRegKey(hkeyRoot, szKey, TRUE);
 
           /* We are not looking to delete just the product name key, for example:
            *     Mozilla
@@ -285,7 +293,6 @@ void CleanupPreviousVersionRegKeys(void)
   } 
 
 }
-#endif
 
 void ProcessFileOps(DWORD dwTiming, char *szSectionPrefix)
 {
@@ -298,7 +305,7 @@ void ProcessFileOps(DWORD dwTiming, char *szSectionPrefix)
   ProcessRemoveDirectory(dwTiming, szSectionPrefix);
   if(!gbIgnoreRunAppX)
     ProcessRunApp(dwTiming, szSectionPrefix);
-  ProcessWinReg(dwTiming, szSectionPrefix);
+  ProcessOS2INI(dwTiming, szSectionPrefix);
   ProcessProgramFolder(dwTiming, szSectionPrefix);
   ProcessSetVersionRegistry(dwTiming, szSectionPrefix);
 }
@@ -504,19 +511,14 @@ HRESULT CleanupXpcomFile()
   return(FO_SUCCESS);
 }
 
-#ifdef OLDCODE
-#define SETUP_STATE_REG_KEY "Software\\%s\\%s\\%s\\Setup"
-
 HRESULT CleanupArgsRegistry()
 {
-  char  szKey[MAX_BUF];
+  char  szApp[MAX_BUF];
 
-  sprintf(szKey, SETUP_STATE_REG_KEY, sgProduct.szCompanyName, sgProduct.szProductNameInternal,
-    sgProduct.szUserAgent);
-  DeleteWinRegValue(HKEY_CURRENT_USER, szKey, "browserargs");
+  sprintf(szApp, "%s %s", sgProduct.szProductNameInternal, sgProduct.szUserAgent);
+  PrfWriteProfileString(HINI_USERPROFILE, szApp, "browserargs", "");
   return(FO_SUCCESS);
 }
-#endif
 
 HRESULT ProcessUncompressFile(DWORD dwTiming, char *szSectionPrefix)
 {
@@ -646,7 +648,11 @@ HRESULT FileMove(LPSTR szFrom, LPSTR szTo)
     }
 
     ulFindCount = 1;
-    bFound = DosFindNext(hFile, &fdFile, sizeof(fdFile), &ulFindCount);
+    if (DosFindNext(hFile, &fdFile, sizeof(fdFile), &ulFindCount) == NO_ERROR) {
+      bFound = TRUE;
+    } else {
+      bFound = FALSE;
+    }
   }
 
   DosFindClose(hFile);
@@ -746,7 +752,11 @@ HRESULT FileCopy(LPSTR szFrom, LPSTR szTo, BOOL bFailIfExists, BOOL bDnu)
     }
 
     ulFindCount = 1;
-    bFound = DosFindNext(hFile, &fdFile, sizeof(fdFile), &ulFindCount);
+    if (DosFindNext(hFile, &fdFile, sizeof(fdFile), &ulFindCount) == NO_ERROR) {
+      bFound = TRUE;
+    } else {
+      bFound = FALSE;
+    }
   }
 
   DosFindClose(hFile);
@@ -826,7 +836,11 @@ HRESULT FileCopySequential(LPSTR szSourcePath, LPSTR szDestPath, LPSTR szFilenam
       }
 
       ulFindCount = 1;
-      bFound = DosFindNext(hFile, &fdFile, sizeof(fdFile), &ulFindCount);
+      if (DosFindNext(hFile, &fdFile, sizeof(fdFile), &ulFindCount) == NO_ERROR) {
+        bFound = TRUE;
+      } else {
+        bFound = FALSE;
+      }
     }
 
     DosFindClose(hFile);
@@ -1136,7 +1150,11 @@ HRESULT FileDelete(LPSTR szDestination)
     }
 
     ulFindCount = 1;
-    bFound = DosFindNext(hFile, &fdFile, sizeof(fdFile), &ulFindCount);
+    if (DosFindNext(hFile, &fdFile, sizeof(fdFile), &ulFindCount) == NO_ERROR) {
+      bFound = TRUE;
+    } else {
+      bFound = FALSE;
+    }
   }
 
   DosFindClose(hFile);
@@ -1170,9 +1188,9 @@ HRESULT ProcessDeleteFile(DWORD dwTiming, char *szSectionPrefix)
 
 HRESULT DirectoryRemove(LPSTR szDestination, BOOL bRemoveSubdirs)
 {
-#ifdef OLDCODE /* @MAK - need to write this */
-  HANDLE          hFile;
-  WIN32_FIND_DATA fdFile;
+  HDIR            hFile;
+  FILEFINDBUF3    fdFile;
+  ULONG           ulFindCount;
   char            szDestTemp[MAX_BUF];
   BOOL            bFound;
 
@@ -1185,9 +1203,12 @@ HRESULT DirectoryRemove(LPSTR szDestination, BOOL bRemoveSubdirs)
     AppendBackSlash(szDestTemp, sizeof(szDestTemp));
     strcat(szDestTemp, "*");
 
-    bFound = TRUE;
-    hFile = FindFirstFile(szDestTemp, &fdFile);
-    while((hFile != INVALID_HANDLE_VALUE) && (bFound == TRUE))
+    ulFindCount = 1;
+    if((DosFindFirst(szDestTemp, &hFile, 0, &fdFile, sizeof(fdFile), &ulFindCount, FIL_STANDARD)) != NO_ERROR)
+      bFound = FALSE;
+    else
+      bFound = TRUE;
+    while(bFound == TRUE)
     {
       if((strcmpi(fdFile.achName, ".") != 0) && (strcmpi(fdFile.achName, "..") != 0))
       {
@@ -1196,7 +1217,7 @@ HRESULT DirectoryRemove(LPSTR szDestination, BOOL bRemoveSubdirs)
         AppendBackSlash(szDestTemp, sizeof(szDestTemp));
         strcat(szDestTemp, fdFile.achName);
 
-        if(fdFile.dwFileAttributes & FILE_DIRECTORY)
+        if(fdFile.attrFile & FILE_DIRECTORY)
         {
           DirectoryRemove(szDestTemp, bRemoveSubdirs);
         }
@@ -1206,14 +1227,18 @@ HRESULT DirectoryRemove(LPSTR szDestination, BOOL bRemoveSubdirs)
         }
       }
 
-      bFound = FindNextFile(hFile, &fdFile);
+      ulFindCount = 1;
+      if (DosFindNext(hFile, &fdFile, sizeof(fdFile), &ulFindCount) == NO_ERROR) {
+        bFound = TRUE;
+      } else {
+        bFound = FALSE;
+      }
     }
 
-    FindClose(hFile);
+    DosFindClose(hFile);
   }
   
-  RemoveDirectory(szDestination);
-#endif
+  DosDeleteDir(szDestination);
   return(FO_SUCCESS);
 }
 
@@ -1340,146 +1365,16 @@ HRESULT ProcessRunApp(DWORD dwTiming, char *szSectionPrefix)
 }
 
 #ifdef OLDCODE
-DWORD ParseRestrictedAccessKey(LPSTR szKey)
-{
-  DWORD dwKey;
-
-  if(strcmpi(szKey, "ONLY_RESTRICTED") == 0)
-    dwKey = RA_ONLY_RESTRICTED;
-  else if(strcmpi(szKey, "ONLY_NONRESTRICTED") == 0)
-    dwKey = RA_ONLY_NONRESTRICTED;
-  else
-    dwKey = RA_IGNORE;
-
-  return(dwKey);
-}
-
-HKEY ParseRootKey(LPSTR szRootKey)
-{
-  HKEY hkRootKey;
-
-  if(strcmpi(szRootKey, "HKEY_CURRENT_CONFIG") == 0)
-    hkRootKey = HKEY_CURRENT_CONFIG;
-  else if(strcmpi(szRootKey, "HKEY_CURRENT_USER") == 0)
-    hkRootKey = HKEY_CURRENT_USER;
-  else if(strcmpi(szRootKey, "HKEY_LOCAL_MACHINE") == 0)
-    hkRootKey = HKEY_LOCAL_MACHINE;
-  else if(strcmpi(szRootKey, "HKEY_USERS") == 0)
-    hkRootKey = HKEY_USERS;
-  else if(strcmpi(szRootKey, "HKEY_PERFORMANCE_DATA") == 0)
-    hkRootKey = HKEY_PERFORMANCE_DATA;
-  else if(strcmpi(szRootKey, "HKEY_DYN_DATA") == 0)
-    hkRootKey = HKEY_DYN_DATA;
-  else /* HKEY_CLASSES_ROOT */
-    hkRootKey = HKEY_CLASSES_ROOT;
-
-  return(hkRootKey);
-}
-
-char *ParseRootKeyString(HKEY hkKey, LPSTR szRootKey, DWORD dwRootKeyBufSize)
-{
-  if(!szRootKey)
-    return(NULL);
-
-  ZeroMemory(szRootKey, dwRootKeyBufSize);
-  if((hkKey == HKEY_CURRENT_CONFIG) &&
-    ((long)dwRootKeyBufSize > strlen("HKEY_CURRENT_CONFIG")))
-    strcpy(szRootKey, "HKEY_CURRENT_CONFIG");
-  else if((hkKey == HKEY_CURRENT_USER) &&
-         ((long)dwRootKeyBufSize > strlen("HKEY_CURRENT_USER")))
-    strcpy(szRootKey, "HKEY_CURRENT_USER");
-  else if((hkKey == HKEY_LOCAL_MACHINE) &&
-         ((long)dwRootKeyBufSize > strlen("HKEY_LOCAL_MACHINE")))
-    strcpy(szRootKey, "HKEY_LOCAL_MACHINE");
-  else if((hkKey == HKEY_USERS) &&
-         ((long)dwRootKeyBufSize > strlen("HKEY_USERS")))
-    strcpy(szRootKey, "HKEY_USERS");
-  else if((hkKey == HKEY_PERFORMANCE_DATA) &&
-         ((long)dwRootKeyBufSize > strlen("HKEY_PERFORMANCE_DATA")))
-    strcpy(szRootKey, "HKEY_PERFORMANCE_DATA");
-  else if((hkKey == HKEY_DYN_DATA) &&
-         ((long)dwRootKeyBufSize > strlen("HKEY_DYN_DATA")))
-    strcpy(szRootKey, "HKEY_DYN_DATA");
-  else if((long)dwRootKeyBufSize > strlen("HKEY_CLASSES_ROOT"))
-    strcpy(szRootKey, "HKEY_CLASSES_ROOT");
-
-  return(szRootKey);
-}
-
-BOOL ParseRegType(LPSTR szType, DWORD *dwType)
-{
-  BOOL bSZ;
-
-  if(strcmpi(szType, "REG_SZ") == 0)
-  {
-    /* Unicode NULL terminated string */
-    *dwType = REG_SZ;
-    bSZ     = TRUE;
-  }
-  else if(strcmpi(szType, "REG_EXPAND_SZ") == 0)
-  {
-    /* Unicode NULL terminated string
-     * (with environment variable references) */
-    *dwType = REG_EXPAND_SZ;
-    bSZ     = TRUE;
-  }
-  else if(strcmpi(szType, "REG_BINARY") == 0)
-  {
-    /* Free form binary */
-    *dwType = REG_BINARY;
-    bSZ     = FALSE;
-  }
-  else if(strcmpi(szType, "REG_DWORD") == 0)
-  {
-    /* 32bit number */
-    *dwType = REG_DWORD;
-    bSZ     = FALSE;
-  }
-  else if(strcmpi(szType, "REG_DWORD_LITTLE_ENDIAN") == 0)
-  {
-    /* 32bit number
-     * (same as REG_DWORD) */
-    *dwType = REG_DWORD_LITTLE_ENDIAN;
-    bSZ     = FALSE;
-  }
-  else if(strcmpi(szType, "REG_DWORD_BIG_ENDIAN") == 0)
-  {
-    /* 32bit number */
-    *dwType = REG_DWORD_BIG_ENDIAN;
-    bSZ     = FALSE;
-  }
-  else if(strcmpi(szType, "REG_LINK") == 0)
-  {
-    /* Symbolic link (unicode) */
-    *dwType = REG_LINK;
-    bSZ     = TRUE;
-  }
-  else if(strcmpi(szType, "REG_MULTI_SZ") == 0)
-  {
-    /* Multiple Unicode strings */
-    *dwType = REG_MULTI_SZ;
-    bSZ     = TRUE;
-  }
-  else /* Default is REG_NONE */
-  {
-    /* no value type */
-    *dwType = REG_NONE;
-    bSZ     = TRUE;
-  }
-
-  return(bSZ);
-}
-
 BOOL WinRegKeyExists(HKEY hkRootKey, LPSTR szKey)
 {
   HKEY  hkResult;
   DWORD dwErr;
   BOOL  bKeyExists = FALSE;
 
-  if((dwErr = RegOpenKeyEx(hkRootKey, szKey, 0, KEY_READ, &hkResult)) == ERROR_SUCCESS)
+//  if((dwErr = RegOpenKeyEx(hkRootKey, szKey, 0, KEY_READ, &hkResult)) == ERROR_SUCCESS)
   {
     bKeyExists = TRUE;
-    RegCloseKey(hkResult);
+//    RegCloseKey(hkResult);
   }
 
   return(bKeyExists);
@@ -1493,8 +1388,8 @@ BOOL WinRegNameExists(HKEY hkRootKey, LPSTR szKey, LPSTR szName)
   char  szBuf[MAX_BUF];
   BOOL  bNameExists = FALSE;
 
-  ZeroMemory(szBuf, sizeof(szBuf));
-  if((dwErr = RegOpenKeyEx(hkRootKey, szKey, 0, KEY_READ, &hkResult)) == ERROR_SUCCESS)
+  memset(szBuf, 0, sizeof(szBuf));
+//  if((dwErr = RegOpenKeyEx(hkRootKey, szKey, 0, KEY_READ, &hkResult)) == ERROR_SUCCESS)
   {
     dwSize = sizeof(szBuf);
     dwErr  = RegQueryValueEx(hkResult, szName, 0, NULL, szBuf, &dwSize);
@@ -1502,7 +1397,7 @@ BOOL WinRegNameExists(HKEY hkRootKey, LPSTR szKey, LPSTR szName)
     if((*szBuf != '\0') && (dwErr == ERROR_SUCCESS))
       bNameExists = TRUE;
 
-    RegCloseKey(hkResult);
+//    RegCloseKey(hkResult);
   }
 
   return(bNameExists);
@@ -1515,7 +1410,7 @@ void DeleteWinRegKey(HKEY hkRootKey, LPSTR szKey, BOOL bAbsoluteDelete)
   DWORD     dwTotalSubKeys;
   DWORD     dwTotalValues;
   DWORD     dwSubKeySize;
-  FILETIME  ftLastWriteFileTime;
+//  FILETIME  ftLastWriteFileTime;
   char      szSubKey[MAX_BUF_TINY];
   char      szNewKey[MAX_BUF];
   long      lRv;
@@ -1525,8 +1420,8 @@ void DeleteWinRegKey(HKEY hkRootKey, LPSTR szKey, BOOL bAbsoluteDelete)
   {
     dwTotalSubKeys = 0;
     dwTotalValues  = 0;
-    RegQueryInfoKey(hkResult, NULL, NULL, NULL, &dwTotalSubKeys, NULL, NULL, &dwTotalValues, NULL, NULL, NULL, NULL);
-    RegCloseKey(hkResult);
+//    RegQueryInfoKey(hkResult, NULL, NULL, NULL, &dwTotalSubKeys, NULL, NULL, &dwTotalValues, NULL, NULL, NULL, NULL);
+//    RegCloseKey(hkResult);
 
     if(((dwTotalSubKeys == 0) && (dwTotalValues == 0)) || bAbsoluteDelete)
     {
@@ -1536,41 +1431,24 @@ void DeleteWinRegKey(HKEY hkRootKey, LPSTR szKey, BOOL bAbsoluteDelete)
         {
           dwSubKeySize = sizeof(szSubKey);
           lRv = 0;
-          if(RegOpenKeyEx(hkRootKey, szKey, 0, KEY_READ, &hkResult) == ERROR_SUCCESS)
+//          if(RegOpenKeyEx(hkRootKey, szKey, 0, KEY_READ, &hkResult) == ERROR_SUCCESS)
           {
-            if((lRv = RegEnumKeyEx(hkResult, 0, szSubKey, &dwSubKeySize, NULL, NULL, NULL, &ftLastWriteFileTime)) == ERROR_SUCCESS)
+//            if((lRv = RegEnumKeyEx(hkResult, 0, szSubKey, &dwSubKeySize, NULL, NULL, NULL, &ftLastWriteFileTime)) == ERROR_SUCCESS)
             {
-              RegCloseKey(hkResult);
+//              RegCloseKey(hkResult);
               strcpy(szNewKey, szKey);
               AppendBackSlash(szNewKey, sizeof(szNewKey));
               strcat(szNewKey, szSubKey);
-              DeleteWinRegKey(hkRootKey, szNewKey, bAbsoluteDelete);
+//              DeleteWinRegKey(hkRootKey, szNewKey, bAbsoluteDelete);
             }
-            else
-              RegCloseKey(hkResult);
+//            else
+//              RegCloseKey(hkResult);
           }
         } while(lRv != ERROR_NO_MORE_ITEMS);
       }
 
       dwErr = RegDeleteKey(hkRootKey, szKey);
     }
-  }
-}
-
-void DeleteWinRegValue(HKEY hkRootKey, LPSTR szKey, LPSTR szName)
-{
-  HKEY    hkResult;
-  DWORD   dwErr;
-
-  dwErr = RegOpenKeyEx(hkRootKey, szKey, 0, KEY_WRITE, &hkResult);
-  if(dwErr == ERROR_SUCCESS)
-  {
-    if(*szName == '\0')
-      dwErr = RegDeleteValue(hkResult, NULL);
-    else
-      dwErr = RegDeleteValue(hkResult, szName);
-
-    RegCloseKey(hkResult);
   }
 }
 
@@ -1582,8 +1460,8 @@ DWORD GetWinReg(HKEY hkRootKey, LPSTR szKey, LPSTR szName, LPSTR szReturnValue, 
   DWORD dwType;
   char  szBuf[MAX_BUF];
 
-  ZeroMemory(szBuf, sizeof(szBuf));
-  ZeroMemory(szReturnValue, dwReturnValueSize);
+  memset(szBuf, 0, sizeof(szBuf));
+  memset(szReturnValue, 0, dwReturnValueSize);
 
   if((dwErr = RegOpenKeyEx(hkRootKey, szKey, 0, KEY_READ, &hkResult)) == ERROR_SUCCESS)
   {
@@ -1602,7 +1480,7 @@ DWORD GetWinReg(HKEY hkRootKey, LPSTR szKey, LPSTR szName, LPSTR szReturnValue, 
     else
       *szReturnValue = '\0';
 
-    RegCloseKey(hkResult);
+//    RegCloseKey(hkResult);
   }
 
   return(dwType);
@@ -1780,67 +1658,44 @@ void AppendWinReg(HKEY hkRootKey,
 }
 #endif
 
-HRESULT ProcessWinReg(DWORD dwTiming, char *szSectionPrefix)
+HRESULT ProcessOS2INI(ULONG ulTiming, char *szSectionPrefix)
 {
-#ifdef OLDCODE /* @MAK need to write for OS/2 - Os/2 INI stuff */
   char    szBuf[MAX_BUF];
+  char    szApp[MAX_BUF];
   char    szKey[MAX_BUF];
-  char    szName[MAX_BUF];
   char    szValue[MAX_BUF];
   char    szDecrypt[MAX_BUF];
-  char    szOverwriteKey[MAX_BUF];
-  char    szOverwriteName[MAX_BUF];
   char    szSection[MAX_BUF];
-  HKEY    hRootKey;
   BOOL    bDnu;
-  BOOL    bOverwriteKey;
-  BOOL    bOverwriteName;
-  BOOL    bOSDetected;
-  DWORD   dwIndex;
-  DWORD   dwType;
-  DWORD   dwSize;
-  __int64 iiNum;
+  ULONG   ulIndex;
+  ULONG   ulSize;
 
-  dwIndex = 0;
-  BuildNumberedString(dwIndex, szSectionPrefix, "Windows Registry", szSection, sizeof(szSection));
-  GetPrivateProfileString(szSection, "Root Key", "", szBuf, sizeof(szBuf), szFileIniConfig);
+  ulIndex = 0;
+  BuildNumberedString(ulIndex, szSectionPrefix, "OS2INI", szSection, sizeof(szSection));
+  GetPrivateProfileString(szSection, "App", "", szBuf, sizeof(szBuf), szFileIniConfig);
   while(*szBuf != '\0')
   {
-    if(TimingCheck(dwTiming, szSection, szFileIniConfig))
+    if(TimingCheck(ulTiming, szSection, szFileIniConfig))
     {
-      hRootKey = ParseRootKey(szBuf);
+      GetPrivateProfileString(szSection, "App",                 "", szBuf,           sizeof(szBuf),          szFileIniConfig);
+      GetPrivateProfileString(szSection, "Decrypt App",         "", szDecrypt,       sizeof(szDecrypt),      szFileIniConfig);
+      memset(szApp, 0, sizeof(szApp));
+      if(strcmpi(szDecrypt, "TRUE") == 0)
+        DecryptString(szApp, szBuf);
+      else
+        strcpy(szApp, szBuf);
 
-      GetPrivateProfileString(szSection, "Key",                 "", szBuf,           sizeof(szBuf),          szFileIniConfig);
-      GetPrivateProfileString(szSection, "Decrypt Key",         "", szDecrypt,       sizeof(szDecrypt),      szFileIniConfig);
-      GetPrivateProfileString(szSection, "Overwrite Key",       "", szOverwriteKey,  sizeof(szOverwriteKey), szFileIniConfig);
-      ZeroMemory(szKey, sizeof(szKey));
+      GetPrivateProfileString(szSection, "Key",                "", szBuf,           sizeof(szBuf),           szFileIniConfig);
+      GetPrivateProfileString(szSection, "Decrypt Key",        "", szDecrypt,       sizeof(szDecrypt),       szFileIniConfig);
+      memset(szKey, 0, sizeof(szKey));
       if(strcmpi(szDecrypt, "TRUE") == 0)
         DecryptString(szKey, szBuf);
       else
         strcpy(szKey, szBuf);
 
-      if(strcmpi(szOverwriteKey, "FALSE") == 0)
-        bOverwriteKey = FALSE;
-      else
-        bOverwriteKey = TRUE;
-
-      GetPrivateProfileString(szSection, "Name",                "", szBuf,           sizeof(szBuf),           szFileIniConfig);
-      GetPrivateProfileString(szSection, "Decrypt Name",        "", szDecrypt,       sizeof(szDecrypt),       szFileIniConfig);
-      GetPrivateProfileString(szSection, "Overwrite Name",      "", szOverwriteName, sizeof(szOverwriteName), szFileIniConfig);
-      ZeroMemory(szName, sizeof(szName));
-      if(strcmpi(szDecrypt, "TRUE") == 0)
-        DecryptString(szName, szBuf);
-      else
-        strcpy(szName, szBuf);
-
-      if(strcmpi(szOverwriteName, "FALSE") == 0)
-        bOverwriteName = FALSE;
-      else
-        bOverwriteName = TRUE;
-
-      GetPrivateProfileString(szSection, "Name Value",          "", szBuf,           sizeof(szBuf), szFileIniConfig);
-      GetPrivateProfileString(szSection, "Decrypt Name Value",  "", szDecrypt,       sizeof(szDecrypt), szFileIniConfig);
-      ZeroMemory(szValue, sizeof(szValue));
+      GetPrivateProfileString(szSection, "Key Value",          "", szBuf,           sizeof(szBuf), szFileIniConfig);
+      GetPrivateProfileString(szSection, "Decrypt Key Value",  "", szDecrypt,       sizeof(szDecrypt), szFileIniConfig);
+      memset(szValue, 0, sizeof(szValue));
       if(strcmpi(szDecrypt, "TRUE") == 0)
         DecryptString(szValue, szBuf);
       else
@@ -1848,9 +1703,9 @@ HRESULT ProcessWinReg(DWORD dwTiming, char *szSectionPrefix)
 
       GetPrivateProfileString(szSection, "Size",                "", szBuf,           sizeof(szBuf), szFileIniConfig);
       if(*szBuf != '\0')
-        dwSize = atoi(szBuf);
+        ulSize = atoi(szBuf);
       else
-        dwSize = 0;
+        ulSize = 0;
 
       GetPrivateProfileString(szSection,
                               "Do Not Uninstall",
@@ -1863,52 +1718,13 @@ HRESULT ProcessWinReg(DWORD dwTiming, char *szSectionPrefix)
       else
         bDnu = FALSE;
 
-      /* Read the OS key to see if there are restrictions on which OS to
-       * the Windows registry key for */
-      GetPrivateProfileString(szSection,
-                              "OS",
-                              "",
-                              szBuf,
-                              sizeof(szBuf),
-                              szFileIniConfig);
-      /* If there is no OS key value set, then assume all OS is valid.
-       * If there are any, then compare against the global OS value to
-       * make sure there's a match. */
-      bOSDetected = TRUE;
-      if((*szBuf != '\0') &&
-        ((gSystemInfo.dwOSType & ParseOSType(szBuf)) == 0))
-        bOSDetected = FALSE;
-
-      if(bOSDetected)
-      {
-        ZeroMemory(szBuf, sizeof(szBuf));
-        GetPrivateProfileString(szSection,
-                                "Type",
-                                "",
-                                szBuf,
-                                sizeof(szBuf),
-                                szFileIniConfig);
-      if(ParseRegType(szBuf, &dwType))
-      {
-        /* create/set windows registry key here (string value)! */
-        SetWinReg(hRootKey, szKey, bOverwriteKey, szName, bOverwriteName,
-                  dwType, (CONST LPBYTE)szValue, strlen(szValue), TRUE, bDnu);
-      }
-      else
-      {
-        iiNum = _atoi64(szValue);
-        /* create/set windows registry key here (binary/dword value)! */
-        SetWinReg(hRootKey, szKey, bOverwriteKey, szName, bOverwriteName,
-                  dwType, (CONST LPBYTE)&iiNum, dwSize, TRUE, bDnu);
-        }
-      }
+      PrfWriteProfileString(HINI_USERPROFILE, szApp, szKey, szValue);
     }
 
-    ++dwIndex;
-    BuildNumberedString(dwIndex, szSectionPrefix, "Windows Registry", szSection, sizeof(szSection));
-    GetPrivateProfileString(szSection, "Root Key", "", szBuf, sizeof(szBuf), szFileIniConfig);
+    ++ulIndex;
+    BuildNumberedString(ulIndex, szSectionPrefix, "OS2 INI", szSection, sizeof(szSection));
+    GetPrivateProfileString(szSection, "App", "", szBuf, sizeof(szBuf), szFileIniConfig);
   }
-#endif
   return(FO_SUCCESS);
 }
 
@@ -1918,7 +1734,6 @@ HRESULT ProcessProgramFolder(DWORD dwTiming, char *szSectionPrefix)
   DWORD dwIndex0;
   DWORD dwIndex1;
   DWORD dwIconId;
-  DWORD dwRestrictedAccess;
   char  szIndex1[MAX_BUF];
   char  szBuf[MAX_BUF];
   char  szSection0[MAX_BUF];
@@ -1962,18 +1777,11 @@ HRESULT ProcessProgramFolder(DWORD dwTiming, char *szSectionPrefix)
         else
           dwIconId = 0;
 
-        GetPrivateProfileString(szSection1, "Restricted Access",    "", szBuf, sizeof(szBuf), szFileIniConfig);
-        dwRestrictedAccess = ParseRestrictedAccessKey(szBuf);
-        if((dwRestrictedAccess == RA_IGNORE) ||
-          ((dwRestrictedAccess == RA_ONLY_RESTRICTED) && gbRestrictedAccess) ||
-          ((dwRestrictedAccess == RA_ONLY_NONRESTRICTED) && !gbRestrictedAccess))
-        {
-          CreateALink(szFile, szProgramFolder, szDescription, szWorkingDir, szArguments, szIconPath, dwIconId);
-          strcpy(szBuf, szProgramFolder);
-          AppendBackSlash(szBuf, sizeof(szBuf));
-          strcat(szBuf, szDescription);
-          UpdateInstallLog(KEY_WINDOWS_SHORTCUT, szBuf, FALSE);
-        }
+        CreateALink(szFile, szProgramFolder, szDescription, szWorkingDir, szArguments, szIconPath, dwIconId);
+        strcpy(szBuf, szProgramFolder);
+        AppendBackSlash(szBuf, sizeof(szBuf));
+        strcat(szBuf, szDescription);
+        UpdateInstallLog(KEY_WINDOWS_SHORTCUT, szBuf, FALSE);
 
         ++dwIndex1;
         itoa(dwIndex1, szIndex1, 10);
@@ -2097,7 +1905,6 @@ HRESULT ProcessCreateCustomFiles(DWORD dwTiming)
           sprintf(szBufTiny,"Section%d-Value%d",dwSectIndex,dwKVIndex);
           GetPrivateProfileString(szSection, szBufTiny, "", szBuf, sizeof(szBuf), szFileIniConfig);
           DecryptString(szDefinedValue, szBuf);
-#ifdef OLDCODE /* @MAK we need this */
           if(WritePrivateProfileString(szDefinedSection, szDefinedKey, szDefinedValue, szFileName) == 0)
           {
             char szEWPPS[MAX_BUF];
@@ -2111,7 +1918,6 @@ HRESULT ProcessCreateCustomFiles(DWORD dwTiming)
             }
             return(FO_ERROR_WRITE);
           }
-#endif
           sprintf(szBufTiny,"Section%d-Key%d",dwSectIndex,++dwKVIndex);
           GetPrivateProfileString(szSection, szBufTiny, "", szDefinedKey, sizeof(szDefinedKey), szFileIniConfig);
         } /* while(*szDefinedKey != '\0')  */

@@ -92,11 +92,6 @@ typedef int PRInt32;
 #define UP_FTP                          0
 #define UP_HTTP                         1
 
-/* RA: Restricted Access */
-#define RA_IGNORE                       0
-#define RA_ONLY_RESTRICTED              1
-#define RA_ONLY_NONRESTRICTED           2
-
 /* LIS: Log Install Status */
 #define LIS_SUCCESS                     0
 #define LIS_FAILURE                     1
@@ -150,8 +145,8 @@ typedef int PRInt32;
 #define ERROR_CODE_SHOW                 1
 #define DLG_NONE                        0
 #define DLG_COMMIT_INSTALL              1
-#define CX_CHECKBOX                     13
-#define CY_CHECKBOX                     13
+#define CX_CHECKBOX                     11
+#define CY_CHECKBOX                     11
 
 /* WIZ: WIZARD defines */
 #define WIZ_OK                          0
@@ -546,7 +541,6 @@ struct sSysInfo
   LONG  lScreenX;
   LONG  lScreenY;
   BOOL  bScreenReader;
-  BOOL  bRefreshIcons;
 };
 
 typedef struct diskSpaceNode dsN;

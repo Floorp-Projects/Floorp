@@ -33,34 +33,10 @@
 #include "logging.h"
 #include "nsEscape.h"
 
-#define HIDWORD(l)   ((DWORD) (((ULONG) (l) >> 32) & 0xFFFF))
-#define LODWORD(l)   ((DWORD) (l))
-
-#define DEFAULT_ICON_SIZE   32
-#define INDEX_STR_LEN       10
-#define PN_PROCESS          TEXT("Process")
-#define PN_THREAD           TEXT("Thread")
-
-#define FTPSTR_LEN (sizeof(szFtp) - 1)
-#define HTTPSTR_LEN (sizeof(szHttp) - 1)
-
-#ifdef OLDCODE
-typedef BOOL   (WINAPI *NS_ProcessWalk)(HANDLE hSnapshot, LPPROCESSENTRY32 lppe);
-typedef HANDLE (WINAPI *NS_CreateSnapshot)(DWORD dwFlags, DWORD th32ProcessID);
-typedef PERF_DATA_BLOCK             PERF_DATA,      *PPERF_DATA;
-typedef PERF_OBJECT_TYPE            PERF_OBJECT,    *PPERF_OBJECT;
-typedef PERF_INSTANCE_DEFINITION    PERF_INSTANCE,  *PPERF_INSTANCE;
-TCHAR   INDEX_PROCTHRD_OBJ[2*INDEX_STR_LEN];
-DWORD   PX_PROCESS;
-DWORD   PX_THREAD;
-#endif
-
 char *ArchiveExtensions[] = {"zip",
                              "xpi",
                              "jar",
                              ""};
-
-#define SETUP_STATE_REG_KEY "Software\\%s\\%s\\%s\\Setup"
 
 typedef struct structVer
 {
@@ -69,10 +45,6 @@ typedef struct structVer
   ULONGLONG ullRelease;
   ULONGLONG ullBuild;
 } verBlock;
-
-void  TranslateVersionStr(LPSTR szVersion, verBlock *vbVersion);
-BOOL  GetFileVersion(LPSTR szFile, verBlock *vbVersion);
-int   CompareVersion(verBlock vbVersionOld, verBlock vbVersionNew);
 
 BOOL InitDialogClass(HMODULE hInstance, HMODULE hSetupRscInst)
 {
@@ -211,95 +183,44 @@ void Delay(ULONG ulSeconds)
   DosSleep(ulSeconds * 1000);
 }
 
-BOOL VerifyRestrictedAccess(void)
-{
-#ifdef OLDCODE /* @MAK - not sure what to do here */
-  char  szSubKey[MAX_BUF];
-  char  szSubKeyToTest[] = "Software\\%s - Test Key";
-  BOOL  bRv;
-  DWORD dwDisp = 0;
-  DWORD dwErr;
-  HKEY  hkRv;
-
-  sprintf(szSubKey, szSubKeyToTest, sgProduct.szCompanyName);
-  dwErr = RegCreateKeyEx(HKEY_LOCAL_MACHINE,
-                         szSubKey,
-                         0,
-                         NULL,
-                         REG_OPTION_NON_VOLATILE,
-                         KEY_WRITE,
-                         NULL,
-                         &hkRv,
-                         &dwDisp);
-  if(dwErr == ERROR_SUCCESS)
-  {
-    RegCloseKey(hkRv);
-    switch(dwDisp)
-    {
-      case REG_CREATED_NEW_KEY:
-        RegDeleteKey(HKEY_LOCAL_MACHINE, szSubKey);
-        break;
-
-      case REG_OPENED_EXISTING_KEY:
-        break;
-    }
-    bRv = FALSE;
-  }
-  else
-    bRv = TRUE;
-
-  return(bRv);
-#endif
-}
-
 void UnsetSetupState(void)
 {
-  char szKey[MAX_BUF_TINY];
+  char szApp[MAX_BUF_TINY];
 
-  sprintf(szKey,
-           SETUP_STATE_REG_KEY,
-           sgProduct.szCompanyName,
+  sprintf(szApp,
+           "%s %s",
            sgProduct.szProductNameInternal,
            sgProduct.szUserAgent);
-#ifdef OLDCODE
-  DeleteWinRegValue(HKEY_CURRENT_USER, szKey, "Setup State");
-#endif
+  PrfWriteProfileString(HINI_USERPROFILE, szApp, "Setup State", "");
 }
 
 void SetSetupState(char *szState)
 {
-  char szKey[MAX_BUF_TINY];
+  char szApp[MAX_BUF_TINY];
 
-  sprintf(szKey,
-           SETUP_STATE_REG_KEY,
-           sgProduct.szCompanyName,
+  sprintf(szApp,
+           "%s %s",
            sgProduct.szProductNameInternal,
            sgProduct.szUserAgent);
 
-#ifdef OLDCODE
-  SetWinReg(HKEY_CURRENT_USER, szKey, TRUE, "Setup State", TRUE,
-            REG_SZ, szState, strlen(szState), TRUE, FALSE);
-#endif
+  PrfWriteProfileString(HINI_USERPROFILE, szApp, "Setup State", szState);
 }
 
 DWORD GetPreviousUnfinishedState(void)
 {
   char szBuf[MAX_BUF_TINY];
-  char szKey[MAX_BUF_TINY];
+  char szApp[MAX_BUF_TINY];
   DWORD dwRv = PUS_NONE;
 
-  if(sgProduct.szCompanyName &&
-     sgProduct.szProductNameInternal &&
+  if(sgProduct.szProductNameInternal &&
      sgProduct.szUserAgent)
   {
-    sprintf(szKey,
-             SETUP_STATE_REG_KEY,
-             sgProduct.szCompanyName,
+    sprintf(szApp,
+             "%s %s",
              sgProduct.szProductNameInternal,
              sgProduct.szUserAgent);
-#ifdef OLDCODE
-    GetWinReg(HKEY_CURRENT_USER, szKey, "Setup State", szBuf, sizeof(szBuf));
-#endif
+
+    PrfQueryProfileString(HINI_USERPROFILE, szApp, "Setup State", "", szBuf, sizeof(szBuf));
     if(strcmpi(szBuf, SETUP_STATE_DOWNLOAD) == 0)
       dwRv = PUS_DOWNLOAD;
     else if(strcmpi(szBuf, SETUP_STATE_UNPACK_XPCOM) == 0)
@@ -313,68 +234,44 @@ DWORD GetPreviousUnfinishedState(void)
 
 void UnsetSetupCurrentDownloadFile(void)
 {
-  char szKey[MAX_BUF];
+  char szApp[MAX_BUF];
 
-  sprintf(szKey,
-           SETUP_STATE_REG_KEY,
-           sgProduct.szCompanyName,
+  sprintf(szApp,
+           "%s %s",
            sgProduct.szProductNameInternal,
            sgProduct.szUserAgent);
-#ifdef OLDCODE
-  DeleteWinRegValue(HKEY_CURRENT_USER,
-                    szKey,
-                    "Setup Current Download");
-#endif
+  PrfWriteProfileString(HINI_USERPROFILE, szApp, "Setup Current Download", "");
 }
 
 void SetSetupCurrentDownloadFile(char *szCurrentFilename)
 {
-  char szKey[MAX_BUF];
+  char szApp[MAX_BUF];
 
-  sprintf(szKey,
-           SETUP_STATE_REG_KEY,
-           sgProduct.szCompanyName,
+  sprintf(szApp,
+           "%s %s",
            sgProduct.szProductNameInternal,
            sgProduct.szUserAgent);
-#ifdef OLDCODE
-  SetWinReg(HKEY_CURRENT_USER,
-            szKey,
-            TRUE,
-            "Setup Current Download",
-            TRUE,
-            REG_SZ,
-            szCurrentFilename,
-            strlen(szCurrentFilename),
-            TRUE,
-            FALSE);
-#endif
+  PrfWriteProfileString(HINI_USERPROFILE, szApp, "Setup State", szCurrentFilename);
 }
 
 char *GetSetupCurrentDownloadFile(char *szCurrentDownloadFile,
-                                  DWORD dwCurrentDownloadFileBufSize)
+                                  ULONG ulCurrentDownloadFileBufSize)
 {
-  char szKey[MAX_BUF];
+  char szApp[MAX_BUF];
 
   if(!szCurrentDownloadFile)
     return(NULL);
 
-  memset(szCurrentDownloadFile, 0, dwCurrentDownloadFileBufSize);
-  if(sgProduct.szCompanyName &&
-     sgProduct.szProductNameInternal &&
+  memset(szCurrentDownloadFile, 0, ulCurrentDownloadFileBufSize);
+  if(sgProduct.szProductNameInternal &&
      sgProduct.szUserAgent)
   {
-    sprintf(szKey,
-             SETUP_STATE_REG_KEY,
-             sgProduct.szCompanyName,
+    sprintf(szApp,
+             "%s %s",
              sgProduct.szProductNameInternal,
              sgProduct.szUserAgent);
-#ifdef OLDCODE
-    GetWinReg(HKEY_CURRENT_USER,
-              szKey,
-              "Setup Current Download", 
-              szCurrentDownloadFile,
-              dwCurrentDownloadFileBufSize);
-#endif
+    PrfQueryProfileString(HINI_USERPROFILE, szApp, "Setup Current Download", "",
+                          szCurrentDownloadFile, ulCurrentDownloadFileBufSize);
   }
 
   return(szCurrentDownloadFile);
@@ -528,12 +425,6 @@ HRESULT Initialize(HMODULE hInstance, PSZ szAppName)
     }
     RemoveBackSlash(szTempDir);
   }
-
-#ifdef OLDCODE /* @MAK - on OS/2, we can't have BMP independent of PS - argh */
-  hbmpBoxChecked         = LoadBitmap(hSetupRscInst, MAKEINTRESOURCE(IDB_BOX_CHECKED));
-  hbmpBoxCheckedDisabled = LoadBitmap(hSetupRscInst, MAKEINTRESOURCE(IDB_BOX_CHECKED_DISABLED));
-  hbmpBoxUnChecked       = LoadBitmap(hSetupRscInst, MAKEINTRESOURCE(IDB_BOX_UNCHECKED));
-#endif
 
   DeleteIdiGetConfigIni();
   bIdiArchivesExists = DeleteIdiGetArchives();
@@ -1018,23 +909,23 @@ void SwapFTPAndHTTP(char *szInUrl, DWORD dwInUrlSize)
   switch(diAdditionalOptions.dwUseProtocol)
   {
     case UP_HTTP:
-      if((strncmp(szInUrl, szFtp, FTPSTR_LEN) == 0) &&
+      if((strncmp(szInUrl, szFtp, (sizeof(szFtp) - 1)) == 0) &&
          ((int)dwInUrlSize > strlen(szInUrl) + 1))
       {
-        ptr = szInUrl + FTPSTR_LEN;
+        ptr = szInUrl + (sizeof(szFtp) - 1);
         memmove(ptr + 1, ptr, strlen(ptr) + 1);
-        memcpy(szInUrl, szHttp, HTTPSTR_LEN);
+        memcpy(szInUrl, szHttp, (sizeof(szHttp) - 1));
       }
       break;
 
     case UP_FTP:
     default:
-      if((strncmp(szInUrl, szHttp, HTTPSTR_LEN) == 0) &&
+      if((strncmp(szInUrl, szHttp, (sizeof(szHttp) - 1)) == 0) &&
          ((int)dwInUrlSize > strlen(szInUrl) + 1))
       {
-        ptr = szInUrl + HTTPSTR_LEN;
+        ptr = szInUrl + (sizeof(szHttp) - 1);
         memmove(ptr - 1, ptr, strlen(ptr) + 1);
-        memcpy(szInUrl, szFtp, FTPSTR_LEN);
+        memcpy(szInUrl, szFtp, (sizeof(szFtp) - 1));
       }
       break;
   }
@@ -1054,12 +945,10 @@ int UpdateIdiFile(char  *szPartialUrl,
   SwapFTPAndHTTP(szPartialUrl, dwPartialUrlBufSize);
   RemoveSlash(szPartialUrl);
   sprintf(szUrl, "%s/%s", szPartialUrl, siCObject->szArchiveName);
-#ifdef OLDCODE
   if(WritePrivateProfileString(szSection,
                                szKey,
                                szUrl,
                                szFileIdiGetArchives) == 0)
-#endif
   {
     char szEWPPS[MAX_BUF];
 
@@ -1091,26 +980,20 @@ HRESULT AddArchiveToIdiFile(siC *siCObject,
   int       iIndex = 0;
   ssi       *ssiSiteSelectorTemp;
 
-#ifdef OLDCODE
   WritePrivateProfileString(szSection,
                             "desc",
                             siCObject->szDescriptionShort,
                             szFileIdiGetArchives);
-#endif
   itoa(siCObject->ulInstallSizeArchive, szArchiveSize, 10);
-#ifdef OLDCODE
   WritePrivateProfileString(szSection,
                             "size",
                             szArchiveSize,
                             szFileIdiGetArchives);
-#endif
   itoa(siCObject->dwAttributes & SIC_IGNORE_DOWNLOAD_ERROR, szBuf, 10);
-#ifdef OLDCODE
   WritePrivateProfileString(szSection,
                             "Ignore File Network Error",
                             szBuf,
                             szFileIdiGetArchives);
-#endif
 
   strcpy(szFile, szTempDir);
   AppendBackSlash(szFile, sizeof(szFile));
@@ -1273,16 +1156,12 @@ long RetrieveRedirectFile()
   strcat(szFileIdiGetRedirect, FILE_IDI_GETREDIRECT);
 
   GetPrivateProfileString("Redirect", "Description", "", szBuf, sizeof(szBuf), szFileIniConfig);
-#ifdef OLDCODE
   WritePrivateProfileString("File0", "desc", szBuf, szFileIdiGetRedirect);
-#endif
   GetPrivateProfileString("Redirect", "Server Path", "", szBuf, sizeof(szBuf), szFileIniConfig);
   AppendSlash(szBufUrl, sizeof(szBufUrl));
   strcat(szBufUrl, szBuf);
   SwapFTPAndHTTP(szBufUrl, sizeof(szBufUrl));
-#ifdef OLDCODE
   if(WritePrivateProfileString("File0", "url", szBufUrl, szFileIdiGetRedirect) == 0)
-#endif
   {
     char szEWPPS[MAX_BUF];
 
@@ -1295,7 +1174,6 @@ long RetrieveRedirectFile()
     return(1);
   }
 
-#ifdef OLDCODE /* When we get the hook */
   lResult = DownloadFiles(szFileIdiGetRedirect,               /* input idi file to parse                 */
                           szTempDir,                          /* download directory                      */
                           diAdvancedSettings.szProxyServer,   /* proxy server name                       */
@@ -1306,7 +1184,6 @@ long RetrieveRedirectFile()
                           TRUE,                               /* ignore network error                    */
                           NULL,                               /* buffer to store the name of failed file */
                           0);                                 /* size of failed file name buffer         */
-#endif
   return(lResult);
 }
 
@@ -1485,7 +1362,6 @@ long RetrieveArchives()
     if(FileExists(szFileIdiGetArchives))
     {
       gbDownloadTriggered = TRUE;
-#ifdef OLDCODE /* When we get the hook */
       lResult = DownloadFiles(szFileIdiGetArchives,               /* input idi file to parse                 */
                               szTempDir,                          /* download directory                      */
                               diAdvancedSettings.szProxyServer,   /* proxy server name                       */
@@ -1496,7 +1372,6 @@ long RetrieveArchives()
                               FALSE,                              /* ignore network error                    */
                               szFailedFile,                       /* buffer to store the name of failed file */
                               sizeof(szFailedFile));              /* size of failed file name buffer         */
-#endif
       if(lResult == WIZ_OK)
       {
         /* CRC check only the archives that were downloaded.
@@ -2327,7 +2202,6 @@ HRESULT InitSetupGeneral()
 {
   char szBuf[MAX_BUF];
 
-  gSystemInfo.bRefreshIcons      = FALSE; 
   sgProduct.ulMode               = NORMAL;
   sgProduct.ulCustomType         = ST_RADIO0;
   sgProduct.ulNumberOfComponents = 0;
@@ -2696,23 +2570,6 @@ void SiCNodeSetAttributes(DWORD dwIndex, DWORD dwAttributes, BOOL bSet, BOOL bIn
           siCTemp->dwAttributes |= dwAttributes;
         else
           siCTemp->dwAttributes &= ~dwAttributes;
-
-        if((!(siCTemp->dwAttributes & SIC_INVISIBLE))
-           && (dwAttributes == SIC_SELECTED) 
-           && gSystemInfo.bScreenReader 
-           && hwndListBox)
-        {
-          szTmpString = SiCNodeGetDescriptionShort(dwVisibleIndex, FALSE, dwACFlag);
-          strcpy(tchBuffer, szTmpString);
-          strcat(tchBuffer, " - ");
-          if(bSet)
-            strcat(tchBuffer, sgInstallGui.szChecked);
-          else
-            strcat(tchBuffer, sgInstallGui.szUnchecked);
-
-          //We've got to actually change the text in the listbox for the screen reader to see it.
-          WinSendMsg(hwndListBox, LM_SETITEMTEXT, dwIndex, (MPARAM)tchBuffer);
-        }
       }
 
       ++dwCount;
@@ -2734,23 +2591,6 @@ void SiCNodeSetAttributes(DWORD dwIndex, DWORD dwAttributes, BOOL bSet, BOOL bIn
             siCTemp->dwAttributes |= dwAttributes;
           else
             siCTemp->dwAttributes &= ~dwAttributes;
-
-          if((!(siCTemp->dwAttributes & SIC_INVISIBLE))
-             && (dwAttributes == SIC_SELECTED) 
-             && gSystemInfo.bScreenReader 
-             && hwndListBox)
-          {
-            szTmpString = SiCNodeGetDescriptionShort(dwVisibleIndex, FALSE, dwACFlag);
-            strcpy(tchBuffer, szTmpString);
-            strcat(tchBuffer, " - ");
-            if(bSet)
-              strcat(tchBuffer, sgInstallGui.szChecked);
-            else
-              strcat(tchBuffer, sgInstallGui.szUnchecked);
-
-            //We've got to actually change the text in the listbox for the screen reader to see it.
-          WinSendMsg(hwndListBox, LM_SETITEMTEXT, dwIndex, (MPARAM)tchBuffer);
-          }
         }
 
         ++dwCount;
@@ -3558,22 +3398,7 @@ HRESULT InitComponentDiskSpaceInfo(dsN **dsnComponentDSRequirement)
   HRESULT   hResult    = 0;
   char      szBuf[MAX_BUF];
   char      szIndex0[MAX_BUF];
-  char      szSysPath[MAX_BUF];
-  char      szBufSysPath[MAX_BUF];
   char      szBufTempPath[MAX_BUF];
-
-#ifdef OLDCODE /* @MAK - whyu do they get the system directory */
-  if(GetSystemDirectory(szSysPath, MAX_BUF) == 0)
-  {
-    memset(szSysPath, 0, MAX_BUF);
-    memset(szBufSysPath, 0, MAX_BUF);
-  }
-  else
-  {
-    ParsePath(szSysPath, szBufSysPath, sizeof(szBufSysPath), FALSE, PP_ROOT_ONLY);
-    AppendBackSlash(szBufSysPath, sizeof(szBufSysPath));
-  }
-#endif
 
   ParsePath(szTempDir, szBufTempPath, sizeof(szBufTempPath), FALSE, PP_ROOT_ONLY);
   AppendBackSlash(szBufTempPath, sizeof(szBufTempPath));
@@ -3595,9 +3420,6 @@ HRESULT InitComponentDiskSpaceInfo(dsN **dsnComponentDSRequirement)
 
       if(*szTempDir != '\0')
         UpdatePathDiskSpaceRequired(szTempDir, siCObject->ulInstallSizeArchive, dsnComponentDSRequirement);
-
-      if(*szSysPath != '\0')
-        UpdatePathDiskSpaceRequired(szSysPath, siCObject->ulInstallSizeSystem, dsnComponentDSRequirement);
     }
 
     ++dwIndex0;
@@ -3777,27 +3599,9 @@ BOOL ResolveSupersede(siC *siCObject)
           DecryptString(szFilePath, szSupersedeFile);
           if(FileExists(szFilePath))
           {
-            sprintf(szKey, "SupersedeMinVersion%d",dwIndex);
-            GetPrivateProfileString(siCObject->szReferenceName, szKey, "", szSupersedeVersion, sizeof(szSupersedeVersion), szFileIniConfig);
-            if(*szSupersedeVersion != '\0')
-            {
-              if (GetFileVersion(szFilePath,&vbVersionOld))
-              {
-                /* If we can get the version, and it is greater than or equal to the SupersedeVersion
-                 * set supersede.  If we cannot get the version, do not supersede the file. */
-                TranslateVersionStr(szSupersedeVersion, &vbVersionNew);
-                if ( CompareVersion(vbVersionOld,vbVersionNew) >= 0)
-                {  
-                  siCObject->bSupersede = TRUE;
-                  break;  /* Found at least one file, so break out of while loop */
-                }
-              }
-            }
-            else
-            { /* The file exists, and there's no version to check.  set Supersede */
-              siCObject->bSupersede = TRUE;
-              break;  /* Found at least one file, so break out of while loop */
-            }
+            /* The file exists.  set Supersede */
+            siCObject->bSupersede = TRUE;
+            break;  /* Found at least one file, so break out of while loop */
           }
           sprintf(szKey, "SupersedeFile%d", ++dwIndex);        
           GetPrivateProfileString(siCObject->szReferenceName, szKey, "", szSupersedeFile, sizeof(szSupersedeFile), szFileIniConfig);
@@ -4769,6 +4573,8 @@ BOOL CheckForProcess(LPSTR szProcessName, DWORD dwProcessName)
 int PreCheckInstance(char *szSection, char *szIniFile)
 {
 /* @MAK this function appears to try a -kill to get rid of turbo */
+/* We don't have a good way to do this */
+#ifdef OLDCODE
   char  szBuf[MAX_BUF];
   char  szKey[MAX_BUF];
   char  szName[MAX_BUF];
@@ -4866,11 +4672,29 @@ int PreCheckInstance(char *szSection, char *szIniFile)
   } while(bContinue);
 
   return(iRv);
+#endif
 }
 
-DWORD CloseAllWindowsOfWindowHandle(HWND hwndWindow)
+ULONG CloseAllWindowsOfWindowHandle(HWND hwndWindow)
 {
-   /* @MAK - need to write - query process of hwnd and close all windows */
+  HENUM henum;
+  HWND hwnd;
+  PID mainpid, pid;
+  TID tid;
+
+  WinQueryWindowProcess(hwndWindow, &mainpid, &tid);
+
+  henum = WinBeginEnumWindows(HWND_DESKTOP);
+  while ((hwnd = WinGetNextWindow(henum)) != NULLHANDLE)
+  {
+    WinQueryWindowProcess(hwndWindow, &pid, &tid);
+    if (pid == mainpid) {
+      if (WinIsWindowVisible(hwnd)) {
+        WinSendMsg(hwnd, WM_CLOSE, 0, 0);
+      }
+    }
+  }
+  WinEndEnumWindows(henum);
 
   return(WIZ_OK);
 }
@@ -4995,13 +4819,11 @@ HRESULT CheckInstances()
       else
         szWN = szWindowName;
 
-#ifdef OLDCODE
       /* If an instance is found, call PreCheckInstance first */
       if((hwndFW = FindWindow(szCN, szWN)) != NULL)
         PreCheckInstance(szSection, szFileIniConfig);
 
       if((hwndFW = FindWindow(szCN, szWN)) != NULL)
-#endif
       {
         if(*szMessage != '\0')
         {
@@ -5058,151 +4880,6 @@ HRESULT CheckInstances()
   }
 
   return(FALSE);
-}
-
-BOOL GetFileVersion(LPSTR szFile, verBlock *vbVersion)
-{
-#ifdef OLDCODE /* @MAK - we can't do this on OS/2 */
-  UINT              uLen;
-  UINT              dwLen;
-  BOOL              bRv;
-  DWORD             dwHandle;
-  LPVOID            lpData;
-  LPVOID            lpBuffer;
-  VS_FIXEDFILEINFO  *lpBuffer2;
-
-  vbVersion->ullMajor   = 0;
-  vbVersion->ullMinor   = 0;
-  vbVersion->ullRelease = 0;
-  vbVersion->ullBuild   = 0;
-  if(FileExists(szFile))
-  {
-    bRv    = TRUE;
-    dwLen  = GetFileVersionInfoSize(szFile, &dwHandle);
-    lpData = (LPVOID)malloc(sizeof(long)*dwLen);
-    uLen   = 0;
-
-    if(GetFileVersionInfo(szFile, dwHandle, dwLen, lpData) != 0)
-    {
-      if(VerQueryValue(lpData, "\\", &lpBuffer, &uLen) != 0)
-      {
-        lpBuffer2             = (VS_FIXEDFILEINFO *)lpBuffer;
-        vbVersion->ullMajor   = HIWORD(lpBuffer2->dwFileVersionMS);
-        vbVersion->ullMinor   = LOWORD(lpBuffer2->dwFileVersionMS);
-        vbVersion->ullRelease = HIWORD(lpBuffer2->dwFileVersionLS);
-        vbVersion->ullBuild   = LOWORD(lpBuffer2->dwFileVersionLS);
-      }
-    }
-    free(lpData);
-  }
-  else
-    /* File does not exist */
-    bRv = FALSE;
-
-  return(bRv);
-#endif
-}
-
-void TranslateVersionStr(LPSTR szVersion, verBlock *vbVersion)
-{
-#ifdef OLDCODE /* @MAK - we can't do this on OS/2 */
-  LPSTR szNum1 = NULL;
-  LPSTR szNum2 = NULL;
-  LPSTR szNum3 = NULL;
-  LPSTR szNum4 = NULL;
-
-  szNum1 = strtok(szVersion, ".");
-  szNum2 = strtok(NULL,      ".");
-  szNum3 = strtok(NULL,      ".");
-  szNum4 = strtok(NULL,      ".");
-
-  vbVersion->ullMajor   = atoi(szNum1);
-  vbVersion->ullMinor   = atoi(szNum2);
-  vbVersion->ullRelease = atoi(szNum3);
-  vbVersion->ullBuild   = atoi(szNum4);
-#endif
-}
-
-int CompareVersion(verBlock vbVersionOld, verBlock vbVersionNew)
-{
-#ifdef OLDCODE /* @MAK - we can't do this on OS/2 */
-  if(vbVersionOld.ullMajor > vbVersionNew.ullMajor)
-    return(4);
-  else if(vbVersionOld.ullMajor < vbVersionNew.ullMajor)
-    return(-4);
-
-  if(vbVersionOld.ullMinor > vbVersionNew.ullMinor)
-    return(3);
-  else if(vbVersionOld.ullMinor < vbVersionNew.ullMinor)
-    return(-3);
-
-  if(vbVersionOld.ullRelease > vbVersionNew.ullRelease)
-    return(2);
-  else if(vbVersionOld.ullRelease < vbVersionNew.ullRelease)
-    return(-2);
-
-  if(vbVersionOld.ullBuild > vbVersionNew.ullBuild)
-    return(1);
-  else if(vbVersionOld.ullBuild < vbVersionNew.ullBuild)
-    return(-1);
-
-  /* the versions are all the same */
-  return(0);
-#endif
-}
-
-void RefreshIcons()
-{
-#ifdef OLDCODE /* @MAK probably don't need */
-  char subKey[MAX_BUF];
-  char iconConstraint[MAX_BUF];
-  BYTE iconConstraintNew[MAX_BUF];
-  HKEY hkResult;
-  DWORD dwValueType;
-  long iconConstraintSize;
-  long rv;
-
-  // Get the size of the icon from the windows registry.
-  // When this registry value is changed, the OS can flush the
-  // icon cache and thus update the icons.
-  iconConstraintSize = sizeof(iconConstraint);
-  strcpy(subKey, "Control Panel\\Desktop\\WindowMetrics");
-  RegOpenKeyEx(HKEY_CURRENT_USER, subKey, 0, KEY_ALL_ACCESS, &hkResult);
-  rv = RegQueryValueEx(hkResult, "Shell Icon Size", 0, &dwValueType, iconConstraint, &iconConstraintSize);
-  if(rv != ERROR_SUCCESS || iconConstraintSize == 0)
-  {
-    // Key not found or value not found, so use default OS value.
-    int iIconSize = GetSystemMetrics(SM_CXICON);
-    if(iIconSize == 0)
-      // Getting default OS value failed, use hard coded value
-      iIconSize = DEFAULT_ICON_SIZE;
-
-    sprintf(iconConstraint, "%d", iIconSize);
-  }
-
-  // decrease the size of the icon by 1
-  // and tell the system to refresh the icons
-  sprintf(iconConstraintNew, "%d", atoi(iconConstraint) - 1);
-  iconConstraintSize = strlen(iconConstraintNew);
-  RegSetValueEx(hkResult, "Shell Icon Size", 0, dwValueType, iconConstraintNew, iconConstraintSize);
-  SendMessageTimeout(HWND_BROADCAST,
-                     WM_SETTINGCHANGE,
-                     SPI_SETNONCLIENTMETRICS,
-                     (LPARAM)"WindowMetrics",
-                     SMTO_NORMAL|SMTO_ABORTIFHUNG, 
-                     10000, NULL); 
-
-  // reset the original size of the icon
-  // and tell the system to refresh the icons
-  iconConstraintSize = strlen(iconConstraint);
-  RegSetValueEx(hkResult, "Shell Icon Size", 0, dwValueType, iconConstraint, iconConstraintSize);
-  SendMessageTimeout(HWND_BROADCAST,
-                     WM_SETTINGCHANGE,
-                     SPI_SETNONCLIENTMETRICS,
-                     (LPARAM)"WindowMetrics",
-                     SMTO_NORMAL|SMTO_ABORTIFHUNG, 
-                     10000, NULL); 
-#endif
 }
 
 int CRCCheckArchivesStartup(char *szCorruptedArchiveList, DWORD dwCorruptedArchiveListSize, BOOL bIncludeTempPath)
@@ -5399,51 +5076,6 @@ HRESULT ParseConfigIni(int argc, char *argv[])
   if(strcmpi(szBuf, "TRUE") == 0)
     sgProduct.bLockPath = TRUE;
 
-#ifdef OLDCODE /* @MAK - probably a great place to so WSOD stuff */
-  gbRestrictedAccess = VerifyRestrictedAccess();
-#endif
-  if(gbRestrictedAccess)
-  {
-    /* Detected user does not have the appropriate
-     * privileges on this system */
-    char szTitle[MAX_BUF_TINY];
-    int  iRvMB;
-
-    switch(sgProduct.ulMode)
-    {
-      case NORMAL:
-        if(!GetPrivateProfileString("Messages", "MB_WARNING_STR", "", szBuf, sizeof(szBuf), szFileIniInstall))
-          strcpy(szTitle, "Setup");
-        else
-          sprintf(szTitle, szBuf, sgProduct.szProductName);
-
-        GetPrivateProfileString("Strings", "Message NORMAL Restricted Access", "", szBuf, sizeof(szBuf), szFileIniConfig);
-        iRvMB = WinMessageBox(HWND_DESKTOP, hWndMain, szBuf, szTitle, 0, MB_YESNO | MB_ICONEXCLAMATION | MB_DEFBUTTON2);
-        break;
-
-      case AUTO:
-        ShowMessage(szMsgInitSetup, FALSE);
-        GetPrivateProfileString("Strings", "Message AUTO Restricted Access", "", szBuf, sizeof(szBuf), szFileIniConfig);
-        ShowMessage(szBuf, TRUE);
-        Delay(5);
-        ShowMessage(szBuf, FALSE);
-        iRvMB = MBID_NO;
-        break;
-
-      default:
-        iRvMB = MBID_NO;
-        break;
-    }
-
-    if(iRvMB == MBID_NO)
-    {
-      /* User chose not to continue with the lack of
-       * appropriate access privileges */
-      WinPostQueueMsg(0, WM_QUIT, 1, 0);
-      return(1);
-    }
-  }
-
   /* get main install path */
   if(LocatePreviousPath("Locate Previous Product Path", szPreviousPath, sizeof(szPreviousPath)) == FALSE)
   {
@@ -5522,10 +5154,6 @@ HRESULT ParseConfigIni(int argc, char *argv[])
   /* get main program folder name */
   GetPrivateProfileString("General", "Program Folder Name", "", szBuf, sizeof(szBuf), szFileIniConfig);
   DecryptString(sgProduct.szProgramFolderName, szBuf);
-
-  GetPrivateProfileString("General", "Refresh Icons", "", szBuf, sizeof(szBuf), szFileIniConfig);
-  if(strcmpi(szBuf, "TRUE") == 0)
-    gSystemInfo.bRefreshIcons = TRUE;
 
   /* Welcome dialog */
   GetPrivateProfileString("Dialog Welcome",             "Show Dialog",     "", szShowDialog,                  sizeof(szShowDialog), szFileIniConfig);
@@ -5961,8 +5589,6 @@ HRESULT ParseInstallIni()
   GetPrivateProfileString("General", "README", "", sgInstallGui.szReadme_, sizeof(sgInstallGui.szReadme_), szFileIniInstall);
   GetPrivateProfileString("General", "PAUSE_", "", sgInstallGui.szPause_, sizeof(sgInstallGui.szPause_), szFileIniInstall);
   GetPrivateProfileString("General", "RESUME_", "", sgInstallGui.szResume_, sizeof(sgInstallGui.szResume_), szFileIniInstall);
-  GetPrivateProfileString("General", "CHECKED", "",   sgInstallGui.szChecked,   sizeof(sgInstallGui.szChecked),   szFileIniInstall);
-  GetPrivateProfileString("General", "UNCHECKED", "", sgInstallGui.szUnchecked, sizeof(sgInstallGui.szUnchecked), szFileIniInstall);
 
   return(0);
 }
@@ -5989,13 +5615,11 @@ BOOL LocatePreviousPath(PSZ szMainSectionName, PSZ szPath, ULONG ulPathSize)
     if(*szValue != '\0')
       bFound = LocatePathNscpReg(szSection, szPath, ulPathSize);
     else
-#ifdef OLDCODE    
     {
-      GetPrivateProfileString(szSection, "HKey", "", szValue, sizeof(szValue), szFileIniConfig);
+      GetPrivateProfileString(szSection, "HApp", "", szValue, sizeof(szValue), szFileIniConfig);
       if(*szValue != '\0')
-        bFound = LocatePathWinReg(szSection, szPath, ulPathSize);
+        bFound = LocatePathOS2INI(szSection, szPath, ulPathSize);
       else
-#endif      
       {
         GetPrivateProfileString(szSection, "Path", "", szValue, sizeof(szValue), szFileIniConfig);
         if(*szValue != '\0')
@@ -6003,9 +5627,7 @@ BOOL LocatePreviousPath(PSZ szMainSectionName, PSZ szPath, ULONG ulPathSize)
         else
           break;
       }
-#ifdef OLDCODE
     }
-#endif
   }
 
   return(bFound);
@@ -6070,10 +5692,9 @@ DWORD GetTotalArchivesToDownload()
   return(dwTotalArchivesToDownload);
 }
 
-BOOL LocatePathWinReg(LPSTR szSection, LPSTR szPath, DWORD dwPathSize)
+BOOL LocatePathOS2INI(PSZ szSection, PSZ szPath, ULONG ulPathSize)
 {
-#ifdef OLDCODE /* @MAK - need to port */
-  char  szHKey[MAX_BUF];
+  char  szHApp[MAX_BUF];
   char  szHRoot[MAX_BUF];
   char  szName[MAX_BUF];
   char  szVerifyExistence[MAX_BUF];
@@ -6081,18 +5702,16 @@ BOOL LocatePathWinReg(LPSTR szSection, LPSTR szPath, DWORD dwPathSize)
   BOOL  bDecryptKey;
   BOOL  bContainsFilename;
   BOOL  bReturn;
-//  HKEY  hkeyRoot;
 
   bReturn = FALSE;
-  GetPrivateProfileString(szSection, "HKey", "", szHKey, sizeof(szHKey), szFileIniConfig);
-  if(*szHKey != '\0')
+  GetPrivateProfileString(szSection, "HApp", "", szHApp, sizeof(szHApp), szFileIniConfig);
+  if(*szHApp != '\0')
   {
     bReturn = FALSE;
-    memset(szPath, 0, dwPathSize);
+    memset(szPath, 0, ulPathSize);
 
-    GetPrivateProfileString(szSection, "HRoot",        "", szHRoot, sizeof(szHRoot), szFileIniConfig);
     GetPrivateProfileString(szSection, "Name",         "", szName,  sizeof(szName),  szFileIniConfig);
-    GetPrivateProfileString(szSection, "Decrypt HKey", "", szBuf,   sizeof(szBuf),   szFileIniConfig);
+    GetPrivateProfileString(szSection, "Decrypt HApp", "", szBuf,   sizeof(szBuf),   szFileIniConfig);
     if(strcmpi(szBuf, "FALSE") == 0)
       bDecryptKey = FALSE;
     else
@@ -6109,14 +5728,13 @@ BOOL LocatePathWinReg(LPSTR szSection, LPSTR szPath, DWORD dwPathSize)
     else
       bContainsFilename = FALSE;
 
-//    hkeyRoot = ParseRootKey(szHRoot);
     if(bDecryptKey == TRUE)
     {
-      DecryptString(szBuf, szHKey);
-      strcpy(szHKey, szBuf);
+      DecryptString(szBuf, szHApp);
+      strcpy(szHApp, szBuf);
     }
 
-//    GetWinReg(hkeyRoot, szHKey, szName, szBuf, sizeof(szBuf));
+    PrfQueryProfileString(HINI_USERPROFILE, szHApp, szName, "", szBuf, sizeof(szBuf));
     if(*szBuf != '\0')
     {
       if(strcmpi(szVerifyExistence, "FILE") == 0)
@@ -6124,7 +5742,7 @@ BOOL LocatePathWinReg(LPSTR szSection, LPSTR szPath, DWORD dwPathSize)
         if(FileExists(szBuf))
         {
           if(bContainsFilename == TRUE)
-            ParsePath(szBuf, szPath, dwPathSize, FALSE, PP_PATH_ONLY);
+            ParsePath(szBuf, szPath, ulPathSize, FALSE, PP_PATH_ONLY);
           else
             strcpy(szPath, szBuf);
 
@@ -6136,7 +5754,7 @@ BOOL LocatePathWinReg(LPSTR szSection, LPSTR szPath, DWORD dwPathSize)
       else if(strcmpi(szVerifyExistence, "PATH") == 0)
       {
         if(bContainsFilename == TRUE)
-          ParsePath(szBuf, szPath, dwPathSize, FALSE, PP_PATH_ONLY);
+          ParsePath(szBuf, szPath, ulPathSize, FALSE, PP_PATH_ONLY);
         else
           strcpy(szPath, szBuf);
 
@@ -6148,7 +5766,7 @@ BOOL LocatePathWinReg(LPSTR szSection, LPSTR szPath, DWORD dwPathSize)
       else
       {
         if(bContainsFilename == TRUE)
-          ParsePath(szBuf, szPath, dwPathSize, FALSE, PP_PATH_ONLY);
+          ParsePath(szBuf, szPath, ulPathSize, FALSE, PP_PATH_ONLY);
         else
           strcpy(szPath, szBuf);
 
@@ -6158,7 +5776,6 @@ BOOL LocatePathWinReg(LPSTR szSection, LPSTR szPath, DWORD dwPathSize)
   }
 
   return(bReturn);
-#endif
 }
 
 BOOL LocatePath(LPSTR szSection, LPSTR szPath, DWORD dwPathSize)
@@ -6434,35 +6051,33 @@ HRESULT DecryptVariable(PSZ szVariable, ULONG ulVariableSize)
   }
   else if(strcmpi(szVariable, "Product CurrentVersion") == 0)
   {
-    char szKey[MAX_BUF];
+    char szApp[MAX_BUF];
 
-    sprintf(szKey, "Software\\%s\\%s", sgProduct.szCompanyName, sgProduct.szProductNameInternal);
+    sprintf(szApp, "%s", sgProduct.szProductNameInternal);
 
-#ifdef OLDCODE /* @MAK */
     /* parse for the current Netscape WinReg key */
-    GetWinReg(HKEY_LOCAL_MACHINE, szKey, "CurrentVersion", szBuf, sizeof(szBuf));
-#endif
+    PrfQueryProfileString(HINI_USERPROFILE, szApp, "CurrentVersion", "",
+                          szBuf, sizeof(szBuf));
 
     if(*szBuf == '\0')
       return(FALSE);
 
-    sprintf(szVariable, "Software\\%s\\%s\\%s", sgProduct.szCompanyName, sgProduct.szProductNameInternal, szBuf);
+    sprintf(szVariable, "%s %s", sgProduct.szProductNameInternal, szBuf);
   }
   else if(strcmpi(szVariable, "Product PreviousVersion") == 0)
   {
-    char szKey[MAX_BUF];
+    char szApp[MAX_BUF];
 
-    sprintf(szKey, "Software\\%s\\%s", sgProduct.szCompanyName, sgProduct.szProductNamePrevious);
+    sprintf(szApp, "%s", sgProduct.szProductNamePrevious);
 
-#ifdef OLDCODE /* @MAK */
     /* parse for the current Netscape WinReg key */
-    GetWinReg(HKEY_LOCAL_MACHINE, szKey, "CurrentVersion", szBuf, sizeof(szBuf));
-#endif
+    PrfQueryProfileString(HINI_USERPROFILE, szApp, "CurrentVersion", "",
+                          szBuf, sizeof(szBuf));
 
     if(*szBuf == '\0')
       return(FALSE);
 
-    sprintf(szVariable, "Software\\%s\\%s\\%s", sgProduct.szCompanyName, sgProduct.szProductNamePrevious, szBuf);
+    sprintf(szVariable, "%s %s", sgProduct.szProductNamePrevious, szBuf);
   }
   else if(szVariable[0] == '$')
   {
@@ -6680,8 +6295,16 @@ HRESULT FileExists(PSZ szFile)
         return FILE_DIRECTORY;
      else
         return(TRUE);
-  else
-     return (FALSE);
+  else if ((strlen(szFile) == 2) && (szFile[1] == ':'))
+  {
+     char temp[4] = {0};
+     strcpy(temp, szFile);
+     strcat(temp, "\\");
+     statrv = stat(temp, &st);
+     if (statrv == 0)
+        return FILE_DIRECTORY;
+  }
+  return (FALSE);
 }
 
 BOOL NeedReboot()
@@ -6954,27 +6577,23 @@ void SendErrorMessage(void)
                          MB_OKCANCEL | MB_ICONQUESTION) == MBID_OK)
         {
           //PrintError(szMsg, ERROR_CODE_HIDE);
-#ifdef OLDCODE /* @MAK when we have download */
           WGet(szFullURL,
                szWGetLog,
                diAdvancedSettings.szProxyServer,
                diAdvancedSettings.szProxyPort,
                diAdvancedSettings.szProxyUser,
                diAdvancedSettings.szProxyPasswd);
-#endif
         }
       }
       else if(!gErrorMessageStream.bShowConfirmation)
       {
         //PrintError(szMsg, ERROR_CODE_HIDE);
-#ifdef OLDCODE /* @MAK when we have download */
         WGet(szFullURL,
              szWGetLog,
              diAdvancedSettings.szProxyServer,
              diAdvancedSettings.szProxyPort,
              diAdvancedSettings.szProxyUser,
              diAdvancedSettings.szProxyPasswd);
-#endif
       }
 
       FreeMemory(&szFullURL);
@@ -6995,15 +6614,6 @@ void DeInitialize()
     AppendBackSlash(szBuf, sizeof(szBuf));
     DirectoryRemove(szBuf, FALSE);
   }
-
-#ifdef OLDCODE
-  if(hbmpBoxChecked)
-    DeleteObject(hbmpBoxChecked);
-  if(hbmpBoxCheckedDisabled)
-    DeleteObject(hbmpBoxCheckedDisabled);
-  if(hbmpBoxUnChecked)
-    DeleteObject(hbmpBoxUnChecked);
-#endif
 
   DeleteWGetLog();
   CleanTempFiles();
@@ -7081,6 +6691,8 @@ void SaveInstallerFiles()
   char      szArchivePath[MAX_BUF];
   DWORD     dwIndex0;
   siC       *siCObject = NULL;
+  PPIB      ppib;
+  PTIB      ptib;
 
   GetSaveInstallerPath(szDestination, sizeof(szDestination));
   AppendBackSlash(szDestination, sizeof(szDestination));
@@ -7105,9 +6717,9 @@ void SaveInstallerFiles()
     /* Else if self extracting file does not exist, copy the setup files */
     /* First get the current process' filename (in case it's not really named setup.exe */
     /* Then copy it to the install folder */
-#ifdef OLDCODE /* @MAK - we have this, just need to port it */
-    GetModuleFileName(NULL, szBuf, sizeof(szBuf));
-#endif
+    char buffer[CCHMAXPATH];
+    DosGetInfoBlocks( &ptib, &ppib);
+    DosQueryModuleName( ppib->pib_hmte, sizeof(szBuf), szBuf);
     ParsePath(szBuf, szMFN, sizeof(szMFN), FALSE, PP_FILENAME_ONLY);
 
     strcpy(szBuf, szSetupDir);
@@ -7158,4 +6770,39 @@ BOOL ShowAdditionalOptionsDialog(void)
     return(FALSE);
 
   return(TRUE);
+}
+
+/* Only checks for class or window name right now */
+HWND FindWindow(PCSZ pszClassName, PCSZ pszWindowName)
+{
+  HENUM henum;
+  HWND hwndClient, hwnd = NULLHANDLE;
+  char pszT[256];
+
+  henum = WinBeginEnumWindows(HWND_DESKTOP);
+  while ((hwnd = WinGetNextWindow(henum)) != NULLHANDLE)
+  {
+    HWND hwndClient = NULLHANDLE;
+
+    /* If the window is a frame window, use the client for the class
+     * comparison.
+     */
+    if (((ULONG)WinSendMsg(hwnd, WM_QUERYFRAMEINFO, NULL, NULL)) & FI_FRAME)
+        hwndClient = WinWindowFromID(hwnd, FID_CLIENT);
+
+    /* See if the class matches.
+     */
+    if (pszClassName) {
+      WinQueryClassName(hwndClient ? hwndClient : hwnd, sizeof(pszT), pszT);
+      if (strcmp(pszT, pszClassName) == 0)
+        break;
+    }
+    if (pszWindowName) {
+      WinQueryWindowText(hwnd, sizeof(pszT), pszT);
+      if (strcmp(pszT, pszWindowName) == 0)
+        break;
+    }
+  }
+  WinEndEnumWindows(henum);
+  return  hwnd;
 }

@@ -122,5 +122,6 @@
 #define IDWIZNEXT                       11014
 #define IDS_MSG_CREATE_DIRECTORY        11015
 #define IDWIZNEXT2                      11015
+#define IDC_MOZILLA                     11016
 #define IDC_STATIC                      -1
 
