@@ -132,7 +132,8 @@ nsFocusController::UpdateCommands(const nsAReadableString& aEventName)
       doc->GetScriptGlobalObject(getter_AddRefs(global));
 
       nsCOMPtr<nsIDOMWindowInternal> window(do_QueryInterface(global));
-      window->UpdateCommands(aEventName);
+      if (window)
+        window->UpdateCommands(aEventName);
     }
   }
   return NS_OK;
