@@ -28,6 +28,7 @@
 #include "nsIDocument.h"
 #include "nsISupportsArray.h"
 #include "nsDocument.h"
+#include "nsMarkupDocument.h"
 #include "nsIURL.h"
 #include "nsIDOMText.h"
 
@@ -166,7 +167,7 @@ void testStrings(nsIDocument* aDoc) {
   printf("string tests complete\n");
 }
 
-class MyDocument : public nsDocument {
+class MyDocument : public nsMarkupDocument {
 public:
   MyDocument();
   NS_IMETHOD StartDocumentLoad(nsIURL *aUrl, 
