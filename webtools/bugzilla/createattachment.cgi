@@ -58,6 +58,9 @@ What kind of file is this?
 <br><input type=radio name=type value=patch>Patch file (text/plain, diffs)
 <br><input type=radio name=type value="text/plain">Plain text (text/plain)
 <br><input type=radio name=type value="text/html">HTML source (text/html)
+<br><input type=radio name=type value="image/gif">GIF Image (image/gif)
+<br><input type=radio name=type value="image/jpeg">JPEG Image (image/jpeg)
+<br><input type=radio name=type value="image/png">PNG Image (image/png)
 <br><input type=radio name=type value="application/octet-stream">Binary file (application/octet-stream)
 <br><input type=radio name=type value="other">Other (enter mime type: <input name=othertype size=30>)
 <P>
