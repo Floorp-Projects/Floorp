@@ -140,7 +140,7 @@
   button.plain > .button-internal-box > .button-text-container:hover:active,
   button.plain > .button-internal-box > .button-text-container > .button-text, 
   button.plain > .button-internal-box > .button-text-container > .button.text:hover:active,
-  button-plain > .button-internal-box > .button-icon, 
+  button.plain > .button-internal-box > .button-icon, 
   button.plain > .button-internal-box > .button.icon:hover:active
     {
       border              : 0px ! important;

@@ -4,9 +4,9 @@
     background-image      : url("chrome://communicator/skin/navbar-endbox.gif");
     background-repeat     : no-repeat;
     list-style-image      : url("chrome://global/skin/animthrob_single.gif");
-    width                 : 68px;
-    max-width             : 68px;
-    padding               : 11px 3px 1px 23px;
+    width                 : 56px;
+    max-width             : 56px;
+    padding               : 8px 8px 7px 16px;
     margin                : 0px;
     cursor                : pointer;
   }  
@@ -18,7 +18,6 @@
   
 #navigator-throbber:hover:active
   {
-    padding               : 12px 2px 0px 24px;
-    margin                : 0px;
+    padding               : 9px 7px 6px 17px;
   }
 
