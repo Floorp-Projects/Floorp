@@ -2811,67 +2811,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             break;
 
           case JSOP_NE:
-#if 1
             EQUALITY_OP(!=, JS_TRUE);
-#else
-    {
-        rval = FETCH_OPND(-1);
-        lval = FETCH_OPND(-2);
-        ltmp = JSVAL_TAG(lval);
-        rtmp = JSVAL_TAG(rval);
-        if (ltmp == JSVAL_OBJECT &&
-            (obj2 = JSVAL_TO_OBJECT(lval)) &&
-            ((clasp = OBJ_GET_CLASS(cx, obj2)->flags & JSCLASS_IS_EXTENDED))) {
-            JSExtendedClass *xclasp;
-
-            xclasp = (JSExtendedClass *) clasp;
-            ok = xclasp->equality(cx, obj2, rval, &cond);
-            if (!ok)
-                goto out;
-            cond = cond != JS_TRUE;
-        }
-        if (ltmp == rtmp) {
-            if (ltmp == JSVAL_STRING) {
-                str  = JSVAL_TO_STRING(lval);
-                str2 = JSVAL_TO_STRING(rval);
-                cond = js_CompareStrings(str, str2) != 0;
-            } else if (ltmp == JSVAL_DOUBLE) {
-                d  = *JSVAL_TO_DOUBLE(lval);
-                d2 = *JSVAL_TO_DOUBLE(rval);
-                cond = JSDOUBLE_COMPARE(d, !=, d2, JS_TRUE);
-            } else {
-                XML_NAME_EQUALITY_OP(!=)
-                /* Handle all undefined (=>NaN) and int combinations. */
-                cond = lval != rval;
-            }
-        } else {
-            if (JSVAL_IS_NULL(lval) || JSVAL_IS_VOID(lval)) {
-                cond = (JSVAL_IS_NULL(rval) || JSVAL_IS_VOID(rval)) != 1;
-            } else if (JSVAL_IS_NULL(rval) || JSVAL_IS_VOID(rval)) {
-                cond = 1 != 0;
-            } else {
-                if (ltmp == JSVAL_OBJECT) {
-                    VALUE_TO_PRIMITIVE(cx, lval, JSTYPE_VOID, &lval);
-                    ltmp = JSVAL_TAG(lval);
-                } else if (rtmp == JSVAL_OBJECT) {
-                    VALUE_TO_PRIMITIVE(cx, rval, JSTYPE_VOID, &rval);
-                    rtmp = JSVAL_TAG(rval);
-                }
-                if (ltmp == JSVAL_STRING && rtmp == JSVAL_STRING) {
-                    str  = JSVAL_TO_STRING(lval);
-                    str2 = JSVAL_TO_STRING(rval);
-                    cond = js_CompareStrings(str, str2) != 0;
-                } else {
-                    VALUE_TO_NUMBER(cx, lval, d);
-                    VALUE_TO_NUMBER(cx, rval, d2);
-                    cond = JSDOUBLE_COMPARE(d, !=, d2, JS_TRUE);
-                }
-            }
-        }
-        sp--;
-        STORE_OPND(-1, BOOLEAN_TO_JSVAL(cond));
-    }
-#endif
             break;
 
 #if !JS_BUG_FALLIBLE_EQOPS
