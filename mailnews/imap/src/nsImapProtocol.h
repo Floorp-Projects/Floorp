@@ -24,9 +24,10 @@
 
 #include "nsIStreamListener.h"
 #include "nsIOutputStream.h"
+#include "nsIBufferOutputStream.h"
+#include "nsIBufferInputStream.h"
 #include "nsImapCore.h"
 #include "nsString.h"
-#include "nsCOMPtr.h"
 
 #include "nsImapServerResponseParser.h"
 #include "nsImapProxyEvent.h"
@@ -39,6 +40,9 @@
 #include "nsIMsgIncomingServer.h"
 #include "nsISupportsArray.h"
 #include "nsIThread.h"
+#include "nsIImapMockChannel.h"
+#include "nsILoadGroup.h"
+#include "nsCOMPtr.h"
 
 class nsIMAPMessagePartIDArray;
 class nsIMsgIncomingServer;
@@ -285,8 +289,12 @@ private:
 	nsCOMPtr<nsIChannel>		m_channel; 
 	nsCOMPtr<nsIOutputStream>	m_outputStream;   // this will be obtained from the transport interface
 	nsCOMPtr<nsIInputStream>    m_inputStream;
-	nsCOMPtr<nsIStreamListener> m_outputConsumer;
-	nsCOMPtr<nsISupports>	  m_streamConsumer; // if we are displaying an article this is the rfc-822 display sink...
+
+    nsCOMPtr<nsIBufferInputStream>  m_channelInputStream;
+	nsCOMPtr<nsIBufferOutputStream> m_channelOutputStream;
+	nsCOMPtr<nsIStreamListener>	    m_channelListener; // if we are displaying an article this is the rfc-822 display sink...
+    nsCOMPtr<nsISupports>           m_channelContext;
+    nsCOMPtr<nsIImapMockChannel>    m_mockChannel;   // this is the channel we should forward to people
 
 
 	// this is a method designed to buffer data coming from the input stream and efficiently extract out 
@@ -510,6 +518,37 @@ private:
     EMailboxDiscoverStatus m_discoveryStatus;
     nsVoidArray m_listedMailboxList;
     nsVoidArray* m_deletableChildren;
+};
+
+// This small class is a "mock" channel because it is a mockery of the imap channel's implementation...
+// it's a light weight channel that we can return to necko when they ask for a channel on a url before
+// we actually have an imap protocol instance around which can run the url. Please see my comments in
+// nsIImapMockChannel.idl for more details..
+//
+// Threading concern: This class lives entirely in the UI thread.
+
+class nsImapMockChannel : public nsIImapMockChannel
+{
+public:
+
+	NS_DECL_ISUPPORTS
+    NS_DECL_NSIIMAPMOCKCHANNEL
+    NS_DECL_NSICHANNEL
+    NS_DECL_NSIREQUEST
+	
+    nsImapMockChannel();
+	virtual ~nsImapMockChannel();
+
+    static nsresult Create (const nsIID& iid, void **result);
+
+protected:
+    // we CANNOT own the uri else we will have a circular ref count
+    // because the imap uri ref counts us....so don't think about
+    // turning this into a com ptr!
+    nsIURI * m_url;
+    nsCOMPtr<nsILoadGroup> m_loadGroup;
+    nsCOMPtr<nsIStreamListener> m_channelListener;
+    nsCOMPtr<nsISupports> m_channelContext;
 };
 
 #endif  // nsImapProtocol_h___

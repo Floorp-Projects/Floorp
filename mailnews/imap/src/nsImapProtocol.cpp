@@ -41,7 +41,9 @@
 #include "nsIWebShell.h"
 #include "nsIImapService.h"
 #include "nsISocketTransportService.h"
+#include "nsIIOService.h"
 #include "nsXPIDLString.h"
+#include "nsIPipe.h"
 
 #include "nsImapStringBundle.h"
 #include "nsCOMPtr.h"
@@ -60,6 +62,7 @@ PRLogModuleInfo *IMAP;
 
 const char *kImapTrashFolderName = "Trash"; // **** needs to be localized ****
 
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_IID(kIWebShell, NS_IWEB_SHELL_IID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
@@ -482,8 +485,7 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
 	NS_PRECONDITION(aURL, "null URL passed into Imap Protocol");
 	if (aURL)
 	{
-        rv = aURL->QueryInterface(nsIImapUrl::GetIID(), 
-                                           getter_AddRefs(m_runningUrl));
+        rv = aURL->QueryInterface(NS_GET_IID(nsIImapUrl), getter_AddRefs(m_runningUrl));
         if (NS_FAILED(rv)) return rv;
 
         if (!m_server)
@@ -491,6 +493,25 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
 			nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_runningUrl);
             rv = mailnewsUrl->GetServer(getter_AddRefs(m_server));
 		}
+
+        nsCOMPtr<nsIStreamListener> aRealStreamListener = do_QueryInterface(aConsumer);
+        m_runningUrl->GetMockChannel(getter_AddRefs(m_mockChannel));
+        if (m_mockChannel)
+        {   
+            // if we have a listener from a mock channel, over-ride the consumer that was passed in
+            m_mockChannel->GetChannelListener(getter_AddRefs(aRealStreamListener));
+            m_mockChannel->GetChannelContext(getter_AddRefs(m_channelContext));
+        }
+
+        // since we'll be making calls directly from the imap thread to the channel listener,
+        // we need to turn it into a proxy object....we'll assume that the listener is on the same thread
+        // as the event sink queue
+        if (aRealStreamListener)
+        {
+            NS_WITH_SERVICE(nsIIOService, pNetService, kIOServiceCID, &rv);
+            if (NS_FAILED(rv)) return rv; 
+            pNetService->NewAsyncStreamListener(aRealStreamListener, m_sinkEventQueue, getter_AddRefs(m_channelListener));
+        }
 
 		PRUint32 capability = kCapabilityUndefined;
 
@@ -502,9 +523,8 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
 			// extract the file name and create a file transport...
 			PRInt32 port = IMAP_PORT;
 			nsXPIDLCString hostName;
-
-			NS_WITH_SERVICE(nsISocketTransportService, socketService, kSocketTransportServiceCID, &rv);
-
+            
+            NS_WITH_SERVICE(nsISocketTransportService, socketService, kSocketTransportServiceCID, &rv);
 			if (NS_SUCCEEDED(rv) && aURL)
 			{
 				aURL->GetPort(&port);
@@ -531,6 +551,12 @@ void nsImapProtocol::ReleaseUrlState()
 	m_imapMessageSink = null_nsCOMPtr();
 	m_imapExtensionSink = null_nsCOMPtr();
 	m_imapMiscellaneousSink = null_nsCOMPtr();
+    m_channelListener = null_nsCOMPtr();
+    m_channelContext = null_nsCOMPtr();
+    m_mockChannel = null_nsCOMPtr();
+    m_channelInputStream = null_nsCOMPtr();
+    m_channelOutputStream = null_nsCOMPtr();
+
 	// mscott - do we need to release all of our sinks here? will we re-use them on the next
 	// url request? I'm guessing we need to release them even though we'll just re-acquire
 	// them on the next request.
@@ -586,8 +612,11 @@ NS_IMETHODIMP nsImapProtocol::Run()
     me->m_runningUrl = null_nsCOMPtr();
     me->m_channel = null_nsCOMPtr();
     me->m_outputStream = null_nsCOMPtr();
-    me->m_outputConsumer = null_nsCOMPtr();
-    me->m_streamConsumer = null_nsCOMPtr();
+    me->m_channelListener = null_nsCOMPtr();
+    me->m_channelContext = null_nsCOMPtr();
+    me->m_mockChannel = null_nsCOMPtr();
+    me->m_channelInputStream = null_nsCOMPtr();
+    me->m_channelOutputStream = null_nsCOMPtr();
     me->m_sinkEventQueue = null_nsCOMPtr();
     me->m_eventQueue = null_nsCOMPtr();
     me->m_server = null_nsCOMPtr();
@@ -853,6 +882,12 @@ void nsImapProtocol::ProcessCurrentURL()
 	GetServerStateParser().InitializeState();
 	GetServerStateParser().SetConnected(PR_TRUE);
 
+    // if we are set up as a channel, we should notify our channel listener that we are starting...
+	// so pass in ourself as the channel and not the underlying socket or file channel the protocol
+	// happens to be using
+	if (m_channelListener)
+		m_channelListener->OnStartRequest(m_mockChannel, m_channelContext);
+
 	// mscott - I believe whenever we get here that we will also have
 	// a connection. Why? Because when we load the url we open the 
 	// connection if it isn't open already....However, if we haven't received
@@ -924,6 +959,13 @@ void nsImapProtocol::ProcessCurrentURL()
                                                       // url.
         WaitForFEEventCompletion();
     }
+
+	// if we are set up as a channel, we should notify our channel listener that we are starting...
+	// so pass in ourself as the channel and not the underlying socket or file channel the protocol
+	// happens to be using
+	if (m_channelListener)
+		rv = m_channelListener->OnStopRequest(m_mockChannel, m_channelContext, NS_OK, nsnull);
+
     m_lastActiveTime = PR_Now(); // ** jt -- is this the best place for time stamp
 	PseudoInterrupt(PR_FALSE);	// clear this, because we must be done interrupting?
     nsCOMPtr<nsISupports> copyState;
@@ -1013,6 +1055,7 @@ NS_IMETHODIMP nsImapProtocol::OnStartRequest(nsIChannel * /* aChannel */, nsISup
                                              NS_OK);
         WaitForFEEventCompletion();
     }
+
     PR_CExitMonitor(this);
 	return NS_OK;
 }
@@ -1042,13 +1085,17 @@ NS_IMETHODIMP nsImapProtocol::OnStopRequest(nsIChannel * /* aChannel */, nsISupp
 
 NS_IMETHODIMP nsImapProtocol::GetStreamConsumer (nsISupports **result)
 {
+    // mscott - i'm going to make this method obsolete...
+    return NS_ERROR_NOT_IMPLEMENTED;
+#if 0
 	if (result)
 	{
-		*result = m_streamConsumer;
+		*result = nsnull;
 		NS_IF_ADDREF(*result);
 		return NS_OK;
 	}
 	return NS_ERROR_NULL_POINTER;
+#endif
 }
 
 NS_IMETHODIMP
@@ -1114,9 +1161,6 @@ nsresult nsImapProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 	nsresult rv = NS_OK;
 	if (aURL)
 	{
-		if (aConsumer)
-			m_streamConsumer = do_QueryInterface(aConsumer, &rv);
-
 		rv = SetupWithUrl(aURL, aConsumer); 
         if (NS_FAILED(rv)) return rv;
     	SetupSinkProxy(); // generate proxies for all of the event sinks in the url
@@ -1885,6 +1929,15 @@ void nsImapProtocol::BeginMessageDownLoad(
 					WaitForFEEventCompletion();
 				}
 			}
+            // if we have a mock channel, that means we have a channel listener who wants the
+            // message. So set up a pipe. We'll write the messsage into one end of the pipe
+            // and they will read it out of the other end.
+            else if (m_mockChannel)
+            {
+	           // create a pipe to pump the message into...the output will go to whoever
+	           // is consuming the message display
+	            nsresult rv = NS_NewPipe(getter_AddRefs(m_channelInputStream), getter_AddRefs(m_channelOutputStream));
+            }
 			else if (m_imapMessageSink) 
             {
                 m_imapMessageSink->SetupMsgWriteStream(this, si);
@@ -2470,6 +2523,14 @@ nsImapProtocol::PostLineDownLoadEvent(msg_line_info *downloadLineDontDelete)
 			m_imapMailFolderSink->ParseAdoptedHeaderLine(this, downloadLineDontDelete);
 		}
 	}
+    // if we have a channel listener, then just spool the message
+    // directory to the listener
+    else if (m_channelListener)
+    {
+       PRUint32 count = 0;
+       char * line = downloadLineDontDelete->adoptedMessageLine;
+	   m_channelOutputStream->Write(line, PL_strlen(line), &count);
+    }
     else if (m_imapMessageSink && downloadLineDontDelete)
 	{
         m_imapMessageSink->ParseAdoptedMsgLine(this, downloadLineDontDelete);
@@ -2612,6 +2673,13 @@ void nsImapProtocol::NormalMessageEndDownload()
 		if (m_imapMailFolderSink)
 			m_imapMailFolderSink->NormalEndHeaderParseStream(this);
 	}
+    else if (m_channelListener)
+    {
+        PRUint32 inlength = 0;
+		m_channelInputStream->Available(&inlength);
+		if (inlength > 0) // broadcast our batched up ODA changes
+			m_channelListener->OnDataAvailable(m_mockChannel, m_channelContext, m_channelInputStream, 0, inlength);   
+    }
 	else if (m_imapMessageSink)
     {
         m_imapMessageSink->NormalEndMsgWriteStream(this);
@@ -6018,4 +6086,205 @@ nsIMAPMailboxInfo::nsIMAPMailboxInfo(const char *name, char delimiter)
 
 nsIMAPMailboxInfo::~nsIMAPMailboxInfo()
 {
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+// The following is the implementation of nsImapMockChannel
+//////////////////////////////////////////////////////////////////////////////////////////////
+NS_IMPL_ISUPPORTS2(nsImapMockChannel, nsIImapMockChannel, nsIChannel)
+
+nsImapMockChannel::nsImapMockChannel()
+{
+    NS_INIT_REFCNT();
+}
+
+nsImapMockChannel::~nsImapMockChannel()
+{
+}
+
+nsresult nsImapMockChannel::Create(const nsIID &iid, void ** aInstancePtrResult)
+{
+	/* note this new macro for assertions...they can take a string describing the assertion */
+	NS_PRECONDITION(nsnull != aInstancePtrResult, "nsnull ptr");
+	if (aInstancePtrResult)
+	{
+        nsImapMockChannel * mockChannel = new nsImapMockChannel();
+		if (mockChannel)
+			return mockChannel->QueryInterface(iid, aInstancePtrResult);
+		else
+			return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
+	}
+	else
+		return NS_ERROR_NULL_POINTER; /* aInstancePtrResult was NULL....*/
+}
+
+NS_IMETHODIMP  nsImapMockChannel::GetChannelListener(nsIStreamListener **aChannelListener)
+{
+    *aChannelListener = m_channelListener;
+    NS_IF_ADDREF(*aChannelListener);
+    return NS_OK;
+}
+
+NS_IMETHODIMP  nsImapMockChannel::GetChannelContext(nsISupports **aChannelContext)
+{
+    *aChannelContext = m_channelContext;
+    NS_IF_ADDREF(*aChannelContext);
+    return NS_OK;
+}
+
+// now implement our mock implementation of the channel interface...we forward all calls to the real
+// channel if we have one...otherwise we return something bogus...
+
+NS_IMETHODIMP nsImapMockChannel::SetURI(nsIURI * aURL)
+{
+	m_url = aURL;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsImapMockChannel::SetLoadGroup(nsILoadGroup * aLoadGroup)
+{
+	m_loadGroup = dont_QueryInterface(aLoadGroup);
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsImapMockChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
+{
+    *aLoadGroup = m_loadGroup;
+    NS_IF_ADDREF(*aLoadGroup);
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsImapMockChannel::GetURI(nsIURI * *aURI)
+{
+	nsresult rv = NS_OK;
+	if (aURI)
+	{
+		if (m_url)
+			rv = m_url->QueryInterface(NS_GET_IID(nsIURI), (void **) aURI);
+		else
+			*aURI = nsnull;
+	}
+	else
+		rv = NS_ERROR_NULL_POINTER;
+	return rv;
+}
+ 
+NS_IMETHODIMP nsImapMockChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount, nsIInputStream **_retval)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsImapMockChannel::OpenOutputStream(PRUint32 startPosition, nsIOutputStream **_retval)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsImapMockChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount, nsISupports *ctxt, nsIStreamListener *listener)
+{
+	// set the stream listener and then load the url
+	m_channelContext = ctxt;
+	m_channelListener = listener;
+
+	// the following load group code is completely bogus....
+	nsresult rv = NS_OK;
+	if (m_loadGroup)
+	{
+		nsCOMPtr<nsILoadGroupListenerFactory> factory;
+		//
+		// Create a load group "proxy" listener...
+		//
+		rv = m_loadGroup->GetGroupListenerFactory(getter_AddRefs(factory));
+		if (factory) 
+		{
+			nsCOMPtr<nsIStreamListener> newListener;
+			rv = factory->CreateLoadGroupListener(m_channelListener, getter_AddRefs(newListener));
+			if (NS_SUCCEEDED(rv)) 
+				m_channelListener = newListener;
+		}
+	} // if aLoadGroup
+
+    // loading the url consists of asking the server to add the url to it's imap event queue....
+    nsCOMPtr<nsIImapUrl> imapUrl = do_QueryInterface(m_url);
+    nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_url, &rv);
+    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIMsgIncomingServer> server;
+    rv = mailnewsUrl->GetServer(getter_AddRefs(server));
+    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIImapIncomingServer> imapServer;
+    imapServer = do_QueryInterface(server, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    // Assume AsyncRead is always called from the UI thread.....
+    nsCOMPtr<nsIEventQueue> queue;
+ 	// get the Event Queue for this thread...
+	NS_WITH_SERVICE(nsIEventQueueService, pEventQService,kEventQueueServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = pEventQService->GetThreadEventQueue(PR_GetCurrentThread(), getter_AddRefs(queue));
+    if (NS_FAILED(rv)) return rv;
+    rv = imapServer->GetImapConnectionAndLoadUrl(queue, imapUrl, nsnull);
+    return rv;
+}
+
+NS_IMETHODIMP nsImapMockChannel::AsyncWrite(nsIInputStream *fromStream, PRUint32 startPosition, PRInt32 writeCount, nsISupports *ctxt, nsIStreamObserver *observer)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsImapMockChannel::GetLoadAttributes(nsLoadFlags *aLoadAttributes)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsImapMockChannel::SetLoadAttributes(nsLoadFlags aLoadAttributes)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsImapMockChannel::GetContentType(char * *aContentType)
+{
+	*aContentType = nsCRT::strdup("message/rfc822");
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsImapMockChannel::GetContentLength(PRInt32 * aContentLength)
+{
+  *aContentLength = -1;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsImapMockChannel::GetPrincipal(nsIPrincipal * *aPrincipal)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsImapMockChannel::SetPrincipal(nsIPrincipal * aPrincipal)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// From nsIRequest
+////////////////////////////////////////////////////////////////////////////////
+
+NS_IMETHODIMP nsImapMockChannel::IsPending(PRBool *result)
+{
+    *result = PR_TRUE;
+    return NS_OK; 
+}
+
+NS_IMETHODIMP nsImapMockChannel::Cancel()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsImapMockChannel::Suspend()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsImapMockChannel::Resume()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
