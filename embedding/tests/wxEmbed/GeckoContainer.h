@@ -25,6 +25,8 @@
  *
  * Contributor(s):
  *
+ *   Adam Lock <adamlock@netscape.com>
+ *
  * ***** END LICENSE BLOCK ***** */
 
 #ifndef __WebBrowserChrome__
@@ -64,6 +66,7 @@ public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IGECKOCONTAINER_IID)
 
     NS_IMETHOD GetRole(nsACString &aRole) = 0;
+    NS_IMETHOD GetContainerUI(GeckoContainerUI **pUI) = 0;
 };
 
 #define NS_DECL_NSIGECKOCONTAINER
@@ -101,7 +104,7 @@ public:
 
     // nsIGeckoContainer
     NS_IMETHOD GetRole(nsACString &aRole);
-
+    NS_IMETHOD GetContainerUI(GeckoContainerUI **pUI);
 
     nsresult CreateBrowser(PRInt32 aX, PRInt32 aY, PRInt32 aCX, PRInt32 aCY, nativeWindow aParent,
                            nsIWebBrowser **aBrowser);
@@ -128,10 +131,9 @@ protected:
 class GeckoContainerUI
 {
 public:
-    static nsresult CreateBrowserWindow(PRUint32 aChromeFlags,
-             GeckoContainer *aParent,
-             GeckoContainer **aNewWindow);
-
+    // Called by the window creator when a new browser window is requested
+    virtual nsresult CreateBrowserWindow(PRUint32 aChromeFlags,
+         nsIWebBrowserChrome *aParent, nsIWebBrowserChrome **aNewWindow);
     // Called when the content wants to be destroyed (e.g. a window.close() happened)
     virtual void Destroy();
     // Called when the Gecko has been torn down, allowing dangling references to be released

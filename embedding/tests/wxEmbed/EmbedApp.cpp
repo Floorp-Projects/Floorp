@@ -1,11 +1,44 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: Mozilla-sample-code 1.0
+ *
+ * Copyright (c) 2002 Netscape Communications Corporation and
+ * other contributors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this Mozilla sample software and associated documentation files
+ * (the "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to permit
+ * persons to whom the Software is furnished to do so, subject to the
+ * following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ *
+ * Contributor(s):
+ *
+ *   Adam Lock <adamlock@netscape.com>
+ *
+ * ***** END LICENSE BLOCK ***** */
+
 #include "global.h"
 
 #include "nsIProfile.h"
+#include "nsIWindowWatcher.h"
 #include "nsMemory.h"
 
 #include "BrowserFrame.h"
 #include "MailFrame.h"
 #include "GeckoProtocolHandler.h"
+#include "GeckoWindowCreator.h"
 
 class FooCallback : public GeckoChannelCallback
 {
@@ -67,7 +100,6 @@ bool EmbedApp::OnInit()
         return FALSE;
     }
 
-
     nsresult rv;
     nsCOMPtr<nsIProfile> profileService = 
              do_GetService(NS_PROFILE_CONTRACTID, &rv);
@@ -76,12 +108,28 @@ bool EmbedApp::OnInit()
     rv = profileService->SetCurrentProfile(L"wxEmbed");
     if (NS_FAILED(rv)) return FALSE;
 
+    GeckoProtocolHandler::RegisterHandler("foo", "Test handler", new FooCallback);
+
+
+    // create an nsWindowCreator and give it to the WindowWatcher service
+    GeckoWindowCreator *creatorCallback = new GeckoWindowCreator();
+    if (creatorCallback)
+    {
+        nsCOMPtr<nsIWindowCreator> windowCreator(NS_STATIC_CAST(nsIWindowCreator *, creatorCallback));
+        if (windowCreator)
+        {
+            nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
+            if (wwatch)
+            {
+                wwatch->SetWindowCreator(windowCreator);
+            }
+        }
+    }
 
     // Create the main frame window
     BrowserFrame* frame = new BrowserFrame(NULL);
     frame->Show(TRUE);
 
-    GeckoProtocolHandler::RegisterHandler("foo", "Test handler", new FooCallback);
 
     SetTopWindow(frame);
 

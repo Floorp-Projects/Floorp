@@ -25,6 +25,8 @@
  *
  * Contributor(s):
  *
+ *   Adam Lock <adamlock@netscape.com>
+ *
  * ***** END LICENSE BLOCK ***** */
 
 // Mozilla Includes
@@ -154,6 +156,11 @@ NS_IMETHODIMP GeckoContainer::GetRole(nsACString &aRole)
     return NS_OK;
 }
 
+NS_IMETHODIMP GeckoContainer::GetContainerUI(GeckoContainerUI **pUI)
+{
+    *pUI = mUI;
+    return NS_OK;
+}
 
 //*****************************************************************************
 // GeckoContainer::nsIInterfaceRequestor
