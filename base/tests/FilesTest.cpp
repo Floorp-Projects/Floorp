@@ -18,9 +18,8 @@
 
 #include "nsFileSpec.h"
 #include "nsFileStream.h"
-#if WHEN_MCMULLEN_REVIEWS
 #include "nsSpecialSystemDirectory.h"
-#endif
+
 //#include "string.h"
 //void* operator new(size_t n) { return malloc(n); }
 
@@ -42,19 +41,18 @@ struct FilesTest
     int IterateDirectoryChildren(nsFileSpec& startChild);
     int CanonicalPath(const char* relativePath);
     int Persistence(const char* relativePath);
-
+    int FileSpecEquality(const char *aFile, const char *bFile);
     int Copy(const char*  sourceFile, const char* targDir);
     int Move(const char*  sourceFile, const char*  targDir);
     int Rename(const char*  sourceFile, const char* newName);
 
     int Execute(const char* appName, const char* args);
 
-#if WHEN_MCMULLEN_REVIEWS
     int SpecialSystemDirectories();
-#endif
+
     void Banner(const char* bannerString);
-    void Passed();
-    int Failed();
+    int Passed();
+    int Failed(const char* explanation = nsnull);
     void Inspect();
         
 	nsOutputConsoleStream mConsole;
@@ -72,19 +70,22 @@ void FilesTest::Banner(const char* bannerString)
 }
 
 //----------------------------------------------------------------------------------------
-void FilesTest::Passed()
+int FilesTest::Passed()
 //----------------------------------------------------------------------------------------
 {
     ((nsOutputStream&)mConsole) << "Test passed.";
     mConsole << nsEndl;
+    return 0; // for convenience
 }
 
 //----------------------------------------------------------------------------------------
-int FilesTest::Failed()
+int FilesTest::Failed(const char* explanation)
 //----------------------------------------------------------------------------------------
 {
-    mConsole << "ERROR: Test failed." << nsEndl;
-    return -1;
+    mConsole << "ERROR : Test failed." << nsEndl;
+    if (explanation)
+        mConsole << "REASON: " << explanation << nsEndl;
+    return -1; // for convenience
 }
 
 //----------------------------------------------------------------------------------------
@@ -162,8 +163,7 @@ int FilesTest::OutputStream(const char* relativePath)
                 << nsEndl;
             return -1;
     }
-    Passed();
-    return 0;
+    return Passed();
 }
 
 //----------------------------------------------------------------------------------------
@@ -197,8 +197,7 @@ int FilesTest::StringStream()
             return Failed();
         }
     }
-    Passed();
-    return 0;
+    return Passed();
 }
 
 //----------------------------------------------------------------------------------------
@@ -278,8 +277,7 @@ int FilesTest::Persistence(
     if (!mySpec.Exists())
         return Failed();
     
-    Passed();
-    return 0;
+    return Passed();
 }
 
 //----------------------------------------------------------------------------------------
@@ -379,8 +377,7 @@ int FilesTest::Delete(nsFileSpec& victim)
         return -1;
     }
     
-    Passed();
-    return 0;
+    return Passed();
 }
 
 //----------------------------------------------------------------------------------------
@@ -394,15 +391,10 @@ int FilesTest::CreateDirectory(nsFileSpec& dirSpec)
 		<< nsEndl;
 		
 	dirSpec.CreateDirectory();
-	if (dirSpec.Exists())
-		Passed();
-	else
-	{
-		Failed();
-		return -1;
-	}
+	if (!dirSpec.Exists())
+		return Failed();
 	dirSpec.Delete(PR_TRUE);
-	return 0;
+	return Passed();
 }
 
 //----------------------------------------------------------------------------------------
@@ -415,9 +407,7 @@ int FilesTest::CreateDirectoryRecursive(const char* aPath)
 		<< "\n\t" << (const char*)aPath
 		<< nsEndl;
 		
-    Passed();
-	
-    return 0;
+    return Passed();
 }
 
 
@@ -468,8 +458,24 @@ int FilesTest::CanonicalPath(
             << nsEndl;
         return -1;
     }
-    Passed();
-    return 0;
+    return Passed();
+}
+
+//----------------------------------------------------------------------------------------
+int FilesTest::FileSpecEquality(const char *aFile, const char *bFile)
+//----------------------------------------------------------------------------------------
+{
+    nsFileSpec aFileSpec(aFile, PR_FALSE);
+    nsFileSpec bFileSpec(bFile, PR_FALSE);
+    nsFileSpec cFileSpec(bFile, PR_FALSE);  // this should == bFile
+    
+    if (aFileSpec != bFileSpec &&
+        bFileSpec == cFileSpec )
+    {
+        return Passed();
+    }
+
+    return Failed();
 }
 
 //----------------------------------------------------------------------------------------
@@ -499,9 +505,7 @@ int FilesTest::Copy(const char* file, const char* dir)
     if (! dirPath.Exists() || ! filePath.Exists() || NS_FAILED(error))
         return Failed();
 
-   Passed();
-   
-   return 0;
+   return Passed();
 }
 
 //----------------------------------------------------------------------------------------
@@ -531,8 +535,7 @@ int FilesTest::Move(const char* file, const char* dir)
     if (! dirPath.Exists() || srcSpec.Exists() || NS_FAILED(error))
         return Failed();
 
-    Passed();
-    return 0;
+    return Passed();
 }
 
 //----------------------------------------------------------------------------------------
@@ -547,12 +550,9 @@ int FilesTest::Execute(const char* appName, const char* args)
     if (NS_FAILED(error))
         return Failed();
 
-   Passed();
-
-    return 0;
+    return Passed();
 }
 
-#if WHEN_MCMULLEN_REVIEWS
 //----------------------------------------------------------------------------------------
 int FilesTest::SpecialSystemDirectories()
 //----------------------------------------------------------------------------------------
@@ -560,233 +560,209 @@ int FilesTest::SpecialSystemDirectories()
      mConsole << "Please verify that these are the paths to various system directories:" << nsEndl;
 
 
-    nsSpecialSystemDirectory systemDir;
-    
-    systemDir = nsSpecialSystemDirectory::OS_DriveDirectory;
-    if ((const char*)systemDir == nsnull)
-    {
-		Failed();
-		return -1;
-	}
+    nsSpecialSystemDirectory systemDir(nsSpecialSystemDirectory::OS_DriveDirectory);
+    if (!systemDir.Valid())
+		return Failed();
     
     mConsole << "OS_DriveDirectory yields \t";
-    if((const char*)systemDir)
+    if (systemDir.Valid())
     {
-        mConsole <<   (const char*) systemDir  << nsEndl;
+        (nsOutputStream)mConsole << systemDir << nsEndl;
     }
     else
     {
         mConsole <<   "nsnull"  << nsEndl;
-        Failed();
-		return -1;
+        return Failed();
     }
 
     systemDir = nsSpecialSystemDirectory::OS_TemporaryDirectory;
     mConsole << "OS_TemporaryDirectory yields \t";
-    if((const char*)systemDir)
+    if (systemDir.Valid())
     {
-        mConsole <<   (const char*) systemDir  << nsEndl;
+        (nsOutputStream)mConsole << systemDir << nsEndl;
     }
     else
     {
         mConsole <<   "nsnull"  << nsEndl;
-        Failed();
-		return -1;
+        return Failed();
     }
     
 #ifdef XP_MAC
     systemDir = nsSpecialSystemDirectory::Mac_SystemDirectory;
     mConsole << "Mac_SystemDirectory yields \t";
-    if((const char*)systemDir)
+    if (systemDir.Valid())
     {
-        mConsole <<   (const char*) systemDir  << nsEndl;
+        mConsole << systemDir << nsEndl;
     }
     else
     {
         mConsole <<   "nsnull"  << nsEndl;
-        Failed();
-		return -1;
+        return Failed();
     }
 
     systemDir = nsSpecialSystemDirectory::Mac_DesktopDirectory;
     mConsole << "Mac_DesktopDirectory yields \t";
-    if((const char*)systemDir)
+    if (systemDir.Valid())
     {
-        mConsole <<   (const char*) systemDir  << nsEndl;
+        mConsole << systemDir << nsEndl;
     }
     else
     {
         mConsole <<   "nsnull"  << nsEndl;
-        Failed();
-		return -1;
+        return Failed();
     }
 
     systemDir = nsSpecialSystemDirectory::Mac_TrashDirectory;
     mConsole << "Mac_TrashDirectory yields \t";
-    if((const char*)systemDir)
+    if (systemDir.Valid())
     {
-        mConsole <<   (const char*) systemDir  << nsEndl;
+        mConsole << systemDir << nsEndl;
     }
     else
     {
         mConsole <<   "nsnull"  << nsEndl;
-        Failed();
-		return -1;
+        return Failed();
     }
 
     systemDir = nsSpecialSystemDirectory::Mac_StartupDirectory;
     mConsole << "Mac_StartupDirectory yields \t";
-    if((const char*)systemDir)
+    if (systemDir.Valid())
     {
-        mConsole <<   (const char*) systemDir  << nsEndl;
+        mConsole << systemDir << nsEndl;
     }
     else
     {
         mConsole <<   "nsnull"  << nsEndl;
-        Failed();
-		return -1;
+        return Failed();
     }
 
     systemDir = nsSpecialSystemDirectory::Mac_ShutdownDirectory;
     mConsole << "Mac_ShutdownDirectory yields \t";
-    if((const char*)systemDir)
+    if (systemDir.Valid())
     {
-        mConsole <<   (const char*) systemDir  << nsEndl;
+        mConsole << systemDir << nsEndl;
     }
     else
     {
         mConsole <<   "nsnull"  << nsEndl;
-        Failed();
-		return -1;
+        return Failed();
     }
 
     systemDir = nsSpecialSystemDirectory::Mac_AppleMenuDirectory;
     mConsole << "Mac_AppleMenuDirectory yields \t";
-    if((const char*)systemDir)
+    if (systemDir.Valid())
     {
-        mConsole <<   (const char*) systemDir  << nsEndl;
+        mConsole << systemDir << nsEndl;
     }
     else
     {
         mConsole <<   "nsnull"  << nsEndl;
-        Failed();
-		return -1;
+        return Failed();
     }
 
     systemDir = nsSpecialSystemDirectory::Mac_ControlPanelDirectory;
     mConsole << "Mac_ControlPanelDirectory yields \t";
-    if((const char*)systemDir)
+    if (systemDir.Valid())
     {
-        mConsole <<   (const char*) systemDir  << nsEndl;
+        mConsole << systemDir << nsEndl;
     }
     else
     {
         mConsole <<   "nsnull"  << nsEndl;
-        Failed();
-		return -1;
+        return Failed();
     }
 
     systemDir = nsSpecialSystemDirectory::Mac_ExtensionDirectory;
     mConsole << "Mac_ExtensionDirectory yields \t";
-    if((const char*)systemDir)
+    if (systemDir.Valid())
     {
-        mConsole <<   (const char*) systemDir  << nsEndl;
+        mConsole << systemDir << nsEndl;
     }
     else
     {
         mConsole <<   "nsnull"  << nsEndl;
-        Failed();
-		return -1;
+        return Failed();
     }
 
     systemDir = nsSpecialSystemDirectory::Mac_FontsDirectory;
     mConsole << "Mac_FontsDirectory yields \t";
-    if((const char*)systemDir)
+    if (systemDir.Valid())
     {
-        mConsole <<   (const char*) systemDir  << nsEndl;
+        mConsole << systemDir << nsEndl;
     }
     else
     {
         mConsole <<   "nsnull"  << nsEndl;
-        Failed();
-		return -1;
+        return Failed();
     }
 
     systemDir = nsSpecialSystemDirectory::Mac_PreferencesDirectory;
     mConsole << "Mac_PreferencesDirectory yields \t";
 
-    if((const char*)systemDir)
+    if (systemDir.Valid())
     {
-        mConsole <<   (const char*) systemDir  << nsEndl;
+        mConsole << systemDir << nsEndl;
     }
     else
     {
         mConsole <<   "nsnull"  << nsEndl;
-        Failed();
-		return -1;
+        return Failed();
     }
 
 #elif XP_PC
     systemDir = nsSpecialSystemDirectory::Win_SystemDirectory;
     mConsole << "Win_SystemDirectory yields \t";
-    if((const char*)systemDir)
+    if (systemDir.Valid())
     {
-        mConsole <<   (const char*) systemDir  << nsEndl;
+        (nsOutputStream)mConsole << systemDir << nsEndl;
     }
     else
     {
         mConsole <<   "nsnull"  << nsEndl;
-        Failed();
-		return -1;
+        return Failed();
     }
 
     systemDir = nsSpecialSystemDirectory::Win_WindowsDirectory;
     mConsole << "Win_WindowsDirectory yields \t";
-    if((const char*)systemDir)
+    if (systemDir.Valid())
     {
-        mConsole <<   (const char*) systemDir  << nsEndl;
+        (nsOutputStream)mConsole << systemDir << nsEndl;
     }
     else
     {
         mConsole <<   "nsnull"  << nsEndl;
-        Failed();
-		return -1;
+        return Failed();
     }
 
 #else
     systemDir = nsSpecialSystemDirectory::Unix_LocalDirectory;
     mConsole << "Unix_LocalDirectory yields \t";
-    if((const char*)systemDir)
+    if (systemDir.Valid())
     {
-        mConsole <<   (const char*) systemDir  << nsEndl;
+        (nsOutputStream)mConsole << systemDir << nsEndl;
     }
     else
     {
         mConsole <<   "nsnull"  << nsEndl;
-        Failed();
-		return -1;
+        return Failed();
     }
 
     systemDir = nsSpecialSystemDirectory::Unix_LibDirectory;
     mConsole << "Unix_LibDirectory yields \t";
 
-    if((const char*)systemDir)
+    if (systemDir.Valid())
     {
-        mConsole <<   (const char*) systemDir  << nsEndl;
+        (nsOutputStream)mConsole << systemDir << nsEndl;
     }
     else
     {
         mConsole <<   "nsnull"  << nsEndl;
-        Failed();
-		return -1;
+        return Failed();
     }
 #endif    
     
-    Passed();
-    return 0;
-
+    return Passed();
 } // FilesTest::SpecialSystemDirectories
-#endif
 
 
 //----------------------------------------------------------------------------------------
@@ -851,6 +827,10 @@ int FilesTest::RunAllTests()
 	Banner("IterateDirectoryChildren");
 	if (IterateDirectoryChildren(parent) != 0)
 		return -1;
+    
+    Banner("Equals operator of nsFileSpec");
+    if (FileSpecEquality("mumble/a", "mumble/b") != 0)
+        return -1;
 
     Banner("Copy");
     if (Copy("mumble/copyfile.txt", "mumble/copy") != 0)
@@ -874,11 +854,9 @@ int FilesTest::RunAllTests()
 #endif
         return -1;
 
-#if WHEN_MCMULLEN_REVIEWS    
     Banner("Special System Directories");
     if (SpecialSystemDirectories() != 0)
         return -1;
-#endif
 
 	Banner("Persistence");
 	if (Persistence("mumble/filedesc.dat") != 0)

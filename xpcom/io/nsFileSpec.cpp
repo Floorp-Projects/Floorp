@@ -187,7 +187,7 @@ char* nsFileSpecHelpers::GetLeaf(const char* inPath, char inSeparator)
     // So now, separator was the last character. Poke in a null instead.
     *(char*)lastSeparator = '\0'; // Should use const_cast, but Unix has old compiler.
     leafPointer = strrchr(inPath, inSeparator);
-    char* result = leafPointer ? StringDup(leafPointer++) : StringDup(inPath);
+    char* result = leafPointer ? StringDup(++leafPointer) : StringDup(inPath);
     // Restore the poked null before returning.
     *(char*)lastSeparator = inSeparator;
 #ifdef XP_PC
@@ -756,7 +756,7 @@ nsOutputStream& operator << (nsOutputStream& s, const nsFileSpec& spec)
 {
     return (s << (const char*)spec.mPath);
 }
-#endif // DEBUG && XP_UNIX
+#endif // DEBUG ONLY!
 
 //----------------------------------------------------------------------------------------
 nsFileSpec nsFileSpec::operator + (const char* inRelativePath) const
@@ -766,6 +766,31 @@ nsFileSpec nsFileSpec::operator + (const char* inRelativePath) const
     result += inRelativePath;
     return result;
 } // nsFileSpec::operator +
+
+//----------------------------------------------------------------------------------------
+PRBool nsFileSpec::operator == (const nsFileSpec& inOther) const
+//----------------------------------------------------------------------------------------
+{
+
+#ifdef XP_MAC
+   if ( inOther.mSpec.vRefNum == mSpec.vRefNum &&
+        inOther.mSpec.parID   == mSpec.parID &&
+        EqualString(inOther.mSpec.name, mSpec.name, false, false))
+        return (PR_TRUE);
+#else
+   if (strcmp(mPath, inOther.mPath ) == 0)
+       return (PR_TRUE);
+#endif
+
+   return (PR_FALSE);
+}
+
+//----------------------------------------------------------------------------------------
+PRBool nsFileSpec::operator != (const nsFileSpec& inOther) const
+//----------------------------------------------------------------------------------------
+{
+    return (! (*this == inOther) );
+}
 
 //========================================================================================
 //	class nsPersistentFileDescriptor
