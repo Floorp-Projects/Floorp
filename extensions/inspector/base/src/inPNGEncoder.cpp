@@ -39,15 +39,8 @@
 
 #include "inPNGEncoder.h"
 
-#include "nsISupportsArray.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
-#include "nsIPresShell.h"
-#include "nsIPresContext.h"
-#include "nsIRenderingContext.h"
-#include "nsIFrame.h"
-#include "nsIDOMElement.h"
-#include "nsIDOMWindowInternal.h"
 #include "png.h"
 
 ///////////////////////////////////////////////////////////////////////////////

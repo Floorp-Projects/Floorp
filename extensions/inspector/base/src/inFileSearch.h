@@ -100,7 +100,7 @@ protected:
   static PRBool AdvanceWildcard(PRUnichar** aString, PRUnichar* aNextChar);
   
   // misc
-  nsresult MakePathRelative(nsAutoString* aPath);
+  nsresult MakePathRelative(nsAString& aPath);
   nsresult CountDirectoryDepth(nsIFile* aDir, PRUint32* aDepth);
 
 };

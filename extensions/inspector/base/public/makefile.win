@@ -22,8 +22,7 @@
 
 DEPTH=..\..\..\..
 
-XPIDLSRCS = .\inIDOMDataSource.idl \
-            .\inIDOMRDFResource.idl \
+XPIDLSRCS = .\inIDOMView.idl \
             .\inIDeepTreeWalker.idl \
             .\inIFlasher.idl \
             .\inISearchProcess.idl \

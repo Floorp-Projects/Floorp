@@ -55,17 +55,11 @@ const kIMPORT_RULE = Components.interfaces.nsIDOMCSSRule.IMPORT_RULE;
 //////////////////////////////////////////////////
 
 window.addEventListener("load", BoxModelViewer_initialize, false);
-window.addEventListener("load", BoxModelViewer_destroy, false);
 
 function BoxModelViewer_initialize()
 {
   viewer = new BoxModelViewer();
   viewer.initialize(parent.FrameExchange.receiveData(window));
-}
-
-function BoxModelViewer_destroy()
-{
-  viewer.destroy();
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -84,6 +78,7 @@ BoxModelViewer.prototype =
   
   mSubject: null,
   mPane: null,
+  mBitmap: null,
   mLastBitmapId: null,
   mColorPicker: null,
   mOutlinesReady: false,
@@ -141,12 +136,14 @@ BoxModelViewer.prototype =
   {
   },
 
-  updateCommand: function(aCmd, aAttr, aValue)
+  isCommandEnabled: function(aCommand)
   {
-    if (aValue == null)
-      document.getElementById(aCmd).removeAttribute(aAttr);
-    else
-      document.getElementById(aCmd).setAttribute(aAttr, aValue);
+    return false;
+  },
+  
+  getCommand: function(aCommand)
+  {
+    return null;
   },
 
   ////////////////////////////////////////////////////////////////////////////
@@ -207,7 +204,8 @@ BoxModelViewer.prototype =
     this.mZoomScale = s;
     var w = this.mBitmap.width * s;
     var h = this.mBitmap.height * s;
-    this.mImgZoom.setAttribute("style", "min-width: " + w + "px; min-height: " + h + "px;");
+    this.mImgZoom.setAttribute("width", w);
+    this.mImgZoom.setAttribute("height", h);
     
     this.mOutlinesReady = false;
     if (this.showOutlines || this.fillOutlines)
@@ -262,7 +260,7 @@ BoxModelViewer.prototype =
     var pr = parseInt(computed.getPropertyCSSValue("padding-right").cssText) * s;
     var pb = parseInt(computed.getPropertyCSSValue("padding-bottom").cssText) * s;
     var pl = parseInt(computed.getPropertyCSSValue("padding-left").cssText) * s;
-    var bx = document.getElementById("bxPadding");
+    bx = document.getElementById("bxPadding");
     bx.setAttribute("style", (pt ? ("padding-top: " + (pt-2) + "px;") : "") +
                              (pr ? ("padding-right: " + (pr-2) + "px;") : "") +
                              (pb ? ("padding-bottom: " + (pb-2) + "px;") : "") +
@@ -505,7 +503,7 @@ BoxModelViewer.prototype =
     var doc = this.mColorDialogWin.document;
     var tx = doc.getElementById("txColor");
     tx.setAttribute("value", aColor);
-    var tx = doc.getElementById("bxColorSwatch");
+    tx = doc.getElementById("bxColorSwatch");
     tx.setAttribute("style", "background-color: " + aColor);
   },
   
@@ -515,6 +513,17 @@ BoxModelViewer.prototype =
     var path = FilePickerUtils.pickFile("Save Image as PNG", "", ["filterAll"], "Save");
     if (path)
      encoder.writePNG(this.mBitmap, path.unicodePath, 24);
+  },
+
+  ////////////////////////////////////////////////////////////////////////////
+  //// miscellaneous
+
+  updateCommand: function(aCmd, aAttr, aValue)
+  {
+    if (aValue == null)
+      document.getElementById(aCmd).removeAttribute(aAttr);
+    else
+      document.getElementById(aCmd).setAttribute(aAttr, aValue);
   }
 
   ////////////////////////////////////////////////////////////////////////////

@@ -5,6 +5,8 @@
   <!ENTITY % dtd2 SYSTEM "chrome://inspector/content/util.dtd"> %dtd2;
 ]>
 
+<?xul-overlay href="chrome://inspector/content/editingOverlay.xul"?>
+
 <overlay id="ovPopupsMain"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
@@ -48,29 +50,35 @@
   </menupopup>
 
   <menupopup id="mppEdit">
-    <menuitem label="&cmdUndo.label;" accesskey="&cmdUndo.accesskey;" observes="cmdUndo"/>
-    <menuitem label="&cmdRedo.label;" accesskey="&cmdRedo.accesskey;" observes="cmdRedo"/>
+    <menuitem id="mnEditUndo"/>
+    <menuitem id="mnEditRedo"/>
     <menuseparator/>
-    <menuitem label="&cmdCut.label;" accesskey="&cmdCut.accesskey;" observes="cmdCut"/>
-    <menuitem label="&cmdCopy.label;" accesskey="&cmdCopy.accesskey;" observes="cmdCopy"/>
-    <menuitem label="&cmdPaste.label;" accesskey="&cmdPaste.accesskey;" observes="cmdPaste"/>
-    <menuitem label="&cmdDelete.label;" accesskey="&cmdDelete.accesskey;" observes="cmdDelete"/>
+    <menuitem id="mnEditCut"/>
+    <menuitem id="mnEditCopy"/>
+    <menuitem id="mnEditPaste"/>
+    <menuseparator/>
+    <menuitem id="mnEditInsert"/>
+    <menuitem id="mnEditDelete"/>
     <menuseparator/>
     <menuitem label="&cmdPrefs.label;" accesskey="&cmdPrefs.accesskey;" observes="cmdShowPrefsDialog"/>
   </menupopup>
 
-  <menupopup id="mppSearch" onpopupshowing="inspector.initPopup(this)">
+  <menupopup id="mppSearch">
+    <!--
     <menuseparator/>
     <menu label="&mnSearchPlugins.label;" accesskey="&mnSearchPlugins.accesskey;">
       <menupopup id="mppSearchPlugins">
         <menuitem label="&cmdRunSearch.label;" accesskey="&cmdRunSearch.accesskey;" observes="cmdRunSearch"/>
       </menupopup>
     </menu>
+    -->
   </menupopup>
 
   <menupopup id="mppView" >
     <menuitem class="menuitem-iconic" type="checkbox" label="&cmdToggleBrowser.label;" observes="cmdToggleBrowser"/>
+    <!--
     <menuitem class="menuitem-iconic" type="checkbox" label="&cmdToggleSearch.label;" observes="cmdToggleSearch"/>
+    -->
     <menuseparator/>
   </menupopup>
 

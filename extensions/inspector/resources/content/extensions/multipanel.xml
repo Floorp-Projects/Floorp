@@ -23,7 +23,7 @@
     <content>
       <xul:box class="multipanel-label-box" onclick="this.parentNode.toggleOpen()">
         <xul:box class="multipanel-label-box-2" flex="1">
-          <xul:text class="multipanel-title" inherits="value=label"/>
+          <xul:label class="multipanel-title" inherits="value=label"/>
         </xul:box>
       </xul:box>
       <xul:box anonid="content-box" class="multipanel-content-box" flex="1">

@@ -36,8 +36,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+
 #include "nsISupports.idl"
 
+interface nsAString;
 interface inISearchObserver;
 interface nsISupportsArray;
 
@@ -74,7 +76,7 @@ interface inISearchProcess : nsISupports
 
   // methods for getting results of specific types
   
-  wstring getStringResultAt(in long aIndex);
+  AString getStringResultAt(in long aIndex);
   
   long getIntResultAt(in long aIndex);
   

@@ -53,14 +53,15 @@ var gFlasherRegistry = [];
 ////////////////////////////////////////////////////////////////////////////
 //// class Flasher
 
-function Flasher(aColor, aThickness, aDuration, aSpeed)
+function Flasher(aColor, aThickness, aDuration, aSpeed, aInvert)
 {
   this.mShell = XPCU.createInstance("@mozilla.org/inspector/flasher;1", "inIFlasher");;
   this.color = aColor;
   this.mThickness = aThickness;
   this.duration = aDuration;
   this.mSpeed = aSpeed;
-
+  this.mInvert = aInvert;
+  
   this.register();
 }
 
@@ -78,6 +79,7 @@ Flasher.prototype =
   mThickness: 0,
   mDuration: 0,
   mSpeed: 0,
+  mInvert: false,
 
   ////////////////////////////////////////////////////////////////////////////
   //// Properties
@@ -100,10 +102,13 @@ Flasher.prototype =
   set thickness(aVal) { this.mThickness = aVal; },
 
   get duration() { return this.mDuration; },
-  set duration(aVal) { this.mDuration = aVal*1000; /*seconds->milliseconds*/ },
+  set duration(aVal) { this.mDuration = aVal; },
 
   get speed() { return this.mSpeed; },
   set speed(aVal) { this.mSpeed = aVal; },
+
+  get invert() { return this.mInvert; },
+  set invert(aVal) { this.mInvert = aVal; },
 
   // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::
   // :::::::::::::::::::: Methods ::::::::::::::::::::::::::::
@@ -153,7 +158,7 @@ Flasher.prototype =
 
   paintOn: function()
   {
-    this.mShell.drawElementOutline(this.mElement, this.mColor, this.mThickness);
+    this.mShell.drawElementOutline(this.mElement, this.mColor, this.mThickness, this.mInvert);
   },
 
   paintOff: function()

@@ -38,8 +38,7 @@
 
 #include "nsIGenericFactory.h"
 
-#include "inDOMRDFResource.h"
-#include "inDOMDataSource.h"
+#include "inDOMView.h"
 #include "inDeepTreeWalker.h"
 #include "inFlasher.h"
 #include "inCSSValueSearch.h"
@@ -55,8 +54,7 @@
   #include "inScreenCapturer.h"
 #endif
 
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(inDOMDataSource, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR(inDOMRDFResource)
+NS_GENERIC_FACTORY_CONSTRUCTOR(inDOMView)
 NS_GENERIC_FACTORY_CONSTRUCTOR(inDeepTreeWalker)
 NS_GENERIC_FACTORY_CONSTRUCTOR(inFlasher)
 NS_GENERIC_FACTORY_CONSTRUCTOR(inCSSValueSearch)
@@ -72,13 +70,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(inPNGEncoder)
   NS_GENERIC_FACTORY_CONSTRUCTOR(inScreenCapturer)
 #endif
 
-// {3AD0C13B-195E-48e7-AF29-F024E2D759EA}
-#define IN_INSDOMDATASOURCE_CID \
-{ 0x3ad0c13b, 0x195e, 0x48e7, { 0xaf, 0x29, 0xf0, 0x24, 0xe2, 0xd7, 0x59, 0xea } }
-
-// {76C9161F-4C4C-4c1b-8F96-64587315C79E}
-#define IN_DOMRDFRESOURCE_CID \
-{ 0x76c9161f, 0x4c4c, 0x4c1b, { 0x8f, 0x96, 0x64, 0x58, 0x73, 0x15, 0xc7, 0x9e } }
+// {FB5C1775-1BBD-4b9c-ABB0-AE7ACD29E87E}
+#define IN_DOMVIEW_CID \
+{ 0xfb5c1775, 0x1bbd, 0x4b9c, { 0xab, 0xb0, 0xae, 0x7a, 0xcd, 0x29, 0xe8, 0x7e } }
 
 // {BFCB82C2-5611-4318-90D6-BAF4A7864252}
 #define IN_DEEPTREEWALKER_CID \
@@ -128,17 +122,12 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(inPNGEncoder)
 
 static nsModuleComponentInfo components[] =
 {
-  { "DOM Datasource", 
-    IN_INSDOMDATASOURCE_CID, 
-    NS_RDF_DATASOURCE_CONTRACTID_PREFIX IN_DOMDATASOURCE_ID, 
-    inDOMDataSourceConstructor },
+  { "DOM View",
+    IN_DOMVIEW_CID, 
+    "@mozilla.org/inspector/dom-view;1",
+    inDOMViewConstructor },
 
-  { "DOM RDF Resource", 
-    IN_DOMRDFRESOURCE_CID, 
-    NS_RDF_RESOURCE_FACTORY_CONTRACTID_PREFIX IN_DOMRDFRESOURCE_ID, 
-    inDOMRDFResourceConstructor },
-
-  { "Deep Tree Holder", 
+  { "Deep Tree Walker", 
     IN_DEEPTREEWALKER_CID, 
     "@mozilla.org/inspector/deep-tree-walker;1",
     inDeepTreeWalkerConstructor },

@@ -38,18 +38,23 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMDocument;
-interface nsIRDFResource;
+interface nsIDOMNode;
 
-[scriptable, uuid(A029F6DD-9945-4607-850F-C8476387A52A)]
-interface inIDOMDataSource : nsISupports
+[scriptable, uuid(3EB4C760-DFFD-4983-94A8-18BCB99100E4)]
+interface inIDOMView : nsISupports
 {
-  attribute nsIDOMDocument document;
+  attribute nsIDOMNode rootNode;
+
   attribute boolean showAnonymousContent;
   attribute boolean showSubDocuments;
 
-  void addFilterByType(in unsigned short aType, in boolean aExclusive);
-  void removeFilterByType(in unsigned short aType);
-  boolean isFiltered(in unsigned short aType);
-  nsIRDFResource getResourceForObject(in nsISupports aObject);
+  nsIDOMNode getNodeFromRowIndex(in long rowIndex);
+  long getRowIndexFromNode(in nsIDOMNode node);
+
+  void addFilterByType(in unsigned short type, in boolean exclusive);
+  void removeFilterByType(in unsigned short type);
+  boolean isFiltered(in unsigned short type);
+
+
+  void rebuild();
 };

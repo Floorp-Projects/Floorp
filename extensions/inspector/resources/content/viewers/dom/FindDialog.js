@@ -98,12 +98,6 @@ FindDialog.prototype =
       var el2 = document.getElementById("tfText2");
       this.mOpener.startFind("attr", dir, el.value, el2.value);
     }
-    this.close();
-  },
-
-  close: function()
-  {
-    window.close();
   },
 
   toggleType: function(aType)
@@ -155,12 +149,13 @@ FindDialog.prototype =
   
   setValue: function(aValue1, aValue2)
   {
+    var txf;
     if (aValue1) {
-      var txf = document.getElementById("tfText1");
+      txf = document.getElementById("tfText1");
       txf.value = aValue1;
     }
     if (aValue2) {
-      var txf = document.getElementById("tfText2");
+      txf = document.getElementById("tfText2");
       txf.value = aValue2;
     }
   },

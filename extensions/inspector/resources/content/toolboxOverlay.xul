@@ -43,7 +43,7 @@
               tooltip="aTooltip" tooltiptext="&btnFind.tooltip;"/>
 
       <hbox id="bxURLBarContainer" flex="1">
-        <hbox autostretch="never" valign="middle" flex="1">
+        <hbox align="center" flex="1">
           <textbox id="tfURLBar" type="autocomplete" flex="1"
             searchSessions="history" timeout="50" maxrows="6"
             observes="cmdGotoURL">

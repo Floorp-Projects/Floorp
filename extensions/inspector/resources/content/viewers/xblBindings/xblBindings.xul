@@ -17,7 +17,6 @@
   <script type="application/x-javascript" src="chrome://inspector/content/hooks.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/events/ObserverManager.js"/>
-  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xul/inOutlinerBuilder.js"/>
   
   <menulist id="mlBindings" oncommand="viewer.displayBinding(this.value)">
     <menupopup id="mpBindings"/>
@@ -25,14 +24,15 @@
   
   <multipanelset id="mpsBinding" flex="1">
     <multipanel id="bxContent" label="Content" open="true" persist="open" onopen="if (viewer) {viewer.initContent();} else {gInitContent = true;}">
-      <outliner id="olContent" class="outliner-list" flex="1">
-        <outlinerbody id="olbContent" flex="1" datasources="rdf:null" 
-                      containment="&INS-rdf;HasChildren" flags="dont-test-empty">
-          <template/>
-        </outlinerbody>
+      <outliner id="olContent" flex="1">
+        <outlinercol id="colNodeName" primary="true" label="nodeName" flex="1"/>
+        <splitter class="tree-splitter"/>
+        <outlinercol id="colNodeValue" label="nodeValue" flex="1"/>
+        
+        <outlinerbody id="olbContent" flex="1"/>
       </outliner>
     </multipanel>
-  
+
     <multipanel id="bxMethods" label="Methods" open="true" persist="open">
       <outliner id="olMethods" class="outliner-list" flex="1"
                 onselect="viewer.onMethodSelected()">

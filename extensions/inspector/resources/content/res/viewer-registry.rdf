@@ -6,7 +6,7 @@
   <rdf:Seq about="inspector:viewers">
     <rdf:li><rdf:Description 
       ins:uid="dom"
-      ins:description="DOM Viewer"
+      ins:description="DOM Nodes"
       ins:icon="chrome://inspector/content/viewers/dom/dom-icon.gif">
         <ins:filter><![CDATA[
           return doesQI(object, 'nsIDOMDocument');
@@ -49,7 +49,7 @@
       ins:uid="styleRules"
       ins:description="CSS Style Rules">
         <ins:filter><![CDATA[
-          return doesQI(object, 'nsIDOMElement');
+          return doesQI(object, 'nsIDOMElement') || doesQI(object, 'nsIDOMCSSStyleSheet');
         ]]></ins:filter>
      </rdf:Description></rdf:li>
 

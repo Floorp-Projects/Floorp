@@ -6,6 +6,8 @@
   <!ENTITY % dtd3 SYSTEM "chrome://inspector/locale/viewers/dom.dtd"> %dtd3;
 ]>
 
+<?xul-overlay href="chrome://inspector/content/editingOverlay.xul"?>
+
 <?xml-stylesheet href="chrome://inspector/skin/viewers/dom/dom.css"?>
 
 <page id="winDOMViewer"
@@ -14,33 +16,30 @@
   
   <script type="application/x-javascript" src="chrome://inspector/content/viewers/dom/dom.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/utils.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/hooks.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/Flasher.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
-  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/rdf/RDFU.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/system/PrefUtils.js"/>
-  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xul/inOutlinerBuilder.js"/>
-  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xul/DNDUtils.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/events/ObserverManager.js"/>
-  <script type="application/x-javascript" src="chrome://inspector/content/hooks.js"/>
 
   <!--============================= COMMANDS ============================== -->
 
+  <commandset id="cmdsEditing"/>  
+
   <commandset>
-    <command id="cmdInsertNode"
-      oncommand="viewer.cmdDeleteSelectedNode()"/>
-
-    <command id="cmdDeleteNode"
-      oncommand="viewer.cmdDeleteSelectedNode()"/>
-
-    <command id="cmdCopyXML"
-      oncommand="viewer.cmdCopySelectedXML()"/>
+    <command id="cmdInspectInNewWindow" 
+      oncommand="viewer.cmdInspectInNewWindow()"/>
 
     <command id="cmdInspectBrowser" 
       isvalid="return viewer.cmdInspectBrowserIsValid()"
       oncommand="viewer.cmdInspectBrowser()"/>
 
-    <command id="cmdInspectInNewWindow" 
-      oncommand="viewer.cmdInspectInNewWindow()"/>
+    <command id="cmdCopyXML"
+      oncommand="viewer.cmdCopySelectedXML()"/>
+
+    <command id="cmdBlink" 
+      isvalid="return viewer.cmdBlinkIsValid();"
+      oncommand="viewer.cmdBlink()"/>
 
     <command id="cmdShowPseudoClasses"
       oncommand="viewer.cmdShowPseudoClasses()"/>
@@ -53,10 +52,16 @@
       <menuitem label="&cmdInspectInNewWindow.label;" observes="cmdInspectInNewWindow"/>
       <menuitem label="&cmdInspectBrowser.label;" observes="cmdInspectBrowser"/>
       <menuseparator/>
-      <menuitem label="&cmdInsertNode.label;" observes="cmdInsertNode"/>
-      <menuitem label="&cmdDeleteNode.label;" observes="cmdDeleteNode"/>
+      <menuitem id="mnEditCut"/>
+      <menuitem id="mnEditCopy"/>
+      <menuitem id="mnEditPaste"/>
+      <menuseparator/>
+      <!--<menuitem id="mnEditInsert"/>-->
+      <menuitem id="mnEditDelete"/>
       <menuseparator/>
       <menuitem label="&cmdCopyXML.label;" observes="cmdCopyXML"/>
+      <menuseparator/>
+      <menuitem label="&cmdBlink.label;" observes="cmdBlink"/>
       <menuitem label="&cmdShowPseudoClasses.label;" observes="cmdShowPseudoClasses"/>
     </popup>
   </popupset>
@@ -65,12 +70,23 @@
     The template for this outliner will be filled in by inOutlinerBuilder
     ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: -->
   
-  <outliner id="trDOMOutliner" flex="1" class="outliner-nocolpicker"
-            onselect="viewer.onItemSelected()">
-    <outlinerbody id="trDOMOutlinerBody" flex="1" context="ppDOMContext"
-                  datasources="rdf:null" ref="inspector:DOMRoot"
-                  containment="&INS-rdf;HasChildren" flags="dont-test-empty">
-      <template/>
-    </outlinerbody>
+  <outliner id="trDOMOutliner" flex="1" onselect="viewer.onItemSelected()" enableColumnDrag="true">
+    <outlinercol id="colNodeName" label="nodeName" primary="true" persist="width,hidden,ordinal" flex="3"/>
+    <splitter class="tree-splitter"/>
+    <outlinercol id="colLocalName" label="localName" hidden="true" persist="width,hidden,ordinal" flex="1"/>
+    <splitter class="tree-splitter"/>
+    <outlinercol id="colPrefix" label="prefix" hidden="true" persist="width,hidden,ordinal" flex="1"/>
+    <splitter class="tree-splitter"/>
+    <outlinercol id="colNamespaceURI" label="namespaceURI" hidden="true" persist="width,hidden,ordinal" flex="1"/>
+    <splitter class="tree-splitter"/>
+    <outlinercol id="colNodeType" label="nodeType" hidden="true"  persist="width,hidden,ordinal" flex="1"/>
+    <splitter class="tree-splitter"/>
+    <outlinercol id="colNodeValue" label="nodeValue" hidden="true" persist="width,hidden,ordinal" flex="1"/>
+    <splitter class="tree-splitter"/>
+    <outlinercol id="col@id" label="id" persist="width,hidden,ordinal" flex="1"/>
+    <splitter class="tree-splitter"/>
+    <outlinercol id="col@class" label="class" persist="width,hidden,ordinal" flex="1"/>
+    
+    <outlinerbody id="trDOMOutlinerBody" flex="1" context="ppDOMContext"/>
   </outliner>
 </page>

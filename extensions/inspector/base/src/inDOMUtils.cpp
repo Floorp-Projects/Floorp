@@ -40,19 +40,12 @@
 #include "inDOMUtils.h"
 #include "inLayoutUtils.h"
 
-#include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsIDOMElement.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
-#include "nsIComponentManager.h"
-#include "nsISupportsArray.h"
 #include "nsEnumeratorUtils.h"
-#include "nsIAtom.h"
-#include "nsIContent.h"
-#include "nsIBindingManager.h"
 #include "nsIXBLBinding.h" 
-
 #include "nsIStyleContext.h"
 #include "nsRuleNode.h"
 #include "nsIStyleRule.h"
@@ -90,7 +83,7 @@ inDOMUtils::GetStyleRules(nsIDOMElement *aElement, nsISupportsArray **_retval)
   nsCOMPtr<nsIContent> content;
   content = do_QueryInterface(aElement);
 
-  nsIFrame* frame;
+  nsIFrame* frame = nsnull;
   nsCOMPtr<nsIStyleContext> styleContext;
   nsresult rv = shell->GetPrimaryFrameFor(content, &frame);
   if (NS_FAILED(rv) || !frame) return rv;
@@ -99,7 +92,7 @@ inDOMUtils::GetStyleRules(nsIDOMElement *aElement, nsISupportsArray **_retval)
 
   // create a resource for all the style rules from the 
   // context and add them to aArcs
-  nsRuleNode* ruleNode;
+  nsRuleNode* ruleNode = nsnull;
   styleContext->GetRuleNode(&ruleNode);
   
   nsCOMPtr<nsIStyleRule> srule;
@@ -110,7 +103,7 @@ inDOMUtils::GetStyleRules(nsIDOMElement *aElement, nsISupportsArray **_retval)
     ruleNode = ruleNode->GetParent();
     
     // don't be adding that there root node
-    if (ruleNode->IsRoot())
+    if (!ruleNode || ruleNode->IsRoot())
       break;
   }
 
@@ -186,28 +179,36 @@ inDOMUtils::GetBindingURLs(nsIDOMElement *aElement, nsISimpleEnumerator **_retva
 NS_IMETHODIMP
 inDOMUtils::SetContentState(nsIDOMElement *aElement, PRInt32 aState)
 {
+  if (!aElement)
+    return NS_ERROR_NULL_POINTER;
+  
   nsCOMPtr<nsIEventStateManager> esm = inLayoutUtils::GetEventStateManagerFor(aElement);
   if (esm) {
     nsCOMPtr<nsIContent> content;
     content = do_QueryInterface(aElement);
-    
-    esm->SetContentState(content, aState);
+  
+    return esm->SetContentState(content, aState);
   }
   
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 inDOMUtils::GetContentState(nsIDOMElement *aElement, PRInt32* aState)
 {
+  *aState = NS_EVENT_STATE_UNSPECIFIED;
+
+  if (!aElement)
+    return NS_ERROR_NULL_POINTER;
+
   nsCOMPtr<nsIEventStateManager> esm = inLayoutUtils::GetEventStateManagerFor(aElement);
   if (esm) {
     nsCOMPtr<nsIContent> content;
     content = do_QueryInterface(aElement);
-    
-    esm->GetContentState(content, *aState);
+  
+    return esm->GetContentState(content, *aState);
   }
 
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 

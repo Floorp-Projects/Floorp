@@ -53,17 +53,11 @@ var viewer;
 //////////////////////////////////////////////////
 
 window.addEventListener("load", ComputedStyleViewer_initialize, false);
-window.addEventListener("unload", ComputedStyleViewer_destroy, false);
 
 function ComputedStyleViewer_initialize()
 {
   viewer = new ComputedStyleViewer();
   viewer.initialize(parent.FrameExchange.receiveData(window));
-}
-
-function ComputedStyleViewer_destroy()
-{
-  viewer.destroy();
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -75,8 +69,7 @@ function ComputedStyleViewer()
   this.mURL = window.location;
   
   this.mOutliner = document.getElementById("olStyles");
-  var bx = this.mOutliner.boxObject;
-  this.mOlBox = bx.QueryInterface(Components.interfaces.nsIOutlinerBoxObject);
+  this.mOlBox = this.mOutliner.outlinerBoxObject;
 }
 
 ComputedStyleViewer.prototype = 
@@ -97,6 +90,7 @@ ComputedStyleViewer.prototype =
   set subject(aObject) 
   {
     this.mOlBox.view = new ComputedStyleView(aObject);
+    this.mObsMan.dispatchEvent("subjectChange", { subject: aObject });
   },
 
   initialize: function(aPane)
@@ -107,6 +101,20 @@ ComputedStyleViewer.prototype =
 
   destroy: function()
   {
+    // We need to remove the view at this time or else it will attempt to 
+    // re-paint while the document is being deconstructed, resulting in
+    // some nasty XPConnect assertions
+    this.mOlBox.view = null;
+  },
+
+  isCommandEnabled: function(aCommand)
+  {
+    return false;
+  },
+  
+  getCommand: function(aCommand)
+  {
+    return null;
   },
 
   ////////////////////////////////////////////////////////////////////////////
@@ -142,8 +150,19 @@ function(aRow, aColId)
     return this.mStyleList.item(aRow);
   } else if (aColId == "olcStyleValue") {
     var prop = this.mStyleList.item(aRow);
-    var cssval = this.mStyleList.getPropertyCSSValue(prop);
-    return cssval ? cssval.cssText : "";
+    // The computed style getters for these properties are not yet
+    // implemented properly, and trying to fetch them results in
+    // a hailstorm of assertions.
+    switch (prop) {
+      case "left":
+      case "right":
+      case "top":
+      case "bottom":
+      case "-moz-outline-width":
+      case "marker-offset":
+        return "";
+    }
+    return this.mStyleList.getPropertyValue(prop);
   }
   
   return "";

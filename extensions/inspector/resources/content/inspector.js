@@ -39,15 +39,6 @@
 /***************************************************************
 * InspectorApp -------------------------------------------------
 *  The primary object that controls the Inspector application.
-* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-* REQUIRED IMPORTS:
-*   chrome://inspector/content/jsutil/xpcom/XPCU.js
-*   chrome://inspector/content/jsutil/rdf/RDFArray.js
-*   chrome://inspector/content/jsutil/rdf/RDFU.js
-*   chrome://inspector/content/jsutil/xul/FrameExchange.js
-*   chrome://inspector/content/jsutil/system/file.js
-*   chrome://inspector/content/search/inSearchService.js
-*   chrome://inspector/content/search/inSearchModule.js
 ****************************************************************/
 
 //////////// global variables /////////////////////
@@ -60,8 +51,7 @@ const kSearchRegURL        = "resource:///res/inspector/search-registry.rdf";
 
 const kWindowMediatorIID   = "@mozilla.org/rdf/datasource;1?name=window-mediator";
 const kClipboardHelperCID  = "@mozilla.org/widget/clipboardhelper;1";
-const kGlobalClipboard     = Components.interfaces.nsIClipboard.kGlobalClipboard
-const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
+const nsIWebNavigation     = Components.interfaces.nsIWebNavigation;
 
 //////////////////////////////////////////////////
 
@@ -97,18 +87,19 @@ InspectorApp.prototype =
   
   get document() { return this.mDocPanel.viewer.subject },
   get searchRegistry() { return this.mSearchService },
+  get panelset() { return this.mPanelSet; },
   
   initialize: function(aTarget)
   {
     this.mInitTarget = aTarget;
     
-    this.initSearch();
+    //this.initSearch();
 
     var el = document.getElementById("bxBrowser");
     el.addEventListener("load", BrowserLoadListener, true);
 
     this.toggleBrowser(true, false);
-    this.toggleSearch(true, false);
+    //this.toggleSearch(true, false);
 
     this.mClipboardHelper = XPCU.getService(kClipboardHelperCID, "nsIClipboardHelper");
 
@@ -123,9 +114,9 @@ InspectorApp.prototype =
     InsUtil.persistAll("bxObjectPanel");
   },
   
-  ////////////////////////////////////////////////////////////////// //////////
+  ////////////////////////////////////////////////////////////////////////////
   //// Viewer Panels
-
+  
   initViewerPanels: function()
   {
     this.mDocPanel = this.mPanelSet.getPanel(0);
@@ -160,10 +151,14 @@ InspectorApp.prototype =
   ////////////////////////////////////////////////////////////////////////////
   //// UI Commands
 
+  doViewerCommand: function(aCommand)
+  {
+    this.mPanelSet.execCommand(aCommand);
+  },
+  
   showOpenURLDialog: function()
   {
-    var defaultURL = "chrome://inspector/content/tests/allskin.xul"; // for testing
-    var url = prompt("Enter a URL:", defaultURL);
+    var url = prompt("Enter a URL:", "");
     if (url) {
       this.gotoURL(url);
     }
@@ -171,7 +166,7 @@ InspectorApp.prototype =
 
   showPrefsDialog: function()
   {
-    goPreferences("inspector.xul", "chrome://inspector/content/prefs/pref-inspector.xul", "inspector");
+    goPreferences("advancedItem", "chrome://inspector/content/prefs/pref-inspector.xul", "inspector");
   },
   
   runSearch: function()
@@ -247,7 +242,7 @@ InspectorApp.prototype =
     var mod = this.mSearchService.currentModule;
     var idx = this.mSearchService.getSelectedIndex(0);
     var text = mod.getItemText(idx);
-    this.mClipboardHelper.writeStringToClipboard(text, kGlobalClipboard);
+    this.mClipboardHelper.copyString(text);
   },
 
   copySearchItemAll: function()
@@ -333,7 +328,6 @@ InspectorApp.prototype =
   setTargetDocument: function(aDoc)
   {
     this.mDocPanel.subject = aDoc;
-    this.mObjectPanel.subject = null;
   },
 
   get webNavigation()
@@ -349,10 +343,10 @@ InspectorApp.prototype =
   set locationText(aText) { document.getElementById("tfURLBar").value = aText; },
 
   get statusText() { return document.getElementById("txStatus").value; },
-  set statusText(aText) { document.getElementById("txStatus").setAttribute("value", aText); },
+  set statusText(aText) { document.getElementById("txStatus").value = aText; },
 
-  get progress() { return document.getElementById("pmStatus").getAttribute("value"); },
-  set progress(aPct) { document.getElementById("pmStatus").setAttribute("value", aPct); },
+  get progress() { return document.getElementById("pmStatus").value; },
+  set progress(aPct) { document.getElementById("pmStatus").value = aPct; },
 
   get searchTitle(aTitle) { return document.getElementById("splSearch").label; },
   set searchTitle(aTitle)
@@ -523,7 +517,10 @@ InspectorApp.prototype =
 
 function BrowserLoadListener(aEvent) 
 {
-  inspector.documentLoaded();
+  // since we will also get load events for frame documents,
+  // make sure we respond to the top-level document load
+  if (aEvent.target.defaultView == _content)
+    inspector.documentLoaded();
 }
 
 function UtilWindowOpenListener(aWindow)

@@ -51,5 +51,5 @@ interface inISearchObserver : nsISupports
   void onSearchStart(in inISearchProcess aModule);
   void onSearchResult(in inISearchProcess aModule);
   void onSearchEnd(in inISearchProcess aModule, in short aResult);
-  void onSearchError(in inISearchProcess aModule, in wstring aMessage);
+  void onSearchError(in inISearchProcess aModule, in AString aMessage);
 };

@@ -18,18 +18,18 @@
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/system/FilePickerUtils.js"/>
 
   <vbox>
-    <html style="width: 400px">&junkImgsDescription;</html>
-    <hbox autostretch="never">
-      <text id="txSearchPath" value="Search Path:"/>
+    <description style="width: 400px">&junkImgsDescription;</description>
+    <hbox align="center">
+      <label id="txSearchPath" value="Search Path:"/>
       <textbox id="txfSearchPath" flex="1" style="width: 25em;" persist="true"/>
       <button id="btnSearchPathBrowser" value="Browse" onclick="dialog.browse()"/>
     </hbox>
     <!--
-    <hbox autostretch="never">
-      <text id="txRemotePath" value="Target URL:"/>
+    <hbox align="center">
+      <label id="txRemotePath" value="Target URL:"/>
       <textbox id="txfRemotePath" flex="1" persist="true"/>
     </hbox>
-    <hbox autostretch="never">
+    <hbox align="center">
       <checkbox id="cbIsSkin" label="Target is a Skin" checked="true" persist="true"/>
     </hbox>
     -->

@@ -112,6 +112,16 @@ JSObjectViewer.prototype =
   {
   },
   
+  isCommandEnabled: function(aCommand)
+  {
+    return false;
+  },
+  
+  getCommand: function(aCommand)
+  {
+    return null;
+  },
+  
   ////////////////////////////////////////////////////////////////////////////
   //// event dispatching
 

@@ -2,7 +2,7 @@
 
 <!DOCTYPE overlay SYSTEM "chrome://inspector/locale/prefs.dtd">
 
-<?xml-stylesheet href="chrome://communicator/skin/"?>
+<?xml-stylesheet href="chrome://inspector/skin/"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <page id="winPref" orient="vertical"
@@ -19,17 +19,35 @@
       "txfElBorderWidth",
       "txfElDuration",
       "txfElSpeed",
-      "cbElOn",
-      "cbxNavIntegration"
+      "cbElInvert",
+      "cbElOn"
      ];
     
     function initFunction()
     {
       parent.initPanel("chrome://inspector/content/prefs/pref-inspector.xul");
+      enableBlinkPrefs(document.getElementById("cbElOn").checked);
     }
 
     AddColorPicker(initFunction);
 
+    function enableBlinkPrefs(aTruth)
+    {
+      var els = [
+        "lbElBorderColor", "cprElBorderColor",
+        "lbElBorderWidth", "txfElBorderWidth",
+        "lbElDuration", "txfElDuration",
+        "lbElSpeed", "txfElSpeed",
+        "cbElInvert"];
+        
+      for (var i = 0; i < els.length; ++i) {
+        if (aTruth)
+          document.getElementById(els[i]).removeAttribute("disabled");
+        else
+          document.getElementById(els[i]).setAttribute("disabled", true);
+      }
+    }
+    
   ]]></script>
 
   <hbox class="box-smallheader" title="&Inspector.label;"/>
@@ -38,49 +56,51 @@
     <groupbox id="tbxBlink" flex="1">
       <caption label="Element Blinking"/>
       <vbox>
+        <checkbox id="cbElOn" label="Blink Selected Element" oncommand="enableBlinkPrefs(this.checked)"
+            preftype="bool" prefstring="inspector.blink.on" prefattribute="checked"/>
         <grid>
           <columns>
             <column/>
             <column flex="1"/>
           </columns>
           <rows>
-            <row autostretch="never">
-              <text value="Border Color"/>
-              <hbox autostretch="never">
+            <row align="center">
+              <label id="lbElBorderColor" value="Border Color"/>
+              <hbox align="center">
                 <colorpicker id="cprElBorderColor" type="button"
                   preftype="color" prefstring="inspector.blink.border-color" prefattribute="color"/>
               </hbox>
             </row>
-            <row autostretch="never">
-              <text value="Border Width"/>
-              <hbox autostretch="never">
+            <row align="center">
+              <label id="lbElBorderWidth" value="Border Width"/>
+              <hbox align="center">
                 <textbox id="txfElBorderWidth" style="width: 4em"
                   preftype="int" prefstring="inspector.blink.border-width" prefattribute="value"/>
-                <text value="(px)"/>
+                <label value="(px)"/>
               </hbox>
             </row>
-            <row autostretch="never">
-              <text value="Blink Duration"/>
-              <hbox autostretch="never">
+            <row align="center">
+              <label id="lbElDuration" value="Blink Duration"/>
+              <hbox align="center">
                 <textbox id="txfElDuration" style="width: 4em"
                   preftype="int" prefstring="inspector.blink.duration" prefattribute="value"/>
-                <text value="(s)"/>
+               <label value="(ms)"/>
               </hbox>
             </row>
-            <row autostretch="never">
-              <text value="Blink Speed"/>
-              <hbox autostretch="never">
+            <row align="center">
+             <label id="lbElSpeed" value="Blink Speed"/>
+              <hbox align="center">
                 <textbox id="txfElSpeed" style="width: 4em"
                   preftype="int" prefstring="inspector.blink.speed" prefattribute="value"/>
-                <text value="(ms)"/>
+               <label value="(ms)"/>
                </hbox>
             </row>
           </rows>
         </grid>
-        <hbox autostretch="never">
-          <checkbox id="cbElOn" label="Blink Selected Element"
-              preftype="bool" prefstring="inspector.blink.on" prefattribute="checked"/>
-        </hbox>
+        <vbox align="start">
+          <checkbox id="cbElInvert" label="Invert Colors"
+                    preftype="bool" prefstring="inspector.blink.invert" prefattribute="checked"/>
+        </vbox>
       </vbox>
     </groupbox>
     
@@ -89,16 +109,18 @@
       <vbox flex="1">
         <vbox id="bxSidebarInstall" flex="1">
           <hbox>
-            <html id="txSidebarMsg" flex="1">The DOM Inspector Sidebar is not currently installed.  Click the 'Install' button to add it to your Sidebar.</html>
+            <description id="txSidebarMsg" flex="1">The DOM Inspector Sidebar is not currently installed.  Click the 'Install' button to add it to your Sidebar.</description>
           </hbox>
           <button id="btnSidebarInstall" label="Install" onclick="sidebarPref.installSidebar()"/>
         </vbox>
       </vbox>
     </groupbox>
     
+    <!--
     <vbox>
       <checkbox id="cbxNavIntegration" label="Add contextual menus to Navigator"
                 preftype="bool" prefstring="inspector.hooks.navigator" prefattribute="checked"/>
     </vbox>
+    -->
   </vbox>
 </page>

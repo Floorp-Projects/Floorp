@@ -10,7 +10,7 @@
     <spacer flex="1"/>
     <hbox id="bxOuter" flex="1">
       <spacer flex="1"/>
-      <hbox id="bxCenter" autostretch="never"/>
+      <hbox id="bxCenter" align="center" pack="center"/>
       <spacer flex="1"/>
     </hbox>
     <spacer flex="1"/>

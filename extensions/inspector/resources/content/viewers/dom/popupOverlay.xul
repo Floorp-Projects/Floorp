@@ -34,13 +34,6 @@
         accesskey="&cmdToggleAnonContent.accesskey;"
         observes="cmd:toggleAnon"/>
 
-      <menuseparator/>
-
-      <menuitem id="item:showColumns"
-        label="&cmdShowColumnsDialog.label;"
-        accesskey="&cmdShowColumnsDialog.accesskey;"
-        observes="cmd:showColumns"/>
-
     </menupopup>
   </popupset>
 

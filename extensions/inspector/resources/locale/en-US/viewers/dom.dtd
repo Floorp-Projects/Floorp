@@ -24,6 +24,7 @@
   <!ENTITY cmdInsertNode.label "Insert...">
   <!ENTITY cmdDeleteNode.label "Delete">
   <!ENTITY cmdCopyXML.label "Copy XML">
+  <!ENTITY cmdBlink.label "Blink Element">
   <!ENTITY cmdInspectBrowser.label "Inspect Contained Document">
   <!ENTITY cmdInspectInNewWindow.label "Inspect in New Window">
   

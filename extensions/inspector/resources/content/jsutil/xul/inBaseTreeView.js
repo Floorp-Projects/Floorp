@@ -71,6 +71,8 @@ inBaseOutlinerView.prototype =
   performAction: function(aAction) {},
   performActionOnRow: function(aAction, aRow) {},
   performActionOnCell: function(aAction, aRow, aColId) {},
+  isSeparator: function(aIndex) {},
+  
   
   // extra utility stuff
 
@@ -80,7 +82,9 @@ inBaseOutlinerView.prototype =
       var i = Components.interfaces.nsIAtomService;
       var svc = Components.classes["@mozilla.org/atom-service;1"].getService(i);
       return svc.getAtom(aVal);
-    } catch(ex) { }
+    } catch(ex) {
+      return null;
+    }
   }
   
 };

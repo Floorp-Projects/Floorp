@@ -5,7 +5,7 @@
 
   <statusbar id="status-bar">
     <statusbarpanel id="txStatusPanel" flex="1">
-      <text id="txStatus" flex="1"/>
+      <label id="txStatus" flex="1"/>
     </statusbarpanel>
     <progressmeter id="pmStatus" mode="normal" value="0" class="progressmeter-statusbar"/>
   </statusbar>

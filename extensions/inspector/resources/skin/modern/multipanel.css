@@ -50,6 +50,10 @@
   padding: 2px 4px;
 }
 
+.multipanel-title {
+  margin: 0px !important;
+}
+
 multipanel[disabled="true"] > .multipanel-label-box {
   color: #8C99AB;
 }

@@ -11,11 +11,11 @@
       <xul:vbox class="titledsplitter-container" flex="1">
         <xul:spacer class="titledsplitter-dragbar"/>
         <xul:box class="titledsplitter-titlebox" flex="1" onmousedown="event.stopPropagation()">
-          <xul:box autostretch="never">
-            <xul:text class="titledsplitter-text" inherits="value=label"/>
+          <xul:box align="center">
+            <xul:label class="titledsplitter-text" inherits="value=label"/>
           </xul:box>
           <xul:spacer flex="1"/>
-          <xul:button class="titledsplitter-closebutton" autostretch="never"
+          <xul:button class="titledsplitter-closebutton" align="center" pack="center"
                    onclick="this.parentNode.parentNode.parentNode.close();">
             <xul:image class="titledsplitter-closeimage"/>
           </xul:button>
@@ -71,9 +71,7 @@
               this.mOnOpen = new Function(js);
           }          
 
-          if (this.mOnOpen) {
-            return this.mOnOpen();
-          }
+          return this.mOnOpen ? this.mOnOpen() : null;
         ]]></body>
       </method>
     

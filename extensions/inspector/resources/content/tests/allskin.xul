@@ -75,7 +75,7 @@
 <window orient="vertical"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
-  <text value="All skin css files are now loaded."/>
+  <label value="All skin css files are now loaded."/>
 
 </window>
 

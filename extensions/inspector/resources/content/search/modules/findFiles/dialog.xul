@@ -18,16 +18,16 @@
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/system/FilePickerUtils.js"/>
   
   <vbox>
-    <hbox autostretch="never">
-      <text id="txSearchFor" value="&txSearchFor.label;"/>
+    <hbox align="center">
+      <label id="txSearchFor" value="&txSearchFor.label;"/>
       <textbox id="txfSearchFor" style="width: 25em;" persist="true"/>
     </hbox>
-    <hbox autostretch="never">
-      <text id="txSearchPath" value="&txSearchPath.label;"/>
+    <hbox align="center">
+      <label id="txSearchPath" value="&txSearchPath.label;"/>
       <textbox id="txfSearchPath" style="width: 25em;" persist="true"/>
       <button id="btnSearchPathBrowser" label="Browse" onclick="dialog.browse()" persist="true"/>
     </hbox>
-    <hbox autostretch="never">
+    <hbox align="center">
       <checkbox id="cbRecurse" label="&cbRecurse.label;"/>
     </hbox>    
   </vbox>

@@ -39,19 +39,18 @@
 @import url("chrome://inspector/content/extensions/titledSplitter.css");
 @import url("chrome://inspector/content/extensions/multipanel.css");
 
-@namespace domi url("http://www.mozilla.org/inspector");
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 *[hide="true"] {
   visibility: hidden;
 }
 
-domi|panelset {
+domi-panelset {
   -moz-binding: url("chrome://inspector/content/inspector.xml#panelset");
   display: -moz-box;
 }
 
-domi|panel {
+domi-panel {
   -moz-binding: url("chrome://inspector/content/inspector.xml#panel");
   display: -moz-box;
 }

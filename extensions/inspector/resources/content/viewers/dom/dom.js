@@ -39,33 +39,16 @@
 /***************************************************************
 * DOMViewer --------------------------------------------
 *  Views all nodes within a document.
-* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-* REQUIRED IMPORTS:
-*   chrome://inspector/content/util.js
-*   chrome://inspector/content/jsutil/xpcom/XPCU.js
-*   chrome://inspector/content/jsutil/rdf/RDFU.js
 ****************************************************************/
 
 //////////// global variables /////////////////////
 
 var viewer;
 
-window.onunload = function() { viewer.destroy(); }
-
-var gColumnExtras = {
-  "Anonymous": "Anonymous", 
-  "nodeType": "nodeType"
-};
-
-var gColumnAttrs = {
-  "class": "triDOMView"
-};
-
 //////////// global constants ////////////////////
 
-const kDOMDataSourceIID           = "@mozilla.org/rdf/datasource;1?name=Inspector_DOM";
+const kDOMViewCID          = "@mozilla.org/inspector/dom-view;1";
 const kClipboardHelperCID  = "@mozilla.org/widget/clipboardhelper;1";
-const kGlobalClipboard     = Components.interfaces.nsIClipboard.kGlobalClipboard;
 
 //////////////////////////////////////////////////
 
@@ -88,10 +71,10 @@ function DOMViewer() // implements inIViewer
   this.mDOMOutlinerBody = document.getElementById("trDOMOutlinerBody");
 
   // prepare and attach the DOM DataSource
-  this.mDOMDS = XPCU.createInstance(kDOMDataSourceIID, "inIDOMDataSource");
-  this.mDOMDS.showSubDocuments = true;
-  this.mDOMDS.removeFilterByType(2); // hide attribute nodes
-  this.mDOMOutlinerBody.database.AddDataSource(this.mDOMDS);
+  this.mDOMView = XPCU.createInstance(kDOMViewCID, "inIDOMView");
+  this.mDOMView.showSubDocuments = true;
+  this.mDOMView.removeFilterByType(Node.ATTRIBUTE_NODE); // hide attribute nodes
+  this.mDOMOutliner.outlinerBoxObject.view = this.mDOMView;
 
   PrefUtils.addObserver("inspector", PrefChangeObserver);
 }
@@ -99,7 +82,7 @@ function DOMViewer() // implements inIViewer
 DOMViewer.prototype = 
 {
   mSubject: null,
-  mDOMDS: null,
+  mDOMView: null,
   // searching stuff
   mSearchResults: null,
   mSearchCurrentIdx: null,
@@ -107,6 +90,11 @@ DOMViewer.prototype =
   mColumns: null,
   mFlashSelected: null,
   mFlashes: 0,
+  mFindDir: null,
+  mFindParams: null,
+  mFindType: null,
+  mFindWalker: null,
+  mSelecting: false,
   
   ////////////////////////////////////////////////////////////////////////////
   //// interface inIViewer
@@ -115,44 +103,71 @@ DOMViewer.prototype =
 
   get uid() { return "dom" },
   get pane() { return this.mPanel },
-
+  get editable() { return true; },
+  
   get selection() { return this.mSelection },
 
   get subject() { return this.mSubject },
   set subject(aObject) {
     this.mSubject = aObject;
-    this.mDOMDS.document = aObject;
-    try {
-      this.mOutlinerBuilder.buildContent();
-      if (this.mPanel.params)
-        this.selectElementInOutliner(this.mPanel.params);
-      else
-        this.selectElementInOutliner(aObject.documentElement, true);
-    } catch (ex) {
-      debug("ERROR: While rebuilding dom tree\n" + ex);    
-    }
+    this.mDOMView.rootNode = aObject.documentElement;
     this.mObsMan.dispatchEvent("subjectChange", { subject: aObject });
+    this.setInitialSelection(aObject);
   },
 
   //// methods
 
   initialize: function(aPane)
   {
-    this.initColumns();
+    //this.initColumns();
 
     this.mPanel = aPane;
     aPane.notifyViewerReady(this);
 
-    this.toggleAnonContent(true, PrefUtils.getPref("inspector.dom.showAnon"));
+    this._toggleAnonContent(true, PrefUtils.getPref("inspector.dom.showAnon"));
     this.setFlashSelected(PrefUtils.getPref("inspector.blink.on"));
   },
   
   destroy: function()
   {
-    if (this.mEvilListener && "setListener" in this.mEvilListener)
-      this.mEvilListener.setListener(null);
+    this.mDOMOutliner.outlinerBoxObject.view = null;
   },
 
+  isCommandEnabled: function(aCommand)
+  {
+    switch (aCommand) {
+      case "cmdEditPaste":
+        var canPaste = this.mPanel.panelset.clipboardFlavor == "inspector/dom-node";
+        if (canPaste) {
+          var node = this.mPanel.panelset.getClipboardData();
+          canPaste = node ? node.nodeType != Node.ATTRIBUTE_NODE : false;
+        }
+        return canPaste;
+      case "cmdEditInsert":
+        return false;
+      case "cmdEditCut":
+      case "cmdEditCopy":
+      case "cmdEditDelete":
+        return this.selectedNode != null;
+    }
+    return false;
+  },
+  
+  getCommand: function(aCommand)
+  {
+    switch (aCommand) {
+      case "cmdEditCut":
+        return new cmdEditCut();
+      case "cmdEditCopy":
+        return new cmdEditCopy();
+      case "cmdEditPaste":
+        return new cmdEditPaste();
+      case "cmdEditDelete":
+        return new cmdEditDelete();
+    }
+    return null;
+  },
+  
   ////////////////////////////////////////////////////////////////////////////
   //// event dispatching
 
@@ -170,16 +185,22 @@ DOMViewer.prototype =
 
   toggleAnonContent: function(aExplicit, aValue)
   {
-    var val = aExplicit ? aValue : !this.mDOMDS.showAnonymousContent;
-    this.mDOMDS.showAnonymousContent = val;
+    this._toggleAnonContent(aExplicit, aValue);
+    this.rebuild();
+  },
+  
+  _toggleAnonContent: function(aExplicit, aValue)
+  {
+    var val = aExplicit ? aValue : !this.mDOMView.showAnonymousContent;
+    this.mDOMView.showAnonymousContent = val;
     this.mPanel.panelset.setCommandAttribute("cmd:toggleAnon", "checked", val ? "true" : "false");
     PrefUtils.setPref("inspector.dom.showAnon", val);
   },
   
   toggleSubDocs: function(aExplicit, aValue)
   {
-    var val = aExplicit ? aValue : !this.mDOMDS.showSubDocuments;
-    this.mDOMDS.showSubDocuments = val;
+    var val = aExplicit ? aValue : !this.mDOMView.showSubDocuments;
+    this.mDOMView.showSubDocuments = val;
     this.mPanel.panelset.setCommandAttribute("cmd:toggleSubDocs", "checked", val ? "true" : "false");
   },
   
@@ -198,19 +219,45 @@ DOMViewer.prototype =
   {
     var idx = this.mDOMOutliner.currentIndex;
     var node = this.getNodeFromRowIndex(idx);
-
-    var win = openDialog("chrome://inspector/content/viewers/dom/pseudoClassDialog.xul", 
-                         "_blank", "chrome", node);
+    
+    if (node)
+      openDialog("chrome://inspector/content/viewers/dom/pseudoClassDialog.xul", 
+                           "_blank", "chrome", node);
   },
 
+  cmdBlink: function()
+  {
+    this.flashElement(this.selectedNode);
+  },
+  
+  cmdBlinkIsValid: function()
+  {
+    return this.selectedNode ? (this.selectedNode.nodeType == Node.ELEMENT_NODE) : false;
+  },
+    
   onItemSelected: function()
   {
     var idx = this.mDOMOutliner.currentIndex;
     this.mSelection = this.getNodeFromRowIndex(idx);
     this.mObsMan.dispatchEvent("selectionChange", { selection: this.mSelection } );
-
-    if (this.mFlashSelected)
-      this.flashElement(this.mSelection);
+  
+    if (this.mSelection) {
+      if (this.mFlashSelected)
+        this.flashElement(this.mSelection);
+    }
+  },
+  
+  setInitialSelection: function(aObject)
+  {
+    var fireSelected = this.mDOMOutliner.currentIndex == 0;
+  
+    if (this.mPanel.params)
+      this.selectElementInOutliner(this.mPanel.params);
+    else
+      this.selectElementInOutliner(aObject.documentElement, true);
+  
+    if (fireSelected)
+      this.onItemSelected();
   },
   
   onContextCreate: function(aPP)
@@ -233,17 +280,10 @@ DOMViewer.prototype =
     }
   },
   
-  cmdDeleteSelectedNode: function()
-  {
-    var node = this.getSelectedNode();
-    if (node)
-      node.parentNode.removeChild(node);
-  },
-  
   cmdInspectBrowserIsValid: function()
   {
-    var node = viewer.getSelectedNode();
-    if (!node) return false;
+    var node = viewer.selectedNode;
+    if (!node || node.nodeType != Node.ELEMENT_NODE) return false;
     
     var n = node.localName.toLowerCase();
     return n == "tabbrowser" || n == "browser" || n == "iframe" || n == "frame" || n == "editor";
@@ -251,7 +291,7 @@ DOMViewer.prototype =
   
   cmdInspectBrowser: function()
   {
-    var node = this.getSelectedNode();
+    var node = this.selectedNode;
     var n = node.localName.toLowerCase();
     if (node && n == "browser" && node.namespaceURI == kXULNSURI) {
       // xul browser
@@ -273,8 +313,9 @@ DOMViewer.prototype =
  
   cmdInspectInNewWindow: function()
   {
-    var node = this.getSelectedNode();
-    inspectObject(node);
+    var node = this.selectedNode;
+    if (node)
+      inspectObject(node);
   },
   
   ////////////////////////////////////////////////////////////////////////////
@@ -282,12 +323,12 @@ DOMViewer.prototype =
 
   cmdCopySelectedXML: function()
   {
-    var node = this.getSelectedNode();
+    var node = this.selectedNode;
     if (node) {
       var xml = this.toXML(node);
     
       var helper = XPCU.getService(kClipboardHelperCID, "nsIClipboardHelper");
-      helper.copyStringToClipboard(xml, kGlobalClipboard);    
+      helper.copyString(xml);
     }
   },
 
@@ -380,6 +421,9 @@ DOMViewer.prototype =
   
   doSelectByClick: function(aTarget)
   {
+    if (aTarget.nodeType == Node.TEXT_NODE)
+      aTarget = aTarget.parentNode;
+      
     this.stopSelectByClick();
     this.selectElementInOutliner(aTarget);
   },
@@ -419,7 +463,7 @@ DOMViewer.prototype =
     };
 
     this.mFindFn = fn;
-    this.mFindWalker = this.createDOMWalker(this.mDOMDS.document.documentElement);
+    this.mFindWalker = this.createDOMWalker(this.mDOMView.rootNode);
     this.findNext();
   },
   
@@ -470,8 +514,15 @@ DOMViewer.prototype =
   // @param aEl - element from the document being inspected
   ///////////////////////////////////////////////////////////////////////////
 
-  selectElementInOutliner: function(aEl, aExpand)
+  selectElementInOutliner: function(aEl, aExpand, aQuickie)
   {
+    var bx = this.mDOMOutliner.outlinerBoxObject;
+
+    if (!aEl) {
+      bx.selection.select(null);
+      return false;      
+    }
+      
     // Keep searching until a pre-created ancestor is
     // found, and then open each ancestor until
     // the found element is created
@@ -488,28 +539,58 @@ DOMViewer.prototype =
       } else
         break;
     } 
-    var bx = this.mDOMOutliner.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject);
-    var view = bx.view;
 
     // we've got all the ancestors, now open them 
     // one-by-one from the top on down
+    var view = bx.view;
+    var lastIndex;
     for (var i = line.length-1; i >= 0; i--) {
       index = this.getRowIndexFromNode(line[i]);
-      if (index < 0) return false; // can't find row, so stop trying to descend
-      if ((aExpand || i > 0) && !view.isContainerOpen(index))
+      if (index < 0) 
+        break; // can't find row, so stop trying to descend
+      if ((aExpand || i > 0) && !view.isContainerOpen(index)) {
         view.toggleOpenState(index);
-      if (i == 0)
-        bx.ensureRowIsVisible(index);    
+      }
+      lastIndex = index;
     }
 
-    bx.selection.select(index);
+    if (!aQuickie && lastIndex >= 0) {
+      bx.selection.select(lastIndex);
+      bx.ensureRowIsVisible(lastIndex);
+    }
+    
+    return aQuickie;
+  },
+  
+  ///////////////////////////////////////////////////////////////////////////
+  // Remember which rows are open, and which row is selected. Then rebuild outliner,
+  // re-open previously opened rows, and re-select previously selected row
+  ///////////////////////////////////////////////////////////////////////////
+  rebuild: function()
+  {
+    var selNode = this.getNodeFromRowIndex(this.mDOMOutliner.currentIndex);
+    this.mDOMOutliner.outlinerBoxObject.selection.select(null);
+    
+    var opened = [];
+    var i;
+    for (i = 0; i < this.mDOMView.rowCount; ++i) {
+      if (this.mDOMView.isContainerOpen(i))
+        opened.push(this.getNodeFromRowIndex(i));
+    }
+    
+    this.mDOMView.rebuild();
+    
+    for (i = 0; i < opened.length; ++i)
+      this.selectElementInOutliner(opened[i], true, true);
+    
+    this.selectElementInOutliner(selNode);
   },
   
   createDOMWalker: function(aRoot)
   {
     var walker = XPCU.createInstance("@mozilla.org/inspector/deep-tree-walker;1", "inIDeepTreeWalker");
-    walker.showAnonymousContent = this.mDOMDS.showAnonymousContent;
-    walker.showSubDocuments = this.mDOMDS.showSubDocuments;
+    walker.showAnonymousContent = this.mDOMView.showAnonymousContent;
+    walker.showSubDocuments = this.mDOMView.showSubDocuments;
     walker.init(aRoot, Components.interfaces.nsIDOMNodeFilter.SHOW_ALL);
     return walker;
   },
@@ -523,83 +604,14 @@ DOMViewer.prototype =
     var cols = colPref.split(",")
     this.mColumns = cols;
     this.mColumnHash = {};
-      
-    var tb = new inOutlinerBuilder(this.mDOMOutliner, kInspectorNSURI, "Child");
-    tb.allowDragColumns = true;
-    tb.isRefContainer = false;
-    tb.isContainer = true;
-    tb.rowAttributes = gColumnAttrs;
-    tb.rowFields = gColumnExtras;
-    this.mOutlinerBuilder = tb;
+  },
 
-    tb.initialize();
-    
-    for (var i = 0; i < cols.length; i++) {
-      this.mColumnHash[cols[i]] = true;
-      tb.addColumn({
-        name: cols[i], 
-        title: cols[i],
-        flex: i == 0 ? 2 : 1,
-        className: "triDOMView"});
-    }
-    
-    // start listening for modifications to columns
-    // from drag and drop operations
-    tb.onColumnAdd = gColumnAddListener;
-    tb.onColumnRemove = gColumnRemoveListener;
-    
-    tb.build();
-  },
-  
-  hasColumn: function(aName)
-  {
-    return this.mColumnHash[aName] == true;
-  },
-  
-  //// these add/remove methods depend on names that have already 
-  //// been added to the tree builder
-  
-  doAddColumn: function(aIndex)
-  {
-    var name = this.mOutlinerBuilder.getColumnName(aIndex);
-    this.mColumnHash[name] = true;
-    this.mColumns.splice(aIndex, 0, name);
-    this.saveColumns();
-  },
-  
-  doRemoveColumn: function(aIndex)
-  {
-    var name = this.mColumns[aIndex];
-    this.mColumnHash[name] = null;
-    this.mColumns.splice(aIndex, 1);
-    this.saveColumns();
-  },
-  
-  onColumnAdd: function(aIndex)
-  {
-    this.doAddColumn(aIndex);
-  },
-  
-  onColumnRemove: function(aIndex)
-  {
-    this.doRemoveColumn(aIndex);
-  },
-  
+  // XX re-implement custom columns code some-day  
+
   saveColumns: function()
   {
     var cols = this.mColumns.join(",");
     PrefUtils.setPref("inspector.dom.columns", cols);
-  },
-
-  onColumnsDialogReady: function (aDialog)
-  {
-    this.mColumnsDialog = aDialog;
-    this.mOutlinerBuilder.addColumnDropTarget(aDialog.box);
-  },
-  
-  onColumnsDialogClose: function (aDialog)
-  {
-    this.mColumnsDialog = null;
   },
 
   ////////////////////////////////////////////////////////////////////////////
@@ -611,7 +623,8 @@ DOMViewer.prototype =
       this.mFlasher = new Flasher(PrefUtils.getPref("inspector.blink.border-color"), 
                                   PrefUtils.getPref("inspector.blink.border-width"), 
                                   PrefUtils.getPref("inspector.blink.duration"), 
-                                  PrefUtils.getPref("inspector.blink.speed"));
+                                  PrefUtils.getPref("inspector.blink.speed"),
+                                  PrefUtils.getPref("inspector.blink.invert"));
     }
     
     return this.mFlasher;
@@ -619,8 +632,9 @@ DOMViewer.prototype =
 
   flashElement: function(aElement)
   {
-    // make sure we only try to flash element nodes
-    if (aElement.nodeType == 1) {
+    // make sure we only try to flash element nodes, and don't 
+    // flash the documentElement (it's too darn big!)
+    if (aElement.nodeType == 1 && aElement != aElement.ownerDocument.documentElement) {
       var flasher = this.flasher;
       
       if (flasher.flashing) 
@@ -667,6 +681,8 @@ DOMViewer.prototype =
         this.mFlasher.duration = PrefUtils.getPref("inspector.blink.duration");
       } else if (aName == "inspector.blink.speed") {
         this.mFlasher.speed = PrefUtils.getPref("inspector.blink.speed");
+      } else if (aName == "inspector.blink.invert") {
+        this.mFlasher.invert = PrefUtils.getPref("inspector.blink.invert");
       }
     }
   },
@@ -676,7 +692,7 @@ DOMViewer.prototype =
   
   getAllDocuments: function()
   {
-    var doc = this.mDOMDS.document;
+    var doc = this.mDOMView.rootNode.ownerDocument;
     var results = [doc];
     this.findDocuments(doc, results);
     return results;
@@ -695,7 +711,7 @@ DOMViewer.prototype =
   {
     for (var i = 0; i < aKids.length; ++i) {
       try {
-        if (aKids.localName == "editor")
+        if (aKids[i].localName == "editor")
           aArray.push(aKids[i].editorShell.editorDocument);
         else
           aArray.push(aKids[i].contentDocument);
@@ -705,29 +721,147 @@ DOMViewer.prototype =
     }
   },
   
+  get selectedNode()
+  {
+    var index = this.mDOMOutliner.currentIndex;
+    return index >= 0 ? this.getNodeFromRowIndex(index) : null;
+  },
+
   getNodeFromRowIndex: function(aIndex)
   {
-    if (aIndex < 0)
+    try {
+      return this.mDOMView.getNodeFromRowIndex(aIndex);
+    } catch (ex) {
       return null;
-    var builder = this.mDOMOutlinerBody.builder.QueryInterface(Components.interfaces.nsIXULOutlinerBuilder);
-    var res = builder.getResourceAtIndex(aIndex);
-    res = res.QueryInterface(Components.interfaces.inIDOMRDFResource);
-    return res ? res.object : null;
+    }
   },
   
   getRowIndexFromNode: function(aNode)
   {
-    var builder = this.mDOMOutlinerBody.builder.QueryInterface(Components.interfaces.nsIXULOutlinerBuilder);
-    var res = this.mDOMDS.getResourceForObject(aNode);
-    return res ? builder.getIndexOfResource(res) : -1;
+    try {
+      return this.mDOMView.getRowIndexFromNode(aNode);
+    } catch (ex) {
+      return -1;
+    }
   },
   
-  getSelectedNode: function()
+  canPaste: function(aFlavour)
   {
-    var sel = this.mDOMOutliner.currentIndex;
-    return this.getNodeFromRowIndex(sel);
+    return aFlavour == "Inspector-DOM-Node";
   }
+  
+};
 
+////////////////////////////////////////////////////////////////////////////
+//// Command Objects
+
+function cmdEditDelete() {}
+cmdEditDelete.prototype =
+{
+  node: null,
+  nextSibling: null,
+  parentNode: null,
+  
+  doCommand: function()
+  {
+    var node = this.node ? this.node : viewer.selectedNode;
+    if (node) {
+      this.node = node;
+      this.nextSibling = node.nextSibling;
+      this.parentNode = node.parentNode;
+      node.parentNode.removeChild(node);
+    }
+  },
+  
+  undoCommand: function()
+  {
+    if (this.node) {
+      if (this.nextSibling)
+        this.parentNode.insertBefore(this.node, this.nextSibling);
+      else
+        this.parentNode.appendChild(this.node);        
+    }
+  }
+};
+
+function cmdEditCut() {}
+cmdEditCut.prototype =
+{
+  cmdCopy: null,
+  cmdDelete: null,
+  doCommand: function()
+  {
+    if (!this.cmdCopy) {
+      this.cmdDelete = new cmdEditDelete();
+      this.cmdCopy = new cmdEditCopy();
+    }
+    this.cmdCopy.doCommand();
+    this.cmdDelete.doCommand();    
+  },
+
+  undoCommand: function()
+  {
+    this.cmdDelete.undoCommand();    
+    this.cmdCopy.undoCommand();
+  }
+};
+
+function cmdEditCopy() {}
+cmdEditCopy.prototype =
+{
+  copiedNode: null,
+  previousData: null,
+  previousFlavor: null,
+    
+  doCommand: function()
+  {
+    var copiedNode = null;
+    if (!this.copiedNode) {
+      copiedNode = viewer.selectedNode;
+      if (copiedNode) {
+        this.copiedNode = copiedNode;
+        this.previousData = viewer.pane.panelset.getClipboardData();
+        this.previousFlavor = viewer.pane.panelset.clipboardFlavor;
+      }
+    } else
+      copiedNode = this.copiedNode;
+      
+    viewer.pane.panelset.setClipboardData(copiedNode, "inspector/dom-node");
+  },
+  
+  undoCommand: function()
+  {
+    viewer.pane.panelset.setClipboardData(this.previousData, this.previousFlavor);
+  }
+};
+
+function cmdEditPaste() {}
+cmdEditPaste.prototype =
+{
+  pastedNode: null,
+  pastedBefore: null,
+  
+  doCommand: function()
+  {
+    var node = this.pastedNode ? this.pastedNode : viewer.pane.panelset.getClipboardData();
+    var selected = this.pastedBefore ? this.pastedBefore : viewer.selectedNode;
+    if (selected) {
+      this.pastedNode = node.cloneNode(true);
+      this.pastedBefore = selected;
+      if (selected.nextSibling)
+        selected.parentNode.insertBefore(this.pastedNode, selected.nextSibling);
+      else
+        selected.parentNode.appendChild(this.pastedNode);
+      return false;
+    }
+    return true;
+  },
+  
+  undoCommand: function()
+  {
+    if (this.pastedNode)
+      this.pastedNode.parentNode.removeChild(this.pastedNode);
+  }
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -736,10 +870,11 @@ DOMViewer.prototype =
 var MouseDownListener = {
   handleEvent: function(aEvent)
   {
+    var target = viewer.mDOMView.showAnonymousContent ? aEvent.originalTarget : aEvent.target;
     if (aEvent.type == "mousedown")
-      viewer.doSelectByClick(aEvent.target);
+      viewer.doSelectByClick(target);
     else if (aEvent.type == "mouseover")
-      viewer.selectByClickOver(aEvent.target);
+      viewer.selectByClickOver(target);
   }
 }
 
@@ -760,9 +895,9 @@ function gColumnRemoveListener(aIndex)
   viewer.onColumnRemove(aIndex);
 }
 
-
 function dumpDOM2(aNode)
 {
   dump(DOMViewer.prototype.toXML(aNode));
 }
 
+  

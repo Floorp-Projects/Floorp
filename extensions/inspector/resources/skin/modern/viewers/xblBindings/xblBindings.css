@@ -38,6 +38,3 @@
 
 @import url("chrome://inspector/skin");
 @import url("chrome://inspector/skin/viewers/dom/dom.css");
-
-@namespace domi url("http://www.mozilla.org/inspector");
-

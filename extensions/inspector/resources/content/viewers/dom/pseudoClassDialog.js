@@ -63,7 +63,6 @@ function PseudoClassDialog_initialize()
 {
   dialog = new PseudoClassDialog();
   dialog.initialize();
-  doSetOKCancel(gDoOKFunc);
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -92,7 +91,7 @@ PseudoClassDialog.prototype =
     }
   },
   
-  closeDialog: function()
+  onOk: function()
   {
     var el = this.mSubject;
     var root = el.ownerDocument.documentElement;
@@ -104,17 +103,7 @@ PseudoClassDialog.prototype =
       else
         this.mDOMUtils.setContentState(root, gCheckBoxIds[key]);
     }
-    
-    window.close();
   }
   
 };
 
-////////////////////////////////////////////////////////////////////////////
-//// dialogOverlay stuff
-
-function gDoOKFunc() {
-  dialog.closeDialog();
-
-  return true;
-}
