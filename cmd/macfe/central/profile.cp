@@ -31,6 +31,7 @@
 #include "DirectoryCopy.h"
 #include <LGARadioButton.h>
 #include <LGAPushButton.h>
+#include <LGAEditField.h>
 
 // for multi-user profile support in PE
 #include "MUC.h"

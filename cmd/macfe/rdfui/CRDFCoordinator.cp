@@ -45,6 +45,8 @@
 #include "URobustCreateWindow.h"
 #include "BookmarksDialogs.h"
 #include "divview.h"
+#include "LGAIconSuiteControl.h"
+
 
 const char* CRDFCoordinator::Pref_EditWorkspace = "browser.editWorkspace";
 const char* CRDFCoordinator::Pref_ShowNavCenterSelector = "browser.chrome.show_navcenter_selector";
