@@ -406,6 +406,13 @@ nsAuthURLParser::ParseAtDirectory(const char* i_Path, char* *o_Directory,
         if (file != dirfile)
         {
             ExtractString(dirfile, o_Directory, (file - dirfile)+1);
+            if (*dirfile != '/') {
+                nsCAutoString dir;
+                dir += "/" ;
+                dir += *o_Directory;
+                CRTFREEIF(*o_Directory);
+                *o_Directory = dir.ToNewCString();
+            }
         } else {
             DupString(o_Directory, "/");
         }
