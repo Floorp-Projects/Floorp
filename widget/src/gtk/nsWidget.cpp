@@ -40,9 +40,9 @@
 
 #define NSCOLOR_TO_GDKCOLOR(n,g) \
   PR_BEGIN_MACRO \
-  g.red = 256 * NS_GET_R(n); \
-  g.green = 256 * NS_GET_G(n); \
-  g.blue = 256 * NS_GET_B(n); \
+  g ## .red = 256 * NS_GET_R(n); \
+  g ## .green = 256 * NS_GET_G(n); \
+  g ## .blue = 256 * NS_GET_B(n); \
   PR_END_MACRO
 
 // Taken from nsRenderingContextGTK.cpp
