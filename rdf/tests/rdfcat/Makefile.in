@@ -28,10 +28,71 @@ LOCAL_INCLUDES  =
 
 REQUIRES	= 
 
+TOOLKIT_GFX_LIB		:= -lgfx$(MOZ_TOOLKIT)
+TOOLKIT_WIDGET_LIB	:= -lwidget$(MOZ_TOOLKIT)
+TOOLKIT_BASE_LIB	:= -lgmbase$(MOZ_TOOLKIT)
+
+BASE_LIBS =	     \
+	-lraptorbase \
+	-lpref	     \
+	$(ZLIB_LIBS) \
+	-lreg	     \
+	-l$(MOZ_LIB_JS_PREFIX)js	     \
+	-lxpcom	     \
+	-lsecfree    \
+	-l$(MOZ_LIB_UTIL_PREFIX)util    \
+	$(NULL)
+
+GECKO_LIBS =		      \
+	-lraptorwebwidget     \
+	$(TOOLKIT_WIDGET_LIB) \
+	-lraptorgfx	      \
+	$(TOOLKIT_GFX_LIB)    \
+	-lgfxps  \
+	-lraptorhtml	      \
+	$(TOOLKIT_BASE_LIB)   \
+	-lraptorhtmlpars      \
+	-lexpat \
+	-lxmltok \
+	-lraptorview	      \
+	-ljsdom		      \
+	-lraptorplugin	      \
+	$(NULL)
+
+IMGLIB_LIBS =	     \
+	-limg	     \
+	$(JPEG_LIBS) \
+	$(PNG_LIBS)  \
+	$(NULL)
+
+NETLIB_LIBS =	      \
+	-labouturl    \
+	-lfileurl     \
+	-lftpurl      \
+	-lgophurl     \
+	-lhttpurl     \
+	-lremoturl    \
+	-lsockstuburl \
+	-lmimetype    \
+	-lnetcache    \
+	-lnetcnvts    \
+	-lnetlib      \
+	-lnetutil     \
+	-lnetwork     \
+	-lxp	      \
+	-ljsurl	      \
+	-l$(MOZ_LIB_DBM_PREFIX)dbm      \
+	-lpwcac	      \
+	$(NULL)
+
 LIBS		= \
-	-lxpcom \
-	-lreg \
+	$(GECKO_LIBS) \
+	$(NETLIB_LIBS) \
+	$(IMGLIB_LIBS) \
+	$(BASE_LIBS) \
 	$(NSPR_LIBS) \
+	$(TOOLKIT_BASE_LIB) \
+	$(TK_LIBS) \
 	$(NULL)
 
 PROGRAM		= rdfcat
