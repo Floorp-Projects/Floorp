@@ -60,11 +60,9 @@ typedef float               gfx_angle;
  * A color is a 32 bit unsigned integer with
  * four components: R, G, B and A.
  *
- * @var typedef unsigned long gfx_color
+ * @var typedef PRUint32 gfx_color
  */
-typedef unsigned long       gfx_color;
-
-typedef gfx_color nscolor;
+typedef PRUint32            gfx_color;
 
 /**
  * typedef that should be used for bit depths
