@@ -365,7 +365,7 @@ nsFileInputStream::IsNonBlocking(PRBool *aNonBlocking)
 }
 
 NS_IMETHODIMP
-nsFileInputStream::Seek(PRInt32 aWhence, PRInt32 aOffset)
+nsFileInputStream::Seek(PRInt32 aWhence, PRInt64 aOffset)
 {
     if (!mFD) {
         if (mBehaviorFlags & REOPEN_ON_REWIND) {
