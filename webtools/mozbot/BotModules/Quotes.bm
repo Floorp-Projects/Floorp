@@ -91,7 +91,7 @@ sub checkRights {
     my $self = shift;
     my ($right, $event) = @_;
     return 1 if $self->isAdmin($event);
-    foreach my $user ($self->{"user$right"}) {
+    foreach my $user (@{$self->{"users$right"}}) {
         return 1 if $user eq $event->{userName};
     }
     return 0;
