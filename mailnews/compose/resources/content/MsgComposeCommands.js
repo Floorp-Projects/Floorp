@@ -153,9 +153,10 @@ function ComposeStartup()
         identity = getIdentityForKey(args.preselectid);
     else
     {
-    	//TODO: what I need here is not the current selected identity but the default one. 
-    	//      For now GetCurrentIdentity gives back the first identity (not the selected one).
-    	identity = accountManager.currentIdentity;
+        // no preselect, so use the default account
+        var identities = accountManager.defaultAccount.identities;
+        
+    	identity = identities.QueryElementAt(0, Components.interfaces.nsIMsgIdentity);
     }
     identitySelect.value = identity.key;
 
