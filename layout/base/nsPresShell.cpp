@@ -4130,6 +4130,18 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
         }
       }
 
+      // We now have the offset relative to the closest parent view.
+      // Walk up the view tree till we get to the scrolled view, since the
+      // closest view could belong to a positioned but not scrolled element
+      // This should give us the offset relative to the scrolled view
+      while (closestView && closestView != scrolledView) {
+        nscoord x, y;
+        
+        closestView->GetPosition(&x, &y);
+        offset.MoveBy(x, y);
+        closestView->GetParent(closestView);
+      }
+      
       // Determine the visible rect in the scrolled view's coordinate space.
       // The size of the visible area is the clip view size
       const nsIView*  clipView;
