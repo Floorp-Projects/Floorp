@@ -199,7 +199,8 @@ public:
   virtual void EnsureCellMinWidths(PRBool aShrinkFixedWidthCells);
 
   virtual void AdjustTableThatIsTooWide(nscoord  aComputedWidth, 
-                                        nscoord  aTableWidth);
+                                        nscoord  aTableWidth, 
+                                        PRBool   aShrinkFixedCols);
 
   virtual void AdjustTableThatIsTooNarrow(nscoord  aComputedWidth, 
                                           nscoord  aTableWidth);
@@ -209,6 +210,11 @@ public:
     * return false if the width changes based on content, parent size, etc.
     */
   virtual PRBool IsFixedWidth(const nsStylePosition* aStylePosition);
+
+  /** return true if the colIndex is in the list of colIndexes */
+  virtual PRBool IsColumnInList(const PRInt32 colIndex, 
+                                PRInt32 *colIndexes, 
+                                PRInt32 aNumFixedColumns);
 
 
 protected:
