@@ -67,6 +67,9 @@ public:
   NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGPolygonElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGPolygonElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGPolygonElementBase::)
+
+  // nsIStyledContent interface
+  NS_IMETHODIMP_(PRBool) IsAttributeMapped(const nsIAtom* name) const;
   
 protected:
   nsCOMPtr<nsIDOMSVGPointList> mPoints;
@@ -146,4 +149,18 @@ NS_IMETHODIMP nsSVGPolygonElement::GetAnimatedPoints(nsIDOMSVGPointList * *aAnim
   *aAnimatedPoints = mPoints;
   NS_ADDREF(*aAnimatedPoints);
   return NS_OK;
+}
+
+//----------------------------------------------------------------------
+// nsIStyledContent methods
+
+NS_IMETHODIMP_(PRBool)
+nsSVGPolygonElement::IsAttributeMapped(const nsIAtom* name) const
+{
+  static const MappedAttributeEntry* const map[] = {
+    sMarkersMap,
+  };
+  
+  return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
+    nsSVGPolygonElementBase::IsAttributeMapped(name);
 }

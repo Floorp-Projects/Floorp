@@ -57,7 +57,7 @@ protected:
   nsSVGPathElement(nsINodeInfo *aNodeInfo);
   virtual ~nsSVGPathElement();
   nsresult Init();
-  
+
 public:
   // interfaces:
   
@@ -69,6 +69,9 @@ public:
   NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGPathElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGPathElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGPathElementBase::)
+
+  // nsIStyledContent interface
+  NS_IMETHODIMP_(PRBool) IsAttributeMapped(const nsIAtom* name) const;
   
 protected:
   nsCOMPtr<nsIDOMSVGPathSegList> mSegments;
@@ -325,4 +328,18 @@ NS_IMETHODIMP nsSVGPathElement::GetAnimatedPathSegList(nsIDOMSVGPathSegList * *a
 NS_IMETHODIMP nsSVGPathElement::GetAnimatedNormalizedPathSegList(nsIDOMSVGPathSegList * *aAnimatedNormalizedPathSegList)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+//----------------------------------------------------------------------
+// nsIStyledContent methods
+
+NS_IMETHODIMP_(PRBool)
+nsSVGPathElement::IsAttributeMapped(const nsIAtom* name) const
+{
+  static const MappedAttributeEntry* const map[] = {
+    sMarkersMap,
+  };
+  
+  return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
+    nsSVGPathElementBase::IsAttributeMapped(name);
 }

@@ -72,6 +72,9 @@ public:
   // nsISVGContent specializations:
   virtual void ParentChainChanged();
 
+  // nsIStyledContent interface
+  NS_IMETHODIMP_(PRBool) IsAttributeMapped(const nsIAtom* name) const;
+
 protected:
   
   nsCOMPtr<nsIDOMSVGAnimatedLength> mX1;
@@ -270,3 +273,17 @@ void nsSVGLineElement::ParentChainChanged()
   
   // XXX call baseclass version to recurse into children?
 }  
+
+//----------------------------------------------------------------------
+// nsIStyledContent methods
+
+NS_IMETHODIMP_(PRBool)
+nsSVGLineElement::IsAttributeMapped(const nsIAtom* name) const
+{
+  static const MappedAttributeEntry* const map[] = {
+    sMarkersMap,
+  };
+  
+  return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
+    nsSVGLineElementBase::IsAttributeMapped(name);
+}

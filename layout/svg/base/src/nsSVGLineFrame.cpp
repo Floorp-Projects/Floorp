@@ -45,8 +45,10 @@
 #include "nsIDOMSVGElement.h"
 #include "nsIDOMSVGSVGElement.h"
 #include "nsISVGRendererPathBuilder.h"
+#include "nsISVGMarkable.h"
 
-class nsSVGLineFrame : public nsSVGPathGeometryFrame
+class nsSVGLineFrame : public nsSVGPathGeometryFrame,
+                       public nsISVGMarkable
 {
 protected:
   friend nsresult
@@ -61,13 +63,26 @@ public:
 
   // nsISVGPathGeometrySource interface:
   NS_IMETHOD ConstructPath(nsISVGRendererPathBuilder *pathBuilder);
-  
+
+  // nsISVGMarkable interface
+  void GetMarkPoints(nsVoidArray *aMarks);
+
+   // nsISupports interface:
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+
 private:
+  NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
+  NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }  
+
   nsCOMPtr<nsIDOMSVGLength> mX1;
   nsCOMPtr<nsIDOMSVGLength> mY1;
   nsCOMPtr<nsIDOMSVGLength> mX2;
   nsCOMPtr<nsIDOMSVGLength> mY2;
 };
+
+NS_INTERFACE_MAP_BEGIN(nsSVGLineFrame)
+  NS_INTERFACE_MAP_ENTRY(nsISVGMarkable)
+NS_INTERFACE_MAP_END_INHERITING(nsSVGPathGeometryFrame)
 
 //----------------------------------------------------------------------
 // Implementation
@@ -196,8 +211,28 @@ NS_IMETHODIMP nsSVGLineFrame::ConstructPath(nsISVGRendererPathBuilder* pathBuild
   return NS_OK;
 }
 
-// const nsStyleSVG* nsSVGLineFrame::GetStyle()
-// {
-//   // XXX TODO: strip out any fill color as per svg specs
-//   return nsSVGGraphicFrame::GetStyle();
-// }
+//----------------------------------------------------------------------
+// nsISVGMarkable methods:
+
+void
+nsSVGLineFrame::GetMarkPoints(nsVoidArray *aMarks) {
+  float x1,y1,x2,y2;
+
+  mX1->GetValue(&x1);
+  mY1->GetValue(&y1);
+  mX2->GetValue(&x2);
+  mY2->GetValue(&y2);
+
+  nsSVGMark *m1, *m2;
+  m1 = new nsSVGMark();
+  m2 = new nsSVGMark();
+
+  m1->x = x1;
+  m1->y = y1;
+  m2->x = x2;
+  m2->y = y2;
+  m1->angle = m2->angle = atan2(y2-y1, x2-x1);
+
+  aMarks->AppendElement(m1);
+  aMarks->AppendElement(m2);
+}

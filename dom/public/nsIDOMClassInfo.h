@@ -255,6 +255,7 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_SVGImageElement_id,
   eDOMClassInfo_SVGLinearGradientElement_id,
   eDOMClassInfo_SVGLineElement_id,
+  eDOMClassInfo_SVGMarkerElement_id,
   eDOMClassInfo_SVGPathElement_id,
   eDOMClassInfo_SVGPolygonElement_id,
   eDOMClassInfo_SVGPolylineElement_id,
@@ -270,6 +271,8 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_SVGUseElement_id,
 
   // other SVG classes
+  eDOMClassInfo_SVGAngle_id,
+  eDOMClassInfo_SVGAnimatedAngle_id,
   eDOMClassInfo_SVGAnimatedEnumeration_id,
   eDOMClassInfo_SVGAnimatedLength_id,
   eDOMClassInfo_SVGAnimatedLengthList_id,

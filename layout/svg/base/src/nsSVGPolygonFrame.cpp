@@ -42,8 +42,10 @@
 #include "nsIDOMSVGPoint.h"
 //#include "nsASVGPathBuilder.h"
 #include "nsISVGRendererPathBuilder.h"
+#include "nsISVGMarkable.h"
 
-class nsSVGPolygonFrame : public nsSVGPathGeometryFrame
+class nsSVGPolygonFrame : public nsSVGPathGeometryFrame,
+                          public nsISVGMarkable
 {
 protected:
   friend nsresult
@@ -61,7 +63,22 @@ public:
   NS_IMETHOD ConstructPath(nsISVGRendererPathBuilder *pathBuilder);
   
   nsCOMPtr<nsIDOMSVGPointList> mPoints;
+
+  // nsISVGMarkable interface
+  void GetMarkPoints(nsVoidArray *aMarks);
+
+   // nsISupports interface:
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+
+private:
+  NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
+  NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }  
 };
+
+
+NS_INTERFACE_MAP_BEGIN(nsSVGPolygonFrame)
+  NS_INTERFACE_MAP_ENTRY(nsISVGMarkable)
+NS_INTERFACE_MAP_END_INHERITING(nsSVGPathGeometryFrame)
 
 //----------------------------------------------------------------------
 // Implementation
@@ -154,4 +171,58 @@ NS_IMETHODIMP nsSVGPolygonFrame::ConstructPath(nsISVGRendererPathBuilder* pathBu
   pathBuilder->ClosePath(&x,&y);
 
   return NS_OK;
+}
+
+//----------------------------------------------------------------------
+// nsISVGMarkable methods:
+
+void
+nsSVGPolygonFrame::GetMarkPoints(nsVoidArray *aMarks) {
+
+  if (!mPoints)
+    return;
+
+  PRUint32 count;
+  mPoints->GetNumberOfItems(&count);
+  if (count == 0)
+    return;
+  
+  float px = 0.0, py = 0.0, prevAngle, startAngle;
+
+  nsCOMPtr<nsIDOMSVGPoint> point;
+  for (PRUint32 i = 0; i < count; ++i) {
+    mPoints->GetItem(i, getter_AddRefs(point));
+
+    float x, y;
+    point->GetX(&x);
+    point->GetY(&y);
+
+    float angle = atan2(y-py, x-px);
+    if (i == 1)
+      startAngle = angle;
+    else if (i > 1)
+      ((nsSVGMark *)aMarks->ElementAt(aMarks->Count()-1))->angle = 
+        nsSVGMarkerFrame::bisect(prevAngle, angle);
+
+    nsSVGMark *mark;
+    mark = new nsSVGMark;
+    mark->x = x;
+    mark->y = y;
+    aMarks->AppendElement(mark);
+
+    prevAngle = angle;
+    px = x;
+    py = y;
+  }
+
+  float nx, ny, angle;
+  mPoints->GetItem(0, getter_AddRefs(point));
+  point->GetX(&nx);
+  point->GetY(&ny);
+  angle = atan2(ny - py, nx - px);
+
+  ((nsSVGMark *)aMarks->ElementAt(aMarks->Count()-1))->angle = 
+    nsSVGMarkerFrame::bisect(prevAngle, angle);
+  ((nsSVGMark *)aMarks->ElementAt(0))->angle =
+    nsSVGMarkerFrame::bisect(angle, startAngle);
 }

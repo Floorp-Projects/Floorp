@@ -857,6 +857,9 @@ nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
   mFill = aSource.mFill;
   mFillOpacity = aSource.mFillOpacity;
   mFillRule = aSource.mFillRule;
+  mMarkerEnd = aSource.mMarkerEnd;
+  mMarkerMid = aSource.mMarkerMid;
+  mMarkerEnd = aSource.mMarkerStart;
   mPointerEvents = aSource.mPointerEvents;
   mShapeRendering = aSource.mShapeRendering;
   mStopColor = aSource.mStopColor;
@@ -889,6 +892,9 @@ nsChangeHint nsStyleSVG::CalcDifference(const nsStyleSVG& aOther) const
   if ( mFill                  != aOther.mFill                  ||
        mFillOpacity           != aOther.mFillOpacity           ||
        mFillRule              != aOther.mFillRule              ||
+       !EqualURIs(mMarkerEnd, aOther.mMarkerEnd)               ||
+       !EqualURIs(mMarkerMid, aOther.mMarkerMid)               ||
+       !EqualURIs(mMarkerStart, aOther.mMarkerStart)           ||
        mPointerEvents         != aOther.mPointerEvents         ||
        mShapeRendering        != aOther.mShapeRendering        ||
        mStopColor             != aOther.mStopColor             ||

@@ -63,6 +63,8 @@ REQUIRES	= xpcom \
 		  unicharutil
 
 CPPSRCS		= \
+		nsSVGAngle.cpp \
+		nsSVGAnimatedAngle.cpp \
 		nsSVGAnimatedEnumeration.cpp \
 		nsSVGAnimatedLength.cpp \
 		nsSVGAnimatedLengthList.cpp \
@@ -91,6 +93,7 @@ CPPSRCS		= \
 		nsSVGLength.cpp \
 		nsSVGLengthList.cpp \
 		nsSVGLineElement.cpp \
+		nsSVGMarkerElement.cpp \
 		nsSVGMatrix.cpp \
 		nsSVGNumber.cpp \
 		nsSVGNumberList.cpp \

@@ -306,6 +306,8 @@
 #include "nsIDOMXPathEvaluator.h"
 
 #ifdef MOZ_SVG
+#include "nsIDOMSVGAngle.h"
+#include "nsIDOMSVGAnimatedAngle.h"
 #include "nsIDOMSVGAnimatedEnum.h"
 #include "nsIDOMSVGAnimatedLength.h"
 #include "nsIDOMSVGAnimatedLengthList.h"
@@ -332,6 +334,7 @@
 #include "nsIDOMSVGLengthList.h"
 #include "nsIDOMSVGLineElement.h"
 #include "nsIDOMSVGLocatable.h"
+#include "nsIDOMSVGMarkerElement.h"
 #include "nsIDOMSVGMatrix.h"
 #include "nsIDOMSVGNumber.h"
 #include "nsIDOMSVGNumberList.h"
@@ -838,6 +841,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGLineElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGMarkerElement, nsElementSH,
+                           ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGPathElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGPolygonElement, nsElementSH,
@@ -866,6 +871,10 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            ELEMENT_SCRIPTABLE_FLAGS)
 
   // other SVG classes
+  NS_DEFINE_CLASSINFO_DATA(SVGAngle, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGAnimatedAngle, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGAnimatedEnumeration, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGAnimatedLength, nsDOMGenericSH,
@@ -2364,6 +2373,11 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_SVG_GRAPHIC_ELEMENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
+  DOM_CLASSINFO_MAP_BEGIN(SVGMarkerElement, nsIDOMSVGMarkerElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGMarkerElement)
+    DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
   DOM_CLASSINFO_MAP_BEGIN(SVGPathElement, nsIDOMSVGPathElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGPathElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGAnimatedPathData)
@@ -2446,6 +2460,14 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_END
 
   // other SVG classes
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGAngle, nsIDOMSVGAngle)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGAngle)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGAnimatedAngle, nsIDOMSVGAnimatedAngle)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGAnimatedAngle)
+  DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(SVGAnimatedEnumeration, nsIDOMSVGAnimatedEnumeration)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGAnimatedEnumeration)

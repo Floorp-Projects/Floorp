@@ -55,14 +55,6 @@ NS_NewSVGDefsFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aN
 {
   *aNewFrame = nsnull;
   
-  nsCOMPtr<nsIDOMSVGTransformable> transformable = do_QueryInterface(aContent);
-  if (!transformable) {
-#ifdef DEBUG
-    printf("warning: trying to construct an SVGDefsFrame for a content element that doesn't support the right interfaces\n");
-#endif
-    return NS_ERROR_FAILURE;
-  }
-  
   nsSVGDefsFrame* it = new (aPresShell) nsSVGDefsFrame;
   if (nsnull == it)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -79,7 +71,9 @@ nsSVGDefsFrame::nsSVGDefsFrame()
 nsSVGDefsFrame::~nsSVGDefsFrame()
 {
   nsCOMPtr<nsIDOMSVGTransformable> transformable = do_QueryInterface(mContent);
-  NS_ASSERTION(transformable, "wrong content element");
+  if (!transformable)
+    return;
+
   nsCOMPtr<nsIDOMSVGAnimatedTransformList> transforms;
   transformable->GetTransform(getter_AddRefs(transforms));
   nsCOMPtr<nsISVGValue> value = do_QueryInterface(transforms);
@@ -91,7 +85,9 @@ nsSVGDefsFrame::~nsSVGDefsFrame()
 nsresult nsSVGDefsFrame::Init()
 {
   nsCOMPtr<nsIDOMSVGTransformable> transformable = do_QueryInterface(mContent);
-  NS_ASSERTION(transformable, "wrong content element");
+  if (!transformable)
+    return NS_OK;
+
   nsCOMPtr<nsIDOMSVGAnimatedTransformList> transforms;
   transformable->GetTransform(getter_AddRefs(transforms));
   nsCOMPtr<nsISVGValue> value = do_QueryInterface(transforms);

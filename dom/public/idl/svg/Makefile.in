@@ -49,6 +49,8 @@ XPIDL_MODULE	= dom_svg
 
 
 XPIDLSRCS	= \
+		nsIDOMSVGAngle.idl \
+		nsIDOMSVGAnimatedAngle.idl \
 		nsIDOMSVGAnimatedEnum.idl \
 		nsIDOMSVGAnimatedLength.idl \
 		nsIDOMSVGAnimatedLengthList.idl \
@@ -75,6 +77,7 @@ XPIDLSRCS	= \
 		nsIDOMSVGLengthList.idl \
 		nsIDOMSVGLineElement.idl \
 		nsIDOMSVGLocatable.idl \
+		nsIDOMSVGMarkerElement.idl \
 		nsIDOMSVGMatrix.idl \
 		nsIDOMSVGNumber.idl \
 		nsIDOMSVGNumberList.idl \

@@ -301,6 +301,7 @@ protected:
 
 #ifdef MOZ_SVG
   PRBool ParseDasharray(nsresult& aErrorCode);
+  PRBool ParseMarker(nsresult& aErrorCode);
 #endif
 
   // Reused utility parsing routines
@@ -4001,6 +4002,13 @@ PRBool CSSParserImpl::ParseProperty(nsresult& aErrorCode,
   case eCSSProperty_text_shadow:
     return ParseTextShadow(aErrorCode);
 
+#ifdef MOZ_SVG
+  case eCSSProperty_stroke_dasharray:
+    return ParseDasharray(aErrorCode);
+  case eCSSProperty_marker:
+    return ParseMarker(aErrorCode);
+#endif
+
   // Strip out properties we use internally. These properties are used
   // by compound property parsing routines (e.g. "background-position").
   case eCSSProperty_background_x_position:
@@ -4024,11 +4032,6 @@ PRBool CSSParserImpl::ParseProperty(nsresult& aErrorCode,
     // The user can't use these
     REPORT_UNEXPECTED(PEInaccessibleProperty);
     return PR_FALSE;
-
-#ifdef MOZ_SVG
-  case eCSSProperty_stroke_dasharray:
-    return ParseDasharray(aErrorCode);
-#endif
 
   default:  // must be single property
     {
@@ -4121,6 +4124,7 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty_COUNT:
 #ifdef MOZ_SVG
   case eCSSProperty_stroke_dasharray:
+  case eCSSProperty_marker:
 #endif
     NS_ERROR("not a single value property");
     return PR_FALSE;
@@ -4240,6 +4244,10 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty_fill_rule:
     return ParseVariant(aErrorCode, aValue, VARIANT_HK,
                         nsCSSProps::kFillRuleKTable);
+  case eCSSProperty_marker_end:
+  case eCSSProperty_marker_mid:
+  case eCSSProperty_marker_start:
+    return ParseVariant(aErrorCode, aValue, VARIANT_HUO, nsnull);
   case eCSSProperty_pointer_events:
     return ParseVariant(aErrorCode, aValue, VARIANT_HK,
                         nsCSSProps::kPointerEventsKTable);
@@ -5795,6 +5803,21 @@ PRBool CSSParserImpl::ParseDasharray(nsresult& aErrorCode)
       }
     }
     delete listHead;
+  }
+  return PR_FALSE;
+}
+
+PRBool CSSParserImpl::ParseMarker(nsresult& aErrorCode)
+{
+  nsCSSValue marker;
+  if (ParseSingleValueProperty(aErrorCode, marker, eCSSProperty_marker_end)) {
+    if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
+      AppendValue(eCSSProperty_marker_end, marker);
+      AppendValue(eCSSProperty_marker_mid, marker);
+      AppendValue(eCSSProperty_marker_start, marker);
+      aErrorCode = NS_OK;
+      return PR_TRUE;
+    }
   }
   return PR_FALSE;
 }
