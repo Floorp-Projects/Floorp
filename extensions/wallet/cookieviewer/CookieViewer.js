@@ -305,6 +305,7 @@ function AddItem(children,cells,prefix,idfier)
   for(var i = 0; i < cells.length; i++)
   {
     var cell  = document.createElement("treecell");
+    cell.setAttribute("class", "propertylist");
     cell.setAttribute("value", cells[i])
     row.appendChild(cell);
   }
