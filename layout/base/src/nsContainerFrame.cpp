@@ -299,18 +299,6 @@ PRBool nsContainerFrame::IsPseudoFrame() const
   return result;
 }
 
-// Returns true if aChild is being used as a pseudo frame
-PRBool nsContainerFrame::ChildIsPseudoFrame(const nsIFrame* aChild) const
-{
-  nsIContent* childContent;
-  PRBool      result;
-   
-  aChild->GetContent(childContent);
-  result = childContent == mContent;
-  NS_RELEASE(childContent);
-  return result;
-}
-
 /////////////////////////////////////////////////////////////////////////////
 // Helper member functions
 
@@ -812,26 +800,6 @@ void nsContainerFrame::DumpTree() const
   }
 
   root->List();
-}
-
-/**
- * A container is empty if it has no children, or it has exactly one
- * child and that child is a pseudo-frame and it's empty (recursively
- * applied if that child contains one child which is a
- * pseudo-frame...)
- */
-PRBool nsContainerFrame::IsEmpty()
-{
-  if (nsnull == mFirstChild) {
-    return PR_TRUE;
-  }
-  if (mChildCount > 1) {
-    return PR_FALSE;
-  }
-  if (ChildIsPseudoFrame(mFirstChild)) {
-    return ((nsContainerFrame*)mFirstChild)->IsEmpty();
-  }
-  return PR_FALSE;
 }
 
 #endif
