@@ -557,7 +557,7 @@ Contributor(s): ______________________________________. -->
       <menuitem value="&BloatDumpNewCmd.label;" oncommand="window.content.location.href='about:bloat?new'"/>
       <menuitem value="&BloatDumpAllCmd.label;" oncommand="window.content.location.href='about:bloat'"/>
       <menuitem value="&BloatClearCmd.label;"   oncommand="window.content.location.href='about:bloat?clear'"/>
-      <menuitem value="&BloatLeaksCmd.label;"   oncommand="window.content.location.href='about:bloat?leaks'"/>
+      <menuitem value="&BloatLeaksCmd.label;"   oncommand="dumpMemoryLeaks();"/>
     </menupopup>
   </menu>
   <spring flex="100%"/>
