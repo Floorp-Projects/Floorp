@@ -1931,6 +1931,7 @@ nsDocShell::AddChild(nsIDocShellTreeItem * aChild)
     // Do some docShell Specific stuff.
     nsXPIDLString defaultCharset;
     nsXPIDLString forceCharset;
+    float textZoom = 1.0;
     NS_ENSURE_TRUE(mContentViewer, NS_ERROR_FAILURE);
 
     nsCOMPtr<nsIMarkupDocumentViewer> muDV =
@@ -1941,6 +1942,9 @@ nsDocShell::AddChild(nsIDocShellTreeItem * aChild)
                           NS_ERROR_FAILURE);
         NS_ENSURE_SUCCESS(muDV->
                           GetForceCharacterSet(getter_Copies(forceCharset)),
+                          NS_ERROR_FAILURE);
+        NS_ENSURE_SUCCESS(muDV->
+                          GetTextZoom(&textZoom),
                           NS_ERROR_FAILURE);
     }
     nsCOMPtr<nsIContentViewer> childCV;
@@ -1954,6 +1958,8 @@ nsDocShell::AddChild(nsIDocShellTreeItem * aChild)
             NS_ENSURE_SUCCESS(childmuDV->SetDefaultCharacterSet(defaultCharset),
                               NS_ERROR_FAILURE);
             NS_ENSURE_SUCCESS(childmuDV->SetForceCharacterSet(forceCharset),
+                              NS_ERROR_FAILURE);
+            NS_ENSURE_SUCCESS(childmuDV->SetTextZoom(textZoom),
                               NS_ERROR_FAILURE);
         }
     }
