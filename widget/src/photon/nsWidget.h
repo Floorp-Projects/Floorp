@@ -165,6 +165,7 @@ class nsWidget : public nsBaseWidget
     void              InitDamageQueue();
     static int        GotFocusCallback( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo );
     static int        LostFocusCallback( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo );
+//    virtual void      NativePaint( PhRect_t &extent );
 
     PtWidget_t *mWidget;
     nsIWidget  *mParent;
@@ -182,8 +183,8 @@ class nsWidget : public nsBaseWidget
     static DamageQueueEntry *mDmgQueue;
     static PRBool           mDmgQueueInited;
     static PtWorkProcId_t   *mWorkProcID;
-    PRBool mCreateHold;
-    PRBool mHold;
+//    PRBool mCreateHold;
+//    PRBool mHold;
 };
 
 #endif /* nsWidget_h__ */
