@@ -540,6 +540,19 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
   nsresult res;
   nsCOMPtr<nsIDOMNode> selNode;
   PRInt32 selOffset;
+  PRInt32 start=0;  PRInt32 end=0;  
+
+  // handle docs with a max length
+  res = TruncateInsertionIfNeeded(aSelection, inString, outString, aMaxLength);
+  if (NS_FAILED(res)) return res;
+  
+  // handle password field docs
+  if (mFlags & nsIHTMLEditor::eEditorPasswordMask)
+  {
+    res = mEditor->GetTextSelectionOffsets(aSelection, start, end);
+    NS_ASSERTION((NS_SUCCEEDED(res)), "getTextSelectionOffsets failed!");
+    if (NS_FAILED(res)) return res;
+  }
 
   char specialChars[] = {'\t','\n',0};
   
@@ -559,6 +572,29 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
   // we want to ignore result of WillInsert()
   *aCancel = PR_FALSE;
   
+  // handle password field data
+  // this has the side effect of changing all the characters in aOutString
+  // to the replacement character
+  if (mFlags & nsIHTMLEditor::eEditorPasswordMask)
+  {
+    res = EchoInsertionToPWBuff(start, end, outString);
+    if (NS_FAILED(res)) return res;
+  }
+
+  // if we're a single line control, pretreat the input string to remove returns
+  // this is unnecessary if we use <BR>'s for breaks in "plain text", because
+  // InsertBreak() checks the string.  But we don't currently do that, so we need this
+  // fixes bug 21032 
+  // *** there's some debate about whether we should replace CRLF with spaces, or
+  //     truncate the string at the first CRLF.  Here, we replace with spaces.
+  // Hack: I stripped out this test for IME inserts - it screws up double byte chars
+  // that happen to end in the same values as CR or LF.  Bug 27699
+  if (inString->IsEmpty() && (aAction != kInsertTextIME))
+  if ((nsIHTMLEditor::eEditorSingleLineMask & mFlags) && (aAction != kInsertTextIME))
+  {
+    outString->ReplaceChar(CRLF, ' ');
+  }
+
   // get the (collapsed) selection location
   res = mEditor->GetStartNodeAndOffset(aSelection, &selNode, &selOffset);
   if (NS_FAILED(res)) return res;

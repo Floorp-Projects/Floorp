@@ -3599,7 +3599,53 @@ nsHTMLEditor::GetDocumentIsEmpty(PRBool *aDocumentIsEmpty)
 NS_IMETHODIMP
 nsHTMLEditor::GetDocumentLength(PRInt32 *aCount)                                              
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (!aCount) { return NS_ERROR_NULL_POINTER; }
+  nsresult result;
+  // initialize out params
+  *aCount = 0;
+  
+  // special-case for empty document, to account for the bogus text node
+  PRBool docEmpty;
+  result = GetDocumentIsEmpty(&docEmpty);
+  if (NS_FAILED(result)) return result;
+  if (docEmpty)
+  {
+    *aCount = 0;
+    return NS_OK;
+  }
+  
+  // get the body node
+  nsCOMPtr<nsIDOMElement> bodyElement;
+  result = nsEditor::GetBodyElement(getter_AddRefs(bodyElement));
+  if (NS_FAILED(result)) { return result; }
+  if (!bodyElement) { return NS_ERROR_NULL_POINTER; }
+
+  // get the offsets of the first and last children of the body node
+  nsCOMPtr<nsIDOMNode>bodyNode = do_QueryInterface(bodyElement);
+  if (!bodyNode) { return NS_ERROR_NULL_POINTER; }
+  PRInt32 numBodyChildren=0;
+  nsCOMPtr<nsIDOMNode>lastChild;
+  result = bodyNode->GetLastChild(getter_AddRefs(lastChild));
+  if (NS_FAILED(result)) { return result; }
+  if (!lastChild) { return NS_ERROR_NULL_POINTER; }
+  result = GetChildOffset(lastChild, bodyNode, numBodyChildren);
+  if (NS_FAILED(result)) { return result; }
+
+  // count
+  PRInt32 start, end;
+  result = GetAbsoluteOffsetsForPoints(bodyNode, 0, 
+                                       bodyNode, numBodyChildren, 
+                                       bodyNode, start, end);
+  if (NS_SUCCEEDED(result))
+  {
+    NS_ASSERTION(0==start, "GetAbsoluteOffsetsForPoints failed to set start correctly.");
+    NS_ASSERTION(0<=end, "GetAbsoluteOffsetsForPoints failed to set end correctly.");
+    if (0<=end) {
+      *aCount = end;
+      printf ("count = %d\n", *aCount);
+    }
+  }
+  return result;
 }
 
 NS_IMETHODIMP nsHTMLEditor::SetMaxTextLength(PRInt32 aMaxTextLength)
