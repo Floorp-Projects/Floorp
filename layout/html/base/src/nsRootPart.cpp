@@ -591,6 +591,15 @@ NS_METHOD RootContentFrame::HandleEvent(nsIPresContext& aPresContext,
         }
       }
       break;
+    case NS_MOUSE_LEFT_BUTTON_UP:
+      {
+        nsIEventStateManager *mStateManager;
+        if (NS_OK == aPresContext.GetEventStateManager(&mStateManager)) {
+          mStateManager->SetActiveLink(nsnull);
+          NS_RELEASE(mStateManager);
+        }
+      }
+      break;
     }
   }
 

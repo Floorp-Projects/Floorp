@@ -3,6 +3,7 @@
         readonly attribute  Window self;
 	readonly attribute  Document document;
 	readonly attribute  Navigator navigator;
+	readonly attribute  Window opener;
 	void  dump(in wstring str);
 	void  alert(in wstring str);
  
@@ -10,5 +11,6 @@
         void clearInterval(in long timerID);
         long setTimeout(/* ... */);
         long setInterval(/* ... */);
+        long open(/* ... */);
       };
 

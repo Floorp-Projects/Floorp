@@ -52,6 +52,7 @@
 #include "nsXIFDTD.h"
 #include "nsIParser.h"
 #include "nsHTMLContentSinkStream.h"
+#include "nsEditorMode.h"
 
 #include "resources.h"
 
@@ -85,7 +86,6 @@
 #else
 #define STATUS_HEIGHT 28
 #endif
-
 #ifdef INSET_WEBSHELL
 #define WEBSHELL_LEFT_INSET 5
 #define WEBSHELL_RIGHT_INSET 5
@@ -281,6 +281,9 @@ HandleLocationEvent(nsGUIEvent *aEvent)
       bw->GoTo(text);
     }
     break;
+  default:
+    break;
+
   }
 
   return nsEventStatus_eIgnore;
@@ -331,7 +334,16 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
       LoadURL(url);
     }
     break;
+  
+  case JS_CONSOLE:
+    DoJSConsole();
+    break;
+
+  case EDITOR_MODE:
+    DoEditorMode();
+    break;
   }
+
   return nsEventStatus_eIgnore;
 }
 
@@ -707,9 +719,13 @@ nsBrowserWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
     mThrobber->MoveTo(aWidth - THROBBER_WIDTH, 0);
   }
 
-  nsRect rr(0, BUTTON_HEIGHT,
-            aWidth,
-            aHeight - BUTTON_HEIGHT);
+  nsRect rr(0, 0, aWidth, aHeight);
+
+  if (mLocation) {
+    rr.y += BUTTON_HEIGHT;
+    rr.height -= BUTTON_HEIGHT;
+  }
+
   if (mStatus) {
     mStatus->Resize(0, aHeight - STATUS_HEIGHT,
                     aWidth, STATUS_HEIGHT,
@@ -769,6 +785,12 @@ nsBrowserWindow::Hide()
 }
 
 NS_IMETHODIMP
+nsBrowserWindow::OpenWindow(const nsString& aURL, PRUint32 aNewChromeMask, nsIBrowserWindow*& aNewWindow)
+{
+  return mApp->OpenWindow(aURL, aNewChromeMask, aNewWindow);
+}
+
+NS_IMETHODIMP
 nsBrowserWindow::ChangeChrome(PRUint32 aChromeMask)
 {
   // XXX write me
@@ -818,8 +840,9 @@ nsBrowserWindow::GetTitle(nsString& aResult)
 NS_IMETHODIMP
 nsBrowserWindow::SetStatus(const nsString& aStatus)
 {
-  NS_PRECONDITION(nsnull != mStatus, "null window");
-  mStatus->SetText(aStatus);
+  if (nsnull != mStatus) {
+    mStatus->SetText(aStatus);
+  }
   return NS_OK;
 }
 
@@ -1126,6 +1149,31 @@ nsBrowserWindow::DoCopy()
 }
 
 //----------------------------------------------------------------------
+
+void
+nsBrowserWindow::DoJSConsole()
+{
+  mApp->CreateJSConsole(this);
+}
+
+void
+nsBrowserWindow::DoEditorMode()
+{
+  nsIPresShell* shell = GetPresShell();
+  if (nsnull != shell) {
+    nsIDocument* doc = shell->GetDocument();
+    if (nsnull != doc) {
+      nsIDOMDocument *domdoc = nsnull;
+      doc->QueryInterface(kIDOMDocumentIID, (void**) &domdoc);
+      if (nsnull != domdoc) {
+        NS_InitEditorMode(domdoc);
+        NS_RELEASE(domdoc);
+      }
+      NS_RELEASE(doc);
+    }
+    NS_RELEASE(shell);
+  }
+}
 
 #ifdef NS_DEBUG
 #include "nsIContent.h"
@@ -1526,32 +1574,6 @@ nsBrowserWindow::DoSiteWalker()
   mApp->CreateSiteWalker(this);
 }
 
-void
-nsBrowserWindow::DoJSConsole()
-{
-  mApp->CreateJSConsole(this);
-}
-
-#include "nsEditorMode.h"
-void
-nsBrowserWindow::DoEditorMode()
-{
-  nsIPresShell* shell = GetPresShell();
-  if (nsnull != shell) {
-    nsIDocument* doc = shell->GetDocument();
-    if (nsnull != doc) {
-      nsIDOMDocument *domdoc = nsnull;
-      doc->QueryInterface(kIDOMDocumentIID, (void**) &domdoc);
-      if (nsnull != domdoc) {
-        NS_InitEditorMode(domdoc);
-        NS_RELEASE(domdoc);
-      }
-      NS_RELEASE(doc);
-    }
-    NS_RELEASE(shell);
-  }
-}
-
 nsEventStatus
 nsBrowserWindow::DispatchDebugMenu(PRInt32 aID)
 {
@@ -1636,14 +1658,6 @@ nsBrowserWindow::DispatchDebugMenu(PRInt32 aID)
 
   case VIEWER_TOP100:
     DoSiteWalker();
-    break;
-
-  case JS_CONSOLE:
-    DoJSConsole();
-    break;
-
-  case EDITOR_MODE:
-    DoEditorMode();
     break;
   }
   return(result);

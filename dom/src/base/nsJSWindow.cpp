@@ -48,7 +48,8 @@ enum Window_slots {
   WINDOW_WINDOW = -11,
   WINDOW_SELF = -12,
   WINDOW_DOCUMENT = -13,
-  WINDOW_NAVIGATOR = -14
+  WINDOW_NAVIGATOR = -14,
+  WINDOW_OPENER = -15
 };
 
 /***********************************************************************/
@@ -152,6 +153,33 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsIDOMNavigator* prop;
         if (NS_OK == a->GetNavigator(&prop)) {
+          // get the js object
+          if (prop != nsnull) {
+            nsIScriptObjectOwner *owner = nsnull;
+            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+              JSObject *object = nsnull;
+              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+                // set the return value
+                *vp = OBJECT_TO_JSVAL(object);
+              }
+              NS_RELEASE(owner);
+            }
+            NS_RELEASE(prop);
+          }
+          else {
+            *vp = JSVAL_NULL;
+          }
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case WINDOW_OPENER:
+      {
+        nsIDOMWindow* prop;
+        if (NS_OK == a->GetOpener(&prop)) {
           // get the js object
           if (prop != nsnull) {
             nsIScriptObjectOwner *owner = nsnull;
@@ -522,6 +550,40 @@ WindowSetInterval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 }
 
 
+//
+// Native method Open
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowOpen(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *nativeThis = (nsIDOMWindow*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  PRInt32 nativeRet;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->Open(cx, argv+0, argc-0, &nativeRet)) {
+      return JS_FALSE;
+    }
+
+    *rval = INT_TO_JSVAL(nativeRet);
+  }
+  else {
+    JS_ReportError(cx, "Function open requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
 /***********************************************************************/
 //
 // class for Window
@@ -549,6 +611,7 @@ static JSPropertySpec WindowProperties[] =
   {"self",    WINDOW_SELF,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"document",    WINDOW_DOCUMENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"navigator",    WINDOW_NAVIGATOR,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"opener",    WINDOW_OPENER,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 
@@ -564,6 +627,7 @@ static JSFunctionSpec WindowMethods[] =
   {"clearInterval",          WindowClearInterval,     1},
   {"setTimeout",          WindowSetTimeout,     0},
   {"setInterval",          WindowSetInterval,     0},
+  {"open",          WindowOpen,     0},
   {0}
 };
 
