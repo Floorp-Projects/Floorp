@@ -65,15 +65,22 @@ endif
 echo "Testing conversion of XIF entities ..."
 TestOutput -i text/xif -o text/plain -c OutTestData/entityxif.out OutTestData/entityxif.xif
 if ($status != 0) then
-  echo "XIF entity convertsion test failed."
+  echo "XIF entity conversion test failed."
   set errmsg = ($errmsg "entityxif.out")
 endif
 
 echo "Testing XIF to HTML ..."
 TestOutput -i text/xif -o text/html -c OutTestData/xifstuff.out OutTestData/xifstuff.xif
 if ($status != 0) then
-  echo "XIF entity convertsion test failed."
-  set errmsg = ($errmsg "entityxif.out")
+  echo "XIF to HTML conversion test failed."
+  set errmsg = ($errmsg "xifstuff.out")
+endif
+
+echo "Testing HTML Table to Text ..."
+TestOutput -i text/html -o text/plain -c OutTestData/htmltable.out OutTestData/htmltable.html
+if ($status != 0) then
+  echo "HTML Table to Plain text failed."
+  set errmsg = ($errmsg "htmltable.out")
 endif
 
 if (errmsg != "") then

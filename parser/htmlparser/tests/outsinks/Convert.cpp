@@ -176,7 +176,7 @@ int main(int argc, char** argv)
 Usage: %s [-i intype] [-o outtype] [-f flags] [-w wrapcol] [-c comparison_file] infile\n\
 \tIn/out types are mime types (e.g. text/html)\n\
 \tcomparison_file is a file against which to compare the output\n\
-\t  (not yet implemented\n\
+\n\
 \tDefaults are -i text/html -o text/plain -f 0 -w 72 [stdin]\n",
                progname);
         exit(0);
