@@ -31,6 +31,7 @@
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsHTMLParts.h"
+#include "nsStyleUtil.h"
 
 /* for collections */
 #include "nsIDOMElement.h"
@@ -885,6 +886,11 @@ nsHTMLTableElement::StringToAttribute(nsIAtom* aAttribute,
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
+  else if (aAttribute == nsHTMLAtoms::bordercolor) {
+    if (nsGenericHTMLElement::ParseColor(aValue, mInner.mDocument, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
+  }
   else if (aAttribute == nsHTMLAtoms::frame) {
     if (nsGenericHTMLElement::ParseEnumValue(aValue, kFrameTable, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
@@ -1036,16 +1042,24 @@ MapTableBorderInto(const nsIHTMLMappedAttributes* aAttributes,
     aPresContext->GetScaledPixelsToTwips(&p2t);
     nsStyleCoord twips;
     if (borderValue.GetUnit() != eHTMLUnit_Pixel) {
-      tableStyle->mRules=NS_STYLE_TABLE_RULES_ALL;  // non-0 values of border imply default rules=all
+      // empty values of border get rules=all and frame=border
+      tableStyle->mRules = NS_STYLE_TABLE_RULES_ALL;  
+      tableStyle->mFrame = NS_STYLE_TABLE_FRAME_BORDER;
       twips.SetCoordValue(NSIntPixelsToTwips(1, p2t));
     }
     else {
       PRInt32 borderThickness = borderValue.GetPixelValue();
       twips.SetCoordValue(NSIntPixelsToTwips(borderThickness, p2t));
-      if (0!=borderThickness)
-        tableStyle->mRules=NS_STYLE_TABLE_RULES_ALL;  // non-0 values of border imply default rules=all
-      else
-        tableStyle->mRules=NS_STYLE_TABLE_RULES_NONE; // 0 value of border imply default rules=none
+      if (0 != borderThickness) {
+        // border != 0 implies rules=all and frame=border
+        tableStyle->mRules = NS_STYLE_TABLE_RULES_ALL;  
+        tableStyle->mFrame = NS_STYLE_TABLE_FRAME_BORDER;
+      }
+      else {
+        // border = 0 implies rules=none and frame=void
+        tableStyle->mRules = NS_STYLE_TABLE_RULES_NONE; 
+        tableStyle->mFrame = NS_STYLE_TABLE_FRAME_NONE;
+      }
     }
 
     // by default, set all border sides to the specified width
@@ -1060,8 +1074,8 @@ MapTableBorderInto(const nsIHTMLMappedAttributes* aAttributes,
 
 static void
 MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
-                  nsIStyleContext* aContext,
-                  nsIPresContext* aPresContext)
+                  nsIStyleContext*               aContext,
+                  nsIPresContext*                aPresContext)
 {
   NS_PRECONDITION(nsnull!=aContext, "bad style context arg");
   NS_PRECONDITION(nsnull!=aPresContext, "bad presentation context arg");
@@ -1075,9 +1089,42 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
     const nsStyleDisplay* readDisplay = (nsStyleDisplay*)
                 aContext->GetStyleData(eStyleStruct_Display);
     if (readDisplay && (readDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_CELL)) {
-      // handle attributes for table cell
-int x = 0;
-x += 1;
+      // set the cell's border from the table
+      aAttributes->GetAttribute(nsHTMLAtoms::border, value);
+      if ((value.GetUnit() == eHTMLUnit_Pixel) ||
+          (value.GetUnit() == eHTMLUnit_Empty)) {
+        float p2t;
+        aPresContext->GetPixelsToTwips(&p2t);
+        nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+        nsStyleSpacing* spacingStyle = (nsStyleSpacing*)aContext->GetMutableStyleData(eStyleStruct_Spacing);
+        nsStyleCoord width;
+        width.SetCoordValue(onePixel);
+
+        spacingStyle->mBorder.SetTop(width);
+        spacingStyle->mBorder.SetLeft(width);
+        spacingStyle->mBorder.SetBottom(width);
+        spacingStyle->mBorder.SetRight(width);
+
+        spacingStyle->SetBorderStyle(NS_SIDE_TOP,    NS_STYLE_BORDER_STYLE_BG_INSET);
+        spacingStyle->SetBorderStyle(NS_SIDE_LEFT,   NS_STYLE_BORDER_STYLE_BG_INSET);
+        spacingStyle->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_BG_INSET);
+        spacingStyle->SetBorderStyle(NS_SIDE_RIGHT,  NS_STYLE_BORDER_STYLE_BG_INSET);
+
+        nscolor borderColor = 0xFFC0C0C0;
+        // XXX the next line should be removed when bug 12905 is resolved - until then there is a memory leak
+        NS_ADDREF(aContext);
+        const nsStyleColor* colorData = 
+          nsStyleUtil::FindNonTransparentBackground(aContext);
+        if (colorData != nsnull) // we found a style context which has a background color 
+          borderColor = colorData->mBackgroundColor;
+        // if the border color is white, then shift to grey
+        if (borderColor == 0xFFFFFFFF)
+          borderColor = 0xFFC0C0C0;
+        spacingStyle->SetBorderColor(NS_SIDE_TOP,    borderColor);
+        spacingStyle->SetBorderColor(NS_SIDE_LEFT,   borderColor);
+        spacingStyle->SetBorderColor(NS_SIDE_BOTTOM, borderColor);
+        spacingStyle->SetBorderColor(NS_SIDE_RIGHT,  borderColor);
+      }
     }
     else {  // handle attributes for table
       // width
@@ -1114,6 +1161,17 @@ x += 1;
         default:
           break;
         }
+      }
+
+      // bordercolor
+      aAttributes->GetAttribute(nsHTMLAtoms::bordercolor, value);
+      if ((eHTMLUnit_Color == value.GetUnit()) || (eHTMLUnit_ColorName == value.GetUnit())) {
+        nscolor color = value.GetColorValue();
+        nsStyleSpacing* spacing = (nsStyleSpacing*)aContext->GetMutableStyleData(eStyleStruct_Spacing);
+        spacing->SetBorderColor(0, color);
+        spacing->SetBorderColor(1, color);
+        spacing->SetBorderColor(2, color);
+        spacing->SetBorderColor(3, color);
       }
 
       // border and frame
@@ -1212,6 +1270,9 @@ nsHTMLTableElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
       (aAttribute == nsHTMLAtoms::width) ||
       (aAttribute == nsHTMLAtoms::height)) {
     aHint = NS_STYLE_HINT_REFLOW;
+  }
+  else if (aAttribute == nsHTMLAtoms::bordercolor) {
+    aHint = NS_STYLE_HINT_VISUAL;
   }
   else if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
     if (! nsGenericHTMLElement::GetBackgroundAttributesImpact(aAttribute, aHint)) {
