@@ -61,7 +61,7 @@ import java.io.*;
  */
 
 public class TestArray {
-  public static final String NS_ARRAY_CID = "@mozilla.org/array;1";
+  public static final String NS_ARRAY_CONTRACTID = "@mozilla.org/array;1";
 
   public static void main(String [] args) {
     System.loadLibrary("javaxpcom");
@@ -72,10 +72,15 @@ public class TestArray {
     }
 
     File localFile = new File(mozillaPath);
-    GeckoEmbed.initEmbedding(localFile, null);
+    XPCOM.initXPCOM(localFile, null);
+    // XPCOM.initXPCOM() only initializes XPCOM.  If you want to initialize
+    // Gecko, you would do the following instead:
+    //    GeckoEmbed.initEmbedding(localFile, null);
 
     nsIComponentManager componentManager = XPCOM.getComponentManager();
-    nsIMutableArray array = (nsIMutableArray) componentManager.createInstanceByContractID(NS_ARRAY_CID, null, nsIMutableArray.NS_IMUTABLEARRAY_IID);
+    nsIMutableArray array = (nsIMutableArray)
+      componentManager.createInstanceByContractID(NS_ARRAY_CONTRACTID, null,
+                                                  nsIMutableArray.NS_IMUTABLEARRAY_IID);
     if (array == null) {
       throw new RuntimeException("Failed to create nsIMutableArray.");
     }
@@ -170,7 +175,8 @@ public class TestArray {
     localFile = null;
     componentManager = null;
     System.gc();
-    GeckoEmbed.termEmbedding();
+    XPCOM.shutdownXPCOM(null);
+    //    GeckoEmbed.termEmbedding();
 
     System.out.println("Test Passed.");
   }
