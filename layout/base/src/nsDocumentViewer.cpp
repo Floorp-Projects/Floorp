@@ -1381,6 +1381,7 @@ DocumentViewerImpl::PrintContent(nsIWebShell *      aParent,
   if (!doesContainFrameSet && CanPrint==PR_TRUE) {
 #endif
 
+if (!doesContainFrameSet) {
     NS_ENSURE_SUCCESS( aDContext->BeginDocument(), NS_ERROR_FAILURE );
     aDContext->GetDeviceSurfaceDimensions(width, height);
 
