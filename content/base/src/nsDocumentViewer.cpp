@@ -4001,13 +4001,7 @@ NS_IMETHODIMP DocumentViewerImpl::SelectAll()
   rv = selection->RemoveAllRanges();
   if (NS_FAILED(rv)) return rv;
 
-  static NS_DEFINE_CID(kCDOMRangeCID,           NS_RANGE_CID);
-  nsCOMPtr<nsIDOMRange> range = do_CreateInstance(kCDOMRangeCID, &rv);
-
-  rv = range->SelectNodeContents(bodyNode);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = selection->AddRange(range);
+  rv = selection->SelectAllChildren(bodyNode);
   return rv;
 }
 
