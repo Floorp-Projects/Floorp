@@ -451,9 +451,7 @@ static REGERR nr_OpenFile(char *path, FILEHANDLE *fh)
 #if defined(XP_MAC) || defined(XP_MACOSX)
         case opWrErr:
 #else
-#ifndef XP_OS2_VACPP
         case EROFS:     /* read-only file system */
-#endif
         case EACCES:    /* file in use or read-only file*/
 #endif
             /* try read only */
