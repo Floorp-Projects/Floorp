@@ -849,7 +849,7 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 		 news:/GROUP
 		 news://HOST/GROUP
 	   */
-	  m_currentGroup = group;
+	  m_currentGroup.Assign(group);
 
 	  if (PL_strchr ((const char *)m_currentGroup, '*')) {
 		m_typeWanted = LIST_WANTED;
@@ -1254,7 +1254,7 @@ PRInt32 nsNNTPProtocol::NewsResponse(nsIInputStream * inputStream, PRUint32 leng
             nsXPIDLString errorText;
             GetNewsStringByName("errorFromServer", getter_Copies(errorText));
             nsAutoString combinedMsg = NS_STATIC_CAST(const PRUnichar*, errorText);
-            combinedMsg += m_responseText;
+            combinedMsg.AppendWithConversion(m_responseText);
             rv = dialog->Alert(combinedMsg.GetUnicode());  
             // XXX:  todo, check rv?
         }
@@ -3310,7 +3310,7 @@ static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 nsresult nsNNTPProtocol::GetNewsStringByName(const char *aName, PRUnichar **aString)
 {
 	nsresult res;
-	nsAutoString	resultString = "???";
+	nsAutoString	resultString; resultString.AssignWithConversion("???");
 	if (!m_stringBundle)
 	{
 		char*       propertyURL = NEWS_MSGS_URL;
@@ -3325,16 +3325,16 @@ nsresult nsNNTPProtocol::GetNewsStringByName(const char *aName, PRUnichar **aStr
 	}
 	if (m_stringBundle)
 	{
-		nsAutoString unicodeName(aName);
+		nsAutoString unicodeName; unicodeName.AssignWithConversion(aName);
 
 		PRUnichar *ptrv = nsnull;
 		res = m_stringBundle->GetStringFromName(unicodeName.GetUnicode(), &ptrv);
 
 		if (NS_FAILED(res)) 
 		{
-			resultString = "[StringName";
-			resultString.Append(aName);
-			resultString += "?]";
+			resultString.AssignWithConversion("[StringName");
+			resultString.AppendWithConversion(aName);
+			resultString.AppendWithConversion("?]");
 			*aString = resultString.ToNewUnicode();
 		}
 		else
@@ -3537,7 +3537,7 @@ PRInt32 nsNNTPProtocol::DisplayNewsRC()
 	if (!name) return -1;
 
 	// do I need asciiName?
-	nsCAutoString asciiName(name);
+	nsCAutoString asciiName; asciiName.AssignWithConversion(name);
 	m_currentGroup = (const char *)asciiName;
 
 	if(NS_SUCCEEDED(rv) && ((const char *)m_currentGroup))
@@ -5011,7 +5011,7 @@ void nsNNTPProtocol::SetProgressBarPercent(int percent)
 
 		char *printfString = PR_smprintf("%d%%", percent);
 		if (printfString) {
-			nsString formattedString(printfString);
+			nsString formattedString; formattedString.AssignWithConversion(printfString);
 			progressMsg = nsCRT::strdup(formattedString.GetUnicode());
 		}
 		if (feedback) {
@@ -5038,7 +5038,7 @@ nsNNTPProtocol::SetProgressStatus(char *message)
 
                 char *printfString = PR_smprintf("%s", message);
                 if (printfString) {
-                        nsString formattedString(printfString);
+                        nsString formattedString; formattedString.AssignWithConversion(printfString);
                         progressMsg = nsCRT::strdup(formattedString.GetUnicode());
                 }
                 if (feedback) {

@@ -498,7 +498,7 @@ nsNntpIncomingServer::AddSubscribedNewsgroups()
 				nsXPIDLString name;
 				rv = currFolder->GetName(getter_Copies(name));
 				if (NS_SUCCEEDED(rv) && name) {
-					nsCAutoString asciiName(name);
+					nsCAutoString asciiName; asciiName.AssignWithConversion(name);
 					rv = SetNewsgroupAsSubscribed((const char *)asciiName);
 				}
             }
@@ -548,7 +548,7 @@ nsNntpIncomingServer::SetNewsgroupAsSubscribed(const char *aName)
 #endif
 
 	nsCOMPtr<nsIRDFLiteral> subscribedLiteral;
-	nsAutoString subscribedString("true");
+	nsAutoString subscribedString; subscribedString.AssignWithConversion("true");
 	rv = rdfService->GetLiteral(subscribedString.GetUnicode(), getter_AddRefs(subscribedLiteral));
 	if(NS_FAILED(rv)) return rv;
 	nsCOMPtr<nsIRDFResource> kNC_Subscribed;
@@ -604,7 +604,7 @@ nsNntpIncomingServer::AddNewNewsgroup(const char *aName)
 	rv = rdfService->GetResource((const char *) groupUri, getter_AddRefs(newsgroupResource));
 	
 	nsCOMPtr<nsIRDFLiteral> nameLiteral;
-	nsAutoString nameString(aName);
+	nsAutoString nameString; nameString.AssignWithConversion(aName);
 	rv = rdfService->GetLiteral(nameString.GetUnicode(), getter_AddRefs(nameLiteral));
 	if(NS_FAILED(rv)) return rv;
 	nsCOMPtr<nsIRDFResource> kNC_Name;
@@ -612,7 +612,7 @@ nsNntpIncomingServer::AddNewNewsgroup(const char *aName)
 	if(NS_FAILED(rv)) return rv;
 
 	nsCOMPtr<nsIRDFLiteral> subscribedLiteral;
-	nsAutoString subscribedString("false");
+	nsAutoString subscribedString; subscribedString.AssignWithConversion("false");
 	rv = rdfService->GetLiteral(subscribedString.GetUnicode(), getter_AddRefs(subscribedLiteral));
 	if(NS_FAILED(rv)) return rv;
 	nsCOMPtr<nsIRDFResource> kNC_Subscribed;
@@ -837,7 +837,7 @@ nsNntpIncomingServer::SubscribeToNewsgroup(const char *name)
 	if (NS_FAILED(rv)) return rv;
 	if (!msgfolder) return NS_ERROR_FAILURE;
 
-	nsAutoString newsgroupName(name);
+	nsAutoString newsgroupName; newsgroupName.AssignWithConversion(name);
 	rv = msgfolder->CreateSubfolder(newsgroupName.GetUnicode());
 	if (NS_FAILED(rv)) return rv;
 

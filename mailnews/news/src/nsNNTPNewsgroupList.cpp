@@ -474,7 +474,7 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(nsIMsgWindow * aMsgWindow,
                 rv = ioParamBlock->SetInt(ARTICLE_COUNT_INT_ARG, *last - *first + 1);
                 if (NS_FAILED(rv)) return rv;
         
-                rv = ioParamBlock->SetString(GROUPNAME_STRING_ARG, nsString(m_groupName).GetUnicode());
+                rv = ioParamBlock->SetString(GROUPNAME_STRING_ARG, NS_ConvertASCIItoUCS2(m_groupName).GetUnicode());
                 if (NS_FAILED(rv)) return rv;
 
 				// get the server key
@@ -482,7 +482,7 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(nsIMsgWindow * aMsgWindow,
 				rv = server->GetKey(getter_Copies(serverKey));
 				if (NS_FAILED(rv)) return rv;
 
-                rv = ioParamBlock->SetString(SERVERKEY_STRING_ARG, nsString((const char *)serverKey).GetUnicode());
+                rv = ioParamBlock->SetString(SERVERKEY_STRING_ARG, NS_ConvertASCIItoUCS2((const char *)serverKey).GetUnicode());
                 if (NS_FAILED(rv)) return rv;
 
 				rv = openWindow(aMsgWindow, DOWNLOAD_HEADERS_URL, ioParamBlock); 
@@ -584,7 +584,7 @@ nsNNTPNewsgroupList::AddToKnownArticles(PRInt32 first, PRInt32 last)
 		if (NS_SUCCEEDED(rv) && newsGroupInfo) {
 			char *output = m_knownArts.set->Output();
 			if (output) {
-				nsString str(output);
+				nsString str; str.AssignWithConversion(output);
 				newsGroupInfo->SetKnownArtsSet(&str);
 			}
 			delete [] output;
@@ -1116,7 +1116,7 @@ nsNNTPNewsgroupList::SetProgressStatus(char *message)
 
                 char *printfString = PR_smprintf("%s", message);
                 if (printfString) {
-                        nsString formattedString(printfString);
+                        nsString formattedString; formattedString.AssignWithConversion(printfString);
                         progressMsg = nsCRT::strdup(formattedString.GetUnicode());
 						PR_FREEIF(printfString);
                 }

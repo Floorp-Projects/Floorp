@@ -290,7 +290,7 @@ nsMsgNewsFolder::AddDirectorySeparator(nsFileSpec &path)
       // unfortunately we can't just say:
       //          path += sep;
       // here because of the way nsFileSpec concatenates
-      nsAutoString str((nsFilePath)path);
+      nsAutoString str; str.AssignWithConversion(NS_STATIC_CAST(nsFilePath, path));
       str += sep;
       path = nsFilePath(str);
     }
@@ -503,7 +503,7 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateSubfolder(const PRUnichar *uninewsgroupname
 	if (!uninewsgroupname) return NS_ERROR_NULL_POINTER;
 	if (nsCRT::strlen(uninewsgroupname) == 0) return NS_ERROR_FAILURE;
 
-    nsCAutoString newsgroupname(uninewsgroupname);
+    nsCAutoString newsgroupname; newsgroupname.AssignWithConversion(uninewsgroupname);
     nsFileSpec path;
 	nsCOMPtr<nsIFileSpec> pathSpec;
 	rv = GetPath(getter_AddRefs(pathSpec));
@@ -933,7 +933,7 @@ NS_IMETHODIMP nsMsgNewsFolder::DeleteMessages(nsISupportsArray *messages,
     if (NS_FAILED(rv)) return rv;
     nsXPIDLString newsgroupname;
     rv = GetName(getter_Copies(newsgroupname));
-	nsCAutoString asciiName(newsgroupname);
+	nsCAutoString asciiName; asciiName.AssignWithConversion(newsgroupname);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -1430,7 +1430,7 @@ nsMsgNewsFolder::GetGroupPasswordWithUI(const PRUnichar * aPromptMessage, const
             }
 
             // we got a password back...so remember it
-            nsCString aCStr(uniGroupPassword);
+            nsCString aCStr; aCStr.AssignWithConversion(uniGroupPassword);
             rv = SetGroupPassword((const char *) aCStr);
             if (NS_FAILED(rv)) return rv;
 
@@ -1482,7 +1482,7 @@ nsMsgNewsFolder::GetGroupUsernameWithUI(const PRUnichar * aPromptMessage, const
             }
 
             // we got a username back, remember it
-            nsCString aCStr(uniGroupUsername);
+            nsCString aCStr; aCStr.AssignWithConversion(uniGroupUsername);
             rv = SetGroupUsername((const char *) aCStr);
             if (NS_FAILED(rv)) return rv;
 
@@ -1512,7 +1512,7 @@ nsMsgNewsFolder::GetNewsrcLine(char **newsrcLine)
     rv = GetName(getter_Copies(newsgroupname));
     if (NS_FAILED(rv)) return rv;
 
-	nsCAutoString newsrcLineStr(newsgroupname);
+	nsCAutoString newsrcLineStr; newsrcLineStr.AssignWithConversion(newsgroupname);
     newsrcLineStr += ":";
 
     char *setStr = nsnull;
