@@ -372,30 +372,7 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIContentViewer interface...
-  NS_IMETHOD Init(nsIWidget* aParentWidget,
-                  nsIDeviceContext* aDeviceContext,
-                  const nsRect& aBounds);
-  NS_IMETHOD SetContainer(nsISupports* aContainer);
-  NS_IMETHOD GetContainer(nsISupports** aContainerResult);
-  NS_IMETHOD LoadStart(nsISupports* aDoc);
-  NS_IMETHOD LoadComplete(nsresult aStatus);
-  NS_IMETHOD Unload(void);
-  NS_IMETHOD Destroy(void);
-  NS_IMETHOD Stop(void);
-  NS_IMETHOD GetDOMDocument(nsIDOMDocument **aResult);
-  NS_IMETHOD SetDOMDocument(nsIDOMDocument *aDocument);
-  NS_IMETHOD GetBounds(nsRect& aResult);
-  NS_IMETHOD SetBounds(const nsRect& aBounds);
-  
-  NS_IMETHOD GetPreviousViewer(nsIContentViewer** aResult);
-  NS_IMETHOD SetPreviousViewer(nsIContentViewer* aViewer);
-
-  NS_IMETHOD Move(PRInt32 aX, PRInt32 aY);
-  NS_IMETHOD Show();
-  NS_IMETHOD Hide();
-  NS_IMETHOD Validate();
-  NS_IMETHOD SetEnableRendering(PRBool aOn);
-  NS_IMETHOD GetEnableRendering(PRBool* aResult);
+  NS_DECL_NSICONTENTVIEWER
 
   // nsIDocumentViewer interface...
   NS_IMETHOD SetUAStyleSheet(nsIStyleSheet* aUAStyleSheet);
@@ -845,6 +822,14 @@ NS_IMPL_ISUPPORTS5(DocumentViewerImpl,
 
 DocumentViewerImpl::~DocumentViewerImpl()
 {
+  NS_ASSERTION(!mDocument, "User did not call nsIContentViewer::Close");
+  if (mDocument)
+    Close();
+
+  NS_ASSERTION(!mPresShell, "User did not call nsIContentViewer::Destroy");
+  if (mPresShell)
+    Destroy();
+
   if (mPagePrintTimer != nsnull) {
     mPagePrintTimer->Stop();
     delete mPagePrintTimer;
@@ -854,10 +839,8 @@ DocumentViewerImpl::~DocumentViewerImpl()
     mPrt->OnEndPrinting(NS_ERROR_FAILURE);
     delete mPrt;
   }
-      // Revoke pending invalidate events
-  NS_ASSERTION(!mDocument, "User did not call nsIContentViewer::Destroy");
-  if (mDocument)
-    Destroy();
+
+  // XXX(?) Revoke pending invalidate events
 
   // clear weak references before we go away
   if (mPresContext) {
@@ -870,10 +853,6 @@ DocumentViewerImpl::~DocumentViewerImpl()
     // stop everything but the chrome.
     mPresContext->Stop();
   }
-
-  // Avoid leaking the old viewer.
-  if (mPreviousViewer)
-    SetPreviousViewer(nsnull);
 }
 
 /*
@@ -1166,12 +1145,18 @@ DocumentViewerImpl::Unload()
 }
 
 NS_IMETHODIMP
-DocumentViewerImpl::Destroy()
+DocumentViewerImpl::Close()
 {
-  // All callers are supposed to call destroy to break circular
+  // All callers are supposed to call close to break circular
   // references.  If we do this stuff in the destructor, the
   // destructor might never be called (especially if we're being
   // used from JS.
+
+  // Close is also needed to disable scripts during paint suppression,
+  // since we transfer the existing global object to the new document
+  // that is loaded.  In the future, the global object may become a proxy
+  // for an object that can be switched in and out so that we don't need
+  // to disable scripts during paint suppression.
 
   nsresult rv;
 
@@ -1194,6 +1179,24 @@ DocumentViewerImpl::Destroy()
     }
  }
 
+  mDocument = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DocumentViewerImpl::Destroy()
+{
+  // All callers are supposed to call destroy to break circular
+  // references.  If we do this stuff in the destructor, the
+  // destructor might never be called (especially if we're being
+  // used from JS.
+
+  // Avoid leaking the old viewer.
+  if (mPreviousViewer) {
+    mPreviousViewer->Destroy();
+    mPreviousViewer = nsnull;
+  }
+
   if (mDeviceContext)
     mDeviceContext->FlushFontCache();
 
@@ -1201,13 +1204,13 @@ DocumentViewerImpl::Destroy()
     // Break circular reference (or something)
     mPresShell->EndObservingDocument();
     nsCOMPtr<nsISelection> selection;
-    rv = GetDocumentSelection(getter_AddRefs(selection));
+    nsresult rv = GetDocumentSelection(getter_AddRefs(selection));
     nsCOMPtr<nsISelectionPrivate> selPrivate(do_QueryInterface(selection));
     if (NS_SUCCEEDED(rv) && selPrivate && mSelectionListener) 
       selPrivate->RemoveSelectionListener(mSelectionListener);
+    mPresShell = nsnull;
   }
   
-  mDocument = nsnull;
   return NS_OK;
 }
 
@@ -1370,17 +1373,13 @@ DocumentViewerImpl::GetPreviousViewer(nsIContentViewer** aViewer)
 NS_IMETHODIMP
 DocumentViewerImpl::SetPreviousViewer(nsIContentViewer* aViewer)
 {
-  if (!aViewer) {
-    // Clearing it out.
-    mPreviousViewer = nsnull;
+  // NOTE:  |Show| sets |mPreviousViewer| to null without calling this
+  // function.
 
-    // Now we can show, but only if we aren't dead already (which
-    // can occasionally happen when one page moves to another during the onload
-    // handler.)
-    if (mDocument)
-      Show();
-  }
-  else {
+  if (aViewer) {
+    NS_ASSERTION(!mPreviousViewer,
+                 "can't set previous viewer when there already is one");
+
     // In a multiple chaining situation (which occurs when running a thrashing
     // test like i-bench or jrgm's tests with no delay), we can build up a 
     // whole chain of viewers.  In order to avoid this, we always set our previous
@@ -1392,9 +1391,9 @@ DocumentViewerImpl::SetPreviousViewer(nsIContentViewer* aViewer)
     nsCOMPtr<nsIContentViewer> prevViewer;
     aViewer->GetPreviousViewer(getter_AddRefs(prevViewer));
     if (prevViewer) {
-      SetPreviousViewer(prevViewer);
-      prevViewer->SetPreviousViewer(nsnull);
-      return NS_OK;
+      aViewer->SetPreviousViewer(nsnull);
+      aViewer->Destroy();
+      return SetPreviousViewer(prevViewer);
     }
   }
 
@@ -1432,6 +1431,17 @@ DocumentViewerImpl::Show(void)
 {
   NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
   NS_PRECONDITION(mWindow, "null window");
+
+  // We don't need the previous viewer anymore since we're not
+  // displaying it.
+  if (mPreviousViewer) {
+    // This little dance *may* only be to keep
+    // PresShell::EndObservingDocument happy, but I'm not sure.
+    nsCOMPtr<nsIContentViewer> prevViewer(mPreviousViewer);
+    mPreviousViewer = nsnull;
+    prevViewer->Destroy();
+  }
+
   if (mWindow) {
     mWindow->Show(PR_TRUE);
   }

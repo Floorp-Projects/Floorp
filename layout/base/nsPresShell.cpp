@@ -1482,104 +1482,6 @@ PresShell::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
 PresShell::~PresShell()
 {
-#ifdef MOZ_REFLOW_PERF
-  DumpReflows();
-  if (mReflowCountMgr) {
-    delete mReflowCountMgr;
-    mReflowCountMgr = nsnull;
-  }
-#endif
-
-  // If our paint suppression timer is still active, kill it.
-  if (mPaintSuppressionTimer) {
-    mPaintSuppressionTimer->Cancel();
-    mPaintSuppressionTimer = nsnull;
-  }
-
-  nsCOMPtr<nsISupports> container;
-  mPresContext->GetContainer(getter_AddRefs(container));
-  if (container) {
-    nsCOMPtr<nsIDocShell> cvc(do_QueryInterface(container));
-    if (cvc) {
-      nsCOMPtr<nsIContentViewer> cv;
-      cvc->GetContentViewer(getter_AddRefs(cv));
-      if (cv)
-        cv->SetPreviousViewer(nsnull);
-    }
-  }
-
-  // release our pref style sheet, if we have one still
-  ClearPreferenceStyleRules();
-
-  // if we allocated any stack memory free it.
-  FreeDynamicStack();
-
-  // free our table of anonymous content
-  ReleaseAnonymousContent();
-
-  mIsDestroying = PR_TRUE;
-
-  // Clobber weak leaks in case of re-entrancy during tear down
-  mHistoryState = nsnull;
-
-  // kill subshell map, if any.  It holds only weak references
-  if (mSubShellMap)
-  {
-    delete mSubShellMap;
-    mSubShellMap = nsnull;
-  }
-
-  // release current event content and any content on event stack
-  NS_IF_RELEASE(mCurrentEventContent);
-
-  PRInt32 i, count = mCurrentEventContentStack.Count();
-  nsIContent* currentEventContent;
-  for (i = 0; i < count; i++) {
-    currentEventContent = (nsIContent*)mCurrentEventContentStack.ElementAt(i);
-    NS_IF_RELEASE(currentEventContent);
-  }
-
-  if (mViewManager) {
-    // Disable paints during tear down of the frame tree
-    mViewManager->DisableRefresh();
-    mViewManager = nsnull;
-  }
-
-  // This shell must be removed from the document before the frame
-  // hierarchy is torn down to avoid finding deleted frames through
-  // this presshell while the frames are being torn down
-  if (mDocument) {
-    mDocument->DeleteShell(this);
-  }
-
-  // Destroy the frame manager. This will destroy the frame hierarchy
-  if (mFrameManager) {
-    mFrameManager->Destroy();
-    NS_RELEASE(mFrameManager);
-  }
-
-  // Let the style set do its cleanup.
-  mStyleSet->Shutdown();
-
-  // We hold a reference to the pres context, and it holds a weak link back
-  // to us. To avoid the pres context having a dangling reference, set its 
-  // pres shell to NULL
-  if (mPresContext) {
-    mPresContext->SetShell(nsnull);
-  }
-
-  if (mViewEventListener) {
-    mViewEventListener->SetPresShell((nsIPresShell*)nsnull);
-    NS_RELEASE(mViewEventListener);
-  }
-
-  // Revoke pending reflow events
-  if (mPendingReflowEvent) {
-    mPendingReflowEvent = PR_FALSE;
-    mEventQueue->RevokeEvents(this);
-  }
-
-  KillResizeEventTimer();
 }
 
 /**
@@ -2446,6 +2348,113 @@ PresShell::EndObservingDocument()
       return NS_ERROR_UNEXPECTED;
     mSelection->ShutDown();
   }
+
+#ifdef MOZ_REFLOW_PERF
+  DumpReflows();
+  if (mReflowCountMgr) {
+    delete mReflowCountMgr;
+    mReflowCountMgr = nsnull;
+  }
+#endif
+
+  // If our paint suppression timer is still active, kill it.
+  if (mPaintSuppressionTimer) {
+    mPaintSuppressionTimer->Cancel();
+    mPaintSuppressionTimer = nsnull;
+  }
+
+#ifdef DEBUG
+  {
+    nsCOMPtr<nsISupports> container;
+    mPresContext->GetContainer(getter_AddRefs(container));
+    if (container) {
+      nsCOMPtr<nsIDocShell> cvc(do_QueryInterface(container));
+      if (cvc) {
+        nsCOMPtr<nsIContentViewer> cv;
+        cvc->GetContentViewer(getter_AddRefs(cv));
+        if (cv) {
+          nsCOMPtr<nsIContentViewer> prevViewer;
+          cv->GetPreviousViewer(getter_AddRefs(prevViewer));
+          NS_ASSERTION(!prevViewer, "still have a previous viewer!");
+        }
+      }
+    }
+  }
+#endif
+
+  // release our pref style sheet, if we have one still
+  ClearPreferenceStyleRules();
+
+  // if we allocated any stack memory free it.
+  FreeDynamicStack();
+
+  // free our table of anonymous content
+  ReleaseAnonymousContent();
+
+  mIsDestroying = PR_TRUE;
+
+  // Clobber weak leaks in case of re-entrancy during tear down
+  mHistoryState = nsnull;
+
+  // kill subshell map, if any.  It holds only weak references
+  if (mSubShellMap)
+  {
+    delete mSubShellMap;
+    mSubShellMap = nsnull;
+  }
+
+  // release current event content and any content on event stack
+  NS_IF_RELEASE(mCurrentEventContent);
+
+  PRInt32 i, count = mCurrentEventContentStack.Count();
+  nsIContent* currentEventContent;
+  for (i = 0; i < count; i++) {
+    currentEventContent = (nsIContent*)mCurrentEventContentStack.ElementAt(i);
+    NS_IF_RELEASE(currentEventContent);
+  }
+
+  if (mViewManager) {
+    // Disable paints during tear down of the frame tree
+    mViewManager->DisableRefresh();
+    mViewManager = nsnull;
+  }
+
+  // This shell must be removed from the document before the frame
+  // hierarchy is torn down to avoid finding deleted frames through
+  // this presshell while the frames are being torn down
+  if (mDocument) {
+    mDocument->DeleteShell(this);
+  }
+
+  // Destroy the frame manager. This will destroy the frame hierarchy
+  if (mFrameManager) {
+    mFrameManager->Destroy();
+    NS_RELEASE(mFrameManager);
+  }
+
+  // Let the style set do its cleanup.
+  mStyleSet->Shutdown();
+
+  // We hold a reference to the pres context, and it holds a weak link back
+  // to us. To avoid the pres context having a dangling reference, set its 
+  // pres shell to NULL
+  if (mPresContext) {
+    mPresContext->SetShell(nsnull);
+  }
+
+  if (mViewEventListener) {
+    mViewEventListener->SetPresShell((nsIPresShell*)nsnull);
+    NS_RELEASE(mViewEventListener);
+  }
+
+  // Revoke pending reflow events
+  if (mPendingReflowEvent) {
+    mPendingReflowEvent = PR_FALSE;
+    mEventQueue->RevokeEvents(this);
+  }
+
+  KillResizeEventTimer();
+
   return NS_OK;
 }
 
@@ -4578,23 +4587,17 @@ PresShell::UnsuppressAndInvalidate()
     focusController->SetSuppressFocus(PR_TRUE, "PresShell suppression on Web page loads");
 
   nsCOMPtr<nsISupports> container;
-  nsCOMPtr<nsIContentViewer> cv;
-  nsCOMPtr<nsIDocumentViewer> dv;
   mPresContext->GetContainer(getter_AddRefs(container));
   if (container) {
     nsCOMPtr<nsIDocShell> cvc(do_QueryInterface(container));
     if (cvc) {
+      nsCOMPtr<nsIContentViewer> cv;
       cvc->GetContentViewer(getter_AddRefs(cv));
-      dv = do_QueryInterface(cv);
+      if (cv)
+        cv->Show();
     }
   }
 
-  if (dv)
-    dv->Show();
-
-  if (cv)
-    cv->SetPreviousViewer(nsnull);
- 
   mPaintingSuppressed = PR_FALSE;
   nsIFrame* rootFrame;
   mFrameManager->GetRootFrame(&rootFrame);

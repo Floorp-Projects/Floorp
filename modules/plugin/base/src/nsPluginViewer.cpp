@@ -169,28 +169,7 @@ public:
   NS_IMETHOD StartLoad(nsIRequest* request, nsIStreamListener*& aResult);
 
   // nsIContentViewer
-  NS_IMETHOD Init(nsIWidget* aParentWidget,
-                  nsIDeviceContext* aDeviceContext,
-                  const nsRect& aBounds);
-  NS_IMETHOD SetContainer(nsISupports* aContainer);
-  NS_IMETHOD GetContainer(nsISupports** aContainerResult);
-  NS_IMETHOD LoadStart(nsISupports* aDoc);
-  NS_IMETHOD LoadComplete(nsresult aStatus);
-  NS_IMETHOD Unload(void);
-  NS_IMETHOD Destroy(void);
-  NS_IMETHOD Stop(void);
-  NS_IMETHOD GetDOMDocument(nsIDOMDocument **aResult);
-  NS_IMETHOD SetDOMDocument(nsIDOMDocument *aDocument);
-  NS_IMETHOD GetBounds(nsRect& aResult);
-  NS_IMETHOD SetBounds(const nsRect& aBounds);
-  NS_IMETHOD GetPreviousViewer(nsIContentViewer** aViewer);
-  NS_IMETHOD SetPreviousViewer(nsIContentViewer* aViewer);
-  NS_IMETHOD Move(PRInt32 aX, PRInt32 aY);
-  NS_IMETHOD Show();
-  NS_IMETHOD Hide();
-  NS_IMETHOD Validate();
-  NS_IMETHOD SetEnableRendering(PRBool aOn);
-  NS_IMETHOD GetEnableRendering(PRBool* aResult);
+  NS_DECL_NSICONTENTVIEWER
 
   // nsIContentViewerEdit
   NS_DECL_NSICONTENTVIEWEREDIT
@@ -436,6 +415,12 @@ PluginViewerImpl::Unload(void)
 }
 
 NS_IMETHODIMP
+PluginViewerImpl::Close(void)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 PluginViewerImpl::Destroy(void)
 {
   // XXX ripped off from nsObjectFrame::Destroy()
@@ -558,6 +543,8 @@ PluginViewerImpl::GetPreviousViewer(nsIContentViewer** aViewer)
 NS_IMETHODIMP
 PluginViewerImpl::SetPreviousViewer(nsIContentViewer* aViewer)
 {
+  if (aViewer)
+    aViewer->Destroy();
   return NS_OK;
 }
 
