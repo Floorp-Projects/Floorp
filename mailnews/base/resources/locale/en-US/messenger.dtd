@@ -82,10 +82,15 @@ Rights Reserved.
 
 <!-- Edit Menu -->
 <!ENTITY deleteMsgCmd.label "Delete Message">  
+<!ENTITY deleteMsgCmd.accesskey "d">  
 <!ENTITY cancelNewsMsgCmd.label "Cancel Message">  
+<!ENTITY cancelNewsMsgCmd.accesskey "n">  
 <!ENTITY deleteMsgsCmd.label "Delete Selected Messages">  
+<!ENTITY deleteMsgsCmd.accesskey "d">  
 <!ENTITY deleteFolderCmd.label "Delete Folder">  
+<!ENTITY deleteFolderCmd.accesskey "d">  
 <!ENTITY unsubscribeNewsgroupCmd.label "Unsubscribe">
+<!ENTITY unsubscribeNewsgroupCmd.accesskey "n">
 <!ENTITY selectMenu.label "Select">  
 <!ENTITY selectMenu.accesskey "l">  
 <!ENTITY selectThreadCmd.label "Thread">  

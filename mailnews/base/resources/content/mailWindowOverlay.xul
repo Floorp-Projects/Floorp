@@ -123,10 +123,15 @@ Rights Reserved.
   <command id="cmd_paste"/>
   <command id="cmd_delete"
          valueFolder="&deleteFolderCmd.label;"
+         valueFolderAccessKey="&deleteFolderCmd.accesskey;"
          valueNewsgroup="&unsubscribeNewsgroupCmd.label;"
+         valueNewsgroupAccessKey="&unsubscribeNewsgroupCmd.accesskey;"
          valueMessage="&deleteMsgCmd.label;"
+         valueMessageAccessKey="&deleteMsgCmd.accesskey;"
          valueNewsMessage="&cancelNewsMsgCmd.label;"
-         valueMessages="&deleteMsgsCmd.label;"/>
+         valueNewsMessageAccessKey="&cancelNewsMsgCmd.accesskey;"
+         valueMessages="&deleteMsgsCmd.label;"
+         valueMessagesAccessKey="&deleteMsgsCmd.accesskey;"/>
   <command id="cmd_editDraft" oncommand="goDoCommand('cmd_editDraft')" disabled="true"/>
   <command id="cmd_selectAll"/>
   <command id="cmd_selectThread" oncommand="goDoCommand('cmd_selectThread')"/>
@@ -805,7 +810,7 @@ Rights Reserved.
       <menuitem id="menu_cut"/>
       <menuitem id="menu_copy"/>
       <menuitem id="menu_paste"/>
-      <menuitem id="menu_delete"/>
+      <menuitem id="menu_delete" observes="cmd_delete"/>
       <menuitem label="&editDraftCmd.label;" 
             accesskey="&editDraftCmd.accesskey;" 
             observes="cmd_editDraft"/>

@@ -462,11 +462,25 @@ var MessageWindowController =
 		switch ( command )
 		{
 			case "cmd_delete":
-      if (gDBView)
-      {
-         gDBView.getCommandStatus(nsMsgViewCommandType.deleteMsg, enabled, checkStatus);
-         return enabled.value;
-      }
+        if ( command == "cmd_delete")
+        {
+          if (isNewsURI(gCurrentMessageUri))
+          {
+             goSetMenuValue(command, 'valueNewsMessage');
+             goSetAccessKey(command, 'valueNewsMessageAccessKey');
+          }
+          else
+          {
+             goSetMenuValue(command, 'valueMessage');
+             goSetAccessKey(command, 'valueMessageAccessKey');
+          }
+        }
+
+        if (gDBView)
+        {
+           gDBView.getCommandStatus(nsMsgViewCommandType.deleteMsg, enabled, checkStatus);
+           return enabled.value;
+        }
 			case "cmd_reply":
 			case "button_reply":
 			case "cmd_replySender":
@@ -496,13 +510,6 @@ var MessageWindowController =
 			case "cmd_markAsFlagged":
       case "button_file":
 			case "cmd_file":
-				if ( command == "cmd_delete")
-				{
-          if (isNewsURI(gCurrentMessageUri))
-					   goSetMenuValue(command, 'valueNewsMessage');
-          else
-					   goSetMenuValue(command, 'valueMessage');
-				}
 				return ( gCurrentMessageUri != null);
 			case "cmd_getNewMessages":
       case "button_getNewMessages":
