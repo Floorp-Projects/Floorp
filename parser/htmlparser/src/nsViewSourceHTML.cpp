@@ -558,12 +558,10 @@ nsresult WriteNewline(nsIContentSink& aSink,CSharedVSContext& aContext) {
 
   //if you're here, we already know gTokenRecyler is valid...
 
-  CToken* theToken = (CStartToken*)gTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_br);
-  if(theToken){
-    aContext.mStartNode.Init(theToken);
-    result=aSink.AddLeaf(aContext.mStartNode); 
-    gTokenRecycler->RecycleToken(theToken);
-  }
+//  CToken* theToken = (CStartToken*)gTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_br);
+  CStartToken theToken(eHTMLTag_br);
+  aContext.mStartNode.Init(&theToken);
+  result=aSink.AddLeaf(aContext.mStartNode); 
   return NS_OK;
 }
 
@@ -581,14 +579,11 @@ nsresult WriteNBSP(PRInt32 aCount, nsIContentSink& aSink,CSharedVSContext& aCont
 
   //if you're here, we already know gTokenRecyler is valid...
 
-  CToken* theToken = (CEntityToken*)gTokenRecycler->CreateTokenOfType(eToken_entity,eHTMLTag_unknown,"nbsp");
-  if(theToken){
-    aContext.mStartNode.Init(theToken);
-    int theIndex;
-    for(theIndex=0;theIndex<aCount;theIndex++)
-      result=aSink.AddLeaf(aContext.mStartNode); 
-    gTokenRecycler->RecycleToken(theToken);
-  }
+  CEntityToken theToken("nbsp");
+  aContext.mStartNode.Init(&theToken);
+  int theIndex;
+  for(theIndex=0;theIndex<aCount;theIndex++)
+    result=aSink.AddLeaf(aContext.mStartNode); 
 
   return NS_OK;
 }
