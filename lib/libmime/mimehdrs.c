@@ -74,7 +74,11 @@ HG82991
 char *
 strip_continuations(char *original);
 
+/*
+ender mime does not need any of this except for strip coninuous
+*/
 
+#ifndef MOZ_ENDER_MIME 
 
 
 MimeHeaders *
@@ -2714,46 +2718,6 @@ MimeHeaders_make_bigfun_stamp(XP_Bool bigfun_p,
   return result;
 }
 
-/* Strip CR+LF+<whitespace> runs within (original).
-   Since the string at (original) can only shrink,
-   this conversion is done in place. (original)
-   is returned. */
-char *
-strip_continuations(char *original)
-{
-	char *p1, *p2;
-
-	/* If we were given a null string, return it as is */
-	if (!original) return NULL;
-
-	/* Start source and dest pointers at the beginning */
-	p1 = p2 = original;
-
-	while(*p2)
-	{
-		/* p2 runs ahead at (CR and/or LF) + <space> */
-		if ((p2[0] == CR) || (p2[0] == LF))
-		{
-			/* move past (CR and/or LF) + whitespace following */	
-			do
-			{
-				p2++;
-			}
-			while((*p2 == CR) || (*p2 == LF) || XP_IS_SPACE(*p2));
-
-			if (*p2 == '\0') continue; /* drop out of loop at end of string*/
-		}
-
-		/* Copy the next non-linebreaking char */
-		*p1 = *p2;
-		p1++; p2++;
-	}
-	*p1 = '\0';
-
-	return original;
-}
-
-extern int16 INTL_DefaultMailToWinCharSetID(int16 csid);
 
 /* Given text purporting to be a qtext header value, strip backslashes that
 	may be escaping other chars in the string. */
@@ -2875,7 +2839,6 @@ MimeHeaders_get_name(MimeHeaders *hdrs)
 
 
 
-#ifdef XP_UNIX
 /* This piece of junk is so that I can use BBDB with Mozilla.
    = Put bbdb-srv.perl on your path.
    = Put bbdb-srv.el on your lisp path.
@@ -2911,4 +2874,47 @@ MimeHeaders_do_unix_display_hook_hack(MimeHeaders *hdrs)
 		}
 	}
 }
-#endif /* XP_UNIX */
+
+#endif /*MOZ_ENDER_MIME*/
+
+/* Strip CR+LF+<whitespace> runs within (original).
+   Since the string at (original) can only shrink,
+   this conversion is done in place. (original)
+   is returned. */
+char *
+strip_continuations(char *original)
+{
+	char *p1, *p2;
+
+	/* If we were given a null string, return it as is */
+	if (!original) return NULL;
+
+	/* Start source and dest pointers at the beginning */
+	p1 = p2 = original;
+
+	while(*p2)
+	{
+		/* p2 runs ahead at (CR and/or LF) + <space> */
+		if ((p2[0] == CR) || (p2[0] == LF))
+		{
+			/* move past (CR and/or LF) + whitespace following */	
+			do
+			{
+				p2++;
+			}
+			while((*p2 == CR) || (*p2 == LF) || XP_IS_SPACE(*p2));
+
+			if (*p2 == '\0') continue; /* drop out of loop at end of string*/
+		}
+
+		/* Copy the next non-linebreaking char */
+		*p1 = *p2;
+		p1++; p2++;
+	}
+	*p1 = '\0';
+
+	return original;
+}
+
+extern int16 INTL_DefaultMailToWinCharSetID(int16 csid);
+
