@@ -68,6 +68,14 @@
 
 #define MAX_LOADSTRING 100
 
+
+#ifdef _BUILD_STATIC_BIN
+#include "nsStaticComponent.h"
+nsresult PR_CALLBACK
+app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
+#endif
+
+
 const TCHAR *szWindowClass = _T("WINEMBED");
 
 // Foward declarations of functions included in this code module:
@@ -166,6 +174,11 @@ int main(int argc, char *argv[])
     TCHAR szTitle[MAX_LOADSTRING];
     LoadString(ghInstanceResources, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     MyRegisterClass(ghInstanceApp);
+
+#ifdef _BUILD_STATIC_BIN
+    // Initialize XPCOM's module info table
+    NSGetStaticModuleInfo = app_getModuleInfo;
+#endif
 
     // Init Embedding APIs
     NS_InitEmbedding(nsnull, nsnull);

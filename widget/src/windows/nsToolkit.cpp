@@ -550,7 +550,7 @@ nsToolkit::nsToolkit()
 #endif
 
 #ifdef MOZ_STATIC_COMPONENT_LIBS
-    nsToolkit::Startup(nsnull);
+    nsToolkit::Startup(GetModuleHandle(NULL));
 #endif
 }
 

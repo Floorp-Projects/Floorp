@@ -174,7 +174,33 @@ include $(topsrcdir)/config/config.mk
 libs::
 	+$(LOOP_OVER_DIRS)
 
+
+ifdef BUILD_STATIC_LIBS
+
+include $(topsrcdir)/config/static-config.mk
+
+EXTRA_DEPS     += $(STATIC_EXTRA_DEPS)
+EXTRA_DSO_LIBS += $(STATIC_EXTRA_DSO_LIBS)
+ifneq ($(OS_ARCH),WINNT)
+EXTRA_LIBS     += -L$(DEPTH)/dist/lib/components
+endif # !WINNT
+EXTRA_LIBS     += $(EXTRA_DSO_LIBS) $(STATIC_EXTRA_LIBS)
+QT_LIBS        += $(EXTRA_LIBS)
+XLIB_LIBS      += $(EXTRA_LIBS)
+GTK_LIBS       += $(EXTRA_LIBS)
+DEFINES        += $(STATIC_DEFINES)
+CPPSRCS        += $(STATIC_CPPSRCS)
+
+endif # BUILD_STATIC_LIBS
+
+
 include $(topsrcdir)/config/rules.mk
+
+
+ifdef BUILD_STATIC_LIBS
+include $(topsrcdir)/config/static-rules.mk
+endif # BUILD_STATIC_LIBS
+
 
 ifeq ($(OS_ARCH),Darwin)
 LOCAL_INCLUDES		+= -I$(topsrcdir)/widget/src/mac

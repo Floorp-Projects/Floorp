@@ -264,6 +264,18 @@ ifdef MOZ_ENABLE_GTK2
 tier_99_dirs	+= embedding/browser/gtk/tests
 endif
 
+# viewer
+ifneq (,$(ENABLE_TESTS))
+tier_99_dirs += webshell/tests
+endif
+
+# winembed, mfcembed
+ifeq ($(OS_ARCH),WINNT)
+ifneq (,$(ENABLE_TESTS)$(MOZILLA_OFFICIAL))
+tier_99_dirs += embedding/tests
+endif
+endif
+
 else
 
 # Standalone build
