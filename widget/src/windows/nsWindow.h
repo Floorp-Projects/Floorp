@@ -65,6 +65,8 @@ struct IAccessible;
 #include "nsIAccessibleEventListener.h"
 #endif
 
+#define IME_MAX_CHAR_POS       64
+
 #define NSRGB_2_COLOREF(color) \
             RGB(NS_GET_R(color),NS_GET_G(color),NS_GET_B(color))
 #define COLOREF_2_NSRGB(color) \
@@ -88,7 +90,7 @@ class nsIMM
     typedef LONG (CALLBACK *SetCompFontPtr)  (HIMC, PLOGFONT);
     typedef LONG (CALLBACK *GetCompWindowPtr)  (HIMC,LPCOMPOSITIONFORM);
     typedef LONG (CALLBACK *GetPropertyPtr)  (HKL, DWORD);
-
+    typedef LONG (CALLBACK *GetDefaultIMEWndPtr) (HWND);
 public:
 
     static nsIMM& LoadModule() {
@@ -144,6 +146,9 @@ public:
 
 	    mGetProperty=(mInstance) ? (GetPropertyPtr)GetProcAddress(mInstance,"ImmGetProperty") : 0;
 	    NS_ASSERTION(mGetProperty!=NULL,"nsIMM.ImmGetProperty failed.");
+
+	    mGetDefaultIMEWnd=(mInstance) ? (GetDefaultIMEWndPtr)GetProcAddress(mInstance,"ImmGetDefaultIMEWnd") : 0;
+	    NS_ASSERTION(mGetDefaultIMEWnd!=NULL,"nsIMM.ImmGetDefaultIMEWnd failed.");
     }
 
     ~nsIMM() {
@@ -165,6 +170,7 @@ public:
       mSetCompositionFontW=0;
       mSetCompositionFontW=0;
       mGetProperty=0;
+      mGetDefaultIMEWnd=0;
     }
 
     LONG GetCompositionStringA(HIMC h,DWORD d1,LPVOID v,DWORD d2) {
@@ -227,6 +233,10 @@ public:
       return (mGetProperty) ? mGetProperty(hKL, dwIndex) : 0L;
     }
 
+    LONG GetDefaultIMEWnd(HWND hWnd) {
+      return (mGetDefaultIMEWnd) ? mGetDefaultIMEWnd(hWnd) : 0L;
+    }
+
 private:
 
     HINSTANCE mInstance;
@@ -245,6 +255,7 @@ private:
     SetCompFontPtr  mSetCompositionFontW;   
     GetCompWindowPtr  mGetCompositionWindow;   
     GetPropertyPtr  mGetProperty;
+    GetDefaultIMEWndPtr mGetDefaultIMEWnd;
 };
 
 /**
@@ -362,6 +373,11 @@ public:
     // nsIKBStateControl interface 
 
     NS_IMETHOD ResetInputState();
+
+    PRBool IMEMouseHandling(PRUint32 aEventType, PRInt32 aAction, LPARAM lParam);
+    PRBool IMECompositionHitTest(PRUint32 aEventType, POINT * ptPos);
+    PRBool HandleMouseActionOfIME(PRInt32 aAction, POINT* ptPos);
+    void GetCompositionWindowPos(HIMC hIMC, PRUint32 aEventType, COMPOSITIONFORM *cpForm);
 
     HWND                    mBorderlessParent;
 
@@ -529,8 +545,10 @@ protected:
 	PRInt32		mIMECompClauseStringLength;
 	PRInt32		mIMECompClauseStringSize;
 	long		mIMECursorPosition;
-
-    PRUnichar*  mIMEReconvertUnicode; // reconvert string
+	PRUnichar*  mIMEReconvertUnicode; // reconvert string
+  
+	// For describing composing frame
+	RECT*   mIMECompCharPos;
 
 	static UINT		gCurrentKeyboardCP;
 	static HKL		gKeyboardLayout;
