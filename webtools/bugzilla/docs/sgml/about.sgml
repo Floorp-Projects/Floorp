@@ -1,0 +1,235 @@
+<!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook V4.1//EN" [
+<!ENTITY conventions SYSTEM "conventions.sgml"> ] > -->
+
+<CHAPTER ID="about">
+<TITLE>About This Guide</TITLE>
+
+  <SECTION ID="aboutthisguide">
+    <TITLE>Purpose and Scope of this Guide</TITLE>
+    <PARA>
+      This document was started on September 17, 2000
+      by Matthew P. Barnson after a great deal of procrastination updating the Bugzilla FAQ,
+      which I left untouched for nearly half a year.
+      After numerous complete rewrites and reformatting, it is the document you see today.
+    </PARA>
+    <PARA>
+      Despite the lack of updates, Bugzilla is simply the best piece of bug-tracking software
+      the world has ever seen.  This document is intended to be the comprehensive guide to 
+      the installation, administration, maintenance, and use of the Bugzilla bug-tracking system.
+    </PARA>
+    <PARA>
+      This release of the Bugzilla Guide is the <EMPHASIS>2.11</EMPHASIS> release.
+      It is so named that it may match the current version of Bugzilla.
+      The numbering tradition stems from that used for many free software projects,
+      in which <EMPHASIS>even-numbered</EMPHASIS> point releases (1.2, 1.14, etc.)
+      are considered "stable releases", intended for public consumption; on the other 
+      hand, <EMPHASIS>odd-numbered</EMPHASIS> point releases (1.3, 2.09, etc.)
+      are considered unstable <EMPHASIS>development</EMPHASIS> releases intended
+      for advanced users, systems administrators, developers, and those who enjoy
+      a lot of pain. 
+    </PARA>
+    <PARA>
+      Newer revisions of the Bugzilla Guide will follow the numbering conventions of
+      the main-tree Bugzilla releases, available at
+      <ULINK URL="http://www.mozilla.org/bugs/source.html">Mozilla.org</ULINK>, with
+      the exception that intermediate releases will have a minor revision number
+      following a period.  For instance, if the current version of Bugzilla is 4.2,
+      the current "stable" version of the Bugzilla guide, in, say, it's fifth revision,
+      would be numbered "4.2.5".  Got it?  Good.
+    </PARA>
+    <PARA>
+      I wrote this in response to the enormous demand for decent Bugzilla documentation.
+      I have incorporated instructions from the Bugzilla README, Frequently Asked Questions,
+      Database Schema Document, and various mailing lists to create it.
+      Chances are, there are glaring errors in this documentation; please contact
+      <EMAIL>barnboy@trilobyte.net</EMAIL> to correct them.
+    </PARA>
+  </SECTION>
+
+  <SECTION ID="copyright">
+    <TITLE>Copyright Information</TITLE>
+    <BLOCKQUOTE>
+      <ATTRIBUTION>Copyright (c) 2000-2001 Matthew P. Barnson</ATTRIBUTION>
+      <PARA>
+	Permission is granted to copy, distribute and/or modify this document under thei
+	terms of the GNU Free Documentation License, Version 1.1 or any later version published 
+	by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and 
+	with no Back-Cover Texts.  A copy of the license is included in the section entitled 
+	"GNU Free Documentation LIcense".
+      </PARA>
+    </BLOCKQUOTE>
+    <PARA>
+      If you have any questions regarding this document, its' copyright, or publishing this
+      document in non-electronic form, please contact <EMAIL>barnboy@trilobyte.net</EMAIL>
+    </PARA>
+  </SECTION>
+
+  <SECTION ID="disclaimer">
+    <TITLE>Disclaimer</TITLE>
+    <PARA>
+      No liability for the contents of this document can be accepted.
+      Use the concepts, examples, and other content at your own risk.
+      As this is a new edition of this document, there may be errors
+      and inaccuracies that may damage your system.  Use of this document
+      may cause your girlfriend to leave you, your cats to pee on your
+      furniture and clothing, your computer to cease functioning, your
+      boss to fire you, and global thermonuclear war.  Proceed with caution.
+    </PARA>
+    <PARA>
+      All copyrights are held by their respective owners, unless specifically
+      noted otherwise.  Use of a term in this document should not be regarded
+      as affecting the validity of any trademark or service mark.
+      In particular, I like to put down Microsoft(tm).  Live with it.
+    </PARA>
+    <PARA>
+      Naming of particular products or brands should not be seen as endorsements,
+      with the exception of the term "GNU/Linux".
+      Use GNU/Linux.  Love it.  Bathe with it.  It is life and happiness.
+      I endorse it wholeheartedly and encourage you to do the same.
+    </PARA>
+    <PARA>
+      You are strongly recommended to make a backup of your system before
+      installing Bugzilla and at regular intervals thereafter.  Heaven knows
+      it's saved my bacon time after time; if you implement any suggestion in 
+      this Guide, implement this one!
+    </PARA>
+    <PARA>
+      Bugzilla has not undergone a complete security review.
+      Security holes probably exist in the code.
+      Great care should be taken both in the installation and usage of this software.
+      Carefully consider the implications of installing other network services with Bugzilla.
+    </PARA>
+  </SECTION>
+
+<!-- Section 2: New Versions -->
+
+  <SECTION ID="newversions">
+    <TITLE>New Versions</TITLE>
+    <PARA>
+      This is the initial release of the Bugzilla Guide.
+    </PARA>
+    <PARA>
+      This document can be found in the following places:
+    </PARA>
+    <PARA>
+      <ITEMIZEDLIST>
+	<LISTITEM>
+	  <PARA>
+	    <ULINK URL="http://www.trilobyte.net/barnsons/">TriloBYTE</ULINK>
+	  </PARA>
+	</LISTITEM>
+	<LISTITEM>
+	  <PARA>
+	    <ULINK URL="http://www.mozilla.org/projects/bugzilla/">Mozilla.org</ULINK>
+	  </PARA>
+	</LISTITEM>
+	<LISTITEM>
+	  <PARA>
+	    <ULINK URL="http://www.linuxdoc.org/">The Linux Documentation Project</ULINK>
+	  </PARA>
+	</LISTITEM>
+      </ITEMIZEDLIST>
+    </PARA>
+    <PARA>
+      The latest version of this document can be checked out via CVS.
+      Please follow the instructions available at
+      <ULINK URL="http://www.mozilla.org/cvs.html">the Mozilla CVS page</ULINK>,
+      and check out the mozilla/webtools/bugzilla/docs/ branch.
+    </PARA>
+  </SECTION>
+
+  <SECTION ID="credits">
+    <TITLE>Credits</TITLE>
+    <PARA>
+      The people listed below have made enormous contributions to the creation
+      of this Guide, through their dedicated hacking efforts,
+      numerous e-mail and IRC support sessions,
+      and overall excellent contribution to the Bugzilla community:
+    </PARA>
+    <PARA>
+      <ULINK URL="mailto://terry@mozilla.org">Terry Weissman</ULINK>
+      for initially converting Bugzilla from BugSplat!
+      and writing the README upon which this documentation is largely based.
+    </PARA>
+    <PARA>
+      <ULINK URL="mailto://tara@tequilarista.org">Tara Hernandez</ULINK> 
+      for keeping Bugzilla development going strong after Terry left Mozilla.org
+    </PARA>
+    <PARA>
+      <ULINK URL="mailto://dkl@redhat.com">Dave Lawrence</ULINK>
+      for providing insight into the key differences between Red Hat's 
+      customized Bugzilla, and being largely responsible for the
+      "Red Hat Bugzilla" appendix
+    </PARA>
+    <PARA>
+      <ULINK URL="mailto://endico@mozilla.org">Dawn Endico</ULINK>
+      for being a hacker extraordinaire and putting up with my incessant
+      questions and arguments on irc.mozilla.org in #mozwebtools
+    </PARA>
+    <PARA>
+      Last but not least, all the members of the
+      <ULINK URL="news://news.mozilla.org/netscape/public/mozilla/webtools">
+	netscape.public.mozilla.webtools</ULINK> newsgroup.  Without your
+      discussions, insight, suggestions, and patches, this could never have happened.
+    </PARA>
+  </SECTION>
+  <SECTION id="contributors">
+<TITLE>Contributors</TITLE>
+    <PARA>
+      Thanks go to these people for significant contributions to this documentation:
+    </PARA>
+    <PARA>
+      Zach Lipton, Andrew Pearson, Spencer Smith, Eric Hansen
+    </PARA>
+  </SECTION>
+  <SECTION ID="feedback">
+    <TITLE>Feedback</TITLE>
+    <PARA>
+      I welcome feedback on this document.  Without your submissions and input,
+      this Guide cannot continue to exist.  Please mail additions, comments, criticisms, etc.
+      to <EMAIL>barnboy@trilobyte.net</EMAIL>.  Please send flames to 
+      <EMAIL>devnull@localhost</EMAIL>
+    </PARA>
+  </SECTION>
+
+  <SECTION ID="translations">
+    <TITLE>Translations</TITLE>
+    <PARA>
+      The Bugzilla Guide needs translators!  Please volunteer your translation into the language of your choice.
+      If you will translate this Guide, please notify the members of the mozilla-webtools mailing list at
+      <email>mozilla-webtools@mozilla.org</email>
+    </PARA>
+  </SECTION>
+
+  <!-- conventions used here (didn't want to give it a chapter of its own) -->
+&conventions;
+
+</CHAPTER>
+
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-namecase-general:t
+sgml-general-insert-case:upper
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:2
+sgml-indent-data:t
+sgml-parent-document:Bugzilla-Guide\.sgml
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+sgml-doctype:"<!DOCTYPE chapter PUBLIC \"-//OASIS//DTD DocBook V4.1//EN\">"
+End:
+-->
+
+
+
+
+
+
+
+

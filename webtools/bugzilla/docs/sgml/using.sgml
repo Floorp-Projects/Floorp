@@ -1,0 +1,846 @@
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook V4.1//EN">
+
+<!-- TOC
+Chapter: Using Bugzilla
+ Create an account
+ Logging in
+ Setting up preferences
+  Account Settings
+  Email Settings
+  Page Footer
+  Permissions
+ Life cycle of a bug
+ Creating a bug
+  Checking for duplicates
+  Overview of all bug fields
+  Setting bug permissions
+ The Query Interface
+  Standard Queries
+  Email Queries
+  Boolean Queries
+  Regexp Queries
+ The Query Results
+  Changing Columns
+  Changing sorting order
+  Mass changes 
+ Miscellaneous usage hints
+
+-->
+
+<chapter id="using">
+<title>Using Bugzilla</title>
+  <epigraph>
+    <para>
+      What, Why, How, & What's in it for me?
+    </para>
+  </epigraph>
+
+  <section id="whatis">
+    <title>What is Bugzilla?</title>
+    <para>
+      Bugzilla is one example of a class of programs called "Defect Tracking Systems",
+      or, more commonly, "Bug-Tracking Systems".  Defect Tracking Systems allow individual or
+      groups of developers to keep track of outstanding bugs in their product effectively.
+      At the time Bugzilla was originally written, as a port from Netscape Communications'
+      "Bugsplat!" program to Perl from TCL, there were very few competitors in the market
+      for bug-tracking software.  Most commercial defect-tracking software vendors at the
+      time charged enormous licensing fees.  Bugzilla quickly became a favorite of the
+      open-source crowd (with its genesis in the open-source browser project, Mozilla) and
+      is now the de-facto standard defect-tracking system against which all others are
+      measured.
+    </para>
+    <para>
+      Bugzilla has matured immensely, and now boasts many advanced features.  These include:
+      <itemizedlist>
+	<listitem>
+	  <para>
+	    integrated, product-based granular security schema
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    inter-bug dependencies and dependency graphing
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    advanced reporting capabilities
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    a robust, stable RDBMS back-end
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    extensive configurability
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    a very well-understood and well-thought-out natural bug resolution protocol
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    email, XML, and HTTP APIs
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    integration with several automated software configuration management systems
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    too many more features to list
+	  </para>
+	</listitem>
+      </itemizedlist>
+    </para>
+    <para>
+      Despite its current robustness and popularity, however, Bugzilla
+      faces some near-term challenges, such as reliance on a single database, a lack of
+      abstraction of the user interface and program logic, verbose email bug
+      notifications, a powerful but daunting query interface, little reporting configurability,
+      problems with extremely large queries, some unsupportable bug resolution options,
+      no internationalization, and dependence on some nonstandard libraries.
+    </para>
+    <para>
+      Despite these small problems, Bugzilla is very hard to beat.  It is under <emphasis>very</emphasis>
+      active development to address the current issues, and a long-awaited overhaul in the form
+      of Bugzilla 3.0 is expected sometime later this year.
+    </para>
+  </section>
+  
+  <section id="why">
+    <title>Why Should We Use Bugzilla?</title>
+    <epigraph>
+      <para>
+	No, Who's on first...
+      </para>
+    </epigraph>
+    <para>
+      For many years, defect-tracking software has remained principally the domain
+      of large software development houses.  Even then, most shops never bothered
+      with bug-tracking software, and instead simply relied on shared lists and
+      email to monitor the status of defects.  This procedure is error-prone and
+      tends to cause those bugs judged least significant by developers to be
+      dropped or ignored
+    </para>
+    <para>
+      These days, many companies are finding that integrated defect-tracking
+      systems reduce downtime, increase productivity, and raise customer 
+      satisfaction with their systems.  Along with full disclosure, an open
+      bug-tracker allows manufacturers to keep in touch with their clients
+      and resellers, to communicate about problems effectively throughout
+      the data management chain.  Many corporations have also discovered that
+      defect-tracking helps reduce costs by providing IT support accountability,
+      telephone support knowledge bases, and a common, well-understood system
+      for accounting for unusual system or software issues.
+    </para>
+    <para>
+      But why should <emphasis>you</emphasis> use Bugzilla?
+    </para>
+    <para>
+      Bugzilla is very adaptable to various situations.  Known uses currently
+      include IT support queues, Systems Administration deployment management,
+      chip design and development problem tracking (both pre-and-post fabrication),
+      and software bug tracking for luminaries such as Redhat, Loki software,
+      Linux-Mandrake, and VA Systems.  Combined with systems such as CVS, Bonsai,
+      or Perforce SCM, Bugzilla provides a powerful, easy-to-use  solution to
+      configuration management and replication problems
+    </para>
+    <para>
+      Bugzilla can dramatically increase the productivity and accountability
+      of individual employees by providing a documented workflow and positive
+      feedback for good performance.  How many times do you wake up in the
+      morning, remembering that you were supposed to do *something* today,
+      but you just can't quite remember?  Put it in Bugzilla, and you have a record
+      of it from which you can extrapolate milestones, predict product versions
+      for integration, and by using Bugzilla's e-mail integration features
+      be able to follow the discussion trail that led to critical decisions.
+    </para>
+    <para>
+      Ultimately, Bugzilla puts the power in your hands to improve your value
+      to your employer or business while providing a usable framework for your natural
+      attention to detail and knowledge store to flourish.
+    </para>
+  </section>
+  
+  <section id="how">
+    <title>How do I use Bugzilla?</title>
+    <epigraph>
+      <para>
+	Hey!  I'm Woody!  Howdy, Howdy, Howdy!
+      </para>
+    </epigraph>
+    
+    <para>
+      Bugzilla is a large and complex system.  Describing how to use it
+      requires some time.  If you are only interested in installing or administering
+      a Bugzilla installation, please consult the Installing and Administering
+      Bugzilla portions of this Guide.  This section is principally aimed towards
+      developing end-user mastery of Bugzilla, so you may fully enjoy the benefits
+      afforded by using this reliable open-source bug-tracking software.
+    </para>
+    <para>
+      Throughout this portion of the Guide, we will refer to user account
+      options available at the Bugzilla test installation,
+      <ulink url="http://landfill.tequilarista.org/">
+      landfill.tequilarista.org</ulink>.
+      Although Landfill serves as a great introduction to Bugzilla, it does not offer
+      all the options you would have as a user on your own installation of Bugzilla,
+      nor can it do more than serve as a general introduction to Bugzilla.
+  However, please use it if you want to
+      follow this tutorial.
+    </para>
+    
+    <section id="myaccount">
+      <title>Create a Bugzilla Account</title>
+      <para>
+	First thing's first!  If you want to use Bugzilla, first you need to create
+	an account.  Consult with the administrator responsible for your installation
+	of Bugzilla for the URL you should use to access it.
+	If you're test-driving the end-user Bugzilla experience, use this URL:
+	<ulink url="http://landfill.tequilarista.org/mozilla/bugzilla/">
+	  http://landfill.tequilarista.org/mozilla/bugzilla/</ulink>
+      </para>
+      <orderedlist>
+	<listitem>
+	  <para>
+	    Click the "Open a new Bugzilla account" link.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    Enter your "E-mail address" and "Real Name" (or whatever name you want to call yourself)
+	    in the spaces provided, then select the "Create Account" button.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    Within 5-10 minutes, you should receive an email to the address you provided above,
+	    which contains your login name (generally the same as the email address), and
+	    a password you can use to access your account.  This password is randomly generated,
+	    and should be changed at your nearest opportunity (we'll go into how to do it later).
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    Click the "Log In" link in the yellow area at the bottom of the page in your browser,
+	    then enter your "E-mail address" and "Password" you just received into the spaces provided,
+	    and select "Login".
+	    <note>
+	      <para>
+		If you ever forget your password, you can come back to this page, enter your
+		"E-mail address", then select the "E-mail me a password" button to have your password
+		mailed to you again so that you can login.
+	      </para>
+	    </note>
+	    <caution>
+	      <para>
+		Many modern browsers include an "Auto-Complete" or "Form Fill" feature to
+		remember the user names and passwords you type in at many sites.  Unfortunately,
+		sometimes they attempt to "guess" what you will put in as your password, and guess
+		wrong.  If you notice a text box is already filled out, please overwrite the contents
+		of the text box so you can be sure to input the correct information.
+	      </para>
+	    </caution>
+	  </para>
+	</listitem>
+      </orderedlist>
+      <para>
+	Congratulations!  If you followed these directions, you now are the
+	proud owner of a user account on landfill.tequilarista.org (Landfill) or
+	your local Bugzilla install.  You should now see in your browser a
+	page called the "Bugzilla Query Page".  It may look daunting, but
+	with this Guide to walk you through it, you will master it in no time.
+      </para>
+    </section>
+    
+    <section id="query">
+      <title>The Bugzilla Query Page</title>
+      <para>
+	The Bugzilla Query Page is the heart and soul of Bugzilla.  It is the master
+	interface where you can find any bug report, comment, or patch currently in the Bugzilla
+	system.  We'll go into how to create your own bug report later on.
+      </para>
+      <para>
+	There are efforts underway to simplify query usage.  If you have a local installation
+	of Bugzilla 2.12 or higher, you should have "quicksearch.html" available
+	to use and simplify your searches.  There is also, or shortly will be, a helper
+	for the query interface, called "queryhelp.cgi".  Landfill tends to run the latest code,
+	so these two utilities should be available there for your perusal.
+      </para>
+      <para>
+	At this point, please visit the main Bugzilla site,
+	<ulink url="http://bugzilla.mozilla.org/query.cgi">
+	bugzilla.mozilla.org</ulink>, to see a more fleshed-out query page.
+      </para>
+      <para>
+	The first thing you need to notice about the Bugzilla Query Page is that
+	nearly every box you see on your screen has a hyperlink nearby, explaining what
+	it is or what it does.  Near the upper-left-hand corner of your browser window
+	you should see the word "Status" underlined.  Select it.
+      </para>
+      <para>
+	Notice the page that popped up?  Every underlined word you see on your screen
+	is a hyperlink that will take you to context-sensitive help.
+	Click around for a while, and learn what everything here does.  To return
+	to the query interface after pulling up a help page, use the "Back" button in
+	your browser.
+      </para>
+      <para>
+	I'm sure that after checking out the online help, you are now an Expert
+	on the Bugzilla Query Page.  If, however, you feel you haven't mastered it yet,
+	let me walk you through making a few successful queries to find out what there
+	are in the Bugzilla bug-tracking system itself.
+      </para>
+      <orderedlist>
+	<listitem>
+	  <para>
+	    Ensure you are back on the "Bugzilla Query Page"
+	    Do nothing in the boxes marked "Status", "Resolution", "Platform", "OpSys",
+	    "Priority", or "Severity".  The default query for "Status" is to find all bugs that
+	    are NEW, ASSIGNED, or REOPENED, which is what we want.  If you don't select anything
+	    in the other 5 scrollboxes there, then you are saying that "any of these are OK";
+	    we're not locking ourselves into only finding bugs on the "DEC" Platform, or "Windows 95"
+	    OpSys (Operating System).  You're smart, I think you have it figured out.
+	  </para>
+	  <para>
+	    Basically, selecting <emphasis>anything</emphasis> on the query page narrows your search
+	    down.  Leaving stuff unselected, or text boxes unfilled, broadens your search!
+	  </para>
+	</listitem>
+
+	<listitem>
+	  <para>
+	    You see the box immediately below the top six boxes that contains an "Email" text box, 
+	    with the words "matching as", a drop-down selection box, then some checkboxes with
+	    "Assigned To" checked by default?  This allows you to filter your search down based upon
+	    email address.  Let's put my email address in there, and see what happens.
+	  </para>
+	  <para>
+	    Type "barnboy@trilobyte.net" in the top Email text box.
+	  </para>
+	</listitem>
+
+	<listitem>
+	  <para>
+	    Let's narrow the search some more.  Scroll down until you find the box with the word
+	    "Program" over the top of it.  This is where we can narrow our search down to only
+	    specific products (software programs or product lines) in our Bugzilla database.
+	    Please notice the box is a <emphasis>scrollbox</emphasis>.  Using the down arrow on the
+	    scrollbox, scroll down until you can see an entry called "Webtools".  Select this entry.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    Did you notice that some of the boxes to the right changed when you selected "Webtools"?
+	    Every Program (or Product) has different Versions, Components, and Target Milestones associated
+	    with it.  A "Version" is the number of a software program.
+	    <example>
+	      <title>Some Famous Software Versions</title>
+	      <informalexample>
+		<para>
+		  Do you remember the hype in 1995 when Microsoft Windows 95(r) was released?
+		  It may have been several years
+		  ago, but Microsoft(tm) spent over $300 Million advertising this new Version of their
+		  software.  Three years later, they released Microsoft Windows 98(r),
+		  another new version, to great fanfare, and then in 2000 quietly 
+		  released Microsoft Windows ME(Millenium Edition)(r). 
+		</para>
+		<para>
+		  Software "Versions" help a manufacturer differentiate
+		  their current product from their
+		  previous products.  Most do not identify their products
+		  by the year they were released.
+		  Instead, the "original" version of their software will
+		  often be numbered "1.0", with
+		  small bug-fix releases on subsequent tenths of a digit.  In most cases, it's not
+		  a decimal number; for instance, often 1.9 is an <emphasis>older</emphasis> version
+		  of the software than 1.11,
+		  but is a <emphasis>newer</emphasis> version than 1.1.1.
+		</para>
+		<para>
+		  In general, a "Version" in Bugzilla should refer to 
+		  <emphasis>released</emphasis>
+		  products, not products that have not yet been released 
+		  to the public.  Forthcoming products
+		  are what the Target Milestone field is for.
+		</para>
+	      </informalexample>
+	    </example>
+	  </para>
+	  <para>
+	    A "Component" is a piece of a Product.
+	    It may be a standalone program, or some other logical
+	    division of a Product or Program. 
+	    Normally, a Component has a single Owner, who is responsible
+	    for overseeing efforts to improve that Component.
+	    <example>
+	      <title>Mozilla Webtools Components</title>
+	      <informalexample>
+		<para>
+		  Mozilla's "Webtools" Product is composed of several pieces (Components):
+		  <simplelist>
+		    <member><emphasis>Bonsai</emphasis>,
+		      a tool to show recent changes to Mozilla</member>
+		    <member><emphasis>Bugzilla</emphasis>,
+		      a defect-tracking tool</member>
+		    <member><emphasis>Build</emphasis>,
+		      a tool to automatically compile source code
+		      into machine-readable form</member>
+		    <member><emphasis>Despot</emphasis>,
+		      a program that controls access to the other Webtools</member>
+		    <member><emphasis>LXR</emphasis>,
+		      a utility that automatically marks up text files
+		    to make them more readable</member>
+		    <member><emphasis>MozBot</emphasis>,
+		      a "robot" that announces changes to Mozilla in Chat</member>
+		    <member><emphasis>TestManager</emphasis>,
+		      a tool to help find bugs in Mozilla</member>
+		    <member><emphasis>Tinderbox</emphasis>,
+		      which displays reports from Build</member>
+		  </simplelist>
+		</para>
+		<para>
+		  A different person is responsible for each of these Components.
+		  Tara Hernandez keeps
+		  the "Bugzilla" component up-to-date.
+		</para>
+	      </informalexample>
+	    </example>
+	  </para>
+	  <para>
+	    A "Milestone", or "Target Milestone" is a often a planned future "Version" of a
+	    product.  In many cases, though, Milestones simply represent significant dates for
+	    a developer.  Having certain features in your Product is frequently
+	    tied to revenue (money)
+	    the developer will receive if the features work by the time she 
+	    reaches the Target Milestone.
+	    Target Milestones are a great tool to organize your time.
+	    If someone will pay you $100,000 for
+	    incorporating certain features by a certain date,
+	    those features by that Milestone date become
+	    a very high priority.  Milestones tend to be highly malleable creatures,
+	    though, that appear
+	    to be in reach but are out of reach by the time the important day arrives.
+	  </para>
+	  <para>
+	    The Bugzilla Project has set up Milestones for future 
+	    Bugzilla versions 2.14, 2.16, 2.18, 3.0, etc.  However,
+	    a Target Milestone can just as easily be a specific date,
+	    code name, or weird alphanumeric
+	    combination, like "M19".
+	  </para>
+	</listitem>
+
+	<listitem>
+	  <para>
+	    OK, now let's select the "Bugzilla" component from its scrollbox.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    Skip down the page a bit -- do you see the "submit query" button?
+	    Select it, and let's run
+	    this query!
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    Congratulations!  You've completed your first Query, and have before you the Bug List
+	    of the author of this Guide, Matthew P. Barnson (barnboy@trilobyte.net).  If I'm
+	    doing well,
+	    you'll have a cryptic "Zarro Boogs Found" message on your screen.  It is just
+	    a happy hacker's way of saying "Zero Bugs Found".  However, I am fairly certain I will
+	    always have some bugs assigned to me that aren't done yet,
+	    so you won't often see that message!
+	  </para>
+	</listitem>
+      </orderedlist>
+      <para>
+	I encourage you to click the bug numbers in the left-hand column and examine
+	my bugs.  Also notice that if you click the underlined 
+	links near the top of this page, they do
+	not take you to context-sensitive help here,
+	but instead sort the columns of bugs on the screen!
+	When you need to sort your bugs by priority, severity,
+	or the people they are assigned to, this
+	is a tremendous timesaver.
+      </para>
+      <para>
+	A couple more interesting things about the Bug List page:
+	<simplelist>
+	  <member><emphasis>Change Columns</emphasis>:
+	    by selecting this link, you can show all kinds
+	    of information in the Bug List</member>
+	  <member><emphasis>Change several bugs at once</emphasis>:
+	    If you have sufficient rights to change all
+	    the bugs shown in the Bug List, you can mass-modify them.
+	    This is a big time-saver.</member>
+	  <member><emphasis>Send mail to bug owners</emphasis>:
+	    If you have many related bugs, you can request
+	    an update from every person who owns the bugs in
+	    the Bug List asking them the status.</member>
+	  <member><emphasis>Edit this query</emphasis>:
+	    If you didn't get exactly the results you were looking for,
+	    you can return to the Query page through this link and make
+	    small revisions to the query you just made so
+	    you get more accurate results.</member>
+	</simplelist>
+      </para>
+      <note>
+	<para>
+	  There are many more options to the Bugzilla Query Page 
+	  and the Bug List than I have shown you.
+	  But this should be enough for you to learn to get around.
+	  I encourage you to check out the
+	  <ulink url="http://www.mozilla.org/bugs/">Bugzilla Home Page</ulink>
+	  to learn about the Anatomy
+	  and Life Cycle of a Bug before continuing.
+	</para>
+      </note>
+    </section>
+    
+    
+    <section id="bugreports">
+      <title>Creating and Managing Bug Reports</title>
+      <epigraph>
+	<para>And all this time, I thought we were taking bugs <emphasis>out</emphasis>...</para>
+      </epigraph>
+      
+      <section id="bug_writing">
+	<title>Writing a Great Bug Report</title>
+	<para>
+	  Before we plunge into writing your first bug report, I encourage you to read 
+	  <ulink url="http://www.mozilla.org/quality/bug-writing-guidelines.html">Mozilla.org's Bug
+	    Writing Guidelines</ulink>.  While some of the advice is Mozilla-specific, the basic
+	  principles of reporting Reproducible, Specific bugs, isolating the Product you are
+	  using, the Version of the Product, the Component which failed, the Hardware Platform, and
+	  Operating System you were using at the time of the failure go a long way toward ensuring accurate,
+	  responsible fixes for the bug that bit you.
+	</para>
+	<para>
+	  While you are at it, why not learn how to find previously reported bugs?  Mozilla.org
+	  has published a great tutorial on finding duplicate bugs, available at
+	  <ulink url="http://www.mozilla.org/quality/help/beginning-duplicate-finding.html">
+	    http://www.mozilla.org/quality/help/beginning-duplicate-finding.html</ulink>.
+	</para>
+	<para>
+	  I realize this was a lot to read.  However, understanding the mentality of writing
+	  great bug reports will help us on the next part!
+	</para>
+	<orderedlist>
+	  <listitem>
+	    <para>
+	      Go back to <ulink url="http://landfill.tequilarista.org/mozilla/bugzilla/">
+		http://landfill.tequilarista.org/mozilla/bugzilla/</ulink>
+	      in your browser.
+	    </para>
+	  </listitem>
+	  <listitem>
+	    <para>
+	      Select the 
+	      <ulink url="http://landfill.tequilarista.org/mozilla/bugzilla/enter_bug.cgi">
+		Enter a new bug report</ulink> link.
+	    </para>
+	  </listitem>
+	  <listitem>
+	    <para>
+	      Select a product.
+	    </para>
+	  </listitem>
+	  <listitem>
+	    <para>
+	      Now you should be at the "Enter Bug" form.
+	      The "reporter" should have been automatically filled out
+	      for you (or else Bugzilla prompted you to Log In again
+	      -- you did keep the email with your username
+	      and password, didn't you?).
+	    </para>
+	  </listitem>
+	  <listitem>
+	    <para>
+	      Select a Component in the scrollbox.
+	    </para>
+	  </listitem>
+	  <listitem>
+	    <para>
+	      Bugzilla should have made reasonable guesses, based upon your browser,
+	      for the "Platform" and "OS" drop-down
+	      boxes.  If those are wrong, change them -- if you're on an SGI box
+	      running IRIX, we want to know!
+	    </para>
+	  </listitem>
+	  <listitem>
+	    <para>
+	      Fill in the "Assigned To" box with the email address you provided earlier. 
+	      This way you don't end up sending copies of your bug to lots of other people,
+	      since it's just a test bug.
+	    </para>
+	  </listitem>
+	  <listitem>
+	    <para>
+	      Leave the "CC" text box blank. 
+	      Fill in the "URL" box with "http://www.mozilla.org".
+	    </para>
+	  </listitem>
+	  <listitem>
+	    <para>
+	      Enter "The Bugzilla Guide" in the Summary text box,
+	      and place any comments you have on this
+	      tutorial, or the Guide in general, into the Description box.
+	    </para>
+	  </listitem>
+	</orderedlist>
+	<para>
+	  Voila!  Select "Commit" and send in your bug report!
+	  Next we'll look at resolving bugs.
+	</para>
+      </section>
+
+      <section id="bug_manage">
+	<title>Managing your Bug Reports</title>
+	<para>
+	  OK, you should have a link to the bug you just created near the top of your page.
+	  It should say
+	  "Bug XXXX posted", with a link to the right saying "Back to BUG# XXXX".
+	  Select this link.
+	</para>
+	<orderedlist>
+	  <listitem>
+	    <para>
+	      Scroll down a bit on the subsequent page,
+	      until you see the "Resolve bug, changing resolution to (dropdown box).
+	      Normally, you would
+	      "Accept bug (change status to ASSIGNED)", fix it, and then resolve.
+	      But in this case, we're
+	      going to short-circuit the process because this wasn't a real bug.
+	      Change the dropdown next to
+	      "Resolve Bug" to "INVALID", make sure the radio button is
+	      marked next to "Resolve Bug", then
+	      click "Commit".
+	    </para>
+	  </listitem>
+	  <listitem>
+	    <para>
+	      Hey!  It said it couldn't take the change in a big red box!
+	      That's right, you must specify
+	      a Comment in order to make this change.  Select the "Back"
+	      button in your browser, add a
+	      Comment, then try Resolving the bug with INVALID status again.
+	      This time it should work.
+	    </para>
+	  </listitem>
+	</orderedlist>
+	<para>
+	  You have now learned the basics of Bugzilla navigation,
+	  entering a bug, and bug maintenance.
+	  I encourage you to explore these features, and see what you can do with them!
+	  We'll spend no more time on individual Bugs or Queries from this point on, so you are
+	  on your own there.
+	</para>
+	<para>
+	  But I'll give a few last hints!
+	</para>
+	<para>
+	  There is a <ulink url="http://bugzilla.mozilla.org/help.html">CLUE</ulink>
+	  on the Query page
+	  that will teach you more how to use the form.
+	</para>
+	<para>
+	  If you click the hyperlink on the
+	  <ulink url="http://bugzilla.mozilla.org/describecomponents.cgi">Component</ulink>
+	  box of the Query page, you will be presented a form that will describe what all
+	  the components are.
+	</para>
+	<para>
+	  Possibly the most powerful feature of the Query page is the 
+	  <ulink url="http://bugzilla.mozilla.org/booleanchart.html">Boolean Chart</ulink> section.
+	  It's a bit confusing to use the first time, but can provide unparalleled
+	  flexibility in your queries,
+	  allowing you to build extremely powerful requests.
+	</para>
+	<para>
+	  Finally, you can build some nifty 
+	  <ulink url="http://bugzilla.mozilla.org/reports.cgi">Reports</ulink>
+	  using the "Bug Reports" link near the bottom of the query page, and also
+	  available via the "Reports" link
+	  at the footer of each page.
+	</para>
+      </section>
+    </section>
+
+  </section>
+
+  <section id="init4me">
+    <title>What's in it for me?</title>
+    <epigraph>
+      <para>
+	Indiana, it feels like we walking on fortune cookies!
+      </para>
+      <para>
+	These ain't fortune cookies, kid...
+      </para>
+    </epigraph>
+    <para>
+      Customized User Preferences offer tremendous versatility to
+      your individual Bugzilla experience.
+      Let's plunge into what you can do!  The first step is to click
+      the "Edit prefs" link at the footer of each page once you
+      have logged in to
+      <ulink url="http://landfill.tequilarista.org/mozilla/bugzilla/query.cgi?GoAheadAndLogIn=1">
+      Landfill</ulink>.
+    </para>
+    <section id="accountsettings">
+      <title>Account Settings</title>
+      <para>
+	On this page, you can change your basic Account Settings,
+	including your password and full name.
+	For security reasons, in order to change anything on this page you
+	must type your <emphasis>current</emphasis>
+	password into the "Old Password" field. 
+	If you wish to change your password, type the new password you
+	want into the "New Password" field and again into the "Re-enter 
+	new password" field to ensure
+	you typed your new password correctly.  Select the "Submit" button and you're done!
+      </para>
+    </section>
+    <section id="emailsettings">
+      <title>Email Settings</title>
+      <section id="notification">
+	<title>Email Notification</title>
+	<para>
+	  Ahh, here you can reduce or increase the amount of email sent you from Bugzilla!
+	  In the drop-down "Notify me of changes to", select one of
+	  <simplelist>
+	    <member><emphasis>All qualifying bugs</emphasis>: sends you every change to every bug
+	      where your name is somewhere on it, regardless of who changed it.</member>
+	    <member><emphasis>Only those bugs which I am listed in the CC line</emphasis>: prevents
+	      you from receiving mail for which you are the reporter,'
+	      owner, or QA contact.  If you are on the CC
+	      list, presumably someone had a <emphasis>good</emphasis>
+	      reason for you to get the email.</member>
+	    <member><emphasis>All qulifying bugs except those which I change</emphasis>:
+	      This is the default, and
+	      a sensible setting.  If someone else changes your bugs, you will get emailed,
+	      but if you change bugs
+	      yourself you will receive no notification of the change.</member>
+	  </simplelist>
+	</para>
+      </section>
+      <section id="newemailtech">
+	<title>New Email Technology</title>
+	<note>
+	  <para>
+	    This option may not be available in all Bugzilla installations, depending upon
+	    the preferences of the systems administrator responsible for the setup of your Bugzilla.
+	    However, if you really want this functionality, ask her to "enable newemailtech
+	    in Params"
+	    and "make it the default for all new users", referring her to the Administration section
+	    of this Guide.
+	  </para>
+	</note>
+	<para>
+	  Disregard the warnings about "experimental and bleeding edge"; the code to handle email
+	  in a cleaner manner than that historically used for Bugzilla is
+	  quite robust and well-tested now.
+	</para>
+	<para>
+	  I recommend you enable the option, "Click here to sign up (and risk any bugs)".
+	  Your email-box
+	  will thank you for it.  The fundamental shift in "newemailtech" is away from standard UNIX
+	  "diff" output, which is quite ugly, to a prettier, better laid-out email.
+	</para>
+      </section>
+      <section id="watchsettings">
+	<title>"Watching" Users</title>
+	<note>
+	  <para>
+	    This option may not be available in all Bugzilla installations, depending upon
+	    the preferences of the systems administrator responsible for the setup of your Bugzilla.
+	    However, if you really want this functionality, ask her to "enable watchers in Params".
+	  </para>
+	</note>
+	<para>
+	  By entering user email names into the "Users to watch" text entry box, delineated by commas,
+	  you can watch bugs of other users.  This powerful functionality enables seamless transitions
+	  as developers change projects, managers wish to get in touch with the issues faced by their
+	  direct reports, or users go on vacation.  If any of these three situations apply
+	  to you, you will undoubtedly find this feature quite convenient.
+	</para>
+      </section>
+    </section>
+    <section id="footersettings">
+      <title>Page Footer</title>
+      <note>
+	<para>
+	  By default, this page is quite barren.  However, go explore the Query Page some more; you will
+	  find that you can store numerous queries on the server, so if you regularly run a particular query
+	  it is just a drop-down menu away.  On this page of Preferences, if you have many stored
+	  queries you can elect to have them always one-click away!
+	</para>
+      </note>
+      <para>
+	If you have many stored queries on the server, here you will find individual drop-downs for each
+	stored query.  Each drop-down gives you the option of that query appearing on the footer of every
+	page in Bugzilla!  This gives you powerful one-click access to any complex searches you may set up,
+	and is an excellent way to impress your boss...
+      </para>
+      <tip>
+	<para>By default, the "My Bugs" link appears at the bottom of each page.  However, this query
+	gives you both the bugs you have reported, as well as those you are assigned.  One of the most
+	common uses for this page is to remove the "My Bugs" link, replacing it with two other queries,
+	commonly called "My Bug Reports" and "My Bugs" (but only referencing bugs assigned to you).  This
+	allows you to distinguish those bugs you have reported from those you are assigned.  I commonly
+	set up complex Boolean queries in the Query page and link them to my footer in this page.  When
+	they are significantly complex, a one-click reference can save hours of work.</para>
+      </tip>
+    </section>
+    <section id="permissionsettings">
+      <title>Permissions</title>
+      <para>
+	This is a purely informative page which outlines your current permissions on
+	this installation of Bugzilla.  If you have permissions to grant certain permissions to
+	other users, the "other users" link appears on this page as well as the footer.
+	For more information regarding user administration, please consult the Administration
+	section of this Guide.
+      </para>
+    </section>
+  </section>
+
+  <section id="usingbz-conc">
+    <title>Using Bugzilla-Conclusion</title>
+    <para>
+      Thank you for reading through this portion of the Bugzilla Guide.  I anticipate
+      it may not yet meet the needs of all readers.  If you have additional comments or
+      corrections to make, please submit your contributions to the
+      <ulink url="mailto://mozilla-webtools@mozilla.org">mozilla-webtools</ulink>
+      mailing list/newsgroup.  The mailing list is mirrored to the netscape.public.mozilla.webtools
+      newsgroup, and the newsgroup is mirrored to mozilla-webtools@mozilla.org
+    </para>
+  </section>
+</chapter>
+
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-namecase-general:t
+sgml-general-insert-case:lower
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:2
+sgml-indent-data:t
+sgml-parent-document:Bugzilla-Guide\.sgml
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+-->

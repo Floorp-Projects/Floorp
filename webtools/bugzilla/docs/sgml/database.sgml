@@ -1,27 +1,42 @@
-The Bugzilla Database Schema v1.0
+<!-- <!DOCTYPE appendix PUBLIC "-//OASIS//DTD DocBook V4.1//EN"> -->
 
-The contents of this file are subject to the Mozilla Public License Version
-1.1 (the "License"); you may not use this file except in compliance with the
-License. You may obtain a copy of the License at http://www.mozilla.org/MPL/ .
-Software distributed under the License is distributed on an "AS IS" basis,
-WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
-the specific language governing rights and limitations under the License.
+<APPENDIX id="database">
 
-The Original Code is "The Bugzilla Database Schema".
+<TITLE>The Bugzilla Database</TITLE>
+<NOTE>
+<PARA>This document really needs to be updated with more fleshed out information about primary keys, interrelationships, and maybe some nifty tables to document dependencies.  Any takers? <REMARK>MPB</REMARK></PARA>
+</NOTE>
+  <SECTION id="dbschema">
+    <TITLE>Database Schema Chart</TITLE>
+    <PARA>
+      <MEDIAOBJECT>
+	<IMAGEOBJECT>
+	  <IMAGEDATA FILEREF="dbschema.jpg" FORMAT="jpg">
+	</IMAGEOBJECT>
 
-The Initial Developer of the Original Code is AtHome Corporation. Portions
-created by AtHome are Copyright © 1995-2000 AtHome Corporation. All Rights
-Reserved. @Home, Excite@Home, @Work, and Excite are the trademarks of At Home
-Corporation, and may be registered in certain jurisdictions
+	<TEXTOBJECT>
+	  <PHRASE>Database Relationships</PHRASE>
+	</TEXTOBJECT>
 
-Contributor(s):  Matthew P. Barnson <mbarnson@excitehome.net>
+	<CAPTION>
+	  <PARA>Bugzilla database relationships chart</PARA>
+	</CAPTION>
+      </MEDIAOBJECT>
+    </PARA>
+  </SECTION>
+
+  <SECTION id="dbdoc">
+<TITLE>MySQL Bugzilla Database Introduction</TITLE>
+<LITERALLAYOUT>
+
+Contributor(s):  Matthew P. Barnson (mbarnson@excitehome.net)
 
 Last update: May 16, 2000
 
 Changes:
 Version 1.0: Initial public release (May 16, 2000)
 
-Maintainer:  Matthew P. Barnson <mbarnson@excitehome.net>
+Maintainer:  Matthew P. Barnson (mbarnson@excitehome.net)
 
 
 ===
@@ -65,7 +80,7 @@ to ensure completeness even should this paper become out of date.
   This document is not maintained by Netscape or Netscape employees, so please
 do not contact them regarding errors or omissions contained herein. Please
 direct all questions, comments, updates, flames, etc. to Matthew P. Barnson
-<mbarnson@excitehome.net> (barnboy or barnhome on irc.mozilla.org in
+mbarnson@excitehome.net) (barnboy or barnhome on irc.mozilla.org in
 #mozwebtools).
 
   I'm sure I've made some glaring errors or omissions in this paper -- please
@@ -382,3 +397,233 @@ LINKS
 
 Great MySQL tutorial site:
 http://www.devshed.com/Server_Side/MySQL/
+
+    </LITERALLAYOUT>
+  </SECTION>
+
+  <SECTION id="granttables">
+    <TITLE>MySQL Permissions & Grant Tables</TITLE>
+
+    <NOTE>
+      <PARA>The following portion of documentation comes from my answer to an old discussion of Keynote, a cool product that does trouble-ticket tracking for IT departments.  I wrote this post to the Keynote support group regarding MySQL grant table permissions, and how to use them effectively.  It is badly in need of updating, as I believe MySQL has added a field or two to the grant tables since this time, but it serves as a decent introduction and troubleshooting document for grant table issues.  I used Keynote to track my troubles until I discovered Bugzilla, which gave me a whole new set of troubles to work on : )</PARA>
+    </NOTE>
+
+    <LITERALLAYOUT>
+From matt_barnson@singletrac.com Wed Jul  7 09:00:07 1999
+Date: Mon, 1 Mar 1999 21:37:04 -0700 
+From: Matthew Barnson matt_barnson@singletrac.com
+To: keystone-users@homeport.org
+Subject: [keystone-users] Grant Tables FAQ
+
+    [The following text is in the "iso-8859-1" character set]
+    [Your display is set for the "US-ASCII" character set]
+    [Some characters may be displayed incorrectly]
+
+Maybe we can include this rambling message in the Keystone FAQ?  It gets
+asked a lot, and the only option current listed in the FAQ is
+"--skip-grant-tables".
+
+Really, you can't go wrong by reading section 6 of the MySQL manual, at
+http://www.mysql.com/Manual/manual.html.  I am sure their description is
+better than mine.
+
+MySQL runs fine without permissions set up correctly if you run the mysql
+daemon with the "--skip-grant-tables" option.  Running this way denies
+access to nobody.  Unfortunately, unless you've got yourself firewalled it
+also opens the potential for abuse if someone knows you're running it.
+
+Additionally, the default permissions for MySQL allow anyone at localhost
+access to the database if the database name begins with "test_" or is named
+"test" (i.e. "test_keystone").  You can change the name of your database in
+the keystone.conf file ($sys_dbname).  This is the way I am doing it for
+some of my databases, and it works fine.
+
+The methods described below assume you're running MySQL on the same box as
+your webserver, and that you don't mind if your $sys_dbuser for Keystone has
+superuser access.  See near the bottom of this message for a description of
+what each field does.
+
+Method #1:
+
+1.  cd /var/lib
+	#location where you'll want to run /usr/bin/mysql_install_db shell
+script from to get it to work.
+
+2.  ln -s mysql data  
+	# soft links the "mysql" directory to "data", which is what
+mysql_install_db expects.  Alternately, you can edit mysql_install_db and
+change all the "./data" references to "./mysql".
+
+3.  Edit /usr/bin/mysql_install_db with your favorite text editor (vi,
+emacs, jot, pico, etc.)
+A)  Copy the "INSERT INTO db VALUES
+('%','test\_%','','Y','Y','Y','Y','Y','Y');" and paste it immediately after
+itself.  Chage the 'test\_%' value to 'keystone', or the value of
+$sys_dbname in keystone.conf.
+B)  If you are running your keystone database with any user, you'll need to
+copy the "INSERT INTO user VALUES
+('localhost','root','','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y');" line after
+itself and change 'root' to the name of the keystone database user
+($sys_dbuser) in keystone.conf.
+
+	# adds entries to the script to create grant tables for specific
+hosts and users.  The user you set up has super-user access ($sys_dbuser) --
+you may or may not want this.  The layout of mysql_install_db is really very
+uncomplicated.
+
+4.  /usr/bin/mysqladmin shutdown
+	# ya gotta shut it down before you can reinstall the grant tables!
+
+5.  rm -i /var/lib/mysql/mysql/*.IS?' and answer 'Y' to the deletion
+questions.
+	# nuke your current grant tables.  This WILL NOT delete any other
+databases than your grant tables.
+
+6.  /usr/bin/mysql_install_db
+	# run the script you just edited to install your new grant tables.
+
+7.  mysqladmin -u root password (new_password)  
+	# change the root MySQL password, or else anyone on localhost can
+login to MySQL as root and make changes.  You can skip this step if you want
+keystone to connect as root with no password.
+
+8.  mysqladmin -u (webserver_user_name) password (new_password)  
+	# change the password of the $sys_dbuser.  Note that you will need
+to change the password in the keystone.conf file as well in $sys_dbpasswd,
+and if your permissions are set up incorrectly anybody can type the URL to
+your keystone.conf file and get the password.  Not that this will help them
+much if your permissions are set to @localhost.
+
+
+
+Method #2:  easier, but a pain reproducing if you have to delete your grant
+tables.  This is the "recommended" method for altering grant tables in
+MySQL.  I don't use it because I like the other way :)
+
+shell> mysql --user=root keystone
+
+mysql> GRANT
+SELECT,INSERT,UPDATE,DELETE,INDEX,ALTER,CREATE,DROP,RELOAD,SHUTDOWN,PROCESS,
+FILE,
+           ON keystone.*
+           TO <$sys_dbuser name>@localhost
+           IDENTIFIED BY '(password)'
+	     WITH GRANT OPTION;
+
+OR
+
+mysql> GRANT ALL PRIVELEGES 
+		ON keystone.*
+		TO <$sys_dbuser name>@localhost
+		IDENTIFIED BY '(password)'
+		WITH GRANT OPTION;
+
+	# this grants the required permissions to the keystone ($sys_dbuser)
+account defined in keystone.conf.  However, if you are runnning many
+different MySQL-based apps, as we are, it's generally better to edit the
+mysql_install_db script to be able to quickly reproduce your permissions
+structure again.  Note that the FILE privelege and WITH GRANT OPTION may not
+be in your best interest to include.
+
+
+GRANT TABLE FIELDS EXPLANATION:
+Quick syntax summary:  "%" in MySQL is a wildcard.  I.E., if you are
+defining your DB table and in the 'host' field and enter '%', that means
+that any host can access that database.  Of course, that host must also have
+a valid db user in order to do anything useful.  'db'=name of database.  In
+our case, it should be "keystone".  "user" should be your "$sys_dbuser"
+defined in keystone.conf.  Note that you CANNOT add or change a password by
+using the "INSERT INTO db (X)" command -- you must change it with the mysql
+-u command as defined above.  Passwords are stored encrypted in the MySQL
+database, and if you try to enter it directly into the table they will not
+match.
+
+TABLE:  USER.  Everything after "password" is a privelege granted (Y/N).
+This table controls individual user global access rights.
+
+'host','user','password','select','insert','update','delete','index','alter'
+,'create','drop','grant','reload','shutdown','process','file'
+
+TABLE:  DB.  This controls access of USERS to databases.
+
+'host','db','user','select','insert','update','delete','index','alter','crea
+te','drop','grant'
+
+TABLE:  HOST.  This controls which HOSTS are allowed what global access
+rights.  Note that the HOST table, USER table, and DB table are very closely
+connected -- if an authorized USER attempts an SQL request from an
+unauthorized HOST, she's denied.  If a request from an authorized HOST is
+not an authorized USER, it is denied.  If a globally authorized USER does
+not have rights to a certain DB, she's denied.  Get the picture?
+
+'host','db','select','insert','update','delete','index','alter','create','dr
+op','grant'
+
+
+You should now have a working knowledge of MySQL grant tables.  If there is
+anything I've left out of this answer that you feel is pertinent, or if my
+instructions don't work for you, please let me know and I'll re-post this
+letter again, corrected.  I threw it together one night out of exasperation
+for all the newbies who don't know squat about MySQL yet, so it is almost
+guaranteed to have errors.
+
+Once again, you can't go wrong by reading section 6 of the MySQL manual.  It
+is more detailed than I!
+http://www.mysql.com/Manual/manual.html.
+
+----------------------------------------------------------------------------
+10/12/2000
+Matthew sent in some mail with updated contact information:
+NEW CONTACT INFORMATION: 
+
+                        ------------------------ 
+                        Matthew P. Barnson 
+                        Manager, Systems Administration 
+                        Excite@Home Business Applications 
+                        mbarnson@excitehome.net 
+                        (801)234-8300 
+
+
+    </LITERALLAYOUT>
+  </SECTION>
+  <SECTION id="cleanupwork">
+    <TITLE>Cleaning up after mucking with Bugzilla</TITLE>
+    <LITERALLAYOUT>
+Contributed by Eric Hansen:
+There are several things, and one trick.  There is a small tiny piece of
+documentation I saw once that said something very important.
+1)  After pretty much any manual working of the Mysql db, you must
+delete a file in the bugzilla directory: data/versioncache
+Versioncache basically is a way to speed up bugzilla (from what I
+understand).  It stores a lot of commonly used information.  However,
+this file is refreshed every so often (I can't remember the time
+interval though).  So eventually all changes do propogate out, so you
+may see stuff suddenly working.
+2)  Assuming that failed, you will also have to check something with the
+checksetup.pl file.  It actually is run twice.  The first time it
+creates the file: localconfig.  You can modify localconfig, (or not if
+you are doing bug_status stuff) or you should delete localconfig and
+rerun your modified checksetup.pl.  Since I don't actually see anything
+in localconfig pertaining to bug_status, this point is mainly a FYI.
+    </LITERALLAYOUT>
+  </SECTION>
+
+</APPENDIX>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-namecase-general:t
+sgml-general-insert-case:upper
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:2
+sgml-indent-data:t
+sgml-parent-document:nil
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+-->

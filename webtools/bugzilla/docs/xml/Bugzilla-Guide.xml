@@ -1,0 +1,177 @@
+<!DOCTYPE BOOK PUBLIC "-//OASIS//DTD DocBook V4.1//EN" [
+
+<!-- Include macros -->
+<!ENTITY about SYSTEM "about.sgml">
+<!ENTITY conventions SYSTEM "conventions.sgml">
+<!ENTITY doc-index SYSTEM "index.sgml">
+<!ENTITY faq SYSTEM "faq.sgml">
+<!ENTITY gfdl SYSTEM "gfdl.sgml">
+<!ENTITY glossary SYSTEM "glossary.sgml">
+<!ENTITY installation SYSTEM "installation.sgml">
+<!ENTITY administration SYSTEM "administration.sgml">
+<!ENTITY using SYSTEM "using.sgml">
+<!ENTITY integration SYSTEM "integration.sgml">
+<!ENTITY future SYSTEM "future.sgml">
+<!ENTITY index SYSTEM "index.sgml">
+<!ENTITY database SYSTEM "database.sgml">
+<!ENTITY patches SYSTEM "patches.sgml">
+<!ENTITY variants SYSTEM "variants.sgml">
+
+]>
+
+<!-- Coding standards for this document 
+
+1.  Preface new or modified sections with a comment stating who
+ modified it and when; please also use the "authorinitials" tag.
+
+2.  There is no "two".
+
+3.  Other than the GFDL, please use the "section" tag instead of "sect1", "sect2", etc.
+
+4.  Use Entities to include files for new chapters in Bugzilla-Guide.sgml.
+
+5.  Ensure all documents compile cleanly to HTML after modification.
+  The errors "DTD Declaration not allowed here" and "DTDDECL catalog types not supported"
+ are normal errors to be expected when compiling the whole guide.
+
+6.  Try to index important terms wherever possible.
+
+7.  Follow coding standards at http://www.linuxdoc.org.
+
+8.  All tags should be lowercase (needsfix)
+
+9.  Code being submitted for review should use the 
+"review" tag. Documentation on this is available at 
+http://www.linuxdoc.org/LDP/LDP-Author-Guide/tools-hints.html
+ under section 4.9.4, "Making notes on the text while it's being written".
+
+10.  Please use sensible spacing.  The comments at the very end of each Guide
+ file define reasonable defaults for PSGML mode in EMACS.
+  Double-indent tags, use double spacing whenever possible,
+ try to avoid clutter and feel free to waste space in the code to make it more readable.
+
+-->
+
+<BOOK ID="index">
+
+<!-- Header -->
+
+  <BOOKINFO>
+    <TITLE>The Bugzilla Guide</TITLE>
+    <PUBDATE>v2.11.1, 06 March 2001</PUBDATE>
+    <AUTHOR>
+      <FIRSTNAME>Matthew</FIRSTNAME>
+      <OTHERNAME>P.</OTHERNAME>
+      <SURNAME>Barnson</SURNAME>
+      <affiliation>
+	<address><email>barnboy@trilobyte.net</email></address>
+      </affiliation>
+    </AUTHOR>
+
+    <ABSTRACT>
+      <PARA>This is the documentation for Bugzilla, the Mozilla bug-tracking system.</PARA>
+    </ABSTRACT>
+
+    <REVHISTORY>
+      <REVISION>
+	<REVNUMBER>v2.11</REVNUMBER>
+	<DATE>20 December 2000</DATE>
+	<AUTHORINITIALS>MPB</AUTHORINITIALS>
+	<REVREMARK>Converted the README, FAQ, and DATABASE information into SGML
+	  docbook format.</REVREMARK>
+      </REVISION>
+
+      <revision>
+	<revnumber>2.11.1</revnumber>
+	<date>06 March 2001</date>
+	<revremark>
+	  Took way too long to revise this for 2.12 release.
+	  Updated FAQ to use qandaset tags instead of literallayout,
+	  cleaned up administration section, added User Guide section,
+	  miscellaneous FAQ updates and third-party integration information.
+	  From this point on all new tags are lowercase in preparation for the
+	  2.13 release of the Guide in XML format instead of SGML.
+	</revremark>
+      </revision>
+    </REVHISTORY>
+
+    <KEYWORDSET>
+      <KEYWORD>Bugzilla</KEYWORD>
+      <KEYWORD>Guide</KEYWORD>
+      <KEYWORD>installation</KEYWORD>
+      <KEYWORD>FAQ</KEYWORD>
+      <KEYWORD>administration</KEYWORD>
+      <KEYWORD>integration</KEYWORD>
+      <KEYWORD>MySQL</KEYWORD>
+      <KEYWORD>Mozilla</KEYWORD>
+      <KEYWORD>webtools</KEYWORD>
+    </KEYWORDSET>
+  </BOOKINFO>
+
+<!-- About This Guide -->
+&about;
+
+<!-- Installing Bugzilla -->
+&installation;
+
+<!-- Administering Bugzilla -->
+&administration;
+
+<!-- Using Bugzilla -->
+&using;
+
+<!-- Integrating Bugzilla with Third-Party Tools -->
+&integration;
+
+<!-- The Future of Bugzilla -->
+&future;
+
+<!-- Appendix: The Frequently Asked Questions -->
+&faq;
+
+<!-- Appendix: The Database Schema -->
+&database;
+
+<!-- Appendix: Major Bugzilla Variants -->
+&variants;
+
+<!-- Appendix: Custom Patches -->
+&patches;
+
+<!-- Appendix: The GNU Free Documentation License -->
+&gfdl;
+
+<!-- Glossary -->
+&glossary;
+
+<!-- Index -->
+&index;
+
+</BOOK>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-namecase-general:t
+sgml-general-insert-case:lower
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:2
+sgml-indent-data:t
+sgml-parent-document:nil
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+-->
+
+
+
+
+
+
+
+
+

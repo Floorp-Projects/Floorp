@@ -1,0 +1,209 @@
+<!DOCTYPE appendix PUBLIC "-//OASIS//DTD DocBook V4.1//EN">
+
+<appendix id="patches">
+  <title>Useful Patches and Utilities for Bugzilla</title>		
+
+<section id="setperl">
+    <title>The setperl.pl Utility</title>
+    <para>	
+      You can use the "setperl.pl" utility to quickly and easily
+      change the path to perl on all your Bugzilla files.
+    </para>	
+    <procedure>
+      <step>
+	<para>
+	  Download the "setperl.pl" utility to your Bugzilla
+	  directory and make it executable.
+	</para>
+	<substeps>
+	  <step>
+	    <para>
+	      <computeroutput>
+		<prompt>bash#</prompt>
+		<command>cd /your/path/to/bugzilla</command>
+	      </computeroutput>
+	    </para>
+	  </step>
+	  <step>
+	  <para>
+	      <computeroutput>
+		<prompt>bash#</prompt>
+		<command>wget -O setperl.pl 'http://bugzilla.mozilla.org/showattachment.cgi?attach_id=10795'</command>
+	      </computeroutput>
+	    </para>
+	  </step>
+	<step>
+	    <para>
+	      <computeroutput>
+		<prompt>bash#</prompt>
+		<command>chmod u+x setperl.pl</command>
+	      </computeroutput>
+	    </para>
+	  </step>
+      </substeps>
+      </step>
+      <step>
+	<para>
+	  Prepare (and fix) Bugzilla file permissions.
+	</para>
+	<substeps>
+	  <step>
+	    <para>
+	      <computeroutput>
+		<prompt>bash#</prompt>
+		<command>chmod u+w *</command>
+	      </computeroutput>
+	    </para>
+	  </step>
+	  <step>
+	  <para>
+	      <computeroutput>
+		<prompt>bash#</prompt>
+		<command>chmod u+x duplicates.cgi</command>
+	      </computeroutput>
+	    </para>
+	  </step>
+	  <step>
+	    <para>
+	      <computeroutput>
+		<prompt>bash#</prompt>
+		<command>chmod a-x bug_status.html</command>
+	      </computeroutput>
+	    </para>
+	  </step>
+	</substeps>
+      </step>
+      <step>
+	<para>
+	  Run the script:
+	</para>
+	<para>
+	  <computeroutput>
+	    <prompt>bash#</prompt>
+	    <command>./setperl.pl /your/path/to/perl</command>
+	  </computeroutput>
+	</para>
+      </step>
+    </procedure>
+  </section>
+
+  <section id="cmdline">
+    <title>Command-line Bugzilla Queries</title>
+    <para>
+      Users can query Bugzilla from the command line using
+      this suite of utilities.
+    </para>
+    <para>
+      The query.conf file contains the mapping from options to field
+      names and comparison types.  Quoted option names are "grepped" for, so
+      it should be easy to edit this file.  Comments (#) have no effect; you
+      must make sure these lines do not contain any quoted "option"
+    </para>
+    <para>
+      buglist is a shell script which submits a Bugzilla query and writes the
+      resulting HTML page to stdout.  It supports both short options,
+      (such as "-Afoo" or "-Rbar") and long options (such as
+      "--assignedto=foo" or "--reporter=bar").  If the first character
+      of an option is not "-", it is treated as if it were prefixed
+      with "--default=".
+    </para>
+    <para>
+      The columlist is taken from the COLUMNLIST environment variable.
+      This is equivalent to the "Change Columns" option when you list
+      bugs in buglist.cgi.  If you have already used Bugzilla, use
+      <command>grep COLUMLIST ~/.netscape/cookies</command> to see
+      your current COLUMNLIST setting.
+    </para>
+    <para>
+      bugs is a simple shell script which calls buglist and extracts
+      the bug numbers from the output.  Adding the prefix
+      "http://bugzilla.mozilla.org/buglist.cgi?bug_id="
+      turns the bug list into a working link if any bugs are found.
+      Counting bugs is easy.  Pipe the results through
+      <command>sed -e 's/,/ /g' | wc | awk '{printf $2 "\n"}'</command>
+    </para>
+    <para>
+      Akkana says she has good results piping buglist output through
+      <command>w3m -T text/html -dump</command>
+    </para>
+    <procedure>
+      <step>
+	<para>
+	  Download three files:
+	</para>
+	<substeps>
+	  <step>
+	    <para>
+	      <computeroutput>
+		<prompt>bash$</prompt>
+		<command>wget -O query.conf 'http://bugzilla.mozilla.org/showattachment.cgi?attach_id=26157'</command>
+	      </computeroutput>
+	    </para>
+	  </step>
+	  <step>
+	    <para>
+	      <computeroutput>
+		<prompt>bash$</prompt>
+		<command>wget -O buglist 'http://bugzilla.mozilla.org/showattachment.cgi?attach_id=26944'</command>
+	      </computeroutput>
+	    </para>
+	  </step>
+	  <step>
+	    <para>
+	      <computeroutput>
+		<prompt>bash#</prompt>
+		<command>wget -O bugs 'http://bugzilla.mozilla.org/showattachment.cgi?attach_id=26215'</command>
+	      </computeroutput>
+	    </para>
+	  </step>
+	</substeps>
+      </step>
+      <step>
+	<para>
+	  Make your utilities executable:
+	  <computeroutput>
+	    <prompt>bash$</prompt>
+	    <command>chmod u+x buglist bugs</command>
+	  </computeroutput>
+	</para>
+      </step>
+    </procedure>
+  </section>
+
+  <section id="quicksearch">
+    <title>The Quicksearch Utility</title>
+    <para>
+      Quicksearch is a new, experimental feature of the 2.12 release.
+      It consist of two Javascript files, "quicksearch.js" and "localconfig.js",
+      and two documentation files, "quicksearch.html" and "quicksearchhack.html"
+    </para>
+    <para>
+      The index.html page has been updated to include the QuickSearch text box.
+    </para>
+    <para>
+      To take full advantage of the query power, the Bugzilla maintainer must
+      edit "localconfig.js" according to the value sets used in the local installation.
+    </para>
+    <para>
+      Currently, keywords must be hard-coded in localconfig.js.  If they are not,
+      keywords are not automatically recognized.  This means, if localconfig.js
+      is left unconfigured, that searching for a bug with the "foo" keyword
+      will only find bugs with "foo" in the summary, status whiteboard, product or
+      component name, but not those with the keyword "foo".
+    </para>
+    <para>
+      Workarounds for Bugzilla users:
+      <simplelist>
+	<member>search for '!foo' (this will find only bugs with the keyword "foo"</member>
+	<member>search 'foo,!foo' (equivalent to 'foo OR keyword:foo')</member>
+      </simplelist>
+    </para>
+    <para>
+      When this tool is ported from client-side JavaScript to server-side Perl,
+      the requirement for hard-coding keywords can be fixed.
+      <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=70907">This bug</ulink>
+      has details.
+    </para>
+  </section>
+
+</appendix>

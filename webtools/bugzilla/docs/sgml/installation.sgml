@@ -1,0 +1,347 @@
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook V4.1//EN">
+
+<CHAPTER id="installation">
+  <TITLE>Installing Bugzilla</TITLE>
+  
+  <SECTION id="README.unix">
+    <TITLE>UNIX Installation</TITLE>
+    <NOTE>
+      <PARA>
+	Please consult the README included with the Bugzilla distribution
+	as the current canonical source for UNIX installation instructions.
+	We do, however, have some installation notes for errata from the README.
+      </PARA>
+    </NOTE>
+
+    <NOTE>
+      <PARA>
+	If you are installing Bugzilla on S.u.S.e. Linux, or some other
+	distributions with "paranoid" security options, it is possible
+	that the checksetup.pl script may fail with the error:
+	<ERRORNAME>cannot chdir(/var/spool/mqueue): Permission denied</ERRORNAME>
+	This is because your
+	/var/spool/mqueue directory has a mode of "drwx------".  Type
+	<COMMAND>chmod 755 /var/spool/mqueue</COMMAND> as root to fix this problem.
+      </PARA>
+    </NOTE>
+
+    <NOTE>
+      <PARA>
+	
+      </PARA>
+    </NOTE>
+  </SECTION>
+
+  <SECTION id="README.windows">
+    <TITLE>Win32 (Win98+/NT/2K) Installation</TITLE>
+    <PARA>
+      These directions have <EMPHASIS>not</EMPHASIS> been extensively tested.
+      We need testers!  Please try these out and post any changes to the
+      newsgroup.
+    </PARA>
+    <SECTION id="ntverified">
+      <TITLE>Win32 Installation: Step-by-step</TITLE>
+      <NOTE>
+	<PARA>
+	  You should be familiar with, and cross-reference, the UNIX README
+	  while performing your Win32 installation.  Unfortunately, Win32
+	  directions are not yet as detailed as those for UNIX.
+	</PARA>
+	<PARA>
+	  The <EMPHASIS>most critical</EMPHASIS> difference for Win32 users is
+	  the lack of support for a crypt() function in MySQL for Windows.  It does not
+	  have it!  All ENCRYPT statements must be modified.
+	</PARA>
+      </NOTE>
+
+      <PROCEDURE>
+	<STEP>
+	  <PARA>
+	    Install <ULINK URL="http://www.apache.org/">Apache Web Server</ULINK>
+	    for Windows.
+	  </PARA>
+	  <NOTE>
+	    <PARA>
+	      You may also use Internet Information Server or Personal Web
+	      Server for this purpose.  However, setup is slightly more
+	      difficult.  If ActivePerl doesn't seem to handle your file
+	      associations correctly (for .cgi and .pl files), please
+	      consult the FAQ, in the "Win32" section.
+	    </PARA>
+	    <PARA>
+	      If you are going to use IIS, if on Windows NT you must be updated
+	      to at least Service Pack 4.
+	    </PARA>
+	  </NOTE>
+	</STEP>
+	<STEP>
+	  <PARA>
+	    Install <ULINK URL="http://www.activestate.com/">ActivePerl</ULINK>
+	  </PARA>
+	  <PARA>
+	    Please also check the following links to fully understand the status
+	    of ActivePerl on Win32:
+	    <ULINK URL="http://language.perl.com/newdocs/pod/perlport.html">
+	      Perl Porting</ULINK>, and
+	    <ULINK URL="http://ftp.univie.ac.at/packages/perl/ports/nt/FAQ/perlwin32faq5.html">
+	      Hixie Click Here</ULINK>
+	  </PARA>
+	</STEP>
+	<STEP>
+	  <PARA>
+	    Use ppm from your perl\bin directory to install the following packs: DBI,
+	    DBD-Mysql, TimeDate, Chart, Date-Calc, Date-Manip, and GD.  You may need
+	    to extract them from .zip format using Winzip or other unzip program first.
+	    These additional ppm modules can be downloaded from ActiveState.
+	  </PARA>
+	  <PARA>
+	    The syntax for ppm is:
+	    <COMPUTEROUTPUT>
+	      <PROMPT>C:> </PROMPT><COMMAND>ppm install &lt;module&gt;.ppd</COMMAND>
+	    </COMPUTEROUTPUT>
+	  </PARA>
+	  <PARA>
+	    You can find ActiveState ppm modules at
+	    <ULINK URL="http://www.activestate.com/PPMPackages/5.6plus/">
+	      http://www.activestate.com/PPMPackages/5.6plus</ULINK>
+	  </PARA>
+	</STEP>
+	<STEP>
+	  <PARA>
+	    Download and install the Windows GNU tools from
+	    <ULINK URL="http://www.cygwin.com/">www.cygwin.com</ULINK>.
+	    Make sure the GNU utilities are in your $PATH.
+	  </PARA>
+	</STEP>
+	<STEP>
+	  <PARA>
+	    Install MySQL for NT.
+	    <NOTE>
+	      <PARA>
+		Your configuration file for MySQL <EMPHASIS>must</EMPHASIS> be named C:\MY.CNF.
+	      </PARA>
+	    </NOTE>
+	  </PARA>
+	</STEP>
+	<STEP>
+	  <PARA>
+	    Setup MySQL
+	  </PARA>
+	  <SUBSTEPS>
+	    <STEP>
+	      <PARA>
+		<COMPUTEROUTPUT>
+		  <PROMPT>C:> </PROMPT>
+		  <COMMAND>C:\mysql\bin\mysql -u root mysql</COMMAND>
+		</COMPUTEROUTPUT>
+	      </PARA>
+	    </STEP>
+	    <STEP>
+	      <PARA>
+		<COMPUTEROUTPUT>
+		  <PROMPT>mysql></PROMPT>
+		  <COMMAND>DELETE FROM user WHERE Host='localhost' AND User='';</COMMAND>
+		</COMPUTEROUTPUT>
+	      </PARA>
+	    </STEP>
+	    <STEP>
+	      <PARA>
+		<COMPUTEROUTPUT>
+		  <PROMPT>mysql></PROMPT>
+		  <COMMAND>UPDATE user SET Password=PASSWORD ('new_password')
+		    WHERE user='root';</COMMAND>
+		</COMPUTEROUTPUT>
+	      </PARA>
+	    </STEP>
+	    <STEP>
+	      <PARA>
+		<COMPUTEROUTPUT>
+		  <PROMPT>mysql></PROMPT>
+		  <COMMAND>GRANT SELECT, INSERT, UPDATE, DELETE,
+		    INDEX, ALTER, CREATE, DROP, REFERENCES
+		    ON bugs.* to bugs@localhost
+		    IDENTIFIED BY 'bugs_password';</COMMAND>
+		</COMPUTEROUTPUT>
+	      </PARA>
+	    </STEP>
+	    <STEP>
+	      <PARA>
+		<COMPUTEROUTPUT>
+		  <PROMPT>mysql></PROMPT>
+		  <COMMAND>FLUSH PRIVILEGES;</COMMAND>
+		</COMPUTEROUTPUT>
+	      </PARA>
+	    </STEP>
+	    <STEP>
+	      <PARA>
+		<COMPUTEROUTPUT>
+		  <PROMPT>mysql></PROMPT>
+		  <COMMAND>create database bugs;</COMMAND>
+		</COMPUTEROUTPUT>
+	      </PARA>
+	    </STEP>
+	    <STEP>
+	      <PARA>
+		<COMPUTEROUTPUT>
+		  <PROMPT>mysql></PROMPT>
+		  <COMMAND>exit</COMMAND>
+		</COMPUTEROUTPUT>
+	      </PARA>
+	    </STEP>
+	    <STEP>
+	      <PARA>
+		<COMPUTEROUTPUT>
+		  <PROMPT>C:></PROMPT>
+		  <COMMAND>C:\mysql\bin\mysqladmin -u root -p reload</COMMAND>
+		</COMPUTEROUTPUT>
+	      </PARA>
+	    </STEP>
+	  </SUBSTEPS>
+	</STEP>
+
+	<STEP>
+	  <PARA>
+	    Configure Bugzilla.  For Win32, this involves editing "defparams.pl"
+	    and "localconfig" to taste.  Running "checksetup.pl" should create
+	    localconfig for you.  Note that getgrnam() doesn't work, and should be
+	    deleted.  Change this line:
+	    "my $webservergid = getgrnam($my_webservergroup); "
+	    to
+	    "my $webservergid = $my_webservergroup; "
+	  </PARA>
+	</STEP>
+
+	<STEP>
+	  <NOTE>
+	    <PARA>
+	      There are several alternatives to Sendmail that will work on Win32.
+	      The one mentioned here is a <EMPHASIS>suggestion</EMPHASIS>, not
+	      a requirement.  Some other mail packages that can work include
+	      <ULINK URL="http://www.blat.net/">BLAT</ULINK>,
+	      <ULINK URL="http://www.geocel.com/windmail/">Windmail</ULINK>,
+	      <ULINK URL="http://www.dynamicstate.com/">Mercury Sendmail</ULINK>,
+	      and the CPAN Net::SMTP Perl module (available in .ppm).
+	      Every option requires some hacking of the Perl scripts for Bugzilla
+	      to make it work.  The option here simply requires the least.
+	    </PARA>
+	  </NOTE>
+	  <PARA>
+	    Download NTsendmail, available from<ULINK URL="http://www.ntsendmail.com/">
+	    www.ntsendmail.com</ULINK>.  In order for it to work, you must set up some
+	    new environment variables (detailed on the ntsendmail home page).  Figuring
+	    out where to put those variables is left as an exercise for the reader.
+	    You must have a "real" mail server which allows you to relay off it
+	    in your $ENV{"NTsendmail"} (which you should probably place in globals.pl)
+	  </PARA>
+	  <PARA>
+	    Once downloaded and installed, modify all open(SENDMAIL) calls to open
+	    "| c:\ntsendmail\ntsendmail -t" instead of "|/usr/lib/sendmail -t".
+	  </PARA>
+	  <NOTE>
+	    <PARA>
+	      We need someone to test this and make sure this works as advertised.
+	    </PARA>
+	  </NOTE>
+	</STEP>
+	<STEP>
+	  <PARA>
+	    Modify globals.pl and CGI.pl to remove the word "encrypt".
+	  </PARA>
+	  <NOTE>
+	    <PARA>
+	      I'm not sure this is all that is involved to remove crypt.  Any
+	      NT Bugzilla hackers want to pipe up?
+	    </PARA>
+	  </NOTE>
+	</STEP>
+	<STEP>
+	  <PARA>
+	    Change all references to "processmail" to "processmail.pl" in
+	    all files, and rename "processmail" to "processmail.pl"
+	  </PARA>
+	  <NOTE>
+	    <PARA>
+	      I really think this may be a change we want to make for
+	      main-tree Bugzilla.  It's painless for the UNIX folks,
+	      and will make the Win32 people happier.
+	    </PARA>
+	  </NOTE>
+	</STEP>
+	<STEP>
+	  <PARA>
+	    Modify the path to perl on the first line (#!) of all files
+	    to point to your Perl installation, and
+	    add "perl" to the beginning of all Perl system calls that
+	    use a perl script as an argument.  This may take you a while.
+	    There is a "setperl.pl" utility to speed part of this procedure,
+	    available in the "Patches and Utilities" section of The Bugzilla Guide.
+	  </PARA>
+	</STEP>
+	<STEP>
+	  <PARA>
+	    In processmail.pl, add "binmode(HANDLE)" before all read() calls.
+	    This may not be necessary, but in some cases the read() under
+	    Win32 doesn't count the EOL's without using a binary read().
+	  </PARA>
+	</STEP>
+      </PROCEDURE>
+
+    </SECTION>
+
+    <SECTION id="addlwintips">
+      <TITLE>Additional Windows Tips</TITLE>
+      <TIP>
+	<PARA>
+	  From Andrew Pearson:
+	  <BLOCKQUOTE>
+	    <PARA>
+	      "You can make Bugzilla work with Personal Web Server for
+	      Windows 98 and higher, as well as for IIS 4.0.  Microsoft has
+	      information available at
+	      <ULINK URL=" http://support.microsoft.com/support/kb/articles/Q231/9/98.ASP">
+		http://support.microsoft.com/support/kb/articles/Q231/9/98.ASP</ULINK>
+	    </PARA>
+	    <PARA>
+	      Basically you need to add two String Keys in the
+	      registry at the following location:
+	    </PARA>
+	    <PARA>
+	      HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\W3SVC\Parameters\ScriptMap
+	    </PARA>
+	    <PARA>
+	      The keys should be called ".pl" and ".cgi", and both
+	      should have a value something like:
+	      <COMMAND>c:/perl/bin/perl.exe "%s" "%s"</COMMAND>
+	    </PARA>
+	    <PARA>
+	      The KB article only talks about .pl, but it goes into
+	      more detail and provides a perl test script.
+	    </PARA>
+	  </BLOCKQUOTE>
+	</PARA>
+      </TIP>
+    </SECTION>
+  </SECTION>
+</CHAPTER>
+
+
+
+
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-namecase-general:t
+sgml-general-insert-case:upper
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:2
+sgml-indent-data:t
+sgml-parent-document:nil
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+-->

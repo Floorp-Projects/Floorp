@@ -1,0 +1,54 @@
+<!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook V4.1//EN" > -->
+
+<!-- Keep these tools listings in alphabetical order please. -MPB -->
+
+<chapter id="integration">
+  <title>Integrating Bugzilla with Third-Party Tools</title>
+
+  <section id="bonsai">
+    <title>Bonsai</title>
+    <para>We need Bonsai integration information.</para>
+  </section>
+
+  <section id="cvs">
+    <title>CVS</title>
+    <para>We need CVS integration information</para>
+  </section>
+
+  <section id="scm">
+    <title>Perforce SCM</title>
+    <para>
+      Richard Brooksby and his team have an integration tool
+      in public beta.  You can find it at
+      <ulink url="http://www.ravenbrook.com/project/p4dt">
+	http://www.ravenbrook.com/project/p4dti</ulink>.
+    </para>
+  </section>
+
+  <section id="tinderbox">
+    <title>Tinderbox</title>
+    <para>We need Tinderbox integration information</para>
+  </section>
+
+</chapter>
+
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-namecase-general:t
+sgml-general-insert-case:lower
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:2
+sgml-indent-data:t
+sgml-parent-document:nil
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+-->
+
+

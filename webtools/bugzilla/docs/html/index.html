@@ -1,0 +1,531 @@
+<HTML
+><HEAD
+><TITLE
+>The Bugzilla Guide</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.61
+"><LINK
+REL="NEXT"
+TITLE="About This Guide"
+HREF="about.html"><META
+NAME="KEYWORD"
+CONTENT="Bugzilla"><META
+NAME="KEYWORD"
+CONTENT="Guide"><META
+NAME="KEYWORD"
+CONTENT="installation"><META
+NAME="KEYWORD"
+CONTENT="FAQ"><META
+NAME="KEYWORD"
+CONTENT="administration"><META
+NAME="KEYWORD"
+CONTENT="integration"><META
+NAME="KEYWORD"
+CONTENT="MySQL"><META
+NAME="KEYWORD"
+CONTENT="Mozilla"><META
+NAME="KEYWORD"
+CONTENT="webtools"></HEAD
+><BODY
+CLASS="BOOK"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="BOOK"
+><A
+NAME="INDEX"
+></A
+><DIV
+CLASS="TITLEPAGE"
+><H1
+CLASS="TITLE"
+><A
+NAME="AEN2"
+>The Bugzilla Guide</A
+></H1
+><H3
+CLASS="AUTHOR"
+><A
+NAME="AEN5"
+>Matthew P. Barnson</A
+></H3
+><DIV
+CLASS="AFFILIATION"
+><DIV
+CLASS="ADDRESS"
+><P
+CLASS="ADDRESS"
+>barnboy@trilobyte.net</P
+></DIV
+></DIV
+><DIV
+><DIV
+CLASS="ABSTRACT"
+><A
+NAME="AEN12"
+></A
+><P
+></P
+><P
+>This is the documentation for Bugzilla, the Mozilla bug-tracking system.</P
+><P
+></P
+></DIV
+></DIV
+><HR></DIV
+><DIV
+CLASS="TOC"
+><DL
+><DT
+><B
+>Table of Contents</B
+></DT
+><DT
+>1. <A
+HREF="about.html"
+>About This Guide</A
+></DT
+><DD
+><DL
+><DT
+>1.1. <A
+HREF="aboutthisguide.html"
+>Purpose and Scope of this Guide</A
+></DT
+><DT
+>1.2. <A
+HREF="copyright.html"
+>Copyright Information</A
+></DT
+><DT
+>1.3. <A
+HREF="disclaimer.html"
+>Disclaimer</A
+></DT
+><DT
+>1.4. <A
+HREF="newversions.html"
+>New Versions</A
+></DT
+><DT
+>1.5. <A
+HREF="credits.html"
+>Credits</A
+></DT
+><DT
+>1.6. <A
+HREF="contributors.html"
+>Contributors</A
+></DT
+><DT
+>1.7. <A
+HREF="feedback.html"
+>Feedback</A
+></DT
+><DT
+>1.8. <A
+HREF="translations.html"
+>Translations</A
+></DT
+><DT
+>1.9. <A
+HREF="conventions.html"
+>Document Conventions</A
+></DT
+></DL
+></DD
+><DT
+>2. <A
+HREF="installation.html"
+>Installing Bugzilla</A
+></DT
+><DD
+><DL
+><DT
+>2.1. <A
+HREF="readme.unix.html"
+>UNIX Installation</A
+></DT
+><DT
+>2.2. <A
+HREF="readme.windows.html"
+>Win32 (Win98+/NT/2K) Installation</A
+></DT
+></DL
+></DD
+><DT
+>3. <A
+HREF="administration.html"
+>Administering Bugzilla</A
+></DT
+><DD
+><DL
+><DT
+>3.1. <A
+HREF="postinstall-check.html"
+>Post-Installation Checklist</A
+></DT
+><DT
+>3.2. <A
+HREF="useradmin.html"
+>User Administration</A
+></DT
+><DT
+>3.3. <A
+HREF="programadmin.html"
+>Product, Component, Milestone, and Version Administration</A
+></DT
+><DT
+>3.4. <A
+HREF="security.html"
+>Bugzilla Security</A
+></DT
+></DL
+></DD
+><DT
+>4. <A
+HREF="using.html"
+>Using Bugzilla</A
+></DT
+><DD
+><DL
+><DT
+>4.1. <A
+HREF="whatis.html"
+>What is Bugzilla?</A
+></DT
+><DT
+>4.2. <A
+HREF="why.html"
+>Why Should We Use Bugzilla?</A
+></DT
+><DT
+>4.3. <A
+HREF="how.html"
+>How do I use Bugzilla?</A
+></DT
+><DT
+>4.4. <A
+HREF="init4me.html"
+>What's in it for me?</A
+></DT
+><DT
+>4.5. <A
+HREF="usingbz-conc.html"
+>Using Bugzilla-Conclusion</A
+></DT
+></DL
+></DD
+><DT
+>5. <A
+HREF="integration.html"
+>Integrating Bugzilla with Third-Party Tools</A
+></DT
+><DD
+><DL
+><DT
+>5.1. <A
+HREF="bonsai.html"
+>Bonsai</A
+></DT
+><DT
+>5.2. <A
+HREF="cvs.html"
+>CVS</A
+></DT
+><DT
+>5.3. <A
+HREF="scm.html"
+>Perforce SCM</A
+></DT
+><DT
+>5.4. <A
+HREF="tinderbox.html"
+>Tinderbox</A
+></DT
+></DL
+></DD
+><DT
+>6. <A
+HREF="future.html"
+>The Future of Bugzilla</A
+></DT
+><DD
+><DL
+><DT
+>6.1. <A
+HREF="spamlite.html"
+>Reducing Spam</A
+></DT
+><DT
+>6.2. <A
+HREF="searching.html"
+>Better Searching</A
+></DT
+><DT
+>6.3. <A
+HREF="trackingbugs.html"
+>Description Flags and Tracking Bugs</A
+></DT
+><DT
+>6.4. <A
+HREF="bugprobs.html"
+>Bug Issues</A
+></DT
+><DT
+>6.5. <A
+HREF="dbaseintegrity.html"
+>Database Integrity</A
+></DT
+><DT
+>6.6. <A
+HREF="bz30.html"
+>Bugzilla 3.0</A
+></DT
+></DL
+></DD
+><DT
+>A. <A
+HREF="faq.html"
+>The Bugzilla FAQ</A
+></DT
+><DT
+>B. <A
+HREF="database.html"
+>The Bugzilla Database</A
+></DT
+><DD
+><DL
+><DT
+>B.1. <A
+HREF="dbschema.html"
+>Database Schema Chart</A
+></DT
+><DT
+>B.2. <A
+HREF="dbdoc.html"
+>MySQL Bugzilla Database Introduction</A
+></DT
+><DT
+>B.3. <A
+HREF="granttables.html"
+>MySQL Permissions &#38; Grant Tables</A
+></DT
+><DT
+>B.4. <A
+HREF="cleanupwork.html"
+>Cleaning up after mucking with Bugzilla</A
+></DT
+></DL
+></DD
+><DT
+>C. <A
+HREF="patches.html"
+>Useful Patches and Utilities for Bugzilla</A
+></DT
+><DD
+><DL
+><DT
+>C.1. <A
+HREF="setperl.html"
+>The setperl.pl Utility</A
+></DT
+><DT
+>C.2. <A
+HREF="cmdline.html"
+>Command-line Bugzilla Queries</A
+></DT
+><DT
+>C.3. <A
+HREF="quicksearch.html"
+>The Quicksearch Utility</A
+></DT
+></DL
+></DD
+><DT
+>D. <A
+HREF="gfdl.html"
+>GNU Free Documentation License</A
+></DT
+><DD
+><DL
+><DT
+>0. <A
+HREF="gfdl_0.html"
+>PREAMBLE</A
+></DT
+><DT
+>1. <A
+HREF="gfdl_1.html"
+>APPLICABILITY AND DEFINITIONS</A
+></DT
+><DT
+>2. <A
+HREF="gfdl_2.html"
+>VERBATIM COPYING</A
+></DT
+><DT
+>3. <A
+HREF="gfdl_3.html"
+>COPYING IN QUANTITY</A
+></DT
+><DT
+>4. <A
+HREF="gfdl_4.html"
+>MODIFICATIONS</A
+></DT
+><DT
+>5. <A
+HREF="gfdl_5.html"
+>COMBINING DOCUMENTS</A
+></DT
+><DT
+>6. <A
+HREF="gfdl_6.html"
+>COLLECTIONS OF DOCUMENTS</A
+></DT
+><DT
+>7. <A
+HREF="gfdl_7.html"
+>AGGREGATION WITH INDEPENDENT WORKS</A
+></DT
+><DT
+>8. <A
+HREF="gfdl_8.html"
+>TRANSLATION</A
+></DT
+><DT
+>9. <A
+HREF="gfdl_9.html"
+>TERMINATION</A
+></DT
+><DT
+>10. <A
+HREF="gfdl_10.html"
+>FUTURE REVISIONS OF THIS LICENSE</A
+></DT
+><DT
+><A
+HREF="gfdl_howto.html"
+>How to use this License for your documents</A
+></DT
+></DL
+></DD
+><DT
+><A
+HREF="glossary.html"
+>Glossary</A
+></DT
+></DL
+></DIV
+><DIV
+CLASS="LOT"
+><DL
+CLASS="LOT"
+><DT
+><B
+>List of Examples</B
+></DT
+><DT
+>3-1. <A
+HREF="programadmin.html#AEN491"
+>Creating some Components</A
+></DT
+><DT
+>3-2. <A
+HREF="programadmin.html#AEN520"
+>Common Use of Versions</A
+></DT
+><DT
+>3-3. <A
+HREF="programadmin.html#AEN524"
+>A Different Use of Versions</A
+></DT
+><DT
+>3-4. <A
+HREF="programadmin.html#AEN552"
+>Using SortKey with Target Milestone</A
+></DT
+><DT
+>3-5. <A
+HREF="programadmin.html#AEN590"
+>When to Use Group Security</A
+></DT
+><DT
+>3-6. <A
+HREF="programadmin.html#AEN607"
+>Creating a New Group</A
+></DT
+><DT
+>4-1. <A
+HREF="how.html#AEN745"
+>Some Famous Software Versions</A
+></DT
+><DT
+>4-2. <A
+HREF="how.html#AEN755"
+>Mozilla Webtools Components</A
+></DT
+><DT
+>1. <A
+HREF="glossary.html#AEN1735"
+>A Sample Product</A
+></DT
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="about.html"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>About This Guide</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>
