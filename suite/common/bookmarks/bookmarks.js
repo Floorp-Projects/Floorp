@@ -164,7 +164,8 @@ function doPaste()
 	}
 	else
 	{
-		var parID = select_list[0].parentNode.parentNode.getAttribute("id");
+		var parID = select_list[0].parentNode.parentNode.getAttribute("ref");
+		if (!parID)	parID = select_list[0].parentNode.parentNode.getAttribute("id");
 		if (!parID)	return(false);
 		pasteContainerRes = RDF.GetResource(parID);
 		if (!pasteContainerRes)	return(false);
@@ -262,7 +263,8 @@ function doDelete(promptFlag)
 		if (!node)    continue;
 		var ID = node.getAttribute("id");
 		if (!ID)    continue;
-		var parentID = node.parentNode.parentNode.getAttribute("id");
+		var parentID = node.parentNode.parentNode.getAttribute("ref");
+		if (!parentID)	parentID = node.parentNode.parentNode.getAttribute("id");
 		if (!parentID)	continue;
 
 		dump("Node " + nodeIndex + ": " + ID + "\n");
@@ -460,7 +462,8 @@ function fillContextMenu(name)
     var rdf = isupports.QueryInterface(Components.interfaces.nsIRDFService);
     if (!rdf)    return(false);
 
-    var select_list = treeNode.getElementsByAttribute("selected", "true");
+    var select_list = treeNode.selectedItems;
+    if (!select_list)	return(false);
     if (select_list.length < 1)    return(false);
     
     dump("# of Nodes selected: " + select_list.length + "\n\n");
@@ -572,8 +575,9 @@ function doContextCmd(cmdName)
 	cmdResource = cmdResource.QueryInterface(Components.interfaces.nsIRDFResource);
 	if (!cmdResource)        return(false);
 
-	var select_list = treeNode.getElementsByAttribute("selected", "true");
-	if (select_list.length < 1)    return(false);
+	var select_list = treeNode.selectedItems;
+	if (!select_list)		return(false);
+	if (select_list.length < 1)	return(false);
 
 	dump("# of Nodes selected: " + select_list.length + "\n\n");
 
