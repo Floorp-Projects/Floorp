@@ -40,6 +40,8 @@ public:
 	NS_IMETHOD		GetThreadKey(nsMsgKey *result);
     NS_IMETHOD		GetFlags(PRUint32 *result);
     NS_IMETHOD		SetFlags(PRUint32 flags);
+	NS_IMETHOD		SetSubject(char *subject);
+	NS_IMETHOD		GetSubject(char **result);
 	NS_IMETHOD		GetNumChildren(PRUint32 *result);
 	NS_IMETHOD		GetNumUnreadChildren (PRUint32 *result);
 	NS_IMETHOD		AddChild(nsIMsgDBHdr *child, PRBool threadInThread);
@@ -47,7 +49,7 @@ public:
 	NS_IMETHOD		GetChild(nsMsgKey msgKey, nsIMsgDBHdr **result);
 	NS_IMETHOD		GetChildHdrAt(PRInt32 index, nsIMsgDBHdr **result);
 	NS_IMETHOD 		RemoveChildAt(PRInt32 index);
-	NS_IMETHOD		RemoveChild(nsMsgKey msgKey);
+	NS_IMETHOD		RemoveChildHdr(nsIMsgDBHdr *child);
 	NS_IMETHOD		MarkChildRead(PRBool bRead);
 	NS_IMETHOD		EnumerateMessages(nsMsgKey parent, nsIEnumerator* *result);
 
@@ -63,6 +65,7 @@ protected:
 	virtual nsresult	InitCachedValues();
 	nsresult			ChangeChildCount(PRInt32 delta);
 	nsresult			ChangeUnreadChildCount(PRInt32 delta);
+	nsresult			RemoveChild(nsMsgKey msgKey);
 
 	nsMsgKey		m_threadKey; 
 	PRUint32		m_numChildren;		
@@ -71,8 +74,6 @@ protected:
     nsIMdbTable		*m_mdbTable;
 	nsIMdbRow		*m_metaRow;
 	PRBool			m_cachedValuesInitialized;
-
-
 
 };
 

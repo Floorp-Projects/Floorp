@@ -312,6 +312,7 @@ nsMsgDatabase::nsMsgDatabase()
 	  m_threadIdColumnToken(0),
 	  m_threadChildrenColumnToken(0),
 	  m_threadUnreadChildrenColumnToken(0),
+	  m_threadSubjectColumnToken(0),
 	  m_messageThreadIdColumnToken(0),
 	  m_numReferencesColumnToken(0),
 	  m_messageCharSetColumnToken(0),
@@ -738,6 +739,7 @@ const char *kThreadFlagsColumnName = "threadFlags";
 const char *kThreadIdColumnName = "threadId";
 const char *kThreadChildrenColumnName = "children";
 const char *kThreadUnreadChildrenColumnName = "unreadChildren";
+const char *kThreadSubjectColumnName = "threadSubject";
 const char *kMessageCharSetColumnName = "msgCharSet";
 struct mdbOid gAllMsgHdrsTableOID;
 
@@ -829,6 +831,7 @@ nsresult nsMsgDatabase::InitMDBInfo()
 			GetStore()->StringToToken(GetEnv(),  kThreadFlagsColumnName, &m_threadFlagsColumnToken);
 			GetStore()->StringToToken(GetEnv(),  kThreadChildrenColumnName, &m_threadChildrenColumnToken);
 			GetStore()->StringToToken(GetEnv(),  kThreadUnreadChildrenColumnName, &m_threadUnreadChildrenColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kThreadSubjectColumnName, &m_threadSubjectColumnToken);
 			GetStore()->StringToToken(GetEnv(),  kNumReferencesColumnName, &m_numReferencesColumnToken);
 			GetStore()->StringToToken(GetEnv(),  kMessageCharSetColumnName, &m_messageCharSetColumnToken);
 			err = GetStore()->StringToToken(GetEnv(), kMsgHdrsTableKind, &m_hdrTableKindToken); 
@@ -998,13 +1001,7 @@ nsresult nsMsgDatabase::RemoveHeaderFromDB(nsMsgHdr *msgHdr)
 	nsCOMPtr <nsIMsgThread> thread ;
 	ret = GetThreadContainingMsgHdr(msgHdr, getter_AddRefs(thread));
 	if (NS_SUCCEEDED(ret))
-	{
-		nsMsgKey msgKey;
-
-		ret = msgHdr->GetMessageKey(&msgKey);
-		if (NS_SUCCEEDED(ret))
-			ret = thread->RemoveChild(msgKey);
-	}
+		ret = thread->RemoveChildHdr(msgHdr);
 	else
 		NS_ASSERTION(PR_FALSE, "couldn't find thread containing deleted message");
 	// even if we couldn't find the thread,we should try to remove the header.
@@ -1762,7 +1759,8 @@ NS_IMETHODIMP nsMsgDBThreadEnumerator::Next(void)
 	nsresult rv;
 	nsIMdbTable *table = nsnull;
 
-    do {
+    while (PR_TRUE) 
+	{
         NS_IF_RELEASE(mResultThread);
         mResultThread = nsnull;
         rv = mTableCursor->NextTable(mDB->GetEnv(), &table);
@@ -1782,8 +1780,19 @@ NS_IMETHODIMP nsMsgDBThreadEnumerator::Next(void)
 
         mResultThread = new nsMsgThread(mDB, table);
 		if(mResultThread)
+		{
+			PRUint32 numChildren = 0;
 			NS_ADDREF(mResultThread);
-    } while (mFilter && mFilter(mResultThread, mClosure) != NS_OK);
+			mResultThread->GetNumChildren(&numChildren);
+			// we've got empty thread; don't tell caller about it.
+			if (numChildren == 0)
+				continue;
+		}
+		if (mFilter && mFilter(mResultThread, mClosure) != NS_OK)
+			continue;
+		else
+			break;
+    }
 	return rv;
 }
 
@@ -1900,13 +1909,19 @@ NS_IMETHODIMP nsMsgDatabase::CreateNewHdr(nsMsgKey key, nsIMsgDBHdr **pnewHdr)
 NS_IMETHODIMP nsMsgDatabase::AddNewHdrToDB(nsIMsgDBHdr *newHdr, PRBool notify)
 {
     nsMsgHdr* hdr = NS_STATIC_CAST(nsMsgHdr*, newHdr);          // closed system, cast ok
-	nsresult err = m_mdbAllMsgHeadersTable->AddRow(GetEnv(), hdr->GetMDBRow());
+	PRBool newThread;
+
+	nsresult err = ThreadNewHdr(hdr, newThread);
+	// we thread header before we add it to the all headers table
+	// so that subject threading will work (otherwise, when we try
+	// to find the first header with the same subject, we get the
+	// new header!
 	if (NS_SUCCEEDED(err))
 	{
 		nsMsgKey key;
 		PRUint32 flags;
 
-	    newHdr->GetMessageKey(&key);
+		newHdr->GetMessageKey(&key);
 		newHdr->GetFlags(&flags);
 		if (flags & MSG_FLAG_NEW)
 		{
@@ -1921,9 +1936,7 @@ NS_IMETHODIMP nsMsgDatabase::AddNewHdrToDB(nsIMsgDBHdr *newHdr, PRBool notify)
 			if (! (flags & MSG_FLAG_READ))
 				m_dbFolderInfo->ChangeNumNewMessages(1);
 		}
-		PRBool newThread;
-
-		err = ThreadNewHdr(hdr, newThread);
+		err = m_mdbAllMsgHeadersTable->AddRow(GetEnv(), hdr->GetMDBRow());
 		if (notify)
 		{
 			NotifyKeyAddedAll(key, flags, NULL);
@@ -2210,10 +2223,25 @@ nsMsgThread *nsMsgDatabase::GetThreadForReference(nsString2 &msgID)
 	return thread;
 }
 
-nsMsgThread *	nsMsgDatabase::GetThreadForSubject(const char * subject)
+nsMsgThread *	nsMsgDatabase::GetThreadForSubject(nsString2 &subject)
 {
 //	NS_ASSERTION(PR_FALSE, "not implemented yet.");
-	return nsnull;
+	nsMsgThread *thread = NULL;
+
+	// just find some msg hdr with this subject and use it's thread
+	// as the containng thread,
+	nsIMsgDBHdr	*msgHdr = GetMsgHdrForSubject(subject);  
+	if (msgHdr != NULL)
+	{
+		nsMsgKey threadId;
+		if (NS_SUCCEEDED(msgHdr->GetThreadId(&threadId)))
+		{
+			// find thread header for header whose message id we matched.
+			thread = GetThreadForThreadId(threadId);
+		}
+		msgHdr->Release();
+	}
+	return thread;
 }
 
 nsresult nsMsgDatabase::ThreadNewHdr(nsMsgHdr* newHdr, PRBool &newThread)
@@ -2260,7 +2288,7 @@ nsresult nsMsgDatabase::ThreadNewHdr(nsMsgHdr* newHdr, PRBool &newThread)
 	newHdr->GetSubject(subject);
 	if ((ThreadBySubjectWithoutRe() || (newHdrFlags & MSG_FLAG_HAS_RE)) && (!thread))
 	{
-		thread = getter_AddRefs(GetThreadForSubject(subject.GetBuffer()));
+		thread = getter_AddRefs(GetThreadForSubject(subject));
 		if(thread)
 		{
 			thread->GetThreadKey(&threadId);
@@ -2326,6 +2354,34 @@ nsIMsgDBHdr *nsMsgDatabase::GetMsgHdrForMessageID(nsString2 &msgID)
 	return msgHdr;
 }
 
+nsIMsgDBHdr *nsMsgDatabase::GetMsgHdrForSubject(nsString2 &subject)
+{
+	nsIMsgDBHdr	*msgHdr = nsnull;
+    nsresult rv = NS_OK;
+	mdbYarn	subjectYarn;
+
+	subjectYarn.mYarn_Buf = (void*)subject.GetBuffer();
+	subjectYarn.mYarn_Fill = PL_strlen(subject.GetBuffer());
+	subjectYarn.mYarn_Form = 0;
+	subjectYarn.mYarn_Size = subjectYarn.mYarn_Fill;
+
+	nsIMdbRow	*hdrRow;
+	mdbOid		outRowId;
+	mdb_err result = GetStore()->FindRow(GetEnv(), m_hdrRowScopeToken,
+		m_subjectColumnToken, &subjectYarn,  &outRowId, 
+		&hdrRow);
+	if (NS_SUCCEEDED(result) && hdrRow)
+	{
+		//Get key from row
+		mdbOid outOid;
+		nsMsgKey key=0;
+		if (hdrRow->GetOid(GetEnv(), &outOid) == NS_OK)
+			key = outOid.mOid_Id;
+		rv = CreateMsgHdr(hdrRow, key, &msgHdr);
+	}
+	return msgHdr;
+}
+
 NS_IMETHODIMP nsMsgDatabase::GetThreadContainingMsgHdr(nsIMsgDBHdr *msgHdr, nsIMsgThread **result)
 {
 	nsresult ret = NS_OK;
@@ -2338,7 +2394,7 @@ NS_IMETHODIMP nsMsgDatabase::GetThreadContainingMsgHdr(nsIMsgDBHdr *msgHdr, nsIM
 	if (threadId != nsMsgKey_None)
 		*result = GetThreadForThreadId(threadId);
 
-	return ret;
+	return (*result) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 

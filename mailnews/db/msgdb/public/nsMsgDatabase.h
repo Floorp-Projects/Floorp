@@ -233,10 +233,11 @@ protected:
 	nsresult GetBoolPref(const char *prefName, PRBool *result);
 	// retrieval methods
 	nsMsgThread *	GetThreadForReference(nsString2 &msgID);
-	nsMsgThread *	GetThreadForSubject(const char * subject);
+	nsMsgThread *	GetThreadForSubject(nsString2 &subject);
 	nsMsgThread *	GetThreadForThreadId(nsMsgKey threadId);
 	nsMsgHdr	*	GetMsgHdrForReference(nsString2 &reference);
 	nsIMsgDBHdr	*	GetMsgHdrForMessageID(nsString2 &msgID);
+	nsIMsgDBHdr	*	GetMsgHdrForSubject(nsString2 &msgID);
 	nsMsgThread *	GetThreadContainingMsgHdr(nsMsgHdr *msgHdr);
 	// threading interfaces
 	virtual nsresult CreateNewThread(nsMsgKey key, nsMsgThread **newThread);
@@ -308,6 +309,7 @@ protected:
 	mdb_token			m_threadChildrenColumnToken;
 	mdb_token			m_threadUnreadChildrenColumnToken;
 	mdb_token			m_messageThreadIdColumnToken;
+	mdb_token			m_threadSubjectColumnToken;
 	mdb_token			m_numReferencesColumnToken;
 	mdb_token			m_messageCharSetColumnToken;
 	nsIMsgHeaderParser	*m_HeaderParser;

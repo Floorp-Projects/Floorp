@@ -130,6 +130,17 @@ NS_IMETHODIMP nsMsgThread::SetFlags(PRUint32 flags)
 	return ret;
 }
 
+NS_IMETHODIMP nsMsgThread::SetSubject(char *subject)
+{
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgThread::GetSubject(char **result)
+{
+	if (!result)
+		return NS_ERROR_NULL_POINTER;
+	return NS_OK;
+}
 
 NS_IMETHODIMP nsMsgThread::GetNumChildren(PRUint32 *result)
 {
@@ -249,7 +260,7 @@ NS_IMETHODIMP nsMsgThread::RemoveChildAt(PRInt32 aIndex)
 }
 
 
-NS_IMETHODIMP nsMsgThread::RemoveChild(nsMsgKey msgKey)
+nsresult nsMsgThread::RemoveChild(nsMsgKey msgKey)
 {
 	nsresult ret = NS_OK;
 	mdbOid		rowObjectId;
@@ -259,6 +270,22 @@ NS_IMETHODIMP nsMsgThread::RemoveChild(nsMsgKey msgKey)
 	return ret;
 }
 
+NS_IMETHODIMP nsMsgThread::RemoveChildHdr(nsIMsgDBHdr *child)
+{
+	PRUint32 flags;
+	nsMsgKey key;
+
+	if (!child)
+		return NS_ERROR_NULL_POINTER;
+
+	child->GetFlags(&flags);
+	child->GetMessageKey(&key);
+
+	if (!(flags & MSG_FLAG_READ))
+		ChangeUnreadChildCount(-1);
+	ChangeChildCount(-1);
+	return RemoveChild(key);
+}
 
 NS_IMETHODIMP nsMsgThread::MarkChildRead(PRBool bRead)
 {
@@ -277,12 +304,15 @@ PRBool nsMsgThread::TryReferenceThreading(nsIMsgDBHdr *newHeader)
 	for (int32 refIndex = newHeader->GetNumReferences() - 1; !done && refIndex >= 0; refIndex--)
 	{
 		nsCOMPtr <nsIMsgDBHdr>  refHdr;
-		refHdr = messageDB->GetNeoMessageHdrForHashMessageID(newHeader->GetReferenceId(refIndex));
+		nsString2 referenceStr;
+
+		newHeader->GetStringReference(refIndex, referenceStr);
+		refHdr = m_mdbDB->GetMsgHdrForMessageID(referenceStr);
 		if (refHdr)
 		{
 			// position iterator at child pos.
 			childIterator.reset();
-			while (TRUE)
+			while (PR_TRUE)
 			{
 				MessageKey curMsgId = childIterator.currentID();
 				if (curMsgId == 0)
@@ -391,6 +421,8 @@ nsMsgThreadEnumerator::nsMsgThreadEnumerator(nsMsgThread *thread, nsMsgKey start
 			mResultHdr = nsnull;
 
 		}
+		else
+			NS_ASSERTION(PR_FALSE, "couldn't get child from thread");
 		mChildIndex = 1;
 	}
     NS_ADDREF(thread);
@@ -405,12 +437,14 @@ NS_IMPL_ISUPPORTS(nsMsgThreadEnumerator, nsIEnumerator::GetIID())
 
 NS_IMETHODIMP nsMsgThreadEnumerator::First(void)
 {
-	//nsresult rv = NS_OK;
+	nsresult rv = NS_OK;
 
 	if (!mThread)
 		return NS_ERROR_NULL_POINTER;
 		
-    return Next();
+    rv = Next();
+	NS_ASSERTION(mCurKey != nsMsgKey_None || NS_SUCCEEDED(rv), "first failed, can't have that");
+	return rv;
 }
 
 NS_IMETHODIMP nsMsgThreadEnumerator::Next(void)
