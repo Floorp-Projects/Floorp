@@ -74,6 +74,7 @@ public:
   NS_IMETHOD ReleaseEvent(nsIDOMEventListener *aListener);
   NS_IMETHOD AddEventListener(nsIDOMEventListener *aListener, const nsIID& aIID);
   NS_IMETHOD RemoveEventListener(nsIDOMEventListener *aListener, const nsIID& aIID);
+  NS_IMETHOD GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
   NS_IMETHOD GetNewListenerManager(nsIEventListenerManager **aInstancePtrResult);
 
   NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext, 
@@ -105,9 +106,6 @@ protected:
   void          ClearAllTimeouts();
   void          DropTimeout(nsTimeoutImpl *aTimeout);
   void          HoldTimeout(nsTimeoutImpl *aTimeout);
-
-  nsresult SetScriptEventListener(JSContext *aContext, REFNSIID aListenerTypeIID);
-  NS_IMETHOD GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
 
   nsIScriptContext *mContext;
   void *mScriptObject;

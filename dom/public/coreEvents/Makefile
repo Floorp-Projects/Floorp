@@ -25,6 +25,7 @@ EXPORTS =               \
 	nsIDOMEventCapturer.h		\
 	nsIDOMEventReceiver.h		\
 	nsIDOMFocusListener.h		\
+	nsIDOMFormListener.h		\
         nsIDOMKeyListener.h		\
         nsIDOMLoadListener.h		\
         nsIDOMMouseListener.h		\
