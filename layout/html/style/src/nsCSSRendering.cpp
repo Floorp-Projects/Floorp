@@ -2563,6 +2563,8 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
         content->GetParent(*getter_AddRefs(parent));
         if ( parent )
           return;
+        else
+          ::GetStyleData(aForFrame, &color);
       }
       else
         return;
@@ -2576,6 +2578,8 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
     return;
   }
 
+  if (!color)
+    return;
   nsStyleBackground canvasColor(*color);
 
   nsCOMPtr<nsIPresShell> shell;
@@ -2629,16 +2633,8 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
   NS_PRECONDITION(aForFrame,
                   "Frame is expected to be provided to PaintBackground");
 
-  PRBool        transparentBG = 
-                  NS_STYLE_BG_COLOR_TRANSPARENT ==
-                  (aColor.mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT);
-  PRBool        canDrawBackgroundImage=PR_TRUE,canDrawBackgroundColor=PR_TRUE;
-  float         percent;
-  nsStyleCoord  bordStyleRadius[4];
-  PRInt16       borderRadii[4],i;
-
-
   // if we are printing, bail for now
+  PRBool canDrawBackgroundImage=PR_TRUE,canDrawBackgroundColor=PR_TRUE;
   if(aUsePrintSettings){
     aPresContext->GetBackgroundImageDraw(canDrawBackgroundImage); 
     aPresContext->GetBackgroundColorDraw(canDrawBackgroundColor); 
@@ -2649,7 +2645,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
     }
   }
   // Check to see if we have an appearance defined.  If so, we let the theme
-  // renderer draw the background.
+  // renderer draw the background and bail out.
   const nsStyleDisplay* displayData;
   aForFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct*&)displayData));
   if (displayData->mAppearance) {
@@ -2661,6 +2657,13 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
       return;
     }
   }
+
+  PRBool        transparentBG = 
+                  NS_STYLE_BG_COLOR_TRANSPARENT ==
+                  (aColor.mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT);
+  float         percent;
+  nsStyleCoord  bordStyleRadius[4];
+  PRInt16       borderRadii[4],i;
 
   // if there is no background image or background images are turned off, try a color.
   if (aColor.mBackgroundImage.IsEmpty() || (canDrawBackgroundColor && !canDrawBackgroundImage)) {
