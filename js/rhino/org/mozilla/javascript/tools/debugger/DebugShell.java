@@ -113,7 +113,9 @@ public class DebugShell implements Debugger {
                 Main.getErr().println(ioe.toString());
                 break;
             }
-            if (line == null || line.length() == 0 || line.equals("#")) {
+            if (line == null)
+                break;
+            if (line.length() == 0 || line.equals("#")) {
                 if (lastCommand != null)
                     line = lastCommand;
                 else
