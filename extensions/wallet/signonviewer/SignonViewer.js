@@ -84,12 +84,15 @@ function Startup()
   } else if (tab == "W") {
     element = document.getElementById("signonviewer");
     element.setAttribute("title", element.getAttribute("alttitle"));
+    
+    // hide non-used tabs
     element = document.getElementById("nopreview");
-    element.setAttribute("selected","true" );
-    element = document.getElementById("nopreview");
-    element.setAttribute("style","display: block;" );
-    element = document.getElementById("nocapture");
-    element.setAttribute("style","display: block;" );
+    element.selected = true;
+    element = document.getElementById("signonTab");
+    element.setAttribute("style", "display: none");
+    element = document.getElementById("signonSitesTab");
+    element.setAttribute("style", "display: none");
+
     element = document.getElementById("panel");
     element.setAttribute("index","2" );
   } else {
