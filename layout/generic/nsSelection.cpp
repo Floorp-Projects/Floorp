@@ -1702,6 +1702,8 @@ nsSelection::LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PRInt
 NS_METHOD 
 nsSelection::SetMouseDownState(PRBool aState)
 {
+  if (mMouseDownState == aState)
+    return NS_OK;
   mMouseDownState = aState;
   if (!mMouseDownState)
   {
