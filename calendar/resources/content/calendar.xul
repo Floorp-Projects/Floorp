@@ -79,7 +79,7 @@
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    height="700px"
    width="830px"
-   persist="screenX screenY width height"
+   persist="screenX screenY width height sizemode"
    > 
  
 <broadcasterset>
