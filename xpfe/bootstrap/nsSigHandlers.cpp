@@ -149,8 +149,6 @@ void InstallUnixSignalHandlers(const char *ProgramName)
     long m = 65536 - t;
     if (m<c) m = c;
  
-    m = 60000;
-
     struct rlimit r;
     r.rlim_cur = m;
     r.rlim_max = m;
