@@ -76,7 +76,7 @@ namespace MetaData {
             ASSERT(p.lexer.peek(true).hasKind(Token::end));
             if (true)
             {
-                PrettyPrinter f(stdOut, 30);
+                PrettyPrinter f(stdOut, 80);
                 {
                     PrettyPrinter::Block b(f, 2);
                     f << "Program =";
@@ -265,13 +265,13 @@ namespace MetaData {
                         case StmtNode::For:
                         case StmtNode::ForIn:
                             {
-                                ForStmtNode *f = checked_cast<ForStmtNode *>(p);
+                                ForStmtNode *f = checked_cast<ForStmtNode *>(*si);
                                 g->tgtID = &f->breakLabelID;
                             }
                             break;
                        case StmtNode::Switch:
                             {
-                                SwitchStmtNode *s = checked_cast<SwitchStmtNode *>(p);
+                                SwitchStmtNode *s = checked_cast<SwitchStmtNode *>(*si);
                                 g->tgtID = &s->breakLabelID;
                             }
                             break;
@@ -398,9 +398,15 @@ namespace MetaData {
                 Frame *topFrame = env->getTopFrame();
                 env->addFrame(compileFrame);
                 VariableBinding *pb = f->function.parameters;
-                while (pb) {
-                    // XXX define a static binding for each parameter
-                    pb = pb->next;
+                if (pb) {
+                    NamespaceList publicNamespaceList;
+                    publicNamespaceList.push_back(publicNamespace);
+                    while (pb) {
+                        // XXX define a static binding for each parameter
+                        Variable *v = new Variable();
+                        pb->mn = defineStaticMember(env, pb->name, &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, p->pos);
+                        pb = pb->next;
+                    }
                 }
                 ValidateStmt(cxt, env, f->function.body);
                 env->removeTopFrame();
@@ -409,7 +415,7 @@ namespace MetaData {
                                         || (topFrame->kind == ParameterKind))
                         && (f->attributes == NULL)) {
                     HoistedVar *v = defineHoistedVar(env, f->function.name, p);
-                    // XXX Here ths spec. has ???, so the following is tentative
+                    // XXX Here the spec. has ???, so the following is tentative
                     DynamicInstance *dInst = new DynamicInstance(functionClass);
                     dInst->fWrap = new FunctionWrapper(unchecked, compileFrame);
                     f->fWrap = dInst->fWrap;
@@ -601,6 +607,9 @@ namespace MetaData {
                 }
                 c->complete = true;
             }
+            break;
+        case StmtNode::empty:
+            break;
         }   // switch (p->getKind())
 
         JS2Object::removeRoot(ri);
@@ -1116,6 +1125,8 @@ namespace MetaData {
                 }
             }
             break;
+        case StmtNode::empty:
+            break;
         default:
             NOT_REACHED("Not Yet Implemented");
         }   // switch (p->getKind())
@@ -1482,6 +1493,15 @@ namespace MetaData {
             }
             break;
 
+        case ExprNode::conditional:
+            {
+                TernaryExprNode *c = checked_cast<TernaryExprNode *>(p);
+                ValidateExpression(cxt, env, c->op1);
+                ValidateExpression(cxt, env, c->op2);
+                ValidateExpression(cxt, env, c->op3);
+            }
+            break;
+
         case ExprNode::qualify:
         case ExprNode::identifier:
             {
@@ -1823,6 +1843,29 @@ doUnary:
         case ExprNode::string:
             {  
                 bCon->addString(checked_cast<StringExprNode *>(p)->str, p->pos);
+            }
+            break;
+        case ExprNode::conditional:
+            {
+                BytecodeContainer::LabelID falseConditionExpression = bCon->getLabel();
+                BytecodeContainer::LabelID labelAtBottom = bCon->getLabel();
+
+                TernaryExprNode *c = checked_cast<TernaryExprNode *>(p);
+                Reference *lVal = EvalExprNode(env, phase, c->op1);
+                if (lVal) lVal->emitReadBytecode(bCon, p->pos);
+                bCon->emitBranch(eBranchFalse, falseConditionExpression, p->pos);
+
+                lVal = EvalExprNode(env, phase, c->op2);
+                if (lVal) lVal->emitReadBytecode(bCon, p->pos);
+                bCon->emitBranch(eBranch, labelAtBottom, p->pos);
+
+                bCon->setLabel(falseConditionExpression);
+                //adjustStack(-1);        // the true case will leave a stack entry pending
+                                        // but we can discard it since only path will be taken.
+                lVal = EvalExprNode(env, phase, c->op3);
+                if (lVal) lVal->emitReadBytecode(bCon, p->pos);
+
+                bCon->setLabel(labelAtBottom);
             }
             break;
         case ExprNode::qualify:
@@ -2279,14 +2322,14 @@ doUnary:
         }
         
 
-        // Check all frames below the current - up to the RegionalFrame
+        // Check all frames below the current - up to the RegionalFrame - for a non-forbidden definition
         Frame *regionalFrame = env->getRegionalFrame();
         if (localFrame != regionalFrame) {
             Frame *fr = localFrame->nextFrame;
             while (fr != regionalFrame) {
                 for (b = fr->staticReadBindings.lower_bound(*id),
                         end = fr->staticReadBindings.upper_bound(*id); (b != end); b++) {
-                    if (mn->matches(b->second->qname) && (b->second->content->kind == StaticMember::Forbidden))
+                    if (mn->matches(b->second->qname) && (b->second->content->kind != StaticMember::Forbidden))
                         reportError(Exception::definitionError, "Duplicate definition {0}", pos, id);
                 }
                 fr = fr->nextFrame;
@@ -2545,6 +2588,12 @@ doUnary:
     {
         return STRING_TO_JS2VAL(meta->engine->object_StringAtom);
     }
+    
+    js2val GlobalObject_isNaN(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc)
+    {
+        float64 d = meta->toFloat64(argv[0]);
+        return BOOLEAN_TO_JS2VAL(JSDOUBLE_IS_NaN(d));
+    }
 
     void JS2Metadata::addGlobalObjectFunction(char *name, NativeCode *code)
     {
@@ -2591,6 +2640,9 @@ doUnary:
         writeDynamicProperty(glob, new Multiname(engine->undefined_StringAtom, publicNamespace), true, JS2VAL_UNDEFINED, RunPhase);
         writeDynamicProperty(glob, new Multiname(&world.identifiers["NaN"], publicNamespace), true, engine->nanValue, RunPhase);
         writeDynamicProperty(glob, new Multiname(&world.identifiers["Infinity"], publicNamespace), true, engine->posInfValue, RunPhase);
+        // Function properties of the global object 
+        addGlobalObjectFunction("isNaN", GlobalObject_isNaN);
+
 
         // Function properties of the Object prototype object
         objectClass->prototype = new PrototypeInstance(NULL, objectClass);
@@ -3653,6 +3705,7 @@ deleteClassProperty:
             bCon = new BytecodeContainer();
         bCon->mSource = source;
         bCon->mSourceLocation = sourceLocation;
+        engine->bCon = bCon;
 
         return result;
     }

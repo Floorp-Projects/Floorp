@@ -601,6 +601,7 @@ namespace JavaScript
         if (oldBuffer != cache)
             delete[] oldBuffer;
         bufferSize = newBufferSize;
+        bufferEnd = buffer + newBufferSize;
     }
 
     // Ensure that there is room to hold one more element at the back of the queue,

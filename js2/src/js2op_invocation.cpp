@@ -126,6 +126,29 @@
                 runtimeFrame->instantiate(&meta->env);
                 runtimeFrame->thisObject = a;
 //                assignArguments(runtimeFrame, fWrap->compileFrame->signature);
+                // XXX
+
+                for (uint32 i = 0, a = 0; i < fWrap->compileFrame->parameterCount; i++) {
+                    
+                }
+
+                for (StaticBindingIterator sbi = runtimeFrame->staticReadBindings.begin(), sbend = runtimeFrame->staticReadBindings.end(); (sbi != sbend); sbi++) {
+                    StaticBinding *sb;
+                    StaticBinding *m = sbi->second;
+                    if (m->content->cloneContent == NULL) {
+                        m->content->cloneContent = m->content->clone();
+                    }
+                    sb = new StaticBinding(m->qname, m->content->cloneContent);
+                    sb->xplicit = m->xplicit;
+                    const StaticBindingMap::value_type e(sbi->first, sb);
+                    singularFrame->staticReadBindings.insert(e);
+                }
+
+
+
+                for (uint32 i = 0; i < argCount; i++) {
+                    
+                }
                 if (!fWrap->code)
                     jsr(phase, fWrap->bCon);   // seems out of order, but we need to catch the current top frame 
                 meta->env.addFrame(runtimeFrame);
