@@ -98,11 +98,11 @@ namespace Silverstone.Manticore.Browser
 
       int startMode = mPrefs.GetIntPref("browser.homepage.mode");
       switch (startMode) {
-        case 0:
+        case 2:
           radioButton3.Checked = true;
           restoreSessionSettingsButton.Enabled = true;
           break;
-        case 2:
+        case 0:
           radioButton2.Checked = true;
           break;
         case 1:
@@ -118,9 +118,9 @@ namespace Silverstone.Manticore.Browser
 
       int mode = 1;
       if (radioButton3.Checked) 
-        mode = 0;
-      else if (radioButton2.Checked)
         mode = 2;
+      else if (radioButton2.Checked)
+        mode = 0;
       mPrefs.SetIntPref("browser.homepage.mode", mode);
 
       // XXX need to save session setting prefs when implemented.

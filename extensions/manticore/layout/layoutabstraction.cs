@@ -64,6 +64,43 @@ namespace Silverstone.Manticore.Layout
       this.Dock = DockStyle.Fill;
     }
 
+    protected override void OnPaint(PaintEventArgs e)
+    {
+      // Draw an inset border around the client area for
+      // blank documents. 
+      Graphics g = e.Graphics;
+
+      g.DrawLine(SystemPens.ControlDark, 
+                 new Point(0, 0), 
+                 new Point(this.Width, 0));
+      g.DrawLine(SystemPens.ControlDark,
+                 new Point(0, 0),
+                 new Point(0, this.Height));
+      g.DrawLine(SystemPens.ControlDarkDark, 
+                 new Point(1, 1),
+                 new Point(1 + (this.Width - 1), 1));
+      g.DrawLine(SystemPens.ControlDarkDark,
+                 new Point(1, 1),
+                 new Point(1, 1 + (this.Height - 1)));
+      g.DrawLine(SystemPens.ControlLightLight, 
+                 new Point(this.Width - 1, 0),
+                 new Point(this.Width - 1, this.Height));
+      g.DrawLine(SystemPens.ControlLightLight,
+                 new Point(0, this.Height - 1),
+                 new Point(this.Width, this.Height - 1));
+      g.DrawLine(SystemPens.ControlLight,
+                 new Point(this.Width - 2, 1),
+                 new Point(this.Width - 2, this.Height - 2));
+      g.DrawLine(SystemPens.ControlLight,
+                 new Point(1, this.Height - 2),
+                 new Point(this.Width - 2, this.Height - 2));
+    }
+
+    protected override void OnResize(EventArgs e)
+    {
+      Invalidate();
+    }
+
     public void RealizeLayoutEngine()
     {
       if (gecko == null && trident == null) {

@@ -3,7 +3,7 @@
     <layoutengine value="trident" />
     <bookmarksfile value="bookmarks.xml" />
     <homepage value="http://abcnews.go.com/" xmlns="">
-      <mode value="1" />
+      <mode value="0" />
     </homepage>
   </browser>
 </preferences>
