@@ -45,10 +45,52 @@
 #include "nsStr.h"
 #include "nsIAtom.h"
 
+#ifdef NEW_STRING_APIS
+#include "nsAWritableString.h"
+#endif
+
 
 class NS_COM nsSubsumeCStr;
 
-class NS_COM nsCString : public nsStr {
+class NS_COM nsCString :
+#ifdef NEW_STRING_APIS
+  public nsAWritableCString,
+#endif
+  public nsStr {
+
+#ifdef NEW_STRING_APIS
+protected:
+  typedef nsAReadableCString::FragmentRequest  FragmentRequest;
+  typedef nsAReadableCString::ConstFragment    ConstFragment;
+  typedef nsAWritableCString::Fragment         Fragment;
+
+  virtual const char* GetConstFragment( ConstFragment&, FragmentRequest, PRUint32 ) const;
+  virtual char* GetFragment( Fragment&, FragmentRequest, PRUint32 );
+
+public:
+  nsCString( const nsAReadableCString& );
+
+#ifdef HAVE_CPP_USING
+  using nsAWritableCString::Assign;
+  using nsAWritableCString::Append;
+  using nsAWritableCString::Insert;
+#else
+ virtual  void Assign( const nsAReadableCString& aReadable ) {
+    nsAWritableCString::Assign(aReadable);
+  }
+
+  virtual void Append( const nsAReadableCString& aReadable ) {
+    nsAWritableCString::Append(aReadable);
+  }
+
+  virtual void Insert( const nsAReadableCString& aReadable, PRUint32 atPosition ) {
+    nsAWritableCString::Insert(aReadable, atPosition);
+  }
+#endif
+#endif
+
+public:
+  void AppendChar( char );
 
 public: 
 
@@ -97,7 +139,7 @@ public:
    * Retrieve the length of this string
    * @return string length
    */
-  inline PRInt32 Length() const { return (PRInt32)mLength; }
+  virtual PRUint32 Length() const { return mLength; }
 
   /**
    * Retrieve the size of this string
@@ -112,9 +154,7 @@ public:
    * @param   aLength -- contains new length for mStr
    * @return
    */
-  void SetLength(PRUint32 aLength) { 
-    Truncate(aLength);
-  }
+  void SetLength(PRUint32 aLength);
 
   /**
    * Sets the new length of the string.
@@ -122,14 +162,20 @@ public:
    * @return  nada
    */
   void SetCapacity(PRUint32 aLength);
+
   /**
    * This method truncates this string to given length.
    *
    * @param   anIndex -- new length of string
    * @return  nada
    */
-  void Truncate(PRUint32 anIndex=0);
+  void Truncate(PRUint32 anIndex=0) {
+    NS_ASSERTION(anIndex<=mLength, "Can't use |Truncate()| to make a string longer.");
+    if ( anIndex < mLength )
+      SetLength(anIndex);
+  }
 
+#ifndef NEW_STRING_APIS
   /**
    *  Determine whether or not this string has a length of 0
    *  
@@ -157,14 +203,15 @@ public:
   PRUnichar CharAt(PRUint32 anIndex) const;
   PRUnichar First(void) const;
   PRUnichar Last(void) const;
+#endif
 
   PRBool SetCharAt(PRUnichar aChar,PRUint32 anIndex);
-
 
   /**********************************************************************
     String creation methods...
    *********************************************************************/
 
+#ifndef NEW_STRING_APIS
   /**
    * Create a new string by appending given string to this
    * @param   aString -- 2nd string to be appended
@@ -187,7 +234,7 @@ public:
    */
   nsSubsumeCStr operator+(PRUnichar aChar);
   nsSubsumeCStr operator+(char aChar);
-
+#endif
 
   /**********************************************************************
     Lexomorphic transforms...
@@ -499,7 +546,9 @@ public:
    *  @param  aCount -- number of chars to be cut
    *  @return *this
    */
+#ifndef NEW_STRING_APIS
   nsCString& Cut(PRUint32 anOffset,PRInt32 aCount);
+#endif
 
 
   /**********************************************************************
@@ -594,6 +643,7 @@ public:
   virtual PRInt32 Compare(const char* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
   virtual PRInt32 Compare(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
 
+#ifndef NEW_STRING_APIS
   /**
    * These methods compare a given string type to this one
    * @param aString is the string to be compared to this
@@ -647,6 +697,7 @@ public:
   PRBool  operator>=(const nsStr &S) const;
   PRBool  operator>=(const char* aString) const;
   PRBool  operator>=(const PRUnichar* aString) const;
+#endif // !defined(NEW_STRING_APIS)
 
   /**
    * Compare this to given string; note that we compare full strings here.
@@ -674,6 +725,14 @@ public:
   static  nsCString*  CreateString(void);
 
 };
+
+#if 0
+#ifdef NEW_STRING_APIS
+NS_DEF_NON_TEMPLATE_STRING_COMPARISON_OPERATORS(const nsCString&, const nsCString&);
+NS_DEF_NON_TEMPLATE_STRING_COMPARISON_OPERATORS(const nsCString&, const char*)
+NS_DEF_NON_TEMPLATE_STRING_COMPARISON_OPERATORS(const char*, const nsCString&)
+#endif
+#endif
 
 extern NS_COM int fputs(const nsCString& aString, FILE* out);
 //ostream& operator<<(ostream& aStream,const nsCString& aString);

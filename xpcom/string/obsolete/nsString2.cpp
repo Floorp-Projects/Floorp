@@ -136,6 +136,47 @@ nsString::~nsString() {
   nsStr::Destroy(*this);
 }
 
+#ifdef NEW_STRING_APIS
+const PRUnichar* nsString::GetConstFragment( ConstFragment& aFragment, FragmentRequest aRequest, PRUint32 aOffset ) const {
+  switch ( aRequest ) {
+    case kFirstFragment:
+    case kLastFragment:
+    case kFragmentAt:
+      aFragment.mEnd = (aFragment.mStart = mUStr) + mLength;
+      return aFragment.mStart + aOffset;
+    
+    case kPrevFragment:
+    case kNextFragment:
+    default:
+      return 0;
+  }
+}
+
+PRUnichar* nsString::GetFragment( Fragment& aFragment, FragmentRequest aRequest, PRUint32 aOffset ) {
+  switch ( aRequest ) {
+    case kFirstFragment:
+    case kLastFragment:
+    case kFragmentAt:
+      aFragment.mEnd = (aFragment.mStart = mUStr) + mLength;
+      return aFragment.mStart + aOffset;
+    
+    case kPrevFragment:
+    case kNextFragment:
+    default:
+      return 0;
+  }
+}
+
+nsString::nsString( const nsAReadableString& aReadable ) {
+  nsStr::Initialize(*this,eTwoByte);
+  Assign(aReadable);
+}
+#endif
+
+void nsString::AppendChar( PRUnichar aChar ) {
+  Append(aChar);
+}
+
 void nsString::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const {
   if (aResult) {
     *aResult = sizeof(*this) + mCapacity * mCharSize;
@@ -149,7 +190,9 @@ void nsString::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const {
  * @param   anIndex -- new length of string
  * @return  nada
  */
-void nsString::Truncate(PRUint32 anIndex) {
+void nsString::SetLength(PRUint32 anIndex) {
+  if ( anIndex > mCapacity )
+    SetCapacity(anIndex);
   nsStr::Truncate(*this,anIndex);
 }
 
@@ -173,7 +216,7 @@ void nsString::SetCapacity(PRUint32 aLength) {
 
 
 //static char gChar=0;
-
+#ifndef NEW_STRING_APIS
 /** 
  * 
  * @update  gess1/4/99
@@ -225,6 +268,7 @@ PRUnichar nsString::First(void) const{
 PRUnichar nsString::Last(void) const{
   return GetCharAt(*this,mLength-1);
 }
+#endif // !defined(NEW_STRING_APIS)
 
 /**
  * set a char inside this string at given index
@@ -251,7 +295,7 @@ PRBool nsString::SetCharAt(PRUnichar aChar,PRUint32 anIndex){
   append (operator+) METHODS....
  *********************************************************/
 
-
+#ifndef NEW_STRING_APIS
 /**
  * Create a new string by appending given string to this
  * @update  gess 01/04/99
@@ -325,6 +369,7 @@ nsSubsumeStr nsString::operator+(PRUnichar aChar) {
   temp.Append(char(aChar));
   return nsSubsumeStr(temp);
 }
+#endif // !defined(NEW_STRING_APIS)
 
 /**********************************************************************
   Lexomorphic transforms...
@@ -1375,12 +1420,14 @@ nsString& nsString::Insert(PRUnichar aChar,PRUint32 anOffset){
  *  @param  aCount -- number of chars to be cut
  *  @return *this
  */
+#ifndef NEW_STRING_APIS
 nsString& nsString::Cut(PRUint32 anOffset, PRInt32 aCount) {
   if(0<aCount) {
     nsStr::Delete(*this,anOffset,aCount);
   }
   return *this;
 }
+#endif
 
 /**********************************************************************
   Searching methods...                
@@ -1776,6 +1823,8 @@ PRInt32 nsString::Compare(const nsStr& aString,PRBool aIgnoreCase,PRInt32 aCount
   return nsStr::Compare(*this,aString,aCount,aIgnoreCase);
 }
 
+
+#ifndef NEW_STRING_APIS
 /**
  *  Here come a whole bunch of operator functions that are self-explanatory...
  */
@@ -1809,7 +1858,7 @@ PRBool nsString::operator>=(const nsString& S) const {return PRBool(Compare(S)>=
 PRBool nsString::operator>=(const nsStr& S) const {return PRBool(Compare(S)>=0);}
 PRBool nsString::operator>=(const char* s) const {return PRBool(Compare(s)>=0);}
 PRBool nsString::operator>=(const PRUnichar* s) const {return PRBool(Compare(s)>=0);}
-
+#endif // !defined(NEW_STRING_APIS)
 
 PRBool nsString::EqualsIgnoreCase(const nsString& aString) const {
   return Equals(aString,PR_TRUE);
