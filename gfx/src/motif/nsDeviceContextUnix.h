@@ -29,6 +29,12 @@
 #include "X11/Xlib.h"
 #include "X11/Intrinsic.h"
 
+#ifdef MITSHM
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <X11/extensions/XShm.h>
+#endif
+
 /* nsDrawingSurface is actually the following struct */
 struct nsDrawingSurfaceUnix {
   Display *display ;
@@ -36,6 +42,10 @@ struct nsDrawingSurfaceUnix {
   GC       gc ;
   Visual * visual ;
   PRUint32 depth ;
+#ifdef MITSHM
+  XShmSegmentInfo shmInfo;
+  XImage * shmImage;
+#endif
 };
 
 class nsDeviceContextUnix : public nsIDeviceContext

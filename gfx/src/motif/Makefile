@@ -25,7 +25,7 @@ MODULE=raptor
 
 REQUIRES=util img xpcom raptor netlib
 
-LCFLAGS+=-D_IMPL_NS_GFXONXP 
+LCFLAGS+=-D_IMPL_NS_GFXONXP
 
 EXTRA_DSO_LDOPTS+=\
 	$(DIST)/bin/libxpcom.so \
@@ -38,9 +38,9 @@ EXTRA_DSO_LDOPTS+=\
 # This should really be done properly in 'config'
 ifeq ($(OS_ARCH),Linux)
 EXTRA_DSO_LDOPTS+=\
-	 -L/usr/X11R6/lib -lXt -lX11 -lm
+	 -L/usr/X11R6/lib -lXt -lX11 -lXext -lm
 else
-EXTRA_DSO_LDOPTS+= -lXt -lX11 -lm
+EXTRA_DSO_LDOPTS+= -lXt -lX11 -lXext -lm
 endif
 
 

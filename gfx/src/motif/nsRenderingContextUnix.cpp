@@ -28,7 +28,7 @@
 #include "X11/Xlib.h"
 #include "X11/Xutil.h"
 
-//#define NO_CLIP
+
 
 /*
   Some Implementation Notes
@@ -88,6 +88,12 @@ nsRenderingContextUnix :: nsRenderingContextUnix()
   mRegion = nsnull;
   mCurrFontHandle = 0;
   PushState();
+
+#ifdef MITSHM
+  mHasSharedMemory = PR_FALSE;
+  mSupportsSharedPixmaps = PR_FALSE;
+#endif
+
 }
 
 nsRenderingContextUnix :: ~nsRenderingContextUnix()
@@ -126,6 +132,7 @@ nsRenderingContextUnix :: ~nsRenderingContextUnix()
     }
     delete mFrontBuffer;
   }
+
 
   NS_IF_RELEASE(mFontMetrics);
   NS_IF_RELEASE(mFontCache);
@@ -181,6 +188,11 @@ nsresult nsRenderingContextUnix :: Init(nsIDeviceContext* aContext,
 
 nsresult nsRenderingContextUnix :: CommonInit()
 {
+
+#ifdef MITSHM
+  PRInt32 shmMajor, shmMinor ;
+#endif
+
   ((nsDeviceContextUnix *)mContext)->SetDrawingSurface(mRenderingSurface);
   ((nsDeviceContextUnix *)mContext)->InstallColormap();
 
@@ -188,6 +200,19 @@ nsresult nsRenderingContextUnix :: CommonInit()
   mP2T = mContext->GetDevUnitsToAppUnits();
   mTMatrix->AddScale(mContext->GetAppUnitsToDevUnits(),
                      mContext->GetAppUnitsToDevUnits());
+
+#ifdef MITSHM
+  if (XShmQueryVersion(mRenderingSurface->display, 
+		       &shmMajor, 
+		       &shmMinor, 
+		       &mSupportsSharedPixmaps) != 0) {
+
+    mHasSharedMemory = PR_TRUE;
+    mRenderingSurface->shmImage = nsnull;
+    mRenderingSurface->shmInfo.shmaddr = nsnull;
+  }
+#endif
+
   return NS_OK;
 }
 
@@ -545,17 +570,96 @@ nsDrawingSurface nsRenderingContextUnix :: CreateDrawingSurface(nsRect *aBounds)
   // Must make sure this code never gets called when nsRenderingSurface is nsnull
   PRUint32 depth = DefaultDepth(mRenderingSurface->display,
 				DefaultScreen(mRenderingSurface->display));
-  Pixmap p;
-  
-  if (aBounds != nsnull) {
-    p  = ::XCreatePixmap(mRenderingSurface->display,
-			 mRenderingSurface->drawable,
-			 aBounds->width, aBounds->height, depth);
-  } else {
-    p  = ::XCreatePixmap(mRenderingSurface->display,
-			 mRenderingSurface->drawable,
-			 2, 2, depth);
+  Pixmap p = nsnull;
+
+  PRInt32 w = 200, h = 200; // Use some reasonable defaults
+
+  if (nsnull != aBounds) {
+    w = aBounds->width;
+    h = aBounds->height;
   }
+
+#ifdef MITSHM
+  PRUint32 format;
+
+  if (mRenderingSurface->visual->c_class == TrueColor || 
+      mRenderingSurface->visual->c_class == DirectColor)    
+    format = ZPixmap;
+  else 
+    format = XYPixmap;
+
+  if (mSupportsSharedPixmaps == PR_TRUE) {
+
+    mRenderingSurface->shmImage = 
+      ::XShmCreateImage(mRenderingSurface->display,
+			mRenderingSurface->visual, 
+			depth, format, 0, 
+			&(mRenderingSurface->shmInfo),
+			w,h);
+    
+    mRenderingSurface->shmInfo.shmid = 
+      shmget(IPC_PRIVATE,
+	     mRenderingSurface->shmImage->bytes_per_line * 
+	     mRenderingSurface->shmImage->height,
+	     IPC_CREAT | 0777);
+    
+    if (mRenderingSurface->shmInfo.shmid >= 0) {
+      
+      mRenderingSurface->shmInfo.shmaddr = 
+	(char *) shmat(mRenderingSurface->shmInfo.shmid, 0, 0);
+      
+      if (mRenderingSurface->shmInfo.shmaddr != ((char*)-1)) {
+	
+	mRenderingSurface->shmImage->data = mRenderingSurface->shmInfo.shmaddr;
+	mRenderingSurface->shmInfo.readOnly = False;
+	XShmAttach(mRenderingSurface->display, &(mRenderingSurface->shmInfo));
+	
+	p = ::XShmCreatePixmap(mRenderingSurface->display,
+			       mRenderingSurface->drawable,
+			       mRenderingSurface->shmInfo.shmaddr, 
+			       &(mRenderingSurface->shmInfo),
+			       mRenderingSurface->shmImage->width,
+			       mRenderingSurface->shmImage->height,
+			       mRenderingSurface->shmImage->depth);
+
+	::XShmGetImage(mRenderingSurface->display,
+		       mRenderingSurface->drawable,
+		       mRenderingSurface->shmImage,
+		       0,0,AllPlanes);
+      }
+    }
+  }
+
+  // If we failed along the way, just fall back on 
+  // old sockets pixmap mechanism....
+  if (nsnull == p) {
+
+    if (mRenderingSurface->shmInfo.shmaddr != nsnull) {
+
+      if (mRenderingSurface->shmInfo.shmaddr != ((char*)-1))
+	shmdt(mRenderingSurface->shmInfo.shmaddr);
+
+      shmctl(mRenderingSurface->shmInfo.shmid, IPC_RMID,0);
+
+      ::XShmDetach(mRenderingSurface->display, 
+		   &(mRenderingSurface->shmInfo));
+    }
+
+    if (mRenderingSurface->shmImage != nsnull)
+      XDestroyImage(mRenderingSurface->shmImage);
+    
+    mRenderingSurface->shmImage = nsnull;   
+    mRenderingSurface->shmInfo.shmaddr = nsnull;
+    
+  }
+
+#endif
+
+  if (nsnull == p)
+    p  = ::XCreatePixmap(mRenderingSurface->display,
+			 mRenderingSurface->drawable,
+			 w, h, depth);
+
 
   nsDrawingSurfaceUnix * surface = new nsDrawingSurfaceUnix();
 
@@ -565,6 +669,13 @@ nsDrawingSurface nsRenderingContextUnix :: CreateDrawingSurface(nsRect *aBounds)
   surface->visual   = mRenderingSurface->visual;
   surface->depth    = mRenderingSurface->depth;
 
+#ifdef MITSHM
+  surface->shmInfo = mRenderingSurface->shmInfo;
+  surface->shmImage = mRenderingSurface->shmImage;
+  mRenderingSurface->shmInfo.shmaddr = nsnull;
+  mRenderingSurface->shmImage = nsnull;
+#endif
+
   return ((nsDrawingSurface)surface);
 }
 
@@ -572,10 +683,21 @@ void nsRenderingContextUnix :: DestroyDrawingSurface(nsDrawingSurface aDS)
 {
   nsDrawingSurfaceUnix * surface = (nsDrawingSurfaceUnix *) aDS;
 
-  // XXX - Could this be a GC? If so, store the type of surface in nsDrawingSurfaceUnix
+#ifdef MITSHM
+  if (surface->shmImage != nsnull) {
+
+    shmdt(surface->shmInfo.shmaddr);
+    shmctl(surface->shmInfo.shmid, IPC_RMID,0);
+    ::XShmDetach(surface->display, &(surface->shmInfo));
+    XDestroyImage(surface->shmImage);
+
+    surface->shmImage = nsnull;   
+    surface->shmInfo.shmaddr = nsnull;
+  }
+#endif
+
   ::XFreePixmap(surface->display, surface->drawable);
 
-  //XXX greg, this seems bad. MMP
     if (mRenderingSurface == surface)
       mRenderingSurface = nsnull;
 
