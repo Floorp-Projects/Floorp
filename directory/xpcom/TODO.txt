@@ -1,5 +1,7 @@
 housecleaning
 ------------- 
+* fix mac compiler warnings
+
 * sort out nsldap.h vs. nsLDAP.h.  can the former go away?
 
 * why do searches that return lots of entries to the nsLDAPChannel
@@ -22,9 +24,6 @@ housecleaning
 * remove nsILDAPService from (at least) the build and
   nsLDAPProtocolModule.cpp (if not CVS), since it's not currently in use.
 
-* should nsILDAPOperation subclass nsIRequest?  why do some
-  non-nsIChannel things in the mozilla code base implement nsIRequest?
-
 * get rid of unixy, non-NSPR/XPCOM includes, functions, and error handling
   from nsLDAP{Connection,Operation,Message}.[ch]
 
@@ -34,8 +33,6 @@ housecleaning
 
 * come up with a strategy for removing completed nsILDAPOperations from
   the connection's pending request queue
-
-* switch all old-style casts to use either QI or NS_CAST_* macros
 
 * some (many?) destructors don't clean up completely or correctly.  
   audit for this and fix.
