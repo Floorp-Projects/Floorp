@@ -89,7 +89,7 @@ __END__
 
 =head1 NAME
 
-Bugzilla::DB - database authentication for Bugzilla
+Bugzilla::Auth::DB - database authentication for Bugzilla
 
 =head1 SUMMARY
 
