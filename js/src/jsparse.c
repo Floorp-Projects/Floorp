@@ -113,7 +113,6 @@ static JSParser PrimaryExpr;
  * Insist that the next token be of type tt, or report errno and return null.
  * NB: this macro uses cx and ts from its lexical environment.
  */
-
 #define MUST_MATCH_TOKEN(tt, errno)                                           \
     JS_BEGIN_MACRO                                                            \
         if (js_GetToken(cx, ts) != tt) {                                      \
@@ -3426,6 +3425,10 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
             }
         } else {
             JS_ASSERT(pn->pn_arity == PN_BINARY);
+            if (!FoldType(cx, pn1, TOK_NUMBER) ||
+                !FoldType(cx, pn2, TOK_NUMBER)) {
+                return JS_FALSE;
+            }
             if (pn1->pn_type == TOK_NUMBER && pn2->pn_type == TOK_NUMBER) {
                 if (!FoldBinaryNumeric(cx, pn->pn_op, pn1, pn2, pn, tc))
                     return JS_FALSE;
