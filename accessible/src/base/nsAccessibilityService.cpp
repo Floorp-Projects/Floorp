@@ -609,7 +609,7 @@ nsAccessibilityService::CreateHTMLListboxAccessible(nsIDOMNode* aDOMNode, nsISup
 
   nsCOMPtr<nsIWeakReference> weakShell = do_GetWeakReference(presShell);
 
-  *_retval = new nsHTMLListboxAccessible(aDOMNode, weakShell);
+  *_retval = new nsHTMLSelectListAccessible(aDOMNode, weakShell);
   if (! *_retval) 
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -685,7 +685,10 @@ nsAccessibilityService::CreateHTMLRadioButtonAccessibleXBL(nsIDOMNode *aNode, ns
 }
 
 NS_IMETHODIMP 
-nsAccessibilityService::CreateHTMLSelectOptionAccessible(nsIDOMNode* aDOMNode, nsIAccessible *aAccParent, nsISupports* aPresContext, nsIAccessible **_retval)
+nsAccessibilityService::CreateHTMLSelectOptionAccessible(nsIDOMNode* aDOMNode, 
+																												 nsIAccessible *aAccParent, 
+																												 nsISupports* aPresContext, 
+																												 nsIAccessible **_retval)
 {
   nsCOMPtr<nsIPresContext> presContext(do_QueryInterface(aPresContext));
   NS_ASSERTION(presContext,"Error non prescontext passed to accessible factory!!!");
@@ -695,7 +698,7 @@ nsAccessibilityService::CreateHTMLSelectOptionAccessible(nsIDOMNode* aDOMNode, n
 
   nsCOMPtr<nsIWeakReference> weakShell = do_GetWeakReference(presShell);
 
-  *_retval = new nsHTMLSelectOptionAccessible(aAccParent, aDOMNode, weakShell);
+  *_retval = new nsHTMLSelectOptionAccessible(aDOMNode, weakShell);
   if (! *_retval) 
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1499,7 +1502,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessibleFor(nsIDOMNode *aNode,
   // Please leave this in for now, it's a convenient debugging method
   nsAutoString name;
   aNode->GetLocalName(name);
-  if (name.Equals(NS_LITERAL_STRING("INPUT"))) 
+  if (name.EqualsIgnoreCase("LABEL")) 
     printf("## aaronl debugging tag name\n");
 
   nsAutoString attrib;
@@ -1622,7 +1625,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessibleFor(nsIDOMNode *aNode,
     nsCOMPtr<nsIDOMHTMLOptionElement> optionElement(do_QueryInterface(aNode));
     if (optionElement) {
       nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(shell));
-      newAcc = new nsHTMLSelectOptionAccessible(nsnull, aNode, weakShell);
+      newAcc = new nsHTMLSelectOptionAccessible(aNode, weakShell);
     }
   }
   // See if this is an <optgroup>, 
@@ -1631,7 +1634,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessibleFor(nsIDOMNode *aNode,
     nsCOMPtr<nsIDOMHTMLOptGroupElement> optGroupElement(do_QueryInterface(aNode));
     if (optGroupElement) {
       nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(shell));
-      newAcc = new nsHTMLSelectOptGroupAccessible(nsnull, aNode, weakShell);
+      newAcc = new nsHTMLSelectOptGroupAccessible(aNode, weakShell);
     }
   }
 

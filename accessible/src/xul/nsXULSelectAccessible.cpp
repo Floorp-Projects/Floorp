@@ -52,9 +52,7 @@
 /**
   * Selects, Listboxes and Comboboxes, are made up of a number of different
   *  widgets, some of which are shared between the two. This file contains 
-  *  all of the widgets for both of the Selects, for XUL only. Some of them
-  *  extend classes from nsSelectAccessible.cpp, which contains base classes 
-  *  that are also extended by the XUL Select Accessibility support.
+  *  all of the widgets for both of the Selects, for XUL only.
   *
   *  Listbox:
   *     - nsXULListboxAccessible
