@@ -3530,7 +3530,7 @@ nsHTMLDocument::GetBodyContent()
   return PR_FALSE;
 }
 
-NS_IMETHODIMP
+nsresult
 nsHTMLDocument::GetBodyElement(nsIDOMHTMLBodyElement** aBody)
 {
   if (mBodyContent == nsnull && PR_FALSE == GetBodyContent()) {
