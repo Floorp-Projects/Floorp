@@ -16,11 +16,88 @@
  * Reserved.
  */
 
-
 #include "nsCollationMac.h"
-
+#include <Resources.h>
+#include <TextUtils.h>
+#include <Script.h>
+#include "prmem.h"
+#include "prmon.h"
 
 NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+/* Copy from FE_StrColl(), macfe/utility/locale.cp. */
+static short mac_get_script_sort_id(const short scriptcode)
+{
+	short itl2num;
+	ItlbRecord **ItlbRecordHandle;
+
+	/* get itlb of the system script */
+	ItlbRecordHandle = (ItlbRecord **) GetResource('itlb', scriptcode);
+	
+	/* get itl2 number of current system script from itlb if possible
+	 * otherwise, try script manager (Script manager won't update 
+	 * itl2 number when the change on the fly )
+	 */
+	if(ItlbRecordHandle != NULL)
+	{
+		if(*ItlbRecordHandle == NULL)
+			LoadResource((Handle)ItlbRecordHandle);
+			
+		if(*ItlbRecordHandle != NULL)
+			itl2num = (*ItlbRecordHandle)->itlbSort;
+		else
+			itl2num = GetScriptVariable(scriptcode, smScriptSort);
+	} else {	/* Use this as fallback */
+		itl2num = GetScriptVariable(scriptcode, smScriptSort);
+	}
+	
+	return itl2num;
+}
+
+static Handle itl2Handle;
+
+static int mac_sort_tbl_compare(const void* s1, const void* s2)
+{
+	return CompareText((Ptr) s1, (Ptr) s2, 1, 1, itl2Handle);
+}
+
+static int mac_sort_tbl_init(const short scriptcode, unsigned char *mac_sort_tbl)
+{
+	int i;
+	unsigned char sort_tbl[256];
+	
+	for (i = 0; i < 256; i++)
+		sort_tbl[i] = (unsigned char) i;
+
+	/* Get itl2. */
+	itl2Handle = GetResource('itl2', mac_get_script_sort_id(scriptcode));
+	if (itl2Handle == NULL)
+		return -1;
+	
+	/* qsort */
+	PRMonitor* mon = PR_NewMonitor();
+	PR_EnterMonitor(mon);
+	qsort((void *) sort_tbl, 256, 1, mac_sort_tbl_compare);
+	(void) PR_ExitMonitor(mon);
+	PR_DestroyMonitor(mon);
+	
+	/* Put index to the table so we can map character code to sort oder. */
+	for (i = 0; i < 256; i++)
+		mac_sort_tbl[sort_tbl[i]] = (unsigned char) i;
+		
+	return 0;
+}
+
+inline unsigned char mac_sort_tbl_search(const unsigned char ch, const unsigned char* mac_sort_tbl)
+{
+	/* Map character code to sort order. */
+	return mac_sort_tbl[ch];
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 NS_IMPL_ISUPPORTS(nsCollationMac, kICollationIID);
 
@@ -39,12 +116,20 @@ nsCollationMac::~nsCollationMac()
 
 nsresult nsCollationMac::Initialize(nsILocale* locale) 
 {
+  NS_ASSERTION(mCollation == NULL, "Should only be initialized once.");
   mCollation = new nsCollation;
   if (mCollation == NULL) {
+    NS_ASSERTION(0, "mCollation creation failed");
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  // locale -> LCID
+  // locale -> script code + charset name
+  // TODO: get this via nsILocale
+  mCharset.SetString("ISO-8859-1");
+  m_scriptcode = 0; //smRoman
+  if (mac_sort_tbl_init(m_scriptcode, m_mac_sort_tbl) == -1) {
+    return NS_ERROR_FAILURE;
+  }
 
   return NS_OK;
 };
@@ -60,20 +145,42 @@ nsresult nsCollationMac::GetSortKeyLen(const nsCollationStrength strength,
 nsresult nsCollationMac::CreateSortKey(const nsCollationStrength strength, 
                            const nsString& stringIn, PRUint8* key, PRUint32* outLen)
 {
-  PRUint32 byteLenIn = stringIn.Length() * sizeof(PRUnichar);
-  nsAutoString stringNormalized(stringIn);
+  nsresult res = NS_OK;
 
-  if (byteLenIn > *outLen) {
-    byteLenIn = 0;
+  nsAutoString stringNormalized(stringIn);
+  if (strength != kCollationCaseSensitive) {
+    res = mCollation->NormalizeString(stringNormalized);
   }
-  else {
-    if (mCollation != NULL && strength != kCollationCaseSensitive) {
-      mCollation->NormalizeString(stringNormalized);
+  // convert unicode to charset
+  char *str;
+  int str_len;
+
+  res = mCollation->UnicodeToChar(stringNormalized, &str, mCharset);
+  if (NS_SUCCEEDED(res) && str != NULL) {
+    str_len = strlen(str);
+    NS_ASSERTION(str_len > *outLen, "output buffer too small");
+    
+    if (smJapanese != m_scriptcode && smKorean != m_scriptcode && 
+        smTradChinese != m_scriptcode && smSimpChinese != m_scriptcode) {
+      for (int i = 0; i < str_len; i++) {
+        *key++ = (PRUint8) mac_sort_tbl_search((const unsigned char) str[i], m_mac_sort_tbl);
+      }
     }
-    // temporary implementation, call FE eventually
-    memcpy((void *) key, (void *) stringNormalized.GetUnicode(), byteLenIn);
-   }
-  *outLen = byteLenIn;
+    else {
+      // No CJK support, just copy the row string then lowercase for ASCII only.
+      strcpy((char *) key, str);
+      for (int i = 0; i < str_len; i++) {
+        if ((unsigned char) str[i] < 128) {
+          *key++ = tolower(str[i]);
+        }
+        else {
+          key += (smFirstByte == CharacterByteType((Ptr) key, 0, m_scriptcode)) ? 2 : 1; 
+        }
+      }
+    }
+    *outLen = str_len;
+    PR_Free(str);
+  }
 
   return NS_OK;
 }
