@@ -1734,13 +1734,10 @@ NS_IMETHODIMP nsWebBrowser::Activate(void)
   // focus controller object.
   nsCOMPtr<nsIDOMWindow> domWindowExternal;
   GetContentDOMWindow(getter_AddRefs(domWindowExternal));
-  nsCOMPtr<nsIDOMWindowInternal> domWindow;
-  domWindow = do_QueryInterface(domWindowExternal);
-  nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(domWindow));
+  nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(domWindowExternal));
   PRBool needToFocus = PR_TRUE;
   if (piWin) {
-    nsCOMPtr<nsIFocusController> focusController;
-    piWin->GetRootFocusController(getter_AddRefs(focusController));
+    nsIFocusController *focusController = piWin->GetRootFocusController();
     if (focusController) {
       // Go ahead and mark the focus controller as being active.  We have
       // to do this even before the activate message comes in.
@@ -1751,8 +1748,8 @@ NS_IMETHODIMP nsWebBrowser::Activate(void)
       if (focusedWindow) {
         needToFocus = PR_FALSE;
         focusController->SetSuppressFocus(PR_TRUE, "Activation Suppression");
-        domWindow->Focus(); // This sets focus, but we'll ignore it.  
-                           // A subsequent activate will cause us to stop suppressing.
+        piWin->Focus(); // This sets focus, but we'll ignore it.  
+                        // A subsequent activate will cause us to stop suppressing.
       }
     }
   }
@@ -1765,8 +1762,8 @@ NS_IMETHODIMP nsWebBrowser::Activate(void)
     GetPrimaryContentWindow(getter_AddRefs(contentDomWindow));
     if (contentDomWindow)
       contentDomWindow->Focus();
-    else if (domWindow)
-      domWindow->Focus();
+    else if (piWin)
+      piWin->Focus();
   }
 
   nsCOMPtr<nsIDOMWindow> win;
@@ -1814,8 +1811,8 @@ NS_IMETHODIMP nsWebBrowser::Deactivate(void)
   if (domWindow) {
     nsCOMPtr<nsPIDOMWindow> privateDOMWindow = do_QueryInterface(domWindow);
     if(privateDOMWindow) {
-      nsCOMPtr<nsIFocusController> focusController;
-      privateDOMWindow->GetRootFocusController(getter_AddRefs(focusController));
+      nsIFocusController *focusController =
+          privateDOMWindow->GetRootFocusController();
       if (focusController)
         focusController->SetActive(PR_FALSE);
       privateDOMWindow->Deactivate();
@@ -1852,8 +1849,7 @@ NS_IMETHODIMP nsWebBrowser::GetFocusedWindow(nsIDOMWindow * *aFocusedWindow)
     nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(domWindowExternal /*domWindow*/, &rv));
     if (NS_FAILED(rv)) return rv;
     
-    nsCOMPtr<nsIFocusController> focusController;
-    piWin->GetRootFocusController(getter_AddRefs(focusController));
+    nsIFocusController *focusController = piWin->GetRootFocusController();
     if (focusController)
       rv = focusController->GetFocusedWindow(getter_AddRefs(focusedWindow));
     
@@ -1882,8 +1878,7 @@ NS_IMETHODIMP nsWebBrowser::GetFocusedElement(nsIDOMElement * *aFocusedElement)
   nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(domWindowExternal, &rv));
   if (NS_FAILED(rv)) return rv;
 
-  nsCOMPtr<nsIFocusController> focusController;
-  piWin->GetRootFocusController(getter_AddRefs(focusController));
+  nsIFocusController *focusController = piWin->GetRootFocusController();
   if (focusController)
   rv = focusController->GetFocusedElement(getter_AddRefs(focusedElement));
 

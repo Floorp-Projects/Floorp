@@ -60,6 +60,7 @@ REQUIRES	= xpcom \
 		  webbrwsr \
 		  embed_base \
 		  intl \
+		  layout \
 		  $(NULL)
 
 CPPSRCS		= nsPrompt.cpp \

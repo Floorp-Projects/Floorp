@@ -671,8 +671,7 @@ EmbedPrivate::TopLevelFocusIn(void)
   if (!piWin)
     return;
 
-  nsCOMPtr<nsIFocusController> focusController;
-  piWin->GetRootFocusController(getter_AddRefs(focusController));
+  nsIFocusController *focusController = piWin->GetRootFocusController();
   if (focusController)
     focusController->SetActive(PR_TRUE);
 }
@@ -689,8 +688,7 @@ EmbedPrivate::TopLevelFocusOut(void)
   if (!piWin)
     return;
 
-  nsCOMPtr<nsIFocusController> focusController;
-  piWin->GetRootFocusController(getter_AddRefs(focusController));
+  nsIFocusController *focusController = piWin->GetRootFocusController();
   if (focusController)
     focusController->SetActive(PR_FALSE);
 }
@@ -726,8 +724,7 @@ EmbedPrivate::ChildFocusOut(void)
 
   // but the window is still active until the toplevel gets a focus
   // out
-  nsCOMPtr<nsIFocusController> focusController;
-  piWin->GetRootFocusController(getter_AddRefs(focusController));
+  nsIFocusController *focusController = piWin->GetRootFocusController();
   if (focusController)
     focusController->SetActive(PR_TRUE);
 
@@ -747,10 +744,7 @@ EmbedPrivate::GetListener(void)
   if (!piWin)
     return;
 
-  nsCOMPtr<nsIChromeEventHandler> chromeHandler;
-  piWin->GetChromeEventHandler(getter_AddRefs(chromeHandler));
-
-  mEventReceiver = do_QueryInterface(chromeHandler);
+  mEventReceiver = do_QueryInterface(piWin->GetChromeEventHandler());
 }
 
 // attach key and mouse event listeners
@@ -846,14 +840,8 @@ EmbedPrivate::GetPIDOMWindow(nsPIDOMWindow **aPIWin)
   // get the private DOM window
   nsCOMPtr<nsPIDOMWindow> domWindowPrivate = do_QueryInterface(domWindow);
   // and the root window for that DOM window
-  nsCOMPtr<nsIDOMWindowInternal> rootWindow;
-  domWindowPrivate->GetPrivateRoot(getter_AddRefs(rootWindow));
+  *aPIWin = domWindowPrivate->GetPrivateRoot();
   
-  nsCOMPtr<nsIChromeEventHandler> chromeHandler;
-  nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(rootWindow));
-
-  *aPIWin = piWin.get();
-
   if (*aPIWin) {
     NS_ADDREF(*aPIWin);
     return NS_OK;

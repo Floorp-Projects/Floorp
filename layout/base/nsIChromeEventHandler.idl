@@ -40,8 +40,8 @@
 #include "nsISupports.idl"
 
 %{ C++
-#include "nsIPresContext.h"
-#include "nsEvent.h"
+#include "nsEvent.h"  // for nsEventStatus enum
+class nsIPresContext;
 %}
 
 [ptr] native nsIPresContext(nsIPresContext);

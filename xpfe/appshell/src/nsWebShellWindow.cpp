@@ -458,8 +458,8 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
           if (domWindow) {
             nsCOMPtr<nsPIDOMWindow> privateDOMWindow = do_QueryInterface(domWindow);
             if(privateDOMWindow) {
-              nsCOMPtr<nsIFocusController> focusController;
-              privateDOMWindow->GetRootFocusController(getter_AddRefs(focusController));
+              nsIFocusController *focusController =
+                privateDOMWindow->GetRootFocusController();
               if (focusController)
                 focusController->RewindFocusState();
             }
@@ -559,8 +559,8 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
         if (domWindow) {
           nsCOMPtr<nsPIDOMWindow> privateDOMWindow = do_QueryInterface(domWindow);
           if(privateDOMWindow) {
-            nsCOMPtr<nsIFocusController> focusController;
-            privateDOMWindow->GetRootFocusController(getter_AddRefs(focusController));
+            nsIFocusController *focusController = 
+              privateDOMWindow->GetRootFocusController();
             if (focusController)
               focusController->SetActive(PR_FALSE);
             privateDOMWindow->Deactivate();
@@ -580,8 +580,7 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
         if (!domWindow) {
           break;
         }
-        nsCOMPtr<nsIFocusController> focusController;
-        piWin->GetRootFocusController(getter_AddRefs(focusController));
+        nsIFocusController *focusController = piWin->GetRootFocusController();
         if (focusController) {
           // This is essentially the first stage of activation (NS_GOTFOCUS is
           // followed by the DOM window getting activated (which is direct on Win32
@@ -1241,9 +1240,7 @@ nsWebShellWindow::OnStateChange(nsIWebProgress *aProgress,
   aProgress->GetDOMWindow(getter_AddRefs(eventWin));
   nsCOMPtr<nsPIDOMWindow> eventPWin(do_QueryInterface(eventWin));
   if (eventPWin) {
-    nsCOMPtr<nsIDOMWindowInternal> rootiwin;
-    eventPWin->GetPrivateRoot(getter_AddRefs(rootiwin));
-    nsCOMPtr<nsPIDOMWindow> rootPWin(do_QueryInterface(rootiwin));
+    nsPIDOMWindow *rootPWin = eventPWin->GetPrivateRoot();
     if (eventPWin != rootPWin)
       return NS_OK;
   }

@@ -1092,14 +1092,12 @@ nsHTMLInputElement::SetFocus(nsIPresContext* aPresContext)
   // If the window is not active, do not allow the focus to bring the
   // window to the front.  We update the focus controller, but do
   // nothing else.
-  nsCOMPtr<nsIFocusController> focusController;
   nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(mDocument->GetScriptGlobalObject()));
-  win->GetRootFocusController(getter_AddRefs(focusController));
+  nsIFocusController *focusController = win->GetRootFocusController();
   PRBool isActive = PR_FALSE;
   focusController->GetActive(&isActive);
   if (!isActive) {
-    nsCOMPtr<nsIDOMWindowInternal> domWin(do_QueryInterface(win));
-    focusController->SetFocusedWindow(domWin);
+    focusController->SetFocusedWindow(win);
     focusController->SetFocusedElement(this);
 
     return;
@@ -1164,13 +1162,11 @@ nsHTMLInputElement::Select()
     // window to the front.  We update the focus controller, but do
     // nothing else.
     nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(mDocument->GetScriptGlobalObject()));
-    nsCOMPtr<nsIFocusController> focusController;
-    win->GetRootFocusController(getter_AddRefs(focusController));
+    nsIFocusController *focusController = win->GetRootFocusController();
     PRBool isActive = PR_FALSE;
     focusController->GetActive(&isActive);
     if (!isActive) {
-      nsCOMPtr<nsIDOMWindowInternal> domWin(do_QueryInterface(win));
-      focusController->SetFocusedWindow(domWin);
+      focusController->SetFocusedWindow(win);
       focusController->SetFocusedElement(this);
       SelectAll(presContext);
       return NS_OK;

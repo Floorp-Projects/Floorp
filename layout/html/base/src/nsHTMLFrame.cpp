@@ -64,7 +64,6 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIFocusController.h"
-#include "nsPIDOMWindow.h"
 #include "nsIScrollableFrame.h"
 #include "nsIScrollableView.h"
 #include "nsIDocShell.h"

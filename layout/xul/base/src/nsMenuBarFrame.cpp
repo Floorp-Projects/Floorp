@@ -215,8 +215,8 @@ nsMenuBarFrame::SetActive(PRBool aActiveFlag)
     if (!windowPrivate)
       break;
 
-    nsCOMPtr<nsIFocusController> focusController;
-    windowPrivate->GetRootFocusController(getter_AddRefs(focusController));
+    nsIFocusController *focusController =
+      windowPrivate->GetRootFocusController();
     if (!focusController)
       break;
 

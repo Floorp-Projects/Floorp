@@ -371,11 +371,11 @@ NS_IMETHODIMP nsWebBrowserFind::SetMatchCase(PRBool aMatchCase)
 static void
 FocusElementButNotDocument(nsIDocument* aDocument, nsIContent* aContent)
 {
-  nsCOMPtr<nsIFocusController> focusController;
+  nsIFocusController *focusController = nsnull;
   nsCOMPtr<nsPIDOMWindow> ourWindow =
     do_QueryInterface(aDocument->GetScriptGlobalObject());
   if (ourWindow)
-    ourWindow->GetRootFocusController(getter_AddRefs(focusController));
+    focusController = ourWindow->GetRootFocusController();
   if (!focusController)
     return;
 
@@ -844,8 +844,8 @@ nsWebBrowserFind::GetFrameSelection(nsIDOMWindow* aWindow,
     nsCOMPtr<nsPIDOMWindow> ourWindow = 
       do_QueryInterface(doc->GetScriptGlobalObject());
     if (ourWindow) {
-      nsCOMPtr<nsIFocusController> focusController;
-      ourWindow->GetRootFocusController(getter_AddRefs(focusController));
+      nsIFocusController *focusController =
+          ourWindow->GetRootFocusController();
       if (focusController) {
         nsCOMPtr<nsIDOMElement> focusedElement;
         focusController->GetFocusedElement(getter_AddRefs(focusedElement));
@@ -887,9 +887,9 @@ nsresult nsWebBrowserFind::OnFind(nsIDOMWindow *aFoundWindow)
 
     // focus the frame we found in
     nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(aFoundWindow);
-    nsCOMPtr<nsIFocusController> focusController;
+    nsIFocusController *focusController = nsnull;
     if (ourWindow)
-        ourWindow->GetRootFocusController(getter_AddRefs(focusController));
+        focusController = ourWindow->GetRootFocusController();
     if (focusController)
     {
         nsCOMPtr<nsIDOMWindowInternal> windowInt = do_QueryInterface(aFoundWindow);

@@ -232,13 +232,10 @@ GlobalWindowImpl::GlobalWindowImpl()
   : mJSObject(nsnull),
     mTimeouts(nsnull),
     mTimeoutInsertionPoint(&mTimeouts),
-    mRunningTimeout(nsnull),
     mTimeoutPublicIdCounter(1),
     mTimeoutFiringDepth(0),
-    mMutationBits(0),
     mFirstDocumentLoad(PR_TRUE),
     mIsScopeClear(PR_TRUE),
-    mIsDocumentLoaded(PR_FALSE),
     mFullScreen(PR_FALSE),
     mIsClosed(PR_FALSE),
     mOpenerWasCleared(PR_FALSE),
@@ -246,10 +243,14 @@ GlobalWindowImpl::GlobalWindowImpl()
     mLastMouseButtonAction(LL_ZERO),
     mGlobalObjectOwner(nsnull),
     mDocShell(nsnull),
-    mCurrentEvent(0),
-    mChromeEventHandler(nsnull),
-    mFrameElement(nsnull)
+    mCurrentEvent(0)
 {
+  // nsPIDOMWindow initializers
+  mFrameElement = nsnull;
+  mRunningTimeout = nsnull;
+  mMutationBits = 0;
+  mIsDocumentLoaded = PR_FALSE;
+
   // We could have failed the first time through trying
   // to create the entropy collector, so we should
   // try to get one until we succeed.
@@ -318,9 +319,7 @@ GlobalWindowImpl::CleanUp()
   mContext = nsnull;            // Forces Release
   mChromeEventHandler = nsnull; // Forces Release
 
-  PRBool popup;
-  IsPopupSpamWindow(&popup);
-  if (popup) {
+  if (IsPopupSpamWindow()) {
     SetPopupSpamWindow(PR_FALSE);
     --gOpenPopupSpamCount;
   }
@@ -411,11 +410,10 @@ GlobalWindowImpl::GetContext()
   return mContext;
 }
 
-NS_IMETHODIMP
+void
 GlobalWindowImpl::SetOpenerScriptURL(nsIURI* aURI)
 {
   mOpenerScriptURL = aURI;
-  return NS_OK;
 }
 
 nsresult
@@ -499,8 +497,7 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
       // Get our private root. If it is equal to us, then we
       // need to attach our global key bindings that handle
       // browser scrolling and other browser commands.
-      nsCOMPtr<nsIDOMWindowInternal> internal;
-      GetPrivateRoot(getter_AddRefs(internal));
+      nsIDOMWindowInternal *internal = GlobalWindowImpl::GetPrivateRoot();
 
       if (internal == NS_STATIC_CAST(nsIDOMWindowInternal *, this)) {
         nsCOMPtr<nsIXBLService> xblService =
@@ -671,8 +668,8 @@ GlobalWindowImpl::SetDocShell(nsIDocShell* aDocShell)
     // if we are closing the window while in full screen mode, be sure
     // to restore os chrome
     if (mFullScreen) {
-      nsCOMPtr<nsIFocusController> focusController;
-      GetRootFocusController(getter_AddRefs(focusController));
+      nsIFocusController *focusController =
+        GlobalWindowImpl::GetRootFocusController();
       PRBool isActive = PR_FALSE;
       focusController->GetActive(&isActive);
       // only restore OS chrome if the closing window was active
@@ -731,8 +728,7 @@ GlobalWindowImpl::SetDocShell(nsIDocShell* aDocShell)
       GetParent(getter_AddRefs(parentWindow));
       if (parentWindow.get() != NS_STATIC_CAST(nsIDOMWindow*,this)) {
         nsCOMPtr<nsPIDOMWindow> piWindow(do_QueryInterface(parentWindow));
-        nsCOMPtr<nsIChromeEventHandler> handler;
-        piWindow->GetChromeEventHandler(getter_AddRefs(mChromeEventHandler));
+        mChromeEventHandler = piWindow->GetChromeEventHandler();
       }
       else NS_NewWindowRoot(this, getter_AddRefs(mChromeEventHandler));
     }
@@ -1030,16 +1026,6 @@ GlobalWindowImpl::GetDocument(nsIDOMDocument** aDocument)
   // SetNewDocument().
   if (!mDocument && mDocShell)
     nsCOMPtr<nsIDOMDocument> domdoc(do_GetInterface(mDocShell));
-
-  NS_IF_ADDREF(*aDocument = mDocument);
-
-  return NS_OK;
-}
-
-// like GetDocument, but merely fetches the document if it already exists
-NS_IMETHODIMP GlobalWindowImpl::GetExtantDocument(nsIDOMDocument** aDocument)
-{
-  NS_ENSURE_ARG_POINTER(aDocument);
 
   NS_IF_ADDREF(*aDocument = mDocument);
 
@@ -2495,8 +2481,8 @@ GlobalWindowImpl::Focus()
     }
   }
   else {
-    nsCOMPtr<nsIFocusController> focusController;
-    GetRootFocusController(getter_AddRefs(focusController));
+    nsIFocusController *focusController =
+      GlobalWindowImpl::GetRootFocusController();
     if (focusController)
       focusController->SetFocusedWindow(this);
   }
@@ -3271,11 +3257,9 @@ GlobalWindowImpl::Open(const nsAString& aUrl,
                       _retval);
   if (NS_SUCCEEDED(rv)) {
     if (abuseLevel >= openControlled) {
-      nsCOMPtr<nsPIDOMWindow> opened(do_QueryInterface(*_retval));
-      if (opened) {
-        opened->SetPopupSpamWindow(PR_TRUE);
-        ++gOpenPopupSpamCount;
-      }
+      GlobalWindowImpl *opened = NS_STATIC_CAST(GlobalWindowImpl*, *_retval);
+      opened->SetPopupSpamWindow(PR_TRUE);
+      ++gOpenPopupSpamCount;
     }
     if (abuseLevel >= openAbused)
       FireAbuseEvents(PR_FALSE, PR_TRUE, aUrl, aOptions);
@@ -3358,11 +3342,9 @@ GlobalWindowImpl::Open(nsIDOMWindow **_retval)
     }
     
     if (abuseLevel >= openControlled) {
-      nsCOMPtr<nsPIDOMWindow> opened(do_QueryInterface(*_retval));
-      if (opened) {
-        opened->SetPopupSpamWindow(PR_TRUE);
-        ++gOpenPopupSpamCount;
-      }
+      GlobalWindowImpl *opened = NS_STATIC_CAST(GlobalWindowImpl*, *_retval);
+      opened->SetPopupSpamWindow(PR_TRUE);
+      ++gOpenPopupSpamCount;
     }
     if (abuseLevel >= openAbused)
       FireAbuseEvents(PR_FALSE, PR_TRUE, url, options);
@@ -3628,14 +3610,16 @@ GlobalWindowImpl::Close()
     } else rv = NS_ERROR_OUT_OF_MEMORY;
   }
   
-  if (NS_FAILED(rv))
-    rv = ReallyCloseWindow();
+  if (NS_FAILED(rv)) {
+    ReallyCloseWindow();
+    rv = NS_OK;
+  }
   
   return rv;
 }
 
 
-NS_IMETHODIMP
+void
 GlobalWindowImpl::ReallyCloseWindow()
 {
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
@@ -3647,8 +3631,6 @@ GlobalWindowImpl::ReallyCloseWindow()
     treeOwnerAsWin->Destroy();
     CleanUp();
   }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -3679,48 +3661,9 @@ GlobalWindowImpl::GetFrameElement(nsIDOMElement** aFrameElement)
 }
 
 NS_IMETHODIMP
-GlobalWindowImpl::GetFrameElementInternal(nsIDOMElement** aFrameElement)
-{
-  *aFrameElement = mFrameElement;
-  NS_IF_ADDREF(*aFrameElement);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-GlobalWindowImpl::SetFrameElementInternal(nsIDOMElement* aFrameElement)
-{
-  mFrameElement = aFrameElement;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-GlobalWindowImpl::IsLoadingOrRunningTimeout(PRBool* aResult)
-{
-  *aResult = !mIsDocumentLoaded || mRunningTimeout;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-GlobalWindowImpl::IsPopupSpamWindow(PRBool *aResult)
-{
-  *aResult = mIsPopupSpam;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-GlobalWindowImpl::SetPopupSpamWindow(PRBool aPopup)
-{
-  mIsPopupSpam = aPopup;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 GlobalWindowImpl::UpdateCommands(const nsAString& anAction)
 {
-  nsCOMPtr<nsIDOMWindowInternal> rootWindow;
-  GetPrivateRoot(getter_AddRefs(rootWindow));
+  nsIDOMWindowInternal *rootWindow = GlobalWindowImpl::GetPrivateRoot();
   if (!rootWindow)
     return NS_OK;
 
@@ -4261,12 +4204,10 @@ GlobalWindowImpl::GetSystemEventGroup(nsIDOMEventGroup **aGroup)
 // GlobalWindowImpl::nsPIDOMWindow
 //*****************************************************************************
 
-NS_IMETHODIMP
-GlobalWindowImpl::GetPrivateParent(nsPIDOMWindow ** aParent)
+nsPIDOMWindow*
+GlobalWindowImpl::GetPrivateParent()
 {
   nsCOMPtr<nsIDOMWindow> parent;
-  *aParent = nsnull;            // Set to null so we can bail out later
-
   GetParent(getter_AddRefs(parent));
 
   if (NS_STATIC_CAST(nsIDOMWindow *, this) == parent.get()) {
@@ -4285,24 +4226,24 @@ GlobalWindowImpl::GetPrivateParent(nsPIDOMWindow ** aParent)
     parent = do_QueryInterface(globalObject);
   }
 
-  if (parent)
-    CallQueryInterface(parent.get(), aParent);
+  if (parent) {
+    return NS_STATIC_CAST(GlobalWindowImpl*,
+                          NS_STATIC_CAST(nsIDOMWindow*, parent.get()));
+  }
 
-  return NS_OK;
+  return nsnull;
 }
 
-NS_IMETHODIMP
-GlobalWindowImpl::GetPrivateRoot(nsIDOMWindowInternal ** aParent)
+nsPIDOMWindow*
+GlobalWindowImpl::GetPrivateRoot()
 {
-  *aParent = nsnull;            // Set to null so we can bail out later
-
   nsCOMPtr<nsIDOMWindow> parent;
   GetTop(getter_AddRefs(parent));
 
   nsCOMPtr<nsIScriptGlobalObject> parentTop = do_QueryInterface(parent);
   NS_ASSERTION(parentTop, "cannot get parentTop");
-  if(parentTop == nsnull)
-    return NS_ERROR_FAILURE;
+  if (!parentTop)
+    return nsnull;
 
   nsIDocShell *docShell = parentTop->GetDocShell();
 
@@ -4319,16 +4260,17 @@ GlobalWindowImpl::GetPrivateRoot(nsIDOMWindowInternal ** aParent)
       parent = do_QueryInterface(doc->GetScriptGlobalObject());
       nsCOMPtr<nsIDOMWindow> tempParent;
       parent->GetTop(getter_AddRefs(tempParent));
-      CallQueryInterface(tempParent, aParent);
-      return NS_OK;
+      return NS_STATIC_CAST(GlobalWindowImpl*,
+                            NS_STATIC_CAST(nsIDOMWindow*, tempParent));
     }
   }
 
   if (parent) {
-    CallQueryInterface(parent, aParent);
+    return NS_STATIC_CAST(GlobalWindowImpl*,
+                          NS_STATIC_CAST(nsIDOMWindow*, parent));
   }
 
-  return NS_OK;
+  return nsnull;
 }
 
 
@@ -4349,7 +4291,7 @@ GlobalWindowImpl::GetLocation(nsIDOMLocation ** aLocation)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 GlobalWindowImpl::GetObjectProperty(const PRUnichar *aProperty,
                                     nsISupports ** aObject)
 {
@@ -4383,7 +4325,7 @@ GlobalWindowImpl::GetObjectProperty(const PRUnichar *aProperty,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 GlobalWindowImpl::Activate()
 {
 /*
@@ -4450,7 +4392,7 @@ GlobalWindowImpl::Activate()
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 GlobalWindowImpl::Deactivate()
 {
   nsCOMPtr<nsIPresShell> presShell;
@@ -4478,49 +4420,24 @@ GlobalWindowImpl::Deactivate()
   return NS_OK;
 }
 
-NS_IMETHODIMP
-GlobalWindowImpl::GetChromeEventHandler(nsIChromeEventHandler** aHandler)
+nsIFocusController*
+GlobalWindowImpl::GetRootFocusController()
 {
-  NS_IF_ADDREF(*aHandler = mChromeEventHandler);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-GlobalWindowImpl::GetRootFocusController(nsIFocusController** aController)
-{
-  *aController = nsnull;
-
-  nsCOMPtr<nsIDOMWindowInternal> rootWindow;
-  GetPrivateRoot(getter_AddRefs(rootWindow));
+  nsIDOMWindowInternal *rootWindow = GlobalWindowImpl::GetPrivateRoot();
   if (rootWindow) {
     // Obtain the chrome event handler.
-    nsCOMPtr<nsIChromeEventHandler> chromeHandler;
     nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(rootWindow));
-    piWin->GetChromeEventHandler(getter_AddRefs(chromeHandler));
+    nsIChromeEventHandler *chromeHandler = piWin->GetChromeEventHandler();
     if (chromeHandler) {
       nsCOMPtr<nsPIWindowRoot> windowRoot(do_QueryInterface(chromeHandler));
       if (windowRoot) {
-        windowRoot->GetFocusController(aController);
+        nsCOMPtr<nsIFocusController> fc;
+        windowRoot->GetFocusController(getter_AddRefs(fc));
+        return fc;  // this reference is going away, but the root holds onto it
       }
     }
   }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-GlobalWindowImpl::HasMutationListeners(PRUint32 aMutationEventType,
-                                       PRBool* aResult)
-{
-  *aResult = (mMutationBits & aMutationEventType) != 0;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-GlobalWindowImpl::SetMutationListeners(PRUint32 aType)
-{
-  mMutationBits |= aType;
-  return NS_OK;
+  return nsnull;
 }
 
 //*****************************************************************************
@@ -4769,7 +4686,8 @@ GlobalWindowImpl::CloseWindow(nsISupports *aWindow)
 {
   nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(aWindow));
 
-  win->ReallyCloseWindow();
+  NS_STATIC_CAST(GlobalWindowImpl*,
+                 NS_STATIC_CAST(nsPIDOMWindow*, win))->ReallyCloseWindow();
 }
 
 //*****************************************************************************

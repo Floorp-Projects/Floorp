@@ -63,6 +63,7 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIServiceManagerUtils.h"
+#include "nsGlobalWindow.h"
 
 #ifdef MOZ_XUL
 #include "nsIDOMXULDocument.h"
@@ -406,8 +407,10 @@ nsFocusController::GetControllerForCommand(const char * aCommand, nsIController*
     currentWindow = do_QueryInterface(domWindow);
   }
   else if (mCurrentWindow) {
-    nsCOMPtr<nsPIDOMWindow> privateWin = do_QueryInterface(mCurrentWindow);
-    privateWin->GetPrivateParent(getter_AddRefs(currentWindow));
+    GlobalWindowImpl *win =
+      NS_STATIC_CAST(GlobalWindowImpl*,
+                     NS_STATIC_CAST(nsIDOMWindowInternal*, mCurrentWindow));
+    currentWindow = win->GetPrivateParent();
   }
   else return NS_OK;
 
@@ -426,8 +429,10 @@ nsFocusController::GetControllerForCommand(const char * aCommand, nsIController*
         }
       }
     } 
-    nsCOMPtr<nsPIDOMWindow> parentPWindow = currentWindow;
-    parentPWindow->GetPrivateParent(getter_AddRefs(currentWindow));
+    GlobalWindowImpl *win =
+      NS_STATIC_CAST(GlobalWindowImpl*,
+                     NS_STATIC_CAST(nsIDOMWindowInternal*, currentWindow));
+    currentWindow = win->GetPrivateParent();
   }
   
   return NS_OK;

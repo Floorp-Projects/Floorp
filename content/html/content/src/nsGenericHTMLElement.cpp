@@ -1394,9 +1394,9 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsIPresContext* aPresContext,
             // If the window is not active, do not allow the focus to bring the
             // window to the front.  We update the focus controller, but do
             // nothing else.
-            nsCOMPtr<nsIFocusController> focusController;
             nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(mDocument->GetScriptGlobalObject()));
-            win->GetRootFocusController(getter_AddRefs(focusController));
+            nsIFocusController *focusController =
+              win->GetRootFocusController();
             PRBool isActive = PR_FALSE;
             focusController->GetActive(&isActive);
             if (!isActive) {

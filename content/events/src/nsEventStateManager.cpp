@@ -545,11 +545,11 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
           // we will be focusing it again later when we receive the NS_ACTIVATE
           // event.  See bug 120209.
 
-          nsCOMPtr<nsIFocusController> focusController;
+          nsIFocusController *focusController = nsnull;
           PRBool isAlreadySuppressed = PR_FALSE;
 
           if (ourWindow) {
-            ourWindow->GetRootFocusController(getter_AddRefs(focusController));
+            focusController = ourWindow->GetRootFocusController();
             if (focusController) {
               focusController->GetSuppressFocus(&isAlreadySuppressed);
               focusController->SetSuppressFocus(PR_TRUE,
@@ -646,15 +646,15 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
         // Try to keep the focus controllers and the globals in synch
         if (gLastFocusedDocument && gLastFocusedDocument != mDocument) {
 
-          nsCOMPtr<nsIFocusController> lastController;
+          nsIFocusController *lastController = nsnull;
           nsCOMPtr<nsPIDOMWindow> lastWindow = do_QueryInterface(gLastFocusedDocument->GetScriptGlobalObject());
           if (lastWindow)
-            lastWindow->GetRootFocusController(getter_AddRefs(lastController));
+            lastController = lastWindow->GetRootFocusController();
 
-          nsCOMPtr<nsIFocusController> nextController;
+          nsIFocusController *nextController = nsnull;
           nsCOMPtr<nsPIDOMWindow> nextWindow = do_QueryInterface(mDocument->GetScriptGlobalObject());
           if (nextWindow)
-            nextWindow->GetRootFocusController(getter_AddRefs(nextController));
+            nextController = nextWindow->GetRootFocusController();
 
           if (lastController != nextController && lastController && nextController)
             lastController->SetActive(PR_FALSE);
@@ -780,8 +780,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
         return NS_ERROR_NULL_POINTER;
       }
 
-      nsCOMPtr<nsIFocusController> focusController;
-      win->GetRootFocusController(getter_AddRefs(focusController));
+      nsIFocusController *focusController = win->GetRootFocusController();
 
       nsCOMPtr<nsIDOMElement> focusedElement;
       nsCOMPtr<nsIDOMWindowInternal> focusedWindow;
@@ -796,7 +795,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
       }
 
       if (!focusedWindow)
-        focusedWindow = do_QueryInterface(mDocument->GetScriptGlobalObject());
+        focusedWindow = win;
 
       NS_WARN_IF_FALSE(focusedWindow,"check why focusedWindow is null!!!");
 
@@ -863,7 +862,9 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
       // focused sub-window and sub-element for this top-level
       // window.
 
-      nsCOMPtr<nsIFocusController> focusController = GetFocusControllerForDocument(mDocument);
+      nsIFocusController *focusController =
+        GetFocusControllerForDocument(mDocument);
+
       if (focusController)
         focusController->SetSuppressFocus(PR_TRUE, "Deactivate Suppression");
 
@@ -1544,8 +1545,7 @@ nsEventStateManager::ChangeTextSize(PRInt32 change)
   nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(gLastFocusedDocument->GetScriptGlobalObject());
   if(!ourWindow) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDOMWindowInternal> rootWindow;
-  ourWindow->GetPrivateRoot(getter_AddRefs(rootWindow));
+  nsIDOMWindowInternal *rootWindow = ourWindow->GetPrivateRoot();
   if(!rootWindow) return NS_ERROR_FAILURE;
   
   nsCOMPtr<nsIDOMWindow> windowContent;
@@ -4001,8 +4001,7 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
       // see comments in ShiftFocusInternal on mCurrentFocus overloading
       PRBool fcActive = PR_FALSE;
       if (mDocument) {
-        nsCOMPtr<nsIFocusController> fc;
-        fc = getter_AddRefs(GetFocusControllerForDocument(mDocument));
+        nsIFocusController *fc = GetFocusControllerForDocument(mDocument);
         if (fc)
           fc->GetActive(&fcActive);
       }
@@ -4209,14 +4208,14 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext,
           
           // Make sure we're not switching command dispatchers, if so, surpress the blurred one
           if(gLastFocusedDocument && mDocument) {
-            nsCOMPtr<nsIFocusController> newFocusController;
-            nsCOMPtr<nsIFocusController> oldFocusController;
+            nsIFocusController *newFocusController = nsnull;
+            nsIFocusController *oldFocusController = nsnull;
             nsCOMPtr<nsPIDOMWindow> newWindow = do_QueryInterface(mDocument->GetScriptGlobalObject());
             nsCOMPtr<nsPIDOMWindow> oldWindow = do_QueryInterface(gLastFocusedDocument->GetScriptGlobalObject());
             if(newWindow)
-              newWindow->GetRootFocusController(getter_AddRefs(newFocusController));
+              newFocusController = newWindow->GetRootFocusController();
             if(oldWindow)
-              oldWindow->GetRootFocusController(getter_AddRefs(oldFocusController));
+              oldFocusController = oldWindow->GetRootFocusController();
             if(oldFocusController && oldFocusController != newFocusController)
               oldFocusController->SetSuppressFocus(PR_TRUE, "SendFocusBlur Window Switch");
           }
@@ -4263,15 +4262,15 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext,
 
       // Make sure we're not switching command dispatchers, if so, surpress the blurred one
       if (mDocument) {
-        nsCOMPtr<nsIFocusController> newFocusController;
-        nsCOMPtr<nsIFocusController> oldFocusController;
+        nsIFocusController *newFocusController = nsnull;
+        nsIFocusController *oldFocusController = nsnull;
         nsCOMPtr<nsPIDOMWindow> newWindow = do_QueryInterface(mDocument->GetScriptGlobalObject());
         nsCOMPtr<nsPIDOMWindow> oldWindow = do_QueryInterface(gLastFocusedDocument->GetScriptGlobalObject());
 
         if (newWindow)
-          newWindow->GetRootFocusController(getter_AddRefs(newFocusController));
-        oldWindow->GetRootFocusController(getter_AddRefs(oldFocusController));
-        if(oldFocusController && oldFocusController != newFocusController)
+          newFocusController = newWindow->GetRootFocusController();
+        oldFocusController = oldWindow->GetRootFocusController();
+        if (oldFocusController && oldFocusController != newFocusController)
           oldFocusController->SetSuppressFocus(PR_TRUE, "SendFocusBlur Window Switch #2");
       }
 
@@ -4771,7 +4770,8 @@ nsEventStateManager::FocusElementButNotDocument(nsIContent *aContent)
    * while the window focus is currently somewhere else such as the find dialog
    */
 
-  nsCOMPtr<nsIFocusController> focusController(GetFocusControllerForDocument(mDocument));
+  nsIFocusController *focusController =
+    GetFocusControllerForDocument(mDocument);
   if (!focusController)
       return;
 
@@ -5444,16 +5444,11 @@ nsEventStateManager::ShiftFocusByDoc(PRBool aForward)
 }
 
 // Get the FocusController given an nsIDocument
-already_AddRefed<nsIFocusController>
+nsIFocusController*
 nsEventStateManager::GetFocusControllerForDocument(nsIDocument* aDocument)
 {
   nsCOMPtr<nsISupports> container = aDocument->GetContainer();
   nsCOMPtr<nsPIDOMWindow> windowPrivate = do_GetInterface(container);
-  nsIFocusController* fc;
-  if (windowPrivate)
-    windowPrivate->GetRootFocusController(&fc);
-  else
-    fc = nsnull;
 
-  return fc;
+  return windowPrivate ? windowPrivate->GetRootFocusController() : nsnull;
 }

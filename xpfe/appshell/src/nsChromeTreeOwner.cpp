@@ -60,7 +60,6 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMXULElement.h"
 #include "nsIXULBrowserWindow.h"
-#include "nsPIDOMWindow.h"
 
 // CIDs
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);

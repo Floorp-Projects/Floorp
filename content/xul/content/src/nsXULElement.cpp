@@ -370,9 +370,7 @@ static PRBool HasMutationListeners(nsIContent* aContent, PRUint32 aType)
   if (!window)
     return PR_FALSE;
 
-  PRBool set;
-  window->HasMutationListeners(aType, &set);
-  if (!set)
+  if (!window->HasMutationListeners(aType))
     return PR_FALSE;
 
   // We know a mutation listener is registered, but it might not

@@ -128,9 +128,7 @@ nsXULCommandDispatcher::EnsureFocusController()
     // guaranteed that the focus controller outlives us, so it
     // is safe to hold on to it (since we can't die until it has
     // died).
-    nsCOMPtr<nsIFocusController> focus;
-    win->GetRootFocusController(getter_AddRefs(focus));
-    mFocusController = focus; // Store as a weak ptr.
+    mFocusController = win->GetRootFocusController(); // Store as a weak ptr.
   }
 }
 

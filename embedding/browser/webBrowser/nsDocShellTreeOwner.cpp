@@ -88,6 +88,7 @@
 #include "nsIContent.h"
 #include "imgIContainer.h"
 #include "nsContextMenuInfo.h"
+#include "nsIPresContext.h"
 
 //
 // GetEventReceiver
@@ -104,13 +105,9 @@ GetEventReceiver ( nsWebBrowser* inBrowser, nsIDOMEventReceiver** outEventRcvr )
 
   nsCOMPtr<nsPIDOMWindow> domWindowPrivate = do_QueryInterface(domWindow);
   NS_ENSURE_TRUE(domWindowPrivate, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIDOMWindowInternal> rootWindow;
-  domWindowPrivate->GetPrivateRoot(getter_AddRefs(rootWindow));
+  nsPIDOMWindow *rootWindow = domWindowPrivate->GetPrivateRoot();
   NS_ENSURE_TRUE(rootWindow, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIChromeEventHandler> chromeHandler;
-  nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(rootWindow));
-  NS_ENSURE_TRUE(piWin, NS_ERROR_FAILURE);
-  piWin->GetChromeEventHandler(getter_AddRefs(chromeHandler));
+  nsIChromeEventHandler *chromeHandler = rootWindow->GetChromeEventHandler();
   NS_ENSURE_TRUE(chromeHandler, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDOMEventReceiver> rcvr = do_QueryInterface(chromeHandler);
@@ -1685,9 +1682,7 @@ ChromeContextMenuListener::ContextMenu(nsIDOMEvent* aMouseEvent)
   NS_ENSURE_SUCCESS(res, res);
   NS_ENSURE_TRUE(privateWin, NS_ERROR_FAILURE);
   // get the focus controller
-  nsCOMPtr<nsIFocusController> focusController;
-  res = privateWin->GetRootFocusController(getter_AddRefs(focusController));
-  NS_ENSURE_SUCCESS(res, res);
+  nsIFocusController *focusController = privateWin->GetRootFocusController();
   NS_ENSURE_TRUE(focusController, NS_ERROR_FAILURE);
   // set the focus controller's popup node to the event target
   res = focusController->SetPopupNode(targetDOMnode);

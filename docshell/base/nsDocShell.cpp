@@ -4744,10 +4744,10 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
     // testing bugs #28580 and 50509.  These are immensely important bugs,
     // so PLEASE take care not to regress them if you decide to alter this 
     // code later              -- hyatt
-    nsCOMPtr<nsIFocusController> focusController;
+    nsIFocusController *focusController = nsnull;
     if (mScriptGlobal) {
         nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(mScriptGlobal);
-        ourWindow->GetRootFocusController(getter_AddRefs(focusController));
+        focusController = ourWindow->GetRootFocusController();
         if (focusController) {
             // Suppress the command dispatcher.
             focusController->SetSuppressFocus(PR_TRUE,
@@ -4755,7 +4755,6 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
             // Remove focus from the element that has it
             nsCOMPtr<nsIDOMWindowInternal> focusedWindow;
             focusController->GetFocusedWindow(getter_AddRefs(focusedWindow));
-            nsCOMPtr<nsIDOMWindowInternal> ourFocusedWindow(do_QueryInterface(ourWindow));
 
             // We want to null out the last focused element if the document containing
             // it is going away.  If the last focused element is in a descendent
@@ -4768,7 +4767,7 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
             if (focusedWindow)
               focusedWindow->GetParent(getter_AddRefs(curwin));
             while (curwin) {
-              if (curwin == NS_STATIC_CAST(nsIDOMWindow*, ourFocusedWindow)) {
+              if (curwin == ourWindow) {
                 isSubWindow = PR_TRUE;
                 break;
               }
@@ -4784,7 +4783,7 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
               curwin = dont_AddRef(temp);
             }
 
-            if (ourFocusedWindow == focusedWindow || isSubWindow)
+            if (ourWindow == focusedWindow || isSubWindow)
               focusController->ResetElementFocus();
         }
     }
@@ -6770,9 +6769,9 @@ NS_IMETHODIMP nsDocShell::EnsureFind()
 
     // if we can, search the focussed window
     nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(scriptGO);
-    nsCOMPtr<nsIFocusController> focusController;
+    nsIFocusController *focusController = nsnull;
     if (ourWindow)
-        ourWindow->GetRootFocusController(getter_AddRefs(focusController));
+        focusController = ourWindow->GetRootFocusController();
     if (focusController)
     {
         nsCOMPtr<nsIDOMWindowInternal> focussedWindow;

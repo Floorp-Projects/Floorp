@@ -82,7 +82,6 @@
 #include "nsWeakReference.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMDocument.h"
-#include "nsPIDOMWindow.h"
 #include "nsIRenderingContext.h"
 #include "nsIFrameFrame.h"
 #include "nsAutoPtr.h"

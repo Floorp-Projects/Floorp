@@ -199,8 +199,7 @@ static int child_getting_focus( PtWidget_t *widget, PtWidget_t *child, PhEvent_t
 	moz->EmbedRef->GetPIDOMWindow( getter_AddRefs( piWin ) );
 	if( !piWin ) return Pt_CONTINUE;
 
-	nsCOMPtr<nsIFocusController> focusController;
-	piWin->GetRootFocusController(getter_AddRefs(focusController));
+	nsIFocusController *focusController = piWin->GetRootFocusController();
 	if( focusController ) focusController->SetActive( PR_TRUE );
 	return Pt_CONTINUE;
 	}

@@ -3792,9 +3792,9 @@ NS_IMETHODIMP nsPluginInstanceOwner::Init(nsIPresContext* aPresContext, nsObject
     // content viewer doesn't transfer focus to the toplevel window.
 
     nsCOMPtr<nsPIDOMWindow> privWindow = do_GetInterface(container);
-    nsCOMPtr<nsIFocusController> fc;
+    nsIFocusController *fc = nsnull;
     if (privWindow) {
-      privWindow->GetRootFocusController(getter_AddRefs(fc));
+      fc = privWindow->GetRootFocusController();
       if (fc)
         fc->SetSuppressFocus(PR_TRUE, "PluginInstanceOwner::Init Suppression");
     }

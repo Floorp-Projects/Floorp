@@ -595,7 +595,7 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
         // is the parent under popup conditions?
         nsCOMPtr<nsPIDOMWindow> piWindow(do_QueryInterface(aParent));
         if (piWindow)
-          piWindow->IsLoadingOrRunningTimeout(&popupConditions);
+          popupConditions = piWindow->IsLoadingOrRunningTimeout();
 
         // chrome is always allowed, so clear the flag if the opener is chrome
         if (popupConditions) {
@@ -758,10 +758,7 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
            Also using GetDocument to force document creation seems to
            screw up focus in the hidden window; see bug 36016.
         */
-        nsCOMPtr<nsIDOMDocument> document;
-        w->GetExtantDocument(getter_AddRefs(document));
-
-        nsCOMPtr<nsIDocument> doc(do_QueryInterface(document));
+        nsCOMPtr<nsIDocument> doc(do_QueryInterface(w->GetExtantDocument()));
         if (doc) { 
           // Set the referrer
           loadInfo->SetReferrer(doc->GetDocumentURI());

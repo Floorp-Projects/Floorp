@@ -498,7 +498,7 @@ PRBool nsAccessible::IsPartiallyVisible(PRBool *aIsOffscreen)
 
 nsresult nsAccessible::GetFocusedNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aFocusedNode)
 {
-  nsCOMPtr<nsIFocusController> focusController;
+  nsIFocusController *focusController = nsnull;
   nsCOMPtr<nsIDocument> document;
   nsCOMPtr<nsIContent> content(do_QueryInterface(aCurrentNode));
   if (content)
@@ -509,7 +509,7 @@ nsresult nsAccessible::GetFocusedNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aFo
   if (document) {
     nsCOMPtr<nsPIDOMWindow> ourWindow(do_QueryInterface(document->GetScriptGlobalObject()));
     if (ourWindow) 
-      ourWindow->GetRootFocusController(getter_AddRefs(focusController));
+      focusController = ourWindow->GetRootFocusController();
   }
 
   if (focusController) {

@@ -663,9 +663,10 @@ nsFormFillController::AddFocusListener(nsIDOMWindow *aWindow)
     return;
 
   nsCOMPtr<nsPIDOMWindow> privateDOMWindow(do_QueryInterface(aWindow));
-  nsCOMPtr<nsIChromeEventHandler> chromeEventHandler;
+  nsIChromeEventHandler *chromeEventHandler = nsnull;
   if (privateDOMWindow)
-    privateDOMWindow->GetChromeEventHandler(getter_AddRefs(chromeEventHandler));
+    chromeEventHandler = privateDOMWindow->GetChromeEventHandler();
+
   nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(chromeEventHandler));
 
   if (target)
@@ -683,9 +684,10 @@ nsFormFillController::RemoveFocusListener(nsIDOMWindow *aWindow)
   StopControllingInput();
   
   nsCOMPtr<nsPIDOMWindow> privateDOMWindow(do_QueryInterface(aWindow));
-  nsCOMPtr<nsIChromeEventHandler> chromeEventHandler;
+  nsIChromeEventHandler *chromeEventHandler = nsnull;
   if (privateDOMWindow)
-    privateDOMWindow->GetChromeEventHandler(getter_AddRefs(chromeEventHandler));
+    chromeEventHandler = privateDOMWindow->GetChromeEventHandler();
+
   nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(chromeEventHandler));
 
   target->RemoveEventListener(NS_LITERAL_STRING("focus"),
