@@ -265,16 +265,6 @@ protected:
 
   // end Incremental Reflow methods
 
-  // When the reflow state is constructed, mComputedWidth and mComputedHeight get set
-  // to the table's styled width and height.  Flex from XUL boxes can make the styled #s
-  // inaccurate, which means that mComputedWidth and mComputedHeight from the parent
-  // reflow state should be used instead.
-  
-  // The following function will patch the reflow state so that trees behave properly inside boxes. 
-  // This might work for tables as well, but not until regression tests can be run to make sure,
-  NS_IMETHOD FixBadReflowState(const nsHTMLReflowState& aParentReflowState,
-                               nsHTMLReflowState& aChildReflowState) { return NS_OK; };
-
   nsSize GetMaxElementSize(const nsMargin& aInnerMargin,
                            const nsMargin& aInnerPadding,
                            const nsMargin& aCaptionMargin);
