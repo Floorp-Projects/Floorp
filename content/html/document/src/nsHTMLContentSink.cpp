@@ -397,7 +397,8 @@ public:
   nsresult EvaluateScript(const nsAReadableString& aScript,
                           nsIURI *aScriptURI,
                           PRInt32 aLineNo,
-                          const char* aVersion);
+                          const char* aVersion,
+                          PRBool aInScriptTag);
   const char* mScriptLanguageVersion;
 
   void UpdateAllContexts();
@@ -4577,8 +4578,6 @@ HTMLContentSink::PreEvaluateScript()
   mCurrentContext->SetPreAppend(PR_TRUE);
 
   mInScript++;
-  
-
   return PR_TRUE;
 }
 
@@ -4599,7 +4598,8 @@ nsresult
 HTMLContentSink::EvaluateScript(const nsAReadableString& aScript,
                                 nsIURI *aScriptURI,
                                 PRInt32 aLineNo,
-                                const char* aVersion)
+                                const char* aVersion,
+                                PRBool aInScriptTag)
 {
   nsresult rv = NS_OK;
 
@@ -4622,10 +4622,20 @@ HTMLContentSink::EvaluateScript(const nsAReadableString& aScript,
     if (aScriptURI) {
       (void)aScriptURI->GetSpec(&url);
     }
-  
+    
+    // If we are currently processing a script tag, set 
+    // a flag in nsIScriptContext indicating for the same. 
+    if (aInScriptTag)
+      context->SetProcessingScriptTag(PR_TRUE);
+
     PRBool isUndefined;
     context->EvaluateString(aScript, nsnull, principal, url,
                             aLineNo, aVersion, ret, &isUndefined);
+
+    // we are done processing the script. Unset the
+    // flag in nsIScriptContext
+    if (aInScriptTag)
+      context->SetProcessingScriptTag(PR_FALSE);
     
     if (url) {
       nsCRT::free(url);
@@ -4763,7 +4773,7 @@ HTMLContentSink::OnStreamComplete(nsIStreamLoader* aLoader,
         return rv;
 
       rv = EvaluateScript(mUnicodeXferBuf, mScriptURI, 1,
-                          mScriptLanguageVersion);
+                          mScriptLanguageVersion, PR_TRUE);
       if (NS_FAILED(rv))
         return rv;
 
@@ -4989,7 +4999,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
       PRUint32 lineNo = (PRUint32)aNode.GetSourceLineNumber();
       nsIURI *docURI = mDocument->GetDocumentURL();
 
-      EvaluateScript(script, docURI, lineNo, jsVersionString);
+      EvaluateScript(script, docURI, lineNo, jsVersionString, PR_TRUE);
       NS_IF_RELEASE(docURI);
 
       PostEvaluateScript(bodyPresent);
