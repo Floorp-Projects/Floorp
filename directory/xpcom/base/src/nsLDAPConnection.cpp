@@ -623,14 +623,14 @@ CheckLDAPOperationResult(nsHashKey *aKey, void *aData, void* aClosure)
             // the connection may not exist yet.  sleep for a while
             // and try again
             //
-        PR_LOG(gLDAPLogModule, PR_LOG_WARNING, ("ldap_result() timed out.\n"));
+            PR_LOG(gLDAPLogModule, PR_LOG_WARNING, ("ldap_result() timed out.\n"));
 
             // The sleep here is to avoid a problem where the LDAP
             // Connection/thread isn't ready quite yet, and we want to
             // avoid a very busy loop.
             //
             PR_Sleep(sleepTime);
-        return PR_TRUE;
+            return PR_TRUE;
 
         case -1: // something went wrong 
 
@@ -714,34 +714,37 @@ CheckLDAPOperationResult(nsHashKey *aKey, void *aData, void* aClosure)
             // initialize the message, using a protected method not available
             // through nsILDAPMessage (which is why we need the raw pointer)
             //
-        rv = rawMsg->Init(loop->mRawConn, msgHandle);
+            rv = rawMsg->Init(loop->mRawConn, msgHandle);
 
             switch (rv) {
 
-            case NS_OK: 
-              {
+            case NS_OK: {
                 PRInt32 errorCode;
                 rawMsg->GetErrorCode(&errorCode);
-                if (errorCode == LDAP_PROTOCOL_ERROR)
-                {
-                  // maybe a version error, e.g., using v3 on a v2 server.
-                  // if we're using v3, try v2.
-                  if (loop->mRawConn->mVersion == nsILDAPConnection::VERSION3)
-                  {
+                // maybe a version error, e.g., using v3 on a v2 server.
+                // if we're using v3, try v2.
+                //
+                if (errorCode == LDAP_PROTOCOL_ERROR && 
+                   loop->mRawConn->mVersion == nsILDAPConnection::VERSION3) {
                     nsCAutoString password;
                     loop->mRawConn->mVersion = nsILDAPConnection::VERSION2;
-                    ldap_set_option(loop->mRawConn->mConnectionHandle, LDAP_OPT_PROTOCOL_VERSION, &loop->mRawConn->mVersion);
-                    nsCOMPtr <nsILDAPOperation> operation = NS_STATIC_CAST(nsILDAPOperation *, NS_STATIC_CAST(nsISupports *, aData));
-                    // we pass in an empty password to tell the operation that it
-                    // should use the cached password.
-                    operation->SimpleBind(password);
-                    operationFinished = PR_FALSE;
-                    // we don't want to notify callers that we're done...
-                    return PR_TRUE;
-                  }
+                    ldap_set_option(loop->mRawConn->mConnectionHandle,
+                          LDAP_OPT_PROTOCOL_VERSION, &loop->mRawConn->mVersion);
+                    nsCOMPtr <nsILDAPOperation> operation = 
+                      NS_STATIC_CAST(nsILDAPOperation *, 
+                          NS_STATIC_CAST(nsISupports *, aData));
+                    // we pass in an empty password to tell the operation that 
+                    // it should use the cached password.
+                    //
+                    rv = operation->SimpleBind(password);
+                    if (NS_SUCCEEDED(rv)) {
+                        operationFinished = PR_FALSE;
+                        // we don't want to notify callers that we're done...
+                        return PR_TRUE;
+                    }
                 }
-              }
-              break;
+            }
+            break;
 
             case NS_ERROR_LDAP_DECODING_ERROR:
                 consoleSvc->LogStringMessage(
