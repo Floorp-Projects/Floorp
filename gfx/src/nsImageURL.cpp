@@ -125,10 +125,12 @@ ImageURLImpl::QueryInterface(const nsIID& aIID,
   }
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
   static NS_DEFINE_IID(kClassIID, kIImageURLIID); 
+  static NS_DEFINE_IID(kURIIID, NS_IURI_IID);
   static NS_DEFINE_IID(kURLIID, NS_IURL_IID);
 
   // xxx I think this is wrong -- this class isn't aggregated with nsIURI!
-  if (aIID.Equals(kURLIID)) {
+  if (aIID.Equals(kURIIID) ||
+	  aIID.Equals(kURLIID)) {
     *aInstancePtr = (void*) mURL;
     NS_ADDREF(mURL);
     return NS_OK;
