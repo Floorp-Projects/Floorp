@@ -119,17 +119,16 @@ nsXULTreeFrame::EnsureRowIsVisible(PRInt32 aRowIndex)
 
 /* void scrollToIndex (in long rowIndex); */
 NS_IMETHODIMP 
-nsXULTreeFrame::ScrollToIndex(PRInt32 rowIndex)
+nsXULTreeFrame::ScrollToIndex(PRInt32 aRowIndex)
 {
   // Get our treechildren child frame.
-  nsXULTreeOuterGroupFrame* treeOuterGroup = nsnull;
-  GetTreeBody(&treeOuterGroup);
+  nsXULTreeOuterGroupFrame* XULTreeOuterGroup = nsnull;
+  GetTreeBody(&XULTreeOuterGroup);
 
-  if (!treeOuterGroup)
-    return NS_OK; // No tree body. Just bail.
-
-  // XXX IMPLEMENT!
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (!XULTreeOuterGroup) return NS_OK;
+  
+  XULTreeOuterGroup->ScrollToIndex(aRowIndex);
+  return NS_OK;
 }
 
 /* nsIDOMElement getNextItem (in nsIDOMElement startItem, in long delta); */
@@ -241,6 +240,33 @@ nsXULTreeFrame::GetIndexOfItem(nsIPresContext* aPresContext, nsIDOMElement* aEle
   treeOuterGroup->GetContent(getter_AddRefs(root));
   return treeOuterGroup->IndexOfItem(root, content, PR_TRUE, PR_TRUE, aResult);
 }
+
+/* void getNumberOfVisibleRows (); */
+NS_IMETHODIMP 
+nsXULTreeFrame::GetNumberOfVisibleRows(PRInt32 *aResult)
+{
+  // Get our treechildren child frame.
+  nsXULTreeOuterGroupFrame* XULTreeOuterGroup = nsnull;
+  GetTreeBody(&XULTreeOuterGroup);
+
+  if (!XULTreeOuterGroup) return NS_OK;
+  
+  return XULTreeOuterGroup->GetNumberOfVisibleRows(aResult);
+}
+
+/* void getIndexOfFirstVisibleRow (); */
+NS_IMETHODIMP 
+nsXULTreeFrame::GetIndexOfFirstVisibleRow(PRInt32 *aResult)
+{
+  // Get our treechildren child frame.
+  nsXULTreeOuterGroupFrame* XULTreeOuterGroup = nsnull;
+  GetTreeBody(&XULTreeOuterGroup);
+
+  if (!XULTreeOuterGroup) return NS_OK;
+  
+  return XULTreeOuterGroup->GetIndexOfFirstVisibleRow(aResult);
+}
+
 
 void
 nsXULTreeFrame::GetTreeBody(nsXULTreeOuterGroupFrame** aResult)

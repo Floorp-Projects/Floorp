@@ -117,9 +117,14 @@ NS_IMETHODIMP nsTreeBoxObject::EnsureIndexIsVisible(PRInt32 aRowIndex)
 }
 
 /* void scrollToIndex (in long rowIndex); */
-NS_IMETHODIMP nsTreeBoxObject::ScrollToIndex(PRInt32 rowIndex)
+NS_IMETHODIMP nsTreeBoxObject::ScrollToIndex(PRInt32 aRowIndex)
 {
-  return NS_OK;
+  nsIFrame* frame = GetFrame();
+  if (!frame)
+    return NS_OK;
+  
+  nsCOMPtr<nsITreeFrame> treeFrame(do_QueryInterface(frame));
+  return treeFrame->ScrollToIndex(aRowIndex);
 }
 
 /* nsIDOMElement getNextItem (in nsIDOMElement startItem, in long delta); */
@@ -148,7 +153,12 @@ NS_IMETHODIMP nsTreeBoxObject::GetPreviousItem(nsIDOMElement *aStartItem, PRInt3
 /* nsIDOMElement getItemAtIndex (in long index); */
 NS_IMETHODIMP nsTreeBoxObject::GetItemAtIndex(PRInt32 index, nsIDOMElement **_retval)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsIFrame* frame = GetFrame();
+  if (!frame)
+    return NS_OK;
+
+  nsCOMPtr<nsITreeFrame> treeFrame(do_QueryInterface(frame));
+  return treeFrame->GetItemAtIndex(index, _retval);
 }
 
 /* long getIndexOfItem (in nsIDOMElement item); */
@@ -164,6 +174,28 @@ NS_IMETHODIMP nsTreeBoxObject::GetIndexOfItem(nsIDOMElement* aElement, PRInt32 *
   nsCOMPtr<nsIPresContext> presContext;
   mPresShell->GetPresContext(getter_AddRefs(presContext));
   return treeFrame->GetIndexOfItem(presContext, aElement, aResult);
+}
+
+/* void getNumberOfVisibleRows (); */
+NS_IMETHODIMP nsTreeBoxObject::GetNumberOfVisibleRows(PRInt32 *aResult)
+{
+  nsIFrame* frame = GetFrame();
+  if (!frame)
+    return NS_OK;
+  
+  nsCOMPtr<nsITreeFrame> treeFrame(do_QueryInterface(frame));
+  return treeFrame->GetNumberOfVisibleRows(aResult);
+}
+
+/* void getIndexOfFirstVisibleRow (); */
+NS_IMETHODIMP nsTreeBoxObject::GetIndexOfFirstVisibleRow(PRInt32 *aResult)
+{
+  nsIFrame* frame = GetFrame();
+  if (!frame)
+    return NS_OK;
+  
+  nsCOMPtr<nsITreeFrame> treeFrame(do_QueryInterface(frame));
+  return treeFrame->GetIndexOfFirstVisibleRow(aResult);
 }
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////

@@ -35,7 +35,8 @@ interface nsITreeBoxObject : nsISupports
   nsIDOMElement getPreviousItem(in nsIDOMElement startItem, in long delta);
   nsIDOMElement getItemAtIndex(in long index);
   long getIndexOfItem(in nsIDOMElement item);
-
+  long getNumberOfVisibleRows();
+  long getIndexOfFirstVisibleRow();
 };
 
 %{C++

@@ -106,7 +106,13 @@ public:
 
   nscoord GetYPosition();
   nscoord GetAvailableHeight();
-
+  NS_IMETHOD GetNumberOfVisibleRows(PRInt32 *aResult) {
+    *aResult=GetAvailableHeight() / mRowHeight; return NS_OK;
+  }
+  NS_IMETHOD GetIndexOfFirstVisibleRow(PRInt32 *aResult) {
+    *aResult=mCurrentIndex; return NS_OK;
+  }
+  
   NS_IMETHOD PositionChanged(PRInt32 aOldIndex, PRInt32 aNewIndex);
   NS_IMETHOD ScrollbarButtonPressed(PRInt32 aOldIndex, PRInt32 aNewIndex);
 
@@ -130,6 +136,8 @@ public:
   // This method ensures that a row is onscreen.  It will scroll the tree widget such
   // that the row is at the top of the screen (if the row was offscreen to start with).
   void EnsureRowIsVisible(PRInt32 aRowIndex);
+
+  void ScrollToIndex(PRInt32 aRowIndex);
   
   NS_IMETHOD IndexOfItem(nsIContent* aRoot, nsIContent* aContent,
                          PRBool aDescendIntoRows, // Invariant

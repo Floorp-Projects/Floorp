@@ -186,7 +186,6 @@ nsXULTreeOuterGroupFrame::GetAvailableHeight()
   return y;
 }
 
-
 void
 nsXULTreeOuterGroupFrame::ComputeTotalRowCount(PRInt32& aCount, nsIContent* aParent)
 {
@@ -715,6 +714,22 @@ nsXULTreeOuterGroupFrame::EnsureRowIsVisible(PRInt32 aRowIndex)
   if (newIndex < 0)
     newIndex = 0;
 
+  PRInt32 delta = mCurrentIndex > newIndex ? mCurrentIndex - newIndex : newIndex - mCurrentIndex;
+  PRInt32 up = newIndex < mCurrentIndex;
+  mCurrentIndex = newIndex;
+  InternalPositionChanged(up, delta);
+
+  // This change has to happen immediately.
+  // Flush any pending reflow commands.
+  nsCOMPtr<nsIDocument> doc;
+  mContent->GetDocument(*getter_AddRefs(doc));
+  doc->FlushPendingNotifications();
+}
+
+void
+nsXULTreeOuterGroupFrame::ScrollToIndex(PRInt32 aRowIndex)
+{
+  PRInt32 newIndex = aRowIndex;
   PRInt32 delta = mCurrentIndex > newIndex ? mCurrentIndex - newIndex : newIndex - mCurrentIndex;
   PRInt32 up = newIndex < mCurrentIndex;
   mCurrentIndex = newIndex;
