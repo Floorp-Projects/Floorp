@@ -268,7 +268,8 @@ NS_IMETHODIMP nsDocShellTreeOwner::GetNewWindow(PRInt32 aChromeFlags,
 
    nsCOMPtr<nsIWebBrowser> webBrowser;
    NS_ENSURE_TRUE(mWebBrowserChrome, NS_ERROR_FAILURE);
-   mWebBrowserChrome->CreateBrowserWindow(aChromeFlags, getter_AddRefs(webBrowser));
+   aChromeFlags &= ~(nsIWebBrowserChrome::CHROME_WITH_SIZE | nsIWebBrowserChrome::CHROME_WITH_POSITION);
+   mWebBrowserChrome->CreateBrowserWindow(aChromeFlags, -1, -1, -1, -1, getter_AddRefs(webBrowser));
    NS_ENSURE_TRUE(webBrowser, NS_ERROR_FAILURE);
 
    nsCOMPtr<nsIInterfaceRequestor> webBrowserAsReq(do_QueryInterface(webBrowser));

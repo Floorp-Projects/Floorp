@@ -115,7 +115,7 @@ NS_IMETHODIMP WebBrowserChrome::SetChromeFlags(PRUint32 aChromeMask)
 // in winEmbed.cpp
 extern nativeWindow CreateNativeWindow(nsIWebBrowserChrome* chrome);
 
-NS_IMETHODIMP WebBrowserChrome::CreateBrowserWindow(PRUint32 chromeMask, nsIWebBrowser **aWebBrowser)
+NS_IMETHODIMP WebBrowserChrome::CreateBrowserWindow(PRUint32 chromeMask, PRInt32 aX, PRInt32 aY, PRInt32 aCX, PRInt32 aCY, nsIWebBrowser **aWebBrowser)
 {
    NS_ENSURE_ARG_POINTER(aWebBrowser);
    *aWebBrowser = nsnull;

@@ -259,7 +259,7 @@ NS_IMETHODIMP nsContentTreeOwner::GetChromeFlags(PRUint32* aChromeFlags)
 }
 
 NS_IMETHODIMP nsContentTreeOwner::CreateBrowserWindow(PRUint32 aChromeFlags,
-   nsIWebBrowser** aWebBrowser)
+   PRInt32 aX, PRInt32 aY, PRInt32 aCX, PRInt32 aCY, nsIWebBrowser** aWebBrowser)
 {
    NS_ERROR("Haven't Implemented this yet");
    return NS_ERROR_FAILURE;

@@ -83,7 +83,7 @@ nsresult OpenWebPage(char* url)
     NS_ADDREF(chrome); // native window will hold the addref.
 
     nsCOMPtr<nsIWebBrowser> newBrowser;
-    chrome->CreateBrowserWindow(0, getter_AddRefs(newBrowser));
+    chrome->CreateBrowserWindow(0, -1, -1, -1, -1, getter_AddRefs(newBrowser));
     if (!newBrowser)
         return NS_ERROR_FAILURE;
 

@@ -54,32 +54,36 @@ interface nsIWebBrowserChrome : nsISupports
 	attribute nsIWebBrowser webBrowser;
 
 	/*
-		Definitions for the chrome masks
+		Definitions for the chrome flags
 	*/
-	const unsigned long CHROME_DEFAULT = 0x00000001;
-	const unsigned long CHROME_WINDOW_BORDERS = 0x00000002;
-	const unsigned long CHROME_WINDOW_CLOSE = 0x00000004;
-	const unsigned long CHROME_WINDOW_RESIZE = 0x00000008;
-	const unsigned long CHROME_MENUBAR = 0x00000010;
-	const unsigned long CHROME_TOOLBAR = 0x00000020;
-	const unsigned long CHROME_LOCATIONBAR = 0x00000040;
-	const unsigned long CHROME_STATUSBAR = 0x00000080;
+	const unsigned long CHROME_DEFAULT          = 0x00000001;
+	const unsigned long CHROME_WINDOW_BORDERS   = 0x00000002;
+	const unsigned long CHROME_WINDOW_CLOSE     = 0x00000004;
+	const unsigned long CHROME_WINDOW_RESIZE    = 0x00000008;
+	const unsigned long CHROME_MENUBAR          = 0x00000010;
+	const unsigned long CHROME_TOOLBAR          = 0x00000020;
+	const unsigned long CHROME_LOCATIONBAR      = 0x00000040;
+	const unsigned long CHROME_STATUSBAR        = 0x00000080;
 	const unsigned long CHROME_PERSONAL_TOOLBAR = 0x00000100;
-	const unsigned long CHROME_SCROLLBARS = 0x00000200;
-	const unsigned long CHROME_TITLEBAR = 0x00000400;
-	const unsigned long CHROME_EXTRA = 0x00000800;
+	const unsigned long CHROME_SCROLLBARS       = 0x00000200;
+	const unsigned long CHROME_TITLEBAR         = 0x00000400;
+	const unsigned long CHROME_EXTRA            = 0x00000800;
 
-	const unsigned long CHROME_WINDOW_RAISED = 0x02000000;
-	const unsigned long CHROME_WINDOW_LOWERED = 0x04000000;
-	const unsigned long CHROME_CENTER_SCREEN = 0x08000000;
-	const unsigned long CHROME_DEPENDENT = 0x10000000;
+    // createBrowserWindow specific flags
+    const unsigned long CHROME_WITH_SIZE        = 0x00001000;
+    const unsigned long CHROME_WITH_POSITION    = 0x00002000;
+
+	const unsigned long CHROME_WINDOW_RAISED    = 0x02000000;
+	const unsigned long CHROME_WINDOW_LOWERED   = 0x04000000;
+	const unsigned long CHROME_CENTER_SCREEN    = 0x08000000;
+	const unsigned long CHROME_DEPENDENT        = 0x10000000;
 	// Note: The modal style bit just affects the way the window looks and does
 	//       mean it's actually modal.
-	const unsigned long CHROME_MODAL = 0x20000000; 
-	const unsigned long CHROME_OPENAS_DIALOG = 0x40000000;
-	const unsigned long CHROME_OPENAS_CHROME = 0x80000000;
+	const unsigned long CHROME_MODAL            = 0x20000000; 
+	const unsigned long CHROME_OPENAS_DIALOG    = 0x40000000;
+	const unsigned long CHROME_OPENAS_CHROME    = 0x80000000;
 
-	const unsigned long CHROME_ALL = 0x00000ffe;
+	const unsigned long CHROME_ALL              = 0x00000ffe;
 
 	/*
 		The chrome flags for this browser chrome
@@ -97,7 +101,8 @@ interface nsIWebBrowserChrome : nsISupports
 		new window.	
 	*/
 
-	nsIWebBrowser createBrowserWindow(in unsigned long chromeFlags);
+    nsIWebBrowser createBrowserWindow(in unsigned long chromeFlags,
+                          in long aX, in long aY, in long aCX, in long aCY);
 
 
 	/*
