@@ -52,7 +52,7 @@ class nsAutoBufferHandle
 
       explicit
       nsAutoBufferHandle( const nsSharedBufferHandle<CharT>* aHandle )
-          : mHandle(aHandle)
+          : mHandle( NS_CONST_CAST(nsSharedBufferHandle<CharT>*, aHandle) )
         {
           if ( mHandle)
             mHandle->AcquireReference();
