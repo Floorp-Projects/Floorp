@@ -121,7 +121,7 @@ calendarManager.prototype.addServerDialogResponse = function( CalendarObject )
       CalendarObject.remotePath = CalendarObject.path;
       CalendarObject.path = profileFile.path;
       
-      this.retrieveAndSaveRemoteCalendar( CalendarObject, onResponseFunction );
+      this.retrieveAndSaveRemoteCalendar( CalendarObject, onResponseAndRefresh );
 
       alert( "Remote Calendar Added" );
    }
@@ -308,17 +308,11 @@ calendarManager.prototype.refreshAllRemoteCalendars = function()
 }
 
 
-function onResponseFunction( )
-{
-   //save the stream to a file.
-   saveDataToFile( calendarToGet.path, request.responseText, "UTF-8" );
-}
-
 function onResponseAndRefresh( )
 {
    //save the stream to a file.
-   onResponseFunction();
-
+   saveDataToFile( calendarToGet.path, request.responseText, "UTF-8" );
+   
    gCalendarWindow.calendarManager.removeCalendar( calendarToGet );
 
    gCalendarWindow.calendarManager.addCalendar( calendarToGet );
