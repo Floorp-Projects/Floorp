@@ -31,9 +31,10 @@ class  nsFormControlFrame;
 class  nsRadioControlFrame;
 class  nsIFormControlFrame;
 class  nsIDOMHTMLFormElement;
-
+class nsIDocument;
 class nsIPresContext;
 class nsFormFrame;
+
 // XXX these structs and gFormFrameTable below provide a faster way to get from a form content to
 // the appropriate frame. Before replacing this mechanism with FindFrameWithContent, please test
 // a page with thousands of frames and hundreds of form controls.

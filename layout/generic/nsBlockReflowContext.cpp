@@ -22,6 +22,7 @@
 #include "nsISpaceManager.h"
 #include "nsIFontMetrics.h"
 #include "nsIPresContext.h"
+#include "nsIContent.h"
 #include "nsIStyleContext.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsBlockFrame.h"

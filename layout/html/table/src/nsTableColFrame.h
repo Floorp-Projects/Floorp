@@ -21,6 +21,8 @@
 #include "nscore.h"
 #include "nsContainerFrame.h"
 
+class nsVoidArray;
+
 class nsTableColFrame : public nsFrame {
 public:
 

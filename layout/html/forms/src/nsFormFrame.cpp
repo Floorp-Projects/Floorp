@@ -687,7 +687,7 @@ nsFormFrame::GetParentHTMLFrameDocument(nsIDocument* doc) {
   nsIDocument* parentDocument = nsnull;
   nsIScriptContextOwner* webshellOwner = nsnull;
   if (!doc) return nsnull;
-  if ((webshellOwner = doc->GetScriptContextOwner())) {
+  if ((webshellOwner = doc->GetScriptContextOwner()) != nsnull) {
     nsIWebShell* webshell = nsnull;
     if (NS_OK == webshellOwner->QueryInterface(kIWebshellIID, (void **)&webshell)) {
       nsIWebShell* pWebshell = nsnull;

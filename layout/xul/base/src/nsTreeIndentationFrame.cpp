@@ -24,6 +24,7 @@
 #include "nsXULAtoms.h"
 #include "nsUnitConversion.h"
 #include "nsIStyleContext.h"
+#include "nsIContent.h"
 #include "nsStyleConsts.h"
 #include "nsINameSpaceManager.h"
 #include "nsTreeIndentationFrame.h"

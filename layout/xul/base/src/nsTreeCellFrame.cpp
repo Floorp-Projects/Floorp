@@ -25,6 +25,7 @@
 #include "nsIStyleContext.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
+#include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIStyleSet.h"
 #include "nsIViewManager.h"
