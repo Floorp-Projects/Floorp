@@ -50,20 +50,11 @@ public:
 
   static const nsIID& GetIID() { static nsIID iid = NS_IDOCUMENT_ENCODER_IID; return iid; }
 
-#if 0
   /**
-   *  Creates a stream representation of aDocument.
-   *  Uses the MIMEType to choose an encoding.
-   *
-   *  aDocument must point to a valid, non-null nsIDocument object.
-   *  Possible result codes: NS_OK, NS_ERROR_ENCODER_NOT_FOUND
+   *  Initialize with a pointer to the document and the mime type.
    *  
    */
-  nsIDocumentEncoder(nsIDocument* aDocument,
-                     const nsString& aMIMEType);
-
-  virtual ~nsIDocumentEncoder();
-#endif
+  NS_IMETHOD Init(nsIDocument* aDocument, nsString& aMimeType) = 0;
 
   /**
    *  If the selection is set to a non-null value, then the

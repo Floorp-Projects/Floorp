@@ -16,13 +16,14 @@
  * Reserved.
  */
 
+#include "nsIDocumentEncoder.h"
+
 #include "nscore.h"
 #include "nsIFactory.h"
 #include "nsISupports.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
-
-#include "nsIDocumentEncoder.h"
+#include "nsIDocument.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
@@ -37,6 +38,8 @@ public:
 
   nsHTMLEncoder();
   virtual ~nsHTMLEncoder();
+
+  NS_IMETHOD Init(nsIDocument* aDocument, nsString& aMimeType);
 
   /* Interfaces for addref and release and queryinterface */
   NS_DECL_ISUPPORTS
@@ -53,17 +56,35 @@ public:
   NS_IMETHOD SubstituteURL(const nsString& aOriginal,
                            const nsString& aReplacement);
   NS_IMETHOD PrettyPrint(PRBool aYesNO);
+
+private:
+  nsIDocument* mDocument;
+  nsString mMimeType;
 };
 
 NS_IMPL_ADDREF(nsHTMLEncoder)
 NS_IMPL_RELEASE(nsHTMLEncoder)
 
-nsHTMLEncoder::nsHTMLEncoder()
+nsHTMLEncoder::nsHTMLEncoder() : mMimeType("text/html")
 {
+  mDocument = 0;
 }
 
 nsHTMLEncoder::~nsHTMLEncoder()
 {
+  NS_IF_RELEASE(mDocument);
+}
+
+NS_IMETHODIMP
+nsHTMLEncoder::Init(nsIDocument* aDocument, nsString& aMimeType)
+{
+  if (!aDocument)
+    return NS_ERROR_INVALID_ARG;
+
+  mDocument = aDocument;
+  NS_ADDREF(mDocument);
+  mMimeType = aMimeType;
+  return NS_OK;
 }
 
 nsresult nsHTMLEncoder::QueryInterface(REFNSIID aIID,   
@@ -103,6 +124,11 @@ nsHTMLEncoder::SetCharset(const nsString& aCharset)
 NS_IMETHODIMP
 nsHTMLEncoder::EncodeToString(nsString& aOutputString)
 {
+  if (!mDocument)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  // Also make sure mString is a mime type "text/html" or "text/plain"
+
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
