@@ -1,11 +1,7 @@
 <?xml version="1.0"?> 
 
-<!DOCTYPE window
-[
-<!-- OK Cancel Buttons -->
-<!ENTITY okButton.label			"OK"> 
-<!ENTITY cancelButton.label		"Cancel"> 
-]> 
+<!DOCTYPE window SYSTEM "chrome://global/locale/dialogOverlay.dtd">
+
 
 
 <overlay id="dialogOverlay"
