@@ -1,4 +1,4 @@
-# $Id: Common.pm,v 1.17 1999/04/23 19:55:04 endico%mozilla.org Exp $
+# $Id: Common.pm,v 1.18 1999/04/26 19:42:35 endico%mozilla.org Exp $
 
 package LXR::Common;
 
@@ -201,7 +201,7 @@ sub markupstring {
     $string =~ s/(&lt;)(.*@.*)(&gt;)/$1<a href=\"mailto:$2\">$2<\/a>$3/g;
 
     # HTMLify file names, assuming file is in the current directory.
-    $string =~ s#\b(([\w-_\/]+\.(c|h|cc|cp|cpp|java))|README)\b#<a href=\"$Conf->{virtroot}/source$virtp$1\">$1</a>#g;
+    $string =~ s#\b(([\w-_\/]+\.(c|h|cc|cpp?|idl|java))|README)\b#<a href=\"$Conf->{virtroot}/source$virtp$1\">$1</a>#g;
 
     return($string);
 }
@@ -233,7 +233,7 @@ sub markupfile {
     $line = 1;
 
     # A C/C++ file 
-    if ($fname =~ /\.([ch]|cpp?|cc|java)$/i) { # Duplicated in genxref.
+    if ($fname =~ /\.([ch]|cpp?|idl|cc|java)$/i) { # Duplicated in genxref.
 
 	&SimpleParse::init($INFILE, @cterm);
 	
