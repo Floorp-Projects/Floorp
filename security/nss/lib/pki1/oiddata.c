@@ -34,8 +34,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: oiddata.c,v $ $Revision: 1.3 $ $Date: 2005/02/02 22:28:24 $ ; @(#) $RCSfile: oiddata.c,v $ $Revision: 1.3 $ $Date: 2005/02/02 22:28:24 $";
+static const char CVS_ID[] = "@(#) $RCSfile: oiddata.c,v $ $Revision: 1.4 $ $Date: 2005/03/04 18:30:12 $ ; @(#) $RCSfile: oiddata.c,v $ $Revision: 1.4 $ $Date: 2005/03/04 18:30:12 $";
 #endif /* DEBUG */
 
 #ifndef PKI1T_H
