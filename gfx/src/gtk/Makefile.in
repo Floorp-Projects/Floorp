@@ -168,6 +168,7 @@ EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) \
 		-lgfxshared_s \
 		$(GFX_XINERAMA_LIBS) \
 		$(MOZ_JS_LIBS) \
+		$(MOZ_UNICHARUTIL_LIBS) \
 		$(NULL)
 endif
 
