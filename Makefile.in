@@ -66,7 +66,8 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-export:: envirocheck $(OBJS)
+ifndef LOSE_NSPR
+export:: envirocheck
 	$(MAKE) $(NSPR_MAKE_ARGS)
 
 libs::
@@ -86,6 +87,8 @@ clobber::
                
 clobber_all::
 	$(MAKE) $(NSPR_MAKE_ARGS)
+
+endif
 
 # Running this rule assembles all the SDK source pieces into dist/sdk.
 # You'll need to run this rule on every platform to get all the
