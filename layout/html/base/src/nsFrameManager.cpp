@@ -1282,7 +1282,6 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
     nsIAtom* childList = nsnull;
     PRInt32 childChange;
     nsIFrame* child;
-    nsIAtom* frameType = nsnull;
 
     do {
       child = nsnull;
@@ -1292,7 +1291,8 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
         child->GetFrameState(&state);
         if (NS_FRAME_OUT_OF_FLOW != (state & NS_FRAME_OUT_OF_FLOW)) {
           // only do frames that are in flow
-          child->GetFrameType(&frameType);
+          nsCOMPtr<nsIAtom> frameType;
+          child->GetFrameType(getter_AddRefs(frameType));
           if (nsLayoutAtoms::placeholderFrame == frameType) { // placeholder
             // get out of flow frame and recurse there
             nsIFrame* outOfFlowFrame = ((nsPlaceholderFrame*)child)->GetOutOfFlowFrame();
