@@ -883,7 +883,9 @@ nsWindow::SetFocus(void)
   
   nsGUIEvent event;
   
+#ifdef DEBUG_saari
   printf("send NS_GOTFOCUS from nsWindow::SetFocus\n");
+#endif
   event.message = NS_GOTFOCUS;
   event.widget  = this;
 
@@ -939,7 +941,9 @@ nsWindow::SetFocus(void)
     gJustGotDeactivate = PR_FALSE;
     nsGUIEvent eventActivate;
     eventActivate.message = NS_ACTIVATE;
+#ifdef DEBUG_saari
     printf("send NS_ACTIVATE from SetFocus\n");
+#endif
     eventActivate.widget  = this;
     eventActivate.eventStructType = NS_GUI_EVENT;
     eventActivate.time = 0;
@@ -1666,17 +1670,14 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
                              GTK_SIGNAL_FUNC(handle_size_allocate),
                              this);
     // track focus in and focus out events for the shell
-    if (mShell) {
-      gtk_signal_connect(GTK_OBJECT(mShell),
-                         "focus_in_event",
-                         GTK_SIGNAL_FUNC(handle_toplevel_focus_in),
-                         this);
-      gtk_signal_connect(GTK_OBJECT(mShell),
-                         "focus_out_event",
-                         GTK_SIGNAL_FUNC(handle_toplevel_focus_out),
-                         this);
-
-    }
+    gtk_signal_connect(GTK_OBJECT(mShell),
+                       "focus_in_event",
+                       GTK_SIGNAL_FUNC(handle_toplevel_focus_in),
+                       this);
+    gtk_signal_connect(GTK_OBJECT(mShell),
+                       "focus_out_event",
+                       GTK_SIGNAL_FUNC(handle_toplevel_focus_out),
+                       this);
     break;
 
   case eWindowType_child:
@@ -2301,7 +2302,6 @@ NS_IMETHODIMP nsWindow::CaptureMouse(PRBool aCapture)
 
   if (aCapture)
   {
-    printf("grabbing widget\n");
     GdkCursor *cursor = gdk_cursor_new (GDK_ARROW);
     gdk_pointer_grab (GTK_WIDGET(grabWidget)->window, PR_TRUE,(GdkEventMask)
                       (GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
@@ -2494,24 +2494,28 @@ gint handle_toplevel_focus_in(GtkWidget *      aWidget,
                               GdkEventFocus *  aGdkFocusEvent, 
                               gpointer         aData)
 {
+#ifdef DEBUG_saari
   printf("handle_toplevel_focus_in\n");
-  if(!aWidget) {
+#endif
+  if (!aWidget) {
     return PR_TRUE;
   }
 
-  if(!aGdkFocusEvent) {
+  if (!aGdkFocusEvent) {
     return PR_TRUE;
   }
 
-  nsWidget * widget = (nsWidget *) aData;
+  nsWidget *widget = (nsWidget *)aData;
 
-  if(!widget) {
+  if (!widget) {
     return PR_TRUE;
   }
 
   nsGUIEvent eventGotFocus;
   eventGotFocus.message = NS_GOTFOCUS;
+#ifdef DEBUG_saari
   printf("Send NS_GOTFOCUS from handle_toplevel_focus_in\n");
+#endif
   eventGotFocus.widget  = widget;
   eventGotFocus.eventStructType = NS_GUI_EVENT;
   eventGotFocus.time = 0;
@@ -2531,20 +2535,22 @@ gint handle_toplevel_focus_out(GtkWidget *      aWidget,
                                GdkEventFocus *  aGdkFocusEvent, 
                                gpointer         aData)
 {
+#ifdef DEBUG_saari
   printf("handle_toplevel_focus_out\n");
   printf("... send NS_DEACTIVATE\n");
+#endif
   gJustGotDeactivate = PR_TRUE;
-  if(!aWidget) {
+  if (!aWidget) {
     return PR_TRUE;
   }
   
-  if(!aGdkFocusEvent) {
+  if (!aGdkFocusEvent) {
     return PR_TRUE;
   }
 
-  nsWidget * widget = (nsWidget *) aData;
+  nsWidget *widget = (nsWidget *) aData;
 
-  if(!widget) {
+  if (!widget) {
     return PR_TRUE;
   }
 
