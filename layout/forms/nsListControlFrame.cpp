@@ -81,6 +81,8 @@ nsListControlFrame::nsListControlFrame()
   mComboboxFrame  = nsnull;
   mFormFrame      = nsnull;
   mDisplayed      = PR_FALSE;
+  mButtonDown     = PR_FALSE;
+  mLastFrame      = nsnull;
 }
 
 //----------------------------------------------------------------------
@@ -642,7 +644,7 @@ void nsListControlFrame::MultipleSelection(PRBool aIsShift, PRBool aIsControl)
 {
   mSelectedIndex = (PRInt32)GetSelectedIndex(mHitFrame);
   if (kNothingSelected != mSelectedIndex) {
-    if (aIsShift) {
+    if ((aIsShift) || (mButtonDown && (!aIsControl))) {
         // Shift is held down
       SetFrameSelected(mSelectedIndex, PR_TRUE);
       if (mEndExtendedIndex == kNothingSelected) {
@@ -694,17 +696,57 @@ void nsListControlFrame::MultipleSelection(PRBool aIsShift, PRBool aIsControl)
 
 }
 
+void nsListControlFrame::HandleListSelection(nsIPresContext& aPresContext, 
+                                               nsGUIEvent*     aEvent,
+                                               nsEventStatus&  aEventStatus)
+{
+  if (mMultipleSelections) {
+    MultipleSelection(((nsMouseEvent *)aEvent)->isShift, ((nsMouseEvent *)aEvent)->isControl);
+  } else {
+    SingleSelection();
+  }
+}
+
+PRBool nsListControlFrame::HasSameContent(nsIFrame* aFrame1, nsIFrame* aFrame2)
+{
+   // Quick check, if the frames are equal they must have
+   // the same content
+  if (aFrame1 == aFrame2)
+    return PR_TRUE;
+
+  PRBool result = PR_FALSE;
+  nsIContent* content1 = nsnull;
+  nsIContent* content2 = nsnull;
+  aFrame1->GetContent(&content1);
+  aFrame2->GetContent(&content2);
+  if (aFrame1 == aFrame2) {
+    result = PR_TRUE;
+  }
+  
+  NS_IF_RELEASE(content1);
+  NS_IF_RELEASE(content2);
+  return(result);
+}
+
+
 //----------------------------------------------------------------------
 NS_IMETHODIMP nsListControlFrame::HandleLikeListEvent(nsIPresContext& aPresContext, 
                                                nsGUIEvent*     aEvent,
                                                nsEventStatus&  aEventStatus)
 {
   if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
-    if (mMultipleSelections) {
-      MultipleSelection(((nsMouseEvent *)aEvent)->isShift, ((nsMouseEvent *)aEvent)->isControl);
-    } else {
-      SingleSelection();
+    HandleListSelection(aPresContext, aEvent, aEventStatus);
+    mButtonDown = PR_TRUE;
+    CaptureMouseEvents(PR_TRUE);
+    mLastFrame = mHitFrame;
+  } else if (aEvent->message == NS_MOUSE_MOVE) {
+    if ((PR_TRUE == mButtonDown) && (! HasSameContent(mLastFrame, mHitFrame))) {
+      HandleListSelection(aPresContext, aEvent, aEventStatus);
+      mLastFrame = mHitFrame;
     }
+  } else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
+    mButtonDown = PR_FALSE;
+    CaptureMouseEvents(PR_FALSE);
   }
 
   aEventStatus = nsEventStatus_eConsumeNoDefault;
@@ -1408,6 +1450,7 @@ nsListControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
 
   return NS_OK;
 }
+
 
 // Create a Borderless top level widget for drop-down lists.
 nsresult nsListControlFrame::CreateScrollingViewWidget(nsIView* aView, const nsStylePosition* aPosition)
