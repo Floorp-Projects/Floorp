@@ -37,6 +37,10 @@ Contributor(s): ______________________________________. -->
 	      <spring flex="100%"/> 
 	      <html:div>Ctrl+N</html:div>
 		  <titledbutton class="menu-right" value=""/> 
+		  <xpmenuchildren>
+		    <xpmenuitem><html:div>Nested Item One</html:div></xpmenuitem>
+			<xpmenuitem><html:div>Nested Item Two</html:div></xpmenuitem>
+		  </xpmenuchildren>
 	    </xpmenu>
 	    <xpmenuitem> 
 		  <html:div><html:u>O</html:u>pen...</html:div> 
@@ -69,49 +73,49 @@ Contributor(s): ______________________________________. -->
 	  <xpmenu>
 	    <html:div><html:u>E</html:u>dit</html:div>
 		<xpmenuchildren>
-		  <xpmenu><html:div>Sample Item</html:div></xpmenu>
+		  <xpmenuitem><html:div>Sample Item</html:div></xpmenuitem>
 		</xpmenuchildren>
 	  </xpmenu>
 	  <xpmenu>
 	    <html:div><html:u>V</html:u>iew</html:div>
 		<xpmenuchildren>
-		  <xpmenu><html:div>Sample Item</html:div></xpmenu>
+		  <xpmenuitem><html:div>Sample Item</html:div></xpmenuitem>
 		</xpmenuchildren>
 	  </xpmenu>
 	  <xpmenu>
 	    <html:div><html:u>S</html:u>earch</html:div>
 	    <xpmenuchildren>
-		  <xpmenu><html:div>Sample Item</html:div></xpmenu>
+		  <xpmenuitem><html:div>Sample Item</html:div></xpmenuitem>
 		</xpmenuchildren>
 	  </xpmenu>
 	  <xpmenu>
 	    <html:div><html:u>G</html:u>o</html:div>
 	    <xpmenuchildren>
-		  <xpmenu><html:div>Sample Item</html:div></xpmenu>
+		  <xpmenuitem><html:div>Sample Item</html:div></xpmenuitem>
 		</xpmenuchildren>
 	  </xpmenu>
 	  <xpmenu>
 	    <html:div><html:u>B</html:u>ookmarks</html:div>
 	    <xpmenuchildren>
-		  <xpmenu><html:div>Sample Item</html:div></xpmenu>
+		  <xpmenuitem><html:div>Sample Item</html:div></xpmenuitem>
 		</xpmenuchildren>
 	  </xpmenu>
 	  <xpmenu>
 	    <html:div><html:u>T</html:u>asks</html:div>
 	    <xpmenuchildren>
-		  <xpmenu><html:div>Sample Item</html:div></xpmenu>
+		  <xpmenuitem><html:div>Sample Item</html:div></xpmenuitem>
 		</xpmenuchildren>
 	  </xpmenu>
 	  <xpmenu>
 	    <html:div><html:u>D</html:u>ebug</html:div>
 		<xpmenuchildren>
-		  <xpmenu><html:div>Sample Item</html:div></xpmenu>
+		  <xpmenuitem><html:div>Sample Item</html:div></xpmenuitem>
 		</xpmenuchildren>
 	  </xpmenu>
 	  <xpmenu>
 	    <html:div><html:u>Q</html:u>A</html:div>
 		<xpmenuchildren>
-		  <xpmenu><html:div>Sample Item</html:div></xpmenu>
+		  <xpmenuitem><html:div>Sample Item</html:div></xpmenuitem>
 		</xpmenuchildren>
 	  </xpmenu>
 	  <spring flex="100%"/>
