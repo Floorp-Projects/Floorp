@@ -35,38 +35,63 @@
       ;Create a laitem for this item and add the association item->laitem to the laitems-hash
       ;hash table if it's not there already.  Regardless of whether a new laitem was created,
       ;update the laitem's lookaheads to also include the given lookaheads.
-      ;If prev is non-null, update (laitem-propagates prev) to include the laitem if it's not
-      ;already included there.
+      ;forbidden is a terminalset of terminals that must not occur immediately after the dot in this
+      ;laitem.  The forbidden set is inherited from constraints in parent laitems in the same state.
+      ;If prev is non-null, update (laitem-propagates prev) to include the laitem and the given
+      ;passthrough terminalset if it's not already included there.
       ;If a new laitem was created and its first symbol after the dot exists and is a
       ;nonterminal A, recursively close items A->.rhs corresponding to all rhs's in the
       ;grammar's rule for A.
-      ((close-item (item lookaheads prev)
-         (let ((laitem (gethash item laitems-hash)))
+      ((close-item (item forbidden lookaheads prev passthroughs)
+         (let ((production (item-production item))
+               (laitem (gethash item laitems-hash)))
+           (unless (terminalset-empty? forbidden)
+             (multiple-value-bind (dot-lookaheads dot-passthroughs)
+                                  (string-initial-terminals grammar (item-unseen item) (production-constraints production) (item-dot item))
+               (let ((dot-initial (terminalset-union dot-lookaheads dot-passthroughs)))
+                 ;Check whether any terminal can start this item.  If not, skip this item altogether.
+                 (when (terminalset-empty? (terminalset-difference dot-initial forbidden))
+                   ;Mark skipped items in the laitems-hash table.
+                   (when (and laitem (not (eq laitem 'forbidden)))
+                     (error "Two laitems in the same state differing only in forbidden initial terminal constraints: ~S" laitem))
+                   (setf (gethash item laitems-hash) 'forbidden)
+                   (return-from close-item))
+                 ;Convert forbidden into a canonical format by removing terminals that cannot begin this item's expansion anyway.
+                 (terminalset-intersection-f forbidden dot-initial))))
            (if laitem
-             (setf (laitem-lookaheads laitem)
-                   (terminalset-union (laitem-lookaheads laitem) lookaheads))
+             (progn
+               (unless (terminalset-= forbidden (laitem-forbidden laitem))
+                 (error "Two laitems in the same state differing only in forbidden initial terminal constraints: ~S" laitem))
+               (terminalset-union-f (laitem-lookaheads laitem) lookaheads))
              (let ((item-next-symbol (item-next-symbol item)))
-               (setq laitem (allocate-laitem grammar item lookaheads))
+               (setq laitem (allocate-laitem grammar item forbidden lookaheads))
                (push laitem laitems)
                (setf (gethash item laitems-hash) laitem)
                (when (nonterminal? item-next-symbol)
-                 (multiple-value-bind (next-lookaheads epsilon-lookahead)
-                                      (string-initial-terminals grammar (rest (item-unseen item)))
-                   (let ((next-prev (and epsilon-lookahead laitem)))
-                     (dolist (production (rule-productions (grammar-rule grammar item-next-symbol)))
-                       (close-item (make-item grammar production 0) next-lookaheads next-prev)))))))
+                 (let* ((dot (item-dot item))
+                        (next-forbidden (terminalset-union forbidden
+                                                           (terminalset-complement (general-production-lookahead-constraint production dot)))))
+                   (multiple-value-bind (next-lookaheads next-passthroughs)
+                                        (string-initial-terminals grammar (rest (item-unseen item)) (production-constraints production) (1+ dot))
+                     (let ((next-prev (and (not (terminalset-empty? next-passthroughs)) laitem)))
+                       (dolist (production (rule-productions (grammar-rule grammar item-next-symbol)))
+                         (close-item (make-item grammar production 0) next-forbidden next-lookaheads next-prev next-passthroughs))))))))
            (when prev
-             (pushnew laitem (laitem-propagates prev))))))
+             (laitem-add-propagation prev laitem passthroughs)))))
       
       (dolist (acons kernel-item-alist)
-        (close-item (car acons) initial-lookaheads (and update-propagates (cdr acons))))
+        (close-item (car acons) 
+                    *empty-terminalset*
+                    initial-lookaheads
+                    (and update-propagates (cdr acons))
+                    *full-terminalset*))
       (allocate-state number kernel (nreverse laitems)))))
 
 
-; f is a function that takes two arguments:
-;   a grammar symbol, and
-;   a list of kernel items in order of increasing item number.
-;   a list of pairs (item . prev), where item is a kernel item and prev is a laitem;
+; f is a function that takes three arguments:
+;   a grammar symbol;
+;   a list of kernel items in order of increasing item number;
+;   a list of pairs (item . prev), where item is a kernel item and prev is a laitem.
 ; For each possible symbol X that can be shifted while in the given state S, call
 ; f giving it S and the list of items that constitute the kernel of that shift's destination
 ; state.  The prev's are the sources of the corresponding shifted items.
@@ -130,9 +155,10 @@
 (defun propagate-internal-lookaheads (state)
   (dolist (src-laitem (state-laitems state))
     (let ((src-lookaheads (laitem-lookaheads src-laitem)))
-      (dolist (dst-laitem (laitem-propagates src-laitem))
-        (setf (laitem-lookaheads dst-laitem)
-              (terminalset-union (laitem-lookaheads dst-laitem) src-lookaheads))))))
+      (dolist (propagation (laitem-propagates src-laitem))
+        (let ((dst-laitem (car propagation))
+              (mask (cdr propagation)))
+          (terminalset-union-f (laitem-lookaheads dst-laitem) (terminalset-intersection src-lookaheads mask)))))))
 
 
 ; Propagate all lookaheads in kernel-item-alist, which must target destination-state.
@@ -141,8 +167,7 @@
   (dolist (acons kernel-item-alist)
     (let ((dest-laitem (state-laitem destination-state (car acons)))
           (src-laitem (cdr acons)))
-      (setf (laitem-lookaheads dest-laitem)
-            (terminalset-union (laitem-lookaheads dest-laitem) (laitem-lookaheads src-laitem)))))
+      (terminalset-union-f (laitem-lookaheads dest-laitem) (laitem-lookaheads src-laitem))))
   (setf (gethash destination-state dirty-states) t))
 
 
@@ -249,7 +274,7 @@
              (let ((destination-state (gethash kernel lalr-states-hash)))
                (if destination-state
                  (dolist (acons kernel-item-alist)
-                   (pushnew (state-laitem destination-state (car acons)) (laitem-propagates (cdr acons))))
+                   (laitem-add-propagation (cdr acons) (state-laitem destination-state (car acons)) *full-terminalset*))
                  (progn
                    (setq destination-state (make-state grammar kernel kernel-item-alist t next-state-number *empty-terminalset*))
                    (setf (gethash kernel lalr-states-hash) destination-state)
@@ -278,12 +303,14 @@
       (dolist (dirty-laitem (hash-table-keys dirty-laitems))
         (remhash dirty-laitem dirty-laitems)
         (let ((src-lookaheads (laitem-lookaheads dirty-laitem)))
-          (dolist (dst-laitem (laitem-propagates dirty-laitem))
-            (let* ((old-dst-lookaheads (laitem-lookaheads dst-laitem))
-                   (new-dst-lookaheads (terminalset-union old-dst-lookaheads src-lookaheads)))
-              (unless (terminalset-= old-dst-lookaheads new-dst-lookaheads)
-                (setf (laitem-lookaheads dst-laitem) new-dst-lookaheads)
-                (setf (gethash dst-laitem dirty-laitems) t)))))))
+          (dolist (propagation (laitem-propagates dirty-laitem))
+            (let ((dst-laitem (car propagation))
+                  (mask (cdr propagation)))
+              (let* ((old-dst-lookaheads (laitem-lookaheads dst-laitem))
+                     (new-dst-lookaheads (terminalset-union old-dst-lookaheads (terminalset-intersection src-lookaheads mask))))
+                (unless (terminalset-= old-dst-lookaheads new-dst-lookaheads)
+                  (setf (laitem-lookaheads dst-laitem) new-dst-lookaheads)
+                  (setf (gethash dst-laitem dirty-laitems) t))))))))
     
     ;Erase the propagates chains in all laitems.
     (dolist (state (grammar-states grammar))
@@ -306,16 +333,21 @@
     (dolist (laitem (state-laitems state))
       (let ((item (laitem-item laitem)))
         (unless (item-next-symbol item)
-          (if (grammar-symbol-= (item-lhs item) *start-nonterminal*)
-            (when (terminal-in-terminalset grammar *end-marker* (laitem-lookaheads laitem))
-              (push (cons *end-marker* (make-accept-transition))
-                    (state-transitions state)))
-            (map-terminalset-reverse
-             #'(lambda (lookahead)
-                 (push (cons lookahead (make-reduce-transition (item-production item)))
-                       (state-transitions state)))
-             grammar
-             (laitem-lookaheads laitem))))))
+          (let ((lookaheads (terminalset-difference
+                             (terminalset-intersection
+                              (laitem-lookaheads laitem)
+                              (general-production-lookahead-constraint (item-production item) (item-dot item)))
+                             (laitem-forbidden laitem))))
+            (if (grammar-symbol-= (item-lhs item) *start-nonterminal*)
+              (when (terminal-in-terminalset grammar *end-marker* lookaheads)
+                (push (cons *end-marker* (make-accept-transition))
+                      (state-transitions state)))
+              (map-terminalset-reverse
+               #'(lambda (lookahead)
+                   (push (cons lookahead (make-reduce-transition (item-production item)))
+                         (state-transitions state)))
+               grammar
+               lookaheads))))))
     (setf (state-gotos state)
           (sort (state-gotos state) #'< :key #'(lambda (goto-cons) (state-number (cdr goto-cons)))))
     (setf (state-transitions state)

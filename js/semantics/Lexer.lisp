@@ -388,10 +388,19 @@
 (defun grammar-singletons (grammar-source)
   (assert-type grammar-source (list (tuple t (list t) identifier)))
   (let ((singletons 0))
-    (dolist (production-source grammar-source)
-      (dolist (grammar-symbol (second production-source))
-        (when (characterp grammar-symbol)
-          (setq singletons (charset-add-char singletons grammar-symbol)))))
+    (labels
+      ((scan-for-singletons (list)
+         (dolist (element list)
+           (cond
+            ((characterp element)
+             (setq singletons (charset-add-char singletons element)))
+            ((consp element)
+             (case (first element)
+               (:- (scan-for-singletons (rest element)))
+               (:-- (scan-for-singletons (cddr element)))))))))
+      
+      (dolist (production-source grammar-source)
+        (scan-for-singletons (second production-source))))
     singletons))
 
 
@@ -551,12 +560,64 @@
 ;;; ------------------------------------------------------------------------------------------------------
 
 
+; Return a freshly consed list of partitions for the given charclass.
+(defun charclass-partitions (lexer charclass)
+  (do ((partitions nil)
+       (charset (charclass-charset charclass)))
+      ((charset-empty? charset) partitions)
+    (let* ((partition-name (if (charset-infinite? charset)
+                             *default-partition-name*
+                             (gethash (charset-highest-char charset) (lexer-char-tokens lexer))))
+           (partition-charset (if (characterp partition-name)
+                                (char-charset partition-name)
+                                (partition-charset (gethash partition-name (lexer-partitions lexer))))))
+      (push partition-name partitions)
+      (setq charset (charset-difference charset partition-charset)))))
+
+
+; Return an updated grammar-source whose character class nonterminals replaced with sets of
+; terminals inside :- and :-- constraints.
+(defun update-constraint-nonterminals (lexer grammar-source)
+  (mapcar
+   #'(lambda (production-source)
+       (let ((rhs (second production-source)))
+         (if (some #'(lambda (rhs-component)
+                       (and (consp rhs-component)
+                            (member (first rhs-component) '(:- :--))))
+                   rhs)
+           (list*
+            (first production-source)
+            (mapcar
+             #'(lambda (component)
+                 (when (consp component)
+                   (let ((tag (first component)))
+                     (when (eq tag ':-)
+                       (setq component (list* ':-- (rest component) (rest component)))
+                       (setq tag ':--))
+                     (when (eq tag ':--)
+                       (setq component
+                             (list* tag
+                                    (second component)
+                                    (mapcan #'(lambda (grammar-symbol)
+                                                (if (nonterminal? grammar-symbol)
+                                                  (charclass-partitions lexer (assert-non-null (lexer-charclass lexer grammar-symbol)))
+                                                  (list grammar-symbol)))
+                                            (cddr component)))))))
+                 component)
+             rhs)
+            (cddr production-source))
+           production-source)))
+   grammar-source))
+
+
 ; Return two values:
-;   extra grammar productions that define the character class nonterminals out of characters and tokens;
-;   extra commands that:
+;   An updated grammar-source that includes:
+;     grammar productions that define the character class nonterminals out of characters and tokens;
+;     character class nonterminals replaced with sets of terminals inside :- and :-- constraints.
+;   Extra commands that:
 ;     define the partitions used in this lexer;
 ;     define the actions of these productions.
-(defun lexer-grammar-and-commands (lexer)
+(defun lexer-grammar-and-commands (lexer grammar-source)
   (labels
     ((component-partitions (charset partitions)
        (if (charset-empty? charset)
@@ -616,7 +677,7 @@
                           (partition-lexer-actions (gethash partition-name (lexer-partitions lexer)))))
               (lexer-partition-names lexer))))
         (values
-         (nreverse productions)
+         (nreconc productions (update-constraint-nonterminals lexer grammar-source))
          (nconc partition-commands (nreverse commands)))))))
 
 
@@ -632,9 +693,9 @@
 ;     define the actions of these productions.
 (defun make-lexer-and-grammar (kind charclasses-source lexer-actions-source parametrization start-symbol grammar-source &optional excluded-nonterminals-source)
   (let ((lexer (make-lexer parametrization charclasses-source lexer-actions-source grammar-source)))
-    (multiple-value-bind (extra-grammar-source extra-commands) (lexer-grammar-and-commands lexer)
+    (multiple-value-bind (lexer-grammar-source extra-commands) (lexer-grammar-and-commands lexer grammar-source)
       (let ((grammar (make-and-compile-grammar kind parametrization start-symbol
-                                               (append extra-grammar-source grammar-source) excluded-nonterminals-source)))
+                                               lexer-grammar-source excluded-nonterminals-source)))
         (setf (lexer-grammar lexer) grammar)
         (values lexer extra-commands)))))
 

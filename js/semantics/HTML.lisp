@@ -378,6 +378,7 @@
     ((:intersection-10 1) (:script "document.write(U_cap)"))            ;#x2229
     ((:union-10 1) (:script "document.write(U_cup)"))                   ;#x222A
     ((:member-10 2) (:script "document.write(U_isin)"))                 ;#x2208
+    ((:not-member-10 2) (:script "document.write(U_notin)"))            ;#x2209
     ((:derives-10 2) (:script "document.write(U_rArr)"))                ;#x21D2
     ((:left-triangle-bracket-10 1) (:script "document.write(U_lang)"))  ;#x2329
     ((:right-triangle-bracket-10 1) (:script "document.write(U_rang)")) ;#x232A
@@ -443,6 +444,8 @@
     ;Specials
     (:invisible del)
     ((:but-not 6) (b "except"))
+    ((:begin-negative-lookahead 13) "[lookahead" :not-member-10 "{")
+    ((:end-negative-lookahead 2) "}]")
     (:subscript sub)
     (:superscript sup)
     (:plain-subscript :subscript)

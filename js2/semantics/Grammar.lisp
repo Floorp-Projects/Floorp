@@ -28,6 +28,7 @@
 (deftype terminalset () 'integer)
 
 (defconstant *empty-terminalset* 0)
+(defconstant *full-terminalset* -1)
 
 ; Return true if terminalset is empty.
 (declaim (inline terminalset-empty?))
@@ -53,11 +54,34 @@
   (zerop (logand terminalset1 terminalset2)))
 
 
-; Merge two sets of lookaheads sorted by increasing terminal numbers, eliminating
-; duplicates.  Return the combined set.
+; Return the complement of the terminalset.
+(declaim (inline terminalset-complement))
+(defun terminalset-complement (terminalset)
+  (lognot terminalset))
+
+
+; Return the intersection of the two terminalsets.
+(declaim (inline terminalset-intersection))
+(defun terminalset-intersection (terminalset1 terminalset2)
+  (logand terminalset1 terminalset2))
+
+(define-modify-macro terminalset-intersection-f (terminalset2) terminalset-intersection)
+
+
+; Return the union of the two terminalsets.
 (declaim (inline terminalset-union))
 (defun terminalset-union (terminalset1 terminalset2)
   (logior terminalset1 terminalset2))
+
+(define-modify-macro terminalset-union-f (terminalset2) terminalset-union)
+
+
+; Return the elements in terminalset1 that are not in terminalset2.
+(declaim (inline terminalset-difference))
+(defun terminalset-difference (terminalset1 terminalset2)
+  (logandc2 terminalset1 terminalset2))
+
+(define-modify-macro terminalset-difference-f (terminalset2) terminalset-difference)
 
 
 ; Return a unique serial number for the given terminal.
@@ -120,12 +144,48 @@
 
 
 ;;; ------------------------------------------------------------------------------------------------------
+;;; CONSTRAINTS
+
+;;; A constraint modifies the rhs of a production.  The constraint applies just before the pos-th
+;;; general grammar symbol on the rhs of the production.
+(defstruct (constraint (:constructor nil) (:copier nil) (:predicate constraint?))
+  (pos nil :type integer :read-only t))            ;Position of this constraint; ranges between 0 and length(general-production-rhs), inclusive.
+
+
+;;; A lookahead-constraint imposes a restriction on the current lookahead terminal when matching
+;;; against the production.  The match succeeds only if there is no following terminal or the following
+;;; terminal is not present in the lookahead-constraint's list of forbidden terminals.
+(defstruct (lookahead-constraint (:include constraint)
+                                 (:constructor make-lookahead-constraint (pos forbidden-terminals source))
+                                 (:predicate lookahead-constraint?))
+  (forbidden-terminals nil :type list :read-only t) ;List of forbidden terminals
+  (source nil :type list :read-only t)              ;List of grammar symbols (terminals or nonterminals) that produced the list of forbidden terminals
+  (terminalset nil :type (or null terminalset)))    ;Set of allowed terminals (complement of forbidden-terminals); null until terminals are numbered
+
+
+; Emit markup for a lookahead-constraint.
+(defun depict-lookahead-constraint (markup-stream lookahead-constraint)
+  (depict markup-stream :begin-negative-lookahead)
+  (depict-list markup-stream
+               #'depict-production-rhs-component
+               (lookahead-constraint-source lookahead-constraint)
+               :separator ", ")
+  (depict markup-stream :end-negative-lookahead))
+
+
+(defmethod print-object ((lookahead-constraint lookahead-constraint) stream)
+  (print-unreadable-object (lookahead-constraint stream)
+    (format stream "-~{ ~:_~W~}" (lookahead-constraint-source lookahead-constraint))))
+
+
+;;; ------------------------------------------------------------------------------------------------------
 ;;; GENERALIZED PRODUCTIONS
 
 ;;; A general-production is a common base class for the production and generic-production classes.
 (defstruct (general-production (:constructor nil) (:copier nil) (:predicate general-production?))
   (lhs nil :type general-nonterminal :read-only t) ;The general-nonterminal on the left-hand side of this general-production
   (rhs nil :type list :read-only t)                ;List of general grammar symbols to which that general-nonterminal expands
+  (constraints nil :type list :read-only t)        ;List of constraints applying to rhs, sorted by increasing pos values
   (name nil :read-only t))                         ;This general-production's name that will be used to name the parse tree node
 
 
@@ -137,11 +197,46 @@
     (generic-production-productions general-production)))
 
 
+; Return the general-production's rhs with constraints interleaved with the rhs general grammar symbols.
+(defun general-production-rhs-components (general-production)
+  (labels
+    ((merge-constraints (rhs constraints pos)
+       (if constraints
+         (let* ((constraint (first constraints))
+                (constraint-pos (constraint-pos constraint)))
+           (cond
+            ((= constraint-pos pos)
+             (cons constraint (merge-constraints rhs (rest constraints) pos)))
+            (rhs
+             (cons (first rhs) (merge-constraints (rest rhs) constraints (1+ pos))))
+            (t (error "Bad constraint list"))))
+         rhs)))
+    
+    (merge-constraints (general-production-rhs general-production)
+                       (general-production-constraints general-production)
+                       0)))
+
+
+; Return the general-production's lookahead-constraint's terminalset at the given position.
+(defun general-production-lookahead-constraint (general-production pos)
+  (let ((constraint (find pos (general-production-constraints general-production) :key #'constraint-pos :test #'=)))
+    (if constraint
+      (lookahead-constraint-terminalset constraint)
+      *full-terminalset*)))
+
+
 ; Emit a markup paragraph for the left-hand-side of a general production.
 (defun depict-general-production-lhs (markup-stream lhs-general-nonterminal)
   (depict-paragraph (markup-stream ':grammar-lhs)
     (depict-general-nonterminal markup-stream lhs-general-nonterminal :definition)
     (depict markup-stream " " ':derives-10)))
+
+
+; Emit markup for a production right-hand-side component.
+(defun depict-production-rhs-component (markup-stream production-rhs-component &optional subscript)
+  (if (lookahead-constraint? production-rhs-component)
+    (depict-lookahead-constraint markup-stream production-rhs-component)
+    (depict-general-grammar-symbol markup-stream production-rhs-component :reference subscript)))
 
 
 ; Emit a markup paragraph for the right-hand-side of a general production.
@@ -152,45 +247,48 @@
     (if first
       (depict markup-stream ':tab3)
       (depict markup-stream "|" ':tab2))
-    (let ((rhs (general-production-rhs general-production)))
+    (let ((rhs-components (general-production-rhs-components general-production)))
       (depict-list markup-stream
-                   #'(lambda (markup-stream general-grammar-symbol)
-                       (depict-general-grammar-symbol markup-stream general-grammar-symbol :reference))
-                   rhs
+                   #'depict-production-rhs-component
+                   rhs-components
                    :separator " "
                    :empty '(:left-angle-quote "empty" :right-angle-quote)))))
 
 
 ; Emit the general production, including both its left and right-hand sides.
 ; Include serial number subscripts on all rhs grammar symbols that both
-;    appear more than once in the rhs or appear in the lhs; and
+;    appear more than once in the rhs or appear in the lhs, and
 ;    have symbols that are present in the symbols-with-subscripts list.
 ; link is the lhs's link type.
 (defun depict-general-production (markup-stream general-production link &optional symbols-with-subscripts)
   (let ((lhs (general-production-lhs general-production))
-        (rhs (general-production-rhs general-production)))
+        (rhs-components (general-production-rhs-components general-production)))
     (depict-general-nonterminal markup-stream lhs link)
     (depict markup-stream " " ':derives-10)
-    (if rhs
+    (if rhs-components
       (let ((counts-hash (make-hash-table :test *grammar-symbol-=*)))
         (when symbols-with-subscripts
           (dolist (symbol symbols-with-subscripts)
             (setf (gethash symbol counts-hash) 0))
-          (dolist (general-grammar-symbol (cons lhs rhs))
-            (let ((symbol (general-grammar-symbol-symbol general-grammar-symbol)))
-              (when (gethash symbol counts-hash)
-                (incf (gethash symbol counts-hash)))))
+          (dolist (production-rhs-component (cons lhs (general-production-rhs general-production)))
+            (when (general-grammar-symbol? production-rhs-component)
+              (let ((symbol (general-grammar-symbol-symbol production-rhs-component)))
+                (when (gethash symbol counts-hash)
+                  (incf (gethash symbol counts-hash))))))
           (maphash #'(lambda (symbol count)
                        (assert-true (> count 0))
                        (if (> count 1)
                          (setf (gethash symbol counts-hash) 0)
                          (remhash symbol counts-hash)))
                    counts-hash))
-        (dolist (general-grammar-symbol rhs)
-          (let* ((symbol (general-grammar-symbol-symbol general-grammar-symbol))
-                 (subscript (and (gethash symbol counts-hash) (incf (gethash symbol counts-hash)))))
+        (dolist (production-rhs-component rhs-components)
+          (let ((subscript nil))
+            (when (general-grammar-symbol? production-rhs-component)
+              (let ((symbol (general-grammar-symbol-symbol production-rhs-component)))
+                (when (gethash symbol counts-hash)
+                  (setq subscript (incf (gethash symbol counts-hash))))))
             (depict-space markup-stream)
-            (depict-general-grammar-symbol markup-stream general-grammar-symbol :reference subscript))))
+            (depict-production-rhs-component markup-stream production-rhs-component subscript))))
       (depict markup-stream " " ':left-angle-quote "empty" :right-angle-quote))))
 
 
@@ -198,7 +296,7 @@
 ;;; PRODUCTIONS
 
 ;;; A production describes the expansion of a nonterminal (the lhs) into
-;;; a string of zero or more grammar symbols (the rhs).
+;;; a string of zero or more grammar symbols (the rhs); the rhs may also have constraints attached.
 ;;; Each production has a unique number.  Earlier productions have smaller numbers.
 ;;; There is exactly one production structure for a given production, so eq can be
 ;;; used to test for production equality.
@@ -206,7 +304,7 @@
 ;;; The evaluator is a lisp form that evaluates to a function f that takes one argument --
 ;;; the old state of the parser's value stack -- and returns the new state of that stack.
 (defstruct (production (:include general-production (lhs nil :type nonterminal :read-only t))
-                       (:constructor make-production (lhs rhs name rhs-length number))
+                       (:constructor make-production (lhs rhs constraints name rhs-length number))
                        (:copier nil) (:predicate production?))
   (rhs-length nil :type integer :read-only t) ;Number of grammar symbols in the rhs
   (number nil :type integer :read-only t)     ;This production's serial number
@@ -234,7 +332,7 @@
 
 (defun print-production (production &optional (stream t))
   (format stream "~<~W -> ~:I~_~:[<epsilon> ~;~:*~{~W ~:_~}~]~:> ~:_[~W]"
-          (list (production-lhs production) (production-rhs production))
+          (list (production-lhs production) (general-production-rhs-components production))
           (production-name production)))
 
 
@@ -251,7 +349,7 @@
 ;;; A generic production is not a production and does not have a number or actions.
 
 (defstruct (generic-production (:include general-production (lhs nil :type generic-nonterminal :read-only t))
-                               (:constructor make-generic-production (lhs rhs name productions))
+                               (:constructor make-generic-production (lhs rhs constraints name productions))
                                (:copier nil)
                                (:predicate generic-production?))
   (productions nil :type list :read-only t))       ;List of instantiations of this generic production
@@ -265,14 +363,15 @@
     (if (generic-nonterminal? new-lhs)
       (make-generic-production
        new-lhs
-       (mapcar #'(lambda (rhs-general-grammar-symbol)
-                   (general-grammar-symbol-substitute attribute argument rhs-general-grammar-symbol))
+       (mapcar #'(lambda (grammar-symbol)
+                   (general-grammar-symbol-substitute attribute argument grammar-symbol))
                (generic-production-rhs generic-production))
+       (general-production-constraints generic-production)
        (generic-production-name generic-production)
        (remove-if #'(lambda (production)
                       (not (general-nonterminal-is-instance? grammar-parametrization new-lhs (production-lhs production))))
                   productions))
-
+      
       (assert-non-null (find new-lhs productions :key #'production-lhs :test #'eq)))))
 
 
@@ -317,14 +416,19 @@
 ;;; A rule is the set of all productions with the same lhs nonterminal.
 ;;; There is exactly one rule structure for a given nonterminal lhs, so eq can be
 ;;; used to test for rule equality.
+;;;
+;;; If the rule cannot somehow produce an empty expansion, then passthrough-terminals is empty.
+;;; Otherwise, passthrough-terminals summarizes the constraints imposed on the next lookahead terminal
+;;; imposed by all empty expansions of this rule.  If these empty expansions do not impose any
+;;; lookahead-constraints, then passthrough-terminals will be the full set.
 (defstruct (rule (:include general-rule (productions nil :type list :read-only t))
                  (:constructor make-rule (productions))
-                 (:copier nil)
-                 (:predicate rule?))
+             (:copier nil)
+             (:predicate rule?))
   ;productions                                ;The list of all productions for this rule's nonterminal lhs
   (number nil :type (or null integer))        ;This nonterminal's serial number
-  (derives-epsilon nil :type bool)            ;True if some direct or indirect expansion of this nonterminal can return epsilon
-  (initial-terminals *empty-terminalset* :type terminalset)) ;Set of all terminals that can begin some expansion of this nonterminal
+  (passthrough-terminals *empty-terminalset* :type terminalset) ;See above
+  (initial-terminals *empty-terminalset* :type terminalset))    ;Set of all terminals that can begin some expansion of this nonterminal
 
 
 ; Return a list of nonterminals in this rule's rhs.
@@ -394,6 +498,12 @@
   (production-lhs (item-production item)))
 
 
+; Return the constraints of the item's production.
+(declaim (inline item-constraints))
+(defun item-constraints (item)
+  (production-constraints (item-production item)))
+
+
 ; Make an item with the given production and dot location (which must be an integer
 ; between 0 and length(rhs(production)), inclusive.  Reuse an existing item in the
 ; grammar if possible.
@@ -412,18 +522,27 @@
                (allocate-item production dot unseen number next)))))))
 
 
-(defun print-item (item &optional (stream t))
+(defun print-item (item &optional (stream t) after-dot)
   (let ((production (item-production item)))
     (format stream "~W -> ~:_" (production-lhs production))
     (pprint-logical-block (stream (production-rhs production))
-      (do ((n (item-dot item) (1- n))
+      (do ((pos 0 (1+ pos))
+           (constraints (production-constraints production))
            (first t))
           ()
-        (when (zerop n)
+        (when (= pos (item-dot item))
           (if first
             (setq first nil)
             (format stream " ~:_"))
-          (write-char #\. stream))
+          (write-char #\. stream)
+          (when after-dot
+            (format stream " ~:_~W" after-dot)))
+        (do ()
+            ((or (endp constraints) (/= (constraint-pos (first constraints)) pos)))
+          (if first
+            (setq first nil)
+            (format stream " ~:_"))
+          (write (pop constraints) :stream stream))
         (pprint-exit-if-list-exhausted)
         (if first
           (setq first nil)
@@ -441,27 +560,46 @@
 
 ;;; A laitem is an item with associated lookahead information.
 ;;; Unlike items, laitem structures are not shared among the states.
-(defstruct (laitem (:constructor allocate-laitem (grammar item lookaheads))
+(defstruct (laitem (:constructor allocate-laitem (grammar item forbidden lookaheads))
                    (:copier nil)
                    (:predicate laitem?))
   (grammar nil :type grammar :read-only t) ;The grammar to which this laitem belongs
   (item nil :type item :read-only t)       ;The item to which this laitem corresponds
+  (forbidden nil :type terminalset :read-only t) ;A set of terminals that must not occur after the dot because of lookahead-constraints
   (lookaheads nil :type terminalset)       ;Set of lookahead terminals
-  (propagates nil :type list))             ;List of laitems to which lookaheads propagate from this laitem (see note below)
-;When parsing a LALR(1) grammar, propagates is the list of all laitems (in this and other states)
-;to which lookaheads propagate from this laitem.
+  (propagates nil :type list))             ;List of (laitem . mask) to which lookaheads propagate from this laitem (see note below)
+;When parsing a LALR(1) grammar, propagates contains all laitems (in this and other states)
+;to which lookaheads propagate from this laitem.  The mask in each entry of propagates
+;is a terminalset that indicates which lookaheads can propagate; this is usually *full-terminalset*
+;but can be smaller in the presence of constraints.
 ;When parsing a LR(1) grammar, propagates is the list of all laitems to which lookaheads propagate from this laitem
 ;without following a shift transition.  Such laitems must necessarily be in the same state.  In the LR(1) case each
 ;laitem listed in the propagates list must come after this laitem in this state's laitems list.
 
 
+; Add or modify a propagation entry in src-laitem to point to dst-laitem with
+; the given mask.
+(defun laitem-add-propagation (src-laitem dst-laitem mask)
+  (let ((propagation-entry (assoc dst-laitem (laitem-propagates src-laitem))))
+    (if propagation-entry
+      (terminalset-union-f (cdr propagation-entry) mask)
+      (push (cons dst-laitem mask) (laitem-propagates src-laitem)))))
+
+
 (defvar *lookahead-print-column* 70)
 
 (defun print-laitem (laitem &optional (stream t))
-  (print-item (laitem-item laitem) stream)
-  (format stream " ~vT~_" *lookahead-print-column*)
-  (pprint-logical-block (stream nil :prefix "{" :suffix "}")
-    (print-terminalset (laitem-grammar laitem) (laitem-lookaheads laitem) stream)))
+  (let* ((grammar (laitem-grammar laitem))
+         (item (laitem-item laitem))
+         (forbidden (laitem-forbidden laitem))
+         (forbidden-as-constraint
+          (and (not (terminalset-empty? forbidden))
+               (let ((forbidden-terminals (terminalset-list grammar forbidden)))
+                 (make-lookahead-constraint (item-dot item) forbidden-terminals forbidden-terminals)))))
+    (print-item item stream forbidden-as-constraint)
+    (format stream " ~vT~_" *lookahead-print-column*)
+    (pprint-logical-block (stream nil :prefix "{" :suffix "}")
+      (print-terminalset grammar (laitem-lookaheads laitem) stream))))
 
 (defmethod print-object ((laitem laitem) stream)
   (print-unreadable-object (laitem stream)
@@ -695,14 +833,14 @@
       ((substitute-argument-with (attribute subtree)
          (ecase (first subtree)
            (:rule
-            (let* ((general-rule (second subtree))
-                   (lhs (general-rule-lhs general-rule))
-                   (new-lhs (general-grammar-symbol-substitute attribute argument lhs)))
-              (assert-true (generic-rule? general-rule))
-              (list ':rule 
-                    (if (generic-nonterminal? new-lhs)
-                      (generic-rule-substitute grammar attribute argument general-rule)
-                      (grammar-rule grammar new-lhs)))))
+             (let* ((general-rule (second subtree))
+                    (lhs (general-rule-lhs general-rule))
+                    (new-lhs (general-grammar-symbol-substitute attribute argument lhs)))
+               (assert-true (generic-rule? general-rule))
+               (list ':rule 
+                     (if (generic-nonterminal? new-lhs)
+                       (generic-rule-substitute grammar attribute argument general-rule)
+                       (grammar-rule grammar new-lhs)))))
            (:argument
             (list ':argument
                   (second subtree)
@@ -841,7 +979,7 @@
   (terminal-actions nil :type hash-table :read-only t)   ;Hash table of terminal -> list of (action-symbol . action-function-or-nil)
   (rules nil :type hash-table :read-only t)              ;Hash table of nonterminal -> rule
   (parameter-trees nil :type hash-table :read-only t)    ;Hash table of nonterminal-symbol -> parameter-tree
-  (max-production-length nil :type integer :read-only t) ;Maximum number of grammar symbols on the rhs of a production
+  (max-production-length nil :type integer :read-only t) ;Maximum number of grammar symbols in the rhs of a production
   (general-productions nil :type hash-table :read-only t);Hash table of production-name -> general-production
   (n-productions nil :type integer :read-only t)         ;Number of productions in the grammar
   ;The following fields are used for the parser.
@@ -904,41 +1042,57 @@
   (assert-non-null (nth n (grammar-states grammar))))
 
 
-; Return true if symbol ==>* epsilon.
-(defun symbol-derives-epsilon (grammar symbol)
-  (assert-type symbol grammar-symbol)
-  (and (nonterminal? symbol)
-       (rule-derives-epsilon (grammar-rule grammar symbol))))
-
-
-; Return the terminalset of all terminals a that satisfy
-;   symbol ==>* a rest,
+; Return two values:
+;   a generate terminalset G;
+;   a passthrough terminalset P.
+;
+; G is the terminalset of all terminals x that satisfy
+;   symbol ==>* x rest,
 ; where rest is an arbitrary string of grammar symbols.
+; P is the terminalset of all terminals x that satisfy
+;   symbol x ==> x
 (defun symbol-initial-terminals (grammar symbol)
   (assert-type symbol grammar-symbol)
   (if (nonterminal? symbol)
-    (rule-initial-terminals (grammar-rule grammar symbol))
-    (make-terminalset grammar symbol)))
+    (let ((rule (grammar-rule grammar symbol)))
+      (values (rule-initial-terminals rule) (rule-passthrough-terminals rule)))
+    (values (make-terminalset grammar symbol) *empty-terminalset*)))
 
 
-; Given symbol-string, an arbitrary string of grammar symbols,
-; return two values:  a terminalset S and a boolean B.
-; S is the terminalset of all terminals a that satisfy
-;   symbol-string ==>* a rest,
+; Given an arbitrary string of grammar symbols, a list of constraints, and an initial position,
+; return two values:
+;   a generate terminalset G;
+;   a passthrough terminalset P.
+;
+; G is the terminalset of all terminals x that satisfy
+;   symbol-string ==>* x rest,
 ; where rest is an arbitrary string of grammar symbols.
-; B is true if symbol-string ==>* epsilon.
-(defun string-initial-terminals (grammar symbol-string)
-  (let ((initial-terminals *empty-terminalset*)
-        (derives-epsilon nil))
-    (dolist (element symbol-string (setq derives-epsilon t))
-      (setq initial-terminals (terminalset-union initial-terminals (symbol-initial-terminals grammar element)))
-      (unless (symbol-derives-epsilon grammar element)
-        (return)))
-    (values initial-terminals derives-epsilon)))
+; P is the terminalset of all terminals x that satisfy
+;   symbol-string x ==> x
+;
+; The constraints' positions are relative to the given initial position, which specifies the position
+; of the first grammar-symbol in the symbol-string.  The constraints must be listed in order of
+; increasing positions.
+(defun string-initial-terminals (grammar symbol-string constraints pos)
+  (do ((symbol-string symbol-string (cdr symbol-string))
+       (initial-terminals *empty-terminalset*)
+       (passthrough-terminals *full-terminalset*))
+      ((terminalset-empty? passthrough-terminals) (values initial-terminals *empty-terminalset*))
+    (let ((constraint (find pos constraints :key #'constraint-pos :test #'=)))
+      (when constraint
+        (terminalset-intersection-f passthrough-terminals (lookahead-constraint-terminalset constraint))))
+    (if symbol-string
+      (multiple-value-bind (generate passthrough) (symbol-initial-terminals grammar (first symbol-string))
+        (terminalset-union-f initial-terminals (terminalset-intersection passthrough-terminals generate))
+        (terminalset-intersection-f passthrough-terminals passthrough))
+      (return (values initial-terminals passthrough-terminals)))))
 
 
-; Intern attributed or generic nonterminals in the production's lhs and rhs.  Return the
-; resulting production source.
+; Intern attributed or generic nonterminals in the production's lhs and rhs.  Also replace
+; (:- <terminal> ... <terminal>) or (:-- (<grammar-symbol> ... <grammar-symbol>) <terminal> ... <terminal>)
+; sublists in the rhs with lookahead-constraints and put these, in order, after the third element of
+; the returned list.
+; Return the resulting production source.
 (defun intern-production-source (grammar-parametrization production-source)
   (assert-type production-source (tuple (or user-nonterminal cons) (list (or user-grammar-symbol cons)) identifier))
   (let ((production-lhs-source (first production-source))
@@ -946,11 +1100,24 @@
         (production-name (third production-source)))
     (if (or (consp production-lhs-source) (some #'consp production-rhs-source))
       (multiple-value-bind (lhs-nonterminal lhs-arguments) (grammar-parametrization-intern grammar-parametrization production-lhs-source)
-        (list lhs-nonterminal
-              (mapcar #'(lambda (grammar-symbol-source)
-                          (grammar-parametrization-intern grammar-parametrization grammar-symbol-source lhs-arguments))
-                      production-rhs-source)
-              production-name))
+        (let ((rhs nil)
+              (constraints nil)
+              (pos 0))
+          (dolist (component-source production-rhs-source)
+            (cond
+             ((and (consp component-source) (eq (first component-source) ':-))
+              (let ((lookaheads (rest component-source)))
+                (push
+                 (make-lookahead-constraint pos (assert-non-null lookaheads) lookaheads)
+                 constraints)))
+             ((and (consp component-source) (eq (first component-source) ':--))
+              (let ((lookaheads (rest component-source)))
+                (push
+                 (make-lookahead-constraint pos (assert-non-null (rest lookaheads)) (assert-non-null (first lookaheads)))
+                 constraints)))
+             (t (push (grammar-parametrization-intern grammar-parametrization component-source lhs-arguments) rhs)))
+            (incf pos))
+          (list* lhs-nonterminal (nreverse rhs) production-name (nreverse constraints))))
       production-source)))
 
 
@@ -966,6 +1133,13 @@
 ; nonterminal can have attributes, thereby designating a specialization instead of a fully
 ; generic production.
 ;
+; The rhs can also contain lookahead constraints of the form
+;   (:- <terminal> ... <terminal>) 
+; which indicate that the following terminal must not be one of the listed terminals.  The form
+;   (:-- (<grammar-symbol> ... <grammar-symbol>) <terminal> ... <terminal>)
+; does the same thing except that it prints the grammar-symbols instead of the terminals when
+; the production is printed.
+;
 ; excluded-nonterminals-source is a list of nonterminals not used in the grammar.  Productions,
 ; including productions expanded from generic productions, that have one of these nonterminals
 ; on the lhs are ignored.
@@ -979,7 +1153,8 @@
         (general-productions (make-hash-table :test #'equal))
         (production-number 0)
         (max-production-length 1)
-        (excluded-nonterminals-hash (make-hash-table :test *grammar-symbol-=*)))
+        (excluded-nonterminals-hash (make-hash-table :test *grammar-symbol-=*))
+        (lookahead-constraints nil))
     
     ;Set up excluded-nonterminals-hash.  The values of the hash table are either :seen or :unseen
     ;depending on whether a production with the particular nonterminal has been seen yet.
@@ -989,12 +1164,12 @@
     
     ;Create the starting production:  *start-nonterminal* ==> start-symbol
     (setf (gethash *start-nonterminal* rules)
-          (list (make-production *start-nonterminal* (list start-symbol) nil 1 0)))
+          (list (make-production *start-nonterminal* (list start-symbol) nil nil 1 0)))
     
     ;Create the rest of the productions.
     (flet
-      ((create-production (lhs rhs name)
-         (let ((production (make-production lhs rhs name (length rhs) (incf production-number))))
+      ((create-production (lhs rhs constraints name)
+         (let ((production (make-production lhs rhs constraints name (length rhs) (incf production-number))))
            (push production (gethash lhs rules))
            (dolist (rhs-terminal (production-terminals production))
              (setf (gethash rhs-terminal terminals-hash) t))
@@ -1008,6 +1183,7 @@
         (let* ((production-lhs (first production-source))
                (production-rhs (second production-source))
                (production-name (third production-source))
+               (production-constraints (cdddr production-source))
                (lhs-arguments (general-grammar-symbol-arguments production-lhs)))
           (setq max-production-length (max max-production-length (length production-rhs)))
           (when (gethash production-name general-productions)
@@ -1024,16 +1200,17 @@
                               (mapcar #'(lambda (general-grammar-symbol)
                                           (instantiate-general-grammar-symbol bound-argument-alist general-grammar-symbol))
                                       production-rhs)
+                              production-constraints
                               production-name)
                              productions))))
                lhs-arguments)
               (when productions
                 (setf (gethash production-name general-productions)
-                      (make-generic-production production-lhs production-rhs production-name (nreverse productions)))))
+                      (make-generic-production production-lhs production-rhs production-constraints production-name (nreverse productions)))))
             
             (unless (nonterminal-excluded production-lhs)
               (setf (gethash production-name general-productions)
-                    (create-production production-lhs production-rhs production-name)))))))
+                    (create-production production-lhs production-rhs production-constraints production-name)))))))
     
     
     ;Change all values of the rules hash table to contain rule structures
@@ -1042,9 +1219,16 @@
     (maphash
      #'(lambda (rule-lhs rule-productions)
          (dolist (rule-production rule-productions)
-           (dolist (rhs-nonterminal (production-nonterminals rule-production))
-             (unless (gethash rhs-nonterminal rules)
-               (error "Nonterminal ~S used but not defined" rhs-nonterminal))))
+           (dolist (grammar-symbol (production-rhs rule-production))
+             (when (nonterminal? grammar-symbol)
+               (unless (gethash grammar-symbol rules)
+                 (error "Nonterminal ~S used but not defined" grammar-symbol))))
+           (dolist (constraint (production-constraints rule-production))
+             (push constraint lookahead-constraints)
+             (dolist (lookahead-terminal (lookahead-constraint-forbidden-terminals constraint))
+               (unless (gethash lookahead-terminal terminals-hash)
+                 (warn "Lookahead terminal ~S not used in main grammar" lookahead-terminal)
+                 (setf (gethash lookahead-terminal terminals-hash) t)))))
          (setf (gethash rule-lhs rules)
                (make-rule (nreverse rule-productions))))
      rules)
@@ -1086,27 +1270,33 @@
                         :n-productions production-number
                         :items-hash (make-hash-table :test #'equal))))
           
-          ;Compute the values of derives-epsilon and initial-terminals in each rule.
+          ;Compute the terminalsets in the lookahead-constraints.
+          (dolist (lookahead-constraint lookahead-constraints)
+            (let ((terminalset *full-terminalset*))
+              (dolist (forbidden-terminal (lookahead-constraint-forbidden-terminals lookahead-constraint))
+                (terminalset-difference-f terminalset (make-terminalset grammar forbidden-terminal)))
+              (setf (lookahead-constraint-terminalset lookahead-constraint) terminalset)))
+          
+          ;Compute the values of passthrough-terminals and initial-terminals in each rule.
           (do ((changed t))
               ((not changed))
             (setq changed nil)
             (dolist (nonterminal (grammar-nonterminals-list grammar))
               (let ((rule (grammar-rule grammar nonterminal))
                     (new-initial-terminals *empty-terminalset*)
-                    (new-derives-epsilon nil))
+                    (new-passthrough-terminals *empty-terminalset*))
                 (dolist (production (rule-productions rule))
-                  (multiple-value-bind (production-initial-terminals production-derives-epsilon)
-                                       (string-initial-terminals grammar (production-rhs production))
-                    (setq new-initial-terminals (terminalset-union new-initial-terminals production-initial-terminals))
-                    (when production-derives-epsilon
-                      (setq new-derives-epsilon t))))
-                (assert-true (or new-derives-epsilon (not (rule-derives-epsilon rule))))
-                (assert-true (terminalset-<= (rule-initial-terminals rule) new-initial-terminals))
+                  (multiple-value-bind (production-initial-terminals production-passthrough-terminals)
+                                       (string-initial-terminals grammar (production-rhs production) (production-constraints production) 0)
+                    (terminalset-union-f new-initial-terminals production-initial-terminals)
+                    (terminalset-union-f new-passthrough-terminals production-passthrough-terminals)))
                 (unless (terminalset-= new-initial-terminals (rule-initial-terminals rule))
+                  (assert-true (terminalset-<= (rule-initial-terminals rule) new-initial-terminals))
                   (setf (rule-initial-terminals rule) new-initial-terminals)
                   (setq changed t))
-                (unless (eq new-derives-epsilon (rule-derives-epsilon rule))
-                  (setf (rule-derives-epsilon rule) t)
+                (unless (terminalset-= new-passthrough-terminals (rule-passthrough-terminals rule))
+                  (assert-true (terminalset-<= (rule-passthrough-terminals rule) new-passthrough-terminals))
+                  (setf (rule-passthrough-terminals rule) new-passthrough-terminals)
                   (setq changed t)))))
           
           ;Compute the parameter-trees entries.
@@ -1154,7 +1344,7 @@
                   (loop
                     (let ((production (pprint-pop)))
                       (format stream "~@<~:[<epsilon> ~;~:*~{~W ~:_~}~] ~_~vT~vA [~W]~:>"
-                              (production-rhs production) *name-print-column*
+                              (general-production-rhs-components production) *name-print-column*
                               production-number-width (print-production-number (production-number production))
                               (production-name production)))
                     (pprint-exit-if-list-exhausted)
@@ -1162,7 +1352,7 @@
                 (pprint-indent :block 2 stream)
                 (when details
                   (format stream "~:@_Initial terminals: ~@_~@<~:[~;<epsilon> ~:_~]~{~W ~:_~}~:>"
-                          (rule-derives-epsilon rule)
+                          (not (terminalset-empty? (rule-passthrough-terminals rule)))
                           (terminalset-list grammar (rule-initial-terminals rule)))))
               (pprint-newline :mandatory stream))
             (pprint-exit-if-list-exhausted)
