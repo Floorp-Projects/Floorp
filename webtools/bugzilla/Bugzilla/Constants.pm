@@ -192,14 +192,14 @@ use constant DEFAULT_EMAIL_SETTINGS =>
       "~emailCClistUnconfirmed~on" .
   
       "~emailVoterRemoveme~on" .
-      "~emailVoterComments~on" .
-      "~emailVoterAttachments~on" .
-      "~emailVoterStatus~on" .
+      "~emailVoterComments~" .
+      "~emailVoterAttachments~" .
+      "~emailVoterStatus~" .
       "~emailVoterResolved~on" .
-      "~emailVoterKeywords~on" .
+      "~emailVoterKeywords~" .
       "~emailVoterCC~" .
-      "~emailVoterOther~on" .
-      "~emailVoterUnconfirmed~on";
+      "~emailVoterOther~" .
+      "~emailVoterUnconfirmed~";
 
 use constant GRANT_DIRECT => 0;
 use constant GRANT_DERIVED => 1;
