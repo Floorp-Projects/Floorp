@@ -217,7 +217,7 @@ XULPopupListenerImpl::Init(nsIDOMElement* aElement, const XULPopupType& popup)
     NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
     if ( prefs ) {
       rv = prefs->GetBoolPref("browser.chrome.toolbar_tips", &mShowTooltips);
-      prefs->RegisterCallback("browser.chrome.toolbar_tips", sTooltipPrefChanged, this);
+      prefs->RegisterCallback("browser.chrome.toolbar_tips", (PrefChangedFunc)sTooltipPrefChanged, this);
     }
   }
   
@@ -230,7 +230,7 @@ XULPopupListenerImpl::Init(nsIDOMElement* aElement, const XULPopupType& popup)
 //
 // Called when the tooltip pref changes. Refetch it.
 int 
-PR_CALLBACK XULPopupListenerImpl :: sTooltipPrefChanged (const char *, void * inData )
+XULPopupListenerImpl :: sTooltipPrefChanged (const char *, void * inData )
 {
   XULPopupListenerImpl* self = NS_STATIC_CAST(XULPopupListenerImpl*, inData);
   if ( self ) {
