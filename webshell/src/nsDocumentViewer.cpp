@@ -110,6 +110,7 @@ private:
     nsIView*        mView;
     nsIWidget*      mWindow;
     nsIContentViewerContainer* mContainer;
+    nsIDeviceContext *mDeviceContext;
 
     nsIDocument*    mDocument;
     nsIPresContext* mPresContext;
@@ -202,7 +203,12 @@ DocumentViewerImpl::~DocumentViewerImpl()
       }
       NS_RELEASE(mDocument);
     }
-    
+
+    if (nsnull != mDeviceContext) {
+      mDeviceContext->FlushFontCache();
+      NS_RELEASE(mDeviceContext);
+    }
+
     // Note: release context then shell
     NS_IF_RELEASE(mPresContext);
     if (nsnull != mPresShell) {
@@ -278,6 +284,9 @@ DocumentViewerImpl::Init(nsNativeWidget aNativeParent,
     if (nsnull == mDocument) {
         return NS_ERROR_NULL_POINTER;
     }
+
+    mDeviceContext = aDeviceContext;
+    NS_IF_ADDREF(mDeviceContext);
 
     PRBool makeCX = PR_FALSE;
     if (nsnull == mPresContext) {
