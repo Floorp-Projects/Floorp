@@ -25,8 +25,8 @@
 		<html:div>
 			<html:label for="pref:int:mail.forward_message_mode">&forwardMsg.label;</html:label>
 			<html:select id="pref:int:mail.forward_message_mode">
-				<html:option value="2" label="&inline.label;"/>
 				<html:option value="0" label="&asAttachment.label;"/>
+				<html:option value="2" label="&inline.label;"/>
 			</html:select>
 		</html:div>
 		
