@@ -246,25 +246,30 @@
       <box orient="vertical" id="messagesBox" flex="1">
         <hbox id="messengerBox" flex="1" minheight="100" height="100" persist="height">
           <vbox id="threadPaneBox" flex="1">          
-            <tree id="threadTree" flex="2" enableColumnDrag="true" _selectDelay="500" class="plain focusring"
+            <tree id="threadTree" persist="lastfoldersent" flex="2" enableColumnDrag="true" _selectDelay="500" class="plain focusring" lastfoldersent="false" 
                          disableKeyNavigation="true"
                          context="threadPaneContext"
                          onkeypress="ThreadPaneKeyPress(event);"
                          onselect="ThreadPaneSelectionChanged();">
               <treecols pickertooltiptext="&columnChooser.tooltip;">
-                <treecol id="threadCol" persist="hidden ordinal" fixed="true" cycler="true"
-                         class="treecol-image threadColumnHeader" currentView="unthreaded"
+               <treecol id="threadCol" persist="hidden ordinal" fixed="true" cycler="true"
+                        class="treecol-image threadColumnHeader" currentView="unthreaded"
                         display="&threadColumn.label;" tooltiptext="&threadColumn.tooltip;"/>
-                <splitter class="tree-splitter"/>
-                <treecol id="subjectCol" persist="hidden ordinal width" flex="7" ignoreincolumnpicker="true"
-                         label="&subjectColumn.label;" tooltiptext="&subjectColumn.tooltip;"/>
-                <splitter class="tree-splitter"/>
-                <treecol id="junkStatusCol" persist="hidden ordinal width" fixed="true" cycler="true"
-                         class="treecol-image junkStatusHeader"
-                         display="&junkStatusColumn.label;" tooltiptext="&junkStatusColumn.tooltip;"/>
                <splitter class="tree-splitter"/>
-               <treecol id="senderOrRecipientCol" persist="hidden ordinal width" flex="4"
+               <treecol id="subjectCol" persist="hidden ordinal width" flex="7" ignoreincolumnpicker="true"
+                        label="&subjectColumn.label;" tooltiptext="&subjectColumn.tooltip;"/>
+               <splitter class="tree-splitter"/>
+               <treecol id="junkStatusCol" persist="hidden ordinal width" fixed="true" cycler="true"
+                        class="treecol-image junkStatusHeader"
+                        display="&junkStatusColumn.label;" tooltiptext="&junkStatusColumn.tooltip;"/>
+               <splitter class="tree-splitter"/>
+               <treecol id="senderCol" persist="hidden swappedhidden ordinal width" flex="4" 
+                        hidden="false" swappedhidden="true"
                         label="&senderColumn.label;" tooltiptext="&senderColumn.tooltip;"/>
+               <splitter class="tree-splitter"/>
+               <treecol id="recipientCol" persist="hidden swappedhidden ordinal width" flex="4" 
+                        hidden="true" swappedhidden="false"
+                        label="&recipientColumn.label;" tooltiptext="&recipientColumn.tooltip;"/>
                <splitter class="tree-splitter"/>
                <treecol id="unreadButtonColHeader" persist="hidden ordinal" fixed="true" cycler="true"
                         class="treecol-image readColumnHeader"
