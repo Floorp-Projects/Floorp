@@ -25,6 +25,7 @@
 
 #include "nsNetThread.h"
 
+#include "nsIEventQueueService.h"
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
 #include "nsIURL.h"
@@ -337,7 +338,7 @@ void nsNetlibThread::NetlibMainLoop()
 class nsStreamListenerProxy : public nsIStreamListener
 {
 public:
-    nsStreamListenerProxy(nsIStreamListener* aListener, PLEventQueue* aEventQ);
+    nsStreamListenerProxy(nsIStreamListener* aListener, nsIEventQueue* aEventQ);
 
     NS_DECL_ISUPPORTS
 
@@ -359,7 +360,7 @@ protected:
 
 private:
     nsresult mStatus;
-    PLEventQueue* mEventQ;
+    nsIEventQueue* mEventQ;
 };
 
 
@@ -370,7 +371,7 @@ struct ProxyEvent : public PLEvent
   virtual ~ProxyEvent();
   virtual void InitEvent();
   NS_IMETHOD HandleEvent() = 0;
-  void Fire(PLEventQueue* aEventQ);
+  void Fire(nsIEventQueue* aEventQ);
 
   static void PR_CALLBACK HandlePLEvent(PLEvent* aEvent);
   static void PR_CALLBACK DestroyPLEvent(PLEvent* aEvent);
@@ -410,13 +411,13 @@ void PR_CALLBACK ProxyEvent::DestroyPLEvent(PLEvent* aEvent)
 }
 
 
-void ProxyEvent::Fire(PLEventQueue* aEventQ) 
+void ProxyEvent::Fire(nsIEventQueue* aEventQ) 
 {
   InitEvent();
 
-  NS_PRECONDITION(nsnull != aEventQ, "PLEventQueue for thread is null");
+  NS_PRECONDITION(nsnull != aEventQ, "nsIEventQueue for thread is null");
 
-  PL_PostEvent(aEventQ, this);
+  aEventQ->PostEvent(this);
 }
 
 
@@ -634,7 +635,7 @@ OnDataAvailableProxyEvent::HandleEvent()
 /*--------------------------------------------------------------------------*/
 
 nsStreamListenerProxy::nsStreamListenerProxy(nsIStreamListener* aListener,
-                                             PLEventQueue* aEventQ)
+                                             nsIEventQueue* aEventQ)
 {
     NS_INIT_REFCNT();
 
@@ -642,6 +643,8 @@ nsStreamListenerProxy::nsStreamListenerProxy(nsIStreamListener* aListener,
     NS_ADDREF(mRealListener);
 
     mEventQ = aEventQ;
+		NS_IF_ADDREF(mEventQ);
+
     mStatus = NS_OK;
 }
 
@@ -819,10 +822,11 @@ nsStreamListenerProxy::OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream,
 nsStreamListenerProxy::~nsStreamListenerProxy()
 {
     NS_RELEASE(mRealListener);
+		NS_IF_RELEASE(mEventQ);
 }
 
 nsIStreamListener* ns_NewStreamListenerProxy(nsIStreamListener* aListener,
-                                             PLEventQueue* aEventQ)
+                                             nsIEventQueue* aEventQ)
 {
     return new nsStreamListenerProxy(aListener, aEventQ);
 }
@@ -911,7 +915,10 @@ net_CallExitRoutineProxy(Net_GetUrlExitFunc* exit_routine,
     ev = new CallExitRoutineProxyEvent(exit_routine, URL_s, status, 
                                        format_out, window_id);
     if (nsnull != ev) {
-      ev->Fire((PLEventQueue*)URL_s->owner_data);
+      
+			nsIEventQueue* eventQueue = (nsIEventQueue*)(URL_s->owner_data);
+			if (eventQueue)
+			  ev->Fire(eventQueue);
     }
   } else {
     net_CallExitRoutine(exit_routine, URL_s, status, format_out, window_id);

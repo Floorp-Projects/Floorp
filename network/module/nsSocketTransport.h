@@ -116,7 +116,7 @@ protected:
     nsString* mData;
     PRFileDesc *m_ready_fd;
     nsIEventQueueService* mEventQService;
-    PLEventQueue* m_evQueue;
+    nsIEventQueue* m_evQueue;
     char m_buffer[NET_SOCKSTUB_BUF_SIZE];
 };
 

@@ -30,7 +30,7 @@
 
 #include "plstr.h"
 
-extern nsIStreamListener* ns_NewStreamListenerProxy(nsIStreamListener* aListener, PLEventQueue* aEventQ);
+extern nsIStreamListener* ns_NewStreamListenerProxy(nsIStreamListener* aListener, nsIEventQueue* aEventQ);
 static NS_DEFINE_IID(kIOutputStreamIID, NS_IOUTPUTSTREAM_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
@@ -344,6 +344,7 @@ nsSocketTransport::~nsSocketTransport()
   rv = CloseCurrentConnection();
 
   NS_IF_RELEASE(mEventQService);
+	NS_IF_RELEASE(m_evQueue);
   NS_IF_RELEASE(m_outStream);
   NS_IF_RELEASE(m_url);
   NS_IF_RELEASE(m_inputStreamConsumer);
