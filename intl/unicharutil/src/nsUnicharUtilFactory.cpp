@@ -103,7 +103,9 @@ extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aCID, nsISupports* servi
 extern "C" NS_EXPORT PRBool NSCanUnload() {
   return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
 }
-
+// somehow  UNIX have problem to link against nsRepository::RegisterFactory
+// temporary turn it off untill XPCOM folks fix it
+#ifndef XP_UNIX
 extern "C" NS_EXPORT nsresult NSRegisterSelf(const char *path)
 {
   return nsRepository::RegisterFactory(kUnicharUtilCID, path,
@@ -114,3 +116,4 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(const char *path)
 {
   return nsRepository::UnregisterFactory(kUnicharUtilCID, path);
 }
+#endif
