@@ -120,7 +120,7 @@ Contributor(s):  Hkan Waara <hwaara@chello.se>
 
             <treecols>
               <treecol id="nameColumn" flex="1" label="&nameColumn.label;" sort="?Name"/>
-              <treecol id="activeColumn" label="&activeColumn.label;"/>
+              <treecol id="activeColumn" label="&activeColumn.label;" cycler="true"/>
             </treecols>
 
             <template>

@@ -105,7 +105,7 @@ Contributors:
       <treecols>
         <treecol id="folderNameCol" flex="5" persist="hidden width" label="&MsgSelectItems.label;" primary="true" />
         <splitter class="tree-splitter"/>		  
-        <treecol id="syncCol" flex="1" persist="hidden width" label="&MsgSelectInd.label;"  />
+        <treecol id="syncCol" flex="1" persist="hidden width" label="&MsgSelectInd.label;" cycler="true" />
       </treecols>
     </tree>
 
