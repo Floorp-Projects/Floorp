@@ -1149,7 +1149,7 @@ private:
     nsCOMPtr<nsIChannel>         mChannel;
 };
 
-NS_IMPL_ISUPPORTS2(InterceptStreamListener, nsIInputStream, nsIStreamListener)
+NS_IMPL_ISUPPORTS3(InterceptStreamListener, nsIInputStream, nsIStreamListener, nsIStreamObserver)
 
 NS_IMETHODIMP
 nsCachedNetData::InterceptAsyncRead(nsIStreamListener *aOriginalListener,
