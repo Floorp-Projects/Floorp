@@ -48,10 +48,10 @@ interface nsILDAPConnection : nsISupports
     readonly attribute string errorString;
 
     // wrapper for ldap_init()
-    void Init(in string defhost, in short defport);
+    void init(in string defhost, in short defport);
   
     // wrapper for ldap_get_lderrno()
-    long GetLdErrno(out string matched, out string s);
+    long getLdErrno(out string matched, out string s);
 
     // really only for the internal use of nsLDAPOperation and friends
     //

@@ -176,7 +176,7 @@ nsLDAPOperation::SearchExt(const char *base, // base DN to search
 // wrapper for ldap_url_search
 //
 NS_IMETHODIMP
-nsLDAPOperation::URLSearch(const char *aURL, // the search URL
+nsLDAPOperation::UrlSearch(const char *aURL, // the search URL
 			   PRBool aAttrsOnly) // skip attribute names?
 {
     NS_ENSURE_ARG(aURL);

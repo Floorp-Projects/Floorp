@@ -46,15 +46,15 @@ interface nsILDAPOperation : nsISupports
     
     // wrapper for ldap_simple_bind()
     //
-    void SimpleBind(in string binddn, in string passwd);
+    void simpleBind(in string binddn, in string passwd);
 
     // wrapper for ldap_search_url()
     //
-    void URLSearch(in string url, in boolean attrsonly);
+    void urlSearch(in string url, in boolean attrsonly);
 
     // wrapper for ldap_result()
     // XXX - timeout currently ignored
     // XXX - should add consts for all param
     //
-    long Result(in long all, in PRTime timeout, out nsILDAPMessage message);
+    long result(in long all, in PRTime timeout, out nsILDAPMessage message);
 };

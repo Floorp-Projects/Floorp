@@ -136,7 +136,7 @@ lds(class nsLDAPChannel *chan, const char *url)
     // XXX what about timeouts? 
     // XXX failure is a reasonable thing; don't assert
     //
-    rv = myOperation->URLSearch(url, PR_FALSE);
+    rv = myOperation->UrlSearch(url, PR_FALSE);
     NS_ENSURE_SUCCESS(rv,rv);
 
     // poll for results
