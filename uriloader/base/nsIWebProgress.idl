@@ -80,4 +80,9 @@ interface nsIWebProgress : nsISupports
    * The DOM Window associated with the WebProgress instance.
    */
   readonly attribute nsIDOMWindow DOMWindow;
+  
+  /**
+   * The IsLoadingDocument associated with the WebProgress instance
+   */
+  readonly attribute PRBool isLoadingDocument;
 };
