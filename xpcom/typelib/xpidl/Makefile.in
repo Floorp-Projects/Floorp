@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PROGRAM		= xpidl
+PROGRAM		= xpidl$(BIN_SUFFIX)
 INTERNAL_TOOLS	= 1
 
 CSRCS		= \

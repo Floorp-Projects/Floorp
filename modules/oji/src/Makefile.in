@@ -33,6 +33,7 @@ REQUIRES	= img java js lay layer plugin plugimpl pref style util xpcom raptor oj
 
 ifdef MOZ_OJI
 LIBRARY_NAME	= oji
+EXTRA_DSO_LIBS	= jsj
 
 CPPSRCS		= \
 		jvmmgr.cpp \
@@ -54,10 +55,11 @@ EXPORTS		= \
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 endif
 
-EXTRA_DSO_LDOPTS += \
+EXTRA_DSO_LDOPTS = \
+		-L$(DIST)/bin \
+		$(EXTRA_DSO_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
-		-lmozjs \
-		-ljsj \
+		$(MOZ_JS_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

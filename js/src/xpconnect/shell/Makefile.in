@@ -39,14 +39,14 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpcshell
-SIMPLE_PROGRAMS	= xpcshell
+SIMPLE_PROGRAMS	= xpcshell$(BIN_SUFFIX)
 
 CPPSRCS		= xpcshell.cpp
 
 LIBS		= \
-		-lmozjs \
 		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \
+		$(MOZ_JS_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

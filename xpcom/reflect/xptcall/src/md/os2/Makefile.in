@@ -29,14 +29,44 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= xpconnect
 LIBRARY_NAME	= xptcmd
 
-CPPSRCS		= \
-		xptcinvoke_emx.cpp \
-		xptcstubs_emx.cpp \
-		$(NULL)
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+CPPSRCS		= xptcinvoke_icc.cpp 
+else
+CPPSRCS		= xptcinvoke_emx.cpp 
+endif
+
+CPPSRCS		+= xptcstubs_os2.cpp
+
+# we don't want the shared lib, but we want to force the creation of a static lib.
+override NO_SHARED_LIB=1
+override NO_STATIC_LIB=
 
 include $(topsrcdir)/config/rules.mk
 
-CFLAGS		+= -DEXPORT_XPC_API
+DEFINES		+= -DEXPORT_XPC_API -DDEBUG
 
 INCLUDES	+= -I$(srcdir)/../..
+
+# The asm routines are split across two files to facilitate testing; once they
+# work properly, the files should be combined
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+ASRCS		= xptcinvoke_vacpp.asm xptcstubs_vacpp.asm
+ASFILES		= $(ASRCS:.asm=.obj)
+LIBOBJS		+= $(ASFILES)
+ASFLAGS		= -Mb                       # turn off logo
+
+ifdef MOZ_DEBUG
+ASFLAGS		+= +Ods
+endif
+
+$(ASFILES): %.obj: %.asm
+	alp $(ASFLAGS) $<
+
+export:: $(ASFILES)
+endif
+
+showobjs:
+	@echo $(ASFILES)
+	@echo $(LIBOBJS)
+
 

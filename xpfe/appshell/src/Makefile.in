@@ -29,6 +29,9 @@ include $(DEPTH)/config/autoconf.mk
 IS_COMPONENT=1
 MODULE		= raptor
 LIBRARY_NAME	= nsappshell
+SHORT_LIBNAME	= appshell
+
+EXTRA_DSO_LIBS	= jsdom
 
 CPPSRCS		= \
 		nsChromeTreeOwner.cpp \
@@ -48,16 +51,16 @@ CPPSRCS		= \
 		nsCommonDialogs.cpp \
 		nsAbout.cpp \
 		nsAppShellFactory.cpp \
-        nsUserInfoUnix.cpp \
+	        nsUserInfoUnix.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
-		-L$(DIST)/bin -ljsdom \
+		-L$(DIST)/bin \
 		$(MOZ_NECKO_UTIL_LIBS) \
 		$(FULLCIRCLE_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(MOZ_TIMER_LIBS) \
-		-lmozjs \
+		$(MOZ_JS_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

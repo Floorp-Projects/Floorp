@@ -27,7 +27,16 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= apprunner
+
+ifeq ($(USE_SHORT_LIBNAME),1)
+PROGRAM		= mozilla$(BIN_SUFFIX)
+EXTRA_DSO_LIBS	= nggfx
+WEBSHELL_LIB	= $(DIST)/lib/webshell.$(LIB_SUFFIX)
+else
 PROGRAM		= mozilla-bin
+EXTRA_DSO_LIBS	= raptorgfx
+WEBSHELL_LIB	= -lraptorwebwidget
+endif
 
 CPPSRCS		= \
 		nsAppRunner.cpp \
@@ -36,9 +45,9 @@ CPPSRCS		= \
 		$(NULL)
 
 XP_DIST_LIBS	= \
-		-lraptorgfx \
-		-lmozjs \
+		$(EXTRA_DSO_LIBS) \
 		$(XPCOM_LIBS) \
+		$(MOZ_JS_LIBS) \
 		$(OJI_LIBS) \
 		$(NULL)
 
@@ -69,7 +78,7 @@ DETECT_WEBSHELL_LEAKS=
 endif
 
 ifdef DETECT_WEBSHELL_LEAKS
-XP_LIBS         += -lraptorwebwidget -ldocshell -ljsdom
+XP_LIBS         += $(WEBSHELL_LIB) -ldocshell -ljsdom
 endif
 
 ifdef MOZ_JPROF
@@ -86,12 +95,9 @@ ifdef GC_LEAK_DETECTOR
 LIBS += -lboehm
 endif
 
-XP_DIST_DEP_LIBS := $(filter-out -L$(DIST)/bin -L$(DIST)/lib, $(XP_DIST_LIBS))
-
-EXTRA_DEPS	= \
-		$(addprefix $(DIST)/,$(patsubst -l%,bin/lib%$(DLL_SUFFIX),$(XP_DIST_DEP_LIBS:-l%_s=lib/lib%_s.a))) \
-		$(XP_NS_UNDERBAR_CRAP) \
-		$(NULL)
+ifeq ($(MOZ_OS2_TOOLS),EMX)
+BIN_FLAGS	:= -Zlinker /PM:PM -Zlinker /Stack:0x30000
+endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
 BEOS_PROGRAM_RESOURCE = $(srcdir)/apprunner-beos.rsrc
@@ -108,6 +114,15 @@ endif
 #endif
 
 include $(topsrcdir)/config/rules.mk
+
+XP_DIST_DEP_LIBS := $(filter-out -L$(DIST)/bin -L$(DIST)/lib, $(XP_DIST_LIBS))
+
+ifneq ($(MOZ_WIDGET_TOOLKIT),os2)
+EXTRA_DEPS	= \
+		$(addprefix $(DIST)/,$(patsubst -l%,bin/lib%$(DLL_SUFFIX),$(XP_DIST_DEP_LIBS:-l%_s=lib/lib%_s.a))) \
+		$(XP_NS_UNDERBAR_CRAP) \
+		$(NULL)
+endif
 
 CXXFLAGS	+= $(MOZ_TOOLKIT_REGISTRY_CFLAGS)
 

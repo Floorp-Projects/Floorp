@@ -29,7 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= xpcom
 INTERNAL_TOOLS	= 1
 
-SIMPLE_PROGRAMS	= xpt_dump xpt_link
+SIMPLE_PROGRAMS	= xpt_dump$(BIN_SUFFIX) xpt_lin$(BIN_SUFFIX)k
 CSRCS		= xpt_dump.c xpt_link.c
 
 ifdef CROSS_COMPILE
@@ -41,7 +41,7 @@ include $(topsrcdir)/config/rules.mk
 
 # Compile directly against the static lib, so we can use the tools
 # during the build without the shared library path being set.
-LIBS		= $(DIST)/lib/libxpt.a
+LIBS		= $(DIST)/lib/libxpt.$(LIB_SUFFIX)
 
 # Tell the $(SIMPLE_PROGRAMS) target that we need to be recompiled
 # when libxpt changes.
