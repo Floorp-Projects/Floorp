@@ -106,6 +106,7 @@ MODULES_suite :=                                \
   mozilla/security/manager                      \
   mozilla/toolkit                               \
   mozilla/storage                               \
+  mozilla/db/sqlite3                            \
   $(NULL)
 
 MODULES_toolkit :=                              \

@@ -293,6 +293,10 @@ ifdef NS_TRACE_MALLOC
 tier_50_dirs += tools/trace-malloc
 endif
 
+ifdef MOZ_STORAGE
+tier_50_dirs += db/sqlite3/src storage
+endif
+
 #
 # tier 9x - application features
 #
