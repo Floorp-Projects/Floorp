@@ -18,7 +18,7 @@ Communications Corporation. Portions created by Netscape are
 Copyright (C) 1998-1999 Netscape Communications Corporation. All
 Rights Reserved.
 
-Contributor(s): ______________________________________. -->
+Contributor(s): Michael Lowe <michael.lowe@bigfoot.com> -->
 
 <?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
 
@@ -38,35 +38,60 @@ Contributor(s): ______________________________________. -->
    <html:script language="javascript" src="openLocation.js"/>
                    
 	<keyset id="keyset"/>
-           
-           
-	<box align="horizontal" style="width: 36em; height: 100%;">
+           		
+		<box align="vertical" style="width: 43em; margin:1em;">
 		
-		<html:div style="width: 45px; margin: 5px;">
-			<html:img src="chrome://global/skin/question-icon.gif" width="32" height="32" border="0"/>
-		</html:div>
-		
-		<box align="vertical" flex="100%">
-		
-			<box align="vertical" style="margin-bottom: 1em;">	
-				<html:div flex="100%">
-					&enter.label;
-				</html:div>
-			</box>
-			
-			<box align="horizontal"  flex="100%">
-				<html:input id="dialog.input" flex="100%" onkeyup="onTyping(event.which)"/>
-			</box>
-			
-			<box align="horizontal"  flex="100%" style="margin-bottom: 1em; width: 100%;">
-				<html:input type="checkbox" id="dialog.newWindow"/>
-				<html:label for="dialog.newWindow">&openWin.label;</html:label>
-           		<spring flex="100%"/> 
-			</box>
+		  <html:label>
+				&enter.label;
+			</html:label>
 
-			<box id="okCancelButtons"/>
-		</box>
+		  <html:label style="margin-left: 1em;" >
+			&example.label;
+			<html:i>
+			&exampleURL.label;
+			</html:i>
+			</html:label>
+			
+		  <html:input style="margin-left: 1em;" id="dialog.input" type="text" flex="100%" onkeyup="onTyping(event.which)"/>
+
+      <html:div style="margin-top: 0.5em; margin-left: 2em; margin-bottom: 1em;" >
+    		<titledbutton class="dialog push" value="&chooseFile.label;" align="left" onclick="onChooseFile()"/>
+      </html:div>
+
+      <html:div>
+        <html:div class="separator" align="horizontal" />
+      </html:div>
+
+			<box align="horizontal" style="margin-top: 1em;" >
+        <html:div>
+          <html:label>&openWhere.label;</html:label>
+        </html:div>
+
+        <box align="vertical" id="dialog.openWhereBox">
+            <html:div id="dialog.topWindowDiv">
+ 				      <html:input type="radio" name="openWhereRadio" id="dialog.topWindow"/>       
+				      <html:label for="dialog.topWindow">&topWindow.label;</html:label>
+            </html:div>
+            <html:div id="dialog.newWindowDiv">
+ 				      <html:input type="radio" name="openWhereRadio" id="dialog.newWindow"/>       
+				      <html:label for="dialog.newWindow">&newWindow.label;</html:label>
+            </html:div>
+            <html:div id="dialog.editNewWindowDiv">
+ 				      <html:input type="radio" name="openWhereRadio" id="dialog.editNewWindow"/>       
+				      <html:label for="dialog.editNewWindow">&editNewWindow.label;</html:label>
+            </html:div>
+        </box>
+
+        <spring flex="100%"/> 
+
+        <html:div>
+  			  <box id="okCancelButtons"/>
+        </html:div>
 		
-	</box>
-         
+	    </box>
+	  </box>
+        
+    <foo style="display:none;" id="openLabel" value="&open.label;"/>
+    <foo style="display:none;" id="chooseFileTitle" value="&chooseFileTitle.label;"/>
+        
  </window>
