@@ -249,6 +249,7 @@ Contributor(s): ______________________________________. -->
 <!-- L10n BEGIN : DO not localize the entities below; test case --> 
 <!ENTITY strresCmd.label "StringBundle Test">
 <!ENTITY languages.label "Languages">
+<!ENTITY en-US.label "English (en-US)">
 <!ENTITY da-DK-file.label "Danish (da-DK; file)">
 <!ENTITY da-DK-http.label "Danish (da-DK; http)">
 <!-- L10n END   : DO not localize the entities above; test case --> 
@@ -706,6 +707,8 @@ Contributor(s): ______________________________________. -->
         <menuitem value="&strresCmd.label;" onaction="window.content.location.href='resource:/res/strres-test.xul'"/>
 		<menu value="&languages.label;">
 	    	<menupopup>
+        		<menuitem value="&en-US.label;" 
+			          onaction="localeTo('', 'en-US');" />
         		<menuitem value="&da-DK-file.label;" 
 			          onaction="localeTo('', 'da-DK');" />
         		<menuitem value="&da-DK-http.label;" 
