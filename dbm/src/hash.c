@@ -65,15 +65,16 @@ static char sccsid[] = "@(#)hash.c	8.9 (Berkeley) 6/16/94";
 #if !defined(_WIN32) && !defined(_WINDOWS) && !defined(macintosh) && !defined(XP_OS2_VACPP)
 #include <unistd.h>
 #endif
+#if defined(_WIN32) || defined(_WINDOWS) 
+#include <windows.h>
+#endif
 
 #ifdef XP_OS2_VACPP
 #include "types.h"
 #define EPERM SOCEPERM
 #endif
 
-#ifdef DEBUG
 #include <assert.h>
-#endif
 
 #include "mcom_db.h"
 #include "hash.h"
@@ -117,25 +118,21 @@ int hash_accesses, hash_collisions, hash_expansions, hash_overflows;
 
 /* A new Lou (montulli@mozilla.com) routine.
  *
- * The database is screwed.  Delete it by 
- * making it a zero length file
+ * The database is screwed.  
  *
- * This zero's hashp so that the
- * database can't be accessed any more
+ * This closes the file, flushing buffers as appropriate.
  */
 static void
 __remove_database(DB *dbp)
 {
 	HTAB *hashp = (HTAB *)dbp->internal;
+
+	assert(0);
+
 	if (!hashp)
 		return;
-
-	if(hashp->fp != NO_FILE)
-		close(hashp->fp);
-	if(hashp->filename)
-		unlink(hashp->filename);
-	dbp->internal = NULL; /* zero the internal stuff */
-
+	hdestroy(hashp);
+	dbp->internal = NULL; 
 }
 
 /************************** INTERFACE ROUTINES ***************************/
@@ -189,6 +186,7 @@ __hash_open(const char *file, int flags, int mode, const HASHINFO *info, int dfl
 	 	 */
 		new_table = 1;
 	}
+	hashp->file_size = statbuf.st_size;
 
 	if (file) {				 
 
@@ -561,8 +559,13 @@ hdestroy(HTAB *hashp)
 	if (hashp->fp != -1)
 		(void)close(hashp->fp);
 
-	if(hashp->filename)
+	if(hashp->filename) {
+#if defined(_WIN32) || defined(_WINDOWS) || defined(XP_OS2)
+		if (hashp->is_temp)
+			(void)unlink(hashp->filename);
+#endif
 		free(hashp->filename);
+	}
 
 	free(hashp);
 
@@ -572,6 +575,65 @@ hdestroy(HTAB *hashp)
 	}
 	return (SUCCESS);
 }
+
+#if defined(_WIN32) || defined(_WINDOWS) 
+/*
+ * Close and reopen file to force file length update on windows. 
+ *
+ * Returns:
+ *	 0 == OK
+ *	-1 DBM_ERROR
+ */
+static int
+update_EOF(HTAB *hashp)
+{
+#if defined(DBM_REOPEN_ON_FLUSH)
+	char *      file       = hashp->filename;
+	off_t       file_size;
+	int         flags;
+	int         mode       = -1;
+	struct stat statbuf;
+
+	memset(&statbuf, 0, sizeof statbuf);
+
+	/* make sure we won't lose the file by closing it. */
+	if (!file || (stat(file, &statbuf)  && (errno == ENOENT)))  {
+		/* pretend we did it. */
+		return 0;
+	}
+
+	(void)close(hashp->fp);
+
+	flags = hashp->flags & ~(O_TRUNC | O_CREAT | O_EXCL);
+
+	if ((hashp->fp = DBFILE_OPEN(file, flags | O_BINARY, mode)) == -1)
+		return -1;
+	file_size = lseek(hashp->fp, (off_t)0, SEEK_END);
+	if (file_size == -1) 
+		return -1;
+	hashp->file_size = file_size;
+	return 0;
+#else
+	int    fd        = hashp->fp;
+	off_t  file_size = lseek(fd, (off_t)0, SEEK_END);
+	HANDLE handle    = (HANDLE)_get_osfhandle(fd);
+	BOOL   cool      = FlushFileBuffers(handle);
+#ifdef DEBUG3
+	if (!cool) {
+		DWORD err = GetLastError();
+		(void)fprintf(stderr,
+			"FlushFileBuffers failed, last error = %d, 0x%08x\n",
+			err, err);
+	}
+#endif
+	if (file_size == -1) 
+		return -1;
+	hashp->file_size = file_size;
+	return cool ? 0 : -1;
+#endif
+}
+#endif
+
 /*
  * Write modified pages to disk
  *
@@ -600,6 +662,14 @@ hash_sync(const DB *dbp, uint flags)
 		return (0);
 	if (__buf_free(hashp, 0, 1) || flush_meta(hashp))
 		return (DBM_ERROR);
+#if defined(_WIN32) || defined(_WINDOWS) 
+	if (hashp->updateEOF && hashp->filename && !hashp->is_temp) {
+		int status = update_EOF(hashp);
+		hashp->updateEOF = 0;
+		if (status)
+			return status;
+	}
+#endif
 	hashp->new_file = 0;
 	return (0);
 }
