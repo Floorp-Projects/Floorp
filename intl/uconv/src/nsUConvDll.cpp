@@ -36,8 +36,8 @@ static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-extern "C" PRInt32 g_InstanceCount = 0;
-extern "C" PRInt32 g_LockCount = 0;
+PRInt32 g_InstanceCount = 0;
+PRInt32 g_LockCount = 0;
 
 //----------------------------------------------------------------------
 // Global functions and data [implementation]

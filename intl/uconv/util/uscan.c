@@ -93,6 +93,30 @@ PRIVATE PRBool uCheckAndScan2ByteGRPrefix8EA2(
 		PRUint32*				inscanlen
 );
 
+PRIVATE PRBool uCheckAndScanAlways2ByteSwap(
+		uShiftTable 			*shift,
+		PRInt32*				state,
+		unsigned char		*in,
+		PRUint16				*out,
+		PRUint32 				inbuflen,
+		PRUint32*				inscanlen
+);
+PRIVATE PRBool uCheckAndScanAlways4Byte(
+		uShiftTable 			*shift,
+		PRInt32*				state,
+		unsigned char		*in,
+		PRUint16				*out,
+		PRUint32 				inbuflen,
+		PRUint32*				inscanlen
+);
+PRIVATE PRBool uCheckAndScanAlways4ByteSwap(
+		uShiftTable 			*shift,
+		PRInt32*				state,
+		unsigned char		*in,
+		PRUint16				*out,
+		PRUint32 				inbuflen,
+		PRUint32*				inscanlen
+);
 
 PRIVATE PRBool uScanAlways2Byte(
 		unsigned char*		in,
@@ -129,6 +153,9 @@ PRIVATE uScannerFunc m_scanner[uNumOfCharsetType] =
 	uCheckAndScanAlways2ByteShiftGR,
 	uCheckAndScan2ByteGRPrefix8F,
 	uCheckAndScan2ByteGRPrefix8EA2,
+	uCheckAndScanAlways2ByteSwap,
+	uCheckAndScanAlways4Byte,
+	uCheckAndScanAlways4ByteSwap,
 };
 
 /*=================================================================================
@@ -363,4 +390,73 @@ PRIVATE PRBool uCheckAndScan2ByteGRPrefix8EA2(
 	}
 }
 
+/*=================================================================================
 
+=================================================================================*/
+PRIVATE PRBool uCheckAndScanAlways2ByteSwap(
+		uShiftTable 			*shift,
+		PRInt32*				state,
+		unsigned char		*in,
+		PRUint16				*out,
+		PRUint32 				inbuflen,
+		PRUint32*				inscanlen
+)
+{
+	if(inbuflen < 2)
+		return PR_FALSE;
+	else
+	{
+		*inscanlen = 2;
+		*out = ((in[1] << 8) | ( in[0])) ;
+		return PR_TRUE;
+	}
+}
+/*=================================================================================
+
+=================================================================================*/
+PRIVATE PRBool uCheckAndScanAlways4Byte(
+		uShiftTable 			*shift,
+		PRInt32*				state,
+		unsigned char		*in,
+		PRUint16				*out,
+		PRUint32 				inbuflen,
+		PRUint32*				inscanlen
+)
+{
+	if(inbuflen < 4)
+		return PR_FALSE;
+	else
+	{
+		*inscanlen = 4;
+                if((0 ==in[0]) && ( 0==in[1]))
+		    *out = ((in[2] << 8) | ( in[3])) ;
+                else
+		    *out = 0xFFFD ;
+		return PR_TRUE;
+	}
+}
+
+/*=================================================================================
+
+=================================================================================*/
+PRIVATE PRBool uCheckAndScanAlways4ByteSwap(
+		uShiftTable 			*shift,
+		PRInt32*				state,
+		unsigned char		*in,
+		PRUint16				*out,
+		PRUint32 				inbuflen,
+		PRUint32*				inscanlen
+)
+{
+	if(inbuflen < 4)
+		return PR_FALSE;
+	else
+	{
+		*inscanlen = 4;
+                if((0 ==in[2]) && ( 0==in[3]))
+		    *out = ((in[1] << 8) | ( in[0])) ;
+                else
+		    *out = 0xFFFD ;
+		return PR_TRUE;
+	}
+}
