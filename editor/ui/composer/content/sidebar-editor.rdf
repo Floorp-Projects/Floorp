@@ -58,6 +58,7 @@
 
   <RDF:Seq about="NC:EditorSidebarRoot">
 
+<!--
     <RDF:li>
 
        <RDF:Description ID="files">
@@ -71,6 +72,7 @@
        </RDF:Description>
 
     </RDF:li>
+-->
 
     <RDF:li>
 
