@@ -2,6 +2,9 @@ netwerk/Makefile
 netwerk/base/Makefile
 netwerk/base/public/Makefile
 netwerk/base/src/Makefile
+netwerk/dns/Makefile
+netwerk/dns/public/Makefile
+netwerk/dns/src/Makefile
 netwerk/build/Makefile
 netwerk/protocol/Makefile
 netwerk/protocol/ftp/Makefile
