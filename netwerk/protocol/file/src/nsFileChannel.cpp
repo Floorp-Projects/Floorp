@@ -85,7 +85,7 @@ nsFileChannel::nsFileChannel()
     NS_INIT_REFCNT();
 #if defined(PR_LOGGING)
     //
-    // Initialize the global PRLogModule for socket transport logging 
+    // Initialize the global PRLogModule for socket transport logging
     // if necessary...
     //
     if (nsnull == gFileTransportLog) {
@@ -107,7 +107,7 @@ nsFileChannel::Init(nsFileProtocolHandler* handler,
     mGetter = getter;
     NS_IF_ADDREF(mGetter);
 
-    mMonitor = PR_NewMonitor();
+    mMonitor = nsAutoMonitor::NewMonitor("FileChannel");
     if (mMonitor == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -126,44 +126,44 @@ nsFileChannel::Init(nsFileProtocolHandler* handler,
     }
 
     // if we support the nsIURL interface then use it to get just
-	// the file path with no other garbage!
-	nsCOMPtr<nsIURL> aUrl = do_QueryInterface(mURI, &rv);
-	if (NS_SUCCEEDED(rv) && aUrl) // does it support the url interface?
-	{
-		nsXPIDLCString fileString;
-		aUrl->DirFile(getter_Copies(fileString));
-		// to be mac friendly you need to convert a file path to a nsFilePath before
-		// passing it to a nsFileSpec...
+    // the file path with no other garbage!
+    nsCOMPtr<nsIURL> aUrl = do_QueryInterface(mURI, &rv);
+    if (NS_SUCCEEDED(rv) && aUrl) // does it support the url interface?
+    {
+        nsXPIDLCString fileString;
+        aUrl->DirFile(getter_Copies(fileString));
+        // to be mac friendly you need to convert a file path to a nsFilePath before
+        // passing it to a nsFileSpec...
 #ifdef XP_MAC
-		nsFilePath filePath(nsUnescape((char*)(const char*)fileString));
-		mSpec = filePath;
-		
-		// Don't assume we actually created a good file spec
-		FSSpec theSpec = mSpec.GetFSSpec();
-		if (!theSpec.name[0])
-		{
-			NS_ERROR("failed to create a file spec");
+        nsFilePath filePath(nsUnescape((char*)(const char*)fileString));
+        mSpec = filePath;
 
-			// Since we didn't actually create the file spec 
-			// we return an error
-			return NS_ERROR_MALFORMED_URI;
-		}
+        // Don't assume we actually created a good file spec
+        FSSpec theSpec = mSpec.GetFSSpec();
+        if (!theSpec.name[0])
+        {
+            NS_ERROR("failed to create a file spec");
+
+            // Since we didn't actually create the file spec
+            // we return an error
+            return NS_ERROR_MALFORMED_URI;
+        }
 #else
-		nsFilePath filePath(nsUnescape((char*)(const char*)fileString));
-		mSpec = filePath;
+        nsFilePath filePath(nsUnescape((char*)(const char*)fileString));
+        mSpec = filePath;
 #endif
-	}
-	else
-	{
-		// otherwise do the best we can by using the spec for the uri....
-		// XXX temporary, until we integrate more thoroughly with nsFileSpec
-		char* url;
-		rv = mURI->GetSpec(&url);
-		if (NS_FAILED(rv)) return rv;
-		nsFileURL fileURL(url);
-		nsCRT::free(url);
-		mSpec = fileURL;
-	}
+    }
+    else
+    {
+        // otherwise do the best we can by using the spec for the uri....
+        // XXX temporary, until we integrate more thoroughly with nsFileSpec
+        char* url;
+        rv = mURI->GetSpec(&url);
+        if (NS_FAILED(rv)) return rv;
+        nsFileURL fileURL(url);
+        nsCRT::free(url);
+        mSpec = fileURL;
+    }
 
     return NS_OK;
 }
@@ -179,8 +179,8 @@ nsFileChannel::~nsFileChannel()
     NS_ASSERTION(mFileStream == nsnull, "channel not closed");
     NS_ASSERTION(mBufferInputStream == nsnull, "channel not closed");
     NS_ASSERTION(mBufferOutputStream == nsnull, "channel not closed");
-    if (mMonitor) 
-        PR_DestroyMonitor(mMonitor);
+    if (mMonitor)
+        nsAutoMonitor::DestroyMonitor(mMonitor);
     NS_IF_RELEASE(mLoadGroup);
     NS_IF_RELEASE(mPrincipal);
 }
@@ -196,7 +196,7 @@ nsFileChannel::QueryInterface(const nsIID& aIID, void** aInstancePtr)
         NS_ADDREF_THIS();
         return NS_OK;
     }
-    return NS_NOINTERFACE; 
+    return NS_NOINTERFACE;
 }
 
 NS_IMPL_ADDREF(nsFileChannel);
@@ -222,7 +222,7 @@ NS_IMETHODIMP
 nsFileChannel::IsPending(PRBool *result)
 {
     *result = mState != QUIESCENT;
-    return NS_OK; 
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -236,8 +236,8 @@ nsFileChannel::Cancel()
         Resume();
     }
     mState = ENDING;
-    PR_LOG(gFileTransportLog, PR_LOG_DEBUG, 
-           ("nsFileTransport: Cancel [this=%x %s]", 
+    PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
+           ("nsFileTransport: Cancel [this=%x %s]",
             this, (const char*)mSpec));
     return rv;
 }
@@ -252,8 +252,8 @@ nsFileChannel::Suspend()
         // XXX close the stream here?
         mStatus = mHandler->Suspend(this);
         mSuspended = PR_TRUE;
-        PR_LOG(gFileTransportLog, PR_LOG_DEBUG, 
-               ("nsFileTransport: Suspend [this=%x %s]", 
+        PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
+               ("nsFileTransport: Suspend [this=%x %s]",
                 this, (const char*)mSpec));
     }
     return rv;
@@ -269,8 +269,8 @@ nsFileChannel::Resume()
         // XXX re-open the stream and seek here?
         mSuspended = PR_FALSE;  // set this first before resuming!
         mStatus = mHandler->Resume(this);
-        PR_LOG(gFileTransportLog, PR_LOG_DEBUG, 
-               ("nsFileTransport: Resume [this=%x %s] status=%x", 
+        PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
+               ("nsFileTransport: Resume [this=%x %s] status=%x",
                 this, (const char*)mSpec, mStatus));
     }
     return rv;
@@ -331,8 +331,8 @@ nsFileChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
 
     *result = mBufferInputStream;
     NS_ADDREF(*result);
-    PR_LOG(gFileTransportLog, PR_LOG_DEBUG, 
-           ("nsFileTransport: OpenInputStream [this=%x %s]", 
+    PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
+           ("nsFileTransport: OpenInputStream [this=%x %s]",
             this, (const char*)mSpec));
     return NS_OK;
 }
@@ -353,8 +353,8 @@ nsFileChannel::OpenOutputStream(PRUint32 startPosition, nsIOutputStream **result
     if (NS_FAILED(rv)) return rv;
     rv = str->QueryInterface(NS_GET_IID(nsIOutputStream), (void**)result);
     NS_RELEASE(str);
-    PR_LOG(gFileTransportLog, PR_LOG_DEBUG, 
-           ("nsFileTransport: OpenOutputStream [this=%x %s]", 
+    PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
+           ("nsFileTransport: OpenOutputStream [this=%x %s]",
             this, (const char*)mSpec));
     return rv;
 }
@@ -378,61 +378,61 @@ nsFileChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
         if (NS_FAILED(rv)) return rv;
     }
 
-	// mscott --  this is just one temporary hack until we have a legit stream converter
-	// story going....if the file we are opening is an rfc822 file then we want to 
-	// go out and convert the data into html before we try to load it. so I'm inserting
-	// code which if we are rfc-822 will cause us to literally insert a converter between
-	// the file channel stream of incoming data and the consumer at the other end of the
-	// AsyncRead call...
+    // mscott --  this is just one temporary hack until we have a legit stream converter
+    // story going....if the file we are opening is an rfc822 file then we want to 
+    // go out and convert the data into html before we try to load it. so I'm inserting
+    // code which if we are rfc-822 will cause us to literally insert a converter between
+    // the file channel stream of incoming data and the consumer at the other end of the
+    // AsyncRead call...
     mRealListener = listener;
 #ifdef STREAM_CONVERTER_HACK
-	nsXPIDLCString aContentType;
+    nsXPIDLCString aContentType;
 
+    rv = GetContentType(getter_Copies(aContentType));
+    if (NS_SUCCEEDED(rv) && PL_strcasecmp("message/rfc822", aContentType) == 0)
+    {
+        // okay we are an rfc822 message...
+        // (0) Create an instance of an RFC-822 stream converter...
+        // because I need this converter to be around for the lifetime of the channel,
+        // I'm making it a member variable.
+        // (1) create a proxied stream listener for the caller of this method
+        // (2) set this proxied listener as the listener on the output stream
+        // (3) create a proxied stream listener for the converter
+        // (4) set mListener to be the stream converter's listener.
 
-	rv = GetContentType(getter_Copies(aContentType));
-	if (NS_SUCCEEDED(rv) && PL_strcasecmp("message/rfc822", aContentType) == 0)
-	{
-		// okay we are an rfc822 message...
-		// (0) Create an instance of an RFC-822 stream converter...
-		// because I need this converter to be around for the lifetime of the channel,
-		// I'm making it a member variable.
-		// (1) create a proxied stream listener for the caller of this method
-		// (2) set this proxied listener as the listener on the output stream
-		// (3) create a proxied stream listener for the converter
-		// (4) set mListener to be the stream converter's listener.
+        // (0) create a stream converter
+        nsCOMPtr<nsIStreamConverter> mimeParser;
+        // mscott - we could generalize this hack to work with other stream converters by simply
+        // using the content type of the file to generate a progid for a stream converter and use
+        // that instead of a class id...
 
-		// (0) create a stream converter
-		nsCOMPtr<nsIStreamConverter> mimeParser;
-		// mscott - we could generalize this hack to work with other stream converters by simply
-		// using the content type of the file to generate a progid for a stream converter and use
-		// that instead of a class id...
+        nsIComponentManager *comMgr;
+        rv = NS_GetGlobalComponentManager(&comMgr);
 
-		nsIComponentManager *comMgr;
-		rv = NS_GetGlobalComponentManager(&comMgr);
+        if (!mStreamConverter) {
+            rv = comMgr->CreateInstanceByProgID(NS_ISTREAMCONVERTER_KEY 
+                                        "?from=message/rfc822?to=text/xul", 
+                                        NULL, NS_GET_IID(nsIStreamConverter), 
+                                        (void **) getter_AddRefs(mStreamConverter)); 
+        }
+        if (NS_FAILED(rv)) return rv;
 
-		if (!mStreamConverter)
-			rv = comMgr->CreateInstanceByProgID(NS_ISTREAMCONVERTER_KEY 
-                                                "?from=message/rfc822?to=text/xul", 
-                                                NULL, NS_GET_IID(nsIStreamConverter), 
-                                                (void **) getter_AddRefs(mStreamConverter)); 
-		if (NS_FAILED(rv)) return rv;
+        // (1) and (2)
+        nsCOMPtr<nsIStreamListener> proxiedConsumerListener;
+        rv = serv->NewAsyncStreamListener(this, mEventQueue, getter_AddRefs(proxiedConsumerListener));
+        if (NS_FAILED(rv)) return rv;
 
-		// (1) and (2)
-		nsCOMPtr<nsIStreamListener> proxiedConsumerListener;
-		rv = serv->NewAsyncStreamListener(this, mEventQueue, getter_AddRefs(proxiedConsumerListener));
-		if (NS_FAILED(rv)) return rv;
+        // (3) set the stream converter as the listener on the channel
+        mListener = mStreamConverter;
+        NS_IF_ADDREF(mListener); // mListener is NOT a com ptr...
 
-		// (3) set the stream converter as the listener on the channel
-		mListener = mStreamConverter;
-		NS_IF_ADDREF(mListener); // mListener is NOT a com ptr...
-
-		mStreamConverter->AsyncConvertData(nsnull, nsnull, proxiedConsumerListener, (nsIChannel *) this);
-		mStreamConverterOutType = "text/xul";
-	}
-	else
-		rv = serv->NewAsyncStreamListener(this, mEventQueue, &mListener);
+        mStreamConverter->AsyncConvertData(nsnull, nsnull, proxiedConsumerListener, (nsIChannel *) this);
+        mStreamConverterOutType = "text/xul";
+    }
+    else
+        rv = serv->NewAsyncStreamListener(this, mEventQueue, &mListener);
 #else   
-	rv = serv->NewAsyncStreamListener(this, mEventQueue, &mListener);
+    rv = serv->NewAsyncStreamListener(this, mEventQueue, &mListener);
 #endif
     if (NS_FAILED(rv)) return rv;
 
@@ -452,15 +452,15 @@ nsFileChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
     mState = START_READ;
     mSourceOffset = startPosition;
 
-	// did the user request a specific number of bytes to read?
-	// if they passed in -1 then they want all bytes to be read.f
-	if (readCount > 0) // did the user pass in
-	{
-		mReadFixedAmount = PR_TRUE;
-		mAmount = (PRUint32) readCount; // mscott - this is a safe cast!
-	}
-	else
-		mAmount = 0; // don't worry we'll ignore this parameter from here on out because mReadFixedAmount is false
+    // did the user request a specific number of bytes to read?
+    // if they passed in -1 then they want all bytes to be read.f
+    if (readCount > 0) // did the user pass in
+    {
+        mReadFixedAmount = PR_TRUE;
+        mAmount = (PRUint32) readCount; // mscott - this is a safe cast!
+    }
+    else
+        mAmount = 0; // don't worry we'll ignore this parameter from here on out because mReadFixedAmount is false
 
     if (mLoadGroup) {
         nsCOMPtr<nsILoadGroupListenerFactory> factory;
@@ -481,8 +481,8 @@ nsFileChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
         if (NS_FAILED(rv)) return rv;
     }
 
-    PR_LOG(gFileTransportLog, PR_LOG_DEBUG, 
-           ("nsFileTransport: AsyncRead [this=%x %s]", 
+    PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
+           ("nsFileTransport: AsyncRead [this=%x %s]",
             this, (const char*)mSpec));
     rv = mHandler->DispatchRequest(this);
     if (NS_FAILED(rv)) return rv;
@@ -498,8 +498,8 @@ nsFileChannel::AsyncWrite(nsIInputStream *fromStream,
 {
     nsAutoMonitor mon(mMonitor);
 
-    PR_LOG(gFileTransportLog, PR_LOG_DEBUG, 
-           ("nsFileTransport: AsyncWrite [this=%x %s]", 
+    PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
+           ("nsFileTransport: AsyncWrite [this=%x %s]",
             this, (const char*)mSpec));
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -525,14 +525,14 @@ nsFileChannel::GetContentType(char * *aContentType)
 {
     nsresult rv = NS_OK;
 #ifdef STREAM_CONVERTER_HACK
-	// okay, if we already have a stream converter hooked up to the channel
-	// then we want to LIE about the content type...the content type is really
-	// the stream converter out type...
-	if (mStreamConverter) 
-	{
-		*aContentType = mStreamConverterOutType.ToNewCString();
-		return rv;
-	}
+    // okay, if we already have a stream converter hooked up to the channel
+    // then we want to LIE about the content type...the content type is really
+    // the stream converter out type...
+    if (mStreamConverter) 
+    {
+        *aContentType = mStreamConverterOutType.ToNewCString();
+        return rv;
+    }
 #endif
 
     if (mSpec.IsDirectory()) {
@@ -596,7 +596,7 @@ nsFileChannel::Run(void)
 
 static NS_METHOD
 nsWriteToFile(void* closure,
-              const char* fromRawSegment, 
+              const char* fromRawSegment,
               PRUint32 toOffset,
               PRUint32 count,
               PRUint32 *writeCount)
@@ -628,23 +628,22 @@ nsFileChannel::Process(void)
           }
           if (NS_FAILED(mStatus)) goto error;
 
-		  if (mSourceOffset > 0) // if we need to set a starting offset, QI for the nsIRandomAccessStore and set it
-		  {
-			nsCOMPtr<nsIRandomAccessStore> inputStream;
-			inputStream = do_QueryInterface(fs, &mStatus);
-			if (NS_FAILED(mStatus)) goto error;
-			// for now, assume the offset is always relative to the start of the file (position 0)
-			// so use PR_SEEK_SET
-			inputStream->Seek(PR_SEEK_SET, mSourceOffset);
-		  }
+          if (mSourceOffset > 0) // if we need to set a starting offset, QI for the nsIRandomAccessStore and set it
+          {
+              nsCOMPtr<nsIRandomAccessStore> inputStream;
+              inputStream = do_QueryInterface(fs, &mStatus);
+              if (NS_FAILED(mStatus)) goto error;
+              // for now, assume the offset is always relative to the start of the file (position 0)
+              // so use PR_SEEK_SET
+              inputStream->Seek(PR_SEEK_SET, mSourceOffset);
+          }
 
-		  
           mStatus = fs->QueryInterface(NS_GET_IID(nsIInputStream), (void**)&mFileStream);
           NS_RELEASE(fs);
           if (NS_FAILED(mStatus)) goto error;
 
-          PR_LOG(gFileTransportLog, PR_LOG_DEBUG, 
-                 ("nsFileTransport: START_READ [this=%x %s]", 
+          PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
+                 ("nsFileTransport: START_READ [this=%x %s]",
                   this, (const char*)mSpec));
           mState = READING;
           break;
@@ -658,15 +657,15 @@ nsFileChannel::Process(void)
           mStatus = fileStr->GetLength(&inLen);
           if (NS_FAILED(mStatus)) goto error;
 
-		  // mscott --> if the user wanted to only read a fixed number of bytes
-		  // we need to honor that...
-		  if (mReadFixedAmount) 
-			  inLen = inLen < mAmount ? inLen : mAmount; // take the min(inLen, mAmount)
+          // mscott --> if the user wanted to only read a fixed number of bytes
+          // we need to honor that...
+          if (mReadFixedAmount && inLen > mAmount)
+              inLen = mAmount; // take the min(inLen, mAmount)
 
           PRUint32 amt;
           mStatus = mBufferOutputStream->WriteFrom(fileStr, inLen, &amt);
-          PR_LOG(gFileTransportLog, PR_LOG_DEBUG, 
-                 ("nsFileTransport: READING [this=%x %s] amt=%d status=%x", 
+          PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
+                 ("nsFileTransport: READING [this=%x %s] amt=%d status=%x",
                   this, (const char*)mSpec, amt, mStatus));
           if (mStatus == NS_BASE_STREAM_WOULD_BLOCK) {
               mStatus = NS_OK;
@@ -681,12 +680,12 @@ nsFileChannel::Process(void)
               mStatus = mListener->OnDataAvailable(this, mContext, mBufferInputStream, mSourceOffset, amt);
               if (NS_FAILED(mStatus)) goto error;
           }
-          
-		  if (mReadFixedAmount && mAmount == 0)
-		  {
-			  Cancel(); // stop reading data...we are done
-			  return;
-		  }
+
+          if (mReadFixedAmount && mAmount == 0)
+          {
+              Cancel(); // stop reading data...we are done
+              return;
+          }
 
           mSourceOffset += amt;
 
@@ -708,8 +707,8 @@ nsFileChannel::Process(void)
           NS_RELEASE(fs);
           if (NS_FAILED(mStatus)) goto error;
 
-          PR_LOG(gFileTransportLog, PR_LOG_DEBUG, 
-                 ("nsFileTransport: START_WRITE [this=%x %s]", 
+          PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
+                 ("nsFileTransport: START_WRITE [this=%x %s]",
                   this, (const char*)mSpec));
           mState = WRITING;
           break;
@@ -719,7 +718,7 @@ nsFileChannel::Process(void)
 #if 0
           PRUint32 amt;
           mStatus = mBuffer->ReadSegments(nsWriteToFile, mFileStream, (PRUint32)-1, &amt);
-          if (mStatus == NS_BASE_STREAM_EOF) goto error; 
+          if (mStatus == NS_BASE_STREAM_EOF) goto error;
           if (NS_FAILED(mStatus)) goto error;
 
           nsAutoCMonitor mon(mBuffer);
@@ -727,15 +726,15 @@ nsFileChannel::Process(void)
 
           mSourceOffset += amt;
 #endif
-          PR_LOG(gFileTransportLog, PR_LOG_DEBUG, 
-                 ("nsFileTransport: WRITING [this=%x %s]", 
+          PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
+                 ("nsFileTransport: WRITING [this=%x %s]",
                   this, (const char*)mSpec));
           // stay in the WRITING state
           break;
       }
       case ENDING: {
-          PR_LOG(gFileTransportLog, PR_LOG_DEBUG, 
-                 ("nsFileTransport: ENDING [this=%x %s] status=%x", 
+          PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
+                 ("nsFileTransport: ENDING [this=%x %s] status=%x",
                   this, (const char*)mSpec, mStatus));
           mBufferOutputStream->Flush();
           if (mListener) {
@@ -800,11 +799,11 @@ nsFileChannel::OnEmpty(nsIPipe* pipe)
 
 NS_IMETHODIMP
 nsFileChannel::OnDataAvailable(nsIChannel* channel, nsISupports* context,
-                               nsIInputStream *aIStream, 
+                               nsIInputStream *aIStream,
                                PRUint32 aSourceOffset,
                                PRUint32 aLength)
 {
-    return mRealListener->OnDataAvailable(channel, context, aIStream, 
+    return mRealListener->OnDataAvailable(channel, context, aIStream,
                                           aSourceOffset, aLength);
 }
 
@@ -823,7 +822,7 @@ nsFileChannel::OnStopRequest(nsIChannel* channel, nsISupports* context,
     nsresult rv;
 
     rv = mRealListener->OnStopRequest(channel, context, aStatus, aMsg);
- 
+
     if (mLoadGroup) {
         mLoadGroup->RemoveChannel(channel, context, aStatus, aMsg);
     }
@@ -863,9 +862,9 @@ nsFileChannel::GetParent(nsIFileChannel * *aParent)
 
 class nsDirEnumerator : public nsISimpleEnumerator
 {
-public: 
+public:
     NS_DECL_ISUPPORTS
- 
+
     nsDirEnumerator() : mHandler(nsnull), mDir(nsnull), mNext(nsnull) {
         NS_INIT_REFCNT();
     }
@@ -889,7 +888,7 @@ public:
                 // end of dir entries
 
                 PRStatus status = PR_CloseDir(mDir);
-                if (status != PR_SUCCESS) 
+                if (status != PR_SUCCESS)
                     return NS_ERROR_FAILURE;
                 mDir = nsnull;
 
@@ -902,7 +901,7 @@ public:
             if (NS_FAILED(rv)) return rv;
 
             NS_ASSERTION(mNext, "NewChannel failed");
-        }            
+        }
         *result = mNext != nsnull;
         return NS_OK;
     }
@@ -940,7 +939,7 @@ nsFileChannel::GetChildren(nsISimpleEnumerator * *aChildren)
 {
     nsresult rv;
 
-    PRBool isDir;    
+    PRBool isDir;
     rv = IsDirectory(&isDir);
     if (NS_FAILED(rv)) return rv;
     if (!isDir)
@@ -993,7 +992,7 @@ nsFileChannel::Delete()
     mSpec.Delete(PR_TRUE); // RECURSIVE DELETE!
     if (mSpec.Exists())
         return NS_ERROR_FAILURE;
-    
+
     return NS_OK;
 }
 
@@ -1072,7 +1071,7 @@ nsFileChannel::ResolveLink(nsIFileChannel **_retval)
     {
         return CreateFileChannelFromFileSpec(tempSpec, _retval);
     }
-    
+
     return rv;
 }
 
@@ -1088,14 +1087,14 @@ nsFileChannel::MakeUnique(const char* baseName, nsIFileChannel **_retval)
     }
     return NS_ERROR_FAILURE;        // XXX probably need NS_BASE_STREAM_NOT_DIRECTORY or something
 }
-    
+
 
 NS_IMETHODIMP
 nsFileChannel::Execute(const char *args)
 {
     nsresult rv;
     char* queryArgs = nsnull;
-    
+
     if (args == nsnull) {
         nsIURL* url;
         rv = mURI->QueryInterface(NS_GET_IID(nsIURL), (void**)&url);
@@ -1106,7 +1105,7 @@ nsFileChannel::Execute(const char *args)
             args = queryArgs;
         }
     }
-    
+
     rv = mSpec.Execute(args);
     if (queryArgs)
         nsCRT::free(queryArgs);
@@ -1128,10 +1127,10 @@ nsFileChannel::CreateFileChannelFromFileSpec(nsFileSpec& spec, nsIFileChannel **
 
     nsIChannel* channel;
     rv = serv->NewChannel("load",    // XXX what should this be?
-                          urlStr, 
+                          urlStr,
                           nsnull,
                           mLoadGroup,
-                          mGetter, 
+                          mGetter,
                           &channel);
 
     if (NS_FAILED(rv)) return rv;

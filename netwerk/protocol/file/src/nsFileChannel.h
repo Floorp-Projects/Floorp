@@ -118,7 +118,7 @@ protected:
     nsresult                    mStatus;
     PRUint32                    mSourceOffset;
     PRUint32                    mAmount;
-	PRBool						mReadFixedAmount;  // if user wants to only read a fixed number of bytes set this flag
+    PRBool                      mReadFixedAmount;  // if user wants to only read a fixed number of bytes set this flag
 
     PRMonitor*                  mMonitor;
     PRUint32                    mLoadAttributes;
@@ -128,8 +128,8 @@ protected:
     nsCOMPtr<nsIStreamListener> mRealListener;
 
 #ifdef STREAM_CONVERTER_HACK
-	nsCOMPtr<nsIStreamConverter> mStreamConverter;
-	nsCString					mStreamConverterOutType;
+    nsCOMPtr<nsIStreamConverter> mStreamConverter;
+    nsCString                    mStreamConverterOutType;
 #endif
 };
 
