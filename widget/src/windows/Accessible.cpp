@@ -1004,6 +1004,14 @@ void RootAccessible::GetNSAccessibleFor(VARIANT varChild, nsCOMPtr<nsIAccessible
 
 NS_IMETHODIMP RootAccessible::HandleEvent(PRUint32 aEvent, nsIAccessible* aAccessible)
 {
+  if (aEvent == EVENT_FOCUS) {
+    // Don't fire accessible focus event for documents, 
+    // Microsoft Windows will generate those from native window focus events
+    nsCOMPtr<nsIAccessibleDocument> accessibleDoc(do_QueryInterface(aAccessible));
+    if (accessibleDoc)
+      return NS_OK;
+  }
+
   // get the id for the accessible
   PRInt32 id = GetIdFor(aAccessible);
 

@@ -3836,6 +3836,23 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
   NS_IF_ADDREF(aContent);
   NS_IF_ADDREF(aContent);
  
+  // Moved widget focusing code here, from end of SendFocusBlur
+  // This fixes the order of accessibility focus events, so that 
+  // the window focus event goes first, and then the focus event for the control
+  if (aEnsureWindowHasFocus) {
+    // This raises the window that has both content and scroll bars in it
+    // instead of the child window just below it that contains only the content
+    // That way we focus the same window that gets focused by a mouse click
+    nsCOMPtr<nsIViewManager> vm;
+    presShell->GetViewManager(getter_AddRefs(vm));
+    if (vm) {
+      nsCOMPtr<nsIWidget> widget;
+      vm->GetWidget(getter_AddRefs(widget));
+      if (widget)
+        widget->SetFocus(PR_TRUE);
+    }
+  }
+
   if (nsnull != aContent && aContent != mFirstFocusEvent) {
 
     //Store the first focus event we fire and don't refire focus
@@ -3879,36 +3896,6 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
     }
   }
 
-  nsIFrame * currentFocusFrame = nsnull;
-  if (mCurrentFocus)
-    presShell->GetPrimaryFrameFor(mCurrentFocus, &currentFocusFrame);
-  if (!currentFocusFrame)
-    currentFocusFrame = mCurrentTarget;
-
-  // Find the window that this frame is in and
-  // make sure it has focus
-  if (currentFocusFrame && aEnsureWindowHasFocus) {
-    nsIFrame * parentFrame;
-    currentFocusFrame->GetParentWithView(aPresContext, &parentFrame);
-    if (nsnull != parentFrame) {
-      nsIView * pView;
-      parentFrame->GetView(aPresContext, &pView);
-      if (nsnull != pView) {
-        nsIWidget *window = nsnull;
-
-        nsIView *ancestor = pView;
-        while (nsnull != ancestor) {
-          ancestor->GetWidget(window); // addrefs
-          if (nsnull != window) {
-            window->SetFocus();
-            NS_RELEASE(window); // releases. Duh.
-            break;
-          }
-          ancestor->GetParent(ancestor);
-        }
-      }
-    }
-  }
   if (mBrowseWithCaret) 
     SetContentCaretVisible(presShell, aContent, PR_TRUE); 
 
