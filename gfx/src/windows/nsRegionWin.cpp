@@ -30,7 +30,11 @@ nsRegionWin :: nsRegionWin()
 
 nsRegionWin :: ~nsRegionWin()
 {
-  mRegion = NULL;
+  if (NULL != mRegion)
+  {
+    ::DeleteObject(mRegion);
+    mRegion = NULL;
+  }
 }
 
 NS_IMPL_QUERY_INTERFACE(nsRegionWin, kRegionIID)
