@@ -97,6 +97,7 @@ struct ip_mreq {
 #define _PR_USE_POLL
 #define _PR_STAT_HAS_ONLY_ST_ATIME
 #define _PR_NO_LARGE_FILES
+#define _PR_STRICT_ADDR_LEN
 
 /* IPv6 support */
 #ifdef _SOCKADDR_LEN
