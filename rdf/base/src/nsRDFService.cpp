@@ -712,7 +712,7 @@ ServiceImpl::GetDataSource(const char* uri, nsIRDFDataSource** aDataSource)
     if (NS_FAILED(rv)) return rv;
     rv = (*aDataSource)->Init(uri);
     if (NS_FAILED(rv)) return rv;
-    return RegisterDataSource(*aDataSource);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
