@@ -72,8 +72,6 @@
     #define NS_OS_SYSTEM_DIR                    "SysD"
 #endif
 
-#define NS_OS_PLUGINS_DIR_LIST                  "OSPluginsDL"
-
 // for MacOSX we need the UNIX entries, plus the MAC entries
 #if defined (XP_UNIX) || defined(XP_MACOSX)
     #define NS_UNIX_LOCAL_DIR                   "Locl"
