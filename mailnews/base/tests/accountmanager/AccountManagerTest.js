@@ -10,7 +10,9 @@ function displayAccounts() {
   arrayDescribe(servers, Components.interfaces.nsIMsgIncomingServer, "Server");
   
   var identities = am.allIdentities;
-  arrayDescribe(identities, Components.interfaces.nsIMsgIdentity, "Identity");
+  arrayDescribe(identities,
+                Components.interfaces.nsIMsgIdentity,
+                "Identity", describeIdentity);
 
   var accounts = am.accounts;
   arrayDescribe(accounts, Components.interfaces.nsIMsgAccount, "Account");
@@ -18,12 +20,13 @@ function displayAccounts() {
 }
 
 
-function arrayDescribe(array, iface, name) {
+function arrayDescribe(array, iface, name, describeCallback) {
     dump("There are " + array.Count() + " " + name + "(s).\n");
     for (var i=0; i<array.Count(); i++) {
       var obj = array.GetElementAt(i).QueryInterface(iface);
       dump(name + " #" + i + ":\n");
       describe(obj, "\t" + name);
+      if (describeCallback) describeCallback(obj);
     }
 }
 
@@ -35,4 +38,8 @@ function describe(object, name) {
     
     dump(name + "." + i + " = " + value + "\n");
   }
+}
+
+function describeIdentity(identity) {
+  dump("Additional Identity Info\n");
 }
