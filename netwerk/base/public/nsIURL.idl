@@ -68,14 +68,14 @@ interface nsIURL : nsIURI
      * URL.  For example, the filePath of "http://foo/bar.html#baz" is
      * "/foo/bar.html".
      *
-     * ((( may contain unescaped UTF-8 characters )))
+     * Some characters may be escaped.
      */
     attribute AUTF8String filePath;
 
     /**
      * Returns the parameters specified after the ; in the URL. 
      *
-     * ((( may contain unescaped UTF-8 characters )))
+     * Some characters may be escaped.
      */
     attribute AUTF8String param;
 
@@ -83,7 +83,7 @@ interface nsIURL : nsIURI
      * Returns the query portion (the part after the "?") of the URL.
      * If there isn't one, an empty string is returned.
      *
-     * ((( may contain unescaped UTF-8 characters )))
+     * Some characters may be escaped.
      */
     attribute AUTF8String query;
 
@@ -91,7 +91,7 @@ interface nsIURL : nsIURI
      * Returns the reference portion (the part after the "#") of the URL.
      * If there isn't one, an empty string is returned.
      *
-     * ((( may contain unescaped UTF-8 characters )))
+     * Some characters may be escaped.
      */
     attribute AUTF8String ref;
 
@@ -112,7 +112,7 @@ interface nsIURL : nsIURI
      * be a file. But you can get just the leading directory portion 
      * for sure.
      *
-     * ((( may contain unescaped UTF-8 characters )))
+     * Some characters may be escaped.
      */
     attribute AUTF8String directory;
 
@@ -125,7 +125,7 @@ interface nsIURL : nsIURI
      * for the last trailing slash. And hence dont rely on this to 
      * be a definite file. 
      *
-     * ((( may contain unescaped UTF-8 characters )))
+     * Some characters may be escaped.
      */
     attribute AUTF8String fileName;
 
@@ -137,7 +137,7 @@ interface nsIURL : nsIURI
     /**
      * Returns the file basename portion of a filename in a url.
      *
-     * ((( may contain unescaped UTF-8 characters )))
+     * Some characters may be escaped.
      */
     attribute AUTF8String fileBaseName;
 
@@ -145,7 +145,7 @@ interface nsIURL : nsIURI
      * Returns the file extension portion of a filename in a url.  If a file
      * extension does not exist, the empty string is returned.
      *
-     * ((( may contain unescaped UTF-8 characters )))
+     * Some characters may be escaped.
      */
     attribute AUTF8String fileExtension;
 };
