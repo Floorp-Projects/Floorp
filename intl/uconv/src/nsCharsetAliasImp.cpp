@@ -111,6 +111,7 @@ const nsString& nsCharsetAlias::GetPreferred(
    } else if(aKey.Equals("x-sjis") ||
              aKey.Equals("ms_kanji") ||
              aKey.Equals("csshiftjis") ||
+             aKey.Equals("shift_jis") ||
              aKey.Equals("windows-31j") )
    {
       return sjis;
@@ -191,27 +192,36 @@ PRBool nsCharsetAlias::Equals(
    if(aCharset1.EqualsIgnoreCase(aCharset2))
       return PR_TRUE;
 
-   return GetPreferred(aCharset1).Equals(GetPreferred(aCharset2));
+   if(aCharset1.Equals("") || aCharset2.Equals(""))
+      return PR_FALSE;
+
+   const nsString& name1 = GetPreferred(aCharset1);
+   const nsString& name2 = GetPreferred(aCharset2);
+   return (name1.EqualsIgnoreCase(name2)) ? PR_TRUE : PR_FALSE;
+   
 }
 
 NS_IMETHODIMP nsCharsetAlias::Equals(
    const nsString& aCharset1, const nsString& aCharset2, PRBool* oResult) 
 {
-   *oResult = Equals(aCharset1, aCharset2);
+   PRBool ret = Equals(aCharset1, aCharset2);
+   *oResult = ret;
    return NS_OK;
 }
 
 NS_IMETHODIMP nsCharsetAlias::Equals(
    const PRUnichar* aCharset1, const PRUnichar* aCharset2, PRBool* oResult) 
 {
-   *oResult = Equals(aCharset1, aCharset2);
+   PRBool ret = Equals(aCharset1, aCharset2);
+   *oResult = ret;
    return NS_OK;
 }
 
 NS_IMETHODIMP nsCharsetAlias::Equals(
    const char* aCharset1, const char* aCharset2, PRBool* oResult) 
 {
-   *oResult = Equals(aCharset1, aCharset2);
+   PRBool ret = Equals(aCharset1, aCharset2);
+   *oResult = ret;
    return NS_OK;
 }
 
