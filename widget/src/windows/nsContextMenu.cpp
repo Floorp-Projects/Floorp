@@ -43,6 +43,7 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIContextMenuIID,  NS_ICONTEXTMENU_IID);
 static NS_DEFINE_IID(kIMenuIID,     NS_IMENU_IID);
 static NS_DEFINE_IID(kIMenuItemIID, NS_IMENUITEM_IID);
+static NS_DEFINE_IID(kIWidgetIID,   NS_IWIDGET_IID);
 
 // CIDs
 #include "nsWidgetsCID.h"
@@ -122,16 +123,14 @@ NS_METHOD nsContextMenu::Create(nsISupports *aParent)
   if(aParent)
   {
       nsIWidget * parent = nsnull;
-      aParent->QueryInterface(kIMenuIID, (void**) &parent);
+      aParent->QueryInterface(kIWidgetIID, (void**) &parent); // This does the addref
       if(parent)
 	  {
         mParentWindow = parent;
-
-		NS_RELEASE(parent); // Balance the QI
 	  }
   }
 
-  mMenu = CreateMenu();
+  mMenu = CreatePopupMenu();
   return NS_OK;
 }
 
