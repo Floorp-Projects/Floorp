@@ -2418,6 +2418,85 @@ nsEditor::IntermediateNodesAreInline(nsIDOMRange *aRange,
 
 
 nsresult 
+nsEditor::GetPriorNode(nsIDOMNode  *aParentNode, 
+                       PRInt32      aOffset, 
+                       PRBool       aEditableNode, 
+                       nsIDOMNode **aResultNode)
+{
+  // just another version of GetPriorNode that takes a {parent, offset}
+  // instead of a node
+  nsresult result = NS_OK;
+  if (!aParentNode || !aResultNode) { return NS_ERROR_NULL_POINTER; }
+  
+  // if we are at beginning of node than just look before it
+  if (!aOffset)
+  {
+    return GetPriorNode(aParentNode, aEditableNode, aResultNode);
+  }
+  else
+  {
+    // else look before the child at 'aOffset'
+    nsCOMPtr<nsIDOMNode> child = GetChildAt(aParentNode, aOffset);
+    if (child)
+      return GetPriorNode(child, aEditableNode, aResultNode);
+    // unless there isn't one, in which case we are at the end of the node
+    // and want the deep-right child.
+    else
+    {
+      result = GetRightmostChild(*aResultNode, aResultNode);
+      if (NS_FAILED(result)) return result;
+      if (!aEditableNode) return result;
+      if (IsEditable(*aResultNode))  return result;
+      else 
+      { 
+        // restart the search from the non-editable node we just found
+        nsCOMPtr<nsIDOMNode> notEditableNode = do_QueryInterface(*aResultNode);
+        return GetPriorNode(notEditableNode, aEditableNode, aResultNode);
+      }
+    }
+  }
+}
+
+
+
+nsresult 
+nsEditor::GetNextNode(nsIDOMNode   *aParentNode, 
+                       PRInt32      aOffset, 
+                       PRBool       aEditableNode, 
+                       nsIDOMNode **aResultNode)
+{
+  // just another version of GetNextNode that takes a {parent, offset}
+  // instead of a node
+  nsresult result = NS_OK;
+  if (!aParentNode || !aResultNode) { return NS_ERROR_NULL_POINTER; }
+  
+  // look at the child at 'aOffset'
+  nsCOMPtr<nsIDOMNode> child = GetChildAt(aParentNode, aOffset);
+  if (child)
+  {
+    result = GetLeftmostChild(*aResultNode, aResultNode);
+    if (NS_FAILED(result)) return result;
+    if (!aEditableNode) return result;
+    if (IsEditable(*aResultNode))  return result;
+    else 
+    { 
+      // restart the search from the non-editable node we just found
+      nsCOMPtr<nsIDOMNode> notEditableNode = do_QueryInterface(*aResultNode);
+      return GetNextNode(notEditableNode, aEditableNode, aResultNode);
+    }
+  }
+    
+  // unless there isn't one, in which case we are at the end of the node
+  // and want the next one.
+  else
+  {
+    return GetNextNode(aParentNode, aEditableNode, aResultNode);
+  }
+}
+
+
+
+nsresult 
 nsEditor::GetPriorNode(nsIDOMNode  *aCurrentNode, 
                        PRBool       aEditableNode, 
                        nsIDOMNode **aResultNode)
@@ -3525,7 +3604,7 @@ nsEditor::SplitNodeDeep(nsIDOMNode *aNode,
   
   while (nodeToSplit)
   {
-    // need to insert rules code call here to do thingsa like
+    // need to insert rules code call here to do things like
     // not split a list if you are after the last <li> or before the first, etc.
     // for now we just have some smarts about unneccessarily splitting
     // textnodes, which should be universal enough to put straight in
@@ -3577,18 +3656,18 @@ nsEditor::SplitNodeDeep(nsIDOMNode *aNode,
 nsresult
 nsEditor::JoinNodeDeep(nsIDOMNode *aLeftNode, 
                        nsIDOMNode *aRightNode,
-                       nsIDOMSelection *aSelection) 
+                       nsCOMPtr<nsIDOMNode> *aOutJoinNode, 
+                       PRInt32 *outOffset)
 {
-  if (!aLeftNode || !aRightNode) return NS_ERROR_NULL_POINTER;
+  if (!aLeftNode || !aRightNode || !aOutJoinNode || !outOffset) return NS_ERROR_NULL_POINTER;
 
   // while the rightmost children and their descendants of the left node 
   // match the leftmost children and their descendants of the right node
   // join them up.  Can you say that three times fast?
-   
+  
   nsCOMPtr<nsIDOMNode> leftNodeToJoin = do_QueryInterface(aLeftNode);
   nsCOMPtr<nsIDOMNode> rightNodeToJoin = do_QueryInterface(aRightNode);
-  nsCOMPtr<nsIDOMNode> parentNode;
-  PRInt32 offset;
+  nsCOMPtr<nsIDOMNode> parentNode,tmp;
   nsresult res = NS_OK;
   
   rightNodeToJoin->GetParentNode(getter_AddRefs(parentNode));
@@ -3596,23 +3675,51 @@ nsEditor::JoinNodeDeep(nsIDOMNode *aLeftNode,
   while (leftNodeToJoin && rightNodeToJoin && parentNode &&
           NodesSameType(leftNodeToJoin, rightNodeToJoin))
   {
-    res = JoinNodes(leftNodeToJoin,rightNodeToJoin,parentNode);
+    // adjust out params
+    PRUint32 length;
+    if (IsTextNode(leftNodeToJoin))
+    {
+      nsCOMPtr<nsIDOMCharacterData>nodeAsText;
+      nodeAsText = do_QueryInterface(leftNodeToJoin);
+      nodeAsText->GetLength(&length);
+    }
+    else
+    {
+      res = GetLengthOfDOMNode(leftNodeToJoin, length);
+      if (NS_FAILED(res)) return res;
+    }
+    
+    *aOutJoinNode = rightNodeToJoin;
+    *outOffset = length;
+    
+    // do the join
+    res = JoinNodes(leftNodeToJoin, rightNodeToJoin, parentNode);
     if (NS_FAILED(res)) return res;
     
-    res = GetStartNodeAndOffset(aSelection, &parentNode, &offset);
-    if (NS_FAILED(res)) return res;
-    
-    if (offset == 0)  // no new left node; we're done joining
-      return NS_OK;
-
     if (IsTextNode(parentNode)) // we've joined all the way down to text nodes, we're done!
       return NS_OK;
 
     else
     {
       // get new left and right nodes, and begin anew
-      leftNodeToJoin = GetChildAt(parentNode, offset-1);
-      rightNodeToJoin = GetChildAt(parentNode, offset);
+      parentNode = rightNodeToJoin;
+      leftNodeToJoin = GetChildAt(parentNode, length-1);
+      rightNodeToJoin = GetChildAt(parentNode, length);
+
+      // skip over non-editable nodes
+      while (leftNodeToJoin && !IsEditable(leftNodeToJoin))
+      {
+        leftNodeToJoin->GetPreviousSibling(getter_AddRefs(tmp));
+        leftNodeToJoin = tmp;
+      }
+      if (!leftNodeToJoin) break;
+    
+      while (rightNodeToJoin && !IsEditable(rightNodeToJoin))
+      {
+        rightNodeToJoin->GetNextSibling(getter_AddRefs(tmp));
+        rightNodeToJoin = tmp;
+      }
+      if (!rightNodeToJoin) break;
     }
   }
   
@@ -4021,7 +4128,6 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange,
 
   // determine if the insertion point is at the beginning, middle, or end of the node
   nsCOMPtr<nsIDOMCharacterData> nodeAsText;
-  nsCOMPtr<nsIDOMNode> selectedNode;
   nodeAsText = do_QueryInterface(node);
 
   if (nodeAsText)
@@ -4040,7 +4146,6 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange,
     if ((NS_SUCCEEDED(result)) && childList)
     {
       childList->GetLength(&count);
-      childList->Item(offset, getter_AddRefs(selectedNode));
     }
     isFirst = PRBool(0==offset);
     isLast  = PRBool((count-1)==(PRUint32)offset);
@@ -4140,9 +4245,22 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange,
     else
     { // we're deleting a node
       DeleteElementTxn *txn;
-      result = CreateTxnForDeleteElement(selectedNode, &txn);
-      if (NS_SUCCEEDED(result)) {
-        aTxn->AppendChild(txn);
+      nsCOMPtr<nsIDOMNode> selectedNode;
+      if (eDeletePrevious==aAction)
+      {
+        result = GetPriorNode(node, offset, PR_TRUE, getter_AddRefs(selectedNode));
+      }
+      else if (eDeleteNext==aAction)
+      {
+        result = GetNextNode(node, offset, PR_TRUE, getter_AddRefs(selectedNode));
+      }
+      if (NS_SUCCEEDED(result) && selectedNode) 
+      {
+        result = CreateTxnForDeleteElement(selectedNode, &txn);
+        if (NS_SUCCEEDED(result)) 
+        {
+          aTxn->AppendChild(txn);
+        }
       }
     }
   }

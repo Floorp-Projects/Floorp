@@ -482,6 +482,12 @@ public:
                         PRBool       aEditableNode,
                         nsIDOMNode **aResultNode);
 
+  // and another version that takes a {parent,offset} pair rather than a node
+  nsresult GetPriorNode(nsIDOMNode  *aParentNode, 
+                        PRInt32      aOffset, 
+                        PRBool       aEditableNode, 
+                        nsIDOMNode **aResultNode);
+                       
   /** get the node immediately after to aCurrentNode
     * @param aCurrentNode   the node from which we start the search
     * @param aEditableNode  if PR_TRUE, only return an editable node
@@ -493,6 +499,12 @@ public:
                        PRBool       aEditableNode,
                        nsIDOMNode **aResultNode);
 
+  // and another version that takes a {parent,offset} pair rather than a node
+  nsresult GetNextNode(nsIDOMNode  *aParentNode, 
+                       PRInt32      aOffset, 
+                       PRBool       aEditableNode, 
+                       nsIDOMNode **aResultNode);
+                       
   /** Get the rightmost child of aCurrentNode, and return it in aResultNode
     * aResultNode is set to nsnull if aCurrentNode has no children.
     */
@@ -565,7 +577,9 @@ public:
   nsresult IsPrevCharWhitespace(nsIDOMNode *aParentNode, PRInt32 aOffset, PRBool *aResult);
 
   nsresult SplitNodeDeep(nsIDOMNode *aNode, nsIDOMNode *aSplitPointParent, PRInt32 aSplitPointOffset, PRInt32 *outOffset);
-  nsresult JoinNodeDeep(nsIDOMNode *aLeftNode, nsIDOMNode *aRightNode, nsIDOMSelection *aSelection); 
+  nsresult JoinNodeDeep(nsIDOMNode *aLeftNode, nsIDOMNode *aRightNode, nsCOMPtr<nsIDOMNode> *aOutJoinNode, PRInt32 *outOffset); 
+
+  nsresult GetString(const nsString& name, nsString& value);
 
   nsresult BeginUpdateViewBatch(void);
   nsresult EndUpdateViewBatch(void);
