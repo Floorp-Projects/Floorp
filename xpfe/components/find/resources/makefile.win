@@ -23,7 +23,9 @@ include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
 	$(MAKE_INSTALL) finddialog.xul $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) finddialog.js $(DIST)\bin\res\samples
 
 clobber::
 	rm -f $(DIST)\bin\res\samples\finddialog.xul
+	rm -f $(DIST)\bin\res\samples\finddialog.js
 
