@@ -238,7 +238,9 @@ nsImapIncomingServer::GetImapConnectionAndLoadUrl(nsIEventQueue*
     {   // unable to get an imap connection to run the url; add to the url
         // queue
         PR_CEnterMonitor(this);
-        m_urlQueue->AppendElement(aImapUrl);
+		nsCOMPtr <nsISupports> supports(do_QueryInterface(aImapUrl));
+		if (supports)
+			m_urlQueue->AppendElement(supports);
         m_urlConsumers.AppendElement((void*)aConsumer);
         NS_IF_ADDREF(aConsumer);
         PR_CExitMonitor(this);
@@ -265,7 +267,7 @@ nsImapIncomingServer::LoadNextQueuedUrl()
     if (cnt > 0)
     {
         nsCOMPtr<nsISupports>
-            aSupport(do_QueryInterface(m_urlQueue->ElementAt(0)));
+            aSupport(getter_AddRefs(m_urlQueue->ElementAt(0)));
         nsCOMPtr<nsIImapUrl>
             aImapUrl(do_QueryInterface(aSupport, &rv));
 
