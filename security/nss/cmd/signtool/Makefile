@@ -57,15 +57,11 @@ include ../platlibs.mk
 # can't do this in manifest.mn because OS_ARCH isn't defined there.
 ifeq ($(OS_ARCH), WINNT)
 
-EXTRA_LIBS = \
+EXTRA_LIBS += \
 	$(DIST)/lib/jar.lib \
 	$(DIST)/lib/zlib.lib \
 	$(NULL)
 
-#OS_LIBS += \
-#	wsock32.lib \
-#	winmm.lib \
-#	$(NULL)
 else
 
 EXTRA_LIBS += \
