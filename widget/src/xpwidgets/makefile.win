@@ -27,8 +27,15 @@ CPPSRCS =              \
 	nsMenuButton.cpp        \
 	nsToolbarItemHolder.cpp           \
 	nsToolbarManager.cpp       \
-	nsImageButton.cpp         \
 	nsToolBar.cpp         \
+	nsHTColumn.cpp	\
+	nsHTControlStripItem.cpp \
+	nsHTTreeItem.cpp \
+	nsHTItem.cpp \
+	nsHTTreeDataModel.cpp \
+	nsHTDataModel.cpp \
+	nsTreeView.cpp \
+	nsImageButton.cpp         \
 	$(NULL)
 
 MODULE=raptor 
@@ -39,6 +46,13 @@ OBJS=.\$(OBJDIR)\nsBaseWidget.obj  \
 	.\$(OBJDIR)\nsToolbarManager.obj  \
 	.\$(OBJDIR)\nsImageButton.obj  \
 	.\$(OBJDIR)\nsToolBar.obj  \
+	.\$(OBJDIR)\nsHTColumn.obj \
+	.\$(OBJDIR)\nsHTControlStripItem.obj \
+	.\$(OBJDIR)\nsHTTreeItem.obj \
+	.\$(OBJDIR)\nsHTItem.obj \
+	.\$(OBJDIR)\nsHTTreeDataModel.obj \
+	.\$(OBJDIR)\nsHTDataModel.obj \
+	.\$(OBJDIR)\nsTreeView.obj \
 	$(NULL)
 
 LINCS=                                  \
