@@ -38,6 +38,7 @@ class nsIStyleContext;
 class nsIAtom;
 class nsString;
 class nsIEventStateManager;
+class nsIURL;
 
 #define NS_IPRESCONTEXT_IID   \
 { 0x0a5d12e0, 0x944e, 0x11d1, \
@@ -78,6 +79,11 @@ public:
    */
   NS_IMETHOD GetCompatibilityMode(nsCompatibility& aMode) = 0;
   NS_IMETHOD SetCompatibilityMode(nsCompatibility aMode) = 0;
+
+  /** 
+   * Get base url for presentation
+   */
+  NS_IMETHOD GetBaseURL(nsIURL*& aURL) = 0;
 
   /**
    * Resolve style for the given piece of content that will be a child
