@@ -113,6 +113,10 @@
 #include "nsUnicharUtils.h"
 #include "nsCSSAtoms.h"
 
+#if defined (XP_MAC) || defined(XP_MACOSX)
+#include <Events.h>
+#endif
+
 #if defined(DEBUG_rods) || defined(DEBUG_bryner)
 //#define DEBUG_DOCSHELL_FOCUS
 #endif
@@ -938,7 +942,7 @@ nsEventStateManager :: CreateClickHoldTimer ( nsIPresContext* inPresContext, nsG
     mClickHoldTimer->Cancel();
     mClickHoldTimer = nsnull;
   }
-  
+    
   // if content clicked on has a popup, don't even start the timer
   // since we'll end up conflicting and both will show.
   nsCOMPtr<nsIContent> clickedContent;
@@ -1027,6 +1031,14 @@ nsEventStateManager :: FireContextClick ( )
 {
   if ( !mEventDownWidget || !mEventPresContext )
     return;
+
+#if defined (XP_MAC) || defined(XP_MACOSX)
+  // hacky OS call to ensure that we don't show a context menu when the user
+  // let go of the mouse already, after a long, cpu-hogging operation prevented
+  // us from handling any OS events. See bug 117589.
+  if (!::StillDown())
+    return;
+#endif
 
   nsEventStatus status = nsEventStatus_eIgnore;
   nsMouseEvent event;
