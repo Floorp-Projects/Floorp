@@ -23,6 +23,9 @@
       case "chrome://cookie/content/pref-cookies.xul":
         _elementIDs.push("networkDisableCookieForMailNews");
         break;
+      case "chrome://cookie/content/pref-images.xul":
+        _elementIDs.push("networkImageDisableImagesInMailNews");
+        break;
       }
     }
   ]]>
@@ -49,6 +52,16 @@
               preftype="bool" prefstring="network.cookie.disableCookieForMailNews"
               insertafter="networkCookieBehaviorSeparator"/>
   </page>
+  <!--- image toggle for mail/news -->
+  <groupbox id="imagesArea">
+    <checkbox id="networkImageDisableImagesInMailNews"
+              label="&disableImageInMailNews.label;" accesskey="&disableImageInMailNews.accesskey;"
+              observes="haveImageBlocking"
+              pref="true" preftype="bool" prefstring="mailnews.message_display.disable_remote_image"
+              prefattribute="checked" insertafter="networkImagesBehaviorSeparator"/>
+  </groupbox>
+
+
 
   <!-- category tree entries for mail/news -->
   <treechildren id="panelChildren">

@@ -5,6 +5,9 @@
 <!ENTITY disableCookieForMailNews.label "Disable cookies in Mail &amp; Newsgroups">
 <!ENTITY disableCookieForMailNews.accesskey "m">
 
+<!ENTITY disableImageInMailNews.label       "Do not load remote images in Mail &amp; Newsgroup messages">
+<!ENTITY disableImageInMailNews.accesskey   "i">
+
 <!ENTITY mail.label "Mail &amp; Newsgroups">
 <!ENTITY mail.accesskey "m">
 <!ENTITY address.label "Addressing">
