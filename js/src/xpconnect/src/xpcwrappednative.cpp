@@ -63,8 +63,8 @@ static int DEBUG_WrappedNativeTotalCalls;
 static int DEBUG_WrappedNativeMethodCalls;
 static int DEBUG_WrappedNativeGetterCalls;
 static int DEBUG_WrappedNativeSetterCalls;
-#define DEBUG_CHUCKS_TO_COUNT 4
-static int DEBUG_WrappedNativeTearOffChunkCounts[DEBUG_CHUCKS_TO_COUNT+1];
+#define DEBUG_CHUNKS_TO_COUNT 4
+static int DEBUG_WrappedNativeTearOffChunkCounts[DEBUG_CHUNKS_TO_COUNT+1];
 static PRBool  DEBUG_DumpedWrapperStats;
 #endif
 
@@ -112,8 +112,8 @@ static void DEBUG_TrackDeleteWrapper(XPCWrappedNative* wrapper)
         DEBUG_LiveWrappedNativeNoProtoCount--;
 
     int extraChunkCount = wrapper->DEBUG_CountOfTearoffChunks() - 1;
-    if(extraChunkCount > DEBUG_CHUCKS_TO_COUNT)
-        extraChunkCount = DEBUG_CHUCKS_TO_COUNT;
+    if(extraChunkCount > DEBUG_CHUNKS_TO_COUNT)
+        extraChunkCount = DEBUG_CHUNKS_TO_COUNT;
     DEBUG_WrappedNativeTearOffChunkCounts[extraChunkCount]++;
 #endif
 }
@@ -173,7 +173,7 @@ static void DEBUG_TrackShutdownWrapper(XPCWrappedNative* wrapper)
 
         printf("(wrappers / tearoffs): (");
         int i;
-        for(i = 0; i < DEBUG_CHUCKS_TO_COUNT; i++)
+        for(i = 0; i < DEBUG_CHUNKS_TO_COUNT; i++)
         {
             printf("%d / %d, ",
                    DEBUG_WrappedNativeTearOffChunkCounts[i],
@@ -251,9 +251,9 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
     XPCNativeScriptableCreateInfo sciProto;
     XPCNativeScriptableCreateInfo sciWrapper;
 
-    if(NS_FAILED(GatherScriptableInfo(identity,
-                                      isClassInfo ? nsnull : info.get(),
-                                      &sciProto, &sciWrapper)))
+    if(NS_FAILED(GatherScriptableCreateInfo(identity,
+                                            isClassInfo ? nsnull : info.get(),
+                                            &sciProto, &sciWrapper)))
         return NS_ERROR_FAILURE;
 
     JSObject* parent = Scope->GetGlobalJSObject();
@@ -495,50 +495,63 @@ XPCWrappedNative::~XPCWrappedNative()
     NS_IF_RELEASE(mIdentity);
 }
 
+
+// This is factored out so that it can be called publicly 
+// static
+nsresult 
+XPCWrappedNative::GatherProtoScriptableCreateInfo(
+                        nsIClassInfo* classInfo,
+                        XPCNativeScriptableCreateInfo* sciProto)
+{
+    NS_ASSERTION(classInfo, "bad param");
+    NS_ASSERTION(sciProto && !sciProto->GetCallback(), "bad param");
+
+    nsCOMPtr<nsISupports> possibleHelper;
+    nsresult rv = classInfo->GetHelperForLanguage(
+                                    nsIProgrammingLanguage::JAVASCRIPT,
+                                    getter_AddRefs(possibleHelper));
+    if(NS_SUCCEEDED(rv) && possibleHelper)
+    {
+        nsCOMPtr<nsIXPCScriptable> helper(do_QueryInterface(possibleHelper));
+        if(helper)
+        {
+            JSUint32 flags;
+            rv = helper->GetScriptableFlags(&flags);
+            if(NS_FAILED(rv))
+                flags = 0;
+
+            sciProto->SetCallback(helper);
+            sciProto->SetFlags(flags);
+        }
+    }
+    return NS_OK;
+}
+
 // static
 nsresult
-XPCWrappedNative::GatherScriptableInfo(
+XPCWrappedNative::GatherScriptableCreateInfo(
                         nsISupports* obj,
                         nsIClassInfo* classInfo,
                         XPCNativeScriptableCreateInfo* sciProto,
                         XPCNativeScriptableCreateInfo* sciWrapper)
 {
-    nsCOMPtr<nsIXPCScriptable> helper;
-
     NS_ASSERTION(sciProto   && !sciProto->GetCallback(), "bad param");
     NS_ASSERTION(sciWrapper && !sciWrapper->GetCallback(), "bad param");
 
     // Get the class scriptable helper (if present)
     if(classInfo)
     {
-        nsCOMPtr<nsISupports> possibleHelper;
-        nsresult rv = classInfo->GetHelperForLanguage(
-                                        nsIProgrammingLanguage::JAVASCRIPT,
-                                        getter_AddRefs(possibleHelper));
-        if(NS_SUCCEEDED(rv) && possibleHelper)
-        {
-            helper = do_QueryInterface(possibleHelper);
-            if(helper)
-            {
-                JSUint32 flags;
-                rv = helper->GetScriptableFlags(&flags);
-                if(NS_FAILED(rv))
-                    flags = 0;
+        GatherProtoScriptableCreateInfo(classInfo, sciProto);
 
-                sciProto->SetCallback(helper);
-                sciProto->SetFlags(flags);
+        sciWrapper->SetCallback(sciProto->GetCallback());
+        sciWrapper->SetFlags(sciProto->GetFlags());
 
-                sciWrapper->SetCallback(helper);
-                sciWrapper->SetFlags(flags);
-
-                if(sciProto->GetFlags().DontAskInstanceForScriptable())
-                    return NS_OK;
-            }
-        }
+        if(sciProto->GetFlags().DontAskInstanceForScriptable())
+            return NS_OK;
     }
 
     // Do the same for the wrapper specific scriptable
-    helper = do_QueryInterface(obj);
+    nsCOMPtr<nsIXPCScriptable> helper(do_QueryInterface(obj));
     if(helper)
     {
         JSUint32 flags;
@@ -817,6 +830,7 @@ XPCWrappedNative::FlatJSObjectFinalized(JSContext *cx, JSObject *obj)
             JSObject* jso = to->GetJSObject();
             if(jso)
             {
+                NS_ASSERTION(JS_IsAboutToBeFinalized(cx, jso), "bad!");
                 JS_SetPrivate(cx, jso, nsnull);
                 to->JSObjectFinalized();
             }
@@ -966,6 +980,7 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
                                     newProto->GetJSProtoObject()))
                 {
                     // this is bad, very bad
+                    NS_ERROR("JS_SetPrototype failed");
                     NS_RELEASE(wrapper);
                     return NS_ERROR_FAILURE;
                 }
@@ -1210,7 +1225,6 @@ XPCWrappedNative::InitTearOff(XPCCallContext& ccx,
 
     // Determine if the object really does this interface...
 
-    nsresult rv = NS_OK;
     const nsIID* iid = aInterface->GetIID();
     nsISupports* identity = GetIdentityObject();
     nsISupports* obj;
@@ -1359,7 +1373,7 @@ GetArraySizeFromParam(XPCCallContext& ccx,
     const nsXPTParamInfo& arg_param = methodInfo->GetParam(argnum);
     const nsXPTType& arg_type = arg_param.GetType();
 
-    // XXX require PRUint32 here - need to require in compiler too!
+    // The xpidl compiler ensures this. We reaffirm it for safety.
     if(arg_type.IsPointer() || arg_type.TagPart() != nsXPTType::T_U32)
         return Throw(NS_ERROR_XPC_CANT_GET_ARRAY_INFO, ccx);
 
@@ -1400,7 +1414,8 @@ GetInterfaceTypeFromParam(XPCCallContext& ccx,
 
         const nsXPTParamInfo& arg_param = methodInfo->GetParam(argnum);
         const nsXPTType& arg_type = arg_param.GetType();
-        // XXX require iid type here - need to require in compiler too!
+        
+        // The xpidl compiler ensures this. We reaffirm it for safety.
         if(!arg_type.IsPointer() || arg_type.TagPart() != nsXPTType::T_IID)
             return ThrowBadParam(NS_ERROR_XPC_CANT_GET_PARAM_IFACE_INFO, paramIndex, ccx);
 
@@ -1418,10 +1433,15 @@ JSBool
 XPCWrappedNative::CallMethod(XPCCallContext& ccx,
                              CallMode mode /*= CALL_METHOD */)
 {
-    if(!ccx.CanCallNow())
+    nsresult rv = ccx.CanCallNow();
+    if(NS_FAILED(rv))
     {
-        NS_ASSERTION(0, "hmm? We are finding out about this late!");
-        return Throw(NS_ERROR_XPC_UNEXPECTED, ccx);
+        // If the security manager is complaining then this is not really an
+        // internal error in xpconnect. So, no reason to botch the assertion.
+        NS_ASSERTION(rv == NS_ERROR_XPC_SECURITY_MANAGER_VETO, 
+                     "hmm? CanCallNow failed in XPCWrappedNative::CallMethod. "
+                     "We are finding out about this late!");
+        return Throw(rv, ccx);
     }
 
     DEBUG_TrackWrapperCall(ccx.GetWrapper(), mode);
@@ -1510,7 +1530,7 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
         goto done;
     }
 
-    // XXX ASSUMES that retval is last arg.
+    // XXX ASSUMES that retval is last arg. The xpidl compiler ensures this.
     paramCount = methodInfo->GetParamCount();
     requiredArgs = paramCount;
     if(paramCount && methodInfo->GetParam(paramCount-1).IsRetval())
@@ -2112,7 +2132,7 @@ NS_IMETHODIMP XPCWrappedNative::DebugDump(PRInt16 depth)
         {
             XPC_LOG_INDENT();
             XPC_LOG_ALWAYS(("mScriptable @ %x", mScriptableInfo->GetCallback()));
-            XPC_LOG_ALWAYS(("mFlags of %x", mScriptableInfo->GetFlags()));
+            XPC_LOG_ALWAYS(("mFlags of %x", (PRUint32)mScriptableInfo->GetFlags()));
             XPC_LOG_ALWAYS(("mJSClass @ %x", mScriptableInfo->GetJSClass()));
             XPC_LOG_OUTDENT();
         }
@@ -2696,12 +2716,6 @@ void DEBUG_CheckWrapperThreadSafety(const XPCWrappedNative* wrapper)
 }
 #endif
 
-/***************************************************************************/
-/***************************************************************************/
-/***************************************************************************/
-
-#ifdef XPC_OLD_DOM_SUPPORT
-
 NS_IMPL_THREADSAFE_ISUPPORTS1(XPCJSObjectHolder, nsIXPConnectJSObjectHolder)
 
 NS_IMETHODIMP
@@ -2735,5 +2749,3 @@ XPCJSObjectHolder::newHolder(JSContext* cx, JSObject* obj)
     }
     return new XPCJSObjectHolder(cx, obj);
 }
-
-#endif

@@ -18,10 +18,6 @@
     - VERIFY only share protos if scriptable flag says so.
 
 - FOORPRINT & PERFORMANCE
-    ? look into optional hashtable in interface sets
-        FWIW, I'm thinking this is likely to not be a real win (and will 
-        certainly have a cost).
-        The JS engine caches the bulk of such lookups for us anyway.
 
 - CODE MAINTAINABILITY
     - more code comments
@@ -38,7 +34,6 @@
     - add multi-threaded tests
 
 - DOCS
-    - update typelib spec ([astring] and [function])
     - xpconnect api docs
     - discussion of flattening and implications
     - add to the faqs

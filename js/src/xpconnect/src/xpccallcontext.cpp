@@ -236,26 +236,28 @@ XPCCallContext::SetArgsAndResultPtr(uintN argc,
     mState = HAVE_ARGS;
 }
 
-JSBool
+nsresult
 XPCCallContext::CanCallNow()
 {
+    nsresult rv;
+    
     if(!HasInterfaceAndMember())
-        return JS_FALSE;
+        return NS_ERROR_UNEXPECTED;
     if(mState < HAVE_ARGS)
-        return JS_FALSE;
+        return NS_ERROR_UNEXPECTED;
 
     if(!mTearOff)
-        mTearOff = mWrapper->FindTearOff(*this, mInterface);
-
-    if(mTearOff)
     {
-        // Refresh in case FindTearOff extended the set
-        mSet = mWrapper->GetSet();
-
-        mState = READY_TO_CALL;
-        return JS_TRUE;
+        mTearOff = mWrapper->FindTearOff(*this, mInterface, JS_FALSE, &rv);
+        if(!mTearOff)
+            return NS_FAILED(rv) ? rv : NS_ERROR_UNEXPECTED;
     }
-    return JS_FALSE;
+
+    // Refresh in case FindTearOff extended the set
+    mSet = mWrapper->GetSet();
+
+    mState = READY_TO_CALL;
+    return NS_OK;
 }
 
 void

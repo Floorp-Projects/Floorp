@@ -124,21 +124,7 @@
 
 #ifdef DEBUG
 #define XPC_DETECT_LEADING_UPPERCASE_ACCESS_ERRORS
-#endif
-
-#ifdef DEBUG
-#define XPC_REPORT_SHADOWED_WRAPPED_NATIVE_MEMBERS
-#endif
-
-#ifdef DEBUG
 #define XPC_CHECK_WRAPPER_THREADSAFETY
-#endif
-
-#if defined(DEBUG_xpc_hacker)
-#define XPC_CHECK_CLASSINFO_CLAIMS
-#if defined(DEBUG_jst)
-#define XPC_ASSERT_CLASSINFO_CLAIMS
-#endif
 #endif
 
 #if defined(DEBUG_xpc_hacker)
@@ -147,6 +133,11 @@
 #define XPC_TRACK_SCOPE_STATS
 #define XPC_TRACK_PROTO_STATS
 #define XPC_CHECK_WRAPPERS_AT_SHUTDOWN
+#define XPC_REPORT_SHADOWED_WRAPPED_NATIVE_MEMBERS
+#define XPC_CHECK_CLASSINFO_CLAIMS
+#if defined(DEBUG_jst)
+#define XPC_ASSERT_CLASSINFO_CLAIMS
+#endif
 //#define DEBUG_stats_jband 1
 //#define XPC_REPORT_NATIVE_INTERFACE_AND_SET_FLUSHING
 //#define XPC_REPORT_JSCLASS_FLUSHING
@@ -499,7 +490,6 @@ public:
         IDX_WRAPPED_JSOBJECT        ,
         IDX_OBJECT                  ,
         IDX_PROTOTYPE               ,
-        IDX_CALLABLE_INFO_PROP_NAME ,
         IDX_CREATE_INSTANCE         ,
         IDX_TOTAL_COUNT // just a count of the above
     };
@@ -760,7 +750,7 @@ public:
     void SetCallInfo(XPCNativeInterface* iface, XPCNativeMember* member,
                      JSBool isSetter);
 
-    JSBool  CanCallNow();
+    nsresult  CanCallNow();
 
     void SystemIsBeingShutDown();
 
@@ -1372,7 +1362,7 @@ public:
     void
     GetScriptableShared(XPCNativeScriptableShared* shared) {mShared = shared;}
 
-private:
+protected:
     XPCNativeScriptableInfo(nsIXPCScriptable* scriptable = nsnull,
                             XPCNativeScriptableShared* shared = nsnull)
         : mCallback(scriptable), mShared(shared)
@@ -1775,6 +1765,10 @@ public:
     char* ToString(XPCCallContext& ccx,
                    XPCWrappedNativeTearOff* to = nsnull) const;
 
+    static nsresult GatherProtoScriptableCreateInfo(
+                        nsIClassInfo* classInfo,
+                        XPCNativeScriptableCreateInfo* sciProto);
+
     // Make ctor and dtor protected (rather than private) to placate nsCOMPtr.
 protected:
     XPCWrappedNative(); // not implemented
@@ -1804,7 +1798,7 @@ private:
     JSBool InitTearOffJSObject(XPCCallContext& ccx,
                                 XPCWrappedNativeTearOff* to);
 
-    static nsresult GatherScriptableInfo(
+    static nsresult GatherScriptableCreateInfo(
                         nsISupports* obj,
                         nsIClassInfo* classInfo,
                         XPCNativeScriptableCreateInfo* sciProto,
@@ -2013,8 +2007,6 @@ private:
 
 /***************************************************************************/
 
-#ifdef XPC_OLD_DOM_SUPPORT
-
 class XPCJSObjectHolder : public nsIXPConnectJSObjectHolder
 {
 public:
@@ -2036,8 +2028,6 @@ private:
     JSRuntime* mRuntime;
     JSObject* mJSObj;
 };
-
-#endif
 
 /***************************************************************************
 ****************************************************************************
