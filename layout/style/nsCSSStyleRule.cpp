@@ -1619,24 +1619,27 @@ MapDeclarationFontInto(nsICSSDeclaration* aDeclaration,
         }
         else if (eCSSUnit_Enumerated == ourFont->mFamily.GetUnit()) {
         	nsSystemAttrID sysID;
-        	switch (ourFont->mFamily.GetIntValue()) {
-        		case NS_STYLE_FONT_CAPTION:				sysID = eSystemAttr_Font_Caption;				break;		// css2
-        		case NS_STYLE_FONT_ICON:					sysID = eSystemAttr_Font_Icon;					break;
-        		case NS_STYLE_FONT_MENU:					sysID = eSystemAttr_Font_Menu;					break;
-        		case NS_STYLE_FONT_MESSAGE_BOX:		sysID = eSystemAttr_Font_MessageBox;		break;
-        		case NS_STYLE_FONT_SMALL_CAPTION:	sysID = eSystemAttr_Font_SmallCaption;	break;
-        		case NS_STYLE_FONT_STATUS_BAR:		sysID = eSystemAttr_Font_StatusBar;			break;
-        		case NS_STYLE_FONT_WINDOW:				sysID = eSystemAttr_Font_Window;				break;		// css3
-        		case NS_STYLE_FONT_DOCUMENT:			sysID = eSystemAttr_Font_Document;			break;
-        		case NS_STYLE_FONT_WORKSPACE:			sysID = eSystemAttr_Font_Workspace;			break;
-        		case NS_STYLE_FONT_DESKTOP:				sysID = eSystemAttr_Font_Desktop;				break;
-        		case NS_STYLE_FONT_INFO:					sysID = eSystemAttr_Font_Info;					break;
-        		case NS_STYLE_FONT_DIALOG:				sysID = eSystemAttr_Font_Dialog;				break;
-        		case NS_STYLE_FONT_BUTTON:				sysID = eSystemAttr_Font_Button;				break;
-        		case NS_STYLE_FONT_PULL_DOWN_MENU:sysID = eSystemAttr_Font_PullDownMenu;	break;
-        		case NS_STYLE_FONT_LIST:					sysID = eSystemAttr_Font_List;					break;
-        		case NS_STYLE_FONT_FIELD:					sysID = eSystemAttr_Font_Field;					break;
-					}
+          switch (ourFont->mFamily.GetIntValue()) {
+            case NS_STYLE_FONT_CAPTION:       sysID = eSystemAttr_Font_Caption;       break;    // css2
+            case NS_STYLE_FONT_ICON:          sysID = eSystemAttr_Font_Icon;          break;
+            case NS_STYLE_FONT_MENU:          sysID = eSystemAttr_Font_Menu;          break;
+            case NS_STYLE_FONT_MESSAGE_BOX:   sysID = eSystemAttr_Font_MessageBox;    break;
+            case NS_STYLE_FONT_SMALL_CAPTION: sysID = eSystemAttr_Font_SmallCaption;  break;
+            case NS_STYLE_FONT_STATUS_BAR:    sysID = eSystemAttr_Font_StatusBar;     break;
+            case NS_STYLE_FONT_WINDOW:        sysID = eSystemAttr_Font_Window;        break;    // css3
+            case NS_STYLE_FONT_DOCUMENT:      sysID = eSystemAttr_Font_Document;      break;
+            case NS_STYLE_FONT_WORKSPACE:     sysID = eSystemAttr_Font_Workspace;     break;
+            case NS_STYLE_FONT_DESKTOP:       sysID = eSystemAttr_Font_Desktop;       break;
+            case NS_STYLE_FONT_INFO:          sysID = eSystemAttr_Font_Info;          break;
+            case NS_STYLE_FONT_DIALOG:        sysID = eSystemAttr_Font_Dialog;        break;
+            case NS_STYLE_FONT_BUTTON:        sysID = eSystemAttr_Font_Button;        break;
+            case NS_STYLE_FONT_PULL_DOWN_MENU:sysID = eSystemAttr_Font_PullDownMenu;  break;
+            case NS_STYLE_FONT_LIST:          sysID = eSystemAttr_Font_List;          break;
+            case NS_STYLE_FONT_FIELD:         sysID = eSystemAttr_Font_Field;         break;
+          }
+
+          nsCompatibility mode;
+          aPresContext->GetCompatibilityMode(&mode);
 				  nsCOMPtr<nsIDeviceContext> dc;
           aPresContext->GetDeviceContext(getter_AddRefs(dc));
           if (dc) {
@@ -1649,6 +1652,14 @@ MapDeclarationFontInto(nsICSSDeclaration* aDeclaration,
             font->mFlags |= NS_STYLE_FONT_FACE_EXPLICIT;
           }
 
+          // NavQuirks uses sans-serif instead of whatever the native font is
+          if (eCompatibility_NavQuirks == mode) {
+            if (sysID == eSystemAttr_Font_Button ||
+                sysID == eSystemAttr_Font_Caption ||
+                sysID == eSystemAttr_Font_Field) {
+              font->mFont.name.AssignWithConversion("sans-serif");
+            }
+          }
         }
         else if (eCSSUnit_Inherit == ourFont->mFamily.GetUnit()) {
           font->mFont.name = parentFont->mFont.name;
