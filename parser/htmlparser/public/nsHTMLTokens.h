@@ -146,7 +146,9 @@ public:
   // the following info is used to set well-formedness state on start tags...
   virtual eContainerInfo GetContainerInfo(void) const {return mContainerInfo;}
   virtual void SetContainerInfo(eContainerInfo aContainerInfo) {
-    mContainerInfo=aContainerInfo;
+    if (eFormUnknown==mContainerInfo) {
+      mContainerInfo=aContainerInfo;
+    }
   }
   virtual PRBool IsWellFormed(void) const {
     return eWellFormed == mContainerInfo;
