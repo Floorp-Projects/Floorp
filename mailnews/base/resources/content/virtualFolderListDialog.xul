@@ -42,7 +42,7 @@
         xmlns:NC="http://home.netscape.com/NC-rdf#" 
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&virtualFolderListTitle.title;"
-        style="width: 25em; height: 25em;"
+        style="width: 27em; height: 25em;"
         persist="width height screenX screenY"
         onload="onLoad();"
         onunload="onUnLoad();"
