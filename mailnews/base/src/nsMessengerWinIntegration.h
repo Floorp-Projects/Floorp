@@ -50,6 +50,7 @@
 #include "nsString.h"
 #include "nsIPref.h"
 #include "nsInt64.h"
+#include "nsISupportsArray.h"
 
 // this function is exported by shell32.dll version 5.60 or later (Windows XP or greater)
 extern "C"
@@ -61,6 +62,8 @@ typedef HRESULT (__stdcall *fnSHEnumerateUnreadMailAccounts)(HKEY hKeyUser, DWOR
 #define NS_MESSENGERWININTEGRATION_CID \
   {0xf62f3d3a, 0x1dd1, 0x11b2, \
     {0xa5, 0x16, 0xef, 0xad, 0xb1, 0x31, 0x61, 0x5c}}
+
+class nsIStringBundle; 
 
 class nsMessengerWinIntegration : public nsIMessengerOSIntegration,
                                   public nsIFolderListener
@@ -75,6 +78,19 @@ public:
   NS_DECL_NSIFOLDERLISTENER
 
 private:
+  
+  static NOTIFYICONDATAW mBiffIconData;   // status bar icon for biff.
+  void InitializeBiffStatusIcon(); 
+  void FillToolTipInfo();
+  nsresult GetStringBundle(nsIStringBundle **aBundle);
+  PRBool mBiffIconVisible;
+  nsCOMPtr<nsISupportsArray> mFoldersWithNewMail;  // keep track of all the root folders with pending new mail
+
+  nsCOMPtr<nsIAtom> mBiffStateAtom;
+
+  PRUint32 mCurrentBiffState;
+  PRBool   mStoreUnreadCounts; // for windows XP, we do a lot of work to store the last unread count for the inbox
+                               // this flag is set to true when we are doing that
   nsresult ResetCurrent();
   nsresult RemoveCurrentFromRegistry();
   nsresult UpdateRegistryWithCurrent();
