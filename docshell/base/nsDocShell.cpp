@@ -158,6 +158,10 @@ NS_IMETHODIMP nsDocShell::LoadURIVia(nsIURI* aUri,
 {
    NS_ENSURE_ARG(aUri);
 
+   // If Anchor, goto anchor
+   // Stop
+   // URI Load
+
    nsCOMPtr<nsIURILoader> uriLoader = do_GetService(NS_URI_LOADER_PROGID);
    NS_ENSURE_TRUE(uriLoader, NS_ERROR_FAILURE);
 
@@ -601,6 +605,7 @@ NS_IMETHODIMP nsDocShell::FindItemWithName(const PRUnichar *aName,
       {
       *_retval = NS_STATIC_CAST(nsIDocShellTreeItem*, this);
       NS_ADDREF(*_retval);
+      return NS_OK;
       }
 
    // Second we check our children making sure not to ask a child if it
@@ -842,6 +847,10 @@ NS_IMETHODIMP nsDocShell::GoForward()
 
 NS_IMETHODIMP nsDocShell::LoadURI(const PRUnichar* aURI)
 {
+   // Mangle URL
+   // If anchor goto Anchor
+   // Stop Current Loads
+   // URI Load
    //XXX First Checkin
    NS_ERROR("Not Yet Implemented");
    return NS_ERROR_FAILURE;
@@ -907,23 +916,39 @@ NS_IMETHODIMP nsDocShell::GetDocument(nsIDOMDocument** aDocument)
 	
 NS_IMETHODIMP nsDocShell::GetCurrentURI(PRUnichar** aCurrentURI)
 {
-   //XXX First Checkin
-   NS_ERROR("Not Yet Implemented");
-   return NS_ERROR_FAILURE;
+   NS_ENSURE_ARG_POINTER(aCurrentURI);
+   
+   if(!mCurrentURI)
+      {
+      *aCurrentURI = nsnull;
+      return NS_OK;
+      }
+
+   char* spec;
+   NS_ENSURE_SUCCESS(mCurrentURI->GetSpec(&spec), NS_ERROR_FAILURE);
+
+   nsAutoString strSpec(spec);
+   *aCurrentURI = strSpec.ToNewUnicode();
+
+   if(spec)
+      nsCRT::free(spec);
+
+   return NS_OK;
 }
 	
 NS_IMETHODIMP nsDocShell::SetSessionHistory(nsISHistory* aSessionHistory)
 {
-   //XXX First Checkin
-   NS_ERROR("Not Yet Implemented");
-   return NS_ERROR_FAILURE;
+   mSessionHistory = aSessionHistory;
+   return NS_OK;
 }
 	
 NS_IMETHODIMP nsDocShell::GetSessionHistory(nsISHistory** aSessionHistory)
 {
-   //XXX First Checkin
-   NS_ERROR("Not Yet Implemented");
-   return NS_ERROR_FAILURE;
+   NS_ENSURE_ARG_POINTER(aSessionHistory);
+
+   *aSessionHistory = mSessionHistory;
+   NS_IF_ADDREF(*aSessionHistory);
+   return NS_OK;
 }
 
 //*****************************************************************************
@@ -1794,7 +1819,7 @@ nsresult nsDocShell::NewContentViewerObj(const char* aContentType,
    nsCOMPtr<nsIDocumentLoaderFactory> docLoaderFactory(do_CreateInstance(id));
    NS_ENSURE_TRUE(docLoaderFactory, NS_ERROR_FAILURE);
 
-   nsCOMPtr<nsILoadGroup> loadGroup(do_QueryInterface(mLoadCookie));
+   nsCOMPtr<nsILoadGroup> loadGroup(do_QueryInterface(mContentListener->mLoadCookie));
    // Now create an instance of the content viewer
    nsXPIDLCString strCommand;
    // go to the uri loader and ask it to convert the uri load command into a old
@@ -1933,6 +1958,21 @@ NS_IMETHODIMP nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer)
 
    return NS_OK;
 }
+
+NS_IMETHODIMP nsDocShell::StopCurrentLoads()
+{
+   // XXX
+   NS_ERROR("Not Yet Implemented");
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::AddCurrentSiteToHistories()
+{
+   // XXX
+   NS_ERROR("Not Yet Implemented");
+   return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsDocShell::FireStartDocumentLoad(nsIDocumentLoader* aLoader,
