@@ -461,20 +461,24 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
       // de-activation.  This will cause it to remember the last
       // focused sub-window and sub-element for this top-level
       // window.
+      nsCOMPtr<nsIDOMXULCommandDispatcher> commandDispatcher;
       nsCOMPtr<nsIDOMWindow> rootWindow;
       nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(ourGlobal);
-      ourWindow->GetPrivateRoot(getter_AddRefs(rootWindow));
-      nsCOMPtr<nsIDOMDocument> rootDocument;
-      rootWindow->GetDocument(getter_AddRefs(rootDocument));
+      if(ourWindow) {
+        ourWindow->GetPrivateRoot(getter_AddRefs(rootWindow));
+        if(rootWindow) {
+          nsCOMPtr<nsIDOMDocument> rootDocument;
+          rootWindow->GetDocument(getter_AddRefs(rootDocument));
 
-      nsCOMPtr<nsIDOMXULCommandDispatcher> commandDispatcher;
-      nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(rootDocument);
-      if (xulDoc) {
-        // See if we have a command dispatcher attached.
-        xulDoc->GetCommandDispatcher(getter_AddRefs(commandDispatcher));
-        if (commandDispatcher) {
-          // Suppress the command dispatcher.
-          commandDispatcher->SetSuppressFocus(PR_TRUE);
+          nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(rootDocument);
+          if (xulDoc) {
+            // See if we have a command dispatcher attached.
+            xulDoc->GetCommandDispatcher(getter_AddRefs(commandDispatcher));
+            if (commandDispatcher) {
+              // Suppress the command dispatcher.
+              commandDispatcher->SetSuppressFocus(PR_TRUE);
+            }
+          }
         }
       }
 
@@ -501,7 +505,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
             esm->SetFocusedContent(gLastFocusedContent);
             gLastFocusedContent->HandleDOMEvent(oldPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
             esm->SetFocusedContent(nsnull);
-            NS_RELEASE(gLastFocusedContent);
+            NS_IF_RELEASE(gLastFocusedContent);
           }
         }
 
@@ -512,15 +516,15 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
     
         // fire blur on document and window
         nsCOMPtr<nsIScriptGlobalObject> globalObject;
-        gLastFocusedDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
-        gLastFocusedDocument->HandleDOMEvent(gLastFocusedPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
-        if(!globalObject) break;
-             
-        globalObject->HandleDOMEvent(gLastFocusedPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
-        mCurrentTarget = nsnull;
-
+        if(gLastFocusedDocument) {
+          gLastFocusedDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
+          gLastFocusedDocument->HandleDOMEvent(gLastFocusedPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+          if(globalObject)
+            globalObject->HandleDOMEvent(gLastFocusedPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+        }
         // Now clear our our global variables
-        NS_RELEASE(gLastFocusedDocument);
+        mCurrentTarget = nsnull;
+        NS_IF_RELEASE(gLastFocusedDocument);
         gLastFocusedPresContext = nsnull;
       }             
 
