@@ -49,9 +49,9 @@ nsFTPChannel::nsFTPChannel()
       mSourceOffset(0),
       mAmount(0),
       mContentLength(-1),
-      mLock(nsnull),
       mBufferSegmentSize(0),
       mBufferMaxSize(0),
+      mLock(nsnull),
       mStatus(NS_OK)
 {
     NS_INIT_REFCNT();
@@ -254,7 +254,8 @@ nsFTPChannel::OpenInputStream(nsIInputStream **result)
     if (!thread) return NS_ERROR_OUT_OF_MEMORY;
     mConnThread = thread;
 
-    rv = thread->Init(mHandler, this, mBufferSegmentSize, mBufferMaxSize);
+    rv = thread->Init(mHandler, this, mPrompter,
+                      mBufferSegmentSize, mBufferMaxSize);
     mHandler = 0;
     if (NS_FAILED(rv)) return rv;
 
@@ -327,7 +328,8 @@ nsFTPChannel::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
     if (!thread) return NS_ERROR_OUT_OF_MEMORY;
     mConnThread = thread;
 
-    rv = thread->Init(mHandler, this, mBufferSegmentSize, mBufferMaxSize);
+    rv = thread->Init(mHandler, this, mPrompter,
+                      mBufferSegmentSize, mBufferMaxSize);
     mHandler = nsnull;
     if (NS_FAILED(rv)) return rv;
 
@@ -365,7 +367,8 @@ nsFTPChannel::AsyncWrite(nsIInputStream *fromStream,
     if (!thread) return NS_ERROR_OUT_OF_MEMORY;
     mConnThread = thread;
 
-    rv = thread->Init(mHandler, this, mBufferSegmentSize, mBufferMaxSize);
+    rv = thread->Init(mHandler, this, mPrompter,
+                      mBufferSegmentSize, mBufferMaxSize);
     mHandler = 0;
     if (NS_FAILED(rv)) return rv;
 
@@ -576,11 +579,11 @@ nsFTPChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallb
     mCallbacks = aNotificationCallbacks;
 
     if (mCallbacks) {
-        nsresult rv = mCallbacks->GetInterface(NS_GET_IID(nsIProgressEventSink), 
-                                               getter_AddRefs(mEventSink));
-        if (NS_FAILED(rv)) {
-            PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::Init() (couldn't find event sink)\n"));
-        }
+        (void)mCallbacks->GetInterface(NS_GET_IID(nsIProgressEventSink), 
+                                       getter_AddRefs(mEventSink));
+
+        (void)mCallbacks->GetInterface(NS_GET_IID(nsIPrompt),
+                                       getter_AddRefs(mPrompter));
     }
     return NS_OK;
 }
