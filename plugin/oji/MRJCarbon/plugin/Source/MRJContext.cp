@@ -1932,7 +1932,6 @@ void MRJContext::synchronizeVisibility()
 {
     OSStatus status;
     
-#if TARGET_CARBON
     if (mAppletControl) {
         JNIEnv* env = mSession->getCurrentEnv();
         if (mPluginWindow != NULL) {
@@ -1949,6 +1948,7 @@ void MRJContext::synchronizeVisibility()
             int clipWidth = (mCachedClipRect.right - mCachedClipRect.left);
             int clipHeight = (mCachedClipRect.bottom - mCachedClipRect.top);
 
+            status = ::SizeJavaControl(env, mAppletControl, mPluginWindow->width, mPluginWindow->height);
             status = ::MoveAndClipJavaControl(env, mAppletControl, posX, posY,
                                               clipX, clipY, clipWidth, clipHeight);
 
@@ -1959,56 +1959,12 @@ void MRJContext::synchronizeVisibility()
                 status = ::DrawJavaControl(env, mAppletControl);
             }
 
-#if 0
-            // Invalidate the old clip rectangle, so that any bogus drawing that may
-            // occurred at the old location, will be corrected.
-            GrafPtr framePort = (GrafPtr)mPluginPort;
-            LocalPort port(framePort);
-            port.Enter();
-            ::InvalWindowRect(GetWindowFromPort(mPluginPort), (Rect*)&oldClipRect);
-            ::InvalWindowRect(GetWindowFromPort(mPluginPort), (Rect*)&mCachedClipRect);
-            port.Exit();
-#endif
         } else {
            status = ::MoveAndClipJavaControl(env, mAppletControl, 0, 0, 0, 0, 0, 0);
            status = ::ShowHideJavaControl(env, mAppletControl, false);
            mIsVisible = false;
         }
     }
-#else
-    // always update the cached information.
-    if (mViewerFrame != NULL) {
-        if (mPluginWindow != NULL) {
-            nsPluginRect oldClipRect = mCachedClipRect;
-            nsPluginPort* pluginPort = mPluginWindow->window;
-            mCachedOrigin.x = pluginPort->portx;
-            mCachedOrigin.y = pluginPort->porty;
-            mCachedClipRect = mPluginWindow->clipRect;
-            
-            // compute the frame's origin and clipping.
-
-            // JManager wants the origin expressed in window coordinates.
-            // npWindow refers to the entire mozilla view port whereas the nport
-            // refers to the actual rendered html window.
-            Point frameOrigin = { -pluginPort->porty, -pluginPort->portx };
-            GrafPtr framePort = (GrafPtr)mPluginPort;
-            status = ::JMSetFrameVisibility(mViewerFrame, framePort,
-                                                     frameOrigin, mPluginClipping);
-
-            // Invalidate the old clip rectangle, so that any bogus drawing that may
-            // occurred at the old location, will be corrected.
-            LocalPort port(framePort);
-            port.Enter();
-            ::InvalRect((Rect*)&oldClipRect);
-            ::InvalRect((Rect*)&mCachedClipRect);
-            port.Exit();
-        } else {
-            Point frameOrigin = { 0, 0 };
-            status = ::JMSetFrameVisibility(mViewerFrame, GrafPtr(mPluginPort),
-                                            frameOrigin, mPluginClipping);
-        }
-    }
-#endif
 }
 
 void MRJContext::showFrames()
