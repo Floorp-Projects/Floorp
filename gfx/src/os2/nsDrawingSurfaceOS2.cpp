@@ -106,7 +106,7 @@ void nsDrawingSurfaceOS2::NS2PM_ININ( const nsRect &in, RECTL &rcl)
    const static nscoord kBottomLeftLimit = -8192;
    const static nscoord kTopRightLimit   =  16384;
 
-   PRUint32 ulHeight = GetHeight ();
+   PRInt32 ulHeight = GetHeight ();
 
    rcl.xLeft    = PR_MAX(kBottomLeftLimit, in.x);
    rcl.xRight   = PR_MIN(in.x+in.width-1, kTopRightLimit);
@@ -117,7 +117,7 @@ void nsDrawingSurfaceOS2::NS2PM_ININ( const nsRect &in, RECTL &rcl)
 
 void nsDrawingSurfaceOS2::PM2NS_ININ( const RECTL &in, nsRect &out)
 {
-   PRUint32 ulHeight = GetHeight ();
+   PRInt32 ulHeight = GetHeight ();
 
    out.x = in.xLeft;
    out.width = in.xRight - in.xLeft + 1;
@@ -135,7 +135,7 @@ void nsDrawingSurfaceOS2::NS2PM_INEX( const nsRect &in, RECTL &rcl)
 
 void nsDrawingSurfaceOS2::NS2PM( PPOINTL aPointl, ULONG cPointls)
 {
-   PRUint32 ulHeight = GetHeight ();
+   PRInt32 ulHeight = GetHeight ();
 
    for( ULONG i = 0; i < cPointls; i++)
       aPointl[ i].y = ulHeight - aPointl[ i].y - 1;
