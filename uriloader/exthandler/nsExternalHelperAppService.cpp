@@ -85,6 +85,8 @@
 
 #include "nsIPrefService.h"
 
+#include "nsIGlobalHistory.h"
+
 #include "nsCRT.h"
 #include "plstr.h"
 
@@ -1400,6 +1402,15 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
     {
         rv = LaunchWithApplication(nsnull, PR_FALSE);
     }
+  }
+
+  // Now let's mark the downloaded URL as visited
+  nsCOMPtr<nsIGlobalHistory> history(do_GetService(NS_GLOBALHISTORY_CONTRACTID));
+  nsCAutoString spec;
+  mSourceUrl->GetSpec(spec);
+  if (history && !spec.IsEmpty())
+  {
+    history->AddPage(spec.get());
   }
 
   return NS_OK;
