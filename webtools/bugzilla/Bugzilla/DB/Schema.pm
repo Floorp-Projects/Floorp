@@ -1353,6 +1353,8 @@ sub _get_create_index_ddl {
 
 =head1 SERIALIZATION/DESERIALIZATION
 
+=over 4
+
 =item C<serialize_abstract()>
 
  Description: Serializes the "abstract" schema into a format

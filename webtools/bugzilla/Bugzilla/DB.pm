@@ -614,8 +614,8 @@ sub _bz_init_schema_storage {
         # correct migration code at all.
         die "Attempted to initialize the schema but there are already "
             . " $table_size copies of it stored.\nThis should never happen.\n"
-            . " Compare the two rows of the bz_schema table and delete the "
-            . "newer one.";
+            . " Compare the rows of the bz_schema table and delete the "
+            . "newer one(s).";
     }
 }
 
