@@ -34,7 +34,6 @@ CPPSRCS= \
 	nsBaseAppCore.cpp       \
 	nsDOMPropsCore.cpp		\
 	nsDOMPropsCoreFactory.cpp	\
-	nsMailCore.cpp       \
 	nsPrefsCore.cpp       \
 	nsRDFCore.cpp		\
 	nsRDFCoreFactory.cpp	\
@@ -44,7 +43,6 @@ CPPSRCS= \
 	nsToolbarCore.cpp       \
 	nsToolkitCore.cpp	\
 	nsBrowserAppCore.cpp       \
-	nsMailCoreFactory.cpp       \
 	nsPrefsCoreFactory.cpp       \
 	nsToolbarCoreFactory.cpp       \
 	nsToolkitCoreFactory.cpp	\
@@ -55,7 +53,6 @@ CPPSRCS= \
 	nsJSAppCoresManager.cpp       \
 	nsJSDOMPropsCore.cpp		\
 	nsJSEditorAppCore.cpp       \
-	nsJSMailCore.cpp   \
 	nsJSPrefsCore.cpp   \
 	nsJSRDFCore.cpp		\
 	nsJSToolbarCore.cpp   \
