@@ -23,11 +23,6 @@
 #ifndef _MIMEMOZ_H_
 #define _MIMEMOZ_H_
 
-#ifdef __cplusplus
-#include "nsIFileSpec.h"
-extern "C" {
-#endif /* __cplusplus */
-
 #include "prtypes.h"
 #include "nsStreamConverter.h"
 #include "nsIMimeEmitter.h"
@@ -42,9 +37,6 @@ extern "C" {
 #undef Bool
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 
   
 #include "mimei.h"
