@@ -572,7 +572,7 @@ then
 			SKIP_IDL_CHECK="yes"
 			BUILD_XPIDL=1
 			LIBIDL_CFLAGS="-I/usr/lib/glib/include"
-			LIBIDL_LIBS="-lglib"
+			LIBIDL_LIBS="-lglib -lIDL"
 			AC_SUBST(LIBIDL_CFLAGS)
 			AC_SUBST(LIBIDL_LIBS)
 		fi
