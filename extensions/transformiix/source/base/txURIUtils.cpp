@@ -50,8 +50,8 @@
 #ifdef TX_EXE
 //- Constants -/
 
-const String URIUtils::HTTP_PROTOCOL("http");
-const String URIUtils::FILE_PROTOCOL("file");
+const String URIUtils::HTTP_PROTOCOL(NS_LITERAL_STRING("http"));
+const String URIUtils::FILE_PROTOCOL(NS_LITERAL_STRING("file"));
 const char   URIUtils::HREF_PATH_SEP  = '/';
 const char   URIUtils::DEVICE_SEP     = '|';
 const char   URIUtils::PORT_SEP       = ':';
@@ -97,28 +97,28 @@ istream* URIUtils::getInputStream
 **/
 void URIUtils::getDocumentBase(const String& href, String& dest) {
     //-- use temp str so the subString method doesn't destroy dest
-    String docBase("");
+    String docBase;
 
-    if (!href.isEmpty()) {
+    if (!href.IsEmpty()) {
 
         int idx = -1;
         //-- check for URL
         ParsedURI* uri = parseURI(href);
         if ( !uri->isMalformed ) {
-            idx = href.lastIndexOf(HREF_PATH_SEP);
+            idx = href.RFindChar(HREF_PATH_SEP);
         }
         else {
             //-- The following contains a fix from Shane Hathaway
             //-- to handle the case when both "\" and "/" appear in filename
-            int idx2 = href.lastIndexOf(HREF_PATH_SEP);
-            //idx = href.lastIndexOf(File.separator);
+            int idx2 = href.RFindChar(HREF_PATH_SEP);
+            //idx = href.RFindChar(File.separator);
             idx = -1; //-- hack change later
             if (idx2 > idx) idx = idx2;
         }
         if (idx >= 0) href.subString(0,idx, docBase);
         delete uri;
     }
-    dest.append(docBase);
+    dest.Append(docBase);
 } //-- getDocumentBase
 #endif
 
@@ -129,12 +129,12 @@ void URIUtils::getDocumentBase(const String& href, String& dest) {
 **/
 void URIUtils::resolveHref(const String& href, const String& base,
                            String& dest) {
-    if (base.isEmpty()) {
-        dest.append(href);
+    if (base.IsEmpty()) {
+        dest.Append(href);
         return;
     }
-    if (href.isEmpty()) {
-        dest.append(base);
+    if (href.IsEmpty()) {
+        dest.Append(base);
         return;
     }
 
@@ -144,7 +144,7 @@ void URIUtils::resolveHref(const String& href, const String& base,
     nsresult result = NS_NewURI(getter_AddRefs(pURL), base);
     if (NS_SUCCEEDED(result)) {
         NS_MakeAbsoluteURI(resultHref, href, pURL);
-        dest.append(resultHref);
+        dest.Append(resultHref);
     }
 #else
     String documentBase;
@@ -153,7 +153,7 @@ void URIUtils::resolveHref(const String& href, const String& base,
     //-- check for URL
     ParsedURI* uri = parseURI(href);
     if ( !uri->isMalformed ) {
-        dest.append(href);
+        dest.Append(href);
         delete uri;
         return;
     }
@@ -161,24 +161,24 @@ void URIUtils::resolveHref(const String& href, const String& base,
 
     //-- join document base + href
     String xHref;
-    if (!documentBase.isEmpty()) {
-        xHref.append(documentBase);
-        if (documentBase.charAt(documentBase.length()-1) != HREF_PATH_SEP)
-            xHref.append(HREF_PATH_SEP);
+    if (!documentBase.IsEmpty()) {
+        xHref.Append(documentBase);
+        if (documentBase.CharAt(documentBase.Length()-1) != HREF_PATH_SEP)
+            xHref.Append(PRUnichar(HREF_PATH_SEP));
     }
-    xHref.append(href);
+    xHref.Append(href);
 
     //-- check new href
     ParsedURI* newUri = parseURI(xHref);
     if ( !newUri->isMalformed ) {
-        dest.append(xHref);
+        dest.Append(xHref);
     }
     else {
         // Try local files
         ifstream inFile(NS_LossyConvertUCS2toASCII(xHref).get(),
                         ios::in);
-        if ( inFile ) dest.append(xHref);
-        else dest.append(href);
+        if ( inFile ) dest.Append(xHref);
+        else dest.Append(href);
         inFile.close();
     }
     delete uri;
@@ -189,16 +189,16 @@ void URIUtils::resolveHref(const String& href, const String& base,
 
 void URIUtils::getFragmentIdentifier(const String& href, String& frag) {
     PRInt32 pos;
-    pos = href.lastIndexOf('#');
+    pos = href.RFindChar('#');
     if(pos != kNotFound)
         href.subString(pos+1, frag);
     else
-        frag.clear();
+        frag.Truncate();
 } //-- getFragmentIdentifier
 
 void URIUtils::getDocumentURI(const String& href, String& docUri) {
     PRInt32 pos;
-    pos = href.lastIndexOf('#');
+    pos = href.RFindChar('#');
     if(pos != kNotFound)
         href.subString(0,pos,docUri);
     else
@@ -211,7 +211,7 @@ istream* URIUtils::openStream(ParsedURI* uri) {
     // check protocol
 
     istream* inStream = 0;
-    if ( FILE_PROTOCOL.isEqual(uri->protocol) ) {
+    if ( FILE_PROTOCOL.Equals(uri->protocol) ) {
         ifstream* inFile =
             new ifstream(NS_LossyConvertUCS2toASCII(uri->path).get(),
                          ios::in);
@@ -231,32 +231,33 @@ URIUtils::ParsedURI* URIUtils::parseURI(const String& uri) {
     short mode = PROTOCOL_MODE;
 
     // look for protocol
-    int totalCount = uri.length();
+    int totalCount = uri.Length();
     int charCount = 0;
-    UNICODE_CHAR prevCh = '\0';
+    PRUnichar prevCh = '\0';
     int fslash = 0;
-    String buffer(uri.length());
+    String buffer;
+    buffer.getNSString().SetCapacity(uri.Length());
     while ( charCount < totalCount ) {
-        UNICODE_CHAR ch = uri.charAt(charCount++);
+        PRUnichar ch = uri.CharAt(charCount++);
         switch(ch) {
             case '.' :
                 if ( mode == PROTOCOL_MODE ) {
                     uriTokens->isMalformed = MB_TRUE;
                     mode = HOST_MODE;
                 }
-                buffer.append(ch);
+                buffer.Append(ch);
                 break;
             case ':' :
             {
                 switch ( mode ) {
                     case PROTOCOL_MODE :
                         uriTokens->protocol = buffer;
-                        buffer.clear();
+                        buffer.Truncate();
                         mode = HOST_MODE;
                         break;
                     case HOST_MODE :
                         uriTokens->host = buffer;
-                        buffer.clear();
+                        buffer.Truncate();
                         mode = PORT_MODE;
                         break;
                     default:
@@ -267,25 +268,25 @@ URIUtils::ParsedURI* URIUtils::parseURI(const String& uri) {
             case '/' :
                 switch ( mode ) {
                     case HOST_MODE :
-                        if (!buffer.isEmpty()) {
+                        if (!buffer.IsEmpty()) {
                             mode = PATH_MODE;
-                            buffer.append(ch);
+                            buffer.Append(ch);
                         }
                         else if ( fslash == 2 ) mode = PATH_MODE;
                         else ++fslash;
                         break;
                     case PORT_MODE :
                         mode = PATH_MODE;
-                        uriTokens->port.append(buffer);
-                        buffer.clear();
+                        uriTokens->port.Append(buffer);
+                        buffer.Truncate();
                         break;
                     default:
-                        buffer.append(ch);
+                        buffer.Append(ch);
                         break;
                 }
                 break;
             default:
-                buffer.append(ch);
+                buffer.Append(ch);
         }
         prevCh = ch;
     }
@@ -294,19 +295,19 @@ URIUtils::ParsedURI* URIUtils::parseURI(const String& uri) {
         uriTokens->isMalformed = MB_TRUE;
     }
     //-- finish remaining mode
-    if (!buffer.isEmpty()) {
+    if (!buffer.IsEmpty()) {
         switch ( mode ) {
             case PROTOCOL_MODE :
-                uriTokens->protocol.append(buffer);
+                uriTokens->protocol.Append(buffer);
                 break;
             case HOST_MODE :
-                uriTokens->host.append(buffer);
+                uriTokens->host.Append(buffer);
                 break;
             case PORT_MODE :
-                uriTokens->port.append(buffer);
+                uriTokens->port.Append(buffer);
                 break;
             case PATH_MODE :
-                uriTokens->path.append(buffer);
+                uriTokens->path.Append(buffer);
                 break;
             default:
                 break;

@@ -259,14 +259,14 @@ void txStandaloneXSLTProcessor::getHrefFromStylesheetPI(Document& xmlDocument,
     while (node) {
         if (node->getNodeType() == Node::PROCESSING_INSTRUCTION_NODE) {
             String target = ((ProcessingInstruction*)node)->getTarget();
-            if (STYLESHEET_PI.isEqual(target) ||
-                STYLESHEET_PI_OLD.isEqual(target)) {
+            if (STYLESHEET_PI.Equals(target) ||
+                STYLESHEET_PI_OLD.Equals(target)) {
                 String data = ((ProcessingInstruction*)node)->getData();
-                type.clear();
-                tmpHref.clear();
+                type.Truncate();
+                tmpHref.Truncate();
                 parseStylesheetPI(data, type, tmpHref);
-                if (XSL_MIME_TYPE.isEqual(type)) {
-                    href.clear();
+                if (XSL_MIME_TYPE.Equals(type)) {
+                    href.Truncate();
                     URIUtils::resolveHref(tmpHref, node->getBaseURI(), href);
                 }
             }
@@ -283,32 +283,32 @@ void txStandaloneXSLTProcessor::parseStylesheetPI(String& data,
                                                   String& type,
                                                   String& href)
 {
-    PRUint32 size = data.length();
+    PRUint32 size = data.Length();
     NamedMap bufferMap;
-    bufferMap.put(String("type"), &type);
-    bufferMap.put(String("href"), &href);
+    bufferMap.put(String(NS_LITERAL_STRING("type")), &type);
+    bufferMap.put(String(NS_LITERAL_STRING("href")), &href);
     PRUint32 ccount = 0;
     MBool inLiteral = MB_FALSE;
-    char matchQuote = '"';
+    PRUnichar matchQuote = '"';
     String sink;
     String* buffer = &sink;
 
     for (ccount = 0; ccount < size; ccount++) {
-        char ch = data.charAt(ccount);
+        PRUnichar ch = data.CharAt(ccount);
         switch ( ch ) {
             case ' ':
                 if (inLiteral) {
-                    buffer->append(ch);
+                    buffer->Append(ch);
                 }
                 break;
             case '=':
                 if (inLiteral) {
-                    buffer->append(ch);
+                    buffer->Append(ch);
                 }
-                else if (buffer->length() > 0) {
+                else if (!buffer->IsEmpty()) {
                     buffer = (String*)bufferMap.get(*buffer);
                     if (!buffer) {
-                        sink.clear();
+                        sink.Truncate();
                         buffer = &sink;
                     }
                 }
@@ -318,11 +318,11 @@ void txStandaloneXSLTProcessor::parseStylesheetPI(String& data,
                 if (inLiteral) {
                     if (matchQuote == ch) {
                         inLiteral = MB_FALSE;
-                        sink.clear();
+                        sink.Truncate();
                         buffer = &sink;
                     }
                     else {
-                        buffer->append(ch);
+                        buffer->Append(ch);
                     }
                 }
                 else {
@@ -331,7 +331,7 @@ void txStandaloneXSLTProcessor::parseStylesheetPI(String& data,
                 }
                 break;
             default:
-                buffer->append(ch);
+                buffer->Append(ch);
                 break;
         }
     }
@@ -342,8 +342,8 @@ txStandaloneXSLTProcessor::parsePath(const String& aPath, ErrorObserver& aErr)
 {
     ifstream xmlInput(NS_LossyConvertUCS2toASCII(aPath).get(), ios::in);
     if (!xmlInput) {
-        String err("Couldn't open ");
-        err.append(aPath);
+        String err(NS_LITERAL_STRING("Couldn't open "));
+        err.Append(aPath);
         aErr.receiveError(err);
         return 0;
     }
@@ -352,8 +352,8 @@ txStandaloneXSLTProcessor::parsePath(const String& aPath, ErrorObserver& aErr)
     Document* xmlDoc = xmlParser.parse(xmlInput, aPath);
     xmlInput.close();
     if (!xmlDoc) {
-        String err("Parsing error in ");
-        err.append(aPath);
+        String err(NS_LITERAL_STRING("Parsing error in "));
+        err.Append(aPath);
         aErr.receiveError(err);
     }
     return xmlDoc;

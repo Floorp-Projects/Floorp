@@ -31,15 +31,15 @@ void CommandLineUtils::getOptions
         String arg;
         String flag;
         for (int i = 0; i < argc; i++) {
-            arg.clear();
-            arg.append(argv[i]);
+            arg.Truncate();
+            arg.getNSString().AppendWithConversion(argv[i]);
 
-            if (!arg.isEmpty() && (arg.charAt(0) == '-')) {
+            if (!arg.IsEmpty() && (arg.CharAt(0) == '-')) {
 
                 // clean up previous flag
-                if (!flag.isEmpty()) {
+                if (!flag.IsEmpty()) {
                     options.put(flag, new String(arg));
-                    flag.clear();
+                    flag.Truncate();
                 }
                 // get next flag
                 arg.subString(1,flag);
@@ -49,17 +49,17 @@ void CommandLineUtils::getOptions
                 if (!flags.contains(flag)) {
                     PRUint32 idx = 1;
                     String tmpFlag;
-                    while(idx <= flag.length()) {
+                    while(idx <= flag.Length()) {
                         flag.subString(0,idx, tmpFlag);
                         if (flags.contains(tmpFlag)) {
-                            if (idx < flag.length()) {
+                            if (idx < flag.Length()) {
                                 String* value = new String();
                                 flag.subString(idx, *value);
                                 options.put(tmpFlag,value);
                                 break;
                             }
                         }
-                        else if (idx == flag.length()) {
+                        else if (idx == flag.Length()) {
                             cout << "invalid option: -" << flag << endl;
                         }
                         ++idx;
@@ -68,13 +68,13 @@ void CommandLineUtils::getOptions
             }// if flag char '-'
             else {
                 // Store both flag key and number key
-                if (!flag.isEmpty())
+                if (!flag.IsEmpty())
                     options.put(flag, new String(arg));
-                flag.clear();
+                flag.Truncate();
             }
 
         }// end for
-        if (!flag.isEmpty())
-            options.put(flag, new String("no value"));
+        if (!flag.IsEmpty())
+            options.put(flag, new String(NS_LITERAL_STRING("no value")));
 } //-- getOptions
 

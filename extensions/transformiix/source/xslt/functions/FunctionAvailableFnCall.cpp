@@ -118,7 +118,7 @@ ExprResult* FunctionAvailableFunctionCall::evaluate(txIEvalContext* aContext)
             }
         }
         else {
-            String err("Invalid argument passed to function-available, expecting String");
+            String err(NS_LITERAL_STRING("Invalid argument passed to function-available, expecting String"));
             aContext->receiveError(err, NS_ERROR_XPATH_INVALID_ARG);
             result = new StringResult(err);
         }

@@ -132,35 +132,35 @@ MBool Double::isNeg(double aDbl)
 double Double::toDouble(const String& aSrc)
 {
     PRUint32 idx = 0;
-    PRUint32 len = aSrc.length();
+    PRUint32 len = aSrc.Length();
     MBool digitFound = MB_FALSE;
 
     // leading whitespace
     while (idx < len &&
-           XMLUtils::isWhitespace(aSrc.charAt(idx))) {
+           XMLUtils::isWhitespace(aSrc.CharAt(idx))) {
         ++idx;
     }
 
     // sign char
-    if (idx < len && aSrc.charAt(idx) == '-')
+    if (idx < len && aSrc.CharAt(idx) == '-')
         ++idx;
 
     // integer chars
     while (idx < len &&
-           aSrc.charAt(idx) >= '0' &&
-           aSrc.charAt(idx) <= '9') {
+           aSrc.CharAt(idx) >= '0' &&
+           aSrc.CharAt(idx) <= '9') {
         ++idx;
         digitFound = MB_TRUE;
     }
 
     // decimal separator
-    if (idx < len && aSrc.charAt(idx) == '.') {
+    if (idx < len && aSrc.CharAt(idx) == '.') {
         ++idx;
 
         // fraction chars
         while (idx < len &&
-               aSrc.charAt(idx) >= '0' &&
-               aSrc.charAt(idx) <= '9') {
+               aSrc.CharAt(idx) >= '0' &&
+               aSrc.CharAt(idx) <= '9') {
             ++idx;
             digitFound = MB_TRUE;
         }
@@ -168,7 +168,7 @@ double Double::toDouble(const String& aSrc)
 
     // ending whitespace
     while (idx < len &&
-           XMLUtils::isWhitespace(aSrc.charAt(idx))) {
+           XMLUtils::isWhitespace(aSrc.CharAt(idx))) {
         ++idx;
     }
 
@@ -193,13 +193,13 @@ String& Double::toString(double aValue, String& aDest)
     // check for special cases
 
     if (isNaN(aValue)) {
-        aDest.append("NaN");
+        aDest.Append(NS_LITERAL_STRING("NaN"));
         return aDest;
     }
     if (isInfinite(aValue)) {
         if (aValue < 0)
-            aDest.append('-');
-        aDest.append("Infinity");
+            aDest.Append(PRUnichar('-'));
+        aDest.Append(NS_LITERAL_STRING("Infinity"));
         return aDest;
     }
 
@@ -222,17 +222,17 @@ String& Double::toString(double aValue, String& aDest)
     PR_dtoa(aValue, 0, 0, &intDigits, &sign, &endp, buf, bufsize-1);
 
     if (sign)
-        aDest.append('-');
+        aDest.Append(PRUnichar('-'));
 
     int i;
     for (i = 0; i < endp - buf; i++) {
         if (i == intDigits)
-            aDest.append('.');
-        aDest.append(buf[i]);
+            aDest.Append(PRUnichar('.'));
+        aDest.Append(PRUnichar(buf[i]));
     }
     
     for (; i < intDigits; i++)
-        aDest.append('0');
+        aDest.Append(PRUnichar('0'));
 
 #else
 
@@ -252,14 +252,14 @@ String& Double::toString(double aValue, String& aDest)
         }
         else {
             if (printDeci) {
-                aDest.append('.');
+                aDest.Append(PRUnichar('.'));
                 printDeci = MB_FALSE;
             }
 
             for ( ;zeros ;zeros--)
-                aDest.append('0');
+                aDest.Append(PRUnichar('0'));
 
-            aDest.append(buf[i]);
+            aDest.Append(PRUnichar(buf[i]));
         }
     }
 

@@ -70,7 +70,7 @@ Attr::Attr(const String& aNamespaceURI,
            Document* aOwner) :
     NodeDefinition(Node::ATTRIBUTE_NODE, aName, NULL_STRING, aOwner)
 {
- if (aNamespaceURI.isEmpty())
+ if (aNamespaceURI.IsEmpty())
     mNamespaceID = kNameSpaceID_None;
   else
     mNamespaceID = txNamespaceManager::getNamespaceID(aNamespaceURI);
@@ -116,10 +116,10 @@ const String& Attr::getValue()
   Node* child = getFirstChild();
   while (child) {
     if (child->getNodeType() != Node::ENTITY_REFERENCE_NODE) {
-        nodeValue.append(child->getNodeValue());
+        nodeValue.Append(child->getNodeValue());
         child = child->getNextSibling();
         if (child)
-          nodeValue.append(",");
+          nodeValue.Append(PRUnichar(','));
     } else {
       child = child->getNextSibling();
     }

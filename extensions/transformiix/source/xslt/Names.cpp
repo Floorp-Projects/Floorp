@@ -37,30 +37,30 @@
 #include "Names.h"
 
 //-- Global Strings
-const String STYLESHEET_PI("xml-stylesheet");
-const String STYLESHEET_PI_OLD("xml:stylesheet");
-const String XSL_MIME_TYPE("text/xsl");
+const String STYLESHEET_PI(NS_LITERAL_STRING("xml-stylesheet"));
+const String STYLESHEET_PI_OLD(NS_LITERAL_STRING("xml:stylesheet"));
+const String XSL_MIME_TYPE(NS_LITERAL_STRING("text/xsl"));
 
 //-- Attribute Values
-const String ASCENDING_VALUE("ascending");
-const String DESCENDING_VALUE("descending");
-const String LOWER_FIRST_VALUE("lower-first");
-const String NUMBER_VALUE("number");
-const String TEXT_VALUE("text");
-const String UPPER_FIRST_VALUE("upper-first");
-const String YES_VALUE("yes");
+const String ASCENDING_VALUE(NS_LITERAL_STRING("ascending"));
+const String DESCENDING_VALUE(NS_LITERAL_STRING("descending"));
+const String LOWER_FIRST_VALUE(NS_LITERAL_STRING("lower-first"));
+const String NUMBER_VALUE(NS_LITERAL_STRING("number"));
+const String TEXT_VALUE(NS_LITERAL_STRING("text"));
+const String UPPER_FIRST_VALUE(NS_LITERAL_STRING("upper-first"));
+const String YES_VALUE(NS_LITERAL_STRING("yes"));
 
 //-- Stylesheet attributes
-const String ANCESTOR_AXIS("ancestor");
-const String ANCESTOR_OR_SELF_AXIS("ancestor-or-self");
-const String ATTRIBUTE_AXIS("attribute");
-const String CHILD_AXIS("child");
-const String DESCENDANT_AXIS("descendant");
-const String DESCENDANT_OR_SELF_AXIS("descendant-or-self");
-const String FOLLOWING_AXIS("following");
-const String FOLLOWING_SIBLING_AXIS("following-sibling");
-const String NAMESPACE_AXIS("namespace");
-const String PARENT_AXIS("parent");
-const String PRECEDING_AXIS("preceding");
-const String PRECEDING_SIBLING_AXIS("preceding-sibling");
-const String SELF_AXIS("self");
+const String ANCESTOR_AXIS(NS_LITERAL_STRING("ancestor"));
+const String ANCESTOR_OR_SELF_AXIS(NS_LITERAL_STRING("ancestor-or-self"));
+const String ATTRIBUTE_AXIS(NS_LITERAL_STRING("attribute"));
+const String CHILD_AXIS(NS_LITERAL_STRING("child"));
+const String DESCENDANT_AXIS(NS_LITERAL_STRING("descendant"));
+const String DESCENDANT_OR_SELF_AXIS(NS_LITERAL_STRING("descendant-or-self"));
+const String FOLLOWING_AXIS(NS_LITERAL_STRING("following"));
+const String FOLLOWING_SIBLING_AXIS(NS_LITERAL_STRING("following-sibling"));
+const String NAMESPACE_AXIS(NS_LITERAL_STRING("namespace"));
+const String PARENT_AXIS(NS_LITERAL_STRING("parent"));
+const String PRECEDING_AXIS(NS_LITERAL_STRING("preceding"));
+const String PRECEDING_SIBLING_AXIS(NS_LITERAL_STRING("preceding-sibling"));
+const String SELF_AXIS(NS_LITERAL_STRING("self"));

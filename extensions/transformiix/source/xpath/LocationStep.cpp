@@ -253,40 +253,40 @@ void LocationStep::fromDescendantsRev(Node* node, txIMatchContext* cs,
 void LocationStep::toString(String& str) {
     switch (mAxisIdentifier) {
         case ANCESTOR_AXIS :
-            str.append("ancestor::");
+            str.Append(NS_LITERAL_STRING("ancestor::"));
             break;
         case ANCESTOR_OR_SELF_AXIS :
-            str.append("ancestor-or-self::");
+            str.Append(NS_LITERAL_STRING("ancestor-or-self::"));
             break;
         case ATTRIBUTE_AXIS:
-            str.append("@");
+            str.Append(PRUnichar('@'));
             break;
         case DESCENDANT_AXIS:
-            str.append("descendant::");
+            str.Append(NS_LITERAL_STRING("descendant::"));
             break;
         case DESCENDANT_OR_SELF_AXIS:
-            str.append("descendant-or-self::");
+            str.Append(NS_LITERAL_STRING("descendant-or-self::"));
             break;
         case FOLLOWING_AXIS :
-            str.append("following::");
+            str.Append(NS_LITERAL_STRING("following::"));
             break;
         case FOLLOWING_SIBLING_AXIS:
-            str.append("following-sibling::");
+            str.Append(NS_LITERAL_STRING("following-sibling::"));
             break;
         case NAMESPACE_AXIS:
-            str.append("namespace::");
+            str.Append(NS_LITERAL_STRING("namespace::"));
             break;
         case PARENT_AXIS :
-            str.append("parent::");
+            str.Append(NS_LITERAL_STRING("parent::"));
             break;
         case PRECEDING_AXIS :
-            str.append("preceding::");
+            str.Append(NS_LITERAL_STRING("preceding::"));
             break;
         case PRECEDING_SIBLING_AXIS :
-            str.append("preceding-sibling::");
+            str.Append(NS_LITERAL_STRING("preceding-sibling::"));
             break;
         case SELF_AXIS :
-            str.append("self::");
+            str.Append(NS_LITERAL_STRING("self::"));
             break;
         default:
             break;

@@ -83,10 +83,10 @@ ExprResult* AttributeValueTemplate::evaluate(txIEvalContext* aContext)
 void AttributeValueTemplate::toString(String& str) {
     txListIterator iter(&expressions);
     while (iter.hasNext()) {
-        str.append('{');
+        str.Append(PRUnichar('{'));
         Expr* expr = (Expr*)iter.next();
         expr->toString(str);
-        str.append('}');
+        str.Append(PRUnichar('}'));
     }
 } //-- toString
 

@@ -68,28 +68,28 @@ inline String::~String()
   MOZ_COUNT_DTOR(String);
 }
 
-inline void String::append(UNICODE_CHAR aSource)
+inline void String::Append(PRUnichar aSource)
 {
   mString.Append(aSource);
 }
 
-inline void String::append(const String& aSource)
+inline void String::Append(const String& aSource)
 {
   mString.Append(aSource.mString);
 }
 
-inline void String::append(const UNICODE_CHAR* aSource, PRUint32 aLength)
+inline void String::Append(const PRUnichar* aSource, PRUint32 aLength)
 {
   mString.Append(aSource, aLength);
 }
 
-inline void String::append(const nsAString& aSource)
+inline void String::Append(const nsAString& aSource)
 {
   mString.Append(aSource);
 }
 
 inline void String::insert(PRUint32 aOffset,
-                           UNICODE_CHAR aSource)
+                           PRUnichar aSource)
 {
   mString.Insert(aSource, aOffset);
 }
@@ -100,7 +100,7 @@ inline void String::insert(PRUint32 aOffset, const String& aSource)
 }
 
 inline void String::replace(PRUint32 aOffset,
-                            UNICODE_CHAR aSource)
+                            PRUnichar aSource)
 {
   mString.SetCharAt(aSource, aOffset);
 }
@@ -110,23 +110,17 @@ inline void String::replace(PRUint32 aOffset, const String& aSource)
   mString.Replace(aOffset, mString.Length() - aOffset, aSource.mString);
 }
 
-inline void String::deleteChars(PRUint32 aOffset,
-                                PRUint32 aCount)
+inline void String::Cut(PRUint32 aOffset, PRUint32 aCount)
 {
   mString.Cut(aOffset, aCount);
 }
 
-inline UNICODE_CHAR String::charAt(PRUint32 aIndex) const
+inline PRUnichar String::CharAt(PRUint32 aIndex) const
 {
   return mString.CharAt(aIndex);
 }
 
-inline void String::clear()
-{
-  mString.Truncate();
-}
-
-inline PRInt32 String::indexOf(UNICODE_CHAR aData,
+inline PRInt32 String::indexOf(PRUnichar aData,
                                PRInt32 aOffset) const
 {
   return mString.FindChar(aData, (PRUint32)aOffset);
@@ -138,16 +132,13 @@ inline PRInt32 String::indexOf(const String& aData,
   return mString.Find(aData.mString, aOffset);
 }
 
-inline PRInt32 String::lastIndexOf(UNICODE_CHAR aData,
-                                   PRInt32 aOffset) const
+inline PRInt32 String::RFindChar(PRUnichar aData, PRInt32 aOffset) const
 {
   return mString.RFindChar(aData, aOffset);
 }
 
-inline MBool String::isEqual(const String& aData) const
+inline MBool String::Equals(const String& aData) const
 {
-  if (this == &aData)
-    return MB_TRUE;
   return mString.Equals(aData.mString);
 }
 
@@ -158,17 +149,17 @@ inline MBool String::isEqualIgnoreCase(const String& aData) const
   return mString.Equals(aData.mString, txCaseInsensitiveStringComparator());
 }
 
-inline MBool String::isEmpty() const
+inline MBool String::IsEmpty() const
 {
   return mString.IsEmpty();
 }
 
-inline PRUint32 String::length() const
+inline PRUint32 String::Length() const
 {
   return mString.Length();
 }
 
-inline void String::truncate(PRUint32 aLength)
+inline void String::Truncate(PRUint32 aLength)
 {
   mString.Truncate(aLength);
 }
@@ -182,7 +173,7 @@ inline String& String::subString(PRUint32 aStart, String& aDest) const
   else {
     NS_ASSERTION(aStart == length,
                  "Bonehead! Calling subString with negative length.");
-    aDest.clear();
+    aDest.Truncate();
   }
   return aDest;
 }
@@ -196,7 +187,7 @@ inline String& String::subString(PRUint32 aStart, PRUint32 aEnd,
   else {
     NS_ASSERTION(aStart == aEnd,
                  "Bonehead! Calling subString with negative length.");
-    aDest.clear();
+    aDest.Truncate();
   }
   return aDest;
 }
@@ -224,28 +215,6 @@ inline String::operator const nsAString&() const
 }
 
 // XXX DEPRECATED
-inline String::String(PRUint32 aSize)
-{
-  MOZ_COUNT_CTOR(String);
-  mString.SetCapacity(aSize);
-}
-
-inline String::String(const char* aSource)
-{
-  MOZ_COUNT_CTOR(String);
-  mString.AssignWithConversion(aSource);
-}
-
-inline void String::append(const char* aSource)
-{
-  mString.AppendWithConversion(aSource);
-}
-
-inline MBool String::isEqual(const char* aData) const
-{
-  return mString.EqualsWithConversion(aData);
-}
-
 inline nsString& String::getNSString()
 {
   return mString;

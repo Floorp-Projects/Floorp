@@ -34,7 +34,7 @@
 //Construct a text object with the specified document owner and data
 //
 Text::Text(const String& theData, Document* owner) :
-      CharacterData(Node::TEXT_NODE, String("#text"), theData, owner)
+      CharacterData(Node::TEXT_NODE, String(NS_LITERAL_STRING("#text")), theData, owner)
 {
 }
 
@@ -57,11 +57,11 @@ Text* Text::splitText(PRUint32 offset)
   Text* newTextSibling = NULL;
   String newData;
 
-  if (offset < nodeValue.length())
+  if (offset < nodeValue.Length())
     {
       newTextSibling = getOwnerDocument()->createTextNode(nodeValue.subString(offset, newData));
       getParentNode()->insertBefore(newTextSibling, getNextSibling());
-      nodeValue.deleteChars(offset, nodeValue.length() - offset);
+      nodeValue.Cut(offset, nodeValue.Length() - offset);
     }
 
   return newTextSibling;

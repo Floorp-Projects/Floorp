@@ -95,18 +95,18 @@ ExprResult* BooleanExpr::evaluate(txIEvalContext* aContext)
 void BooleanExpr::toString(String& str) {
 
     if ( leftExpr ) leftExpr->toString(str);
-    else str.append("null");
+    else str.Append(NS_LITERAL_STRING("null"));
 
     switch ( op ) {
         case OR:
-            str.append(" or ");
+            str.Append(NS_LITERAL_STRING(" or "));
             break;
         default:
-            str.append(" and ");
+            str.Append(NS_LITERAL_STRING(" and "));
             break;
     }
     if ( rightExpr ) rightExpr->toString(str);
-    else str.append("null");
+    else str.Append(NS_LITERAL_STRING("null"));
 
 } //-- toString
 

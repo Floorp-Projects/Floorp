@@ -50,7 +50,7 @@ txKeyFunctionCall::txKeyFunctionCall(ProcessorState* aPs,
 ExprResult* txKeyFunctionCall::evaluate(txIEvalContext* aContext)
 {
     if (!aContext || !requireParams(2, 2, aContext))
-        return new StringResult("error");
+        return new StringResult(NS_LITERAL_STRING("error"));
 
     NodeSet* res = new NodeSet;
     if (!res) {
@@ -71,7 +71,7 @@ ExprResult* txKeyFunctionCall::evaluate(txIEvalContext* aContext)
     }
 
     if (!key) {
-        String err("No key with that name in: ");
+        String err(NS_LITERAL_STRING("No key with that name in: "));
         toString(err);
         aContext->receiveError(err, NS_ERROR_INVALID_ARG);
         return res;
@@ -252,7 +252,7 @@ void txXSLKey::testNode(Node* aNode, NamedMap* aMap)
             if (exprResult->getResultType() == ExprResult::NODESET) {
                 NodeSet* res = (NodeSet*)exprResult;
                 for (int i=0; i<res->size(); i++) {
-                    val.clear();
+                    val.Truncate();
                     XMLDOMUtils::getNodeValue(res->get(i), val);
 
                     nodeSet = (NodeSet*)aMap->get(val);

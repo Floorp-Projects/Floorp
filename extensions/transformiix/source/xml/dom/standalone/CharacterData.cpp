@@ -60,7 +60,7 @@ void CharacterData::setData(const String& source)
 //
 PRUint32 CharacterData::getLength() const
 {
-  return nodeValue.length();
+  return nodeValue.Length();
 }
 
 //
@@ -70,39 +70,39 @@ PRUint32 CharacterData::getLength() const
 //
 String& CharacterData::substringData(PRUint32 offset, PRUint32 count, String& dest)
 {
-  if ((offset < nodeValue.length()) && (count > 0))
+  if ((offset < nodeValue.Length()) && (count > 0))
     return nodeValue.subString(offset, offset+count, dest);
   else
     {
-    dest.clear();
+    dest.Truncate();
     return dest;
     }
 }
 
 void CharacterData::appendData(const String& arg)
 {
-  nodeValue.append(arg);
+  nodeValue.Append(arg);
 }
 
 void CharacterData::insertData(PRUint32 offset, const String& arg)
 {
-  if (offset < nodeValue.length())
+  if (offset < nodeValue.Length())
     nodeValue.insert(offset, arg);
 }
 
 void CharacterData::deleteData(PRUint32 offset, PRUint32 count)
 {
-  if ((offset < nodeValue.length()) && (count > 0))
-    nodeValue.deleteChars(offset, count);
+  if ((offset < nodeValue.Length()) && (count > 0))
+    nodeValue.Cut(offset, count);
 }
 
 void CharacterData::replaceData(PRUint32 offset, PRUint32 count, const String& arg)
 {
   String tempString;
 
-  if ((offset < nodeValue.length()) && (count > 0))
+  if ((offset < nodeValue.Length()) && (count > 0))
     {
-      if (count < arg.length())
+      if (count < arg.Length())
         {
         tempString = arg.subString(0, count, tempString);
         nodeValue.replace(offset, tempString);

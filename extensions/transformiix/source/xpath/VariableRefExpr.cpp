@@ -68,7 +68,7 @@ ExprResult* VariableRefExpr::evaluate(txIEvalContext* aContext)
     nsresult rv = aContext->getVariable(mNamespace, mLocalName, exprResult);
     if (NS_FAILED(rv)) {
       // XXX report error, undefined variable
-      return new StringResult("error");
+      return new StringResult(NS_LITERAL_STRING("error"));
     }
     return exprResult->clone();
 }
@@ -83,14 +83,14 @@ ExprResult* VariableRefExpr::evaluate(txIEvalContext* aContext)
 **/
 void VariableRefExpr::toString(String& aDest)
 {
-    aDest.append('$');
+    aDest.Append(PRUnichar('$'));
     if (mPrefix) {
         String prefix;
         TX_GET_ATOM_STRING(mPrefix, prefix);
-        aDest.append(prefix);
-        aDest.append(':');
+        aDest.Append(prefix);
+        aDest.Append(PRUnichar(':'));
     }
     String lname;
     TX_GET_ATOM_STRING(mLocalName, lname);
-    aDest.append(lname);
+    aDest.Append(lname);
 } //-- toString

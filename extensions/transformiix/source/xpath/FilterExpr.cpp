@@ -73,7 +73,7 @@ ExprResult* FilterExpr::evaluate(txIEvalContext* aContext)
     }
     else if(!isEmpty()) {
         // We can't filter a non-nodeset
-        String err("Expecting nodeset as result of: ");
+        String err(NS_LITERAL_STRING("Expecting nodeset as result of: "));
         expr->toString(err);
         aContext->receiveError(err, NS_ERROR_XPATH_EVAL_FAILED);
         delete exprResult;
@@ -90,7 +90,7 @@ ExprResult* FilterExpr::evaluate(txIEvalContext* aContext)
 **/
 void FilterExpr::toString(String& str) {
     if ( expr ) expr->toString(str);
-    else str.append("null");
+    else str.Append(NS_LITERAL_STRING("null"));
     PredicateList::toString(str);
 } //-- toString
 

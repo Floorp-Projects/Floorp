@@ -72,7 +72,7 @@ void StringList::add(String* strptr) {
 MBool StringList::contains(String& search) {
     StringListItem* sItem = firstItem;
     while ( sItem ) {
-        if ( search.isEqual(*sItem->strptr)) return MB_TRUE;
+        if ( search.Equals(*sItem->strptr)) return MB_TRUE;
         sItem = sItem->nextItem;
     }
     return MB_FALSE;
@@ -191,7 +191,7 @@ StringList::StringListItem* StringList::remove(StringList::StringListItem* sItem
 void StringList::remove(String& search) {
     StringListItem* sItem = firstItem;
     while (sItem) {
-        if (sItem->strptr->isEqual(search)) {
+        if (sItem->strptr->Equals(search)) {
             delete sItem->strptr;
             StringListItem* temp = remove(sItem);
             sItem = sItem->nextItem;

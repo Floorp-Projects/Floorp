@@ -75,10 +75,10 @@ Token::Token(const String& value, short type)
   this->value = value;
 } //-- Token
 
-Token::Token(UNICODE_CHAR uniChar, short type)
+Token::Token(PRUnichar uniChar, short type)
 {
   this->type = type;
-  this->value.append(uniChar);
+  this->value.Append(uniChar);
 } //-- Token
 
 /**
@@ -107,30 +107,30 @@ Token::~Token()
  * Complex Tokens
 */
 //-- Nodetype tokens
-const String ExprLexer::COMMENT("comment");
-const String ExprLexer::NODE("node");
-const String ExprLexer::PROC_INST("processing-instruction");
-const String ExprLexer::TEXT("text");
+const String ExprLexer::COMMENT(NS_LITERAL_STRING("comment"));
+const String ExprLexer::NODE(NS_LITERAL_STRING("node"));
+const String ExprLexer::PROC_INST(NS_LITERAL_STRING("processing-instruction"));
+const String ExprLexer::TEXT(NS_LITERAL_STRING("text"));
 
 //-- boolean
-const String ExprLexer::AND("and");
-const String ExprLexer::OR("or");
+const String ExprLexer::AND(NS_LITERAL_STRING("and"));
+const String ExprLexer::OR(NS_LITERAL_STRING("or"));
 
 //-- multiplicative operators
-const String ExprLexer::MODULUS("mod");
-const String ExprLexer::DIVIDE("div");
+const String ExprLexer::MODULUS(NS_LITERAL_STRING("mod"));
+const String ExprLexer::DIVIDE(NS_LITERAL_STRING("div"));
 
 /**
  * The set of Lexer error messages
  **/
 const String ExprLexer::error_message[] =
 {
-  String("VariableReference expected"),
-  String("Operator expected"),
-  String("Literal is not closed"),
-  String(": not expected"),
-  String("! not expected, use != or not()"),
-  String("found a unkown character")
+  String(NS_LITERAL_STRING("VariableReference expected")),
+  String(NS_LITERAL_STRING("Operator expected")),
+  String(NS_LITERAL_STRING("Literal is not closed")),
+  String(NS_LITERAL_STRING(": not expected")),
+  String(NS_LITERAL_STRING("! not expected, use != or not()")),
+  String(NS_LITERAL_STRING("found a unkown character"))
 };
 
   //---------------/
@@ -234,14 +234,14 @@ MBool ExprLexer::nextIsOperatorToken(Token* token)
 **/
 void ExprLexer::parse(const String& pattern)
 {
-  if (pattern.isEmpty())
+  if (pattern.IsEmpty())
     return;
 
   String tokenBuffer;
   PRUint32 iter = 0, start;
-  PRUint32 size = pattern.length();
+  PRUint32 size = pattern.Length();
   short defType;
-  UNICODE_CHAR ch;
+  PRUnichar ch;
 
   //-- initialize previous token, this will automatically get
   //-- deleted when it goes out of scope
@@ -251,11 +251,11 @@ void ExprLexer::parse(const String& pattern)
 
   while (iter < size) {
 
-    ch = pattern.charAt(iter);
+    ch = pattern.CharAt(iter);
     defType = Token::CNAME;
 
     if (ch==DOLLAR_SIGN) {
-      if (++iter == size || !XMLUtils::isLetter(ch=pattern.charAt(iter))) {
+      if (++iter == size || !XMLUtils::isLetter(ch=pattern.CharAt(iter))) {
         // Error, VariableReference expected
         errorPos = iter;
         errorCode = ERROR_UNRESOLVED_VAR_REFERENCE;
@@ -277,27 +277,27 @@ void ExprLexer::parse(const String& pattern)
       //  and are dealt with below
       start = iter;
       while (++iter < size && 
-             XMLUtils::isNCNameChar(pattern.charAt(iter))) /* just go */ ;
-      if (iter < size && pattern.charAt(iter)==COLON) {
+             XMLUtils::isNCNameChar(pattern.CharAt(iter))) /* just go */ ;
+      if (iter < size && pattern.CharAt(iter)==COLON) {
         // try QName or wildcard, might need to step back for axis
         if (++iter < size)
-          if (XMLUtils::isLetter(pattern.charAt(iter)))
+          if (XMLUtils::isLetter(pattern.CharAt(iter)))
             while (++iter < size && 
-                   XMLUtils::isNCNameChar(pattern.charAt(iter))) /* just go */ ;
-          else if (pattern.charAt(iter)=='*' 
+                   XMLUtils::isNCNameChar(pattern.CharAt(iter))) /* just go */ ;
+          else if (pattern.CharAt(iter)=='*' 
                    && defType != Token::VAR_REFERENCE)
             ++iter; /* eat wildcard for NameTest, bail for var ref at COLON */
           else 
             iter--; // step back
       }
       if (nextIsOperatorToken(prevToken)) {
-        if (pattern.subString(start,iter,subStr).isEqual(AND))
+        if (pattern.subString(start,iter,subStr).Equals(AND))
           defType = Token::AND_OP;
-        else if (pattern.subString(start,iter,subStr).isEqual(OR))
+        else if (pattern.subString(start,iter,subStr).Equals(OR))
           defType = Token::OR_OP;
-        else if (pattern.subString(start,iter,subStr).isEqual(MODULUS))
+        else if (pattern.subString(start,iter,subStr).Equals(MODULUS))
           defType = Token::MODULUS_OP;
-        else if (pattern.subString(start,iter,subStr).isEqual(DIVIDE))
+        else if (pattern.subString(start,iter,subStr).Equals(DIVIDE))
           defType = Token::DIVIDE_OP;
         else {
           // Error "operator expected"
@@ -317,10 +317,10 @@ void ExprLexer::parse(const String& pattern)
     else if (isXPathDigit(ch)) {
       start = iter;
       while (++iter < size && 
-             isXPathDigit(pattern.charAt(iter))) /* just go */;
-      if (iter < size && pattern.charAt(iter) == '.')
+             isXPathDigit(pattern.CharAt(iter))) /* just go */;
+      if (iter < size && pattern.CharAt(iter) == '.')
         while (++iter < size && 
-               isXPathDigit(pattern.charAt(iter))) /* just go */;
+               isXPathDigit(pattern.CharAt(iter))) /* just go */;
       addToken(new Token(pattern.subString(start,iter,subStr),Token::NUMBER));
     }
     else {
@@ -355,11 +355,11 @@ void ExprLexer::parse(const String& pattern)
       case PERIOD:
         // period can be .., .(DIGITS)+ or ., check next
         if (++iter < size) {
-          ch=pattern.charAt(iter);
+          ch=pattern.CharAt(iter);
           if (isXPathDigit(ch)) {
             start=iter-1;
             while (++iter < size && 
-                   isXPathDigit(pattern.charAt(iter))) /* just go */;
+                   isXPathDigit(pattern.CharAt(iter))) /* just go */;
             addToken(new Token(pattern.subString(start,iter,subStr),
                                Token::NUMBER));
           }
@@ -376,7 +376,7 @@ void ExprLexer::parse(const String& pattern)
         
         break;
       case COLON: // QNames are dealt above, must be axis ident
-        if (++iter < size && pattern.charAt(iter)==COLON &&
+        if (++iter < size && pattern.CharAt(iter)==COLON &&
             prevToken->type == Token::CNAME) {
           prevToken->type = Token::AXIS_IDENTIFIER;
           ++iter;
@@ -393,7 +393,7 @@ void ExprLexer::parse(const String& pattern)
         }
         break;
       case FORWARD_SLASH :
-        if (++iter < size && pattern.charAt(iter)==ch) {
+        if (++iter < size && pattern.CharAt(iter)==ch) {
           addToken(new Token(pattern.subString(iter-1,++iter,subStr),
                              Token::ANCESTOR_OP));
         }
@@ -402,7 +402,7 @@ void ExprLexer::parse(const String& pattern)
         }
         break;
       case BANG : // can only be !=
-        if (++iter < size && pattern.charAt(iter)==EQUAL) {
+        if (++iter < size && pattern.CharAt(iter)==EQUAL) {
           addToken(new Token(pattern.subString(iter-1,++iter,subStr),
                              Token::NOT_EQUAL_OP));
         }
@@ -422,7 +422,7 @@ void ExprLexer::parse(const String& pattern)
         ++iter;
         break;
       case L_ANGLE:
-        if (++iter < size && pattern.charAt(iter)==EQUAL) {
+        if (++iter < size && pattern.CharAt(iter)==EQUAL) {
           addToken(new Token(pattern.subString(iter-1,++iter,subStr),
                              Token::LESS_OR_EQUAL_OP));
         }
@@ -430,7 +430,7 @@ void ExprLexer::parse(const String& pattern)
           addToken(new Token(ch,Token::LESS_THAN_OP));
         break;
       case R_ANGLE:
-        if (++iter < size && pattern.charAt(iter)==EQUAL) {
+        if (++iter < size && pattern.CharAt(iter)==EQUAL) {
           addToken(new Token(pattern.subString(iter-1,++iter,subStr),
                              Token::GREATER_OR_EQUAL_OP));
         }
@@ -450,13 +450,13 @@ void ExprLexer::parse(const String& pattern)
         break;
       case L_PAREN:
         if (prevToken->type == Token::CNAME) {
-          if (prevToken->value.isEqual(COMMENT))
+          if (prevToken->value.Equals(COMMENT))
             prevToken->type = Token::COMMENT;
-          else if (prevToken->value.isEqual(NODE))
+          else if (prevToken->value.Equals(NODE))
             prevToken->type = Token::NODE;
-          else if (prevToken->value.isEqual(PROC_INST))
+          else if (prevToken->value.Equals(PROC_INST))
             prevToken->type = Token::PROC_INST;
-          else if (prevToken->value.isEqual(TEXT))
+          else if (prevToken->value.Equals(TEXT))
             prevToken->type = Token::TEXT;
           else
             prevToken->type = Token::FUNCTION_NAME;

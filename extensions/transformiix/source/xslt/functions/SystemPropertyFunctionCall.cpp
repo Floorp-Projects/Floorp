@@ -44,22 +44,22 @@ ExprResult* SystemPropertyFunctionCall::evaluate(txIEvalContext* aContext)
                     result = new NumberResult(1.0);
                 }
                 else if (qname.mLocalName == txXSLTAtoms::vendor) {
-                    result = new StringResult("Transformiix");
+                    result = new StringResult(NS_LITERAL_STRING("Transformiix"));
                 }
                 else if (qname.mLocalName == txXSLTAtoms::vendorUrl) {
-                    result = new StringResult("http://www.mozilla.org/projects/xslt/");
+                    result = new StringResult(NS_LITERAL_STRING("http://www.mozilla.org/projects/xslt/"));
                 }
             }
         }
         else {
-            String err("Invalid argument passed to system-property(), expecting String");
+            String err(NS_LITERAL_STRING("Invalid argument passed to system-property(), expecting String"));
             aContext->receiveError(err, NS_ERROR_XPATH_INVALID_ARG);
             result = new StringResult(err);
         }
     }
 
     if (!result) {
-        result = new StringResult("");
+        result = new StringResult();
     }
     return result;
 }

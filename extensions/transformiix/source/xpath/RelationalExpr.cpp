@@ -118,7 +118,7 @@ MBool RelationalExpr::compareResults(ExprResult* left, ExprResult* right) {
                 left->stringValue(lStr);
                 String rStr;
                 right->stringValue(rStr);
-                result = !lStr.isEqual(rStr);
+                result = !lStr.Equals(rStr);
             }
         }
         else if ( op == EQUAL) {
@@ -145,7 +145,7 @@ MBool RelationalExpr::compareResults(ExprResult* left, ExprResult* right) {
                 left->stringValue(lStr);
                 String rStr;
                 right->stringValue(rStr);
-                result = lStr.isEqual(rStr);
+                result = lStr.Equals(rStr);
             }
 
         }
@@ -240,31 +240,31 @@ ExprResult* RelationalExpr::evaluate(txIEvalContext* aContext)
 void RelationalExpr::toString(String& str) {
 
     if ( leftExpr ) leftExpr->toString(str);
-    else str.append("null");
+    else str.Append(NS_LITERAL_STRING("null"));
 
     switch ( op ) {
         case NOT_EQUAL:
-            str.append("!=");
+            str.Append(NS_LITERAL_STRING("!="));
             break;
         case LESS_THAN:
-            str.append("<");
+            str.Append(PRUnichar('<'));
             break;
         case LESS_OR_EQUAL:
-            str.append("<=");
+            str.Append(NS_LITERAL_STRING("<="));
             break;
         case GREATER_THAN :
-            str.append(">");
+            str.Append(PRUnichar('>'));
             break;
         case GREATER_OR_EQUAL:
-            str.append(">=");
+            str.Append(NS_LITERAL_STRING(">="));
             break;
         default:
-            str.append("=");
+            str.Append(PRUnichar('='));
             break;
     }
 
     if ( rightExpr ) rightExpr->toString(str);
-    else str.append("null");
+    else str.Append(NS_LITERAL_STRING("null"));
 
 } //-- toString
 

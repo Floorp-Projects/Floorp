@@ -66,41 +66,41 @@ int main(int argc, char** argv) {
 
     //-- available flags
     StringList flags;
-    flags.add(new String("i"));          // XML input
-    flags.add(new String("s"));          // XSL input
-    flags.add(new String("o"));          // Output filename
-    flags.add(new String("h"));          // help
-    flags.add(new String("q"));          // quiet
+    flags.add(new String(NS_LITERAL_STRING("i")));          // XML input
+    flags.add(new String(NS_LITERAL_STRING("s")));          // XSL input
+    flags.add(new String(NS_LITERAL_STRING("o")));          // Output filename
+    flags.add(new String(NS_LITERAL_STRING("h")));          // help
+    flags.add(new String(NS_LITERAL_STRING("q")));          // quiet
 
     NamedMap options;
     options.setObjectDeletion(MB_TRUE);
     CommandLineUtils::getOptions(options, argc, argv, flags);
 
-    if (!options.get(String("q"))) {
-        String copyright("(C) 1999 The MITRE Corporation, Keith Visco, and contributors");
+    if (!options.get(String(NS_LITERAL_STRING("q")))) {
+        String copyright(NS_LITERAL_STRING("(C) 1999 The MITRE Corporation, Keith Visco, and contributors"));
         cerr << "TransforMiiX ";
         cerr << "1.2b pre" << endl;
         cerr << copyright << endl;
         //-- print banner line
-        PRUint32 fillSize = copyright.length() + 1;
+        PRUint32 fillSize = copyright.Length() + 1;
         PRUint32 counter;
         for (counter = 0; counter < fillSize; ++counter)
             cerr << '-';
         cerr << endl << endl;
     }
 
-    if (options.get(String("h"))) {
+    if (options.get(String(NS_LITERAL_STRING("h")))) {
         printHelp();
         return 0;
     }
-    String* xmlFilename = (String*)options.get(String("i"));
-    String* xsltFilename = (String*)options.get(String("s"));
-    String* outFilename = (String*)options.get(String("o"));
+    String* xmlFilename = (String*)options.get(String(NS_LITERAL_STRING("i")));
+    String* xsltFilename = (String*)options.get(String(NS_LITERAL_STRING("s")));
+    String* outFilename = (String*)options.get(String(NS_LITERAL_STRING("o")));
 
     //-- handle output stream
     ostream* resultOutput = &cout;
     ofstream resultFileStream;
-    if (outFilename && !outFilename->isEqual("-")) {
+    if (outFilename && !outFilename->getConstNSString().Equals(NS_LITERAL_STRING("-"))) {
         resultFileStream.open(NS_LossyConvertUCS2toASCII(*outFilename).get(),
                               ios::out);
         if (!resultFileStream) {
