@@ -482,6 +482,9 @@ void leaky::analyze()
     lep < lastLogEntry;
     lep = reinterpret_cast<malloc_log_entry*>(&lep->pcs[lep->numpcs])) {
 
+    if (excluded(lep) || !included(lep))
+      continue;
+
     ++stacks; // How many stack frames did we collect
 
     // This loop walks through every symbol in the call stack.  By walking it
