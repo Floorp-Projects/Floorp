@@ -258,7 +258,7 @@ real_checkout:
 	 : If it fails, touch an error file because "tee" hides the error.
 	@failed=.cvs-failed.tmp; rm -f $$failed*; \
 	cvs_co='echo $$cmd ; \
-	  ($$cmd || touch $$failed) 2>&1 | tee -a $(CVSCO_LOGFILE) && \
+	  (eval "$$cmd" || touch $$failed) 2>&1 | tee -a $(CVSCO_LOGFILE) && \
 	  if test -f $$failed; then false; else true; fi;'; \
 	cmd='$(CVSCO_NSPR)'      && eval $$cvs_co && \
 	cmd='$(CVSCO_PSM)'       && eval $$cvs_co && \
