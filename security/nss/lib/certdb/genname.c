@@ -331,7 +331,7 @@ cert_EncodeGeneralNames(PRArenaPool *arena, CERTGeneralName *names)
 	goto loser;
     }
     for (i = 0; i < count; i++) {
-	items[i] = CERT_EncodeGeneralName(current_name, (SECItem *) NULL, arena);
+	items[i] = CERT_EncodeGeneralName(current_name, (SECItem *)NULL, arena);
 	if (items[i] == NULL) {
 	    goto loser;
 	}
@@ -465,8 +465,7 @@ cert_EncodeNameConstraint(CERTNameConstraint  *constraint,
 	    return NULL;
 	}
     }
-    CERT_EncodeGeneralName(&(constraint->name), &(constraint->DERName), 
-			   arena);
+    CERT_EncodeGeneralName(&(constraint->name), &(constraint->DERName), arena);
     
     dest = SEC_ASN1EncodeItem (arena, dest, constraint,
 			       CERTNameConstraintTemplate);
@@ -490,7 +489,7 @@ cert_EncodeNameConstraintSubTree(CERTNameConstraint  *constraints,
     if (constraints != NULL) {
 	count = 1;
     }
-    head = (PRCList *) (((char *) constraints) + offsetof(CERTNameConstraint, l));
+    head = (PRCList *)((char *)constraints + offsetof(CERTNameConstraint, l));
     while (current_constraint->l.next != head) {
 	current_constraint = cert_get_next_name_constraint(current_constraint);
 	++count;
@@ -530,14 +529,16 @@ cert_EncodeNameConstraints(CERTNameConstraints  *constraints,
     /* TODO: mark arena */
     if (constraints->permited != NULL) {
 	rv = cert_EncodeNameConstraintSubTree(constraints->permited, arena,
-					      &constraints->DERPermited, PR_TRUE);
+					      &constraints->DERPermited, 
+					      PR_TRUE);
 	if (rv == SECFailure) {
 	    goto loser;
 	}
     }
     if (constraints->excluded != NULL) {
 	rv = cert_EncodeNameConstraintSubTree(constraints->excluded, arena,
-					      &constraints->DERExcluded, PR_FALSE);
+					      &constraints->DERExcluded, 
+					      PR_FALSE);
 	if (rv == SECFailure) {
 	    goto loser;
 	}
@@ -568,11 +569,13 @@ cert_DecodeNameConstraint(PRArenaPool       *arena,
     constraint = PORT_ArenaZNew(arena, CERTNameConstraint);
     if (!constraint)
     	goto loser;
-    rv = SEC_ASN1DecodeItem(arena, constraint, CERTNameConstraintTemplate, encodedConstraint);
+    rv = SEC_ASN1DecodeItem(arena, constraint, CERTNameConstraintTemplate, 
+                            encodedConstraint);
     if (rv != SECSuccess) {
 	goto loser;
     }
-    temp = CERT_DecodeGeneralName(arena, &(constraint->DERName), &(constraint->name));
+    temp = CERT_DecodeGeneralName(arena, &(constraint->DERName), 
+                                         &(constraint->name));
     if (temp != &(constraint->name)) {
 	goto loser;
     }
@@ -642,18 +645,20 @@ cert_DecodeNameConstraints(PRArenaPool   *arena,
     if (rv != SECSuccess) {
 	goto loser;
     }
-    if (constraints->DERPermited != NULL && constraints->DERPermited[0] != NULL) {
-	constraints->permited = cert_DecodeNameConstraintSubTree(arena,
-								 constraints->DERPermited,
-								 PR_TRUE);
+    if (constraints->DERPermited != NULL && 
+        constraints->DERPermited[0] != NULL) {
+	constraints->permited = 
+	    cert_DecodeNameConstraintSubTree(arena, constraints->DERPermited,
+					     PR_TRUE);
 	if (constraints->permited == NULL) {
 	    goto loser;
 	}
     }
-    if (constraints->DERExcluded != NULL && constraints->DERExcluded[0] != NULL) {
-	constraints->excluded = cert_DecodeNameConstraintSubTree(arena,
-								 constraints->DERExcluded,
-								 PR_FALSE);
+    if (constraints->DERExcluded != NULL && 
+        constraints->DERExcluded[0] != NULL) {
+	constraints->excluded = 
+	    cert_DecodeNameConstraintSubTree(arena, constraints->DERExcluded,
+					     PR_FALSE);
 	if (constraints->excluded == NULL) {
 	    goto loser;
 	}
@@ -855,22 +860,20 @@ CERT_GetNameConstraintByType (CERTNameConstraint *constraints,
 			      PRArenaPool *arena)
 {
     CERTNameConstraint *current;
-    CERTNameConstraint *temp;
     
     *returnList = NULL;
     if (!constraints)
 	return SECSuccess;
     /* TODO: mark arena */
     current = constraints;
-
     do {
-	if (current->name.type == type || 
-	    (type == certDirectoryName && current->name.type == certRFC822Name)) {
-	    temp = NULL;
-	    temp = CERT_CopyNameConstraint(arena, temp, current);
-	    if (temp == NULL) {
+	if ( current->name.type == type || 
+	    (current->name.type == certRFC822Name &&
+	     type == certDirectoryName)) {
+	    CERTNameConstraint *temp;
+	    temp = CERT_CopyNameConstraint(arena, NULL, current);
+	    if (temp == NULL) 
 		goto loser;
-	    }
 	    *returnList = CERT_AddNameConstraint(*returnList, temp);
 	}
 	current = cert_get_next_name_constraint(current);
