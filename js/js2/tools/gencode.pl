@@ -128,9 +128,9 @@ $ops{"SAVE_NAME"} =
   };
 $ops{"NEW_OBJECT"} =
   {
-   super  => "Instruction_1",
-   rem    => "dest",
-   params => [ ("TypedRegister") ]
+   super  => "Instruction_2",
+   rem    => "dest, constructor",
+   params => [ ("TypedRegister", "TypedRegister") ]
   };
 $ops{"NEW_CLASS"} =
   {

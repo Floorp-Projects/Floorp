@@ -55,17 +55,49 @@ JSValue object_toString(Context *cx, const JSValues& argv)
     return kUndefinedValue;
 }
 
+JSValue objectConstructor(Context *cx, const JSValues& argv)
+{
+    ASSERT(argv.size() > 0);
+    JSValue theThis = argv[0];
+    
+    // the prototype and class have been established already
+
+    return theThis;
+}
+
+struct ObjectFunctionEntry {
+    char *name;
+    JSNativeFunction::JSCode fn;
+} ObjectFunctions[] = {
+    { "toString",     object_toString },
+};
+
 
 JSObject *JSObject::objectPrototypeObject = JSObject::initJSObject();
-JSString *JSObject::ObjectString = new JSString("Object");
+String JSObject::ObjectString = widenCString("Object");
 
+// This establishes the ur-prototype, there's a timing issue
+// here - the JSObject static initializers have to run before
+// any other JSObject objects are constructed.
 JSObject *JSObject::initJSObject()
 {
     JSObject *result = new JSObject();
-    result->setProperty(widenCString("toString"), JSValue(new JSNativeFunction(object_toString) ) );
+
+    for (int i = 0; i < sizeof(ObjectFunctions) / sizeof(ObjectFunctionEntry); i++)
+        result->setProperty(widenCString(ObjectFunctions[i].name), JSValue(new JSNativeFunction(ObjectFunctions[i].fn) ) );
+
     return result;
 }
 
+// Install the 'Object' constructor into the scope, mostly irrelevant since making 
+// a new JSObject does all the work of setting the prototype and [[class]] values.
+void JSObject::initObjectObject(JSScope *g)
+{
+    JSObject* o = new JSObject();
+
+    g->setProperty(ObjectString, JSValue(new JSNativeFunction(objectConstructor)));
+
+}
 
 
 
