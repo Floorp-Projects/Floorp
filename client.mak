@@ -21,12 +21,6 @@ MOZ_TOP=mozilla
 !endif
 
 #
-# Arbitrary required defines (should probably just turn them on in the
-#                              tree by default)
-
-MODULAR_NETLIB = 1
-
-#
 # Command macro defines
 #
 
