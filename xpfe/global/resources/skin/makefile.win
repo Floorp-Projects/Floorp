@@ -40,6 +40,8 @@ install::
 	$(MAKE_INSTALL) scrollThumb.gif $(DISTBROWSER)
 	$(MAKE_INSTALL) scrollThumb_mo.gif $(DISTBROWSER)
 	$(MAKE_INSTALL) scrollThumb_dis.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) opentwisty.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) closedtwisty.gif $(DISTBROWSER)
 
 clobber::
   rm -f $(DIST)\bin\chrome\global\skin\default\*.*

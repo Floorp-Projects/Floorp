@@ -42,6 +42,8 @@ EXPORT_RESOURCE_CONTENT = \
 	$(srcdir)/scrollThumb.gif \
 	$(srcdir)/scrollThumb_mo.gif \
 	$(srcdir)/scrollThumb_dis.gif \
+	$(srcdir)/opentwisty.gif \
+	$(srcdir)/closedtwisty.gif \
 	$(NULL)
 
 install:: 

@@ -955,3 +955,24 @@ box splitter[collapse="after"] grippy {
    list-style-image: url(resource:/res/toolbar/grippy-horizontal-after.gif);
 }
 
+titledbutton.twisty
+{
+  visibility: hidden;
+}
+
+treeitem [open="true"][container="true"]> treerow > treecell > titledbutton.twisty {
+ vertical-align: bottom;
+ height: 16px;
+ width: 16px;
+ list-style-image: url("chrome:/global/skin/opentwisty.gif");
+ visibility: visible;
+}
+
+treeitem [container="true"] > treerow > treecell > titledbutton.twisty {
+ vertical-align: bottom;
+ height: 16px;
+ width: 16px;
+ list-style-image: url("chrome:/global/skin/closedtwisty.gif");
+ visibility: visible;
+}
+
