@@ -2041,7 +2041,7 @@ nsTableRowGroupFrame::FindFrameAt(PRInt32    aLineNumber,
                                   PRBool*    aXIsBeforeFirstFrame, 
                                   PRBool*    aXIsAfterLastFrame)
 {
-  PRInt32 cellCount = 0;
+  PRInt32 colCount = 0;
   CellData* cellData;
   nsIFrame* tempFrame = nsnull;
   nsRect tempRect;
@@ -2054,15 +2054,17 @@ nsTableRowGroupFrame::FindFrameAt(PRInt32    aLineNumber,
   if(!cellMap)
      return NS_ERROR_FAILURE;
 
-  cellCount = cellMap->GetNumCellsOriginatingInRow(aLineNumber);
+  colCount = cellMap->GetColCount();
 
   *aXIsBeforeFirstFrame = PR_FALSE;
   *aXIsAfterLastFrame = PR_FALSE;
 
   PRBool gotParentRect = PR_FALSE;
-  for(int i =0;i < cellCount; i++)
+  for (PRInt32 i = 0; i < colCount; i++)
   {
     cellData = cellMap->GetDataAt(aLineNumber, i);
+    if (!cellData->IsOrig())
+      continue;
     tempFrame = (nsIFrame*)cellData->GetCellFrame();
 
     if(!tempFrame)
