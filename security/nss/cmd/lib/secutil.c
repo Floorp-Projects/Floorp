@@ -936,7 +936,7 @@ SECU_PrintSet(FILE *out, SECItem *t, char *m, int level)
 
     start = 2;
     if (t->data[1] & 0x80) {
-	start = (t->data[1] & 0x7f) +1;
+	start += (t->data[1] & 0x7f);
     }
     for (bp=&t->data[start]; bp < &t->data[t->len]; ) {
 	SECItem tmp;
@@ -953,6 +953,9 @@ SECU_PrintSet(FILE *out, SECItem *t, char *m, int level)
 	    len = bp[1];
 	}
 	tmp.len = len+lenlen+1;
+	if (tmp.len > &t->data[t->len] - bp) {
+	    tmp.len = &t->data[t->len] - bp;
+	}
 	tmp.data = bp;
 	bp += tmp.len;
 	secu_PrintAny(out,&tmp,NULL,level+1);
