@@ -242,18 +242,20 @@ nsLDAPDataSource.prototype = {
 
 	 function generateBoundCallback() {
 
-	     cb = new boundCallback();
-
-	     cb.onLDAPMessage = function() {
+	     boundCallback.prototype.onLDAPMessage = function() {
 
 		 // netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
 		 if (DEBUG) {
+		     dump("in the closure\n");
+
 		     dump("boundCallback() called with scope: \n\t" + 
-			  aSource.Value + "\n\t" + aProperty.Value + 
-			  "\n\t" + aTruthValue + "\n\n");
+		     aSource.Value + "\n\t" + aProperty.Value + 
+		     "\n\t" + aTruthValue + "\n\n");
 		 }
 	     }
+
+	     cb = new boundCallback();
 
 	     return cb;
 	 }
