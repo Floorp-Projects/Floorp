@@ -26,8 +26,10 @@ LIBRARY_NAME	= xptinfo
 
 CSRCS		= $(NULL)
 
-CPPSRCS		= nsInterfaceInfo.cpp              \
-		  nsInterfaceInfoManager.cpp       \
+CPPSRCS		= nsInterfaceInfo.cpp           \
+		  nsInterfaceInfoManager.cpp	\
+		  nsTypelibRecord.cpp		\
+		  nsInterfaceRecord.cpp		\
 		  $(NULL)
 
 REQUIRES	= $(MODULE)

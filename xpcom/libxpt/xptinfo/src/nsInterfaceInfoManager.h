@@ -29,7 +29,10 @@
 
 #include "xpt_struct.h"
 #include "nsInterfaceInfo.h"
+
 #include "nsInterfaceRecord.h"
+#include "nsTypelibRecord.h"
+
 
 class nsInterfaceInfoManager : public nsIInterfaceInfoManager
 {
@@ -43,24 +46,28 @@ class nsInterfaceInfoManager : public nsIInterfaceInfoManager
     NS_IMETHOD GetIIDForName(const char* name, nsIID** iid);
     NS_IMETHOD GetNameForIID(const nsIID* iid, char** name);
 
-    // should be private ?
-    nsInterfaceInfoManager();
 public:
     virtual ~nsInterfaceInfoManager();
     static nsInterfaceInfoManager* GetInterfaceInfoManager();
     static nsIAllocator* GetAllocator(nsInterfaceInfoManager* iim = NULL);
 
 private:
-    void initInterfaceTables();
+    nsInterfaceInfoManager();
+    nsresult initInterfaceTables();
+
+    // Should this be public?
+    nsresult indexify_file(const char *filename);
+
+    // list of typelib records for enumeration.  (freeing?)
+    nsTypelibRecord *typelibRecords;
 
     // mapping between names and records
-    PLHashTable *mInterfaceTable;
+    PLHashTable *nameTable;
 
-    // mapping between iids and names
-    // (record handling is looked up by name; iids are translated there)
-    nsHashtable *mIIDTable;
+    // mapping between IIDs and records.
+    nsHashtable *IIDTable;
 
-    nsIAllocator* mAllocator;
+    nsIAllocator *allocator;
 };
 
 #endif /* nsInterfaceInfoManager_h___ */

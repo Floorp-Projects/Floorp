@@ -21,23 +21,35 @@
 #ifndef nsInterfaceRecord_h___
 #define nsInterfaceRecord_h___
 
-#include "xpt_struct.h"
 #include "nsInterfaceInfo.h"
+#include "xpt_struct.h"
 
 // resolve circular ref...
 class nsInterfaceInfo;
+class nsTypelibRecord;
 
-// For references in the mInterfaceTable hashtable.
+// For references in the IIDTable, nameTable hashtables in the
+// nsInterfaceInfoManager.
 class nsInterfaceRecord {
 public:
-    XPTHeader *which_header;
-    PRBool resolved;
-    XPTInterfaceDirectoryEntry *entry;
+    // Accessors for these?
+
+    nsID iid;
+    char *name;
+    char *name_space;
+
+    nsTypelibRecord *typelibRecord;
+    XPTInterfaceDescriptor *interfaceDescriptor;
+
+    // adds ref
+    nsresult GetInfo(nsInterfaceInfo **result);
+
+    // makes allocator alloc'd copy.
+    nsresult GetIID(nsIID **iid);
+    nsresult GetName(char **name);
+
+    // so that nsInterfaceInfo destructor can null it out.
     nsInterfaceInfo *info;
-#ifdef DEBUG
-    // which (counting from 1) typelib was it loaded from?
-    int which;
-#endif
 };    
 
 #endif /* nsInterfaceRecord_h___ */
