@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.2 $ $Date: 2001/09/13 22:16:22 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.3 $ $Date: 2001/09/18 20:54:57 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -68,6 +68,7 @@ NSSTrustDomain_Create
 	return (NSSTrustDomain *)NULL;
     }
     rvTD->arena = arena;
+    rvTD->refCount = 1;
     return rvTD;
 }
 
@@ -77,8 +78,11 @@ NSSTrustDomain_Destroy
   NSSTrustDomain *td
 )
 {
-    nss_SetError(NSS_ERROR_NOT_FOUND);
-    return PR_FAILURE;
+    if (--td->refCount == 0) {
+	NSSModule_Destroy(td->module);
+	nssArena_Destroy(td->arena);
+    }
+    return PR_SUCCESS;
 }
 
 NSS_IMPLEMENT PRStatus
