@@ -206,6 +206,56 @@ public:
   PRInt32      mOrdinal;
 };
 
+/************************************************************************
+  CTokenRecycler class implementation.
+  This class is used to recycle tokens. 
+  By using this simple class, we cut WAY down on the number of tokens
+  that get created during the run of the system.
+ ************************************************************************/
+class CTokenRecycler : public nsITokenRecycler {
+public:
+  
+//      enum {eCacheMaxSize=100}; 
+
+                  CTokenRecycler();
+  virtual         ~CTokenRecycler();
+  virtual void    RecycleToken(CToken* aToken);
+  virtual CToken* CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag, const nsString& aString);
+  virtual CToken* CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag);
+
+protected:
+    nsDeque*  mTokenCache[eToken_last-1];
+    nsString  mEmpty;
+
+#ifdef  NS_DEBUG
+    int       mTotals[eToken_last-1];
+#endif
+};
+
+
+/************************************************************************
+  CNodeRecycler class implementation.
+  This class is used to recycle nodes. 
+  By using this simple class, we cut down on the number of nodes
+  that get created during the run of the system.
+ ************************************************************************/
+
+class CNodeRecycler {
+public:
+  
+                         CNodeRecycler();
+  virtual                ~CNodeRecycler();
+  virtual nsCParserNode* CreateNode(void);
+  virtual void           RecycleNode(nsCParserNode* aNode,nsITokenRecycler* aTokenRecycler=0);
+
+protected:
+    nsDeque  mSharedNodes;
+
+#ifdef NS_DEBUG
+    PRInt32 gNodeCount;
+#endif
+};
+
 
 /************************************************************************
   The dtdcontext class defines an ordered list of tags (a context).
@@ -240,7 +290,9 @@ public:
   nsIParserNode*  RemoveStyle(eHTMLTags aTag);
 
   nsresult        GetNodeRecycler(CNodeRecycler*& aNodeRecycler);
-  static  void    FreeNodeRecycler(void);
+  void            RecycleNode(nsCParserNode *aNode);
+  CTokenRecycler* GetTokenRecycler(void);
+  static  void    ReleaseGlobalObjects(void);
 
   CNamedEntity*   RegisterEntity(const nsString& aName,const nsString& aValue);
   CNamedEntity*   GetEntity(const nsString& aName)const;
@@ -256,7 +308,8 @@ public:
   PRBool          mTransitional;
   PRBool          mHadDocTypeDecl;
 
-  static   CNodeRecycler* mNodeRecycler;
+  static          CNodeRecycler   *gNodeRecycler;
+  static          CTokenRecycler  *gTokenRecycler;
 
   CTableState     *mTableStates;
   PRInt32         mCounters[NS_HTML_TAG_MAX];
@@ -281,55 +334,6 @@ public:
   }
 };
 
-
-/************************************************************************
-  CTokenRecycler class implementation.
-  This class is used to recycle tokens. 
-  By using this simple class, we cut WAY down on the number of tokens
-  that get created during the run of the system.
- ************************************************************************/
-class CTokenRecycler : public nsITokenRecycler {
-public:
-  
-//      enum {eCacheMaxSize=100}; 
-
-                  CTokenRecycler();
-  virtual         ~CTokenRecycler();
-  virtual void    RecycleToken(CToken* aToken);
-  virtual CToken* CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag, const nsString& aString);
-  virtual CToken* CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag);
-
-protected:
-    nsDeque*  mTokenCache[eToken_last-1];
-    nsString  mEmpty;
-
-#ifdef  NS_DEBUG
-    int       mTotals[eToken_last-1];
-#endif
-};
-
-/************************************************************************
-  CNodeRecycler class implementation.
-  This class is used to recycle nodes. 
-  By using this simple class, we cut down on the number of nodes
-  that get created during the run of the system.
- ************************************************************************/
-
-class CNodeRecycler {
-public:
-  
-                         CNodeRecycler();
-  virtual                ~CNodeRecycler();
-  virtual nsCParserNode* CreateNode(void);
-  virtual void           RecycleNode(nsCParserNode* aNode,nsITokenRecycler* aTokenRecycler=0);
-
-protected:
-    nsDeque  mSharedNodes;
-
-#ifdef NS_DEBUG
-    PRInt32 gNodeCount;
-#endif
-};
 
 /************************************************************************
   ITagHandler class offers an API for taking care of specific tokens.

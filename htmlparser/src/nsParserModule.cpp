@@ -211,7 +211,7 @@ nsParserModule::Shutdown()
     nsHTMLTokenizer::FreeTokenRecycler();
     nsXMLTokenizer::FreeTokenRecycler();
     nsExpatTokenizer::FreeTokenRecycler();
-    nsDTDContext::FreeNodeRecycler();
+    nsDTDContext::ReleaseGlobalObjects();
     nsParser::FreeSharedObjects();
     mInitialized = PR_FALSE;
     COtherDTD::ReleaseTable();

@@ -357,7 +357,9 @@ eHTMLTags nsEntryStack::Last() const {
 /***************************************************************
   Now define the dtdcontext class
  ***************************************************************/
-CNodeRecycler* nsDTDContext::mNodeRecycler=0;
+
+CNodeRecycler   *nsDTDContext::gNodeRecycler=0;
+CTokenRecycler  *nsDTDContext::gTokenRecycler=0;
 
 /**
  * 
@@ -499,6 +501,15 @@ public:
   }
 
 
+  /**
+   * Get a counter string in the given style for the given value.
+   * 
+   * @update	rickg 6June2000
+   * 
+   * @param   aFormat -- format of choice
+   * @param   aValue  -- cardinal value of string
+   * @param   aString -- will hold result
+   */
   static void  GetFormattedString(eNumFormat aFormat,PRInt32 aValue, nsString& aString,const char* aCharSet, int anOffset, int aBase) {
 	  switch (aFormat) {
 		  case	eDecimal:	    DecimalString(aValue,aString);  break;
@@ -514,6 +525,14 @@ public:
 	  }
   }
 
+  /**
+   * Compute a counter string in the casted-series style for the given value.
+   * 
+   * @update	rickg 6June2000
+   * 
+   * @param   aValue  -- cardinal value of string
+   * @param   aString -- will hold result
+   */
   static void  SeriesString(PRInt32 aValue,nsString& aString,const char* aCharSet, int offset, int base) {
 	  int	ndex=0;
 	  int	root=1;
@@ -539,6 +558,14 @@ public:
     }
   }
 
+  /**
+   * Compute a counter string in the spelled style for the given value.
+   * 
+   * @update	rickg 6June2000
+   * 
+   * @param   aValue  -- cardinal value of string
+   * @param   aString -- will hold result
+   */
   static void SpelledString(PRInt32 aValue,nsString& aString) {
 
     static	char	ones[][12]=   {"zero","one ","two ","three ","four ","five ","six ","seven ","eight ","nine ","ten "};
@@ -553,26 +580,26 @@ public:
 	  PRInt32	root=1000000000;
 	  PRInt32	expn=4;
 	  PRInt32	modu=0;
-	  PRInt32	temp=0;
     
 	  aValue=abs(aValue);
     if(0<aValue) {      
 
 	    while(root && aValue) {		
-		    if(temp=aValue/root) {
-          PRInt32 div=temp/100;
-          if (div) {//start with hundreds part
-            aString.AppendWithConversion(ones[div]);
+        PRInt32 temp=aValue/root;
+		    if(temp) {
+          PRInt32 theDiv=temp/100;
+          if (theDiv) {//start with hundreds part
+            aString.AppendWithConversion(ones[theDiv]);
             aString.AppendWithConversion(bases[1]);
 		      }
 			    modu=(temp%10);
-          div=(temp%100)/10;
-          if (div) {
-				    if (div<2) {
+          theDiv=(temp%100)/10;
+          if (theDiv) {
+				    if (theDiv<2) {
               aString.AppendWithConversion(teens[modu]);
 						  modu=0;
 					  }
-            else aString.AppendWithConversion(tens[div]);
+            else aString.AppendWithConversion(tens[theDiv]);
           }
 			    if (modu) 
             aString.AppendWithConversion(ones[modu]); //do remainder
@@ -587,11 +614,27 @@ public:
     else aString.AppendWithConversion(ones[0]);
   }
 
+  /**
+   * Compute a counter string in the decimal format for the given value.
+   * 
+   * @update	rickg 6June2000
+   * 
+   * @param   aValue  -- cardinal value of string
+   * @param   aString -- will hold result
+   */
   static void DecimalString(PRInt32 aValue,nsString& aString) {
     aString.Truncate();
     aString.AppendInt(aValue);
   }
 
+  /**
+   * Compute a counter string in binary format for the given value.
+   * 
+   * @update	rickg 6June2000
+   * 
+   * @param   aValue  -- cardinal value of string
+   * @param   aString -- will hold result
+   */
   static void BinaryString(PRInt32 aValue,nsString& aString) {
 	  static char	kBinarySet[]="01";
 
@@ -600,6 +643,14 @@ public:
     SeriesString(aValue,aString,kBinarySet,0,2);
   }
 
+  /**
+   * Compute a counter string in hex format for the given value.
+   * 
+   * @update	rickg 6June2000
+   * 
+   * @param   aValue  -- cardinal value of string
+   * @param   aString -- will hold result
+   */
   static void HexString(PRInt32 aValue,nsString& aString) {
     static char	kHexSet[]="0123456789ABCDEF";
 
@@ -608,6 +659,14 @@ public:
     SeriesString(aValue,aString,kHexSet,0,16);
   }
 
+  /**
+   * Compute a counter string in the roman style for the given value.
+   * 
+   * @update	rickg 6June2000
+   * 
+   * @param   aValue  -- cardinal value of string
+   * @param   aString -- will hold result
+   */
   static void RomanString(PRInt32 aValue,nsString& aString) {
 	  static char digitsA[] = "ixcm";
 	  static char digitsB[] = "vld?";
@@ -648,6 +707,14 @@ public:
 	  }
   }
 
+  /**
+   * Compute a counter string in the alpha style for the given value.
+   * 
+   * @update	rickg 6June2000
+   * 
+   * @param   aValue  -- cardinal value of string
+   * @param   aString -- will hold result
+   */
   static void AlphaString(PRInt32 aValue,nsString& aString) {
 	  static const char kAlphaSet[]="abcdefghijklmnopqrstuvwxyz";
 	  
@@ -655,6 +722,14 @@ public:
       SeriesString(aValue-1,aString,kAlphaSet,-1,26);    
   }
 
+  /**
+   * Compute a counter string in the footnote style for the given value.
+   * 
+   * @update	rickg 6June2000
+   * 
+   * @param   aValue  -- cardinal value of string
+   * @param   aString -- will hold result
+   */
   static void FootnoteString(PRInt32 aValue,nsString& aString) {
     static char	kFootnoteSet[]="abcdefg";
 
@@ -822,7 +897,7 @@ nsIParserNode* nsDTDContext::Pop(nsEntryStack *&aChildStyleStack) {
 
   return result;
 }
-
+ 
 /**
  * 
  * @update  harishd 04/07/00
@@ -1024,21 +1099,67 @@ nsIParserNode* nsDTDContext::RemoveStyle(eHTMLTags aTag){
  */
 nsresult nsDTDContext::GetNodeRecycler(CNodeRecycler*& aNodeRecycler){
   nsresult result=NS_OK;
-  if(!mNodeRecycler) {
-    mNodeRecycler=new CNodeRecycler();
-    if(mNodeRecycler==0) result=NS_ERROR_OUT_OF_MEMORY;
+  if(!gNodeRecycler) {
+    gNodeRecycler=new CNodeRecycler();
+    if(gNodeRecycler==0) result=NS_ERROR_OUT_OF_MEMORY;
   }
-  aNodeRecycler=mNodeRecycler;
+  aNodeRecycler=gNodeRecycler;
   return result;
 }
 
 /**
+ * This gets called someone wants to create a token of the given type.
  * 
- * @update  hairshd 04/10/00
+ * @update  rickg 16June2000
+ * @param   aType
+ * @param   aTag
+ * @param   aString
+ * @return  new CToken* or 0.
  */
-void nsDTDContext::FreeNodeRecycler(){
-  if(mNodeRecycler) {
-    delete mNodeRecycler;
+CTokenRecycler* nsDTDContext::GetTokenRecycler(void) {
+  if(!gTokenRecycler) {
+    gTokenRecycler = new CTokenRecycler();
+  }
+  return gTokenRecycler;
+}
+
+
+/**
+ * 
+ * @update  rickg 16June2000
+ */
+void nsDTDContext::RecycleNode(nsCParserNode* aNode) {
+  nsresult result=NS_OK;
+
+  if(aNode) {
+    if(!gNodeRecycler)
+      result=nsDTDContext::GetNodeRecycler(gNodeRecycler);
+
+    if(NS_SUCCEEDED(result)) {
+      if(!gTokenRecycler)
+        GetTokenRecycler();
+      gNodeRecycler->RecycleNode(aNode,gTokenRecycler);
+    }
+    else {
+      delete aNode;
+    }
+  }
+}
+
+
+/**
+ * This gets called when the parser module is getting unloaded
+ * 
+ * @return  nada
+ */
+void nsDTDContext::ReleaseGlobalObjects(){
+  if(gNodeRecycler) {
+    delete gNodeRecycler;
+    gNodeRecycler=0;
+  }
+  if(gTokenRecycler) {
+    delete gTokenRecycler;
+    gTokenRecycler=0;
   }
 }
 
@@ -1124,10 +1245,14 @@ void CTokenRecycler::RecycleToken(CToken* aToken) {
 
 
 /**
+ * Let's get this code ready to be reused by all the contexts.
  * 
- * @update	vidur 11/12/98
- * @param 
- * @return
+ * @update	rickg 12June2000
+ * @param   aType -- tells you the type of token to create
+ * @param   aTag  -- tells you the type of tag to init with this token
+ * @param   aString -- gives a default string value for the token
+ *
+ * @return  ptr to new token (or 0).
  */
 CToken* CTokenRecycler::CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag, const nsString& aString) {
 
@@ -1164,10 +1289,13 @@ CToken* CTokenRecycler::CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag, 
 }
 
 /**
+ * Let's get this code ready to be reused by all the contexts.
  * 
- * @update	vidur 11/12/98
- * @param 
- * @return
+ * @update	rickg 12June2000
+ * @param   aType -- tells you the type of token to create
+ * @param   aTag  -- tells you the type of tag to init with this token
+ *
+ * @return  ptr to new token (or 0).
  */
 CToken* CTokenRecycler::CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag) {
 

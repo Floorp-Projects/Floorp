@@ -104,10 +104,8 @@ public:
 
     nsIDTD* theDTD;
 
-#if 1
     NS_NewNavHTMLDTD(&theDTD);    //do this as a default HTML DTD...
     mDTDDeque.Push(theDTD);
-#endif
 
     NS_NewOtherHTMLDTD(&mOtherDTD);  //do this as the default DTD for strict documents...
     mDTDDeque.Push(mOtherDTD);
@@ -627,16 +625,6 @@ void DetermineParseMode(nsString& aBuffer,nsDTDMode& aParseMode,eParserDocType& 
       }
  
     } //if
-    else {
-      PRInt32 thePos=aBuffer.Find("HTML",PR_TRUE,1,50);
-      if(kNotFound!=thePos) {
-        aDocType=eHTML4Text;
-        PRInt32 theIDPos=aBuffer.Find("PublicID",thePos);
-        if(kNotFound==theIDPos)
-          theIDPos=aBuffer.Find("SystemID",thePos);
-        aParseMode=(kNotFound==theIDPos) ? eDTDMode_quirks : eDTDMode_strict;
-      }
-    }
   }
   else if(kNotFound<(theIndex=aBuffer.Find("?XML",PR_TRUE,0,128))) {
     aParseMode=eDTDMode_strict;
@@ -731,6 +719,13 @@ PRBool FindSuitableDTD( CParserContext& aParserContext,nsString& aBuffer) {
   }
 
   if(theBestDTD) {
+
+//#define FORCE_HTML_THROUGH_STRICT_DTD
+#if FORCE_HTML_THROUGH_STRICT_DTD
+    if(theBestDTD==gSharedObjects.mDTDDeque.ObjectAt(0))
+      theBestDTD=(nsIDTD*)gSharedObjects.mDTDDeque.ObjectAt(1);
+#endif
+
     theBestDTD->CreateNewInstance(&aParserContext.mDTD);
     return PR_TRUE;
   }
@@ -755,7 +750,7 @@ nsresult nsParser::CreateCompatibleDTD(nsIDTD** aDTD,
                                        const nsString* aMimeType,
                                        nsDTDMode aDTDMode)
 {
-  nsresult       result=NS_OK;
+  nsresult       result=NS_OK; 
   const nsCID*   theDTDClassID=0;
 
   /**
@@ -1025,6 +1020,22 @@ nsresult nsParser::WillBuildModel(nsString& aFilename){
       
       nsString& theBuffer=mParserContext->mScanner->GetBuffer();
       DetermineParseMode(theBuffer,mParserContext->mDTDMode,mParserContext->mDocType,mParserContext->mMimeType);
+
+#define DISABLE_TRANSITIONAL_MODE
+#ifdef  DISABLE_TRANSITIONAL_MODE
+
+      /********************************************************************************************
+          The following code is here because to deal with a nasty backward compatibility problem. 
+          The composer product emits <doctype HTML 4.0 Transitional> for the documents it creates, 
+          but the documents aren't really compliant. To prevent lots of pages from breaking, well 
+          disable proper handling of Transitional doctypes and use quirks mode instead. If lucky, 
+          we'll get to add a pref to allow power users to get the right answer.
+       ********************************************************************************************/
+
+      if(eDTDMode_transitional==mParserContext->mDTDMode) {
+        mParserContext->mDTDMode=eDTDMode_quirks;
+      }
+#endif
 
       if(PR_TRUE==FindSuitableDTD(*mParserContext,theBuffer)) {
         mParserContext->mDTD->WillBuildModel( *mParserContext,mSink);
