@@ -39,8 +39,8 @@
 #import <Carbon/Carbon.h>
 
 @interface CHPreferenceManager : NSObject {
-    NSUserDefaults *defaults;
-    ICInstance internetConfig;
+    NSUserDefaults*	mDefaults;
+    ICInstance 			mInternetConfig;
 }
 
 + (CHPreferenceManager *)sharedInstance;
@@ -50,7 +50,7 @@
 - (BOOL) initInternetConfig;
 - (BOOL) initMozillaPrefs;
 - (void) syncMozillaPrefs;
-// - (BOOL) getICBoolPref:(ConstStr255Param) prefKey;
+
 - (NSString *) getICStringPref:(ConstStr255Param) prefKey;
 - (NSString *) homePage:(BOOL) checkStartupPagePref;
 
