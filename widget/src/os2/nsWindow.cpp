@@ -1799,7 +1799,7 @@ PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
             event.isShift = PR_FALSE;  // OS2TODO - Why do we need this?
             event.keyCode = 0;
          }
-         else if (usChar != ' ')
+         else if (usChar != VK_SPACE)
          {
             event.charCode = 0;
          }
