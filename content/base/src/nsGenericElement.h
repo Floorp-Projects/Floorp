@@ -759,8 +759,7 @@ public:
    * @param aDest the destination object
    * @param aDeep whether to copy children
    */
-  NS_IMETHOD CopyInnerTo(nsGenericContainerElement* aDest,
-                         PRBool aDeep);
+  nsresult CopyInnerTo(nsGenericContainerElement* aDest, PRBool aDeep);
 
   // Remainder of nsIContent
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,

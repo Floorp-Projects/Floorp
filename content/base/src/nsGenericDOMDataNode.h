@@ -367,19 +367,6 @@ private:
                       PRBool* aReturn) {                                    \
     return nsGenericDOMDataNode::IsSupported(aFeature, aVersion, aReturn);  \
   }                                                                         \
-  NS_IMETHOD GetBaseURI(nsAString& aURI) {                                  \
-    return nsGenericDOMDataNode::GetBaseURI(aURI);                          \
-  }                                                                         \
-  NS_IMETHOD LookupPrefix(const nsAString& aNamespaceURI,                   \
-                          nsAString& aPrefix) {                             \
-    return nsGenericDOMDataNode::LookupPrefix(aNamespaceURI,                \
-                                              aPrefix);                     \
-  }                                                                         \
-  NS_IMETHOD LookupNamespaceURI(const nsAString& aNamespacePrefix,          \
-                                nsAString& aNamespaceURI) {                 \
-    return nsGenericDOMDataNode::LookupNamespaceURI(aNamespacePrefix,       \
-                                                    aNamespaceURI);         \
-  }                                                                         \
   NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
 
 #endif /* nsGenericDOMDataNode_h___ */

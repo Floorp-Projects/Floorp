@@ -272,7 +272,7 @@ nsGenericHTMLElement::Shutdown()
 }
 
 nsresult
-nsGenericHTMLElement::CopyInnerTo(nsGenericHTMLElement* aDst,
+nsGenericHTMLElement::CopyInnerTo(nsGenericContainerElement* aDst,
                                   PRBool aDeep)
 {
   nsresult rv = NS_OK;
