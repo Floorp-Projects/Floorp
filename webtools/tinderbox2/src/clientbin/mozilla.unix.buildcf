@@ -10,8 +10,8 @@
 # substituted.
 
 
-# $Revision: 1.2 $ 
-# $Date: 2002/04/25 00:55:49 $ 
+# $Revision: 1.3 $ 
+# $Date: 2002/05/03 20:20:44 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/clientbin/mozilla.unix.buildcf,v $ 
 # $Name:  $ 
@@ -78,9 +78,9 @@ sub GetSystemInfo {
     }
     
     if ($OS eq 'QNX') {
-        $os_ver = `uname -v`;
+        $OSVer = `uname -v`;
         chomp($os_ver);
-        $os_ver =~ s/^([0-9])([0-9]*)$/$1.$2/;
+        $OSVer =~ s/^([0-9])([0-9]*)$/$1.$2/;
     }
 
     if ( $OS eq 'SCO_SV' ) {
