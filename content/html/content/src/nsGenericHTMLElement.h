@@ -69,12 +69,16 @@ class nsIPresState;
 class nsIScrollableView;
 struct nsRect;
 
-extern void GetGenericHTMLElementIIDs(nsVoidArray& aArray);
 
-class nsGenericHTMLElement : public nsGenericElement {
+class nsGenericHTMLElement : public nsGenericElement
+{
 public:
   nsGenericHTMLElement();
   virtual ~nsGenericHTMLElement();
+
+#ifdef GATHER_ELEMENT_USEAGE_STATISTICS
+  nsresult Init(nsINodeInfo *aNodeInfo);
+#endif
 
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
@@ -676,7 +680,7 @@ protected:
  * QueryInterface() implementation helper macros
  */
 
-#define NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(_class, _base)                    \
+#define NS_HTML_CONTENT_INTERFACE_MAP_AMBIGOUS_BEGIN(_class, _base, _base_if) \
   NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)    \
   {                                                                           \
     NS_ENSURE_ARG_POINTER(aInstancePtr);                                      \
@@ -690,12 +694,18 @@ protected:
     if (NS_SUCCEEDED(rv))                                                     \
       return rv;                                                              \
                                                                               \
-    rv = DOMQueryInterface(this, aIID, aInstancePtr);                         \
+    rv = DOMQueryInterface(NS_STATIC_CAST(_base_if *, this), aIID,            \
+                           aInstancePtr);                                     \
                                                                               \
     if (NS_SUCCEEDED(rv))                                                     \
       return rv;                                                              \
                                                                               \
     nsISupports *foundInterface = nsnull;
+
+
+#define NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(_class, _base)                    \
+  NS_HTML_CONTENT_INTERFACE_MAP_AMBIGOUS_BEGIN(_class, _base,                 \
+                                               nsIDOMHTMLElement)
 
 
 #define NS_HTML_CONTENT_INTERFACE_MAP_END                                     \
@@ -710,6 +720,243 @@ protected:
     return NS_OK;                                                             \
   }
 
+
+#define NS_INTERFACE_MAP_ENTRY_IF_TAG(_interface, _tag)                       \
+  if (mNodeInfo->Equals(nsHTMLAtoms::_tag) &&                                 \
+      aIID.Equals(NS_GET_IID(_interface)))                                    \
+    foundInterface = NS_STATIC_CAST(_interface *, this);                      \
+  else
+
+
+#define NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO_IF_TAG(_class, _tag)         \
+  if (mNodeInfo->Equals(nsHTMLAtoms::_tag) &&                                 \
+      aIID.Equals(NS_GET_IID(nsIClassInfo))) {                                \
+    foundInterface =                                                          \
+      nsContentUtils::GetClassInfoInstance(eDOMClassInfo_##_class##_id);      \
+    NS_ENSURE_TRUE(foundInterface, NS_ERROR_OUT_OF_MEMORY);                   \
+                                                                              \
+    *aInstancePtr = foundInterface;                                           \
+                                                                              \
+    return NS_OK;                                                             \
+  } else
+
+
+
+// Element class factory methods
+
+nsresult
+NS_NewHTMLSharedLeafElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLAnchorElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLAppletElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLAreaElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLBRElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+inline nsresult
+NS_NewHTMLBaseElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo)
+{
+  return NS_NewHTMLSharedLeafElement(aResult, aNodeInfo);
+}
+
+nsresult
+NS_NewHTMLBaseFontElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLBodyElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLButtonElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLDListElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLDelElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLDirectoryElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLDivElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+inline nsresult
+NS_NewHTMLEmbedElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo)
+{
+  return NS_NewHTMLSharedLeafElement(aResult, aNodeInfo);
+}
+
+nsresult
+NS_NewHTMLFieldSetElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLFontElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLFormElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLFrameElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLFrameSetElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLHRElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLHeadElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLHeadingElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLHtmlElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLIFrameElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLImageElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLInputElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLInsElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+inline nsresult
+NS_NewHTMLIsIndexElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo)
+{
+  return NS_NewHTMLSharedLeafElement(aResult, aNodeInfo);
+}
+
+nsresult
+NS_NewHTMLLIElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLLabelElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLLegendElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLLinkElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLMapElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLMenuElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLMetaElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLModElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLOListElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLObjectElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLOptGroupElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLOptionElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLParagraphElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+inline nsresult
+NS_NewHTMLParamElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo)
+{
+  return NS_NewHTMLSharedLeafElement(aResult, aNodeInfo);
+}
+
+nsresult
+NS_NewHTMLPreElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLQuoteElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLScriptElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLSelectElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+inline nsresult
+NS_NewHTMLSpacerElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo)
+{
+  return NS_NewHTMLSharedLeafElement(aResult, aNodeInfo);
+}
+
+nsresult
+NS_NewHTMLSpanElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLStyleElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLTableCaptionElement(nsIHTMLContent** aResult,nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLTableCellElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLTableColElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+inline nsresult
+NS_NewHTMLTableColGroupElement(nsIHTMLContent** aResult,
+                               nsINodeInfo *aNodeInfo)
+{
+  return NS_NewHTMLTableColElement(aResult, aNodeInfo);
+}
+
+nsresult
+NS_NewHTMLTableElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLTableRowElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLTableSectionElement(nsIHTMLContent** aResult,nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLTbodyElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLTextAreaElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLTfootElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLTheadElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLTitleElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLUListElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+nsresult
+NS_NewHTMLUnknownElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+
+inline nsresult
+NS_NewHTMLWBRElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo)
+{
+  return NS_NewHTMLSharedLeafElement(aResult, aNodeInfo);
+}
 
 
 #endif /* nsGenericHTMLElement_h___ */

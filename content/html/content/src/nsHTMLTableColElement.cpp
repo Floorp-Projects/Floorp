@@ -132,7 +132,7 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLTableColElement, nsGenericElement)
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLTableColElement,
                                     nsGenericHTMLContainerElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLTableColElement)
-  NS_INTERFACE_MAP_ENTRY(nsIHTMLTableColElement)
+  NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIHTMLTableColElement, col) // for col only
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLTableColElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
@@ -275,14 +275,6 @@ void MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes, nsRuleDat
       }
     }
   }
-  else if (aData->mSID == eStyleStruct_Table && 
-           aData->mTableData && aData->mTableData->mSpan.GetUnit() == eCSSUnit_Null) {
-    // span: int
-    nsHTMLValue value;
-    aAttributes->GetAttribute(nsHTMLAtoms::span, value);
-    if (value.GetUnit() == eHTMLUnit_Integer)
-      aData->mTableData->mSpan.SetIntValue(value.GetIntValue(), eCSSUnit_Integer);
-  }
   else if (aData->mTextData) {
     if (aData->mSID == eStyleStruct_Text) {
       if (aData->mTextData->mTextAlign.GetUnit() == eCSSUnit_Null) {
@@ -307,14 +299,39 @@ void MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes, nsRuleDat
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
 }
 
+static 
+void ColMapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
+                              nsRuleData* aData)
+{
+  if (!aAttributes || !aData)
+    return;
+
+  nsHTMLValue value;
+  
+  if (aData->mSID == eStyleStruct_Table && 
+      aData->mTableData &&
+      aData->mTableData->mSpan.GetUnit() == eCSSUnit_Null) {
+    // span: int
+    nsHTMLValue value;
+    aAttributes->GetAttribute(nsHTMLAtoms::span, value);
+    if (value.GetUnit() == eHTMLUnit_Integer)
+      aData->mTableData->mSpan.SetIntValue(value.GetIntValue(),
+                                           eCSSUnit_Integer);
+  }
+
+  MapAttributesIntoRule(aAttributes, aData);
+}
+
 NS_IMETHODIMP
-nsHTMLTableColElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
+nsHTMLTableColElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                                PRInt32 aModType,
                                                 PRInt32& aHint) const
 {
   if ((aAttribute == nsHTMLAtoms::width) ||
       (aAttribute == nsHTMLAtoms::align) ||
       (aAttribute == nsHTMLAtoms::valign) ||
-      (aAttribute == nsHTMLAtoms::span)) {
+      ((aAttribute == nsHTMLAtoms::span) &&
+       !mNodeInfo->Equals(nsHTMLAtoms::col))) {
     aHint = NS_STYLE_HINT_REFLOW;
   }
   else if (!GetCommonMappedAttributesImpact(aAttribute, aHint)) {
@@ -328,7 +345,12 @@ nsHTMLTableColElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt
 NS_IMETHODIMP
 nsHTMLTableColElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const
 {
-  aMapRuleFunc = &MapAttributesIntoRule;
+  if (mNodeInfo->Equals(nsHTMLAtoms::col)) {
+    aMapRuleFunc = &ColMapAttributesIntoRule;
+  } else {
+    aMapRuleFunc = &MapAttributesIntoRule;
+  }
+
   return NS_OK;
 }
 

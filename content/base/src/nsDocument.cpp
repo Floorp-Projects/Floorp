@@ -3381,7 +3381,8 @@ nsDocument::GetFileSpec(nsIFile * *aFileSpec)
 }
 
 NS_IMETHODIMP 
-nsDocument::FlushPendingNotifications(PRBool aFlushReflows, PRBool aUpdateViews)
+nsDocument::FlushPendingNotifications(PRBool aFlushReflows,
+                                      PRBool aUpdateViews)
 {
   if (aFlushReflows) {
 

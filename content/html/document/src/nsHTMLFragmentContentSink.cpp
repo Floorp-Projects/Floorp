@@ -45,7 +45,7 @@
 #include "nsIHTMLContentContainer.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLTokens.h"  
-#include "nsHTMLParts.h"
+#include "nsGenericHTMLElement.h"
 #include "nsIDOMText.h"
 #include "nsIDOMComment.h"
 #include "nsIDOMHTMLFormElement.h"

@@ -51,7 +51,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLContentSerializer.h"
-#include "nsHTMLParts.h"
+#include "nsGenericHTMLElement.h"
 #include "nsIBindingManager.h"
 #include "nsICSSLoader.h"
 #include "nsICSSParser.h"

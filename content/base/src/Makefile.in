@@ -104,4 +104,5 @@ INCLUDES	+= \
 		-I$(srcdir)/../../html/style/src \
 		-I$(srcdir)/../../xul/base/src \
 		-I$(srcdir)/../../xul/content/src \
+		-I$(srcdir)/../../html/content/src \
 		$(NULL)
