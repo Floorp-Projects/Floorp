@@ -158,19 +158,6 @@ protected:
   nsIStyleContext* GetContext(nsIPresContext* aPresContext, nsIStyleContext* aParentContext, 
                               nsIAtom* aPseudoTag, nsISupportsArray* aRules, PRBool aForceUnique, 
                               PRBool& aUsedRules);
-  PRInt32 RulesMatching(nsISupportsArray* aSheets,
-                        nsIPresContext* aPresContext,
-                        nsIAtom* aMedium,
-                        nsIContent* aContent,
-                        nsIStyleContext* aParentContext,
-                        nsISupportsArray* aResults);
-  PRInt32 RulesMatching(nsISupportsArray* aSheets,
-                        nsIPresContext* aPresContext,
-                        nsIAtom* aMedium,
-                        nsIContent* aParentContent,
-                        nsIAtom* aPseudoTag,
-                        nsIStyleContext* aParentContext,
-                        nsISupportsArray* aResults);
   void  List(FILE* out, PRInt32 aIndent, nsISupportsArray* aSheets);
   void  ListContexts(nsIStyleContext* aRootContext, FILE* out, PRInt32 aIndent);
 
@@ -402,48 +389,42 @@ nsIStyleSheet* StyleSetImpl::GetBackstopStyleSheetAt(PRInt32 aIndex)
   return sheet;
 }
 
-PRInt32 StyleSetImpl::RulesMatching(nsISupportsArray* aSheets,
-                                    nsIPresContext* aPresContext,
-                                    nsIAtom* aMedium,
-                                    nsIContent* aContent,
-                                    nsIStyleContext* aParentContext,
-                                    nsISupportsArray* aResults)
-{
-  PRInt32 ruleCount = 0;
-
-  if (nsnull != aSheets) {
-    PRUint32 cnt;
-    nsresult rv = aSheets->Count(&cnt);
-    if (NS_FAILED(rv)) return rv;
-    PRInt32 index = (PRInt32)cnt;
-    while (0 < index--) {
-      nsIStyleSheet* sheet = (nsIStyleSheet*)aSheets->ElementAt(index);
-      PRBool mediumOK = PR_FALSE;
-      PRInt32 mediumCount;
-      sheet->GetMediumCount(mediumCount);
-      if (0 < mediumCount) {
-        PRInt32 index = 0;
-        nsIAtom* medium;
-        while ((PR_FALSE == mediumOK) && (index < mediumCount)) {
-          sheet->GetMediumAt(index++, medium);
-          if ((medium == nsLayoutAtoms::all) || (medium == aMedium)) {
-            mediumOK = PR_TRUE;
-          }
-          NS_RELEASE(medium);
-        }
-      }
-      else {
-        mediumOK = PR_TRUE;
-      }
-      if (mediumOK) {
-        ruleCount += sheet->RulesMatching(aPresContext, aContent, aParentContext,
-                                          aResults);
-      }
-      NS_RELEASE(sheet);
-    }
+struct RulesMatchingData {
+  RulesMatchingData(nsIPresContext* aPresContext,
+                    nsIAtom* aMedium,
+                    nsIContent* aContent,
+                    nsIStyleContext* aParentContext,
+                    nsISupportsArray* aResults)
+    : mPresContext(aPresContext),
+      mMedium(aMedium),
+      mContent(aContent),
+      mParentContext(aParentContext),
+      mResults(aResults),
+      mCount(0)
+  {
   }
-  return ruleCount;
+  nsIPresContext*   mPresContext;
+  nsIAtom*          mMedium;
+  nsIContent*       mContent;
+  nsIStyleContext*  mParentContext;
+  nsISupportsArray* mResults;
+  PRInt32           mCount;
+
+};
+
+static PRBool
+EnumRulesMatching(nsISupports* aSheet, void* aData)
+{
+  nsIStyleSheet*  sheet = (nsIStyleSheet*)aSheet;
+  RulesMatchingData* data = (RulesMatchingData*)aData;
+
+  if (NS_OK == sheet->UseForMedium(data->mMedium)) {
+    data->mCount += sheet->RulesMatching(data->mPresContext, data->mContent, 
+                                         data->mParentContext, data->mResults);
+  }
+  return PR_TRUE;
 }
+
 
 nsIStyleContext* StyleSetImpl::GetContext(nsIPresContext* aPresContext, 
                                           nsIStyleContext* aParentContext, nsIAtom* aPseudoTag, 
@@ -551,25 +532,22 @@ nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
     }
 
     if (nsnull != rules) {
-      nsCOMPtr<nsIAtom> medium;
-      aPresContext->GetMedium(getter_AddRefs(medium));
-      // XXX Stop-gap fix to prevent ua.css rules from being applied
-      // to XML elements
-      nsIHTMLContent *htmlContent;
-      nsresult rv = NS_ERROR_FAILURE;
-      if (aContent)
-        rv = aContent->QueryInterface(kIHTMLContentIID, (void **)&htmlContent);
-      PRInt32 ruleCount = 0;
-      if (NS_SUCCEEDED(rv)) {
-         ruleCount += RulesMatching(mBackstopSheets, aPresContext, medium, aContent, aParentContext, rules);
-         NS_RELEASE(htmlContent);
+      nsIAtom* medium = nsnull;
+      aPresContext->GetMedium(&medium);
+      RulesMatchingData data(aPresContext, medium, aContent, aParentContext, rules);
+      if (mBackstopSheets) {
+        mBackstopSheets->EnumerateBackwards(EnumRulesMatching, &data);
       }
-      PRInt32 backstopRules = ruleCount;
-      ruleCount += RulesMatching(mDocSheets, aPresContext, medium, aContent, aParentContext, rules);
-      ruleCount += RulesMatching(mOverrideSheets, aPresContext, medium, aContent, aParentContext, rules);
+      PRInt32 backstopRules = data.mCount;
+      if (mDocSheets) {
+        mDocSheets->EnumerateBackwards(EnumRulesMatching, &data);
+      }
+      if (mOverrideSheets) {
+        mOverrideSheets->EnumerateBackwards(EnumRulesMatching, &data);
+      }
 
       PRBool usedRules = PR_FALSE;
-      if (0 < ruleCount) {
+      if (0 < data.mCount) {
         SortRulesByStrength(rules, backstopRules);
         result = GetContext(aPresContext, aParentContext, nsnull, rules, aForceUnique, usedRules);
         if (usedRules) {
@@ -587,55 +565,51 @@ nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
         mRecycler = rules;
         result = GetContext(aPresContext, aParentContext, nsnull, nsnull, aForceUnique, usedRules);
       }
+      NS_RELEASE(medium);
     }
   }
 
   return result;
 }
 
-
-PRInt32 StyleSetImpl::RulesMatching(nsISupportsArray* aSheets,
-                                    nsIPresContext* aPresContext,
-                                    nsIAtom* aMedium,
-                                    nsIContent* aParentContent,
-                                    nsIAtom* aPseudoTag,
-                                    nsIStyleContext* aParentContext,
-                                    nsISupportsArray* aResults)
-{
-  PRInt32 ruleCount = 0;
-
-  if (nsnull != aSheets) {
-    PRUint32 cnt;
-    nsresult rv = aSheets->Count(&cnt);
-    if (NS_FAILED(rv)) return rv;
-    PRInt32 index = (PRInt32)cnt;
-    while (0 < index--) {
-      nsIStyleSheet* sheet = (nsIStyleSheet*)aSheets->ElementAt(index);
-      PRBool mediumOK = PR_FALSE;
-      PRInt32 mediumCount;
-      sheet->GetMediumCount(mediumCount);
-      if (0 < mediumCount) {
-        PRInt32 index = 0;
-        nsIAtom* medium;
-        while ((PR_FALSE == mediumOK) && (index < mediumCount)) {
-          sheet->GetMediumAt(index++, medium);
-          if ((medium == nsLayoutAtoms::all) || (medium == aMedium)) {
-            mediumOK = PR_TRUE;
-          }
-          NS_RELEASE(medium);
-        }
-      }
-      else {
-        mediumOK = PR_TRUE;
-      }
-      if (mediumOK) {
-        ruleCount += sheet->RulesMatching(aPresContext, aParentContent, aPseudoTag, 
-                                          aParentContext, aResults);
-      }
-      NS_RELEASE(sheet);
-    }
+struct PseudoRulesMatchingData {
+  PseudoRulesMatchingData(nsIPresContext* aPresContext,
+                          nsIAtom* aMedium,
+                          nsIContent* aParentContent,
+                          nsIAtom* aPseudoTag,
+                          nsIStyleContext* aParentContext,
+                          nsISupportsArray* aResults)
+    : mPresContext(aPresContext),
+      mMedium(aMedium),
+      mParentContent(aParentContent),
+      mPseudoTag(aPseudoTag),
+      mParentContext(aParentContext),
+      mResults(aResults),
+      mCount(0)
+  {
   }
-  return ruleCount;
+  nsIPresContext*   mPresContext;
+  nsIAtom*          mMedium;
+  nsIContent*       mParentContent;
+  nsIAtom*          mPseudoTag;
+  nsIStyleContext*  mParentContext;
+  nsISupportsArray* mResults;
+  PRInt32           mCount;
+
+};
+
+static PRBool
+EnumPseudoRulesMatching(nsISupports* aSheet, void* aData)
+{
+  nsIStyleSheet*  sheet = (nsIStyleSheet*)aSheet;
+  PseudoRulesMatchingData* data = (PseudoRulesMatchingData*)aData;
+
+  if (NS_OK == sheet->UseForMedium(data->mMedium)) {
+    data->mCount += sheet->RulesMatching(data->mPresContext, data->mParentContent, 
+                                         data->mPseudoTag, 
+                                         data->mParentContext, data->mResults);
+  }
+  return PR_TRUE;
 }
 
 nsIStyleContext* StyleSetImpl::ResolvePseudoStyleFor(nsIPresContext* aPresContext,
@@ -656,21 +630,23 @@ nsIStyleContext* StyleSetImpl::ResolvePseudoStyleFor(nsIPresContext* aPresContex
   }
 
   if (nsnull != rules) {
-    nsCOMPtr<nsIAtom> medium;
-    aPresContext->GetMedium(getter_AddRefs(medium));
-    PRInt32 ruleCount = RulesMatching(mBackstopSheets, aPresContext, medium,
-                                      aParentContent, aPseudoTag, 
-                                      aParentContext, rules);
-    PRInt32 backstopRules = ruleCount;
-    ruleCount += RulesMatching(mDocSheets, aPresContext, medium,
-                               aParentContent, aPseudoTag, 
-                               aParentContext, rules);
-    ruleCount += RulesMatching(mOverrideSheets, aPresContext, medium,
-                               aParentContent, aPseudoTag, 
-                               aParentContext, rules);
+    nsIAtom* medium = nsnull;
+    aPresContext->GetMedium(&medium);
+    PseudoRulesMatchingData data(aPresContext, medium, aParentContent, 
+                                 aPseudoTag, aParentContext, rules);
+    if (mBackstopSheets) {
+      mBackstopSheets->EnumerateBackwards(EnumPseudoRulesMatching, &data);
+    }
+    PRInt32 backstopRules = data.mCount;
+    if (mDocSheets) {
+      mDocSheets->EnumerateBackwards(EnumPseudoRulesMatching, &data);
+    }
+    if (mOverrideSheets) {
+      mOverrideSheets->EnumerateBackwards(EnumPseudoRulesMatching, &data);
+    }
 
     PRBool usedRules = PR_FALSE;
-    if (0 < ruleCount) {
+    if (0 < data.mCount) {
       SortRulesByStrength(rules, backstopRules);
       result = GetContext(aPresContext, aParentContext, aPseudoTag, rules, aForceUnique, usedRules);
       if (usedRules) {
@@ -688,6 +664,7 @@ nsIStyleContext* StyleSetImpl::ResolvePseudoStyleFor(nsIPresContext* aPresContex
       mRecycler = rules;
       result = GetContext(aPresContext, aParentContext, aPseudoTag, nsnull, aForceUnique, usedRules);
     }
+    NS_IF_RELEASE(medium);
   }
 
   return result;
@@ -711,21 +688,23 @@ nsIStyleContext* StyleSetImpl::ProbePseudoStyleFor(nsIPresContext* aPresContext,
   }
 
   if (nsnull != rules) {
-    nsCOMPtr<nsIAtom> medium;
-    aPresContext->GetMedium(getter_AddRefs(medium));
-    PRInt32 ruleCount = RulesMatching(mBackstopSheets, aPresContext, medium,
-                                      aParentContent, aPseudoTag, 
-                                      aParentContext, rules);
-    PRInt32 backstopRules = ruleCount;
-    ruleCount += RulesMatching(mDocSheets, aPresContext, medium,
-                               aParentContent, aPseudoTag, 
-                               aParentContext, rules);
-    ruleCount += RulesMatching(mOverrideSheets, aPresContext, medium,
-                               aParentContent, aPseudoTag, 
-                               aParentContext, rules);
+    nsIAtom* medium = nsnull;
+    aPresContext->GetMedium(&medium);
+    PseudoRulesMatchingData data(aPresContext, medium, aParentContent, 
+                                 aPseudoTag, aParentContext, rules);
+    if (mBackstopSheets) {
+      mBackstopSheets->EnumerateBackwards(EnumPseudoRulesMatching, &data);
+    }
+    PRInt32 backstopRules = data.mCount;
+    if (mDocSheets) {
+      mDocSheets->EnumerateBackwards(EnumPseudoRulesMatching, &data);
+    }
+    if (mOverrideSheets) {
+      mOverrideSheets->EnumerateBackwards(EnumPseudoRulesMatching, &data);
+    }
 
     PRBool usedRules = PR_FALSE;
-    if (0 < ruleCount) {
+    if (0 < data.mCount) {
       SortRulesByStrength(rules, backstopRules);
       result = GetContext(aPresContext, aParentContext, aPseudoTag, rules, aForceUnique, usedRules);
       if (usedRules) {
@@ -742,6 +721,7 @@ nsIStyleContext* StyleSetImpl::ProbePseudoStyleFor(nsIPresContext* aPresContext,
       NS_ASSERT_REFCOUNT(rules, 1, "rules array was used elsewhere");
       mRecycler = rules;
     }
+    NS_IF_RELEASE(medium);
   }
 
   return result;
