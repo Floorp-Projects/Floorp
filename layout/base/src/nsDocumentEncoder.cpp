@@ -1054,6 +1054,20 @@ nsHTMLCopyEncoder::SetSelection(nsISelection* aSelection)
       mIsTextWidget = PR_TRUE;
       break;
     }
+    else if (atom.get() == nsHTMLAtoms::body)
+    {
+      // check for moz prewrap style on body.  If it's there we are 
+      // in a plaintext editor.  This is pretty cheezy but I haven't 
+      // found a good way to tell if we are in a plaintext editor.
+      nsCOMPtr<nsIDOMElement> bodyElem = do_QueryInterface(selContent);
+      nsAutoString wsVal;
+      rv = bodyElem->GetAttribute(NS_LITERAL_STRING("white-space"), wsVal);
+      if (NS_SUCCEEDED(rv) && (kNotFound != wsVal.Find(NS_LITERAL_STRING("-moz-pre-wrap"))))
+      {
+        mIsTextWidget = PR_TRUE;
+        break;
+      }
+    }
     selContent->GetParent(*getter_AddRefs(tmp));
     selContent = tmp;
   }
@@ -1066,7 +1080,7 @@ nsHTMLCopyEncoder::SetSelection(nsISelection* aSelection)
   if (mIsTextWidget) 
   {
     mSelection = aSelection;
-    mFlags |= OutputRaw;
+    mMimeType = NS_LITERAL_STRING("text/plain");
     return NS_OK;
   }
   
@@ -1120,13 +1134,6 @@ nsHTMLCopyEncoder::EncodeToStringWithContext(nsAWritableString& aEncodedString,
   nsresult rv = EncodeToString(aEncodedString);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (mIsTextWidget) {
-    aEncodedString.Insert(NS_LITERAL_STRING("<pre>"), 0);
-    aEncodedString.Append(NS_LITERAL_STRING("</pre>"));
-  }
-
-  // do not encode any context info or range hints if we are not in an html document.
-  
   // do not encode any context info or range hints if we are in a text widget.
   if (mIsTextWidget) return NS_OK;
 
