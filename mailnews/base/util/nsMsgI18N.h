@@ -92,6 +92,30 @@ NS_MSG_BASE char * nsMsgI18NGetDefaultMailCharset(void);
  *
  * @param charset     [IN] Charset name.
  * @param inString    [IN] Unicode string to convert.
+ * @param outString   [OUT] Converted output string.
+ * @return            nsresult.
+ */
+nsresult nsMsgI18NConvertFromUnicode(const nsCString& aCharset, 
+                                     const nsString& inString,
+                                     nsCString& outString);
+
+/**
+ * Convert from charset to unicode.
+ *
+ * @param charset     [IN] Charset name.
+ * @param inString    [IN] Input string to convert.
+ * @param outString   [OUT] Output unicode string.
+ * @return            nsresult.
+ */
+nsresult nsMsgI18NConvertToUnicode(const nsCString& aCharset, 
+                                   const nsCString& inString, 
+                                   nsString& outString);
+
+/**
+ * Convert from unicode to target charset.
+ *
+ * @param charset     [IN] Charset name.
+ * @param inString    [IN] Unicode string to convert.
  * @param outCString  [OUT] Output C string, need PR_FREE.
  * @return            nsresult.
  */

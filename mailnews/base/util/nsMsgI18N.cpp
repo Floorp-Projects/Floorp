@@ -54,11 +54,154 @@ static NS_DEFINE_CID(kSaveAsCharsetCID, NS_SAVEASCHARSET_CID);
 // International functions necessary for composition
 //
 
+nsresult nsMsgI18NConvertFromUnicode(const nsCString& aCharset, 
+                                     const nsString& inString,
+                                     nsCString& outString)
+{
+  if (inString.IsEmpty()) {
+    outString.Assign("");
+    return NS_OK;
+  }
+  // Note: this will hide a possible error when the unicode text may contain more than one charset.
+  // (e.g. Latin1 + Japanese). Use nsMsgI18NSaveAsCharset instead to avoid that problem.
+  else if (aCharset.IsEmpty() ||
+      aCharset.EqualsIgnoreCase("us-ascii") ||
+      aCharset.EqualsIgnoreCase("ISO-8859-1")) {
+    outString = inString;
+    return NS_OK;
+  }
+  else if (aCharset.EqualsIgnoreCase("UTF-8")) {
+    char *s = inString.ToNewUTF8String();
+    if (NULL == s)
+      return NS_ERROR_OUT_OF_MEMORY;
+    outString.Assign(s);
+    Recycle(s);
+    return NS_OK;
+  }
+  nsAutoString convCharset("ISO-8859-1");
+  nsresult res;
+
+  // Resolve charset alias
+  nsCOMPtr <nsICharsetAlias> calias = do_GetService(NS_CHARSETALIAS_PROGID, &res);
+  if (NS_SUCCEEDED(res)) {
+    nsAutoString aAlias(aCharset);
+    if (aAlias.Length()) {
+      res = calias->GetPreferred(aAlias, convCharset);
+    }
+  }
+
+  nsCOMPtr <nsICharsetConverterManager> ccm = do_GetService(NS_CHARSETCONVERTERMANAGER_PROGID, &res);
+  if(NS_SUCCEEDED(res)) {
+    nsCOMPtr <nsIUnicodeEncoder> encoder;
+
+    // get an unicode converter
+    res = ccm->GetUnicodeEncoder(&convCharset, getter_AddRefs(encoder));
+    if(NS_SUCCEEDED(res)) {
+      res = encoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nsnull, '?');
+      if (NS_SUCCEEDED(res)) {
+
+        const PRUnichar *originalSrcPtr = inString.GetUnicode();
+        PRUnichar *currentSrcPtr = NS_CONST_CAST(PRUnichar *, originalSrcPtr);
+        PRInt32 originalUnicharLength = inString.Length();
+        PRInt32 srcLength;
+        PRInt32 dstLength;
+        char localbuf[512];
+        PRInt32 consumedLen = 0;
+
+        // convert
+        while (consumedLen < originalUnicharLength) {
+          srcLength = originalUnicharLength - consumedLen;  
+          dstLength = 512;
+          res = encoder->Convert(currentSrcPtr, &srcLength, localbuf, &dstLength);
+          if (NS_FAILED(res))
+            break;
+          outString.Append(localbuf, dstLength);
+
+          currentSrcPtr += srcLength;
+          consumedLen = currentSrcPtr - originalSrcPtr; // src length used so far
+        }
+      }
+    }    
+  }
+  return res;
+}
+
+nsresult nsMsgI18NConvertToUnicode(const nsCString& aCharset, 
+                                   const nsCString& inString, 
+                                   nsString& outString)
+{
+  if (inString.IsEmpty()) {
+    outString.Truncate();
+    return NS_OK;
+  }
+  else if (aCharset.IsEmpty() ||
+      aCharset.EqualsIgnoreCase("us-ascii") ||
+      aCharset.EqualsIgnoreCase("ISO-8859-1")) {
+    outString = inString;
+    return NS_OK;
+  }
+
+  nsAutoString convCharset;
+  nsresult res;
+
+  // Resolve charset alias
+  nsCOMPtr <nsICharsetAlias> calias = do_GetService(NS_CHARSETALIAS_PROGID, &res);
+  if (NS_SUCCEEDED(res)) {
+    nsAutoString aAlias(aCharset);
+    if (aAlias.Length()) {
+      res = calias->GetPreferred(aAlias, convCharset);
+    }
+  }
+  if (NS_FAILED(res)) {
+    return res;
+  }
+
+  nsCOMPtr <nsICharsetConverterManager> ccm = do_GetService(NS_CHARSETCONVERTERMANAGER_PROGID, &res);
+  if(NS_SUCCEEDED(res)) {
+    nsCOMPtr <nsIUnicodeDecoder> decoder;
+
+    // get an unicode converter
+    res = ccm->GetUnicodeDecoder(&convCharset, getter_AddRefs(decoder));
+    if(NS_SUCCEEDED(res)) {
+
+      const char *originalSrcPtr = inString.GetBuffer();
+      char *currentSrcPtr = NS_CONST_CAST(char *, originalSrcPtr);
+      PRInt32 originalLength = inString.Length();
+      PRInt32 srcLength;
+      PRInt32 dstLength;
+      PRUnichar localbuf[512];
+      PRInt32 consumedLen = 0;
+
+      // convert
+      while (consumedLen < originalLength) {
+        srcLength = originalLength - consumedLen;  
+        dstLength = 512;
+        res = decoder->Convert(currentSrcPtr, &srcLength, localbuf, &dstLength);
+        if (NS_FAILED(res))
+          break;
+        outString.Append(localbuf, dstLength);
+
+        currentSrcPtr += srcLength;
+        consumedLen = currentSrcPtr - originalSrcPtr; // src length used so far
+      }
+    }    
+  }  
+  return res;
+}
+
 // Convert an unicode string to a C string with a given charset.
 nsresult ConvertFromUnicode(const nsString& aCharset, 
                             const nsString& inString,
                             char** outCString)
 {
+#if 0 
+  nsCAutoString s;
+  nsresult rv;
+  rv = nsMsgI18NConvertFromUnicode(aCharset, inString, s);
+  *outCString = PL_strdup(s);
+  return rv;
+#endif
+
   *outCString = NULL;
 
   if (inString.IsEmpty()) {
@@ -136,6 +279,12 @@ nsresult ConvertToUnicode(const nsString& aCharset,
                           const char* inCString, 
                           nsString& outString)
 {
+#if 0 
+  nsresult rv;
+  rv = nsMsgI18NConvertToUnicode(aCharset, nsCAutoString(inCString), outString);
+  return rv;
+#endif
+
   if (NULL == inCString) {
     return NS_ERROR_NULL_POINTER;
   }
