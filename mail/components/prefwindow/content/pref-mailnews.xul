@@ -42,7 +42,7 @@ Contributor(s):
   <![CDATA[
 
     var _elementIDs = ["mailnewsConfirmMoveFoldersToTrash", 
-                       "mailnewsStartPageEnabled", "mailnewsStartPageUrl", 
+                       "mailnewsStartPageEnabled", "mailnewsStartPageUrl", "mailRememberLastMsg",
                        "mailnewsSoundFileUrl", "newMailNotification", "newMailNotificationType",
                         "newMailNotificationAlert"];
   ]]>

@@ -700,7 +700,7 @@ function MsgGetMessagesForAllServers(defaultServer)
                 else
                 {
                     // Check to see if there are new messages on the server
-                    currentServer.PerformBiff();
+                    currentServer.PerformBiff(msgWindow);
                 }
             }
         }
@@ -1227,6 +1227,7 @@ function CloseMailWindow()
 
 function MsgJunk()
 {
+  MsgJunkMailInfo(true);
   JunkSelectedMessages(!SelectedMessagesAreJunk());
 }
 
@@ -2076,6 +2077,7 @@ function MsgSearchMessages()
 
 function MsgJunkMail()
 {
+  MsgJunkMailInfo(true);
   var preselectedFolder = null;
   if ("GetFirstSelectedMsgFolder" in window)
     preselectedFolder = GetFirstSelectedMsgFolder();
@@ -2084,14 +2086,27 @@ function MsgJunkMail()
   OpenOrFocusWindow(args, "mailnews:junk", "chrome://messenger/content/junkMail.xul");
 }
 
-function MsgJunkMailInfo()
+function MsgJunkMailInfo(aCheckFirstUse)
 {
+  if (aCheckFirstUse) {
+    if (!pref.getBoolPref("mailnews.ui.junk.firstuse"))
+      return;
+    pref.setBoolPref("mailnews.ui.junk.firstuse", false);
+
+    // check to see if this is an existing profile where the user has started using
+    // the junk mail feature already
+    var junkmailPlugin = Components.classes["@mozilla.org/messenger/filter-plugin;1?name=bayesianfilter"]
+                                   .getService(Components.interfaces.nsIJunkMailPlugin);
+    if (junkmailPlugin.userHasClassified)
+      return;
+  }
+
   var desiredWindow = GetWindowByWindowType("mailnews:junkmailinfo");
 
   if (desiredWindow)
     desiredWindow.focus();
   else
-    window.openDialog("chrome://messenger/content/junkMailInfo.xul", "mailnews:junkmailinfo", "centerscreen,resizeable=no,titlebar,chrome", null);
+    window.openDialog("chrome://messenger/content/junkMailInfo.xul", "mailnews:junkmailinfo", "centerscreen,resizeable=no,titlebar,chrome,modal", null);
 }
 
 function MsgSearchAddresses()

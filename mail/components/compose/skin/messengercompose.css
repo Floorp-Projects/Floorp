@@ -32,6 +32,10 @@
 /**** BEGIN HACK: thunderbird does not currently use the new toolkit's autocomplete widget...so
       for now, force the bindings back to the old values in the xpfe toolkit ******/
 
+textbox[type="autocomplete"] {
+  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete");
+}
+
 .autocomplete-result-popup {
   -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-result-popup");
 }
@@ -54,6 +58,14 @@
 
 .autocomplete-history-dropmarker {
   -moz-binding: url("chrome://global/content/autocomplete.xml#history-dropmarker");
+}
+
+.autocomplete-treebody:-moz-tree-row(menuactive) {
+  background-color: Highlight;
+}
+
+.autocomplete-treebody:-moz-tree-cell-text(menuactive)  {
+  color: HighlightText !important;
 }
 
 /*** end horrible hack ***/
