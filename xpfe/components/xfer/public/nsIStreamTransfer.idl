@@ -59,7 +59,4 @@ interface nsIStreamTransfer : nsIAppShellComponent {
 %{C++
 #define NS_ISTREAMTRANSFER_PROGID NS_IAPPSHELLCOMPONENT_PROGID "/xfer"
 #define NS_ISTREAMTRANSFER_CLASSNAME "Mozilla Stream Transfer Component"
-#define NS_DECL_ISTREAMTRANSFER \
-    NS_IMETHOD SelectFileAndTransferLocation( nsIURI*, nsIDOMWindow* ); \
-    NS_IMETHOD SelectFileAndTransferLocationSpec( char const*, nsIDOMWindow* );
 %}

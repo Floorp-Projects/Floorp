@@ -88,10 +88,4 @@ interface nsIAppShellComponent : nsISupports {
 #define NS_IAPPSHELLCOMPONENT_PROGID    "component://netscape/appshell/component"
 #define NS_IAPPSHELLCOMPONENT_CLASSNAME "Mozilla AppShell Component"
 #define NS_IAPPSHELLCOMPONENT_KEY       "software/netscape/appshell/components"
-
-#define NS_DECL_IAPPSHELLCOMPONENT \
-    NS_IMETHOD Initialize( nsIAppShellService*, \
-                           nsICmdLineService* ); \
-    NS_IMETHOD Shutdown();
-
 %}

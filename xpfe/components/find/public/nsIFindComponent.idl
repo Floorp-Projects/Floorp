@@ -117,10 +117,4 @@ interface nsIFindComponent : nsIAppShellComponent {
 %{C++
 #define NS_IFINDCOMPONENT_PROGID NS_IAPPSHELLCOMPONENT_PROGID "/find"
 #define NS_IFINDCOMPONENT_CLASSNAME "Mozilla Find Component"
-#define NS_DECL_IFINDCOMPONENT \
-    NS_IMETHOD CreateContext( nsIWebShell *, nsIEditor *, nsISupports ** ); \
-    NS_IMETHOD Find( nsISupports *, PRBool * ); \
-    NS_IMETHOD Replace( nsISupports * ); \
-    NS_IMETHOD FindNext( nsISupports *, PRBool * ); \
-    NS_IMETHOD ResetContext( nsISupports *, nsIWebShell *, nsIEditor * );
 %}
