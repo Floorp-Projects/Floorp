@@ -4084,7 +4084,6 @@ nsFontMetricsXlib::FindStyleSheetGenericFont(PRUnichar aChar)
         }
       }
       if (!mDocConverterType) {
-        NS_ASSERTION(mDocConverterType!=nsnull, "failed to get converter type");
         mDocConverterType = SingleByteConvert;
       }
       if (mDocConverterType == SingleByteConvert) {
