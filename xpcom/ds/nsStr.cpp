@@ -150,7 +150,7 @@ void nsStr::EnsureCapacity(nsStr& aString,PRUint32 aNewLength,nsIMemoryAgent* an
 void nsStr::GrowCapacity(nsStr& aDest,PRUint32 aNewLength,nsIMemoryAgent* anAgent) {
   if(aNewLength>aDest.mCapacity) {
     nsStr theTempStr;
-    nsStr::Initialize(theTempStr,aDest.mMultibyte);
+    nsStr::Initialize(theTempStr,(eCharSize)aDest.mMultibyte);
 
     nsIMemoryAgent* theAgent=(anAgent) ? anAgent : GetDefaultAgent();
     EnsureCapacity(theTempStr,aNewLength,theAgent);
