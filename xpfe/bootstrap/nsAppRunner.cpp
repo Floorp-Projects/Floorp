@@ -665,7 +665,7 @@ int main(int argc, char* argv[])
   for (int i=0; i<argc; i++)
     if ((PL_strcasecmp(argv[i], "-nosplash") == 0)
         || (PL_strcasecmp(argv[i], "/nosplash") == 0))
-      dosplash = PR_FALSE
+      dosplash = PR_FALSE;
 #endif
   if (dosplash) {
       rv = NS_CreateSplashScreen( &splash );
