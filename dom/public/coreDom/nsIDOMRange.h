@@ -24,7 +24,6 @@
 #include "nsString.h"
 #include "nsIScriptContext.h"
 
-class nsIDOMElement;
 class nsIDOMNode;
 class nsIDOMDocumentFragment;
 class nsIDOMRange;
@@ -39,14 +38,14 @@ public:
   NS_IMETHOD    GetIsPositioned(PRBool* aIsPositioned)=0;
   NS_IMETHOD    SetIsPositioned(PRBool aIsPositioned)=0;
 
-  NS_IMETHOD    GetStartParent(nsIDOMElement** aStartParent)=0;
-  NS_IMETHOD    SetStartParent(nsIDOMElement* aStartParent)=0;
+  NS_IMETHOD    GetStartParent(nsIDOMNode** aStartParent)=0;
+  NS_IMETHOD    SetStartParent(nsIDOMNode* aStartParent)=0;
 
   NS_IMETHOD    GetStartOffset(PRInt32* aStartOffset)=0;
   NS_IMETHOD    SetStartOffset(PRInt32 aStartOffset)=0;
 
-  NS_IMETHOD    GetEndParent(nsIDOMElement** aEndParent)=0;
-  NS_IMETHOD    SetEndParent(nsIDOMElement* aEndParent)=0;
+  NS_IMETHOD    GetEndParent(nsIDOMNode** aEndParent)=0;
+  NS_IMETHOD    SetEndParent(nsIDOMNode* aEndParent)=0;
 
   NS_IMETHOD    GetEndOffset(PRInt32* aEndOffset)=0;
   NS_IMETHOD    SetEndOffset(PRInt32 aEndOffset)=0;
@@ -88,12 +87,12 @@ public:
 #define NS_DECL_IDOMRANGE   \
   NS_IMETHOD    GetIsPositioned(PRBool* aIsPositioned);  \
   NS_IMETHOD    SetIsPositioned(PRBool aIsPositioned);  \
-  NS_IMETHOD    GetStartParent(nsIDOMElement** aStartParent);  \
-  NS_IMETHOD    SetStartParent(nsIDOMElement* aStartParent);  \
+  NS_IMETHOD    GetStartParent(nsIDOMNode** aStartParent);  \
+  NS_IMETHOD    SetStartParent(nsIDOMNode* aStartParent);  \
   NS_IMETHOD    GetStartOffset(PRInt32* aStartOffset);  \
   NS_IMETHOD    SetStartOffset(PRInt32 aStartOffset);  \
-  NS_IMETHOD    GetEndParent(nsIDOMElement** aEndParent);  \
-  NS_IMETHOD    SetEndParent(nsIDOMElement* aEndParent);  \
+  NS_IMETHOD    GetEndParent(nsIDOMNode** aEndParent);  \
+  NS_IMETHOD    SetEndParent(nsIDOMNode* aEndParent);  \
   NS_IMETHOD    GetEndOffset(PRInt32* aEndOffset);  \
   NS_IMETHOD    SetEndOffset(PRInt32 aEndOffset);  \
   NS_IMETHOD    GetIsCollapsed(PRBool* aIsCollapsed);  \
@@ -119,12 +118,12 @@ public:
 #define NS_FORWARD_IDOMRANGE(_to)  \
   NS_IMETHOD    GetIsPositioned(PRBool* aIsPositioned) { return _to##GetIsPositioned(aIsPositioned); } \
   NS_IMETHOD    SetIsPositioned(PRBool aIsPositioned) { return _to##SetIsPositioned(aIsPositioned); } \
-  NS_IMETHOD    GetStartParent(nsIDOMElement** aStartParent) { return _to##GetStartParent(aStartParent); } \
-  NS_IMETHOD    SetStartParent(nsIDOMElement* aStartParent) { return _to##SetStartParent(aStartParent); } \
+  NS_IMETHOD    GetStartParent(nsIDOMNode** aStartParent) { return _to##GetStartParent(aStartParent); } \
+  NS_IMETHOD    SetStartParent(nsIDOMNode* aStartParent) { return _to##SetStartParent(aStartParent); } \
   NS_IMETHOD    GetStartOffset(PRInt32* aStartOffset) { return _to##GetStartOffset(aStartOffset); } \
   NS_IMETHOD    SetStartOffset(PRInt32 aStartOffset) { return _to##SetStartOffset(aStartOffset); } \
-  NS_IMETHOD    GetEndParent(nsIDOMElement** aEndParent) { return _to##GetEndParent(aEndParent); } \
-  NS_IMETHOD    SetEndParent(nsIDOMElement* aEndParent) { return _to##SetEndParent(aEndParent); } \
+  NS_IMETHOD    GetEndParent(nsIDOMNode** aEndParent) { return _to##GetEndParent(aEndParent); } \
+  NS_IMETHOD    SetEndParent(nsIDOMNode* aEndParent) { return _to##SetEndParent(aEndParent); } \
   NS_IMETHOD    GetEndOffset(PRInt32* aEndOffset) { return _to##GetEndOffset(aEndOffset); } \
   NS_IMETHOD    SetEndOffset(PRInt32 aEndOffset) { return _to##SetEndOffset(aEndOffset); } \
   NS_IMETHOD    GetIsCollapsed(PRBool* aIsCollapsed) { return _to##GetIsCollapsed(aIsCollapsed); } \

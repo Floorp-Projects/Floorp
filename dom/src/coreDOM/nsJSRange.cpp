@@ -25,7 +25,6 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIPtr.h"
 #include "nsString.h"
-#include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIDOMRange.h"
@@ -34,12 +33,10 @@
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
-static NS_DEFINE_IID(kIElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kINodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIDocumentFragmentIID, NS_IDOMDOCUMENTFRAGMENT_IID);
 static NS_DEFINE_IID(kIRangeIID, NS_IDOMRANGE_IID);
 
-NS_DEF_PTR(nsIDOMElement);
 NS_DEF_PTR(nsIDOMNode);
 NS_DEF_PTR(nsIDOMDocumentFragment);
 NS_DEF_PTR(nsIDOMRange);
@@ -86,7 +83,7 @@ GetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case RANGE_STARTPARENT:
       {
-        nsIDOMElement* prop;
+        nsIDOMNode* prop;
         if (NS_OK == a->GetStartParent(&prop)) {
           // get the js object
           if (prop != nsnull) {
@@ -124,7 +121,7 @@ GetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case RANGE_ENDPARENT:
       {
-        nsIDOMElement* prop;
+        nsIDOMNode* prop;
         if (NS_OK == a->GetEndParent(&prop)) {
           // get the js object
           if (prop != nsnull) {
@@ -257,15 +254,15 @@ SetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case RANGE_STARTPARENT:
       {
-        nsIDOMElement* prop;
+        nsIDOMNode* prop;
         if (JSVAL_IS_NULL(*vp)) {
           prop = nsnull;
         }
         else if (JSVAL_IS_OBJECT(*vp)) {
           JSObject *jsobj = JSVAL_TO_OBJECT(*vp); 
           nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);
-          if (NS_OK != supports->QueryInterface(kIElementIID, (void **)&prop)) {
-            JS_ReportError(cx, "Parameter must be of type Element");
+          if (NS_OK != supports->QueryInterface(kINodeIID, (void **)&prop)) {
+            JS_ReportError(cx, "Parameter must be of type Node");
             return JS_FALSE;
           }
         }
@@ -296,15 +293,15 @@ SetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case RANGE_ENDPARENT:
       {
-        nsIDOMElement* prop;
+        nsIDOMNode* prop;
         if (JSVAL_IS_NULL(*vp)) {
           prop = nsnull;
         }
         else if (JSVAL_IS_OBJECT(*vp)) {
           JSObject *jsobj = JSVAL_TO_OBJECT(*vp); 
           nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);
-          if (NS_OK != supports->QueryInterface(kIElementIID, (void **)&prop)) {
-            JS_ReportError(cx, "Parameter must be of type Element");
+          if (NS_OK != supports->QueryInterface(kINodeIID, (void **)&prop)) {
+            JS_ReportError(cx, "Parameter must be of type Node");
             return JS_FALSE;
           }
         }
