@@ -22,10 +22,14 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 -->
 
-<!DOCTYPE window>
+<!DOCTYPE window
+[
+<!ENTITY completionText.label "That's it!">
+]
+>
 
 <window id="done" xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload="parent.wizardPageLoaded('done');">
-<html:div>That's it!</html:div>
+<html:div>&completionText.label;</html:div>
 </window>

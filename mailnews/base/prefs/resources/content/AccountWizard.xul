@@ -23,7 +23,15 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 -->
 
-<!DOCTYPE window>
+<!DOCTYPE window
+[
+<!ENTITY backButton.label "Back">
+<!ENTITY nextButton.label "Next">
+<!ENTITY finishButton.label "Finish">
+<!ENTITY cancelButton.label "Cancel">
+<!ENTITY instructions.label "Click next to continue entering information.">
+]
+>
 
 <window id="account-wizard-dialog" xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -35,7 +43,7 @@ Rights Reserved.
 <box align="vertical" style="width: 100%; height: 100%">
   <html:iframe flex="100%" style="width: 100%; height: 240px; border: none; margin: 5px;" src="aw-accounttype.xul" name="wizardContents" scrolling="auto"/>
   <html:div>
-    Click next to continue entering information.
+    &instructions.label;
   </html:div>
   <html:br/><html:hr/>
   <box align="horizontal" style="margin: 10px">
@@ -44,12 +52,12 @@ Rights Reserved.
     <titledbutton value="Load Page" onclick="onLoadPage(event);"/>
 -->
     <spring flex="100%"/>
-    <titledbutton value="&lt; Back" onclick="onBack(event);"/>
-    <titledbutton value="Next &gt;" onclick="onNext(event);"/>
+    <titledbutton value="&lt; &backButton.label;" onclick="onBack(event);"/>
+    <titledbutton value="&nextButton.label; &gt;" onclick="onNext(event);"/>
     <spring style="width: 10px"/>
-    <titledbutton value="Finish" onclick="onFinish(event);"/>
+    <titledbutton value="&finishButton.label;" onclick="onFinish(event);"/>
     <spring style="width: 10px"/>
-    <titledbutton value="Cancel" onclick="onCancel(event);"/>
+    <titledbutton value="&cancelButton.label;" onclick="onCancel(event);"/>
   </box>
 </box>
 </window>
