@@ -617,6 +617,12 @@ nsHTMLTextAreaElement::GetControllers(nsIControllers** aResult)
       NS_ERROR_FAILURE);
 
     if (!controller) { return NS_ERROR_NULL_POINTER; }
+    nsresult rv;
+    nsCOMPtr<nsIEditorController> editorController = do_QueryInterface(controller, &rv);
+    if (NS_FAILED(rv)) return rv;
+    rv = editorController->Init();
+    if (NS_FAILED(rv)) return rv;
+    
     mControllers->AppendController(controller);
   }
 
