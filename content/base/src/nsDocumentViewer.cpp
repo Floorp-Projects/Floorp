@@ -3888,6 +3888,7 @@ NS_IMETHODIMP DocumentViewerImpl::CopyLinkLocation()
   NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_INITIALIZED);
   nsCOMPtr<nsIDOMNode> node;
   nsresult rv = GetPopupLinkNode(getter_AddRefs(node));
+  // make noise if we're not in a link
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
   return mPresShell->DoCopyLinkLocation(node);
@@ -3898,9 +3899,9 @@ NS_IMETHODIMP DocumentViewerImpl::CopyImageLocation()
   NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_INITIALIZED);
   nsCOMPtr<nsIDOMNode> node;
   nsresult rv = GetPopupImageNode(getter_AddRefs(node));
+  // make noise if we're not in an image
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
-  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_INITIALIZED);
   return mPresShell->DoCopyImageLocation(node);
 }
 
@@ -3909,9 +3910,9 @@ NS_IMETHODIMP DocumentViewerImpl::CopyImageContents()
   NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_INITIALIZED);
   nsCOMPtr<nsIDOMNode> node;
   nsresult rv = GetPopupImageNode(getter_AddRefs(node));
+  // make noise if we're not in an image
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
-  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_INITIALIZED);
   return mPresShell->DoCopyImageContents(node);
 }
 
@@ -4952,7 +4953,6 @@ DocumentViewerImpl::GetPopupNode(nsIDOMNode** aNode)
   // get the popup node
   rv = focusController->GetPopupNode(aNode); // addref happens here
   NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(*aNode, NS_ERROR_FAILURE);
 
   return rv;
 }
@@ -4967,6 +4967,7 @@ DocumentViewerImpl::GetPopupNode(nsIDOMNode** aNode)
  * do their own checking.
  */
 
+// GetPopupLinkNode: return popup link node or fail
 nsresult
 DocumentViewerImpl::GetPopupLinkNode(nsIDOMNode** aNode)
 {
@@ -5003,6 +5004,7 @@ DocumentViewerImpl::GetPopupLinkNode(nsIDOMNode** aNode)
   return NS_ERROR_FAILURE;
 }
 
+// GetPopupLinkNode: return popup image node or fail
 nsresult
 DocumentViewerImpl::GetPopupImageNode(nsIDOMNode** aNode)
 {
@@ -5019,7 +5021,7 @@ DocumentViewerImpl::GetPopupImageNode(nsIDOMNode** aNode)
   // find out if we're an image. this really ought to look for objects
   // with type "image/...", but this is good enough for now.
   nsCOMPtr<nsIDOMHTMLImageElement> img(do_QueryInterface(node, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) return rv;
   NS_ENSURE_TRUE(img, NS_ERROR_FAILURE);
 
   // if we made it here, we're an image.
@@ -5053,7 +5055,7 @@ NS_IMETHODIMP DocumentViewerImpl::GetInLink(PRBool* aInLink)
   // get the popup link
   nsCOMPtr<nsIDOMNode> node;
   nsresult rv = GetPopupLinkNode(getter_AddRefs(node));
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) return rv;
   NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
 
   // if we made it here, we're in a link
@@ -5075,7 +5077,7 @@ NS_IMETHODIMP DocumentViewerImpl::GetInImage(PRBool* aInImage)
   // get the popup image
   nsCOMPtr<nsIDOMNode> node;
   nsresult rv = GetPopupImageNode(getter_AddRefs(node));
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) return rv;
   NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
 
   // if we made it here, we're in an image
