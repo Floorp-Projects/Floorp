@@ -45,6 +45,7 @@ protected:
   virtual PRIntn GetSkipSides() const;
 
   void InitializeState(nsIPresContext* aPresContext,
+                       const nsReflowState& aReflowState,
                        nsInlineState& aState);
 
   PRBool DidFitChild(nsIPresContext*  aPresContext,

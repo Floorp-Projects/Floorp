@@ -23,6 +23,7 @@
 class nsIFrame;
 class nsIFrameImageLoader;
 class nsIPresContext;
+struct nsReflowState;
 struct nsReflowMetrics;
 struct nsSize;
 
@@ -51,9 +52,9 @@ public:
                      PRIntn& aLoadStatus);
 
   void GetDesiredSize(nsIPresContext* aPresContext,
-                      nsIFrame* aForFrame,
-                      nsReflowMetrics& aDesiredSize,
-                      const nsSize& aMaxSize);
+                      const nsReflowState& aReflowState,
+                      const nsSize& aMaxSize,
+                      nsReflowMetrics& aDesiredSize);
 
 protected:
   nsIFrameImageLoader* mImageLoader;
