@@ -1165,7 +1165,16 @@ nsFontMetricsXlib::InitGlobals(nsIDeviceContext *aDevice)
 #ifdef ENABLE_X_FONT_BANNING
   /* get the font banning pattern */
   nsXPIDLCString fbpattern;
-  rv = gPref->GetCharPref("font.x11.rejectfontpattern", getter_Copies(fbpattern));
+#ifdef USE_XPRINT
+  if (nsFontMetricsXlib::mPrinterMode) {
+    rv = gPref->GetCharPref("print.xprint.font.rejectfontpattern", getter_Copies(fbpattern));
+  }  
+  if (!nsFontMetricsXlib::mPrinterMode || NS_FAILED(rv)) {
+#endif /* USE_XPRINT */
+    rv = gPref->GetCharPref("font.x11.rejectfontpattern", getter_Copies(fbpattern));
+#ifdef USE_XPRINT
+  }
+#endif /* USE_XPRINT */
   if (NS_SUCCEEDED(rv)) {
     gFontRejectRegEx = new regex_t;
     if (!gFontRejectRegEx) {
@@ -1185,7 +1194,16 @@ nsFontMetricsXlib::InitGlobals(nsIDeviceContext *aDevice)
     }    
   }
 
-  rv = gPref->GetCharPref("font.x11.acceptfontpattern", getter_Copies(fbpattern));
+#ifdef USE_XPRINT
+  if (nsFontMetricsXlib::mPrinterMode) {
+    rv = gPref->GetCharPref("print.xprint.font.acceptfontpattern", getter_Copies(fbpattern));
+  }  
+  if (!nsFontMetricsXlib::mPrinterMode || NS_FAILED(rv)) {
+#endif /* USE_XPRINT */
+    rv = gPref->GetCharPref("font.x11.acceptfontpattern", getter_Copies(fbpattern));
+#ifdef USE_XPRINT
+  }
+#endif /* USE_XPRINT */
   if (NS_SUCCEEDED(rv)) {
     gFontAcceptRegEx = new regex_t;
     if (!gFontAcceptRegEx) {
