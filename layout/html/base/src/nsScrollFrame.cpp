@@ -48,10 +48,12 @@ NS_IMETHODIMP
 nsScrollFrame::Init(nsIPresContext&  aPresContext,
                     nsIContent*      aContent,
                     nsIFrame*        aParent,
-                    nsIStyleContext* aStyleContext)
+                    nsIStyleContext* aStyleContext,
+                    nsIFrame*        aPrevInFlow)
 {
   nsresult  rv = nsHTMLContainerFrame::Init(aPresContext, aContent,
-                                            aParent, aStyleContext);
+                                            aParent, aStyleContext,
+                                            aPrevInFlow);
 
   // Create the scrolling view
   CreateScrollingView();

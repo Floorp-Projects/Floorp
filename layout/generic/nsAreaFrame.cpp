@@ -77,7 +77,8 @@ NS_IMETHODIMP
 nsAreaFrame::Init(nsIPresContext&  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
-                  nsIStyleContext* aContext)
+                  nsIStyleContext* aContext,
+                  nsIFrame*        aPrevInFlow)
 {
   // Create a space manager if requested
   if (0 == (mFlags & NS_AREA_NO_SPACE_MGR)) {
@@ -85,7 +86,7 @@ nsAreaFrame::Init(nsIPresContext&  aPresContext,
     NS_ADDREF(mSpaceManager);
   }
 
-  return nsBlockFrame::Init(aPresContext, aContent, aParent, aContext);
+  return nsBlockFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 }
 
 NS_IMETHODIMP
@@ -592,9 +593,8 @@ nsAreaFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
   if (nsnull == cf) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  cf->Init(aPresContext, mContent, aParent, aStyleContext);
+  cf->Init(aPresContext, mContent, aParent, aStyleContext, this);
   cf->SetFlags(mFlags);
-  cf->AppendToFlow(this);
   aContinuingFrame = cf;
   return NS_OK;
 }

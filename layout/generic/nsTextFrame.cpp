@@ -503,9 +503,7 @@ TextFrame::CreateContinuingFrame(nsIPresContext&  aCX,
   if (nsnull == cf) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  cf->Init(aCX, mContent, aParent, aStyleContext);
-  cf->AppendToFlow(this);
-  cf->mState |= NS_FRAME_REPLACED_ELEMENT;/* XXX kipp: hack for inline reflow */
+  cf->Init(aCX, mContent, aParent, aStyleContext, this);
   aContinuingFrame = cf;
   return NS_OK;
 }

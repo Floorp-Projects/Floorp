@@ -98,7 +98,7 @@ nsHTMLContainerFrame::CreatePlaceholderFrame(nsIPresContext& aPresContext,
                                             kidSC, PR_FALSE,
                                             &placeholderPseudoStyle);
   NS_RELEASE(kidSC);
-  placeholder->Init(aPresContext, content, this, placeholderPseudoStyle);
+  placeholder->Init(aPresContext, content, this, placeholderPseudoStyle, nsnull);
   NS_RELEASE(placeholderPseudoStyle);
   NS_IF_RELEASE(content);
 

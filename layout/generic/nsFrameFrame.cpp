@@ -325,7 +325,7 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext&          aPresContext,
     firstChild = new nsHTMLFrameInnerFrame;
     mFrames.SetFrames(firstChild);
     // XXX temporary! use style system to get correct style!
-    firstChild->Init(aPresContext, mContent, this, mStyleContext);
+    firstChild->Init(aPresContext, mContent, this, mStyleContext, nsnull);
   }
  
   // nsContainerFrame::PaintBorder has some problems, kludge it here

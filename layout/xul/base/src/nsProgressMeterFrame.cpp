@@ -201,10 +201,12 @@ NS_IMETHODIMP
 nsProgressMeterFrame::Init(nsIPresContext&  aPresContext,
                    nsIContent*      aContent,
                    nsIFrame*        aParent,
-                   nsIStyleContext* aContext)
+                   nsIStyleContext* aContext,
+                   nsIFrame*        aPrevInFlow)
 {
  
-  nsresult  rv = nsLeafFrame::Init(aPresContext, aContent, aParent, aContext);
+  nsresult  rv = nsLeafFrame::Init(aPresContext, aContent, aParent, aContext,
+                                   aPrevInFlow);
 
   // get the value
   nsAutoString value;

@@ -36,7 +36,8 @@ public:
   NS_IMETHOD Init(nsIPresContext&  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
-                  nsIStyleContext* aContext); // Overridden to set whether we're a column header 
+                  nsIStyleContext* aContext,
+                  nsIFrame*        aPrevInFlow); // Overridden to set whether we're a column header 
 
   NS_IMETHOD Reflow(nsIPresContext& aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,

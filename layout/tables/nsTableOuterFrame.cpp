@@ -1094,8 +1094,7 @@ nsTableOuterFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
   if (nsnull == cf) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  cf->Init(aPresContext, mContent, aParent, aStyleContext);
-  cf->AppendToFlow(this);
+  cf->Init(aPresContext, mContent, aParent, aStyleContext, this);
   if (PR_TRUE==gsDebug)
     printf("nsTableOuterFrame::CCF parent = %p, this=%p, cf=%p\n", aParent, this, cf);
   aContinuingFrame = cf;

@@ -221,7 +221,8 @@ NS_IMETHODIMP
 nsFrame::Init(nsIPresContext&  aPresContext,
               nsIContent*      aContent,
               nsIFrame*        aParent,
-              nsIStyleContext* aContext)
+              nsIStyleContext* aContext,
+              nsIFrame*        aPrevInFlow)
 {
   mContent = aContent;
   NS_IF_ADDREF(mContent);

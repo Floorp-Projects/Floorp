@@ -99,7 +99,7 @@ nsLegendFrame::SetInitialChildList(nsIPresContext& aPresContext,
   aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::legendContentPseudo,
                                             mStyleContext, PR_FALSE,
                                             &styleContext);
-  mFrames.FirstChild()->Init(aPresContext, mContent, this, styleContext);
+  mFrames.FirstChild()->Init(aPresContext, mContent, this, styleContext, nsnull);
   NS_RELEASE(styleContext);                                           
 
   // Set the parent for each of the child frames

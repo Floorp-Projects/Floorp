@@ -24,6 +24,12 @@
 class nsSplittableFrame : public nsFrame
 {
 public:
+  NS_IMETHOD Init(nsIPresContext&  aPresContext,
+                  nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsIStyleContext* aContext,
+                  nsIFrame*        aPrevInFlow);
+  
   // CreateContinuingFrame() does the default behavior of using the
   // content delegate to create a new frame
   NS_IMETHOD  IsSplittable(nsSplittableType& aIsSplittable) const;

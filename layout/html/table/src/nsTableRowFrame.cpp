@@ -1440,8 +1440,7 @@ nsTableRowFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
   if (nsnull == cf) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  cf->Init(aPresContext, mContent, aParent, aStyleContext);
-  cf->AppendToFlow(this);
+  cf->Init(aPresContext, mContent, aParent, aStyleContext, this);
   cf->SetRowIndex(GetRowIndex());
 
   // Create a continuing frame for each table cell frame
