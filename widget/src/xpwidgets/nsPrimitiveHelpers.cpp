@@ -140,24 +140,21 @@ nsPrimitiveHelpers :: ConvertUnicodeToPlatformPlainText ( PRUnichar* inUnicode, 
   // Get the appropriate unicode encoder. We're guaranteed that this won't change
   // through the life of the app so we can cache it.
   nsresult rv;
-  static nsCOMPtr<nsIUnicodeEncoder> encoder;
-  static PRBool hasConverter = PR_FALSE;
-  if ( !hasConverter ) {
-    // get the charset
-    nsAutoString platformCharset;
-    nsCOMPtr <nsIPlatformCharset> platformCharsetService = do_GetService(NS_PLATFORMCHARSET_PROGID, &rv);
-    if (NS_SUCCEEDED(rv))
-      rv = platformCharsetService->GetCharset(kPlatformCharsetSel_PlainTextInClipboard, platformCharset);
-    if (NS_FAILED(rv))
-      platformCharset.AssignWithConversion("ISO-8859-1");
-      
-    // get the encoder
-    NS_WITH_SERVICE(nsICharsetConverterManager, ccm, NS_CHARSETCONVERTERMANAGER_PROGID, &rv);  
-    rv = ccm->GetUnicodeEncoder(&platformCharset, getter_AddRefs(encoder));
+  nsCOMPtr<nsIUnicodeEncoder> encoder;
 
-    hasConverter = PR_TRUE;
-  }
-  
+  // get the charset
+  nsAutoString platformCharset;
+  nsCOMPtr <nsIPlatformCharset> platformCharsetService = do_GetService(NS_PLATFORMCHARSET_PROGID, &rv);
+  if (NS_SUCCEEDED(rv))
+    rv = platformCharsetService->GetCharset(kPlatformCharsetSel_PlainTextInClipboard, platformCharset);
+  if (NS_FAILED(rv))
+    platformCharset.AssignWithConversion("ISO-8859-1");
+
+#if 0
+  // get the encoder
+  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, NS_CHARSETCONVERTERMANAGER_PROGID, &rv);  
+  rv = ccm->GetUnicodeEncoder(&platformCharset, getter_AddRefs(encoder));
+
   // Estimate out length and allocate the buffer based on a worst-case estimate, then do
   // the conversion.
   encoder->GetMaxLength(inUnicode, inUnicodeLen, outPlainTextLen);
@@ -169,6 +166,21 @@ nsPrimitiveHelpers :: ConvertUnicodeToPlatformPlainText ( PRUnichar* inUnicode, 
       (*outPlainTextData)[*outPlainTextLen] = '\0';          // null terminate. Convert() doesn't do it for us
     }
   } // if valid length
+#endif
+
+  // use transliterate to convert things like smart quotes to normal quotes for plain text
+  nsCAutoString cPlatformCharset;
+  cPlatformCharset.AssignWithConversion(platformCharset);
+
+  nsCOMPtr<nsISaveAsCharset> converter = do_CreateInstance("component://netscape/intl/saveascharset");
+  converter->Init(cPlatformCharset,
+                  nsISaveAsCharset::attr_EntityAfterCharsetConv,
+                  nsIEntityConverter::transliterate);
+
+  converter->Convert(inUnicode, outPlainTextData);
+
+  // XXX is there a better way to do this?
+  *outPlainTextLen = strlen(*outPlainTextData);
 
   NS_ASSERTION ( NS_SUCCEEDED(rv), "Error converting unicode to plain text" );
   
