@@ -104,11 +104,11 @@
 <!ENTITY calendar.monthview.button.tooltip        "Switch To Month View" >
 
 <!ENTITY calendar.newevent.button.label         "New Event" >
-<!ENTITY calendar.gototoday.button.label        "Today's Date" >
-<!ENTITY calendar.choosedate.button.label       "Choose A Date" >
-<!ENTITY calendar.dayview.button.label          "Day View" >
-<!ENTITY calendar.weekview.button.label         "Week View" >
-<!ENTITY calendar.monthview.button.label        "Month View" >
+<!ENTITY calendar.gototoday.button.label        "Today" >
+<!ENTITY calendar.choosedate.button.label       "Choose Date" >
+<!ENTITY calendar.dayview.button.label          "Day" >
+<!ENTITY calendar.weekview.button.label         "Week" >
+<!ENTITY calendar.monthview.button.label        "Month" >
 
 <!ENTITY calendar.menu.options.newcategory   "New Category" >
 <!ENTITY calendar.menu.options.modify        "Edit" >
@@ -130,4 +130,8 @@
 <!ENTITY calendar.portlet.title.today           "Today's Events" >
 <!ENTITY calendar.portlet.title.week           "Week's Events" >
  
- 
+<!-- Statusbar -->
+<!ENTITY statusText.label            "Document: Done">
+
+<!-- Window Title -->
+<!ENTITY window.title            "Mozilla Calendar">

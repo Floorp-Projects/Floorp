@@ -86,69 +86,10 @@ toolbarseparator {
   width: 0px;
 }
 
-toolbargrippy {
-  width: 9px;
-  background-image: none;
-  background-color	: #ffffff;
-  border-right:     1px solid #8698bc;
-  border-left:     1px solid #8698bc;
-  
-}
-
-toolbargrippy:active { 
-  background-color	: #e7e7ff;
-}
-
-toolbargrippy:hover:active { 
-  background-color	: #d2d7ed;
-}
-
-
-.toolbargrippy-top {
-  height: 1px;
-  background-image: none;
-  border-top:     1px solid #8698bc;
-  border-right:     1px solid #8698bc;
-  border-left:     1px solid #8698bc;
-}
-
-.toolbargrippy-btm {
-  height: 7px;
-  background-image: url("chrome://penglobal/skin/unifinder/toolbar_grippy_arrow.png");
-  background-repeat       : no-repeat;
-  
-  border-top:     1px solid #8698bc;
-  border-bottom:     1px solid #8698bc;
-}
-
-
 .collapsed-tray-holder {
   background-color:	#e5e5ec;
   height: 11px;
   border-bottom		    : 1px solid #000000;
-}
-
-
-toolbargrippy[tbgrippy-collapsed="true"] {
-  background-image: none;
-}
-
-toolbargrippy[tbgrippy-collapsed="true"] > .toolbargrippy-collapsed-left {
-  background-image: url("chrome://penglobal/skin/unifinder/toolbar_grippy_arrow_collapsed.png");
-  width: 12px;
-}
-
-toolbargrippy[tbgrippy-collapsed="true"] > .toolbargrippy-collapsed-right {
-  background-color: #e5e5ec;
-  border: 1px outset #92ABC9;
-}
-
-toolbargrippy[tbgrippy-collapsed="true"]:hover:active > .toolbargrippy-collapsed-left {
-  background-image: url("chrome://global/skin/toolbar/tbgrip-clps-act.gif");
-}
-
-toolbargrippy[tbgrippy-collapsed="true"]:hover:active > .toolbargrippy-collapsed-right {
-  border-style: inset;
 }
 
 

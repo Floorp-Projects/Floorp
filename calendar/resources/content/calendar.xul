@@ -21,6 +21,7 @@
    -
    - Contributor(s): Garth Smedley <garths@oeone.com> 
    -                 Mike Potter <mikep@oeone.com>
+   -                 Colin Phillips <colinp@oeone.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -40,12 +41,14 @@
 
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?> 
 <?xml-stylesheet href="chrome://calendar/skin/calendar.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/communicator.css" type="text/css"?>
 
 
 <!-- Overlays -->
 <?xul-overlay href="chrome://penglobal/content/penRootOverlay.xul"?>
 <?xul-overlay href="chrome://penglobal/content/penApplicationOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
+<?xul-overlay href="chrome://calendar/content/calendarMenuOverlay.xul"?>
 
 <?xul-overlay href="chrome://penglobal/content/datepicker-overlay.xul"?>
 
@@ -61,7 +64,8 @@
 [
     <!ENTITY % dtd1 SYSTEM "chrome://penglobal/locale/global.dtd" > %dtd1;
     <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd2;
-	 <!ENTITY % dtd3 SYSTEM "chrome://penglobal/locale/unifinder.dtd" > %dtd3;
+    <!ENTITY % dtd3 SYSTEM "chrome://penglobal/locale/unifinder.dtd" > %dtd3;
+    <!ENTITY % dtd4 SYSTEM "chrome://calendar/locale/calendarMenu.dtd" > %dtd4;
 ]>
 
 
@@ -69,6 +73,7 @@
 
 <window
    id="calendar-window"
+   title="&window.title;"
    onload="calendarInit()"
    onunload="calendarFinish()"
    xmlns:html="http://www.w3.org/1999/xhtml"
@@ -121,26 +126,42 @@
  </popup>
 
 
+   <toolbox id="calendar-toolbox" class="toolbox-top" deferattached="true">
+      <!-- Menu -->
+      <menubar id="main-menubar" persist="collapsed"
+             grippytooltip="aTooltip" grippytooltiptext="&menuBar.tooltip;"/>
+
+      <toolbar class="toolbar-primary chromeclass-toolbar" id="calendar-bar" persist="collapsed" 
+             grippytooltip="aTooltip" grippytooltiptext="&navigationToolbar.tooltip;"
+             tbalign="stretch">
+             
+             <toolbarseparator class="toolbarseparator-primary"/>
+             <toolbarbutton class="toolbarbutton-1" id="calendar-new-event-button"      label="&calendar.newevent.button.label;"        tooltip="aTooltip" tooltiptext="&calendar.newevent.button.tooltip;"     oncommand="newEventCommand()"/>
+             <toolbarseparator class="toolbarseparator-primary"/>
+             <toolbarbutton class="toolbarbutton-1" id="calendar-choose-date-button"    label="&calendar.choosedate.button.label;"      tooltip="aTooltip" tooltiptext="&calendar.choosedate.button.tooltip;"   onmousedown="prepareChooseDate()" popup="oe-date-picker-popup"/>
+             <toolbarbutton class="toolbarbutton-1" id="calendar-go-to-today-button"    label="&calendar.gototoday.button.label;"       tooltip="aTooltip" tooltiptext="&calendar.gototoday.button.tooltip;"    oncommand="gCalendarWindow.goToToday()"/>
+             <toolbarseparator class="toolbarseparator-primary"/>
+             <toolbarbutton class="toolbarbutton-1" id="calendar-day-view-button"       label="&calendar.dayview.button.label;"         tooltip="aTooltip" tooltiptext="&calendar.dayview.button.tooltip;"      oncommand="gCalendarWindow.switchToDayView()"/>
+             <toolbarbutton class="toolbarbutton-1" id="calendar-week-view-button"      label="&calendar.weekview.button.label;"        tooltip="aTooltip" tooltiptext="&calendar.weekview.button.tooltip;"     oncommand="gCalendarWindow.switchToWeekView()"/>
+             <toolbarbutton class="toolbarbutton-1" id="calendar-month-view-button"     label="&calendar.monthview.button.label;"       tooltip="aTooltip" tooltiptext="&calendar.monthview.button.tooltip;"    oncommand="gCalendarWindow.switchToMonthView()"/>
+             <spacer flex="1"/>
+             <hbox id="throbber-box" autostretch="never">
+              <button id="navigator-throbber" oncommand='//goClickThrobber("calendar.throbber.url")' tooltip="aTooltip" tooltiptext="&throbber.tooltip;">
+                 <!--
+                 <observes element="broadcaster_throbber" attribute="busy"/>
+                 -->
+              </button>
+             </hbox>
+      </toolbar>
+   </toolbox>
+
+
 <!-- V I S I B L E  C O N T E N T  -->
 
 <vbox id="calendar-top-box" flex="1" context="debug-menu">
   
   <!-- Calendar Controls-->
  
-	<hbox id="calendar-controls-box" flex="1" >
-		<spacer flex="1" />
-   
-		<button class="calendar-management-button" id="calendar-new-event-button"    tooltip="aTooltip" tooltiptext="&calendar.newevent.button.tooltip;"     label="&calendar.newevent.button.label;"     oncommand="newEventCommand()"/>    
-		<image class="calendar-control-divider" />
-		<button class="calendar-management-button" id="calendar-go-to-today-button"  tooltip="aTooltip" tooltiptext="&calendar.gototoday.button.tooltip;"    label="&calendar.gototoday.button.label;"    oncommand="gCalendarWindow.goToToday()"/>    
-		<button class="calendar-management-button" id="calendar-choose-date-button"  tooltip="aTooltip" tooltiptext="&calendar.choosedate.button.tooltip;"   label="&calendar.choosedate.button.label;"   onmousedown="prepareChooseDate()" popup="oe-date-picker-popup" />    
-		<image class="calendar-control-divider" />
-		<button class="calendar-management-button" id="calendar-day-view-button"     tooltip="aTooltip" tooltiptext="&calendar.dayview.button.tooltip;"      label="&calendar.dayview.button.label;"      oncommand="gCalendarWindow.switchToDayView();"/>
-		<button class="calendar-management-button" id="calendar-week-view-button"    tooltip="aTooltip" tooltiptext="&calendar.weekview.button.tooltip;"     label="&calendar.weekview.button.label;"     oncommand="gCalendarWindow.switchToWeekView();"/>
-		<button class="calendar-management-button" id="calendar-month-view-button"   tooltip="aTooltip" tooltiptext="&calendar.monthview.button.tooltip;"    label="&calendar.monthview.button.label;"    oncommand="gCalendarWindow.switchToMonthView();"/>
-	</hbox>
-
-   
 	<hbox id="calendar-content-box" flex="1">
 
       
@@ -185,11 +206,16 @@
       <spacer flex="1"/>
       
       </hbox> <!-- End: box with unifinder on left, calendar on right -->
-	</vbox>
+  </vbox>
 
-
-
-
+  <statusbar id="status-bar" class="chromeclass-status">
+             ondragover="nsDragAndDrop.dragOver(event, contentAreaDNDObserver);"
+             ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
+    <hbox id="component-bar"/>
+    <statusbarpanel id="statusbar-display" label="&statusText.label;" crop="right" flex="1"/>
+    <progressmeter class="progressmeter-statusbar" statusbar="true" id="statusbar-icon" mode="normal" value="0"/>
+    <statusbarpanel class="statusbarpanel-icononly" id="offline-status"/>
+  </statusbar> 
 
 </window>
 
