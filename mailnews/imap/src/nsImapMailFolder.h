@@ -118,7 +118,6 @@ public:
 	NS_IMETHOD CreateSubfolder(const PRUnichar *folderName);
 	NS_IMETHOD AddSubfolder(nsAutoString *name, nsIMsgFolder **child);
     
-    NS_IMETHOD ForceDBClosed();
     NS_IMETHOD Compact();
     NS_IMETHOD EmptyTrash(nsIMsgWindow *msgWindow);
 	NS_IMETHOD Delete ();

@@ -655,6 +655,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
 				onlineName += folderNameStr;
 				imapFolder->SetVerifiedAsOnlineFolder(PR_TRUE);
 				imapFolder->SetOnlineName(onlineName.GetBuffer());
+                imapFolder->SetHierarchyDelimiter(hierarchyDelimiter);
 			}
 
             unusedDB->SetSummaryValid(PR_TRUE);
@@ -904,31 +905,6 @@ NS_IMETHODIMP nsImapMailFolder::Rename (const PRUnichar *newName)
         rv = imapService->RenameLeaf(m_eventQueue, this, newName, this,
                                      nsnull);
     return rv;
-}
-
-NS_IMETHODIMP nsImapMailFolder::ForceDBClosed()
-{
-    PRUint32 cnt = 0, i;
-    if (mSubFolders)
-    {
-        nsCOMPtr<nsISupports> aSupport;
-        nsCOMPtr<nsIMsgFolder> child;
-        mSubFolders->Count(&cnt);
-        if (cnt > 0)
-            for (i = 0; i < cnt; i++)
-            {
-                aSupport = getter_AddRefs(mSubFolders->ElementAt(i));
-                child = do_QueryInterface(aSupport);
-                if (child)
-                    child->ForceDBClosed();
-            }
-    }
-    if (mDatabase)
-    {
-        mDatabase->ForceClosed();
-        mDatabase = null_nsCOMPtr();
-    }
-    return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -116,6 +116,33 @@ NS_IMETHODIMP nsMsgDBFolder::Shutdown(PRBool shutdownChildren)
 	return NS_OK;
 }
 
+
+NS_IMETHODIMP nsMsgDBFolder::ForceDBClosed ()
+{
+    PRUint32 cnt = 0, i;
+    if (mSubFolders)
+    {
+        nsCOMPtr<nsISupports> aSupport;
+        nsCOMPtr<nsIMsgFolder> child;
+        mSubFolders->Count(&cnt);
+        if (cnt > 0)
+            for (i = 0; i < cnt; i++)
+            {
+                aSupport = getter_AddRefs(mSubFolders->ElementAt(i));
+                child = do_QueryInterface(aSupport);
+                if (child)
+                    child->ForceDBClosed();
+            }
+    }
+    if (mDatabase)
+    {
+        mDatabase->ForceClosed();
+        mDatabase = null_nsCOMPtr();
+    }
+    return NS_OK;
+}
+
+
 NS_IMETHODIMP nsMsgDBFolder::StartFolderLoading(void)
 {
 	if(mDatabase)

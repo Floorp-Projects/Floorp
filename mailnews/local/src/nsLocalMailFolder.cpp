@@ -768,7 +768,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName)
     if (NS_FAILED(rv)) return rv;
     rv = GetParent(getter_AddRefs(parent));
     if (NS_FAILED(rv)) return rv;
-    Shutdown(PR_TRUE);
+    ForceDBClosed();
     nsCOMPtr<nsIMsgFolder> parentFolder = do_QueryInterface(parent);
     nsCOMPtr<nsISupports> parentSupport = do_QueryInterface(parent);
     
