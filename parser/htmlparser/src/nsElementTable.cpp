@@ -73,6 +73,8 @@ TagList  gAddressKids={1,{eHTMLTag_p}};
 TagList  gBodyKids={9, {eHTMLTag_dd,eHTMLTag_del,eHTMLTag_dt,eHTMLTag_ins,
                         eHTMLTag_noscript,eHTMLTag_nolayer,eHTMLTag_script,eHTMLTag_li,eHTMLTag_param}}; // Added PARAM for bug 54448
 TagList  gButtonKids={2,{eHTMLTag_caption,eHTMLTag_legend}};
+
+TagList  gDLRootTags={5,{eHTMLTag_body,eHTMLTag_td,eHTMLTag_table,eHTMLTag_applet,eHTMLTag_dd}};
 TagList  gDLKids={2,{eHTMLTag_dd,eHTMLTag_dt}};
 TagList  gDTKids={1,{eHTMLTag_dt}};
 TagList  gFieldsetKids={2,{eHTMLTag_legend,eHTMLTag_text}};
@@ -147,6 +149,7 @@ const int kNoPropRange=0;
 const int kDefaultPropRange=1;
 const int kBodyPropRange=2;
 
+PRBool CanBeContainedLI(eHTMLTags aChildTag,nsDTDContext &aContext);
 
 //*********************************************************************************************
 //
@@ -192,6 +195,7 @@ void Initialize(eHTMLTags aTag,
   gHTMLElements[aTag].mSpecialParents=aSpecialParents;
   gHTMLElements[aTag].mSpecialKids=aSpecialKids;
   gHTMLElements[aTag].mSkipTarget=aSkipTarget;
+  gHTMLElements[aTag].mCanBeContained=0; //most use the default impl.
 }
 
 
@@ -228,7 +232,7 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
-      /*parent,incl,exclgroups*/          kPhrase, (kSelf|kFlowEntity), kNone,	
+      /*parent,incl,exclgroups*/          kPhrase, (kSelf|kInlineEntity), kNone,	
       /*special props, prop-range*/       0,kDefaultPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
@@ -237,7 +241,7 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
-      /*parent,incl,exclgroups*/          kPhrase, (kFlowEntity|kSelf), kNone,	
+      /*parent,incl,exclgroups*/          kPhrase, (kSelf|kInlineEntity), kNone,	
       /*special props, prop-range*/       0,kDefaultPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
@@ -335,7 +339,7 @@ void InitializeElementTable(void) {
       /*tag*/                             eHTMLTag_blockquote,
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-      /*autoclose starttags and endtags*/ 0,0,0,&gExcludableParents,
+      /*autoclose starttags and endtags*/ 0,0,0,0,  //remove excludeable parents to fix bug 53473
       /*parent,incl,exclgroups*/          kBlock, (kSelf|kFlowEntity), kNone,	
       /*special props, prop-range*/       0,kDefaultPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
@@ -390,7 +394,7 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
-      /*parent,incl,exclgroups*/          kPhrase, (kFlowEntity|kSelf), kNone,	
+      /*parent,incl,exclgroups*/          kPhrase, (kSelf|kInlineEntity), kNone,	
       /*special props, prop-range*/       0,kDefaultPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
@@ -399,7 +403,7 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
-      /*parent,incl,exclgroups*/          kPhrase, (kSelf|kFlowEntity), kNone,	
+      /*parent,incl,exclgroups*/          kPhrase, (kSelf|kInlineEntity), kNone,	
       /*special props, prop-range*/       0,kDefaultPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
@@ -453,7 +457,7 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
-      /*parent,incl,exclgroups*/          kPhrase, (kSelf|kFlowEntity), kNone,	
+      /*parent,incl,exclgroups*/          kPhrase, (kSelf|kInlineEntity), kNone,	
       /*special props, prop-range*/       0,kDefaultPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
@@ -478,8 +482,8 @@ void InitializeElementTable(void) {
     Initialize( 
       /*tag*/                             eHTMLTag_dl,
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-      /*autoclose starttags and endtags*/ &gDLKids,0,0,0,
+	    /*rootnodes,endrootnodes*/          &gDLRootTags,&gRootTags,	//fix bug 57634
+      /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kBlock, kSelf|kFlowEntity, kNone,	
       /*special props, prop-range*/       kOmitWS, kNoPropRange,
       /*special parents,kids,skip*/       0,&gDLKids,eHTMLTag_unknown);
@@ -498,7 +502,7 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
-      /*parent,incl,exclgroups*/          kPhrase, (kSelf|kFlowEntity), kNone,	
+      /*parent,incl,exclgroups*/          kPhrase, (kSelf|kInlineEntity), kNone,	
       /*special props, prop-range*/       0,kDefaultPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
@@ -724,7 +728,7 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
-      /*parent,incl,exclgroups*/          kPhrase, (kSelf|kFlowEntity), kNone,	
+      /*parent,incl,exclgroups*/          kPhrase, (kSelf|kInlineEntity), kNone,	
       /*special props, prop-range*/       0,kDefaultPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
@@ -773,6 +777,8 @@ void InitializeElementTable(void) {
       /*special props, prop-range*/       kNoPropagate|kVerifyHierarchy, kDefaultPropRange,
       /*special parents,kids,skip*/       0,&gLIKids,eHTMLTag_unknown);
 
+    gHTMLElements[eHTMLTag_li].mCanBeContained=&CanBeContainedLI;
+
     Initialize( 
       /*tag*/                             eHTMLTag_link,
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
@@ -787,7 +793,7 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
-      /*parent,incl,exclgroups*/          kPreformatted, kNone, kNone,	
+      /*parent,incl,exclgroups*/          kPreformatted, (kSelf|kFlowEntity), kNone,	//add flowentity to fix 54993
       /*special props, prop-range*/       0,kDefaultPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
@@ -976,7 +982,7 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
-      /*parent,incl,exclgroups*/          kPhrase, (kSelf|kFlowEntity), kNone,	
+      /*parent,incl,exclgroups*/          kPhrase, (kSelf|kInlineEntity), kNone,	
       /*special props, prop-range*/       0,kDefaultPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
@@ -1074,7 +1080,7 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
-      /*parent,incl,exclgroups*/          kPhrase, (kSelf|kFlowEntity), kNone,	
+      /*parent,incl,exclgroups*/          kPhrase, (kSelf|kInlineEntity), kNone,	//changed this to inline per spec; fix bug 44584.
       /*special props, prop-range*/       0,kDefaultPropRange,
       /*special parents,kids,skip*/       0,&gContainsText,eHTMLTag_unknown);
 
@@ -1220,7 +1226,7 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
-      /*parent,incl,exclgroups*/          kPhrase, (kSelf|kFlowEntity), kNone,	
+      /*parent,incl,exclgroups*/          kPhrase, (kSelf|kInlineEntity), kNone,	
       /*special props, prop-range*/       0,kDefaultPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
@@ -1307,12 +1313,162 @@ void InitializeElementTable(void) {
   }//if
 };
 
-void DeleteElementTable(void) 
-{
+void DeleteElementTable(void) {
   if(gHTMLElements) {
-    delete [] gHTMLElements;  //fixed bug 49564
+    delete [] gHTMLElements;
     gHTMLElements=0;
   }
+}
+
+/**
+ * This is called to answer the CanBeContained question when LI is the parent
+ * @update	gess 10/13/00
+ * @param 
+ * @return
+ */ 
+PRBool CanBeContainedLI(eHTMLTags aChildTag,nsDTDContext &aContext) {
+  PRBool result=PR_TRUE;
+
+  //walk the parent hierarchy, to see if the LI is in a block or an inline.
+  PRInt32 anIndex=aContext.GetCount();
+  PRBool  theLIHasABlockParent=PR_FALSE;
+
+  PRBool theChildIsBlock=PR_FALSE;
+  
+  if((aChildTag>eHTMLTag_unknown) && (aChildTag<eHTMLTag_userdefined)) {
+    theChildIsBlock=  (eHTMLTag_dt==aChildTag) || 
+                      (eHTMLTag_dd==aChildTag) ||
+                      (gHTMLElements[aChildTag].IsMemberOf(kBlock))       || 
+                      (gHTMLElements[aChildTag].IsMemberOf(kBlockEntity)) || 
+                      (gHTMLElements[aChildTag].IsMemberOf(kHeading))     || 
+                      (gHTMLElements[aChildTag].IsMemberOf(kPreformatted))|| 
+                      (gHTMLElements[aChildTag].IsMemberOf(kList)); 
+  }
+
+  if(theChildIsBlock) {
+
+    while(--anIndex>0) {
+      eHTMLTags aParent=aContext.TagAt(anIndex);
+      if((eHTMLTag_ul==aParent) ||
+         (eHTMLTag_ol==aParent) || 
+         (eHTMLTag_table==aParent) ||
+         (eHTMLTag_dir==aParent)) {
+        theLIHasABlockParent=PR_TRUE;
+        break;
+      }
+    }
+    result=theLIHasABlockParent;
+  }    
+  else {
+    result=PR_TRUE;
+  }
+  return result;
+}
+
+/**
+ * This is the default implementation, that was moved out of CNavDTD, so that it can be made
+ * to behave in a more flexible manner. At this point, the code itself has not changed.
+ * NOTE: This is not called YET. It's just a placeholder for future changes.
+ *
+ * @update	gess 10/13/00
+ * @param 
+ * @return
+ */ 
+PRBool nsHTMLElement::CanBeContained(eHTMLTags aChildTag,nsDTDContext &aContext) {
+  PRBool result=PR_TRUE;
+  if(!mCanBeContained) {
+
+    /* #    Interesting test cases:       Result:
+     * 1.   <UL><LI>..<B>..<LI>           inner <LI> closes outer <LI>
+     * 2.   <CENTER><DL><DT><A><CENTER>   allow nested <CENTER>
+     * 3.   <TABLE><TR><TD><TABLE>...     allow nested <TABLE>
+     * 4.   <FRAMESET> ... <FRAMESET>
+     */
+
+    //Note: This method is going away. First we need to get the elementtable to do closures right, and
+    //      therefore we must get residual style handling to work.
+
+    //the changes to this method were added to fix bug 54651...
+
+    PRInt32 theCount=aContext.GetCount();
+    result=PR_TRUE;
+
+    if(0<theCount){
+      TagList* theRootTags=gHTMLElements[aChildTag].GetRootTags();
+      TagList* theSpecialParents=gHTMLElements[aChildTag].GetSpecialParents();
+      if(theRootTags) {
+        PRInt32 theRootIndex=LastOf(aContext,*theRootTags);
+        PRInt32 theSPIndex=(theSpecialParents) ? LastOf(aContext,*theSpecialParents) : kNotFound;  
+        PRInt32 theChildIndex=GetIndexOfChildOrSynonym(aContext,aChildTag);
+        PRInt32 theTargetIndex=(theRootIndex>theSPIndex) ? theRootIndex : theSPIndex;
+
+        if((theTargetIndex==theCount-1) ||
+          ((theTargetIndex==theChildIndex) && gHTMLElements[aChildTag].CanContainSelf())) {
+          result=PR_TRUE;
+        }
+        else {
+        
+          result=PR_FALSE;
+
+          static eHTMLTags gTableElements[]={eHTMLTag_td,eHTMLTag_th};
+
+          PRInt32 theIndex=theCount-1;
+          while(theChildIndex<theIndex) {
+            eHTMLTags theParentTag=aContext.TagAt(theIndex--);
+            if (gHTMLElements[theParentTag].IsMemberOf(kBlockEntity)  || 
+                gHTMLElements[theParentTag].IsMemberOf(kHeading)      || 
+                gHTMLElements[theParentTag].IsMemberOf(kPreformatted) || 
+                gHTMLElements[theParentTag].IsMemberOf(kFormControl) || //added this to fix bug 44479
+                gHTMLElements[theParentTag].IsMemberOf(kList)) {
+              if(!HasOptionalEndTag(theParentTag)) {
+                result=PR_TRUE;
+                break;
+              }
+            }
+            else if(FindTagInSet(theParentTag,gTableElements,sizeof(gTableElements)/sizeof(eHTMLTag_unknown))){
+              result=PR_TRUE;  //added this to catch a case we missed; bug 57173.
+              break;
+            }
+          }
+        }
+      }
+    }
+
+  }
+  else result=(*mCanBeContained)(aChildTag,aContext);
+  return result;
+}
+
+/**
+ *  Call this to find the index of a given child, or (if not found)
+ *  the index of its nearest synonym.
+ *   
+ *  @update  gess 3/25/98
+ *  @param   aTagStack -- list of open tags
+ *  @param   aTag -- tag to test for containership
+ *  @return  index of kNotFound
+ */
+PRInt32 nsHTMLElement::GetIndexOfChildOrSynonym(nsDTDContext& aContext,eHTMLTags aChildTag) {
+  PRInt32 theChildIndex=aContext.LastOf(aChildTag);
+  if(kNotFound==theChildIndex) {
+    TagList* theSynTags=gHTMLElements[aChildTag].GetSynonymousTags(); //get the list of tags that THIS tag can close
+    if(theSynTags) {
+      theChildIndex=LastOf(aContext,*theSynTags);
+    } 
+    else{
+      PRInt32 theGroup=nsHTMLElement::GetSynonymousGroups(aChildTag);
+      if(theGroup) {
+        theChildIndex=aContext.GetCount();
+        while(-1<--theChildIndex) {
+          eHTMLTags theTag=aContext[theChildIndex];
+          if(gHTMLElements[theTag].IsMemberOf(theGroup)) {
+            break;   
+          }
+        }
+      }
+    } 
+  }
+  return theChildIndex;
 }
 
 int nsHTMLElement::GetSynonymousGroups(eHTMLTags aTag) {
@@ -1424,7 +1580,8 @@ PRBool nsHTMLElement::IsBlockCloser(eHTMLTags aTag){
       // TD is a block closure   - Ref. Bug# 27490
       // TR is a block closure   - Ref. Bug# 26488
 
-      static eHTMLTags gClosers[]={ eHTMLTag_table,eHTMLTag_tbody,eHTMLTag_caption,eHTMLTag_dd,eHTMLTag_dt,
+      static eHTMLTags gClosers[]={ eHTMLTag_table,eHTMLTag_tbody,eHTMLTag_caption,
+                                    //eHTMLTag_dd,eHTMLTag_dt, TESTING!!!! DONT SHIP THIS! WHY ARE THESE HERE?
                                     eHTMLTag_td,eHTMLTag_th,eHTMLTag_tr,
                                     /* eHTMLTag_tfoot, eHTMLTag_thead,*/
                                     eHTMLTag_nobr,eHTMLTag_optgroup,eHTMLTag_ol,eHTMLTag_ul,eHTMLTag_dir};
@@ -1747,35 +1904,37 @@ PRBool nsHTMLElement::IsResidualStyleTag(eHTMLTags aChild) {
   PRBool result=PR_FALSE;
   switch(aChild) {
     case eHTMLTag_a:       
-//    case eHTMLTag_abbr:
-//    case eHTMLTag_acronym:   
     case eHTMLTag_b:
     case eHTMLTag_bdo:     
     case eHTMLTag_big:       
     case eHTMLTag_blink:
-//    case eHTMLTag_center:  
-//    case eHTMLTag_cite:      
-//    case eHTMLTag_code:
     case eHTMLTag_del:     
-//    case eHTMLTag_dfn:       
-//    case eHTMLTag_em:
     case eHTMLTag_font:    
     case eHTMLTag_i:         
     case eHTMLTag_ins:
-//    case eHTMLTag_kbd:     
     case eHTMLTag_q:
     case eHTMLTag_s:       
-//    case eHTMLTag_samp:      
     case eHTMLTag_small:
-//    case eHTMLTag_span:    
     case eHTMLTag_strike:    
-//    case eHTMLTag_strong:
     case eHTMLTag_sub:     
     case eHTMLTag_sup:       
     case eHTMLTag_tt:
     case eHTMLTag_u:       
-//    case eHTMLTag_var:
       result=PR_TRUE;
+
+    case eHTMLTag_abbr:
+    case eHTMLTag_acronym:   
+    case eHTMLTag_center:  
+    case eHTMLTag_cite:      
+    case eHTMLTag_code:
+    case eHTMLTag_dfn:       
+    case eHTMLTag_em:
+    case eHTMLTag_kbd:     
+    case eHTMLTag_samp:      
+    case eHTMLTag_span:    
+    case eHTMLTag_strong:
+    case eHTMLTag_var:
+      result=PR_FALSE;
     default:
       break;
   };
@@ -1969,7 +2128,7 @@ eHTMLTags nsHTMLElement::GetCloseTargetForEndTag(nsDTDContext& aContext,PRInt32 
     }
   }
 
-  else if( //ContainsSet(kPreformatted) ||  
+  else if(ContainsSet(kPreformatted) ||  
           IsMemberOf(kFormControl|kExtensions|kPreformatted)){  //bug54834...
 
     while((--theIndex>=anIndex) && (eHTMLTag_unknown==result)){

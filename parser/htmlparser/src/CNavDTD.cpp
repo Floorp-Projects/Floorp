@@ -53,8 +53,8 @@
 #include "nsIFormProcessor.h"
 #include "nsVoidArray.h"
 #include "nsReadableUtils.h"
-
 #include "prmem.h"
+#include "nsLoggingSink.h"
 
 
 static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
@@ -201,7 +201,7 @@ void CNavDTD::RecycleNodes(nsEntryStack *aNodeStack) {
           IF_FREE(theToken); 
         }
 
-        mSharedNodes.Push(theNode);
+        mNodeRecycler->RecycleNode(theNode);
       } //if
     } //while
   } //if
@@ -215,6 +215,46 @@ void CNavDTD::RecycleNodes(nsEntryStack *aNodeStack) {
  */
 const nsIID& CNavDTD::GetMostDerivedIID(void)const {
   return kClassIID;
+}
+
+
+nsLoggingSink* GetLoggingSink() {
+
+  //these are used when you want to generate a log file for contentsink construction...
+
+  static  PRBool checkForPath=PR_TRUE;
+  static  nsLoggingSink *theSink=0;
+  static  const char* gLogPath=0; 
+
+  if(checkForPath) {
+    
+    // we're only going to check the environment once per session.
+
+    gLogPath = /* "c:/temp/parse.log"; */ PR_GetEnv("PARSE_LOGFILE"); 
+    checkForPath=PR_FALSE;
+  }
+  
+#ifdef NS_DEBUG
+
+  if(gLogPath && (!theSink)) {
+    static  nsLoggingSink gLoggingSink;
+
+    PRIntn theFlags = 0;
+
+     // create the file exists, only open for read/write
+     // otherwise, create it
+    if(PR_Access(gLogPath,PR_ACCESS_EXISTS) != PR_SUCCESS)
+      theFlags = PR_CREATE_FILE;
+    theFlags |= PR_RDWR;
+
+     // open the record file
+    PRFileDesc *theLogFile = PR_Open(gLogPath,theFlags,0);
+    gLoggingSink.SetOutputStream(theLogFile,PR_TRUE);
+    theSink=&gLoggingSink;
+  }
+#endif
+
+  return theSink;
 }
  
 /**
@@ -244,7 +284,13 @@ CNavDTD::~CNavDTD(){
 
  // delete mNodeRecycler;
 
-  NS_IF_RELEASE(mSink);
+  if(mSink) {
+    nsLoggingSink *theLogSink=GetLoggingSink();
+    if(mSink==theLogSink) {
+      theLogSink->ReleaseProxySink();
+    }
+  }
+
   NS_IF_RELEASE(mDTDDebug);
 }
  
@@ -397,6 +443,20 @@ nsresult CNavDTD::WillBuildModel(  const CParserContext& aParserContext,nsIConte
     }
 
     if(result==NS_OK) {
+
+        //let's see if the environment is set up for us to write output to
+        //a logging sink. If so, then we'll create one, and make it the
+        //proxy for the real sink we're given from the parser.
+
+#ifdef NS_DEBUG
+         
+      nsLoggingSink *theLogSink=GetLoggingSink();
+      if(theLogSink) {   
+        theLogSink->SetProxySink(mSink);
+        mSink=theLogSink;
+      }
+#endif    
+
       result = aSink->WillBuildModel();
 
       MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::WillBuildModel(), this=%p\n", this));
@@ -864,8 +924,7 @@ nsresult CNavDTD::DidHandleStartTag(nsCParserNode& aNode,eHTMLTags aChildTag){
         if(0<theString.Length()) {
           CTextToken *theToken=NS_STATIC_CAST(CTextToken*,mTokenAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text,theString));
           nsCParserNode theNode(theToken,0);
-          result=mSink->AddLeaf(theNode);
-          IF_FREE(theToken);
+          result=mSink->AddLeaf(theNode); //when the node get's destructed, so does the new token
         }
         MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::DidHandleStartTag(), this=%p\n", this));
         START_TIMER()
@@ -967,6 +1026,10 @@ PRInt32 CNavDTD::LastOf(eHTMLTags aTagSet[],PRInt32 aCount) const {
  */
 static
 PRInt32 GetIndexOfChildOrSynonym(nsDTDContext& aContext,eHTMLTags aChildTag) {
+
+#if 0
+  PRInt32 theChildIndex=nsHTMLElement::GetIndexOfChildOrSynonym(aContext,aChildTag);
+#else 
   PRInt32 theChildIndex=aContext.LastOf(aChildTag);
   if(kNotFound==theChildIndex) {
     TagList* theSynTags=gHTMLElements[aChildTag].GetSynonymousTags(); //get the list of tags that THIS tag can close
@@ -986,6 +1049,7 @@ PRInt32 GetIndexOfChildOrSynonym(nsDTDContext& aContext,eHTMLTags aChildTag) {
       }
     }
   }
+#endif
   return theChildIndex;
 }
 
@@ -1042,6 +1106,7 @@ PRBool CanBeContained(eHTMLTags aChildTag,nsDTDContext& aContext) {
           if (gHTMLElements[theParentTag].IsMemberOf(kBlockEntity)  || 
               gHTMLElements[theParentTag].IsMemberOf(kHeading)      || 
               gHTMLElements[theParentTag].IsMemberOf(kPreformatted) || 
+              gHTMLElements[theParentTag].IsMemberOf(kFormControl)  ||  //fixes bug 44479
               gHTMLElements[theParentTag].IsMemberOf(kList)) {
             if(!HasOptionalEndTag(theParentTag)) {
               result=PR_TRUE;
@@ -1100,10 +1165,10 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
     eProcessRule theRule=eNormalOp; 
 
     if((!theParentContains) &&
-       (nsHTMLElement::IsResidualStyleTag(theParentTag)) &&
-       (IsBlockElement(aChildTag,theParentTag))) {
+       (IsBlockElement(aChildTag,theParentTag) &&
+       IsInlineElement(theParentTag,theParentTag))) { //broaden this to fix <inline><block></block></inline>
 
-      if((eHTMLTag_table!=aChildTag) && (eHTMLTag_li!=aChildTag)) {
+      if(eHTMLTag_li!=aChildTag) {  //remove test for table to fix 57554
         nsCParserNode* theParentNode= NS_STATIC_CAST(nsCParserNode*, mBodyContext->PeekNode());
         if(theParentNode->mToken->IsWellFormed()) {
           theRule=eLetInlineContainBlock;
@@ -1853,7 +1918,7 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
             // Ex. <font face="helvetica"><table><tr><td></font></td></tr></table> some text...
             // In the above ex. the orphaned FONT tag, inside TD, should cross TD boundaryto 
             // close the FONT tag above TABLE. 
-            static eHTMLTags gBarriers[]={eHTMLTag_td,eHTMLTag_th};
+            static eHTMLTags gBarriers[]={eHTMLTag_thead,eHTMLTag_tbody,eHTMLTag_tfoot,eHTMLTag_table};
 
             if(!FindTagInSet(theParentTag,gBarriers,sizeof(gBarriers)/sizeof(theParentTag))) {
               PopStyle(theChildTag);
@@ -2037,6 +2102,7 @@ nsresult CNavDTD::HandleEntityToken(CToken* aToken) {
     if(CanOmit(theParentTag,eHTMLTag_entity,theParentContains)) {
       eHTMLTags theCurrTag=(eHTMLTags)aToken->GetTypeID();
       result=HandleOmittedTag(aToken,theCurrTag,theParentTag,theNode);
+      mNodeRecycler->RecycleNode(theNode);
       return result;
     }
   

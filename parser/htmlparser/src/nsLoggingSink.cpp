@@ -17,13 +17,24 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
+ *  Notes: 
+ *    The logging sink is now both a sink and a proxy. 
+ *    If you want to dump the calls from the parser to the sink, 
+ *    create a content sink as usual and hand it to the parser.
+ *  
+ *    If you want to use a normal sink AND simultaneously have a
+ *    parse-log generated, you can set an environment variable
+ *    and a logging sink will be created. It will act as a proxy
+ *    to the REAL sink you are using after it logs the call. This
+ *    form of the loggingsink is constructed using the version
+ *    that accepts an nsIHTMLContentSink*.
+ *
  * Contributor(s): 
  */
 #include "nsLoggingSink.h"
 #include "nsHTMLTags.h"
 #include "nsString.h"
-
-#include <iostream.h>
+#include "prprf.h"
 
 static NS_DEFINE_IID(kIContentSinkIID, NS_ICONTENT_SINK_IID);
 static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
@@ -40,34 +51,6 @@ static char gSkippedContentTags[] = {
   0
 };
 
-/**
- * 
- * @update	gess8/8/98
- * @param 
- * @return
- */
-ostream& operator<<(ostream& os, nsAutoString& aString) {
-	const PRUnichar* uc=aString.GetUnicode();
-	int len=aString.Length();
-	for(int i=0;i<len;i++)
-		os<<(char)uc[i];
-	return os;
-}
-
-/**
- * 
- * @update	gess8/8/98
- * @param 
- * @return
- */
-ostream& operator<<(ostream& os,const nsString& aString) {
-	const PRUnichar* uc=aString.GetUnicode();
-	int len=aString.Length();
-	for(int i=0;i<len;i++)
-		os<<(char)uc[i];
-	return os;
-}
-
 
 nsresult
 NS_NewHTMLLoggingSink(nsIContentSink** aInstancePtrResult)
@@ -83,19 +66,19 @@ NS_NewHTMLLoggingSink(nsIContentSink** aInstancePtrResult)
   return it->QueryInterface(kIContentSinkIID, (void**) aInstancePtrResult);
 }
 
-nsLoggingSink::nsLoggingSink()
-{
+nsLoggingSink::nsLoggingSink() {
   NS_INIT_REFCNT();
   mOutput = 0;
 	mLevel=-1;
+  mSink=0;
 }
 
-nsLoggingSink::~nsLoggingSink()
-{
-  if (0 != mOutput) {
-    mOutput->flush();  
-    mOutput = 0;
+nsLoggingSink::~nsLoggingSink() { 
+  mSink=0;
+  if(mOutput && mAutoDeleteOutput) {
+    delete mOutput;
   }
+  mOutput=0;
 }
 
 NS_IMPL_ADDREF(nsLoggingSink)
@@ -133,82 +116,149 @@ nsLoggingSink::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP
-nsLoggingSink::SetOutputStream(ostream& aStream) {
-  mOutput = &aStream;
+nsLoggingSink::SetOutputStream(PRFileDesc *aStream,PRBool autoDeleteOutput) {
+  mOutput = aStream;
+  mAutoDeleteOutput=autoDeleteOutput;
   return NS_OK;
 }
 
 static
-void WriteTabs(ostream& anOutputStream,int aTabCount) {
-	int tabs;
-	for(tabs=0;tabs<aTabCount;tabs++)
-		anOutputStream << "  ";
+void WriteTabs(PRFileDesc * out,int aTabCount) {
+  int tabs;
+  for(tabs=0;tabs<aTabCount;tabs++)
+    PR_fprintf(out, "  ");
 }
 
 
 NS_IMETHODIMP
-nsLoggingSink::WillBuildModel()
-{
-	WriteTabs(*mOutput,++mLevel);
-	(*mOutput) << "<begin>" << endl;
+nsLoggingSink::WillBuildModel() {
+  
+  WriteTabs(mOutput,++mLevel);
+  PR_fprintf(mOutput, "<begin>\n");
+  
+  //proxy the call to the real sink if you have one.
+  if(mSink) {
+    mSink->WillBuildModel();
+  }
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsLoggingSink::DidBuildModel(PRInt32 aQualityLevel)
-{
-	WriteTabs(*mOutput,mLevel--);
-	(*mOutput) << "</begin>" << endl;
-  return NS_OK;
+nsLoggingSink::DidBuildModel(PRInt32 aQualityLevel) {
+  
+  WriteTabs(mOutput,mLevel--);
+  PR_fprintf(mOutput, "</begin>\n");
+
+  //proxy the call to the real sink if you have one.
+  nsresult theResult=NS_OK;
+  if(mSink) {
+    theResult=mSink->DidBuildModel(aQualityLevel);
+  }
+
+  return theResult;
 }
 
 NS_IMETHODIMP
-nsLoggingSink::WillInterrupt()
-{
-  return NS_OK;
+nsLoggingSink::WillInterrupt() {
+  nsresult theResult=NS_OK;
+
+  //proxy the call to the real sink if you have one.
+  if(mSink) {
+    theResult=mSink->WillInterrupt();
+  }
+  
+  return theResult;
 }
 
 NS_IMETHODIMP
-nsLoggingSink::WillResume()
-{
-  return NS_OK;
+nsLoggingSink::WillResume() {
+  nsresult theResult=NS_OK;
+
+  //proxy the call to the real sink if you have one.
+  if(mSink) {
+    theResult=mSink->WillResume();
+  }
+  
+  return theResult;
 }
 
 NS_IMETHODIMP
-nsLoggingSink::SetParser(nsIParser* aParser) 
-{
-  return NS_OK;
+nsLoggingSink::SetParser(nsIParser* aParser)  {
+  nsresult theResult=NS_OK;
+
+  //proxy the call to the real sink if you have one.
+  if(mSink) {
+    theResult=mSink->SetParser(aParser);
+  }
+  
+  return theResult;
 }
 
 NS_IMETHODIMP
-nsLoggingSink::OpenContainer(const nsIParserNode& aNode)
-{
-  return OpenNode("container", aNode);
+nsLoggingSink::OpenContainer(const nsIParserNode& aNode) {
+
+  OpenNode("container", aNode); //do the real logging work...
+
+  nsresult theResult=NS_OK;
+
+  //then proxy the call to the real sink if you have one.
+  if(mSink) {
+    theResult=mSink->OpenContainer(aNode);
+  }
+  
+  return theResult;
+
 }
 
 NS_IMETHODIMP
-nsLoggingSink::CloseContainer(const nsIParserNode& aNode)
-{
+nsLoggingSink::CloseContainer(const nsIParserNode& aNode) {
+
+  nsresult theResult=NS_OK;
 
   nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
   if ((nodeType >= eHTMLTag_unknown) &&
       (nodeType <= nsHTMLTag(NS_HTML_TAG_MAX))) {
     const char* tag = nsHTMLTags::GetStringValue(nodeType);
-		return CloseNode(tag);
+		theResult=CloseNode(tag);
 	}
-	return CloseNode("???");
+	else theResult= CloseNode("???");
+
+  //then proxy the call to the real sink if you have one.
+  if(mSink) {
+    theResult=mSink->CloseContainer(aNode);
+  }
+  
+  return theResult;
+
 }
 
 NS_IMETHODIMP
-nsLoggingSink::AddLeaf(const nsIParserNode& aNode)
-{
-  return LeafNode(aNode);
-}
+nsLoggingSink::AddLeaf(const nsIParserNode& aNode) {
+  LeafNode(aNode);
+
+  nsresult theResult=NS_OK;
+
+  //then proxy the call to the real sink if you have one.
+  if(mSink) {
+    theResult=mSink->AddLeaf(aNode);
+  }
+  
+  return theResult;
+
+} 
+
 
 NS_IMETHODIMP 
-nsLoggingSink::NotifyError(const nsParserError* aError)
-{
-  return NS_OK;
+nsLoggingSink::NotifyError(const nsParserError* aError) {
+  nsresult theResult=NS_OK;
+
+  //then proxy the call to the real sink if you have one.
+  if(mSink) {
+    theResult=mSink->NotifyError(aError);
+  }
+  
+  return theResult;
 }
 
 
@@ -228,7 +278,14 @@ nsLoggingSink::AddProcessingInstruction(const nsIParserNode& aNode){
   DebugDump("<",aNode.GetText(),(mNodeStackPos)*2);
 #endif
 
-  return NS_OK;
+  nsresult theResult=NS_OK;
+
+  //then proxy the call to the real sink if you have one.
+  if(mSink) {
+    theResult=mSink->AddProcessingInstruction(aNode);
+  }
+  
+  return theResult;
 }
 
 /**
@@ -237,13 +294,21 @@ nsLoggingSink::AddProcessingInstruction(const nsIParserNode& aNode){
  */
 
 NS_IMETHODIMP
-nsLoggingSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
-{
+nsLoggingSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode) {
+
 #ifdef VERBOSE_DEBUG
   DebugDump("<",aNode.GetText(),(mNodeStackPos)*2);
 #endif
 
-  return NS_OK;
+  nsresult theResult=NS_OK;
+
+  //then proxy the call to the real sink if you have one.
+  if(mSink) {
+    theResult=mSink->AddDocTypeDecl(aNode,aMode);
+  }
+  
+  return theResult;
+
 }
 
 /**
@@ -262,169 +327,285 @@ nsLoggingSink::AddComment(const nsIParserNode& aNode){
   DebugDump("<",aNode.GetText(),(mNodeStackPos)*2);
 #endif
 
-  return NS_OK;
+  nsresult theResult=NS_OK;
+
+  //then proxy the call to the real sink if you have one.
+  if(mSink) {
+    theResult=mSink->AddComment(aNode);
+  }
+  
+  return theResult;
+
 }
 
 
 NS_IMETHODIMP
-nsLoggingSink::SetTitle(const nsString& aValue)
-{
-  nsAutoString tmp;
-  QuoteText(aValue, tmp);
-	WriteTabs(*mOutput,++mLevel);
-	(*mOutput) << "<title value=\"" << tmp << "\"/>" << endl;
-	--mLevel;
-  return NS_OK;
+nsLoggingSink::SetTitle(const nsString& aValue) {
+   
+   nsAutoString tmp;
+   QuoteText(aValue, tmp);
+   WriteTabs(mOutput,++mLevel);
+   PR_fprintf(mOutput, "<title value=\"%s\"/>\n", tmp.GetBuffer());
+   --mLevel;
+  
+  nsresult theResult=NS_OK;
+
+  //then proxy the call to the real sink if you have one.
+  if(mSink) {
+    theResult=mSink->SetTitle(aValue);
+  }
+  
+  return theResult;
+
+}
+
+
+NS_IMETHODIMP
+nsLoggingSink::OpenHTML(const nsIParserNode& aNode) {
+  OpenNode("html", aNode);
+
+  nsresult theResult=NS_OK;
+
+  //then proxy the call to the real sink if you have one.
+  if(mSink) {
+    theResult=mSink->OpenHTML(aNode);
+  }
+  
+  return theResult;
+
 }
 
 NS_IMETHODIMP
-nsLoggingSink::OpenHTML(const nsIParserNode& aNode)
-{
-  return OpenNode("html", aNode);
+nsLoggingSink::CloseHTML(const nsIParserNode& aNode) {
+  CloseNode("html");
+
+  nsresult theResult=NS_OK;
+
+  //then proxy the call to the real sink if you have one.
+  if(mSink) {
+    theResult=mSink->CloseHTML(aNode);
+  }
+  
+  return theResult;
+
 }
 
 NS_IMETHODIMP
-nsLoggingSink::CloseHTML(const nsIParserNode& aNode)
-{
-  return CloseNode("html");
+nsLoggingSink::OpenHead(const nsIParserNode& aNode) {
+  OpenNode("head", aNode);
+
+  nsresult theResult=NS_OK;
+
+  //then proxy the call to the real sink if you have one.
+  if(mSink) {
+    theResult=mSink->OpenHead(aNode);
+  }
+  
+  return theResult;
 }
 
 NS_IMETHODIMP
-nsLoggingSink::OpenHead(const nsIParserNode& aNode)
-{
-  return OpenNode("head", aNode);
+nsLoggingSink::CloseHead(const nsIParserNode& aNode) {
+  CloseNode("head");
+
+  nsresult theResult=NS_OK;
+
+  //then proxy the call to the real sink if you have one.
+  if(mSink) {
+    theResult=mSink->CloseHead(aNode);
+  }
+  
+  return theResult;
 }
 
 NS_IMETHODIMP
-nsLoggingSink::CloseHead(const nsIParserNode& aNode)
-{
-  return CloseNode("head");
+nsLoggingSink::OpenBody(const nsIParserNode& aNode) {
+  OpenNode("body", aNode);
+
+  nsresult theResult=NS_OK;
+
+  //then proxy the call to the real sink if you have one.
+  if(mSink) {
+    theResult=mSink->OpenBody(aNode);
+  }
+  
+  return theResult;
 }
 
 NS_IMETHODIMP
-nsLoggingSink::OpenBody(const nsIParserNode& aNode)
-{
-  return OpenNode("body", aNode);
+nsLoggingSink::CloseBody(const nsIParserNode& aNode) {
+  CloseNode("body");
+
+  nsresult theResult=NS_OK;
+
+  //then proxy the call to the real sink if you have one.
+  if(mSink) {
+    theResult=mSink->CloseBody(aNode);
+  }
+  
+  return theResult;
 }
 
 NS_IMETHODIMP
-nsLoggingSink::CloseBody(const nsIParserNode& aNode)
-{
-  return CloseNode("body");
+nsLoggingSink::OpenForm(const nsIParserNode& aNode) {
+  OpenNode("form", aNode);
+
+  nsresult theResult=NS_OK;
+
+  //then proxy the call to the real sink if you have one.
+  if(mSink) {
+    theResult=mSink->OpenForm(aNode);
+  }
+  
+  return theResult;
 }
 
 NS_IMETHODIMP
-nsLoggingSink::OpenForm(const nsIParserNode& aNode)
-{
-  return OpenNode("form", aNode);
+nsLoggingSink::CloseForm(const nsIParserNode& aNode) {
+  CloseNode("form");
+
+  nsresult theResult=NS_OK;
+
+  //then proxy the call to the real sink if you have one.
+  if(mSink) {
+    theResult=mSink->CloseForm(aNode);
+  }
+  
+  return theResult;
 }
 
 NS_IMETHODIMP
-nsLoggingSink::CloseForm(const nsIParserNode& aNode)
-{
-  return CloseNode("form");
+nsLoggingSink::OpenMap(const nsIParserNode& aNode) {
+  OpenNode("map", aNode);
+
+  nsresult theResult=NS_OK;
+
+  //then proxy the call to the real sink if you have one.
+  if(mSink) {
+    theResult=mSink->OpenMap(aNode);
+  }
+  
+  return theResult;
 }
 
 NS_IMETHODIMP
-nsLoggingSink::OpenMap(const nsIParserNode& aNode)
-{
-  return OpenNode("map", aNode);
+nsLoggingSink::CloseMap(const nsIParserNode& aNode) {
+  CloseNode("map");
+
+  nsresult theResult=NS_OK;
+
+  //then proxy the call to the real sink if you have one.
+  if(mSink) {
+    theResult=mSink->CloseMap(aNode);
+  }
+  
+  return theResult;
 }
 
 NS_IMETHODIMP
-nsLoggingSink::CloseMap(const nsIParserNode& aNode)
-{
-  return CloseNode("map");
+nsLoggingSink::OpenFrameset(const nsIParserNode& aNode) {
+  OpenNode("frameset", aNode);
+
+  nsresult theResult=NS_OK;
+
+  //then proxy the call to the real sink if you have one.
+  if(mSink) {
+    theResult=mSink->OpenFrameset(aNode);
+  }
+  
+  return theResult;
 }
 
 NS_IMETHODIMP
-nsLoggingSink::OpenFrameset(const nsIParserNode& aNode)
-{
-  return OpenNode("frameset", aNode);
-}
+nsLoggingSink::CloseFrameset(const nsIParserNode& aNode) {
+  CloseNode("frameset");
 
-NS_IMETHODIMP
-nsLoggingSink::CloseFrameset(const nsIParserNode& aNode)
-{
-  return CloseNode("frameset");
+  nsresult theResult=NS_OK;
+
+  //then proxy the call to the real sink if you have one.
+  if(mSink) {
+    theResult=mSink->CloseFrameset(aNode);
+  }
+  
+  return theResult;
 }
 
 
 nsresult
-nsLoggingSink::OpenNode(const char* aKind, const nsIParserNode& aNode)
-{
-	WriteTabs(*mOutput,++mLevel);
+nsLoggingSink::OpenNode(const char* aKind, const nsIParserNode& aNode) {
+	WriteTabs(mOutput,++mLevel);
 
-	(*mOutput) << "<open container=";
+  PR_fprintf(mOutput,"<open container=");
 
   nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
   if ((nodeType >= eHTMLTag_unknown) &&
       (nodeType <= nsHTMLTag(NS_HTML_TAG_MAX))) {
     const char* tag = nsHTMLTags::GetStringValue(nodeType);
-		(*mOutput) << "\"" << tag << "\"";
+    PR_fprintf(mOutput, "\"%s\"", tag);
   }
   else {
-    const nsAReadableString& text = aNode.GetText();
-		(*mOutput) << "\"" << NS_ConvertUCS2toUTF8(text).get() << " \"";
+    const nsAReadableString& theText = aNode.GetText();
+    PR_fprintf(mOutput, "\"%s\"", theText);
+
   }
 
   if (WillWriteAttributes(aNode)) {
-		(*mOutput) << ">" << endl;
+    PR_fprintf(mOutput, ">\n");
     WriteAttributes(aNode);
-		(*mOutput) << "</open>" << endl;
+    PR_fprintf(mOutput, "</open>\n");
   }
   else {
-		(*mOutput) << ">" << endl;
+    PR_fprintf(mOutput, ">\n");
   }
 
   return NS_OK;
 }
 
 nsresult
-nsLoggingSink::CloseNode(const char* aKind)
-{
-	WriteTabs(*mOutput,mLevel--);
-	(*mOutput) << "<close container=\"" << aKind << "\">" << endl;
+nsLoggingSink::CloseNode(const char* aKind) {
+	WriteTabs(mOutput,mLevel--);
+  PR_fprintf(mOutput, "<close container=\"%s\">\n", aKind);
   return NS_OK;
 }
 
 
 nsresult
-nsLoggingSink::WriteAttributes(const nsIParserNode& aNode)
-{
+nsLoggingSink::WriteAttributes(const nsIParserNode& aNode) {
   nsAutoString tmp, tmp2;
   PRInt32 ac = aNode.GetAttributeCount();
   for (PRInt32 i = 0; i < ac; i++) {
     const nsAReadableString& k = aNode.GetKeyAt(i);
     const nsString& v = aNode.GetValueAt(i);
 
-		(*mOutput) << " <attr key=\"" << NS_ConvertUCS2toUTF8(k).get() << "\" value=\"";
+		PR_fprintf(mOutput, " <attr key=\"%s\" value=\"", k);
  
     tmp.Truncate();
     tmp.Append(v);
-    PRUnichar first = tmp.First();
-    if ((first == '"') || (first == '\'')) {
-      if (tmp.Last() == first) {
-        tmp.Cut(0, 1);
-        PRInt32 pos = tmp.Length() - 1;
-        if (pos >= 0) {
-          tmp.Cut(pos, 1);
-        }
-      } else {
-        // Mismatched quotes - leave them in
-      }
-    }
-    QuoteText(tmp, tmp2);
 
-		(*mOutput) << tmp2 << "\"/>" << endl;
+    if(0<tmp.Length()) {
+      PRUnichar first = tmp.First();
+      if ((first == '"') || (first == '\'')) {
+        if (tmp.Last() == first) {
+          tmp.Cut(0, 1);
+          PRInt32 pos = tmp.Length() - 1;
+          if (pos >= 0) {
+            tmp.Cut(pos, 1);
+          }
+        } else {
+          // Mismatched quotes - leave them in
+        }
+      }
+    }    
+    QuoteText(tmp, tmp2);
+		PR_fprintf(mOutput, "%s\"/>\n", tmp2.GetBuffer());
   }
 
   if (0 != strchr(gSkippedContentTags, aNode.GetNodeType())) {
     const nsString& content = aNode.GetSkippedContent();
     if (content.Length() > 0) {
       QuoteText(content, tmp);
-			(*mOutput) << " <content value=\"";
-			(*mOutput) << tmp << "\"/>" << endl;
+      PR_fprintf(mOutput, " <content value=\"");
+      PR_fprintf(mOutput, "%s\"/>\n", tmp.GetBuffer()) ;
     }
   }
 
@@ -450,7 +631,7 @@ nsLoggingSink::WillWriteAttributes(const nsIParserNode& aNode)
 nsresult
 nsLoggingSink::LeafNode(const nsIParserNode& aNode)
 {
- 	WriteTabs(*mOutput,1+mLevel);
+ 	WriteTabs(mOutput,1+mLevel);
 	nsHTMLTag				nodeType  = nsHTMLTag(aNode.GetNodeType());
 
   if ((nodeType >= eHTMLTag_unknown) &&
@@ -458,16 +639,16 @@ nsLoggingSink::LeafNode(const nsIParserNode& aNode)
     const char* tag = nsHTMLTags::GetStringValue(nodeType);
 
 		if(tag)
-			(*mOutput) << "<leaf tag=\"" << tag << "\"";
-		else (*mOutput) << "<leaf tag=\"???\"";
+      PR_fprintf(mOutput, "<leaf tag=\"%s\"", tag);
+    else PR_fprintf(mOutput, "<leaf tag=\"???\"");
 
     if (WillWriteAttributes(aNode)) {
-			(*mOutput) << ">" << endl;
+			PR_fprintf(mOutput, ">\n");
       WriteAttributes(aNode);
-			(*mOutput) << "</leaf>" << endl;
+			PR_fprintf(mOutput, "</leaf>\n");
     }
     else {
-			(*mOutput) << "/>" << endl;
+			PR_fprintf(mOutput, "/>\n");
     }
   }
   else {
@@ -477,11 +658,11 @@ nsLoggingSink::LeafNode(const nsIParserNode& aNode)
 			case eHTMLTag_whitespace:
 			case eHTMLTag_text:
 				QuoteText(aNode.GetText(), tmp);
-				(*mOutput) << "<text value=\"" << tmp << "\"/>" << endl;
+				PR_fprintf(mOutput, "<text value=\"%s\"/>\n", tmp.GetBuffer());
 				break;
 
 			case eHTMLTag_newline:
-				(*mOutput) << "<newline/>" << endl;
+				PR_fprintf(mOutput, "<newline/>\n");
 				break;
 
 			case eHTMLTag_entity:
@@ -491,7 +672,7 @@ nsLoggingSink::LeafNode(const nsIParserNode& aNode)
 				if (pos >= 0) {
 					tmp.Cut(pos, 1);
 				}
-				(*mOutput) << "<entity value=\"" << tmp << "\"/>" << endl;
+				PR_fprintf(mOutput, "<entity value=\"%s\"/>\n", tmp.GetBuffer());
 				break;
 
 			default:
@@ -501,9 +682,8 @@ nsLoggingSink::LeafNode(const nsIParserNode& aNode)
   return NS_OK;
 }
 
-nsresult
-nsLoggingSink::QuoteText(const nsAReadableString& aValue, nsString& aResult)
-{
+nsresult 
+nsLoggingSink::QuoteText(const nsAReadableString& aValue, nsString& aResult) {
   aResult.Truncate();
   const PRUnichar* cp = nsPromiseFlatString(aValue);
   const PRUnichar* end = cp + aValue.Length();

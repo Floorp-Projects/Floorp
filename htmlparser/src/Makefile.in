@@ -86,7 +86,7 @@ CPPSRCS		= \
 # streams code in prstrm.cpp.
 #
 ifndef MOZ_DISABLE_DTD_DEBUG
-CPPSRCS		+= nsDTDDebug.cpp prstrm.cpp
+CPPSRCS		+= nsDTDDebug.cpp 
 endif
 
 EXPORTS		= \

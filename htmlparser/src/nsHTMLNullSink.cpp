@@ -23,6 +23,8 @@
 #include "nsHTMLTokens.h"
 #include "nsIParser.h"
 #include "prtypes.h" 
+#include "prprf.h"
+
 #define VERBOSE_DEBUG
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
@@ -128,10 +130,14 @@ nsHTMLNullSink::~nsHTMLNullSink() {
 
 #ifdef VERBOSE_DEBUG
 static void DebugDump(const char* str1,const nsAReadableString& str2,PRInt32 tabs) {
-  for(PRInt32 i=0;i<tabs;i++)
-    cout << " "; //add some tabbing to debug output...
+  for(PRInt32 i=0;i<tabs;i++) {
+    PR_fprintf(PR_STDOUT, " "); //add some tabbing to debug output...
+  }
+
   const char* cp = NS_ConvertUCS2toUTF8(str2);
-  cout << str1 << cp << ">" << endl;
+  PR_fprintf(PR_STDOUT, "%s%s>\n", str1, cp);
+  // should this be deleted?  
+  //    delete[] cp;
 }
 #endif
 

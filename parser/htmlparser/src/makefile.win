@@ -55,7 +55,6 @@ CPPSRCS=					\
 	nsWellFormedDTD.cpp			\
 	nsViewSourceHTML.cpp \
 	nsExpatDTD.cpp			\
-	prstrm.cpp				\
 	nsParserModule.cpp			\
 	$(NULL)
 
@@ -85,7 +84,6 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsWellFormedDTD.obj		\
 	.\$(OBJDIR)\nsViewSourceHTML.obj		\
 	.\$(OBJDIR)\nsExpatDTD.obj		\
-	.\$(OBJDIR)\prstrm.obj			\
 	.\$(OBJDIR)\nsParserModule.obj		\
 	$(NULL)
 

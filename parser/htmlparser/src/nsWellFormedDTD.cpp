@@ -46,6 +46,7 @@
 #include "prtypes.h"  //this is here for debug reasons...
 #include "prio.h"
 #include "plstr.h"
+#include "prprf.h"
 
 #include "prmem.h"
 #include "nsSpecialSystemDirectory.h"
@@ -730,13 +731,13 @@ nsresult CWellFormedDTD::HandleErrorToken(CToken* aToken) {
   // Output the error to the console  
   if (error) {
     char* temp;          
-    cout << "XML Error in file '" << (temp = mFilename.ToNewCString()) << "', ";
+    PR_fprintf(PR_STDOUT, "XML Error in file '%s', ",(temp = mFilename.ToNewCString()));
     Recycle(temp);
-    cout << "Line Number: " << error->lineNumber << ", ";
-    cout << "Col Number: " << error->colNumber << ", ";
-    cout << "Description: " << (temp = error->description.ToNewCString()) << "\n";
+    PR_fprintf(PR_STDOUT, "Line Number: %s, ", error->lineNumber);
+    PR_fprintf(PR_STDOUT, "Col Number: %s, ", error->colNumber);
+    PR_fprintf(PR_STDOUT, "Description: %s\n",(temp = error->description.ToNewCString()));
     Recycle(temp);
-    cout << "Source Line: " << (temp = error->sourceLine.ToNewCString()) << "\n";
+    PR_fprintf(PR_STDOUT, "Source Line: %s\n",(temp = error->sourceLine.ToNewCString()));
     Recycle(temp);
   }
 
