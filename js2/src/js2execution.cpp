@@ -2331,7 +2331,6 @@ JSValue JSValue::valueToUInt16(Context *, const JSValue& value)
 
 JSValue JSValue::valueToBoolean(Context *cx, const JSValue& value)
 {
-    JSObject *obj = NULL;
     switch (value.tag) {
     case f64_tag:
         if (JSDOUBLE_IS_NaN(value.f64))
