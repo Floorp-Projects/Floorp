@@ -49,6 +49,7 @@ var gAddressBookBundle;
 
 var gSearchStopButton;
 var gPropertiesButton;
+var gComposeButton;
 
 var gRDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
 
@@ -87,6 +88,7 @@ function initializeSearchWindowWidgets()
 {
   gSearchStopButton = document.getElementById("search-button");
   gPropertiesButton = document.getElementById("propertiesButton");
+  gComposeButton = document.getElementById("composeButton");
   gStatusText = document.getElementById('statusText');
 }
 
@@ -97,6 +99,7 @@ function onSearchStop()
 function onAbSearchReset(event) 
 {
   gPropertiesButton.setAttribute("disabled","true");
+  gComposeButton.setAttribute("disabled","true");
 
   CloseAbView();
 
@@ -161,6 +164,7 @@ function onSearch()
 {
     gStatusText.setAttribute("label", "");
     gPropertiesButton.setAttribute("disabled","true");
+    gComposeButton.setAttribute("disabled","true");
 
     gSearchSession.clearScopes();
 
@@ -294,6 +298,11 @@ function onProperties()
   AbEditSelectedCard();
 }
 
+function onCompose()
+{
+  AbNewMessage();
+}
+
 function AbResultsPaneDoubleClick(card)
 {
   AbEditCard(card);
@@ -301,12 +310,20 @@ function AbResultsPaneDoubleClick(card)
 
 function UpdateCardView()
 {
-  if (GetNumSelectedCards() == 1) {
-    gPropertiesButton.removeAttribute("disabled");
-  }
-  else {
+  var numSelected = GetNumSelectedCards();
+
+  if (!numSelected) {
     gPropertiesButton.setAttribute("disabled","true");
+    gComposeButton.setAttribute("disabled","true");
+    return;
   }
+
+  gComposeButton.removeAttribute("disabled");
+
+  if (numSelected == 1) 
+    gPropertiesButton.removeAttribute("disabled");
+  else
+    gPropertiesButton.setAttribute("disabled","true");
 }
 
 function onChooseDirectory(event) 

@@ -30,5 +30,7 @@
 <!ENTITY abSearchHeading.accesskey   "S">
 <!ENTITY propertiesButton.label      "Properties">
 <!ENTITY propertiesButton.accesskey  "P">
+<!ENTITY composeButton.label         "Compose">
+<!ENTITY composeButton.accesskey     "C">
 <!ENTITY abSearchDialogTitle.label   "Advanced Address Book Search">
 

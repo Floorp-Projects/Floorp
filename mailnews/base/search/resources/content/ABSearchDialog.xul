@@ -109,6 +109,7 @@ Rights Reserved.
        </vbox>
        <hbox align="start">
          <button label="&propertiesButton.label;" id="propertiesButton" oncommand="onProperties()" accesskey="&propertiesButton.accesskey;" disabled="true"/>
+         <button label="&composeButton.label;" id="composeButton" oncommand="onCompose()" accesskey="&composeButton.accesskey;" disabled="true"/>
          <spacer flex="1" />
        </hbox>      
     </vbox>
