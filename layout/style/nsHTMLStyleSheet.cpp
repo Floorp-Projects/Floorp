@@ -1922,7 +1922,9 @@ HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
         // If we're paginated then don't ever make the BODY scrollable
         // XXX Use a special BODY rule for paged media...
         if (!(aPresContext->IsPaginated() && (nsHTMLAtoms::body == tag))) {
-          if ((display->mDisplay!=NS_STYLE_DISPLAY_TABLE) && display->IsBlockLevel() && IsScrollable(aPresContext, tag, display)) {
+          if ((display->mDisplay!=NS_STYLE_DISPLAY_TABLE) && display->IsBlockLevel() &&
+              IsScrollable(aPresContext, tag, display)) {
+
             // Create a scroll frame which will wrap the frame that needs to
             // be scrolled
             if (NS_SUCCEEDED(NS_NewScrollFrame(scrollFrame))) {
@@ -1968,6 +1970,35 @@ HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
           }
         }
 
+        // See if the element is floated or absolutely positioned
+        const nsStylePosition* position = (const nsStylePosition*)
+          styleContext->GetStyleData(eStyleStruct_Position);
+
+        if ((NS_STYLE_FLOAT_NONE != display->mFloats) ||
+            (NS_STYLE_POSITION_ABSOLUTE == position->mPosition)) {
+
+          // If it can contain children then wrap it in a BODY frame
+          PRBool  isContainer;
+          aContent->CanContainChildren(isContainer);
+
+          if (isContainer) {
+            // The body wrapper frame gets the original style context
+            NS_NewBodyFrame(wrapperFrame, NS_BODY_SHRINK_WRAP);
+            wrapperFrame->Init(*aPresContext, aContent, aParentFrame, styleContext);
+            nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, wrapperFrame,
+                                                     styleContext, PR_FALSE);
+
+            // The wrapped frame gets a pseudo style context that inherits the
+            // display property
+            nsIStyleContext*  wrappedPseudoStyle;
+            wrappedPseudoStyle = aPresContext->ResolvePseudoStyleContextFor(aContent, 
+                                  nsHTMLAtoms::wrappedFramePseudo, styleContext);
+            NS_RELEASE(styleContext);
+            aParentFrame = wrapperFrame;
+            styleContext = wrappedPseudoStyle;
+          }
+        }
+
         // Handle specific frame types
         rv = ConstructFrameByTag(aPresContext, aContent, aParentFrame,
                                  tag, styleContext, aFrameSubTree);
@@ -1980,8 +2011,10 @@ HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
                                            styleContext, aFrameSubTree);
         }
 
-        // Set the scroll frame's initial child list and return the scroll frame
-        // as the frame sub-tree
+        // If there's a scroll frame or a wrapper frame then set their initial
+        // child lists, and return that frame as the frame sub-tree.
+        // Because SetInitialChildList() is called bottom-up we need to wait
+        // until after we've created the frame sub-tree
         if (nsnull != scrollFrame) {
           if (nsnull != wrapperFrame) {
             wrapperFrame->SetInitialChildList(*aPresContext, nsnull, aFrameSubTree);
@@ -1989,7 +2022,11 @@ HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
           } else {
             scrollFrame->SetInitialChildList(*aPresContext, nsnull, aFrameSubTree);
           }
-          aFrameSubTree = scrollFrame;
+         aFrameSubTree = scrollFrame;
+
+        } else if (nsnull != wrapperFrame) {
+          wrapperFrame->SetInitialChildList(*aPresContext, nsnull, aFrameSubTree);
+          aFrameSubTree = wrapperFrame;
         }
       }
     }

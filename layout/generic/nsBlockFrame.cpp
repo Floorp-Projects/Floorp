@@ -2182,16 +2182,6 @@ nsBlockFrame::AppendNewFrames(nsIPresContext& aPresContext,
       frame = placeholder;
       isBlock = PR_FALSE;
     }
-    else {
-      // Wrap the frame in a view if necessary
-      nsIStyleContext* kidSC;
-      frame->GetStyleContext(kidSC);
-      rv = CreateViewForFrame(aPresContext, frame, kidSC, PR_FALSE);
-      NS_RELEASE(kidSC);
-      if (NS_OK != rv) {
-        return rv;
-      }
-    }
 
     // If the child is an inline then add it to the lastLine (if it's
     // an inline line, otherwise make a new line). If the child is a
@@ -4308,16 +4298,6 @@ nsBlockFrame::InsertNewFrame(nsIPresContext& aPresContext,
     // Add the placeholder frame to the flow
     aNewFrame = placeholder;
     newFrameIsBlock = PR_FALSE;  // placeholder frame is always inline
-  }
-  else {
-    // Wrap the frame in a view if necessary
-    nsIStyleContext* kidSC;
-    aNewFrame->GetStyleContext(kidSC);
-    nsresult rv = CreateViewForFrame(aPresContext, aNewFrame, kidSC, PR_FALSE);    
-    NS_RELEASE(kidSC);
-    if (NS_OK != rv) {
-      return rv;
-    }
   }
 
   // Insert/append the frame into flows line list at the right spot

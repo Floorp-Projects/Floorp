@@ -84,8 +84,6 @@ protected:
   void ReflowAbsoluteItems(nsIPresContext& aPresContext,
                            const nsHTMLReflowState& aReflowState);
 
-  nsIView* CreateAbsoluteView(nsIStyleContext* aStyleContext) const;
-
   void TranslatePoint(nsIFrame* aFrameFrom, nsPoint& aPoint) const;
 
   void ComputeAbsoluteFrameBounds(nsIFrame*                aAnchorFrame,

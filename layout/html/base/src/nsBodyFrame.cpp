@@ -551,17 +551,6 @@ nsBodyFrame::ReflowAbsoluteItems(nsIPresContext& aPresContext,
       // Add the absolutely positioned frame to the end of the child list
       AddAbsoluteFrame(absoluteFrame);
 
-      // Make sure the frame has a view
-      nsIView*  view;
-      absoluteFrame->GetView(view);
-      if (nsnull == view) {
-        nsIStyleContext* absSC;
-        absoluteFrame->GetStyleContext(absSC);
-        view = CreateAbsoluteView(absSC);
-        NS_RELEASE(absSC);
-        absoluteFrame->SetView(view);  
-      }
-
       // See whether this is the frame's initial reflow
       nsFrameState  frameState;
       absoluteFrame->GetFrameState(frameState);
@@ -634,95 +623,6 @@ nsBodyFrame::ReflowAbsoluteItems(nsIPresContext& aPresContext,
       }
     }
   }
-}
-
-nsIView*
-nsBodyFrame::CreateAbsoluteView(nsIStyleContext* aStyleContext) const
-{
-  const nsStyleDisplay* display = (const nsStyleDisplay*)
-    aStyleContext->GetStyleData(eStyleStruct_Display);
-  const nsStylePosition* position = (const nsStylePosition*)
-    aStyleContext->GetStyleData(eStyleStruct_Position);
-  const nsStyleColor* color = (const nsStyleColor*)
-    aStyleContext->GetStyleData(eStyleStruct_Color);
-
-  nsIView*  view;
-
-  static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
-  static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
-
-  // Create the view
-  nsresult result = nsRepository::CreateInstance(kViewCID, 
-                                                 nsnull, 
-                                                 kIViewIID, 
-                                                 (void **)&view);
-  if (NS_OK == result) {
-    nsIView*  containingView;
-    GetView(containingView);
-    if (nsnull == containingView) {
-      nsPoint offset;
-      GetOffsetFromView(offset, containingView);
-    }
-  
-    // Initialize the view
-    nsIViewManager* viewManager;
-    containingView->GetViewManager(viewManager);
-    NS_ASSERTION(nsnull != viewManager, "null view manager");
-
-    // Is there a clip rect specified?
-    nsViewClip    clip = {0, 0, 0, 0};
-    PRUint8       clipType = (display->mClipFlags & NS_STYLE_CLIP_TYPE_MASK);
-    nsViewClip*   pClip = nsnull;
-
-    if (NS_STYLE_CLIP_RECT == clipType) {
-      if ((NS_STYLE_CLIP_LEFT_AUTO & display->mClipFlags) == 0) {
-        clip.mLeft = display->mClip.left;
-      }
-      if ((NS_STYLE_CLIP_RIGHT_AUTO & display->mClipFlags) == 0) {
-        clip.mRight = display->mClip.right;
-      }
-      if ((NS_STYLE_CLIP_TOP_AUTO & display->mClipFlags) == 0) {
-        clip.mTop = display->mClip.top;
-      }
-      if ((NS_STYLE_CLIP_BOTTOM_AUTO & display->mClipFlags) == 0) {
-        clip.mBottom = display->mClip.bottom;
-      }
-      pClip = &clip;
-    }
-    else if (NS_STYLE_CLIP_INHERIT == clipType) {
-      // XXX need to handle clip inherit (get from parent style context)
-      NS_NOTYETIMPLEMENTED("clip inherit");
-    }
-
-    // Get the z-index to use
-    PRInt32 zIndex = 0;
-    if (position->mZIndex.GetUnit() == eStyleUnit_Integer) {
-      zIndex = position->mZIndex.GetIntValue();
-    } else if (position->mZIndex.GetUnit() == eStyleUnit_Auto) {
-      zIndex = 0;
-    } else if (position->mZIndex.GetUnit() == eStyleUnit_Inherit) {
-      // XXX need to handle z-index "inherit"
-      NS_NOTYETIMPLEMENTED("zIndex: inherit");
-    }
-     
-    // Initialize the view with a size of (0, 0). When we're done reflowing
-    // the frame the view will be sized and positioned
-    view->Init(viewManager, nsRect(0, 0, 0, 0), containingView, pClip);
-    viewManager->InsertChild(containingView, view, zIndex);
-    // If the background color is transparent or the visibility is hidden
-    // then mark the view as having transparent content
-    // XXX We could try and be smarter about this and check whether there's
-    // a background image. If there is a background image and the image is
-    // fully opaque then we don't need to mark the view as having transparent
-    // content...
-    if ((NS_STYLE_BG_COLOR_TRANSPARENT & color->mBackgroundFlags) || !display->mVisible) {
-      viewManager->SetViewContentTransparency(view, PR_TRUE);
-    }
-    viewManager->SetViewOpacity(view, color->mOpacity);
-    NS_RELEASE(viewManager);
-  }
-
-  return view;
 }
 
 // Translate aPoint from aFrameFrom's coordinate space to our coordinate space
