@@ -875,6 +875,13 @@ public:
     to handle it.
    **********************************************************/
   virtual PRInt32 FindAutoCloseTargetForEndTag(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink, PRInt32& anIndex) {
+
+    // XXXldb This method is completely unused because the |aNode|
+    // parameter is declared as |nsIParserNode| rather than
+    // |nsCParserNode| so it doesn't override the member function of
+    // CElement.
+    NS_NOTREACHED("This isn't used.  Should it be?");
+
     PRInt32 result=kNotFound;
 
     switch(aTag) {
@@ -1011,11 +1018,11 @@ public:
     
     nsresult result=NS_OK;
     PRInt32   theCount=aContext->GetCount();
-    eHTMLTags theGrandParentTag=aContext->TagAt(theCount-2);
 
     nsCParserNode *theNode = (nsCParserNode*)aNode;
 
 #ifdef DEBUG
+    eHTMLTags theGrandParentTag=aContext->TagAt(theCount-2);
     nsAutoString  theNumber;
     aContext->IncrementCounter(theGrandParentTag,*theNode,theNumber);
 
@@ -1155,6 +1162,13 @@ public:
   }
 
   virtual nsresult OpenContext(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+
+    // XXXldb This method is completely unused because the |aNode|
+    // parameter is declared as |nsIParserNode| rather than
+    // |nsCParserNode| so it doesn't override the member function of
+    // CElement.
+    NS_NOTREACHED("This isn't used.  Should it be?");
+
     NS_ASSERTION(aContext!=nsnull,"cannot make a decision without a context");
 
     nsresult result=NS_OK;
@@ -1168,6 +1182,13 @@ public:
   }
 
   virtual nsresult CloseContext(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+
+    // XXXldb This method is completely unused because the |aNode|
+    // parameter is declared as |nsIParserNode| rather than
+    // |nsCParserNode| so it doesn't override the member function of
+    // CElement.
+    NS_NOTREACHED("This isn't used.  Should it be?");
+
     NS_ASSERTION(aContext!=nsnull,"cannot make a decision without a context");
 
     nsresult result=NS_OK;
@@ -1239,6 +1260,13 @@ public:
     Textcontainer handles the opening of it's own children
    **********************************************************/
   virtual nsresult HandleStartToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+
+    // XXXldb This method is completely unused because the |aNode|
+    // parameter is declared as |nsIParserNode| rather than
+    // |nsCParserNode| so it doesn't override the member function of
+    // CElement.
+    NS_NOTREACHED("This isn't used.  Should it be?");
+
     nsresult result=NS_OK;
 
     switch(aTag) {
@@ -1254,6 +1282,13 @@ public:
   }
 
   virtual nsresult HandleEndToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+
+    // XXXldb This method is completely unused because the |aNode|
+    // parameter is declared as |nsIParserNode| rather than
+    // |nsCParserNode| so it doesn't override the member function of
+    // CElement.
+    NS_NOTREACHED("This isn't used.  Should it be?");
+
     nsresult result=NS_OK;
     return result;
   }
@@ -1279,6 +1314,13 @@ public:
     Call this for each element as it get's closed
    **********************************************************/
   virtual nsresult  NotifyClose(nsCParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+
+    // XXXldb This method is completely unused because the |aNode|
+    // parameter is declared as |nsCParserNode| rather than
+    // |nsIParserNode| so it doesn't override the member function of
+    // CTextContainer.
+    NS_NOTREACHED("This isn't used.  Should it be?");
+
     nsresult result=NS_OK;
     CElement* theHead=GetElement(eHTMLTag_head);
     if(theHead) {
@@ -1375,6 +1417,13 @@ public:
     Call this for each element as it get's closed
    **********************************************************/
   virtual nsresult  NotifyClose(nsCParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+
+    // XXXldb This method is completely unused because the |aNode|
+    // parameter is declared as |nsCParserNode| rather than
+    // |nsIParserNode| so it doesn't override the member function of
+    // CTextContainer.
+    NS_NOTREACHED("This isn't used.  Should it be?");
+
     nsresult result=NS_OK;
     CElement* theHead=GetElement(eHTMLTag_head);
     if(theHead) {
@@ -1422,6 +1471,13 @@ public:
     this gets called to close a tag in the given context
    **********************************************************/
   virtual nsresult  CloseContext(nsIParserNode *aNode,eHTMLTags aTag,nsDTDContext *aContext,nsIHTMLContentSink *aSink) {
+
+    // XXXldb This method is completely unused because the |aNode|
+    // parameter is declared as |nsIParserNode| rather than
+    // |nsCParserNode| so it doesn't override the member function of
+    // CElement.
+    NS_NOTREACHED("This isn't used.  Should it be?");
+
     nsEntryStack* theStack=0;
     nsIParserNode *theNode=aContext->Pop(theStack);
 
@@ -1435,6 +1491,13 @@ public:
     Call this for each element as it get's closed
    **********************************************************/
   virtual nsresult  NotifyClose(nsCParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+
+    // XXXldb This method is completely unused because the |aNode|
+    // parameter is declared as |nsCParserNode| rather than
+    // |nsIParserNode| so it doesn't override the member function of
+    // CTextContainer.
+    NS_NOTREACHED("This isn't used.  Should it be?");
+
     nsresult result=NS_OK;
 
     if(aContext->HasOpenContainer(eHTMLTag_body)) {
@@ -1903,6 +1966,13 @@ public:
 
    //this gets called after each tag is opened in the given context
   virtual nsresult  OpenContainer(nsCParserNode *aNode,eHTMLTags aTag,nsDTDContext *aContext,nsIHTMLContentSink *aSink) {
+
+    // XXXldb This method is completely unused because the |aNode|
+    // parameter is declared as |nsCParserNode| rather than
+    // |nsIParserNode| so it doesn't override the member function of
+    // CElement.
+    NS_NOTREACHED("This isn't used.  Should it be?");
+
     nsresult result=NS_OK;
     if(mTag==aTag) {
       // Close the head before opening a body.
@@ -1946,7 +2016,6 @@ public:
 
     nsresult result=CElement::HandleStartToken(aNode,aTag,aContext,aSink);
 
-    CElement *theElement=GetElement(aTag);    
     if(NS_SUCCEEDED(result)) {
       if(aNode) {
         nsCParserNode*  theNode=(nsCParserNode*)aNode;

@@ -82,8 +82,10 @@ static NS_DEFINE_IID(kClassIID,     NS_INAVHTML_DTD_IID);
 
 static NS_DEFINE_CID(kFormProcessorCID, NS_FORMPROCESSOR_CID); 
  
+#ifdef DEBUG
 static const  char* kNullToken = "Error: Null token given";
 static const  char* kInvalidTagStackPos = "Error: invalid tag stack position";
+#endif
 
 #ifdef  ENABLE_CRC
 static char gShowCRC;

@@ -482,8 +482,6 @@ CNamedEntity* nsDTDContext::GetEntity(const nsAString& aName)const {
     aName.BeginReading(start);
     aName.EndReading(end);
     
-
-    PRInt32 theLen=aName.Length();
     PRUnichar theChar=aName.Last();
 
     // skip past leading and trailing quotes/etc

@@ -88,8 +88,6 @@
 #include "nsIDOMDocumentFragment.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
-#include "nsIParser.h"
-#include "nsParserCIID.h"
 #include "nsIImage.h"
 #include "nsAOLCiter.h"
 #include "nsInternetCiter.h"

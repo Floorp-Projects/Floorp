@@ -578,6 +578,7 @@ nsScanner* nsParser::GetScanner(void){
 nsDTDMode nsParser::GetParseMode(void){
   if(mParserContext)
     return mParserContext->mDTDMode;
+  NS_NOTREACHED("no parser context");
   return eDTDMode_unknown;
 }
 
@@ -1128,8 +1129,9 @@ void DetermineParseMode(const nsString& aBuffer,
  *  @return  
  */
 static
-PRBool FindSuitableDTD( CParserContext& aParserContext,nsString& aBuffer) {
-  
+PRBool FindSuitableDTD(CParserContext& aParserContext,
+                       const nsString& aBuffer)
+{
   //Let's start by trying the defaultDTD, if one exists...
   if(aParserContext.mDTD)
     if(aParserContext.mDTD->CanParse(aParserContext,aBuffer,0))
@@ -1210,38 +1212,30 @@ nsParser::CancelParsingEvents() {
  * last thing that happens right before parsing, so we
  * can delay until the last moment the resolution of
  * which DTD to use (unless of course we're assigned one).
- *
- * @update	gess5/18/98
- * @param 
- * @return  error code -- 0 if ok, non-zero if error.
  */
-nsresult nsParser::WillBuildModel(nsString& aFilename){
+nsresult nsParser::WillBuildModel(nsString& aFilename)
+{
+  if (!mParserContext)
+    return kInvalidParserContext;
 
-  nsresult       result=NS_OK;
+  if (eUnknownDetect != mParserContext->mAutoDetectStatus)
+    return NS_OK;
 
-  if(mParserContext){
-    if(eUnknownDetect==mParserContext->mAutoDetectStatus) {  
-      mMajorIteration=-1; 
-      mMinorIteration=-1; 
-      
-      nsAutoString theBuffer;
-      // XXXVidur Make a copy and only check in the first 1k
-      mParserContext->mScanner->Peek(theBuffer, 1024);
+  nsAutoString theBuffer;
+  // XXXVidur Make a copy and only check in the first 1k
+  mParserContext->mScanner->Peek(theBuffer, 1024);
 
-      if (eDTDMode_unknown == mParserContext->mDTDMode ||
-          eDTDMode_autodetect == mParserContext->mDTDMode) {
-        DetermineParseMode(theBuffer,mParserContext->mDTDMode,mParserContext->mDocType,mParserContext->mMimeType);
-      }
+  if (eDTDMode_unknown == mParserContext->mDTDMode ||
+      eDTDMode_autodetect == mParserContext->mDTDMode)
+    DetermineParseMode(theBuffer, mParserContext->mDTDMode,
+                       mParserContext->mDocType, mParserContext->mMimeType);
 
-      if(PR_TRUE==FindSuitableDTD(*mParserContext,theBuffer)) {
-        nsITokenizer* tokenizer;
-        mParserContext->GetTokenizer(mParserContext->mDTD->GetType(), tokenizer);
-        result = mParserContext->mDTD->WillBuildModel(*mParserContext, tokenizer, mSink);
-      }//if        
-    }//if
-  } 
-  else result=kInvalidParserContext;    
-  return result;
+  if (!FindSuitableDTD(*mParserContext,theBuffer))
+    return NS_OK;
+
+  nsITokenizer* tokenizer;
+  mParserContext->GetTokenizer(mParserContext->mDTD->GetType(), tokenizer);
+  return mParserContext->mDTD->WillBuildModel(*mParserContext, tokenizer, mSink);
 }
 
 /**
@@ -2514,8 +2508,6 @@ nsresult nsParser::Tokenize(PRBool aIsFinalChunk){
       }
     }
     else {
-      ++mMajorIteration; 
-   
       PRBool flushTokens=PR_FALSE;
 
       MOZ_TIMER_START(mTokenizeTime);
@@ -2523,7 +2515,6 @@ nsresult nsParser::Tokenize(PRBool aIsFinalChunk){
       WillTokenize(aIsFinalChunk);
       while (NS_SUCCEEDED(result)) {
         mParserContext->mScanner->Mark();
-        ++mMinorIteration;
         result=theTokenizer->ConsumeToken(*mParserContext->mScanner, flushTokens);
         if (NS_FAILED(result)) {
           mParserContext->mScanner->RewindToMark();

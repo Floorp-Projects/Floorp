@@ -448,8 +448,6 @@ protected:
     eParserCommands     mCommand;
     nsresult            mInternalState;
     PRInt32             mStreamStatus;
-    PRInt32             mMajorIteration;
-    PRInt32             mMinorIteration;
     PRInt32             mCharsetSource;
     
     PRUint16            mFlags;
