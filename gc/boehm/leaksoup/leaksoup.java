@@ -162,12 +162,16 @@ public class leaksoup {
 		
 		// assume user want's lxr URLs. (why?)
 		FileLocator.USE_BLAME = false;
+		FileLocator.ASSIGN_BLAME = false;
 		
 		for (int i = 0; i < args.length; i++) {
 			String arg = args[i];
 			if (arg.charAt(0) == '-') {
 				if (arg.equals("-blame"))
 					FileLocator.USE_BLAME = true;
+				else
+				if (arg.equals("-assign"))
+					FileLocator.ASSIGN_BLAME = true;
 			} else {
 				cook(arg);
 			}
