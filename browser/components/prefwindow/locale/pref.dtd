@@ -23,6 +23,7 @@
 <!ENTITY images.label "Images">
 <!ENTITY scriptsAndWindows.label "JavaScript">
 <!ENTITY tabs.label "Tabbed Browsing">
+<!ENTITY downloads.label "Downloads">
 #ifdef XP_WIN
 <!ENTITY winhooks.label                   "System">
 #endif

@@ -118,6 +118,8 @@ pref("accessibility.typeaheadfind.timeout", 5000);
 
 pref("browser.download.progressDnldDialog.keepAlive", true); // keep the dnload progress dialog up after dnload is complete
 pref("browser.download.progressDnldDialog.enable_launch_reveal_buttons", true);
+pref("browser.download.useProgressDialogs", true);
+pref("browser.download.openSidebar", false);
 
 // various default search settings
 pref("browser.search.defaulturl", "chrome://browser-region/locale/region.properties");
@@ -613,8 +615,6 @@ pref("alerts.height", 50);
 pref("update_notifications.enabled", true);
 pref("update_notifications.provider.0.frequency", 7); // number of days
 pref("update_notifications.provider.0.datasource", "chrome://communicator-region/locale/region.properties");
-
-pref("browser.downloads.useProgressDialogs", true);
 
 // if true, allow plug-ins to override internal imglib decoder mime types in full-page mode
 pref("plugin.override_internal_types", false);

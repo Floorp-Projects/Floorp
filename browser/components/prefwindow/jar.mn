@@ -6,6 +6,7 @@ browser.jar:
 *   content/browser/pref/pref-themes.js                    (content/pref-themes.js)
 *   content/browser/pref/pref-charset.js                   (content/pref-charset.js)
 *   content/browser/pref/pref-charset.xul                  (content/pref-charset.xul)
+*   content/browser/pref/pref-downloads.xul                (content/pref-downloads.xul)
 *   content/browser/pref/pref-fonts.js                     (content/pref-fonts.js)
 *   content/browser/pref/pref-fonts.xul                    (content/pref-fonts.xul)
 *   content/browser/pref/pref-calibrate-screen.xul         (content/pref-calibrate-screen.xul)
@@ -43,3 +44,4 @@ en-US.jar:
 *   locale/en-US/browser/pref/pref.dtd                     (locale/pref.dtd)
     locale/en-US/browser/pref/pref-winhooks.dtd            (locale/pref-winhooks.dtd)
     locale/en-US/browser/pref/addPopup.properties          (locale/addPopup.properties)
+    locale/en-US/browser/pref/pref-downloads.dtd           (locale/pref-downloads.dtd)

@@ -34,7 +34,7 @@
 
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["advancedJavaAllow", "advancedMailFTP", "advancedMailFTPAddress", "useProgressDialogs",
+    var _elementIDs = ["advancedJavaAllow", "advancedMailFTP", "advancedMailFTPAddress",
                        "popupPolicy"];   
     
     var policyButton;
@@ -316,8 +316,6 @@
                preftype="string" prefstring="network.ftp.anonymous_password"
                flex="2"/>
     </hbox>
-    <checkbox id="useProgressDialogs" label="&useProgressDialogs.label;" accesskey="&useProgressDialogs.accesskey;"
-              prefstring="browser.downloads.useProgressDialogs"/>
   </groupbox>
 
   <groupbox id="popupsArea" flex="1">

@@ -97,6 +97,15 @@ var gInPrintPreviewMode = false;
 var gWebProgress = null;
 var gFormHistory = null;
 
+const dlObserver = {
+  observe: function(subject, topic, state) {  
+    if (topic != "dl-start") return;
+    var open = gPrefService.getBoolPref("browser.download.openSidebar");
+    if (open && document.getElementById("sidebar-box").hidden)
+      toggleSidebar("viewDownloadsSidebar");
+  }
+};
+
 /**
 * We can avoid adding multiple load event listeners and save some time by adding
 * one listener that calls all real handlers.
@@ -375,32 +384,32 @@ function Startup()
 
 function delayedStartup(aElt)
 {
-
   // loads the services
   initServices();
   initBMService();
 
   gBrowser.addEventListener("load", function(evt) { setTimeout(loadEventHandlers, 0, evt); }, true);
-  
+
   window.addEventListener("keypress", ctrlNumberTabSelection, true);
 
   if (gMustLoadSidebar) {
     var sidebar = document.getElementById("sidebar");
     sidebar.setAttribute("src", window.opener.document.getElementById("sidebar").getAttribute("src"));
   }
-  
+ 
   // Perform default browser checking (after window opens).
   checkForDefaultBrowser();
 
   // now load bookmarks after a delay
+
   BMSVC.ReadBookmarks();
   var bt = document.getElementById("bookmarks-toolbar");
-  if ("toolbar" in bt)
+  if (bt && "toolbar" in bt)
     bt.toolbar.builder.rebuild();       
 
   // called when we go into full screen, even if it is 
   // initiated by a web page script
-  addEventListener("fullscreen", onFullScreen, false);
+  window.addEventListener("fullscreen", onFullScreen, false);
 
   WindowFocusTimerCallback(aElt);
 
@@ -414,6 +423,9 @@ function delayedStartup(aElt)
                               .getService(Components.interfaces.nsIPrefService);
   gPrefService = gPrefService.getBranch(null);
 
+  var observerService = Components.classes["@mozilla.org/observer-service;1"]
+                                  .getService(Components.interfaces.nsIObserverService);
+  observerService.addObserver(dlObserver, "dl-start", false);
   updateHomeTooltip();
 }
 

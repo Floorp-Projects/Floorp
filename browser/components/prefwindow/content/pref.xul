@@ -87,7 +87,12 @@
             <treecell url="chrome://browser/content/pref/pref-connection.xul" label="&connection.label;" />
           </treerow>
         </treeitem>
-    
+
+        <treeitem>
+          <treerow>
+            <treecell url="chrome://browser/content/pref/pref-downloads.xul" label="&downloads.label;" />
+          </treerow>
+        </treeitem>   
     
         <treeitem id="advancedItem" container="true">
           <treerow>

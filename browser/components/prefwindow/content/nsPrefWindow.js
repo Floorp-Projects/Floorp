@@ -332,22 +332,7 @@ nsPrefWindow.prototype =
                       else if (elt == "button")
                         prefattribute = "disabled";
                     }
-                    var prefvalue;
-                    switch( preftype )
-                      {
-                        case "bool":
-                          prefvalue = this.getPref( preftype, prefstring );
-                          break;
-                        case "int":
-                          prefvalue = this.getPref( preftype, prefstring );
-                          break;
-                        case "string":
-                        case "localizedstring":
-                        case "color":                          
-                        default: 
-                          prefvalue = this.getPref( preftype, prefstring );
-                          break;
-                      }
+                    var prefvalue = this.getPref( preftype, prefstring );
                     if( prefvalue == "!/!ERROR_UNDEFINED_PREF!/!" )
                       {
                         prefvalue = prefdefval;

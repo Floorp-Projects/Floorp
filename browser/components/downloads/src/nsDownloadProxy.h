@@ -45,7 +45,7 @@
 #include "nsIPrefService.h"
 #include "nsIMIMEInfo.h"
 
-#define USE_PROGRESS_DIALOGS_PREF "browser.downloads.useProgressDialogs"
+#define USE_PROGRESS_DIALOGS_PREF "browser.download.useProgressDialogs"
 
 class nsDownloadProxy : public nsIDownload,
                         public nsIWebProgressListener
