@@ -56,10 +56,6 @@ nsNewsDatabase::nsNewsDatabase()
 
 nsNewsDatabase::~nsNewsDatabase()
 {
-    if (m_readSet) {
-        delete m_readSet;
-        m_readSet = nsnull;
-    }    
 }
 
 NS_IMPL_ADDREF_INHERITED(nsNewsDatabase, nsMsgDatabase)
@@ -308,41 +304,18 @@ NS_IMETHODIMP nsNewsDatabase::GetReadSet(nsMsgKeySet **pSet)
 {
     if (!pSet) return NS_ERROR_NULL_POINTER;
     
-    NS_ASSERTION(m_readSet,"set doesn't exist yet!");
-    if (!m_readSet) return NS_ERROR_FAILURE;
     
     *pSet = m_readSet;
     return NS_OK;
 }
 
-NS_IMETHODIMP nsNewsDatabase::SetReadSetStr(const char * setStr)
+NS_IMETHODIMP nsNewsDatabase::SetReadSet(nsMsgKeySet *pSet)
 {
-    NS_ASSERTION(setStr, "no setStr!");
-    if (!setStr) return NS_ERROR_NULL_POINTER;
-
-    NS_ASSERTION(!m_readSet, "set already exists!");
-    if (m_readSet) {
-        delete m_readSet;
-        m_readSet = nsnull;
-    }
-    
-    m_readSet = nsMsgKeySet::Create(setStr);
-    if (!m_readSet) return NS_ERROR_OUT_OF_MEMORY;
-    return NS_OK;
+  m_readSet = pSet;
+  return NS_OK;
 }
  
-  
-NS_IMETHODIMP nsNewsDatabase::GetReadSetStr(char **setStr)
-{
-    if (!setStr) return NS_ERROR_NULL_POINTER;
-    if (!m_readSet) return NS_ERROR_FAILURE;
-
-    m_readSet->Output(setStr);
-    if (!*setStr) return NS_ERROR_OUT_OF_MEMORY;
-
-    return NS_OK;
-}
-
+ 
 PRBool nsNewsDatabase::SetHdrReadFlag(nsIMsgDBHdr *msgHdr, PRBool bRead)
 {
     nsresult rv;

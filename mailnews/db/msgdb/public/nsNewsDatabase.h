@@ -94,6 +94,7 @@ protected:
   
   // at a specified entry.
 
+  // this is owned by the nsNewsFolder, which lives longer than the db.
   nsMsgKeySet           *m_readSet;
 };
 

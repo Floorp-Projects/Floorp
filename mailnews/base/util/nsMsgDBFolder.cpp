@@ -652,6 +652,8 @@ nsMsgDBFolder::SetMsgDatabase(nsIMsgDatabase *aMsgDatabase)
 {
   if (mDatabase)
   {
+    // commit here - db might go away when all these refs are released.
+    mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
     mDatabase->RemoveListener(this);
     mDatabase->ClearCachedHdrs();
   }

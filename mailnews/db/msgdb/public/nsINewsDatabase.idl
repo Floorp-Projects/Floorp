@@ -47,6 +47,5 @@
 [scriptable, uuid(f700208a-1dd1-11b2-b947-e4e1e4fdf278)]
 
 interface nsINewsDatabase : nsISupports {
-  [noscript] void getReadSet(out nsMsgKeySetPtr pSet);
-  attribute string readSetStr;
+  [noscript] attribute nsMsgKeySetPtr readSet;
 };

@@ -63,9 +63,8 @@ interface nsIMsgNewsFolder : nsISupports {
 
   nsIMsgFolder addNewsgroup(in string newsgroupName, in string setStr);
 
-  void getReadSetStr(out string setStr);
+  void setReadSetFromStr(in string setStr);
 
-  attribute string cachedNewsrcLine;
   readonly attribute string newsrcLine;
   readonly attribute string optionLines;
   readonly attribute string unsubscribedNewsgroupLines;

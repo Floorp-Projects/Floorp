@@ -145,8 +145,7 @@ protected:
 	nsCString mOptionLines;
         nsCString mUnsubscribedNewsgroupLines;
         PRBool m_downloadMessageForOfflineUse;
-	// cache this until we open the db.
-	char        *mCachedNewsrcLine;
+        nsMsgKeySet *mReadSet; 
 
 	nsCOMPtr<nsIFileSpec> mNewsrcFilePath; 
 

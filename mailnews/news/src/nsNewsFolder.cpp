@@ -119,7 +119,7 @@ static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 nsMsgNewsFolder::nsMsgNewsFolder(void) : nsMsgLineBuffer(nsnull, PR_FALSE),
      mExpungedBytes(0), mGettingNews(PR_FALSE),
     mInitialized(PR_FALSE), mOptionLines(""), mUnsubscribedNewsgroupLines(""), 
-    m_downloadMessageForOfflineUse(PR_FALSE), mCachedNewsrcLine(nsnull), mGroupUsername(nsnull), mGroupPassword(nsnull), mAsciiName(nsnull)
+    m_downloadMessageForOfflineUse(PR_FALSE), mReadSet(nsnull), mGroupUsername(nsnull), mGroupPassword(nsnull), mAsciiName(nsnull)
 {
   MOZ_COUNT_CTOR(nsNewsFolder); // double count these for now.
   /* we're parsing the newsrc file, and the line breaks are platform specific.
@@ -136,7 +136,7 @@ nsMsgNewsFolder::nsMsgNewsFolder(void) : nsMsgLineBuffer(nsnull, PR_FALSE),
 nsMsgNewsFolder::~nsMsgNewsFolder(void)
 {
   MOZ_COUNT_DTOR(nsNewsFolder);
-  CRTFREEIF(mCachedNewsrcLine);
+  delete mReadSet;
   PR_FREEIF(mGroupUsername);
   PR_FREEIF(mGroupPassword);
   PR_FREEIF(mAsciiName);
@@ -191,24 +191,6 @@ nsMsgNewsFolder::CreateSubFolders(nsFileSpec &path)
   }
   
   return rv;
-}
-
-NS_IMETHODIMP
-nsMsgNewsFolder::GetReadSetStr(char **setStr)
-{
-    nsresult rv;
-    if (!mDatabase) return NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsINewsDatabase> db(do_QueryInterface(mDatabase, &rv));
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    rv = db->GetReadSetStr(setStr);
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    if (!*setStr) return NS_ERROR_FAILURE;
-    if (!*setStr[0]) return NS_ERROR_FAILURE;
-
-    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -267,7 +249,7 @@ nsMsgNewsFolder::AddNewsgroup(const char *name, const char *setStr, nsIMsgFolder
   if (NS_FAILED(rv)) return rv;        
   
   // cache this for when we open the db
-  rv = newsFolder->SetCachedNewsrcLine(setStr);
+  rv = newsFolder->SetReadSetFromStr(setStr);
   if (NS_FAILED(rv)) return rv;        
   
   PRUint32 numExistingGroups;
@@ -422,12 +404,7 @@ nsresult nsMsgNewsFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
       nsCOMPtr<nsINewsDatabase> db(do_QueryInterface(mDatabase, &rv));
       if (NS_FAILED(rv)) return rv;        
       
-      nsXPIDLCString setStr;
-      
-      rv = GetCachedNewsrcLine(getter_Copies(setStr));
-      if (NS_FAILED(rv)) return rv;        
-      
-      rv = db->SetReadSetStr((const char *)setStr);
+      rv = db->SetReadSet(mReadSet);
       if (NS_FAILED(rv)) return rv;        
     }
     if (NS_FAILED(rv)) return rv;
@@ -800,22 +777,15 @@ nsresult nsMsgNewsFolder::AbbreviatePrettyName(PRUnichar ** prettyName, PRInt32 
 NS_IMETHODIMP
 nsMsgNewsFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatabase **db)
 {
-  nsresult openErr=NS_ERROR_UNEXPECTED;
-  if(!db || !folderInfo)
-		return NS_ERROR_NULL_POINTER;	//ducarroz: should we use NS_ERROR_INVALID_ARG?
-		
-  nsresult rv;
-  nsCOMPtr<nsIMsgDatabase> newsDBFactory( do_CreateInstance(kCNewsDB, &rv) );
-	nsCOMPtr<nsIMsgDatabase> newsDB;
-	if (NS_SUCCEEDED(rv) && newsDBFactory) {
-    openErr = newsDBFactory->OpenFolderDB(this, PR_FALSE, PR_FALSE, getter_AddRefs(newsDB));
-	}
-  else {
-    return rv;
-  }
 
-  *db = newsDB;
-  NS_IF_ADDREF (*db);
+  nsresult openErr;
+  if(!db || !folderInfo)
+    return NS_ERROR_NULL_POINTER; 
+
+  openErr = GetDatabase(nsnull);
+
+  *db = mDatabase;
+  NS_IF_ADDREF(*db);
   if (NS_SUCCEEDED(openErr)&& *db)
     openErr = (*db)->GetDBFolderInfo(folderInfo);
   return openErr;
@@ -830,31 +800,13 @@ nsMsgNewsFolder::UpdateSummaryFromNNTPInfo(PRInt32 oldest, PRInt32 youngest, PRI
   PRInt32 oldUnreadMessages = mNumUnreadMessages;
   PRInt32 oldTotalMessages = mNumTotalMessages;
   
-  nsMsgKeySet *set = nsnull;
-  if (mDatabase) {
-    nsCOMPtr<nsINewsDatabase> db(do_QueryInterface(mDatabase, &rv));
-    if (NS_FAILED(rv)) return rv;
-    
-    rv = db->GetReadSet(&set);
-    if (NS_FAILED(rv)) return rv;
-  }
-  else {
-    nsXPIDLCString cachedNewsrcLine;
-    rv = GetCachedNewsrcLine(getter_Copies(cachedNewsrcLine));
-    if (NS_FAILED(rv)) return rv;
-    
-    set = nsMsgKeySet::Create((const char *)cachedNewsrcLine);
-  }
-  
-  if (!set) return NS_ERROR_FAILURE;
-  
   char *setStr = nsnull;
   /* First, mark all of the articles now known to be expired as read. */
   if (oldest > 1) { 
     nsXPIDLCString oldSet;
-    set->Output(getter_Copies(oldSet));
-    set->AddRange(1, oldest - 1);
-    rv = set->Output(&setStr);
+    mReadSet->Output(getter_Copies(oldSet));
+    mReadSet->AddRange(1, oldest - 1);
+    rv = mReadSet->Output(&setStr);
     if (setStr && nsCRT::strcmp(setStr, oldSet))
       newsrcHasChanged = PR_TRUE;
   }
@@ -866,7 +818,7 @@ nsMsgNewsFolder::UpdateSummaryFromNNTPInfo(PRInt32 oldest, PRInt32 youngest, PRI
     youngest = 1;
   }
   
-  PRInt32 unread = set->CountMissingInRange(oldest, youngest);
+  PRInt32 unread = mReadSet->CountMissingInRange(oldest, youngest);
   NS_ASSERTION(unread >= 0,"CountMissingInRange reported unread < 0");
   if (unread < 0) return NS_ERROR_FAILURE;
   if (unread > total) {
@@ -896,21 +848,6 @@ nsMsgNewsFolder::UpdateSummaryFromNNTPInfo(PRInt32 oldest, PRInt32 youngest, PRI
     NotifyIntPropertyChanged(kTotalUnreadMessagesAtom, oldUnreadMessages, mNumUnreadMessages);
   }
   
-  /* re-cache the newsrc line. */
-  if (!mDatabase) {
-    if (setStr) {
-      nsCAutoString newsrcLine(setStr);
-      newsrcLine += MSG_LINEBREAK;
-      rv = SetCachedNewsrcLine((const char *)newsrcLine);
-      NS_ASSERTION(NS_SUCCEEDED(rv),"SetCachedNewsrcLine() failed");
-      
-      if (newsrcHasChanged) {
-        rv = SetNewsrcHasChanged(PR_TRUE);
-        NS_ASSERTION(NS_SUCCEEDED(rv),"SetNewsrcHasChanged() failed");
-      }
-    }
-    delete set; // If !mDatabase then we own set, thus we should delete it.
-  }
   nsCRT::free(setStr);
   setStr = nsnull;
   return rv;
@@ -1543,20 +1480,11 @@ nsMsgNewsFolder::GetNewsrcLine(char **newsrcLine)
   newsrcLineStr += ":";
   
   nsXPIDLCString setStr;
-  rv = GetReadSetStr(getter_Copies(setStr));
-  if (NS_SUCCEEDED(rv)) {
-    newsrcLineStr += " ";
-    newsrcLineStr += setStr;
-    newsrcLineStr += MSG_LINEBREAK;
-  }
-  else {
-    nsXPIDLCString cachedNewsrcLine;
-    rv = GetCachedNewsrcLine(getter_Copies(cachedNewsrcLine));
-    if (NS_SUCCEEDED(rv) && ((const char *)cachedNewsrcLine) && (PL_strlen((const char *)cachedNewsrcLine))) {
-      newsrcLineStr += (const char *)cachedNewsrcLine;
-    }
-    else {
+  if (mReadSet) {
+    mReadSet->Output(getter_Copies(setStr));
+    if (NS_SUCCEEDED(rv)) {
       newsrcLineStr += " ";
+      newsrcLineStr += setStr;
       newsrcLineStr += MSG_LINEBREAK;
     }
   }
@@ -1568,29 +1496,16 @@ nsMsgNewsFolder::GetNewsrcLine(char **newsrcLine)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsMsgNewsFolder::GetCachedNewsrcLine(char **newsrcLine)
-{
-    if (!newsrcLine) return NS_ERROR_NULL_POINTER;
-    if (!mCachedNewsrcLine) return NS_ERROR_FAILURE;
-
-    *newsrcLine = nsCRT::strdup(mCachedNewsrcLine);
-
-    if (!*newsrcLine) return NS_ERROR_OUT_OF_MEMORY;
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMsgNewsFolder::SetCachedNewsrcLine(const char *newsrcLine)
+NS_IMETHODIMP nsMsgNewsFolder::SetReadSetFromStr(const char *newsrcLine)
 {
     if (!newsrcLine) return NS_ERROR_NULL_POINTER;
 
-    CRTFREEIF(mCachedNewsrcLine);
+    if (mReadSet)
+      delete mReadSet;
 
-    mCachedNewsrcLine = nsCRT::strdup(newsrcLine);
-    
-    if (!mCachedNewsrcLine) return NS_ERROR_OUT_OF_MEMORY;
+    mReadSet = nsMsgKeySet::Create(newsrcLine);
+
+    if (!mReadSet) return NS_ERROR_OUT_OF_MEMORY;
 
     return NS_OK;
 }
