@@ -200,6 +200,38 @@ nsNoAuthURLParser::ParseAtDirectory(const char* i_Path, char* *o_Directory,
         DupString(o_Directory, "/");
         file = dirfile;
     } else {
+#ifdef XP_PC
+        // if it contains only a drive then add a /
+        if (PL_strlen(dirfile) == 3 && *dirfile == '/' && 
+            (*(dirfile+2) == ':' || *(dirfile+2) == '|')) {
+            nsCAutoString tempdir;
+            tempdir += dirfile;
+            tempdir += "/";
+            CRTFREEIF(dirfile);
+            dirfile = tempdir.ToNewCString();
+            if (!dirfile) return NS_ERROR_OUT_OF_MEMORY;
+        } else {
+          // if it is not beginning with a drive and 
+          // there are no three slashes then add them and
+          // take it as an unc path 
+            if (PL_strlen(dirfile) < 3 ||
+                !(*(dirfile+2) == ':' || *(dirfile+2) == '|')) {
+                nsCAutoString tempdir;
+                if (PL_strlen(dirfile) < 2 || (PL_strlen(dirfile) >= 2 &&
+                   *(dirfile+1) != '/' && *(dirfile+1) != '\\')) {
+                    tempdir += "/";
+                }
+                if (PL_strlen(dirfile) < 3 || (PL_strlen(dirfile) >= 3 &&
+                   *(dirfile+2) != '/' && *(dirfile+2) != '\\')) {
+                    tempdir += "/";
+                }
+                tempdir += dirfile;
+                CRTFREEIF(dirfile);
+                dirfile = tempdir.ToNewCString();
+                if (!dirfile) return NS_ERROR_OUT_OF_MEMORY;
+            }
+        } 
+#endif
         CoaleseDirs(dirfile);
         // Get length again
         dlen = PL_strlen(dirfile);
