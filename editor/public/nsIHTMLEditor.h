@@ -177,7 +177,7 @@ public:
   NS_IMETHOD Indent(const nsString& aIndent)=0;
   NS_IMETHOD Align(const nsString& aAlign)=0;
 
-  // This should replace InsertLink and InsertImage once it is working
+  NS_IMETHOD GetElementOrParentByTagName(const nsString& aTagName, nsIDOMNode *aNode, nsIDOMElement** aReturn)=0;
   NS_IMETHOD GetSelectedElement(const nsString& aTagName, nsIDOMElement** aReturn)=0;
   NS_IMETHOD CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement** aReturn)=0;
   NS_IMETHOD InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)=0;
@@ -199,6 +199,15 @@ public:
   NS_IMETHOD DeleteTableColumn(PRInt32 aNumber)=0;
   NS_IMETHOD DeleteTableRow(PRInt32 aNumber)=0;
   NS_IMETHOD JoinTableCells(PRBool aCellToRight)=0;
+  NS_IMETHOD GetRowIndex(nsIDOMElement *aCell, PRInt32 &aRowIndex)=0;
+  NS_IMETHOD GetColumnIndex(nsIDOMElement *aCell, PRInt32 &aColIndex)=0;
+  NS_IMETHOD GetColumnCellCount(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32& aCount)=0;
+  NS_IMETHOD GetRowCellCount(nsIDOMElement* aTable, PRInt32 aColIndex, PRInt32& aCount)=0;
+  NS_IMETHOD GetMaxColumnCellCount(nsIDOMElement* aTable, PRInt32& aCount)=0;
+  NS_IMETHOD GetMaxRowCellCount(nsIDOMElement* aTable, PRInt32& aCount)=0;
+  NS_IMETHOD GetCellAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aColIndex, nsIDOMElement* &aCell)=0;
+  NS_IMETHOD GetCellDataAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aColIndex, nsIDOMElement* &aCell, 
+                           PRInt32& aStartRowIndex, PRInt32& aStartColIndex, PRInt32& aRowSpan, PRInt32& aColSpan)=0;
 
 // IME editing Methods
   NS_IMETHOD BeginComposition(void)=0;

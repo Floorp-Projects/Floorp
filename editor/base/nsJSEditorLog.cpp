@@ -691,6 +691,12 @@ nsJSEditorLog::Align(const nsString& aAlign)
 }
 
 NS_IMETHODIMP
+nsJSEditorLog::GetElementOrParentByTagName(const nsString &aTagName, nsIDOMNode *aNode, nsIDOMElement** aReturn)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsJSEditorLog::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aReturn)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -816,6 +822,63 @@ nsJSEditorLog::DeleteTableRow(PRInt32 aNumber)
 
 NS_IMETHODIMP
 nsJSEditorLog::JoinTableCells(PRBool aCellToRight)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsJSEditorLog::GetCellIndexes(nsIDOMElement *aCell, PRInt32 &aColIndex, PRInt32 &aRowIndex)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsJSEditorLog::GetRowIndex(nsIDOMElement *aCell, PRInt32 &aRowIndex)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP 
+nsJSEditorLog::GetColumnIndex(nsIDOMElement *aCell, PRInt32 &aColIndex)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsJSEditorLog::GetColumnCellCount(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32& aCount)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsJSEditorLog::GetRowCellCount(nsIDOMElement* aTable, PRInt32 aColIndex, PRInt32& aCount)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsJSEditorLog::GetMaxColumnCellCount(nsIDOMElement* aTable, PRInt32& aCount)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsJSEditorLog::GetMaxRowCellCount(nsIDOMElement* aTable, PRInt32& aCount)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+//TODO: This should be implemented by layout for efficiency
+NS_IMETHODIMP 
+nsJSEditorLog::GetCellAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aColIndex, nsIDOMElement* &aCell)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsJSEditorLog::GetCellDataAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aColIndex, nsIDOMElement* &aCell, 
+                            PRInt32& aStartRowIndex, PRInt32& aStartColIndex, PRInt32& aRowSpan, PRInt32& aColSpan)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

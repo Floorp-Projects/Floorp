@@ -27,6 +27,7 @@ class nsIDOMWindow;
 class nsIDOMDocument;
 class nsIDOMSelection;
 class nsIDOMElement;
+class nsIDOMNode;
 %}
 
 interface nsIFileSpec;
@@ -97,7 +98,10 @@ interface nsIEditorShell : nsISupports
   void Indent(in wstring indent);
   void Align(in wstring align);
   
+  /* Element insert and property editing */
   nsIDOMElement GetSelectedElement(in wstring tagName);
+  /* returns the element conversion of supplied node or a parent of required type */
+  nsIDOMElement GetElementOrParentByTagName(in wstring tagName, in nsIDOMNode node);
   nsIDOMElement CreateElementWithDefaults(in wstring tagName);
   void    InsertElement(in nsIDOMElement element, in boolean deleteSelection);
   void    SaveHLineSettings(in nsIDOMElement element);
@@ -105,6 +109,15 @@ interface nsIEditorShell : nsISupports
   void    SelectElement(in nsIDOMElement element);
   void    SetSelectionAfterElement(in nsIDOMElement element);
 
+  /* Table editing */
+  PRInt32 GetRowIndex(in nsIDOMElement cellElement);
+  PRInt32 GetColumnIndex(in nsIDOMElement cellElement);
+  nsIDOMElement GetCellAt(in nsIDOMElement tableElement, in PRInt32 rowIndex, in PRInt32 colIndex);
+  PRInt32 GetRowCellCount(in nsIDOMElement tableElement, in PRInt32 colIndex);
+  PRInt32 GetColumnCellCount(in nsIDOMElement tableElement, in PRInt32 rowIndex);
+  PRInt32 GetMaxRowCellCount(in nsIDOMElement tableElement);
+  PRInt32 GetMaxColumnCellCount(in nsIDOMElement tableElement);
+  
   /* Get list of embedded objects, e.g. for mail compose */
   nsISupportsArray GetEmbeddedObjects();
 

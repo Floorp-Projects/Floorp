@@ -86,7 +86,44 @@ static PRBool gNoisy = PR_FALSE;
 static const PRBool gNoisy = PR_FALSE;
 #endif
 
+// Some utilities to handle stupid overloading of "A" tag for link and named anchor
+static char hrefText[] = "href";
+static char linkText[] = "link";
+static char anchorText[] = "anchor";
+static char namedanchorText[] = "namedanchor";
 
+#define IsLink(s) (s.EqualsIgnoreCase(hrefText) || s.EqualsIgnoreCase(linkText))
+#define IsNamedAnchor(s) (s.EqualsIgnoreCase(anchorText) || s.EqualsIgnoreCase(namedanchorText))
+
+static PRBool IsLinkNode(nsIDOMNode *aNode)
+{
+  if (aNode)
+  {
+    nsCOMPtr<nsIDOMHTMLAnchorElement> anchor = do_QueryInterface(aNode);
+    if (anchor)
+    {
+      nsString tmpText;
+      if (NS_SUCCEEDED(anchor->GetHref(tmpText)) && tmpText.GetUnicode() && tmpText.Length() != 0)
+        return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+
+static PRBool IsNamedAnchorNode(nsIDOMNode *aNode)
+{
+  if (aNode)
+  {
+    nsCOMPtr<nsIDOMHTMLAnchorElement> anchor = do_QueryInterface(aNode);
+    if (anchor)
+    {
+      nsString tmpText;
+      if (NS_SUCCEEDED(anchor->GetName(tmpText)) && tmpText.GetUnicode() && tmpText.Length() != 0)
+        return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
 
 nsHTMLEditor::nsHTMLEditor()
 {
@@ -1941,45 +1978,48 @@ nsHTMLEditor::InsertImage(nsString& aURL,
   return res;
 }
 
-static PRBool IsLinkNode(nsIDOMNode *aNode)
-{
-  if (aNode)
-  {
-    nsCOMPtr<nsIDOMHTMLAnchorElement> anchor = do_QueryInterface(aNode);
-    if (anchor)
-    {
-      nsString tmpText;
-      if (NS_SUCCEEDED(anchor->GetHref(tmpText)) && tmpText.GetUnicode() && tmpText.Length() != 0)
-        return PR_TRUE;
-    }
-  }
-  return PR_FALSE;
-}
-
 NS_IMETHODIMP
-nsHTMLEditor::GetParentLinkElement(nsIDOMNode *aNode, nsIDOMElement** aReturn)
+nsHTMLEditor::GetElementOrParentByTagName(const nsString &aTagName, nsIDOMNode *aNode, nsIDOMElement** aReturn)
 {
-  if (!aNode || !aReturn )
+  if (aTagName.Length() == 0 || !aNode || !aReturn )
     return NS_ERROR_NULL_POINTER;
   
+  nsAutoString TagName = aTagName;
+  TagName.ToLowerCase();
+  PRBool getLink = IsLink(TagName);
+  PRBool getNamedAnchor = IsNamedAnchor(TagName);
+  if ( getLink || getNamedAnchor)
+  {
+    TagName = "a";  
+  }
+
   // default is null - no element found
   *aReturn = nsnull;
   
-  nsCOMPtr<nsIDOMNode> linkNode = aNode;
+  nsCOMPtr<nsIDOMNode> currentNode = aNode;
   nsCOMPtr<nsIDOMNode> parent;
   PRBool bNodeFound = PR_FALSE;
 
   while (PR_TRUE)
   {
     // Test if we have a link (an anchor with href set)
-    if (IsLinkNode(linkNode))
+    if ( (getLink && IsLinkNode(currentNode)) ||
+         (getNamedAnchor && IsNamedAnchorNode(currentNode)) )
     {
       bNodeFound = PR_TRUE;
       break;
+    } else {
+      nsAutoString currentTagName; 
+      aNode->GetNodeName(currentTagName);
+      if (currentTagName.EqualsIgnoreCase(TagName))
+      {
+        bNodeFound = PR_TRUE;
+        break;
+      }
     }
     // Search up the parent chain
     // We should never fail because of root test below, but lets be safe
-    if (!NS_SUCCEEDED(linkNode->GetParentNode(getter_AddRefs(parent))) || !parent)
+    if (!NS_SUCCEEDED(currentNode->GetParentNode(getter_AddRefs(parent))) || !parent)
       break;
 
     // Stop searching if parent is a root (body or table cell)
@@ -1988,20 +2028,21 @@ nsHTMLEditor::GetParentLinkElement(nsIDOMNode *aNode, nsIDOMElement** aReturn)
     parent->GetNodeName(parentTagName);
     if (!NS_SUCCEEDED(IsRootTag(parentTagName, isRoot)) || isRoot)
       break;
-    linkNode = parent;
+    currentNode = parent;
   }
   if (bNodeFound)
   {
-    nsCOMPtr<nsIDOMElement> linkElement = do_QueryInterface(linkNode);
-    if (linkElement)
+    nsCOMPtr<nsIDOMElement> currentElement = do_QueryInterface(currentNode);
+    if (currentElement)
     {
-      *aReturn = linkElement;
+      *aReturn = currentElement;
       // Getters must addref
       NS_ADDREF(*aReturn);
     }
   }
   return NS_OK;
 }
+
 
 NS_IMETHODIMP
 nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aReturn)
@@ -2031,7 +2072,7 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
   nsCOMPtr<nsIDOMElement> selectedElement;
   PRBool bNodeFound = PR_FALSE;
 
-  if (TagName == "href")
+  if (IsLink(TagName))
   {
     // Link tag is a special case - we return the anchor node
     //  found for any selection that is totally within a link,
@@ -2065,7 +2106,7 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
       }
 #endif
       nsCOMPtr<nsIDOMElement> parentLinkOfAnchor;
-      res = GetParentLinkElement(anchorNode, getter_AddRefs(parentLinkOfAnchor));
+      res = GetElementOrParentByTagName("href", anchorNode, getter_AddRefs(parentLinkOfAnchor));
       if (NS_SUCCEEDED(res) && parentLinkOfAnchor)
       {
         if (isCollapsed)
@@ -2075,14 +2116,14 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
         } else if(focusNode) 
         {  // Link node must be the same for both ends of selection
           nsCOMPtr<nsIDOMElement> parentLinkOfFocus;
-          res = GetParentLinkElement(focusNode, getter_AddRefs(parentLinkOfFocus));
+          res = GetElementOrParentByTagName("href", focusNode, getter_AddRefs(parentLinkOfFocus));
           if (NS_SUCCEEDED(res) && parentLinkOfFocus == parentLinkOfAnchor)
             bNodeFound = PR_TRUE;
         }
       
         // We found a link node parent
         if (bNodeFound) {
-          // GetParentLinkElement addref'd this, so we don't need to do it here
+          // GetElementOrParentByTagName addref'd this, so we don't need to do it here
           *aReturn = parentLinkOfAnchor;
           return NS_OK;
         }
@@ -2100,7 +2141,6 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
       }
     }
   } 
-  //NOTE: We will not find the link node aboveif it is the only thing selected
 
   if (!bNodeFound && !isCollapsed)   // Don't bother to examine selection if it is collapsed
   {
@@ -2156,23 +2196,11 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
 
               // The "A" tag is a pain,
               //  used for both link(href is set) and "Named Anchor"
-              if (TagName == "href" || TagName == "anchor")
+              nsCOMPtr<nsIDOMNode> selectedNode = do_QueryInterface(selectedElement);
+              if ( (IsLink(TagName) && IsLinkNode(selectedNode)) ||
+                   (IsNamedAnchor(TagName) && IsNamedAnchorNode(selectedNode)) )
               {
-                // We could use GetAttribute, but might as well use anchor element directly
-                nsCOMPtr<nsIDOMHTMLAnchorElement> anchor = do_QueryInterface(selectedElement);
-                if (anchor)
-                {
-                  nsString tmpText;
-                  if( TagName == "href")
-                  {
-                    if (NS_SUCCEEDED(anchor->GetHref(tmpText)) && tmpText.GetUnicode() && tmpText.Length() != 0)
-                      bNodeFound = PR_TRUE;
-                  } else if (TagName == "anchor")
-                  {
-                    if (NS_SUCCEEDED(anchor->GetName(tmpText)) && tmpText.GetUnicode() && tmpText.Length() != 0)
-                      bNodeFound = PR_TRUE;
-                  }
-                }
+                bNodeFound = PR_TRUE;
               } else if (TagName == domTagName) { // All other tag names are handled here
                 bNodeFound = PR_TRUE;
               }
@@ -2218,9 +2246,7 @@ nsHTMLEditor::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement*
   TagName.ToLowerCase();
   nsAutoString realTagName;
 
-  PRBool isHREF = (TagName == "href");
-  PRBool isAnchor = (TagName == "anchor");
-  if (isHREF || isAnchor)
+  if (IsLink(TagName) || IsNamedAnchor(TagName))
   {
     realTagName = "a";
   } else {
@@ -2368,13 +2394,9 @@ nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)
     // Named Anchor is a special case,
     // We collapse to insert element BEFORE the selection
     // For all other tags, we insert AFTER the selection
-    nsCOMPtr<nsIDOMHTMLAnchorElement> anchor = do_QueryInterface(aElement);
-    if (anchor)
-    {
-      nsAutoString name;
-      if (NS_SUCCEEDED(anchor->GetName(name)) && name.GetUnicode() && name.Length() != 0)
-        collapseAfter = PR_FALSE;
-    }
+    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aElement);
+    if (IsNamedAnchorNode(node))
+      collapseAfter = PR_FALSE;
 
     if (collapseAfter)
     {

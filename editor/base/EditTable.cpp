@@ -27,7 +27,8 @@
 #include "nsIDOMRange.h"
 #include "nsIDOMSelection.h"
 #include "nsIAtom.h"
-
+#include "nsIDOMHTMLTableElement.h"
+#include "nsIDOMHTMLTableCellElement.h"
 /*
 #include "nsIDocument.h"
 #include "nsIServiceManager.h"
@@ -49,78 +50,88 @@
 // transactions the editor knows how to build
 #include "TransactionFactory.h"
 #include "EditAggregateTxn.h"
-#include "InsertTableTxn.h"
-#include "InsertTableCellTxn.h"
-#include "InsertTableColumnTxn.h"
-#include "InsertTableRowTxn.h"
-#include "DeleteTableTxn.h"
-#include "DeleteTableCellTxn.h"
-#include "DeleteTableColumnTxn.h"
-#include "DeleteTableRowTxn.h"
-#include "JoinTableCellsTxn.h"
-// Include after above so Transaction types are defined first
+#include "nsIDOMHTMLCollection.h"
 #include "nsHTMLEditor.h"
 
 static NS_DEFINE_IID(kITransactionManagerIID, NS_ITRANSACTIONMANAGER_IID);
 
-// Table Editing methods -- for testing, hooked up to Tool Menu items
-// Modeled after nsEditor::InsertText()
-NS_IMETHODIMP nsHTMLEditor::InsertTable()
+// Table Editing methods
+
+NS_IMETHODIMP
+nsHTMLEditor::InsertTable()
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsHTMLEditor::CreateTxnForInsertTable(const nsIDOMElement *aTableNode, InsertTableTxn ** aTxn)
-{
-  if( aTableNode == nsnull || aTxn == nsnull )
-  {
-    return NS_ERROR_NULL_POINTER;
-  }
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsHTMLEditor::InsertTableCell(PRInt32 aNumber, PRBool aAfter)
+NS_IMETHODIMP
+nsHTMLEditor::InsertTableCell(PRInt32 aNumber, PRBool aAfter)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsHTMLEditor::InsertTableColumn(PRInt32 aNumber, PRBool aAfter)
+NS_IMETHODIMP
+nsHTMLEditor::InsertTableColumn(PRInt32 aNumber, PRBool aAfter)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsHTMLEditor::InsertTableRow(PRInt32 aNumber, PRBool aAfter)
+NS_IMETHODIMP
+nsHTMLEditor::InsertTableRow(PRInt32 aNumber, PRBool aAfter)
+{
+  nsCOMPtr<nsIDOMSelection>selection;
+  nsresult res = nsEditor::GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(res) || !selection)
+    return res;
+  // Collapse the current selection
+  selection->ClearSelection();
+  nsCOMPtr<nsIDOMNode> anchorNode;
+  res = selection->GetAnchorNode(getter_AddRefs(anchorNode));
+  if (NS_FAILED(res) || !anchorNode)
+    return res;
+
+  nsCOMPtr<nsIDOMElement> cell;
+  nsCOMPtr<nsIDOMElement> row;
+  nsCOMPtr<nsIDOMElement> table;
+  res = NS_ERROR_FAILURE;
+  //if(NS_SUCCEEDED(GetElementOrParentByTagName("td", anchorNode, getter_AddRefs(cell))
+
+
+  return res;
+}
+
+NS_IMETHODIMP
+nsHTMLEditor::DeleteTable()
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsHTMLEditor::DeleteTable()
+NS_IMETHODIMP
+nsHTMLEditor::DeleteTableCell(PRInt32 aNumber)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsHTMLEditor::DeleteTableCell(PRInt32 aNumber)
+NS_IMETHODIMP
+nsHTMLEditor::DeleteTableColumn(PRInt32 aNumber)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsHTMLEditor::DeleteTableColumn(PRInt32 aNumber)
+NS_IMETHODIMP
+nsHTMLEditor::DeleteTableRow(PRInt32 aNumber)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsHTMLEditor::DeleteTableRow(PRInt32 aNumber)
+NS_IMETHODIMP 
+nsHTMLEditor::JoinTableCells(PRBool aCellToRight)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsHTMLEditor::JoinTableCells(PRBool aCellToRight)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsHTMLEditor::GetCellIndexes(nsIDOMNode *aCellNode, PRInt32 &aColIndex, PRInt32 &aRowIndex)
+NS_IMETHODIMP 
+nsHTMLEditor::GetCellIndexes(nsIDOMElement *aCell, PRInt32 &aColIndex, PRInt32 &aRowIndex)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   aColIndex=0; // initialize out params
@@ -128,7 +139,7 @@ NS_IMETHODIMP nsHTMLEditor::GetCellIndexes(nsIDOMNode *aCellNode, PRInt32 &aColI
   result = NS_ERROR_FAILURE;        // we return an error unless we get the index
   nsISupports *layoutObject=nsnull; // frames are not ref counted, so don't use an nsCOMPtr
 
-  result = nsEditor::GetLayoutObject(aCellNode, &layoutObject);
+  result = nsEditor::GetLayoutObject(aCell, &layoutObject);
 
   if ((NS_SUCCEEDED(result)) && (nsnull!=layoutObject))
   { // get the table cell interface from the frame
@@ -138,33 +149,93 @@ NS_IMETHODIMP nsHTMLEditor::GetCellIndexes(nsIDOMNode *aCellNode, PRInt32 &aColI
     { // get the index
       result = cellLayoutObject->GetColIndex(aColIndex);
       if (NS_SUCCEEDED(result))
+      {
         result = cellLayoutObject->GetRowIndex(aRowIndex);
+      }
+    }
+  }
+  return result;
+}
+
+NS_IMETHODIMP 
+nsHTMLEditor::GetRowIndex(nsIDOMElement *aCell, PRInt32 &aRowIndex)
+{
+  nsresult result=NS_ERROR_NOT_INITIALIZED;
+  aRowIndex=0;
+  result = NS_ERROR_FAILURE;        // we return an error unless we get the index
+  nsISupports *layoutObject=nsnull; // frames are not ref counted, so don't use an nsCOMPtr
+
+  result = nsEditor::GetLayoutObject(aCell, &layoutObject);
+
+  if ((NS_SUCCEEDED(result)) && (nsnull!=layoutObject))
+  { // get the table cell interface from the frame
+    nsITableCellLayout *cellLayoutObject=nsnull; // again, frames are not ref-counted
+    result = layoutObject->QueryInterface(nsITableCellLayout::GetIID(), (void**)(&cellLayoutObject));
+    if ((NS_SUCCEEDED(result)) && (nsnull!=cellLayoutObject))
+    { // get the index
+      result = cellLayoutObject->GetRowIndex(aRowIndex);
     }
   }
   return result;
 }
 
 
-NS_IMETHODIMP nsHTMLEditor::GetFirstCellInColumn(nsIDOMNode *aCurrentCellNode, nsIDOMNode* &aFirstCellNode)
+NS_IMETHODIMP 
+nsHTMLEditor::GetColumnIndex(nsIDOMElement *aCell, PRInt32 &aColIndex)
+{
+  nsresult result=NS_ERROR_NOT_INITIALIZED;
+  aColIndex=0; // initialize out params
+  result = NS_ERROR_FAILURE;        // we return an error unless we get the index
+  nsISupports *layoutObject=nsnull; // frames are not ref counted, so don't use an nsCOMPtr
+
+  result = nsEditor::GetLayoutObject(aCell, &layoutObject);
+
+  if ((NS_SUCCEEDED(result)) && (nsnull!=layoutObject))
+  { // get the table cell interface from the frame
+    nsITableCellLayout *cellLayoutObject=nsnull; // again, frames are not ref-counted
+    result = layoutObject->QueryInterface(nsITableCellLayout::GetIID(), (void**)(&cellLayoutObject));
+    if ((NS_SUCCEEDED(result)) && (nsnull!=cellLayoutObject))
+    { // get the index
+     result = cellLayoutObject->GetColIndex(aColIndex);
+    }
+  }
+  return result;
+}
+
+NS_IMETHODIMP 
+nsHTMLEditor::GetColumnCellCount(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32& aCount)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-
-NS_IMETHODIMP nsHTMLEditor::GetNextCellInColumn(nsIDOMNode *aCurrentCellNode, nsIDOMNode* &aNextCellNode)
+NS_IMETHODIMP 
+nsHTMLEditor::GetRowCellCount(nsIDOMElement* aTable, PRInt32 aColIndex, PRInt32& aCount)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-
-NS_IMETHODIMP nsHTMLEditor::GetFirstCellInRow(nsIDOMNode *aCurrentCellNode, nsIDOMNode* &aCellNode)
+NS_IMETHODIMP 
+nsHTMLEditor::GetMaxColumnCellCount(nsIDOMElement* aTable, PRInt32& aCount)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-
-NS_IMETHODIMP nsHTMLEditor::GetNextCellInRow(nsIDOMNode *aCurrentCellNode, nsIDOMNode* &aNextCellNode)
+NS_IMETHODIMP 
+nsHTMLEditor::GetMaxRowCellCount(nsIDOMElement* aTable, PRInt32& aCount)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+//TODO: This should be implemented by layout for efficiency
+NS_IMETHODIMP 
+nsHTMLEditor::GetCellAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aColIndex, nsIDOMElement* &aCell)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsHTMLEditor::GetCellDataAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aColIndex, nsIDOMElement* &aCell, 
+                            PRInt32& aStartRowIndex, PRInt32& aStartColIndex, PRInt32& aRowSpan, PRInt32& aColSpan)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}

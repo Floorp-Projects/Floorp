@@ -140,12 +140,22 @@ class nsEditorShell :   public nsIEditorShell,
 
     /* nsIDOMElement GetSelectedElement (in wstring tagName); */
 	  NS_IMETHOD GetSelectedElement(const PRUnichar *tagName, nsIDOMElement **_retval);
+    NS_IMETHOD GetElementOrParentByTagName(const PRUnichar *tagName, nsIDOMNode *aNode, nsIDOMElement **_retval);
 	  NS_IMETHOD CreateElementWithDefaults(const PRUnichar *tagName, nsIDOMElement **_retval);
 	  NS_IMETHOD InsertElement(nsIDOMElement *element, PRBool deleteSelection);
     NS_IMETHOD SaveHLineSettings(nsIDOMElement* aElement);
 	  NS_IMETHOD InsertLinkAroundSelection(nsIDOMElement *anchorElement);
 	  NS_IMETHOD SelectElement(nsIDOMElement *element);
 	  NS_IMETHOD SetSelectionAfterElement(nsIDOMElement *element);
+
+    // Return just 1 value -- for Java Script
+    NS_IMETHOD GetRowIndex(nsIDOMElement *aCell, PRInt32 *aRowIndex);
+    NS_IMETHOD GetColumnIndex(nsIDOMElement *aCell, PRInt32 *aColIndex);
+    NS_IMETHOD GetColumnCellCount(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 *aCount);
+    NS_IMETHOD GetRowCellCount(nsIDOMElement* aTable, PRInt32 aColIndex, PRInt32 *aCount);
+    NS_IMETHOD GetMaxColumnCellCount(nsIDOMElement* aTable, PRInt32 *aCount);
+    NS_IMETHOD GetMaxRowCellCount(nsIDOMElement* aTable, PRInt32 *aCount);
+    NS_IMETHOD GetCellAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aColIndex, nsIDOMElement **_retval);
 
     /* Get list of embedded objects, e.g. for mail compose */
     NS_IMETHOD GetEmbeddedObjects(nsISupportsArray **aObjectArray);
