@@ -51,7 +51,7 @@ endif
 endif
 
 # For 6.x machines, include this flag
-ifeq (6.,$(findstring 6.,$(OS_RELEASE)))
+ifeq ($(basename $(OS_RELEASE)),6)
 ifeq ($(USE_N32),1)
 ODD_CFLAGS		+= -n32 -exceptions -woff 1209,1642,3201
 COMPILER_TAG		= _n32
@@ -95,10 +95,11 @@ endif
 # catch unresolved symbols
 ifeq ($(basename $(OS_RELEASE)),6)
 SHLIB_LD_OPTS = -no_unresolved
-endif
-
 ifeq ($(USE_N32),1)
 SHLIB_LD_OPTS		+= -n32
+else
+SHLIB_LD_OPTS		+= -32
+endif
 endif
 
 MKSHLIB			= $(LD) $(SHLIB_LD_OPTS) -rdata_shared -shared -soname $(@:$(OBJDIR)/%.so=%.so)
@@ -109,6 +110,4 @@ DSO_LDOPTS		= -elf -shared -all
 
 ifdef DSO_BACKEND
 DSO_LDOPTS		+= -soname $(DSO_NAME)
-
-
 endif
