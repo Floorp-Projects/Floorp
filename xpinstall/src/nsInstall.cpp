@@ -454,10 +454,16 @@ PRInt32
 nsInstall::AddDirectory(const nsString& aJarSource,
                         PRInt32* aReturn)
 {
+    if(mPackageFolder == nsnull)
+    {
+        *aReturn = SaveError( nsInstall::PACKAGE_FOLDER_NOT_SET );
+        return NS_OK;
+    }
+    
     return AddDirectory("", 
                         "", 
                         aJarSource, 
-                        nsnull, 
+                        mPackageFolder, 
                         "", 
                         PR_FALSE,
                         aReturn);
