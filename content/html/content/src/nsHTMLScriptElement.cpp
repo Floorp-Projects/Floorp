@@ -517,6 +517,12 @@ nsHTMLScriptElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 
   CopyInnerTo(it, aDeep);
 
+  // The clone should be marked evaluated if we are.  It should also be marked
+  // evaluated if we're evaluating, to handle the case when this script node's
+  // script clones the node.
+  it->mIsEvaluated = mIsEvaluated || mEvaluating;
+  it->mLineNumber = mLineNumber;
+  
   *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
 
   NS_ADDREF(*aReturn);
