@@ -46,7 +46,9 @@ CPPSRCS =                       \
     nsProperties.cpp            \
     nsRBTree.cpp                \
     nsSizeOfHandler.cpp		    \
+    nsStr.cpp                   \
     nsString.cpp                \
+    nsString2.cpp               \
     nsUnicharBuffer.cpp         \
     nsUnicharInputStream.cpp    \
     nsVoidArray.cpp             \
@@ -70,7 +72,9 @@ EXPORTS =                       \
     nsIUnicharInputStream.h     \
     nsInt64.h                   \
     nsRBTree.h                  \
+    nsStr.h                     \
     nsString.h                  \
+    nsString2.h                 \
     nsTime.h			\
     nsVoidArray.h               \
     nsUnitConversion.h          \
