@@ -384,7 +384,8 @@ private:
 NS_IMPL_THREADSAFE_ISUPPORTS1(MemCacheWriteStreamWrapper, nsIOutputStream)
 
 nsMemCacheChannel::nsMemCacheChannel(nsMemCacheRecord *aRecord, nsILoadGroup *aLoadGroup)
-    : mRecord(aRecord), mStartOffset(0), mStatus(NS_OK)
+    : mRecord(aRecord), mStartOffset(0), mStatus(NS_OK),
+      mLoadAttributes(nsIChannel::LOAD_NORMAL)
 {
     NS_INIT_REFCNT();
     mRecord->mNumChannels++;
@@ -623,17 +624,15 @@ nsMemCacheChannel::SetContentLength(PRInt32 aContentLength)
 NS_IMETHODIMP
 nsMemCacheChannel::GetLoadAttributes(nsLoadFlags *aLoadAttributes)
 {
-    // Not required to be implemented, since it is implemented by cache manager
-    NS_NOTREACHED("nsMemCacheChannel::GetLoadAttributes");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *aLoadAttributes = mLoadAttributes;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsMemCacheChannel::SetLoadAttributes(nsLoadFlags aLoadAttributes)
 {
-    // Not required to be implemented, since it is implemented by cache manager
-    NS_NOTREACHED("nsMemCacheChannel::SetLoadAttributes");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    mLoadAttributes = aLoadAttributes;
+    return NS_OK;
 }
 
 NS_IMETHODIMP

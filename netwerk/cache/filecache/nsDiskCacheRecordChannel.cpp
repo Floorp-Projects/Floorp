@@ -154,6 +154,7 @@ nsDiskCacheRecordChannel::nsDiskCacheRecordChannel(nsDiskCacheRecord *aRecord,
                                                    nsILoadGroup *aLoadGroup)
   : mRecord(aRecord),
     mLoadGroup(aLoadGroup),
+    mLoadAttributes(nsIChannel::LOAD_NORMAL),
     mStatus(NS_OK) 
 {
   NS_INIT_REFCNT();
@@ -440,17 +441,15 @@ nsDiskCacheRecordChannel::AsyncWrite(nsIInputStream *fromStream,
 NS_IMETHODIMP
 nsDiskCacheRecordChannel::GetLoadAttributes(nsLoadFlags *aLoadAttributes)
 {
-  // Not required to be implemented, since it is implemented by cache manager
-  NS_NOTREACHED("nsDiskCacheRecordChannel::GetLoadAttributes");
-  return NS_ERROR_NOT_IMPLEMENTED;
+    *aLoadAttributes = mLoadAttributes;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDiskCacheRecordChannel::SetLoadAttributes(nsLoadFlags aLoadAttributes)
 {
-  // Not required to be implemented, since it is implemented by cache manager
-  NS_NOTREACHED("nsDiskCacheRecordChannel::SetLoadAttributes");
-  return NS_ERROR_NOT_IMPLEMENTED;
+    mLoadAttributes = aLoadAttributes;
+    return NS_OK;
 }
 
 #define DUMMY_TYPE "application/x-unknown-content-type"
