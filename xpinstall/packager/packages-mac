@@ -235,6 +235,7 @@ viewer:defaults:wallet:StateSchema.tbl
 viewer:res:html:*
 viewer:res:html.css
 viewer:res:quirk.css
+viewer:res:viewsource.css
 viewer:res:maccharset.properties 
 viewer:res:rdf:article.gif
 viewer:res:rdf:collapser.gif

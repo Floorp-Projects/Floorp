@@ -274,6 +274,7 @@ protected:
     PRInt32             mValue;
     PRInt32             mPopupTag;
     PRInt32             mSummaryTag;
+    PRBool              mSyntaxHighlight;
 #else
     nsAutoString        mStartTag;
     nsAutoString        mEndTag;

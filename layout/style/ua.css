@@ -22,6 +22,7 @@
 @import url(resource:/res/html.css);
 @import url(chrome://global/content/xul.css);
 @import url(resource:/res/quirk.css);
+@import url(resource:/res/viewsource.css);
 
 parsererror {
   display: block;

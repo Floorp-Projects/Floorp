@@ -20,108 +20,67 @@
  *      Blake Ross <BlakeR1234@aol.com>
  */
 
-@namespace url(http://www.mozilla.org/viewsource); 
+@namespace url(http://www.w3.org/1999/xhtml); /* set default namespace to HTML */
 
-viewsource { 
-  font-family: monospace; 
-  font-weight: normal; 
-  color: black; 
+.viewsource {
+  font-family: monospace;
+  font-weight: normal;
+  color: black;
   white-space: pre;
-  font-size: 12px; 
+  font-size: 12px;
   padding-top: 8px; 
   margin-left: 8px;
-} 
-
-summary {
-  display: block; 
-  background-color: #FFFFCC; 
-  width: 90%; 
-  border: solid; 
-  border-width: 1px; 
-  font-family: sans-serif;
-} 
-
-key {
-   font-weight:bold;
 }
-
-key:before {
-  color: black;
-} 
-
-val {
-  color: blue; 
-  font-weight:normal;
-} 
-
-val:before {
-  content: "="; 
-  color: black;
-} 
-
-entity {
-  color:#FF4500; 
-  font-weight:normal;
-} 
-
-entity:before {
-  content: "&";
-} 
-
-comment {
-  color: green; 
-  font-style:italic; 
-} 
-
-cdata {
-  color: #CC0066;
-} 
-
-doctype {
-  color: steelblue; 
-  font-style: italic;
-} 
-
-pi {
-  color: orchid; 
-  font-style: italic;
+.start-tag {
+ color: purple;
+ font-weight: bold;
 }
-
-start {
-  color: purple;
-  font-weight:bold;
-} 
-
-start:before {
-  content: "<"; 
-  color: black; 
-} 
-
-start:after {
-  content: ">"; 
-  color: black;
-} 
-
-end {
-  color: purple;
-  font-weight:bold;
-} 
-
-end:before {
-  content: "</"; 
-  color: black;
-} 
-
-end:after {
-  content: ">"; 
-  color: black;
+.end-tag {
+ color: purple;
+ font-weight: bold; 
 }
-
-txt {
-  font-weight: normal; 
+.comment {
+ color: green;
+ font-style: italic;
 }
-
-error {
-  background-color: #FFFFCC; 
-  font-weight: bold;
-} 
+.cdata {
+ color: #CC0066;
+}
+.doctype {
+ color: steelblue;
+ font-style: italic;
+}
+.pi {
+ color: orchid;
+ font-style: italic;
+}
+.entity {
+ color:#FF4500;
+ font-weight: normal;
+}
+.text {
+  font-weight: normal;
+}
+.attribute-name {
+ color: black;
+ font-weight: bold;
+}
+.attribute-value {
+ color: blue;
+ font-weight: normal;
+}
+.summary {
+ display: block;
+ background-color: #FFFFCC;
+ width: 90%;
+ border: solid;
+ border-width: 1pt;
+ font-family: sans-serif;
+}
+.popup {
+  font-weight: normal;
+}
+.markupdeclaration {
+ color: steelblue;
+ font-style: italic;
+}

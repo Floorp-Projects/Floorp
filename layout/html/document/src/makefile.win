@@ -62,6 +62,7 @@ install:: $(LIBRARY)
 	$(MAKE_INSTALL) html.css $(DIST)\bin\res
 	$(MAKE_INSTALL) forms.css $(DIST)\bin\res
 	$(MAKE_INSTALL) quirk.css $(DIST)\bin\res
+	$(MAKE_INSTALL) viewsource.css $(DIST)\bin\res
 	$(MAKE_INSTALL) arrow.gif $(DIST)\bin\res
 	$(MAKE_INSTALL) arrowd.gif $(DIST)\bin\res
 
@@ -71,5 +72,6 @@ clobber::
 	rm -f $(DIST)\bin\res\html.css
 	rm -f $(DIST)\bin\res\forms.css
 	rm -f $(DIST)\bin\res\quirk.css
+	rm -f $(DIST)\bin\res\viewsource.css
 	rm -f $(DIST)\bin\res\arrow.gif
 	rm -f $(DIST)\bin\res\arrowd.gif
