@@ -209,6 +209,7 @@ nsDocShellTreeOwner::GetInterface(const nsIID& aIID, void** aSink)
 NS_IMETHODIMP
 nsDocShellTreeOwner::FindItemWithName(const PRUnichar* aName,
                                       nsIDocShellTreeItem* aRequestor,
+                                      nsIDocShellTreeItem* aOriginalRequestor,
                                       nsIDocShellTreeItem** aFoundItem)
 {
   NS_ENSURE_ARG(aName);
@@ -250,7 +251,8 @@ nsDocShellTreeOwner::FindItemWithName(const PRUnichar* aName,
   }
 
   // next, check our children
-  rv = FindChildWithName(aName, PR_TRUE, aRequestor, aFoundItem);
+  rv = FindChildWithName(aName, PR_TRUE, aRequestor, aOriginalRequestor,
+                         aFoundItem);
   if(NS_FAILED(rv) || *aFoundItem)
     return rv;
 
@@ -260,20 +262,21 @@ nsDocShellTreeOwner::FindItemWithName(const PRUnichar* aName,
   if(mTreeOwner) {
     if (mTreeOwner != reqAsTreeOwner)
       return mTreeOwner->FindItemWithName(aName, mWebBrowser->mDocShellAsItem,
-                                          aFoundItem);
+                                          aOriginalRequestor, aFoundItem);
     return NS_OK;
   }
 
   // finally, failing everything else, search all windows, if we're not already
   if (mWebBrowser->mDocShellAsItem != aRequestor)
-    return FindItemWithNameAcrossWindows(aName, aFoundItem);
+    return FindItemWithNameAcrossWindows(aName, aOriginalRequestor, aFoundItem);
 
   return NS_OK; // failed
 }
 
 nsresult
 nsDocShellTreeOwner::FindChildWithName(const PRUnichar *aName, PRBool aRecurse,
-                                       nsIDocShellTreeItem* aRequestor, 
+                                       nsIDocShellTreeItem* aRequestor,
+                                       nsIDocShellTreeItem* aOriginalRequestor,
                                        nsIDocShellTreeItem **aFoundItem)
 {
   if (!mWebBrowser)
@@ -302,7 +305,8 @@ nsDocShellTreeOwner::FindChildWithName(const PRUnichar *aName, PRBool aRecurse,
         nsCOMPtr<nsIDocShellTreeItem> item =
           do_QueryInterface(sgo->GetDocShell());
         if (item && item != aRequestor) {
-          rv = item->FindItemWithName(aName, mWebBrowser->mDocShellAsItem, aFoundItem);
+          rv = item->FindItemWithName(aName, mWebBrowser->mDocShellAsItem,
+                                      aOriginalRequestor, aFoundItem);
           if (NS_FAILED(rv) || *aFoundItem)
             break;
         }
@@ -314,6 +318,7 @@ nsDocShellTreeOwner::FindChildWithName(const PRUnichar *aName, PRBool aRecurse,
 
 nsresult
 nsDocShellTreeOwner::FindItemWithNameAcrossWindows(const PRUnichar* aName,
+                                                   nsIDocShellTreeItem* aOriginalRequestor,
                                                    nsIDocShellTreeItem** aFoundItem)
 {
   // search for the item across the list of top-level windows
@@ -341,7 +346,7 @@ nsDocShellTreeOwner::FindItemWithNameAcrossWindows(const PRUnichar* aName,
         nsCOMPtr<nsIDocShellTreeItem> item =
           do_QueryInterface(sgo->GetDocShell());
         if (item) {
-          rv = item->FindItemWithName(aName, item, aFoundItem);
+          rv = item->FindItemWithName(aName, item, aOriginalRequestor, aFoundItem);
           if (NS_FAILED(rv) || *aFoundItem)
             break;
         }

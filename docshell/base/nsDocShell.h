@@ -368,9 +368,6 @@ protected:
 
     PRPackedBool               mIsBeingDestroyed;
 
-    // Validate window targets to prevent frameset spoofing
-    PRPackedBool               mValidateOrigin;
-
     PRPackedBool               mIsExecutingOnLoadHandler;
 
     // Indicates that a DocShell in this "docshell tree" is printing

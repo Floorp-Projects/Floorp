@@ -45,7 +45,7 @@
 
 interface nsIDocShellTreeItem;
 
-[scriptable, uuid(80F30E10-A7CF-11d3-AFC5-00A024FFC08C)]
+[scriptable, uuid(9e508466-5ebb-4618-abfa-9ad47bed0b2e)]
 interface nsIDocShellTreeOwner : nsISupports
 {
 	/*
@@ -58,9 +58,13 @@ interface nsIDocShellTreeOwner : nsISupports
 	a shell by the specified name.  Inversely the child uses it to ensure it
 	does not ask its parent to do the search if its parent is the one that
 	asked it to search.
+	aOriginalRequestor - The original treeitem that made the request, if any.
+	This is used to ensure that we don't run into cross-site issues.
+
 	*/
 	nsIDocShellTreeItem findItemWithName(in wstring name, 
-		in nsIDocShellTreeItem aRequestor);
+		in nsIDocShellTreeItem aRequestor,
+		in nsIDocShellTreeItem aOriginalRequestor);
 
 	/*
 	Called when a content shell is added to the the docShell Tree.

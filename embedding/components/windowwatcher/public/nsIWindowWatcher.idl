@@ -160,6 +160,10 @@ interface nsIWindowWatcher : nsISupports {
       @param aCurrentWindow a starting point in the window hierarchy to
                             begin the search.  If null, each toplevel window
                             will be searched.
+
+      Note: This method will search all open windows for any window or
+      frame with the given window name. Make sure you understand the
+      security implications of this before using this method!
   */
   nsIDOMWindow getWindowByName(in wstring aTargetName,
                                in nsIDOMWindow aCurrentWindow);

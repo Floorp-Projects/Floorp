@@ -4712,7 +4712,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       const jschar *chars = ::JS_GetStringChars(str);
 
       dsn->FindChildWithName(NS_REINTERPRET_CAST(const PRUnichar*, chars),
-                             PR_FALSE, PR_TRUE, nsnull,
+                             PR_FALSE, PR_TRUE, nsnull, nsnull,
                              getter_AddRefs(child));
 
       nsCOMPtr<nsIDOMWindow> child_win(do_GetInterface(child));
