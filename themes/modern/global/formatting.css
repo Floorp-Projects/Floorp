@@ -142,6 +142,12 @@ text.label {
   margin: 1px 2px 1px 2px;
 }
 
+.plain {
+  margin: 0px;
+  border: none;
+  padding: 0px;
+}
+
 text[disabled="true"] {
   color: #9FA6AE;
 }    
