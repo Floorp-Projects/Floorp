@@ -461,9 +461,6 @@ nsCharsetConverterManager::GetCharsetLangGroupRaw(const char * aCharset,
   nsAutoString langGroup;
   res = GetBundleValue(mDataBundle, alias.get(), NS_LITERAL_STRING(".LangGroup"), langGroup);
 
-  nsCOMPtr<nsIAtom> langGroupAtom = NS_NewAtom(langGroup);
-
-  NS_ADDREF(*aResult = langGroupAtom);
-  
+  *aResult = NS_NewAtom(langGroup);
   return res;
 }
