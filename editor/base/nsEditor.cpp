@@ -4312,8 +4312,9 @@ nsresult nsEditor::BeginUpdateViewBatch()
   NS_PRECONDITION(mUpdateCount>=0, "bad state");
 
   nsCOMPtr<nsIDOMSelection>selection;
-  nsresult selectionResult = GetSelection(getter_AddRefs(selection));
-  if (NS_SUCCEEDED(selectionResult) && selection) {
+  nsresult rv = GetSelection(getter_AddRefs(selection));
+  if (NS_SUCCEEDED(rv) && selection) 
+  {
     selection->StartBatchChanges();
   }
 
@@ -4326,6 +4327,12 @@ nsresult nsEditor::BeginUpdateViewBatch()
 #else
       mViewManager->BeginUpdateViewBatch();
 #endif
+      nsCOMPtr<nsIPresShell> presShell;
+      rv = GetPresShell(getter_AddRefs(presShell));
+      if (NS_SUCCEEDED(rv) && presShell)
+      {
+        presShell->BeginBatchingReflows();
+      }
     }
     mUpdateCount++;
   }
@@ -4362,6 +4369,12 @@ nsresult nsEditor::EndUpdateViewBatch()
 #else
       mViewManager->EndUpdateViewBatch();
 #endif
+      nsCOMPtr<nsIPresShell> presShell;
+      rv = GetPresShell(getter_AddRefs(presShell));
+      if (NS_SUCCEEDED(rv) && presShell)
+      {
+        presShell->EndBatchingReflows(PR_TRUE);
+      }
     }
   }  
 
