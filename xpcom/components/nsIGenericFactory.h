@@ -63,7 +63,7 @@ public:
 extern NS_COM nsresult
 NS_NewGenericFactory(nsIGenericFactory* *result,
                      nsIGenericFactory::ConstructorProcPtr constructor,
-                     nsIGenericFactory::DestructorProcPtr destructor = NULL);
+                     nsIGenericFactory::DestructorProcPtr destructor = nsnull);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Generic Modules
