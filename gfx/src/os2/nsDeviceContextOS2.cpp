@@ -299,6 +299,7 @@ nsresult nsDeviceContextOS2::CreateRenderingContext( nsIRenderingContext *&aCont
    // Defer to Alt when there is one
   if (mAltDC && ((mUseAltDC & kUseAltDCFor_CREATERC_PAINT) || (mUseAltDC & kUseAltDCFor_CREATERC_REFLOW))) {
       return mAltDC->CreateRenderingContext(aContext);  
+  }
 #endif
 
    NS_ASSERTION( mPrintDC, "CreateRenderingContext for non-print DC");
