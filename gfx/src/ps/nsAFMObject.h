@@ -201,7 +201,7 @@ struct fontInformation
   double      mFontBBox_urx;
   double      mFontBBox_ury;
   const char *mVersion;
-  const char *mNotice;
+  char       *mNotice;         // DO NOT MAKE "const" (125341)
   const char *mEncodingScheme;
   PRInt32     mMappingScheme;
   PRInt32     mEscChar;
