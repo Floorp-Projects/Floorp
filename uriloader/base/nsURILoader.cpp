@@ -100,10 +100,6 @@ public:
 protected:
     virtual ~nsDocumentOpenInfo();
     nsDocumentOpenInfo* Clone();
-    // ProcessCanceledCase will do a couple of things....(1) it checks to see if the channel was canceled,
-    // if it was, it will go out and release all of the document open info's local state for this load
-    // and it will return TRUE.
-    PRBool ProcessCanceledCase(nsIRequest *request);
 
 protected:
     nsCOMPtr<nsIURIContentListener> m_contentListener;
@@ -142,33 +138,6 @@ nsDocumentOpenInfo* nsDocumentOpenInfo::Clone()
   }
 
   return newObject;
-}
-
-// ProcessCanceledCase will do a couple of things....(1) it checks to see if the channel was canceled,
-// if it was, it will go out and release all of the document open info's local state for this load
-// and it will return TRUE.
-PRBool nsDocumentOpenInfo::ProcessCanceledCase(nsIRequest *request)
-{
-  PRBool canceled = PR_FALSE;
-  nsresult rv = NS_OK;
-
-  if (request)
-  {
-    request->GetStatus(&rv);
-
-    // if we were aborted or if the js returned no result (i.e. we aren't replacing any window content)
-    if (rv == NS_BINDING_ABORTED || rv == NS_ERROR_DOM_RETVAL_UNDEFINED)
-    {
-      canceled = PR_TRUE;
-      // free any local state for this load since we are aborting it so we 
-      // can break any cycles...
-      m_contentListener = nsnull;
-      m_targetStreamListener = nsnull;
-      m_originalContext = nsnull;
-    }
-  }
-
-  return canceled;
 }
 
 nsresult nsDocumentOpenInfo::Open(nsIChannel *aChannel,  
@@ -235,8 +204,23 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStartRequest(nsIRequest *request, nsISupport
     }
   }
 
-  if (ProcessCanceledCase(request))
+  //
+  // Make sure that the transaction has succeeded, so far...
+  //
+  nsresult status;
+
+  rv = request->GetStatus(&status);
+  
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to get request status!");
+  if (NS_FAILED(rv)) return rv;
+
+  if (NS_FAILED(status)) {
+    //
+    // The transaction has already reported an error - so it will be torn
+    // down. Therefore, it is not necessary to return an error code...
+    //
     return NS_OK;
+  }
 
   rv = DispatchContent(request, aCtxt);
   if (m_targetStreamListener)
@@ -252,9 +236,6 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnDataAvailable(nsIRequest *request, nsISuppor
 
   nsresult rv = NS_OK;
   
-  if (ProcessCanceledCase(request))
-    return NS_OK;
-
   if (m_targetStreamListener)
     rv = m_targetStreamListener->OnDataAvailable(request, aCtxt, inStr, sourceOffset, count);
   return rv;
@@ -270,6 +251,10 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStopRequest(nsIRequest *request, nsISupports
     m_targetStreamListener = 0;
     listener->OnStopRequest(request, aCtxt, aStatus);
   }
+
+  // don't need these any more...
+  m_contentListener = nsnull;
+  m_originalContext = nsnull;
 
   return NS_OK;
 }
