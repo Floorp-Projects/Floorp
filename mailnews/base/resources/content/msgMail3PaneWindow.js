@@ -40,24 +40,9 @@ messageView = messageView.QueryInterface(Components.interfaces.nsIMessageView);
 /* Functions related to startup */
 function OnLoadMessenger()
 {
-	var pref = Components.classes['component://netscape/preferences'];
-	var startpage = "about:blank";
 
-	if (pref) {
-          pref = pref.getService();
-        }
-        if (pref) {
-          pref = pref.QueryInterface(Components.interfaces.nsIPref);
-        }
-	if (pref) {
-		startpageenabled= pref.GetBoolPref("mailnews.start_page.enabled");
-		if (startpageenabled) {
-			startpage = pref.CopyCharPref("mailnews.start_page.url");
-		}
-	}
+    loadStartPage();
 	messenger.SetWindow(window, statusFeedback);
-	dump("start message pane with: " + startpage + "\n");
-	window.frames["messagepane"].location = startpage;
 
 	AddDataSources();
 	InitPanes();
@@ -81,6 +66,30 @@ function OnUnloadMessenger()
 {
 	dump("\nOnUnload from XUL\nClean up ...\n");
 	messenger.OnUnload();
+}
+
+function loadStartPage() {
+
+	var pref = Components.classes['component://netscape/preferences'];
+	var startpage = "about:blank";
+
+    if (!pref) return;
+
+    try {
+        pref = pref.getService(Components.interfaces.nsIPref);
+
+		startpageenabled= pref.GetBoolPref("mailnews.start_page.enabled");
+        
+		if (startpageenabled)
+			startpage = pref.CopyCharPref("mailnews.start_page.url");
+        window.frames["messagepane"].location = startpage;
+
+        dump("start message pane with: " + startpage + "\n");
+	}
+    catch (ex) {
+        dump("Error loading start page.\n");
+        return;
+    }
 }
 
 function AddDataSources()
