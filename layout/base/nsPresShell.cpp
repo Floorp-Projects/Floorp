@@ -55,6 +55,7 @@
 #include "nsCRT.h"
 #include "prlog.h"
 #include "prmem.h"
+#include "prprf.h"
 #include "prinrval.h"
 #include "nsVoidArray.h"
 #include "nsHashtable.h"
@@ -7890,25 +7891,9 @@ void ReflowCountMgr::DisplayDiffsInTotals(const char * aStr)
 // make a color string like #RRGGBB
 void ColorToString(nscolor aColor, nsAutoString &aString)
 {
-  nsAutoString tmp;
-  aString.SetLength(0);
+  char buf[8];
 
-  // #
-  aString.Append(NS_LITERAL_STRING("#"));
-  // RR
-  tmp.AppendInt((PRInt32)NS_GET_R(aColor), 16);
-  if (tmp.Length() < 2) tmp.AppendInt(0,16);
-  aString.Append(tmp);
-  tmp.SetLength(0);
-  // GG
-  tmp.AppendInt((PRInt32)NS_GET_G(aColor), 16);
-  if (tmp.Length() < 2) tmp.AppendInt(0,16);
-  aString.Append(tmp);
-  tmp.SetLength(0);
-  // BB
-  tmp.AppendInt((PRInt32)NS_GET_B(aColor), 16);
-  if (tmp.Length() < 2) tmp.AppendInt(0,16);
-  aString.Append(tmp);
+  PR_snprintf(buf, sizeof(buf), "#%02x%02x%02x",
+              NS_GET_R(aColor), NS_GET_G(aColor), NS_GET_B(aColor));
+  CopyASCIItoUTF16(buf, aString);
 }
-
-
