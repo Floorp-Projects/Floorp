@@ -1863,7 +1863,7 @@ function setCurrentObject (obj)
     {
         /* Remove currently selected items before this tree gets rerooted,
          * because it seems to remember the selections for eternity if not. */
-        if (userList.view.selection)
+        if (userList.view && userList.view.selection)
             userList.view.selection.select(-1);
 
         if (obj.TYPE == "IRCChannel")
