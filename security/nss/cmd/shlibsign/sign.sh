@@ -1,6 +1,6 @@
 #!/bin/sh
 if [ ${3} = "YES" ]; then
-    if test `echo "${PATH}" | grep -c \;` != 0; then
+    if echo "${PATH}" | grep -c \; >/dev/null; then
         PATH=${PATH}\;${1}/bin\;${1}/lib
     else
         PATH=${PATH}:${1}/bin:${1}/lib
