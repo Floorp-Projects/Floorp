@@ -107,7 +107,7 @@ END
 sub Send($;$) {
     my ($id, $recipients) = (@_);
 
-    # This doesn't work if its not in a sub. Probably something to do with the
+    # This only works in a sub. Probably something to do with the
     # require abuse we do.
     GetVersionTable();
 
@@ -510,10 +510,10 @@ sub getEmailAttributes (\%\@$) {
             push (@flags, 'CC');
         }
 
-        # These next few lines are for finding out who's been added
-        # to the Owner, QA, CC, etc. fields.  It does not effect
-        # the @flags array at all, but is run here because it does
-        # effect filtering later and we're already in the loop.
+        # These next few lines find out who has been added
+        # to the Owner, QA, CC, etc. fields.  They do not affect
+        # the @flags array at all, but are run here because they
+        # affect filtering later and we're already in the loop.
         if ($fieldName eq 'AssignedTo') {
             push (@{$force{'Owner'}}, $new);
         } elsif ($fieldName eq 'QAcontact') {
@@ -555,9 +555,9 @@ sub getEmailAttributes (\%\@$) {
 
 sub filterEmailGroup ($$$) {
     # This function figures out who should receive email about the bug
-    # based on the user's role with regard to the bug (assignee, reporter 
+    # based on the user's role with respect to the bug (assignee, reporter, 
     # etc.), the changes that occurred (new comments, attachment added, 
-    # status changed etc.) and the user's email preferences.
+    # status changed, etc.) and the user's email preferences.
     
     # Returns a filtered list of those users who would receive email
     # about these changes, and adds the names of those users who would
@@ -569,7 +569,7 @@ sub filterEmailGroup ($$$) {
     my @users = split( /,/ , $users );
     
     # Treat users who are in the process of being removed from this role
-    # as if they were still in it.
+    # as if they still have it.
     push @users, @{$force{$role}};
 
     # If this installation supports user watching, add to the list those
@@ -599,7 +599,7 @@ sub filterEmailGroup ($$$) {
         # (no idea why unregistered users should even be on this list,
         # but the code that was here before I re-wrote it allows this),
         # then we do not have any preferences for them, so assume the
-        # default preference to receive all mail for any reason.
+        # default preference is to receive all mail.
         my $userid = DBname_to_id($user);
         if (!$userid) {
             push(@recipients, $user);
@@ -610,10 +610,10 @@ sub filterEmailGroup ($$$) {
         SendSQL("SELECT emailflags FROM profiles WHERE userid = $userid");
         my $prefs = FetchOneColumn();
         
-        # If the user's preferences are empty, assume the default preference 
-        # to receive all mail.  This happens when the installation upgraded
-        # from a version of Bugzilla without email preferences to one with
-        # them, but the user has not set their preferences yet.
+        # If the user's preferences are empty, it means the user has not set
+        # their mail preferences after the installation upgraded from a
+        # version of Bugzilla without email preferences to one with them. In
+        # this case, assume they want to receive all mail.
         if (!defined($prefs) || $prefs !~ /email/) {
             push(@recipients, $user);
             next;
@@ -725,7 +725,7 @@ sub NewProcessOnePerson ($$$$$$$$$$$$$) {
                (!$user->groups->{Param("insidergroup")}));
 
     # We shouldn't send changedmail if this is a dependency mail, and any of 
-    # the depending bugs is not visible to the user.
+    # the depending bugs are not visible to the user.
     foreach my $dep_id (@depbugs) {
         my $save_id = $dep_id;
         detaint_natural($dep_id) || warn("Unexpected Error: \@depbugs contains a non-numeric value: '$save_id'")
@@ -744,7 +744,7 @@ sub NewProcessOnePerson ($$$$$$$$$$$$$) {
         if (! $value) {
           next;
         }
-        # Don't send estimated_time if user not in the group, or not enabled
+        # Only send estimated_time if it is enabled and the user is in the group
         if ($f ne 'estimated_time' ||
             $user->groups->{Param('timetrackinggroup')}) {
 
