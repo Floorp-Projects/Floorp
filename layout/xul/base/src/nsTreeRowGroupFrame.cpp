@@ -31,6 +31,7 @@
 #include "nsIStyleContext.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsIContent.h"
+#include "nsIXULContent.h"
 #include "nsCSSRendering.h"
 #include "nsTreeCellFrame.h"
 #include "nsCellMap.h"
@@ -1590,6 +1591,10 @@ void nsTreeRowGroupFrame::CreateScrollbar(nsIPresContext* aPresContext)
 
     nsCOMPtr<nsIContent> content = do_QueryInterface(node);
     content->SetParent(mContent);
+
+    nsCOMPtr<nsIXULContent> xulContent = do_QueryInterface(content);
+    if (xulContent)
+      xulContent->SetAnonymousState(PR_TRUE); // Mark as anonymous to keep events from getting out.
     
     nsCOMPtr<nsIAtom> align = dont_AddRef(NS_NewAtom("align"));
     content->SetAttribute(kNameSpaceID_None, align, "vertical", PR_FALSE);
