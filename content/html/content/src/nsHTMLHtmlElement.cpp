@@ -26,13 +26,14 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
+#include "nsIDocument.h"
 
 static NS_DEFINE_IID(kIDOMHTMLHtmlElementIID, NS_IDOMHTMLHTMLELEMENT_IID);
 
 class nsHTMLHtmlElement : public nsIDOMHTMLHtmlElement,
-                   public nsIScriptObjectOwner,
-                   public nsIDOMEventReceiver,
-                   public nsIHTMLContent
+                          public nsIScriptObjectOwner,
+                          public nsIDOMEventReceiver,
+                          public nsIHTMLContent
 {
 public:
   nsHTMLHtmlElement(nsIAtom* aTag);
@@ -126,16 +127,16 @@ NS_IMPL_STRING_ATTR(nsHTMLHtmlElement, Version, version, eSetAttrNotify_None)
 
 NS_IMETHODIMP
 nsHTMLHtmlElement::StringToAttribute(nsIAtom* aAttribute,
-                              const nsString& aValue,
-                              nsHTMLValue& aResult)
+                                     const nsString& aValue,
+                                     nsHTMLValue& aResult)
 {
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
 NS_IMETHODIMP
 nsHTMLHtmlElement::AttributeToString(nsIAtom* aAttribute,
-                              nsHTMLValue& aValue,
-                              nsString& aResult) const
+                                     nsHTMLValue& aValue,
+                                     nsString& aResult) const
 {
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
@@ -155,14 +156,17 @@ nsHTMLHtmlElement::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) co
   return NS_OK;
 }
 
-
 NS_IMETHODIMP
 nsHTMLHtmlElement::HandleDOMEvent(nsIPresContext& aPresContext,
-                           nsEvent* aEvent,
-                           nsIDOMEvent** aDOMEvent,
-                           PRUint32 aFlags,
-                           nsEventStatus& aEventStatus)
+                                  nsEvent* aEvent,
+                                  nsIDOMEvent** aDOMEvent,
+                                  PRUint32 aFlags,
+                                  nsEventStatus& aEventStatus)
 {
-  return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                               aFlags, aEventStatus);
+  if (nsnull != mInner.mDocument) {
+    return mInner.mDocument->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
+                                            aFlags, aEventStatus);
+  }
+  aEventStatus = nsEventStatus_eIgnore;
+  return NS_OK;
 }
