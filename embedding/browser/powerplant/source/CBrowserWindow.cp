@@ -1,3 +1,24 @@
+/* -*- Mode: C++; tab-width: 3; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is the Mozilla browser.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications, Inc.  Portions created by Netscape are
+ * Copyright (C) 1999, Mozilla.  All Rights Reserved.
+ * 
+ * Contributor(s):
+ *   Conrad Carlen <conrad@ingress.com>
+ */
 
 #include "nsString.h"
 #include "nsWidgetsCID.h"
@@ -18,6 +39,7 @@
 #include <LStaticText.h>
 #include <LWindowHeader.h>
 #include <LBevelButton.h>
+#include <LProgressBar.h>
 
 // CBrowserWindow:
 // A simple browser window that hooks up a CWebShell to a minimal set of controls
@@ -26,13 +48,14 @@
 
 enum
 {
-	paneID_BackButton		= 'Back'
-,	paneID_ForwardButton	= 'Forw'
-,	paneID_StopButton		= 'Stop'
-,	paneID_URLField			= 'gUrl'
-,	paneID_WebShellView		= 'WebS'
-,	paneID_StatusBar		= 'Stat'
-,	paneID_Throbber	   = 'THRB'
+	paneID_BackButton		= 'Back',
+	paneID_ForwardButton	= 'Forw',
+	paneID_StopButton		= 'Stop',
+	paneID_URLField		= 'gUrl',
+	paneID_WebShellView	= 'WebS',
+	paneID_StatusBar		= 'Stat',
+	paneID_Throbber	   = 'THRB',
+   paneID_ProgressBar   = 'Prog'
 };
 
 // CIDs
@@ -45,7 +68,8 @@ static NS_DEFINE_IID(kWindowCID, NS_WINDOW_CID);
 CBrowserWindow::CBrowserWindow() :
    mBrowserShell(NULL), mBrowserChrome(NULL),
    mURLField(NULL), mStatusBar(NULL), mThrobber(NULL),
-   mBackButton(NULL), mForwardButton(NULL), mStopButton(NULL)
+   mBackButton(NULL), mForwardButton(NULL), mStopButton(NULL),
+   mProgressBar(NULL)
 {
 	nsresult rv = CommonConstruct();
 	if (NS_FAILED(rv))
@@ -62,7 +86,8 @@ CBrowserWindow::CBrowserWindow(LStream*	inStream)
 	: LWindow(inStream),
    mBrowserShell(NULL), mBrowserChrome(NULL),
    mURLField(NULL), mStatusBar(NULL), mThrobber(NULL),
-   mBackButton(NULL), mForwardButton(NULL), mStopButton(NULL)
+   mBackButton(NULL), mForwardButton(NULL), mStopButton(NULL),
+   mProgressBar(NULL)
 {
 	nsresult rv = CommonConstruct();
 	if (NS_FAILED(rv))
@@ -78,7 +103,8 @@ CBrowserWindow::~CBrowserWindow()
 {
    if (mBrowserChrome)
    {
-      mBrowserChrome->BrowserWindow(NULL);
+      mBrowserChrome->BrowserShell() = nsnull;
+      mBrowserChrome->BrowserWindow() = nsnull;
       NS_RELEASE(mBrowserChrome);
    }
 }
@@ -96,7 +122,7 @@ NS_IMETHODIMP CBrowserWindow::CommonConstruct()
    mBrowserChrome = new CWebBrowserChrome;
    NS_ENSURE_TRUE(mBrowserChrome, NS_ERROR_OUT_OF_MEMORY);
    NS_ADDREF(mBrowserChrome);
-   mBrowserChrome->BrowserWindow(this);
+   mBrowserChrome->BrowserWindow() = this;
    
    return NS_OK;
 }
@@ -128,12 +154,10 @@ void CBrowserWindow::FinishCreateSelf()
 	mBrowserShell = dynamic_cast<CBrowserShell*>(FindPaneByID(paneID_WebShellView));
 	ThrowIfNULL_(mBrowserShell);  // Curtains if we don't have this
 	
-	// Tell our CBrowserShell about ourself 
+	// Tell our CBrowserShell about the chrome 
 	mBrowserShell->SetTopLevelWindow(mBrowserChrome);
-	// Tell the chrome about the nsIWebBrowser
-	nsCOMPtr<nsIWebBrowser> webBrowser;
-	mBrowserShell->GetWebBrowser(getter_AddRefs(webBrowser));
-	mBrowserChrome->SetWebBrowser(webBrowser);
+	// Tell our chrome about the CBrowserShell 
+	mBrowserChrome->BrowserShell() = mBrowserShell;
 	
 	// Find our subviews - When we have a way of creating this
 	// window with various chrome flags, we may or may not have
@@ -144,6 +168,9 @@ void CBrowserWindow::FinishCreateSelf()
 
 	mStatusBar = dynamic_cast<LStaticText*>(FindPaneByID(paneID_StatusBar));
 	mThrobber = dynamic_cast<CThrobber*>(FindPaneByID(paneID_Throbber));
+	mProgressBar = dynamic_cast<LProgressBar*>(FindPaneByID(paneID_ProgressBar));
+	if (mProgressBar)
+	   mProgressBar->Hide();
 	
 	mBackButton = dynamic_cast<LBevelButton*>(FindPaneByID(paneID_BackButton));
 	if (mBackButton)
@@ -319,9 +346,14 @@ NS_METHOD CBrowserWindow::SetLocation(const nsString& aLocation)
    return NS_OK;
 }
 
-NS_METHOD CBrowserWindow::OnStatusNetStart(nsIChannel *aChannel)
+NS_METHOD CBrowserWindow::OnStatusNetStart(nsIWebProgress *progress, nsIRequest *request,
+                                           PRInt32 progressStateFlags, PRUint32 status)
 {
-	// Stop the throbber
+	if (mProgressBar) {
+	   mProgressBar->Show();
+	   mProgressBar->SetIndeterminateFlag(true, true);
+   }
+   
 	if (mThrobber)
 		mThrobber->Start();
 
@@ -337,12 +369,18 @@ NS_METHOD CBrowserWindow::OnStatusNetStart(nsIChannel *aChannel)
    return NS_OK;
 }
 
-NS_METHOD CBrowserWindow::OnStatusNetStop(nsIChannel *aChannel)
+NS_METHOD CBrowserWindow::OnStatusNetStop(nsIWebProgress *progress, nsIRequest *request,
+                                          PRInt32 progressStateFlags, PRUint32 status)
 {
-	// Stop the throbber
 	if (mThrobber)
 		mThrobber->Stop();
 		
+	if (mProgressBar) {
+	   if (mProgressBar->IsIndeterminate())
+	      mProgressBar->Stop();
+	   mProgressBar->Hide();
+	}
+	
 	// Enable back, forward, stop
 	if (mBackButton)
 		mBrowserShell->CanGoBack() ? mBackButton->Enable() : mBackButton->Disable();
@@ -360,7 +398,24 @@ NS_METHOD CBrowserWindow::OnStatusNetStop(nsIChannel *aChannel)
    return NS_OK;
 }
 
-NS_METHOD CBrowserWindow::OnStatusDNS(nsIChannel *aChannel)
+
+NS_METHOD CBrowserWindow::OnProgressChange(nsIWebProgress *progress, nsIRequest *request,
+                                           PRInt32 curSelfProgress, PRInt32 maxSelfProgress, 
+                                           PRInt32 curTotalProgress, PRInt32 maxTotalProgress)
 {
+   if (mProgressBar) {
+      if (maxTotalProgress != -1 && mProgressBar->IsIndeterminate())
+         mProgressBar->SetIndeterminateFlag(false, false);
+      else if (maxTotalProgress == -1 && !mProgressBar->IsIndeterminate())
+         mProgressBar->SetIndeterminateFlag(true, true);
+      
+      if (!mProgressBar->IsIndeterminate()) {
+         PRInt32 aMax = max(0, maxTotalProgress);
+         PRInt32 aVal = min(aMax, max(0, curTotalProgress));
+         mProgressBar->SetMaxValue(aMax);
+         mProgressBar->SetValue(aVal);
+      }
+   }
    return NS_OK;
 }
+  
