@@ -98,7 +98,7 @@ function openit()  {
 	var	windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
 
     
-	var topWindowOfType = windowManagerInterface.GetMostRecentWindow( "navigator:browser" );
+	var topWindowOfType = windowManagerInterface.getMostRecentWindow( "navigator:browser" );
 	if ( topWindowOfType )
 	{
 		var inputfield = document.getElementById(prefID);
