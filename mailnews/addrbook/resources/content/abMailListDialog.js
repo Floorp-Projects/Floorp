@@ -444,6 +444,10 @@ function awAppendNewRow(setFocus)
     if ( input && input.length == 1 )
     {
       input[0].setAttribute("value", "");
+      // XXX TODO
+      // band-aid for bug #190153 which was caused by a
+      // band-aid for #90337
+      input[0].value = "";
       input[0].setAttribute("id", "addressCol1#" + top.MAX_RECIPIENTS);
       
       if (input[0].getAttribute('focused') != '')
