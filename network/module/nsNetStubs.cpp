@@ -2300,13 +2300,21 @@ uint32    INTL_TextToUnicodeLen(
     return 0;
 }
 
-
-
-
-
 /*
  * Random libnet functions...
  */
+NET_StreamClass *
+NET_NewStream          (char                 *name,
+                        MKStreamWriteFunc     process,
+                        MKStreamCompleteFunc  complete,
+                        MKStreamAbortFunc     abort,
+                        MKStreamWriteReadyFunc ready,
+                        void                 *streamData,
+                        MWContext            *windowID)
+{
+    return NULL;
+}
+
 #ifdef DEBUG
 MODULE_PRIVATE void
 NET_DisplayStreamInfoAsHTML(ActiveEntry *cur_entry)
