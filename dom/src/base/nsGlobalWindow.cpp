@@ -4994,6 +4994,7 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
 
     nsTimeoutImpl *last_running_timeout = mRunningTimeout;
     mRunningTimeout = timeout;
+    timeout->mRunning = PR_TRUE;
 
     // Hold on to the timeout in case mExpr or mFunObj releases its
     // doc.
@@ -5032,6 +5033,7 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
 
     --mTimeoutFiringDepth;
     mRunningTimeout = last_running_timeout;
+    timeout->mRunning = PR_FALSE;
 
     // We ignore any failures from calling EvaluateString() or
     // CallEventHandler() on the context here since we're in a loop
@@ -5292,10 +5294,10 @@ GlobalWindowImpl::ClearTimeoutOrInterval()
 
   for (top = &mTimeouts; (timeout = *top) != NULL; top = &timeout->mNext) {
     if (timeout->mPublicId == public_id) {
-      if (mRunningTimeout == timeout) {
+      if (timeout->mRunning) {
         /* We're running from inside the timeout. Mark this
            timeout for deferred deletion by the code in
-           win_run_timeout() */
+           RunTimeout() */
         timeout->mInterval = 0;
       }
       else {
