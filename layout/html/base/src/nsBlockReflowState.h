@@ -3822,7 +3822,12 @@ nsBlockFrame::SplitLine(nsBlockReflowState& aState,
   if (gNoisyReflow) {
     nsFrame::IndentBy(stdout, gNoiseIndent);
     printf("split line: from line=%p pushCount=%d aFrame=", aLine, pushCount);
-    nsFrame::ListTag(stdout, aFrame);
+    if (aFrame) {
+      nsFrame::ListTag(stdout, aFrame);
+    }
+    else {
+      printf("(null)");
+    }
     printf("\n");
     if (gReallyNoisyReflow) {
       aLine->List(aState.mPresContext, stdout, gNoiseIndent+1);

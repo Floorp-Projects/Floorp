@@ -2818,6 +2818,8 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
     }
   }
 
+  PRBool firstThing = PR_TRUE;
+  PRBool textStartsWithNBSP = PR_FALSE;
   for (;;) {
     // Get next word/whitespace from the text
     PRBool isWhitespace;
@@ -2886,8 +2888,16 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
         }
         lastWordWidth = width;
       }
+
+      // See if the first thing in the section of text is a
+      // non-breaking space (html nbsp entity). If it is then make
+      // note of that fact for the line layout logic.
+      if (wrapping && firstThing && (bp[0] == ' ')) {
+        textStartsWithNBSP = PR_TRUE;
+      }
       skipWhitespace = PR_FALSE;
     }
+    firstThing = PR_FALSE;
 
     // See if there is room for the text
     if (measureText) {
@@ -3050,6 +3060,7 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
   // text object collapsed into nothingness which means it shouldn't
   // effect the current setting of the ends-in-whitespace flag.
   lineLayout.SetUnderstandsWhiteSpace(PR_TRUE);
+  lineLayout.SetTextStartsWithNBSP(textStartsWithNBSP);
   if (0 != x) {
     lineLayout.SetEndsInWhiteSpace(endsInWhitespace);
   }
