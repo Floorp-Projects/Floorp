@@ -40,7 +40,6 @@ nsRegionGTK::nsRegionGTK()
 #endif
 
   mRegion = nsnull;
-  mRegionType = eRegionComplexity_empty;
 }
 
 nsRegionGTK::~nsRegionGTK()
@@ -63,7 +62,6 @@ nsresult nsRegionGTK::Init(void)
     gdk_region_destroy(mRegion);
   }
   mRegion = ::gdk_region_new();
-  mRegionType = eRegionComplexity_empty;
   return NS_OK;
 }
 
