@@ -52,6 +52,9 @@ class nsHTTPChannel;
 #define TRANSPORT_REUSE_ALIVE   1
 #define TRANSPORT_OPEN_ALWAYS   2
 
+#define DEFAULT_KEEP_ALIVE_TIMEOUT  (2 * 60)
+#define MAX_NUMBER_OF_OPEN_TRANSPORTS 8
+
 class nsHTTPHandler : public nsIHTTPProtocolHandler
 {
 public:
@@ -112,6 +115,7 @@ protected:
     nsAuthEngine        mAuthEngine;
     PRBool              mDoKeepAlive;
     PRInt32             mKeepAliveTimeout;
+    PRInt32             mMaxConnections;
     nsCOMPtr<nsIPref>   mPrefs;
     nsCOMPtr<nsIProtocolProxyService>       mProxySvc;
     PRUint32            mReferrerLevel;
