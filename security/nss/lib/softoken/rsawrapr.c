@@ -33,7 +33,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: rsawrapr.c,v 1.4 2001/11/30 23:29:31 relyea%netscape.com Exp $
+ * $Id: rsawrapr.c,v 1.5 2003/11/07 03:38:59 relyea%netscape.com Exp $
  */
 
 #include "blapi.h"
@@ -218,6 +218,10 @@ rsa_FormatOneBlock(unsigned modulusLen, RSA_BlockType blockType,
 	 */
 	padLen = modulusLen - data->len - 3;
 	PORT_Assert (padLen >= RSA_BLOCK_MIN_PAD_LEN);
+	if (padLen < RSA_BLOCK_MIN_PAD_LEN) {
+	    PORT_Free (block);
+	    return NULL;
+	}
 	PORT_Memset (bp,
 		   blockType == RSA_BlockPrivate0
 			? RSA_BLOCK_PRIVATE0_PAD_OCTET
@@ -240,6 +244,10 @@ rsa_FormatOneBlock(unsigned modulusLen, RSA_BlockType blockType,
 	 */
 	padLen = modulusLen - data->len - 3;
 	PORT_Assert (padLen >= RSA_BLOCK_MIN_PAD_LEN);
+	if (padLen < RSA_BLOCK_MIN_PAD_LEN) {
+	    PORT_Free (block);
+	    return NULL;
+	}
 	for (i = 0; i < padLen; i++) {
 	    /* Pad with non-zero random data. */
 	    do {

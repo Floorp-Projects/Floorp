@@ -1256,7 +1256,72 @@ pk11_FindAttribute(PK11Object *object,CK_ATTRIBUTE_TYPE type)
     return(attribute);
 }
 
+/*
+ * Take a buffer and it's length and return it's true size in bits;
+ */
+unsigned int
+pk11_GetLengthInBits(unsigned char *buf, unsigned int bufLen)
+{
+    unsigned int size = bufLen * 8;
+    int i;
+    /* Get the real length in bytes */
+    for (i=0; i < bufLen; i++) {
+	unsigned char  c = *buf++;
+	if (c != 0) {
+	    unsigned char m;
+	    for (m=0x80; m > 0 ;  m = m >> 1) {
+		if ((c & m) != 0) {
+		    break;
+		} 
+		size--;
+	    }
+	    break;
+	}
+	size-=8;
+    }
+    return size;
+}
 
+/*
+ * Constrain a big num attribute. to size and padding
+ * minLength means length of the object must be greater than equal to minLength
+ * maxLength means length of the object must be less than equal to maxLength
+ * minMultiple means that object length mod minMultiple must equal 0.
+ * all input sizes are in bits.
+ * if any constraint is '0' that constraint is not checked.
+ */
+CK_RV
+pk11_ConstrainAttribute(PK11Object *object, CK_ATTRIBUTE_TYPE type, 
+			int minLength, int maxLength, int minMultiple)
+{
+    PK11Attribute *attribute;
+    unsigned int size;
+    unsigned char *ptr;
+    int i,j;
+
+    attribute = pk11_FindAttribute(object, type);
+    if (!attribute) {
+	return CKR_TEMPLATE_INCOMPLETE;
+    }
+    ptr = (unsigned char *) attribute->attrib.pValue;
+    if (ptr == NULL) {
+	pk11_FreeAttribute(attribute);
+	return CKR_ATTRIBUTE_VALUE_INVALID;
+    }
+    size = pk11_GetLengthInBits(ptr, attribute->attrib.ulValueLen);
+    pk11_FreeAttribute(attribute);
+
+    if ((minLength != 0) && (size <  minLength)) {
+	return CKR_ATTRIBUTE_VALUE_INVALID;
+    }
+    if ((maxLength != 0) && (size >  maxLength)) {
+	return CKR_ATTRIBUTE_VALUE_INVALID;
+    }
+    if ((minMultiple != 0) && ((size % minMultiple) != 0)) {
+	return CKR_ATTRIBUTE_VALUE_INVALID;
+    }
+    return CKR_OK;
+}
 
 PRBool
 pk11_hasAttributeToken(PK11TokenObject *object)
