@@ -21,6 +21,9 @@
 
 #include "nsISpaceManager.h"
 
+// Number of builtin nsBandTrapezoid's
+#define NS_BLOCK_BAND_DATA_TRAPS 6
+
 /**
  * Class used to manage processing of the space-manager band data.
  * Provides HTML/CSS specific behavior to the raw data.
@@ -71,7 +74,7 @@ protected:
   nsSize mSpace;
 
   // Trapezoids used during band processing
-  nsBandTrapezoid mData[12];
+  nsBandTrapezoid mData[NS_BLOCK_BAND_DATA_TRAPS];
 
   // Bounding rect of available space between any left and right floaters
   nsRect mAvailSpace;

@@ -28,7 +28,7 @@ nsBlockBandData::nsBlockBandData()
     mSpaceManagerY(0),
     mSpace(0, 0)
 {
-  mSize = 12;
+  mSize = NS_BLOCK_BAND_DATA_TRAPS;
   mTrapezoids = mData;
 }
 
