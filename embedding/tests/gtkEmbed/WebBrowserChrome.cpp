@@ -57,7 +57,7 @@ NS_INTERFACE_MAP_BEGIN(WebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
-   NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
+   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserSiteWindow)
    NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)  //optional
 //   NS_INTERFACE_MAP_ENTRY(nsIPrompt)
 NS_INTERFACE_MAP_END
@@ -262,20 +262,8 @@ WebBrowserChrome::OnSecurityChange(nsIWebProgress *aWebProgress,
 
 
 //*****************************************************************************
-// WebBrowserChrome::nsIBaseWindow
+// WebBrowserChrome::nsIWebBrowserSiteWindow
 //*****************************************************************************   
-
-NS_IMETHODIMP WebBrowserChrome::InitWindow(nativeWindow aParentNativeWindow,
-   nsIWidget* parentWidget, PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy)   
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP WebBrowserChrome::Create()
-{
-   NS_ASSERTION(PR_FALSE, "You can't call this");
-   return NS_ERROR_UNEXPECTED;
-}
 
 NS_IMETHODIMP WebBrowserChrome::Destroy()
 {
@@ -313,63 +301,9 @@ NS_IMETHODIMP WebBrowserChrome::GetPositionAndSize(PRInt32* x, PRInt32* y, PRInt
     return mBaseWindow->GetPositionAndSize(x, y, cx, cy);
 }
 
-NS_IMETHODIMP WebBrowserChrome::Repaint(PRBool aForce)
-{
-   return mBaseWindow->Repaint(aForce);
-}
-
-NS_IMETHODIMP WebBrowserChrome::GetParentWidget(nsIWidget** aParentWidget)
-{
-   NS_ENSURE_ARG_POINTER(aParentWidget);
-
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
-   return NS_OK;
-}
-
-NS_IMETHODIMP WebBrowserChrome::SetParentWidget(nsIWidget* aParentWidget)
-{
-   NS_ASSERTION(PR_FALSE, "You can't call this");
-   return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP WebBrowserChrome::GetParentNativeWindow(nativeWindow* aParentNativeWindow)
-{
-   NS_ENSURE_ARG_POINTER(aParentNativeWindow);
-
-   *aParentNativeWindow = mNativeWindow;
-   return NS_OK;
-}
-
-NS_IMETHODIMP WebBrowserChrome::SetParentNativeWindow(nativeWindow aParentNativeWindow)
-{
-   mNativeWindow = aParentNativeWindow;
-   return NS_OK;
-}
-
-NS_IMETHODIMP WebBrowserChrome::GetVisibility(PRBool* aVisibility)
-{
-   return mBaseWindow->GetVisibility(aVisibility);
-}
-
-NS_IMETHODIMP WebBrowserChrome::SetVisibility(PRBool aVisibility)
-{   
-   return mBaseWindow->SetVisibility(aVisibility);
-}
-
-NS_IMETHODIMP WebBrowserChrome::GetMainWidget(nsIWidget** aMainWidget)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 NS_IMETHODIMP WebBrowserChrome::SetFocus()
 {
    return mBaseWindow->SetFocus();
-}
-
-NS_IMETHODIMP WebBrowserChrome::FocusAvailable(nsIBaseWindow* aCurrentFocus, 
-   PRBool* aTookFocus)
-{
-   return mBaseWindow->FocusAvailable(aCurrentFocus, aTookFocus);
 }
 
 NS_IMETHODIMP WebBrowserChrome::GetTitle(PRUnichar** aTitle)
@@ -385,3 +319,11 @@ NS_IMETHODIMP WebBrowserChrome::SetTitle(const PRUnichar* aTitle)
 {
    return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+NS_IMETHODIMP WebBrowserChrome::GetSiteWindow(void ** aSiteWindow)
+{
+   NS_ENSURE_ARG_POINTER(aSiteWindow);
+   *aSiteWindow = mNativeWindow;
+   return NS_OK;
+}
+
