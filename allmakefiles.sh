@@ -1374,6 +1374,7 @@ MAKEFILES_calendar="
         calendar/Makefile
         calendar/libxpical/Makefile
         calendar/resources/Makefile
+        calendar/resources/locale/Makefile
 	other-licenses/libical/Makefile
 	other-licenses/libical/src/Makefile
 	other-licenses/libical/src/libical/Makefile
