@@ -38,7 +38,7 @@ you'd like to see.
 }
 
 
-set fid [open "|./data/ldapsearch -b \"o=Netscape Communications Corp.,c=US\" -h $ldapserver -p $ldapport -s sub \"(mail=$FORM(person)@netscape.com)\" cn" r]
+set fid [open "|./data/ldapsearch -b \"dc=netscape,dc=com\" -h $ldapserver -p $ldapport -s sub \"(mail=$FORM(person)@netscape.com)\" cn" r]
 
 while {[gets $fid line] >= 0} {
     if {[regexp -- {^cn: (.*)$} $line foo n]} {
@@ -72,7 +72,7 @@ you'd like to see.
 
 
 puts "Content-type: text/html
-Refresh: 0; URL=http://phonebook/cgi-bin/expand-entry.pl?fullname=[url_quote "$fullname,o=Netscape Communications Corp.,c=US"]
+Refresh: 0; URL=http://phonebook/cgi-bin/expand-entry.pl?fullname=[url_quote "$fullname,dc=netscape,dc=com"]
 
 <HTML>
 <TITLE>What a hack.</TITLE>

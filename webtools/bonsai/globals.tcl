@@ -28,7 +28,7 @@ set cocommand /tools/ns/bin/co
 set lxr_base http://cvs-mirror.mozilla.org/webtools/lxr/source
 set mozilla_lxr_kludge TRUE
 
-set ldapserver directory.mcom.com
+set ldapserver nsdirectory.mcom.com
 # set ldapserver hoth.mcom.com
 set ldapport 389
 
@@ -44,6 +44,27 @@ if {![info exists env(TZ)] || [cequal $env(TZ) ""]} {
 # numbers that appear in the system.
 set BUGSYSTEMEXPR {<A HREF="http://scopus/bugsplat/show_bug.cgi?id=&">&</A>}
 set treeid {default}
+
+
+if {[info exists tcl_version] && $tcl_version >= 8.0} {
+    # The below tclX functions moved into the main TCL codebase in version 8,
+    # but their names changed.  So, we cope.  Note that these conversion
+    # routines only cover Bonsai's current use of these routines, not all
+    # possible uses.
+    proc getclock {} {
+        return [clock seconds]
+    }
+    proc convertclock {str args} {
+        if {[lindex $args 0] == "GMT"} {
+            return [clock scan $str -gmt 1]
+        }
+        return [clock scan $str]
+    }
+    proc fmtclock {date args} {
+    }
+}
+    
+
 
 proc NOTDEF {foo} {
 }
@@ -442,7 +463,7 @@ proc GenerateProfileHTML {name} {
         set value($n) ""
     }
 
-    if {[catch {set fid [open "|./data/ldapsearch -b \"o=Netscape Communications Corp.,c=US\" -h $ldapserver -p $ldapport -s sub \"(mail=$name@netscape.com)\" $namelist" r]} errinfo]} {
+    if {[catch {set fid [open "|./data/ldapsearch -b \"dc=netscape,dc=com\" -h $ldapserver -p $ldapport -s sub \"(mail=$name@netscape.com)\" $namelist" r]} errinfo]} {
         return "<B>Error -- Couldn't contact the directory server.</B><PRE>$errinfo</PRE>"
     }
 
