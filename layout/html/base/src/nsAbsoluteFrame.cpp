@@ -310,6 +310,55 @@ NS_METHOD AbsoluteFrame::ResizeReflow(nsIPresContext*  aPresContext,
   return nsFrame::ResizeReflow(aPresContext, aDesiredSize, aMaxSize, aMaxElementSize, aStatus);
 }
 
+NS_METHOD
+AbsoluteFrame::ChildCount(PRInt32& aChildCount) const
+{
+  aChildCount = 1;
+  return NS_OK;
+}
+
+NS_METHOD
+AbsoluteFrame::ChildAt(PRInt32 aIndex, nsIFrame*& aFrame) const
+{
+  aFrame = (0 == aIndex) ? mFrame : nsnull;
+  return NS_OK;
+}
+
+NS_METHOD
+AbsoluteFrame::IndexOf(const nsIFrame* aChild, PRInt32& aIndex) const
+{
+  aIndex = (aChild == mFrame) ? 0 : -1;
+  return NS_OK;
+}
+
+NS_METHOD
+AbsoluteFrame::FirstChild(nsIFrame*& aFirstChild) const
+{
+  aFirstChild = mFrame;
+  return NS_OK;
+}
+
+NS_METHOD
+AbsoluteFrame::NextChild(const nsIFrame* aChild, nsIFrame*& aNextChild) const
+{
+  aNextChild = nsnull;
+  return NS_OK;
+}
+
+NS_METHOD
+AbsoluteFrame::PrevChild(const nsIFrame* aChild, nsIFrame*& aPrevChild) const
+{
+  aPrevChild = nsnull;
+  return NS_OK;
+}
+
+NS_METHOD
+AbsoluteFrame::LastChild(nsIFrame*& aLastChild) const
+{
+  aLastChild = mFrame;
+  return NS_OK;
+}
+
 NS_METHOD AbsoluteFrame::List(FILE* out, PRInt32 aIndent) const
 {
   // Indent
