@@ -34,7 +34,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.12 2001/06/21 03:20:09 nelsonb%netscape.com Exp $
+ * $Id: cert.h,v 1.13 2001/11/08 00:14:39 relyea%netscape.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -276,6 +276,10 @@ extern CERTCertDBHandle *CERT_GetDefaultCertDB(void);
 extern CERTCertList *CERT_GetCertChainFromCert(CERTCertificate *cert, 
 					       int64 time, 
 					       SECCertUsage usage);
+extern CERTCertificate *
+CERT_NewTempCertificate (CERTCertDBHandle *handle, SECItem *derCert,
+                         char *nickname, PRBool isperm, PRBool copyDER);
+
 
 /******************************************************************************
  *
@@ -397,42 +401,13 @@ extern void CERT_DestroyCrl (CERTSignedCrl *crl);
 ** Decode a certificate and put it into the temporary certificate database
 */
 extern CERTCertificate *
-CERT_NewTempCertificate (CERTCertDBHandle *handle, SECItem *derCert,
-			 char *nickname, PRBool isperm, PRBool copyDER);
-
-/*
-** Add a certificate to the temporary database.
-**	"dbCert" is the certificate from the perm database.
-**	"isperm" indicates if the cert is in the permanent database.
-*/
-extern CERTCertificate *
-CERT_AddTempCertificate (CERTCertDBHandle *handle, certDBEntryCert *entry,
-			 PRBool isperm);
-
-/*
-** Add a temporary certificate to the permanent database.
-** 	"cert" is the temporary cert
-**	"nickname" is the permanent nickname to use
-**	"trust" is the certificate trust parameters to assign to the cert
-*/
-extern SECStatus
-CERT_AddTempCertToPerm (CERTCertificate *cert, char *nickname, CERTCertTrust *trust);
+CERT_DecodeCertificate (SECItem *derCert, char *nickname,PRBool copyDER);
 
 /*
 ** Find a certificate in the database
 **	"key" is the database key to look for
 */
 extern CERTCertificate *CERT_FindCertByKey(CERTCertDBHandle *handle, SECItem *key);
-
-/*
- * Lookup a certificate in the databases without locking
- *	"certKey" is the database key to look for
- *
- * XXX - this should be internal, but pkcs 11 needs to call it during a
- * traversal.
- */
-CERTCertificate *
-CERT_FindCertByKeyNoLocking(CERTCertDBHandle *handle, SECItem *certKey);
 
 /*
 ** Find a certificate in the database by name
@@ -470,6 +445,7 @@ CERT_FindCertByIssuerAndSN (CERTCertDBHandle *handle, CERTIssuerAndSN *issuerAnd
 */
 extern CERTCertificate *
 CERT_FindCertByNickname (CERTCertDBHandle *handle, char *nickname);
+
 /*
 ** Find a certificate in the database by a DER encoded certificate
 **	"derCert" is the DER encoded certificate
@@ -503,17 +479,6 @@ CERT_FindCertBySPKDigest(CERTCertDBHandle *handle, SECItem *spkDigest);
  */
 CERTCertificate *
 CERT_FindCertIssuer(CERTCertificate *cert, int64 validTime, SECCertUsage usage);
-
-/*
-** Delete a certificate from the temporary database
-**	"cert" is the certificate to be deleted
-*/
-extern SECStatus CERT_DeleteTempCertificate(CERTCertificate *cert);
-
-/*
-** Flush and close the permanent database.
-*/
-extern void CERT_ClosePermCertDB(CERTCertDBHandle *handle);
 
 /*
 ** Check the validity times of a certificate vs. time 't', allowing
@@ -640,6 +605,14 @@ extern char *CERT_HTMLCertInfo(CERTCertificate *cert, PRBool showImages,
 ** moved elsewhere?
 */
 extern SECItem *CERT_DecodeAVAValue(SECItem *derAVAValue);
+
+/*
+ * take a DER certificate and decode it into a certificate structure
+ */
+CERTCertificate *
+CERT_DecodeDERCertificate(SECItem *derSignedCert, PRBool copyDER,
+                         char *nickname);
+
 
 
 /*
@@ -926,32 +899,6 @@ extern void CERT_DestroyCertificateList(CERTCertificateList *list);
 /* is cert a newer than cert b? */
 PRBool CERT_IsNewer(CERTCertificate *certa, CERTCertificate *certb);
 
-typedef SECStatus (* CERTCertCallback)(CERTCertificate *cert, void *arg);
-
-SECStatus
-CERT_TraversePermCertsForSubject(CERTCertDBHandle *handle, SECItem *derSubject,
-				 CERTCertCallback cb, void *cbarg);
-int
-CERT_NumPermCertsForSubject(CERTCertDBHandle *handle, SECItem *derSubject);
-
-SECStatus
-CERT_TraversePermCertsForNickname(CERTCertDBHandle *handle, char *nickname,
-				  CERTCertCallback cb, void *cbarg);
-
-int
-CERT_NumPermCertsForNickname(CERTCertDBHandle *handle, char *nickname);
-
-int
-CERT_NumCertsForCertSubject(CERTCertificate *cert);
-
-int
-CERT_NumPermCertsForCertSubject(CERTCertificate *cert);
-
-SECStatus
-CERT_TraverseCertsForSubject(CERTCertDBHandle *handle,
-			     CERTSubjectList *subjectList,
-			     CERTCertCallback cb, void *cbarg);
-
 /* currently a stub for address book */
 PRBool
 CERT_IsCertRevoked(CERTCertificate *cert);
@@ -1008,12 +955,6 @@ CERT_SaveSMimeProfile(CERTCertificate *cert, SECItem *emailProfile,
  */
 SECItem *
 CERT_FindSMimeProfile(CERTCertificate *cert);
-
-int
-CERT_GetDBContentVersion(CERTCertDBHandle *handle);
-
-void
-CERT_SetDBContentVersion(int version, CERTCertDBHandle *handle);
 
 SECStatus
 CERT_AddNewCerts(CERTCertDBHandle *handle);
@@ -1369,6 +1310,8 @@ CERT_GetStatusConfig(CERTCertDBHandle *handle);
  */
 void
 CERT_SetStatusConfig(CERTCertDBHandle *handle, CERTStatusConfig *config);
+
+
 
 /*
  * Acquire the cert reference count lock

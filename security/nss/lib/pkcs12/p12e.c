@@ -1029,17 +1029,17 @@ SEC_PKCS12AddCert(SEC_PKCS12ExportContext *p12ctxt, SEC_PKCS12SafeInfo *safe,
 	    	CERTCertificate *tempCert;
 
 		/* decode the certificate */
-	    	tempCert = CERT_NewTempCertificate(certDb, 
-	    					&certList->certs[count], NULL,
-	    					PR_FALSE, PR_TRUE);
+	    	 tempCert = 
+			CERT_DecodeDERCertificate( &certList->certs[count], 
+					PR_FALSE, NULL);
 	    	if(!tempCert) {
 		    CERT_DestroyCertificateList(certList);
 		    goto loser;
 		}
 
 		/* add the certificate */
-	    	if(SEC_PKCS12AddCert(p12ctxt, safe, nestedDest, tempCert, certDb,
-				     NULL, PR_FALSE) != SECSuccess) {
+	    	if(SEC_PKCS12AddCert(p12ctxt, safe, nestedDest, tempCert,
+				 certDb, NULL, PR_FALSE) != SECSuccess) {
 		    CERT_DestroyCertificate(tempCert);
 		    CERT_DestroyCertificateList(certList);
 		    goto loser;
@@ -1400,8 +1400,7 @@ SEC_PKCS12AddDERCertAndEncryptedKey(SEC_PKCS12ExportContext *p12ctxt,
 
     mark = PORT_ArenaMark(p12ctxt->arena);
 
-    cert = CERT_NewTempCertificate(CERT_GetDefaultCertDB(), derCert,
-				   NULL, PR_FALSE, PR_TRUE);
+    cert = CERT_DecodeDERCertificate(derCert, PR_FALSE, NULL);
     if(!cert) {
 	PORT_ArenaRelease(p12ctxt->arena, mark);
 	PORT_SetError(SEC_ERROR_NO_MEMORY);

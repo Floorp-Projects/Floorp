@@ -32,15 +32,14 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: softoken.h,v 1.2 2000/09/23 00:04:34 relyea%netscape.com Exp $
+ * $Id: softoken.h,v 1.3 2001/11/08 00:15:41 relyea%netscape.com Exp $
  */
 
 #ifndef _SOFTOKEN_H_
 #define _SOFTOKEN_H_
 
 #include "blapi.h"
-#include "keytlow.h"
-#include "keytboth.h"
+#include "lowkeyti.h"
 #include "softoknt.h"
 #include "secoidt.h"
 
@@ -83,23 +82,23 @@ extern unsigned char *RSA_FormatOneBlock(unsigned int modulusLen,
  * RSA_DecryptBlock.
  */
 extern
-SECStatus RSA_Sign(SECKEYLowPrivateKey *key, unsigned char *output,
+SECStatus RSA_Sign(NSSLOWKEYPrivateKey *key, unsigned char *output,
 		       unsigned int *outputLen, unsigned int maxOutputLen,
 		       unsigned char *input, unsigned int inputLen);
 extern
-SECStatus RSA_CheckSign(SECKEYLowPublicKey *key, unsigned char *sign,
+SECStatus RSA_CheckSign(NSSLOWKEYPublicKey *key, unsigned char *sign,
 			    unsigned int signLength, unsigned char *hash,
 			    unsigned int hashLength);
 extern
-SECStatus RSA_CheckSignRecover(SECKEYLowPublicKey *key, unsigned char *data,
+SECStatus RSA_CheckSignRecover(NSSLOWKEYPublicKey *key, unsigned char *data,
     			    unsigned int *data_len,unsigned int max_output_len, 
 			    unsigned char *sign, unsigned int sign_len);
 extern
-SECStatus RSA_EncryptBlock(SECKEYLowPublicKey *key, unsigned char *output,
+SECStatus RSA_EncryptBlock(NSSLOWKEYPublicKey *key, unsigned char *output,
 			   unsigned int *outputLen, unsigned int maxOutputLen,
 			   unsigned char *input, unsigned int inputLen);
 extern
-SECStatus RSA_DecryptBlock(SECKEYLowPrivateKey *key, unsigned char *output,
+SECStatus RSA_DecryptBlock(NSSLOWKEYPrivateKey *key, unsigned char *output,
 			   unsigned int *outputLen, unsigned int maxOutputLen,
 			   unsigned char *input, unsigned int inputLen);
 
@@ -108,24 +107,24 @@ SECStatus RSA_DecryptBlock(SECKEYLowPrivateKey *key, unsigned char *output,
  *   RAW is RSA_X_509
  */
 extern
-SECStatus RSA_SignRaw( SECKEYLowPrivateKey *key, unsigned char *output,
+SECStatus RSA_SignRaw( NSSLOWKEYPrivateKey *key, unsigned char *output,
 			 unsigned int *output_len, unsigned int maxOutputLen,
 			 unsigned char *input, unsigned int input_len);
 extern
-SECStatus RSA_CheckSignRaw( SECKEYLowPublicKey *key, unsigned char *sign, 
+SECStatus RSA_CheckSignRaw( NSSLOWKEYPublicKey *key, unsigned char *sign, 
 			    unsigned int sign_len, unsigned char *hash, 
 			    unsigned int hash_len);
 extern
-SECStatus RSA_CheckSignRecoverRaw( SECKEYLowPublicKey *key, unsigned char *data,
+SECStatus RSA_CheckSignRecoverRaw( NSSLOWKEYPublicKey *key, unsigned char *data,
 			    unsigned int *data_len, unsigned int max_output_len,
 			    unsigned char *sign, unsigned int sign_len);
 extern
-SECStatus RSA_EncryptRaw( SECKEYLowPublicKey *key, unsigned char *output,
+SECStatus RSA_EncryptRaw( NSSLOWKEYPublicKey *key, unsigned char *output,
 			    unsigned int *output_len,
 			    unsigned int max_output_len, 
 			    unsigned char *input, unsigned int input_len);
 extern
-SECStatus RSA_DecryptRaw(SECKEYLowPrivateKey *key, unsigned char *output,
+SECStatus RSA_DecryptRaw(NSSLOWKEYPrivateKey *key, unsigned char *output,
 			     unsigned int *output_len,
     			     unsigned int max_output_len,
 			     unsigned char *input, unsigned int input_len);

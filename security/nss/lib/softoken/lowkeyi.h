@@ -32,68 +32,67 @@
  *
  * key.h - public data structures and prototypes for the private key library
  *
- * $Id: keylow.h,v 1.2 2001/09/20 21:05:51 relyea%netscape.com Exp $
+ * $Id: lowkeyi.h,v 1.2 2001/11/08 00:15:35 relyea%netscape.com Exp $
  */
 
-#ifndef _KEYLOW_H_
-#define _KEYLOW_H_
+#ifndef _LOWKEYI_H_
+#define _LOWKEYI_H_
 
 #include "prtypes.h"
 #include "seccomon.h"
-#include "keydbt.h"
 #include "secoidt.h"
-#include "certt.h"
-#include "keytlow.h"
+#include "pcertt.h"
+#include "lowkeyti.h"
 
 SEC_BEGIN_PROTOS
 
-typedef char * (* SECKEYDBNameFunc)(void *arg, int dbVersion);
+typedef char * (* NSSLOWKEYDBNameFunc)(void *arg, int dbVersion);
     
 /*
 ** Open a key database.
 */
-extern SECKEYKeyDBHandle *SECKEY_OpenKeyDB(PRBool readOnly,
-					   SECKEYDBNameFunc namecb,
+extern NSSLOWKEYDBHandle *nsslowkey_OpenKeyDB(PRBool readOnly,
+					   NSSLOWKEYDBNameFunc namecb,
 					   void *cbarg);
 
-extern SECKEYKeyDBHandle *SECKEY_OpenKeyDBFilename(char *filename,
+extern NSSLOWKEYDBHandle *nsslowkey_OpenKeyDBFilename(char *filename,
 						   PRBool readOnly);
 
 /*
 ** Update the database
 */
-extern SECStatus SECKEY_UpdateKeyDBPass1(SECKEYKeyDBHandle *handle);
-extern SECStatus SECKEY_UpdateKeyDBPass2(SECKEYKeyDBHandle *handle,
+extern SECStatus nsslowkey_UpdateKeyDBPass1(NSSLOWKEYDBHandle *handle);
+extern SECStatus nsslowkey_UpdateKeyDBPass2(NSSLOWKEYDBHandle *handle,
 					 SECItem *pwitem);
 
 /*
  * Clear out all the keys in the existing database
  */
-extern SECStatus SECKEY_ResetKeyDB(SECKEYKeyDBHandle *handle);
+extern SECStatus nsslowkey_ResetKeyDB(NSSLOWKEYDBHandle *handle);
 
 /*
 ** Close the specified key database.
 */
-extern void SECKEY_CloseKeyDB(SECKEYKeyDBHandle *handle);
+extern void nsslowkey_CloseKeyDB(NSSLOWKEYDBHandle *handle);
 
 /*
  * Get the version number of the database
  */
-extern int SECKEY_GetKeyDBVersion(SECKEYKeyDBHandle *handle);
+extern int nsslowkey_GetKeyDBVersion(NSSLOWKEYDBHandle *handle);
 
 /*
 ** Support a default key database.
 */
-extern void SECKEY_SetDefaultKeyDB(SECKEYKeyDBHandle *handle);
-extern SECKEYKeyDBHandle *SECKEY_GetDefaultKeyDB(void);
+extern void nsslowkey_SetDefaultKeyDB(NSSLOWKEYDBHandle *handle);
+extern NSSLOWKEYDBHandle *nsslowkey_GetDefaultKeyDB(void);
 
 /* set the alg id of the key encryption algorithm */
-extern void SECKEY_SetDefaultKeyDBAlg(SECOidTag alg);
+extern void nsslowkey_SetDefaultKeyDBAlg(SECOidTag alg);
 
 /*
  * given a password and salt, produce a hash of the password
  */
-extern SECItem *SECKEY_HashPassword(char *pw, SECItem *salt);
+extern SECItem *nsslowkey_HashPassword(char *pw, SECItem *salt);
 
 /*
  * Derive the actual password value for a key database from the
@@ -101,12 +100,12 @@ extern SECItem *SECKEY_HashPassword(char *pw, SECItem *salt);
  * stored in the key database.
  */
 extern SECItem *
-SECKEY_DeriveKeyDBPassword(SECKEYKeyDBHandle *handle, char *pw);
+nsslowkey_DeriveKeyDBPassword(NSSLOWKEYDBHandle *handle, char *pw);
 
 /*
 ** Delete a key from the database
 */
-extern SECStatus SECKEY_DeleteKey(SECKEYKeyDBHandle *handle, 
+extern SECStatus nsslowkey_DeleteKey(NSSLOWKEYDBHandle *handle, 
 				  SECItem *pubkey);
 
 /*
@@ -115,27 +114,22 @@ extern SECStatus SECKEY_DeleteKey(SECKEYKeyDBHandle *handle,
 **	"f" is a the callback function for getting the password
 **	"arg" is the argument for the callback
 */
-extern SECStatus SECKEY_StoreKeyByPublicKey(SECKEYKeyDBHandle *handle, 
-					    SECKEYLowPrivateKey *pk,
+extern SECStatus nsslowkey_StoreKeyByPublicKey(NSSLOWKEYDBHandle *handle, 
+					    NSSLOWKEYPrivateKey *pk,
 					    SECItem *pubKeyData,
 					    char *nickname,
-					    SECKEYLowGetPasswordKey f,
-					    void *arg);
+					    SECItem *arg);
 
 /* does the key for this cert exist in the database filed by modulus */
-extern SECStatus SECKEY_KeyForCertExists(SECKEYKeyDBHandle *handle,
-					 CERTCertificate *cert);
+extern PRBool nsslowkey_KeyForCertExists(NSSLOWKEYDBHandle *handle,
+					 NSSLOWCERTCertificate *cert);
 
-SECKEYLowPrivateKey *
-SECKEY_FindKeyByCert(SECKEYKeyDBHandle *handle, CERTCertificate *cert,
-		     SECKEYLowGetPasswordKey f, void *arg);
-
-extern SECStatus SECKEY_HasKeyDBPassword(SECKEYKeyDBHandle *handle);
-extern SECStatus SECKEY_SetKeyDBPassword(SECKEYKeyDBHandle *handle,
+extern SECStatus nsslowkey_HasKeyDBPassword(NSSLOWKEYDBHandle *handle);
+extern SECStatus nsslowkey_SetKeyDBPassword(NSSLOWKEYDBHandle *handle,
 				     SECItem *pwitem);
-extern SECStatus SECKEY_CheckKeyDBPassword(SECKEYKeyDBHandle *handle,
+extern SECStatus nsslowkey_CheckKeyDBPassword(NSSLOWKEYDBHandle *handle,
 					   SECItem *pwitem);
-extern SECStatus SECKEY_ChangeKeyDBPassword(SECKEYKeyDBHandle *handle,
+extern SECStatus nsslowkey_ChangeKeyDBPassword(NSSLOWKEYDBHandle *handle,
 					    SECItem *oldpwitem,
 					    SECItem *newpwitem);
 
@@ -144,32 +138,32 @@ extern SECStatus SECKEY_ChangeKeyDBPassword(SECKEYKeyDBHandle *handle,
 **	"key" the object
 **	"freeit" if PR_TRUE then free the object as well as its sub-objects
 */
-extern void SECKEY_LowDestroyPrivateKey(SECKEYLowPrivateKey *key);
+extern void nsslowkey_DestroyPrivateKey(NSSLOWKEYPrivateKey *key);
 
 /*
 ** Destroy a public key object.
 **	"key" the object
 **	"freeit" if PR_TRUE then free the object as well as its sub-objects
 */
-extern void SECKEY_LowDestroyPublicKey(SECKEYLowPublicKey *key);
+extern void nsslowkey_DestroyPublicKey(NSSLOWKEYPublicKey *key);
 
 /*
 ** Return the modulus length of "pubKey".
 */
-extern unsigned int SECKEY_LowPublicModulusLen(SECKEYLowPublicKey *pubKey);
+extern unsigned int nsslowkey_PublicModulusLen(NSSLOWKEYPublicKey *pubKey);
 
 
 /*
 ** Return the modulus length of "privKey".
 */
-extern unsigned int SECKEY_LowPrivateModulusLen(SECKEYLowPrivateKey *privKey);
+extern unsigned int nsslowkey_PrivateModulusLen(NSSLOWKEYPrivateKey *privKey);
 
 
 /*
 ** Convert a low private key "privateKey" into a public low key
 */
-extern SECKEYLowPublicKey 
-		*SECKEY_LowConvertToPublicKey(SECKEYLowPrivateKey *privateKey);
+extern NSSLOWKEYPublicKey 
+		*nsslowkey_ConvertToPublicKey(NSSLOWKEYPrivateKey *privateKey);
 
 /*
  * Set the Key Database password.
@@ -181,7 +175,7 @@ extern SECKEYLowPublicKey
  * returned.
  */
 extern SECStatus 
-SECKEY_SetKeyDBPasswordAlg(SECKEYKeyDBHandle *handle,
+nsslowkey_SetKeyDBPasswordAlg(NSSLOWKEYDBHandle *handle,
 			SECItem *pwitem, 
 			SECOidTag algorithm);
 
@@ -194,7 +188,7 @@ SECKEY_SetKeyDBPasswordAlg(SECKEYKeyDBHandle *handle,
  * actual password.  If it is not, SECFailure is returned.
  */
 extern SECStatus 
-SECKEY_CheckKeyDBPasswordAlg(SECKEYKeyDBHandle *handle,
+nsslowkey_CheckKeyDBPasswordAlg(NSSLOWKEYDBHandle *handle,
 				SECItem *pwitem, 
 				SECOidTag algorithm);
 
@@ -210,7 +204,7 @@ SECKEY_CheckKeyDBPasswordAlg(SECKEYKeyDBHandle *handle,
  * A return of anything but SECSuccess indicates failure.
  */
 extern SECStatus 
-SECKEY_ChangeKeyDBPasswordAlg(SECKEYKeyDBHandle *handle,
+nsslowkey_ChangeKeyDBPasswordAlg(NSSLOWKEYDBHandle *handle,
 			      SECItem *oldpwitem, SECItem *newpwitem,
 			      SECOidTag old_algorithm);
 
@@ -223,11 +217,11 @@ SECKEY_ChangeKeyDBPasswordAlg(SECKEYKeyDBHandle *handle,
  * A return of anything but SECSuccess indicates failure.
  */
 extern SECStatus 
-SECKEY_StoreKeyByPublicKeyAlg(SECKEYKeyDBHandle *handle, 
-			      SECKEYLowPrivateKey *privkey, 
+nsslowkey_StoreKeyByPublicKeyAlg(NSSLOWKEYDBHandle *handle, 
+			      NSSLOWKEYPrivateKey *privkey, 
 			      SECItem *pubKeyData,
 			      char *nickname,
-			      SECKEYLowGetPasswordKey f, void *arg,
+			      SECItem *arg,
 			      SECOidTag algorithm); 
 
 /* Find key by modulus.  This function is the inverse of store key
@@ -236,17 +230,17 @@ SECKEY_StoreKeyByPublicKeyAlg(SECKEYKeyDBHandle *handle,
  * else NULL is returned.
  *   modulus is the modulus to locate
  */
-extern SECKEYLowPrivateKey *
-SECKEY_FindKeyByPublicKey(SECKEYKeyDBHandle *handle, SECItem *modulus, 
-			  SECKEYLowGetPasswordKey f, void *arg);
+extern NSSLOWKEYPrivateKey *
+nsslowkey_FindKeyByPublicKey(NSSLOWKEYDBHandle *handle, SECItem *modulus, 
+			  SECItem *arg);
 
 /* Make a copy of a low private key in it's own arena.
  * a return of NULL indicates an error.
  */
-extern SECKEYLowPrivateKey *
-SECKEY_CopyLowPrivateKey(SECKEYLowPrivateKey *privKey);
+extern NSSLOWKEYPrivateKey *
+nsslowkey_CopyPrivateKey(NSSLOWKEYPrivateKey *privKey);
 
 
 SEC_END_PROTOS
 
-#endif /* _KEYLOW_H_ */
+#endif /* _LOWKEYI_H_ */

@@ -34,7 +34,7 @@
 /*
  * Encryption/decryption routines for CMS implementation, none of which are exported.
  *
- * $Id: cmscipher.c,v 1.2 2000/06/13 21:56:27 chrisk%netscape.com Exp $
+ * $Id: cmscipher.c,v 1.3 2001/11/08 00:15:26 relyea%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -43,7 +43,7 @@
 #include "secitem.h"
 #include "pk11func.h"
 #include "secerr.h"
-#include "secpkcs5.h"
+/*#include "secpkcs5.h" */
 
 /*
  * -------------------------------------------------------------------

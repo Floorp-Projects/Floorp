@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.25 2001/10/11 16:31:29 ian.mcgreer%sun.com Exp $
+ # $Id: nssinit.c,v 1.26 2001/11/08 00:15:03 relyea%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -50,7 +50,7 @@
 #include "secrng.h"
 #include "pk11func.h"
 
-#include "pkinss3hack.h"
+#include "pki3hack.h"
 
 #define NSS_MAX_FLAG_SIZE  sizeof("readOnly")+sizeof("noCertDB")+ \
 	sizeof("noModDB")+sizeof("forceOpen")+sizeof("passwordRequired")
@@ -241,6 +241,8 @@ nss_Init(const char *configdir, const char *certPrefix, const char *keyPrefix,
     }
 
     STAN_LoadDefaultNSS3TrustDomain();
+    CERT_SetDefaultCertDB((CERTCertDBHandle *)
+				STAN_GetDefaultTrustDomain());
     return rv;
 }
 

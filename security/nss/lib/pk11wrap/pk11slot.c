@@ -49,9 +49,7 @@
 #include "prtime.h"
 #include "prlong.h"
 #include "secerr.h"
-#include "secpkcs5.h"
-#define NSSCKT_H /* we included pkcs11t.h, so block ckt.h from including nssckt.h */
-#include "ckt.h"
+/*#include "secpkcs5.h" */
 
 
 /*************************************************************
@@ -419,7 +417,7 @@ PK11_NewSlotInfo(void)
     slot->series = 0;
     slot->wrapKey = 0;
     slot->wrapMechanism = CKM_INVALID_MECHANISM;
-    slot->refKeys[0] = CK_INVALID_KEY;
+    slot->refKeys[0] = CK_INVALID_HANDLE;
     slot->reason = PK11_DIS_NONE;
     slot->readOnly = PR_TRUE;
     slot->needLogin = PR_FALSE;
@@ -466,9 +464,6 @@ PK11_DestroySlot(PK11SlotInfo *slot)
    if (slot->functionList) {
 	PK11_GETTAB(slot)->C_CloseAllSessions(slot->slotID);
    }
-
-   /* now free up all the certificates we grabbed on this slot */
-   PK11_FreeSlotCerts(slot);
 
    /* free up the cached keys and sessions */
    PK11_CleanKeyList(slot);
@@ -1082,9 +1077,6 @@ PK11_DoPassword(PK11SlotInfo *slot, PRBool loadCerts, void *wincx)
 	if (rv != SECWouldBlock) break;
     }
     if (rv == SECSuccess) {
-	if ((loadCerts) && (!slot->isInternal) && (slot->cert_count == 0)) {
-	    PK11_ReadSlotCerts(slot);
-	}
 	rv = pk11_CheckVerifyTest(slot);
     } else if (!attempt) PORT_SetError(SEC_ERROR_BAD_PASSWORD);
     return rv;
@@ -1715,14 +1707,6 @@ PK11_InitToken(PK11SlotInfo *slot, PRBool loadCerts)
 	if (!slot->isThreadSafe) PK11_ExitSlotMonitor(slot);
     }
 
-    /*if we have cached slotcerts, free them they are almost certainly stale*/
-    PK11_FreeSlotCerts(slot);
-
-    if (loadCerts && (!slot->isInternal) && 
-       ((!slot->needLogin) || (slot->defaultFlags & SECMOD_FRIENDLY_FLAG))) {
-	PK11_ReadSlotCerts(slot);
-    }
-
     if (!(slot->needLogin)) {
 	return pk11_CheckVerifyTest(slot);
     }
@@ -1783,7 +1767,7 @@ pk11_isRootSlot(PK11SlotInfo *slot)
     PORT_Assert(tsize <= sizeof(findTemp)/sizeof(CK_ATTRIBUTE));
 
     handle = pk11_FindObjectByTemplate(slot,findTemp,tsize);
-    if (handle == CK_INVALID_KEY) {
+    if (handle == CK_INVALID_HANDLE) {
 	return PR_FALSE;
     }
     return PR_TRUE;
@@ -1891,7 +1875,6 @@ pk11_IsPresentCertLoad(PK11SlotInfo *slot, PRBool loadCerts)
 	    PK11_GETTAB(slot)->C_CloseSession(slot->session);
 	    slot->session = CK_INVALID_SESSION;
 	    /* force certs to be freed */
-	    PK11_FreeSlotCerts(slot);
 	}
         if (!slot->isThreadSafe) PK11_ExitSlotMonitor(slot);
 	return PR_FALSE;
@@ -1904,7 +1887,6 @@ pk11_IsPresentCertLoad(PK11SlotInfo *slot, PRBool loadCerts)
 	if (crv != CKR_OK) {
 	    PK11_GETTAB(slot)->C_CloseSession(slot->session);
 	    slot->session = CK_INVALID_SESSION;
-	    PK11_FreeSlotCerts(slot);
 	}
     }
     if (!slot->isThreadSafe) PK11_ExitSlotMonitor(slot);
@@ -3334,59 +3316,6 @@ static unsigned long  rc2_unmap(unsigned long x)
 }
 
 
-/*
- * Helper function to decode a PKCS5 DER encode paramter block into a PKCS #11
- * PBE_Parameter structure.
- */
-SECStatus
-pk11_pbe_decode(SECAlgorithmID *algid, SECItem *mech)
-{
-    CK_PBE_PARAMS *pbe_params = NULL;
-    SEC_PKCS5PBEParameter *p5_param;
-    SECItem *p5_misc = NULL;
-    int paramSize = 0;
-
-    p5_param = SEC_PKCS5GetPBEParameter(algid);
-    if(p5_param == NULL) {
-	return SECFailure;
-    }
-
-        
-    p5_misc = &p5_param->salt;
-    paramSize = sizeof(CK_PBE_PARAMS);
-
-    pbe_params = (CK_PBE_PARAMS *)PORT_ZAlloc(paramSize);
-    if (pbe_params == NULL) {
-	SEC_PKCS5DestroyPBEParameter(p5_param);
-	return SECFailure;
-    }
-
-    /* get salt */
-    pbe_params->pSalt = (CK_CHAR_PTR)PORT_ZAlloc(p5_misc->len);
-    if (pbe_params->pSalt == CK_NULL_PTR) {
-	goto loser;
-    }
-    PORT_Memcpy(pbe_params->pSalt, p5_misc->data, p5_misc->len);
-    pbe_params->ulSaltLen = (CK_ULONG) p5_misc->len;
-
-    /* get iteration count */
-    p5_misc = &p5_param->iteration;
-    pbe_params->ulIteration = (CK_ULONG) DER_GetInteger(p5_misc);
-
-    /* copy into the mechanism sec item */
-    mech->data = (unsigned char *)pbe_params;
-    mech->len = paramSize;
-    SEC_PKCS5DestroyPBEParameter(p5_param);
-    return SECSuccess;
-
-loser:
-    if (pbe_params->pSalt != CK_NULL_PTR) {
-	PORT_Free(pbe_params->pSalt);
-    }
-    PORT_Free(pbe_params);
-    SEC_PKCS5DestroyPBEParameter(p5_param);
-    return SECFailure;
-}
 
 /* Generate a mechaism param from a type, and iv. */
 SECItem *
@@ -3520,7 +3449,7 @@ PK11_ParamFromAlgid(SECAlgorithmID *algid)
     case CKM_PBE_SHA1_RC2_128_CBC:
     case CKM_PBE_SHA1_RC4_40:
     case CKM_PBE_SHA1_RC4_128:
-	rv = pk11_pbe_decode(algid,mech);
+	rv = pbe_PK11AlgidToParam(algid,mech);
 	if (rv != SECSuccess) {
 	    PORT_Free(mech);
 	    return NULL;
@@ -4285,7 +4214,6 @@ PK11_ResetToken(PK11SlotInfo *slot, char *sso_pwd)
     /* first shutdown the token. Existing sessions will get closed here */
     PK11_GETTAB(slot)->C_CloseAllSessions(slot->slotID);
     slot->session = CK_INVALID_SESSION;
-    PK11_FreeSlotCerts(slot);
 
     /* now re-init the token */ 
     crv = PK11_GETTAB(slot)->C_InitToken(slot->slotID,
@@ -4301,47 +4229,14 @@ PK11_ResetToken(PK11SlotInfo *slot, char *sso_pwd)
     return SECSuccess;
 }
 
-
-
-
-static SECOidTag
-pk11_MapPBEMechanismTypeToAlgtag(CK_MECHANISM_TYPE mech)
-{
-    switch(mech) {
-	case CKM_PBE_MD2_DES_CBC:
-	    return SEC_OID_PKCS5_PBE_WITH_MD2_AND_DES_CBC;
-	case CKM_PBE_MD5_DES_CBC:
-	    return SEC_OID_PKCS5_PBE_WITH_MD5_AND_DES_CBC;
-	case CKM_NETSCAPE_PBE_SHA1_DES_CBC:
-	    return SEC_OID_PKCS5_PBE_WITH_SHA1_AND_DES_CBC;
-	case CKM_NETSCAPE_PBE_SHA1_TRIPLE_DES_CBC:
-	    return SEC_OID_PKCS12_PBE_WITH_SHA1_AND_TRIPLE_DES_CBC;
-	case CKM_NETSCAPE_PBE_SHA1_FAULTY_3DES_CBC:
-	    return SEC_OID_PKCS12_PBE_WITH_SHA1_AND_TRIPLE_DES_CBC;
-	case CKM_NETSCAPE_PBE_SHA1_40_BIT_RC4:
-	    return SEC_OID_PKCS12_PBE_WITH_SHA1_AND_40_BIT_RC4;
-	case CKM_NETSCAPE_PBE_SHA1_128_BIT_RC4:
-	    return SEC_OID_PKCS12_PBE_WITH_SHA1_AND_128_BIT_RC4;
-	case CKM_NETSCAPE_PBE_SHA1_40_BIT_RC2_CBC:
-	    return SEC_OID_PKCS12_PBE_WITH_SHA1_AND_40_BIT_RC2_CBC;
-	case CKM_NETSCAPE_PBE_SHA1_128_BIT_RC2_CBC:
-	    return SEC_OID_PKCS12_PBE_WITH_SHA1_AND_128_BIT_RC2_CBC;
-	case CKM_PBE_SHA1_RC2_128_CBC:
-	    return SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_128_BIT_RC2_CBC;
-	case CKM_PBE_SHA1_RC2_40_CBC:
-	    return SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_40_BIT_RC2_CBC;
-	case CKM_PBE_SHA1_RC4_40:
-	    return SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_40_BIT_RC4;
-	case CKM_PBE_SHA1_RC4_128:
-	    return SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_128_BIT_RC4;
-	case CKM_PBE_SHA1_DES3_EDE_CBC:
-	    return SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_3KEY_TRIPLE_DES_CBC;
-	case CKM_PBE_SHA1_DES2_EDE_CBC:
-	    return SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_2KEY_TRIPLE_DES_CBC;
-	default:
-	    break;
+static PRBool
+pk11_isAllZero(unsigned char *data,int len) {
+    while (len--) {
+	if (*data++) {
+	    return PR_FALSE;
+	}
     }
-    return SEC_OID_UNKNOWN;
+    return PR_TRUE;
 }
 
 CK_RV
@@ -4353,9 +4248,6 @@ PK11_MapPBEMechanismToCryptoMechanism(CK_MECHANISM_PTR pPBEMechanism,
     CK_PBE_PARAMS_PTR pPBEparams;
     CK_RC2_CBC_PARAMS_PTR rc2_params;
     CK_ULONG rc2_key_len;
-    SECStatus rv = SECFailure;
-    SECAlgorithmID temp_algid;
-    SECItem param, *iv;
 
     if((pPBEMechanism == CK_NULL_PTR) || (pCryptoMechanism == CK_NULL_PTR)) {
 	return CKR_HOST_MEMORY;
@@ -4364,32 +4256,20 @@ PK11_MapPBEMechanismToCryptoMechanism(CK_MECHANISM_PTR pPBEMechanism,
     pPBEparams = (CK_PBE_PARAMS_PTR)pPBEMechanism->pParameter;
     iv_len = PK11_GetIVLength(pPBEMechanism->mechanism);
 
-    if(pPBEparams->pInitVector == CK_NULL_PTR) {
-	pPBEparams->pInitVector = (CK_CHAR_PTR)PORT_ZAlloc(iv_len);
-	if(pPBEparams->pInitVector == NULL) {
-	    return CKR_HOST_MEMORY;
-	}
-	param.data = (unsigned char*)pPBEMechanism->pParameter;
-	param.len = pPBEMechanism->ulParameterLen;
-	rv = PK11_ParamToAlgid(pk11_MapPBEMechanismTypeToAlgtag(
-				  pPBEMechanism->mechanism),
-				&param, NULL, &temp_algid);
-	if(rv != SECSuccess) {
-	    SECOID_DestroyAlgorithmID(&temp_algid, PR_FALSE);
-	    return CKR_HOST_MEMORY;
-	} else {
-	    iv = SEC_PKCS5GetIV(&temp_algid, pbe_pwd, faulty3DES);
-	    if((iv == NULL) && (iv_len != 0)) {
-	        SECOID_DestroyAlgorithmID(&temp_algid, PR_FALSE);
-		return CKR_HOST_MEMORY;
+    if (iv_len) {
+	if (pk11_isAllZero(pPBEparams->pInitVector,iv_len)) {
+	    SECItem param;
+	    PK11SymKey *symKey;
+
+	    param.data = pPBEMechanism->pParameter;
+	    param.len = pPBEMechanism->ulParameterLen;
+
+	    symKey = PK11_RawPBEKeyGen(PK11_GetInternalSlot(),
+		pPBEMechanism->mechanism, &param, pbe_pwd, faulty3DES, NULL);
+	    if (symKey== NULL) {
+		return CKR_DEVICE_ERROR; /* sigh */
 	    }
-	    SECOID_DestroyAlgorithmID(&temp_algid, PR_FALSE);
-	    if(iv != NULL) {
-		PORT_Memcpy((char *)pPBEparams->pInitVector,
-	    		    (char *)iv->data,
-	    		    iv->len);
-		SECITEM_ZfreeItem(iv, PR_TRUE);
-	    }
+	    PK11_FreeSymKey(symKey);
 	}
     }
 
@@ -4430,9 +4310,10 @@ have_crypto_mechanism:
 	    rc2_key_len = 128;
 have_key_len:
 	    pCryptoMechanism->mechanism = CKM_RC2_CBC;
-	    pCryptoMechanism->ulParameterLen = (CK_ULONG)sizeof(CK_RC2_CBC_PARAMS);
-	    pCryptoMechanism->pParameter = 
-		(CK_RC2_CBC_PARAMS_PTR)PORT_ZAlloc(sizeof(CK_RC2_CBC_PARAMS));
+	    pCryptoMechanism->ulParameterLen = (CK_ULONG)
+						sizeof(CK_RC2_CBC_PARAMS);
+	    pCryptoMechanism->pParameter = (CK_RC2_CBC_PARAMS_PTR)
+				PORT_ZAlloc(sizeof(CK_RC2_CBC_PARAMS));
 	    if(pCryptoMechanism->pParameter == NULL) {
 		return CKR_HOST_MEMORY;
 	    }

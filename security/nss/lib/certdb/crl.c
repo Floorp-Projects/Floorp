@@ -34,7 +34,7 @@
 /*
  * Moved from secpkcs7.c
  *
- * $Id: crl.c,v 1.3 2001/05/07 21:07:23 relyea%netscape.com Exp $
+ * $Id: crl.c,v 1.4 2001/11/08 00:14:40 relyea%netscape.com Exp $
  */
 
 #include "cert.h"
@@ -45,6 +45,7 @@
 #include "certxutl.h"
 #include "prtime.h"
 #include "secerr.h"
+#include "pk11func.h"
 
 const SEC_ASN1Template SEC_CERTExtensionTemplate[] = {
     { SEC_ASN1_SEQUENCE,
@@ -387,6 +388,223 @@ loser:
     }
     
     return(0);
+}
+
+/*
+ * Lookup a CRL in the databases. We mirror the same fast caching data base
+ *  caching stuff used by certificates....?
+ */
+CERTSignedCrl *
+SEC_FindCrlByKeyOnSlot(PK11SlotInfo *slot, SECItem *crlKey, int type)
+{
+    CERTSignedCrl *crl = NULL;
+    SECItem *derCrl;
+    CK_OBJECT_HANDLE crlHandle;
+
+    if (slot) {
+	PK11_ReferenceSlot(slot);
+    }
+     
+    derCrl = PK11_FindCrlByName(&slot, &crlHandle, crlKey,type);
+    if (derCrl == NULL) {
+	goto loser;
+    }
+    
+    crl = CERT_DecodeDERCrl(NULL, derCrl, type);
+    if (crl) {
+	crl->slot = slot;
+	slot = NULL; /* adopt it */
+    }
+
+loser:
+    if (slot) {
+	PK11_FreeSlot(slot);
+    }
+    return(crl);
+}
+
+SECStatus SEC_DestroyCrl(CERTSignedCrl *crl);
+
+CERTSignedCrl *
+crl_storeCRL (PK11SlotInfo *slot,char *url,
+                  CERTSignedCrl *newCrl, SECItem *derCrl, int type)
+{
+    CERTSignedCrl *oldCrl = NULL, *crl = NULL;
+    CK_OBJECT_HANDLE crlHandle;
+
+    oldCrl = SEC_FindCrlByKeyOnSlot(slot, &newCrl->crl.derName, type);
+
+    /* if there is an old crl, make sure the one we are installing
+     * is newer. If not, exit out, otherwise delete the old crl.
+     */
+    if (oldCrl != NULL) {
+        if (!SEC_CrlIsNewer(&newCrl->crl,&oldCrl->crl)) {
+
+            if (type == SEC_CRL_TYPE) {
+                PORT_SetError(SEC_ERROR_OLD_CRL);
+            } else {
+                PORT_SetError(SEC_ERROR_OLD_KRL);
+            }
+
+            goto done;
+        }
+
+        if ((SECITEM_CompareItem(&newCrl->crl.derName,
+                &oldCrl->crl.derName) != SECEqual) &&
+            (type == SEC_KRL_TYPE) ) {
+
+            PORT_SetError(SEC_ERROR_CKL_CONFLICT);
+            goto done;
+        }
+
+        /* if we have a url in the database, use that one */
+        if (oldCrl->url) {
+	    url = oldCrl->url;
+        }
+
+
+        /* really destroy this crl */
+        /* first drum it out of the permanment Data base */
+        SEC_DeletePermCRL(oldCrl);
+    }
+
+    /* Write the new entry into the data base */
+    crlHandle = PK11_PutCrl(slot, derCrl, &newCrl->crl.derName, url, type);
+    if (crlHandle != CK_INVALID_HANDLE) {
+	crl = newCrl;
+	crl->slot = PK11_ReferenceSlot(slot);
+	crl->pkcs11ID = crlHandle;
+    }
+
+done:
+    if (oldCrl) SEC_DestroyCrl(oldCrl);
+
+    return crl;
+}
+
+CERTSignedCrl *
+SEC_FindCrlByName(CERTCertDBHandle *handle, SECItem *crlKey, int type)
+{
+	return SEC_FindCrlByKeyOnSlot(NULL,crlKey,type);
+}
+
+/*
+ *
+ * create a new CRL from DER material.
+ *
+ * The signature on this CRL must be checked before you
+ * load it. ???
+ */
+CERTSignedCrl *
+SEC_NewCrl(CERTCertDBHandle *handle, char *url, SECItem *derCrl, int type)
+{
+    CERTSignedCrl *newCrl = NULL, *crl = NULL;
+    PK11SlotInfo *slot;
+
+    /* make this decode dates! */
+    newCrl = CERT_DecodeDERCrl(NULL, derCrl, type);
+    if (newCrl == NULL) {
+        if (type == SEC_CRL_TYPE) {
+            PORT_SetError(SEC_ERROR_CRL_INVALID);
+        } else {
+            PORT_SetError(SEC_ERROR_KRL_INVALID);
+        }
+        goto done;
+    }
+
+    slot = PK11_GetInternalKeySlot();
+    crl = crl_storeCRL(slot, url, newCrl, derCrl, type);
+    PK11_FreeSlot(slot);
+
+
+done:
+    if (crl == NULL) {
+	if (newCrl) {
+	    PORT_FreeArena(newCrl->arena, PR_FALSE);
+	}
+    }
+
+    return crl;
+}
+
+
+CERTSignedCrl *
+SEC_FindCrlByDERCert(CERTCertDBHandle *handle, SECItem *derCrl, int type)
+{
+    PRArenaPool *arena;
+    SECItem crlKey;
+    SECStatus rv;
+    CERTSignedCrl *crl = NULL;
+    
+    /* create a scratch arena */
+    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    if ( arena == NULL ) {
+	return(NULL);
+    }
+    
+    /* extract the database key from the cert */
+    rv = CERT_KeyFromDERCrl(arena, derCrl, &crlKey);
+    if ( rv != SECSuccess ) {
+	goto loser;
+    }
+
+    /* find the crl */
+    crl = SEC_FindCrlByName(handle, &crlKey, type);
+    
+loser:
+    PORT_FreeArena(arena, PR_FALSE);
+    return(crl);
+}
+
+
+SECStatus
+SEC_DestroyCrl(CERTSignedCrl *crl)
+{
+    if (crl) {
+	if (crl->referenceCount-- <= 1) {
+	    if (crl->slot) {
+		PK11_FreeSlot(crl->slot);
+	    }
+	    PORT_FreeArena(crl->arena, PR_FALSE);
+	}
+    }
+    return SECSuccess;
+}
+
+SECStatus
+SEC_LookupCrls(CERTCertDBHandle *handle, CERTCrlHeadNode **nodes, int type)
+{
+    CERTCrlHeadNode *head;
+    PRArenaPool *arena = NULL;
+    SECStatus rv;
+
+    *nodes = NULL;
+
+    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    if ( arena == NULL ) {
+	return SECFailure;
+    }
+
+    /* build a head structure */
+    head = (CERTCrlHeadNode *)PORT_ArenaAlloc(arena, sizeof(CERTCrlHeadNode));
+    head->arena = arena;
+    head->first = NULL;
+    head->last = NULL;
+    head->dbhandle = handle;
+
+    /* Look up the proper crl types */
+    *nodes = head;
+
+    rv = PK11_LookupCrls(nodes, type, NULL);
+    
+    if (rv != SECSuccess) {
+	if ( arena ) {
+	    PORT_FreeArena(arena, PR_FALSE);
+	    *nodes = NULL;
+	}
+    }
+
+    return rv;
 }
 
 /* These functions simply return the address of the above-declared templates.

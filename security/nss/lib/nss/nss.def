@@ -564,6 +564,7 @@ SECMOD_LoadModule;
 SECMOD_GetModuleSpecList;
 SECMOD_FreeModuleSpecList;
 SECMOD_UpdateModule;
+PK11_RawPBEKeyGen;
 ;+    local:
 ;+       *;
 ;+};

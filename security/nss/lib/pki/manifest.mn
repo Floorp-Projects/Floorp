@@ -30,7 +30,7 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-MANIFEST_CVS_ID = "@(#) $RCSfile: manifest.mn,v $ $Revision: 1.5 $ $Date: 2001/10/19 20:10:51 $ $Name:  $"
+MANIFEST_CVS_ID = "@(#) $RCSfile: manifest.mn,v $ $Revision: 1.6 $ $Date: 2001/11/08 00:15:20 $ $Name:  $"
 
 CORE_DEPTH = ../../..
 
@@ -57,8 +57,8 @@ CSRCS =		        \
 	$(NULL)
 
 ifndef PURE_STAN_BUILD
-CSRCS += nss3hack.c
-PRIVATE_EXPORTS += pkinss3hack.h pkitm.h pkim.h
+CSRCS += pki3hack.c
+PRIVATE_EXPORTS += pki3hack.h pkitm.h pkim.h
 DEFINES = -DNSS_3_4_CODE
 endif
 

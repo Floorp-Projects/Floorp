@@ -860,7 +860,7 @@ seckey_ExtractPublicKey(CERTSubjectPublicKeyInfo *spki)
 
     pubk->arena = arena;
     pubk->pkcs11Slot = 0;
-    pubk->pkcs11ID = CK_INVALID_KEY;
+    pubk->pkcs11ID = CK_INVALID_HANDLE;
 
 
     /* Convert bit string length from bits to bytes */
@@ -1037,7 +1037,7 @@ SECKEY_CopyPrivateKey(SECKEYPrivateKey *privk)
 	if (privk->pkcs11IsTemp) {
 	    copyk->pkcs11ID = 
 			PK11_CopyKey(privk->pkcs11Slot,privk->pkcs11ID);
-	    if (copyk->pkcs11ID == CK_INVALID_KEY) goto fail;
+	    if (copyk->pkcs11ID == CK_INVALID_HANDLE) goto fail;
 	} else {
 	    copyk->pkcs11ID = privk->pkcs11ID;
 	}
@@ -1072,7 +1072,7 @@ SECKEY_CopyPublicKey(SECKEYPublicKey *pubk)
 	copyk->arena = arena;
 	copyk->keyType = pubk->keyType;
 	copyk->pkcs11Slot = NULL;	/* go get own reference */
-	copyk->pkcs11ID = CK_INVALID_KEY;
+	copyk->pkcs11ID = CK_INVALID_HANDLE;
 	switch (pubk->keyType) {
 	  case rsaKey:
 	    rv = SECITEM_CopyItem(arena, &copyk->u.rsa.modulus,
@@ -1201,7 +1201,7 @@ SECKEY_ConvertToPublicKey(SECKEYPrivateKey *privk)
     }
     pubk->keyType = privk->keyType;
     pubk->pkcs11Slot = NULL;
-    pubk->pkcs11ID = CK_INVALID_KEY;
+    pubk->pkcs11ID = CK_INVALID_HANDLE;
     pubk->arena = arena;
 
     /*

@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.14 $ $Date: 2001/11/07 16:15:29 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.1 $ $Date: 2001/11/08 00:14:53 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -48,13 +48,9 @@ static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.14 $ $Date
 #include "pki.h"
 #endif /* PKI_H */
 
-#ifdef NSS_3_4_CODE
-#include "pkcs11.h"
-#else
 #ifndef NSSCKEPV_H
 #include "nssckepv.h"
 #endif /* NSSCKEPV_H */
-#endif /* NSS_3_4_CODE */
 
 #ifndef NSSPKI_H
 #include "nsspki.h"
@@ -219,25 +215,30 @@ nssToken_DeleteStoredObject
   CK_OBJECT_HANDLE object
 )
 {
-    nssSession *session;
+    nssSession *session = NULL;
     CK_RV ckrv;
     PRStatus nssrv;
     PRBool createdSession;
     if (nssCKObject_IsAttributeTrue(object, CKA_TOKEN, tok->defaultSession,
-                                    tok->slot, &nssrv)) {
-	if (sessionOpt) {
-	    if (!nssSession_IsReadWrite(sessionOpt)) {
-		return PR_FAILURE;;
-	    } else {
-		session = sessionOpt;
-	    }
-	} else if (nssSession_IsReadWrite(tok->defaultSession)) {
-	    session = tok->defaultSession;
-	} else {
-	    session = nssSlot_CreateSession(tok->slot, NULL, PR_TRUE);
-	    createdSession = PR_TRUE;
-	}
+	                            tok->slot, &nssrv)) {
+       if (sessionOpt) {
+	   if (!nssSession_IsReadWrite(sessionOpt)) {
+	       return PR_FAILURE;;
+	   } else {
+	       session = sessionOpt;
+	   }
+       } else if (nssSession_IsReadWrite(tok->defaultSession)) {
+	   session = tok->defaultSession;
+       } else {
+	   session = nssSlot_CreateSession(tok->slot, NULL, PR_TRUE);
+	   createdSession = PR_TRUE;
+       }
     }
+
+    if (session == NULL) {
+	return PR_FAILURE;
+    }
+
     nssSession_EnterMonitor(session);
     ckrv = CKAPI(tok->slot)->C_DestroyObject(session->handle, object);
     nssSession_ExitMonitor(session);
@@ -259,10 +260,11 @@ nssToken_ImportObject
   CK_ULONG otsize
 )
 {
-    nssSession *session;
+    nssSession *session = NULL;
     PRBool createdSession = PR_FALSE;
     CK_OBJECT_HANDLE object;
     CK_RV ckrv;
+
     if (nssCKObject_IsTokenObjectTemplate(objectTemplate, otsize)) {
 	if (sessionOpt) {
 	    if (!nssSession_IsReadWrite(sessionOpt)) {
@@ -276,6 +278,9 @@ nssToken_ImportObject
 	    session = nssSlot_CreateSession(tok->slot, NULL, PR_TRUE);
 	    createdSession = PR_TRUE;
 	}
+    }
+    if (session == NULL) {
+	return PR_FAILURE;
     }
     nssSession_EnterMonitor(session);
     ckrv = CKAPI(tok->slot)->C_CreateObject(session->handle, 
@@ -311,17 +316,17 @@ nssToken_FindObjectByTemplate
     ckrv = CKAPI(tok)->C_FindObjectsInit(hSession, cktemplate, ctsize);
     if (ckrv != CKR_OK) {
 	nssSession_ExitMonitor(session);
-	return CK_INVALID_KEY;
+	return CK_INVALID_HANDLE;
     }
     ckrv = CKAPI(tok)->C_FindObjects(hSession, &rvObject, 1, &count);
     if (ckrv != CKR_OK) {
 	nssSession_ExitMonitor(session);
-	return CK_INVALID_KEY;
+	return CK_INVALID_HANDLE;
     }
     ckrv = CKAPI(tok)->C_FindObjectsFinal(hSession);
     nssSession_ExitMonitor(session);
     if (ckrv != CKR_OK) {
-	return CK_INVALID_KEY;
+	return CK_INVALID_HANDLE;
     }
     return rvObject;
 }

@@ -30,42 +30,25 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-#ifndef _KEYTBOTH_H_
-#define _KEYTBOTH_H_ 1
+/*
+ * cdbhdl.h - certificate database handle
+ *   private to the certdb module
+ *
+ * $Id: cdbhdl.h,v 1.2 2001/11/08 00:15:30 relyea%netscape.com Exp $
+ */
+#ifndef _CDBHDL_H_
+#define _CDBHDL_H_
 
-#include "blapit.h"
-#include "secoidt.h"
+#include "nspr.h"
+#include "mcom_db.h"
+#include "pcertt.h"
 
 /*
-** Attributes
-*/
-struct SECKEYAttributeStr {
-    SECItem attrType;
-    SECItem **attrValue;
+ * Handle structure for open certificate databases
+ */
+struct NSSLOWCERTCertDBHandleStr {
+    DB *permCertDB;
+    PZMonitor *dbMon;
 };
-typedef struct SECKEYAttributeStr SECKEYAttribute;
 
-/*
-** A PKCS#8 private key info object
-*/
-struct PrivateKeyInfoStr {
-    PLArenaPool *arena;
-    SECItem version;
-    SECAlgorithmID algorithm;
-    SECItem privateKey;
-    SECKEYAttribute **attributes;
-};
-typedef struct PrivateKeyInfoStr PrivateKeyInfo;
-#define SEC_PRIVATE_KEY_INFO_VERSION		0	/* what we *create* */
-
-/*
-** A PKCS#8 private key info object
-*/
-struct EncryptedPrivateKeyInfoStr {
-    PLArenaPool *arena;
-    SECAlgorithmID algorithm;
-    SECItem encryptedData;
-};
-typedef struct EncryptedPrivateKeyInfoStr EncryptedPrivateKeyInfo;
-
-#endif /* _KEYT_H_ */
+#endif

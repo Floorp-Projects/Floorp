@@ -39,6 +39,7 @@ EXPORTS = \
 	nssb64t.h \
 	nsslocks.h \
 	nssilock.h \
+	nssilckt.h \
 	nssrwlk.h \
 	nssrwlkt.h \
 	portreg.h \
@@ -84,18 +85,8 @@ CSRCS = \
 	sectime.c \
 	secport.c \
 	secinit.c \
-	sysrand.c \
 	utf8.c \
 	$(NULL)
-
-ifeq ($(subst /,,$(shell uname -s)),OS2)
-	CSRCS += os2_rand.c
-endif
-
-#	mac_rand.c
-#	unix_rand.c
-#	win_rand.c
-#	prelib.c
 
 REQUIRES = security dbm
 

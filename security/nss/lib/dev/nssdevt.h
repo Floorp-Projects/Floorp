@@ -35,7 +35,7 @@
 #define NSSDEVT_H
 
 #ifdef DEBUG
-static const char NSSDEVT_CVS_ID[] = "@(#) $RCSfile: nssdevt.h,v $ $Revision: 1.1 $ $Date: 2001/10/11 16:43:06 $ $Name:  $";
+static const char NSSDEVT_CVS_ID[] = "@(#) $RCSfile: nssdevt.h,v $ $Revision: 1.2 $ $Date: 2001/11/08 00:14:54 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -51,15 +51,6 @@ static const char NSSDEVT_CVS_ID[] = "@(#) $RCSfile: nssdevt.h,v $ $Revision: 1.
 #ifndef NSSPKIT_H
 #include "nsspkit.h"
 #endif /* NSSPKIT_H */
-
-#ifdef NSS_3_4_CODE
-#include "pkcs11t.h"
-#include "secmodt.h"
-#else
-#ifndef NSSCKT_H
-#include "nssckt.h"
-#endif /* NSSCKT_H */
-#endif /* NSS_3_4_CODE */
 
 PR_BEGIN_EXTERN_C
 

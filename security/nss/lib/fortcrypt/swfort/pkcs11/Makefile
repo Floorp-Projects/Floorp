@@ -55,7 +55,7 @@ endif
 #	$(DIST)/lib/$(NSPR31_LIB_PREFIX)nspr4.lib 
 EXTRA_LIBS = \
 	$(DIST)/lib/swfci.lib \
-	$(DIST)/lib/softoken.lib \
+	$(DIST)/lib/softokn.lib \
 	$(CRYPTO_LIB) \
 	$(DIST)/lib/secutil.lib \
 	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plc4_s.lib \
@@ -89,7 +89,7 @@ endif
 
 EXTRA_LIBS += \
 	$(DIST)/lib/libswfci.$(LIB_SUFFIX) \
-	$(DIST)/lib/libsoftoken.$(LIB_SUFFIX) \
+	$(DIST)/lib/libsoftokn.$(LIB_SUFFIX) \
 	$(CRYPTO_LIB) \
 	$(DIST)/lib/libsecutil.$(LIB_SUFFIX) \
 	$(PLC_STATIC_LIB) \

@@ -477,6 +477,9 @@ PK11_CreatePBEAlgorithmID(SECOidTag algorithm, int iteration, SECItem *salt);
 PK11SymKey *
 PK11_PBEKeyGen(PK11SlotInfo *slot, SECAlgorithmID *algid,  SECItem *pwitem,
 	       PRBool faulty3DES, void *wincx);
+PK11SymKey *
+PK11_RawPBEKeyGen(PK11SlotInfo *slot, CK_MECHANISM_TYPE type, SECItem *params,
+		SECItem *pwitem, PRBool faulty3DES, void *wincx);
 SECItem *
 PK11_GetPBEIV(SECAlgorithmID *algid, SECItem *pwitem);
 
@@ -488,6 +491,21 @@ PK11_GetLowLevelKeyIDForCert(PK11SlotInfo *slot,
 					CERTCertificate *cert, void *pwarg);
 SECItem *
 PK11_GetLowLevelKeyIDForPrivateKey(SECKEYPrivateKey *key);
+
+SECItem *
+PK11_FindCrlByName(PK11SlotInfo **slot, CK_OBJECT_HANDLE *handle,
+						SECItem *derName, int type);
+
+CK_OBJECT_HANDLE
+PK11_PutCrl(PK11SlotInfo *slot, SECItem *crl, 
+				SECItem *name, char *url, int type);
+
+SECItem *
+PK11_FindSMimeProfile(PK11SlotInfo **slotp, char *emailAddr, SECItem *derSubj,
+					SECItem **profileTime);
+SECStatus
+PK11_SaveSMimeProfile(PK11SlotInfo *slot, char *emailAddr, SECItem *derSubj,
+			SECItem *emailProfile, SECItem *profileTime);
 
 SEC_END_PROTOS
 

@@ -34,7 +34,7 @@
 /*
  * Interface to the OCSP implementation.
  *
- * $Id: ocsp.h,v 1.1 2000/03/31 19:43:02 relyea%netscape.com Exp $
+ * $Id: ocsp.h,v 1.2 2001/11/08 00:14:45 relyea%netscape.com Exp $
  */
 
 #ifndef _OCSP_H_
@@ -353,6 +353,8 @@ CERT_GetEncodedOCSPResponse(PRArenaPool *arena, CERTCertList *certList,
  *     Pointer to CERTCertDBHandle for certificate DB to use for verification.
  *   void *pwArg
  *     Pointer to argument for password prompting, if needed.
+ *   CERTCertificate *issuerCert
+ *     Issuer of the certificate that generated the OCSP request.
  * OUTPUTS:
  *   CERTCertificate **pSignerCert
  *     Pointer in which to store signer's certificate; only filled-in if
@@ -371,7 +373,8 @@ CERT_GetEncodedOCSPResponse(PRArenaPool *arena, CERTCertList *certList,
 extern SECStatus
 CERT_VerifyOCSPResponseSignature(CERTOCSPResponse *response,	
 				 CERTCertDBHandle *handle, void *pwArg,
-				 CERTCertificate **pSignerCert);
+				 CERTCertificate **pSignerCert,
+				 CERTCertificate *issuerCert);
 
 /*
  * FUNCTION: CERT_GetOCSPAuthorityInfoAccessLocation

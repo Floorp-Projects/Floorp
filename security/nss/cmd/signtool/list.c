@@ -91,14 +91,6 @@ ListCerts(char *key, int list_certs)
 		return -1;
 	}
 
-	/* Traverse Internal DB */
-	rv = SEC_TraversePermCerts(db, cert_trav_callback, (void*)&list_certs);
-
-	if (rv) {
-		PR_fprintf(outputFD, "**Traverse of internal DB failed**\n");
-		return -1;
-	}
-
 	if (num_trav_certs == 0) {
 		PR_fprintf(outputFD,
 			"You don't appear to have any object signing certificates.\n");

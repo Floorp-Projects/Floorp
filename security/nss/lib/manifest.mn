@@ -33,29 +33,25 @@
 CORE_DEPTH = ../..
 DEPTH      = ../..
 
-DIRS =            \
-	base      \
-	asn1      \
-	dev       \
-	pki       \
-	pki1      \
-	crmf      \
-	jar       \
-	certhigh  \
-	pk11wrap  \
-	cryptohi  \
-	softoken  \
-	certdb    \
-	crypto    \
-	util      \
-	freebl    \
-	nss       \
-	pkcs12    \
-	fortcrypt \
-	pkcs7     \
-	smime     \
-	ssl       \
+#
+# organized by DLL
+#
+#  softoken and prereqs.
+#  stan (not a separate dll yet)
+#  nss base (traditional)
+#  ssl
+#  smime
+#  ckfw (builtins module)
+#  crmf jar (not dll's)
+#  fortcrypt
+DIRS =  util freebl softoken \
+	base asn1 dev pki pki1 \
+	certdb certhigh pk11wrap cryptohi crypto nss \
+	ssl \
+	pkcs12 pkcs7 smime \
+	crmf jar \
 	ckfw      \
+	fortcrypt \
 	$(NULL)
 
 # NSS 4.0 build - pure stan libraries

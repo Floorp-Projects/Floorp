@@ -36,8 +36,81 @@
 #  are specifed as dependencies within rules.mk.
 #
 
-TARGETS        = $(LIBRARY)
-SHARED_LIBRARY =
-IMPORT_LIBRARY =
-PROGRAM        =
+#TARGETS        = $(LIBRARY)
+#SHARED_LIBRARY =
+#IMPORT_LIBRARY =
+#PROGRAM        =
 
+# can't do this in manifest.mn because OS_ARCH isn't defined there.
+ifeq ($(OS_ARCH), WINNT)
+
+# don't want the 32 in the shared library name
+SHARED_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).dll
+IMPORT_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).lib
+
+RES = $(OBJDIR)/$(LIBRARY_NAME).res
+RESNAME = $(LIBRARY_NAME).rc
+
+# $(PROGRAM) has explicit dependencies on $(EXTRA_LIBS)
+CRYPTOLIB=$(DIST)/lib/freebl.lib
+CRYPTODIR=../freebl
+ifdef MOZILLA_SECURITY_BUILD
+	CRYPTOLIB=$(DIST)/lib/crypto.lib
+	CRYPTODIR=../crypto
+endif
+
+EXTRA_SHARED_LIBRARY_LIBS += \
+	$(CRYPTOLIB) \
+	$(DIST)/lib/secutil.lib \
+	$(NULL)
+
+EXTRA_LIBS += \
+	$(DIST)/lib/dbm.lib \
+	$(NULL)
+
+ifdef MOZILLA_BSAFE_BUILD
+	EXTRA_LIBS+=$(DIST)/lib/bsafe$(BSAFEVER).lib
+endif
+
+EXTRA_SHARED_LIBS += \
+	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plc4.lib \
+	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plds4.lib \
+	$(DIST)/lib/$(NSPR31_LIB_PREFIX)nspr4.lib \
+	$(NULL)
+else
+
+# $(PROGRAM) has explicit dependencies on $(EXTRA_LIBS)
+CRYPTOLIB=$(DIST)/lib/libfreebl.$(LIB_SUFFIX)
+CRYPTODIR=../freebl
+ifdef MOZILLA_SECURITY_BUILD
+	CRYPTOLIB=$(DIST)/lib/libcrypto.$(LIB_SUFFIX)
+	CRYPTODIR=../crypto
+endif
+EXTRA_LIBS += \
+	$(CRYPTOLIB) \
+	$(DIST)/lib/libsecutil.$(LIB_SUFFIX) \
+	$(DIST)/lib/libdbm.$(LIB_SUFFIX) \
+	$(NULL)
+ifdef MOZILLA_BSAFE_BUILD
+	EXTRA_LIBS+=$(DIST)/lib/libbsafe.$(LIB_SUFFIX)
+endif
+
+# $(PROGRAM) has NO explicit dependencies on $(EXTRA_SHARED_LIBS)
+# $(EXTRA_SHARED_LIBS) come before $(OS_LIBS), except on AIX.
+EXTRA_SHARED_LIBS += \
+	-L$(DIST)/lib/ \
+	-lplc4 \
+	-lplds4 \
+	-lnspr4 \
+	$(NULL)
+endif
+
+ifeq ($(OS_ARCH),SunOS)
+ifndef USE_64
+ifeq ($(CPU_ARCH),sparc)
+# The -R '$ORIGIN' linker option instructs libnss3.so to search for its
+# dependencies (libfreebl_*.so) in the same directory where it resides.
+MKSHLIB += -R '$$ORIGIN'
+endif
+endif
+endif

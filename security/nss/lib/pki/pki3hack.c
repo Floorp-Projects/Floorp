@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: nss3hack.c,v $ $Revision: 1.5 $ $Date: 2001/11/05 17:29:27 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.1 $ $Date: 2001/11/08 00:15:20 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -56,11 +56,11 @@ static const char CVS_ID[] = "@(#) $RCSfile: nss3hack.c,v $ $Revision: 1.5 $ $Da
 #endif /* CKHELPER_H */
 
 #ifndef DEVNSS3HACK_H
-#include "devnss3hack.h"
+#include "dev3hack.h"
 #endif /* DEVNSS3HACK_H */
 
 #ifndef PKINSS3HACK_H
-#include "pkinss3hack.h"
+#include "pki3hack.h"
 #endif /* PKINSS3HACK_H */
 
 #include "secitem.h"
@@ -95,13 +95,10 @@ STAN_LoadDefaultNSS3TrustDomain
     td->tokenList = nssList_Create(td->arena, PR_TRUE);
     list = PK11_GetAllTokens(CKM_INVALID_MECHANISM, PR_FALSE, PR_FALSE, NULL);
     if (list) {
-	/* XXX this doesn't work until softoken is a true PKCS#11 mod */
 	for (le = list->head; le; le = le->next) {
-	    if (!PK11_IsInternal(le->slot)) {
-		token = nssToken_CreateFromPK11SlotInfo(td, le->slot);
-		PK11Slot_SetNSSToken(le->slot, token);
-		nssList_Add(td->tokenList, token);
-	    }
+	    token = nssToken_CreateFromPK11SlotInfo(td, le->slot);
+	    PK11Slot_SetNSSToken(le->slot, token);
+	    nssList_Add(td->tokenList, token);
 	}
     }
     td->tokens = nssList_CreateIterator(td->tokenList);
@@ -322,7 +319,14 @@ static CERTCertTrust *
 nssTrust_GetCERTCertTrust(NSSTrust *t, CERTCertificate *cc)
 {
     CERTCertTrust *rvTrust = PORT_ArenaAlloc(cc->arena, sizeof(CERTCertTrust));
+    unsigned int client;
     rvTrust->sslFlags = get_nss3trust_from_cktrust(t->serverAuth);
+    client = get_nss3trust_from_cktrust(t->clientAuth);
+    if (client & (CERTDB_TRUSTED_CA|CERTDB_NS_TRUSTED_CA)) {
+	client &= ~(CERTDB_TRUSTED_CA|CERTDB_NS_TRUSTED_CA);
+	rvTrust->sslFlags |= CERTDB_TRUSTED_CLIENT_CA;
+    }
+    rvTrust->sslFlags |= client;
     rvTrust->emailFlags = get_nss3trust_from_cktrust(t->emailProtection);
     rvTrust->objectSigningFlags = get_nss3trust_from_cktrust(t->codeSigning);
     if (PK11_IsUserCert(cc->slot, cc, cc->pkcs11ID)) {
@@ -347,7 +351,7 @@ fill_CERTCertificateFields(NSSCertificate *c, CERTCertificate *cc)
     }
     /* trust */
     cc->trust = nssTrust_GetCERTCertTrust(&c->trust, cc);
-    /* referenceCount  addref? */
+    cc->referenceCount++;
     /* subjectList ? */
     /* pkcs11ID */
     cc->pkcs11ID = c->handle;
@@ -378,14 +382,55 @@ NSS_EXTERN NSSCertificate *
 STAN_GetNSSCertificate(CERTCertificate *cc)
 {
     NSSCertificate *c;
+    NSSArena *arena;
+
     c = cc->nssCertificate;
-    if (!c) {
-	/* i don't think this should happen.  but if it can, need to create
-	 * NSSCertificate from CERTCertificate values here.
-	 */
+    if (c) {
+    	return c;
+    }
+
+    /* i don't think this should happen.  but if it can, need to create
+     * NSSCertificate from CERTCertificate values here.  */
+    /* Yup, it can happen. */
+    arena = NSSArena_Create();
+    if (!arena) {
 	return NULL;
     }
+    c = NSSCertificate_Create(arena);
+    if (!c) {
+	goto loser;
+    }
+    NSSITEM_FROM_SECITEM(&c->encoding, &cc->derCert);
+    c->type = NSSCertificateType_PKIX;
+    c->arena = arena;
+    nssItem_Create(arena,
+                   &c->issuer, cc->derIssuer.len, cc->derIssuer.data);
+    nssItem_Create(arena,
+                   &c->subject, cc->derSubject.len, cc->derSubject.data);
+    nssItem_Create(arena,
+                   &c->serial, cc->serialNumber.len, cc->serialNumber.data);
+    if (cc->nickname) {
+	c->nickname = nssUTF8_Create(arena,
+                                 nssStringType_UTF8String,
+                                 (NSSUTF8 *)cc->nickname,
+                                 PORT_Strlen(cc->nickname));
+    }
+    if (cc->emailAddr) {
+        c->email = nssUTF8_Create(arena,
+                                  nssStringType_PrintableString,
+                                  (NSSUTF8 *)cc->emailAddr,
+                                  PORT_Strlen(cc->emailAddr));
+    }
+    c->trustDomain = (NSSTrustDomain *)cc->dbhandle;
+    if (cc->slot) {
+	c->token = PK11Slot_GetNSSToken(cc->slot);
+	c->slot = c->token->slot;
+    }
+    cc->nssCertificate = c;
     return c;
+loser:
+    nssArena_Destroy(arena);
+    return NULL;
 }
 
 static CK_TRUST
@@ -545,7 +590,8 @@ get_cert_type(NSSCertificateType nssType)
     case NSSCertificateType_PKIX:
 	return CKC_X_509;
     default:
-	return CK_INVALID_KEY;
+	return CK_INVALID_HANDLE;  /* Not really! CK_INVALID_HANDLE is not a
+				    * type CK_CERTIFICATE_TYPE */
     }
 }
 
@@ -591,7 +637,7 @@ nssTrustDomain_AddTempCertToPerm
     /* This is a hack, ignoring the 4.0 token ordering scheme */
     token = STAN_GetInternalToken();
     c->handle = nssToken_ImportObject(token, NULL, cert_template, ctsize);
-    if (c->handle == CK_INVALID_KEY) {
+    if (c->handle == CK_INVALID_HANDLE) {
 	return PR_FAILURE;
     }
     c->token = token;

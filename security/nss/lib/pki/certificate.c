@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.12 $ $Date: 2001/11/05 17:29:27 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.13 $ $Date: 2001/11/08 00:15:19 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -135,7 +135,7 @@ NSSCertificate_Create
     if (!arenaOpt) {
 	rvCert->arena = arena;
     }
-    rvCert->handle = CK_INVALID_KEY;
+    rvCert->handle = CK_INVALID_HANDLE;
     return rvCert;
 loser:
     if (!arenaOpt && arena) {
@@ -191,27 +191,30 @@ nssCertificate_GetCertTrust
 )
 {
     PRStatus nssrv;
-    CK_TRUST saTrust, epTrust, csTrust;
+    CK_TRUST saTrust, caTrust, epTrust, csTrust;
     CK_OBJECT_HANDLE tobjID;
     CK_ULONG trust_size;
     CK_ATTRIBUTE trust_template[] = {
 	{ CKA_TRUST_SERVER_AUTH,      NULL, 0 },
+	{ CKA_TRUST_CLIENT_AUTH,      NULL, 0 },
 	{ CKA_TRUST_EMAIL_PROTECTION, NULL, 0 },
 	{ CKA_TRUST_CODE_SIGNING,     NULL, 0 }
     };
     trust_size = sizeof(trust_template) / sizeof(trust_template[0]);
     tobjID = get_cert_trust_handle(c, session);
-    if (tobjID == CK_INVALID_KEY) {
+    if (tobjID == CK_INVALID_HANDLE) {
 	return PR_FAILURE;
     }
     /* Then use the trust object to find the trust settings */
     NSS_CK_SET_ATTRIBUTE_VAR(trust_template, 0, saTrust);
-    NSS_CK_SET_ATTRIBUTE_VAR(trust_template, 1, epTrust);
-    NSS_CK_SET_ATTRIBUTE_VAR(trust_template, 2, csTrust);
+    NSS_CK_SET_ATTRIBUTE_VAR(trust_template, 1, caTrust);
+    NSS_CK_SET_ATTRIBUTE_VAR(trust_template, 2, epTrust);
+    NSS_CK_SET_ATTRIBUTE_VAR(trust_template, 3, csTrust);
     nssrv = nssCKObject_GetAttributes(tobjID,
                                       trust_template, trust_size,
                                       NULL, session, c->slot);
     c->trust.serverAuth = saTrust;
+    c->trust.clientAuth = caTrust;
     c->trust.emailProtection = epTrust;
     c->trust.codeSigning = csTrust;
     return PR_SUCCESS;
@@ -371,9 +374,17 @@ nssCertificate_SetCertTrust
     }
     session = c->token->defaultSession;
     tobjID = get_cert_trust_handle(c, session);
-    if (tobjID == CK_INVALID_KEY) {
+    if (tobjID == CK_INVALID_HANDLE) {
 	/* trust object doesn't exist yet, create one */
-	return create_cert_trust_object(c, trust);
+	tobjID = create_cert_trust_object(c, trust);
+	if (tobjID == CK_INVALID_HANDLE) {
+	    return PR_FAILURE;
+	}
+	c->trust.serverAuth = trust->serverAuth;
+	c->trust.clientAuth = trust->clientAuth;
+	c->trust.emailProtection = trust->emailProtection;
+	c->trust.codeSigning = trust->codeSigning;
+	return PR_SUCCESS;
     }
     NSS_CK_SET_ATTRIBUTE_VAR(trust_template, 0, trust->serverAuth);
     NSS_CK_SET_ATTRIBUTE_VAR(trust_template, 1, trust->clientAuth);
@@ -754,13 +765,15 @@ NSSCertificate_GetPublicKey
   NSSCertificate *c
 )
 {
-    PRStatus nssrv;
     CK_ATTRIBUTE pubktemplate[] = {
 	{ CKA_CLASS,   NULL, 0 },
 	{ CKA_ID,      NULL, 0 },
 	{ CKA_SUBJECT, NULL, 0 }
     };
+#if 0
+    PRStatus nssrv;
     CK_ULONG count = sizeof(pubktemplate) / sizeof(pubktemplate[0]);
+#endif 
     NSS_CK_SET_ATTRIBUTE_ITEM(pubktemplate, 0, &g_ck_class_pubkey);
     if (c->id.size > 0) {
 	/* CKA_ID */

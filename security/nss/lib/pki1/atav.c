@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: atav.c,v $ $Revision: 1.3 $ $Date: 2001/10/15 15:01:59 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: atav.c,v $ $Revision: 1.4 $ $Date: 2001/11/08 00:15:24 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -961,13 +961,13 @@ nss_atav_utf8_string_is_hex
   return PR_TRUE;
 }
 
-static PRUint8
+static NSSUTF8
 nss_atav_fromhex
 (
-  PRUint8 *d
+  NSSUTF8 *d
 )
 {
-  PRUint8 rv;
+  NSSUTF8 rv;
 
   if( d[0] <= '9' ) {
     rv = (d[0] - '0') * 16;
@@ -1105,8 +1105,8 @@ nssATAV_CreateFromUTF8
   if( '#' == *value ) { /* XXX fgmr.. was it '#'?  or backslash? */
     PRUint32 size;
     PRUint32 len;
-    PRUint8 *c;
-    PRUint8 *d;
+    NSSUTF8 *c;
+    NSSUTF8 *d;
     PRStatus status;
     /* It's in hex */
 
@@ -1716,6 +1716,9 @@ nssATAV_Compare
   case nssStringType_UniversalString:
     break;
   case nssStringType_BMPString:
+    break;
+  case nssStringType_GeneralString:
+    /* what to do here? */
     break;
   case nssStringType_UTF8String:
     break;

@@ -34,7 +34,7 @@
 /*
  * Test program for client-side OCSP.
  *
- * $Id: ocspclnt.c,v 1.1 2000/03/31 20:09:29 relyea%netscape.com Exp $
+ * $Id: ocspclnt.c,v 1.2 2001/11/08 00:14:21 relyea%netscape.com Exp $
  */
 
 #include "secutil.h"
@@ -859,7 +859,7 @@ print_response (FILE *out_file, SECItem *data, CERTCertDBHandle *handle)
 	}
 
 	sigStatus = CERT_VerifyOCSPResponseSignature (response, handle,
-						      NULL, &signerCert);
+						      NULL, &signerCert, NULL);
 	SECU_Indent (out_file, level);
 	fprintf (out_file, "Signature verification ");
 	if (sigStatus != SECSuccess) {
@@ -1209,7 +1209,6 @@ nssdone:
 
     if (handle != NULL) {
 	(void) CERT_DisableOCSPChecking (handle);
-	CERT_ClosePermCertDB (handle);
     }
 
     NSS_Shutdown ();

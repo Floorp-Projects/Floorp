@@ -38,68 +38,210 @@
 
 #include "pk11pars.h"
 #include "pkcs11i.h"
+#include "mcom_db.h"
 
 #define FREE_CLEAR(p) if (p) { PORT_Free(p); p = NULL; }
 
 static void
-secmod_parseFlags(char *tmp, pk11_parameters *parsed) { 
+secmod_parseTokenFlags(char *tmp, pk11_token_parameters *parsed) { 
     parsed->readOnly = pk11_argHasFlag("flags","readOnly",tmp);
     parsed->noCertDB = pk11_argHasFlag("flags","noCertDB",tmp);
-    parsed->noModDB = pk11_argHasFlag("flags","noModDB",tmp);
+    parsed->noKeyDB = pk11_argHasFlag("flags","noKeyDB",tmp);
     parsed->forceOpen = pk11_argHasFlag("flags","forceOpen",tmp);
     parsed->pwRequired = pk11_argHasFlag("flags","passwordRequired",tmp);
     return;
 }
 
-
+static void
+secmod_parseFlags(char *tmp, pk11_parameters *parsed) { 
+    parsed->noModDB = pk11_argHasFlag("flags","noModDB",tmp);
+    parsed->readOnly = pk11_argHasFlag("flags","readOnly",tmp);
+    /* keep legacy interface working */
+    parsed->noCertDB = pk11_argHasFlag("flags","noCertDB",tmp);
+    parsed->forceOpen = pk11_argHasFlag("flags","forceOpen",tmp);
+    parsed->pwRequired = pk11_argHasFlag("flags","passwordRequired",tmp);
+    return;
+}
 
 CK_RV
-secmod_parseParameters(char *param, pk11_parameters *parsed) 
+secmod_parseTokenParameters(char *param, pk11_token_parameters *parsed) 
 {
     int next;
     char *tmp;
     char *index;
     index = pk11_argStrip(param);
 
-    PORT_Memset(parsed, 0, sizeof(pk11_parameters));
-
     while (*index) {
 	PK11_HANDLE_STRING_ARG(index,parsed->configdir,"configdir=",;)
 	PK11_HANDLE_STRING_ARG(index,parsed->certPrefix,"certprefix=",;)
 	PK11_HANDLE_STRING_ARG(index,parsed->keyPrefix,"keyprefix=",;)
-	PK11_HANDLE_STRING_ARG(index,parsed->secmodName,"secmod=",;)
-	PK11_HANDLE_STRING_ARG(index,parsed->man,"manufactureID=",;)
-	PK11_HANDLE_STRING_ARG(index,parsed->libdes,"libraryDescription=",;)
-	PK11_HANDLE_STRING_ARG(index,parsed->tokdes,"cryptoTokenDescription=",;)
-	PK11_HANDLE_STRING_ARG(index,parsed->ptokdes,"dbTokenDescription=",;)
-	PK11_HANDLE_STRING_ARG(index,parsed->slotdes,"cryptoSlotDescription=",;)
-	PK11_HANDLE_STRING_ARG(index,parsed->pslotdes,"dbSlotDescription=",;)
-	PK11_HANDLE_STRING_ARG(index,parsed->fslotdes,"FIPSSlotDescription=",;)
-	PK11_HANDLE_STRING_ARG(index,parsed->fpslotdes,"FIPSTokenDescription=",;)
+	PK11_HANDLE_STRING_ARG(index,parsed->tokdes,"tokenDescription=",;)
+	PK11_HANDLE_STRING_ARG(index,parsed->slotdes,"slotDescription=",;)
 	PK11_HANDLE_STRING_ARG(index,tmp,"minPWLen=", 
 			if(tmp) { parsed->minPW=atoi(tmp); PORT_Free(tmp); })
 	PK11_HANDLE_STRING_ARG(index,tmp,"flags=", 
-		if(tmp) { secmod_parseFlags(param,parsed); PORT_Free(tmp); })
+	   if(tmp) { secmod_parseTokenFlags(param,parsed); PORT_Free(tmp); })
 	PK11_HANDLE_FINAL_ARG(index)
    }
    return CKR_OK;
 }
 
+static void
+secmod_parseTokens(char *tokenParams, pk11_parameters *parsed)
+{
+    char *tokenIndex;
+    pk11_token_parameters *tokens = NULL;
+    int i=0,count = 0,next;
+
+    if ((tokenParams == NULL) || (*tokenParams == 0))  return;
+
+    /* first count the number of slots */
+    for (tokenIndex = pk11_argStrip(tokenParams); *tokenIndex;
+		tokenIndex = pk11_argStrip(pk11_argSkipParameter(tokenIndex))) {
+	count++;
+    }
+
+    /* get the data structures */
+    tokens = (pk11_token_parameters *) 
+			PORT_ZAlloc(count*sizeof(pk11_token_parameters));
+    if (tokens == NULL) return;
+
+    for (tokenIndex = pk11_argStrip(tokenParams), i = 0;
+					*tokenIndex && i < count ; i++ ) {
+	char *name;
+	name = pk11_argGetName(tokenIndex,&next);
+	tokenIndex += next;
+
+	tokens[i].slotID = pk11_argDecodeNumber(name);
+        tokens[i].readOnly = PR_TRUE;
+	tokens[i].noCertDB = PR_TRUE;
+	tokens[i].noKeyDB = PR_TRUE;
+	if (!pk11_argIsBlank(*tokenIndex)) {
+	    char *args = pk11_argFetchValue(tokenIndex,&next);
+	    tokenIndex += next;
+	    if (args) {
+		secmod_parseTokenParameters(args,&tokens[i]);
+		PORT_Free(args);
+	    }
+	}
+	if (name) PORT_Free(name);
+	tokenIndex = pk11_argStrip(tokenIndex);
+    }
+    parsed->token_count = i;
+    parsed->tokens = tokens;
+    return; 
+}
+
+CK_RV
+secmod_parseParameters(char *param, pk11_parameters *parsed, PRBool isFIPS) 
+{
+    int next;
+    char *tmp;
+    char *index;
+    char *certPrefix = NULL, *keyPrefix = NULL;
+    char *tokdes = NULL, *ptokdes = NULL;
+    char *slotdes = NULL, *pslotdes = NULL;
+    char *fslotdes = NULL, *fpslotdes = NULL;
+    char *minPW = NULL;
+    index = pk11_argStrip(param);
+
+    PORT_Memset(parsed, 0, sizeof(pk11_parameters));
+
+    while (*index) {
+	PK11_HANDLE_STRING_ARG(index,parsed->configdir,"configdir=",;)
+	PK11_HANDLE_STRING_ARG(index,parsed->secmodName,"secmod=",;)
+	PK11_HANDLE_STRING_ARG(index,parsed->man,"manufactureID=",;)
+	PK11_HANDLE_STRING_ARG(index,parsed->libdes,"libraryDescription=",;)
+	/* constructed values, used so legacy interfaces still work */
+	PK11_HANDLE_STRING_ARG(index,certPrefix,"certprefix=",;)
+        PK11_HANDLE_STRING_ARG(index,keyPrefix,"keyprefix=",;)
+        PK11_HANDLE_STRING_ARG(index,tokdes,"cryptoTokenDescription=",;)
+        PK11_HANDLE_STRING_ARG(index,ptokdes,"dbTokenDescription=",;)
+        PK11_HANDLE_STRING_ARG(index,slotdes,"cryptoSlotDescription=",;)
+        PK11_HANDLE_STRING_ARG(index,pslotdes,"dbSlotDescription=",;)
+        PK11_HANDLE_STRING_ARG(index,fslotdes,"FIPSSlotDescription=",;)
+        PK11_HANDLE_STRING_ARG(index,minPW,"FIPSTokenDescription=",;)
+	PK11_HANDLE_STRING_ARG(index,tmp,"minPWLen=",;)
+
+	PK11_HANDLE_STRING_ARG(index,tmp,"flags=", 
+		if(tmp) { secmod_parseFlags(param,parsed); PORT_Free(tmp); })
+	PK11_HANDLE_STRING_ARG(index,tmp,"tokens=", 
+		if(tmp) { secmod_parseTokens(tmp,parsed); PORT_Free(tmp); })
+	PK11_HANDLE_FINAL_ARG(index)
+    }
+    if (parsed->tokens == NULL) {
+	int  count = isFIPS ? 1 : 2;
+	int  index = count-1;
+	pk11_token_parameters *tokens = NULL;
+
+	tokens = (pk11_token_parameters *) 
+			PORT_ZAlloc(count*sizeof(pk11_token_parameters));
+	if (tokens == NULL) {
+	    goto loser;
+	}
+	parsed->tokens = tokens;
+    	parsed->token_count = count;
+	tokens[index].slotID = isFIPS ? FIPS_SLOT_ID : PRIVATE_KEY_SLOT_ID;
+	tokens[index].certPrefix = certPrefix;
+	tokens[index].keyPrefix = keyPrefix;
+	tokens[index].minPW = minPW ? atoi(minPW) : 0;
+	tokens[index].readOnly = parsed->readOnly;
+	tokens[index].noCertDB = parsed->noCertDB;
+	tokens[index].forceOpen = parsed->forceOpen;
+	tokens[index].pwRequired = parsed->pwRequired;
+	certPrefix = NULL;
+	keyPrefix = NULL;
+	if (isFIPS) {
+	    tokens[index].tokdes = fslotdes;
+	    tokens[index].slotdes = fpslotdes;
+	    fslotdes = NULL;
+	    fpslotdes = NULL;
+	} else {
+	    tokens[index].tokdes = ptokdes;
+	    tokens[index].slotdes = pslotdes;
+	    tokens[0].slotID = NETSCAPE_SLOT_ID;
+	    tokens[0].tokdes = tokdes;
+	    tokens[0].slotdes = slotdes;
+	    tokens[0].noCertDB = PR_TRUE;
+	    tokens[0].noKeyDB = PR_TRUE;
+	    ptokdes = NULL;
+	    pslotdes = NULL;
+	    tokdes = NULL;
+	    slotdes = NULL;
+	}
+    }
+
+loser:
+    FREE_CLEAR(certPrefix);
+    FREE_CLEAR(keyPrefix);
+    FREE_CLEAR(tokdes);
+    FREE_CLEAR(ptokdes);
+    FREE_CLEAR(slotdes);
+    FREE_CLEAR(pslotdes);
+    FREE_CLEAR(fslotdes);
+    FREE_CLEAR(fpslotdes);
+    FREE_CLEAR(minPW);
+    return CKR_OK;
+}
+
 void
 secmod_freeParams(pk11_parameters *params)
 {
+    int i;
+
+    for (i=0; i < params->token_count; i++) {
+	FREE_CLEAR(params->tokens[i].configdir);
+	FREE_CLEAR(params->tokens[i].certPrefix);
+	FREE_CLEAR(params->tokens[i].keyPrefix);
+	FREE_CLEAR(params->tokens[i].tokdes);
+	FREE_CLEAR(params->tokens[i].slotdes);
+    }
+
     FREE_CLEAR(params->configdir);
-    FREE_CLEAR(params->certPrefix);
-    FREE_CLEAR(params->keyPrefix);
     FREE_CLEAR(params->secmodName);
     FREE_CLEAR(params->man);
     FREE_CLEAR(params->libdes); 
-    FREE_CLEAR(params->tokdes);
-    FREE_CLEAR(params->ptokdes);
-    FREE_CLEAR(params->slotdes);
-    FREE_CLEAR(params->pslotdes);
-    FREE_CLEAR(params->fslotdes);
-    FREE_CLEAR(params->fpslotdes);
+    FREE_CLEAR(params->tokens);
 }
 
 
@@ -462,7 +604,7 @@ secmod_DecodeData(char *defParams, DBT *data, PRBool *retInternal)
 	    trustOrder = 20;
 	}
 
-        slotStrings[i] = pk11_mkSlotString(slotID,defaultFlags,
+	slotStrings[i] = pk11_mkSlotString(slotID,defaultFlags,
 			timeout,slots[i].askpw,hasRootCerts,hasRootTrust);
     }
 
@@ -488,7 +630,7 @@ static DB *secmod_OpenDB(char *dbName, PRBool readOnly) {
 	 if (readOnly) return NULL;
 
 	 pkcs11db = dbopen( dbName,
-                             O_RDWR | O_CREAT | O_TRUNC, 0600, DB_HASH, 0 );
+			     O_RDWR | O_CREAT | O_TRUNC, 0600, DB_HASH, 0 );
 	 if (pkcs11db) (* pkcs11db->sync)(pkcs11db, 0);
     }
     return pkcs11db;

@@ -57,6 +57,7 @@ typedef enum {
 	JAR_COMMAND,
 	LIST_COMMAND,
 	RAW_LIST_COMMAND,
+	RAW_ADD_COMMAND,
 	UNDEFAULT_COMMAND
 } Command;
 
@@ -74,6 +75,7 @@ static char *commandNames[] = {
 	"-jar",
 	"-list",
 	"-rawlist",
+	"-rawadd",
 	"-undefault"
 };
 
@@ -81,6 +83,7 @@ static char *commandNames[] = {
 /* this enum must be kept in sync with the optionStrings list */
 typedef enum {
 	ADD_ARG=0,
+	RAW_ADD_ARG,
 	CHANGEPW_ARG,
 	CIPHERS_ARG,
 	CREATE_ARG,
@@ -112,6 +115,7 @@ typedef enum {
 /* This list must be kept in sync with the Arg enum */
 static char *optionStrings[] = {
 	"-add",
+	"-rawadd",
 	"-changepw",
 	"-ciphers",
 	"-create",
@@ -150,6 +154,7 @@ static Command command = NO_COMMAND;
 static char* pwFile = NULL;
 static char* newpwFile = NULL;
 static char* moduleName = NULL;
+static char* moduleSpec = NULL;
 static char* slotName = NULL;
 static char* secmodName = NULL;
 static char* tokenName = NULL;
@@ -398,6 +403,18 @@ parse_args(int argc, char *argv[])
 					moduleName = argv[++i];
 			}
 			break;
+		case RAW_ADD_ARG:
+			if(command != NO_COMMAND) {
+				PR_fprintf(PR_STDERR, errStrings[MULTIPLE_COMMAND_ERR], arg);
+				return MULTIPLE_COMMAND_ERR;
+			}
+			command = RAW_ADD_COMMAND;
+			if(TRY_INC(i, argc)) {
+				PR_fprintf(PR_STDERR, errStrings[OPTION_NEEDS_ARG_ERR], arg);
+				return OPTION_NEEDS_ARG_ERR;
+			}
+			moduleSpec = argv[i];
+			break;
 		case MECHANISMS_ARG:
 			if(mechanisms != NULL) {
 				PR_fprintf(PR_STDERR, errStrings[DUPLICATE_OPTION_ERR], arg);
@@ -499,6 +516,8 @@ verify_params()
 		break;
 	case LIST_COMMAND:
 	case RAW_LIST_COMMAND:
+		break;
+	case RAW_ADD_COMMAND:
 		break;
 	case UNDEFAULT_COMMAND:
 	case DEFAULT_COMMAND:
@@ -777,17 +796,26 @@ main(int argc, char *argv[])
 		goto loser;
 	}
 
-        if (command == RAW_LIST_COMMAND) {
+        if ((command == RAW_LIST_COMMAND) || (command == RAW_ADD_COMMAND)) {
 	    if(!moduleName) {
+		char *readOnlyStr, *noCertDBStr, *sep;
 		if (!secmodName) secmodName="secmod.db";
 		if (!dbprefix) dbprefix = "";
+		sep = ((command == RAW_LIST_COMMAND) && nocertdb) ? "," : " ";
+		readOnlyStr = (command == RAW_LIST_COMMAND) ? "readOnly" : "" ;
+		noCertDBStr = nocertdb ? "noCertDB" : "";
 		SECU_ConfigDirectory(dbdir);
 
-		moduleName=PR_smprintf("name=\"NSS default Module DB\" parameters=\"configdir=%s certPrefix=%s keyPrefix=%s secmod=%s flags=readOnly%s\" NSS=\"flags=internal,moduleDB,moduleDBOnly,critical\"",
-			SECU_ConfigDirectory(NULL),dbprefix,
-				dbprefix,secmodName, nocertdb?",noCertDB":"");
+		moduleName=PR_smprintf("name=\"NSS default Module DB\" parameters=\"configdir=%s certPrefix=%s keyPrefix=%s secmod=%s flags=%s%s%s\" NSS=\"flags=internal,moduleDB,moduleDBOnly,critical\"",
+			SECU_ConfigDirectory(NULL),dbprefix, dbprefix,
+				secmodName,  readOnlyStr,sep,  noCertDBStr);
 	    }
-	    errcode = RawListModule(moduleName);
+	    if (command == RAW_LIST_COMMAND) {
+		errcode = RawListModule(moduleName);
+	    } else {
+		PORT_Assert(moduleSpec);
+		errcode = RawAddModule(moduleName,moduleSpec);
+	    }
 	    goto loser;
 	}
 

@@ -498,8 +498,7 @@ install_cert(CERTCertDBHandle *db, PK11SlotInfo *slot, SECItem *derCert,
 	CERTCertTrust trust;
     PK11SlotInfo *newSlot;
 
-	newcert = CERT_NewTempCertificate(db, derCert, NULL,
-	 /*isperm*/ PR_FALSE, /*copyDER*/ PR_TRUE);
+	newcert = CERT_DecodeDERCertificate(derCert, PR_TRUE, NULL);
 
 	if (newcert == NULL) {
 		PR_fprintf(errorFD, "%s: can't create new certificate\n", PROGRAM_NAME);

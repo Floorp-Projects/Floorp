@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certdecode.c,v $ $Revision: 1.2 $ $Date: 2001/10/19 20:06:28 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certdecode.c,v $ $Revision: 1.3 $ $Date: 2001/11/08 00:15:19 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIT_H
@@ -114,7 +114,7 @@ nssDecodedCert_Destroy
 #if 0
 	nss_SetError(NSS_ERROR_INVALID_ARGUMENT);
 #endif
-	return PR_FAILURE;
+	break;
     }
     return PR_FAILURE;
 }

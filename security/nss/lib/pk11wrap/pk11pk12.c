@@ -106,8 +106,40 @@ struct SECKEYRawPrivateKeyStr {
     } u;
 };
 typedef struct SECKEYRawPrivateKeyStr SECKEYRawPrivateKey;
-/*const SEC_ASN1Template SECKEY_PrivateKeyInfoTemplate[];*/
 
+
+/* ASN1 Templates for new decoder/encoder */
+/*
+ * Attribute value for PKCS8 entries (static?)
+ */
+const SEC_ASN1Template SECKEY_AttributeTemplate[] = {
+    { SEC_ASN1_SEQUENCE,
+        0, NULL, sizeof(SECKEYAttribute) },
+    { SEC_ASN1_OBJECT_ID, offsetof(SECKEYAttribute, attrType) },
+    { SEC_ASN1_SET_OF, offsetof(SECKEYAttribute, attrValue),
+        SEC_AnyTemplate },
+    { 0 }
+};
+
+const SEC_ASN1Template SECKEY_SetOfAttributeTemplate[] = {
+    { SEC_ASN1_SET_OF, 0, SECKEY_AttributeTemplate },
+};
+
+const SEC_ASN1Template SECKEY_PrivateKeyInfoTemplate[] = {
+    { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(SECKEYPrivateKeyInfo) },
+    { SEC_ASN1_INTEGER, offsetof(SECKEYPrivateKeyInfo,version) },
+    { SEC_ASN1_INLINE, offsetof(SECKEYPrivateKeyInfo,algorithm),
+        SECOID_AlgorithmIDTemplate },
+    { SEC_ASN1_OCTET_STRING, offsetof(SECKEYPrivateKeyInfo,privateKey) },
+    { SEC_ASN1_OPTIONAL | SEC_ASN1_CONSTRUCTED | SEC_ASN1_CONTEXT_SPECIFIC | 0,
+        offsetof(SECKEYPrivateKeyInfo,attributes),
+        SECKEY_SetOfAttributeTemplate },
+    { 0 }
+};
+
+const SEC_ASN1Template SECKEY_PointerToPrivateKeyInfoTemplate[] = {
+    { SEC_ASN1_POINTER, 0, SECKEY_PrivateKeyInfoTemplate }
+};
 
 const SEC_ASN1Template SECKEY_RSAPrivateKeyExportTemplate[] = {
     { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(SECKEYRawPrivateKey) },
@@ -133,6 +165,25 @@ const SEC_ASN1Template SECKEY_DHPrivateKeyExportTemplate[] = {
     { SEC_ASN1_INTEGER, offsetof(SECKEYRawPrivateKey,u.dh.prime) },
 };
 
+const SEC_ASN1Template SECKEY_EncryptedPrivateKeyInfoTemplate[] = {
+    { SEC_ASN1_SEQUENCE,
+        0, NULL, sizeof(SECKEYEncryptedPrivateKeyInfo) },
+    { SEC_ASN1_INLINE,
+        offsetof(SECKEYEncryptedPrivateKeyInfo,algorithm),
+        SECOID_AlgorithmIDTemplate },
+    { SEC_ASN1_OCTET_STRING,
+        offsetof(SECKEYEncryptedPrivateKeyInfo,encryptedData) },
+    { 0 }
+};
+
+const SEC_ASN1Template SECKEY_PointerToEncryptedPrivateKeyInfoTemplate[] = {
+        { SEC_ASN1_POINTER, 0, SECKEY_EncryptedPrivateKeyInfoTemplate }
+};
+
+SEC_ASN1_CHOOSER_IMPLEMENT(SECKEY_EncryptedPrivateKeyInfoTemplate)
+SEC_ASN1_CHOOSER_IMPLEMENT(SECKEY_PointerToEncryptedPrivateKeyInfoTemplate)
+SEC_ASN1_CHOOSER_IMPLEMENT(SECKEY_PrivateKeyInfoTemplate)
+SEC_ASN1_CHOOSER_IMPLEMENT(SECKEY_PointerToPrivateKeyInfoTemplate)
 
 
 SECStatus

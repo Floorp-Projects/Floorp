@@ -135,79 +135,11 @@
 #include "prlock.h"
 #include "prcvar.h"
 
+#include "nssilckt.h"
+
 PR_BEGIN_EXTERN_C
 
-typedef enum {
-    nssILockArena = 0,
-    nssILockSession = 1,
-    nssILockObject = 2,
-    nssILockRefLock = 3,
-    nssILockCert = 4,
-    nssILockCertDB = 5,
-    nssILockDBM = 6,
-    nssILockCache = 7,
-    nssILockSSL = 8,
-    nssILockList = 9,
-    nssILockSlot = 10,
-    nssILockFreelist = 11,
-    nssILockOID = 12,
-    nssILockAttribute = 13,
-    nssILockPK11cxt = 14,  /* pk11context */
-    nssILockRWLock = 15,
-    nssILockOther = 16,
-    nssILockSelfServ = 17,
-    nssILockLast  /* don't use this one! */
-} nssILockType;
-
-/*
-** Declare operation type enumerator
-** enumerations identify the function being performed
-*/
-typedef enum  {
-    FlushTT = 0,
-    NewLock = 1,
-    Lock = 2,
-    Unlock = 3,
-    DestroyLock = 4,
-    NewCondVar = 5,
-    WaitCondVar = 6,
-    NotifyCondVar = 7,
-    NotifyAllCondVar = 8,
-    DestroyCondVar = 9,
-    NewMonitor = 10,
-    EnterMonitor = 11,
-    ExitMonitor = 12,
-    Notify = 13,
-    NotifyAll = 14,
-    Wait = 15,
-    DestroyMonitor = 16
-} nssILockOp;
-
-/*
-** Declare the trace record
-*/
-struct pzTrace_s {
-    PRUint32        threadID; /* PR_GetThreadID() */
-    nssILockOp      op;       /* operation being performed */
-    nssILockType    ltype;    /* lock type identifier */
-    PRIntervalTime  callTime; /* time spent in function */
-    PRIntervalTime  heldTime; /* lock held time, or -1 */
-    void            *lock;    /* address of lock structure */    
-    PRIntn          line;     /* line number */
-    char            file[24]; /* filename */
-};
-
-/*
-** conditionally compile in nssilock features
-*/
 #if defined(NEED_NSS_ILOCK)
-
-/*
-** declare opaque types. See: nssilock.c
-*/
-typedef struct pzlock_s PZLock;
-typedef struct pzcondvar_s PZCondVar;
-typedef struct pzmonitor_s PZMonitor;
 
 #define PZ_NewLock(t) pz_NewLock((t),__FILE__,__LINE__)
 extern PZLock * 
@@ -356,21 +288,17 @@ extern void pz_TraceFlush( void );
 
 #else /* NEED_NSS_ILOCK */
 
-#define PZLock                  PRLock
-
 #define PZ_NewLock(t)           PR_NewLock()
 #define PZ_DestroyLock(k)       PR_DestroyLock((k))
 #define PZ_Lock(k)              PR_Lock((k))
 #define PZ_Unlock(k)            PR_Unlock((k))
 
-#define PZCondVar               PRCondVar
 #define PZ_NewCondVar(l)        PR_NewCondVar((l))
 #define PZ_DestroyCondVar(v)    PR_DestroyCondVar((v))
 #define PZ_WaitCondVar(v,t)     PR_WaitCondVar((v),(t))
 #define PZ_NotifyCondVar(v)     PR_NotifyCondVar((v))
 #define PZ_NotifyAllCondVar(v)  PR_NotifyAllCondVar((v))
 
-#define PZMonitor               PRMonitor
 #define PZ_NewMonitor(t)        PR_NewMonitor()
 #define PZ_DestroyMonitor(m)    PR_DestroyMonitor((m))
 #define PZ_EnterMonitor(m)      PR_EnterMonitor((m))

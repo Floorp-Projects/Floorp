@@ -30,7 +30,7 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-MANIFEST_CVS_ID = "@(#) $RCSfile: manifest.mn,v $ $Revision: 1.2 $ $Date: 2001/10/11 16:33:38 $ $Name:  $"
+MANIFEST_CVS_ID = "@(#) $RCSfile: manifest.mn,v $ $Revision: 1.3 $ $Date: 2001/11/08 00:14:53 $ $Name:  $"
 
 CORE_DEPTH = ../../..
 
@@ -47,17 +47,15 @@ EXPORTS =	   \
 MODULE = security
 
 CSRCS =		        \
-	module.c        \
-	slot.c          \
-	token.c         \
-	util.c          \
+	devmod.c        \
+	devslot.c          \
+	devtoken.c         \
+	devutil.c          \
 	ckhelper.c      \
 	$(NULL)
 
 # here is where the 3.4 glue code is added
 ifndef PURE_STAN_BUILD
-CSRCS += nss3hack.c
-PRIVATE_EXPORTS += devnss3hack.h
 DEFINES = -DNSS_3_4_CODE
 endif
 

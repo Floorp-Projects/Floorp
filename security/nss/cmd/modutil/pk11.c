@@ -303,6 +303,31 @@ RawListModule(char *modulespec)
 	return SUCCESS;
 }
 
+RawAddModule(char *dbmodulespec, char *modulespec)
+{
+    SECMODModule *module;
+    SECMODModule *dbmodule;
+
+
+    dbmodule = SECMOD_LoadModule(dbmodulespec,NULL,PR_TRUE);
+    if (dbmodule == NULL) {
+	 /* handle error */
+	return NO_SUCH_MODULE_ERR;
+    }
+
+    module = SECMOD_LoadModule(modulespec,dbmodule,PR_FALSE);
+    if (module == NULL) {
+	 /* handle error */
+	return NO_SUCH_MODULE_ERR;
+    }
+
+    if( SECMOD_UpdateModule(module) != SECSuccess ) {
+	PR_fprintf(PR_STDERR, errStrings[UPDATE_MOD_FAILED_ERR], modulespec);
+	return UPDATE_MOD_FAILED_ERR;
+    }
+    return SUCCESS;
+}
+
 /************************************************************************
  *
  * L i s t M o d u l e s
