@@ -3470,14 +3470,17 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
   // Only need to create a scroll frame/view for cases 2 and 3.
   // Currently OVERFLOW_SCROLL isn't honored, as
   // scrollportview::SetScrollPref is not implemented.
-  PRBool isXUL = PR_FALSE;
 
+  PRInt32 nameSpaceID;
+  aDocElement->GetNameSpaceID(nameSpaceID);
+
+  PRBool isHTML = (nameSpaceID == kNameSpaceID_HTML);
+  PRBool isXUL = (nameSpaceID == nsXULAtoms::nameSpaceID);
+
+  // Never create scrollbars for XUL documents
 #ifdef INCLUDE_XUL
-  PRInt32 nameSpaceID; // Never create scrollbars for XUL documents
-  if (NS_SUCCEEDED(aDocElement->GetNameSpaceID(nameSpaceID)) &&
-      nameSpaceID == nsXULAtoms::nameSpaceID) {
+  if (isXUL) {
     isScrollable = PR_FALSE;
-    isXUL = PR_TRUE;
   } else 
 #endif
   {
@@ -3508,6 +3511,73 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
           aPresContext->GetPaginatedScrolling(&isScrollable);
         } else {
           isScrollable = PR_FALSE; // we are printing
+        }
+      }
+    }
+  }
+
+  // if scrolling is still supported, check for the style data on the HTML and BODY
+  // NOTE: the docElement in HTML will have a BODY child, and we have to check for
+  //       no scrolling on that element as well as the docElement. Outside of HTML,
+  //       we will not check the children of the docElement
+  if (isScrollable) {
+    NS_ASSERTION(!isXUL, "XUL documents should never be scrollable - see above");
+
+    // see if the style is overflow: hidden, first on the document element
+    nsCOMPtr<nsIStyleContext> styleContext;
+    aPresContext->ResolveStyleContextFor(aDocElement, nsnull, PR_FALSE,
+                                         getter_AddRefs(styleContext));
+    if (styleContext) {
+      const nsStyleDisplay* display = (const nsStyleDisplay*)
+        styleContext->GetStyleData(eStyleStruct_Display);
+      if (display) {
+        if (display->mOverflow == NS_STYLE_OVERFLOW_HIDDEN || 
+            display->mOverflow == NS_STYLE_OVERFLOW_SCROLLBARS_NONE) {
+          isScrollable = PR_FALSE;
+        }
+      }
+    }
+    
+    // if still scrollable, check the BODY element, but only if we are in an HTML document
+    if (isScrollable && isHTML) {
+      // XXX: there is a nice convenient method on nsIHTMLDocument that we could use to get the body
+      //      element - it is called, strangely enough, GetBodyElement, but we cannot use it here
+      //      because the separation between content and layout prohibits including nsIHTMLDocument
+      //      without pulling more of content into content/shared, so we do the search the hard way
+
+      // walk the children of the docElement looking fo the BODY
+      nsCOMPtr<nsIContent> bodyElement;
+      PRInt32 count = 0;
+      aDocElement->ChildCount(count);
+      for (PRInt32 i = 0; i < count; ++i) {
+        nsCOMPtr<nsIContent> kidElement;
+        aDocElement->ChildAt(i, *getter_AddRefs(kidElement));
+        if (kidElement){
+          nsCOMPtr<nsIAtom> kidTag;
+          kidElement->GetTag(*getter_AddRefs(kidTag));
+          if (kidTag == nsHTMLAtoms::body) {
+            bodyElement = kidElement;
+            // done looking
+            break;
+          }
+        } else {
+          NS_ASSERTION(PR_FALSE, "null child element returned from ChildAt");
+          break;
+        }
+      }      
+      if (bodyElement) {
+        nsCOMPtr<nsIStyleContext> bodyContext;
+        aPresContext->ResolveStyleContextFor(bodyElement, styleContext, PR_FALSE,
+                                             getter_AddRefs(bodyContext));
+        if (bodyContext) {
+          const nsStyleDisplay* display = (const nsStyleDisplay*)
+            bodyContext->GetStyleData(eStyleStruct_Display);
+          if (display) {
+            if (display->mOverflow == NS_STYLE_OVERFLOW_HIDDEN || 
+                display->mOverflow == NS_STYLE_OVERFLOW_SCROLLBARS_NONE) {
+              isScrollable = PR_FALSE;
+            }
+          }
         }
       }
     }
