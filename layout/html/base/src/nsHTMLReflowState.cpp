@@ -88,6 +88,27 @@ nsHTMLReflowState::ReasonToString(nsReflowReason aReason)
 }
 #endif
 
+nsHTMLReflowState::nsHTMLReflowState(const nsHTMLReflowState& aOther)
+{
+  // Use assignment operator below.
+  *this = aOther;
+}
+
+nsHTMLReflowState&
+nsHTMLReflowState::operator=(const nsHTMLReflowState &aOther)
+{
+  // Copy everything.
+  // XXX This won't work anymore if someone adds member variables that
+  // have nontrivial constructors or assignment operators (e.g.,
+  // nsCOMPtr).
+  memcpy(this, &aOther, sizeof(*this));
+
+  // Fix up the |mCBReflowState| member, which should continue to point
+  // to |this|.
+  if (aOther.mCBReflowState == &aOther)
+    mCBReflowState = this;
+}
+
 // Initialize a <b>root</b> reflow state with a rendering context to
 // use for measuring things.
 nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*      aPresContext,

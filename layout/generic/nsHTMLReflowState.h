@@ -262,9 +262,13 @@ struct nsHTMLReflowState {
   static const char* ReasonToString(nsReflowReason aReason);
 #endif
 
-  // Note: The copy constructor is written by the compiler
-  // automatically. You can use that and then override specific values
-  // if you want, or you can call Init as desired...
+  // A simple copy constructor.  (It fixes up |mCBReflowState|, which
+  // can point to |this|, to point to the copy's |this|.)
+  nsHTMLReflowState(const nsHTMLReflowState& aOther);
+
+  // A simple assignment operator.  It does the same fixups as the
+  // copy-consturctor.
+  nsHTMLReflowState& operator=(const nsHTMLReflowState& aOther);
 
   // Initialize a <b>root</b> reflow state with a rendering context to
   // use for measuring things.
