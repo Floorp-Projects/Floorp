@@ -629,6 +629,7 @@ namespace JavaScript {
 		void reserve(size_t nElts);
 		T *reserve_back(size_t nElts = 1);
 		T *advance_back(size_t nElts = 1);
+		T *reserve_advance_back(size_t nElts = 1);
 
 		void fast_push_back(const T &elt);
 		void push_back(const T &elt);
@@ -683,6 +684,15 @@ namespace JavaScript {
 	template <typename T>
 	inline T *RawArrayBuffer<T>::advance_back(size_t nElts) {
 		ASSERT(length + nElts <= maxReservedSize);
+		T *p = buffer + length;
+		length += nElts;
+		return p;
+	}
+
+	// Combine the effects of reserve_back and advance_back.
+	template <typename T>
+	inline T *RawArrayBuffer<T>::reserve_advance_back(size_t nElts) {
+		reserve(length + nElts);
 		T *p = buffer + length;
 		length += nElts;
 		return p;
