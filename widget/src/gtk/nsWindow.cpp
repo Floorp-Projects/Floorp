@@ -425,11 +425,11 @@ PRBool nsWindow::OnExpose(nsPaintEvent &event)
     mUpdateArea->Union(event.rect->x, event.rect->y, event.rect->width, event.rect->height);
 
 
-    printf("\n\n");
+    //    printf("\n\n");
     PRInt32 x, y, w, h;
     mUpdateArea->GetBoundingBox(&x,&y,&w,&h);
-    printf("should be painting x = %i , y = %i , w = %i , h = %i\n", x, y, w, h);
-    printf("\n\n");
+    //    printf("should be painting x = %i , y = %i , w = %i , h = %i\n", x, y, w, h);
+    //    printf("\n\n");
     event.rect->x = x;
     event.rect->y = y;
     event.rect->width = w;
@@ -437,7 +437,7 @@ PRBool nsWindow::OnExpose(nsPaintEvent &event)
 
     if (event.rect->width == 0 || event.rect->height == 0)
     {
-      printf("ignoring paint for 0x0\n");
+      //      printf("ignoring paint for 0x0\n");
       return NS_OK;
     }
 
