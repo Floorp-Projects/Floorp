@@ -30,6 +30,7 @@ var gSettingsChanged = false;
 var gSiteDataChanged = false;
 var gAddNewSite = false;
 var gCurrentSiteIndex = -1;
+var gPasswordManagerOn = true;
 
 // Dialog initialization code
 function Startup()
@@ -50,6 +51,9 @@ function Startup()
   gPublishSiteData = GetPublishSiteData();
   gDefaultSiteName = GetDefaultPublishSiteName();
   gPreviousDefaultSite = gDefaultSiteName;
+
+  gPasswordManagerOn = GetBoolPref("signon.rememberSignons");
+  gDialog.SavePassword.disabled = !gPasswordManagerOn;
 
   InitDialog();
 
@@ -93,10 +97,10 @@ function FillSiteList()
 
 function SetPublishItemStyle(item)
 {
-  // Add a cell before the text to display a check for default site
+  // Display default site with bold style
   if (item)
   {
-    if (item.label == gDefaultSiteName)
+    if (item.getAttribute("label") == gDefaultSiteName)
       item.setAttribute("class", "bold");
     else
       item.removeAttribute("class");
@@ -204,8 +208,6 @@ function InitSiteSettings(selectedSiteIndex)
   // Index to the site we will need to update if settings changed
   gCurrentSiteIndex = selectedSiteIndex;
   
-  var savePassord = false;
-
   SetSelectedSiteIndex(selectedSiteIndex);
   var haveData = (gPublishSiteData && selectedSiteIndex != -1);
 
@@ -213,8 +215,10 @@ function InitSiteSettings(selectedSiteIndex)
   gDialog.PublishUrlInput.value = haveData ? gPublishSiteData[selectedSiteIndex].publishUrl : "";
   gDialog.BrowseUrlInput.value = haveData ? gPublishSiteData[selectedSiteIndex].browseUrl : "";
   gDialog.UsernameInput.value = haveData ? gPublishSiteData[selectedSiteIndex].username : "";
-  gDialog.PasswordInput.value = haveData ? gPublishSiteData[selectedSiteIndex].password : "";
-  gDialog.SavePassword.checked = haveData ? gPublishSiteData[selectedSiteIndex].savePassword : false;
+
+  var savePassord = haveData && gPasswordManagerOn;
+  gDialog.PasswordInput.value = savePassord ? gPublishSiteData[selectedSiteIndex].password : "";
+  gDialog.SavePassword.checked = savePassord ? gPublishSiteData[selectedSiteIndex].savePassword : false;
 
   gDialog.SetDefaultButton.disabled = !haveData;
   gDialog.RemoveSiteButton.disabled = !haveData;

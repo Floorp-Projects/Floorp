@@ -31,6 +31,7 @@ var gPreviousTitle;
 var gSettingsChanged = false;
 var gInitialSiteName;
 var gInitialSiteIndex = -1;
+var gPasswordManagerOn = true;
 
 // Dialog initialization code
 function Startup()
@@ -77,6 +78,9 @@ function Startup()
   // Change 'Ok' button to 'Publish'
   gDialog.PublishButton.setAttribute("label", GetString("Publish"));
   
+  gPasswordManagerOn = GetBoolPref("signon.rememberSignons");
+  gDialog.SavePassword.disabled = !gPasswordManagerOn;
+
   gPublishSiteData = GetPublishSiteData();
   gDefaultSiteName = GetDefaultPublishSiteName();
 
@@ -247,7 +251,7 @@ function SelectSiteList()
     publishUrl = gPublishSiteData[selectedSiteIndex].publishUrl;
     browseUrl = gPublishSiteData[selectedSiteIndex].browseUrl;
     username = gPublishSiteData[selectedSiteIndex].username;
-    savePassword = gPublishSiteData[selectedSiteIndex].savePassword;
+    savePassword = gPasswordManagerOn ? gPublishSiteData[selectedSiteIndex].savePassword : false;
     if (savePassword)
       password = gPublishSiteData[selectedSiteIndex].password;
 
