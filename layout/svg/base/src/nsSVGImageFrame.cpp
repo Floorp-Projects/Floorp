@@ -51,6 +51,7 @@
 #include "nsIImageLoadingContent.h"
 #include "imgIContainer.h"
 #include "gfxIImageFrame.h"
+#include "nsIImage.h"
 #include "imgIRequest.h"
 #include "nsSVGClipPathFrame.h"
 
@@ -456,7 +457,7 @@ nsSVGImageFrame::ConvertFrame(gfxIImageFrame *aNewFrame)
     mSurface->Unlock();
     return NS_ERROR_FAILURE;
   }
-#ifdef XP_WIN
+#ifdef MOZ_PLATFORM_IMAGES_BOTTOM_TO_TOP
   stride = -stride;
 #endif
 
@@ -477,11 +478,21 @@ nsSVGImageFrame::ConvertFrame(gfxIImageFrame *aNewFrame)
   aNewFrame->GetAlphaData(&alpha, &length);
   aNewFrame->GetAlphaBytesPerRow(&abpr);
 
-#ifdef XP_WIN
-  // nsImageWin returns either 3bpp or 4bpp, depending on optimization
-  PRUint32 bpp = bpr/width;
+  // some platforms return 4bpp (OSX and Win32 under some circumstances)
+  const PRUint32 bpp = bpr/width;
+
+#ifdef XP_MACOSX
+  // pixels on os-x have a lead byte we don't care about (alpha or
+  // garbage, depending on the image format) - shift our pointer down
+  // one so we can use the rest of the code as-is
+  rgb++;
 #endif
-  
+
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
+#define REVERSE_CHANNELS
+#endif
+
+  // cairo/os-x wants ABGR format, GDI+ wants RGBA, cairo/unix wants BGRA
   if (!alpha) {
     for (PRInt32 y=0; y<height; y++) {
       if (stride > 0)
@@ -489,16 +500,21 @@ nsSVGImageFrame::ConvertFrame(gfxIImageFrame *aNewFrame)
       else
         target = data + stride * (1 - height) + stride * y;
       for (PRInt32 x=0; x<width; x++) {
-#ifdef XP_WIN
+#ifdef XP_MACOSX
+        *target++ = 255;
+#endif
+#ifndef REVERSE_CHANNELS
         *target++ = rgb[y*bpr + bpp*x];
         *target++ = rgb[y*bpr + bpp*x + 1];
         *target++ = rgb[y*bpr + bpp*x + 2];
 #else
-        *target++ = rgb[y*bpr + 3*x + 2];
-        *target++ = rgb[y*bpr + 3*x + 1];
-        *target++ = rgb[y*bpr + 3*x];
+        *target++ = rgb[y*bpr + bpp*x + 2];
+        *target++ = rgb[y*bpr + bpp*x + 1];
+        *target++ = rgb[y*bpr + bpp*x];
 #endif
+#ifndef XP_MACOSX
         *target++ = 255;
+#endif
       }
     }
   } else {
@@ -511,16 +527,21 @@ nsSVGImageFrame::ConvertFrame(gfxIImageFrame *aNewFrame)
           target = data + stride * (1 - height) + stride * y;
         for (PRInt32 x=0; x<width; x++) {
           PRUint32 a = alpha[y*abpr + x];
-#ifdef XP_WIN
+#ifdef XP_MACOSX
+          *target++ = a;
+#endif
+#ifndef REVERSE_CHANNELS
           FAST_DIVIDE_BY_255(*target++, rgb[y*bpr + bpp*x] * a);
           FAST_DIVIDE_BY_255(*target++, rgb[y*bpr + bpp*x + 1] * a);
           FAST_DIVIDE_BY_255(*target++, rgb[y*bpr + bpp*x + 2] * a);
 #else
-          FAST_DIVIDE_BY_255(*target++, rgb[y*bpr + 3*x + 2] * a);
-          FAST_DIVIDE_BY_255(*target++, rgb[y*bpr + 3*x + 1] * a);
-          FAST_DIVIDE_BY_255(*target++, rgb[y*bpr + 3*x] * a);
+          FAST_DIVIDE_BY_255(*target++, rgb[y*bpr + bpp*x + 2] * a);
+          FAST_DIVIDE_BY_255(*target++, rgb[y*bpr + bpp*x + 1] * a);
+          FAST_DIVIDE_BY_255(*target++, rgb[y*bpr + bpp*x] * a);
 #endif
+#ifndef XP_MACOSX
           *target++ = a;
+#endif
         }
       }
     } else {
@@ -534,16 +555,21 @@ nsSVGImageFrame::ConvertFrame(gfxIImageFrame *aNewFrame)
         
         for (PRUint32 x=0; x<width; x++) {
           if (NS_GET_BIT(alphaRow, x)) {
-#ifdef XP_WIN
+#ifdef XP_MACOSX
+            *target++ = 255;
+#endif
+#ifndef REVERSE_CHANNELS
             *target++ = rgb[y*bpr + bpp*x];
             *target++ = rgb[y*bpr + bpp*x + 1];
             *target++ = rgb[y*bpr + bpp*x + 2];
 #else
-            *target++ = rgb[y*bpr + 3*x + 2];
-            *target++ = rgb[y*bpr + 3*x + 1];
-            *target++ = rgb[y*bpr + 3*x];
+            *target++ = rgb[y*bpr + bpp*x + 2];
+            *target++ = rgb[y*bpr + bpp*x + 1];
+            *target++ = rgb[y*bpr + bpp*x];
 #endif
+#ifndef XP_MACOSX
             *target++ = 255;
+#endif
           } else {
             *target++ = 0;
             *target++ = 0;
@@ -554,6 +580,8 @@ nsSVGImageFrame::ConvertFrame(gfxIImageFrame *aNewFrame)
       }
     }
   }
+
+#undef REVERSE_CHANNELS
   
   mSurface->Unlock();
   aNewFrame->UnlockImageData();
