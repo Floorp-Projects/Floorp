@@ -38,7 +38,7 @@
 
 extern "C" RDF_NCVocab  gNavCenter;
 
-#ifdef DEBUG_slamm
+#if defined(DEBUG_slamm)||defined(DEBUG_mcafee)
 #define D(x) x
 #else
 #define D(x)
@@ -649,6 +649,18 @@ XFE_RDFTreeView::add_row
     /*D( fprintf(stderr,"XFE_RDFTreeView::add_row(0x%x %d) name(%s) depth(%d)\n",
              node,row, name, depth);)*/
     Pixmap pixmap, mask;
+
+#if 0
+    // Using this for debugging. -mcafee
+    static PRBool firstRow = PR_TRUE;
+
+    if(firstRow) {
+      printf("First row\n");
+      firstRow = PR_FALSE;
+    } else {
+      printf("Not first row\n");
+    }
+#endif
 
 	//pixmap = XmUNSPECIFIED_PIXMAP;
 	//pixmask = XmUNSPECIFIED_PIXMAP;
