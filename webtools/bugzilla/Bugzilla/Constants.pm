@@ -36,7 +36,17 @@ use base qw(Exporter);
     CONTROLMAPSHOWN
     CONTROLMAPDEFAULT
     CONTROLMAPMANDATORY
-    );
+
+    AUTH_OK
+    AUTH_NODATA
+    AUTH_ERROR
+    AUTH_LOGINFAILED
+    AUTH_DISABLED
+
+    LOGIN_OPTIONAL
+    LOGIN_NORMAL
+    LOGIN_REQUIRED
+);
    
 
 # CONSTANTS
@@ -72,5 +82,16 @@ use constant CONTROLMAPSHOWN => 1;
 use constant CONTROLMAPDEFAULT => 2;
 use constant CONTROLMAPMANDATORY => 3;
 
-1;
+# See Bugzilla::Auth for docs for these
 
+use constant AUTH_OK => 0;
+use constant AUTH_NODATA => 1;
+use constant AUTH_ERROR => 2;
+use constant AUTH_LOGINFAILED => 3;
+use constant AUTH_DISABLED => 4;
+
+use constant LOGIN_OPTIONAL => 0;
+use constant LOGIN_NORMAL => 1;
+use constant LOGIN_REQUIRED => 2;
+
+1;

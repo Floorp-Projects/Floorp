@@ -24,10 +24,13 @@ package Bugzilla;
 
 use strict;
 
+use Bugzilla::Auth;
 use Bugzilla::CGI;
 use Bugzilla::Config;
+use Bugzilla::Constants;
 use Bugzilla::DB;
 use Bugzilla::Template;
+use Bugzilla::User;
 
 my $_template;
 sub template {
@@ -41,6 +44,60 @@ sub cgi {
     my $class = shift;
     $_cgi ||= new Bugzilla::CGI();
     return $_cgi;
+}
+
+my $_user;
+sub user {
+    my $class = shift;
+    return $_user;
+}
+
+sub login {
+    my ($class, $type) = @_;
+
+    # Avoid double-logins, which may confuse the auth code
+    # (double cookies, odd compat code settings, etc)
+    # This is particularly important given the munging for
+    # $::COOKIE{'Bugzilla_login'} from a userid to a loginname
+    # (for backwards compat)
+    if (defined $_user) {
+        return $_user->{id};
+    }
+
+    $type = LOGIN_NORMAL unless defined $type;
+
+    # For now, we can only log in from a cgi
+    # One day, we'll be able to log in via apache auth, an email message's
+    # PGP signature, and so on
+
+    use Bugzilla::Auth::CGI;
+    my $userid = Bugzilla::Auth::CGI->login($type);
+    if ($userid) {
+        $_user = new Bugzilla::User($userid);
+
+        # Compat stuff
+        $::userid = $userid;
+        &::ConfirmGroup($userid);
+
+        # Evil compat hack. The cookie stores the id now, not the name, but
+        # old code still looks at this to get the current user's email
+        # so it needs to be set.
+        $::COOKIE{'Bugzilla_login'} = $_user->{email};
+
+        $::vars->{'user'} = &::GetUserInfo($userid);
+    } else {
+        # Old compat stuff
+
+        $::userid = 0;
+        delete $::COOKIE{'Bugzilla_login'};
+        delete $::COOKIE{'Bugzilla_logincookie'};
+        # NB - Can't delete from $cgi->cookie, so the cookie data will
+        # remain there
+        # People shouldn't rely on the cookie param for the username
+        # - use Bugzilla->user instead!
+    }
+
+    return $userid || 0;
 }
 
 my $_dbh;
@@ -93,6 +150,7 @@ sub switch_to_main_db {
 # Per process cleanup
 sub _cleanup {
     undef $_cgi;
+    undef $_user;
 
     # See bug 192531. If we don't clear the possibly active statement handles,
     # then when this is called from the END block, it happens _before_ the
@@ -191,6 +249,16 @@ The current C<Template> object, to be used for output
 The current C<cgi> object. Note that modules should B<not> be using this in
 general. Not all Bugzilla actions are cgi requests. Its useful as a convenience
 method for those scripts/templates which are only use via CGI, though.
+
+=item C<user>
+
+The current L<Bugzilla::User>. C<undef> if there is no currently logged in user
+or if the login code has not yet been run.
+
+=item C<login>
+
+Logs in a user, returning the userid, or C<0> if there is no logged in user. 
+See L<Bugzilla::Auth>.
 
 =item C<dbh>
 

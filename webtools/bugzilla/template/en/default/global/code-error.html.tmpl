@@ -48,6 +48,16 @@
     Attachment #[% attachid FILTER html %] ([% description FILTER html %]) 
     is already obsolete.
 
+  [% ELSIF error == "auth_err" %]
+    [% title = "Internal Authentication Error" %]
+    [%# Authentication errors are in a template depending on the auth method,
+        for pluggability.
+      #%] 
+    [% INCLUDE "account/auth/$authmethod-error.html.tmpl" %]
+
+  [% ELSIF error == "authres_unhandled" %]
+    An authorization handler return value was not handled by the login code.
+
   [% ELSIF error == "bug_error" %]
     Trying to retrieve bug [% bug.bug_id %] returned the error
     [% bug.error FILTER html %]

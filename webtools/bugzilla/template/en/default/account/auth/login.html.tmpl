@@ -31,45 +31,26 @@
 %]
 
 <p>
-  I need a legitimate 
-  [% Param('useLDAP') ? "LDAP username" : "email address" %]
-  and password to continue.
-</p>  
+  I need a legitimate login and password to continue.
+</p>
 
 <form action="[% target %]" method="POST">
   <table>
     <tr>
-      [% IF Param("useLDAP") %]
-        <td align="right">
-          <b>Username:</b>
-        </td>
-        <td>
-          <input size="10" name="LDAP_login">
-        </td>
-      </tr>
-      <tr>
-        <td align="right">
-          <b>Password:</b>
-        </td>
-        <td>
-          <input type="password" size="10" name="LDAP_password">
-        </td>
-      [% ELSE %]
-        <td align="right">
-          <b>E-mail address:</b>
-        </td>
-        <td>
-          <input size="35" name="Bugzilla_login">
-        </td>
-      </tr>
-      <tr>
-        <td align="right">
-          <b>Password:</b>
-        </td>
-        <td>
-          <input type="password" size="35" name="Bugzilla_password">
-        </td>
-      [% END %]
+      <td align="right">
+        <b>Login:</b>
+      </td>
+      <td>
+        <input size="35" name="Bugzilla_login">
+      </td>
+    </tr>
+    <tr>
+      <td align="right">
+        <b>Password:</b>
+      </td>
+      <td>
+        <input type="password" size="35" name="Bugzilla_password">
+      </td>
     [% IF Param('loginnetmask') < 32 %]
       <tr>
         <td align="right">
@@ -88,18 +69,17 @@
     </tr>
   </table>
   
-  [% PROCESS "global/hidden-fields.html.tmpl"   
-     exclude="^(Bugzilla|LDAP)_(login|password)$" %]
+  [% PROCESS "global/hidden-fields.html.tmpl"
+     exclude="^Bugzilla_(login|password|restrictlogin)$" %]
 
   <input type="submit" name="GoAheadAndLogIn" value="Login">
 </form>
 
 [%# Allow the user to create a new account, or request a token to change 
-  # their password (unless we are using LDAP, in which case the user must 
-  # use LDAP to change it).
+  # their password, assuming that our auth method allows that.
   #%]
   
-[% UNLESS Param("useLDAP") %]
+[% IF caneditaccount %]
   <hr>
 
   [% IF Param("createemailregexp") %]

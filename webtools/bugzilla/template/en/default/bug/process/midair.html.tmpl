@@ -65,7 +65,7 @@ You have the following choices:
 <ul>
   <li>
     <form method="post" action="process_bug.cgi">
-      [% PROCESS "global/hidden-fields.html.tmpl" exclude="^(Bugzilla|LDAP)_(login|password)$" %]
+      [% PROCESS "global/hidden-fields.html.tmpl" exclude="^Bugzilla_(login|password)$" %]
       <input type="submit" value="Submit my changes anyway">
         This will cause all of the above changes to be overwritten
         [% ", except for the added comment(s)" IF comments.size > start_at %].

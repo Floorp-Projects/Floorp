@@ -40,11 +40,11 @@ use vars qw(
 ConnectToDatabase();
 
 # If we're using LDAP for login, then we can't create a new account here.
-if(Param('useLDAP')) {
+unless (Bugzilla::Auth->can_edit) {
   # Just in case someone already has an account, let them get the correct
   # footer on the error message
   quietly_check_login();
-  ThrowUserError("ldap_cant_create_account");
+  ThrowUserError("auth_cant_create_account");
 }
 
 # Clear out the login cookies.  Make people log in again if they create an

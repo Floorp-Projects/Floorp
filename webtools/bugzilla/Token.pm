@@ -237,16 +237,17 @@ sub Cancel {
     &::SendSQL("UNLOCK TABLES");
 }
 
-sub HasPasswordToken {
-    # Returns a password token if the user has one.
-    
-    my ($userid) = @_;
-    
-    &::SendSQL("SELECT token FROM tokens 
-                WHERE userid = $userid AND tokentype = 'password' LIMIT 1");
-    my ($token) = &::FetchSQLData();
-    
-    return $token;
+sub DeletePasswordTokens {
+    my ($userid, $reason) = @_;
+
+    my $dbh = Bugzilla->dbh;
+    my $sth = $dbh->prepare("SELECT token " .
+                            "FROM tokens " .
+                            "WHERE userid=? AND tokentype='password'");
+    $sth->execute($userid);
+    while (my $token = $sth->fetchrow_array) {
+        Token::Cancel($token, "user_logged_in");
+    }
 }
 
 sub HasEmailChangeToken {

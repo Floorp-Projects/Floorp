@@ -34,12 +34,7 @@ use lib ".";
 
 use Bugzilla::Util;
 use Bugzilla::Config;
-
-# commented out the following snippet of code. this tosses errors into the
-# CGI if you are perl 5.6, and doesn't if you have perl 5.003. 
-# We want to check for the existence of the LDAP modules here.
-# eval "use Mozilla::LDAP::Conn";
-# my $have_ldap = $@ ? 0 : 1;
+use Bugzilla::Constants;
 
 # Shut up misguided -w warnings about "used only once".  For some reason,
 # "use vars" chokes on me when I try it here.
@@ -202,82 +197,8 @@ sub PasswordForLogin {
     return $result;
 }
 
-sub get_netaddr {
-    my ($ipaddr) = @_;
-
-    # Check for a valid IPv4 addr which we know how to parse
-    if (!$ipaddr || $ipaddr !~ /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/) {
-        return undef;
-    }
-
-    my $addr = unpack("N", pack("CCCC", split(/\./, $ipaddr)));
-
-    my $maskbits = Param('loginnetmask');
-
-    $addr >>= (32-$maskbits);
-    $addr <<= (32-$maskbits);
-    return join(".", unpack("CCCC", pack("N", $addr)));
-}
-
-my $login_cookie_set = 0;
-# If quietly_check_login is called with no arguments and logins are
-# required, it will prompt for a login.
 sub quietly_check_login {
-    if (Param('requirelogin') && !(@_)) {
-        return confirm_login();
-    }
-    $::disabledreason = '';
-    my $userid = 0;
-    my $ipaddr = $ENV{'REMOTE_ADDR'};
-    my $netaddr = get_netaddr($ipaddr);
-    if (defined $::COOKIE{"Bugzilla_login"} &&
-        defined $::COOKIE{"Bugzilla_logincookie"}) {
-        my $query = "SELECT profiles.userid," .
-                " profiles.login_name, " .
-                " profiles.disabledtext " .
-                " FROM profiles, logincookies WHERE logincookies.cookie = " .
-                SqlQuote($::COOKIE{"Bugzilla_logincookie"}) .
-                " AND profiles.userid = logincookies.userid AND" .
-                " profiles.login_name = " .
-                SqlQuote($::COOKIE{"Bugzilla_login"}) .
-                " AND (logincookies.ipaddr = " .
-                SqlQuote($ipaddr);
-        if (defined $netaddr) {
-            $query .= " OR logincookies.ipaddr = " . SqlQuote($netaddr);
-        }
-        $query .= ")";
-        SendSQL($query);
-
-        my @row;
-        if (MoreSQLData()) {
-            ($userid, my $loginname, my $disabledtext) = FetchSQLData();
-            if ($userid > 0) {
-                if ($disabledtext eq '') {
-                    $::COOKIE{"Bugzilla_login"} = $loginname; # Makes sure case
-                                                              # is in
-                                                              # canonical form.
-                    # We've just verified that this is ok
-                    detaint_natural($::COOKIE{"Bugzilla_logincookie"});
-                } else {
-                    $::disabledreason = $disabledtext;
-                    $userid = 0;
-                }
-            }
-        }
-    }
-    # if 'who' is passed in, verify that it's a good value
-    if ($::FORM{'who'}) {
-        my $whoid = DBname_to_id($::FORM{'who'});
-        delete $::FORM{'who'} unless $whoid;
-    }
-    if (!$userid) {
-        delete $::COOKIE{"Bugzilla_login"};
-    }
-                    
-    $::userid = $userid;
-    ConfirmGroup($userid);
-    $vars->{'user'} = GetUserInfo($::userid);
-    return $userid;
+    return Bugzilla->login($_[0] ? LOGIN_OPTIONAL : LOGIN_NORMAL);
 }
 
 # Populate a hash with information about this user. 
@@ -351,281 +272,7 @@ sub MailPassword {
 }
 
 sub confirm_login {
-    my ($nexturl) = (@_);
-
-# Uncommenting the next line can help debugging...
-#    print "Content-type: text/plain\n\n";
-
-    # I'm going to reorganize some of this stuff a bit.  Since we're adding
-    # a second possible validation method (LDAP), we need to move some of this
-    # to a later section.  -Joe Robins, 8/3/00
-    my $enteredlogin = "";
-    my $realcryptpwd = "";
-    my $userid;
-
-    # If the form contains Bugzilla login and password fields, use Bugzilla's 
-    # built-in authentication to authenticate the user (otherwise use LDAP below).
-    if (defined $::FORM{"Bugzilla_login"} && defined $::FORM{"Bugzilla_password"}) {
-        # Make sure the user's login name is a valid email address.
-        $enteredlogin = $::FORM{"Bugzilla_login"};
-        CheckEmailSyntax($enteredlogin);
-
-        # Retrieve the user's ID and crypted password from the database.
-        SendSQL("SELECT userid, cryptpassword FROM profiles 
-                 WHERE login_name = " . SqlQuote($enteredlogin));
-        ($userid, $realcryptpwd) = FetchSQLData();
-
-        # Make sure the user exists or throw an error (but do not admit it was a username
-        # error to make it harder for a cracker to find account names by brute force).
-        $userid || ThrowUserError("invalid_username_or_password");
-
-        # If this is a new user, generate a password, insert a record
-        # into the database, and email their password to them.
-        if ( defined $::FORM{"PleaseMailAPassword"} && !$userid ) {
-            # Ensure the new login is valid
-            if(!ValidateNewUser($enteredlogin)) {
-                ThrowUserError("account_exists");
-            }
-
-            my $password = InsertNewUser($enteredlogin, "");
-            MailPassword($enteredlogin, $password);
-            
-            $vars->{'login'} = $enteredlogin;
-            
-            print "Content-Type: text/html\n\n";
-            $template->process("account/created.html.tmpl", $vars)
-              || ThrowTemplateError($template->error());                 
-        }
-
-        # Otherwise, authenticate the user.
-        else {
-            # Get the salt from the user's crypted password.
-            my $salt = $realcryptpwd;
-
-            # Using the salt, crypt the password the user entered.
-            my $enteredCryptedPassword = crypt( $::FORM{"Bugzilla_password"} , $salt );
-
-            # Make sure the passwords match or throw an error.
-            ($enteredCryptedPassword eq $realcryptpwd)
-              || ThrowUserError("invalid_username_or_password");
-
-            # If the user has successfully logged in, delete any password tokens
-            # lying around in the system for them.
-            use Token;
-            my $token = Token::HasPasswordToken($userid);
-            while ( $token ) {
-                Token::Cancel($token, 'user_logged_in');
-                $token = Token::HasPasswordToken($userid);
-            }
-        }
-
-     } elsif (Param("useLDAP") &&
-              defined $::FORM{"LDAP_login"} &&
-              defined $::FORM{"LDAP_password"}) {
-       # If we're using LDAP for login, we've got an entirely different
-       # set of things to check.
-
-# see comment at top of file near eval
-       # First, if we don't have the LDAP modules available to us, we can't
-       # do this.
-#       if(!$have_ldap) {
-#         print "Content-type: text/html\n\n";
-#         PutHeader("LDAP not enabled");
-#         print "The necessary modules for LDAP login are not installed on ";
-#         print "this machine.  Please send mail to ".Param("maintainer");
-#         print " and notify him of this problem.\n";
-#         PutFooter();
-#         exit;
-#       }
-
-       # Next, we need to bind anonymously to the LDAP server.  This is
-       # because we need to get the Distinguished Name of the user trying
-       # to log in.  Some servers (such as iPlanet) allow you to have unique
-       # uids spread out over a subtree of an area (such as "People"), so
-       # just appending the Base DN to the uid isn't sufficient to get the
-       # user's DN.  For servers which don't work this way, there will still
-       # be no harm done.
-       my $LDAPserver = Param("LDAPserver");
-       if ($LDAPserver eq "") {
-         print "Content-type: text/html\n\n";
-         PutHeader("LDAP server not defined");
-         print "The LDAP server for authentication has not been defined.  ";
-         print "Please contact ".Param("maintainer")." ";
-         print "and notify him of this problem.\n";
-         PutFooter();
-         exit;
-       }
-
-       my $LDAPport = "389";  #default LDAP port
-       if($LDAPserver =~ /:/) {
-         ($LDAPserver, $LDAPport) = split(":",$LDAPserver);
-       }
-       my $LDAPconn = new Mozilla::LDAP::Conn($LDAPserver,$LDAPport);
-       if(!$LDAPconn) {
-         print "Content-type: text/html\n\n";
-         PutHeader("Unable to connect to LDAP server");
-         print "I was unable to connect to the LDAP server for user ";
-         print "authentication.  Please contact ".Param("maintainer");
-         print " and notify him of this problem.\n";
-         PutFooter();
-         exit;
-       }
-
-       # if no password was provided, then fail the authentication
-       # while it may be valid to not have an LDAP password, when you
-       # bind without a password (regardless of the binddn value), you
-       # will get an anonymous bind.  I do not know of a way to determine
-       # whether a bind is anonymous or not without making changes to the
-       # LDAP access control settings
-       if ( ! $::FORM{"LDAP_password"} ) {
-         print "Content-type: text/html\n\n";
-         PutHeader("Login Failed");
-         print "You did not provide a password.\n";
-         print "Please click <b>Back</b> and try again.\n";
-         PutFooter();
-         exit;
-       }
-
-       # We've got our anonymous bind;  let's look up this user.
-       my $dnEntry = $LDAPconn->search(Param("LDAPBaseDN"),"subtree","uid=".$::FORM{"LDAP_login"});
-       if(!$dnEntry) {
-         print "Content-type: text/html\n\n";
-         PutHeader("Login Failed");
-         print "The username or password you entered is not valid.\n";
-         print "Please click <b>Back</b> and try again.\n";
-         PutFooter();
-         exit;
-       }
-
-       # Now we get the DN from this search.  Once we've got that, we're
-       # done with the anonymous bind, so we close it.
-       my $userDN = $dnEntry->getDN;
-       $LDAPconn->close;
-
-       # Now we attempt to bind as the specified user.
-       $LDAPconn = new Mozilla::LDAP::Conn($LDAPserver,$LDAPport,$userDN,$::FORM{"LDAP_password"});
-       if(!$LDAPconn) {
-         print "Content-type: text/html\n\n";
-         PutHeader("Login Failed");
-         print "The username or password you entered is not valid.\n";
-         print "Please click <b>Back</b> and try again.\n";
-         PutFooter();
-         exit;
-       }
-
-       # And now we're going to repeat the search, so that we can get the
-       # mail attribute for this user.
-       my $userEntry = $LDAPconn->search(Param("LDAPBaseDN"),"subtree","uid=".$::FORM{"LDAP_login"});
-       if(!$userEntry->exists(Param("LDAPmailattribute"))) {
-         print "Content-type: text/html\n\n";
-         PutHeader("LDAP authentication error");
-         print "I was unable to retrieve the ".Param("LDAPmailattribute");
-         print " attribute from the LDAP server.  Please contact ";
-         print Param("maintainer")." and notify him of this error.\n";
-         PutFooter();
-         exit;
-       }
-
-       # Mozilla::LDAP::Entry->getValues returns an array for the attribute
-       # requested, even if there's only one entry.
-       $enteredlogin = ($userEntry->getValues(Param("LDAPmailattribute")))[0];
-
-       # We're going to need the cryptpwd for this user from the database
-       # so that we can set the cookie below, even though we're not going
-       # to use it for authentication.
-       $realcryptpwd = PasswordForLogin($enteredlogin);
-
-       # If we don't get a result, then we've got a user who isn't in
-       # Bugzilla's database yet, so we've got to add them.
-       if($realcryptpwd eq "") {
-         # We'll want the user's name for this.
-         my $userRealName = ($userEntry->getValues("displayName"))[0];
-         if($userRealName eq "") {
-           $userRealName = ($userEntry->getValues("cn"))[0];
-         }
-         InsertNewUser($enteredlogin, $userRealName);
-         $realcryptpwd = PasswordForLogin($enteredlogin);
-       }
-     } # end LDAP authentication
-
-     # And now, if we've logged in via either method, then we need to set
-     # the cookies.
-     if($enteredlogin ne "") {
-       $::COOKIE{"Bugzilla_login"} = $enteredlogin;
-       my $ipaddr = $ENV{'REMOTE_ADDR'};
-
-       # Unless we're restricting the login, or restricting would have no
-       # effect, loosen the IP which we record in the table
-       unless ($::FORM{'Bugzilla_restrictlogin'} ||
-               Param('loginnetmask') == 32) {
-           $ipaddr = get_netaddr($ipaddr);
-           $ipaddr = $ENV{'REMOTE_ADDR'} unless defined $ipaddr;
-       }
-       SendSQL("insert into logincookies (userid,ipaddr) values (@{[DBNameToIdAndCheck($enteredlogin)]}, @{[SqlQuote($ipaddr)]})");
-       SendSQL("select LAST_INSERT_ID()");
-       my $logincookie = FetchOneColumn();
-
-       $::COOKIE{"Bugzilla_logincookie"} = $logincookie;
-       my $cookiepath = Param("cookiepath");
-       if ($login_cookie_set == 0) {
-           $login_cookie_set = 1;
-           print "Set-Cookie: Bugzilla_login= " . url_quote($enteredlogin) . " ; path=$cookiepath; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
-           print "Set-Cookie: Bugzilla_logincookie=$logincookie ; path=$cookiepath; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
-       }
-    }
-
-    # If anonymous logins are disabled, quietly_check_login will force
-    # the user to log in by calling confirm_login() when called by any 
-    # code that does not call it with an argument. When confirm_login
-    # calls quietly_check_login, it must not result in confirm_login
-    # being called back.
-    $userid = quietly_check_login('do_not_recurse_here');
-
-    if (!$userid) {
-        if ($::disabledreason) {
-            my $cookiepath = Param("cookiepath");
-            print "Set-Cookie: Bugzilla_login= ; path=$cookiepath; expires=Sun, 30-Jun-80 00:00:00 GMT
-Set-Cookie: Bugzilla_logincookie= ; path=$cookiepath; expires=Sun, 30-Jun-80 00:00:00 GMT
-Content-type: text/html
-
-";
-            $vars->{'disabled_reason'} = $::disabledreason;
-            ThrowUserError("account_disabled");
-        }
-        
-        if (!defined $nexturl || $nexturl eq "") {
-            # Sets nexturl to be argv0, stripping everything up to and
-            # including the last slash (or backslash on Windows).
-            $0 =~ m:([^/\\]*)$:;
-            $nexturl = $1;
-        }
-        
-        $vars->{'target'} = $nexturl;
-        $vars->{'form'} = \%::FORM;
-        $vars->{'mform'} = \%::MFORM;
-        
-        print "Content-type: text/html\n\n";
-        $template->process("account/login.html.tmpl", $vars)
-          || ThrowTemplateError($template->error());
-                
-        # This seems like as good as time as any to get rid of old
-        # crufty junk in the logincookies table.  Get rid of any entry
-        # that hasn't been used in a month.
-        if (Bugzilla->dbwritesallowed) {
-            SendSQL("DELETE FROM logincookies " .
-                    "WHERE TO_DAYS(NOW()) - TO_DAYS(lastused) > 30");
-        }
-
-        exit;
-    }
-
-    # Update the timestamp on our logincookie, so it'll keep on working.
-    if (Bugzilla->dbwritesallowed) {
-        SendSQL("UPDATE logincookies SET lastused = null " .
-                "WHERE cookie = $::COOKIE{'Bugzilla_logincookie'}");
-    }
-    ConfirmGroup($userid);
-    return $userid;
+    return Bugzilla->login(LOGIN_REQUIRED);
 }
 
 sub PutHeader {
@@ -659,14 +306,19 @@ sub ThrowCodeError {
   ($vars->{'error'}, my $extra_vars, my $unlock_tables) = (@_);
 
   SendSQL("UNLOCK TABLES") if $unlock_tables;
-  
-  # Copy the extra_vars into the vars hash 
-  foreach my $var (keys %$extra_vars) {
-      $vars->{$var} = $extra_vars->{$var};
+
+  # If we don't have this test here, then the %@extra_vars vivifies
+  # the hashref, and then setting $vars->{'variables'} uses an empty hashref
+  # so the error template prints out a bogus header for the empty hash
+  if (defined $extra_vars) {
+      # Copy the extra_vars into the vars hash 
+      foreach my $var (keys %$extra_vars) {
+          $vars->{$var} = $extra_vars->{$var};
+      }
+
+      # We may one day log something to file here also.
+      $vars->{'variables'} = $extra_vars;
   }
-  
-  # We may one day log something to file here also.
-  $vars->{'variables'} = $extra_vars;
   
   print "Content-type: text/html\n\n" if !$vars->{'header_done'};
   $template->process("global/code-error.html.tmpl", $vars)

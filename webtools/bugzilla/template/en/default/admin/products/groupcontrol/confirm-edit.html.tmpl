@@ -36,7 +36,7 @@ group '[% group.name FILTER html %]' impacts [% group.count %] bugs for which th
 [% END %]
 <form method="post" >
 
-  [% PROCESS "global/hidden-fields.html.tmpl" exclude="^(Bugzilla|LDAP)_(login|password)$" %]
+  [% PROCESS "global/hidden-fields.html.tmpl" exclude="^Bugzilla_(login|password)$" %]
 
   <br>
      Click "Continue" to proceed with the change including the changes 

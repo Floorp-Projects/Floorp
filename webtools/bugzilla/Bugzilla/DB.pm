@@ -61,8 +61,6 @@ our @SQLStateStack = ();
 sub SendSQL {
     my ($str) = @_;
 
-    require Bugzilla;
-
     $_current_sth = Bugzilla->dbh->prepare($str);
 
     $_current_sth->execute;
@@ -78,8 +76,6 @@ sub SqlQuote {
 
     # Backwards compat code
     return "''" if not defined $str;
-
-    require Bugzilla;
 
     my $res = Bugzilla->dbh->quote($str);
 
@@ -156,6 +152,7 @@ sub _connect {
                            $db_pass,
                            { RaiseError => 1,
                              PrintError => 0,
+                             ShowErrorStatement => 1,
                              HandleError => \&_handle_error,
                              FetchHashKeyName => 'NAME_lc',
                              TaintIn => 1,

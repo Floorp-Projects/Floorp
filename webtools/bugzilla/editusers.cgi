@@ -110,8 +110,8 @@ sub EmitFormElements ($$$$)
     if ($editall) {
         print "</TR><TR>\n";
         print "  <TH ALIGN=\"right\">Password:</TH>\n";
-        if(Param('useLDAP')) {
-          print "  <TD><FONT COLOR=RED>This site is using LDAP for authentication!</FONT></TD>\n";
+        if(!Bugzilla::Auth->can_edit) {
+          print "  <TD><FONT COLOR=RED>This site's authentication method does not allow password changes through Bugzilla!</FONT></TD>\n";
         } else {
           print qq|
             <TD><INPUT TYPE="PASSWORD" SIZE="16" MAXLENGTH="16" NAME="password" VALUE=""><br>
@@ -357,7 +357,7 @@ if ($action eq 'list') {
         }
         print "</TR>";
     }
-    if ($editall && !Param('useLDAP')) {
+    if ($editall && Bugzilla::Auth->can_edit) {
         print "<TR>\n";
         my $span = $candelete ? 3 : 2;
         print qq{
@@ -391,9 +391,8 @@ if ($action eq 'add') {
         exit;
     }
 
-    if(Param('useLDAP')) {
-      print "This site is using LDAP for authentication.  To add a new user, ";
-      print "please contact the LDAP administrators.";
+    if(!Bugzilla::Auth->can_edit) {
+      print "The authentication mechanism you are using does not permit accounts to be created from Bugzilla";
       PutTrailer();
       exit;
     }
@@ -429,9 +428,8 @@ if ($action eq 'new') {
         exit;
     }
 
-    if(Param('useLDAP')) {
-      print "This site is using LDAP for authentication.  To add a new user, ";
-      print "please contact the LDAP administrators.";
+    if (!Bugzilla::Auth->can_edit) {
+      print "This site's authentication mechanism does not allow new users to be added.";
       PutTrailer();
       exit;
     }
@@ -791,7 +789,7 @@ if ($action eq 'update') {
 
 
     # Update the database with the user's new password if they changed it.
-    if ( !Param('useLDAP') && $editall && $password ) {
+    if ( Bugzilla::Auth->can_edit && $editall && $password ) {
         my $passworderror = ValidatePassword($password);
         if ( !$passworderror ) {
             my $cryptpassword = SqlQuote(Crypt($password));

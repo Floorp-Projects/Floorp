@@ -186,6 +186,11 @@ sub UpdateParams {
         $param{'useentrygroupdefault'} = $param{'usebuggroupsentry'};
     }
 
+    # Modularise auth code
+    if (exists $param{'useLDAP'} && !exists $param{'loginmethod'}) {
+        $param{'loginmethod'} = $param{'useLDAP'} ? "LDAP" : "DB";
+    }
+
     # --- DEFAULTS FOR NEW PARAMS ---
 
     foreach my $item (@param_list) {

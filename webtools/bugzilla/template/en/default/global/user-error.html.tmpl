@@ -92,6 +92,12 @@
     Bug aliases cannot be longer than 20 characters.
     Please choose a shorter alias.
 
+  [% ELSIF error == "auth_cant_create_account" %]
+    [% title = "Can't create accounts" %]
+    This site is using an authentication scheme which does not permit
+    account creation. Please contact an administrator to get a new account
+    created.
+
   [% ELSIF error == "authorization_failure" %]
     [% title = "Authorization Failed" %]
     You are not allowed to [% action %].
@@ -312,11 +318,6 @@
   [% ELSIF error == "invalid_username_or_password" %]
     [% title = "Invalid Username Or Password" %]
     The username or password you entered is not valid.
-                    
-  [% ELSIF error == "ldap_cant_create_account" %]
-    [% title = "Can't create LDAP accounts" %]
-    This site is using LDAP for authentication.  Please contact 
-    an LDAP administrator to get a new account created.
      
   [% ELSIF error == "login_needed_for_password_change" %]
     [% title = "Login Name Required" %]

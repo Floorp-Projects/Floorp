@@ -155,7 +155,7 @@
 
 [% IF matchsuccess == 1 %]
 
-  [% PROCESS "global/hidden-fields.html.tmpl" exclude="^(Bugzilla|LDAP)_(login|password)$" %]
+  [% PROCESS "global/hidden-fields.html.tmpl" exclude="^Bugzilla_(login|password)$" %]
 
   <p>
     <input type="submit" value="Continue">

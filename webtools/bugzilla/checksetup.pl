@@ -675,28 +675,6 @@ EOF
 }
 
 ###########################################################################
-# Global Utility Library
-###########################################################################
-
-# globals.pl clears the PATH, but File::Find uses Cwd::cwd() instead of
-# Cwd::getcwd(), which we need to do because `pwd` isn't in the path - see
-# http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-09/msg00115.html
-# As a workaround, since we only use File::Find in checksetup, which doesn't
-# run in taint mode anyway, preserve the path...
-my $origPath = $::ENV{'PATH'};
-
-# Use the Bugzilla utility library for various functions.  We do this
-# here rather than at the top of the file so globals.pl doesn't define
-# localconfig variables for us before we get a chance to check for
-# their existence and create them if they don't exist.  Also, globals.pl
-# removes $ENV{'path'}, which we need in order to run `which mysql` above.
-require "globals.pl";
-
-# ...and restore it. This doesn't change tainting, so this will still cause
-# errors if this script ever does run with -T.
-$::ENV{'PATH'} = $origPath;
-
-###########################################################################
 # Check data directory
 ###########################################################################
 
@@ -1215,6 +1193,33 @@ if ($my_webservergroup) {
     chmod 01777, 'graphs';
 }
 
+###########################################################################
+# Global Utility Library
+###########################################################################
+
+# This is done here, because some modules require params to be set up, which
+# won't have happened earlier.
+
+# The only use for loading globals.pl is for Crypt(), which should at some
+# point probably be factored out into Bugzilla::Auth::*
+
+# globals.pl clears the PATH, but File::Find uses Cwd::cwd() instead of
+# Cwd::getcwd(), which we need to do because `pwd` isn't in the path - see
+# http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-09/msg00115.html
+# As a workaround, since we only use File::Find in checksetup, which doesn't
+# run in taint mode anyway, preserve the path...
+my $origPath = $::ENV{'PATH'};
+
+# Use the Bugzilla utility library for various functions.  We do this
+# here rather than at the top of the file so globals.pl doesn't define
+# localconfig variables for us before we get a chance to check for
+# their existence and create them if they don't exist.  Also, globals.pl
+# removes $ENV{'path'}, which we need in order to run `which mysql` above.
+require "globals.pl";
+
+# ...and restore it. This doesn't change tainting, so this will still cause
+# errors if this script ever does run with -T.
+$::ENV{'PATH'} = $origPath;
 
 ###########################################################################
 # Check MySQL setup
@@ -1300,6 +1305,16 @@ my $dbh = DBI->connect($connectstring, $my_db_user, $my_db_pass)
 
 END { $dbh->disconnect if $dbh }
 
+###########################################################################
+# Check for LDAP
+###########################################################################
+
+if (Param('loginmethod') eq 'LDAP') {
+    my $netLDAP = have_vers("Net::LDAP", 0);
+    if (!$netLDAP && !$silent) {
+        print "If you wish to use LDAP authentication, then you must install Net::LDAP\n\n";
+    }
+}
 
 ###########################################################################
 # Check GraphViz setup

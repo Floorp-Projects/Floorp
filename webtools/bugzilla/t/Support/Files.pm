@@ -29,12 +29,13 @@ package Support::Files;
 @additional_files = ();
 %exclude_deps = (
     'XML::Parser' => ['importxml.pl'],
+    'Net::LDAP' => ['Bugzilla/Auth/LDAP.pm'],
 );
 
 
-# XXX - this file should be rewritten to use File::Find or similar
+# XXX - this file should really be rewritten to use File::Find or similar
 $file = '*';
-@files = (glob($file), glob('Bugzilla/*.pm'));
+@files = (glob($file), glob('Bugzilla/*.pm'), glob('Bugzilla/*/*.pm'));
 
 sub have_pkg {
     my ($pkg) = @_;

@@ -123,6 +123,31 @@ sub check_netmask {
     return "";
 }
 
+sub check_loginmethod {
+    # doeditparams traverses the list of params, and for each one it checks,
+    # then updates. This means that if one param checker wants to look at 
+    # other params, it must be below that other one. So you can't have two 
+    # params mutually dependant on each other.
+    # This means that if someone clears the LDAP config params after setting
+    # the login method as LDAP, we won't notice, but all logins will fail.
+    # So don't do that.
+
+    my ($method, $entry) = @_;
+    my $res = check_multi($method, $entry);
+    return $res if $res;
+    if ($method eq 'DB') {
+        # No params
+    } elsif ($method eq 'LDAP') {
+        eval "require Net::LDAP";
+        return "Error requiring Net::LDAP: '$@'" if $@;
+        return "LDAP servername is missing" unless Param("LDAPserver");
+        return "LDAPBaseDN is empty" unless Param("LDAPBaseDN");
+    } else {
+        return "Unknown loginmethod '$method' in check_loginmethod";
+    }
+    return "";
+}
+
 # OK, here are the parameter definitions themselves.
 #
 # Each definition is a hash with keys:
@@ -323,19 +348,19 @@ sub check_netmask {
   },
 
   {
-   name => 'useLDAP',
-   desc => 'Turn this on to use an LDAP directory for user authentication ' .
-           'instead of the Bugzilla database.  (User profiles will still be ' .
-           'stored in the database, and will match against the LDAP user by ' .
-           'email address.)',
-   type => 'b',
-   default => 0
-  },
-
-  {
    name => 'LDAPserver',
    desc => 'The name (and optionally port) of your LDAP server. (e.g. ' .
            'ldap.company.com, or ldap.company.com:portnum)',
+   type => 't',
+   default => ''
+  },
+
+  {
+   name => 'LDAPbinddn',
+   desc => 'If your LDAP server requires that you use a binddn and password ' .
+           'instead of binding anonymously, enter it here ' .
+           '(e.g. cn=default,cn=user:password). ' .
+           'Leave this empty for the normal case of an anonymous bind.',
    type => 't',
    default => ''
   },
@@ -349,11 +374,41 @@ sub check_netmask {
   },
 
   {
+   name => 'LDAPuidattribute',
+   desc => 'The name of the attribute containing the user\'s login name.',
+   type => 't',
+   default => 'uid'
+  },
+
+  {
    name => 'LDAPmailattribute',
    desc => 'The name of the attribute of a user in your directory that ' .
            'contains the email address.',
    type => 't',
    default => 'mail'
+  },
+
+  {
+   name => 'loginmethod',
+   desc => 'The type of login authentication to use:
+            <dl>
+              <dt>DB</dt>
+              <dd>
+                Bugzilla\'s builtin authentication. This is the most common
+                choice.
+              </dd>
+              <dt>LDAP</dt>
+              <dd>
+                LDAP authentication using an LDAP server. This method is
+                experimental; please see the Bugzilla documentation for more
+                information. Using this method requires additional parameters
+                to be set above.
+              </dd>
+             </dl>',
+   type => 's',
+   choices => [ 'DB', 'LDAP' ],
+   default => 'DB',
+   checker => \&check_loginmethod
   },
 
   {

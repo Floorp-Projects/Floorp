@@ -52,7 +52,7 @@
     
 <form method="post" action="process_bug.cgi">
 
-[% PROCESS "global/hidden-fields.html.tmpl" exclude="^(Bugzilla|LDAP)_(login|password)$" %]
+[% PROCESS "global/hidden-fields.html.tmpl" exclude="^Bugzilla_(login|password)$" %]
 
 <p>
   <input type="radio" name="confirm_add_duplicate" value="1"> 
