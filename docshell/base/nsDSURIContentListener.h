@@ -43,8 +43,6 @@ protected:
 
    void DocShell(nsDocShell* aDocShell);
    nsDocShell* DocShell();
-   void GetParentContentListener(nsIURIContentListener** aParentListener);
-   void SetParentContentListener(nsIURIContentListener* aParentListener);
    void GetPresContext(nsIPresContext** aPresContext);
    void SetPresContext(nsIPresContext* aPresContext);
    PRBool HandleInCurrentDocShell(const char* aContentType, 
@@ -54,6 +52,7 @@ protected:
 protected:
    nsDocShell*                      mDocShell;
    nsCOMPtr<nsIPresContext>         mPresContext;
+   nsCOMPtr<nsISupports>            mLoadCookie; // the load cookie associated with the window context.
 
    nsIURIContentListener*            mParentContentListener;  // Weak Reference
 };

@@ -28,6 +28,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDocumentViewer.h"
+#include "nsIDocumentLoaderFactory.h"
 #include "nsIDeviceContext.h"
 #include "nsCURILoader.h"
 #include "nsLayoutCID.h"
@@ -147,13 +148,17 @@ NS_IMETHODIMP nsDocShell::LoadURIVia(nsIURI* aUri,
    // first, open a channel for the url
    nsCOMPtr<nsIChannel> channel;
    nsCOMPtr<nsIInterfaceRequestor> capabilities (do_QueryInterface(NS_STATIC_CAST(nsIDocShell *, this)));
-   nsCOMPtr<nsILoadGroup> loadGroup(do_QueryInterface(mLoadCookie));
+
+   // we need to get the load group from our load cookie so we can pass it into open uri...
+   nsCOMPtr<nsILoadGroup> loadGroup;
+   NS_ENSURE_SUCCESS(uriLoader->GetLoadGroupForContext(NS_STATIC_CAST(nsISupports *, (nsIDocShell *) this), getter_AddRefs(loadGroup)),
+                     NS_ERROR_FAILURE);
+
    NS_ENSURE_SUCCESS(NS_OpenURI(getter_AddRefs(channel), aUri, loadGroup, capabilities), NS_ERROR_FAILURE);
 
 
    NS_ENSURE_SUCCESS(uriLoader->OpenURIVia(channel, nsIURILoader::viewNormal, nsnull, 
-      NS_STATIC_CAST(nsIDocShell*, this), mLoadCookie, 
-      getter_AddRefs(mLoadCookie), aAdapterBinding), NS_ERROR_FAILURE);
+      NS_STATIC_CAST(nsIDocShell*, this), aAdapterBinding), NS_ERROR_FAILURE);
 
    return NS_OK;
 }
@@ -356,8 +361,7 @@ NS_IMETHODIMP nsDocShell::GetParentURIContentListener(nsIURIContentListener**
    NS_ENSURE_ARG_POINTER(aParent);
    NS_ENSURE_SUCCESS(EnsureContentListener(), NS_ERROR_FAILURE);
 
-   mContentListener->GetParentContentListener(aParent);
-   return NS_OK;
+   return mContentListener->GetParentContentListener(aParent);
 }
 
 NS_IMETHODIMP nsDocShell::SetParentURIContentListener(nsIURIContentListener*
@@ -365,8 +369,7 @@ NS_IMETHODIMP nsDocShell::SetParentURIContentListener(nsIURIContentListener*
 {
    NS_ENSURE_SUCCESS(EnsureContentListener(), NS_ERROR_FAILURE);
 
-   mContentListener->SetParentContentListener(aParent);
-   return NS_OK;
+   return mContentListener->SetParentContentListener(aParent);
 }
 
 NS_IMETHODIMP nsDocShell::GetPrefs(nsIPref** aPrefs)
