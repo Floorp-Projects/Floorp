@@ -31,10 +31,8 @@
 
 #ifdef _WIN32
 #include "md/x86/x86Win32Thread.h"
-#elif defined(LINUX)
-#include "x86LinuxThread.h"
-#elif defined(FREEBSD)
-#include "x86FreeBSDThread.h"
+#elif defined LINUX || defined FREEBSD || defined NETBSD
+#include "x86UnixishThread.h"
 #else
 
 #define GetPassedException(E)
