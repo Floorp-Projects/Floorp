@@ -55,7 +55,7 @@ components\xpcom_nativeapp.xpt
 components\xpcom_thread.xpt
 components\xpcom_xpti.xpt
 components\mozreg.dll
-components\mozreg.xpt
+;components\mozreg.xpt
 
 ; xpconnect
 components\xpc3250.dll
