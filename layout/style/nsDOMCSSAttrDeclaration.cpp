@@ -163,11 +163,8 @@ nsDOMCSSAttributeDeclaration::GetCSSParsingEnvironment(nsIURI** aBaseURI,
   if (NS_FAILED(result)) {
     return result;
   }
-  nsCOMPtr<nsIDocument> doc;
-  result = nodeInfo->GetDocument(getter_AddRefs(doc));
-  if (NS_FAILED(result)) {
-    return result;
-  }
+  // XXXbz GetOwnerDocument
+  nsIDocument* doc = nodeInfo->GetDocument();
 
   mContent->GetBaseURL(aBaseURI);
   

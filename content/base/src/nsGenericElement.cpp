@@ -1145,13 +1145,7 @@ nsGenericElement::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 {
   NS_ENSURE_ARG_POINTER(aOwnerDocument);
 
-  nsCOMPtr<nsIDocument> doc(mDocument);
-
-  if (!doc) {
-    // If we're not part of the document we can check if our nodeinfo
-    // can get at the document
-    mNodeInfo->GetDocument(getter_AddRefs(doc));
-  }
+  nsIDocument* doc = GetOwnerDocument();
 
   if (doc) {
     return CallQueryInterface(doc, aOwnerDocument);
@@ -1776,9 +1770,7 @@ nsGenericElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
     if (aDocument) {
       // check the document on the nodeinfo to see whether we need a
       // new nodeinfo
-      nsCOMPtr<nsIDocument> nodeinfoDoc;
-      mNodeInfo->GetDocument(getter_AddRefs(nodeinfoDoc));
-      if (aDocument != nodeinfoDoc) {
+      if (aDocument != mNodeInfo->GetDocument()) {
         // get a new nodeinfo
         nsCOMPtr<nsIAtom> name = mNodeInfo->GetNameAtom();
         nsCOMPtr<nsIAtom> prefix = mNodeInfo->GetPrefixAtom();
@@ -2246,11 +2238,7 @@ nsGenericElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsGenericElement::GetBaseURL(nsIURI** aBaseURL) const
 {
-  nsCOMPtr<nsIDocument> doc = mDocument;
-
-  if (!doc) {
-    mNodeInfo->GetDocument(getter_AddRefs(doc));
-  }
+  nsIDocument* doc = GetOwnerDocument();
 
   // Our base URL depends on whether we have an xml:base attribute, as
   // well as on whether any of our ancestors do.
@@ -2892,10 +2880,6 @@ nsGenericElement::doReplaceChild(nsIDOMNode* aNewChild,
       !nsContentUtils::CanCallerAccess(aNewChild)) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
-
-  nsCOMPtr<nsIDocument> document;
-
-  GetDocument(getter_AddRefs(document));
 
   /*
    * Make sure the new child is not "this" node or one of this nodes

@@ -850,8 +850,7 @@ nsGenericHTMLElement::GetInnerHTML(nsAString& aInnerHTML)
 {
   aInnerHTML.Truncate();
 
-  nsCOMPtr<nsIDocument> doc;
-  mNodeInfo->GetDocument(getter_AddRefs(doc));
+  nsCOMPtr<nsIDocument> doc = GetOwnerDocument();
   if (!doc) {
     return NS_OK; // We rely on the document for doing HTML conversion
   }
@@ -902,8 +901,7 @@ nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
 
   nsCOMPtr<nsIDOMDocumentFragment> df;
 
-  nsCOMPtr<nsIDocument> doc;
-  mNodeInfo->GetDocument(getter_AddRefs(doc));
+  nsCOMPtr<nsIDocument> doc = GetOwnerDocument();
 
   nsCOMPtr<nsIScriptContext> scx;
   PRBool scripts_enabled = PR_FALSE;
@@ -2336,11 +2334,7 @@ nsGenericHTMLElement::GetInlineStyleRule(nsIStyleRule** aStyleRule)
 nsresult
 nsGenericHTMLElement::GetBaseURL(nsIURI** aBaseURL) const
 {
-  nsCOMPtr<nsIDocument> doc(mDocument);
-
-  if (!doc) {
-    mNodeInfo->GetDocument(getter_AddRefs(doc));
-  }
+  nsIDocument* doc = GetOwnerDocument();
 
   if (mAttributes &&
       mAttributes->HasAttribute(nsHTMLAtoms::_baseHref, kNameSpaceID_None)) {
@@ -3077,10 +3071,7 @@ nsGenericHTMLElement::AttrToURI(nsIAtom* aAttrName, nsAString& aAbsoluteURI)
   nsCOMPtr<nsIURI> baseURI;
   GetBaseURL(getter_AddRefs(baseURI));
 
-  nsCOMPtr<nsIDocument> doc(mDocument);
-  if (!doc) {
-    mNodeInfo->GetDocument(getter_AddRefs(doc));
-  }
+  nsIDocument* doc = GetOwnerDocument();
 
   nsCOMPtr<nsIURI> attrURI;
   rv = nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(attrURI),
@@ -3124,11 +3115,7 @@ nsGenericHTMLElement::ParseStyleAttribute(const nsAString& aValue, nsHTMLValue& 
   nsresult result = NS_OK;
   NS_ASSERTION(mNodeInfo, "If we don't have a nodeinfo, we are very screwed");
 
-  nsCOMPtr<nsIDocument> doc = mDocument;
-
-  if (!doc) {
-    mNodeInfo->GetDocument(getter_AddRefs(doc));
-  }
+  nsIDocument* doc = GetOwnerDocument();
 
   if (doc) {
     PRBool isCSS = PR_TRUE; // assume CSS until proven otherwise

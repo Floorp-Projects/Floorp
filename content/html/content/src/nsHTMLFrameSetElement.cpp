@@ -350,11 +350,8 @@ nsHTMLFrameSetElement::StringToAttribute(nsIAtom* aAttribute,
                                          nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::bordercolor) {
-    nsCOMPtr<nsIDocument> doc(mDocument);
-    if (!doc) {
-      mNodeInfo->GetDocument(getter_AddRefs(doc));
-    }
-    if (aResult.ParseColor(aValue, doc)) {
+    if (aResult.ParseColor(aValue,
+                           nsGenericHTMLContainerElement::GetOwnerDocument())) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   } 
@@ -512,14 +509,8 @@ nsHTMLFrameSetElement::ParseRowColSpec(nsString&       aSpec,
 
       // Treat 0* as 1* in quirks mode (bug 40383)
       nsCompatibility mode = eCompatibility_FullStandards;
-      nsCOMPtr<nsIHTMLDocument> htmlDocument;
-      if (mDocument) {
-        htmlDocument = do_QueryInterface(mDocument);
-      } else {
-        nsCOMPtr<nsIDocument> doc;
-        mNodeInfo->GetDocument(getter_AddRefs(doc));
-        htmlDocument = do_QueryInterface(doc);
-      }
+      nsCOMPtr<nsIHTMLDocument> htmlDocument =
+        do_QueryInterface(nsGenericHTMLContainerElement::GetOwnerDocument());
       if (htmlDocument) {
         htmlDocument->GetCompatibilityMode(mode);
       }

@@ -282,7 +282,7 @@ public:
   /*
    * Retrieve a pointer to the document that owns this node info.
    */
-  NS_IMETHOD GetDocument(nsIDocument** aDocument) const = 0;
+  virtual nsIDocument* GetDocument() const = 0;
 
   /*
    * Retrieve a pointer to the principal for the document of this node info.
@@ -360,7 +360,7 @@ public:
    * Retrieve a pointer to the document that owns this node info
    * manager.
    */
-  NS_IMETHOD GetDocument(nsIDocument** aDocument) = 0;
+  virtual nsIDocument* GetDocument() const = 0;
 
   /**
    * Gets the principal of the document associated with this.
