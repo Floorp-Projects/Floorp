@@ -3564,18 +3564,18 @@ public class Codegen extends Interpreter {
     }
 
     private void dstore(short local) {
-        xstore(ByteCode.DSTORE_0, ByteCode.DSTORE, local);
+        xop(ByteCode.DSTORE_0, ByteCode.DSTORE, local);
     }
 
     private void istore(short local) {
-        xstore(ByteCode.ISTORE_0, ByteCode.ISTORE, local);
+        xop(ByteCode.ISTORE_0, ByteCode.ISTORE, local);
     }
 
     private void astore(short local) {
-        xstore(ByteCode.ASTORE_0, ByteCode.ASTORE, local);
+        xop(ByteCode.ASTORE_0, ByteCode.ASTORE, local);
     }
 
-    private void xstore(byte shortOp, byte op, short local) {
+    private void xop(byte shortOp, byte op, short local) {
         switch (local) {
           case 0:
             addByteCode(shortOp);
@@ -3590,45 +3590,31 @@ public class Codegen extends Interpreter {
             addByteCode((byte)(shortOp + 3));
             break;
           default:
-            if (local < 0 || local >= Byte.MAX_VALUE)
+            if (local < 0 || local >= Short.MAX_VALUE)
                 throw new RuntimeException("bad local");
-            addByteCode(op, (byte)local);
+            if (local < Byte.MAX_VALUE) {
+                addByteCode(op, (byte)local);
+            } else {
+                // Add wide opcode.
+                addByteCode(ByteCode.WIDE);
+                addByteCode(op);
+                addByteCode((byte)(local >> 8));
+                addByteCode((byte)(local & 0xff));
+            }
             break;
         }
     }
 
     private void dload(short local) {
-        xload(ByteCode.DLOAD_0, ByteCode.DLOAD, local);
+        xop(ByteCode.DLOAD_0, ByteCode.DLOAD, local);
     }
 
     private void iload(short local) {
-        xload(ByteCode.ILOAD_0, ByteCode.ILOAD, local);
+        xop(ByteCode.ILOAD_0, ByteCode.ILOAD, local);
     }
 
     private void aload(short local) {
-        xload(ByteCode.ALOAD_0, ByteCode.ALOAD, local);
-    }
-
-    private void xload(byte shortOp, byte op, short local) {
-        switch (local) {
-          case 0:
-            addByteCode(shortOp);
-            break;
-          case 1:
-            addByteCode((byte)(shortOp + 1));
-            break;
-          case 2:
-            addByteCode((byte)(shortOp + 2));
-            break;
-          case 3:
-            addByteCode((byte)(shortOp + 3));
-            break;
-          default:
-            if (local < 0 || local >= Byte.MAX_VALUE)
-                throw new RuntimeException("bad local");
-            addByteCode(op, (byte) local);
-            break;
-        }
+        xop(ByteCode.ALOAD_0, ByteCode.ALOAD, local);
     }
 
     private short getNewWordPairLocal() {
