@@ -50,7 +50,6 @@ function initCommands()
          ["away",              cmdAway,             CMD_NEED_SRV | CMD_CONSOLE],
          ["cancel",            cmdCancel,           CMD_NEED_NET | CMD_CONSOLE],
          ["charset",           cmdCharset,                         CMD_CONSOLE],
-         ["channel-charset",   cmdCharset,         CMD_NEED_CHAN | CMD_CONSOLE],
          ["channel-motif",     cmdMotif,           CMD_NEED_CHAN | CMD_CONSOLE],
          ["channel-pref",      cmdPref,            CMD_NEED_CHAN | CMD_CONSOLE],
          ["cmd-copy",          cmdCopy,                                      0],
@@ -66,6 +65,7 @@ function initCommands()
          ["client",            cmdClient,                          CMD_CONSOLE],
          ["commands",          cmdCommands,                        CMD_CONSOLE],
          ["ctcp",              cmdCTCP,             CMD_NEED_SRV | CMD_CONSOLE],
+         ["default-charset",   cmdCharset,                         CMD_CONSOLE],
          ["delete-view",       cmdDeleteView,                      CMD_CONSOLE],
          ["disable-plugin",    cmdAblePlugin,                      CMD_CONSOLE],
          ["disconnect",        cmdDisconnect,       CMD_NEED_SRV | CMD_CONSOLE],
@@ -98,7 +98,6 @@ function initCommands()
          ["msg",               cmdMsg,              CMD_NEED_SRV | CMD_CONSOLE],
          ["names",             cmdNames,            CMD_NEED_SRV | CMD_CONSOLE],
          ["network",           cmdNetwork,                         CMD_CONSOLE],
-         ["network-charset",   cmdCharset,          CMD_NEED_NET | CMD_CONSOLE],
          ["network-motif",     cmdMotif,            CMD_NEED_NET | CMD_CONSOLE],
          ["network-pref",      cmdPref,             CMD_NEED_NET | CMD_CONSOLE],
          ["networks",          cmdNetworks,                        CMD_CONSOLE],
@@ -132,7 +131,6 @@ function initCommands()
          ["unignore",          cmdIgnore,           CMD_NEED_NET | CMD_CONSOLE],
          ["unstalk",           cmdUnstalk,                         CMD_CONSOLE],
          ["usermode",          cmdUsermode,                        CMD_CONSOLE],
-         ["user-charset",      cmdCharset,         CMD_NEED_USER | CMD_CONSOLE],
          ["user-motif",        cmdMotif,           CMD_NEED_USER | CMD_CONSOLE],
          ["user-pref",         cmdPref,            CMD_NEED_USER | CMD_CONSOLE],
          ["version",           cmdVersion,                         CMD_CONSOLE],
@@ -610,25 +608,15 @@ function cmdCharset(e)
 {
     var pm;
     
-    if (e.command.name == "channel-charset")
-    {
-        pm = e.channel.prefManager;
-        msg = MSG_CURRENT_CHARSET_CHAN;
-    }
-    else if (e.command.name == "network-charset")
-    {
-        pm = e.network.prefManager;
-        msg = MSG_CURRENT_CHARSET_NET;
-    }
-    else if (e.command.name == "user-charset")
-    {
-        pm = e.user.prefManager;
-        msg = MSG_CURRENT_CHARSET_USER;
-    }
-    else
+    if (e.command.name == "default-charset")
     {
         pm = client.prefManager;
         msg = MSG_CURRENT_CHARSET;
+    }
+    else
+    {
+        pm = e.sourceObject.prefManager;
+        msg = MSG_CURRENT_CHARSET_VIEW;
     }
 
     if (e.newCharset)
