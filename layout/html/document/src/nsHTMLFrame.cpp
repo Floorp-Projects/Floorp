@@ -42,6 +42,7 @@
 #include "nsHTMLFrameset.h"
 class nsHTMLFrame;
 
+static NS_DEFINE_IID(kIWebShellContainerIID, NS_IWEB_SHELL_CONTAINER_IID);
 static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
@@ -376,7 +377,11 @@ nsHTMLFrameInnerFrame::nsHTMLFrameInnerFrame(nsIContent* aContent,
 
 nsHTMLFrameInnerFrame::~nsHTMLFrameInnerFrame()
 {
-  NS_IF_RELEASE(mWebShell);
+  if (nsnull != mWebShell) {
+    // XXX: Is the needed (or wanted?)
+    mWebShell->SetContainer(nsnull);
+    NS_RELEASE(mWebShell);
+  }
   NS_RELEASE(mTempObserver);
 }
 
@@ -495,6 +500,15 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
     container->QueryInterface(kIWebShellIID, (void**) &outerShell);
     if (nsnull != outerShell) {
       outerShell->AddChild(mWebShell);
+
+      // connect the container...
+      nsIWebShellContainer* outerContainer = nsnull;
+      container->QueryInterface(kIWebShellContainerIID, (void**) &outerContainer);
+      if (nsnull != outerContainer) {
+        mWebShell->SetContainer(outerContainer);
+        NS_RELEASE(outerContainer);
+      }
+
       nsIPref*  outerPrefs = nsnull;  // connect the prefs
       outerShell->GetPrefs(outerPrefs);
       if (nsnull != outerPrefs) {
