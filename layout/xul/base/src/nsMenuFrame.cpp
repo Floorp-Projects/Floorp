@@ -56,6 +56,8 @@
 #include "nsIComponentManager.h"
 #include "nsWidgetsCID.h"
 #include "nsBoxLayoutState.h"
+#include "nsIXBLBinding.h"
+#include "nsIBindableContent.h"
 
 #define NS_MENU_POPUP_LIST_INDEX   (NS_AREA_FRAME_ABSOLUTE_LIST_INDEX + 1)
 
@@ -1234,8 +1236,16 @@ nsMenuFrame::BuildAcceleratorText(nsString& aAccelString)
     aAccelString += keyChar;
   }
 
-  if (!aAccelString.IsEmpty())
+  if (!aAccelString.IsEmpty()) {
     mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::acceltext, aAccelString, PR_FALSE);
+    nsCOMPtr<nsIBindableContent> bindable(do_QueryInterface(mContent));
+    if (bindable) {
+      nsCOMPtr<nsIXBLBinding> binding;
+      bindable->GetBinding(getter_AddRefs(binding));
+      if (binding)
+        binding->AttributeChanged(nsXULAtoms::acceltext, kNameSpaceID_None, PR_FALSE);
+    }
+  }
 }
 
 void

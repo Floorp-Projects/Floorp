@@ -50,27 +50,10 @@
 #include "nsCOMPtr.h"
 #include "nsBoxFrame.h"
 
-#define NS_TOOLBOX_GRIPPY_NORMAL_CONTEXT_INDEX    0
-#define NS_TOOLBOX_GRIPPY_ROLLOVER_CONTEXT_INDEX  1
-
 class nsToolboxFrame : public nsBoxFrame
 {
 public:
   friend nsresult NS_NewToolboxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
-
-  // nsIBox
-  NS_IMETHOD Layout(nsBoxLayoutState& aBoxLayoutState);
-  NS_IMETHOD GetInset(nsMargin& aInset);
-  NS_IMETHOD NeedsRecalc();
-
-  // nsIFrame
-  NS_IMETHOD  Paint(nsIPresContext* aPresContext,
-                    nsIRenderingContext& aRenderingContext,
-                    const nsRect& aDirtyRect,
-                    nsFramePaintLayer aWhichLayer);
-  NS_IMETHOD  HandleEvent(nsIPresContext* aPresContext, 
-                          nsGUIEvent*     aEvent,
-                          nsEventStatus*  aEventStatus);
 
   NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,
@@ -78,11 +61,6 @@ public:
                   nsIStyleContext* aContext,
                   nsIFrame*        aPrevInFlow); 
 
-  NS_IMETHOD  GetAdditionalStyleContext(PRInt32 aIndex, 
-                                        nsIStyleContext** aStyleContext) const;
-  NS_IMETHOD  SetAdditionalStyleContext(PRInt32 aIndex, 
-                                        nsIStyleContext* aStyleContext);
- 
 /*BEGIN implementations of dragevent handler interface*/
   virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
   virtual nsresult DragEnter(nsIDOMEvent* aDragEvent);
@@ -99,70 +77,10 @@ public:
   }
 
 protected:
-  enum { kGrippyWidthInPixels = 10, kCollapsedGrippyHeightInPixels = 10, kCollapsedGrippyWidthInPixels = 50 } ;
-  enum { kNoGrippyHilighted = -1 } ;
-
-  struct TabInfo {
-    TabInfo( nsIContent * inContent, PRBool inCollapsed, 
-               const nsRect &inBounds = nsRect(0,0,0,0)) 
-       : mToolbar(inContent),
-         mBoundingRect(inBounds),
-         mCollapsed(inCollapsed)
-      {
-      } 
-
-    void SetBounds(const nsRect &inBounds) { mBoundingRect = inBounds; }
-
-    nsIContent*    mToolbar;       // content object associated w/ toolbar frame. We don't own it.
-    nsRect         mBoundingRect;
-    PRBool         mCollapsed;
-  };
-
+  
   nsToolboxFrame(nsIPresShell* aShell);
   virtual ~nsToolboxFrame();
 
-  virtual PRBool GetInitialOrientation(PRBool& aIsHorizontal); 
-
-  virtual void UpdateStyles(nsIPresContext* aPresContext);
-  virtual void CalculateGrippies(nsIPresContext* aPresContext);
-  virtual nsresult LayoutGrippies(nsBoxLayoutState& aBoxLayoutState);
-
- 
-  void RefreshStyleContext(nsIPresContext* aPresContext,
-                            nsIAtom *         aNewContentPseudo,
-                            nsCOMPtr<nsIStyleContext>* aCurrentStyle,
-                            nsIContent *      aContent,
-                            nsIStyleContext*  aParentStyle) ;
-
-  void DrawGrippies ( nsIPresContext* aPresContext, nsIRenderingContext & aContext ) const ;
-  void DrawGrippy ( nsIPresContext* aPresContext, nsIRenderingContext & aContext, 
-                      const nsRect & aBoundingRect, PRBool aDrawHilighted ) const ;
-  void CollapseToolbar ( TabInfo & inTab ) ; 
-  void ExpandToolbar ( TabInfo & inTab ) ; 
-
-  void ConvertToLocalPoint ( nsIPresContext* aPresContext, nsPoint & ioPoint ) ;
-  void OnMouseMove ( nsIPresContext* aPresContext, nsPoint & aMouseLoc ) ;
-  void OnMouseExit ( nsIPresContext* aPresContext ) ;
-  void OnMouseLeftClick ( nsIPresContext* aPresContext, nsPoint & aMouseLoc ) ;
-
-    // utility routines
-  TabInfo* FindGrippyForToolbar ( nsVoidArray & inList, const nsIContent* inContent ) const ;
-  void ClearGrippyList ( nsVoidArray & inList ) ;
-
-    // style context for the normal state and rollover state of grippies
-  nsCOMPtr<nsIStyleContext>    mGrippyNormalStyle;
-  nsCOMPtr<nsIStyleContext>    mGrippyRolloverStyle;
-  
-  nsMargin mInset;
-
-  unsigned long mSumOfToolbarHeights;
-  nsVoidArray  mGrippies;          // list of all active grippies
-  unsigned short mNumToolbars;
-  short mGrippyHilighted;          // used to indicate which grippy the mouse is inside
-
-  const nsCOMPtr<nsIAtom> kCollapsedAtom ;
-  const nsCOMPtr<nsIAtom> kHiddenAtom ;
-  
   class DragListenerDelegate : public nsIDOMDragListener
   {
   protected:
@@ -221,9 +139,6 @@ protected:
     // with an element in the UI.
   nsToolboxFrame ( const nsToolboxFrame& aFrame ) ;	            // DO NOT IMPLEMENT
   nsToolboxFrame& operator= ( const nsToolboxFrame& aFrame ) ;  // DO NOT IMPLEMENT
-  
-  PRBool mNeedsCalc;
-  nsIPresContext* mPresContext;
 }; // class nsToolboxFrame
 
 #endif
