@@ -722,6 +722,10 @@ SOURCE=..\..\..\..\..\browser\installer\windows\langenus.jst
 # End Source File
 # Begin Source File
 
+SOURCE="..\..\..\..\..\browser\installer\windows\packages-static"
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\..\browser\installer\windows\psm.jst
 
 !IF  "$(CFG)" == "installer - Win32 Release"
