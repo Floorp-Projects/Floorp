@@ -49,7 +49,6 @@ CPPSRCS		= \
 		nsTransferable.cpp \
 		nsHTMLFormatConverter.cpp \
 		nsBaseDragService.cpp \
-		nsBaseClipboard.cpp \
 		nsPrimitiveHelpers.cpp \
 		nsXPLookAndFeel.cpp \
 		nsClipboardHelper.cpp \
@@ -57,6 +56,10 @@ CPPSRCS		= \
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 CPPSRCS += nsWidgetAtoms.cpp
+endif
+
+ifneq (,$(filter beos os2 mac cocoa windows,$(MOZ_WIDGET_TOOLKIT)))
+CPPSRCS += nsBaseClipboard.cpp
 endif
 
 ifneq (,$(filter beos os2 mac cocoa photon windows,$(MOZ_WIDGET_TOOLKIT)))
