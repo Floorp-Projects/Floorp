@@ -3375,11 +3375,8 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
   nsRect tileRect(x0, y0, (x1 - x0), (y1 - y0));
   nsRect drawRect;
 
-  if (drawRect.IntersectRect(tileRect, dirtyRect)) {
-    PRInt32 xOffset = drawRect.x - x0,
-            yOffset = drawRect.y - y0;
-    aRenderingContext.DrawTile(image, xOffset, yOffset, &drawRect);
-  }
+  if (drawRect.IntersectRect(tileRect, dirtyRect))
+    aRenderingContext.DrawTile(image, x0, y0, &drawRect);
 
 #if (!defined(XP_UNIX) && !defined(XP_BEOS)) || defined(XP_MACOSX)
   // Restore clipping
