@@ -27,8 +27,15 @@ include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
 
 EXPORT_RESOURCE_CONTENT = \
+	$(srcdir)/EditorHLineProperties.dtd \
 	$(srcdir)/EditorImageProperties.dtd \
+	$(srcdir)/EditorInsertSource.dtd \
+	$(srcdir)/EditorInsertTable.dtd \
 	$(srcdir)/EditorLinkProperties.dtd \
+	$(srcdir)/EditorPersonalDictionary.dtd \
+	$(srcdir)/EditorSpellCheck.dtd \
+	$(srcdir)/EdLinkProps.dtd \
+	$(srcdir)/EdNamedAnchorProperties.dtd \
 	$(NULL)
 
 install::
