@@ -104,17 +104,6 @@ NS_IMETHODIMP nsPNGDecoder::Init(imgIRequest *aRequest)
 }
 
 
-/* readonly attribute imgIRequest request; */
-NS_IMETHODIMP nsPNGDecoder::GetRequest(imgIRequest * *aRequest)
-{
-  *aRequest = mRequest;
-  NS_ADDREF(*aRequest);
-  return NS_OK;
-}
-
-
-
-
 
 
 /** nsIOutputStream methods **/
@@ -153,15 +142,11 @@ static NS_METHOD ReadDataOut(nsIInputStream* in,
   // we need to do the setjmp here otherwise bad things will happen
   if (setjmp(decoder->mPNG->jmpbuf)) {
     png_destroy_read_struct(&decoder->mPNG, &decoder->mInfo, NULL);
-    // is this NS_ERROR_FAILURE enough?
-
-    decoder->mRequest->Cancel(NS_BINDING_ABORTED); // XXX is this the correct error ?
 
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv = decoder->ProcessData((unsigned char*)fromRawSegment, count, writeCount);
-  return rv;
+  return decoder->ProcessData((unsigned char*)fromRawSegment, count, writeCount);
 }
 
 nsresult nsPNGDecoder::ProcessData(unsigned char *data, PRUint32 count, PRUint32 *readCount)
@@ -282,8 +267,8 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
 
   /* let libpng expand interlaced images */
   if (interlace_type == PNG_INTERLACE_ADAM7) {
-      /* number_passes = */
-      png_set_interlace_handling(png_ptr);
+    /* number_passes = */
+    png_set_interlace_handling(png_ptr);
   }
 
   /* now all of those things we set above are used to update various struct
@@ -321,8 +306,8 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
     decoder->mObserver->OnStartDecode(nsnull, nsnull);
 
   decoder->mImage = do_CreateInstance("@mozilla.org/image/container;1");
-  // XXX should we add code to longjmp out of here in failure cases?
-  //  if (!decoder->mImage) return NS_ERROR_OUT_OF_MEMORY;
+  if (!decoder->mImage)
+    longjmp(decoder->mPNG->jmpbuf, 5); // NS_ERROR_OUT_OF_MEMORY
 
   decoder->mRequest->SetImage(decoder->mImage);
 
@@ -333,10 +318,8 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
     decoder->mObserver->OnStartContainer(nsnull, nsnull, decoder->mImage);
 
   decoder->mFrame = do_CreateInstance("@mozilla.org/gfx/image/frame;2");
-#if 0
-  // XXX should we longjmp to png_ptr->jumpbuf here if we failed?
-  if (!decoder->mFrame) return NS_ERROR_OUT_OF_MEMORY;
-#endif
+  if (!decoder->mFrame)
+    longjmp(decoder->mPNG->jmpbuf, 5); // NS_ERROR_OUT_OF_MEMORY
 
   gfx_format format;
 
@@ -374,7 +357,7 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
     decoder->interlacebuf = (PRUint8 *)nsMemory::Alloc(channels*width*height);
     decoder->ibpr = channels*width;
     if (!decoder->interlacebuf) {
-//      return NS_ERROR_FAILURE;
+      longjmp(decoder->mPNG->jmpbuf, 5); // NS_ERROR_OUT_OF_MEMORY
     }            
   }
 
@@ -439,11 +422,11 @@ row_callback(png_structp png_ptr, png_bytep new_row,
     decoder->mFrame->GetFormat(&format);
     PRUint8 *aptr, *cptr;
 
-// The mac specific ifdefs in the code below are there to make sure we
-// always fill in 4 byte pixels right now, which is what the mac always
-// allocates for its pixel buffers in true color mode. This will change
-// when we start storing images with color palettes when they don't need
-// true color support (GIFs).
+    // The mac specific ifdefs in the code below are there to make sure we
+    // always fill in 4 byte pixels right now, which is what the mac always
+    // allocates for its pixel buffers in true color mode. This will change
+    // when we start storing images with color palettes when they don't need
+    // true color support (GIFs).
     switch (format) {
     case gfxIFormats::RGB:
     case gfxIFormats::BGR:
@@ -550,6 +533,5 @@ end_callback(png_structp png_ptr, png_infop info_ptr)
     decoder->mObserver->OnStopContainer(nsnull, nsnull, decoder->mImage);
     decoder->mObserver->OnStopDecode(nsnull, nsnull, NS_OK, nsnull);
   }
-
 }
 

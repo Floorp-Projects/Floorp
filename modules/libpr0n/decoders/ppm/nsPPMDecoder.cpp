@@ -72,15 +72,6 @@ NS_IMETHODIMP nsPPMDecoder::Init(imgIRequest *aRequest)
   return NS_OK;
 }
 
-/* readonly attribute imgIRequest request; */
-NS_IMETHODIMP nsPPMDecoder::GetRequest(imgIRequest * *aRequest)
-{
-  *aRequest = mRequest;
-  NS_ADDREF(*aRequest);
-  return NS_OK;
-}
-
-
 
 
 
