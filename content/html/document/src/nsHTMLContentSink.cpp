@@ -235,7 +235,8 @@ public:
   NS_IMETHOD_(void) Notify(nsITimer *timer);
   
   // nsICSSLoaderObserver
-  NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet*aSheet, PRBool aNotify);
+  NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet* aSheet,
+                              PRBool aNotify) { return NS_OK; };
 
   // nsIDocumentObserver
   NS_IMETHOD BeginUpdate(nsIDocument *aDocument);
@@ -275,12 +276,12 @@ public:
                             nsIContent* aChild,
                             PRInt32 aIndexInContainer) { return NS_OK; }
   NS_IMETHOD StyleSheetAdded(nsIDocument *aDocument,
-                             nsIStyleSheet* aStyleSheet) { return NS_OK; }
+                             nsIStyleSheet* aStyleSheet);
   NS_IMETHOD StyleSheetRemoved(nsIDocument *aDocument,
-                               nsIStyleSheet* aStyleSheet) { return NS_OK; }
+                               nsIStyleSheet* aStyleSheet);
   NS_IMETHOD StyleSheetDisabledStateChanged(nsIDocument *aDocument,
                                         nsIStyleSheet* aStyleSheet,
-                                        PRBool aDisabled) { return NS_OK; }
+                                        PRBool aDisabled);
   NS_IMETHOD StyleRuleChanged(nsIDocument *aDocument,
                               nsIStyleSheet* aStyleSheet,
                               nsIStyleRule* aStyleRule,
@@ -3948,22 +3949,6 @@ HTMLContentSink::ProcessLink(nsIHTMLContent* aElement, const nsAReadableString& 
   return result;
 }
 
-NS_IMETHODIMP
-HTMLContentSink::StyleSheetLoaded(nsICSSStyleSheet* aSheet, 
-                                  PRBool aDidNotify)
-{
-  // If there was a notification done for this style sheet, we know
-  // that frames have been created for all content seen so far
-  // (processing of a new style sheet causes recreation of the frame
-  // model).  As a result, all contexts should update their notion of
-  // how much frame creation has happened.
-  if (aDidNotify) {
-    UpdateAllContexts();
-  }
-
-  return NS_OK;
-}
-
 nsresult
 HTMLContentSink::ProcessStyleLink(nsIHTMLContent* aElement,
                                   const nsString& aHref, const nsString& aRel,
@@ -4414,6 +4399,40 @@ HTMLContentSink::EndUpdate(nsIDocument *aDocument)
     UpdateAllContexts();
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLContentSink::StyleSheetAdded(nsIDocument *aDocument,
+                                 nsIStyleSheet* aStyleSheet)
+{
+  // Processing of a new style sheet causes recreation of the frame
+  // model. As a result, all contexts should update their notion of
+  // how much frame creation has happened.
+  UpdateAllContexts();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLContentSink::StyleSheetRemoved(nsIDocument *aDocument,
+                                   nsIStyleSheet* aStyleSheet)
+{
+  // Removing a style sheet causes recreation of the frame model.
+  // As a result, all contexts should update their notion of how
+  // much frame creation has happened.
+  UpdateAllContexts();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLContentSink::StyleSheetDisabledStateChanged(nsIDocument *aDocument,
+                                                nsIStyleSheet* aStyleSheet,
+                                                PRBool aDisabled)
+{
+  // Disabling/enabling a style sheet causes recreation of the frame
+  // model. As a result, all contexts should update their notion of
+  // how much frame creation has happened.
+  UpdateAllContexts();
   return NS_OK;
 }
 
