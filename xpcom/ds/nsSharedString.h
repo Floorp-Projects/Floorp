@@ -52,10 +52,10 @@ class basic_nsSharedString
           return mLength;
         }
 
-      basic_nsSharedString( const basic_nsAReadableString<CharT>& aReadable )
+      basic_nsSharedString( const CharT* data, size_t length )
+          : mRefCount(0), mData(data), mLength(length)
         {
-          mLength = aReadable.Length();
-          copy(aReadable.BeginReading(), aReadable.EndReading(), mData+0);
+          // nothing else to do here
         }
 
       nsrefcnt
@@ -75,8 +75,8 @@ class basic_nsSharedString
 
     private:
       mutable nsrefcnt  mRefCount;
+      const CharT*      mData;
       size_t            mLength;
-      CharT             mData[1];
   };
 
 NS_DEF_STRING_COMPARISONS(basic_nsSharedString<CharT>)
@@ -117,8 +117,20 @@ template <class CharT>
 basic_nsSharedString<CharT>*
 new_nsSharedString( const basic_nsAReadableString<CharT>& aReadable )
   {
-    void* in_buffer = operator new( sizeof(basic_nsSharedString<CharT>) + aReadable.Length()*sizeof(CharT) );
-    return new (in_buffer) basic_nsSharedString<CharT>(aReadable);
+    size_t object_size    = ((sizeof(basic_nsSharedString<CharT>) + sizeof(CharT) - 1) / sizeof(CharT)) * sizeof(CharT);
+    size_t string_length  = aReadable.Length();
+    size_t string_size    = string_length * sizeof(CharT);
+
+    void* object_ptr = operator new(object_size + string_size);
+    if ( object_ptr )
+      {
+        typedef CharT* CharT_ptr;
+        CharT* string_ptr = CharT_ptr(NS_STATIC_CAST(unsigned char*, object_ptr) + object_size);
+        string_copy(aReadable.BeginReading(), aReadable.EndReading(), string_ptr);
+        return new (object_ptr) basic_nsSharedString<CharT>(string_ptr, string_length);
+      }
+
+    return 0;
   }
 
 
