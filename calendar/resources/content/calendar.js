@@ -915,3 +915,25 @@ function getBoolPref (prefObj, prefName, defaultValue)
        return defaultValue;
     }
 }
+
+function GetUnicharPref(prefObj, prefName, defaultValue)
+{
+    try {
+      return prefObj.getComplexValue(prefName, Components.interfaces.nsISupportsString).data;
+    }
+    catch(e)
+    {
+        return defaultValue;
+    }
+}
+
+function SetUnicharPref(aPrefObj, aPrefName, aPrefValue)
+{
+    try {
+      var str = Components.classes["@mozilla.org/supports-string;1"]
+                          .createInstance(Components.interfaces.nsISupportsString);
+      str.data = aPrefValue;
+      aPrefObj.setComplexValue(aPrefName, Components.interfaces.nsISupportsString, str);
+    }
+    catch(e) {}
+}
