@@ -56,8 +56,8 @@
 
         </vbox>
         <spring style="width:10px"/>
-    </vbox>
-      
+    </hbox>
+
     <spring style="height:1em"/>
   <hbox id="okCancelButtons"
         button1Label="&send.label;"
