@@ -145,9 +145,10 @@ function onCancel()
 
 function onServerClick(event)
 {
+    var itemURI = event.target.id;
+
     // Return if same server is selected.
-    var item = event.target;
-    if (item.id == gCurrentServerURI)
+    if (itemURI == gCurrentServerURI)
       return;
 
     // Save the current filters to disk before switching because
@@ -156,8 +157,7 @@ function onServerClick(event)
     if (filterList) 
       filterList.saveToDefaultFile();
 
-    var item = event.target;
-    selectServer(item.id);
+    selectServer(itemURI);
 }
 
 function CanRunFiltersAfterTheFact(aServer)
