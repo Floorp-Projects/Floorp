@@ -78,7 +78,7 @@ CLASS="SECTION"
 ><H2
 CLASS="SECTION"
 ><A
-NAME="AEN486"
+NAME="AEN509"
 >3.2.1. Introduction</A
 ></H2
 ><P
@@ -109,7 +109,7 @@ CLASS="SECTION"
 ><H2
 CLASS="SECTION"
 ><A
-NAME="AEN492"
+NAME="AEN515"
 >3.2.2. Installing the Prerequisites</A
 ></H2
 ><DIV
@@ -613,7 +613,7 @@ CLASS="SECTION"
 ><H2
 CLASS="SECTION"
 ><A
-NAME="AEN579"
+NAME="AEN602"
 >3.2.5. DBI Perl Module</A
 ></H2
 ><P
@@ -642,7 +642,7 @@ HREF="downloadlinks.html"
 	<DIV
 CLASS="INFORMALEXAMPLE"
 ><A
-NAME="AEN586"
+NAME="AEN609"
 ></A
 ><P
 ></P
@@ -696,7 +696,7 @@ VALIGN="TOP"
 	<DIV
 CLASS="INFORMALEXAMPLE"
 ><A
-NAME="AEN593"
+NAME="AEN616"
 ></A
 ><P
 ></P
@@ -789,7 +789,7 @@ CLASS="SECTION"
 ><H2
 CLASS="SECTION"
 ><A
-NAME="AEN617"
+NAME="AEN640"
 >3.2.6. Data::Dumper Perl Module</A
 ></H2
 ><P
@@ -814,7 +814,7 @@ CLASS="SECTION"
 ><H2
 CLASS="SECTION"
 ><A
-NAME="AEN622"
+NAME="AEN645"
 >3.2.7. MySQL related Perl Module Collection</A
 ></H2
 ><P
@@ -860,7 +860,7 @@ CLASS="SECTION"
 ><H2
 CLASS="SECTION"
 ><A
-NAME="AEN631"
+NAME="AEN654"
 >3.2.8. TimeDate Perl Module Collection</A
 ></H2
 ><P
@@ -882,7 +882,7 @@ CLASS="SECTION"
 ><H2
 CLASS="SECTION"
 ><A
-NAME="AEN635"
+NAME="AEN658"
 >3.2.9. GD Perl Module (1.8.3)</A
 ></H2
 ><P
@@ -948,7 +948,7 @@ CLASS="SECTION"
 ><H2
 CLASS="SECTION"
 ><A
-NAME="AEN644"
+NAME="AEN667"
 >3.2.10. Chart::Base Perl Module (0.99c)</A
 ></H2
 ><P
@@ -969,7 +969,7 @@ CLASS="SECTION"
 ><H2
 CLASS="SECTION"
 ><A
-NAME="AEN648"
+NAME="AEN671"
 >3.2.11. DB_File Perl Module</A
 ></H2
 ><P
@@ -985,7 +985,7 @@ CLASS="SECTION"
 ><H2
 CLASS="SECTION"
 ><A
-NAME="AEN651"
+NAME="AEN674"
 >3.2.12. HTTP Server</A
 ></H2
 ><P
@@ -1156,7 +1156,7 @@ CLASS="SECTION"
 ><H2
 CLASS="SECTION"
 ><A
-NAME="AEN669"
+NAME="AEN692"
 >3.2.13. Installing the Bugzilla Files</A
 ></H2
 ><P
@@ -1247,7 +1247,7 @@ HREF="patches.html"
 	<DIV
 CLASS="EXAMPLE"
 ><A
-NAME="AEN685"
+NAME="AEN708"
 ></A
 ><P
 ><B
@@ -1289,6 +1289,29 @@ bash# ln -s /usr/bin/perl /usr/bosaitools/bin/perl
 ></TR
 ></TABLE
 >
+	  </P
+><P
+>	    Alternately, you can simply run this perl one-liner to
+	    change your path to perl in all the files in your Bugzilla
+	    installation:
+	    <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="PROGRAMLISTING"
+>perl -pi -e 's@#!/usr/bonsaitools/bin/perl@/usr/bin/perl@' *cgi *pl Bug.pm
+	    </PRE
+></FONT
+></TD
+></TR
+></TABLE
+>
+	    Change the second path to perl to match your installation.
 	  </P
 ></DIV
 >
@@ -1335,7 +1358,7 @@ CLASS="SECTION"
 ><H2
 CLASS="SECTION"
 ><A
-NAME="AEN696"
+NAME="AEN721"
 >3.2.14. Setting Up the MySQL Database</A
 ></H2
 ><P
@@ -1573,7 +1596,7 @@ CLASS="SECTION"
 ><H2
 CLASS="SECTION"
 ><A
-NAME="AEN743"
+NAME="AEN768"
 >3.2.15. Tweaking <TT
 CLASS="FILENAME"
 >localconfig</TT
@@ -1699,7 +1722,7 @@ CLASS="QUOTE"
 	    <DIV
 CLASS="EXAMPLE"
 ><A
-NAME="AEN774"
+NAME="AEN799"
 ></A
 ><P
 ><B
@@ -1779,7 +1802,7 @@ CLASS="SECTION"
 ><H2
 CLASS="SECTION"
 ><A
-NAME="AEN781"
+NAME="AEN806"
 >3.2.16. Setting Up Maintainers Manually (Optional)</A
 ></H2
 ><P
@@ -1829,7 +1852,7 @@ CLASS="SECTION"
 ><H2
 CLASS="SECTION"
 ><A
-NAME="AEN792"
+NAME="AEN817"
 >3.2.17. The Whining Cron (Optional)</A
 ></H2
 ><P
@@ -1915,7 +1938,7 @@ CLASS="SECTION"
 ><H2
 CLASS="SECTION"
 ><A
-NAME="AEN802"
+NAME="AEN827"
 >3.2.18. Bug Graphs (Optional)</A
 ></H2
 ><P
@@ -1972,7 +1995,7 @@ CLASS="SECTION"
 ><H2
 CLASS="SECTION"
 ><A
-NAME="AEN814"
+NAME="AEN839"
 >3.2.19. Securing MySQL</A
 ></H2
 ><P

@@ -438,13 +438,13 @@ CLASS="QUOTE"
 >scrollbox</EM
 >.  Using the down arrow on
 	    the scrollbox, scroll down until you can see an entry
-	    called "Webtools".  Select this entry.
+	    called "Bugzilla".  Select this entry.
 	  </P
 ></LI
 ><LI
 ><P
 >	    Did you notice that some of the boxes to the right changed
-	    when you selected "Webtools"? Every Program (or Product)
+	    when you selected "Bugzilla"? Every Program (or Product)
 	    has different Versions, Components, and Target Milestones
 	    associated with it.  A "Version" is the number of a
 	    software program.
@@ -519,7 +519,7 @@ NAME="AEN317"
 ></A
 ><P
 ><B
->Example 2-2. Mozilla Webtools Components</B
+>Example 2-2. Mozilla's Bugzilla Components</B
 ></P
 ><DIV
 CLASS="INFORMALEXAMPLE"
@@ -529,7 +529,7 @@ NAME="AEN319"
 ><P
 ></P
 ><P
->		  Mozilla's "Webtools" Product is composed of several pieces (Components):
+>		  Mozilla's "Bugzilla" Product is composed of several pieces (Components):
 		  <P
 ></P
 ><TABLE
@@ -538,71 +538,172 @@ BORDER="0"
 ><TR
 ><TD
 ><EM
->Bonsai</EM
+>Administration</EM
 >,
-		      a tool to show recent changes to Mozilla</TD
+                      Administration of a bugzilla installation, including 
+                      <TT
+CLASS="FILENAME"
+>editcomponents.cgi</TT
+>,
+                      <TT
+CLASS="FILENAME"
+>editgroups.cgi</TT
+>, 
+                      <TT
+CLASS="FILENAME"
+>editkeywords.cgi</TT
+>, 
+                      <TT
+CLASS="FILENAME"
+>editparams.cgi</TT
+>,
+                      <TT
+CLASS="FILENAME"
+>editproducts.cgi</TT
+>,
+                      <TT
+CLASS="FILENAME"
+>editusers.cgi</TT
+>,
+                      <TT
+CLASS="FILENAME"
+>editversions.cgi,</TT
+> and
+                      <TT
+CLASS="FILENAME"
+>sanitycheck.cgi</TT
+>.
+                    </TD
 ></TR
 ><TR
 ><TD
 ><EM
->Bugzilla</EM
+>Bugzilla-General</EM
 >,
-		      a defect-tracking tool</TD
+                      Anything that doesn't fit in the other components, or spans
+                      multiple components.
+                    </TD
 ></TR
 ><TR
 ><TD
 ><EM
->Build</EM
+>Creating/Changing Bugs</EM
 >,
-		      a tool to automatically compile source code
-		      into machine-readable form</TD
+                      Creating, changing, and viewing bugs.
+                      <TT
+CLASS="FILENAME"
+>enter_bug.cgi</TT
+>,
+                      <TT
+CLASS="FILENAME"
+>post_bug.cgi</TT
+>,
+                      <TT
+CLASS="FILENAME"
+>show_bug.cgi</TT
+> and
+                      <TT
+CLASS="FILENAME"
+>process_bug.cgi</TT
+>.
+                    </TD
 ></TR
 ><TR
 ><TD
 ><EM
->Despot</EM
+>Documentation</EM
 >,
-		      a program that controls access to the other Webtools</TD
+                      The bugzilla documentation, including anything in the
+                      <TT
+CLASS="FILENAME"
+>docs/</TT
+> directory and The Bugzilla Guide
+                      (This document :)
+                    </TD
 ></TR
 ><TR
 ><TD
 ><EM
->LXR</EM
+>Email</EM
 >,
-		      a utility that automatically marks up text files
-		    to make them more readable</TD
+                      Anything to do with email sent by Bugzilla.
+                      <TT
+CLASS="FILENAME"
+>processmail</TT
+>
+                    </TD
 ></TR
 ><TR
 ><TD
 ><EM
->MozBot</EM
+>Installation</EM
 >,
-		      a "robot" that announces changes to Mozilla in Chat</TD
+                      The installation process of Bugzilla. This includes
+                      <TT
+CLASS="FILENAME"
+>checksetup.pl</TT
+> and whatever else it evolves into.
+                    </TD
 ></TR
 ><TR
 ><TD
 ><EM
->TestManager</EM
+>Query/Buglist</EM
 >,
-		      a tool to help find bugs in Mozilla</TD
+                      Anything to do with searching for bugs and viewing the buglists.
+                      <TT
+CLASS="FILENAME"
+>query.cgi</TT
+> and
+                      <TT
+CLASS="FILENAME"
+>buglist.cgi</TT
+>
+                    </TD
 ></TR
 ><TR
 ><TD
 ><EM
->Tinderbox</EM
+>Reporting/Charting</EM
 >,
-		      which displays reports from Build</TD
+                      Getting reports from Bugzilla.
+                      <TT
+CLASS="FILENAME"
+>reports.cgi</TT
+> and
+                      <TT
+CLASS="FILENAME"
+>duplicates.cgi</TT
+>
+                    </TD
+></TR
+><TR
+><TD
+><EM
+>User Accounts</EM
+>,
+                      Anything about managing a user account from the user's perspective.
+                      <TT
+CLASS="FILENAME"
+>userprefs.cgi</TT
+>, saved queries, creating accounts,
+                      changing passwords, logging in, etc. 
+                    </TD
+></TR
+><TR
+><TD
+><EM
+>User Interface</EM
+>,
+                      General issues having to do with the user interface cosmetics (not
+                      functionality) including cosmetic issues, HTML templates, etc.
+                    </TD
 ></TR
 ></TBODY
 ></TABLE
 ><P
 ></P
 >
-		</P
-><P
->		  A different person is responsible for each of these Components.
-		  Tara Hernandez keeps
-		  the "Bugzilla" component up-to-date.
 		</P
 ><P
 ></P

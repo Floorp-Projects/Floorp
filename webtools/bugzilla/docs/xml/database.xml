@@ -13,7 +13,7 @@
     <para>
       <mediaobject>
 	<imageobject>
-	  <imagedata fileref="dbschema.jpg" format="jpg">
+	  <imagedata fileref="../images/dbschema.jpg" format="jpg">
 	</imageobject>
 	
 	<textobject>

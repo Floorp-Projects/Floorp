@@ -3,10 +3,10 @@ The Bugzilla Guide
 
 Matthew P. Barnson
 
-   barnboy@NOSPAM.trilobyte.net
+   barnboy@trilobyte.net
    Zach Lipton
 
-   zach@NOSPAM.zachlipton.com
+   zach AT zachlipton DOT com
    Revision History
    Revision v2.11  20 December 2000 Revised by: MPB
    Converted the README, FAQ, and DATABASE information into SGML docbook
@@ -136,6 +136,7 @@ Matthew P. Barnson
 
               3.6.1. Win32 Installation: Step-by-step
               3.6.2. Additional Windows Tips
+              3.6.3. Bugzilla LDAP Integration
 
    4. Administering Bugzilla
 
@@ -169,6 +170,15 @@ Matthew P. Barnson
         5.4. Tinderbox/Tinderbox2
 
    6. The Future of Bugzilla
+   7. Bugzilla Variants and Competitors
+
+        7.1. Red Hat Bugzilla
+        7.2. Loki Bugzilla (Fenris)
+        7.3. Issuezilla
+        7.4. Scarab
+        7.5. Perforce SCM
+        7.6. SourceForge
+
    A. The Bugzilla FAQ
    B. Software Download Links
    C. The Bugzilla Database
@@ -182,21 +192,13 @@ Matthew P. Barnson
 
         C.3. MySQL Permissions & Grant Tables
 
-   7. Bugzilla Variants and Competitors
-
-        7.1. Red Hat Bugzilla
-        7.2. Loki Bugzilla (Fenris)
-        7.3. Issuezilla
-        7.4. Scarab
-        7.5. Perforce SCM
-        7.6. SourceForge
-
    D. Useful Patches and Utilities for Bugzilla
 
         D.1. Apache mod_rewrite magic
         D.2. The setperl.csh Utility
         D.3. Command-line Bugzilla Queries
         D.4. The Quicksearch Utility
+        D.5. Hacking Bugzilla
 
    E. GNU Free Documentation License
 
@@ -217,7 +219,7 @@ Matthew P. Barnson
 
    List of Examples
    2-1. Some Famous Software Versions
-   2-2. Mozilla Webtools Components
+   2-2. Mozilla's Bugzilla Components
    3-1. Setting up bonsaitools symlink
    3-2. Running checksetup.pl as the web user
    3-3. Installing ActivePerl ppd Modules on Microsoft Windows
@@ -230,6 +232,7 @@ Matthew P. Barnson
    4-4. Using SortKey with Target Milestone
    4-5. When to Use Group Security
    4-6. Creating a New Group
+   4-7. Bugzilla Groups
    D-1. Using Setperl to set your perl path
    1. A Sample Product
      _________________________________________________________________
@@ -270,8 +273,8 @@ Chapter 1. About This Guide
    documentation. I have incorporated instructions from the Bugzilla
    README, Frequently Asked Questions, Database Schema Document, and
    various mailing lists to create it. Chances are, there are glaring
-   errors in this documentation; please contact
-   <barnboy@NOSPAM.trilobyte.net> to correct them.
+   errors in this documentation; please contact <barnboy@trilobyte.net>
+   to correct them.
      _________________________________________________________________
 
 1.2. Copyright Information
@@ -289,7 +292,7 @@ Chapter 1. About This Guide
 
    If you have any questions regarding this document, its copyright, or
    publishing this document in non-electronic form, please contact
-   Matthew P. Barnson. Remove "NOSPAM" from email address to send.
+   Matthew P. Barnson.
      _________________________________________________________________
 
 1.3. Disclaimer
@@ -356,8 +359,8 @@ Chapter 1. About This Guide
    numerous e-mail and IRC support sessions, and overall excellent
    contribution to the Bugzilla community:
 
-   Terry Weissman for initially converting Bugzilla from BugSplat! and
-   writing the README upon which this documentation is largely based.
+   Terry Weissman for initially writing Bugzilla and creating the README
+   upon which the UNIX installation documentation is largely based.
 
    Tara Hernandez for keeping Bugzilla development going strong after
    Terry left Mozilla.org
@@ -380,7 +383,7 @@ Chapter 1. About This Guide
    documentation (in no particular order):
 
    Andrew Pearson, Spencer Smith, Eric Hanson, Kevin Brannen, Ron
-   Teitelbaum
+   Teitelbaum, Jacob Steenhagen, Joe Robins
      _________________________________________________________________
 
 1.7. Feedback
@@ -686,10 +689,10 @@ Chapter 2. Using Bugzilla
        can narrow our search down to only specific products (software
        programs or product lines) in our Bugzilla database. Please notice
        the box is a scrollbox. Using the down arrow on the scrollbox,
-       scroll down until you can see an entry called "Webtools". Select
+       scroll down until you can see an entry called "Bugzilla". Select
        this entry.
     4. Did you notice that some of the boxes to the right changed when
-       you selected "Webtools"? Every Program (or Product) has different
+       you selected "Bugzilla"? Every Program (or Product) has different
        Versions, Components, and Target Milestones associated with it. A
        "Version" is the number of a software program.
        Example 2-1. Some Famous Software Versions
@@ -715,22 +718,33 @@ Chapter 2. Using Bugzilla
        program, or some other logical division of a Product or Program.
        Normally, a Component has a single Owner, who is responsible for
        overseeing efforts to improve that Component.
-       Example 2-2. Mozilla Webtools Components
-       Mozilla's "Webtools" Product is composed of several pieces
+       Example 2-2. Mozilla's Bugzilla Components
+       Mozilla's "Bugzilla" Product is composed of several pieces
        (Components):
 
-       Bonsai, a tool to show recent changes to Mozilla
-       Bugzilla, a defect-tracking tool
-   Build, a tool to automatically compile source code into
-   machine-readable form
-       Despot, a program that controls access to the other Webtools
-   LXR, a utility that automatically marks up text files to make them
-   more readable
-       MozBot, a "robot" that announces changes to Mozilla in Chat
-       TestManager, a tool to help find bugs in Mozilla
-       Tinderbox, which displays reports from Build
-       A different person is responsible for each of these Components.
-       Tara Hernandez keeps the "Bugzilla" component up-to-date.
+   Administration, Administration of a bugzilla installation, including
+   editcomponents.cgi, editgroups.cgi, editkeywords.cgi, editparams.cgi,
+   editproducts.cgi, editusers.cgi, editversions.cgi, and
+   sanitycheck.cgi.
+   Bugzilla-General, Anything that doesn't fit in the other components,
+   or spans multiple components.
+   Creating/Changing Bugs, Creating, changing, and viewing bugs.
+   enter_bug.cgi, post_bug.cgi, show_bug.cgi and process_bug.cgi.
+   Documentation, The bugzilla documentation, including anything in the
+   docs/ directory and The Bugzilla Guide (This document :)
+       Email, Anything to do with email sent by Bugzilla. processmail
+   Installation, The installation process of Bugzilla. This includes
+   checksetup.pl and whatever else it evolves into.
+   Query/Buglist, Anything to do with searching for bugs and viewing the
+   buglists. query.cgi and buglist.cgi
+   Reporting/Charting, Getting reports from Bugzilla. reports.cgi and
+   duplicates.cgi
+   User Accounts, Anything about managing a user account from the user's
+   perspective. userprefs.cgi, saved queries, creating accounts, changing
+   passwords, logging in, etc.
+   User Interface, General issues having to do with the user interface
+   cosmetics (not functionality) including cosmetic issues, HTML
+   templates, etc.
        A "Milestone", or "Target Milestone" is a often a planned future
        "Version" of a product. In many cases, though, Milestones simply
        represent significant dates for a developer. Having certain
@@ -1439,6 +1453,12 @@ bash# mkdir /usr/bonsaitools
 bash# mkdir /usr/bonsaitools/bin
 bash# ln -s /usr/bin/perl /usr/bosaitools/bin/perl
 
+   Alternately, you can simply run this perl one-liner to change your
+   path to perl in all the files in your Bugzilla installation:
+perl -pi -e 's@#!/usr/bonsaitools/bin/perl@/usr/bin/perl@' *cgi *pl Bug.pm
+
+   Change the second path to perl to match your installation.
+
    Tip
 
    If you don't have root access to set this symlink up, check out the
@@ -1853,8 +1873,7 @@ bash# cd $BUGZILLA_HOME; for i in `ls *.cgi`; \
    <ry4an@ry4an.org>, with some edits by Terry Weissman, Bryce Nesbitt,
    Martin Pool, & Dan Mosedale (But don't send bug reports to them;
    report them using bugzilla, at
-   http://bugzilla.mozilla.org/enter_bug.cgi , project Webtools,
-   component Bugzilla).
+   http://bugzilla.mozilla.org/enter_bug.cgi?product=Bugzilla ).
 
    This document was heavily modified again Wednesday, March 07 2001 to
    reflect changes for Bugzilla 2.12 release by Matthew P. Barnson. The
@@ -2104,19 +2123,39 @@ exit;
        your Bugzilla directory. For instance, change this line in
        processmail:
 
+
 system ("./processmail.pl",@ARGLIST);
 
 
        to
 
+
 system ("perl processmail.pl",@ARGLIST);
 
+
+   14. Add binmode() calls so attachments will work (bug 62000).
+       Because Microsoft Windows based systems handle binary files
+       different than Unix based systems, you need to add the following
+       lines to createattachment.cgi and showattachment.cgi before the
+       require 'CGI.pl'; line.
+
+binmode(STDIN);
+binmode(STDOUT);
+
+   Note
+
+   According to bug 62000, the perl documentation says that you should
+   always use binmode() when dealing with binary files, but never when
+   dealing with text files. That seems to suggest that rather than
+   aribtrarily putting binmode() at the begining of the attachment files,
+   there should be logic to determine if binmode() is needed or not.
 
    Tip
 
    If you are using IIS or Personal Web Server, you must add cgi
    relationships to Properties -> Home directory (tab) -> Application
    Settings (section) -> Configuration (button), such as:
+
 
 .cgi to: <perl install directory>\perl.exe %s %s
 .pl to: <perl install directory>\perl.exe %s %s
@@ -2139,8 +2178,7 @@ GET,HEAD,POST
      Basically you need to add two String Keys in the registry at the
      following location:
 
-     HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\W3SVC\Paramete
-     rs\ScriptMap
+HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\W3SVC\Parameters\ScriptMap
 
      The keys should be called ".pl" and ".cgi", and both should have a
      value something like: c:/perl/bin/perl.exe "%s" "%s"
@@ -2152,14 +2190,15 @@ GET,HEAD,POST
 
    If attempting to run Bugzilla 2.12 or older, you will need to remove
    encrypt() calls from the Perl source. This is not necessary for
-   Bugzilla 2.13 and later.
+   Bugzilla 2.13 and later, which includes the current release, Bugzilla
+   2.14.
 
    Example 3-4. Removing encrypt() for Windows NT Bugzilla version 2.12
    or earlier
 
    Replace this:
 
-SendSQL("SELECT encrypt(" . SqlQuote($enteredpwd) . ", " . SqlQuote(substr($rea
+SendSQL("SELECT encrypt(" . SqlQuote($enteredpwd) . ", " . SQLQuote(substr($rea
 lcryptpwd, 0, 2)) . ")");
 my $enteredcryptpwd = FetchOneColumn();
 
@@ -2168,6 +2207,66 @@ my $enteredcryptpwd = FetchOneColumn();
 my $enteredcryptpwd = $enteredpwd
 
    in cgi.pl.
+     _________________________________________________________________
+
+3.6.3. Bugzilla LDAP Integration
+
+   What follows is some late-breaking information on using the LDAP
+   authentication options with Bugzilla. The author has not tested these
+   (nor even formatted this section!) so please contribute feedback to
+   the newsgroup.
+
+   Mozilla::LDAP module
+   The Mozilla::LDAP module allows you to use LDAP for authentication to
+   the Bugzilla system.  This module is not required if you are not using
+   LDAP.
+   Mozilla::LDAP (aka PerLDAP) is available for download from
+   http://www.mozilla.org/directory.
+   NOTE: The Mozilla::LDAP module requires Netscape's Directory SDK.
+   Follow the link for "Directory SDK for C" on that same page to
+   download the SDK first.  After you have installed this SDK, then
+   install the PerLDAP module.
+   ----------------------------------------------------------------------
+   Post-Installation Checklist
+   ----------------------------------------------------------------------
+   Set useLDAP to "On" **only** if you will be using an LDAP directory
+   for authentication.  Be very careful when setting up this parameter;
+   if you set LDAP authentication, but do not have a valid LDAP directory
+   set up, you will not be able to log back in to Bugzilla once you log
+   out.  (If this happens, you can get back in by manually editing the
+   data/params file, and setting useLDAP back to 0.)
+   If using LDAP, you must set the three additional parameters:
+   Set LDAPserver to the name (and optionally port) of your LDAP server.
+   If no port is specified, it defaults to the default port of 389.  (e.g
+   "ldap.mycompany.com" or "ldap.mycompany.com:1234")
+   Set LDAPBaseDN to the base DN for searching for users in your LDAP
+   directory.  (e.g. "ou=People,o=MyCompany")  uids must be unique under
+   the DN specified here.
+   Set LDAPmailattribute to the name of the attribute in your LDAP
+   directory which contains the primary email address.  On most directory
+   servers available, this is "mail", but you may need to change this.
+   ----------------------------------------------------------------------
+   (Not sure where this bit should go, but it's important that it be in
+   there somewhere...)
+   ----------------------------------------------------------------------
+   Using LDAP authentication for Bugzilla:
+   The existing authentication scheme for Bugzilla uses email addresses
+   as the primary user ID, and a password to authenticate that user.  All
+   places within Bugzilla where you need to deal with user ID (e.g
+   assigning a bug) use the email address.
+   The LDAP authentication builds on top of this scheme, rather than
+   replacing it.  The initial log in is done with a username and password
+   for the LDAP directory.  This then fetches the email address from LDAP
+   and authenticates seamlessly in the standard Bugzilla authentication
+   scheme using this email address.  If an account for this address
+   already exists in your Bugzilla system, it will log in to that
+   account.  If no account for that email address exists, one is created
+   at the time of login.  (In this case, Bugzilla will attempt to use the
+   "displayName" or "cn" attribute to determine the user's full name.)
+   After authentication, all other user-related tasks are still handled
+   by email address, not LDAP username.  You still assign bugs by email
+   address, query on users by email address, etc.
+   ----------------------------------------------------------------------
      _________________________________________________________________
 
 Chapter 4. Administering Bugzilla
@@ -2880,6 +2979,84 @@ Chapter 4. Administering Bugzilla
        instructions for creating a new Product. If you need to add users
        to these new groups as you create them, you will find the option
        to add them to the group available under the "Edit User" screens.
+
+   You may find this example illustrative for how bug groups work.
+
+   Example 4-7. Bugzilla Groups
+
+   Bugzilla Groups example
+   -----------------------
+   For this example, let us suppose we have four groups, call them
+   Group1, Group2, Group3, and Group4.
+   We have 5 users, User1, User2, User3, User4, User5.
+   We have 8 bugs, Bug1, ..., Bug8.
+   Group membership is defined by this chart:
+   (X denotes that user is in that group.)
+   (I apologize for the nasty formatting of this table.  Try viewing
+   it in a text-based browser or something for now. -MPB)
+         G G G G
+         r r r r
+         o o o o
+         u u u u
+         p p p p
+         1 2 3 4
+        +-+-+-+-+
+   User1|X| | | |
+        +-+-+-+-+
+   User2| |X| | |
+        +-+-+-+-+
+   User3|X| |X| |
+        +-+-+-+-+
+   User4|X|X|X| |
+        +-+-+-+-+
+   User5| | | | |
+        +-+-+-+-+
+   Bug restrictions are defined by this chart:
+   (X denotes that bug is restricted to that group.)
+        G G G G
+        r r r r
+        o o o o
+        u u u u
+        p p p p
+        1 2 3 4
+       +-+-+-+-+
+   Bug1| | | | |
+       +-+-+-+-+
+   Bug2| |X| | |
+       +-+-+-+-+
+   Bug3| | |X| |
+       +-+-+-+-+
+   Bug4| | | |X|
+       +-+-+-+-+
+   Bug5|X|X| | |
+       +-+-+-+-+
+   Bug6|X| |X| |
+       +-+-+-+-+
+   Bug7|X|X|X| |
+       +-+-+-+-+
+   Bug8|X|X|X|X|
+       +-+-+-+-+
+   Who can see each bug?
+   Bug1 has no group restrictions.  Therefore, Bug1 can be seen by any
+   user, whatever their group membership.  This is going to be the only
+   bug that User5 can see, because User5 isn't in any groups.
+   Bug2 can be seen by anyone in Group2, that is User2 and User4.
+   Bug3 can be seen by anyone in Group3, that is User3 and User4.
+   Bug4 can be seen by anyone in Group4.  Nobody is in Group4, so none of
+   these users can see Bug4.
+   Bug5 can be seen by anyone who is in _both_ Group1 and Group2.  This
+   is only User4.  User1 cannot see it because he is not in Group2, and
+   User2 cannot see it because she is not in Group1.
+   Bug6 can be seen by anyone who is in both Group1 and Group3.  This
+   would include User3 and User4.  Similar to Bug5, User1 cannot see Bug6
+   because he is not in Group3.
+   Bug7 can be seen by anyone who is in Group1, Group2, and Group3.  This
+   is only User4.  All of the others are missing at least one of those
+   group priveleges, and thus cannot see the bug.
+   Bug8 can be seen by anyone who is in Group1, Group2, Group3, and
+   Group4.  There is nobody in all four of these groups, so nobody can
+   see Bug8.  It doesn't matter that User4 is in Group1, Group2, and
+   Group3, since he isn't in Group4.
      _________________________________________________________________
 
 4.4. Bugzilla Security
@@ -3012,6 +3189,10 @@ Chapter 5. Integrating Bugzilla with Third-Party Tools
    have CVS check-in comments append to your Bugzilla bug. If you have
    your check-in script include an @resolution field, you can even change
    the Bugzilla bug state.
+
+   There is also a project, based upon somewhat dated Bugzilla code, to
+   integrate CVS and Bugzilla through CVS' ability to email. Check it out
+   at: http://homepages.kcbbs.gen.nz/~tonyg/, under the "cvszilla" link.
      _________________________________________________________________
 
 5.3. Perforce SCM
@@ -3039,10 +3220,665 @@ Chapter 6. The Future of Bugzilla
 
    Bugzilla's Future.  Much of this is the present, now.
 
-   The future of Bugzilla is Bugzilla 3.0. Unfortunately, I do not have
-   more information about it right now, and most of what went into the
-   "future" section is now present. That stuff was blue-sky a year ago;
-   MattyT should have me a new document sometime...
+   Bugzilla's future is a constantly-changing thing, as various
+   developers "scratch an itch" when it comes to functionality. Thus this
+   section is very malleable, subject to change without notice, etc.
+   You'll probably also notice the lack of formatting. I apologize that
+   it's not quite as readable as the rest of the Guide.
+
+                                  Bugzilla Blue Sky
+   Customisability
+      One of the major stumbling blocks of Bugzilla has been that it is t
+   oo
+      rigid and does not adapt itself well enough to the needs of an
+      organisation.  This has led to organisations making changes to the
+      Bugzilla code that need to be redone each new version of Bugzilla.
+      Bugzilla should attempt to move away from this to a world where thi
+   s
+      doesn't need to occur.
+      Most of the subsections in this section are currently explicit desi
+   gn
+      goals for the "Bugzilla 3" rewrite.  This does not necessarily mean
+      that they will not occur before them in Bugzilla 2, but most are
+      significant undertakings.
+     Field Customisation
+      Many installations wish to customise the fields that appear on bug
+      reports.   Current versions of Bugzilla offer limited
+      customisability.  In particular, some fields can be turned off.
+      However, many administrators wish to add their own fields, and rena
+   me
+      or otherwise modify existing fields.  An architecture that supports
+      this would be extraordinarily useful.
+      Indeed, many fields work similarly and could be abstracted into "fi
+   eld
+      types", so that an administrator need write little or no code to
+      support the new fields they desire.
+      Possible field types include text (eg status whiteboard), numbers,
+      dates (eg report time), accounts (eg reporter, qa, cc), inter-bug
+      relationships (dependencies, duplicates), option groups (platform,
+   os,
+      severity, priority, target milestone, version) etc.
+      Ideally an administrator could configure their fields through a
+      Bugzilla interface that requires no code to be added.  However, it
+   is
+      highly unlikely this ideal will never be met, and in a similar way
+      that office applications have scripting languages, Bugzilla should
+      allow new field types to be written.
+      Similarly, a common desire is for resolutions to be added or remove
+   d.
+       Allocations
+      ?
+       Option Groups
+      ?
+       Relations
+      ?
+     Database Integrity
+      Furthermore, it is desirable for administrators to be able to speci
+   fy
+      rules that must or should apply between the fields on a bug report.
+      For example, you might wish to specify that a bug with status ASSIG
+   NED
+      must have a target milestone field that that is not untargetted.  O
+   r
+      that a bug with a certain number of votes should get ASSIGNED.  Or
+      that the QA contact must be different from the assignee.
+      "Must" relationships could be implemented by refusing to make chang
+   es
+      that violate the relationships, or alternatively, automatically
+      updating certain fields in order to satisfy the criteria.  Which
+      occurs should be up to the administrator.
+      "Should" relationships could be implemented by a combination of
+      emitting warnings on the process bug page, the same on notification
+      mails, or emitting periodic whine mails about the situation.  Again
+   ,
+      which occurs should be up to the administrator.
+      It should also be possible for whine mails to be emitted for "must"
+      relationships, as they might become violated through direct databas
+   e
+      access, Bugzilla bugs, or because they were there before the
+      relationship was enforced.
+      As well as implementing intra-bug constraints, it would be useful t
+   o
+      create inter-bug constraints.  For example, a bug that is dependent
+    on
+      another bug should not have an earlier milestone or greater priorit
+   y
+      than that bug.
+     Database Adaptability
+      Often an administrator desires that fields adapt to the values of
+      other fields.  For example, the value of a field might determine th
+   e
+      possible values of another field or even whether it appears (whethe
+   r
+      it is "applicable").
+      Limited adaptability is present in Bugzilla 2, and only on the
+      "Product" field:
+        * The possible values of the target milestone, version and compon
+   ent
+          fields depend on the product.
+        * UNCONFIRMED can be turned off for specific products.
+        * Voting can be configured differently or turned off for differen
+   t
+          products, and there is a separate user vote limits for each
+          product.
+      It would be good if more adaptability was present, both in terms of
+      all fields relying on the product, as well as the ability to adapt
+      based on the value of all fields.
+      Example ???
+      General adaptability raises the issue of circular references betwee
+   n
+      fields causing problems.  One possible solution to this is to place
+      the fields in a total ordering and require a field refer only to th
+   e
+      previous fields.
+      In Bugzilla 2, changing the product of a bug meant a second page wo
+   uld
+      appear that allowed you to choose a new milestone, component and
+      version, as those fields adapted themselves to the new product.  Th
+   is
+      page could be generalised to support all instances where:
+        * a field value must or might be changed because the possible val
+   ues
+          have changed
+        * is going to drop off because it it is no longer applicable, and
+          this should be confirmed
+        * must be specified because it is suddenly applicable, and the
+          default value, if one exists, might not be acceptable
+     Database Independence
+      Currently Bugzilla only runs on the MySQL database.  It would be
+      desirable for Bugzilla to run on other databases, because:
+        * Organisations may have existing database products they use and
+          would prefer to run a homogenous environment.
+        * Databases each have their own shortcomings, including MySQL.  A
+   n
+          administrator might choose a database that would work better wi
+   th
+          their Bugzilla.
+      This raises the possibility that we could use features that are onl
+   y
+      present in some databases, by appropriately falling back.  For
+      example, in the MySQL world, we live without:
+        * record-level locking, instead we use table-level locking
+        * referential and record constraints, instead we checking code
+        * subselects, instead we use multiple queries and redundant "cach
+   es"
+     Multiple Front Ends
+      Currently Bugzilla is manipulated via the Web, and notifies via
+      E-Mail.  It would be desirable for Bugzilla to easily support vario
+   us
+      front ends.
+      There is no reason that Bugzilla could not be controlled via a whol
+   e
+      range of front ends, including Web, E-Mail, IRC, ICQ, etc, and
+      similarly for how it notifies.  It's also possible that we could
+      introduce a special Bugzilla client that uses its own protocol, for
+      maximum user productivity.
+      Indeed a request reply might be returned via a totally different
+      transport method than was use to submit the request.
+   Internationalisation
+      Bugzilla currently supports only English.  All of the field names,
+      user instructions, etc are written in English.  It would be desirab
+   le
+      to allow "language packs" so Bugzilla can be easily used in
+      non-English speaking locales.
+      To a degree field customisation supports this, because administrato
+   rs
+      could specify their own fields names anyway.  However, there will
+      always be some basic facilities not covered by this, and it is
+      desirable that the administrator's interface also is
+      internationalisable.
+   Better Searching
+     General Summary Reports
+      Sometimes, the normal querying page leaves a lot to be desired.  Th
+   ere
+      are other facilities already in place or which people have asked fo
+   r:
+      Most Doomed Reports - All Bugs or All Bugs In A Product, Categorise
+   d
+      On Assignee, Shows and Counts Number of Bugs For Each Assignee
+      Most Voted For Bugs - All Bugs, Categorised On Product, Shows Top T
+   en
+      Bugs Voters Most Want Fixed
+      Number of Open Bugs For An Assignee - Bug List, Categorised On
+      Developers, Counts Number of Bugs In Category
+      The important thing to realise is that people want categorised repo
+   rts
+      on all sorts of things - a general summary report.
+      In a categorised report, you choose the subset of bugs you wish to
+      operate on (similar to how you would specify a query), and then
+      categorise them on one or more fields.
+      For each category you display the count of the number of things in
+      that category.  You can optionally display the bugs themselves, or
+      leave them out, just showing the counts.  And you can optionally li
+   mit
+      the number of things (bugs or subcategories) that display in each
+      category.
+      Such a mechanism would let you do all of the above and more.
+      Applications of this mechanism would only be recognised once it was
+      implemented.
+     Related Bugs
+      It would be nice to have a field where you could enter other bugs
+      related to the current bug.  It would be handy for navigation and
+      possibly even finding duplicates.
+     Column Specification Support
+      Currently bug lists use the columns that you last used.  This doesn
+   't
+      work well for "prepackaged queries", where you followed a link.  Yo
+   u
+      can probably add a column by specifying a sort column, but this is
+      difficult and suboptimal.
+      Furthermore, I find that when I want to add a column to a bug list,
+      it's usually a one off and I would prefer it to go away for the nex
+   t
+      query.  Hence, it would be nice to specify the columns that appear
+   on
+      the bug list (and general summary report) pages.  The default query
+      mechanism should be able to let you specify your default columns.
+     Advanced Querying Redesign
+      ?
+   Keywords
+      People have a need to apply tags to bugs.  In the beginning, people
+      placed designators in the summary and status whiteboard.  However,
+      these fields were not designed for that, and so there were many fla
+   ws
+      with this system:
+        * They pollute the field with information that was never intended
+    to
+          be present.
+        * Removing them with a bulk change is a difficult problem that ha
+   s
+          too many pitfalls to implement.
+        * You can easily get the capitalisation wrong.
+      Then dependencies were introduced (when?), and people realised that
+      they could use them for "tracking bugs".  Again, dependencies were
+   not
+      designed for that, and so there were more flaws, albeit different
+      ones, including:
+        * They aren't really bugs, so it's difficult to distinguish issue
+   s
+          from bugs.
+        * They can pollute bugs counts, and you must somehow exclude them
+          from queries.
+        * There is a whole lot of useless information on them.  They have
+    an
+          assignee but there is nothing to fix, and that person can get
+          whined at by Bugzilla.  They have target milestones which must
+   be
+          manually maintained.  And so on.
+      Finally, keywords were introduced (when?) for this purpose to remov
+   e
+      the need for these two systems.  Unfortunately, the simple keywords
+      implementation was itself lacking in certain features provided by t
+   he
+      two previous systems, and has remained almost unchanged since its
+      inception.  Furthermore, it could not be forseen that in large
+      installations, the sheer number of keywords could become unwieldly
+   and
+      could lead to a movement back to the other systems.
+      The keywords system was the right idea, however, and it remains so.
+      Fixing the keywords system is one of the most important Bugzilla
+      issues.
+     Bringing Keywords Up To Par
+      For the most part, keywords are very good at what they do.  It is e
+   asy
+      to add and remove them (unlike summary/whiteboard designators), we
+   can
+      simply see what issues are present on a bug (unlike tracking bugs),
+      and we do not confuse bugs with issues (unlike tracking bugs).
+      However, there are still some "regressions" in the keyword system o
+   ver
+      previous systems:
+        * Users wish to view the "dependency forest" of a keyword.  While
+    a
+          dependency tree is of one bug, a dependency forest is of a bug
+          list, and consists of a dependency tree for each member of the
+   bug
+          list.  Users can work around this with tracking bugs by creatin
+   g a
+          tracking bug and viewing the dependency tree of that tracking b
+   ug.
+        * Users wish to specify the keywords that initially apply to a bu
+   g,
+          but instead they must edit the bug once it has already been
+          submitted.  They can work around this with summary designators,
+          since they specify the summary at reporting time.
+        * Users wish to store or share a bug list that contains a keyword
+   s
+          column.  Hence they wish to be able to specify what columns app
+   ear
+          in the bug list URL, as mentioned earlier.  They can work aroun
+   d
+          this using summary designators, since almost all bug lists have
+    a
+          summary column.
+        * Users wish to be able to view keywords on a bug list.  However
+          often they are only interested in a small number of keywords.
+          Having a bug list with a keywords column means that all keyword
+   s
+          will appear on a bug list.  This can take a substantial amount
+   of
+          space where a bug has a lot of keywords, since the table column
+   s
+          in Bugzilla adjust to the largest cell in that column.  Hence
+          users wish to be able to specify which keywords should appear i
+   n
+          the bug list.  In a very real sense, each keyword is a field un
+   to
+          itself.  Users can work around this by using summary designator
+   s,
+          since they keywords will share the space in the summary column.
+        * Users wish to know when bugs with a specific issue are resolved
+   .
+          Hence they wish to be able to receive notifications on all the
+          bugs with a specific keyword.  The introduction a generic watch
+   ing
+          facility (also for things like watching all bugs in a component
+   )
+          would achieve this.  Users can work around this by using tracki
+   ng
+          bugs, as dependencies have an existing way of detecting fixes t
+   o
+          bug a bug was blocked by.
+     Dealing With The Keyword Overload
+      At the time of writing, the mozilla.org installation has approximat
+   ely
+      100 keywords, and many more would be in use if the keywords system
+      didn't have the problems it does.
+      Such a large number of keywords introduces logistical problems:
+        * It must be easy for someone to learn what a keyword means.  If
+   a
+          keyword is buried within a lot of other keywords, it can be
+          difficult to find.
+        * It must be easy to see what keywords are on a bug.  If the numb
+   er
+          of keywords is large, then this can be difficult.
+      These lead some people to feel that there are "too many keywords".
+      These problems are not without solutions however.  It is harder to
+      find a list of designators or tracking bugs than it is a list of
+      keywords.
+      The essential problem is it needs to be easy to find the keywords
+      we're interested in through the mass of keywords.
+       Keyword Applicability
+      As has been previously mentioned, it is desirable for fields to be
+      able to adapt to the values of other fields.  This is certainly tru
+   e
+      for keywords.  Many keywords are simply not relevant because of the
+      bugs product, component, etc.
+      Hence, by introducing keyword applicability, and not displaying
+      keywords that are not relevant to the current bug, or clearly
+      separating them, we can make the keyword overload problem less
+      significant.
+      Currently when you click on "keywords" on a bug, you get a list of
+   all
+      bugs.  It would be desirable to introduce a list of keywords tailor
+   ed
+      to a specific bug, that reports, in order:
+        * the keywords currently on the bug
+        * the keywords not currently on the bug, but applicable to the bu
+   g
+        * optionally, the keywords not applicable to the bug
+      This essentially orders the keywords into three groups, where each
+      group is more important than the previous, and therefore appears
+      closer to the top.
+       Keyword Grouping & Ordering
+      We could further enhance both the global and bug specific keyword l
+   ist
+      by grouping keywords.  We should always have a "flat" view of
+      keywords, but other ways of viewing the keywords would be useful to
+   o.
+      If keyword applicability was implemented, we could group keywords
+      based on their "applicability condition".  Keywords that apply to a
+   ll
+      bugs could be separated from keywords that apply to a specific
+      product, both on the global keyword list and the keyword list of a
+   bug
+      that is in that product.
+      We could specify groups of our own.  For example, many keywords are
+    in
+      a mutually exclusive group, essentially like radio buttons in a use
+   r
+      interface.  This creates a natural grouping, although other groupin
+   gs
+      occur (which depends on your keywords).
+      It is possible that we could use collapsing/expanding operations on
+      "twisties" to only should the groups we are interested in.
+      And instead of grouping keywords, we could order them on some metri
+   c
+      of usefulness, such as:
+        * when the keyword was last added to a bug
+        * how many bugs the keyword is on
+        * how many open bugs the keyword is on
+       Opting Out Of Keywords
+      Not all people are going to care about all keywords.  Therefore it
+      makes sense that you may wish to specify which keywords you are
+      interested in, either on the bug page, or on notifications.
+      Other keywords will therefore not bother users who are not interest
+   ed
+      in them.
+     Keyword Security
+      Currently all keywords are available and editable to all people wit
+   h
+      edit bugs access.  This situation is clearly suboptimal.
+      Although relying on good behaviour for people to not do what they
+      shouldn't works reasonably well on the mozilla.org, it is better to
+      enforce that behaviour - it can be breached through malice, acciden
+   t
+      or ignorance.
+      And in the situation where it is desirable for the presence or abse
+   nce
+      of a keyword not to be revealed, organisations either need to be
+      content with the divulgence, or not use keywords at all.
+      In the situation where they choose to divulge, introducing the abil
+   ity
+      to restrict who can see the keyword would also reduce keyword
+      overload.
+     Personal Keywords
+      Keywords join together a set of bugs which would otherwise be
+      unrelated in the bug system.
+      We allow users to store their own queries.  However we don't allow
+      them to store their own keywords on a bug.  This reduces the
+      usefulness of personal queries, since you cannot join a set of
+      unrelated bugs together in a way that you wish.  Lists of bug numbe
+   rs
+      can work, by they can only be used for small lists, and it is
+      impossible to share a list between multiple queries.
+      Personal keywords are necessary to replace personal tracking bugs,
+   as
+      they would not pollute the keyword space.  Indeed, on many
+      installations this could remove some keywords out of the global
+      keyword space.
+      In a similar vein and with similar effects, group keywords could be
+      introduced that are only available to members of a specific group.
+     Keyword Restrictions
+      Keywords are not islands unto themselves.  Along with their potenti
+   al
+      to be involved in the inter-field relationships mentioned earlier,
+      keywords can also be related to other keywords.
+      Essentially, there are two possibilities:
+        * a set of keywords are mutually exclusive
+        * the presence of a keyword implies another keyword must be prese
+   nt
+      Introduction of the ability to specify these restrictions would hav
+   e
+      benefits.
+      If mutually exclusive keywords were present on a bug, their removal
+      would fix up the database, as well as reducing the number of keywor
+   ds
+      on that bug.
+      In the situation where a keyword implies another keyword, there are
+      two possiblities as to how to handle the situation.
+      The first is automatically add the keyword.  This would fix up the
+      database, but it would increase the number of keywords on a bug.
+      The second is to automatically remove the keyword, and alter querie
+   s
+      so they pick up the first keyword as well as the removed keyword.
+      This would fix up the database and reduce the number of keywords on
+    a
+      bug, but it might confuse users who don't see the keyword.
+      Alternatively, the implied keywords could be listed separately.
+   Notifications
+      Every time a bug gets changed notifications get sent out to people
+      letting them know about what changes have been made.  This is a
+      significant feature, and all sorts of questions can be raised, but
+      they mainly boil down to when they should be sent and what they sho
+   uld
+      look like.
+     Changes You're Interested In
+      As of version 2.12 users can specify what sort of changes they are
+      interested in receiving notifications for.  However, this is still
+      limited.  As yet there is no facility to specify which keywords you
+      care about, and whether you care about changes to fields such as th
+   e
+      QA contact changes.
+      Furthermore, often an unnecessary comment will go along with a chan
+   ge,
+      either because it is required, or the commenter is ignorant of how
+   the
+      new system works.  While explaining why you did something is useful
+   ,
+      merely commenting on what you did is not because that information i
+   s
+      already accessible view "Bug Activity".
+      Because of this unnecessary comment, a lot of changes that would
+      otherwise not generate notifications for certain people do so, beca
+   use
+      few people are willing to turn off comments.  One way to deal with
+      this problem is to allow people to specify that their comments are
+      purely explanatory, and that anyone who is not interested in the
+      change will not be interested in the comment.
+      Furthermore, one possible rationale for unnecessary comments is tha
+   t
+      the bug activity does not display on the normal page and hence it i
+   s
+      difficult to cross reference comments and actions.  Hence, it would
+    be
+      beneficial to be able to do this.
+     Bugs You're Watching
+      Currently to receive a notification about a bug you need to have yo
+   ur
+      name on it.  This is suboptimal because you need to know about a bu
+   g
+      before you can receive notifications on it.  Often you are interest
+   ed
+      in any bug with a field set to a specific value.  For example, you
+      might be interested in all bugs with a specific product, component
+   or
+      keyword.
+      If someone could automatically receive notifications about these bu
+   gs,
+      it would make everyone's lives easier.  Currently the default assig
+   nee
+      and QA contact for a component will automatically receive
+      notifications for
+      Question:  This moves half way to a BCC.
+     Bulk Changes
+      A very useful feature of Bugzilla is the ability to perform an acti
+   on
+      on multiple bugs at once.  However, this means that similar
+      notifications are currently generated for each bug modified.
+      This can result in a torrent of notifications that can annoy.
+      Furthermore, since the bugs are all changed close to each other in
+      time, it is easy for someone to mass delete all the notifications
+      generated by a bulk change and miss an unrelated notification in th
+   e
+      middle.
+      These factors can lead to a tendency for people to delay bulk chang
+   es,
+      or avoid them entirely.  This is suboptimal.
+      It would be better if a bulk change generated only one notification
+      mail.  This would vastly reduce the annoyance factor, and prevent
+      accidental deletion of notifications.
+      One problem with this change is that some people separate out
+      notifications using filtering.  This means that they would no longe
+   r
+      be match parts of a bulk change under different filtering rules.
+      One possibility to resolve this is to allow people to specify group
+   s
+      of bugs.  All bugs within a group would go into the same
+      notification.  The filters could then distinguish the different bug
+      groups.
+      In any case, it is likely there would need to be a transition perio
+   d
+      to allow people to alter their filters.
+   Nominations
+      ?
+   Linking Bugzilla Installations
+      The first example of linking Bugzilla installations together has is
+      the introduction of bug moving in version 2.12.  However, it would
+   be
+      useful to be able to link installations in more ways.
+        * Dependencies and other relationships between bugs in other
+          installations.  This is difficult because dependencies are
+          synchronised on both bugs, so the installation that changes
+          dependencies would need to communicate the new state to the oth
+   er
+          installation.  It would also mean that relationships and
+          notifications that refer to other bugs would need to communicat
+   e
+          with the other installation.
+        * References to bugs in other installations.  Currently if you ty
+   pe
+          "bug XXX" or "bug #XXX" where XXX is a number, you get an
+          automatic hyperlink to that bug.  It would be useful if you cou
+   ld
+          say "YYY bug #XXX" where YYY is the name of another installatio
+   n.
+   Retirement
+      ?
+   Whiny Reports
+      ?
+     Group Redesign
+      ?
+     Hard Wrapping Comments
+      Currently Bugzilla "hard wraps" its comments to a specific line siz
+   e,
+      similar to E-Mail.  This has various problems:
+        * The way it currently works, wrapping is done in the browser at
+          submission time using a non-standard HTML extension not support
+   ed
+          by some (uncommon) browsers.  These browsers generate comments
+          that scroll off the right side of the screen.
+        * Because comments are of fixed width, when you expand your brows
+   er
+          window, the comments do not expand to fit available space.
+      It would be much better to move to a world of soft wrapping, where
+   the
+      browser wraps the text at display time, similar to a world processo
+   r.
+       And as in a word processor, soft wrapping does not preclude the
+      insertion of newlines.
+      Hard wrapping is too entrenched into text E-Mail to fix, but we can
+      fix Bugzilla without causing any problems.  The old content will st
+   ill
+      be wrapped too early, but at least new content will work.
+     _________________________________________________________________
+
+Chapter 7. Bugzilla Variants and Competitors
+
+   I created this section to answer questions about Bugzilla competitors
+   and variants, then found a wonderful site which covers an awful lot of
+   what I wanted to discuss. Rather than quote it in its entirety, I'll
+   simply refer you here: http://linas.org/linux/pm.html
+     _________________________________________________________________
+
+7.1. Red Hat Bugzilla
+
+   Red Hat Bugzilla is probably the most popular Bugzilla variant on the
+   planet. One of the major benefits of Red Hat Bugzilla is the ability
+   to work with Oracle, MySQL, and PostGreSQL databases serving as the
+   back-end, instead of just MySQL. Dave Lawrence has worked very hard to
+   keep Red Hat Bugzilla up-to-date, and many people prefer the
+   snappier-looking page layout of Red Hat Bugzilla to the default
+   Mozilla-standard formatting.
+
+   URL: http://bugzilla.redhat.com/bugzilla/
+     _________________________________________________________________
+
+7.2. Loki Bugzilla (Fenris)
+
+   Fenris can be found at http://fenris.lokigames.com. It is a fork from
+   Bugzilla.
+     _________________________________________________________________
+
+7.3. Issuezilla
+
+   Issuezilla is another fork from Bugzilla, and seems nearly as popular
+   as the Red Hat Bugzilla fork. Some Issuezilla team members are regular
+   contributors to the Bugzilla mailing list/newsgroup. Issuezilla is not
+   the primary focus of bug-tracking at tigris.org, however. Their
+   Java-based bug-tracker, Scarab, a newfangled Java-based issue tracker,
+   is under heavy development and looks promising!
+
+   URL: http://issuezilla.tigris.org/servlets/ProjectHome
+     _________________________________________________________________
+
+7.4. Scarab
+
+   Scarab is a promising new bug-tracking system built using Java Serlet
+   technology. As of this writing, no source code has been released as a
+   package, but you can obtain the code from CVS.
+
+   URL: http://scarab.tigris.org
+     _________________________________________________________________
+
+7.5. Perforce SCM
+
+   Although Perforce isn't really a bug tracker, it can be used as such
+   through the "jobs" functionality.
+
+   http://www.perforce.com/perforce/technotes/note052.htmlhttp://www.perf
+   orce.com/perforce/technotes/note052.html
+     _________________________________________________________________
+
+7.6. SourceForge
+
+   SourceForge is more of a way of coordinating geographically
+   distributed free software and open source projects over the Internet
+   than strictly a bug tracker, but if you're hunting for bug-tracking
+   for your open project, it may be just what the software engineer
+   ordered!
+
+   URL: http://www.sourceforge.net
      _________________________________________________________________
 
 Appendix A. The Bugzilla FAQ
@@ -3130,51 +3966,47 @@ Appendix A. The Bugzilla FAQ
                 fields? If I wanted to take the results of a query and
                 export that data to MS Excel, could I do that?
 
-        A.4.14. Does Bugzilla allow fields to be added, changed or
-                deleted? If I want to customize the bug submission form
-                to meet our needs, can I do that using our terminology?
-
-        A.4.15. Has anyone converted Bugzilla to another language to be
+        A.4.14. Has anyone converted Bugzilla to another language to be
                 used in other countries? Is it localizable?
 
-        A.4.16. Can a user create and save reports? Can they do this in
+        A.4.15. Can a user create and save reports? Can they do this in
                 Word format? Excel format?
 
-        A.4.17. Can a user re-run a report with a new project, same
+        A.4.16. Can a user re-run a report with a new project, same
                 query?
 
-        A.4.18. Can a user modify an existing report and then save it
+        A.4.17. Can a user modify an existing report and then save it
                 into another name?
 
-        A.4.19. Does Bugzilla have the ability to search by word, phrase,
+        A.4.18. Does Bugzilla have the ability to search by word, phrase,
                 compound search?
 
-        A.4.20. Can the admin person establish separate group and
+        A.4.19. Can the admin person establish separate group and
                 individual user privileges?
 
-        A.4.21. Does Bugzilla provide record locking when there is
+        A.4.20. Does Bugzilla provide record locking when there is
                 simultaneous access to the same bug? Does the second
                 person get a notice that the bug is in use or how are
                 they notified?
 
-        A.4.22. Are there any backup features provided?
-        A.4.23. Can users be on the system while a backup is in progress?
+        A.4.21. Are there any backup features provided?
+        A.4.22. Can users be on the system while a backup is in progress?
 
-        A.4.24. What type of human resources are needed to be on staff to
+        A.4.23. What type of human resources are needed to be on staff to
                 install and maintain Bugzilla? Specifically, what type of
                 skills does the person need to have? I need to find out
                 if we were to go with Bugzilla, what types of individuals
                 would we need to hire and how much would that cost vs
                 buying an "Out-of-the-Box" solution.
 
-        A.4.25. What time frame are we looking at if we decide to hire
+        A.4.24. What time frame are we looking at if we decide to hire
                 people to install and maintain the Bugzilla? Is this
                 something that takes hours or weeks to install and a
                 couple of hours per week to maintain and customize or is
                 this a multi-week install process, plus a full time job
                 for 1 person, 2 people, etc?
 
-        A.4.26. Is there any licensing fee or other fees for using
+        A.4.25. Is there any licensing fee or other fees for using
                 Bugzilla? Any out-of-pocket cost other than the bodies
                 needed as identified above?
 
@@ -3645,51 +4477,50 @@ Appendix A. The Bugzilla FAQ
    progression states, also require adjusting the program logic to
    compensate for the change.
 
+   There is no GUI for adding fields to Bugzilla at this time. You can
+   follow development of this feature at
+   http://bugzilla.mozilla.org/show_bug.cgi?id=91037
+
    A.4.7. The index.html page doesn't show the footer. It's really
    annoying to have to go to the querypage just to check my "my bugs"
    link. How do I get a footer on static HTML pages?
 
-   This was a late-breaking question for the Guide, so I just have to
-   quote the relevant newsgroup thread on it.
+   It's possible to get the footer on the static index page using Server
+   Side Includes (SSI). The trick to doing this is making sure that your
+   web server is set up to allow SSI and specifically, the #exec
+   directive. You should also rename index.html to index.shtml.
 
-   > AFAIK, most sites (even if they have SSI enabled) won't have #exec c
-   md
-   > enabled.  Perhaps what would be better is a #include virtual and a
-   > footer.cgi the basically has the "require 'CGI.pl' and PutFooter com
-   mand.
-   >
-   > Please note that under most configurations, this also requires namin
-   g
-   > the file from index.html to index.shtml (and making sure that it wil
-   l
-   > still be reconized as an index).  Personally, I think this is better
-    on
-   > a per-installation basis (perhaps add something to the FAQ that says
-    how
-   > to do this).
-   Good point.  Yeah, easy enough to do, that it shouldn't be a big deal
-   for
-   someone to take it on if they want it.  FAQ is a good place for it.
-   > Dave Miller wrote:
-   >
-   >> I did a little experimenting with getting the command menu and foot
-   er on
-   >> the end of the index page while leaving it as an HTML file...
-   >>
-   >> I was successful. :)
-   >>
-   >> I added this line:
-   >>
-   >>
-   >>
-   >> Just before the </BODY> </HTML> at the end of the file.  And it wor
-   ked.
-   >>
-   >> Thought I'd toss that out there.  Should I check this in?  For thos
-   e that
-   >> have SSI disabled, it'll act like a comment, so I wouldn't think it
-    would
-   >> break anything.
+   After you've done all that, you can add the following line to
+   index.shtml:
+<!--#exec cmd="/usr/bin/perl -e &quot;require 'CGI.pl'; PutFooter();&quot;" -->
+
+   Note
+
+   This line will be replaced with the actual HTML for the footer when
+   the page is requested, so you should put this line where you want the
+   footer to appear.
+
+   Because this method depends on being able to use a #exec directive,
+   and most ISP's will not allow that, there is an alternative method.
+   You could have a small script (such as api.cgi) that basically looks
+   like:
+#!/usr/bonsaitools/bin/perl -w
+
+require 'globals.pl';
+
+if ($::FORM{sub} eq 'PutFooter') {
+    PutFooter();
+} else {
+    die 'api.cgi was incorrectly called';
+}
+
+   and then put this line in index.shtml.
+   <!--#include virtual="api.cgi?sub=PutFooter"-->
+
+   Note
+
+   This still requires being able to use Server Side Includes, if this
+   simply will not work for you, see bug 80183 for a third option.
 
    A.4.8. Does Bugzilla provide any reporting features, metrics, graphs,
    etc? You know, the type of stuff that management likes to see. :)
@@ -3765,46 +4596,40 @@ Appendix A. The Bugzilla FAQ
    find an excellent example at
    http://www.mozilla.org/quality/help/bugzilla-helper.html
 
-   A.4.14. Does Bugzilla allow fields to be added, changed or deleted? If
-   I want to customize the bug submission form to meet our needs, can I
-   do that using our terminology?
-
-   Yes.
-
-   A.4.15. Has anyone converted Bugzilla to another language to be used
+   A.4.14. Has anyone converted Bugzilla to another language to be used
    in other countries? Is it localizable?
 
    Currently, no. Internationalization support for Perl did not exist in
    a robust fashion until the recent release of version 5.6.0; Bugzilla
    is, and likely will remain (until 3.X) completely non-localized.
 
-   A.4.16. Can a user create and save reports? Can they do this in Word
+   A.4.15. Can a user create and save reports? Can they do this in Word
    format? Excel format?
 
    Yes. No. No.
 
-   A.4.17. Can a user re-run a report with a new project, same query?
+   A.4.16. Can a user re-run a report with a new project, same query?
 
    Yes.
 
-   A.4.18. Can a user modify an existing report and then save it into
+   A.4.17. Can a user modify an existing report and then save it into
    another name?
 
    You can save an unlimited number of queries in Bugzilla. You are free
    to modify them and rename them to your heart's desire.
 
-   A.4.19. Does Bugzilla have the ability to search by word, phrase,
+   A.4.18. Does Bugzilla have the ability to search by word, phrase,
    compound search?
 
    You have no idea. Bugzilla's query interface, particularly with the
    advanced Boolean operators, is incredibly versatile.
 
-   A.4.20. Can the admin person establish separate group and individual
+   A.4.19. Can the admin person establish separate group and individual
    user privileges?
 
    Yes.
 
-   A.4.21. Does Bugzilla provide record locking when there is
+   A.4.20. Does Bugzilla provide record locking when there is
    simultaneous access to the same bug? Does the second person get a
    notice that the bug is in use or how are they notified?
 
@@ -3812,19 +4637,19 @@ Appendix A. The Bugzilla FAQ
    detection, and offers the offending user a choice of options to deal
    with the conflict.
 
-   A.4.22. Are there any backup features provided?
+   A.4.21. Are there any backup features provided?
 
    MySQL, the database back-end for Bugzilla, allows hot-backup of data.
    You can find strategies for dealing with backup considerations at
    http://www.mysql.com/doc/B/a/Backup.html
 
-   A.4.23. Can users be on the system while a backup is in progress?
+   A.4.22. Can users be on the system while a backup is in progress?
 
    Yes. However, commits to the database must wait until the tables are
    unlocked. Bugzilla databases are typically very small, and backups
    routinely take less than a minute.
 
-   A.4.24. What type of human resources are needed to be on staff to
+   A.4.23. What type of human resources are needed to be on staff to
    install and maintain Bugzilla? Specifically, what type of skills does
    the person need to have? I need to find out if we were to go with
    Bugzilla, what types of individuals would we need to hire and how much
@@ -3843,7 +4668,7 @@ Appendix A. The Bugzilla FAQ
    me three to five hours to make Bugzilla happy on a Development
    installation of Linux-Mandrake.
 
-   A.4.25. What time frame are we looking at if we decide to hire people
+   A.4.24. What time frame are we looking at if we decide to hire people
    to install and maintain the Bugzilla? Is this something that takes
    hours or weeks to install and a couple of hours per week to maintain
    and customize or is this a multi-week install process, plus a full
@@ -3856,7 +4681,7 @@ Appendix A. The Bugzilla FAQ
    UNIX or Perl skills to handle your process management and bug-tracking
    maintenance & customization.
 
-   A.4.26. Is there any licensing fee or other fees for using Bugzilla?
+   A.4.25. Is there any licensing fee or other fees for using Bugzilla?
    Any out-of-pocket cost other than the bodies needed as identified
    above?
 
@@ -3950,18 +4775,11 @@ Appendix A. The Bugzilla FAQ
 
    If you are using an alternate Mail Transport Agent (MTA other than
    sendmail), make sure the options given in the "processmail" script for
-   all instances of "sendmail" are correct for your MTA. If you are using
-   Sendmail, you may wish to delete the "-ODeliveryMode=deferred" option
-   in the "processmail" script for every invocation of "sendmail". (Be
-   sure and leave the "-t" option, though!)
+   all instances of "sendmail" are correct for your MTA.
 
-   A better alternative is to change the "-O" option to
-   "-ODeliveryMode=background". This prevents Sendmail from hanging your
-   Bugzilla Perl processes if the domain to which it must send mail is
-   unavailable.
-
-   This is now a configurable parameter called "sendmailnow", available
-   from editparams.cgi.
+   If you are using Sendmail, try enabling "sendmailnow" in
+   editparams.cgi. If you are using Postfix, you will also need to enable
+   "sendmailnow".
 
    A.7.7. How come email never reaches me from bugzilla changes?
 
@@ -4004,12 +4822,17 @@ Appendix A. The Bugzilla FAQ
    A.8.3. I think my database might be corrupted, or contain invalid
    entries. What do I do?
 
-   Run the "sanity check" utility (./sanitycheck.cgi in the bugzilla_home
-   directory) to see! If it all comes back, you're OK. If it doesn't come
-   back OK (i.e. any red letters), there are certain things Bugzilla can
-   recover from and certain things it can't. If it can't auto-recover, I
-   hope you're familiar with mysqladmin commands or have installed
-   another way to manage your database...
+   Run the "sanity check" utility (./sanitycheck.cgi in the Bugzilla_home
+   directory) from your web browser to see! If it finishes without
+   errors, you're probably OK. If it doesn't come back OK (i.e. any red
+   letters), there are certain things Bugzilla can recover from and
+   certain things it can't. If it can't auto-recover, I hope you're
+   familiar with mysqladmin commands or have installed another way to
+   manage your database. Sanity Check, although it is a good basic check
+   on your database integrity, by no means is a substitute for competent
+   database administration and avoiding deletion of data. It is not
+   exhaustive, and was created to do a basic check for the most common
+   problems in Bugzilla databases.
 
    A.8.4. I want to manually edit some entries in my database. How?
 
@@ -4065,10 +4888,10 @@ Appendix A. The Bugzilla FAQ
    A.8.9. How come even after I delete bugs, the long descriptions show
    up?
 
-   Delete everything from $BUZILLA_HOME/shadow. Bugzilla creates shadow
-   files there, with each filename corresponding to a bug number. Also be
-   sure to run syncshadowdb to make sure, if you are using a shadow
-   database, that the shadow database is current.
+   This should only happen with Bugzilla 2.14 if you are using the
+   "shadow database" feature, and your shadow database is out of sync.
+   Try running syncshadowdb -syncall to make sure your shadow database is
+   in synch with your primary database.
 
 9. Bugzilla and Win32
 
@@ -4279,8 +5102,8 @@ Appendix A. The Bugzilla FAQ
    Try this link to view current bugs or requests for enhancement for
    Bugzilla.
 
-   You can view bugs marked for 2.14 release here. This list includes
-   bugs for the 2.14 release that have already been fixed and checked
+   You can view bugs marked for 2.16 release here. This list includes
+   bugs for the 2.16 release that have already been fixed and checked
    into CVS. Please consult the Bugzilla Project Page for details on how
    to check current sources out of CVS so you can have these bug fixes
    early!
@@ -4300,8 +5123,7 @@ Appendix A. The Bugzilla FAQ
    A.11.3. What's the best way to submit patches? What guidelines should
    I follow?
 
-    1. Enter a bug into bugzilla.mozilla.org for the "Webtools" product,
-       "Bugzilla" component.
+    1. Enter a bug into bugzilla.mozilla.org for the "Bugzilla" product.
     2. Upload your patch as a unified DIFF (having used "diff -u" against
        the current sources checked out of CVS), or new source file by
        clicking "Create a new attachment" link on the bug page you've
@@ -4904,74 +5726,6 @@ C.3. MySQL Permissions & Grant Tables
    http://www.mysql.com/Manual/manual.html.
      _________________________________________________________________
 
-Chapter 7. Bugzilla Variants and Competitors
-
-   I created this section to answer questions about Bugzilla competitors
-   and variants, then found a wonderful site which covers an awful lot of
-   what I wanted to discuss. Rather than quote it in its entirety, I'll
-   simply refer you here: http://linas.org/linux/pm.html
-     _________________________________________________________________
-
-7.1. Red Hat Bugzilla
-
-   Red Hat Bugzilla is probably the most popular Bugzilla variant on the
-   planet. One of the major benefits of Red Hat Bugzilla is the ability
-   to work with Oracle, MySQL, and PostGreSQL databases serving as the
-   back-end, instead of just MySQL. Dave Lawrence has worked very hard to
-   keep Red Hat Bugzilla up-to-date, and many people prefer the
-   snappier-looking page layout of Red Hat Bugzilla to the default
-   Mozilla-standard formatting.
-
-   URL: http://bugzilla.redhat.com/bugzilla/
-     _________________________________________________________________
-
-7.2. Loki Bugzilla (Fenris)
-
-   Fenris can be found at http://fenris.lokigames.com. It is a fork from
-   Bugzilla.
-     _________________________________________________________________
-
-7.3. Issuezilla
-
-   Issuezilla is another fork from Bugzilla, and seems nearly as popular
-   as the Red Hat Bugzilla fork. Some Issuezilla team members are regular
-   contributors to the Bugzilla mailing list/newsgroup. Issuezilla is not
-   the primary focus of bug-tracking at tigris.org, however. Their
-   Java-based bug-tracker, Scarab, a newfangled Java-based issue tracker,
-   is under heavy development and looks promising!
-
-   URL: http://issuezilla.tigris.org/servlets/ProjectHome
-     _________________________________________________________________
-
-7.4. Scarab
-
-   Scarab is a promising new bug-tracking system built using Java Serlet
-   technology. As of this writing, no source code has been released as a
-   package, but you can obtain the code from CVS.
-
-   URL: http://scarab.tigris.org
-     _________________________________________________________________
-
-7.5. Perforce SCM
-
-   Although Perforce isn't really a bug tracker, it can be used as such
-   through the "jobs" functionality.
-
-   http://www.perforce.com/perforce/technotes/note052.htmlhttp://www.perf
-   orce.com/perforce/technotes/note052.html
-     _________________________________________________________________
-
-7.6. SourceForge
-
-   SourceForge is more of a way of coordinating geographically
-   distributed free software and open source projects over the Internet
-   than strictly a bug tracker, but if you're hunting for bug-tracking
-   for your open project, it may be just what the software engineer
-   ordered!
-
-   URL: http://www.sourceforge.net
-     _________________________________________________________________
-
 Appendix D. Useful Patches and Utilities for Bugzilla
 
    Are you looking for a way to put your Bugzilla into overdrive? Catch
@@ -5093,6 +5847,109 @@ D.4. The Quicksearch Utility
    When this tool is ported from client-side JavaScript to server-side
    Perl, the requirement for hard-coding keywords can be fixed. This bug
    has details.
+     _________________________________________________________________
+
+D.5. Hacking Bugzilla
+
+   What follows are some general guidelines for changing Bugzilla, and
+   adhering to good coding practice while doing so. We've had some
+   checkins in the past which ruined Bugzilla installations because of
+   disregard for these conventions. Sorry for the lack of formatting; I
+   got this info into the Guide on the day of 2.14 release and haven't
+   formatted it yet.
+
+   The following is a guide for reviewers when checking code into Bugzill
+   a's
+   CVS repostory at mozilla.org.  If you wish to submit patches to Bugzil
+   la,
+   you should follow the rules and style conventions below.  Any code tha
+   t
+   does not adhere to these basic rules will not be added to Bugzilla's
+   codebase.
+    1. Usage of variables in Regular Expressions
+       It is very important that you don't use a variable in a regular
+       expression unless that variable is supposed to contain an expressi
+   on.
+       This especially applies when using grep.  You should use:
+       grep ($_ eq $value, @array);
+       - NOT -
+       grep (/$value/, @array);
+       If you need to use a non-expression variable inside of an expressi
+   on, be
+       sure to quote it properly (using \Q..\E).
+   Coding Style for Bugzilla
+   -------------------------
+   While it's true that not all of the code currently in Bugzilla adheres
+    to
+   this styleguide, it is something that is being worked toward.  Therefo
+   re,
+   we ask that all new code (submitted patches and new files) follow this
+    guide
+   as closely as possible (if you're only changing 1 or 2 lines, you don'
+   t have
+   to reformat the entire file :).
+    1. Whitespace
+       Bugzilla's prefered indentation is 4 spaces (no tabs, please).
+    2. Curly braces.
+       The opening brace of a block should be on the same line as the sta
+   tement
+       that is causing the block and the closing brace should be at the s
+   ame
+       indentation level as that statement, for example:
+       if ($var) {
+           print "The variable is true";
+       } else {
+           print "Try again";
+       }
+       - NOT -
+       if ($var)
+       {
+           print "The variable is true";
+       }
+       else
+       {
+           print "Try again";
+       }
+    3. File Names
+       File names for bugzilla code and support documention should be leg
+   al across
+       multiple platforms.  \ / : * ? " < > and | are all illegal charact
+   ers for
+       filenames on various platforms.  Also, file names should not have
+   spaces in
+       them as they can cause confusion in CVS and other mozilla.org util
+   ities.
+    4. Variable Names
+       If a variable is scoped globally ($::variable) its name should be
+   descriptive
+       of what it contains.  Local variables can be named a bit looser, p
+   rovided the
+       context makes their content obvious.  For example, $ret could be u
+   sed as a
+       staging variable for a routine's return value as the line |return
+   $ret;| will
+       make it blatently obvious what the variable holds and most likely
+   be shown
+       on the same screen as |my $ret = "";|.
+    5. Cross Database Compatability
+       Bugzilla was originally written to work with MySQL and therefore t
+   ook advantage
+       of some of its features that aren't contained in other RDBMS softw
+   are.  These
+       should be avoided in all new code.  Examples of these features are
+    enums and
+       encrypt().
+    6. Cross Platform Compatability
+       While Bugzilla was written to be used on Unix based systems (and U
+   nix/Linux is
+       still the only officially supported platform) there are many who d
+   esire/need to
+       run Bugzilla on Microsoft Windows boxes.  Whenever possible, we sh
+   ould strive
+       not to make the lives of these people any more complicated and avo
+   id doing things
+       that break Bugzilla's ability to run on multiple operating systems
+   .
      _________________________________________________________________
 
 Appendix E. GNU Free Documentation License

@@ -26,7 +26,7 @@
 <!ENTITY bzg-ver "2.14">
 <!ENTITY bzg-cvs-ver "2.15.0">
 <!ENTITY bzg-auth "Matthew P. Barnson">
-<!ENTITY bzg-auth-email "<email>barnboy@NOSPAM.trilobyte.net</email>">
+<!ENTITY bzg-auth-email "<email>barnboy@trilobyte.net</email>">
 <!ENTITY mysql "http://www.mysql.com/">
 <!ENTITY perl-ver "5.6.1">
 
@@ -126,14 +126,14 @@ try to avoid clutter and feel free to waste space in the code to make it more re
 	<othername>P.</othername>
 	<surname>Barnson</surname>
 	<affiliation>
-	  <address><email>barnboy@NOSPAM.trilobyte.net</email></address>
+	  <address><email>barnboy@trilobyte.net</email></address>
 	</affiliation>
       </author>
 
       <collab>
 	<collabname>Zach Lipton</collabname>
 	<affiliation>
-	  <address><email>zach@NOSPAM.zachlipton.com</email></address>
+	  <address><email>zach AT zachlipton DOT com</email></address>
 	</affiliation>
       </collab>
 
@@ -196,6 +196,9 @@ try to avoid clutter and feel free to waste space in the code to make it more re
 <!-- The Future of Bugzilla -->
 &future;
 
+<!-- Major Bugzilla Variants -->
+&variants;
+
 <!-- Appendix: The Frequently Asked Questions -->
 &faq;
 
@@ -204,9 +207,6 @@ try to avoid clutter and feel free to waste space in the code to make it more re
 
 <!-- Appendix: The Database Schema -->
 &database;
-
-<!-- Appendix: Major Bugzilla Variants -->
-&variants;
 
 <!-- Appendix: Custom Patches -->
 &patches;

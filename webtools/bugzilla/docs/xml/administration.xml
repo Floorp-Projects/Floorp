@@ -1192,6 +1192,103 @@
 	  </para>
 	</listitem>
       </orderedlist>
+      <para>
+	You may find this example illustrative for how bug groups work.
+	<example>
+	  <title>Bugzilla Groups</title>
+	  <literallayout>
+Bugzilla Groups example
+-----------------------
+
+For this example, let us suppose we have four groups, call them
+Group1, Group2, Group3, and Group4.
+
+We have 5 users, User1, User2, User3, User4, User5.
+
+We have 8 bugs, Bug1, ..., Bug8.
+
+Group membership is defined by this chart:
+(X denotes that user is in that group.)
+(I apologize for the nasty formatting of this table.  Try viewing
+it in a text-based browser or something for now. -MPB)
+
+      G G G G
+      r r r r
+      o o o o
+      u u u u
+      p p p p
+      1 2 3 4
+     +-+-+-+-+
+User1|X| | | |
+     +-+-+-+-+
+User2| |X| | |
+     +-+-+-+-+
+User3|X| |X| |
+     +-+-+-+-+
+User4|X|X|X| |
+     +-+-+-+-+
+User5| | | | |
+     +-+-+-+-+
+
+Bug restrictions are defined by this chart:
+(X denotes that bug is restricted to that group.)
+
+     G G G G
+     r r r r
+     o o o o
+     u u u u
+     p p p p
+     1 2 3 4
+    +-+-+-+-+
+Bug1| | | | |
+    +-+-+-+-+
+Bug2| |X| | |
+    +-+-+-+-+
+Bug3| | |X| |
+    +-+-+-+-+
+Bug4| | | |X|
+    +-+-+-+-+
+Bug5|X|X| | |
+    +-+-+-+-+
+Bug6|X| |X| |
+    +-+-+-+-+
+Bug7|X|X|X| |
+    +-+-+-+-+
+Bug8|X|X|X|X|
+    +-+-+-+-+
+
+Who can see each bug?
+
+Bug1 has no group restrictions.  Therefore, Bug1 can be seen by any
+user, whatever their group membership.  This is going to be the only
+bug that User5 can see, because User5 isn't in any groups.
+
+Bug2 can be seen by anyone in Group2, that is User2 and User4.
+
+Bug3 can be seen by anyone in Group3, that is User3 and User4.
+
+Bug4 can be seen by anyone in Group4.  Nobody is in Group4, so none of
+these users can see Bug4.
+
+Bug5 can be seen by anyone who is in _both_ Group1 and Group2.  This
+is only User4.  User1 cannot see it because he is not in Group2, and
+User2 cannot see it because she is not in Group1.
+
+Bug6 can be seen by anyone who is in both Group1 and Group3.  This
+would include User3 and User4.  Similar to Bug5, User1 cannot see Bug6
+because he is not in Group3.
+
+Bug7 can be seen by anyone who is in Group1, Group2, and Group3.  This
+is only User4.  All of the others are missing at least one of those
+group priveleges, and thus cannot see the bug.
+
+Bug8 can be seen by anyone who is in Group1, Group2, Group3, and
+Group4.  There is nobody in all four of these groups, so nobody can
+see Bug8.  It doesn't matter that User4 is in Group1, Group2, and
+Group3, since he isn't in Group4.
+	  </literallayout>
+	</example>
+      </para>
     </section>
   </section>
   

@@ -301,7 +301,7 @@ CLASS="COMMAND"
 ><DIV
 CLASS="EXAMPLE"
 ><A
-NAME="AEN1012"
+NAME="AEN1038"
 ></A
 ><P
 ><B
@@ -1130,7 +1130,9 @@ TARGET="_top"
 ></LI
 ><LI
 ><P
->	    Modify the invocation of all system() calls in all perl scripts in your Bugzilla directory.  For instance, change this line in processmail:
+>	    Modify the invocation of all system() calls in all perl
+	    scripts in your Bugzilla directory.  For instance, change
+	    this line in processmail: 
 	    <TABLE
 BORDER="0"
 BGCOLOR="#E0E0E0"
@@ -1141,14 +1143,14 @@ WIDTH="100%"
 COLOR="#000000"
 ><PRE
 CLASS="PROGRAMLISTING"
->system ("./processmail.pl",@ARGLIST);
+> 
+system ("./processmail.pl",@ARGLIST); 
 	    </PRE
 ></FONT
 ></TD
 ></TR
 ></TABLE
->
-to
+> to
 	    <TABLE
 BORDER="0"
 BGCOLOR="#E0E0E0"
@@ -1159,7 +1161,8 @@ WIDTH="100%"
 COLOR="#000000"
 ><PRE
 CLASS="PROGRAMLISTING"
->system ("perl processmail.pl",@ARGLIST);
+> 
+system ("perl processmail.pl",@ARGLIST);
 	    </PRE
 ></FONT
 ></TD
@@ -1167,6 +1170,94 @@ CLASS="PROGRAMLISTING"
 ></TABLE
 >
 	  </P
+></LI
+><LI
+><P
+>            Add <TT
+CLASS="FUNCTION"
+>binmode()</TT
+> calls so attachments
+	    will work (<A
+HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=62000"
+TARGET="_top"
+>bug 62000</A
+>).
+          </P
+><P
+>            Because Microsoft Windows based systems handle binary
+	    files different than Unix based systems, you need to add
+	    the following lines to
+	    <TT
+CLASS="FILENAME"
+>createattachment.cgi</TT
+>  and
+	    <TT
+CLASS="FILENAME"
+>showattachment.cgi</TT
+> before the
+	    <TT
+CLASS="FUNCTION"
+>require 'CGI.pl';</TT
+> line.</P
+><P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="PROGRAMLISTING"
+>binmode(STDIN);
+binmode(STDOUT);</PRE
+></FONT
+></TD
+></TR
+></TABLE
+>
+          </P
+><DIV
+CLASS="NOTE"
+><P
+></P
+><TABLE
+CLASS="NOTE"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>              According to <A
+HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=62000"
+TARGET="_top"
+>bug 62000</A
+>, the perl documentation says that you should always use <TT
+CLASS="FUNCTION"
+>binmode()</TT
+> when dealing with binary files, but never when dealing with text files.  That seems to suggest that rather than aribtrarily putting <TT
+CLASS="FUNCTION"
+>binmode()</TT
+> at the begining of the attachment files, there should be logic to determine if <TT
+CLASS="FUNCTION"
+>binmode()</TT
+> is needed or not.
+            </P
+></TD
+></TR
+></TABLE
+></DIV
 ></LI
 ></OL
 ></DIV
@@ -1195,7 +1286,9 @@ VALIGN="TOP"
 	  relationships to Properties -&#62; Home directory (tab) -&#62;
 	  Application Settings (section) -&#62; Configuration (button),
 	  such as: 
-	  <TABLE
+	</P
+><P
+>	  <TABLE
 BORDER="0"
 BGCOLOR="#E0E0E0"
 WIDTH="100%"
@@ -1254,7 +1347,7 @@ VALIGN="TOP"
 ><P
 >	  From Andrew Pearson:
 	  <A
-NAME="AEN1169"
+NAME="AEN1212"
 ></A
 ><BLOCKQUOTE
 CLASS="BLOCKQUOTE"
@@ -1272,7 +1365,23 @@ TARGET="_top"
 	      registry at the following location:
 	    </P
 ><P
->	      HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\W3SVC\Parameters\ScriptMap
+>	      <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="PROGRAMLISTING"
+>HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\W3SVC\Parameters\ScriptMap
+	      </PRE
+></FONT
+></TD
+></TR
+></TABLE
+>
 	    </P
 ><P
 >	      The keys should be called ".pl" and ".cgi", and both
@@ -1319,11 +1428,12 @@ VALIGN="TOP"
 	  <EM
 >not necessary</EM
 > for Bugzilla 2.13 and
-	  later.
+	  later, which includes the current release, Bugzilla
+	  2.14.
 	  <DIV
 CLASS="EXAMPLE"
 ><A
-NAME="AEN1180"
+NAME="AEN1224"
 ></A
 ><P
 ><B
@@ -1331,7 +1441,7 @@ NAME="AEN1180"
 	      2.12 or earlier</B
 ></P
 ><P
->	      Replace this:  
+>	      Replace this:   
 	      <TABLE
 BORDER="0"
 BGCOLOR="#E0E0E0"
@@ -1342,16 +1452,16 @@ WIDTH="100%"
 COLOR="#000000"
 ><PRE
 CLASS="PROGRAMLISTING"
-> 
-SendSQL("SELECT encrypt(" . SqlQuote($enteredpwd) . ", " . SqlQuote(substr($realcryptpwd, 0, 2)) . ")"); 
-my $enteredcryptpwd = FetchOneColumn(); 
+>  
+SendSQL("SELECT encrypt(" . SqlQuote($enteredpwd) . ", " . SQLQuote(substr($realcryptpwd, 0, 2)) . ")");
+my $enteredcryptpwd = FetchOneColumn();
 	      </PRE
 ></FONT
 ></TD
 ></TR
 ></TABLE
->
-	      with this:  
+> 
+with this:   
 	      <TABLE
 BORDER="0"
 BGCOLOR="#E0E0E0"
@@ -1362,14 +1472,14 @@ WIDTH="100%"
 COLOR="#000000"
 ><PRE
 CLASS="PROGRAMLISTING"
-> 
-my $enteredcryptpwd = $enteredpwd  
+>  
+my $enteredcryptpwd = $enteredpwd   
 	      </PRE
 ></FONT
 ></TD
 ></TR
 ></TABLE
->
+> 
 	      in cgi.pl.
 	    </P
 ></DIV
@@ -1379,6 +1489,87 @@ my $enteredcryptpwd = $enteredpwd
 ></TR
 ></TABLE
 ></DIV
+></DIV
+><DIV
+CLASS="SECTION"
+><H2
+CLASS="SECTION"
+><A
+NAME="BZLDAP"
+>3.6.3. Bugzilla LDAP Integration</A
+></H2
+><P
+>	What follows is some late-breaking information on using the
+	LDAP authentication options with Bugzilla.  The author has not
+	tested these (nor even formatted this section!) so please
+	contribute feedback to the newsgroup.
+      </P
+><P
+CLASS="LITERALLAYOUT"
+>Mozilla::LDAP&nbsp;module<br>
+<br>
+The&nbsp;Mozilla::LDAP&nbsp;module&nbsp;allows&nbsp;you&nbsp;to&nbsp;use&nbsp;LDAP&nbsp;for&nbsp;authentication&nbsp;to<br>
+the&nbsp;Bugzilla&nbsp;system.&nbsp;&nbsp;This&nbsp;module&nbsp;is&nbsp;not&nbsp;required&nbsp;if&nbsp;you&nbsp;are&nbsp;not&nbsp;using<br>
+LDAP.<br>
+<br>
+Mozilla::LDAP&nbsp;(aka&nbsp;PerLDAP)&nbsp;is&nbsp;available&nbsp;for&nbsp;download&nbsp;from<br>
+http://www.mozilla.org/directory.<br>
+<br>
+NOTE:&nbsp;The&nbsp;Mozilla::LDAP&nbsp;module&nbsp;requires&nbsp;Netscape's&nbsp;Directory&nbsp;SDK.<br>
+Follow&nbsp;the&nbsp;link&nbsp;for&nbsp;"Directory&nbsp;SDK&nbsp;for&nbsp;C"&nbsp;on&nbsp;that&nbsp;same&nbsp;page&nbsp;to<br>
+download&nbsp;the&nbsp;SDK&nbsp;first.&nbsp;&nbsp;After&nbsp;you&nbsp;have&nbsp;installed&nbsp;this&nbsp;SDK,&nbsp;then<br>
+install&nbsp;the&nbsp;PerLDAP&nbsp;module.<br>
+----------------------------------------------------------------------<br>
+<br>
+Post-Installation&nbsp;Checklist<br>
+----------------------------------------------------------------------<br>
+Set&nbsp;useLDAP&nbsp;to&nbsp;"On"&nbsp;**only**&nbsp;if&nbsp;you&nbsp;will&nbsp;be&nbsp;using&nbsp;an&nbsp;LDAP&nbsp;directory<br>
+for&nbsp;authentication.&nbsp;&nbsp;Be&nbsp;very&nbsp;careful&nbsp;when&nbsp;setting&nbsp;up&nbsp;this&nbsp;parameter;<br>
+if&nbsp;you&nbsp;set&nbsp;LDAP&nbsp;authentication,&nbsp;but&nbsp;do&nbsp;not&nbsp;have&nbsp;a&nbsp;valid&nbsp;LDAP&nbsp;directory<br>
+set&nbsp;up,&nbsp;you&nbsp;will&nbsp;not&nbsp;be&nbsp;able&nbsp;to&nbsp;log&nbsp;back&nbsp;in&nbsp;to&nbsp;Bugzilla&nbsp;once&nbsp;you&nbsp;log<br>
+out.&nbsp;&nbsp;(If&nbsp;this&nbsp;happens,&nbsp;you&nbsp;can&nbsp;get&nbsp;back&nbsp;in&nbsp;by&nbsp;manually&nbsp;editing&nbsp;the<br>
+data/params&nbsp;file,&nbsp;and&nbsp;setting&nbsp;useLDAP&nbsp;back&nbsp;to&nbsp;0.)<br>
+<br>
+If&nbsp;using&nbsp;LDAP,&nbsp;you&nbsp;must&nbsp;set&nbsp;the&nbsp;three&nbsp;additional&nbsp;parameters:<br>
+<br>
+Set&nbsp;LDAPserver&nbsp;to&nbsp;the&nbsp;name&nbsp;(and&nbsp;optionally&nbsp;port)&nbsp;of&nbsp;your&nbsp;LDAP&nbsp;server.<br>
+If&nbsp;no&nbsp;port&nbsp;is&nbsp;specified,&nbsp;it&nbsp;defaults&nbsp;to&nbsp;the&nbsp;default&nbsp;port&nbsp;of&nbsp;389.&nbsp;&nbsp;(e.g<br>
+"ldap.mycompany.com"&nbsp;or&nbsp;"ldap.mycompany.com:1234")<br>
+<br>
+Set&nbsp;LDAPBaseDN&nbsp;to&nbsp;the&nbsp;base&nbsp;DN&nbsp;for&nbsp;searching&nbsp;for&nbsp;users&nbsp;in&nbsp;your&nbsp;LDAP<br>
+directory.&nbsp;&nbsp;(e.g.&nbsp;"ou=People,o=MyCompany")&nbsp;&nbsp;uids&nbsp;must&nbsp;be&nbsp;unique&nbsp;under<br>
+the&nbsp;DN&nbsp;specified&nbsp;here.<br>
+<br>
+Set&nbsp;LDAPmailattribute&nbsp;to&nbsp;the&nbsp;name&nbsp;of&nbsp;the&nbsp;attribute&nbsp;in&nbsp;your&nbsp;LDAP<br>
+directory&nbsp;which&nbsp;contains&nbsp;the&nbsp;primary&nbsp;email&nbsp;address.&nbsp;&nbsp;On&nbsp;most&nbsp;directory<br>
+servers&nbsp;available,&nbsp;this&nbsp;is&nbsp;"mail",&nbsp;but&nbsp;you&nbsp;may&nbsp;need&nbsp;to&nbsp;change&nbsp;this.<br>
+----------------------------------------------------------------------<br>
+<br>
+(Not&nbsp;sure&nbsp;where&nbsp;this&nbsp;bit&nbsp;should&nbsp;go,&nbsp;but&nbsp;it's&nbsp;important&nbsp;that&nbsp;it&nbsp;be&nbsp;in<br>
+there&nbsp;somewhere...)<br>
+----------------------------------------------------------------------<br>
+Using&nbsp;LDAP&nbsp;authentication&nbsp;for&nbsp;Bugzilla:<br>
+<br>
+The&nbsp;existing&nbsp;authentication&nbsp;scheme&nbsp;for&nbsp;Bugzilla&nbsp;uses&nbsp;email&nbsp;addresses<br>
+as&nbsp;the&nbsp;primary&nbsp;user&nbsp;ID,&nbsp;and&nbsp;a&nbsp;password&nbsp;to&nbsp;authenticate&nbsp;that&nbsp;user.&nbsp;&nbsp;All<br>
+places&nbsp;within&nbsp;Bugzilla&nbsp;where&nbsp;you&nbsp;need&nbsp;to&nbsp;deal&nbsp;with&nbsp;user&nbsp;ID&nbsp;(e.g<br>
+assigning&nbsp;a&nbsp;bug)&nbsp;use&nbsp;the&nbsp;email&nbsp;address.<br>
+<br>
+The&nbsp;LDAP&nbsp;authentication&nbsp;builds&nbsp;on&nbsp;top&nbsp;of&nbsp;this&nbsp;scheme,&nbsp;rather&nbsp;than<br>
+replacing&nbsp;it.&nbsp;&nbsp;The&nbsp;initial&nbsp;log&nbsp;in&nbsp;is&nbsp;done&nbsp;with&nbsp;a&nbsp;username&nbsp;and&nbsp;password<br>
+for&nbsp;the&nbsp;LDAP&nbsp;directory.&nbsp;&nbsp;This&nbsp;then&nbsp;fetches&nbsp;the&nbsp;email&nbsp;address&nbsp;from&nbsp;LDAP<br>
+and&nbsp;authenticates&nbsp;seamlessly&nbsp;in&nbsp;the&nbsp;standard&nbsp;Bugzilla&nbsp;authentication<br>
+scheme&nbsp;using&nbsp;this&nbsp;email&nbsp;address.&nbsp;&nbsp;If&nbsp;an&nbsp;account&nbsp;for&nbsp;this&nbsp;address<br>
+already&nbsp;exists&nbsp;in&nbsp;your&nbsp;Bugzilla&nbsp;system,&nbsp;it&nbsp;will&nbsp;log&nbsp;in&nbsp;to&nbsp;that<br>
+account.&nbsp;&nbsp;If&nbsp;no&nbsp;account&nbsp;for&nbsp;that&nbsp;email&nbsp;address&nbsp;exists,&nbsp;one&nbsp;is&nbsp;created<br>
+at&nbsp;the&nbsp;time&nbsp;of&nbsp;login.&nbsp;&nbsp;(In&nbsp;this&nbsp;case,&nbsp;Bugzilla&nbsp;will&nbsp;attempt&nbsp;to&nbsp;use&nbsp;the<br>
+"displayName"&nbsp;or&nbsp;"cn"&nbsp;attribute&nbsp;to&nbsp;determine&nbsp;the&nbsp;user's&nbsp;full&nbsp;name.)<br>
+<br>
+After&nbsp;authentication,&nbsp;all&nbsp;other&nbsp;user-related&nbsp;tasks&nbsp;are&nbsp;still&nbsp;handled<br>
+by&nbsp;email&nbsp;address,&nbsp;not&nbsp;LDAP&nbsp;username.&nbsp;&nbsp;You&nbsp;still&nbsp;assign&nbsp;bugs&nbsp;by&nbsp;email<br>
+address,&nbsp;query&nbsp;on&nbsp;users&nbsp;by&nbsp;email&nbsp;address,&nbsp;etc.<br>
+----------------------------------------------------------------------<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</P
 ></DIV
 ></DIV
 ><DIV

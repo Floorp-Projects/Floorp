@@ -399,13 +399,13 @@ system against which all others are measured.
 	    our Bugzilla database. Please notice the box is a
 	    <emphasis>scrollbox</emphasis>.  Using the down arrow on
 	    the scrollbox, scroll down until you can see an entry
-	    called "Webtools".  Select this entry.
+	    called "Bugzilla".  Select this entry.
 	  </para>
 	</listitem>
 	<listitem>
 	  <para>
 	    Did you notice that some of the boxes to the right changed
-	    when you selected "Webtools"? Every Program (or Product)
+	    when you selected "Bugzilla"? Every Program (or Product)
 	    has different Versions, Components, and Target Milestones
 	    associated with it.  A "Version" is the number of a
 	    software program.
@@ -452,35 +452,66 @@ system against which all others are measured.
 	    Normally, a Component has a single Owner, who is responsible
 	    for overseeing efforts to improve that Component.
 	    <example>
-	      <title>Mozilla Webtools Components</title>
+	      <title>Mozilla's Bugzilla Components</title>
 	      <informalexample>
 		<para>
-		  Mozilla's "Webtools" Product is composed of several pieces (Components):
+		  Mozilla's "Bugzilla" Product is composed of several pieces (Components):
 		  <simplelist>
-		    <member><emphasis>Bonsai</emphasis>,
-		      a tool to show recent changes to Mozilla</member>
-		    <member><emphasis>Bugzilla</emphasis>,
-		      a defect-tracking tool</member>
-		    <member><emphasis>Build</emphasis>,
-		      a tool to automatically compile source code
-		      into machine-readable form</member>
-		    <member><emphasis>Despot</emphasis>,
-		      a program that controls access to the other Webtools</member>
-		    <member><emphasis>LXR</emphasis>,
-		      a utility that automatically marks up text files
-		    to make them more readable</member>
-		    <member><emphasis>MozBot</emphasis>,
-		      a "robot" that announces changes to Mozilla in Chat</member>
-		    <member><emphasis>TestManager</emphasis>,
-		      a tool to help find bugs in Mozilla</member>
-		    <member><emphasis>Tinderbox</emphasis>,
-		      which displays reports from Build</member>
+                    <member><emphasis>Administration</emphasis>,
+                      Administration of a bugzilla installation, including 
+                      <filename>editcomponents.cgi</filename>,
+                      <filename>editgroups.cgi</filename>, 
+                      <filename>editkeywords.cgi</filename>, 
+                      <filename>editparams.cgi</filename>,
+                      <filename>editproducts.cgi</filename>,
+                      <filename>editusers.cgi</filename>,
+                      <filename>editversions.cgi,</filename> and
+                      <filename>sanitycheck.cgi</filename>.
+                    </member>
+                    <member><emphasis>Bugzilla-General</emphasis>,
+                      Anything that doesn't fit in the other components, or spans
+                      multiple components.
+                    </member>
+                    <member><emphasis>Creating/Changing Bugs</emphasis>,
+                      Creating, changing, and viewing bugs.
+                      <filename>enter_bug.cgi</filename>,
+                      <filename>post_bug.cgi</filename>,
+                      <filename>show_bug.cgi</filename> and
+                      <filename>process_bug.cgi</filename>.
+                    </member>
+                    <member><emphasis>Documentation</emphasis>,
+                      The bugzilla documentation, including anything in the
+                      <filename>docs/</filename> directory and The Bugzilla Guide
+                      (This document :)
+                    </member>
+                    <member><emphasis>Email</emphasis>,
+                      Anything to do with email sent by Bugzilla.
+                      <filename>processmail</filename>
+                    </member>
+                    <member><emphasis>Installation</emphasis>,
+                      The installation process of Bugzilla. This includes
+                      <filename>checksetup.pl</filename> and whatever else it evolves into.
+                    </member>
+                    <member><emphasis>Query/Buglist</emphasis>,
+                      Anything to do with searching for bugs and viewing the buglists.
+                      <filename>query.cgi</filename> and
+                      <filename>buglist.cgi</filename>
+                    </member>
+                    <member><emphasis>Reporting/Charting</emphasis>,
+                      Getting reports from Bugzilla.
+                      <filename>reports.cgi</filename> and
+                      <filename>duplicates.cgi</filename>
+                    </member>
+                    <member><emphasis>User Accounts</emphasis>,
+                      Anything about managing a user account from the user's perspective.
+                      <filename>userprefs.cgi</filename>, saved queries, creating accounts,
+                      changing passwords, logging in, etc. 
+                    </member>
+                    <member><emphasis>User Interface</emphasis>,
+                      General issues having to do with the user interface cosmetics (not
+                      functionality) including cosmetic issues, HTML templates, etc.
+                    </member>
 		  </simplelist>
-		</para>
-		<para>
-		  A different person is responsible for each of these Components.
-		  Tara Hernandez keeps
-		  the "Bugzilla" component up-to-date.
 		</para>
 	      </informalexample>
 	    </example>

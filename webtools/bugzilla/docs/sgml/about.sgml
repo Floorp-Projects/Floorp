@@ -70,8 +70,7 @@
     <para>
       If you have any questions regarding this document, its
       copyright, or publishing this document in non-electronic form,
-      please contact &bzg-auth;.  Remove "NOSPAM" from email address
-      to send.
+      please contact &bzg-auth;. 
     </para>
   </section>
 
@@ -172,8 +171,8 @@
     </para>
     <para>
       <ulink url="mailto://terry@mozilla.org">Terry Weissman</ulink>
-      for initially converting Bugzilla from BugSplat! and writing the
-      README upon which this documentation is largely based.
+      for initially writing Bugzilla and creating the
+      README upon which the UNIX installation documentation is largely based.
     </para>
     <para>
       <ulink url="mailto://tara@tequilarista.org">Tara
@@ -204,7 +203,8 @@
       documentation (in no particular order):
     </para>
     <para>
-      Andrew Pearson, Spencer Smith, Eric Hanson, Kevin Brannen, Ron Teitelbaum
+      Andrew Pearson, Spencer Smith, Eric Hanson, Kevin Brannen, Ron
+      Teitelbaum, Jacob Steenhagen, Joe Robins
     </para>
   </section>
   <section id="feedback">

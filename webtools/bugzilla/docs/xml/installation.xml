@@ -616,6 +616,15 @@ bash# mkdir /usr/bonsaitools/bin
 bash# ln -s /usr/bin/perl /usr/bosaitools/bin/perl
 	    </programlisting>
 	  </para>
+	  <para>
+	    Alternately, you can simply run this perl one-liner to
+	    change your path to perl in all the files in your Bugzilla
+	    installation:
+	    <programlisting>
+perl -pi -e 's@#!/usr/bonsaitools/bin/perl@/usr/bin/perl@' *cgi *pl Bug.pm
+	    </programlisting>
+	    Change the second path to perl to match your installation.
+	  </para>
 	</example>
 	<tip>
 	  <para>
@@ -1241,7 +1250,7 @@ bash# cd $BUGZILLA_HOME; for i in `ls *.cgi`; \
     </section>
 
     
-    <section>
+    <section id="unixhistory">
       <title>UNIX Installation Instructions History</title>
       <para>
 	This document was originally adapted from the Bonsai
@@ -1252,9 +1261,8 @@ bash# cd $BUGZILLA_HOME; for i in `ls *.cgi`; \
 	The February 25, 1999 re-write of this page was done by Ry4an
 	Brase &lt;ry4an@ry4an.org&gt;, with some edits by Terry
 	Weissman, Bryce Nesbitt, Martin Pool, & Dan Mosedale (But
-	don't send bug reports to them; report them using bugzilla, at
-	http://bugzilla.mozilla.org/enter_bug.cgi , project Webtools,
-	component Bugzilla).
+	don't send bug reports to them; report them using bugzilla, at <ulink
+	url="http://bugzilla.mozilla.org/enter_bug.cgi?product=Bugzilla">http://bugzilla.mozilla.org/enter_bug.cgi?product=Bugzilla</ulink> ).
       </para>
       <para>
 	This document was heavily modified again Wednesday, March 07
@@ -1696,16 +1704,46 @@ exit;
 
 	<step>
 	  <para>
-	    Modify the invocation of all system() calls in all perl scripts in your Bugzilla directory.  For instance, change this line in processmail:
-	    <programlisting>
-system ("./processmail.pl",@ARGLIST);
-	    </programlisting>
-to
-	    <programlisting>
+	    Modify the invocation of all system() calls in all perl
+	    scripts in your Bugzilla directory.  For instance, change
+	    this line in processmail: 
+	    <programlisting> 
+system ("./processmail.pl",@ARGLIST); 
+	    </programlisting> to
+	    <programlisting> 
 system ("perl processmail.pl",@ARGLIST);
 	    </programlisting>
 	  </para>
 	</step>
+        <step>
+          <para>
+            Add <function>binmode()</function> calls so attachments
+	    will work (<ulink
+			      url="http://bugzilla.mozilla.org/show_bug.cgi?id=62000">bug 62000</ulink>).
+          </para>
+          <para>
+            Because Microsoft Windows based systems handle binary
+	    files different than Unix based systems, you need to add
+	    the following lines to
+	    <filename>createattachment.cgi</filename>  and
+	    <filename>showattachment.cgi</filename> before the
+	    <function>require 'CGI.pl';</function> line.
+</para>
+<para>
+<programlisting>
+<![CDATA[
+binmode(STDIN);
+binmode(STDOUT);
+]]>
+</programlisting>
+          </para>
+          <note>
+            <para>
+              According to <ulink
+				  url="http://bugzilla.mozilla.org/show_bug.cgi?id=62000">bug 62000</ulink>, the perl documentation says that you should always use <function>binmode()</function> when dealing with binary files, but never when dealing with text files.  That seems to suggest that rather than aribtrarily putting <function>binmode()</function> at the begining of the attachment files, there should be logic to determine if <function>binmode()</function> is needed or not.
+            </para>
+          </note>
+        </step>
       </procedure>
 
       <tip>
@@ -1714,6 +1752,8 @@ system ("perl processmail.pl",@ARGLIST);
 	  relationships to Properties -> Home directory (tab) ->
 	  Application Settings (section) -> Configuration (button),
 	  such as: 
+	</para>
+	<para>
 	  <programlisting> 
 .cgi to: &lt;perl install directory&gt;\perl.exe %s %s
 .pl to: &lt;perl install directory&gt;\perl.exe %s %s
@@ -1742,7 +1782,9 @@ GET,HEAD,POST
 	      registry at the following location:
 	    </para>
 	    <para>
-	      HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\W3SVC\Parameters\ScriptMap
+	      <programlisting>
+HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\W3SVC\Parameters\ScriptMap
+	      </programlisting>
 	    </para>
 	    <para>
 	      The keys should be called ".pl" and ".cgi", and both
@@ -1761,25 +1803,101 @@ GET,HEAD,POST
 	  If attempting to run Bugzilla 2.12 or older, you will need
 	  to remove encrypt() calls from the Perl source. This is
 	  <emphasis>not necessary</emphasis> for Bugzilla 2.13 and
-	  later.
+	  later, which includes the current release, Bugzilla
+	  &bz-ver;.
 	  <example>
 	    <title>Removing encrypt() for Windows NT Bugzilla version
 	      2.12 or earlier</title>
 	    <para>
-	      Replace this:  
-	      <programlisting> 
-SendSQL("SELECT encrypt(" . SqlQuote($enteredpwd) . ", " . SqlQuote(substr($realcryptpwd, 0, 2)) . ")"); 
-my $enteredcryptpwd = FetchOneColumn(); 
-	      </programlisting>
-	      with this:  
-	      <programlisting> 
-my $enteredcryptpwd = $enteredpwd  
-	      </programlisting>
+	      Replace this:   
+	      <programlisting>  
+SendSQL("SELECT encrypt(" . SqlQuote($enteredpwd) . ", " . SQLQuote(substr($realcryptpwd, 0, 2)) . ")");
+my $enteredcryptpwd = FetchOneColumn();
+	      </programlisting> 
+with this:   
+	      <programlisting>  
+my $enteredcryptpwd = $enteredpwd   
+	      </programlisting> 
 	      in cgi.pl.
 	    </para>
 	  </example>
 	</para>
       </tip>
+    </section>
+    
+    <section id="bzldap">
+      <title>Bugzilla LDAP Integration</title>
+      <para>
+	What follows is some late-breaking information on using the
+	LDAP authentication options with Bugzilla.  The author has not
+	tested these (nor even formatted this section!) so please
+	contribute feedback to the newsgroup.
+      </para>
+      <literallayout>
+Mozilla::LDAP module
+
+The Mozilla::LDAP module allows you to use LDAP for authentication to
+the Bugzilla system.  This module is not required if you are not using
+LDAP.
+
+Mozilla::LDAP (aka PerLDAP) is available for download from
+http://www.mozilla.org/directory.
+
+NOTE: The Mozilla::LDAP module requires Netscape's Directory SDK.
+Follow the link for "Directory SDK for C" on that same page to
+download the SDK first.  After you have installed this SDK, then
+install the PerLDAP module.
+----------------------------------------------------------------------
+
+Post-Installation Checklist
+----------------------------------------------------------------------
+Set useLDAP to "On" **only** if you will be using an LDAP directory
+for authentication.  Be very careful when setting up this parameter;
+if you set LDAP authentication, but do not have a valid LDAP directory
+set up, you will not be able to log back in to Bugzilla once you log
+out.  (If this happens, you can get back in by manually editing the
+data/params file, and setting useLDAP back to 0.)
+
+If using LDAP, you must set the three additional parameters:
+
+Set LDAPserver to the name (and optionally port) of your LDAP server.
+If no port is specified, it defaults to the default port of 389.  (e.g
+"ldap.mycompany.com" or "ldap.mycompany.com:1234")
+
+Set LDAPBaseDN to the base DN for searching for users in your LDAP
+directory.  (e.g. "ou=People,o=MyCompany")  uids must be unique under
+the DN specified here.
+
+Set LDAPmailattribute to the name of the attribute in your LDAP
+directory which contains the primary email address.  On most directory
+servers available, this is "mail", but you may need to change this.
+----------------------------------------------------------------------
+
+(Not sure where this bit should go, but it's important that it be in
+there somewhere...)
+----------------------------------------------------------------------
+Using LDAP authentication for Bugzilla:
+
+The existing authentication scheme for Bugzilla uses email addresses
+as the primary user ID, and a password to authenticate that user.  All
+places within Bugzilla where you need to deal with user ID (e.g
+assigning a bug) use the email address.
+
+The LDAP authentication builds on top of this scheme, rather than
+replacing it.  The initial log in is done with a username and password
+for the LDAP directory.  This then fetches the email address from LDAP
+and authenticates seamlessly in the standard Bugzilla authentication
+scheme using this email address.  If an account for this address
+already exists in your Bugzilla system, it will log in to that
+account.  If no account for that email address exists, one is created
+at the time of login.  (In this case, Bugzilla will attempt to use the
+"displayName" or "cn" attribute to determine the user's full name.)
+
+After authentication, all other user-related tasks are still handled
+by email address, not LDAP username.  You still assign bugs by email
+address, query on users by email address, etc.
+----------------------------------------------------------------------
+      </literallayout>
     </section>
   </section>
 </chapter>
