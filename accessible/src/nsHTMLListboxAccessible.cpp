@@ -53,7 +53,7 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLListboxAccessible, nsAccessible, nsIAccessibl
   */
 NS_IMETHODIMP nsHTMLListboxAccessible::GetAccRole(PRUint32 *_retval)
 {
-  *_retval = ROLE_LIST;
+  *_retval = ROLE_WINDOW;
   return NS_OK;
 }
 
