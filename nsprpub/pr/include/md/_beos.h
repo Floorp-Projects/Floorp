@@ -143,8 +143,6 @@ struct _MDDir {
 #define PR_PATH_SEPARATOR		':'
 #define PR_PATH_SEPARATOR_STR		":"
 
-#undef HAVE_SOCKET_KEEPALIVE
-
 #define GETTIMEOFDAY(tp)	gettimeofday((tp), NULL)
 
 /* --- Memory-mapped files stuff --- not implemented on BeOS */

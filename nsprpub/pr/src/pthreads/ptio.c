@@ -3072,7 +3072,7 @@ static PRIOMethods _pr_socketpollfd_methods = {
 
 static PRFileDesc *pt_SetMethods(PRIntn osfd, PRDescType type)
 {
-    PRInt32 flags, one = 1;
+    PRInt32 flags;
     PRFileDesc *fd = _PR_Getfd();
     
     if (fd == NULL) PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
@@ -3101,8 +3101,6 @@ static PRFileDesc *pt_SetMethods(PRIntn osfd, PRDescType type)
                 flags = fcntl(osfd, F_GETFL, 0);
                 flags |= _PR_FCNTL_FLAGS;
                 (void)fcntl(osfd, F_SETFL, flags);
-                (void)setsockopt(osfd, SOL_SOCKET, SO_KEEPALIVE,
-                    (_PRSockOptVal_t) &one, sizeof(one));
                 break;
             case PR_DESC_SOCKET_UDP:
                 fd->methods = PR_GetUDPMethods();

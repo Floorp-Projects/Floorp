@@ -1183,7 +1183,6 @@ static const PRIOMethods* PR_GetSocketPollFdMethods()
 PR_IMPLEMENT(PRFileDesc*) PR_Socket(PRInt32 domain, PRInt32 type, PRInt32 proto)
 {
 	PRInt32 osfd;
-	int one = 1;
 	PRFileDesc *fd;
 
 	if (!_pr_initialized) _PR_ImplicitInitialization();
@@ -1202,24 +1201,6 @@ PR_IMPLEMENT(PRFileDesc*) PR_Socket(PRInt32 domain, PRInt32 type, PRInt32 proto)
 	if (osfd == -1) {
 		return 0;
 	}
-#ifdef HAVE_SOCKET_KEEPALIVE
-	/* "Keep-alive" packets are specific to TCP. */
-	if ((domain == AF_INET
-#if defined(_PR_INET6)
-			|| domain == AF_INET6
-#endif
-			) && type == SOCK_STREAM) {
-		if (setsockopt(osfd, (int)SOL_SOCKET, SO_KEEPALIVE,
-#ifdef XP_OS2_VACPP
-            (char *)&one, sizeof(one) ) < 0) {
-#else
-		    (const void *) &one, sizeof(one) ) < 0) {
-#endif
-			_PR_MD_CLOSE_SOCKET(osfd);
-			return 0;
-		}
-	}
-#endif
 	if (type == SOCK_STREAM)
 		fd = PR_AllocFileDesc(osfd, PR_GetTCPMethods());
 	else

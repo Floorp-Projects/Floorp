@@ -442,8 +442,6 @@ extern PRStatus _MD_getsysinfo(PRSysInfo cmd, char *name, PRUint32 namelen);
 
 extern int _MD_unix_get_nonblocking_connect_error(int osfd);
 
-#define HAVE_SOCKET_KEEPALIVE
-
 /* Memory-mapped files */
 
 struct _MDFileMap {
