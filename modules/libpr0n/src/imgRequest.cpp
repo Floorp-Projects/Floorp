@@ -28,6 +28,7 @@
 #include "nsILoadGroup.h"
 #include "nsIHTTPChannel.h"
 #include "nsIInputStream.h"
+
 #include "imgILoader.h"
 #include "nsIComponentManager.h"
 

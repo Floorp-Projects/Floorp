@@ -73,7 +73,7 @@ private:
   PRBool   mDoneDecoding;
   PRBool   mAnimating;
   
-  nsCOMPtr<imgIContainerObserver> mObserver;
+  imgIContainerObserver *mObserver; // WEAK
 
 
   // GIF specific bits
