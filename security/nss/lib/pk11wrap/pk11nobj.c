@@ -247,7 +247,8 @@ loser:
 }
 
 /*
- * Return a list of all the CRLs 
+ * Return a list of all the CRLs .
+ * CRLs are allocated in the list's arena.
  */
 SECStatus
 PK11_LookupCrls(CERTCrlHeadNode *nodes, int type, void *wincx) {
@@ -265,6 +266,157 @@ PK11_LookupCrls(CERTCrlHeadNode *nodes, int type, void *wincx) {
 
     creater.callback = pk11_CollectCrls;
     creater.callbackArg = (void *) nodes;
+    creater.findTemplate = theTemplate;
+    creater.templateCount = (attrs - theTemplate);
+
+    return pk11_TraverseAllSlots(PK11_TraverseSlot, &creater, wincx);
+}
+
+struct crlOptionsStr {
+    CERTCrlHeadNode* head;
+    PRInt32 decodeOptions;
+};
+
+typedef struct crlOptionsStr crlOptions;
+
+static SECStatus
+pk11_RetrieveCrlsCallback(PK11SlotInfo *slot, CK_OBJECT_HANDLE crlID,
+                          void *arg)
+{
+    SECItem* derCrl = NULL;
+    crlOptions* options = (crlOptions*) arg;
+    CERTCrlHeadNode *head = options->head;
+    CERTCrlNode *new_node = NULL;
+    CK_ATTRIBUTE fetchCrl[3] = {
+	 { CKA_VALUE, NULL, 0},
+	 { CKA_NETSCAPE_KRL, NULL, 0},
+	 { CKA_NETSCAPE_URL, NULL, 0},
+    };
+    const int fetchCrlSize = sizeof(fetchCrl)/sizeof(fetchCrl[2]);
+    CK_RV crv;
+    SECStatus rv = SECFailure;
+    PRBool adopted = PR_FALSE; /* whether the CRL adopted the DER memory
+                                  successfully */
+    int i;
+
+    crv = PK11_GetAttributes(NULL,slot,crlID,fetchCrl,fetchCrlSize);
+    if (CKR_OK != crv) {
+	PORT_SetError(PK11_MapError(crv));
+	goto loser;
+    }
+
+    if (!fetchCrl[1].pValue) {
+        /* reject KRLs */
+	PORT_SetError(SEC_ERROR_CRL_INVALID);
+	goto loser;
+    }
+
+    new_node = (CERTCrlNode *)PORT_ArenaAlloc(head->arena,
+                                              sizeof(CERTCrlNode));
+    if (new_node == NULL) {
+        goto loser;
+    }
+
+    new_node->type = SEC_CRL_TYPE;
+
+    derCrl = SECITEM_AllocItem(NULL, NULL, 0);
+    if (!derCrl) {
+        goto loser;
+    }
+    derCrl->type = siBuffer;
+    derCrl->data = (unsigned char *)fetchCrl[0].pValue;
+    derCrl->len = fetchCrl[0].ulValueLen;
+    new_node->crl = CERT_DecodeDERCrlWithFlags(NULL, derCrl,new_node->type,
+                                               options->decodeOptions);
+    if (new_node->crl == NULL) {
+	goto loser;
+    }    
+    adopted = PR_TRUE; /* now that the CRL has adopted the DER memory,
+                          we won't need to free it upon exit */
+
+    if (fetchCrl[2].pValue && fetchCrl[2].ulValueLen) {
+        /* copy the URL if there is one */
+        int nnlen = fetchCrl[2].ulValueLen;
+        new_node->crl->url  = (char *)PORT_ArenaAlloc(new_node->crl->arena,
+                                                      nnlen+1);
+        if ( !new_node->crl->url ) {
+            goto loser;
+        }
+        PORT_Memcpy(new_node->crl->url, fetchCrl[2].pValue, nnlen);
+        new_node->crl->url[nnlen] = 0;
+    } else {
+        new_node->crl->url = NULL;
+    }
+
+    new_node->next = NULL;
+    if (head->last) {
+        head->last->next = new_node;
+        head->last = new_node;
+    } else {
+        head->first = head->last = new_node;
+    }
+    rv = SECSuccess;
+    new_node->crl->slot = PK11_ReferenceSlot(slot);
+    new_node->crl->pkcs11ID = crlID;
+
+loser:
+    /* free attributes that weren't adopted by the CRL */
+    for (i=1;i<fetchCrlSize;i++) {
+        if (fetchCrl[i].pValue) {
+            PORT_Free(fetchCrl[i].pValue);
+        }
+    }
+    /* free the DER if the CRL object didn't adopt it */
+    if (fetchCrl[0].pValue && PR_FALSE == adopted) {
+        PORT_Free(fetchCrl[0].pValue);
+    }
+    if (derCrl && !adopted) {
+        /* clear the data fields, which we already took care of above */
+        derCrl->data = NULL;
+        derCrl->len = 0;
+        /* free the memory for the SECItem structure itself */
+        SECITEM_FreeItem(derCrl, PR_TRUE);
+    }
+    return(rv);
+}
+
+/*
+ * Return a list of CRLs matching specified issuer and type
+ * CRLs are not allocated in the list's arena, but rather in their own,
+ * arena, so that they can be used individually in the CRL cache .
+ * CRLs are always partially decoded for efficiency.
+ */
+SECStatus pk11_RetrieveCrls(CERTCrlHeadNode *nodes, SECItem* issuer,
+                            void *wincx)
+{
+    pk11TraverseSlot creater;
+    CK_ATTRIBUTE theTemplate[2];
+    CK_ATTRIBUTE *attrs;
+    CK_OBJECT_CLASS crlClass = CKO_NETSCAPE_CRL;
+    crlOptions options;
+
+    attrs = theTemplate;
+    PK11_SETATTRS(attrs, CKA_CLASS, &crlClass, sizeof(crlClass)); attrs++;
+
+    options.head = nodes;
+
+    /* - do a partial decoding - we don't need to decode the entries while
+       fetching
+       - don't copy the DER for optimal performance - CRL can be very large
+       - have the CRL objects adopt the DER, so SEC_DestroyCrl will free it
+       - keep bad CRL objects. The CRL cache is interested in them, for
+         security purposes. Bad CRL objects are a sign of something amiss.
+    */
+
+    options.decodeOptions = CRL_DECODE_SKIP_ENTRIES | CRL_DECODE_DONT_COPY_DER |
+                            CRL_DECODE_ADOPT_HEAP_DER | CRL_DECODE_KEEP_BAD_CRL;
+    if (issuer)
+    {
+        PK11_SETATTRS(attrs, CKA_SUBJECT, issuer->data, issuer->len); attrs++;
+    }
+
+    creater.callback = pk11_RetrieveCrlsCallback;
+    creater.callbackArg = (void *) &options;
     creater.findTemplate = theTemplate;
     creater.templateCount = (attrs - theTemplate);
 
@@ -336,6 +488,7 @@ PK11_FindCrlByName(PK11SlotInfo **slot, CK_OBJECT_HANDLE *crlHandle,
 	goto loser;
     }
 
+    /* why are we arbitrarily picking the first CRL ??? */
     derCrl->data = crlData[0].pValue;
     derCrl->len = crlData[0].ulValueLen;
 

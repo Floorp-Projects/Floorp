@@ -36,7 +36,7 @@
 /*
  * certi.h - private data structures for the certificate library
  *
- * $Id: certi.h,v 1.11 2004/04/25 15:03:03 gerv%gerv.net Exp $
+ * $Id: certi.h,v 1.12 2005/02/15 06:26:42 julien.pierre.bugs%sun.com Exp $
  */
 #ifndef _CERTI_H_
 #define _CERTI_H_
@@ -44,7 +44,11 @@
 #include "certt.h"
 #include "nssrwlkt.h"
 
-#define USE_RWLOCK 1
+/*
+#define GLOBAL_RWLOCK 1
+*/
+
+#define DPC_RWLOCK 1
 
 /* all definitions in this file are subject to change */
 
@@ -53,16 +57,15 @@ typedef struct CRLEntryCacheStr CRLEntryCache;
 typedef struct CRLDPCacheStr CRLDPCache;
 typedef struct CRLIssuerCacheStr CRLIssuerCache;
 typedef struct CRLCacheStr CRLCache;
+typedef struct CachedCrlStr CachedCrl;
 
 struct OpaqueCRLFieldsStr {
     PRBool partial;
+    PRBool decodingError;
     PRBool badEntries;
-    PRBool bad;
     PRBool badDER;
     PRBool badExtensions;
-    PRBool deleted;
     PRBool heapDER;
-    PRBool unverified;
 };
 
 typedef struct PreAllocatorStr PreAllocator;
@@ -95,23 +98,14 @@ struct CRLEntryCacheStr {
 #define CRL_CACHE_OUT_OF_MEMORY             0x0004 /* this state will be set
         if we don't have enough memory to build the hash table of entries */
 
-/*  CRL distribution point cache object
-    This is a cache of CRL entries for a given distribution point of an issuer
-    It is built from a collection of one full and 0 or more delta CRLs.
-*/
+typedef enum {
+    CRL_OriginToken = 0,    /* CRL came from PKCS#11 token */
+    CRL_OriginExplicit = 1, /* CRL was explicitly added to the cache, from RAM */
+} CRLOrigin;
 
-struct CRLDPCacheStr {
-#ifdef USE_RWLOCK
-    NSSRWLock* lock;
-#else
-    PRLock* lock;
-#endif
-    CERTCertificate* issuer;    /* cert issuer */
-    SECItem* subject;           /* DER of issuer subject */
-    SECItem* distributionPoint; /* DER of distribution point. This may be
-                                   NULL when distribution points aren't
-                                   in use (ie. the CA has a single CRL) */
-
+struct CachedCrlStr {
+    CERTSignedCrl* crl;
+    CRLOrigin origin;
     /* hash table of entries. We use a PLHashTable and pre-allocate the
        required amount of memory in one shot, so that our allocator can
        simply pass offsets into it when hashing.
@@ -125,29 +119,109 @@ struct CRLDPCacheStr {
     */
     PLHashTable* entries;
     PreAllocator* prebuffer; /* big pre-allocated buffer mentioned above */
+    PRBool sigChecked; /* this CRL signature has already been checked */
+    PRBool sigValid; /* signature verification status .
+                     Only meaningful if checked is PR_TRUE . */
+};
 
-    /* array of CRLs matching this distribution point */
+/* constructor */
+SECStatus CachedCrl_Create(CachedCrl** returned, CERTSignedCrl* crl,
+                           CRLOrigin origin);
+/* destructor */
+SECStatus CachedCrl_Destroy(CachedCrl* crl);
+
+/* create hash table of CRL entries */
+SECStatus CachedCrl_Populate(CachedCrl* crlobject);
+
+/* empty the cache content */
+SECStatus CachedCrl_Depopulate(CachedCrl* crl);
+
+/* are these CRLs the same, as far as the cache is concerned ?
+   Or are they the same token object, but with different DER ? */
+
+static SECStatus CachedCrl_Compare(CachedCrl* a, CachedCrl* b, PRBool* isDupe,
+                                PRBool* isUpdated);
+
+/*  CRL distribution point cache object
+    This is a cache of CRL entries for a given distribution point of an issuer
+    It is built from a collection of one full and 0 or more delta CRLs.
+*/
+
+struct CRLDPCacheStr {
+#ifdef DPC_RWLOCK
+    NSSRWLock* lock;
+#else
+    PRLock* lock;
+#endif
+    CERTCertificate* issuer;    /* cert issuer 
+                                   XXX there may be multiple issuer certs,
+                                       with different validity dates. Also
+                                       need to deal with SKID/AKID . See
+                                       bugzilla 217387, 233118 */
+    SECItem* subject;           /* DER of issuer subject */
+    SECItem* distributionPoint; /* DER of distribution point. This may be
+                                   NULL when distribution points aren't
+                                   in use (ie. the CA has a single CRL).
+                                   Currently not used. */
+
+    /* array of full CRLs matching this distribution point */
     PRUint32 ncrls;              /* total number of CRLs in crls */
-    CERTSignedCrl** crls;       /* array of all matching DER CRLs
-                                   from all tokens */
+    CachedCrl** crls;            /* array of all matching CRLs */
     /* XCRL With iCRLs and multiple DPs, the CRL can be shared accross several
        issuers. In the future, we'll need to globally recycle the CRL in a
        separate list in order to avoid extra lookups, decodes, and copies */
 
     /* pointers to good decoded CRLs used to build the cache */
-    CERTSignedCrl* full;    /* full CRL used for the cache */
+    CachedCrl* selected;    /* full CRL selected for use in the cache */
 #if 0
     /* for future use */
     PRInt32 numdeltas;      /* number of delta CRLs used for the cache */
-    CERTSignedCrl** deltas; /* delta CRLs used for the cache */
+    CachedCrl** deltas;     /* delta CRLs used for the cache */
 #endif
-    /* invalidity bitflag */
+    /* cache invalidity bitflag */
     PRUint16 invalid;       /* this state will be set if either
              CRL_CACHE_INVALID_CRLS or CRL_CACHE_LAST_FETCH_FAILED is set.
              In those cases, all certs are considered revoked as a
              security precaution. The invalid state can only be cleared
              during an update if all error states are cleared */
+    PRBool refresh;        /* manual refresh from tokens has been forced */
+    PRBool mustchoose;     /* trigger reselection algorithm, for case when
+                              RAM CRL objects are dropped from the cache */
+    PRIntervalTime lastfetch; /* time a CRL token fetch was last performed */
+    PRIntervalTime lastcheck; /* time CRL token objects were last checked for
+                                 existence */
 };
+
+/* create a DPCache object */
+SECStatus DPCache_Create(CRLDPCache** returned, CERTCertificate* issuer,
+                         SECItem* subject, SECItem* dp);
+
+/* destructor for CRL DPCache object */
+SECStatus DPCache_Destroy(CRLDPCache* cache);
+
+/* add a new CRL object to the dynamic array of CRLs of the DPCache, and
+   returns the cached CRL object . Needs write access to DPCache. */
+SECStatus DPCache_AddCRL(CRLDPCache* cache, CachedCrl* crl, PRBool* added);
+
+/* fetch the CRL for this DP from the PKCS#11 tokens */
+SECStatus DPCache_FetchFromTokens(CRLDPCache* cache, PRTime vfdate, void* wincx);
+
+/* check if a particular SN is in the CRL cache and return its entry */
+SECStatus DPCache_Lookup(CRLDPCache* cache, SECItem* sn, CERTCrlEntry** returned);
+
+/* update the content of the CRL cache, including fetching of CRLs, and
+   reprocessing with specified issuer and date */
+SECStatus DPCache_GetUpToDate(CRLDPCache* cache, CERTCertificate* issuer,
+                         PRBool readlocked, PRTime vfdate, void* wincx);
+
+/* returns true if there are CRLs from PKCS#11 slots */
+PRBool DPCache_HasTokenCRLs(CRLDPCache* cache);
+
+/* remove CRL at offset specified */
+SECStatus DPCache_RemoveCRL(CRLDPCache* cache, PRUint32 offset);
+
+/* Pick best CRL to use . needs write access */
+SECStatus DPCache_SelectCRL(CRLDPCache* cache);
 
 /*  CRL issuer cache object
     This object tracks all the distribution point caches for a given issuer.
@@ -158,7 +232,6 @@ struct CRLDPCacheStr {
 
 struct CRLIssuerCacheStr {
     SECItem* subject;           /* DER of issuer subject */
-    CRLDPCache dp;              /* DER of distribution point */
     CRLDPCache* dpp;
 #if 0
     /* XCRL for future use.
@@ -171,12 +244,32 @@ struct CRLIssuerCacheStr {
 #endif
 };
 
+/* create an issuer cache object (per CA subject ) */
+SECStatus IssuerCache_Create(CRLIssuerCache** returned,
+                             CERTCertificate* issuer,
+                             SECItem* subject, SECItem* dp);
+
+/* destructor for CRL IssuerCache object */
+SECStatus IssuerCache_Destroy(CRLIssuerCache* cache);
+
+/* add a DPCache to the issuer cache */
+SECStatus IssuerCache_AddDP(CRLIssuerCache* cache, CERTCertificate* issuer,
+                            SECItem* subject, SECItem* dp, CRLDPCache** newdpc);
+
+/* get a particular DPCache object from an IssuerCache */
+CRLDPCache* IssuerCache_GetDPCache(CRLIssuerCache* cache, SECItem* dp);
+
+
 /*  CRL revocation cache object
     This object tracks all the issuer caches
 */
 
 struct CRLCacheStr {
+#ifdef GLOBAL_RWLOCK
+    NSSRWLock* lock;
+#else
     PRLock* lock;
+#endif
     /* hash table of issuer to CRLIssuerCacheStr,
        indexed by issuer DER subject */
     PLHashTable* issuers;
