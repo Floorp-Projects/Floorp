@@ -22,7 +22,11 @@ Contributor(s):
 #include <stddef.h>
 
 #ifdef XML_UNICODE
+#ifdef XML_UNICODE_WCHAR_T
 typedef const wchar_t *KEY;
+#else
+typedef const unsigned short *KEY;
+#endif
 #else
 typedef const char *KEY;
 #endif
