@@ -1042,7 +1042,19 @@ nsresult nsMsgThread::GetChildHdrForKey(nsMsgKey desiredKey, nsIMsgDBHdr **resul
       (*result)->GetMessageKey(&msgKey);
       
       if (msgKey == desiredKey)
+      {
+        nsMsgKey threadKey;
+        (*result)->GetThreadId(&threadKey);
+        if (threadKey != m_threadKey) // this msg isn't in this thread
+        {
+          PRUint32 msgSize;
+          (*result)->GetMessageSize(&msgSize);
+          if (msgSize == 0) // this is a phantom message - let's get rid of it.
+            RemoveChild(msgKey);
+          rv = NS_ERROR_UNEXPECTED;
+        }
         break;
+      }
       NS_RELEASE(*result);
     }
   }
