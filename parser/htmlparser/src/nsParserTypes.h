@@ -32,6 +32,7 @@
  * ===========================================================*/
 
 #include "prtypes.h"
+#include "nsError.h"
 
 enum  eParseMode {
   
@@ -50,7 +51,7 @@ const PRInt32   kBadFilename      = -4;
 const PRInt32   kBadURL           = -3;
 const PRInt32   kInterrupted      = -2;
 const PRInt32   kNotFound         = -1;
-const PRInt32   kNoError          = 0;
+const PRInt32   kNoError          = NS_OK;
 
 const PRUint32  kNewLine          = '\n';
 const PRUint32  kCR               = '\r';

@@ -87,7 +87,7 @@ class COtherDTD : public CNavDTD {
      * @param 
      * @return
      */
-    virtual PRInt32 WillBuildModel(nsString& aString);
+    NS_IMETHOD WillBuildModel(nsString& aString);
 
     /**
      * 
@@ -95,7 +95,7 @@ class COtherDTD : public CNavDTD {
      * @param 
      * @return
      */
-    virtual PRInt32 DidBuildModel(PRInt32 anErrorCode);
+    NS_IMETHOD DidBuildModel(PRInt32 anErrorCode);
 
     /**
      *  
@@ -103,7 +103,7 @@ class COtherDTD : public CNavDTD {
      *  @param   aToken -- token object to be put into content model
      *  @return  0 if all is well; non-zero is an error
      */
-    virtual PRInt32 HandleToken(CToken* aToken);
+    NS_IMETHOD HandleToken(CToken* aToken);
 
     /**
      *  Cause the tokenizer to consume the next token, and 
@@ -113,7 +113,7 @@ class COtherDTD : public CNavDTD {
      *  @param   anError -- ref to error code
      *  @return  new token or null
      */
-    virtual PRInt32 ConsumeToken(CToken*& aToken);
+    NS_IMETHOD ConsumeToken(CToken*& aToken);
 
 
     /**
@@ -122,7 +122,7 @@ class COtherDTD : public CNavDTD {
      * @param 
      * @return
      */
-    virtual void WillResumeParse(void);
+    NS_IMETHOD WillResumeParse(void);
 
     /**
      * 
@@ -130,7 +130,7 @@ class COtherDTD : public CNavDTD {
      * @param 
      * @return
      */
-    virtual void WillInterruptParse(void);
+    NS_IMETHOD WillInterruptParse(void);
 
     /**
      *  This method is called to determine whether or not a tag
@@ -225,7 +225,7 @@ class COtherDTD : public CNavDTD {
      * @param   aToken is the start token to be handled
      * @return  TRUE if the token was handled.
      */
-    PRInt32 HandleStartToken(CToken* aToken);
+    nsresult HandleStartToken(CToken* aToken);
 
     /**
      * This method gets called when a start token has been consumed, and
@@ -238,7 +238,7 @@ class COtherDTD : public CNavDTD {
      * @param   aNode is a node be updated with info from given token
      * @return  TRUE if the token was handled.
      */
-    PRInt32 HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsIParserNode& aNode);
+    nsresult HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsIParserNode& aNode);
 
     /**
      * This method gets called when an end token has been consumed and needs 
@@ -247,7 +247,7 @@ class COtherDTD : public CNavDTD {
      * @param   aToken is the end token to be handled
      * @return  TRUE if the token was handled.
      */
-    PRInt32 HandleEndToken(CToken* aToken);
+    nsresult HandleEndToken(CToken* aToken);
 
     /**
      * This method gets called when an entity token has been consumed and needs 
@@ -256,7 +256,7 @@ class COtherDTD : public CNavDTD {
      * @param   aToken is the entity token to be handled
      * @return  TRUE if the token was handled.
      */
-    PRInt32 HandleEntityToken(CToken* aToken);
+    nsresult HandleEntityToken(CToken* aToken);
 
     /**
      * This method gets called when a comment token has been consumed and needs 
@@ -265,7 +265,7 @@ class COtherDTD : public CNavDTD {
      * @param   aToken is the comment token to be handled
      * @return  TRUE if the token was handled.
      */
-    PRInt32 HandleCommentToken(CToken* aToken);
+    nsresult HandleCommentToken(CToken* aToken);
 
     /**
      * This method gets called when a skipped-content token has been consumed and needs 
@@ -274,7 +274,7 @@ class COtherDTD : public CNavDTD {
      * @param   aToken is the skipped-content token to be handled
      * @return  TRUE if the token was handled.
      */
-    PRInt32 HandleSkippedContentToken(CToken* aToken);
+    nsresult HandleSkippedContentToken(CToken* aToken);
 
     /**
      * This method gets called when an attribute token has been consumed and needs 
@@ -283,7 +283,7 @@ class COtherDTD : public CNavDTD {
      * @param   aToken is the attribute token to be handled
      * @return  TRUE if the token was handled.
      */
-    PRInt32 HandleAttributeToken(CToken* aToken);
+    nsresult HandleAttributeToken(CToken* aToken);
 
     /**
      * This method gets called when a script token has been consumed and needs 
@@ -292,7 +292,7 @@ class COtherDTD : public CNavDTD {
      * @param   aToken is the script token to be handled
      * @return  TRUE if the token was handled.
      */
-    PRInt32 HandleScriptToken(CToken* aToken);
+    nsresult HandleScriptToken(CToken* aToken);
     
     /**
      * This method gets called when a style token has been consumed and needs 
@@ -301,7 +301,7 @@ class COtherDTD : public CNavDTD {
      * @param   aToken is the style token to be handled
      * @return  TRUE if the token was handled.
      */
-    PRInt32 HandleStyleToken(CToken* aToken);
+    nsresult HandleStyleToken(CToken* aToken);
 
 private:
 
@@ -318,7 +318,7 @@ private:
      * @param   HTML (node) to be opened in content sink.
      * @return  TRUE if all went well.
      */
-    PRInt32 OpenHTML(const nsIParserNode& aNode);
+    nsresult OpenHTML(const nsIParserNode& aNode);
 
     /**
      * 
@@ -326,7 +326,7 @@ private:
      * @param 
      * @return
      */
-    PRInt32 CloseHTML(const nsIParserNode& aNode);
+    nsresult CloseHTML(const nsIParserNode& aNode);
 
     /**
      * This cover method opens the given node as a head item in 
@@ -335,7 +335,7 @@ private:
      * @param   HEAD (node) to be opened in content sink.
      * @return  TRUE if all went well.
      */
-    PRInt32 OpenHead(const nsIParserNode& aNode);
+    nsresult OpenHead(const nsIParserNode& aNode);
 
     /**
      * This cover method causes the content-sink head to be closed
@@ -343,7 +343,7 @@ private:
      * @param   aNode is the node to be closed in sink (usually ignored)
      * @return  TRUE if all went well.
      */
-    PRInt32 CloseHead(const nsIParserNode& aNode);
+    nsresult CloseHead(const nsIParserNode& aNode);
 
     /**
      * This cover method opens the given node as a body item in 
@@ -352,7 +352,7 @@ private:
      * @param   BODY (node) to be opened in content sink.
      * @return  TRUE if all went well.
      */
-    PRInt32 OpenBody(const nsIParserNode& aNode);
+    nsresult OpenBody(const nsIParserNode& aNode);
 
     /**
      * This cover method causes the content-sink body to be closed
@@ -360,7 +360,7 @@ private:
      * @param   aNode is the body node to be closed in sink (usually ignored)
      * @return  TRUE if all went well.
      */
-    PRInt32 CloseBody(const nsIParserNode& aNode);
+    nsresult CloseBody(const nsIParserNode& aNode);
 
     /**
      * This cover method opens the given node as a form item in 
@@ -369,7 +369,7 @@ private:
      * @param   FORM (node) to be opened in content sink.
      * @return  TRUE if all went well.
      */
-    PRInt32 OpenForm(const nsIParserNode& aNode);
+    nsresult OpenForm(const nsIParserNode& aNode);
 
     /**
      * This cover method causes the content-sink form to be closed
@@ -377,7 +377,7 @@ private:
      * @param   aNode is the form node to be closed in sink (usually ignored)
      * @return  TRUE if all went well.
      */
-    PRInt32 CloseForm(const nsIParserNode& aNode);
+    nsresult CloseForm(const nsIParserNode& aNode);
 
     /**
      * This cover method opens the given node as a form item in 
@@ -386,7 +386,7 @@ private:
      * @param   FORM (node) to be opened in content sink.
      * @return  TRUE if all went well.
      */
-    PRInt32 OpenMap(const nsIParserNode& aNode);
+    nsresult OpenMap(const nsIParserNode& aNode);
 
     /**
      * This cover method causes the content-sink form to be closed
@@ -394,7 +394,7 @@ private:
      * @param   aNode is the form node to be closed in sink (usually ignored)
      * @return  TRUE if all went well.
      */
-    PRInt32 CloseMap(const nsIParserNode& aNode);
+    nsresult CloseMap(const nsIParserNode& aNode);
 
     /**
      * This cover method opens the given node as a frameset item in 
@@ -403,7 +403,7 @@ private:
      * @param   FRAMESET (node) to be opened in content sink.
      * @return  TRUE if all went well.
      */
-    PRInt32 OpenFrameset(const nsIParserNode& aNode);
+    nsresult OpenFrameset(const nsIParserNode& aNode);
 
     /**
      * This cover method causes the content-sink frameset to be closed
@@ -411,7 +411,7 @@ private:
      * @param   aNode is the frameeset node to be closed in sink (usually ignored)
      * @return  TRUE if all went well.
      */
-    PRInt32 CloseFrameset(const nsIParserNode& aNode);
+    nsresult CloseFrameset(const nsIParserNode& aNode);
 
     /**
      * This cover method opens the given node as a generic container in 
@@ -420,7 +420,7 @@ private:
      * @param   generic container (node) to be opened in content sink.
      * @return  TRUE if all went well.
      */
-    PRInt32 OpenContainer(const nsIParserNode& aNode,PRBool aUpdateStyleStack);
+    nsresult OpenContainer(const nsIParserNode& aNode,PRBool aUpdateStyleStack);
 
     /**
      * This cover method causes a generic containre in the content-sink to be closed
@@ -428,14 +428,14 @@ private:
      * @param   aNode is the node to be closed in sink (usually ignored)
      * @return  TRUE if all went well.
      */
-    PRInt32 CloseContainer(const nsIParserNode& aNode,eHTMLTags anActualTag,PRBool aUpdateStyles);
+    nsresult CloseContainer(const nsIParserNode& aNode,eHTMLTags anActualTag,PRBool aUpdateStyles);
     
     /**
      * This cover method causes the topmost container to be closed in sink
      * @update	gess5/11/98
      * @return  TRUE if all went well.
      */
-    PRInt32 CloseTopmostContainer();
+    nsresult CloseTopmostContainer();
     
     /**
      * Cause all containers down to topmost given tag to be closed
@@ -443,7 +443,7 @@ private:
      * @param   aTag is the tag at which auto-closure should stop (inclusive) 
      * @return  TRUE if all went well -- otherwise FALSE
      */
-    PRInt32 CloseContainersTo(eHTMLTags aTag,PRBool aUpdateStyles);
+    nsresult CloseContainersTo(eHTMLTags aTag,PRBool aUpdateStyles);
 
     /**
      * Cause all containers down to given position to be closed
@@ -451,7 +451,7 @@ private:
      * @param   anIndex is the stack pos at which auto-closure should stop (inclusive) 
      * @return  TRUE if all went well -- otherwise FALSE
      */
-    PRInt32 CloseContainersTo(PRInt32 anIndex,eHTMLTags aTag,PRBool aUpdateStyles);
+    nsresult CloseContainersTo(PRInt32 anIndex,eHTMLTags aTag,PRBool aUpdateStyles);
 
     /**
      * Causes leaf to be added to sink at current vector pos.
@@ -459,7 +459,7 @@ private:
      * @param   aNode is leaf node to be added.
      * @return  TRUE if all went well -- FALSE otherwise.
      */
-    PRInt32 AddLeaf(const nsIParserNode& aNode);
+    nsresult AddLeaf(const nsIParserNode& aNode);
 
     /**
      * Causes auto-closures of context vector stack in order to find a 
@@ -469,7 +469,7 @@ private:
      * @param   child to be added (somewhere) to context vector stack.
      * @return  TRUE if succeeds, otherwise FALSE
      */
-    PRInt32 ReduceContextStackFor(eHTMLTags aChildTag);
+    nsresult ReduceContextStackFor(eHTMLTags aChildTag);
 
     /**
      * Attempt forward and/or backward propagation for the given
@@ -478,12 +478,12 @@ private:
      * @param   type of child to be propagated.
      * @return  TRUE if succeeds, otherwise FALSE
      */
-    PRInt32 CreateContextStackFor(eHTMLTags aChildTag);
+    nsresult CreateContextStackFor(eHTMLTags aChildTag);
 
-    PRInt32 OpenTransientStyles(eHTMLTags aTag);
-    PRInt32 CloseTransientStyles(eHTMLTags aTag);
-    PRInt32 UpdateStyleStackForOpenTag(eHTMLTags aTag,eHTMLTags aActualTag);
-    PRInt32 UpdateStyleStackForCloseTag(eHTMLTags aTag,eHTMLTags aActualTag);
+    nsresult OpenTransientStyles(eHTMLTags aTag);
+    nsresult CloseTransientStyles(eHTMLTags aTag);
+    nsresult UpdateStyleStackForOpenTag(eHTMLTags aTag,eHTMLTags aActualTag);
+    nsresult UpdateStyleStackForCloseTag(eHTMLTags aTag,eHTMLTags aActualTag);
 
 
     /****************************************************
@@ -507,7 +507,7 @@ private:
      * @param   aToken is the next token (or null)
      * @return  error code
      */
-    PRInt32     ConsumeTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
+    nsresult     ConsumeTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
     
     /**
      * Retrieve next START tag from given scanner.
@@ -516,7 +516,7 @@ private:
      * @param   aToken is the next token (or null)
      * @return  error code
      */
-    PRInt32     ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
+    nsresult     ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
     
     /**
      * Retrieve collection of HTML/XML attributes from given scanner
@@ -525,7 +525,7 @@ private:
      * @param   aToken is the next token (or null)
      * @return  error code
      */
-    PRInt32     ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,CStartToken* aToken);
+    nsresult     ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,CStartToken* aToken);
     
     /**
      * Retrieve a sequence of text from given scanner.
@@ -535,7 +535,7 @@ private:
      * @param   aToken is the next token (or null)
      * @return  error code
      */
-    PRInt32     ConsumeText(const nsString& aString,CScanner& aScanner,CToken*& aToken);
+    nsresult     ConsumeText(const nsString& aString,CScanner& aScanner,CToken*& aToken);
     
     /**
      * Retrieve an entity from given scanner
@@ -545,7 +545,7 @@ private:
      * @param   aToken is the next token (or null)
      * @return  error code
      */
-    PRInt32     ConsumeEntity(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
+    nsresult     ConsumeEntity(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
     
     /**
      * Retrieve a whitespace sequence from the given scanner
@@ -555,7 +555,7 @@ private:
      * @param   aToken is the next token (or null)
      * @return  error code
      */
-    PRInt32     ConsumeWhitespace(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
+    nsresult     ConsumeWhitespace(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
     
     /**
      * Retrieve a comment from the given scanner
@@ -565,7 +565,7 @@ private:
      * @param   aToken is the next token (or null)
      * @return  error code
      */
-    PRInt32     ConsumeComment(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
+    nsresult     ConsumeComment(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
 
     /**
      * Retrieve newlines from given scanner
@@ -575,7 +575,7 @@ private:
      * @param   aToken is the next token (or null)
      * @return  error code
      */
-    PRInt32     ConsumeNewline(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
+    nsresult     ConsumeNewline(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
 
     /**
      * Causes content to be skipped up to sequence contained in aString.
@@ -586,7 +586,7 @@ private:
      * @param   aToken is the next token (or null)
      * @return  error code
      */
-    virtual PRInt32 ConsumeContentToEndTag(const nsString& aString,PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
+    virtual nsresult ConsumeContentToEndTag(const nsString& aString,PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
 
 
 protected:

@@ -22,7 +22,7 @@ LIBRARY_NAME = raptorhtmlpars
 DEFINES = -D_IMPL_NS_HTMLPARS
 
 CPPSRCS =     \
-  nsHTMLContentSink.cpp \
+  nsHTMLNullSink.cpp \
   nsParserNode.cpp  \
   nsDTDDebug.cpp \
   nsScanner.cpp   \

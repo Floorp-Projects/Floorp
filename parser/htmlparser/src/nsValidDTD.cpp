@@ -190,8 +190,8 @@ eAutoDetectResult CValidDTD::AutoDetectContentType(nsString& aBuffer,nsString& a
  * @param 
  * @return
  */
-PRInt32 CValidDTD::WillBuildModel(nsString& aFilename){
-  PRInt32 result=0;
+NS_IMETHODIMP CValidDTD::WillBuildModel(nsString& aFilename){
+  nsresult result=NS_OK;
   return result;
 }
 
@@ -201,8 +201,8 @@ PRInt32 CValidDTD::WillBuildModel(nsString& aFilename){
  * @param 
  * @return
  */
-PRInt32 CValidDTD::DidBuildModel(PRInt32 anErrorCode){
-  PRInt32 result=0;
+NS_IMETHODIMP CValidDTD::DidBuildModel(PRInt32 anErrorCode){
+  nsresult result=NS_OK;
 
   return result;
 }
@@ -249,12 +249,12 @@ nsIContentSink* CValidDTD::SetContentSink(nsIContentSink* aSink) {
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null 
  */
-PRInt32 CValidDTD::ConsumeToken(CToken*& aToken){
+NS_IMETHODIMP CValidDTD::ConsumeToken(CToken*& aToken){
   
   CScanner* theScanner=mParser->GetScanner();
 
   PRUnichar aChar;
-  PRInt32   result=theScanner->GetChar(aChar);
+  nsresult   result=theScanner->GetChar(aChar);
 
   switch(result) {
     case kEOF:
@@ -264,7 +264,7 @@ PRInt32 CValidDTD::ConsumeToken(CToken*& aToken){
       theScanner->RewindToMark();
       break; 
 
-    case kNoError:
+    case NS_OK:
     default:
       switch(aChar) {
         case kLessThan:
@@ -273,7 +273,7 @@ PRInt32 CValidDTD::ConsumeToken(CToken*& aToken){
       } //switch
       break; 
   } //switch
-  if(kNoError==result)
+  if(NS_OK==result)
     result=theScanner->Eof();
   return result;
 }
@@ -284,8 +284,8 @@ PRInt32 CValidDTD::ConsumeToken(CToken*& aToken){
  * @param 
  * @return
  */
-void CValidDTD::WillResumeParse(void){
-  return;
+NS_IMETHODIMP CValidDTD::WillResumeParse(void){
+  return NS_OK;
 }
 
 /**
@@ -294,8 +294,8 @@ void CValidDTD::WillResumeParse(void){
  * @param 
  * @return
  */
-void CValidDTD::WillInterruptParse(void){
-  return;
+NS_IMETHODIMP CValidDTD::WillInterruptParse(void){
+  return NS_OK;
 }
 
 /**
@@ -327,8 +327,8 @@ PRBool CValidDTD::CanContain(PRInt32 aParent,PRInt32 aChild){
  *  @param   aToken -- token object to be put into content model
  *  @return  0 if all is well; non-zero is an error
  */
-PRInt32 CValidDTD::HandleToken(CToken* aToken) {
-  PRInt32 result=0;
+NS_IMETHODIMP CValidDTD::HandleToken(CToken* aToken) {
+  nsresult result=NS_OK;
   return result;
 }
 

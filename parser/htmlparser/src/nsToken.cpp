@@ -59,8 +59,8 @@ CToken::~CToken() {
  *  @param  aScanner -- object to retrieve data from
  *  @return int error code
  */
-PRInt32 CToken::Consume(PRUnichar aChar,CScanner& aScanner) {
-  PRInt32 result=kNoError;
+nsresult CToken::Consume(PRUnichar aChar,CScanner& aScanner) {
+  nsresult result=NS_OK;
   return result;
 }
 

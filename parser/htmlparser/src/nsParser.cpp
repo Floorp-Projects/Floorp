@@ -30,7 +30,7 @@
 #include "nsIDTDDebug.h"
 #include "nshtmlpars.h"
 
-#define rickgdebug 1
+#undef rickgdebug
 #ifdef  rickgdebug
 #include "CRtfDTD.h"
 #include "nsWellFormedDTD.h"

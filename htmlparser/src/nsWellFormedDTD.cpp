@@ -177,8 +177,8 @@ eAutoDetectResult CWellFormedDTD::AutoDetectContentType(nsString& aBuffer,nsStri
  * @param 
  * @return
  */
-PRInt32 CWellFormedDTD::WillBuildModel(nsString& aFilename){
-  PRInt32 result=0;
+NS_IMETHODIMP CWellFormedDTD::WillBuildModel(nsString& aFilename){
+  nsresult result=NS_OK;
   return result;
 }
 
@@ -188,8 +188,8 @@ PRInt32 CWellFormedDTD::WillBuildModel(nsString& aFilename){
  * @param 
  * @return
  */
-PRInt32 CWellFormedDTD::DidBuildModel(PRInt32 anErrorCode){
-  PRInt32 result=0;
+NS_IMETHODIMP CWellFormedDTD::DidBuildModel(PRInt32 anErrorCode){
+  nsresult result=NS_OK;
 
   return result;
 }
@@ -236,12 +236,12 @@ nsIContentSink* CWellFormedDTD::SetContentSink(nsIContentSink* aSink) {
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null 
  */
-PRInt32 CWellFormedDTD::ConsumeToken(CToken*& aToken){
+NS_IMETHODIMP CWellFormedDTD::ConsumeToken(CToken*& aToken){
   
   CScanner* theScanner=mParser->GetScanner();
 
   PRUnichar aChar;
-  PRInt32   result=theScanner->GetChar(aChar);
+  nsresult   result=theScanner->GetChar(aChar);
 
   switch(result) {
     case kEOF:
@@ -251,7 +251,7 @@ PRInt32 CWellFormedDTD::ConsumeToken(CToken*& aToken){
       theScanner->RewindToMark();
       break; 
 
-    case kNoError:
+    case NS_OK:
     default:
       switch(aChar) {
         case kLessThan:
@@ -260,7 +260,7 @@ PRInt32 CWellFormedDTD::ConsumeToken(CToken*& aToken){
       } //switch
       break; 
   } //switch
-  if(kNoError==result)
+  if(NS_OK==result)
     result=theScanner->Eof();
   return result;
 }
@@ -271,8 +271,8 @@ PRInt32 CWellFormedDTD::ConsumeToken(CToken*& aToken){
  * @param 
  * @return
  */
-void CWellFormedDTD::WillResumeParse(void){
-  return;
+NS_IMETHODIMP CWellFormedDTD::WillResumeParse(void){
+  return NS_OK;
 }
 
 /**
@@ -281,8 +281,8 @@ void CWellFormedDTD::WillResumeParse(void){
  * @param 
  * @return
  */
-void CWellFormedDTD::WillInterruptParse(void){
-  return;
+NS_IMETHODIMP CWellFormedDTD::WillInterruptParse(void){
+  return NS_OK;
 }
 
 /**
@@ -314,8 +314,8 @@ PRBool CWellFormedDTD::CanContain(PRInt32 aParent,PRInt32 aChild){
  *  @param   aToken -- token object to be put into content model
  *  @return  0 if all is well; non-zero is an error
  */
-PRInt32 CWellFormedDTD::HandleToken(CToken* aToken) {
-  PRInt32 result=0;
+NS_IMETHODIMP CWellFormedDTD::HandleToken(CToken* aToken) {
+  nsresult result=NS_OK;
   return result;
 }
 

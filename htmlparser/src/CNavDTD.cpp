@@ -36,7 +36,7 @@
 #include "nsHTMLTokens.h"
 #include "nsCRT.h"
 #include "nsParser.h"
-#include "nsHTMLContentSink.h" 
+#include "nsIHTMLContentSink.h" 
 #include "nsScanner.h"
 #include "nsParserTypes.h"
 #include "nsVoidArray.h"
@@ -420,13 +420,14 @@ eAutoDetectResult CNavDTD::AutoDetectContentType(nsString& aBuffer,nsString& aTy
  * @param 
  * @return
  */
-PRInt32 CNavDTD::WillBuildModel(nsString& aFilename){
-  PRInt32 result=0;
+nsresult CNavDTD::WillBuildModel(nsString& aFilename){
+  nsresult result=NS_OK;
 
   mFilename=aFilename;
 
-  if(mSink)
-    mSink->WillBuildModel();
+  if(mSink) {
+    result = mSink->WillBuildModel();
+  }
 
   return result;
 }
@@ -437,14 +438,14 @@ PRInt32 CNavDTD::WillBuildModel(nsString& aFilename){
  * @param 
  * @return
  */
-PRInt32 CNavDTD::DidBuildModel(PRInt32 anErrorCode){
-  PRInt32 result=0;
+nsresult CNavDTD::DidBuildModel(PRInt32 anErrorCode){
+  nsresult result= NS_OK;
 
   if((kNoError==anErrorCode) && (mContextStack.mCount>0)) {
-    CloseContainersTo(0,eHTMLTag_unknown,PR_FALSE);
+    result = CloseContainersTo(0,eHTMLTag_unknown,PR_FALSE);
   }
   if(mSink) {
-    mSink->DidBuildModel(1);
+    result = mSink->DidBuildModel(1);
   }
 
   return result;
@@ -462,8 +463,8 @@ PRInt32 CNavDTD::DidBuildModel(PRInt32 anErrorCode){
  *  @param   aParser
  *  @return  
  */
-PRInt32 CNavDTD::HandleToken(CToken* aToken){
-  PRInt32 result=0;
+nsresult CNavDTD::HandleToken(CToken* aToken){
+  nsresult result=NS_OK;
 
   if(aToken) {
     CHTMLToken*     theToken= (CHTMLToken*)(aToken);
@@ -496,16 +497,16 @@ PRInt32 CNavDTD::HandleToken(CToken* aToken){
  *  @param   aNode -- CParserNode representing this start token
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  */
-PRInt32 CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsIParserNode& aNode) {
+nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsIParserNode& aNode) {
   NS_PRECONDITION(0!=aToken,kNullToken);
 
   eHTMLTags parentTag=GetTopNode();
-  PRInt32   result=kNoError;
+  nsresult   result=NS_OK;
   PRBool    contains=CanContain(parentTag,aChildTag);
 
   if(PR_FALSE==contains){
     result=CreateContextStackFor(aChildTag);
-    if(kNoError!=result) {
+    if(NS_OK!=result) {
       //if you're here, then the new topmost container can't contain aToken.
       //You must determine what container hierarchy you need to hold aToken,
       //and create that on the parsestack.
@@ -546,7 +547,7 @@ PRInt32 CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsIP
  *  @param   aNode -- CParserNode representing this start token
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  */
-PRInt32 CNavDTD::HandleStartToken(CToken* aToken) {
+nsresult CNavDTD::HandleStartToken(CToken* aToken) {
   NS_PRECONDITION(0!=aToken,kNullToken);
 
   CStartToken*  st= (CStartToken*)(aToken);
@@ -556,9 +557,11 @@ PRInt32 CNavDTD::HandleStartToken(CToken* aToken) {
   nsCParserNode attrNode((CHTMLToken*)aToken);
   PRInt16       attrCount=aToken->GetAttributeCount();
   PRInt32       theCount;
-  PRInt32       result=(0==attrCount) ? kNoError : mParser->CollectAttributes(attrNode,attrCount);
+  nsresult      result=(0==attrCount)
+    ? NS_OK
+    : mParser->CollectAttributes(attrNode,attrCount);
 
-  if(kNoError==result) {
+  if(NS_OK==result) {
       //now check to see if this token should be omitted...
     if(PR_FALSE==CanOmit(GetTopNode(),tokenTagType)) {
   
@@ -571,7 +574,7 @@ PRInt32 CNavDTD::HandleStartToken(CToken* aToken) {
           {
             nsCParserNode theNode(st);
             result=OpenHead(theNode); //open the head...
-            if(kNoError==result) {
+            if(NS_OK==result) {
               result=mParser->CollectSkippedContent(attrNode,theCount);
               mSink->SetTitle(attrNode.GetSkippedContent());
               result=CloseHead(theNode); //close the head...
@@ -595,9 +598,9 @@ PRInt32 CNavDTD::HandleStartToken(CToken* aToken) {
           {
             nsCParserNode theNode((CHTMLToken*)aToken);
             result=OpenHead(theNode);
-            if(kNoError==result)
+            if(NS_OK==result)
               result=AddLeaf(attrNode);
-            if(kNoError==result)
+            if(NS_OK==result)
               result=CloseHead(theNode);
           }
           break;
@@ -606,11 +609,11 @@ PRInt32 CNavDTD::HandleStartToken(CToken* aToken) {
           {
             nsCParserNode theNode((CHTMLToken*)aToken);
             result=OpenHead(theNode);
-            if(kNoError==result) {
+            if(NS_OK==result) {
               mParser->CollectSkippedContent(attrNode,theCount);
-              if(kNoError==result) {
+              if(NS_OK==result) {
                 result=AddLeaf(attrNode);
-                if(kNoError==result)
+                if(NS_OK==result)
                   result=CloseHead(theNode);
               }
             }
@@ -625,9 +628,9 @@ PRInt32 CNavDTD::HandleStartToken(CToken* aToken) {
 
         case eHTMLTag_base:
           result=OpenHead(attrNode);
-          if(kNoError==result) {
+          if(NS_OK==result) {
             result=AddLeaf(attrNode);
-            if(kNoError==result)
+            if(NS_OK==result)
               result=CloseHead(attrNode);
           }
           break;
@@ -661,10 +664,10 @@ PRInt32 CNavDTD::HandleStartToken(CToken* aToken) {
  *  @param   aToken -- next (start) token to be handled
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  */
-PRInt32 CNavDTD::HandleEndToken(CToken* aToken) {
+nsresult CNavDTD::HandleEndToken(CToken* aToken) {
   NS_PRECONDITION(0!=aToken,kNullToken);
 
-  PRInt32     result=kNoError;
+  nsresult    result=NS_OK;
   CEndToken*  et = (CEndToken*)(aToken);
   eHTMLTags   tokenTagType=(eHTMLTags)et->GetTypeID();
 
@@ -733,11 +736,11 @@ PRInt32 CNavDTD::HandleEndToken(CToken* aToken) {
  *  @param   aToken -- next (start) token to be handled
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  */
-PRInt32 CNavDTD::HandleEntityToken(CToken* aToken) {
+nsresult CNavDTD::HandleEntityToken(CToken* aToken) {
   NS_PRECONDITION(0!=aToken,kNullToken);
 
   CEntityToken* et = (CEntityToken*)(aToken);
-  PRInt32       result=kNoError;
+  nsresult      result=NS_OK;
   eHTMLTags     tokenTagType=(eHTMLTags)et->GetTypeID();
 
   if(PR_FALSE==CanOmit(GetTopNode(),tokenTagType)) {
@@ -757,9 +760,9 @@ PRInt32 CNavDTD::HandleEntityToken(CToken* aToken) {
  *  @param   aToken -- next (start) token to be handled
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  */
-PRInt32 CNavDTD::HandleCommentToken(CToken* aToken) {
+nsresult CNavDTD::HandleCommentToken(CToken* aToken) {
   NS_PRECONDITION(0!=aToken,kNullToken);
-  return kNoError;
+  return NS_OK;
 }
 
 /**
@@ -772,10 +775,10 @@ PRInt32 CNavDTD::HandleCommentToken(CToken* aToken) {
  *  @param   aToken -- next (start) token to be handled
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  */
-PRInt32 CNavDTD::HandleSkippedContentToken(CToken* aToken) {
+nsresult CNavDTD::HandleSkippedContentToken(CToken* aToken) {
   NS_PRECONDITION(0!=aToken,kNullToken);
 
-  PRInt32 result=kNoError;
+  nsresult result=NS_OK;
 
   if(HasOpenContainer(eHTMLTag_body)) {
     nsCParserNode aNode((CHTMLToken*)aToken);
@@ -794,12 +797,12 @@ PRInt32 CNavDTD::HandleSkippedContentToken(CToken* aToken) {
  *  @param   aToken -- next (start) token to be handled
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  */
-PRInt32 CNavDTD::HandleAttributeToken(CToken* aToken) {
+nsresult CNavDTD::HandleAttributeToken(CToken* aToken) {
   NS_PRECONDITION(0!=aToken,kNullToken);
   NS_ERROR("attribute encountered -- this shouldn't happen!");
 
   CAttributeToken*  at = (CAttributeToken*)(aToken);
-  PRInt32 result=kNoError;
+  nsresult result=NS_OK;
   return result;
 }
 
@@ -811,9 +814,9 @@ PRInt32 CNavDTD::HandleAttributeToken(CToken* aToken) {
  *  @param   aToken -- next (start) token to be handled
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  */
-PRInt32 CNavDTD::HandleScriptToken(CToken* aToken) {
+nsresult CNavDTD::HandleScriptToken(CToken* aToken) {
   NS_PRECONDITION(0!=aToken,kNullToken);
-  PRInt32 result=kNoError;
+  nsresult result=NS_OK;
 
   PRInt32 pos=GetTopmostIndexOf(eHTMLTag_body);
   nsCParserNode theNode((CHTMLToken*)aToken);
@@ -823,11 +826,11 @@ PRInt32 CNavDTD::HandleScriptToken(CToken* aToken) {
   if (kNotFound == pos) {
     // We're in the HEAD
     result=OpenHead(theNode);
-    if(kNoError==result) {
+    if(NS_OK==result) {
       mParser->CollectSkippedContent(attrNode,attrCount);
-      if(kNoError==result) {
+      if(NS_OK==result) {
         result=AddLeaf(attrNode);
-        if(kNoError==result)
+        if(NS_OK==result)
           result=CloseHead(theNode);
       }
     }
@@ -835,7 +838,7 @@ PRInt32 CNavDTD::HandleScriptToken(CToken* aToken) {
   else {
     // We're in the BODY
     mParser->CollectSkippedContent(attrNode,attrCount);
-    if(kNoError==result) {
+    if(NS_OK==result) {
       result=AddLeaf(attrNode);
     }
   }
@@ -851,11 +854,11 @@ PRInt32 CNavDTD::HandleScriptToken(CToken* aToken) {
  *  @param   aToken -- next (start) token to be handled
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  */
-PRInt32 CNavDTD::HandleStyleToken(CToken* aToken){
+nsresult CNavDTD::HandleStyleToken(CToken* aToken){
   NS_PRECONDITION(0!=aToken,kNullToken);
 
   CStyleToken*  st = (CStyleToken*)(aToken);
-  PRInt32 result=kNoError;
+  nsresult result=NS_OK;
   return result;
 }
 
@@ -872,7 +875,6 @@ void CNavDTD::DeleteTokenHandlers(void) {
     delete mTokenHandlers[i];
     mTokenHandlers[i]=0;
   }
-  return;
 }
 
 
@@ -1762,8 +1764,8 @@ PRInt32 CNavDTD::GetTopmostIndexOf(eHTMLTags aTag) const {
  * @param   tag of the container just opened
  * @return  0 (for now)
  */
-PRInt32 CNavDTD::OpenTransientStyles(eHTMLTags aTag){
-  PRInt32 result=0;
+nsresult CNavDTD::OpenTransientStyles(eHTMLTags aTag){
+  nsresult result=NS_OK;
 
   if(0==strchr(gWhitespaceTags,aTag)){
     PRInt32 pos=0;
@@ -1788,7 +1790,7 @@ PRInt32 CNavDTD::OpenTransientStyles(eHTMLTags aTag){
               mContextStack.mBits[mContextStack.mCount-1]=PR_TRUE;
           } //switch
         }
-        if(kNoError!=result)
+        if(NS_OK!=result)
           break;
       }//for
     }
@@ -1808,8 +1810,8 @@ PRInt32 CNavDTD::OpenTransientStyles(eHTMLTags aTag){
  * @param   tag of the container just opened
  * @return  0 (for now)
  */
-PRInt32 CNavDTD::CloseTransientStyles(eHTMLTags aTag){
-  PRInt32 result=0;
+nsresult CNavDTD::CloseTransientStyles(eHTMLTags aTag){
+  nsresult result=NS_OK;
 
   if((mStyleStack.mCount>0) && (mContextStack.mBits[mContextStack.mCount-1])) {
     if(0==strchr(gWhitespaceTags,aTag)){
@@ -1829,12 +1831,11 @@ PRInt32 CNavDTD::CloseTransientStyles(eHTMLTags aTag){
  * 
  * @update  gess4/22/98
  * @param   aNode -- next node to be added to model
- * @return  TRUE if ok, FALSE if error
  */
-PRInt32 CNavDTD::OpenHTML(const nsIParserNode& aNode){
+nsresult CNavDTD::OpenHTML(const nsIParserNode& aNode){
   NS_PRECONDITION(mContextStack.mCount >= 0, kInvalidTagStackPos);
 
-  PRInt32 result=mSink->OpenHTML(aNode); 
+  nsresult result=mSink->OpenHTML(aNode); 
   mContextStack.Push((eHTMLTags)aNode.GetNodeType());
   return result;
 }
@@ -1848,9 +1849,9 @@ PRInt32 CNavDTD::OpenHTML(const nsIParserNode& aNode){
  * @param   aNode -- next node to be removed from our model
  * @return  TRUE if ok, FALSE if error
  */
-PRInt32 CNavDTD::CloseHTML(const nsIParserNode& aNode){
+nsresult CNavDTD::CloseHTML(const nsIParserNode& aNode){
   NS_PRECONDITION(mContextStack.mCount > 0, kInvalidTagStackPos);
-  PRInt32 result=mSink->CloseHTML(aNode); 
+  nsresult result=mSink->CloseHTML(aNode); 
   mContextStack.Pop();
   return result;
 }
@@ -1864,9 +1865,9 @@ PRInt32 CNavDTD::CloseHTML(const nsIParserNode& aNode){
  * @param   aNode -- next node to be added to model
  * @return  TRUE if ok, FALSE if error
  */
-PRInt32 CNavDTD::OpenHead(const nsIParserNode& aNode){
+nsresult CNavDTD::OpenHead(const nsIParserNode& aNode){
   mContextStack.Push(eHTMLTag_head);
-  PRInt32 result=mSink->OpenHead(aNode); 
+  nsresult result=mSink->OpenHead(aNode); 
   return result;
 }
 
@@ -1878,8 +1879,8 @@ PRInt32 CNavDTD::OpenHead(const nsIParserNode& aNode){
  * @param   aNode -- next node to be removed from our model
  * @return  TRUE if ok, FALSE if error
  */
-PRInt32 CNavDTD::CloseHead(const nsIParserNode& aNode){
-  PRInt32 result=mSink->CloseHead(aNode); 
+nsresult CNavDTD::CloseHead(const nsIParserNode& aNode){
+  nsresult result=mSink->CloseHead(aNode); 
   mContextStack.Pop();
   return result;
 }
@@ -1892,10 +1893,10 @@ PRInt32 CNavDTD::CloseHead(const nsIParserNode& aNode){
  * @param   aNode -- next node to be added to model
  * @return  TRUE if ok, FALSE if error
  */
-PRInt32 CNavDTD::OpenBody(const nsIParserNode& aNode){
+nsresult CNavDTD::OpenBody(const nsIParserNode& aNode){
   NS_PRECONDITION(mContextStack.mCount >= 0, kInvalidTagStackPos);
 
-  PRInt32 result=kNoError;
+  nsresult result=NS_OK;
   eHTMLTags topTag=GetTopNode();
 
   if(eHTMLTag_html!=topTag) {
@@ -1923,7 +1924,7 @@ PRInt32 CNavDTD::OpenBody(const nsIParserNode& aNode){
     }
   }
 
-  if(kNoError==result) {
+  if(NS_OK==result) {
     result=mSink->OpenBody(aNode); 
     mContextStack.Push((eHTMLTags)aNode.GetNodeType());
   }
@@ -1938,9 +1939,9 @@ PRInt32 CNavDTD::OpenBody(const nsIParserNode& aNode){
  * @param   aNode -- next node to be removed from our model
  * @return  TRUE if ok, FALSE if error
  */
-PRInt32 CNavDTD::CloseBody(const nsIParserNode& aNode){
+nsresult CNavDTD::CloseBody(const nsIParserNode& aNode){
   NS_PRECONDITION(mContextStack.mCount >= 0, kInvalidTagStackPos);
-  PRInt32 result=mSink->CloseBody(aNode); 
+  nsresult result=mSink->CloseBody(aNode); 
   mContextStack.Pop();
   return result;
 }
@@ -1953,11 +1954,11 @@ PRInt32 CNavDTD::CloseBody(const nsIParserNode& aNode){
  * @param   aNode -- next node to be added to model
  * @return  TRUE if ok, FALSE if error
  */
-PRInt32 CNavDTD::OpenForm(const nsIParserNode& aNode){
+nsresult CNavDTD::OpenForm(const nsIParserNode& aNode){
   if(mHasOpenForm)
     CloseForm(aNode);
-  PRInt32 result=mSink->OpenForm(aNode);
-  if(kNoError==result)
+  nsresult result=mSink->OpenForm(aNode);
+  if(NS_OK==result)
     mHasOpenForm=PR_TRUE;
   return result;
 }
@@ -1970,8 +1971,8 @@ PRInt32 CNavDTD::OpenForm(const nsIParserNode& aNode){
  * @param   aNode -- next node to be removed from our model
  * @return  TRUE if ok, FALSE if error
  */
-PRInt32 CNavDTD::CloseForm(const nsIParserNode& aNode){
-  PRInt32 result=kNoError;
+nsresult CNavDTD::CloseForm(const nsIParserNode& aNode){
+  nsresult result=NS_OK;
   if(mHasOpenForm) {
     mHasOpenForm=PR_FALSE;
     result=mSink->CloseForm(aNode); 
@@ -1987,15 +1988,11 @@ PRInt32 CNavDTD::CloseForm(const nsIParserNode& aNode){
  * @param   aNode -- next node to be added to model
  * @return  TRUE if ok, FALSE if error
  */
-PRInt32 CNavDTD::OpenMap(const nsIParserNode& aNode){
+nsresult CNavDTD::OpenMap(const nsIParserNode& aNode){
   if(mHasOpenMap)
     CloseMap(aNode);
-
-  //NOTE: We need to change to method so that it opens a MAP, 
-  //      instead of a FORM. This was copy/paste coding at its best.
-
-  PRInt32 result=mSink->OpenForm(aNode);
-  if(kNoError==result)
+  nsresult result=mSink->OpenMap(aNode);
+  if(NS_OK==result)
     mHasOpenMap=PR_TRUE;
   return result;
 }
@@ -2008,15 +2005,11 @@ PRInt32 CNavDTD::OpenMap(const nsIParserNode& aNode){
  * @param   aNode -- next node to be removed from our model
  * @return  TRUE if ok, FALSE if error
  */
-PRInt32 CNavDTD::CloseMap(const nsIParserNode& aNode){
-  PRInt32 result=kNoError;
+nsresult CNavDTD::CloseMap(const nsIParserNode& aNode){
+  nsresult result=NS_OK;
   if(mHasOpenMap) {
     mHasOpenMap=PR_FALSE;
-
-  //NOTE: We need to change to method so that it closes a MAP, 
-  //      instead of a FORM. This was copy/paste coding at its best.
-    
-    result=mSink->CloseForm(aNode); 
+    result=mSink->CloseMap(aNode); 
   }
   return result;
 }
@@ -2029,9 +2022,9 @@ PRInt32 CNavDTD::CloseMap(const nsIParserNode& aNode){
  * @param   aNode -- next node to be added to model
  * @return  TRUE if ok, FALSE if error
  */
-PRInt32 CNavDTD::OpenFrameset(const nsIParserNode& aNode){
+nsresult CNavDTD::OpenFrameset(const nsIParserNode& aNode){
   NS_PRECONDITION(mContextStack.mCount >= 0, kInvalidTagStackPos);
-  PRInt32 result=mSink->OpenFrameset(aNode); 
+  nsresult result=mSink->OpenFrameset(aNode); 
   mContextStack.Push((eHTMLTags)aNode.GetNodeType());
   return result;
 }
@@ -2044,9 +2037,9 @@ PRInt32 CNavDTD::OpenFrameset(const nsIParserNode& aNode){
  * @param   aNode -- next node to be removed from our model
  * @return  TRUE if ok, FALSE if error
  */
-PRInt32 CNavDTD::CloseFrameset(const nsIParserNode& aNode){
+nsresult CNavDTD::CloseFrameset(const nsIParserNode& aNode){
   NS_PRECONDITION(mContextStack.mCount > 0, kInvalidTagStackPos);
-  PRInt32 result=mSink->CloseFrameset(aNode); 
+  nsresult result=mSink->CloseFrameset(aNode); 
   mContextStack.Pop();
   return result;
 }
@@ -2060,10 +2053,11 @@ PRInt32 CNavDTD::CloseFrameset(const nsIParserNode& aNode){
  * @param   aNode -- next node to be added to model
  * @return  TRUE if ok, FALSE if error
  */
-PRInt32 CNavDTD::OpenContainer(const nsIParserNode& aNode,PRBool aUpdateStyleStack){
+nsresult
+CNavDTD::OpenContainer(const nsIParserNode& aNode,PRBool aUpdateStyleStack){
   NS_PRECONDITION(mContextStack.mCount > 0, kInvalidTagStackPos);
   
-  PRInt32   result=kNoError; 
+  nsresult   result=NS_OK; 
   eHTMLTags nodeType=(eHTMLTags)aNode.GetNodeType();
 
 //  CloseTransientStyles(nodeType);
@@ -2082,6 +2076,10 @@ PRInt32 CNavDTD::OpenContainer(const nsIParserNode& aNode,PRBool aUpdateStyleSta
     case eHTMLTag_title:
       break;
 
+    case eHTMLTag_map:
+      result=OpenMap(aNode);
+      break;
+
     case eHTMLTag_form:
       result=OpenForm(aNode); break;
 
@@ -2091,7 +2089,7 @@ PRInt32 CNavDTD::OpenContainer(const nsIParserNode& aNode,PRBool aUpdateStyleSta
       break;
   }
 
-  if((kNoError==result) && (PR_TRUE==aUpdateStyleStack)){
+  if((NS_OK==result) && (PR_TRUE==aUpdateStyleStack)){
     UpdateStyleStackForOpenTag(nodeType,nodeType);
   }
 
@@ -2106,9 +2104,11 @@ PRInt32 CNavDTD::OpenContainer(const nsIParserNode& aNode,PRBool aUpdateStyleSta
  * @param   aNode -- next node to be removed from our model
  * @return  TRUE if ok, FALSE if error
  */
-PRInt32 CNavDTD::CloseContainer(const nsIParserNode& aNode,eHTMLTags aTag,PRBool aUpdateStyles){
+nsresult
+CNavDTD::CloseContainer(const nsIParserNode& aNode,eHTMLTags aTag,
+                        PRBool aUpdateStyles){
   NS_PRECONDITION(mContextStack.mCount > 0, kInvalidTagStackPos);
-  PRInt32   result=kNoError; //was false
+  nsresult   result=NS_OK;
   eHTMLTags nodeType=(eHTMLTags)aNode.GetNodeType();
   
   //XXX Hack! We know this is wrong, but it works
@@ -2129,6 +2129,10 @@ PRInt32 CNavDTD::CloseContainer(const nsIParserNode& aNode,eHTMLTags aTag,PRBool
     case eHTMLTag_body:
       result=CloseBody(aNode); break;
 
+    case eHTMLTag_map:
+      result=CloseMap(aNode);
+      break;
+
     case eHTMLTag_form:
       result=CloseForm(aNode); break;
 
@@ -2140,7 +2144,7 @@ PRInt32 CNavDTD::CloseContainer(const nsIParserNode& aNode,eHTMLTags aTag,PRBool
   }
 
   mContextStack.mBits[mContextStack.mCount]=PR_FALSE;
-  if((kNoError==result) && (PR_TRUE==aUpdateStyles)){
+  if((NS_OK==result) && (PR_TRUE==aUpdateStyles)){
     UpdateStyleStackForCloseTag(nodeType,aTag);
   }
 
@@ -2155,9 +2159,11 @@ PRInt32 CNavDTD::CloseContainer(const nsIParserNode& aNode,eHTMLTags aTag,PRBool
  * @param   
  * @return  TRUE if ok, FALSE if error
  */
-PRInt32 CNavDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTag,PRBool aUpdateStyles){
+nsresult
+CNavDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTag,
+                           PRBool aUpdateStyles){
   NS_PRECONDITION(mContextStack.mCount > 0, kInvalidTagStackPos);
-  PRInt32 result=kNoError;
+  nsresult result=NS_OK;
 
   CEndToken aToken(gEmpty);
   nsCParserNode theNode(&aToken);
@@ -2180,7 +2186,7 @@ PRInt32 CNavDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTag,PRBool aUpdate
  * @param   
  * @return  TRUE if ok, FALSE if error
  */
-PRInt32 CNavDTD::CloseContainersTo(eHTMLTags aTag,PRBool aUpdateStyles){
+nsresult CNavDTD::CloseContainersTo(eHTMLTags aTag,PRBool aUpdateStyles){
   NS_PRECONDITION(mContextStack.mCount > 0, kInvalidTagStackPos);
 
   PRInt32 pos=GetTopmostIndexOf(aTag);
@@ -2203,7 +2209,7 @@ PRInt32 CNavDTD::CloseContainersTo(eHTMLTags aTag,PRBool aUpdateStyles){
     }
   }
   
-  PRInt32 result=kNoError;
+  nsresult result=NS_OK;
   eHTMLTags theParentTag=GetDefaultParentTagFor(aTag);
   pos=GetTopmostIndexOf(theParentTag);
   if(kNotFound!=pos) {
@@ -2221,7 +2227,7 @@ PRInt32 CNavDTD::CloseContainersTo(eHTMLTags aTag,PRBool aUpdateStyles){
  * @param   
  * @return  TRUE if ok, FALSE if error
  */
-PRInt32 CNavDTD::CloseTopmostContainer(){
+nsresult CNavDTD::CloseTopmostContainer(){
   NS_PRECONDITION(mContextStack.mCount > 0, kInvalidTagStackPos);
 
   CEndToken aToken(gEmpty);
@@ -2239,8 +2245,8 @@ PRInt32 CNavDTD::CloseTopmostContainer(){
  * @param   aNode -- next node to be added to model
  * @return  TRUE if ok, FALSE if error
  */
-PRInt32 CNavDTD::AddLeaf(const nsIParserNode& aNode){
-  PRInt32 result=mSink->AddLeaf(aNode); 
+nsresult CNavDTD::AddLeaf(const nsIParserNode& aNode){
+  nsresult result=mSink->AddLeaf(aNode); 
   return result;
 }
 
@@ -2255,10 +2261,10 @@ PRInt32 CNavDTD::AddLeaf(const nsIParserNode& aNode){
  *           create a new context vector
  *  @return  true if we succeeded, otherwise false
  */
-PRInt32 CNavDTD::CreateContextStackFor(eHTMLTags aChildTag){
+nsresult CNavDTD::CreateContextStackFor(eHTMLTags aChildTag){
   nsAutoString  theVector;
   
-  PRInt32   result=kNoError;
+  nsresult  result=NS_OK;
   PRInt32   pos=0;
   PRInt32   cnt=0;
   eHTMLTags theTop=GetTopNode();
@@ -2268,7 +2274,7 @@ PRInt32 CNavDTD::CreateContextStackFor(eHTMLTags aChildTag){
     pos=0;
     cnt=theVector.Length()-1;
     if(mContextStack.Last()==(eHTMLTags)theVector[cnt])
-      result=kNoError;
+      result=NS_OK;
     else result=kContextMismatch;
   }
   else {
@@ -2285,7 +2291,7 @@ PRInt32 CNavDTD::CreateContextStackFor(eHTMLTags aChildTag){
       //propagation worked, so pop unwanted containers, push new ones, then exit...
       pos=0;
       cnt=theVector.Length();
-      result=kNoError;
+      result=NS_OK;
       while(pos<mContextStack.mCount) {
         if(mContextStack.mTags[pos]==(eHTMLTags)theVector[cnt-1-pos]) {
           pos++;
@@ -2303,7 +2309,7 @@ PRInt32 CNavDTD::CreateContextStackFor(eHTMLTags aChildTag){
 
     //now, build up the stack according to the tags 
     //you have that aren't in the stack...
-  if(kNoError==result){
+  if(NS_OK==result){
     int i=0;
     for(i=pos;i<cnt;i++) {
       CStartToken* st=new CStartToken((eHTMLTags)theVector[cnt-1-i]);
@@ -2325,8 +2331,8 @@ PRInt32 CNavDTD::CreateContextStackFor(eHTMLTags aChildTag){
  *  @param   
  *  @return  
  */
-PRInt32 CNavDTD::ReduceContextStackFor(eHTMLTags aChildTag){
-  PRInt32   result=kNoError;
+nsresult CNavDTD::ReduceContextStackFor(eHTMLTags aChildTag){
+  nsresult   result=NS_OK;
   eHTMLTags topTag=GetTopNode();
 
   while( (topTag!=kNotFound) && 
@@ -2347,8 +2353,9 @@ PRInt32 CNavDTD::ReduceContextStackFor(eHTMLTags aChildTag){
  * @param   aTag is the id of the html container being opened
  * @return  0 if all is well.
  */
-PRInt32 CNavDTD::UpdateStyleStackForOpenTag(eHTMLTags aTag,eHTMLTags anActualTag){
-  PRInt32   result=0;
+nsresult
+CNavDTD::UpdateStyleStackForOpenTag(eHTMLTags aTag,eHTMLTags anActualTag){
+  nsresult   result=0;
   
   switch (aTag) {
 
@@ -2394,8 +2401,9 @@ PRInt32 CNavDTD::UpdateStyleStackForOpenTag(eHTMLTags aTag,eHTMLTags anActualTag
  * @param 
  * @return  0 if all went well (which it always does)
  */
-PRInt32 CNavDTD::UpdateStyleStackForCloseTag(eHTMLTags aTag,eHTMLTags anActualTag){
-  PRInt32 result=0;
+nsresult
+CNavDTD::UpdateStyleStackForCloseTag(eHTMLTags aTag,eHTMLTags anActualTag){
+  nsresult result=0;
   
   if(mStyleStack.mCount>0) {
     switch (aTag) {
@@ -2452,18 +2460,19 @@ PRInt32 CNavDTD::UpdateStyleStackForCloseTag(eHTMLTags aTag,eHTMLTags anActualTa
  *  @param   aToken is the out arg holding our new token
  *  @return  error code (may return kInterrupted).
  */
-PRInt32 CNavDTD::ConsumeTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
+nsresult
+CNavDTD::ConsumeTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
 
   nsAutoString empty("");
-  PRInt32 result=aScanner.GetChar(aChar);
+  nsresult result=aScanner.GetChar(aChar);
 
-  if(kNoError==result) {
+  if(NS_OK==result) {
 
     switch(aChar) {
       case kForwardSlash:
         PRUnichar ch; 
         result=aScanner.Peek(ch);
-        if(kNoError==result) {
+        if(NS_OK==result) {
           if(nsString::IsAlpha(ch))
             aToken=new CEndToken(empty);
           else aToken=new CCommentToken(empty); //Special case: </ ...> is treated as a comment
@@ -2481,7 +2490,7 @@ PRInt32 CNavDTD::ConsumeTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) 
         }
     } //switch
 
-    if((0!=aToken) && (kNoError==result)) {
+    if((0!=aToken) && (NS_OK==result)) {
       result= aToken->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
       if(result) {
         delete aToken;
@@ -2501,13 +2510,14 @@ PRInt32 CNavDTD::ConsumeTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) 
  *  @param   aScanner: see nsScanner.h
  *  @return  
  */
-PRInt32 CNavDTD::ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,CStartToken* aToken) {
+nsresult
+CNavDTD::ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,CStartToken* aToken) {
   PRBool done=PR_FALSE;
-  PRInt32 result=kNoError;
+  nsresult result=NS_OK;
   nsAutoString as("");
   PRInt16 theAttrCount=0;
 
-  while((!done) && (result==kNoError)) {
+  while((!done) && (result==NS_OK)) {
     CAttributeToken* theToken= new CAttributeToken(as);
     if(theToken){
       result=theToken->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
@@ -2524,14 +2534,14 @@ PRInt32 CNavDTD::ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,CStartToke
         aToken->SetEmpty(PR_TRUE);
         delete theToken;
       }
-      else if(kNoError==result){
+      else if(NS_OK==result){
         theAttrCount++;
         mTokenDeque.Push(theToken);
       }//if
       else delete theToken; //we can't keep it...
     }//if
     
-    if(kNoError==result){
+    if(NS_OK==result){
       result=aScanner.Peek(aChar);
       if(aChar==kGreaterThan) { //you just ate the '>'
         aScanner.GetChar(aChar); //skip the '>'
@@ -2553,7 +2563,11 @@ PRInt32 CNavDTD::ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,CStartToke
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null
  */
-PRInt32 CNavDTD::ConsumeContentToEndTag(const nsString& aString,PRUnichar aChar,CScanner& aScanner,CToken*& aToken){
+nsresult
+CNavDTD::ConsumeContentToEndTag(const nsString& aString,
+                                PRUnichar aChar,
+                                CScanner& aScanner,
+                                CToken*& aToken){
   
   //In the case that we just read the given tag, we should go and
   //consume all the input until we find a matching end tag.
@@ -2575,22 +2589,23 @@ PRInt32 CNavDTD::ConsumeContentToEndTag(const nsString& aString,PRUnichar aChar,
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null 
  */
-PRInt32 CNavDTD::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
+nsresult
+CNavDTD::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
   PRInt32 theDequeSize=mTokenDeque.GetSize();
-  PRInt32 result=kNoError;
+  nsresult result=NS_OK;
 
   aToken=new CStartToken(nsAutoString(""));
   
   if(aToken) {
     result= aToken->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
-    if(kNoError==result) {
+    if(NS_OK==result) {
       if(((CStartToken*)aToken)->IsAttributed()) {
         result=ConsumeAttributes(aChar,aScanner,(CStartToken*)aToken);
       }
       //now that that's over with, we have one more problem to solve.
       //In the case that we just read a <SCRIPT> or <STYLE> tags, we should go and
       //consume all the content itself.
-      if(kNoError==result) {
+      if(NS_OK==result) {
         nsString& str=aToken->GetText();
         CToken*   skippedToken=0;
         if(str.EqualsIgnoreCase("SCRIPT") ||
@@ -2600,7 +2615,7 @@ PRInt32 CNavDTD::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aTo
 
           result=ConsumeContentToEndTag(str,aChar,aScanner,skippedToken);
     
-          if((kNoError==result) && skippedToken){
+          if((NS_OK==result) && skippedToken){
               //now we strip the ending sequence from our new SkippedContent token...
             PRInt32 slen=str.Length()+3;
             nsString& skippedText=skippedToken->GetText();
@@ -2623,7 +2638,7 @@ PRInt32 CNavDTD::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aTo
       //tag but ran out of data (not in the stream, but in this *part* of the stream.
       //For simplicity, we have to unwind our input. Therefore, we pop and discard
       //any new tokens we've cued this round. Later we can get smarter about this.
-      if(kNoError!=result) {
+      if(NS_OK!=result) {
         while(mTokenDeque.GetSize()>theDequeSize) {
           delete mTokenDeque.PopBack();
         }
@@ -2645,11 +2660,12 @@ PRInt32 CNavDTD::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aTo
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null 
  */
-PRInt32 CNavDTD::ConsumeEntity(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
+nsresult
+CNavDTD::ConsumeEntity(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
    PRUnichar  ch;
-   PRInt32 result=aScanner.GetChar(ch);
+   nsresult result=aScanner.GetChar(ch);
 
-   if(kNoError==result) {
+   if(NS_OK==result) {
      if(nsString::IsAlpha(ch)) { //handle common enity references &xxx; or &#000.
        aToken = new CEntityToken(nsAutoString(""));
        result = aToken->Consume(ch,aScanner);  //tell new token to finish consuming text...    
@@ -2677,9 +2693,12 @@ PRInt32 CNavDTD::ConsumeEntity(PRUnichar aChar,CScanner& aScanner,CToken*& aToke
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null 
  */
-PRInt32 CNavDTD::ConsumeWhitespace(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
+nsresult
+CNavDTD::ConsumeWhitespace(PRUnichar aChar,
+                           CScanner& aScanner,
+                           CToken*& aToken) {
   aToken = new CWhitespaceToken(nsAutoString(""));
-  PRInt32 result=kNoError;
+  nsresult result=NS_OK;
   if(aToken) {
      result=aToken->Consume(aChar,aScanner);
   }
@@ -2696,9 +2715,10 @@ PRInt32 CNavDTD::ConsumeWhitespace(PRUnichar aChar,CScanner& aScanner,CToken*& a
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null 
  */
-PRInt32 CNavDTD::ConsumeComment(PRUnichar aChar,CScanner& aScanner,CToken*& aToken){
+nsresult
+CNavDTD::ConsumeComment(PRUnichar aChar,CScanner& aScanner,CToken*& aToken){
   aToken = new CCommentToken(nsAutoString(""));
-  PRInt32 result=kNoError;
+  nsresult result=NS_OK;
   if(aToken) {
      result=aToken->Consume(aChar,aScanner);
   }
@@ -2715,9 +2735,11 @@ PRInt32 CNavDTD::ConsumeComment(PRUnichar aChar,CScanner& aScanner,CToken*& aTok
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null 
  */
-PRInt32 CNavDTD::ConsumeText(const nsString& aString,CScanner& aScanner,CToken*& aToken){
-
-  PRInt32 result=kNoError;
+nsresult
+CNavDTD::ConsumeText(const nsString& aString,
+                     CScanner& aScanner,
+                     CToken*& aToken){
+  nsresult result=NS_OK;
   if(aToken=new CTextToken(aString)) {
     PRUnichar ch=0;
     result=aToken->Consume(ch,aScanner);
@@ -2734,9 +2756,12 @@ PRInt32 CNavDTD::ConsumeText(const nsString& aString,CScanner& aScanner,CToken*&
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null 
  */
-PRInt32 CNavDTD::ConsumeNewline(PRUnichar aChar,CScanner& aScanner,CToken*& aToken){
+nsresult
+CNavDTD::ConsumeNewline(PRUnichar aChar,
+                        CScanner& aScanner,
+                        CToken*& aToken){
   aToken=new CNewlineToken(nsAutoString(""));
-  PRInt32 result=kNoError;
+  nsresult result=NS_OK;
   if(aToken) {
     result=aToken->Consume(aChar,aScanner);
   }
@@ -2755,17 +2780,16 @@ PRInt32 CNavDTD::ConsumeNewline(PRUnichar aChar,CScanner& aScanner,CToken*& aTok
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null 
  */
-PRInt32 CNavDTD::ConsumeToken(CToken*& aToken){
-  
+nsresult CNavDTD::ConsumeToken(CToken*& aToken){
   aToken=0;
   if(mTokenDeque.GetSize()>0) {
     aToken=(CToken*)mTokenDeque.Pop();
-    return kNoError;
+    return NS_OK;
   }
 
-  PRInt32   result=kNoError;
+  nsresult   result=NS_OK;
   CScanner* theScanner=mParser->GetScanner();
-  if(kNoError==result){
+  if(NS_OK==result){
     
     PRUnichar theChar;
     result=theScanner->GetChar(theChar);
@@ -2777,7 +2801,7 @@ PRInt32 CNavDTD::ConsumeToken(CToken*& aToken){
         theScanner->RewindToMark();
         break; 
 
-      case kNoError:
+      case NS_OK:
       default:
         switch(theChar) {
           case kLessThan:
@@ -2801,7 +2825,7 @@ PRInt32 CNavDTD::ConsumeToken(CToken*& aToken){
         } //switch
         break; 
     } //switch
-    if(kNoError==result)
+    if(NS_OK==result)
       result=theScanner->Eof();
   } //while
   return result;
@@ -2824,11 +2848,12 @@ CToken* CNavDTD::CreateTokenOfType(eHTMLTokenTypes aType) {
  * @param 
  * @return
  */
-void CNavDTD::WillResumeParse(void){
+nsresult CNavDTD::WillResumeParse(void){
+  nsresult result = NS_OK;
   if(mSink) {
-    mSink->WillResume();
+    result = mSink->WillResume();
   }
-  return;
+  return result;
 }
 
 /**
@@ -2837,11 +2862,12 @@ void CNavDTD::WillResumeParse(void){
  * @param 
  * @return
  */
-void CNavDTD::WillInterruptParse(void){
+nsresult CNavDTD::WillInterruptParse(void){
+  nsresult result = NS_OK;
   if(mSink) {
-    mSink->WillInterrupt();
+    result = mSink->WillInterrupt();
   }
-  return;
+  return result;
 }
 
 

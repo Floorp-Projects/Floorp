@@ -15,6 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#ifndef nsIDTD_h___
+#define nsIDTD_h___
 
 /**
  * MODULE NOTES:
@@ -22,18 +24,12 @@
  * 
  *         
  */
-
-#ifndef NS_IDTD__
-#define NS_IDTD__
-
 #include "nshtmlpars.h"
 #include "nsISupports.h"
 #include "prtypes.h"
 
-#define NS_IDTD_IID      \
-  {0x75634940, 0xcfdc,  0x11d1,  \
-  {0xaa, 0xda, 0x00,    0x80, 0x5f, 0x8a, 0x3e, 0x14}}
-
+#define NS_IDTD_IID \
+ { 0xa6cf9053, 0x15b3, 0x11d2,{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
 
 class nsIParser;
 class CToken;
@@ -44,20 +40,7 @@ class nsString;
 
 enum eAutoDetectResult {eUnknownDetect, eValidDetect, eInvalidDetect};
 
-// XXX: Disable warning message about nsISupports not being exported. I *believe* this
-// to be a harmless warning message on windows, a better fix would be to export
-// the nsISupports interface.
-
-#if defined(XP_PC)
-#pragma warning( disable : 4275 )  
-#endif
-
-CLASS_EXPORT_HTMLPARS nsIDTD : public nsISupports {
-
-#if defined(XP_PC)
-#pragma warning( default : 4275 )
-#endif
-           
+class nsIDTD : public nsISupports {
   public:
 
     /**
@@ -112,7 +95,7 @@ CLASS_EXPORT_HTMLPARS nsIDTD : public nsISupports {
      * @param 
      * @return
      */
-    virtual PRInt32 WillBuildModel(nsString& aFilename)=0;
+    NS_IMETHOD WillBuildModel(nsString& aFilename)=0;
 
     /**
      * 
@@ -120,27 +103,22 @@ CLASS_EXPORT_HTMLPARS nsIDTD : public nsISupports {
      * @param 
      * @return
      */
-    virtual PRInt32 DidBuildModel(PRInt32 anErrorCode)=0;
+    NS_IMETHOD DidBuildModel(PRInt32 anErrorCode)=0;
     
     /**
      *  
      *  @update  gess 3/25/98
      *  @param   aToken -- token object to be put into content model
-     *  @return  0 if all is well; non-zero is an error
      */
-    virtual PRInt32 HandleToken(CToken* aToken)=0;
-
+    NS_IMETHOD HandleToken(CToken* aToken)=0;
 
     /**
      *  Cause the tokenizer to consume the next token, and 
      *  return an error result.
      *  
      *  @update  gess 3/25/98
-     *  @param   anError -- ref to error code
-     *  @return  new token or null
      */
-    virtual PRInt32 ConsumeToken(CToken*& aToken)=0;
-
+    NS_IMETHOD ConsumeToken(CToken*& aToken)=0;
 
     /**
      * 
@@ -148,7 +126,7 @@ CLASS_EXPORT_HTMLPARS nsIDTD : public nsISupports {
      * @param 
      * @return
      */
-    virtual void WillResumeParse(void)=0;
+    NS_IMETHOD WillResumeParse(void)=0;
 
     /**
      * 
@@ -156,7 +134,7 @@ CLASS_EXPORT_HTMLPARS nsIDTD : public nsISupports {
      * @param 
      * @return
      */
-    virtual void WillInterruptParse(void)=0;
+    NS_IMETHOD WillInterruptParse(void)=0;
 
     /**
      *  This method is called to determine whether or not a tag
@@ -169,7 +147,6 @@ CLASS_EXPORT_HTMLPARS nsIDTD : public nsISupports {
      */
     virtual PRBool CanContain(PRInt32 aParent,PRInt32 aChild)=0;
 
-
     /**
      * 
      * @update	jevering6/23/98
@@ -179,8 +156,4 @@ CLASS_EXPORT_HTMLPARS nsIDTD : public nsISupports {
 	  virtual void SetDTDDebug(nsIDTDDebug * aDTDDebug) = 0;
 };
 
-
-#endif 
-
-
-
+#endif /* nsIDTD_h___ */

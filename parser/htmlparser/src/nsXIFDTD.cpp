@@ -397,8 +397,8 @@ eAutoDetectResult nsXIFDTD::AutoDetectContentType(nsString& aBuffer,nsString& aT
  * @param 
  * @return
  */
-PRInt32 nsXIFDTD::WillBuildModel(nsString& aFileName){
-  PRInt32 result=0;
+nsresult nsXIFDTD::WillBuildModel(nsString& aFileName){
+  nsresult result=NS_OK;
 
   if(mSink)
   {
@@ -422,12 +422,12 @@ PRInt32 nsXIFDTD::WillBuildModel(nsString& aFileName){
  * @param 
  * @return
  */
-PRInt32 nsXIFDTD::DidBuildModel(PRInt32 anErrorCode){
-  PRInt32 result=0;
+nsresult nsXIFDTD::DidBuildModel(PRInt32 anErrorCode){
+  nsresult result=NS_OK;
 
   if(mSink) 
   {
-    mSink->DidBuildModel(anErrorCode);
+    result = mSink->DidBuildModel(anErrorCode);
     
     if (mOut != nsnull)
     {
@@ -452,8 +452,8 @@ PRInt32 nsXIFDTD::DidBuildModel(PRInt32 anErrorCode){
  *  @param   aParser
  *  @return  
  */
-PRInt32 nsXIFDTD::HandleToken(CToken* aToken){
-  PRInt32 result=0;
+nsresult nsXIFDTD::HandleToken(CToken* aToken){
+  nsresult result=NS_OK;
 
   if(aToken) {
     CHTMLToken*     theToken= (CHTMLToken*)(aToken);
@@ -1621,7 +1621,7 @@ PRInt32 nsXIFDTD::ConsumeNewline(PRUnichar aChar,CScanner& aScanner,CToken*& aTo
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null 
  */
-PRInt32 nsXIFDTD::ConsumeToken(CToken*& aToken){
+nsresult nsXIFDTD::ConsumeToken(CToken*& aToken){
   
   aToken=0;
   if(mTokenDeque.GetSize()>0) {
@@ -1629,9 +1629,9 @@ PRInt32 nsXIFDTD::ConsumeToken(CToken*& aToken){
     return kNoError;
   }
 
-  PRInt32   result=kNoError;
+  nsresult   result=NS_OK;
   CScanner* theScanner=mParser->GetScanner();
-  if(kNoError==result){
+  if(NS_OK==result){
     
     PRUnichar aChar;
     result=theScanner->GetChar(aChar);
@@ -1643,7 +1643,7 @@ PRInt32 nsXIFDTD::ConsumeToken(CToken*& aToken){
         theScanner->RewindToMark();
         break; 
 
-      case kNoError:
+      case NS_OK:
       default:
         switch(aChar) {
           case kLessThan:
@@ -1668,7 +1668,7 @@ PRInt32 nsXIFDTD::ConsumeToken(CToken*& aToken){
         } //switch
         break; 
     } //switch
-    if(kNoError==result)
+    if(NS_OK==result)
       result=theScanner->Eof();
   } //while
   return result;
@@ -1691,11 +1691,12 @@ CToken* nsXIFDTD::CreateTokenOfType(eHTMLTokenTypes aType) {
  * @param 
  * @return
  */
-void nsXIFDTD::WillResumeParse(void){
+nsresult nsXIFDTD::WillResumeParse(void){
+  nsresult result = NS_OK;
   if(mSink) {
-    mSink->WillResume();
+    result = mSink->WillResume();
   }
-  return;
+  return result;
 }
 
 /**
@@ -1704,11 +1705,12 @@ void nsXIFDTD::WillResumeParse(void){
  * @param 
  * @return
  */
-void nsXIFDTD::WillInterruptParse(void){
+nsresult nsXIFDTD::WillInterruptParse(void){
+  nsresult result = NS_OK;
   if(mSink) {
-    mSink->WillInterrupt();
+    result = mSink->WillInterrupt();
   }
-  return;
+  return result;
 }
 
 
