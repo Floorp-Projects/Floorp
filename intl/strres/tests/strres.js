@@ -53,5 +53,5 @@ function srGetStrBundleWithLocale(path, locale)
 function srGetStrBundle(path)
 {
   var appLocale = srGetAppLocale();
-  return srGetStrBundleWithLocale(path, null);
+  return srGetStrBundleWithLocale(path, appLocale);
 }
