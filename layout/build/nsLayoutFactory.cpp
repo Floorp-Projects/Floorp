@@ -54,6 +54,11 @@
 #include "nsCSSAtoms.h"  // to addref/release table
 #include "nsColorNames.h"  // to addref/release table
 
+#ifdef INCLUDE_XUL
+#include "nsXULAtoms.h"
+#endif
+#include "nsLayoutAtoms.h"
+
 class nsIDocumentLoaderFactory;
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
@@ -137,6 +142,10 @@ nsLayoutFactory::nsLayoutFactory(const nsCID &aClass)
   nsCSSKeywords::AddRefTable();
   nsCSSProps::AddRefTable();
   nsColorNames::AddRefTable();
+  nsHTMLAtoms::AddRefAtoms();
+#ifdef INCLUDE_XUL
+  nsXULAtoms::AddRefAtoms();
+#endif
 }   
 
 nsLayoutFactory::~nsLayoutFactory()   
@@ -146,6 +155,10 @@ nsLayoutFactory::~nsLayoutFactory()
   nsCSSProps::ReleaseTable();
   nsCSSKeywords::ReleaseTable();
   nsCSSAtoms::ReleaseAtoms();
+  nsHTMLAtoms::ReleaseAtoms();
+#ifdef INCLUDE_XUL
+  nsXULAtoms::ReleaseAtoms();
+#endif
 }   
 
 nsresult
