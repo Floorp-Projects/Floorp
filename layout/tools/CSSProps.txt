@@ -59,6 +59,7 @@ margin-bottom
 margin-left
 margin-right
 margin-top
+opacity
 overflow
 padding
 padding-bottom
