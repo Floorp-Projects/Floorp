@@ -683,8 +683,11 @@ public class Context {
     public ScriptableObject initStandardObjects(ScriptableObject scope,
                                                 boolean sealed)
     {
-        if (scope == null)
-            scope = new NativeObject();
+        if (scope == null) {
+            scope = new GlobalScope();
+        } else if (!(scope instanceof GlobalScope)) {
+            GlobalScope.embed(scope);
+        }
 
         BaseFunction.init(this, scope, sealed);
         NativeObject.init(this, scope, sealed);
@@ -1472,31 +1475,13 @@ public class Context {
     }
 
     /**
-     * Set whether to cache some values statically.
-     * <p>
-     * By default, the engine will cache some values statically
-     * (reflected Java classes, for instance). This can speed
-     * execution dramatically, but increases the memory footprint.
-     * Also, with caching enabled, references may be held to
-     * objects past the lifetime of any real usage.
-     * <p>
-     * If caching is enabled and this method is called with a
-     * <code>false</code> argument, the caches will be emptied.
-     * So one strategy could be to clear the caches at times
-     * appropriate to the application.
-     * <p>
-     * Caching is enabled by default.
-     *
-     * @param cachingEnabled if true, caching is enabled
-     * @since 1.5 Release 1
+     * @deprecated To enable/disable caching for a particular top scope,
+     * use {@link GlobalScope#get(Scriptable)} and
+     * {@link GlobalScope#setCachingEnabled(boolean)}.
+     * The function is kept only for compatibility and does nothing.
      */
-    public static void setCachingEnabled(boolean cachingEnabled) {
-        if (isCachingEnabled && !cachingEnabled) {
-            // Caching is being turned off. Empty caches.
-            JavaMembers.classTable = new Hashtable();
-        }
-        isCachingEnabled = cachingEnabled;
-        FunctionObject.setCachingEnabled(cachingEnabled);
+    public static void setCachingEnabled(boolean cachingEnabled)
+    {
     }
 
     // Proxy to allow to use deprecated WrapHandler in place of WrapFactory
@@ -2114,8 +2099,6 @@ public class Context {
     }
 
     static final boolean check = true;
-
-    static boolean isCachingEnabled = true;
 
     private static Hashtable threadContexts = new Hashtable(11);
     private static Object threadLocalCx;

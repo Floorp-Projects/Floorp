@@ -593,7 +593,8 @@ class JavaMembers
                                    Class staticType)
     {
         JavaMembers members;
-        Hashtable ct = classTable;  // use local reference to avoid synchronize
+        GlobalScope global = GlobalScope.get(scope);
+        Hashtable ct = global.classTable;
 
         Class cl = dynamicType;
         for (;;) {
@@ -627,7 +628,7 @@ class JavaMembers
             }
         }
 
-        if (Context.isCachingEnabled)
+        if (global.isCachingEnabled)
             ct.put(cl, members);
         return members;
     }
@@ -637,8 +638,6 @@ class JavaMembers
         return Context.reportRuntimeError2(
             "msg.java.member.not.found", cl.getName(), memberName);
     }
-
-    static Hashtable classTable = new Hashtable();
 
     private Class cl;
     private Hashtable members;

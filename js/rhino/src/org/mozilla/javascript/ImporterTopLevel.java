@@ -70,7 +70,7 @@ import java.io.Serializable;
  *
  * @author Norris Boyd
  */
-public class ImporterTopLevel extends ScriptableObject {
+public class ImporterTopLevel extends GlobalScope {
 
     /**
      * @deprecated
@@ -90,10 +90,6 @@ public class ImporterTopLevel extends ScriptableObject {
 
     private void init() {
         ImporterFunctions.setup(this);
-    }
-
-    public String getClassName() {
-        return "global";
     }
 
     public boolean has(String name, Scriptable start) {

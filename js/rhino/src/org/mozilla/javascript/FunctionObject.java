@@ -182,15 +182,25 @@ public class FunctionObject extends BaseFunction
         ScriptRuntime.setFunctionProtoAndParent(scope, this);
 
         if (method != null) {
-            Invoker master = invokerMaster;
-            if (master != null) {
-                Context cx = Context.getContext();
-                try {
-                    invoker = master.createInvoker(cx, method, types);
-                } catch (SecurityException ex) {
-                    // Ignore invoker optimization in case of SecurityException
-                    // which can be the case if class loader creation is
-                    // disabled.
+            GlobalScope global = GlobalScope.get(scope);
+            if (global.invokerOptimization) {
+                Invoker master = (Invoker)global.invokerMaster;
+                if (master == null) {
+                    master = newInvokerMaster();
+                    if (master == null) {
+                        global.invokerOptimization = false;
+                    }
+                    global.invokerMaster = master;
+                }
+                if (master != null) {
+                    Context cx = Context.getContext();
+                    try {
+                        invoker = master.createInvoker(cx, method, types);
+                    } catch (SecurityException ex) {
+                        // Ignore invoker optimization in case of
+                        // SecurityException which can be the case if class
+                        // loader creation is disabled.
+                    }
                 }
             }
         }
@@ -492,14 +502,6 @@ public class FunctionObject extends BaseFunction
         return parmsLength == VARARGS_CTOR;
     }
 
-    static void setCachingEnabled(boolean enabled) {
-        if (!enabled) {
-            invokerMaster = null;
-        } else if (invokerMaster == null) {
-            invokerMaster = newInvokerMaster();
-        }
-    }
-
     private void writeObject(ObjectOutputStream out)
         throws IOException
     {
@@ -642,8 +644,6 @@ public class FunctionObject extends BaseFunction
 
     private static final String
         INVOKER_MASTER_CLASS = "org.mozilla.javascript.optimizer.InvokerImpl";
-
-    static Invoker invokerMaster = newInvokerMaster();
 
     private static final short VARARGS_METHOD = -1;
     private static final short VARARGS_CTOR =   -2;
