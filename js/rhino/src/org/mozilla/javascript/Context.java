@@ -1488,6 +1488,39 @@ public final class Context {
         this.debugLevel = (byte) debugLevel;
         return result;
     }
+    
+    /**
+     * Get a value corresponding to a key.
+     * <p>
+     * Since the Context is associated with a thread it can be 
+     * used to maintain values that can be later retrieved using 
+     * the current thread. 
+     * <p>
+     * Note that the values are maintained with the Context, so
+     * if the Context is disassociated from the thread the values
+     * cannot be retreived. Also, if private data is to be maintained
+     * in this manner the key should be a java.lang.Object 
+     * whose reference is not divulged to untrusted code.
+     * @param key the key used to lookup the value
+     * @return a value previously stored using putThreadLocal.
+     */
+    public Object getThreadLocal(Object key) {
+        if (hashtable == null)
+            return null;
+        return hashtable.get(key);
+    }
+
+    /**
+     * Put a value that can later be retrieved using a given key.
+     * <p>
+     * @param key the key used to index the value
+     * @param value the value to save
+     */
+    public void putThreadLocal(Object key, Object value) {
+        if (hashtable == null)
+            hashtable = new Hashtable();
+        hashtable.put(key, value);
+    }
 
     /********** end of API **********/
 
@@ -1800,5 +1833,6 @@ public final class Context {
     private byte debugLevel;
     private int enterCount;
     private ListenerCollection listeners;
+    private Hashtable hashtable;
 }
 
