@@ -174,7 +174,6 @@ private:
   // destrucor of this class is private.
 
   nsDOMEventRTTearoff(nsIContent *aContent);
-  virtual ~nsDOMEventRTTearoff();
 
   static nsDOMEventRTTearoff *mCachedEventTearoff[NS_EVENT_TEAROFF_CACHE_SIZE];
   static PRUint32 mCachedEventTearoffCount;
@@ -187,6 +186,8 @@ private:
   nsresult GetEventReceiver(nsIDOMEventReceiver **aReceiver);
 
 public:
+  virtual ~nsDOMEventRTTearoff();
+
   // Use this static method to create instances of this tearoff class.
   static nsDOMEventRTTearoff *Create(nsIContent *aContent);
 
