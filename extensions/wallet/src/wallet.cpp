@@ -1652,14 +1652,17 @@ wallet_ReadKeyFile(PRBool useDefaultKey) {
       return PR_FALSE;
     }
   }
-  if (Wallet_UTF8Get(strm) != ((key.CharAt(0))^Wallet_GetKey(saveCountK, writeCount++))
-      || strm.eof()) {
-    strm.close();
-    Wallet_InitKeySet(PR_FALSE);
-    key = nsAutoString("");
-    keyCancel = PR_FALSE;
-    return PR_FALSE;
+  if (key.Length() != 0) {
+    if (Wallet_UTF8Get(strm) != ((key.CharAt(0))^Wallet_GetKey(saveCountK, writeCount++))
+        || strm.eof()) {
+      strm.close();
+      Wallet_InitKeySet(PR_FALSE);
+      key = nsAutoString("");
+      keyCancel = PR_FALSE;
+      return PR_FALSE;
+    }
   }
+
   Wallet_UTF8Get(strm); /* to get past the end of the file so eof() will get set */
   PRBool rv = strm.eof();
   strm.close();
@@ -1670,7 +1673,7 @@ wallet_ReadKeyFile(PRBool useDefaultKey) {
   } else {
     Wallet_InitKeySet(PR_FALSE);
     key = nsAutoString("");
-    keyCancel = PR_TRUE;
+    keyCancel = PR_FALSE;
     return PR_FALSE;
   }
 }
