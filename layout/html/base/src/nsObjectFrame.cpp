@@ -1275,7 +1275,7 @@ nsObjectFrame::InstantiatePlugin(nsIPresContext* aPresContext,
                                    nsnull, //extra
                                    &shouldLoad);
     if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
-      return NS_CONTENT_BLOCKED_SHOW_ALT;
+      return NS_ERROR_CONTENT_BLOCKED_SHOW_ALT;
     }
   }
 
