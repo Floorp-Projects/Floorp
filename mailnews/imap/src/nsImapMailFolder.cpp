@@ -454,26 +454,48 @@ NS_IMETHODIMP nsImapMailFolder::CreateSubfolder(const char *folderName)
 	nsresult rv = NS_OK;
     
 	nsFileSpec path;
-    nsCOMPtr<nsIMsgFolder> child;
 	//Get a directory based on our current path.
+	rv = GetPathName(path);
+	if(NS_FAILED(rv))
+		return rv;
+
 	rv = CreateDirectoryForFolder(path);
 	if(NS_FAILED(rv))
 		return rv;
 
     nsAutoString leafName = folderName;
     nsString folderNameStr;
-    PRInt32 folderStart = leafName.RFind('/');
+    nsString parentName = leafName;
+    PRInt32 folderStart = leafName.Find('/');
     if (folderStart > 0)
-        leafName.Right(folderNameStr, leafName.Length() - folderStart -1);
-    else
-        folderNameStr = leafName;
+    {
+        NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+        nsCOMPtr<nsIRDFResource> res;
+        nsCOMPtr<nsIMsgFolder> parentFolder;
+        nsAutoString uri (mURI);
+        parentName.Right(leafName, leafName.Length() - folderStart - 1);
+        parentName.Truncate(folderStart);
+        path += parentName;
+        rv = CreateDirectoryForFolder(path);
+        if (NS_FAILED(rv)) return rv;
+        uri.Append('/');
+        uri.Append(parentName);
+        rv = rdf->GetResource((const char *) nsAutoCString(uri),
+                              getter_AddRefs(res));
+        if (NS_FAILED(rv)) return rv;
+        parentFolder = do_QueryInterface(res, &rv);
+        if (NS_FAILED(rv)) return rv;
+        return parentFolder->CreateSubfolder((const char*)
+                                             nsAutoCString(leafName));
+    }
     
-	//Now we have a valid directory or we have returned.
-	//Make sure the new folder name is valid
-	path += folderNameStr;
-   
+    folderNameStr = leafName;
+    
+    path += folderNameStr;
+
 	// Create an empty database for this mail folder, set its name from the user  
 	nsCOMPtr<nsIMsgDatabase> mailDBFactory;
+    nsCOMPtr<nsIMsgFolder> child;
 
 	rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), (void **) getter_AddRefs(mailDBFactory));
 	if (NS_SUCCEEDED(rv) && mailDBFactory)
@@ -493,7 +515,8 @@ NS_IMETHODIMP nsImapMailFolder::CreateSubfolder(const char *folderName)
 			}
 
 			//Now let's create the actual new folder
-			rv = AddSubfolder(folderNameStr, getter_AddRefs(child));
+			rv = AddSubfolder(folderNameStr,
+                                            getter_AddRefs(child));
             unusedDB->SetSummaryValid(PR_TRUE);
 			unusedDB->Commit(kLargeCommit);
             unusedDB->Close(PR_TRUE);
@@ -2030,10 +2053,6 @@ nsresult
 nsImapMailFolder::CreateDirectoryForFolder(nsFileSpec &path) //** dup
 {
 	nsresult rv = NS_OK;
-
-	rv = GetPathName(path);
-	if(NS_FAILED(rv))
-		return rv;
 
 	if(!path.IsDirectory())
 	{
