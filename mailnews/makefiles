@@ -29,6 +29,8 @@ mailnews/local/tests/mailbox/Makefile
 mailnews/imap/Makefile
 mailnews/imap/public/Makefile
 mailnews/imap/src/Makefile
+mailnews/imap/tests/Makefile
+mailnews/imap/tests/harness/Makefile
 mailnews/news/Makefile
 mailnews/news/public/Makefile
 mailnews/news/src/Makefile
