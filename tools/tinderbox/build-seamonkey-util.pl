@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
-$::UtilsVersion = '$Revision: 1.219 $ ';
+$::UtilsVersion = '$Revision: 1.220 $ ';
 
 package TinderUtils;
 
@@ -1940,7 +1940,7 @@ sub CodesizeTest {
     $bash_cmd = $type . "summary.win.bash";
   } else {
     # Assume Linux for non-windows for now.
-    $bash_cmd = $type . "summary.linux.bash";
+    $bash_cmd = $type . "summary.unix.bash";
   }
   
   my $test_result =
