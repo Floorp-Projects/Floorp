@@ -64,6 +64,7 @@ DWORD           dwScreenY;
 
 DWORD           dwTempSetupType;
 DWORD           gdwUpgradeValue;
+DWORD           gdwSiteSelectorStatus;
 
 BOOL            bSDUserCanceled;
 BOOL            bIdiArchivesExists;

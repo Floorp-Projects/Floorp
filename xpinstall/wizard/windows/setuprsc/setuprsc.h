@@ -7,11 +7,14 @@
 #endif
 #include "winresrc.h"
 #define IDS_ERROR_FILE_NOT_FOUND        3
+#define IDRESUME                        3
+#define IDPAUSE                         4
 #define IDS_MSG_RETRIEVE_INSTALLINI     11
 #define IDI_ICON1                       105
 #define IDI_SETUP                       105
 #define IDB_BITMAP_WELCOME              108
 #define DLG_MESSAGE                     110
+#define IDB_BITMAP_DOWNLOAD_LOGO        114
 #define DLG_BROWSE_DIR                  503
 #define IDC_STATUS                      1001
 #define IDC_STATUS1                     1001
@@ -22,6 +25,7 @@
 #define ID_IGNORE                       1002
 #define IDC_STATUS2                     1003
 #define IDC_STATUS_URL2                 1003
+#define IDC_STATUS_TO                   1003
 #define IDC_STATUS0                     1004
 #define IDC_STATUS3                     1005
 #define ID_YES_TO_ALL                   1005
@@ -53,6 +57,7 @@
 #define IDC_STATIC2                     1035
 #define IDC_STATIC3                     1036
 #define IDC_STATIC4                     1037
+#define IDC_PERCENTAGE                  1038
 #define IDC_MESSAGE1                    1040
 #define IDC_PICT0                       1041
 #define IDC_MESSAGE0                    1042
@@ -126,7 +131,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
-#define _APS_NEXT_RESOURCE_VALUE        113
+#define _APS_NEXT_RESOURCE_VALUE        115
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1074
 #define _APS_NEXT_SYMED_VALUE           101

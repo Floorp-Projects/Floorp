@@ -40,7 +40,6 @@ HRESULT           NS_LoadString(HANDLE hInstance, DWORD dwID, LPSTR szStringBuf,
 HRESULT           WinSpawn(LPSTR szClientName, LPSTR szParameters, LPSTR szCurrentDir, int iShowCmd, BOOL bWait);
 HRESULT           ParseConfigIni(LPSTR lpszCmdLine);
 HRESULT           ParseInstallIni();
-HFONT             myGetSysFont();
 HRESULT           DecryptString(LPSTR szOutputStr, LPSTR szInputStr);
 HRESULT           DecryptVariable(LPSTR szVariable, DWORD dwVariableSize);
 HRESULT           InitSetupGeneral(void);
@@ -198,6 +197,11 @@ int               UpdateIdiFile(char  *szPartialUrl,
                                 char  *szSection,
                                 char  *szKey,
                                 char  *szFileIdiGetArchives);
+void              SetDownloadFile(void);
+void              UnsetSetupCurrentDownloadFile(void);
+void              SetSetupCurrentDownloadFile(char *szCurrentFilename);
+char              *GetSetupCurrentDownloadFile(char *szCurrentDownloadFile,
+                                       DWORD dwCurrentDownloadFileBufSize);
 
 #endif /* _EXTRA_H_ */
 

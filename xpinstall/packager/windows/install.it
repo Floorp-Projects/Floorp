@@ -15,9 +15,10 @@ PASSWORD=Password:
 SELECTDIRECTORY=Select a directory
 DIRECTORIES_=&Directories:
 DRIVES_=Dri&ves:
-STATUS=Status:
+STATUS=Remaining:
 FILE=File:
-URL=Url:
+URL=From URL:
+TO=To Path:
 ACCEPT_=&Accept
 NO_=&No
 PROGRAMFOLDER_=&Program Folder:
@@ -36,6 +37,8 @@ CURRENTSETTINGS=Current Settings:
 INSTALL_=&Install
 DELETE_=&Delete
 README=Re&ad Me
+PAUSE_=&Pause
+RESUME_=&Resume
 
 EXTRACTING=Extracting...
 

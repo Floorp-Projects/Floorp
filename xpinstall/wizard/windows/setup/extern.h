@@ -62,6 +62,7 @@ extern DWORD            dwSetupType;
 
 extern DWORD            dwTempSetupType;
 extern DWORD            gdwUpgradeValue;
+extern DWORD            gdwSiteSelectorStatus;
 
 extern BOOL             bSDUserCanceled;
 extern BOOL             bIdiArchivesExists;
