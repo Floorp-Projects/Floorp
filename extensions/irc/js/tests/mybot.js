@@ -22,6 +22,10 @@
  *
  */
 
+if (typeof escape == "undefined")
+    escape = unescape = function (s) {return s;}
+
+
 function runMyBot()
 {
     load ("ircbot.js");
