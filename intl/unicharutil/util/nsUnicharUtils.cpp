@@ -114,6 +114,9 @@ CaseInsensitiveFindInReadable( const nsAString& aPattern, nsAString::const_itera
 int
 nsCaseInsensitiveStringComparator::operator()( const PRUnichar* lhs, const PRUnichar* rhs, PRUint32 aLength ) const
   {
-    return 0; //nsCRT::strncasecmp(lhs, rhs, aLength);
+      NS_InitCaseConversion();
+      PRInt32 result;
+      gCaseConv->CaseCompare(lhs, rhs, aLength, &result);
+      return result;
   }
 
