@@ -15,32 +15,44 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#include "Scribble.h"
 
-#ifdef XP_PC
+#ifndef nsIAppShell_h__
+#define nsIAppShell_h__
 
-#include <windows.h>
+#include "nsString.h"
 
-int WINAPI WinMain(HINSTANCE hInstance, 
-                     HINSTANCE hPrevInstance, 
-                     LPSTR lpszCmdLine, 
-                     int nCmdShow) 
+#define NS_IAPPSHELL_IID \
+{ 0xa0757c31, 0xeeac, 0x11d1, { 0x9e, 0xc1, 0x0, 0xaa, 0x0, 0x2f, 0xb8, 0x21 } };
+
+/**
+ * Application shell used for Test applications
+ */
+
+class nsIAppShell : public nsISupports 
 {
-    CreateApplication();
 
-    // Process messages
-    MSG msg;
-    while (GetMessage(&msg, NULL, 0, 0)) {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-    }
-    return msg.wParam;
-}
+public:
 
-void main(int argc, char **argv)
-{
-    WinMain(GetModuleHandle(NULL), NULL, 0, SW_SHOW);
-}
+ /**
+  * Creates an application shell
+  */ 
 
-#endif
+  virtual void Create() = 0;
+
+ /**
+  * Enter an event loop.
+  * Don't leave until application exits.
+  */
+  
+  virtual nsresult Run() = 0;
+
+  /**
+   * Exit the handle event loop
+   */
+
+  virtual void Exit() = 0;
+
+};
+
+#endif // nsIAppShell_h__
 

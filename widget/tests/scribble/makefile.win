@@ -15,18 +15,37 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH=..\..
+DEPTH=..\..\..
 IGNORE_MANIFEST=1
 
-DEFINES=-D_IMPL_NS_UI 
-MODULE=raptor 
 
-EXPORTS=nsui.h nsIWidget.h nsIButton.h nsICheckButton.h nsIListWidget.h \
-    nsIComboBox.h nsITextWidget.h nsITextAreaWidget.h nsIComboBox.h \
-    nsIListBox.h nsIFileWidget.h nsIScrollbar.h nsGUIEvent.h \
-    nsIRadioButton.h nsIRadioGroup.h nsIMouseListener.h \
-    nsIEventListener.h nsIToolkit.h nsWidgetsCID.h nsITabWidget.h \
-    nsITooltipWidget.h nsIAppShell.h
+MAKE_OBJ_TYPE   = EXE
+PROGRAM = .\$(OBJDIR)\scribble.exe
+#RESFILE = scribble.res
+
+OBJS =                                  \
+	.\$(OBJDIR)\main.obj            \
+	.\$(OBJDIR)\Scribble.obj        \
+	$(NULL)
+
+LINCS=-I$(PUBLIC)\raptor -I$(PUBLIC)\xpcom 
+
+MYLIBS=				\
+ $(DIST)\lib\xpcom32.lib	\
+ $(LIBNSPR)			\
+ $(DIST)\lib\raptorbase.lib	\
+ $(DIST)\lib\raptorgfx.lib	\
+ $(NULL)
+
+LLIBS= $(MYLIBS)		\
+ -SUBSYSTEM:CONSOLE 
 
 include <$(DEPTH)\config\rules.mak>
 
+install:: $(PROGRAM)
+	$(MAKE_INSTALL) $(PROGRAM) $(DIST)\bin
+
+clobber::
+	rm -f $(DIST)\bin\scribble.exe
+
+$(PROGRAM):: $(OBJS) $(MYLIBS)

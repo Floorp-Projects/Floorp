@@ -23,6 +23,7 @@ PROGRAM = .\$(OBJDIR)\widget.exe
 
 OBJS =  \
 	.\$(OBJDIR)\winmain.obj         \
+	..\$(OBJDIR)\nsWidgetTest.obj    \
 	$(NULL)
 
 LINCS=-I$(PUBLIC)\raptor \

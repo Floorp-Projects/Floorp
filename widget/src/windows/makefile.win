@@ -50,6 +50,7 @@ OBJS =                                   \
 	.\$(OBJDIR)\nsScrollbar.obj      \
 	.\$(OBJDIR)\nsTabWidget.obj      \
     .\$(OBJDIR)\nsTooltipWidget.obj  \
+	.\$(OBJDIR)\nsAppShell.obj  \
 	$(NULL)
 
 LINCS=                                  \

@@ -38,10 +38,12 @@
 #include "nsTransform2D.h"
 #include "nsGfxCIID.h"
 #include "nsWidgetsCID.h"
+#include "nsIAppShell.h"
 
 ScribbleApp scribbleData;
 
-
+static NS_DEFINE_IID(kCAppShellCID, NS_APPSHELL_CID);
+static NS_DEFINE_IID(kIAppShellIID, NS_IAPPSHELL_IID);
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 static NS_DEFINE_IID(kIButtonIID, NS_IBUTTON_IID);
 static NS_DEFINE_IID(kIScrollbarIID, NS_ISCROLLBAR_IID);
@@ -353,7 +355,7 @@ nsEventStatus PR_CALLBACK HandleEventText(nsGUIEvent *aEvent)
 //
 // Main application entry function
 //
-void CreateApplication()
+nsresult CreateApplication()
 {
     scribbleData.isDrawing = PR_FALSE;
 
@@ -383,6 +385,7 @@ void CreateApplication()
     static NS_DEFINE_IID(kCTextAreaCID, NS_TEXTAREA_CID);
     static NS_DEFINE_IID(kCTextFieldCID, NS_TEXTFIELD_CID);
 
+    NSRepository::RegisterFactory(kCAppShellCID, "raptorwidget.dll", PR_FALSE, PR_FALSE);
     NSRepository::RegisterFactory(kCWindowCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
     NSRepository::RegisterFactory(kCChildCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
     NSRepository::RegisterFactory(kCButtonCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
@@ -408,6 +411,12 @@ void CreateApplication()
 
     if (NS_OK == res)
       scribbleData.mContext->Init();
+
+
+     // Create an application shell
+    nsIAppShell *appShell;
+    NSRepository::CreateInstance(kCAppShellCID, nsnull, kIAppShellIID, (void**)&appShell);
+    appShell->Create();
    
     //
     // create the main window
@@ -542,5 +551,6 @@ void CreateApplication()
     //
     scribbleData.mainWindow->Show(PR_TRUE);
 
+    return(appShell->Run());
 }
 
