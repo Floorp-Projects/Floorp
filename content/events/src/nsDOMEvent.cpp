@@ -137,15 +137,15 @@ nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent, const nsAR
   else {
     //Allocate internal event
     nsAutoString eventType(aEventType);
-    if (eventType.EqualsIgnoreCase("MouseEvent")) {
+    if (eventType.EqualsIgnoreCase("MouseEvents")) {
       mEvent = PR_NEWZAP(nsMouseEvent);
       mEvent->eventStructType = NS_MOUSE_EVENT;
     }
-    else if (eventType.EqualsIgnoreCase("KeyEvent")) {
+    else if (eventType.EqualsIgnoreCase("KeyEvents")) {
       mEvent = PR_NEWZAP(nsKeyEvent);
       mEvent->eventStructType = NS_KEY_EVENT;
     }
-    else if (eventType.EqualsIgnoreCase("HTMLEvent")) {
+    else if (eventType.EqualsIgnoreCase("HTMLEvents")) {
       mEvent = PR_NEWZAP(nsEvent);
       mEvent->eventStructType = NS_EVENT;
     }
