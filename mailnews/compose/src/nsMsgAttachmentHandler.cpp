@@ -432,7 +432,7 @@ nsMsgAttachmentHandler::SnarfMsgAttachment(nsMsgCompFields *compFields)
     mFileSpec = nsMsgCreateTempFileSpec("nsmail.tmp");
     mCompFields = compFields;
     PR_FREEIF(m_real_name);
-    m_real_name = PL_strdup("forward.eml");
+    m_real_name = PL_strdup("ForwardedMessage.eml");
     PR_FREEIF(m_type);
     m_type = PL_strdup("message/rfc822");
     PR_FREEIF(m_override_type);
@@ -467,12 +467,19 @@ nsMsgAttachmentHandler::SnarfMsgAttachment(nsMsgCompFields *compFields)
 done:
   if (NS_FAILED(rv))
   {
-      mOutFile->close();
-      delete mOutFile;
-      mOutFile = nsnull;
-      mFileSpec->Delete(PR_FALSE);
-      delete mFileSpec;
-      mFileSpec = nsnull;
+      if (mOutFile)
+      {
+        mOutFile->close();
+        delete mOutFile;
+        mOutFile = nsnull;
+      }
+
+      if (mFileSpec)
+      {
+        mFileSpec->Delete(PR_FALSE);
+        delete mFileSpec;
+        mFileSpec = nsnull;
+      }
   }
   if (messageService)
       ReleaseMessageServiceFromURI(m_uri, messageService);
