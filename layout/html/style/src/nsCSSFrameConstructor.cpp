@@ -2388,7 +2388,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
     }
   }
 
-  // If the frame is absolutely positioned then create a placeholder frame
+  // If the frame is absolutely positioned, then create a placeholder frame
   if (isAbsolutelyPositioned || isFixedPositioned) {
     nsIFrame* placeholderFrame;
 
@@ -3452,6 +3452,13 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresContext* aPresContext,
   NS_ASSERTION(content, "null content object");
   content->GetTag(*getter_AddRefs(tag));
 
+  // Get the previous sibling frame
+  // XXX Handle absolutely positioned and floated elements...
+  nsIFrame*     firstChild;
+  parentFrame->FirstChild(nsnull, &firstChild);
+  nsFrameList   frameList(firstChild);
+  nsIFrame*     prevSibling = frameList.GetPrevSiblingFor(aFrame);
+  
   // See whether it's an IMG or an OBJECT element
   if (nsHTMLAtoms::img == tag.get()) {
     // It's an IMG element. Try and construct an alternate frame to use when the
@@ -3460,12 +3467,6 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresContext* aPresContext,
     rv = ConstructAlternateImageFrame(aPresContext, content, parentFrame, newFrame);
 
     if (NS_SUCCEEDED(rv)) {
-      // Get the previous sibling frame
-      nsIFrame*     firstChild;
-      parentFrame->FirstChild(nsnull, &firstChild);
-      nsFrameList   frameList(firstChild);
-      nsIFrame*     prevSibling = frameList.GetPrevSiblingFor(aFrame);
-
       // Delete the current frame and insert the new frame
       nsCOMPtr<nsIPresShell> presShell;
       aPresContext->GetShell(getter_AddRefs(presShell));
@@ -3474,7 +3475,55 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresContext* aPresContext,
     }
 
   } else if (nsHTMLAtoms::object == tag.get()) {
-    ;
+    // It's an OBJECT element, so we should display the contents instead
+    nsCOMPtr<nsIStyleContext> styleContext;
+    const nsStyleDisplay*     display;
+
+    aFrame->GetStyleContext(getter_AddRefs(styleContext));
+    display = (const nsStyleDisplay*)styleContext->GetStyleData(eStyleStruct_Display);
+
+    // Get the containing block for absolutely positioned elements
+    nsIFrame* absoluteContainingBlock = GetAbsoluteContainingBlock(aPresContext,
+                                                                   parentFrame);
+    
+    // Create a frame based on the display type
+    nsAbsoluteItems absoluteItems(absoluteContainingBlock);
+    nsFrameItems    frameItems;
+    nsAbsoluteItems fixedItems(mFixedContainingBlock);
+
+    rv = ConstructFrameByDisplayType(aPresContext, display, content, parentFrame,
+                                     styleContext, absoluteItems, frameItems,
+                                     fixedItems);
+    nsIFrame* newFrame = frameItems.childList;
+
+    if (NS_SUCCEEDED(rv)) {
+      // Delete the current frame and insert the new frame
+      nsCOMPtr<nsIPresShell> presShell;
+      aPresContext->GetShell(getter_AddRefs(presShell));
+      parentFrame->RemoveFrame(*aPresContext, *presShell, nsnull, aFrame);
+      parentFrame->InsertFrames(*aPresContext, *presShell, nsnull, prevSibling, newFrame);
+    
+      // If there are new absolutely positioned child frames, then notify
+      // the parent
+      // XXX We can't just assume these frames are being appended, we need to
+      // determine where in the list they should be inserted...
+      if (nsnull != absoluteItems.childList) {
+        rv = absoluteItems.containingBlock->AppendFrames(*aPresContext, *presShell,
+                                                         nsLayoutAtoms::absoluteList,
+                                                         absoluteItems.childList);
+      }
+
+      // If there are new fixed positioned child frames, then notify
+      // the parent
+      // XXX We can't just assume these frames are being appended, we need to
+      // determine where in the list they should be inserted...
+      if (nsnull != fixedItems.childList) {
+        rv = fixedItems.containingBlock->AppendFrames(*aPresContext, *presShell,
+                                                      nsLayoutAtoms::fixedList,
+                                                      fixedItems.childList);
+      }
+    }
+
   } else {
     NS_ASSERTION(PR_FALSE, "unexpected tag");
   }
