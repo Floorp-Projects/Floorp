@@ -89,8 +89,9 @@ public:
 	void static SetLoadGroupTest(nsIRequest *, nsILoadGroup *);
 	void static GetLoadGroupTest(nsIRequest *);
     void OnStartTests(UINT nMenuID);
-	void RunAllTests();
-	void RunIndividualTests(UINT nMenuID);
+	void RunAllTests(int);
+	void RunIndividualTests(UINT nMenuID, int);
+	nsIChannel * GetTheChannel(int, nsILoadGroup *);
 	// Generated message map functions
 protected:
 /*	//{{AFX_MSG(CNsIRequest)
