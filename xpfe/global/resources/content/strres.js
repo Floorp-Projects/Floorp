@@ -32,16 +32,16 @@ function selectLocale(event)
     }
     var node = event.target;
     var langcode = node.getAttribute('value');
-    //var old_lang = chromeRegistry.getSelectedLocale("navigator");
-    //dump("\n-->old_lang=" + old_lang + "--");
-    chromeRegistry.selectLocale(langcode, true);
-	dump("\n-->set new lang, langcode=" + langcode + "--");
-    var sbundle = srGetStrBundle("chrome://global/locale/brand.properties");
-	var alertstr = sbundle.GetStringFromName("langAlert");
-	alert(alertstr);
+    var prefUtilBundle = srGetStrBundle("chrome://communicator/locale/pref/prefutilities.properties");
+    var brandBundle = srGetStrBundle("chrome://global/locale/brand.properties");
+    var alertText = prefUtilBundle.GetStringFromName("languageAlert");
+    var titleText = prefUtilBundle.GetStringFromName("languageTitle");
+    alertText = alertText.replace(/%brand%/g, brandBundle.GetStringFromName("brandShortName"));
+    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
+    promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService)
+    promptService.alert(window, titleText, alertText);
   }
   catch(e) {
-    dump("\n--> strres.js: selectLocale() failed!\n");
     return false;
   }
   return true;	
