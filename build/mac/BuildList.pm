@@ -116,6 +116,7 @@ sub BuildMozilla()
 		BuildProject(":mozilla:build:mac:CustomLib:CustomLib.mcp",										"CustomLib$D.shlb");
 		MakeAlias(":mozilla:build:mac:CustomLib:CustomLib$D.shlb", "$dist_dir");
 		
+		BuildProject(":mozilla:build:mac:CustomLib:CustomLib.mcp",										"CustomStaticLibs$D.o");
 		BuildProject(":mozilla:modules:security:freenav:macbuild:NoSecurity.mcp",			"Security.o");
 		BuildProject(":mozilla:modules:libfont:macbuild:FontBroker.mcp",							"FontBroker$D.o");
 		BuildProject(":mozilla:lib:libmocha:macbuild:LibMocha.mcp",										"LibMocha$D.o");	
