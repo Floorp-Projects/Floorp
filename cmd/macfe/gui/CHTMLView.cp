@@ -55,7 +55,6 @@
 #include "layers.h"
 #include "nppriv.h"
 
-// FIX ME!!! this is only for SCROLLER_ID  remove in favor of xxx::class_ID
 #include "resgui.h" 
 #include "macgui.h"
 #include "mimages.h"
@@ -285,9 +284,6 @@ void CHTMLView::FinishCreateSelf(void)
 	// ¥¥¥ Hack, how else do we do this though?
 	// Main view or the frames
 
-// FIX ME!!! the scroller dependency need to be removed
-//	if ((mSuperView->GetPaneID() == SCROLLER_ID ) || (mSuperView->GetPaneID() == 1005))
-//		mScroller = (CHyperScroller*)mSuperView;
 	mScroller = dynamic_cast<CHyperScroller*>(mSuperView); // - jrm
 
 	SDimension16 theFrameSize;
@@ -7182,6 +7178,19 @@ void CHTMLView::RestructureGridView(
 }
 
 
+const char*
+CHTMLView :: GetBuiltInAttribute ( LO_BuiltinStruct *inBuiltinStruct, const char* inAttribute )
+{
+	for ( uint16 n = 0; n < inBuiltinStruct->attribute_cnt; n++ ) {
+		const char* attName = inBuiltinStruct->attribute_list[n];
+		const char* attValue = inBuiltinStruct->value_list[n];
+		if ( attName && (XP_STRCASECMP(attName, inAttribute) == 0) )
+			return attValue;
+	}
+	return NULL; 
+}
+
+
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 //	¥	FreeBuiltinElement
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
@@ -7189,19 +7198,48 @@ void CHTMLView::RestructureGridView(
 void
 CHTMLView :: FreeBuiltinElement ( LO_BuiltinStruct* inBuiltinStruct )
 {
-	DebugStr("\pNot implemented; g");
-	
+	LView* tree = static_cast<LView*>(inBuiltinStruct->FE_Data);
+	if ( tree ) {
+		RemoveSubPane ( tree );
+		delete tree;
+		inBuiltinStruct->FE_Data = NULL;
+	}
+
 } // FreeBuiltinElement
 
 
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 //	¥	DisplayBuiltin
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
-// Create and display a SHACK tree widget in HTML area
+// Create and display builtin elements like the embedded composer or shack widgets.
 void
-CHTMLView :: DisplayBuiltin ( int inLocation, LO_BuiltinStruct* inBuiltinStruct )
+CHTMLView :: DisplayBuiltin ( int /*inLocation*/, LO_BuiltinStruct* inBuiltinStruct )
 {
-	DebugStr("\pNot implemented; g");
+	// create the widget if it hasn't already been created, else refresh
+	if ( ! inBuiltinStruct->FE_Data ) {
+		
+		// get tag attributes
+		const char* url = GetBuiltInAttribute(inBuiltinStruct, "data");
+		const char* target = GetBuiltInAttribute(inBuiltinStruct, "target");
+
+		// reanimate the builtin version of Aurora
+		CShackRDFCoordinator* tree = dynamic_cast<CShackRDFCoordinator*>
+									(UReanimator::CreateView(9503, this, this));
+		tree->ResizeFrameTo ( inBuiltinStruct->width, inBuiltinStruct->height, false );
+		tree->PlaceInSuperImageAt ( inBuiltinStruct->x, inBuiltinStruct->y, false );
+		
+		// set window target and url
+		tree->BuildHTPane ( url, inBuiltinStruct->attribute_cnt, inBuiltinStruct->attribute_list, 
+								inBuiltinStruct->value_list );
+		tree->SetTargetFrame ( target );
+		
+		tree->Refresh();
+		inBuiltinStruct->FE_Data = tree;
+	}
+	else {
+		LView* tree = static_cast<LView*>(inBuiltinStruct->FE_Data);
+		tree->Refresh();
+	}
 
 } // DisplayBuiltin
 

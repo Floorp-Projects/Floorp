@@ -714,6 +714,9 @@ class CHTMLView :
 
 	protected:
 
+		const char*					GetBuiltInAttribute ( 
+											LO_BuiltinStruct *inBuiltinStruct,
+											const char* inAttribute ) ;
 		virtual void				FreeBuiltinElement( 
 											LO_BuiltinStruct *		inBuiltinStruct) ;
 		virtual void				DisplayBuiltin( 
