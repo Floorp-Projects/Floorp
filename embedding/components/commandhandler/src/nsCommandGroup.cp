@@ -49,7 +49,6 @@ NS_IMPL_ISUPPORTS1(nsControllerCommandGroup, nsIControllerCommandGroup)
 
 nsControllerCommandGroup::nsControllerCommandGroup()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsControllerCommandGroup::~nsControllerCommandGroup()

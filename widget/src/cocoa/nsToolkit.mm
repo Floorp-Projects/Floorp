@@ -248,8 +248,6 @@ static const char* gQuartzRenderingPref = "browser.quartz.enable";
 nsToolkit::nsToolkit()
 : mInited(false)
 {
-  NS_INIT_ISUPPORTS();
-  
   if (!gEventQueueHandler)
   {
     // autorelease this so that if Init is never called, it is not

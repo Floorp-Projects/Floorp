@@ -59,7 +59,6 @@ nsFilePicker::nsFilePicker()
 , mMode(0)
 , mSelectedType(0)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 

@@ -60,7 +60,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsAppShellCocoa, nsIAppShell)
 //-------------------------------------------------------------------------
 nsAppShellCocoa::nsAppShellCocoa()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 //-------------------------------------------------------------------------
