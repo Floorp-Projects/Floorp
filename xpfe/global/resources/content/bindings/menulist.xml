@@ -46,9 +46,14 @@
         <body>
           <![CDATA[
             this.setAttribute('sizetopopup', 'true');
+            
+            // if there was a previously selected item, be sure to set our internal
+            // selection memory to that item so we can un-set it properly later on
+            var arr = this.firstChild.getElementsByAttribute('selected', 'true');
+            if (arr.length)
+              this.selectedInternal = arr[0];
+              
             if (!this.label && this.childNodes.length) {
-              var arr = this.firstChild.getElementsByAttribute('selected', 'true');
-
               if (!arr.length && this.value)
                 arr = this.firstChild.getElementsByAttribute('value', this.value);
 
