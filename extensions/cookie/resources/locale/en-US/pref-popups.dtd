@@ -12,5 +12,5 @@
 <!ENTITY popupCustom.label              "Use custom settings">
 <!ENTITY popupCustom.accesskey          "c">
 
-<!ENTITY popupView.label                "Manage Popup Permissions">
+<!ENTITY popupView.label                "Manage Pop-up Permissions">
 <!ENTITY popupView.accesskey            "m">

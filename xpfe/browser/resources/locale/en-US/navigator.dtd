@@ -196,7 +196,3 @@
 <!ENTITY historyCmd.label           "History">  
 <!ENTITY historyCmd.accesskey       "i">
 <!ENTITY history.commandKey       "h">
-
-<!-- Popup control -->
-<!ENTITY popup-control.label          "allow popup windows from this site">
-
