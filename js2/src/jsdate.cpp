@@ -289,12 +289,12 @@ static int32 WeekDay(float64 t)
     return result;
 }
 
-static float64 *Date_getProlog(Context *cx, const JSValue& thisValue)
+static float64 *Date_getProlog(Context *cx, const js2val thisValue)
 {
-    if (thisValue.getType() != Date_Type)
+    if (JSValue::getType(thisValue) != Date_Type)
         cx->reportError(Exception::typeError, "You need a date");
-    ASSERT(thisValue.isInstance());
-    JSDateInstance *dateInst = checked_cast<JSDateInstance *>(thisValue.instance);
+    ASSERT(JSValue::isInstance(thisValue));
+    JSDateInstance *dateInst = checked_cast<JSDateInstance *>(JSValue::instance(thisValue));
 
     return &dateInst->mValue;
 }
@@ -358,7 +358,7 @@ static int32 msFromTime(float64 t)
     return result;
 }
 
-static JSValue Date_makeTime(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc, uint32 maxargs, bool local)
+static js2val Date_makeTime(Context *cx, const js2val thisValue, js2val *argv, uint32 argc, uint32 maxargs, bool local)
 {
     uint32 i;
     float64 args[4], *argp, *stop;
@@ -384,12 +384,12 @@ static JSValue Date_makeTime(Context *cx, const JSValue& thisValue, JSValue *arg
 	argc = maxargs;  /* clamp argc */
 
     for (i = 0; i < argc; i++) {
-        argv[i] = argv[i].toNumber(cx);        
+        argv[i] = JSValue::toNumber(cx, argv[i]);        
         if (JSDOUBLE_IS_NaN(argv[i])) {
             *date = nan;
             return kNaNValue;
         }
-	args[i] = argv[i].toInteger(cx).f64;
+        args[i] = JSValue::f64(JSValue::toInteger(cx, argv[i]));
     }
 
     if (local)
@@ -426,10 +426,10 @@ static JSValue Date_makeTime(Context *cx, const JSValue& thisValue, JSValue *arg
 	result = UTC(result);
 
     *date = TIMECLIP(result);
-    return JSValue(*date);
+    return JSValue::newNumber(*date);
 }
     
-static JSValue Date_makeDate(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc, uint32 maxargs, bool local)
+static js2val Date_makeDate(Context *cx, const js2val thisValue, js2val *argv, uint32 argc, uint32 maxargs, bool local)
 {
     uint32 i;
     float64 lorutime; /* local or UTC version of *date */
@@ -450,12 +450,12 @@ static JSValue Date_makeDate(Context *cx, const JSValue& thisValue, JSValue *arg
 	argc = maxargs;   /* clamp argc */
 
     for (i = 0; i < argc; i++) {
-        argv[i] = argv[i].toNumber(cx);        
+        argv[i] = JSValue::toNumber(cx, argv[i]);        
         if (JSDOUBLE_IS_NaN(argv[i])) {
             *date = nan;
             return kNaNValue;
         }
-	args[i] = argv[i].toInteger(cx).f64;
+        args[i] = JSValue::f64(JSValue::toInteger(cx, argv[i]));
     }
 
     /* return NaN if date is NaN and we're not setting the year,
@@ -496,7 +496,7 @@ static JSValue Date_makeDate(Context *cx, const JSValue& thisValue, JSValue *arg
 	result = UTC(result);
 
     *date = TIMECLIP(result);
-    return JSValue(*date);
+    return JSValue::newNumber(*date);
 }
 
 /* find UTC time from given date... no 1900 correction! */
@@ -741,7 +741,7 @@ static void new_explode(float64 timeval, PRMJTime *split, bool findEquivalent)
 }
 
 /* helper function */
-static JSValue Date_format(Context * /*cx*/, float64 date, formatspec format)
+static js2val Date_format(Context * /*cx*/, float64 date, formatspec format)
 {
     StringFormatter outf;
     char tzbuf[100];
@@ -844,11 +844,11 @@ static JSValue Date_format(Context * /*cx*/, float64 date, formatspec format)
         }
     }
 
-    return JSValue(new String(outf.getString()));
+    return JSValue::newString(new String(outf.getString()));
 }
 
 
-extern JSValue Date_TypeCast(Context *cx, const JSValue& /*thisValue*/, JSValue * /*argv*/, uint32 /*argc*/)
+extern js2val Date_TypeCast(Context *cx, const js2val /*thisValue*/, js2val * /*argv*/, uint32 /*argc*/)
 {
     int64 us, ms, us2ms;
     float64 msec_time;
@@ -865,13 +865,13 @@ extern JSValue Date_TypeCast(Context *cx, const JSValue& /*thisValue*/, JSValue 
 }
 
 #define MAXARGS        7
-JSValue Date_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+js2val Date_Constructor(Context *cx, const js2val thisValue, js2val *argv, uint32 argc)
 {
-    JSValue thatValue = thisValue;
-    if (thatValue.isNull())
+    js2val thatValue = thisValue;
+    if (JSValue::isNull(thatValue))
         thatValue = Date_Type->newInstance(cx);
-    ASSERT(thatValue.isInstance());
-    JSDateInstance *thisInst = checked_cast<JSDateInstance *>(thatValue.instance);
+    ASSERT(JSValue::isInstance(thatValue));
+    JSDateInstance *thisInst = checked_cast<JSDateInstance *>(JSValue::instance(thatValue));
 
     /* Date called as constructor */
     if (argc == 0) {
@@ -887,13 +887,13 @@ JSValue Date_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, u
     } 
     else {
         if (argc == 1) {
-	    if (!argv[0].isString()) {
+            if (!JSValue::isString(argv[0])) {
 	        /* the argument is a millisecond number */
-	        float64 d = argv[0].toNumber(cx).f64;
+                float64 d = JSValue::f64(JSValue::toNumber(cx, argv[0]));
 	        thisInst->mValue = TIMECLIP(d);
 	    } else {
 	        /* the argument is a string; parse it. */
-	        const String *str = argv[0].toString(cx).string;
+                const String *str = JSValue::string(JSValue::toString(cx, argv[0]));
 
 	        float64 d = date_parseString(*str);
 	        thisInst->mValue = TIMECLIP(d);
@@ -907,7 +907,7 @@ JSValue Date_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, u
 
 	    for (loop = 0; loop < MAXARGS; loop++) {
 	        if (loop < argc) {
-	            float64 double_arg = argv[loop].toNumber(cx).f64;
+	            float64 double_arg = JSValue::f64(JSValue::toNumber(cx, argv[loop]));
 		    /* if any arg is NaN, make a NaN date object
 		       and return */
 		    if (!JSDOUBLE_IS_FINITE(double_arg)) {
@@ -937,15 +937,15 @@ JSValue Date_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, u
     return thatValue;
 }
 
-JSValue Date_parse(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
+js2val Date_parse(Context *cx, const js2val /*thisValue*/, js2val *argv, uint32 /*argc*/)
 {
-    const String *str = argv[0].toString(cx).string;
+    const String *str = JSValue::string(JSValue::toString(cx, argv[0]));
     float64 d = date_parseString(*str);
     d = TIMECLIP(d);
-    return JSValue(d);
+    return JSValue::newNumber(d);
 }
 
-JSValue Date_UTC(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
+js2val Date_UTC(Context *cx, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
     float64 array[MAXARGS];
     uint32 loop;
@@ -953,9 +953,9 @@ JSValue Date_UTC(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint3
 
     for (loop = 0; loop < MAXARGS; loop++) {
 	if (loop < argc) {
-            d = argv[loop].toNumber(cx).f64;
+            d = JSValue::f64(JSValue::toNumber(cx, argv[loop]));
 	    if (!JSDOUBLE_IS_FINITE(d))
-		return JSValue(d);
+                return JSValue::newNumber(d);
 	    array[loop] = floor(d);
 	} 
         else 
@@ -973,11 +973,11 @@ JSValue Date_UTC(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint3
     d = date_msecFromDate(array[0], array[1], array[2],
 			      array[3], array[4], array[5], array[6]);
     d = TIMECLIP(d);
-    return JSValue(d);
+    return JSValue::newNumber(d);
 }
 
 
-static JSValue Date_toGMTString(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+static js2val Date_toGMTString(Context *cx, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
 {
     StringFormatter buf;
     float64 *date = Date_getProlog(cx, thisValue);
@@ -999,11 +999,11 @@ static JSValue Date_toGMTString(Context *cx, const JSValue& thisValue, JSValue *
 		    MinFromTime(temp),
 		    SecFromTime(temp));
     }
-    return JSValue(new String(buf.getString()));
+    return JSValue::newString(new String(buf.getString()));
 }
 
 
-static JSValue Date_toLocaleHelper(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/, char *format)
+static js2val Date_toLocaleHelper(Context *cx, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/, char *format)
 {
     StringFormatter outf;
     char buf[100];
@@ -1035,10 +1035,10 @@ static JSValue Date_toLocaleHelper(Context *cx, const JSValue& thisValue, JSValu
             outf << buf;
     }
 
-    return JSValue(new String(outf.getString()));
+    return JSValue::newString(new String(outf.getString()));
 }
 
-static JSValue Date_toLocaleString(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static js2val Date_toLocaleString(Context *cx, const js2val thisValue, js2val *argv, uint32 argc)
 {
     /* Use '%#c' for windows, because '%c' is
      * backward-compatible and non-y2k with msvc; '%#c' requests that a
@@ -1053,7 +1053,7 @@ static JSValue Date_toLocaleString(Context *cx, const JSValue& thisValue, JSValu
 				   );
 }
 
-static JSValue Date_toLocaleDateString(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static js2val Date_toLocaleDateString(Context *cx, const js2val thisValue, js2val *argv, uint32 argc)
 {
     /* Use '%#x' for windows, because '%x' is
      * backward-compatible and non-y2k with msvc; '%#x' requests that a
@@ -1068,44 +1068,44 @@ static JSValue Date_toLocaleDateString(Context *cx, const JSValue& thisValue, JS
 				   );
 }
 
-static JSValue Date_toLocaleTimeString(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static js2val Date_toLocaleTimeString(Context *cx, const js2val thisValue, js2val *argv, uint32 argc)
 {
     return Date_toLocaleHelper(cx, thisValue, argv, argc, "%X");
 }
 
-static JSValue Date_toTimeString(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+static js2val Date_toTimeString(Context *cx, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
 {
     float64 *date = Date_getProlog(cx, thisValue);
     return Date_format(cx, *date, FORMATSPEC_TIME);
 }
 
-static JSValue Date_toDateString(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+static js2val Date_toDateString(Context *cx, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
 {
     float64 *date = Date_getProlog(cx, thisValue);
     return Date_format(cx, *date, FORMATSPEC_DATE);
 }
 
-static JSValue Date_toString(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+static js2val Date_toString(Context *cx, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
 {
     float64 *date = Date_getProlog(cx, thisValue);
     return Date_format(cx, *date, FORMATSPEC_FULL);
 }
 
-static JSValue Date_toSource(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+static js2val Date_toSource(Context *cx, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
 {
     StringFormatter buf;
     float64 *date = Date_getProlog(cx, thisValue);
     buf << "(new Date(" << *numberToString(*date) << "))";
-    return JSValue(new String(buf.getString()));
+    return JSValue::newString(new String(buf.getString()));
 }
 
-static JSValue Date_getTime(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+static js2val Date_getTime(Context *cx, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
 {
     float64 *date = Date_getProlog(cx, thisValue);
-    return JSValue(*date);
+    return JSValue::newNumber(*date);
 }
 
-static JSValue Date_getTimezoneOffset(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+static js2val Date_getTimezoneOffset(Context *cx, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
 {
     float64 result;
     float64 *date = Date_getProlog(cx, thisValue);
@@ -1117,17 +1117,17 @@ static JSValue Date_getTimezoneOffset(Context *cx, const JSValue& thisValue, JSV
      * constant except for daylight savings time.
      */
     result = (result - LocalTime(result)) / msPerMinute;
-    return JSValue(result);
+    return JSValue::newNumber(result);
 }
 
-static JSValue Date_getYear(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+static js2val Date_getYear(Context *cx, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
 {
     float64 result;
     float64 *date = Date_getProlog(cx, thisValue);
     result = *date;
 
     if (!JSDOUBLE_IS_FINITE(result))
-	return JSValue(result);
+        return JSValue::newNumber(result);
 
     result = YearFromTime(LocalTime(result));
 
@@ -1154,147 +1154,147 @@ static JSValue Date_getYear(Context *cx, const JSValue& thisValue, JSValue * /*a
 #else
     result -= 1900;
 #endif
-    return JSValue(result);
+    return JSValue::newNumber(result);
 }
 
-static JSValue Date_getFullYear(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+static js2val Date_getFullYear(Context *cx, const js2val thisValue, js2val * /* argv */, uint32 /*argc*/)
 {
     float64 result = *Date_getProlog(cx, thisValue);
     if (!JSDOUBLE_IS_FINITE(result))
-	return JSValue(result);
+        return JSValue::newNumber(result);
     result = YearFromTime(LocalTime(result));
-    return JSValue(result);
+    return JSValue::newNumber(result);
 }
 
-static JSValue Date_getUTCFullYear(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+static js2val Date_getUTCFullYear(Context *cx, const js2val thisValue, js2val * /* argv */, uint32 /*argc*/)
 {
     float64 result = *Date_getProlog(cx, thisValue);
     if (!JSDOUBLE_IS_FINITE(result))
-	return JSValue(result);
+	return JSValue::newNumber(result);
     result = YearFromTime(result);
-    return JSValue(result);
+    return JSValue::newNumber(result);
 }
 
-static JSValue Date_getMonth(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+static js2val Date_getMonth(Context *cx, const js2val thisValue, js2val * /* argv */, uint32 /*argc*/)
 {
     float64 result = *Date_getProlog(cx, thisValue);
     if (!JSDOUBLE_IS_FINITE(result))
-	return JSValue(result);
+	return JSValue::newNumber(result);
     result = MonthFromTime(LocalTime(result));
-    return JSValue(result);
+    return JSValue::newNumber(result);
 }
 
-static JSValue Date_getUTCMonth(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+static js2val Date_getUTCMonth(Context *cx, const js2val thisValue, js2val * /* argv */, uint32 /*argc*/)
 {
     float64 result = *Date_getProlog(cx, thisValue);
     if (!JSDOUBLE_IS_FINITE(result))
-	return JSValue(result);
+	return JSValue::newNumber(result);
     result = MonthFromTime(result);
-    return JSValue(result);
+    return JSValue::newNumber(result);
 }
 
-static JSValue Date_getDate(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+static js2val Date_getDate(Context *cx, const js2val thisValue, js2val * /* argv */, uint32 /*argc*/)
 {
     float64 result = *Date_getProlog(cx, thisValue);
     if (!JSDOUBLE_IS_FINITE(result))
-	return JSValue(result);
+	return JSValue::newNumber(result);
     result = DateFromTime(LocalTime(result));
-    return JSValue(result);
+    return JSValue::newNumber(result);
 }
 
-static JSValue Date_getUTCDate(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+static js2val Date_getUTCDate(Context *cx, const js2val thisValue, js2val * /* argv */, uint32 /*argc*/)
 {
     float64 result = *Date_getProlog(cx, thisValue);
     if (!JSDOUBLE_IS_FINITE(result))
-	return JSValue(result);
+	return JSValue::newNumber(result);
     result = DateFromTime(result);
-    return JSValue(result);
+    return JSValue::newNumber(result);
 }
 
-static JSValue Date_getDay(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+static js2val Date_getDay(Context *cx, const js2val thisValue, js2val * /* argv */, uint32 /*argc*/)
 {
     float64 result = *Date_getProlog(cx, thisValue);
     if (!JSDOUBLE_IS_FINITE(result))
-	return JSValue(result);
+	return JSValue::newNumber(result);
     result = WeekDay(LocalTime(result));
-    return JSValue(result);
+    return JSValue::newNumber(result);
 }
 
-static JSValue Date_getUTCDay(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+static js2val Date_getUTCDay(Context *cx, const js2val thisValue, js2val * /* argv */, uint32 /*argc*/)
 {
     float64 result = *Date_getProlog(cx, thisValue);
     if (!JSDOUBLE_IS_FINITE(result))
-	return JSValue(result);
+	return JSValue::newNumber(result);
     result = WeekDay(result);
-    return JSValue(result);
+    return JSValue::newNumber(result);
 }
 
-static JSValue Date_getHours(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+static js2val Date_getHours(Context *cx, const js2val thisValue, js2val * /* argv */, uint32 /*argc*/)
 {
     float64 result = *Date_getProlog(cx, thisValue);
     if (!JSDOUBLE_IS_FINITE(result))
-	return JSValue(result);
+	return JSValue::newNumber(result);
     result = HourFromTime(LocalTime(result));
-    return JSValue(result);
+    return JSValue::newNumber(result);
 }
 
-static JSValue Date_getUTCHours(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+static js2val Date_getUTCHours(Context *cx, const js2val thisValue, js2val * /* argv */, uint32 /*argc*/)
 {
     float64 result = *Date_getProlog(cx, thisValue);
     if (!JSDOUBLE_IS_FINITE(result))
-	return JSValue(result);
+	return JSValue::newNumber(result);
     result = HourFromTime(result);
-    return JSValue(result);
+    return JSValue::newNumber(result);
 }
 
-static JSValue Date_getMinutes(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+static js2val Date_getMinutes(Context *cx, const js2val thisValue, js2val * /* argv */, uint32 /*argc*/)
 {
     float64 result = *Date_getProlog(cx, thisValue);
     if (!JSDOUBLE_IS_FINITE(result))
-	return JSValue(result);
+	return JSValue::newNumber(result);
     result = MinFromTime(LocalTime(result));
-    return JSValue(result);
+    return JSValue::newNumber(result);
 }
 
-static JSValue Date_getUTCMinutes(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+static js2val Date_getUTCMinutes(Context *cx, const js2val thisValue, js2val * /* argv */, uint32 /*argc*/)
 {
     float64 result = *Date_getProlog(cx, thisValue);
     if (!JSDOUBLE_IS_FINITE(result))
-	return JSValue(result);
+	return JSValue::newNumber(result);
     result = MinFromTime(result);
-    return JSValue(result);
+    return JSValue::newNumber(result);
 }
 
 /* Date.getSeconds is mapped to getUTCSeconds */
-static JSValue Date_getUTCSeconds(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+static js2val Date_getUTCSeconds(Context *cx, const js2val thisValue, js2val * /* argv */, uint32 /*argc*/)
 {
     float64 result = *Date_getProlog(cx, thisValue);
     if (!JSDOUBLE_IS_FINITE(result))
-	return JSValue(result);
+	return JSValue::newNumber(result);
     result = SecFromTime(result);
-    return JSValue(result);
+    return JSValue::newNumber(result);
 }
 
 /* Date.getMilliseconds is mapped to getUTCMilliseconds */
-static JSValue Date_getUTCMilliseconds(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+static js2val Date_getUTCMilliseconds(Context *cx, const js2val thisValue, js2val * /* argv */, uint32 /*argc*/)
 {
     float64 result = *Date_getProlog(cx, thisValue);
     if (!JSDOUBLE_IS_FINITE(result))
-	return JSValue(result);
+	return JSValue::newNumber(result);
     result = msFromTime(result);
-    return JSValue(result);
+    return JSValue::newNumber(result);
 }
 
 
-static JSValue Date_setTime(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 /*argc*/)
+static js2val Date_setTime(Context *cx, const js2val thisValue, js2val argv[], uint32 /*argc*/)
 {
     float64 *date = Date_getProlog(cx, thisValue);
-    float64 result = argv[0].toNumber(cx).f64;
+    float64 result = JSValue::f64(JSValue::toNumber(cx, argv[0]));
     *date = TIMECLIP(result);
-    return JSValue(*date);
+    return JSValue::newNumber(*date);
 }
 
-static JSValue Date_setYear(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 /*argc*/)
+static js2val Date_setYear(Context *cx, const js2val thisValue, js2val argv[], uint32 /*argc*/)
 {
     float64 t;
     float64 year;
@@ -1303,10 +1303,10 @@ static JSValue Date_setYear(Context *cx, const JSValue& thisValue, JSValue *argv
 
     float64 *date = Date_getProlog(cx, thisValue);
     result = *date;
-    year = argv[0].toNumber(cx).f64;
+    year = JSValue::f64(JSValue::toNumber(cx, argv[0]));
     if (!JSDOUBLE_IS_FINITE(year)) {
 	*date = nan;
-	return JSValue(*date);
+        return JSValue::newNumber(*date);
     }
 
     year = JSValue::float64ToInteger(year);
@@ -1325,82 +1325,82 @@ static JSValue Date_setYear(Context *cx, const JSValue& thisValue, JSValue *argv
     result = UTC(result);
 
     *date = TIMECLIP(result);
-    return JSValue(*date);
+    return JSValue::newNumber(*date);
 }
 
-static JSValue Date_setFullYear(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static js2val Date_setFullYear(Context *cx, const js2val thisValue, js2val argv[], uint32 argc)
 {
     return Date_makeDate(cx, thisValue, argv, argc, 3, true);
 }
 
-static JSValue Date_setUTCFullYear(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static js2val Date_setUTCFullYear(Context *cx, const js2val thisValue, js2val argv[], uint32 argc)
 {
     return Date_makeDate(cx, thisValue, argv, argc, 3, false);
 }
 
-static JSValue Date_setMonth(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static js2val Date_setMonth(Context *cx, const js2val thisValue, js2val argv[], uint32 argc)
 {
     return Date_makeDate(cx, thisValue, argv, argc, 2, true);
 }
 
-static JSValue Date_setUTCMonth(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static js2val Date_setUTCMonth(Context *cx, const js2val thisValue, js2val argv[], uint32 argc)
 {
     return Date_makeDate(cx, thisValue, argv, argc, 2, false);
 }
 
-static JSValue Date_setDate(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static js2val Date_setDate(Context *cx, const js2val thisValue, js2val argv[], uint32 argc)
 {
     return Date_makeDate(cx, thisValue, argv, argc, 1, true);
 }
 
-static JSValue Date_setUTCDate(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static js2val Date_setUTCDate(Context *cx, const js2val thisValue, js2val argv[], uint32 argc)
 {
     return Date_makeDate(cx, thisValue, argv, argc, 1, false);
 }
 
-static JSValue Date_setHours(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static js2val Date_setHours(Context *cx, const js2val thisValue, js2val argv[], uint32 argc)
 {
     return Date_makeTime(cx, thisValue, argv, argc, 4, true);
 }
 
-static JSValue Date_setUTCHours(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static js2val Date_setUTCHours(Context *cx, const js2val thisValue, js2val argv[], uint32 argc)
 {
     return Date_makeTime(cx, thisValue, argv, argc, 4, false);
 }
 
-static JSValue Date_setMinutes(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static js2val Date_setMinutes(Context *cx, const js2val thisValue, js2val argv[], uint32 argc)
 {
     return Date_makeTime(cx, thisValue, argv, argc, 3, true);
 }
 
-static JSValue Date_setUTCMinutes(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static js2val Date_setUTCMinutes(Context *cx, const js2val thisValue, js2val argv[], uint32 argc)
 {
     return Date_makeTime(cx, thisValue, argv, argc, 3, false);
 }
 
-static JSValue Date_setSeconds(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static js2val Date_setSeconds(Context *cx, const js2val thisValue, js2val argv[], uint32 argc)
 {
     return Date_makeTime(cx, thisValue, argv, argc, 2, true);
 }
 
-static JSValue Date_setUTCSeconds(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static js2val Date_setUTCSeconds(Context *cx, const js2val thisValue, js2val argv[], uint32 argc)
 {
     return Date_makeTime(cx, thisValue, argv, argc, 2, true);
 }
 
-static JSValue Date_setMilliseconds(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static js2val Date_setMilliseconds(Context *cx, const js2val thisValue, js2val argv[], uint32 argc)
 {
     return Date_makeTime(cx, thisValue, argv, argc, 1, true);
 }
 
-static JSValue Date_setUTCMilliseconds(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static js2val Date_setUTCMilliseconds(Context *cx, const js2val thisValue, js2val argv[], uint32 argc)
 {
     return Date_makeTime(cx, thisValue, argv, argc, 1, true);
 }
 
 // SpiderMonkey has a 'hinted' version:
 #if JS_HAS_VALUEOF_HINT
-static JSValue Date_valueOf(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static js2val Date_valueOf(Context *cx, const js2val thisValue, js2val argv[], uint32 argc)
 {
     /* If called directly with no arguments, convert to a time number. */
     if (argc == 0)
@@ -1408,7 +1408,7 @@ static JSValue Date_valueOf(Context *cx, const JSValue& thisValue, JSValue *argv
 
     /* Convert to number only if the hint was given, otherwise favor string. */
     if (argc == 1) {
-    	const String *str = argv[0].toString(cx).string;
+        const String *str = JSValue::string(JSValue::toString(cx, argv[0]));
 	if (str->compare(&cx->Number_StringAtom) == 0)
 	    return Date_getTime(cx, thisValue, argv, argc);
     }

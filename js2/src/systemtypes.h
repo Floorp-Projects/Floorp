@@ -88,7 +88,9 @@ typedef float float32;
 #endif
 
 #ifdef _WIN32
+#ifndef IS_LITTLE_ENDIAN
  #define IS_LITTLE_ENDIAN
+#endif
 #endif
 #ifdef __i386__
  #define IS_LITTLE_ENDIAN
@@ -106,8 +108,9 @@ const uint basicAlignment = 1u<<lgBasicAlignment;
 //
 // Bit manipulation
 //
-
+#ifndef JS_BIT
 #define JS_BIT(n)       ((uint32)1 << (n))
+#endif
 #define JS_BITMASK(n)   (JS_BIT(n) - 1)
 
 #endif /* systemtypes_h */

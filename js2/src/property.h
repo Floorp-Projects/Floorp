@@ -44,13 +44,14 @@ namespace JavaScript {
 namespace JS2Runtime {
 
     class JSFunction;
-    class JSValue;
     class JSType;
 
     typedef enum { ValuePointer, FunctionPair, IndexPair, Slot, Method, Constructor } PropertyFlag;
     
     typedef uint32 PropertyAttribute;
     
+
+    typedef uint32 js2val;
 
     
     class Property {
@@ -83,7 +84,7 @@ namespace JS2Runtime {
         }
 
         // a generic property
-        Property(JSValue *p, JSType *type, PropertyAttribute attr) 
+        Property(js2val p, JSType *type, PropertyAttribute attr) 
             : mType(type), mAttributes(attr), mFlag(ValuePointer) 
         { 
             mData.vp = p;
@@ -114,7 +115,7 @@ namespace JS2Runtime {
 
         
         union {
-            JSValue *vp;        // straightforward value
+            js2val vp;          // straightforward value
             struct {            // getter & setter functions
                 JSFunction *getterF;
                 JSFunction *setterF;

@@ -50,56 +50,56 @@ namespace JavaScript {
 namespace JS2Runtime {
 
 
-JSValue String_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+js2val String_Constructor(Context *cx, const js2val thisValue, js2val *argv, uint32 argc)
 {
-    JSValue thatValue = thisValue;
-    if (thatValue.isNull())
+    js2val thatValue = thisValue;
+    if (JSValue::isNull(thatValue))
         thatValue = String_Type->newInstance(cx);
-    ASSERT(thatValue.isInstance());
-    JSStringInstance *strInst = checked_cast<JSStringInstance *>(thatValue.instance);
+    ASSERT(JSValue::isInstance(thatValue));
+    JSStringInstance *strInst = checked_cast<JSStringInstance *>(JSValue::instance(thatValue));
 
     if (argc > 0)
-        strInst->mValue = new String(*argv[0].toString(cx).string);
+        strInst->mValue = new String(*JSValue::string(JSValue::toString(cx, argv[0])));
     else
         strInst->mValue = &cx->Empty_StringAtom;
     return thatValue;
 }
 
-JSValue String_TypeCast(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
+js2val String_TypeCast(Context *cx, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
     if (argc == 0)
-        return JSValue(&cx->Empty_StringAtom);
+        return JSValue::newString(&cx->Empty_StringAtom);
     else
-        return argv[0].toString(cx);
+        return JSValue::toString(cx, argv[0]);
 }
 
 
-JSValue String_fromCharCode(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
+js2val String_fromCharCode(Context *cx, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
     String *resultStr = new String();   // can't use cx->Empty_StringAtom; because we're modifying this below
     resultStr->reserve(argc);
     for (uint32 i = 0; i < argc; i++)
-        *resultStr += (char16)(argv[i].toUInt16(cx).f64);
+        *resultStr += (char16)(JSValue::f64(JSValue::toUInt16(cx, argv[i])));
 
-    return JSValue(resultStr);
+    return JSValue::newString(resultStr);
 }
 
-static JSValue String_toString(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+static js2val String_toString(Context *cx, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
 {
-    if (thisValue.getType() != String_Type)
+    if (JSValue::getType(thisValue) != String_Type)
         cx->reportError(Exception::typeError, "String.toString called on something other than a string thing");
-    ASSERT(thisValue.isInstance());
-    JSStringInstance *strInst = checked_cast<JSStringInstance *>(thisValue.instance);
-    return JSValue(strInst->mValue);
+    ASSERT(JSValue::isInstance(thisValue));
+    JSStringInstance *strInst = checked_cast<JSStringInstance *>(JSValue::instance(thisValue));
+    return JSValue::newString(strInst->mValue);
 }
 
-static JSValue String_valueOf(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+static js2val String_valueOf(Context *cx, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
 {
-    if (thisValue.getType() != String_Type)
+    if (JSValue::getType(thisValue) != String_Type)
         cx->reportError(Exception::typeError, "String.valueOf called on something other than a string thing");
-    ASSERT(thisValue.isInstance());
-    JSStringInstance *strInst = checked_cast<JSStringInstance *>(thisValue.instance);
-    return JSValue(strInst->mValue);
+    ASSERT(JSValue::isInstance(thisValue));
+    JSStringInstance *strInst = checked_cast<JSStringInstance *>(JSValue::instance(thisValue));
+    return JSValue::newString(strInst->mValue);
 }
 
 /*
@@ -112,24 +112,25 @@ static JSValue String_valueOf(Context *cx, const JSValue& thisValue, JSValue * /
  * NOTE This method ignores the lastIndex and global properties of regexp. The lastIndex property of regexp is left
  * unchanged.
 */
-static JSValue String_search(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static js2val String_search(Context *cx, const js2val thisValue, js2val *argv, uint32 argc)
 {
     ContextStackReplacement csr(cx);
 
-    JSValue S = thisValue.toString(cx);
+    js2val S = JSValue::toString(cx, thisValue);
 
-    JSValue regexp = argv[0];
-    if ((argc == 0) || (regexp.getType() != RegExp_Type)) {
+    js2val regexp = argv[0];
+    if ((argc == 0) || (JSValue::getType(regexp) != RegExp_Type)) {
         regexp = kNullValue;
         regexp = RegExp_Constructor(cx, regexp, argv, 1);
     }
-    REState *pState = (checked_cast<JSRegExpInstance *>(regexp.instance))->mRegExp;
+    REState *pState = (checked_cast<JSRegExpInstance *>(JSValue::instance(regexp)))->mRegExp;
 
-    REMatchState *match = REExecute(pState, S.string->begin(), 0, S.string->length(), false);
+    const String *str = JSValue::string(S);
+    REMatchState *match = REExecute(pState, str->begin(), 0, str->length(), false);
     if (match)
-        return JSValue((float64)(match->startIndex));
+        return JSValue::newNumber((float64)(match->startIndex));
     else
-        return JSValue(-1.0);
+        return JSValue::newNumber(-1.0);
 
 }
 
@@ -147,39 +148,39 @@ static JSValue String_search(Context *cx, const JSValue& thisValue, JSValue *arg
  *    first elements of the results of all matching invocations of RegExp.prototype.exec.
  */
  
-static JSValue String_match(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static js2val String_match(Context *cx, const js2val thisValue, js2val *argv, uint32 argc)
 {
     ContextStackReplacement csr(cx);
 
-    JSValue S = thisValue.toString(cx);
+    js2val S = JSValue::toString(cx, thisValue);
 
-    JSValue regexp = argv[0];
-    if ((argc == 0) || (regexp.getType() != RegExp_Type)) {
+    js2val regexp = argv[0];
+    if ((argc == 0) || (JSValue::getType(regexp) != RegExp_Type)) {
         regexp = kNullValue;
         regexp = RegExp_Constructor(cx, regexp, argv, 1);
     }
 
-    REState *pState = (checked_cast<JSRegExpInstance *>(regexp.instance))->mRegExp;
+    REState *pState = (checked_cast<JSRegExpInstance *>(JSValue::instance(regexp)))->mRegExp;
     if ((pState->flags & RE_GLOBAL) == 0) {
         return RegExp_exec(cx, regexp, &S, 1);                
     }
     else {
-        JSValue result = Array_Type->newInstance(cx);
-        JSArrayInstance *A = checked_cast<JSArrayInstance *>(result.instance);
+        js2val result = Array_Type->newInstance(cx);
+        JSArrayInstance *A = checked_cast<JSArrayInstance *>(JSValue::instance(result));
         int32 index = 0;
         int32 lastIndex = 0;
         while (true) {
-            REMatchState *match = REExecute(pState, S.string->begin(), lastIndex, S.string->length(), false);
+            REMatchState *match = REExecute(pState, JSValue::string(S)->begin(), lastIndex, JSValue::string(S)->length(), false);
             if (match == NULL)
                 break;
             if (lastIndex == match->endIndex)
                 lastIndex++;
             else
                 lastIndex = match->endIndex;
-            String *matchStr = new String(S.string->substr(match->startIndex, match->endIndex - match->startIndex));
-            A->setProperty(cx, *numberToString(index++), NULL, JSValue(matchStr));
+            String *matchStr = new String(JSValue::string(S)->substr(match->startIndex, match->endIndex - match->startIndex));
+            A->setProperty(cx, *numberToString(index++), NULL, JSValue::newString(matchStr));
         }
-        regexp.instance->setProperty(cx, cx->LastIndex_StringAtom, NULL, JSValue((float64)lastIndex));
+        JSValue::instance(regexp)->setProperty(cx, cx->LastIndex_StringAtom, NULL, JSValue::newNumber((float64)lastIndex));
         return result;
     }
 }
@@ -257,26 +258,26 @@ static const String interpretDollar(Context *cx, const String *replaceStr, uint3
  */
 
 
-static JSValue String_replace(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static js2val String_replace(Context *cx, const js2val thisValue, js2val *argv, uint32 argc)
 {
-    JSValue S = thisValue.toString(cx);
+    const String *S = JSValue::string(JSValue::toString(cx, thisValue));
 
-    JSValue searchValue;
-    JSValue replaceValue;
+    js2val searchValue;
+    js2val replaceValue;
 
     if (argc > 0) searchValue = argv[0];
     if (argc > 1) replaceValue = argv[1];
-    const String *replaceStr = replaceValue.toString(cx).string;
+    const String *replaceStr = JSValue::string(JSValue::toString(cx, replaceValue));
 
-    if (searchValue.getType() == RegExp_Type) {
-	REState *pState = (checked_cast<JSRegExpInstance *>(searchValue.instance))->mRegExp;
+    if (JSValue::getType(searchValue) == RegExp_Type) {
+	REState *pState = (checked_cast<JSRegExpInstance *>(JSValue::instance(searchValue)))->mRegExp;
 	REMatchState *match;
 	uint32 m = pState->parenCount;
 	String newString;
         int32 lastIndex = 0;
 
 	while (true) {
-            match = REExecute(pState, S.string->begin(), lastIndex, S.string->length(), false);
+            match = REExecute(pState, S->begin(), lastIndex, S->length(), false);
 	    if (match) {
 		String insertString;
 		uint32 start = 0;
@@ -286,7 +287,7 @@ static JSValue String_replace(Context *cx, const JSValue& thisValue, JSValue *ar
 		    if ((dollarPos != String::npos) && (dollarPos < (replaceStr->length() - 1))) {
 			uint32 skip;
 			insertString += replaceStr->substr(start, dollarPos - start);
-			insertString += interpretDollar(cx, replaceStr, dollarPos, S.string, match, skip);
+			insertString += interpretDollar(cx, replaceStr, dollarPos, S, match, skip);
 			start = dollarPos + skip;
 		    }
 		    else {
@@ -296,7 +297,7 @@ static JSValue String_replace(Context *cx, const JSValue& thisValue, JSValue *ar
 		    }
 		}
                 // grab everything preceding the match
-		newString += S.string->substr(lastIndex, match->startIndex - lastIndex);
+		newString += S->substr(lastIndex, match->startIndex - lastIndex);
                 // and then add the replacement string
 		newString += insertString;
 	    }
@@ -306,17 +307,17 @@ static JSValue String_replace(Context *cx, const JSValue& thisValue, JSValue *ar
 	    if ((pState->flags & RE_GLOBAL) == 0)
 		break;
 	}
-	newString += S.string->substr(lastIndex, S.string->length() - lastIndex);
+        newString += S->substr(lastIndex, S->length() - lastIndex);
 	if ((pState->flags & RE_GLOBAL) == 0)
-            searchValue.instance->setProperty(cx, cx->LastIndex_StringAtom, NULL, JSValue((float64)lastIndex));
-	return JSValue(new String(newString));
+            JSValue::instance(searchValue)->setProperty(cx, cx->LastIndex_StringAtom, NULL, JSValue::newNumber((float64)lastIndex));
+        return JSValue::newString(new String(newString));
     }
     else {
-	const String *searchStr = searchValue.toString(cx).string;
+        const String *searchStr = JSValue::string(JSValue::toString(cx, searchValue));
 	REMatchState match;
-        uint32 pos = S.string->find(*searchStr, 0);
+        uint32 pos = S->find(*searchStr, 0);
 	if (pos == String::npos)
-	    return JSValue(S.string);
+            return JSValue::newString(S);
 	match.startIndex = (int32)pos;
 	match.endIndex = match.startIndex + searchStr->length();
 	match.parenCount = 0;
@@ -328,7 +329,7 @@ static JSValue String_replace(Context *cx, const JSValue& thisValue, JSValue *ar
 	    if ((dollarPos != String::npos) && (dollarPos < (replaceStr->length() - 1))) {
 		uint32 skip;
 		insertString += replaceStr->substr(start, dollarPos - start);
-		insertString += interpretDollar(cx, replaceStr, dollarPos, S.string, &match, skip);
+		insertString += interpretDollar(cx, replaceStr, dollarPos, S, &match, skip);
 		start = dollarPos + skip;
 	    }
 	    else {
@@ -336,11 +337,11 @@ static JSValue String_replace(Context *cx, const JSValue& thisValue, JSValue *ar
 		break;
 	    }
 	}
-	newString += S.string->substr(0, match.startIndex);
+	newString += S->substr(0, match.startIndex);
 	newString += insertString;
 	uint32 index = match.endIndex;
-	newString += S.string->substr(index, S.string->length() - index);
-	return JSValue(new String(newString));
+	newString += S->substr(index, S->length() - index);
+        return JSValue::newString(new String(newString));
     }
 }
 
@@ -348,7 +349,7 @@ struct MatchResult {
     bool failure;
     uint32 endIndex;
     uint32 capturesCount;
-    JSValue *captures;
+    js2val *captures;
 };
 
 static void strSplitMatch(const String *S, uint32 q, const String *R, MatchResult &result)
@@ -381,12 +382,12 @@ static void regexpSplitMatch(const String *S, uint32 q, REState *RE, MatchResult
         result.failure = false;
         result.capturesCount = match->parenCount;
         if (match->parenCount) {
-            result.captures = new JSValue[match->parenCount];
+            result.captures = new js2val[match->parenCount];
             for (int32 i = 0; i < match->parenCount; i++) {
                 if (match->parens[i].index != -1) {
                     String *parenStr = new String(S->substr((uint32)(match->parens[i].index + q), 
                                                     (uint32)(match->parens[i].length)));
-                    result.captures[i] = JSValue(parenStr);
+                    result.captures[i] = JSValue::newString(parenStr);
                 }
 		else
                     result.captures[i] = kUndefinedValue;
@@ -396,32 +397,32 @@ static void regexpSplitMatch(const String *S, uint32 q, REState *RE, MatchResult
 
 }
 
-static JSValue String_split(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static js2val String_split(Context *cx, const js2val thisValue, js2val *argv, uint32 argc)
 {
     ContextStackReplacement csr(cx);
 
-    JSValue S = thisValue.toString(cx);
+    const String *S = JSValue::string(JSValue::toString(cx, thisValue));
 
-    JSValue result = Array_Type->newInstance(cx);
-    JSArrayInstance *A = checked_cast<JSArrayInstance *>(result.instance);
+    js2val result = Array_Type->newInstance(cx);
+    JSArrayInstance *A = checked_cast<JSArrayInstance *>(JSValue::instance(result));
     uint32 lim;
-    JSValue separatorV = (argc > 0) ? argv[0] : kUndefinedValue;
-    JSValue limitV = (argc > 1) ? argv[1] : kUndefinedValue;
+    js2val separatorV = (argc > 0) ? argv[0] : kUndefinedValue;
+    js2val limitV = (argc > 1) ? argv[1] : kUndefinedValue;
         
-    if (limitV.isUndefined())
+    if (JSValue::isUndefined(limitV))
         lim = (uint32)(two32minus1);
     else
-        lim = (uint32)(limitV.toUInt32(cx).f64);
+        lim = (uint32)JSValue::f64(JSValue::toUInt32(cx, limitV));
 
-    uint32 s = S.string->size();
+    uint32 s = S->size();
     uint32 p = 0;
 
     REState *RE = NULL;
     const String *R = NULL;
-    if (separatorV.getType() == RegExp_Type)
-        RE = (checked_cast<JSRegExpInstance *>(separatorV.instance))->mRegExp;
+    if (JSValue::getType(separatorV) == RegExp_Type)
+        RE = (checked_cast<JSRegExpInstance *>(JSValue::instance(separatorV)))->mRegExp;
     else
-        R = separatorV.toString(cx).string;
+        R = JSValue::string(JSValue::toString(cx, separatorV));
 
     if (lim == 0) 
         return result;
@@ -436,12 +437,12 @@ static JSValue String_split(Context *cx, const JSValue& thisValue, JSValue *argv
     if (s == 0) {
         MatchResult z;
         if (RE)
-            regexpSplitMatch(S.string, 0, RE, z);
+            regexpSplitMatch(S, 0, RE, z);
         else
-            strSplitMatch(S.string, 0, R, z);
+            strSplitMatch(S, 0, R, z);
         if (!z.failure)
             return result;
-        A->setProperty(cx, widenCString("0"), NULL, S);
+        A->setProperty(cx, widenCString("0"), NULL, JSValue::newString(S));
         return result;
     }
 
@@ -449,16 +450,16 @@ static JSValue String_split(Context *cx, const JSValue& thisValue, JSValue *argv
         uint32 q = p;
 step11:
         if (q == s) {
-            String *T = new String(*S.string, p, (s - p));
-            JSValue v(T);
+            String *T = new String(*S, p, (s - p));
+            js2val v = JSValue::newString(T);
             A->setProperty(cx, *numberToString(A->mLength), NULL, v);
             return result;
         }
         MatchResult z;
         if (RE)
-            regexpSplitMatch(S.string, q, RE, z);
+            regexpSplitMatch(S, q, RE, z);
         else
-            strSplitMatch(S.string, q, R, z);
+            strSplitMatch(S, q, R, z);
         if (z.failure) {
             q = q + 1;
             goto step11;
@@ -468,73 +469,73 @@ step11:
             q = q + 1;
             goto step11;
         }
-        String *T = new String(*S.string, p, (q - p));
-        JSValue v(T);
+        String *T = new String(*S, p, (q - p));
+        js2val v = JSValue::newString(T);
         A->setProperty(cx, *numberToString(A->mLength), NULL, v);
         if (A->mLength == lim)
             return result;
         p = e;
 
         for (uint32 i = 0; i < z.capturesCount; i++) {
-            A->setProperty(cx, *numberToString(A->mLength), NULL, JSValue(z.captures[i]));
+            A->setProperty(cx, *numberToString(A->mLength), NULL, z.captures[i]);
             if (A->mLength == lim)
                 return result;
         }
     }
 }
 
-static JSValue String_charAt(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static js2val String_charAt(Context *cx, const js2val thisValue, js2val *argv, uint32 argc)
 {
-    const String *str = thisValue.toString(cx).string;
+    const String *str = JSValue::string(JSValue::toString(cx, thisValue));
 
     uint32 pos = 0;
     if (argc > 0)
-        pos = (uint32)(argv[0].toInt32(cx).f64);
+        pos = (uint32)JSValue::f64(JSValue::toInt32(cx, argv[0]));
 
     if ((pos < 0) || (pos >= str->size()))
-        return JSValue(&cx->Empty_StringAtom);
+        return JSValue::newString(&cx->Empty_StringAtom);
     else
-        return JSValue(new String(1, (*str)[pos]));
+        return JSValue::newString(new String(1, (*str)[pos]));
     
 }
 
-static JSValue String_charCodeAt(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static js2val String_charCodeAt(Context *cx, const js2val thisValue, js2val *argv, uint32 argc)
 {
-    const String *str = thisValue.toString(cx).string;
+    const String *str = JSValue::string(JSValue::toString(cx, thisValue));
 
     uint32 pos = 0;
     if (argc > 0)
-        pos = (uint32)(argv[0].toInt32(cx).f64);
+        pos = (uint32)JSValue::f64(JSValue::toInt32(cx, argv[0]));
 
     if ((pos < 0) || (pos >= str->size()))
         return kNaNValue;
     else
-        return JSValue((float64)(*str)[pos]);
+        return JSValue::newNumber((float64)(*str)[pos]);
 }
 
-static JSValue String_concat(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static js2val String_concat(Context *cx, const js2val thisValue, js2val *argv, uint32 argc)
 {
-    const String *str = thisValue.toString(cx).string;
+    const String *str = JSValue::string(JSValue::toString(cx, thisValue));
     String *result = new String(*str);
 
     for (uint32 i = 0; i < argc; i++) {
-        *result += *argv[i].toString(cx).string;
+        *result += *JSValue::string(JSValue::toString(cx, argv[i]));
     }
 
-    return JSValue(result);
+    return JSValue::newString(result);
 }
 
-static JSValue String_indexOf(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static js2val String_indexOf(Context *cx, const js2val thisValue, js2val *argv, uint32 argc)
 {
     if (argc == 0)
-        return JSValue(-1.0);
+        return JSValue::newNumber(-1.0);
 
-    const String *str = thisValue.toString(cx).string;
-    const String *searchStr = argv[0].toString(cx).string;
+    const String *str = JSValue::string(JSValue::toString(cx, thisValue));
+    const String *searchStr = JSValue::string(JSValue::toString(cx, argv[0]));
     uint32 pos = 0;
 
     if (argc > 1) {
-        float64 fpos = argv[1].toNumber(cx).f64;
+        float64 fpos = JSValue::f64(JSValue::toNumber(cx, argv[1]));
         if (JSDOUBLE_IS_NaN(fpos))
             pos = 0;
         if (fpos < 0)
@@ -547,21 +548,21 @@ static JSValue String_indexOf(Context *cx, const JSValue& thisValue, JSValue *ar
     }
     pos = str->find(*searchStr, pos);
     if (pos == String::npos)
-        return JSValue(-1.0);
-    return JSValue((float64)pos);
+        return JSValue::newNumber(-1.0);
+    return JSValue::newNumber((float64)pos);
 }
 
-static JSValue String_lastIndexOf(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static js2val String_lastIndexOf(Context *cx, const js2val thisValue, js2val *argv, uint32 argc)
 {
     if (argc == 0)
-        return JSValue(-1.0);
+        return JSValue::newNumber(-1.0);
 
-    const String *str = thisValue.toString(cx).string;
-    const String *searchStr = argv[0].toString(cx).string;
+    const String *str = JSValue::string(JSValue::toString(cx, thisValue));
+    const String *searchStr = JSValue::string(JSValue::toString(cx, argv[0]));
     uint32 pos = str->size();
 
     if (argc > 1) {
-        float64 fpos = argv[1].toNumber(cx).f64;
+        float64 fpos = JSValue::f64(JSValue::toNumber(cx, argv[1]));
         if (JSDOUBLE_IS_NaN(fpos))
             pos = str->size();
         else {
@@ -576,35 +577,35 @@ static JSValue String_lastIndexOf(Context *cx, const JSValue& thisValue, JSValue
     }
     pos = str->rfind(*searchStr, pos);
     if (pos == String::npos)
-        return JSValue(-1.0);
-    return JSValue((float64)pos);
+        return JSValue::newNumber(-1.0);
+    return JSValue::newNumber((float64)pos);
 }
 
-static JSValue String_localeCompare(Context * /*cx*/, const JSValue& /*thisValue*/, JSValue * /*argv*/, uint32 /*argc*/)
+static js2val String_localeCompare(Context * /*cx*/, const js2val /*thisValue*/, js2val * /*argv*/, uint32 /*argc*/)
 {
     return kUndefinedValue;
 }
 
-static JSValue String_toLowerCase(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+static js2val String_toLowerCase(Context *cx, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
 {
-    JSValue S = thisValue.toString(cx);
+    js2val S = JSValue::toString(cx, thisValue);
 
-    String *result = new String(*S.string);
+    String *result = new String(*JSValue::string(S));
     for (String::iterator i = result->begin(), end = result->end(); i != end; i++)
         *i = toLower(*i);
 
-    return JSValue(result);
+    return JSValue::newString(result);
 }
 
-static JSValue String_toUpperCase(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+static js2val String_toUpperCase(Context *cx, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
 {
-    JSValue S = thisValue.toString(cx);
+    js2val S = JSValue::toString(cx, thisValue);
 
-    String *result = new String(*S.string);
+    String *result = new String(*JSValue::string(S));
     for (String::iterator i = result->begin(), end = result->end(); i != end; i++)
         *i = toUpper(*i);
 
-    return JSValue(result);
+    return JSValue::newString(result);
 }
 
 /*
@@ -628,15 +629,15 @@ static JSValue String_toUpperCase(Context *cx, const JSValue& thisValue, JSValue
  *       position Result(5).
  */
 
-static JSValue String_slice(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static js2val String_slice(Context *cx, const js2val thisValue, js2val *argv, uint32 argc)
 {
-    const String *sourceString = thisValue.toString(cx).string;
+    const String *sourceString = JSValue::string(JSValue::toString(cx, thisValue));
 
     uint32 sourceLength = sourceString->size();
     uint32 start, end;
 
     if (argc > 0) {
-        int32 arg0 = (int32)(argv[0].toInt32(cx).f64);
+        int32 arg0 = (int32)JSValue::f64(JSValue::toInt32(cx, argv[0]));
         if (arg0 < 0) {
             arg0 += sourceLength;
             if (arg0 < 0)
@@ -655,7 +656,7 @@ static JSValue String_slice(Context *cx, const JSValue& thisValue, JSValue *argv
         start = 0;
 
     if (argc > 1) {
-        int32 arg1 = (int32)(argv[1].toInt32(cx).f64);
+        int32 arg1 = (int32)JSValue::f64(JSValue::toInt32(cx, argv[1]));
         if (arg1 < 0) {
             arg1 += sourceLength;
             if (arg1 < 0)
@@ -674,8 +675,8 @@ static JSValue String_slice(Context *cx, const JSValue& thisValue, JSValue *argv
         end = sourceLength;
 
     if (start > end)
-        return JSValue(&cx->Empty_StringAtom);
-    return JSValue(new String(sourceString->substr(start, end - start)));
+        return JSValue::newString(&cx->Empty_StringAtom);
+    return JSValue::newString(new String(sourceString->substr(start, end - start)));
 }
 
 /*
@@ -700,15 +701,15 @@ static JSValue String_slice(Context *cx, const JSValue& thisValue, JSValue *argv
  *       Result(1), namely the characters with indices Result(7) through Result(8)-1, in ascending order.
  */
 
-static JSValue String_substring(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static js2val String_substring(Context *cx, const js2val thisValue, js2val *argv, uint32 argc)
 {
-    const String *sourceString = thisValue.toString(cx).string;
+    const String *sourceString = JSValue::string(JSValue::toString(cx, thisValue));
 
     uint32 sourceLength = sourceString->size();
     uint32 start, end;
 
     if (argc > 0) {
-        float64 farg0 = argv[0].toNumber(cx).f64;
+        float64 farg0 = JSValue::f64(JSValue::toNumber(cx, argv[0]));
         if (JSDOUBLE_IS_NaN(farg0) || (farg0 < 0))
             start = 0;
         else {
@@ -725,7 +726,7 @@ static JSValue String_substring(Context *cx, const JSValue& thisValue, JSValue *
         start = 0;
 
     if (argc > 1) {
-        float64 farg1 = argv[1].toNumber(cx).f64;
+        float64 farg1 = JSValue::f64(JSValue::toNumber(cx, argv[1]));
         if (JSDOUBLE_IS_NaN(farg1) || (farg1 < 0))
             end = 0;
         else {
@@ -747,7 +748,7 @@ static JSValue String_substring(Context *cx, const JSValue& thisValue, JSValue *
         end = t;
     }
         
-    return JSValue(new String(sourceString->substr(start, end - start)));
+    return JSValue::newString(new String(sourceString->substr(start, end - start)));
 }
 
 

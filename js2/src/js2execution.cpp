@@ -63,9 +63,9 @@ namespace JS2Runtime {
 
 inline char narrow(char16 ch) { return char(ch); }
 
-JSValue Context::readEvalString(const String &str, const String& fileName, ScopeChain *scopeChain, const JSValue& thisValue)
+js2val Context::readEvalString(const String &str, const String& fileName, ScopeChain *scopeChain, const js2val thisValue)
 {
-    JSValue result = kUndefinedValue;
+    js2val result = kUndefinedValue;
     NamespaceList *useOnceNamespace = NULL;
 
     Arena a;
@@ -104,12 +104,12 @@ JSValue Context::readEvalString(const String &str, const String& fileName, Scope
     return result;
 }
 
-JSValue Context::readEvalFile(const String& fileName)
+js2val Context::readEvalFile(const String& fileName)
 {
     String buffer;
     int ch;
 
-    JSValue result = kUndefinedValue;
+    js2val result = kUndefinedValue;
 
     std::string str(fileName.length(), char());
     std::transform(fileName.begin(), fileName.end(), str.begin(), narrow);
@@ -118,7 +118,7 @@ JSValue Context::readEvalFile(const String& fileName)
         while ((ch = getc(f)) != EOF)
             buffer += static_cast<char>(ch);
         fclose(f);
-        result = readEvalString(buffer, fileName, NULL, JSValue(getGlobalObject()));
+        result = readEvalString(buffer, fileName, NULL, JSValue::newObject(getGlobalObject()));
     }
     return result;
 }
@@ -156,9 +156,9 @@ bool Context::executeOperator(Operator op, JSType *t1, JSType *t2)
 
     JSFunction *target = (*candidate)->mImp;
 
-    JSValue newThis = kNullValue;
+    js2val newThis = kNullValue;
     if (target->isNative()) {
-        JSValue result = target->getNativeCode()(this, newThis, getBase(stackSize() - 2), 2);
+        js2val result = target->invokeNativeCode(this, newThis, getBase(stackSize() - 2), 2);
         resizeStack(stackSize() - 2);
         pushValue(result);
         return false;
@@ -178,15 +178,15 @@ bool Context::executeOperator(Operator op, JSType *t1, JSType *t2)
 // Invokes either the native or bytecode implementation. Causes another interpreter loop
 // to begin execution, and does nothing to clean up the incoming arguments (which need
 // not even be on the execution stack).
-JSValue Context::invokeFunction(JSFunction *target, const JSValue& thisValue, JSValue *argv, uint32 argc)
+js2val Context::invokeFunction(JSFunction *target, const js2val thisValue, js2val *argv, uint32 argc)
 {
     if (target->isNative())
-        return target->getNativeCode()(this, thisValue, argv, argc);
+        return target->invokeNativeCode(this, thisValue, argv, argc);
     else
         return interpret(target->getByteCode(), 0, target->getScopeChain(), thisValue, argv, argc);
 }
 
-JSValue Context::interpret(JS2Runtime::ByteCodeModule *bcm, int offset, ScopeChain *scopeChain, const JSValue& thisValue, JSValue *argv, uint32 /*argc*/)
+js2val Context::interpret(JS2Runtime::ByteCodeModule *bcm, int offset, ScopeChain *scopeChain, const js2val thisValue, js2val *argv, uint32 /*argc*/)
 { 
     Activation *prev = new Activation(mLocals, mStack, mStackTop, mScopeChain,
                                             mArgumentBase, mThis, NULL, mCurModule, mNamespaceList); // use NULL pc value to force interpret loop to exit
@@ -200,7 +200,7 @@ JSValue Context::interpret(JS2Runtime::ByteCodeModule *bcm, int offset, ScopeCha
         mScopeChain->addScope(getGlobalObject());
     }
     
-//    if (mThis.isObject())
+//    if (JSValue::isObject(mThis))
 //        mScopeChain->addScope(mThis.object);
 //    mScopeChain->addScope(mActivationStack.top());
 
@@ -208,12 +208,12 @@ JSValue Context::interpret(JS2Runtime::ByteCodeModule *bcm, int offset, ScopeCha
     uint8 *pc = mCurModule->mCodeBase + offset;
     uint8 *endPC = mCurModule->mCodeBase + mCurModule->mLength;
     mArgumentBase = argv;
-    mLocals = new JSValue[mCurModule->mLocalsCount];
-    mStack = new JSValue[mCurModule->mStackDepth];
+    mLocals = new js2val[mCurModule->mLocalsCount];
+    mStack = new js2val[mCurModule->mStackDepth];
     mStackMax = mCurModule->mStackDepth;
     mStackTop = 0;
 
-    JSValue result;
+    js2val result;
     try {
         result = interpret(pc, endPC);
     }
@@ -223,9 +223,9 @@ JSValue Context::interpret(JS2Runtime::ByteCodeModule *bcm, int offset, ScopeCha
          
         // the following (delete's) are a bit iffy - depends on whether
         // a closure capturing the contents has come along...
-//        if (mThis.isObject())
+//        if (JSValue::isObject(mThis))
 //          mScopeChain->popScope();
-        JSValue x;
+        js2val x;
         if (jsx.hasKind(Exception::userException)) 
             x = popValue();
 
@@ -257,7 +257,7 @@ JSValue Context::interpret(JS2Runtime::ByteCodeModule *bcm, int offset, ScopeCha
 
     // the following (delete's) are a bit iffy - depends on whether
     // a closure capturing the contents has come along...
-//    if (mThis.isObject())
+//    if (JSValue::isObject(mThis))
 //        mScopeChain->popScope();
     delete[] mStack;
     delete[] mLocals;
@@ -279,9 +279,9 @@ JSValue Context::interpret(JS2Runtime::ByteCodeModule *bcm, int offset, ScopeCha
 }
 
 // Assumes arguments are on the top of stack. argCount is the number that were pushed by user code
-JSValue *Context::buildArgumentBlock(JSFunction *target, uint32 &argCount)
+js2val *Context::buildArgumentBlock(JSFunction *target, uint32 &argCount)
 {
-    JSValue *argBase;
+    js2val *argBase;
     uint32 maxExpectedParameterCount = target->getRequiredParameterCount() + target->getOptionalParameterCount() + target->getNamedParameterCount();
     if (target->isChecked()) {
         if (argCount < target->getRequiredParameterCount())
@@ -295,7 +295,7 @@ JSValue *Context::buildArgumentBlock(JSFunction *target, uint32 &argCount)
     uint32 argBlockSize = max(argCount, maxExpectedParameterCount) + (target->hasRestParameter() ? 1 : 0);
                                                     // room for all required,optional & named arguments
                                                     // plus the rest parameter if it exists.
-    argBase = new JSValue[argBlockSize];     
+    argBase = new js2val[argBlockSize];     
 
 /*
 * If the first parameter is required and no positional argument has been supplied for it, then raise an error unless the function 
@@ -320,8 +320,8 @@ JSValue *Context::buildArgumentBlock(JSFunction *target, uint32 &argCount)
         bool needDefault = true;
         if (target->parameterIsRequired(pIndex)) {
             if (inArgIndex < argCount) {
-                JSValue v = getValue(inArgIndex + argStart);
-                bool isPositionalArg = !v.isNamedArg();
+                js2val v = getValue(inArgIndex + argStart);
+                bool isPositionalArg = !JSValue::isNamedArg(v);
                 // if the next argument is named, then we've run out of positional args
                 if (!isPositionalArg) {
                     if (!target->isChecked())
@@ -340,8 +340,8 @@ JSValue *Context::buildArgumentBlock(JSFunction *target, uint32 &argCount)
             if (target->parameterIsOptional(pIndex)) {
                 bool tookPositionalArg = false;
                 if (inArgIndex < argCount) {
-                    JSValue v = getValue(inArgIndex + argStart);
-                    if (!v.isNamedArg()) {
+                    js2val v = getValue(inArgIndex + argStart);
+                    if (!JSValue::isNamedArg(v)) {
                         argBase[pIndex] = v;
                         argUsed[inArgIndex++] = true;
                         needDefault = false;
@@ -353,10 +353,10 @@ JSValue *Context::buildArgumentBlock(JSFunction *target, uint32 &argCount)
                     const String *parameterName = target->getParameterName(pIndex);
                     for (uint32 i = inArgIndex; i < argCount; i++) {
                         if (!argUsed[i]) {
-                            JSValue v = getValue(i + argStart);
-                            if (v.isNamedArg()) {
-                                if (v.namedArg->mName == parameterName) {
-                                    argBase[pIndex] = v.namedArg->mValue;
+                            js2val v = getValue(i + argStart);
+                            if (JSValue::isNamedArg(v)) {
+                                if (JSValue::namedArg(v)->mName == parameterName) {
+                                    argBase[pIndex] = JSValue::namedArg(v)->mValue;
                                     argUsed[i] = true;
                                     needDefault = false;
                                     break;
@@ -385,7 +385,7 @@ JSValue *Context::buildArgumentBlock(JSFunction *target, uint32 &argCount)
 * If there is no RestParameter and any arguments remain, raise an error unless the function is unchecked.
 */
 
-    JSValue restArgument;
+    js2val restArgument;
     bool haveRestArg = false;
     
     if (target->hasRestParameter() && target->getParameterName(restParameterIndex)) {
@@ -396,26 +396,26 @@ JSValue *Context::buildArgumentBlock(JSFunction *target, uint32 &argCount)
     inArgIndex = 0;    // re-number the non-named arguments that end up in the rest arg
     for (i = 0; i < argCount; i++) {
         if (!argUsed[i]) {
-            JSValue v = getValue(i + argStart);
-            bool isNamedArg = v.isNamedArg();
+            js2val v = getValue(i + argStart);
+            bool isNamedArg = JSValue::isNamedArg(v);
             if (isNamedArg) {
-                NamedArgument *arg = v.namedArg;
+                NamedArgument *arg = JSValue::namedArg(v);
                 if (haveRestArg)
-                    restArgument.object->setProperty(this, *arg->mName, (NamespaceList *)(NULL), arg->mValue);
+                    JSValue::object(restArgument)->setProperty(this, *arg->mName, (NamespaceList *)(NULL), arg->mValue);
                 else
                     reportError(Exception::referenceError, "Unused named argument, no rest argument");                                
             }
             else {
                 if (haveRestArg) {
                     const String *id = numberToString(inArgIndex++);
-                    restArgument.object->setProperty(this, *id, (NamespaceList *)(NULL), v);
+                    JSValue::object(restArgument)->setProperty(this, *id, (NamespaceList *)(NULL), v);
                 }
                 else {
                     if (target->isChecked())
                        reportError(Exception::referenceError, "Extra argument, no rest argument"); 
                     else {
                         if (isNamedArg)
-                            argBase[i] = v.namedArg->mValue;
+                            argBase[i] = JSValue::namedArg(v)->mValue;
                         else
                             argBase[i] = v;
                     }
@@ -428,10 +428,10 @@ JSValue *Context::buildArgumentBlock(JSFunction *target, uint32 &argCount)
     return argBase;
 }
 
-JSValue Context::interpret(uint8 *pc, uint8 *endPC)
+js2val Context::interpret(uint8 *pc, uint8 *endPC)
 {
     bool useOnceNamespace = false;
-    JSValue result = kUndefinedValue;
+    js2val result = kUndefinedValue;
     while (pc != endPC) {
         mPC = pc;
         try {
@@ -472,14 +472,14 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                 break;
             case DupOp:
                 {
-                    JSValue v = topValue();
+                    js2val v = topValue();
                     pushValue(v);
                 }
                 break;
             case DupInsertOp:   // XXX something more efficient than pop/push?
                 {
-                    JSValue v1 = popValue();
-                    JSValue v2 = popValue();
+                    js2val v1 = popValue();
+                    js2val v2 = popValue();
                     pushValue(v1);
                     pushValue(v2);
                     pushValue(v1);
@@ -489,7 +489,7 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                 {
                     uint16 count = *((uint16 *)pc);
                     pc += sizeof(uint16);
-                    JSValue *vp = getBase(stackSize() - count);
+                    js2val *vp = getBase(stackSize() - count);
                     while (count--)
                         pushValue(*vp++);
                 }
@@ -497,7 +497,7 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
             // <N things> <object2> --> <object2> <N things> <object2>
             case DupInsertNOp:
                 {
-                    JSValue v2 = topValue();
+                    js2val v2 = topValue();
                     uint16 count = *((uint16 *)pc);
                     pc += sizeof(uint16);
                     insertValue(v2, mStackTop - (count + 1));
@@ -505,21 +505,21 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                 break;
             case SwapOp:   // XXX something more efficient than pop/push?
                 {
-                    JSValue v1 = popValue();
-                    JSValue v2 = popValue();
+                    js2val v1 = popValue();
+                    js2val v2 = popValue();
                     pushValue(v1);
                     pushValue(v2);
                 }
                 break;
             case LogicalXorOp:
                 {
-                    JSValue v2 = popValue();
-                    ASSERT(v2.isBool());
-                    JSValue v1 = popValue();
-                    ASSERT(v1.isBool());
+                    js2val v2 = popValue();
+                    ASSERT(JSValue::isBool(v2));
+                    js2val v1 = popValue();
+                    ASSERT(JSValue::isBool(v1));
 
-                    if (v1.boolean) {
-                        if (v2.boolean) {
+                    if (JSValue::boolean(v1)) {
+                        if (JSValue::boolean(v2)) {
                             popValue();
                             popValue();
                             pushValue(kFalseValue);
@@ -528,13 +528,13 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                             popValue();
                     }
                     else {
-                        if (v1.boolean) {
+                        if (JSValue::boolean(v1)) {
                             popValue();
                             popValue();
                             pushValue(kFalseValue);
                         }
                         else {
-                            JSValue t = topValue();
+                            js2val t = topValue();
                             popValue();
                             popValue();
                             pushValue(t);
@@ -544,9 +544,12 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                 break;
             case LogicalNotOp:
                 {
-                    JSValue v = popValue();
-                    ASSERT(v.isBool());
-                    pushValue(JSValue(!v.boolean));
+                    js2val v = popValue();
+                    ASSERT(JSValue::isBool(v));
+                    if (JSValue::isTrue(v))
+                        pushValue(kFalseValue);
+                    else
+                        pushValue(kTrueValue);
                 }
                 break;
             case JumpOp:
@@ -557,15 +560,15 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                 break;
             case ToBooleanOp:
                 {
-                    JSValue v = popValue();
-                    pushValue(v.toBoolean(this));
+                    js2val v = popValue();
+                    pushValue(JSValue::toBoolean(this, v));
                 }
                 break;
             case JumpFalseOp:
                 {
-                    JSValue v = popValue();
-                    ASSERT(v.isBool());
-                    if (!v.boolean) {
+                    js2val v = popValue();
+                    ASSERT(JSValue::isBool(v));
+                    if (!JSValue::boolean(v)) {
                         uint32 offset = *((uint32 *)pc);
                         pc += offset;
                     }
@@ -575,9 +578,9 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                 break;
             case JumpTrueOp:
                 {
-                    JSValue v = popValue();
-                    ASSERT(v.isBool());
-                    if (v.boolean) {
+                    js2val v = popValue();
+                    ASSERT(JSValue::isBool(v));
+                    if (JSValue::boolean(v)) {
                         uint32 offset = *((uint32 *)pc);
                         pc += offset;
                     }
@@ -587,11 +590,11 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                 break;
             case NamedArgOp:
                 {
-                    JSValue name = popValue();
-                    if (!name.isString())
+                    js2val name = popValue();
+                    if (!JSValue::isString(name))
                         reportError(Exception::typeError, "String needed for argument name");
-                    JSValue value = popValue();
-                    pushValue(JSValue(new NamedArgument(value, name.string)));
+                    js2val value = popValue();
+                    pushValue(JSValue::newNamedArg(new NamedArgument(value, JSValue::string(name))));
                 }
                 break;
             case InvokeOp:
@@ -602,9 +605,9 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     CallFlag callFlags = (CallFlag)(*pc++);
                     mPC = pc;
 
-                    JSValue *targetValue = getBase(stackSize() - (argCount + 1));
+                    js2val *targetValue = getBase(stackSize() - (argCount + 1));
                     JSFunction *target;
-                    JSValue oldThis = mThis;
+                    js2val oldThis = mThis;
                     switch (callFlags & ThisFlags) {
                     case NoThis:
                         mThis = kNullValue; 
@@ -617,15 +620,15 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                         NOT_REACHED("bad bytecode");
                     }
 
-                    if (!targetValue->isFunction()) {
-                        if (targetValue->isType()) {
+                    if (!JSValue::isFunction(*targetValue)) {
+                        if (JSValue::isType(*targetValue)) {
                             // how to distinguish between a cast and an invocation of
                             // the superclass constructor from a constructor????
                             // XXX help
                             if ((callFlags & SuperInvoke) == SuperInvoke) {
                                 // in this case, calling the constructor requires passing the 'this' value
                                 // through.
-                                target = targetValue->type->getDefaultConstructor();
+                                target = JSValue::type(*targetValue)->getDefaultConstructor();
                                 mThis = oldThis;
                             }
                             else {
@@ -637,15 +640,15 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                                 // XXX Note that this is different behaviour from JS1.5, where
                                 // (e.g.) Array(2) is an invocation of the constructor.
                                 
-                                target = targetValue->type->getTypeCastFunction();
+                                target = JSValue::type(*targetValue)->getTypeCastFunction();
                                 if (target == NULL) {
                                     if ((argCount > 1) || ((callFlags & ThisFlags) != NoThis))
                                         reportError(Exception::referenceError, "Type cast can only take one argument");
-                                    JSValue v;
+                                    js2val v;
                                     if (argCount > 0)
                                         v = popValue();
                                     popValue();             // don't need the target anymore
-                                    pushValue(mapValueToType(v, targetValue->type));
+                                    pushValue(mapValueToType(v, JSValue::type(*targetValue)));
                                     mThis = oldThis;
                                     break;      // all done
                                 }
@@ -655,7 +658,7 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                             reportError(Exception::referenceError, "Not a function");
                     }
                     else {
-                        target = targetValue->function;
+                        target = JSValue::function(*targetValue);
 
                         // an invocation of the super constructor has to pass thru the existing 'this'
                         if (target->isConstructor() && (callFlags & SuperInvoke))
@@ -664,11 +667,11 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                             if (target->hasBoundThis())   // then we use it instead of the expressed version
                                 mThis = target->getThisValue();
                     }
-                    if (target->isPrototype() && mThis.isNull())
-                        mThis = JSValue(getGlobalObject());
+                    if (target->isPrototype() && JSValue::isNull(mThis))
+                        mThis = JSValue::newObject(getGlobalObject());
                                         
                     if (!target->isNative()) {
-                        JSValue *argBase = buildArgumentBlock(target, argCount);
+                        js2val *argBase = buildArgumentBlock(target, argCount);
                         // XXX Optimize the more typical case in which there are no named arguments, no optional arguments
                         // and the appropriate number of arguments have been supplied.
 
@@ -681,9 +684,9 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                         mScopeChain->addScope(target->getActivation());
 
                         if (!target->isChecked()) {
-                            JSValue args = Array_Type->newInstance(this);
+                            js2val args = Array_Type->newInstance(this);
                             for (uint32 i = 0; i < argCount; i++) 
-                                args.instance->setProperty(this, *numberToString(i), NULL, argBase[i]);
+                                JSValue::instance(args)->setProperty(this, *numberToString(i), NULL, argBase[i]);
                             target->getActivation()->setProperty(this, Arguments_StringAtom, NULL, args);
                         }
 
@@ -691,20 +694,20 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                         pc = mCurModule->mCodeBase;
                         endPC = mCurModule->mCodeBase + mCurModule->mLength;
                         mArgumentBase = argBase;
-                        mLocals = new JSValue[mCurModule->mLocalsCount];
-                        mStack = new JSValue[mCurModule->mStackDepth];
+                        mLocals = new js2val[mCurModule->mLocalsCount];
+                        mStack = new js2val[mCurModule->mStackDepth];
                         mStackMax = mCurModule->mStackDepth;
                         mStackTop = 0;
                     }
                     else {
-                        JSValue *argBase = getBase(stackSize() - argCount);
+                        js2val *argBase = getBase(stackSize() - argCount);
                         // native functions may still need access to information
                         // about the currently executing function.
                         mActivationStack.push(new Activation(mLocals, mStack, mStackTop - (cleanUp + 1),
                                                                     mScopeChain,
                                                                     mArgumentBase, oldThis,
                                                                     pc, mCurModule, mNamespaceList));
-                        JSValue result = (target->getNativeCode())(this, mThis, argBase, argCount);
+                        js2val result = target->invokeNativeCode(this, mThis, argBase, argCount);
                         Activation *prev = mActivationStack.top();
                         delete prev;
                         mActivationStack.pop();
@@ -750,7 +753,7 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                 break;
             case ReturnOp:
                 {
-                    JSValue result = popValue();                    
+                    js2val result = popValue();                    
                     if (mActivationStack.empty())
                         return result;                    
                     Activation *prev = mActivationStack.top();
@@ -783,26 +786,26 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                 {
                     JSType *t = *((JSType **)pc);
                     pc += sizeof(JSType *);
-                    pushValue(JSValue(t));
+                    pushValue(JSValue::newType(t));
                 }
                 break;
             case LoadFunctionOp:
                 {
                     JSFunction *f = *((JSFunction **)pc);
                     pc += sizeof(JSFunction *);
-                    pushValue(JSValue(f));
+                    pushValue(JSValue::newFunction(f));
                 }
                 break;
             case LoadConstantStringOp:
                 {
                     uint32 index = *((uint32 *)pc);
                     pc += sizeof(uint32);
-                    pushValue(JSValue(mCurModule->getString(index)));
+                    pushValue(JSValue::newString(mCurModule->getString(index)));
                 }
                 break;
             case LoadConstantNumberOp:
                 {
-                    pushValue(JSValue(mCurModule->getNumber(pc)));
+                    pushValue(JSValue::newNumber(mCurModule->getNumber(pc)));
                     pc += sizeof(float64);
                 }
                 break;
@@ -825,7 +828,7 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                 {
                     JSInstance *t = *((JSInstance **)pc);
                     pc += sizeof(JSInstance *);
-                    pushValue(JSValue(t));
+                    pushValue(JSValue::newInstance(t));
                 }
                 break;
             case DeleteNameOp:
@@ -841,8 +844,8 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                 break;
             case DeleteOp:
                 {
-                    JSValue base = popValue();
-                    JSObject *obj = base.toObjectValue(this);
+                    js2val base = popValue();
+                    JSObject *obj = JSValue::toObjectValue(this, base);
                     uint32 index = *((uint32 *)pc);
                     pc += sizeof(uint32);
                     const StringAtom &name = *mCurModule->getString(index);
@@ -858,35 +861,35 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                 break;
             case TypeOfOp:
                 {
-                    JSValue v = popValue();
-                    if (v.isUndefined())
-                        pushValue(JSValue(&Undefined_StringAtom));
+                    js2val v = popValue();
+                    if (JSValue::isUndefined(v))
+                        pushValue(JSValue::newString(&Undefined_StringAtom));
                     else
-                    if (v.isNull())
-                        pushValue(JSValue(&Object_StringAtom));
+                    if (JSValue::isNull(v))
+                        pushValue(JSValue::newString(&Object_StringAtom));
                     else
-                    if (v.isBool())
-                        pushValue(JSValue(&Boolean_StringAtom));
+                    if (JSValue::isBool(v))
+                        pushValue(JSValue::newString(&Boolean_StringAtom));
                     else
-                    if (v.isNumber())
-                        pushValue(JSValue(&Number_StringAtom));
+                    if (JSValue::isNumber(v))
+                        pushValue(JSValue::newString(&Number_StringAtom));
                     else
-                    if (v.isString())
-                        pushValue(JSValue(&String_StringAtom));
+                    if (JSValue::isString(v))
+                        pushValue(JSValue::newString(&String_StringAtom));
                     else
-                    if (v.isFunction())
-                        pushValue(JSValue(&Function_StringAtom));
+                    if (JSValue::isFunction(v))
+                        pushValue(JSValue::newString(&Function_StringAtom));
                     else
-                        pushValue(JSValue(&Object_StringAtom));
+                        pushValue(JSValue::newString(&Object_StringAtom));
                 }
                 break;
             case AsOp:
                 {
-                    JSValue t = popValue();
-                    JSValue v = popValue();
-                    if (t.isType()) {
-                        if (v.isInstance() 
-                                && (v.instance->getType() == t.type))
+                    js2val t = popValue();
+                    js2val v = popValue();
+                    if (JSValue::isType(t)) {
+                        if (JSValue::isInstance(v) 
+                            && (JSValue::instance(v)->getType() == JSValue::type(t)))
                             pushValue(v);
                         else
                             pushValue(kNullValue);   // XXX or throw an exception if 
@@ -898,28 +901,28 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                 break;
             case IsOp:
                 {
-                    JSValue t = popValue();
-                    JSValue v = popValue();
-                    if (t.isType()) {
-                        if (v.isNull())
-                            if (t.type == Object_Type)
+                    js2val t = popValue();
+                    js2val v = popValue();
+                    if (JSValue::isType(t)) {
+                        if (JSValue::isNull(v))
+                            if (JSValue::type(t) == Object_Type)
                                 pushValue(kTrueValue);
                             else
                                 pushValue(kFalseValue);
                         else
-                            if (v.isInstance() 
-                                    && ((v.instance->getType() == t.type)
-                                        || (v.instance->getType()->derivesFrom(t.type))))
+                            if (JSValue::isInstance(v) 
+                                && ((JSValue::instance(v)->getType() == JSValue::type(t))
+                                        || (JSValue::instance(v)->getType()->derivesFrom(JSValue::type(t)))))
                                 pushValue(kTrueValue);
                             else {
-                                if (v.getType() == t.type)
+                                if (JSValue::getType(v) == JSValue::type(t))
                                     pushValue(kTrueValue);
                                 else
                                     pushValue(kFalseValue);
                             }
                     }
                     else {  // behave like instanceof
-                        if (t.isObject() && t.isFunction()) {                            
+                        if (JSValue::isObject(t) && JSValue::isFunction(t)) {                            
                             // XXX prove that t->function["prototype"] is on t.object->mPrototype chain
                             pushValue(kTrueValue);
                         }
@@ -930,16 +933,16 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                 break;
             case InstanceOfOp:  
                 {
-                    JSValue t = popValue();
-                    JSValue v = popValue();
-                    if (t.isFunction()) {
-                        JSFunction *obj = t.function;                        
+                    js2val t = popValue();
+                    js2val v = popValue();
+                    if (JSValue::isFunction(t)) {
+                        JSFunction *obj = JSValue::function(t);                        
                         PropertyIterator i;
                         JSFunction *target = NULL;
                         if (obj->hasProperty(this, HasInstance_StringAtom, mNamespaceList, Read, &i)) {
-                            JSValue hi = obj->getPropertyValue(i);
-                            if (hi.isFunction())
-                                target = hi.function;
+                            js2val hi = obj->getPropertyValue(i);
+                            if (JSValue::isFunction(hi))
+                                target = JSValue::function(hi);
                         }
                         if (target)
                             pushValue(invokeFunction(target, t, &v, 1));
@@ -948,9 +951,9 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     }
                     else {
                         // XXX hack for <= ECMA 3 compatibility
-                        if (t.isType()) {
-                            if ((v.getType() == t.type)
-                                    || v.getType()->derivesFrom(t.type))
+                        if (JSValue::isType(t)) {
+                            if ((JSValue::getType(v) == JSValue::type(t))
+                                || JSValue::getType(v)->derivesFrom(JSValue::type(t)))
                                 pushValue(kTrueValue);
                             else
                                 pushValue(kFalseValue);
@@ -966,15 +969,15 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     pc += sizeof(uint32);
                     const StringAtom &name = *mCurModule->getString(index);
                     JSObject *parent = mScopeChain->getNameValue(this, name, mNamespaceList);
-                    JSValue result = topValue();
-                    if (result.isFunction() && !result.function->hasBoundThis()) {
+                    js2val result = topValue();
+                    if (JSValue::isFunction(result) && !JSValue::function(result)->hasBoundThis()) {
                         popValue();
-                        if (result.function->isConstructor())
+                        if (JSValue::function(result)->isConstructor())
                             // A constructor has to be called with a NULL 'this' in order to prompt it
                             // to construct the instance object.
-                            pushValue(JSValue((JSFunction *)(new JSBoundFunction(this, result.function, NULL))));
+                            pushValue(JSValue::newFunction((JSFunction *)(new JSBoundFunction(this, JSValue::function(result), NULL))));
                         else
-                            pushValue(JSValue((JSFunction *)(new JSBoundFunction(this, result.function, parent))));
+                            pushValue(JSValue::newFunction((JSFunction *)(new JSBoundFunction(this, JSValue::function(result), parent))));
                     }
                     if (useOnceNamespace) {
                         NamespaceList *t = mNamespaceList->mNext;
@@ -989,10 +992,10 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     uint32 index = *((uint32 *)pc);
                     pc += sizeof(uint32);
                     const StringAtom &name = *mCurModule->getString(index);
-                    JSValue v = topValue();
-                    if (v.isFunction() && v.function->hasBoundThis() && !v.function->isMethod()) {
+                    js2val v = topValue();
+                    if (JSValue::isFunction(v) && JSValue::function(v)->hasBoundThis() && !JSValue::function(v)->isMethod()) {
                         popValue();
-                        pushValue(JSValue(v.function->getFunction()));
+                        pushValue(JSValue::newFunction(JSValue::function(v)->getFunction()));
                     }
                     mScopeChain->setNameValue(this, name, mNamespaceList);
                     if (useOnceNamespace) {
@@ -1027,25 +1030,25 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     pc += sizeof(uint16);
                     mPC = pc;
 
-                    JSValue *base = getBase(stackSize() - (dimCount + 1));
+                    js2val *base = getBase(stackSize() - (dimCount + 1));
 
                     // Use the type of the base to dispatch on...
-                    JSObject *obj = base->toObjectValue(this);
-                    JSFunction *target = getUnaryOperator(base->getType(), Index);
+                    JSObject *obj = JSValue::toObjectValue(this, *base);
+                    JSFunction *target = getUnaryOperator(JSValue::getType(*base), Index);
 
                     if (target) {
-                        JSValue result;
+                        js2val result;
                         if (target->isNative()) {
-                            JSValue *argBase = new JSValue[dimCount + 1];
+                            js2val *argBase = new js2val[dimCount + 1];
                             for (uint32 i = 0; i < (dimCount + 1); i++)
                                 argBase[i] = base[i];
                             resizeStack(stackSize() - (dimCount + 1));
-                            result = target->getNativeCode()(this, argBase[0], argBase, dimCount + 1);
+                            result = target->invokeNativeCode(this, argBase[0], argBase, dimCount + 1);
                             delete[] argBase;
                         }
                         else {
                             uint32 argCount = dimCount + 1;
-                            JSValue *argBase = buildArgumentBlock(target, argCount);
+                            js2val *argBase = buildArgumentBlock(target, argCount);
                             resizeStack(stackSize() - (dimCount + 1));
                             try {
                                 result = interpret(target->getByteCode(), 0, target->getScopeChain(), argBase[0], argBase, argCount);
@@ -1060,22 +1063,22 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     else {  // XXX or should this be implemented in Object_Type as operator "[]" ?
                         if (dimCount != 1)
                             reportError(Exception::typeError, "too many indices");
-                        JSValue index = popValue();
+                        js2val index = popValue();
                         popValue();     // discard base
-                        const String *name = index.toString(this).string;
+                        const String *name = JSValue::string(JSValue::toString(this, index));
                         obj->getProperty(this, *name, mNamespaceList);
                     }
                     // if the result is a method of some kind, bind
                     // the base object to it
-                    JSValue result = topValue();
-                    if (result.isFunction()) {
+                    js2val result = topValue();
+                    if (JSValue::isFunction(result)) {
                         popValue();
-                        if (result.function->isConstructor())
+                        if (JSValue::function(result)->isConstructor())
                             // A constructor has to be called with a NULL 'this' in order to prompt it
                             // to construct the instance object.
-                            pushValue(JSValue((JSFunction *)(new JSBoundFunction(this, result.function, NULL))));
+                            pushValue(JSValue::newFunction((JSFunction *)(new JSBoundFunction(this, JSValue::function(result), NULL))));
                         else
-                            pushValue(JSValue((JSFunction *)(new JSBoundFunction(this, result.function, obj))));
+                            pushValue(JSValue::newFunction((JSFunction *)(new JSBoundFunction(this, JSValue::function(result), obj))));
                     }
                 }
                 break;
@@ -1085,31 +1088,31 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     pc += sizeof(uint16);
                     mPC = pc;
 
-                    JSValue *base = getBase(stackSize() - (dimCount + 2));     // +1 for assigned value
+                    js2val *base = getBase(stackSize() - (dimCount + 2));     // +1 for assigned value
 
                     // Use the type of the base to dispatch on...
-                    JSObject *obj = base->toObjectValue(this);
-                    JSFunction *target = getUnaryOperator(base->getType(), IndexEqual);
+                    JSObject *obj = JSValue::toObjectValue(this, *base);
+                    JSFunction *target = getUnaryOperator(JSValue::getType(*base), IndexEqual);
 
                     if (target) {
-                        JSValue v = popValue();     // need to have this sitting right above the base value
-                        if (v.isFunction() && v.function->hasBoundThis() && !v.function->isMethod()) {
-                            v = JSValue(v.function->getFunction());
+                        js2val v = popValue();     // need to have this sitting right above the base value
+                        if (JSValue::isFunction(v) && JSValue::function(v)->hasBoundThis() && !JSValue::function(v)->isMethod()) {
+                            v = JSValue::newFunction(JSValue::function(v)->getFunction());
                         }
                         insertValue(v, mStackTop - dimCount);
 
-                        JSValue result;
+                        js2val result;
                         if (target->isNative()) {
-                            JSValue *argBase = new JSValue[dimCount + 2];
+                            js2val *argBase = new js2val[dimCount + 2];
                             for (uint32 i = 0; i < (dimCount + 2); i++)
                                 argBase[i] = base[i];
                             resizeStack(stackSize() - (dimCount + 2));
-                            result = target->getNativeCode()(this, *base, base, (dimCount + 2));
+                            result = target->invokeNativeCode(this, *base, base, (dimCount + 2));
                             delete[] argBase;
                         }
                         else {
                             uint32 argCount = dimCount + 2;
-                            JSValue *argBase = buildArgumentBlock(target, argCount);
+                            js2val *argBase = buildArgumentBlock(target, argCount);
                             resizeStack(stackSize() - (dimCount + 2));
                             try {
                                 result = interpret(target->getByteCode(), 0, target->getScopeChain(), *base, argBase, argCount);
@@ -1124,13 +1127,13 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     else {  // XXX or should this be implemented in Object_Type as operator "[]=" ?
                         if (dimCount != 1)
                             reportError(Exception::typeError, "too many indices");
-                        JSValue v = popValue();
-                        if (v.isFunction() && v.function->hasBoundThis() && !v.function->isMethod()) {
-                            v = JSValue(v.function->getFunction());
+                        js2val v = popValue();
+                        if (JSValue::isFunction(v) && JSValue::function(v)->hasBoundThis() && !JSValue::function(v)->isMethod()) {
+                            v = JSValue::newFunction(JSValue::function(v)->getFunction());
                         }
-                        JSValue index = popValue();
+                        js2val index = popValue();
                         popValue();     // discard base
-                        const String *name = index.toString(this).string;
+                        const String *name = JSValue::string(JSValue::toString(this, index));
                         obj->setProperty(this, *name, mNamespaceList, v);
                         pushValue(v);                
                     }
@@ -1142,25 +1145,25 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     pc += sizeof(uint16);
                     mPC = pc;
 
-                    JSValue *base = getBase(stackSize() - (dimCount + 1));
+                    js2val *base = getBase(stackSize() - (dimCount + 1));
 
                     // Use the type of the base to dispatch on...
-                    JSObject *obj = base->toObjectValue(this);
-                    JSFunction *target = getUnaryOperator(base->getType(), DeleteIndex);
+                    JSObject *obj = JSValue::toObjectValue(this, *base);
+                    JSFunction *target = getUnaryOperator(JSValue::getType(*base), DeleteIndex);
 
                     if (target) {
-                        JSValue result;
+                        js2val result;
                         if (target->isNative()) {
-                            JSValue *argBase = new JSValue[dimCount + 1];
+                            js2val *argBase = new js2val[dimCount + 1];
                             for (uint32 i = 0; i < (dimCount + 1); i++)
                                 argBase[i] = base[i];
                             resizeStack(stackSize() - (dimCount + 1));
-                            result = target->getNativeCode()(this, argBase[0], argBase, dimCount + 1);
+                            result = target->invokeNativeCode(this, argBase[0], argBase, dimCount + 1);
                             delete[] argBase;
                         }
                         else {
                             uint32 argCount = dimCount + 1;
-                            JSValue *argBase = buildArgumentBlock(target, argCount);
+                            js2val *argBase = buildArgumentBlock(target, argCount);
                             resizeStack(stackSize() - (dimCount + 1));
                             try {
                                 result = interpret(target->getByteCode(), 0, target->getScopeChain(), kNullValue, argBase, argCount);
@@ -1175,9 +1178,9 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     else {  // XXX or should this be implemented in Object_Type as operator "delete[]" ?
                         if (dimCount != 1)
                             reportError(Exception::typeError, "too many indices");
-                        JSValue index = popValue();
+                        js2val index = popValue();
                         popValue();     // discard base
-                        const String *name = index.toString(this).string;
+                        const String *name = JSValue::string(JSValue::toString(this, index));
                         PropertyIterator it;
                         if (obj->hasOwnProperty(this, *name, mNamespaceList, Read, &it))
                             obj->deleteProperty(this, *name, mNamespaceList);
@@ -1187,8 +1190,8 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                 break;
             case GetPropertyOp:
                 {
-                    JSValue base = popValue();
-                    JSObject *obj = base.toObjectValue(this);
+                    js2val base = popValue();
+                    JSObject *obj = JSValue::toObjectValue(this, base);
                     uint32 index = *((uint32 *)pc);
                     pc += sizeof(uint32);
                     mPC = pc;
@@ -1196,15 +1199,15 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     obj->getProperty(this, name, mNamespaceList);
                     // if the result is a method of some kind, bind
                     // the base object to it
-                    JSValue result = topValue();
-                    if (result.isFunction()) {
+                    js2val result = topValue();
+                    if (JSValue::isFunction(result)) {
                         popValue();
-                        if (result.function->isConstructor())
+                        if (JSValue::function(result)->isConstructor())
                             // A constructor has to be called with a NULL 'this' in order to prompt it
                             // to construct the instance object.
-                            pushValue(JSValue((JSFunction *)(new JSBoundFunction(this, result.function, NULL))));
+                            pushValue(JSValue::newFunction((JSFunction *)(new JSBoundFunction(this, JSValue::function(result), NULL))));
                         else
-                            pushValue(JSValue((JSFunction *)(new JSBoundFunction(this, result.function, obj))));
+                            pushValue(JSValue::newFunction((JSFunction *)(new JSBoundFunction(this, JSValue::function(result), obj))));
                     }
                     if (useOnceNamespace) {
                         NamespaceList *t = mNamespaceList->mNext;
@@ -1216,8 +1219,8 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                 break;
             case GetInvokePropertyOp:
                 {
-                    JSValue base = topValue();
-                    JSValue baseObject = base.toObject(this);
+                    js2val base = topValue();
+                    js2val baseObject = JSValue::toObject(this, base);
                     // XXX really only need to pop/push if the base got modified
                     popValue();
                     pushValue(baseObject); // want the "toObject'd" version of base
@@ -1227,7 +1230,7 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     mPC = pc;
                     
                     const StringAtom &name = *mCurModule->getString(index);
-                    baseObject.getObjectValue()->getProperty(this, name, mNamespaceList);
+                    JSValue::getObjectValue(baseObject)->getProperty(this, name, mNamespaceList);
                     if (useOnceNamespace) {
                         NamespaceList *t = mNamespaceList->mNext;
                         delete mNamespaceList;
@@ -1238,12 +1241,12 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                 break;
             case SetPropertyOp:
                 {
-                    JSValue v = popValue();
-                    if (v.isFunction() && v.function->hasBoundThis() && !v.function->isMethod()) {
-                        v = JSValue(v.function->getFunction());
+                    js2val v = popValue();
+                    if (JSValue::isFunction(v) && JSValue::function(v)->hasBoundThis() && !JSValue::function(v)->isMethod()) {
+                        v = JSValue::newFunction(JSValue::function(v)->getFunction());
                     }
-                    JSValue base = popValue();
-                    JSObject *obj = base.toObjectValue(this);
+                    js2val base = popValue();
+                    JSObject *obj = JSValue::toObjectValue(this, base);
                     uint32 index = *((uint32 *)pc);
                     pc += sizeof(uint32);
                     mPC = pc;
@@ -1262,11 +1265,11 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                 {
                     Operator op = (Operator)(*pc++);
                     mPC = pc;
-                    JSValue v = topValue();
-                    JSFunction *target = getUnaryOperator(v.getType(), op);
+                    js2val v = topValue();
+                    JSFunction *target = getUnaryOperator(JSValue::getType(v), op);
                     if (target) {                    
                         uint32 argBase = stackSize() - 1;
-                        JSValue newThis = kNullValue;
+                        js2val newThis = kNullValue;
                         if (!target->isNative()) {
                             // lie about argCount to the activation since it
                             // would normally expect to clean the function pointer
@@ -1280,13 +1283,13 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                             pc = mCurModule->mCodeBase;
                             endPC = mCurModule->mCodeBase + mCurModule->mLength;
                             mArgumentBase = getBase(argBase);
-                            mLocals = new JSValue[mCurModule->mLocalsCount];
-                            mStack = new JSValue[mCurModule->mStackDepth];
+                            mLocals = new js2val[mCurModule->mLocalsCount];
+                            mStack = new js2val[mCurModule->mStackDepth];
                             mStackMax = mCurModule->mStackDepth;
                             mStackTop = 0;
                         }
                         else {
-                            JSValue result = (target->getNativeCode())(this, newThis, getBase(argBase), 0);
+                            js2val result = target->invokeNativeCode(this, newThis, getBase(argBase), 0);
                             resizeStack(stackSize() -  1);
                             pushValue(result);
                         }
@@ -1299,25 +1302,25 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     case Negate:
                         {
                             popValue();
-                            JSValue n = v.toNumber(this);
-                            if (n.isNaN())
+                            js2val n = JSValue::toNumber(this, v);
+                            if (JSValue::isNaN(n))
                                 pushValue(n);
                             else
-                                pushValue(JSValue(-n.f64));
+                                pushValue(JSValue::newNumber(-JSValue::f64(n)));
                         }
                         break;
                     case Posate:
                         {
                             popValue();
-                            JSValue n = v.toNumber(this);
+                            js2val n = JSValue::toNumber(this, v);
                             pushValue(n);
                         }
                         break;
                     case Complement:
                         {
                             popValue();
-                            JSValue n = v.toInt32(this);
-                            pushValue(JSValue((float64)(~(int32)(n.f64))));
+                            js2val n = JSValue::toInt32(this, v);
+                            pushValue(JSValue::newNumber((float64)(~(int32)JSValue::f64(n))));
                         }
                         break;
                     }
@@ -1327,14 +1330,14 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                 {
                     Operator op = (Operator)(*pc++);
                     mPC = pc;
-                    JSValue v1 = getValue(stackSize() - 2);
-                    JSValue v2 = getValue(stackSize() - 1);
-                    if (executeOperator(op, v1.getType(), v2.getType())) {
+                    js2val v1 = getValue(stackSize() - 2);
+                    js2val v2 = getValue(stackSize() - 1);
+                    if (executeOperator(op, JSValue::getType(v1), JSValue::getType(v2))) {
                         // need to invoke
                         pc = mCurModule->mCodeBase;
                         endPC = mCurModule->mCodeBase + mCurModule->mLength;
-                        mLocals = new JSValue[mCurModule->mLocalsCount];
-                        mStack = new JSValue[mCurModule->mStackDepth];
+                        mLocals = new js2val[mCurModule->mLocalsCount];
+                        mStack = new js2val[mCurModule->mStackDepth];
                         mStackMax = mCurModule->mStackDepth;
                         mStackTop = 0;
                     }
@@ -1342,9 +1345,9 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                 break;
             case GetConstructorOp:
                 {
-                    JSValue v = popValue();
-                    ASSERT(v.isType());
-                    pushValue(JSValue(v.type->getDefaultConstructor()));
+                    js2val v = popValue();
+                    ASSERT(JSValue::isType(v));
+                    pushValue(JSValue::newFunction(JSValue::type(v)->getDefaultConstructor()));
                 }
                 break;
             case NewInstanceOp:
@@ -1352,22 +1355,22 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     uint32 argCount = *((uint32 *)pc); 
                     pc += sizeof(uint32);
                     uint32 cleanUp = argCount;
-                    JSValue *argBase = getBase(stackSize() - argCount);
+                    js2val *argBase = getBase(stackSize() - argCount);
                     bool isPrototypeFunctionCall = false;
 
                     JSFunction *target = NULL;
-                    JSValue newThis = kNullValue;
-                    JSValue *typeValue = getBase(stackSize() - (argCount + 1));
-                    if (!typeValue->isType()) {                        
-                        if (typeValue->isFunction() && typeValue->function->isPrototype()) {
+                    js2val newThis = kNullValue;
+                    js2val *typeValue = getBase(stackSize() - (argCount + 1));
+                    if (!JSValue::isType(*typeValue)) {                        
+                        if (JSValue::isFunction(*typeValue) && JSValue::function(*typeValue)->isPrototype()) {
                             isPrototypeFunctionCall = true;
-                            target = typeValue->function;
+                            target = JSValue::function(*typeValue);
                             newThis = Object_Type->newInstance(this);
                             PropertyIterator i;
                             if (target->hasProperty(this, Prototype_StringAtom, mNamespaceList, Read, &i)) {
-                                JSValue v = target->getPropertyValue(i);
-                                newThis.object->mPrototype = v.toObjectValue(this);
-                                newThis.object->setProperty(this, UnderbarPrototype_StringAtom, (NamespaceList *)NULL, JSValue(newThis.object->mPrototype));
+                                js2val v = target->getPropertyValue(i);
+                                JSValue::object(newThis)->mPrototype = JSValue::newObject(JSValue::toObjectValue(this, v));
+                                JSValue::object(newThis)->setProperty(this, UnderbarPrototype_StringAtom, (NamespaceList *)NULL, JSValue::object(newThis)->mPrototype);
                             }
                         }
                         else            
@@ -1377,31 +1380,31 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                         // if the type has an operator "new" use that, 
                         // otherwise use the default constructor (and pass NULL
                         // for the this value)
-                        target = getUnaryOperator(typeValue->type, New);
+                        target = getUnaryOperator(JSValue::type(*typeValue), New);
                         if (target)
-                            newThis = typeValue->type->newInstance(this);
+                            newThis = JSValue::type(*typeValue)->newInstance(this);
                         else {
                             newThis = kNullValue;
-                            target = typeValue->type->getDefaultConstructor();
+                            target = JSValue::type(*typeValue)->getDefaultConstructor();
                         }
                     }                    
                     ASSERT(target);
 
-                    JSValue result;
+                    js2val result;
                     if (target->isNative()) {
-                        JSValue *tArgBase = new JSValue[argCount];
+                        js2val *tArgBase = new js2val[argCount];
                         for (uint32 i = 0; i < argCount; i++)
                             tArgBase[i] = argBase[i];
                         resizeStack(stackSize() - cleanUp);
-                        result = target->getNativeCode()(this, newThis, tArgBase, argCount);
+                        result = target->invokeNativeCode(this, newThis, tArgBase, argCount);
                     }
                     else {
                         argBase = buildArgumentBlock(target, argCount);
                         resizeStack(stackSize() - cleanUp);
                         if (!target->isChecked()) {
-                            JSValue args = Array_Type->newInstance(this);
+                            js2val args = Array_Type->newInstance(this);
                             for (uint32 i = 0; i < argCount; i++) 
-                                args.instance->setProperty(this, *numberToString(i), NULL, argBase[i]);
+                                JSValue::instance(args)->setProperty(this, *numberToString(i), NULL, argBase[i]);
                             target->getActivation()->setProperty(this, Arguments_StringAtom, NULL, args);
                         }
                         try {
@@ -1417,7 +1420,7 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                         // If it's a prototype function, the return value is only
                         // interesting if it's not a primitive, in which case it
                         // overrides the newly constructed object. Weird, huh.
-                        if (!result.isPrimitive())
+                        if (!JSValue::isPrimitive(result))
                             newThis = result;
                     }
                     else
@@ -1430,10 +1433,10 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                 break;
             case NewThisOp:
                 {
-                    JSValue v = popValue();
-                    if (mThis.isNull()) {
-                        ASSERT(v.isType());
-                        mThis = v.type->newInstance(this);
+                    js2val v = popValue();
+                    if (JSValue::isNull(mThis)) {
+                        ASSERT(JSValue::isType(v));
+                        mThis = JSValue::type(v)->newInstance(this);
                     }
                 }
                 break;
@@ -1453,9 +1456,9 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                 {
                     uint32 index = *((uint32 *)pc);
                     pc += sizeof(uint32);
-                    JSValue v = topValue();
-                    if (v.isFunction() && v.function->hasBoundThis() && !v.function->isMethod()) {
-                        v = JSValue(v.function->getFunction());
+                    js2val v = topValue();
+                    if (JSValue::isFunction(v) && JSValue::function(v)->hasBoundThis() && !JSValue::function(v)->isMethod()) {
+                        v = JSValue::newFunction(JSValue::function(v)->getFunction());
                     }
                     mLocals[index] = v;
                 }
@@ -1471,9 +1474,9 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                 break;
             case SetClosureVarOp:
                 {
-                    JSValue v = topValue();
-                    if (v.isFunction() && v.function->hasBoundThis() && !v.function->isMethod()) {
-                        v = JSValue(v.function->getFunction());
+                    js2val v = topValue();
+                    if (JSValue::isFunction(v) && JSValue::function(v)->hasBoundThis() && !JSValue::function(v)->isMethod()) {
+                        v = JSValue::newFunction(JSValue::function(v)->getFunction());
                     }
                     uint32 depth = *((uint32 *)pc);
                     pc += sizeof(uint32);
@@ -1500,9 +1503,9 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                 break;
             case SetArgOp:
                 {
-                    JSValue v = topValue();
-                    if (v.isFunction() && v.function->hasBoundThis() && !v.function->isMethod()) {
-                        v = JSValue(v.function->getFunction());
+                    js2val v = topValue();
+                    if (JSValue::isFunction(v) && JSValue::function(v)->hasBoundThis() && !JSValue::function(v)->isMethod()) {
+                        v = JSValue::newFunction(JSValue::function(v)->getFunction());
                     }
                     uint32 index = *((uint32 *)pc);
                     pc += sizeof(uint32);
@@ -1511,50 +1514,50 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                 break;
             case GetMethodOp:
                 {
-                    JSValue base = topValue();
-                    ASSERT(base.isInstance());
+                    js2val base = topValue();
+                    ASSERT(JSValue::isInstance(base));
                     uint32 index = *((uint32 *)pc);
                     pc += sizeof(uint32);
-                    pushValue(JSValue(base.instance->mType->mMethods[index]));
+                    pushValue(JSValue::newInstance(JSValue::instance(base)->mType->mMethods[index]));
                 }
                 break;
             case GetMethodRefOp:
                 {
-                    JSValue base = popValue();
-                    if (!base.isInstance())
+                    js2val base = popValue();
+                    if (!JSValue::isInstance(base))
                         reportError(Exception::semanticError, "Illegal method reference");
                     uint32 index = *((uint32 *)pc);
                     pc += sizeof(uint32);
-                    pushValue(JSValue(new JSBoundFunction(this, base.instance->mType->mMethods[index], base.object)));
+                    pushValue(JSValue::newFunction(new JSBoundFunction(this, JSValue::instance(base)->mType->mMethods[index], JSValue::object(base))));
                 }
                 break;
             case GetFieldOp:
                 {
-                    JSValue base = popValue();
-                    ASSERT(base.isInstance());
+                    js2val base = popValue();
+                    ASSERT(JSValue::isInstance(base));
                     uint32 index = *((uint32 *)pc);
                     pc += sizeof(uint32);
-                    pushValue(base.instance->mInstanceValues[index]);
+                    pushValue(JSValue::instance(base)->mInstanceValues[index]);
                 }
                 break;
             case SetFieldOp:
                 {
-                    JSValue v = popValue();
-                    if (v.isFunction() && v.function->hasBoundThis() && !v.function->isMethod()) {
-                        v = JSValue(v.function->getFunction());
+                    js2val v = popValue();
+                    if (JSValue::isFunction(v) && JSValue::function(v)->hasBoundThis() && !JSValue::function(v)->isMethod()) {
+                        v = JSValue::newFunction(JSValue::function(v)->getFunction());
                     }
-                    JSValue base = popValue();
-                    ASSERT(base.isInstance());
+                    js2val base = popValue();
+                    ASSERT(JSValue::isInstance(base));
                     uint32 index = *((uint32 *)pc);
                     pc += sizeof(uint32);
-                    base.instance->mInstanceValues[index] = v;
+                    JSValue::instance(base)->mInstanceValues[index] = v;
                     pushValue(v);
                 }
                 break;
             case WithinOp:
                 {
-                    JSValue base = popValue();
-                    mScopeChain->addScope(base.toObjectValue(this));
+                    js2val base = popValue();
+                    mScopeChain->addScope(JSValue::toObjectValue(this, base));
                 }
                 break;
             case WithoutOp:
@@ -1576,7 +1579,7 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                 break;
             case LoadGlobalObjectOp:
                 {
-                    pushValue(JSValue(getGlobalObject()));
+                    pushValue(JSValue::newObject(getGlobalObject()));
                 }
                 break;
             case JsrOp:
@@ -1620,14 +1623,14 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                 break;
             case JuxtaposeOp:
                 {
-                    JSValue v2 = popValue();
-                    JSValue v1 = popValue();
+                    js2val v2 = popValue();
+                    js2val v1 = popValue();
 
-                    ASSERT(v1.isAttribute());
-                    ASSERT(v2.isAttribute());
+                    ASSERT(JSValue::isAttribute(v1));
+                    ASSERT(JSValue::isAttribute(v2));
 
-                    Attribute *a1 = v1.attribute;
-                    Attribute *a2 = v2.attribute;
+                    Attribute *a1 = JSValue::attribute(v1);
+                    Attribute *a2 = JSValue::attribute(v2);
 
                     if ((a1->mTrueFlags & a2->mFalseFlags) != 0)
                         reportError(Exception::semanticError, "Mismatched attributes"); // XXX could supply more detail
@@ -1654,15 +1657,15 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                         if (a2->mExtendArgument)
                             x->mExtendArgument = a2->mExtendArgument;
                     
-                    pushValue(JSValue(x));
+                    pushValue(JSValue::newAttribute(x));
                 }
                 break;
             case CastOp:
                 {
-                    JSValue t = popValue();
-                    ASSERT(t.isType());
-                    JSType *toType = t.type;
-                    JSValue v = popValue();
+                    js2val t = popValue();
+                    ASSERT(JSValue::isType(t));
+                    JSType *toType = JSValue::type(t);
+                    js2val v = popValue();
 
                     pushValue(mapValueToType(v, toType));
                 }
@@ -1695,7 +1698,7 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                 HandlerData *hndlr = (HandlerData *)mTryStack.top();
                 Activation *curAct = (mActivationStack.size() > 0) ? mActivationStack.top() : NULL;
                 
-                JSValue x;
+                js2val x;
                 if (curAct != hndlr->mActivation) {
                     ASSERT(mActivationStack.size() > 0);
                     Activation *prev;// = mActivationStack.top();
@@ -1727,8 +1730,8 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
 
                 // make sure there's a JS object for the catch clause to work with
                 if (!jsx.hasKind(Exception::userException)) {
-                    JSValue argv[1];
-                    argv[0] = JSValue(new String(jsx.fullMessage()));
+                    js2val argv[1];
+                    argv[0] = JSValue::newString(new String(jsx.fullMessage()));
                     switch (jsx.kind) {
                     case Exception::syntaxError:
                         x = SyntaxError_Constructor(this, kNullValue, argv, 1);
@@ -1761,107 +1764,94 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
 
 // called on a JSValue to return a base object. The value may be a type, function, instance
 // or generic object
-JSObject *JSValue::getObjectValue() const
+JSObject *JSValue::getObjectValue(js2val v)
 {
-    switch (tag) {
-    case object_tag:
-        return object;
-    case instance_tag:
-        return instance;
-    case function_tag:
-        return function;
-    case type_tag:
-        return type;
-    case package_tag:
-        return package;
-    default:
-        NOT_REACHED("Bad tag");
-        return NULL;
-    }
+    ASSERT(isObject(v));
+    return object(v);
 }
 
 // called on a JSValue with type == Number_Type, which could be either a tagged
 // value or a Number object (actually an instance). Return the raw value in either case.
-float64 JSValue::getNumberValue() const
+float64 JSValue::getNumberValue(js2val v)
 {
-    if (isNumber())
-        return f64;
-    ASSERT(isInstance() && (getType() == Number_Type));
-    JSNumberInstance *numInst = checked_cast<JSNumberInstance *>(instance);
+    if (JSValue::isNumber(v))
+        return JSValue::f64(v);
+    ASSERT(JSValue::isInstance(v) && (JSValue::getType(v) == Number_Type));
+    JSNumberInstance *numInst = checked_cast<JSNumberInstance *>(JSValue::instance(v));
     return numInst->mValue;
 }
 
 // called on a JSValue with type == String_Type, which could be either a tagged
 // value or a String object (actually an instance). Return the raw value in either case.
-const String *JSValue::getStringValue() const
+const String *JSValue::getStringValue(js2val v)
 {
-    if (isString())
-        return string;
-    ASSERT(isInstance() && (getType() == String_Type));
-    JSStringInstance *strInst = checked_cast<JSStringInstance *>(instance);
+    if (JSValue::isString(v))
+        return JSValue::string(v);
+    ASSERT(JSValue::isInstance(v) && (JSValue::getType(v) == String_Type));
+    JSStringInstance *strInst = checked_cast<JSStringInstance *>(JSValue::instance(v));
     return strInst->mValue;
 }
 
 // called on a JSValue with type == Boolean_Type, which could be either a tagged
 // value or a Boolean object (actually an instance). Return the raw value in either case.
-bool JSValue::getBoolValue() const
+bool JSValue::getBoolValue(js2val v)
 {
-    if (isBool())
-        return boolean;
-    ASSERT(isInstance() && (getType() == Boolean_Type));
-    JSBooleanInstance *boolInst = checked_cast<JSBooleanInstance *>(instance);
+    if (JSValue::isBool(v))
+        return JSValue::boolean(v);
+    ASSERT(JSValue::isInstance(v) && (JSValue::getType(v) == Boolean_Type));
+    JSBooleanInstance *boolInst = checked_cast<JSBooleanInstance *>(JSValue::instance(v));
     return boolInst->mValue;
 }
 
 // Implementation of '+' for two number types
-static JSValue numberPlus(Context *, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
+static js2val numberPlus(Context *, const js2val /*thisValue*/, js2val argv[], uint32 /*argc*/)
 {
-    return JSValue(argv[0].getNumberValue() + argv[1].getNumberValue());
+    return JSValue::newNumber(JSValue::getNumberValue(argv[0]) + JSValue::getNumberValue(argv[1]));
 }
 
 // Implementation of '+' for two integer types
-static JSValue integerPlus(Context * /*cx*/, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
+static js2val integerPlus(Context * /*cx*/, const js2val /*thisValue*/, js2val argv[], uint32 /*argc*/)
 {
-    return JSValue(argv[0].getNumberValue() + argv[1].getNumberValue());
+    return JSValue::newNumber(JSValue::getNumberValue(argv[0]) + JSValue::getNumberValue(argv[1]));
 }
 
 // Implementation of '+' for two 'generic' objects
-static JSValue objectPlus(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
+static js2val objectPlus(Context *cx, const js2val /*thisValue*/, js2val argv[], uint32 /*argc*/)
 {
-    JSValue &r1 = argv[0];
-    JSValue &r2 = argv[1];
-    JSType *t1 = r1.getType();
-    JSType *t2 = r2.getType();
+    js2val &r1 = argv[0];
+    js2val &r2 = argv[1];
+    JSType *t1 = JSValue::getType(r1);
+    JSType *t2 = JSValue::getType(r2);
 
     if ((t1 == Number_Type) && (t2 == Number_Type)) {        
-        return JSValue(r1.getNumberValue() + r2.getNumberValue());
+        return JSValue::newNumber(JSValue::getNumberValue(r1) + JSValue::getNumberValue(r2));
     }
 
     if (t1 == String_Type) {
         if (t2 == String_Type)
-            return JSValue(new String(*r1.getStringValue() + *r2.getStringValue()));
+            return JSValue::newString(new String(*JSValue::getStringValue(r1) + *JSValue::getStringValue(r2)));
         else
-            return JSValue(new String(*r1.getStringValue() + *r2.toString(cx).string));
+            return JSValue::newString(new String(*JSValue::getStringValue(r1) + *JSValue::string(JSValue::toString(cx, r2))));
     }
     else {
         if (t2 == String_Type) 
-            return JSValue(new String(*r1.toString(cx).string + *r2.getStringValue()));
+            return JSValue::newString(new String(*JSValue::string(JSValue::toString(cx, r1)) + *JSValue::getStringValue(r2)));
         else {
-            JSValue r1p = r1.toPrimitive(cx);
-            JSValue r2p = r2.toPrimitive(cx);
+            js2val r1p = JSValue::toPrimitive(cx, r1);
+            js2val r2p = JSValue::toPrimitive(cx, r2);
             // gar-on-teed tagged values now
-            if (r1p.isString())
-                if (r2p.isString())
-                    return JSValue(new String(*r1p.string + *r2p.string));
+            if (JSValue::isString(r1p))
+                if (JSValue::isString(r2p))
+                    return JSValue::newString(new String(*JSValue::string(r1p) + *JSValue::string(r2p)));
                 else
-                    return JSValue(new String(*r1p.string + *r2p.toString(cx).string));
+                    return JSValue::newString(new String(*JSValue::string(r1p) + *JSValue::string(JSValue::toString(cx, r2p))));
             else
-                if (r2p.isString())
-                    return JSValue(new String(*r1p.toString(cx).string + *r2p.string));
+                if (JSValue::isString(r2p))
+                    return JSValue::newString(new String(*JSValue::string(JSValue::toString(cx, r1p)) + *JSValue::string(r2p)));
                 else {
-                    JSValue num1(r1.toNumber(cx));
-                    JSValue num2(r2.toNumber(cx));
-                    return JSValue(num1.f64 + num2.f64);
+                    js2val num1(JSValue::toNumber(cx, r1));
+                    js2val num2(JSValue::toNumber(cx, r2));
+                    return JSValue::newNumber(JSValue::f64(num1) + JSValue::f64(num2));
                 }
         }
     }
@@ -1870,197 +1860,197 @@ static JSValue objectPlus(Context *cx, const JSValue& /*thisValue*/, JSValue *ar
 
 
 // Implementation of '-' for two integer types
-static JSValue integerMinus(Context * /*cx*/, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
+static js2val integerMinus(Context * /*cx*/, const js2val /*thisValue*/, js2val argv[], uint32 /*argc*/)
 {
-    return JSValue(argv[0].getNumberValue() - argv[1].getNumberValue());
+    return JSValue::newNumber(JSValue::getNumberValue(argv[0]) - JSValue::getNumberValue(argv[1]));
 }
 
 // Implementation of '-' for two number types
-static JSValue numberMinus(Context *, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
+static js2val numberMinus(Context *, const js2val /*thisValue*/, js2val argv[], uint32 /*argc*/)
 {
-    return JSValue(argv[0].getNumberValue() - argv[1].getNumberValue());
+    return JSValue::newNumber(JSValue::getNumberValue(argv[0]) - JSValue::getNumberValue(argv[1]));
 }
 
 // Implementation of '-' for two 'generic' objects
-static JSValue objectMinus(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
+static js2val objectMinus(Context *cx, const js2val /*thisValue*/, js2val argv[], uint32 /*argc*/)
 {
-    JSValue &r1 = argv[0];
-    JSValue &r2 = argv[1];
-    return JSValue(r1.toNumber(cx).f64 - r2.toNumber(cx).f64);
+    js2val r1 = JSValue::toNumber(cx, argv[0]);
+    js2val r2 = JSValue::toNumber(cx, argv[1]);
+    return JSValue::newNumber(JSValue::f64(r1) - JSValue::f64(r2));
 }
 
 
 
 // Implementation of '*' for two integer types
-static JSValue integerMultiply(Context * /*cx*/, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
+static js2val integerMultiply(Context * /*cx*/, const js2val /*thisValue*/, js2val argv[], uint32 /*argc*/)
 {
-    return JSValue(argv[0].getNumberValue() * argv[1].getNumberValue());
+    return JSValue::newNumber(JSValue::getNumberValue(argv[0]) * JSValue::getNumberValue(argv[1]));
 }
 
 // Implementation of '*' for two 'generic' objects
-static JSValue objectMultiply(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
+static js2val objectMultiply(Context *cx, const js2val /*thisValue*/, js2val argv[], uint32 /*argc*/)
 {
-    JSValue &r1 = argv[0];
-    JSValue &r2 = argv[1];
-    return JSValue(r1.toNumber(cx).f64 * r2.toNumber(cx).f64);
+    js2val r1 = JSValue::toNumber(cx, argv[0]);
+    js2val r2 = JSValue::toNumber(cx, argv[1]);
+    return JSValue::newNumber(JSValue::f64(r1) * JSValue::f64(r2));
 }
 
 
 // Implementation of '/' for two integer types
-static JSValue integerDivide(Context * /*cx*/, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
+static js2val integerDivide(Context * /*cx*/, const js2val /*thisValue*/, js2val argv[], uint32 /*argc*/)
 {
-    float64 f1 = argv[0].getNumberValue();
-    float64 f2 = argv[1].getNumberValue();
+    float64 f1 = JSValue::getNumberValue(argv[0]);
+    float64 f2 = JSValue::getNumberValue(argv[1]);
     float64 d = f1 / f2;
     bool neg = (d < 0);
     d = fd::floor(neg ? -d : d);
     d = neg ? -d : d;
-    return JSValue(d);
+    return JSValue::newNumber(d);
 }
 
 // Implementation of '/' for two 'generic' objects
-static JSValue objectDivide(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
+static js2val objectDivide(Context *cx, const js2val /*thisValue*/, js2val argv[], uint32 /*argc*/)
 {
-    JSValue &r1 = argv[0];
-    JSValue &r2 = argv[1];
-    return JSValue(r1.toNumber(cx).f64 / r2.toNumber(cx).f64);
+    js2val r1 = JSValue::toNumber(cx, argv[0]);
+    js2val r2 = JSValue::toNumber(cx, argv[1]);
+    return JSValue::newNumber(JSValue::f64(r1) / JSValue::f64(r2));
 }
 
 
 // Implementation of '%' for two integer types
-static JSValue integerRemainder(Context * /*cx*/, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
+static js2val integerRemainder(Context * /*cx*/, const js2val /*thisValue*/, js2val argv[], uint32 /*argc*/)
 {
-    float64 f1 = argv[0].getNumberValue();
-    float64 f2 = argv[1].getNumberValue();
+    float64 f1 = JSValue::getNumberValue(argv[0]);
+    float64 f2 = JSValue::getNumberValue(argv[1]);
     float64 d = fd::fmod(f1, f2);
     bool neg = (d < 0);
     d = fd::floor(neg ? -d : d);
     d = neg ? -d : d;
-    return JSValue(d);
+    return JSValue::newNumber(d);
 }
 
 // Implementation of '%' for two 'generic' objects
-static JSValue objectRemainder(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
+static js2val objectRemainder(Context *cx, const js2val /*thisValue*/, js2val argv[], uint32 /*argc*/)
 {
-    JSValue &r1 = argv[0];
-    JSValue &r2 = argv[1];
+    js2val r1 = JSValue::toNumber(cx, argv[0]);
+    js2val r2 = JSValue::toNumber(cx, argv[1]);
 
-    float64 f1 = r1.toNumber(cx).f64;
-    float64 f2 = r2.toNumber(cx).f64;
+    float64 f1 = JSValue::f64(r1);
+    float64 f2 = JSValue::f64(r2);
 
 #ifdef XP_PC
     /* Workaround MS fmod bug where 42 % (1/0) => NaN, not 42. */
     if (JSDOUBLE_IS_FINITE(f1) && JSDOUBLE_IS_INFINITE(f2))
-        return JSValue(f1);
+        return JSValue::newNumber(f1);
 #endif
 
-    return JSValue(fd::fmod(f1, f2));
+    return JSValue::newNumber(fd::fmod(f1, f2));
 }
 
 
 // Implementation of '<<' for two integer types
-static JSValue integerShiftLeft(Context * /*cx*/, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
+static js2val integerShiftLeft(Context * /*cx*/, const js2val /*thisValue*/, js2val argv[], uint32 /*argc*/)
 {
-    float64 f1 = argv[0].getNumberValue();
-    float64 f2 = argv[1].getNumberValue();
-    return JSValue((float64)( (int32)(f1) << ( (uint32)(f2) & 0x1F)) );
+    float64 f1 = JSValue::getNumberValue(argv[0]);
+    float64 f2 = JSValue::getNumberValue(argv[1]);
+    return JSValue::newNumber((float64)( (int32)(f1) << ( (uint32)(f2) & 0x1F)) );
 }
 
 // Implementation of '<<' for two 'generic' objects
-static JSValue objectShiftLeft(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
+static js2val objectShiftLeft(Context *cx, const js2val /*thisValue*/, js2val argv[], uint32 /*argc*/)
 {
-    JSValue &r1 = argv[0];
-    JSValue &r2 = argv[1];
-    return JSValue((float64)( (int32)(r1.toInt32(cx).f64) << ( (uint32)(r2.toUInt32(cx).f64) & 0x1F)) );
+    js2val r1 = JSValue::toInt32(cx, argv[0]);
+    js2val r2 = JSValue::toUInt32(cx, argv[1]);
+    return JSValue::newNumber((float64)( (int32)(JSValue::f64(r1)) << ( (uint32)(JSValue::f64(r2)) & 0x1F)) );
 }
 
 
 
 // Implementation of '>>' for two integer types
-static JSValue integerShiftRight(Context * /*cx*/, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
+static js2val integerShiftRight(Context * /*cx*/, const js2val /*thisValue*/, js2val argv[], uint32 /*argc*/)
 {
-    float64 f1 = argv[0].getNumberValue();
-    float64 f2 = argv[1].getNumberValue();
-    return JSValue((float64) ( (int32)(f1) >> ( (uint32)(f2) & 0x1F)) );
+    float64 f1 = JSValue::getNumberValue(argv[0]);
+    float64 f2 = JSValue::getNumberValue(argv[1]);
+    return JSValue::newNumber((float64) ( (int32)(f1) >> ( (uint32)(f2) & 0x1F)) );
 }
 
 // Implementation of '>>' for two 'generic' objects
-static JSValue objectShiftRight(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
+static js2val objectShiftRight(Context *cx, const js2val /*thisValue*/, js2val argv[], uint32 /*argc*/)
 {
-    JSValue &r1 = argv[0];
-    JSValue &r2 = argv[1];
-    return JSValue((float64) ( (int32)(r1.toInt32(cx).f64) >> ( (uint32)(r2.toUInt32(cx).f64) & 0x1F)) );
+    js2val r1 = JSValue::toInt32(cx, argv[0]);
+    js2val r2 = JSValue::toUInt32(cx, argv[1]);
+    return JSValue::newNumber((float64) ( (int32)(JSValue::f64(r1)) >> ( (uint32)(JSValue::f64(r2)) & 0x1F)) );
 }
 
 
 
 // Implementation of '>>>' for two integer types
-static JSValue integerUShiftRight(Context * /*cx*/, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
+static js2val integerUShiftRight(Context * /*cx*/, const js2val /*thisValue*/, js2val argv[], uint32 /*argc*/)
 {
-    float64 f1 = argv[0].getNumberValue();
-    float64 f2 = argv[1].getNumberValue();
-    return JSValue((float64) ( (uint32)(f1) >> ( (uint32)(f2) & 0x1F)) );
+    float64 f1 = JSValue::getNumberValue(argv[0]);
+    float64 f2 = JSValue::getNumberValue(argv[1]);
+    return JSValue::newNumber((float64) ( (uint32)(f1) >> ( (uint32)(f2) & 0x1F)) );
 }
 
 // Implementation of '>>>' for two 'generic' objects
-static JSValue objectUShiftRight(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
+static js2val objectUShiftRight(Context *cx, const js2val /*thisValue*/, js2val argv[], uint32 /*argc*/)
 {
-    JSValue &r1 = argv[0];
-    JSValue &r2 = argv[1];
-    return JSValue((float64) ( (uint32)(r1.toUInt32(cx).f64) >> ( (uint32)(r2.toUInt32(cx).f64) & 0x1F)) );
+    js2val r1 = JSValue::toUInt32(cx, argv[0]);
+    js2val r2 = JSValue::toUInt32(cx, argv[1]);
+    return JSValue::newNumber((float64) ( (uint32)(JSValue::f64(r1)) >> ( (uint32)(JSValue::f64(r2)) & 0x1F)) );
 }
 
 
 // Implementation of '&' for two integer types
-static JSValue integerBitAnd(Context * /*cx*/, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
+static js2val integerBitAnd(Context * /*cx*/, const js2val /*thisValue*/, js2val argv[], uint32 /*argc*/)
 {
-    float64 f1 = argv[0].getNumberValue();
-    float64 f2 = argv[1].getNumberValue();
-    return JSValue((float64)( (int32)(f1) & (int32)(f2) ));
+    float64 f1 = JSValue::getNumberValue(argv[0]);
+    float64 f2 = JSValue::getNumberValue(argv[1]);
+    return JSValue::newNumber((float64)( (int32)(f1) & (int32)(f2) ));
 }
 
 // Implementation of '&' for two 'generic' objects
-static JSValue objectBitAnd(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
+static js2val objectBitAnd(Context *cx, const js2val /*thisValue*/, js2val argv[], uint32 /*argc*/)
 {
-    JSValue &r1 = argv[0];
-    JSValue &r2 = argv[1];
-    return JSValue((float64)( (int32)(r1.toInt32(cx).f64) & (int32)(r2.toInt32(cx).f64) ));
+    js2val r1 = JSValue::toInt32(cx, argv[0]);
+    js2val r2 = JSValue::toInt32(cx, argv[1]);
+    return JSValue::newNumber((float64)( (int32)(JSValue::f64(r1)) & (int32)(JSValue::f64(r2)) ));
 }
 
 
 
 // Implementation of '^' for two integer types
-static JSValue integerBitXor(Context * /*cx*/, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
+static js2val integerBitXor(Context * /*cx*/, const js2val /*thisValue*/, js2val argv[], uint32 /*argc*/)
 {
-    float64 f1 = argv[0].getNumberValue();
-    float64 f2 = argv[1].getNumberValue();
-    return JSValue((float64)( (int32)(f1) ^ (int32)(f2) ));
+    float64 f1 = JSValue::getNumberValue(argv[0]);
+    float64 f2 = JSValue::getNumberValue(argv[1]);
+    return JSValue::newNumber((float64)( (int32)(f1) ^ (int32)(f2) ));
 }
 
 // Implementation of '^' for two 'generic' objects
-static JSValue objectBitXor(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
+static js2val objectBitXor(Context *cx, const js2val /*thisValue*/, js2val argv[], uint32 /*argc*/)
 {
-    JSValue &r1 = argv[0];
-    JSValue &r2 = argv[1];
-    return JSValue((float64)( (int32)(r1.toInt32(cx).f64) ^ (int32)(r2.toInt32(cx).f64) ));
+    js2val r1 = JSValue::toInt32(cx, argv[0]);
+    js2val r2 = JSValue::toInt32(cx, argv[1]);
+    return JSValue::newNumber((float64)( (int32)(JSValue::f64(r1)) ^ (int32)(JSValue::f64(r2)) ));
 }
 
 
 
 // Implementation of '|' for two integer types
-static JSValue integerBitOr(Context * /*cx*/, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
+static js2val integerBitOr(Context * /*cx*/, const js2val /*thisValue*/, js2val argv[], uint32 /*argc*/)
 {
-    float64 f1 = argv[0].getNumberValue();
-    float64 f2 = argv[1].getNumberValue();
-    return JSValue((float64)( (int32)(f1) | (int32)(f2) ));
+    float64 f1 = JSValue::getNumberValue(argv[0]);
+    float64 f2 = JSValue::getNumberValue(argv[1]);
+    return JSValue::newNumber((float64)( (int32)(f1) | (int32)(f2) ));
 }
 
 // Implementation of '|' for two 'generic' objects
-static JSValue objectBitOr(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
+static js2val objectBitOr(Context *cx, const js2val /*thisValue*/, js2val argv[], uint32 /*argc*/)
 {
-    JSValue &r1 = argv[0];
-    JSValue &r2 = argv[1];
-    return JSValue((float64)( (int32)(r1.toInt32(cx).f64) | (int32)(r2.toInt32(cx).f64) ));
+    js2val r1 = JSValue::toInt32(cx, argv[0]);
+    js2val r2 = JSValue::toInt32(cx, argv[1]);
+    return JSValue::newNumber((float64)( (int32)(JSValue::f64(r1)) | (int32)(JSValue::f64(r2)) ));
 }
 
 
@@ -2068,156 +2058,149 @@ static JSValue objectBitOr(Context *cx, const JSValue& /*thisValue*/, JSValue *a
 //
 // implements r1 < r2, returning true or false or undefined
 //
-static JSValue objectCompare(Context *cx, JSValue &r1, JSValue &r2)
+static js2val objectCompare(Context *cx, js2val &r1, js2val &r2)
 {
-    JSValue r1p = r1.toPrimitive(cx, JSValue::NumberHint);
-    JSValue r2p = r2.toPrimitive(cx, JSValue::NumberHint);
+    js2val r1p = JSValue::toPrimitive(cx, r1, JSValue::NumberHint);
+    js2val r2p = JSValue::toPrimitive(cx, r2, JSValue::NumberHint);
 
-    if (r1p.isString() && r2p.isString())
-        return JSValue(bool(r1p.string->compare(*r2p.string) < 0));
+    if (JSValue::isString(r1p) && JSValue::isString(r2p))
+        return JSValue::newBoolean(bool(JSValue::string(r1p)->compare(*JSValue::string(r2p)) < 0));
     else {
-        JSValue r1n = r1p.toNumber(cx);
-        JSValue r2n = r2p.toNumber(cx);
-        if (r1n.isNaN() || r2n.isNaN())
+        js2val r1n = JSValue::toNumber(cx, r1p);
+        js2val r2n = JSValue::toNumber(cx, r2p);
+        if (JSValue::isNaN(r1n) || JSValue::isNaN(r2n))
             return kUndefinedValue;
         else
-            return JSValue(r1n.f64 < r2n.f64);
+            return JSValue::newNumber(JSValue::f64(r1n) < JSValue::f64(r2n));
     }
 
 }
 
-static JSValue objectLess(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
+static js2val objectLess(Context *cx, const js2val /*thisValue*/, js2val argv[], uint32 /*argc*/)
 {
-    JSValue &r1 = argv[0];
-    JSValue &r2 = argv[1];
-    JSValue result = objectCompare(cx, r1, r2);
-    if (result.isUndefined())
+    js2val result = objectCompare(cx, argv[0], argv[1]);
+    if (JSValue::isUndefined(result))
         return kFalseValue;
     else
         return result;
 }
 
-static JSValue objectLessEqual(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
+static js2val objectLessEqual(Context *cx, const js2val /*thisValue*/, js2val argv[], uint32 /*argc*/)
 {
-    JSValue &r1 = argv[0];
-    JSValue &r2 = argv[1];
-    JSValue result = objectCompare(cx, r2, r1);
-    if (result.isUndefined() || result.isTrue())
+    js2val result = objectCompare(cx, argv[1], argv[0]);
+    if (JSValue::isUndefined(result) || JSValue::isTrue(result))
         return kFalseValue;
     else
         return kTrueValue;
 }
 
 // Compare two values for '=='
-static JSValue compareEqual(Context *cx, JSValue r1, JSValue r2)
+static js2val compareEqual(Context *cx, js2val r1, js2val r2)
 {
-    JSType *t1 = r1.getType();
-    JSType *t2 = r2.getType();
+    JSType *t1 = JSValue::getType(r1);
+    JSType *t2 = JSValue::getType(r2);
 
     if (t1 != t2) {
-        if (r1.isNull() && r2.isUndefined())
+        if (JSValue::isNull(r1) && JSValue::isUndefined(r2))
             return kTrueValue;
-        if (r1.isUndefined() && r2.isNull())
+        if (JSValue::isUndefined(r1) && JSValue::isNull(r2))
             return kTrueValue;
         if ((t1 == Number_Type) && (t2 == String_Type))
-            return compareEqual(cx, r1, r2.toNumber(cx));
+            return compareEqual(cx, r1, JSValue::toNumber(cx, r2));
         if ((t1 == String_Type) && (t2 == Number_Type))
-            return compareEqual(cx, r1.toNumber(cx), r2.toString(cx));
+            return compareEqual(cx, JSValue::toNumber(cx, r1), JSValue::toString(cx, r2));
         if (t1 == Boolean_Type)
-            return compareEqual(cx, r1.toNumber(cx), r2);
+            return compareEqual(cx, JSValue::toNumber(cx, r1), r2);
         if (t2 == Boolean_Type)
-            return compareEqual(cx, r1, r2.toNumber(cx));
-        if ( ((t1 == String_Type) || (t1 == Number_Type)) && r2.isObject() )
-            return compareEqual(cx, r1, r2.toPrimitive(cx));
-        if ( (r1.isObject()) && ((t2 == String_Type) || (t2 == Number_Type)) )
-            return compareEqual(cx, r1.toPrimitive(cx), r2);
+            return compareEqual(cx, r1, JSValue::toNumber(cx, r1));
+        if ( ((t1 == String_Type) || (t1 == Number_Type)) && JSValue::isObject(r2) )
+            return compareEqual(cx, r1, JSValue::toPrimitive(cx, r2));
+        if ( (JSValue::isObject(r1)) && ((t2 == String_Type) || (t2 == Number_Type)) )
+            return compareEqual(cx, JSValue::toPrimitive(cx, r1), r2);
         return kFalseValue;
     }
     else {
-        if (r1.isUndefined())
+        if (JSValue::isUndefined(r1))
             return kTrueValue;
-        if (r1.isNull())
+        if (JSValue::isNull(r1))
             return kTrueValue;
-        if (r1.isInstance() && r2.isInstance()) // because new Boolean()->getType() == Boolean_Type
-            return JSValue(r1.instance == r2.instance);
-        if (r1.isObject() && r2.isObject())
-            return JSValue(r1.object == r2.object);
-        if (r1.isPackage() && r2.isPackage())
-            return JSValue(r1.package == r2.package);
-        if (r1.isType())
-            return JSValue(r1.type == r2.type);
-        if (r1.isFunction())
-            return JSValue(r1.function->isEqual(r2.function));
+        if (JSValue::isInstance(r1) && JSValue::isInstance(r2)) // because new Boolean()->getType() == Boolean_Type
+            return JSValue::newBoolean(JSValue::instance(r1) == JSValue::instance(r2));
+        if (JSValue::isObject(r1) && JSValue::isObject(r2))
+            return JSValue::newBoolean(JSValue::object(r1) == JSValue::object(r2));
+        if (JSValue::isPackage(r1) && JSValue::isPackage(r2))
+            return JSValue::newBoolean(JSValue::package(r1) == JSValue::package(r2));
+        if (JSValue::isType(r1))
+            return JSValue::newBoolean(JSValue::type(r1) == JSValue::type(r2));
+        if (JSValue::isFunction(r1))
+            return JSValue::newBoolean(JSValue::function(r1)->isEqual(JSValue::function(r2)));
         if (t1 == Number_Type) {
             
-            float64 f1 = r1.getNumberValue();
-            float64 f2 = r2.getNumberValue();
+            float64 f1 = JSValue::getNumberValue(r1);
+            float64 f2 = JSValue::getNumberValue(r2);
 
             if (JSDOUBLE_IS_NaN(f1))
                 return kFalseValue;
             if (JSDOUBLE_IS_NaN(f2))
                 return kFalseValue;
 
-            return JSValue(r1.f64 == r2.f64);
+            return JSValue::newBoolean(JSValue::f64(r1) == JSValue::f64(r2));
         }
         else {
             if (t1 == String_Type)
-                return JSValue(bool(r1.getStringValue()->compare(*r2.getStringValue()) == 0));
+                return JSValue::newBoolean(bool(JSValue::getStringValue(r1)->compare(*JSValue::getStringValue(r2)) == 0));
             if (t1 == Boolean_Type)
-                return JSValue(r1.getBoolValue() == r2.getBoolValue());
+                return JSValue::newBoolean(JSValue::getBoolValue(r1) == JSValue::getBoolValue(r2));
             NOT_REACHED("unhandled type");
             return kFalseValue;
         }
     }
 }
 
-static JSValue objectEqual(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
+static js2val objectEqual(Context *cx, const js2val /*thisValue*/, js2val argv[], uint32 /*argc*/)
 {
-    JSValue r1 = argv[0];
-    JSValue r2 = argv[1];
-    
-    return compareEqual(cx, r1, r2);
+    return compareEqual(cx, argv[0], argv[1]);
 }
 
-static JSValue objectSpittingImage(Context * /*cx*/, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
+static js2val objectSpittingImage(Context * /*cx*/, const js2val /*thisValue*/, js2val argv[], uint32 /*argc*/)
 {
-    JSValue r1 = argv[0];
-    JSValue r2 = argv[1];
+    js2val r1 = argv[0];
+    js2val r2 = argv[1];
     
-    JSType *t1 = r1.getType();
-    JSType *t2 = r2.getType();
+    JSType *t1 = JSValue::getType(r1);
+    JSType *t2 = JSValue::getType(r2);
 
-    if ((t1 != t2) || (r1.isObject() != r2.isObject())) {
+    if ((t1 != t2) || (JSValue::isObject(r1) != JSValue::isObject(r2))) {
         return kFalseValue;
     }
     else {
-        if (r1.isUndefined())
+        if (JSValue::isUndefined(r1))
             return kTrueValue;
-        if (r1.isNull())
+        if (JSValue::isNull(r1))
             return kTrueValue;
-        if (r1.isObject() && r2.isObject()) // because new Boolean()->getType() == Boolean_Type
-            return JSValue(r1.object == r2.object);
-        if (r1.isType())
-            return JSValue(r1.type == r2.type);
-        if (r1.isFunction())
-            return JSValue(r1.function->isEqual(r2.function));
+        if (JSValue::isObject(r1) && JSValue::isObject(r2)) // because new Boolean()->getType() == Boolean_Type
+            return JSValue::newBoolean(JSValue::object(r1) == JSValue::object(r2));
+        if (JSValue::isType(r1))
+            return JSValue::newBoolean(JSValue::type(r1) == JSValue::type(r2));
+        if (JSValue::isFunction(r1))
+            return JSValue::newBoolean(JSValue::function(r1)->isEqual(JSValue::function(r2)));
         if (t1 == Number_Type) {
             
-            float64 f1 = r1.getNumberValue();
-            float64 f2 = r2.getNumberValue();
+            float64 f1 = JSValue::getNumberValue(r1);
+            float64 f2 = JSValue::getNumberValue(r2);
 
             if (JSDOUBLE_IS_NaN(f1))
                 return kFalseValue;
             if (JSDOUBLE_IS_NaN(f2))
                 return kFalseValue;
 
-            return JSValue(r1.f64 == r2.f64);
+            return JSValue::newBoolean(JSValue::f64(r1) == JSValue::f64(r2));
         }
         else {
             if (t1 == String_Type)
-                return JSValue(bool(r1.getStringValue()->compare(*r2.getStringValue()) == 0));
-            if (r1.isBool() && r2.isBool())
-                return JSValue(r1.getBoolValue() == r2.getBoolValue());
+                return JSValue::newBoolean(bool(JSValue::getStringValue(r1)->compare(*JSValue::getStringValue(r2)) == 0));
+            if (JSValue::isBool(r1) && JSValue::isBool(r2))
+                return JSValue::newBoolean(JSValue::getBoolValue(r1) == JSValue::getBoolValue(r2));
             return kFalseValue;
         }
     }
@@ -2279,7 +2262,7 @@ void Context::initOperators()
     };
 
     for (uint32 i = 0; i < sizeof(OpTable) / sizeof(OpTableEntry); i++) {
-        JSFunction *f = new JSFunction(this, OpTable[i].imp, OpTable[i].resType);
+        JSFunction *f = new JSFunction(this, OpTable[i].imp, OpTable[i].resType, NULL);
         OperatorDefinition *op = new OperatorDefinition(OpTable[i].op1, OpTable[i].op2, f);
         mBinaryOperatorTable[OpTable[i].which].push_back(op);
     }
@@ -2292,36 +2275,32 @@ void Context::initOperators()
 // so that the behaviour here of constructing a new instance of those types would
 // be different?
 
-JSValue JSValue::valueToObject(Context *cx, const JSValue& value)
+js2val JSValue::valueToObject(Context *cx, const js2val value)
 {
-    switch (value.tag) {
-    case f64_tag:
+    switch (tag(value)) {
+    case JS2VAL_DOUBLE:
         {
-            JSValue result = Number_Type->newInstance(cx);
-            ((JSNumberInstance *)result.instance)->mValue = value.f64;
-            return JSValue(result);
+            js2val result = Number_Type->newInstance(cx);
+            ((JSNumberInstance *)JSValue::instance(result))->mValue = JSValue::f64(value);
+            return result;
         }
-    case boolean_tag:
+    case JS2VAL_BOOLEAN:
         {
-            JSValue result = Boolean_Type->newInstance(cx);
-            ((JSBooleanInstance *)result.instance)->mValue = value.boolean;
-            return JSValue(result);
+            js2val result = Boolean_Type->newInstance(cx);
+            ((JSBooleanInstance *)JSValue::instance(result))->mValue = JSValue::boolean(value);
+            return result;
         }
-    case string_tag: 
+    case JS2VAL_STRING: 
         {
-            JSValue result = String_Type->newInstance(cx);
-            ((JSStringInstance *)result.instance)->mValue = value.string;
-            return JSValue(result);
+            js2val result = String_Type->newInstance(cx);
+            ((JSStringInstance *)JSValue::instance(result))->mValue = JSValue::string(value);
+            return result;
         }
-    case instance_tag:
-    case package_tag:
-    case type_tag:
-    case object_tag:
-    case function_tag:
+    case JS2VAL_OBJECT:
+        if (isNull(value))
+            cx->reportError(Exception::typeError, "converting null to object");
         return value;
-    case null_tag:
-        cx->reportError(Exception::typeError, "converting null to object");
-    case undefined_tag:
+    case JS2VAL_INT:
         cx->reportError(Exception::typeError, "converting undefined to object");
     default:
         NOT_REACHED("Bad tag");
@@ -2338,40 +2317,32 @@ JSValue JSValue::valueToObject(Context *cx, const JSValue& value)
 // be different?
 
 
-JSObject *JSValue::toObjectValue(Context *cx) const
+JSObject *JSValue::toObjectValue(Context *cx, const js2val v)
 {
-    switch (tag) {
-    case f64_tag:
+    switch (tag(v)) {
+    case JS2VAL_DOUBLE:
         {
-            JSValue result = Number_Type->newInstance(cx);
-            ((JSNumberInstance *)result.instance)->mValue = f64;
-            return result.instance;
+            js2val result = Number_Type->newInstance(cx);
+            ((JSNumberInstance *)JSValue::instance(result))->mValue = JSValue::f64(v);
+            return JSValue::instance(result);
         }
-    case boolean_tag:
+    case JS2VAL_BOOLEAN:
         {
-            JSValue result = Boolean_Type->newInstance(cx);
-            ((JSBooleanInstance *)result.instance)->mValue = boolean;
-            return result.instance;
+            js2val result = Boolean_Type->newInstance(cx);
+            ((JSBooleanInstance *)JSValue::instance(result))->mValue = JSValue::boolean(v);
+            return JSValue::instance(result);
         }
-    case string_tag: 
+    case JS2VAL_STRING: 
         {
-            JSValue result = String_Type->newInstance(cx);
-            ((JSStringInstance *)result.instance)->mValue = string;
-            return result.instance;
+            js2val result = String_Type->newInstance(cx);
+            ((JSStringInstance *)JSValue::instance(result))->mValue = JSValue::string(v);
+            return JSValue::instance(result);
         }
-    case type_tag:
-        return type;
-    case object_tag:
-        return object;
-    case function_tag:
-        return function;
-    case instance_tag:
-        return instance;
-    case package_tag:
-        return package;
-    case null_tag:
-        cx->reportError(Exception::typeError, "converting null to object");
-    case undefined_tag:
+    case JS2VAL_OBJECT:
+        if (isNull(v))
+            cx->reportError(Exception::typeError, "converting null to object");
+        return JSValue::object(v);
+    case JS2VAL_INT:
         cx->reportError(Exception::typeError, "converting undefined to object");
     default:
         NOT_REACHED("Bad tag");
@@ -2406,25 +2377,22 @@ float64 stringToNumber(const String *string)
 }
 
 // Convert a JSValue to number-type
-JSValue JSValue::valueToNumber(Context *cx, const JSValue& value)
+js2val JSValue::valueToNumber(Context *cx, const js2val value)
 {
-    switch (value.tag) {
-    case f64_tag:
+    switch (tag(value)) {
+    case JS2VAL_DOUBLE:
         return value;
-    case string_tag: 
-        return JSValue(stringToNumber(value.string));
-    case object_tag:
-    case instance_tag:
-    case package_tag:
-    case type_tag:
-    case function_tag:
-        return value.toPrimitive(cx, NumberHint).toNumber(cx);
-    case boolean_tag:
-        return JSValue((value.boolean) ? 1.0 : 0.0);
-    case undefined_tag:
+    case JS2VAL_STRING: 
+        return JSValue::newNumber(stringToNumber(JSValue::string(value)));
+    case JS2VAL_OBJECT:
+        if (isNull(value))
+            return kPositiveZero;
+        else
+            return JSValue::toNumber(cx, JSValue::toPrimitive(cx, value, NumberHint));
+    case JS2VAL_BOOLEAN:
+        return JSValue::newNumber((JSValue::boolean(value)) ? 1.0 : 0.0);
+    case JS2VAL_INT:
         return kNaNValue;
-    case null_tag:
-        return kPositiveZero;
     default:
         NOT_REACHED("Bad tag");
         return kUndefinedValue;
@@ -2440,38 +2408,26 @@ const String *numberToString(float64 number)
 }
 
 // Convert a JSValue to a string (ECMA rules)
-JSValue JSValue::valueToString(Context *cx, const JSValue& value)
+js2val JSValue::valueToString(Context *cx, const js2val value)
 {
     const String *strp = NULL;
     JSObject *obj = NULL;
-    switch (value.tag) {
-    case f64_tag:
-        return JSValue(numberToString(value.f64));
-    case object_tag:
-        obj = value.object;
+    switch (tag(value)) {
+    case JS2VAL_DOUBLE:
+        return JSValue::newString(numberToString(JSValue::f64(value)));
+    case JS2VAL_OBJECT:
+        if (isNull(value))
+            strp = &cx->Null_StringAtom;
+        else
+            obj = JSValue::object(value);
         break;
-    case function_tag:
-        obj = value.function;
-        break;
-    case string_tag:
+    case JS2VAL_STRING:
         return value;
-    case boolean_tag:
-        strp = (value.boolean) ? &cx->True_StringAtom : &cx->False_StringAtom;
+    case JS2VAL_BOOLEAN:
+        strp = (JSValue::boolean(value)) ? &cx->True_StringAtom : &cx->False_StringAtom;
         break;
-    case type_tag:
-        strp = value.type->mClassName;
-        break;
-    case undefined_tag:
+    case JS2VAL_INT:
         strp = &cx->Undefined_StringAtom;
-        break;
-    case null_tag:
-        strp = &cx->Null_StringAtom;
-        break;
-    case instance_tag:
-        obj = value.instance;
-        break;
-    case package_tag:
-        obj = value.package;
         break;
     default:
         NOT_REACHED("Bad tag");
@@ -2480,15 +2436,15 @@ JSValue JSValue::valueToString(Context *cx, const JSValue& value)
         JSFunction *target = NULL;
         PropertyIterator i;
         if (obj->hasProperty(cx, cx->ToString_StringAtom, NULL, Read, &i)) {
-            JSValue v = obj->getPropertyValue(i);
-            if (v.isFunction())
-                target = v.function;
+            js2val v = obj->getPropertyValue(i);
+            if (JSValue::isFunction(v))
+                target = JSValue::function(v);
         }
         if (target == NULL) {
             if (obj->hasProperty(cx, cx->ValueOf_StringAtom, NULL, Read, &i)) {
-                JSValue v = obj->getPropertyValue(i);
-                if (v.isFunction())
-                    target = v.function;
+                js2val v = obj->getPropertyValue(i);
+                if (JSValue::isFunction(v))
+                    target = JSValue::function(v);
             }
         }
         if (target)
@@ -2497,31 +2453,25 @@ JSValue JSValue::valueToString(Context *cx, const JSValue& value)
         return kUndefinedValue; // keep compilers happy
     }
     else
-        return JSValue(strp);
+        return JSValue::newString(strp);
 
 }
 
 // Convert a JSValue to a primitive type
-JSValue JSValue::toPrimitive(Context *cx, Hint hint) const
+js2val JSValue::toPrimitive(Context *cx, const js2val v, Hint hint)
 {
     JSObject *obj;
-    switch (tag) {
-    case f64_tag:
-    case string_tag:
-    case boolean_tag:
-    case undefined_tag:
-        return *this;
+    switch (tag(v)) {
+    case JS2VAL_DOUBLE:
+    case JS2VAL_STRING:
+    case JS2VAL_BOOLEAN:
+    case JS2VAL_INT:
+        return v;
 
-    case instance_tag:
-        obj = instance;
-        if ((hint == NoHint) && (getType() == Date_Type))
+    case JS2VAL_OBJECT:
+        obj = JSValue::object(v);
+        if ((hint == NoHint) && (getType(v) == Date_Type))
             hint = StringHint;
-        break;
-    case object_tag:
-        obj = object;
-        break;
-    case function_tag:
-        obj = function;
         break;
 
     default:
@@ -2533,7 +2483,7 @@ JSValue JSValue::toPrimitive(Context *cx, Hint hint) const
     //
     ASSERT(obj);
     JSFunction *target = NULL;
-    JSValue result;
+    js2val result;
     PropertyIterator i;
 
     StringAtom *first = &cx->ValueOf_StringAtom;
@@ -2546,23 +2496,23 @@ JSValue JSValue::toPrimitive(Context *cx, Hint hint) const
 
 
     if (obj->hasProperty(cx, *first, NULL, Read, &i)) {
-        JSValue v = obj->getPropertyValue(i);
-        if (v.isFunction()) {
-            target = v.function;
+        js2val v = obj->getPropertyValue(i);
+        if (JSValue::isFunction(v)) {
+            target = JSValue::function(v);
             if (target) {
-                result = cx->invokeFunction(target, *this, NULL, 0);
-                if (result.isPrimitive())
+                result = cx->invokeFunction(target, v, NULL, 0);
+                if (JSValue::isPrimitive(result))
                     return result;
             }
         }
     }
     if (obj->hasProperty(cx, *second, NULL, Read, &i)) {
-        JSValue v = obj->getPropertyValue(i);
-        if (v.isFunction()) {
-            target = v.function;
+        js2val v = obj->getPropertyValue(i);
+        if (JSValue::isFunction(v)) {
+            target = JSValue::function(v);
             if (target) {
-                result = cx->invokeFunction(target, *this, NULL, 0);
-                if (result.isPrimitive())
+                result = cx->invokeFunction(target, v, NULL, 0);
+                if (JSValue::isPrimitive(result))
                     return result;
             }
         }
@@ -2571,6 +2521,7 @@ JSValue JSValue::toPrimitive(Context *cx, Hint hint) const
     return kUndefinedValue;
 }
 
+/*
 int JSValue::operator==(const JSValue& value) const
 {
     if (this->tag == value.tag) {
@@ -2588,7 +2539,7 @@ int JSValue::operator==(const JSValue& value) const
     }
     return 0;
 }
-
+*/
 float64 JSValue::float64ToInteger(float64 d)
 {
     if (JSDOUBLE_IS_NaN(d))
@@ -2597,11 +2548,10 @@ float64 JSValue::float64ToInteger(float64 d)
         return (d >= 0.0) ? fd::floor(d) : -fd::floor(-d);
 }
 
-JSValue JSValue::valueToInteger(Context *cx, const JSValue& value)
+js2val JSValue::valueToInteger(Context *cx, const js2val value)
 {
-    JSValue v = valueToNumber(cx, value);
-    v.f64 = float64ToInteger(v.f64);
-    return v;
+    js2val v = valueToNumber(cx, value);
+    return JSValue::newNumber(float64ToInteger(JSValue::f64(v)));
 }
 
 int32 JSValue::float64ToInt32(float64 d)
@@ -2624,23 +2574,24 @@ uint32 JSValue::float64ToUInt32(float64 d)
     return (uint32)d;
 }
 
-JSValue JSValue::valueToInt32(Context *, const JSValue& value)
+js2val JSValue::valueToInt32(Context *, const js2val value)
 {
     float64 d;
-    switch (value.tag) {
-    case f64_tag:
-        d = value.f64;
+    switch (tag(value)) {
+    case JS2VAL_DOUBLE:
+        d = JSValue::f64(value);
         break;
-    case string_tag: 
+    case JS2VAL_STRING: 
         {
             const char16 *numEnd;
-            d = stringToDouble(value.string->begin(), value.string->end(), numEnd);
+            const String *str = JSValue::string(value);
+            d = stringToDouble(str->begin(), str->end(), numEnd);
         }
         break;
-    case boolean_tag:
-        return JSValue((float64)((value.boolean) ? 1 : 0));
-    case object_tag:
-    case undefined_tag:
+    case JS2VAL_BOOLEAN:
+        return JSValue::newNumber((float64)((JSValue::boolean(value)) ? 1 : 0));
+    case JS2VAL_OBJECT:
+    case JS2VAL_INT:
         // toNumber(toPrimitive(hint Number))
         return kUndefinedValue;
     default:
@@ -2648,27 +2599,28 @@ JSValue JSValue::valueToInt32(Context *, const JSValue& value)
         return kUndefinedValue;
     }
     if ((d == 0.0) || !JSDOUBLE_IS_FINITE(d) )
-        return JSValue((float64)0);
-    return JSValue((float64)float64ToInt32(d));
+        return JSValue::newNumber((float64)0);
+    return JSValue::newNumber((float64)float64ToInt32(d));
 }
 
-JSValue JSValue::valueToUInt32(Context *, const JSValue& value)
+js2val JSValue::valueToUInt32(Context *, const js2val value)
 {
     float64 d;
-    switch (value.tag) {
-    case f64_tag:
-        d = value.f64;
+    switch (tag(value)) {
+    case JS2VAL_DOUBLE:
+        d = JSValue::f64(value);
         break;
-    case string_tag: 
+    case JS2VAL_STRING: 
         {
             const char16 *numEnd;
-            d = stringToDouble(value.string->begin(), value.string->end(), numEnd);
+            const String *str = JSValue::string(value);
+            d = stringToDouble(str->begin(), str->end(), numEnd);
         }
         break;
-    case boolean_tag:
-        return JSValue((float64)((value.boolean) ? 1 : 0));
-    case object_tag:
-    case undefined_tag:
+    case JS2VAL_BOOLEAN:
+        return JSValue::newNumber((float64)((JSValue::boolean(value)) ? 1 : 0));
+    case JS2VAL_OBJECT:
+    case JS2VAL_INT:
         // toNumber(toPrimitive(hint Number))
         return kUndefinedValue;
     default:
@@ -2676,27 +2628,28 @@ JSValue JSValue::valueToUInt32(Context *, const JSValue& value)
         return kUndefinedValue;
     }
     if ((d == 0.0) || !JSDOUBLE_IS_FINITE(d))
-        return JSValue((float64)0);
-    return JSValue((float64)float64ToUInt32(d));
+        return JSValue::newNumber((float64)0);
+    return JSValue::newNumber((float64)float64ToUInt32(d));
 }
 
-JSValue JSValue::valueToUInt16(Context *, const JSValue& value)
+js2val JSValue::valueToUInt16(Context *, const js2val value)
 {
     float64 d;
-    switch (value.tag) {
-    case f64_tag:
-        d = value.f64;
+    switch (tag(value)) {
+    case JS2VAL_DOUBLE:
+        d = JSValue::f64(value);
         break;
-    case string_tag: 
+    case JS2VAL_STRING: 
         {
             const char16 *numEnd;
-            d = stringToDouble(value.string->begin(), value.string->end(), numEnd);
+            const String *str = JSValue::string(value);
+            d = stringToDouble(str->begin(), str->end(), numEnd);
         }
         break;
-    case boolean_tag:
-        return JSValue((float64)((value.boolean) ? 1 : 0));
-    case object_tag:
-    case undefined_tag:
+    case JS2VAL_BOOLEAN:
+        return JSValue::newNumber((float64)((JSValue::boolean(value)) ? 1 : 0));
+    case JS2VAL_OBJECT:
+    case JS2VAL_INT:
         // toNumber(toPrimitive(hint Number))
         return kUndefinedValue;
     default:
@@ -2704,36 +2657,34 @@ JSValue JSValue::valueToUInt16(Context *, const JSValue& value)
         return kUndefinedValue;
     }
     if ((d == 0.0) || !JSDOUBLE_IS_FINITE(d))
-        return JSValue((float64)0);
+        return JSValue::newNumber((float64)0);
     bool neg = (d < 0);
     d = fd::floor(neg ? -d : d);
     d = neg ? -d : d;
     d = fd::fmod(d, two16);
     d = (d >= 0) ? d : d + two16;
-    return JSValue((float64)d);
+    return JSValue::newNumber((float64)d);
 }
 
-JSValue JSValue::valueToBoolean(Context * /*cx*/, const JSValue& value)
+js2val JSValue::valueToBoolean(Context * /*cx*/, const js2val value)
 {
-    switch (value.tag) {
-    case f64_tag:
-        if (JSDOUBLE_IS_NaN(value.f64))
+    switch (tag(value)) {
+    case JS2VAL_DOUBLE:
+        if (isNaN(value))
             return kFalseValue;
-        if (value.f64 == 0.0)
+        if (f64(value) == 0.0)
             return kFalseValue;
         return kTrueValue;
-    case string_tag: 
-        return JSValue(value.string->length() != 0);
-    case boolean_tag:
+    case JS2VAL_STRING: 
+        return JSValue::newBoolean(JSValue::string(value)->length() != 0);
+    case JS2VAL_BOOLEAN:
         return value;
-    case type_tag:
-    case instance_tag:
-    case object_tag:
-    case function_tag:
-        return kTrueValue;
-        break;
-    case null_tag:
-    case undefined_tag:
+    case JS2VAL_OBJECT:
+        if (isNull(value))
+            return kFalseValue;
+        else
+            return kTrueValue;
+    case JS2VAL_INT:
         return kFalseValue;
     default:
         NOT_REACHED("Bad tag");
@@ -2744,53 +2695,56 @@ JSValue JSValue::valueToBoolean(Context * /*cx*/, const JSValue& value)
 
 // See if 'v' can be represented as a 't' - works for
 // the built-ins by falling back to the ECMA3 behaviour
-JSValue Context::mapValueToType(JSValue v, JSType *t)
+js2val Context::mapValueToType(js2val v, JSType *t)
 {
     // user conversions?
-    if (v.getType() == t)
+    if (JSValue::getType(v) == t)
         return v;
     
     if (t == Number_Type) {
-        return v.toNumber(this);
+        return JSValue::toNumber(this, v);
     }
     else
     if (t == Integer_Type) {
-        float64 d = v.toNumber(this).f64;
+        js2val fv = JSValue::toNumber(this, v);
+        float64 d = JSValue::f64(fv);
         bool neg = (d < 0);
         d = fd::floor(neg ? -d : d);
         d = neg ? -d : d;
-        return JSValue(d);
+        return JSValue::newNumber(d);
     }
     else
     if (t == String_Type) {
-        return v.toString(this);
+        return JSValue::toString(this, v);
     }
     else
     if (t == Boolean_Type) {
-        return v.toBoolean(this);
+        return JSValue::toBoolean(this, v);
     }
 
-    if (v.isUndefined())
+    if (JSValue::isUndefined(v))
         return v;
 
-    if (v.getType()->derivesFrom(t))
+    if (JSValue::getType(v)->derivesFrom(t))
         return v;
 
     reportError(Exception::typeError, "Invalid type cast");
     return kUndefinedValue;
 }
 
-JSType *JSValue::getType() const {
-    switch (tag) {
-    case f64_tag:       return Number_Type;
-    case boolean_tag:   return Boolean_Type;
-    case string_tag:    return (JSType *)String_Type;
-    case object_tag:    return Object_Type;
-    case instance_tag:  return instance->getType();
-    case undefined_tag: return Void_Type;
-    case null_tag:      return Null_Type;
-    case function_tag:  return Function_Type;
-    case type_tag:      return Type_Type;
+JSType *JSValue::getType(const js2val v) {
+    switch (tag(v)) {
+    case JS2VAL_DOUBLE:     return Number_Type;
+    case JS2VAL_BOOLEAN:    return Boolean_Type;
+    case JS2VAL_STRING:     return (JSType *)String_Type;
+    case JS2VAL_OBJECT:     if (isNull(v))
+                                return Null_Type;
+                            else
+                                if (isInstance(v))
+                                    return JSValue::instance(v)->getType();
+                                else
+                                    return Object_Type;
+    case JS2VAL_INT:        return Void_Type;
     default: 
         NOT_REACHED("bad type"); 
         return NULL;

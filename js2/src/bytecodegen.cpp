@@ -780,16 +780,16 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
                 }
                 else {
                     // initialize the variable with an appropriate value
-                    JSValue uiv = ref->mType->getUninitializedValue();
-                    if (!uiv.isUndefined()) {
+                    js2val uiv = ref->mType->getUninitializedValue();
+                    if (!JSValue::isUndefined(uiv)) {
                         ref->emitImplicitLoad(this);
-                        if (uiv.isNull())
+                        if (JSValue::isNull(uiv))
                             addOp(LoadConstantNullOp);
                         else
-                        if (uiv.isPositiveZero())
+                        if (JSValue::isPositiveZero(uiv))
                             addOp(LoadConstantZeroOp);
                         else
-                        if (uiv.isFalse())
+                        if (JSValue::isFalse(uiv))
                             addOp(LoadConstantFalseOp);
                         else
                             NOT_REACHED("Any more??");
@@ -1495,9 +1495,9 @@ Reference *ByteCodeGen::genReference(ExprNode *p, Access acc)
 
             if (b->op1->getKind() == ExprNode::identifier) {
                 const StringAtom &name = checked_cast<IdentifierExprNode *>(b->op1)->name;
-                JSValue v = mScopeChain->getCompileTimeValue(m_cx, name, NULL);
-                if (v.isType()) {
-                    lType = v.type;
+                js2val v = mScopeChain->getCompileTimeValue(m_cx, name, NULL);
+                if (JSValue::isType(v)) {
+                    lType = JSValue::type(v);
                     genExpr(b->op1);
                 }
             }
@@ -1574,9 +1574,9 @@ void ByteCodeGen::genReferencePair(ExprNode *p, Reference *&readRef, Reference *
 
             if (b->op1->getKind() == ExprNode::identifier) {
                 const StringAtom &name = checked_cast<IdentifierExprNode *>(b->op1)->name;
-                JSValue v = mScopeChain->getCompileTimeValue(m_cx, name, NULL);
-                if (v.isType()) {
-                    lType = v.type;
+                js2val v = mScopeChain->getCompileTimeValue(m_cx, name, NULL);
+                if (JSValue::isType(v)) {
+                    lType = JSValue::type(v);
                     genExpr(b->op1);
                 }
             }
@@ -2437,18 +2437,18 @@ BinaryOpEquals:
     case ExprNode::regExp:
         {
             RegExpExprNode *v = checked_cast<RegExpExprNode *>(p);
-            JSValue reValue = kNullValue;
-            JSValue args[2];
-            args[0] = JSValue(&v->re);
-            args[1] = JSValue(&v->flags);
+            js2val reValue = kNullValue;
+            js2val args[2];
+            args[0] = JSValue::newString(&v->re);
+            args[1] = JSValue::newString(&v->flags);
             ByteCodeModule *curModule = m_cx->mCurModule;
             ByteCodeModule errorHandlingModule(p->pos);
             m_cx->mCurModule = &errorHandlingModule;
             reValue = RegExp_Constructor(m_cx, reValue, args, 2);
             m_cx->mCurModule = curModule;
-            ASSERT(reValue.isInstance());
+            ASSERT(JSValue::isInstance(reValue));
             addOp(LoadConstantRegExpOp);
-            addPointer(reValue.instance);
+            addPointer(JSValue::instance(reValue));
             return RegExp_Type;
         }
         break;

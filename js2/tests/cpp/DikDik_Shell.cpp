@@ -104,49 +104,50 @@ const bool showTokens = false;
 //#define SHOW_ICODE 1
 
 
-static JSValue load(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
+static js2val load(Context *cx, const js2val /*thisValue*/, js2val argv[], uint32 argc)
 {
-    if ((argc >= 1) && (argv[0].isString())) {    
-        const String& fileName = *argv[0].string;
+    if ((argc >= 1) && (JSValue::isString(argv[0]))) {    
+        const String& fileName = *JSValue::string(argv[0]);
         cx->readEvalFile(fileName);
     }    
     return kUndefinedValue;
 }
 
-static JSValue print(Context * /*cx*/, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
+static js2val print(Context * /*cx*/, const js2val /*thisValue*/, js2val argv[], uint32 argc)
 {
     for (uint32 i = 0; i < argc; i++) {
-        stdOut << argv[i] << "\n";
+        JSValue::print(stdOut, argv[i]);
+        stdOut << "\n";
     }
     return kUndefinedValue;
 }
 
-static JSValue version(Context * /*cx*/, const JSValue& /*thisValue*/, JSValue * /*argv*/, uint32 /*argc*/)
+static js2val version(Context * /*cx*/, const js2val /*thisValue*/, js2val /*argv*/[], uint32 /*argc*/)
 {
-    return JSValue(2.0);
+    return JSValue::newNumber(2.0);
 }
 
-static JSValue debug(Context *cx, const JSValue& /*thisValue*/, JSValue * /*argv*/, uint32 /*argc*/)
+static js2val debug(Context *cx, const js2val /*thisValue*/, js2val /*argv*/[], uint32 /*argc*/)
 {
     cx->mDebugFlag = !cx->mDebugFlag;
     return kUndefinedValue;
 }
 
-static JSValue trace(Context * /*cx*/, const JSValue& /*thisValue*/, JSValue * /*argv*/, uint32 /*argc*/)
+static js2val trace(Context * /*cx*/, const js2val /*thisValue*/, js2val /*argv*/[], uint32 /*argc*/)
 {
     gTraceFlag = true;
     stdOut << "Will report allocation stats\n";
     return kUndefinedValue;
 }
 
-static JSValue dikdik(Context * /*cx*/, const JSValue& /*thisValue*/, JSValue * /*argv*/, uint32 /*argc*/)
+static js2val dikdik(Context * /*cx*/, const js2val /*thisValue*/, js2val /*argv*/[], uint32 /*argc*/)
 {
     extern void do_dikdik(Formatter &f);
     do_dikdik(stdOut);
     return kUndefinedValue;
 }
 
-static JSValue quit(Context * /*cx*/, const JSValue& /*thisValue*/, JSValue * /*argv*/, uint32 /*argc*/)
+static js2val quit(Context * /*cx*/, const js2val /*thisValue*/, js2val /*argv*/[], uint32 /*argc*/)
 {
     exit(0);
     return kUndefinedValue;
@@ -199,9 +200,11 @@ static int readEvalPrint(Context *cx, FILE *in)
 #endif
                     bcm->setSource(buffer, ConsoleName);
                     cx->setReader(NULL);
-                    JSValue result = cx->interpret(bcm, 0, NULL, JSValue(cx->getGlobalObject()), NULL, 0);
-                    if (!result.isUndefined())
-                        stdOut << result.toString(cx) << "\n";
+                    js2val result = cx->interpret(bcm, 0, NULL, JSValue::newObject(cx->getGlobalObject()), NULL, 0);
+                    if (!JSValue::isUndefined(result)) {
+                        JSValue::print(stdOut, JSValue::toString(cx, result));
+                        stdOut << "\n";
+                    }
                     delete bcm;
                 }
 #endif
@@ -279,13 +282,13 @@ int main(int argc, char **argv)
         JSObject *globalObject;
         Context cx(&globalObject, world, a, Pragma::js2);
 
-        globalObject->defineVariable(&cx, widenCString("load"), (NamespaceList *)(NULL), Property::NoAttribute, NULL, JSValue(new JSFunction(&cx, load, NULL)));
-        globalObject->defineVariable(&cx, widenCString("print"), (NamespaceList *)(NULL), Property::NoAttribute, NULL, JSValue(new JSFunction(&cx, print, NULL)));
-        globalObject->defineVariable(&cx, widenCString("debug"), (NamespaceList *)(NULL), Property::NoAttribute, NULL, JSValue(new JSFunction(&cx, debug, NULL)));
-        globalObject->defineVariable(&cx, widenCString("trace"), (NamespaceList *)(NULL), Property::NoAttribute, NULL, JSValue(new JSFunction(&cx, trace, NULL)));
-        globalObject->defineVariable(&cx, widenCString("dikdik"), (NamespaceList *)(NULL), Property::NoAttribute, NULL, JSValue(new JSFunction(&cx, dikdik, NULL)));
-        globalObject->defineVariable(&cx, widenCString("version"), (NamespaceList *)(NULL), Property::NoAttribute, NULL, JSValue(new JSFunction(&cx, version, NULL)));
-        globalObject->defineVariable(&cx, widenCString("quit"), (NamespaceList *)(NULL), Property::NoAttribute, NULL, JSValue(new JSFunction(&cx, quit, NULL)));
+        globalObject->defineVariable(&cx, widenCString("load"), (NamespaceList *)(NULL), Property::NoAttribute, NULL, JSValue::newFunction(new JSFunction(&cx, load, NULL)));
+        globalObject->defineVariable(&cx, widenCString("print"), (NamespaceList *)(NULL), Property::NoAttribute, NULL, JSValue::newFunction(new JSFunction(&cx, print, NULL)));
+        globalObject->defineVariable(&cx, widenCString("debug"), (NamespaceList *)(NULL), Property::NoAttribute, NULL, JSValue::newFunction(new JSFunction(&cx, debug, NULL)));
+        globalObject->defineVariable(&cx, widenCString("trace"), (NamespaceList *)(NULL), Property::NoAttribute, NULL, JSValue::newFunction(new JSFunction(&cx, trace, NULL)));
+        globalObject->defineVariable(&cx, widenCString("dikdik"), (NamespaceList *)(NULL), Property::NoAttribute, NULL, JSValue::newFunction(new JSFunction(&cx, dikdik, NULL)));
+        globalObject->defineVariable(&cx, widenCString("version"), (NamespaceList *)(NULL), Property::NoAttribute, NULL, JSValue::newFunction(new JSFunction(&cx, version, NULL)));
+        globalObject->defineVariable(&cx, widenCString("quit"), (NamespaceList *)(NULL), Property::NoAttribute, NULL, JSValue::newFunction(new JSFunction(&cx, quit, NULL)));
 
         bool doInteractive = true;
         int result = 0;

@@ -101,10 +101,10 @@ Attribute *Context::executeAttributes(ExprNode *attr)
     ByteCodeGen bcg(this, mScopeChain);
     ByteCodeModule *bcm = bcg.genCodeForExpression(attr);
 //    stdOut << *bcm;
-    JSValue result = interpret(bcm, 0, NULL, JSValue(getGlobalObject()), NULL, 0);
+    js2val result = interpret(bcm, 0, NULL, JSValue::newObject(getGlobalObject()), NULL, 0);
 
-    ASSERT(result.isAttribute());
-    return result.attribute;
+    ASSERT(JSValue::isAttribute(result));
+    return JSValue::attribute(result);
 }
 
 
@@ -177,8 +177,8 @@ bool JSObject::hasProperty(Context *cx, const String &name, NamespaceList *names
     if (hasOwnProperty(cx, name, names, acc, p))
         return true;
     else
-        if (!mPrototype.isNull())
-            return mPrototype.getObjectValue()->hasProperty(cx, name, names, acc, p);
+        if (!JSValue::isNull(mPrototype))
+            return JSValue::getObjectValue(mPrototype)->hasProperty(cx, name, names, acc, p);
         else
             return false;
 }
@@ -197,16 +197,16 @@ bool JSObject::deleteProperty(Context * /*cx*/, const String &name, NamespaceLis
 
 
 // get a property value
-JSValue JSObject::getPropertyValue(PropertyIterator &i)
+js2val JSObject::getPropertyValue(PropertyIterator &i)
 {
     Property *prop = PROPERTY(i);
     ASSERT(prop->mFlag == ValuePointer);
-    return *prop->mData.vp;
+    return prop->mData.vp;
 }
 
-Property *JSObject::insertNewProperty(const String &name, NamespaceList *names, PropertyAttribute attrFlags, JSType *type, const JSValue &v)
+Property *JSObject::insertNewProperty(const String &name, NamespaceList *names, PropertyAttribute attrFlags, JSType *type, const js2val v)
 {
-    Property *prop = new Property(new JSValue(v), type, attrFlags);
+    Property *prop = new Property(v, type, attrFlags);
     const PropertyMap::value_type e(name, new NamespacedProperty(prop, names));
     mProperties.insert(e);
     return prop;
@@ -273,7 +273,7 @@ Property *JSObject::defineVariable(Context *cx, const String &name, AttributeStm
         }
     }
 
-    Property *prop = new Property(new JSValue(), type, attrFlags);
+    Property *prop = new Property(kUndefinedValue, type, attrFlags);
     const PropertyMap::value_type e(name, new NamespacedProperty(prop, names));
     mProperties.insert(e);
     return prop;
@@ -288,14 +288,14 @@ Property *JSObject::defineVariable(Context *cx, const String &name, NamespaceLis
         }
     }
 
-    Property *prop = new Property(new JSValue(), type, attrFlags);
+    Property *prop = new Property(kUndefinedValue, type, attrFlags);
     const PropertyMap::value_type e(name, new NamespacedProperty(prop, names));
     mProperties.insert(e);
     return prop;
 }
 
 // add a property (with a value)
-Property *JSObject::defineVariable(Context *cx, const String &name, AttributeStmtNode *attr, JSType *type, const JSValue v)
+Property *JSObject::defineVariable(Context *cx, const String &name, AttributeStmtNode *attr, JSType *type, const js2val v)
 {
     NamespaceList *names = (attr) ? attr->attributeValue->mNamespaceList : NULL;
     PropertyAttribute attrFlags = (attr) ? attr->attributeValue->mTrueFlags : 0;
@@ -311,17 +311,17 @@ Property *JSObject::defineVariable(Context *cx, const String &name, AttributeStm
         }
         else {
             // override the existing value
-            PROPERTY_VALUEPOINTER(it) = new JSValue(v);
+            PROPERTY_VALUEPOINTER(it) = v;
             return PROPERTY(it);
         }
     }
 
-    Property *prop = new Property(new JSValue(v), type, attrFlags);
+    Property *prop = new Property(v, type, attrFlags);
     const PropertyMap::value_type e(name, new NamespacedProperty(prop, names));
     mProperties.insert(e);
     return prop;
 }
-Property *JSObject::defineVariable(Context *cx, const String &name, NamespaceList *names, PropertyAttribute attrFlags, JSType *type, const JSValue v)
+Property *JSObject::defineVariable(Context *cx, const String &name, NamespaceList *names, PropertyAttribute attrFlags, JSType *type, const js2val v)
 {
     PropertyIterator it;
     if (hasOwnProperty(cx, name, names, Read, &it)) {
@@ -330,23 +330,17 @@ Property *JSObject::defineVariable(Context *cx, const String &name, NamespaceLis
         }
     }
 
-    Property *prop = new Property(new JSValue(v), type, attrFlags);
+    Property *prop = new Property(v, type, attrFlags);
     const PropertyMap::value_type e(name, new NamespacedProperty(prop, names));
     mProperties.insert(e);
     return prop;
 }
-Property *JSObject::defineAlias(Context * /*cx*/, const String &name, NamespaceList *names, PropertyAttribute attrFlags, JSType *type, JSValue *vp)
-
+Property *JSObject::defineAlias(Context * /*cx*/, const String &name, NamespaceList *names, PropertyAttribute attrFlags, JSType *type, js2val vp)
 {
-
     Property *prop = new Property(vp, type, attrFlags);
-
     const PropertyMap::value_type e(name, new NamespacedProperty(prop, names));
-
     mProperties.insert(e);
-
     return prop;
-
 }
 
 
@@ -387,10 +381,10 @@ void JSObject::getProperty(Context *cx, const String &name, NamespaceList *names
         Property *prop = PROPERTY(i);
         switch (prop->mFlag) {
         case ValuePointer:
-            cx->pushValue(*prop->mData.vp);
+            cx->pushValue(prop->mData.vp);
             break;
         case FunctionPair:
-             cx->pushValue(cx->invokeFunction(prop->mData.fPair.getterF, JSValue(this), NULL, 0));
+            cx->pushValue(cx->invokeFunction(prop->mData.fPair.getterF, JSValue::newObject(this), NULL, 0));
             break;
         default:
             ASSERT(false);  // XXX more to implement
@@ -398,8 +392,8 @@ void JSObject::getProperty(Context *cx, const String &name, NamespaceList *names
         }
     }
     else {
-        if (!mPrototype.isNull())
-            mPrototype.getObjectValue()->getProperty(cx, name, names);
+        if (!JSValue::isNull(mPrototype))
+            JSValue::getObjectValue(mPrototype)->getProperty(cx, name, names);
         else
             cx->pushValue(kUndefinedValue);        
     }
@@ -428,17 +422,17 @@ void JSInstance::getProperty(Context *cx, const String &name, NamespaceList *nam
             cx->pushValue(mInstanceValues[prop->mData.index]);
             break;
         case ValuePointer:
-            cx->pushValue(*prop->mData.vp);
+            cx->pushValue(prop->mData.vp);
             break;
         case FunctionPair:
-            cx->pushValue(cx->invokeFunction(prop->mData.fPair.getterF, JSValue(this), NULL, 0));
+            cx->pushValue(cx->invokeFunction(prop->mData.fPair.getterF, JSValue::newObject(this), NULL, 0));
             break;
         case Constructor:
         case Method:
-            cx->pushValue(JSValue(mType->mMethods[prop->mData.index]));
+            cx->pushValue(JSValue::newFunction(mType->mMethods[prop->mData.index]));
             break;
         case IndexPair:
-            cx->pushValue(cx->invokeFunction(mType->mMethods[prop->mData.iPair.getterI], JSValue(this), NULL, 0));
+            cx->pushValue(cx->invokeFunction(mType->mMethods[prop->mData.iPair.getterI], JSValue::newObject(this), NULL, 0));
             break;
         default:
             ASSERT(false);  // XXX more to implement
@@ -455,7 +449,7 @@ XXX this path allows an instance to access static fields of it's type
             JSObject::getProperty(cx, name, names);
 }
 
-void JSObject::setProperty(Context *cx, const String &name, NamespaceList *names, const JSValue &v)
+void JSObject::setProperty(Context *cx, const String &name, NamespaceList *names, const js2val v)
 {
     PropertyIterator i;
     if (hasOwnProperty(cx, name, names, Write, &i)) {
@@ -465,12 +459,12 @@ void JSObject::setProperty(Context *cx, const String &name, NamespaceList *names
         case ValuePointer:
             if (name.compare(cx->UnderbarPrototype_StringAtom) == 0)
                 mPrototype = v;
-            *prop->mData.vp = v;
+            prop->mData.vp = v;
             break;
         case FunctionPair:
             {
-                JSValue argv = v;
-                cx->invokeFunction(prop->mData.fPair.setterF, JSValue(this), &argv, 1);
+                js2val argv = v;
+                cx->invokeFunction(prop->mData.fPair.setterF, JSValue::newObject(this), &argv, 1);
             }
             break;
         default:
@@ -482,7 +476,7 @@ void JSObject::setProperty(Context *cx, const String &name, NamespaceList *names
         defineVariable(cx, name, names, Property::Enumerable, Object_Type, v);
 }
 
-void JSType::setProperty(Context *cx, const String &name, NamespaceList *names, const JSValue &v)
+void JSType::setProperty(Context *cx, const String &name, NamespaceList *names, const js2val v)
 {
     PropertyIterator i;
     if (hasOwnProperty(cx, name, names, Read, &i))
@@ -494,7 +488,7 @@ void JSType::setProperty(Context *cx, const String &name, NamespaceList *names, 
             JSObject::setProperty(cx, name, names, v);
 }
 
-void JSInstance::setProperty(Context *cx, const String &name, NamespaceList *names, const JSValue &v)
+void JSInstance::setProperty(Context *cx, const String &name, NamespaceList *names, const js2val v)
 {
     PropertyIterator i;
     if (hasOwnProperty(cx, name, names, Write, &i)) {
@@ -505,18 +499,18 @@ void JSInstance::setProperty(Context *cx, const String &name, NamespaceList *nam
             mInstanceValues[prop->mData.index] = v;
             break;
         case ValuePointer:
-            *prop->mData.vp = v;
+            prop->mData.vp = v;
             break;
         case FunctionPair: 
             {
-                JSValue argv = v;
-                cx->invokeFunction(prop->mData.fPair.setterF, JSValue(this), &argv, 1);
+                js2val argv = v;
+                cx->invokeFunction(prop->mData.fPair.setterF, JSValue::newObject(this), &argv, 1);
             }
             break;
         case IndexPair: 
             {
-                JSValue argv = v;
-                cx->invokeFunction(mType->mMethods[prop->mData.iPair.setterI], JSValue(this), &argv, 1);
+                js2val argv = v;
+                cx->invokeFunction(mType->mMethods[prop->mData.iPair.setterI], JSValue::newObject(this), &argv, 1);
             }
             break;
         default:
@@ -537,16 +531,16 @@ void JSInstance::setProperty(Context *cx, const String &name, NamespaceList *nam
 void JSArrayInstance::getProperty(Context *cx, const String &name, NamespaceList *names)
 {
     if (name.compare(cx->Length_StringAtom) == 0)
-        cx->pushValue(JSValue((float64)mLength));
+        cx->pushValue(JSValue::newNumber((float64)mLength));
     else
         JSInstance::getProperty(cx, name, names);
 }
 
-void JSArrayInstance::setProperty(Context *cx, const String &name, NamespaceList *names, const JSValue &v)
+void JSArrayInstance::setProperty(Context *cx, const String &name, NamespaceList *names, const js2val v)
 {
     if (name.compare(cx->Length_StringAtom) == 0) {
-        uint32 newLength = (uint32)(v.toUInt32(cx).f64);
-        if (newLength != v.toNumber(cx).f64)
+        uint32 newLength = (uint32)JSValue::f64(JSValue::toUInt32(cx, v));
+        if (newLength != JSValue::f64(JSValue::toNumber(cx, v)))
             cx->reportError(Exception::rangeError, "out of range value for length"); 
         
         for (uint32 i = newLength; i < mLength; i++) {
@@ -565,13 +559,13 @@ void JSArrayInstance::setProperty(Context *cx, const String &name, NamespaceList
         else {
             Property *prop = PROPERTY(it);
             ASSERT(prop->mFlag == ValuePointer);
-            *prop->mData.vp = v;
+            prop->mData.vp = v;
         }
-        JSValue v = JSValue(&name);
-        JSValue v_int = v.toUInt32(cx);
-        if ((v_int.f64 != two32minus1) && (v_int.toString(cx).string->compare(name) == 0)) {
-            if (v_int.f64 >= mLength)
-                mLength = (uint32)(v_int.f64) + 1;
+        js2val v = JSValue::newString(&name);
+        js2val v_int = JSValue::toUInt32(cx, v);
+        if ((JSValue::f64(v_int) != two32minus1) && (JSValue::string(JSValue::toString(cx, v_int))->compare(name) == 0)) {
+            if (JSValue::f64(v_int) >= mLength)
+                mLength = (uint32)(JSValue::f64(v_int)) + 1;
         }
     }
 }
@@ -598,12 +592,12 @@ bool JSArrayInstance::deleteProperty(Context *cx, const String &name, NamespaceL
 void JSStringInstance::getProperty(Context *cx, const String &name, NamespaceList *names)
 {
     if (name.compare(cx->Length_StringAtom) == 0)
-        cx->pushValue(JSValue((float64)(mValue->size())));
+        cx->pushValue(JSValue::newNumber((float64)(mValue->size())));
     else
         JSInstance::getProperty(cx, name, names);
 }
 
-void JSStringInstance::setProperty(Context *cx, const String &name, NamespaceList *names, const JSValue &v)
+void JSStringInstance::setProperty(Context *cx, const String &name, NamespaceList *names, const js2val v)
 {
     if (name.compare(cx->Length_StringAtom) == 0) {
     }
@@ -634,7 +628,7 @@ bool JSStringInstance::deleteProperty(Context *cx, const String &name, Namespace
 void JSInstance::initInstance(Context *cx, JSType *type)
 {
     if (type->mVariableCount)
-        mInstanceValues = new JSValue[type->mVariableCount];
+        mInstanceValues = new js2val[type->mVariableCount];
 
     // copy the instance variable names into the property map 
     for (PropertyIterator pi = type->mProperties.begin(), 
@@ -658,13 +652,13 @@ void JSInstance::initInstance(Context *cx, JSType *type)
             }
         }
         if (t->mInstanceInitializer)
-            cx->invokeFunction(t->mInstanceInitializer, JSValue(this), NULL, 0);
+            cx->invokeFunction(t->mInstanceInitializer, JSValue::newObject(this), NULL, 0);
         t = t->mSuperType;
     }
 
     // run the initializer
     if (type->mInstanceInitializer) {
-        cx->invokeFunction(type->mInstanceInitializer, JSValue(this), NULL, 0);
+        cx->invokeFunction(type->mInstanceInitializer, JSValue::newObject(this), NULL, 0);
     }
 
     mType = type;
@@ -673,20 +667,20 @@ void JSInstance::initInstance(Context *cx, JSType *type)
 // Create a new (empty) instance of this class. The prototype
 // link for this new instance is established from the type's
 // prototype object.
-JSValue JSType::newInstance(Context *cx)
+js2val JSType::newInstance(Context *cx)
 {
     JSInstance *result = new JSInstance(cx, this);
     result->mPrototype = mPrototypeObject;
     result->defineVariable(cx, cx->UnderbarPrototype_StringAtom, NULL, 0, Object_Type, mPrototypeObject);
-    return JSValue(result);
+    return JSValue::newInstance(result);
 }
 
-JSValue JSObjectType::newInstance(Context *cx)
+js2val JSObjectType::newInstance(Context *cx)
 {
     JSObject *result = new JSObject();
     result->mPrototype = mPrototypeObject;
     result->defineVariable(cx, cx->UnderbarPrototype_StringAtom, NULL, 0, Object_Type, mPrototypeObject);
-    return JSValue(result);
+    return JSValue::newObject(result);
 }
 
 
@@ -701,7 +695,7 @@ void JSType::setInstanceInitializer(Context * /*cx*/, JSFunction *f)
 void JSType::setStaticInitializer(Context *cx, JSFunction *f)
 {
     if (f)
-        cx->interpret(f->getByteCode(), 0, f->getScopeChain(), JSValue(this), NULL, 0);
+        cx->interpret(f->getByteCode(), 0, f->getScopeChain(), JSValue::newObject(this), NULL, 0);
 }
 
 Property *JSType::defineVariable(Context *cx, const String& name, AttributeStmtNode *attr, JSType *type)
@@ -724,59 +718,59 @@ XXX error for classes, right? but not for local variables under what circumstanc
     return prop;
 }
 
-JSValue JSArrayType::newInstance(Context *cx)
+js2val JSArrayType::newInstance(Context *cx)
 {
     JSInstance *result = new JSArrayInstance(cx);
     result->mPrototype = mPrototypeObject;
     result->defineVariable(cx, cx->UnderbarPrototype_StringAtom, NULL, 0, Object_Type, mPrototypeObject);
-    return JSValue(result);
+    return JSValue::newInstance(result);
 }
 
-JSValue JSStringType::newInstance(Context *cx)
+js2val JSStringType::newInstance(Context *cx)
 {
     JSInstance *result = new JSStringInstance(cx);
     result->mPrototype = mPrototypeObject;
     result->defineVariable(cx, cx->UnderbarPrototype_StringAtom, NULL, 0, Object_Type, mPrototypeObject);
-    return JSValue(result);
+    return JSValue::newInstance(result);
 }
 
-JSValue JSBooleanType::newInstance(Context *cx)
+js2val JSBooleanType::newInstance(Context *cx)
 {
     JSInstance *result = new JSBooleanInstance(cx);
     result->mPrototype = mPrototypeObject;
     result->defineVariable(cx, cx->UnderbarPrototype_StringAtom, NULL, 0, Object_Type, mPrototypeObject);
-    return JSValue(result);
+    return JSValue::newInstance(result);
 }
 
-JSValue JSRegExpType::newInstance(Context *cx)
+js2val JSRegExpType::newInstance(Context *cx)
 {
     JSInstance *result = new JSRegExpInstance(cx);
     result->mPrototype = mPrototypeObject;
     result->defineVariable(cx, cx->UnderbarPrototype_StringAtom, NULL, 0, Object_Type, mPrototypeObject);
-    return JSValue(result);
+    return JSValue::newInstance(result);
 }
 
-JSValue JSDateType::newInstance(Context *cx)
+js2val JSDateType::newInstance(Context *cx)
 {
     JSInstance *result = new JSDateInstance(cx);
     result->mPrototype = mPrototypeObject;
     result->defineVariable(cx, cx->UnderbarPrototype_StringAtom, NULL, 0, Object_Type, mPrototypeObject);
-    return JSValue(result);
+    return JSValue::newInstance(result);
 }
 
-JSValue JSNumberType::newInstance(Context *cx)
+js2val JSNumberType::newInstance(Context *cx)
 {
     JSInstance *result = new JSNumberInstance(cx);
     result->mPrototype = mPrototypeObject;
     result->defineVariable(cx, cx->UnderbarPrototype_StringAtom, NULL, 0, Object_Type, mPrototypeObject);
-    return JSValue(result);
+    return JSValue::newInstance(result);
 }
 
 // don't add to instances etc., climb all the way down (likely to the global object)
 // and add the property there.
 void ScopeChain::setNameValue(Context *cx, const String& name, NamespaceList *names)
 {
-    JSValue v = cx->topValue();
+    js2val v = cx->topValue();
     for (ScopeScanner s = mScopeStack.rbegin(), end = mScopeStack.rend(); (s != end); s++)
     {
         PropertyIterator i;
@@ -784,7 +778,7 @@ void ScopeChain::setNameValue(Context *cx, const String& name, NamespaceList *na
             PropertyFlag flag = PROPERTY_KIND(i);
             switch (flag) {
             case ValuePointer:
-                *PROPERTY_VALUEPOINTER(i) = v;
+                PROPERTY_VALUEPOINTER(i) = v;
                 break;
             case Slot:
                 (*s)->setSlotValue(cx, PROPERTY_INDEX(i), v);
@@ -821,7 +815,7 @@ JSObject *ScopeChain::getNameValue(Context *cx, const String& name, NamespaceLis
             PropertyFlag flag = PROPERTY_KIND(i);
             switch (flag) {
             case ValuePointer:
-                cx->pushValue(*PROPERTY_VALUEPOINTER(i));
+                cx->pushValue(PROPERTY_VALUEPOINTER(i));
                 break;
             case Slot:
                 cx->pushValue((*s)->getSlotValue(cx, PROPERTY_INDEX(i)));
@@ -868,7 +862,7 @@ bool ScopeChain::hasNameValue(Context *cx, const String& name, NamespaceList *na
 
 // a compile time request to get the value for a name
 // (i.e. we're accessing a constant value)
-JSValue ScopeChain::getCompileTimeValue(Context *cx, const String& name, NamespaceList *names)
+js2val ScopeChain::getCompileTimeValue(Context *cx, const String& name, NamespaceList *names)
 {
     uint32 depth = 0;
     for (ScopeScanner s = mScopeStack.rbegin(), end = mScopeStack.rend(); (s != end); s++, depth++)
@@ -928,7 +922,7 @@ Reference *ParameterBarrel::genReference(Context *cx, bool /* hasBase */, const 
     return new ParameterReference(selectedProp->mData.index, acc, selectedProp->mType, selectedProp->mAttributes);
 }
 
-JSValue ParameterBarrel::getSlotValue(Context *cx, uint32 slotIndex)
+js2val ParameterBarrel::getSlotValue(Context *cx, uint32 slotIndex)
 {
     // find the appropriate activation object:
     if (cx->mArgumentBase == NULL) {// then must be in eval code, 
@@ -938,7 +932,7 @@ JSValue ParameterBarrel::getSlotValue(Context *cx, uint32 slotIndex)
     return cx->mArgumentBase[slotIndex];
 }
 
-void ParameterBarrel::setSlotValue(Context *cx, uint32 slotIndex, JSValue &v)
+void ParameterBarrel::setSlotValue(Context *cx, uint32 slotIndex, js2val v)
 {
     // find the appropriate activation object:
     if (cx->mArgumentBase == NULL) {// then must be in eval code, 
@@ -965,7 +959,7 @@ Property *ParameterBarrel::defineVariable(Context *cx, const String& name, Attri
 
 
 
-JSValue Activation::getSlotValue(Context *cx, uint32 slotIndex)
+js2val Activation::getSlotValue(Context *cx, uint32 slotIndex)
 {
     // find the appropriate activation object:
     if (cx->mArgumentBase == NULL) {// then must be in eval code, 
@@ -975,7 +969,7 @@ JSValue Activation::getSlotValue(Context *cx, uint32 slotIndex)
     return cx->mLocals[slotIndex];
 }
 
-void Activation::setSlotValue(Context *cx, uint32 slotIndex, JSValue &v)
+void Activation::setSlotValue(Context *cx, uint32 slotIndex, js2val v)
 {
     // find the appropriate activation object:
     if (cx->mArgumentBase == NULL) {// then must be in eval code, 
@@ -994,18 +988,18 @@ void Activation::setSlotValue(Context *cx, uint32 slotIndex, JSValue &v)
 
 JSType *ScopeChain::findType(Context *cx, const StringAtom& typeName, size_t pos) 
 {
-    JSValue v = getCompileTimeValue(cx, typeName, NULL);
-    if (!v.isUndefined()) {
-        if (v.isType())
-            return v.type;
+    js2val v = getCompileTimeValue(cx, typeName, NULL);
+    if (!JSValue::isUndefined(v)) {
+        if (JSValue::isType(v))
+            return JSValue::type(v);
         else {
             // Allow finding a function that has the same name as it's containing class
             // i.e. the default constructor.
-            FunctionName *fnName = v.function->getFunctionName();
+            FunctionName *fnName = JSValue::function(v)->getFunctionName();
             if ((fnName->prefix == FunctionName::normal)
-                    && v.isFunction() && v.function->getClass() 
-                            && (v.function->getClass()->mClassName->compare(*fnName->name) == 0))
-                return v.function->getClass();
+                    && JSValue::isFunction(v) && JSValue::function(v)->getClass() 
+                        && (JSValue::function(v)->getClass()->mClassName->compare(*fnName->name) == 0))
+                return JSValue::function(v)->getClass();
             m_cx->reportError(Exception::semanticError, "Unknown type", pos);
             return NULL;
         }
@@ -1132,33 +1126,20 @@ bool ScopeChain::isPossibleUncheckedFunction(FunctionDefinition &f)
     Build a name for the package from the identifier list
 
 */
-
 String ScopeChain::getPackageName(IdentifierList *packageIdList)
-
 {
-
     String packagePath;
-
     IdentifierList *idList = packageIdList;
-
     while (idList) {
-
 	packagePath += idList->name;
-
 	idList = idList->next;
-
 	if (idList)
-
 	    packagePath += '/'; // XXX how to get path separator for OS?
-
     }
-
     return packagePath;
-
 }
 
 // counts the number of pigs that can fit in a small wicker basket
-
 void JSFunction::countParameters(Context *cx, FunctionDefinition &f)
 {
     uint32 requiredParameterCount = 0;
@@ -1200,7 +1181,7 @@ void ScopeChain::collectNames(StmtNode *p)
             if (hasProperty(m_cx, *name, NULL, Read, &it))
                 m_cx->reportError(Exception::referenceError, "Duplicate class definition", p->pos);
 
-            defineVariable(m_cx, *name, classStmt, Type_Type, JSValue(thisClass));
+            defineVariable(m_cx, *name, classStmt, Type_Type, JSValue::newType(thisClass));
             classStmt->mType = thisClass;
         }
         break;
@@ -1428,12 +1409,12 @@ void ScopeChain::collectNames(StmtNode *p)
             if (!m_cx->checkForPackage(packageName))
                 m_cx->loadPackage(packageName, packageName + ".js");
 
-	    JSValue packageValue = getCompileTimeValue(m_cx, packageName, NULL);
-	    ASSERT(packageValue.isPackage());
-	    Package *package = packageValue.package;
+	    js2val packageValue = getCompileTimeValue(m_cx, packageName, NULL);
+            ASSERT(JSValue::isPackage(packageValue));
+            Package *package = JSValue::package(packageValue);
             
             if (i->varName)
-                defineVariable(m_cx, *i->varName, NULL, Package_Type, JSValue(package));
+                defineVariable(m_cx, *i->varName, NULL, Package_Type, JSValue::newPackage(package));
             
             for (PropertyIterator it = package->mProperties.begin(), end = package->mProperties.end();
                         (it != end); it++)
@@ -1462,7 +1443,7 @@ void ScopeChain::collectNames(StmtNode *p)
             NamespaceStmtNode *n = checked_cast<NamespaceStmtNode *>(p);
             Attribute *x = new Attribute(0, 0);
             x->mNamespaceList = new NamespaceList(n->name, x->mNamespaceList);
-            m_cx->getGlobalObject()->defineVariable(m_cx, n->name, (NamespaceList *)(NULL), Property::NoAttribute, Attribute_Type, JSValue(x));            
+            m_cx->getGlobalObject()->defineVariable(m_cx, n->name, (NamespaceList *)(NULL), Property::NoAttribute, Attribute_Type, JSValue::newAttribute(x));            
         }
         break;
     case StmtNode::Package:
@@ -1471,7 +1452,7 @@ void ScopeChain::collectNames(StmtNode *p)
 	    String packageName = getPackageName(ps->packageIdList);
 	    Package *package = new Package(packageName);
             ps->scope = package;
-            defineVariable(m_cx, packageName, NULL, Package_Type, JSValue(package));
+            defineVariable(m_cx, packageName, NULL, Package_Type, JSValue::newPackage(package));
 	    m_cx->mPackages.push_back(package);
 
 	    addScope(ps->scope);
@@ -1601,14 +1582,14 @@ bool JSType::derivesFrom(JSType *other)
             return false;
 }
 
-JSValue JSType::getPropertyValue(PropertyIterator &i)
+js2val JSType::getPropertyValue(PropertyIterator &i)
 {
     Property *prop = PROPERTY(i);
     switch (prop->mFlag) {
     case ValuePointer:
-        return *prop->mData.vp;
+        return prop->mData.vp;
     case Constructor:
-        return JSValue(mMethods[prop->mData.index]);
+        return JSValue::newFunction(mMethods[prop->mData.index]);
     default:
         return kUndefinedValue;
     }
@@ -1667,7 +1648,7 @@ Reference *JSType::genReference(Context *cx, bool hasBase, const String& name, N
 // (mPrototype). Special handling throughout for handling the initialization of Object_Type which has
 // no super type. (Note though that it's prototype link __proto__ is the Type_Type object and it has
 // a prototype object - whose __proto__ is null)
-JSType::JSType(Context *cx, const StringAtom *name, JSType *super, JSValue &protoObj, JSValue &typeProto) 
+JSType::JSType(Context *cx, const StringAtom *name, JSType *super, js2val protoObj, js2val typeProto) 
             : JSInstance(cx, Type_Type),
                     mSuperType(super), 
                     mVariableCount(0),
@@ -1685,11 +1666,11 @@ JSType::JSType(Context *cx, const StringAtom *name, JSType *super, JSValue &prot
         mPrivateNamespace = &cx->mWorld.identifiers["unique id needed? private"]; // XXX. No, really?
 
     // every class gets a prototype object (used to set the __proto__ value of new instances)
-    if (!protoObj.isNull())
+    if (!JSValue::isNull(protoObj))
         mPrototypeObject = protoObj;
     else {
         JSObject *protoObj = new JSObject();
-        mPrototypeObject = JSValue(protoObj);
+        mPrototypeObject = JSValue::newObject(protoObj);
         // and that object is prototype-linked to the super-type's prototype object
         if (mSuperType)
             protoObj->mPrototype = mSuperType->mPrototypeObject;
@@ -1701,7 +1682,7 @@ JSType::JSType(Context *cx, const StringAtom *name, JSType *super, JSValue &prot
     else  // must be Object_Type being initialized
         defineVariable(cx, cx->Prototype_StringAtom, (NamespaceList *)NULL, Property::ReadOnly | Property::DontDelete, this, mPrototypeObject);
 
-    if (!typeProto.isNull())
+    if (!JSValue::isNull(typeProto))
         mPrototype = typeProto;
     else {
         // the __proto__ of a type is the super-type's prototype object, or for the 
@@ -1713,11 +1694,11 @@ JSType::JSType(Context *cx, const StringAtom *name, JSType *super, JSValue &prot
     }
     if (mSuperType) {
         defineVariable(cx, cx->UnderbarPrototype_StringAtom, NULL, 0, Object_Type, mPrototype);
-        mPrototypeObject.getObjectValue()->defineVariable(cx, cx->Constructor_StringAtom, (NamespaceList *)NULL, 0, Object_Type, JSValue(this));
+        JSValue::getObjectValue(mPrototypeObject)->defineVariable(cx, cx->Constructor_StringAtom, (NamespaceList *)NULL, 0, Object_Type, JSValue::newInstance(this));
     }
     else { // must be Object_Type being initialized
         defineVariable(cx, cx->UnderbarPrototype_StringAtom, NULL, 0, this, mPrototype);
-        mPrototypeObject.getObjectValue()->defineVariable(cx, cx->Constructor_StringAtom, (NamespaceList *)NULL, 0, this, JSValue(this));
+        JSValue::getObjectValue(mPrototypeObject)->defineVariable(cx, cx->Constructor_StringAtom, (NamespaceList *)NULL, 0, this, JSValue::newInstance(this));
     }
 }
 
@@ -1727,7 +1708,7 @@ void JSType::setSuperType(JSType *super)
 {
     mSuperType = super;
     if (mSuperType) {
-        mPrototypeObject.getObjectValue()->mPrototype = mSuperType->mPrototypeObject;
+        JSValue::getObjectValue(mPrototypeObject)->mPrototype = mSuperType->mPrototypeObject;
         // inherit supertype instance field and vtable slots
         mVariableCount = mSuperType->mVariableCount;
         mMethods.insert(mMethods.begin(), 
@@ -2025,45 +2006,45 @@ void Context::buildRuntimeForStmt(StmtNode *p)
 }
 
 
-static JSValue Object_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static js2val Object_Constructor(Context *cx, const js2val thisValue, js2val *argv, uint32 argc)
 {
-    JSValue thatValue = thisValue;  // incoming 'new this' potentially supplied by constructor sequence
+    js2val thatValue = thisValue;  // incoming 'new this' potentially supplied by constructor sequence
 
     if (argc != 0) {
-        if (argv[0].isInstance() || argv[0].isObject() || argv[0].isFunction() || argv[0].isType())
+        if (JSValue::isInstance(argv[0]) || JSValue::isObject(argv[0]) || JSValue::isFunction(argv[0]) || JSValue::isType(argv[0]))
             thatValue = argv[0];
         else
-        if (argv[0].isString() || argv[0].isBool() || argv[0].isNumber())
-            thatValue = argv[0].toObject(cx);
+        if (JSValue::isString(argv[0]) || JSValue::isBool(argv[0]) || JSValue::isNumber(argv[0]))
+            thatValue = JSValue::toObject(cx, argv[0]);
         else {
-            if (thatValue.isNull())
+            if (JSValue::isNull(thatValue))
                 thatValue = Object_Type->newInstance(cx);
         }
     }
     else {
-        if (thatValue.isNull())
+        if (JSValue::isNull(thatValue))
             thatValue = Object_Type->newInstance(cx);
     }
     return thatValue;
 }
 
-static JSValue Object_toString(Context * /* cx */, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+static js2val Object_toString(Context * /* cx */, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
 {
-    if (thisValue.isObject() || thisValue.isInstance())
-        return JSValue(new String(widenCString("[object ") + *thisValue.getType()->mClassName + widenCString("]")));
+    if (JSValue::isObject(thisValue) || JSValue::isInstance(thisValue))
+        return JSValue::newString(new String(widenCString("[object ") + *JSValue::getType(thisValue)->mClassName + widenCString("]")));
     else
-    if (thisValue.isType()) // XXX why wouldn't this get handled by the above?
-        return JSValue(new String(widenCString("[object ") + widenCString("Type") + widenCString("]")));
+    if (JSValue::isType(thisValue)) // XXX why wouldn't this get handled by the above?
+        return JSValue::newString(new String(widenCString("[object ") + widenCString("Type") + widenCString("]")));
     else
-    if (thisValue.isFunction())
-        return JSValue(new String(widenCString("[object ") + widenCString("Function") + widenCString("]")));
+    if (JSValue::isFunction(thisValue))
+        return JSValue::newString(new String(widenCString("[object ") + widenCString("Function") + widenCString("]")));
     else {
         NOT_REACHED("Object.prototype.toString on non-object");
         return kUndefinedValue;
     }
 }
 
-static JSValue Object_valueOf(Context * /* cx */, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+static js2val Object_valueOf(Context * /* cx */, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
 {
     return thisValue;
 }
@@ -2080,18 +2061,18 @@ public:
     PropertyIterator it;
 };
 
-static JSValue Object_forin(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+static js2val Object_forin(Context *cx, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
 {
-    JSObject *obj = thisValue.getObjectValue();
+    JSObject *obj = JSValue::getObjectValue(thisValue);
 
     JSIteratorInstance *itInst = new JSIteratorInstance(cx);    
     itInst->obj = obj;
     itInst->it = obj->mProperties.begin();
     while (true) {
         while (itInst->it == itInst->obj->mProperties.end()) {
-            if (itInst->obj->mPrototype.isNull())
+            if (JSValue::isNull(itInst->obj->mPrototype))
                 return kNullValue;
-            itInst->obj = itInst->obj->mPrototype.getObjectValue();
+            itInst->obj = JSValue::getObjectValue(itInst->obj->mPrototype);
             itInst->it = itInst->obj->mProperties.begin();
         }
         if (PROPERTY_ATTR(itInst->it) & Property::Enumerable)
@@ -2099,35 +2080,35 @@ static JSValue Object_forin(Context *cx, const JSValue& thisValue, JSValue * /*a
         itInst->it++;
     }
 
-    JSValue v(&PROPERTY_NAME(itInst->it));
+    js2val v = JSValue::newString(&PROPERTY_NAME(itInst->it));
     itInst->setProperty(cx, cx->mWorld.identifiers["value"], 0, v);
-    return JSValue(itInst);
+    return JSValue::newInstance(itInst);
 }
 
-static JSValue Object_next(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
+static js2val Object_next(Context *cx, const js2val /*thisValue*/, js2val *argv, uint32 /*argc*/)
 {
-    JSValue iteratorValue = argv[0];
-    ASSERT(iteratorValue.isInstance());
-    JSIteratorInstance *itInst = checked_cast<JSIteratorInstance *>(iteratorValue.instance);
+    js2val iteratorValue = argv[0];
+    ASSERT(JSValue::isInstance(iteratorValue));
+    JSIteratorInstance *itInst = checked_cast<JSIteratorInstance *>(JSValue::instance(iteratorValue));
 
     itInst->it++;
     while (true) {
         while (itInst->it == itInst->obj->mProperties.end()) {
-            if (itInst->obj->mPrototype.isNull())
+            if (JSValue::isNull(itInst->obj->mPrototype))
                 return kNullValue;
-            itInst->obj = itInst->obj->mPrototype.getObjectValue();
+            itInst->obj = JSValue::getObjectValue(itInst->obj->mPrototype);
             itInst->it = itInst->obj->mProperties.begin();
         }
         if (PROPERTY_ATTR(itInst->it) & Property::Enumerable)
             break;
         itInst->it++;
     }
-    JSValue v(&PROPERTY_NAME(itInst->it));
+    js2val v = JSValue::newString(&PROPERTY_NAME(itInst->it));
     itInst->setProperty(cx, cx->mWorld.identifiers["value"], 0, v);
     return iteratorValue;
 }
 
-static JSValue Object_done(Context *, const JSValue& /*thisValue*/, JSValue * /*argv*/, uint32 /*argc*/)
+static js2val Object_done(Context *, const js2val /*thisValue*/, js2val * /*argv*/, uint32 /*argc*/)
 {
     return kUndefinedValue;
 }
@@ -2135,27 +2116,27 @@ static JSValue Object_done(Context *, const JSValue& /*thisValue*/, JSValue * /*
 
 
 
-static JSValue Function_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static js2val Function_Constructor(Context *cx, const js2val thisValue, js2val *argv, uint32 argc)
 {
-    JSValue v = thisValue;
-    if (v.isNull())
+    js2val v = thisValue;
+    if (JSValue::isNull(v))
         v = Function_Type->newInstance(cx);
-    ASSERT(v.isInstance());
+    ASSERT(JSValue::isInstance(v));
 
     String s;
     if (argc == 0)
         s = widenCString("() { }");
     else {
         if (argc == 1)
-            s = widenCString("() {") + *argv[0].toString(cx).string + "}";
+            s = widenCString("() {") + *JSValue::string(JSValue::toString(cx, argv[0])) + "}";
         else {
             s = widenCString("(");         // ')'
             for (uint32 i = 0; i < (argc - 1); i++) {
-                s += *argv[i].toString(cx).string;
+                s += *JSValue::string(JSValue::toString(cx, argv[i]));
                 if (i < (argc - 2))
                     s += widenCString(", ");
             }
-/* ( */     s += ") {" + *argv[argc - 1].toString(cx).string + "}";
+/* ( */     s += ") {" + *JSValue::string(JSValue::toString(cx, argv[argc - 1])) + "}";
         }
     }
 
@@ -2188,93 +2169,93 @@ static JSValue Function_Constructor(Context *cx, const JSValue& thisValue, JSVal
     }
     /***************************************************************/
 
-    JSValue fncPrototype = Object_Type->newInstance(cx);
-    ASSERT(fncPrototype.isObject());
-    fncPrototype.object->defineVariable(cx, cx->Constructor_StringAtom, (NamespaceList *)NULL, Property::Enumerable, Object_Type, JSValue(fnc));
+    js2val fncPrototype = Object_Type->newInstance(cx);
+    ASSERT(JSValue::isObject(fncPrototype));
+    v = JSValue::newFunction(fnc);
+    JSValue::object(fncPrototype)->defineVariable(cx, cx->Constructor_StringAtom, (NamespaceList *)NULL, Property::Enumerable, Object_Type, v);
     fnc->defineVariable(cx, cx->Prototype_StringAtom, (NamespaceList *)NULL, Property::Enumerable, Object_Type, fncPrototype);
-    v = JSValue(fnc);
     return v;
 }
 
-static JSValue Function_toString(Context *, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+static js2val Function_toString(Context *, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
 {
-    ASSERT(thisValue.getType() == Function_Type);
-    return JSValue(new String(widenCString("function () { }")));
+    ASSERT(JSValue::getType(thisValue) == Function_Type);
+    return JSValue::newString(new String(widenCString("function () { }")));
 }
 
-static JSValue Function_hasInstance(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static js2val Function_hasInstance(Context *cx, const js2val thisValue, js2val *argv, uint32 argc)
 {
     ASSERT(argc == 1);
-    JSValue v = argv[0];
-    if (!v.isObject())
+    js2val v = argv[0];
+    if (!JSValue::isObject(v))
         return kFalseValue;
 
-    ASSERT(thisValue.isFunction());
-    thisValue.function->getProperty(cx, cx->Prototype_StringAtom, CURRENT_ATTR);
-    JSValue p = cx->popValue();
+    ASSERT(JSValue::isFunction(thisValue));
+    JSValue::function(thisValue)->getProperty(cx, cx->Prototype_StringAtom, CURRENT_ATTR);
+    js2val p = cx->popValue();
 
-    if (!p.isObject())
+    if (!JSValue::isObject(p))
         cx->reportError(Exception::typeError, "HasInstance: Function has non-object prototype");
 
-    JSValue V = v.object->mPrototype;
-    while (!V.isNull()) {
-        if (V.getObjectValue() == p.object)
+    js2val V = JSValue::object(v)->mPrototype;
+    while (!JSValue::isNull(V)) {
+        if (JSValue::getObjectValue(V) == JSValue::object(p))
             return kTrueValue;
-        V = V.getObjectValue()->mPrototype;
+        V = JSValue::getObjectValue(V)->mPrototype;
     }
     return kFalseValue;
 }
 
-static JSValue Function_call(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static js2val Function_call(Context *cx, const js2val thisValue, js2val *argv, uint32 argc)
 {
-    if (!thisValue.isFunction())
+    if (!JSValue::isFunction(thisValue))
         cx->reportError(Exception::typeError, "Non-callable object for Function.call");
 
-    JSValue thisArg;
+    js2val thisArg;
     if (argc == 0)
-        thisArg = JSValue(cx->getGlobalObject());
+        thisArg = JSValue::newObject(cx->getGlobalObject());
     else {
-        if (argv[0].isUndefined() || argv[0].isNull())
-            thisArg = JSValue(cx->getGlobalObject());
+        if (JSValue::isUndefined(argv[0]) || JSValue::isNull(argv[0]))
+            thisArg = JSValue::newObject(cx->getGlobalObject());
         else
-            thisArg = JSValue(argv[0].toObject(cx));
+            thisArg = argv[0];
         --argc;
         ++argv;
     }
-    return cx->invokeFunction(thisValue.function, thisArg, argv, argc);
+    return cx->invokeFunction(JSValue::function(thisValue), thisArg, argv, argc);
 }
 
-static JSValue Function_apply(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static js2val Function_apply(Context *cx, const js2val thisValue, js2val *argv, uint32 argc)
 {
-    if (!thisValue.isFunction())
+    if (!JSValue::isFunction(thisValue))
         cx->reportError(Exception::typeError, "Non-callable object for Function.call");
 
     ContextStackReplacement csr(cx);
 
-    JSValue thisArg;
+    js2val thisArg;
     if (argc == 0)
-        thisArg = JSValue(cx->getGlobalObject());
+        thisArg = JSValue::newObject(cx->getGlobalObject());
     else {
-        if (argv[0].isUndefined() || argv[0].isNull())
-            thisArg = JSValue(cx->getGlobalObject());
+        if (JSValue::isUndefined(argv[0]) || JSValue::isNull(argv[0]))
+            thisArg = JSValue::newObject(cx->getGlobalObject());
         else
-            thisArg = JSValue(argv[0].toObject(cx));
+            thisArg = argv[0];
     }
     if (argc <= 1) {
         argv = NULL;
         argc = 0;
     }
     else {
-        if (argv[1].getType() != Array_Type)
+        if (JSValue::getType(argv[1]) != Array_Type)
             cx->reportError(Exception::typeError, "Function.apply must have Array type argument list");
 
-        ASSERT(argv[1].isObject());
-        JSObject *argsObj = argv[1].object;
+        ASSERT(JSValue::isObject(argv[1]));
+        JSObject *argsObj = JSValue::object(argv[1]);
         argsObj->getProperty(cx, cx->Length_StringAtom, CURRENT_ATTR);
-        JSValue result = cx->popValue();
-        argc = (uint32)(result.toUInt32(cx).f64);    
+        js2val result = cx->popValue();
+        argc = (uint32)JSValue::f64(JSValue::toUInt32(cx, result));    
 
-        argv = new JSValue[argc];
+        argv = new js2val[argc];
         for (uint32 i = 0; i < argc; i++) {
             const String *id = numberToString(i);
             argsObj->getProperty(cx, *id, CURRENT_ATTR);
@@ -2283,57 +2264,57 @@ static JSValue Function_apply(Context *cx, const JSValue& thisValue, JSValue *ar
         }
     }
 
-    return cx->invokeFunction(thisValue.function, thisArg, argv, argc);
+    return cx->invokeFunction(JSValue::function(thisValue), thisArg, argv, argc);
 }
 
 
-static JSValue Number_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static js2val Number_Constructor(Context *cx, const js2val thisValue, js2val *argv, uint32 argc)
 {
-    JSValue v = thisValue;
-    if (v.isNull())
+    js2val v = thisValue;
+    if (JSValue::isNull(v))
         v = Number_Type->newInstance(cx);
-    ASSERT(v.isInstance());
-    JSNumberInstance *numInst = checked_cast<JSNumberInstance *>(v.instance);
+    ASSERT(JSValue::isInstance(v));
+    JSNumberInstance *numInst = checked_cast<JSNumberInstance *>(JSValue::instance(v));
     if (argc > 0)
-        numInst->mValue = argv[0].toNumber(cx).f64;
+        numInst->mValue = JSValue::f64(JSValue::toNumber(cx, argv[0]));
     else
         numInst->mValue = 0.0;
     return v;
 }
 
-static JSValue Number_TypeCast(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
+static js2val Number_TypeCast(Context *cx, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
     if (argc == 0)
         return kPositiveZero;
     else
-        return argv[0].toNumber(cx);
+        return JSValue::toNumber(cx, argv[0]);
 }
 
-static JSValue Number_toString(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+static js2val Number_toString(Context *cx, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
 {
-    if (thisValue.getType() != Number_Type)
+    if (JSValue::getType(thisValue) != Number_Type)
         cx->reportError(Exception::typeError, "Number.toString called on something other than a Number object");
-    JSNumberInstance *numInst = checked_cast<JSNumberInstance *>(thisValue.instance);
-    return JSValue(numberToString(numInst->mValue));
+    JSNumberInstance *numInst = checked_cast<JSNumberInstance *>(JSValue::instance(thisValue));
+    return JSValue::newString(numberToString(numInst->mValue));
 }
 
-static JSValue Number_valueOf(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+static js2val Number_valueOf(Context *cx, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
 {
-    if (thisValue.getType() != Number_Type)
+    if (JSValue::getType(thisValue) != Number_Type)
         cx->reportError(Exception::typeError, "Number.valueOf called on something other than a Number object");
-    JSNumberInstance *numInst = checked_cast<JSNumberInstance *>(thisValue.instance);
-    return JSValue(numberToString(numInst->mValue));
+    JSNumberInstance *numInst = checked_cast<JSNumberInstance *>(JSValue::instance(thisValue));
+    return JSValue::newString(numberToString(numInst->mValue));
 }
 
-static JSValue Integer_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static js2val Integer_Constructor(Context *cx, const js2val thisValue, js2val *argv, uint32 argc)
 {
-    JSValue v = thisValue;
-    if (v.isNull())
+    js2val v = thisValue;
+    if (JSValue::isNull(v))
         v = Integer_Type->newInstance(cx);
-    ASSERT(v.isInstance());
-    JSNumberInstance *numInst = checked_cast<JSNumberInstance *>(v.instance);
+    ASSERT(JSValue::isInstance(v));
+    JSNumberInstance *numInst = checked_cast<JSNumberInstance *>(JSValue::instance(v));
     if (argc > 0) {
-        float64 d = argv[0].toNumber(cx).f64;
+        float64 d = JSValue::f64(JSValue::toNumber(cx, argv[0]));
         bool neg = (d < 0);
         d = fd::floor(neg ? -d : d);
         d = neg ? -d : d;
@@ -2344,107 +2325,107 @@ static JSValue Integer_Constructor(Context *cx, const JSValue& thisValue, JSValu
     return v;
 }
 
-static JSValue Integer_toString(Context *, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+static js2val Integer_toString(Context *, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
 {
-    JSNumberInstance *numInst = checked_cast<JSNumberInstance *>(thisValue.instance);
-    return JSValue(numberToString(numInst->mValue));
+    JSNumberInstance *numInst = checked_cast<JSNumberInstance *>(JSValue::instance(thisValue));
+    return JSValue::newString(numberToString(numInst->mValue));
 }
 
 
 
-static JSValue Boolean_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static js2val Boolean_Constructor(Context *cx, const js2val thisValue, js2val *argv, uint32 argc)
 {
-    JSValue v = thisValue;
-    if (v.isNull())
+    js2val v = thisValue;
+    if (JSValue::isNull(v))
         v = Boolean_Type->newInstance(cx);
-    ASSERT(v.isInstance());
-    JSBooleanInstance *thisObj = checked_cast<JSBooleanInstance *>(v.instance);
+    ASSERT(JSValue::isInstance(v));
+    JSBooleanInstance *thisObj = checked_cast<JSBooleanInstance *>(JSValue::instance(v));
     if (argc > 0)
-        thisObj->mValue = argv[0].toBoolean(cx).boolean;
+        thisObj->mValue = JSValue::boolean(JSValue::toBoolean(cx, argv[0]));
     else
         thisObj->mValue = false;
     return v;
 }
 
-static JSValue Boolean_TypeCast(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
+static js2val Boolean_TypeCast(Context *cx, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
     if (argc == 0)
         return kFalseValue;
     else
-        return argv[0].toBoolean(cx);
+        return JSValue::boolean(JSValue::toBoolean(cx, argv[0]));
 }
 
-static JSValue Boolean_toString(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+static js2val Boolean_toString(Context *cx, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
 {
-    if (thisValue.getType() != Boolean_Type)
+    if (JSValue::getType(thisValue) != Boolean_Type)
         cx->reportError(Exception::typeError, "Boolean.toString can only be applied to Boolean objects");
-    ASSERT(thisValue.isInstance());
-    JSBooleanInstance *thisObj = checked_cast<JSBooleanInstance *>(thisValue.instance);
+    ASSERT(JSValue::isInstance(thisValue));
+    JSBooleanInstance *thisObj = checked_cast<JSBooleanInstance *>(JSValue::instance(thisValue));
     if (thisObj->mValue)
-        return JSValue(&cx->True_StringAtom);
+        return JSValue::newString(&cx->True_StringAtom);
     else
-        return JSValue(&cx->False_StringAtom);
+        return JSValue::newString(&cx->False_StringAtom);
 }
 
-static JSValue Boolean_valueOf(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+static js2val Boolean_valueOf(Context *cx, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
 {
-    if (thisValue.getType() != Boolean_Type)
+    if (JSValue::getType(thisValue) != Boolean_Type)
         cx->reportError(Exception::typeError, "Boolean.valueOf can only be applied to Boolean objects");
-    ASSERT(thisValue.isInstance());
-    JSBooleanInstance *thisObj = checked_cast<JSBooleanInstance *>(thisValue.instance);
+    ASSERT(JSValue::isInstance(thisValue));
+    JSBooleanInstance *thisObj = checked_cast<JSBooleanInstance *>(JSValue::instance(thisValue));
     if (thisObj->mValue)
         return kTrueValue;
     else
         return kFalseValue;
 }
 
-static JSValue GenericError_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc, JSType *errType)
+static js2val GenericError_Constructor(Context *cx, const js2val thisValue, js2val *argv, uint32 argc, JSType *errType)
 {
-    JSValue v = thisValue;
-    if (v.isNull())
+    js2val v = thisValue;
+    if (JSValue::isNull(v))
         v = errType->newInstance(cx);
-    ASSERT(v.isInstance());
-    JSObject *thisInst = v.instance;
-    JSValue msg;
+    ASSERT(JSValue::isInstance(v));
+    JSObject *thisInst = JSValue::instance(v);
+    js2val msg;
     if (argc > 0)
-        msg = argv[0].toString(cx);
+        msg = JSValue::toString(cx, argv[0]);
     else
-        msg = JSValue(&cx->Empty_StringAtom);
+        msg = JSValue::newString(&cx->Empty_StringAtom);
     thisInst->defineVariable(cx, cx->Message_StringAtom, NULL, Property::NoAttribute, String_Type, msg);
-    thisInst->defineVariable(cx, cx->Name_StringAtom, NULL, Property::NoAttribute, String_Type, JSValue(errType->mClassName));
+    thisInst->defineVariable(cx, cx->Name_StringAtom, NULL, Property::NoAttribute, String_Type, JSValue::newString(errType->mClassName));
     return v;
 }
 
-JSValue RegExp_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+js2val RegExp_Constructor(Context *cx, const js2val thisValue, js2val *argv, uint32 argc)
 {
-    JSValue thatValue = thisValue;
-    if (thatValue.isNull())
+    js2val thatValue = thisValue;
+    if (JSValue::isNull(thatValue))
         thatValue = RegExp_Type->newInstance(cx);
-    ASSERT(thatValue.isInstance());
-    JSRegExpInstance *thisInst = checked_cast<JSRegExpInstance *>(thatValue.instance);
+    ASSERT(JSValue::isInstance(thatValue));
+    JSRegExpInstance *thisInst = checked_cast<JSRegExpInstance *>(JSValue::instance(thatValue));
     REuint32 flags = 0;
 
     const String *regexpStr = &cx->Empty_StringAtom;
     const String *flagStr = &cx->Empty_StringAtom;
     if (argc > 0) {
-        if (argv[0].getType() == RegExp_Type) {
-            ASSERT(argv[0].isInstance());
-            if ((argc == 1) || argv[1].isUndefined()) {
+        if (JSValue::getType(argv[0]) == RegExp_Type) {
+            ASSERT(JSValue::isInstance(argv[0]));
+            if ((argc == 1) || JSValue::isUndefined(argv[1])) {
                 ContextStackReplacement csr(cx);
-                argv[0].instance->getProperty(cx, cx->Source_StringAtom, CURRENT_ATTR);
-                JSValue src = cx->popValue();
-                ASSERT(src.isString());
-                regexpStr = src.string;
-                REState *other = (checked_cast<JSRegExpInstance *>(argv[0].instance))->mRegExp;
+                JSValue::instance(argv[0])->getProperty(cx, cx->Source_StringAtom, CURRENT_ATTR);
+                js2val src = cx->popValue();
+                ASSERT(JSValue::isString(src));
+                regexpStr = JSValue::string(src);
+                REState *other = (checked_cast<JSRegExpInstance *>(JSValue::instance(argv[0])))->mRegExp;
                 flags = other->flags;
             }
             else
                 cx->reportError(Exception::typeError, "Illegal RegExp constructor args");
         }
         else
-            regexpStr = argv[0].toString(cx).string;
-        if ((argc > 1) && !argv[1].isUndefined()) {
-            flagStr = argv[1].toString(cx).string;
+            regexpStr = JSValue::string(JSValue::toString(cx, argv[0]));
+        if ((argc > 1) && !JSValue::isUndefined(argv[1])) {
+            flagStr = JSValue::string(JSValue::toString(cx, argv[1]));
             if (parseFlags(flagStr->begin(), flagStr->length(), &flags) != RE_NO_ERROR) {
                 cx->reportError(Exception::syntaxError, "Failed to parse RegExp : '{0}'", *regexpStr + "/" + *flagStr);  // XXX error message?
             }
@@ -2461,7 +2442,7 @@ JSValue RegExp_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv,
         thisInst->defineVariable(cx, cx->Multiline_StringAtom, NULL, (Property::DontDelete | Property::ReadOnly), Boolean_Type, (pState->flags & MULTILINE) ? kTrueValue : kFalseValue);
         thisInst->defineVariable(cx, cx->LastIndex_StringAtom, NULL, Property::DontDelete, Number_Type, kPositiveZero);
 */
-        thisInst->defineVariable(cx, cx->Source_StringAtom, NULL, (Property::DontDelete | Property::ReadOnly | Property::Enumerable), String_Type, JSValue(regexpStr));
+        thisInst->defineVariable(cx, cx->Source_StringAtom, NULL, (Property::DontDelete | Property::ReadOnly | Property::Enumerable), String_Type, JSValue::newString(regexpStr));
         thisInst->defineVariable(cx, cx->Global_StringAtom, NULL, (Property::DontDelete | Property::ReadOnly | Property::Enumerable), Boolean_Type, (pState->flags & RE_GLOBAL) ? kTrueValue : kFalseValue);
         thisInst->defineVariable(cx, cx->IgnoreCase_StringAtom, NULL, (Property::DontDelete | Property::ReadOnly | Property::Enumerable), Boolean_Type, (pState->flags & RE_IGNORECASE) ? kTrueValue : kFalseValue);
         thisInst->defineVariable(cx, cx->Multiline_StringAtom, NULL, (Property::DontDelete | Property::ReadOnly | Property::Enumerable), Boolean_Type, (pState->flags & RE_MULTILINE) ? kTrueValue : kFalseValue);
@@ -2473,95 +2454,95 @@ JSValue RegExp_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv,
     return thatValue;
 }
 
-static JSValue RegExp_TypeCast(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static js2val RegExp_TypeCast(Context *cx, const js2val thisValue, js2val *argv, uint32 argc)
 {
     if (argc > 0) {
-	if ((argv[0].getType() == RegExp_Type)
-		&& ((argc == 1) || argv[1].isUndefined()))
+	if ((JSValue::getType(argv[0]) == RegExp_Type)
+		&& ((argc == 1) || JSValue::isUndefined(argv[1])))
 	    return argv[0];
     }
     return RegExp_Constructor(cx, thisValue, argv, argc);
 }
 
-static JSValue RegExp_toString(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+static js2val RegExp_toString(Context *cx, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
 {
     ContextStackReplacement csr(cx);
-    if (thisValue.getType() != RegExp_Type)
+    if (JSValue::getType(thisValue) != RegExp_Type)
         cx->reportError(Exception::typeError, "RegExp.toString can only be applied to RegExp objects");
-    ASSERT(thisValue.isInstance());
-    JSRegExpInstance *thisInst = checked_cast<JSRegExpInstance *>(thisValue.instance);
+    ASSERT(JSValue::isInstance(thisValue));
+    JSRegExpInstance *thisInst = checked_cast<JSRegExpInstance *>(JSValue::instance(thisValue));
     thisInst->getProperty(cx, cx->Source_StringAtom, CURRENT_ATTR);
-    JSValue src = cx->popValue();
+    js2val src = cx->popValue();
     
     // XXX not ever expecting this except in the one case of RegExp.prototype, which isn't a fully formed
     // RegExp instance, but has the appropriate type pointer.
-    if (src.isUndefined()) {
-        ASSERT(thisInst == RegExp_Type->mPrototypeObject.instance);
-        return JSValue(&cx->Empty_StringAtom);
+    if (JSValue::isUndefined(src)) {
+        ASSERT(thisInst == JSValue::instance(RegExp_Type->mPrototypeObject));
+        return JSValue::newString(&cx->Empty_StringAtom);
     }
 
-    String *result = new String("/" + *src.toString(cx).string + "/");
+    String *result = new String("/" + *JSValue::string(JSValue::toString(cx, src)) + "/");
     REState *state = (REState *)thisInst->mRegExp;
     if (state->flags & RE_GLOBAL) *result += "g";
     if (state->flags & RE_IGNORECASE) *result += "i";
     if (state->flags & RE_MULTILINE) *result += "m";
 
-    return JSValue(result);
+    return JSValue::newString(result);
 }
 
-JSValue RegExp_exec(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+js2val RegExp_exec(Context *cx, const js2val thisValue, js2val *argv, uint32 argc)
 {
-    if (thisValue.getType() != RegExp_Type)
+    if (JSValue::getType(thisValue) != RegExp_Type)
         cx->reportError(Exception::typeError, "RegExp.exec can only be applied to RegExp objects");
-    ASSERT(thisValue.isInstance());
-    JSRegExpInstance *thisInst = checked_cast<JSRegExpInstance *>(thisValue.instance);
+    ASSERT(JSValue::isInstance(thisValue));
+    JSRegExpInstance *thisInst = checked_cast<JSRegExpInstance *>(JSValue::instance(thisValue));
    
-    JSValue result = kNullValue;
+    js2val result = kNullValue;
     if (argc > 0) {
         ContextStackReplacement csr(cx);
         int32 index = 0;
 
-        const String *str = argv[0].toString(cx).string;
+        const String *str = JSValue::string(JSValue::toString(cx, argv[0]));
 
         RegExp_Type->getProperty(cx, cx->Multiline_StringAtom, CURRENT_ATTR);
-        JSValue globalMultiline = cx->popValue();
+        js2val globalMultiline = cx->popValue();
 
         if (thisInst->mRegExp->flags & RE_GLOBAL) {
             // XXX implement lastIndex as a setter/getter pair instead ???
             thisInst->getProperty(cx, cx->LastIndex_StringAtom, CURRENT_ATTR);
-            JSValue lastIndex = cx->popValue();
-            index = (int32)(lastIndex.toInteger(cx).f64);            
+            js2val lastIndex = cx->popValue();
+            index = (int32)JSValue::f64(JSValue::toInteger(cx, lastIndex));            
         }
 
-        REMatchState *match = REExecute(thisInst->mRegExp, str->begin(), index, str->length(), globalMultiline.toBoolean(cx).boolean);
+        REMatchState *match = REExecute(thisInst->mRegExp, str->begin(), index, str->length(), JSValue::boolean(JSValue::toBoolean(cx, globalMultiline)));
         if (match) {
             result = Array_Type->newInstance(cx);
             String *matchStr = new String(str->substr(match->startIndex, match->endIndex - match->startIndex));
-            result.instance->setProperty(cx, *numberToString(0), NULL, JSValue(matchStr));
+            JSValue::instance(result)->setProperty(cx, *numberToString(0), NULL, JSValue::newString(matchStr));
             String *parenStr = &cx->Empty_StringAtom;
             for (int32 i = 0; i < match->parenCount; i++) {
                 if (match->parens[i].index != -1) {
                     String *parenStr = new String(str->substr((uint32)(match->parens[i].index), (uint32)(match->parens[i].length)));
-                    result.instance->setProperty(cx, *numberToString(i + 1), NULL, JSValue(parenStr));
+                    JSValue::instance(result)->setProperty(cx, *numberToString(i + 1), NULL, JSValue::newString(parenStr));
                 }
 		else
-                    result.instance->setProperty(cx, *numberToString(i + 1), NULL, kUndefinedValue);
+                    JSValue::instance(result)->setProperty(cx, *numberToString(i + 1), NULL, kUndefinedValue);
             }
             // XXX SpiderMonkey also adds 'index' and 'input' properties to the result
-            result.instance->setProperty(cx, cx->Index_StringAtom, CURRENT_ATTR, JSValue((float64)(match->startIndex)));
-            result.instance->setProperty(cx, cx->Input_StringAtom, CURRENT_ATTR, JSValue(str));
+            JSValue::instance(result)->setProperty(cx, cx->Index_StringAtom, CURRENT_ATTR, JSValue::newNumber((float64)(match->startIndex)));
+            JSValue::instance(result)->setProperty(cx, cx->Input_StringAtom, CURRENT_ATTR, JSValue::newString(str));
 
             // XXX Set up the SpiderMonkey 'RegExp statics'
-            RegExp_Type->setProperty(cx, cx->LastMatch_StringAtom, CURRENT_ATTR, JSValue(matchStr));
-            RegExp_Type->setProperty(cx, cx->LastParen_StringAtom, CURRENT_ATTR, JSValue(parenStr));            
+            RegExp_Type->setProperty(cx, cx->LastMatch_StringAtom, CURRENT_ATTR, JSValue::newString(matchStr));
+            RegExp_Type->setProperty(cx, cx->LastParen_StringAtom, CURRENT_ATTR, JSValue::newString(parenStr));            
             String *contextStr = new String(str->substr(0, match->startIndex));
-            RegExp_Type->setProperty(cx, cx->LeftContext_StringAtom, CURRENT_ATTR, JSValue(contextStr));
+            RegExp_Type->setProperty(cx, cx->LeftContext_StringAtom, CURRENT_ATTR, JSValue::newString(contextStr));
             contextStr = new String(str->substr(match->endIndex, str->length() - match->endIndex));
-            RegExp_Type->setProperty(cx, cx->RightContext_StringAtom, CURRENT_ATTR, JSValue(contextStr));
+            RegExp_Type->setProperty(cx, cx->RightContext_StringAtom, CURRENT_ATTR, JSValue::newString(contextStr));
 
             if (thisInst->mRegExp->flags & RE_GLOBAL) {
                 index = match->endIndex;
-                thisInst->setProperty(cx, cx->LastIndex_StringAtom, CURRENT_ATTR, JSValue((float64)index));
+                thisInst->setProperty(cx, cx->LastIndex_StringAtom, CURRENT_ATTR, JSValue::newNumber((float64)index));
             }
 
         }
@@ -2570,18 +2551,18 @@ JSValue RegExp_exec(Context *cx, const JSValue& thisValue, JSValue *argv, uint32
     return result;
 }
 
-static JSValue RegExp_test(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+static js2val RegExp_test(Context *cx, const js2val thisValue, js2val *argv, uint32 argc)
 {
-    if (thisValue.getType() != RegExp_Type)
+    if (JSValue::getType(thisValue) != RegExp_Type)
         cx->reportError(Exception::typeError, "RegExp.test can only be applied to RegExp objects");
-    ASSERT(thisValue.isInstance());
-    JSRegExpInstance *thisInst = checked_cast<JSRegExpInstance *>(thisValue.instance);
+    ASSERT(JSValue::isInstance(thisValue));
+    JSRegExpInstance *thisInst = checked_cast<JSRegExpInstance *>(JSValue::instance(thisValue));
     if (argc > 0) {
         ContextStackReplacement csr(cx);
-        const String *str = argv[0].toString(cx).string;
+        const String *str = JSValue::string(JSValue::toString(cx, argv[0]));
         RegExp_Type->getProperty(cx, cx->Multiline_StringAtom, CURRENT_ATTR);
-        JSValue globalMultiline = cx->popValue();
-        REMatchState *match = REExecute(thisInst->mRegExp, str->begin(), 0, str->length(), globalMultiline.toBoolean(cx).boolean);
+        js2val globalMultiline = cx->popValue();
+        REMatchState *match = REExecute(thisInst->mRegExp, str->begin(), 0, str->length(), JSValue::boolean(JSValue::toBoolean(cx, globalMultiline)));
         if (match)
             return kTrueValue;
     }
@@ -2589,76 +2570,76 @@ static JSValue RegExp_test(Context *cx, const JSValue& thisValue, JSValue *argv,
 }
 
 
-JSValue Error_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+js2val Error_Constructor(Context *cx, const js2val thisValue, js2val *argv, uint32 argc)
 {
     return GenericError_Constructor(cx, thisValue, argv, argc, Error_Type);
 }
 
-static JSValue Error_toString(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+static js2val Error_toString(Context *cx, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
 {
     ContextStackReplacement csr(cx);
 
-    if ((thisValue.getType() != Error_Type) && !thisValue.getType()->derivesFrom(Error_Type))
+    if ((JSValue::getType(thisValue) != Error_Type) && !JSValue::getType(thisValue)->derivesFrom(Error_Type))
         cx->reportError(Exception::typeError, "Error.toString can only be applied to Error objects");
-    ASSERT(thisValue.isInstance());
-    JSInstance *thisInstance = thisValue.instance;
+    ASSERT(JSValue::isInstance(thisValue));
+    JSInstance *thisInstance = JSValue::instance(thisValue);
     thisInstance->getProperty(cx, cx->Message_StringAtom, CURRENT_ATTR);
-    JSValue msg = cx->popValue();
+    js2val msg = cx->popValue();
     thisInstance->getProperty(cx, cx->Name_StringAtom, CURRENT_ATTR);
-    JSValue name = cx->popValue();
+    js2val name = cx->popValue();
 
-    String *result = new String(*name.toString(cx).string + ":" + *msg.toString(cx).string);
-    return JSValue(result);
+    String *result = new String(*JSValue::string(JSValue::toString(cx, name)) + ":" + *JSValue::string(JSValue::toString(cx, msg)));
+    return JSValue::newString(result);
 }
 
-JSValue EvalError_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+js2val EvalError_Constructor(Context *cx, const js2val thisValue, js2val *argv, uint32 argc)
 {
     return GenericError_Constructor(cx, thisValue, argv, argc, EvalError_Type);
 }
 
-JSValue RangeError_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+js2val RangeError_Constructor(Context *cx, const js2val thisValue, js2val *argv, uint32 argc)
 {
     return GenericError_Constructor(cx, thisValue, argv, argc, RangeError_Type);
 }
 
-JSValue ReferenceError_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+js2val ReferenceError_Constructor(Context *cx, const js2val thisValue, js2val *argv, uint32 argc)
 {
     return GenericError_Constructor(cx, thisValue, argv, argc, ReferenceError_Type);
 }
 
-JSValue SyntaxError_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+js2val SyntaxError_Constructor(Context *cx, const js2val thisValue, js2val *argv, uint32 argc)
 {
     return GenericError_Constructor(cx, thisValue, argv, argc, SyntaxError_Type);
 }
 
-JSValue TypeError_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+js2val TypeError_Constructor(Context *cx, const js2val thisValue, js2val *argv, uint32 argc)
 {
     return GenericError_Constructor(cx, thisValue, argv, argc, TypeError_Type);
 }
 
-JSValue UriError_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+js2val UriError_Constructor(Context *cx, const js2val thisValue, js2val *argv, uint32 argc)
 {
     return GenericError_Constructor(cx, thisValue, argv, argc, UriError_Type);
 }
 
 
-static JSValue ExtendAttribute_Invoke(Context * /*cx*/, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
+static js2val ExtendAttribute_Invoke(Context * /*cx*/, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
     ASSERT(argc == 1);
 
     Attribute *x = new Attribute(Property::Extend, Property::Extend | Property::Virtual);
-    ASSERT(argv[0].isType());
-    x->mExtendArgument = (JSType *)(argv[0].type);
+    ASSERT(JSValue::isType(argv[0]));
+    x->mExtendArgument = (JSType *)(JSValue::type(argv[0]));
 
-    return JSValue(x);
+    return JSValue::newAttribute(x);
 }
 
-static JSValue GlobalObject_Eval(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
+static js2val GlobalObject_Eval(Context *cx, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
     if (argc > 0) {
-        if (!argv[0].isString())
+        if (!JSValue::isString(argv[0]))
             return argv[0];
-        const String *sourceStr = argv[0].toString(cx).string;
+        const String *sourceStr = JSValue::string(JSValue::toString(cx, argv[0]));
 
         Activation *prev = cx->mActivationStack.top();
 
@@ -2667,49 +2648,49 @@ static JSValue GlobalObject_Eval(Context *cx, const JSValue& /*thisValue*/, JSVa
     return kUndefinedValue;
 }
 
-static JSValue GlobalObject_ParseInt(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
+static js2val GlobalObject_ParseInt(Context *cx, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
     ASSERT(argc >= 1);
     int radix = 0;      // default for stringToInteger
     if (argc == 2)
-        radix = (int)(argv[1].toInt32(cx).f64);
+        radix = (int)JSValue::f64(JSValue::toInt32(cx, argv[1]));
     if ((radix < 0) || (radix > 36))
         return kNaNValue;
 
-    const String *string = argv[0].toString(cx).string;
+    const String *string = JSValue::string(JSValue::toString(cx, argv[0]));
     const char16 *numEnd;
     const char16 *sBegin = string->begin();
     float64 f = 0.0;
     if (sBegin)
         f = stringToInteger(sBegin, string->end(), numEnd, (uint)radix);
-    return JSValue(f);
+    return JSValue::newNumber(f);
 }
 
-static JSValue GlobalObject_ParseFloat(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
+static js2val GlobalObject_ParseFloat(Context *cx, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
     ASSERT(argc == 1);
 
-    const String *string = argv[0].toString(cx).string;
+    const String *string = JSValue::string(JSValue::toString(cx, argv[0]));
     const char16 *numEnd;
     const char16 *sBegin = string->begin();
     float64 f = 0.0;
     if (sBegin)
         f = stringToDouble(sBegin, string->end(), numEnd);
-    return JSValue(f);
+    return JSValue::newNumber(f);
 }
 
-static JSValue GlobalObject_isNaN(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
+static js2val GlobalObject_isNaN(Context *cx, const js2val /*thisValue*/, js2val *argv, uint32 /*argc*/)
 {
-    float64 f = argv[0].toNumber(cx).f64;
+    float64 f = JSValue::f64(JSValue::toNumber(cx, argv[0]));
     if (JSDOUBLE_IS_NaN(f))
         return kTrueValue;
     else
         return kFalseValue;
 }
 
-static JSValue GlobalObject_isFinite(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
+static js2val GlobalObject_isFinite(Context *cx, const js2val /*thisValue*/, js2val *argv, uint32 /*argc*/)
 {
-    float64 f = argv[0].toNumber(cx).f64;
+    float64 f = JSValue::f64(JSValue::toNumber(cx, argv[0]));
     if (JSDOUBLE_IS_FINITE(f))
         return kTrueValue;
     else
@@ -2747,7 +2728,7 @@ static const uint8 urlCharType[256] =
 #define IS_OK(C, mask) (urlCharType[((uint8) (C))] & (mask))
 
 /* See ECMA-262 15.1.2.4. */
-static JSValue GlobalObject_escape(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
+static js2val GlobalObject_escape(Context *cx, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
     if (argc > 0) {
         uint32 i, ni, length, newlength;
@@ -2758,12 +2739,12 @@ static JSValue GlobalObject_escape(Context *cx, const JSValue& /*thisValue*/, JS
 
         uint32 mask = URL_XALPHAS | URL_XPALPHAS | URL_PATH;
         if (argc > 1) {
-            float64 d = argv[1].toNumber(cx).f64;
+            float64 d = JSValue::f64(JSValue::toNumber(cx, argv[1]));
             if (!JSDOUBLE_IS_FINITE(d) || (mask = (uint32)d) != d || mask & ~(URL_XALPHAS | URL_XPALPHAS | URL_PATH))
                 cx->reportError(Exception::runtimeError, "Bad string mask for escape");
         }
 
-        const String *str = argv[0].toString(cx).string;
+        const String *str = JSValue::string(JSValue::toString(cx, argv[0]));
 
         const char16 *chars = str->begin();
         length = newlength = str->size();
@@ -2807,20 +2788,20 @@ static JSValue GlobalObject_escape(Context *cx, const JSValue& /*thisValue*/, JS
 
         String *result = new String(newchars, newlength);
         delete[] newchars;
-        return JSValue(result);
+        return JSValue::newString(result);
     }
-    return JSValue(&cx->Undefined_StringAtom);
+    return JSValue::newString(&cx->Undefined_StringAtom);
 }
 #undef IS_OK
 
 /* See ECMA-262 15.1.2.5 */
-static JSValue GlobalObject_unescape(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
+static js2val GlobalObject_unescape(Context *cx, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
     if (argc > 0) {
         uint32 i, ni;
         char16 ch;
 
-        const String *str = argv[0].toString(cx).string;
+        const String *str = JSValue::string(JSValue::toString(cx, argv[0]));
 
         const char16 *chars = str->begin();
         uint32 length = str->size();
@@ -2854,9 +2835,9 @@ static JSValue GlobalObject_unescape(Context *cx, const JSValue& /*thisValue*/, 
 
         String *result = new String(newchars, ni);
         delete[] newchars;
-        return JSValue(result);
+        return JSValue::newString(result);
     }
-    return JSValue(&cx->Undefined_StringAtom);
+    return JSValue::newString(&cx->Undefined_StringAtom);
 }
 
 
@@ -2865,7 +2846,7 @@ JSFunction::JSFunction(Context *cx, JSType *resultType, ScopeChain *scopeChain)
                 mParameterBarrel(NULL),
                 mActivation(),
                 mByteCode(NULL), 
-                mCode(NULL), 
+                mNativeCode(NULL), 
                 mResultType(resultType),
                 mRequiredParameters(0),
                 mOptionalParameters(0),
@@ -2877,7 +2858,8 @@ JSFunction::JSFunction(Context *cx, JSType *resultType, ScopeChain *scopeChain)
                 mIsChecked(true),
                 mHasRestParameter(false),
                 mClass(NULL),
-                mFunctionName(NULL)
+                mFunctionName(NULL),
+                mDispatch(NULL)
 {
     if (scopeChain) {
         mScopeChain = new ScopeChain(*scopeChain);
@@ -2885,17 +2867,17 @@ JSFunction::JSFunction(Context *cx, JSType *resultType, ScopeChain *scopeChain)
     if (Function_Type)    // protect against bootstrap
         mPrototype = Function_Type->mPrototypeObject;
     mActivation.mContainer = this;
-    defineVariable(cx, cx->Prototype_StringAtom, (NamespaceList *)NULL, 0, Object_Type, JSValue(Object_Type->newInstance(cx)));
-    if (!mPrototype.isNull())
+    defineVariable(cx, cx->Prototype_StringAtom, (NamespaceList *)NULL, 0, Object_Type, Object_Type->newInstance(cx));
+    if (!JSValue::isNull(mPrototype))
         defineVariable(cx, cx->UnderbarPrototype_StringAtom, (NamespaceList *)NULL, 0, Object_Type, mPrototype);
 }
 
-JSFunction::JSFunction(Context *cx, NativeCode *code, JSType *resultType) 
+JSFunction::JSFunction(Context *cx, NativeCode *code, JSType *resultType, NativeDispatch *dispatch) 
             : JSInstance(cx, Function_Type), 
                 mParameterBarrel(NULL),
                 mActivation(),
                 mByteCode(NULL), 
-                mCode(code), 
+                mNativeCode(code), 
                 mResultType(resultType), 
                 mRequiredParameters(0),
                 mOptionalParameters(0),
@@ -2907,16 +2889,17 @@ JSFunction::JSFunction(Context *cx, NativeCode *code, JSType *resultType)
                 mIsChecked(false),          // native functions aren't checked (?)
                 mHasRestParameter(false),
                 mClass(NULL),
-                mFunctionName(NULL)
+                mFunctionName(NULL),
+                mDispatch(dispatch)
 {
     if (Function_Type)    // protect against bootstrap
         mPrototype = Function_Type->mPrototypeObject;
     mActivation.mContainer = this;
-    defineVariable(cx, cx->Prototype_StringAtom, (NamespaceList *)NULL, 0, Object_Type, JSValue(Object_Type->newInstance(cx)));
+    defineVariable(cx, cx->Prototype_StringAtom, (NamespaceList *)NULL, 0, Object_Type, Object_Type->newInstance(cx));
     defineVariable(cx, cx->UnderbarPrototype_StringAtom, (NamespaceList *)NULL, 0, Object_Type, mPrototype);
 }
               
-JSValue JSFunction::runParameterInitializer(Context *cx, uint32 a, const JSValue& thisValue, JSValue *argv, uint32 argc)
+js2val JSFunction::runParameterInitializer(Context *cx, uint32 a, const js2val thisValue, js2val *argv, uint32 argc)
 {
     ASSERT(mParameters && (a < maxParameterIndex()));
     return cx->interpret(getByteCode(), (int32)mParameters[a].mInitializer, getScopeChain(), thisValue, argv, argc);
@@ -2929,16 +2912,22 @@ void JSFunction::setParameterCounts(Context *cx, uint32 r, uint32 o, uint32 n, b
     mOptionalParameters = o;
     mNamedParameters = n;
     mParameters = new ParameterData[mRequiredParameters + mOptionalParameters + + mNamedParameters + ((hasRest) ? 1 : 0)];
-    defineVariable(cx, cx->Length_StringAtom, (NamespaceList *)NULL, Property::DontDelete | Property::ReadOnly, Number_Type, JSValue((float64)mRequiredParameters)); 
+    defineVariable(cx, cx->Length_StringAtom, (NamespaceList *)NULL, Property::DontDelete | Property::ReadOnly, Number_Type, JSValue::newNumber((float64)mRequiredParameters)); 
 }
 
-
+js2val JSFunction::invokeNativeCode(Context *cx, const js2val thisValue, js2val argv[], uint32 argc)
+{
+    if (mDispatch)
+        return (mDispatch)(mNativeCode, cx, thisValue, argv, argc);
+    else
+        return mNativeCode(cx, thisValue, argv, argc);
+}
 
 
 void Context::assureStackSpace(uint32 s)
 {
     if ((mStackMax - mStackTop) < s) {
-        JSValue *newStack = new JSValue[mStackMax + s];
+        js2val *newStack = new js2val[mStackMax + s];
         for (uint32 i = 0; i < mStackTop; i++)
             newStack[i] = mStack[i];
         delete[] mStack;
@@ -2955,7 +2944,7 @@ void Context::assureStackSpace(uint32 s)
 void Context::initClass(JSType *type, ClassDef *cdef, PrototypeFunctions *pdef)
 {
     mScopeChain->addScope(type);
-    JSFunction *constructor = new JSFunction(this, cdef->defCon, Object_Type);
+    JSFunction *constructor = new JSFunction(this, cdef->defCon, Object_Type, NULL);
     constructor->setClass(type);
     constructor->setFunctionName(type->mClassName);
     type->setDefaultConstructor(this, constructor);
@@ -2963,41 +2952,41 @@ void Context::initClass(JSType *type, ClassDef *cdef, PrototypeFunctions *pdef)
     // the prototype functions are defined in the prototype object...
     if (pdef) {
         for (uint32 i = 0; i < pdef->mCount; i++) {
-            JSFunction *fun = new JSFunction(this, pdef->mDef[i].imp, pdef->mDef[i].result);
+            JSFunction *fun = new JSFunction(this, pdef->mDef[i].imp, pdef->mDef[i].result, NULL);
 //            fun->setClass(type); don't do this, it makes the function a method
             StringAtom *name = &mWorld.identifiers[widenCString(pdef->mDef[i].name)];
             fun->setFunctionName(name);
             fun->setParameterCounts(this, pdef->mDef[i].length, 0, 0, false);
-            type->mPrototypeObject.getObjectValue()->defineVariable(this, *name,
+            JSValue::getObjectValue(type->mPrototypeObject)->defineVariable(this, *name,
                                                                        (NamespaceList *)(NULL), 
                                                                        Property::NoAttribute,
                                                                        pdef->mDef[i].result, 
-                                                                       JSValue(fun));
+                                                                       JSValue::newFunction(fun));
         }
     }
     type->completeClass(this, mScopeChain);
     type->setStaticInitializer(this, NULL);
     type->mUninitializedValue = *cdef->uninit;
-    getGlobalObject()->defineVariable(this, widenCString(cdef->name), (NamespaceList *)(NULL), Property::NoAttribute, Type_Type, JSValue(type));
+    getGlobalObject()->defineVariable(this, widenCString(cdef->name), (NamespaceList *)(NULL), Property::NoAttribute, Type_Type, JSValue::newType(type));
     mScopeChain->popScope();
     if (pdef) delete pdef;
 }
 
-static JSValue arrayMaker(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
+static js2val arrayMaker(Context *cx, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
     ASSERT(argc == 2);
-    ASSERT(argv[0].isType());
-    JSType *baseType = argv[0].type;
+    ASSERT(JSValue::isType(argv[0]));
+    JSType *baseType = JSValue::type(argv[0]);
 
-    if ((baseType == Array_Type) && argv[1].isType()) {
-        JSType *elementType = argv[1].type;
+    if ((baseType == Array_Type) && JSValue::isType(argv[1])) {
+        JSType *elementType = JSValue::type(argv[1]);
         JSType *result = new JSArrayType(cx, elementType, NULL, Object_Type, kNullValue, kNullValue);
         result->setDefaultConstructor(cx, Array_Type->getDefaultConstructor());
-        return JSValue(result);
+        return JSValue::newType(result);
     }
     else {
         // then it's just <type>[] - an element reference
-        argv[0].type->getProperty(cx, *argv[1].toString(cx).string, NULL);
+        JSValue::type(argv[0])->getProperty(cx, *JSValue::string(JSValue::toString(cx, argv[1])), NULL);
         return cx->popValue();
     }
 
@@ -3048,12 +3037,12 @@ void Context::initBuiltins()
     // (which we don't actually have, hmm).
     // For String, etc. this same issue needs to be finessed
 
-    JSValue protoVal;
+    js2val protoVal;
 
     JSFunction *funProto = new JSFunction(this, Object_Type, NULL);
     funProto->mPrototype = Object_Type->mPrototypeObject;
     funProto->defineVariable(this, UnderbarPrototype_StringAtom, NULL, 0, Object_Type, funProto->mPrototype);
-    protoVal            = JSValue(funProto);
+    protoVal            = JSValue::newFunction(funProto);
     Function_Type       = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[2].name)], Object_Type, protoVal, kNullValue);
     Function_Type->mPrototype = Function_Type->mPrototypeObject;
     funProto->mType = Function_Type;
@@ -3064,32 +3053,32 @@ void Context::initBuiltins()
 
     
     JSNumberInstance *numProto  = new JSNumberInstance(this);
-    protoVal            = JSValue(numProto);
+    protoVal            = JSValue::newInstance(numProto);
     Number_Type         = new JSNumberType(this, &mWorld.identifiers[widenCString(builtInClasses[3].name)], Object_Type, protoVal, Function_Type->mPrototypeObject);
     numProto->mType     = Number_Type;
 
     Integer_Type        = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[4].name)], Object_Type, kNullValue, kNullValue);
 
     JSStringInstance *strProto  = new JSStringInstance(this);
-    protoVal            = JSValue(strProto);
+    protoVal            = JSValue::newInstance(strProto);
     String_Type         = new JSStringType(this, &mWorld.identifiers[widenCString(builtInClasses[5].name)], Object_Type, protoVal, Function_Type->mPrototypeObject);
     strProto->mValue    = &Empty_StringAtom;
     strProto->mPrototype = Function_Type->mPrototypeObject;
     strProto->mType     = String_Type;
     
     JSArrayInstance *arrayProto = new JSArrayInstance(this);
-    protoVal            = JSValue(arrayProto);
+    protoVal            = JSValue::newInstance(arrayProto);
     Array_Type          = new JSArrayType(this, Object_Type, &mWorld.identifiers[widenCString(builtInClasses[6].name)], Object_Type, protoVal, Function_Type->mPrototypeObject);
     arrayProto->mType   = Array_Type;
 
     JSBooleanInstance *boolProto = new JSBooleanInstance(this);
-    protoVal            = JSValue(boolProto);
+    protoVal            = JSValue::newInstance(boolProto);
     Boolean_Type        = new JSBooleanType(this, &mWorld.identifiers[widenCString(builtInClasses[7].name)], Object_Type, protoVal, Function_Type->mPrototypeObject);
     boolProto->mValue   = false;
     boolProto->mType    = Boolean_Type;
 
     JSDateInstance *dateProto = new JSDateInstance(this);
-    protoVal            = JSValue(dateProto);
+    protoVal            = JSValue::newInstance(dateProto);
     Date_Type           = new JSDateType(this, &mWorld.identifiers[widenCString(builtInClasses[12].name)], Object_Type, protoVal, Function_Type->mPrototypeObject);
     dateProto->mType    = Date_Type;
     
@@ -3109,7 +3098,7 @@ void Context::initBuiltins()
     // XXX RegExp.prototype is set to a RegExp instance, which isn't ECMA (it's supposed to be an Object instance) but
     // is SpiderMonkey compatible.
     JSRegExpInstance *regExpProto = new JSRegExpInstance(this);
-    protoVal            = JSValue(regExpProto);
+    protoVal            = JSValue::newInstance(regExpProto);
     RegExp_Type         = new JSRegExpType(this, &mWorld.identifiers[widenCString(builtInClasses[21].name)], Object_Type, protoVal, Function_Type->mPrototypeObject);
     regExpProto->mPrototype = Object_Type->mPrototypeObject;
     regExpProto->mType = RegExp_Type;
@@ -3174,7 +3163,7 @@ void Context::initBuiltins()
     };
 
     ASSERT(mGlobal);
-    *mGlobal = Object_Type->newInstance(this).object;
+    *mGlobal = JSValue::object(Object_Type->newInstance(this));
     initClass(Object_Type,          &builtInClasses[0],  new PrototypeFunctions(&objectProtos[0]) );
     
     initClass(Type_Type,            &builtInClasses[1],  NULL );
@@ -3199,40 +3188,40 @@ void Context::initBuiltins()
     initClass(UriError_Type,        &builtInClasses[20], new PrototypeFunctions(&errorProtos[0]));
     initClass(RegExp_Type,          &builtInClasses[21], new PrototypeFunctions(&regexpProtos[0]));
 
-    defineOperator(Index, Type_Type, new JSFunction(this, arrayMaker, Type_Type));
+    defineOperator(Index, Type_Type, new JSFunction(this, arrayMaker, Type_Type, NULL));
     
-    Object_Type->mTypeCast = new JSFunction(this, Object_Constructor, Object_Type);
-    Function_Type->mTypeCast = new JSFunction(this, Function_Constructor, Object_Type);
+    Object_Type->mTypeCast = new JSFunction(this, Object_Constructor, Object_Type, NULL);
+    Function_Type->mTypeCast = new JSFunction(this, Function_Constructor, Object_Type, NULL);
 
-    Number_Type->mTypeCast = new JSFunction(this, Number_TypeCast, Number_Type);
+    Number_Type->mTypeCast = new JSFunction(this, Number_TypeCast, Number_Type, NULL);
 
-    defineOperator(Index, Array_Type, new JSFunction(this, Array_GetElement, Object_Type));
-    defineOperator(IndexEqual, Array_Type, new JSFunction(this, Array_SetElement, Object_Type));
-    Array_Type->mTypeCast = new JSFunction(this, Array_Constructor, Array_Type);
-    Array_Type->defineVariable(this, Length_StringAtom, NULL, Property::NoAttribute, Number_Type, JSValue(1.0));
+    defineOperator(Index, Array_Type, new JSFunction(this, Array_GetElement, Object_Type, NULL));
+    defineOperator(IndexEqual, Array_Type, new JSFunction(this, Array_SetElement, Object_Type, NULL));
+    Array_Type->mTypeCast = new JSFunction(this, Array_Constructor, Array_Type, NULL);
+    Array_Type->defineVariable(this, Length_StringAtom, NULL, Property::NoAttribute, Number_Type, JSValue::newNumber(1.0));
 
-    Boolean_Type->mTypeCast = new JSFunction(this, Boolean_TypeCast, Boolean_Type);
-    Boolean_Type->defineVariable(this, Length_StringAtom, NULL, Property::NoAttribute, Number_Type, JSValue(1.0));
+    Boolean_Type->mTypeCast = new JSFunction(this, Boolean_TypeCast, Boolean_Type, NULL);
+    Boolean_Type->defineVariable(this, Length_StringAtom, NULL, Property::NoAttribute, Number_Type, JSValue::newNumber(1.0));
 
-    Date_Type->mTypeCast = new JSFunction(this, Date_TypeCast, String_Type);
-    Date_Type->defineStaticMethod(this, widenCString("parse"), NULL, new JSFunction(this, Date_parse, Number_Type));
-    Date_Type->defineStaticMethod(this, widenCString("UTC"), NULL, new JSFunction(this, Date_UTC, Number_Type));
+    Date_Type->mTypeCast = new JSFunction(this, Date_TypeCast, String_Type, NULL);
+    Date_Type->defineStaticMethod(this, widenCString("parse"), NULL, new JSFunction(this, Date_parse, Number_Type, NULL));
+    Date_Type->defineStaticMethod(this, widenCString("UTC"), NULL, new JSFunction(this, Date_UTC, Number_Type, NULL));
 
-    JSFunction *fromCharCode = new JSFunction(this, String_fromCharCode, String_Type);
-    fromCharCode->defineVariable(this, Length_StringAtom, (NamespaceList *)NULL, Property::DontDelete | Property::ReadOnly, Number_Type, JSValue(1.0)); 
-    String_Type->defineVariable(this, FromCharCode_StringAtom, NULL, String_Type, JSValue(fromCharCode));
-    String_Type->mTypeCast = new JSFunction(this, String_TypeCast, String_Type);
-    String_Type->defineVariable(this, Length_StringAtom, NULL, Property::NoAttribute, Number_Type, JSValue(1.0));
+    JSFunction *fromCharCode = new JSFunction(this, String_fromCharCode, String_Type, NULL);
+    fromCharCode->defineVariable(this, Length_StringAtom, (NamespaceList *)NULL, Property::DontDelete | Property::ReadOnly, Number_Type, JSValue::newNumber(1.0)); 
+    String_Type->defineVariable(this, FromCharCode_StringAtom, NULL, String_Type, JSValue::newFunction(fromCharCode));
+    String_Type->mTypeCast = new JSFunction(this, String_TypeCast, String_Type, NULL);
+    String_Type->defineVariable(this, Length_StringAtom, NULL, Property::NoAttribute, Number_Type, JSValue::newNumber(1.0));
 
-    Error_Type->mTypeCast = new JSFunction(this, Error_Constructor, Error_Type);
-    RegExp_Type->mTypeCast = new JSFunction(this, RegExp_TypeCast, Error_Type);
+    Error_Type->mTypeCast = new JSFunction(this, Error_Constructor, Error_Type, NULL);
+    RegExp_Type->mTypeCast = new JSFunction(this, RegExp_TypeCast, Error_Type, NULL);
 
     // XXX these RegExp statics are not specified by ECMA, but implemented by SpiderMonkey
-    RegExp_Type->defineVariable(this, Input_StringAtom, NULL, Property::NoAttribute, String_Type, JSValue(&Empty_StringAtom));
-    RegExp_Type->defineVariable(this, LastMatch_StringAtom, NULL, Property::NoAttribute, String_Type, JSValue(&Empty_StringAtom));
-    RegExp_Type->defineVariable(this, LastParen_StringAtom, NULL, Property::NoAttribute, String_Type, JSValue(&Empty_StringAtom));
-    RegExp_Type->defineVariable(this, LeftContext_StringAtom, NULL, Property::NoAttribute, String_Type, JSValue(&Empty_StringAtom));
-    RegExp_Type->defineVariable(this, RightContext_StringAtom, NULL, Property::NoAttribute, String_Type, JSValue(&Empty_StringAtom));
+    RegExp_Type->defineVariable(this, Input_StringAtom, NULL, Property::NoAttribute, String_Type, JSValue::newString(&Empty_StringAtom));
+    RegExp_Type->defineVariable(this, LastMatch_StringAtom, NULL, Property::NoAttribute, String_Type, JSValue::newString(&Empty_StringAtom));
+    RegExp_Type->defineVariable(this, LastParen_StringAtom, NULL, Property::NoAttribute, String_Type, JSValue::newString(&Empty_StringAtom));
+    RegExp_Type->defineVariable(this, LeftContext_StringAtom, NULL, Property::NoAttribute, String_Type, JSValue::newString(&Empty_StringAtom));
+    RegExp_Type->defineVariable(this, RightContext_StringAtom, NULL, Property::NoAttribute, String_Type, JSValue::newString(&Empty_StringAtom));
     
 
 }
@@ -3386,17 +3375,17 @@ Context::Context(JSObject **global, World &world, Arena &a, Pragma::Flags flags)
     }
     
     JSType *MathType = new JSType(this, &mWorld.identifiers[widenCString("Math")], Object_Type, Object_Type->mPrototypeObject, kNullValue);
-    JSObject *mathObj = MathType->newInstance(this).instance;
+    JSObject *mathObj = JSValue::instance(MathType->newInstance(this));
 
-    getGlobalObject()->defineVariable(this, Math_StringAtom, (NamespaceList *)(NULL), Property::NoAttribute, Object_Type, JSValue(mathObj));
+    getGlobalObject()->defineVariable(this, Math_StringAtom, (NamespaceList *)(NULL), Property::NoAttribute, Object_Type, JSValue::newObject(mathObj));
     initMathObject(this, mathObj);
     initDateObject(this);
     
-    Number_Type->defineVariable(this, widenCString("MAX_VALUE"), NULL, Property::ReadOnly | Property::DontDelete, Number_Type, JSValue(maxValue));
-    Number_Type->defineVariable(this, widenCString("MIN_VALUE"), NULL, Property::ReadOnly | Property::DontDelete, Number_Type, JSValue(minValue));
-    Number_Type->defineVariable(this, widenCString("NaN"), NULL, Property::ReadOnly | Property::DontDelete, Number_Type, JSValue(nan));
-    Number_Type->defineVariable(this, widenCString("POSITIVE_INFINITY"), NULL, Property::ReadOnly | Property::DontDelete, Number_Type, JSValue(positiveInfinity));
-    Number_Type->defineVariable(this, widenCString("NEGATIVE_INFINITY"), NULL, Property::ReadOnly | Property::DontDelete, Number_Type, JSValue(negativeInfinity));
+    Number_Type->defineVariable(this, widenCString("MAX_VALUE"), NULL, Property::ReadOnly | Property::DontDelete, Number_Type, JSValue::newNumber(maxValue));
+    Number_Type->defineVariable(this, widenCString("MIN_VALUE"), NULL, Property::ReadOnly | Property::DontDelete, Number_Type, JSValue::newNumber(minValue));
+    Number_Type->defineVariable(this, widenCString("NaN"), NULL, Property::ReadOnly | Property::DontDelete, Number_Type, JSValue::newNumber(nan));
+    Number_Type->defineVariable(this, widenCString("POSITIVE_INFINITY"), NULL, Property::ReadOnly | Property::DontDelete, Number_Type, JSValue::newNumber(positiveInfinity));
+    Number_Type->defineVariable(this, widenCString("NEGATIVE_INFINITY"), NULL, Property::ReadOnly | Property::DontDelete, Number_Type, JSValue::newNumber(negativeInfinity));
 
     initOperators();
     
@@ -3430,11 +3419,11 @@ Context::Context(JSObject **global, World &world, Arena &a, Pragma::Flags flags)
     
     for (i = 0; i < (sizeof(attribute_init) / sizeof(Attribute_Init)); i++) {
         Attribute *attr = new Attribute(attribute_init[i].trueFlags, attribute_init[i].falseFlags);
-        getGlobalObject()->defineVariable(this, widenCString(attribute_init[i].name), (NamespaceList *)(NULL), Property::NoAttribute, Attribute_Type, JSValue(attr));
+        getGlobalObject()->defineVariable(this, widenCString(attribute_init[i].name), (NamespaceList *)(NULL), Property::NoAttribute, Attribute_Type, JSValue::newAttribute(attr));
     }
 
-    JSFunction *x = new JSFunction(this, ExtendAttribute_Invoke, Attribute_Type);
-    getGlobalObject()->defineVariable(this, Extend_StringAtom, (NamespaceList *)(NULL), Property::NoAttribute, Attribute_Type, JSValue(x));
+    JSFunction *x = new JSFunction(this, ExtendAttribute_Invoke, Attribute_Type, NULL);
+    getGlobalObject()->defineVariable(this, Extend_StringAtom, (NamespaceList *)(NULL), Property::NoAttribute, Attribute_Type, JSValue::newFunction(x));
 
 
     
@@ -3450,10 +3439,10 @@ Context::Context(JSObject **global, World &world, Arena &a, Pragma::Flags flags)
     };
     
     for (i = 0; i < (sizeof(globalObjectFunctions) / sizeof(ProtoFunDef)); i++) {
-        x = new JSFunction(this, globalObjectFunctions[i].imp, globalObjectFunctions[i].result);
+        x = new JSFunction(this, globalObjectFunctions[i].imp, globalObjectFunctions[i].result, NULL);
         x->setParameterCounts(this, globalObjectFunctions[i].length, 0, 0, false);
         x->setIsPrototype(true);
-        getGlobalObject()->defineVariable(this, widenCString(globalObjectFunctions[i].name), (NamespaceList *)(NULL), Property::NoAttribute, globalObjectFunctions[i].result, JSValue(x));    
+        getGlobalObject()->defineVariable(this, widenCString(globalObjectFunctions[i].name), (NamespaceList *)(NULL), Property::NoAttribute, globalObjectFunctions[i].result, JSValue::newFunction(x));    
     }
 
     getGlobalObject()->defineVariable(this, Undefined_StringAtom, (NamespaceList *)(NULL), Property::NoAttribute, Void_Type, kUndefinedValue);
@@ -3464,63 +3453,32 @@ Context::Context(JSObject **global, World &world, Arena &a, Pragma::Flags flags)
 
 
 /*
-
     See if the specified package is already loaded - return true
-
     Throw an exception if the package is being loaded already
-
 */
-
 bool Context::checkForPackage(const String &packageName)
-
 {
-
     // XXX linear search 
-
     for (PackageList::iterator pi = mPackages.begin(), end = mPackages.end(); (pi != end); pi++) {
-
         if (PACKAGE_NAME(pi).compare(packageName) == 0) {
-
             if (PACKAGE_STATUS(pi) == Package::OnItsWay)
-
                 reportError(Exception::referenceError, "Package circularity");
-
             else
-
                 return true;
-
         }
-
     }
-
     return false;
-
 }
 
 
-
 /*
-
     Load the specified package from the file
-
 */
-
 void Context::loadPackage(const String & /*packageName*/, const String &filename)
-
 {
-
     // XXX need some rules for search path
-
     // XXX need to extract just the target package from the file
-
-
-
     readEvalFile(filename);
-
-    
-
- 
-
 }
 
 
@@ -3581,52 +3539,52 @@ void Context::reportError(Exception::Kind kind, char *message, size_t pos, const
     reportError(kind, message, pos, str.c_str());
 }
 
-Formatter& operator<<(Formatter& f, const JSValue& value)
+void JSValue::print(Formatter& f, const js2val value)
 {
-    switch (value.tag) {
-    case JSValue::f64_tag:
-        f << value.f64;
+    switch (tag(value)) {
+    case JS2VAL_DOUBLE:
+        f << f64(value);
         break;
-    case JSValue::object_tag:
-        printFormat(f, "Object @ 0x%08X\n", value.object);
-        f << *value.object;
-        break;
-    case JSValue::type_tag:
-        printFormat(f, "Type @ 0x%08X\n", value.type);
-        f << *value.type;
-        break;
-    case JSValue::boolean_tag:
-        f << ((value.boolean) ? "true" : "false");
-        break;
-    case JSValue::string_tag:
-        f << *value.string;
-        break;
-    case JSValue::undefined_tag:
-        f << "undefined";
-        break;
-    case JSValue::null_tag:
-        f << "null";
-        break;
-    case JSValue::function_tag:
-        if (!value.function->isNative()) {
-            FunctionName *fnName = value.function->getFunctionName();
-            if (fnName) {
-                StringFormatter s;
-                PrettyPrinter pp(s);
-                fnName->print(pp);
-                f << "function '" << s.getString() << "'\n" << *value.function->getByteCode();
-            }
-            else {
-                f << "function anonymous\n" << *value.function->getByteCode();
-            }
+    case JS2VAL_OBJECT:
+        if (isNull(value))
+            f << "null";
+        else if (isType(value)) {
+            printFormat(f, "Type @ 0x%08X\n", JSValue::type(value));
+            f << *JSValue::type(value);
         }
-        else
-            f << "function\n";
+        else if (isFunction(value)) {
+            if (!JSValue::function(value)->isNative()) {
+                FunctionName *fnName = JSValue::function(value)->getFunctionName();
+                if (fnName) {
+                    StringFormatter s;
+                    PrettyPrinter pp(s);
+                    fnName->print(pp);
+                    f << "function '" << s.getString() << "'\n" << *JSValue::function(value)->getByteCode();
+                }
+                else {
+                    f << "function anonymous\n" << *JSValue::function(value)->getByteCode();
+                }
+            }
+            else
+                f << "function\n";
+        }
+        else {
+            printFormat(f, "Object @ 0x%08X\n", object(value));
+            f << *JSValue::object(value);
+        }
+        break;
+    case JS2VAL_BOOLEAN:
+        f << ((JSValue::boolean(value)) ? "true" : "false");
+        break;
+    case JS2VAL_STRING:
+        f << *JSValue::string(value);
+        break;
+    case JS2VAL_INT:
+        f << "undefined";
         break;
     default:
         NOT_REACHED("Bad tag");
     }
-    return f;
 }
 
 void JSType::printSlotsNStuff(Formatter& f) const
@@ -3677,16 +3635,16 @@ Formatter& operator<<(Formatter& f, const Property& prop)
     switch (prop.mFlag) {
     case ValuePointer : 
         {
-            JSValue v = *prop.mData.vp;
+            js2val v = prop.mData.vp;
             f << "ValuePointer --> "; 
-            if (v.isObject())
-                printFormat(f, "Object @ 0x%08X\n", v.object);
+            if (JSValue::isObject(v))
+                printFormat(f, "Object @ 0x%08X\n", JSValue::object(v));
             else
-            if (v.isType())
-                printFormat(f, "Type @ 0x%08X\n", v.type);
+            if (JSValue::isType(v))
+                printFormat(f, "Type @ 0x%08X\n", JSValue::type(v));
             else
-            if (v.isFunction())
-                printFormat(f, "Function @ 0x%08X\n", v.function);
+            if (JSValue::isFunction(v))
+                printFormat(f, "Function @ 0x%08X\n", JSValue::function(v));
             else
                 f << v << "\n";
         }
@@ -3705,7 +3663,7 @@ Formatter& operator<<(Formatter& f, const JSInstance& obj)
         const Property *prop = PROPERTY(i);
         f << "[" << PROPERTY_NAME(i) << "] ";
         switch (prop->mFlag) {
-        case ValuePointer : f << "ValuePointer --> " << *prop->mData.vp; break;
+        case ValuePointer : f << "Value --> " << prop->mData.vp; break;
         case FunctionPair : f << "FunctionPair\n"; break;
         case IndexPair : f << "IndexPair\n"; break;
         case Slot : f << "Slot #" << prop->mData.index 

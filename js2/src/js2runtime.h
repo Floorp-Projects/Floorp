@@ -131,121 +131,155 @@ static const double two31 = 2147483648.0;
     float64 stringToNumber(const String *string);
 
 
+#define JS2_BIT(n)       ((uint32)1 << (n))
+#define JS2_BITMASK(n)   (JS2_BIT(n) - 1)
+/*
+ * Type tags stored in the low bits of a js2val.
+ */
+#define JS2VAL_OBJECT            0x0     /* untagged reference to object */
+#define JS2VAL_INT               0x1     /* tagged 31-bit integer value */
+#define JS2VAL_DOUBLE            0x2     /* tagged reference to double */
+#define JS2VAL_STRING            0x4     /* tagged reference to string */
+#define JS2VAL_BOOLEAN           0x6     /* tagged boolean value */
+
+/* Type tag bitfield length and derived macros. */
+#define JS2VAL_TAGBITS           3
+#define JS2VAL_TAGMASK           JS2_BITMASK(JS2VAL_TAGBITS)
+#define JS2VAL_TAG(v)            ((v) & JS2VAL_TAGMASK)
+#define JS2VAL_SETTAG(v,t)       ((v) | (t))
+#define JS2VAL_CLRTAG(v)         ((v) & ~(js2val)JS2VAL_TAGMASK)
+#define JS2VAL_ALIGN             JS2_BIT(JS2VAL_TAGBITS)
+
+#define JS2VAL_INT_POW2(n)       ((js2val)1 << (n))
+#define INT_TO_JS2VAL(i)         (((js2val)(i) << 1) | JS2VAL_INT)
+#define JS2VAL_VOID              INT_TO_JS2VAL(0 - JS2VAL_INT_POW2(30))
+#define JS2VAL_NULL              OBJECT_TO_JS2VAL(0)
+#define JS2VAL_FALSE             BOOLEAN_TO_JS2VAL(false)
+#define JS2VAL_TRUE              BOOLEAN_TO_JS2VAL(true)
+
+/* Predicates for type testing. */
+#define JS2VAL_IS_OBJECT(v)      (JS2VAL_TAG(v) == JS2VAL_OBJECT)
+#define JS2VAL_IS_NUMBER(v)      (JS2VAL_IS_INT(v) || JS2VAL_IS_DOUBLE(v))
+#define JS2VAL_IS_INT(v)         (((v) & JS2VAL_INT) && (v) != JS2VAL_VOID)
+#define JS2VAL_IS_DOUBLE(v)      (JS2VAL_TAG(v) == JS2VAL_DOUBLE)
+#define JS2VAL_IS_STRING(v)      (JS2VAL_TAG(v) == JS2VAL_STRING)
+#define JS2VAL_IS_BOOLEAN(v)     (JS2VAL_TAG(v) == JS2VAL_BOOLEAN)
+#define JS2VAL_IS_NULL(v)        ((v) == JS2VAL_NULL)
+#define JS2VAL_IS_VOID(v)        ((v) == JS2VAL_VOID)
+#define JS2VAL_IS_PRIMITIVE(v)   (!JS2VAL_IS_OBJECT(v) || JS2VAL_IS_NULL(v))
+
+/* Objects, strings, and doubles are GC'ed. */
+#define JS2VAL_IS_GCTHING(v)     (!((v) & JS2VAL_INT) && !JS2VAL_IS_BOOLEAN(v))
+#define JS2VAL_TO_GCTHING(v)     ((void *)JS2VAL_CLRTAG(v))
+#define JS2VAL_TO_OBJECT(v)      ((JSObject *)JS2VAL_TO_GCTHING(v))
+#define JS2VAL_TO_DOUBLE(v)      ((float64 *)JS2VAL_TO_GCTHING(v))
+#define JS2VAL_TO_STRING(v)      ((String *)JS2VAL_TO_GCTHING(v))
+#define OBJECT_TO_JS2VAL(obj)    ((js2val)(obj))
+#define DOUBLE_TO_JS2VAL(dp)     JS2VAL_SETTAG((js2val)(dp), JS2VAL_DOUBLE)
+#define STRING_TO_JS2VAL(str)    JS2VAL_SETTAG((js2val)(str), JS2VAL_STRING)
+
+/* Convert between boolean and jsval. */
+#define JS2VAL_TO_BOOLEAN(v)     (((v) >> JS2VAL_TAGBITS) != 0)
+#define BOOLEAN_TO_JS2VAL(b)     JS2VAL_SETTAG((js2val)(b) << JS2VAL_TAGBITS,     \
+                                             JS2VAL_BOOLEAN)
+
     class JSValue {
-    public:
-        union {
-            float64 f64;
-            JSObject *object;
-            JSInstance *instance;
-            JSFunction *function;
-            const String *string;
-            JSType *type;
-            bool boolean;
-            NamedArgument *namedArg;
-            Attribute *attribute;
-            Package *package;
-        };
+    private:
+        JSValue() { ASSERT(false); }
+
+    public:        
+
+        static int32 tag(const js2val v)                    { return JS2VAL_TAG(v); }
+        static float64 f64(const js2val v)                  { return *JS2VAL_TO_DOUBLE(v); }
+        static JSObject *object(const js2val v)             { return JS2VAL_TO_OBJECT(v); }
+        static JSInstance *instance(const js2val v)         { return (JSInstance *)JS2VAL_TO_OBJECT(v); }
+        static JSFunction *function(const js2val v)         { return (JSFunction *)JS2VAL_TO_OBJECT(v); }
+        static JSType *type(const js2val v)                 { return (JSType *)JS2VAL_TO_OBJECT(v); }
+        static const String *string(const js2val v)         { return JS2VAL_TO_STRING(v); }
+        static bool boolean(const js2val v)                 { return JS2VAL_TO_BOOLEAN(v); }
+        static NamedArgument *namedArg(const js2val v)      { return (NamedArgument *)JS2VAL_TO_OBJECT(v); }
+        static Attribute *attribute(const js2val v)         { return (Attribute *)JS2VAL_TO_OBJECT(v); }
+        static Package *package(const js2val v)             { return (Package *)JS2VAL_TO_OBJECT(v); }
+
+        static js2val newNumber(float64 f)                  { return DOUBLE_TO_JS2VAL(new double(f));}
+        static js2val newObject(JSObject *object)           { return OBJECT_TO_JS2VAL(object); }
+        static js2val newInstance(JSInstance *instance)     { return OBJECT_TO_JS2VAL(instance); }
+        static js2val newFunction(JSFunction *function)     { return OBJECT_TO_JS2VAL(function); }
+        static js2val newType(JSType *type)                 { return OBJECT_TO_JS2VAL(type); }
+        static js2val newString(const String *string)       { return STRING_TO_JS2VAL(string); }
+        static js2val newBoolean(bool boolean)              { return BOOLEAN_TO_JS2VAL(boolean); }
+
+        static js2val newNamedArg(NamedArgument *arg)       { return OBJECT_TO_JS2VAL(arg); }
+        static js2val newAttribute(Attribute *attr)         { return OBJECT_TO_JS2VAL(attr); }
+        static js2val newPackage(Package *pkg)              { return OBJECT_TO_JS2VAL(pkg); }
+
         
-        typedef enum {
-            undefined_tag, 
-            f64_tag,
-            object_tag,
-            instance_tag,
-            function_tag,
-            type_tag,
-            boolean_tag,
-            string_tag,
-            null_tag,
-            namedArg_tag,
-            attribute_tag,
-            package_tag
-        } Tag;
-        Tag tag;
-        
-        JSValue() : f64(0.0), tag(undefined_tag) {}
-        explicit JSValue(float64 f64) : f64(f64), tag(f64_tag) {}
-        explicit JSValue(JSObject *object) : object(object), tag(object_tag) { ASSERT(object); }
-        explicit JSValue(JSInstance *instance) : instance(instance), tag(instance_tag) { ASSERT(instance); }
-        explicit JSValue(JSFunction *function) : function(function), tag(function_tag) { ASSERT(function); }
-        explicit JSValue(JSType *type) : type(type), tag(type_tag) { ASSERT(type); }
-        explicit JSValue(const String *string) : string(string), tag(string_tag) { ASSERT(string); }
-        explicit JSValue(bool boolean) : boolean(boolean), tag(boolean_tag) {}
-        explicit JSValue(NamedArgument *arg) : namedArg(arg), tag(namedArg_tag) { ASSERT(arg); }
-        explicit JSValue(Attribute *attr) : attribute(attr), tag(attribute_tag) { ASSERT(attribute); }
-        explicit JSValue(Package *pkg) : package(pkg), tag(package_tag) { ASSERT(pkg); }
-        explicit JSValue(Tag tag) : tag(tag) {}
+        static bool isObject(const js2val v)                { return JS2VAL_IS_OBJECT(v); }
+        static bool isInstance(const js2val v);
+        static bool isNumber(js2val v)                      { return JS2VAL_IS_NUMBER(v); }
+        static bool isBool(const js2val v)                  { return JS2VAL_IS_BOOLEAN(v); }
+        static bool isType(const js2val v);
+        static bool isFunction(const js2val v);
+        static bool isString(const js2val v)                { return JS2VAL_IS_STRING(v); }
+        static bool isPrimitive(const js2val v)             { return isNumber(v) || isBool(v) || isString(v) || isUndefined(v) || isNull(v); }
+        static bool isNamedArg(const js2val v);
+        static bool isAttribute(const js2val v);
+        static bool isPackage(const js2val v);
 
-        float64& operator=(float64 f64)                 { return (tag = f64_tag, this->f64 = f64); }
-        JSObject*& operator=(JSObject* object)          { return (tag = object_tag, this->object = object); }
-        JSInstance*& operator=(JSInstance* instance)    { return (tag = instance_tag, this->instance = instance); }
-        JSType*& operator=(JSType* type)                { return (tag = type_tag, this->type = type); }
-        JSFunction*& operator=(JSFunction* function)    { return (tag = function_tag, this->function = function); }
-        bool& operator=(bool boolean)                   { return (tag = boolean_tag, this->boolean = boolean); }
-        
-        bool isObject() const                           { return (tag == object_tag); }
-        bool isInstance() const                         { return (tag == instance_tag); }
-        bool isNumber() const                           { return (tag == f64_tag); }
-        bool isBool() const                             { return (tag == boolean_tag); }
-        bool isType() const                             { return (tag == type_tag); }
-        bool isFunction() const                         { return (tag == function_tag); }
-        bool isString() const                           { return (tag == string_tag); }
-        bool isPrimitive() const                        { return isNumber() || isBool() || isString() || isUndefined() || isNull(); }
-        bool isNamedArg() const                         { return (tag == namedArg_tag); }
-        bool isAttribute() const                        { return (tag == attribute_tag); }
-        bool isPackage() const                          { return (tag == package_tag); }
+        static bool isUndefined(const js2val v)             { return JS2VAL_IS_VOID(v); }
+        static bool isNull(const js2val v)                  { return JS2VAL_IS_NULL(v); }
+        static bool isNaN(const js2val v)                   { ASSERT(isNumber(v)); return JSDOUBLE_IS_NaN(*JS2VAL_TO_DOUBLE(v)); }
+        static bool isNegativeInfinity(const js2val v)      { ASSERT(isNumber(v)); return (*JS2VAL_TO_DOUBLE(v) < 0) && JSDOUBLE_IS_INFINITE(*JS2VAL_TO_DOUBLE(v)); }
+        static bool isPositiveInfinity(const js2val v)      { ASSERT(isNumber(v)); return (*JS2VAL_TO_DOUBLE(v) > 0) && JSDOUBLE_IS_INFINITE(*JS2VAL_TO_DOUBLE(v)); }
+        static bool isNegativeZero(const js2val v)          { ASSERT(isNumber(v)); return JSDOUBLE_IS_NEGZERO(*JS2VAL_TO_DOUBLE(v)); }
+        static bool isPositiveZero(const js2val v)          { ASSERT(isNumber(v)); return JSDOUBLE_IS_POSZERO(*JS2VAL_TO_DOUBLE(v)); }
 
-        bool isUndefined() const                        { return (tag == undefined_tag); }
-        bool isNull() const                             { return (tag == null_tag); }
-        bool isNaN() const                              { ASSERT(isNumber()); return JSDOUBLE_IS_NaN(f64); }
-        bool isNegativeInfinity() const                 { ASSERT(isNumber()); return (f64 < 0) && JSDOUBLE_IS_INFINITE(f64); }
-        bool isPositiveInfinity() const                 { ASSERT(isNumber()); return (f64 > 0) && JSDOUBLE_IS_INFINITE(f64); }
-        bool isNegativeZero() const                     { ASSERT(isNumber()); return JSDOUBLE_IS_NEGZERO(f64); }
-        bool isPositiveZero() const                     { ASSERT(isNumber()); return JSDOUBLE_IS_POSZERO(f64); }
+        static bool isFalse(const js2val v)                 { return (v == JS2VAL_FALSE); }
+        static bool isTrue(const js2val v)                  { return (v == JS2VAL_TRUE); }
 
-        bool isTrue() const                             { ASSERT(isBool()); return boolean; }
-        bool isFalse() const                            { ASSERT(isBool()); return !boolean; }
+        static JSType *getType(const js2val v);
 
-        JSType *getType() const;
+        static js2val toString(Context *cx, const js2val v)        { return (isString(v) ? v : valueToString(cx, v)); }
+        static js2val toNumber(Context *cx, const js2val v)        { return (isNumber(v) ? v : valueToNumber(cx, v)); }
+        static js2val toInteger(Context *cx, const js2val v)       { return valueToInteger(cx, v); }
+        static js2val toUInt32(Context *cx, const js2val v)        { return valueToUInt32(cx, v); }
+        static js2val toUInt16(Context *cx, const js2val v)        { return valueToUInt16(cx, v); }
+        static js2val toInt32(Context *cx, const js2val v)         { return valueToInt32(cx, v); }
+        static js2val toObject(Context *cx, const js2val v)        { return ((isObject(v) || isType(v) || isFunction(v) || isInstance(v) || isPackage(v)) ?
+                                                                                    v : valueToObject(cx, v)); }
+        static js2val toBoolean(Context *cx, const js2val v)       { return (isBool(v) ? v : valueToBoolean(cx, v)); }
 
-        JSValue toString(Context *cx) const             { return (isString() ? *this : valueToString(cx, *this)); }
-        JSValue toNumber(Context *cx) const             { return (isNumber() ? *this : valueToNumber(cx, *this)); }
-        JSValue toInteger(Context *cx) const            { return valueToInteger(cx, *this); }
-        JSValue toUInt32(Context *cx) const             { return valueToUInt32(cx, *this); }
-        JSValue toUInt16(Context *cx) const             { return valueToUInt16(cx, *this); }
-        JSValue toInt32(Context *cx) const              { return valueToInt32(cx, *this); }
-        JSValue toObject(Context *cx) const             { return ((isObject() || isType() || isFunction() || isInstance() || isPackage()) ?
-                                                                *this : valueToObject(cx, *this)); }
-        JSValue toBoolean(Context *cx) const            { return (isBool() ? *this : valueToBoolean(cx, *this)); }
+        static float64 getNumberValue(const js2val v);
+        static const String *getStringValue(const js2val v);
+        static bool getBoolValue(const js2val v);
+        static JSObject *getObjectValue(const js2val v);
 
-        float64 getNumberValue() const;
-        const String *getStringValue() const;
-        bool getBoolValue() const;
-        JSObject *getObjectValue() const;
-
-        JSObject *toObjectValue(Context *cx) const;
+        static JSObject *toObjectValue(Context *cx, const js2val v);
 
         /* These are for use in 'toPrimitive' calls */
         enum Hint {
             NumberHint, StringHint, NoHint
         };
-        JSValue toPrimitive(Context *cx, Hint hint = NoHint) const;
+        static js2val toPrimitive(Context *cx, const js2val v, Hint hint = NoHint);
         
-        static JSValue valueToNumber(Context *cx, const JSValue& value);
-        static JSValue valueToInteger(Context *cx, const JSValue& value);
-        static JSValue valueToString(Context *cx, const JSValue& value);
-        static JSValue valueToObject(Context *cx, const JSValue& value);
-        static JSValue valueToUInt32(Context *cx, const JSValue& value);
-        static JSValue valueToUInt16(Context *cx, const JSValue& value);
-        static JSValue valueToInt32(Context *cx, const JSValue& value);
-        static JSValue valueToBoolean(Context *cx, const JSValue& value);
+        static js2val valueToNumber(Context *cx, const js2val value);
+        static js2val valueToInteger(Context *cx, const js2val value);
+        static js2val valueToString(Context *cx, const js2val value);
+        static js2val valueToObject(Context *cx, const js2val value);
+        static js2val valueToUInt32(Context *cx, const js2val value);
+        static js2val valueToUInt16(Context *cx, const js2val value);
+        static js2val valueToInt32(Context *cx, const js2val value);
+        static js2val valueToBoolean(Context *cx, const js2val value);
         
 
         static float64 float64ToInteger(float64 d);
         static int32 float64ToInt32(float64 d);
         static uint32 float64ToUInt32(float64 d);
 
-        int operator==(const JSValue& value) const;
-    
+        static void print(Formatter& f, const js2val value);
+
+
+#ifdef NOT_SCARED_OF_GC_CODE    
 	/**
         * Scans through the object, and copies all references.
         */
@@ -254,8 +288,8 @@ static const double two31 = 2147483648.0;
             switch (tag) {
             case object_tag:	object = (JSObject*) collector->copy(object); break;
             case function_tag:	function = (JSFunction*) collector->copy(function); break;
-            case type_tag:		type = (JSType*) collector->copy(type); break;
-            default:			break;
+            case type_tag:	type = (JSType*) collector->copy(type); break;
+            default:		break;
             }
             return sizeof(JSValue);
         }
@@ -265,24 +299,24 @@ static const double two31 = 2147483648.0;
             static Collector::InstanceOwner<JSValue> owner;
             return gc.allocateObject(n, &owner);
         }
+#endif
 
 #ifdef DEBUG
-        void* operator new(size_t s)    { void *t = STD::malloc(s); trace_alloc("JSValue", s, t); return t; }
+        void* operator new(size_t s)  { void *t = STD::malloc(s); trace_alloc("JSValue", s, t); return t; }
         void operator delete(void* t) { trace_release("JSValue", t); STD::free(t); }
 #endif
 
     };
-    Formatter& operator<<(Formatter& f, const JSValue& value);
 
-    extern JSValue kUndefinedValue;
-    extern JSValue kNaNValue;
-    extern JSValue kTrueValue;
-    extern JSValue kFalseValue;
-    extern JSValue kNullValue;
-    extern JSValue kNegativeZero;
-    extern JSValue kPositiveZero;
-    extern JSValue kNegativeInfinity;
-    extern JSValue kPositiveInfinity;
+    extern js2val kUndefinedValue;
+    extern js2val kNaNValue;
+    extern js2val kTrueValue;
+    extern js2val kFalseValue;
+    extern js2val kNullValue;
+    extern js2val kNegativeZero;
+    extern js2val kPositiveZero;
+    extern js2val kNegativeInfinity;
+    extern js2val kPositiveInfinity;
     
 
     
@@ -556,7 +590,7 @@ XXX ...couldn't get this to work...
         PropertyMap   mProperties;
 
         // Every JSObject (except the Ur-object) has a prototype
-        JSValue       mPrototype;
+        js2val       mPrototype;
 
         virtual bool isDynamic() { return true; }
 
@@ -573,11 +607,11 @@ XXX ...couldn't get this to work...
         
         virtual bool hasProperty(Context *cx, const String &name, NamespaceList *names, Access acc, PropertyIterator *p);
 
-        virtual JSValue getPropertyValue(PropertyIterator &i);
+        virtual js2val getPropertyValue(PropertyIterator &i);
 
         virtual void getProperty(Context *cx, const String &name, NamespaceList *names);
 
-        virtual void setProperty(Context *cx, const String &name, NamespaceList *names, const JSValue &v);
+        virtual void setProperty(Context *cx, const String &name, NamespaceList *names, const js2val v);
 
 
 
@@ -587,7 +621,7 @@ XXX ...couldn't get this to work...
 
         // add a property/value into the map 
         // - assumes the map doesn't already have this property
-        Property *insertNewProperty(const String &name, NamespaceList *names, PropertyAttribute attrFlags, JSType *type, const JSValue &v);
+        Property *insertNewProperty(const String &name, NamespaceList *names, PropertyAttribute attrFlags, JSType *type, const js2val v);
 
         virtual Property *defineStaticVariable(Context *cx, const String &name, AttributeStmtNode *attr, JSType *type)
         {
@@ -598,15 +632,15 @@ XXX ...couldn't get this to work...
         // add a method property
         virtual void defineMethod(Context *cx, const String &name, AttributeStmtNode *attr, JSFunction *f)
         {
-            defineVariable(cx, name, attr, Function_Type, JSValue(f));
+            defineVariable(cx, name, attr, Function_Type, JSValue::newFunction(f));
         }
         virtual void defineStaticMethod(Context *cx, const String &name, AttributeStmtNode *attr, JSFunction *f)
         {
-            JSObject::defineVariable(cx, name, attr, Function_Type, JSValue(f));    // XXX or error?
+            JSObject::defineVariable(cx, name, attr, Function_Type, JSValue::newFunction(f));    // XXX or error?
         }
         virtual void defineConstructor(Context *cx, const String& name, AttributeStmtNode *attr, JSFunction *f)
         {
-            JSObject::defineVariable(cx, name, attr, Function_Type, JSValue(f));    // XXX or error?
+            JSObject::defineVariable(cx, name, attr, Function_Type, JSValue::newFunction(f));    // XXX or error?
         }
         virtual void defineStaticGetterMethod(Context *cx, const String &name, AttributeStmtNode *attr, JSFunction *f)
         {
@@ -619,9 +653,9 @@ XXX ...couldn't get this to work...
         virtual void defineGetterMethod(Context *cx, const String &name, AttributeStmtNode *attr, JSFunction *f);
         virtual void defineSetterMethod(Context *cx, const String &name, AttributeStmtNode *attr, JSFunction *f);
 
-        virtual Property *defineVariable(Context *cx, const String &name, AttributeStmtNode *attr, JSType *type, const JSValue v);
-        virtual Property *defineVariable(Context *cx, const String &name, NamespaceList *names, PropertyAttribute attrFlags, JSType *type, const JSValue v);
-        virtual Property *defineAlias(Context *cx, const String &name, NamespaceList *names, PropertyAttribute attrFlags, JSType *type, JSValue *vp);
+        virtual Property *defineVariable(Context *cx, const String &name, AttributeStmtNode *attr, JSType *type, const js2val v);
+        virtual Property *defineVariable(Context *cx, const String &name, NamespaceList *names, PropertyAttribute attrFlags, JSType *type, const js2val v);
+        virtual Property *defineAlias(Context *cx, const String &name, NamespaceList *names, PropertyAttribute attrFlags, JSType *type, js2val vp);
         
         virtual Reference *genReference(Context *cx, bool hasBase, const String& name, NamespaceList *names, Access acc, uint32 depth);
 
@@ -634,8 +668,8 @@ XXX ...couldn't get this to work...
 
         virtual void defineTempVariable(Context *cx, Reference *&readRef, Reference *&writeRef, JSType *type);
 
-        virtual JSValue getSlotValue(Context * /*cx*/, uint32 /*slotIndex*/)    { ASSERT(false); return kUndefinedValue; }
-        virtual void setSlotValue(Context * /*cx*/, uint32 /*slotIndex*/, JSValue & /*v*/)    { ASSERT(false); }
+        virtual js2val getSlotValue(Context * /*cx*/, uint32 /*slotIndex*/)    { ASSERT(false); return kUndefinedValue; }
+        virtual void setSlotValue(Context * /*cx*/, uint32 /*slotIndex*/, js2val /*v*/)    { ASSERT(false); }
 
         // debug only        
         void printProperties(Formatter &f) const
@@ -701,14 +735,14 @@ XXX ...couldn't get this to work...
         void initInstance(Context *cx, JSType *type);
 
         void getProperty(Context *cx, const String &name, NamespaceList *names);
-        void setProperty(Context *cx, const String &name, NamespaceList *names, const JSValue &v);
+        void setProperty(Context *cx, const String &name, NamespaceList *names, const js2val v);
 
-        JSValue getField(uint32 index)
+        js2val getField(uint32 index)
         {
             return mInstanceValues[index];
         }
 
-        void setField(uint32 index, JSValue v)
+        void setField(uint32 index, js2val v)
         {
             mInstanceValues[index] = v;
         }
@@ -720,7 +754,7 @@ XXX ...couldn't get this to work...
         // the class that created this instance
         JSType        *mType;
 
-        JSValue         *mInstanceValues;
+        js2val         *mInstanceValues;
 
     protected:
         typedef Collector::InstanceOwner<JSInstance> JSInstanceOwner;
@@ -735,7 +769,7 @@ XXX ...couldn't get this to work...
             // FIXME: need some kind of array operator new[] (gc) thing.
             // this will have to use an extra word to keep track of the
             // element count.
-            mInstanceValues = (JSValue*) collector->copy(mInstanceValues);
+            mInstanceValues = (js2val*) collector->copy(mInstanceValues);
             return sizeof(JSInstance);
         }
     
@@ -777,7 +811,7 @@ XXX ...couldn't get this to work...
         JSType() : JSInstance(NULL, NULL), mSuperType(NULL), mVariableCount(0), mIsDynamic(false) { }
 
     public:        
-        JSType(Context *cx, const StringAtom *name, JSType *super, JSValue &protoObj, JSValue &typeProto);
+        JSType(Context *cx, const StringAtom *name, JSType *super, js2val protoObj, js2val typeProto);
 
         virtual ~JSType() { }       // keeping gcc happy
 
@@ -792,7 +826,7 @@ XXX ...couldn't get this to work...
 
 
         // construct a new (empty) instance of this class
-        virtual JSValue newInstance(Context *cx);
+        virtual js2val newInstance(Context *cx);
            
 
         Property *defineVariable(Context *cx, const String& name, AttributeStmtNode *attr, JSType *type);
@@ -801,11 +835,11 @@ XXX ...couldn't get this to work...
    // XXX
    // XXX why doesn't the virtual function in JSObject get found?
    // XXX
-        Property *defineVariable(Context *cx, const String& name, AttributeStmtNode *attr, JSType *type, JSValue v)
+        Property *defineVariable(Context *cx, const String& name, AttributeStmtNode *attr, JSType *type, js2val v)
         {
             return JSObject::defineVariable(cx, name, attr, type, v);
         }
-        Property *defineVariable(Context *cx, const String &name, NamespaceList *names, PropertyAttribute attrFlags, JSType *type, const JSValue v)
+        Property *defineVariable(Context *cx, const String &name, NamespaceList *names, PropertyAttribute attrFlags, JSType *type, const js2val v)
         {
             return JSObject::defineVariable(cx, name, names, attrFlags, type, v);
         }
@@ -831,9 +865,9 @@ XXX ...couldn't get this to work...
         bool derivesFrom(JSType *other);
 
         virtual void getProperty(Context *cx, const String &name, NamespaceList *names);
-        virtual void setProperty(Context *cx, const String &name, NamespaceList *names, const JSValue &v);
+        virtual void setProperty(Context *cx, const String &name, NamespaceList *names, const js2val v);
 
-        virtual JSValue getPropertyValue(PropertyIterator &i);
+        virtual js2val getPropertyValue(PropertyIterator &i);
 
         virtual bool hasProperty(Context *cx, const String &name, NamespaceList *names, Access acc, PropertyIterator *p);
 
@@ -842,7 +876,7 @@ XXX ...couldn't get this to work...
         JSFunction *getDefaultConstructor() { return mDefaultConstructor; }
         JSFunction *getTypeCastFunction()   { return mTypeCast; }
 
-        JSValue getUninitializedValue()     { return mUninitializedValue; }
+        js2val getUninitializedValue()     { return mUninitializedValue; }
 
         // Generates defaultConstructor if one doesn't exist -
         // assumes that the super types have been completed already
@@ -864,9 +898,9 @@ XXX ...couldn't get this to work...
         const StringAtom    *mPrivateNamespace;
 
         bool            mIsDynamic;
-        JSValue         mUninitializedValue;            // the value for uninitialized vars
+        js2val         mUninitializedValue;            // the value for uninitialized vars
 
-        JSValue         mPrototypeObject;              // becomes the prototype for any instance
+        js2val         mPrototypeObject;              // becomes the prototype for any instance
 
         // DEBUG
         void printSlotsNStuff(Formatter& f) const;
@@ -929,7 +963,7 @@ XXX ...couldn't get this to work...
         void* operator new(size_t s)    { void *t = STD::malloc(s); trace_alloc("JSArrayInstance", s, t); return t; }
         void operator delete(void* t)   { trace_release("JSArrayInstance", t); STD::free(t); }
 #endif
-        void setProperty(Context *cx, const String &name, NamespaceList *names, const JSValue &v);
+        void setProperty(Context *cx, const String &name, NamespaceList *names, const js2val v);
         void getProperty(Context *cx, const String &name, NamespaceList *names);
 
         bool hasOwnProperty(Context *cx, const String &name, NamespaceList *names, Access acc, PropertyIterator *p);
@@ -940,7 +974,7 @@ XXX ...couldn't get this to work...
 
     class JSArrayType : public JSType {
     public:
-        JSArrayType(Context *cx, JSType *elementType, const StringAtom *name, JSType *super, JSValue &protoObj, JSValue &typeProto) 
+        JSArrayType(Context *cx, JSType *elementType, const StringAtom *name, JSType *super, js2val protoObj, js2val typeProto) 
             : JSType(cx, name, super, protoObj, typeProto), mElementType(elementType)
         {
         }
@@ -951,7 +985,7 @@ XXX ...couldn't get this to work...
         void operator delete(void* t)   { trace_release("JSArrayType", t); STD::free(t); }
 #endif
 
-        JSValue newInstance(Context *cx);
+        js2val newInstance(Context *cx);
         JSType *mElementType;
     };
 
@@ -963,7 +997,7 @@ XXX ...couldn't get this to work...
         void* operator new(size_t s)    { void *t = STD::malloc(s); trace_alloc("JSStringInstance", s, t); return t; }
         void operator delete(void* t)   { trace_release("JSStringInstance", t); STD::free(t); }
 #endif
-        void setProperty(Context *cx, const String &name, NamespaceList *names, const JSValue &v);
+        void setProperty(Context *cx, const String &name, NamespaceList *names, const js2val v);
         void getProperty(Context *cx, const String &name, NamespaceList *names);
         bool hasOwnProperty(Context *cx, const String &name, NamespaceList *names, Access acc, PropertyIterator *p);
         bool deleteProperty(Context *cx, const String &name, NamespaceList *names);
@@ -973,7 +1007,7 @@ XXX ...couldn't get this to work...
 
     class JSStringType : public JSType {
     public:
-        JSStringType(Context *cx, const StringAtom *name, JSType *super, JSValue &protoObj, JSValue &typeProto) 
+        JSStringType(Context *cx, const StringAtom *name, JSType *super, js2val protoObj, js2val typeProto) 
             : JSType(cx, name, super, protoObj, typeProto)
         {
         }
@@ -982,7 +1016,7 @@ XXX ...couldn't get this to work...
         void* operator new(size_t s)    { void *t = STD::malloc(s); trace_alloc("JSStringType", s, t); return t; }
         void operator delete(void* t)   { trace_release("JSStringType", t); STD::free(t); }
 #endif
-        JSValue newInstance(Context *cx);
+        js2val newInstance(Context *cx);
     };
 
     class JSBooleanInstance : public JSInstance {
@@ -998,7 +1032,7 @@ XXX ...couldn't get this to work...
 
     class JSBooleanType : public JSType {
     public:
-        JSBooleanType(Context *cx, const StringAtom *name, JSType *super, JSValue &protoObj, JSValue &typeProto) 
+        JSBooleanType(Context *cx, const StringAtom *name, JSType *super, js2val protoObj, js2val typeProto) 
             : JSType(cx, name, super, protoObj, typeProto)
         {
         }
@@ -1007,7 +1041,7 @@ XXX ...couldn't get this to work...
         void* operator new(size_t s)    { void *t = STD::malloc(s); trace_alloc("JSBooleanType", s, t); return t; }
         void operator delete(void* t)   { trace_release("JSBooleanType", t); STD::free(t); }
 #endif
-        JSValue newInstance(Context *cx);
+        js2val newInstance(Context *cx);
     };
 
     class JSNumberInstance : public JSInstance {
@@ -1023,7 +1057,7 @@ XXX ...couldn't get this to work...
 
     class JSNumberType : public JSType {
     public:
-        JSNumberType(Context *cx, const StringAtom *name, JSType *super, JSValue &protoObj, JSValue &typeProto) 
+        JSNumberType(Context *cx, const StringAtom *name, JSType *super, js2val protoObj, js2val typeProto) 
             : JSType(cx, name, super, protoObj, typeProto)
         {
         }
@@ -1032,7 +1066,7 @@ XXX ...couldn't get this to work...
         void* operator new(size_t s)    { void *t = STD::malloc(s); trace_alloc("JSNumberType", s, t); return t; }
         void operator delete(void* t)   { trace_release("JSNumberType", t); STD::free(t); }
 #endif
-        JSValue newInstance(Context *cx);
+        js2val newInstance(Context *cx);
     };
 
     class JSDateInstance : public JSInstance {
@@ -1048,7 +1082,7 @@ XXX ...couldn't get this to work...
 
     class JSDateType : public JSType {
     public:
-        JSDateType(Context *cx, const StringAtom *name, JSType *super, JSValue &protoObj, JSValue &typeProto) 
+        JSDateType(Context *cx, const StringAtom *name, JSType *super, js2val protoObj, js2val typeProto) 
             : JSType(cx, name, super, protoObj, typeProto)
         {
         }
@@ -1057,7 +1091,7 @@ XXX ...couldn't get this to work...
         void* operator new(size_t s)    { void *t = STD::malloc(s); trace_alloc("JSDateType", s, t); return t; }
         void operator delete(void* t)   { trace_release("JSDateType", t); STD::free(t); }
 #endif
-        JSValue newInstance(Context *cx);
+        js2val newInstance(Context *cx);
     };
 
     class JSRegExpInstance : public JSInstance {
@@ -1074,7 +1108,7 @@ XXX ...couldn't get this to work...
 
     class JSRegExpType : public JSType {
     public:
-        JSRegExpType(Context *cx, const StringAtom *name, JSType *super, JSValue &protoObj, JSValue &typeProto) 
+        JSRegExpType(Context *cx, const StringAtom *name, JSType *super, js2val protoObj, js2val typeProto) 
             : JSType(cx, name, super, protoObj, typeProto)
         {
         }
@@ -1083,12 +1117,12 @@ XXX ...couldn't get this to work...
         void* operator new(size_t s)    { void *t = STD::malloc(s); trace_alloc("JSBooleanType", s, t); return t; }
         void operator delete(void* t)   { trace_release("JSBooleanType", t); STD::free(t); }
 #endif
-        JSValue newInstance(Context *cx);
+        js2val newInstance(Context *cx);
     };
 
     class JSObjectType : public JSType {
     public:
-        JSObjectType(Context *cx, const StringAtom *name, JSType *super, JSValue &protoObj, JSValue &typeProto) 
+        JSObjectType(Context *cx, const StringAtom *name, JSType *super, js2val protoObj, js2val typeProto) 
             : JSType(cx, name, super, protoObj, typeProto)
         {
         }
@@ -1097,7 +1131,7 @@ XXX ...couldn't get this to work...
         void* operator new(size_t s)    { void *t = STD::malloc(s); trace_alloc("JSObjectType", s, t); return t; }
         void operator delete(void* t)   { trace_release("JSObjectType", t); STD::free(t); }
 #endif
-        JSValue newInstance(Context *cx);
+        js2val newInstance(Context *cx);
     };
 
 
@@ -1120,8 +1154,8 @@ XXX ...couldn't get this to work...
         Property *defineVariable(Context *cx, const String& name, AttributeStmtNode *attr, JSType *type);
         Reference *genReference(Context *cx, bool hasBase, const String& name, NamespaceList *names, Access acc, uint32 depth);
 
-        JSValue getSlotValue(Context *cx, uint32 slotIndex);
-        void setSlotValue(Context *cx, uint32 slotIndex, JSValue &v);
+        js2val getSlotValue(Context *cx, uint32 slotIndex);
+        void setSlotValue(Context *cx, uint32 slotIndex, js2val v);
 
     };
 
@@ -1152,10 +1186,10 @@ XXX ...couldn't get this to work...
                 mNamespaceList(NULL)
         {}
 
-        Activation(JSValue *locals, 
-                   JSValue *stack, uint32 stackTop,
+        Activation(js2val *locals, 
+                   js2val *stack, uint32 stackTop,
                    ScopeChain *scopeChain,
-                   JSValue *argBase, JSValue curThis,
+                   js2val *argBase, js2val curThis,
                    uint8 *pc, 
                    ByteCodeModule *module,
                    NamespaceList *namespaceList )
@@ -1189,12 +1223,12 @@ XXX ...couldn't get this to work...
         
         
         // saved values from a previous execution
-        JSValue *mLocals;
-        JSValue *mStack;
+        js2val *mLocals;
+        js2val *mStack;
         uint32 mStackTop;           
         ScopeChain *mScopeChain;
-        JSValue *mArgumentBase;
-        JSValue mThis;
+        js2val *mArgumentBase;
+        js2val mThis;
         uint8 *mPC;
         ByteCodeModule *mModule;
         JSFunction *mContainer;
@@ -1210,8 +1244,8 @@ XXX ...couldn't get this to work...
 
         Reference *genReference(Context *cx, bool hasBase, const String& name, NamespaceList *names, Access acc, uint32 depth);
 
-        JSValue getSlotValue(Context *cx, uint32 slotIndex);
-        void setSlotValue(Context *cx, uint32 slotIndex, JSValue &v);
+        js2val getSlotValue(Context *cx, uint32 slotIndex);
+        void setSlotValue(Context *cx, uint32 slotIndex, js2val v);
 
     };
 
@@ -1252,12 +1286,12 @@ XXX ...couldn't get this to work...
             JSObject *top = mScopeStack.back();
             return top->defineVariable(cx, name, attr, type);
         }
-        Property *defineVariable(Context *cx, const String& name, AttributeStmtNode *attr, JSType *type, JSValue v)
+        Property *defineVariable(Context *cx, const String& name, AttributeStmtNode *attr, JSType *type, js2val v)
         {
             JSObject *top = mScopeStack.back();
             return top->defineVariable(cx, name, attr, type, v);
         }
-        Property *defineAlias(Context *cx, const String &name, NamespaceList *names, PropertyAttribute attrFlags, JSType *type, JSValue *vp)
+        Property *defineAlias(Context *cx, const String &name, NamespaceList *names, PropertyAttribute attrFlags, JSType *type, js2val vp)
         {
             JSObject *top = mScopeStack.back();
             return top->defineAlias(cx, name, names, attrFlags, type, vp);
@@ -1365,7 +1399,7 @@ XXX ...couldn't get this to work...
 
         // a compile time request to get the value for a name
         // (i.e. we're accessing a constant value)
-        JSValue getCompileTimeValue(Context *cx, const String& name, NamespaceList *names);
+        js2val getCompileTimeValue(Context *cx, const String& name, NamespaceList *names);
 
 
 
@@ -1433,12 +1467,13 @@ XXX ...couldn't get this to work...
         };
 
 
-        typedef JSValue (NativeCode)(Context *cx, const JSValue &thisValue, JSValue argv[], uint32 argc);
+        typedef js2val (NativeCode)(Context *cx, const js2val thisValue, js2val argv[], uint32 argc);
+        typedef js2val (NativeDispatch)(NativeCode *target, Context *cx, const js2val thisValue, js2val argv[], uint32 argc);
 
         // XXX these should be Function_Type->newInstance() calls, no?
 
         JSFunction(Context *cx, JSType *resultType, ScopeChain *scopeChain);        
-        JSFunction(Context *cx, NativeCode *code, JSType *resultType);
+        JSFunction(Context *cx, NativeCode *code, JSType *resultType, NativeDispatch *dispatch = NULL);
 
         ~JSFunction() { }  // keeping gcc happy
         
@@ -1463,18 +1498,19 @@ XXX ...couldn't get this to work...
         void setClass(JSType *c)                { mClass = c; }
 
         virtual bool hasBoundThis()             { return false; }
-        virtual bool isNative()                 { return (mCode != NULL); }
+        virtual bool isNative()                 { return (mNativeCode != NULL); }
         virtual bool isPrototype()              { return mIsPrototype; }
         virtual bool isConstructor()            { return mIsConstructor; }
         virtual bool isMethod()                 { return (mClass != NULL); }
         virtual ByteCodeModule *getByteCode()   { ASSERT(!isNative()); return mByteCode; }
-        virtual NativeCode *getNativeCode()     { ASSERT(isNative()); return mCode; }
+//        virtual NativeCode *getNativeCode()     { ASSERT(isNative()); return mCode; }
+        virtual js2val invokeNativeCode(Context *cx, const js2val thisValue, js2val argv[], uint32 argc);
         virtual ParameterBarrel *getParameterBarrel()
                                                 { return mParameterBarrel; }
         virtual Activation *getActivation()     { return &mActivation; }
 
         virtual ScopeChain *getScopeChain()     { return mScopeChain; }
-        virtual JSValue getThisValue()          { return kNullValue; }         
+        virtual js2val getThisValue()          { return kNullValue; }         
         virtual JSType *getClass()              { return mClass; }
         virtual FunctionName *getFunctionName() { return mFunctionName; }
 
@@ -1485,7 +1521,7 @@ XXX ...couldn't get this to work...
                                                 { ASSERT(mParameters && (a < maxParameterIndex())); return mParameters[a].mType; }
         virtual bool parameterHasInitializer(uint32 a)
                                                 { ASSERT(mParameters && (a < maxParameterIndex())); return (mParameters[a].mInitializer != (uint32)(-1)); }
-        virtual JSValue runParameterInitializer(Context *cx, uint32 a, const JSValue& thisValue, JSValue *argv, uint32 argc);
+        virtual js2val runParameterInitializer(Context *cx, uint32 a, const js2val thisValue, js2val *argv, uint32 argc);
 
         virtual uint32 getRequiredParameterCount()   
                                                 { return mRequiredParameters; }
@@ -1516,7 +1552,7 @@ XXX ...couldn't get this to work...
 
     private:
         ByteCodeModule *mByteCode;
-        NativeCode *mCode;
+        NativeCode *mNativeCode;
         JSType *mResultType;
         uint32 mRequiredParameters;
         uint32 mOptionalParameters;
@@ -1529,6 +1565,7 @@ XXX ...couldn't get this to work...
         bool mHasRestParameter;
         JSType *mClass;                         // pointer to owning class if this function is a method
         FunctionName *mFunctionName;
+        NativeDispatch *mDispatch;
 
     protected:
         typedef Collector::InstanceOwner<JSFunction> JSFunctionOwner;
@@ -1560,6 +1597,8 @@ XXX ...couldn't get this to work...
 #endif
     };
 
+
+
     class JSBoundFunction : public JSFunction {
     private:
         JSFunction *mFunction;
@@ -1576,17 +1615,18 @@ XXX ...couldn't get this to work...
         bool isConstructor()            { return mFunction->isConstructor(); }
         bool isMethod()                 { return mFunction->isMethod(); }
         ByteCodeModule *getByteCode()   { return mFunction->getByteCode(); }
-        NativeCode *getNativeCode()     { return mFunction->getNativeCode(); }
+        js2val invokeNativeCode(Context *cx, const js2val thisValue, js2val argv[], uint32 argc)
+                                        { return mFunction->invokeNativeCode(cx, thisValue, argv, argc); }
         ParameterBarrel *getParameterBarrel()
                                         { return mFunction->mParameterBarrel; }
         Activation *getActivation()     { return &mFunction->mActivation; }
         JSType *getResultType()         { return mFunction->getResultType(); }
         JSType *getParameterType(uint32 a)    { return mFunction->getParameterType(a); }
         bool parameterHasInitializer(uint32 a){ return mFunction->parameterHasInitializer(a); }
-        JSValue runParameterInitializer(Context *cx, uint32 a, const JSValue& thisValue, JSValue *argv, uint32 argc)
+        js2val runParameterInitializer(Context *cx, uint32 a, const js2val thisValue, js2val *argv, uint32 argc)
                                         { return mFunction->runParameterInitializer(cx, a, thisValue, argv, argc); }
         ScopeChain *getScopeChain()     { return mFunction->getScopeChain(); }
-        JSValue getThisValue()          { return (mThis) ? JSValue(mThis) : kNullValue; }         
+        js2val getThisValue()           { return (mThis) ? JSValue::newObject(mThis) : kNullValue; }         
         JSType *getClass()              { return mFunction->getClass(); }
         FunctionName *getFunctionName() { return mFunction->getFunctionName(); }
 
@@ -1610,7 +1650,7 @@ XXX ...couldn't get this to work...
 
         void getProperty(Context *cx, const String &name, NamespaceList *names) 
                                         { mFunction->getProperty(cx, name, names); }
-        void setProperty(Context *cx, const String &name, NamespaceList *names, const JSValue &v)
+        void setProperty(Context *cx, const String &name, NamespaceList *names, const js2val v)
                                         { mFunction->setProperty(cx, name, names, v); }
         bool hasProperty(Context *cx, const String &name, NamespaceList *names, Access acc, PropertyIterator *p)
                                         { return mFunction->hasProperty(cx, name, names, acc, p); }
@@ -1687,19 +1727,19 @@ XXX ...couldn't get this to work...
 
     // provide access to the Error object constructors so that runtime exceptions
     // can be constructed for Javascript catches.
-    extern JSValue Error_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc);
-    extern JSValue EvalError_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc);
-    extern JSValue RangeError_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc);
-    extern JSValue ReferenceError_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc);
-    extern JSValue SyntaxError_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc);
-    extern JSValue TypeError_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc);
-    extern JSValue UriError_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc);
+    extern js2val Error_Constructor(Context *cx, const js2val thisValue, js2val *argv, uint32 argc);
+    extern js2val EvalError_Constructor(Context *cx, const js2val thisValue, js2val *argv, uint32 argc);
+    extern js2val RangeError_Constructor(Context *cx, const js2val thisValue, js2val *argv, uint32 argc);
+    extern js2val ReferenceError_Constructor(Context *cx, const js2val thisValue, js2val *argv, uint32 argc);
+    extern js2val SyntaxError_Constructor(Context *cx, const js2val thisValue, js2val *argv, uint32 argc);
+    extern js2val TypeError_Constructor(Context *cx, const js2val thisValue, js2val *argv, uint32 argc);
+    extern js2val UriError_Constructor(Context *cx, const js2val thisValue, js2val *argv, uint32 argc);
 
     // called by bytecodegen for RegExp literals
-    extern JSValue RegExp_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc);
+    extern js2val RegExp_Constructor(Context *cx, const js2val thisValue, js2val *argv, uint32 argc);
     
     // called directly by String.match
-    extern JSValue RegExp_exec(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc);
+    extern js2val RegExp_exec(Context *cx, const js2val thisValue, js2val *argv, uint32 argc);
 
 
     class Package : public JSObject  {
@@ -1750,7 +1790,7 @@ XXX ...couldn't get this to work...
         struct ClassDef {
             char *name;
             JSFunction::NativeCode *defCon;
-            const JSValue *uninit;
+            const js2val *uninit;
         };
 
         Context(JSObject **global, World &world, Arena &a, Pragma::Flags flags);
@@ -1840,7 +1880,7 @@ XXX ...couldn't get this to work...
         // Construct an array of argument values, updating argCount to
         // reflect the final size. Pulls incoming args from the top of
         // the stack.
-        JSValue *buildArgumentBlock(JSFunction *target, uint32 &argCount);
+        js2val *buildArgumentBlock(JSFunction *target, uint32 &argCount);
 
         
         // compiles attribute expression into an attribute object
@@ -1851,10 +1891,10 @@ XXX ...couldn't get this to work...
 
         // Run the binary operator designated, after using the types to do the dispatch
         bool executeOperator(Operator op, JSType *t1, JSType *t2);
-        JSValue mapValueToType(JSValue v, JSType *t);
+        js2val mapValueToType(js2val v, JSType *t);
 
         // Run the interpreter loop on the function
-        JSValue invokeFunction(JSFunction *target, const JSValue& thisValue, JSValue *argv, uint32 argc);
+        js2val invokeFunction(JSFunction *target, const js2val thisValue, js2val *argv, uint32 argc);
 
         // This reader is used to generate source information
         // to go with exception messages.
@@ -1873,28 +1913,28 @@ XXX ...couldn't get this to work...
 
         uint8 *mPC;
 
-        JSValue mThis;
+        js2val mThis;
 
         // this is the execution stack (for the current function)
-        JSValue *mStack;
+        js2val *mStack;
         uint32 mStackTop;
         uint32 mStackMax;
 
         NamespaceList *mNamespaceList;
 
-        void pushValue(const JSValue &v)
+        void pushValue(const js2val v)
         {
             ASSERT(mStackTop < mStackMax);
             mStack[mStackTop++] = v;
         }
 
-        JSValue popValue()
+        js2val popValue()
         {
             ASSERT(mStackTop > 0);
             return mStack[--mStackTop];
         }
 
-        JSValue topValue()
+        js2val topValue()
         {
             return mStack[mStackTop - 1];
         }
@@ -1910,14 +1950,14 @@ XXX ...couldn't get this to work...
             return mStackTop;
         }
 
-        JSValue getValue(uint32 n)
+        js2val getValue(uint32 n)
         {
             ASSERT(n < mStackTop);
             return mStack[n];
         }
 
         // put the value in at 'index', lifting everything above that up by one
-        void insertValue(JSValue v, uint32 index)
+        void insertValue(js2val v, uint32 index)
         {
             ASSERT(mStackTop < mStackMax);      // we're effectively pushing one entry
             for (uint32 i = mStackTop - 1; i >= index; i--)
@@ -1926,7 +1966,7 @@ XXX ...couldn't get this to work...
             mStackTop++;
         }
 
-        JSValue *getBase(uint32 n)
+        js2val *getBase(uint32 n)
         {
             ASSERT(n <= mStackTop);     // s'ok to point beyond the end
             return &mStack[n];
@@ -1951,10 +1991,10 @@ XXX ...couldn't get this to work...
         std::stack<uint8 *> mSubStack;
 
         // the locals for the current function (an array, constructed on function entry)
-        JSValue *mLocals;
+        js2val *mLocals;
 
         // the base of the incoming arguments for this function
-        JSValue *mArgumentBase;
+        js2val *mArgumentBase;
 
         typedef std::vector<OperatorDefinition *> OperatorList;
             
@@ -1967,16 +2007,16 @@ XXX ...couldn't get this to work...
         bool checkForPackage(const String &packageName);    // return true if loaded, throw exception if loading
         void loadPackage(const String &packageName, const String &filename);  // load package from file
 
-        JSValue readEvalFile(const String& fileName);
-        JSValue readEvalString(const String &str, const String& fileName, ScopeChain *scopeChain, const JSValue& thisValue);
+        js2val readEvalFile(const String& fileName);
+        js2val readEvalString(const String &str, const String& fileName, ScopeChain *scopeChain, const js2val thisValue);
 
         void buildRuntime(StmtNode *p);
         void buildRuntimeForFunction(FunctionDefinition &f, JSFunction *fnc);
         void buildRuntimeForStmt(StmtNode *p);
         ByteCodeModule *genCode(StmtNode *p, const String &sourceName);
 
-        JSValue interpret(ByteCodeModule *bcm, int offset, ScopeChain *scopeChain, const JSValue& thisValue, JSValue *argv, uint32 argc);
-        JSValue interpret(uint8 *pc, uint8 *endPC);
+        js2val interpret(ByteCodeModule *bcm, int offset, ScopeChain *scopeChain, const js2val thisValue, js2val *argv, uint32 argc);
+        js2val interpret(uint8 *pc, uint8 *endPC);
         
         void reportError(Exception::Kind kind, char *message, size_t pos, const char *arg = NULL);
         void reportError(Exception::Kind kind, char *message, const char *arg = NULL);
@@ -2033,22 +2073,22 @@ XXX ...couldn't get this to work...
             m_cx->mStackMax = mOldStackMax;
         }
 
-        JSValue mStack[ReplacementStackSize];
+        js2val mStack[ReplacementStackSize];
 
         Context *m_cx;
 
-        JSValue *mOldStack;
+        js2val *mOldStack;
         uint32 mOldStackTop;
         uint32 mOldStackMax;
 
     };
 
     
-    class NamedArgument {
+    class NamedArgument : public JSObject {
     public:
-        NamedArgument(JSValue &v, const String *n) : mValue(v), mName(n) { }
+        NamedArgument(js2val v, const String *n) : mValue(v), mName(n) { }
 
-        JSValue mValue;
+        js2val mValue;
         const String *mName;
 
     protected:
@@ -2057,18 +2097,19 @@ XXX ...couldn't get this to work...
         /**
         * Scans through the object, and copies all references.
         */
+#ifdef NOT_SCARED_OF_GC_CODE    
         Collector::size_type scan(Collector* collector)
         {
             mValue.scan(collector);
             return sizeof(NamedArgument);
         }
-
     public:
         void* operator new(size_t n, Collector& gc)
         {
             static NamedArgumentOwner owner;
             return gc.allocateObject(n, &owner);
         }
+#endif
 
 #ifdef DEBUG
     public:
@@ -2078,7 +2119,7 @@ XXX ...couldn't get this to work...
     };
     
     
-    class Attribute {
+    class Attribute : public JSObject {
     public:
         Attribute(PropertyAttribute t, PropertyAttribute f)
             : mTrueFlags(t), mFalseFlags(f), mExtendArgument(NULL), mNamespaceList(NULL) { }
@@ -2119,7 +2160,12 @@ XXX ...couldn't get this to work...
     
     
     
-    
+    inline bool JSValue::isInstance(const js2val v)              { return JS2VAL_IS_OBJECT(v) && dynamic_cast<JSInstance *>(JS2VAL_TO_OBJECT(v)); }
+    inline bool JSValue::isType(const js2val v)                  { return JS2VAL_IS_OBJECT(v) && dynamic_cast<JSType *>(JS2VAL_TO_OBJECT(v)); }
+    inline bool JSValue::isFunction(const js2val v)              { return JS2VAL_IS_OBJECT(v) && dynamic_cast<JSFunction *>(JS2VAL_TO_OBJECT(v)); }
+    inline bool JSValue::isNamedArg(const js2val v)              { return JS2VAL_IS_OBJECT(v) && dynamic_cast<NamedArgument *>(JS2VAL_TO_OBJECT(v)); }
+    inline bool JSValue::isAttribute(const js2val v)             { return JS2VAL_IS_OBJECT(v) && dynamic_cast<Attribute *>(JS2VAL_TO_OBJECT(v)); }
+    inline bool JSValue::isPackage(const js2val v)               { return JS2VAL_IS_OBJECT(v) && dynamic_cast<Package *>(JS2VAL_TO_OBJECT(v)); }
     
     
     

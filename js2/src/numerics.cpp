@@ -252,15 +252,15 @@ InitNumerics::InitNumerics()
 // had to move these here since they depend upon the values
 // initialized above, and we can't guarantee order other than
 // lexically in a single file.
-JSValue JS::JS2Runtime::kUndefinedValue;
-JSValue JS::JS2Runtime::kNaNValue = JSValue(nan);
-JSValue JS::JS2Runtime::kTrueValue = JSValue(true);
-JSValue JS::JS2Runtime::kFalseValue = JSValue(false);
-JSValue JS::JS2Runtime::kNullValue = JSValue(JSValue::null_tag);
-JSValue JS::JS2Runtime::kNegativeZero = JSValue(-0.0);
-JSValue JS::JS2Runtime::kPositiveZero = JSValue(0.0);
-JSValue JS::JS2Runtime::kNegativeInfinity = JSValue(negativeInfinity);
-JSValue JS::JS2Runtime::kPositiveInfinity = JSValue(positiveInfinity);
+js2val JS::JS2Runtime::kUndefinedValue = JS2VAL_VOID;
+js2val JS::JS2Runtime::kNaNValue = JSValue::newNumber(nan);
+js2val JS::JS2Runtime::kTrueValue = JSValue::newBoolean(true);
+js2val JS::JS2Runtime::kFalseValue = JSValue::newBoolean(false);
+js2val JS::JS2Runtime::kNullValue = JS2VAL_NULL;
+js2val JS::JS2Runtime::kNegativeZero = JSValue::newNumber(-0.0);
+js2val JS::JS2Runtime::kPositiveZero = JSValue::newNumber(0.0);
+js2val JS::JS2Runtime::kNegativeInfinity = JSValue::newNumber(negativeInfinity);
+js2val JS::JS2Runtime::kPositiveInfinity = JSValue::newNumber(positiveInfinity);
 
 //
 // Portable double-precision floating point to string and back conversions

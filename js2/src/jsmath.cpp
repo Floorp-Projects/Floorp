@@ -80,103 +80,103 @@ namespace JS2Runtime {
 #define M_CONSTANTS_COUNT     8
 
 
-static JSValue Math_abs(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
+static js2val Math_abs(Context *cx, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
     if (argc == 0)
         return kNaNValue;
     else
-        return JSValue(fd::fabs(argv[0].toNumber(cx).f64));
+        return JSValue::newNumber(fd::fabs(JSValue::f64(JSValue::toNumber(cx, argv[0]))));
 }
-static JSValue Math_acos(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
+static js2val Math_acos(Context *cx, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
     if (argc == 0)
         return kNaNValue;
-    return JSValue(fd::acos(argv[0].toNumber(cx).f64));
+    return JSValue::newNumber(fd::acos(JSValue::f64(JSValue::toNumber(cx, argv[0]))));
 }
-static JSValue Math_asin(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
+static js2val Math_asin(Context *cx, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
     if (argc == 0)
         return kNaNValue;
-    return JSValue(fd::asin(argv[0].toNumber(cx).f64));
+    return JSValue::newNumber(fd::asin(JSValue::f64(JSValue::toNumber(cx, argv[0]))));
 }
-static JSValue Math_atan(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
+static js2val Math_atan(Context *cx, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
     if (argc == 0)
         return kNaNValue;
-    return JSValue(fd::atan(argv[0].toNumber(cx).f64));
+    return JSValue::newNumber(fd::atan(JSValue::f64(JSValue::toNumber(cx, argv[0]))));
 }
-static JSValue Math_atan2(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
+static js2val Math_atan2(Context *cx, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
     if (argc <= 1)
         return kNaNValue;
-    float64 y = argv[0].toNumber(cx).f64;
-    float64 x = argv[1].toNumber(cx).f64;
-    return JSValue(fd::atan2(y, x));
+    float64 y = JSValue::f64(JSValue::toNumber(cx, argv[0]));
+    float64 x = JSValue::f64(JSValue::toNumber(cx, argv[1]));
+    return JSValue::newNumber(fd::atan2(y, x));
 }
-static JSValue Math_ceil(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
+static js2val Math_ceil(Context *cx, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
     if (argc == 0)
         return kNaNValue;
-    return JSValue(fd::ceil(argv[0].toNumber(cx).f64));
+    return JSValue::newNumber(fd::ceil(JSValue::f64(JSValue::toNumber(cx, argv[0]))));
 }
-static JSValue Math_cos(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
+static js2val Math_cos(Context *cx, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
     if (argc == 0)
         return kNaNValue;
-    return JSValue(fd::cos(argv[0].toNumber(cx).f64));
+    return JSValue::newNumber(fd::cos(JSValue::f64(JSValue::toNumber(cx, argv[0]))));
 }
-static JSValue Math_exp(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
+static js2val Math_exp(Context *cx, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
     if (argc == 0)
         return kNaNValue;
-    return JSValue(fd::exp(argv[0].toNumber(cx).f64));
+    return JSValue::newNumber(fd::exp(JSValue::f64(JSValue::toNumber(cx, argv[0]))));
 }
-static JSValue Math_floor(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
+static js2val Math_floor(Context *cx, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
     if (argc == 0)
         return kNaNValue;
     else
-        return JSValue(fd::floor(argv[0].toNumber(cx).f64));
+        return JSValue::newNumber(fd::floor(JSValue::f64(JSValue::toNumber(cx, argv[0]))));
 }
-static JSValue Math_log(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
+static js2val Math_log(Context *cx, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
     if (argc == 0)
         return kNaNValue;
-    return JSValue(fd::log(argv[0].toNumber(cx).f64));
+    return JSValue::newNumber(fd::log(JSValue::f64(JSValue::toNumber(cx, argv[0]))));
 }
-static JSValue Math_max(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
+static js2val Math_max(Context *cx, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
     if (argc == 0)
         return kNegativeInfinity;
-    float64 result = argv[0].toNumber(cx).f64;
+    float64 result = JSValue::f64(JSValue::toNumber(cx, argv[0]));
     if (JSDOUBLE_IS_NaN(result)) return kNaNValue;
     for (uint32 i = 1; i < argc; ++i) {
-        float64 arg = argv[i].toNumber(cx).f64;
+        float64 arg = JSValue::f64(JSValue::toNumber(cx, argv[i]));
         if (JSDOUBLE_IS_NaN(arg)) return kNaNValue;
         if (arg > result)
             result = arg;
     }
-    return JSValue(result);
+    return JSValue::newNumber(result);
 }
-static JSValue Math_min(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
+static js2val Math_min(Context *cx, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
     if (argc == 0)
         return kPositiveInfinity;
-    float64 result = argv[0].toNumber(cx).f64;
+    float64 result = JSValue::f64(JSValue::toNumber(cx, argv[0]));
     if (JSDOUBLE_IS_NaN(result)) return kNaNValue;
     for (uint32 i = 1; i < argc; ++i) {
-        float64 arg = argv[i].toNumber(cx).f64;
+        float64 arg = JSValue::f64(JSValue::toNumber(cx, argv[i]));
         if (JSDOUBLE_IS_NaN(arg)) return kNaNValue;
         if ((arg < result) || (JSDOUBLE_IS_POSZERO(result) && JSDOUBLE_IS_NEGZERO(arg)))
             result = arg;
     }
-    return JSValue(result);
+    return JSValue::newNumber(result);
 }
-static JSValue Math_pow(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
+static js2val Math_pow(Context *cx, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
     if (argc < 1)
         return kNaNValue;
-    return JSValue(fd::pow(argv[0].toNumber(cx).f64, argv[1].toNumber(cx).f64));
+    return JSValue::newNumber(fd::pow(JSValue::f64(JSValue::toNumber(cx, argv[0])), JSValue::f64(JSValue::toNumber(cx, argv[1]))));
 }
 
 /*
@@ -249,35 +249,35 @@ static float64 random_nextDouble(Context *cx)
 }
 
 
-static JSValue Math_random(Context *cx, const JSValue& /*thisValue*/, JSValue * /*argv*/, uint32 /*argc*/)
+static js2val Math_random(Context *cx, const js2val /*thisValue*/, js2val *argv, uint32 /*argc*/)
 {
     random_init(cx);
-    return JSValue(random_nextDouble(cx));
+    return JSValue::newNumber(random_nextDouble(cx));
 }
-static JSValue Math_round(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
+static js2val Math_round(Context *cx, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
     if (argc == 0)
         return kNaNValue;
-    float64 x = argv[0].toNumber(cx).f64;
-    return JSValue( fd::copysign( fd::floor(x + 0.5), x ) );
+    float64 x = JSValue::f64(JSValue::toNumber(cx, argv[0]));
+    return JSValue::newNumber( fd::copysign( fd::floor(x + 0.5), x ) );
 }
-static JSValue Math_sin(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
+static js2val Math_sin(Context *cx, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
     if (argc == 0)
         return kNaNValue;
-    return JSValue(fd::sin(argv[0].toNumber(cx).f64));
+    return JSValue::newNumber(fd::sin(JSValue::f64(JSValue::toNumber(cx, argv[0]))));
 }
-static JSValue Math_sqrt(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
+static js2val Math_sqrt(Context *cx, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
     if (argc == 0)
         return kNaNValue;
-    return JSValue(fd::sqrt(argv[0].toNumber(cx).f64));
+    return JSValue::newNumber(fd::sqrt(JSValue::f64(JSValue::toNumber(cx, argv[0]))));
 }
-static JSValue Math_tan(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)   
+static js2val Math_tan(Context *cx, const js2val /*thisValue*/, js2val *argv, uint32 argc)   
 {
     if (argc == 0)
         return kNaNValue;
-    return JSValue(fd::tan(argv[0].toNumber(cx).f64));
+    return JSValue::newNumber(fd::tan(JSValue::f64(JSValue::toNumber(cx, argv[0]))));
 }
 
 
@@ -326,14 +326,14 @@ void initMathObject(Context *cx, JSObject *mathObj)
     for (i = 0; i < M_CONSTANTS_COUNT; i++)
         mathObj->defineVariable(cx, widenCString(MathObjectConstants[i].name), 
                                     (NamespaceList *)(NULL), Property::ReadOnly | Property::DontDelete, 
-                                    Number_Type, JSValue(MathObjectConstants[i].value));
+                                    Number_Type, JSValue::newNumber(MathObjectConstants[i].value));
 
     for (i = 0; i < sizeof(MathObjectFunctions) / sizeof(MathObjectFunctionDef); i++) {
-        JSFunction *f = new JSFunction(cx, MathObjectFunctions[i].imp, Number_Type);
+        JSFunction *f = new JSFunction(cx, MathObjectFunctions[i].imp, Number_Type, NULL);
         f->setParameterCounts(cx, MathObjectFunctions[i].length, 0, 0, false);
         mathObj->defineVariable(cx, widenCString(MathObjectFunctions[i].name), 
                                     (NamespaceList *)(NULL), Property::ReadOnly | Property::DontDelete, 
-                                    Number_Type, JSValue(f));
+                                    Number_Type, JSValue::newFunction(f));
     }
 }    
 

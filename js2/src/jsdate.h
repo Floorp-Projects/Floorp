@@ -36,10 +36,10 @@ namespace JavaScript {
 namespace JS2Runtime {
 
 
-    extern JSValue Date_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc);
-    extern JSValue Date_TypeCast(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc);
-    extern JSValue Date_parse(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc);
-    extern JSValue Date_UTC(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc);
+    extern js2val Date_Constructor(Context *cx, const js2val thisValue, js2val *argv, uint32 argc);
+    extern js2val Date_TypeCast(Context *cx, const js2val thisValue, js2val *argv, uint32 argc);
+    extern js2val Date_parse(Context *cx, const js2val thisValue, js2val *argv, uint32 argc);
+    extern js2val Date_UTC(Context *cx, const js2val thisValue, js2val *argv, uint32 argc);
 
     Context::PrototypeFunctions *getDateProtos();
 
