@@ -93,13 +93,6 @@ Contributors:
         <text class="label" value="&kb.label;"/>
     </hbox>
 
-    <hbox iscontrolcontainer="true" autostretch="never">
-        <checkbox wsm_persist="true" id="offline.compactFolder" 
-            label="&offlineCompact.label;" accesskey="&offlineCompact.accesskey;"/> 
-        <textbox wsm_persist="true" id="offline.compactFolderMin" size="5" value="100"/>
-        <text class="label" value="&kb.label;"/>
-    </hbox>
-
     
     <checkbox iscontrolcontainer="true" hidable="true" hidefor="pop3,imap" 
          wsm_persist="true" id="nntp.downloadUnread" label="&nntpDownloadUnread.label;" accesskey="&nntpDownloadUnread.accesskey;"/>
