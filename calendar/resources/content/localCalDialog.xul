@@ -135,14 +135,14 @@
                         </hbox>
                         <hbox>
                            <textbox id="server-path-textbox" flex="1" /> 
-                           <button oncommand="launchFilePicker()"
-                                   label="&calendar.server.dialog.browse.label;"/>
                         </hbox>
                     </row>
                     <row align="center">
                         <hbox class="field-label-box-class" pack="end"/>
                         <hbox flex="1"> 
                            <description flex="1">&calendar.local.calendar.dialog.help.label;</description>
+                           <button oncommand="launchFilePicker()"
+                                   label="&calendar.server.dialog.browse.label;"/>
                         </hbox>
                     </row>
 
