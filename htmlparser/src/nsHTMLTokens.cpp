@@ -761,12 +761,12 @@ nsresult CCommentToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
 
   //this change is here to make the editor teams' life easier.
   //I'm removing the leading and trailing markup...
-
+/*
   if(0==mTextValue.Find("<!"))
     mTextValue.Cut(0,2);  //trim off 1st 2 chars...
   if(kGreaterThan==mTextValue.Last())
     mTextValue.Truncate(mTextValue.Length()-1); //trim off last char
-
+*/
   return result;
 }
 
