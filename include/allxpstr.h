@@ -8189,6 +8189,7 @@ ResDef(RDF_CMD_35, RDF_CMD_BASE+35,  "Undo")
 ResDef(RDF_CMD_36, RDF_CMD_BASE+36,  "New Workspace...")
 ResDef(RDF_CMD_37, RDF_CMD_BASE+37,  "Rename")
 ResDef(RDF_CMD_38, RDF_CMD_BASE+38,  "Find...")
+ResDef(RDF_CMD_39, RDF_CMD_BASE+39,  "Get New Mail ...")
 
 ResDef(RDF_MAIN_TITLE, RDF_MSG_BASE+100,  "Information")
 ResDef(RDF_COLOR_TITLE, RDF_MSG_BASE+101,  "Color Information")
