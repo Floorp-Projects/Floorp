@@ -419,7 +419,6 @@ nsSVGCairoPathGeometry::GetCoveredRegion(nsISVGRendererRegion **_retval)
   cairo_t *ctx = cairo_create();
 
   GeneratePath(ctx);
-  cairo_default_matrix(ctx);
 
   PRUint16 type;  
   mSource->GetFillPaintType(&type);
@@ -430,26 +429,15 @@ nsSVGCairoPathGeometry::GetCoveredRegion(nsISVGRendererRegion **_retval)
 
   if (!hasCoveredFill && !hasCoveredStroke) return NS_OK;
 
-  double x[4], y[4];
+  double xmin, ymin, xmax, ymax;
 
   if (hasCoveredStroke)
-    cairo_stroke_extents(ctx, &x[0], &y[0], &x[1], &y[1]);
+    cairo_stroke_extents(ctx, &xmin, &ymin, &xmax, &ymax);
   else
-    cairo_fill_extents(ctx, &x[0], &y[0], &x[1], &y[1]);
+    cairo_fill_extents(ctx, &xmin, &ymin, &xmax, &ymax);
 
-  x[2] = x[0];  y[2] = y[1];
-  x[3] = x[1];  y[3] = y[0];
-
-  double xmin = DBL_MAX, ymin = DBL_MAX;
-  double xmax = DBL_MIN, ymax = DBL_MIN;
-
-  for (int i=0; i<4; i++) {
-    cairo_transform_point(ctx, &x[i], &y[i]);
-    if (x[i] < xmin) xmin = x[i];
-    if (y[i] < ymin) ymin = y[i];
-    if (x[i] > xmax) xmax = x[i];
-    if (y[i] > ymax) ymax = y[i];
-  }
+  cairo_transform_point(ctx, &xmin, &ymin);
+  cairo_transform_point(ctx, &xmax, &ymax);
 
   cairo_destroy(ctx);
 
@@ -473,7 +461,8 @@ nsSVGCairoPathGeometry::ContainsPoint(float x, float y, PRBool *_retval)
   cairo_set_tolerance(ctx, 1.0);
 
   GeneratePath(ctx);
-  cairo_default_matrix(ctx);
+  double xx = x, yy = y;
+  cairo_inverse_transform_point(ctx, &xx, &yy);
 
   PRBool isClip;
   mSource->IsClipChild(&isClip);
@@ -489,9 +478,9 @@ nsSVGCairoPathGeometry::ContainsPoint(float x, float y, PRBool *_retval)
   PRUint16 mask = 0;
   mSource->GetHittestMask(&mask);
   if (mask & nsISVGPathGeometrySource::HITTEST_MASK_FILL)
-    *_retval = cairo_in_fill(ctx, x, y);
-  if (!*_retval & mask & nsISVGPathGeometrySource::HITTEST_MASK_STROKE)
-    *_retval = cairo_in_stroke(ctx, x, y);
+    *_retval = cairo_in_fill(ctx, xx, yy);
+  if (!*_retval && (mask & nsISVGPathGeometrySource::HITTEST_MASK_STROKE))
+    *_retval = cairo_in_stroke(ctx, xx, yy);
 
   cairo_destroy(ctx);
 
