@@ -374,7 +374,9 @@ foreach my $b (grep(/^bit-\d*$/, keys %::FORM)) {
 # Lock tables before inserting records for the new bug into the database
 # if we are using a shadow database to prevent shadow database corruption
 # when two bugs get created at the same time.
-SendSQL("LOCK TABLES bugs WRITE, bug_group_map WRITE, longdescs WRITE, cc WRITE, profiles READ") if Param("shadowdb");
+SendSQL("LOCK TABLES bugs WRITE, bug_group_map WRITE, longdescs WRITE, " . 
+        "cc WRITE, keywords WRITE, dependencies WRITE, bugs_activity WRITE, " . 
+        "fielddefs READ, profiles READ") if Param("shadowdb");
 
 # Add the bug report to the DB.
 SendSQL($sql);
