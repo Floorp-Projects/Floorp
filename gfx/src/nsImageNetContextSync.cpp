@@ -156,7 +156,7 @@ ImageNetContextSyncImpl::GetURL(ilIURL*          aURL,
   PRInt32 status = 0;
 
   // Get a nsIURL interface
-  nsIURL* url;
+  nsIURL* url = nsnull;
   aURL->QueryInterface(kIURLIID, (void **)&url);
 
   // Get a network service interface which we'll use to create a stream
@@ -219,8 +219,9 @@ ImageNetContextSyncImpl::GetURL(ilIURL*          aURL,
     aReader->StreamAbort(-1);
     status = -1;
   }
-
+  
   aReader->NetRequestDone(aURL, status);
+  NS_IF_RELEASE(url);
 
   return 0;
 }
