@@ -28,12 +28,15 @@
 //#define _SELFTEST_DEQUE 1
 #undef _SELFTEST_DEQUE 
 
+MOZ_DECL_CTOR_COUNTER(nsDeque)
+
 /**
  * Standard constructor
  * @update	gess4/18/98
  * @return  new deque
  */
 nsDeque::nsDeque(nsDequeFunctor* aDeallocator) {
+  MOZ_COUNT_CTOR(nsDeque);
   mDeallocator=aDeallocator;
   mOrigin=mSize=0;
   mData=mBuffer; // don't allocate space until you must
@@ -47,6 +50,7 @@ nsDeque::nsDeque(nsDequeFunctor* aDeallocator) {
  * @update	gess4/18/98
  */
 nsDeque::~nsDeque() {
+  MOZ_COUNT_DTOR(nsDeque);
 
 #if 0
   char buffer[30];
