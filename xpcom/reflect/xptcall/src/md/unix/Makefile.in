@@ -315,6 +315,21 @@ endif
 endif
 endif
 
+######################################################################
+# S/390
+######################################################################
+#
+# Linux for S/390
+#
+ifeq ($(OS_ARCH)$(OS_TEST),Linuxs390)
+CPPSRCS		:= xptcinvoke_linux_s390.cpp xptcstubs_linux_s390.cpp
+endif
+
+ifeq ($(OS_ARCH)$(OS_TEST),Linuxs390x)
+CPPSRCS		:= xptcinvoke_linux_s390x.cpp xptcstubs_linux_s390x.cpp
+endif
+
+
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
 
