@@ -1584,7 +1584,7 @@ secoid_Init(void)
     int i;
 
     if (oidhash) {
-	return PR_SUCCESS;
+	return SECSuccess;
     }
     
     oidhash = PL_NewHashTable(0, SECITEM_Hash, SECITEM_HashCompare,
