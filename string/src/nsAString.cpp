@@ -27,18 +27,6 @@
 #include "nsCRT.h"
 
 
-PRBool
-nsAString::IsVoid() const
-  {
-    return PR_FALSE;
-  }
-
-void
-nsAString::SetIsVoid( PRBool )
-  {
-    // |SetIsVoid| is ignored by default
-  }
-
 int
 nsDefaultStringComparator::operator()( const PRUnichar* lhs, const PRUnichar* rhs, PRUint32 aLength ) const
   {
@@ -98,12 +86,22 @@ Compare( const nsAString& lhs, const nsAString& rhs, const nsStringComparator& a
   }
 
 PRBool
+nsAString::IsVoid() const
+  {
+    return PR_FALSE;
+  }
+
+void
+nsAString::SetIsVoid( PRBool )
+  {
+    // |SetIsVoid| is ignored by default
+  }
+
+PRBool
 nsAString::Equals( const char_type* rhs ) const
   {
     return Equals(nsDependentString(rhs));
   }
-
-
 
 nsAString::char_type
 nsAString::First() const
@@ -560,6 +558,18 @@ Compare( const nsACString& lhs, const nsACString& rhs, const nsCStringComparator
       return 1;
     else
       return 0;
+  }
+
+PRBool
+nsACString::IsVoid() const
+  {
+    return PR_FALSE;
+  }
+
+void
+nsACString::SetIsVoid( PRBool )
+  {
+    // |SetIsVoid| is ignored by default
   }
 
 PRBool
