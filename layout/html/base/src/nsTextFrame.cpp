@@ -2771,6 +2771,10 @@ nsTextFrame::Reflow(nsIPresContext* aPresContext,
       aMetrics.maxElementSize->width = 0;
       aMetrics.maxElementSize->height = 0;
     }
+#ifdef MOZ_MATHML
+    if (NS_REFLOW_CALC_BOUNDING_METRICS & aMetrics.mFlags)
+      aMetrics.mBoundingMetrics.Clear();
+#endif
     return NS_OK;
   }
 
@@ -3190,6 +3194,43 @@ nsTextFrame::Reflow(nsIPresContext* aPresContext,
   // Set content offset and length
   mContentOffset = startingOffset;
   mContentLength = offset - startingOffset;
+
+#ifdef MOZ_MATHML
+  // Simple minded code to also return the bounding metrics if the caller wants it...
+  // More consolidation is needed -- a better approach is to follow what is done by
+  // the other routines that are doing measurements.
+  if (NS_REFLOW_CALC_BOUNDING_METRICS & aMetrics.mFlags) {
+    rv = NS_ERROR_UNEXPECTED; // initialize with an error; it is reset if things turn out well
+    aMetrics.mBoundingMetrics.Clear();
+    // Get the text to measure. 
+    nsCOMPtr<nsIDOMText> domText(do_QueryInterface(mContent));
+    if (domText.get()) {
+      nsAutoString aData;
+      domText->GetData(aData);
+
+      // Extract the piece of text relevant to us -- XXX whitespace cause a mess here  
+      nsAutoString aText;
+      aData.Mid(aText, mContentOffset, mContentLength);
+
+      // Set the font
+      nsStyleFont font;
+      mStyleContext->GetStyle(eStyleStruct_Font, font);
+      aReflowState.rendContext->SetFont(font.mFont);
+
+      // Now get the exact bounding metrics of the text
+      nsBoundingMetrics bm;
+      rv = aReflowState.rendContext->GetBoundingMetrics(aText.GetUnicode(), PRUint32(mContentLength), bm);
+      if (NS_SUCCEEDED(rv)) aMetrics.mBoundingMetrics = bm;
+    }
+    if (NS_FAILED(rv)) { 
+      // Things didn't turn out well, just return the reflow metrics.
+      aMetrics.mBoundingMetrics.ascent  =  aMetrics.ascent;
+      aMetrics.mBoundingMetrics.descent = -aMetrics.descent;
+      aMetrics.mBoundingMetrics.width   =  aMetrics.width;
+      printf("nsTextFrame: could not perform GetBoundingMetrics()\n");
+    }
+  }
+#endif
 
   // If it's an incremental reflow command, then invalidate our existing
   // bounds.
