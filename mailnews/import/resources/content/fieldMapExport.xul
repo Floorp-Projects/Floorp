@@ -71,8 +71,8 @@ Rights Reserved.
 
 		<box align="vertical" style="height:270px">
 			<spring flex="50%"/>
-			<titledbutton class="dialog push" onclick="OnAddExport()" value="&fieldMapExport.add;"/>
-			<titledbutton class="dialog push" onclick="OnAddAllExport()" value="&fieldMapExport.addAll;"/>
+			<button class="dialog push" onclick="OnAddExport()" value="&fieldMapExport.add;"/>
+			<button class="dialog push" onclick="OnAddAllExport()" value="&fieldMapExport.addAll;"/>
 			<spring flex="50%"/>
 		</box>
 

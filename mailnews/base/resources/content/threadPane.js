@@ -48,7 +48,7 @@ function ThreadPaneOnClick(event)
         // <treeitem>
         //   <treerow>
         //     <treecell>
-        //         <titledbutton class="tree-cell-twisty"> <!-- anonymous -->
+        //         <button class="tree-cell-twisty"> <!-- anonymous -->
         var treeitem = t.parentNode.parentNode.parentNode;
 		var open = treeitem.getAttribute('open');
 		if(open == "true")

@@ -27,7 +27,7 @@
 // AddExtraAddressProcessing --> If you want to add any extra
 // customizations for a given address you can insert it here.
 // emailAddress --> is the email address in question
-// addressButton --> the titledbutton in the UI that we have created
+// addressButton --> the button in the UI that we have created
 // to represent this email address. this is probably what you want
 // to modify / poke. 
 
