@@ -43,18 +43,23 @@ EXPORTS = \
 
 CPPSRCS = \
 	nsMessenger.cpp	\
+	nsIMessenger.cpp	\
 	nsMessengerNameSet.cpp \
-	nsMsgGroupRecord.cpp \
 	nsMsgRFC822Parser.cpp \
+	nsUInt32Array.cpp	\
+	nsMsgKeyArray.cpp	\
 	nsMsgFolder.cpp \
 	nsMsgImapMailFolder.cpp \
-	nsNewsSet.cpp \
+	nsMsgGroupRecord.cpp \
 	nsLocalFolderSummarySpec.cpp	\
-	nsMsgMD5.cpp \
+	nsMsgLineBuffer.cpp	\
+	nsNewsSet.cpp \
 	nsUrlListenerManager.cpp \
-	nsUInt32Array.cpp	\
 	nsMsgMailSession.cpp	\
 	nsMsgIdentity.cpp	\
+	nsMsgAppCore.cpp	\
+	nsJSMsgAppCore.cpp	\
+	nsMsgMD5.cpp \
 	$(NULL)
 
 CPPSRCS += \
