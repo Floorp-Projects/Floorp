@@ -51,7 +51,7 @@ RANLIB			= ranlib
 DEFAULT_COMPILER = gcc
 
 ifeq ($(OS_TEST),ppc)
-	OS_REL_CFLAGS	= -DMACLINUX -DLINUX1_2
+	OS_REL_CFLAGS	= -DLINUX1_2 -D_XOPEN_SOURCE
 	CPU_ARCH	= ppc
 else
 ifeq ($(OS_TEST),alpha)
