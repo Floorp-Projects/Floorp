@@ -40,6 +40,7 @@
 #ifndef nsDeviceContextSpecXlib_h___
 #define nsDeviceContextSpecXlib_h___
 
+#include "nsCOMPtr.h"
 #include "nsIDeviceContextSpec.h"
 #include "nsIPrintSettings.h"
 #include "nsIPrintOptions.h" 
