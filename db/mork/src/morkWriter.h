@@ -103,8 +103,9 @@
 #define morkWriter_kRowCellDepth 4 /* */
 #define morkWriter_kRowCellValueDepth 6 /* */
 
-// v=1.1 retired on 23-Mar-98
-#define morkWriter_kFileHeader "// <!-- <mdb:mork:z v=\"1.2\"/> -->"
+// v=1.1 retired on 23-Mar-99 (for metainfo one char column names)
+// v=1.2 retired on 20-Apr-99 (for ":c" suffix on table kind hex refs)
+#define morkWriter_kFileHeader "// <!-- <mdb:mork:z v=\"1.3\"/> -->"
 
 class morkWriter : public morkNode { // row iterator
 
