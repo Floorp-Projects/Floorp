@@ -22,7 +22,6 @@ DEPTH=..\..\..
 
 EXPORTS	= \
 	nsIRDFMail.h        \
-	nsIRDFFileSystem.h  \
 	$(NULL)
 
 include <$(DEPTH)/config/rules.mak>
