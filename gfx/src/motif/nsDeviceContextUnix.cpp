@@ -188,7 +188,7 @@ PRUint32 nsDeviceContextUnix :: ConvertPixel(nscolor aColor)
       // Check to see if this exact color is present.  If not, add it ourselves.  
       // If there are no unallocated cells left, do our own closest match lookup 
       //since X doesn't provide us with one.
-
+      
       Status rc ;
       XColor colorcell;
       
@@ -239,46 +239,14 @@ PRUint32 nsDeviceContextUnix :: ConvertPixel(nscolor aColor)
       } else {
 	newcolor = colorcell.pixel;
       }
-    }
-      
-#if 0
-      // Find the exact color.  If it is not exact, allocate
-      // The exact color and return it. If we cannot find the exact color,
-      // mark the colormap as not writeable, and return closest.
+    } 
 
-      XColor * xcolors = (XColor *) PR_Malloc(sizeof(XColor)*mNumCells);
-      XColor * thiscolor;
-      
-      // XXX God this is expensive.  We either need to cache
-      //or install an RGB colormap!
-      ::XQueryColors(mSurface->display,
-		     mColormap,
-		     xcolors, 
-		     mNumCells);
-      
-      // Find the closest color and return it
-      for (i = 0; i < mNumCells; i++){
-	
-	thiscolor = (xcolors+i);
-	
-	if (thiscolor->red == NS_GET_R(aColor) &&
-	  thiscolor->green == NS_GET_G(aColor) &&
-	    thiscolor->blue == NS_GET_B(aColor)){
-	  foundcolor = PR_TRUE;
-	  break ;
-	}
-	
-      }
-      
-      if (foundcolor) {
-	newcolor = thiscolor->pixel;
-      }
-      
-      PR_Free((void*)xcolors);
-#endif
-    
   }
 
+  if (mDepth == 24) {
+    newcolor = aColor;
+  }
+  
   return (newcolor);
 }
 
