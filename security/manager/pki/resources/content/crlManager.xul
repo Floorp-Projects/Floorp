@@ -49,7 +49,7 @@
   <text class="label" value="&validation.crlmanager.label;"/>
   <separator class="thin"/>
   <tree id="crltree" class="inset" style="height: 10em;"
-   multiple="false" oncommand="EnableCrlActions()" flex="1">
+   multiple="false" onclick="EnableCrlActions()" flex="1">
     <treecolgroup>
       <treecol flex="3" width="0"/>
       <splitter class="tree-splitter"/>
