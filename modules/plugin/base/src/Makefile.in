@@ -85,7 +85,7 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 	CPPSRCS += nsPluginsDirOS2.cpp
 	CPPSRCS += nsPluginNativeWindowOS2.cpp
 else
-ifeq ($(OS_ARCH),Darwin)
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 	CPPSRCS += nsPluginsDirDarwin.cpp
 	CPPSRCS += nsPluginNativeWindow.cpp
 else
@@ -145,13 +145,8 @@ EXTRA_DSO_LDOPTS += -lgtkxtbin $(XLDFLAGS) $(XT_LIBS) $(MOZ_GTK2_LIBS) $(XLIBS)
 endif           #MOZ_ENABLE_GTK2
 
 ifdef MOZ_ENABLE_XLIB
-EXTRA_DSO_LDOPTS += -lxlibxtbin -lxlibrgb $(XLDFLAGS) $(XT_LIBS)
-ifndef MOZ_MONOLITHIC_TOOLKIT
+EXTRA_DSO_LDOPTS += -lxlibxtbin -lxlibrgb $(XLDFLAGS) $(XT_LIBS) $(XLIBS)
 CXXFLAGS        += $(MOZ_XLIB_CFLAGS)
 CFLAGS          += $(MOZ_XLIB_CFLAGS)
-else
-CXXFLAGS        += $(TK_CFLAGS)
-CFLAGS          += $(TK_CFLAGS)
-endif		#MOZ_MONOLITHIC_TOOLKIT
 endif		#MOZ_ENABLE_XLIB
 
