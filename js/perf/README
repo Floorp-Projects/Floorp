@@ -1,0 +1,17 @@
+jsPerformance.pl is an adaptation by mazielobo@netscape.com
+of the JS Engine test driver (jsDriver.pl by rginda@netscape.com).
+
+Whereas jsDriver.pl runs qualitative tests with pass-fail output,
+jsPerformance.pl runs performance tests, with timing output.
+
+The driver outputs results files as peers to the test driver, and like
+jsDriver.pl, expects tests to be in a directory structure two levels deep.
+
+Additionally, jsPerformance.pl will post results to a server for logging
+purposes, if you have an appropriate CGI script to receive the results.
+
+The CGI script we used was http://jrgm.mcom.com/cgi-bin/jsperf/collect.cgi.
+This was adapted from John Morrison's loader.pl script (jrgm@netscape.com.).
+
+Note: the call to send_results_to_server() is currently commented out.
+If you have a CGI script and want to post results to it, uncomment it.
