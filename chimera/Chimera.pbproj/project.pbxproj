@@ -358,7 +358,7 @@
 	<key>CFBundleExecutable</key>
 	<string>Navigator</string>
 	<key>CFBundleGetInfoString</key>
-	<string>Navigator 0.3.1, © 2002 Mozilla</string>
+	<string>Navigator 0.4.0, © 2002 Mozilla</string>
 	<key>CFBundleIconFile</key>
 	<string>appicon.icns</string>
 	<key>CFBundleIdentifier</key>
@@ -370,7 +370,7 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>Navigator 0.3.1</string>
+	<string>Navigator 0.4.0</string>
 	<key>CFBundleSignature</key>
 	<string>CHIM</string>
 	<key>CFBundleURLTypes</key>
@@ -388,7 +388,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>0.3.1</string>
+	<string>0.4.0</string>
 	<key>NSAppleScriptEnabled</key>
 	<true/>
 	<key>NSMainNibFile</key>
@@ -4611,7 +4611,7 @@
 	<key>CFBundleExecutable</key>
 	<string>Navigator</string>
 	<key>CFBundleGetInfoString</key>
-	<string>Navigator 0.3.1, © 2002 Mozilla</string>
+	<string>Navigator 0.4.0, © 2002 Mozilla</string>
 	<key>CFBundleIconFile</key>
 	<string>appicon.icns</string>
 	<key>CFBundleIdentifier</key>
@@ -4623,7 +4623,7 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>Navigator 0.3.1</string>
+	<string>Navigator 0.4.0</string>
 	<key>CFBundleSignature</key>
 	<string>CHIM</string>
 	<key>CFBundleURLTypes</key>
@@ -4641,7 +4641,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>0.3.1</string>
+	<string>0.4.0</string>
 	<key>NSAppleScriptEnabled</key>
 	<true/>
 	<key>NSMainNibFile</key>
