@@ -83,7 +83,8 @@ protected:
 
 MOZ_DECL_CTOR_COUNTER(UndisplayedNode);
 
-struct UndisplayedNode {
+class UndisplayedNode {
+public:
   UndisplayedNode(nsIContent* aContent, nsIStyleContext* aStyle)
   {
     MOZ_COUNT_CTOR(UndisplayedNode);
