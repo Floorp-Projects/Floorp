@@ -1970,21 +1970,6 @@ PRBool nsString::EqualsWithConversion(const PRUnichar* aString,PRBool aIgnoreCas
   return result;
 }
 
-#ifndef NEW_STRING_APIS
-/**
- * Compare this to given string; note that we compare full strings here.
- * 
- * @update gess 01/04/99
- * @param  aString is the other nsString to be compared to
- * @param   aCount tells us how many chars to test; -1 implies full length
- * @return TRUE if equal
- */
-PRBool nsString::Equals(const nsStr& aString,PRBool aIgnoreCase,PRInt32 aCount) const {
-  PRInt32 theAnswer=nsStr::StrCompare(*this,aString,aCount,aIgnoreCase);
-  PRBool  result=PRBool(0==theAnswer);
-  return result;
-}
-
 /**
  * Compare this to given atom; note that we compare full strings here.
  * The optional length argument just lets us know how long the given string is.
@@ -1996,7 +1981,7 @@ PRBool nsString::Equals(const nsStr& aString,PRBool aIgnoreCase,PRInt32 aCount) 
  * @param  aLength -- length of given string.
  * @return TRUE if equal
  */
-PRBool nsString::Equals(/*FIX: const */nsIAtom* aAtom,PRBool aIgnoreCase) const{
+PRBool nsString::EqualsAtom(/*FIX: const */nsIAtom* aAtom,PRBool aIgnoreCase) const{
   NS_ASSERTION(0!=aAtom,kNullPointerError);
   PRBool result=PR_FALSE;
   if(aAtom){
@@ -2012,6 +1997,21 @@ PRBool nsString::Equals(/*FIX: const */nsIAtom* aAtom,PRBool aIgnoreCase) const{
   }
 
    return result;
+}
+
+#ifndef NEW_STRING_APIS
+/**
+ * Compare this to given string; note that we compare full strings here.
+ * 
+ * @update gess 01/04/99
+ * @param  aString is the other nsString to be compared to
+ * @param   aCount tells us how many chars to test; -1 implies full length
+ * @return TRUE if equal
+ */
+PRBool nsString::Equals(const nsStr& aString,PRBool aIgnoreCase,PRInt32 aCount) const {
+  PRInt32 theAnswer=nsStr::StrCompare(*this,aString,aCount,aIgnoreCase);
+  PRBool  result=PRBool(0==theAnswer);
+  return result;
 }
 
 /**
