@@ -840,7 +840,7 @@ nsGenericElement::GetElementsByTagName(const nsAReadableString& aTagname,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return list->QueryInterface(NS_GET_IID(nsIDOMNode), (void **)aReturn);
+  return list->QueryInterface(NS_GET_IID(nsIDOMNodeList), (void **)aReturn);
 }
 
 nsresult
