@@ -40,7 +40,7 @@ nsVoidArray::nsVoidArray(PRInt32 aCount)
 nsVoidArray& nsVoidArray::operator=(const nsVoidArray& other)
 {
   if (nsnull != mArray) {
-    delete mArray;
+    delete [] mArray;
   }
   PRInt32 otherCount = other.mCount;
   mArraySize = otherCount;
