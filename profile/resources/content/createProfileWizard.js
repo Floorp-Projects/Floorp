@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *   Ben Goodger (30/09/99)
+ *   Brant Gurganus (23/03/03)
  */ 
 
 // The WIZARD of GORE
@@ -31,7 +32,7 @@ var gProfileManagerBundle;
 // Navigation Set for pages contained in wizard 
 var wizardMap = {
   newProfile1_1: { previous: null,              next: "newProfile1_2",    finish: false },
-  newProfile1_2: { previous: "newProfile1_1",   next: null,               finish: true },
+  newProfile1_2: { previous: "newProfile1_1",   next: null,               finish: true }
 }
 
 // page specific variables
@@ -44,7 +45,7 @@ function Startup( startPage, frame_id )
 {
   if( frame_id == "" ) {
     dump("Please supply a content_frame ID!");
-    return false;
+    return;
   }
   gCreateProfileWizardBundle = document.getElementById("bundle_createProfileWizard");
   gProfileManagerBundle = document.getElementById("bundle_profileManager");
@@ -96,7 +97,7 @@ function onFinish()
   var profRegion = wizardManager.WSM.PageData["newProfile1_2"].ProfileRegion.value;
 
   // Get & select langcode
-  proceed = processCreateProfileData(profName, profDir, profLang, profRegion); 
+  var proceed = processCreateProfileData(profName, profDir, profLang, profRegion); 
   
   if( proceed ) {
     if( window.opener ) {
@@ -172,6 +173,7 @@ function processCreateProfileData( aProfName, aProfDir, langcode, regioncode)
   }
   catch(e) {
     dump("*** Failed to create a profile\n");
+    return false;
   }
 }
 
