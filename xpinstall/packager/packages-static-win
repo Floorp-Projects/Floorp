@@ -66,6 +66,7 @@ bin\xpicleanup.exe
 
 ; ActiveX plugin
 bin\plugins\npmozax.dll
+bin\components\nsAxSecurityPolicy.js
 
 ; LDAP components need to be in the browser for AutoConfig
 bin\nsldap32v50.dll

@@ -26,6 +26,8 @@ mozctlx.dll
 ; ActiveX plugin
 ;
 plugins\npmozax.dll
+components\nsAxSecurityPolicy.js
+
 
 ; 
 ; NSPR:
