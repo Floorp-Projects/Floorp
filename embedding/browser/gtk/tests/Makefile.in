@@ -35,6 +35,10 @@ ifdef NS_TRACE_MALLOC
 REQUIRES	+= tracemalloc
 endif
 
+ifdef MOZ_JPROF
+REQUIRES	+= jprof
+endif
+
 CPPSRCS		= TestGtkEmbed.cpp
 
 ifdef ENABLE_TESTS
@@ -99,6 +103,10 @@ endif
 
 ifdef MOZ_PERF_METRICS
 EXTRA_LIBS	+= -lmozutil_s
+endif
+
+ifdef MOZ_JPROF
+EXTRA_LIBS	+= -ljprof
 endif
 
 EXTRA_LIBS	+= $(MOZ_JS_LIBS)
