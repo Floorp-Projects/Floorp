@@ -247,3 +247,18 @@
 .box-texttab[selected] > .sidebar-tab-right-box > .sidebar-tab-right-btm {
   background: #D2D8E3 !important;
 }
+
+/* ::::: sidebar navigation buttons ::::: */
+
+.sidebar-nav-button {
+  -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton-image");
+  padding: 5px 0px 5px 0px;
+}
+
+.tab-fwd {
+  list-style-image: url("chrome://global/skin/arrow/arrow-up.gif");
+}
+
+.tab-back {
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
+}

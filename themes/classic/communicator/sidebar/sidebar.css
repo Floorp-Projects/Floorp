@@ -153,5 +153,17 @@
   list-style-image: url("chrome://communicator/skin/sidebar/sbtab-twisty-open.gif");
 }
 
+/* ::::: sidebar navigation buttons ::::: */
 
+.sidebar-nav-button {
+  -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton-image");
+  padding: 5px 0px 5px 0px;
+}
 
+.tab-fwd {
+  list-style-image: url("chrome://global/skin/arrow/arrow-up.gif");
+}
+
+.tab-back {
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
+}

@@ -54,6 +54,10 @@ function setBlank()
 // Uncomment for debug output
 const SB_DEBUG = false;
 
+// pref for limiting number of tabs in view
+// initialized in sidebar_overlay_init()
+var gNumTabsInViewPref;
+
 // The rdf service
 const RDF_URI = '@mozilla.org/rdf/rdf-service;1';
 var RDF = Components.classes[RDF_URI].getService();
@@ -84,6 +88,7 @@ function sbPanelList(container_id)
   debug("sbPanelList("+container_id+")");
   this.node = document.getElementById(container_id);
   this.childNodes = this.node.childNodes;
+  this.initialized = false; // set after first display of tabs
 }
 
 sbPanelList.prototype.get_panel_from_id =
@@ -127,7 +132,7 @@ function (panels)
   debug("pick_default_panel: length=" + this.node.childNodes.length);
   for (var ii = 2; ii < this.node.childNodes.length; ii += 2) {
     var panel = this.get_panel_from_header_index(ii);
-    if (!panel.is_excluded()) {
+    if (!panel.is_excluded() && panel.is_in_view()) {
       return panel;
     }
   }
@@ -140,7 +145,7 @@ function (panels)
   debug("pick_default_panel: length=" + this.node.childNodes.length);
   for (var ii=(this.node.childNodes.length - 1); ii >= 2; ii -= 2) {
     var panel = this.get_panel_from_header_index(ii);
-    if (!panel.is_excluded()) {
+    if (!panel.is_excluded() && panel.is_in_view()) {
       return panel;
     }
   }
@@ -158,6 +163,20 @@ function ()
       return true;
   }
   return false;
+}
+
+sbPanelList.prototype.num_included_panels =
+function ()
+{
+  var count = 0;
+  var panels = this.node.childNodes;
+  for (var i = 2; i < panels.length; i += 2)
+  {
+    var curr = this.get_panel_from_header_index(i);
+    if (!curr.is_excluded())
+      count++;
+  }
+  return count;
 }
 
 sbPanelList.prototype.select =
@@ -197,7 +216,7 @@ function ()
   var content_default_id = sidebar_container.getAttribute('defaultpanel');
   if (content_default_id != '') {
     var content = sidebarObj.panels.get_panel_from_id(content_default_id);
-    if (content && !content.is_excluded()) {
+    if (content && !content.is_excluded() && content.is_in_view()) {
       default_panel = content;
     }
   }
@@ -207,7 +226,7 @@ function ()
     var last_selected_id = this.node.getAttribute('last-selected-panel');
     if (last_selected_id != '') {
       var last = sidebarObj.panels.get_panel_from_id(last_selected_id);
-      if (last && !last.is_excluded()) {
+      if (last && !last.is_excluded() && last.is_in_view()) {
         default_panel = last;
       }
     }
@@ -267,25 +286,57 @@ function (force_reload)
     sidebarObj.collapsed = false;
   }
 
+  if (sidebarObj.panels.num_included_panels() > gNumTabsInViewPref)
+    document.getElementById("nav-buttons-box").hidden = false;
+  else
+    document.getElementById("nav-buttons-box").hidden = true;
+
   var have_set_top = 0;
   var have_set_after_selected = 0;
   var is_after_selected = 0;
   var last_header = 0;
+  var num_in_view = 0;
+  debug("this.initialized: " + this.initialized);
   for (var ii=2; ii < this.node.childNodes.length; ii += 2) {
     var header = this.node.childNodes.item(ii);
     var content = this.node.childNodes.item(ii+1);
     var id = header.getAttribute('id');
     var panel = new sbPanel(id, header, ii);
-    if (panel.is_excluded()) {
-      debug("item("+ii/2+") excluded");
+    var excluded = panel.is_excluded();
+    var in_view = false;
+    if (!this.initialized) 
+    {
+      if (num_in_view < gNumTabsInViewPref)
+        in_view = true;
+    }
+    else
+    {
+      if (header.getAttribute("in-view") == "true")
+        in_view = true;
+    }
+    if (excluded || !in_view)
+    {
+      debug("item("+ii/2+") excluded: " + excluded + 
+                          " in view: " + in_view);
       header.setAttribute('hidden','true');
       content.setAttribute('hidden','true');
+      if (!in_view)
+      {
+        header.setAttribute("in-view", false);
+        header.removeAttribute("top-panel");
+        header.removeAttribute("last-panel");
+      }
     } else {
-      last_header = header;
+      // only set if in view
+      if (!this.initialized || (num_in_view < gNumTabsInViewPref))
+        last_header = header;
       header.removeAttribute('last-panel');
-      if (!have_set_top) {
+      // only set if in view
+      if (!have_set_top && 
+          (!this.initialized || (header.getAttribute("in-view") == "true")))
+      {
         header.setAttribute('top-panel','true');
-        have_set_top = 1
+        have_set_top = 1;
       } else {
         header.removeAttribute('top-panel');
       }
@@ -296,6 +347,16 @@ function (force_reload)
         header.removeAttribute('first-panel-after-selected');
       }
       header.removeAttribute('hidden');
+      header.setAttribute("in-view", true);
+      num_in_view++;
+
+      // selected tab is not in view so just select the last one
+      if (!is_after_selected && num_in_view == gNumTabsInViewPref && 
+          selected_id != id)
+      {
+        selected_id = id;
+        this.node.setAttribute('last-selected-panel', id);
+      }
 
       // Pick sandboxed, or unsandboxed iframe
       var iframe = panel.get_iframe();
@@ -375,6 +436,8 @@ function (force_reload)
       no_panels_iframe.removeAttribute('hidden');
       this.node.setAttribute('hidden','true');
   }
+
+  this.initialized = true;
 }
 
 
@@ -453,6 +516,12 @@ sbPanel.prototype.is_excluded =
 function ()
 {
   return sb_panel_is_excluded(this.get_header());
+}
+
+sbPanel.prototype.is_in_view =
+function()
+{
+  return (this.header.getAttribute("in-view") == "true");
 }
 
 sbPanel.prototype.is_selected =
@@ -647,6 +716,18 @@ function sidebar_overlay_init() {
       debug("sidebar = " + sidebarObj);
       debug("sidebarObj.resource = " + sidebarObj.resource);
       debug("sidebarObj.datasource_uri = " + sidebarObj.datasource_uri);
+
+      // Obtain the pref for limiting the number of tabs in view
+      try
+      {
+        var prefs = Components.classes["@mozilla.org/preferences-service;1"].
+                      getService(Components.interfaces.nsIPrefBranch);
+        gNumTabsInViewPref = prefs.getIntPref("sidebar.num_tabs_in_view");
+      }
+      catch (ex)
+      {
+        gNumTabsInViewPref = 8; // failover default
+      }
 
       // Show the header for the panels area. Use a splitter if there
       // is stuff over the panels area.
@@ -1131,6 +1212,47 @@ function SidebarTogglePanel(panel_menuitem) {
     }
   }
 
+  // if we ex/included a tab in view then add/remove another one
+  if (panel.is_in_view())
+  {
+    if (did_exclude)
+    {
+      // we excluded one so let's try to bring a non-excluded one into view
+      var tabs = sidebarObj.panels.node.childNodes;
+      var newFirst = null;
+      for (var i = 2; i < tabs.length ; i += 2)
+      {
+        var currTab = sidebarObj.panels.get_panel_from_header_index(i);
+        var hasPotential = !currTab.is_excluded() && !currTab.is_in_view();
+
+        // set potential new first tab in case we can't find one after the
+        // tab that was just excluded
+        if (!newFirst && hasPotential)
+          newFirst = currTab;
+
+        if (i > panel.index && hasPotential)
+        {
+          currTab.header.setAttribute("in-view", true);
+          added = true;
+          break;
+        }
+      }
+      if (!added && newFirst)
+        newFirst.header.setAttribute("in-view", true);
+    }
+    else
+    {
+      // we included a new tab so let's take the last one out of view
+      var tabs = sidebarObj.panels.node.childNodes;
+      for (i = 2; i < tabs.length; i += 2)
+      {
+        var currHeader = tabs[i];
+        if (currHeader.hasAttribute("last-panel"))
+          currHeader.setAttribute("in-view", false);
+      }
+    }
+  }
+
   if (did_exclude && !sidebarObj.panels.visible_panels_exist())
     // surrender focus to main content area
     window._content.focus();
@@ -1140,6 +1262,115 @@ function SidebarTogglePanel(panel_menuitem) {
 
   // Write the modified panels out.
   sidebarObj.datasource.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource).Flush();
+}
+
+function SidebarNavigate(aDirection)
+{
+  debug("SidebarNavigate " + aDirection);
+
+  var tabs = sidebarObj.panels.node.childNodes;
+  // move forward a tab (down in the template)
+  if (aDirection > 0)
+  {
+    // ensure we have a tab below the last one
+    var foundLast = false; 
+    var oldFirst = null;
+    for (var i = 2; i < tabs.length; i += 2) 
+    {
+      var currHeader = tabs[i];
+      var currTab = new sbPanel(currHeader.getAttribute("id"), currHeader, i);
+  
+      if (!currTab.is_excluded())
+      {     
+        if (foundLast)
+        {
+          debug("toggling old first and new last");
+          debug("new last:  " + currHeader.getAttribute("id"));
+          debug("old first: " + oldFirst.getAttribute("id"));
+          currHeader.setAttribute("in-view", true);
+          oldFirst.setAttribute("in-view", false);
+          
+          // if old first was selected select new first instead
+          if (oldFirst.getAttribute("id") == 
+              sidebarObj.panels.node.getAttribute("last-selected-panel"))
+          {
+            sidebarObj.panels.node.setAttribute('last-selected-panel', 
+              currTab.id);
+          }
+          
+          break;
+        }
+
+        if (!foundLast && currHeader.hasAttribute("last-panel"))
+        {
+          debug("found last");
+          foundLast = true;
+        }
+
+        // set the old first in case we find a new last below
+        // the old last and need to toggle the new first's ``in-view''
+        if (!oldFirst && currTab.is_in_view())
+          oldFirst = currHeader;
+      }
+    }
+  }
+  
+  // move back a tab (up in the template)
+  else if (aDirection < 0)
+  {
+    var newFirst = null, newLast = null;
+    var foundFirst = false;
+    for (var i = 2; i < tabs.length; i += 2)
+    {
+      var currHeader = tabs[i];
+      var currTab = new sbPanel(currHeader.getAttribute("id"), currHeader, i);
+
+      if (!currTab.is_excluded())
+      {
+        if (!foundFirst && currHeader.hasAttribute("top-panel"))
+        {
+          debug("found first");
+          foundFirst = true;
+        }
+        if (!foundFirst)
+        {
+          debug("setting newFirst");
+          newFirst = currHeader;
+        }
+
+        if (currHeader.hasAttribute("last-panel"))
+        {
+          debug("found last");
+
+          // ensure we have a tab above the first one
+          if (newFirst)
+          {
+            debug("toggling new first and old last");
+            debug("new first: " + newFirst.getAttribute("id"));
+            debug("old last:  " + currHeader.getAttribute("id"));
+
+            newFirst.setAttribute("in-view", true);
+            currHeader.setAttribute("in-view", false); // hide old last
+          
+            // if old last was selected, now select one above it
+            if (sidebarObj.panels.node.getAttribute("last-selected-panel") ==
+                currTab.id)
+            {
+              sidebarObj.panels.node.setAttribute("last-selected-panel", 
+                newLast.getAttribute("id"));
+            }
+
+            break;
+          }
+        }
+        if (currTab.is_in_view())
+          newLast = currHeader;
+      }
+    }
+  }
+
+  if (aDirection)
+    sidebarObj.panels.update(false);
 }
 
 //////////////////////////////////////////////////////////////
