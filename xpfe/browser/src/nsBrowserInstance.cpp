@@ -648,6 +648,7 @@ nsBrowserInstance::LoadInitialPage(void)
       // A url was provided. Load it
       if (APP_DEBUG) printf("Got Command line URL to load %s\n", urlstr);
       nsString url; url.AssignWithConversion( urlstr );
+      nsMemory::Free(urlstr); urlstr = nsnull;
       rv = LoadUrl( url.GetUnicode() );
       cmdLineURLUsed = PR_TRUE;
       return rv;
@@ -1154,8 +1155,6 @@ nsBrowserInstance::SetTextZoom(float aTextZoom)
 NS_IMETHODIMP
 nsBrowserInstance::GetDocumentCharset(PRUnichar **aCharset)
 {
-  nsAutoString docCharset; 
-  PRUnichar *pDocCharset = nsnull;
   nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(GetContentWindow()) );
 
   if (!globalObj) {
@@ -1172,15 +1171,16 @@ nsBrowserInstance::GetDocumentCharset(PRUnichar **aCharset)
     {
       nsCOMPtr<nsIMarkupDocumentViewer> markupCV = do_QueryInterface(childCV);
       if (markupCV) {
-        pDocCharset = (PRUnichar *) docCharset.GetUnicode();
-        NS_ENSURE_SUCCESS(markupCV->GetDefaultCharacterSet(&pDocCharset), NS_ERROR_FAILURE);
+        // This allocates a new buffer
+        NS_ENSURE_SUCCESS(markupCV->GetDefaultCharacterSet(aCharset), NS_ERROR_FAILURE);
       }
     }
   }
   
-  //a little cludgy here - make sure have an nsAutoString with strlen > 0, so we can use ToNewUnicode()
-  nsAutoString docCharsetAdjustedLengthBuff(pDocCharset);
-  *aCharset = (PRUnichar *) docCharsetAdjustedLengthBuff.ToNewUnicode();
+  if (!*aCharset) {
+    nsAutoString blank;
+    *aCharset = blank.ToNewUnicode();
+  }
   return NS_OK;
 }
 
