@@ -1,18 +1,16 @@
 #! /usr/bonsaitools/bin/perl
 
 use FileHandle;
-use FileNameFind;
 
 $tree = 'SeaMonkey';
 $cvsroot = '/cvsroot/mozilla';
+$lxr_data_root = '/export2/lxr-data';
 @ignore = ( 'long long', '__cmsg_data' );
 $ignore_pat = "(?:".join('|',@ignore).")";
 
-print STDERR "Updating file index...";
-$find = new FileNameFind;
-$find->update($cvsroot, $tree);
-$find->close;
-print STDERR "done\n";
+print STDERR "Building hash of file names...";
+%file_names = build_file_hash($cvsroot, $tree);
+print STDERR "done.\n";
 
 for $br (last_successful_builds($tree)) {
   next unless $br->{errorparser} eq 'unix';
@@ -21,7 +19,7 @@ for $br (last_successful_builds($tree)) {
   print "log is $tree/$br->{logfile}\n";
 
   $fh = new FileHandle "gunzip -c ../tinderbox/$tree/$br->{logfile} |";
-  &gcc_parser($fh, $tree);
+  &gcc_parser($fh, $cvsroot, $tree, \%file_names);
 
   last;
 }
@@ -32,6 +30,33 @@ for $br (last_successful_builds($tree)) {
 
 # end of main
 # ===================================================================
+
+sub build_file_hash {
+  my ($cvsroot, $tree) = @_;
+
+  $lxr_data_root = "/export2/lxr-data/\L$tree";
+
+  $lxr_file_list = "\L$lxr_data_root/.glimpse_filenames";
+  open(LXR_FILENAMES, "<$lxr_file_list")
+    or die "Unable to open $lxr_file_list: $!\n";
+
+  use File::Basename;
+  
+  while (<LXR_FILENAMES>) {
+    my ($base, $dir, $ext) = fileparse($_,'\.[^/]*');
+    next unless $ext =~ /^\.(cpp|h|C|s|c)$/;
+    $base = "$base$ext";
+
+    unless (exists $bases{$base}) {
+      $dir =~ s|$lxr_data_root/mozilla/||;
+      $dir =~ s|/$||;
+      $bases{$base} = $dir;
+    } else {
+      $bases{$base} = '<multiple>';
+    }
+  }
+  return %bases;
+}
 
 sub last_successful_builds {
   my $tree = shift;
@@ -63,11 +88,9 @@ sub last_successful_builds {
 }
 
 sub gcc_parser {
-  my ($fh, $tree) = @_;
+  my ($fh, $cvsroot, $tree, $file_hash_ref) = @_;
   my $dir = '';
 
-  my $find = new FileNameFind;
-  $find->open($tree);
   while (<$fh>) {
     # Directory
     #
@@ -86,7 +109,14 @@ sub gcc_parser {
     ($filename, $line, undef, $warning_text) = split /:\s*/;
     $filename =~ s/.*\///;
     
-    my $dir = find_dir($find, $build_dir, $filename);
+    my $dir;
+    if (-e "$cvsroot/$tree/$builddir/$filename") {
+      $dir = $build_dir;
+    } else {
+      unless(defined($dir = $file_hash_ref->{$filename})) {
+        $dir = '<no_match>';
+      }
+    }
     my $file = "$dir/$filename";
 
     unless (defined($warnings{"$file:$line"})) {
@@ -105,21 +135,6 @@ sub gcc_parser {
   }
 }
 
-sub find_dir {
-  my ($find, $dir, $filename) = @_;
-
-  my @dirs = $find->lookup($filename, candidate=>$dir);
-
-  if ($#dirs == -1) {
-    warn "No match for $filename ($dir).\n";
-    return "<no_match>";
-  } elsif ($#dirs == 0) {
-    return $dirs[0];
-  } else {
-    warn "Multiple match for $filename ($dir).\n";
-    return "<multiple_matches>";
-  }
-}
 
 sub dump_warning_data {
   while (my ($file_and_line, $record) = each %warnings) {
