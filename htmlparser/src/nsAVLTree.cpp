@@ -94,7 +94,8 @@ protected:
  * @return  true if they are identical (contain same stuff).
  */
 PRBool nsAVLTree::operator==(const nsAVLTree& aCopy) const{
-  void* theItem=FirstThat(CDoesntExist(aCopy));
+  CDoesntExist functor(aCopy);
+  void* theItem=FirstThat(functor);
   PRBool result=PRBool(!theItem);
   return result;
 }
@@ -581,10 +582,12 @@ static void*
 avlFirstThat(nsAVLNode* aNode, nsAVLNodeFunctor& aFunctor) {
   void* result=nsnull;
   if(aNode) {
-    if (result = avlFirstThat(aNode->mLeft,aFunctor)) {
+    result = avlFirstThat(aNode->mLeft,aFunctor);
+    if (result) {
       return result;
     }
-    if (result = aFunctor(aNode->mValue)) {
+    result = aFunctor(aNode->mValue);
+    if (result) {
       return result;
     }
     result = avlFirstThat(aNode->mRight,aFunctor);
