@@ -45,6 +45,10 @@ using std::auto_ptr;
 #include "nsWindow.h"
 #include "nsMacEventHandler.h"
 
+#if TARGET_CARBON
+#include <CarbonEvents.h>
+#endif
+
 class nsMacEventHandler;
 struct PhantomScrollbarData;
 
