@@ -147,6 +147,9 @@ public:
   virtual nsresult FireSingleOnData(nsIStreamListener *aListener, 
                                     nsISupports *aContext);
   virtual nsresult Abort();
+protected:
+  PRInt32                     mBodyBytesReceived;
+  PRInt32                     mContentLength;
 };
 
 /*
