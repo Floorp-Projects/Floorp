@@ -41,9 +41,9 @@
     <option value=""></option>
   [% END %]
   [% FOREACH tmpuser = user.get_userlist %]
-    [% IF tmpuser.visible OR value == tmpuser.login %]
+    [% IF tmpuser.visible OR value.match("\\b$tmpuser.login\\b") %]
       <option value="[% tmpuser.login FILTER html %]"
-        [% " selected" IF value == tmpuser.login %]
+        [% " selected=\"selected\"" IF value.match("\\b$tmpuser.login\\b") %]
       >[% tmpuser.identity FILTER html %]</option>
     [% END %]
   [% END %]

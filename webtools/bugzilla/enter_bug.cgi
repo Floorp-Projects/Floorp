@@ -411,7 +411,7 @@ else {
     $vars->{'blocked'}        = formvalue('blocked');
     $vars->{'deadline'}       = formvalue('deadline');
 
-    $vars->{'cc'}             = formvalue('cc');
+    $vars->{'cc'}             = join(', ', $cgi->param('cc'));
 
     $vars->{'comment'}        = formvalue('comment');
     $vars->{'commentprivacy'} = formvalue('commentprivacy');
