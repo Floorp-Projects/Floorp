@@ -58,6 +58,7 @@
 #include "nsEditorUtils.h"
 #include "EditTxn.h"
 #include "nsIPref.h"
+#include "nsISupportsArray.h"
 
 // for IBMBIDI
 #include "nsIPresShell.h"
