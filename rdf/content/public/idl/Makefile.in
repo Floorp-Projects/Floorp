@@ -39,7 +39,10 @@ IDLSRCS		= \
 		XULTreeElement.idl \
 		$(NULL)
 
-include $(DEPTH)/config/rules.mk
+IDLSRCS		:= $(addprefix $(srcdir)/, $(IDLSRCS))
+GLOBALIDLSRCS	:= $(addprefix $(srcdir)/, $(GLOBALIDLSRCS))
+
+include $(topsrcdir)/config/rules.mk
 
 GARBAGE		+= genx genjs
 
@@ -55,6 +58,6 @@ export:: genx genjs $(IDLSRCS)
 	$(DIST)/bin/idlc -g -d genjs -j $(GLOBALIDLSRCS)
 
 install::
-	$(NSINSTALL) genx/nsIDOM*.h $(DEPTH)/rdf/content/public
-	$(NSINSTALL) genjs/nsJS*.cpp $(DEPTH)/rdf/content/src
+	$(NSINSTALL) -m 644 genx/nsIDOM*.h $(topsrcdir)/rdf/content/public
+	$(NSINSTALL) -m 644 genjs/nsJS*.cpp $(topsrcdir)/rdf/content/src
 

@@ -47,7 +47,9 @@ IDLSRCS		= \
 		CSSPrimitiveValue.idl \
 		$(NULL)
 
-include $(DEPTH)/config/rules.mk
+IDLSRCS		:= $(addprefix $(srcdir)/, $(IDLSRCS))
+
+include $(topsrcdir)/config/rules.mk
 
 GARBAGE		+= genx genjs
 
@@ -61,6 +63,6 @@ export:: genx genjs $(IDLSRCS)
 	$(DIST)/bin/idlc -d genjs -j $(IDLSRCS)
 
 install::
-	$(NSINSTALL) genx/nsIDOM*.h $(DEPTH)/dom/public/css
-	$(NSINSTALL) genjs/nsJS*.cpp $(DEPTH)/dom/src/css
+	$(NSINSTALL) -m 644 genx/nsIDOM*.h $(topsrcdir)/dom/public/css
+	$(NSINSTALL) -m 644 genjs/nsJS*.cpp $(topsrcdir)/dom/src/css
 
