@@ -1524,8 +1524,8 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(EventRecord&	aOSEvent)
 		}
 
 #if TARGET_CARBON
-    case inToolbarButton:           // rjc: Mac OS X
-      gEventDispatchHandler.DispatchGuiEvent(mTopLevelWidget, NS_XUL_CLOSE);		
+    case inToolbarButton:           // we get this part on Mac OS X only
+      gEventDispatchHandler.DispatchGuiEvent(mTopLevelWidget, NS_OS_TOOLBAR);		
       break;
 #endif
     
