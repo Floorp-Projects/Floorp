@@ -156,7 +156,7 @@
 <!ENTITY charsetISOCyrillic.accesskey "y">
 <!ENTITY dcharEcmaCyrCmd.label "Cyrillic (ISO-IR-111)">
 <!ENTITY charsetECMACyrillic.accesskey "xxx">
-<!ENTITY dcharDosCyrCmd.label "Cyrillic (IBM866)">
+<!ENTITY dcharDosCyrCmd.label "Cyrillic (CP-866)">
 <!ENTITY charsetDOSCyrillic.accesskey "d">
 <!ENTITY dcharWinCyrCmd.label "Cyrillic (Windows-1251)">
 <!ENTITY charsetWinCyrillic.accesskey "xxx">
