@@ -665,10 +665,12 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
 nsresult nsMsgSearchOfflineMail::Search (PRBool *aDone)
 {
   nsresult err = NS_OK;
-
+  
   NS_ENSURE_ARG(aDone);
   nsresult dbErr = NS_OK;
-	nsCOMPtr<nsIMsgDBHdr> msgDBHdr;
+  nsCOMPtr<nsIMsgDBHdr> msgDBHdr;
+  
+  const PRInt32 kNumHdrsInSlice = 500;
 
   *aDone = PR_FALSE;
   // Try to open the DB lazily. This will set up a parser if one is required
@@ -676,7 +678,7 @@ nsresult nsMsgSearchOfflineMail::Search (PRBool *aDone)
     err = OpenSummaryFile ();
   if (!m_db)  // must be reparsing.
     return err;
-
+  
   // Reparsing is unnecessary or completed
   if (NS_SUCCEEDED(err))
   {
@@ -684,41 +686,43 @@ nsresult nsMsgSearchOfflineMail::Search (PRBool *aDone)
       dbErr = m_db->EnumerateMessages (getter_AddRefs(m_listContext));
     if (NS_SUCCEEDED(dbErr) && m_listContext)
     {
-	    nsCOMPtr<nsISupports> currentItem;
-
-	    dbErr = m_listContext->GetNext(getter_AddRefs(currentItem));
-	    if(NS_SUCCEEDED(dbErr))
-	    {
-		    msgDBHdr = do_QueryInterface(currentItem, &dbErr);
-	    }
-    }
-    if (!NS_SUCCEEDED(dbErr))      
-      *aDone = PR_TRUE; //###phil dbErr is dropped on the floor. just note that we did have an error so we'll clean up later
-    else
-    {
-      PRBool match = PR_FALSE;
-      nsAutoString nullCharset, folderCharset;
-      GetSearchCharsets(nullCharset, folderCharset);
-      NS_ConvertUCS2toUTF8 charset(folderCharset);
-      // Is this message a hit?
-      err = MatchTermsForSearch (msgDBHdr, m_searchTerms, charset.get(), m_scope, m_db, &match);
-      // Add search hits to the results list
-      if (NS_SUCCEEDED(err) && match)
+      for (PRInt32 hdrIndex = 0; !*aDone && hdrIndex < kNumHdrsInSlice; hdrIndex++)
       {
-        AddResultElement (msgDBHdr);
+        nsCOMPtr<nsISupports> currentItem;
+      
+        dbErr = m_listContext->GetNext(getter_AddRefs(currentItem));
+        if(NS_SUCCEEDED(dbErr))
+        {
+          msgDBHdr = do_QueryInterface(currentItem, &dbErr);
+        }
+        if (!NS_SUCCEEDED(dbErr))      
+          *aDone = PR_TRUE; //###phil dbErr is dropped on the floor. just note that we did have an error so we'll clean up later
+        else
+        {
+          PRBool match = PR_FALSE;
+          nsAutoString nullCharset, folderCharset;
+          GetSearchCharsets(nullCharset, folderCharset);
+          NS_ConvertUCS2toUTF8 charset(folderCharset);
+          // Is this message a hit?
+          err = MatchTermsForSearch (msgDBHdr, m_searchTerms, charset.get(), m_scope, m_db, &match);
+          // Add search hits to the results list
+          if (NS_SUCCEEDED(err) && match)
+          {
+            AddResultElement (msgDBHdr);
+          }
+          //      m_scope->m_frame->IncrementOfflineProgress();
+        }
       }
-//      m_scope->m_frame->IncrementOfflineProgress();
-    }
-
+    }    
   }
   else
-      *aDone = PR_TRUE; // we couldn't open up the DB. This is an unrecoverable error so mark the scope as done.
-
+    *aDone = PR_TRUE; // we couldn't open up the DB. This is an unrecoverable error so mark the scope as done.
+  
   // in the past an error here would cause an "infinite" search because the url would continue to run...
   // i.e. if we couldn't open the database, it returns an error code but the caller of this function says, oh,
   // we did not finish so continue...what we really want is to treat this current scope as done
   if (*aDone)
-      CleanUpScope(); // Do clean up for end-of-scope processing
+    CleanUpScope(); // Do clean up for end-of-scope processing
   return err;
 }
 
