@@ -58,6 +58,8 @@
 #include "nsIPresContext.h"
 #include "nsIDocument.h"
 
+#include "nsCSSPseudoElements.h"
+
 #if defined(DEBUG_bzbarsky) || defined(DEBUG_caillon)
 #define DEBUG_ComputedDOMStyle
 #endif
@@ -163,9 +165,29 @@ nsComputedDOMStyle::Init(nsIDOMElement *aElement,
     return NS_ERROR_FAILURE;
   }
 
-  if (!DOMStringIsNull(aPseudoElt) && !aPseudoElt.IsEmpty()) {
-    mPseudo = do_GetAtom(aPseudoElt);
+  if (!DOMStringIsNull(aPseudoElt) && !aPseudoElt.IsEmpty() &&
+      aPseudoElt.First() == PRUnichar(':')) {
+    // deal with two-colon forms of aPseudoElt
+    nsAString::const_iterator start, end;
+    aPseudoElt.BeginReading(start);
+    aPseudoElt.EndReading(end);
+    NS_ASSERTION(start != end, "aPseudoElt is not empty!");
+    ++start;
+    PRBool haveTwoColons = PR_TRUE;
+    if (start == end || *start != PRUnichar(':')) {
+      --start;
+      haveTwoColons = PR_FALSE;
+    }
+    mPseudo = do_GetAtom(Substring(start, end));
     NS_ENSURE_TRUE(mPseudo, NS_ERROR_OUT_OF_MEMORY);
+
+    // There aren't any non-CSS2 pseudo-elements with a single ':'
+    if (!haveTwoColons &&
+        !nsCSSPseudoElements::IsCSS2PseudoElement(mPseudo)) {
+      // XXXbz I'd really rather we threw an exception or something, but
+      // the DOM spec sucks.
+      mPseudo = nsnull;
+    }
   }
 
   nsCOMPtr<nsIPresContext> presCtx;
