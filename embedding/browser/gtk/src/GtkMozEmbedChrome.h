@@ -62,16 +62,7 @@ public:
   // nsIGtkEmbed
 
   NS_IMETHOD Init                         (GtkWidget *aOwningWidget);
-  NS_IMETHOD SetNewBrowserCallback        (GtkMozEmbedChromeCB *aCallback, void *aData);
-  NS_IMETHOD SetDestroyCallback           (GtkMozEmbedDestroyCB *aCallback, void *aData);
-  NS_IMETHOD SetVisibilityCallback        (GtkMozEmbedVisibilityCB *aCallback, void *aData);
-  NS_IMETHOD SetLinkChangeCallback        (GtkMozEmbedLinkCB *aCallback, void *aData);
-  NS_IMETHOD SetJSStatusChangeCallback    (GtkMozEmbedJSStatusCB *aCallback, void *aData);
-  NS_IMETHOD SetLocationChangeCallback    (GtkMozEmbedLocationCB *aCallback, void *aData);
-  NS_IMETHOD SetTitleChangeCallback       (GtkMozEmbedTitleCB *aCallback, void *aData);
-  NS_IMETHOD SetProgressCallback          (GtkMozEmbedProgressCB *aCallback, void *aData);
-  NS_IMETHOD SetNetCallback               (GtkMozEmbedNetCB *aCallback, void *aData);
-  NS_IMETHOD SetStartOpenCallback         (GtkMozEmbedStartOpenCB *aCallback, void *aData);
+  NS_IMETHOD SetEmbedListener             (GtkEmbedListener *aListener);
   NS_IMETHOD GetLinkMessage               (char **retval);
   NS_IMETHOD GetJSStatus                  (char **retval);
   NS_IMETHOD GetLocation                  (char **retval);
@@ -95,26 +86,6 @@ public:
 private:
   GtkWidget                 *mOwningGtkWidget;
   nsCOMPtr<nsIWebBrowser>    mWebBrowser;
-  GtkMozEmbedChromeCB       *mNewBrowserCB;
-  void                      *mNewBrowserCBData;
-  GtkMozEmbedDestroyCB      *mDestroyCB;
-  void                      *mDestroyCBData;
-  GtkMozEmbedVisibilityCB   *mVisibilityCB;
-  void                      *mVisibilityCBData;
-  GtkMozEmbedLinkCB         *mLinkCB;
-  void                      *mLinkCBData;
-  GtkMozEmbedJSStatusCB     *mJSStatusCB;
-  void                      *mJSStatusCBData;
-  GtkMozEmbedLocationCB     *mLocationCB;
-  void                      *mLocationCBData;
-  GtkMozEmbedTitleCB        *mTitleCB;
-  void                      *mTitleCBData;
-  GtkMozEmbedProgressCB     *mProgressCB;
-  void                      *mProgressCBData;
-  GtkMozEmbedNetCB          *mNetCB;
-  void                      *mNetCBData;
-  GtkMozEmbedStartOpenCB    *mOpenCB;
-  void                      *mOpenCBData;
   nsRect                     mBounds;
   PRBool                     mVisibility;
   nsXPIDLCString             mLinkMessage;
@@ -131,6 +102,7 @@ private:
   nsCOMPtr<nsIStreamListener> mStreamListener;
   PRUint32                   mOffset;
   PRBool                     mDoingStream;
+  GtkEmbedListener          *mChromeListener;
 };
 
 #endif /* __GtkMozEmbedChrome_h */

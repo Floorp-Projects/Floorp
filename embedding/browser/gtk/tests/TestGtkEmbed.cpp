@@ -26,59 +26,103 @@
 typedef struct _TestGtkBrowser {
   GtkWidget  *topLevelWindow;
   GtkWidget  *topLevelVBox;
+  GtkWidget  *menuBar;
+  GtkWidget  *fileMenuItem;
+  GtkWidget  *fileMenu;
+  GtkWidget  *fileOpenNewBrowser;
+  GtkWidget  *fileStream;
+  GtkWidget  *fileClose;
+  GtkWidget  *fileQuit;
   GtkWidget  *toolbarHBox;
   GtkWidget  *toolbar;
   GtkWidget  *backButton;
   GtkWidget  *stopButton;
   GtkWidget  *forwardButton;
   GtkWidget  *reloadButton;
-  GtkWidget  *streamButton;
   GtkWidget  *urlEntry;
   GtkWidget  *mozEmbed;
   GtkWidget  *progressAreaHBox;
   GtkWidget  *progressBar;
+  GtkWidget  *statusAlign;
   GtkWidget  *statusBar;
   const char *statusMessage;
   int         loadPercent;
   int         bytesLoaded;
   int         maxBytesLoaded;
   char       *tempMessage;
+  gboolean menuBarOn;
+  gboolean toolBarOn;
+  gboolean locationBarOn;
+  gboolean statusBarOn;
+
 } TestGtkBrowser;
 
+// the list of browser windows currently open
+GList *browser_list = g_list_alloc();
+
 static TestGtkBrowser *new_gtk_browser    (guint32 chromeMask);
+static void            set_browser_visibility (TestGtkBrowser *browser,
+					       gboolean visibility);
 
 static int num_browsers = 0;
 
 // callbacks from the UI
-static void     back_clicked_cb    (GtkButton   *button, TestGtkBrowser *browser);
-static void     stop_clicked_cb    (GtkButton   *button, TestGtkBrowser *browser);
-static void     forward_clicked_cb (GtkButton   *button, TestGtkBrowser *browser);
-static void     reload_clicked_cb  (GtkButton   *button, TestGtkBrowser *browser);
-static void     stream_clicked_cb  (GtkButton   *button, TestGtkBrowser *browser);
-static void     url_activate_cb    (GtkEditable *widget, TestGtkBrowser *browser);
-static gboolean delete_cb          (GtkWidget *widget,   GdkEventAny *event,
+static void     back_clicked_cb    (GtkButton   *button, 
 				    TestGtkBrowser *browser);
-static void     destroy_cb         (GtkWidget *widget, TestGtkBrowser *browser);
+static void     stop_clicked_cb    (GtkButton   *button,
+				    TestGtkBrowser *browser);
+static void     forward_clicked_cb (GtkButton   *button,
+				    TestGtkBrowser *browser);
+static void     reload_clicked_cb  (GtkButton   *button,
+				    TestGtkBrowser *browser);
+static void     url_activate_cb    (GtkEditable *widget, 
+				    TestGtkBrowser *browser);
+static void     menu_open_new_cb   (GtkMenuItem *menuitem,
+				    TestGtkBrowser *browser);
+static void     menu_stream_cb     (GtkMenuItem *menuitem,
+				    TestGtkBrowser *browser);
+static void     menu_close_cb      (GtkMenuItem *menuitem,
+				    TestGtkBrowser *browser);
+static void     menu_quit_cb       (GtkMenuItem *menuitem,
+				    TestGtkBrowser *browser);
+static gboolean delete_cb          (GtkWidget *widget, GdkEventAny *event,
+				    TestGtkBrowser *browser);
+static void     destroy_cb         (GtkWidget *widget,
+				    TestGtkBrowser *browser);
 
 // callbacks from the widget
 static void location_changed_cb  (GtkMozEmbed *embed, TestGtkBrowser *browser);
 static void title_changed_cb     (GtkMozEmbed *embed, TestGtkBrowser *browser);
 static void load_started_cb      (GtkMozEmbed *embed, TestGtkBrowser *browser);
 static void load_finished_cb     (GtkMozEmbed *embed, TestGtkBrowser *browser);
-static void net_state_change_cb (GtkMozEmbed *embed, gint flags, guint status, TestGtkBrowser *browser);
+static void net_state_change_cb  (GtkMozEmbed *embed, gint flags,
+				  guint status, TestGtkBrowser *browser);
+static void net_state_change_all_cb (GtkMozEmbed *embed, const char *uri,
+				     gint flags, guint status,
+				     TestGtkBrowser *browser);
 static void progress_change_cb   (GtkMozEmbed *embed, gint cur, gint max,
 				  TestGtkBrowser *browser);
+static void progress_change_all_cb (GtkMozEmbed *embed, const char *uri,
+				    gint cur, gint max,
+				    TestGtkBrowser *browser);
 static void link_message_cb      (GtkMozEmbed *embed, TestGtkBrowser *browser);
 static void js_status_cb         (GtkMozEmbed *embed, TestGtkBrowser *browser);
-static void new_window_cb        (GtkMozEmbed *embed, GtkMozEmbed **retval, guint chromemask,
+static void new_window_cb        (GtkMozEmbed *embed,
+				  GtkMozEmbed **retval, guint chromemask,
 				  TestGtkBrowser *browser);
-static void visibility_cb        (GtkMozEmbed *embed, gboolean visibility, TestGtkBrowser *browser);
+static void visibility_cb        (GtkMozEmbed *embed, 
+				  gboolean visibility,
+				  TestGtkBrowser *browser);
 static void destroy_brsr_cb      (GtkMozEmbed *embed, TestGtkBrowser *browser);
-static gint open_uri_cb          (GtkMozEmbed *embed, const char *uri, TestGtkBrowser *browser);
+static gint open_uri_cb          (GtkMozEmbed *embed, const char *uri,
+				  TestGtkBrowser *browser);
+static void size_to_cb           (GtkMozEmbed *embed, gint width,
+				  gint height, TestGtkBrowser *browser);
 
 // some utility functions
 static void update_status_bar_text  (TestGtkBrowser *browser);
-static void update_temp_message     (TestGtkBrowser *browser, const char *message);
+static void update_temp_message     (TestGtkBrowser *browser,
+				     const char *message);
 static void update_nav_buttons      (TestGtkBrowser *browser);
 
 int
@@ -90,9 +134,9 @@ main(int argc, char **argv)
   TestGtkBrowser *browser = new_gtk_browser(GTK_MOZ_EMBED_FLAG_DEFAULTCHROME);
 
   // set our minimum size
-  gtk_widget_set_usize(browser->topLevelWindow, 400, 400);
+  gtk_widget_set_usize(browser->mozEmbed, 400, 400);
 
-  gtk_widget_show_all(browser->topLevelWindow);
+  set_browser_visibility(browser, TRUE);
 
   if (argc > 1)
     gtk_moz_embed_load_url(GTK_MOZ_EMBED(browser->mozEmbed), argv[1]);
@@ -103,25 +147,98 @@ main(int argc, char **argv)
 static TestGtkBrowser *
 new_gtk_browser(guint32 chromeMask)
 {
+  guint32         actualChromeMask = chromeMask;
   TestGtkBrowser *browser = 0;
 
   num_browsers++;
 
   browser = g_new0(TestGtkBrowser, 1);
 
+  browser_list = g_list_prepend(browser_list, browser);
+
+  browser->menuBarOn = FALSE;
+  browser->toolBarOn = FALSE;
+  browser->locationBarOn = FALSE;
+  browser->statusBarOn = FALSE;
+
+  g_print("new_gtk_browser\n");
+
+  if (chromeMask == GTK_MOZ_EMBED_FLAG_DEFAULTCHROME)
+    actualChromeMask = GTK_MOZ_EMBED_FLAG_ALLCHROME;
+
+  if (actualChromeMask & GTK_MOZ_EMBED_FLAG_MENUBARON)
+  {
+    browser->menuBarOn = TRUE;
+    g_print("\tmenu bar\n");
+  }
+  if (actualChromeMask & GTK_MOZ_EMBED_FLAG_TOOLBARON)
+  {
+    browser->toolBarOn = TRUE;
+    g_print("\ttool bar\n");
+  }
+  if (actualChromeMask & GTK_MOZ_EMBED_FLAG_LOCATIONBARON)
+  {
+    browser->locationBarOn = TRUE;
+    g_print("\tlocation bar\n");
+  }
+  if (actualChromeMask & GTK_MOZ_EMBED_FLAG_STATUSBARON)
+  {
+    browser->statusBarOn = TRUE;
+    g_print("\tstatus bar\n");
+  }
+
   // create our new toplevel window
   browser->topLevelWindow = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   // new vbox
   browser->topLevelVBox = gtk_vbox_new(FALSE, 0);
   // add it to the toplevel window
-  gtk_container_add(GTK_CONTAINER(browser->topLevelWindow), browser->topLevelVBox);
+  gtk_container_add(GTK_CONTAINER(browser->topLevelWindow),
+		    browser->topLevelVBox);
+  // create our menu bar
+  browser->menuBar = gtk_menu_bar_new();
+  // create the file menu
+  browser->fileMenuItem = gtk_menu_item_new_with_label("File");
+  browser->fileMenu = gtk_menu_new();
+  gtk_menu_item_set_submenu (GTK_MENU_ITEM(browser->fileMenuItem),
+			     browser->fileMenu);
+
+  browser->fileOpenNewBrowser = 
+    gtk_menu_item_new_with_label("Open New Browser");
+  gtk_menu_append(GTK_MENU(browser->fileMenu),
+		  browser->fileOpenNewBrowser);
+  
+  browser->fileStream =
+    gtk_menu_item_new_with_label("Test Stream");
+  gtk_menu_append(GTK_MENU(browser->fileMenu),
+		  browser->fileStream);
+
+  browser->fileClose =
+    gtk_menu_item_new_with_label("Close");
+  gtk_menu_append(GTK_MENU(browser->fileMenu),
+		  browser->fileClose);
+
+  browser->fileQuit =
+    gtk_menu_item_new_with_label("Quit");
+  gtk_menu_append(GTK_MENU(browser->fileMenu),
+		  browser->fileQuit);
+  
+  // append it
+  gtk_menu_bar_append(GTK_MENU_BAR(browser->menuBar), browser->fileMenuItem);
+
+  // add it to the vbox
+  gtk_box_pack_start(GTK_BOX(browser->topLevelVBox),
+		     browser->menuBar,
+		     FALSE, // expand
+		     FALSE, // fill
+		     0);    // padding
   // create the hbox that will contain the toolbar and the url text entry bar
   browser->toolbarHBox = gtk_hbox_new(FALSE, 0);
   // add that hbox to the vbox
-  gtk_box_pack_start(GTK_BOX(browser->topLevelVBox), browser->toolbarHBox,
-		   FALSE, // expand
-		   FALSE, // fill
-		   0);    // padding
+  gtk_box_pack_start(GTK_BOX(browser->topLevelVBox), 
+		     browser->toolbarHBox,
+		     FALSE, // expand
+		     FALSE, // fill
+		     0);    // padding
   // new horiz toolbar with buttons + icons
   browser->toolbar = gtk_toolbar_new(GTK_ORIENTATION_HORIZONTAL,
 				     GTK_TOOLBAR_BOTH);
@@ -131,93 +248,109 @@ new_gtk_browser(guint32 chromeMask)
 		   FALSE, // fill
 		   0);    // padding
   // new back button
-  browser->backButton = gtk_toolbar_append_item(GTK_TOOLBAR(browser->toolbar),
-						"Back",
-						"Go Back",
-						"Go Back",
-						0, // XXX replace with icon
-						GTK_SIGNAL_FUNC(back_clicked_cb),
-						browser);
+  browser->backButton =
+    gtk_toolbar_append_item(GTK_TOOLBAR(browser->toolbar),
+			    "Back",
+			    "Go Back",
+			    "Go Back",
+			    0, // XXX replace with icon
+			    GTK_SIGNAL_FUNC(back_clicked_cb),
+			    browser);
   // new stop button
-  browser->stopButton = gtk_toolbar_append_item(GTK_TOOLBAR(browser->toolbar),
-						"Stop",
-						"Stop",
-						"Stop",
-						0, // XXX replace with icon
-						GTK_SIGNAL_FUNC(stop_clicked_cb),
-						browser);
+  browser->stopButton = 
+    gtk_toolbar_append_item(GTK_TOOLBAR(browser->toolbar),
+			    "Stop",
+			    "Stop",
+			    "Stop",
+			    0, // XXX replace with icon
+			    GTK_SIGNAL_FUNC(stop_clicked_cb),
+			    browser);
   // new forward button
-  browser->forwardButton = gtk_toolbar_append_item(GTK_TOOLBAR(browser->toolbar),
-						   "Forward",
-						   "Forward",
-						   "Forward",
-						   0, // XXX replace with icon
-						   GTK_SIGNAL_FUNC(forward_clicked_cb),
-						   browser);
+  browser->forwardButton =
+    gtk_toolbar_append_item(GTK_TOOLBAR(browser->toolbar),
+			    "Forward",
+			    "Forward",
+			    "Forward",
+			    0, // XXX replace with icon
+			    GTK_SIGNAL_FUNC(forward_clicked_cb),
+			    browser);
   // new reload button
-  browser->reloadButton = gtk_toolbar_append_item(GTK_TOOLBAR(browser->toolbar),
-						  "Reload",
-						  "Reload",
-						  "Reload",
-						  0, // XXX replace with icon
-						  GTK_SIGNAL_FUNC(reload_clicked_cb),
-						  browser);
-  // new stream button
-  browser->streamButton = gtk_toolbar_append_item(GTK_TOOLBAR(browser->toolbar),
-						  "Stream",
-						  "Stream",
-						  "Stream",
-						  0, // XXX replace with icon
-						  GTK_SIGNAL_FUNC(stream_clicked_cb),
-						  browser);
+  browser->reloadButton = 
+    gtk_toolbar_append_item(GTK_TOOLBAR(browser->toolbar),
+			    "Reload",
+			    "Reload",
+			    "Reload",
+			    0, // XXX replace with icon
+			    GTK_SIGNAL_FUNC(reload_clicked_cb),
+			    browser);
   // create the url text entry
   browser->urlEntry = gtk_entry_new();
   // add it to the hbox
   gtk_box_pack_start(GTK_BOX(browser->toolbarHBox), browser->urlEntry,
-		   TRUE, // expand
-		   TRUE, // fill
-		   0);    // padding
+		     TRUE, // expand
+		     TRUE, // fill
+		     0);    // padding
   // create our new gtk moz embed widget
   browser->mozEmbed = gtk_moz_embed_new();
   // add it to the toplevel vbox
   gtk_box_pack_start(GTK_BOX(browser->topLevelVBox), browser->mozEmbed,
-			   TRUE, // expand
-			   TRUE, // fill
-			   0);   // padding
+		     TRUE, // expand
+		     TRUE, // fill
+		     0);   // padding
   // create the new hbox for the progress area
   browser->progressAreaHBox = gtk_hbox_new(FALSE, 0);
   // add it to the vbox
   gtk_box_pack_start(GTK_BOX(browser->topLevelVBox), browser->progressAreaHBox,
-		   FALSE, // expand
-		   FALSE, // fill
-		   0);   // padding
+		     FALSE, // expand
+		     FALSE, // fill
+		     0);   // padding
   // create our new progress bar
   browser->progressBar = gtk_progress_bar_new();
   // add it to the hbox
   gtk_box_pack_start(GTK_BOX(browser->progressAreaHBox), browser->progressBar,
-		   FALSE, // expand
-		   FALSE, // fill
-		   0);   // padding
-  // create our status areaa
-  browser->statusBar = gtk_statusbar_new();
-  // add it to the hbox
-  gtk_box_pack_start(GTK_BOX(browser->progressAreaHBox), browser->statusBar,
-		   TRUE, // expand
-		   TRUE, // fill
-		   0);   // padding
+		     FALSE, // expand
+		     FALSE, // fill
+		     0); // padding
   
+  // create our status area and the alignment object that will keep it
+  // from expanding
+  browser->statusAlign = gtk_alignment_new(0, 0, 1, 1);
+  gtk_widget_set_usize(browser->statusAlign, 1, -1);
+  // create the status bar
+  browser->statusBar = gtk_statusbar_new();
+  gtk_container_add(GTK_CONTAINER(browser->statusAlign), browser->statusBar);
+  // add it to the hbox
+  gtk_box_pack_start(GTK_BOX(browser->progressAreaHBox), browser->statusAlign,
+		     TRUE, // expand
+		     TRUE, // fill
+		     0);   // padding
   // by default none of the buttons are marked as sensitive.
   gtk_widget_set_sensitive(browser->backButton, FALSE);
   gtk_widget_set_sensitive(browser->stopButton, FALSE);
   gtk_widget_set_sensitive(browser->forwardButton, FALSE);
   gtk_widget_set_sensitive(browser->reloadButton, FALSE);
-
+  
   // catch the destruction of the toplevel window
   gtk_signal_connect(GTK_OBJECT(browser->topLevelWindow), "delete_event",
 		     GTK_SIGNAL_FUNC(delete_cb), browser);
+
   // hook up the activate signal to the right callback
   gtk_signal_connect(GTK_OBJECT(browser->urlEntry), "activate",
 		     GTK_SIGNAL_FUNC(url_activate_cb), browser);
+
+  // hook up to the open new browser activation
+  gtk_signal_connect(GTK_OBJECT(browser->fileOpenNewBrowser), "activate",
+		     GTK_SIGNAL_FUNC(menu_open_new_cb), browser);
+  // hook up to the stream test
+  gtk_signal_connect(GTK_OBJECT(browser->fileStream), "activate",
+		     GTK_SIGNAL_FUNC(menu_stream_cb), browser);
+  // close this window
+  gtk_signal_connect(GTK_OBJECT(browser->fileClose), "activate",
+		     GTK_SIGNAL_FUNC(menu_close_cb), browser);
+  // quit the application
+  gtk_signal_connect(GTK_OBJECT(browser->fileQuit), "activate",
+		     GTK_SIGNAL_FUNC(menu_quit_cb), browser);
+
   // hook up the location change to update the urlEntry
   gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "location",
 		     GTK_SIGNAL_FUNC(location_changed_cb), browser);
@@ -232,9 +365,13 @@ new_gtk_browser(guint32 chromeMask)
   // hook up to the change in network status
   gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "net_state",
 		     GTK_SIGNAL_FUNC(net_state_change_cb), browser);
+  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "net_state_all",
+		     GTK_SIGNAL_FUNC(net_state_change_all_cb), browser);
   // hookup to changes in progress
   gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "progress",
 		     GTK_SIGNAL_FUNC(progress_change_cb), browser);
+  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "progress_all",
+		     GTK_SIGNAL_FUNC(progress_change_all_cb), browser);
   // hookup to changes in over-link message
   gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "link_message",
 		     GTK_SIGNAL_FUNC(link_message_cb), browser);
@@ -255,14 +392,50 @@ new_gtk_browser(guint32 chromeMask)
   // to load a new uri
   gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "open_uri",
 		     GTK_SIGNAL_FUNC(open_uri_cb), browser);
+  // this signal is emitted when there's a request to change the
+  // containing browser window to a certain height, like with width
+  // and height args for a window.open in javascript
+  gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "size_to",
+		     GTK_SIGNAL_FUNC(size_to_cb), browser);
   // hookup to when the window is destroyed
   gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "destroy",
 		     GTK_SIGNAL_FUNC(destroy_cb), browser);
-
+  
   // set the chrome type so it's stored in the object
-  gtk_moz_embed_set_chrome_mask(GTK_MOZ_EMBED(browser->mozEmbed), chromeMask);
+  gtk_moz_embed_set_chrome_mask(GTK_MOZ_EMBED(browser->mozEmbed),
+				actualChromeMask);
 
   return browser;
+}
+
+void
+set_browser_visibility (TestGtkBrowser *browser, gboolean visibility)
+{
+  if (!visibility)
+  {
+    gtk_widget_hide(browser->topLevelWindow);
+    return;
+  }
+  
+  if (browser->menuBarOn)
+    gtk_widget_show_all(browser->menuBar);
+  else
+    gtk_widget_hide_all(browser->menuBar);
+
+  // since they are on the same line here...
+  if (browser->toolBarOn || browser->locationBarOn)
+    gtk_widget_show_all(browser->toolbarHBox);
+  else 
+    gtk_widget_hide_all(browser->toolbarHBox);
+
+  if (browser->statusBarOn)
+    gtk_widget_show_all(browser->progressAreaHBox);
+  else
+    gtk_widget_hide_all(browser->progressAreaHBox);
+
+  gtk_widget_show(browser->mozEmbed);
+  gtk_widget_show(browser->topLevelVBox);
+  gtk_widget_show(browser->topLevelWindow);
 }
 
 void
@@ -289,7 +462,8 @@ void
 reload_clicked_cb  (GtkButton *button, TestGtkBrowser *browser)
 {
   g_print("reload_clicked_cb\n");
-  gtk_moz_embed_reload(GTK_MOZ_EMBED(browser->mozEmbed), GTK_MOZ_EMBED_FLAG_RELOADNORMAL);
+  gtk_moz_embed_reload(GTK_MOZ_EMBED(browser->mozEmbed),
+		       GTK_MOZ_EMBED_FLAG_RELOADNORMAL);
 }
 
 void 
@@ -300,9 +474,12 @@ stream_clicked_cb  (GtkButton   *button, TestGtkBrowser *browser)
   data = "<html>Hi";
   data2 = " there</html>\n";
   g_print("stream_clicked_cb\n");
-  gtk_moz_embed_open_stream(GTK_MOZ_EMBED(browser->mozEmbed), "file://", "text/html");
-  gtk_moz_embed_append_data(GTK_MOZ_EMBED(browser->mozEmbed), data, strlen(data));
-  gtk_moz_embed_append_data(GTK_MOZ_EMBED(browser->mozEmbed), data2, strlen(data2));
+  gtk_moz_embed_open_stream(GTK_MOZ_EMBED(browser->mozEmbed),
+			    "file://", "text/html");
+  gtk_moz_embed_append_data(GTK_MOZ_EMBED(browser->mozEmbed),
+			    data, strlen(data));
+  gtk_moz_embed_append_data(GTK_MOZ_EMBED(browser->mozEmbed),
+			    data2, strlen(data2));
   gtk_moz_embed_close_stream(GTK_MOZ_EMBED(browser->mozEmbed));
 }
 
@@ -313,6 +490,53 @@ url_activate_cb    (GtkEditable *widget, TestGtkBrowser *browser)
   g_print("loading url %s\n", text);
   gtk_moz_embed_load_url(GTK_MOZ_EMBED(browser->mozEmbed), text);
   g_free(text);
+}
+
+void
+menu_open_new_cb   (GtkMenuItem *menuitem, TestGtkBrowser *browser)
+{
+  g_print("opening new browser.\n");
+  TestGtkBrowser *newBrowser = 
+    new_gtk_browser(GTK_MOZ_EMBED_FLAG_DEFAULTCHROME);
+  gtk_widget_set_usize(newBrowser->mozEmbed, 400, 400);
+  set_browser_visibility(newBrowser, TRUE);
+}
+
+void
+menu_stream_cb     (GtkMenuItem *menuitem, TestGtkBrowser *browser)
+{
+  g_print("menu_stream_cb\n");
+  char *data;
+  char *data2;
+  data = "<html>Hi";
+  data2 = " there</html>\n";
+  g_print("stream_clicked_cb\n");
+  gtk_moz_embed_open_stream(GTK_MOZ_EMBED(browser->mozEmbed),
+			    "file://", "text/html");
+  gtk_moz_embed_append_data(GTK_MOZ_EMBED(browser->mozEmbed),
+			    data, strlen(data));
+  gtk_moz_embed_append_data(GTK_MOZ_EMBED(browser->mozEmbed),
+			    data2, strlen(data2));
+  gtk_moz_embed_close_stream(GTK_MOZ_EMBED(browser->mozEmbed));
+}
+
+void
+menu_close_cb (GtkMenuItem *menuitem, TestGtkBrowser *browser)
+{
+  gtk_widget_destroy(browser->topLevelWindow);
+}
+
+void
+menu_quit_cb (GtkMenuItem *menuitem, TestGtkBrowser *browser)
+{
+  TestGtkBrowser *tmpBrowser;
+  GList *tmp_list = browser_list;
+  tmpBrowser = (TestGtkBrowser *)tmp_list->data;
+  while (tmpBrowser) {
+    tmp_list = tmp_list->next;
+    gtk_widget_destroy(tmpBrowser->topLevelWindow);
+    tmpBrowser = (TestGtkBrowser *)tmp_list->data;
+  }
 }
 
 gboolean
@@ -326,8 +550,11 @@ delete_cb(GtkWidget *widget, GdkEventAny *event, TestGtkBrowser *browser)
 void
 destroy_cb         (GtkWidget *widget, TestGtkBrowser *browser)
 {
+  GList *tmp_list;
   g_print("destroy_cb\n");
   num_browsers--;
+  tmp_list = g_list_find(browser_list, browser);
+  browser_list = g_list_remove_link(browser_list, tmp_list);
   if (browser->tempMessage)
     g_free(browser->tempMessage);
   if (num_browsers == 0)
@@ -344,7 +571,8 @@ location_changed_cb (GtkMozEmbed *embed, TestGtkBrowser *browser)
   if (newLocation)
   {
     gtk_editable_delete_text(GTK_EDITABLE(browser->urlEntry), 0, -1);
-    gtk_editable_insert_text(GTK_EDITABLE(browser->urlEntry), newLocation, strlen(newLocation), &newPosition);
+    gtk_editable_insert_text(GTK_EDITABLE(browser->urlEntry),
+			     newLocation, strlen(newLocation), &newPosition);
     g_free(newLocation);
   }
   else
@@ -398,9 +626,10 @@ load_finished_cb    (GtkMozEmbed *embed, TestGtkBrowser *browser)
 
 
 void
-net_state_change_cb (GtkMozEmbed *embed, gint flags, guint status, TestGtkBrowser *browser)
+net_state_change_cb (GtkMozEmbed *embed, gint flags, guint status,
+		     TestGtkBrowser *browser)
 {
-  //  g_print("net_state_change_cb %d\n", flags);
+  g_print("net_state_change_cb %d\n", flags);
   if (flags & GTK_MOZ_EMBED_FLAG_IS_REQUEST) {
     if (flags & GTK_MOZ_EMBED_FLAG_REDIRECTING)
     browser->statusMessage = "Redirecting to site...";
@@ -419,7 +648,7 @@ net_state_change_cb (GtkMozEmbed *embed, gint flags, guint status, TestGtkBrowse
   else if (status == GTK_MOZ_EMBED_STATUS_FAILED_USERCANCELED)
     browser->statusMessage = "User canceled connecting to site.";
 
-  if (flags & GTK_MOZ_EMBED_FLAG_IS_WINDOW) {
+  if (flags & GTK_MOZ_EMBED_FLAG_IS_DOCUMENT) {
     if (flags & GTK_MOZ_EMBED_FLAG_START)
       browser->statusMessage = "Loading site...";
     else if (flags & GTK_MOZ_EMBED_FLAG_STOP)
@@ -430,12 +659,20 @@ net_state_change_cb (GtkMozEmbed *embed, gint flags, guint status, TestGtkBrowse
   
 }
 
+void net_state_change_all_cb (GtkMozEmbed *embed, const char *uri,
+				     gint flags, guint status,
+				     TestGtkBrowser *browser)
+{
+  //  g_print("net_state_change_all_cb %s %d %d\n", uri, flags, status);
+}
+
 void progress_change_cb   (GtkMozEmbed *embed, gint cur, gint max,
 			   TestGtkBrowser *browser)
 {
   g_print("progress_change_cb cur %d max %d\n", cur, max);
 
-  if (max == -1)
+  // avoid those pesky divide by zero errors
+  if (max < 1)
   {
     gtk_progress_set_activity_mode(GTK_PROGRESS(browser->progressBar), FALSE);
     browser->loadPercent = 0;
@@ -452,6 +689,13 @@ void progress_change_cb   (GtkMozEmbed *embed, gint cur, gint max,
     gtk_progress_set_percentage(GTK_PROGRESS(browser->progressBar), browser->loadPercent / 100.0);
   }
   
+}
+
+void progress_change_all_cb (GtkMozEmbed *embed, const char *uri,
+			     gint cur, gint max,
+			     TestGtkBrowser *browser)
+{
+  //g_print("progress_change_all_cb %s cur %d max %d\n", uri, cur, max);
 }
 
 void
@@ -488,7 +732,7 @@ new_window_cb (GtkMozEmbed *embed, GtkMozEmbed **newEmbed, guint chromemask, Tes
   g_print("new_window_cb\n");
   g_print("embed is %p chromemask is %d\n", embed, chromemask);
   TestGtkBrowser *newBrowser = new_gtk_browser(chromemask);
-  gtk_widget_set_usize(newBrowser->topLevelWindow, 400, 400);
+  gtk_widget_set_usize(newBrowser->mozEmbed, 400, 400);
   *newEmbed = GTK_MOZ_EMBED(newBrowser->mozEmbed);
   g_print("new browser is %p\n", *newEmbed);
 }
@@ -497,10 +741,7 @@ void
 visibility_cb (GtkMozEmbed *embed, gboolean visibility, TestGtkBrowser *browser)
 {
   g_print("visibility_cb %d\n", visibility);
-  if (visibility)
-    gtk_widget_show_all(browser->topLevelWindow);
-  else
-    gtk_widget_hide_all(browser->topLevelWindow);
+  set_browser_visibility(browser, visibility);
 }
 
 void
@@ -520,6 +761,14 @@ open_uri_cb          (GtkMozEmbed *embed, const char *uri, TestGtkBrowser *brows
     return TRUE;
   // don't interrupt anything
   return FALSE;
+}
+
+void
+size_to_cb (GtkMozEmbed *embed, gint width, gint height,
+	    TestGtkBrowser *browser)
+{
+  g_print("*** size_to_cb %d %d\n", width, height);
+  gtk_widget_set_usize(browser->mozEmbed, width, height);
 }
 
 // utility functions

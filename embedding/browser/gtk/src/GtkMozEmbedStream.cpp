@@ -20,130 +20,66 @@
  */
 
 #include "GtkMozEmbedStream.h"
-#include "nsMemory.h"
+#include "nsIPipe.h"
+#include "nsIBufferInputStream.h"
+#include "nsIBufferOutputStream.h"
 
 // nsIInputStream interface
 
-NS_IMPL_ADDREF(GtkMozEmbedStream)
-NS_IMPL_RELEASE(GtkMozEmbedStream)
-
-NS_INTERFACE_MAP_BEGIN(GtkMozEmbedStream)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_INTERFACE_MAP_ENTRY(nsIInputStream)
-NS_INTERFACE_MAP_END
+NS_IMPL_ISUPPORTS1(GtkMozEmbedStream, nsIInputStream)
 
 GtkMozEmbedStream::GtkMozEmbedStream()
 {
   NS_INIT_REFCNT();
-  mLength = 0;
-  mBuffer = 0;
 }
 
 GtkMozEmbedStream::~GtkMozEmbedStream()
 {
-  if (mBuffer)
-    nsMemory::Free(mBuffer);
+}
+
+NS_METHOD GtkMozEmbedStream::Init()
+{
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIBufferInputStream> bufInStream;
+  nsCOMPtr<nsIBufferOutputStream> bufOutStream;
+  
+  rv = NS_NewPipe(getter_AddRefs(bufInStream),
+		  getter_AddRefs(bufOutStream));
+
+  if (NS_FAILED(rv)) return rv;
+  
+  mInputStream  = do_QueryInterface(bufInStream);
+  mOutputStream = do_QueryInterface(bufOutStream);
+  return rv;
+}
+
+NS_METHOD GtkMozEmbedStream::Append(const char *aData, PRUint32 aLen)
+{
+  nsresult rv = NS_OK;
+  PRUint32 bytesWritten = 0;
+  rv = mOutputStream->Write(aData, aLen, &bytesWritten);
+  if (NS_FAILED(rv))
+    return rv;
+  
+  NS_ASSERTION(bytesWritten == aLen, "underlying byffer couldn't handle the write");
+  return rv;
 }
 
 NS_IMETHODIMP GtkMozEmbedStream::Available(PRUint32 *_retval)
 {
-  NS_ENSURE_ARG_POINTER(_retval);
-  *_retval = mLength;
-  return NS_OK;
+  return mInputStream->Available(_retval);
 }
 
 NS_IMETHODIMP GtkMozEmbedStream::Read(char * aBuf, PRUint32 aCount, PRUint32 *_retval)
 {
-  PRUint32 bytesToRead;
-
-  NS_ENSURE_ARG_POINTER(aBuf);
-  NS_ENSURE_ARG_POINTER(_retval);
-  *_retval = 0;
-
-  // shortcut?
-  if (aCount == 0)
-    return NS_OK;
-
-  // check to see how many bytes we can read
-  if (aCount > mLength)
-    bytesToRead = mLength;
-  else
-    bytesToRead = aCount;
-
-  // copy our data
-  *_retval = bytesToRead;
-  memcpy(aBuf, mBuffer, bytesToRead);
-
-  // see if we can truncate the buffer entirely
-  if (bytesToRead == mBufLen)
-  {
-    mBuffer = nsnull;
-    mLength = 0;
-    mBufLen = 0;
-    return NS_OK;
-  }
-  // truncate it some, then
-  memmove(mBuffer, &mBuffer[bytesToRead], (mLength - bytesToRead));
-  mLength -= bytesToRead;
-  
-  return NS_OK;
+  return mInputStream->Read(aBuf, aCount, _retval);
 }
 
 // nsIBaseStream interface
 
 NS_IMETHODIMP GtkMozEmbedStream::Close(void)
 {
-  if (mBuffer)
-    nsMemory::Free(mBuffer);
-  mLength = 0;
-  mBufLen = 0;
+  return mInputStream->Close();
   return NS_OK;
 }
 
-NS_METHOD GtkMozEmbedStream::Append(const char *aData, PRUint32 aLen)
-{
-  // shortcut?
-  if (aLen == 0 || aData == NULL)
-    return NS_OK;
-  mLength += aLen;
-  // first time
-  if (!mBuffer)
-  {
-    mBuffer = (char *)nsMemory::Alloc(mLength);
-    mBufLen = mLength;
-    if (!mBuffer)
-    {
-      mLength = 0;
-      mBufLen = 0;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    memcpy(mBuffer, aData, aLen);
-    return NS_OK;
-  }
-  else
-  {
-    // see if we need to realloc
-    if (mLength > mBufLen)
-    {
-      char *newBuffer;
-      newBuffer = (char *)nsMemory::Realloc(mBuffer, mLength);
-      if (!newBuffer)
-      {
-	mLength = 0;
-	mBufLen = 0;
-	nsMemory::Free(mBuffer);
-	mBuffer = NULL;
-	return NS_ERROR_OUT_OF_MEMORY;
-      }
-      mBuffer = newBuffer;
-      mBufLen = mLength;
-      memcpy(&mBuffer[mLength - aLen], aData, aLen);
-    }
-    else
-      // no realloc required and don't have to update mBufLen, just
-      // update
-      memcpy(&mBuffer[mLength - aLen], aData, aLen);
-  }
-
-  return NS_OK;
-}
