@@ -395,6 +395,7 @@ nsFileControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
 NS_IMETHODIMP
 nsFileControlFrame::AttributeChanged(nsIPresContext* aPresContext,
                                        nsIContent*     aChild,
+                                       PRInt32         aNameSpaceID,
                                        nsIAtom*        aAttribute,
                                        PRInt32         aHint)
 {
@@ -409,7 +410,7 @@ nsFileControlFrame::AttributeChanged(nsIPresContext* aPresContext,
     //mTextContent->SetHTMLAttribute(nsHTMLAtoms::disabled, val, PR_TRUE);
   }
 
-  return nsAreaFrame::AttributeChanged(aPresContext, aChild,  aAttribute, aHint);
+  return nsAreaFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aHint);
 }
 
 NS_IMETHODIMP

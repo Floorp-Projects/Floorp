@@ -44,6 +44,7 @@ NS_NewNativeButtonControlFrame(nsIFrame** aNewFrame)
 NS_IMETHODIMP
 nsNativeButtonControlFrame::AttributeChanged(nsIPresContext* aPresContext,
                                        nsIContent*     aChild,
+                                       PRInt32         aNameSpaceID,
                                        nsIAtom*        aAttribute,
                                        PRInt32         aHint)
 {
@@ -67,7 +68,7 @@ nsNativeButtonControlFrame::AttributeChanged(nsIPresContext* aPresContext,
     // Allow the base class to handle common attributes supported
     // by all form elements... 
     else {
-      result = Inherited::AttributeChanged(aPresContext, aChild, aAttribute, aHint);
+      result = Inherited::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aHint);
     }
   }
   return result;

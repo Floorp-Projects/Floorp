@@ -425,7 +425,7 @@ static void ForceDrawFrame(nsIFrame * aFrame)
 //
 NS_IMETHODIMP
 nsToolbarFrame :: AttributeChanged ( nsIPresContext* aPresContext, nsIContent* aChild,
-                                      nsIAtom* aAttribute, PRInt32 aHint)
+                                     PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRInt32 aHint)
 {
   nsresult rv = NS_OK;
   
@@ -439,7 +439,7 @@ nsToolbarFrame :: AttributeChanged ( nsIPresContext* aPresContext, nsIContent* a
     nsAllocator::Free ( iHateNSString );
   }
   else
-    rv = nsBoxFrame::AttributeChanged ( aPresContext, aChild, aAttribute, aHint );
+    rv = nsBoxFrame::AttributeChanged ( aPresContext, aChild, aNameSpaceID, aAttribute, aHint );
 
   return rv;
   

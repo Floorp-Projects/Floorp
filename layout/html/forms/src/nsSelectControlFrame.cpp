@@ -127,6 +127,7 @@ public:
 
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
                                      nsIContent*     aChild,
+                                     PRInt32         aNameSpaceID,
                                      nsIAtom*        aAttribute,
                                      PRInt32         aHint);
 protected:
@@ -1184,6 +1185,7 @@ void nsSelectControlFrame::SetOptionSelected(PRUint32 indx, PRBool aValue)
 NS_IMETHODIMP
 nsSelectControlFrame::AttributeChanged(nsIPresContext* aPresContext,
                                      nsIContent*     aChild,
+                                     PRInt32         aNameSpaceID,
                                      nsIAtom*        aAttribute,
                                      PRInt32         aHint)
 {

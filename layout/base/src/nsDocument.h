@@ -272,6 +272,7 @@ public:
                             nsISupports* aSubContent);
   NS_IMETHOD ContentStatesChanged(nsIContent* aContent1, nsIContent* aContent2);
   NS_IMETHOD AttributeChanged(nsIContent* aChild,
+                              PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
                               PRInt32 aHint);
   NS_IMETHOD ContentAppended(nsIContent* aContainer,

@@ -142,6 +142,7 @@ public:
 
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
                                      nsIContent*     aChild,
+                                     PRInt32         aNameSpaceID,
                                      nsIAtom*        aAttribute,
                                      PRInt32         aHint);
 
@@ -1219,6 +1220,7 @@ void nsNativeSelectControlFrame::SetOptionSelectedCache(PRInt32 indx, PRBool aVa
 NS_IMETHODIMP
 nsNativeSelectControlFrame::AttributeChanged(nsIPresContext* aPresContext,
                                      nsIContent*     aChild,
+                                     PRInt32         aNameSpaceID,
                                      nsIAtom*        aAttribute,
                                      PRInt32         aHint)
 {

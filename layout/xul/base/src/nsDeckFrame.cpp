@@ -75,11 +75,12 @@ nsDeckFrame::Init(nsIPresContext&  aPresContext,
 NS_IMETHODIMP
 nsDeckFrame::AttributeChanged(nsIPresContext* aPresContext,
                                nsIContent* aChild,
+                               PRInt32 aNameSpaceID,
                                nsIAtom* aAttribute,
                                PRInt32 aHint)
 {
   nsresult rv = nsBoxFrame::AttributeChanged(aPresContext, aChild,
-                                              aAttribute, aHint);
+                                              aNameSpaceID, aAttribute, aHint);
 
 
    // if the index changed hide the old element and make the now element visible

@@ -117,10 +117,11 @@ nsTreeCellFrame::Init(nsIPresContext&  aPresContext,
 
 NS_IMETHODIMP nsTreeCellFrame::AttributeChanged(nsIPresContext* aPresContext,
                               nsIContent* aChild,
+                              PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
                               PRInt32 aHint)
 {
-  nsresult rv = nsTableCellFrame::AttributeChanged(aPresContext, aChild, aAttribute, aHint);
+  nsresult rv = nsTableCellFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aHint);
   if (mAnonymousContent && (aAttribute == nsHTMLAtoms::align || aAttribute == nsXULAtoms::crop 
           || aAttribute == nsHTMLAtoms::value))
   {

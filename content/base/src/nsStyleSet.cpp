@@ -126,6 +126,7 @@ public:
                                   nsIContent* aContent2);
   NS_IMETHOD AttributeChanged(nsIPresContext*  aPresContext,
                               nsIContent* aChild,
+                              PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
                               PRInt32 aHint); // See nsStyleConsts fot hint values
 
@@ -982,11 +983,12 @@ StyleSetImpl::ContentStatesChanged(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 StyleSetImpl::AttributeChanged(nsIPresContext* aPresContext,
                                nsIContent* aContent,
+                               PRInt32 aNameSpaceID,
                                nsIAtom* aAttribute,
                                PRInt32 aHint)
 {
   return mFrameConstructor->AttributeChanged(aPresContext, aContent, 
-                                             aAttribute, aHint);
+                                             aNameSpaceID, aAttribute, aHint);
 }
 
 

@@ -162,6 +162,7 @@ nsCheckboxControlFrame::PostCreateWidget(nsIPresContext* aPresContext, nscoord& 
 NS_IMETHODIMP
 nsCheckboxControlFrame::AttributeChanged(nsIPresContext* aPresContext,
                                           nsIContent*     aChild,
+                                          PRInt32         aNameSpaceID,
                                           nsIAtom*        aAttribute,
                                           PRInt32         aHint)
 {
@@ -182,7 +183,7 @@ nsCheckboxControlFrame::AttributeChanged(nsIPresContext* aPresContext,
     }
   }
   else
-    return nsNativeFormControlFrame::AttributeChanged(aPresContext, aChild, aAttribute, aHint);
+    return nsNativeFormControlFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aHint);
 
   return NS_OK;
 }

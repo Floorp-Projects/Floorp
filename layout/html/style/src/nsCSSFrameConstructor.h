@@ -89,6 +89,7 @@ public:
                                   nsIContent* aContent2);
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
                               nsIContent* aContent,
+                              PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
                               PRInt32 aHint);
 

@@ -110,6 +110,7 @@ public:
 
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
                               nsIContent* aChild,
+                              PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
                               PRInt32 aHint);
   NS_IMETHOD  VerifyTree() const;
@@ -389,6 +390,7 @@ nsHTMLFrameOuterFrame::VerifyTree() const
 NS_IMETHODIMP
 nsHTMLFrameOuterFrame::AttributeChanged(nsIPresContext* aPresContext,
                                         nsIContent* aChild,
+                                        PRInt32 aNameSpaceID,
                                         nsIAtom* aAttribute,
                                         PRInt32 aHint)
 {
