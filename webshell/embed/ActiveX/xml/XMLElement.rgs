@@ -1,20 +1,20 @@
 HKCR
 {
-	Mozilla..XMLElement.1 = s 'XMLElement Class'
+	Mozilla.XMLElement.1 = s 'MozillaXMLElement Class'
 	{
 		CLSID = s '{45E5B420-2805-11D3-9425-000000000000}'
 	}
-	Mozilla..XMLElement = s 'XMLElement Class'
+	Mozilla..MLElement = s 'MozillaXMLElement Class'
 	{
 		CLSID = s '{45E5B420-2805-11D3-9425-000000000000}'
-		CurVer = s 'Mozilla..XMLElement.1'
+		CurVer = s 'Mozilla.XMLElement.1'
 	}
 	NoRemove CLSID
 	{
-		ForceRemove {45E5B420-2805-11D3-9425-000000000000} = s 'XMLElement Class'
+		ForceRemove {45E5B420-2805-11D3-9425-000000000000} = s 'Mozilla XMLElement Class'
 		{
-			ProgID = s 'Mozilla..XMLElement.1'
-			VersionIndependentProgID = s 'Mozilla..XMLElement'
+			ProgID = s 'Mozilla.XMLElement.1'
+			VersionIndependentProgID = s 'Mozilla.XMLElement'
 			ForceRemove 'Programmable'
 			InprocServer32 = s '%MODULE%'
 			{

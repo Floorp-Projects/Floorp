@@ -10,13 +10,14 @@
 class ATL_NO_VTABLE CXMLElementCollection : 
 	public CComObjectRootEx<CComSingleThreadModel>,
 	public CComCoClass<CXMLElementCollection, &CLSID_MozXMLElementCollection>,
-	public IDispatchImpl<IXMLElementCollection, &IID_IXMLElementCollection, &LIBID_MozActiveXMLLib>,
-	public IPersistMoniker
+	public IDispatchImpl<IXMLElementCollection, &IID_IXMLElementCollection, &LIBID_MozActiveXMLLib>
 {
+	// List of elements
+	ElementList m_cElements;
+
 public:
-	CXMLElementCollection()
-	{
-	}
+	CXMLElementCollection();
+	virtual ~CXMLElementCollection();
 
 DECLARE_REGISTRY_RESOURCEID(IDR_XMLELEMENTCOLLECTION)
 
@@ -34,6 +35,7 @@ END_COM_MAP()
 	virtual HRESULT STDMETHODCALLTYPE item(/* [in][optional] */ VARIANT var1, /* [in][optional] */ VARIANT var2, /* [out][retval] */ IDispatch __RPC_FAR *__RPC_FAR *ppDisp);
 
 public:
+	HRESULT Add(IXMLElement *pElement);
 };
 
 typedef CComObject<CXMLElementCollection> CXMLElementCollectionInstance;

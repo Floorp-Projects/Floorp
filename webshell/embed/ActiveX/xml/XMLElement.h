@@ -10,6 +10,7 @@
 #include <map>
 
 typedef std::map<std::string, std::string> StringMap;
+typedef std::vector< CComQIPtr<IXMLElement, &IID_IXMLElement> > ElementList;
 
 /////////////////////////////////////////////////////////////////////////////
 // CXMLElement
@@ -21,7 +22,7 @@ class ATL_NO_VTABLE CXMLElement :
 	// Pointer to parent
 	IXMLElement *m_pParent;
 	// List of children
-	std::vector< CComQIPtr<IXMLElement, &IID_IXMLElement> > m_cChildren;
+	ElementList m_cChildren;
 	// Tag name
 	std::string m_szTagName;
 	// Text
@@ -36,6 +37,7 @@ public:
 	virtual ~CXMLElement();
 
 	virtual HRESULT SetParent(IXMLElement *pParent);
+	virtual HRESULT PutType(long nType);
 	virtual HRESULT ReleaseAll();
 
 DECLARE_REGISTRY_RESOURCEID(IDR_XMLELEMENT)

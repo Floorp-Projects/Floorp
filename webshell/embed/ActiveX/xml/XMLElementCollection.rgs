@@ -1,17 +1,17 @@
 HKCR
 {
-	Mozilla.XMLElementCollection.1 = s 'XMLElementCollection Class'
+	Mozilla.XMLElementCollection.1 = s 'Mozilla XMLElementCollection Class'
 	{
 		CLSID = s '{45E5B422-2805-11D3-9425-000000000000}'
 	}
-	Mozilla.XMLElementCollection = s 'XMLElementCollection Class'
+	Mozilla.XMLElementCollection = s 'Mozilla XMLElementCollection Class'
 	{
 		CLSID = s '{45E5B422-2805-11D3-9425-000000000000}'
 		CurVer = s 'Mozilla.XMLElementCollection.1'
 	}
 	NoRemove CLSID
 	{
-		ForceRemove {45E5B422-2805-11D3-9425-000000000000} = s 'XMLElementCollection Class'
+		ForceRemove {45E5B422-2805-11D3-9425-000000000000} = s 'Mozilla XMLElementCollection Class'
 		{
 			ProgID = s 'Mozilla.XMLElementCollection.1'
 			VersionIndependentProgID = s 'Mozilla.XMLElementCollection'

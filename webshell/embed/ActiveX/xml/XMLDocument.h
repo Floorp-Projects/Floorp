@@ -19,6 +19,7 @@ public:
 	CXMLDocument();
 	virtual ~CXMLDocument();
 
+
 DECLARE_REGISTRY_RESOURCEID(IDR_XMLDOCUMENT)
 
 DECLARE_PROTECT_FINAL_CONSTRUCT()
@@ -28,20 +29,22 @@ BEGIN_COM_MAP(CXMLDocument)
 	COM_INTERFACE_ENTRY(IDispatch)
 	COM_INTERFACE_ENTRY(IPersistMoniker)
 	COM_INTERFACE_ENTRY(IPersistStreamInit)
-	COM_INTERFACE_ENTRY(ISupportErrorInfo)
+//	COM_INTERFACE_ENTRY(ISupportErrorInfo)
 END_COM_MAP()
 
 	LONG m_nReadyState;
+	std::string m_szURL;
+	CComQIPtr<IXMLElement, &IID_IXMLElement> m_spRoot;
 
 // ISupportsErrorInfo
 	STDMETHOD(InterfaceSupportsErrorInfo)(REFIID riid);
 
 // IPersistStreamInit
 	//virtual HRESULT STDMETHODCALLTYPE IsDirty(void);
-	virtual HRESULT STDMETHODCALLTYPE Load(/* [in] */ LPSTREAM pStm);
-	virtual HRESULT STDMETHODCALLTYPE Save(/* [in] */ LPSTREAM pStm, /* [in] */ BOOL fClearDirty);
-	virtual HRESULT STDMETHODCALLTYPE GetSizeMax(/* [out] */ ULARGE_INTEGER __RPC_FAR *pCbSize);
-	virtual HRESULT STDMETHODCALLTYPE InitNew(void);
+	HRESULT STDMETHODCALLTYPE Load(/* [in] */ LPSTREAM pStm);
+	HRESULT STDMETHODCALLTYPE Save(/* [in] */ LPSTREAM pStm, /* [in] */ BOOL fClearDirty);
+	HRESULT STDMETHODCALLTYPE GetSizeMax(/* [out] */ ULARGE_INTEGER __RPC_FAR *pCbSize);
+	HRESULT STDMETHODCALLTYPE InitNew(void);
 
 // IPersistMoniker
 	HRESULT STDMETHODCALLTYPE GetClassID(/* [out] */ CLSID __RPC_FAR *pClassID);
@@ -50,8 +53,6 @@ END_COM_MAP()
 	HRESULT STDMETHODCALLTYPE Save(/* [in] */ IMoniker __RPC_FAR *pimkName, /* [in] */ LPBC pbc, /* [in] */ BOOL fRemember);
 	HRESULT STDMETHODCALLTYPE SaveCompleted(/* [in] */ IMoniker __RPC_FAR *pimkName, /* [in] */ LPBC pibc);
 	HRESULT STDMETHODCALLTYPE GetCurMoniker(/* [out] */ IMoniker __RPC_FAR *__RPC_FAR *ppimkName);
-
-
 
 // IXMLError
 	HRESULT STDMETHODCALLTYPE GetErrorInfo(XML_ERROR __RPC_FAR *pErrorReturn);

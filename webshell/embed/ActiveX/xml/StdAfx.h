@@ -21,10 +21,18 @@
 extern CComModule _Module;
 #include <atlcom.h>
 
-#include "activexml.h"
+//#include "activexml.h"
+
+extern const CLSID CLSID_MozXMLElement;
+extern const CLSID CLSID_MozXMLDocument;
+extern const CLSID CLSID_MozXMLElementCollection;
+extern const IID LIBID_MozActiveXMLLib;
+
 #include "XMLElement.h"
 #include "XMLElementCollection.h"
 #include "XMLDocument.h"
+
+extern HRESULT ParseExpat(const char *pBuffer, unsigned long cbBufSize, IXMLDocument *pDocument, IXMLElement **ppElement);
 
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.

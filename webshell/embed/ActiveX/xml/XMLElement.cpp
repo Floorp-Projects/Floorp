@@ -1,12 +1,13 @@
 // XMLElement.cpp : Implementation of CXMLElement
 #include "stdafx.h"
-#include "Activexml.h"
+//#include "Activexml.h"
 #include "XMLElement.h"
 
 
 CXMLElement::CXMLElement()
 {
 	m_nType = 0;
+	m_pParent = NULL;
 }
 
 
@@ -22,6 +23,14 @@ HRESULT CXMLElement::SetParent(IXMLElement *pParent)
 	return S_OK;
 }
 
+
+HRESULT CXMLElement::PutType(long nType)
+{
+	m_nType = nType;
+	return S_OK;
+}
+
+
 HRESULT CXMLElement::ReleaseAll()
 {
 	// Release all children
@@ -33,6 +42,8 @@ HRESULT CXMLElement::ReleaseAll()
 /////////////////////////////////////////////////////////////////////////////
 // CXMLElement
 
+
+// Return the element's tag name
 HRESULT STDMETHODCALLTYPE CXMLElement::get_tagName(/* [out][retval] */ BSTR __RPC_FAR *p)
 {
 	if (p == NULL)
@@ -45,6 +56,7 @@ HRESULT STDMETHODCALLTYPE CXMLElement::get_tagName(/* [out][retval] */ BSTR __RP
 }
 
 
+// Store the tag name
 HRESULT STDMETHODCALLTYPE CXMLElement::put_tagName(/* [in] */ BSTR p)
 {
 	if (p == NULL)
@@ -57,6 +69,7 @@ HRESULT STDMETHODCALLTYPE CXMLElement::put_tagName(/* [in] */ BSTR p)
 }
 
 
+// Returns the parent element
 HRESULT STDMETHODCALLTYPE CXMLElement::get_parent(/* [out][retval] */ IXMLElement __RPC_FAR *__RPC_FAR *ppParent)
 {
 	if (ppParent == NULL)
@@ -74,6 +87,7 @@ HRESULT STDMETHODCALLTYPE CXMLElement::get_parent(/* [out][retval] */ IXMLElemen
 }
 
 
+// Set the specified attribute value
 HRESULT STDMETHODCALLTYPE CXMLElement::setAttribute(/* [in] */ BSTR strPropertyName, /* [in] */ VARIANT PropertyValue)
 {
 	if (strPropertyName == NULL || PropertyValue.vt != VT_BSTR)
@@ -90,6 +104,7 @@ HRESULT STDMETHODCALLTYPE CXMLElement::setAttribute(/* [in] */ BSTR strPropertyN
 }
 
 
+// Return the requested attribute
 HRESULT STDMETHODCALLTYPE CXMLElement::getAttribute(/* [in] */ BSTR strPropertyName, /* [out][retval] */ VARIANT __RPC_FAR *PropertyValue)
 {
 	if (strPropertyName == NULL || PropertyValue == NULL)
@@ -111,6 +126,7 @@ HRESULT STDMETHODCALLTYPE CXMLElement::getAttribute(/* [in] */ BSTR strPropertyN
 }
 
 
+// Find and remove the specified attribute
 HRESULT STDMETHODCALLTYPE CXMLElement::removeAttribute(/* [in] */ BSTR strPropertyName)
 {
 	if (strPropertyName == NULL)
@@ -132,10 +148,25 @@ HRESULT STDMETHODCALLTYPE CXMLElement::removeAttribute(/* [in] */ BSTR strProper
 }
 
 
+// Return the child collection for this element
 HRESULT STDMETHODCALLTYPE CXMLElement::get_children(/* [out][retval] */ IXMLElementCollection __RPC_FAR *__RPC_FAR *pp)
 {
-	// TODO 
-	return E_NOTIMPL;
+	CXMLElementCollectionInstance *pCollection = NULL;
+	CXMLElementCollectionInstance::CreateInstance(&pCollection);
+	if (pCollection == NULL)
+	{
+		return E_OUTOFMEMORY;
+	}
+
+	// Add children to the collection
+	for (ElementList::iterator i = m_cChildren.begin(); i != m_cChildren.end(); i++)
+	{
+		pCollection->Add(*i);
+	}
+
+	pCollection->QueryInterface(IID_IXMLElementCollection, (void **) pp);
+
+	return S_OK;
 }
 
 
@@ -169,8 +200,21 @@ HRESULT STDMETHODCALLTYPE CXMLElement::addChild(/* [in] */ IXMLElement __RPC_FAR
 		return E_INVALIDARG;
 	}
 
-	//TODO
-	return E_NOTIMPL;
+	// Set the child's parent to be this element
+	((CXMLElement *) pChildElem)->SetParent(this);
+
+	if (lIndex < 0 || lIndex >= m_cChildren.size())
+	{
+		// Append to end
+		m_cChildren.push_back(pChildElem);
+	}
+	else
+	{
+// TODO		m_cChildren.insert(&m_cChildren[lIndex]);
+		m_cChildren.push_back(pChildElem);
+	}
+
+	return S_OK;
 }
 
 

@@ -1,11 +1,12 @@
 // XMLDocument.cpp : Implementation of CXMLDocument
 #include "stdafx.h"
-#include "Activexml.h"
+//#include "Activexml.h"
 #include "XMLDocument.h"
 
 
 CXMLDocument::CXMLDocument()
 {
+	ATLTRACE(_T("CXMLDocument::CXMLDocument()\n"));
 	m_nReadyState = READYSTATE_COMPLETE;
 }
 
@@ -40,7 +41,34 @@ STDMETHODIMP CXMLDocument::InterfaceSupportsErrorInfo(REFIID riid)
 
 HRESULT STDMETHODCALLTYPE CXMLDocument::Load(/* [in] */ LPSTREAM pStm)
 {
-	return E_NOTIMPL;
+	if (pStm == NULL)
+	{
+		return E_INVALIDARG;
+	}
+
+	// Load the XML from the stream
+	STATSTG statstg;
+	pStm->Stat(&statstg, STATFLAG_NONAME);
+
+	ULONG cbBufSize = statstg.cbSize.LowPart;
+
+	char *pBuffer = new char[cbBufSize];
+	if (pBuffer == NULL)
+	{
+		return E_OUTOFMEMORY;
+	}
+
+	memset(pBuffer, 0, cbBufSize);
+	pStm->Read(pBuffer, cbBufSize, NULL);
+
+	m_spRoot.Release();
+	ParseExpat(pBuffer, cbBufSize, (IXMLDocument *) this, &m_spRoot);
+
+	delete []pBuffer;
+
+	m_nReadyState = READYSTATE_LOADED;
+
+	return S_OK;
 }
 
 
@@ -58,7 +86,7 @@ HRESULT STDMETHODCALLTYPE CXMLDocument::GetSizeMax(/* [out] */ ULARGE_INTEGER __
 
 HRESULT STDMETHODCALLTYPE CXMLDocument::InitNew(void)
 {
-	return E_NOTIMPL;
+	return S_OK;
 }
 
 
@@ -90,8 +118,16 @@ HRESULT STDMETHODCALLTYPE CXMLDocument::Load(/* [in] */ BOOL fFullyAvailable, /*
 		return E_INVALIDARG;
 	}
 
-//	pimkName->BindToStorage(pibc, NULL, iid, pObj)
-	return E_NOTIMPL;
+	m_nReadyState = READYSTATE_LOADING;
+
+	// Bind to the stream specified by the moniker
+	CComQIPtr<IStream, &IID_IStream> spIStream;
+	if (FAILED(pimkName->BindToStorage(pibc, NULL, IID_IStream, (void **) &spIStream)))
+	{
+		return E_FAIL;
+	}
+
+	return Load(spIStream);
 }
 
 
@@ -127,7 +163,16 @@ HRESULT STDMETHODCALLTYPE CXMLDocument::GetErrorInfo(XML_ERROR __RPC_FAR *pError
 
 HRESULT STDMETHODCALLTYPE CXMLDocument::get_root(/* [out][retval] */ IXMLElement __RPC_FAR *__RPC_FAR *p)
 {
-	return E_NOTIMPL;
+	if (p == NULL)
+	{
+		return E_INVALIDARG;
+	}
+	*p = NULL;
+	if (m_spRoot)
+	{
+		m_spRoot->QueryInterface(IID_IXMLElement, (void **) p);
+	}
+	return S_OK;
 }
 
 
@@ -151,13 +196,46 @@ HRESULT STDMETHODCALLTYPE CXMLDocument::get_fileUpdatedDate(/* [out][retval] */ 
 
 HRESULT STDMETHODCALLTYPE CXMLDocument::get_URL(/* [out][retval] */ BSTR __RPC_FAR *p)
 {
-	return E_NOTIMPL;
+	if (p == NULL)
+	{
+		return E_INVALIDARG;
+	}
+
+	USES_CONVERSION;
+	*p = SysAllocString(A2OLE(m_szURL.c_str()));
+	return S_OK;
 }
 
 
 HRESULT STDMETHODCALLTYPE CXMLDocument::put_URL(/* [in] */ BSTR p)
 {
-	return E_NOTIMPL;
+	if (p == NULL)
+	{
+		return E_INVALIDARG;
+	}
+
+	USES_CONVERSION;
+	m_szURL = OLE2A(p);
+
+	// Destroy old document
+	CComQIPtr<IMoniker, &IID_IMoniker> spIMoniker;
+	if (FAILED(CreateURLMoniker(NULL, A2W(m_szURL.c_str()), &spIMoniker)))
+	{
+		return E_FAIL;
+	}
+
+	CComQIPtr<IBindCtx, &IID_IBindCtx> spIBindCtx;
+	if (FAILED(CreateBindCtx(0, &spIBindCtx)))
+	{
+		return E_FAIL;
+	}
+
+	if (FAILED(Load(TRUE, spIMoniker, spIBindCtx, 0)))
+	{
+		return E_FAIL;
+	}
+
+	return S_OK;
 }
 
 
@@ -225,8 +303,26 @@ HRESULT STDMETHODCALLTYPE CXMLDocument::createElement(/* [in] */ VARIANT vType, 
 	{
 		return E_OUTOFMEMORY;
 	}
+
+	IXMLElement *pElement = NULL;
+	if (FAILED(pInstance->QueryInterface(IID_IXMLElement, (void **) &pElement)))
+	{
+		pInstance->Release();
+		return E_NOINTERFACE;
+	}
+
+	// Set the element type
+	long nType = vType.intVal;
+	pInstance->PutType(nType);
+
+	// Set the tag name
+	if (var1.vt == VT_BSTR)
+	{
+		pInstance->put_tagName(var1.bstrVal);
+	}
 	
-	return pInstance->QueryInterface(IID_IXMLElement, (void **) ppElem);
+	*ppElem = pElement;
+	return S_OK;
 }
 
 
