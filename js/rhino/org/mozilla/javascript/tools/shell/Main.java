@@ -401,8 +401,8 @@ public class Main {
     static public InputStream in = System.in;
     static public PrintStream out = System.out;
     static public PrintStream err = System.err;
-    static private final int EXITCODE_RUNTIME_ERROR = 125;
-    static private final int EXITCODE_FILE_NOT_FOUND = 126;    
+    static private final int EXITCODE_RUNTIME_ERROR = 3;
+    static private final int EXITCODE_FILE_NOT_FOUND = 4;
     
     SourceTextManager debug_stm;
     //DebugManager debug_dm; // TODO: enable debugger

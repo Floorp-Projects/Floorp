@@ -132,6 +132,8 @@ public class Global extends ImporterTopLevel {
                             Object[] args, Function funObj)
     {
 
+        Main.global.exitCode = 0;
+        
         if (args.length > 0)
             Main.global.exitCode = (int) Context.toNumber(args[0]);
 
