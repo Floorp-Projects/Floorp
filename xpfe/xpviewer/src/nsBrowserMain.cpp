@@ -104,7 +104,7 @@ int main(int argc, char **argv)
   /* we should, um, check for failure */
   if (app->Initialize(argc, argv) != NS_OK)
     return 0;
-  app->OpenWindow();
+  // Initialize() now does this: app->OpenWindow();
   app->Run();
   NS_RELEASE(app);
 
