@@ -795,21 +795,23 @@ nsldapi_host_connected_to( Sockbuf *sb )
 int
 nsldapi_iostatus_interest_write( LDAP *ld, Sockbuf *sb )
 {
+	int		rc = 0;
 	NSLDAPIIOStatus	*iosp;
 
 	LDAP_MUTEX_LOCK( ld, LDAP_IOSTATUS_LOCK );
 
 	if ( ld->ld_iostatus == NULL
 	    && nsldapi_iostatus_init_nolock( ld ) < 0 ) {
-		LDAP_MUTEX_UNLOCK( ld, LDAP_IOSTATUS_LOCK );
-		return( -1 );
+		rc = -1;
+		goto unlock_and_return;
 	}
 
 	iosp = ld->ld_iostatus;
 
 	if ( iosp->ios_type == NSLDAPI_IOSTATUS_TYPE_OSNATIVE ) {
 #ifdef NSLDAPI_AVOID_OS_SOCKETS
-		return( -1 );
+		rc = -1;
+		goto unlock_and_return;
 #else /* NSLDAPI_AVOID_OS_SOCKETS */
 #ifdef NSLDAPI_HAVE_POLL
 		if ( nsldapi_add_to_os_pollfds( sb->sb_sd,
@@ -838,9 +840,9 @@ nsldapi_iostatus_interest_write( LDAP *ld, Sockbuf *sb )
 		     iosp->ios_type, 0, 0 );
 	}
 
+unlock_and_return:
 	LDAP_MUTEX_UNLOCK( ld, LDAP_IOSTATUS_LOCK );
-
-	return( 0 );
+	return( rc );
 }
 
 
@@ -851,21 +853,23 @@ nsldapi_iostatus_interest_write( LDAP *ld, Sockbuf *sb )
 int
 nsldapi_iostatus_interest_read( LDAP *ld, Sockbuf *sb )
 {
+	int		rc = 0;
 	NSLDAPIIOStatus	*iosp;
 
 	LDAP_MUTEX_LOCK( ld, LDAP_IOSTATUS_LOCK );
 
 	if ( ld->ld_iostatus == NULL
 	    && nsldapi_iostatus_init_nolock( ld ) < 0 ) {
-		LDAP_MUTEX_UNLOCK( ld, LDAP_IOSTATUS_LOCK );
-		return( -1 );
+		rc = -1;
+		goto unlock_and_return;
 	}
 
 	iosp = ld->ld_iostatus;
 
 	if ( iosp->ios_type == NSLDAPI_IOSTATUS_TYPE_OSNATIVE ) {
 #ifdef NSLDAPI_AVOID_OS_SOCKETS
-		return( -1 );
+		rc = -1;
+		goto unlock_and_return;
 #else /* NSLDAPI_AVOID_OS_SOCKETS */
 #ifdef NSLDAPI_HAVE_POLL
 		if ( nsldapi_add_to_os_pollfds( sb->sb_sd,
@@ -893,9 +897,9 @@ nsldapi_iostatus_interest_read( LDAP *ld, Sockbuf *sb )
 		     iosp->ios_type, 0, 0 );
 	}
 
+unlock_and_return:
 	LDAP_MUTEX_UNLOCK( ld, LDAP_IOSTATUS_LOCK );
-
-	return( 0 );
+	return( rc );
 }
 
 
@@ -906,21 +910,23 @@ nsldapi_iostatus_interest_read( LDAP *ld, Sockbuf *sb )
 int
 nsldapi_iostatus_interest_clear( LDAP *ld, Sockbuf *sb )
 {
+	int		rc = 0;
 	NSLDAPIIOStatus	*iosp;
 
 	LDAP_MUTEX_LOCK( ld, LDAP_IOSTATUS_LOCK );
 
 	if ( ld->ld_iostatus == NULL
 	    && nsldapi_iostatus_init_nolock( ld ) < 0 ) {
-		LDAP_MUTEX_UNLOCK( ld, LDAP_IOSTATUS_LOCK );
-		return( -1 );
+		rc = -1;
+		goto unlock_and_return;
 	}
 
 	iosp = ld->ld_iostatus;
 
 	if ( iosp->ios_type == NSLDAPI_IOSTATUS_TYPE_OSNATIVE ) {
 #ifdef NSLDAPI_AVOID_OS_SOCKETS
-		return( -1 );
+		rc = -1;
+		goto unlock_and_return;
 #else /* NSLDAPI_AVOID_OS_SOCKETS */
 #ifdef NSLDAPI_HAVE_POLL
 		if ( nsldapi_clear_from_os_pollfds( sb->sb_sd,
@@ -962,9 +968,9 @@ nsldapi_iostatus_interest_clear( LDAP *ld, Sockbuf *sb )
 		     iosp->ios_type, 0, 0 );
 	}
 
+unlock_and_return:
 	LDAP_MUTEX_UNLOCK( ld, LDAP_IOSTATUS_LOCK );
-
-	return( 0 );
+	return( rc );
 }
 
 
@@ -974,15 +980,18 @@ nsldapi_iostatus_interest_clear( LDAP *ld, Sockbuf *sb )
 int
 nsldapi_iostatus_is_write_ready( LDAP *ld, Sockbuf *sb )
 {
-	int		rc;
+	int		rc = 0;
 	NSLDAPIIOStatus	*iosp;
 
 	LDAP_MUTEX_LOCK( ld, LDAP_IOSTATUS_LOCK );
 	iosp = ld->ld_iostatus;
+	if ( iosp == NULL ) {
+		goto unlock_and_return;
+	}
 
 	if ( iosp->ios_type == NSLDAPI_IOSTATUS_TYPE_OSNATIVE ) {
 #ifdef NSLDAPI_AVOID_OS_SOCKETS
-		return 0;
+		goto unlock_and_return;
 #else  /* NSLDAPI_AVOID_OS_SOCKETS */
 #ifdef NSLDAPI_HAVE_POLL
 		/*
@@ -1013,6 +1022,7 @@ nsldapi_iostatus_is_write_ready( LDAP *ld, Sockbuf *sb )
 		rc = 0;
 	}
 
+unlock_and_return:
 	LDAP_MUTEX_UNLOCK( ld, LDAP_IOSTATUS_LOCK );
 	return( rc );
 }
@@ -1024,15 +1034,18 @@ nsldapi_iostatus_is_write_ready( LDAP *ld, Sockbuf *sb )
 int
 nsldapi_iostatus_is_read_ready( LDAP *ld, Sockbuf *sb )
 {
-	int		rc;
+	int		rc = 0;
 	NSLDAPIIOStatus	*iosp;
 
 	LDAP_MUTEX_LOCK( ld, LDAP_IOSTATUS_LOCK );
 	iosp = ld->ld_iostatus;
+	if ( iosp == NULL ) {
+		goto unlock_and_return;
+	}
 
 	if ( iosp->ios_type == NSLDAPI_IOSTATUS_TYPE_OSNATIVE ) {
 #ifdef NSLDAPI_AVOID_OS_SOCKETS
-		return 0;
+		goto unlock_and_return;
 #else /* NSLDAPI_AVOID_OS_SOCKETS */
 #ifdef NSLDAPI_HAVE_POLL
 		/*
@@ -1063,6 +1076,7 @@ nsldapi_iostatus_is_read_ready( LDAP *ld, Sockbuf *sb )
 		rc = 0;
 	}
 
+unlock_and_return:
 	LDAP_MUTEX_UNLOCK( ld, LDAP_IOSTATUS_LOCK );
 	return( rc );
 }
@@ -1208,7 +1222,7 @@ nsldapi_iostatus_poll( LDAP *ld, struct timeval *timeout )
 	iosp = ld->ld_iostatus;
 
 	if ( iosp == NULL ||
-	    ( iosp->ios_read_count <= 0 && iosp->ios_read_count <= 0 )) {
+            ( iosp->ios_read_count <= 0 && iosp->ios_write_count <= 0 )) {
 		rc = 0;		/* simulate a timeout */
 
 	} else if ( iosp->ios_type == NSLDAPI_IOSTATUS_TYPE_OSNATIVE ) {

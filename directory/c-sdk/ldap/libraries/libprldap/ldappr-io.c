@@ -340,7 +340,8 @@ prldap_try_one_address( struct lextiof_socket_private *prsockp,
      * Try to open the TCP connection itself:
      */
     if ( PR_SUCCESS != PR_Connect( prsockp->prsock_prfd, addrp,
-		prldap_timeout2it( timeout, prsockp->prsock_io_max_timeout ))) {
+                prldap_timeout2it( timeout, prsockp->prsock_io_max_timeout ))
+                && PR_IN_PROGRESS_ERROR != PR_GetError() ) {
 	PR_Close( prsockp->prsock_prfd );
 	prsockp->prsock_prfd = NULL;
 	return( -1 );

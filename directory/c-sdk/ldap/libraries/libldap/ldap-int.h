@@ -170,13 +170,13 @@ typedef struct ldap_conn {
 	int			lconn_refcnt;
 	unsigned long		lconn_lastused;	/* time */
 	int			lconn_status;
-#define LDAP_CONNST_NEEDSOCKET		1
 #define LDAP_CONNST_CONNECTING		2
 #define LDAP_CONNST_CONNECTED		3
 #define LDAP_CONNST_DEAD		4
 	LDAPServer		*lconn_server;
 	char			*lconn_binddn;	/* DN of last successful bind */
 	int			lconn_bound;	/* has a bind been done? */
+	int			lconn_pending_requests; /* count of unsent req*/
 	char			*lconn_krbinstance;
 	struct ldap_conn	*lconn_next;
 } LDAPConn;
@@ -190,13 +190,13 @@ typedef struct ldapreq {
 	int		lr_status;	/* status of request */
 #define LDAP_REQST_INPROGRESS	1
 #define LDAP_REQST_CHASINGREFS	2
-#define LDAP_REQST_NOTCONNECTED	3
 #define LDAP_REQST_WRITING	4
 #define LDAP_REQST_CONNDEAD	5	/* associated conn. has failed */
 	int		lr_outrefcnt;	/* count of outstanding referrals */
 	int		lr_origid;	/* original request's message id */
 	int		lr_parentcnt;	/* count of parent requests */
 	int		lr_res_msgtype;	/* result message type */
+	int		lr_expect_resp;	/* if non-zero, expect a response */
 	int		lr_res_errno;	/* result LDAP errno */
 	char		*lr_res_error;	/* result error string */
 	char		*lr_res_matched;/* result matched DN string */
@@ -241,7 +241,10 @@ struct ldap_x_ext_io_fns_rev0 {
 
 
 /*
- * structure representing an ldap connection
+ * Structure representing an ldap connection.
+ *
+ * This is an opaque struct; the fields are not visible to
+ * applications that use the LDAP API.
  */
 struct ldap {
 	struct sockbuf	*ld_sbp;	/* pointer to socket desc. & buffer */
@@ -261,13 +264,12 @@ struct ldap {
 	char		*ld_matched;
 	int		ld_msgid;
 
-	/* do not mess with these */
+	/* Note: the ld_requests list is ordered old to new */
 	LDAPRequest	*ld_requests;	/* list of outstanding requests */
 	LDAPMessage	*ld_responses;	/* list of outstanding responses */
 	int		*ld_abandoned;	/* array of abandoned requests */
 	char		*ld_cldapdn;	/* DN used in connectionless search */
 
-	/* it is OK to change these next four values directly */
 	int		ld_cldaptries;	/* connectionless search retry count */
 	int		ld_cldaptimeout;/* time between retries */
 	int		ld_refhoplimit;	/* limit on referral nesting */
@@ -280,7 +282,6 @@ struct ldap {
 #define LDAP_BITOPT_RECONNECT	0x08000000
 #define LDAP_BITOPT_ASYNC       0x04000000
 
-	/* do not mess with the rest though */
 	char		*ld_defhost;	/* full name of default server */
 	int		ld_defport;	/* port of default server */
 	BERTranslateProc ld_lber_encode_translate_proc;
@@ -365,11 +366,11 @@ struct ldap {
 	/* extra thread function pointers */
 	struct ldap_extra_thread_fns	ld_thread2;
 
-	/* With the 4.0 version of the LDAP SDK */
-	/* the extra thread functions except for */
-	/* the ld_threadid_fn has been disabled */
-	/* Look at the release notes for the full */
-	/* explanation */
+	/*
+	 * With the 4.0 and later versions of the LDAP SDK, the extra thread
+	 * functions except for the ld_threadid_fn have been disabled.
+	 * Look at the release notes for the full explanation.
+	 */
 #define ld_mutex_trylock_fn		ld_thread2.ltf_mutex_trylock
 #define ld_sema_alloc_fn		ld_thread2.ltf_sema_alloc
 #define ld_sema_free_fn			ld_thread2.ltf_sema_free
@@ -701,17 +702,21 @@ int nsldapi_post_result( LDAP *ld, int msgid, LDAPMessage *result );
  */
 int nsldapi_send_initial_request( LDAP *ld, int msgid, unsigned long msgtype,
 	char *dn, BerElement *ber );
+int nsldapi_send_pending_requests_nolock( LDAP *ld, LDAPConn *lc );
 int nsldapi_alloc_ber_with_options( LDAP *ld, BerElement **berp );
 void nsldapi_set_ber_options( LDAP *ld, BerElement *ber );
-int nsldapi_ber_flush( LDAP *ld, Sockbuf *sb, BerElement *ber, int freeit,
-	int async );
+int nsldapi_send_ber_message( LDAP *ld, Sockbuf *sb, BerElement *ber,
+	int freeit );
 int nsldapi_send_server_request( LDAP *ld, BerElement *ber, int msgid,
 	LDAPRequest *parentreq, LDAPServer *srvlist, LDAPConn *lc,
 	char *bindreqdn, int bind );
 LDAPConn *nsldapi_new_connection( LDAP *ld, LDAPServer **srvlistp, int use_ldsb,
 	int connect, int bind );
 LDAPRequest *nsldapi_find_request_by_msgid( LDAP *ld, int msgid );
+LDAPRequest *nsldapi_new_request( LDAPConn *lc, BerElement *ber, int msgid,
+   int expect_resp );
 void nsldapi_free_request( LDAP *ld, LDAPRequest *lr, int free_conn );
+void nsldapi_queue_request_nolock( LDAP *ld, LDAPRequest *lr );
 void nsldapi_free_connection( LDAP *ld, LDAPConn *lc,
 	LDAPControl **serverctrls, LDAPControl **clientctrls,
 	int force, int unbind );

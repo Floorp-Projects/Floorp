@@ -205,11 +205,21 @@ nsldapi_send_unbind( LDAP *ld, Sockbuf *sb, LDAPControl **serverctrls,
 	}
 
 	/* send the message */
-	if ( nsldapi_ber_flush( ld, sb, ber, 1, 0 ) != 0 ) {
+        err = nsldapi_send_ber_message( ld, sb, ber, 1 /* free ber */ );
+	if ( err != 0 ) {
 		ber_free( ber, 1 );
-		err = LDAP_SERVER_DOWN;
-		LDAP_SET_LDERRNO( ld, err, NULL, NULL );
-		return( err );
+		if (err != -2 ) {
+			/*
+			 * Message could not be sent, and the reason is
+			 * something other than a "would block" error.
+			 * Note that we ignore "would block" errors because
+			 * it is not critical that an UnBind request
+			 * actually reach the LDAP server.
+			 */
+			err = LDAP_SERVER_DOWN;
+			LDAP_SET_LDERRNO( ld, err, NULL, NULL );
+			return( err );
+		}
 	}
 
 	return( LDAP_SUCCESS );

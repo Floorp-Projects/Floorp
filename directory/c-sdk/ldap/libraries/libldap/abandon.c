@@ -38,6 +38,8 @@ static char copyright[] = "@(#) Copyright (c) 1990 Regents of the University of 
 
 static int do_abandon( LDAP *ld, int origid, int msgid,
     LDAPControl **serverctrls, LDAPControl **clientctrls );
+static int nsldapi_send_abandon_message( LDAP *ld, LDAPConn *lc, 
+    BerElement *ber, int abandon_msgid );
 
 /*
  * ldap_abandon - perform an ldap abandon operation. Parameters:
@@ -111,7 +113,6 @@ do_abandon( LDAP *ld, int origid, int msgid, LDAPControl **serverctrls,
 {
 	BerElement	*ber;
 	int		i, bererr, lderr, sendabandon;
-	Sockbuf		*sb;
 	LDAPRequest	*lr = NULL;
 
 	/*
@@ -124,92 +125,60 @@ do_abandon( LDAP *ld, int origid, int msgid, LDAPControl **serverctrls,
 	/* optimistic */
 	lderr = LDAP_SUCCESS;	
 
-/* 
- * this is not the best implementation...  
- * the code special cases the when async io is enabled.
- * The logic is clear this way, at the cost of code bloat.
- * This logic should be cleaned up post nova 4.5 rtm
- */
-    if (ld->ld_options & LDAP_BITOPT_ASYNC)
-    {
-        /* Don't send an abandon message unless there is something to abandon. */
+        /*
+	 * Find the request that we are abandoning.  Don't send an
+	 * abandon message unless there is something to abandon.
+	 */
         sendabandon = 0;
+	for ( lr = ld->ld_requests; lr != NULL; lr = lr->lr_next ) {
+		if ( lr->lr_msgid == msgid ) {	/* this message */
+			if ( origid == msgid && lr->lr_parent != NULL ) {
+				/* don't let caller abandon child requests! */
+				lderr = LDAP_PARAM_ERROR;
+				goto set_errorcode_and_return;
+			}
+			if ( lr->lr_status == LDAP_REQST_INPROGRESS ) {
+			 	/*
+				 * We only need to send an abandon message if
+				 * the request is in progress.
+				 */
+			    sendabandon = 1;
+			}
+			break;
+		}
+		if ( lr->lr_origid == msgid ) {	/* child:  abandon it */
+			(void)do_abandon( ld, msgid, lr->lr_msgid,
+			      serverctrls, clientctrls );
+			/* we ignore errors from child abandons... */
+		}
+	}
 
-        /* Find the request that we are abandoning. */
-        if (ld->ld_requests != NULL) {
-            for ( lr = ld->ld_requests; lr != NULL; lr = lr->lr_next ) {
-                if ( lr->lr_msgid == msgid ) {	/* this message */
-                    if ( origid == msgid && lr->lr_parent != NULL ) {
-                        /* don't let caller abandon child requests! */
-                        lderr = LDAP_PARAM_ERROR;
-                        goto set_errorcode_and_return;
-                    }
-                    if ( lr->lr_status == LDAP_REQST_INPROGRESS ) {
-                        /* We only need to send an abandon message if the request
-                         * is in progress.
-                         */
-                        sendabandon = 1;
-                    }
-                    break;
-                }
-                if ( lr->lr_origid == msgid ) {	/* child:  abandon it */
-                    (void)do_abandon( ld, msgid, lr->lr_msgid,
-                                      serverctrls, clientctrls );
-                    /* we ignore errors from child abandons... */
-                }
-            }
-        }
-    }
-    else
-    {
-        sendabandon = 1;
-        /* find the request that we are abandoning */
-        for ( lr = ld->ld_requests; lr != NULL; lr = lr->lr_next ) {
-            if ( lr->lr_msgid == msgid ) {	/* this message */
-                break;
-            }
-            if ( lr->lr_origid == msgid ) {	/* child:  abandon it */
-                (void)do_abandon( ld, msgid, lr->lr_msgid,
-                                  serverctrls, clientctrls );
-                /* we ignore errors from child abandons... */
-            }
-        }
-        
-        if ( lr != NULL ) {
-            if ( origid == msgid && lr->lr_parent != NULL ) {
-                /* don't let caller abandon child requests! */
-                lderr = LDAP_PARAM_ERROR;
-                goto set_errorcode_and_return;
-            }
-            if ( lr->lr_status != LDAP_REQST_INPROGRESS ) {
-                /* no need to send abandon message */
-                sendabandon = 0;
-            }
-        }
-    }
 	if ( ldap_msgdelete( ld, msgid ) == 0 ) {
 		/* we had all the results and deleted them */
 		goto set_errorcode_and_return;
 	}
 
-	if ( sendabandon ) {
+	if ( lr != NULL && sendabandon ) {
 		/* create a message to send */
 		if (( lderr = nsldapi_alloc_ber_with_options( ld, &ber )) ==
 		    LDAP_SUCCESS ) {
+			int	abandon_msgid;
+
 			LDAP_MUTEX_LOCK( ld, LDAP_MSGID_LOCK );
+			abandon_msgid = ++ld->ld_msgid;
+			LDAP_MUTEX_UNLOCK( ld, LDAP_MSGID_LOCK );
 #ifdef CLDAP
 			if ( ld->ld_dbp->sb_naddr > 0 ) {
 				bererr = ber_printf( ber, "{isti",
-				    ++ld->ld_msgid, ld->ld_cldapdn,
+				    abandon_msgid, ld->ld_cldapdn,
 				    LDAP_REQ_ABANDON, msgid );
 			} else {
 #endif /* CLDAP */
 				bererr = ber_printf( ber, "{iti",
-				    ++ld->ld_msgid, LDAP_REQ_ABANDON, msgid );
+				    abandon_msgid, LDAP_REQ_ABANDON, msgid );
 #ifdef CLDAP
 			}
 #endif /* CLDAP */
-			LDAP_MUTEX_UNLOCK( ld, LDAP_MSGID_LOCK );
 
 			if ( bererr == -1 ||
 			    ( lderr = nsldapi_put_controls( ld, serverctrls,
@@ -217,31 +186,36 @@ do_abandon( LDAP *ld, int origid, int msgid, LDAPControl **serverctrls,
 				lderr = LDAP_ENCODING_ERROR;
 				ber_free( ber, 1 );
 			} else {
-				/* send the message */
-				if ( lr != NULL ) {
-					sb = lr->lr_conn->lconn_sb;
-				} else {
-					sb = ld->ld_sbp;
-				}
-				if ( nsldapi_ber_flush( ld, sb, ber, 1, 0 )
-				    != 0 ) {
-					lderr = LDAP_SERVER_DOWN;
-				}
+				/* try to send the message */
+				lderr = nsldapi_send_abandon_message( ld,
+				    lr->lr_conn, ber, abandon_msgid );
 			}
 		}
 	}
 
 	if ( lr != NULL ) {
-		if ( sendabandon ) {
-			nsldapi_free_connection( ld, lr->lr_conn, NULL, NULL,
-			    0, 1 );
-		}
+		/*
+		 * Always call nsldapi_free_connection() so that the connection's
+		 * ref count is correctly decremented.  It is OK to always pass
+		 * 1 for the "unbind" parameter because doing so will only affect
+		 * connections that resulted from a child request (because the
+		 * default connection's ref count never goes to zero).
+		 */
+		nsldapi_free_connection( ld, lr->lr_conn, NULL, NULL,
+			0 /* do not force */, 1 /* send unbind before closing */ );
+
+		/*
+		 * Free the entire request chain if we finished abandoning everything.
+		 */
 		if ( origid == msgid ) {
 			nsldapi_free_request( ld, lr, 0 );
 		}
 	}
 
-
+	/*
+	 * Record the abandoned message ID (used to discard any server responses
+	 * that arrive later).
+	 */
 	LDAP_MUTEX_LOCK( ld, LDAP_ABANDON_LOCK );
 	if ( ld->ld_abandoned == NULL ) {
 		if ( (ld->ld_abandoned = (int *)NSLDAPI_MALLOC( 2
@@ -267,5 +241,48 @@ do_abandon( LDAP *ld, int origid, int msgid, LDAPControl **serverctrls,
 
 set_errorcode_and_return:
 	LDAP_SET_LDERRNO( ld, lderr, NULL, NULL );
+	return( lderr );
+}
+
+/*
+ * Try to send the abandon message that is encoded in ber.  Returns an
+ * LDAP result code.
+ */
+static int
+nsldapi_send_abandon_message( LDAP *ld, LDAPConn *lc, BerElement *ber,
+    int abandon_msgid )
+{
+	int	lderr = LDAP_SUCCESS;
+	int	err = 0;
+
+	err = nsldapi_send_ber_message( ld, lc->lconn_sb,
+	    ber, 1 /* free ber */ );
+	if ( err == -2 ) {
+		/*
+		 * "Would block" error.  Queue the abandon as
+		 * a pending request.
+		 */
+		LDAPRequest	*lr;
+
+		lr = nsldapi_new_request( lc, ber, abandon_msgid,
+		    0 /* no response expected */ );
+		if ( lr == NULL ) {
+			lderr = LDAP_NO_MEMORY;
+			ber_free( ber, 1 );
+		} else {
+			lr->lr_status = LDAP_REQST_WRITING;
+			nsldapi_queue_request_nolock( ld, lr );
+			++lc->lconn_pending_requests;
+			nsldapi_iostatus_interest_write( ld,
+			    lc->lconn_sb );
+		}
+	} else if ( err != 0 ) {
+		/*
+		 * Fatal error (not a "would block" error).
+		 */
+		lderr = LDAP_SERVER_DOWN;
+		ber_free( ber, 1 );
+	}
+
 	return( lderr );
 }

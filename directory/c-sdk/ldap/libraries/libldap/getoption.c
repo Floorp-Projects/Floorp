@@ -201,6 +201,12 @@ ldap_get_option( LDAP *ld, int option, void *optdata )
 		*((struct ldap_thread_fns *) optdata) = ld->ld_thread;
 		break;
 
+	/* extra thread function pointers */
+	case LDAP_OPT_EXTRA_THREAD_FN_PTRS:
+		/* struct copy */
+		*((struct ldap_extra_thread_fns *) optdata) = ld->ld_thread2;
+		break;
+
 	/* DNS function pointers */
 	case LDAP_OPT_DNS_FN_PTRS:
 		/* struct copy */
