@@ -1813,9 +1813,19 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
 
         // box offsets: length, percent, auto, inherit
         if (nsnull != ourPosition->mOffset) {
-          SetCoord(ourPosition->mOffset->mTop, position->mTopOffset, SETCOORD_LPAH, font, aPresContext);
-          // XXX right bottom
-          SetCoord(ourPosition->mOffset->mLeft, position->mLeftOffset, SETCOORD_LPAH, font, aPresContext);
+          nsStyleCoord  coord;
+          if (SetCoord(ourPosition->mOffset->mTop, coord, SETCOORD_LPAH, font, aPresContext)) {
+            position->mOffset.SetTop(coord);            
+          }
+          if (SetCoord(ourPosition->mOffset->mRight, coord, SETCOORD_LPAH, font, aPresContext)) {
+            position->mOffset.SetRight(coord);            
+          }
+          if (SetCoord(ourPosition->mOffset->mBottom, coord, SETCOORD_LPAH, font, aPresContext)) {
+            position->mOffset.SetBottom(coord);
+          }
+          if (SetCoord(ourPosition->mOffset->mLeft, coord, SETCOORD_LPAH, font, aPresContext)) {
+            position->mOffset.SetLeft(coord);
+          }
         }
 
         SetCoord(ourPosition->mWidth, position->mWidth, SETCOORD_LPAH, font, aPresContext);
