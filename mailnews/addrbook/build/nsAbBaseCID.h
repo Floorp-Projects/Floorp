@@ -27,7 +27,7 @@
 { /* {D60B84F2-2A8C-11d3-9E07-00A0C92B5F0D} */		\
   0xd60b84f2, 0x2a8c, 0x11d3,						\
 	{ 0x9e, 0x7, 0x0, 0xa0, 0xc9, 0x2b, 0x5f, 0xd }	\
-};
+}
 
 #define NS_ABDIRECTORYDATASOURCE_CID				\
 { /* 0A79186D-F754-11d2-A2DA-001083003D0C */		\
