@@ -3276,7 +3276,7 @@ nsBrowserWindow::ToggleBoolPrefAndRefresh(const char * aPrefName)
     PRBool value;
     prefs->GetBoolPref(aPrefName,&value);
     prefs->SetBoolPref(aPrefName,!value);
-    prefs->SavePrefFile(nsnull);
+    prefs->SavePrefFile();
     
     ForceRefresh();
   }
@@ -3293,7 +3293,7 @@ nsBrowserWindow::SetBoolPref(const char * aPrefName, PRBool aValue)
   if (prefs && nsnull != aPrefName)
   {
     prefs->SetBoolPref(aPrefName, aValue);
-    prefs->SavePrefFile(nsnull);
+    prefs->SavePrefFile();
   }
 }
 
@@ -3307,7 +3307,7 @@ nsBrowserWindow::SetStringPref(const char * aPrefName, const nsString& aValue)
   {
     char * prefStr = aValue.ToNewCString();
     prefs->SetCharPref(aPrefName, prefStr);
-    prefs->SavePrefFile(nsnull);
+    prefs->SavePrefFile();
     delete [] prefStr;
   }
 
@@ -3652,7 +3652,7 @@ nsBrowserWindow::SetCompatibilityMode(PRUint32 aMode)
       prefInt = eCompatibility_NavQuirks;
     }
     pref->SetIntPref("nglayout.compatibility.mode", prefInt);
-    pref->SavePrefFile(nsnull);
+    pref->SavePrefFile();
   }
 }
 

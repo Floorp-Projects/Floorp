@@ -29,17 +29,13 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= pref
 LIBRARY_NAME	= pref
 IS_COMPONENT	= 1
-REQUIRES	= xpcom string js xpconnect caps dom intl locale profile
+REQUIRES	= xpcom string js xpconnect caps dom intl locale
 
 include $(topsrcdir)/config/config.mk
 
 CSRCS		= prefapi.c
 
-CPPSRCS		= nsPref.cpp \
-			  nsPrefBranch.cpp	\
-			  nsPrefService.cpp	\
-			  nsPrefsFactory.cpp	\
-			 $(NULL)
+CPPSRCS		= nsPref.cpp
 
 PREF_JS_EXPORTS	= \
 		$(srcdir)/initpref.js \

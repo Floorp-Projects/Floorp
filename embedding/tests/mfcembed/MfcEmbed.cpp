@@ -363,7 +363,7 @@ void CMfcEmbedApp::OnEditPreferences()
             prefs->SetIntPref("browser.startup.page", m_iStartupPage);
             rv = prefs->SetCharPref("browser.startup.homepage", m_strHomePage);
             if (NS_SUCCEEDED(rv))
-                rv = prefs->SavePrefFile(nsnull);
+                rv = prefs->SavePrefFile();
         }
         else
 		    NS_ASSERTION(PR_FALSE, "Could not get preferences service");
@@ -428,7 +428,7 @@ nsresult CMfcEmbedApp::InitializePrefs()
             prefs->SetIntPref("font.size.fixed.x-western", 13);
             rv = prefs->SetBoolPref("mfcbrowser.prefs_inited", PR_TRUE);
             if (NS_SUCCEEDED(rv))
-                rv = prefs->SavePrefFile(nsnull);
+                rv = prefs->SavePrefFile();
         }
         else
         {

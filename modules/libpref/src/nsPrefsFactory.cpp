@@ -27,7 +27,7 @@
 #include "nsIPref.h"
 
 // remove this when nsPref goes away
-extern "C" NS_IMETHODIMP nsPrefConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+extern "C" nsresult nsPrefConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrefService, Init)

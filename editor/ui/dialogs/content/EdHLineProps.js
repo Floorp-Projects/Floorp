@@ -153,7 +153,7 @@ function onSaveDefault()
       prefs.SetBoolPref("editor.hrule.shading", shading);
 
       // Write the prefs out NOW!
-      prefs.savePrefFile(null);
+      prefs.SavePrefFile();
     }
 	}
 }
