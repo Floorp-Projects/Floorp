@@ -17,6 +17,7 @@
  */
 
 #include "msgCore.h"
+#include "nsCOMPtr.h"
 #include "prprf.h"
 
 #include <stdio.h>
@@ -169,10 +170,11 @@ protected:
 	PRBool		m_runningURL;
 	PRBool		m_runTestHarness;
 
-	nsINetService  * m_netService;
-	nsISmtpService * m_smtpService;
-	nsISmtpUrl	   * m_smtpUrl;
-    nsresult SetupUrl(char *group);
+	nsCOMPtr<nsINetService>  m_netService;
+	nsISmtpService			*m_smtpService;
+	nsCOMPtr<nsISmtpUrl>	 m_smtpUrl;
+    
+	nsresult SetupUrl(char *group);
 	PRBool m_protocolInitialized; 
 };
 
@@ -191,13 +193,9 @@ nsresult nsSmtpTestDriver::OnStopRunningUrl(nsIURL * aUrl, nsresult aExitCode)
 	if (aUrl)
 	{
 		// query it for a mailnews interface for now....
-		nsIMsgMailNewsUrl * mailUrl = nsnull;
-		rv = aUrl->QueryInterface(nsIMsgMailNewsUrl::GetIID(), (void **) &mailUrl);
-		if (NS_SUCCEEDED(rv))
-		{
+		nsCOMPtr<nsIMsgMailNewsUrl> mailUrl = do_QueryInterface(aUrl);
+		if (mailUrl)
 			mailUrl->UnRegisterListener(this);
-			NS_RELEASE(mailUrl);
-		}
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////
@@ -221,9 +219,7 @@ nsSmtpTestDriver::nsSmtpTestDriver(nsINetService * pNetService,
 	m_runningURL = PR_FALSE;
 	m_runTestHarness = PR_TRUE;
     m_eventQueue = queue;
-	m_netService = pNetService;
-	m_smtpUrl = nsnull;
-	NS_IF_ADDREF(m_netService); 
+	m_netService = dont_QueryInterface(pNetService);
 	
 	InitializeTestDriver(); // prompts user for initialization information...
 
@@ -235,7 +231,6 @@ nsSmtpTestDriver::nsSmtpTestDriver(nsINetService * pNetService,
 
 nsSmtpTestDriver::~nsSmtpTestDriver()
 {
-	NS_IF_RELEASE(m_netService); 
 	nsServiceManager::ReleaseService(kSmtpServiceCID, m_smtpService); // XXX probably need shutdown listener here
 }
 
@@ -248,11 +243,7 @@ nsresult nsSmtpTestDriver::RunDriver()
 	while (m_runTestHarness)
 	{
 		if (m_runningURL == PR_FALSE) // can we run and dispatch another command?
-		{
-			NS_IF_RELEASE(m_smtpUrl); // release our old url..
-			m_smtpUrl = nsnull;
 			status = ReadAndDispatchCommand();	 // run a new url
-		}
 
 	 // if running url
 #ifdef XP_UNIX
@@ -417,7 +408,8 @@ nsresult nsSmtpTestDriver::OnSendMessageInFile()
 	nsIURL * url = nsnull;
 	m_smtpService->SendMailMessage(filePath, recipients, this, &url);
 	if (url)
-		url->QueryInterface(nsISmtpUrl::GetIID(), (void **) &m_smtpUrl);
+		m_smtpUrl = do_QueryInterface(url);
+
 	NS_IF_RELEASE(url);
 
 
@@ -452,10 +444,8 @@ int main()
     }
 
 	// Create the Event Queue for this thread...
-    nsIEventQueueService* pEventQService;
-    result = nsServiceManager::GetService(kEventQueueServiceCID,
-                                          nsIEventQueueService::GetIID(),
-                                          (nsISupports**)&pEventQService);
+	NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &result); 
+
 	if (NS_FAILED(result)) return result;
 
     result = pEventQService->CreateThreadEventQueue();
