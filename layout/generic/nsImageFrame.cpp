@@ -960,6 +960,7 @@ nsImageFrame::AttributeChanged(nsIPresContext* aPresContext,
       fputs(newSRC, stdout);
       printf("'\n");
 #endif
+
       if (mImageLoader.IsImageSizeKnown()) {
         mImageLoader.UpdateURLSpec(aPresContext, newSRC);
         PRUint32 loadStatus = mImageLoader.GetLoadStatus();
@@ -969,18 +970,12 @@ nsImageFrame::AttributeChanged(nsIPresContext* aPresContext,
           Invalidate(aPresContext, nsRect(0, 0, mRect.width, mRect.height), PR_FALSE);
         }
       }
-      else {
-        // Dirty the image frame and ask its parent to reflow it 
-        // when the image size isn't already known
-        if (mParent) {
-          nsCOMPtr<nsIPresShell> presShell;
-          aPresContext->GetShell(getter_AddRefs(presShell));
-          mState |= NS_FRAME_IS_DIRTY;
-	        mParent->ReflowDirtyChild(presShell, (nsIFrame*) this);
-        }
-        else {
-          NS_ASSERTION(0, "No parent to pass the reflow request up to.");
-        }
+      else {        
+        // Stop the earlier image load
+        mImageLoader.StopLoadImage(aPresContext);
+
+        // Update the URL and start the new image load
+        mImageLoader.UpdateURLSpec(aPresContext, newSRC);
       }
     }
   }
