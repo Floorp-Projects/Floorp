@@ -1474,6 +1474,23 @@ case "$target" in
     *-nto*) 
         MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,--version-script,$(BUILD_TOOLS)/gnu-ld-scripts/components-version-script'
         ;;
+    *-darwin*)
+        AC_MSG_CHECKING(for -exported_symbols_list option to ld)
+        AC_CACHE_VAL(ac_cv_exported_symbols_list,
+         [
+           if $LD -exported_symbols_list | grep "argument missing" >/dev/null; then
+             ac_cv_exported_symbols_list=true
+           else
+             ac_cv_exported_symbols_list=false
+           fi
+         ])
+        if test "$ac_cv_exported_symbols_list" = true; then
+          MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,-exported_symbols_list -Wl,$(BUILD_TOOLS)/gnu-ld-scripts/components-export-list'
+          AC_MSG_RESULT(yes)
+        else
+          AC_MSG_RESULT(no)
+        fi
+        ;;
 esac
 
 if test -z "$SKIP_COMPILER_CHECKS"; then
