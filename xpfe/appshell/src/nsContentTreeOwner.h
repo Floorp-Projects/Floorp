@@ -42,7 +42,7 @@ public:
 
 protected:
    nsContentTreeOwner();
-   ~nsContentTreeOwner();
+   virtual ~nsContentTreeOwner();
 
    void XULWindow(nsXULWindow* aXULWindow);
    nsXULWindow* XULWindow();
