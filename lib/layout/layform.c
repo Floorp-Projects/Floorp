@@ -5441,11 +5441,17 @@ SI_RestoreOldSignonData
 	    data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr);
 	    while((data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr))!=0) {
 		if (data->isPassword) {
+#ifdef XP_MAC
+		    StrAllocCopy(
+			(char *)form_element->element_data->ele_text.default_text,
+			data->value);
+#else
 		    char* default_text =
 			(char*)(form_element->element_data->ele_text.default_text);
 		    StrAllocCopy(default_text, data->value);
 		    form_element->element_data->ele_text.default_text =
 			(unsigned long *)default_text;
+#endif
 		    si_unlock_signon_list();
 		    return;
 		}
@@ -5471,11 +5477,17 @@ SI_RestoreOldSignonData
 	while((data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr))!=0) {
 	    if(XP_STRCMP(data->name,
 		    (char *)form_element->element_data->ele_text.name)==0) {
+#ifdef XP_MAC
+		StrAllocCopy(
+		    (char *)form_element->element_data->ele_text.default_text,
+		    data->value);
+#else
 		char* default_text =
 		    (char*)(form_element->element_data->ele_text.default_text);
 		StrAllocCopy(default_text, data->value);
 		form_element->element_data->ele_text.default_text =
 		    (unsigned long *)default_text;
+#endif
 		si_unlock_signon_list();
 		return;
 	    }
