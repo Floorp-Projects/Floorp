@@ -460,7 +460,7 @@ input[type="submit"] {
   padding: 1px;
 }
 
-input[type="submit"][pseudoclass~="active"] {
+input[type="submit"]:active {
   border-style: inset;
 
   padding-left: 2px;
@@ -469,17 +469,22 @@ input[type="submit"][pseudoclass~="active"] {
   padding-bottom: 0px;
 }
 
-input[type="submit"][pseudoclass~="active"]:-moz-outline {
+input[type="submit"]:active:-moz-outline {
    border : 1px solid black;
 }
 
-input[type="submit"][pseudoclass~="hover"]:-moz-outline {
+input[type="submit"]:hover:-moz-outline {
    border : 1px solid black;
 }
 
 input[type="submit"][disabled] {
    border-style: solid;
 }
+
+input[type="submit"][disabled]:active {
+  padding: 1px;
+}
+
 
 input[type="submit"]:-moz-focus-inner {
    padding-left  : 2px;
@@ -489,7 +494,7 @@ input[type="submit"]:-moz-focus-inner {
    margin: 0px;
 }
 
-input[type="submit"][pseudoclass~="focus"]:-moz-focus-inner {
+input[type="submit"]:focus:-moz-focus-inner {
    padding-left  : 1px;
    padding-right : 1px;
    padding-top   : 0px;
@@ -507,7 +512,7 @@ input[type="reset"] {
   padding: 1px;
 }
 
-input[type="reset"][pseudoclass~="active"] {
+input[type="reset"]:active {
   border-style: inset;
 
   padding-left: 2px;
@@ -516,16 +521,20 @@ input[type="reset"][pseudoclass~="active"] {
   padding-bottom: 0px;
 }
 
-input[type="reset"][pseudoclass~="active"]:-moz-outline {
+input[type="reset"]:active:-moz-outline {
    border : 1px solid black;
 }
 
-input[type="reset"][pseudoclass~="hover"]:-moz-outline {
+input[type="reset"]:hover:-moz-outline {
    border : 1px solid black;
 }
 
 input[type="reset"][disabled] {
    border-style: solid;
+}
+
+input[type="reset"][disabled]:active {
+  padding: 1px;
 }
 
 input[type="reset"]:-moz-focus-inner {
@@ -536,7 +545,7 @@ input[type="reset"]:-moz-focus-inner {
    margin: 0px;
 }
 
-input[type="reset"][pseudoclass~="focus"]:-moz-focus-inner {
+input[type="reset"]:focus:-moz-focus-inner {
    padding-left  : 1px;
    padding-right : 1px;
    padding-top   : 0px;
@@ -554,7 +563,7 @@ input[type="button"] {
   padding: 1px;
 }
 
-input[type="button"][pseudoclass~="active"] {
+input[type="button"]:active {
   border-style: inset;
 
   padding-left: 2px;
@@ -563,16 +572,20 @@ input[type="button"][pseudoclass~="active"] {
   padding-bottom: 0px;
 }
 
-input[type="button"][pseudoclass~="active"]:-moz-outline {
+input[type="button"]:active:-moz-outline {
    border : 1px solid black;
 }
 
-input[type="button"][pseudoclass~="hover"]:-moz-outline {
+input[type="button"]:hover:-moz-outline {
    border : 1px solid black;
 }
 
 input[type="button"][disabled] {
    border-style: solid;
+}
+
+input[type="button"][disabled]:active {
+  padding: 1px;
 }
 
 input[type="button"]:-moz-focus-inner {
@@ -583,7 +596,7 @@ input[type="button"]:-moz-focus-inner {
    margin: 0px;
 }
 
-input[type="button"][pseudoclass~="focus"]:-moz-focus-inner {
+input[type="button"]:focus:-moz-focus-inner {
    padding-left  : 1px;
    padding-right : 1px;
    padding-top   : 0px;
@@ -606,7 +619,7 @@ button {
   padding: 1px;
 }
 
-button[pseudoclass~="active"] {
+button:active {
   border-style: inset;
 
   padding-left: 2px;
@@ -615,19 +628,23 @@ button[pseudoclass~="active"] {
   padding-bottom: 0px;
 }
 
-button[pseudoclass~="hover"] {
+button:hover {
 }
 
-button[pseudoclass~="active"]:-moz-outline {
+button:active:-moz-outline {
    border : 1px solid black;
 }
 
-button[pseudoclass~="hover"]:-moz-outline {
+button:hover:-moz-outline {
    border : 1px solid black;
 }
 
 button[disabled] {
    border-style: solid;
+}
+
+button[disabled]:active {
+  padding: 1px;
 }
 
 button:-moz-focus-inner {
@@ -638,7 +655,7 @@ button:-moz-focus-inner {
    margin: 0px;
 }
 
-button[pseudoclass~="focus"]:-moz-focus-inner {
+button:focus:-moz-focus-inner {
    padding-left  : 1px;
    padding-right : 1px;
    padding-top   : 0px;

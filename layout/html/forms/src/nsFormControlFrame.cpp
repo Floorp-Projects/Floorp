@@ -571,6 +571,15 @@ NS_METHOD nsFormControlFrame::HandleEvent(nsIPresContext& aPresContext,
     }
   }
 
+  // lets see if the button was clicked. -EDV
+  switch (aEvent->message) {
+     case NS_MOUSE_LEFT_CLICK:
+        MouseClicked(&aPresContext);
+     break;
+  }
+
+  /* All this this now done internally in Gecko.
+
   //printf(" %d %d %d %d (%d,%d) \n", this, aEvent->widget, aEvent->widgetSupports, 
   //       aEvent->message, aEvent->point.x, aEvent->point.y);
 
@@ -608,6 +617,7 @@ NS_METHOD nsFormControlFrame::HandleEvent(nsIPresContext& aPresContext,
       }
       break;
   }
+  */
   aEventStatus = nsEventStatus_eConsumeDoDefault;
   return NS_OK;
 }

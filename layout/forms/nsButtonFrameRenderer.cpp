@@ -34,79 +34,6 @@ nsButtonFrameRenderer::SetFrame(nsFrame* aFrame, nsIPresContext& aPresContext)
 }
 
 void
-nsButtonFrameRenderer::Redraw()
-{
-  mFrame->Invalidate(mOutlineRect, PR_TRUE);
-}
-
-nsString
-nsButtonFrameRenderer::GetPseudoClassAttribute()
-{
-  // get the content
-  nsCOMPtr<nsIContent> content;
-  mFrame->GetContent(getter_AddRefs(content));
-	
-  // create and atom for the pseudo class
-  nsCOMPtr<nsIAtom> atom = do_QueryInterface(NS_NewAtom("pseudoclass"));
-
-  // get the attribute
-  nsAutoString value;
-  content->GetAttribute(mNameSpace, atom, value);
-
-  /*
-  char ch[256];
-  value.ToCString(ch,256);
-  printf("getting pseudo='%s'\n",ch);
-  */
-
-  return value;
-}
-
-
-void
-nsButtonFrameRenderer::SetPseudoClassAttribute(const nsString& value, PRBool notify)
-{
-  // get the content
-  nsCOMPtr<nsIContent> content;
-  mFrame->GetContent(getter_AddRefs(content));
-	
-  // create and atom for the pseudo class
-  nsCOMPtr<nsIAtom> atom = do_QueryInterface(NS_NewAtom("pseudoclass"));
-
-  nsString pseudo = value;
-  // remove whitespace
-  pseudo.Trim(" ");
-  pseudo.CompressWhitespace();
-
-  // set it
-  content->SetAttribute(mNameSpace, atom, pseudo, notify);
-  
-  /*
-  char ch[256];
-  pseudo.ToCString(ch,256);
-  printf("setting pseudo='%s'\n",ch);
-  */
-}
-
-void
-nsButtonFrameRenderer::SetHover(PRBool aHover, PRBool notify)
-{
-   ToggleClass(aHover, HOVER, notify);
-}
-
-void
-nsButtonFrameRenderer::SetActive(PRBool aActive, PRBool notify)
-{
-   ToggleClass(aActive, ACTIVE, notify);
-}
-
-void
-nsButtonFrameRenderer::SetFocus(PRBool aFocus, PRBool notify)
-{
-   ToggleClass(aFocus, FOCUS, notify);
-}
-
-void
 nsButtonFrameRenderer::SetDisabled(PRBool aDisabled, PRBool notify)
 {
    // get the content
@@ -118,28 +45,6 @@ nsButtonFrameRenderer::SetDisabled(PRBool aDisabled, PRBool notify)
   else
      content->UnsetAttribute(mNameSpace, nsHTMLAtoms::disabled, notify);
 
-}
-
-PRBool
-nsButtonFrameRenderer::isHover() 
-{
-	nsString pseudo = GetPseudoClassAttribute();
-	PRInt32 index = IndexOfClass(pseudo, HOVER);
-    if (index != -1)
-		return PR_TRUE;
-	else
-		return PR_FALSE;
-}
-
-PRBool
-nsButtonFrameRenderer::isActive() 
-{
-	nsString pseudo = GetPseudoClassAttribute();
-	PRInt32 index = IndexOfClass(pseudo, ACTIVE);
-    if (index != -1)
-		return PR_TRUE;
-	else
-		return PR_FALSE;
 }
 
 PRBool
@@ -155,159 +60,15 @@ nsButtonFrameRenderer::isDisabled()
   return PR_FALSE;
 }
 
-PRBool
-nsButtonFrameRenderer::isFocus() 
-{
-	nsString pseudo = GetPseudoClassAttribute();
-	PRInt32 index = IndexOfClass(pseudo, FOCUS);
-    if (index != -1)
-		return PR_TRUE;
-	else
-		return PR_FALSE;
-}
-
-void
-nsButtonFrameRenderer::ToggleClass(PRBool aValue, const nsString& c, PRBool notify)
-{
-   // get the pseudo class
-   nsString pseudo = GetPseudoClassAttribute();
-
-   // if focus add it 
-   if (aValue) 
-	   AddClass(pseudo, c);
-   else
-	   RemoveClass(pseudo, c);
-
-   // set pseudo class
-   SetPseudoClassAttribute(pseudo, notify);
-}
-
-
-void
-nsButtonFrameRenderer::AddClass(nsString& pseudoclass, const nsString newClass)
-{
-	// see if the class is already there
-	// if not add it
-
-	PRInt32 index = IndexOfClass(pseudoclass, newClass);
-    if (index == -1) {
-       pseudoclass += " ";
-	   pseudoclass += newClass;
-	}
-}
-
-void
-nsButtonFrameRenderer::RemoveClass(nsString& pseudoclass, const nsString newClass)
-{
-	// see if the class is there
-	// if so remove it
-	PRInt32 index = IndexOfClass(pseudoclass, newClass);
-    if (index == -1)
-		return;
-
-    // remove it
-	pseudoclass.Cut(index, newClass.Length());
-}
-
-PRInt32
-nsButtonFrameRenderer::IndexOfClass(nsString& pseudoclass, const nsString& c)
-{
-	// easy first case
-	if (pseudoclass.Equals(c))
-       return 0;
- 
-	// look on left
-	PRInt32 index = pseudoclass.Find(nsString(c) + " ");
-	if (index == -1 || index > 0) {
-		// look on right
-        index = pseudoclass.Find(nsString(" ") + c);
-	    if (index == -1 || index != pseudoclass.Length() - (c.Length()+1))
-		{
-			// look in center
-			index = pseudoclass.Find(nsString(" ") + c + " ");
-			if (index == -1)
-				return -1;
-			else
-				index++;
-		} else 
-			index++;
-	}
-
-	
-
-	return index;
-}
-
-
-
-NS_IMETHODIMP
-nsButtonFrameRenderer::HandleEvent(nsIPresContext& aPresContext, 
-                                  nsGUIEvent* aEvent,
-                                  nsEventStatus& aEventStatus)
-{
-  // if disabled do nothing
-  if (PR_TRUE == isDisabled()) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIContent> content;
-  mFrame->GetContent(getter_AddRefs(content));
-
-  // get its view
-  nsIView* view = nsnull;
-  mFrame->GetView(&view);
-  nsCOMPtr<nsIViewManager> viewMan;
-
-  if (view)
-    view->GetViewManager(*getter_AddRefs(viewMan));
-
-  aEventStatus = nsEventStatus_eIgnore;
- 
-  switch (aEvent->message) {
-
-    case NS_MOUSE_ENTER:
-     SetHover(PR_TRUE, PR_TRUE);
-    break;
-
-    case NS_MOUSE_LEFT_BUTTON_DOWN: 
-      SetActive(PR_TRUE, PR_TRUE);
-      // grab all mouse events
-
-      PRBool result;
-      if (viewMan)
-      viewMan->GrabMouseEvents(view,result);
-    break;
-
-    case NS_MOUSE_LEFT_BUTTON_UP:
-      SetActive(PR_FALSE, PR_TRUE);
-      // stop grabbing mouse events
-      if (viewMan)
-      viewMan->GrabMouseEvents(nsnull,result);
-    break;
-      case NS_MOUSE_EXIT:
-      // if we don't have a view then we might not know when they release
-      // the button. So on exit go back to the normal state.
-      if (!viewMan)
-        SetActive(PR_FALSE, PR_TRUE);
-
-      SetHover(PR_FALSE, PR_TRUE);
-      
-      break;
-    }
-
-  return NS_OK;
-}
-
-/*
 void
 nsButtonFrameRenderer::Redraw()
-{	
-	nsRect frameRect;
-	mFrame->GetRect(frameRect);
-	nsRect rect(0, 0, frameRect.width, frameRect.height);
-    mFrame->Invalidate(rect, PR_TRUE);
+{
+  nsRect rect;
+  mFrame->GetRect(rect);
+  rect.x = 0;
+  rect.y = 0;
+  mFrame->Invalidate(rect, PR_TRUE);
 }
-*/
 
 void 
 nsButtonFrameRenderer::PaintButton     (nsIPresContext& aPresContext,
@@ -319,10 +80,10 @@ nsButtonFrameRenderer::PaintButton     (nsIPresContext& aPresContext,
   //printf("painted width='%d' height='%d'\n",aRect.width, aRect.height);
 
 	// draw the border and background inside the focus and outline borders
-	PaintBorderAndBackground(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, aRect);
+ 	PaintBorderAndBackground(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, aRect);
 
 	// draw the focus and outline borders
-    PaintOutlineAndFocusBorders(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, aRect);
+  PaintOutlineAndFocusBorders(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, aRect);
 }
 
 void
@@ -341,13 +102,6 @@ nsButtonFrameRenderer::PaintOutlineAndFocusBorders(nsIPresContext& aPresContext,
 
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) 
 	{
-    // because we have and outline rect we need to 
-    // store our bounds for redraw. We will change
-    // these bounds when outline appears
-    mOutlineRect = rect;
-    mOutlineRect.width = 0;
-    mOutlineRect.height= 0;
-
 		if (mOuterFocusStyle) {
 			// ---------- paint the outer focus border -------------
 
@@ -373,10 +127,13 @@ nsButtonFrameRenderer::PaintOutlineAndFocusBorders(nsIPresContext& aPresContext,
 
   if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) 
 	{
+    /*
 		if (mOutlineStyle) {
 
-			 GetButtonOutlineRect(aRect, mOutlineRect);
- 
+			 GetButtonOutlineRect(aRect, rect);
+
+       mOutlineRect = rect;
+
 			 const nsStyleSpacing* spacing = (const nsStyleSpacing*)mOutlineStyle ->GetStyleData(eStyleStruct_Spacing);
 
 			 // set the clipping area so we can draw outside our bounds.
@@ -385,10 +142,11 @@ nsButtonFrameRenderer::PaintOutlineAndFocusBorders(nsIPresContext& aPresContext,
 
 		     aRenderingContext.SetClipRect(rect, nsClipCombine_kReplace, clipEmpty);
 			 nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, mFrame,
-							   aDirtyRect, mOutlineRect, *spacing, mOutlineStyle, 0);
+							   aDirtyRect, rect, *spacing, mOutlineStyle, 0);
 
 			 aRenderingContext.PopState(clipEmpty);
 		}
+    */
 	}
 }
 
@@ -554,21 +312,36 @@ nsButtonFrameRenderer::GetAddedButtonBorderAndPadding()
   return GetButtonOuterFocusBorderAndPadding() + GetButtonInnerFocusMargin() + GetButtonInnerFocusBorderAndPadding();
 }
 
+/**
+ * Call this when styles change
+ */
 void 
 nsButtonFrameRenderer::ReResolveStyles(nsIPresContext& aPresContext)
 {
+
 	// get all the styles
 	nsCOMPtr<nsIContent> content;
 	mFrame->GetContent(getter_AddRefs(content));
 	nsCOMPtr<nsIStyleContext> context;
 	mFrame->GetStyleContext(getter_AddRefs(context));
 
-    // style that draw an outline around the button
+  // style that draw an outline around the button
+
+  // see if the outline has changed.
+//  nsCOMPtr<nsIStyleContext> oldOutline = mOutlineStyle;
+
 	nsCOMPtr<nsIAtom> atom (do_QueryInterface(NS_NewAtom(":-moz-outline")));
 	aPresContext.ProbePseudoStyleContextFor(content, atom, context,
 										  PR_FALSE,
 										  getter_AddRefs(mOutlineStyle));
 
+  /*
+  if (mOutlineStyle != oldOutline)
+  {
+     // if changed redraw the old rect
+     mFrame->Invalidate(mOutlineRect, PR_TRUE);
+  }
+  */
 
     // style for the inner such as a dotted line (Windows)
 	atom = do_QueryInterface(NS_NewAtom(":-moz-focus-inner"));
@@ -584,29 +357,3 @@ nsButtonFrameRenderer::ReResolveStyles(nsIPresContext& aPresContext)
 										  PR_FALSE,
 										  getter_AddRefs(mOuterFocusStyle));
 }
-
-
-void
-nsButtonFrameRenderer::AddFocusBordersAndPadding(nsIPresContext& aPresContext,
-                                  const nsHTMLReflowState& aReflowState,
-                                  nsHTMLReflowMetrics& aMetrics,
-                                  nsMargin& aBorderPadding)
-{
-  aBorderPadding = aReflowState.mComputedBorderPadding;
-  
-  nsMargin m = GetButtonOuterFocusBorderAndPadding();
-  m += GetButtonInnerFocusMargin();
-  m += GetButtonInnerFocusBorderAndPadding();
-
-  aBorderPadding += m;
- 
-  aMetrics.width += m.left + m.right;
-  aMetrics.height += m.top + m.bottom;
-  
-  aMetrics.ascent = aMetrics.height;
-  aMetrics.descent = 0;
-
- // printf("requested width='%d' height='%d'\n",aMetrics.width, aMetrics.height);
-}
-
-

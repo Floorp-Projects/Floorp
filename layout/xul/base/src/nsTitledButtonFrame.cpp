@@ -889,43 +889,13 @@ nsTitledButtonFrame::HandleEvent(nsIPresContext& aPresContext,
                                       nsGUIEvent* aEvent,
                                       nsEventStatus& aEventStatus)
 {
-  nsLeafFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 
   // if disabled do nothing
   if (PR_TRUE == mRenderer.isDisabled()) {
     return NS_OK;
   }
 
-  // let the renderer handle the UI stuff
-  mRenderer.HandleEvent(aPresContext, aEvent, aEventStatus);
-
-  aEventStatus = nsEventStatus_eIgnore;
- 
-  switch (aEvent->message) {
-
-  case NS_MOUSE_ENTER:
-    break;
-    
-  case NS_MOUSE_LEFT_BUTTON_DOWN:
-    mRenderer.SetFocus(PR_TRUE, PR_TRUE);
-    break;
-    
-  case NS_MOUSE_LEFT_BUTTON_UP:
-    break;
-
-  case NS_MOUSE_EXIT:
-    break;
-
-  case NS_MOUSE_MOVE:
-    break;
-    
-  default:
-    break;
-  }
-
-  //aEventStatus = nsEventStatus_eConsumeNoDefault;
-
-  return NS_OK;
+  return nsLeafFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
 
 

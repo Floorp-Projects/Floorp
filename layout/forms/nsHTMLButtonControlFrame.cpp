@@ -268,7 +268,6 @@ nsHTMLButtonControlFrame::MouseClicked(nsIPresContext* aPresContext)
 void 
 nsHTMLButtonControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 {
-  mRenderer.SetFocus(aOn, aRepaint);
 }
 
 void
@@ -293,49 +292,20 @@ nsHTMLButtonControlFrame::HandleEvent(nsIPresContext& aPresContext,
                                       nsGUIEvent*     aEvent,
                                       nsEventStatus&  aEventStatus)
 {
-  nsWidgetRendering mode;
-  aPresContext.GetWidgetRenderingMode(&mode);
-
   // if disabled do nothing
   if (mRenderer.isDisabled()) {
     return NS_OK;
   }
 
-  nsresult result = mRenderer.HandleEvent(aPresContext, aEvent, aEventStatus);
-  if (NS_OK != result)
-     return result;
-    
-  aEventStatus = nsEventStatus_eIgnore;
- 
+   // lets see if the button was clicked. -EDV
   switch (aEvent->message) {
-
-    case NS_MOUSE_ENTER:
-	    break;
- 
-    case NS_MOUSE_LEFT_BUTTON_DOWN:
-      mRenderer.SetFocus(PR_TRUE, PR_TRUE);         
-	    break;
-
-    case NS_MOUSE_LEFT_BUTTON_UP:
-      if (mRenderer.isHover()) 
-			  MouseClicked(&aPresContext);
-	    break;
-
-    case NS_KEY_DOWN:
-      if (NS_KEY_EVENT == aEvent->eventStructType) {
-        nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
-        if (NS_VK_SPACE  == keyEvent->keyCode) {
-          MouseClicked(&aPresContext);
-        }
-      }
-      break;
-
-    case NS_MOUSE_EXIT:
-	    break;
+     case NS_MOUSE_LEFT_CLICK:
+        MouseClicked(&aPresContext);
+     break;
   }
 
-  return NS_OK;
-
+  // we don't want our children to get any events. So just pass it to frame.
+  return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
 
 

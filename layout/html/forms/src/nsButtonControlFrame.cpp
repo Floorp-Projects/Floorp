@@ -521,57 +521,17 @@ nsButtonControlFrame::HandleEvent(nsIPresContext& aPresContext,
   nsWidgetRendering mode;
   aPresContext.GetWidgetRenderingMode(&mode);
 
-  if (eWidgetRendering_Native == mode) {
-    return nsFormControlFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
-  } 
-
   // if disabled do nothing
   if (mRenderer.isDisabled()) {
     return NS_OK;
   }
 
-  nsresult result = mRenderer.HandleEvent(aPresContext, aEvent, aEventStatus);
-  if (NS_OK != result) {
-    return result;
-  }
-    
-  aEventStatus = nsEventStatus_eIgnore;
- 
-  switch (aEvent->message) {
-
-    case NS_MOUSE_ENTER:
-	   break;
- 
-    case NS_MOUSE_LEFT_BUTTON_DOWN:
-      mRenderer.SetFocus(PR_TRUE, PR_TRUE);         
-	    break;
-
-    case NS_MOUSE_LEFT_BUTTON_UP:
-      if (mRenderer.isHover()) {
-			  MouseClicked(&aPresContext);
-      }
-	    break;
-
-    case NS_KEY_DOWN:
-      if (NS_KEY_EVENT == aEvent->eventStructType) {
-        nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
-        if (NS_VK_SPACE == keyEvent->keyCode || NS_VK_RETURN == keyEvent->keyCode) {
-          MouseClicked(&aPresContext);
-        }
-      }
-
-    case NS_MOUSE_EXIT:
-	    break;
-  }
-
-  return NS_OK;
-
+  return nsFormControlFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
 
 void 
 nsButtonControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 {
-  mRenderer.SetFocus(aOn, aRepaint);
 }
 
 void
