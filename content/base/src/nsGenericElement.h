@@ -39,6 +39,7 @@
 #define nsGenericElement_h___
 
 #include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
 #include "nsIHTMLContent.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOMNamedNodeMap.h"
@@ -157,19 +158,19 @@ public:
    * @see nsIDOMNodeList
    * @see nsGenericHTMLLeafElement::GetChildNodes
    */
-  nsChildContentList *mChildNodes;
+  nsRefPtr<nsChildContentList> mChildNodes;
 
   /**
    * The .style attribute (an interface that forwards to the actual
    * style rules)
    * @see nsGenericHTMLElement::GetStyle */
-  nsDOMCSSDeclaration *mStyle;
+  nsRefPtr<nsDOMCSSDeclaration> mStyle;
 
   /**
    * An object implementing nsIDOMNamedNodeMap for this content (attributes)
    * @see nsGenericElement::GetAttributes
    */
-  nsDOMAttributeMap* mAttributeMap;
+  nsRefPtr<nsDOMAttributeMap> mAttributeMap;
 
   /**
    * The nearest enclosing content node with a binding that created us.
@@ -716,7 +717,7 @@ protected:
   /**
    * Information about this type of node
    */
-  nsINodeInfo* mNodeInfo;                   // OWNER
+  nsCOMPtr<nsINodeInfo> mNodeInfo;          // OWNER
 
   /**
    * Used for either storing flags for this element or a pointer to

@@ -761,8 +761,8 @@ nsDOMEventRTTearoff::IsRegisteredHere(const nsAString & type, PRBool *_retval)
 //----------------------------------------------------------------------
 
 nsDOMSlots::nsDOMSlots(PtrBits aFlags)
-  : mFlags(aFlags & ~GENERIC_ELEMENT_CONTENT_ID_MASK), mChildNodes(nsnull),
-    mStyle(nsnull), mAttributeMap(nsnull), mBindingParent(nsnull),
+  : mFlags(aFlags & ~GENERIC_ELEMENT_CONTENT_ID_MASK),
+    mBindingParent(nsnull),
     mContentID(aFlags >> GENERIC_ELEMENT_CONTENT_ID_BITS_OFFSET)
 {
 }
@@ -771,17 +771,14 @@ nsDOMSlots::~nsDOMSlots()
 {
   if (mChildNodes) {
     mChildNodes->DropReference();
-    NS_RELEASE(mChildNodes);
   }
 
   if (mStyle) {
     mStyle->DropReference();
-    NS_RELEASE(mStyle);
   }
 
   if (mAttributeMap) {
     mAttributeMap->DropReference();
-    NS_RELEASE(mAttributeMap);
   }
 }
 
@@ -854,7 +851,7 @@ nsGenericElement::Shutdown()
 }
 
 nsGenericElement::nsGenericElement()
-  : mDocument(nsnull), mParent(nsnull), mNodeInfo(nsnull),
+  : mDocument(nsnull), mParent(nsnull),
     mFlagsOrSlots(GENERIC_ELEMENT_DOESNT_HAVE_DOMSLOTS)
 {
 }
@@ -901,8 +898,6 @@ nsGenericElement::~nsGenericElement()
 
     PL_DHashTableOperate(&sEventListenerManagersHash, this, PL_DHASH_REMOVE);
   }
-
-  NS_IF_RELEASE(mNodeInfo);
 
   if (HasDOMSlots()) {
     nsDOMSlots *slots = GetDOMSlots();
@@ -1013,7 +1008,6 @@ nsGenericElement::Init(nsINodeInfo *aNodeInfo)
   NS_ENSURE_ARG(aNodeInfo);
 
   mNodeInfo = aNodeInfo;
-  NS_ADDREF(mNodeInfo);
 
   nsresult rv = NS_OK;
 
@@ -1185,11 +1179,7 @@ nsGenericElement::SetPrefix(const nsAString& aPrefix)
                                          getter_AddRefs(newNodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_RELEASE(mNodeInfo);
-
   mNodeInfo = newNodeInfo;
-
-  NS_ADDREF(mNodeInfo);
 
   return NS_OK;
 }
@@ -1281,19 +1271,19 @@ nsGenericElement::HasAttributes(PRBool* aReturn)
 NS_IMETHODIMP
 nsGenericElement::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
 {
-  NS_PRECONDITION(nsnull != aAttributes, "null pointer argument");
+  NS_PRECONDITION(aAttributes, "null pointer argument");
   nsDOMSlots *slots = GetDOMSlots();
 
-  if (nsnull == slots->mAttributeMap) {
+  if (!slots->mAttributeMap) {
     slots->mAttributeMap = new nsDOMAttributeMap(this);
     if (!slots->mAttributeMap) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-
-    NS_ADDREF(slots->mAttributeMap);
   }
 
-  return CallQueryInterface(slots->mAttributeMap, aAttributes);
+  NS_ADDREF(*aAttributes = slots->mAttributeMap);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1783,9 +1773,7 @@ nsGenericElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
           nodeInfoManager->GetNodeInfo(name, prefix, nameSpaceID,
                                        getter_AddRefs(newNodeInfo));
           if (newNodeInfo) {
-            NS_RELEASE(mNodeInfo);
             mNodeInfo = newNodeInfo;
-            NS_ADDREF(mNodeInfo);
           }
         }
       }
@@ -3216,16 +3204,14 @@ struct nsGenericAttribute
       mValue(aValue)
   {
     MOZ_COUNT_CTOR(nsGenericAttribute);
-    NS_IF_ADDREF(mNodeInfo);
   }
 
   ~nsGenericAttribute(void)
   {
     MOZ_COUNT_DTOR(nsGenericAttribute);
-    NS_IF_RELEASE(mNodeInfo);
   }
 
-  nsINodeInfo* mNodeInfo;
+  nsCOMPtr<nsINodeInfo> mNodeInfo;
   nsString     mValue;
 };
 
@@ -3343,10 +3329,11 @@ nsGenericContainerElement::GetChildNodes(nsIDOMNodeList** aChildNodes)
     if (!slots->mChildNodes) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    NS_ADDREF(slots->mChildNodes);
   }
 
-  return CallQueryInterface(slots->mChildNodes, aChildNodes);
+  NS_ADDREF(*aChildNodes = slots->mChildNodes);
+
+  return NS_OK;
 }
 
 nsresult

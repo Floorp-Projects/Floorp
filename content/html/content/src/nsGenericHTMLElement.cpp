@@ -501,20 +501,22 @@ nsGenericHTMLElement::SetClassName(const nsAString& aClassName)
 nsresult
 nsGenericHTMLElement::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
 {
-  nsresult res = NS_OK;
   nsDOMSlots *slots = GetDOMSlots();
 
-  if (nsnull == slots->mStyle) {
+  if (!slots->mStyle) {
+    nsresult rv;
     if (!gCSSOMFactory) {
-      res = CallGetService(kCSSOMFactoryCID, &gCSSOMFactory);
-      if (NS_FAILED(res))
-        return res;
+      rv = CallGetService(kCSSOMFactoryCID, &gCSSOMFactory);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
     }
 
-    res = gCSSOMFactory->CreateDOMCSSAttributeDeclaration(this,
-                                                          &slots->mStyle);
-    if (NS_FAILED(res))
-      return res;
+    rv = gCSSOMFactory->CreateDOMCSSAttributeDeclaration(this,
+                                                         getter_AddRefs(slots->mStyle));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
   }
 
   // Why bother with QI?
@@ -3520,10 +3522,11 @@ nsGenericHTMLLeafElement::GetChildNodes(nsIDOMNodeList** aChildNodes)
     if (!slots->mChildNodes) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    NS_ADDREF(slots->mChildNodes);
   }
 
-  return CallQueryInterface(slots->mChildNodes, aChildNodes);
+  NS_ADDREF(*aChildNodes = slots->mChildNodes);
+
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------
@@ -3590,11 +3593,14 @@ nsGenericHTMLContainerElement::GetChildNodes(nsIDOMNodeList** aChildNodes)
 
   if (!slots->mChildNodes) {
     slots->mChildNodes = new nsChildContentList(this);
-    // XXX Need to check for out-of-memory
-    NS_ADDREF(slots->mChildNodes);
+    if (!slots->mChildNodes) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
 
-  return CallQueryInterface(slots->mChildNodes, aChildNodes);
+  NS_ADDREF(*aChildNodes = slots->mChildNodes);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
