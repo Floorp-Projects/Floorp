@@ -199,7 +199,7 @@ function AddAvailableCharset()
   {
     var selItem =  available_charsets.selectedItems[nodeIndex];
     
-    var charsetname  = selItem.id;
+    var charsetname  = selItem.label;
     var charsetid = selItem.id;
     var already_active = false;
 
