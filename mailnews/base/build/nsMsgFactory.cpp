@@ -340,10 +340,7 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
   nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
   if (NS_FAILED(rv)) return rv;
 
-  nsIComponentManager* compMgr;
-  rv = servMgr->GetService(kComponentManagerCID, 
-                           nsIComponentManager::GetIID(), 
-                           (nsISupports**)&compMgr);
+  NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   // register the message folder factory
@@ -351,104 +348,81 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                                        "Folder Event",
                                        nsnull,
                                        path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
-
   rv = compMgr->RegisterComponent(kCUrlListenerManagerCID,
                                        "UrlListenerManager",
                                        "component://netscape/messenger/urlListenerManager",
                                        path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
 
   rv = compMgr->RegisterComponent(kCMessengerBootstrapCID,
                                   "Netscape Messenger Bootstrapper",
                                   "component://netscape/appshell/component/messenger",
                                   path,
                                   PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
 
   rv = compMgr->RegisterComponent(kCMessengerCID,
                                   "Messenger DOM interaction object",
                                   "component://netscape/messenger",
                                   path,
                                   PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
 
   rv = compMgr->RegisterComponent(kMsgAccountManagerCID,
                                   "Messenger Account Manager",
                                   "component://netscape/messenger/account-manager",
                                   path,
                                   PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
 
   rv = compMgr->RegisterComponent(kMsgAccountCID,
                                   "Messenger User Account",
                                   "component://netscape/messenger/account",
                                   path,
                                   PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
 
   rv = compMgr->RegisterComponent(kMsgIdentityCID,
                                   "Messenger User Identity",
                                   "component://netscape/messenger/identity",
                                   path,
                                   PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
   
-#if 0
-  rv = compMgr->RegisterComponent(kCMsgGroupRecordCID,
-                                       nsnull,
-                                       nsnull,
-                                       path,
-                                       PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
-#endif
   rv = compMgr->RegisterComponent(kCMsgMailSessionCID,
                                   "Mail Session",
                                   "component://netscape/messenger/services/session",
                                   path,
                                   PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
 
   // register our RDF datasources:
   rv = compMgr->RegisterComponent(kMailNewsFolderDataSourceCID, 
                                   "Mail/News Folder Data Source",
                                   NS_RDF_DATASOURCE_PROGID_PREFIX "mailnewsfolders",
                                   path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
 
   // register our RDF datasources:
   rv = compMgr->RegisterComponent(kMailNewsMessageDataSourceCID, 
                                   "Mail/News Message Data Source",
                                   NS_RDF_DATASOURCE_PROGID_PREFIX "mailnewsmessages",
                                   path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
 
   rv = compMgr->RegisterComponent(kCMessageViewDataSourceCID, 
                                   "Mail/News Message View Data Source",
                                   NS_RDF_DATASOURCE_PROGID_PREFIX "mail-messageview",
                                   path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
 
   rv = compMgr->RegisterComponent(kMsgAccountManagerDataSourceCID,
                                   "Mail/News Account Manager Data Source",
                                   NS_RDF_DATASOURCE_PROGID_PREFIX "msgaccountmanager",
                                   path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
   rv = compMgr->RegisterComponent(kMsgAccountDataSourceCID,
                                   "Mail/News Account Data Source",
                                   NS_RDF_DATASOURCE_PROGID_PREFIX "msgaccounts",
                                   path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
+ 
   rv = compMgr->RegisterComponent(kMsgIdentityDataSourceCID,
                                   "Mail/News Identity Data Source",
                                   NS_RDF_DATASOURCE_PROGID_PREFIX "msgidentities",
                                   path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
   rv = compMgr->RegisterComponent(kMsgServerDataSourceCID,
                                   "Mail/News Server Data Source",
                                   NS_RDF_DATASOURCE_PROGID_PREFIX "msgservers",
                                   path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
 
 #ifdef DEBUG_bienvenu  
   printf("register filter service\n");
@@ -456,7 +430,6 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                                   "Message Filter Service",
                                   "component://netscape/messenger/services/filters",
                                   path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
 #endif   
   
   rv = compMgr->RegisterComponent(kMsgBiffManagerCID,
@@ -464,14 +437,10 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                                   "component://netscape/messenger/biffManager",
                                   path,
                                   PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
-
 #ifdef NS_DEBUG
   printf("mailnews registering from %s\n",path);
 #endif
 
-  done:
-  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
 }
 
@@ -483,51 +452,30 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
   nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
   if (NS_FAILED(rv)) return rv;
 
-  nsIComponentManager* compMgr;
-  rv = servMgr->GetService(kComponentManagerCID, 
-                           nsIComponentManager::GetIID(), 
-                           (nsISupports**)&compMgr);
+  NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   rv = compMgr->UnregisterComponent(kCUrlListenerManagerCID, path);
-  if (NS_FAILED(rv)) goto done;
+  
   rv = compMgr->UnregisterComponent(kCMessengerBootstrapCID, path);
-  if (NS_FAILED(rv)) goto done;
-#if 0
-  rv = compMgr->UnregisterComponent(kCMsgGroupRecordCID, path);
-  if (NS_FAILED(rv)) goto done;
-#endif
   rv = compMgr->UnregisterComponent(kCMsgFolderEventCID, path);
-  if (NS_FAILED(rv)) goto done;
+  
   rv = compMgr->UnregisterComponent(kCMsgMailSessionCID, path);
-  if(NS_FAILED(rv)) goto done;
   rv = compMgr->UnregisterComponent(kMailNewsFolderDataSourceCID, path);
-  if (NS_FAILED(rv)) goto done;
   rv = compMgr->UnregisterComponent(kMailNewsMessageDataSourceCID, path);
-  if (NS_FAILED(rv)) goto done;
   rv = compMgr->UnregisterComponent(kCMessageViewDataSourceCID, path);
-  if(NS_FAILED(rv)) goto done;
 
   // Account Manager RDF stuff
   rv = compMgr->UnregisterComponent(kMsgAccountManagerDataSourceCID, path);
-  if(NS_FAILED(rv)) goto done;
   rv = compMgr->UnregisterComponent(kMsgAccountDataSourceCID, path);
-  if(NS_FAILED(rv)) goto done;
   rv = compMgr->UnregisterComponent(kMsgIdentityDataSourceCID, path);
-  if(NS_FAILED(rv)) goto done;
   rv = compMgr->UnregisterComponent(kMsgServerDataSourceCID, path);
-  if(NS_FAILED(rv)) goto done;
 #ifdef DEBUG_bienvenu
   rv = compMgr->UnregisterComponent(kMsgFilterServiceCID, path);
-  if(NS_FAILED(rv)) goto done;
 #endif
 
   //Biff
   rv = compMgr->UnregisterComponent(kMsgBiffManagerCID, path);
-  if(NS_FAILED(rv)) goto done;
-
-  done:
-  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
 }
 

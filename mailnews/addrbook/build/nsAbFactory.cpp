@@ -218,10 +218,7 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
 	nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
 	if (NS_FAILED(rv)) return rv;
 
-	nsIComponentManager* compMgr;
-	rv = servMgr->GetService(kComponentManagerCID, 
-                             nsIComponentManager::GetIID(), 
-                            (nsISupports**)&compMgr);
+	NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &rv);
 	if (NS_FAILED(rv)) return rv;
 
 	// register our RDF datasources:
@@ -229,27 +226,21 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
 							  "Mail/News Address Book Directory Data Source",
 							  NS_RDF_DATASOURCE_PROGID_PREFIX "addressdirectory",
 							  path, PR_TRUE, PR_TRUE);
-	if (NS_FAILED(rv)) goto done;
 
 	rv = compMgr->RegisterComponent(kAbDirectoryCID,
 								  "Mail/News Address Book Directory Factory",
 								  NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "abdirectory",
 								  path, PR_TRUE, PR_TRUE);
-	if (NS_FAILED(rv)) goto done;
 
 	rv = compMgr->RegisterComponent(kAbCardDataSourceCID, 
 							  "Mail/News Address Book Card Data Source",
 							  NS_RDF_DATASOURCE_PROGID_PREFIX "addresscard",
 							  path, PR_TRUE, PR_TRUE);
-	if (NS_FAILED(rv)) goto done;
 
 	rv = compMgr->RegisterComponent(kAbCardCID,
 								  "Mail/News Address Book Card Factory",
 								  NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "abcard",
 								  path, PR_TRUE, PR_TRUE);
-	if (NS_FAILED(rv)) goto done;
-	done:
-		(void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
 }
 
@@ -261,25 +252,15 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 	nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
 	if (NS_FAILED(rv)) return rv;
 
-	nsIComponentManager* compMgr;
-	rv = servMgr->GetService(kComponentManagerCID, 
-                             nsIComponentManager::GetIID(), 
-                             (nsISupports**)&compMgr);
+	NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &rv);
 	if (NS_FAILED(rv)) return rv;
 
 	rv = compMgr->UnregisterComponent(kAbDirectoryDataSourceCID, path);
-	if (NS_FAILED(rv)) goto done;
 
 	rv = compMgr->UnregisterComponent(kAbDirectoryCID, path);
-	if (NS_FAILED(rv)) goto done;
 
 	rv = compMgr->UnregisterComponent(kAbCardDataSourceCID, path);
-	if (NS_FAILED(rv)) goto done;
 
 	rv = compMgr->UnregisterComponent(kAbCardCID, path);
-	if (NS_FAILED(rv)) goto done;
-
-done:
-	(void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
 	return rv;
 }
