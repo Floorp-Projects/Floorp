@@ -182,10 +182,19 @@ ED_FileError EDT_PublishFile( MWContext * pContext,
 
 /* 
  * Check the URL that will be passed into EDT_PublishFile. 
- * TRUE if pURL should be used, or FALSE if the user should
- * make another choice. 
+ * Return TRUE if pURL should be used even with error, or FALSE if the user should
+ * make another choice - leave user in Publishing dialog
+ * We now internally correct for bad characters and missing file extensions,
+ *   so the supplied string may have been changed.
+ * Caller should always update values in Publish dialog based
+ *   on returned string after calling this 
  */
+/* OTHER PLATFORMS NEED TO CHANGE THIS WHEN THEY CHANGE 2ND PARAM IN FE */
+#ifdef XP_WIN
+XP_Bool EDT_CheckPublishURL( MWContext *pContext, char **ppURL);
+#else
 XP_Bool EDT_CheckPublishURL( MWContext * pContext, char * pURL);
+#endif
 
 /*
  * Save editor and images to an abstract file system.
@@ -914,10 +923,14 @@ void EDT_FreeParamData( EDT_ParamData *pParamData );
 /*
  * Get and Set Named Anchors (Targets)
 */
-char *EDT_GetTargetData( MWContext *pContext );
-void EDT_SetTargetData( MWContext *pContext, char *pTargetName );
-void EDT_InsertTarget( MWContext *pContext, char* pTargetName );
-char *EDT_GetAllDocumentTargets( MWContext *pContext );
+char* EDT_GetTargetData( MWContext *pContext );
+void  EDT_SetTargetData( MWContext *pContext, char *pTargetName );
+void  EDT_InsertTarget( MWContext *pContext, char* pTargetName );
+char* EDT_GetAllDocumentTargets( MWContext *pContext );
+/* Scroll (move insert point) to a target withing current document */
+XP_Bool EDT_ScrollToTarget(MWContext *pContext, char *pTargetURL);
+/* Get text to display on status line: "Target Name: name" */
+char* EDT_GetTargetNameFromIcon(LO_ImageStruct *pIcon);
 
 /*CLM: Check current file-update time and
  *     return TRUE if it is different
@@ -926,7 +939,7 @@ char *EDT_GetAllDocumentTargets( MWContext *pContext );
 XP_Bool EDT_IsFileModified( MWContext* pContext );
 
 /* CLM: Read a file and build a targets list just like the current doc list */
-char *EDT_GetAllDocumentTargetsInFile( MWContext *pContext, char *pHref);
+char* EDT_GetAllDocumentTargetsInFile( MWContext *pContext, char *pHref);
 
 /*
  * Returns a list of all local documents associated with
