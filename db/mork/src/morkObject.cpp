@@ -180,23 +180,12 @@ morkObject::AddWeakRef(nsIMdbEnv* mev)
 {
   return morkNode::AddWeakRef((morkEnv *) mev);
 }
-NS_IMETHODIMP
-morkObject::AddStrongRef(nsIMdbEnv* mev)
-{
-  return morkNode::AddStrongRef((morkEnv *) mev);
-}
 
 NS_IMETHODIMP
 morkObject::CutWeakRef(nsIMdbEnv* mev)
 {
   return morkNode::CutWeakRef((morkEnv *) mev);
 }
-NS_IMETHODIMP
-morkObject::CutStrongRef(nsIMdbEnv* mev)
-{
-  return morkNode::CutStrongRef((morkEnv *) mev);
-}
-
   
 NS_IMETHODIMP
 morkObject::CloseMdbObject(nsIMdbEnv* mev)
