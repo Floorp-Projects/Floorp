@@ -268,7 +268,11 @@ endif
 ifeq ($(OS_ARCH),Linux)
 ifneq (,$(findstring sparc,$(OS_TEST)))
 CPPSRCS		:= xptcinvoke_sparc_solaris.cpp xptcstubs_sparc_solaris.cpp
+ifdef HAVE_GCC3_ABI
+ASFILES		:= xptcinvoke_asm_sparc_linux_GCC3.s xptcstubs_asm_sparc_solaris.s
+else
 ASFILES		:= xptcinvoke_asm_sparc_linux.s xptcstubs_asm_sparc_solaris.s
+endif
 endif
 endif
 #
