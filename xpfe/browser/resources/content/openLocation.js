@@ -18,7 +18,6 @@
  * Netscape Communications Corporation. All Rights Reserved.
  */
 
-var toolkit;
 var browser;
 var dialog;
 
@@ -30,16 +29,11 @@ function onLoad() {
     dialog.help      = document.getElementById( "dialog.help" );
 	dialog.newWindow = document.getElementById( "dialog.newWindow" );
 
-	toolkit = XPAppCoresManager.Find( "toolkitCore" );
-	if ( !toolkit ) {
-		toolkit = new ToolkitCore();
-		toolkit.Init( "toolkitCore" );
-	}
+	browser = window.arguments[0];
 
-	browser = XPAppCoresManager.Find( window.arguments[0] );
 	if ( !browser ) {
-		dump( "unable to get browser app core\n" );
-		toolkit.CloseWindow( window );
+		dump( "No browser instance provided!\n" );
+		window.close();
         return;
 	}
 
@@ -71,7 +65,7 @@ function onTyping( key ) {
 }
 
 function open() {
-   if ( dialog.ok.disabled ) {
+   if ( dialog.ok.disabled || dialog.input.value == "" ) {
       return;
    }
 
@@ -82,26 +76,13 @@ function open() {
 		browser.loadUrl( url );
 	} else {
 		/* User wants new window. */
-		toolkit.ShowWindowWithArgs( "chrome:/navigator/content/navigator.xul", window.opener, url );
+        window.opener.openDialog( "chrome://navigator/content/navigator.xul", null, "all,dialog=no", url );
 	}
 
 	/* Close dialog. */
-	toolkit.CloseWindow( window );
-}
-
-function choose() {
-	/* Use existing browser "open" logic. */
-	browser.openWindow();
-	toolkit.CloseWindow( window );
+	window.close();
 }
 
 function cancel() {
-    toolkit.CloseWindow( window );
-}
-
-function help() {
-    if ( dialog.help.disabled ) {
-        return;
-    }
-    dump( "openLocation::help() not implemented\n" );
+    window.close();
 }
