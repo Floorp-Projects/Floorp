@@ -79,12 +79,12 @@
   </columns>
 
   <rows>
-    <row>
+    <row align="center">
       <text value="&textInput.label;"/>
       <textbox id="textInput" flex="1" oninput="doEnabling()" 
                onfocus="onTextFieldFocus();"/>
     </row>
-    <row id="filterBox" hidden="true">
+    <row id="filterBox" hidden="true" align="center">
       <text value="&filterMenuList.label;"/>
       <menulist id="filterMenuList" flex="1" oncommand="onFilterChanged(event.target);"/>
     </row>
