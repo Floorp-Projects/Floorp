@@ -108,6 +108,7 @@ CHyperTreeHeader::SetUpColumns(HT_Cursor columnCursor)
 	// now initialize LTableHeader data members and have it sync itself up
 	mColumnCount = dataVector.size();
 	mLastVisibleColumn = mColumnCount;
+	mLastShowableColumn = mColumnCount;
 	ConvertWidthsToAbsolute();
 	ComputeColumnPositions();
 	PositionColumnHeaders(true);
