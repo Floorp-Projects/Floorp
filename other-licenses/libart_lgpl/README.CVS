@@ -1,3 +1,16 @@
+This is mozilla's modified version of the libart source code. The original 
+code can be found in the gnome.org cvs repository.
+
+The below notice appears in the gnome.org cvs tree. It isn't a requirement
+to submitting a patch to this directory that people assign copyright.  
+However, you should be aware of the below if you want your changes to be
+accepted into the official libart release. We strongly encourage all
+submitted patches (except, obviously, for mozilla-specific build hacks) to
+be sent to the maintainer. We don't want to fork the code, but we do want
+and need patches so that, for example, SVG can work on the mac.
+
+---------------------------------------------------
+
 Welcome to the libart source tree!
 
 This code is being developed in a "free software for sale"
