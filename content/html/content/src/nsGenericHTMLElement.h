@@ -140,8 +140,7 @@ public:
   nsresult GetClientWidth(PRInt32* aClientWidth);
   nsresult ScrollIntoView(PRBool aTop);
 
-  nsresult GetOffsetRect(nsRect& aRect, 
-                         nsIAtom* aOffsetParentTag,
+  nsresult GetOffsetRect(nsRect& aRect,
                          nsIContent** aOffsetParent);
   nsresult GetScrollInfo(nsIScrollableView **aScrollableView, float *aP2T,
                          float *aT2P);
