@@ -53,12 +53,6 @@ Contributors:
         <text class="label" value="&kb.label;"/>
       </box>
 
-      <box iscontrolcontainer="true" orient="horizontal" autostretch="never">
-        <checkbox wsm_persist="true" id="offline.compactFolder" 
-            label="&offlineCompact.label;" accesskey="&offlineCompact.accesskey;"/> 
-        <textbox wsm_persist="true" id="offline.compactFolderMin" size="5" value="100"/>
-        <text class="label" value="&kb.label;"/>
-      </box>
     </titledbox>
 
     <titledbox orient="vertical" id="offline.titlebox"  hidable="true" hidefor="pop3">
@@ -99,13 +93,7 @@ Contributors:
         <text class="label" value="&kb.label;"/>
     </box>
 
-    <box iscontrolcontainer="true" orient="horizontal" autostretch="never">
-        <checkbox wsm_persist="true" id="offline.compactFolder" 
-            label="&offlineCompact.label;" accesskey="&offlineCompact.accesskey;"/> 
-        <textbox wsm_persist="true" id="offline.compactFolderMin" size="5" value="100"/>
-        <text class="label" value="&kb.label;"/>
-    </box>
-
+    
     <checkbox iscontrolcontainer="true" hidable="true" hidefor="pop3,imap" 
          wsm_persist="true" id="nntp.downloadUnread" label="&nntpDownloadUnread.label;" accesskey="&nntpDownloadUnread.accesskey;"/>
     <box iscontrolcontainer="true" hidable="true" hidefor="pop3,imap" orient="horizontal" autostretch="never">

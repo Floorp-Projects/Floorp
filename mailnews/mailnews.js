@@ -306,3 +306,4 @@ pref("mail.biff.default_sound_url","");
 pref("mail.content_disposition_type", 0);
 
 pref("mailnews.show_send_progress", true); //Will show a progress dialog when saving or sending a message
+pref("mail.server.default.retainBy", 1);

@@ -175,7 +175,7 @@ function LoadSyncTree()
     for (var i=0;i<allServers.Count();i++)	{
 
         var currentServer = allServers.GetElementAt(i).QueryInterface(Components.interfaces.nsIMsgIncomingServer);
-        var rootURI = currentServer.serverURI
+        var rootURI = currentServer.serverURI;
         var rootFolder = currentServer.RootFolder;
 
         var rootMsgFolder = rootFolder.QueryInterface(Components.interfaces.nsIMsgFolder);

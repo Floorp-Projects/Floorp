@@ -31,20 +31,12 @@ function onInit()
         initRetentionSettings();
         initDownloadSettings();
     }
-
 }
 
 function initServerSettings()
 {	 
  
-    var prefs = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
-    var compactFolder = prefs.GetBoolPref("mail.prompt_purge_threshhold");	
-    var compactFolderMin = prefs.GetIntPref("mail.purge_threshhold");	
-    if (compactFolderMin == null || compactFolderMin == 0 )
-        compactFolderMin = 100;
     document.getElementById("offline.notDownload").checked =  gIncomingServer.limitMessageSize;
-    document.getElementById("offline.compactFolder").checked = compactFolder;
-    document.getElementById("offline.compactFolderMin").setAttribute("value", compactFolderMin);
     if(gIncomingServer.maxMessageSize > 0)
         document.getElementById("offline.notDownloadMin").setAttribute("value", gIncomingServer.maxMessageSize);
     else
@@ -54,6 +46,7 @@ function initServerSettings()
         gImapIncomingServer = gIncomingServer.QueryInterface(Components.interfaces.nsIImapIncomingServer);
         document.getElementById("offline.downloadBodiesOnGetNewMail").checked =  gImapIncomingServer.downloadBodiesOnGetNewMail;
         document.getElementById("offline.newFolder").checked =  gImapIncomingServer.offlineDownload;
+        onLockPreference();	
     }
 }
   
@@ -78,13 +71,20 @@ function initRetentionSettings()
     else
         document.getElementById("nntp.removeBodyMin").setAttribute("value", "30");
 
-    if(retentionSettings.retainByPreference == 1)
+    switch(retentionSettings.retainByPreference)
+    {		
+        case 1:
         document.getElementById("nntp.keepAllMsg").checked = true;	
-    else if(retentionSettings.retainByPreference == 2)
+            break;
+        case 2:   
         document.getElementById("nntp.keepOldMsg").checked = true;
-    else if(retentionSettings.retainByPreference == 3)
+            break;
+        case 3:    
         document.getElementById("nntp.keepNewMsg").checked = true;
-
+            break;
+        default:
+            document.getElementById("nntp.keepAllMsg").checked = true;
+    }  
 }
 
 
@@ -200,10 +200,6 @@ function onSave()
     var retentionSettings = new Array;
     var downloadSettings = new Array;
 
-    var prefs = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
-    var compactFolderMin = document.getElementById("offline.compactFolderMin").value;
-    var compactFolder = document.getElementById("offline.compactFolder").checked;	
- 
     gIncomingServer.limitMessageSize = document.getElementById("offline.notDownload").checked;
     gIncomingServer.maxMessageSize = document.getElementById("offline.notDownloadMin").value;
 
@@ -225,8 +221,6 @@ function onSave()
     downloadSettings.downloadUnreadOnly = document.getElementById("nntp.downloadUnread").checked;
     downloadSettings.ageLimitOfMsgsToDownload = document.getElementById("nntp.downloadMsgMin").value;
 
-    prefs.SetBoolPref("mail.prompt_purge_threshhold", compactFolder);
-    prefs.SetIntPref("mail.purge_threshhold", compactFolderMin);
     gIncomingServer.retentionSettings = retentionSettings;
     gIncomingServer.downloadSettings = downloadSettings;
 
@@ -235,4 +229,28 @@ function onSave()
         gImapIncomingServer.offlineDownload = document.getElementById("offline.newFolder").checked;
     }
 }
+
+
+function onLockPreference()
+{
+    var isDownloadLocked = false;
+    var isGetNewLocked = false;
+    var initPrefString = "mail.server"; 
+    var finalPrefString; 
+
+    var prefService = Components.classes["@mozilla.org/preferences-service;1"];
+    prefService = prefService.getService();
+    prefService = prefService.QueryInterface(Components.interfaces.nsIPrefService);
+
+    finalPrefString = initPrefString + "." + gIncomingServer.key + ".";
+    var pref = prefService.getBranch(finalPrefString);
+    isDownloadLocked = pref.PrefIsLocked("offline_download");
+    if(isDownloadLocked) 
+        document.getElementById("offline.newFolder").disabled = true;
+    
+    isGetNewLocked = pref.PrefIsLocked("download_bodies_on_get_new_mail");
+    if(isGetNewLocked)
+        document.getElementById("offline.downloadBodiesOnGetNewMail").disabled = true;        
+      
+} 
 
