@@ -62,6 +62,7 @@ EXPORTS		= \
 XPIDLSRCS	= \
 		nsIThread.idl \
 		nsIThreadPool.idl \
+		nsITimerManager.idl \
 		nsIRunnable.idl \
 		nsIEventQueue.idl \
 		nsIEventQueueService.idl \
