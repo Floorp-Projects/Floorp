@@ -37,6 +37,8 @@
 #include "nsCURILoader.h"
 #include "nsIWebProgress.h"
 #include "nsIWebProgressListener.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 
 // used to manage our in memory data source of helper applications
 #include "nsRDFCID.h"
@@ -64,6 +66,8 @@
 #include "nsIInternetConfigService.h"
 #include "nsDecodeAppleFile.h"
 #endif // XP_MAC
+
+const char *FORCE_ALWAYS_ASK_PREF = "browser.helperApps.alwaysAsk.force";
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID, NS_RDFXMLDATASOURCE_CID);
@@ -838,12 +842,24 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
     httpChannel->SetApplyConversion( PR_FALSE );
   }
 
+  PRBool forceAlwaysAsk = PR_TRUE;
+  nsCOMPtr<nsIPrefService> prefs = 
+    do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv))
+  {
+    nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(prefs, &rv);
+    if (NS_SUCCEEDED(rv))
+       rv = prefBranch->GetBoolPref(FORCE_ALWAYS_ASK_PREF, &forceAlwaysAsk);
+  }
 
   // now that the temp file is set up, find out if we need to invoke a dialog asking the user what
   // they want us to do with this content...
 
-  PRBool alwaysAsk = PR_FALSE;
-  mMimeInfo->GetAlwaysAskBeforeHandling(&alwaysAsk);
+  PRBool alwaysAsk = PR_TRUE;
+  if (forceAlwaysAsk)
+    alwaysAsk = PR_TRUE;
+  else
+    mMimeInfo->GetAlwaysAskBeforeHandling(&alwaysAsk);
   if (alwaysAsk)
   {
     // do this first! make sure we don't try to take an action until the user tells us what they want to do
