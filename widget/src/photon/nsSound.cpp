@@ -36,11 +36,14 @@ NS_IMPL_ISUPPORTS(nsSound, nsCOMTypeInfo<nsISound>::GetIID());
 ////////////////////////////////////////////////////////////////////////
 nsSound::nsSound()
 {
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsSound::nsSound this=<%p>\n", this));
+
   NS_INIT_REFCNT();
 }
 
 nsSound::~nsSound()
 {
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsSound::~nsSound this=<%p>\n", this));
 
 }
 
@@ -61,6 +64,8 @@ nsresult NS_NewSound(nsISound** aSound)
 // not currently used.. may go away
 NS_METHOD nsSound::Init(void)
 {
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsSound::Init this=<%p>\n", this));
+
   return NS_OK;
 }
 
@@ -68,7 +73,7 @@ NS_METHOD nsSound::Init(void)
 NS_METHOD nsSound::Beep()
 {
   ::PtBeep();
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsSound::Beep - Not Implemented\n"));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsSound::Beep this=<%p>\n", this));
   return NS_OK;
 }
 
