@@ -37,4 +37,4 @@ ifdef BUILD_DEBUG_GC
 	DEFINES += -DDEBUG_GC
 endif
 
-GARBAGE += $(DEPENDENCIES) core $(wildcard core.[0-9]*)
+GARBAGE += $(DEPENDENCIES)
