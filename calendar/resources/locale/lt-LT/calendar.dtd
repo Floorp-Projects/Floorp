@@ -448,6 +448,13 @@
 <!ENTITY calendar.print.onlyitemsstatus.label "Įvykiai, turintys būseną:">
 <!ENTITY calendar.print.onlyitemscategory.label "Priklausantys kategorijai:">
 
+<!-- LOCALIZATION NOTE (mainWindow.title): DONT_TRANSLATE -->
+<!ENTITY mainWindow.title "&brandFullName;">
+<!-- LOCALIZATION NOTE (mainWindow.titlemodifier) : DONT_TRANSLATE -->
+<!ENTITY mainWindow.titlemodifier "&brandFullName;">
+<!-- LOCALIZATION NOTE (mainWindow.titlemodifiermenuseparator): DONT_TRANSLATE -->
+<!ENTITY mainWindow.titlemodifiermenuseparator " - ">
+
 <!-- Added to match Lithuanian locale (questions to tatjanaj@ktl.mii.lt) -->
 <!ENTITY alarm.units.minutes.t  "minučių">
 <!ENTITY alarm.units.hours.t    "valandų">

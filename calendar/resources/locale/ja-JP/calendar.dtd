@@ -451,3 +451,10 @@
 <!ENTITY calendar.print.onlyitemsstatus.label "このステータスの項目のみ印刷:">
 <!ENTITY calendar.print.onlyitemscategory.label "このカテゴリの項目のみ印刷:">
 
+<!-- LOCALIZATION NOTE (mainWindow.title): DONT_TRANSLATE -->
+<!ENTITY mainWindow.title "&brandFullName;">
+<!-- LOCALIZATION NOTE (mainWindow.titlemodifier) : DONT_TRANSLATE -->
+<!ENTITY mainWindow.titlemodifier "&brandFullName;">
+<!-- LOCALIZATION NOTE (mainWindow.titlemodifiermenuseparator): DONT_TRANSLATE -->
+<!ENTITY mainWindow.titlemodifiermenuseparator " - ">
+

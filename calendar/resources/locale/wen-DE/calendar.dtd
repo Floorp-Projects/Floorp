@@ -448,3 +448,10 @@
 <!ENTITY calendar.print.onlyitemsstatus.label "Jenož pozicije z tutym statusom ćišćeć:">
 <!ENTITY calendar.print.onlyitemscategory.label "Jenož pozicije z tutej kategoriju ćišćeć:">
 
+<!-- LOCALIZATION NOTE (mainWindow.title): DONT_TRANSLATE -->
+<!ENTITY mainWindow.title "&brandFullName;">
+<!-- LOCALIZATION NOTE (mainWindow.titlemodifier) : DONT_TRANSLATE -->
+<!ENTITY mainWindow.titlemodifier "&brandFullName;">
+<!-- LOCALIZATION NOTE (mainWindow.titlemodifiermenuseparator): DONT_TRANSLATE -->
+<!ENTITY mainWindow.titlemodifiermenuseparator " - ">
+

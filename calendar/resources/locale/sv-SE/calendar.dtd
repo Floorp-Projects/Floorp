@@ -449,3 +449,10 @@
 <!ENTITY calendar.print.onlyitemsstatus.label "Skriv enbart ut saker med statusen:">
 <!ENTITY calendar.print.onlyitemscategory.label "Skriv enbart ut saker inom kategorin:">
 
+<!-- LOCALIZATION NOTE (mainWindow.title): DONT_TRANSLATE -->
+<!ENTITY mainWindow.title "&brandFullName;">
+<!-- LOCALIZATION NOTE (mainWindow.titlemodifier) : DONT_TRANSLATE -->
+<!ENTITY mainWindow.titlemodifier "&brandFullName;">
+<!-- LOCALIZATION NOTE (mainWindow.titlemodifiermenuseparator): DONT_TRANSLATE -->
+<!ENTITY mainWindow.titlemodifiermenuseparator " - ">
+

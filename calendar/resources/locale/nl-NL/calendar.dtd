@@ -442,3 +442,10 @@
 <!ENTITY calendar.print.onlyitemsstatus.label "Enkel items met deze status afdrukken:">
 <!ENTITY calendar.print.onlyitemscategory.label "Enkel items met deze categorie afdrukken:">
 
+<!-- LOCALIZATION NOTE (mainWindow.title): DONT_TRANSLATE -->
+<!ENTITY mainWindow.title "&brandFullName;">
+<!-- LOCALIZATION NOTE (mainWindow.titlemodifier) : DONT_TRANSLATE -->
+<!ENTITY mainWindow.titlemodifier "&brandFullName;">
+<!-- LOCALIZATION NOTE (mainWindow.titlemodifiermenuseparator): DONT_TRANSLATE -->
+<!ENTITY mainWindow.titlemodifiermenuseparator " - ">
+

@@ -136,7 +136,25 @@
 <!ENTITY addressBookCmd.label     "Adresar">
 <!ENTITY addressBookCmd.accesskey "A">
 
+<!ENTITY helpMenu.label         "Help"> 
 <!ENTITY helpMenu.accesskey            "P">
 
 <!ENTITY walletPasswordManager.label     "Upravljalec gesel">
 <!ENTITY walletPasswordManager.accesskey "g">
+
+<!-- Toolbar items -->
+<!ENTITY fileMenu.label         "File"> 
+<!ENTITY fileMenu.accesskey       "F">
+
+<!ENTITY editMenu.label         "Edit"> 
+<!ENTITY editMenu.accesskey       "E"> 
+<!ENTITY preferencesCmd.label       "Options...">
+<!ENTITY preferencesCmd.accesskey     "O"> 
+
+<!ENTITY viewMenu.label         "View"> 
+<!ENTITY viewMenu.accesskey       "V"> 
+
+<!ENTITY releaseCmd.label       "Release Notes">
+<!ENTITY releaseCmd.accesskey       "R">
+<!ENTITY aboutCmd.label         "About &brandFullName;">
+<!ENTITY aboutCmd.accesskey       "A">

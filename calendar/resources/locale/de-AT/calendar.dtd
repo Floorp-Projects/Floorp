@@ -444,3 +444,11 @@
 <!ENTITY calendar.print.listselected.label "Gewählte Ereignisse auflisten">
 <!ENTITY calendar.print.onlyitemsstatus.label "Nur Elemente mit folgendem Status drucken:">
 <!ENTITY calendar.print.onlyitemscategory.label "Nur Elemente mit folgender Kategorie drucken:">
+
+<!-- LOCALIZATION NOTE (mainWindow.title): DONT_TRANSLATE -->
+<!ENTITY mainWindow.title "&brandFullName;">
+<!-- LOCALIZATION NOTE (mainWindow.titlemodifier) : DONT_TRANSLATE -->
+<!ENTITY mainWindow.titlemodifier "&brandFullName;">
+<!-- LOCALIZATION NOTE (mainWindow.titlemodifiermenuseparator): DONT_TRANSLATE -->
+<!ENTITY mainWindow.titlemodifiermenuseparator " - ">
+

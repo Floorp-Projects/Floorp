@@ -447,3 +447,11 @@
 <!ENTITY calendar.print.listselected.label "Rhestri Digwyddiadau Penodol">
 <!ENTITY calendar.print.onlyitemsstatus.label "Argraffu eitemau gyda'r statws hwn, yn unig:">
 <!ENTITY calendar.print.onlyitemscategory.label "Argraffu eitemau yn y categori hwn, yn unig:">
+
+<!-- LOCALIZATION NOTE (mainWindow.title): DONT_TRANSLATE -->
+<!ENTITY mainWindow.title "&brandFullName;">
+<!-- LOCALIZATION NOTE (mainWindow.titlemodifier) : DONT_TRANSLATE -->
+<!ENTITY mainWindow.titlemodifier "&brandFullName;">
+<!-- LOCALIZATION NOTE (mainWindow.titlemodifiermenuseparator): DONT_TRANSLATE -->
+<!ENTITY mainWindow.titlemodifiermenuseparator " - ">
+

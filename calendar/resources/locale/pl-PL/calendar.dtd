@@ -444,3 +444,10 @@
 <!ENTITY calendar.print.onlyitemsstatus.label "Drukuj tylko pozycje o statusie:">
 <!ENTITY calendar.print.onlyitemscategory.label "Drukuj tylko pozycje o kategorii:">
 
+<!-- LOCALIZATION NOTE (mainWindow.title): DONT_TRANSLATE -->
+<!ENTITY mainWindow.title "&brandFullName;">
+<!-- LOCALIZATION NOTE (mainWindow.titlemodifier) : DONT_TRANSLATE -->
+<!ENTITY mainWindow.titlemodifier "&brandFullName;">
+<!-- LOCALIZATION NOTE (mainWindow.titlemodifiermenuseparator): DONT_TRANSLATE -->
+<!ENTITY mainWindow.titlemodifiermenuseparator " - ">
+

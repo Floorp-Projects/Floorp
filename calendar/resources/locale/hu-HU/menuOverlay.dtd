@@ -138,7 +138,25 @@
 <!ENTITY addressBookCmd.label     "Címjegyzék">
 <!ENTITY addressBookCmd.accesskey "C">
 
+<!ENTITY helpMenu.label         "Help"> 
 <!ENTITY helpMenu.accesskey            "H">
 
 <!ENTITY walletPasswordManager.label     "Jelszókezelő">
 <!ENTITY walletPasswordManager.accesskey "J">
+
+<!-- Toolbar items -->
+<!ENTITY fileMenu.label         "File"> 
+<!ENTITY fileMenu.accesskey       "F">
+
+<!ENTITY editMenu.label         "Edit"> 
+<!ENTITY editMenu.accesskey       "E"> 
+<!ENTITY preferencesCmd.label       "Options...">
+<!ENTITY preferencesCmd.accesskey     "O"> 
+
+<!ENTITY viewMenu.label         "View"> 
+<!ENTITY viewMenu.accesskey       "V"> 
+
+<!ENTITY releaseCmd.label       "Release Notes">
+<!ENTITY releaseCmd.accesskey       "R">
+<!ENTITY aboutCmd.label         "About &brandFullName;">
+<!ENTITY aboutCmd.accesskey       "A">

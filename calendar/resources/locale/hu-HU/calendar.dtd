@@ -450,3 +450,10 @@
 <!ENTITY calendar.print.onlyitemsstatus.label "Csak a következő állapotú tételek kerüljenek nyomtatásra">
 <!ENTITY calendar.print.onlyitemscategory.label "Csak a következő kategóriájú tételek kerüljenek nyomtatásra"> 
 
+<!-- LOCALIZATION NOTE (mainWindow.title): DONT_TRANSLATE -->
+<!ENTITY mainWindow.title "&brandFullName;">
+<!-- LOCALIZATION NOTE (mainWindow.titlemodifier) : DONT_TRANSLATE -->
+<!ENTITY mainWindow.titlemodifier "&brandFullName;">
+<!-- LOCALIZATION NOTE (mainWindow.titlemodifiermenuseparator): DONT_TRANSLATE -->
+<!ENTITY mainWindow.titlemodifiermenuseparator " - ">
+

@@ -448,3 +448,10 @@
 <!ENTITY calendar.print.onlyitemsstatus.label "Tlačiť iba položky tohoto stavu:">
 <!ENTITY calendar.print.onlyitemscategory.label "Tlačiť iba položky tejto kategórie:">
 
+<!-- LOCALIZATION NOTE (mainWindow.title): DONT_TRANSLATE -->
+<!ENTITY mainWindow.title "&brandFullName;">
+<!-- LOCALIZATION NOTE (mainWindow.titlemodifier) : DONT_TRANSLATE -->
+<!ENTITY mainWindow.titlemodifier "&brandFullName;">
+<!-- LOCALIZATION NOTE (mainWindow.titlemodifiermenuseparator): DONT_TRANSLATE -->
+<!ENTITY mainWindow.titlemodifiermenuseparator " - ">
+
