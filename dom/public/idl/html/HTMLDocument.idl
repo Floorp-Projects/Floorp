@@ -4,7 +4,7 @@
 
             attribute  DOMString            title;
    readonly attribute  DOMString            referrer;
-   readonly attribute  DOMString            domain;
+            attribute  DOMString            domain;
    readonly attribute  DOMString            URL;
             attribute  HTMLElement          body;
    readonly attribute  HTMLCollection       images;

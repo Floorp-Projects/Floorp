@@ -193,6 +193,8 @@ protected:
   PRBool GetBodyContent();
   nsresult GetBodyElement(nsIDOMHTMLBodyElement** aBody);
 
+  NS_IMETHOD GetDomainURI(nsIURI **uri);
+
 #ifdef NECKO
   virtual nsresult Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
 #else

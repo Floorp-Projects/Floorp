@@ -631,6 +631,20 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         
         break;
       }
+      case HTMLDOCUMENT_DOMAIN:
+      {
+        PRBool ok = PR_FALSE;
+        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.domain", PR_TRUE, &ok);
+        if (!ok) {
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
+        }
+        nsAutoString prop;
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+      
+        a->SetDomain(prop);
+        
+        break;
+      }
       case HTMLDOCUMENT_BODY:
       {
         PRBool ok = PR_FALSE;
@@ -1403,7 +1417,7 @@ static JSPropertySpec HTMLDocumentProperties[] =
 {
   {"title",    HTMLDOCUMENT_TITLE,    JSPROP_ENUMERATE},
   {"referrer",    HTMLDOCUMENT_REFERRER,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"domain",    HTMLDOCUMENT_DOMAIN,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"domain",    HTMLDOCUMENT_DOMAIN,    JSPROP_ENUMERATE},
   {"URL",    HTMLDOCUMENT_URL,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"body",    HTMLDOCUMENT_BODY,    JSPROP_ENUMERATE},
   {"images",    HTMLDOCUMENT_IMAGES,    JSPROP_ENUMERATE | JSPROP_READONLY},

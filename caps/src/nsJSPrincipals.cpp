@@ -40,7 +40,7 @@ nsDestroyJSPrincipals(JSContext *cx, struct JSPrincipals *jsprin) {
     // so we don't need to worry about "codebase"
 }
 
-nsJSPrincipals::nsJSPrincipals() 
+nsJSPrincipals::nsJSPrincipals()
 {
     codebase = nsnull;
     getPrincipalArray = nsGetPrincipalArray;

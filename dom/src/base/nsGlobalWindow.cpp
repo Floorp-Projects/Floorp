@@ -120,7 +120,6 @@ GlobalWindowImpl::GlobalWindowImpl()
   mLocation = nsnull;
   mFrames = nsnull;
   mOpener = nsnull;
-  mPrincipal = nsnull;
 
   mTimeouts = nsnull;
   mTimeoutInsertionPoint = nsnull;
@@ -149,7 +148,6 @@ GlobalWindowImpl::~GlobalWindowImpl()
   NS_IF_RELEASE(mLocation);
   NS_IF_RELEASE(mFrames);
   NS_IF_RELEASE(mOpener);
-  NS_IF_RELEASE(mPrincipal);
   NS_IF_RELEASE(mListenerManager);
 }
 
@@ -293,11 +291,6 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument *aDocument)
   }
 
   //XXX Should this be outside the about:blank clearscope exception?
-  if (nsnull != mPrincipal)
-  {
-    NS_RELEASE(mPrincipal);
-  }
-
   if (nsnull != mDocument) {
     NS_RELEASE(mDocument);
   }
@@ -2915,41 +2908,15 @@ GlobalWindowImpl::DisableExternalCapture()
 NS_IMETHODIMP
 GlobalWindowImpl::GetPrincipal(nsIPrincipal **result) 
 {
-  if (!mPrincipal) {
-    nsCOMPtr<nsIDocument> doc;
-    if (!mDocument || NS_FAILED(mDocument->QueryInterface(kIDocumentIID, 
-                                                          (void **) getter_AddRefs(doc))))
-    {
-      return NS_ERROR_FAILURE;
-    }
-
-    mPrincipal = doc->GetDocumentPrincipal();
-    if (!mPrincipal) {
-      nsCOMPtr<nsIURI> uri = dont_AddRef(doc->GetDocumentURL());
-      if (!uri) 
-        return NS_ERROR_FAILURE;
-
-      nsresult rv;
-      NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
-                      NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-      if (NS_FAILED(rv)) 
-          return NS_ERROR_FAILURE;
-      if (NS_FAILED(securityManager->CreateCodebasePrincipal(uri, &mPrincipal)))
-          return NS_ERROR_FAILURE;
-    }
+  nsCOMPtr<nsIDocument> doc;
+  if (!mDocument || NS_FAILED(mDocument->QueryInterface(kIDocumentIID, 
+                                                        (void **) getter_AddRefs(doc))))
+  {
+    return NS_ERROR_FAILURE;
   }
-  *result = mPrincipal;
-  NS_ADDREF(*result);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-GlobalWindowImpl::SetPrincipal(nsIPrincipal *aPrin)
-{
-  NS_IF_RELEASE(mPrincipal);
-  mPrincipal = aPrin;
-  if (mPrincipal) 
-    NS_ADDREF(mPrincipal);
+  *result = doc->GetDocumentPrincipal();
+  if (!*result)
+    return NS_ERROR_FAILURE;
   return NS_OK;
 }
 

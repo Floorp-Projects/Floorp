@@ -190,11 +190,6 @@ nsChromeProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
         }
         nsCOMPtr<nsISupports> owner = do_QueryInterface(principal);
         (*result)->SetOwner(owner);
-#ifdef DEBUG_norris
-        nsXPIDLCString spec;
-        uri->GetSpec(getter_Copies(spec));
-        fprintf(stderr, "System principal created for %s\n", (const char *)spec);
-#endif
     }
 
     NS_RELEASE(chromeURI);
