@@ -37,7 +37,6 @@
 #include <plarena.h>
 #include <seccomon.h>
 #include <secmodt.h>
-#include <mcom_db.h>
 #include <certt.h>
 #include <cert.h>
 #include <pk11func.h>

@@ -33,7 +33,6 @@
 #include "_jni/org_mozilla_jss_CryptoManager.h"
 
 #include <secitem.h>
-#include <mcom_db.h>
 #include <secmod.h>
 #include <cert.h>
 #include <certt.h>
@@ -56,19 +55,6 @@
 #if defined(AIX) || defined(HPUX) || defined(LINUX)
 #include <signal.h>
 #endif
-
-/* HACK
- * Include this from cdbhdl.h since it's now a private export.
- * We only do this because we need to allocate memory for this so
- * we need its size.
- */
-struct CERTCertDBHandleStr {
-    DB *permCertDB;
-    DB *tempCertDB;
-    void *spkDigestInfo;
-    CERTStatusConfig *statusConfig;
-    PZMonitor *dbMon;
-};
 
 /********************************************************************/
 /* The following VERSION Strings should be updated in the following */

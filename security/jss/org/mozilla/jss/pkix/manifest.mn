@@ -37,7 +37,7 @@ MODULE = jss
 
 NS_USE_JDK = 1
 
-REQUIRES =      nspr20 dbm security
+REQUIRES =      nspr20 security
 
 PACKAGE =       org/mozilla/jss/pkix
 

@@ -43,10 +43,6 @@ SHARED_LIBRARY_DIRS = \
     ../org/mozilla/jss/util \
     $(NULL)
 
-EXTRA_LIBS += \
-    $(LIBDBM) \
-    $(NULL)
-
 ifeq ($(OS_ARCH),WINNT)
 
 SHARED_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).dll
