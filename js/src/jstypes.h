@@ -118,10 +118,16 @@
 
 #else /* Unix */
 
-#define JS_EXTERN_API(__type) extern __type
-#define JS_EXPORT_API(__type) __type
-#define JS_EXTERN_DATA(__type) extern __type
-#define JS_EXPORT_DATA(__type) __type
+#ifdef HAVE_VISIBILITY_PRAGMA
+#define JS_EXTERNAL_VIS __attribute__((visibility ("default")))
+#else
+#define JS_EXTERNAL_VIS
+#endif
+
+#define JS_EXTERN_API(__type) extern JS_EXTERNAL_VIS __type
+#define JS_EXPORT_API(__type) JS_EXTERNAL_VIS __type
+#define JS_EXTERN_DATA(__type) extern JS_EXTERNAL_VIS __type
+#define JS_EXPORT_DATA(__type) JS_EXTERNAL_VIS __type
 
 #define JS_DLL_CALLBACK
 #define JS_STATIC_DLL_CALLBACK(__x) static __x
@@ -141,7 +147,7 @@
 #if defined(_WIN32) && !defined(__MWERKS__)
 #    define JS_IMPORT_DATA(__x)      __declspec(dllimport) __x
 #else
-#    define JS_IMPORT_DATA(__x)     __x
+#    define JS_IMPORT_DATA(__x)     JS_EXPORT_DATA (__x)
 #endif
 
 /*

@@ -92,7 +92,7 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 #ifdef MOZ_WIDGET_GTK
 // this is specific to gtk 1.2
-extern GdkFont *default_font;
+extern NS_IMPORT_(GdkFont *) default_font;
 #endif /* MOZ_WIDGET_GTK */
 
 /**

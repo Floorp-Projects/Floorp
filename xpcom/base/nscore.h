@@ -99,19 +99,23 @@
  * SomeCtor() NS_HIDDEN;
  */
 
-#ifdef HAVE_VISIBILITY_ATTRIBUTE
+#ifdef HAVE_VISIBILITY_HIDDEN_ATTRIBUTE
 #define NS_VISIBILITY_HIDDEN   __attribute__ ((visibility ("hidden")))
-#define NS_VISIBILITY_DEFAULT
-
-#define NS_HIDDEN_(type)   NS_VISIBILITY_HIDDEN type
 #else
 #define NS_VISIBILITY_HIDDEN
-#define NS_VISIBILITY_DEFAULT
-
-#define NS_HIDDEN_(type)   type
 #endif
 
+#if defined(HAVE_VISIBILITY_HIDDEN_ATTRIBUTE) && defined(HAVE_VISIBILITY_PRAGMA)
+#define NS_VISIBILITY_DEFAULT __attribute__ ((visibility ("default")))
+#else
+#define NS_VISIBILITY_DEFAULT
+#endif
+
+#define NS_HIDDEN_(type)   NS_VISIBILITY_HIDDEN type
+#define NS_EXTERNAL_VIS_(type) NS_VISIBILITY_DEFAULT type
+
 #define NS_HIDDEN           NS_VISIBILITY_HIDDEN
+#define NS_EXTERNAL_VIS     NS_VISIBILITY_DEFAULT
 
 #undef  IMETHOD_VISIBILITY
 #define IMETHOD_VISIBILITY  NS_VISIBILITY_HIDDEN
@@ -164,6 +168,12 @@
 #define NS_CALLBACK_(_type, _name) _type (__stdcall * _name)
 #define NS_STDCALL __stdcall
 
+// These are needed to mark static members in exported classes, due to
+// gcc bug XXX insert bug# here.
+
+#define NS_EXPORT_STATIC_MEMBER_(type) type
+#define NS_IMPORT_STATIC_MEMBER_(type) type
+
 #elif defined(XP_MAC)
 
 #define NS_IMPORT
@@ -175,18 +185,23 @@
 #define NS_METHOD_(type) type
 #define NS_CALLBACK_(_type, _name) _type (* _name)
 #define NS_STDCALL
+#define NS_EXPORT_STATIC_MEMBER_(type) type
+#define NS_IMPORT_STATIC_MEMBER_(type) type
 
 #else
 
-#define NS_IMPORT
-#define NS_IMPORT_(type) type
-#define NS_EXPORT
-#define NS_EXPORT_(type) type
+#define NS_IMPORT NS_EXTERNAL_VIS
+#define NS_IMPORT_(type) NS_EXTERNAL_VIS_(type)
+#define NS_EXPORT NS_EXTERNAL_VIS
+#define NS_EXPORT_(type) NS_EXTERNAL_VIS_(type)
 #define NS_IMETHOD_(type) virtual IMETHOD_VISIBILITY type NS_DEFCALL
 #define NS_IMETHODIMP_(type) type
 #define NS_METHOD_(type) type
 #define NS_CALLBACK_(_type, _name) _type (* _name)
 #define NS_STDCALL
+#define NS_EXPORT_STATIC_MEMBER_(type) NS_EXTERNAL_VIS_(type)
+#define NS_IMPORT_STATIC_MEMBER_(type) NS_EXTERNAL_VIS_(type)
+
 #endif
 
 /**

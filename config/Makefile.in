@@ -98,6 +98,12 @@ endif
 
 HEADERS		= nsBuildID.h $(DEPTH)/mozilla-config.h
 
+ifdef WRAP_SYSTEM_INCLUDES
+export::
+	mkdir -p $(DIST)/include/system_wrappers
+	$(PERL) $(topsrcdir)/nsprpub/config/make-system-wrappers.pl $(DIST)/include/system_wrappers < $(srcdir)/system-headers
+endif
+
 export:: $(TARGETS) $(HEADERS)
 	$(INSTALL) $(IFLAGS1) $(HEADERS) $(DIST)/include
 	$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/build-list.pl $(PUBLIC)/.headerlist $(HEADERS)

@@ -42,6 +42,7 @@
 
 #include "prtypes.h"
 #include "nsDebug.h"
+#include "psSharedCore.h"
 
 struct nsPaperSizePS_ {
     const char *name;
@@ -50,7 +51,7 @@ struct nsPaperSizePS_ {
     PRBool isMetric;        // Present to the user in metric, if possible
 };
 
-class nsPaperSizePS {
+class NS_PSSHARED nsPaperSizePS {
     public:
         /** ---------------------------------------------------
          * Constructor
@@ -118,8 +119,9 @@ class nsPaperSizePS {
 
     private:
         unsigned int mCurrent;
-        static const nsPaperSizePS_ mList[];
-        static const unsigned int mCount;
+        // the class visibility should export these, but it doesn't
+        static NS_PSSHARED_STATIC_MEMBER_(const nsPaperSizePS_) mList[];
+        static NS_PSSHARED_STATIC_MEMBER_(const unsigned int) mCount;
 };
 
 #endif

@@ -43,6 +43,16 @@
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 #include <gtk/gtkobject.h>
+#ifdef MOZILLA_CLIENT
+#include "nscore.h"
+#ifdef _IMPL_GTKSUPERWIN_API
+#define GTKSUPERWIN_API(type) NS_EXPORT_(type)
+#else
+#define GTKSUPERWIN_API(type) NS_IMPORT_(type)
+#endif
+#else
+#define GTKSUPERWIN_API(type) type
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -93,15 +103,15 @@ struct _GdkSuperWinClass
   GtkObjectClass object_class;
 };
 
-GtkType gdk_superwin_get_type(void);
+GTKSUPERWIN_API(GtkType) gdk_superwin_get_type(void);
 
-GdkSuperWin *gdk_superwin_new (GdkWindow      *parent_window,
-                               guint           x,
-                               guint           y,
-                               guint           width,
-                               guint           height);
+GTKSUPERWIN_API(GdkSuperWin*) gdk_superwin_new (GdkWindow      *parent_window,
+                                                guint           x,
+                                                guint           y,
+                                                guint           width,
+                                                guint           height);
 
-void  
+GTKSUPERWIN_API(void)  
 gdk_superwin_set_event_funcs (GdkSuperWin               *superwin,
                               GdkSuperWinFunc            shell_func,
                               GdkSuperWinPaintFunc       paint_func,
@@ -111,12 +121,12 @@ gdk_superwin_set_event_funcs (GdkSuperWin               *superwin,
                               gpointer                   func_data,
                               GDestroyNotify             notify);
 
-void gdk_superwin_scroll (GdkSuperWin *superwin,
-                          gint         dx,
-                          gint         dy);
-void gdk_superwin_resize (GdkSuperWin *superwin,
-                          gint         width,
-                          gint         height);
+GTKSUPERWIN_API(void) gdk_superwin_scroll (GdkSuperWin *superwin,
+                                           gint         dx,
+                                           gint         dy);
+GTKSUPERWIN_API(void) gdk_superwin_resize (GdkSuperWin *superwin,
+                                           gint         width,
+                                           gint         height);
 
 #ifdef __cplusplus
 }

@@ -43,12 +43,13 @@
 #include "nsVoidArray.h"
 #include "prtypes.h"
 #include "nsCUPSShim.h"
+#include "psSharedCore.h"
 
 class nsIPrefService;
 class nsIPrefBranch;
 class nsCUPSShim;
 
-class nsPSPrinterList {
+class NS_PSSHARED nsPSPrinterList {
     public:
         /**
          * Initialize a printer manager object.
