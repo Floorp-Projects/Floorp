@@ -46,13 +46,7 @@ my %toplevel_modules; # visited components.
 
 my $debug = 0;
 
-my $makecommand;
-
-if ($^O eq "linux") {
-  $makecommand = "make";
-} elsif ($^O eq "MSWin32") {
-  $makecommand = "make";
-}
+my $makecommand = "make";
 
 use Cwd;
 my @dirs;
