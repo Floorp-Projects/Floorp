@@ -56,17 +56,19 @@ public class NativeJavaPackage extends ScriptableObject {
 
     // we know these are packages so we can skip the class check
     // note that this is ok even if the package isn't present.
-    static final String[] commonPackages = {
-        "java.lang",
-        "java.lang.reflect",
-        "java.io",
-        "java.math",
-        "java.util",
-        "java.util.zip",
-        "java.text",
-        "java.text.resources",
-        "java.applet",
-    };
+    private static final String commonPackages = ""
+                                                 +"java.lang;"
+                                                 +"java.lang.reflect"
+                                                 +"java.io;"
+                                                 +"java.math;"
+                                                 +"java.net;"
+                                                 +"java.util;"
+                                                 +"java.util.zip;"
+                                                 +"java.text;"
+                                                 +"java.text.resources;"
+                                                 +"java.applet;"
+                                                 +"javax.swing;"
+                                                 ;
 
     public static class TopLevelPackage extends NativeJavaPackage
                                         implements Function
@@ -121,20 +123,25 @@ public class NativeJavaPackage extends ScriptableObject {
         NativeJavaPackage javaAlias = (NativeJavaPackage)packages.get("java",
                                                                       packages);
 
+        for (int nameStart = 0; ;) {
+            int nameEnd = commonPackages.indexOf(';', nameStart);
+            if (nameEnd < 0) { break; }
+            String packageName = commonPackages.substring(nameStart, nameEnd);
+            packages.forcePackage(packageName);
+            nameStart = nameEnd + 1;
+        }
+
+        Method[] m = FunctionObject.findMethods(NativeJavaPackage.class,
+                                                "jsFunction_getClass");
+        FunctionObject f = new FunctionObject("getClass", m[0], scope);
+
         // It's safe to downcast here since initStandardObjects takes
         // a ScriptableObject.
         ScriptableObject global = (ScriptableObject) scope;
 
+        global.defineProperty("getClass", f, ScriptableObject.DONTENUM);
         global.defineProperty("Packages", packages, ScriptableObject.DONTENUM);
         global.defineProperty("java", javaAlias, ScriptableObject.DONTENUM);
-
-        for (int i = 0; i < commonPackages.length; i++)
-            packages.forcePackage(commonPackages[i]);
-
-        Method[] m = FunctionObject.findMethods(NativeJavaPackage.class,
-                                                "jsFunction_getClass");
-        FunctionObject f = new FunctionObject("getClass", m[0], global);
-        global.defineProperty("getClass", f, ScriptableObject.DONTENUM);
 
         // I think I'm supposed to return the prototype, but I don't have one.
         return packages;
