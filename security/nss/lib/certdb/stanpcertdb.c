@@ -154,6 +154,7 @@ __CERT_AddTempCertToPerm(CERTCertificate *cert, char *nickname,
     NSSCertificate *c = STAN_GetNSSCertificate(cert);
     context = c->object.cryptoContext;
     if (!context) {
+	PORT_SetError(SEC_ERROR_ADDING_CERT); 
 	return SECFailure; /* wasn't a temp cert */
     }
     stanNick = nssCertificate_GetNickname(c, NULL);
