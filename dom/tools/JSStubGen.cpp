@@ -69,7 +69,9 @@ JSStubGen::Generate(char *aFileName,
   GenerateNPL();
   GenerateIncludes(aSpec);
   GenerateIIDDefinitions(aSpec);
+#ifndef USE_COMPTR
   GenerateDefPtrs(aSpec);
+#endif
   GeneratePropertySlots(aSpec);
   GeneratePropertyFunc(aSpec, PR_TRUE);
   GeneratePropertyFunc(aSpec, PR_FALSE);
@@ -95,7 +97,11 @@ static const char *kIncludeDefaultsStr = "\n"
 "#include \"nsIJSScriptObject.h\"\n"
 "#include \"nsIScriptObjectOwner.h\"\n"
 "#include \"nsIScriptGlobalObject.h\"\n"
+#ifdef USE_COMPTR
+"#include \"nsCOMPtr.h\"\n"
+#else
 "#include \"nsIPtr.h\"\n"
+#endif
 "#include \"nsString.h\"\n";
 static const char *kIncludeStr = "#include \"nsIDOM%s.h\"\n";
 static const char *kXPIDLIncludeStr = "#include \"%s.h\"\n";
@@ -305,19 +311,40 @@ static const char *kPropFuncBeginStr = "\n"
 "  if (nsnull == a) {\n"
 "    return JS_TRUE;\n"
 "  }\n"
-"\n"
+"\n";
+
+static const char *kIntCaseStr =
 "  if (JSVAL_IS_INT(id)) {\n"
 "    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);\n"
 "    nsIScriptSecurityManager *secMan;\n"
-"    PRBool ok;\n"
+"    PRBool ok = PR_FALSE;\n"
 "    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {\n"
 "      return JS_FALSE;\n"
 "    }\n"
 "    switch(JSVAL_TO_INT(id)) {\n";
 
+static const char *kIntCaseNamedItemStr =
+"  PRBool checkNamedItem = PR_TRUE;\n"
+"  if (JSVAL_IS_INT(id)) {\n"
+"    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);\n"
+"    nsIScriptSecurityManager *secMan;\n"
+"    PRBool ok = PR_FALSE;\n"
+"    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {\n"
+"      return JS_FALSE;\n"
+"    }\n"
+"    checkNamedItem = PR_FALSE;\n"
+"    switch(JSVAL_TO_INT(id)) {\n";
+
 static const char *kPropFuncDefaultStr = 
 "      default:\n"
 "        return nsJSUtils::nsCallJSScriptObject%sProperty(a, cx, id, vp);\n"
+"    }\n"
+"    NS_RELEASE(secMan);\n"
+"  }\n";
+
+static const char *kPropFuncDefaultNamedItemStr = 
+"      default:\n"
+"        checkNamedItem = PR_TRUE;\n"
 "    }\n"
 "    NS_RELEASE(secMan);\n"
 "  }\n";
@@ -368,7 +395,8 @@ static const char *kPropFuncEndStr =
 "}\n";
 
 static const char *kPropFuncNamedItemStr =
-"  else if (JSVAL_IS_STRING(id)) {\n"
+"\n"
+"  if (checkNamedItem) {\n"
 "    %s prop;\n"
 "    nsAutoString name;\n"
 "\n"
@@ -394,7 +422,8 @@ static const char *kPropFuncNamedItemStr =
 "  }\n";
 
 static const char *kPropFuncNamedItemNonPrimaryStr =
-"  else if (JSVAL_IS_STRING(id)) {\n"
+"\n"
+"  if (checkNamedItem) {\n"
 "    %s prop;\n"
 "    nsIDOM%s* b;\n"
 "    nsAutoString name;\n"
@@ -464,7 +493,37 @@ JSStubGen::GeneratePropertyFunc(IdlSpecification &aSpec, PRBool aIsGetter)
   JSGEN_GENERATE_PROPFUNCBEGIN(buf,  aIsGetter ? "Get" : "Set", primary_iface->GetName());
   *file << buf;
 
+  IdlFunction *item_func = NULL;
+  IdlFunction *named_item_func = NULL;
+  IdlInterface *item_iface = NULL;
+  IdlInterface *named_item_iface = NULL;
+  
   int i, icount = aSpec.InterfaceCount();
+  for (i = 0; i < icount; i++) {
+    IdlInterface *iface = aSpec.GetInterfaceAt(i);
+
+    int m, mcount = iface->FunctionCount();
+    for (m = 0; m < mcount; m++) {
+      IdlFunction *func = iface->GetFunctionAt(m);
+      
+      if (strcmp(func->GetName(), "item") == 0) {
+        item_func = func;
+        item_iface = iface;
+      }
+      else if (strcmp(func->GetName(), "namedItem") == 0) {
+        named_item_func = func;
+        named_item_iface = iface;
+      }
+    }
+  }
+
+  if (NULL == named_item_func) {
+    *file << kIntCaseStr;
+  }
+  else {
+    *file << kIntCaseNamedItemStr;
+  }
+
   for (i = 0; i < icount; i++) {
     IdlInterface *iface = aSpec.GetInterfaceAt(i);
     char iface_name[128];
@@ -513,29 +572,6 @@ JSStubGen::GeneratePropertyFunc(IdlSpecification &aSpec, PRBool aIsGetter)
   if (!any) {
     *file << kNoAttrStr;
   }
-
-  IdlFunction *item_func = NULL;
-  IdlFunction *named_item_func = NULL;
-  IdlInterface *item_iface = NULL;
-  IdlInterface *named_item_iface = NULL;
-  
-  for (i = 0; i < icount; i++) {
-    IdlInterface *iface = aSpec.GetInterfaceAt(i);
-
-    int m, mcount = iface->FunctionCount();
-    for (m = 0; m < mcount; m++) {
-      IdlFunction *func = iface->GetFunctionAt(m);
-      
-      if (strcmp(func->GetName(), "item") == 0) {
-        item_func = func;
-        item_iface = iface;
-      }
-      else if (strcmp(func->GetName(), "namedItem") == 0) {
-        named_item_func = func;
-        named_item_iface = iface;
-      }
-    }
-  }
     
   if (aIsGetter) {
     if (NULL != item_func) {
@@ -543,6 +579,9 @@ JSStubGen::GeneratePropertyFunc(IdlSpecification &aSpec, PRBool aIsGetter)
       GeneratePropGetter(file, *item_iface, *rval, 
                          item_iface == primary_iface ? 
                          JSSTUBGEN_DEFAULT : JSSTUBGEN_DEFAULT_NONPRIMARY);
+    }
+    else if (NULL != named_item_func) {
+      *file << kPropFuncDefaultNamedItemStr;
     }
     else {
       JSGEN_GENERATE_PROPFUNCDEFAULT(buf, aIsGetter ? "Get" : "Set");
@@ -976,7 +1015,11 @@ static const char *kMethodBodyBeginStr = "\n"
 "  if (argc >= %d) {\n";
 
 static const char *kMethodObjectParamStr = "\n"
+#ifdef USE_COMPTR
+"    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b%d),\n"
+#else
 "    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b%d,\n"
+#endif
 "                                           kI%sIID,\n"
 "                                           \"%s\",\n"
 "                                           cx,\n"
@@ -990,7 +1033,11 @@ static const char *kMethodObjectParamStr = "\n"
 
 
 static const char *kMethodXPIDLObjectParamStr = "\n"
-"    if (JS_FALSE == nsJSUtils::nsConvertJSValToXPCObject((nsISupports**)&b%d,\n"
+#ifdef USE_COMPTR
+"    if (JS_FALSE == nsJSUtils::nsConvertJSValToXPCObject(getter_AddRef(b%d),\n"
+#else
+"    if (JS_FALSE == nsJSUtils::nsConvertJSValToXPCObject(&b%d,\n"
+#endif
 "                                           kI%sIID, cx, argv[%d])) {\n"
 "      return JS_FALSE;\n"
 "    }\n";

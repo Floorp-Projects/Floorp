@@ -28,6 +28,8 @@
 class ofstream;
 #endif
 
+//#define USE_COMPTR
+
 class IdlObject;
 class IdlSpecification;
 class IdlInterface;

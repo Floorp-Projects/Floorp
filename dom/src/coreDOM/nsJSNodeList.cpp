@@ -64,7 +64,7 @@ GetNodeListProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   if (JSVAL_IS_INT(id)) {
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
     nsIScriptSecurityManager *secMan;
-    PRBool ok;
+    PRBool ok = PR_FALSE;
     if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
       return JS_FALSE;
     }
@@ -122,7 +122,7 @@ SetNodeListProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   if (JSVAL_IS_INT(id)) {
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
     nsIScriptSecurityManager *secMan;
-    PRBool ok;
+    PRBool ok = PR_FALSE;
     if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
       return JS_FALSE;
     }

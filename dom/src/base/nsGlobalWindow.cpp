@@ -1199,8 +1199,9 @@ GlobalWindowImpl::ClearAllTimeouts()
        then we need to reset the list insertion point for
        newly-created timeouts in case the user adds a timeout,
        before we pop the stack back to RunTimeout. */
-    if (mRunningTimeout == timeout)
+    if (mRunningTimeout == timeout) {
       mTimeoutInsertionPoint = nsnull;
+    }
         
     next = timeout->next;
     if (timeout->timer) {
@@ -1274,13 +1275,14 @@ nsGlobalWindow_RunTimeout(nsITimer *aTimer, void *aClosure)
 {
   nsTimeoutImpl *timeout = (nsTimeoutImpl *)aClosure;
 
-  timeout->window->RunTimeout(timeout);
-  // Drop the ref_count since the timer won't be holding on to the
-  // timeout struct anymore
-  timeout->window->DropTimeout(timeout);
+  if (timeout->window->RunTimeout(timeout)) {
+    // Drop the ref_count since the timer won't be holding on to the
+    // timeout struct anymore
+    timeout->window->DropTimeout(timeout);
+  }
 }
 
-void
+PRBool
 GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
 {
     nsTimeoutImpl *next, *timeout;
@@ -1290,6 +1292,10 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
     PRInt64 now;
     jsval result;
     nsITimer *timer;
+
+    /* Make sure that we don't go away as a result of running timeouts */
+    GlobalWindowImpl* temp = this;
+    NS_ADDREF(temp);
 
     timer = aTimeout->timer;
     cx = (JSContext *)mContext->GetNativeContext();
@@ -1313,8 +1319,10 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
     /* Maybe the timeout that the event was fired for has been deleted
        and there are no others timeouts with deadlines that make them
        eligible for execution yet.  Go away. */
-    if (!last_expired_timeout)
-        return;
+    if (!last_expired_timeout) {
+      NS_RELEASE(temp);
+      return PR_TRUE;
+    }
 
     /* Insert a dummy timeout into the list of timeouts between the portion
        of the list that we are about to process now and those timeouts that
@@ -1336,6 +1344,7 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
       next = timeout->next;
 
       /* Hold the timeout in case expr or funobj releases its doc. */
+      HoldTimeout(timeout);
       mRunningTimeout = timeout;
 
       if (timeout->expr) {
@@ -1373,6 +1382,15 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
       mContext->ScriptEvaluated();
 
       mRunningTimeout = nsnull;
+      /* If the temporary reference is the only one that is keeping
+         the timeout around, the document was released and we should
+         restart this function. */
+      if (timeout->ref_count == 1) {
+        DropTimeout(timeout);
+        NS_RELEASE(temp);
+        return PR_FALSE;
+      }
+      DropTimeout(timeout);
 
       /* If we have a regular interval timer, we re-fire the
        *  timeout, accounting for clock drift.
@@ -1401,13 +1419,15 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
            code below that checks for zero toid. */
         nsresult err = NS_NewTimer(&timeout->timer);
         if (NS_OK != err) {
-          return;
+          NS_RELEASE(temp);
+          return PR_TRUE;
         } 
         
         err = timeout->timer->Init(nsGlobalWindow_RunTimeout, timeout, 
                                    delay32);
         if (NS_OK != err) {
-          return;
+          NS_RELEASE(temp);
+          return PR_TRUE;
         } 
         // Increment ref_count to indicate that this timer is holding
         // on to the timeout struct.
@@ -1435,6 +1455,10 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
     /* Take the dummy timeout off the head of the list */
     mTimeouts = dummy_timeout.next;
     mTimeoutInsertionPoint = nsnull;
+
+    /* Get rid of our temporary reference to ourselves */
+    NS_RELEASE(temp);
+    return PR_TRUE;
 }
 
 static const char *kSetIntervalStr = "setInterval";
