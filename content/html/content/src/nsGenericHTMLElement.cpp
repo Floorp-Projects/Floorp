@@ -504,6 +504,9 @@ nsGenericHTMLElement::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
   nsDOMSlots *slots = GetDOMSlots();
 
   if (!slots->mStyle) {
+    // Just in case...
+    ReparseStyleAttribute();
+
     nsresult rv;
     if (!gCSSOMFactory) {
       rv = CallGetService(kCSSOMFactoryCID, &gCSSOMFactory);
@@ -2307,6 +2310,11 @@ nsGenericHTMLElement::GetInlineStyleRule(nsIStyleRule** aStyleRule)
   if (mAttributes) {
     nsHTMLValue value;
     if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::style, value)) {
+      if (eHTMLUnit_String == value.GetUnit()) {
+        ReparseStyleAttribute();
+        mAttributes->GetAttribute(nsHTMLAtoms::style, value);
+        // hopefully value.GetUnit() is now eHTMLUnit_ISupports
+      }
       if (eHTMLUnit_ISupports == value.GetUnit()) {
         nsCOMPtr<nsISupports> supports = value.GetISupportsValue();
         if (supports)

@@ -54,8 +54,6 @@
 
 #include "nsHTMLURIRefObject.h"
 
-#include "nsICSSParser.h"
-#include "nsIDOMCSSStyleRule.h"
 #include "nsIDOMText.h"
 #include "nsITextContent.h"
 #include "nsIDOMNodeList.h"
@@ -5925,40 +5923,6 @@ nsHTMLEditor::NodesSameType(nsIDOMNode *aNode1, nsIDOMNode *aNode2)
     }
   }
   return PR_FALSE;
-}
-
-NS_IMETHODIMP
-nsHTMLEditor::ParseStyleAttrIntoCSSRule(const nsAString& aString,
-                                        nsIDOMCSSStyleRule **_retval)
-{
-  nsCOMPtr<nsIDOMDocument> domdoc;
-  nsEditor::GetDocument(getter_AddRefs(domdoc));
-  if (!domdoc)
-    return NS_ERROR_UNEXPECTED;
-
-  nsCOMPtr<nsIDocument> doc (do_QueryInterface(domdoc));
-  if (!doc)
-    return NS_ERROR_UNEXPECTED;
-  nsCOMPtr <nsIURI> docURL;
-  doc->GetBaseURL(getter_AddRefs(docURL));
-  nsCOMPtr<nsICSSParser> css = do_CreateInstance("@mozilla.org/content/css-parser;1");
-  NS_ASSERTION(css, "can't get a css parser");
-  if (!css) return NS_ERROR_NULL_POINTER;    
-
-  nsCOMPtr<nsIStyleRule> mRule;
-  css->ParseStyleAttribute(aString, docURL, getter_AddRefs(mRule));
-  nsCOMPtr<nsICSSRule> styleRule = do_QueryInterface(mRule);
-  if (!styleRule) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  nsCOMPtr<nsIDOMCSSRule> domRule;
-  styleRule->GetDOMRule(getter_AddRefs(domRule));
-  if (!domRule) {
-    return NS_ERROR_UNEXPECTED;
-  }
-  
-  return CallQueryInterface(domRule, _retval);
 }
 
 NS_IMETHODIMP

@@ -569,13 +569,6 @@ interface nsIHTMLEditor : nsISupports
   void removeInsertionListener(in nsIContentFilter inFilter);
 
   /**
-   * parse a string containing CSS declarations and returns a DOM CSSStyleRule
-   * @return        a DOM CSSStyleRule
-   * @param aString [IN] a string containing CSS declarations
-   */
-  nsIDOMCSSStyleRule parseStyleAttrIntoCSSRule(in AString aString);
-
-  /**
    * Returns an anonymous nsDOMElement of type aTag,
    * child of aParentNode. If aIsCreatedHidden is true, the class
    * "hidden" is added to the created element. If aAnonClass is not

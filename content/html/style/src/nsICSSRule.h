@@ -71,6 +71,8 @@ public:
 
   NS_IMETHOD Clone(nsICSSRule*& aClone) const = 0;
 
+  // Note that this returns null for inline style rules since they aren't
+  // supposed to have a DOM rule representation (and our code wouldn't work).
   NS_IMETHOD GetDOMRule(nsIDOMCSSRule** aDOMRule) = 0;
 };
 
