@@ -224,12 +224,13 @@ PK11SlotInfo *SECMOD_LookupSlot(SECMODModuleID moduleID,CK_SLOT_ID slotID) {
     return NULL;
 }
 
-
 /*
- * find a module by name and delete it of the module list
+ * find a module by name or module pointer, and delete it off the module list
+ * optionally remove it from secmod.db
  */
+
 SECStatus
-SECMOD_DeleteModule(char *name, int *type) {
+SECMOD_DeleteModuleEx(char * name, SECMODModule *mod, int *type, PRBool permdb) {
     SECMODModuleList *mlp;
     SECMODModuleList **mlpp;
     SECStatus rv = SECFailure;
@@ -240,7 +241,8 @@ SECMOD_DeleteModule(char *name, int *type) {
     SECMOD_GetWriteLock(moduleLock);
     for(mlpp = &modules,mlp = modules; 
 				mlp != NULL; mlpp = &mlp->next, mlp = *mlpp) {
-	if (PORT_Strcmp(name,mlp->module->commonName) == 0) {
+        if ( ( name && (PORT_Strcmp(name,mlp->module->commonName) == 0) ) ||
+             mod == mlp->module ) {
 	    /* don't delete the internal module */
 	    if (!mlp->module->internal) {
 		SECMOD_RemoveList(mlpp,mlp);
@@ -256,12 +258,21 @@ SECMOD_DeleteModule(char *name, int *type) {
     }
     SECMOD_ReleaseWriteLock(moduleLock);
 
-
     if (rv == SECSuccess) {
- 	SECMOD_DeletePermDB(mlp->module);
+        if (permdb) {
+ 	    SECMOD_DeletePermDB(mlp->module);
+        }
 	SECMOD_DestroyModuleListElement(mlp);
     }
     return rv;
+}
+
+/*
+ * find a module by name and delete it of the module list
+ */
+SECStatus
+SECMOD_DeleteModule(char *name, int *type) {
+    return SECMOD_DeleteModuleEx(name, NULL, type, PR_TRUE);
 }
 
 /*
@@ -329,7 +340,7 @@ SECMOD_DeleteInternalModule(char *name) {
 }
 
 SECStatus
-SECMOD_AddModule(SECMODModule *newModule) {
+SECMOD_AddModuleEx(SECMODModule *newModule, PRBool permdb) {
     SECStatus rv;
     SECMODModule *oldModule;
 
@@ -353,12 +364,19 @@ SECMOD_AddModule(SECMODModule *newModule) {
 	newModule->parent = SECMOD_ReferenceModule(defaultDBModule);
     }
 
-    SECMOD_AddPermDB(newModule);
+    if (permdb) {
+        SECMOD_AddPermDB(newModule);
+    }
     SECMOD_AddModuleToList(newModule);
 
     rv = STAN_AddModuleToDefaultTrustDomain(newModule);
 
     return rv;
+}
+
+SECStatus
+SECMOD_AddModule(SECMODModule *newModule) {
+    return SECMOD_AddModuleEx(newModule, PR_TRUE);
 }
 
 PK11SlotInfo *SECMOD_FindSlot(SECMODModule *module,char *name) {
