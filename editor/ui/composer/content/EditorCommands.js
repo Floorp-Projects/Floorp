@@ -404,6 +404,10 @@ function CheckSpelling()
     }
   }
 }
+function OnCreateAlignmentPopup()
+{
+  dump("Creating Alignment popup window\n");
+}
   
 // --------------------------- Debug stuff ---------------------------
 

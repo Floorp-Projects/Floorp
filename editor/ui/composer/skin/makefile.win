@@ -23,8 +23,10 @@ install:: $(DLL)
   $(MAKE_INSTALL) Editor.css              $(DIST)\bin\chrome\editor\composer\skin\default
   $(MAKE_INSTALL) images\ED_Bold.gif			$(DIST)\bin\chrome\editor\composer\skin\default\images
   $(MAKE_INSTALL) images\ED_Bullets.gif		$(DIST)\bin\chrome\editor\composer\skin\default\images
-  $(MAKE_INSTALL) images\ED_Center.gif		$(DIST)\bin\chrome\editor\composer\skin\default\images
-  $(MAKE_INSTALL) images\ED_ClearStyle.gif		$(DIST)\bin\chrome\editor\composer\skin\default\images
+  $(MAKE_INSTALL) images\ED_Left.gif			$(DIST)\bin\chrome\editor\composer\skin\default\images
+  $(MAKE_INSTALL) images\ED_Center.gif    $(DIST)\bin\chrome\editor\composer\skin\default\images
+  $(MAKE_INSTALL) images\ED_Right.gif     $(DIST)\bin\chrome\editor\composer\skin\default\images
+  $(MAKE_INSTALL) images\ED_Justify.gif   $(DIST)\bin\chrome\editor\composer\skin\default\images
   $(MAKE_INSTALL) images\ED_Copy.gif			$(DIST)\bin\chrome\editor\composer\skin\default\images
   $(MAKE_INSTALL) images\ED_Cut.gif			  $(DIST)\bin\chrome\editor\composer\skin\default\images
   $(MAKE_INSTALL) images\ED_Outdent.gif		$(DIST)\bin\chrome\editor\composer\skin\default\images
@@ -33,12 +35,10 @@ install:: $(DLL)
   $(MAKE_INSTALL) images\ED_Image.gif			$(DIST)\bin\chrome\editor\composer\skin\default\images
   $(MAKE_INSTALL) images\ED_Indent.gif		$(DIST)\bin\chrome\editor\composer\skin\default\images
   $(MAKE_INSTALL) images\ED_Italic.gif		$(DIST)\bin\chrome\editor\composer\skin\default\images
-  $(MAKE_INSTALL) images\ED_Left.gif			$(DIST)\bin\chrome\editor\composer\skin\default\images
   $(MAKE_INSTALL) images\ED_Link.gif			$(DIST)\bin\chrome\editor\composer\skin\default\images
   $(MAKE_INSTALL) images\ED_Numbers.gif		$(DIST)\bin\chrome\editor\composer\skin\default\images
   $(MAKE_INSTALL) images\ED_Paste.gif			$(DIST)\bin\chrome\editor\composer\skin\default\images
   $(MAKE_INSTALL) images\ED_Redo.gif			$(DIST)\bin\chrome\editor\composer\skin\default\images
-  $(MAKE_INSTALL) images\ED_Right.gif			$(DIST)\bin\chrome\editor\composer\skin\default\images
   $(MAKE_INSTALL) images\ED_Spell.gif			$(DIST)\bin\chrome\editor\composer\skin\default\images
   $(MAKE_INSTALL) images\ED_Table.gif			$(DIST)\bin\chrome\editor\composer\skin\default\images
   $(MAKE_INSTALL) images\ED_Target.gif		$(DIST)\bin\chrome\editor\composer\skin\default\images
@@ -62,8 +62,10 @@ clobber::
   rm -f $(DIST)\bin\chrome\editor\composer\skin\default\Editor.css
   rm -f $(DIST)\bin\chrome\editor\composer\skin\default\images\ED_Bold.gif			
   rm -f $(DIST)\bin\chrome\editor\composer\skin\default\images\ED_Bullets.gif			
+  rm -f $(DIST)\bin\chrome\editor\composer\skin\default\images\ED_Left.gif			
   rm -f $(DIST)\bin\chrome\editor\composer\skin\default\images\ED_Center.gif			
-  rm -f $(DIST)\bin\chrome\editor\composer\skin\default\images\ED_ClearStyle.gif			
+  rm -f $(DIST)\bin\chrome\editor\composer\skin\default\images\ED_Right.gif			
+  rm -f $(DIST)\bin\chrome\editor\composer\skin\default\images\ED_Justify.gif			
   rm -f $(DIST)\bin\chrome\editor\composer\skin\default\images\ED_Copy.gif			
   rm -f $(DIST)\bin\chrome\editor\composer\skin\default\images\ED_Cut.gif			
   rm -f $(DIST)\bin\chrome\editor\composer\skin\default\images\ED_Outdent.gif			
@@ -72,12 +74,10 @@ clobber::
   rm -f $(DIST)\bin\chrome\editor\composer\skin\default\images\ED_Image.gif			
   rm -f $(DIST)\bin\chrome\editor\composer\skin\default\images\ED_Indent.gif			
   rm -f $(DIST)\bin\chrome\editor\composer\skin\default\images\ED_Italic.gif			
-  rm -f $(DIST)\bin\chrome\editor\composer\skin\default\images\ED_Left.gif			
   rm -f $(DIST)\bin\chrome\editor\composer\skin\default\images\ED_Link.gif			
   rm -f $(DIST)\bin\chrome\editor\composer\skin\default\images\ED_Numbers.gif			
   rm -f $(DIST)\bin\chrome\editor\composer\skin\default\images\ED_Paste.gif			
   rm -f $(DIST)\bin\chrome\editor\composer\skin\default\images\ED_Redo.gif			
-  rm -f $(DIST)\bin\chrome\editor\composer\skin\default\images\ED_Right.gif			
   rm -f $(DIST)\bin\chrome\editor\composer\skin\default\images\ED_Spell.gif			
   rm -f $(DIST)\bin\chrome\editor\composer\skin\default\images\ED_Table.gif			
   rm -f $(DIST)\bin\chrome\editor\composer\skin\default\images\ED_Target.gif			
