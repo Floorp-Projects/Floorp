@@ -705,7 +705,7 @@ nsEventStateManager :: GenerateDragGesture ( nsIPresContext* aPresContext, nsGUI
 
         if (! frameSel) {
           nsCOMPtr<nsIPresShell> shell;
-          nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
+          rv = aPresContext->GetShell(getter_AddRefs(shell));
 
           if (NS_SUCCEEDED(rv) && shell)
             rv = shell->GetFrameSelection(getter_AddRefs(frameSel));
@@ -3272,8 +3272,14 @@ nsresult nsEventStateManager::MoveFocusToCaret()
     if (nodeValue.Length() == caretOffset) {
       // Yes, indeed we were at the end of the last node
       nsCOMPtr<nsIBidirectionalEnumerator> frameTraversal;
-      rv = NS_NewFrameTraversal(getter_AddRefs(frameTraversal),
-        EXTENSIVE, mPresContext, caretFrame);
+
+      nsCOMPtr<nsIFrameTraversal> trav(do_CreateInstance(kFrameTraversalCID,
+                                                         &rv));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = trav->NewFrameTraversal(getter_AddRefs(frameTraversal), EXTENSIVE,
+                                   mPresContext, caretFrame);
+      NS_ENSURE_SUCCESS(rv, rv);
 
       do {   
         // Get the next logical frame, and set the start of
