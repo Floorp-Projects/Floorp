@@ -70,17 +70,19 @@ static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 #define DOWNLOAD_MANAGER_BUNDLE "chrome://communicator/locale/downloadmanager/downloadmanager.properties"
 #define INTERVAL 500
 
-nsIRDFResource* gNC_DownloadsRoot;
-nsIRDFResource* gNC_File;
-nsIRDFResource* gNC_URL;
-nsIRDFResource* gNC_Name;
-nsIRDFResource* gNC_ProgressMode;
-nsIRDFResource* gNC_ProgressPercent;
-nsIRDFResource* gNC_Transferred;
-nsIRDFResource* gNC_DownloadState;
-nsIRDFResource* gNC_StatusText;
+static nsIRDFResource* gNC_DownloadsRoot = nsnull;
+static nsIRDFResource* gNC_File = nsnull;
+static nsIRDFResource* gNC_URL = nsnull;
+static nsIRDFResource* gNC_Name = nsnull;
+static nsIRDFResource* gNC_ProgressMode = nsnull;
+static nsIRDFResource* gNC_ProgressPercent = nsnull;
+static nsIRDFResource* gNC_Transferred = nsnull;
+static nsIRDFResource* gNC_DownloadState = nsnull;
+static nsIRDFResource* gNC_StatusText = nsnull;
 
-nsIRDFService* gRDFService;
+static nsIRDFService* gRDFService = nsnull;
+
+static PRInt32 gRefCnt = 0;
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsDownloadManager
@@ -94,6 +96,12 @@ nsDownloadManager::nsDownloadManager() : mBatches(0)
 
 nsDownloadManager::~nsDownloadManager()
 {
+  if (--gRefCnt != 0 || !gRDFService)
+    // Either somebody tried to use |CreateInstance| instead of
+    // |GetService| or |Init| failed very early, so there's nothing to
+    // do here.
+    return;
+
   gRDFService->UnregisterDataSource(mDataSource);
 
   NS_IF_RELEASE(gNC_DownloadsRoot);                                             
@@ -106,14 +114,17 @@ nsDownloadManager::~nsDownloadManager()
   NS_IF_RELEASE(gNC_DownloadState);
   NS_IF_RELEASE(gNC_StatusText);
 
-  nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);                
-  gRDFService = nsnull;                                                         
-
+  NS_RELEASE(gRDFService);
 }
 
 nsresult
 nsDownloadManager::Init()
 {
+  if (gRefCnt++ != 0) {
+    NS_NOTREACHED("download manager should be used as a service");
+    return NS_ERROR_UNEXPECTED; // This will make the |CreateInstance| fail.
+  }
+
   nsresult rv;
   mRDFContainerUtils = do_GetService("@mozilla.org/rdf/container-utils;1", &rv);
   if (NS_FAILED(rv)) return rv;
@@ -123,8 +134,7 @@ nsDownloadManager::Init()
   
   obsService->AddObserver(this, "quit-application", PR_FALSE);
 
-  rv = nsServiceManager::GetService(kRDFServiceCID, NS_GET_IID(nsIRDFService),
-                                    (nsISupports**) &gRDFService);
+  rv = CallGetService(kRDFServiceCID, &gRDFService);
   if (NS_FAILED(rv)) return rv;                                                 
 
   gRDFService->GetResource("NC:DownloadsRoot", &gNC_DownloadsRoot);
