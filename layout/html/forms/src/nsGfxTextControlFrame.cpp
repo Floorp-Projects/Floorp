@@ -1065,58 +1065,6 @@ nsGfxTextControlFrame::InstallEditor()
       doc->AddObserver(mDocObserver);
     }
 
-    // get the DOM event receiver
-    nsCOMPtr<nsIDOMEventReceiver> er;
-    result = mDoc->QueryInterface(kIDOMEventReceiverIID, getter_AddRefs(er));
-    if (!er) { result = NS_ERROR_NULL_POINTER; }
-    nsCOMPtr<nsIEnderEventListener> eL;
-
-    // we need to hook up our listeners before the editor is initialized
-    result = NS_NewEnderKeyListener(getter_AddRefs(mKeyListener));
-    if (NS_SUCCEEDED(result) && mKeyListener)
-    {
-      eL = do_QueryInterface(mKeyListener);
-      if (eL)
-      {
-        eL->SetFrame(this);
-        eL->SetPresContext(mFramePresContext);
-      }
-      result = er->AddEventListenerByIID(mKeyListener, kIDOMKeyListenerIID);
-      if (NS_FAILED(result)) { //we couldn't add the listener
-        mKeyListener = do_QueryInterface(nsnull); // null out the listener, it's useless
-      }
-    }
-    /*
-    result = NS_NewEnderMouseListener(getter_AddRefs(mMouseListener));
-    if (NS_SUCCEEDED(result) && mMouseListener)
-    {
-      eL = do_QueryInterface(mMouseListener);
-      if (eL)
-      {
-        eL->SetFrame(this);
-        eL->SetPresContext(mFramePresContext);
-        result = er->AddEventListenerByIID(mMouseListener, kIDOMMouseListenerIID);
-        if (NS_FAILED(result)) { //we couldn't add the listener
-          mMouseListener = do_QueryInterface(nsnull); // null out the listener, it's useless
-        }
-      }
-    }
-    */
-    result = NS_NewEnderFocusListener(getter_AddRefs(mFocusListener));
-    if (NS_SUCCEEDED(result) && mFocusListener)
-    {
-      eL = do_QueryInterface(mFocusListener);
-      if (eL)
-      {
-        eL->SetFrame(this);
-        eL->SetPresContext(mFramePresContext);
-        result = er->AddEventListenerByIID(mFocusListener, kIDOMFocusListenerIID);
-        if (NS_FAILED(result)) { //we couldn't add the listener
-          mFocusListener = do_QueryInterface(nsnull); // null out the listener, it's useless
-        }
-      }
-    }
-
     PRUint32 editorFlags = 0;
     if (IsPlainTextControl())
       editorFlags |= nsIHTMLEditor::eEditorPlaintextMask;
@@ -1128,6 +1076,68 @@ nsGfxTextControlFrame::InstallEditor()
     result = mEditor->Init(mDoc, presShell, editorFlags);
     if (NS_SUCCEEDED(result)) {
       result = InitializeTextControl(presShell, mDoc);
+    }
+    if (NS_SUCCEEDED(result)) {
+      result = InstallEventListeners();
+    }
+  }
+  return result;
+}
+
+NS_IMETHODIMP
+nsGfxTextControlFrame::InstallEventListeners()
+{
+  nsresult result;
+
+  // get the DOM event receiver
+  nsCOMPtr<nsIDOMEventReceiver> er;
+  result = mDoc->QueryInterface(kIDOMEventReceiverIID, getter_AddRefs(er));
+  if (!er) { result = NS_ERROR_NULL_POINTER; }
+  nsCOMPtr<nsIEnderEventListener> eL;
+
+  // we need to hook up our listeners before the editor is initialized
+  result = NS_NewEnderKeyListener(getter_AddRefs(mKeyListener));
+  if (NS_SUCCEEDED(result) && mKeyListener)
+  {
+    eL = do_QueryInterface(mKeyListener);
+    if (eL)
+    {
+      eL->SetFrame(this);
+      eL->SetPresContext(mFramePresContext);
+    }
+    result = er->AddEventListenerByIID(mKeyListener, kIDOMKeyListenerIID);
+    if (NS_FAILED(result)) { //we couldn't add the listener
+      mKeyListener = do_QueryInterface(nsnull); // null out the listener, it's useless
+    }
+  }
+  /*
+  result = NS_NewEnderMouseListener(getter_AddRefs(mMouseListener));
+  if (NS_SUCCEEDED(result) && mMouseListener)
+  {
+    eL = do_QueryInterface(mMouseListener);
+    if (eL)
+    {
+      eL->SetFrame(this);
+      eL->SetPresContext(mFramePresContext);
+      result = er->AddEventListenerByIID(mMouseListener, kIDOMMouseListenerIID);
+      if (NS_FAILED(result)) { //we couldn't add the listener
+        mMouseListener = do_QueryInterface(nsnull); // null out the listener, it's useless
+      }
+    }
+  }
+  */
+  result = NS_NewEnderFocusListener(getter_AddRefs(mFocusListener));
+  if (NS_SUCCEEDED(result) && mFocusListener)
+  {
+    eL = do_QueryInterface(mFocusListener);
+    if (eL)
+    {
+      eL->SetFrame(this);
+      eL->SetPresContext(mFramePresContext);
+      result = er->AddEventListenerByIID(mFocusListener, kIDOMFocusListenerIID);
+      if (NS_FAILED(result)) { //we couldn't add the listener
+        mFocusListener = do_QueryInterface(nsnull); // null out the listener, it's useless
+      }
     }
   }
   return result;
@@ -1684,6 +1694,32 @@ nsEnderKeyListener::KeyUp(nsIDOMEvent* aKeyEvent)
 nsresult
 nsEnderKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
 {
+  nsCOMPtr<nsIDOMUIEvent>uiEvent;
+  uiEvent = do_QueryInterface(aKeyEvent);
+  if (!uiEvent) { //non-key event passed to keydown.  bad things.
+    return NS_OK;
+  }
+
+  if (mFrame && mContent)
+  {
+    nsEventStatus status = nsEventStatus_eIgnore;
+    nsKeyEvent event;
+    event.eventStructType = NS_KEY_EVENT;
+    event.widget = nsnull;
+    event.message = NS_KEY_PRESS;
+    event.flags = NS_EVENT_FLAG_INIT;
+    uiEvent->GetKeyCode(&(event.keyCode));
+    uiEvent->GetCharCode(&(event.charCode));
+    uiEvent->GetShiftKey(&(event.isShift));
+    uiEvent->GetCtrlKey(&(event.isControl));
+    uiEvent->GetAltKey(&(event.isAlt));
+
+    // Have the content handle the event.
+    mContent->HandleDOMEvent(*mContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+    
+    // Now have the frame handle the event
+    mFrame->HandleEvent(*mContext, &event, status);
+  }
   return NS_OK;
 }
 
