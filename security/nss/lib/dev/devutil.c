@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.24 $ $Date: 2004/04/25 15:03:06 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.25 $ $Date: 2004/09/22 01:45:26 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEVM_H
@@ -585,6 +585,7 @@ clear_cache (
     nssCryptokiObjectAndAttributes **oa;
     PRUint32 objectType;
     for (objectType = cachedCerts; objectType <= cachedCRLs; objectType++) {
+	cache->searchedObjectType[objectType] = PR_FALSE;
 	if (!cache->objects[objectType]) {
 	    continue;
 	}
@@ -596,7 +597,6 @@ clear_cache (
 	}
 	nss_ZFreeIf(cache->objects[objectType]);
 	cache->objects[objectType] = NULL;
-	cache->searchedObjectType[objectType] = PR_FALSE;
     }
 }
 
