@@ -1687,6 +1687,20 @@ void nsString::DebugDump(ostream& aStream) const {
   aStream << endl;
 }
 
+/**
+ * 
+ * @update	gess8/8/98
+ * @param 
+ * @return
+ */
+ostream& operator<<(ostream& os,nsString& aString){
+	const PRUnichar* uc=aString.GetUnicode();
+	int len=aString.Length();
+	for(int i=0;i<len;i++)
+		os<<(char)uc[i];
+	return os;
+}
+
 
 //----------------------------------------------------------------------
 
@@ -1843,6 +1857,21 @@ void nsAutoString::SelfTest(){
   xas.Append("this string exceeds the max size");
   xas.DebugDump(cout);
 }
+
+/**
+ * 
+ * @update	gess8/8/98
+ * @param 
+ * @return
+ */
+ostream& operator<<(ostream& os,nsAutoString& aString){
+	const PRUnichar* uc=aString.GetUnicode();
+	int len=aString.Length();
+	for(int i=0;i<len;i++)
+		os<<(char)uc[i];
+	return os;
+}
+
 
 
 /**
