@@ -56,7 +56,7 @@ public:
     virtual ~EmbedWindow();
     
     nsresult Init            (NativeBrowserControl *aOwner);
-    nsresult CreateWindow_   (void);
+    nsresult CreateWindow_   (PRUint32 width, PRUint32 height);
     void     ReleaseChildren (void);
     
     NS_DECL_ISUPPORTS

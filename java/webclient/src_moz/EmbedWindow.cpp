@@ -67,10 +67,9 @@ EmbedWindow::Init(NativeBrowserControl *aOwner)
 }
 
 nsresult
-EmbedWindow::CreateWindow_(void)
+EmbedWindow::CreateWindow_(PRUint32 width, PRUint32 height)
 {
     nsresult rv;
-    int width, height;
 #ifdef XP_UNIX
     PR_ASSERT(PR_FALSE);
     GtkWidget *ownerAsWidget (GTK_WIDGET(mOwner->parentHWnd));
@@ -78,25 +77,23 @@ EmbedWindow::CreateWindow_(void)
     height = ownerAsWidget->allocation.height;
 #else 
     HWND ownerAsWidget = mOwner->parentHWnd;
-    width = 640; // PENDING(edburns): how to get the size of the parentHwnd
-    height = 480; 
 #endif
-
-  // Get the base window interface for the web browser object and
-  // create the window.
-  mBaseWindow = do_QueryInterface(mWebBrowser);
-  rv = mBaseWindow->InitWindow(ownerAsWidget,
-			       nsnull,
-			       0, 0, 
-			       width, height);
-  if (NS_FAILED(rv))
+    
+    // Get the base window interface for the web browser object and
+    // create the window.
+    mBaseWindow = do_QueryInterface(mWebBrowser);
+    rv = mBaseWindow->InitWindow(ownerAsWidget,
+                                 nsnull,
+                                 0, 0, 
+                                 width, height);
+    if (NS_FAILED(rv))
+        return rv;
+    
+    rv = mBaseWindow->Create();
+    if (NS_FAILED(rv))
     return rv;
-
-  rv = mBaseWindow->Create();
-  if (NS_FAILED(rv))
-    return rv;
-
-  return NS_OK;
+    
+    return NS_OK;
 }
 
 

@@ -83,9 +83,29 @@ NativeBrowserControl::Init()
 }
 
 nsresult
-NativeBrowserControl::Realize(void *parentWinPtr, PRBool *aAlreadyRealized)
+NativeBrowserControl::Realize(void *parentWinPtr, PRBool *aAlreadyRealized,
+                              PRUint32 width, PRUint32 height)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    // Create our session history object and tell the navigation object
+    // to use it.  We need to do this before we create the web browser
+    // window.
+    mSessionHistory = do_CreateInstance(NS_SHISTORY_CONTRACTID);
+    mNavigation->SetSessionHistory(mSessionHistory);
+
+#ifdef XP_UNIX
+    PR_ASSERT(PR_FALSE);
+    GtkWidget *ownerAsWidget (GTK_WIDGET(parentWinPtr));
+    parentHWnd = ownerAsWidget;
+    width = ownerAsWidget->allocation.width;
+    height = ownerAsWidget->allocation.height;
+#else 
+    parentHWnd = (HWND) parentWinPtr;
+#endif
+
+    // create the window
+    mWindow->CreateWindow_(width, height);
+    
+    return NS_OK;
 }
 
 void
@@ -96,16 +116,34 @@ NativeBrowserControl::Unrealize(void)
 void
 NativeBrowserControl::Show(void)
 {
+    // Get the nsIWebBrowser object for our embedded window.
+    nsCOMPtr<nsIWebBrowser> webBrowser;
+    mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
+    
+    // and set the visibility on the thing
+    nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(webBrowser);
+    baseWindow->SetVisibility(PR_TRUE);
 }
 
 void
 NativeBrowserControl::Hide(void)
 {
+    // Get the nsIWebBrowser object for our embedded window.
+    nsCOMPtr<nsIWebBrowser> webBrowser;
+    mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
+    
+    // and set the visibility on the thing
+    nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(webBrowser);
+    baseWindow->SetVisibility(PR_FALSE);
 }
 
 void
-NativeBrowserControl::Resize(PRUint32 aWidth, PRUint32 aHeight)
+NativeBrowserControl::Resize(PRUint32 x, PRUint32 y,
+                             PRUint32 aWidth, PRUint32 aHeight)
 {
+    mWindow->SetDimensions(nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION |
+                           nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_INNER,
+                           x, y, aWidth, aHeight);
 }
 
 void

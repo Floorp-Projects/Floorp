@@ -97,7 +97,6 @@ REQUIRES	= xpcom \
 #	NativeEventThreadActionEvents.cpp \
 #	NavigationActionEvents.cpp \
 #	InputStreamShim.cpp \
-#	WindowControlImpl.cpp \
 #	WindowControlActionEvents.cpp \
 #	WindowCreator.cpp \
 
@@ -118,6 +117,7 @@ CPPSRCS = \
 	PreferencesImpl.cpp \
 	ProfileManagerImpl.cpp \
 	WrapperFactoryImpl.cpp \
+	WindowControlImpl.cpp \
 	$(NULL)
 
 ifeq ($(OS_ARCH),Linux)

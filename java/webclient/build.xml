@@ -93,7 +93,7 @@
       </patternset>
 
       <patternset>
-            <include name="org/mozilla/webclient/impl/wrapper_native/win32/*" 
+            <include name="org/mozilla/webclient/impl/wrapper_native/Win32*" 
                      if="build.win32.classes"/>
       </patternset>
 
@@ -146,7 +146,7 @@
   <target name="compile.win32.canvas.headers" if="build.win32.classes">
 
     <javah destdir="${basedir}/src_moz/win32"
-      class="org.mozilla.webclient.impl.wrapper_native.win32.Win32BrowserControlCanvas">
+      class="org.mozilla.webclient.impl.wrapper_native.Win32BrowserControlCanvas">
       <classpath refid="compile.classpath"/>
     </javah>
 

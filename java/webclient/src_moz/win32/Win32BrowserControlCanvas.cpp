@@ -32,16 +32,16 @@
 
 typedef jboolean (JNICALL *PJAWT_GETAWT)(JNIEnv*, JAWT*);
 
-#include "org_mozilla_webclient_impl_wrapper_0005fnative_win32_Win32BrowserControlCanvas.h"
+#include "org_mozilla_webclient_impl_wrapper_0005fnative_Win32BrowserControlCanvas.h"
 #include "jni_util.h" //for throwing Exceptions to Java
 
 
 /*
- * Class:     org_mozilla_webclient_impl_wrapper_0005fnative_win32_Win32BrowserControlCanvas
+ * Class:     org_mozilla_webclient_impl_wrapper_0005fnative_Win32BrowserControlCanvas
  * Method:    getHandleToPeer
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_win32_Win32BrowserControlCanvas_getHandleToPeer
+JNIEXPORT jint JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Win32BrowserControlCanvas_getHandleToPeer
   (JNIEnv *env, jobject canvas) {
     JAWT awt;
     JAWT_DrawingSurface* ds;

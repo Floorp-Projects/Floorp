@@ -1,5 +1,5 @@
 /*
- * $Id: NavigationTest.java,v 1.1 2004/03/05 15:34:24 edburns%acm.org Exp $
+ * $Id: NavigationTest.java,v 1.2 2004/04/20 16:17:42 edburns%acm.org Exp $
  */
 
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
@@ -30,8 +30,9 @@ import junit.framework.TestSuite;
 import junit.framework.Test;
 
 import java.util.Enumeration;
-import javax.swing.tree.TreeModel;
-import javax.swing.tree.TreeNode;
+
+import java.awt.Frame;
+import java.awt.BorderLayout;
 
 import java.io.File;
 
@@ -60,7 +61,15 @@ public class NavigationTest extends WebclientTestCase {
 	BrowserControlFactory.setAppData(getBrowserBinDir());
 	firstBrowserControl = BrowserControlFactory.newBrowserControl();
 	assertNotNull(firstBrowserControl);
-
+	BrowserControlCanvas canvas = (BrowserControlCanvas)
+	    firstBrowserControl.queryInterface(BrowserControl.BROWSER_CONTROL_CANVAS_NAME);
+	assertNotNull(canvas);
+	Frame frame = new Frame();
+	frame.setUndecorated(true);
+	frame.setBounds(0, 0, 640, 480);
+	frame.add(canvas, BorderLayout.CENTER);
+	frame.setVisible(true);
+	
 	Navigation nav = (Navigation) 
 	    firstBrowserControl.queryInterface(BrowserControl.NAVIGATION_NAME);
 	assertNotNull(nav);

@@ -26,6 +26,7 @@ import org.mozilla.util.Log;
 import org.mozilla.util.ParameterCheck;
 
 import org.mozilla.webclient.BrowserControl;
+import org.mozilla.webclient.BrowserControlCanvas;
 import org.mozilla.webclient.impl.BrowserControlImpl;
 import org.mozilla.webclient.Bookmarks;
 import org.mozilla.webclient.Preferences;
@@ -201,43 +202,56 @@ public class WrapperFactoryImpl extends Object implements WrapperFactory {
 
     public Object newImpl(String interfaceName,
 			  BrowserControl browserControl) throws ClassNotFoundException {
-	Object result = null;
 	
-	synchronized(this) {
-	    if (!nativeDoesImplement(interfaceName)) {
-		throw new ClassNotFoundException("Can't instantiate " + 
-						 interfaceName + 
-						 ": not implemented.");
+	if (BrowserControl.BROWSER_CONTROL_CANVAS_NAME == interfaceName) {
+	    Class bcClass = Class.forName(getPlatformCanvasClassName());
+	    BrowserControlCanvas canvas = null;
+	    try {
+		canvas = (BrowserControlCanvas) bcClass.newInstance();
 	    }
-	    if (BrowserControl.WINDOW_CONTROL_NAME == interfaceName) {
-		result = new WindowControlImpl(this, browserControl);
+	    catch (IllegalAccessException e) {
+		throw new ClassNotFoundException(e.getMessage());
 	    }
-	    if (BrowserControl.NAVIGATION_NAME == interfaceName) {
-		result = new NavigationImpl(this, browserControl);
+	    catch (InstantiationException e) {
+		throw new ClassNotFoundException(e.getMessage());
 	    }
-	    if (BrowserControl.HISTORY_NAME == interfaceName) {
-		result = new HistoryImpl(this, browserControl);
-	    }
-	    if (BrowserControl.CURRENT_PAGE_NAME == interfaceName) {
-		result = new CurrentPageImpl(this, browserControl);
-	    }
-	    if (BrowserControl.EVENT_REGISTRATION_NAME == interfaceName) {
-		result = new EventRegistrationImpl(this, browserControl);
-	    }
-	    if (BrowserControl.BOOKMARKS_NAME == interfaceName) {
-		Assert.assert_it(null != bookmarks);
-		result = bookmarks;
-	    }
-	    if (BrowserControl.PREFERENCES_NAME == interfaceName) {
-		Assert.assert_it(null != prefs);
-		result = prefs;
-	    }
-	    if (BrowserControl.PROFILE_MANAGER_NAME == interfaceName) {
-		Assert.assert_it(null != profileManager);
-		result = profileManager;
-	    }
+	    canvas.initialize(browserControl);
+	    return canvas;
 	}
-	
+
+	Object result = null;
+	if (!nativeDoesImplement(interfaceName)) {
+	    throw new ClassNotFoundException("Can't instantiate " + 
+					     interfaceName + 
+					     ": not implemented.");
+	}
+	if (BrowserControl.WINDOW_CONTROL_NAME == interfaceName) {
+	    result = new WindowControlImpl(this, browserControl);
+	}
+	if (BrowserControl.NAVIGATION_NAME == interfaceName) {
+	    result = new NavigationImpl(this, browserControl);
+	}
+	if (BrowserControl.HISTORY_NAME == interfaceName) {
+	    result = new HistoryImpl(this, browserControl);
+	}
+	if (BrowserControl.CURRENT_PAGE_NAME == interfaceName) {
+	    result = new CurrentPageImpl(this, browserControl);
+	}
+	if (BrowserControl.EVENT_REGISTRATION_NAME == interfaceName) {
+	    result = new EventRegistrationImpl(this, browserControl);
+	}
+	if (BrowserControl.BOOKMARKS_NAME == interfaceName) {
+	    Assert.assert_it(null != bookmarks);
+	    result = bookmarks;
+	}
+	if (BrowserControl.PREFERENCES_NAME == interfaceName) {
+	    Assert.assert_it(null != prefs);
+	    result = prefs;
+	}
+	if (BrowserControl.PROFILE_MANAGER_NAME == interfaceName) {
+	    Assert.assert_it(null != profileManager);
+	    result = profileManager;
+	}
 	return result;
     }
     
@@ -379,7 +393,7 @@ protected String getPlatformCanvasClassName()
     
     if (null != osName) {
         if (-1 != osName.indexOf("indows")) {
-            platformCanvasClassName = "org.mozilla.webclient.impl.wrapper_native.win32.Win32BrowserControlCanvas";
+            platformCanvasClassName = "org.mozilla.webclient.impl.wrapper_native.Win32BrowserControlCanvas";
         }
         else {
             platformCanvasClassName = "org.mozilla.webclient.impl.wrapper_native.gtk.GtkBrowserControlCanvas";

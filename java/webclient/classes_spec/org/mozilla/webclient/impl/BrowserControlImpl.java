@@ -186,7 +186,12 @@ public Object queryInterface(String interfaceName) throws ClassNotFoundException
         return history;
     }
     if (BROWSER_CONTROL_CANVAS_NAME.equals(interfaceName)) {
-        Assert.assert_it(null != myCanvas);
+        if (null == myCanvas) {
+            myCanvas = 
+                (BrowserControlCanvas) 
+                wrapperFactory.newImpl(BROWSER_CONTROL_CANVAS_NAME,
+                                       this);
+        }
         return myCanvas;
     }
     if (CURRENT_PAGE_NAME.equals(interfaceName)) {

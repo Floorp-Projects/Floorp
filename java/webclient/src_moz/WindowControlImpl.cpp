@@ -28,35 +28,46 @@
 
 #include "org_mozilla_webclient_impl_wrapper_0005fnative_WindowControlImpl.h"
 
-#include "WindowControlActionEvents.h"
-
 #include "ns_util.h"
 
-#include "nsIThread.h" // for PRThread
+#include "NativeBrowserControl.h"
 
-#include "nsCOMPtr.h" // to get nsIBaseWindow from webshell
-#include "nsIBaseWindow.h" // to get methods like SetVisibility
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_WindowControlImpl_nativeRealize
+(JNIEnv *env, jobject obj, jint windowPtr, jint nativeBCPtr, jint x, jint y, 
+ jint width, jint height, jobject aBrowserControlImpl)
+{
+    NativeBrowserControl* nativeBrowserControl = (NativeBrowserControl *) nativeBCPtr;
+    
+    if (nativeBrowserControl == nsnull) {
+        ::util_ThrowExceptionToJava(env, "Exception: null passed to nativeRealize");
+        return;
+    }
+    PRBool alreadyRealized;
+
+#ifdef XP_UNIX
+    int gtkWinPtr = 
+        (int)::util_GetGTKWinPtrFromCanvas(env, aBrowserControlImpl);
+    // PENDING set this into the nativeBrowserControl for use later
+#endif
+
+    nativeBrowserControl->Realize((void *) windowPtr, &alreadyRealized,
+                                  width, height);
+}
 
 JNIEXPORT void JNICALL 
 Java_org_mozilla_webclient_impl_wrapper_1native_WindowControlImpl_nativeSetBounds
-(JNIEnv *env, jobject obj, jint webShellPtr, jint x, jint y, jint w, jint h)
+(JNIEnv *env, jobject obj, jint nativeBCPtr, jint x, jint y, jint w, jint h)
 {
-    NativeBrowserControl* initContext = (NativeBrowserControl *) webShellPtr;
+    NativeBrowserControl* nativeBrowserControl = (NativeBrowserControl *) nativeBCPtr;
     
-	if (initContext == nsnull) {
-		::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to nativeSetBounds");
-		return;
-	}
-	if (initContext->initComplete) {
-		wsResizeEvent	* actionEvent = 
-            new wsResizeEvent(initContext->baseWindow, x, y, w, h);
-        PLEvent			* event       = (PLEvent*) *actionEvent;
-        
-		::util_PostEvent(initContext, event);
-	}
-    
+    if (nativeBrowserControl == nsnull) {
+        ::util_ThrowExceptionToJava(env, "Exception: null passed to nativeRealize");
+        return;
+    }
+    nativeBrowserControl->Resize(x, y, w, h);
 }
 
+/********************
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_WindowControlImpl_nativeMoveWindowTo
 (JNIEnv *env, jobject obj, jint webShellPtr, jint x, jint y)
 {
@@ -112,22 +123,27 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_WindowCon
 
 }
 
-JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_WindowControlImpl_nativeSetVisible
-(JNIEnv *env, jobject obj, jint webShellPtr, jboolean newState)
-{
+*********************/
 
-  NativeBrowserControl* initContext = (NativeBrowserControl *) webShellPtr;
-  if (initContext == nsnull) {
-    ::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to raptorWebShellRepaint");
-    return;
-  }
-  if (initContext->initComplete) {
-    wsShowEvent * actionEvent = new  wsShowEvent(initContext->baseWindow, JNI_TRUE == newState ? PR_TRUE : PR_FALSE);
-    PLEvent			* event       = (PLEvent*) *actionEvent;
-    ::util_PostEvent(initContext, event);
-  }
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_WindowControlImpl_nativeSetVisible
+(JNIEnv *env, jobject obj, jint nativeBCPtr, jboolean newState)
+{
+    NativeBrowserControl* nativeBrowserControl = (NativeBrowserControl *) nativeBCPtr;
+    
+    if (nativeBrowserControl == nsnull) {
+        ::util_ThrowExceptionToJava(env, "Exception: null passed to nativeRealize");
+        return;
+    }
+    if (newState) {
+        nativeBrowserControl->Show();
+    }
+    else {
+        nativeBrowserControl->Hide();
+    }
   
 }
+
+/******************
 
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_WindowControlImpl_nativeSetFocus
 (JNIEnv *env, jobject obj, jint webShellPtr)
@@ -146,3 +162,4 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_WindowCon
 		::util_PostEvent(initContext, event);
 	}
 }
+*********************/

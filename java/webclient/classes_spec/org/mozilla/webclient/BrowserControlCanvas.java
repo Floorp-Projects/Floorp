@@ -52,7 +52,7 @@ import java.awt.*;
 
  * See concrete subclasses for scope info.
 
- * @version $Id: BrowserControlCanvas.java,v 1.6 2003/09/06 06:26:45 edburns%acm.org Exp $
+ * @version $Id: BrowserControlCanvas.java,v 1.7 2004/04/20 16:17:41 edburns%acm.org Exp $
 
  * @see	org.mozilla.webclient.win32.Win32BrowserControlCanvas
 
@@ -227,6 +227,9 @@ protected Rectangle getBoundsRelativeToWindow ()
 
 public void setBounds(int x, int y, int w, int h) 
 {
+    if (!initializeOK) {
+        throw new IllegalStateException("Can't resize canvas before adding it to parent");
+    }
 	super.setBounds(x, y, w, h);
     Rectangle boundsRect = new Rectangle(0, 0, w - 1, h - 1);
 	if (webShell != null) {
@@ -253,6 +256,20 @@ public void setBounds(int x, int y, int w, int h)
 public void setBounds(Rectangle rect) 
 {
 	super.setBounds(rect);
+}
+
+public void setVisible(boolean b) {
+    try {
+        WindowControl wc = (WindowControl)
+            webShell.queryInterface(BrowserControl.WINDOW_CONTROL_NAME);
+        wc.setVisible(b);
+    }
+    catch(Exception ex) {
+        System.out.println("Can't setVisible(" + b + ") " + 
+                           ex.getMessage());
+        
+    }
+    super.setVisible(b);
 }
 
 } // class BrowserControlCanvas

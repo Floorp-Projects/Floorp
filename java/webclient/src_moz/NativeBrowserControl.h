@@ -60,11 +60,14 @@ public:
     // 
     
     nsresult    Init            ();
-    nsresult    Realize         (void* parentWinPtr, PRBool *aAlreadyRealized);
+    nsresult    Realize         (void* parentWinPtr, 
+                                 PRBool *aAlreadyRealized, 
+                                 PRUint32 width, PRUint32 height);
     void        Unrealize       (void);
     void        Show            (void);
     void        Hide            (void);
-    void        Resize          (PRUint32 aWidth, PRUint32 aHeight);
+    void        Resize          (PRUint32 x, PRUint32 y,
+                                 PRUint32 aWidth, PRUint32 aHeight);
     void        Destroy         (void);
 
     //

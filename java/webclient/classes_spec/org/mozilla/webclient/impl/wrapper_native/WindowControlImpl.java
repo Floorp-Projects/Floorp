@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * 
+/* 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -79,23 +78,41 @@ public WindowControlImpl(WrapperFactory yourFactory,
 // Methods from WindowControl    
 //
 
-public void setBounds(Rectangle newBounds)
+public void setBounds(Rectangle rect)
 {
-    ParameterCheck.nonNull(newBounds);
+    ParameterCheck.nonNull(rect);
     getWrapperFactory().verifyInitialized();
     Assert.assert_it(-1 != getNativeBrowserControl());
-    
-    synchronized(getBrowserControl()) {
-        nativeSetBounds(getNativeBrowserControl(), newBounds.x, newBounds.y,
-                        newBounds.width, newBounds.height);
-    }
+    final Rectangle newBounds = rect;
+    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+	    public Object run() {
+		nativeSetBounds(getNativeBrowserControl(), 
+				newBounds.x, newBounds.y,
+				newBounds.width, newBounds.height);
+		return null;
+	    }
+	});
 }
 
-public void createWindow(int nativeWindow, Rectangle bounds)
+public void createWindow(int nativeWindow, Rectangle rect)
 {
     ParameterCheck.greaterThan(nativeWindow, 0);
-    ParameterCheck.nonNull(bounds);
+    ParameterCheck.nonNull(rect);
     getWrapperFactory().verifyInitialized();
+    final int nativeWin = nativeWindow;
+    final int nativeBc = getNativeBrowserControl();
+    final BrowserControl bc = getBrowserControl();
+    final Rectangle bounds = rect;
+    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+	    public Object run() {
+		nativeRealize(nativeWin, nativeBc, bounds.x, 
+			      bounds.y, bounds.width, 
+			      bounds.height, bc);
+		return null;
+	    }
+	});
+    
+    
 }
 
 public int getNativeWebShell()
@@ -134,10 +151,13 @@ public void repaint(boolean forceRepaint)
 public void setVisible(boolean newState)
 {
     getWrapperFactory().verifyInitialized();
-    
-    synchronized(getBrowserControl()) {
-        nativeSetVisible(getNativeBrowserControl(), newState);
-    }
+    final boolean finalBool = newState;
+    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+	    public Object run() {
+		nativeSetVisible(getNativeBrowserControl(), finalBool);
+		return null;
+	    }
+	});
 }
 
 public void setFocus()
@@ -151,6 +171,11 @@ public void setFocus()
 // 
 // Native methods
 //
+
+public native void nativeRealize(int nativeWindow, 
+				 int nativeBrowserControl,
+				 int x, int y, int width, int height, 
+				 BrowserControl myBrowserControlImpl);
 
 public native void nativeSetBounds(int webShellPtr, int x, int y, 
                                    int w, int h);
@@ -178,7 +203,7 @@ public static void main(String [] args)
 
     Log.setApplicationName("WindowControlImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: WindowControlImpl.java,v 1.3 2004/04/10 21:50:38 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: WindowControlImpl.java,v 1.4 2004/04/20 16:17:41 edburns%acm.org Exp $");
 
     try {
         org.mozilla.webclient.BrowserControlFactory.setAppData(args[0]);
