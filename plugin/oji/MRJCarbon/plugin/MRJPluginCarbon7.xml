@@ -432,7 +432,7 @@
                 <!-- Settings for "FTP Panel" panel -->
                 <SETTING><NAME>MWFTP_Post_hostName</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_username</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>26438b3k0&#255;&#217;p</VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>265m8b3k0&#255;&#217;p</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_remoteDir</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathVersion</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathType</NAME><VALUE>0</VALUE></SETTING>
@@ -831,6 +831,13 @@
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
+                <FILE>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MRJSession.java</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS>Debug</FILEFLAGS>
+                </FILE>
             </FILELIST>
             <LINKORDER>
                 <FILEREF>
@@ -891,6 +898,11 @@
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>MRJConsole.java</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MRJSession.java</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
             </LINKORDER>
@@ -1393,7 +1405,7 @@
 
                 <!-- Settings for "Remote Debug" panel -->
                 <SETTING><NAME>Enabled</NAME><VALUE>false</VALUE></SETTING>
-                <SETTING><NAME>ConnectionName</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>ConnectionName</NAME><VALUE>no connections avaiable</VALUE></SETTING>
                 <SETTING><NAME>DownloadPath</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>LaunchRemoteApp</NAME><VALUE>false</VALUE></SETTING>
                 <SETTING><NAME>RemoteAppPath</NAME><VALUE></VALUE></SETTING>
@@ -1469,7 +1481,7 @@
                 <!-- Settings for "FTP Panel" panel -->
                 <SETTING><NAME>MWFTP_Post_hostName</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_username</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>26438b3k0&#255;&#217;p</VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>265m8b3k0&#255;&#217;p</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_remoteDir</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathVersion</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathType</NAME><VALUE>0</VALUE></SETTING>
@@ -1973,6 +1985,15 @@
                     <FILEKIND>Library</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
+                <FILE>
+                    <PATHTYPE>PathRelative</PATHTYPE>
+                    <PATHROOT>CodeWarrior</PATHROOT>
+                    <ACCESSPATH>:MacOS Support:</ACCESSPATH>
+                    <PATH>:Universal:Libraries:StubLibraries:CarbonFrameworkLib</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Library</FILEKIND>
+                    <FILEFLAGS>Debug</FILEFLAGS>
+                </FILE>
             </FILELIST>
             <LINKORDER>
                 <FILEREF>
@@ -2113,6 +2134,13 @@
                     <PATHROOT>CodeWarrior</PATHROOT>
                     <ACCESSPATH>:MacOS Support:</ACCESSPATH>
                     <PATH>:Universal:Libraries:StubLibraries:CarbonLib</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>PathRelative</PATHTYPE>
+                    <PATHROOT>CodeWarrior</PATHROOT>
+                    <ACCESSPATH>:MacOS Support:</ACCESSPATH>
+                    <PATH>:Universal:Libraries:StubLibraries:CarbonFrameworkLib</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
@@ -2294,6 +2322,14 @@
             <FILEREF>
                 <TARGETNAME>MRJPluginCarbon</TARGETNAME>
                 <PATHTYPE>PathRelative</PATHTYPE>
+                <PATHROOT>CodeWarrior</PATHROOT>
+                <ACCESSPATH>:MacOS Support:</ACCESSPATH>
+                <PATH>:Universal:Libraries:StubLibraries:CarbonFrameworkLib</PATH>
+                <PATHFORMAT>MacOS</PATHFORMAT>
+            </FILEREF>
+            <FILEREF>
+                <TARGETNAME>MRJPluginCarbon</TARGETNAME>
+                <PATHTYPE>PathRelative</PATHTYPE>
                 <PATHROOT>Project</PATHROOT>
                 <ACCESSPATH>::MRJSDK:</ACCESSPATH>
                 <PATH>:JavaFrameworks:JavaEmbeddingLib</PATH>
@@ -2313,6 +2349,12 @@
                 <TARGETNAME>MRJPlugin.jar</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>MRJConsole.java</PATH>
+                <PATHFORMAT>MacOS</PATHFORMAT>
+            </FILEREF>
+            <FILEREF>
+                <TARGETNAME>MRJPlugin.jar</TARGETNAME>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>MRJSession.java</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
