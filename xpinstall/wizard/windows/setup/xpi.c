@@ -28,17 +28,26 @@
 #include "xpistub.h"
 #include "xpi.h"
 
+#define BDIR_RIGHT 1
+#define BDIR_LEFT  2
+
 static XpiInit          pfnXpiInit;
 static XpiInstall       pfnXpiInstall;
 static XpiExit          pfnXpiExit;
 
 static long             lFileCounter;
+static long             lBarberCounter;
+static BOOL             bBarberBar;
+static DWORD            dwBarberDirection;
 static DWORD            dwCurrentArchive;
 static DWORD            dwTotalArchives;
+char                    szStrProcessingFile[MAX_BUF];
+char                    szStrCopyingFile[MAX_BUF];
+char                    szStrInstalling[MAX_BUF];
 
 static void UpdateGaugeFileProgressBar(unsigned value);
 static void UpdateGaugeArchiveProgressBar(unsigned value);
-static void UpdateFileStatus(const char *szFullFilename);
+static void UpdateGaugeFileBarber(void);
 
 struct ExtractFilesDlgInfo
 {
@@ -149,6 +158,12 @@ HRESULT SmartUpdateJars()
     return(1);
   if(NS_LoadString(hSetupRscInst, IDS_DLG_EXTRACTING_TITLE, szDlgExtractingTitle, MAX_BUF) != WIZ_OK)
     return(1);
+  if(NS_LoadString(hSetupRscInst, IDS_STR_PROCESSINGFILE, szStrProcessingFile, MAX_BUF) != WIZ_OK)
+    exit(1);
+  if(NS_LoadString(hSetupRscInst, IDS_STR_INSTALLING, szStrInstalling, MAX_BUF) != WIZ_OK)
+    exit(1);
+  if(NS_LoadString(hSetupRscInst, IDS_STR_COPYINGFILE, szStrCopyingFile, MAX_BUF) != WIZ_OK)
+    exit(1);
 
   ShowMessage(szMsgSmartUpdateStart, TRUE);
   if(InitializeXPIStub() == WIZ_OK)
@@ -158,17 +173,21 @@ HRESULT SmartUpdateJars()
     ShowMessage(szMsgSmartUpdateStart, FALSE);
     InitProgressDlg();
     GetTotalArchivesToInstall();
+    SetWindowText(dlgInfo.hWndDlg, szDlgExtractingTitle);
 
     dwIndex0          = 0;
     dwCurrentArchive  = 0;
-    dwTotalArchives  *= 2;
-    siCObject = SiCNodeGetObject(dwIndex0, TRUE);
+    dwTotalArchives   = (dwTotalArchives * 2) + 1;
+    bBarberBar        = FALSE;
+    siCObject         = SiCNodeGetObject(dwIndex0, TRUE);
     while(siCObject)
     {
       /* launch smartupdate engine for earch jar to be installed */
       if((siCObject->dwAttributes & SIC_SELECTED) && !(siCObject->dwAttributes & SIC_LAUNCHAPP))
       {
         lFileCounter      = 0;
+        lBarberCounter    = 0;
+        dwBarberDirection = BDIR_RIGHT;
 			  dlgInfo.nFileBars = 0;
         UpdateGaugeFileProgressBar(0);
 
@@ -199,8 +218,15 @@ HRESULT SmartUpdateJars()
           }
         }
 
-        wsprintf(szBuf, szDlgExtractingTitle, siCObject->szDescriptionShort);
-        SetWindowText(dlgInfo.hWndDlg, szBuf);
+        if(dwCurrentArchive == 0)
+        {
+          ++dwCurrentArchive;
+          UpdateGaugeArchiveProgressBar((unsigned)(((double)(dwCurrentArchive)/(double)dwTotalArchives)*(double)100));
+        }
+
+        wsprintf(szBuf, szStrInstalling, siCObject->szDescriptionShort);
+        SetDlgItemText(dlgInfo.hWndDlg, IDC_STATUS0, szBuf);
+
         hrResult = pfnXpiInstall(szArchive, "", 0xFFFF);
         if(hrResult == 999)
           bReboot = TRUE;
@@ -240,23 +266,36 @@ HRESULT SmartUpdateJars()
 
 void cbXPIStart(const char *URL, const char *UIName)
 {
-//  MessageBox(NULL, UIName, "XpiStub is running", MB_ICONEXCLAMATION);
 }
 
 void cbXPIProgress(const char* msg, PRInt32 val, PRInt32 max)
 {
+  char szFilename[MAX_BUF];
+  char szStrProcessingFileBuf[MAX_BUF];
+  char szStrCopyingFileBuf[MAX_BUF];
+
+  ParsePath((char *)msg, szFilename, sizeof(szFilename), PP_FILENAME_ONLY);
+
   if(max == 0)
   {
-    UpdateFileStatus(msg);
+    wsprintf(szStrProcessingFileBuf, szStrProcessingFile, szFilename);
+    SetDlgItemText(dlgInfo.hWndDlg, IDC_STATUS3, szStrProcessingFileBuf);
+    bBarberBar = TRUE;
+    UpdateGaugeFileBarber();
   }
   else
   {
-    UpdateGaugeFileProgressBar((unsigned)(((double)(val+1)/(double)max)*(double)100));
-    if((dwCurrentArchive % 2) == 0)
+    if(bBarberBar == TRUE)
     {
+      dlgInfo.nFileBars = 0;
       ++dwCurrentArchive;
       UpdateGaugeArchiveProgressBar((unsigned)(((double)(dwCurrentArchive)/(double)dwTotalArchives)*(double)100));
+      bBarberBar = FALSE;
     }
+
+    wsprintf(szStrCopyingFileBuf, szStrCopyingFile, szFilename);
+    SetDlgItemText(dlgInfo.hWndDlg, IDC_STATUS3, szStrCopyingFileBuf);
+    UpdateGaugeFileProgressBar((unsigned)(((double)(val+1)/(double)max)*(double)100));
   }
 
   ProcessWindowsMessages();
@@ -290,42 +329,57 @@ CenterWindow(HWND hWndDlg)
 LRESULT CALLBACK
 ProgressDlgProc(HWND hWndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-  char szStrFileNumber[MAX_BUF];
-  char szStrFilename[MAX_BUF];
-
 	switch (msg)
   {
 		case WM_INITDIALOG:
-      if(NS_LoadString(hSetupRscInst, IDS_STR_FILE_NUMBER, szStrFileNumber, MAX_BUF) != WIZ_OK)
-        exit(1);
-      if(NS_LoadString(hSetupRscInst, IDS_STR_FILENAME, szStrFilename, MAX_BUF) != WIZ_OK)
-        exit(1);
-
-			// Center the dialog over the desktop
 			CenterWindow(hWndDlg);
-      SetDlgItemText(hWndDlg, IDC_STATUS0, szStrFileNumber);
-      SetDlgItemText(hWndDlg, IDC_STATUS3, szStrFilename);
 			return FALSE;
 
 		case WM_COMMAND:
-//			DestroyWindow(hWndDlg);
 			return TRUE;
 	}
 
 	return FALSE;  // didn't handle the message
 }
 
+// This routine will update the File Gauge progress bar to the specified percentage
+// (value between 0 and 100)
 static void
-UpdateFileStatus(const char *szFullFilename)
+UpdateGaugeFileBarber()
 {
-  char szFileCounter[MAX_BUF];
-  char szFilename[MAX_BUF];
+	int	nBars;
+	HWND	hWndGauge = GetDlgItem(dlgInfo.hWndDlg, IDC_GAUGE_FILE);
+	RECT	rect;
 
-  ParsePath((char *)szFullFilename, szFilename, sizeof(szFilename), PP_FILENAME_ONLY);
-  ++lFileCounter;
-  ltoa(lFileCounter, szFileCounter, 10);
-  SetDlgItemText(dlgInfo.hWndDlg, IDC_STATUS1, szFileCounter);
-  SetDlgItemText(dlgInfo.hWndDlg, IDC_STATUS2, szFilename);
+  if(dwBarberDirection == BDIR_RIGHT)
+  {
+    if(lBarberCounter < 151)
+      ++lBarberCounter;
+    else
+      dwBarberDirection = BDIR_LEFT;
+  }
+  else if(dwBarberDirection == BDIR_LEFT)
+  {
+    if(lBarberCounter > 0)
+      --lBarberCounter;
+    else
+      dwBarberDirection = BDIR_RIGHT;
+  }
+
+  // Figure out how many bars should be displayed
+  nBars = (dlgInfo.nMaxFileBars * lBarberCounter / 100);
+
+  // Update the gauge state before painting
+  dlgInfo.nFileBars = nBars;
+
+  // Only invalidate the part that needs updating
+  GetClientRect(hWndGauge, &rect);
+  InvalidateRect(hWndGauge, &rect, FALSE);
+
+  // Update the whole extracting dialog. We do this because we don't
+  // have a message loop to process WM_PAINT messages in case the
+  // extracting dialog was exposed
+  UpdateWindow(dlgInfo.hWndDlg);
 }
 
 // This routine will update the File Gauge progress bar to the specified percentage
@@ -460,6 +514,54 @@ DrawProgressBar(HWND hWnd, int nBars)
 	EndPaint(hWnd, &ps);
 }
 
+// Draws the blue progress bar
+static void
+DrawBarberBar(HWND hWnd, int nBars)
+{
+  int         i;
+	PAINTSTRUCT	ps;
+	HDC         hDC;
+	RECT        rect;
+	HBRUSH      hBrush;
+	HBRUSH      hBrushClear;
+
+  hDC = BeginPaint(hWnd, &ps);
+	GetClientRect(hWnd, &rect);
+  if(nBars <= 0)
+  {
+    /* clear the bars */
+    hBrushClear = CreateSolidBrush(GetSysColor(COLOR_MENU));
+    FillRect(hDC, &rect, hBrushClear);
+  }
+  else
+  {
+  	// Draw the bars
+    hBrushClear   = CreateSolidBrush(GetSysColor(COLOR_MENU));
+    hBrush        = CreateSolidBrush(RGB(0, 0, 128));
+	  rect.left     = rect.top = BAR_MARGIN;
+	  rect.bottom  -= BAR_MARGIN;
+	  rect.right    = rect.left + BAR_WIDTH;
+
+	  for(i = 0; i < (nBars + 1); i++)
+    {
+		  RECT	dest;
+
+		  if(IntersectRect(&dest, &ps.rcPaint, &rect))
+      {
+        if((i >= (nBars - 15)) && (i < nBars))
+			    FillRect(hDC, &rect, hBrush);
+        else
+			    FillRect(hDC, &rect, hBrushClear);
+      }
+
+      OffsetRect(&rect, BAR_WIDTH + BAR_SPACING, 0);
+	  }
+  }
+
+	DeleteObject(hBrush);
+	EndPaint(hWnd, &ps);
+}
+
 // Adjusts the width of the gauge based on the maximum number of bars
 static void
 SizeToFitGauge(HWND hWnd, int nMaxBars)
@@ -507,7 +609,11 @@ GaugeFileWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			return(FALSE);
 
 		case WM_PAINT:
-			DrawProgressBar(hWnd, dlgInfo.nFileBars);
+      if(bBarberBar == TRUE)
+			  DrawBarberBar(hWnd, dlgInfo.nFileBars);
+      else
+			  DrawProgressBar(hWnd, dlgInfo.nFileBars);
+
 			return(FALSE);
 	}
 
