@@ -1,0 +1,51 @@
+<?xml version="1.0"?> <!-- -*- Mode: HTML -*- -->
+
+<?xml-stylesheet href="chrome://global/skin/filepicker.css" type="text/css"?>
+
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
+<window id="main-window" xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  align="vertical"
+  onload="onLoad();"
+  width="426" height="300"
+  class="dialog">
+
+<html:script src="chrome://global/content/filepicker.js"/>
+
+<box align="horizontal">
+  <text value="Look in:"/>
+  <menulist id="lookInMenuList" flex="1">
+    <menupopup id="lookInMenu"/>
+  </menulist>
+
+  <button value="up" onclick="goUp();"/>
+  <button value="n"/>
+</box>
+
+<box align="horizontal">
+  <tree id="directoryList" onclick="onClick(event);" flex="1">
+    <treehead>
+      <treerow>
+        <treecell value="Name"/>
+        <treecell value="Size"/>
+        <treecell value="Permissions"/>
+      </treerow>
+    </treehead>
+  </tree>
+</box>
+
+<box align="horizontal">
+  <text value="File name:"/>
+  <html:input type="text" id="textInput" onkeyup="if (event.which == 13) { textEntered(event.target.value); }" flex="1"/>
+</box>
+
+<box align="horizontal">
+  <text value="Files of type:"/>
+  <menulist id="filterMenuList" flex="1"/>
+</box>
+
+<box id="okCancelButtons"/>
+
+</window>
