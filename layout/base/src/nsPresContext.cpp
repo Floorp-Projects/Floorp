@@ -1020,32 +1020,3 @@ nsPresContext::GetEventStateManager(nsIEventStateManager** aManager)
   NS_IF_ADDREF(*aManager);
   return NS_OK;
 }
-
-// nsITimeRecorder implementation
-
-#ifdef RAPTOR_PERF_METRICS
-NS_IMETHODIMP
-nsPresContext::ResetTimer(PRUint32 aTimerID)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPresContext::StartTimer(PRUint32 aTimerID)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPresContext::StopTimer(PRUint32 aTimerID)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPresContext::PrintTimer(PRUint32 aTimerID)
-{
-  return NS_OK;
-}
-
-#endif
