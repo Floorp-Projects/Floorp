@@ -73,7 +73,7 @@
   <separator class="groove"/>
 
   <hbox align="center" pack="end">
-    <button label="&saveChanges.label;" oncommand="onAccept();"/>
+    <button label="&saveChanges.label;" oncommand="onAccept();" default="true"/>
   </hbox>
 </vbox>
 

@@ -211,8 +211,8 @@ function Startup()
   gBrowser = document.getElementById("content");
   gURLBar = document.getElementById("urlbar");
   
-  var toolbar = document.getElementById("nav-bar");
-  toolbar.toolbarChanged = BrowserToolbarChanged;
+  var toolbox = document.getElementById("navigator-toolbox");
+  toolbox.customizeDone = BrowserToolboxCustomizeDone;
 
   SetPageProxyState("invalid", null);
 
@@ -301,7 +301,8 @@ function Startup()
       uriToLoad = window.arguments[0];
     
     if (uriToLoad && uriToLoad != "about:blank") {
-      gURLBar.value = uriToLoad;
+      if (gURLBar)
+        gURLBar.value = uriToLoad;
       if ("arguments" in window && window.arguments.length >= 3) {
         loadURI(uriToLoad, window.arguments[2]);
       } else {
@@ -348,11 +349,14 @@ function Startup()
 
   // Focus the content area unless we're loading a blank page
   var elt;
-  if (uriToLoad == "about:blank" && !toolbar.hidden && window.locationbar.visible)
+  if (uriToLoad == "about:blank" && !toolbar.hidden &&
+      gURLBar && !gURLBar.parentNode.parentNode.collapsed)
+  {
     elt = gURLBar;
-  else
+  } else {
     elt = _content;
-
+  }
+  
   setTimeout(delayedStartup, 0, elt);
 }
 
@@ -379,13 +383,7 @@ function delayedStartup(aElt)
                               .getService(Components.interfaces.nsIPrefService);
   pref = prefService.getBranch(null);
 
-  // set home button tooltip text
-  var homeButton = document.getElementById("home-button");
-  if (homeButton) {
-    var homePage = getHomePage();
-    if (homePage)
-      homeButton.setAttribute("tooltiptext", homePage);
-  }
+  updateHomeTooltip();
 }
 
 function WindowFocusTimerCallback(element)
@@ -536,7 +534,7 @@ function addBookmarkAs(aBrowser)
 
 function openLocation()
 {
-  if (gURLBar && !document.getElementById("nav-bar").hidden) {
+  if (gURLBar && !gURLBar.parentNode.parentNode.collapsed) {
     gURLBar.focus();
     gURLBar.select();
   }
@@ -549,7 +547,8 @@ function BrowserOpenTab()
 {
   if (!gInPrintPreviewMode) {
     gBrowser.selectedTab = gBrowser.addTab('about:blank');
-    setTimeout("gURLBar.focus();", 0); 
+    if (gURLBar)
+      setTimeout("gURLBar.focus();", 0); 
   }
 }
 
@@ -1117,7 +1116,7 @@ function handleURLBarCommand(aTriggeringEvent)
 
 function UpdatePageProxyState()
 {
-  if (gURLBar.value != gLastValidURLStr)
+  if (gURLBar && gURLBar.value != gLastValidURLStr)
     SetPageProxyState("invalid", null);
 }
 
@@ -1125,6 +1124,7 @@ function SetPageProxyState(aState, aURI)
 {
   if (!gURLBar)
     return;
+
   if (!gProxyButton)
     gProxyButton = document.getElementById("page-proxy-button");
   if (!gProxyFavIcon)
@@ -1157,8 +1157,6 @@ function SetPageProxyState(aState, aURI)
 
 function PageProxyDragGesture(aEvent)
 {
-  if (!gURLBar)
-    return false;
   if (gProxyButton.getAttribute("pageproxystate") == "valid") {
     nsDragAndDrop.startDrag(aEvent, proxyIconDNDObserver);
     return true;
@@ -2535,24 +2533,6 @@ function openAboutDialog()
   window.openDialog("chrome://browser/content/aboutDialog.xul", "About", "modal,centerscreen,chrome,resizable=no");
 }
 
-function BrowserToolbarChanged()
-{
-  gURLBar = document.getElementById("urlbar");
-  gProxyButton = document.getElementById("page-proxy-button");
-  gProxyFavIcon = document.getElementById("page-proxy-favicon");
-  gProxyDeck = document.getElementById("page-proxy-deck");
-  var homeButton = document.getElementById("home-button");
-  if (homeButton) {
-    var homePage = getHomePage();
-    homeButton.setAttribute("tooltiptext", homePage);
-  }
-  window.XULBrowserWindow.init();
-
-  var url = getWebNavigation().currentURI.spec;
-  gURLBar.value = url;
-  SetPageProxyState("valid", null); // XXX Build a URI and pass it in here.
-}
-
 function BrowserCustomizeToolbar()
 {
   // Disable tlhe menubar and toolbar context menu items
@@ -2564,18 +2544,39 @@ function BrowserCustomizeToolbar()
   cmd.setAttribute("disabled", "true");
   
   window.openDialog("chrome://global/content/customizeToolbar.xul", "CustomizeToolbar",
-                    "chrome,all,dependent", gBrowser);
+                    "chrome,all,dependent", document.getElementById("navigator-toolbox"));
 }
 
-function onToolbarCustomizeComplete()
+function BrowserToolboxCustomizeDone(aToolboxChanged)
 {
+  // Update global UI elements that may have been added or removed
+  if (aToolboxChanged) {
+    gURLBar = document.getElementById("urlbar");
+    gProxyButton = document.getElementById("page-proxy-button");
+    gProxyFavIcon = document.getElementById("page-proxy-favicon");
+    gProxyDeck = document.getElementById("page-proxy-deck");
+    updateHomeTooltip();
+    window.XULBrowserWindow.init();
+  }
+
+  // Update the urlbar
+  var url = getWebNavigation().currentURI.spec;
+  if (gURLBar) {
+    gURLBar.value = url;
+    var uri = Components.classes["@mozilla.org/network/standard-url;1"]
+                        .createInstance(Components.interfaces.nsIURI);
+    uri.spec = url;
+    SetPageProxyState("valid", uri);
+  }
+
+  // Re-enable parts of the UI we disabled during the dialog
   var menubar = document.getElementById("main-menubar");
   for (var i = 0; i < menubar.childNodes.length; ++i)
     menubar.childNodes[i].setAttribute("disabled", false);
-
   var cmd = document.getElementById("cmd_CustomizeToolbars");
   cmd.removeAttribute("disabled");
 
+  // XXX Shouldn't have to do this, but I do
   window.focus();
 }
 
@@ -3208,5 +3209,14 @@ function goPreferences(containerID, paneURL, itemID)
     var features = "chrome,titlebar,resizable";
     openDialog("chrome://browser/content/pref/pref.xul","PrefWindow", 
                features, paneURL, containerID, itemID);
+  }
+}
+
+function updateHomeTooltip()
+{
+  var homeButton = document.getElementById("home-button");
+  if (homeButton) {
+    var homePage = getHomePage();
+    homeButton.setAttribute("tooltiptext", homePage);
   }
 }

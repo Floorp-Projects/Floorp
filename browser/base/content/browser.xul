@@ -773,7 +773,7 @@ Contributor(s):
                       oncommand="BrowserPrint();"
                       tooltiptext="&printButton.tooltip;"/>
 
-      <toolbaritem id="throbber-box" align="center" pack="center" title="&throbberItem.title;">
+      <toolbaritem id="throbber-box" align="center" pack="center">
         <button id="navigator-throbber" oncommand="goClickThrobber('browser.throbber.url')"
                 tooltiptext="&throbber.tooltip;"/>
       </toolbaritem>
