@@ -80,7 +80,7 @@ NS_NewTreeCellFrame (nsIFrame** aNewFrame)
 
 // Constructor
 nsTreeCellFrame::nsTreeCellFrame()
-:nsTableCellFrame() { mAllowEvents = PR_FALSE; mIsHeader = PR_FALSE; }
+:nsTableCellFrame() { mAllowEvents = PR_FALSE; mIsHeader = PR_FALSE; mAnonymousContent = nsnull; }
 
 // Destructor
 nsTreeCellFrame::~nsTreeCellFrame()
@@ -135,6 +135,24 @@ nsTreeCellFrame::Init(nsIPresContext&  aPresContext,
 
   return rv;
 }
+
+NS_IMETHODIMP nsTreeCellFrame::AttributeChanged(nsIPresContext* aPresContext,
+                              nsIContent* aChild,
+                              nsIAtom* aAttribute,
+                              PRInt32 aHint)
+{
+  nsresult rv = nsTableCellFrame::AttributeChanged(aPresContext, aChild, aAttribute, aHint);
+  if (mAnonymousContent && (aAttribute == nsHTMLAtoms::align || aAttribute == nsXULAtoms::crop 
+          || aAttribute == nsHTMLAtoms::value))
+  {
+    nsAutoString value;
+    // XXX should check if attribute has been removed
+    mContent->GetAttribute(kNameSpaceID_None, aAttribute, value);
+    mAnonymousContent->SetAttribute(kNameSpaceID_None, aAttribute, value, PR_TRUE);
+  }
+  return rv;
+}
+
 
 nsTableFrame* nsTreeCellFrame::GetTreeFrame()
 {

@@ -289,7 +289,8 @@ nsTreeRowGroupFrame::FindRowContentAtIndex(PRInt32& aIndex, nsIContent* aParent,
 
 void 
 nsTreeRowGroupFrame::FindPreviousRowContent(PRInt32& aDelta, nsIContent* aUpwardHint, 
-                                            nsIContent* aDownwardHint, nsIContent** aResult)
+                                            nsIContent* aDownwardHint,
+                                            nsIContent** aResult)
 {
   // Init to nsnull.
   *aResult = nsnull;
@@ -372,7 +373,7 @@ nsTreeRowGroupFrame::FindPreviousRowContent(PRInt32& aDelta, nsIContent* aUpward
     // Hopeless. It ain't in there.
     return;
   }
-  else // We didn't find it here. We need to go up to our parent, using ourselves as a hint.
+  else if (!aDownwardHint) // We didn't find it here. We need to go up to our parent, using ourselves as a hint.
     FindPreviousRowContent(aDelta, parentContent, nsnull, aResult);
 
   // Bail. There's nothing else we can do.
