@@ -74,7 +74,7 @@ elsif ($action eq 'edit')           { edit();           }
 elsif ($action eq 'insert')         { insert();         }
 elsif ($action eq 'update')         { update();         }
 elsif ($action eq 'confirmdelete')  { confirmDelete();  } 
-elsif ($action eq 'delete')         { &delete();        }
+elsif ($action eq 'delete')         { deleteType();     }
 elsif ($action eq 'deactivate')     { deactivate();     }
 else { 
     ThrowCodeError("action_unrecognized", { action => $action });
@@ -362,7 +362,7 @@ sub confirmDelete
 }
 
 
-sub delete {
+sub deleteType {
     validateID();
     
     SendSQL("LOCK TABLES flagtypes WRITE, flags WRITE, " . 
