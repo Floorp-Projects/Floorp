@@ -583,9 +583,9 @@ nsHttpResponseHead::ParseContentType(char *type)
     if (!*type)
         return;
 
-    // a response could have multiple content type headers... we'll honor
-    // the last one.
-    mContentCharset.Truncate();
+    // a response could have multiple content type headers... 
+    // we'll honor the last one. But for charset, we will only 
+    // honor the last one that comes with charset. 
     mContentType.Truncate();
 
     // we don't care about comments (although they are invalid here)
