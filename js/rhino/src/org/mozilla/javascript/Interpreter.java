@@ -2211,26 +2211,38 @@ public class Interpreter extends LabelTable {
                 }
 
                 final int SCRIPT_THROW = 0, ECMA = 1, RUNTIME = 2, OTHER = 3;
-
                 int exType;
                 Object errObj; // Object seen by catch
-                if (ex instanceof JavaScriptException) {
-                    errObj = ScriptRuntime.
-                        unwrapJavaScriptException((JavaScriptException)ex);
-                    exType = SCRIPT_THROW;
-                }
-                else if (ex instanceof EcmaError) {
-                    // an offical ECMA error object,
-                    errObj = ((EcmaError)ex).getErrorObject();
-                    exType = ECMA;
-                }
-                else if (ex instanceof RuntimeException) {
-                    errObj = ex;
-                    exType = RUNTIME;
-                }
-                else {
-                    errObj = ex; // Error instance
-                    exType = OTHER;
+
+                for (;;) {
+                    if (ex instanceof JavaScriptException) {
+                        errObj = ScriptRuntime.
+                            unwrapJavaScriptException((JavaScriptException)ex);
+                        exType = SCRIPT_THROW;
+                    }
+                    else if (ex instanceof EcmaError) {
+                        // an offical ECMA error object,
+                        errObj = ((EcmaError)ex).getErrorObject();
+                        exType = ECMA;
+                    }
+                    else if (ex instanceof WrappedException) {
+                        Object w = ((WrappedException) ex).unwrap();
+                        if (w instanceof Throwable) {
+                            ex = (Throwable) w;
+                            continue;
+                        }
+                        errObj = ex;
+                        exType = RUNTIME;
+                    }
+                    else if (ex instanceof RuntimeException) {
+                        errObj = ex;
+                        exType = RUNTIME;
+                    }
+                    else {
+                        errObj = ex; // Error instance
+                        exType = OTHER;
+                    }
+                    break;
                 }
 
                 if (exType != OTHER && cx.debugger != null) {

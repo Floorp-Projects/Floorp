@@ -110,6 +110,8 @@ class JavaMembers {
             throw new RuntimeException("unexpected IllegalAccessException "+
                                        "accessing Java field");
         } catch (InvocationTargetException e) {
+            // Since JavaScriptException is a checked exception, must
+            // wrap the JavaScriptException in a WrappedException
             throw WrappedException.wrapException(
                 JavaScriptException.wrapException(scope, e));
         }
