@@ -23,30 +23,23 @@ Rights Reserved.
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to HTML */
 @namespace html url("http://www.w3.org/1999/xhtml"); /* namespace for XUL elements */
 
-#sidebar-splitter {
-  border-right: 1px solid threedshadow;
-}
-
-#results-splitter {
-  border-left: 1px solid threedhighlight;
-}
- 
 /* CardView styles - used in the Card View Pane */
 
 #CardViewOuterBox {
+  border-left: 1px solid threedshadow;
   border-top: 1px solid threedshadow;
   border-bottom: 1px solid threedhighlight;
   border-right: 1px solid threedhighlight;
 }
 
 #CardViewBox {
-	overflow: auto;
-	background-color: #FFFFFF;
+	min-width: 150px;
   border-left: 1px solid threeddarkshadow;
   border-top: 1px solid threeddarkshadow;
   border-bottom: 1px solid threedface;
   border-right: 1px solid threedface;
-	min-width: 150px;
+	background-color: #FFFFFF;
+	overflow: auto;
 	-moz-user-focus: ignore;
 }
 
@@ -123,21 +116,13 @@ html|p {
 
 /* Custom Trees */
 
-tree { 
-}
-
-treeitem[selected="true"] > treerow { 
-	color: highlighttext;
-	background-color: highlight;
-}
-
-tree[class="abDirectory"] > treechildren > treeitem > treerow > treecell > .tree-cell-icon {
+tree[class="abDirectory"] treeitem > treerow > treecell > .tree-cell-primary-icon {
 	list-style-image: url("chrome://messenger/skin/addressbook/myaddrbk.gif");
   margin-right: 1px;
   margin-left: 1px;
 }
 
-tree[class="abResults"] > treechildren > treeitem > treerow > treecell.cardicon {
+tree[class="abResults"] treeitem > treerow > treecell.cardicon {
 	list-style-image: url("chrome://messenger/skin/abcard.gif");
 	height: 14px;
 	min-height: 14px;
@@ -145,7 +130,8 @@ tree[class="abResults"] > treechildren > treeitem > treerow > treecell.cardicon 
 }
 
 treeitem[empty="true"] > treerow > treecell > .tree-cell-twisty {               
-  list-style-image: none !important;                                             
+  list-style-image: none !important;
+  padding-left: 12px;
 }
 
 /* Toolbar buttons */
@@ -256,62 +242,6 @@ treeitem[empty="true"] > treerow > treecell > .tree-cell-twisty {
   } 
   
   
-/*
-#button-stop {
-	list-style-image:url("chrome://global/skin/stop.gif");
-}
-
-#button-stop[disabled="true"],
-#button-stop[disabled="true"]:hover,
-#button-stop[disabled="true"]:hover:active
-  {
-    list-style-image      : url("chrome://global/skin/stop-disabled.gif");
-  } 
-
-#button-stop:hover
-  {
-    list-style-image      : url("chrome://global/skin/stop-hover.gif");
-  } 
-
-#button-stop:hover:active
-  {
-    list-style-image      : url("chrome://global/skin/stop-hover-active.gif");
-  } 
-
-#button-search {
-	list-style-image:url("chrome://messenger/skin/addressbook/searchold.gif");
-}
-
-#button-search[disabled="true"],
-#button-search[disabled="true"]:hover,
-#button-search[disabled="true"]:hover:active
-  {
-    list-style-image      : url("chrome://messenger/skin/addressbook/searchold-disabled.gif");
-  } 
-
-#button-search:hover
-  {
-    list-style-image      : url("chrome://messenger/skin/addressbook/searchold-hover.gif");
-  } 
-
-#button-search:hover:active
-  {
-    list-style-image      : url("chrome://messenger/skin/addressbook/searchold-hover-active.gif");
-  }
-#searchlabel {
-	padding: 0px;
-	padding-left: 5px;
-	padding-bottom:2px;
-	white-space: nowrap;
-	font-size: smaller;
-	min-width: 20px;
-}
-
-#searchtext {
-	min-width: 20px;
-	padding: 0px;
-}
-*/
 
 /* ==FOR abSelectAddressesDialog.xul =======*/
 
@@ -330,44 +260,46 @@ treeitem[empty="true"] > treerow > treecell > .tree-cell-twisty {
 
 /* -note- #dirTree#resultsTree is shared with addressbook.xul */
 
-#dirTree, #dirTree > .tree-container-treerows {
-  border             : none;
+#sidebar-box {
+  border: none;
+  border-left: 1px solid threedshadow;
+  border-right: 1px solid threedhighlight;
+}
+
+tree > treehead > treerow {
+  border: none;
 }
 
 #dirTree { // Tree that lists different Address Books
-  height			   : 100px;
   min-width		   : 10px;
-  border-bottom  : 1px solid threedshadow;
-  border-right   : 1px solid threedshadow;
+  border-top     : none;
+  border-left    : none;
+  border-right   : none;
+}
+
+#dirTreeBox {
+  border-left       : 1px solid threedshadow;
+  border-right      : 1px solid threedhighlight;
+  border-bottom     : none;
 }
 
 #dirTree[type="dialog"] {
-  border-left: 1px solid threeddarkshadow;
-  border-top: 1px solid threeddarkshadow;
-  border-bottom: 1px solid threedface;
-  border-right: 1px solid threedface;
 }
 
 #resultsTree {
-  border-top: none;
-  border-left: none;
-  border-bottom: none;
+  border-top        : none;
+  border-bottom     : none;
 }
  
 #results-bucket-tree-box {
 }
 
 #resultsTreeBox {
-	background-color: window; 
-}
-
-#resultsTree {
-	height			: 100px; 
-	min-width		: 10px;
+	background-color: window;
+  border-top: 1px solid threedshadow;
 }
 
 #vertical-splitter {
-  border-right  : 1px solid threedshadow;
   min-width     : 4px;
 }
 
@@ -384,7 +316,6 @@ treeitem[empty="true"] > treerow > treecell > .tree-cell-twisty {
 #addressBucket {
 	height			: 100px; 
 	min-width		: 10px;
-  border-left: none;
 }
 
 #rightColumnButtonBox { // Column with "New", "Edit" and "Remove" buttons
@@ -401,7 +332,12 @@ treeitem[empty="true"] > treerow > treecell > .tree-cell-twisty {
 }
 
 #bucket-splitter {
-  border-left: 1px solid threedhighlight;
-  border-top: none;
+  border: none;
   min-height: 4px;
 }
+
+#sidebar-panels-splitter {
+    border-top            : none;
+}
+
+
