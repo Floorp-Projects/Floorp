@@ -43,13 +43,14 @@ package org.mozilla.javascript;
  * @see org.mozilla.javascript.Arguments
  * @author Norris Boyd
  */
-public final class NativeCall extends IdScriptable {
-
-    static void init(Context cx, Scriptable scope, boolean sealed) {
-        NativeCall obj = new NativeCall();
-        obj.prototypeFlag = true;
-        obj.addAsPrototype(MAX_PROTOTYPE_ID, cx, scope, sealed);
+public final class NativeCall extends ScriptableObject
+{
+    static void init(Context cx, Scriptable scope, boolean sealed)
+    {
+        new NativeCallPrototype(cx, scope, sealed);
     }
+
+    NativeCall() { }
 
     NativeCall(Context cx, Scriptable scope, NativeFunction funObj,
                Scriptable thisObj, Object[] args)
@@ -76,36 +77,29 @@ public final class NativeCall extends IdScriptable {
             }
         }
 
-        // initialize "arguments" property
-        super.put("arguments", this, new Arguments(this));
+        // initialize "arguments" property but only if it was not overriden by
+        // the parameter with the same name
+        if (!super.has("arguments", this)) {
+            super.put("arguments", this, new Arguments(this));
+        }
 
         if (argNames != null) {
             for (int i = funObj.argCount; i != argNames.length; i++) {
-                super.put(argNames[i], this, Undefined.instance);
+                String name = argNames[i];
+                if (!super.has(name, this)) {
+                    super.put(name, this, Undefined.instance);
+                }
             }
         }
     }
 
-    private NativeCall() {
-    }
-
-    public String getClassName() {
+    public String getClassName()
+    {
         return "Call";
     }
 
-    private static Object jsConstructor(Context cx, Object[] args,
-                                        Function ctorObj, boolean inNewExpr)
+    NativeCall getActivation(Function f)
     {
-        if (!inNewExpr) {
-            throw Context.reportRuntimeError1("msg.only.from.new", "Call");
-        }
-        ScriptRuntime.checkDeprecated(cx, "Call");
-        NativeCall result = new NativeCall();
-        result.setPrototype(getObjectPrototype(ctorObj));
-        return result;
-    }
-
-    NativeCall getActivation(Function f) {
         NativeCall x = this;
         do {
             if (x.funObj == f)
@@ -115,63 +109,79 @@ public final class NativeCall extends IdScriptable {
         return null;
     }
 
-    public Function getFunctionObject() {
+    public Function getFunctionObject()
+    {
         return funObj;
     }
 
-    public Object[] getOriginalArguments() {
+    public Object[] getOriginalArguments()
+    {
         return originalArgs;
     }
 
-    public NativeCall getCaller() {
+    public NativeCall getCaller()
+    {
         return caller;
     }
 
-    public Scriptable getThisObj() {
+    public Scriptable getThisObj()
+    {
         return thisObj;
     }
 
-    public int methodArity(int methodId) {
-        if (prototypeFlag) {
-            if (methodId == Id_constructor) return 1;
-        }
+    NativeCall caller;
+    NativeFunction funObj;
+    Scriptable thisObj;
+    private Object[] originalArgs;
+}
+
+final class NativeCallPrototype extends IdScriptable
+{
+    NativeCallPrototype(Context cx, Scriptable scope, boolean sealed)
+    {
+        addAsPrototype(MAX_PROTOTYPE_ID, cx, scope, sealed);
+    }
+
+    public String getClassName()
+    {
+        return "Call";
+    }
+
+    public int methodArity(int methodId)
+    {
+        if (methodId == Id_constructor) return 1;
         return super.methodArity(methodId);
     }
 
-    public Object execMethod
-        (int methodId, IdFunction f,
-         Context cx, Scriptable scope, Scriptable thisObj, Object[] args)
+    public Object execMethod(int methodId, IdFunction f,
+                             Context cx, Scriptable scope,
+                             Scriptable thisObj, Object[] args)
         throws JavaScriptException
     {
-        if (prototypeFlag) {
-            if (methodId == Id_constructor) {
-                return jsConstructor(cx, args, f, thisObj == null);
+        if (methodId == Id_constructor) {
+            if (thisObj != null) {
+                throw Context.reportRuntimeError1("msg.only.from.new", "Call");
             }
+            ScriptRuntime.checkDeprecated(cx, "Call");
+            NativeCall result = new NativeCall();
+            result.setPrototype(getObjectPrototype(scope));
+            return result;
         }
         return super.execMethod(methodId, f, cx, scope, thisObj, args);
     }
 
-    protected String getIdName(int id) {
-        if (prototypeFlag) {
-            if (id == Id_constructor) return "constructor";
-        }
+    protected String getIdName(int id)
+    {
+        if (id == Id_constructor) return "constructor";
         return null;
     }
 
-    protected int mapNameToId(String s) {
-        if (!prototypeFlag) { return 0; }
+    protected int mapNameToId(String s)
+    {
         return s.equals("constructor") ? Id_constructor : 0;
     }
 
     private static final int
         Id_constructor   = 1,
         MAX_PROTOTYPE_ID = 1;
-
-    NativeCall caller;
-    NativeFunction funObj;
-    Scriptable thisObj;
-    private Object[] originalArgs;
-    public int debugPC;
-
-    private boolean prototypeFlag;
 }
