@@ -35,6 +35,9 @@ use Bugzilla::RelationSet;
 use Bugzilla::Config qw(:DEFAULT $datadir);
 use Bugzilla::Util;
 
+use Mail::Mailer;
+use Mail::Header;
+
 # This code is really ugly. It was a commandline interface, then it was moved
 # There are package-global variables which we rely on ProcessOneBug to clean
 # up each time, and other sorts of fun.
@@ -877,23 +880,27 @@ sub NewProcessOnePerson ($$$$$$$$$$$$$) {
     return 1;
 }
 
-# XXX: Should eventually add $mail_from and $mail_to options to 
-# control the SMTP Envelope. -mkanat
 sub MessageToMTA ($) {
-   my ($msg) = (@_);
+    my ($msg) = (@_);
+    return unless $enableSendMail;
 
-    my $sendmailparam = "";
-    unless (Param("sendmailnow")) {
-       $sendmailparam = "-ODeliveryMode=deferred";
+    my @args;
+    if (Param("maildeliverymethod") eq "sendmail" && Param("sendmailnow")) {
+        push @args, "-ODeliveryMode=deferred";
     }
-
-    if ($enableSendMail == 1) {
-        open(SENDMAIL, "|/usr/lib/sendmail $sendmailparam -t -i") ||
-          die "Can't open sendmail";
-
-        print SENDMAIL trim($msg) . "\n";
-        close SENDMAIL;
+    if (Param("maildeliverymethod") eq "smtp") {
+        push @args, Server => Param("smtpserver");
     }
+    my $mailer = new Mail::Mailer Param("maildeliverymethod"), @args;
+
+    $msg =~ /(.*?)\n\n(.*)/ms;
+    my @header_lines = split(/\n/, $1);
+    my $body = $2;
+
+    my $headers = new Mail::Header \@header_lines, Modify => 0;
+    $mailer->open($headers->header_hashref);
+    print $mailer $msg;
+    $mailer->close;
 }
 
 1;

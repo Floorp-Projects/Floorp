@@ -302,7 +302,11 @@ my $modules = [
     { 
         name => 'Text::Wrap', 
         version => '2001.0131' 
-    } 
+    },
+    { 
+        name => 'Mail::Mailer', 
+        version => '1.65'
+    },
 ];
 
 my %ppm_modules = (
@@ -318,6 +322,7 @@ my %ppm_modules = (
     'GD'                => 'GD',
     'GD::Graph'         => 'GDGraph',
     'GD::Text::Align'   => 'GDTextUtil',
+    'Mail::Mailer'      => 'MailTools',
 );
 
 sub install_command {

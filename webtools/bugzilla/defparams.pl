@@ -671,6 +671,17 @@ sub find_languages {
   },
 
   {
+   name => 'maildeliverymethod',
+   desc => 'The method used for mail delivery. The testfile method ' .
+           'is useful for debugging (for more information see the ' .
+           'Mail::Mailer manual)',
+   type => 's',
+   choices => ['sendmail', 'smtp', 'qmail', 'testfile'],
+   default => 'sendmail',
+   checker => \&check_multi
+  },
+
+  {
    name => 'sendmailnow',
    desc => 'Sites using anything older than version 8.12 of \'sendmail\' ' .
            'can achieve a significant performance increase in the ' .
@@ -681,6 +692,13 @@ sub find_languages {
            '*must* leave it on, or no bug mail will be sent.',
    type => 'b',
    default => 1
+  },
+
+  {
+   name => 'smtpserver',
+   desc => 'The SMTP server address (if using SMTP for mail delivery).',
+   type => 't',
+   default => 'localhost'
   },
 
   {
