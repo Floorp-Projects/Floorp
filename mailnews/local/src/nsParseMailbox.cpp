@@ -119,11 +119,16 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStopBinding(nsIURL* aURL, nsresult aStatus, 
 				msgHdr->GetMessageKey(&key);
 				msgHdr->GetAuthor(author);
 				msgHdr->GetSubject(subject);
+				char *authorStr = author.ToNewCString();
+				char *subjectStr = subject.ToNewCString();
 				// leak nsString return values...
-				printf("hdr key = %ld, author = %s subject = %s\n", key, author.ToNewCString(), subject.ToNewCString());
+				printf("hdr key = %ld, author = %s subject = %s\n", key, (authorStr) ? authorStr : "", (subjectStr) ? subjectStr : "");
+				delete [] authorStr;
+				delete [] subjectStr;
 				msgHdr->Release();
 			}
 		}
+		m_mailDB->Close(TRUE);
 	}
 #endif
 	return NS_OK;
@@ -1083,10 +1088,36 @@ int nsParseMailMessageState::FinalizeHeaders()
 			{
 				// note that we're now setting the whole recipient list,
 				// not just the pretty name of the first recipient.
-				m_newMsgHdr->SetRecipients(recipient->value, TRUE);
+				PRUint32 numAddresses;
+				char	*names;
+				char	*addresses;
+
+				ret = m_rfc822AddressParser->ParseRFC822Addresses (recipient->value, &names, &addresses, numAddresses);
+				if (ret == NS_OK)
+				{
+					m_newMsgHdr->SetRecipientsArray(names, addresses, numAddresses);
+					PR_FREEIF(addresses);
+					PR_FREEIF(names);
+				}
+				else	// hmm, should we just use the original string?
+					m_newMsgHdr->SetRecipients(recipient->value, TRUE);
 			}
 			if (ccList)
-				m_newMsgHdr->SetCCList(ccList->value);
+			{
+				PRUint32 numAddresses;
+				char	*names;
+				char	*addresses;
+
+				ret = m_rfc822AddressParser->ParseRFC822Addresses (ccList->value, &names, &addresses, numAddresses);
+				if (ret == NS_OK)
+				{
+					m_newMsgHdr->SetCCListArray(names, addresses, numAddresses);
+					PR_FREEIF(addresses);
+					PR_FREEIF(names);
+				}
+				else	// hmm, should we just use the original string?
+					m_newMsgHdr->SetCCList(ccList->value);
+			}
 			status = InternSubject (subject);
 			if (status >= 0)
 			{
