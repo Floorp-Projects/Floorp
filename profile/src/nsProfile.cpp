@@ -121,6 +121,7 @@
 
 #define PREF_CONFIRM_AUTOMIGRATION     "profile.confirm_automigration"
 #define PREF_AUTOMIGRATION             "profile.allow_automigration"
+#define PREF_MIGRATE_ALL               "profile.migrate_all"
 
 #if defined (XP_MAC)
 #define CHROME_STYLE nsIWebBrowserChrome::CHROME_WINDOW_BORDERS | nsIWebBrowserChrome::CHROME_WINDOW_CLOSE | nsIWebBrowserChrome::CHROME_CENTER_SCREEN
@@ -905,6 +906,9 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
     if (allowAutoMigration && (NS_SUCCEEDED(rv) || forceMigration))
     {        
         if (cmdResult || forceMigration) {
+        PRBool migrateAll = PR_FALSE;
+        (void)prefBranch->GetBoolPref(PREF_MIGRATE_ALL, &migrateAll);
+
             rv = MigrateProfileInfo();
             if (NS_FAILED(rv)) return rv;
 
@@ -922,7 +926,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
             else if (num4xProfiles == 0 && numProfiles == 1) {
                 profileURLStr = "";
             }
-            else if (num4xProfiles == 1 && numProfiles == 0) {
+            else if ((num4xProfiles == 1 || migrateAll) && numProfiles == 0) {
                 PRBool confirmed = PR_FALSE;
                 if (NS_SUCCEEDED(ConfirmAutoMigration(canInteract, &confirmed)) && confirmed)
                     AutoMigrate();
