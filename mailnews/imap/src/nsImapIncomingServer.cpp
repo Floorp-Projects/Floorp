@@ -106,6 +106,8 @@ public:
 	// nsIImapServerSink impl
 	NS_IMETHOD PossibleImapMailbox(const char *folderPath);
 	NS_IMETHOD DiscoveryDone();
+
+	NS_IMETHOD PromptForPassword(char ** aPassword);
 	NS_IMETHOD  FEAlert(const PRUnichar *aString);
 	NS_IMETHOD  FEAlertFromServer(const char *aString);
 protected:
@@ -115,8 +117,6 @@ protected:
 	nsresult DeleteNonVerifiedFolders();
 	PRBool NoDescendentsAreVerified(nsIFolder *parentFolder);
 	PRBool AllDescendentsAreNoSelect(nsIFolder *parentFolder);
-
-
 private:
     nsresult CreateImapConnection (nsIEventQueue* aEventQueue,
                                    nsIImapUrl* aImapUrl,
@@ -1063,7 +1063,11 @@ nsresult nsImapIncomingServer::GetUnverifiedSubFolders(nsIFolder *parentFolder, 
 		}
 		delete simpleEnumerator;
 	}
-
 	return rv;
+}
+
+NS_IMETHODIMP nsImapIncomingServer::PromptForPassword(char ** aPassword)
+{
+	return GetPassword(PR_TRUE, aPassword);
 }
 
