@@ -47,6 +47,9 @@ LLIBS=								\
     $(LIBNSPR)						\
 	$(NULL)
 
+LINCS=  -I$(DEPTH)\mailnews\imap\src         \
+        $(NULL)
+
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
