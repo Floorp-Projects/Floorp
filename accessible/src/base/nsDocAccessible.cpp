@@ -96,7 +96,7 @@ nsDocAccessible::nsDocAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell)
   NS_ASSERTION(gGlobalDocAccessibleCache, "No global doc accessible cache");
   PutCacheEntry(gGlobalDocAccessibleCache, NS_STATIC_CAST(void*, mWeakShell), this);
 #ifdef DEBUG
-  printf("\nATTENTION: New doc accessible for weak shell %x\n", mWeakShell);
+  printf("\nATTENTION: New doc accessible for weak shell %x\n", mWeakShell.get());
 #endif
 
   // XXX aaronl should we use an algorithm for the initial cache size?
