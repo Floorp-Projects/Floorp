@@ -97,3 +97,10 @@ ifeq ($(OS_TARGET),SunOS)
 # dependencies (libsoftokn3.so) in the same directory where it resides.
 MKSHLIB += -R '$$ORIGIN'
 endif
+
+ifeq (,$(filter-out WINNT WIN95,$(OS_TARGET)))
+# Export 'mktemp' to be backward compatible with NSS 3.2.x and 3.3.x.
+# See bug 142575.
+DEFINES += -DWIN32_NSS3_DLL_COMPAT
+DLLFLAGS += -EXPORT:mktemp=nss_mktemp
+endif
