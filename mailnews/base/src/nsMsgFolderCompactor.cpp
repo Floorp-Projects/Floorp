@@ -235,10 +235,26 @@ nsFolderCompactState::Compact(nsIMsgFolder *folder, nsIMsgWindow *aMsgWindow)
    NS_ENSURE_SUCCESS(rv,rv);
     
    rv = Init(folder, baseMessageURI, db, pathSpec, m_window);
-   if (NS_SUCCEEDED(rv))
-      rv = StartCompacting();
+   NS_ENSURE_SUCCESS(rv,rv);
 
-   return rv;
+   PRBool isLocked;
+   m_folder->GetLocked(&isLocked);
+   if(!isLocked)
+   {
+     nsCOMPtr <nsISupports> supports = do_QueryInterface(NS_STATIC_CAST(nsIMsgFolderCompactor*, this));
+     m_folder->AcquireSemaphore(supports);
+     return StartCompacting();
+   }
+   else
+   {
+     m_folder->NotifyCompactCompleted();
+     m_folder->ThrowAlertMsg("compactFolderDeniedLock", m_window);
+     CleanupTempFilesAfterError();
+     if (m_compactAll)
+       return CompactNextFolder();
+     else
+       return NS_OK;
+   }
 }
 
 nsresult nsFolderCompactState::ShowStatusMsg(const PRUnichar *aMsg)
@@ -328,21 +344,6 @@ NS_IMETHODIMP nsFolderCompactState::OnStopRunningUrl(nsIURI *url, nsresult statu
 nsresult nsFolderCompactState::StartCompacting()
 {
   nsresult rv = NS_OK;
-  PRBool isLocked;
-  nsCOMPtr <nsISupports> supports = do_QueryInterface(NS_STATIC_CAST(nsIMsgFolderCompactor*, this));
-  m_folder->GetLocked(&isLocked);
-  if(!isLocked)
-    m_folder->AcquireSemaphore(supports);
-  else
-  {
-    m_folder->NotifyCompactCompleted();
-    m_folder->ThrowAlertMsg("compactFolderDeniedLock", m_window);
-    CleanupTempFilesAfterError();
-    if (m_compactAll)
-      return CompactNextFolder();
-    else
-      return rv;
-  }
   if (m_size > 0)
   {
     ShowCompactingStatusMsg();
@@ -645,6 +646,7 @@ nsOfflineStoreCompactState::OnStopRequest(nsIRequest *request, nsISupports *ctxt
   nsCOMPtr<nsIMsgDBHdr> msgHdr;
   nsCOMPtr<nsIMsgDBHdr> newMsgHdr;
   nsCOMPtr <nsIMsgStatusFeedback> statusFeedback;
+  ReleaseFolderLock();
 
   if (NS_FAILED(rv)) goto done;
   uri = do_QueryInterface(ctxt, &rv);
@@ -835,6 +837,7 @@ nsresult nsOfflineStoreCompactState::StartCompacting()
   }
   else
   { // no messages to copy with
+    ReleaseFolderLock();
     FinishCompact();
 //    Release(); // we don't "own" ourselves yet.
   }

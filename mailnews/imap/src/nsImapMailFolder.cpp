@@ -636,107 +636,106 @@ nsresult nsImapMailFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
 NS_IMETHODIMP
 nsImapMailFolder::UpdateFolder(nsIMsgWindow *msgWindow)
 {
-    nsresult rv = NS_ERROR_NULL_POINTER;
-    PRBool selectFolder = PR_FALSE;
-
-    if (mFlags & MSG_FOLDER_FLAG_INBOX) {
-        if (!m_filterList) {
-            rv = GetFilterList(msgWindow, getter_AddRefs(m_filterList));
-            // XXX rv ignored
-        }
-    }
-
-    if (m_filterList) {
-        nsCOMPtr<nsIMsgIncomingServer> server;
-        rv = GetServer(getter_AddRefs(server));
-        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get server");
-
-        PRBool canFileMessagesOnServer = PR_TRUE;
-        if (server) {
-            rv = server->GetCanFileMessagesOnServer(
-                &canFileMessagesOnServer);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "failed to determine if we could file messages on this server");
-        }
-
-        // the mdn filter is for filing return receipts into the sent folder
-        // some servers (like AOL mail servers)
-        // can't file to the sent folder, so we don't add the filter for those servers
-        if (canFileMessagesOnServer) {
-            rv = server->ConfigureTemporaryReturnReceiptsFilter(
-                m_filterList);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "failed to add MDN filter");
-        }
-    }
-
-    nsCOMPtr<nsIImapService> imapService = do_GetService(NS_IMAPSERVICE_CONTRACTID, &rv); 
-    if (NS_FAILED(rv)) return rv;
-
-    selectFolder = PR_TRUE;
-
-    PRBool isServer;
-    rv = GetIsServer(&isServer);
-    if (NS_SUCCEEDED(rv) && isServer)
-        {
-            if (!m_haveDiscoveredAllFolders)
-                {
-                    PRBool hasSubFolders = PR_FALSE;
-                    GetHasSubFolders(&hasSubFolders);
-                    if (!hasSubFolders)
-                        {
-                            rv = CreateClientSubfolderInfo("Inbox", kOnlineHierarchySeparatorUnknown,0, PR_FALSE);
-                            if (NS_FAILED(rv)) 
-                                return rv;
-                        }
-                    m_haveDiscoveredAllFolders = PR_TRUE;
-                }
-            selectFolder = PR_FALSE;
-        }
-    rv = GetDatabase(msgWindow);
-
-    PRBool canOpenThisFolder = PR_TRUE;
-    GetCanIOpenThisFolder(&canOpenThisFolder);
+  nsresult rv = NS_ERROR_NULL_POINTER;
+  PRBool selectFolder = PR_FALSE;
   
-    PRBool hasOfflineEvents = PR_FALSE;
-    GetFlag(MSG_FOLDER_FLAG_OFFLINEEVENTS, &hasOfflineEvents);
+  if (mFlags & MSG_FOLDER_FLAG_INBOX && !m_filterList) 
+      rv = GetFilterList(msgWindow, getter_AddRefs(m_filterList));
+  
+  if (m_filterList) 
+  {
+    nsCOMPtr<nsIMsgIncomingServer> server;
+    rv = GetServer(getter_AddRefs(server));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get server");
     
-    if (hasOfflineEvents && !WeAreOffline())
+    PRBool canFileMessagesOnServer = PR_TRUE;
+    if (server) 
     {
-      nsImapOfflineSync *goOnline = new nsImapOfflineSync(msgWindow, this, this);
-      if (goOnline)
-      {
-        return goOnline->ProcessNextOperation();
-      }
+      rv = server->GetCanFileMessagesOnServer(&canFileMessagesOnServer);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to determine if we could file messages on this server");
     }
-    if (!canOpenThisFolder) 
-        selectFolder = PR_FALSE;
-    // don't run select if we're already running a url/select...
-    if (NS_SUCCEEDED(rv) && !m_urlRunning && selectFolder)
-        {
-            nsCOMPtr <nsIEventQueue> eventQ;
-            nsCOMPtr<nsIEventQueueService> pEventQService = 
-                do_GetService(kEventQueueServiceCID, &rv); 
-            if (NS_SUCCEEDED(rv) && pEventQService)
-                pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
-                                                    getter_AddRefs(eventQ));
-            rv = imapService->SelectFolder(eventQ, this, this, msgWindow,
-                                           nsnull);
-            if ((rv == NS_MSG_ERROR_OFFLINE) ||
-                     (rv == NS_BINDING_ABORTED))
-                {
-                    rv = NS_OK;
-                    NotifyFolderEvent(mFolderLoadedAtom);
-                }
-        }
-    else if (NS_SUCCEEDED(rv))  // tell the front end that the folder is loaded if we're not going to 
-        {                           // actually run a url.
-            if (!m_urlRunning)        // if we're already running a url, we'll let that one send the folder loaded
-                NotifyFolderEvent(mFolderLoadedAtom);
-            if (msgWindow) // don't do this w/o a msgWindow, since it asserts annoyingly
-                rv = AutoCompact(msgWindow);  
-            NS_ENSURE_SUCCESS(rv,rv);
-        }
-
-    return rv;
+    
+    // the mdn filter is for filing return receipts into the sent folder
+    // some servers (like AOL mail servers)
+    // can't file to the sent folder, so we don't add the filter for those servers
+    if (canFileMessagesOnServer) 
+    {
+      rv = server->ConfigureTemporaryReturnReceiptsFilter(m_filterList);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to add MDN filter");
+    }
+  }
+  
+  nsCOMPtr<nsIImapService> imapService = do_GetService(NS_IMAPSERVICE_CONTRACTID, &rv); 
+  if (NS_FAILED(rv)) return rv;
+  
+  selectFolder = PR_TRUE;
+  
+  PRBool isServer;
+  rv = GetIsServer(&isServer);
+  if (NS_SUCCEEDED(rv) && isServer)
+  {
+    if (!m_haveDiscoveredAllFolders)
+    {
+      PRBool hasSubFolders = PR_FALSE;
+      GetHasSubFolders(&hasSubFolders);
+      if (!hasSubFolders)
+      {
+        rv = CreateClientSubfolderInfo("Inbox", kOnlineHierarchySeparatorUnknown,0, PR_FALSE);
+        if (NS_FAILED(rv)) 
+          return rv;
+      }
+      m_haveDiscoveredAllFolders = PR_TRUE;
+    }
+    selectFolder = PR_FALSE;
+  }
+  rv = GetDatabase(msgWindow);
+  
+  PRBool canOpenThisFolder = PR_TRUE;
+  GetCanIOpenThisFolder(&canOpenThisFolder);
+  
+  PRBool hasOfflineEvents = PR_FALSE;
+  GetFlag(MSG_FOLDER_FLAG_OFFLINEEVENTS, &hasOfflineEvents);
+  
+  if (hasOfflineEvents && !WeAreOffline())
+  {
+    nsImapOfflineSync *goOnline = new nsImapOfflineSync(msgWindow, this, this);
+    if (goOnline)
+      return goOnline->ProcessNextOperation();
+  }
+  if (!canOpenThisFolder) 
+    selectFolder = PR_FALSE;
+  // don't run select if we're already running a url/select...
+  if (NS_SUCCEEDED(rv) && !m_urlRunning && selectFolder)
+  {
+    nsCOMPtr <nsIEventQueue> eventQ;
+    nsCOMPtr<nsIEventQueueService> pEventQService = 
+      do_GetService(kEventQueueServiceCID, &rv); 
+    if (NS_SUCCEEDED(rv) && pEventQService)
+      pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
+      getter_AddRefs(eventQ));
+    rv = imapService->SelectFolder(eventQ, this, this, msgWindow, nsnull);
+    switch (rv)
+    {
+      case NS_MSG_ERROR_OFFLINE:
+        if (msgWindow)
+          AutoCompact(msgWindow);  
+        // note fall through to next case.
+      case NS_BINDING_ABORTED:
+        rv = NS_OK;
+        NotifyFolderEvent(mFolderLoadedAtom);
+        break;
+      default:
+        break;
+    }
+  }
+  else if (NS_SUCCEEDED(rv))  // tell the front end that the folder is loaded if we're not going to 
+  {                           // actually run a url.
+    if (!m_urlRunning)        // if we're already running a url, we'll let that one send the folder loaded
+      NotifyFolderEvent(mFolderLoadedAtom);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+  
+  return rv;
 }
 
 
@@ -2208,7 +2207,6 @@ NS_IMETHODIMP nsImapMailFolder::GetNewMessages(nsIMsgWindow *aWindow, nsIUrlList
 
     if (imapServer)
     {
-      imapServer->GetDownloadBodiesOnGetNewMail(&m_downloadingFolderForOfflineUse);
       nsCOMPtr<nsIMsgIncomingServer> incomingServer = do_QueryInterface(imapServer, &rv);
       if (incomingServer)
         incomingServer->GetPerformingBiff(&performingBiff);
@@ -3251,8 +3249,6 @@ NS_IMETHODIMP nsImapMailFolder::FolderPrivileges(nsIMsgWindow *window)
     nsCOMPtr<nsIImapService> imapService = do_GetService(NS_IMAPSERVICE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv,rv);
 
-    // selecting the folder with m_downloadingFolderForOfflineUse true will cause
-    // us to fetch any message bodies we don't have.
     rv = imapService->GetFolderAdminUrl(m_eventQueue, this, window, this, nsnull);
     if (NS_SUCCEEDED(rv))
       m_urlRunning = PR_TRUE;
@@ -3298,8 +3294,6 @@ NS_IMETHODIMP nsImapMailFolder::IssueCommandOnMsgs(const char *command, const ch
   nsCOMPtr<nsIImapService> imapService = do_GetService(NS_IMAPSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  // selecting the folder with m_downloadingFolderForOfflineUse true will cause
-  // us to fetch any message bodies we don't have.
   return imapService->IssueCommandOnMsgs(m_eventQueue, this, aWindow, command, uids, url);
 }
 
@@ -3309,8 +3303,6 @@ NS_IMETHODIMP nsImapMailFolder::FetchCustomMsgAttribute(const char *attribute, c
   nsCOMPtr<nsIImapService> imapService = do_GetService(NS_IMAPSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  // selecting the folder with m_downloadingFolderForOfflineUse true will cause
-  // us to fetch any message bodies we don't have.
   return imapService->FetchCustomMsgAttribute(m_eventQueue, this, aWindow, attribute, uids, url);
 }
 
@@ -3642,16 +3634,13 @@ NS_IMETHODIMP nsImapMailFolder::DownloadMessagesForOffline(nsISupportsArray *mes
 {
   nsCAutoString messageIds;
   nsMsgKeyArray srcKeyArray;
-#ifdef DEBUG_bienvenu
-//  return DownloadAllForOffline(nsnull, window);
-#endif
   nsresult rv = BuildIdsAndKeyArray(messages, messageIds, srcKeyArray);
   if (NS_FAILED(rv) || messageIds.IsEmpty()) return rv;
 
   nsCOMPtr<nsIImapService> imapService = do_GetService(NS_IMAPSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  SetNotifyDownloadedLines(PR_TRUE); // ### TODO need to clear this when we've finished
+  SetNotifyDownloadedLines(PR_TRUE); 
   return imapService->DownloadMessagesForOffline(messageIds.get(), this, nsnull, window);
 }
 
@@ -4263,7 +4252,7 @@ NS_IMETHODIMP nsImapMailFolder::OnStopRequest(nsIRequest *request, nsISupports *
 NS_IMETHODIMP
 nsImapMailFolder::OnStartRunningUrl(nsIURI *aUrl)
 {
-  NS_PRECONDITION(aUrl, "just a sanity check since this is a test program");
+  NS_PRECONDITION(aUrl, "sanity check - need to be be running non-null url");
   m_urlRunning = PR_TRUE;
   return NS_OK;
 }
@@ -4271,11 +4260,14 @@ nsImapMailFolder::OnStartRunningUrl(nsIURI *aUrl)
 NS_IMETHODIMP
 nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
 {
-  NS_PRECONDITION(aUrl, "just a sanity check since this is a test program");
   nsresult rv = NS_OK;
 
   m_urlRunning = PR_FALSE;
-  m_downloadingFolderForOfflineUse = PR_FALSE;
+  if (m_downloadingFolderForOfflineUse)
+  {
+    ReleaseSemaphore(NS_STATIC_CAST(nsIMsgImapMailFolder*, this));
+    m_downloadingFolderForOfflineUse = PR_FALSE;
+  }
   nsCOMPtr<nsIMsgMailSession> session = 
            do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv);
   if (aUrl)
@@ -4869,7 +4861,11 @@ nsImapMailFolder::HeaderFetchCompleted(nsIImapProtocol* aProtocol)
       // for new messages, if the above filter playback actually moves the filtered
       // messages before we get to this code.
       if (autoDownloadNewHeaders)
-        m_downloadingFolderForOfflineUse = PR_TRUE;
+      {
+          // acquire semaphore for offline store. If it fails, we won't download for offline use.
+        if (NS_SUCCEEDED(AcquireSemaphore(NS_STATIC_CAST(nsIMsgImapMailFolder*, this))))
+          m_downloadingFolderForOfflineUse = PR_TRUE;
+      }
     }
 
     if (m_downloadingFolderForOfflineUse)
@@ -5661,7 +5657,11 @@ nsImapMailFolder::SetUrlState(nsIImapProtocol* aProtocol,
   {
     ProgressStatus(aProtocol, IMAP_DONE, nsnull);
     m_urlRunning = PR_FALSE;
-    m_downloadingFolderForOfflineUse = PR_FALSE;
+    if (m_downloadingFolderForOfflineUse)
+    {
+      ReleaseSemaphore(NS_STATIC_CAST(nsIMsgImapMailFolder*, this));
+      m_downloadingFolderForOfflineUse = PR_FALSE;
+    }
   }
 
     if (aUrl)
