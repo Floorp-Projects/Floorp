@@ -239,9 +239,12 @@ public:
 
   NS_IMETHOD SetSelected(nsIDOMRange *aRange,PRBool aSelected, PRBool aSpread);
 
-  NS_IMETHOD PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection,  PRInt32 aStartOffset, 
-                        nsIFrame **aResultFrame, PRInt32 *aFrameOffset, PRInt32 *aContentOffset,
-                        PRBool aEatingWS)const;
+  NS_IMETHOD PeekOffset(nsSelectionAmount aAmount,
+                        nsDirection aDirection,
+                        PRInt32 aStartOffset,
+                        nsIContent **aResultContent, 
+                        PRInt32 *aContentOffset,
+                        PRBool aEatingWS);
 
   NS_IMETHOD GetOffsets(PRInt32 &start, PRInt32 &end)const;
 
@@ -1945,7 +1948,8 @@ nsTextFrame::GetChildFrameContainingOffset(PRInt32 inContentOffset,
   if (contentOffset > mContentLength)
   {
     //this is not the frame we are looking for.
-    nsIFrame *nextInFlow = GetNextInFlow();
+    nsIFrame *nextInFlow;
+    nextInFlow = GetNextInFlow();
     if (nextInFlow)
       return nextInFlow->GetChildFrameContainingOffset(inContentOffset, outFrameContentOffset, outChildFrame);
     else
@@ -1962,17 +1966,32 @@ NS_IMETHODIMP
 nsTextFrame::PeekOffset(nsSelectionAmount aAmount,
                         nsDirection aDirection,
                         PRInt32 aStartOffset,
-                        nsIFrame **aResultFrame, 
-                        PRInt32 *aFrameOffset,
+                        nsIContent **aResultContent, 
                         PRInt32 *aContentOffset,
-                        PRBool aEatingWS) const
+                        PRBool aEatingWS) 
 {
-/*
+
   //default, no matter what grab next/ previous sibling. 
-  if (!aResultFrame || !aFrameOffset || !aContentOffset)
+  if (!aResultContent || !aContentOffset)
     return NS_ERROR_NULL_POINTER;
   if (aStartOffset < 0)
-    aStartOffset = mContentLength;
+    aStartOffset = mContentLength + mContentOffset;
+  if (aStartOffset < mContentOffset){
+    aStartOffset = mContentOffset;
+  }
+
+  if (aStartOffset > (mContentOffset + mContentLength)){
+    nsIFrame *nextInFlow;
+    nextInFlow = GetNextInFlow();
+    if (!nextInFlow){
+      NS_ASSERTION(PR_FALSE,"nsTextFrame::PeekOffset no more flow \n");
+      return NS_ERROR_INVALID_ARG;
+    }
+    return nextInFlow->PeekOffset(aAmount,aDirection,aStartOffset,
+                        aResultContent,aContentOffset,aEatingWS);
+  }
+
+
   PRUnichar wordBufMem[WORD_BUF_SIZE];
   PRUnichar paintBufMem[TEXT_BUF_SIZE];
   PRInt32 indicies[TEXT_BUF_SIZE];
@@ -1999,11 +2018,10 @@ nsTextFrame::PeekOffset(nsSelectionAmount aAmount,
 
   switch (aAmount){
   case eSelectNoAmount : {
-      *aResultFrame = this;
-      if (aStartOffset > mContentLength)
-        aStartOffset = mContentLength; //not ok normaly, but eNone means dont leave this frame
-      *aFrameOffset = aStartOffset;
-      *aContentOffset = mContentOffset;
+      *aResultContent = mContent;
+      if (*aResultContent)
+        (*aResultContent)->AddRef();
+      *aContentOffset = aStartOffset;
     }
     break;
   case eSelectCharacter : {
@@ -2016,49 +2034,51 @@ nsTextFrame::PeekOffset(nsSelectionAmount aAmount,
     PRBool found = PR_TRUE;
     if (aDirection == eDirPrevious){
       PRInt32 i;
-      for (i = aStartOffset -1; i >=0;  i--){
-        if (ip[i] < ip[aStartOffset]){
-          *aFrameOffset = i;
+      for (i = aStartOffset -1 - mContentOffset; i >=0;  i--){
+        if (ip[i] < ip[aStartOffset - mContentOffset]){
+          *aContentOffset = i + mContentOffset;
           break;
         }
       }
       if (i <0){
         found = PR_FALSE;
         frameUsed = GetPrevInFlow();
-        start = -1;
+        start = mContentOffset;
       }
     }
     else if (aDirection == eDirNext){
       PRInt32 i;
-      for (i = aStartOffset +1; i <= mContentLength;  i++){
-        if (ip[i] > ip[aStartOffset]){
-          *aFrameOffset = i;
+      for (i = aStartOffset +1 - mContentOffset; i <= mContentLength;  i++){
+        if (ip[i] > ip[aStartOffset - mContentOffset]){
+          *aContentOffset = i + mContentOffset;
           break;
         }
       }
-      if (aStartOffset == 0 && (mFlags & TEXT_SKIP_LEADING_WS))
+/*      if (aStartOffset == 0 && (mFlags & TEXT_SKIP_LEADING_WS))
         i--; //back up because we just skipped over some white space. why skip over the char also?
+        */
       if (i > mContentLength){
         found = PR_FALSE;
         frameUsed = GetNextInFlow();
-        start = 0;
+        start = mContentOffset + mContentLength;
       }
     }
     if (!found){
       if (frameUsed){
-        result = frameUsed->PeekOffset(eSelectCharacter, aDirection,  start, aResultFrame, 
-              aFrameOffset, aContentOffset, aEatingWS);
+        result = frameUsed->PeekOffset(eSelectCharacter, aDirection,  start, aResultContent, 
+              aContentOffset, aEatingWS);
       }
       else {//reached end ask the frame for help
-        result = nsFrame::PeekOffset(eSelectCharacter, aDirection, start, aResultFrame,
-                  aFrameOffset, aContentOffset, aEatingWS);
+        result = nsFrame::PeekOffset(eSelectCharacter, aDirection, start, aResultContent,
+                  aContentOffset, aEatingWS);
       }
     }
-    else{
-      *aResultFrame = this;
-      *aContentOffset = mContentOffset;
+    else {
+      *aResultContent = mContent;
+      if (*aResultContent)
+        (*aResultContent)->AddRef();
     }
-                          }
+  }
   break;
   case eSelectWord : {
     nsIFrame *frameUsed = nsnull;
@@ -2069,19 +2089,19 @@ nsTextFrame::PeekOffset(nsSelectionAmount aAmount,
     PRInt32 wordLen, contentLen;
     if (aDirection == eDirPrevious){
       keepSearching = PR_TRUE;
-      tx.Init(this, mContentOffset + aStartOffset);
+      tx.Init(this, aStartOffset);
       if (tx.GetPrevWord(PR_FALSE, wordLen, contentLen, isWhitespace, PR_FALSE)){
         if ((aEatingWS && !isWhitespace) || !aEatingWS){
-          *aFrameOffset = aStartOffset - contentLen;
+          *aContentOffset = aStartOffset - contentLen;
           //check for whitespace next.
-          if (*aFrameOffset > 0)
+          if (*aContentOffset > mContentOffset)
             keepSearching = PR_FALSE;//reached the beginning of a word
           aEatingWS = !isWhitespace;//nowhite space, just eat chars.
           while (isWhitespace && tx.GetPrevWord(PR_FALSE, wordLen, contentLen, isWhitespace, PR_FALSE)){
-            *aFrameOffset -= contentLen;
+            *aContentOffset -= contentLen;
             aEatingWS = PR_FALSE;
           }
-          keepSearching = *aFrameOffset <= 0;
+          keepSearching = *aContentOffset <= mContentOffset;
           if (!isWhitespace){
             if (!keepSearching)
               found = PR_TRUE;
@@ -2090,7 +2110,7 @@ nsTextFrame::PeekOffset(nsSelectionAmount aAmount,
           }
         }
         else {
-          *aFrameOffset = mContentLength;
+          *aContentOffset = mContentLength + mContentOffset;
           found = PR_TRUE;
         }
       }
@@ -2098,20 +2118,21 @@ nsTextFrame::PeekOffset(nsSelectionAmount aAmount,
       start = -1; //start at end
     }
     else if (aDirection == eDirNext){
-      tx.Init(this, mContentOffset + aStartOffset );
+      tx.Init(this, aStartOffset );
       if (tx.GetNextWord(PR_FALSE, wordLen, contentLen, isWhitespace, PR_FALSE)){
         if ((aEatingWS && isWhitespace) || !aEatingWS){
-          *aFrameOffset = aStartOffset + contentLen;
+          *aContentOffset = aStartOffset + contentLen;
           //check for whitespace next.
           keepSearching = PR_TRUE;
           isWhitespace = PR_TRUE;
           while (tx.GetNextWord(PR_FALSE, wordLen, contentLen, isWhitespace, PR_FALSE) && isWhitespace){
-            *aFrameOffset += contentLen;
+            *aContentOffset += contentLen;
             keepSearching = PR_FALSE;
+            isWhitespace = PR_FALSE;
           }
         }
         else if (aEatingWS)
-          *aFrameOffset = mContentOffset;
+          *aContentOffset = mContentOffset;
 
         if (!isWhitespace){
           found = PR_TRUE;
@@ -2123,21 +2144,22 @@ nsTextFrame::PeekOffset(nsSelectionAmount aAmount,
       frameUsed = GetNextInFlow();
       start = 0;
     }
-    if (!found || (*aFrameOffset > mContentLength) || (*aFrameOffset < 0)){ //gone too far
+    if (!found || (*aContentOffset > (mContentOffset + mContentLength)) || (*aContentOffset < mContentOffset)){ //gone too far
       if (frameUsed){
-        result = frameUsed->PeekOffset(aAmount, aDirection,  start, aResultFrame, 
-              aFrameOffset, aContentOffset, aEatingWS);
+        result = frameUsed->PeekOffset(aAmount, aDirection,  start, aResultContent, 
+              aContentOffset, aEatingWS);
       }
       else {//reached end ask the frame for help
-        result = nsFrame::PeekOffset(aAmount, aDirection, start, aResultFrame,
-                  aFrameOffset, aContentOffset, aEatingWS);
+        result = nsFrame::PeekOffset(aAmount, aDirection, start, aResultContent,
+                  aContentOffset, aEatingWS);
       }
     }
     else {
-      *aContentOffset = mContentOffset;
-      *aResultFrame   = this;
+      *aResultContent = mContent;
+      if (*aResultContent)
+        (*aResultContent)->AddRef();
     }
-                     }
+  }
     break;
   case eSelectLine : 
   default: result = NS_ERROR_FAILURE; break;
@@ -2150,19 +2172,13 @@ nsTextFrame::PeekOffset(nsSelectionAmount aAmount,
     delete [] ip;
   }
   if (NS_FAILED(result)){
-    *aResultFrame = this;
-    *aContentOffset = mContentOffset;
-    if (eDirNext == aDirection ){
-      *aFrameOffset = mContentLength;
-    }
-    else if (eDirPrevious == aDirection){
-      *aFrameOffset = 0;
-    }
+    *aResultContent = mContent;
+    if (*aResultContent)
+      (*aResultContent)->AddRef();
+    *aContentOffset = aStartOffset;
     result = NS_OK;
   }
   return result;
-  */
-return NS_OK;
 }
 
 NS_IMETHODIMP
