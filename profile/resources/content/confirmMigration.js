@@ -47,6 +47,7 @@ function onLoad()
   }
 
   cancelButton.setAttribute( "class", ( cancelButton.getAttribute( "class" ) + " padded" ) );
+  okButton.focus();
   centerWindowOnScreen();
 }
 
