@@ -33,7 +33,7 @@
 #include "nsTransform2D.h"
 #include "nsIWidget.h"
 #include "nsRect.h"
-#include "nsImageGTK.h"
+#include "nsIImage.h"
 #include "nsIDeviceContext.h"
 #include "nsVoidArray.h"
 #include "nsGfxCIID.h"

@@ -36,6 +36,7 @@
 #include "nsScriptableRegion.h"
 #include "nsIImageManager.h"
 #include "nsDeviceContextGTK.h"
+#include "nsImageGTK.h"
 
 // objects that just require generic constructors
 

@@ -57,6 +57,7 @@ public:
   virtual PRInt32     GetDecodedY2() { return mDecodedY2;}
 
   virtual nsColorMap* GetColorMap();
+
   NS_IMETHOD Draw(nsIRenderingContext &aContext,
                   nsDrawingSurface aSurface,
                   PRInt32 aX, PRInt32 aY,
@@ -65,6 +66,13 @@ public:
                   nsDrawingSurface aSurface,
                   PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                   PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight);
+
+  NS_IMETHOD DrawTile(nsIRenderingContext &aContext,
+                      nsDrawingSurface aSurface,
+                      nscoord aX0, nscoord aY0,
+                      nscoord aX1, nscoord aY1,
+                      nscoord aWidth, nscoord aHeight);
+
   virtual void ImageUpdated(nsIDeviceContext *aContext,
                             PRUint8 aFlags, nsRect *aUpdateRect);
   virtual nsresult    Init(PRInt32 aWidth, PRInt32 aHeight,
@@ -104,6 +112,16 @@ private:
   void ComputePaletteSize(PRIntn nBitCount);
 
 private:
+  inline void DrawComposited(nsIRenderingContext &aContext,
+                             nsDrawingSurface aSurface,
+                             PRInt32 aX, PRInt32 aY,
+                             PRInt32 aWidth, PRInt32 aHeight);
+
+  inline void CreateAlphaBitmap(PRInt32 aWidth, PRInt32 aHeight);
+  inline void CreateOffscreenPixmap(PRInt32 aWidth, PRInt32 aHeight);
+  inline void DrawImageOffscreen(PRInt32 validX, PRInt32 validY, PRInt32 validWidth, PRInt32 validHeight);
+  inline void SetupGCForAlpha(GdkGC *aGC, PRInt32 aX, PRInt32 aY);
+
   PRInt32    mWidth;
   PRInt32    mHeight;
   PRInt32    mDepth;       // bits per pixel
@@ -117,8 +135,8 @@ private:
 
   PRInt32             mDecodedX1;       //Keeps track of what part of image
   PRInt32             mDecodedY1;       // has been decoded.
-  PRInt32             mDecodedX2; 
-  PRInt32             mDecodedY2;    
+  PRInt32             mDecodedX2;
+  PRInt32             mDecodedY2;
 
   // alpha layer members
   PRUint8    *mAlphaBits;
