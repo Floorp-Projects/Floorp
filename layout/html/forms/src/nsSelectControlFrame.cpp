@@ -704,9 +704,6 @@ nsSelectControlFrame::Reset()
         // Cache the state of each option locally
         option->GetDefaultSelected(&selected);
         SetOptionSelected(i, selected);
-
-        // Store the index of each option in the DOM
-        option->SetIndex(i);
         if (selected) {
           listWidget->SelectItem(i);
           if (selectedIndex < 0)
