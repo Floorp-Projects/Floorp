@@ -556,6 +556,15 @@ nsScriptSecurityManager::CheckSameOriginURI(nsIURI* aSourceURI,
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsScriptSecurityManager::CheckSameOriginPrincipal(nsIPrincipal* aSourcePrincipal,
+                                                  nsIPrincipal* aTargetPrincipal)
+{
+    return CheckSameOriginDOMProp(aSourcePrincipal, aTargetPrincipal,
+                                  nsIXPCSecurityManager::ACCESS_SET_PROPERTY);
+}
+
+
 nsresult
 nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
                                                  nsIXPCNativeCallContext* aCallContext,

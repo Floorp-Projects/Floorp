@@ -44,6 +44,7 @@
 #include "nsCOMPtr.h"
 #include "plhash.h"
 #include "nsIURI.h"
+#include "nsIPrincipal.h"
 
 class nsNodeInfo;
 
@@ -71,8 +72,8 @@ public:
                          nsINodeInfo*& aNodeInfo); 
   NS_IMETHOD GetNamespaceManager(nsINameSpaceManager*& aNameSpaceManager);
   NS_IMETHOD GetDocument(nsIDocument*& aDocument);
-  NS_IMETHOD GetDocumentURL(nsIURI** aURL);
-  NS_IMETHOD SetDocumentURL(nsIURI* aURL);
+  NS_IMETHOD GetDocumentPrincipal(nsIPrincipal** aPrincipal);
+  NS_IMETHOD SetDocumentPrincipal(nsIPrincipal* aPrincipal);
 
   // nsNodeInfoManager
   nsNodeInfoManager();
@@ -91,7 +92,7 @@ private:
   PLHashTable *mNodeInfoHash;
   nsCOMPtr<nsINameSpaceManager> mNameSpaceManager;
   nsIDocument *mDocument; // WEAK
-  nsCOMPtr<nsIURI> mDocumentURL;
+  nsCOMPtr<nsIPrincipal> mPrincipal;
 
   /*
    * gAnonymousNodeInfoManager is a global nodeinfo manager used for nodes

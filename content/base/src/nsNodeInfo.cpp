@@ -325,3 +325,8 @@ nsNodeInfo::GetDocument(nsIDocument*& aDocument) const
   return mOwnerManager->GetDocument(aDocument);
 }
 
+NS_IMETHODIMP
+nsNodeInfo::GetDocumentPrincipal(nsIPrincipal** aPrincipal) const
+{
+  return mOwnerManager->GetDocumentPrincipal(aPrincipal);
+}

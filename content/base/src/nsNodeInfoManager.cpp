@@ -42,6 +42,7 @@
 #include "nsString.h"
 #include "nsIAtom.h"
 #include "nsIDocument.h"
+#include "nsIPrincipal.h"
 
 nsNodeInfoManager* nsNodeInfoManager::gAnonymousNodeInfoManager = nsnull;
 PRUint32 nsNodeInfoManager::gNodeManagerCount = 0;
@@ -155,7 +156,7 @@ nsNodeInfoManager::Init(nsIDocument *aDocument,
   mDocument = aDocument;
   mNameSpaceManager = aNameSpaceManager;
   if (aDocument) {
-    mDocumentURL = nsnull;
+    mPrincipal = nsnull;
   }
 
   return NS_OK;
@@ -166,7 +167,17 @@ NS_IMETHODIMP
 nsNodeInfoManager::DropDocumentReference()
 {
   if (mDocument) {
-    mDocument->GetDocumentURL(getter_AddRefs(mDocumentURL));
+    // If the document has a uri we'll ask for it's principal. Otherwise we'll
+    // consider this document 'anonymous'. We don't want to call GetPrincipal
+    // on a document that doesn't have a URI since that'll give an assertion
+    // that we're creating a principal without having a uri.
+    // This happens in a few cases where a document is created and then
+    // immediately dropped without ever getting a URI.
+    nsCOMPtr<nsIURI> docUri;
+    mDocument->GetDocumentURL(getter_AddRefs(docUri));
+    if (docUri) {
+      mDocument->GetPrincipal(getter_AddRefs(mPrincipal));
+    }
   }
   mDocument = nsnull;
 
@@ -335,25 +346,33 @@ nsNodeInfoManager::GetDocument(nsIDocument*& aDocument)
 }
 
 NS_IMETHODIMP
-nsNodeInfoManager::GetDocumentURL(nsIURI** aURL)
+nsNodeInfoManager::GetDocumentPrincipal(nsIPrincipal** aPrincipal)
 {
-  NS_ENSURE_ARG_POINTER(aURL);
-  NS_ASSERTION(!mDocument || !mDocumentURL,
-               "how'd we end up with both a document and a url?");
+  NS_ENSURE_ARG_POINTER(aPrincipal);
+  NS_ASSERTION(!mDocument || !mPrincipal,
+               "how'd we end up with both a document and a principal?");
 
   if (mDocument) {
-    return mDocument->GetDocumentURL(aURL);
+    // If the document has a uri we'll ask for it's principal. Otherwise we'll
+    // consider this document 'anonymous'
+    nsCOMPtr<nsIURI> docUri;
+    mDocument->GetDocumentURL(getter_AddRefs(docUri));
+    if (!docUri) {
+      *aPrincipal = nsnull;
+      return NS_OK;
+    }
+    return mDocument->GetPrincipal(aPrincipal);
   }
-  *aURL = mDocumentURL;
-  NS_IF_ADDREF(*aURL);
+  *aPrincipal = mPrincipal;
+  NS_IF_ADDREF(*aPrincipal);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNodeInfoManager::SetDocumentURL(nsIURI* aURL)
+nsNodeInfoManager::SetDocumentPrincipal(nsIPrincipal* aPrincipal)
 {
   NS_ENSURE_FALSE(mDocument, NS_ERROR_UNEXPECTED);
-  mDocumentURL = aURL;
+  mPrincipal = aPrincipal;
   return NS_OK;
 }
 

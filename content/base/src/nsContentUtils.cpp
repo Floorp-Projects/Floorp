@@ -379,12 +379,12 @@ nsContentUtils::CheckSameOrigin(nsIDOMNode *aTrustedNode,
   NS_PRECONDITION(aTrustedNode, "There must be a trusted node");
 
   /*
-   * Get hold of each node's document or uri
+   * Get hold of each node's document or principal
    */
 
   // In most cases this is a document, so lets try that first
   nsCOMPtr<nsIDocument> trustedDoc = do_QueryInterface(aTrustedNode);
-  nsCOMPtr<nsIURI> trustedUri;
+  nsCOMPtr<nsIPrincipal> trustedPrincipal;
 
   if (!trustedDoc) {
 #ifdef DEBUG
@@ -396,7 +396,7 @@ nsContentUtils::CheckSameOrigin(nsIDOMNode *aTrustedNode,
     aTrustedNode->GetOwnerDocument(getter_AddRefs(domDoc));
     if (!domDoc) {
       // In theory this should never happen. But since theory and reality are
-      // different for XUL elements we'll try to get the URI from the
+      // different for XUL elements we'll try to get the principal from the
       // nsINodeInfoManager.
 
       nsCOMPtr<nsIContent> cont = do_QueryInterface(aTrustedNode);
@@ -406,12 +406,11 @@ nsContentUtils::CheckSameOrigin(nsIDOMNode *aTrustedNode,
       cont->GetNodeInfo(*getter_AddRefs(ni));
       NS_ENSURE_TRUE(ni, NS_ERROR_UNEXPECTED);
       
-      nsCOMPtr<nsINodeInfoManager> nimgr;
-      ni->GetNodeInfoManager(*getter_AddRefs(nimgr));
-      nimgr->GetDocumentURL(getter_AddRefs(trustedUri));
+      ni->GetDocumentPrincipal(getter_AddRefs(trustedPrincipal));
       
-      if (!trustedUri) {
-        // Can't get uri of aTrustedNode so we can't check security against it
+      if (!trustedPrincipal) {
+        // Can't get principal of aTrustedNode so we can't check security
+        // against it
 
         return NS_ERROR_UNEXPECTED;
       }
@@ -429,7 +428,7 @@ nsContentUtils::CheckSameOrigin(nsIDOMNode *aTrustedNode,
   nsCOMPtr<nsIContent> content = do_QueryInterface(aUnTrustedNode);
 
   nsCOMPtr<nsIDocument> unTrustedDoc;
-  nsCOMPtr<nsIURI> unTrustedUri;
+  nsCOMPtr<nsIPrincipal> unTrustedPrincipal;
 
   if (!content) {
     unTrustedDoc = do_QueryInterface(aUnTrustedNode);
@@ -447,21 +446,21 @@ nsContentUtils::CheckSameOrigin(nsIDOMNode *aTrustedNode,
     nsCOMPtr<nsIDOMDocument> domDoc;
     aUnTrustedNode->GetOwnerDocument(getter_AddRefs(domDoc));
     if (!domDoc) {
-      // if we can't get a doc then lets try to get uri through nodeinfo
+      // if we can't get a doc then lets try to get principal through nodeinfo
       // manager
       nsCOMPtr<nsINodeInfo> ni;
       content->GetNodeInfo(*getter_AddRefs(ni));
       if (!ni) {
-        // we can't get to the uri so we'll give up and give the caller access
+        // we can't get to the principal so we'll give up and give the caller
+        // access
 
         return NS_OK;
       }
       
-      nsCOMPtr<nsINodeInfoManager> nimgr;
-      ni->GetNodeInfoManager(*getter_AddRefs(nimgr));
-      nimgr->GetDocumentURL(getter_AddRefs(unTrustedUri));
-      if (!unTrustedUri) {
-        // we can't get to the uri so we'll give up and give the caller access
+      ni->GetDocumentPrincipal(getter_AddRefs(unTrustedPrincipal));
+
+      if (!unTrustedPrincipal) {
+        // we can't get to the principal so we'll give up and give the caller access
 
         return NS_OK;
       }
@@ -473,31 +472,31 @@ nsContentUtils::CheckSameOrigin(nsIDOMNode *aTrustedNode,
   }
 
   /*
-   * Compare the uris
+   * Compare the principals
    */
 
   // If they are in the same document then everything is just fine
   if (trustedDoc == unTrustedDoc && trustedDoc)
     return NS_OK;
 
-  if (!trustedUri) {
-    trustedDoc->GetDocumentURL(getter_AddRefs(trustedUri));
-    // If the trusted node doesn't have a uri we can't check security against it
-    if (!trustedUri) {
+  if (!trustedPrincipal) {
+    trustedDoc->GetPrincipal(getter_AddRefs(trustedPrincipal));
+    if (!trustedPrincipal) {
+      // If the trusted node doesn't have a principal we can't check security against it
+
       return NS_ERROR_DOM_SECURITY_ERR;
     }
   }
-  // Chrome can do anything
-  PRBool isChrome;
-  nsresult rv = trustedUri->SchemeIs("chrome", &isChrome);
-  if (NS_SUCCEEDED(rv) && isChrome) {
-      return NS_OK;
-  }
 
-  if (!unTrustedUri) {
-    unTrustedDoc->GetDocumentURL(getter_AddRefs(unTrustedUri));
-    // If the untrusted node doesn't have a uri we'll allow it to be accessed.
-    if (!unTrustedUri) {
+  if (!unTrustedPrincipal) {
+    unTrustedDoc->GetPrincipal(getter_AddRefs(unTrustedPrincipal));
+    if (!unTrustedDoc) {
+      // We can't get hold of the principal for this node. This should happen
+      // very rarely, like for textnodes out of the tree and <option>s created
+      // using 'new Option'.
+      // If we didn't allow access to nodes like this you wouldn't be able to
+      // insert these nodes into a document.
+
       return NS_OK;
     }
   }
@@ -508,24 +507,38 @@ nsContentUtils::CheckSameOrigin(nsIDOMNode *aTrustedNode,
     return NS_OK;
   }
 
-  return sSecurityManager->CheckSameOriginURI(trustedUri, unTrustedUri);
+  return sSecurityManager->CheckSameOriginPrincipal(trustedPrincipal,
+                                                    unTrustedPrincipal);
 }
 
 // static
 PRBool
 nsContentUtils::CanCallerAccess(nsIDOMNode *aNode)
 {
+  if (!sSecurityManager) {
+    // No security manager available, let any calls go through...
+
+    return PR_TRUE;
+  }
+
+  nsCOMPtr<nsIPrincipal> subjectPrincipal;
+  sSecurityManager->GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));
+
+  if (!subjectPrincipal) {
+    // we're running as system, grant access to the node.
+
+    return PR_TRUE;
+  }
+
   // Make sure that this is a real node. We do this by first QI'ing to
   // nsIContent (which is important performance wise) and if that QI
   // fails we QI to nsIDocument. If both those QI's fail we won't let
   // the caller access this unknown node.
-
+  nsCOMPtr<nsIPrincipal> principal;
   nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
 
-  nsCOMPtr<nsIDocument> doc;
-
   if (!content) {
-    doc = do_QueryInterface(aNode);
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(aNode);
 
     if (!doc) {
       // aNode is neither a nsIContent nor an nsIDocument, something
@@ -535,31 +548,41 @@ nsContentUtils::CanCallerAccess(nsIDOMNode *aNode)
 
       return PR_FALSE;
     }
+    doc->GetPrincipal(getter_AddRefs(principal));
   }
-
-  if (!doc) {
+  else {
     nsCOMPtr<nsIDOMDocument> domDoc;
     aNode->GetOwnerDocument(getter_AddRefs(domDoc));
     if (!domDoc) {
-      // aNode is not part of a document, let any caller access it.
-      return PR_TRUE;
+      nsCOMPtr<nsINodeInfo> ni;
+      content->GetNodeInfo(*getter_AddRefs(ni));
+      if (!ni) {
+        // aNode is not part of a document, let any caller access it.
+
+        return PR_TRUE;
+      }
+      
+      ni->GetDocumentPrincipal(getter_AddRefs(principal));
     }
-
-    doc = do_QueryInterface(domDoc);
-
-    NS_ASSERTION(doc, "QI to nsIDocument failed");
+    else {
+      nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+      NS_ASSERTION(doc, "QI to nsIDocument failed");
+      doc->GetPrincipal(getter_AddRefs(principal));
+    }
   }
 
-  if (!sSecurityManager) {
-    // No security manager available, let any calls go through...
+  if (!principal) {
+    // We can't get hold of the principal for this node. This should happen
+    // very rarely, like for textnodes out of the tree and <option>s created
+    // using 'new Option'.
+    // If we didn't allow access to nodes like this you wouldn't be able to
+    // insert these nodes into a document.
 
     return PR_TRUE;
   }
 
-  nsCOMPtr<nsIURI> uri;
-  doc->GetDocumentURL(getter_AddRefs(uri));
-
-  nsresult rv = sSecurityManager->CheckSameOrigin(nsnull, uri);
+  nsresult rv = sSecurityManager->CheckSameOriginPrincipal(subjectPrincipal,
+                                                           principal);
 
   return NS_SUCCEEDED(rv);
 }

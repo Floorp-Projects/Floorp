@@ -341,8 +341,16 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
     if (! securityManager)
         return NS_ERROR_FAILURE;
 
-    rv |= securityManager->GetCodebasePrincipal(mURI, getter_AddRefs(mDocumentPrincipal));
     rv |= NS_ReadOptionalObject(aStream, PR_TRUE, getter_AddRefs(mDocumentPrincipal));
+    if (!mDocumentPrincipal) {
+        // XXX This should be handled by the security manager, see bug 160042
+        PRBool isChrome = PR_FALSE;
+        if (NS_SUCCEEDED(mURI->SchemeIs("chrome", &isChrome)) && isChrome)
+            rv |= securityManager->GetSystemPrincipal(getter_AddRefs(mDocumentPrincipal));
+        else
+            rv |= securityManager->GetCodebasePrincipal(mURI, getter_AddRefs(mDocumentPrincipal));
+    }
+    mNodeInfoManager->SetDocumentPrincipal(mDocumentPrincipal);
 
     // nsIScriptGlobalObject mGlobalObject
     mGlobalObject = new nsXULPDGlobalObject();
@@ -440,9 +448,17 @@ nsXULPrototypeDocument::GetURI(nsIURI** aResult)
 NS_IMETHODIMP
 nsXULPrototypeDocument::SetURI(nsIURI* aURI)
 {
-    NS_PRECONDITION(mNodeInfoManager, "missing nodeInfoManager");
+    NS_ASSERTION(!mURI, "Can't change the uri of a xul prototype document");
+    if (mURI)
+        return NS_ERROR_ALREADY_INITIALIZED;
+
     mURI = aURI;
-    mNodeInfoManager->SetDocumentURL(aURI);
+    if (!mDocumentPrincipal) {
+        // If the document doesn't have a principal yet we'll force the creation of one
+        // so that mNodeInfoManager properly gets one.
+        nsCOMPtr<nsIPrincipal> principal;
+        GetDocumentPrincipal(getter_AddRefs(principal));
+    }
     return NS_OK;
 }
 
@@ -527,6 +543,7 @@ nsXULPrototypeDocument::SetHeaderData(nsIAtom* aField, const nsAString& aData)
 NS_IMETHODIMP
 nsXULPrototypeDocument::GetDocumentPrincipal(nsIPrincipal** aResult)
 {
+    NS_PRECONDITION(mNodeInfoManager, "missing nodeInfoManager");
     if (!mDocumentPrincipal) {
         nsresult rv;
         nsCOMPtr<nsIScriptSecurityManager> securityManager = 
@@ -535,10 +552,17 @@ nsXULPrototypeDocument::GetDocumentPrincipal(nsIPrincipal** aResult)
         if (NS_FAILED(rv))
             return NS_ERROR_FAILURE;
 
-        rv = securityManager->GetCodebasePrincipal(mURI, getter_AddRefs(mDocumentPrincipal));
+        // XXX This should be handled by the security manager, see bug 160042
+        PRBool isChrome = PR_FALSE;
+        if (NS_SUCCEEDED(mURI->SchemeIs("chrome", &isChrome)) && isChrome)
+            rv = securityManager->GetSystemPrincipal(getter_AddRefs(mDocumentPrincipal));
+        else
+            rv = securityManager->GetCodebasePrincipal(mURI, getter_AddRefs(mDocumentPrincipal));
 
         if (NS_FAILED(rv))
             return NS_ERROR_FAILURE;
+
+        mNodeInfoManager->SetDocumentPrincipal(mDocumentPrincipal);
     }
 
     *aResult = mDocumentPrincipal;
@@ -550,7 +574,9 @@ nsXULPrototypeDocument::GetDocumentPrincipal(nsIPrincipal** aResult)
 NS_IMETHODIMP
 nsXULPrototypeDocument::SetDocumentPrincipal(nsIPrincipal* aPrincipal)
 {
+    NS_PRECONDITION(mNodeInfoManager, "missing nodeInfoManager");
     mDocumentPrincipal = aPrincipal;
+    mNodeInfoManager->SetDocumentPrincipal(aPrincipal);
     return NS_OK;
 }
 
