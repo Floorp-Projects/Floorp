@@ -26,6 +26,7 @@ dirs="	base			\
 	../table/printing	\
         ../formctls/base        \
         ../formctls/bugs        \
+	../style/bugs           \
 	../xbl"
 
 # This doesn't appear to work on Linux right now; needs support for a
