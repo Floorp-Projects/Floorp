@@ -152,11 +152,14 @@ void morkList::PushTail(morkNext* ioLink) // add to tail of list
   
   MORK_ASSERT( (head && tail) || (!head && !tail));
   
-  ioLink->mNext_Link = tail; // make old tail follow the new link
-  if ( !tail ) // list was previously empty?
-    mList_Head = ioLink; // tail is also head for first member added
-  
-  mList_Tail = ioLink; // tail of list is the new link
+  ioLink->mNext_Link = 0; 
+  if ( tail ) 
+  {
+	  tail->mNext_Link = ioLink;
+	  mList_Tail = ioLink;
+  }
+  else // list was previously empty?
+	  mList_Head = mList_Tail = ioLink; // tail is also head for first member added
 }
 
 /*=============================================================================
@@ -245,7 +248,7 @@ morkDeque::At(mork_pos index) const /*i*/
   register morkLink* alink;
   for ( alink = this->First(); alink; alink = this->After(alink) )
   {
-    if ( ++count == index )
+    if ( ++count == (mork_num) index )
       break;
   }
   return alink;
