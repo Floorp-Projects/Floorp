@@ -720,7 +720,7 @@ nsXULDocument::GetLineBreaker(nsILineBreaker** aResult)
       nsAutoString lbarg("");
       result = lf->GetBreaker(lbarg, &lb);
       if(NS_SUCCEEDED(result)) {
-         mLineBreaker = lb;
+         mLineBreaker = dont_AddRef(lb);
       }
       result = nsServiceManager::ReleaseService(kLWBrkCID, lf);
      }
@@ -751,7 +751,7 @@ nsXULDocument::GetWordBreaker(nsIWordBreaker** aResult)
       nsAutoString lbarg("");
       result = lf->GetBreaker(lbarg, &lb);
       if(NS_SUCCEEDED(result)) {
-         mWordBreaker = lb;
+         mWordBreaker = dont_AddRef(lb);
       }
       result = nsServiceManager::ReleaseService(kLWBrkCID, lf);
      }
