@@ -1003,6 +1003,26 @@ NS_IMETHODIMP oeICalImpl::ModifyEvent(oeIICalEvent *icalevent, char **retid)
     }
     
     vcalendar = ((oeICalEventImpl *)icalevent)->AsIcalComponent();
+
+    //Add Last-Modified property
+    icalcomponent *vevent = icalcomponent_get_first_component( vcalendar, ICAL_VEVENT_COMPONENT );
+    if( vevent ) {
+        PRInt64 nowinusec = PR_Now();
+        PRExplodedTime ext;
+        PR_ExplodeTime( nowinusec, PR_GMTParameters, &ext);
+        icaltimetype now = icaltime_null_time();
+        now.year = ext.tm_year;
+        now.month = ext.tm_month + 1;
+        now.day = ext.tm_mday;
+        now.hour = ext.tm_hour;
+        now.minute = ext.tm_min;
+        now.second = ext.tm_sec;
+        now.is_utc = true;
+
+        icalproperty *prop = icalproperty_new_lastmodified( now );
+        icalcomponent_add_property( vevent, prop );
+    }
+
     icalfileset_add_component( stream, vcalendar );
     
 	if( icalfileset_commit(stream) != ICAL_NO_ERROR ) {
