@@ -59,7 +59,6 @@ LCFLAGS = \
 LLIBS	= \
  $(LIBNSPR) \
  $(DIST)\lib\js$(MOZ_BITS)$(VERSION_NUMBER).lib \
- $(DIST)\lib\xplib.lib		\
  $(DIST)\lib\xpcom.lib \
 !ifdef NECKO
  $(DIST)\lib\necko.lib \

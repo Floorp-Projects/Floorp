@@ -28,9 +28,9 @@
 #include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsIStringBundle.h"
+#include "nsVoidArray.h"
 
 extern "C" {
-#include "xp.h"
 #include "prefapi.h"
 #include "prmon.h"
 #ifdef XP_MAC
@@ -63,11 +63,23 @@ static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 #define cookie_localization "resource:/res/cookie.properties"
 #define COOKIE_IS_SPACE(x) ((((unsigned int) (x)) > 0x7f) ? 0 : isspace(x))
 
+//#define GET_ALL_PARTS              127
+#define GET_PASSWORD_PART           64
+#define GET_USERNAME_PART           32
+#define GET_PROTOCOL_PART          16
+#define GET_HOST_PART               8
+#define GET_PATH_PART               4
+#define GET_HASH_PART               2
+#define GET_SEARCH_PART             1
+
 MODULE_PRIVATE time_t 
 cookie_ParseDate(char *date_string);
 
 MODULE_PRIVATE char * 
 cookie_ParseURL (const char *url, int parts_requested);
+
+MODULE_PRIVATE char *
+XP_StripLine (char *string);
 
 typedef struct _cookie_CookieStruct {
   char * path;
@@ -106,9 +118,10 @@ PRIVATE PRBool cookie_permissionsChanged = PR_FALSE;
 PRIVATE PRBool cookie_rememberChecked = PR_FALSE;
 PRIVATE cookie_BehaviorEnum cookie_behavior = COOKIE_Accept;
 PRIVATE PRBool cookie_warning = PR_FALSE;
-PRIVATE XP_List * cookie_cookieList=0;
-PRIVATE XP_List * cookie_permissionList=0;
-PRIVATE XP_List * cookie_deferList=0;
+
+PRIVATE nsVoidArray * cookie_cookieList=0;
+PRIVATE nsVoidArray * cookie_permissionList=0;
+PRIVATE nsVoidArray * cookie_deferList=0;
 
 static PRMonitor * cookie_cookieLockMonitor = NULL;
 static PRThread * cookie_cookieLockOwner = NULL;
@@ -119,6 +132,42 @@ static PRThread  * cookie_deferLockOwner = NULL;
 static int cookie_deferLockCount = 0;
 
 //#define REAL_DIALOG 1
+
+/* StrAllocCopy and StrAllocCat should really be defined elsewhere */
+#include "plstr.h"
+#include "prmem.h"
+#undef StrAllocCopy
+#define StrAllocCopy(dest, src) Local_SACopy (&(dest), src)
+char *
+Local_SACopy(char **destination, const char *source)
+{
+  if(*destination) {
+    PL_strfree(*destination);
+    *destination = 0;
+  }
+  *destination = PL_strdup(source);
+  return *destination;
+}
+
+#undef StrAllocCat
+#define StrAllocCat(dest, src) Local_SACat (&(dest), src)
+char *
+Local_SACat(char **destination, const char *source)
+{
+  if (source && *source) {
+    if (*destination) {
+      int length = PL_strlen (*destination);
+      *destination = (char *) PR_Realloc(*destination, length + PL_strlen(source) + 1);
+      if (*destination == NULL) {
+        return(NULL);
+      }
+      PL_strcpy (*destination + length, source);
+    } else {
+      *destination = PL_strdup(source);
+    }
+  }
+  return *destination;
+}
 
 PRBool
 cookie_CheckConfirmYN(char * szMessage, char * szCheckMessage, PRBool* checkValue) {
@@ -256,7 +305,7 @@ PRIVATE nsresult cookie_ProfileDirectory(nsFileSpec& dirSpec) {
   return spec->GetFileSpec(&dirSpec);
 }
 
-#ifndef XP_MAC
+
 /*
  * Write a line to a file
  * return NS_OK if no error occurs
@@ -307,7 +356,7 @@ cookie_GetLine(nsInputFileStream strm, nsAutoString*& aLine) {
   }
   return 0;
 }
-#endif
+
 
 PRIVATE void
 cookie_LockCookieList(void) {
@@ -443,7 +492,9 @@ cookie_FreePermission(cookie_PermissionStruct * cookie_permission, PRBool save) 
   if(!cookie_permission) {
     return;
   }
-  XP_ListRemoveObject(cookie_permissionList, cookie_permission);
+  if (cookie_permissionList == nsnull)
+    return;
+  cookie_permissionList->RemoveElement(cookie_permission);
   PR_FREEIF(cookie_permission->host);
   PR_Free(cookie_permission);
   if (save) {
@@ -456,21 +507,21 @@ cookie_FreePermission(cookie_PermissionStruct * cookie_permission, PRBool save) 
 PRIVATE void
 cookie_RemoveAllPermissions() {
   cookie_PermissionStruct * victim;
-  XP_List * cookiePermissionList;
-
+ 
   /* check for NULL or empty list */
   cookie_LockPermissionList();
-  cookiePermissionList = cookie_permissionList;
-  if(XP_ListIsEmpty(cookiePermissionList)) {
+  if (cookie_permissionList == nsnull) {
     cookie_UnlockPermissionListst();
     return;
   }
-  while((victim =
-      (cookie_PermissionStruct *)XP_ListNextObject(cookiePermissionList)) != 0) {
-    cookie_FreePermission(victim, PR_FALSE);
-    cookiePermissionList = cookie_permissionList;
+  PRInt32 count = cookie_permissionList->Count();
+  for (PRInt32 i = 0; i < count; ++i) {
+    victim = NS_STATIC_CAST(cookie_PermissionStruct*, cookie_permissionList->ElementAt(i));
+    if (victim) {
+      cookie_FreePermission(victim, PR_FALSE);
+    }
   }
-  XP_ListDestroy(cookie_permissionList);
+  delete cookie_permissionList;
   cookie_permissionList = NULL;
   cookie_UnlockPermissionListst();
 }
@@ -483,7 +534,9 @@ cookie_FreeCookie(cookie_CookieStruct * cookie) {
   if(!cookie) {
     return;
   }
-  XP_ListRemoveObject(cookie_cookieList, cookie);
+  if (cookie_cookieList == nsnull)
+    return;
+  cookie_cookieList->RemoveElement(cookie);
   PR_FREEIF(cookie->path);
   PR_FREEIF(cookie->host);
   PR_FREEIF(cookie->name);
@@ -498,45 +551,55 @@ cookie_FreeCookie(cookie_CookieStruct * cookie) {
 PRIVATE void
 cookie_RemoveAllCookies() {
   cookie_CookieStruct * victim;
-  XP_List * cookieList;
 
   /* check for NULL or empty list */
   cookie_LockCookieList();
-  cookieList = cookie_cookieList;
-  if(XP_ListIsEmpty(cookieList)) {
+  if (cookie_cookieList == nsnull) {
     cookie_UnlockCookieList();
     return;
   }
-  while((victim = (cookie_CookieStruct *) XP_ListNextObject(cookieList)) != 0) {
-    cookie_FreeCookie(victim);
-    cookieList=cookie_cookieList;
+  PRInt32 count = cookie_cookieList->Count();
+  for (PRInt32 i = 0; i < count; ++i) {
+    victim = NS_STATIC_CAST(cookie_CookieStruct*, cookie_cookieList->ElementAt(i));
+    if (victim) {
+      cookie_FreeCookie(victim);
+    }
   }
-  XP_ListDestroy(cookie_cookieList);
+  delete cookie_cookieList;
   cookie_cookieList = NULL;
   cookie_UnlockCookieList();
 }
 
 PRIVATE void
 cookie_RemoveOldestCookie(void) {
-  XP_List * list_ptr;
   cookie_CookieStruct * cookie_s;
   cookie_CookieStruct * oldest_cookie;
   cookie_LockCookieList();
-  list_ptr = cookie_cookieList;
-  if(XP_ListIsEmpty(list_ptr)) {
+
+  if (cookie_cookieList == nsnull) {
     cookie_UnlockCookieList();
     return;
   }
-  oldest_cookie = (cookie_CookieStruct*) list_ptr->next->object;
-  while((cookie_s = (cookie_CookieStruct *) XP_ListNextObject(list_ptr))!=0) {
-    if(cookie_s->lastAccessed < oldest_cookie->lastAccessed) {
-      oldest_cookie = cookie_s;
+   
+  PRInt32 count = cookie_cookieList->Count();
+  if (count == 0) {
+    cookie_UnlockCookieList();
+    return;
+  }
+  oldest_cookie = NS_STATIC_CAST(cookie_CookieStruct*, cookie_cookieList->ElementAt(0));
+  for (PRInt32 i = 1; i < count; ++i) {
+    cookie_s = NS_STATIC_CAST(cookie_CookieStruct*, cookie_cookieList->ElementAt(i));
+    if (cookie_s) {
+      if(cookie_s->lastAccessed < oldest_cookie->lastAccessed) {
+        oldest_cookie = cookie_s;
+      }
     }
   }
   if(oldest_cookie) {
     // TRACEMSG(("Freeing cookie because global max cookies has been exceeded"));
     cookie_FreeCookie(oldest_cookie);
   }
+
   cookie_UnlockCookieList();
 }
 
@@ -545,26 +608,29 @@ cookie_RemoveOldestCookie(void) {
 */
 PRIVATE void
 cookie_RemoveExpiredCookies() {
-  XP_List * list_ptr = cookie_cookieList;
   cookie_CookieStruct * cookie_s;
   time_t cur_time = time(NULL);
-  if(XP_ListIsEmpty(list_ptr)) {
+  
+  if (cookie_cookieList == nsnull)
     return;
-  }
-  while((cookie_s = (cookie_CookieStruct *) XP_ListNextObject(list_ptr))!=0) {
-    /*
-     * Don't get rid of expire time 0 because these need to last for 
-     * the entire session. They'll get cleared on exit.
-     */
-    if( cookie_s->expires && (cookie_s->expires < cur_time) ) {
-      cookie_FreeCookie(cookie_s);
-      /*
-       * Reset the list_ptr to the beginning of the list.
-       * Do this because list_ptr's object was just freed
-       * by the call to cookie_FreeCookie struct, even
-       * though it's inefficient.
+  
+  PRInt32 count = cookie_cookieList->Count();
+  for (PRInt32 i = 0; i < count; ++i) {
+    cookie_s = NS_STATIC_CAST(cookie_CookieStruct*, cookie_cookieList->ElementAt(i));
+    if (cookie_s) {
+     /*
+       * Don't get rid of expire time 0 because these need to last for 
+       * the entire session. They'll get cleared on exit.
        */
-      list_ptr = cookie_cookieList;
+      if( cookie_s->expires && (cookie_s->expires < cur_time) ) {
+        cookie_FreeCookie(cookie_s);
+        /*
+         * Reset the list_ptr to the beginning of the list.
+         * Do this because list_ptr's object was just freed
+         * by the call to cookie_FreeCookie struct, even
+         * though it's inefficient.
+         */
+      }
     }
   }
 }
@@ -576,18 +642,22 @@ cookie_RemoveExpiredCookies() {
  */
 PRIVATE void
 cookie_CheckForMaxCookiesFromHo(const char * cur_host) {
-  XP_List * list_ptr = cookie_cookieList;
   cookie_CookieStruct * cookie_s;
   cookie_CookieStruct * oldest_cookie = 0;
   int cookie_count = 0;
-  if(XP_ListIsEmpty(list_ptr)) {
+  
+  if (cookie_cookieList == nsnull)
     return;
-  }
-  while((cookie_s = (cookie_CookieStruct *) XP_ListNextObject(list_ptr))!=0) {
-    if(!PL_strcasecmp(cookie_s->host, cur_host)) {
-      cookie_count++;
-      if(!oldest_cookie || oldest_cookie->lastAccessed > cookie_s->lastAccessed) {
-        oldest_cookie = cookie_s;
+  
+  PRInt32 count = cookie_cookieList->Count();
+  for (PRInt32 i = 0; i < count; ++i) {
+    cookie_s = NS_STATIC_CAST(cookie_CookieStruct*, cookie_cookieList->ElementAt(i));
+    if (cookie_s) {
+      if(!PL_strcasecmp(cookie_s->host, cur_host)) {
+        cookie_count++;
+        if(!oldest_cookie || oldest_cookie->lastAccessed > cookie_s->lastAccessed) {
+          oldest_cookie = cookie_s;
+        }
       }
     }
   }
@@ -603,13 +673,19 @@ cookie_CheckForMaxCookiesFromHo(const char * cur_host) {
 */
 PRIVATE cookie_CookieStruct *
 cookie_CheckForPrevCookie(char * path, char * hostname, char * name) {
-  XP_List * list_ptr = cookie_cookieList;
   cookie_CookieStruct * cookie_s;
-  while((cookie_s = (cookie_CookieStruct *) XP_ListNextObject(list_ptr))!=0) {
-    if(path && hostname && cookie_s->path && cookie_s->host && cookie_s->name
+  if (cookie_cookieList == nsnull)
+    return NULL;
+  
+  PRInt32 count = cookie_cookieList->Count();
+  for (PRInt32 i = 0; i < count; ++i) {
+    cookie_s = NS_STATIC_CAST(cookie_CookieStruct*, cookie_cookieList->ElementAt(i));
+    if (cookie_s) {
+      if(path && hostname && cookie_s->path && cookie_s->host && cookie_s->name
         && !PL_strcmp(name, cookie_s->name) && !PL_strcmp(path, cookie_s->path)
         && !PL_strcasecmp(hostname, cookie_s->host)) {
-      return(cookie_s);
+        return(cookie_s);
+      }
     }
   }
   return(NULL);
@@ -667,7 +743,6 @@ cookie_WarningPrefChanged(const char * newpref, void * data) {
  */
 PRIVATE cookie_PermissionStruct *
 cookie_CheckForPermission(char * hostname) {
-  XP_List * list_ptr;
   cookie_PermissionStruct * cookie_s;
 
   /* ignore leading period in host name */
@@ -676,11 +751,19 @@ cookie_CheckForPermission(char * hostname) {
   }
 
   cookie_LockPermissionList();
-  list_ptr = cookie_permissionList;
-  while((cookie_s = (cookie_PermissionStruct *) XP_ListNextObject(list_ptr))!=0) {
-    if(hostname && cookie_s->host && !PL_strcasecmp(hostname, cookie_s->host)) {
-      cookie_UnlockPermissionListst();
-      return(cookie_s);
+  if (cookie_permissionList == nsnull) {
+    cookie_UnlockPermissionListst();
+    return(NULL);
+  }
+ 
+  PRInt32 count = cookie_permissionList->Count();
+  for (PRInt32 i = 0; i < count; ++i) {
+    cookie_s = NS_STATIC_CAST(cookie_PermissionStruct*, cookie_permissionList->ElementAt(i));
+    if (cookie_s) {
+      if(hostname && cookie_s->host && !PL_strcasecmp(hostname, cookie_s->host)) {
+        cookie_UnlockPermissionListst();
+        return(cookie_s);
+      }
     }
   }
   cookie_UnlockPermissionListst();
@@ -719,7 +802,6 @@ COOKIE_GetCookie(char * address) {
   char *name=0;
   char *host = cookie_ParseURL(address, GET_HOST_PART);
   char *path = cookie_ParseURL(address, GET_PATH_PART);
-  XP_List * list_ptr;
   cookie_CookieStruct * cookie_s;
   PRBool first=PR_TRUE;
   PRBool xxx = PR_FALSE;
@@ -740,8 +822,15 @@ COOKIE_GetCookie(char * address) {
 
   /* search for all cookies */
   cookie_LockCookieList();
-  list_ptr = cookie_cookieList;
-  while((cookie_s = (cookie_CookieStruct *) XP_ListNextObject(list_ptr))!=0) {
+  if (cookie_cookieList == nsnull) {
+    cookie_UnlockCookieList();
+    return NULL;
+  }
+  PRInt32 count = cookie_cookieList->Count();
+  for (PRInt32 i = 0; i < count; ++i) {
+    cookie_s = NS_STATIC_CAST(cookie_CookieStruct*, cookie_cookieList->ElementAt(i));
+    if (cookie_s == nsnull) 
+      continue;
     if(!cookie_s->host)
     continue;
 
@@ -784,7 +873,7 @@ COOKIE_GetCookie(char * address) {
         /* start the list parsing over :( we must also start the string over */
         PR_FREEIF(rv);
         rv = NULL;
-        list_ptr = cookie_cookieList;
+        i = -1;
         first = PR_TRUE; /* reset first */
         continue;
       }
@@ -830,15 +919,13 @@ cookie_AddPermission(cookie_PermissionStruct * cookie_permission, PRBool save ) 
    * cookie permission list lock
    */
   if (cookie_permission) {
-    XP_List * list_ptr = cookie_permissionList;
     if(!cookie_permissionList) {
-      cookie_permissionList = XP_ListNew();
+      cookie_permissionList = new nsVoidArray();
       if(!cookie_permissionList) {
         PR_Free(cookie_permission->host);
         PR_Free(cookie_permission);
         return;
       }
-      list_ptr = cookie_permissionList;
     }
 
 #ifdef alphabetize
@@ -846,22 +933,25 @@ cookie_AddPermission(cookie_PermissionStruct * cookie_permission, PRBool save ) 
     {
       cookie_PermissionStruct * tmp_cookie_permission;
       PRBool permissionAdded = PR_FALSE;
-      while((tmp_cookie_permission =
-          (cookie_PermissionStruct *)XP_ListNextObject(list_ptr))!=0) {
-        if (PL_strcasecmp(cookie_permission->host,tmp_cookie_permission->host)<0) {
-          XP_ListInsertObject
-            (cookie_permissionList, tmp_cookie_permission, cookie_permission);
+      PRInt32 count = cookie_permissionList->Count();
+      for (PRInt32 i = 0; i < count; ++i) {
+        tmp_cookie_permission = NS_STATIC_CAST(cookie_PermissionStruct*, cookie_permissionList->ElementAt(i));
+        if (tmp_cookie_permission) {
+          if (PL_strcasecmp(cookie_permission->host,tmp_cookie_permission->host)<0) {
+            cookie_permissionList->InsertElementAt(cookie_permission, i);
             permissionAdded = PR_TRUE;
             break;
+          }
+
         }
       }
       if (!permissionAdded) {
-        XP_ListAddObjectToEnd(cookie_permissionList, cookie_permission);
+        cookie_permissionList->AppendElement(cookie_permission);
       }
     }
 #else
     /* add it to the end of the list */
-    XP_ListAddObjectToEnd (cookie_permissionList, cookie_permission);
+    cookie_permissionList->AppendElement(cookie_permission);
 #endif
 
     if (save) {
@@ -904,13 +994,19 @@ cookie_IsFromHost(cookie_CookieStruct *cookie_s, char *host) {
 PRIVATE int
 cookie_Count(char * host) {
   int count = 0;
-  XP_List * list_ptr;
   cookie_CookieStruct * cookie;
   cookie_LockCookieList();
-  list_ptr = cookie_cookieList;
-  while((cookie = (cookie_CookieStruct *) XP_ListNextObject(list_ptr))!=0) {
-    if (host && cookie_IsFromHost(cookie, host)) {
-      count++;
+  if (cookie_cookieList == nsnull) {
+    cookie_UnlockCookieList();
+    return count;
+  }
+  PRInt32 cookie_count = cookie_cookieList->Count();
+  for (PRInt32 i = 0; i < cookie_count; ++i) {
+    cookie = NS_STATIC_CAST(cookie_CookieStruct*, cookie_cookieList->ElementAt(i));
+    if (cookie) {
+      if (host && cookie_IsFromHost(cookie, host)) {
+        count++;
+      }
     }
   }
   cookie_UnlockCookieList();
@@ -927,14 +1023,16 @@ cookie_Defer(char * curURL, char * setCookieHeader, time_t timeToExpire) {
   defer_cookie->timeToExpire = timeToExpire;
   cookie_LockDeferList();
   if (!cookie_deferList) {
-    cookie_deferList = XP_ListNew();
-    if (!cookie_cookieList) {
+    cookie_deferList = new nsVoidArray();
+    if (!cookie_deferList) {
       PR_FREEIF(defer_cookie->curURL);
       PR_FREEIF(defer_cookie->setCookieHeader);
       PR_Free(defer_cookie);
+      cookie_UnlockDeferList();
+      return;
     }
   }
-  XP_ListAddObject(cookie_deferList, defer_cookie);
+  cookie_deferList->InsertElementAt(defer_cookie, 0);
   cookie_UnlockDeferList();
 }
            
@@ -945,17 +1043,26 @@ PRIVATE void
 cookie_Undefer() {
   cookie_DeferStruct * defer_cookie;
   cookie_LockDeferList();
-  if(XP_ListIsEmpty(cookie_deferList)) {
+  if(cookie_deferList == nsnull) {
     cookie_UnlockDeferList();
     return;
   }
-  defer_cookie = (cookie_DeferStruct*)XP_ListRemoveEndObject(cookie_deferList);
+  PRInt32 count = cookie_deferList->Count();
+  if (count == 0) {
+    cookie_UnlockDeferList();
+    return;
+  }
+
+  defer_cookie = NS_STATIC_CAST(cookie_DeferStruct*, cookie_deferList->ElementAt(count-1));
+  cookie_deferList->RemoveElementAt(count-1);
   cookie_UnlockDeferList();
-  cookie_SetCookieString
-    (defer_cookie->curURL, defer_cookie->setCookieHeader, defer_cookie->timeToExpire);
-  PR_FREEIF(defer_cookie->curURL);
-  PR_FREEIF(defer_cookie->setCookieHeader);
-  PR_Free(defer_cookie);
+  if (defer_cookie) {
+    cookie_SetCookieString
+      (defer_cookie->curURL, defer_cookie->setCookieHeader, defer_cookie->timeToExpire);
+    PR_FREEIF(defer_cookie->curURL);
+    PR_FREEIF(defer_cookie->setCookieHeader);
+    PR_Free(defer_cookie);
+  }
 }
 
 /* Java script is calling COOKIE_SetCookieString, netlib is calling 
@@ -1129,7 +1236,7 @@ cookie_SetCookieString(char * curURL, char * setCookieHeader, time_t timeToExpir
       }
       if ( pref_scd == PR_TRUE ) {
         cur_host[cur_host_length-domain_length] = '\0';
-        dot = XP_STRCHR(cur_host, '.');
+        dot = PL_strchr(cur_host, '.');
         cur_host[cur_host_length-domain_length] = '.';
         if (dot) {
         // TRACEMSG(("host minus domain failed no-dot test."
@@ -1304,10 +1411,11 @@ cookie_SetCookieString(char * curURL, char * setCookieHeader, time_t timeToExpir
   /* limit the number of cookies from a specific host or domain */
   cookie_CheckForMaxCookiesFromHo(host_from_header);
 
-  if(XP_ListCount(cookie_cookieList) > MAX_NUMBER_OF_COOKIES-1) {
-    cookie_RemoveOldestCookie();
+  if (cookie_cookieList) {
+    if(cookie_cookieList->Count() > MAX_NUMBER_OF_COOKIES-1) {
+      cookie_RemoveOldestCookie();
+    }
   }
-
   prev_cookie = cookie_CheckForPrevCookie (path_from_header, host_from_header, name_from_header);
   if(prev_cookie) {
     prev_cookie->expires = expires;
@@ -1323,7 +1431,6 @@ cookie_SetCookieString(char * curURL, char * setCookieHeader, time_t timeToExpir
     prev_cookie->isDomain = isDomain;
     prev_cookie->lastAccessed = time(NULL);
   } else {
-    XP_List * list_ptr = cookie_cookieList;
     cookie_CookieStruct * tmp_cookie_ptr;
     size_t new_len;
 
@@ -1350,7 +1457,7 @@ cookie_SetCookieString(char * curURL, char * setCookieHeader, time_t timeToExpir
     prev_cookie->isDomain = isDomain;
     prev_cookie->lastAccessed = time(NULL);
     if(!cookie_cookieList) {
-      cookie_cookieList = XP_ListNew();
+      cookie_cookieList = new nsVoidArray();
       if(!cookie_cookieList) {
         PR_FREEIF(path_from_header);
         PR_FREEIF(name_from_header);
@@ -1367,16 +1474,20 @@ cookie_SetCookieString(char * curURL, char * setCookieHeader, time_t timeToExpir
     /* add it to the list so that it is before any strings of smaller length */
     bCookieAdded = PR_FALSE;
     new_len = PL_strlen(prev_cookie->path);
-    while((tmp_cookie_ptr = (cookie_CookieStruct *) XP_ListNextObject(list_ptr))!=0) { 
-      if(new_len > PL_strlen(tmp_cookie_ptr->path)) {
-        XP_ListInsertObject(cookie_cookieList, tmp_cookie_ptr, prev_cookie);
-        bCookieAdded = PR_TRUE;
-        break;
+    PRInt32 count = cookie_cookieList->Count();
+    for (PRInt32 i = 0; i < count; ++i) {
+      tmp_cookie_ptr = NS_STATIC_CAST(cookie_CookieStruct*, cookie_cookieList->ElementAt(i));
+      if (tmp_cookie_ptr) {
+        if(new_len > PL_strlen(tmp_cookie_ptr->path)) {
+          cookie_cookieList->InsertElementAt(tmp_cookie_ptr, i);
+          bCookieAdded = PR_TRUE;
+          break;
+        }
       }
     }
     if ( !bCookieAdded ) {
       /* no shorter strings found in list */
-      XP_ListAddObjectToEnd(cookie_cookieList, prev_cookie);
+      cookie_cookieList->AppendElement(prev_cookie);
     }
   }
 
@@ -1467,7 +1578,7 @@ COOKIE_SetCookieStringFromHttp(char * curURL, char * setCookieHeader, char * ser
       History_entry * shistEntry = SHIST_GetCurrent(&context->hist);
       if (shistEntry) {
         curSessionHistHost = cookie_ParseURL(shistEntry->address, GET_HOST_PART);
-      }
+      } 
       if(!curHost || !curSessionHistHost) {
         PR_FREEIF(curHost);
         PR_FREEIF(curSessionHistHost);
@@ -1531,12 +1642,10 @@ COOKIE_SetCookieStringFromHttp(char * curURL, char * setCookieHeader, char * ser
   cookie_SetCookieString(curURL, setCookieHeader, gmtCookieExpires);
 }
 
-#ifndef XP_MAC
 
 /* saves the HTTP cookies permissions to disk */
 PRIVATE void
 cookie_SavePermissions() {
-  XP_List * list_ptr;
   cookie_PermissionStruct * cookie_permission_s;
   if (cookie_GetBehaviorPref() == COOKIE_DontUse) {
     return;
@@ -1545,8 +1654,7 @@ cookie_SavePermissions() {
     return;
   }
   cookie_LockPermissionList();
-  list_ptr = cookie_permissionList;
-  if (!(cookie_permissionList)) {
+  if (cookie_permissionList == nsnull) {
     cookie_UnlockPermissionListst();
     return;
   }
@@ -1568,13 +1676,16 @@ cookie_SavePermissions() {
   /* format shall be:
    * host \t permission
    */
-  while ((cookie_permission_s = (cookie_PermissionStruct *)
-    XP_ListNextObject(list_ptr)) != NULL) {
-    cookie_Put(strm, cookie_permission_s->host);
-    if (cookie_permission_s->permission) {
-      cookie_Put(strm, "\tTRUE\n");
-    } else {
-      cookie_Put(strm, "\tFALSE\n");
+   PRInt32 count = cookie_permissionList->Count();
+   for (PRInt32 i = 0; i < count; ++i) {
+     cookie_permission_s = NS_STATIC_CAST(cookie_PermissionStruct*, cookie_permissionList->ElementAt(i));
+    if (cookie_permission_s) {
+      cookie_Put(strm, cookie_permission_s->host);
+      if (cookie_permission_s->permission) {
+        cookie_Put(strm, "\tTRUE\n");
+      } else {
+        cookie_Put(strm, "\tFALSE\n");
+      }
     }
   }
 
@@ -1672,7 +1783,6 @@ cookie_LoadPermissions() {
 /* saves out the HTTP cookies to disk */
 PRIVATE void
 cookie_SaveCookies() {
-  XP_List * list_ptr;
   cookie_CookieStruct * cookie_s;
   time_t cur_date = time(NULL);
   char date_string[36];
@@ -1683,8 +1793,7 @@ cookie_SaveCookies() {
     return;
   }
   cookie_LockCookieList();
-  list_ptr = cookie_cookieList;
-  if (!(list_ptr)) {
+  if (cookie_cookieList == nsnull) {
     cookie_UnlockCookieList();
     return;
   }
@@ -1713,34 +1822,38 @@ cookie_SaveCookies() {
    * expires is a time_t integer
    * cookie can have tabs
    */
-  while((cookie_s = (cookie_CookieStruct *) XP_ListNextObject(list_ptr)) != NULL) {
-    if (cookie_s->expires < cur_date) {
-      /* don't write entry if cookie has expired or has no expiration date */
-      continue;
+  PRInt32 count = cookie_cookieList->Count();
+  for (PRInt32 i = 0; i < count; ++i) {
+    cookie_s = NS_STATIC_CAST(cookie_CookieStruct*, cookie_cookieList->ElementAt(i));
+    if (cookie_s) {
+      if (cookie_s->expires < cur_date) {
+        /* don't write entry if cookie has expired or has no expiration date */
+        continue;
+      }
+      cookie_Put(strm, cookie_s->host);
+      if (cookie_s->isDomain) {
+        cookie_Put(strm, "\tTRUE\t");
+      } else {
+        cookie_Put(strm, "\tFALSE\t");
+      }
+
+      cookie_Put(strm, cookie_s->path);
+      if (cookie_s->xxx) {
+        cookie_Put(strm, "\tTRUE\t");
+      } else {
+        cookie_Put(strm, "\tFALSE\t");
+      }
+
+      PR_snprintf(date_string, sizeof(date_string), "%lu", cookie_s->expires);
+      cookie_Put(strm, date_string);
+      cookie_Put(strm, "\t");
+
+      cookie_Put(strm, cookie_s->name);
+      cookie_Put(strm, "\t");
+
+      cookie_Put(strm, cookie_s->cookie);
+      cookie_Put(strm, "\n");
     }
-    cookie_Put(strm, cookie_s->host);
-    if (cookie_s->isDomain) {
-      cookie_Put(strm, "\tTRUE\t");
-    } else {
-      cookie_Put(strm, "\tFALSE\t");
-    }
-
-    cookie_Put(strm, cookie_s->path);
-    if (cookie_s->xxx) {
-      cookie_Put(strm, "\tTRUE\t");
-    } else {
-      cookie_Put(strm, "\tFALSE\t");
-    }
-
-    PR_snprintf(date_string, sizeof(date_string), "%lu", cookie_s->expires);
-    cookie_Put(strm, date_string);
-    cookie_Put(strm, "\t");
-
-    cookie_Put(strm, cookie_s->name);
-    cookie_Put(strm, "\t");
-
-    cookie_Put(strm, cookie_s->cookie);
-    cookie_Put(strm, "\n");
   }
 
   cookie_cookiesChanged = PR_FALSE;
@@ -1752,7 +1865,6 @@ cookie_SaveCookies() {
 /* reads HTTP cookies from disk */
 PRIVATE void
 cookie_LoadCookies() {
-  XP_List * list_ptr;
   cookie_CookieStruct *new_cookie, *tmp_cookie_ptr;
   size_t new_len;
   nsAutoString * buffer;
@@ -1768,7 +1880,6 @@ cookie_LoadCookies() {
     return;
   }
   cookie_LockCookieList();
-  list_ptr = cookie_cookieList;
 
   /* format is:
    *
@@ -1837,7 +1948,7 @@ cookie_LoadCookies() {
 
     /* start new cookie list if one does not already exist */
     if (!cookie_cookieList) {
-      cookie_cookieList = XP_ListNew();
+      cookie_cookieList = new nsVoidArray();
       if (!cookie_cookieList) {
         cookie_UnlockCookieList();
         strm.close();
@@ -1847,17 +1958,21 @@ cookie_LoadCookies() {
 
     /* add new cookie to the list so that it is before any strings of smaller length */
     new_len = PL_strlen(new_cookie->path);
-    while ((tmp_cookie_ptr = (cookie_CookieStruct *) XP_ListNextObject(list_ptr)) != NULL) {
-      if (new_len > PL_strlen(tmp_cookie_ptr->path)) {
-        XP_ListInsertObject(cookie_cookieList, tmp_cookie_ptr, new_cookie);
-        added_to_list = PR_TRUE;
-        break;
+    PRInt32 count = cookie_cookieList->Count();
+    for (PRInt32 i = 0; i < count; ++i) {
+      tmp_cookie_ptr = NS_STATIC_CAST(cookie_CookieStruct*, cookie_cookieList->ElementAt(i));
+      if (tmp_cookie_ptr) {
+        if (new_len > PL_strlen(tmp_cookie_ptr->path)) {
+          cookie_cookieList->InsertElementAt(new_cookie, i);
+          added_to_list = PR_TRUE;
+          break;
+        }
       }
     }
 
     /* no shorter strings found in list so add new cookie at end */	
     if (!added_to_list) {
-      XP_ListAddObjectToEnd(cookie_cookieList, new_cookie);
+      cookie_cookieList->AppendElement(new_cookie);
     }
   }
 
@@ -1866,414 +1981,7 @@ cookie_LoadCookies() {
   cookie_cookiesChanged = PR_FALSE;
   return;
 }
-#else
 
-/* saves the HTTP cookies permissions to disk
- * the parameter passed in on entry is ignored
- * returns 0 on success -1 on failure.
- */
-PRIVATE void
-cookie_SavePermissions() {
-  XP_List * list_ptr;
-  cookie_PermissionStruct * cookie_permission_s;
-  XP_File fp;
-  int32 len = 0;
-  if(cookie_GetBehaviorPref() == COOKIE_DontUse) {
-    return;
-  }
-  if(!cookie_permissionsChanged) {
-    return;
-  }
-  cookie_LockPermissionList();
-  list_ptr = cookie_permissionList;
-  if(!(cookie_permissionList)) {
-    cookie_UnlockPermissionListst();
-    return;
-  }
-  if(!(fp = NET_XP_FileOpen(NULL, xpHTTPCookiePermission, XP_FILE_WRITE))) {
-    cookie_UnlockPermissionListst();
-    return;
-  }
-  len = NET_XP_FileWrite("# Netscape HTTP Cookie Permission File" LINEBREAK
-                         "# http://www.netscape.com/newsref/std/cookie_spec.html"
-                         LINEBREAK "# This is a generated file!  Do not edit."
-                         LINEBREAK LINEBREAK, -1, fp);
-  if (len < 0) {
-    NET_XP_FileClose(fp);
-    cookie_UnlockPermissionListst();
-    return;
-  }
-
-  /* format shall be:
-   * host \t permission <optional trust label information >
-   */
-  while((cookie_permission_s = (cookie_PermissionStruct *)
-    XP_ListNextObject(list_ptr)) != NULL) {
-    len = NET_XP_FileWrite(cookie_permission_s->host, -1, fp);
-    if (len < 0) {
-      NET_XP_FileClose(fp);
-      cookie_UnlockPermissionListst();
-      return;
-    }
-
-    NET_XP_FileWrite("\t", 1, fp);
-
-    if(cookie_permission_s->permission) {
-      NET_XP_FileWrite("TRUE", -1, fp);
-    } else {
-      NET_XP_FileWrite("FALSE", -1, fp);
-    }
-
-    len = NET_XP_FileWrite(LINEBREAK, -1, fp);
-    if (len < 0) {
-      NET_XP_FileClose(fp);
-      cookie_UnlockPermissionListst();
-      return;
-    }
-  }
-
-  /* save current state of cookie nag-box's checkmark */
-  NET_XP_FileWrite("@@@@", -1, fp);
-  NET_XP_FileWrite("\t", 1, fp);
-  if (cookie_rememberChecked) {
-    NET_XP_FileWrite("TRUE", -1, fp);
-  } else {
-    NET_XP_FileWrite("FALSE", -1, fp);
-  }
-  NET_XP_FileWrite(LINEBREAK, -1, fp);
-
-  cookie_permissionsChanged = PR_FALSE;
-  NET_XP_FileClose(fp);
-  cookie_UnlockPermissionListst();
-  return;
-}
-
-/* reads the HTTP cookies permission from disk
- * the parameter passed in on entry is ignored
- * returns 0 on success -1 on failure.
- *
- */
-#define PERMISSION_LINE_BUFFER_SIZE 4096
-
-PRIVATE void
-cookie_LoadPermissions() {
-  XP_File fp;
-  char buffer[PERMISSION_LINE_BUFFER_SIZE];
-  char *host, *p;
-  PRBool permission_value;
-  cookie_PermissionStruct * cookie_permission;
-  char *host_from_header2;
-  if(!(fp = NET_XP_FileOpen(NULL, xpHTTPCookiePermission, XP_FILE_READ))) {
-    return;
-  }
-
-  /* format is:
-   * host \t permission <optional trust label information>
-   * if this format isn't respected we move onto the next line in the file.
-   */
-
-  cookie_LockPermissionList();
-  while(NET_XP_FileReadLine(buffer, PERMISSION_LINE_BUFFER_SIZE, fp)) {
-    if (*buffer == '#' || *buffer == CR || *buffer == LF || *buffer == 0) {
-      continue;
-    }
-    XP_StripLine(buffer); /* remove '\n' from end of the line */
-    host = buffer;
-
-    /* isolate the host field which is the first field on the line */
-    if( !(p = PL_strchr(host, '\t')) ) {
-      continue; /* no permission field */
-    }
-    *p++ = '\0';
-    if(*p == CR || *p == LF || *p == 0) {
-      continue; /* no permission field */
-    }
-
-    /* ignore leading periods in host name */
-    while (host && (*host == '.')) {
-      host++;
-    }
-
-    /*
-     * the first part of the permission file is valid 
-     * allocate a new permission struct and fill it in
-     */
-    cookie_permission = PR_NEW(cookie_PermissionStruct);
-    if (cookie_permission) {
-      host_from_header2 = PL_strdup(host);
-      cookie_permission->host = host_from_header2;
-
-      /*
-       *  Now handle the permission field.
-       * a host value of "@@@@" is a special code designating the
-       * state of the cookie nag-box's checkmark
-       */
-      permission_value = (!PL_strncmp(p, "TRUE", sizeof("TRUE")-1));
-      if (!PL_strcmp(host, "@@@@")) {
-        cookie_rememberChecked = permission_value;
-      } else {
-        cookie_permission->permission = permission_value;
-        /* add the permission entry */
-        cookie_AddPermission( cookie_permission, PR_FALSE );
-      }
-    } /* end if (cookie_permission) */
-  } /* while(NET_XP_FileReadLine( */
-
-  cookie_UnlockPermissionListst();
-  NET_XP_FileClose(fp);
-  cookie_permissionsChanged = PR_FALSE;
-  return;
-}
-
-/* saves out the HTTP cookies to disk
- *
- * on entry pass in the name of the file to save
- *
- * returns 0 on success -1 on failure.
- *
- */
-PRIVATE void
-cookie_SaveCookies() {
-  XP_List * list_ptr;
-  cookie_CookieStruct * cookie_s;
-  time_t cur_date = time(NULL);
-  XP_File fp;
-  int32 len = 0;
-  char date_string[36];
-
-  if(cookie_GetBehaviorPref() == COOKIE_DontUse) {
-    return;
-  }
-
-  if(!cookie_cookiesChanged) {
-    return;
-  {
-
-  cookie_LockCookieList();
-  list_ptr = cookie_cookieList;
-  if(!(list_ptr)) {
-    cookie_UnlockCookieList();
-    return;
-  }
-
-  if(!(fp = NET_XP_FileOpen(NULL, xpHTTPCookie, XP_FILE_WRITE))) {
-    cookie_UnlockCookieList();
-    return;
-  }
-
-  len = NET_XP_FileWrite("# Netscape HTTP Cookie File" LINEBREAK
-                         "# http://www.netscape.com/newsref/std/cookie_spec.html"
-                         LINEBREAK "# This is a generated file!  Do not edit."
-                         LINEBREAK LINEBREAK,
-                         -1, fp);
-  if (len < 0) {
-    NET_XP_FileClose(fp);
-    cookie_UnlockCookieList();
-    return;
-  }
-
-  /* format shall be:
-   *
-   * host \t isDomain \t path \t xxx \t expires \t name \t cookie
-   *
-   * isDomain is PR_TRUE or PR_FALSE
-   * xxx is PR_TRUE or PR_FALSE  
-   * expires is a time_t integer
-   * cookie can have tabs
-   */
-    while((cookie_s = (cookie_CookieStruct *) XP_ListNextObject(list_ptr)) != NULL) {
-    if(cookie_s->expires < cur_date) {
-      continue;  /* don't write entry if cookie has expired or has no expiration date */
-    }
-    len = NET_XP_FileWrite(cookie_s->host, -1, fp);
-    if (len < 0) {
-      NET_XP_FileClose(fp);
-      cookie_UnlockCookieList();
-      return;
-    }
-    NET_XP_FileWrite("\t", 1, fp);
-
-    if(cookie_s->isDomain) {
-      NET_XP_FileWrite("TRUE", -1, fp);
-    } else {
-      NET_XP_FileWrite("FALSE", -1, fp);
-    }
-    NET_XP_FileWrite("\t", 1, fp);
-
-    NET_XP_FileWrite(cookie_s->path, -1, fp);
-    NET_XP_FileWrite("\t", 1, fp);
-
-
-    if(cookie_s->xxx) {
-      NET_XP_FileWrite("TRUE", -1, fp);
-    } else {
-      NET_XP_FileWrite("FALSE", -1, fp);
-    }
-    NET_XP_FileWrite("\t", 1, fp);
-
-    PR_snprintf(date_string, sizeof(date_string), "%lu", cookie_s->expires);
-    NET_XP_FileWrite(date_string, -1, fp);
-    NET_XP_FileWrite("\t", 1, fp);
-
-    NET_XP_FileWrite(cookie_s->name, -1, fp);
-    NET_XP_FileWrite("\t", 1, fp);
-
-    NET_XP_FileWrite(cookie_s->cookie, -1, fp);
-    len = NET_XP_FileWrite(LINEBREAK, -1, fp);
-    if (len < 0) {
-      NET_XP_FileClose(fp);
-      cookie_UnlockCookieList();
-      return;
-    }
-  }
-
-  cookie_cookiesChanged = PR_FALSE;
-  NET_XP_FileClose(fp);
-  cookie_UnlockCookieList();
-  return;
-}
-
-/* reads HTTP cookies from disk
- *
- * on entry pass in the name of the file to read
- *
- * returns 0 on success -1 on failure.
- *
- *
- */
-#define LINE_BUFFER_SIZE 4096
-
-PRIVATE void
-cookie_LoadCookies() {
-  XP_List * list_ptr;
-  cookie_CookieStruct *new_cookie, *tmp_cookie_ptr;
-  size_t new_len;
-  XP_File fp;
-  char buffer[LINE_BUFFER_SIZE];
-  char *host, *isDomain, *path, *xxx, *expires, *name, *cookie;
-  PRBool added_to_list;
-  if(!(fp = NET_XP_FileOpen(NULL, xpHTTPCookie, XP_FILE_READ))) {
-    return;
-  }
-  cookie_LockCookieList();
-  list_ptr = cookie_cookieList;
-
-  /* format is:
-   *
-   * host \t isDomain \t path \t xxx \t expires \t name \t cookie
-   *
-   * if this format isn't respected we move onto the next line in the file.
-   * isDomain is PR_TRUE or PR_FALSE	-- defaulting to PR_FALSE
-   * xxx is PR_TRUE or PR_FALSE   -- should default to PR_TRUE
-   * expires is a time_t integer
-   * cookie can have tabs
-   */
-  while(NET_XP_FileReadLine(buffer, LINE_BUFFER_SIZE, fp)) {
-    added_to_list = PR_FALSE;
-    if (*buffer == '#' || *buffer == CR || *buffer == LF || *buffer == 0) {
-      continue;
-    }
-    host = buffer;
-    if(!(isDomain = PL_strchr(host, '\t'))) {
-      continue;
-    }
-    *isDomain++ = '\0';
-    if(*isDomain == CR || *isDomain == LF || *isDomain == 0) {
-      continue;
-    }
-    if(!(path = PL_strchr(isDomain, '\t'))) {
-      continue;
-    }
-    *path++ = '\0';
-    if(*path == CR || *path == LF || *path == 0) {
-      continue;
-    }
-    if(!(xxx = PL_strchr(path, '\t'))) {
-      continue;
-    }
-    *xxx++ = '\0';
-    if(*xxx == CR || *xxx == LF || *xxx == 0) {
-      continue;
-    }
-    if(!(expires = PL_strchr(xxx, '\t'))) {
-      continue;
-    }
-    *expires++ = '\0';
-    if(*expires == CR || *expires == LF || *expires == 0) {
-      continue;
-    }
-    if(!(name = PL_strchr(expires, '\t'))) {
-      continue;
-    }
-    *name++ = '\0';
-    if(*name == CR || *name == LF || *name == 0) {
-      continue;
-    }
-    if(!(cookie = PL_strchr(name, '\t'))) {
-      continue;
-    }
-    *cookie++ = '\0';
-    if(*cookie == CR || *cookie == LF || *cookie == 0) {
-      continue;
-    }
-
-    /* remove the '\n' from the end of the cookie */
-    XP_StripLine(cookie);
-
-    /* construct a new cookie_struct */
-    new_cookie = PR_NEW(cookie_CookieStruct);
-    if(!new_cookie) {
-      cookie_UnlockCookieList();
-      return;
-    }
-    memset(new_cookie, 0, sizeof(cookie_CookieStruct));
-    
-    /* copy */
-    StrAllocCopy(new_cookie->cookie, cookie);
-    StrAllocCopy(new_cookie->name, name);
-    StrAllocCopy(new_cookie->path, path);
-    StrAllocCopy(new_cookie->host, host);
-    new_cookie->expires = atol(expires);
-    if(!PL_strcmp(xxx, "TRUE")) {
-      new_cookie->xxx = PR_TRUE;
-    } else {
-      new_cookie->xxx = PR_FALSE;
-    }
-    if(!PL_strcmp(isDomain, "TRUE")) {
-      new_cookie->isDomain = PR_TRUE;
-    } else {
-      new_cookie->isDomain = PR_FALSE;
-    }
-    if(!cookie_cookieList) {
-      cookie_cookieList = XP_ListNew();
-      if(!cookie_cookieList) {
-        cookie_UnlockCookieList();
-        return;
-      }
-    }		
-
-    /* add it to the list so that it is before any strings of smaller length */
-    new_len = PL_strlen(new_cookie->path);
-    while((tmp_cookie_ptr = (cookie_CookieStruct *) XP_ListNextObject(list_ptr)) != NULL) { 
-      if(new_len > PL_strlen(tmp_cookie_ptr->path)) {
-        XP_ListInsertObject(cookie_cookieList, tmp_cookie_ptr, new_cookie);
-        added_to_list = PR_TRUE;
-        break;
-      }
-    }
-
-    /* no shorter strings found in list */	
-    if(!added_to_list) {
-      XP_ListAddObjectToEnd(cookie_cookieList, new_cookie);
-    }
-  }
-
-  NET_XP_FileClose(fp);
-  cookie_UnlockCookieList();
-  cookie_cookiesChanged = PR_FALSE;
-  return;
-}
-#endif
 
 PUBLIC int
 COOKIE_ReadCookies() {
@@ -2314,20 +2022,25 @@ CookieCompare (cookie_CookieStruct * cookie1, cookie_CookieStruct * cookie2) {
  */
 PRIVATE cookie_CookieStruct *
 NextCookieAfter(cookie_CookieStruct * cookie, int * cookieNum) {
-  XP_List *cookie_list=cookie_cookieList;
   cookie_CookieStruct *cookie_ptr;
   cookie_CookieStruct *lowestCookie = NULL;
   int localCookieNum = 0;
   int lowestCookieNum;
 
-  while ( (cookie_ptr=(cookie_CookieStruct *) XP_ListNextObject(cookie_list)) ) {
-    if (!cookie || (CookieCompare(cookie_ptr, cookie) > 0)) {
-      if (!lowestCookie || (CookieCompare(cookie_ptr, lowestCookie) < 0)) {
-        lowestCookie = cookie_ptr;
-        lowestCookieNum = localCookieNum;
+  if (cookie_cookieList == nsnull) 
+    return NULL;
+  PRInt32 count = cookie_cookieList->Count();
+  for (PRInt32 i = 0; i < count; ++i) {
+    cookie_ptr = NS_STATIC_CAST(cookie_CookieStruct*, cookie_cookieList->ElementAt(i));
+    if (cookie_ptr) {
+      if (!cookie || (CookieCompare(cookie_ptr, cookie) > 0)) {
+        if (!lowestCookie || (CookieCompare(cookie_ptr, lowestCookie) < 0)) {
+          lowestCookie = cookie_ptr;
+          lowestCookieNum = localCookieNum;
+        }
       }
+      localCookieNum++;
     }
-    localCookieNum++;
   }
 
   *cookieNum = lowestCookieNum;
@@ -2348,7 +2061,7 @@ cookie_FixQuoted(char* s) {
     count = count++;
     quote++;
   }
-  result = (char*)XP_ALLOC(count + 1);
+  result = (char*)PR_Malloc(count + 1);
   for (i=0, j=0; i<PL_strlen(s); i++) {
     if (s[i] == '"') {
       result[i+(j++)] = '\\';
@@ -2416,7 +2129,8 @@ cookie_FindValueInArgs(nsAutoString results, char* name) {
   nsAutoString value;
   PRInt32 start, length;
   start = results.Find(name);
-  XP_ASSERT(start >= 0);
+//  XP_ASSERT(start >= 0);
+  NS_ASSERTION(start < 0, "bad data");
   if (start < 0) {
     return nsAutoString("").ToNewCString();
   }
@@ -2428,14 +2142,13 @@ cookie_FindValueInArgs(nsAutoString results, char* name) {
 
 PUBLIC void
 COOKIE_CookieViewerReturn(nsAutoString results) {
-  XP_List *cookie_ptr;
-  XP_List *permission_ptr;
   cookie_CookieStruct * cookie;
   cookie_CookieStruct * cookieToDelete = 0;
   cookie_PermissionStruct * permission;
   cookie_PermissionStruct * permissionToDelete = 0;
   int cookieNumber;
   int permissionNumber;
+  PRInt32 count = 0;
 
   /* step through all cookies and delete those that are in the sequence
    * Note: we can't delete cookie while "cookie_ptr" is pointing to it because
@@ -2444,19 +2157,24 @@ COOKIE_CookieViewerReturn(nsAutoString results) {
   char * gone = cookie_FindValueInArgs(results, "|goneC|");
   cookieNumber = 0;
   cookie_LockCookieList();
-  cookie_ptr = cookie_cookieList;
-  while ((cookie = (cookie_CookieStruct *) XP_ListNextObject(cookie_ptr))) {
-    if (cookie_InSequence(gone, cookieNumber)) {
-      if (cookieToDelete) {
-        cookie_FreeCookie(cookieToDelete);
+  if (cookie_cookieList) {
+    count = cookie_cookieList->Count();
+    for (PRInt32 i = 0; i < count; ++i) {
+      cookie = NS_STATIC_CAST(cookie_CookieStruct*, cookie_cookieList->ElementAt(i));
+      if (cookie) {
+        if (cookie_InSequence(gone, cookieNumber)) {
+          if (cookieToDelete) {
+            cookie_FreeCookie(cookieToDelete);
+          }
+          cookieToDelete = cookie;
+        }
+        cookieNumber++;
       }
-      cookieToDelete = cookie;
     }
-    cookieNumber++;
-  }
-  if (cookieToDelete) {
-    cookie_FreeCookie(cookieToDelete);
-    cookie_SaveCookies();
+    if (cookieToDelete) {
+      cookie_FreeCookie(cookieToDelete);
+      cookie_SaveCookies();
+    }
   }
   cookie_UnlockCookieList();
   delete[] gone;
@@ -2468,18 +2186,23 @@ COOKIE_CookieViewerReturn(nsAutoString results) {
   gone = cookie_FindValueInArgs(results, "|goneP|");
   permissionNumber = 0;
   cookie_LockPermissionList();
-  permission_ptr = cookie_permissionList;
-  while ((permission = (cookie_PermissionStruct *) XP_ListNextObject(permission_ptr))) {
-    if (cookie_InSequence(gone, permissionNumber)) {
-      if (permissionToDelete) {
-        cookie_FreePermission(permissionToDelete, PR_FALSE);
+  if (cookie_permissionList) {
+    count = cookie_permissionList->Count();
+    for (PRInt32 i = 0; i < count; ++i) {
+      permission = NS_STATIC_CAST(cookie_PermissionStruct*, cookie_permissionList->ElementAt(i));
+      if (permission) {
+        if (cookie_InSequence(gone, permissionNumber)) {
+          if (permissionToDelete) {
+            cookie_FreePermission(permissionToDelete, PR_FALSE);
+          }
+          permissionToDelete = permission;
+        }
+        permissionNumber++;
       }
-      permissionToDelete = permission;
     }
-    permissionNumber++;
-  }
-  if (permissionToDelete) {
-    cookie_FreePermission(permissionToDelete, PR_TRUE);
+    if (permissionToDelete) {
+      cookie_FreePermission(permissionToDelete, PR_TRUE);
+    }
   }
   cookie_UnlockPermissionListst();
   delete[] gone;
@@ -2490,14 +2213,12 @@ COOKIE_CookieViewerReturn(nsAutoString results) {
 
 PUBLIC void
 COOKIE_GetCookieListForViewer(nsString& aCookieList) {
-  char *buffer = (char*)XP_ALLOC(BUFLEN2);
+  char *buffer = (char*)PR_Malloc(BUFLEN2);
   int g = 0, cookieNum;
-  XP_List *cookie_ptr;
   cookie_CookieStruct * cookie;
 
   cookie_LockCookieList();
   buffer[0] = '\0';
-  cookie_ptr = cookie_cookieList;
   cookieNum = 0;
 
   /* Get rid of any expired cookies now so user doesn't
@@ -2547,25 +2268,27 @@ COOKIE_GetCookieListForViewer(nsString& aCookieList) {
 
 PUBLIC void
 COOKIE_GetPermissionListForViewer(nsString& aPermissionList) {
-  char *buffer = (char*)XP_ALLOC(BUFLEN2);
+  char *buffer = (char*)PR_Malloc(BUFLEN2);
   int g = 0, permissionNum;
-  XP_List *permission_ptr;
   cookie_PermissionStruct * permission;
 
   cookie_LockPermissionList();
   buffer[0] = '\0';
-  permission_ptr = cookie_permissionList;
   permissionNum = 0;
-  while ( (permission=(cookie_PermissionStruct *) XP_ListNextObject(permission_ptr)) ) {
-    g += PR_snprintf(buffer+g, BUFLEN2-g,
-      "%c%d%c%c%s",
-      BREAK,
-      permissionNum,
-      BREAK,
-      permission->permission ? '+' : '-',
-      permission->host
-    );
-    permissionNum++;
+  PRInt32 count = cookie_permissionList->Count();
+  for (PRInt32 i = 0; i < count; ++i) {
+    permission = NS_STATIC_CAST(cookie_PermissionStruct*, cookie_permissionList->ElementAt(i));
+    if (permission) {
+      g += PR_snprintf(buffer+g, BUFLEN2-g,
+        "%c%d%c%c%s",
+        BREAK,
+        permissionNum,
+        BREAK,
+        permission->permission ? '+' : '-',
+        permission->host
+      );
+      permissionNum++;
+    }
   }
   aPermissionList = buffer;
   PR_FREEIF(buffer);
@@ -2600,19 +2323,20 @@ XP_StripLine (char *string) {
   return string;
 }
 
+#ifdef later
 PUBLIC History_entry *
 SHIST_GetCurrent(History * hist) {
   /* MOZ_FUNCTION_STUB; */
   return NULL;
 }
-
+#endif
 
 /*	Very similar to strdup except it free's too
  */
 PUBLIC char * 
 NET_SACopy (char **destination, const char *source) {
   if(*destination) {
-    XP_FREE(*destination);
+    PR_Free(*destination);
     *destination = 0;
   }
   if (! source) {
