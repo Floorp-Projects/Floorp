@@ -163,7 +163,7 @@ nsXPathResult::IterateNext(nsIDOMNode **aResult)
         return NS_ERROR_DOM_TYPE_ERR;
 
     if (mDocument)
-        mDocument->FlushPendingNotifications(PR_FALSE);
+        mDocument->FlushPendingNotifications(Flush_Content);
 
     if (mInvalidIteratorState)
         return NS_ERROR_DOM_INVALID_STATE_ERR;

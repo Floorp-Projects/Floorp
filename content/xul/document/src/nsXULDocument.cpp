@@ -1585,7 +1585,7 @@ nsXULDocument::GetPixelDimensions(nsIPresShell* aShell, PRInt32* aWidth,
     nsSize size;
     nsIFrame* frame;
 
-    FlushPendingNotifications();
+    FlushPendingNotifications(Flush_Layout);
 
     result = aShell->GetPrimaryFrameFor(mRootContent, &frame);
     if (NS_SUCCEEDED(result) && frame) {
@@ -2167,7 +2167,8 @@ nsXULDocument::StartLayout(void)
         // This is done because iframes don't load their subdocs until
         // they get reflowed.  If we reflow asynchronously, our onload
         // will fire too early. -- hyatt
-        FlushPendingNotifications();
+        // XXXbz this is still needed for <xul:iframe>.  We need to fix that.
+        FlushPendingNotifications(Flush_Layout);
 
         // Start observing the document _after_ we do the initial
         // reflow. Otherwise, we'll get into an trouble trying to

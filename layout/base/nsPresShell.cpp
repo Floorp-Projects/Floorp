@@ -1131,7 +1131,7 @@ public:
                                          PRBool        aProcessDummyLayoutRequest = PR_TRUE);  
   NS_IMETHOD CancelAllReflowCommands();
   NS_IMETHOD IsSafeToFlush(PRBool& aIsSafeToFlush);
-  NS_IMETHOD FlushPendingNotifications(PRBool aUpdateViews);
+  NS_IMETHOD FlushPendingNotifications(mozFlushType aType);
 
   /**
    * Recreates the frames for a node
@@ -3972,6 +3972,10 @@ PresShell::CantRenderReplacedElement(nsIFrame* aFrame)
 NS_IMETHODIMP
 PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
 {
+  if (!mDocument) {
+    return NS_ERROR_FAILURE;
+  }
+  
   // Hold a reference to the ESM in case event dispatch tears us down.
   nsCOMPtr<nsIEventStateManager> esm = mPresContext->EventStateManager();
 
@@ -4097,7 +4101,7 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
   if (content) {
     // Flush notifications so we scroll to the right place
     if (aScroll) {
-      FlushPendingNotifications(PR_FALSE);
+      mDocument->FlushPendingNotifications(Flush_Layout);
     }
     
     // Get the primary frame
@@ -5087,7 +5091,7 @@ PresShell::HandlePostedReflowCallbacks()
    }
 
    if (shouldFlush)
-     FlushPendingNotifications(PR_FALSE);
+     FlushPendingNotifications(Flush_Layout);
 }
 
 void
@@ -5162,19 +5166,26 @@ PresShell::IsSafeToFlush(PRBool& aIsSafeToFlush)
 
 
 NS_IMETHODIMP 
-PresShell::FlushPendingNotifications(PRBool aUpdateViews)
+PresShell::FlushPendingNotifications(mozFlushType aType)
 {
+  NS_ASSERTION(aType & (Flush_StyleReresolves | Flush_OnlyReflow |
+                        Flush_OnlyPaint),
+               "Why did we get called?");
+  
   PRBool isSafeToFlush;
   IsSafeToFlush(isSafeToFlush);
 
   if (isSafeToFlush) {
-    if (aUpdateViews && mViewManager) {
+    PRBool batchViews = (aType & Flush_OnlyPaint);
+    if (batchViews && mViewManager) {
       mViewManager->BeginUpdateViewBatch();
     }
 
-    ProcessReflowCommands(PR_FALSE);
+    if (aType & Flush_OnlyReflow) {
+      ProcessReflowCommands(PR_FALSE);
+    }
 
-    if (aUpdateViews && mViewManager) {
+    if (batchViews && mViewManager) {
       mViewManager->EndUpdateViewBatch(NS_VMREFRESH_IMMEDIATE);
     }
   }
@@ -5202,7 +5213,7 @@ PresShell::EndReflowBatching(PRBool aFlushPendingReflows)
   nsresult rv = NS_OK;
   mBatchReflows = PR_FALSE;
   if (aFlushPendingReflows) {
-    rv = FlushPendingNotifications(PR_FALSE);
+    rv = FlushPendingNotifications(Flush_Layout);
   }
   else {
     PostReflowEvent();
@@ -6303,7 +6314,7 @@ PresShell::DidCauseReflow()
   // We may have had more reflow commands appended to the queue during
   // our reflow.  Make sure these get processed at some point.
   if (!gAsyncReflowDuringDocLoad && mDocumentLoading) {
-    FlushPendingNotifications(PR_FALSE);
+    FlushPendingNotifications(Flush_Layout);
   } else {
     PostReflowEvent();
   }

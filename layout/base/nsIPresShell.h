@@ -59,6 +59,7 @@
 #include "nsCompatibility.h"
 #include "nsCOMArray.h"
 #include "nsFrameManagerBase.h"
+#include "mozFlushType.h"
 #include <stdio.h> // for FILE definition
 
 class nsIAtom;
@@ -324,11 +325,15 @@ public:
   NS_IMETHOD IsSafeToFlush(PRBool& aIsSafeToFlush) = 0;
 
   /**
-   * Flush all pending notifications such that the presentation is
-   * in sync with the content.
-   * @param aUpdateViews PR_TRUE causes the affected views to be refreshed immediately.
+   * Flush pending notifications of the type specified.  This method
+   * will not affect the content model; it'll just affect style and
+   * frames. Callers that actually want up-to-date presentation (other
+   * than the document itself) should probably be calling
+   * nsIDocument::FlushPendingNotifications.
+   *
+   * @param aType the type of notifications to flush
    */
-  NS_IMETHOD FlushPendingNotifications(PRBool aUpdateViews) = 0;
+  NS_IMETHOD FlushPendingNotifications(mozFlushType aType) = 0;
 
   /**
    * Post a request to handle a DOM event after Reflow has finished.

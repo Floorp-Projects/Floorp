@@ -438,17 +438,8 @@ nsWebCrawler::OnStateChange(nsIWebProgress* aWebProgress,
     // Make sure the document bits make it to the screen at least once
     nsCOMPtr<nsIPresShell> shell = dont_AddRef(GetPresShell());
     if (shell) {
-      // Force the presentation shell to flush any pending reflows
-      shell->FlushPendingNotifications(PR_FALSE);
-
-      // Force the view manager to update itself
-      nsCOMPtr<nsIViewManager> vm;
-      shell->GetViewManager(getter_AddRefs(vm));
-      if (vm) {
-        nsIView* rootView;
-        vm->GetRootView(rootView);
-        vm->UpdateView(rootView, NS_VMREFRESH_IMMEDIATE);
-      }
+      // Force the presentation shell to update the display
+      shell->FlushPendingNotifications(Flush_Display);
 
       if (mJiggleLayout) {
         nsRect r;

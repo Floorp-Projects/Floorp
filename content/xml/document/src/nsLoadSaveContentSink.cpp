@@ -121,10 +121,10 @@ nsLoadSaveContentSink::SetParser(nsIParser* aParser)
   return mBaseSink->SetParser(aParser);
 }
 
-NS_IMETHODIMP
-nsLoadSaveContentSink::FlushPendingNotifications(void)
+void
+nsLoadSaveContentSink::FlushContent(PRBool aNotify)
 {
-  return mBaseSink->FlushPendingNotifications();
+  mBaseSink->FlushContent(aNotify);
 }
 
 NS_IMETHODIMP

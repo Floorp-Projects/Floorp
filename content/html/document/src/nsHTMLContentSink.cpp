@@ -230,7 +230,7 @@ public:
   NS_IMETHOD WillInterrupt(void);
   NS_IMETHOD WillResume(void);
   NS_IMETHOD SetParser(nsIParser* aParser);
-  NS_IMETHOD FlushPendingNotifications();
+  NS_IMETHOD_(void) FlushContent(PRBool aNotify);
   NS_IMETHOD SetDocumentCharset(nsACString& aCharset);
 
   // nsIHTMLContentSink
@@ -727,7 +727,7 @@ public:
     return FlushText(aDidFlush, PR_TRUE);
   }
 
-  nsresult FlushTags(PRBool aNotify = PR_TRUE);
+  nsresult FlushTags(PRBool aNotify);
 
   PRBool   IsCurrentContainer(nsHTMLTag mType);
   PRBool   IsAncestorContainer(nsHTMLTag mType);
@@ -4419,22 +4419,14 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
   return rv;
 }
 
-NS_IMETHODIMP
-HTMLContentSink::FlushPendingNotifications()
+void
+HTMLContentSink::FlushContent(PRBool aNotify)
 {
-  nsresult result = NS_OK;
   // Only flush tags if we're not doing the notification ourselves
-  // (since we aren't reentrant) and if we're in a script (since we
-  // only care to flush if this is done via script).
-  //
-  // Bug 4891: Also flush outside of <script> tags - if script is
-  // executing after the page has finished loading, and a
-  // document.write occurs, we might need this flush.
+  // (since we aren't reentrant)
   if (mCurrentContext && !mInNotification) {
-    result = mCurrentContext->FlushTags();
+    mCurrentContext->FlushTags(aNotify);
   }
-
-  return result;
 }
 
 NS_IMETHODIMP

@@ -1118,7 +1118,7 @@ void nsSVGSVGElement::GetScreenPosition(PRInt32 &x, PRInt32 &y)
   }
    
   // Flush all pending notifications so that our frames are uptodate
-  presShell->FlushPendingNotifications(PR_FALSE);
+  mDocument->FlushPendingNotifications(Flush_Layout);
     
   nsIFrame* frame;
   presShell->GetPrimaryFrameFor(this, &frame);

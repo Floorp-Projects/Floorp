@@ -1537,7 +1537,14 @@ GlobalWindowImpl::SetName(const nsAString& aName)
 NS_IMETHODIMP
 GlobalWindowImpl::GetInnerWidth(PRInt32* aInnerWidth)
 {
-  FlushPendingNotifications(PR_TRUE);
+  // If we're a subframe, make sure our size is up to date.  It's OK that this
+  // crosses the content/chrome boundary, since chrome can have pending reflows
+  // too.
+  GlobalWindowImpl* parent = NS_STATIC_CAST(GlobalWindowImpl*,
+                                            GetPrivateParent());
+  if (parent) {
+    parent->FlushPendingNotifications(Flush_Layout);
+  }
 
   nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mDocShell));
   *aInnerWidth = 0;
@@ -1589,7 +1596,14 @@ GlobalWindowImpl::SetInnerWidth(PRInt32 aInnerWidth)
 NS_IMETHODIMP
 GlobalWindowImpl::GetInnerHeight(PRInt32* aInnerHeight)
 {
-  FlushPendingNotifications(PR_TRUE);
+  // If we're a subframe, make sure our size is up to date.  It's OK that this
+  // crosses the content/chrome boundary, since chrome can have pending reflows
+  // too.
+  GlobalWindowImpl* parent = NS_STATIC_CAST(GlobalWindowImpl*,
+                                            GetPrivateParent());
+  if (parent) {
+    parent->FlushPendingNotifications(Flush_Layout);
+  }
 
   nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mDocShell));
   *aInnerHeight = 0;
@@ -1646,7 +1660,11 @@ GlobalWindowImpl::GetOuterWidth(PRInt32* aOuterWidth)
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
   NS_ENSURE_TRUE(treeOwnerAsWin, NS_ERROR_FAILURE);
 
-  FlushPendingNotifications(PR_TRUE);
+  GlobalWindowImpl* rootWindow = NS_STATIC_CAST(GlobalWindowImpl*,
+                                                GetPrivateRoot());
+  if (rootWindow) {
+    rootWindow->FlushPendingNotifications(Flush_Layout);
+  }
   PRInt32 notused;
   NS_ENSURE_SUCCESS(treeOwnerAsWin->GetSize(aOuterWidth, &notused),
                     NS_ERROR_FAILURE);
@@ -1689,7 +1707,11 @@ GlobalWindowImpl::GetOuterHeight(PRInt32* aOuterHeight)
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
   NS_ENSURE_TRUE(treeOwnerAsWin, NS_ERROR_FAILURE);
 
-  FlushPendingNotifications(PR_TRUE);
+  GlobalWindowImpl* rootWindow = NS_STATIC_CAST(GlobalWindowImpl*,
+                                                GetPrivateRoot());
+  if (rootWindow) {
+    rootWindow->FlushPendingNotifications(Flush_Layout);
+  }
 
   PRInt32 notused;
   NS_ENSURE_SUCCESS(treeOwnerAsWin->GetSize(&notused, aOuterHeight),
@@ -1862,7 +1884,11 @@ GlobalWindowImpl::CheckSecurityLeftAndTop(PRInt32* aLeft, PRInt32* aTop)
     PRInt32 screenLeft, screenTop, screenWidth, screenHeight;
     PRInt32 winLeft, winTop, winWidth, winHeight;
 
-    FlushPendingNotifications(PR_TRUE);
+    GlobalWindowImpl* rootWindow = NS_STATIC_CAST(GlobalWindowImpl*,
+                                                  GetPrivateRoot());
+    if (rootWindow) {
+      rootWindow->FlushPendingNotifications(Flush_Layout);
+    }
 
     // Get the window size
     nsCOMPtr<nsIBaseWindow> treeOwner;
@@ -2140,7 +2166,7 @@ GlobalWindowImpl::EnsureReflowFlushAndPaint()
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
 
   if (doc) {
-    doc->FlushPendingNotifications(PR_TRUE, PR_FALSE);
+    doc->FlushPendingNotifications(Flush_Layout);
   }
 
   // Unsuppress painting.
@@ -3390,7 +3416,7 @@ GlobalWindowImpl::GetFrames(nsIDOMWindow** aFrames)
   *aFrames = this;
   NS_ADDREF(*aFrames);
 
-  FlushPendingNotifications(PR_FALSE);
+  FlushPendingNotifications(Flush_ContentAndNotify);
 
   return NS_OK;
 }
@@ -4184,15 +4210,15 @@ GlobalWindowImpl::GetPrivateParent()
   if (NS_STATIC_CAST(nsIDOMWindow *, this) == parent.get()) {
     nsCOMPtr<nsIContent> chromeElement(do_QueryInterface(mChromeEventHandler));
     if (!chromeElement)
-      return NS_OK;             // This is ok, just means a null parent.
+      return nsnull;             // This is ok, just means a null parent.
 
     nsIDocument* doc = chromeElement->GetDocument();
     if (!doc)
-      return NS_OK;             // This is ok, just means a null parent.
+      return nsnull;             // This is ok, just means a null parent.
 
     nsIScriptGlobalObject *globalObject = doc->GetScriptGlobalObject();
     if (!globalObject)
-      return NS_OK;             // This is ok, just means a null parent.
+      return nsnull;             // This is ok, just means a null parent.
 
     parent = do_QueryInterface(globalObject);
   }
@@ -5429,7 +5455,7 @@ GlobalWindowImpl::GetScrollInfo(nsIScrollableView **aScrollableView,
 
   // Flush pending notifications so that the presentation is up to
   // date.
-  FlushPendingNotifications(PR_TRUE);
+  FlushPendingNotifications(Flush_Layout);
 
   nsCOMPtr<nsIPresContext> presContext;
   mDocShell->GetPresContext(getter_AddRefs(presContext));
@@ -5497,11 +5523,11 @@ GlobalWindowImpl::SecurityCheckURL(const char *aURL)
 }
 
 void
-GlobalWindowImpl::FlushPendingNotifications(PRBool aFlushReflows)
+GlobalWindowImpl::FlushPendingNotifications(mozFlushType aType)
 {
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
   if (doc) {
-    doc->FlushPendingNotifications(aFlushReflows);
+    doc->FlushPendingNotifications(aType);
   }
 }
 

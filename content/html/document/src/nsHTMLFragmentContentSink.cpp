@@ -80,7 +80,7 @@ public:
   NS_IMETHOD WillInterrupt(void);
   NS_IMETHOD WillResume(void);
   NS_IMETHOD SetParser(nsIParser* aParser);
-  NS_IMETHOD FlushPendingNotifications() { return NS_OK; }
+  virtual void FlushContent(PRBool aNotify) { }
   NS_IMETHOD SetDocumentCharset(nsACString& aCharset) { return NS_OK; }
 
   // nsIHTMLContentSink

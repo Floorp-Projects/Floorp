@@ -74,7 +74,7 @@ public:
   NS_IMETHOD WillInterrupt(void);
   NS_IMETHOD WillResume(void);
   NS_IMETHOD SetParser(nsIParser* aParser);  
-  NS_IMETHOD FlushPendingNotifications(void);
+  virtual void FlushContent(PRBool aNotify);
   NS_IMETHOD SetDocumentCharset(nsAString& aCharset);
 
 private:

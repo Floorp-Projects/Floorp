@@ -52,6 +52,7 @@
 #include "nsILoadGroup.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
+#include "mozFlushType.h"
 
 class nsIAtom;
 class nsIContent;
@@ -510,8 +511,11 @@ public:
                                   PRUint32 aFlags,
                                   nsEventStatus* aEventStatus) = 0;
 
-  virtual void FlushPendingNotifications(PRBool aFlushReflows=PR_TRUE,
-                                         PRBool aUpdateViews=PR_FALSE) = 0;
+  /**
+   * Flush notifications for this document and its parent documents
+   * (since those may affect the layout of this one).
+   */
+  virtual void FlushPendingNotifications(mozFlushType aType) = 0;
 
   PRInt32 GetAndIncrementContentID()
   {

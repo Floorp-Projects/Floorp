@@ -765,7 +765,7 @@ nsHTMLFormElement::DoSubmitOrReset(nsIPresContext* aPresContext,
 
   // Make sure the presentation is up-to-date
   if (mDocument) {
-    mDocument->FlushPendingNotifications();
+    mDocument->FlushPendingNotifications(Flush_ContentAndNotify);
   }
 
   // JBK Don't get form frames anymore - bug 34297

@@ -802,7 +802,7 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
       {
          menuPopup->MarkDirty(state);
 
-         mPresContext->PresShell()->FlushPendingNotifications(PR_FALSE);
+         mPresContext->PresShell()->FlushPendingNotifications(Flush_OnlyReflow);
       }
 
       nsRect curRect;
@@ -823,7 +823,7 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
       if (curRect.height != rect.height || mLastPref.height != rect.height)
       {
          menuPopup->MarkDirty(state);
-         mPresContext->PresShell()->FlushPendingNotifications(PR_FALSE);
+         mPresContext->PresShell()->FlushPendingNotifications(Flush_OnlyReflow);
       }
 
       ActivateMenu(PR_TRUE);

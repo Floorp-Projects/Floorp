@@ -79,6 +79,7 @@
 #include "mozXMLTermSession.h"
 #include "nsISelectionController.h"
 #include "nsReadableUtils.h"
+#include "nsIDocument.h"
 
 /////////////////////////////////////////////////////////////////////////
 // mozXMLTermSession definition
@@ -3093,7 +3094,10 @@ NS_IMETHODIMP mozXMLTermSession::ScrollToBottomLeft(void)
   if (NS_FAILED(result) || !presShell)
     return NS_ERROR_FAILURE;
 
-  presShell->FlushPendingNotifications(PR_FALSE);
+  nsIDocument* doc = presShell->GetDocument();
+  if (doc) {
+    doc->FlushPendingNotifications(Flush_Layout);
+  }
 
   // Get DOM Window
   nsCOMPtr<nsIDocShell> docShell;

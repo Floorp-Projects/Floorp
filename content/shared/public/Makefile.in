@@ -59,6 +59,7 @@ nsCSSKeywords.h \
 nsCSSPropList.h \
 nsCSSProperty.h \
 nsCSSProps.h \
+mozFlushType.h \
 nsFrameManager.h \
 nsFrameManagerBase.h \
 nsHTMLAtomList.h \

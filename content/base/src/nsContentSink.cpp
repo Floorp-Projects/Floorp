@@ -863,7 +863,7 @@ nsContentSink::ScrollToRef(PRBool aReallyScroll)
     if (shell) {
       // Scroll to the anchor
       if (aReallyScroll) {
-        shell->FlushPendingNotifications(PR_FALSE);
+        shell->FlushPendingNotifications(Flush_Layout);
       }
 
       // Check an empty string which might be caused by the UTF-8 conversion

@@ -1299,38 +1299,35 @@ nsHTMLDocument::AttributeChanged(nsIContent* aContent, PRInt32 aNameSpaceID,
 }
 
 void
-nsHTMLDocument::FlushPendingNotifications(PRBool aFlushReflows,
-                                          PRBool aUpdateViews)
+nsHTMLDocument::FlushPendingNotifications(mozFlushType aType)
 {
-  // Determine if it is safe to flush the sink
-  // by determining if it safe to flush all the presshells.
-  PRBool isSafeToFlush = PR_TRUE;
-  if (aFlushReflows) {
-    PRInt32 i = 0, n = mPresShells.Count();
-    while ((i < n) && (isSafeToFlush)) {
-      nsCOMPtr<nsIPresShell> shell =
-        NS_STATIC_CAST(nsIPresShell*, mPresShells[i]);
+  if (aType & Flush_Content) {
+    // Determine if it is safe to flush the sink
+    // by determining if it safe to flush all the presshells.
+    PRBool isSafeToFlush = PR_TRUE;
+    if (aType & Flush_SinkNotifications) {
+      PRInt32 i = 0, n = mPresShells.Count();
+      while ((i < n) && (isSafeToFlush)) {
+        nsCOMPtr<nsIPresShell> shell =
+          NS_STATIC_CAST(nsIPresShell*, mPresShells[i]);
 
-      if (shell) {
-        shell->IsSafeToFlush(isSafeToFlush);
+        if (shell) {
+          shell->IsSafeToFlush(isSafeToFlush);
+        }
+        ++i;
       }
-      ++i;
+    }
+
+    if (isSafeToFlush && mParser) {
+      nsCOMPtr<nsIContentSink> sink = mParser->GetContentSink();
+      if (sink) {
+        PRBool notify = ((aType & Flush_SinkNotifications) != 0);
+        sink->FlushContent(notify);
+      }
     }
   }
-
-  if (isSafeToFlush && mParser) {
-    nsCOMPtr<nsIContentSink> sink;
-
-    // XXX Ack! Parser doesn't addref sink before passing it back
-    sink = mParser->GetContentSink();
-    if (sink) {
-      nsresult rv = sink->FlushPendingNotifications();
-      if (NS_FAILED(rv))
-        return;
-    }
-  }
-
-  nsDocument::FlushPendingNotifications(aFlushReflows, aUpdateViews);
+  
+  nsDocument::FlushPendingNotifications(aType);
 }
 
 PRBool
@@ -2210,7 +2207,7 @@ nsHTMLDocument::Close()
     // handler of the frameset fires before the frames get reflowed
     // and loaded.  That is the long explanation for why we need this
     // one line of code here!
-    FlushPendingNotifications();
+    FlushPendingNotifications(Flush_Layout);
 
     // Remove the wyciwyg channel request from the document load group
     // that we added in OpenCommon().  If all other requests between
@@ -2543,7 +2540,7 @@ nsHTMLDocument::GetPixelDimensions(nsIPresShell* aShell,
 {
   *aWidth = *aHeight = 0;
 
-  FlushPendingNotifications();
+  FlushPendingNotifications(Flush_Layout);
 
   // Find the <body> element: this is what we'll want to use for the
   // document's width and height values.
@@ -3061,6 +3058,10 @@ nsHTMLDocument::UpdateNameTableEntry(const nsAString& aName,
     return NS_OK;
   }
 
+  // NOTE: this indexof is absolutely needed, since we don't flush
+  // content notifications when we do document.foo resolution.  So
+  // aContent may be in our list already and just now getting notified
+  // for!
   if (list->IndexOf(aContent, PR_FALSE) < 0) {
     list->AppendElement(aContent);
   }
@@ -3304,7 +3305,7 @@ nsHTMLDocument::ResolveName(const nsAString& aName,
   // table changes when we flush.
   PRUint32 generation = mIdAndNameHashTable.generation;
   
-  FlushPendingNotifications(PR_FALSE);
+  FlushPendingNotifications(Flush_Content);
 
   if (generation != mIdAndNameHashTable.generation) {
     // Table changed, so the entry pointer is no longer valid; look up the

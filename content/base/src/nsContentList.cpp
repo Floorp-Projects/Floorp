@@ -429,8 +429,8 @@ nsContentList::Item(PRUint32 aIndex, PRBool aDoFlush)
   CheckDocumentExistence();
 
   if (mDocument && aDoFlush) {
-    // Flush pending content changes Bug 4891
-    mDocument->FlushPendingNotifications(PR_FALSE);
+    // Flush pending content changes Bug 4891.
+    mDocument->FlushPendingNotifications(Flush_ContentAndNotify);
   }
 
   if (mState != LIST_UP_TO_DATE)
@@ -963,7 +963,8 @@ void
 nsContentList::BringSelfUpToDate(PRBool aDoFlush)
 {
   if (mDocument && aDoFlush) {
-    mDocument->FlushPendingNotifications(PR_FALSE); // Flush pending content changes Bug 4891
+    // Flush pending content changes Bug 4891.
+    mDocument->FlushPendingNotifications(Flush_ContentAndNotify);
   }
 
   if (mState != LIST_UP_TO_DATE)

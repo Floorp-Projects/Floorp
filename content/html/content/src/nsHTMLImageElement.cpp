@@ -285,8 +285,8 @@ nsHTMLImageElement::GetXY()
     return point;
   }
 
-  // Flush all pending notifications so that our frames are uptodate
-  mDocument->FlushPendingNotifications();
+  // Flush all pending notifications so that our frames are laid out correctly
+  mDocument->FlushPendingNotifications(Flush_Layout);
 
   // Get the Frame for this image
   nsIFrame* frame = nsnull;
@@ -339,7 +339,7 @@ nsHTMLImageElement::GetWidthHeight()
     // Flush all pending notifications so that our frames are up to date.
     // If we're not in a document, we don't have a frame anyway, so we
     // don't care.
-    mDocument->FlushPendingNotifications();
+    mDocument->FlushPendingNotifications(Flush_Layout);
   }
 
   nsIImageFrame* imageFrame;
