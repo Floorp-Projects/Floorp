@@ -156,7 +156,7 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
 					{
 						nsresult rv;
 						nsCOMPtr<nsILocalFile> fileToUse = do_CreateInstance( NS_LOCAL_FILE_CONTRACTID, &rv );
-						fileToUse->InitWithPath( moz->download_dest );
+						fileToUse->InitWithNativePath( nsDependentCString(moz->download_dest) );
 	
 						PRBool equalToTempFile = PR_FALSE;
 						PRBool filetoUseAlreadyExists = PR_FALSE;
@@ -167,10 +167,10 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
 
 						// extract the new leaf name from the file location
 						nsXPIDLCString fileName;
-						fileToUse->GetLeafName(getter_Copies(fileName));
+						fileToUse->GetNativeLeafName(fileName);
 						nsCOMPtr<nsIFile> directoryLocation;
 						fileToUse->GetParent(getter_AddRefs(directoryLocation));
-						if( directoryLocation ) rv = tempFile->MoveTo(directoryLocation, fileName);
+						if( directoryLocation ) rv = tempFile->MoveToNative(directoryLocation, fileName);
 					}
 
 					moz->EmbedRef->app_launcher = NULL;
