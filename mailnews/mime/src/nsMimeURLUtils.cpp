@@ -351,12 +351,28 @@ nsMimeURLUtils::URLType(const char *URL, PRInt32  *retType)
 }
 
 PRBool
+ItMatches(const char *line, const char *rep)
+{
+  if ( (!rep) || (!*rep) || (!line) || (!*line) )
+    return PR_FALSE;
+
+  PRInt32 lineLen = PL_strlen(line);
+  PRInt32 compLen = PL_strlen(rep);
+
+  if (lineLen < compLen)
+    return PR_FALSE;
+
+  if (!PL_strncasecmp(line, rep, compLen))
+    return PR_TRUE;
+
+  return PR_FALSE;
+}
+
+PRBool
 GlyphHit(const char *line, char **outputHTML, PRInt32 *glyphTextLen)
 {
-  PRInt32 len = PL_strlen(line);
 
-  if ( ( (len >= 3) && (!PL_strncasecmp(line, ":-)", 3)) ) || 
-       ( (len >= 2) && (!PL_strncasecmp(line, ":)", 2)) ) )
+  if ( ItMatches(line, ":-)") || ItMatches(line, ":)") ) 
   {
     *outputHTML = PL_strdup("<img SRC=\"resource:/res/mailnews/messenger/smile.gif\" height=17 width=17 align=ABSCENTER>");
     if (!(*outputHTML))
@@ -364,8 +380,7 @@ GlyphHit(const char *line, char **outputHTML, PRInt32 *glyphTextLen)
     *glyphTextLen = 3;
     return PR_TRUE;
   }  
-  else if ( ( (len >= 3) && (!PL_strncasecmp(line, ":-(", 3)) ) ||
-            ( (len >= 2) && (!PL_strncasecmp(line, ":(", 2)) ) )
+  else if ( ItMatches(line, ":-(") || ItMatches(line, ":(") ) 
   {
     *outputHTML = PL_strdup("<img SRC=\"resource:/res/mailnews/messenger/frown.gif\" height=17 width=17 align=ABSCENTER>");
     if (!(*outputHTML))
@@ -373,7 +388,7 @@ GlyphHit(const char *line, char **outputHTML, PRInt32 *glyphTextLen)
     *glyphTextLen = 3;
     return PR_TRUE;
   }
-  else if ( (len >= 3) && (!PL_strncasecmp(line, ";-)", 3)) )
+  else if (ItMatches(line, ";-)"))
   {
     *outputHTML = PL_strdup("<img SRC=\"resource:/res/mailnews/messenger/wink.gif\" height=17 width=17 align=ABSCENTER>");
     if (!(*outputHTML))
@@ -381,7 +396,7 @@ GlyphHit(const char *line, char **outputHTML, PRInt32 *glyphTextLen)
     *glyphTextLen = 3;
     return PR_TRUE;
   }
-  else if ( (len >= 3) && (!PL_strncasecmp(line, ":-P", 3)) )
+  else if (ItMatches(line, ";-P"))
   {
     *outputHTML = PL_strdup("<img SRC=\"resource:/res/mailnews/messenger/sick.gif\" height=17 width=17 align=ABSCENTER>");
     if (!(*outputHTML))
