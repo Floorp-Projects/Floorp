@@ -562,9 +562,11 @@ nsLog::Printf(const char* format, ...)
     
     va_list args;
     va_start(args, format);
-    const char* msg = PR_vsmprintf(format, args);
+    char* msg = PR_vsmprintf(format, args);
     va_end(args);
-    return mSink->Print(this, msg);
+    nsresult rv = mSink->Print(this, msg);
+    PR_smprintf_free(msg);
+    return rv;
 }
 
 NS_IMETHODIMP
