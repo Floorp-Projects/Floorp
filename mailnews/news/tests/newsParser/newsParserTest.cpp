@@ -102,7 +102,8 @@ nsresult newsTestDriver::RunDriver()
         
         newMsgHdr->Release();
         newMsgHdr = nsnull;
-
+       
+        m_newsDB->Commit(kSmallCommit);
         m_newsDB->Close(PR_TRUE);
     }
 
