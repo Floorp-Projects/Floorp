@@ -159,6 +159,8 @@ struct nsKeyConverter nsKeycodes[] = {
   { NS_VK_DECIMAL,    GDK_KP_Decimal },
   { NS_VK_DIVIDE,     GDK_KP_Divide },
   { NS_VK_RETURN,     GDK_KP_Enter },
+  { NS_VK_NUM_LOCK,   GDK_Num_Lock },
+  { NS_VK_SCROLL_LOCK,GDK_Scroll_Lock },
 
   { NS_VK_COMMA,      GDK_comma },
   { NS_VK_PERIOD,     GDK_period },
