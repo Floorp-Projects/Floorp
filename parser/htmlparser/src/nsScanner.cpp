@@ -1117,6 +1117,8 @@ nsresult nsScanner::ReadUntil(nsAString& aString,
   }
   
   while (current != mEndPosition) {
+    theChar = *current;
+
     // Filter out completely wrong characters
     // Check if all bits are in the required area
     if(!(theChar & aEndCondition.mFilter)) {
@@ -1132,7 +1134,6 @@ nsresult nsScanner::ReadUntil(nsAString& aString,
     }
     
     ++current;
-    theChar = *current;
   }
 
   // If we are here, we didn't find any terminator in the string and
