@@ -114,6 +114,11 @@ class CToken {
      */
     virtual void GetSource(nsString& anOutputString);
 
+    /** @update	harishd 03/23/00
+     *  @return  reference to string containing string value
+     */
+    virtual void AppendSource(nsString& anOutputString);
+
     /**
      * Setter method that changes the string value of this token
      * @update	gess5/11/98
