@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.41 2002/12/13 19:02:13 relyea%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.42 2003/01/09 18:15:10 relyea%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -61,7 +61,16 @@
 /* forward declaration */
 NSSLOWCERTCertificate *
 nsslowcert_FindCertByDERCertNoLocking(NSSLOWCERTCertDBHandle *handle, SECItem *derCert);
-
+static SECStatus
+nsslowcert_UpdateSMimeProfile(NSSLOWCERTCertDBHandle *dbhandle, 
+	char *emailAddr, SECItem *derSubject, SECItem *emailProfile, 
+							SECItem *profileTime);
+static SECStatus
+nsslowcert_UpdatePermCert(NSSLOWCERTCertDBHandle *dbhandle,
+    NSSLOWCERTCertificate *cert, char *nickname, NSSLOWCERTCertTrust *trust);
+static SECStatus
+nsslowcert_UpdateCrl(NSSLOWCERTCertDBHandle *handle, SECItem *derCrl, 
+			SECItem *crlKey, char *url, PRBool isKRL);
 
 static NSSLOWCERTCertificate *certListHead = NULL;
 static NSSLOWCERTTrust *trustListHead = NULL;
@@ -2367,7 +2376,7 @@ DecodeDBSubjectEntry(certDBEntrySubject *entry, SECItem *dbentry,
     if ((eaddrlen == 0) && (tmpbuf+1 < end)) {
 	/* read in the additional email addresses */
 	entry->nemailAddrs = tmpbuf[0] << 8 | tmpbuf[1];
-	tmpbuf = tmpbuf + 2;
+	tmpbuf += 2;
 	entry->emailAddrs = (char **)
 		PORT_ArenaAlloc(arena, entry->nemailAddrs * sizeof(char *));
 	if (entry->emailAddrs == NULL) {
@@ -3493,7 +3502,7 @@ UpdateV7DB(NSSLOWCERTCertDBHandle *handle, DB *updatedb)
 	    cert = nsslowcert_DecodeDERCertificate(&certEntry.derCert, 
 						certEntry.nickname);
 	    if (cert) {
-		nsslowcert_AddPermCert(handle, cert, certEntry.nickname,
+		nsslowcert_UpdatePermCert(handle, cert, certEntry.nickname,
 					 		&certEntry.trust);
 		nsslowcert_DestroyCertificate(cert);
 	    }
@@ -3518,7 +3527,7 @@ UpdateV7DB(NSSLOWCERTCertDBHandle *handle, DB *updatedb)
 	    if (rv != SECSuccess) {
 		break;
 	    }
-	    nsslowcert_AddCrl(handle, &crlEntry.derCrl, &dbKey, 
+	    nsslowcert_UpdateCrl(handle, &crlEntry.derCrl, &dbKey, 
 						crlEntry.url, isKRL);
 	    /* free data allocated by the decode */
 	    PORT_FreeArena(crlEntry.common.arena, PR_FALSE);
@@ -3532,7 +3541,7 @@ UpdateV7DB(NSSLOWCERTCertDBHandle *handle, DB *updatedb)
 	    smimeEntry.common.arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
 	    rv = DecodeDBSMimeEntry(&smimeEntry,&dbEntry,(char *)dbKey.data);
 	    /* decode entry */
-	    nsslowcert_SaveSMimeProfile(handle, smimeEntry.emailAddr,
+	    nsslowcert_UpdateSMimeProfile(handle, smimeEntry.emailAddr,
 		&smimeEntry.subjectName, &smimeEntry.smimeOptions,
 						 &smimeEntry.optionsDate);
 	    PORT_FreeArena(smimeEntry.common.arena, PR_FALSE);
@@ -4497,8 +4506,8 @@ done:
 }
 
 
-SECStatus
-nsslowcert_AddPermCert(NSSLOWCERTCertDBHandle *dbhandle,
+static SECStatus
+nsslowcert_UpdatePermCert(NSSLOWCERTCertDBHandle *dbhandle,
     NSSLOWCERTCertificate *cert, char *nickname, NSSLOWCERTCertTrust *trust)
 {
     char *oldnn;
@@ -4506,13 +4515,6 @@ nsslowcert_AddPermCert(NSSLOWCERTCertDBHandle *dbhandle,
     PRBool conflict;
     SECStatus ret;
     SECStatus rv;
-
-    nsslowcert_LockDB(dbhandle);
-    rv = db_BeginTransaction(dbhandle->permCertDB);
-    if (rv != SECSuccess) {
-	nsslowcert_UnlockDB(dbhandle);
-	return SECFailure;
-    }
     
     PORT_Assert(!cert->dbEntry);
 
@@ -4543,6 +4545,28 @@ nsslowcert_AddPermCert(NSSLOWCERTCertDBHandle *dbhandle,
     
     ret = SECSuccess;
 done:
+    return(ret);
+}
+
+SECStatus
+nsslowcert_AddPermCert(NSSLOWCERTCertDBHandle *dbhandle,
+    NSSLOWCERTCertificate *cert, char *nickname, NSSLOWCERTCertTrust *trust)
+{
+    char *oldnn;
+    certDBEntryCert *entry;
+    PRBool conflict;
+    SECStatus ret;
+    SECStatus rv;
+
+    nsslowcert_LockDB(dbhandle);
+    rv = db_BeginTransaction(dbhandle->permCertDB);
+    if (rv != SECSuccess) {
+	nsslowcert_UnlockDB(dbhandle);
+	return SECFailure;
+    }
+
+    ret = nsslowcert_UpdatePermCert(dbhandle, cert, nickname, trust);
+    
     db_FinishTransaction(dbhandle->permCertDB, ret != SECSuccess);
     nsslowcert_UnlockDB(dbhandle);
     return(ret);
@@ -5066,18 +5090,14 @@ loser:
 /*
  * replace the existing URL in the data base with a new one
  */
-SECStatus
-nsslowcert_AddCrl(NSSLOWCERTCertDBHandle *handle, SECItem *derCrl, 
+static SECStatus
+nsslowcert_UpdateCrl(NSSLOWCERTCertDBHandle *handle, SECItem *derCrl, 
 			SECItem *crlKey, char *url, PRBool isKRL)
 {
     SECStatus rv = SECFailure;
     certDBEntryRevocation *entry = NULL;
     certDBEntryType crlType = isKRL ? certDBEntryTypeKeyRevocation  
 					: certDBEntryTypeRevocation;
-    rv = db_BeginTransaction(handle->permCertDB);
-    if (rv != SECSuccess) {
-	return SECFailure;
-    }
     DeleteDBCrlEntry(handle, crlKey, crlType);
 
     /* Write the new entry into the data base */
@@ -5091,6 +5111,21 @@ done:
     if (entry) {
 	DestroyDBEntry((certDBEntry *)entry);
     }
+    return rv;
+}
+
+SECStatus
+nsslowcert_AddCrl(NSSLOWCERTCertDBHandle *handle, SECItem *derCrl, 
+			SECItem *crlKey, char *url, PRBool isKRL)
+{
+    SECStatus rv;
+
+    rv = db_BeginTransaction(handle->permCertDB);
+    if (rv != SECSuccess) {
+	return SECFailure;
+    }
+    rv = nsslowcert_UpdateCrl(handle, derCrl, crlKey, url, isKRL);
+
     db_FinishTransaction(handle->permCertDB, rv != SECSuccess);
     return rv;
 }
@@ -5132,17 +5167,14 @@ nsslowcert_hasTrust(NSSLOWCERTCertTrust *trust)
  * email profile from an S/MIME message should be saved.  It can deal with
  * the case when there is no profile.
  */
-SECStatus
-nsslowcert_SaveSMimeProfile(NSSLOWCERTCertDBHandle *dbhandle, char *emailAddr, 
-	SECItem *derSubject, SECItem *emailProfile, SECItem *profileTime)
+static SECStatus
+nsslowcert_UpdateSMimeProfile(NSSLOWCERTCertDBHandle *dbhandle, 
+	char *emailAddr, SECItem *derSubject, SECItem *emailProfile, 
+							SECItem *profileTime)
 {
     certDBEntrySMime *entry = NULL;
     SECStatus rv = SECFailure;;
 
-    rv = db_BeginTransaction(dbhandle->permCertDB);
-    if (rv != SECSuccess) {
-	return SECFailure;
-    }
 
     /* find our existing entry */
     entry = nsslowcert_ReadDBSMimeEntry(dbhandle, emailAddr);
@@ -5192,6 +5224,24 @@ loser:
     if ( entry ) {
 	DestroyDBEntry((certDBEntry *)entry);
     }
+    return(rv);
+}
+
+SECStatus
+nsslowcert_SaveSMimeProfile(NSSLOWCERTCertDBHandle *dbhandle, char *emailAddr, 
+	SECItem *derSubject, SECItem *emailProfile, SECItem *profileTime)
+{
+    certDBEntrySMime *entry = NULL;
+    SECStatus rv = SECFailure;;
+
+    rv = db_BeginTransaction(dbhandle->permCertDB);
+    if (rv != SECSuccess) {
+	return SECFailure;
+    }
+
+    rv = nsslowcert_UpdateSMimeProfile(dbhandle, emailAddr, 
+	 derSubject, emailProfile, profileTime);
+    
     db_FinishTransaction(dbhandle->permCertDB, rv != SECSuccess);
     return(rv);
 }

@@ -729,6 +729,11 @@ PK11_WaitForTokenEvent;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.7.1 { 	# NSS 3.7.1 release
+PK11_TokenRefresh;
+;+    local:
+;+       *;
+;+};
 ;+NSS_3.8 { 	# NSS 3.8 release
 ;+    global:
 HASH_GetHashObjectByOidTag;

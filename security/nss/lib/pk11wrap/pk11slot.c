@@ -1862,6 +1862,45 @@ PK11_InitToken(PK11SlotInfo *slot, PRBool loadCerts)
     return SECSuccess;
 }
 
+/*
+ * initialize a new token
+ * unlike initialize slot, this can be called multiple times in the lifetime
+ * of NSS. It reads the information associated with a card or token,
+ * that is not going to change unless the card or token changes.
+ */
+SECStatus
+PK11_TokenRefresh(PK11SlotInfo *slot)
+{
+    CK_TOKEN_INFO tokenInfo;
+    CK_RV crv;
+    SECStatus rv;
+
+    /* set the slot flags to the current token values */
+    if (!slot->isThreadSafe) PK11_EnterSlotMonitor(slot);
+    crv = PK11_GETTAB(slot)->C_GetTokenInfo(slot->slotID,&tokenInfo);
+    if (!slot->isThreadSafe) PK11_ExitSlotMonitor(slot);
+    if (crv != CKR_OK) {
+	PORT_SetError(PK11_MapError(crv));
+	return SECFailure;
+    }
+
+    slot->flags = tokenInfo.flags;
+    slot->needLogin = ((tokenInfo.flags & CKF_LOGIN_REQUIRED) ? 
+							PR_TRUE : PR_FALSE);
+    slot->readOnly = ((tokenInfo.flags & CKF_WRITE_PROTECTED) ? 
+							PR_TRUE : PR_FALSE);
+    slot->hasRandom = ((tokenInfo.flags & CKF_RNG) ? PR_TRUE : PR_FALSE);
+    slot->protectedAuthPath =
+    		((tokenInfo.flags & CKF_PROTECTED_AUTHENTICATION_PATH) 
+	 						? PR_TRUE : PR_FALSE);
+    /* on some platforms Active Card incorrectly sets the 
+     * CKF_PROTECTED_AUTHENTICATION_PATH bit when it doesn't mean to. */
+    if (slot->isActiveCard) {
+	slot->protectedAuthPath = PR_FALSE;
+    }
+    return SECSuccess;
+}
+
 static PRBool
 pk11_isRootSlot(PK11SlotInfo *slot) 
 {
@@ -4674,7 +4713,7 @@ PK11_WaitForTokenEvent(PK11SlotInfo *slot, PK11TokenEvent event,
 	if (waitForRemoval && series != PK11_GetSlotSeries(slot)) {
 	    return PK11TokenChanged;
 	}
-	if (timeout == PR_INTERVAL_NO_WAIT) {
+	if (timeout != PR_INTERVAL_NO_WAIT) {
 	    return waitForRemoval ? PK11TokenPresent : PK11TokenRemoved;
 	}
 	if (timeout != PR_INTERVAL_NO_TIMEOUT ) {
