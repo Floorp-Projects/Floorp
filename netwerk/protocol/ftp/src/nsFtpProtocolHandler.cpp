@@ -18,6 +18,19 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *
+ *
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date         Modified by     Description of modification
+ * 03/27/2000   IBM Corp.       Added PR_CALLBACK for Optlink
+ *                               use in OS2
  */
 
 #include "nsFtpProtocolHandler.h"
@@ -243,7 +256,7 @@ nsFtpProtocolHandler::InsertConn(const char *aKey, nsConnectionCacheObj *aConn) 
 }
 
 // cleans up a connection list entry
-PRBool CleanupConnEntry(nsHashKey *aKey, void *aData, void *closure) {
+PRBool PR_CALLBACK CleanupConnEntry(nsHashKey *aKey, void *aData, void *closure) {
     delete (nsConnectionCacheObj*)aData;
     return PR_TRUE;
 }

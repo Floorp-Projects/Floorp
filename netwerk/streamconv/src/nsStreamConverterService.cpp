@@ -18,6 +18,19 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *
+ *
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date         Modified by     Description of modification
+ * 03/27/2000   IBM Corp.       Added PR_CALLBACK for Optlink
+ *                               use in OS2
  */
 
 #include "nsStreamConverterService.h"
@@ -49,7 +62,7 @@ nsStreamConverterService::nsStreamConverterService() {
 }
 
 // Delete all the entries in the adjacency list
-PRBool DeleteAdjacencyEntry(nsHashKey *aKey, void *aData, void* closure) {
+PRBool PR_CALLBACK DeleteAdjacencyEntry(nsHashKey *aKey, void *aData, void* closure) {
     SCTableData *entry = (SCTableData*)aData;
     NS_ASSERTION(entry->key && entry->keyString && entry->data, "malformed adjacency list entry");
     delete entry->key;
@@ -278,7 +291,7 @@ nsStreamConverterService::ParseFromTo(const char *aProgID, nsCString &aFromRes, 
 // nsHashtable enumerator functions.
 
 // Initializes the BFS state table.
-PRBool InitBFSTable(nsHashKey *aKey, void *aData, void* closure) {
+PRBool PR_CALLBACK InitBFSTable(nsHashKey *aKey, void *aData, void* closure) {
     nsHashtable *BFSTable = (nsHashtable*)closure;
     if (!BFSTable) return PR_FALSE;
 
@@ -303,7 +316,7 @@ PRBool InitBFSTable(nsHashKey *aKey, void *aData, void* closure) {
 };
 
 // cleans up the BFS state table
-PRBool DeleteBFSEntry(nsHashKey *aKey, void *aData, void *closure) {
+PRBool PR_CALLBACK DeleteBFSEntry(nsHashKey *aKey, void *aData, void *closure) {
     SCTableData *data = (SCTableData*)aData;
     delete data->key;
     delete data->keyString;
