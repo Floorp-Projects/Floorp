@@ -3026,7 +3026,6 @@ nsWebShell::OnOverLink(nsIContent* aContent,
 NS_IMETHODIMP
 nsWebShell:: GetLinkState(const PRUnichar* aURLSpec, nsLinkState& aState)
 {
-  nsString URLSpec(aURLSpec);
   aState = eLinkState_Unvisited;
   
   nsresult rv;
