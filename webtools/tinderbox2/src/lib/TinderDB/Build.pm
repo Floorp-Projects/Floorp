@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.55 $ 
-# $Date: 2002/05/10 21:46:25 $ 
+# $Revision: 1.56 $ 
+# $Date: 2003/01/19 13:40:06 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -172,7 +172,7 @@ if (defined ($TinderConfig::DISPLAY_BUILD_ERRORS)) {
 
 $NUM_OF_AVERAGE = 10;
 
-# We 'have a' notice so that we can put stars in our column.
+# We 'have a' notice so that we can put notices in the column to which they apply.
  
 $NOTICE= TinderDB::Notice->new();
 
@@ -562,6 +562,41 @@ sub event_times_vec {
   return @out;
 }
 
+# return a list of all the start times.
+
+sub start_times_vec {
+  my ($self, $start_time, $end_time, $tree) = (@_);
+
+  my @times;
+
+  my @build_names = build_names($tree);
+  foreach $buildname (@build_names) {
+      my ($num_recs) = $#{ $DATABASE{$tree}{$buildname}{'recs'} };
+      foreach $i (0 .. $num_recs) {
+
+          my $rec = $DATABASE{$tree}{$buildname}{'recs'}[$i];
+          push @times, $rec->{'starttime'};
+
+      }
+  }
+
+  # sort numerically descending
+  @times = sort {$b <=> $a} @times;
+
+  my @out;
+  my $old_time = 0;
+  foreach $time (@times) {
+      ($time == $old_time) && next;
+      ($time <= $start_time) || next;
+      ($time <= $end_time) && last;
+
+      $old_time = $time;
+      push @out, $time;
+  }
+
+  return @out;
+}
+
 
 
 # Print out the Database in a visually useful form so that I can
@@ -583,10 +618,12 @@ sub debug_database {
           my $endtime = localtime($rec->{'endtime'});
           my $runtime = main::round($rec->{'runtime'}/$main::SECONDS_PER_MINUTE);
           my $deadtime = main::round($rec->{'deadtime'}/$main::SECONDS_PER_MINUTE);
+          my $previousbuildtime = localtime($rec->{'previousbuildtime'});
           my $status = $rec->{'status'};
 
           print "\tendtime: $endtime\n";
           print "\tstarttime: $starttime\n";
+          print "\tpreviousbuildtime: $previousbuildtime\n";
           print "\t\t\t\truntime: $runtime deadtime: $deadtime status: $status\n";
       }
   }
@@ -599,7 +636,9 @@ sub debug_database {
 sub status_table_legend {
   my ($out)='';
 
-  # print all the possible links which can be included in a build.
+  # print user defined legend, this is typicaly all the possible links
+  # which can be included in a build log.
+
   my $print_legend = BuildStatus::TinderboxPrintLegend();
 
 $out .=<<EOF;
@@ -666,6 +705,8 @@ EOF
   return ($out);
 }
 
+# return the legend for the Summaries pages which are designed for
+# text browsers.
 
 sub hdml_legend {
   my ($out);
@@ -757,8 +798,8 @@ sub status_table_header {
     
     if ($avg_deadtime) {
         my $min =  main::round($avg_deadtime/$main::SECONDS_PER_MINUTE);
-      $txt .= "avg_deadtime (minutes): &nbsp;$min<br>";
-      $num_lines++;
+        $txt .= "avg_deadtime (minutes): &nbsp;$min<br>";
+        $num_lines++;
     }
     
     $num_lines++;
@@ -780,10 +821,13 @@ sub status_table_header {
         # If we have waited a little time the estimate is:
         # $avg_buildtime + $avg_deadtime
 
-       my ($estimated_dead_remaining) = 
-          main::max( ($avg_deadtime - 
-                      ($main::TIME - $current_endtime)), 
-                     0);
+          my ($estimated_dead_remaining) = 0;
+          if ( ($avg_deadtime) && ($main::TIME - $current_endtime)) {
+              $estimated_dead_remaining = 
+                  main::max( ($avg_deadtime - 
+                              ($main::TIME - $current_endtime)), 
+                             0);
+          }
 
         $estimated_remaining = ($estimated_dead_remaining + $avg_buildtime);
       }
@@ -820,25 +864,28 @@ sub status_table_header {
     my $title = "Build Status Buildname: $buildname";
 
     my ($bg) = BuildStatus::status2html_colors($latest_status);
-    my ($background) = BuildStatus::status2header_background_gif(
+    my ($background) = '';
+    my ($background_gif) = BuildStatus::status2header_background_gif(
                                      $latest_status);
-    if ( ($FileStructure::GIF_URL) && ($background) ) {
-        $background = "background='$FileStructure::GIF_URL/$background'";
+    if ( ($FileStructure::GIF_URL) && ($background_gif) ) {
+        $background = "background='$FileStructure::GIF_URL/$background_gif'";
+
+        # the flames gif which is popular at netscape is causing me
+        # trouble.  when I use it, I have trouble reading the column
+        # heading text in the cell.  I may have to find a different
+        # gif or clever font setting to make this legable.
+
         $buildname = (
-                      "<font color=white>".
+#                      "<font color=white>".
                       $buildname.
-                      "</font>"
-                      );
+#                      "</font>".
+                      "");
     }
 
     my $link = HTMLPopUp::Link(
                                "windowtxt"=>$txt,
                                "windowtitle" => $title,
-                               "linktxt"=> (
-                                            $fontcolor_end.
-                                            $buildname.
-                                            $fontcolor_end
-                                            ),
+                               "linktxt"=> $buildname,
                                "windowheight" => (25 * $num_lines)+100,
                                "href"=>"",
                          );
@@ -911,7 +958,7 @@ sub apply_db_updates {
 
    }  
 
-    if ( defined($DATABASE{$tree}{$build}{'recs'}) ) {
+    if ( defined($previous_rec->{'starttime'}) ) {
       
       my ($safe_separation) = ($TinderDB::TABLE_SPACING * 
                                $main::SECONDS_PER_MINUTE);
@@ -924,23 +971,31 @@ sub apply_db_updates {
          
       my ($different_builds) = ($record->{'starttime'} !=
                                 $previous_rec->{'starttime'});
-         
+
       # Keep the spacing between builds greater then our HTML grid
       # spacing.  There can be very frequent updates for any build
       # but different builds must be spaced apart.
-      
+
       # If updates start too fast, remove older build from database.
 
       if ($different_builds) {
           if ($separation < $safe_separation) {
-              
-              print LOG (
-                         "Not enough separation between builds. ".
-                         "separation: $separation tree: $tree build: $build \n".
-                         "");
-              
+
+              # I would like the admins to know about this condition,
+              # but if they can not fix it for political reasons then
+              # we do not want to clutter up the log with this warning.
+
+#              print main::LOG (
+#                               "Not enough separation between builds. ".
+#                               "safe_separation: $safe_separation ".
+#                               "separation: $separation ".
+#                               "tree: $tree ".
+#                               "build: $build \n".
+#                               "");
+
               # Remove old entry
               shift @{ $DATABASE{$tree}{$build}{'recs'} };
+              $previous_rec = $DATABASE{$tree}{$build}{'recs'}[0];
           }
 
           # Some build machines are buggy and new builds appear to
@@ -960,7 +1015,7 @@ sub apply_db_updates {
     # want two entries for the same build. Must throw out either
     # update or record in the database.
 
-    if ( defined($DATABASE{$tree}{$build}{'recs'}) &&
+    if ( defined($previous_rec->{'starttime'}) &&
          ($record->{'starttime'} == $previous_rec->{'starttime'})
          ) {
         
@@ -972,7 +1027,6 @@ sub apply_db_updates {
         # Remove old entry if it is not final.
 
         shift @{ $DATABASE{$tree}{$build}{'recs'} };
-        $previous_rec = $DATABASE{$tree}{$build}{'recs'}[0];
     } 
 
     # Add the record to the datastructure.
@@ -1000,16 +1054,22 @@ sub apply_db_updates {
                               $record->{'starttime'} 
                               );
 
-      $record->{'deadtime'} = ( 
-                                $record->{'starttime'} - 
-                                $previous_rec->{'endtime'} 
-                                );
+      if ($previous_rec->{'endtime'}) {
+          $record->{'deadtime'} = ( 
+                                    $record->{'starttime'} - 
+                                    $previous_rec->{'endtime'} 
+                                    );
+      }
 
       # fix for mozilla.org issues
 
-      $record->{'deadtime'} = main::max( 0, $record->{'deadtime'} );
+      if ($record->{'deadtime'}) {
+          $record->{'deadtime'} = main::max( 0, $record->{'deadtime'} );
+      }
 
-      $record->{'endtime'} = $record->{'timenow'};
+      if (!defined($record->{'endtime'})) {
+          $record->{'endtime'} = $record->{'timenow'};
+      }
 
       # construct text to be displayed to users interested in this cell
 
@@ -1212,7 +1272,9 @@ sub status_table_row {
     my ($links) = '';
     my ($title) = "Build Info Buildname: $buildname";
 
-    $links.=  "\t\t\t".$text_browser_color_string."\n";
+    if ($text_browser_color_string) {
+        $links.=  "\t\t\t".$text_browser_color_string."\n";
+    }
 
     # Build Log Link
 
@@ -1246,7 +1308,7 @@ sub status_table_row {
     # Binary file Link
     
     if ($current_rec->{'binaryname'}) {
-      $links.= "\t\t\t".HTML::Link(
+      $links.= "\t\t\t".HTMLPopup::Link(
                                  "linktxt"=>"B",
                                  "href"=>$current_rec->{'binaryname'},
                                  "windowtxt"=>$current_rec->{'info'}, 
@@ -1310,19 +1372,19 @@ sub status_table_row {
                    "");
     }
 
-
-     $links .= (
-               "\t\t\t". 
-               $NOTICE->Notice_Link(
-                                    $current_rec->{'starttime'},
-                                    $tree,
-                                    $buildname,
-                                    ).
-               "\n".
-               "");
-
+    # put link to view Notices
+    my $notice = $NOTICE->Notice_Link(
+                                      $current_rec->{'starttime'},
+                                      $tree,
+                                      $buildname,
+                                      );
+    if ($notice) {
+        $links .= "\t\t\t$notice\n";
+    }
     
-    $links.=  "\t\t\t".$text_browser_color_string."\n";
+    if ($text_browser_color_string) {
+        $links.=  "\t\t\t".$text_browser_color_string."\n";
+    }
 
     push @outrow, ( "\t<!-- cell for build: $buildname, tree: $tree -->\n".
                     "\t\t<td align=center $cell_options><tt>\n".
