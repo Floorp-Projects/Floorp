@@ -2416,7 +2416,7 @@ JSValue RegExp_exec(Context *cx, const JSValue& thisValue, JSValue *argv, uint32
         REState *regexp_result = REExecute(parseResult, str->begin(), str->length());
         if (regexp_result) {
             JSArrayInstance *resultArray = (JSArrayInstance *)Array_Type->newInstance(cx);
-            String *matchStr = new String(str->substr(regexp_result->endIndex, regexp_result->length));
+            String *matchStr = new String(str->substr(regexp_result->startIndex, regexp_result->endIndex - regexp_result->startIndex));
             resultArray->setProperty(cx, *numberToString(0), NULL, JSValue(matchStr));
             String *parenStr = &cx->Empty_StringAtom;
             for (uint32 i = 0; i < regexp_result->n; i++) {
@@ -2430,17 +2430,16 @@ JSValue RegExp_exec(Context *cx, const JSValue& thisValue, JSValue *argv, uint32
 
             }
             // XXX SpiderMonkey also adds 'index' and 'input' properties to the result
-            resultArray->setProperty(cx, cx->Index_StringAtom, CURRENT_ATTR, JSValue((float64)(regexp_result->endIndex)));
+            resultArray->setProperty(cx, cx->Index_StringAtom, CURRENT_ATTR, JSValue((float64)(regexp_result->startIndex)));
             resultArray->setProperty(cx, cx->Input_StringAtom, CURRENT_ATTR, JSValue(str));
             result = JSValue(resultArray);
 
             // XXX Set up the SpiderMonkey 'RegExp statics'
             RegExp_Type->setProperty(cx, cx->LastMatch_StringAtom, CURRENT_ATTR, JSValue(matchStr));
             RegExp_Type->setProperty(cx, cx->LastParen_StringAtom, CURRENT_ATTR, JSValue(parenStr));            
-            String *contextStr = new String(str->substr(0, regexp_result->endIndex));
+            String *contextStr = new String(str->substr(0, regexp_result->startIndex));
             RegExp_Type->setProperty(cx, cx->LeftContext_StringAtom, CURRENT_ATTR, JSValue(contextStr));
-            uint32 matchEnd = regexp_result->endIndex + regexp_result->length;
-            contextStr = new String(str->substr(matchEnd, str->length() - matchEnd));
+            contextStr = new String(str->substr(regexp_result->endIndex, str->length() - regexp_result->endIndex));
             RegExp_Type->setProperty(cx, cx->RightContext_StringAtom, CURRENT_ATTR, JSValue(contextStr));
         }
         thisObj->setProperty(cx, cx->LastIndex_StringAtom, CURRENT_ATTR, JSValue((float64)(parseResult->lastIndex)));

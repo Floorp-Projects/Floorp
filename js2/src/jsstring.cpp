@@ -126,7 +126,7 @@ static JSValue String_search(Context *cx, const JSValue& thisValue, JSValue *arg
     parseResult->lastIndex = lastIndex;
 
     if (regexp_result)
-        return JSValue((float64)(regexp_result->endIndex));
+        return JSValue((float64)(regexp_result->startIndex));
     else
         return JSValue(-1.0);
 
@@ -159,7 +159,7 @@ static JSValue String_match(Context *cx, const JSValue& thisValue, JSValue *argv
                 break;
             if (parseResult->lastIndex == index)
                 parseResult->lastIndex++;
-            String *matchStr = new String(S.string->substr(regexp_result->endIndex, regexp_result->length));
+            String *matchStr = new String(S.string->substr(regexp_result->startIndex, regexp_result->endIndex - regexp_result->startIndex));
             A->setProperty(cx, *numberToString(index++), NULL, JSValue(matchStr));
         }
         regexp.object->setProperty(cx, cx->LastIndex_StringAtom, NULL, JSValue((float64)(parseResult->lastIndex)));
@@ -175,14 +175,11 @@ static const String interpretDollar(Context *cx, const String *replaceStr, uint3
     case '$':
 	return cx->Dollar_StringAtom;
     case '&':
-	return searchStr->substr(regexp_result->endIndex, regexp_result->length);
+	return searchStr->substr(regexp_result->startIndex, regexp_result->endIndex - regexp_result->startIndex);
     case '`':
-	return searchStr->substr(0, regexp_result->endIndex);
+	return searchStr->substr(0, regexp_result->startIndex);
     case '\'':
-	{
-	    uint32 matchEndIndex = regexp_result->endIndex + regexp_result->length;
-	    return searchStr->substr(matchEndIndex, searchStr->length() - matchEndIndex);
-	}
+	return searchStr->substr(regexp_result->endIndex, searchStr->length() - regexp_result->endIndex);
     case '0':
     case '1':
     case '2':
@@ -253,12 +250,12 @@ static JSValue String_replace(Context *cx, const JSValue& thisValue, JSValue *ar
 			break;
 		    }
 		}
-		newString += S.string->substr(index, regexp_result->endIndex - index);
+		newString += S.string->substr(index, regexp_result->startIndex - index);
 		newString += insertString;
 	    }
 	    else
 		break;
-	    index = regexp_result->endIndex + regexp_result->length;
+	    index = regexp_result->endIndex;
 	    if ((parseResult->flags & GLOBAL) == 0)
 		break;
 	}
@@ -268,10 +265,10 @@ static JSValue String_replace(Context *cx, const JSValue& thisValue, JSValue *ar
     else {
 	const String *searchStr = searchValue.toString(cx).string;
 	REState regexp_result;
-	regexp_result.endIndex = S.string->find(*searchStr, 0);
-	if (regexp_result.endIndex == String::npos)
+	regexp_result.startIndex = S.string->find(*searchStr, 0);
+	if (regexp_result.startIndex == String::npos)
 	    return JSValue(S.string);
-	regexp_result.length = searchStr->length();
+	regexp_result.endIndex = regexp_result.startIndex + searchStr->length();
 	regexp_result.n = 0;
 	String insertString;
 	String newString;
@@ -289,9 +286,9 @@ static JSValue String_replace(Context *cx, const JSValue& thisValue, JSValue *ar
 		break;
 	    }
 	}
-	newString += S.string->substr(0, regexp_result.endIndex);
+	newString += S.string->substr(0, regexp_result.startIndex);
 	newString += insertString;
-	uint32 index = regexp_result.endIndex + regexp_result.length;
+	uint32 index = regexp_result.endIndex;
 	newString += S.string->substr(index, S.string->length() - index);
 	return JSValue(new String(newString));
     }
@@ -330,7 +327,7 @@ static void regexpSplitMatch(const String *S, uint32 q, REParseState *RE, MatchR
     REState *regexp_result = REMatch(RE, S->begin() + q, S->length() - q);
 
     if (regexp_result) {
-        result.endIndex = regexp_result->endIndex + q;
+        result.endIndex = regexp_result->startIndex + q;
         result.failure = false;
         result.capturesCount = regexp_result->n;
         if (regexp_result->n) {

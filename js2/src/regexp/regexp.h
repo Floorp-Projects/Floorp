@@ -88,8 +88,8 @@ typedef struct RECapture {
 } RECapture;
 
 typedef struct REState {
+    REint32 startIndex;           
     REint32 endIndex;
-    REint32 length;             /* the length of a succesful match */
     REint32 n;                  /* set to (n - 1), i.e. for /((a)b)/, this field is 1 */
     RECapture parens[1];        /* first of 'n' captures, allocated at end of this struct */
 } REState;
