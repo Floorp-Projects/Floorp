@@ -3429,7 +3429,31 @@ HTMLContentSink::ProcessStyleLink(nsIHTMLContent* aElement,
     nsAutoString  params;
     SplitMimeType(aType, mimeType, params);
 
-    if ((0 == mimeType.Length()) || mimeType.EqualsIgnoreCase("text/css")) {
+		nsDTDMode mode;
+		mHTMLDocument->GetDTDMode(mode);
+
+		PRBool isStyleSheet = PR_FALSE;			// see bug 18817
+		if (eDTDMode_NoQuirks == mode) {
+			if (mimeType.EqualsIgnoreCase("text/css")) {
+				isStyleSheet = PR_TRUE;					// strict mode + good mime type
+			}
+			else {
+				if (0 == mimeType.Length()) {
+					nsString extension;
+					aHref.Right(extension, 4);
+					if (extension == ".css") {
+						isStyleSheet = PR_TRUE;			// strict mode + no mime type + '.css' extension
+					}
+				}
+			}
+		}
+		else {
+			if (0 == mimeType.Length() || mimeType.EqualsIgnoreCase("text/css")) {
+				isStyleSheet = PR_TRUE;					// quirks mode + good mime type or no mime type at all
+			}
+		}
+		
+    if (isStyleSheet) {
       nsIURI* url = nsnull;
       {
         result = NS_NewURI(&url, aHref, mDocumentBaseURL);
