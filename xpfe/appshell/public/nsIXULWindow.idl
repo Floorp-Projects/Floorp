@@ -38,6 +38,11 @@ interface nsIXULWindow : nsISupports
 	readonly attribute nsIDocShell docShell;
 
 	/*
+	Indicates if this window is instrinsically sized.	
+	*/
+	attribute boolean intrinsicallySized;
+
+	/*
 	This returns the primary content shell.  
 	
 	Note that this is a docshell tree item and therefore can not be assured of
