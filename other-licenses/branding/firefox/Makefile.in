@@ -23,7 +23,7 @@ BROWSER_APP_FILES = \
 export::
 	$(NSINSTALL) -D $(DIST)/branding
 	cp $(addprefix $(srcdir)/, $(BROWSER_APP_FILES)) $(DIST)/branding/
-ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
 	cp $(srcdir)/document.png $(DIST)/branding/document.png
 endif
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
