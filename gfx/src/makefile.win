@@ -45,11 +45,16 @@ CPP_OBJS=.\$(OBJDIR)\nsColor.obj .\$(OBJDIR)\nsColorNames.obj \
     .\$(OBJDIR)\nsImageRequest.obj .\$(OBJDIR)\nsImageSystemServices.obj \
     .\$(OBJDIR)\nsImageURL.obj .\$(OBJDIR)\nsRect.obj \
     .\$(OBJDIR)\nsTransform2D.obj \
-	.\$(OBJDIR)\nsDeviceContext.obj	.\$(OBJDIR)\nsImageNetContextSync.obj
+    .\$(OBJDIR)\nsDeviceContext.obj \
+	.\$(OBJDIR)\nsImageNetContextSync.obj \
+	.\$(OBJDIR)\nsJSRenderingContext.obj
 
 LINCS=-I$(PUBLIC)\util -I$(PUBLIC)\img \
     -I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
-    -I$(PUBLIC)\netlib
+    -I$(PUBLIC)\netlib \
+	-I$(PUBLIC)\dom \
+	-I$(PUBLIC)\js \
+	$(NULL)
 
 LCFLAGS = \
         $(LCFLAGS) \

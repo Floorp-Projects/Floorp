@@ -135,7 +135,7 @@ nsresult nsGfxFactoryWin::CreateInstance(nsISupports *aOuter,
   else if (mClassID.Equals(kCRenderingContext)) {
     nsRenderingContextWin*  rc;
     NS_NEWXPCOM(rc, nsRenderingContextWin);
-    inst = (nsISupports *)rc;
+    inst = (nsISupports *)((nsIRenderingContext*)rc);
   }
   else if (mClassID.Equals(kCImage)) {
     nsImageWin* image;
