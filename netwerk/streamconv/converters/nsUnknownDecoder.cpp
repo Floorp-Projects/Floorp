@@ -442,6 +442,24 @@ void nsUnknownDecoder::SniffForImageMimeType(const char *buf, PRUint32 len)
     return;
   }
 
+  if (len >= 4 && ((unsigned char)buf[0]==0x8A &&
+                   (unsigned char)buf[1]==0x4D &&
+                   (unsigned char)buf[2]==0x4E &&
+                   (unsigned char)buf[3]==0x47))
+  { 
+    mContentType = NS_LITERAL_CSTRING("video/x-mng");
+    return;
+  }
+
+  if (len >= 4 && ((unsigned char)buf[0]==0x8B &&
+                   (unsigned char)buf[1]==0x4A &&
+                   (unsigned char)buf[2]==0x4E &&
+                   (unsigned char)buf[3]==0x47))
+  { 
+    mContentType = NS_LITERAL_CSTRING("image/x-jng");
+    return;
+  }
+
   /* none of the above?  I give up */
 }
 

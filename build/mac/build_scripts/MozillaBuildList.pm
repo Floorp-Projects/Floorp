@@ -625,6 +625,7 @@ sub BuildClientDist()
 
     #LIBIMAGE
     InstallFromManifest(":mozilla:modules:libimg:png:MANIFEST",                    "$distdirectory:libimg:");
+    InstallFromManifest(":mozilla:modules:libimg:mng:MANIFEST",                    "$distdirectory:libimg:");
 
     if ($main::options{useimg2}) {
 	    #GFX2
@@ -1366,12 +1367,15 @@ sub BuildImglibProjects()
     StartBuildModule("imglib");
 
     BuildProject(":mozilla:jpeg:macbuild:JPEG.xml",                          "JPEG$D.o");
+    MakeAlias(":mozilla:jpeg:macbuild:JPEG$D.o",                             ":mozilla:dist:libimg:");
     BuildProject(":mozilla:modules:libimg:macbuild:png.xml",                 "png$D.o");
+    MakeAlias(":mozilla:modules:libimg:macbuild:png$D.o",                    ":mozilla:dist:libimg:");
 
     # MNG
     if ($main::options{mng})
     {
-        BuildProject(":mozilla:modules:libimg:macbuild:mng.xml",                 "mng$D.o");
+        BuildProject(":mozilla:modules:libimg:macbuild:mng.xml",             "mng$D.o");
+        MakeAlias(":mozilla:modules:libimg:macbuild:mng$D.o",                ":mozilla:dist:libimg:");
     }
 
     EndBuildModule("imglib");
@@ -1405,8 +1409,7 @@ sub BuildImglib2Projects()
         # MNG
         if ($main::options{mng})
         {
-            #BuildProject(":mozilla:modules:libimg:macbuild:mng.mcp",                 "mng$D.o", 0, 0, 0);
-            #BuildOneProject(":mozilla:modules:libimg:macbuild:mngdecoder.mcp",          "mngdecoder$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
+            BuildOneProject(":mozilla:modules:libpr0n:macbuild:mngdecoder.xml",     "mngdecoder$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
         }
     }
     
