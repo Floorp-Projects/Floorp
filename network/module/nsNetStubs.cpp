@@ -924,6 +924,7 @@ WH_FileName (const char *NetName, XP_FileType type)
     }
 
     rv = fileMgr->GetFilePath( (aName ? aName : NetName), &path);
+    PR_FREEIF(aName);
     if (rv != NS_OK)
         return NULL;
 
@@ -949,10 +950,11 @@ WH_TempName(XP_FileType type, const char * prefix)
     }
 
     rv = fileMgr->GetCacheFileName(aName, &path);
+    PR_FREEIF(aName);
     if (rv != NS_OK)
         return NULL;
 
-    return PL_strdup(path);
+    return path;
 }
 
 PUBLIC int
@@ -1050,8 +1052,9 @@ NET_I_XP_FileOpen(const char * name, XP_FileType type, const XP_FilePerm perm)
     /* call OpenFile with nsNetFile syntax if necesary. */
     if ( (!name || !*name) 
          || type == xpCache ) {
-        nsString newName;
-        newName = xpFileTypeToName(type);
+        char *tmpName = xpFileTypeToName(type);
+        nsString newName = tmpName;
+        PR_FREEIF(tmpName)
         if (newName.Length() < 1) {
             PR_Free(trans);
             PR_Free(xpFp);
@@ -1062,7 +1065,8 @@ NET_I_XP_FileOpen(const char * name, XP_FileType type, const XP_FilePerm perm)
     }
 
     rv = fileMgr->OpenFile( (aName ? aName : name), mode, &nsFp);
-    PR_Free(aName);
+    if (aName)
+        delete aName;
     if (NS_OK != rv) {
         return NULL;
     }
@@ -1180,8 +1184,9 @@ NET_I_XP_FileRemove(const char * name, XP_FileType type)
 
     if ( (!name || !*name) 
          || type == xpCache ) {
-        nsString newName;
-        newName = xpFileTypeToName(type);
+        char *tmpName = xpFileTypeToName(type);
+        nsString newName = tmpName;
+        PR_FREEIF(tmpName);
         if (newName.Length() < 1) {
             return NULL;
         }
@@ -1196,6 +1201,8 @@ NET_I_XP_FileRemove(const char * name, XP_FileType type)
     }
 
     rv = fileMgr->FileRemove((aName ? aName : name));
+    if (aName)
+        delete aName;
     if (rv != NS_OK)
         return -1;
 
@@ -1208,17 +1215,18 @@ NET_I_XP_Stat(const char * name, XP_StatStruct * info, XP_FileType type)
     int result = -1;
     PRFileInfo fileInfo;
     PRStatus status;
-    char *newName;
+    char *newName, *tmpName;
     nsString ourName;
     char *path;
     nsresult rv;
 
     switch (type) {
         case xpCache:
-            ourName = xpFileTypeToName(type);
-            if (ourName.Length() < 1) {
+            tmpName = xpFileTypeToName(type);
+            if (!tmpName)
                 return NULL;
-            }
+            ourName = tmpName;
+            PR_FREEIF(tmpName);
             ourName.Append(name);
             newName = ourName.ToNewCString();
 

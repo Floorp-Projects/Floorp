@@ -926,8 +926,10 @@ net_start_first_connect(const char   *host,
      * The user is guaranteing it's existence and usability. */
     if ( localIP > 0 ) {
         PRStatus status;
-        PRNetAddr *addr = (PRNetAddr *)PR_Malloc(sizeof(PRNetAddr));
         PRErrorCode errorCode; /* see http://www.mozilla.org/docs/refList/refNSPR/prerr.htm#1027954 */
+        PRNetAddr *addr = (PRNetAddr *)PR_Malloc(sizeof(PRNetAddr));
+        if (!addr)
+            return MK_UNABLE_TO_CONNECT;
         status = PR_InitializeNetAddr(PR_IpAddrNull, 0, addr);
         if (status != PR_SUCCESS) {
             errorCode = PR_GetError();
@@ -938,6 +940,7 @@ net_start_first_connect(const char   *host,
                 errorCode = PR_GetError();
             }
         }
+        PR_Free(addr);
     }
 
     /* if it's not equal to PR_SUCCESS something went wrong
@@ -1454,8 +1457,10 @@ NET_FinishConnect (CONST char   *url,
          * The user is guaranteing it's existence and usability. */
         if ( localIP > 0 ) {
             PRStatus status;
-            PRNetAddr *addr = (PRNetAddr *)PR_Malloc(sizeof(PRNetAddr));
             PRErrorCode errorCode; /* see http://www.mozilla.org/docs/refList/refNSPR/prerr.htm#1027954 */
+            PRNetAddr *addr = (PRNetAddr *)PR_Malloc(sizeof(PRNetAddr));
+            if (!addr)
+                return MK_UNABLE_TO_CONNECT;
             status = PR_InitializeNetAddr(PR_IpAddrNull, 0, addr);
             if (status != PR_SUCCESS) {
                 errorCode = PR_GetError();
@@ -1466,6 +1471,7 @@ NET_FinishConnect (CONST char   *url,
                     errorCode = PR_GetError();
                 }
             }
+            PR_Free(addr);
         }
 
     	if(PR_SUCCESS != PR_Connect (*sock,
