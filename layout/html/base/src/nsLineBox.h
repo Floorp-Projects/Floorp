@@ -136,7 +136,7 @@ protected:
 //----------------------------------------------------------------------
 
 #define LINE_MAX_BREAK_TYPE  ((1 << 4) - 1)
-#define LINE_MAX_CHILD_COUNT ((1 << 21) - 1)
+#define LINE_MAX_CHILD_COUNT ((1 << 20) - 1)
 
 #if NS_STYLE_CLEAR_LAST_VALUE > 15
 need to rearrange the mBits bitfield;
@@ -230,6 +230,17 @@ public:
   }
   PRBool IsForceInvalidate() const {
     return mFlags.mForceInvalidate;
+  }
+
+  // mResizeReflowOptimizationDisabled bit
+  void DisableResizeReflowOptimization() {
+    mFlags.mResizeReflowOptimizationDisabled = PR_TRUE;
+  }
+  void EnableResizeReflowOptimization() {
+    mFlags.mResizeReflowOptimizationDisabled = PR_FALSE;
+  }
+  PRBool ResizeReflowOptimizationDisabled() const {
+    return mFlags.mResizeReflowOptimizationDisabled;
   }
   
   // mChildCount value
@@ -337,11 +348,11 @@ public:
     PRUint32 mTrimmed : 1;
     PRUint32 mHasPercentageChild : 1;
     PRUint32 mLineWrapped: 1;
-    PRUint32 mForceInvalidate: 1;
-
+    PRUint32 mForceInvalidate: 1;                   // default 0 = means this line handles it's own invalidation.  1 = always invalidate this entire line
+	  PRUint32 mResizeReflowOptimizationDisabled: 1;  // default 0 = means that the opt potentially applies to this line. 1 = never skip reflowing this line for a resize reflow
     PRUint32 mBreakType : 4;
 
-    PRUint32 mChildCount : 21;
+    PRUint32 mChildCount : 20;
   };
 
   struct ExtraData {
@@ -442,7 +453,7 @@ protected:
   nsLineBox** mLines;
   PRInt32 mIndex;
   PRInt32 mNumLines;
-  PRBool mRightToLeft;
+  PRPackedBool mRightToLeft;
 };
 
 #endif /* nsLineBox_h___ */

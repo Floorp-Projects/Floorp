@@ -157,7 +157,8 @@ InitDebugFlags()
 #undef NOISY_REFLOW_REASON        // gives a little info about why each reflow was requested
 #undef REFLOW_STATUS_COVERAGE     // I think this is most useful for printing, to see which frames return "incomplete"
 #undef NOISY_SPACEMANAGER         // enables debug output for space manager use, useful for analysing reflow of floaters and positioned elements
-#undef NOISY_BLOCK_INVALIDATE    // enables debug output for all calls to invalidate
+#undef NOISY_BLOCK_INVALIDATE     // enables debug output for all calls to invalidate
+#undef REALLY_NOISY_REFLOW       // some extra debug info
 
 #endif
 
@@ -781,7 +782,8 @@ nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
 
   const nsMargin& borderPadding = BorderPadding();
 
-  if (NS_FRAME_SPLITTABLE_NON_RECTANGULAR == aSplitType) {
+  if (NS_FRAME_SPLITTABLE_NON_RECTANGULAR == aSplitType) 
+  {
     if (mBand.GetFloaterCount()) {
       // Use the float-edge property to determine how the child block
       // will interact with the floater.
@@ -2007,15 +2009,6 @@ HaveAutoWidth(const nsHTMLReflowState& aReflowState)
 
 
 static PRBool
-IsPercentageUnitSides(const nsStyleSides* aSides)
-{
-  return eStyleUnit_Percent == aSides->GetLeftUnit()
-      || eStyleUnit_Percent == aSides->GetRightUnit()
-      || eStyleUnit_Percent == aSides->GetTopUnit()
-      || eStyleUnit_Percent == aSides->GetBottomUnit();
-}
-
-static PRBool
 IsPercentageAwareChild(const nsIFrame* aFrame)
 {
   const nsStyleSpacing* space;
@@ -2024,9 +2017,9 @@ IsPercentageAwareChild(const nsIFrame* aFrame)
     return PR_TRUE; // just to be on the safe side
   }
 
-  if (IsPercentageUnitSides(&space->mMargin)
-    || IsPercentageUnitSides(&space->mPadding)
-    || IsPercentageUnitSides(&space->mBorderRadius)) {
+  if (nsLineLayout::IsPercentageUnitSides(&space->mMargin)
+    || nsLineLayout::IsPercentageUnitSides(&space->mPadding)
+    || nsLineLayout::IsPercentageUnitSides(&space->mBorderRadius)) {
     return PR_TRUE;
   }
 
@@ -2042,7 +2035,7 @@ IsPercentageAwareChild(const nsIFrame* aFrame)
     || eStyleUnit_Percent == pos->mHeight.GetUnit()
     || eStyleUnit_Percent == pos->mMinHeight.GetUnit()
     || eStyleUnit_Percent == pos->mMaxHeight.GetUnit()
-    || IsPercentageUnitSides(&pos->mOffset)) { // XXX need more here!!!
+    || nsLineLayout::IsPercentageUnitSides(&pos->mOffset)) { // XXX need more here!!!
     return PR_TRUE;
   }
 
@@ -2600,6 +2593,7 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
           // newlines. Therefore, we don't need to reflow the line.
         }
         else if ((line->mNext && !line->HasBreak()) ||
+			           line->ResizeReflowOptimizationDisabled() ||
                  line->HasFloaters() || line->IsImpactedByFloater() ||
                  line->HasPercentageChild() ||
                  (line->mBounds.XMost() > newAvailWidth)) {
