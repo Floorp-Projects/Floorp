@@ -105,9 +105,6 @@ nsresult NS_InitEditorMode(nsIDOMDocument *aDOMDocument, nsIPresShell* aPresShel
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  gEditor->InitHTMLEditor(aDOMDocument, aPresShell);
-  gEditor->EnableUndo(PR_TRUE);
-
-  return result;
+  return gEditor->Init(aDOMDocument, aPresShell);
 }
 
