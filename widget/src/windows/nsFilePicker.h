@@ -59,7 +59,7 @@ protected:
   HWND                   mWnd;
   nsString               mTitle;
   PRInt16                mMode;
-  nsString               mFile;
+  nsCString              mFile;
   nsString               mFilterList;
   nsString               mDefault;
   nsIUnicodeEncoder*     mUnicodeEncoder;

@@ -145,8 +145,6 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
    // Set user-selected location of file or directory
   mFile.SetLength(0);
   if (result == PR_TRUE) {
-    // I think it also needs a conversion here (to unicode since appending to nsString) 
-    // but doing that generates garbage file name, weird.
     mFile.Append(fileBuffer);
   }
   
@@ -236,7 +234,7 @@ NS_IMETHODIMP nsFilePicker::GetFile(nsILocalFile **aFile)
     
   NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
 
-  file->InitWithPath(nsCAutoString(mFile));
+  file->InitWithPath(mFile);
 
   NS_ADDREF(*aFile = file);
 
@@ -248,7 +246,7 @@ NS_IMETHODIMP nsFilePicker::GetFileURL(nsIFileURL **aFileURL)
 {
   nsCOMPtr<nsILocalFile> file(do_CreateInstance("component://mozilla/file/local"));
   NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
-  file->InitWithPath(nsCAutoString(mFile));
+  file->InitWithPath(mFile);
 
   nsCOMPtr<nsIFileURL> fileURL(do_CreateInstance("component://netscape/network/standard-url"));
   NS_ENSURE_TRUE(fileURL, NS_ERROR_FAILURE);
