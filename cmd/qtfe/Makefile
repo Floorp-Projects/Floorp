@@ -16,23 +16,26 @@
 #
 ##########################################################################
 #
-# Makefile for the Mozilla Qt front end.
+# Makefile for the Mozilla X front end.
 #
 # There are N dimensions to a full complement of binaries:
 #
 #	- target architecture
-#	- debug vs optimized
-#	- normal vs "lite"
-#	- normal vs purified
+#	- debug   vs  optimized
+#	- normal  vs  "lite"
+#	- normal  vs  purified
+#   - dynamic vs  statically linked
 #
 # A directory is needed for each of the first two dimensions (target
 # and debug), but executables for all of the others will then be built
 # in the same directory from the same .o files.  The files have names
 # as follows:
 #
-#	mozilla-export
-#	mozilla-nis-export	(SunOS 4 only)
-#	mozilla-export.pure	(SunOS 4 and Solaris only)
+#   qtmoz-export          (Dynamically linked with libs in 
+#                        ../../dist/<objdir>/bin)
+#	qtmozilla-export      (Statically linked)
+#	qtmozilla-nis-export	(SunOS 4 only)
+#	qtmozilla-export.pure	(SunOS 4 and Solaris only)
 #	 ...etc...
 #
 # The only difference in the executables is which version of config-*.o
@@ -40,18 +43,14 @@
 #
 ##########################################################################
 
-default:
-	@echo "Default only makes in this directory..."
-	$(MAKE) $(OBJDIR)/$(QTFE_PROGNAME)-export
-
 DEPTH		= ../..
 MODULE		= qtfe
 
 USE_3PANE	= 1
 
-QTLIB	= -L$(QTDIR)/lib -lqt
 
 include $(DEPTH)/config/config.mk
+include $(DEPTH)/cmd/unixfe/config/unixfe.mk
 
 DIRS		= \
 		  icons \
@@ -60,8 +59,8 @@ DIRS		= \
 REQUIRES	= \
 		  addr \
 		  applet \
-                  xpcom   \
-                  caps    \
+		  xpcom \
+		  caps \
 		  img \
 		  edtplug \
 		  jtools \
@@ -73,7 +72,7 @@ REQUIRES	= \
 		  plds \
 		  nspr20 \
 		  parse \
-		  plugin   \
+		  plugin \
 		  plugimpl \
 		  hook \
 		  pref \
@@ -87,67 +86,34 @@ REQUIRES	= \
 		  java \
 		  $(NULL)
 
-CSRCS		= \
-		  bkmks.c \
-		  $(NULL)
-
 ifdef MOZ_LDAP
-REQUIRES += \
-                   ldap \
-                   $(NULL)
+REQUIRES	+= ldap
 endif
 
-REQUIRES += \
+ifdef MOZ_MAIL_NEWS
+REQUIRES	+= msg
+else
+ifdef MOZ_MAIL_COMPOSE
+REQUIRES	+= mailto
+endif
+endif
+
+REQUIRES	+= \
 		  xfeicons \
 		  progress \
 		  privacy \
 		  $(NULL)
 
-ifdef MOZ_MAIL_NEWS
-CSRCS		+= \
-		  $(NULL)
-endif
-
 ifdef MOZ_FULLCIRCLE
-REQUIRES       += fullsoft
+REQUIRES	+= fullsoft
 endif
 
 ifdef OJI
-REQUIRES       += oji \
-		  ojiimpl
+REQUIRES	+= oji ojiimpl
 endif
 
-ifndef NO_UNIX_ASYNC_DNS
-CSRCS		+= qtfe-dns.c
-endif
-
-QTFE_PROGNAME	:= qtmozilla
-DSO_PROGNAME	:= moz
-
-GUESS_CONFIG	:= $(shell $(DEPTH)/config/config.guess | sed 's/i[23456]86/x86/')
-
-#######################################################################
-
-CCLD		= $(CCC)
-LDFLAGS		= $(CFLAGS)
-NOMD_LDFLAGS	= $(NOMD_CFLAGS)
-
-ifdef MOZILLA_GPROF
-CSRCS		+= gmon.c
-LDFLAGS		= $(OPTIMIZER)
-$(OBJDIR)/gmon.o:	gmon.c gmon.h
-	$(CC) -O -c -o $@ $<
-endif
-
-ifdef SUB_UI
-CSRCS		+= 
-endif
-
-ifndef NO_LAYERS
-CSRCS		+= 
-endif
-
-CFLAGS		+= -DCPLUSPLUS_LINKAGE
+########################################################
+# Front End Specifics
 
 MOCSRCS		=	\
 			moc_callback.cpp	\
@@ -217,16 +183,87 @@ CPPSRCS		= 	\
                         qtgrid.cpp            \
 			$(MOCSRCS)
 
+ifndef NO_UNIX_ASYNC_DNS
+
+CSRCS		+= qtfe-dns.c \
+                   bkmks.c 
+endif
+
+
+FE_PROGNAME	:= qtmozilla
+DSO_PROGNAME	:= qtmoz
+
+GUESS_CONFIG	:= $(shell $(DEPTH)/config/config.guess | sed 's/i[23456]86/x86/')
+QTLIB            = -L$(QTDIR)/lib -lqt
+
+INCLUDES        += -I$(QTDIR)/include -I$(OBJDIR)
+GARBAGE         += $(MOCSRCS) \
+		   $(XFEPRIVDIR)/Netscape.mk \
+                   $(OBJDIR)/icon-pixmaps.inc \
+                   $(OBJDIR)/embed
+
+moc_%.cpp: %.h
+	$(MOC) $< -o $@
+
+#######################################################################
+# end of fe specifics
+
+CCLD		= $(CCC)
+LDFLAGS		= $(CFLAGS)
+NOMD_LDFLAGS	= $(NOMD_CFLAGS)
+BASIC_DSOS	= -L$(DIST)/bin
+
+ifdef MOZILLA_GPROF
+CSRCS		+= gmon.c
+LDFLAGS		= $(OPTIMIZER)
+$(OBJDIR)/gmon.o:	gmon.c gmon.h
+	$(CC) -O -c -o $@ $<
+endif
+
+ifdef SUB_UI
+CSRCS		+= subui.c	
+endif
+
+
+ifeq ($(OS_ARCH),HP-UX)
+#
+# HP requires C++ programs to have main() in a C++ file.
+#
+CPPSRCS		+= cplusplusmain.cc
+CFLAGS		+= -DCPLUSPLUS_LINKAGE
+endif
+
 OBJS		= $(CSRCS:.c=.o) $(CPPSRCS:.cpp=.o)
 
-GARBAGE		+= $(MOCSRCS) $(XFEPRIVDIR)/Netscape.mk $(OBJDIR)/icon-pixmaps.inc $(OBJDIR)/embed
+GARBAGE		+= e_kit_resources.h cxxlink-filter
 
-#ICONS_LIB	= $(DIST)/lib/lib$(LITE_PREFIX)xfeicons.a
+ICONS_LIB	= $(DIST)/lib/lib$(LITE_PREFIX)xfeicons.a
+
+ifneq ($(OS_ARCH),IRIX) 
+ifneq ($(OS_ARCH),FreeBSD)
+DYNAMIC_SYMBOLS_F	= -rdynamic # default
+endif
+endif
+ifeq ($(OS_ARCH),SunOS) 
+ifdef NS_USE_NATIVE
+DYNAMIC_SYMBOLS_F	= -Bdynamic
+else
+DYNAMIC_SYMBOLS_F	= # nothing for gcc
+endif
+endif
+ifeq ($(OS_ARCH),OSF1)
+DYNAMIC_SYMBOLS_F	=
+endif
 
 ifeq ($(OS_ARCH),AIX)
 NSPR_LIB	= 
 else
-NSPR_LIB	= $(DIST)/lib/libplds21.a $(DIST)/lib/libplc21.a $(DIST)/lib/libmsgc21.a $(DIST)/lib/libnspr21.a
+# XXX To a DSO...
+ifdef FULL_STATIC_BUILD
+NSPR_LIB	= $(DIST)/lib/libplds21.a $(DIST)/lib/libplc21.a $(DIST)/lib/libnspr21.a
+else
+BASIC_DSOS	+= -lplds21 -lplc21 -lnspr21
+endif
 endif
 
 ifdef DBMALLOC
@@ -245,10 +282,10 @@ BASIC_LIBS	= \
 		  $(ICONS_LIB) \
 		  $(DIST)/lib/libxlate.a \
 		  $(DIST)/lib/libmimetype.a \
+		  $(DIST)/lib/libnetwork.a	\
 		  $(DIST)/lib/libnetcache.a	\
 		  $(DIST)/lib/libnetcnvts.a	\
-		  $(DIST)/lib/libnetwork.a	\
-		  $(DIST)/lib/libnetutil.a      \
+		  $(DIST)/lib/libnetutil.a \
 		  $(DIST)/lib/libnetcnvts.a	\
 		  $(DIST)/lib/libcnetinit.a	\
 		  $(DIST)/lib/libabouturl.a	\
@@ -260,12 +297,12 @@ BASIC_LIBS	= \
 		  $(DIST)/lib/libjsurl.a	\
 		  $(DIST)/lib/libmarimurl.a	\
 		  $(DIST)/lib/libremoturl.a	\
-		  $(DIST)/lib/libnetwork.a	\
 		  $(DIST)/lib/lib$(LITE_PREFIX)rdf.a \
 		  $(DIST)/lib/lib$(LITE_PREFIX)xml.a \
 		  $(DIST)/lib/lib$(LITE_PREFIX)lay.a \
 		  $(DIST)/lib/libmariner.a \
 		  $(DIST)/lib/libimg.a \
+		  $(DIST)/lib/libnetwork.a	\
 		  $(DIST)/lib/libprivacy.a \
 		  $(NULL)
 
@@ -273,8 +310,8 @@ ifdef MOZ_LOC_INDEP
 BASIC_LIBS	+= $(DIST)/lib/libli.a
 endif
 
-ifdef MOZ_JAVA
-JAVA_JMC = $(DIST)/lib/libjmc.a
+ifdef JAVA_OR_NSJVM
+JAVA_JMC	= $(DIST)/lib/libjmc.a	# XXX To be removed...
 endif
 
 BASIC_LIBS	+= \
@@ -288,48 +325,40 @@ BASIC_LIBS	+= \
 		  $(DIST)/lib/libreg.a \
 		  $(NULL)
 
-ifdef MOZ_NATIVE_JPEG
-BASIC_LIBS	+= -ljpeg
-else
-BASIC_LIBS	+= $(DIST)/lib/libjpeg.a
-endif
-
-ifdef MOZ_NATIVE_PNG
-BASIC_LIBS	+= -lpng
-else
-BASIC_LIBS	+= $(DIST)/lib/libpng.a
-endif
-
- BASIC_LIBS_2    = \
-                   $(DIST)/lib/lib$(LITE_PREFIX)xp.a \
-                   $(DIST)/lib/libdbm.a \
-                   $(DIST)/lib/libcaps.a \
-                   $(DIST)/lib/libxpcom.a \
-                   $(DIST)/lib/lib$(LITE_PREFIX)rdf.a \
-                   $(NULL)
-
+BASIC_LIBS_2	= \
+		  $(DIST)/lib/lib$(LITE_PREFIX)xp.a \
+		  $(DIST)/lib/libdbm.a \
+		  $(DIST)/lib/libcaps.a \
+		  $(DIST)/lib/libxpcom.a \
+		  $(DIST)/lib/lib$(LITE_PREFIX)rdf.a \
+		  $(NULL)
 
 # jwz: link in libmime all the time.
 # but it needs to be before libnetutil, and I don't know how to do that,
 # so just link against libnetutil twice.
 
 BASIC_LIBS	+= \
-		  $(DIST)/lib/libmime.a		\
-		  $(DIST)/lib/libnetutil.a      \
+		  $(DIST)/lib/libmime.a \
+		  $(DIST)/lib/libnetutil.a \
 		  $(NULL)
 
+ifdef SMART_MAIL
+BASIC_LIBS    += $(DIST)/lib/libpop3url.a
+endif
 
 ifdef MOZ_MAIL_NEWS
 ifdef MOZ_SECURITY
-BASIC_LIBS	+= \
-		  $(DIST)/lib/libns_mime.a \
-		  $(NULL)
+BASIC_LIBS	+= $(DIST)/lib/libns_mime.a
 endif
-BASIC_LIBS_2	+= \
-		  $(DIST)/lib/libldap.a \
-		  $(NULL)
+BASIC_LIBS_2	+= $(DIST)/lib/libldap.a
+endif
 
-endif
+# Do we need libns_mime.a here if MOZ_MAIL_COMPOSE and MOZ_SECURITY?
+#ifdef MOZ_MAIL_COMPOSE
+#ifdef MOZ_SECURITY
+#BASIC_LIBS	+= $(DIST)/lib/libns_mime.a
+#endif
+#endif
 
 BASIC_LIBS	+= \
 		  $(DIST)/lib/libmisc.a \
@@ -340,7 +369,7 @@ ifdef MOZ_LDAP
 BASIC_LIBS	+= \
 		$(DIST)/lib/libldap.a \
 		$(DIST)/lib/liblber.a \
-		  $(NULL)
+		$(NULL)
 endif
 
 ifdef MOZ_MAIL_NEWS
@@ -357,6 +386,13 @@ BASIC_LIBS	+= $(DIST)/lib/libaddr.a \
 		  $(NULL)
 endif
 
+ifdef MOZ_MAIL_COMPOSE
+BASIC_LIBS	+= $(DIST)/lib/libmailto.a \
+		  $(DIST)/lib/libmisc.a \
+		  $(DIST)/lib/libmime.a \
+		  $(DIST)/lib/libsmtpurl.a	\
+		$(NULL)
+endif
 
 ifdef MOZ_MAIL_NEWS
 BASIC_LIBS	+= $(DIST)/lib/libnntpurl.a \
@@ -394,14 +430,15 @@ ifndef NO_LAYERS
 BASIC_LIBS	+= $(DIST)/lib/liblayer.a
 endif
 
-BASIC_LIBS += $(DIST)/lib/libxpcom.a \
-              $(DIST)/lib/libcaps.a
 
 ########################################################################
 # Java
 #
 
 ifdef MOZ_JAVA
+#
+# Monolithic Java
+#
 
 BASIC_LIBS	+= \
 		  $(DIST)/lib/lib$(LITE_PREFIX)applet.a \
@@ -416,8 +453,6 @@ endif
 BASIC_LIBS	+= \
 		  $(DIST)/lib/libnsn.a \
 		  $(DIST)/lib/libnsc.a \
-		  $(DIST)/lib/libcaps.a \
-		  $(DIST)/lib/libxpcom.a \
 		  $(DIST)/lib/libjpw.a \
 		  $(DIST)/lib/libzpw.a \
 		  $(DIST)/lib/libiawt.a \
@@ -428,7 +463,11 @@ BASIC_LIBS	+= \
 		  $(DIST)/lib/libjbn.a \
 		  $(NULL)
 
-ifndef NO_SECURITY
+ifdef MOZ_SMARTUPDATE
+BASIC_LIBS	+= $(DIST)/lib/libsoftupdate.a $(DIST)/lib/libprgrss.a
+endif
+
+ifdef MOZ_SECURITY
 BASIC_LIBS	+= $(DIST)/lib/libjsl.a
 endif
 
@@ -438,22 +477,20 @@ endif
 
 BASIC_LIBS	+= $(DIST)/lib/libjrt.a
 
-else  # MOZ_JAVA
+else # !MOZ_JAVA
 
 #
 # OJI
 #
-
 ifdef MOZ_OJI
 
-BASIC_LIBS      += $(DIST)/lib/liboji.a
+BASIC_LIBS	+= $(DIST)/lib/liboji.a
 
 ifdef NSJVM
 
 ifdef MOZ_EDITOR
 BASIC_LIBS	+= $(DIST)/lib/libedtplug.a
 endif
-BASIC_LIBS      += $(DIST)/lib/libsoftupdate.a
 else # !NSJVM
 BASIC_LIBS	+= \
 		  $(DIST)/lib/libstubsj.a \
@@ -461,8 +498,7 @@ BASIC_LIBS	+= \
 		  $(NULL)
 endif # !NSJVM
 
-BASIC_LIBS      += $(DIST)/lib/libprgrss.a \
-		   $(NULL)
+BASIC_LIBS	+= $(DIST)/lib/libprgrss.a
 
 else  # !MOZ_OJI
 # No Monolithic Java, no OJI, just stubs.
@@ -473,33 +509,51 @@ BASIC_LIBS	+= \
 		  $(NULL)
 
 endif  # !MOZ_OJI
-endif  # MOZ_JAVA
+endif  # !MOZ_JAVA
 
-ifdef MOZ_NATIVE_ZLIB
-BASIC_LIBS	+= -lz
-else
-BASIC_LIBS	+= $(DIST)/lib/libzlib.a
-endif
+##
+## Graphics libs.  See mozilla/cmd/unixfe/config/unixfe.mk.
+## 
+BASIC_LIBS += \
+			$(XFE_PNG_LIB) \
+			$(XFE_ZLIB_LIB) \
+			$(XFE_JPEG_LIB) \
+			$(NULL)
+
+##
+## Graphics libs.  See unixfe.mk.
+## 
+BASIC_DSOS += \
+			$(XFE_PNG_DSO) \
+			$(XFE_ZLIB_DSO) \
+			$(XFE_JPEG_DSO) \
+			$(NULL)
 
 ifndef NO_MOCHA
-BASIC_LIBS	+= $(DIST)/lib/libjs.a
-ifdef JAVA_OR_OJI
-BASIC_LIBS	+= $(DIST)/lib/libjsj.a
+# XXX To a DSO...
+ifdef FULL_STATIC_BUILD
+BASIC_LIBS	+= $(DIST)/lib/libjs.a $(DIST)/lib/libjsj.a
+else
+BASIC_DSOS	+= -ljs -ljsj
 endif
 BASIC_LIBS	+= $(DIST)/lib/libmocha.a
+ifdef DOM
+# the DOM code calls back into layout.
+BASIC_LIBS	+= $(DIST)/lib/liblay.a
+endif
+endif
+
+ifdef DOM
+BASIC_LIBS	+= $(DIST)/lib/libdom.a
 endif
 
 # Post-Java libs
 BASIC_LIBS	+= $(DIST)/lib/libstyle.a
 
-ifndef NO_SECURITY
+ifdef MOZ_SECURITY
 BASIC_LIBS	+= $(DIST)/lib/libjar.a
 else
-EXPORT_LIB	= $(DIST)/lib/libhtmldlgs.a $(DIST)/lib/libsecfree.a
-endif
-
-ifdef MOZ_LDAP
-BASIC_LIBS	+= $(DIST)/lib/libldap.a $(DIST)/lib/liblber.a 
+EXPORT_LIB	= $(DIST)/lib/libhtmldlgs.a $(DIST)/lib/libsecfree.a 
 endif
 
 LOCALES		= $(LOCALE_MAP) $(MAIL_IM_HACK) $(NEWS_IM_HACK)
@@ -528,34 +582,31 @@ endif
 
 ifndef NO_NETSCAPE_STATIC
 ifndef NO_BUILD_EXPORT
-TARGETS		+= $(OBJDIR)/$(QTFE_PROGNAME)-export
+TARGETS		+= $(OBJDIR)/$(FE_PROGNAME)-export
 endif
 endif
 
-X_OBJS		= $(OBJDIR)/$(LITE_PREFIX)config-YYY.o \
-		  $(OBJDIR)/license.o
+X_OBJS		= $(OBJDIR)/$(LITE_PREFIX)config-YYY.o 
 
 EXPORT_OBJS	= $(subst YYY,export,$(X_OBJS))
 NIS_EXPORT_OBJS	= $(subst YYY,nis-export,$(X_OBJS))
 
 # If the version number changes, all these need to be rebuilt.
 # (config-* doesn't need to be in here, since that already has a rule.)
-VERSION_OBJS	= $(OBJDIR)/license.o
+VERSION_OBJS	= $(OBJDIR)/license.o 
 
 #######################################################################
 
 -include $(XFEPRIVDIR)Netscape.mk
 include $(DEPTH)/config/rules.mk
 
-deps: $(MOCSRCS) depend
-
 NS_RULES_MK	= 1
 -include $(XFEPRIVDIR)Netscape.mk
 
 DEFINES		+= -DNEW_DECODERS
 
-ifdef MOZ_EDITOR
-DEFINES		+= -DEDITOR -DMOZ_EDITOR
+ifdef XFE_PREF_ADVANCED_PASSIVE_FTP
+DEFINES		+= -DXFE_PREF_ADVANCED_PASSIVE_FTP
 endif
 
 ifdef USE_3PANE
@@ -566,7 +617,18 @@ ifdef USE_ABCOM
 DEFINES		+= -DUSE_ABCOM
 endif
 
-INCLUDES	+= -I$(QTDIR)/include -Isrc -I. -I$(OBJDIR)
+ifdef MOZILLA_XFE_USE_WINNING_FILE_SELECTION
+DEFINES		+= -DUSE_WINNING_FILE_SELECTION
+endif
+
+INCLUDES	+= -Isrc -I. -I$(DEPTH)/dist/public/nls -I$(DEPTH)/dist/public/security \
+		-I$(DEPTH)/dist/public/ldap \
+		-I$(DEPTH)/modules/libimg/public \
+		-I$(DEPTH)/l10n/us
+
+ifdef MOZ_MAIL_NEWS
+INCLUDES	+= -Isrc -I. -I$(DEPTH)/lib/libmsg
+endif
 
 
 #######################################################################
@@ -601,12 +663,37 @@ MCS_CMD		= true
 # Only IRIX 5.x uses this.
 EXTRA_POST_LINK_CMD	= echo
 
-EXPORT_LDFLAGS	= $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(OTHER_LIBS) $(NSPR_LIB)
-EXPORT_DEPLIBS	= $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LIB)
+#
+# The only difference between EXPORT_LDFLAGS and 
+# EXPORT_DYN_MOTIF_LDFLAGS is that OTHER_LIBS is
+# replaced by OTHER_DYN_MOTIF_LIBS.
+#
+# OTHER_DYN_MOTIF_LIBS will use something like 
+# '-L/foo/bar -lXm' instead of '/foo/bar/libXm.a'
+#
+EXPORT_LDFLAGS				=\
+							$(BASIC_LIBS) \
+							$(EXPORT_LIB) \
+							$(BASIC_LIBS_2) \
+							$(BASIC_DSOS) \
+							$(NSPR_LIB) \
+							$(OTHER_LIBS)
 
-DSO_EX_LIBS	= $(EXPORT_LDFLAGS:$(DIST)/lib/lib%.a=-l%)
+EXPORT_DYN_QT_LDFLAGS 	                =\
+							$(BASIC_LIBS) \
+							$(EXPORT_LIB) \
+							$(BASIC_LIBS_2) \
+							$(BASIC_DSOS) \
+							$(NSPR_LIB) \
+							$(QTLIB)
 
-DNS_LIB		+= $(EXTRA_LIBS)
+EXPORT_DEPLIBS				=\
+							$(BASIC_LIBS) \
+							$(EXPORT_LIB) \
+							$(BASIC_LIBS_2) \
+							$(NSPR_LIB)
+
+DSO_EX_LIBS	= $(EXPORT_DYN_QT_LDFLAGS:$(DIST)/lib/lib%.a=-l%)
 
 #######################################################################
 #
@@ -618,15 +705,19 @@ DNS_LIB		+= $(EXTRA_LIBS)
 ifeq ($(OS_ARCH),AIX)
 CCLD		= svxlC -+
 #LDFLAGS		= -bGhooksyslibs -bGlibpathexec -bGnoproc
-LDFLAGS		=  -bGnoproc
-OTHER_LIBS	=  $(QTLIB) -lXext -lX11 $(OS_LIBS)
+#LDFLAGS		=  -bGnoproc
+#
+# ??? need to double check
+#
+LDFLAGS		= -bE:aix_exports -bGhooksyslibs -bGlibpathexec -bGnoproc -bmaxdata:20000000
+OTHER_LIBS	= $(MOTIFLIB) -lXt -lXmu -lX11 $(OS_LIBS)
 US_LDFLAGS	+= $(AIX_NSPR_LINK)
 EXPORT_LDFLAGS	+= $(AIX_NSPR_LINK)
 FRANCE_LDFLAGS	+= $(AIX_NSPR_LINK)
 EXTRA_REL_FILES	+= $(AIX_NSPR)
 
 ifndef NO_WEBFONTS
-EXTRA_REL_FILES += $(WEBFONT_DSO)
+EXTRA_REL_FILES	+= $(WEBFONT_DSO)
 endif
 
 endif
@@ -634,18 +725,50 @@ endif
 ########################################
 # FreeBSD
 ifeq ($(OS_ARCH),FreeBSD)
-OTHER_LIBS	= $(QTLIB) -lX11 -lm $(OS_LIBS)
+OTHER_LIBS	= /usr/X11R6/lib/libXm.a -L/usr/X11R6/lib -lXt -lXmu -lXext -lX11 -lSM -lICE -lm $(OS_LIBS)
+endif
+
+########################################
+# NetBSD
+ifeq ($(OS_ARCH),NetBSD)
+
+# Work around linker semantics that will never find our own libutil on 1.3.x
+ifeq ($(shell uname -r | cut -f2 -d.),3)
+FOOL_GMAKE	= $(EXPORT_LDFLAGS:$(DIST)/lib/lib%.a=-l%)
+DSO_EX_LIBS	= $(FOOL_GMAKE:-lutil=$(DIST)/lib/libutil.a)
+endif
+
+ifdef LIBRUNPATH
+OS_LIBS		+= -R$(LIBRUNPATH)
+endif
+
+OTHER_LIBS	= -L/usr/X11R6/lib -lXm -lXt -lXmu -lXext -lX11 -lSM -lICE -lm $(OS_LIBS)
+
+endif
+
+########################################
+# OpenBSD
+# Copied from NetBSD...
+ifeq ($(OS_ARCH),OpenBSD)
+ifdef LIBRUNPATH
+OS_LIBS		+= -R$(LIBRUNPATH)
+endif
+OTHER_LIBS	= -L/usr/X11R6/lib -lXm -lXt -lXmu -lXext -lX11 -lSM -lICE -lm $(OS_LIBS)
 endif
 
 ########################################
 # BSDI
 ifeq ($(OS_ARCH),BSD_OS)
-OTHER_LIBS	= $(QTLIB) $(X11R6LIBS) \
+OTHER_LIBS	= $(MOTIF)/libXm.a $(LOC_LIB_DIR)/libXt.a $(X11R6LIBS) $(LOC_LIB_DIR)/libXmu.a \
 		  $(LOC_LIB_DIR)/libXext.a $(LOC_LIB_DIR)/libX11.a -lm $(OS_LIBS)
 
 ifeq ($(OS_RELEASE),2.1)
-X11R6LIBS	= 
+X11R6LIBS	= $(LOC_LIB_DIR)/libSM.a $(LOC_LIB_DIR)/libICE.a
 OTHER_LIBS	+= -lipc
+endif
+
+ifeq ($(OS_RELEASE),4.0)
+X11R6LIBS	= $(LOC_LIB_DIR)/libSM.a $(LOC_LIB_DIR)/libICE.a
 endif
 
 NEED_NLS	= 1
@@ -656,18 +779,30 @@ endif
 # HP Machines
 ifeq ($(OS_ARCH),HP-UX)
 
+ifeq ($(OS_RELEASE),A.09)
+HPUX_XLIBS	= -L/usr/lib/X11R5 -L/usr/contrib/X11R5/lib -L/usr/lib/Motif1.2
+endif
 ifeq ($(OS_RELEASE),B.10)
 INCLUDES	+= -I.
+HPUX_XLIBS	= -L/usr/lib/X11R6 -L/usr/contrib/X11R6/lib -L/usr/lib/Motif1.2_R6 -L/usr/lib/Motif1.2
+endif
+ifeq ($(OS_RELEASE),B.11)
+HPUX_XLIBS	= -L/usr/lib/X11R6 -L/usr/contrib/X11R6/lib -L/usr/lib/Motif2.1
 endif
 
 HPUX_RESOURCE_HACK	= -Wp,-H16384
 
-OTHER_LIBS	= -L/usr/lib/X11R5 -L$(DIST)/lib $(QTLIB) -lX11 -lXext $(OS_LIBS)
+OTHER_LIBS	= $(HPUX_XLIBS) -lXm -L$(DIST)/lib -lXmu -lXt -lX11 -lXext $(OS_LIBS)
 
 ifdef MOZ_EDITOR
+
+ifdef NS_USE_GCC
+CCLD		= $(CCC)
+else
 EXPORT_DEPLIBS	+= cxxlink-filter
 US_DEPLIBS	+= cxxlink-filter
 CCLD		= CC -tl,./cxxlink-filter
+endif
 
 ifndef NO_WEBFONTS
 EXTRA_REL_FILES	+= $(WEBFONT_DSO)
@@ -691,7 +826,7 @@ ifeq ($(OS_ARCH),IRIX)
 # should not be removed. SGI dynamically opens the library depending on
 # the setting of some resources (e.g. "useEnhancedFSB")
 #
-OTHER_LIBS	= -lSgm $(QTLIB) -lX11 -lXext -lgen -laudio -lm $(OS_LIBS)
+OTHER_LIBS	= -lSgm $(MOTIFPATCH_LIB) -lXm -lXmu -lXt -lX11 -lXext -lgen -laudio -lm $(OS_LIBS)
 
 #
 # On Irix, tag the executable for use by the Indigo Magic Desktop.
@@ -710,12 +845,12 @@ CCLD		= CC
 ifdef USE_GTSCC
 ifndef NO_GTSCC
 CCLD		= $(DIST)/bin/gtscc $(GTSCC_LD_OPTIONS) -gtsfile $(DEPTH)/config/$(OBJDIR)/db.gts -gtsrootdir $(DEPTH)
-TARGETS		= $(OBJDIR)/$(QTFE_PROGNAME)-export
+TARGETS		= $(OBJDIR)/$(FE_PROGNAME)-export
 endif
 endif
 
 ifndef NO_WEBFONTS
-EXTRA_REL_FILES += $(WEBFONT_DSO)
+EXTRA_REL_FILES	+= $(WEBFONT_DSO)
 endif
 
 endif
@@ -724,34 +859,46 @@ endif
 # Linux
 ifeq ($(OS_ARCH),Linux)
 
-XLIB		= -L/usr/X11R6/lib -lXext -lX11
-XMULIB		= -lXpm
+# Override the definition of OS_LIBS in config/Linux.mk.
+ifeq ($(USE_PTHREADS),1)
+OS_LIBS			= -lpthread -lm -ldl -lc
+else
+OS_LIBS			= -lm -ldl
+endif
 
-OTHER_LIBS	= $(QTLIB) $(XMULIB) $(EXTENSIONLIB) $(XLIB) /usr/lib/libm.so -ldl
 
-# Until we have enough code to drag the function in earlier, we need
-# to let the linker have a second look through these files to resolve
-# circular dependencies in the backend code.
-FORCED_LIBS	:= \
-		    $(DIST)/lib/libxlate.a \
-		    $(DIST)/lib/libimg.a \
-		    $(DIST)/lib/libxlate.a \
-		    $(DIST)/lib/libreg.a
+FE_X11_LDFLAGS		= \
+			$(MOZILLA_XFE_X11_DYNAMIC_PATHS) \
+			-lXt \
+			-lXmu \
+			$(MOZILLA_XFE_X11_DYNAMIC_FLAGS) \
+			-lXext \
+			$(MOZILLA_XFE_X11_SM_FLAGS)
 
-EXPORT_LDFLAGS	+= $(FORCED_LIBS) -lc
+OTHER_LIBS		=  $(FE_X11_LDFLAGS) $(OS_LIBS)
+
+
+# Web fonts are only available on x86
+ifeq ($(OS_RELEASE)$(CPU_ARCH),2.0x86)
+
+ifndef NO_WEBFONTS
+EXTRA_REL_FILES	+= $(WEBFONT_DSO)
+endif
+
+endif
 
 endif
 
 ########################################
 # NCR SYSV 4.0
 ifeq ($(OS_ARCH),NCR)
-OTHER_LIBS	= -L/usr/X/lib $(QTLIB) -lXext -lX11 -lgen -lm $(OS_LIBS)
+OTHER_LIBS	= -L/usr/X/lib $(MOTIFLIB) -lXt -lXmu -lXext -lX11 -lgen -lm $(OS_LIBS)
 endif
 
 ########################################
 # NEC SYSV 4.2
 ifeq ($(OS_ARCH),NEC)
-OTHER_LIBS	= -L/usr/abiccs/lib/X11R5 $(QTLIB) -lXext -lX11 -lresolv -lgen -lm $(OS_LIBS)
+OTHER_LIBS	= -L/usr/abiccs/lib/X11R5 $(MOTIFLIB) -lXt -lXmu -lXext -lX11 -lresolv -lgen -lm $(OS_LIBS)
 endif
 
 ########################################
@@ -764,23 +911,23 @@ ifeq ($(OS_ARCH),OSF1)
 # on 3.2 and 3.0 (and not on 2.0).
 # But libX11 needs to be dynamic, otherwise the locale stuff doesn't work
 # and you get warnings and core dump when pasting into Mozilla.
+# Also, libXm must be dynamic, otherwise Japanese text widgets hang
+# the process.
 # 
-OTHER_LIBS	= $(QTLIB) -lX11 -lXext -ldnet_stub -lm -lots $(OS_LIBS)
-
-EXPORT_LDFLAGS	= $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LIB) $(OTHER_LIBS)
+OTHER_LIBS	= -lXm -lXmu -lXt -lX11 -lXext -ldnet_stub -lm -lots $(OS_LIBS)
 
 endif
 
 ########################################
 # SNI ReliantUNIX (SINIX)
 ifeq ($(OS_ARCH),SINIX)
-OTHER_LIBS	= $(QTLIB) -lX11 -lXext $(OS_LIBS)
+OTHER_LIBS	= -lXm -lXmu -lXt -lX11 -lXext $(OS_LIBS)
 endif
 
 ########################################
 # SCO OpenServer
 ifeq ($(OS_ARCH),SCOOS)
-OTHER_LIBS	= $(LIB_XMOS) $(QTLIB) -lXext -lX11 -lm -lPW $(OS_LIBS)
+OTHER_LIBS	= $(LIB_XMOS) -lXm -lXt -lXmu -lXext -lX11 -lm -lPW $(OS_LIBS)
 
 ifdef NEED_XMOS
 LIB_XMOS	= $(OBJDIR)/Xmos.o
@@ -794,13 +941,13 @@ ifeq ($(OS_ARCH),SunOS)
 
 ifeq ($(OS_RELEASE),4.1)
 
-ALL_TARGETS	+= $(OBJDIR)/$(QTFE_PROGNAME)-nis-export
+ALL_TARGETS	+= $(OBJDIR)/$(FE_PROGNAME)-nis-export
 
-OTHER_LIBS	= $(QTLIB) \
+OTHER_LIBS	= -L$(MOTIF)/lib $(MOTIF)/lib/libXm.a $(MOTIF)/lib/libXmu.a $(MOTIF)/lib/libXt.a \
 		  $(MOTIF)/lib/libXext.a $(MOTIF)/lib/libX11.a
 
 ifndef NO_WEBFONTS
-EXTRA_REL_FILES += $(WEBFONT_DSO)
+EXTRA_REL_FILES	+= $(WEBFONT_DSO)
 endif
 
 ifdef MOZ_EDITOR
@@ -831,7 +978,7 @@ DNS_LIB		= -lresolv
 # For release only.
 # This is only for SunOS as it has both nis and non-nis
 # version of the browser packaged together.
-EXTRA_EXPORT_OBJS	= $(QTFE_PROGNAME)-nis-export
+EXTRA_EXPORT_OBJS	= $(FE_PROGNAME)-nis-export
 
 NEED_YP_VERSION	= 1
 NEED_NLS	= 1
@@ -845,18 +992,18 @@ USRLIBDIR	:= /usr/openwin/lib
 MCS_CMD		= mcs -d
 
 ifeq ($(CPU_ARCH),sparc)
-OTHER_LIBS	= $(QTLIB) -lXext -lX11 $(OS_LIBS) -lgen -lresolv -lm
+OTHER_LIBS	= $(MOTIFPATCH_LIB) $(MOTIFLIB) -lXt -lXmu -lXext -lX11 $(OS_LIBS) -lgen -lresolv -lm
 ifndef NO_WEBFONTS
-EXTRA_REL_FILES += $(WEBFONT_DSO)
+EXTRA_REL_FILES	+= $(WEBFONT_DSO)
 endif
 else
-OTHER_LIBS	= $(QTLIB) -lXext -lX11 $(OS_LIBS) -lm
+OTHER_LIBS	= $(MOTIFLIB) -lXt -lXmu -lXext -lX11 $(OS_LIBS) -lm
 LDFLAGS		= $(NOMD_CFLAGS)
 endif
 
 EXPORT_LDFLAGS	= -z defs -L$(MOTIF)/lib -L$(USRLIBDIR) -R$(MOTIF)/lib \
 		  -R$(USRLIBDIR) $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) \
-		  $(OTHER_LIBS) $(NSPR_LIB)
+		  $(BASIC_DSOS) $(NSPR_LIB) $(OTHER_LIBS)
 
 endif
 endif
@@ -869,16 +1016,26 @@ ifdef NEED_XMOS
 LIB_XMOS	= $(OBJDIR)/Xmos.o
 endif
 
-OTHER_LIBS	= $(LIB_XMOS) -L/usr/X/lib $(QTLIB) -lXext -lX11 -lm
+OTHER_LIBS	= $(LIB_XMOS) -L/usr/X/lib -lXm -lXt -lXmu -lXext -lX11 -lm
 
 EXPORT_LDFLAGS	+= -lresolv -lsocket -lc /usr/ucblib/libucb.a
 
 endif
 
+########################################
+# Data General DG/UX
+ifeq ($(OS_ARCH),DGUX)
+
+OTHER_LIBS	= $(MOTIFLIB) $(OS_LIBS)
+
+endif
+
 #######################################################################
+
 
 $(ICONS_LIB):
 	cd icons; $(MAKE)
+
 
 $(TARGETS): $(OBJS)
 
@@ -937,12 +1094,12 @@ $(OBJDIR)/e_kit.o:	e_kit.c e_kit_resources.h
 e_kit_resources.h: e_kit.ad
 	@echo 'char* fe_ekitDefaultDatabase = ' > $@
 	cat $< | tr '[\001-\272]' '[\106-\377]' | \
-        od -b | sed 's/^[0-7][0-7]* *\(.*\)/\\\1/; \
+	od -b | sed 's/^[0-7][0-7]* *\(.*\)/\\\1/; \
 		s/ /\\/g;s/\(.*\)/ "\1"/;s/^ *"\\"$$//' >> $@
 	@echo ';' >> $@
 
-$(OBJDIR)/Netscape-nis-export.ad $(OBJDIR)/Netscape-export.ad: Makefile resources versionn.h strs make-resources $(LOCALE_MAP)
-	@./make-resources $@ Netscape Netscape "" export $(LOCALES)
+$(OBJDIR)/Netscape-nis-export.ad $(OBJDIR)/Netscape-export.ad: Makefile resources resources-translations versionn.h strs make-resources $(LOCALE_MAP)
+	@./make-resources $@ Netscape Netscape versionn.h strs resources resources-translations $(MOZ_USER_DIR) "" export $(LOCALES)
 
 #######################################################################
 # The "-export" targets
@@ -950,7 +1107,21 @@ $(OBJDIR)/Netscape-nis-export.ad $(OBJDIR)/Netscape-export.ad: Makefile resource
 $(OBJDIR)/$(DSO_PROGNAME)-export: $(OBJS) $(EXPORT_OBJS) $(EXPORT_DEPLIBS)
 	@$(MAKE_OBJDIR)
 	rm -f $@
+ifdef NETSCAPE_OFFICIAL
+	rm -rf $(OBJDIR)/objs.txt
+	@echo Creating a list of all object files ... objs.txt
+	@echo $(OBJS) > $(OBJDIR)/objs.txt
+	@echo $(EXPORT_OBJS) >> $(OBJDIR)/objs.txt
+	@echo $(DSO_EX_LIBS) >> $(OBJDIR)/objs.txt
+	@echo Creating a list of all symbols ... symbols.txt
+	$(PERL) listsymb.pl objs.txt symbols.txt
+	@echo Generating dispatch table ... dispunix.h dispunix.c cmoffset.h
+	$(PERL) gendisp.pl symbols.txt dispunix.h dispunix.c cmoffset.h
+	$(CC) -c -o $(OBJDIR)/dispunix.o -I$(DIST)/include dispunix.c
+	$(CCLD) -o $@ $(LDFLAGS) $(OBJDIR)/dispunix.o $(OBJS) $(EXPORT_OBJS) -L$(DIST)/bin -L$(DIST)/lib $(DSO_EX_LIBS) $(DNS_LIB)
+else
 	$(CCLD) -o $@ $(LDFLAGS) $(OBJS) $(EXPORT_OBJS) -L$(DIST)/bin -L$(DIST)/lib $(DSO_EX_LIBS) $(DNS_LIB)
+endif
 	@$(EXTRA_POST_LINK_CMD) $@
 
 $(OBJDIR)/$(DSO_PROGNAME)-export.mcv: $(OBJS) $(EXPORT_OBJS) $(EXPORT_DEPLIBS)
@@ -971,35 +1142,39 @@ $(OBJDIR)/$(DSO_PROGNAME)-export.quantify: $(OBJS) $(EXPORT_OBJS) $(EXPORT_DEPLI
 	$(QUANTIFY) $(CCLD) -o $@ $(LDFLAGS) $(OBJS) $(EXPORT_OBJS) -L$(DIST)/bin -L$(DIST)/lib $(DSO_EX_LIBS) $(DNS_LIB)
 	@$(EXTRA_POST_LINK_CMD) $@
 
-$(OBJDIR)/$(QTFE_PROGNAME)-export: $(OBJS) $(EXPORT_OBJS) $(EXPORT_DEPLIBS)
+$(OBJDIR)/$(FE_PROGNAME)-export: $(OBJS) $(EXPORT_OBJS) $(EXPORT_DEPLIBS)
 	@$(MAKE_OBJDIR)
 	rm -f $@
-	$(CCLD) -o $@ $(LDFLAGS) $(OBJS) $(EXPORT_OBJS) $(EXPORT_LDFLAGS) $(DNS_LIB)
+	$(CCLD) -o $@ $(DYNAMIC_SYMBOLS_F) $(LDFLAGS) $(OBJS) $(EXPORT_OBJS) $(EXPORT_DYN_QT_LDFLAGS) $(DNS_LIB)
 	@$(EXTRA_POST_LINK_CMD) $@
 
-$(OBJDIR)/$(QTFE_PROGNAME)-export.pure: $(OBJS) $(EXPORT_OBJS) $(EXPORT_DEPLIBS)
+$(OBJDIR)/$(FE_PROGNAME)-export.pure: $(OBJS) $(EXPORT_OBJS) $(EXPORT_DEPLIBS)
 	@$(MAKE_OBJDIR)
 	rm -f $@
 	$(PURIFY) $(CCLD) -o $@ $(NOMD_LDFLAGS) $(OBJS) $(EXPORT_OBJS) $(EXPORT_LDFLAGS) $(DNS_LIB)
 	@$(EXTRA_POST_LINK_CMD) $@
 
-$(OBJDIR)/$(QTFE_PROGNAME)-export.quantify: $(OBJS) $(EXPORT_OBJS) $(EXPORT_DEPLIBS)
+$(OBJDIR)/$(FE_PROGNAME)-export.quantify: $(OBJS) $(EXPORT_OBJS) $(EXPORT_DEPLIBS)
 	@$(MAKE_OBJDIR)
 	rm -f $@
 	$(QUANTIFY) $(CCLD) -o $@ $(NOMD_LDFLAGS) $(OBJS) $(EXPORT_OBJS) $(EXPORT_LDFLAGS) $(DNS_LIB)
 	@$(EXTRA_POST_LINK_CMD) $@
 
-$(OBJDIR)/$(QTFE_PROGNAME)-export.prof: $(OBJS) $(EXPORT_OBJS) $(EXPORT_DEPLIBS)
+$(OBJDIR)/$(FE_PROGNAME)-export.prof: $(OBJS) $(EXPORT_OBJS) $(EXPORT_DEPLIBS)
 	@$(MAKE_OBJDIR)
 	rm -f $@
 	$(CCLD) -p -o $@ $(LDFLAGS) $(OBJS) $(EXPORT_OBJS) $(EXPORT_LDFLAGS) $(DNS_LIB)
 	@$(EXTRA_POST_LINK_CMD) $@
 
-$(OBJDIR)/$(QTFE_PROGNAME)-nis-export: $(OBJS) $(NIS_EXPORT_OBJS) $(NIS_OBJS) $(EXPORT_DEPLIBS)
+$(OBJDIR)/$(FE_PROGNAME)-nis-export: $(OBJS) $(NIS_EXPORT_OBJS) $(NIS_OBJS) $(EXPORT_DEPLIBS)
 	@$(MAKE_OBJDIR)
 	rm -f $@
 	$(CCLD) -o $@ $(LDFLAGS) $(OBJS) $(NIS_EXPORT_OBJS) $(EXPORT_LDFLAGS) $(NIS_LIB)
 	@$(EXTRA_POST_LINK_CMD) $@
+
+#
+# Build a dynamic Motif version.
+#
 
 #---------------- Misc link targets follow ----------------------#
 
@@ -1007,10 +1182,10 @@ $(OBJDIR)/$(QTFE_PROGNAME)-nis-export: $(OBJS) $(NIS_EXPORT_OBJS) $(NIS_OBJS) $(
 mcv:	$(OBJDIR)/$(DSO_PROGNAME)-export $(OBJDIR)/$(DSO_PROGNAME)-export.mcv
 
 # Make a purified, static export executable by default.
-pure:	$(OBJDIR)/$(QTFE_PROGNAME)-export $(OBJDIR)/$(QTFE_PROGNAME)-export.pure
+pure:	$(OBJDIR)/$(FE_PROGNAME)-export $(OBJDIR)/$(FE_PROGNAME)-export.pure
 
 # Trying out quantify.
-quantify:	$(OBJDIR)/$(QTFE_PROGNAME)-export $(OBJDIR)/$(QTFE_PROGNAME)-export.quantify
+quantify:	$(OBJDIR)/$(FE_PROGNAME)-export $(OBJDIR)/$(FE_PROGNAME)-export.quantify
 
 # Use gtscc to find dead code globals.
 unreferenced: $(OBJS) $(NET_EXPORT_OBJS) $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LIB) $(DIST)/bin/gtscc 
@@ -1018,7 +1193,19 @@ unreferenced: $(OBJS) $(NET_EXPORT_OBJS) $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIB
 	rm -f $@
 	$(DIST)/bin/gtscc -gtsrootdir $(DEPTH) -gtsdump -gtsnorecompile -gtsnolink $(DEPTH) $(OBJS) $(NET_EXPORT_OBJS) $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LIB) | awk -n '/ 0 0 / { print $$5 " " $$1 }' | sort > $@
 
+
 ifeq ($(OS_ARCH),AIX)
+
+#
+# In first. Need to double check
+#
+# This fixes a 4.5-specific problem caused by including /usr/include/strings.h unnecessarily.
+$(OBJDIR)/qtmoz.cpp: qtmoz.cpp
+	@$(MAKE_OBJDIR)
+	$(CC) -o $@ -c $(CFLAGS) -D_H_STRINGS $<
+#
+# end 
+#
 AIX_HACK	:= $(notdir $(AIX_NSPR))
 
 # Install nspr dynamic library for AIX.
@@ -1028,7 +1215,7 @@ endif
 
 install:: $(AIX_HACK) $(EXTRA_REL_FILES) $(TARGETS)
 ifdef TARGETS
-	$(INSTALL) $(TARGETS) $(DIST)/bin
+	$(INSTALL) $(filter-out tweak_nspr,$(TARGETS)) $(DIST)/bin
 endif
 
 $(VERSION_OBJS): versionn.h
@@ -1050,6 +1237,8 @@ symbols:
 	@echo "ALL_TARGETS = $(ALL_TARGETS)"
 	@echo "RELEASES    = $(RELEASES)"
 	@echo "OS_ARCH     = $(OS_ARCH)"
+	@echo "FC_PLATFORM = $(FC_PLATFORM)"
+
 
 ####################################################################
 # The icons thing.
@@ -1057,7 +1246,7 @@ symbols:
 
 # the embed program
 $(OBJDIR)/embed: tools/embed.cpp
-	$(CCC) -I$(QTDIR)/include -o $@ $< $(QTLIB) -L/usr/X11/lib -lXext -lX11
+	$(CCC) -I$(QTDIR)/include -o $@ $< $(QTLIB) -L/usr/X11R6/lib -lXext -lX11
 
 # make sure icon-pixmaps.inc gets built
 $(OBJDIR)/icons.o: $(OBJDIR)/icon-pixmaps.inc
@@ -1086,9 +1275,3 @@ ICONS=$(XFE_TB_ICONS) $(XFE_BM_ICONS) $(ANIMATIONS) $(SECURITY) $(FILE_ICONS) $(
 $(OBJDIR)/icon-pixmaps.inc: $(OBJDIR)/embed $(ICONS)
 	$(OBJDIR)/embed $(ICONS) > $@ || (rm $(OBJDIR)/icon-pixmaps.inc;exit 1)
 
-####################################################################
-# MOC files
-####################################################################
-
-moc_%.cpp: %.h
-	$(MOC) $< -o $@
