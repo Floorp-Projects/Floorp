@@ -149,7 +149,7 @@ NS_IMETHODIMP nsViewManager :: Init(nsIDeviceContext* aContext)
 
   rv = SetFrameRate(UPDATE_QUANTUM);
 
-  mLastRefresh = PR_Now();
+  mLastRefresh = PR_IntervalNow();
 
   mRefreshEnabled = PR_TRUE;
 
@@ -367,7 +367,7 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsI
   else
     mDirtyRegion->Subtract(*region);
 
-  mLastRefresh = PR_Now();
+  mLastRefresh = PR_IntervalNow();
 
   mPainting = PR_FALSE;
 }
@@ -473,7 +473,7 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsR
 
 #endif
 
-  mLastRefresh = PR_Now();
+  mLastRefresh = PR_IntervalNow();
 
   mPainting = PR_FALSE;
 }
@@ -611,15 +611,7 @@ NS_IMETHODIMP nsViewManager :: UpdateView(nsIView *aView, const nsRect &aRect, P
     }
     else if ((mFrameRate > 0) && !(aUpdateFlags & NS_VMREFRESH_NO_SYNC))
     {
-      PRTime now = PR_Now();
-      PRTime conversion, ustoms;
-      PRInt32 deltams;
-
-      LL_I2L(ustoms, 1000);
-      LL_SUB(conversion, now, mLastRefresh);
-      LL_DIV(conversion, conversion, ustoms);
-      LL_L2I(deltams, conversion);
-
+      PRInt32 deltams = PR_IntervalToMilliseconds(PR_IntervalNow() - mLastRefresh);
       if (deltams > (1000 / (PRInt32)mFrameRate))
         Composite();
     }
@@ -1291,15 +1283,7 @@ NS_IMETHODIMP nsViewManager :: EnableRefresh(void)
 
   if (mFrameRate > 0)
   {
-    PRTime now = PR_Now();
-    PRTime conversion, ustoms;
-    PRInt32 deltams;
-
-    LL_I2L(ustoms, 1000);
-    LL_SUB(conversion, now, mLastRefresh);
-    LL_DIV(conversion, conversion, ustoms);
-    LL_L2I(deltams, conversion);
-
+    PRInt32 deltams = PR_IntervalToMilliseconds(PR_IntervalNow() - mLastRefresh);
     if (deltams > (1000 / (PRInt32)mFrameRate))
       Composite();
   }
