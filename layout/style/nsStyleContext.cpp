@@ -379,6 +379,26 @@ nsStyleContext::ApplyStyleFixups(nsIPresContext* aPresContext)
       uniqueText->mTextAlign = NS_STYLE_TEXT_ALIGN_DEFAULT;
     }
   }
+
+  // CSS2.1 section 9.2.4 specifies fixups for the 'display' property of
+  // the root element.  We can't implement them in nsRuleNode because we
+  // don't want to store all display structs that aren't 'block',
+  // 'inline', or 'table' in the style context tree on the off chance
+  // that the root element has its style reresolved later.  So do them
+  // here if needed, by changing the style data, so that other code
+  // doesn't get confused by looking at the style data.
+  if (!mParent) {
+    if (disp->mDisplay != NS_STYLE_DISPLAY_NONE &&
+        disp->mDisplay != NS_STYLE_DISPLAY_BLOCK &&
+        disp->mDisplay != NS_STYLE_DISPLAY_TABLE) {
+      nsStyleDisplay *mutable_display = NS_STATIC_CAST(nsStyleDisplay*,
+        GetUniqueStyleData(eStyleStruct_Display));
+      if (mutable_display->mDisplay == NS_STYLE_DISPLAY_INLINE_TABLE)
+        mutable_display->mDisplay = NS_STYLE_DISPLAY_TABLE;
+      else
+        mutable_display->mDisplay = NS_STYLE_DISPLAY_BLOCK;
+    }
+  }
 }
 
 void
