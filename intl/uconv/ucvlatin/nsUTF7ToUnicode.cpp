@@ -124,7 +124,7 @@ nsresult nsBasicUTF7Decoder::DecodeBase64(
         }
         mEncBits += value >> 4;
         *(dest++) = (PRUnichar) mEncBits;
-        mEncBits = (value & 0x0e) << 12;
+        mEncBits = (value & 0x0f) << 12;
         break;
       case 6:
         mEncBits += value << 6;
