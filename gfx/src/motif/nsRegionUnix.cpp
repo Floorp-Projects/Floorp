@@ -66,6 +66,10 @@ void nsRegionUnix :: Subtract(const nsIRegion &aRegion)
 {
 }
 
+void nsRegionUnix :: Subtract(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
+{
+}
+
 PRBool nsRegionUnix :: IsEmpty(void)
 {
   return PR_FALSE;

@@ -69,7 +69,7 @@ void nsRegionWin :: Intersect(const nsIRegion &aRegion)
 {
   nsRegionWin *pRegion = (nsRegionWin *)&aRegion;
 
-  mRegionType = ::CombineRgn(mRegion, pRegion->mRegion, mRegion, RGN_AND);
+  mRegionType = ::CombineRgn(mRegion, mRegion, pRegion->mRegion, RGN_AND);
 }
 
 void nsRegionWin :: Intersect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
@@ -77,7 +77,7 @@ void nsRegionWin :: Intersect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aH
   HRGN tRegion;
 
   tRegion = ::CreateRectRgn(aX, aY, aX + aWidth, aY + aHeight);
-  mRegionType = ::CombineRgn(mRegion, tRegion, mRegion, RGN_AND);
+  mRegionType = ::CombineRgn(mRegion, mRegion, tRegion, RGN_AND);
 
   ::DeleteObject(tRegion);
 }
@@ -86,7 +86,7 @@ void nsRegionWin :: Union(const nsIRegion &aRegion)
 {
   nsRegionWin *pRegion = (nsRegionWin *)&aRegion;
 
-  mRegionType = ::CombineRgn(mRegion, pRegion->mRegion, mRegion, RGN_OR);
+  mRegionType = ::CombineRgn(mRegion, mRegion, pRegion->mRegion, RGN_OR);
 }
 
 void nsRegionWin :: Union(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
@@ -94,7 +94,7 @@ void nsRegionWin :: Union(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeigh
   HRGN tRegion;
 
   tRegion = ::CreateRectRgn(aX, aY, aX + aWidth, aY + aHeight);
-  mRegionType = ::CombineRgn(mRegion, tRegion, mRegion, RGN_OR);
+  mRegionType = ::CombineRgn(mRegion, mRegion, tRegion, RGN_OR);
 
   ::DeleteObject(tRegion);
 }
@@ -104,6 +104,16 @@ void nsRegionWin :: Subtract(const nsIRegion &aRegion)
   nsRegionWin *pRegion = (nsRegionWin *)&aRegion;
 
   mRegionType = ::CombineRgn(mRegion, mRegion, pRegion->mRegion, RGN_DIFF);
+}
+
+void nsRegionWin :: Subtract(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
+{
+  HRGN tRegion;
+
+  tRegion = ::CreateRectRgn(aX, aY, aX + aWidth, aY + aHeight);
+  mRegionType = ::CombineRgn(mRegion, mRegion, tRegion, RGN_DIFF);
+
+  ::DeleteObject(tRegion);
 }
 
 PRBool nsRegionWin :: IsEmpty(void)

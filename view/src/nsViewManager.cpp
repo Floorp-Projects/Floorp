@@ -24,10 +24,13 @@
 #include "nsIDeviceContext.h"
 #include "nsGfxCIID.h"
 #include "nsIScrollableView.h"
+#include "nsIRegion.h"
 
 static const PRBool gsDebug = PR_FALSE;
 
 #define UPDATE_QUANTUM  1000 / 40
+
+//#define USE_DIRTY_RECT
 
 static void vm_timer_callback(nsITimer *aTimer, void *aClosure)
 {
@@ -58,6 +61,7 @@ nsViewManager :: ~nsViewManager()
 
   NS_IF_RELEASE(mRootWindow);
   NS_IF_RELEASE(mRootView);
+  NS_IF_RELEASE(mDirtyRegion);
 
   if (nsnull != mDrawingSurface)
   {
@@ -272,8 +276,69 @@ void nsViewManager :: ResetScrolling(void)
   }
 }
 
-void nsViewManager :: Refresh(nsIRenderingContext *aContext, nsIRegion *region, PRUint32 aUpdateFlags)
+void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsIRegion *region, PRUint32 aUpdateFlags)
 {
+  nsRect              wrect;
+  nsIRenderingContext *localcx = nsnull;
+  nscoord             xoff, yoff;
+  float               scale;
+
+  if (nsnull == aContext)
+  {
+    localcx = CreateRenderingContext(*aView);
+
+    //couldn't get rendering context. ack.
+
+    if (nsnull == localcx)
+    {
+      NS_ASSERTION(PR_FALSE, "unable to create rendering context.");
+      return;
+    }
+  }
+  else
+    localcx = aContext;
+
+  if (aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER)
+  {
+    mRootWindow->GetBounds(wrect);
+    nsDrawingSurface  ds = GetDrawingSurface(*localcx, wrect);
+    localcx->SelectOffScreenDrawingSurface(ds);
+  }
+
+  scale = mContext->GetTwipsToPixels();
+
+  GetWindowOffsets(&xoff, &yoff);
+
+  region->Offset(NS_TO_INT_ROUND(-xoff * scale), NS_TO_INT_ROUND(-yoff * scale));
+//  localcx->SetClipRegion(*region, nsClipCombine_kIntersect);
+  localcx->SetClipRegion(*region, nsClipCombine_kReplace);
+  region->Offset(NS_TO_INT_ROUND(xoff * scale), NS_TO_INT_ROUND(yoff * scale));
+
+  localcx->Translate(-xoff, -yoff);
+
+  nsRect trect;
+
+  region->GetBoundingBox(&trect.x, &trect.y, &trect.width, &trect.height);
+  trect *= mContext->GetPixelsToTwips();
+
+  localcx->PushState();
+  aView->Paint(*localcx, trect, 0);
+  localcx->PopState();
+
+  if (aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER)
+    localcx->CopyOffScreenBits(wrect);
+
+  if (localcx != aContext)
+    NS_RELEASE(localcx);
+
+  //is the dirty region the same as the region we just painted?
+
+  if ((region == mDirtyRegion) || region->IsEqual(*mDirtyRegion))
+    ClearDirtyRegion();
+  else
+    mDirtyRegion->Subtract(*region);
+
+  mLastRefresh = PR_Now();
 }
 
 void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsRect *rect, PRUint32 aUpdateFlags)
@@ -289,10 +354,10 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsR
     //couldn't get rendering context. ack.
 
     if (nsnull == localcx)
-{
-printf("unable to get rc\n");
+    {
+      NS_ASSERTION(PR_FALSE, "unable to create rendering context.");
       return;
-}
+    }
   }
   else
     localcx = aContext;
@@ -328,6 +393,8 @@ printf("unable to get rc\n");
   if (localcx != aContext)
     NS_RELEASE(localcx);
 
+#ifdef USE_DIRTY_RECT
+
   nsRect  updaterect = *rect;
 
   //does our dirty rect intersect the rect we just painted?
@@ -341,13 +408,36 @@ printf("unable to get rc\n");
       ClearDirtyRegion();
   }
 
+#else
+
+  //subtract the area we just painted from the dirty region
+
+  if ((nsnull != mDirtyRegion) && !mDirtyRegion->IsEmpty())
+  {
+    nsRect pixrect = trect;
+
+    pixrect *= mContext->GetTwipsToPixels();
+    mDirtyRegion->Subtract(pixrect.x, pixrect.y, pixrect.width, pixrect.height);
+  }
+
+#endif
+
   mLastRefresh = PR_Now();
 }
 
 void nsViewManager :: Composite()
 {
-  if ((nsnull != mRootView) && (mDirtyRect.IsEmpty() == PR_FALSE))
+#ifdef USE_DIRTY_RECT
+
+  if ((nsnull != mRootView) && !mDirtyRect.IsEmpty())
     Refresh(mRootView, nsnull, &mDirtyRect, NS_VMREFRESH_DOUBLE_BUFFER);
+
+#else
+
+  if ((nsnull != mRootView) && (nsnull != mDirtyRegion) && !mDirtyRegion->IsEmpty())
+    Refresh(mRootView, nsnull, mDirtyRegion, NS_VMREFRESH_DOUBLE_BUFFER);
+
+#endif
 }
 
 void nsViewManager :: UpdateView(nsIView *aView, nsIRegion *aRegion, PRUint32 aUpdateFlags)
@@ -388,16 +478,28 @@ void nsViewManager :: UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 a
     while (par = par->GetParent());
   }
 
+#ifdef USE_DIRTY_RECT
+
   if (mDirtyRect.IsEmpty())
     mDirtyRect = trect;
   else
     mDirtyRect.UnionRect(mDirtyRect, trect);
 
+#else
+
+  AddRectToDirtyRegion(trect);
+
+#endif
+
   if (nsnull != mContext)
   {
     if (aUpdateFlags & NS_VMREFRESH_IMMEDIATE)
+#ifdef USE_DIRTY_RECT
       Refresh(mRootView, nsnull, &mDirtyRect, aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER);
-    else if (mFrameRate > 0)
+#else
+      Refresh(mRootView, nsnull, mDirtyRegion, aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER);
+#endif
+    else if ((mFrameRate > 0) && !(aUpdateFlags & NS_VMREFRESH_NO_SYNC))
     {
       PRTime now = PR_Now();
       PRTime conversion, ustoms;
@@ -524,7 +626,7 @@ void nsViewManager :: RemoveChild(nsIView *parent, nsIView *child)
 
   if ((nsnull != parent) && (nsnull != child))
   {
-    UpdateView(child, nsnull, 0);
+    UpdateView(child, nsnull, NS_VMREFRESH_NO_SYNC);
     parent->RemoveChild(child);
   }
 }
@@ -678,10 +780,19 @@ nsDrawingSurface nsViewManager :: GetDrawingSurface(nsIRenderingContext &aContex
 
 void nsViewManager :: ClearDirtyRegion()
 {
+#ifdef USE_DIRTY_RECT
+
   mDirtyRect.x = 0;
   mDirtyRect.y = 0;
   mDirtyRect.width = 0;
   mDirtyRect.height = 0;
+
+#else
+
+  if (nsnull != mDirtyRegion)
+    mDirtyRegion->SetTo(0, 0, 0, 0);
+
+#endif
 }
 
 nsIRenderingContext * nsViewManager :: CreateRenderingContext(nsIView &aView)
@@ -726,4 +837,26 @@ nsIRenderingContext * nsViewManager :: CreateRenderingContext(nsIView &aView)
   }
 
   return cx;
+}
+
+void nsViewManager :: AddRectToDirtyRegion(nsRect &aRect)
+{
+  if (nsnull == mDirtyRegion)
+  {
+    static NS_DEFINE_IID(kRegionCID, NS_REGION_CID);
+    static NS_DEFINE_IID(kIRegionIID, NS_IREGION_IID);
+
+    nsresult rv = NSRepository::CreateInstance(kRegionCID, 
+                                       nsnull, 
+                                       kIRegionIID, 
+                                       (void **)&mDirtyRegion);
+
+    if (NS_OK != rv)
+      return;
+  }
+
+  nsRect  trect = aRect;
+
+  trect *= mContext->GetTwipsToPixels();
+  mDirtyRegion->Union(trect.x, trect.y, trect.width, trect.height);
 }

@@ -86,10 +86,7 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
         nsRect            vrect, trect = *((nsPaintEvent*)aEvent)->rect;
         nsIDeviceContext  *dx = px->GetDeviceContext();
 
-        trect.x = NS_TO_INT_ROUND(trect.x * convert);
-        trect.y = NS_TO_INT_ROUND(trect.y * convert);
-        trect.width = NS_TO_INT_ROUND(trect.width * convert);
-        trect.height = NS_TO_INT_ROUND(trect.height * convert);
+        trect *= convert;
 
         //see if the paint region is greater than .75 the area of our root view.
         //if so, enable double buffered painting.
