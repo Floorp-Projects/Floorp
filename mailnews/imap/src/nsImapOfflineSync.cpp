@@ -31,7 +31,8 @@
 #include "nsIMsgAccountManager.h"
 #include "nsINntpIncomingServer.h"
 #include "nsIRequestObserver.h"
-
+#include "nsSpecialSystemDirectory.h"
+#include "nsIFileStream.h"
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
@@ -82,6 +83,11 @@ nsImapOfflineSync::OnStopRunningUrl(nsIURI* url, nsresult exitCode)
   if (stopped)
     exitCode = NS_BINDING_ABORTED;
 
+  if (m_curTempFile)
+  {
+    m_curTempFile->Delete(PR_FALSE);
+    m_curTempFile = nsnull;
+  }
   if (NS_SUCCEEDED(exitCode))
     rv = ProcessNextOperation();
   else if (m_listener)  // notify main observer.
@@ -249,64 +255,96 @@ nsImapOfflineSync::ProcessAppendMsgOperation(nsIMsgOfflineImapOperation *current
 	nsCOMPtr <nsIMsgDBHdr> mailHdr;
   nsMsgKey msgKey;
   currentOp->GetMessageKey(&msgKey);
-#ifndef NOT_IMPL_YET
-  m_currentDB->GetMsgHdrForKey(msgKey, getter_AddRefs(mailHdr)); 
-#else
   nsresult rv = m_currentDB->GetMsgHdrForKey(msgKey, getter_AddRefs(mailHdr)); 
 	if (NS_SUCCEEDED(rv) && mailHdr)
 	{
-		char *msg_file_name = WH_TempName (xpFileToPost, "nsmail");
-		if (msg_file_name)
+    nsMsgKey messageOffset;
+    PRUint32 messageSize;
+    mailHdr->GetMessageOffset(&messageOffset);
+    mailHdr->GetOfflineMessageSize(&messageSize);
+    nsCOMPtr <nsIFileSpec>	tempFileSpec;
+    nsSpecialSystemDirectory tmpFileSpec(nsSpecialSystemDirectory::OS_TemporaryDirectory);
+  
+    tmpFileSpec += "nscpmsg.txt";
+    tmpFileSpec.MakeUnique();
+    rv = NS_NewFileSpecWithSpec(tmpFileSpec,
+                                  getter_AddRefs(tempFileSpec));
+	  if (tempFileSpec)
+    {
+      nsCOMPtr <nsIOutputStream> outputStream;
+      rv = tempFileSpec->GetOutputStream(getter_AddRefs(outputStream));
+      if (NS_SUCCEEDED(rv) && outputStream)
+      {
+				nsXPIDLCString moveDestination;
+				currentOp->GetDestinationFolderURI(getter_Copies(moveDestination));
+        nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
+        nsCOMPtr<nsIRDFResource> res;
+        if (NS_FAILED(rv)) return ; // ### return error code.
+        rv = rdf->GetResource(moveDestination, getter_AddRefs(res));
+        if (NS_SUCCEEDED(rv))
+        {
+          nsCOMPtr<nsIMsgFolder> destFolder(do_QueryInterface(res, &rv));
+          if (NS_SUCCEEDED(rv) && destFolder)
+          {
+            nsCOMPtr <nsIInputStream> offlineStoreInputStream;
+            rv = destFolder->GetOfflineStoreInputStream(getter_AddRefs(offlineStoreInputStream));
+            if (NS_SUCCEEDED(rv) && offlineStoreInputStream)
+            {
+              nsCOMPtr<nsIRandomAccessStore> seekStream = do_QueryInterface(offlineStoreInputStream);
+              NS_ASSERTION(seekStream, "non seekable stream - can't read from offline msg");
+              if (seekStream)
+              {
+                rv = seekStream->Seek(PR_SEEK_SET, messageOffset);
+                if (NS_SUCCEEDED(rv))
 		{
-			XP_File msg_file = XP_FileOpen(msg_file_name, xpFileToPost,
-										   XP_FILE_WRITE_BIN);
-			if (msg_file)
-			{
-				mailHdr->WriteOfflineMessage(msg_file, m_currentDB->GetDB(), PR_FALSE);
-				XP_FileClose(msg_file);
-				nsCAutoString moveDestination;
-				currentOp->GetMoveDestination(moveDestination);
-				MSG_IMAPFolderInfoMail *currentIMAPFolder = m_currentFolder->GetIMAPFolderInfoMail();
-
-				MSG_IMAPFolderInfoMail *mailFolderInfo = currentIMAPFolder
-					? m_workerPane->GetMaster()->FindImapMailFolder(currentIMAPFolder->GetHostName(), moveDestination, nsnsnull, PR_FALSE)
-					: m_workerPane->GetMaster()->FindImapMailFolder(moveDestination);
-				char *urlString = 
-					CreateImapAppendMessageFromFileUrl(
-						mailFolderInfo->GetHostName(),
-						mailFolderInfo->GetOnlineName(),
-						mailFolderInfo->GetOnlineHierarchySeparator(),
-						opType == kAppendDraft);
-				if (urlString)
-				{
-					URL_Struct *url = NET_CreateURLStruct(urlString,
-														  NET_NORMAL_RELOAD); 
-					if (url)
-					{
-						url->post_data = XP_STRDUP(msg_file_name);
-						url->post_data_size = XP_STRLEN(msg_file_name);
-						url->post_data_is_file = PR_TRUE;
-						url->method = URL_POST_METHOD;
-						url->fe_data = (void *) new
-							AppendMsgOfflineImapState(
-								mailFolderInfo,
-								currentOp->GetMessageKey(), msg_file_name);
-						url->internal_url = PR_TRUE;
-						url->msg_pane = m_workerPane;
-						m_workerPane->GetContext()->imapURLPane = m_workerPane;
-						MSG_UrlQueue::AddUrlToPane (url,
-													PostAppendMsgExitFunction,
-													m_workerPane, PR_TRUE);
-						currentOp->ClearAppendMsgOperation(opType);
+                  // now, copy the dest folder offline store msg to the temp file
+                  PRInt32 inputBufferSize = 10240;
+                  char *inputBuffer = nsnull;
+        
+                  while (!inputBuffer && (inputBufferSize >= 512))
+                  {
+                    inputBuffer = (char *) PR_Malloc(inputBufferSize);
+                    if (!inputBuffer)
+                      inputBufferSize /= 2;
+                  }
+                  PRUint32 bytesLeft, bytesRead, bytesWritten;
+                  bytesLeft = messageSize;
+                  rv = NS_OK;
+                  while (bytesLeft > 0 && NS_SUCCEEDED(rv))
+                  {
+                    rv = offlineStoreInputStream->Read(inputBuffer, inputBufferSize, &bytesRead);
+                    if (NS_SUCCEEDED(rv) && bytesRead > 0)
+                    {
+                      rv = outputStream->Write(inputBuffer, bytesRead, &bytesWritten);
+                      NS_ASSERTION(bytesWritten == bytesRead, "wrote out correct number of bytes");
+                    }
+                    bytesLeft -= bytesRead;
+                  }
+                  outputStream->Flush();
+                  tempFileSpec->CloseStream();
+                  if (NS_SUCCEEDED(rv))
+                  {
+                    m_curTempFile = tempFileSpec;
+                    rv = destFolder->CopyFileMessage(tempFileSpec,
+                                  /* nsIMsgDBHdr* msgToReplace */ nsnull,
+                                  PR_TRUE /* isDraftOrTemplate */,
+                                  m_window,
+                                  this);
+                  }
+                  else
+                    m_curTempFile->Delete(PR_FALSE);
+                }
+				        currentOp->ClearOperation(nsIMsgOfflineImapOperation::kAppendDraft);
+                m_currentDB->DeleteHeader(mailHdr, nsnull, PR_TRUE, PR_TRUE);
 					}
-					XP_FREEIF(urlString);
 				}
+            // want to close in failure case too
+            tempFileSpec->CloseStream();
 			}
-			XP_FREEIF(msg_file_name);
 		}
-		mailHdr->unrefer();
 	}
-#endif // NOT_IMPL_YET
+}
+	}
 }
 
 
