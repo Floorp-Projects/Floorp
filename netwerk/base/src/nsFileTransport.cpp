@@ -208,9 +208,11 @@ nsFileTransport::AsyncWrite(nsIInputStream* fromStream,
 }
 
 NS_IMETHODIMP
-nsFileTransport::OpenInputStream(nsIInputStream* *result)
+nsFileTransport::OpenInputStream(PRUint32 startPosition, PRInt32 readCount, 
+                                 nsIInputStream* *result)
 {
     nsresult rv;
+    NS_ASSERTION(startPosition == 0, "fix me");
 
     nsIStreamListener* syncListener;
     nsIBufferInputStream* inStr;
@@ -235,7 +237,7 @@ nsFileTransport::OpenInputStream(nsIInputStream* *result)
 }
 
 NS_IMETHODIMP
-nsFileTransport::OpenOutputStream(nsIOutputStream* *result)
+nsFileTransport::OpenOutputStream(PRUint32 startPosition, nsIOutputStream* *result)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

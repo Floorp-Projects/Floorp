@@ -43,6 +43,8 @@ nsFTPChannel::nsFTPChannel()
     : mUrl(nsnull), mConnected(PR_FALSE), mListener(nsnull) {
 
     nsresult rv;
+    
+    NS_INIT_REFCNT();
 
     NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueService, &rv);
     if (NS_SUCCEEDED(rv)) {
@@ -50,8 +52,6 @@ nsFTPChannel::nsFTPChannel()
     }
     if (NS_FAILED(rv))
         mEventQueue = nsnull;    
-    
-    NS_INIT_REFCNT();
 }
 
 nsFTPChannel::~nsFTPChannel() {
@@ -112,13 +112,14 @@ nsFTPChannel::GetURI(nsIURI * *aURL)
 }
 
 NS_IMETHODIMP
-nsFTPChannel::OpenInputStream(nsIInputStream* *result)
+nsFTPChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
+                              nsIInputStream **_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsFTPChannel::OpenOutputStream(nsIOutputStream* *result)
+nsFTPChannel::OpenOutputStream(PRUint32 startPosition, nsIOutputStream **_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -27,6 +27,7 @@ MODULE		= netwerk
 include $(DEPTH)/config/autoconf.mk
 
 DIRS=        \
+	file \
 	ftp  \
         http \
 	$(NULL)

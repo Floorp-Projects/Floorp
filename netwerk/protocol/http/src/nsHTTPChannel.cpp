@@ -113,7 +113,8 @@ nsHTTPChannel::GetURI(nsIURI* *o_URL)
 }
 
 NS_IMETHODIMP
-nsHTTPChannel::OpenInputStream(nsIInputStream* *o_Stream)
+nsHTTPChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
+                               nsIInputStream **o_Stream)
 {
 #if 0
     nsresult rv;
@@ -139,7 +140,7 @@ nsHTTPChannel::OpenInputStream(nsIInputStream* *o_Stream)
 }
 
 NS_IMETHODIMP
-nsHTTPChannel::OpenOutputStream(nsIOutputStream* *o_Stream)
+nsHTTPChannel::OpenOutputStream(PRUint32 startPosition, nsIOutputStream **_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

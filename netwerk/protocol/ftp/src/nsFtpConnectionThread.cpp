@@ -124,11 +124,11 @@ nsFtpConnectionThread::Run() {
     if (NS_FAILED(rv)) return rv;
 
     // get the output stream so we can write to the server
-    rv = lCPipe->OpenOutputStream(&mCOutStream);
+    rv = lCPipe->OpenOutputStream(0, &mCOutStream);
     if (NS_FAILED(rv)) return rv;
 
     // get the input stream so we can read data from the server.
-    rv = lCPipe->OpenInputStream(&mCInStream);
+    rv = lCPipe->OpenInputStream(0, -1, &mCInStream);
     if (NS_FAILED(rv)) return rv;
 
 
@@ -1115,14 +1115,14 @@ nsFtpConnectionThread::Run() {
 
                 if (mAction == GET) {
                     // get the input stream so we can read data from the server.
-                    rv = lDPipe->OpenInputStream(&mDInStream);
+                    rv = lDPipe->OpenInputStream(0, -1, &mDInStream);
                     if (NS_FAILED(rv)) {
                         mState = FTP_ERROR;
                         break;
                     }
                 } else {
                     // get the output stream so we can write to the server
-                    rv = lDPipe->OpenOutputStream(&mDOutStream);
+                    rv = lDPipe->OpenOutputStream(0, &mDOutStream);
                     if (NS_FAILED(rv)) {
                         mState = FTP_ERROR;
                         break;

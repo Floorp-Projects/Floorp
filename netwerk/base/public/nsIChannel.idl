@@ -40,13 +40,21 @@ interface nsIChannel : nsISupports
 
     /**
      * Opens a blocking input stream to the URL's specified source.
+     * @param startPosition - The offset from the start of the data
+     *   from which to read.
+     * @param readCount - The number of bytes to read. If -1, everything
+     *   up to the end of the data is read. If greater than the end of 
+     *   the data, the amount available is returned in the stream.
      */
-    nsIInputStream OpenInputStream();
+    nsIInputStream OpenInputStream(in unsigned long startPosition,
+                                   in long readCount);
 
     /**
      * Opens a blocking output stream to the URL's specified destination.
+     * @param startPosition - The offset from the start of the data
+     *   from which to begin writing.
      */
-    nsIOutputStream OpenOutputStream();
+    nsIOutputStream OpenOutputStream(in unsigned long startPosition);
 
     /**
      * Reads asynchronously from the URL's specified source. Notifications
