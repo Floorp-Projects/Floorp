@@ -206,7 +206,7 @@ nsresult nsPop3Service::RunPopUrl(nsIMsgIncomingServer * aServer, nsIURI * aUrlT
 		if (protocol)
 		{
 			protocol->SetUsername(userName);
-			protocol->SetPassword(popPassword);
+			// protocol->SetPassword(nsnull); // mscott - let's prompt the user instead
 			rv = protocol->LoadUrl(aUrlToRun);
 		}
 

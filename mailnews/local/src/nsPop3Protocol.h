@@ -290,17 +290,17 @@ public:
     const char* GetUsername() { return m_username.GetBuffer(); };
     void SetUsername(const char* name);
 
-    const char* GetPassword() { return m_password.GetBuffer(); };
+    const char* GetPassword();
     void SetPassword(const char* password);
 
 private:
 
     PRUint32 m_pop3CapabilityFlags;
-    nsString m_username;
-    nsString m_password;
+    nsCString m_username;
+    nsCString m_password;
     Pop3ConData* m_pop3ConData;
-	nsString m_senderInfo;
-	nsString m_commandResponse;
+	nsCString m_senderInfo;
+	nsCString m_commandResponse;
 
 	virtual nsresult ProcessProtocolState(nsIURI * url, nsIInputStream * inputStream, 
 									      PRUint32 sourceOffset, PRUint32 length);

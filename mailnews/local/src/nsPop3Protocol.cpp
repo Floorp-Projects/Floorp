@@ -27,8 +27,11 @@
 #include "MailNewsTypes.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
-
+#include "nsINetSupportDialogService.h"
+#include "nsIPrompt.h"
 #include "nsIMsgIncomingServer.h"
+
+static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
 /* km
  *
@@ -348,7 +351,7 @@ void KillPopData(char* data)
 
 // nsPop3Protocol class implementation
 
-nsPop3Protocol::nsPop3Protocol(nsIURI* aURL) : nsMsgLineBuffer(NULL, FALSE), m_username(eOneByte), m_password(eOneByte), m_senderInfo (eOneByte), m_commandResponse(eOneByte)
+nsPop3Protocol::nsPop3Protocol(nsIURI* aURL) : nsMsgLineBuffer(NULL, FALSE)
 {
 	Initialize(aURL);
 }
@@ -411,6 +414,42 @@ void nsPop3Protocol::SetUsername(const char* name)
 		m_username = name;
 }
 
+const char * nsPop3Protocol::GetPassword()
+{
+	// Okay, here's the scoop...if we have a password already, we will go 
+	// ahead and just use it....if we don't have a password then we'll prompt the
+	// user for their pop password for this username on this host.
+
+	if (m_password.IsEmpty())
+	{
+		// we don't have one so ask the user for it.
+		nsresult rv = NS_OK;
+		NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
+		if (NS_SUCCEEDED(rv))
+		{
+			PRUnichar * uniPassword;
+			PRBool okayValue = PR_TRUE;
+			char * promptText = nsnull;
+			nsXPIDLCString hostName;
+
+			nsCOMPtr<nsIURI> url = do_QueryInterface(m_nsIPop3URL);
+			if (url)
+				url->GetHost(getter_Copies(hostName));
+
+			if (hostName)
+				promptText = PR_smprintf("Enter your password for %s@%s.", (const char *) m_username, (const char *) hostName);
+			else
+				promptText = PL_strdup("Enter your password here: ");
+
+			dialog->PromptPassword(nsAutoString(promptText).GetUnicode(), &uniPassword, &okayValue);
+			PR_FREEIF(promptText);
+			m_password = uniPassword;
+		}
+	}
+	
+	return m_password.GetBuffer();
+}
+
 void nsPop3Protocol::SetPassword(const char* passwd)
 {
     NS_ASSERTION(passwd, "no password specified!");
@@ -434,6 +473,7 @@ nsresult nsPop3Protocol::LoadUrl(nsIURI* aURL, nsISupports * /* aConsumer */)
 	// -*-*-*- To Do:
 	// Call SetUsername(accntName);
 	// Call SetPassword(aPassword);
+	GetPassword();
 	
 	nsCOMPtr<nsIURL> url = do_QueryInterface(aURL, &rv);
 	if (NS_FAILED(rv)) return rv;
@@ -632,11 +672,11 @@ PRInt32 nsPop3Protocol::SendAuth()
     if(!m_pop3ConData->command_succeeded)
         return(Error(MK_POP3_SERVER_ERROR));
 
-	nsString command("AUTH"CRLF, eOneByte);
+	nsCAutoString command("AUTH"CRLF);
 
   m_pop3ConData->next_state_after_response = POP3_AUTH_RESPONSE;
   nsCOMPtr<nsIURI> url = do_QueryInterface(m_nsIPop3URL);
-	return SendData(url, command.GetBuffer());
+	return SendData(url, command);
 }
 
 PRInt32 nsPop3Protocol::AuthResponse(nsIInputStream* inputStream, 
@@ -696,10 +736,10 @@ PRInt32 nsPop3Protocol::AuthLogin()
         return(Error(MK_POP3_SERVER_ERROR));
     }
 
-	nsString2 command("AUTH LOGIN" CRLF, eOneByte);
+	nsCAutoString command("AUTH LOGIN" CRLF);
     m_pop3ConData->next_state_after_response = POP3_AUTH_LOGIN_RESPONSE;
 	nsCOMPtr<nsIURI> url = do_QueryInterface(m_nsIPop3URL);
-    return SendData(url, command.GetBuffer());
+    return SendData(url, command);
 }
 
 PRInt32 nsPop3Protocol::AuthLoginResponse()
@@ -742,17 +782,17 @@ PRInt32 nsPop3Protocol::SendUsername()
 	{
         PR_snprintf(m_pop3ConData->output_buffer, 
                     OUTPUT_BUFFER_SIZE, 
-                    "USER %.256s" CRLF, m_username.GetBuffer());
+                    "USER %.256s" CRLF, m_username);
     }
 #endif
     m_pop3ConData->next_state_after_response = POP3_SEND_PASSWORD;
 
-	nsAutoString cmd(eOneByte);
+	nsCAutoString cmd;
 	cmd = "USER ";
 	cmd += m_username;
 	cmd += CRLF;
 	nsCOMPtr<nsIURI> url = do_QueryInterface(m_nsIPop3URL);
-	return SendData(url, cmd.GetBuffer());
+	return SendData(url, cmd);
 }
 
 PRInt32 nsPop3Protocol::SendPassword()
@@ -760,8 +800,8 @@ PRInt32 nsPop3Protocol::SendPassword()
     /* check username response */
     if (!m_pop3ConData->command_succeeded)
         return(Error(MK_POP3_USERNAME_FAILURE));
-    
-    if (!m_password.Length())
+    const char * password = GetPassword();
+    if (!password && !*password)
         return Error(MK_POP3_PASSWORD_UNDEFINED);
 
 #if 0
@@ -778,12 +818,12 @@ PRInt32 nsPop3Protocol::SendPassword()
     else
         m_pop3ConData->next_state_after_response = POP3_SEND_STAT;
 
-	nsAutoString cmd(eOneByte);
+	nsCAutoString cmd;
 	cmd = "PASS ";
-	cmd += m_password;
+	cmd += password;
 	cmd += CRLF;
 	nsCOMPtr<nsIURI> url = do_QueryInterface(m_nsIPop3URL);
-    return SendData(url, cmd.GetBuffer());
+    return SendData(url, cmd);
 }
 
 PRInt32 nsPop3Protocol::SendStatOrGurl(PRBool sendStat)
@@ -857,7 +897,7 @@ PRInt32 nsPop3Protocol::SendStatOrGurl(PRBool sendStat)
     }
 #endif 
     
-	nsAutoString cmd (eOneByte);
+	nsCAutoString cmd;
     if (sendStat) 
 	{
 		cmd  = "STAT" CRLF;
@@ -869,7 +909,7 @@ PRInt32 nsPop3Protocol::SendStatOrGurl(PRBool sendStat)
         m_pop3ConData->next_state_after_response = POP3_GURL_RESPONSE;
     }
     nsCOMPtr<nsIURI> url = do_QueryInterface(m_nsIPop3URL);
-    return SendData(url, cmd.GetBuffer());
+    return SendData(url, cmd);
 }
 
 
@@ -897,7 +937,7 @@ nsPop3Protocol::GetStat()
      *
      *  grab the first and second arg of stat response
      */
-	oldStr = PL_strdup(m_commandResponse.GetBuffer());
+	oldStr = PL_strdup(m_commandResponse);
     num = nsCRT::strtok(oldStr, " ", &newStr);
 
     m_pop3ConData->number_of_messages = atol(num);
@@ -983,7 +1023,7 @@ nsPop3Protocol::GurlResponse()
 		/// the xpidl file which is preventing SetMailAccountURL from taking
 		// const char *. When that is fixed, we can remove this cast.
         if (m_nsIPop3Sink)
-            m_nsIPop3Sink->SetMailAccountURL((char *) m_commandResponse.GetBuffer());
+            m_nsIPop3Sink->SetMailAccountURL((char *) m_commandResponse);
     }
     else {
         m_pop3CapabilityFlags &= ~POP3_HAS_GURL;
@@ -1852,7 +1892,7 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
         }
         else
 		{
-			char * oldStr = PL_strdup(m_commandResponse.GetBuffer());
+			char * oldStr = PL_strdup(m_commandResponse);
 	        m_pop3ConData->cur_msg_size =
                 atol(nsCRT::strtok(oldStr, " ", &newStr));
 			m_commandResponse = newStr;
@@ -2076,7 +2116,7 @@ nsPop3Protocol::HandleLine(char *line, PRUint32 line_length)
             char ch = line[line_length-1];
             line[line_length-1] = 0;
             m_pop3ConData->seenFromHeader = PR_TRUE;
-            if (PL_strstr(line, m_senderInfo.GetBuffer()) == NULL)
+            if (PL_strstr(line, m_senderInfo) == NULL)
                 m_nsIPop3Sink->SetSenderAuthedFlag(m_pop3ConData->msg_closure,
                                                      PR_FALSE);
             line[line_length-1] = ch;
@@ -2261,9 +2301,10 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
             /* If we're just checking for new mail (biff) then don't
                prompt the user for a password; just tell him we don't
                know whether he has new mail. */
+			nsCAutoString password = GetPassword();
             if ((m_pop3ConData->only_check_for_new_mail /* ||
                  MSG_Biff_Master_NikiCallingGetNewMail() */) && 
-                (m_password.IsEmpty() || m_username.IsEmpty())) 
+                (password.IsEmpty() || m_username.IsEmpty())) 
             {
                 status = MK_POP3_PASSWORD_UNDEFINED;
                 m_pop3ConData->biffstate = nsMsgBiffState_Unknown;
@@ -2342,8 +2383,8 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
                 net_pop3_password_pending = PR_TRUE;
             }
 #endif 
-            
-           if (m_username.IsEmpty() || m_password.IsEmpty())
+           nsCAutoString pwd = GetPassword();
+           if (m_username.IsEmpty() || pwd.IsEmpty())
             {
                 // net_pop3_block = PR_FALSE;
                 return NS_OK;
