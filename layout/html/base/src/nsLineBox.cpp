@@ -167,14 +167,34 @@ ListFloaters(FILE* out, PRInt32 aIndent, const nsFloaterCacheList& aFloaters)
 #endif
 
 #ifdef DEBUG
+const char *
+BreakTypeToString(PRUint8 aBreakType)
+{
+  switch (aBreakType) {
+  case NS_STYLE_CLEAR_NONE: return "nobr";
+  case NS_STYLE_CLEAR_LEFT: return "leftbr";
+  case NS_STYLE_CLEAR_RIGHT: return "rightbr";
+  case NS_STYLE_CLEAR_LEFT_AND_RIGHT: return "leftbr+rightbr";
+  case NS_STYLE_CLEAR_LINE: return "linebr";
+  case NS_STYLE_CLEAR_BLOCK: return "blockbr";
+  case NS_STYLE_CLEAR_COLUMN: return "columnbr";
+  case NS_STYLE_CLEAR_PAGE: return "pagebr";
+  default:
+    break;
+  }
+  return "unknown";
+}
+
 char*
 nsLineBox::StateToString(char* aBuf, PRInt32 aBufSize) const
 {
-  PR_snprintf(aBuf, aBufSize, "%s,%s,%s,%s[0x%x]",
+  PR_snprintf(aBuf, aBufSize, "%s,%s,%s,%s,%s,%s[0x%x]",
               IsBlock() ? "block" : "inline",
               IsDirty() ? "dirty" : "clean",
               IsPreviousMarginDirty() ? "prevmargindirty" : "prevmarginclean",
-              IsImpactedByFloater() ? "IMPACTED" : "NOT Impacted",
+              IsImpactedByFloater() ? "impacted" : "not impacted",
+              IsLineWrapped() ? "wrapped" : "not wrapped",
+              BreakTypeToString(GetBreakType()),
               mAllFlags);
   return aBuf;
 }
