@@ -200,6 +200,7 @@ namespace ICG {
         void isScript() { mWithinWith = true; }
 
         void returnStmt(TypedRegister r);
+        void returnStmt();
         void throwStmt(TypedRegister r)
         { iCode->push_back(new Throw(r)); }
 
