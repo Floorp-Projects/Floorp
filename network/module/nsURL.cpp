@@ -51,6 +51,7 @@ public:
   virtual const char* GetHost() const;
   virtual const char* GetFile() const;
   virtual const char* GetRef() const;
+  virtual const char* GetSearch() const;
   virtual const char* GetSpec() const;
   virtual PRInt32 GetPort() const;
 
@@ -61,6 +62,7 @@ public:
   char* mHost;
   char* mFile;
   char* mRef;
+  char* mSearch;
   PRInt32 mPort;
   PRBool mOK;
 
@@ -79,6 +81,7 @@ URLImpl::URLImpl(const nsString& aSpec)
   mHost = nsnull;
   mFile = nsnull;
   mRef = nsnull;
+  mSearch = nsnull;
   mPort = -1;
   mSpec = nsnull;
 
@@ -94,6 +97,7 @@ URLImpl::URLImpl(const nsIURL* aURL, const nsString& aSpec)
   mHost = nsnull;
   mFile = nsnull;
   mRef = nsnull;
+  mSearch = nsnull;
   mPort = -1;
   mSpec = nsnull;
 
@@ -140,6 +144,7 @@ URLImpl::~URLImpl()
   PR_FREEIF(mHost);
   PR_FREEIF(mFile);
   PR_FREEIF(mRef);
+  PR_FREEIF(mSearch);
 }
 
 nsresult URLImpl::Set(const char *aNewSpec)
@@ -181,6 +186,11 @@ const char* URLImpl::GetRef() const
   return mRef;
 }
 
+const char* URLImpl::GetSearch() const
+{
+  return mSearch;
+}
+
 PRInt32 URLImpl::GetPort() const
 {
   return mPort;
@@ -203,6 +213,10 @@ void URLImpl::ToString(nsString& aString) const
   if (nsnull != mRef) {
     aString.Append('#');
     aString.Append(mRef);
+  }
+  if (nsnull != mSearch) {
+    aString.Append('?');
+    aString.Append(mSearch);
   }
 }
 
@@ -231,6 +245,7 @@ nsresult URLImpl::ParseURL(const nsIURL* aURL, const nsString& aSpec)
   PR_FREEIF(mHost);
   PR_FREEIF(mFile);
   PR_FREEIF(mRef);
+  PR_FREEIF(mSearch);
   mPort = -1;
   PR_FREEIF(mSpec);
 
@@ -245,25 +260,37 @@ nsresult URLImpl::ParseURL(const nsIURL* aURL, const nsString& aSpec)
     return NS_OK;
   }
 
-  // Strip out reference info; do what mkparse.c does with search tack on's
-  char* ref = PL_strchr(cSpec, '#');
+  // Strip out reference and search info
+  char* ref = strpbrk(cSpec, "#?");
   if (nsnull != ref) {
-    // XXX Terminate string at reference; note: this loses a search
-    // request following the string. We don't keep around that
-    // information anyway, so who cares???
+    char* search = nsnull;
+    if ('#' == *ref) {
+      search = PL_strchr(ref + 1, '?');
+      if (nsnull != search) {
+        *search++ = '\0';
+      }
+
+      PRIntn hashLen = PL_strlen(ref + 1);
+      if (0 != hashLen) {
+        mRef = (char*) PR_Malloc(hashLen + 1);
+        PL_strcpy(mRef, ref + 1);
+      }      
+    }
+    else {
+      search = ref + 1;
+    }
+
+    if (nsnull != search) {
+      // The rest is the search
+      PRIntn searchLen = PL_strlen(search);
+      if (0 != searchLen) {
+        mSearch = (char*) PR_Malloc(searchLen + 1);
+        PL_strcpy(mSearch, search);
+      }      
+    }
+
+    // XXX Terminate string at start of reference or search
     *ref = '\0';
-    char* search = PL_strchr(ref + 1, '?');
-    if (nsnull != search) {
-      *search = '\0';
-    }
-    PRIntn hashLen = PL_strlen(ref + 1);
-    if (0 != hashLen) {
-      mRef = (char*) PR_Malloc(hashLen + 1);
-      PL_strcpy(mRef, ref + 1);
-    }
-    if (nsnull != search) {
-      *search = '?';
-    }
   }
 
   // The URL is considered absolute if and only if it begins with a
@@ -377,6 +404,10 @@ nsresult URLImpl::ParseURL(const nsIURL* aURL, const nsString& aSpec)
     if (mRef) {
       plen += 1 + PL_strlen(mRef);
     }
+    if (mSearch) {
+      plen += 1 + PL_strlen(mSearch);
+    }
+
     mSpec = (char *) PR_Malloc(plen + 1);
     PR_snprintf(mSpec, plen, "%s://%s%s%s", 
                 mProtocol, ((nsnull != mHost) ? mHost : ""), portBuffer,
@@ -385,9 +416,13 @@ nsresult URLImpl::ParseURL(const nsIURL* aURL, const nsString& aSpec)
       PL_strcat(mSpec, "#");
       PL_strcat(mSpec, mRef);
     }
+    if (mSearch) {
+      PL_strcat(mSpec, "?");
+      PL_strcat(mSpec, mSearch);
+    }
   } else {
     // absolute spec
-    mSpec = PL_strdup(cSpec);
+    mSpec = aSpec.ToNewCString();
 
     // get protocol first
     PRInt32 plen = cp - cSpec;
@@ -431,24 +466,36 @@ nsresult URLImpl::ParseURL(const nsIURL* aURL, const nsString& aSpec)
 #endif
     } else {
       // Host name follows protocol for http style urls
-      cp = PL_strchr(cp, '/');
+      cp = PL_strpbrk(cp, "/:");
+      
       if (nsnull == cp) {
-        // There is no file name, only a host name
+        // There is only a host name
         PRInt32 hlen = PL_strlen(cp0);
         mHost = (char*) PR_Malloc(hlen + 1);
         PL_strcpy(mHost, cp0);
+      }
+      else {
+        PRInt32 hlen = cp - cp0;
+        mHost = (char*) PR_Malloc(hlen + 1);
+        PL_strncpy(mHost, cp0, hlen);        
+        mHost[hlen] = 0;
 
+        if (':' == *cp) {
+          // We have a port number
+          cp0 = cp+1;
+          cp = PL_strchr(cp, '/');
+          mPort = strtol(cp0, (char **)nsnull, 10);
+        }
+      }
+
+      if (nsnull == cp) {
+        // There is no file name
         // Set filename to "/"
         mFile = (char*) PR_Malloc(2);
         mFile[0] = '/';
         mFile[1] = 0;
       }
       else {
-        PRInt32 hlen = cp - cp0;
-        mHost = (char*) PR_Malloc(hlen + 1);
-        PL_strncpy(mHost, cp0, hlen);
-        mHost[hlen] = 0;
-
         // The rest is the file name
         PRInt32 flen = PL_strlen(cp);
         mFile = (char*) PR_Malloc(flen + 1);
