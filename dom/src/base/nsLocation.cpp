@@ -640,6 +640,24 @@ LocationImpl::Replace(const nsAReadableString& aUrl)
 }
 
 NS_IMETHODIMP    
+LocationImpl::Assign(const nsAReadableString& aUrl)
+{
+  nsAutoString oldHref;
+  nsCOMPtr<nsIURI> oldUrl;
+  nsresult result = NS_OK;
+
+  result = GetHref(oldHref);
+  if (NS_SUCCEEDED(result)) {
+    result = NS_NewURI(getter_AddRefs(oldUrl), oldHref);
+    if (NS_SUCCEEDED(result)) {
+      result = SetHrefWithBase(aUrl, oldUrl, PR_FALSE);
+    }
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP    
 LocationImpl::Reload(JSContext *cx, jsval *argv, PRUint32 argc)
 {
   // XXX Security manager needs to be called

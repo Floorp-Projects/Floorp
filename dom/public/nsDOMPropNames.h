@@ -675,6 +675,7 @@
     "keyevent.metakey", \
     "keyevent.shiftkey", \
     "linkstyle.sheet", \
+    "location.assign", \
     "location.hash", \
     "location.host", \
     "location.hostname", \
