@@ -51,6 +51,7 @@ class nsIStreamObserver;
 class nsIWidget;
 class nsIWidgetController;
 class nsIXULWindowCallbacks;
+class nsVoidArray;
 
 class nsWebShellWindow : public nsIWebShellWindow,
                          public nsIWebShellContainer,
@@ -232,6 +233,9 @@ protected:
   PRBool                  mChromeInitialized;
 
   nsVoidArray mMenuDelegates;
+
+  nsVoidArray* mContentShells; // Tracks an array of information about new shells that will be
+                               // created as the XUL file for this window loads.
 
 private:
 
