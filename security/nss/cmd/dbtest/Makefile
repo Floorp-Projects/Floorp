@@ -60,7 +60,9 @@ endif
 
 ifeq (,$(filter-out WINNT WIN95 WIN16,$(OS_TARGET)))  # omits WINCE
 ifndef BUILD_OPT
+ifndef NS_USE_GCC
 LDFLAGS   +=  /subsystem:console /profile /debug /machine:I386 /incremental:no
+endif
 OS_CFLAGS += -D_CONSOLE
 endif
 endif

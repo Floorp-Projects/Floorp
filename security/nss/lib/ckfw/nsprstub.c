@@ -39,7 +39,7 @@
  * SW FORTEZZA to link with some low level security functions without dragging
  * in NSPR.
  *
- * $Id: nsprstub.c,v 1.3 2002/05/01 00:06:29 wtc%netscape.com Exp $
+ * $Id: nsprstub.c,v 1.4 2003/04/20 04:23:22 wtc%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -283,6 +283,12 @@ nssPointerTracker_verify(nssPointerTracker *tracker, const void *pointer)
 }
 #endif
 
+/*
+ * Do not use NSPR stubs for MinGW because they can't resolve references
+ * to the _imp__PR_XXX symbols.  This is merely an expedient hack and not
+ * the right solution.
+ */
+#if !(defined(WIN32) && defined(__GNUC__))
 PR_IMPLEMENT(PRThread *)
 PR_GetCurrentThread(void)
 {
@@ -337,6 +343,7 @@ PR_IMPLEMENT(PRInt32) PR_AtomicSet(PRInt32 *val) { return ++(*val); }
 
 /* now make the RNG happy */ /* This is not atomic! */
 PR_IMPLEMENT(PRInt32) PR_AtomicIncrement(PRInt32 *val) { return ++(*val); }
+#endif /* ! (WIN32 && GCC) */
 
 CK_C_INITIALIZE_ARGS_PTR nssstub_initArgs = NULL;
 NSSArena *nssstub_arena = NULL;
@@ -349,6 +356,12 @@ nssSetLockArgs(CK_C_INITIALIZE_ARGS_PTR pInitArgs)
     }
 }
 
+/*
+ * Do not use NSPR stubs for MinGW because they can't resolve references
+ * to the _imp__PR_XXX symbols.  This is merely an expedient hack and not
+ * the right solution.
+ */
+#if !(defined(WIN32) && defined(__GNUC__))
 #include "prlock.h"
 PR_IMPLEMENT(PRLock *)
 PR_NewLock(void) {
@@ -437,6 +450,7 @@ PRIntn PR_CeilingLog2(PRUint32 i) {
 	PR_CEILING_LOG2(log2,i);
 	return log2;
 }
+#endif /* ! (WIN32 && GCC) */
 
 /********************** end of arena functions ***********************/
 

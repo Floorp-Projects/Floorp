@@ -39,7 +39,7 @@
  * SW FORTEZZA to link with some low level security functions without dragging
  * in NSPR.
  *
- * $Id: stub.c,v 1.5 2002/05/01 00:06:33 wtc%netscape.com Exp $
+ * $Id: stub.c,v 1.6 2003/04/20 04:23:29 wtc%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -234,6 +234,12 @@ PORT_ArenaStrdup(PLArenaPool *arena,const char *str) {
     return newstr;
 }
 
+/*
+ * Do not use NSPR stubs for MinGW because they can't resolve references
+ * to the _imp__PR_XXX symbols.  This is merely an expedient hack and not
+ * the right solution.
+ */
+#if !(defined(WIN32) && defined(__GNUC__))
 PR_IMPLEMENT(void)
 PR_Assert(const char *expr, const char *file, int line) {
     return; 
@@ -256,6 +262,7 @@ PR_SetError(PRErrorCode errorCode, PRInt32 oserr) { return; }
 
 PR_IMPLEMENT(void)
 PR_SetErrorText(PRIntn textLength, const char *text) { return; }
+#endif /* ! (WIN32 && GCC) */
 
 
 /* Old template; want to expunge it eventually. */
@@ -272,6 +279,12 @@ const SEC_ASN1Template SECOID_AlgorithmIDTemplate[] = {
     { 0, }
 };
 
+/*
+ * Do not use NSPR stubs for MinGW because they can't resolve references
+ * to the _imp__PR_XXX symbols.  This is merely an expedient hack and not
+ * the right solution.
+ */
+#if !(defined(WIN32) && defined(__GNUC__))
 /* now make the RNG happy */ /* This is not atomic! */
 PR_IMPLEMENT(PRInt32) PR_AtomicIncrement(PRInt32 *val) { return ++(*val); }
 /* This is not atomic! */
@@ -358,6 +371,7 @@ PRIntn PR_CeilingLog2(PRUint32 i) {
 	PR_CEILING_LOG2(log2,i);
 	return log2;
 }
+#endif /* ! (WIN32 && GCC) */
 
 /********************** end of arena functions ***********************/
 

@@ -109,10 +109,18 @@ endif
 
 ifeq (,$(filter-out WIN%,$(OS_TARGET)))
 $(STUBDLL): $(OBJDIR)/maci.o
+ifdef NS_USE_GCC
+	$(LINK_DLL) -Wl,--out-implib,$(STUBLIB) $(OBJDIR)/maci.o $(OS_LIBS)
+else
 	$(LINK_DLL) -MAP $(DLLBASE) $(subst /,\\,$(OBJDIR)/maci.o $(OS_LIBS))
+endif
 
 $(OBJDIR)/maci.o: maci.c
+ifdef NS_USE_GCC
+	$(CC) -o $@ -c $(CFLAGS) $<
+else
 	$(CC) -Fo$@ -c $(CFLAGS) $<
+endif
 endif
 
 #

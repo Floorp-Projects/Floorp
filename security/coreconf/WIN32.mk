@@ -38,13 +38,26 @@
 
 DEFAULT_COMPILER = cl
 
-CC           = cl
-CCC          = cl
-LINK         = link
-AR           = lib
-AR          += -NOLOGO -OUT:"$@"
-RANLIB       = echo
-BSDECHO      = echo
+ifdef NS_USE_GCC
+	CC           = gcc
+	CCC          = g++
+	LINK         = ld
+	AR           = ar
+	AR          += cr $@
+	RANLIB       = ranlib
+	BSDECHO      = echo
+	RC           = windres.exe -O coff
+	LINK_DLL      = $(CC) $(OS_DLLFLAGS) $(DLLFLAGS)
+else
+	CC           = cl
+	CCC          = cl
+	LINK         = link
+	AR           = lib
+	AR          += -NOLOGO -OUT:"$@"
+	RANLIB       = echo
+	BSDECHO      = echo
+	RC           = rc.exe
+endif
 
 ifdef BUILD_TREE
 NSINSTALL_DIR  = $(BUILD_TREE)/nss
@@ -62,13 +75,38 @@ MKDEPENDENCIES  = $(OBJDIR_NAME)/depend.mk
 INSTALL      = $(NSINSTALL)
 MAKE_OBJDIR  = mkdir
 MAKE_OBJDIR += $(OBJDIR)
-RC           = rc.exe
 GARBAGE     += $(OBJDIR)/vc20.pdb $(OBJDIR)/vc40.pdb
 XP_DEFINE   += -DXP_PC
+ifdef NS_USE_GCC
+LIB_SUFFIX   = a
+else
 LIB_SUFFIX   = lib
+endif
 DLL_SUFFIX   = dll
 
-ifdef BUILD_OPT
+ifdef NS_USE_GCC
+    OS_CFLAGS += -mno-cygwin -mms-bitfields
+    _GEN_IMPORT_LIB=-Wl,--out-implib,$(IMPORT_LIBRARY)
+    DLLFLAGS  += -mno-cygwin -o $@ -shared -Wl,--export-all-symbols $(if $(IMPORT_LIBRARY),$(_GEN_IMPORT_LIB))
+    ifdef BUILD_OPT
+	OPTIMIZER  += -O2
+	DEFINES    += -UDEBUG -U_DEBUG -DNDEBUG
+	#
+	# Add symbolic information for a profiler
+	#
+	ifdef MOZ_PROFILE
+		OPTIMIZER += -g
+	endif
+    else
+	OPTIMIZER  += -g
+	NULLSTRING :=
+	SPACE      := $(NULLSTRING) # end of the line
+	USERNAME   := $(subst $(SPACE),_,$(USERNAME))
+	USERNAME   := $(subst -,_,$(USERNAME))
+	DEFINES    += -DDEBUG -D_DEBUG -UNDEBUG -DDEBUG_$(USERNAME)
+    endif
+else # !NS_USE_GCC
+    ifdef BUILD_OPT
 	OS_CFLAGS  += -MD
 	OPTIMIZER  += -O2
 	DEFINES    += -UDEBUG -U_DEBUG -DNDEBUG
@@ -80,7 +118,7 @@ ifdef BUILD_OPT
 		OPTIMIZER += -Z7
 		DLLFLAGS += -DEBUG -DEBUGTYPE:CV
 	endif
-else
+    else
 	#
 	# Define USE_DEBUG_RTL if you want to use the debug runtime library
 	# (RTL) in the debug build
@@ -99,11 +137,14 @@ else
 	DEFINES    += -DDEBUG -D_DEBUG -UNDEBUG -DDEBUG_$(USERNAME)
 	DLLFLAGS   += -DEBUG -DEBUGTYPE:CV -OUT:"$@"
 	LDFLAGS    += -DEBUG -DEBUGTYPE:CV -PDB:NONE
-endif
+    endif
+endif # NS_USE_GCC
 
 DEFINES += -DWIN32
 ifdef MAPFILE
+ifndef NS_USE_GCC
 DLLFLAGS += -DEF:$(MAPFILE)
+endif
 endif
 # Change PROCESS to put the mapfile in the correct format for this platform
 PROCESS_MAP_FILE = cp $(LIBRARY_NAME).def $@
@@ -116,8 +157,13 @@ PROCESS_MAP_FILE = cp $(LIBRARY_NAME).def $@
 DEFINES += -D_WINDOWS
 
 # override default, which is ASFLAGS = CFLAGS
-AS	= ml.exe
-ASFLAGS = -Cp -Sn -Zi -coff $(INCLUDES)
+ifdef NS_USE_GCC
+	AS	= $(CC)
+	ASFLAGS = $(INCLUDES)
+else
+	AS	= ml.exe
+	ASFLAGS = -Cp -Sn -Zi -coff $(INCLUDES)
+endif
 
 #
 # override the definitions of RELEASE_TREE found in tree.mk
@@ -154,14 +200,22 @@ endif
 # Object suffixes
 #
 ifndef OBJ_SUFFIX
-    OBJ_SUFFIX = .obj
+    ifdef NS_USE_GCC
+	OBJ_SUFFIX = .o
+    else
+	OBJ_SUFFIX = .obj
+    endif
 endif
 
 #
 # Assembler source suffixes
 #
 ifndef ASM_SUFFIX
-    ASM_SUFFIX = .asm
+    ifdef NS_USE_GCC
+	ASM_SUFFIX = .s
+    else
+	ASM_SUFFIX = .asm
+    endif
 endif
 
 #

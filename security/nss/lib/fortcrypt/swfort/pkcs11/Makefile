@@ -50,6 +50,23 @@ CRYPTO_LIB += $(DIST)/lib/bsafe$(BSAFEVER).lib
 CRYPTO_LIB += $(DIST)/lib/freebl.lib 
 endif
 
+# Link with the real NSPR DLLs for MinGW because the NSPR stubs in
+# stub.c can't resolve the references to the _imp__PR_XXX symbols.
+# This is merely an expedient hack and not the right solution.
+ifdef NS_USE_GCC
+EXTRA_LIBS = \
+	$(DIST)/lib/$(LIB_PREFIX)swfci.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)softokn.$(LIB_SUFFIX) \
+	$(CRYPTO_LIB) \
+	$(DIST)/lib/$(LIB_PREFIX)secutil.$(LIB_SUFFIX) \
+	-L$(DIST)/lib \
+	-lplc4 \
+	-lplds4 \
+	-lnspr4 \
+	-lws2_32 \
+	-lwinmm \
+	$(NULL)
+else # ! NS_USE_GCC
 EXTRA_LIBS = \
 	$(DIST)/lib/swfci.lib \
 	$(DIST)/lib/softokn.lib \
@@ -60,6 +77,7 @@ EXTRA_LIBS = \
 	wsock32.lib \
 	winmm.lib \
 	$(NULL)
+endif # NS_USE_GCC
 
 else
 

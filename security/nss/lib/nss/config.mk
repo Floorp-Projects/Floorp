@@ -40,18 +40,28 @@
 ifeq (,$(filter-out WIN%,$(OS_TARGET)))
 
 # don't want the 32 in the shared library name
-SHARED_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).dll
-IMPORT_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).lib
+SHARED_LIBRARY = $(OBJDIR)/$(DLL_PREFIX)$(LIBRARY_NAME)$(LIBRARY_VERSION).$(DLL_SUFFIX)
+IMPORT_LIBRARY = $(OBJDIR)/$(IMPORT_LIB_PREFIX)$(LIBRARY_NAME)$(LIBRARY_VERSION)$(IMPORT_LIB_SUFFIX)
 
 RES = $(OBJDIR)/$(LIBRARY_NAME).res
 RESNAME = $(LIBRARY_NAME).rc
 
+ifdef NS_USE_GCC
+EXTRA_SHARED_LIBS += \
+	-L$(DIST)/lib \
+	-lsoftokn3 \
+	-lplc4 \
+	-lplds4 \
+	-lnspr4\
+	$(NULL)
+else # ! NS_USE_GCC
 EXTRA_SHARED_LIBS += \
 	$(DIST)/lib/softokn3.lib \
 	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plc4.lib \
 	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plds4.lib \
 	$(DIST)/lib/$(NSPR31_LIB_PREFIX)nspr4.lib \
 	$(NULL)
+endif # NS_USE_GCC
 
 else
 
@@ -99,8 +109,10 @@ MKSHLIB += -R '$$ORIGIN'
 endif
 
 ifeq (,$(filter-out WINNT WIN95,$(OS_TARGET)))
+ifndef NS_USE_GCC
 # Export 'mktemp' to be backward compatible with NSS 3.2.x and 3.3.x
 # but do not put it in the import library.  See bug 142575.
 DEFINES += -DWIN32_NSS3_DLL_COMPAT
 DLLFLAGS += -EXPORT:mktemp=nss_mktemp,PRIVATE
+endif
 endif
