@@ -384,14 +384,19 @@ nsHTMLTextAreaElement::SetValue(const nsString& aValue)
     nsGenericHTMLElement::GetPresContext(this, &presContext);
     formControlFrame->SetProperty(presContext, nsHTMLAtoms::value, aValue);
     NS_IF_RELEASE(presContext);
-  }                         
+  }
+  // Set the attribute in the DOM too, we call SetAttribute with aNotify
+  // false so that we don't generate unnecessary reflows.
+  mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::value, aValue, PR_FALSE);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHTMLTextAreaElement::GetDefaultValue(nsString& aDefaultValue)
 {
-  mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::value, aDefaultValue);                 
+  mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::defaultvalue,
+                      aDefaultValue);
+
   return NS_OK;                                                    
 }  
 
@@ -408,6 +413,7 @@ nsHTMLTextAreaElement::SetDefaultValue(const nsString& aDefaultValue)
   nsLinebreakConverter::ConvertStringLineBreaks(defaultValue,
        nsLinebreakConverter::eLinebreakAny, nsLinebreakConverter::eLinebreakContent);
   
+  mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::defaultvalue, defaultValue, PR_TRUE);
   mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::value, defaultValue, PR_TRUE);
   return NS_OK;
 
