@@ -113,7 +113,7 @@ public:
 
   NS_IMETHOD SetStyleSheet(nsICSSStyleSheet* aSheet);
 
-  NS_IMETHOD SetCaseSensative(PRBool aCaseSensative);
+  NS_IMETHOD SetCaseSensitive(PRBool aCaseSensitive);
 
   NS_IMETHOD Parse(nsIUnicharInputStream* aInput,
                    nsIURL*                aInputURL,
@@ -232,7 +232,7 @@ protected:
   PRBool mInHead;
 
   PRBool  mNavQuirkMode;
-  PRBool  mCaseSensative;
+  PRBool  mCaseSensitive;
 };
 
 NS_HTML nsresult
@@ -255,7 +255,7 @@ CSSParserImpl::CSSParserImpl()
   mSheet = nsnull;
   mHavePushBack = PR_FALSE;
   mNavQuirkMode = PR_TRUE;
-  mCaseSensative = PR_FALSE;
+  mCaseSensitive = PR_FALSE;
 }
 
 CSSParserImpl::CSSParserImpl(nsICSSStyleSheet* aSheet)
@@ -266,7 +266,7 @@ CSSParserImpl::CSSParserImpl(nsICSSStyleSheet* aSheet)
   mSheet = aSheet; NS_ADDREF(aSheet);
   mHavePushBack = PR_FALSE;
   mNavQuirkMode = PR_TRUE;
-  mCaseSensative = PR_FALSE;
+  mCaseSensitive = PR_FALSE;
 }
 
 NS_IMPL_ISUPPORTS(CSSParserImpl,kICSSParserIID)
@@ -303,9 +303,9 @@ CSSParserImpl::SetStyleSheet(nsICSSStyleSheet* aSheet)
 }
 
 NS_IMETHODIMP
-CSSParserImpl::SetCaseSensative(PRBool aCaseSensative)
+CSSParserImpl::SetCaseSensitive(PRBool aCaseSensitive)
 {
-  mCaseSensative = aCaseSensative;
+  mCaseSensitive = aCaseSensitive;
   return NS_OK;
 }
 
@@ -1057,7 +1057,7 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
   else if (eCSSToken_Ident == mToken.mType) {    // element name
     PRInt32 colon = mToken.mIdent.Find(':');
     if (-1 == colon) {  // no namespace
-      if (mCaseSensative) {
+      if (mCaseSensitive) {
         aSelector.SetTag(mToken.mIdent);
       }
       else {
@@ -1069,7 +1069,7 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
       nsAutoString  nameSpace;
       mToken.mIdent.Left(nameSpace, colon);
       mToken.mIdent.Right(buffer, (mToken.mIdent.Length() - (colon + 1)));
-      if (! mCaseSensative) {
+      if (! mCaseSensitive) {
         buffer.ToUpperCase();
       }
       // XXX lookup namespace, set it
@@ -1103,7 +1103,7 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
         return PR_FALSE;
       }
       dataMask |= SEL_MASK_CLASS;
-      if (mCaseSensative) {
+      if (mCaseSensitive) {
         aSelector.AddClass(mToken.mIdent);
       }
       else {
@@ -1151,7 +1151,7 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
         return PR_FALSE;
       }
       nsAutoString  attr(mToken.mIdent);
-      if (! mCaseSensative) {
+      if (! mCaseSensitive) {
         attr.ToUpperCase();
       }
       if (! GetToken(aErrorCode, PR_FALSE)) { // premature EOF
@@ -1206,10 +1206,10 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
             }
             if ((eCSSToken_Symbol == mToken.mType) && (']' == mToken.mSymbol)) {
               dataMask |= SEL_MASK_ATTRIB;
-              if (! mCaseSensative) {
+              if (! mCaseSensitive) {
                 value.ToUpperCase();
               }
-              aSelector.AddAttribute(attr, func, value, mCaseSensative);
+              aSelector.AddAttribute(attr, func, value, mCaseSensitive);
             }
             else {
               UngetToken();

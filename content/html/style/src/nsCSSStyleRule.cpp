@@ -116,7 +116,7 @@ PRBool nsAtomList::Equals(const nsAtomList* aOther) const
 nsAttrSelector::nsAttrSelector(const nsString& aAttr)
   : mAttr(nsnull),
     mFunction(NS_ATTR_FUNC_SET),
-    mCaseSensative(1),
+    mCaseSensitive(1),
     mValue(),
     mNext(nsnull)
 {
@@ -124,10 +124,10 @@ nsAttrSelector::nsAttrSelector(const nsString& aAttr)
 }
 
 nsAttrSelector::nsAttrSelector(const nsString& aAttr, PRUint8 aFunction, const nsString& aValue,
-                               PRBool aCaseSensative)
+                               PRBool aCaseSensitive)
   : mAttr(nsnull),
     mFunction(aFunction),
-    mCaseSensative(aCaseSensative),
+    mCaseSensitive(aCaseSensitive),
     mValue(aValue),
     mNext(nsnull)
 {
@@ -137,7 +137,7 @@ nsAttrSelector::nsAttrSelector(const nsString& aAttr, PRUint8 aFunction, const n
 nsAttrSelector::nsAttrSelector(const nsAttrSelector& aCopy)
   : mAttr(aCopy.mAttr),
     mFunction(aCopy.mFunction),
-    mCaseSensative(aCopy.mCaseSensative),
+    mCaseSensitive(aCopy.mCaseSensitive),
     mValue(aCopy.mValue),
     mNext(nsnull)
 {
@@ -159,7 +159,7 @@ PRBool nsAttrSelector::Equals(const nsAttrSelector* aOther) const
   if (nsnull != aOther) {
     if ((mAttr == aOther->mAttr) && 
         (mFunction == aOther->mFunction) && 
-        (mCaseSensative == aOther->mCaseSensative) &&
+        (mCaseSensitive == aOther->mCaseSensitive) &&
         mValue.Equals(aOther->mValue)) {
       if (nsnull != mNext) {
         return mNext->Equals(aOther->mNext);
@@ -346,14 +346,14 @@ void nsCSSSelector::AddAttribute(const nsString& aAttr)
 }
 
 void nsCSSSelector::AddAttribute(const nsString& aAttr, PRUint8 aFunc, const nsString& aValue,
-                                 PRBool aCaseSensative)
+                                 PRBool aCaseSensitive)
 {
   if (0 < aAttr.Length()) {
     nsAttrSelector** list = &mAttrList;
     while (nsnull != *list) {
       list = &((*list)->mNext);
     }
-    *list = new nsAttrSelector(aAttr, aFunc, aValue, aCaseSensative);
+    *list = new nsAttrSelector(aAttr, aFunc, aValue, aCaseSensitive);
   }
 }
 

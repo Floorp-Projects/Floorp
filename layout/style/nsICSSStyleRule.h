@@ -49,14 +49,14 @@ struct nsAttrSelector {
 public:
   nsAttrSelector(const nsString& aAttr);
   nsAttrSelector(const nsString& aAttr, PRUint8 aFunction, const nsString& aValue,
-                 PRBool aCaseSensative);
+                 PRBool aCaseSensitive);
   nsAttrSelector(const nsAttrSelector& aCopy);
   ~nsAttrSelector(void);
   PRBool Equals(const nsAttrSelector* aOther) const;
 
   nsIAtom*        mAttr;
   PRUint8         mFunction;
-  PRPackedBool    mCaseSensative;
+  PRPackedBool    mCaseSensitive;
   nsString        mValue;
   nsAttrSelector* mNext;
 };
@@ -79,7 +79,7 @@ public:
   void AddPseudoClass(nsIAtom* aPseudoClass);
   void AddAttribute(const nsString& aAttr);
   void AddAttribute(const nsString& aAttr, PRUint8 aFunc, const nsString& aValue,
-                    PRBool aCaseSensative);
+                    PRBool aCaseSensitive);
   void SetOperator(PRUnichar aOperator);
 
   PRInt32 CalcWeight(void) const;
