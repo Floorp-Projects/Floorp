@@ -51,6 +51,10 @@ SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libnkkwd_s.$(LIB_SUFFIX) \
 		$(NULL)
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+SHARED_LIBRARY_LIBS	+= $(DIST)/lib/libmozdbm_s.$(LIB_SUFFIX)
+endif
+
 ifdef MOZ_PERF_METRICS
 SHARED_LIBRARY_LIBS	+= $(DIST)/lib/libmozutil_s.$(LIB_SUFFIX)
 endif
