@@ -30,12 +30,14 @@ CPPSRCS=				\
 	AttributeExpr.cpp		\
 	AttributeValueTemplate.cpp	\
 	BasicNodeExpr.cpp		\
+	BooleanExpr.cpp		        \
 	BooleanFunctionCall.cpp		\
 	BooleanResult.cpp		\
 	ElementExpr.cpp			\
 	ErrorFunctionCall.cpp		\
 	ExprLexer.cpp			\
 	ExprParser.cpp			\
+	ExtensionFunctionCall.cpp	\
 	FilterExpr.cpp			\
 	FunctionCall.cpp		\
 	IdentityExpr.cpp		\
@@ -58,6 +60,7 @@ CPPSRCS=				\
 	UnionExpr.cpp			\
 	VariableRefExpr.cpp		\
 	WildCardExpr.cpp		\
+	XPathNames.cpp			\
 	$(NULL)
 
 CPP_OBJS=						\
@@ -65,12 +68,14 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\AttributeExpr.obj			\
 	.\$(OBJDIR)\AttributeValueTemplate.obj		\
 	.\$(OBJDIR)\BasicNodeExpr.obj			\
+	.\$(OBJDIR)\BooleanExpr.obj			\
 	.\$(OBJDIR)\BooleanFunctionCall.obj		\
 	.\$(OBJDIR)\BooleanResult.obj			\
 	.\$(OBJDIR)\ElementExpr.obj			\
 	.\$(OBJDIR)\ErrorFunctionCall.obj		\
 	.\$(OBJDIR)\ExprLexer.obj			\
 	.\$(OBJDIR)\ExprParser.obj			\
+	.\$(OBJDIR)\ExtensionFunctionCall.obj		\
 	.\$(OBJDIR)\FilterExpr.obj			\
 	.\$(OBJDIR)\FunctionCall.obj			\
 	.\$(OBJDIR)\IdentityExpr.obj			\
@@ -93,6 +98,7 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\UnionExpr.obj			\
 	.\$(OBJDIR)\VariableRefExpr.obj			\
 	.\$(OBJDIR)\WildCardExpr.obj			\
+	.\$(OBJDIR)\XPathNames.obj			\
 	$(NULL)
 
 EXPORTS = \
