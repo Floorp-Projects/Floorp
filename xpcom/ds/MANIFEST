@@ -1,4 +1,4 @@
-nsAVLTree.h
+snsAVLTree.h
 nsCppSharedAllocator.h
 nsCRT.h
 nsDeque.h
@@ -9,7 +9,6 @@ nsIArena.h
 nsIBuffer.h
 nsIByteBuffer.h
 nsIObserverList.h
-nsIPageManager.h
 nsIProperties.h
 nsISimpleEnumerator.h
 nsISizeOfHandler.h
