@@ -20,6 +20,7 @@
 #include "nsIContent.h"
 #include "nsIContentDelegate.h"
 #include "nsIDocument.h"
+#include "nsIDocumentObserver.h"
 #include "nsIStyleSet.h"
 #include "nsIStyleContext.h"
 #include "nsFrame.h"
@@ -27,6 +28,7 @@
 #include "nsIViewManager.h"
 #include "nsCRT.h"
 #include "plhash.h"
+#include "prlog.h"
 
 #undef NOISY
 
@@ -126,9 +128,11 @@ FrameHashTable::Remove(nsIFrame* aKey)
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIPresShellIID, NS_IPRESSHELL_IID);
-static NS_DEFINE_IID(kIDocumentObserverIID, NS_IDOCUMENTOBSERVER_IID);
+static NS_DEFINE_IID(kIDocumentObserverIID, NS_IDOCUMENT_OBSERVER_IID);
 
-class PresShell : public nsIPresShell {
+static PRLogModuleInfo* gShellLogModuleInfo;
+
+class PresShell : public nsIPresShell, nsIDocumentObserver {
 public:
   PresShell();
 
@@ -143,31 +147,35 @@ public:
 
   // nsIDocumentObserver
   NS_IMETHOD SetTitle(const nsString& aTitle);
-  virtual void BeginUpdate();
-  virtual void EndUpdate();
-  virtual void ContentChanged(nsIContent* aContent,
-                              nsISupports* aSubContent);
-  virtual void ContentAppended(nsIContent* aContainer);
-  virtual void ContentInserted(nsIContent* aContainer,
-                               nsIContent* aChild,
-                               PRInt32 aIndexInContainer);
-  virtual void ContentReplaced(nsIContent* aContainer,
-                               nsIContent* aOldChild,
-                               nsIContent* aNewChild,
-                               PRInt32 aIndexInContainer);
-  virtual void ContentWillBeRemoved(nsIContent* aContainer,
-                                    nsIContent* aChild,
-                                    PRInt32 aIndexInContainer);
-  virtual void ContentHasBeenRemoved(nsIContent* aContainer,
-                                     nsIContent* aChild,
-                                     PRInt32 aIndexInContainer);
-  virtual void StyleSheetAdded(nsIStyleSheet* aStyleSheet);
+  NS_IMETHOD BeginUpdate();
+  NS_IMETHOD EndUpdate();
+  NS_IMETHOD BeginLoad();
+  NS_IMETHOD EndLoad();
+  NS_IMETHOD BeginReflow(nsIPresShell* aShell);
+  NS_IMETHOD EndReflow(nsIPresShell* aShell);
+  NS_IMETHOD ContentChanged(nsIContent* aContent,
+                            nsISupports* aSubContent);
+  NS_IMETHOD ContentAppended(nsIContent* aContainer);
+  NS_IMETHOD ContentInserted(nsIContent* aContainer,
+                             nsIContent* aChild,
+                             PRInt32 aIndexInContainer);
+  NS_IMETHOD ContentReplaced(nsIContent* aContainer,
+                             nsIContent* aOldChild,
+                             nsIContent* aNewChild,
+                             PRInt32 aIndexInContainer);
+  NS_IMETHOD ContentWillBeRemoved(nsIContent* aContainer,
+                                  nsIContent* aChild,
+                                  PRInt32 aIndexInContainer);
+  NS_IMETHOD ContentHasBeenRemoved(nsIContent* aContainer,
+                                   nsIContent* aChild,
+                                   PRInt32 aIndexInContainer);
+  NS_IMETHOD StyleSheetAdded(nsIStyleSheet* aStyleSheet);
 
   // nsIPresShell
-  virtual nsresult Init(nsIDocument* aDocument,
-                        nsIPresContext* aPresContext,
-                        nsIViewManager* aViewManager,
-                        nsIStyleSet* aStyleSet);
+  NS_IMETHOD Init(nsIDocument* aDocument,
+                  nsIPresContext* aPresContext,
+                  nsIViewManager* aViewManager,
+                  nsIStyleSet* aStyleSet);
   virtual nsIDocument* GetDocument();
   virtual nsIPresContext* GetPresContext();
   virtual nsIViewManager* GetViewManager();
@@ -205,6 +213,9 @@ protected:
 
 PresShell::PresShell()
 {
+#ifdef NS_DEBUG
+  gShellLogModuleInfo = PR_NewLogModule("shell");
+#endif
 }
 
 nsrefcnt
@@ -367,6 +378,8 @@ PresShell::EndObservingDocument()
 void
 PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 {
+  EnterReflowLock();
+
   if (nsnull != mPresContext) {
     nsRect r(0, 0, aWidth, aHeight);
     mPresContext->SetVisibleArea(r);
@@ -429,6 +442,8 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
     printf("PresShell::ResizeReflow: null root frame\n");
 #endif
   }
+
+  ExitReflowLock();
 }
 
 nsIFrame*
@@ -457,19 +472,45 @@ PresShell::SetTitle(const nsString& aTitle)
   return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 PresShell::BeginUpdate()
 {
   mUpdateCount++;
+  return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 PresShell::EndUpdate()
 {
   NS_PRECONDITION(0 != mUpdateCount, "too many EndUpdate's");
   if (--mUpdateCount == 0) {
     // XXX do something here
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PresShell::BeginLoad()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PresShell::EndLoad()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PresShell::BeginReflow(nsIPresShell* aShell)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PresShell::EndReflow(nsIPresShell* aShell)
+{
+  return NS_OK;
 }
 
 void
@@ -492,6 +533,9 @@ PresShell::ProcessReflowCommands()
       nsSize          maxSize;
       
       mRootFrame->GetSize(maxSize);
+      PR_LOG(gShellLogModuleInfo, PR_LOG_DEBUG,
+             ("PresShell::ProcessReflowCommands: reflow command type=%d",
+              rc->GetType()));
       rc->Dispatch(desiredSize, maxSize);
       delete rc;
     }
@@ -506,8 +550,28 @@ PresShell::ProcessReflowCommands()
   }
 }
 
-void
-PresShell::ContentChanged(nsIContent* aContent,
+#ifdef NS_DEBUG
+static char*
+ContentTag(nsIContent* aContent, PRIntn aSlot)
+{
+  static char buf0[100], buf1[100], buf2[100];
+  static char* bufs[] = { buf0, buf1, buf2 };
+  char* buf = bufs[aSlot];
+  nsIAtom* atom = aContent->GetTag();
+  if (nsnull != atom) {
+    nsAutoString tmp;
+    atom->ToString(tmp);
+    tmp.ToCString(buf, 100);
+  }
+  else {
+    buf[0] = 0;
+  }
+  return buf;
+}
+#endif
+
+NS_IMETHODIMP
+PresShell::ContentChanged(nsIContent*  aContent,
                           nsISupports* aSubContent)
 {
   NS_PRECONDITION(nsnull != mRootFrame, "null root frame");
@@ -518,46 +582,65 @@ PresShell::ContentChanged(nsIContent* aContent,
   // command
   nsIFrame* frame = FindFrameWithContent(aContent);
   NS_PRECONDITION(nsnull != frame, "null frame");
+
+  PR_LOG(gShellLogModuleInfo, PR_LOG_DEBUG,
+         ("PresShell::ContentChanged: content=%p[%s] subcontent=%p frame=%p",
+          aContent, ContentTag(aContent, 0),
+          aSubContent, frame));
   frame->ContentChanged(this, mPresContext, aContent, aSubContent);
 
-  if (1 == mReflowLockCount) {
-    ProcessReflowCommands();
-  }
-
   ExitReflowLock();
+  return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 PresShell::ContentAppended(nsIContent* aContainer)
 {
   NS_PRECONDITION(nsnull != mRootFrame, "null root frame");
+
+  EnterReflowLock();
 
   nsIContent* parentContainer = aContainer;
   while (nsnull != parentContainer) {
     nsIFrame* frame = FindFrameWithContent(parentContainer);
     if (nsnull != frame) {
+      PR_LOG(gShellLogModuleInfo, PR_LOG_DEBUG,
+             ("PresShell::ContentAppended: container=%p[%s] frame=%p",
+              aContainer, ContentTag(aContainer, 0), frame));
       frame->ContentAppended(this, mPresContext, aContainer);
-      ProcessReflowCommands();
       break;
     }
     parentContainer = parentContainer->GetParent();
   }
+
+  ExitReflowLock();
+  return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 PresShell::ContentInserted(nsIContent* aContainer,
                            nsIContent* aChild,
                            PRInt32     aIndexInContainer)
 {
   NS_PRECONDITION(nsnull != mRootFrame, "null root frame");
 
+  EnterReflowLock();
+
   nsIFrame* frame = FindFrameWithContent(aContainer);
   NS_PRECONDITION(nsnull != frame, "null frame");
-  frame->ContentInserted(this, mPresContext, aContainer, aChild, aIndexInContainer);
-  ProcessReflowCommands();
+  PR_LOG(gShellLogModuleInfo, PR_LOG_DEBUG,
+     ("PresShell::ContentInserted: container=%p[%s] child=%p[%s][%d] frame=%p",
+      aContainer, ContentTag(aContainer, 0),
+      aChild, ContentTag(aChild, 1), aIndexInContainer,
+      frame));
+  frame->ContentInserted(this, mPresContext, aContainer, aChild,
+                         aIndexInContainer);
+
+  ExitReflowLock();
+  return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 PresShell::ContentReplaced(nsIContent* aContainer,
                            nsIContent* aOldChild,
                            nsIContent* aNewChild,
@@ -565,22 +648,36 @@ PresShell::ContentReplaced(nsIContent* aContainer,
 {
   NS_PRECONDITION(nsnull != mRootFrame, "null root frame");
 
+  EnterReflowLock();
+
   nsIFrame* frame = FindFrameWithContent(aContainer);
   NS_PRECONDITION(nsnull != frame, "null frame");
+  PR_LOG(gShellLogModuleInfo, PR_LOG_DEBUG,
+     ("PresShell::ContentReplaced: container=%p[%s] oldChild=%p[%s][%d] newChild=%p[%s] frame=%p",
+      aContainer, ContentTag(aContainer, 0),
+      aOldChild, ContentTag(aOldChild, 1), aIndexInContainer,
+      aNewChild, ContentTag(aNewChild, 2), frame));
   frame->ContentReplaced(this, mPresContext, aContainer, aOldChild,
-    aNewChild, aIndexInContainer);
-  ProcessReflowCommands();
+                         aNewChild, aIndexInContainer);
+
+  ExitReflowLock();
+  return NS_OK;
 }
 
 // XXX keep this?
-void
+NS_IMETHODIMP
 PresShell::ContentWillBeRemoved(nsIContent* aContainer,
                                 nsIContent* aChild,
                                 PRInt32     aIndexInContainer)
 {
+  PR_LOG(gShellLogModuleInfo, PR_LOG_DEBUG,
+     ("PresShell::ContentWillBeRemoved: container=%p[%s] child=%p[%s][%d]",
+      aContainer, ContentTag(aContainer, 0),
+      aChild, ContentTag(aChild, 1), aIndexInContainer));
+  return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 PresShell::ContentHasBeenRemoved(nsIContent* aContainer,
                                  nsIContent* aChild,
                                  PRInt32     aIndexInContainer)
@@ -589,13 +686,18 @@ PresShell::ContentHasBeenRemoved(nsIContent* aContainer,
 
   nsIFrame* frame = FindFrameWithContent(aContainer);
   NS_PRECONDITION(nsnull != frame, "null frame");
+  PR_LOG(gShellLogModuleInfo, PR_LOG_DEBUG,
+     ("PresShell::ContentHasBeenRemoved: container=%p child=%p[%d] frame=%p",
+      aContainer, aChild, aIndexInContainer, frame));
   frame->ContentDeleted(this, mPresContext, aContainer, aChild, aIndexInContainer);
   ProcessReflowCommands();
+  return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 PresShell::StyleSheetAdded(nsIStyleSheet* aStyleSheet)
 {
+  return NS_OK;
 }
 
 static nsIFrame*
