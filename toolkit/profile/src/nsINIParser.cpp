@@ -63,7 +63,8 @@ nsINIParser::Init(nsILocalFile* aFile)
 
     /* open the file */
     rv = aFile->OpenANSIFileDesc("r", &fd);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv))
+      return rv;
     
     /* get file size */
     if (fseek(fd, 0, SEEK_END) != 0) {
