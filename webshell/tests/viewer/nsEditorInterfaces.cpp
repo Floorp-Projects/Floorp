@@ -69,6 +69,12 @@ nsresult nsEditorKeyListener::ProcessEvent(nsIDOMEvent* aEvent)
 nsresult nsEditorKeyListener::GetCharFromKeyCode(PRUint32 aKeyCode, PRBool aIsShift, char *aChar)
 {
   /* This is completely temporary to get this working while I check out Unicode conversion code. */
+#ifdef XP_MAC
+  if (aChar) {
+    *aChar = (char)aKeyCode;
+    return NS_OK;
+    }
+#else
   if (aKeyCode >= 0x41 && aKeyCode <= 0x5A) {
     if (aIsShift) {
       *aChar = (char)aKeyCode;
@@ -82,6 +88,7 @@ nsresult nsEditorKeyListener::GetCharFromKeyCode(PRUint32 aKeyCode, PRBool aIsSh
       *aChar = (char)aKeyCode;
       return NS_OK;
   }
+#endif
   return NS_ERROR_FAILURE;
 }
 
