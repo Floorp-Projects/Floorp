@@ -170,7 +170,7 @@ nsHTMLOptionElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (aIID.Equals(kIJSNativeInitializerIID)) {
     nsIJSNativeInitializer* tmp = this;
     *aInstancePtr = (void*) tmp;
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }                                                             
   return NS_NOINTERFACE;
@@ -372,7 +372,8 @@ nsHTMLOptionElement::GetIndex(PRInt32* aIndex)
           if (thisNode == thisOption) {
             res = NS_OK;
             *aIndex = i;
-            break;
+            NS_IF_RELEASE(thisOption);
+            break; // skips the release below, thus release above needed
           }
           NS_IF_RELEASE(thisOption);
         }
@@ -636,10 +637,10 @@ nsHTMLOptionElement::Initialize(JSContext* aContext,
     JSString* jsstr = JS_ValueToString(aContext, argv[0]);
     if (nsnull != jsstr) {
       // Create a new text node and append it to the option
-      nsIContent* textNode;
+      nsCOMPtr<nsIContent> textNode;
       nsITextContent* content;
 
-      result = NS_NewTextNode(&textNode);
+      result = NS_NewTextNode(getter_AddRefs(textNode));
       if (NS_FAILED(result)) {
         return result;
       }
@@ -657,6 +658,7 @@ nsHTMLOptionElement::Initialize(JSContext* aContext,
         return result;
       }
       
+      // this addrefs textNode:
       result = mInner.AppendChildTo(textNode, PR_FALSE);
       if (NS_FAILED(result)) {
         return result;
