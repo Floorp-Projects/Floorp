@@ -12,6 +12,7 @@
 #include "nsIWebBrowserPrint.h"
 #include "nsIPrintSettings.h"
 #include "nsIPrintProgressParams.h"
+#include "nsCOMPtr.h"
 
 /////////////////////////////////////////////////////////////////////////////
 // CPrintProgressDialog dialog
