@@ -1247,24 +1247,24 @@ NS_IMETHODIMP nsOSHelperAppService::GetFromMIMEType(const char *aMIMEType,
 
   nsDependentSubstring majorType(majorTypeStart, majorTypeEnd);
   nsDependentSubstring minorType(minorTypeStart, minorTypeEnd);
-  LookUpExtensionsAndDescription(majorType,
-                                 minorType,
-                                 extensions,
-                                 mime_types_description);
   LookUpHandlerAndDescription(majorType,
                               minorType,
                               typeOptions,
                               handler,
                               mailcap_description,
                               mozillaFlags);
-  mailcap_description.Trim(" \t\"");
-  mozillaFlags.Trim(" \t");
-
-  if (extensions.IsEmpty() && mime_types_description.IsEmpty() &&
-      handler.IsEmpty() && mailcap_description.IsEmpty()) {
+  
+  if (handler.IsEmpty()) {
     // we have no useful info....
     return NS_ERROR_FAILURE;
   }
+  
+  mailcap_description.Trim(" \t\"");
+  mozillaFlags.Trim(" \t");
+  LookUpExtensionsAndDescription(majorType,
+                                 minorType,
+                                 extensions,
+                                 mime_types_description);
   
   nsCOMPtr<nsIMIMEInfo> mimeInfo(do_CreateInstance(NS_MIMEINFO_CONTRACTID, &rv));
     
@@ -1281,9 +1281,8 @@ NS_IMETHODIMP nsOSHelperAppService::GetFromMIMEType(const char *aMIMEType,
     
   rv = NS_ERROR_FAILURE;
   nsCOMPtr<nsIFile> handlerFile;
-  if (! handler.IsEmpty()) {
-    rv = GetFileTokenForPath(handler.get(), getter_AddRefs(handlerFile));
-  }
+  rv = GetFileTokenForPath(handler.get(), getter_AddRefs(handlerFile));
+  
   if (NS_SUCCEEDED(rv)) {
     mimeInfo->SetPreferredApplicationHandler(handlerFile);
     mimeInfo->SetPreferredAction(nsIMIMEInfo::useHelperApp);
