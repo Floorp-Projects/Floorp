@@ -46,25 +46,9 @@
           Components.classes["@mozilla.org/permissionmanager;1"]
             .getService(Components.interfaces.nsIPermissionManager);
 
+        if(permissionmanager.testForBlocking(gContextMenu.imageURL,IMAGEPERMISSION))
+          return false;
 
-        var enumerator = permissionmanager.enumerator;
-        while (enumerator.hasMoreElements()) {
-          var nextPermission = enumerator.getNext();
-          nextPermission = nextPermission.QueryInterface(Components.interfaces.nsIPermission);
-          var imageType = 1;
-          if (nextPermission.type == imageType &&
-              !nextPermission.capability) {
-            /* some image host is being blocked, need to find out if it's our image's host */
-            var host = nextPermission.host;
-            if(host.charAt(0) == ".") {  // get rid of the ugly dot on the start of some domains
-              host = host.substring(1,host.length);
-            }
-            if (host && gContextMenu.imageURL.search(host) != -1) {
-              /* it's our image's host that's being blocked */
-              return false;
-            }
-          }
-        }
         /* image is not already being blocked, so "Block Image" can appear on the menu */
         return true;
       },
