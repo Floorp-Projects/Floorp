@@ -53,6 +53,7 @@ static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 nsUsageArrayHelper::nsUsageArrayHelper(CERTCertificate *aCert)
 :mCert(aCert)
 {
+  nsNSSShutDownPreventionLock locker;
   defaultcertdb = CERT_GetDefaultCertDB();
   nssComponent = do_GetService(kNSSComponentCID, &m_rv);
   mCached_NonInadequateReason = SECSuccess;
@@ -64,6 +65,7 @@ nsUsageArrayHelper::check(char *suffix,
                         PRUint32 &aCounter,
                         PRUnichar **outUsages)
 {
+  nsNSSShutDownPreventionLock locker;
   if (CERT_VerifyCertNow(defaultcertdb, mCert, PR_TRUE, 
                          aCertUsage, NULL) == SECSuccess) {
     nsAutoString typestr;
@@ -177,6 +179,7 @@ nsUsageArrayHelper::GetUsagesArray(char *suffix,
                       PRUint32 *_count,
                       PRUnichar **outUsages)
 {
+  nsNSSShutDownPreventionLock locker;
   if (NS_FAILED(m_rv))
     return m_rv;
 

@@ -42,6 +42,7 @@
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
 #include "nsReadableUtils.h"
+#include "nsNSSShutDown.h"
 
 #include "nspr.h"
 extern "C" {
@@ -65,6 +66,7 @@ nsCRLInfo::nsCRLInfo()
 
 nsCRLInfo::nsCRLInfo(CERTSignedCrl *signedCrl)
 {
+  nsNSSShutDownPreventionLock locker;
   CERTCrl *crl = &(signedCrl->crl);
   nsAutoString org;
   nsAutoString orgUnit;

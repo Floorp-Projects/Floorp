@@ -47,6 +47,7 @@
 #include "nsCMSSecureMessage.h"
 #include "nsNSSCertificate.h"
 #include "nsNSSHelper.h"
+#include "nsNSSShutDown.h"
 
 #include <string.h>
 #include "plbase64.h"
@@ -86,6 +87,7 @@ nsCMSSecureMessage::~nsCMSSecureMessage()
 NS_IMETHODIMP nsCMSSecureMessage::
 GetCertByPrefID(const char *certID, char **_retval)
 {
+  nsNSSShutDownPreventionLock locker;
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSSecureMessage::GetCertByPrefID\n"));
   nsresult rv = NS_OK;
   CERTCertificate *cert = 0;
@@ -127,6 +129,7 @@ done:
 nsresult nsCMSSecureMessage::
 DecodeCert(const char *value, nsIX509Cert ** _retval)
 {
+  nsNSSShutDownPreventionLock locker;
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSSecureMessage::DecodeCert\n"));
   nsresult rv = NS_OK;
   PRInt32 length;
@@ -160,6 +163,7 @@ DecodeCert(const char *value, nsIX509Cert ** _retval)
 nsresult nsCMSSecureMessage::
 SendMessage(const char *msg, const char *base64Cert, char ** _retval)
 {
+  nsNSSShutDownPreventionLock locker;
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSSecureMessage::SendMessage\n"));
   nsresult rv = NS_OK;
   CERTCertificate *cert = 0;
@@ -289,6 +293,7 @@ done:
 nsresult nsCMSSecureMessage::
 ReceiveMessage(const char *msg, char **_retval)
 {
+  nsNSSShutDownPreventionLock locker;
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSSecureMessage::ReceiveMessage\n"));
   nsresult rv = NS_OK;
   NSSCMSDecoderContext *dcx;

@@ -47,12 +47,14 @@
 #include "nsICMSDecoder.h"
 #include "sechash.h"
 #include "cms.h"
+#include "nsNSSShutDown.h"
 
 #define NS_HASH_CLASSNAME "Hash Object"
 #define NS_HASH_CID \
   { 0xa31a3028, 0xae28, 0x11d5, { 0xba, 0x4b, 0x00, 0x10, 0x83, 0x03, 0xb1, 0x17 } }
 
-class nsHash : public nsIHash
+class nsHash : public nsIHash,
+               public nsNSSShutDownObject
 {
 public:
   NS_DECL_ISUPPORTS
@@ -63,13 +65,16 @@ public:
 
 private:
   HASHContext * m_ctxt;
+  virtual void virtualDestroyNSSReference();
+  void destructorSafeDestroyNSSReference();
 };
 
 #define NS_CMSMESSAGE_CLASSNAME "CMS Message Object"
 #define NS_CMSMESSAGE_CID \
   { 0xa4557478, 0xae16, 0x11d5, { 0xba,0x4b,0x00,0x10,0x83,0x03,0xb1,0x17 } }
 
-class nsCMSMessage : public nsICMSMessage
+class nsCMSMessage : public nsICMSMessage,
+                     public nsNSSShutDownObject
 {
 public:
   NS_DECL_ISUPPORTS
@@ -86,6 +91,8 @@ private:
   NSSCMSMessage * m_cmsMsg;
   NSSCMSSignerInfo* GetTopLevelSignerInfo();
   nsresult CommonVerifySignature(unsigned char* aDigestData, PRUint32 aDigestDataLen);
+  virtual void virtualDestroyNSSReference();
+  void destructorSafeDestroyNSSReference();
 };
 
 
@@ -97,7 +104,8 @@ private:
 #define NS_CMSDECODER_CID \
   { 0x9dcef3a4, 0xa3bc, 0x11d5, { 0xba, 0x47, 0x00, 0x10, 0x83, 0x03, 0xb1, 0x17 } }
 
-class nsCMSDecoder : public nsICMSDecoder
+class nsCMSDecoder : public nsICMSDecoder,
+                     public nsNSSShutDownObject
 {
 public:
   NS_DECL_ISUPPORTS
@@ -109,6 +117,8 @@ public:
 private:
   nsCOMPtr<nsIInterfaceRequestor> m_ctx;
   NSSCMSDecoderContext *m_dcx;
+  virtual void virtualDestroyNSSReference();
+  void destructorSafeDestroyNSSReference();
 };
 
 // ===============================================
@@ -118,7 +128,8 @@ private:
 #define NS_CMSENCODER_CLASSNAME "CMS Decoder Object"
 #define NS_CMSENCODER_CID \
   { 0xa15789aa, 0x8903, 0x462b, { 0x81, 0xe9, 0x4a, 0xa2, 0xcf, 0xf4, 0xd5, 0xcb } }
-class nsCMSEncoder : public nsICMSEncoder
+class nsCMSEncoder : public nsICMSEncoder,
+                     public nsNSSShutDownObject
 {
 public:
   NS_DECL_ISUPPORTS
@@ -130,6 +141,8 @@ public:
 private:
   nsCOMPtr<nsIInterfaceRequestor> m_ctx;
   NSSCMSEncoderContext *m_ecx;
+  virtual void virtualDestroyNSSReference();
+  void destructorSafeDestroyNSSReference();
 };
 
 #endif

@@ -30,8 +30,10 @@
 #include "nsIPKCS11ModuleDB.h"
 #include "nsString.h"
 #include "pk11func.h"
+#include "nsNSSShutDown.h"
 
-class nsPKCS11Slot : public nsIPKCS11Slot
+class nsPKCS11Slot : public nsIPKCS11Slot,
+                     public nsNSSShutDownObject
 {
 public:
   NS_DECL_ISUPPORTS
@@ -44,9 +46,13 @@ private:
 
   PK11SlotInfo *mSlot;
   nsString mSlotDesc, mSlotManID, mSlotHWVersion, mSlotFWVersion;
+
+  virtual void virtualDestroyNSSReference();
+  void destructorSafeDestroyNSSReference();
 };
 
-class nsPKCS11Module : public nsIPKCS11Module
+class nsPKCS11Module : public nsIPKCS11Module,
+                       public nsNSSShutDownObject
 {
 public:
   NS_DECL_ISUPPORTS
@@ -57,6 +63,9 @@ public:
 
 private:
   SECMODModule *mModule;
+
+  virtual void virtualDestroyNSSReference();
+  void destructorSafeDestroyNSSReference();
 };
 
 class nsPKCS11ModuleDB : public nsIPKCS11ModuleDB

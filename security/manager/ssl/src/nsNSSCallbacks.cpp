@@ -37,7 +37,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsCRT.h"
-#include "nsPSMTracker.h"
+#include "nsNSSShutDown.h"
 
 #include "ssl.h"
 #include "cert.h"
@@ -118,6 +118,7 @@ nsSSLStatus::~nsSSLStatus()
 
 char* PR_CALLBACK
 PK11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg) {
+  nsNSSShutDownPreventionLock locker;
   nsresult rv = NS_OK;
   PRUnichar *password = nsnull;
   PRBool value = PR_FALSE;
@@ -198,6 +199,7 @@ PK11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg) {
 }
 
 void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
+  nsNSSShutDownPreventionLock locker;
   PRInt32 sslStatus;
   char* signer = nsnull;
   char* cipherName = nsnull;
@@ -277,6 +279,8 @@ void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
 
 SECStatus PR_CALLBACK AuthCertificateCallback(void* client_data, PRFileDesc* fd,
                                               PRBool checksig, PRBool isServer) {
+  nsNSSShutDownPreventionLock locker;
+
   // first the default action
   SECStatus rv = SSL_AuthCertificate(CERT_GetDefaultCertDB(), fd, checksig, isServer);
 

@@ -23,6 +23,7 @@
 #include "nsProxiedService.h"
 #include "nsKeygenThread.h"
 #include "nsIDOMWindowInternal.h"
+#include "nsNSSShutDown.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsKeygenThread, nsIKeygenThread)
 
@@ -66,6 +67,7 @@ void nsKeygenThread::SetParams(
     PRBool a_isSensitive,
     void *a_wincx )
 {
+  nsNSSShutDownPreventionLock locker;
   PR_Lock(mutex);
  
     if (!alreadyReceivedParams) {
@@ -195,6 +197,7 @@ nsresult nsKeygenThread::UserCanceled(PRBool *threadAlreadyClosedDialog)
 
 void nsKeygenThread::Run(void)
 {
+  nsNSSShutDownPreventionLock locker;
   PRBool canGenerate = PR_FALSE;
 
   PR_Lock(mutex);

@@ -319,7 +319,7 @@ function doLogout()
   // here's the workaround - login functions are with token
   var selected_token = selected_slot.getToken();
   try {
-    selected_token.logout(false);
+    selected_token.logoutAndDropAuthenticatedResources();
     var tok_status = document.getElementById("tok_status");
     if (selected_token.isLoggedIn()) {
       tok_status.setAttribute("label", 

@@ -70,7 +70,7 @@
 #include "nsILocalFile.h"
 #include "nsITokenPasswordDialogs.h"
 #include "nsICRLManager.h"
-#include "nsPSMTracker.h"
+#include "nsNSSShutDown.h"
 
 #include "nss.h"
 #include "pk11func.h"
@@ -226,7 +226,7 @@ nsNSSComponent::nsNSSComponent()
   NS_ASSERTION( (0 == mInstanceCount), "nsNSSComponent is a singleton, but instantiated multiple times!");
   ++mInstanceCount;
   hashTableCerts = nsnull;
-  mPSMTracker = nsPSMTracker::construct();
+  mShutdownObjectList = nsNSSShutDownList::construct();
 }
 
 nsNSSComponent::~nsNSSComponent()
@@ -255,7 +255,7 @@ nsNSSComponent::~nsNSSComponent()
   ShutdownNSS();
   nsSSLIOLayerFreeTLSIntolerantSites();
   --mInstanceCount;
-  delete mPSMTracker;
+  delete mShutdownObjectList;
 
   if (mutex) {
     PR_DestroyLock(mutex);
@@ -324,6 +324,7 @@ nsNSSComponent::GetPIPNSSBundleString(const PRUnichar *name,
 NS_IMETHODIMP
 nsNSSComponent::SkipOcsp()
 {
+  nsNSSShutDownPreventionLock locker;
   CERTCertDBHandle *certdb = CERT_GetDefaultCertDB();
 
   SECStatus rv = CERT_DisableOCSPChecking(certdb);
@@ -340,6 +341,7 @@ nsNSSComponent::SkipOcspOff()
 void
 nsNSSComponent::InstallLoadableRoots()
 {
+  nsNSSShutDownPreventionLock locker;
   SECMODModule *RootsModule = nsnull;
 
   {
@@ -442,6 +444,7 @@ nsNSSComponent::InstallLoadableRoots()
 nsresult
 nsNSSComponent::ConfigureInternalPKCS11Token()
 {
+  nsNSSShutDownPreventionLock locker;
   nsXPIDLString manufacturerID;
   nsXPIDLString libraryDescription;
   nsXPIDLString tokenDescription;
@@ -591,6 +594,7 @@ nsresult nsNSSComponent::GetNSSCipherIDFromPrefString(const nsACString &aPrefStr
 
 static void setOCSPOptions(nsIPref * pref)
 {
+  nsNSSShutDownPreventionLock locker;
   // Set up OCSP //
   PRInt32 ocspEnabled;
   pref->GetIntPref("security.OCSP.enabled", &ocspEnabled);
@@ -976,7 +980,9 @@ nsNSSComponent::InitializeNSS()
 
     ConfigureInternalPKCS11Token();
 
-    if (::NSS_InitReadWrite(profileStr.get()) != SECSuccess) {
+    SECStatus init_rv = ::NSS_InitReadWrite(profileStr.get());
+
+    if (init_rv != SECSuccess) {
       PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("can not init NSS r/w in %s\n", profileStr.get()));
 
       if (supress_warning_preference) {
@@ -987,7 +993,9 @@ nsNSSComponent::InitializeNSS()
       }
 
       // try to init r/o
-      if (NSS_Init(profileStr.get()) != SECSuccess) {
+      init_rv = NSS_Init(profileStr.get());
+
+      if (init_rv != SECSuccess) {
         PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("can not init in r/o either\n"));
         which_nss_problem = problem_no_security_at_all;
 
@@ -1092,20 +1100,19 @@ nsNSSComponent::ShutdownNSS()
     }
 
     SSL_ClearSessionCache();
-#if 0
-    // temporarily disable this call until bug 181230 gets fixed
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("evaporating psm resources\n"));
+    mShutdownObjectList->evaporateAllNSSResources();
     if (SECSuccess != ::NSS_Shutdown()) {
       PR_LOG(gPIPNSSLog, PR_LOG_ALWAYS, ("NSS SHUTDOWN FAILURE\n"));
     }
     else {
       PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NSS shutdown =====>> OK <<=====\n"));
     }
-#endif
   }
 
   return NS_OK;
 }
-
+ 
 NS_IMETHODIMP
 nsNSSComponent::Init()
 {
@@ -1225,6 +1232,7 @@ nsNSSComponent::VerifySignature(const char* aRSABuf, PRUint32 aRSABufLen,
                                 PRInt32* aErrorCode,
                                 nsIPrincipal** aPrincipal)
 {
+  nsNSSShutDownPreventionLock locker;
   SEC_PKCS7DecoderContext * p7_ctxt = nsnull;
   SEC_PKCS7ContentInfo * p7_info = nsnull; 
   unsigned char hash[SHA1_LENGTH]; 
@@ -1322,6 +1330,8 @@ nsNSSComponent::VerifySignature(const char* aRSABuf, PRUint32 aRSABufLen,
 NS_IMETHODIMP
 nsNSSComponent::RandomUpdate(void *entropy, PRInt32 bufLen)
 {
+  nsNSSShutDownPreventionLock locker;
+
   // Asynchronous event happening often,
   // must not interfere with initialization or profile switch.
   
@@ -1346,6 +1356,7 @@ nsNSSComponent::PrefChangedCallback(const char* aPrefName, void* data)
 void
 nsNSSComponent::PrefChanged(const char* prefName)
 {
+  nsNSSShutDownPreventionLock locker;
   PRBool enabled;
 
   if (!nsCRT::strcmp(prefName, "security.enable_ssl2")) {
@@ -1371,7 +1382,9 @@ nsNSSComponent::PrefChanged(const char* prefName)
   }
 }
 
-#ifdef DEBUG
+#define DEBUG_PSM_PROFILE
+
+#ifdef DEBUG_PSM_PROFILE
 #define PROFILE_CHANGE_NET_TEARDOWN_TOPIC NS_LITERAL_CSTRING("profile-change-net-teardown").get()
 #define PROFILE_CHANGE_NET_RESTORE_TOPIC NS_LITERAL_CSTRING("profile-change-net-restore").get()
 #endif
@@ -1392,7 +1405,7 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
 #endif
 
   if (nsCRT::strcmp(aTopic, PROFILE_APPROVE_CHANGE_TOPIC) == 0) {
-    if (mPSMTracker->isUIActive()) {
+    if (mShutdownObjectList->isUIActive()) {
       ShowAlert(ai_crypto_ui_active);
       nsCOMPtr<nsIProfileChangeStatus> status = do_QueryInterface(aSubject);
       if (status) {
@@ -1404,12 +1417,12 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("in PSM code, receiving change-teardown\n"));
 
     PRBool callVeto = PR_FALSE;
-    
-    if (!mPSMTracker->ifPossibleDisallowUI()) {
+
+    if (!mShutdownObjectList->ifPossibleDisallowUI()) {
       callVeto = PR_TRUE;
       ShowAlert(ai_crypto_ui_active);
     }
-    else if (mPSMTracker->areSSLSocketsActive()) {
+    else if (mShutdownObjectList->areSSLSocketsActive()) {
       callVeto = PR_TRUE;
       ShowAlert(ai_sockets_still_active);
     }
@@ -1422,7 +1435,7 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
     }
   }
   else if (nsCRT::strcmp(aTopic, PROFILE_CHANGE_TEARDOWN_VETO_TOPIC) == 0) {
-    mPSMTracker->allowUI();
+    mShutdownObjectList->allowUI();
   }
   else if (nsCRT::strcmp(aTopic, PROFILE_BEFORE_CHANGE_TOPIC) == 0) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("receiving profile change topic\n"));
@@ -1448,8 +1461,8 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
     if (needsCleanup) {
       ShutdownNSS();
     }
-    
-    mPSMTracker->allowUI();
+    mShutdownObjectList->allowUI();
+
   }
   else if (nsCRT::strcmp(aTopic, PROFILE_AFTER_CHANGE_TOPIC) == 0) {
   
@@ -1501,7 +1514,9 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
     }
   }
   else if ((nsCRT::strcmp(aTopic, SESSION_LOGOUT_TOPIC) == 0) && mNSSInitialized) {
+    nsNSSShutDownPreventionLock locker;
     PK11_LogoutAll();
+    LogoutAuthenticatedPK11();
   }
 
 
@@ -1574,6 +1589,11 @@ void nsNSSComponent::ShowAlert(AlertIdentifier ai)
   }
 }
 
+nsresult nsNSSComponent::LogoutAuthenticatedPK11()
+{
+  return mShutdownObjectList->doPK11Logout();
+}
+
 nsresult
 nsNSSComponent::RegisterObservers()
 {
@@ -1611,6 +1631,8 @@ nsNSSComponent::RegisterObservers()
 NS_IMETHODIMP
 nsNSSComponent::RememberCert(CERTCertificate *cert)
 {
+  nsNSSShutDownPreventionLock locker;
+
   // Must not interfere with init / shutdown / profile switch.
 
   nsAutoLock lock(mutex);
@@ -1713,6 +1735,7 @@ getNSSDialogs(void **_result, REFNSIID aIID, const char *contract)
 nsresult
 setPassword(PK11SlotInfo *slot, nsIInterfaceRequestor *ctx)
 {
+  nsNSSShutDownPreventionLock locker;
   nsresult rv = NS_OK;
   
   if (PK11_NeedUserInit(slot)) {
@@ -1835,6 +1858,7 @@ PSMContentDownloader::OnStopRequest(nsIRequest* request,
                               nsISupports* context,
                               nsresult aStatus)
 {
+  nsNSSShutDownPreventionLock locker;
   //Check if the download succeeded - it might have failed due to
   //network issues, etc.
   if (NS_FAILED(aStatus)){

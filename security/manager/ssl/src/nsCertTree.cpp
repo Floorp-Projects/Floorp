@@ -327,6 +327,7 @@ nsCertTree::GetCertsByType(PRUint32           aType,
                            void              *aCertCmpFnArg,
                            nsISupportsArray **_certs)
 {
+  nsNSSShutDownPreventionLock locker;
   CERTCertList *certList = NULL;
   nsCOMPtr<nsIInterfaceRequestor> cxt = new PipUIContext();
   certList = PK11_ListCerts(PK11CertListUnique, cxt);

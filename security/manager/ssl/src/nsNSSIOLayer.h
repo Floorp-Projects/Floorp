@@ -35,13 +35,16 @@
 #include "nsISSLStatus.h"
 #include "nsISSLStatusProvider.h"
 #include "nsXPIDLString.h"
+#include "nsNSSShutDown.h"
 
 class nsIChannel;
 
 class nsNSSSocketInfo : public nsITransportSecurityInfo,
                         public nsISSLSocketControl,
                         public nsIInterfaceRequestor,
-                        public nsISSLStatusProvider
+                        public nsISSLStatusProvider,
+                        public nsNSSShutDownObject,
+                        public nsOnPK11LogoutCancelObject
 {
 public:
   nsNSSSocketInfo();
@@ -103,6 +106,9 @@ protected:
   nsCOMPtr<nsISSLStatus> mSSLStatus;
 
   nsresult ActivateSSL();
+private:
+  virtual void virtualDestroyNSSReference();
+  void destructorSafeDestroyNSSReference();
 };
 
 nsresult nsSSLIOLayerNewSocket(const char *host,

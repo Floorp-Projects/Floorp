@@ -41,6 +41,7 @@
 #include "nsIX509CertDB.h"
 #include "nsIASN1Object.h"
 #include "nsISMimeCert.h"
+#include "nsNSSShutDown.h"
 
 #include "nsNSSCertHeader.h"
 
@@ -49,7 +50,8 @@ class nsIASN1Sequence;
 
 /* Certificate */
 class nsNSSCertificate : public nsIX509Cert,
-                         public nsISMimeCert
+                         public nsISMimeCert,
+                         public nsNSSShutDownObject
 {
 public:
   NS_DECL_ISUPPORTS
@@ -77,6 +79,8 @@ private:
   nsresult CreateTBSCertificateASN1Struct(nsIASN1Sequence **retSequence,
                                           nsINSSComponent *nssComponent);
   nsresult GetSortableDate(PRTime aTime, nsAString &_aSortableDate);
+  virtual void virtualDestroyNSSReference();
+  void destructorSafeDestroyNSSReference();
 };
 
 #define NS_NSS_LONG 4

@@ -126,10 +126,12 @@ class NS_NO_VTABLE nsINSSComponent : public nsISupports {
 
   NS_IMETHOD DownloadCRLDirectly(nsAutoString, nsAutoString) = 0;
   
+  NS_IMETHOD LogoutAuthenticatedPK11() = 0;
+  
 };
 
 struct PRLock;
-class nsPSMTracker;
+class nsNSSShutDownList;
 
 // Implementation of the PSM component interface.
 class nsNSSComponent : public nsISignatureVerifier,
@@ -167,6 +169,7 @@ public:
   nsresult StopCRLUpdateTimer();
   NS_IMETHOD RemoveCrlFromList(nsAutoString);
   NS_IMETHOD DefineNextTimer();
+  NS_IMETHOD LogoutAuthenticatedPK11();
   NS_IMETHOD DownloadCRLDirectly(nsAutoString, nsAutoString);
   NS_IMETHOD RememberCert(CERTCertificate *cert);
   static nsresult GetNSSCipherIDFromPrefString(const nsACString &aPrefString, PRUint16 &aCipherId);
@@ -211,7 +214,7 @@ private:
   PRBool crlDownloadTimerOn;
   PRBool mUpdateTimerInitialized;
   static int mInstanceCount;
-  nsPSMTracker *mPSMTracker;
+  nsNSSShutDownList *mShutdownObjectList;
 };
 
 class PSMContentListener : public nsIURIContentListener,
