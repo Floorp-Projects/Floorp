@@ -39,7 +39,7 @@ nsDeviceContextPS :: nsDeviceContextPS()
 
   NS_INIT_REFCNT();
   mSpec = nsnull; 
-  
+
 }
 
 /** ---------------------------------------------------
@@ -346,6 +346,10 @@ NS_IMETHODIMP nsDeviceContextPS :: ConvertPixel(nscolor aColor, PRUint32 & aPixe
  *  See documentation in nsIDeviceContext.h
  *	@update 12/21/98 dwc
  */
+NS_IMETHODIMP nsDeviceContextPS::GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup, nsIFontMetrics  *&aMetrics)
+{
+	return GetMetricsFor(aFont, aMetrics);
+}
 NS_IMETHODIMP nsDeviceContextPS::GetMetricsFor(const nsFont& aFont, nsIFontMetrics  *&aMetrics)
 {
 PRInt32         n,cnt;
