@@ -315,7 +315,7 @@ var gFeedSubscriptionsWindow = {
 
       // add or remove the children from our view
       item.open = !item.open;
-      gFeedSubscriptionsWindow.mTree.treeBoxObject.rowCountChanged(aIndex + 1, delta);
+      gFeedSubscriptionsWindow.mTree.treeBoxObject.rowCountChanged(aIndex, delta);
     },    
     cycleHeader: function (aColumn) {},    
     selectionChanged: function () {},    
