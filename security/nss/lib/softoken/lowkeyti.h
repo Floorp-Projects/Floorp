@@ -78,6 +78,14 @@ extern const SEC_ASN1Template nsslowkey_DHPrivateKeyExportTemplate[];
 extern const SEC_ASN1Template nsslowkey_PrivateKeyInfoTemplate[];
 extern const SEC_ASN1Template nsslowkey_EncryptedPrivateKeyInfoTemplate[];
 
+/*
+ * PKCS #8 attributes
+ */
+struct NSSLOWKEYAttributeStr {
+    SECItem attrType;
+    SECItem *attrValue;
+};
+typedef struct NSSLOWKEYAttributeStr NSSLOWKEYAttribute;
 
 /*
 ** A PKCS#8 private key info object
@@ -87,6 +95,7 @@ struct NSSLOWKEYPrivateKeyInfoStr {
     SECItem version;
     SECAlgorithmID algorithm;
     SECItem privateKey;
+    NSSLOWKEYAttribute **attributes;
 };
 typedef struct NSSLOWKEYPrivateKeyInfoStr NSSLOWKEYPrivateKeyInfo;
 #define NSSLOWKEY_PRIVATE_KEY_INFO_VERSION	0	/* what we *create* */

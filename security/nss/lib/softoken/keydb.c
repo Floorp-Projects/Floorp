@@ -32,7 +32,7 @@
  *
  * Private Key Database code
  *
- * $Id: keydb.c,v 1.16 2002/04/08 23:37:48 relyea%netscape.com Exp $
+ * $Id: keydb.c,v 1.17 2002/04/11 00:59:42 relyea%netscape.com Exp $
  */
 
 #include "lowkeyi.h"
@@ -64,6 +64,18 @@
 /* Size of the global salt for key database */
 #define SALT_LENGTH     16
 
+const SEC_ASN1Template nsslowkey_AttributeTemplate[] = {
+    { SEC_ASN1_SEQUENCE, 
+	0, NULL, sizeof(NSSLOWKEYAttribute) },
+    { SEC_ASN1_OBJECT_ID, offsetof(NSSLOWKEYAttribute, attrType) },
+    { SEC_ASN1_SET_OF, offsetof(NSSLOWKEYAttribute, attrValue), 
+	SEC_AnyTemplate },
+    { 0 }
+};
+
+const SEC_ASN1Template nsslowkey_SetOfAttributeTemplate[] = {
+    { SEC_ASN1_SET_OF, 0, nsslowkey_AttributeTemplate },
+};
 /* ASN1 Templates for new decoder/encoder */
 const SEC_ASN1Template nsslowkey_PrivateKeyInfoTemplate[] = {
     { SEC_ASN1_SEQUENCE,
@@ -75,6 +87,9 @@ const SEC_ASN1Template nsslowkey_PrivateKeyInfoTemplate[] = {
 	SECOID_AlgorithmIDTemplate },
     { SEC_ASN1_OCTET_STRING,
 	offsetof(NSSLOWKEYPrivateKeyInfo,privateKey) },
+    { SEC_ASN1_OPTIONAL | SEC_ASN1_CONSTRUCTED | SEC_ASN1_CONTEXT_SPECIFIC | 0,
+	offsetof(NSSLOWKEYPrivateKeyInfo, attributes),
+	nsslowkey_SetOfAttributeTemplate },
     { 0 }
 };
 
