@@ -49,7 +49,8 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 NS_IMETHODIMP
 nsConverterInputStream::Init(nsIInputStream* aStream,
                              const PRUnichar *aCharset,
-                             PRInt32 aBufferSize)
+                             PRInt32 aBufferSize,
+                             PRBool aRecoverFromErrors)
 {
     nsresult rv;
 
@@ -77,6 +78,7 @@ nsConverterInputStream::Init(nsIInputStream* aStream,
     if (NS_FAILED(rv)) return rv;
 
     mInput = aStream;
+    mRecoverFromErrors = aRecoverFromErrors;
     
     return NS_OK;
 }
@@ -99,13 +101,12 @@ nsConverterInputStream::Read(PRUnichar* aBuf,
 {
   NS_ASSERTION(mUnicharDataLength >= mUnicharDataOffset, "unsigned madness");
   PRUint32 rv = mUnicharDataLength - mUnicharDataOffset;
-  nsresult errorCode;
   if (0 == rv) {
     // Fill the unichar buffer
-    rv = Fill(&errorCode);
-    if (rv <= 0) {
+    rv = Fill(&mLastErrorCode);
+    if (rv == 0) {
       *aReadCount = 0;
-      return errorCode;
+      return mLastErrorCode;
     }
   }
   if (rv > aCount) {
@@ -118,36 +119,77 @@ nsConverterInputStream::Read(PRUnichar* aBuf,
   return NS_OK;
 }
 
-PRInt32
+PRUint32
 nsConverterInputStream::Fill(nsresult * aErrorCode)
 {
   if (nsnull == mInput) {
     // We already closed the stream!
     *aErrorCode = NS_BASE_STREAM_CLOSED;
-    return -1;
+    return 0;
   }
 
-  NS_ASSERTION(mByteData->GetLength() >= mByteDataOffset, "unsigned madness");
-  PRUint32 remainder = mByteData->GetLength() - mByteDataOffset;
-  mByteDataOffset = remainder;
-  PRInt32 nb = mByteData->Fill(aErrorCode, mInput, remainder);
-  if (nb <= 0) {
-    // Because we assume a many to one conversion, the lingering data
-    // in the byte buffer must be a partial conversion
-    // fragment. Because we know that we have recieved no more new
-    // data to add to it, we can't convert it. Therefore, we discard
-    // it.
-    return nb;
+  if (NS_FAILED(mLastErrorCode)) {
+    // We failed to completely convert last time, and error-recovery
+    // is disabled.  We will fare no better this time, so...
+    *aErrorCode = mLastErrorCode;
+    return 0;
   }
-  NS_ASSERTION(remainder + nb == mByteData->GetLength(), "bad nb");
+  
+  // We assume a many to one conversion and are using equal sizes for
+  // the two buffers.  However if an error happens at the very start
+  // of a byte buffer we may end up in a situation where n bytes lead
+  // to n+1 unicode chars.  Thus we need to keep track of the leftover
+  // bytes as we convert.
+  
+  PRInt32 nb = mByteData->Fill(aErrorCode, mInput, mLeftOverBytes);
+#if defined(DEBUG_bzbarsky) && 0
+  for (unsigned int foo = 0; foo < mByteData->GetLength(); ++foo) {
+    fprintf(stderr, "%c", mByteData->GetBuffer()[foo]);
+  }
+  fprintf(stderr, "\n");
+#endif
+  if (nb <= 0 && mLeftOverBytes == 0) {
+    // No more data 
+    *aErrorCode = NS_OK;
+    return 0;
+  }
 
+  NS_ASSERTION(PRUint32(nb) + mLeftOverBytes == mByteData->GetLength(),
+               "mByteData is lying to us somewhere");
+  
   // Now convert as much of the byte buffer to unicode as possible
-  PRInt32 dstLen = mUnicharData->GetBufferSize();
-  PRInt32 srcLen = remainder + nb;
-  *aErrorCode = mConverter->Convert(mByteData->GetBuffer(), &srcLen,
-                                    mUnicharData->GetBuffer(), &dstLen);
   mUnicharDataOffset = 0;
-  mUnicharDataLength = dstLen;
-  mByteDataOffset += srcLen;
-  return dstLen;
+  mUnicharDataLength = 0;
+  PRUint32 srcConsumed = 0;
+  do {
+    PRInt32 srcLen = mByteData->GetLength() - srcConsumed;
+    PRInt32 dstLen = mUnicharData->GetBufferSize() - mUnicharDataLength;
+    *aErrorCode = mConverter->Convert(mByteData->GetBuffer()+srcConsumed,
+                                      &srcLen,
+                                      mUnicharData->GetBuffer()+mUnicharDataLength,
+                                      &dstLen);
+    mUnicharDataLength += dstLen;
+    // XXX if srcLen is negative, we want to drop the _first_ byte in
+    // the erroneous byte sequence and try again.  This is not quite
+    // possible right now -- see bug 160784
+    srcConsumed += srcLen;
+    if (NS_FAILED(*aErrorCode) && mRecoverFromErrors) {
+      NS_ASSERTION(0 < mUnicharData->GetBufferSize() - mUnicharDataLength,
+                   "Decoder returned an error but filled the output buffer! "
+                   "Should not happen.");
+      mUnicharData->GetBuffer()[mUnicharDataLength++] = (PRUnichar)0xFFFD;
+      ++srcConsumed;
+      // XXX this is needed to make sure we don't underrun our buffer;
+      // bug 160784 again
+      srcConsumed = PR_MAX(srcConsumed, 0);
+      mConverter->Reset();
+    }
+    NS_ASSERTION(srcConsumed <= mByteData->GetLength(),
+                 "Whoa.  The converter should have returned NS_OK_UDEC_MOREINPUT before this point!");
+  } while (mRecoverFromErrors &&
+           NS_FAILED(*aErrorCode));
+
+  mLeftOverBytes = mByteData->GetLength() - srcConsumed;
+
+  return mUnicharDataLength;
 }

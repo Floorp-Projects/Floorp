@@ -63,27 +63,31 @@ class nsConverterInputStream : nsIConverterInputStream {
                     PRUint32 *aReadCount);
     NS_IMETHOD Close();
     NS_IMETHOD Init(nsIInputStream* aStream, const PRUnichar *aCharset,
-                    PRInt32 aBufferSize);
+                    PRInt32 aBufferSize, PRBool aRecoverFromErrors);
 
     nsConverterInputStream() :
-        mByteDataOffset(0),
+        mLastErrorCode(NS_OK),
+        mLeftOverBytes(0),
         mUnicharDataOffset(0),
-        mUnicharDataLength(0) { NS_INIT_REFCNT(); }
+        mUnicharDataLength(0),
+        mRecoverFromErrors(PR_FALSE) { NS_INIT_REFCNT(); }
     
     virtual ~nsConverterInputStream() {}
 
  private:
 
 
-    PRInt32 Fill(nsresult *aErrorCode);
+    PRUint32 Fill(nsresult *aErrorCode);
     
     nsCOMPtr<nsIUnicodeDecoder> mConverter;
     nsCOMPtr<nsIByteBuffer> mByteData;
     nsCOMPtr<nsIUnicharBuffer> mUnicharData;
     nsCOMPtr<nsIInputStream> mInput;
-    
-    PRUint32 mByteDataOffset;
+
+    nsresult mLastErrorCode;
+    PRUint32 mLeftOverBytes;
     PRUint32 mUnicharDataOffset;
     PRUint32 mUnicharDataLength;
+    PRBool   mRecoverFromErrors;
     
 };

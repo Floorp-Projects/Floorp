@@ -52,6 +52,7 @@
 #include "nsLoadGroup.h"
 #include "nsInputStreamChannel.h"
 #include "nsStreamLoader.h"
+#include "nsUnicharStreamLoader.h"
 #include "nsDownloader.h"
 #include "nsAsyncStreamListener.h"
 #include "nsFileStreams.h"
@@ -640,6 +641,10 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       NS_STREAMLOADER_CID,
       NS_STREAMLOADER_CONTRACTID,
       nsStreamLoader::Create },
+    { NS_UNICHARSTREAMLOADER_CLASSNAME, 
+      NS_UNICHARSTREAMLOADER_CID,
+      NS_UNICHARSTREAMLOADER_CONTRACTID,
+      nsUnicharStreamLoader::Create },
     { NS_DOWNLOADER_CLASSNAME,
       NS_DOWNLOADER_CID,
       NS_DOWNLOADER_CONTRACTID,

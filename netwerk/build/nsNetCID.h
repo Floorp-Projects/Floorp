@@ -274,6 +274,19 @@
     { 0xa1, 0xa5, 0x0, 0x50, 0x4, 0x1c, 0xaf, 0x44 } \
 }
 
+// component implementing nsIUnicharStreamLoader.
+#define NS_UNICHARSTREAMLOADER_CLASSNAME \
+    "nsUnicharStreamLoader"
+#define NS_UNICHARSTREAMLOADER_CONTRACTID \
+    "@mozilla.org/network/unichar-stream-loader;1"
+#define NS_UNICHARSTREAMLOADER_CID \
+{ /* 9445791f-fa4c-4669-b174-df5032bb67b3 */           \
+    0x9445791f,                                        \
+    0xfa4c,                                            \
+    0x4669,                                            \
+    { 0xb1, 0x74, 0xdf, 0x50, 0x32, 0xbb, 0x67, 0xb3 } \
+}
+
 // component implementing nsIDownloader.
 #define NS_DOWNLOADER_CLASSNAME \
     "nsDownloader"

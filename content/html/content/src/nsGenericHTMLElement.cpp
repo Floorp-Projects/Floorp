@@ -3424,15 +3424,6 @@ nsGenericHTMLElement::ParseStyleAttribute(const nsAString& aValue, nsHTMLValue& 
       }
       if (cssLoader) {
         result = cssLoader->GetParserFor(nsnull, getter_AddRefs(cssParser));
-
-        static const char charsetStr[] = "charset=";
-        PRInt32 charsetOffset = styleType.Find(charsetStr, PR_TRUE);
-        if (charsetOffset > 0) {
-          nsString charset;
-          styleType.Right(charset, styleType.Length() -
-                                   (charsetOffset + sizeof(charsetStr) - 1));
-          (void)cssLoader->SetCharset(charset);
-        }
       }
       else {
         result = NS_NewCSSParser(getter_AddRefs(cssParser));

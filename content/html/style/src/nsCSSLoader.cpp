@@ -36,7 +36,7 @@
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsIDocument.h"
 #include "nsINameSpaceManager.h"
-#include "nsIStreamLoader.h"
+#include "nsIUnicharStreamLoader.h"
 #include "nsIUnicharInputStream.h"
 #include "nsIConverterInputStream.h"
 #include "nsICharsetConverterManager.h"
@@ -128,7 +128,7 @@ public:
   nsSharableCString mSpec;
 };
 
-class SheetLoadData : public nsIStreamLoaderObserver
+class SheetLoadData : public nsIUnicharStreamLoaderObserver
 {
 public:
   virtual ~SheetLoadData(void);
@@ -146,7 +146,7 @@ public:
                 nsICSSLoaderObserver* aObserver);
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSISTREAMLOADEROBSERVER
+  NS_DECL_NSIUNICHARSTREAMLOADEROBSERVER
 
   CSSLoaderImpl*  mLoader;
   nsIURI*         mURL;
@@ -175,7 +175,7 @@ public:
   nsICSSLoaderObserver* mObserver;
 };
 
-NS_IMPL_ISUPPORTS1(SheetLoadData, nsIStreamLoaderObserver);
+NS_IMPL_ISUPPORTS1(SheetLoadData, nsIUnicharStreamLoaderObserver);
 
 MOZ_DECL_CTOR_COUNTER(PendingSheetData)
 
@@ -266,8 +266,8 @@ public:
   nsresult ParseSheet(nsIUnicharInputStream* aIn, SheetLoadData* aLoadData,
                       PRBool& aCompleted, nsICSSStyleSheet*& aSheet);
 
-  void DidLoadStyle(nsIStreamLoader* aLoader,
-                    nsString* aStyleData,     // takes ownership, will delete when done
+  void DidLoadStyle(nsIUnicharStreamLoader* aLoader,
+                    nsIUnicharInputStream* aStyleDataStream,
                     SheetLoadData* aLoadData,
                     nsresult aStatus);
 
@@ -309,24 +309,6 @@ public:
   nsVoidArray   mPendingAlternateSheets;  // alternates waiting for load to start
 
   nsHashtable   mSheetMapTable;  // map to insertion index arrays
-
-  // @charset support
-  nsString      mCharset;        // the charset we are using
-
-  NS_IMETHOD GetCharset(/*out*/nsAString &aCharsetDest) const; // PUBLIC
-  NS_IMETHOD SetCharset(/*in*/ const nsAString &aCharsetSrc);  // PUBLIC
-    // public method for clients to set the charset if they know it
-    // NOTE: the SetCharset method will always get the preferred
-    // charset from the charset passed in unless it is the
-    // emptystring, which causes the default charset (that of the
-    // document, falling back to ISO-8869-1) to be set
-
-  nsresult SetCharset(/*in*/ const char* aStyleSheetData,
-                      /*in*/ PRUint32 aDataLength);
-    // sets the charset based upon the data passed in
-    // - if the StyleSheetData is not empty and it has '@charset'
-    //   as the first substring, then use that
-    // - otherwise return an error
 
   // stop loading all sheets
   NS_IMETHOD Stop(void);
@@ -451,7 +433,6 @@ CSSLoaderImpl::CSSLoaderImpl(void)
   mCaseSensitive = PR_FALSE;
   mCompatMode = eCompatibility_FullStandards;
   mParsers = nsnull;
-  SetCharset(NS_LITERAL_STRING(""));
 }
 
 static PRBool PR_CALLBACK ReleaseSheet(nsHashKey* aKey, void* aData, void* aClosure)
@@ -584,7 +565,6 @@ CSSLoaderImpl::GetParserFor(nsICSSStyleSheet* aSheet,
   if (*aParser) {
     (*aParser)->SetCaseSensitive(mCaseSensitive);
     (*aParser)->SetQuirkMode(mCompatMode == eCompatibility_NavQuirks);
-    (*aParser)->SetCharset(mCharset);
     if (aSheet) {
       (*aParser)->SetStyleSheet(aSheet);
     }
@@ -607,6 +587,295 @@ CSSLoaderImpl::RecycleParser(nsICSSParser* aParser)
     }
   }
   return result;
+}
+
+// XXX We call this function a good bit.  Consider caching the service
+// in a static global or something?
+static nsresult ResolveCharset(const nsAString& aCharsetAlias,
+                               nsAString& aCharset)
+{
+  nsresult rv = NS_ERROR_NOT_AVAILABLE;
+  if (! aCharsetAlias.IsEmpty()) {
+    nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID, &rv));
+    NS_ASSERTION(calias, "cannot find charset alias service");
+    if (calias)
+    {
+      rv = calias->GetPreferred(aCharsetAlias, aCharset);
+    }
+  }
+  return rv;
+}
+
+static const char kCharsetSym[] = "@charset";
+
+static nsresult GetCharsetFromData(const unsigned char* aStyleSheetData,
+                                   PRUint32 aDataLength,
+                                   nsAString& aCharset)
+{
+  aCharset.Truncate();
+  if (aDataLength <= sizeof(kCharsetSym) - 1)
+    return NS_ERROR_NOT_AVAILABLE;
+  PRUint32 step = 1;
+  PRUint32 pos = 0;
+  // Determine the encoding type
+  if (*aStyleSheetData == 0x40 && *(aStyleSheetData+1) == 0x63 /* '@c' */ ) {
+    // 1-byte ASCII-based encoding (ISO-8859-*, UTF-8, etc)
+    step = 1;
+    pos = 0;
+  }
+  else if (*aStyleSheetData == 0xEF &&
+           *(aStyleSheetData+1) == 0xBB &&
+           *(aStyleSheetData+2) == 0xBF) {
+    // UTF-8 BOM
+    step = 1;
+    pos = 3;
+  }
+  else if (*aStyleSheetData == 0xFE && *(aStyleSheetData+1) == 0xFF) {
+    // big-endian 2-byte encoding BOM
+    step = 2;
+    pos = 3;
+  }
+  else if (*aStyleSheetData == 0xFF && *(aStyleSheetData+1) == 0xFE) {
+    // little-endian 2-byte encoding BOM
+    NS_WARNING("Our unicode decoders aren't likely  to deal with this one");
+    step = 2;
+    pos = 2;
+  }
+  else if (*aStyleSheetData == 0x00 &&
+           *(aStyleSheetData+1) == 0x00 &&
+           *(aStyleSheetData+2) == 0xFE &&
+           *(aStyleSheetData+3) == 0xFF) {
+    // big-endian 4-byte encoding BOM
+    step = 4;
+    pos = 7;
+  }
+  else if (*aStyleSheetData == 0xFF &&
+           *(aStyleSheetData+1) == 0xFE &&
+           *(aStyleSheetData+2) == 0x00 &&
+           *(aStyleSheetData+3) == 0x00) {
+    // little-endian 4-byte encoding BOM
+    NS_WARNING("Our unicode decoders aren't likely to deal with this one");
+    step = 4;
+    pos = 4;
+  }
+  else if (*aStyleSheetData == 0x00 &&
+           *(aStyleSheetData+1) == 0x00 &&
+           *(aStyleSheetData+2) == 0xFF &&
+           *(aStyleSheetData+3) == 0xFE) {
+    // 4-byte encoding BOM in 2143 order
+    NS_WARNING("Our unicode decoders aren't likely to deal with this one");
+    step = 4;
+    pos = 6;
+  }
+  else if (*aStyleSheetData == 0xFE &&
+           *(aStyleSheetData+1) == 0xFF &&
+           *(aStyleSheetData+2) == 0x00 &&
+           *(aStyleSheetData+3) == 0x00) {
+    // 4-byte encoding BOM in 3412 order
+    NS_WARNING("Our unicode decoders aren't likely to deal with this one");
+    step = 4;
+    pos = 5;
+  }
+  else if (*aStyleSheetData == 0x00 &&
+           *(aStyleSheetData+1) == 0x00 &&
+           *(aStyleSheetData+2) == 0x00 &&
+           *(aStyleSheetData+3) == 0x40) {
+    // big-endian 4-byte encoding, no BOM
+    step = 4;
+    pos = 3;
+  }
+  else if (*aStyleSheetData == 0x40 &&
+           *(aStyleSheetData+1) == 0x00 &&
+           *(aStyleSheetData+2) == 0x00 &&
+           *(aStyleSheetData+3) == 0x00) {
+    // little-encoding 4-byte encoding, no BOM
+    NS_WARNING("Our unicode decoders aren't likely to deal with this one");
+    step = 4;
+    pos = 0;
+  }
+  else if (*aStyleSheetData == 0x00 &&
+           *(aStyleSheetData+1) == 0x00 &&
+           *(aStyleSheetData+2) == 0x40 &&
+           *(aStyleSheetData+3) == 0x00) {
+    // 4-byte encoding in 2143 order, no BOM
+    NS_WARNING("Our unicode decoders aren't likely to deal with this one");
+    step = 4;
+    pos = 2;
+  }
+  else if (*aStyleSheetData == 0x00 &&
+           *(aStyleSheetData+1) == 0x40 &&
+           *(aStyleSheetData+2) == 0x00 &&
+           *(aStyleSheetData+3) == 0x00) {
+    // 4-byte encoding in 3412 order, no BOM
+    NS_WARNING("Our unicode decoders aren't likely to deal with this one");
+    step = 4;
+    pos = 1;
+  }
+  else if (*aStyleSheetData == 0x00 &&
+           *(aStyleSheetData+1) == 0x40 &&
+           *(aStyleSheetData+2) == 0x00 &&
+           *(aStyleSheetData+3) == 0x00) {
+    // 4-byte encoding in 3412 order, no BOM
+    NS_WARNING("Our unicode decoders aren't likely to deal with this one");
+    step = 4;
+    pos = 1;
+  }
+  else if (*aStyleSheetData == 0x00 &&
+           *(aStyleSheetData+1) == 0x40 &&
+           *(aStyleSheetData+2) == 0x00 &&
+           *(aStyleSheetData+3) == 0x63) {
+    // 2-byte big-endian encoding, no BOM
+    step = 2;
+    pos = 1;
+  }
+  else if (*aStyleSheetData == 0x40 &&
+           *(aStyleSheetData+1) == 0x00 &&
+           *(aStyleSheetData+2) == 0x63 &&
+           *(aStyleSheetData+3) == 0x00) {
+    // 2-byte big-endian encoding, no BOM
+    NS_WARNING("Our unicode decoders aren't likely to deal with this one");
+    step = 2;
+    pos = 0;
+  }
+  else {
+    // no clue what this is
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  PRUint32 index = 0;
+  while (pos < aDataLength && index < sizeof(kCharsetSym) - 1) {
+    if (aStyleSheetData[pos] != kCharsetSym[index]) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+    ++index;
+    pos += step;
+  }
+
+  while (pos < aDataLength && nsCRT::IsAsciiSpace(aStyleSheetData[pos])) {
+    pos += step;
+  }
+
+  if (pos >= aDataLength ||
+      (aStyleSheetData[pos] != '"' && aStyleSheetData[pos] != '\'')) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  char quote = aStyleSheetData[pos];
+  pos += step;
+  while (pos < aDataLength) {
+    if (aStyleSheetData[pos] == '\\') {
+      pos += step;
+      if (pos >= aDataLength) {
+        break;
+      }          
+    } else if (aStyleSheetData[pos] == quote) {
+      break;
+    }
+    
+    aCharset.Append(PRUnichar(aStyleSheetData[pos]));
+    pos += step;
+  }
+
+  // Check for the ending ';'
+  pos += step;
+  while (pos < aDataLength && nsCRT::IsAsciiSpace(aStyleSheetData[pos])) {
+    pos += step;    
+  }
+
+  if (pos >= aDataLength || aStyleSheetData[pos] != ';') {
+    aCharset.Truncate();
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SheetLoadData::OnDetermineCharset(nsIUnicharStreamLoader* aLoader,
+                                  nsISupports* aContext,
+                                  const char* aData,
+                                  PRUint32 aDataLength,
+                                  nsACString& aCharset)
+{
+  nsCOMPtr<nsIChannel> channel;
+  nsresult result = aLoader->GetChannel(getter_AddRefs(channel));
+  if (NS_FAILED(result))
+    channel = nsnull;
+
+  /*
+   * First determine the charset (if one is indicated)
+   * 1)  Check nsIChannel::contentCharset
+   * 2)  Check @charset rules in the data
+   * 3)  Check "charset" attribute of the <LINK> or <?xml-stylesheet?>
+   *
+   * If all these fail to give us a charset, fall back on our
+   * default (document charset or ISO-8859-1 if we have no document
+   * charset)
+   */
+  nsAutoString charset;
+  nsAutoString charsetCandidate;
+  if (channel) {
+    nsCAutoString charsetVal;
+    channel->GetContentCharset(charsetVal);
+    CopyASCIItoUCS2(charsetVal, charsetCandidate);
+  }
+
+  result = NS_ERROR_NOT_AVAILABLE;
+  if (! charsetCandidate.IsEmpty()) {
+#ifdef DEBUG_bzbarsky
+    fprintf(stderr, "Setting from HTTP to: %s\n", NS_ConvertUCS2toUTF8(charsetCandidate).get());
+#endif
+    result = ResolveCharset(charsetCandidate, charset);
+  }
+
+  if (NS_FAILED(result)) {
+    //  We have no charset or the HTTP charset is not recognized.
+    //  Try @charset rule
+    result = GetCharsetFromData((const unsigned char*)aData,
+                                aDataLength, charsetCandidate);
+    if (NS_SUCCEEDED(result)) {
+#ifdef DEBUG_bzbarsky
+      fprintf(stderr, "Setting from @charset rule: %s\n",
+              NS_ConvertUCS2toUTF8(charsetCandidate).get());
+#endif
+      result = ResolveCharset(charsetCandidate, charset);
+    }
+  }
+
+  if (NS_FAILED(result)) {
+    // Now try the charset on the <link> or processing instruction
+    // that loaded us
+    nsCOMPtr<nsIStyleSheetLinkingElement>
+      element(do_QueryInterface(mOwningElement));
+    if (element) {
+      element->GetCharset(charsetCandidate);
+      if (! charsetCandidate.IsEmpty()) {
+#ifdef DEBUG_bzbarsky
+        fprintf(stderr, "Setting from property on element: %s\n",
+                NS_ConvertUCS2toUTF8(charsetCandidate).get());
+#endif
+        result = ResolveCharset(charsetCandidate, charset);
+      }
+    }
+  }
+
+  if (NS_FAILED(result) && mLoader->mDocument) {
+    // no useful data on charset.  Try the document charset.
+    // That needs no resolution, since it's already fully resolved
+    mLoader->mDocument->GetDocumentCharacterSet(charset);
+#ifdef DEBUG_bzbarsky
+    fprintf(stderr, "Set from document: %s\n",
+            NS_ConvertUCS2toUTF8(charset).get());
+#endif
+  }      
+
+  if (charset.IsEmpty()) {
+    NS_WARNING("Unable to determine charset for sheet, using ISO-8859-1!");
+    charset = NS_LITERAL_STRING("ISO-8859-1");
+  }
+  
+  aCharset = NS_ConvertUCS2toUTF8(charset);
+  return NS_OK;
 }
 
 /**
@@ -659,25 +928,22 @@ ReportToConsole(const PRUnichar* aMessageName, const PRUnichar **aParams,
 }
 
 NS_IMETHODIMP
-SheetLoadData::OnStreamComplete(nsIStreamLoader* aLoader,
+SheetLoadData::OnStreamComplete(nsIUnicharStreamLoader* aLoader,
                                 nsISupports* aContext,
                                 nsresult aStatus,
-                                PRUint32 aStringLen,
-                                const char* aString)
+                                nsIUnicharInputStream* aDataStream)
 {
   NS_TIMELINE_OUTDENT();
   NS_TIMELINE_MARK_LOADER("SheetLoadData::OnStreamComplete(%s)", aLoader);
-  nsresult result = NS_OK;
-  nsString *strUnicodeBuffer = nsnull;
-
-  nsCOMPtr<nsIRequest> request;
-  result = aLoader->GetRequest(getter_AddRefs(request));
+  nsCOMPtr<nsIChannel> channel;
+  nsresult result = aLoader->GetChannel(getter_AddRefs(channel));
   if (NS_FAILED(result))
-    request = nsnull;
+    channel = nsnull;
+
   // If it's an HTTP channel, we want to make sure this is not an
   // error document we got.
   PRBool realDocument = PR_TRUE;
-  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(request));
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
   if (httpChannel) {
     PRBool requestSucceeded;
     result = httpChannel->GetRequestSucceeded(&requestSucceeded);
@@ -685,10 +951,9 @@ SheetLoadData::OnStreamComplete(nsIStreamLoader* aLoader,
       realDocument = PR_FALSE;
     }
   }
-  
-  if (realDocument && aString && aStringLen>0) {
+
+  if (realDocument && aDataStream) {
     nsCAutoString contentType;
-    nsCOMPtr<nsIChannel> channel(do_QueryInterface(request));
     if (channel) {
       channel->GetContentType(contentType);
     }
@@ -713,109 +978,10 @@ SheetLoadData::OnStreamComplete(nsIStreamLoader* aLoader,
         ReportToConsole(NS_LITERAL_STRING("MimeNotCssWarn").get(), strings, 2,
                         nsIScriptError::warningFlag);
       }
-
-      /*
-       * First determine the charset (if one is indicated)
-       * 1)  Check nsIChannel::contentCharset
-       * 2)  Check @charset rules
-       * 3)  Check "charset" attribute of the <LINK> or <?xml-stylesheet?>
-       *
-       * If all these fail to give us a charset, fall back on our
-       * default (document charset or ISO-8859-1 if we have no document
-       * charset)
-       */
-      nsAutoString strChannelCharset;
-      if (channel) {
-        nsCAutoString charsetVal;
-        channel->GetContentCharset(charsetVal);
-        CopyASCIItoUCS2(charsetVal, strChannelCharset);
-      }
-      result = NS_ERROR_NOT_AVAILABLE;
-      if (! strChannelCharset.IsEmpty()) {
-        result = mLoader->SetCharset(strChannelCharset);
-      }
-      if (NS_FAILED(result)) {
-        //  We have no charset or the HTTP charset is not recognized.
-        //  Try @charset rules
-        result = mLoader->SetCharset(aString, aStringLen);
-      }
-      if (NS_FAILED(result)) {
-        // Now try the charset on the <link> or processing instruction
-        // that loaded us
-        nsCOMPtr<nsIStyleSheetLinkingElement>
-          element(do_QueryInterface(mOwningElement));
-        if (element) {
-          nsAutoString linkCharset;
-          element->GetCharset(linkCharset);
-          if (! linkCharset.IsEmpty()) {
-            result = mLoader->SetCharset(linkCharset);
-          }
-        }
-      }
-      if (NS_FAILED(result)) {
-        // no useful data on charset.  Just set to empty string, and let
-        // SetCharset pick a sane default
-        mLoader->SetCharset(NS_LITERAL_STRING(""));
-      }      
-      {
-        // now get the decoder
-        nsCOMPtr<nsICharsetConverterManager> ccm = 
-          do_GetService(kCharsetConverterManagerCID, &result);
-        if (NS_SUCCEEDED(result) && ccm) {
-          nsString charset;
-          mLoader->GetCharset(charset);
-          nsIUnicodeDecoder *decoder = nsnull;
-          ccm->GetUnicodeDecoder(&charset,&decoder);
-          if (decoder) {
-            PRInt32 unicodeLength=0;
-            if (NS_SUCCEEDED(decoder->GetMaxLength(aString,aStringLen,&unicodeLength))) {
-              PRUnichar *unicodeString = nsnull;
-              strUnicodeBuffer = new nsString;
-              if (nsnull == strUnicodeBuffer) {
-                result = NS_ERROR_OUT_OF_MEMORY;
-              } else {
-                // make space for the decoding
-                strUnicodeBuffer->SetCapacity(unicodeLength);
-                unicodeString = (PRUnichar *) strUnicodeBuffer->get();
-                PRInt32 totalChars = 0;
-                PRInt32 unicharLength = unicodeLength;
-                do {
-                  PRInt32 srcLength = aStringLen;
-                  result = decoder->Convert(aString, &srcLength, unicodeString, &unicharLength);
-                  
-                  totalChars += unicharLength;
-                  if (NS_FAILED(result)) {
-                    // if we failed, we consume one byte, replace it with U+FFFD
-                    // and try the conversion again.
-                    unicodeString[unicharLength++] = (PRUnichar)0xFFFD;
-                    unicodeString = unicodeString + unicharLength;
-                    unicharLength = unicodeLength - (++totalChars);
-
-                    decoder->Reset();
-
-                    if (((PRUint32) (srcLength + 1)) > aStringLen) {
-                      srcLength = aStringLen;
-                    } else {
-                      srcLength++;
-                    }
-
-                    aString += srcLength;
-                    aStringLen -= srcLength;
-                  }
-                } while (NS_FAILED(result) && (aStringLen > 0));
-                
-                // Don't propagate return code of unicode decoder
-                // since it doesn't reflect on our success or failure
-                // - Ref. bug 87110
-                result = NS_OK;
-                strUnicodeBuffer->SetLength(totalChars);
-              }
-            }
-            NS_RELEASE(decoder);
-          }
-        }
-      }
     } else {
+      // Drop the data stream so that we do not load it
+      aDataStream = nsnull;
+      
       nsCAutoString spec;
       if (channel) {
         nsCOMPtr<nsIURI> uri;
@@ -831,17 +997,16 @@ SheetLoadData::OnStreamComplete(nsIStreamLoader* aLoader,
       ReportToConsole(NS_LITERAL_STRING("MimeNotCss").get(), strings, 2,
                       nsIScriptError::errorFlag);
     }
+  } else {
+    // Drop the data stream so that we do not load it
+    aDataStream = nsnull;
   }
-
-  mLoader->DidLoadStyle(aLoader, strUnicodeBuffer, this, aStatus);
-  // NOTE: passed ownership of strUnicodeBuffer to mLoader in the call, 
-  //       so nulling it out for clarity / safety
-  strUnicodeBuffer = nsnull;
-
+  
+  mLoader->DidLoadStyle(aLoader, aDataStream, this, aStatus);
   // We added a reference when the loader was created. This
   // release should destroy it.
   NS_RELEASE(aLoader);
-  return result;
+  return NS_OK;
 }
 
 static PRBool PR_CALLBACK
@@ -1068,8 +1233,8 @@ CSSLoaderImpl::ParseSheet(nsIUnicharInputStream* aIn,
 }
 
 void
-CSSLoaderImpl::DidLoadStyle(nsIStreamLoader* aLoader,
-                            nsString* aStyleData,
+CSSLoaderImpl::DidLoadStyle(nsIUnicharStreamLoader* aLoader,
+                            nsIUnicharInputStream* aStyleDataStream,
                             SheetLoadData* aLoadData,
                             nsresult aStatus)
 {
@@ -1077,25 +1242,12 @@ CSSLoaderImpl::DidLoadStyle(nsIStreamLoader* aLoader,
   NS_ASSERTION(! mSyncCallback, "getting synchronous callback from netlib");
 #endif
 
-  if (NS_SUCCEEDED(aStatus) && (aStyleData) && (!aStyleData->IsEmpty()) && (mDocument)) {
-    nsresult result;
-    nsIUnicharInputStream* uin = nsnull;
-
-    // wrap the string with the CSS data up in a unicode input stream.
-    result = NS_NewStringUnicharInputStream(&uin, aStyleData);
-
-    if (NS_SUCCEEDED(result)) {
-      // XXX We have no way of indicating failure. Silently fail?
-      PRBool completed;
-      nsICSSStyleSheet* sheet;
-      result = ParseSheet(uin, aLoadData, completed, sheet);
-      NS_IF_RELEASE(sheet);
-      NS_IF_RELEASE(uin);
-    }
-    else {
-      URLKey  key(aLoadData->mURL);
-      Cleanup(key, aLoadData);
-    }
+  if (NS_SUCCEEDED(aStatus) && aStyleDataStream && mDocument) {
+    // XXX We have no way of indicating failure. Silently fail?
+    PRBool completed;
+    nsCOMPtr<nsICSSStyleSheet> sheet;
+    ParseSheet(aStyleDataStream, aLoadData, completed, *getter_AddRefs(sheet));
+    // XXX clean up if failure or something?
   }
   else {  // load failed or document now gone, cleanup    
 #ifdef DEBUG
@@ -1399,9 +1551,9 @@ CSSLoaderImpl::LoadSheet(URLKey& aKey, SheetLoadData* aData)
       }
     }
     else if (mDocument || aData->mIsAgent) {  // we're still live, start an async load
-      nsIStreamLoader* loader;
-      nsIURI* urlClone;
-      result = aKey.mURL->Clone(&urlClone); // dont give key URL to netlib, it gets munged
+      nsIUnicharStreamLoader* loader;
+      nsCOMPtr<nsIURI> urlClone;
+      result = aKey.mURL->Clone(getter_AddRefs(urlClone)); // dont give key URL to netlib, it gets munged
       if (NS_SUCCEEDED(result)) {
 #ifdef NS_DEBUG
         mSyncCallback = PR_TRUE;
@@ -1418,14 +1570,27 @@ CSSLoaderImpl::LoadSheet(URLKey& aKey, SheetLoadData* aData)
         NS_TIMELINE_MARK_URI("Loading style sheet: %s", urlClone);
         NS_TIMELINE_INDENT();
 #endif
-        result = NS_NewStreamLoader(&loader, urlClone, aData, nsnull,
-                                    loadGroup, nsnull, nsIChannel::LOAD_NORMAL,
-                                    document_uri,
-                                    nsIHttpChannel::REFERRER_INLINES);
+        nsCOMPtr<nsIChannel> channel;
+        result = NS_NewChannel(getter_AddRefs(channel),
+                               urlClone, nsnull, loadGroup,
+                               nsnull, nsIChannel::LOAD_NORMAL);
+        if (NS_SUCCEEDED(result)) {
+          if (document_uri) {
+            nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
+            if (httpChannel) {
+              result = httpChannel->SetReferrer(document_uri,
+                                                nsIHttpChannel::REFERRER_INLINES);
+            }
+          }
+
+          if (NS_SUCCEEDED(result)) {
+            result = NS_NewUnicharStreamLoader(&loader, channel, aData);
+          }
+        }
+
 #ifdef NS_DEBUG
         mSyncCallback = PR_FALSE;
 #endif
-        NS_RELEASE(urlClone);
         if (NS_SUCCEEDED(result)) {
           mLoadingSheets.Put(&aKey, aData);
           // grab any pending alternates that have this URL
@@ -1711,7 +1876,8 @@ CSSLoaderImpl::LoadAgentSheet(nsIURI* aURL,
           do_CreateInstance("@mozilla.org/intl/converter-input-stream;1",
                             &result);
         if (NS_SUCCEEDED(result))
-          result = uin->Init(in, mCharset.get(), 0);
+          result = uin->Init(in, NS_LITERAL_STRING("ISO-8859-1").get(),
+                             0, PR_TRUE);
         if (NS_SUCCEEDED(result)) {
           SheetLoadData* data = new SheetLoadData(this, aURL, aObserver);
           if (data == nsnull) {
@@ -1791,87 +1957,6 @@ nsresult NS_NewCSSLoader(nsICSSLoader** aLoader)
   return it->QueryInterface(NS_GET_IID(nsICSSLoader), (void **)aLoader);
 }
 
-
-
-NS_IMETHODIMP CSSLoaderImpl::GetCharset(/*out*/nsAString &aCharsetDest) const
-{
-  NS_ASSERTION(!mCharset.IsEmpty(), "CSSLoader charset should be set in ctor" );
-  nsresult rv = NS_OK;
-  aCharsetDest = mCharset;
-  return rv;
-}
-
-NS_IMETHODIMP CSSLoaderImpl::SetCharset(/*in*/ const nsAString &aCharsetSrc)
-    // public method for clients to set the charset if they know it
-    // NOTE: the SetCharset method will always get the preferred
-    // charset from the charset passed in unless it is the
-    // emptystring, which causes the default charset (that of the
-    // document, falling back to ISO-8869-1) to be set
-{
-  nsresult rv = NS_ERROR_NOT_AVAILABLE;
-  if (! aCharsetSrc.IsEmpty()) {
-    nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID, &rv));
-    NS_ASSERTION(calias, "cannot find charset alias");
-    if (calias)
-    {
-      PRBool same = PR_FALSE;
-      rv = calias->Equals(aCharsetSrc, mCharset, &same);
-      if(NS_SUCCEEDED(rv) && same)
-      {
-        return NS_OK; // no difference, don't change it
-      }
-      rv = calias->GetPreferred(aCharsetSrc, mCharset);
-    }
-  } else if (mDocument) {
-    // GetDocumentCharacterSet returns a charset which already has
-    // alias resolution done
-    rv = mDocument->GetDocumentCharacterSet(mCharset);
-  }
-  if (mCharset.IsEmpty()) {
-      mCharset = NS_LITERAL_STRING("ISO-8859-1");
-      rv = NS_ERROR_NOT_AVAILABLE;
-  }
-
-  return rv;
-}
-
-nsresult CSSLoaderImpl::SetCharset(/*in*/ const char* aStyleSheetData,
-                                   /*in*/ PRUint32 aDataLength)
-    // sets the charset based upon the data passed in
-    // - if the StyleSheetData is not empty and it has '@charset'
-    //   as the first substring, then use that
-    // - otherwise return an error
-{
-  nsresult rv = NS_ERROR_NOT_AVAILABLE;
-  nsString strStyleDataUndecoded;
-  strStyleDataUndecoded.AssignWithConversion(aStyleSheetData, aDataLength);
-  PRInt32 charsetOffset;
-  if (!strStyleDataUndecoded.IsEmpty()) {
-    nsString str;
-    static const char atCharsetStr[] = "@charset";
-    if ((charsetOffset = strStyleDataUndecoded.Find(atCharsetStr)) > -1) {
-      nsString strValue;
-      // skip past the ident
-      strStyleDataUndecoded.Right(str, strStyleDataUndecoded.Length() -
-                                  (sizeof(atCharsetStr)-1));
-      // strip any whitespace
-      str.StripWhitespace();
-      // truncate everything past the delimiter (semicolon)
-      PRInt32 pos = str.Find(";");
-      if (pos > -1) {
-        str.Left(strValue,pos);
-      }
-      // strip any quotes
-      strValue.Trim("\"\'");
-
-      // that's the charset!
-      if (!strValue.IsEmpty()) {
-        rv = SetCharset(strValue);
-      }
-    }
-  }
-  return rv;
-}
 
 static PRBool PR_CALLBACK StopLoadingSheetCallback(nsHashKey* aKey, void* aData, void* aClosure)
 {

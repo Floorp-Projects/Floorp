@@ -181,11 +181,6 @@ public:
                            nsCSSDeclaration* aDeclaration,
                            nsChangeHint* aHint);
 
-  NS_IMETHOD GetCharset(/*out*/nsAString &aCharsetDest) const;
-    // sets the out-param to the current charset, as set by SetCharset
-  NS_IMETHOD SetCharset(/*in*/ const nsAString &aCharsetSrc);
-    // NOTE: SetCharset expects the charset to be the preferred charset
-    //       and it just records the string exactly as passed in (no alias resolution)
   void AppendRule(nsICSSRule* aRule);
 
 protected:
@@ -353,8 +348,6 @@ protected:
 
   nsISupportsArray* mGroupStack;
 
-  nsString      mCharset;        // the charset we are using
-
   PRBool  mParsingCompoundProperty;
   void    SetParsingCompoundProperty(PRBool aBool) {mParsingCompoundProperty = aBool;};
   PRBool  IsParsingCompoundProperty(void) {return mParsingCompoundProperty;};
@@ -438,9 +431,6 @@ CSSParserImpl::CSSParserImpl()
     mParsingCompoundProperty(PR_FALSE)
 {
   NS_INIT_REFCNT();
-
-  // set the default charset
-  mCharset.Assign(NS_LITERAL_STRING("ISO-8859-1"));
 }
 
 NS_IMETHODIMP
@@ -5352,16 +5342,4 @@ PRBool CSSParserImpl::ParseTextShadow(PRInt32& aErrorCode,
     }
   }
   return PR_FALSE;
-}
-
-NS_IMETHODIMP CSSParserImpl::GetCharset(/*out*/nsAString &aCharsetDest) const
-{ 
-  aCharsetDest = mCharset; 
-  return NS_OK;
-}
-
-NS_IMETHODIMP CSSParserImpl::SetCharset(/*in*/ const nsAString &aCharsetSrc)
-{
-  mCharset = aCharsetSrc;
-  return NS_OK;
 }
