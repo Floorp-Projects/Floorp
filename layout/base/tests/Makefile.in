@@ -45,7 +45,6 @@ LIBS		+= \
 		-lnetcache \
 		-lnetwork \
 		$(DIST)/bin/components/libraptorhtml.$(DLL_SUFFIX) \
-		-lpref \
 		-lraptorgfx \
 		-limg \
 		-lmozutil \

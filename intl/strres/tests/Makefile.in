@@ -57,7 +57,6 @@ NETLIB_LIBS	= -lneckoutil_s
 endif
 
 LIBS		= \
-		-lpref \
 		-lmozjs \
 		-limg \
 		-lmozutil \

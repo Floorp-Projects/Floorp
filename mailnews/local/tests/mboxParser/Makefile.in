@@ -43,7 +43,6 @@ LIBS		= \
 		-lpwcac \
 		-lmozdbm \
 		-lxp \
-		-lpref \
 		-lmozjs \
 		$(ZLIB_LIBS) \
 		$(NSPR_LIBS) \

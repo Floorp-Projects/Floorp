@@ -58,7 +58,9 @@ PUBLIC=$(DEPTH)/netwerk/dist/include
 endif
 
 EXTRA_DSO_LDOPTS =\
-				-L$(DIST)/bin -lsecfree \
+				-L$(DIST)/bin \
+				-lsecfree \
+				-lpref \
 				$(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -58,7 +58,6 @@ LIBS		= \
 		-lraptorgfx \
 		-lxpcom \
 		-lmozreg \
-		-lpref \
 		-lmozjs \
 		-limg \
 		$(JPEG_LIBS) \
