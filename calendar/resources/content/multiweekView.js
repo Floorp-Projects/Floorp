@@ -250,9 +250,8 @@ MultiweekView.prototype.refreshEvents = function multiweekView_refreshEvents( )
                 var calEvent = itemOccurrence.item.QueryInterface(Components.interfaces.calIEvent);
                 dump("calEvent.title:" + calEvent.title + "\n");
 
-                var DisplayDate = new Date(calEvent.startDate.jsDate);
+                var DisplayDate = new Date(itemOccurrence.occurrenceStartDate.jsDate);
                 dayBoxItem = savedThis.dayBoxItemArray[savedThis.indexOfDate(DisplayDate)];
-
                 var eventbox = savedThis.createEventBox(itemOccurrence);
                 dayBoxItem.appendChild(eventbox);
             }
@@ -261,7 +260,9 @@ MultiweekView.prototype.refreshEvents = function multiweekView_refreshEvents( )
 
     var ccalendar = createCalendar();
 
-    ccalendar.getItems(ccalendar.ITEM_FILTER_TYPE_EVENT | ccalendar.ITEM_FILTER_CLASS_OCCURRENCES,0,jsDateToDateTime(startDate), jsDateToDateTime(endDate), getListener);
+    ccalendar.getItems(ccalendar.ITEM_FILTER_TYPE_EVENT | ccalendar.ITEM_FILTER_CLASS_OCCURRENCES,
+                       0, jsDateToDateTime(startDate), jsDateToDateTime(endDate),
+                       getListener);
 
 }      
 // JT: Liberal code reuse (ie. Cut and Paste)
