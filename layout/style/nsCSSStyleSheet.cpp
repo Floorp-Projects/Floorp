@@ -1484,8 +1484,9 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
                     if (NS_FAILED(rv)) return PR_FALSE;
 
                     char *absUrlStr = nsnull;
-                    const char *urlSpec = href.GetBuffer();
+                    char *urlSpec = href.ToNewCString();
                     rv = service->MakeAbsolute(urlSpec, baseUri, &absUrlStr);
+                    nsCRT::free(urlSpec);
                     NS_RELEASE(baseUri);
                     absURLSpec = absUrlStr;
                     delete [] absUrlStr;
