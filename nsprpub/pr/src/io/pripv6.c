@@ -339,11 +339,11 @@ PRStatus _pr_init_ipv6()
 	ipv6_to_v4_udpMethods.bind = Ipv6ToIpv4SocketBind;
 	ipv6_to_v4_udpMethods.sendto = Ipv6ToIpv4SocketSendTo;
 	ipv6_to_v4_udpMethods.recvfrom = Ipv6ToIpv4SocketRecvFrom;
-	ipv6_to_v4_tcpMethods.getsockname = Ipv6ToIpv4SocketGetName;
-	ipv6_to_v4_tcpMethods.getpeername = Ipv6ToIpv4SocketGetPeerName;
+	ipv6_to_v4_udpMethods.getsockname = Ipv6ToIpv4SocketGetName;
+	ipv6_to_v4_udpMethods.getpeername = Ipv6ToIpv4SocketGetPeerName;
 /*
-	ipv6_to_v4_tcpMethods.getsocketoption = Ipv6ToIpv4GetSocketOption;
-	ipv6_to_v4_tcpMethods.setsocketoption = Ipv6ToIpv4SetSocketOption;
+	ipv6_to_v4_udpMethods.getsocketoption = Ipv6ToIpv4GetSocketOption;
+	ipv6_to_v4_udpMethods.setsocketoption = Ipv6ToIpv4SetSocketOption;
 */
 	return PR_SUCCESS;
 }
