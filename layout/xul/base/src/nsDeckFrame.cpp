@@ -61,6 +61,7 @@
 #include "nsStackLayout.h"
 #include "nsWidgetsCID.h"
 #include "nsHTMLContainerFrame.h"
+#include "nsIWidget.h"
 
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 
@@ -121,8 +122,8 @@ nsDeckFrame::CreateWidget(nsIPresContext* aPresContext, nsIBox* aBox)
      frame->GetView(aPresContext, &view);
   }
 
-  nsIWidget* widget;
-  view->GetWidget(widget);
+  nsCOMPtr<nsIWidget> widget;
+  view->GetWidget(*getter_AddRefs(widget));
 
   if (!widget)
      rv = view->CreateWidget(kWidgetCID);
