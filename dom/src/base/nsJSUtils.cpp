@@ -534,55 +534,44 @@ nsJSUtils::nsGlobalResolve(JSContext* aContext,
 
     nsCOMPtr<nsIScriptContext> scriptContext;
     nsGetStaticScriptContext(aContext, aObj, getter_AddRefs(scriptContext));
-    if (!scriptContext) {
-      return JS_TRUE;
-    }
-
-    result = scriptContext->IsContextInitialized();
-    if (NS_FAILED(result)) {
-      return JS_TRUE;
-    }
-
-    nsCOMPtr<nsIScriptNameSpaceManager> manager;
-    result = scriptContext->GetNameSpaceManager(getter_AddRefs(manager));
-    if (!manager) {
-      return JS_FALSE;
-    }
-
-    PRBool isConstructor;
-    result = manager->LookupName(name, isConstructor, interfaceID, classID);
-    if (NS_SUCCEEDED(result)) {
-      if (isConstructor) {
-        JS_DefineFunction(aContext, aObj, 
-                          JS_GetStringBytes(jsstring),
-                          StubConstructor, 0,
-                          JSPROP_READONLY);
-        return JS_TRUE;
-      }
-      else {
-        result = nsComponentManager::CreateInstance(classID,
-                                                    nsnull,
-                                                    kISupportsIID,
-                                                    (void **)&native);
-        if (NS_FAILED(result)) {
-          return JS_FALSE;
+    if (scriptContext && NS_SUCCEEDED(scriptContext->IsContextInitialized())) {
+      nsCOMPtr<nsIScriptNameSpaceManager> manager;
+      scriptContext->GetNameSpaceManager(getter_AddRefs(manager));
+      if (manager) {
+        PRBool isConstructor;
+        result = manager->LookupName(name, isConstructor, interfaceID, classID);
+        if (NS_SUCCEEDED(result)) {
+          if (isConstructor) {
+            return (JSBool) JS_DefineFunction(aContext, aObj, 
+                                              JS_GetStringBytes(jsstring),
+                                              StubConstructor, 0,
+                                              JSPROP_READONLY);
+          }
+          result = nsComponentManager::CreateInstance(classID,
+                                                      nsnull,
+                                                      kISupportsIID,
+                                                      (void **)&native);
+          if (NS_FAILED(result)) {
+            return JS_FALSE;
+          }
+    
+          if (interfaceID.Equals(kIScriptObjectOwnerIID)) {
+            nsConvertObjectToJSVal(native, aContext, aObj, &val);
+          }
+          else {
+            nsConvertXPCObjectToJSVal(native, interfaceID, aContext, 
+                                      aObj, &val);
+          }
+    
+          return JS_DefineUCProperty(aContext, aObj, 
+                                     JS_GetStringChars(jsstring),
+                                     JS_GetStringLength(jsstring),
+                                     val, nsnull, nsnull, 
+                                     JSPROP_ENUMERATE | JSPROP_READONLY);
         }
-
-        if (interfaceID.Equals(kIScriptObjectOwnerIID)) {
-          nsConvertObjectToJSVal(native, aContext, aObj, &val);
-        }
-        else {
-          nsConvertXPCObjectToJSVal(native, interfaceID, aContext, 
-                                    aObj, &val);
-        }
-
-        return JS_DefineProperty(aContext, aObj, JS_GetStringBytes(jsstring),
-                                 val, nsnull, nsnull, 
-                                 JSPROP_ENUMERATE | JSPROP_READONLY);
       }
     }
   }
-  
   return nsGenericResolve(aContext, aObj, aId);
 }
 
