@@ -1290,3 +1290,60 @@ const char* GetTagName(PRInt32 aTag) {
   }
   return result;
 }
+
+
+/**
+ *  
+ *  
+ *  @update  gess 9/23/98
+ *  @param   
+ *  @return  
+ */
+CInstructionToken::CInstructionToken() : CHTMLToken(eHTMLTag_unknown) {
+}
+
+/**
+ *  
+ *  
+ *  @update  gess 9/23/98
+ *  @param   
+ *  @return  
+ */
+CInstructionToken::CInstructionToken(const nsString& aString) : CHTMLToken(aString) {
+}
+
+/**
+ *  
+ *  
+ *  @update  gess 9/23/98
+ *  @param   
+ *  @return  
+ */
+nsresult CInstructionToken::Consume(PRUnichar aChar,CScanner& aScanner){
+  mTextValue="<?";
+  nsresult result=aScanner.ReadUntil(mTextValue,kGreaterThan,PR_TRUE);
+  return result;
+}
+
+/**
+ *  
+ *  
+ *  @update  gess 9/23/98
+ *  @param   
+ *  @return  
+ */
+const char* CInstructionToken::GetClassName(void){
+  return "instruction";
+}
+
+/**
+ *  
+ *  
+ *  @update  gess 9/23/98
+ *  @param   
+ *  @return  
+ */
+PRInt32 CInstructionToken::GetTokenType(void){
+  return eToken_instruction;
+}
+

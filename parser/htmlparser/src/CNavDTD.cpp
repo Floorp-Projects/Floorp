@@ -199,6 +199,7 @@ CToken* nsCTokenRecycler::CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag
       case eToken_script:     result=new CScriptToken(); break;
       case eToken_style:      result=new CStyleToken(); break;
       case eToken_skippedcontent: result=new CSkippedContentToken(aString); break;
+      case eToken_instruction:result=new CInstructionToken(); break;
         default:
           break;
     }
@@ -308,6 +309,8 @@ PRInt32 NavDispatchTokenHandler(CToken* aToken,nsIDTD* aDTD) {
         result=theDTD->HandleStyleToken(aToken); break;
       case eToken_skippedcontent:
         result=theDTD->HandleSkippedContentToken(aToken); break;
+      case eToken_instruction:
+        result=theDTD->HandleProcessingInstructionToken(aToken); break;
       default:
         result=0;
     }//switch
@@ -337,6 +340,7 @@ void CNavDTD::InitializeDefaultTokenHandlers() {
 //  AddTokenHandler(new CTokenHandler(NavDispatchTokenHandler,eToken_script));
   AddTokenHandler(new CTokenHandler(NavDispatchTokenHandler,eToken_style));
   AddTokenHandler(new CTokenHandler(NavDispatchTokenHandler,eToken_skippedcontent));
+  AddTokenHandler(new CTokenHandler(NavDispatchTokenHandler,eToken_instruction));
 }
 
 
@@ -863,6 +867,21 @@ nsresult CNavDTD::HandleStyleToken(CToken* aToken){
   return NS_OK;
 }
 
+
+/**
+ *  This method gets called when an "instruction" token has been 
+ *  encountered in the parse process. 
+ *  
+ *  @update  gess 3/25/98
+ *  @param   aToken -- next (start) token to be handled
+ *  @return  PR_TRUE if all went well; PR_FALSE if error occured
+ */
+nsresult CNavDTD::HandleProcessingInstructionToken(CToken* aToken){
+  NS_PRECONDITION(0!=aToken,kNullToken);
+
+//  CStyleToken*  st = (CStyleToken*)(aToken);
+  return NS_OK;
+}
 
 /**
  * Retrieve the attributes for this node, and add then into
@@ -2698,9 +2717,15 @@ CNavDTD::ConsumeTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
           else aToken=gTokenRecycler.CreateTokenOfType(eToken_comment,eHTMLTag_unknown,gEmpty);
         }//if
         break;
+
       case kExclamation:
         aToken=gTokenRecycler.CreateTokenOfType(eToken_comment,eHTMLTag_comment,gEmpty);
         break;
+
+      case kQuestionMark: //it must be an XML processing instruction...
+        aToken=gTokenRecycler.CreateTokenOfType(eToken_instruction,eHTMLTag_unknown,gEmpty);
+        break;
+
       default:
         if(nsString::IsAlpha(aChar))
           return ConsumeStartTag(aChar,aScanner,aToken);

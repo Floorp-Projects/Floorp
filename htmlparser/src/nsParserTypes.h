@@ -71,6 +71,7 @@ const PRUint32  kLeftParen        = '(';
 const PRUint32  kRightParen       = ')';
 const PRUint32  kLeftBrace        = '{';
 const PRUint32  kRightBrace       = '}';
+const PRUint32  kQuestionMark     = '?';
 
 
 #endif
