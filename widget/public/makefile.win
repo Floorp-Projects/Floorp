@@ -29,14 +29,14 @@ XPIDLSRCS =               \
   .\nsIDragSession.idl          \
   .\nsIDragService.idl          \
   .\nsIFormatConverter.idl          \
+  .\nsIClipboard.idl            \
+  .\nsIClipboardOwner.idl       \
   $(NULL)
 
 EXPORTS=nsui.h \
   nsIFontSizeIterator.h \
   nsIFontNameIterator.h \
   nsIFontRetrieverService.h \
-  nsIClipboardOwner.h \
-  nsIClipboard.h \
   nsIFileWidget.h            \
   nsIWidget.h \
   nsIButton.h \
