@@ -82,11 +82,6 @@ EX_LIBS = \
 
 ifeq ($(OS_ARCH),Linux)
 EX_LIBS += \
-	$(DIST)/bin/libnglcsslay_s.so	\
-	$(DIST)/bin/libraptorevents_s.so	\
-	$(DIST)/bin/libraptorhtmlbase_s.so \
-	$(DIST)/bin/libraptorlayout_s.so \
-	$(DIST)/bin/libraptorhtmlstyle_s.so \
 	$(DIST)/bin/libpwcac.so \
 	$(DIST)/bin/libdbm.so \
 	$(NULL)
