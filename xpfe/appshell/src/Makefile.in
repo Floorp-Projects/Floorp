@@ -45,10 +45,7 @@ CPPSRCS		= \
 		nsJSXPConnectFactory.cpp \
 		nsAppShellNameSet.cpp \
 		nsFileLocations.cpp \
-		nsNetSupportDialog.cpp \
 		nsWindowMediator.cpp \
-		nsDialogParamBlock.cpp \
-		nsCommonDialogs.cpp \
 		nsAbout.cpp \
 		nsAppShellFactory.cpp \
 		$(NULL)

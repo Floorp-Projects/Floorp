@@ -28,8 +28,6 @@
 #include "nsIFileLocator.h"
 #include "nsIWindowMediator.h"
 #include "rdf.h"
-#include "nsICommonDialogs.h"
-#include "nsIDialogParamBlock.h"
 #include "nsAbout.h"
 #include "nsIGenericFactory.h"
 
@@ -39,8 +37,6 @@
 #include "nsAppShellService.h"
 #include "nsXPConnectFactory.h"
 #include "nsWindowMediator.h"
-#include "nsCommonDialogs.h"
-#include "nsDialogParamBlock.h"
 #include "nsFileLocations.h"
 
 #ifdef XP_MAC
@@ -60,8 +56,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsCmdLineService);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShellService);
 NS_GENERIC_FACTORY_CONSTRUCTOR(XPConnectFactoryImpl);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowMediator);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCommonDialogs);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDialogParamBlock);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFileLocator);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUserInfo);
 
@@ -86,16 +80,6 @@ static nsModuleComponentInfo gAppShellModuleInfo[] =
     NS_WINDOWMEDIATOR_CID,
     NS_RDF_DATASOURCE_CONTRACTID_PREFIX "window-mediator",
     nsWindowMediatorConstructor,
-  },
-  { "Common Dialogs",
-    NS_CommonDialog_CID,
-    "@mozilla.org/appshell/commonDialogs;1",
-    nsCommonDialogsConstructor,
-  },
-  { "kDialogParamBlockCID",
-    NS_DialogParamBlock_CID,
-    NULL,
-    nsDialogParamBlockConstructor,
   },
   { "kAboutModuleCID",
     NS_ABOUT_CID,

@@ -4,8 +4,6 @@
 
 nsIAppShellService.idl
 nsICmdLineService.idl
-nsICommonDialogs.idl
-nsIDialogParamBlock.idl
 nsIFileLocator.idl
 nsIWindowMediator.idl
 nsIXULWindow.idl
