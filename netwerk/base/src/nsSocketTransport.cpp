@@ -551,15 +551,36 @@ nsresult nsSocketTransport::doResolveHost(void)
                     kDNSService,
                     &rv);
     if (NS_FAILED(rv)) return rv;
+
+    //
+    // Give up the SocketTransport lock.  This allows the DNS thread to call the
+    // nsIDNSListener notifications without blocking...
+    //
+    PR_Unlock(mLock);
+
     rv = pDNSService->Lookup(nsnull, mHostName, this, 
                              getter_AddRefs(mDNSRequest));
     //
-    // The DNS lookup is being processed...  Mark the transport as waiting
-    // until the result is available...
+    // Aquire the SocketTransport lock again...
     //
-    // XXX: What should this result code be??
-    if (NS_BASE_STREAM_WOULD_BLOCK == rv) {
-      SetFlag(eSocketDNS_Wait);
+    PR_Lock(mLock);
+
+    if (NS_SUCCEEDED(rv)) {
+      //
+      // The DNS lookup has finished...  It has either failed or succeeded.
+      //
+      if (NS_FAILED(mStatus) || mNetAddress.inet.ip) {
+        mDNSRequest = null_nsCOMPtr();
+        rv = mStatus;
+      } 
+      //
+      // The DNS lookup is being processed...  Mark the transport as waiting
+      // until the result is available...
+      //
+      else {
+        SetFlag(eSocketDNS_Wait);
+        rv = NS_BASE_STREAM_WOULD_BLOCK;
+      }
     }
   }
 
@@ -1413,22 +1434,25 @@ nsSocketTransport::OnFound(nsISupports *aContext,
                            const char* aHostName,
                            nsHostEnt *aHostEnt) 
 {
+  // Enter the socket transport lock...
+  nsAutoLock lock(mLock);
+  nsresult rv = NS_OK;
+
   PR_LOG(gSocketLog, PR_LOG_DEBUG, 
          ("nsSocketTransport::OnFound(...) [this=%x]."
           "  DNS lookup for %s succeeded.\n", 
          this, aHostName));
-  //
-  // XXX: What thread are we on??
-  //
+  
   if (aHostEnt->hostEnt.h_addr_list) {
     memcpy(&mNetAddress.inet.ip, aHostEnt->hostEnt.h_addr_list[0], 
            sizeof(mNetAddress.inet.ip));
   } else {
     // XXX: What should happen here?  The GetHostByName(...) succeeded but 
     //      there are *no* A records...
+    rv = NS_ERROR_FAILURE;
   }
 
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -1436,25 +1460,28 @@ nsSocketTransport::OnStopLookup(nsISupports *aContext,
                                 const char *aHostName,
                                 nsresult aStatus)
 {
-  PR_LOG(gSocketLog, PR_LOG_DEBUG, 
-         ("nsSocketTransport::OnStopLookup(...) [this=%x].  Status = %x Host is %s\n", 
-         this, aStatus, aHostName));
+  // Enter the socket transport lock...
+  nsAutoLock lock(mLock);
 
-  //
-  // XXX: What thread are we on??
-  //
+  PR_LOG(gSocketLog, PR_LOG_DEBUG, 
+         ("nsSocketTransport::OnStopLookup(...) [this=%x]."
+          "  Status = %x Host is %s\n", 
+         this, aStatus, aHostName));
 
   // Release our reference to the DNS Request...
   mDNSRequest = null_nsCOMPtr();
 
-  if (GetFlag(eSocketDNS_Wait)) {
-    // Enter the socket transport lock...
-    nsAutoLock aLock(mLock);
-
-    ClearFlag(eSocketDNS_Wait);
+  // If the lookup failed, set the status...
+  if (NS_FAILED(aStatus)) {
     mStatus = aStatus;
+  }
+
+  // Start processing the transport again - if necessary...
+  if (GetFlag(eSocketDNS_Wait)) {
+    ClearFlag(eSocketDNS_Wait);
     mService->AddToWorkQ(this);
   }
+
   return NS_OK;
 }
 
