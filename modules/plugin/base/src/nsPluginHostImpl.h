@@ -149,6 +149,17 @@ public:
            PRBool forceJSEnabled = PR_FALSE);
 
   NS_IMETHOD
+  GetURLWithHeaders(nsISupports* pluginInst, 
+                    const char* url, 
+                    const char* target = NULL,
+                    nsIPluginStreamListener* streamListener = NULL,
+                    const char* altHost = NULL,
+                    const char* referrer = NULL,
+                    PRBool forceJSEnabled = PR_FALSE,
+                    PRUint32 getHeadersLength = 0, 
+                    const char* getHeaders = NULL);
+  
+  NS_IMETHOD
   PostURL(nsISupports* pluginInst,
             const char* url,
             PRUint32 postDataLen, 
