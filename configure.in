@@ -2205,11 +2205,6 @@ if test "$MOZ_MAIL_NEWS"; then
 fi
 AC_SUBST(MOZ_MAIL_NEWS)
 
-dnl Note: This conflicts with --disable-shared
-MOZ_ARG_ENABLE_BOOL(oji,
-[  --enable-oji            Enable use of Open JVM Interface],
-  [MOZ_OJI=1 FULL_STATIC_BUILD= NO_SHARED_LIB=])
-
 dnl build the tests by default
 ENABLE_TESTS=1
 MOZ_ARG_DISABLE_BOOL(tests,
@@ -2526,7 +2521,6 @@ if test "$_IGNORE_LONG_LONG_WARNINGS"; then
      CFLAGS="$_SAVE_CFLAGS"
 fi
 
-dnl Note: This should not be disabled if --enable-oji is set
 MOZ_ARG_DISABLE_BOOL(shared,
 [  --disable-shared        Disable building of internal shared libs],
   NO_SHARED_LIB=1)
@@ -2729,18 +2723,6 @@ dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Untested or Broken Options)
 
-dnl Note: This needs to come after --disable-shared
-MOZ_ARG_ENABLE_BOOL(java,
-[  --enable-java           Enable use of java applets (untested)],
-  [MOZ_JAVA=1 FULL_STATIC_BUILD= NO_SHARED_LIB=])
-
-if test "$MOZ_OJI" -a "$MOZ_JAVA"
-then
-  echo "configure: error: Simultaneous use of --enable-java and\
-        --enable-oji is no longer supported." 1>&2
-  exit 1
-fi
-
 dnl ========================================================
 dnl =
 dnl = MOZ_TIMER_LIBS
@@ -2811,8 +2793,6 @@ AC_SUBST(MOZ_MONOLITHIC_TOOLKIT)
 AC_SUBST(MOZ_TIMER_LIBS)
 AC_SUBST(MOZ_SECURITY)
 dnl AC_SUBST(MOZ_NETCAST)
-AC_SUBST(MOZ_JAVA)
-AC_SUBST(MOZ_OJI)
 AC_SUBST(MOZ_DEBUG)
 AC_SUBST(MOZ_DEBUG_MODULES)
 AC_SUBST(MOZ_EXTENSIONS)

@@ -1,3 +1,4 @@
+#
 # The contents of this file are subject to the Mozilla Public
 # License Version 1.1 (the "License"); you may not use this file
 # except in compliance with the License. You may obtain a copy of
@@ -42,7 +43,6 @@ MOZ_GFX_TOOLKIT_LDFLAGS     = -lgfx_$(MOZ_WIDGET_TOOLKIT) $(MOZ_XLIBRGB_LDFLAGS)
 MOZ_WIDGET_TOOLKIT_LDFLAGS	= -lwidget_$(MOZ_WIDGET_TOOLKIT)
 
 MOZ_SECURITY 	= @MOZ_SECURITY@
-MOZ_JAVA	= @MOZ_JAVA@
 MOZ_OJI		= @MOZ_OJI@
 MOZ_DEBUG	= @MOZ_DEBUG@
 MOZ_DEBUG_MODULES = @MOZ_DEBUG_MODULES@
@@ -76,6 +76,8 @@ MOZ_COMPONENT_LIBS = @MOZ_COMPONENT_LIBS@
 ClientWallet=1
 CookieManagement=1
 SingleSignon=1
+
+MOZ_OJI=1
 
 MOZ_POST_DSO_LIB_COMMAND = @MOZ_POST_DSO_LIB_COMMAND@
 MOZ_POST_PROGRAM_COMMAND = @MOZ_POST_PROGRAM_COMMAND@
