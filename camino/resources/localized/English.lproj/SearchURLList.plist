@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>Google</key>
-	<string>http://www.google.com/search?ie=UTF-8&amp;oe=UTF-8&amp;q=%s</string>
+        <string>http://www.google.com/search?q=%s&amp;sourceid=mozilla2&amp;ie=utf-8&amp;oe=utf-8</string>
 	<key>Google Images</key>
 	<string>http://images.google.com/images?ie=UTF-8&amp;oe=UTF-8&amp;q=%s</string>
 	<key>PreferredSearchEngine</key>
