@@ -239,7 +239,7 @@ public class ConnectionPool {
                         (LDAPConnectionObject)pool.elementAt(i);
                 }
             } else {
-                debug("All pool connections in use",true);
+                debug("All pool connections in use");
             }
         }
 
@@ -309,11 +309,11 @@ public class ConnectionPool {
             poolMax = poolSize;
         }
 
-        debug("****Initializing LDAP Pool****",true);
-        debug("LDAP host = "+host+" on port "+port,true);
-        debug("Number of connections="+poolSize,true);
-        debug("Maximum number of connections="+poolMax,true);
-        debug("******",true);
+        debug("****Initializing LDAP Pool****");
+        debug("LDAP host = "+host+" on port "+port);
+        debug("Number of connections="+poolSize);
+        debug("Maximum number of connections="+poolMax);
+        debug("******");
 
         pool = new java.util.Vector(); // Create pool vector
         setUpPool( poolSize ); // Initialize it
@@ -332,7 +332,7 @@ public class ConnectionPool {
                 index = size - 1;
             }
         } catch (Exception ex) {
-            debug("Adding a connection: "+ex.toString(),true);
+            debug("Adding a connection: "+ex.toString());
         }
         return index;
     }
@@ -360,8 +360,8 @@ public class ConnectionPool {
                                      authdn, authpw); 
                 }
             } catch ( LDAPException le ) {
-                debug("Creating pool:"+le.toString(),true);
-                debug("aborting....",true);
+                debug("Creating pool:"+le.toString());
+                debug("aborting....");
                 throw le;
             }
             co.setInUse( false ); // Mark not in use
