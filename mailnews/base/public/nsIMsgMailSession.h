@@ -44,6 +44,8 @@
 #include "nsIMsgIdentity.h"
 #include "nsIMsgIncomingServer.h"
 #include "nsIMsgAccountManager.h"
+#include "nsIFolder.h"
+#include "nsIFolderListener.h"
 
 class nsIMsgMailSession : public nsISupports
 {
@@ -58,6 +60,20 @@ public:
 	NS_IMETHOD GetCurrentIdentity(nsIMsgIdentity ** aIdentity) = 0;
     NS_IMETHOD GetCurrentServer(nsIMsgIncomingServer* *aServer) = 0;
     NS_IMETHOD GetAccountManager(nsIMsgAccountManager* *aAccountManager) = 0;
+
+	///////////////////////////////////////////////////////////////////////////////////
+	// Some objects want to get folder notifications from every folder.  Instead of forcing them
+	// to register with every folder, this is a central place where they can register and get all
+	// notifications.
+	//////////////////////////////////////////////////////////////////////////////////////
+  NS_IMETHOD AddFolderListener(nsIFolderListener *listener) = 0;
+  NS_IMETHOD RemoveFolderListener(nsIFolderListener *listener) = 0;
+	NS_IMETHOD NotifyFolderItemPropertyChanged(nsISupports *item, char *property, char* oldValue, char* newValue) = 0;
+	NS_IMETHOD NotifyFolderItemPropertyFlagChanged(nsISupports *item, char *property, PRUint32 oldValue,
+												   PRUint32 newValue) = 0;
+	NS_IMETHOD NotifyFolderItemAdded(nsIFolder *folder, nsISupports *item)= 0;
+	NS_IMETHOD NotifyFolderItemDeleted(nsIFolder *folder, nsISupports *item)= 0;
+
 };
 
 #endif /* nsIMsgMailSession_h___ */
