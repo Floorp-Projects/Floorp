@@ -615,8 +615,6 @@ protected:
     return NS_REINTERPRET_CAST(nsDOMSlots *, mFlagsOrSlots);
   }
 
-  void MaybeClearDOMSlots();
-
   PtrBits GetFlags() const
   {
     if (HasDOMSlots()) {
