@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
-$::UtilsVersion = '$Revision: 1.183 $ ';
+$::UtilsVersion = '$Revision: 1.184 $ ';
 
 package TinderUtils;
 
@@ -584,6 +584,12 @@ sub mail_build_finished_message {
     close LOG;
     unlink($logfile);
 
+    # If on Windows, make sure the log mail has unix lineendings, or
+    # we'll confuse the log scraper.
+    if ($platform eq 'windows') {
+        system("dos2unix $logfile.last");
+    }
+
     if ($Settings::ReportStatus and $Settings::ReportFinalStatus) {
         if ($Settings::blat ne "" && $Settings::use_blat) {
             system("$Settings::blat $logfile.last -t $Settings::Tinderbox_server");
@@ -862,24 +868,14 @@ sub rebootSystem {
 sub create_profile {
     my ($build_dir, $binary_dir, $binary) = @_;
     my $result = run_cmd($build_dir, $binary_dir,
-                         $binary . " -CreateProfile $Settings::MozProfileName",
+                         [$binary, "-CreateProfile", $Settings::MozProfileName],
                          "/dev/null", $Settings::CreateProfileTimeout);
     return $result;
 }
 
-
-sub find_pref_file {
+sub get_profile_dir {
     my $build_dir = shift;
-
-    # profile $Settings::MozProfileName must exist before calling this sub
-
-    # default to *nix
-    my $pref_file = "prefs.js";
-    my $profile_dir = "$build_dir/.mozilla";
-    $profile_dir ="/boot/home/config/settings/Mozilla/$Settings::MozProfileName" if ($Settings::OS eq "BeOS");
-
-    # win32: works on win98 and win2k (file bugs on jrgm@netscape.com if it 
-    # doesn't work on Me, XP, NT4 ...)
+    my $profile_dir;
     if ($Settings::OS =~ /^WIN/) {
         if ($Settings::OS =~ /^WIN9/) { # 98 [but what does uname say on Me?]
             $profile_dir = $ENV{winbootdir} || $ENV{windir} || "C:\\WINDOWS";
@@ -892,10 +888,26 @@ sub find_pref_file {
                 $profile_dir = $ENV{APPDATA} || "C:\\_UNKNOWN_";
             }
         }
-        $profile_dir .= "\\Mozilla\\Profiles\\$Settings::MozProfileName";
+        $profile_dir .= "\\$Settings::ProductName\\Profiles\\$Settings::MozProfileName";
         $profile_dir =~ s|\\|/|g;
+    } elsif ($Settings::OS eq "BeOS") {
+        $profile_dir = "/boot/home/config/settings/Mozilla/$Settings::MozProfileName";
+    } else {
+        # *nix
+        $profile_dir = "$build_dir/.mozilla/$Settings::MozProfileName";
     }
 
+    return $profile_dir;
+}
+
+sub find_pref_file {
+    my $build_dir = shift;
+
+    # profile $Settings::MozProfileName must exist before calling this sub
+
+    # default to *nix
+    my $pref_file = "prefs.js";
+    my $profile_dir = get_profile_dir($build_dir);
     unless (-e $profile_dir) {
         print_log "ERROR: profile $profile_dir does not exist\n";
         #XXX should make 'run_all_tests' throw a 'testfailed' exception
@@ -1107,7 +1119,7 @@ BEGIN {
 
 sub fork_and_log {
     # Fork a sub process and log the output.
-    my ($home, $dir, $cmd, $logfile) = @_;
+    my ($home, $dir, $args, $logfile) = @_;
 
     my $pid = fork; # Fork off a child process.
 
@@ -1128,7 +1140,7 @@ sub fork_and_log {
         open STDERR, ">&STDOUT";
         select STDOUT; $| = 1;  # make STDOUT unbuffered
         select STDERR; $| = 1;  # make STDERR unbuffered
-        exec $cmd;
+        exec @$args;
         die "Could not exec()";
     }
     return $pid;
@@ -1200,13 +1212,13 @@ sub wait_for_pid {
 # shared cltbld user account.
 #
 sub run_cmd {
-    my ($home_dir, $binary_dir, $cmd, $logfile, $timeout_secs) = @_;
+    my ($home_dir, $binary_dir, $args, $logfile, $timeout_secs) = @_;
     my $now = localtime();
 
     print_log "Begin: $now\n";
-    print_log "cmd = $cmd\n";
+    print_log "cmd = @$args[0]\n";
 
-    my $pid = fork_and_log($home_dir, $binary_dir, $cmd, $logfile);
+    my $pid = fork_and_log($home_dir, $binary_dir, $args, $logfile);
     my $result = wait_for_pid($pid, $timeout_secs);
 
     $now = localtime();
@@ -1269,24 +1281,30 @@ sub send_results_to_server {
     print_log "send_results_to_server(): \n";
     print_log "tmpurl = $tmpurl\n";
 
-    my $res = eval q{
-        use LWP::UserAgent;
-        use HTTP::Request;
-        my $ua  = LWP::UserAgent->new;
-        $ua->timeout(10); # seconds
-        my $req = HTTP::Request->new(GET => $tmpurl);
-        my $res = $ua->request($req);
-        return $res;
-    };
-    if ($@) {
-        warn "Failed to submit startup results: $@";
-        print_log "send_results_to_server() failed.\n";
-    } else {
-        print "Results submitted to server: \n",
-        $res->status_line, "\n", $res->content, "\n";
+    # libwww-perl has process control problems on windows,
+    # spawn wget instead.
+    if ($Settings::OS =~ /^WIN/) {
+        system ("wget", "-O", "/dev/null", $tmpurl);
         print_log "send_results_to_server() succeeded.\n";
+    } else {
+        my $res = eval q{
+            use LWP::UserAgent;
+            use HTTP::Request;
+            my $ua  = LWP::UserAgent->new;
+            $ua->timeout(10); # seconds
+            my $req = HTTP::Request->new(GET => $tmpurl);
+            my $res = $ua->request($req);
+            return $res;
+        };
+        if ($@) {
+            warn "Failed to submit startup results: $@";
+            print_log "send_results_to_server() failed.\n";
+        } else {
+            print "Results submitted to server: \n",
+            $res->status_line, "\n", $res->content, "\n";
+            print_log "send_results_to_server() succeeded.\n";
+        }
     }
-
 }
 
 
@@ -1331,54 +1349,48 @@ sub run_all_tests {
     #
     unlink("$binary_dir/component.reg") or warn "$binary_dir/component.reg not removed\n";
     if($Settings::RegxpcomTest) {
-        AliveTest("regxpcom", $build_dir, "$binary_dir/regxpcom", 0,
+        AliveTest("regxpcom", $build_dir, ["$binary_dir/regxpcom"],
                   $Settings::RegxpcomTestTimeout);
     }
 
     my $mozappdir="$build_dir/.mozilla";
-    $mozappdir="/boot/home/config/settings/Mozilla" if ($Settings::OS eq "BeOS");
-    my $profiledir="$mozappdir/$Settings::MozProfileName";
+    my $profiledir = get_profile_dir($build_dir);
 
-    # no special profiledir on win32
-    if ($Settings::OS !~ /^WIN/) {
+    #
+    # Make sure we have a profile to run tests.  This is assumed to be called
+    # $Settings::MozProfileName and will live in $build_dir/.mozilla.
+    # Also assuming only one profile here.
+    #
+    my $cp_result = 0;
+    unless ((-d "$profiledir")||
+            ((-d "$mozappdir/Profiles/$Settings::MozProfileName") and 
+             ($Settings::OS eq 'Darwin'))) {
+        print_log "No profile found, creating profile.\n";
+        $cp_result = create_profile($build_dir, $binary_dir, $binary);
+    } else {
+        print_log "Found profile.\n";
 
-        #
-        # Make sure we have a profile to run tests.  This is assumed to be called
-        # $Settings::MozProfileName and will live in $build_dir/.mozilla.
-        # Also assuming only one profile here.
-        #
-        my $cp_result = 0;
-        unless ((-d "$profiledir")||
-                ((-d "$mozappdir/Profiles/$Settings::MozProfileName") and 
-                 ($Settings::OS eq 'Darwin'))) {
-            print_log "No profile found, creating profile.\n";
+        # Recreate profile if we have $Settings::CleanProfile set.
+        if ($Settings::CleanProfile) {
+            my $deletedir = $mozappdir;
+            $deletedir = $profiledir if ($Settings::OS eq "BeOS" || $Settings::OS =~ /^WIN/);
+            print_log "Creating clean profile ...\n";
+            print_log "Deleting $deletedir ...\n";
+            File::Path::rmtree([$deletedir], 0, 0);
+            if (-e "$deletedir") {
+                print_log "Error: rmtree([$deletedir], 0, 0) failed.\n";
+            }
             $cp_result = create_profile($build_dir, $binary_dir, $binary);
+        }
+    }
+
+    # Set status, in case create profile failed.
+    if($cp_result) {
+        if(not $cp_result->{timed_out} and $cp_result->{exit_value} != 0) {
+            $test_result = "success";
         } else {
-            print_log "Found profile.\n";
-
-            # Recreate profile if we have $Settings::CleanProfile set.
-            if ($Settings::CleanProfile) {
-		my $deletedir = $mozappdir;
-		$deletedir = $profiledir if ($Settings::OS eq "BeOS");
-                print_log "Creating clean profile ...\n";
-                print_log "Deleting $deletedir ...\n";
-                File::Path::rmtree([$deletedir], 0, 0);
-                if (-e "$deletedir") {
-                    print_log "Error: rmtree([$deletedir], 0, 0) failed.\n";
-                }
-                $cp_result = create_profile($build_dir, $binary_dir, $binary);
-            }
+            $test_result = "testfailed";
         }
-
-        # Set status, in case create profile failed.
-        if($cp_result) {
-            if(not $cp_result->{timed_out} and $cp_result->{exit_value} != 0) {
-                $test_result = "success";
-            } else {
-                $test_result = "testfailed";
-            }
-        }
-
     }
 
     #
@@ -1453,7 +1465,7 @@ sub run_all_tests {
     #
     if ($Settings::AliveTest and $test_result eq 'success') {
         $test_result = AliveTest("MozillaAliveTest", $build_dir,
-                                 $binary, " -P $Settings::MozProfileName",
+                                 [$binary, "-P", $Settings::MozProfileName],
                                  $Settings::AliveTestTimeout);
     }
 
@@ -1464,7 +1476,7 @@ sub run_all_tests {
         $ENV{LD_ASSUME_KERNEL} = "2.2.5";
 
         $test_result = AliveTest("MozillaJavaTest", $build_dir,
-                                 $binary, "http://java.sun.com",
+                                 [$binary, "http://java.sun.com"],
                                  $Settings::JavaTestTimeout);
     }
 
@@ -1472,20 +1484,21 @@ sub run_all_tests {
     # Viewer alive test
     if ($Settings::ViewerTest and $test_result eq 'success') {
         $test_result = AliveTest("ViewerAliveTest", $build_dir,
-                                 "$binary_dir/viewer", 0,
+                                 ["$binary_dir/viewer"],
                                  $Settings::ViewerTestTimeout);
     }
 
     # Embed test.  Test the embedded app.
     if ($Settings::EmbedTest and $test_result eq 'success') {
         $test_result = AliveTest("EmbedAliveTest", $build_dir,
-                                 "$embed_binary_dir/$embed_binary_basename", 0,
+                                 ["$embed_binary_dir/$embed_binary_basename"],
                                  $Settings::EmbedTestTimeout);
     }
 
     # Bloat test (based on nsTraceRefcnt)
     if ($Settings::BloatTest and $test_result eq 'success') {
-        $test_result = BloatTest($binary, $build_dir, " -f bloaturls.txt", "",
+        $test_result = BloatTest($binary, $build_dir,
+                                 ["-f", "bloaturls.txt"], "",
                                  $Settings::BloatTestTimeout);
     }
 
@@ -1526,7 +1539,7 @@ sub run_all_tests {
         # Remove the Inbox.msf file.
         # unlink("Inbox.msf");
 
-        $test_result = BloatTest($binary, $build_dir, " -mail", "mail",
+        $test_result = BloatTest($binary, $build_dir, ["-mail"], "mail",
                                  $Settings::MailBloatTestTimeout);
 
         # back to build_dir
@@ -1539,17 +1552,16 @@ sub run_all_tests {
         and $test_result eq 'success') {
         $test_result =
             FileBasedTest("DomToTextConversionTest", $build_dir, $binary_dir,
-                          "perl TestOutSinks.pl", $Settings::DomTestTimeout,
+                          ["perl", "TestOutSinks.pl"], $Settings::DomTestTimeout,
                           "FAILED", 0,
                           0);  # Timeout means failure.
     }
 
     # Layout performance test.
     if ($Settings::LayoutPerformanceTest and $test_result eq 'success') {
-        $test_result = LayoutPerformanceTest("LayoutPerformanceTest", 
-                                             $binary, 
+        $test_result = LayoutPerformanceTest("LayoutPerformanceTest",
                                              $build_dir,
-                                             "-P $Settings::MozProfileName");
+                                             [$binary, "-P", $Settings::MozProfileName]);
     }
 
 
@@ -1563,12 +1575,11 @@ sub run_all_tests {
         # Settle OS.
         run_system_cmd("sync; sleep 10", 35);
 
-        my $url  = "-chrome \"file:$build_dir/mozilla/xpfe/test/winopen.xul\"";
+        my @urlargs = (-chrome,"file:$build_dir/mozilla/xpfe/test/winopen.xul");
         if($test_result eq 'success') {
             $open_time = AliveTestReturnToken($test_name,
                                               $build_dir,
-                                              $binary,
-                                              " -P $Settings::MozProfileName " . $url,
+                                              [$binary, "-P", $Settings::MozProfileName, @urlargs],
                                               $Settings::XULWindowOpenTestTimeout,
                                               "__xulWinOpenTime",
                                               ":");
@@ -1598,16 +1609,16 @@ sub run_all_tests {
 
     if ($Settings::StartupPerformanceTest and $test_result eq 'success') {
 
-      # Win32 needs to do some url magic for file: urls.
-      my $startup_build_dir = $build_dir;
-      if ($Settings::OS =~ /^WIN/) {
-        $startup_build_dir = $win32_build_dir;
-      }
+        # Win32 needs to do some url magic for file: urls.
+        my $startup_build_dir = $build_dir;
+        if ($Settings::OS =~ /^WIN/) {
+            $startup_build_dir = $win32_build_dir;
+        }
 
       $test_result = StartupPerformanceTest("StartupPerformanceTest",
                                             $binary,
                                             $startup_build_dir,
-                                            "-P $Settings::MozProfileName",
+                                            ["-P", $Settings::MozProfileName],
                                             "file:$startup_build_dir/../startup-test.html");
     }
 
@@ -1620,17 +1631,12 @@ sub run_all_tests {
 # after $timeout_secs (seconds).
 #
 sub AliveTest {
-    my ($test_name, $build_dir, $binary, $args, $timeout_secs) = @_;
+    my ($test_name, $build_dir, $args, $timeout_secs) = @_;
+    my $binary = @$args[0];
     my $binary_basename = File::Basename::basename($binary);
     my $binary_dir = File::Basename::dirname($binary);
     my $binary_log = "$build_dir/$test_name.log";
-    my $cmd = $binary_basename;
     local $_;
-
-    # Build up command string, if we have arguments
-    if($args) {
-        $cmd .= " " . $args;
-    }
 
     # Print out testname
     print_log "\n\nRunning $test_name test ...\n";
@@ -1643,7 +1649,7 @@ sub AliveTest {
     # Print out timeout.
     print_log "Timeout = $timeout_secs seconds.\n";
 
-    my $result = run_cmd($build_dir, $binary_dir, $cmd,
+    my $result = run_cmd($build_dir, $binary_dir, $args,
                          $binary_log, $timeout_secs);
 
     print_logfile($binary_log, "$test_name");
@@ -1661,16 +1667,17 @@ sub AliveTest {
 # Same as AliveTest, but look for a token in the log and return
 # the value.  (used for startup iteration test).
 sub AliveTestReturnToken {
-    my ($test_name, $build_dir, $binary, $args, $timeout_secs, $token, $delimiter) = @_;
+    my ($test_name, $build_dir, $args, $timeout_secs, $token, $delimiter) = @_;
     my $status;
     my $rv = 0;
 
     # Same as in AliveTest, needs to match in order to find the log file.
+    my $binary = @$args[0];
     my $binary_basename = File::Basename::basename($binary);
     my $binary_dir = File::Basename::dirname($binary);
     my $binary_log = "$build_dir/$test_name.log";
 
-    $status = AliveTest($test_name, $build_dir, $binary, $args, $timeout_secs);
+    $status = AliveTest($test_name, $build_dir, $args, $timeout_secs);
 
     # Look for and return token
     if ($status) {
@@ -1705,18 +1712,18 @@ sub AliveTestReturnToken {
 #       the process flow control got too confusing :(  -mcafee
 #
 sub FileBasedTest {
-    my ($test_name, $build_dir, $binary_dir, $test_command, $timeout_secs,
+    my ($test_name, $build_dir, $binary_dir, $test_args, $timeout_secs,
         $status_token, $status_token_means_pass, $timeout_is_ok) = @_;
     local $_;
 
-    # Assume the app is the first argument in the execString.
-    my ($binary_basename) = (split /\s+/, $test_command)[0];
+    # Assume the app is the first argument in the array.
+    my ($binary_basename) = @$test_args[0];
     my $binary_log = "$build_dir/$test_name.log";
 
     # Print out test name
     print_log "\n\nRunning $test_name ...\n";
 
-    my $result = run_cmd($build_dir, $binary_dir, $test_command,
+    my $result = run_cmd($build_dir, $binary_dir, $test_args,
                          $binary_log, $timeout_secs);
 
     print_logfile($binary_log, $test_name);
@@ -1749,7 +1756,7 @@ sub FileBasedTest {
 
 
 sub LayoutPerformanceTest {
-    my ($test_name, $binary, $build_dir, $layout_test_args) = @_;
+    my ($test_name, $build_dir, $args) = @_;
     my $layout_test_result;
     my $layout_time;
     my $layout_time_details;
@@ -1761,8 +1768,7 @@ sub LayoutPerformanceTest {
     
     $layout_time = AliveTestReturnToken($test_name,
                                         $build_dir,
-                                        $binary,
-                                        " $layout_test_args \"$url\"",
+                                        [@$args, $url],
                                         $Settings::LayoutPerformanceTestTimeout,
                                         "_x_x_mozilla_page_load",
                                         ",");
@@ -1780,8 +1786,7 @@ sub LayoutPerformanceTest {
       
       $layout_time = AliveTestReturnToken($test_name,
                                           $build_dir,
-                                          $binary,
-                                          " $layout_test_args \"$url\"",
+                                          [@$args, $url],
                                           $Settings::LayoutPerformanceTestTimeout,
                                           "_x_x_mozilla_page_load",
                                           ",");
@@ -1850,7 +1855,7 @@ sub StartupPerformanceTest {
     
     # Generate URL of form file:///<path>/startup-test.html?begin=986869495000
     # Where begin value is current time.
-    my ($time, $url, $cwd, $cmd);
+    my ($time, $url, $cwd);
     
     #
     # Test for Time::HiRes and report the time.
@@ -1873,8 +1878,7 @@ sub StartupPerformanceTest {
       $startuptime =
         AliveTestReturnToken("StartupPerformanceTest-$i",
                              $build_dir,
-                             "$binary",
-                             " $startup_test_args \"$url\"",
+                             [$binary, @$startup_test_args, $url],
                              $Settings::StartupPerformanceTestTimeout,
                              "__startuptime",
                              ",");
@@ -1939,7 +1943,7 @@ sub StartupPerformanceTest {
 # to turn the pageloader code on.  These are on by default for debug.
 #
 sub BloatTest {
-    my ($binary, $build_dir, $args, $bloatdiff_label, $timeout_secs) = @_;
+    my ($binary, $build_dir, $bloat_args, $bloatdiff_label, $timeout_secs) = @_;
     my $binary_basename = File::Basename::basename($binary);
     my $binary_dir = File::Basename::dirname($binary);
     my $binary_log = "$build_dir/bloat-cur.log";
@@ -1956,13 +1960,13 @@ sub BloatTest {
     $ENV{XPCOM_MEM_BLOAT_LOG} = 1; # Turn on ref counting to track leaks.
 
     # Build up binary command, look for profile.
-    my $cmd = "$binary_basename";
+    my @args = ($binary_basename);
     unless ($Settings::MozProfileName eq "") {
-        $cmd .= " -P $Settings::MozProfileName";
+        @args = (@args, "-P", $Settings::MozProfileName);
     }
-    $cmd .= " $args";
+    @args = (@args, @$bloat_args);
 
-    my $result = run_cmd($build_dir, $binary_dir, $cmd, $binary_log,
+    my $result = run_cmd($build_dir, $binary_dir, \@args, $binary_log,
                          $timeout_secs);
     $ENV{XPCOM_MEM_BLOAT_LOG} = 0;
     delete $ENV{XPCOM_MEM_BLOAT_LOG};
@@ -2159,10 +2163,11 @@ sub BloatTest2 {
 
     rename($sdleak_log, $old_sdleak_log);
 
-    my $cmd = "$binary_basename -P $Settings::MozProfileName -f bloaturls.txt --trace-malloc $malloc_log";
+    my @args = ($binary_basename, "-P", $Settings::MozProfileName,
+                "-f", "bloaturls.txt", "--trace-malloc", $malloc_log);
     # win32 builds crash on multiple runs when --shutdown-leaks is used
-    $cmd .= " --shutdown-leaks $sdleak_log" unless $Settings::OS =~ /^WIN/;
-    my $result = run_cmd($build_dir, $binary_dir, $cmd, $binary_log,
+    @args = (@args, "--shutdown-leaks", $sdleak_log) unless $Settings::OS =~ /^WIN/;
+    my $result = run_cmd($build_dir, $binary_dir, \@args, $binary_log,
                          $timeout_secs);
 
     print_logfile($binary_log, "trace-malloc bloat test");
@@ -2179,11 +2184,11 @@ sub BloatTest2 {
     rename($leakstats_log, $old_leakstats_log);
 
     if ($Settings::OS =~ /^WIN/) {
-        $cmd = "leakstats $malloc_log";
+        @args = ("leakstats", $malloc_log);
     } else {
-        $cmd = "run-mozilla.sh ./leakstats $malloc_log";
+        @args = ("run-mozilla.sh", "./leakstats", $malloc_log);
     }
-    $result = run_cmd($build_dir, $binary_dir, $cmd, $leakstats_log,
+    $result = run_cmd($build_dir, $binary_dir, \@args, $leakstats_log,
                       $timeout_secs);
     print_logfile($leakstats_log, "trace-malloc bloat test: leakstats");
 
@@ -2228,8 +2233,8 @@ sub BloatTest2 {
 
     if (-e $old_sdleak_log && -e $sdleak_log) {
         print_logfile($old_leakstats_log, "previous run of trace-malloc bloat test leakstats");
-        $cmd = "$PERL $build_dir/mozilla/tools/trace-malloc/diffbloatdump.pl --depth=15 $old_sdleak_log $sdleak_log";
-        $result = run_cmd($build_dir, $binary_dir, $cmd, $sdleak_diff_log,
+        @args = ($PERL, "$build_dir/mozilla/tools/trace-malloc/diffbloatdump.pl", "--depth=15", $old_sdleak_log, $sdleak_log);
+        $result = run_cmd($build_dir, $binary_dir, \@args, $sdleak_diff_log,
                           $timeout_secs);
         print_logfile($sdleak_diff_log, "trace-malloc leak stats differences");
     }

@@ -371,8 +371,7 @@ sub main {
 
     $post_status = TinderUtils::AliveTest("ChimeraAliveTest",
                                           "$chimera_dir/build/Navigator.app/Contents/MacOS",
-                                          "Navigator",
-                                          "-url \"about:blank\"",  
+                                          ["Navigator", "-url", "about:blank"],
                                           45);
   }
 
@@ -431,8 +430,7 @@ sub main {
       } else {
           $post_status = TinderUtils::AliveTest("ChimeraLayoutTest8Test",
                                                 "$chimera_dir/build/Navigator.app/Contents/MacOS",
-                                                "Navigator",
-                                                "-url \"http://lxr.mozilla.org/seamonkey/source/webshell/tests/viewer/samples/test8.html\"",
+                                                ["Navigator", "-url", "http://lxr.mozilla.org/seamonkey/source/webshell/tests/viewer/samples/test8.html"],
                                                 20);
       }
   }
@@ -442,16 +440,14 @@ sub main {
 
       $post_status = 
         TinderUtils::LayoutPerformanceTest("ChimeraLayoutPerformanceTest",
-                                           "Navigator",
                                            "$chimera_dir/build/Navigator.app/Contents/MacOS",
-                                           "-url");
+                                           ["Navigator", "-url"]);
 
   }
 
 
   # Startup test.
   if ($chimera_startup_test and $post_status eq 'success') {
-
       $post_status =
         TinderUtils::StartupPerformanceTest("ChimeraStartupPerformanceTest",
                                             "Navigator",

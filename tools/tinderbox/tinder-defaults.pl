@@ -17,6 +17,7 @@ $BuildEmbed        = 0;      # After building seamonkey, go build embed app.
 # Tests
 $CleanProfile             = 0;
 $ResetHomeDirForTests     = 1;
+$ProductName              = "Mozilla";
 
 $RunMozillaTests          = 1;  # Allow turning off of all tests if needed.
                                 # renamed from RunTest, to be more descriptive.

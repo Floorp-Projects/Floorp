@@ -119,8 +119,7 @@ sub main {
   if ($galeon_alive_test and $post_status eq 'success') {
     $post_status = TinderUtils::AliveTest("GaleonAliveTest",
 					  "$galeon_dir/src",
-					  "galeon",
-					  "about:blank",
+					  ["galeon", "about:blank"],
 					  45);
   }
   
@@ -128,8 +127,7 @@ sub main {
   if ($galeon_test8_test and $post_status eq 'success') {
     $post_status = TinderUtils::AliveTest("GaleonTest8Test",
 					  "$galeon_dir/src",
-					  "galeon",
-					  "resource:///res/samples/test8.html",
+					  ["galeon", "resource:///res/samples/test8.html"],
 					  45);
   }
   
@@ -138,8 +136,7 @@ sub main {
     TinderUtils::StartupPerformanceTest("GaleonStartupPerformanceTest",
 					"galeon",
 					"$galeon_dir/src",
-					"",
-					"$galeon_dir/src/../../../startup-test.html");     
+					["", "$galeon_dir/src/../../../startup-test.html"]);     
     
   }
 
