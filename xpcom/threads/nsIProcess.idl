@@ -1,0 +1,25 @@
+#include "nsIFile.idl"
+#include "nsISupports.idl"
+
+[scriptable, uuid(3ed86dbe-d084-11d4-ba7a-00c04fa0d26b)]
+
+interface nsIProcess : nsISupports
+{
+	void init(in nsIFile executable);
+	void initWithPid(in unsigned long pid);
+	
+	void kill();
+	void run(in boolean blocking, [array, size_is(count)] in string args, in unsigned long count, out unsigned long pid);
+
+	readonly attribute nsIFile location;
+	readonly attribute unsigned long pid;
+	readonly attribute string processName;
+	readonly attribute unsigned long processSignature;
+	readonly attribute long exitValue;
+};
+
+%{C++
+
+#define NS_PROCESS_CONTRACTID "@mozilla.org/process/util;1"
+#define NS_PROCESS_CLASSNAME "Process Specification"
+%}
