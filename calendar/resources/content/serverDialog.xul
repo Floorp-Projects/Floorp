@@ -140,22 +140,6 @@
                                     flex="1" /> 
                         </hbox>
                     </row>
-                    
-						  <!-- Username -->    
-                    <row align="center">
-                        <hbox class="field-label-box-class" pack="end">
-                            <description>&calendar.server.dialog.username.label;</description>
-                        </hbox>
-                        <textbox flex="1" id="server-username-textbox"/>
-                    </row>
-                    
-                    <!-- Password -->    
-                    <row align="center">
-                        <hbox class="field-label-box-class" pack="end">
-                            <description>&calendar.server.dialog.password.label;</description>
-                        </hbox>
-                        <textbox flex="1" id="server-password-textbox" type="password"/>
-                    </row>
 						  
 						  <!-- Publish Automatically -->    
                     <row align="center">

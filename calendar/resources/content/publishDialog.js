@@ -66,15 +66,11 @@ function loadCalendarPublishDialog()
    if( args.publishObject )
    {
       document.getElementById( "publish-remotePath-textbox" ).value = args.publishObject.remotePath;
-      document.getElementById( "publish-username-textbox" ).value = args.publishObject.username;
-      document.getElementById( "publish-password-textbox" ).value = args.publishObject.password;
    }
    else
    {
       //get default values from the prefs
       document.getElementById( "publish-remotePath-textbox" ).value = opener.getCharPref( opener.gCalendarWindow.calendarPreferences.calendarPref, "publish.path", "" );
-      document.getElementById( "publish-username-textbox" ).value = opener.getCharPref( opener.gCalendarWindow.calendarPreferences.calendarPref, "publish.username", "" );
-      document.getElementById( "publish-password-textbox" ).value = opener.getCharPref( opener.gCalendarWindow.calendarPreferences.calendarPref, "publish.password", "" );
    }
    document.getElementById( "calendar-publishwindow" ).getButton( "accept" ).setAttribute( "label", publishButtonLabel );   
    
@@ -95,8 +91,6 @@ function onOKCommand()
    var CalendarPublishObject = new Object();
 
    CalendarPublishObject.remotePath = document.getElementById( "publish-remotePath-textbox" ).value;
-   CalendarPublishObject.username = document.getElementById( "publish-username-textbox" ).value;
-   CalendarPublishObject.password = document.getElementById( "publish-password-textbox" ).value;
 
    document.getElementById( "publish-progressmeter" ).setAttribute( "mode", "undetermined" );
    // call caller's on OK function

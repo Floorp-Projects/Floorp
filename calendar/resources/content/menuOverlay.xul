@@ -267,7 +267,7 @@
     <menu id="tasksMenu"
          label="&toolsMenu.label;"
          accesskey="&toolsMenu.accesskey;">
-      <menupopup id="taskPopup">
+      <menupopup id="taskPopup" onpopupshowing="checkWallet()">
          <menuitem id="calendar-wizard-menu"
                    key="wizard_key"
                    label="&calendar.wizard.label;"
@@ -291,6 +291,10 @@
                    label="&calendar.publish.label;"
                    accesskey="&calendar.publish.accesskey;"
                    observes="publish_events_command"/>
+        <menuitem label="&walletPasswordManager.label;" hidden="true"
+                  id="password-manager-menu"
+                  accesskey="&walletPasswordManager.accesskey;"
+                  oncommand="openWalletPasswordDialog();"/> 
       </menupopup>
    </menu>
 

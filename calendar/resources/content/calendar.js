@@ -202,7 +202,7 @@ function calendarInit()
 	 // obtain calendar color from the rdf datasource
      calendarColor = calendarNode.getAttribute("http://home.netscape.com/NC-rdf#color");
 
-	 // if the calendar had a color attribute create a style sheet for it
+     // if the calendar had a color attribute create a style sheet for it
      if (calendarColor != null)
      {
        gCalendarStyleSheet.insertRule("." + containerName + " { background-color:" + calendarColor + "!important;}", 1);
@@ -1368,11 +1368,7 @@ function publishEntireCalendar()
    if( remotePath != "" && remotePath != null )
    {
       var publishObject = new Object( );
-      publishObject.username = node.getAttribute( "http://home.netscape.com/NC-rdf#username" );
-      
       publishObject.remotePath = remotePath;
-      
-      publishObject.password = node.getAttribute( "http://home.netscape.com/NC-rdf#password" );
       args.publishObject = publishObject;
    }
    
@@ -1387,10 +1383,6 @@ function publishEntireCalendarDialogResponse( CalendarPublishObject )
    //get the node
    var node = gCalendarWindow.calendarManager.rdf.getNode( name );
    
-   node.setAttribute("http://home.netscape.com/NC-rdf#username", CalendarPublishObject.username);
-   
-   node.setAttribute("http://home.netscape.com/NC-rdf#password", CalendarPublishObject.password);
-   
    node.setAttribute( "http://home.netscape.com/NC-rdf#remotePath", CalendarPublishObject.remotePath );
    
     if( node.getAttribute("http://home.netscape.com/NC-rdf#publishAutomatically") != "true" )
@@ -1400,8 +1392,6 @@ function publishEntireCalendarDialogResponse( CalendarPublishObject )
       
    calendarUploadFile(node.getAttribute( "http://home.netscape.com/NC-rdf#path" ), 
                       CalendarPublishObject.remotePath, 
-                      CalendarPublishObject.username, 
-                      CalendarPublishObject.password, 
                       "text/calendar");
 
    return( false );
@@ -1420,7 +1410,7 @@ function publishCalendarDataDialogResponse( CalendarPublishObject )
 {
    var calendarString = eventArrayToICalString( gCalendarWindow.EventSelection.selectedEvents );
    
-   calendarPublish(calendarString, CalendarPublishObject.remotePath, CalendarPublishObject.username, CalendarPublishObject.password, "text/calendar");
+   calendarPublish(calendarString, CalendarPublishObject.remotePath, "text/calendar");
 }
 
 /*
@@ -1557,4 +1547,21 @@ function openPreferences()
 {
   openDialog("chrome://calendar/content/pref/pref.xul","PrefWindow",
              "chrome,titlebar,resizable,modal");
+}
+
+// Next two functions make the password manager menu option
+// only show up if there is a wallet component. Assume that
+// the existence of a wallet component means wallet UI is there too.
+function checkWallet()
+{
+  if ('@mozilla.org/wallet/wallet-service;1' in Components.classes) {
+    document.getElementById("password-manager-menu")
+            .removeAttribute("hidden");
+  }
+}
+
+function openWalletPasswordDialog()
+{
+  window.openDialog("chrome://communicator/content/wallet/SignonViewer.xul",
+                    "_blank","chrome,resizable=yes","S");
 }

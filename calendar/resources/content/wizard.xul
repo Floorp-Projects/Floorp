@@ -278,29 +278,6 @@
                <description>The filename to save to on the remote server.</description>
            </row>
            
-           <!-- Username -->    
-           <row align="center">
-               <hbox class="field-label-box-class" pack="end">
-                   <description>&calendar.publish.username.label;</description>
-               </hbox>
-               <textbox id="publish-username-textbox" flex="1" /> 
-           </row>
-           <row align="center">
-               <hbox class="field-label-box-class" pack="end"/>
-               <description>(Optional) The username to upload to this server.</description>
-           </row>
-           
-           <!-- Password -->    
-           <row align="center">
-               <hbox class="field-label-box-class" pack="end">
-                   <description>&calendar.publish.password.label;</description>
-               </hbox>
-               <textbox type="password" id="publish-password-textbox" flex="1" />
-           </row>
-           <row align="center">
-               <hbox class="field-label-box-class" pack="end"/>
-               <description>(Optional) The password to upload to this server.</description>
-           </row>
          </rows>
       </grid>
    </wizardpage>

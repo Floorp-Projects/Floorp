@@ -55,7 +55,7 @@
    
    <script type="application/x-javascript">
       var _elementIDs = [
-         "publishPath", "publishUsername", "publishPassword"
+         "publishPath"
       ];
    </script>
 
@@ -64,14 +64,6 @@
       <hbox>
          <description>&pref.publish.path.label;</description>
          <textbox flex="1" id="publishPath" prefstring="calendar.publish.path"/>
-      </hbox>
-      <hbox>
-         <description>&pref.publish.username.label;</description>
-         <textbox flex="1" id="publishUsername" prefstring="calendar.publish.username"/>
-      </hbox>
-      <hbox>
-         <description>&pref.publish.password.label;</description>
-         <textbox flex="1" type="password" id="publishPassword" prefstring="calendar.publish.password"/>
       </hbox>
    </groupbox>
 </page>

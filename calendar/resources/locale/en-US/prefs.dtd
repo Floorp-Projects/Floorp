@@ -135,8 +135,6 @@
 
 <!ENTITY pref.publish.caption        "Publishing Settings">
 <!ENTITY pref.publish.path.label     "Default Remote Filename">
-<!ENTITY pref.publish.username.label "Username">
-<!ENTITY pref.publish.password.label "Password">
 
 <!ENTITY pref.minutes.label "Minutes">
 

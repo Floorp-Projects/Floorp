@@ -101,29 +101,6 @@
                         <description>&calendar.publish.example.url.description;</description>
                     </row>
                     
-                    <!-- Username -->    
-                    <row align="center">
-                        <hbox class="field-label-box-class" pack="end">
-                            <description>&calendar.publish.username.label;</description>
-                        </hbox>
-                        <textbox id="publish-username-textbox" flex="1" /> 
-                    </row>
-                    <row align="center">
-                        <hbox class="field-label-box-class" pack="end"/>
-                        <description>&calendar.publish.username.description;</description>
-                    </row>
-                    
-                    <!-- Password -->    
-                    <row align="center">
-                        <hbox class="field-label-box-class" pack="end">
-                            <description>&calendar.publish.password.label;</description>
-                        </hbox>
-                        <textbox type="password" id="publish-password-textbox" flex="1" />
-                    </row>
-                    <row align="center">
-                        <hbox class="field-label-box-class" pack="end"/>
-                        <description>&calendar.publish.password.description;</description>
-                    </row>
                   </rows>
                </grid>
 					<progressmeter id="publish-progressmeter" mode="determined" value="0"/> 

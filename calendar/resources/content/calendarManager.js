@@ -49,9 +49,7 @@ function CalendarObject()
    this.remote = false;
    this.remotePath = "";
    this.active = false;
-   this.username = "";
    this.color = ""; 
-   this.password = "";
    this.publishAutomatically = false;
 }
 
@@ -171,8 +169,6 @@ calendarManager.prototype.launchEditCalendarDialog = function calMan_launchEditC
    ThisCalendarObject.path = SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#path" );
    ThisCalendarObject.active = SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#active" );
    ThisCalendarObject.remote = SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#remote" );
-   ThisCalendarObject.username = SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#username" );
-   ThisCalendarObject.password = SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#password" );
    ThisCalendarObject.color = SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#color"); 
    ThisCalendarObject.remotePath = SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#remotePath" );
    ThisCalendarObject.publishAutomatically = SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#publishAutomatically" );
@@ -313,8 +309,6 @@ calendarManager.prototype.addServerDialogResponse = function calMan_addServerDia
       
       node.setAttribute("http://home.netscape.com/NC-rdf#remotePath", CalendarObject.remotePath);
       node.setAttribute("http://home.netscape.com/NC-rdf#publishAutomatically", CalendarObject.publishAutomatically);
-      node.setAttribute("http://home.netscape.com/NC-rdf#username", CalendarObject.username);
-      node.setAttribute("http://home.netscape.com/NC-rdf#password", CalendarObject.password);
       this.retrieveAndSaveRemoteCalendar( node );
       
       dump( "Remote Calendar Number "+ next+ " Added\n" );
@@ -368,8 +362,6 @@ calendarManager.prototype.editLocalCalendarDialogResponse = function calMan_edit
    //get the node
    var node = this.rdf.getNode( name );
    
-   node.setAttribute("http://home.netscape.com/NC-rdf#username", CalendarObject.username);
-   node.setAttribute("http://home.netscape.com/NC-rdf#password", CalendarObject.password);
    node.setAttribute( "http://home.netscape.com/NC-rdf#name", CalendarObject.name );
    node.setAttribute( "http://home.netscape.com/NC-rdf#remotePath", CalendarObject.remotePath );
    node.setAttribute("http://home.netscape.com/NC-rdf#publishAutomatically", CalendarObject.publishAutomatically);
@@ -391,8 +383,6 @@ calendarManager.prototype.editServerDialogResponse = function calMan_editServerD
    //get the node
    var node = this.rdf.getNode( name );
    
-   node.setAttribute("http://home.netscape.com/NC-rdf#username", CalendarObject.username);
-   node.setAttribute("http://home.netscape.com/NC-rdf#password", CalendarObject.password);
    node.setAttribute( "http://home.netscape.com/NC-rdf#name", CalendarObject.name );
    node.setAttribute("http://home.netscape.com/NC-rdf#publishAutomatically", CalendarObject.publishAutomatically);
    node.setAttribute("http://home.netscape.com/NC-rdf#color", CalendarObject.color);
@@ -465,8 +455,6 @@ calendarManager.prototype.publishCalendar = function calMan_publishCalendar( Sel
    
    calendarUploadFile(SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#path" ), 
                       SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#remotePath" ), 
-                      SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#username" ), 
-                      SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#password" ), 
                       "text/calendar");
 }
 
@@ -498,32 +486,7 @@ calendarManager.prototype.retrieveAndSaveRemoteCalendar = function calMan_retrie
 
    var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
    
-   var Path;
-   if( ThisCalendarObject.getAttribute( "http://home.netscape.com/NC-rdf#username" ) != "" ||
-       ThisCalendarObject.getAttribute( "http://home.netscape.com/NC-rdf#password" ) != "" )
-   {
-      var RemotePath = ThisCalendarObject.getAttribute( "http://home.netscape.com/NC-rdf#remotePath" );
-      var Protocol;
-      if( RemotePath.indexOf( "http://" ) != -1 )
-      {
-         Protocol = "http://";
-         RemotePath = RemotePath.substr( 7 );
-      }
-      if( RemotePath.indexOf( "https://" ) != -1 )
-      {
-         Protocol = "https://";
-         RemotePath = RemotePath.substr( 8 );
-      }
-      if( RemotePath.indexOf( "ftp://" ) != -1 )
-      {
-         Protocol = "ftp://";
-         RemotePath = RemotePath.substr( 6 );
-      }
-      
-      Path = Protocol+ThisCalendarObject.getAttribute( "http://home.netscape.com/NC-rdf#username" )+":"+ThisCalendarObject.getAttribute( "http://home.netscape.com/NC-rdf#password" )+"@"+RemotePath;
-   }
-   else
-      Path = ThisCalendarObject.getAttribute( "http://home.netscape.com/NC-rdf#remotePath" );
+   var Path = ThisCalendarObject.getAttribute( "http://home.netscape.com/NC-rdf#remotePath" );
 
    var Channel = ioService.newChannel( Path, null, null );
    Channel.loadFlags |= Components.interfaces.nsIRequest.LOAD_BYPASS_CACHE;
@@ -702,10 +665,17 @@ calendarManager.prototype.getRemoteCalendarText = function calMan_getRemoteCalen
       onStreamComplete: function(loader, ctxt, status, resultLength, result)
       {
          window.setCursor( "default" );
+
          var retval = false;
          result = String.fromCharCode.apply(this, result);
+
+         var ch = Channel.QueryInterface(Components.interfaces.nsIHttpChannel);
+         if (!ch.requestSucceeded) {
+           alert("Getting the calendar file failed.\nStatus code: "+ch.responseStatus+": "+ch.responseStatusText);
+         }
+
          //check to make sure its actually a calendar file, if not return.
-         if( result.indexOf( "BEGIN:VCALENDAR" ) == -1 )
+         else if( result.indexOf( "BEGIN:VCALENDAR" ) == -1 )
          {
             alert( "This doesn't appear to be a valid file. Here's what I got back from\n"+Channel.URI.spec+":\nResult:"+result );
          } else {
@@ -717,7 +687,23 @@ calendarManager.prototype.getRemoteCalendarText = function calMan_getRemoteCalen
          return retval;
       }
    }
-   
+
+   var notificationCallbacks =
+   {
+     // nsIInterfaceRequestor interface
+     getInterface: function(iid, instance) {
+       if (iid.equals(Components.interfaces.nsIAuthPrompt)) {
+         // use the window watcher service to get a nsIAuthPrompt impl
+         var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                            .getService(Components.interfaces.nsIWindowWatcher);
+         return ww.getNewAuthPrompter(null);
+       }
+       Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+       return null;
+     },
+   }
+
+   Channel.notificationCallbacks = notificationCallbacks;
    var myInstance = Components.classes["@mozilla.org/network/stream-loader;1"].createInstance(Components.interfaces.nsIStreamLoader);
    dump( "init channel, \nChannel is "+Channel+"\nURL is "+Channel.URI.spec+"\n" );
    window.setCursor( "wait" );
@@ -961,7 +947,7 @@ function calendarColorStyleRuleUpdate( ThisCalendarObject )
    var i;
    
    // obtain calendar name from the Id
-   containerName = ThisCalendarObject.Id.split(':')[2];
+   var containerName = ThisCalendarObject.Id.split(':')[2];
 
    var tempStyleSheets = document.styleSheets;
    for (i=0; i<tempStyleSheets.length; i++)

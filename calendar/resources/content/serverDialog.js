@@ -86,10 +86,6 @@ function loadCalendarServerDialog()
 
    document.getElementById( "server-name-textbox" ).value = gCalendarObject.name;
 
-   document.getElementById( "server-username-textbox" ).value = gCalendarObject.username;
-
-   document.getElementById( "server-password-textbox" ).value = gCalendarObject.password;
-
    document.getElementById( "server-publish-checkbox" ).checked = gCalendarObject.publishAutomatically;
 
    document.getElementById( "server-path-textbox" ).value = gCalendarObject.remotePath;
@@ -118,10 +114,6 @@ function onOKCommand()
 
    gCalendarObject.remotePath = document.getElementById( "server-path-textbox" ).value;
    
-   gCalendarObject.username = document.getElementById( "server-username-textbox" ).value;
-
-   gCalendarObject.password = document.getElementById( "server-password-textbox" ).value;
-
    gCalendarObject.publishAutomatically = document.getElementById( "server-publish-checkbox" ).checked;
 
    gCalendarObject.color = document.getElementById( "calendar-color" ).color; //added by Dallas

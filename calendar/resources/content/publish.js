@@ -68,11 +68,11 @@ function GetIOService()
  * contentType is always text/calendar
  */
 
-function calendarPublish(aDataString, newLocation, login, password, contentType)
+function calendarPublish(aDataString, newLocation, contentType)
 {
   try
   {
-    var protocolChannel = get_destination_channel(newLocation, login, password);
+    var protocolChannel = get_destination_channel(newLocation);
     if (!protocolChannel)
     {
       dump("failed to get a destination channel\n");
@@ -87,11 +87,11 @@ function calendarPublish(aDataString, newLocation, login, password, contentType)
   }
 }
 
-function calendarUploadFile(aSourceFilename, newLocation, login, password, contentType)
+function calendarUploadFile(aSourceFilename, newLocation, contentType)
 {
    try
    {
-      var protocolChannel = get_destination_channel(newLocation, login, password);
+      var protocolChannel = get_destination_channel(newLocation);
       if (!protocolChannel)
       {
          dump("failed to get a destination channel\n");
@@ -134,9 +134,24 @@ function output_file_to_channel( aChannel, aFilePath, contentType )
    output_string_to_channel( aChannel, theFileContents, contentType );
 }
 
+var notificationCallbacks =
+{
+  // nsIInterfaceRequestor interface
+  getInterface: function(iid, instance) {
+    if (iid.equals(Components.interfaces.nsIAuthPrompt)) {
+      // use the window watcher service to get a nsIAuthPrompt impl
+      var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                         .getService(Components.interfaces.nsIWindowWatcher);
+      return ww.getNewAuthPrompter(null);
+    }
+    Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+    return null;
+  },
+}
 
-// this function takes a login and password and adds them to the destination url
-function get_destination_channel(destinationDirectoryLocation, login, password)
+
+// this creates a channel for the destination, and hooks up the password mananager
+function get_destination_channel(destinationDirectoryLocation)
 {
     var ioService = GetIOService();
     if (!ioService)
@@ -145,7 +160,7 @@ function get_destination_channel(destinationDirectoryLocation, login, password)
     }
 
     // create a channel for the destination location
-    destChannel = create_channel_from_url(ioService, destinationDirectoryLocation, login, password);
+    destChannel = create_channel_from_url(ioService, destinationDirectoryLocation);
     if (!destChannel)
     {
       dump("can't create dest channel\n");
@@ -155,7 +170,7 @@ function get_destination_channel(destinationDirectoryLocation, login, password)
     try
     {
 	dump("about to set callbacks\n");
-	destChannel.notificationCallbacks = window.docshell;  // docshell
+	destChannel.notificationCallbacks = notificationCallbacks;  // docshell
 	dump("notification callbacks set\n");
     }
     catch(e) {
@@ -190,19 +205,13 @@ function get_destination_channel(destinationDirectoryLocation, login, password)
 
 
 // this function takes a full url, creates an nsIURI, and then creates a channel from that nsIURI
-function create_channel_from_url(ioService, aURL, aLogin, aPassword)
+function create_channel_from_url(ioService, aURL)
 {
   try
   {
     var nsiuri = ioService.newURI(aURL, null, null);
     if (!nsiuri)
       return null;
-    if (aLogin)
-    {
-      nsiuri.username = aLogin;
-      if (aPassword)
-        nsiuri.password = aPassword;
-    }
     return ioService.newChannelFromURI(nsiuri);
   }
   catch (e)
