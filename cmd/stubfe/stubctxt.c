@@ -93,6 +93,36 @@ STUBFE_FreeEmbedElement (MWContext *context,
 }
 
 static void 
+STUBFE_CreateEmbedWindow (MWContext *context,
+						  NPEmbeddedApp *app)
+{
+}
+
+static void 
+STUBFE_SaveEmbedWindow (MWContext *context,
+						NPEmbeddedApp *app)
+{
+}
+
+static void 
+STUBFE_RestoreEmbedWindow (MWContext *context,
+						   NPEmbeddedApp *app)
+{
+}
+
+static void 
+STUBFE_DestroyEmbedWindow (MWContext *context,
+						   NPEmbeddedApp *app)
+{
+}
+
+static void 
+STUBFE_FreeBuiltinElement(MWContext *context,
+						  LO_BuiltinStruct *embed)
+{
+}
+
+static void 
 STUBFE_FreeJavaAppElement (MWContext *context,
 			   struct LJAppletData *appletData)
 {
@@ -138,6 +168,13 @@ static void
 STUBFE_DisplayEmbed (MWContext * context,
 		     int iLocation,
 		     LO_EmbedStruct *embed_struct)
+{
+}
+
+static void 
+STUBFE_DisplayBuiltin (MWContext * context,
+					   int iLocation,
+					   LO_BuiltinStruct *builtin_struct)
 {
 }
 
@@ -353,6 +390,26 @@ STUBFE_Alert(MWContext *context,
 static XP_Bool 
 STUBFE_Confirm(MWContext * context,
 	       const char * Msg)
+{
+  return FALSE;
+}
+
+static XP_Bool 
+STUBFE_CheckConfirm(MWContext *pContext, 
+					const char *pConfirmMessage,
+					const char *pCheckMessage,
+					const char *pOKMessage,
+					const char *pCancelMessage,
+					XP_Bool *pChecked)
+{
+  return FALSE;
+}
+
+static XP_Bool 
+STUBFE_SelectDialog(MWContext *pContext,
+					const char *pMessage,
+					const char **pList,
+					int16 *pCount)
 {
   return FALSE;
 }
