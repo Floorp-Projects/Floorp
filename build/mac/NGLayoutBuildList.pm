@@ -624,6 +624,8 @@ sub BuildLayoutProjects()
 
 	BuildOneProject(":mozilla:webshell:macbuild:webshell.mcp",					"webshell$D.shlb", "webshell.toc", 1, $main::ALIAS_SYM_FILES);
 
+	BuildOneProject(":mozilla:webshell:embed:mac:RaptorShell.mcp",					"RaptorShell$D.shlb", "RaptorShell.toc", 1, $main::ALIAS_SYM_FILES);
+
 	#// XXX this is here because of a very TEMPORARY dependency
 	BuildOneProject(":mozilla:rdf:macbuild:rdf.mcp",							"rdf$D.shlb", "rdf.toc", 1, $main::ALIAS_SYM_FILES);
 }
@@ -667,7 +669,6 @@ sub BuildViewerProjects()
 	BuildOneProject(":mozilla:webshell:tests:viewer:mac:viewer.mcp",			"viewer$D", "viewer.toc", 0, 0);
 
 #	BuildOneProject(":mozilla:xpfe:macbuild:xpfeviewer.mcp",					"xpfeviewer$D.shlb", "xpfeviewer.toc", 0, 0);
-
 }
 
 
