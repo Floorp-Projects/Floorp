@@ -524,8 +524,8 @@ SWITCH: for ($::FORM{'knob'}) {
         SendSQL("SELECT bug_id FROM bugs WHERE bug_id = " . SqlQuote($num));
         $num = FetchOneColumn();
         if (!$num) {
-            PuntTryAgain("You must specify a bug number of which this bug " .
-                         "is a duplicate or a valid bug number.  The bug has not been changed.")
+            PuntTryAgain("You must specify a valid bug number of which this bug " .
+                         "is a duplicate.  The bug has not been changed.")
         }
         if (!defined($::FORM{'id'}) || $num == $::FORM{'id'}) {
             PuntTryAgain("Nice try, $::FORM{'who'}.  But it doesn't really ".
