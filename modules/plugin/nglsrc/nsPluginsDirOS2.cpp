@@ -107,7 +107,7 @@ static char **BuildStringArray( char *aFlat, PRUint32 &aSize)
 
 // nsPluginsDir class
 
-nsPluginsDir::nsPluginsDir()
+nsPluginsDir::nsPluginsDir(PRUint16 location)
 {
    // XXX This isn't right for the embedded case, but it's as close
    //     as we can do right now.

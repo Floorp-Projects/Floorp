@@ -119,45 +119,46 @@ static char** MakeStringArray(PRUint32 variants, char* data)
 
 /* nsPluginsDir implementation */
 
-nsPluginsDir::nsPluginsDir()
+nsPluginsDir::nsPluginsDir(PRUint16 location)
 {
-  HKEY keyloc; 
-  DWORD pathlen, type; 
-  long result;
+  DWORD pathlen; 
   char path[2000];
   const char* allocPath;
-  //PRDir *dir = nsnull; 
 
-  // first, let's look for a plugin folder that exists in the
-  // same directory as our executable
-  if (::GetModuleFileName(NULL, path, sizeof(path)) > 0) 
-  { 
-    pathlen = PL_strlen(path) - 1; 
-
-    while (pathlen > 0) 
+  if((location == PLUGINS_DIR_LOCATION_AUTO) || (location == PLUGINS_DIR_LOCATION_MOZ_LOCAL))
+  {
+    // look for a plugin folder that exists in the same directory as our executable
+    if (::GetModuleFileName(NULL, path, sizeof(path)) > 0) 
     { 
-      if (path[pathlen] == '\\') 
-        break; 
+      pathlen = PL_strlen(path) - 1; 
 
-      pathlen--; 
-    }
+      while (pathlen > 0) 
+      { 
+        if (path[pathlen] == '\\') 
+          break; 
 
-    if (pathlen > 0) 
-    { 
-      PL_strcpy(&path[pathlen + 1], "plugins"); 
-      //dir = PR_OpenDir(path);
+        pathlen--; 
+      }
 
-	  allocPath = path;//PL_strdup(path);
-	  *(nsFileSpec*)this = allocPath;
+      if (pathlen > 0) 
+      { 
+        PL_strcpy(&path[pathlen + 1], "plugins"); 
+
+	      allocPath = path;
+	      *(nsFileSpec*)this = allocPath;
+      } 
     } 
-  } 
+  }
 
-  // if we didn't find it, let's look for the plugin folder
-  // that the user has in their Communicator 4x install
-  if(!Exists())
-  { 
+  if(((location == PLUGINS_DIR_LOCATION_AUTO) && !Exists()) || 
+    (location == PLUGINS_DIR_LOCATION_4DOTX))
+  {
+    // look for the plugin folder that the user has in their Communicator 4x install
+    HKEY keyloc; 
+    long result;
+    DWORD type; 
+
     path[0] = 0; 
-	//PL_strfree(allocPath);
 
     result = ::RegOpenKeyEx(HKEY_CURRENT_USER, 
                             "Software\\Netscape\\Netscape Navigator\\Main", 
@@ -178,10 +179,9 @@ nsPluginsDir::nsPluginsDir()
       ::RegCloseKey(keyloc); 
     } 
 
-    //dir = PR_OpenDir(path);
 	  allocPath = PL_strdup(path);
 	  *(nsFileSpec*)this = allocPath;
-  } 
+  }
 
 #ifdef NS_DEBUG 
   if (path[0] != 0) 
@@ -285,12 +285,7 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 	DWORD zerome, versionsize;
 	char* verbuf = nsnull;
 	const char* path = this->GetCString();
-/*
-  const char* fileName;
-  fileName = PL_strrchr(path, '\\');
-  if(fileName)
-   ++fileName;
-*/
+
   versionsize = ::GetFileVersionInfoSize((char*)path, &zerome);
 	if (versionsize > 0)
 		verbuf = (char *)PR_Malloc(versionsize);
@@ -310,8 +305,7 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 		info.fMimeTypeArray = MakeStringArray(info.fVariantCount, info.fMimeType);
 		info.fMimeDescriptionArray = MakeStringArray(info.fVariantCount, info.fMimeDescription);
 		info.fExtensionArray = MakeStringArray(info.fVariantCount, info.fExtensions);
-    //info.fFileName = PL_strdup(fileName);
-    info.fFileName = PL_strdup(path); // don't we need the full path too?
+    info.fFileName = PL_strdup(path);
 	}
 	else
 		res = NS_ERROR_FAILURE;

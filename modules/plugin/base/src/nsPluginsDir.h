@@ -32,12 +32,18 @@
  * scan the plugins directory. An nsPluginFileSpec can be constructed from the
  * nsFileSpec returned by the iterator.
  */
+
+/* Where to seek for plugins dir */
+#define PLUGINS_DIR_LOCATION_AUTO       0
+#define PLUGINS_DIR_LOCATION_MOZ_LOCAL  1
+#define PLUGINS_DIR_LOCATION_4DOTX      2
+
 class nsPluginsDir : public nsFileSpec {
 public:
 	/**
 	 * Locates the plugins directory in a platform-dependent manner.
 	 */
-	nsPluginsDir();
+	nsPluginsDir(PRUint16 location = PLUGINS_DIR_LOCATION_AUTO);
 	virtual ~nsPluginsDir();
 
 	/**

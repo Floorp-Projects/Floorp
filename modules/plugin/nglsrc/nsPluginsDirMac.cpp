@@ -51,7 +51,7 @@ static nsresult getApplicationSpec(FSSpec& outAppSpec)
 	return (result == noErr ? NS_OK : NS_ERROR_FAILURE);
 }
 
-nsPluginsDir::nsPluginsDir()
+nsPluginsDir::nsPluginsDir(PRUint16 location)
 {
 #if 0
 	// Use the folder manager to get location of Extensions folder, and
