@@ -1945,12 +1945,17 @@ NS_IMETHODIMP nsMsgDatabase::GetMsgHdrStructFromnsMsgHdr(nsIMessage *msg, nsMsgH
 
 	if (msgHdr)
 	{
+		PRUint32 uint32Value = 0;
 		err = RowCellColumnTonsString(msgHdr->GetMDBRow(), m_subjectColumnToken, hdrStruct->m_subject);
 		err = RowCellColumnTonsString(msgHdr->GetMDBRow(), m_senderColumnToken, hdrStruct->m_author);
 		err = RowCellColumnTonsString(msgHdr->GetMDBRow(), m_messageIdColumnToken, hdrStruct->m_messageId);
 		err = RowCellColumnTonsString(msgHdr->GetMDBRow(), m_referencesColumnToken, hdrStruct->m_references);
 		err = RowCellColumnTonsString(msgHdr->GetMDBRow(), m_recipientsColumnToken, hdrStruct->m_recipients);
 		err = RowCellColumnToUInt32(msgHdr->GetMDBRow(), m_messageSizeColumnToken, &hdrStruct->m_messageSize);
+		err = RowCellColumnToUInt32(msgHdr->GetMDBRow(), m_flagsColumnToken, &hdrStruct->m_flags);
+		err = RowCellColumnToUInt32(msgHdr->GetMDBRow(), m_dateColumnToken, &uint32Value);
+		hdrStruct->m_date = uint32Value;
+
         nsMsgKey key;
         (void)msgHdr->GetMessageKey(&key);
 		hdrStruct->m_messageKey = key;
@@ -2437,6 +2442,7 @@ nsresult nsMsgDatabase::AddNewThread(nsMsgHdr *msgHdr)
 	nsMsgThread *threadHdr = nsnull;
 	
 	nsresult err = CreateNewThread(msgHdr->m_messageKey, &threadHdr);
+	msgHdr->SetThreadId(msgHdr->m_messageKey);
 	if (threadHdr)
 	{
 //		nsString subject;
@@ -2506,6 +2512,25 @@ nsresult nsMsgDatabase::ListAllThreads(nsMsgKeyArray *threadIds)
 	}
 	NS_RELEASE(threads);
 	return rv;
+}
+
+NS_IMETHODIMP nsMsgDatabase::ListAllOfflineOpIds(nsMsgKeyArray *offlineOpIds)
+{
+	nsresult ret = NS_OK;
+	if (!offlineOpIds)
+		return NS_ERROR_NULL_POINTER;
+	// technically, notimplemented, but no one's putting offline ops in anyway.
+	return ret;
+}
+
+NS_IMETHODIMP nsMsgDatabase::ListAllOfflineDeletes(nsMsgKeyArray *offlineDeletes)
+{
+	nsresult ret = NS_OK;
+	if (!offlineDeletes)
+		return NS_ERROR_NULL_POINTER;
+
+	// technically, notimplemented, but no one's putting offline ops in anyway.
+	return ret;
 }
 
 #ifdef DEBUG

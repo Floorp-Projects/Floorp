@@ -173,6 +173,10 @@ public:
   // but also useful to tell the summary to mark itself invalid
   NS_IMETHOD SetSummaryValid(PRBool valid);
 
+  // offline operations
+  NS_IMETHOD ListAllOfflineOpIds(nsMsgKeyArray *offlineOpIds);
+  NS_IMETHOD ListAllOfflineDeletes(nsMsgKeyArray *offlineDeletes);
+
   NS_IMETHOD GetThreadForMsgKey(nsMsgKey msgKey, nsIMsgThread **result);
   NS_IMETHOD GetThreadContainingMsgHdr(nsIMessage *msgHdr, nsIMsgThread **result) ;
   //////////////////////////////////////////////////////////////////////////////
