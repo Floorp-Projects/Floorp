@@ -79,10 +79,13 @@ CPPSRCS = \
     guids.cpp              \
     $(NULL)
 
+DEFINES		+= -DXPCOM_GLUE 
+
+# we still include xpcom directly since this control uses atoms and voidarray.  
 EXTRA_DSO_LDOPTS = \
-	$(DIST)/lib/$(LIB_PREFIX)gkgfx.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)embed_base_s.$(LIB_SUFFIX) \
 	$(MOZ_UNICHARUTIL_LIBS) \
+	$(XPCOM_GLUE_LIBS) \
 	$(XPCOM_LIBS) \
 	$(NSPR_LIBS) \
 	$(NULL)

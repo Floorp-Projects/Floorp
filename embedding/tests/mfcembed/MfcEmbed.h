@@ -124,6 +124,28 @@ private:
 
 /////////////////////////////////////////////////////////////////////////////
 
+static PRInt32 strcmp(const PRUnichar* s1, const PRUnichar* s2) {
+  if(s1 && s2) {
+    for (;;) {
+      PRUnichar c1 = *s1++;
+      PRUnichar c2 = *s2++;
+      if (c1 != c2) {
+        if (c1 < c2) return -1;
+        return 1;
+      }
+      if ((0==c1) || (0==c2)) break;
+    }
+  }
+  else {
+    if (s1)                     // s2 must have been null
+      return -1;
+    if (s2)                     // s1 must have been null
+      return 1;
+  }
+  return 0;
+}
+
+
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.
 

@@ -23,6 +23,7 @@
 #include <gtk/gtk.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 // mozilla specific headers
 #include "nsIDOMKeyEvent.h"
