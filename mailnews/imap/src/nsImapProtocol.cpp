@@ -164,7 +164,7 @@ NS_IMETHODIMP nsImapProtocol::QueryInterface(const nsIID &aIID, void** aInstance
 }
 
 nsImapProtocol::nsImapProtocol() : 
-    m_parser(*this), m_currentCommand(eOneByte, 0), m_flagState(kImapFlagAndUidStateSize, PR_FALSE)
+    m_parser(*this), m_currentCommand("",eOneByte), m_flagState(kImapFlagAndUidStateSize, PR_FALSE)
 {
 	NS_INIT_REFCNT();
 	m_flags = 0;
@@ -1044,7 +1044,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
 	PRBool					bMessageIdsAreUids = PR_TRUE;
 	imapMessageFlagsType	msgFlags = 0;
 	const char					*hostName = nsnull;
-	nsString2				urlHost(eOneByte);
+	nsString2				urlHost("",eOneByte);
 
 	// this can't fail, can it?
 	nsresult res = m_runningUrl->GetImapAction(&imapAction);
@@ -1160,7 +1160,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
 				break;
             case nsIImapUrl::nsImapMsgFetch:
             {
-                nsString2 messageIdString(eOneByte);
+                nsString2 messageIdString("",eOneByte);
 
                 m_runningUrl->CreateListOfMessageIdsString(&messageIdString);
 				// we dont want to send the flags back in a group
@@ -1296,7 +1296,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
 				break;
             case nsIImapUrl::nsImapMsgHeader:
             {
-                nsString2 messageIds(eOneByte);
+                nsString2 messageIds("",eOneByte);
                 m_runningUrl->CreateListOfMessageIdsString(&messageIds);
 
                     // we don't want to send the flags back in a group
@@ -1308,7 +1308,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
 			break;
             case nsIImapUrl::nsImapSearch:
             {
-                nsString2 searchCriteriaString(eOneByte);
+                nsString2 searchCriteriaString("",eOneByte);
                 m_runningUrl->CreateSearchCriteriaString(&searchCriteriaString);
                 Search(searchCriteriaString, bMessageIdsAreUids);
                     // drop the results on the floor for now
@@ -1316,7 +1316,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
 			break;
             case nsIImapUrl::nsImapDeleteMsg:
             {
-                nsString2 messageIdString(eOneByte);
+                nsString2 messageIdString("",eOneByte);
 				
                 m_runningUrl->CreateListOfMessageIdsString(&messageIdString);
 #ifdef DO_PROGRESS
@@ -1432,7 +1432,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
 			break;
             case nsIImapUrl::nsImapAddMsgFlags:
             {
-                nsString2 messageIdString(eOneByte);
+                nsString2 messageIdString("",eOneByte);
                 m_runningUrl->CreateListOfMessageIdsString(&messageIdString);
                         
                 ProcessStoreFlags(messageIdString, bMessageIdsAreUids,
@@ -1452,7 +1452,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
 			break;
             case nsIImapUrl::nsImapSubtractMsgFlags:
             {
-                nsString2 messageIdString(eOneByte);
+                nsString2 messageIdString("",eOneByte);
                 m_runningUrl->CreateListOfMessageIdsString(&messageIdString);
                         
                 ProcessStoreFlags(messageIdString, bMessageIdsAreUids,
@@ -1462,7 +1462,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
 			break;
             case nsIImapUrl::nsImapSetMsgFlags:
             {
-                nsString2 messageIdString(eOneByte);
+                nsString2 messageIdString("",eOneByte);
                 m_runningUrl->CreateListOfMessageIdsString(&messageIdString);
                         
                 ProcessStoreFlags(messageIdString, bMessageIdsAreUids,
@@ -1477,7 +1477,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
             case nsIImapUrl::nsImapOnlineCopy:
             case nsIImapUrl::nsImapOnlineMove:
             {
-                nsString2 messageIdString(eOneByte);
+                nsString2 messageIdString("",eOneByte);
                 m_runningUrl->CreateListOfMessageIdsString(&messageIdString);
                 char *destinationMailbox = nsnull;
 
@@ -1769,7 +1769,7 @@ void nsImapProtocol::SelectMailbox(const char *mailboxName)
 	commandBuffer.Append(escapedName);
 	commandBuffer.Append("\"" CRLF);
             
-    PR_FREEIF( escapedName);
+    delete []escapedName;
            
     SendData(commandBuffer.GetBuffer());
 	ParseIMAPandCheckForNewMail();
@@ -1815,7 +1815,7 @@ void nsImapProtocol::PipelinedFetchMessageParts(const char *uid, nsIMAPMessagePa
 	// assumes no chunking
 
 	// build up a string to fetch
-	nsString2 stringToFetch(eOneByte), what(eOneByte);
+	nsString2 stringToFetch("",eOneByte), what("",eOneByte);
 	int32 currentPartNum = 0;
 	while ((parts->GetNumParts() > currentPartNum) && !DeathSignalReceived())
 	{
@@ -2147,8 +2147,8 @@ void nsImapProtocol::PipelinedFetchMessageParts(nsString2 &uid, nsIMAPMessagePar
 	// assumes no chunking
 
 	// build up a string to fetch
-	nsString2 stringToFetch(eOneByte, 0);
-	nsString2 what(eOneByte, 0);
+	nsString2 stringToFetch("",eOneByte, 0);
+	nsString2 what("",eOneByte, 0);
 
 	int32 currentPartNum = 0;
 	while ((parts->GetNumParts() > currentPartNum) && !DeathSignalReceived())
@@ -2413,7 +2413,7 @@ void nsImapProtocol::ProcessMailboxUpdate(PRBool handlePossibleUndo)
     	if (handlePossibleUndo)
     	{
 	    	// undo any delete flags we may have asked to
-	    	nsString2 undoIds(eOneByte);
+	    	nsString2 undoIds("",eOneByte);
 			
 			GetCurrentUrl()->CreateListOfMessageIdsString(&undoIds);
 			if (undoIds.Length() > 0)
@@ -2639,7 +2639,7 @@ void nsImapProtocol::FolderMsgDumpLoop(PRUint32 *msgUids, PRUint32 msgCount, nsI
 	PRUint32 msgsDownloaded = 0;
 	do 
 	{
-		nsString2 idString(eOneByte);
+		nsString2 idString("",eOneByte);
 
 		PRUint32 msgsToDownload = (msgCountLeft > 200) ? 200 : msgCountLeft;
    		AllocateImapUidString(msgUids + msgsDownloaded, msgsToDownload, idString);	// 20 * 200
@@ -2684,7 +2684,7 @@ void nsImapProtocol::PeriodicBiff()
         if (GetServerStateParser().NumberOfMessages() != numMessages)
         {
 			PRUint32 id = GetServerStateParser().HighestRecordedUID() + 1;
-			nsString2 fetchStr(eOneByte);						// only update flags
+			nsString2 fetchStr("",eOneByte);						// only update flags
 			PRUint32 added = 0, deleted = 0;
 			
 			deleted = m_flagState.GetNumberOfDeletedMessages();
@@ -3272,7 +3272,7 @@ nsImapProtocol::DiscoverMailboxSpec(mailbox_spec * adoptedBoxSpec)
         hostName, userName, kPersonalNamespace, ns);
 	const char *nsPrefix = ns ? ns->GetPrefix() : 0;
 
-	nsString2 canonicalSubDir(eOneByte, 0);
+	nsString2 canonicalSubDir("",eOneByte, 0);
 	if (nsPrefix)
 	{
         PRUnichar slash = '/';
@@ -3305,7 +3305,7 @@ nsImapProtocol::DiscoverMailboxSpec(mailbox_spec * adoptedBoxSpec)
                               kImapTrashFolderName))
 				{
 					PRBool trashExists = PR_FALSE;
-                    nsString2 trashMatch(eOneByte,0);
+                    nsString2 trashMatch("",eOneByte,0);
                     trashMatch = nsPrefix;
                     trashMatch += kImapTrashFolderName;
 					{
@@ -3348,7 +3348,7 @@ nsImapProtocol::DiscoverMailboxSpec(mailbox_spec * adoptedBoxSpec)
 			if (adoptedBoxSpec->allocatedPathName&&
                 *adoptedBoxSpec->allocatedPathName)
 			{
-                nsString2 boxNameCopy (eOneByte, 0);
+                nsString2 boxNameCopy ("",eOneByte, 0);
                 
 				boxNameCopy = adoptedBoxSpec->allocatedPathName;
 
@@ -3898,7 +3898,7 @@ void nsImapProtocol::OnRefreshACLForFolder(const char *mailboxName)
 	command.Append(escapedName);
 	command.Append("\"" CRLF);
             
-    PR_FREEIF( escapedName);
+    delete []escapedName;
             
     SendData(command.GetBuffer());
     
@@ -4007,7 +4007,7 @@ void nsImapProtocol::GetMyRightsForFolder(const char *mailboxName)
 	command.Append(escapedName);
 	command.Append("\"" CRLF);
             
-    PR_FREEIF( escapedName);
+    delete []escapedName;
             
     SendData(command.GetBuffer());
     
@@ -4025,7 +4025,7 @@ void nsImapProtocol::OnStatusForFolder(const char *mailboxName)
 	command.Append(escapedName);
 	command.Append("\" (UIDNEXT MESSAGES UNSEEN)" CRLF);
             
-    PR_FREEIF( escapedName);
+    delete []escapedName;
             
     SendData(command.GetBuffer());
     
@@ -4177,7 +4177,9 @@ void nsImapProtocol::DiscoverMailboxList()
 
 	// iterate through all namespaces and LSUB them.
 	PRUint32 count = 0;
-	m_hostSessionList->GetNumberOfNamespacesForHost(GetImapHostName(), GetImapUserName(), count);
+	m_hostSessionList->GetNumberOfNamespacesForHost(GetImapHostName(),
+                                                    GetImapUserName(), count);
+#ifdef NOT_YET
 	for (PRUint32 i = 0; i < count; i++ )
 	{
 		nsIMAPNamespace * ns = nsnull;
@@ -4228,8 +4230,8 @@ void nsImapProtocol::DiscoverMailboxList()
 				}
 
 				// now do the folders within this namespace
-				nsString2 pattern(eOneByte);
-				nsString2 pattern2(eOneByte);
+				nsString2 pattern("",eOneByte);
+				nsString2 pattern2("",eOneByte);
 				if (usingSubscription)
 				{
 					pattern.Append(prefix);
@@ -4263,6 +4265,7 @@ void nsImapProtocol::DiscoverMailboxList()
 			}
 		}
 	}
+#endif 
 
 	// explicitly LIST the INBOX if (a) we're not using subscription, or (b) we are using subscription and
 	// the user wants us to always show the INBOX.
@@ -4447,7 +4450,7 @@ void nsImapProtocol::CreateMailbox(const char *mailboxName)
 	command += escapedName;
 	command += "\""CRLF;
                
-    PR_FREEIF( escapedName);
+    delete []escapedName;
 
 	SendData(command.GetBuffer());
 	ParseIMAPandCheckForNewMail();
@@ -4493,7 +4496,7 @@ void nsImapProtocol::Lsub(const char *mailboxPattern, PRBool addDirectoryIfNeces
 //            GetServerCommandTag(),                  // command tag
 //            escapedPattern);
             
-    PR_FREEIF( escapedPattern);
+    delete []escapedPattern;
 	PR_FREEIF(boxnameWithOnlineDirectory);
 
 	SendData(command.GetBuffer());
@@ -4527,7 +4530,7 @@ void nsImapProtocol::List(const char *mailboxPattern, PRBool addDirectoryIfNeces
 //            GetServerCommandTag(),                  // command tag
 //            escapedPattern);
             
-    PR_FREEIF( escapedPattern);
+    delete []escapedPattern;
 	PR_FREEIF(boxnameWithOnlineDirectory);
 
 	SendData(command.GetBuffer());  
@@ -4577,7 +4580,7 @@ void nsImapProtocol::Copy(nsString2 &messageList,
 	
 	ParseIMAPandCheckForNewMail(protocolString.GetBuffer());
         
-    PR_FREEIF( escapedDestination);
+    delete [] escapedDestination;
 }
 
 void nsImapProtocol::NthLevelChildList(const char* onlineMailboxPrefix,
@@ -4597,7 +4600,7 @@ void nsImapProtocol::NthLevelChildList(const char* onlineMailboxPrefix,
     if (utf7ListArg)
     {
         nsString2 pattern(utf7ListArg, eOneByte);
-        nsString2 suffix(eOneByte);
+        nsString2 suffix("",eOneByte);
         int count = 0;
         char separator = 0;
         m_runningUrl->GetOnlineSubDirSeparator(&separator);
@@ -4825,7 +4828,7 @@ void nsImapProtocol::ProcessStoreFlags(nsString2 &messageIdsString,
 	if (!flags)
 		return;
 		
-    nsString2 flagString(eOneByte);
+    nsString2 flagString("",eOneByte);
 
 	uint16 userFlags = GetServerStateParser().SupportsUserFlags();
 	uint16 settableFlags = GetServerStateParser().SettablePermanentFlags();
@@ -5059,7 +5062,7 @@ nsImapProtocol::GetDeleteIsMoveToTrash()
 }
 
 nsIMAPMailboxInfo::nsIMAPMailboxInfo(const char *name, char delimiter) :
-    m_mailboxName(eOneByte,0)
+    m_mailboxName("",eOneByte,0)
 {
 	m_mailboxName = name;
 	m_delimiter = delimiter;
