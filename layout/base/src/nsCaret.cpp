@@ -1036,10 +1036,10 @@ void nsCaret::GetCaretRectAndInvert()
     // Simon -- make a hook to draw to the left or right of the caret to show keyboard language direction
     PRBool bidiEnabled;
     nsRect hookRect;
-    PRBool bidiLevel=PR_FALSE;
+    PRBool isCaretRTL=PR_FALSE;
     if (mBidiKeyboard)
-      mBidiKeyboard->IsLangRTL(&bidiLevel);
-    if (bidiLevel)
+      mBidiKeyboard->IsLangRTL(&isCaretRTL);
+    if (isCaretRTL)
     {
       bidiEnabled = PR_TRUE;
       presContext->SetBidiEnabled(bidiEnabled);
@@ -1048,7 +1048,7 @@ void nsCaret::GetCaretRectAndInvert()
       bidiEnabled = presContext->BidiEnabled();
     if (bidiEnabled)
     {
-      if (bidiLevel != mKeyboardRTL)
+      if (isCaretRTL != mKeyboardRTL)
       {
         /* if the caret bidi level and the keyboard language direction are not in
          * synch, the keyboard language must have been changed by the
@@ -1058,7 +1058,7 @@ void nsCaret::GetCaretRectAndInvert()
          * appear. We will call |SelectionLanguageChange| and exit
          * without drawing the caret in the old position.
          */ 
-        mKeyboardRTL = bidiLevel;
+        mKeyboardRTL = isCaretRTL;
         nsCOMPtr<nsISelection> domSelection = do_QueryReferent(mDomSelectionWeak);
         if (domSelection)
         {
@@ -1070,9 +1070,14 @@ void nsCaret::GetCaretRectAndInvert()
         }
       }
       // If keyboard language is RTL, draw the hook on the left; if LTR, to the right
-      hookRect.SetRect(caretRect.x + caretRect.width * ((bidiLevel) ? -1 : 1), 
+      // The height of the hook rectangle is the same as the width of the caret
+      // rectangle.
+      hookRect.SetRect(caretRect.x + ((isCaretRTL) ?
+                                       mBidiIndicatorTwipsSize * -1 :
+                                       caretRect.width),
                        caretRect.y + mBidiIndicatorTwipsSize,
-                       mBidiIndicatorTwipsSize, mBidiIndicatorTwipsSize);
+                       mBidiIndicatorTwipsSize,
+                       caretRect.width);
       mHookRect.IntersectRect(clipRect, hookRect);
     }
 #endif //IBMBIDI
