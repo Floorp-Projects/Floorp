@@ -312,6 +312,7 @@ NS_IMETHODIMP nsBaseWidget::SetZIndex(PRInt32 aZIndex)
 					if (NS_SUCCEEDED(childWidget->GetZIndex(&childZIndex))) {
 						if (aZIndex < childZIndex) {
 							parent->mChildren->InsertElementAt(this, index);
+							PlaceBehind(childWidget, PR_FALSE);
 							break;
 						}
 					}
