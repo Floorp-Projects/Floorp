@@ -82,7 +82,7 @@ if (exists $::FORM{'rebuildvotecache'}) {
     Status("OK, now rebuilding vote cache.");
     SendSQL("lock tables bugs write, votes read");
     SendSQL("update bugs set votes = 0, delta_ts=delta_ts");
-    SendSQL("select bug_id, sum(count) from votes group by bug_id");
+    SendSQL("select bug_id, sum(vote_count) from votes group by bug_id");
     my %votes;
     while (@row = FetchSQLData()) {
         my ($id, $v) = (@row);
@@ -433,7 +433,7 @@ while (@row = FetchSQLData()) {
 }
 
 Status("Checking cached vote counts");
-SendSQL("select bug_id, sum(count) from votes group by bug_id");
+SendSQL("select bug_id, sum(vote_count) from votes group by bug_id");
 
 while (@row = FetchSQLData()) {
     my ($id, $v) = (@row);

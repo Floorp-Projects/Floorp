@@ -1355,7 +1355,7 @@ sub RemoveVotes {
     if ($who) {
         $whopart = " AND votes.who = $who";
     }
-    SendSQL("SELECT profiles.login_name, profiles.userid, votes.count, " .
+    SendSQL("SELECT profiles.login_name, profiles.userid, votes.vote_count, " .
             "products.votesperuser, products.maxvotesperbug " .
             "FROM profiles " . 
             "LEFT JOIN votes ON profiles.userid = votes.who " .
@@ -1393,7 +1393,7 @@ sub RemoveVotes {
 
             my $newvotestext;
             if ($newvotes) {
-                SendSQL("UPDATE votes SET count = $newvotes " .
+                SendSQL("UPDATE votes SET vote_count = $newvotes " .
                         "WHERE bug_id = $id AND who = $userid");
                 $s = $newvotes == 1 ? "" : "s";
                 $newvotestext = "You still have $newvotes vote$s on this bug."
@@ -1436,7 +1436,7 @@ sub RemoveVotes {
                 close SENDMAIL;
             }
         }
-        SendSQL("SELECT SUM(count) FROM votes WHERE bug_id = $id");
+        SendSQL("SELECT SUM(vote_count) FROM votes WHERE bug_id = $id");
         my $v = FetchOneColumn();
         $v ||= 0;
         SendSQL("UPDATE bugs SET votes = $v, delta_ts = delta_ts " .

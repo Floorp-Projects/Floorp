@@ -1170,7 +1170,7 @@ if ($action eq 'update') {
                     "FROM votes, bugs " .
                     "WHERE bugs.bug_id = votes.bug_id " .
                     " AND bugs.product_id = $product_id " .
-                    " AND votes.count > $maxvotesperbug");
+                    " AND votes.vote_count > $maxvotesperbug");
             my @list;
             while (MoreSQLData()) {
                 my ($who, $id) = (FetchSQLData());
@@ -1183,7 +1183,7 @@ if ($action eq 'update') {
                 print qq{<br>Removed votes for bug <A HREF="show_bug.cgi?id=$id">$id</A> from $name\n};
             }
         }
-        SendSQL("SELECT votes.who, votes.count FROM votes, bugs " .
+        SendSQL("SELECT votes.who, votes.vote_count FROM votes, bugs " .
                 "WHERE bugs.bug_id = votes.bug_id " .
                 " AND bugs.product_id = $product_id");
         my %counts;

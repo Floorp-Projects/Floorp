@@ -1356,7 +1356,7 @@ print "\n" unless $silent;
 # safer than the make*.sh shell scripts used to be, because they won't
 # delete existing tables.
 #
-# If you want intentionally do this, yon can always drop a table and re-run
+# If you want to intentionally do this, you can always drop a table and re-run
 # checksetup, e.g. like this:
 #
 #    $ mysql bugs
@@ -1659,7 +1659,7 @@ $table{versions} =
 $table{votes} =
    'who mediumint not null,
     bug_id mediumint not null,
-    count smallint not null,
+    vote_count smallint not null,
 
     index(who),
     index(bug_id)';
@@ -3869,11 +3869,21 @@ if (TableExists('shadowlog')) {
     $dbh->do("DROP TABLE shadowlog");
 }
 
-# 2003-04-24 - myk@mozilla.org/bbaetz@acm.org, bug 201018
-# Force all cached groups to be updated at login, due to security
-# At the next schema change, this should be moved inside that block so that the
-# update doesn't happen on every run
-$dbh->do("UPDATE profiles SET refreshed_when='1900-01-01 00:00:00'");
+# 2003-04-XX - bugzilla@chimpychompy.org (GavinS)
+#
+# Bug 180086 (http://bugzilla.mozilla.org/show_bug.cgi?id=180086)
+#
+# Renaming the 'count' column in the votes table because Sybase doesn't
+# like it
+if (GetFieldDef('votes', 'count')) {
+    # 2003-04-24 - myk@mozilla.org/bbaetz@acm.org, bug 201018
+    # Force all cached groups to be updated at login, due to security bug
+    # Do this here, inside the next schema change block, so that it doesn't
+    # get invalidated on every checksetup run.
+    $dbh->do("UPDATE profiles SET refreshed_when='1900-01-01 00:00:00'");
+
+    RenameField ('votes', 'count', 'vote_count');
+}
 
 #
 # Final checks...

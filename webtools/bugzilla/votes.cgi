@@ -92,7 +92,7 @@ sub show_bug {
     my $total = 0;
     my @users;
     
-    SendSQL("SELECT profiles.login_name, votes.who, votes.count 
+    SendSQL("SELECT profiles.login_name, votes.who, votes.vote_count 
              FROM votes, profiles 
              WHERE votes.bug_id = $bug_id 
                AND profiles.userid = votes.who");
@@ -137,10 +137,10 @@ sub show_user {
     if ($canedit && $bug_id) {
         # Make sure there is an entry for this bug
         # in the vote table, just so that things display right.
-        SendSQL("SELECT votes.count FROM votes 
+        SendSQL("SELECT votes.vote_count FROM votes 
                  WHERE votes.bug_id = $bug_id AND votes.who = $who");
         if (!FetchOneColumn()) {
-            SendSQL("INSERT INTO votes (who, bug_id, count) 
+            SendSQL("INSERT INTO votes (who, bug_id, vote_count) 
                      VALUES ($who, $bug_id, 0)");
         }
     }
@@ -167,7 +167,7 @@ sub show_user {
         my $total = 0;
         my $onevoteonly = 0;
         
-        SendSQL("SELECT votes.bug_id, votes.count, bugs.short_desc,
+        SendSQL("SELECT votes.bug_id, votes.vote_count, bugs.short_desc,
                         bugs.bug_status 
                   FROM  votes, bugs, products
                   WHERE votes.who = $who 
@@ -207,7 +207,7 @@ sub show_user {
         }
     }
 
-    SendSQL("DELETE FROM votes WHERE count <= 0");
+    SendSQL("DELETE FROM votes WHERE vote_count <= 0");
     SendSQL("UNLOCK TABLES");
     
     $vars->{'voting_user'} = { "login" => $name };
@@ -318,7 +318,7 @@ sub record_votes {
     # Insert the new values in their place
     foreach my $id (@buglist) {
         if ($::FORM{$id} > 0) {
-            SendSQL("INSERT INTO votes (who, bug_id, count) 
+            SendSQL("INSERT INTO votes (who, bug_id, vote_count) 
                      VALUES ($who, $id, $::FORM{$id})");
         }
         
@@ -327,7 +327,7 @@ sub record_votes {
     
     # Update the cached values in the bugs table
     foreach my $id (keys %affected) {
-        SendSQL("SELECT sum(count) FROM votes WHERE bug_id = $id");
+        SendSQL("SELECT sum(vote_count) FROM votes WHERE bug_id = $id");
         my $v = FetchOneColumn();
         $v ||= 0;
         SendSQL("UPDATE bugs SET votes = $v, delta_ts=delta_ts 
