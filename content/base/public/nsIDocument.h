@@ -130,10 +130,9 @@ public:
   NS_IMETHOD GetPrincipal(nsIPrincipal **aPrincipal) = 0;
 
   /**
-   * Update principal responsible for this document to the intersection
-   * of its previous value and aPrincipal.
+   * Set the principal responsible for this document.
    */
-  NS_IMETHOD AddPrincipal(nsIPrincipal *aPrincipal) = 0;
+  NS_IMETHOD SetPrincipal(nsIPrincipal *aPrincipal) = 0;
   
   /**
    * Return the LoadGroup for the document. May return null.

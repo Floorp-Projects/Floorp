@@ -99,8 +99,6 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsIChannel.h"
 #include "nsIPrincipal.h"
-#include "nsIAggregatePrincipal.h"
-#include "nsICodebasePrincipal.h"
 #include "nsXBLAtoms.h"
 #include "nsXMLPrettyPrinter.h"
 
@@ -718,6 +716,7 @@ nsXMLContentSink::ProcessBASETag(nsIContent* aContent)
       }
     }
   }
+
   return rv;
 }
 

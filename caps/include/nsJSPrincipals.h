@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -36,19 +36,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 /* describes principals by their orginating uris*/
-#ifndef _NS_JSPRINCIPALS_H_
-#define _NS_JSPRINCIPALS_H_
+
+#ifndef nsJSPrincipals_h__
+#define nsJSPrincipals_h__
 #include "jsapi.h"
 #include "nsIPrincipal.h"
 
-struct nsJSPrincipals : JSPrincipals {
+struct nsJSPrincipals : JSPrincipals
+{
   static nsresult Startup();
   nsJSPrincipals();
-  nsresult Init(char *prin);
+  nsresult Init(nsIPrincipal* aPrincipal, const char *aCodebase);
   ~nsJSPrincipals(void);
 
-  nsIPrincipal *nsIPrincipalPtr;
+  nsIPrincipal *nsIPrincipalPtr; // [WEAK] it owns us.
 };
 
-#endif /* _NS_JSPRINCIPALS_H_ */
-
+#endif /* nsJSPrincipals_h__ */

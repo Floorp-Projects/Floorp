@@ -76,7 +76,6 @@
 #include "nsLayoutAtoms.h"
 #include "nsIChromeEventHandler.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsICodebasePrincipal.h"
 #include "nsXPIDLString.h"
 #include "nsIScrollable.h"
 #include "nsINameSpaceManager.h"

@@ -87,7 +87,7 @@
 #include "nsNetUtil.h"     // for NS_MakeAbsoluteURI
 
 #include "nsIScriptSecurityManager.h"
-#include "nsIAggregatePrincipal.h"
+#include "nsIPrincipal.h"
 #include "nsIPrivateDOMImplementation.h"
 
 #include "nsIDOMWindowInternal.h"
@@ -840,21 +840,9 @@ nsDocument::GetPrincipal(nsIPrincipal **aPrincipal)
 }
 
 NS_IMETHODIMP
-nsDocument::AddPrincipal(nsIPrincipal *aNewPrincipal)
+nsDocument::SetPrincipal(nsIPrincipal *aNewPrincipal)
 {
-  nsresult rv;
-  if (!mPrincipal) {
-    nsCOMPtr<nsIPrincipal> principal;
-    rv = GetPrincipal(getter_AddRefs(principal));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  nsCOMPtr<nsIAggregatePrincipal> agg(do_QueryInterface(mPrincipal, &rv));
-  if (NS_SUCCEEDED(rv)) {
-    rv = agg->Intersect(aNewPrincipal);
-    if (NS_FAILED(rv))
-      return rv;
-  }
+  mPrincipal = aNewPrincipal;
 
   return NS_OK;
 }

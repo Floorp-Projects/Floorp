@@ -58,13 +58,6 @@ PRInt32 nsPrincipal::sCapabilitiesOrdinal = 0;
 const char nsPrincipal::sInvalid[] = "Invalid";
 
 
-nsPrincipal::nsPrincipal()
-  : mCapabilities(7),
-    mSecurityPolicy(nsnull)
-{
-}
-
-
 NS_IMPL_QUERY_INTERFACE2_CI(nsPrincipal,
                             nsIPrincipal,
                             nsISerializable)
@@ -95,10 +88,42 @@ nsPrincipal::Release()
   return count;
 }
 
-nsPrincipal::nsPrincipal(nsIURI *aURI)
-  : mSecurityPolicy(nsnull),
-    mCodebase(aURI)
+nsPrincipal::nsPrincipal()
+  : mCapabilities(7),
+    mSecurityPolicy(nsnull),
+    mTrusted(PR_FALSE),
+    mInitialized(PR_FALSE)
 {
+}
+
+nsresult
+nsPrincipal::Init(const char *aCertID, nsIURI *aCodebase)
+{
+  NS_ENSURE_STATE(!mInitialized);
+  NS_ENSURE_ARG_POINTER(aCertID || aCodebase); // better have one of these.
+
+  mInitialized = PR_TRUE;
+
+  mCodebase = aCodebase;
+
+  nsresult rv;
+  if (aCertID) {
+    rv = SetCertificate(aCertID, nsnull);
+    if (NS_SUCCEEDED(rv)) {
+      rv = mJSPrincipals.Init(this, aCertID);
+    }
+  }
+  else {
+    nsCAutoString spec;
+    rv = mCodebase->GetSpec(spec);
+    if (NS_SUCCEEDED(rv)) {
+      rv = mJSPrincipals.Init(this, spec.get());
+    }
+  }
+
+  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "nsPrincipal::Init() failed");
+
+  return rv;
 }
 
 
@@ -118,10 +143,7 @@ nsPrincipal::~nsPrincipal(void)
 NS_IMETHODIMP
 nsPrincipal::GetJsPrincipals(JSPrincipals **jsprin)
 {
-  if (!mJSPrincipals.nsIPrincipalPtr) {
-    // Don't addref here, since we are referencing each other.
-    mJSPrincipals.nsIPrincipalPtr = this;
-  }
+  NS_PRECONDITION(mJSPrincipals.nsIPrincipalPtr, "mJSPrincipals is uninitalized!");
 
   *jsprin = &mJSPrincipals;
 
@@ -135,8 +157,13 @@ nsPrincipal::GetJsPrincipals(JSPrincipals **jsprin)
 NS_IMETHODIMP
 nsPrincipal::GetOrigin(char **aOrigin)
 {
+  *aOrigin = nsnull;
+
   nsIURI* uri = mDomain ? mDomain : mCodebase;
-  NS_ASSERTION(uri, "No Domain or Codebase");
+  if (!uri) {
+    NS_ASSERTION(mCert, "No Domain or Codebase for a non-cert principal");
+    return NS_ERROR_FAILURE;
+  }
 
   nsCAutoString hostPort;
 
@@ -202,9 +229,8 @@ nsPrincipal::Equals(nsIPrincipal *aOther, PRBool *aResult)
 
       nsXPIDLCString otherCertID;
       aOther->GetCertificateID(getter_Copies(otherCertID));
-      if (!otherCertID.Equals(mCert->certificateID)) {
-        return NS_OK;
-      }
+      *aResult = otherCertID.Equals(mCert->certificateID);
+      return NS_OK;
     }
 
     // Codebases are equal if they have the same origin.
@@ -409,30 +435,25 @@ nsPrincipal::GetURI(nsIURI** aURI)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsPrincipal::SetURI(nsIURI* aURI)
 {
   mCodebase = aURI;
-  mDomain = nsnull;
-  // Codebase has changed, forget cached security policy
-  mSecurityPolicy = nsnull;
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsPrincipal::SetCertificateID(const char* aID)
+
+nsresult
+nsPrincipal::SetCertificate(const char* aID, const char* aName)
 {
-  if (!aID) {
-    mCert = nsnull;
-    return NS_OK;
+  NS_ENSURE_STATE(!mCert);
+
+  if (!aID && !aName) {
+    return NS_ERROR_INVALID_POINTER;
   }
 
+  mCert = new Certificate(aID, aName);
   if (!mCert) {
-    mCert = new Certificate(aID, "");
-    if (!mCert) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
   return NS_OK;
@@ -526,30 +547,29 @@ nsPrincipal::InitFromPersistent(const char* aPrefName,
                   "mCapabilities was already initialized?");
   NS_PRECONDITION(mAnnotations.Count() == 0,
                   "mAnnotations was already initialized?");
+  NS_PRECONDITION(!mInitialized, "We were already initialized?");
 
+  mInitialized = PR_TRUE;
+
+  nsresult rv;
   if (aIsCert) {
-    SetCertificateID(aToken);
+    rv = SetCertificate(aToken, nsnull);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
   }
   else {
-    nsresult rv = NS_NewURI(getter_AddRefs(mCodebase), aToken, nsnull);
+    rv = NS_NewURI(getter_AddRefs(mCodebase), aToken, nsnull);
     if (NS_FAILED(rv)) {
       NS_ERROR("Malformed URI in capability.principal preference.");
       return rv;
     }
 
-    nsCAutoString token;
-    rv = mCodebase->GetSpec(token);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    rv = mJSPrincipals.Init(PL_strdup(token.get()));
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
     mTrusted = aTrusted;
   }
+
+  rv = mJSPrincipals.Init(this, aToken);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   //-- Save the preference name
   mPrefName = aPrefName;
@@ -563,7 +583,7 @@ nsPrincipal::InitFromPersistent(const char* aPrefName,
   }
 
   //-- Store the capabilities
-  nsresult rv = NS_OK;
+  rv = NS_OK;
   if (aGrantedList) {
     rv = SetCanEnableCapability(aGrantedList, nsIPrincipal::ENABLE_GRANTED);
   }

@@ -58,7 +58,6 @@
 #include "nsEscape.h"
 #include "nsJSUtils.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsICodebasePrincipal.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"

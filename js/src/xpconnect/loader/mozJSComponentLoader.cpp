@@ -269,7 +269,7 @@ EvalInSandbox(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         NS_FAILED(secman->GetCodebasePrincipal(iURL,
                                                getter_AddRefs(principal))) ||
         !principal ||
-        NS_FAILED(principal->GetJSPrincipals(&jsPrincipals)) ||
+        NS_FAILED(principal->GetJsPrincipals(&jsPrincipals)) ||
         !jsPrincipals) {
         JS_ReportError(cx, "Can't get principals for evalInSandbox");
         return JS_FALSE;
@@ -997,7 +997,7 @@ mozJSComponentLoader::GlobalForLocation(const char *aLocation,
     nsCOMPtr<nsIScriptObjectPrincipal> backstagePass =
       new BackstagePass(mSystemPrincipal);
 
-    rv = mSystemPrincipal->GetJSPrincipals(&jsPrincipals);
+    rv = mSystemPrincipal->GetJsPrincipals(&jsPrincipals);
     if (NS_FAILED(rv) || !jsPrincipals)
         return nsnull;
 

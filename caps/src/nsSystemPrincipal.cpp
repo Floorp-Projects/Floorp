@@ -47,13 +47,37 @@
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
+#include "nsString.h"
 
 
-NS_IMPL_QUERY_INTERFACE2_CI(nsSystemPrincipal, nsIPrincipal, nsISerializable)
-NS_IMPL_CI_INTERFACE_GETTER2(nsSystemPrincipal, nsIPrincipal, nsISerializable)
+NS_IMPL_QUERY_INTERFACE2_CI(nsSystemPrincipal,
+                            nsIPrincipal,
+                            nsISerializable)
+NS_IMPL_CI_INTERFACE_GETTER2(nsSystemPrincipal,
+                             nsIPrincipal,
+                             nsISerializable)
 
-NSBASEPRINCIPALS_ADDREF(nsSystemPrincipal)
-NSBASEPRINCIPALS_RELEASE(nsSystemPrincipal)
+NS_IMETHODIMP_(nsrefcnt) 
+nsSystemPrincipal::AddRef()
+{
+  NS_PRECONDITION(PRInt32(mJSPrincipals.refcount) >= 0, "illegal refcnt");
+  nsrefcnt count = PR_AtomicIncrement((PRInt32 *)&mJSPrincipals.refcount);
+  NS_LOG_ADDREF(this, count, "nsSystemPrincipal", sizeof(*this));
+  return count;
+}
+
+NS_IMETHODIMP_(nsrefcnt)
+nsSystemPrincipal::Release()
+{
+  NS_PRECONDITION(0 != mJSPrincipals.refcount, "dup release");
+  nsrefcnt count = PR_AtomicDecrement((PRInt32 *)&mJSPrincipals.refcount);
+  NS_LOG_RELEASE(this, count, "nsSystemPrincipal");
+  if (count == 0) {
+    NS_DELETEXPCOM(this);
+  }
+
+  return count;
+}
 
 
 ///////////////////////////////////////
@@ -61,26 +85,15 @@ NSBASEPRINCIPALS_RELEASE(nsSystemPrincipal)
 ///////////////////////////////////////
 
 NS_IMETHODIMP
-nsSystemPrincipal::ToString(char **result)
-{
-    nsAutoString buf;
-    buf.Assign(NS_LITERAL_STRING("[System]"));
-
-    *result = ToNewCString(buf);
-    return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-}
-
-NS_IMETHODIMP
-nsSystemPrincipal::ToUserVisibleString(char **result)
-{
-    return ToString(result);
-}
-
-NS_IMETHODIMP
 nsSystemPrincipal::GetPreferences(char** aPrefName, char** aID, 
                                   char** aGrantedList, char** aDeniedList)
 {
     // The system principal should never be streamed out
+    *aPrefName = nsnull;
+    *aID = nsnull;
+    *aGrantedList = nsnull;
+    *aDeniedList = nsnull;
+
     return NS_ERROR_FAILURE; 
 }
 
@@ -92,7 +105,7 @@ nsSystemPrincipal::Equals(nsIPrincipal *other, PRBool *result)
 }
 
 NS_IMETHODIMP
-nsSystemPrincipal::HashValue(PRUint32 *result)
+nsSystemPrincipal::GetHashValue(PRUint32 *result)
 {
     *result = NS_PTR_TO_INT32(this);
     return NS_OK;
@@ -127,12 +140,14 @@ nsSystemPrincipal::IsCapabilityEnabled(const char *capability,
 NS_IMETHODIMP 
 nsSystemPrincipal::EnableCapability(const char *capability, void **annotation)
 {
+    *annotation = nsnull;
     return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsSystemPrincipal::RevertCapability(const char *capability, void **annotation)
 {
+    *annotation = nsnull;
     return NS_OK;
 }
 
@@ -141,8 +156,87 @@ nsSystemPrincipal::DisableCapability(const char *capability, void **annotation)
 {
     // Can't disable the capabilities of the system principal.
     // XXX might be handy to be able to do so!
+    *annotation = nsnull;
     return NS_ERROR_FAILURE;
 }
+
+NS_IMETHODIMP 
+nsSystemPrincipal::GetURI(nsIURI** aURI)
+{
+    *aURI = nsnull;
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsSystemPrincipal::GetOrigin(char** aOrigin)
+{
+    *aOrigin = ToNewCString(NS_LITERAL_CSTRING("[System]"));
+    return *aOrigin ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+NS_IMETHODIMP 
+nsSystemPrincipal::GetCertificateID(char** aID)
+{
+    *aID = nsnull;
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsSystemPrincipal::GetCommonName(char** aName)
+{
+    *aName = nsnull;
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsSystemPrincipal::SetCommonName(const char* aName)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsSystemPrincipal::GetHasCertificate(PRBool* aResult)
+{
+    *aResult = PR_FALSE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSystemPrincipal::GetDomain(nsIURI** aDomain)
+{
+    *aDomain = nsnull;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSystemPrincipal::SetDomain(nsIURI* aDomain)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSystemPrincipal::GetSecurityPolicy(void** aSecurityPolicy)
+{
+    *aSecurityPolicy = nsnull;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSystemPrincipal::SetSecurityPolicy(void* aSecurityPolicy)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSystemPrincipal::GetJsPrincipals(JSPrincipals **jsprin)
+{
+    NS_PRECONDITION(mJSPrincipals.nsIPrincipalPtr, "mJSPrincipals is uninitalized!");
+
+    *jsprin = &mJSPrincipals;
+    JSPRINCIPALS_HOLD(cx, *jsprin);
+    return NS_OK;
+}
+
 
 //////////////////////////////////////////
 // Methods implementing nsISerializable //
@@ -170,15 +264,10 @@ nsSystemPrincipal::nsSystemPrincipal()
 {
 }
 
-NS_IMETHODIMP
+nsresult
 nsSystemPrincipal::Init()
 {
-    char *codebase = nsCRT::strdup("[System Principal]");
-    if (!codebase)
-        return NS_ERROR_OUT_OF_MEMORY;
-    if (NS_FAILED(mJSPrincipals.Init(codebase))) 
-        return NS_ERROR_FAILURE;
-    return NS_OK;
+    return mJSPrincipals.Init(this, "[System Principal]"); 
 }
 
 nsSystemPrincipal::~nsSystemPrincipal(void)

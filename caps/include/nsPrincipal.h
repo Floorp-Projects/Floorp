@@ -52,7 +52,6 @@ class nsPrincipal : public nsIPrincipal
 {
 public:
   nsPrincipal();
-  nsPrincipal(nsIURI *aURI);
 
 protected:
   virtual ~nsPrincipal();
@@ -61,23 +60,24 @@ public:
   // Our refcount is managed by mJSPrincipals.  Use this macro to avoid
   // an extra refcount member.
   NS_DECL_ISUPPORTS_INHERITED
-protected:
-  // XXXcaa Probably unnecessary.  See bug 143559.
-  NS_DECL_OWNINGTHREAD
 public:
 
   NS_DECL_NSIPRINCIPAL
   NS_DECL_NSISERIALIZABLE
 
+  // Either Init() or InitFromPersistent() must be called before
+  // the principal is in a usable state.
+  nsresult Init(const char *aCertID, nsIURI *aCodebase);
   nsresult InitFromPersistent(const char* aPrefName,
                               const char* aToken,
                               const char* aGrantedList,
                               const char* aDeniedList,
-                              PRBool aIsCert = PR_FALSE,
-                              PRBool aTrusted = PR_FALSE);
+                              PRBool aIsCert,
+                              PRBool aTrusted);
 
   enum AnnotationValue { AnnotationEnabled=1, AnnotationDisabled };
 
+  void SetURI(nsIURI *aURI);
   nsresult SetCapability(const char *capability, void **annotation, 
                          AnnotationValue value);
 
@@ -104,6 +104,8 @@ protected:
     nsCString commonName;
   };
 
+  nsresult SetCertificate(const char* aCertID, const char* aName);
+
   // Keep this is a pointer, even though it may slightly increase the
   // cost of keeping a certificate, this is a good tradeoff though since
   // it is very rare that we actually have a certificate.
@@ -113,8 +115,8 @@ protected:
 
   nsCOMPtr<nsIURI> mCodebase;
   nsCOMPtr<nsIURI> mDomain;
-  PRUint8 mType;
   PRPackedBool mTrusted;
+  PRPackedBool mInitialized;
 };
 
 

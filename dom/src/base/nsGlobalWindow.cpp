@@ -73,7 +73,6 @@
 #include "nsIWidget.h"
 #include "nsIBaseWindow.h"
 #include "nsICharsetConverterManager.h"
-#include "nsICodebasePrincipal.h"
 #include "nsIContent.h"
 #include "nsIWebBrowserPrint.h"
 #include "nsIContentViewerEdit.h"
@@ -4648,12 +4647,13 @@ GlobalWindowImpl::OpenInternal(const nsAString& aUrl,
         if (sSecMan) {
           nsCOMPtr<nsIPrincipal> principal;
           sSecMan->GetSubjectPrincipal(getter_AddRefs(principal));
-          nsCOMPtr<nsICodebasePrincipal> codebasePrin(do_QueryInterface(principal));
-          if (codebasePrin) {
+          if (principal) {
             nsCOMPtr<nsIURI> subjectURI;
-            codebasePrin->GetURI(getter_AddRefs(subjectURI));
-            nsCOMPtr<nsPIDOMWindow> domReturnPrivate(do_QueryInterface(domReturn));
-            domReturnPrivate->SetOpenerScriptURL(subjectURI);
+            principal->GetURI(getter_AddRefs(subjectURI));
+            if (subjectURI) {
+              nsCOMPtr<nsPIDOMWindow> domReturnPrivate(do_QueryInterface(domReturn));
+              domReturnPrivate->SetOpenerScriptURL(subjectURI);
+            }
           }
         }
       }

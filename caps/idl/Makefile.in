@@ -32,9 +32,6 @@ GRE_MODULE	= 1
 XPIDLSRCS	= \
 		nsIScriptSecurityManager.idl \
 		nsIPrincipal.idl \
-		nsICodebasePrincipal.idl \
-		nsICertificatePrincipal.idl \
-		nsIAggregatePrincipal.idl \
 		nsISignatureVerifier.idl \
 		nsISecurityCheckedComponent.idl \
 		$(NULL)

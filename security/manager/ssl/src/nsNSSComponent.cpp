@@ -58,7 +58,7 @@
 #include "nsIWindowWatcher.h"
 #include "nsIPrompt.h"
 #include "nsProxiedService.h"
-#include "nsICertificatePrincipal.h"
+#include "nsIPrincipal.h"
 #include "nsReadableUtils.h"
 #include "nsIDateTimeFormat.h"
 #include "prtypes.h"
@@ -1458,17 +1458,19 @@ nsNSSComponent::VerifySignature(const char* aRSABuf, PRUint32 aRSABufLen,
     rv2 = pCert->GetSha1Fingerprint(fingerprint);
     NS_LossyConvertUCS2toASCII fingerprintStr(fingerprint);
     if (NS_FAILED(rv2)) return rv2;
-    rv2 = mScriptSecurityManager->GetCertificatePrincipal(fingerprintStr.get(), aPrincipal);
-    if (NS_FAILED(rv2) || !*aPrincipal) return rv2;
+    nsCOMPtr<nsIPrincipal> certPrincipal;
+    rv2 = mScriptSecurityManager->GetCertificatePrincipal(fingerprintStr.get(), nsnull,
+                                                          getter_AddRefs(certPrincipal));
+    if (NS_FAILED(rv2) || !certPrincipal) return rv2;
 
-    nsCOMPtr<nsICertificatePrincipal> certPrincipal = do_QueryInterface(*aPrincipal, &rv2);
-    if (NS_FAILED(rv2)) return rv2;
     nsAutoString orgName;
     rv2 = pCert->GetOrganization(orgName);
     if (NS_FAILED(rv2)) return rv2;
     NS_LossyConvertUCS2toASCII  orgNameStr(orgName);
     rv2 = certPrincipal->SetCommonName(orgNameStr.get());
     if (NS_FAILED(rv2)) return rv2;
+
+    *aPrincipal = certPrincipal;
   }
 
   if (p7_info) {

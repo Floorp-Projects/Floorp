@@ -276,10 +276,9 @@ public:
   NS_IMETHOD GetPrincipal(nsIPrincipal **aPrincipal);
 
   /**
-   * Update principal responsible for this document to the intersection
-   * of its previous value and aPrincipal, and return its new value.
+   * Set the principal responsible for this document.
    */
-  NS_IMETHOD AddPrincipal(nsIPrincipal *aPrincipal);
+  NS_IMETHOD SetPrincipal(nsIPrincipal *aPrincipal);
 
   /**
    * Get the Content-Type of this document.
