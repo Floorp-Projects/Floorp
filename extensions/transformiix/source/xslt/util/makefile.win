@@ -48,5 +48,5 @@ LCFLAGS = \
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(CPP_OBJS)
+install:: $(OBJDIR) $(CPP_OBJS)
 
