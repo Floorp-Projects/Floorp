@@ -803,10 +803,10 @@ nsBlockFrame::DeleteFrame(nsIPresContext& aPresContext)
     mBullet = nsnull;
   }
 
+  mFloaters.DeleteFrames(aPresContext);
+
   nsLineBox::DeleteLineList(aPresContext, mLines);
   nsLineBox::DeleteLineList(aPresContext, mOverflowLines);
-
-  mFloaters.DeleteFrames(aPresContext);
 
   return nsBlockFrameSuper::DeleteFrame(aPresContext);
 }
