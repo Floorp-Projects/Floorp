@@ -275,6 +275,29 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable)
   if (!genericTrans)
     return rv;
 
+  //
+  // We can't call the copy callback when we're blocking on the paste callback;
+  // so if this app is already the selection owner, we need to copy our own
+  // data without going through the X server.
+  //
+  if (gdk_selection_owner_get (GDK_SELECTION_PRIMARY) == sWidget->window)
+  {
+    nsDataFlavor *dataFlavor = new nsDataFlavor();
+    // XXX only support text/plain for now
+    dataFlavor->Init(kTextMime, kTextMime);
+
+    // Get data out of our existing transferable.
+    void     *clipboardData;
+    PRUint32 dataLength;
+    rv = mTransferable->GetTransferData(dataFlavor, 
+                                        &clipboardData,
+                                        &dataLength);
+    if (NS_SUCCEEDED(rv))
+      rv = genericTrans->SetTransferData(dataFlavor,
+                                         clipboardData, dataLength);
+    return rv;
+  }
+
 #define ONLY_SUPPORT_PLAIN_TEXT 1
 #ifdef ONLY_SUPPORT_PLAIN_TEXT
   gtk_selection_convert(sWidget, GDK_SELECTION_PRIMARY,
