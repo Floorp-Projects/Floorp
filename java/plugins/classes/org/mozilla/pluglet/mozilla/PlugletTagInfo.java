@@ -14,7 +14,9 @@
  * Inc. All Rights Reserved. 
  */
 package org.mozilla.pluglet.mozilla;
+import java.util.*;
 
-public interface ByteRanges {
-    public void addRange(int offset, int length);
-}
+public interface PlugletTagInfo {
+    public Properties getAttributes();
+    public String getAttribute(String name);
+} 

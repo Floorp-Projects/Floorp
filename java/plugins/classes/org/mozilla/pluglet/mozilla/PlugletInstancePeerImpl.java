@@ -56,6 +56,7 @@ class PlugletInstancePeerImpl implements PlugletInstancePeer {
      * @param height - new window height
      */
     public native void setWindowSize(int width, int height);
+    public native PlugletTagInfo getTagInfo();
     private native void nativeFinalize();
     private native void nativeInitialize();
 };

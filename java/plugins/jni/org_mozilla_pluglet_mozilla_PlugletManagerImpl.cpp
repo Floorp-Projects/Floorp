@@ -16,14 +16,15 @@
 #include "nsIPluginManager.h"
 #include "org_mozilla_pluglet_mozilla_PlugletManagerImpl.h"
 
-
+static jfieldID peerFID = NULL;
 /*
  * Class:     org_mozilla_pluglet_mozilla_PlugletManagerImpl
  * Method:    getValue
  * Signature: (I)Ljava/lang/String;
  */
 JNIEXPORT jstring JNICALL Java_org_mozilla_pluglet_mozilla_PlugletManagerImpl_getValue
-    (JNIEnv *, jobject, jint) {
+    (JNIEnv *env, jobject jthis, jint) {
+    nsIPluginManager * manager = (nsIPluginManager*)env->GetLongField(jthis, peerFID);
     //nb
     return NULL;
 }
@@ -34,7 +35,8 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_pluglet_mozilla_PlugletManagerImpl_ge
  * Signature: (Z)V
  */
 JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletManagerImpl_reloadPluglets
-    (JNIEnv *, jobject, jboolean) {
+    (JNIEnv *env, jobject jthis, jboolean) {
+     nsIPluginManager * manager = (nsIPluginManager*)env->GetLongField(jthis, peerFID);
     //nb
 }
 
@@ -44,9 +46,9 @@ JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletManagerImpl_reloa
  * Signature: ()Ljava/lang/String;
  */
 JNIEXPORT jstring JNICALL Java_org_mozilla_pluglet_mozilla_PlugletManagerImpl_userAgent
-    (JNIEnv *, jobject) {
-    //nb
-    return NULL;
+    (JNIEnv *env, jobject jthis) {
+    nsIPluginManager * manager = (nsIPluginManager*)env->GetLongField(jthis, peerFID);
+    return NULL; //nb
 }    
 
 /*
@@ -55,7 +57,8 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_pluglet_mozilla_PlugletManagerImpl_us
  * Signature: (Lorg/mozilla/pluglet/PlugletInstance;Ljava/net/URL;Ljava/lang/String;Lorg/mozilla/pluglet/PlugletStreamListener;Ljava/lang/String;Ljava/net/URL;Z)V
  */
 JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletManagerImpl_getURL
-    (JNIEnv *, jobject, jobject, jobject, jstring, jobject, jstring, jobject, jboolean) {
+    (JNIEnv *env, jobject jthis, jobject, jobject, jstring, jobject, jstring, jobject, jboolean) {
+    nsIPluginManager * manager = (nsIPluginManager*)env->GetLongField(jthis, peerFID);
     //nb
 }
 
@@ -65,7 +68,8 @@ JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletManagerImpl_getUR
  * Signature: (Lorg/mozilla/pluglet/PlugletInstance;Ljava/net/URL;I[BZLjava/lang/String;Lorg/mozilla/pluglet/PlugletStreamListener;Ljava/lang/String;Ljava/net/URL;ZI[B)V
  */
 JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletManagerImpl_postURL
-    (JNIEnv *, jobject, jobject, jobject, jint, jbyteArray, jboolean, jstring, jobject, jstring, jobject, jboolean, jint, jbyteArray) {
+    (JNIEnv *env, jobject jthis, jobject, jobject, jint, jbyteArray, jboolean, jstring, jobject, jstring, jobject, jboolean, jint, jbyteArray) {
+    nsIPluginManager * manager = (nsIPluginManager*)env->GetLongField(jthis, peerFID);
     //nb
 }
 
@@ -75,8 +79,11 @@ JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletManagerImpl_postU
  * Signature: ()V
  */
 JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletManagerImpl_nativeFinalize
-    (JNIEnv *, jobject) {
-    //nb
+    (JNIEnv *env, jobject jthis) {
+    nsIPluginManager * manager = (nsIPluginManager*)env->GetLongField(jthis, peerFID);
+    if(manager) {
+	NS_RELEASE(manager);
+    }
 }
 
 /*
@@ -85,7 +92,16 @@ JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletManagerImpl_nativ
  * Signature: ()V
  */
 JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletManagerImpl_nativeInitialize
-    (JNIEnv *, jobject) {
-    //nb
+    (JNIEnv *env, jobject jthis) {
+    if(!peerFID) {
+	peerFID = env->GetFieldID(env->GetObjectClass(jthis),"peer","J");
+	if (!peerFID) {
+	    return;
+	}
+    }
+    nsIPluginManager * manager = (nsIPluginManager*)env->GetLongField(jthis, peerFID);
+    if (manager) {
+	manager->AddRef();
+    }
 }
 

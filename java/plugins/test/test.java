@@ -56,6 +56,7 @@ class TestInstance implements PlugletInstance{
     public void initialize(PlugletInstancePeer peer) {
 	org.mozilla.util.Debug.print("--TestInstance.initialize\n");
 	peer.showStatus("Hello world");
+	org.mozilla.util.Debug.print("--TestInstance.initialize  "+peer.getMIMEType());
 	try {
 	    OutputStreamWriter out = new OutputStreamWriter(peer.newStream("text/plain","test"));
 	    String msg = "Hello, world";

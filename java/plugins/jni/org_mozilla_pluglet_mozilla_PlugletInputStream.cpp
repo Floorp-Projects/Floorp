@@ -27,7 +27,7 @@ JNIEXPORT jint JNICALL Java_org_mozilla_pluglet_mozilla_PlugletInputStream_avail
     nsIInputStream * input = (nsIInputStream*)env->GetLongField(jthis, peerFID);;
     PRUint32 res = 0;
     if(input) {
-	input->GetLength(&res);
+	input->Available(&res);
     }
     return (jint)res;
 }

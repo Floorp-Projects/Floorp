@@ -73,6 +73,14 @@ JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletInstancePeerImpl_
 
 /*
  * Class:     org_mozilla_pluglet_mozilla_PlugletInstancePeerImpl
+ * Method:    getTagInfo
+ * Signature: ()Lorg/mozilla/pluglet/mozilla/PlugletTagInfo;
+ */
+JNIEXPORT jobject JNICALL Java_org_mozilla_pluglet_mozilla_PlugletInstancePeerImpl_getTagInfo
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     org_mozilla_pluglet_mozilla_PlugletInstancePeerImpl
  * Method:    nativeFinalize
  * Signature: ()V
  */

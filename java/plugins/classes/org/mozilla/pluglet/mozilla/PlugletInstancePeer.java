@@ -52,5 +52,5 @@ public interface PlugletInstancePeer {
      * @param height - new window height
      */
     public void setWindowSize(int width, int height);
-
+    public PlugletTagInfo getTagInfo();
 }

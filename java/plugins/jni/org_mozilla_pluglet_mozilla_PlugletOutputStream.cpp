@@ -14,7 +14,7 @@
  * Inc. All Rights Reserved. 
  */
 #include "nsIOutputStream.h"
-#include "org_mozilla_pluglet_mozilla_PlugletOutputstream.h"
+#include "org_mozilla_pluglet_mozilla_PlugletOutputStream.h"
 
 static jfieldID peerFID = NULL;
 /*

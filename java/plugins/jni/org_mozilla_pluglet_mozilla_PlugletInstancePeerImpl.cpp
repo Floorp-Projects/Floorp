@@ -15,7 +15,9 @@
  */
 
 #include "nsIPluginInstancePeer.h"
+#include "nsIPluginTagInfo2.h"
 #include "PlugletOutputStream.h"
+#include "PlugletTagInfo2.h"
 #include "org_mozilla_pluglet_mozilla_PlugletInstancePeerImpl.h"
 
 static jfieldID peerFID = NULL;
@@ -123,6 +125,25 @@ JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletInstancePeerImpl_
     instancePeer->SetWindowSize(width,height);
     //nb add exception throwing
 }
+
+
+
+static NS_DEFINE_IID(kIPluginTagInfo2,NS_IPLUGINTAGINFO2_IID);
+/*
+ * Class:     org_mozilla_pluglet_mozilla_PlugletInstancePeerImpl
+ * Method:    getTagInfo
+ * Signature: ()Lorg/mozilla/pluglet/mozilla/PlugletTagInfo;
+ */
+JNIEXPORT jobject JNICALL Java_org_mozilla_pluglet_mozilla_PlugletInstancePeerImpl_getTagInfo
+    (JNIEnv *env, jobject jthis) {
+     nsIPluginInstancePeer * instancePeer = (nsIPluginInstancePeer*)env->GetLongField(jthis, peerFID);
+     nsIPluginTagInfo2 * info = NULL;
+     if(NS_FAILED(instancePeer->QueryInterface(kIPluginTagInfo2,(void**)&info))) {
+	 return NULL;
+     }
+     return PlugletTagInfo2::GetJObject(env,info);
+}
+
 /*
  * Class:     org_mozilla_pluglet_mozilla_PlugletInstancePeerImpl
  * Method:    nativeFinalize

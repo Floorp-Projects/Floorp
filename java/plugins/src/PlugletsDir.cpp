@@ -35,7 +35,8 @@ void PlugletsDir::LoadPluglets() {
 	char * path = PR_GetEnv("PLUGLET");
 	int pathLength = strlen(path);
 	Pluglet *pluglet;
-	for (nsDirectoryIterator iter(nsFileSpec(path),PR_TRUE); iter.Exists(); iter++) {
+	nsFileSpec dir(path);
+	for (nsDirectoryIterator iter(dir,PR_TRUE); iter.Exists(); iter++) {
 	    const nsFileSpec& file = iter;
 	    const char* name = file.GetCString();
 	    int length;
