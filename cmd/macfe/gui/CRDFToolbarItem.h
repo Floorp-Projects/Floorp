@@ -121,12 +121,15 @@ protected:
 	virtual void MouseWithin ( Point inPortPt, const EventRecord &inMacEvent);
 	virtual void MouseLeave(void);
 
+		// handle control tracking
 	virtual void HotSpotAction(short /* inHotSpot */, Boolean inCurrInside, Boolean inPrevInside) ;
 
 	bool IsMouseInFrame ( ) const { return mMouseInFrame; } ;
 	
 private:
 
+	UInt32 CalcAlignment ( UInt32 inTopAlignment, Uint32 inSideAlignment ) const;
+	
 	StRegion mButtonMask;
 	Rect mCachedButtonFrame;
 	Rect mCachedTitleFrame;

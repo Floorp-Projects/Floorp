@@ -63,10 +63,12 @@ CRDFToolbarItem :: ~CRDFToolbarItem ( )
 CRDFPushButton :: CRDFPushButton ( HT_Resource inNode )
 	: CRDFToolbarItem(inNode), mTitleTraitsID(130), mCurrentMode(eTOOLBAR_TEXT_AND_ICONS),
 		mMouseInFrame(false),  mTrackInside(false), mGraphicPadPixels(5), mTitlePadPixels(5),
-		mTitleAlignment(kAlignCenterBottom), mGraphicAlignment(kAlignCenterTop),
 		mOvalWidth(8), mOvalHeight(8)
 {
-
+	// figure out icon and text placement depending on the toolbarBitmapPosition property in HT. The
+	// first param is the alignment when the icon is one top, the 2nd when the icon is on the side.
+	mTitleAlignment = CalcAlignment(kAlignCenterBottom, kAlignCenterRight);
+	mGraphicAlignment = CalcAlignment(kAlignCenterTop, kAlignCenterLeft);
 }
 
 
@@ -74,6 +76,29 @@ CRDFPushButton :: ~CRDFPushButton ( )
 {
 
 }
+
+//
+// CalcAlignment
+//
+// Compute the FE alignment of a specific HT property. If HT specifies the icon is on top, use |inTopAlignment|,
+// otherwise use |inSideAlignment|. This property is a view-level property so we need to pass in the top node
+// of the view, not the node associated with this button. As a result, all buttons on a given toolbar MUST
+// have the same alignment. You cannot have one button with the icon on top and another with the icons on the side
+// in the same toolbar.
+//
+UInt32
+CRDFPushButton :: CalcAlignment ( UInt32 inTopAlignment, Uint32 inSideAlignment ) const
+{
+	Uint32 retVal = inSideAlignment;
+	char* value = NULL;
+	PRBool success = HT_GetTemplateData ( HT_TopNode(HT_GetView(HTNode())), gNavCenter->toolbarBitmapPosition, HT_COLUMN_STRING, &value );
+	if ( success && value ) {
+		if ( strcmp(value, "top") == 0 )
+			retVal = inTopAlignment;
+	}
+	
+	return retVal;
+} // CalcAlignment
 
 
 //
@@ -117,6 +142,7 @@ CRDFPushButton :: CalcTitleFrame ( )
 //
 // CalcGraphicFrame
 //
+// Precompute where the graphic should go.
 //
 void
 CRDFPushButton :: CalcGraphicFrame ( )
@@ -318,13 +344,19 @@ CRDFPushButton :: DrawButtonHilited ( )
 		{
 			Rect frame = mCachedButtonFrame;
 			::InsetRect(&frame, 1, 1);
+
 			// Do we need to do this very slight darkening?
-			UGraphicGizmos::LowerRoundRectColorVolume(frame, 4, 4, UGAAppearance::sGASevenGrayLevels);
-			::InsetRect(&frame, -1, -1);
+//			UGraphicGizmos::LowerRoundRectColorVolume(frame, 4, 4, UGAAppearance::sGASevenGrayLevels);
 		}
 
 	// Now draw GA pressed button bevel
-	UGAAppearance::DrawGAButtonPressedBevelTint(mCachedButtonFrame);
+	if ( URDFUtilities::SetupBackgroundColor(HTNode(), gNavCenter->viewPressedColor, kThemeIconLabelBackgroundBrush) ) {
+		Rect frame = mCachedButtonFrame;
+		::InsetRect(&frame, 1, 1);
+		::EraseRect(&frame);
+	}
+	else
+		UGAAppearance::DrawGAButtonPressedBevelTint(mCachedButtonFrame);
 }
 
 
