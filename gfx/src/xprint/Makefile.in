@@ -23,7 +23,7 @@
 DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
-VPATH		= @srcdir@:@srcdir@/../xlib
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -52,16 +52,20 @@ CSRCS		= \
 		xprintutil_printtofile.c \
 		$(NULL)
 
-# nsDrawingSurfaceXlib only required for staticbuild 
-CPPSRCS		= \
-		nsDeviceContextXP.cpp \
+XLIB_LCPPSRCS	= \
 		nsDrawingSurfaceXlib.cpp \
 		nsFontMetricsXlib.cpp \
 		nsRenderingContextXlib.cpp \
-		nsGfxFactoryXP.cpp \
-		nsXPrintContext.cpp \
 		nsRegionXlib.cpp \
 		nsGCCache.cpp \
+		$(NULL)
+
+# nsDrawingSurfaceXlib only required for staticbuild 
+CPPSRCS		= \
+		$(XLIB_CPPSRCS) \
+		nsDeviceContextXP.cpp \
+		nsGfxFactoryXP.cpp \
+		nsXPrintContext.cpp \
 		$(NULL)
 
 EXPORTS		= \
@@ -76,13 +80,7 @@ CXXFLAGS	 += $(MOZ_XPRINT_CFLAGS)
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
-# use different MDDEPDIR & OBJ_SUFFIX to work around objs in srcdir/VPATH 
-# issue (bug 87422 & 100851)
-# Turn off compiler dependencies as 'gcc -MD' 
-# cannot handle our obj_suffix renaming. (bug 105005)
-MDDEPDIR       := $(MDDEPDIR)_vpath
-OBJ_SUFFIX	:= xp.$(OBJ_SUFFIX)
-COMPILER_DEPEND :=
+GARBAGE		+= $(XLIB_LCPPSRCS) $(wildcard *.$(OBJ_SUFFIX))
 
 include $(topsrcdir)/config/rules.mk
 
@@ -101,9 +99,12 @@ EXTRA_DSO_LDOPTS += \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
-INCLUDES	+= \
+LOCAL_INCLUDES	= \
 		-I$(srcdir) \
 		-I$(srcdir)/../xlib \
 		-I$(srcdir)/../xlibrgb \
 		-I$(srcdir)/.. \
 		$(NULL)
+
+export:: $(addprefix $(srcdir)/../xlib/,$(XLIB_LCPPSRCS))
+	$(INSTALL) $^ .

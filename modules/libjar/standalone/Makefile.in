@@ -23,7 +23,7 @@
 DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
-VPATH		= @srcdir@:@srcdir@/..
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 include $(srcdir)/../objs.mk
@@ -47,9 +47,7 @@ FORCE_STATIC_LIB = 1
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libmozz_s.$(LIB_SUFFIX)
 #endif
 
-MDDEPDIR	:= $(MDDEPDIR)_S
-OBJ_SUFFIX	:= S.$(OBJ_SUFFIX)
-COMPILER_DEPEND :=
+GARBAGE		+= $(MODULES_LIBJAR_LCPPSRCS) $(wildcard *.$(OBJ_SUFFIX))
 
 include $(topsrcdir)/config/rules.mk
 
@@ -58,3 +56,8 @@ DEFINES	+= -D_BSD_SOURCE
 endif
 
 DEFINES += -DSTANDALONE
+
+LOCAL_INCLUDES	= -I$(srcdir)/..
+
+export:: $(MODULES_LIBJAR_CPPSRCS)
+	$(INSTALL) $^ .
