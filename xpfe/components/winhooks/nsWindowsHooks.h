@@ -83,6 +83,9 @@ private:
         PRBool mHandleJPEG;
         PRBool mHandleGIF;
         PRBool mHandlePNG;
+        PRBool mHandleMNG;
+        PRBool mHandleBMP;
+        PRBool mHandleICO;
         PRBool mHandleXML;
         PRBool mHandleXUL;
     };
