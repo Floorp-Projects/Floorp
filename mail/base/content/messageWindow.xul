@@ -123,6 +123,7 @@
   </popupset>
 
   <popup id="attachmentListContext"/>
+  <popup id="copyUrlPopup"/>
   <popup id="toolbar-context-menu"/>
 
   <toolbox id="mail-toolbox" class="toolbox-top">

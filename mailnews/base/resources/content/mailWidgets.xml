@@ -619,7 +619,7 @@
       </xul:hbox>
       <xul:label originalclass="headerValue plain headerValueUrl" onclick="if (!event.button) messenger.launchExternalURL(event.target.value);" 
                  appendoriginalclass="true" keywordrelated="true" class="headerValue plain headerValueUrl" 
-                 anonid="headerValue" flex="1" readonly="true"/> 
+                 anonid="headerValue" flex="1" readonly="true" context="copyUrlPopup"/> 
     </content>
   </binding>
 

@@ -51,6 +51,10 @@
   <menuitem label="&saveAllAttachmentsCmd.label;" accesskey="&saveAllAttachmentsCmd.accesskey;" oncommand="SaveAllAttachments();"/>
 </popup>
 
+<popup id="copyUrlPopup" popupanchor="bottomleft">
+  <menuitem label="&copyLinkCmd.label;" accesskey="&copyLinkCmd.accesskey;" oncommand="CopyWebsiteAddress(document.popupNode)"/>
+</popup>
+
 <tooltip id="attachmentListTooltip"
          onpopupshowing="return FillInAttachmentTooltip(document.tooltipNode);"/> 
 

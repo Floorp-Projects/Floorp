@@ -110,6 +110,7 @@
 <popup id="threadPaneContext"/>
 <popup id="folderPaneContext"/>
 <popup id="attachmentListContext"/>
+<popup id="copyUrlPopup"/>
 <popup id="toolbar-context-menu"/>
 <tooltip id="attachmentListTooltip"/>
 
