@@ -58,6 +58,11 @@ DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, name);
 
 DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, Description);
 
+// This nasty function should disappear when we land Necko completely and 
+// change chrome://global/skin/foo to chrome://skin@global/foo
+//
+void BreakProviderAndRemainingFromPath(const char* i_path, char** o_provider, char** o_remaining);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 class nsChromeRegistry : public nsIChromeRegistry, public nsIRDFDataSource {
@@ -230,66 +235,202 @@ nsChromeRegistry::QueryInterface(REFNSIID aIID, void** aResult)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIChromeRegistry methods:
+/*
+    The ConvertChromeURL takes a chrome URL and converts it into a resource: or 
+    an HTTP: url type with certain rules. Here are the current portions of a 
+    chrome: url that make up the chrome-
 
+            chrome://global/skin/foo?bar
+            \------/ \----/\---/ \-----/
+                |       |     |     |
+                |       |     |     `-- RemainingPortion
+                |       |     |
+                |       |     `-- Provider 
+                |       |
+                |       `-- Package
+                |
+                '-- Always "chrome://"
+
+
+    Sometime in future when Necko lands completely this will change to the 
+    following syntax-
+
+            chrome://skin@global/foo?bar
+
+    This will make the parsing simpler and quicker (since the URL parsing already
+    takes this into account)
+
+*/
 NS_IMETHODIMP
 nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
+#ifdef NECKO
+{
+	nsXPIDLCString spec;
+	aChromeURL->GetSpec(getter_Copies(spec));
+
+    nsresult rv = NS_OK;
+    NS_ASSERTION(aChromeURL, "null url!");
+    if (!aChromeURL)
+        return NS_ERROR_NULL_POINTER;
+
+#ifdef NS_DEBUG
+    //Ensure that we got a chrome url!
+    nsXPIDLCString scheme;
+    rv = aChromeURL->GetScheme(getter_Copies(scheme));
+    if (NS_FAILED(rv)) return rv;
+    NS_ASSERTION((0 == PL_strncmp(scheme, "chrome", 6)), 
+        "Bad scheme URL in chrome URL conversion!");
+    if (0 != PL_strncmp(scheme, "chrome", 6))
+        return NS_ERROR_FAILURE;
+#endif
+
+    // Obtain the package, provider and remaining from the URL
+    nsXPIDLCString package, provider, remaining;
+
+#if 0 // This change happens when we switch to using chrome://skin@global/foo..
+    rv = aChromeURL->GetHost(getter_Copies(package));
+    if (NS_FAILED(rv)) return rv;
+    rv = aChromeURL->GetPreHost(getter_Copies(provider));
+    if (NS_FAILED(rv)) return rv;
+    rv = aChromeURL->GetPath(getter_Copies(remaining));
+    if (NS_FAILED(rv)) return rv;
+#else // For now however...
+
+    rv = aChromeURL->GetHost(getter_Copies(package));
+    if (NS_FAILED(rv)) return rv;
+    nsXPIDLCString tempPath;
+    rv = aChromeURL->GetPath(getter_Copies(tempPath));
+    if (NS_FAILED(rv)) return rv;
+
+    BreakProviderAndRemainingFromPath(
+        (const char*)tempPath, 
+        getter_Copies(provider), 
+        getter_Copies(remaining));
+
+#endif
+
+    // Construct the lookup string-
+    // which is basically chrome:// + package + provider
+    
+    nsString lookup("chrome://");
+
+    lookup += package; // no trailing slash here
+    
+    NS_ASSERTION(*provider == '/', "No leading slash here!");
+    
+    //definitely have a leading slash...
+    if (*provider != '/')
+        lookup += '/';
+    lookup += provider; 
+    
+    // end it on a slash if none is present
+    if (lookup.CharAt(lookup.Length()-1) != '/')
+        lookup += '/';
+
+    // Get the chromeResource from this lookup string
+    nsCOMPtr<nsIRDFResource> chromeResource;
+    if (NS_FAILED(rv = GetPackageTypeResource(lookup, getter_AddRefs(chromeResource)))) {
+        NS_ERROR("Unable to retrieve the resource corresponding to the chrome skin or content.");
+        return rv;
+    }
+    
+    // Using this chrome resource get the three basic things of a chrome entry-
+    // base, name, main. and don't bail if they don't exist.
+
+    nsString base, name, main;
+
+    rv = GetChromeResource(name, chromeResource, kCHROME_name);
+    if (NS_FAILED (rv)) {
+        // No name entry was found. No problem.
+    }
+
+    rv = GetChromeResource(base, chromeResource, kCHROME_base);
+    if (NS_FAILED(rv))
+    {
+        // No base entry was found, default it to our cache.
+        base = "resource:/chrome/";
+        base += package;
+        if ((base.CharAt(base.Length()-1) != '/') && *provider != '/')
+            base += '/';
+        base += provider;
+        if (base.CharAt(base.Length()-1) != '/') 
+            base += '/';
+        if (name.Length())
+            base += name;
+        if (base.CharAt(base.Length()-1) != '/')
+            base += '/';
+    }
+
+    NS_ASSERTION(base.CharAt(base.Length()-1) == '/', "Base doesn't end in a slash!");
+    if ('/' != base.CharAt(base.Length()-1))
+        base += '/';
+  
+    // Now we construct our finalString
+    nsString finalString(base);
+
+    if (!remaining || (0 == PL_strlen(remaining)))
+    {
+        rv = GetChromeResource(main, chromeResource, kCHROME_main);
+        if (NS_FAILED(rv))
+        {
+            //we'd definitely need main for an empty remaining
+            NS_ERROR("Unable to retrieve the main file registry entry for a chrome URL.");
+            return rv;
+        }
+        finalString += main;
+    }
+    else
+        finalString += remaining;
+
+    char* finalURI = finalString.ToNewCString();
+	printf("FROM:%s\n",(const char*) spec);
+	printf("TO:%s\n\n",finalURI);
+    aChromeURL->SetSpec(finalURI);
+/*
+#ifndef NECKO
+    // Clean out possible // in the path
+    char* path;
+    rv = aChromeURL->GetPath(&path);
+    char* cleanPath = path;
+    for (; '\0' != *path; ++path)
+    {
+        if (*path == '/' && *(path+1) == '/')
+            ++path;
+        *cleanPath++ = *path;
+    }
+    aChrome->SetRelativePath(path);
+    nsCRT::free(path);
+#endif
+*/  
+    nsCRT::free(finalURI);
+    return NS_OK;
+}
+#else
 {
     nsresult rv = NS_OK;
     
     // Retrieve the resource for this chrome element.
-#ifdef NECKO
-    char* host;
-#else
     const char* host;
-#endif
     if (NS_FAILED(rv = aChromeURL->GetHost(&host))) {
         NS_ERROR("Unable to retrieve the host for a chrome URL.");
         return rv;
     }
 
     nsAutoString hostStr(host);
-#ifdef NECKO
-    nsCRT::free(host);
-    char* file;
-#else
     const char* file;
-#endif
 
     // Construct a chrome URL and use it to look up a resource.
-#ifndef NECKO
     nsAutoString windowType = nsAutoString("chrome://") + hostStr + "/";
-#else
-    nsAutoString windowType = nsAutoString("chrome://") + hostStr ;
-#endif
 
     // Stash any search part of the URL for later
-#ifdef NECKO
-    nsIURL* url = nsnull;
-    rv = aChromeURL->QueryInterface(nsIURL::GetIID(), (void**)&url);
-    if (NS_SUCCEEDED(rv)) {
-        rv = url->GetQuery(&file);
-		if (NS_FAILED(rv))
-			file = nsCRT::strdup("");
-        NS_RELEASE(url);
-    }
-#else
     aChromeURL->GetSearch(&file);
-#endif
     nsAutoString searchStr(file);
 
     // Find out the package type of the URL
-#ifdef NECKO
-    aChromeURL->GetPath(&file);
-#else
     aChromeURL->GetFile(&file);
-#endif
 
     nsAutoString restOfURL(file);
 
-#ifdef NECKO
-    nsCRT::free(file);
-#endif //NECKO
-    
     // Find the second slash.
     nsAutoString packageType("content");
     nsAutoString path("");
@@ -302,20 +443,12 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
         if (slashIndex == -1)
 		    slashIndex = restOfURL.Length();
 
-#ifndef NECKO
         restOfURL.Mid(packageType, 1, slashIndex - 1);
-#else
-        restOfURL.Mid(packageType, 0, slashIndex);
-#endif
 
         if (slashIndex < restOfURL.Length()-1)
         {
             // There are some extra subdirectories to remember.
-#ifndef NECKO
             restOfURL.Right(path, restOfURL.Length()-slashIndex-1);
-#else
-            restOfURL.Right(path, restOfURL.Length()-slashIndex);
-#endif
         }
     }
 
@@ -339,9 +472,7 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
         // No base entry was found. Default to our cache.
         chromeBase = "resource:/chrome/";
         chromeBase += hostStr;
-#ifndef NECKO
 		chromeBase += "/";
-#endif
         chromeBase += packageType + "/";
         if (chromeName != "")
           chromeBase += chromeName + "/";
@@ -379,11 +510,6 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
     }
     else
     {
-#ifdef NECKO
-        // if path starts in a slash, remove it.
-        if (path[0] == '/')
-          path.Cut(0, 1);
-#endif        
         // XXX Just append the rest of the URL to base to get the actual URL to look up.
 			  chromeBase += path;
     }
@@ -392,20 +518,11 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
     char* search = searchStr.ToNewCString();
     aChromeURL->SetSpec(finalDecision);
     if (search && *search) {
-#ifdef NECKO
-        rv = aChromeURL->QueryInterface(nsIURL::GetIID(), (void**)&url);
-        if (NS_SUCCEEDED(rv)) {
-            (void)url->SetQuery(search);
-            NS_RELEASE(url);
-        }
-#else
         aChromeURL->SetSearch(search);
-#endif
         delete []search;
     }
-    delete []finalDecision;
-    return NS_OK;
 }
+#endif 
 
 NS_IMETHODIMP
 nsChromeRegistry::InitRegistry()
@@ -724,4 +841,29 @@ nsChromeRegistry::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                      nsISupportsArray/*<nsIRDFResource>*/* aArguments)
 {
   return mInner->DoCommand(aSources, aCommand, aArguments);
+}
+
+//
+// Path = provider/remaining
+// 
+void BreakProviderAndRemainingFromPath(const char* i_path, char** o_provider, char** o_remaining)
+{
+    if (!i_path || !o_provider || !o_remaining)
+        return;
+    int len = PL_strlen(i_path);
+    NS_ASSERTION(len>1, "path is messed up!");
+    char* slash = PL_strchr(i_path+1, '/'); // +1 to skip the leading slash if any
+    if (slash)
+    {
+        *o_provider = PL_strndup(i_path, (slash - i_path)); // dont include the trailing slash
+        if (slash != (i_path + len-1)) // if that was not the last trailing slash...
+        {
+            // don't include the leading slash here as well...
+            *o_remaining = PL_strndup(slash+1, len - (slash-i_path + 1)); 
+        }
+        else
+            *o_remaining = nsnull;
+    }
+    else // everything is just the provider
+        *o_provider = PL_strndup(i_path, len);
 }
