@@ -2383,8 +2383,9 @@ main(int argc, char **argv)
     if (certutil.commands[cmd_CreateAndAddCert].activated) {
 	outFile = PR_Open(certreqfile, PR_RDWR | PR_CREATE_FILE, 00660);
 	if (!outFile) {
-	    PR_fprintf(PR_STDERR, "%s -o: unable to open \"%s\" for writing\n",
-	                          progName, certreqfile);
+	    PR_fprintf(PR_STDERR, "%s -o: unable to open \"%s\" for writing (%ld, %ld)\n",
+	                          progName, certreqfile,
+	                          PR_GetError(), PR_GetOSError());
 	    return -1;
 	}
     }
@@ -2394,8 +2395,9 @@ main(int argc, char **argv)
 	inFile = PR_Open(certutil.options[opt_InputFile].arg, PR_RDONLY, 0);
 	if (!inFile) {
 	    PR_fprintf(PR_STDERR,
-	               "%s:  unable to open \"%s\" for reading.\n",
-	               progName, certutil.options[opt_InputFile].arg);
+	               "%s:  unable to open \"%s\" for reading (%ld, %ld).\n",
+	               progName, certutil.options[opt_InputFile].arg,
+	               PR_GetError(), PR_GetOSError());
 	    return -1;
 	}
     }
@@ -2406,8 +2408,9 @@ main(int argc, char **argv)
                           PR_CREATE_FILE | PR_RDWR, 00660);
 	if (!outFile) {
 	    PR_fprintf(PR_STDERR,
-	               "%s:  unable to open \"%s\" for writing.\n",
-	               progName, certutil.options[opt_OutputFile].arg);
+	               "%s:  unable to open \"%s\" for writing (%ld, %ld).\n",
+	               progName, certutil.options[opt_OutputFile].arg,
+	               PR_GetError(), PR_GetOSError());
 	    return -1;
 	}
     }
@@ -2546,12 +2549,14 @@ main(int argc, char **argv)
 	PR_Close(outFile);
 	inFile  = PR_Open(certreqfile, PR_RDONLY, 0);
 	if (!inFile) {
-	    PR_fprintf(PR_STDERR, "Failed to open file \"%s\".\n", certreqfile);
+	    PR_fprintf(PR_STDERR, "Failed to open file \"%s\" (%ld, %ld).\n",
+                       certreqfile, PR_GetError(), PR_GetOSError());
 	    return -1;
 	}
 	outFile = PR_Open(certfile, PR_RDWR | PR_CREATE_FILE, 00660);
 	if (!outFile) {
-	    PR_fprintf(PR_STDERR, "Failed to open file \"%s\".\n", certfile);
+	    PR_fprintf(PR_STDERR, "Failed to open file \"%s\" (%ld, %ld).\n",
+                       certfile, PR_GetError(), PR_GetOSError());
 	    return -1;
 	}
     }
@@ -2583,7 +2588,8 @@ main(int argc, char **argv)
 	PR_Close(outFile);
 	inFile = PR_Open(certfile, PR_RDONLY, 0);
 	if (!inFile) {
-	    PR_fprintf(PR_STDERR, "Failed to open file \"%s\".\n", certfile);
+	    PR_fprintf(PR_STDERR, "Failed to open file \"%s\" (%ld, %ld).\n",
+                       certfile, PR_GetError(), PR_GetOSError());
 	    return -1;
 	}
     }
