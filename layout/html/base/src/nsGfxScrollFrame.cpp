@@ -925,6 +925,21 @@ nsGfxScrollFrameInner::GetScrollableView(nsIPresContext* aPresContext)
 PRBool
 nsGfxScrollFrameInner::AddHorizontalScrollbar(nsBoxLayoutState& aState, nsRect& aScrollAreaSize, PRBool aOnTop)
 {
+#ifdef IBMBIDI
+  if (mHScrollbarBox) {
+    PRInt32 dir = GetIntegerAttribute(mHScrollbarBox, nsXULAtoms::dir, -1);
+    const nsStyleDisplay* disp;
+    mOuter->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)disp);
+
+    // when creating the scrollbar for the first time, or whenever 
+    // display direction is changed, scroll the view horizontally
+    if (dir != disp->mDirection) {
+      SetAttribute(mHScrollbarBox, nsXULAtoms::curpos,
+                   (NS_STYLE_DIRECTION_LTR == disp->mDirection) ? 0 : 0x7FFFFFFF);
+      SetAttribute(mHScrollbarBox, nsXULAtoms::dir, disp->mDirection * mOnePixel);
+    }
+  }
+#endif // IBMBIDI
    return AddRemoveScrollbar(aState, aScrollAreaSize, aOnTop, PR_TRUE, PR_TRUE);
 }
 
@@ -1050,6 +1065,28 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
   // if true places the horizontal scrollbar on the bottom false puts it on the top.
   PRBool scrollBarBottom = PR_TRUE;
 
+#ifdef IBMBIDI
+  const nsStyleDisplay* display;
+  mOuter->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) display);
+  //
+  // Direction Style from this->GetStyleData()
+  // now in (display->mDirection)
+  // ------------------
+  // NS_STYLE_DIRECTION_LTR : LTR or Default
+  // NS_STYLE_DIRECTION_RTL
+  // NS_STYLE_DIRECTION_INHERIT
+  //
+
+  if (display->mDirection == NS_STYLE_DIRECTION_RTL){
+    // if true places the vertical scrollbar on the right false puts it on the left.
+    scrollBarRight = PR_FALSE;
+
+    // if true places the horizontal scrollbar on the bottom false puts it on the top.
+    scrollBarBottom = PR_TRUE;
+  }
+  nsHTMLReflowState* reflowState = (nsHTMLReflowState*)aState.GetReflowState();
+#endif // IBMBIDI
+
   nsIFrame* frame = nsnull;
   mOuter->GetFrame(&frame);
 
@@ -1170,6 +1207,17 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
            //  printf("****Gfx Scrollbar Special case hit!!*****\n");
            
       }
+#ifdef IBMBIDI
+      if (NS_STYLE_DIRECTION_RTL == display->mDirection) {
+        nsCOMPtr<nsIGfxTextControlFrame2> textControl(
+          do_QueryInterface(mOuter->mParent) );
+        if (textControl) {
+          needsLayout = PR_TRUE;
+          reflowState->mRightEdge = scrolledContentSize.width;
+          mScrollAreaBox->MarkDirty(aState);
+        }
+      }
+#endif // IBMBIDI
     } else {
         // if the area is smaller or equal to and we have a scrollbar then
         // remove it.
@@ -1187,6 +1235,9 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
      resizeState.SetLayoutReason(nsBoxLayoutState::Resize);
      LayoutBox(resizeState, mScrollAreaBox, scrollAreaRect); 
      needsLayout = PR_FALSE;
+#ifdef IBMBIDI
+     reflowState->mRightEdge = NS_UNCONSTRAINEDSIZE;
+#endif // IBMBIDI
   }
     
   GetScrolledSize(aState.GetPresContext(),&scrolledContentSize.width, &scrolledContentSize.height);
