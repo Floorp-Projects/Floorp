@@ -1255,8 +1255,7 @@ nsHTMLAttributes::SetAttributeFor(nsINodeInfo* aAttrName,
   nsresult rv;
 #ifdef DEBUG
   {
-    PRInt32 namespaceID;
-    aAttrName->GetNamespaceID(&namespaceID);
+    PRInt32 namespaceID = aAttrName->GetNamespaceID();
     NS_ASSERTION(namespaceID != kNameSpaceID_None, "namespace is null in SetAttributeFor");
   }
 #endif
@@ -1502,10 +1501,9 @@ nsHTMLAttributes::List(FILE* out, PRInt32 aIndent) const
     }
     else {
       nsINodeInfo* ni = mAttrNames[index].GetNodeInfo();
-      PRInt32 namespaceID;
-      nsCOMPtr<nsIAtom> localName, prefix;
-      ni->GetNameAtom(getter_AddRefs(localName));
-      ni->GetNamespaceID(&namespaceID);
+      PRInt32 namespaceID = ni->GetNamespaceID();
+      nsCOMPtr<nsIAtom> localName = ni->GetNameAtom();
+      nsCOMPtr<nsIAtom> prefix;
       const nsHTMLValue *tmp;
       GetAttribute(localName, namespaceID, getter_AddRefs(prefix), &tmp);
       value = *tmp;
