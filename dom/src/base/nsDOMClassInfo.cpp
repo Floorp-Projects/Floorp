@@ -52,6 +52,7 @@
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "xptcall.h"
+#include "prprf.h"
 
 // JavaScript includes
 #include "jsapi.h"
@@ -351,7 +352,8 @@ static NS_DEFINE_CID(kDOMSOF_CID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
 #define ARRAY_SCRIPTABLE_FLAGS                                                \
   (DOM_DEFAULT_SCRIPTABLE_FLAGS |                                             \
-  nsIXPCScriptable::WANT_GETPROPERTY)
+   nsIXPCScriptable::WANT_GETPROPERTY |                                       \
+   nsIXPCScriptable::WANT_ENUMERATE)
 
 #define DOMCLASSINFO_STANDARD_FLAGS                                           \
   (nsIClassInfo::MAIN_THREAD_ONLY | nsIClassInfo::DOM_OBJECT)
@@ -4685,6 +4687,43 @@ nsElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
 
 // NodeList scriptable helper
+
+NS_IMETHODIMP
+nsArraySH::Enumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                     JSObject *obj, PRBool *_retval)
+{
+  // Recursion protection in case someone tries to be smart and call
+  // the enumerate hook from a user defined .length getter, or
+  // somesuch.
+
+  static PRBool sCurrentlyEnumerating;
+
+  if (sCurrentlyEnumerating) {
+    // Don't recurse to death.
+    return NS_OK;
+  }
+
+  sCurrentlyEnumerating = PR_TRUE;
+
+  jsval len_val;
+  JSBool ok = ::JS_GetProperty(cx, obj, "length", &len_val);
+
+  if (ok && JSVAL_IS_INT(len_val)) {
+    PRInt32 length = JSVAL_TO_INT(len_val);
+    char buf[11];
+
+    for (PRInt32 i = 0; ok && i < length; ++i) {
+      PR_snprintf(buf, sizeof(buf), "%d", i);
+
+      ok = ::JS_DefineProperty(cx, obj, buf, JSVAL_VOID, nsnull, nsnull,
+                               JSPROP_ENUMERATE);
+    }
+  }
+
+  sCurrentlyEnumerating = PR_FALSE;
+
+  return ok ? NS_OK : NS_ERROR_UNEXPECTED;
+}
 
 nsresult
 nsArraySH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
