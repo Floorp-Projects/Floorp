@@ -85,6 +85,7 @@ nsMenuItem::nsMenuItem() : nsIMenuItem()
   mDOMNode     = nsnull;
   mKeyEquivalent = " ";
   mEnabled     = PR_TRUE;
+  mIsChecked   = PR_FALSE;
 }
 
 //-------------------------------------------------------------------------
@@ -266,12 +267,14 @@ NS_METHOD nsMenuItem::GetEnabled(PRBool *aIsEnabled)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuItem::SetChecked(PRBool aIsEnabled)
 {
+  mIsChecked = aIsEnabled;
   return NS_OK;
 }
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuItem::GetChecked(PRBool *aIsEnabled)
 {
+  *aIsEnabled = mIsChecked;
   return NS_OK;
 }
 

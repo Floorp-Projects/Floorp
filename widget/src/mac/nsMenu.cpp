@@ -331,6 +331,13 @@ NS_METHOD nsMenu::AddMenuItem(nsIMenuItem * aMenuItem)
 	    ::EnableMenuItem(mMacMenuHandle, mMenuItemVoidArray.Count());
 	  else
 	    ::DisableMenuItem(mMacMenuHandle, mMenuItemVoidArray.Count());
+	    
+	  PRBool isChecked;
+	  aMenuItem->GetChecked(&isChecked);
+	  if(isChecked)
+	    ::CheckItem(mMacMenuHandle, mMenuItemVoidArray.Count(), true);
+	  else
+	    ::CheckItem(mMacMenuHandle, mMenuItemVoidArray.Count(), false);
 	}
   }
   return NS_OK;
@@ -352,8 +359,8 @@ NS_METHOD nsMenu::AddMenu(nsIMenu * aMenu)
       //printf("AddMenu %s \n", label.ToNewCString());
       mNumMenuItems++;
 
-      ::InsertMenuItem(mMacMenuHandle, c2pstr(label.ToNewCString()), mMenuItemVoidArray.Count());
-      //NSStringSetMenuItemText(mMacMenuHandle, mMenuItemVoidArray.Count(), label);
+      ::InsertMenuItem(mMacMenuHandle, "\pb", mMenuItemVoidArray.Count());
+      NSStringSetMenuItemText(mMacMenuHandle, mMenuItemVoidArray.Count(), label);
         
       PRInt16 temp = gCurrentMenuDepth;
       ::SetMenuItemHierarchicalID((MenuHandle) mMacMenuHandle, mMenuItemVoidArray.Count(), temp);
@@ -911,10 +918,12 @@ void nsMenu::LoadMenuItem(
 {
   static const char* NS_STRING_TRUE = "true";
   nsString disabled;
+  nsString checked;
   nsString menuitemName;
   nsString menuitemCmd;
 
   menuitemElement->GetAttribute(nsAutoString("disabled"), disabled);
+  menuitemElement->GetAttribute(nsAutoString("checked"), checked);
   menuitemElement->GetAttribute(nsAutoString("value"), menuitemName);
   menuitemElement->GetAttribute(nsAutoString("cmd"), menuitemCmd);
   // Create nsMenuItem
@@ -1010,6 +1019,11 @@ void nsMenu::LoadMenuItem(
     else
       pnsMenuItem->SetEnabled(PR_TRUE);
 
+	if(checked == NS_STRING_TRUE)
+      pnsMenuItem->SetChecked(PR_TRUE);
+    else
+      pnsMenuItem->SetChecked(PR_FALSE);
+      
 	nsISupports * supports = nsnull;
     pnsMenuItem->QueryInterface(kISupportsIID, (void**) &supports);
     pParentMenu->AddItem(supports); // Parent should now own menu item

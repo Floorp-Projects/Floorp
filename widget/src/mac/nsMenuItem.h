@@ -112,6 +112,7 @@ protected:
   
   PRUint8           mModifiers;
   PRBool            mEnabled;
+  PRBool			mIsChecked;
 };
 
 #endif // nsMenuItem_h__
