@@ -23,6 +23,8 @@
 #ifndef __CThrobber__
 #define __CThrobber__
 
+#include <LControl.h>
+
 #ifndef nsError_h
 #include "nsError.h"
 #endif
@@ -47,7 +49,7 @@ class nsIImageGroup;
 class nsITimer;
 class nsIImageRequest;
 
-class CThrobber : public LView,
+class CThrobber : public LControl,
                   public nsIImageRequestObserver
 {
 public:
