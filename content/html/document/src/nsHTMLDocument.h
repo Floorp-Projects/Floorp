@@ -104,19 +104,18 @@ public:
 
   virtual void EndLoad();
 
-  NS_IMETHOD AddImageMap(nsIDOMHTMLMapElement* aMap);
+  virtual nsresult AddImageMap(nsIDOMHTMLMapElement* aMap);
 
-  NS_IMETHOD RemoveImageMap(nsIDOMHTMLMapElement* aMap);
+  virtual void RemoveImageMap(nsIDOMHTMLMapElement* aMap);
 
-  NS_IMETHOD GetImageMap(const nsAString& aMapName,
-                         nsIDOMHTMLMapElement** aResult);
+  virtual nsIDOMHTMLMapElement *GetImageMap(const nsAString& aMapName);
 
   virtual nsICSSLoader* GetCSSLoader();
 
-  NS_IMETHOD GetCompatibilityMode(nsCompatibility& aMode);
-  NS_IMETHOD SetCompatibilityMode(nsCompatibility aMode);
+  virtual nsCompatibility GetCompatibilityMode();
+  virtual void SetCompatibilityMode(nsCompatibility aMode);
 
-  NS_IMETHOD_(PRBool) IsWriting()
+  virtual PRBool IsWriting()
   {
     return mWriteLevel != PRUint32(0);
   }
@@ -189,16 +188,16 @@ public:
   /*
    * Returns true if document.domain was set for this document
    */
-  NS_IMETHOD WasDomainSet(PRBool* aDomainWasSet);
+  virtual PRBool WasDomainSet();
 
-  NS_IMETHOD ResolveName(const nsAString& aName,
+  virtual nsresult ResolveName(const nsAString& aName,
                          nsIDOMHTMLFormElement *aForm,
                          nsISupports **aResult);
 
-  NS_IMETHOD GetFormControlElements(nsIDOMNodeList** aReturn);
-  NS_IMETHOD AddedForm();
-  NS_IMETHOD RemovedForm();
-  NS_IMETHOD GetNumFormsSynchronous(PRInt32* aNumForms);
+  virtual already_AddRefed<nsIDOMNodeList> GetFormControlElements();
+  virtual void AddedForm();
+  virtual void RemovedForm();
+  virtual PRInt32 GetNumFormsSynchronous();
 
   PRBool IsXHTML()
   {

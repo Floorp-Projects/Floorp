@@ -1033,7 +1033,7 @@ nsHTMLDocument::SetTitle(const nsAString& aTitle)
   return nsDocument::SetTitle(aTitle);
 }
 
-NS_IMETHODIMP
+nsresult
 nsHTMLDocument::AddImageMap(nsIDOMHTMLMapElement* aMap)
 {
   // XXX We should order the maps based on their order in the document.
@@ -1049,33 +1049,21 @@ nsHTMLDocument::AddImageMap(nsIDOMHTMLMapElement* aMap)
   return NS_ERROR_OUT_OF_MEMORY;
 }
 
-NS_IMETHODIMP
+void
 nsHTMLDocument::RemoveImageMap(nsIDOMHTMLMapElement* aMap)
 {
   NS_PRECONDITION(nsnull != aMap, "null ptr");
-  if (nsnull == aMap) {
-    return NS_ERROR_NULL_POINTER;
-  }
   mImageMaps.RemoveObject(aMap);
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLDocument::GetImageMap(const nsAString& aMapName,
-                            nsIDOMHTMLMapElement** aResult)
+nsIDOMHTMLMapElement *
+nsHTMLDocument::GetImageMap(const nsAString& aMapName)
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  *aResult = nsnull;
-
   nsAutoString name;
   PRUint32 i, n = mImageMaps.Count();
 
   for (i = 0; i < n; ++i) {
-    nsCOMPtr<nsIDOMHTMLMapElement> map = mImageMaps[i];
+    nsIDOMHTMLMapElement *map = mImageMaps[i];
     NS_ASSERTION(map, "Null map in map list!");
 
     PRBool match;
@@ -1091,16 +1079,12 @@ nsHTMLDocument::GetImageMap(const nsAString& aMapName,
       match = name.Equals(aMapName, nsCaseInsensitiveStringComparator());
     }
 
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (match) {
-      *aResult = map;
-      NS_ADDREF(*aResult);
-      return NS_OK;
+    if (match && NS_SUCCEEDED(rv)) {
+      return map;
     }
   }
 
-  return NS_OK;
+  return nsnull;
 }
 
 // subclass hooks for sheet ordering
@@ -1190,14 +1174,13 @@ nsHTMLDocument::GetCSSLoader()
 }
 
 
-NS_IMETHODIMP
-nsHTMLDocument::GetCompatibilityMode(nsCompatibility& aMode)
+nsCompatibility
+nsHTMLDocument::GetCompatibilityMode()
 {
-  aMode = mCompatMode;
-  return NS_OK;
+  return mCompatMode;
 }
 
-NS_IMETHODIMP
+void
 nsHTMLDocument::SetCompatibilityMode(nsCompatibility aMode)
 {
   NS_ASSERTION(!IsXHTML() || aMode == eCompatibility_FullStandards,
@@ -1215,8 +1198,6 @@ nsHTMLDocument::SetCompatibilityMode(nsCompatibility aMode)
       pc->SetCompatibilityMode(mCompatMode);
     }
   }
-
-  return NS_OK;
 }
 
 void
@@ -1875,12 +1856,10 @@ nsHTMLDocument::SetDomain(const nsAString& aDomain)
   return rv;
 }
 
-NS_IMETHODIMP
-nsHTMLDocument::WasDomainSet(PRBool* aDomainWasSet)
+PRBool
+nsHTMLDocument::WasDomainSet()
 {
-  NS_ENSURE_ARG_POINTER(aDomainWasSet);
-  *aDomainWasSet = mDomainWasSet;
-  return NS_OK;
+  return mDomainWasSet;
 }
 
 NS_IMETHODIMP
@@ -2682,25 +2661,22 @@ nsHTMLDocument::GetElementsByName(const nsAString& aElementName,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsHTMLDocument::AddedForm()
 {
   ++mNumForms;
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsHTMLDocument::RemovedForm()
 {
   --mNumForms;
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLDocument::GetNumFormsSynchronous(PRInt32* aNumForms)
+PRInt32
+nsHTMLDocument::GetNumFormsSynchronous()
 {
-  *aNumForms = mNumForms;
-  return NS_OK;
+  return mNumForms;
 }
 
 PRBool
@@ -2709,17 +2685,14 @@ nsHTMLDocument::MatchFormControls(nsIContent* aContent, nsString* aData)
   return aContent->IsContentOfType(nsIContent::eHTML_FORM_CONTROL);
 }
 
-NS_IMETHODIMP
-nsHTMLDocument::GetFormControlElements(nsIDOMNodeList** aReturn)
+already_AddRefed<nsIDOMNodeList>
+nsHTMLDocument::GetFormControlElements()
 {
-  nsContentList* elements = nsnull;
-  elements = new nsContentList(this, MatchFormControls, nsString());
-  NS_ENSURE_TRUE(elements, NS_ERROR_OUT_OF_MEMORY);
+  nsIDOMNodeList *list = new nsContentList(this, MatchFormControls,
+                                           EmptyString());
+  NS_IF_ADDREF(list);
 
-  *aReturn = elements;
-  NS_ADDREF(*aReturn);
-
-  return NS_OK;
+  return list;
 }
 
 nsresult
@@ -3457,7 +3430,7 @@ FindNamedItems(const nsAString& aName, nsIContent *aContent,
   }
 }
 
-NS_IMETHODIMP
+nsresult
 nsHTMLDocument::ResolveName(const nsAString& aName,
                             nsIDOMHTMLFormElement *aForm,
                             nsISupports **aResult)

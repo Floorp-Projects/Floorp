@@ -81,7 +81,8 @@ nsresult nsImageMapUtils::FindImageMap(nsIDocument *aDocument,
 
   nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(aDocument));
   if (htmlDoc) {
-    htmlDoc->GetImageMap(usemap, aMap);
+    *aMap = htmlDoc->GetImageMap(usemap);
+    NS_IF_ADDREF(*aMap);
   } else {
     // For XHTML elements embedded in non-XHTML documents we get the
     // map by id since XHTML requires that where a "name" attribute

@@ -1249,9 +1249,7 @@ nsGenericHTMLElement::InNavQuirksMode(nsIDocument* aDoc)
     return PR_FALSE;
   }
 
-  nsCompatibility mode;
-  doc->GetCompatibilityMode(mode);
-  return mode == eCompatibility_NavQuirks;
+  return doc->GetCompatibilityMode() == eCompatibility_NavQuirks;
 }
 
 void

@@ -1409,8 +1409,10 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
     domHtmlDocument->GetForms(getter_AddRefs(forms));
     nsCOMPtr<nsIContentList> htmlForms(do_QueryInterface(forms));
 
-    nsCOMPtr<nsIDOMNodeList> formControls;
-    htmlDocument->GetFormControlElements(getter_AddRefs(formControls));
+    nsCOMPtr<nsIDOMNodeList> formControls =
+      htmlDocument->GetFormControlElements();
+    NS_ENSURE_TRUE(formControls, NS_ERROR_OUT_OF_MEMORY);
+
     nsCOMPtr<nsIContentList> htmlFormControls(do_QueryInterface(formControls));
 
     // If we have a form control and can calculate form information, use
@@ -1452,8 +1454,7 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
           // guess that the highest form parsed so far is the one.
           // This code should not be on trunk, only branch.
           //
-          htmlDocument->GetNumFormsSynchronous(&index);
-          index--;
+          index = htmlDocument->GetNumFormsSynchronous() - 1;
         }
         if (index > -1) {
           KeyAppendInt(index, aKey);

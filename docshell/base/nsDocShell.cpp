@@ -965,7 +965,7 @@ PRBool ValidateOrigin(nsIDocShellTreeItem* aOriginTreeItem, nsIDocShellTreeItem*
 
   // If we don't have an HTML document, fall through with documentDomainSet false
   if (targetHTMLDocument) {
-    targetHTMLDocument->WasDomainSet(&documentDomainSet);
+    documentDomainSet = targetHTMLDocument->WasDomainSet();
   }
 
   // Is origin same principal or a subdomain of target's document.domain
