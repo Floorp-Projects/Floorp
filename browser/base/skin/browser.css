@@ -78,11 +78,21 @@ toolbarbutton.bookmark-item:not([container="true"]):hover:active {
   height: 16px;
 }
 
+/* Prevent [mode="icons"] from hiding the label */
+.bookmark-item > .toolbarbutton-text {
+  display: -moz-box !important;
+}
+
 .bookmark-item > .toolbarbutton-menu-dropmarker {
   display: none;
 }
 
+toolbarpaletteitem[type="bookmarks"] {
+  background: url("chrome://browser/skin/bookmark-large.png") no-repeat center;
+}
+
 /* ::::: bookmark menus ::::: */
+
 menu.bookmark-item,
 menuitem.bookmark-item {
   min-width: 0;
@@ -466,6 +476,10 @@ toolbar[iconsize="small"] #print-button[disabled="true"] {
   margin: 2px 3px;
 }
 
+#search-bar {
+  width: 12em;
+}
+
 /* ::::: page proxy icon ::::: */
 
 #page-proxy-deck,
@@ -503,11 +517,8 @@ toolbar[iconsize="small"] #print-button[disabled="true"] {
 }
 
 /* ::::: autocomplete ::::: */
-.autocomplete-outlinerbody:-moz-outliner-cell-text(value) {
-  padding-left: 15px;
-}
 
-.autocomplete-outlinerbody:-moz-outliner-cell-text(comment) {
+.autocomplete-treebody:-moz-outliner-cell-text(treecolAutoCompleteComment) {
   color: #555566;
 }
 
@@ -615,10 +626,12 @@ toolbar[iconsize="small"] #print-button[disabled="true"] {
 /* ::::: throbber ::::: */
 
 #navigator-throbber {
+  -moz-appearance: none;
   -moz-user-focus: ignore;
-  padding: 0px !important;
-  border: none !important;
   margin: 2px 4px !important;
+  border: none !important;
+  padding: 0px !important;
+  min-width: 0;
   background-color: transparent;
   list-style-image: url("chrome://browser/skin/throbber-stopped.gif");
 }

@@ -3,6 +3,7 @@ classic.jar:
 +  skin/classic/global/browser.css
 +  skin/classic/global/checkbox.css
 +  skin/classic/global/colorpicker.css
++  skin/classic/global/customizeToolbar.css
 +  skin/classic/global/console.css
 +  skin/classic/global/contents.rdf
 +  skin/classic/global/dialog.css
@@ -52,3 +53,6 @@ classic.jar:
 +  skin/classic/global/tree/twisty-open.gif                    (tree/twisty-open.gif)
 +  skin/classic/global/tree/twisty-clsd.gif                    (tree/twisty-clsd.gif)
 +  skin/classic/global/progressmeter/progressmeter-busy.gif    (progressmeter/progressmeter-busy.gif)
++  skin/classic/global/toolbar/spacer-lft.gif                  (toolbar/spacer-lft.gif)
++  skin/classic/global/toolbar/spacer-mid.gif                  (toolbar/spacer-mid.gif)
++  skin/classic/global/toolbar/spacer-rit.gif                  (toolbar/spacer-rit.gif)

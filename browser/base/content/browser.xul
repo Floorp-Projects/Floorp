@@ -118,7 +118,8 @@ Contributor(s):
   <command id="cmd_quit"/>
   <command id="cmd_close" oncommand="BrowserCloseTabOrWindow()"/>
   <command id="cmd_closeWindow" oncommand="BrowserCloseWindow()"/>
-
+  <command id="cmd_CustomizeToolbars" oncommand="BrowserCustomizeToolbar()"/>
+  
   <command id="cmd_copyLink"
            oncommand="goDoCommand('cmd_copyLink')"
            disabled="false"/>
@@ -228,7 +229,7 @@ Contributor(s):
   <tooltip id="aHTMLTooltip" onpopupshowing="return FillInHTMLTooltip(document.tooltipNode);"/>
 
   <popup id="toolbar-context-menu">
-    <menuitem oncommand="BrowserCustomizeToolbar()"
+    <menuitem command="cmd_CustomizeToolbars"
               label="&viewCustomizeToolbar.label;"
               accesskey="&viewCustomizeToolbar.accesskey;"/>
   </popup>
@@ -396,7 +397,7 @@ Contributor(s):
               oncommand="gContextMenu.showMetadata();"/>
   </popup>
 
-  <toolbox id="navigator-toolbox" class="toolbox-top">
+  <toolbox id="navigator-toolbox" class="toolbox-top" mode="icons">
     <!-- Menu -->
       <menubar id="main-menubar" class="chromeclass-menubar">
         <menu label="&fileMenu.label;"
@@ -467,15 +468,14 @@ Contributor(s):
     
         <menu label="&viewMenu.label;" accesskey="&viewMenu.accesskey;">
           <menupopup>
-            <menu label="&viewToolbarsMenu.label;" accesskey="&viewToolbarsMenu.accesskey;">
+            <menu label="&viewToolbarsMenu.label;" accesskey="&viewToolbarsMenu.accesskey;"
+                  onpopupshowing="onViewToolbarsPopupShowing(event);">
               <menupopup onpopupshowing="updateToolbarStates(this);"> 
-                <menuitem id="toggle_navbar" label="&navbarCmd.label;" accesskey="&navbarCmd.accesskey;" type="checkbox" oncommand="goToggleToolbar( 'nav-bar','toggle_navbar');" checked="true"  />
-                <menuitem id="toggle_ptoolbar" label="&personalbarCmd.label;" accesskey="&personalbarCmd.accesskey;" type="checkbox" oncommand="goToggleToolbar('PersonalToolbar','toggle_ptoolbar');" checked="true" />
                 <menuitem id="toggle_taskbar" label="&taskbarCmd.label;" accesskey="&taskbarCmd.accesskey;" type="checkbox" oncommand="goToggleToolbar('status-bar','toggle_taskbar');" checked="true" />
               </menupopup>
             </menu>
             <menuitem label="&viewCustomizeToolbar.label;" accesskey="&viewCustomizeToolbar.accesskey;"
-                      oncommand="BrowserCustomizeToolbar()"/>   
+                      command="cmd_CustomizeToolbars"/>
             <menuitem accesskey="&fullScreenCmd.accesskey;"
                       label="&fullScreenCmd.label;" key="key_fullScreen"
                       command="View:FullScreen"/>
@@ -683,104 +683,115 @@ Contributor(s):
       </menu>
     </menubar>
   
-    <toolbar class="toolbar-primary chromeclass-toolbar" id="nav-bar"
-             fullscreentoolbar="true" mode="icons"
-             defaultset="back-button,forward-button,reload-button,stop-button,urlbar-container,throbber-box"
+    <toolbarpalette>
+      <toolbarbutton id="back-button" type="menu-button" class="toolbarbutton-1"
+                      label="&backCmd.label;"
+					command="Browser:Back"
+                      context="backMenu"
+                      tooltiptext="&backButton.tooltip;">
+        <menupopup context="" onpopupshowing="BrowserBackMenu(event);"
+                    oncommand="gotoHistoryIndex(event); event.preventBubble();"/>
+      </toolbarbutton>
+    
+      <toolbarbutton id="forward-button" type="menu-button" class="toolbarbutton-1"
+                      label="&forwardCmd.label;"
+                      command="Browser:Forward"
+                      context="forwardMenu"
+                      tooltiptext="&forwardButton.tooltip;">
+        <menupopup context="" oncommand="gotoHistoryIndex(event); event.preventBubble()"
+                    onpopupshowing="BrowserForwardMenu(event);"/>
+      </toolbarbutton>
+    
+      <toolbarbutton id="reload-button" class="toolbarbutton-1"
+                      label="&reloadCmd.label;"
+                      oncommand="if (event.shiftKey) BrowserReloadSkipCache(); else BrowserReload();"  
+                      tooltiptext="&reloadButton.tooltip;"/>
+                    
+      <toolbarbutton id="stop-button" class="toolbarbutton-1"
+                      label="&stopCmd.label;"
+                      command="Browser:Stop"
+                      tooltiptext="&stopButton.tooltip;"/>
+
+      <toolbarbutton id="home-button" class="toolbarbutton-1"
+                      label="&homeButton.label;"
+                      ondragover="nsDragAndDrop.dragOver(event, homeButtonObserver);"
+                      ondragdrop="nsDragAndDrop.drop(event, homeButtonObserver);"
+                      ondragexit="nsDragAndDrop.dragExit(event, homeButtonObserver);"
+                      oncommand="BrowserHome();"/>
+    
+      <toolbaritem id="urlbar-container" align="center" flex="1"
+                    class="chromeclass-location">
+        <textbox id="urlbar" flex="1"
+                  type="autocomplete" searchSessions="history" 
+                  timeout="50" maxrows="6" alwaysopenpopup="true"
+                  disablehistory="false"
+                  defaultSearchEngine="true" tabScrolling="true"
+                  showCommentColumn="true"
+                  inputtooltiptext="&locationBar.tooltip;"
+                  oninput="window.XULBrowserWindow.userTyped.value=true;"
+                  ontextcommand="return handleURLBarCommand(eventParam, domEvent);"
+                  ontextrevert="return handleURLBarRevert();"
+                  onfocus="URLBarFocusHandler(event);"
+                  onmousedown="URLBarMouseDownHandler(event);"
+                  onclick="URLBarClickHandler(event);">
+          <deck id="page-proxy-deck">
+            <image id="page-proxy-button"
+                    ondraggesture="PageProxyDragGesture(event);"
+                    tooltiptext="&proxyIcon.tooltip;"/>
+            <image id="page-proxy-favicon" validate="never"
+                    ondraggesture="PageProxyDragGesture(event);"
+                    onload="this.parentNode.selectedIndex = 1;
+                            event.stopPropagation();
+                            event.preventBubble();
+                            HandleBookmarkIcon(this.src, true);"
+                    onerror="gBrowser.addToMissedIconCache(this.src); HandleBookmarkIcon(this.src, false);"
+                    tooltiptext="&proxyIcon.tooltip;"/>
+          </deck>
+
+          <menupopup class="autocomplete-history-popup"
+                      popupalign="topleft" popupanchor="bottomleft"
+                      onpopupshowing="createUBHistoryMenu(event.target);" 
+                      oncommand="executeUrlBarHistoryCommand(event.target);"/>
+        </textbox>
+      </toolbaritem>
+
+      <toolbaritem id="search-container" align="center" class="chromeclass-location">
+        <textbox id="search-bar" flex="1"/>
+      </toolbaritem>
+      
+      <toolbaritem id="go-container" align="center" class="chromeclass-location">
+        <button id="go-button" class="button-toolbar"
+                label="&goButton.label;"
+                oncommand="addToUrlbarHistory(); BrowserLoadURL();"
+                ondragover="nsDragAndDrop.dragOver(event, goButtonObserver);"
+                ondragdrop="nsDragAndDrop.drop(event, goButtonObserver);"
+                ondragexit="nsDragAndDrop.dragExit(event, goButtonObserver);"
+                tooltiptext="&goButton.tooltip;"/> 
+      </toolbaritem>
+
+      <toolbarbutton id="print-button" class="toolbarbutton-1"
+                      label="&printButton.label;"
+                      oncommand="BrowserPrint();"
+                      tooltiptext="&printButton.tooltip;"/>
+
+      <toolbaritem id="throbber-box" align="center" pack="center">
+        <button id="navigator-throbber" oncommand="goClickThrobber('browser.throbber.url')"
+                tooltiptext="&throbber.tooltip;"/>
+      </toolbaritem>
+      
+      <toolbaritem id="personal-bookmarks" flex="1">
+        <bookmarks-toolbar id="bookmarks-toolbar" flex="1"/>
+      </toolbaritem>
+    </toolbarpalette>
+
+    <toolbar id="nav-bar" class="toolbar-primary chromeclass-toolbar"
+             toolbarname="&navbarCmd.label;" accesskey="&navbarCmd.accesskey;"
+             fullscreentoolbar="true"
+             customizable="true" mode="icons"
+             defaultset="back-button,forward-button,urlbar-container,reload-button,stop-button,throbber-box"
              context="toolbar-context-menu">
-        <toolbarpalette>
-          <toolbarbutton id="back-button" type="menu-button" class="toolbarbutton-1"
-                         label="&backCmd.label;"
-						 command="Browser:Back"
-                         context="backMenu"
-                         tooltiptext="&backButton.tooltip;">
-            <menupopup context="" onpopupshowing="BrowserBackMenu(event);"
-                       oncommand="gotoHistoryIndex(event); event.preventBubble();"/>
-          </toolbarbutton>
-        
-          <toolbarbutton id="forward-button" type="menu-button" class="toolbarbutton-1"
-                         label="&forwardCmd.label;"
-                         command="Browser:Forward"
-                         context="forwardMenu"
-                         tooltiptext="&forwardButton.tooltip;">
-            <menupopup context="" oncommand="gotoHistoryIndex(event); event.preventBubble()"
-                       onpopupshowing="BrowserForwardMenu(event);"/>
-          </toolbarbutton>
-        
-          <toolbarbutton id="reload-button" class="toolbarbutton-1"
-                         label="&reloadCmd.label;"
-                         oncommand="if (event.shiftKey) BrowserReloadSkipCache(); else BrowserReload();"  
-                         tooltiptext="&reloadButton.tooltip;"/>
-                       
-          <toolbarbutton id="stop-button" class="toolbarbutton-1"
-                         label="&stopCmd.label;"
-                         command="Browser:Stop"
-                         tooltiptext="&stopButton.tooltip;"/>
 
-          <toolbarbutton id="home-button" class="toolbarbutton-1"
-                         label="&homeButton.label;"
-                         ondragover="nsDragAndDrop.dragOver(event, homeButtonObserver);"
-                         ondragdrop="nsDragAndDrop.drop(event, homeButtonObserver);"
-                         ondragexit="nsDragAndDrop.dragExit(event, homeButtonObserver);"
-                         oncommand="BrowserHome();"/>
-      
-        <toolbaritem id="urlbar-container" align="center" flex="1"
-                     class="chromeclass-location">
-          <textbox id="urlbar" flex="1"
-                   type="autocomplete" searchSessions="history" 
-                   timeout="50" maxrows="6" alwaysopenpopup="true"
-                   disablehistory="false"
-                   defaultSearchEngine="true" tabScrolling="true"
-                   showCommentColumn="true"
-                   inputtooltiptext="&locationBar.tooltip;"
-                   oninput="window.XULBrowserWindow.userTyped.value=true;"
-                   ontextcommand="return handleURLBarCommand(eventParam, domEvent);"
-                   ontextrevert="return handleURLBarRevert();"
-                   onfocus="URLBarFocusHandler(event);"
-                   onmousedown="URLBarMouseDownHandler(event);"
-                   onclick="URLBarClickHandler(event);">
-            <deck id="page-proxy-deck">
-              <image id="page-proxy-button"
-                     ondraggesture="PageProxyDragGesture(event);"
-                     tooltiptext="&proxyIcon.tooltip;"/>
-              <image id="page-proxy-favicon" validate="never"
-                     ondraggesture="PageProxyDragGesture(event);"
-                     onload="this.parentNode.selectedIndex = 1;
-                             event.stopPropagation();
-                             event.preventBubble();
-                             HandleBookmarkIcon(this.src, true);"
-                     onerror="gBrowser.addToMissedIconCache(this.src); HandleBookmarkIcon(this.src, false);"
-                     tooltiptext="&proxyIcon.tooltip;"/>
-            </deck>
-
-            <menupopup class="autocomplete-history-popup"
-                       popupalign="topleft" popupanchor="bottomleft"
-                       onpopupshowing="createUBHistoryMenu(event.target);" 
-                       oncommand="executeUrlBarHistoryCommand(event.target);"/>
-          </textbox>
-        </toolbaritem>
-
-        <toolbaritem id="go-container" align="center" class="chromeclass-location">
-          <button id="go-button" class="button-toolbar"
-                  label="&goButton.label;"
-                  oncommand="addToUrlbarHistory(); BrowserLoadURL();"
-                  ondragover="nsDragAndDrop.dragOver(event, goButtonObserver);"
-                  ondragdrop="nsDragAndDrop.drop(event, goButtonObserver);"
-                  ondragexit="nsDragAndDrop.dragExit(event, goButtonObserver);"
-                  tooltiptext="&goButton.tooltip;"/> 
-        </toolbaritem>
-
-        <toolbarbutton id="print-button" class="toolbarbutton-1"
-                       label="&printButton.label;"
-                       oncommand="BrowserPrint();"
-                       tooltiptext="&printButton.tooltip;"/>
-
-        <toolbaritem id="throbber-box" align="center" pack="center">
-          <button id="navigator-throbber" oncommand="goClickThrobber('browser.throbber.url')"
-                  tooltiptext="&throbber.tooltip;"/>
-        </toolbaritem>
-      </toolbarpalette>
-      
-      <hbox id="window-controls" hidden="true" fullscreencontrol="true">
+    <hbox id="window-controls" hidden="true" fullscreencontrol="true">
         <toolbarbutton id="minimize-button" class="toolbarbutton-1"
                        oncommand="window.minimize();"/>
 
@@ -791,12 +802,13 @@ Contributor(s):
                        oncommand="window.close();"/>
       </hbox>
     </toolbar>
-  
-    <!-- Bookmarks in the personal toolbar folder -->
-    <toolbar id="PersonalToolbar" class="chromeclass-directories">
-      <bookmarks-toolbar id="bookmarks-toolbar" flex="1"/>
-    </toolbar>
+ 
+    <toolbarset id="customToolbars" context="toolbar-context-menu"/>
 
+    <toolbar id="PersonalToolbar" class="chromeclass-directories"
+             customizable="true" defaultset="personal-bookmarks"
+             toolbarname="&personalbarCmd.label;" accesskey="&personalbarCmd.accesskey;"/>
+    
   </toolbox>
     
   <!-- we only need to handle |ondragdrop| because everything else is

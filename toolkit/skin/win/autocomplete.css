@@ -107,3 +107,9 @@ textbox {
 .autocomplete-treebody:-moz-tree-cell-text(menuactive)  {
   color: HighlightText !important;
 }
+
+/* ::::: textboxes inside toolbarpaletteitems ::::: */
+
+toolbarpaletteitem > toolbaritem > textbox > hbox > hbox > html|*.textbox-input {
+  visibility: hidden;
+}

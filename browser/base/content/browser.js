@@ -2592,7 +2592,24 @@ function BrowserToolbarChanged()
 
 function BrowserCustomizeToolbar()
 {
-  window.openDialog("chrome://browser/content/customizeToolbar.xul", "Customize Toolbar", "modal,chrome,resizable=yes");
+  var cmd = document.getElementById("cmd_CustomizeToolbars");
+  cmd.setAttribute("disabled", "true");
+  
+  var iframe = document.createElement("iframe");
+  iframe.flex = 1;
+  iframe.setAttribute("src", "chrome://global/content/customizeToolbar.xul");
+  gBrowser.parentNode.insertBefore(iframe, gBrowser);
+  gBrowser.collapsed = true;
+}
+
+function onToolbarCustomizeComplete()
+{
+  var cmd = document.getElementById("cmd_CustomizeToolbars");
+  cmd.removeAttribute("disabled");
+
+  var iframe = gBrowser.previousSibling;
+  iframe.parentNode.removeChild(iframe);
+  gBrowser.collapsed = false;
 }
 
 var FullScreen = 
@@ -2998,6 +3015,48 @@ nsBrowserStatusHandler.prototype =
     } catch (e) {
     }
   }
+}
+
+function onViewToolbarsPopupShowing(aEvent)
+{
+  var popup = aEvent.target;
+  
+  // Empty the menu
+  for (var i = popup.childNodes.length-1; i >= 0; --i) {
+    var deadItem = popup.childNodes[i];
+    if (deadItem.hasAttribute("toolbarindex"))
+      popup.removeChild(deadItem);
+  }
+  
+  var firstMenuItem = popup.firstChild;
+  
+  var toolbox = document.getElementById("navigator-toolbox");
+  for (var i = 0; i < toolbox.childNodes.length; ++i) {
+    var toolbar = toolbox.childNodes[i];
+    var toolbarName = toolbar.getAttribute("toolbarname");
+    if (toolbarName) {
+      var menuItem = document.createElement("menuitem");
+      menuItem.setAttribute("toolbarindex", i);
+      menuItem.setAttribute("type", "checkbox");
+      menuItem.setAttribute("label", toolbarName);
+      menuItem.setAttribute("accesskey", toolbar.getAttribute("accesskey"));
+      menuItem.setAttribute("checked", toolbar.getAttribute("collapsed") != "true");
+      popup.insertBefore(menuItem, firstMenuItem);        
+      
+      menuItem.addEventListener("command", onViewToolbarCommand, false);
+    }
+    toolbar = toolbar.nextSibling;
+  }
+}
+
+function onViewToolbarCommand(aEvent)
+{
+  var toolbox = document.getElementById("navigator-toolbox");
+  var index = aEvent.originalTarget.getAttribute("toolbarindex");
+  var toolbar = toolbox.childNodes[index];
+  
+  toolbar.collapsed = aEvent.originalTarget.getAttribute("checked") != "true";
+  document.persist(toolbar.id, "collapsed");
 }
 
 function displayPageInfo()

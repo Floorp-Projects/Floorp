@@ -25,57 +25,49 @@
 -->
 
 <!DOCTYPE dialog [
-<!ENTITY % customizeToolbarDTD SYSTEM "chrome://browser/locale/customizeToolbar.dtd">
+<!ENTITY % customizeToolbarDTD SYSTEM "chrome://global/locale/customizeToolbar.dtd">
   %customizeToolbarDTD;
 ]>
 
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://browser/content/customizeToolbar.css" type="text/css"?>
-<?xml-stylesheet href="chrome://browser/skin/customizeToolbar.css" type="text/css"?>
+<?xml-stylesheet href="chrome://global/content/customizeToolbar.css" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/customizeToolbar.css" type="text/css"?>
 
-<dialog id="main-window"
-        title="&window.title;"
-        onload="buildDialog()"
-        ondialogaccept="updateToolbar()"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        width="700" height="465">
+<dialog id="CustomizeToolbarWindow"
+        onload="onLoad();"
+        ondialogaccept="onAccept();"
+        ondialogcancel="onCancel();"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<script type="application/x-javascript" src="chrome://browser/content/customizeToolbar.js"/>
+<script type="application/x-javascript" src="chrome://global/content/customizeToolbar.js"/>
 <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
 <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
 
-<description>
-&removeinstructions.description;
-</description>
-
-<toolbox id="cloned-bar-container"
-         ondragover="nsDragAndDrop.dragOver(event, toolbarDNDObserver)"
-         ondragdrop="nsDragAndDrop.drop(event, toolbarDNDObserver);"
-         ondragexit="gCurrentDragOverItem.removeAttribute('dragactive');"/>
-
-<separator class="groove"/>
+<stringbundle id="stringBundle" src="chrome://global/locale/customizeToolbar.properties"/>
 
 <description>
 &instructions.description;
 </description>
 
 <vbox flex="1" id="palette-box"
+      ondraggesture="gDraggingFromPalette = true; nsDragAndDrop.startDrag(event, dragStartObserver);"
       ondragover="nsDragAndDrop.dragOver(event, paletteDNDObserver);"
       ondragdrop="nsDragAndDrop.drop(event, paletteDNDObserver);"/>
 
-<separator class="groove"/>
-
 <box align="center">
   <label value="&show.label;"/>
-  <menulist id="modelist" oncommand="updateToolbarMode(this.value)">
+  <menulist id="modelist" value="icons" oncommand="updateToolbarMode(this.value);">
     <menupopup>
        <menuitem value="full" label="&iconsAndText.label;"/>
        <menuitem value="icons" label="&icons.label;"/>
        <menuitem value="text" label="&text.label;"/>
     </menupopup>
   </menulist>
+  
   <checkbox id="smallicons" oncommand="updateIconSize(this.checked);" label="&useSmallIcons.label;"/>
-  <button label="&restoreDefaultSet.label;" oncommand="resetToDefault()"/>
+  
+  <button label="&addNewToolbar.label;" oncommand="addNewToolbar();"/>
+  <button label="&restoreDefaultSet.label;" oncommand="restoreDefaultSet();"/>
 </box>
 
 <separator class="groove"/>
