@@ -26,6 +26,9 @@ REQUIRES	= xpcom plugin string
 LIBRARY_NAME	= npsimple
 MODULE_NAME     = SimplePlugin
 
+# Set bogus meta component so that lib is not added to any final-link lists
+META_COMPONENT=bogus_plugin
+
 DEPTH = ..\..\..\..
 
 # Make sure that it builds but don't install it

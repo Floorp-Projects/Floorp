@@ -119,17 +119,19 @@ export:: \
 !endif
         build_number  \
         nsBuildID.h   \
-!ifdef MOZ_COVERAGE
-        trace.dll     \
-!endif
         $(NULL)
+
 !ifdef MOZ_COVERAGE
+export:: trace.dll
        $(MAKE_INSTALL) trace.dll $(DIST)/bin
        $(MAKE_INSTALL) trace.lib $(DIST)/lib
        $(MAKE_INSTALL) trace.dll $(DIST)/install
        $(MAKE_INSTALL) $(DIST)/bin/nspr4.dll $(DIST)/install
 !endif
-      $(RM) $(DIST)\bin\chrome\chromelist.txt 
+
+export::
+	$(RM) $(DIST)\bin\chrome\chromelist.txt 
+	$(RM) $(FINAL_LINK_LIBS) $(FINAL_LINK_COMPS) $(FINAL_LINK_COMP_NAMES)
 
 #install::
 #	$(RM) $(DIST)\bin\chrome\installed-chrome.txt
