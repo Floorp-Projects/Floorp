@@ -598,6 +598,28 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
     return FormatInputStream(aRequest, aCtxt, pushBuffer);
 }
 
+NS_IMETHODIMP
+nsIndexedToHTML::OnInformationAvailable(nsIRequest *aRequest,
+                                        nsISupports *aCtxt,
+                                        const nsAString& aInfo) {
+    nsAutoString pushBuffer;
+    PRUnichar* escaped = nsEscapeHTML2(PromiseFlatString(aInfo).get());
+    if (!escaped)
+        return NS_ERROR_OUT_OF_MEMORY;
+    pushBuffer.Append(NS_LITERAL_STRING("<tr>\n <td>"));
+    pushBuffer.Append(escaped);
+    nsMemory::Free(escaped);
+    pushBuffer.Append(NS_LITERAL_STRING("</td>\n <td></td>\n <td></td>\n <td></td>\n</tr>\n"));
+    
+    // Split this up to avoid slow layout performance with large tables
+    // - bug 85381
+    if (++mRowCount > ROWS_PER_TABLE) {
+        pushBuffer.Append(NS_LITERAL_STRING("</table>\n<table>\n"));
+        mRowCount = 0;
+    }   
+    return FormatInputStream(aRequest, aCtxt, pushBuffer);
+}
+
 void nsIndexedToHTML::FormatSizeString(PRInt64 inSize, nsString& outSizeString)
 {
     nsInt64 size(inSize);
