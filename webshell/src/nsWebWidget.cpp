@@ -420,6 +420,7 @@ nsresult WebWidgetImpl::MakeWindow(nsNativeWidget aNativeParent,
   rv = mView->QueryInterface(kScrollViewIID, (void**)&scrollView);
   if (NS_OK == rv) {
     scrollView->SetScrollPreference(aScrolling);
+    NS_RELEASE(scrollView);
   }
   else {
     NS_ASSERTION(0, "invalid scrolling view");
