@@ -39,7 +39,6 @@
 #include "nsIPref.h"
 #include "nsIProxyAutoConfig.h"
 #include "nsIFile.h"
-#include "nsIFileChannel.h"
 #include "nsIInputStream.h"
 #include "nsIIOService.h"
 #include "nsIURL.h"
@@ -1384,10 +1383,10 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIRequest *request,
   {
     char* urlString;
     nsCOMPtr<nsIFile> localFile;
-    nsCOMPtr<nsIStreamAsFile> fileChannel = do_QueryInterface(channel);
+    nsCOMPtr<nsIStreamAsFile> streamAsFile = do_QueryInterface(channel);
     
-    if (fileChannel)
-        rv = fileChannel->GetFile(getter_AddRefs(localFile));
+    if (streamAsFile)
+        rv = streamAsFile->GetFile(getter_AddRefs(localFile));
     
     if (NS_SUCCEEDED(rv) && localFile)
     {
