@@ -5,3 +5,5 @@ tasksOverlay.xul
 tasksOverlay.js
 dialogOverlay.xul
 dialogOverlay.js
+commonDialog.xul
+commonDialog.js
