@@ -33,7 +33,16 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-# Install bloaturls.txt file for tinderbox Bloaty test.
+ifdef ENABLE_TESTS
+
+# Install bloaturls.txt file for tinderbox bloat test.
 libs:: bloaturls.txt
 	$(INSTALL) $< $(DIST)/bin
 
+# Install bloatcycle.html into dist/bin/res, for auto-cycling
+# of bloaturls.txt.  This is for browsers that can't do -f
+# autocycling of URLs.
+libs:: bloatcycle.html
+	$(INSTALL) $< $(DIST)/bin/res
+
+endif

@@ -1,0 +1,40 @@
+<script>
+// bloat test driver for TestGtkEmbed
+//
+// set |user_pref("dom.allow_scripts_to_close_windows", true);| to 
+// allow this to close the window when the loop is done.
+//
+//     "ftp://ftp.mozilla.org",   // not supported for TestGtkEmbed
+//
+var list = 
+    [
+     "http://www.mozilla.org",
+     "http://www.mozilla.org",
+     "resource:///res/samples/test2.html",
+     "resource:///res/samples/test8.html",
+     "resource:///res/samples/test6.html",
+     "resource:///res/samples/test8.html"
+    ];
+var interval = 3000; // 15000
+var idx = 0;
+var w;
+
+window.onload = function () {
+    w = window.open("about:blank");
+    window.setTimeout(loadURL, interval); 
+};
+function loadURL () {
+    w.location.href = list[idx++];
+    if (list[idx]) {
+	window.setTimeout(loadURL, interval);
+    } else {
+    window.setTimeout("w.close();", interval);
+	window.setTimeout("window.close();", interval);
+    }
+}
+    var i;
+    for(i=0;i<6;i++) {
+      document.write(list[i]);
+      document.write("<br>");
+    }
+</script>
