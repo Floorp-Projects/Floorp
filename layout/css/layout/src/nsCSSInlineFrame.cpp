@@ -387,6 +387,8 @@ nsCSSInlineFrame::ReflowMapped(nsCSSInlineReflowState& aState)
       break;
 
     case NS_INLINE_REFLOW_NOT_COMPLETE:
+      // We must create the continuation now because our next-in-flow
+      // won't know to create it.
       rv = MaybeCreateNextInFlow(aState, child);
       if (NS_OK != rv) {
         reflowResult = nsInlineReflowStatus(rv);
@@ -397,11 +399,13 @@ nsCSSInlineFrame::ReflowMapped(nsCSSInlineReflowState& aState)
       PushKids(aState, prevChild, child);
       mLastContentOffset = kidContentIndex;
       mLastContentIsComplete = PR_FALSE;
+      NS_ASSERTION(mFirstContentOffset <= mLastContentOffset, "bad fco/lco");
       goto done;
 
     case NS_INLINE_REFLOW_BREAK_AFTER:
       mLastContentOffset = kidContentIndex;
       mLastContentIsComplete = PR_TRUE;
+      NS_ASSERTION(mFirstContentOffset <= mLastContentOffset, "bad fco/lco");
 
       // We might have children following this breaking child (for
       // example, somebody inserted an HTML BR in the middle of
@@ -437,6 +441,7 @@ nsCSSInlineFrame::ReflowMapped(nsCSSInlineReflowState& aState)
   } else {
     mLastContentOffset = kidContentIndex - 1;
   }
+  NS_ASSERTION(mFirstContentOffset <= mLastContentOffset, "bad fco/lco");
   mLastContentIsComplete = PR_TRUE;
   aState.mKidContentIndex = kidContentIndex;
   aState.mLastChild = prevChild;
@@ -461,11 +466,12 @@ nsCSSInlineFrame::ReflowUnmapped(nsCSSInlineReflowState& aState)
 
   nsresult rv;
   nsInlineReflowStatus reflowResult = NS_INLINE_REFLOW_NOT_COMPLETE;
-  PRInt32 kidContentIndex = aState.mKidContentIndex;
 
   // Get the childPrevInFlow for our eventual first child if we are a
   // continuation and we have no children and the last child in our
-  // prev-in-flow is incomplete.
+  // prev-in-flow is incomplete. While we are at it, we also compute
+  // our kidContentIndex.
+  PRInt32 kidContentIndex;
   nsIFrame* childPrevInFlow = nsnull;
   if ((nsnull == mFirstChild) && (nsnull != mPrevInFlow)) {
     nsCSSInlineFrame* prev = (nsCSSInlineFrame*)mPrevInFlow;
@@ -478,6 +484,10 @@ nsCSSInlineFrame::ReflowUnmapped(nsCSSInlineReflowState& aState)
       prev->LastChild(childPrevInFlow);
     }
   }
+  else {
+    kidContentIndex = NextChildOffset();
+  }
+
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
      ("enter nsCSSInlineFrame::ReflowUnmapped: kci=%d childPrevInFlow=%p",
       aState.mKidContentIndex, childPrevInFlow));
@@ -529,21 +539,19 @@ nsCSSInlineFrame::ReflowUnmapped(nsCSSInlineReflowState& aState)
       break;
 
     case NS_INLINE_REFLOW_NOT_COMPLETE:
-      rv = MaybeCreateNextInFlow(aState, child);
-      if (NS_OK != rv) {
-        reflowResult = nsInlineReflowStatus(rv);
-        goto done;
-      }
-      prevChild = child;
-      child->GetNextSibling(child);
-      PushKids(aState, prevChild, child);
+      // Note: We don't need to create a next-in-flow for the child
+      // because we know that we will be continued and our
+      // continuation will re-enter the reflow-unmapped logic and pick
+      // up from the prev-in-flows last child and continue it.
       mLastContentOffset = kidContentIndex;
       mLastContentIsComplete = PR_FALSE;
+      NS_ASSERTION(mFirstContentOffset <= mLastContentOffset, "bad fco/lco");
       goto done;
 
     case NS_INLINE_REFLOW_BREAK_AFTER:
       mLastContentOffset = kidContentIndex;
       mLastContentIsComplete = PR_TRUE;
+      NS_ASSERTION(mFirstContentOffset <= mLastContentOffset, "bad fco/lco");
       if (++kidContentIndex == lastContentIndex) {
         reflowResult = NS_INLINE_REFLOW_COMPLETE;
       }
@@ -571,6 +579,7 @@ nsCSSInlineFrame::ReflowUnmapped(nsCSSInlineReflowState& aState)
   } else {
     mLastContentOffset = kidContentIndex - 1;
   }
+  NS_ASSERTION(mFirstContentOffset <= mLastContentOffset, "bad fco/lco");
   mLastContentIsComplete = PR_TRUE;
   reflowResult = NS_INLINE_REFLOW_COMPLETE;
 
@@ -592,11 +601,32 @@ nsCSSInlineFrame::PullUpChildren(nsCSSInlineReflowState& aState)
      ("enter nsCSSInlineFrame::PullUpChildren: childCount=%d",
       mChildCount));
 
+  // Get correct kidContentIndex
+  PRInt32 kidContentIndex;
+  if ((nsnull == mFirstChild) && (nsnull != mPrevInFlow)) {
+    nsCSSInlineFrame* prev = (nsCSSInlineFrame*)mPrevInFlow;
+    NS_ASSERTION(prev->mLastContentOffset >= prev->mFirstContentOffset,
+                 "bad prevInFlow");
+    kidContentIndex = prev->NextChildOffset();
+  }
+  else {
+    kidContentIndex = NextChildOffset();
+  }
+
   nsresult rv;
   nsInlineReflowStatus reflowResult = NS_INLINE_REFLOW_NOT_COMPLETE;
-  PRInt32 kidContentIndex = aState.mKidContentIndex;
   nsCSSInlineFrame* nextInFlow = (nsCSSInlineFrame*) mNextInFlow;
   nsIFrame* prevChild = aState.mLastChild;
+#ifdef NS_DEBUG
+  if (nsnull == prevChild) {
+    NS_ASSERTION(nsnull == mFirstChild, "bad prevChild");
+    NS_ASSERTION(0 == mChildCount, "bad child count");
+  }
+  else {
+    NS_ASSERTION(nsnull != mFirstChild, "bad prevChild");
+    NS_ASSERTION(0 != mChildCount, "bad child count");
+  }
+#endif
   while (nsnull != nextInFlow) {
     // Get child from our next-in-flow
     nsIFrame* child = PullUpOneChild(nextInFlow, prevChild);
@@ -622,6 +652,8 @@ nsCSSInlineFrame::PullUpChildren(nsCSSInlineReflowState& aState)
       break;
 
     case NS_INLINE_REFLOW_NOT_COMPLETE:
+      // We must create the continuation now because our next-in-flow
+      // won't know to create it.
       rv = MaybeCreateNextInFlow(aState, child);
       if (NS_OK != rv) {
         reflowResult = nsInlineReflowStatus(rv);
@@ -632,17 +664,19 @@ nsCSSInlineFrame::PullUpChildren(nsCSSInlineReflowState& aState)
       PushKids(aState, prevChild, child);
       mLastContentOffset = kidContentIndex;
       mLastContentIsComplete = PR_FALSE;
+      NS_ASSERTION(mFirstContentOffset <= mLastContentOffset, "bad fco/lco");
       goto done;
 
     case NS_INLINE_REFLOW_BREAK_AFTER:
       mLastContentOffset = kidContentIndex;
       mLastContentIsComplete = PR_TRUE;
+      NS_ASSERTION(mFirstContentOffset <= mLastContentOffset, "bad fco/lco");
       {
         PRInt32 lastContentIndex;
         lastContentIndex = mContent->ChildCount();
         if (kidContentIndex == lastContentIndex) {
           // All of the children have been pulled up
-          rv = NS_INLINE_REFLOW_COMPLETE;
+          reflowResult = NS_INLINE_REFLOW_COMPLETE;
         }
       }
       goto done;
@@ -651,6 +685,7 @@ nsCSSInlineFrame::PullUpChildren(nsCSSInlineReflowState& aState)
       mLastContentIsComplete = PR_TRUE;
       if (nsnull != prevChild) {
         mLastContentOffset = kidContentIndex - 1;
+        NS_ASSERTION(mFirstContentOffset <= mLastContentOffset, "bad fco/lco");
         PushKids(aState, prevChild, child);
       }
       else {
@@ -667,6 +702,7 @@ nsCSSInlineFrame::PullUpChildren(nsCSSInlineReflowState& aState)
   } else {
     mLastContentOffset = kidContentIndex - 1;
   }
+  NS_ASSERTION(mFirstContentOffset <= mLastContentOffset, "bad fco/lco");
   mLastContentIsComplete = PR_TRUE;
   reflowResult = NS_INLINE_REFLOW_COMPLETE;
 
