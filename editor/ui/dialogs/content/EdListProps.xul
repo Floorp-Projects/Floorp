@@ -44,7 +44,7 @@
   <spring id="location" offsetY="50" persist="offsetX offsetY"/>
 
   <titledbox orient="vertical" flex="1"><title value="&ListType.label;"/>
-    <menulist flex="1" id="ListType" oncommand="SelectListType()">
+    <menulist id="ListType" oncommand="SelectListType()">
       <menupopup>
         <menuitem value="&none.value;"/>
         <menuitem value="&bulletList.value;"/>
@@ -63,7 +63,7 @@
        text value should be identical to string with id=BulletStyle in editor.properties 
   -->
   <titledbox orient="vertical" flex="1"><title id="BulletStyleLabel" value="&bulletStyle.label;"/>
-    <menulist flex="1" class="MinWidth10em" id="BulletStyle" oncommand="SelectBulletStyle()"/>
+    <menulist class="MinWidth10em" id="BulletStyle" oncommand="SelectBulletStyle()"/>
     <spring class="spacer"/>
     <box>
       <text class="label" id="StartingNumberLabel" value="&startingNumber.label;"/>
