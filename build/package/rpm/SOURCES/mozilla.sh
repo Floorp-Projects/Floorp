@@ -57,59 +57,10 @@
 cmdname=`basename $0`
 
 ##
-## location of the apprunner binary.
-##
-MOZ_APPRUNNER_NAME="/usr/lib/mozilla/bin/apprunner"
-
-##
 ## Variables
 ##
-MOZ_DIST_BIN=""
-MOZ_PROGRAM=""
-
-##
-## Functions
-##
-moz_bail()
-{
-	message=$1
-
-	echo
-	echo "$cmdname: $message"
-	echo
-
-	exit 1
-}
-
-moz_test_binary()
-{
-	binary=$1
-
-	if [ -f "$binary" ]
-	then
-		if [ -x "$binary" ]
-		then
-			return 1
-		fi
-	fi
-
-	return 0
-}
-
-moz_test_binary $MOZ_APPRUNNER_NAME
-
-if [ $? -eq 1 ]
-then
-	MOZ_PROGRAM=$MOZ_APPRUNNER_NAME
-fi
-
-##
-## Make sure the program is executable
-##
-if [ ! -x $MOZ_PROGRAM ]
-then
-	moz_bail "Cannot execute $MOZ_PROGRAM."
-fi
+MOZ_DIST_BIN="/usr/lib/mozilla"
+MOZ_PROGRAM="/usr/lib/mozilla/mozilla-bin"
 
 ##
 ## Set MOZILLA_FIVE_HOME
@@ -123,11 +74,74 @@ export MOZILLA_FIVE_HOME
 ##
 if [ "$LD_LIBRARY_PATH" ]
 then
-  LD_LIBRARY_PATH=/usr/lib/mozilla/lib:$LD_LIBRARY_PATH
+  LD_LIBRARY_PATH=/usr/lib/mozilla:/usr/lib/mozilla/plugins:$LD_LIBRARY_PATH
 else
-  LD_LIBRARY_PATH=/usr/lib/mozilla/lib
+  LD_LIBRARY_PATH=/usr/lib/mozilla:/usr/lib/mozilla/plugins
 fi
 
 export LD_LIBRARY_PATH
+
+# tell the glibc for 7.1 that we need to use the old thread stack size
+# model
+
+export LD_ASSUME_KERNEL=2.2.5
+
+# If there is no command line argument at all then try to open a new
+# window in an already running instance.
+
+if [ -z "$1" ]; then
+  $MOZ_PROGRAM -remote "openurl(about:blank,new-window)" 2>/dev/null >/dev/null
+  # no window found?
+  RETURN_VAL=$?
+  if [ "$RETURN_VAL" -eq "2" ]; then
+    exec $MOZ_PROGRAM ${1+"$@"}
+  fi
+  if [ "$RETURN_VAL" -eq "0" ]; then
+    exit 0;
+  fi
+  echo "Error sending command."
+  exit $RETURN_VAL
+fi
+
+unset RETURN_VAL
+
+# If there's a command line argument but it doesn't begin with a -
+# it's probably a url.  Try to send it to a running instance.
+
+USE_EXIST=0
+opt="$1"
+case "$opt" in
+  -*) ;;
+  *) USE_EXIST=1 ;;
+esac
+
+if [ "$USE_EXIST" -eq "1" ]; then
+  # check to make sure that the command contains at least a :/ in it.
+  echo $opt | grep -e ':/' 2>/dev/null > /dev/null
+  RETURN_VAL=$?
+  if [ "$RETURN_VAL" -eq "1" ]; then
+    # does it begin with a / ?
+    echo $opt | grep -e '^/' 2>/dev/null > /dev/null
+    RETURN_VAL=$?
+    if [ "$RETURN_VAL" -eq "0" ]; then
+      opt="file:$opt"
+    elif [ -e `pwd`/$opt ]; then
+      opt="file://`pwd`/$opt"
+    else
+      opt="http://$opt"
+    fi
+  fi
+  # ok, send it
+  $MOZ_PROGRAM -remote "openurl($opt)" 2>/dev/null > /dev/null
+  RETURN_VAL=$?
+  if [ "$RETURN_VAL" -eq "2" ]; then
+    exec $MOZ_PROGRAM ${1+"$@"}
+  fi
+  if [ "$RETURN_VAL" -eq "0" ]; then
+    exit 0;
+  fi
+  echo "Error sending command."
+  exit $RETURN_VAL
+fi
 
 exec $MOZ_PROGRAM ${1+"$@"}
