@@ -38,7 +38,7 @@ DEPTH="../../../../.."
 TEST_BASE=`dirname $0`
 TEST_BASE=`cd $TEST_BASE;pwd`
 MOZ_TEST_BASE=$TEST_BASE/$DEPTH
-MOZCONF=$HOME/.mozconfig
+MOZCONF=`$MOZ_TEST_BASE/mozilla/build/autoconf/mozconfig-find $MOZ_TEST_BASE/mozilla`
 
 MOZ_OBJ=""
 if test -f $MOZCONF; then
