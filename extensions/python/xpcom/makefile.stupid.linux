@@ -45,10 +45,10 @@ PYTHON_SRC=/usr/local/ActivePython-2.0
 
 # =========== START OF SECTION FOR COMMON EDITS =====================
 # We expect a "mozilla" directory under this
-MOZ_SRC=../../../../..
+MOZ_SRC=../../../..
 
 MOZCOMPONENTSDIR=$(MOZ_SRC)/mozilla/dist/bin/components
-MOZINCLUDES=-I$(MOZ_SRC)/mozilla/dist/include
+MOZINCLUDES=-I$(MOZ_SRC)/mozilla/dist/include -I$(MOZ_SRC)/mozilla/dist/include/nspr
 MOZLIBDIR=$(MOZ_SRC)/mozilla/dist/lib
 
 # this is setup to use the *installed* Python directory structure
@@ -90,7 +90,7 @@ LOADER_LDFLAGS=-Xlinker -rpath -Xlinker $(MOZLIBDIR) \
 	-Xlinker -rpath -Xlinker $(PYTHONLIBDIR) \
 	-L$(MOZLIBDIR) -L$(PYTHONLIBDIR)
 # NOTE: can't remember if "-shared" is necessary here
-LOADER_LIBS=-lpython2.0 -ldl -lpthread -ldb -lutil -shared -lxpcom
+LOADER_LIBS=-lpython2.0 -ldl -lpthread -lutil -shared -lxpcom
 $(LOADER): src/loader/pyloader.cpp
 	c++ $(LOADER_CFLAGS) $(MOZINCLUDES) $(PYTHONINCLUDES) \
 		-c src/loader/pyloader.cpp \
@@ -142,7 +142,7 @@ ENGINE_LDFLAGS=-Xlinker -rpath -Xlinker $(MOZLIBDIR) \
 	-Xlinker -rpath -Xlinker $(MOZLIBDIR)/components \
 	-Xlinker -rpath -Xlinker $(PYTHONLIBDIR) \
 	-Xlinker -shared
-ENGINE_LIBS=-lpython2.0 -ldl -lpthread -ldb -lutil -lxpcom \
+ENGINE_LIBS=-lpython2.0 -ldl -lpthread -lutil -lxpcom \
 	-lnspr4 -lgtk -lgdk -rdynamic -lgmodule -lglib -lm -lplc4 \
 	-lpthread -lnsl -lresolv -lm -lc -lgcc
 
