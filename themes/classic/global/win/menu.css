@@ -220,6 +220,16 @@ menuitem[checked="true"][type="radio"][menuactive="true"]
       border              : none;
     }
 
+  menulist > menupopup > menuitem[selected="true"] {
+    list-style-image: url("chrome://global/skin/menu-check.gif");
+    padding-left: 0px !important;
+  } 
+
+  menulist > menupopup > menuitem[menuactive="true"][selected="true"] {
+    list-style-image: url("chrome://global/skin/menu-check-hover.gif");
+  }
+
+
   menulist > menupopup > menuseparator
     {
       border-top: none;
