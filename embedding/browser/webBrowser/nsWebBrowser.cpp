@@ -53,6 +53,7 @@
 #include "nsIURI.h"
 #include "nsIWebBrowserPersist.h"
 #include "nsCWebBrowserPersist.h"
+#include "nsIPrintSettings.h"
 
 // for painting the background window
 #include "nsIRenderingContext.h"
@@ -1737,26 +1738,25 @@ NS_IMETHODIMP nsWebBrowser::SetFocusedElement(nsIDOMElement * aFocusedElement)
   return NS_OK;
 }
 
-
-//*****************************************************************************
-// nsWebBrowser::nsIWebBrowserPrint
-//*****************************************************************************   
-
-/* void Print (in nsIDOMWindow aDOMWindow, in nsIPrintOptions aThePrintOptions); */
-NS_IMETHODIMP nsWebBrowser::Print(nsIDOMWindow *aDOMWindow, 
-                                  nsIPrintOptions *aThePrintOptions,
-                                  nsIPrintListener *aPrintListener)
+/* helper function */
+nsresult nsWebBrowser::DoPrintOrPrintPreview(nsIDOMWindow *aDOMWindow, 
+                                             nsIPrintSettings *aThePrintSettings,
+                                             nsIPrintListener *aPrintListener,
+                                             PRBool            aDoPrinting)
 {
   nsresult rv = NS_OK;
-  nsCOMPtr<nsIDOMWindow> thisDOMWin;
   PRBool silent = PR_FALSE;
-  if( aThePrintOptions != nsnull){
-    aThePrintOptions->GetPrintSilent (&silent);
+  if( aThePrintSettings != nsnull) {
+    nsCOMPtr<nsIPrintOptions> printService = do_GetService(kPrintOptionsCID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      printService->SetPrintSettings(aThePrintSettings);
+    }
+    aThePrintSettings->GetPrintSilent(&silent);
   }
-  
 
   // XXX this next line may need to be changed
   // it is unclear what the correct way is to get the document.
+  nsCOMPtr<nsIDOMWindow> thisDOMWin;
   GetContentDOMWindow(getter_AddRefs(thisDOMWin));
   if (aDOMWindow == thisDOMWin.get()) {
      nsCOMPtr<nsIContentViewer> contentViewer;
@@ -1764,11 +1764,34 @@ NS_IMETHODIMP nsWebBrowser::Print(nsIDOMWindow *aDOMWindow,
      if (contentViewer) {
        nsCOMPtr<nsIContentViewerFile> contentViewerFile(do_QueryInterface(contentViewer));
        if (contentViewerFile) {
-         rv = contentViewerFile->Print(silent, nsnull, aPrintListener);
+         if (aDoPrinting) {
+           rv = contentViewerFile->Print(silent, nsnull, aPrintListener);
+         } else {
+           rv = contentViewerFile->PrintPreview();
+         }
        }
      }
   }
   return rv;
+}
+
+//*****************************************************************************
+// nsWebBrowser::nsIWebBrowserPrint
+//*****************************************************************************   
+
+/* void Print (in nsIDOMWindow aDOMWindow, in nsIPrintSettings aThePrintSettings); */
+NS_IMETHODIMP nsWebBrowser::Print(nsIDOMWindow *aDOMWindow, 
+                                  nsIPrintSettings *aThePrintSettings,
+                                  nsIPrintListener *aPrintListener)
+{
+  return DoPrintOrPrintPreview(aDOMWindow, aThePrintSettings, aPrintListener, PR_TRUE);
+}
+
+/* void PrintPreview (in nsIPrintSettings aThePrintSettings); */
+NS_IMETHODIMP nsWebBrowser::PrintPreview(nsIDOMWindow *aDOMWindow, 
+                                         nsIPrintSettings *aThePrintSettings)
+{
+  return DoPrintOrPrintPreview(aDOMWindow, aThePrintSettings, nsnull, PR_FALSE);
 }
 
   /* void Cancel (); */

@@ -70,6 +70,8 @@
 
 // Print Includes
 #include "PrintProgressDialog.h"
+#include "nsPrintSettingsImpl.h"
+#include "PrintSetupDialog.h"
 
 // Mozilla Includes
 #include "nsIWidget.h"
@@ -117,6 +119,8 @@ BEGIN_MESSAGE_MAP(CBrowserView, CWnd)
 	ON_COMMAND(ID_SAVE_IMAGE_AS, OnSaveImageAs)
 	ON_COMMAND(ID_EDIT_FIND, OnShowFindDlg)
 	ON_COMMAND(ID_FILE_PRINT, OnFilePrint)
+	ON_COMMAND(ID_FILE_PRINTPREVIEW, OnFilePrintPreview)
+	ON_COMMAND(ID_FILE_PRINTSETUP, OnFilePrintSetup)
 	ON_UPDATE_COMMAND_UI(ID_FILE_PRINT, OnUpdateFilePrint)
 	ON_REGISTERED_MESSAGE(WM_FINDMSG, OnFindMsg)
 
@@ -150,6 +154,8 @@ CBrowserView::CBrowserView()
     m_bCurrentlyPrinting = FALSE;
 
     m_SecurityState = SECURITY_STATE_INSECURE;
+
+    m_PrintSettings = (nsIPrintSettings*)new nsPrintSettings();
 }
 
 CBrowserView::~CBrowserView()
@@ -967,7 +973,7 @@ void CBrowserView::OnFilePrint()
 	  nsCOMPtr<nsIWebBrowserPrint> print(do_GetInterface(mWebBrowser));
 	  if(print)
 	  {
-      CPrintProgressDialog  dlg(mWebBrowser, domWindow);
+      CPrintProgressDialog  dlg(mWebBrowser, domWindow, m_PrintSettings);
 
 	    nsCOMPtr<nsIURI> currentURI;
 	    nsresult rv = mWebNav->GetCurrentURI(getter_AddRefs(currentURI));
@@ -981,6 +987,45 @@ void CBrowserView::OnFilePrint()
       dlg.DoModal();
       m_bCurrentlyPrinting = FALSE;
     }
+  }
+}
+
+void CBrowserView::OnFilePrintPreview()
+{
+  nsCOMPtr<nsIDOMWindow> domWindow;
+	mWebBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
+  if(domWindow) {
+	  nsCOMPtr<nsIWebBrowserPrint> print(do_GetInterface(mWebBrowser));
+	  if(print)
+	  {
+      print->PrintPreview(domWindow, m_PrintSettings);
+    }
+  }
+}
+
+static float GetFloatFromStr(const char* aStr, float aMaxVal = 1.0)
+{
+  float val;
+  sscanf(aStr, "%f", &val);
+  if (val <= aMaxVal) {
+    return val;
+  } else {
+    return 0.5;
+  }
+}
+
+void CBrowserView::OnFilePrintSetup()
+{
+  CPrintSetupDialog  dlg(m_PrintSettings);
+  if (dlg.DoModal() == IDOK && m_PrintSettings != NULL) {
+    m_PrintSettings->SetMarginTop(GetFloatFromStr(dlg.m_TopMargin));
+    m_PrintSettings->SetMarginLeft(GetFloatFromStr(dlg.m_LeftMargin));
+    m_PrintSettings->SetMarginRight(GetFloatFromStr(dlg.m_RightMargin));
+    m_PrintSettings->SetMarginBottom(GetFloatFromStr(dlg.m_BottomMargin));
+
+    m_PrintSettings->SetScaling(double(dlg.m_Scaling) / 100.0);
+    m_PrintSettings->SetPrintBGColors(dlg.m_PrintBGColors);
+    m_PrintSettings->SetPrintBGColors(dlg.m_PrintBGImages);
   }
 }
 

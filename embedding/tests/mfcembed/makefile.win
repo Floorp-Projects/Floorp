@@ -68,6 +68,8 @@ OBJS =                           \
     .\$(OBJDIR)\MostRecentUrls.obj \
     .\$(OBJDIR)\PrintProgressDialog.obj       \
     .\$(OBJDIR)\Preferences.obj \
+    .\$(OBJDIR)\nsPrintSettingsImpl.obj       \
+    .\$(OBJDIR)\PrintSetupDialog.obj       \
     .\$(OBJDIR)\StdAfx.obj       \
     $(NULL)
 
