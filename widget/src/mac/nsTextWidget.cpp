@@ -134,20 +134,9 @@ nsTextWidget::Destroy()
 //
 //
 //-------------------------------------------------------------------------
-nsresult nsTextWidget::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-	if (NULL == aInstancePtr) {
-	    return NS_ERROR_NULL_POINTER;
-	}
-
-  static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
-  if (aIID.Equals(kITextWidgetIID)) {
-    AddRef();
-    *aInstancePtr = (void**)(nsITextWidget*)this;
-    return NS_OK;
-  }
-  return Inherited::QueryInterface(aIID, aInstancePtr);
-}
+NS_INTERFACE_MAP_BEGIN(nsTextWidget)
+  NS_INTERFACE_MAP_ENTRY(nsITextWidget)
+NS_INTERFACE_MAP_END_INHERITING(Inherited)
 
 #pragma mark -
 //-------------------------------------------------------------------------

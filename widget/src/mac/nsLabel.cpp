@@ -47,21 +47,9 @@ nsLabel::~nsLabel()
 //
 //
 //-------------------------------------------------------------------------
-nsresult nsLabel::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-	if (NULL == aInstancePtr) {
-	    return NS_ERROR_NULL_POINTER;
-	}
-
-	static NS_DEFINE_IID(kILabel, NS_ILABEL_IID);
-	if (aIID.Equals(kILabel)) {
-	    *aInstancePtr = (void*) ((nsILabel*)this);
-	    AddRef();
-	    return NS_OK;
-	}
-
-	return nsTextWidget::QueryInterface(aIID,aInstancePtr);
-}
+NS_INTERFACE_MAP_BEGIN(nsLabel)
+  NS_INTERFACE_MAP_ENTRY(nsILabel)
+NS_INTERFACE_MAP_END_INHERITING(nsTextWidget)
 
 #pragma mark -
 //-------------------------------------------------------------------------

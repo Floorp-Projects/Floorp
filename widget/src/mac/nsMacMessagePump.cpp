@@ -156,8 +156,7 @@ static long ConvertOSMenuResultToPPMenuResult(long menuResult)
 
 #pragma mark -
 
-static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 //=================================================================
 /*  Constructor

@@ -51,21 +51,9 @@ nsRadioButton::~nsRadioButton()
 //
 //
 //-------------------------------------------------------------------------
-nsresult nsRadioButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-    if (NULL == aInstancePtr) {
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    static NS_DEFINE_IID(kIRadioButtonIID, NS_IRADIOBUTTON_IID);
-    if (aIID.Equals(kIRadioButtonIID)) {
-        *aInstancePtr = (void*) ((nsIRadioButton*)this);
-        AddRef();
-        return NS_OK;
-    }
-
-    return nsWindow::QueryInterface(aIID,aInstancePtr);
-}
+NS_INTERFACE_MAP_BEGIN(nsRadioButton)
+  NS_INTERFACE_MAP_ENTRY(nsIRadioButton)
+NS_INTERFACE_MAP_END_INHERITING(nsWindow)
 
 #pragma mark -
 //-------------------------------------------------------------------------

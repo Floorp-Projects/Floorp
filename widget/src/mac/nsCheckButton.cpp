@@ -51,20 +51,9 @@ nsCheckButton::~nsCheckButton()
 //
 //
 //-------------------------------------------------------------------------
-nsresult nsCheckButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-    if (NULL == aInstancePtr) {
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    static NS_DEFINE_IID(kICheckButtonIID, NS_ICHECKBUTTON_IID);
-    if (aIID.Equals(kICheckButtonIID)) {
-        *aInstancePtr = (void*) ((nsICheckButton*)this);
-        AddRef();
-        return NS_OK;
-    }
-    return nsWindow::QueryInterface(aIID,aInstancePtr);
-}
+NS_INTERFACE_MAP_BEGIN(nsCheckButton)
+  NS_INTERFACE_MAP_ENTRY(nsICheckButton)
+NS_INTERFACE_MAP_END_INHERITING(nsWindow)
 
 #pragma mark -
 //-------------------------------------------------------------------------

@@ -108,27 +108,9 @@ NS_IMETHODIMP   nsFileWidget:: Create(nsIWidget  *aParent,
 }
 
 
-/**
- * Implement the standard QueryInterface for NS_IWIDGET_IID and NS_ISUPPORTS_IID
- * @param aIID The name of the class implementing the method
- * @param _classiiddef The name of the #define symbol that defines the IID
- * for the class (e.g. NS_ISUPPORTS_IID)
-*/ 
-nsresult nsFileWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-    if (NULL == aInstancePtr) {
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    static NS_DEFINE_IID(kIFileWidgetIID, NS_IFILEWIDGET_IID);
-    if (aIID.Equals(kIFileWidgetIID)) {
-        *aInstancePtr = (void*) ((nsIFileWidget*)this);
-        AddRef();
-        return NS_OK;
-    }
-
-    return nsWindow::QueryInterface(aIID,aInstancePtr);
-}
+NS_INTERFACE_MAP_BEGIN(nsFileWidget)
+  NS_INTERFACE_MAP_ENTRY(nsIFileWidget)
+NS_INTERFACE_MAP_END_INHERITING(nsWindow)
 
 
 

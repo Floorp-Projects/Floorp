@@ -31,8 +31,6 @@
 #define NS_IMENULISTENER_IID      \
 { 0xbc658c81, 0x4beb, 0x11d2, \
   { 0x8d, 0xbb, 0x0, 0x60, 0x97, 0x3, 0xc1, 0x9e } }
-  
-static NS_DEFINE_IID(kIMenuListenerIID, NS_IMENULISTENER_IID);
 
 /**
  *

@@ -24,15 +24,13 @@
 #include "nsCarbonHelpers.h"
 
  
-static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
-
 //-------------------------------------------------------------------------
 //
 // Query interface implementation
 //
 //-------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS(nsLookAndFeel, kILookAndFeelIID);
+NS_IMPL_ISUPPORTS1(nsLookAndFeel, nsILookAndFeel);
 
 nsLookAndFeel::nsLookAndFeel()
 {

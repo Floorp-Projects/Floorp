@@ -31,13 +31,8 @@
 #include "nsIServiceManager.h"
 
 // Class IDs...
-static NS_DEFINE_IID(kEventQueueCID,  NS_EVENTQUEUE_CID);
-static NS_DEFINE_IID(kEventQueueServiceCID,  NS_EVENTQUEUESERVICE_CID);
-
-
-// Interface IDs...
-static NS_DEFINE_IID(kIEventQueueIID, NS_IEVENTQUEUE_IID);
-static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
+static NS_DEFINE_CID(kEventQueueCID,  NS_EVENTQUEUE_CID);
+static NS_DEFINE_CID(kEventQueueServiceCID,  NS_EVENTQUEUESERVICE_CID);
 
 
 static nsMacNSPREventQueueHandler*	gEventQueueHandler = nsnull;
@@ -110,8 +105,7 @@ void nsMacNSPREventQueueHandler::RepeatAction(const EventRecord& inMacEvent)
 
 #pragma mark -
 
-NS_DEFINE_IID(kIToolkitIID, NS_ITOOLKIT_IID);
-NS_IMPL_ISUPPORTS(nsToolkit,kIToolkitIID);
+NS_IMPL_ISUPPORTS1(nsToolkit, nsIToolkit);
 
 //-------------------------------------------------------------------------
 //

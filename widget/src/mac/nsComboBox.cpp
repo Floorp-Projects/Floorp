@@ -107,28 +107,10 @@ NS_IMETHODIMP nsComboBox::Create(nsIWidget *aParent,
 //
 //
 //-------------------------------------------------------------------------
-nsresult nsComboBox::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-    if (NULL == aInstancePtr) {
-        return NS_ERROR_NULL_POINTER;
-    }
-
-	static NS_DEFINE_IID(kInsComboBoxIID, NS_ICOMBOBOX_IID);
-	static NS_DEFINE_IID(kInsListWidgetIID, NS_ILISTWIDGET_IID);
-
-	if (aIID.Equals(kInsComboBoxIID)) {
-		*aInstancePtr = (void*) ((nsIComboBox*)this);
-		NS_ADDREF_THIS();
-		return NS_OK;
-	}
-	else if (aIID.Equals(kInsListWidgetIID)) {
-		*aInstancePtr = (void*) ((nsIListWidget*)this);
-		NS_ADDREF_THIS();
-		return NS_OK;
-	}
-
-	return nsWindow::QueryInterface(aIID,aInstancePtr);
-}
+NS_INTERFACE_MAP_BEGIN(nsComboBox)
+  NS_INTERFACE_MAP_ENTRY(nsIComboBox)
+  NS_INTERFACE_MAP_ENTRY(nsIListWidget)
+NS_INTERFACE_MAP_END_INHERITING(nsWindow)
 
 #pragma mark -
 //-------------------------------------------------------------------------
