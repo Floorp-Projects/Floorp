@@ -807,7 +807,7 @@ void nsPluginTag::TryUnloadPlugin(PRBool aForceShutdown)
   PRBool isXPCOM = PR_FALSE;
   if (!(mFlags & NS_PLUGIN_FLAG_OLDSCHOOL))
     isXPCOM = PR_TRUE;
- 
+
   if (isXPCOM && !aForceShutdown) return;
 
   if (mEntryPoint)
