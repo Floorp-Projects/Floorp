@@ -50,7 +50,7 @@
 #include "mkfsort.h"  
 #include "merrors.h"
 #include "shist.h"
-#include "ssl.h"
+#include HG27229
 #include "prtime.h"
 #include "pwcacapi.h"
 #include "secnav.h"
@@ -4112,7 +4112,7 @@ net_ProcessFTP(ActiveEntry * ce)
 										 "FTP",
                                			 FTP_PORT,
 										 &cd->cc->csock, 
-										 FALSE, 
+										 HG27230 
 										 &cd->tcp_con_data, 
 										 ce->window_id,
 										 &ce->URL_s->error_msg,
@@ -4284,7 +4284,7 @@ net_ProcessFTP(ActiveEntry * ce)
 										 "FTP Data Connection",
                        					FTP_PORT, 
 										 &cd->dsock, 
-										 FALSE, 
+										 HG27230 
 										 &cd->tcp_con_data, 
 										 ce->window_id,
 										 &ce->URL_s->error_msg,

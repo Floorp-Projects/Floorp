@@ -19,12 +19,14 @@
 
 DEPTH	= ../..
 
+include $(DEPTH)/config/config.mk
+
 DIRS	= about	\
 	file	\
 	ftp	\
 	gopher	\
-	http	\
-	remote
+	remote  \
+	$(NULL)
 
 ifndef MODULAR_NETLIB
 DIRS += \
@@ -33,6 +35,24 @@ DIRS += \
 	marimba	\
 	$(NULL)
 endif
+
+ifdef MOZ_LDAP
+DIRS += ldap \
+	$(NULL)
+endif
+
+ifdef MOZ_MAIL_NEWS
+DIRS += \
+	mailbox \
+	smtp \
+	nntp \
+	pop3 \
+	imap4 \
+	certld \
+	$(NULL)
+endif
+
+DIRS += http
 
 include $(DEPTH)/config/rules.mk
 

@@ -27,6 +27,7 @@
 /* dbm code */
 
 #include "mkcache.h"
+#include "rosetta.h"
 #include "extcache.h"
 #include "mkgeturl.h"
 #include "netutils.h"
@@ -36,7 +37,7 @@
 #include "xp_mcom.h"
 #include "client.h"
 #include "mkstream.h"
-#include "secnav.h"
+#include HG65288
 #include "mcom_db.h"
 #include "prclist.h"
 #include "prmem.h"
@@ -72,7 +73,7 @@ extern int MK_CACHE_LAST_MODIFIED;
 extern int MK_CACHE_EXPIRES;
 extern int MK_CACHE_LAST_ACCESSED;
 extern int MK_CACHE_CHARSET;
-extern int MK_CACHE_SECURE;
+HG73891
 extern int MK_CACHE_USES_RELATIVE_PATH;
 extern int MK_CACHE_FROM_NETSITE_SERVER;
 
@@ -105,8 +106,7 @@ PRIVATE uint32     net_MaxMemoryCacheSize=0;
 
 /* trace variable for cache testing */
 MODULE_PRIVATE PRBool NET_CacheTraceOn = PR_FALSE;
-
-PRIVATE PRBool net_dont_disk_cache_ssl = PR_FALSE;
+HG76298
 PRIVATE DB * cache_database = 0; 
 /* PRIVATE XXX Mac CodeWarrior bug */ PRCList active_cache_data_objects
 	= PR_INIT_STATIC_CLIST(&active_cache_data_objects);
@@ -121,16 +121,7 @@ typedef struct _CacheDataObject {
 
 PRIVATE void net_RemoveAllDiskCacheObjects(void);
 
-/* pass in TRUE to disable disk caching
- * of SSL documents.
- * pass in FALSE to enable disk cacheing
- * of SSL documents
- */
-PUBLIC void
-NET_DontDiskCacheSSL(XP_Bool set)
-{
-	net_dont_disk_cache_ssl = set;
-}
+HG87325
 
 PUBLIC PRBool
 NET_IsCacheTraceOn(void)
@@ -222,7 +213,7 @@ net_GetDiskCacheSize(void)
 	  {
 		net_NumberInDiskCache = 0;
 	  }
-
+	HG63453
 }
 
 
@@ -314,6 +305,7 @@ net_OpenCacheFatDB(void)
 				cache_database = NULL;
           }
 
+		HG98471
 		if(cache_database)
 		  {
     		if(-1 == (*cache_database->sync)(cache_database, 0))
@@ -454,7 +446,7 @@ net_StoreDiskCacheSize(void)
 
 	data.size = PL_strlen(DISK_CACHE_NAME)+1;
 	data.data = DISK_CACHE_NAME;
-	
+	HG52897
 	(*cache_database->put)(cache_database, net_DiskCacheNameKey, &data, 0);
 
 }
@@ -637,7 +629,7 @@ net_CacheStore(net_CacheObject * obj,
 
 	/* create new dbt data object */
 	data = net_CacheStructToDBData(obj);
-
+	HG73870
 	if(!key || !data)
 	  {
 		TRACEMSG(("Failed to get key or data: malloc error probably"));
@@ -884,6 +876,7 @@ NET_RemoveDiskCacheObjects(uint32 remove_num)
 	DBT data;
 	DBT key;
 
+	HG74380
 	/*
 	 * This optimization is not valid for the case of URLs that normally
 	 * would not be cached because their size exceeds the cache size, but
@@ -1606,23 +1599,24 @@ NET_CacheConverter (FO_Present_Types format_out,
 	 * the cache database is open
 	 */
 
+	HG52980
     TRACEMSG(("cache: want_to_cache is %s", want_to_cache ? "TRUE" : "FALSE"));
 
 	if(want_to_cache 
-	   && (!net_dont_disk_cache_ssl 
-			|| PL_strncasecmp(URL_s->address, "https:", 6))
+	   && (HG73896 
+			PL_strncasecmp(URL_s->address, "https:", 6))
 	   && !URL_s->dont_cache
 	   && (net_MaxDiskCacheSize > 0 || URL_s->must_cache)
 	   && net_OpenCacheFatDB() /* make sure database is open */
   	   && PL_strncasecmp(URL_s->address, "news:", 5)   /* not news: */
-	   && PL_strncasecmp(URL_s->address, "snews:", 6)  /* not snews: */
+	   HG73684
 	   && PL_strncasecmp(URL_s->address, "mailbox://", 10))  /* not IMAP */
 		do_disk_cache = TRUE;
 
 	/* Special case for StreamAsFile plugins:  */
 	if (URL_s->must_cache   /* this only set by plugin code ? */
 		&& ((PL_strncasecmp(URL_s->address, "news:", 5)==0)      /* is news */
-		||  (PL_strncasecmp(URL_s->address, "https:", 6)==0)     /* is secure */
+		HG83903
 		|| !PL_strncasecmp(URL_s->address, "mailbox://", 10))) /* is imap */
 		do_disk_cache = TRUE;
 
@@ -1667,10 +1661,7 @@ NET_CacheConverter (FO_Present_Types format_out,
         StrAllocCopy(cache_object->charset, URL_s->charset);
         StrAllocCopy(cache_object->content_encoding, URL_s->content_encoding);
 
-		/* copy security info */
-		cache_object->security_on             = URL_s->security_on;
-        cache_object->sec_info = SECNAV_CopySSLSocketStatus(URL_s->sec_info);
-
+		HG32138
         StrAllocCopy(cache_object->page_services_url, URL_s->page_services_url);
 
 		/* we always use relative paths in the main disk cache
@@ -1709,7 +1700,7 @@ NET_CacheConverter (FO_Present_Types format_out,
 				else if ((URL_s->address) && 
 						(!PL_strncasecmp(URL_s->address, "mailbox:", 8)
 						|| !PL_strncasecmp(URL_s->address, "news:", 5)
-						|| !PL_strncasecmp(URL_s->address, "snews:", 6))
+						HG65294)
 						 && (URL_s->content_type) && (*(URL_s->content_type)))
 				{
 					/*
@@ -2622,9 +2613,7 @@ NET_FindURLInCache(URL_Struct * URL_s, MWContext *ctxt)
  	URL_s->last_modified  = found_cache_obj->last_modified;
  	URL_s->is_netsite     = found_cache_obj->is_netsite;
 
-	/* copy security info */
-	URL_s->security_on             = found_cache_obj->security_on;
-    URL_s->sec_info = SECNAV_CopySSLSocketStatus(found_cache_obj->sec_info);
+	HG83267
 
 	TRACEMSG(("Cached copy is valid. returning method"));
 
@@ -3284,11 +3273,7 @@ PUT_PART(buffer);
 				  }
 				TABLE_BOTTOM;
 
-				TABLE_TOP( XP_GetString(MK_CACHE_SECURE) );
-				sprintf(buffer, "%s", cache_obj->security_on ? 
-													"TRUE" : "FALSE");
-				PUT_PART(buffer);
-				TABLE_BOTTOM;
+				HG63287
 
 				TABLE_TOP( XP_GetString(MK_CACHE_USES_RELATIVE_PATH) );
 				sprintf(buffer, "%s", cache_obj->is_relative_path ? 

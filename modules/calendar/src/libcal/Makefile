@@ -103,7 +103,9 @@ NSTOM_DEPTH = $(NS_DEPTH)/../mozilla
 INCLUDES    += -I./ical -I./itip -I./ui -I./util -I./htmlform/include \
 			-I$(NSTOM_DEPTH)/dist/public/util \
 			-I$(NSTOM_DEPTH)/dist/public/img \
-			-I$(NSTOM_DEPTH)/dist/public/layer
+			-I$(NSTOM_DEPTH)/dist/public/layer \
+			-I$(NSTOM_DEPTH)/libnls/headers/ 
+
 
 
 

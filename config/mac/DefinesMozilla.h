@@ -60,6 +60,3 @@
 #define ZIP_NAME "java"##VERSION_NUMBER
 */
 
-// 97/05/05 jrm -- use phil's new search scope api
-#define B3_SEARCH_API	1
-

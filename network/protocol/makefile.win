@@ -26,6 +26,7 @@ IGNORE_MANIFEST=1
 
 
 DEPTH=..\..
+include <$(DEPTH)\config\config.mak> 
 DIRS= \
 	about \
 	file \
@@ -37,6 +38,17 @@ DIRS= \
 	dataurl \
 	js \
 	marimba \
+!endif
+!ifdef MOZ_MAIL_NEWS 
+	pop3 \
+	smtp \
+	nntp \
+	mailbox \
+	certld \
+	imap4 \
+!endif
+!ifdef MOZ_LDAP
+	ldap \
 !endif
 	$(NULL)
 

@@ -217,8 +217,7 @@ public:
      --------------------------------
      propList is list of properties to return in events
      stream is CAPIStream to read/write data*/
-    /*
-
+    
     /*TODO: newer CAPI interface*/
     /*
     virtual CAPIStatus handleCAPI(CAPISession * s, CAPIHandle ** ppH,

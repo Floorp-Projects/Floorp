@@ -23,7 +23,9 @@
  */
 
 /* Please leave outside of ifdef for windows precompiled headers */
+#include "rosetta.h"
 #include "mkutils.h"
+#include "mktcp.h"
 
 /* A more guaranteed way of making sure that we never get duplicate messages
 is to always get each message's UIDL (if the server supports it)
@@ -52,8 +54,9 @@ and change the POP3_QUIT_RESPONSE state to flush the newly committed deletes. */
 #include "msgcom.h"
 #include "msgnet.h"
 #include "secnav.h"
-#include "ssl.h"
+#include HG09438
 
+#include "xp_error.h"
 #include "xpgetstr.h"
 
 #include "prefapi.h"
@@ -81,7 +84,11 @@ extern int XP_THE_PREVIOUSLY_ENTERED_PASSWORD_IS_INVALID_ETC;
 extern int XP_CONNECT_HOST_CONTACTED_SENDING_LOGIN_INFORMATION;
 extern int XP_PASSWORD_FOR_POP3_USER;
 extern int MK_MSG_DOWNLOAD_COUNT;
+extern int MK_UNABLE_TO_CONNECT;
+extern int MK_CONNECTION_REFUSED;
+extern int MK_CONNECTION_TIMED_OUT;
 
+extern void net_graceful_shutdown(PRFileDesc * sock, XP_Bool isSecure);
 
 #define POP3_PORT 110  /* the iana port for pop3 */
 #define OUTPUT_BUFFER_SIZE 512  /* max size of command string */
@@ -90,7 +97,7 @@ extern int MK_MSG_DOWNLOAD_COUNT;
 PRIVATE char *net_pop3_username=0;
 PRIVATE char *net_pop3_password=0; /* obfuscated pop3 password */
 PRIVATE XP_Bool net_pop3_password_pending=FALSE;
-PRIVATE XP_Bool net_pop3_block_biff = FALSE;
+PRIVATE XP_Bool net_pop3_block = FALSE;
 
 /* We set this if we find that the UIDL command doesn't work.
    It is reset to FALSE if the user name is re-set (a cheap way
@@ -173,6 +180,7 @@ typedef enum {
 
 #define KEEP		'k'			/* If we want to keep this item on server. */
 #define DELETE_CHAR	'd'			/* If we want to delete this item. */
+#define TOO_BIG		'b'			/* item left on server because it was too big */
 
 typedef struct Pop3AllocedString { /* Need this silliness as a place to
 									  keep the strings that are allocated
@@ -275,13 +283,10 @@ typedef struct _Pop3ConData {
    char *sender_info;
 } Pop3ConData;
 
-/* forward decl */
-PRIVATE int32 net_ProcessPop3 (ActiveEntry *ce);
-
 PUBLIC void
 NET_LeavePopMailOnServer(Bool do_it)
 {
-	/* PR_ASSERT(0);*/				/* This routine is obsolete. */
+	/* XP_ASSERT(0);*/				/* This routine is obsolete. */
 }
 
 /* Well, someone finally found a legitimate reason to put an @ in the
@@ -322,7 +327,7 @@ NET_SetPopUsername(const char *username)
 	*/
 	if (!net_allow_at_sign_in_mail_user_name)
 	{
-		if (net_pop3_username != NULL) at = PL_strchr(net_pop3_username, '@');
+		if (net_pop3_username != NULL) at = XP_STRCHR(net_pop3_username, '@');
 		if (at != NULL) *at = '\0';
 	}
 }
@@ -349,7 +354,7 @@ net_get_pop3_password(void)
 PUBLIC void
 NET_SetPopPassword(const char *password)
 {
-	if (password && PL_strlen(password))
+	if (password && XP_STRLEN(password))
 		StrAllocCopy(net_pop3_password, password);
 	else
 		FREEIF(net_pop3_password);
@@ -378,13 +383,13 @@ NET_SetPopPassword2(const char *password)
 PUBLIC void
 NET_SetPopMsgSizeLimit(int32 size)
 {
-	PR_ASSERT(0);				/* This routine is obsolete */
+	XP_ASSERT(0);				/* This routine is obsolete */
 }
 
 PUBLIC int32
 NET_GetPopMsgSizeLimit(void)
 {
-	PR_ASSERT(0);				/* This routine is obsolete */
+	XP_ASSERT(0);				/* This routine is obsolete */
 	return -1;
 }
 
@@ -392,8 +397,8 @@ NET_GetPopMsgSizeLimit(void)
 static int
 uidl_cmp (const void *obj1, const void *obj2)
 {
-  PR_ASSERT (obj1 && obj2);
-  return PL_strcmp ((char *) obj1, (char *) obj2);
+  XP_ASSERT (obj1 && obj2);
+  return XP_STRCMP ((char *) obj1, (char *) obj2);
 }
 
 
@@ -402,15 +407,16 @@ put_hash(Pop3UidlHost* host, XP_HashTable table, const char* key, char value)
 {
   Pop3AllocedString* tmp;
   int v = value;
-  tmp = PR_NEWZAP(Pop3AllocedString);
+
+  tmp = XP_NEW_ZAP(Pop3AllocedString);
   if (tmp) {
-	tmp->str = PL_strdup(key);
+	tmp->str = XP_STRDUP(key);
 	if (tmp->str) {
 	  tmp->next = host->strings;
 	  host->strings = tmp;
 	  XP_Puthash(table, tmp->str, (void*) v);
 	} else {
-	  PR_Free(tmp);
+	  XP_FREE(tmp);
 	}
   }
 }
@@ -427,21 +433,22 @@ PRIVATE Pop3UidlHost* net_pop3_load_state(const char* searchhost,
   Pop3UidlHost* result = NULL;
   Pop3UidlHost* current = NULL;
   Pop3UidlHost* tmp;
-  result = PR_NEWZAP(Pop3UidlHost);
+
+  result = XP_NEW_ZAP(Pop3UidlHost);
   if (!result) return NULL;
-  result->host = PL_strdup(searchhost);
-  result->user = PL_strdup(searchuser);
+  result->host = XP_STRDUP(searchhost);
+  result->user = XP_STRDUP(searchuser);
   result->hash = XP_HashTableNew(20, XP_StringHash, uidl_cmp);
   if (!result->host || !result->user || !result->hash) {
     FREEIF(result->host);
 	FREEIF(result->user);
 	if (result->hash) XP_HashTableDestroy(result->hash);
-	PR_Free(result);
+	XP_FREE(result);
 	return NULL;
   }
   file = XP_FileOpen("", xpMailPopState, XP_FILE_READ);
   if (!file) return result;
-  buf = (char*)PR_Malloc(512);
+  buf = (char*)XP_ALLOC(512);
   if (buf) {
 	while (XP_FileReadLine(buf, 512, file)) {
 	  if (*buf == '#' || *buf == CR || *buf == LF || *buf == 0)
@@ -449,27 +456,27 @@ PRIVATE Pop3UidlHost* net_pop3_load_state(const char* searchhost,
 	  if (buf[0] == '*') {
 		/* It's a host&user line. */
 		current = NULL;
-		host = strtok(buf + 1, " \t" LINEBREAK);
-		user = strtok(NULL, " \t" LINEBREAK);
+		host = XP_STRTOK(buf + 1, " \t" LINEBREAK);
+		user = XP_STRTOK(NULL, " \t" LINEBREAK);
 		if (host == NULL || user == NULL) continue;
 		for (tmp = result ; tmp ; tmp = tmp->next) {
-		  if (PL_strcmp(host, tmp->host) == 0 &&
-			  PL_strcmp(user, tmp->user) == 0) {
+		  if (XP_STRCMP(host, tmp->host) == 0 &&
+			  XP_STRCMP(user, tmp->user) == 0) {
 			current = tmp;
 			break;
 		  }
 		}
 		if (!current) {
-		  current = PR_NEWZAP(Pop3UidlHost);
+		  current = XP_NEW_ZAP(Pop3UidlHost);
 		  if (current) {
-			current->host = PL_strdup(host);
-			current->user = PL_strdup(user);
+			current->host = XP_STRDUP(host);
+			current->user = XP_STRDUP(user);
 			current->hash = XP_HashTableNew(20, XP_StringHash, uidl_cmp);
 			if (!current->host || !current->user || !current->hash) {
 			  FREEIF(current->host);
 			  FREEIF(current->user);
 			  if (current->hash) XP_HashTableDestroy(current->hash);
-			  PR_Free(current);
+			  XP_FREE(current);
 			} else {
 			  current->next = result->next;
 			  result->next = current;
@@ -479,18 +486,18 @@ PRIVATE Pop3UidlHost* net_pop3_load_state(const char* searchhost,
 	  } else {
 		/* It's a line with a UIDL on it. */
 		if (current) {
-		  flags = strtok(buf, " \t" LINEBREAK);
-		  uidl = strtok(NULL, " \t" LINEBREAK);
+		  flags = XP_STRTOK(buf, " \t" LINEBREAK);
+		  uidl = XP_STRTOK(NULL, " \t" LINEBREAK);
 		  if (flags && uidl) {
-			PR_ASSERT(flags[0] == KEEP || flags[0] == DELETE_CHAR);
-			if (flags[0] == KEEP || flags[0] == DELETE_CHAR) {
+			XP_ASSERT((flags[0] == KEEP) || (flags[0] == DELETE_CHAR) || (flags[0] == TOO_BIG));
+			if ((flags[0] == KEEP) || (flags[0] == DELETE_CHAR) || (flags[0] == TOO_BIG)) {
 			  put_hash(current, current->hash, uidl, flags[0]);
 			}
 		  }
 		}
 	  }
 	}
-	PR_Free(buf);
+	XP_FREE(buf);
   }
   XP_FileClose(file);
   return result;
@@ -520,8 +527,9 @@ net_pop3_write_mapper(XP_HashTable hash, const void* key, void* value,
 					  void* closure)
 {
   XP_File file = (XP_File) closure;
-  PR_ASSERT(value == ((void *) (int) KEEP) ||
-			value == ((void *) (int) DELETE_CHAR));
+  XP_ASSERT((value == ((void *) (int) KEEP)) ||
+			(value == ((void *) (int) DELETE_CHAR)) ||
+			(value == ((void *) (int) TOO_BIG)));
   XP_FilePrintf(file, "%c %s" LINEBREAK, (char)(long)value, (char*) key);
   return TRUE;
 }
@@ -531,23 +539,83 @@ PRIVATE void
 net_pop3_write_state(Pop3UidlHost* host)
 {
   XP_File file;
+  int32 len = 0;
+
   file = XP_FileOpen("", xpMailPopState, XP_FILE_WRITE_BIN);
   if (!file) return;
-  XP_FileWrite("# Netscape POP3 State File" LINEBREAK
+  len = XP_FileWrite("# Netscape POP3 State File" LINEBREAK
 			   "# This is a generated file!  Do not edit." LINEBREAK LINEBREAK,
 			   -1, file);
-  for (; host ; host = host->next) {
-	  if (!hash_empty(host->hash)) {
-	  XP_FileWrite("*", 1, file);
-	  XP_FileWrite(host->host, -1, file);
-	  XP_FileWrite(" ", 1, file);
-	  XP_FileWrite(host->user, -1, file);
-	  XP_FileWrite(LINEBREAK, LINEBREAK_LEN, file);
-	  XP_Maphash(host->hash, net_pop3_write_mapper, file);
+  for (; host && (len >= 0); host = host->next)
+  {
+	  if (!hash_empty(host->hash))
+	  {
+		XP_FileWrite("*", 1, file);
+		XP_FileWrite(host->host, -1, file);
+		XP_FileWrite(" ", 1, file);
+		XP_FileWrite(host->user, -1, file);
+		len = XP_FileWrite(LINEBREAK, LINEBREAK_LEN, file);
+		XP_Maphash(host->hash, net_pop3_write_mapper, file);
 	}
   }
   XP_FileClose(file);
 }
+
+
+/*
+Wrapper routines for POP data. The following routines are used from MSG_FolderInfoMail to
+allow deleting of messages that have been kept on a POP3 server due to their size or
+a preference to keep the messages on the server. When "deleting" messages we load
+our state file, mark any messages we have for deletion and then re-save the state file.
+*/
+extern char* ReadPopData(char *name);
+extern void SavePopData(char *data);
+extern void net_pop3_delete_if_in_server(char *data, char *uidl, XP_Bool *changed);
+extern void KillPopData(char* data);
+
+
+char* ReadPopData(char *name)
+{
+	Pop3UidlHost *uidlHost = NULL;
+	
+	if(!net_pop3_username || !*net_pop3_username)
+		return (char*) uidlHost;
+	
+	uidlHost = net_pop3_load_state(name, net_pop3_username);
+	return (char*) uidlHost;
+}
+
+void SavePopData(char *data)
+{
+	Pop3UidlHost *host = (Pop3UidlHost*) data;
+
+	if (!host)
+		return;
+	net_pop3_write_state(host);
+}
+
+
+/*
+Look for a specific UIDL string in our hash tables, if we have it then we need
+to mark the message for deletion so that it can be deleted later. If the uidl of the
+message is not found, then the message was downloaded completly and already deleted
+from the server. So this only applies to messages kept on the server or too big
+for download. */
+
+void net_pop3_delete_if_in_server(char *data, char *uidl, XP_Bool *changed)
+{
+	Pop3UidlHost *host = (Pop3UidlHost*) data;
+	
+	if (!host)
+		return;
+	if (XP_Gethash (host->hash, (const void*) uidl, 0))
+	{
+		XP_Puthash(host->hash, uidl, (void*) DELETE_CHAR);
+		*changed = TRUE;
+	}
+}
+
+
 
 
 PRIVATE void
@@ -558,22 +626,28 @@ net_pop3_free_state(Pop3UidlHost* host)
   Pop3AllocedString* next;
   while (host) {
 	h = host->next;
-	PR_Free(host->host);
-	PR_Free(host->user);
+	XP_FREE(host->host);
+	XP_FREE(host->user);
 	XP_HashTableDestroy(host->hash);
 	tmp = host->strings;
 	while (tmp) {
 	  next = tmp->next;
-	  PR_Free(tmp->str);
-	  PR_Free(tmp);
+	  XP_FREE(tmp->str);
+	  XP_FREE(tmp);
 	  tmp = next;
 	}
-	PR_Free(host);
+	XP_FREE(host);
 	host = h;
   }
 }
 
 
+void KillPopData(char* data)
+{
+	if (!data)
+		return;
+	net_pop3_free_state((Pop3UidlHost*) data);
+}
 
 PRIVATE void
 net_pop3_free_msg_info(ActiveEntry* ce)
@@ -582,9 +656,11 @@ net_pop3_free_msg_info(ActiveEntry* ce)
   int i;
   if (cd->msg_info) {
 	for (i=0 ; i<cd->number_of_messages ; i++) {
-	  if (cd->msg_info[i].uidl) PR_Free(cd->msg_info[i].uidl);
+	  if (cd->msg_info[i].uidl)
+		  XP_FREE(cd->msg_info[i].uidl);
+	  cd->msg_info[i].uidl = NULL;
 	}
-	PR_Free(cd->msg_info);
+	XP_FREE(cd->msg_info);
 	cd->msg_info = NULL;
   }
 }	
@@ -640,7 +716,7 @@ net_pop3_wait_for_start_of_connection_response(ActiveEntry * ce)
 	if(*line == '+')
 	  {
 		cd->command_succeeded = TRUE;
-		if(PL_strlen(line) > 4)
+		if(XP_STRLEN(line) > 4)
 			StrAllocCopy(cd->command_response, line+4);
 		else
 			StrAllocCopy(cd->command_response, line);
@@ -698,7 +774,7 @@ net_pop3_wait_for_response(ActiveEntry * ce)
 	if(*line == '+')
 	  {
 		cd->command_succeeded = TRUE;
-		if(PL_strlen(line) > 4)
+		if(XP_STRLEN(line) > 4)
 			StrAllocCopy(cd->command_response, line+4);
 		else
 			StrAllocCopy(cd->command_response, line);
@@ -706,7 +782,7 @@ net_pop3_wait_for_response(ActiveEntry * ce)
 	else
 	  {
 		cd->command_succeeded = FALSE;
-		if(PL_strlen(line) > 5)
+		if(XP_STRLEN(line) > 5)
 			StrAllocCopy(cd->command_response, line+5);
 		else
 			StrAllocCopy(cd->command_response, line);
@@ -741,13 +817,13 @@ net_pop3_send_command(ActiveEntry *ce, const char * command)
 
     status = (int) NET_BlockingWrite(ce->socket,
 										command,
-										PL_strlen(command));
+										XP_STRLEN(command));
 
     TRACEMSG(("Pop3 Tx: %s", cd->output_buffer));
 
 	if(status < 0)
 	  {
-		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_WRITE_ERROR, PR_GetOSError());
+		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_WRITE_ERROR, SOCKET_ERRNO);
 		cd->next_state = POP3_ERROR_DONE;
 		return(MK_TCP_WRITE_ERROR);
 	  }
@@ -811,7 +887,7 @@ net_pop3_auth_response(ActiveEntry *ce)
     }
     else if (ce->status < 0) 
 	{
-        int rv = PR_GetOSError();
+        int rv = SOCKET_ERRNO;
 
 		TRACEMSG(("TCP Error: %d", rv));
 
@@ -826,7 +902,7 @@ net_pop3_auth_response(ActiveEntry *ce)
 
     TRACEMSG(("    Rx: %s", line));
 
-    if (!PL_strcmp(line, ".")) 
+    if (!XP_STRCMP(line, ".")) 
 	{
 		/* now that we've read all the AUTH responses, decide which 
 		 * state to go to next 
@@ -837,7 +913,7 @@ net_pop3_auth_response(ActiveEntry *ce)
 			cd->next_state = POP3_SEND_USERNAME;
         cd->pause_for_read = FALSE; /* don't pause */
 	}
-    else if (!PL_strcasecmp (line, "LOGIN")) 
+    else if (!XP_STRCASECMP (line, "LOGIN")) 
 		pop3CapabilityFlags |= POP3_HAS_AUTH_LOGIN;
 
 	return 0;
@@ -900,12 +976,12 @@ net_pop3_send_username(ActiveEntry *ce)
 	if (POP3_HAS_AUTH_LOGIN & pop3CapabilityFlags) {
 		char * str = 
 		  NET_Base64Encode(net_pop3_username, 
-						   PL_strlen(net_pop3_username));
+						   XP_STRLEN(net_pop3_username));
 		if (str)
 		  {
 			PR_snprintf(cd->output_buffer, OUTPUT_BUFFER_SIZE, "%.256s" CRLF,
 						str);
-			PR_FREEIF(str);
+			XP_FREEIF(str);
 		  }
 		else
 		  {
@@ -940,12 +1016,12 @@ net_pop3_send_password(ActiveEntry *ce)
 
 	if (POP3_HAS_AUTH_LOGIN & pop3CapabilityFlags) {
 		char * str = 
-		  NET_Base64Encode(password, PL_strlen(password));
+		  NET_Base64Encode(password, XP_STRLEN(password));
 		if (str)
 		  {
 			PR_snprintf(cd->output_buffer, 
 						OUTPUT_BUFFER_SIZE, "%.256s" CRLF, str);
-			PR_FREEIF(str);
+			XP_FREEIF(str);
 		  }
 		else
 		  {
@@ -956,8 +1032,8 @@ net_pop3_send_password(ActiveEntry *ce)
 		PR_snprintf(cd->output_buffer, 
 					OUTPUT_BUFFER_SIZE, "PASS %.256s" CRLF, password);
 	}
-	memset(password, 0, PL_strlen(password));
-	PR_Free(password);
+	XP_MEMSET(password, 0, XP_STRLEN(password));
+	XP_FREE(password);
 
 	if (cd->get_url)
 		cd->next_state_after_response = POP3_SEND_GURL;
@@ -999,7 +1075,7 @@ net_pop3_send_stat_or_gurl(ActiveEntry *ce, XP_Bool sendStat)
 		/* clear the bogus password in case 
 		 * we need to sync with auth smtp password 
 		 */
-		PR_FREEIF(net_pop3_password);
+		XP_FREEIF(net_pop3_password);
 		return 0;
 	  }
     else if (net_pop3_password_pending)
@@ -1015,11 +1091,11 @@ net_pop3_send_stat_or_gurl(ActiveEntry *ce, XP_Bool sendStat)
       }
 
 	if (sendStat) {
-	    PL_strcpy(cd->output_buffer, "STAT" CRLF);
+	    XP_STRCPY(cd->output_buffer, "STAT" CRLF);
 		cd->next_state_after_response = POP3_GET_STAT;
 	}
 	else {
-	    PL_strcpy(cd->output_buffer, "GURL" CRLF);
+	    XP_STRCPY(cd->output_buffer, "GURL" CRLF);
 		cd->next_state_after_response = POP3_GURL_RESPONSE;
 	}
 
@@ -1051,11 +1127,11 @@ net_pop3_get_stat(ActiveEntry *ce)
 	 *
 	 *  grab the first and second arg of stat response
 	 */
-	num = strtok(cd->command_response, " ");
+	num = XP_STRTOK(cd->command_response, " ");
 
 	cd->number_of_messages = atol(num);
 
-	num = strtok(NULL, " ");
+	num = XP_STRTOK(NULL, " ");
 
 	cd->total_folder_size = (int32) atol(num);
 
@@ -1089,20 +1165,20 @@ net_pop3_get_stat(ActiveEntry *ce)
 		}
 	}
 
+	/*
 #ifdef POP_ALWAYS_USE_UIDL_FOR_DUPLICATES
 	if (net_uidl_command_unimplemented && net_xtnd_xlst_command_unimplemented && net_top_command_unimplemented) 
 #else
 	if ((net_uidl_command_unimplemented && net_xtnd_xlst_command_unimplemented && net_top_command_unimplemented) ||
 		(!cd->only_uidl && !cd->leave_on_server &&
 		 (cd->size_limit < 0 || net_top_command_unimplemented)))
-#endif
+#endif */
 		 /* We don't need message size or uidl info; go directly to getting
 		 messages. */
-	{
-	  cd->next_state = POP3_GET_MSG;
-	} else {
-	  cd->next_state = POP3_SEND_LIST;
-	}
+	/*  cd->next_state = POP3_GET_MSG;
+	else */  /* Fix bug 51262 where pop messages kept on server are re-downloaded after unchecking keep on server */
+	
+	cd->next_state = POP3_SEND_LIST;
 	return 0;
 }
 
@@ -1144,11 +1220,12 @@ PRIVATE int
 net_pop3_send_list(ActiveEntry *ce)
 {
     Pop3ConData * cd = (Pop3ConData *)ce->con_data;
-	cd->msg_info = (Pop3MsgInfo *) PR_Malloc(sizeof(Pop3MsgInfo) *
+	cd->msg_info = (Pop3MsgInfo *) XP_ALLOC(sizeof(Pop3MsgInfo) *
 											cd->number_of_messages);
-	if (!cd->msg_info) return(MK_OUT_OF_MEMORY);
-	memset(cd->msg_info, 0, sizeof(Pop3MsgInfo) * cd->number_of_messages);
-    PL_strcpy(cd->output_buffer, "LIST" CRLF);
+	if (!cd->msg_info)
+		return(MK_OUT_OF_MEMORY);
+	XP_MEMSET(cd->msg_info, 0, sizeof(Pop3MsgInfo) * cd->number_of_messages);
+    XP_STRCPY(cd->output_buffer, "LIST" CRLF);
 	cd->next_state_after_response = POP3_GET_LIST;
 	return(net_pop3_send_command(ce, cd->output_buffer));
 }
@@ -1212,17 +1289,17 @@ net_pop3_get_list(ActiveEntry *ce)
 	 *
 	 * list data is terminated by a ".CRLF" line
 	 */
-	if(!PL_strcmp(line, "."))
+	if(!XP_STRCMP(line, "."))
 	  {
 		cd->next_state = POP3_SEND_UIDL_LIST;
 		cd->pause_for_read = FALSE;
 		return(0);
 	  }
 
-	msg_num = atol(strtok(line, " "));
+	msg_num = atol(XP_STRTOK(line, " "));
 
 	if(msg_num <= cd->number_of_messages && msg_num > 0)
-		cd->msg_info[msg_num-1].size = atol(strtok(NULL, " "));
+		cd->msg_info[msg_num-1].size = atol(XP_STRTOK(NULL, " "));
 
 	return(0);
 }
@@ -1374,7 +1451,7 @@ get_fake_uidl_top(ActiveEntry *ce)
 	/* remove CRLF */
 	XP_StripLine(line);
 
-	if(!PL_strcmp(line, "."))
+	if(!XP_STRCMP(line, "."))
 	{
 		cd->current_msg_to_top--;
 		if (!cd->current_msg_to_top || 
@@ -1401,12 +1478,15 @@ get_fake_uidl_top(ActiveEntry *ce)
 	{
 		/* we are looking for a string of the form
 		   Message-Id: <199602071806.KAA14787@neon.netscape.com> */
-		char *firstToken = strtok(line, " ");
-		if (firstToken && !PL_strcasecmp(firstToken, "MESSAGE-ID:") )
+		char *firstToken = XP_STRTOK(line, " ");
+		int state = 0;
+
+		if (firstToken && !XP_STRCASECMP(firstToken, "MESSAGE-ID:") )
 		{
-			char *message_id_token = strtok(NULL, " ");
-			if ( !cd->only_uidl && message_id_token &&
-			     (((int) XP_Gethash(cd->uidlinfo->hash, message_id_token, 0) ) == 0) )
+			char *message_id_token = XP_STRTOK(NULL, " ");
+			state = (int) XP_Gethash(cd->uidlinfo->hash, message_id_token, 0);
+
+			if (!cd->only_uidl && message_id_token && (state == 0))
 			{	/* we have not seen this message before */
 				
 				/* if we are only doing a biff, stop here */
@@ -1418,24 +1498,27 @@ get_fake_uidl_top(ActiveEntry *ce)
 				}
 				else	/* we will retrieve it and cache it in GET_MSG */
 				{
-				cd->number_of_messages_not_seen_before++;
-				cd->msg_info[cd->current_msg_to_top-1].uidl = PL_strdup(message_id_token);
-	  			if (!cd->msg_info[cd->current_msg_to_top-1].uidl)
-					return MK_OUT_OF_MEMORY;
+					cd->number_of_messages_not_seen_before++;
+					cd->msg_info[cd->current_msg_to_top-1].uidl = XP_STRDUP(message_id_token);
+	  				if (!cd->msg_info[cd->current_msg_to_top-1].uidl)
+						return MK_OUT_OF_MEMORY;
 				}
 			}
 			else if (cd->only_uidl && message_id_token &&
-					 !PL_strcmp(cd->only_uidl, message_id_token))
+					 !XP_STRCMP(cd->only_uidl, message_id_token))
 			{
-					cd->last_accessed_msg = cd->current_msg_to_top;
+					cd->last_accessed_msg = cd->current_msg_to_top - 1;
 					cd->found_new_message_boundary = TRUE;
+					cd->msg_info[cd->current_msg_to_top-1].uidl = XP_STRDUP(message_id_token);
+	  				if (!cd->msg_info[cd->current_msg_to_top-1].uidl)
+						return MK_OUT_OF_MEMORY;
 			}
 			else if (!cd->only_uidl)
 			{	/* we have seen this message and we care about the edge,
 				   stop looking for new ones */
 				if (cd->number_of_messages_not_seen_before != 0)
 				{
-					cd->last_accessed_msg = cd->current_msg_to_top;
+					cd->last_accessed_msg = cd->current_msg_to_top;	/* -1 ? */
 					cd->found_new_message_boundary = TRUE;
 					/* we stay in this state so we can process the rest of the
 					   lines in the top message */
@@ -1483,7 +1566,7 @@ net_pop3_send_xtnd_xlst_msgid(ActiveEntry *ce)
   	return(start_use_top_for_fake_uidl(ce));
 
 
-  PL_strcpy(cd->output_buffer, "XTND XLST Message-Id" CRLF);
+  XP_STRCPY(cd->output_buffer, "XTND XLST Message-Id" CRLF);
   cd->next_state_after_response = POP3_GET_XTND_XLST_MSGID;
   cd->pause_for_read = TRUE;
   return(net_pop3_send_command(ce, cd->output_buffer));
@@ -1562,18 +1645,18 @@ net_pop3_get_xtnd_xlst_msgid(ActiveEntry *ce)
 	 *
 	 * list data is terminated by a ".CRLF" line
 	 */
-	if(!PL_strcmp(line, "."))
+	if(!XP_STRCMP(line, "."))
 	  {
 		cd->next_state = POP3_GET_MSG;
 		cd->pause_for_read = FALSE;
 		return(0);
 	  }
 
-	msg_num = atol(strtok(line, " "));
+	msg_num = atol(XP_STRTOK(line, " "));
 
 	if(msg_num <= cd->number_of_messages && msg_num > 0) {
-/*	  char *eatMessageIdToken = strtok(NULL, " ");	*/
-	  char *uidl = strtok(NULL, " ");	/* not really a uidl but a unique token -km */
+/*	  char *eatMessageIdToken = XP_STRTOK(NULL, " ");	*/
+	  char *uidl = XP_STRTOK(NULL, " ");	/* not really a uidl but a unique token -km */
 
 	  if (!uidl)
 		/* This is bad.  The server didn't give us a UIDL for this message.
@@ -1582,8 +1665,9 @@ net_pop3_get_xtnd_xlst_msgid(ActiveEntry *ce)
 		   there, I have no idea; must be a server bug.  Or something. */
 		uidl = "";
 
-	  cd->msg_info[msg_num-1].uidl = PL_strdup(uidl);
-	  if (!cd->msg_info[msg_num-1].uidl) return MK_OUT_OF_MEMORY;
+	  cd->msg_info[msg_num-1].uidl = XP_STRDUP(uidl);
+	  if (!cd->msg_info[msg_num-1].uidl)
+		  return MK_OUT_OF_MEMORY;
 	}
 
 	return(0);
@@ -1599,7 +1683,7 @@ net_pop3_send_uidl_list(ActiveEntry *ce)
   	return(net_pop3_send_xtnd_xlst_msgid(ce));
 
 
-  PL_strcpy(cd->output_buffer, "UIDL" CRLF);
+  XP_STRCPY(cd->output_buffer, "UIDL" CRLF);
   cd->next_state_after_response = POP3_GET_UIDL_LIST;
   cd->pause_for_read = TRUE;
   return(net_pop3_send_command(ce, cd->output_buffer));
@@ -1636,12 +1720,14 @@ net_pop3_get_uidl_list(ActiveEntry *ce)
 	  fmt = XP_GetString( XP_THE_POP3_SERVER_DOES_NOT_SUPPORT_UIDL_ETC );
 
 	  host = NET_ParseURL(ce->URL_s->address, GET_HOST_PART);
-	  PR_ASSERT(host);
-	  if (!host) host = "(null)";
+	  XP_ASSERT(host);
+	  if (!host)
+		  host = "(null)";
 	  buf = PR_smprintf (fmt, host);
-	  if (!buf) return MK_OUT_OF_MEMORY;
+	  if (!buf)
+		  return MK_OUT_OF_MEMORY;
 	  FE_Alert (ce->window_id, buf);
-	  PR_Free (buf);
+	  XP_FREE (buf);
 
 	  /* Free up the msg_info structure, as we use its presence later to
 		 decide if we can do UIDL-based games. */
@@ -1695,17 +1781,17 @@ net_pop3_get_uidl_list(ActiveEntry *ce)
 	 *
 	 * list data is terminated by a ".CRLF" line
 	 */
-	if(!PL_strcmp(line, "."))
+	if(!XP_STRCMP(line, "."))
 	  {
 		cd->next_state = POP3_GET_MSG;
 		cd->pause_for_read = FALSE;
 		return(0);
 	  }
 
-	msg_num = atol(strtok(line, " "));
+	msg_num = atol(XP_STRTOK(line, " "));
 
 	if(msg_num <= cd->number_of_messages && msg_num > 0) {
-	  char *uidl = strtok(NULL, " ");
+	  char *uidl = XP_STRTOK(NULL, " ");
 
 	  if (!uidl)
 		/* This is bad.  The server didn't give us a UIDL for this message.
@@ -1714,8 +1800,9 @@ net_pop3_get_uidl_list(ActiveEntry *ce)
 		   there, I have no idea; must be a server bug.  Or something. */
 		uidl = "";
 
-	  cd->msg_info[msg_num-1].uidl = PL_strdup(uidl);
-	  if (!cd->msg_info[msg_num-1].uidl) return MK_OUT_OF_MEMORY;
+	  cd->msg_info[msg_num-1].uidl = XP_STRDUP(uidl);
+	  if (!cd->msg_info[msg_num-1].uidl)
+		  return MK_OUT_OF_MEMORY;
 	}
 
 	return(0);
@@ -1748,30 +1835,42 @@ net_pop3_get_msg(ActiveEntry *ce)
 		 everything, and it's easy.  Otherwise, if we only want one
 		 uidl, than that's the only one we'll get.  Otherwise, go
 		 through each message info, decide if we're going to get that
-		 message, and add the number of bytes for it. */
+		 message, and add the number of bytes for it. When a message is too
+		 large (per user's preferences) only add the size we are supposed
+		 to get. */
 	  if (cd->msg_info) {
 		cd->total_download_size = 0;
-		for (i=0 ; i<cd->number_of_messages ; i++) {
+		for (i=0 ; i < cd->number_of_messages ; i++) {
 		  c = 0;
 		  if (cd->only_uidl) {
-			if (cd->msg_info[i].uidl && PL_strcmp(cd->msg_info[i].uidl,
+			if (cd->msg_info[i].uidl && XP_STRCMP(cd->msg_info[i].uidl,
 												  cd->only_uidl) == 0) {
-			  if (cd->msg_info[i].size > cd->size_limit)
-				  cd->total_download_size = cd->size_limit;		/* if more than max, only count max */
-			  else
+			  /*if (cd->msg_info[i].size > cd->size_limit)
+				  cd->total_download_size = cd->size_limit;	*/	/* if more than max, only count max */
+			  /*else*/
 				  cd->total_download_size = cd->msg_info[i].size;
 			  break;
 			}
 			continue;
 		  }
-		  if (cd->msg_info[i].uidl) {
-			c = (char) (int) XP_Gethash(cd->uidlinfo->hash,
-										cd->msg_info[i].uidl, 0);
+		  if (cd->msg_info[i].uidl)
+			c = (char) (int) XP_Gethash(cd->uidlinfo->hash, cd->msg_info[i].uidl, 0);
+		  if ((c == KEEP) && !cd->leave_on_server)
+		  {		/* This message has been downloaded but kept on server, we no longer want to keep it there */
+			if (cd->newuidl == NULL)
+			{
+				cd->newuidl = XP_HashTableNew(20, XP_StringHash, uidl_cmp);
+				if (!cd->newuidl)
+					return MK_OUT_OF_MEMORY;
+			}
+			c = DELETE_CHAR;
+			put_hash(cd->uidlinfo, cd->newuidl, cd->msg_info[i].uidl, DELETE_CHAR); /* Mark message to be deleted in new table */
+			put_hash(cd->uidlinfo, cd->uidlinfo->hash, cd->msg_info[i].uidl, DELETE_CHAR); /* and old one too */
 		  }
-		  if (c != KEEP && c != DELETE_CHAR) {
-			if (cd->msg_info[i].size > cd->size_limit)
-				cd->total_download_size += cd->size_limit;		/* if more than max, only count max */
-			else
+		  if ((c != KEEP) && (c != DELETE_CHAR) && (c != TOO_BIG)) {	/* mesage left on server */
+			/*if (cd->msg_info[i].size > cd->size_limit)
+				cd->total_download_size += cd->size_limit;	*/	/* if more than max, only count max */
+			/*else*/
 				cd->total_download_size += cd->msg_info[i].size;
 		  }
 		}
@@ -1813,34 +1912,52 @@ net_pop3_get_msg(ActiveEntry *ce)
 		cd->next_state = POP3_SEND_XSENDER;
 	else
 		cd->next_state = POP3_SEND_RETR;
-
+	cd->truncating_cur_msg = FALSE;
 	cd->pause_for_read = FALSE;
 	if (cd->msg_info) {
-	  Pop3MsgInfo* info = cd->msg_info + 
-	  					  cd->last_accessed_msg;
+	  Pop3MsgInfo* info = cd->msg_info + cd->last_accessed_msg;
 	  if (cd->only_uidl) {
-		if (info->uidl == NULL || PL_strcmp(info->uidl, cd->only_uidl) != 0) {
-		  cd->next_state = POP3_GET_MSG;
-		}
+		if (info->uidl == NULL || XP_STRCMP(info->uidl, cd->only_uidl))
+			cd->next_state = POP3_GET_MSG;
+		else
+			cd->next_state = POP3_SEND_RETR;
 	  } else {
 		c = 0;
+		if (cd->newuidl == NULL) {
+			cd->newuidl = XP_HashTableNew(20, XP_StringHash, uidl_cmp);
+			if (!cd->newuidl)
+				return MK_OUT_OF_MEMORY;
+		}
 		if (info->uidl) {
 		  c = (char) (int) XP_Gethash(cd->uidlinfo->hash, info->uidl, 0);
 		}
+		cd->truncating_cur_msg = FALSE;
 		if (c == DELETE_CHAR) {
 		  cd->next_state = POP3_SEND_DELE;
 		} else if (c == KEEP) {
 		  cd->next_state = POP3_GET_MSG;
-		} else if (cd->size_limit >= 0 &&
-				   info->size > cd->size_limit &&
-				   !net_top_command_unimplemented &&
-				   cd->only_uidl == NULL) {
-		  cd->next_state = POP3_SEND_TOP;
+		} else if ((c != TOO_BIG) && (cd->size_limit > 0) && (info->size > cd->size_limit) &&
+				   !net_top_command_unimplemented && (cd->only_uidl == NULL)) {
+			/* message is too big */
+			cd->truncating_cur_msg = TRUE;
+			cd->next_state = POP3_SEND_TOP;
+			put_hash(cd->uidlinfo, cd->newuidl, info->uidl, TOO_BIG);
+		} else if (c == TOO_BIG) {	/* message previously left on server, see if the
+									   max download size has changed, because we may
+									   want to download the message this time around.
+									   Otherwise ignore the message, we have the header. */
+			if ((cd->size_limit > 0) && (info->size <= cd->size_limit))
+				XP_Remhash (cd->uidlinfo->hash, (void*) info->uidl);	/* remove from our table, and download */
+			else
+			{
+				cd->truncating_cur_msg = TRUE;
+				cd->next_state = POP3_GET_MSG;	/* ignore this message and get next one */
+				put_hash(cd->uidlinfo, cd->newuidl, info->uidl, TOO_BIG);
+			}
 		}
 	  }
 	  if ((cd->leave_on_server && cd->next_state != POP3_SEND_DELE) ||
-		  cd->next_state == POP3_GET_MSG ||
-		  cd->next_state == POP3_SEND_TOP) {
+		  cd->next_state == POP3_GET_MSG || cd->next_state == POP3_SEND_TOP) {
 
 		/* This is a message we have decided to keep on the server.  Notate
 		   that now for the future.  (Don't change the popstate file at all
@@ -1849,11 +1966,8 @@ net_pop3_get_msg(ActiveEntry *ce)
 		   leave them around until the user next does a GetNewMail.) */
 
 		if (info->uidl && cd->only_uidl == NULL) {
-		  if (cd->newuidl == NULL) {
-			cd->newuidl = XP_HashTableNew(20, XP_StringHash, uidl_cmp);
-			if (!cd->newuidl) return MK_OUT_OF_MEMORY;
-		  }
-		  put_hash(cd->uidlinfo, cd->newuidl, info->uidl, KEEP);
+		  if (!cd->truncating_cur_msg)	/* message already marked as too_big */
+			put_hash(cd->uidlinfo, cd->newuidl, info->uidl, KEEP);
 		}
 	  }
 	  if (cd->next_state == POP3_GET_MSG) {
@@ -1872,17 +1986,16 @@ net_pop3_send_top(ActiveEntry *ce)
 {
     Pop3ConData * cd = (Pop3ConData *)ce->con_data;
 
-	PR_ASSERT(!(net_uidl_command_unimplemented && 
+	XP_ASSERT(!(net_uidl_command_unimplemented && 
 	            net_xtnd_xlst_command_unimplemented &&
 	            net_top_command_unimplemented) );
-	PR_ASSERT(!net_top_command_unimplemented);
+	XP_ASSERT(!net_top_command_unimplemented);
 
     PR_snprintf(cd->output_buffer, 
 			   OUTPUT_BUFFER_SIZE,  
 			   "TOP %ld 20" CRLF,
 			   cd->last_accessed_msg+1);
 
-	cd->truncating_cur_msg = TRUE;
 	cd->next_state_after_response = POP3_TOP_RESPONSE;
 
 	cd->cur_msg_size = -1;
@@ -1923,7 +2036,7 @@ net_pop3_xsender_response(ActiveEntry *ce)
 	  pop3CapabilityFlags &= ~POP3_XSENDER_UNDEFINED;
 
   if (cd->command_succeeded) {
-	  if (PL_strlen (cd->command_response) > 4)
+	  if (XP_STRLEN (cd->command_response) > 4)
 	  {
 		  StrAllocCopy(cd->sender_info, cd->command_response);
 	  }
@@ -1933,8 +2046,10 @@ net_pop3_xsender_response(ActiveEntry *ce)
   else {
 	  pop3CapabilityFlags &= ~POP3_HAS_XSENDER;
   }
-  
-  cd->next_state = POP3_SEND_RETR;
+  if (cd->truncating_cur_msg)
+	  cd->next_state = POP3_SEND_TOP;
+  else
+	cd->next_state = POP3_SEND_RETR;
   return 0;
 }
 
@@ -1946,7 +2061,6 @@ net_pop3_send_retr(ActiveEntry *ce)
     Pop3ConData * cd = (Pop3ConData *)ce->con_data;
 	char buf[OUTPUT_BUFFER_SIZE];
 
-	cd->truncating_cur_msg = FALSE;
     PR_snprintf(cd->output_buffer, 
 			   OUTPUT_BUFFER_SIZE,  
 			   "RETR %ld" CRLF,
@@ -1964,7 +2078,7 @@ net_pop3_send_retr(ActiveEntry *ce)
 	if (cd->only_uidl)
 	  {
 		/* Display bytes if we're only downloading one message. */
-		PR_ASSERT(!cd->graph_progress_bytes_p);
+		XP_ASSERT(!cd->graph_progress_bytes_p);
 		if (!cd->graph_progress_bytes_p)
 		  FE_GraphProgressInit(ce->window_id, ce->URL_s,
 							   cd->total_download_size);
@@ -1995,6 +2109,29 @@ extern int msg_LineBuffer (const char *net_buffer, int32 net_buffer_size,
 PRIVATE int32 net_pop3_retr_handle_line(char *line, uint32 line_length,
 										void *closure);
 
+static int32 gPOP3parsed_bytes, gPOP3size;
+static XP_Bool gPOP3dotFix, gPOP3AssumedEnd;
+
+
+/*
+	To fix a bug where we think the message is over, check the alleged size of the message
+	before we assume that CRLF.CRLF is the end.
+	return TRUE if end of message is unlikely. parsed bytes is not accurate since we add
+	bytes every now and then.
+*/
+
+XP_Bool NET_POP3TooEarlyForEnd(int32 len)
+{
+	if (!gPOP3dotFix)
+		return FALSE;	/* fix turned off */
+	gPOP3parsed_bytes += len;
+	if (gPOP3parsed_bytes >= (gPOP3size - 3))
+		return FALSE;
+	return TRUE;
+}
+
+
+
 /* digest the message
  */
 PRIVATE int
@@ -2003,54 +2140,65 @@ net_pop3_retr_response(ActiveEntry *ce)
     Pop3ConData * cd = (Pop3ConData *)ce->con_data;
 	char *buffer;
 	int32 buffer_size;
+	int32 flags = 0;
+	char *uidl = NULL;
 	int32 old_bytes_received = ce->bytes_received;
-
+	XP_Bool fix = FALSE;
+	
 	if(cd->cur_msg_size == -1)
-	  {
+	{
 		/* this is the beginning of a message
 		 * get the response code and byte size
 		 */
 		if(!cd->command_succeeded)
-		  {
 			return net_pop3_error(ce, MK_POP3_RETR_FAILURE);
-		  }
 
-		/* a successful retr response looks like: #num_bytes Junk
+		/* a successful RETR response looks like: #num_bytes Junk
+		   from TOP we only get the +OK and data
 		 */
-		cd->cur_msg_size = atol(strtok(cd->command_response, " "));
+		if (cd->truncating_cur_msg)
+		{ /* TOP, truncated message */
+			cd->cur_msg_size = cd->size_limit;
+			flags |= MSG_FLAG_PARTIAL;
+		}
+		else
+			cd->cur_msg_size = atol(XP_STRTOK(cd->command_response, " "));  /* RETR complete message */
+
+		if (cd->sender_info)
+			flags |= MSG_FLAG_SENDER_AUTHED;
 
 		if(cd->cur_msg_size < 0)
 			cd->cur_msg_size = 0;
+
+		if (cd->msg_info && cd->msg_info[cd->last_accessed_msg].uidl)
+			uidl = cd->msg_info[cd->last_accessed_msg].uidl;
+
+		gPOP3parsed_bytes = 0;
+		gPOP3size = cd->cur_msg_size;
+		gPOP3AssumedEnd = FALSE;
+		PREF_GetBoolPref("mail.dot_fix", &fix);
+		gPOP3dotFix = fix;
+		
 
 		TRACEMSG(("Opening message stream: MSG_IncorporateBegin"));
 		/* open the message stream so we have someplace
 		 * to put the data
 		 */
-		cd->msg_closure =
-		  MSG_IncorporateBegin (cd->pane,
-								ce->format_out,
-								(cd->truncating_cur_msg ?
-								 cd->msg_info[cd->last_accessed_msg].uidl :
-								 NULL),
-								ce->URL_s,
-								(cd->sender_info ? 
-								 MSG_FLAG_SENDER_AUTHED : 0x0));
+		cd->msg_closure = MSG_IncorporateBegin (cd->pane, ce->format_out, uidl, ce->URL_s, flags);
 
 		TRACEMSG(("Done opening message stream!"));
 													
 		if(!cd->msg_closure)
-		  {
 		    return(net_pop3_error(ce, MK_POP3_MESSAGE_WRITE_ERROR));
-		  }
-	  }
+	}
 
 	if (cd->data_buffer_size > 0)
-	  {
-		PR_ASSERT(cd->obuffer_fp == 0); /* must be the first time */
+	{
+		XP_ASSERT(cd->obuffer_fp == 0); /* must be the first time */
 		buffer = cd->data_buffer;
 		buffer_size = cd->data_buffer_size;
 		cd->data_buffer_size = 0;
-	  }
+	}
 	else
 	  {
         ce->status = PR_Read(ce->socket, 
@@ -2062,75 +2210,93 @@ net_pop3_retr_response(ActiveEntry *ce)
 		cd->pause_for_read = TRUE;
 
 	    if(ce->status == 0)
-          {
-		    /* this shouldn't happen
-             */
-		    return(net_pop3_error(ce, MK_POP3_SERVER_ERROR));
-          }
+		{
+		    /* should never happen */
+			return(net_pop3_error(ce, MK_POP3_SERVER_ERROR));
+		}
         else if(ce->status < 0) /* error */
           {
             int err = PR_GetError();
-    
-            TRACEMSG(("TCP Error: %d", err));
-    
+        
             if (err == PR_WOULD_BLOCK_ERROR)
-              {
-                cd->pause_for_read = TRUE;
-                return (0);
-              }
-    
-            ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, err);
-    
-            /* return TCP error
-             */
-            return MK_TCP_READ_ERROR;
-          }
-	  }
+			{
+				/*
+				(rb) If we have the dot fix, and the server reported the wrong number of bytes there may
+				be nothing else to read, so now go ahead and close the message if we saw something
+				resembling the end of the message.
+				*/
+				if (gPOP3dotFix && gPOP3AssumedEnd)
+				{
+					ce->status = MSG_IncorporateComplete(cd->pane, cd->msg_closure);
+					cd->msg_closure = 0;
+					buffer_size = 0;
+				}
+				else
+				{
+					cd->pause_for_read = TRUE;
+					return (0);
+				}
+			}
+			else
+			{
+				TRACEMSG(("TCP Error: %d", err));
 
-	ce->status = msg_LineBuffer(buffer, buffer_size,
+				ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, err);
+    
+				/* return TCP error
+				 */
+				return MK_TCP_READ_ERROR;
+			}
+		}
+	}
+
+	if (cd->msg_closure)	/* not done yet */
+		ce->status = msg_LineBuffer(buffer, buffer_size,
 								&cd->obuffer, &cd->obuffer_size,
 								&cd->obuffer_fp, FALSE,
 								net_pop3_retr_handle_line, (void *) ce);
 	if (ce->status < 0)
-	  {
-		if (cd->msg_closure) {
-		  MSG_IncorporateAbort(cd->pane, cd->msg_closure,
+	{
+		if (cd->msg_closure)
+		{
+			MSG_IncorporateAbort(cd->pane, cd->msg_closure,
 							   MK_POP3_MESSAGE_WRITE_ERROR);
-		  cd->msg_closure = NULL;
+			cd->msg_closure = NULL;
 		}
 		MSG_AbortMailDelivery(cd->pane);
 		return(net_pop3_error(ce, MK_POP3_MESSAGE_WRITE_ERROR));
-	  }
+	}
 
 	/* normal read. Yay! */
-	if (cd->bytes_received_in_message + buffer_size > cd->cur_msg_size) {
-	  buffer_size = cd->cur_msg_size -  cd->bytes_received_in_message;
-	}
+	if (cd->bytes_received_in_message + buffer_size > cd->cur_msg_size)
+		buffer_size = cd->cur_msg_size -  cd->bytes_received_in_message;
+
     cd->bytes_received_in_message += buffer_size;
     ce->bytes_received            += buffer_size;
 
 	if (!cd->msg_closure) /* meaning _handle_line read ".\r\n" at end-of-msg */
-	  {
+	{
 		cd->pause_for_read = FALSE;
 		if (cd->truncating_cur_msg ||
 			(cd->leave_on_server && !(net_uidl_command_unimplemented &&
 									  net_xtnd_xlst_command_unimplemented &&
-									       net_top_command_unimplemented) )) {
-		  /* We've retreived all or part of this message, but we want to
+									       net_top_command_unimplemented) ))
+		{
+		  /* We've retrieved all or part of this message, but we want to
 			 keep it on the server.  Go on to the next message. */
-		  cd->last_accessed_msg++;
-		  cd->next_state = POP3_GET_MSG;
-		} else {
-		  cd->next_state = POP3_SEND_DELE;
+			cd->last_accessed_msg++;
+			cd->next_state = POP3_GET_MSG;
+		} else
+		{
+			cd->next_state = POP3_SEND_DELE;
 		}
 
 		/* if we didn't get the whole message add the bytes that we didn't get
 		   to the bytes received part so that the progress percent stays sane.
 		 */
 		if(cd->bytes_received_in_message < cd->cur_msg_size)
-		  ce->bytes_received += (cd->cur_msg_size
-								 - cd->bytes_received_in_message);
-	  }
+			ce->bytes_received += (cd->cur_msg_size - cd->bytes_received_in_message);
+	}
 
 	if (cd->graph_progress_bytes_p)
 	  FE_GraphProgress(ce->window_id, ce->URL_s,
@@ -2140,9 +2306,8 @@ net_pop3_retr_response(ActiveEntry *ce)
 
 	/* set percent done to portion of total bytes of all messages
 	   that we're going to download. */
-	FE_SetProgressBarPercent(ce->window_id,
-							 ((ce->bytes_received*100)
-							  / cd->total_download_size));
+	if (cd->total_download_size)
+		FE_SetProgressBarPercent(ce->window_id, ((ce->bytes_received*100) / cd->total_download_size));
 
 	return(0);
 }
@@ -2170,15 +2335,15 @@ net_pop3_top_response(ActiveEntry *ce)
 	  fmt = XP_GetString( XP_THE_POP3_SERVER_DOES_NOT_SUPPORT_THE_TOP_COMMAND );
 
 	  host = NET_ParseURL(ce->URL_s->address, GET_HOST_PART);
-	  size = PL_strlen(fmt) + PL_strlen(host ? host : "(null)") + 100;
-	  buf = (char *) PR_Malloc (size);
+	  size = XP_STRLEN(fmt) + XP_STRLEN(host ? host : "(null)") + 100;
+	  buf = (char *) XP_ALLOC (size);
 	  if (!buf) {
 		  FREEIF(host);
 		  return MK_OUT_OF_MEMORY;
 	  }
 	  PR_snprintf (buf, size, fmt, host ? host : "(null)");
 	  FE_Alert (ce->window_id, buf);
-	  PR_Free (buf);
+	  XP_FREE (buf);
 	  FREEIF(host);
 
 	  PREF_GetBoolPref ("mail.auth_login", &prefBool);
@@ -2203,14 +2368,15 @@ net_pop3_retr_handle_line(char *line, uint32 line_length, void *closure)
   Pop3ConData * cd = (Pop3ConData *)ce->con_data;
   int status;
 
-  PR_ASSERT(cd->msg_closure);
-  if (!cd->msg_closure) return -1;
+  XP_ASSERT(cd->msg_closure);
+  if (!cd->msg_closure)
+	  return -1;
 
   if (cd->sender_info && !cd->seenFromHeader)
   {
 	  if (line_length > 6 && !XP_MEMCMP("From: ", line, 6))
 	  {
-		  /* Zzzzz PL_strstr only works with NULL terminated string. Since,
+		  /* Zzzzz XP_STRSTR only works with NULL terminated string. Since,
 		   * the last character of a line is either a carriage return
 		   * or a linefeed. Temporary setting the last character of the
 		   * line to NULL and later setting it back should be the right 
@@ -2219,7 +2385,7 @@ net_pop3_retr_handle_line(char *line, uint32 line_length, void *closure)
 		  char ch = line[line_length-1];
 		  line[line_length-1] = 0;
 		  cd->seenFromHeader = TRUE;
-		  if (PL_strstr(line, cd->sender_info) == NULL)
+		  if (XP_STRSTR(line, cd->sender_info) == NULL)
 			  MSG_ClearSenderAuthedFlag(cd->pane, cd->msg_closure);
 		  line[line_length-1] = ch;
 	  }
@@ -2227,11 +2393,16 @@ net_pop3_retr_handle_line(char *line, uint32 line_length, void *closure)
 
   status = MSG_IncorporateWrite(cd->pane, cd->msg_closure, line, line_length);
 
-  if (status >= 0 &&
-	  line[0] == '.' &&
-	  (line[1] == CR || line[1] == LF)) {
-	status = MSG_IncorporateComplete(cd->pane, cd->msg_closure);
-	cd->msg_closure = 0;
+  if ((status >= 0) &&
+	  (line[0] == '.') &&
+	  ((line[1] == CR) || (line[1] == LF)))
+  {
+	  gPOP3AssumedEnd = TRUE;	/* in case byte count from server is wrong, mark we may have had the end */
+	  if (!gPOP3dotFix || (gPOP3parsed_bytes >= (gPOP3size -3)))
+	  {
+		status = MSG_IncorporateComplete(cd->pane, cd->msg_closure);
+		cd->msg_closure = 0;
+	  }
   }
 
   return status;
@@ -2261,9 +2432,10 @@ PRIVATE int
 net_pop3_dele_response(ActiveEntry *ce)
 {
     Pop3ConData * cd = (Pop3ConData *)ce->con_data;
-#ifdef POP_ALWAYS_USE_UIDL_FOR_DUPLICATES
-    Pop3UidlHost *host = cd->uidlinfo;
-#endif
+    Pop3UidlHost *host = NULL;
+	
+	if (cd)
+		host = cd->uidlinfo;
 
 	/* the return from the delete will come here
 	 */
@@ -2271,8 +2443,7 @@ net_pop3_dele_response(ActiveEntry *ce)
 		return(net_pop3_error(ce, MK_POP3_DELE_FAILURE));
 
 
-#ifdef POP_ALWAYS_USE_UIDL_FOR_DUPLICATES
-	/*
+	/*	###chrisf
 	the delete succeeded.  Write out state so that we
 	keep track of all the deletes which have not yet been
 	committed on the server.  Flush this state upon successful
@@ -2284,10 +2455,13 @@ net_pop3_dele_response(ActiveEntry *ce)
 	*/
 	if (host)
 	{
-		if (cd->msg_info && cd->msg_info[cd->last_accessed_msg-1].uidl)
-			put_hash(host, host->hash, cd->msg_info[cd->last_accessed_msg-1].uidl, DELETE_CHAR);
+		if (cd->msg_info && cd->msg_info[cd->last_accessed_msg-1].uidl) {
+			if (cd->newuidl)
+				XP_Remhash(cd->newuidl, (void*) cd->msg_info[cd->last_accessed_msg-1].uidl); /* kill message in new hash table */
+			else
+				XP_Remhash(host->hash, (void*) cd->msg_info[cd->last_accessed_msg-1].uidl);
+		}
 	}
-#endif
 
 	cd->next_state = POP3_GET_MSG;
 
@@ -2311,7 +2485,7 @@ net_pop3_commit_state(ActiveEntry *ce, XP_Bool remove_last_entry)
 			Pop3MsgInfo* info = cd->msg_info + cd->last_accessed_msg;
 			if (info && info->uidl && (cd->only_uidl == NULL) && cd->newuidl) {
 				XP_Bool val = XP_Remhash (cd->newuidl, info->uidl);
-				PR_ASSERT(val);
+				XP_ASSERT(val);
 			}
 		}
 	}
@@ -2333,24 +2507,30 @@ net_pop3_commit_state(ActiveEntry *ce, XP_Bool remove_last_entry)
 PRIVATE int32
 net_Pop3Load (ActiveEntry * ce)
 {
-	Pop3ConData * cd = PR_NEW(Pop3ConData);
+	Pop3ConData * cd = XP_NEW(Pop3ConData);
 	char* host = NET_ParseURL(ce->URL_s->address, GET_HOST_PART);
 	char* uidl;
+	int err = 0;
 
+	if (net_pop3_block)		/* we already have a connection going */
+	{
+		FREE(cd);
+		FREEIF(host);
+		return -1;	/* avoid looping back in */
+	}
 	if(!cd || !host || !ce->URL_s->internal_url) {
 		FREEIF(cd);
 		FREEIF(host);
 		return(MK_OUT_OF_MEMORY);
 	}
 
-	memset(cd, 0, sizeof(Pop3ConData));
+	XP_MEMSET(cd, 0, sizeof(Pop3ConData));
 
 	if(!net_pop3_username || !*net_pop3_username)
 	  {
 		FREE(cd);
 		FREEIF(host);
-		ce->URL_s->error_msg = NET_ExplainErrorDetails(
-												MK_POP3_USERNAME_UNDEFINED);
+		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_POP3_USERNAME_UNDEFINED);
 		ce->status = MK_POP3_USERNAME_UNDEFINED;
 #ifdef XP_MAC
 		FE_Alert(ce->window_id, ce->URL_s->error_msg); /* BEFORE going to the prefs window */
@@ -2359,25 +2539,14 @@ net_Pop3Load (ActiveEntry * ce)
 		return(MK_POP3_USERNAME_UNDEFINED);
 	  }
 
-	if(PL_strcasestr(ce->URL_s->address, "?check")) {
+	/* acquire the semaphore which prevents POP3 from making more connections */
+	net_pop3_block = TRUE;
 
-       if (!net_pop3_block_biff)
-	     cd->only_check_for_new_mail = TRUE;
-	   else
-	   {
-         /* don't allow a biff to open a second connection to the 
-          * server because some servers will close the first connection
-          */
-         PR_LogPrint("blocking biff due to avoid opening a second connection");
-         FREEIF(cd);
-		 FREEIF(host);
-         return -1;
-	   }
-	}
-
-	if(PL_strcasestr(ce->URL_s->address, "?gurl")) {
+	if(strcasestr(ce->URL_s->address, "?check"))
+       cd->only_check_for_new_mail = TRUE;
+	
+	if(strcasestr(ce->URL_s->address, "?gurl"))
 		cd->get_url = TRUE;
-	}
 
 	if (!cd->only_check_for_new_mail) {
 	  XP_Bool tmp = FALSE;
@@ -2385,12 +2554,16 @@ net_Pop3Load (ActiveEntry * ce)
 	  if (!cd->pane)
       {
 #ifdef DEBUG_phil
-        PR_LogPrint ("NET_Pop3Load: url->msg_pane NULL for URL: %s\n", ce->URL_s->address);
+        XP_Trace ("NET_Pop3Load: url->msg_pane NULL for URL: %s\n", ce->URL_s->address);
 #endif
 	    cd->pane = MSG_FindPane(ce->window_id, MSG_FOLDERPANE); /* ###tw */
       }
-	  PR_ASSERT(cd->pane);
-	  if (cd->pane == NULL) return -1; /* ### */
+	  XP_ASSERT(cd->pane);
+	  if (cd->pane == NULL)
+	  {
+		  net_pop3_block = FALSE;
+		  return -1; /* ### */
+	  }
 
 	  PREF_GetBoolPref("mail.leave_on_server", &(cd->leave_on_server));
 	  PREF_GetBoolPref("mail.limit_message_size", &tmp);
@@ -2403,9 +2576,10 @@ net_Pop3Load (ActiveEntry * ce)
 	}
 
 	cd->uidlinfo = net_pop3_load_state(host, net_pop3_username);
-	PR_Free(host);
-	cd->output_buffer = (char*)PR_Malloc(OUTPUT_BUFFER_SIZE);
-	if(!cd->uidlinfo || !cd->output_buffer) goto FAIL;
+	XP_FREE(host);
+	cd->output_buffer = (char*)XP_ALLOC(OUTPUT_BUFFER_SIZE);
+	if(!cd->uidlinfo || !cd->output_buffer)
+		goto FAIL;
 
 
 	ce->con_data = cd;
@@ -2413,11 +2587,12 @@ net_Pop3Load (ActiveEntry * ce)
 	cd->biffstate = MSG_BIFF_NoMail;	/* Return "no mail" unless proven
 										   otherwise. */
 
-	uidl = PL_strcasestr(ce->URL_s->address, "?uidl=");
+	uidl = strcasestr(ce->URL_s->address, "?uidl=");
 	if (uidl) {
 	  uidl += 6;
-	  cd->only_uidl = PL_strdup(uidl);
-	  if (!cd->only_uidl) goto FAIL;
+	  cd->only_uidl = XP_STRDUP(uidl);
+	  if (!cd->only_uidl)
+		  goto FAIL;
 	}
 
 	ce->socket = NULL;
@@ -2425,13 +2600,20 @@ net_Pop3Load (ActiveEntry * ce)
 	cd->next_state = POP3_READ_PASSWORD;
 
     /* acquire the semaphore which prevents biff from interrupting connections */
-	net_pop3_block_biff = TRUE;
+	net_pop3_block = TRUE;
 
-	return (net_ProcessPop3(ce));
+	err = net_ProcessPop3(ce);
+	if (err < 0)
+		net_pop3_block = FALSE;
+	return (err);
 
 FAIL:
-	if (cd->uidlinfo) net_pop3_free_state(cd->uidlinfo);
-	if (cd->output_buffer) PR_Free(cd->output_buffer);
+	/* release the semaphore which prevents POP3 from making more connections */
+	net_pop3_block = FALSE;
+	if (cd->uidlinfo)
+		net_pop3_free_state(cd->uidlinfo);
+	if (cd->output_buffer)
+		XP_FREE(cd->output_buffer);
 	FREE(cd);
 	return(MK_OUT_OF_MEMORY);
 }
@@ -2450,7 +2632,7 @@ net_ProcessPop3 (ActiveEntry *ce)
    Pop3ConData * cd = (Pop3ConData *)ce->con_data;
    int oldStatus = 0;
 
-    TRACEMSG(("Entering NET_ProcessPop3"));
+    TRACEMSG(("Entering net_ProcessPop3"));
 
     cd->pause_for_read = FALSE; /* already paused; reset */
 
@@ -2476,18 +2658,18 @@ net_ProcessPop3 (ActiveEntry *ce)
 			    /* If we're just checking for new mail (biff) then don't
 				   prompt the user for a password; just tell him we don't
 				   know whether he has new mail. */
-			    if (cd->only_check_for_new_mail &&
+			    if ((cd->only_check_for_new_mail || MSG_Biff_Master_NikiCallingGetNewMail()) &&
 					(!net_pop3_password || !net_pop3_username))
 				  {
 					ce->status = MK_POP3_PASSWORD_UNDEFINED;
 					cd->biffstate = MSG_BIFF_Unknown;
-					MSG_SetBiffStateAndUpdateFE(cd->biffstate);
+					MSG_SetBiffStateAndUpdateFE(cd->biffstate);	/* update old style biff */
 					cd->next_state = POP3_FREE;
 					cd->pause_for_read = FALSE;
 					break;
 				  }
 
-				PR_ASSERT(net_pop3_username);
+				XP_ASSERT(net_pop3_username);
 
 				if (cd->password_failed)
 				  fmt2 =
@@ -2501,15 +2683,13 @@ net_ProcessPop3 (ActiveEntry *ce)
 					char *password;
 					char *host = NET_ParseURL(ce->URL_s->address,
 											  GET_HOST_PART);
-					size_t len = (PL_strlen(fmt1 ? fmt1 : fmt2) +
-                                 (host ? PL_strlen(host) : 0) + 300) 
+					size_t len = (XP_STRLEN(fmt1 ? fmt1 : fmt2) +
+                                 (host ? XP_STRLEN(host) : 0) + 300) 
 								 * sizeof(char);
-					char *prompt = (char *) PR_Malloc (len);
-#if defined(SingleSignon)                                        
-					char *usernameAndHost=0;
-#endif
+					char *prompt = (char *) XP_ALLOC (len);
 					if (!prompt) {
 						FREEIF(host);
+						net_pop3_block = FALSE;
 						return MK_OUT_OF_MEMORY;
 					}
 					if (fmt1)
@@ -2520,40 +2700,31 @@ net_ProcessPop3 (ActiveEntry *ce)
 									? cd->command_response
 									: XP_GetString(XP_NO_ANSWER)),
 								   net_pop3_username, host);
-#if defined(SingleSignons)                                        
-					StrAllocCopy(usernameAndHost, net_pop3_username);
-					StrAllocCat(usernameAndHost, "@");
-					StrAllocCat(usernameAndHost, host);
 					FREEIF (host);
 
-					password = SI_PromptPassword
-					    (ce->window_id,
-					    prompt, usernameAndHost,
-					    FALSE, !cd->password_failed);
 					cd->password_failed = FALSE;
-					XP_FREE(usernameAndHost);
-
-#else
-					FREEIF (host);
-					cd->password_failed = FALSE;
-					password = FE_PromptPassword
-					    (ce->window_id, prompt);
-#endif
-					PR_Free(prompt);
+					password = FE_PromptPassword(ce->window_id, prompt);
+					XP_FREE(prompt);
 
 					if (password == NULL)
-					  return MK_POP3_PASSWORD_UNDEFINED;
+					{
+						net_pop3_block = FALSE;
+						return MK_POP3_PASSWORD_UNDEFINED;
+					}
 
 					net_set_pop3_password(password);
-					memset(password, 0, PL_strlen(password));
-					PR_Free(password);
+					XP_MEMSET(password, 0, XP_STRLEN(password));
+					XP_FREE(password);
 
 					net_pop3_password_pending = TRUE;
 				  }
 
-				PR_ASSERT (net_pop3_username && net_pop3_password);
+				XP_ASSERT (net_pop3_username && net_pop3_password);
 				if (!net_pop3_username || !net_pop3_password)
-				  return -1;
+				{
+					net_pop3_block = FALSE;
+					return -1;
+				}
 
 				cd->next_state = POP3_START_CONNECT;
 				cd->pause_for_read = FALSE;
@@ -2570,13 +2741,20 @@ net_ProcessPop3 (ActiveEntry *ce)
                                          	"POP3",
                                          	POP3_PORT,
                                          	&ce->socket,
-                                         	FALSE,
+                                         	HG09439
                                          	&cd->tcp_con_data,
                                          	ce->window_id,
                                          	&ce->URL_s->error_msg,
 											 ce->socks_host,
 											 ce->socks_port);
 	
+				if ((ce->status == MK_UNABLE_TO_CONNECT) ||
+					(ce->status == MK_CONNECTION_TIMED_OUT) ||
+					(ce->status == MK_CONNECTION_REFUSED))
+				{
+					if (MSG_Biff_Master_NikiCallingGetNewMail())
+						cd->next_state = POP3_FREE;		/* calls from niki-biff should avoid dialogs */
+				}
             	if(ce->socket != NULL)
                 	NET_TotalNumberOfOpenConnections++;
    
@@ -2609,7 +2787,7 @@ net_ProcessPop3 (ActiveEntry *ce)
                 	ce->con_sock = NULL;  /* set con sock so we can select on it */
 #endif
                   }
-            	else if(ce->status > -1)
+           	else if(ce->status > -1)
                   {
                 	cd->next_state = POP3_FINISH_CONNECT;
                 	ce->con_sock = ce->socket;  /* set con sock so we can select on it */
@@ -2818,34 +2996,37 @@ net_ProcessPop3 (ActiveEntry *ce)
 				   status file and the FE's biff state.
 				 */
 				if (!cd->only_uidl) {
-				  MSG_SetBiffStateAndUpdateFE(cd->biffstate);
-				  if (!cd->only_check_for_new_mail) {
+				  if (cd->only_check_for_new_mail)
+					  MSG_SetBiffStateAndUpdateFE(cd->biffstate);	/* update old style biff */
+				  else {
 					/* We don't want to pop up a warning message any more (see bug 54116),
 					   so instead we put the "no new messages" or "retrieved x new messages"
 					   in the status line.  Unfortunately, this tends to be running
 					   in a progress pane, so we try to get the real pane and
 					   show the message there. */
-					MWContext* context = ce->window_id;
-					if (cd->pane) {
-					  MSG_Pane* parentpane = MSG_GetParentPane(cd->pane);
-					  if (parentpane) {
-						context = MSG_GetContext(parentpane);
+					  MWContext* context = ce->window_id;
+					  if (cd->pane) {
+						  MSG_Pane* parentpane = MSG_GetParentPane(cd->pane);
+						  if (parentpane)
+							  context = MSG_GetContext(parentpane);
 					  }
-					}
-					if (cd->total_download_size <= 0) {
-						/* There are no new messages.  */
-						if (context) FE_Progress(context, XP_GetString(MK_POP3_NO_MESSAGES));
-					}
-					else {
-						/* at least 1 message was queued to download */
-						char *statusTemplate = XP_GetString (MK_MSG_DOWNLOAD_COUNT);
-						char *statusString = PR_smprintf (statusTemplate,  cd->last_accessed_msg, cd->number_of_messages);
-						if (context) FE_Progress(context, statusString);
-						FREEIF(statusString);
-					}
+					  if (cd->total_download_size <= 0) {
+						  /* There are no new messages.  */
+						  if (context)
+							  NET_Progress(context, XP_GetString(MK_POP3_NO_MESSAGES));
+					  }
+					  else {
+						  /* at least 1 message was queued to download */
+						  char *statusTemplate = XP_GetString (MK_MSG_DOWNLOAD_COUNT);
+						  char *statusString = PR_smprintf (statusTemplate,  cd->last_accessed_msg, cd->number_of_messages);
+						  if (context)
+							  NET_Progress(context, statusString);
+						  FREEIF(statusString);
+						  MSG_SetBiffStateAndUpdateFE(MSG_BIFF_NewMail);
+					  }
 				  }
 				}
-    			PL_strcpy(cd->output_buffer, "QUIT" CRLF);
+    			XP_STRCPY(cd->output_buffer, "QUIT" CRLF);
 				oldStatus = ce->status;
 				ce->status = net_pop3_send_command(ce, cd->output_buffer);
 				if (oldStatus == MK_INTERRUPTED)
@@ -2903,9 +3084,9 @@ net_ProcessPop3 (ActiveEntry *ce)
 
 			case POP3_INTERRUPTED:
 				{
-    				PL_strcpy(cd->output_buffer, "QUIT" CRLF);
+    				XP_STRCPY(cd->output_buffer, "QUIT" CRLF);
 					NET_BlockingWrite(ce->socket, cd->output_buffer,
-									  PL_strlen(cd->output_buffer));
+									  XP_STRLEN(cd->output_buffer));
 					PR_Shutdown(ce->socket, PR_SHUTDOWN_SEND); /* make sure QUIT get send
 														       * before closing down the socket
 													      	   */
@@ -2931,7 +3112,7 @@ net_ProcessPop3 (ActiveEntry *ce)
 					 DELE command until the messages are known to be safely
 					 on disk.
 				     */
-					PL_strcpy(cd->output_buffer, "RSET" CRLF);
+					XP_STRCPY(cd->output_buffer, "RSET" CRLF);
 					net_pop3_send_command(ce, cd->output_buffer);
 #endif /* 0 */
 
@@ -2963,9 +3144,10 @@ net_ProcessPop3 (ActiveEntry *ce)
 						context = MSG_GetContext(parentpane);
 					  }
 					}
-					PR_ASSERT (!cd->password_failed);
+					XP_ASSERT (!cd->password_failed);
 					MSG_AbortMailDelivery(cd->pane);
-					if (context) FE_Progress(context, statusString);
+					if (context)
+						NET_Progress(context, statusString);
 					FREEIF(statusString);
 				  }
 
@@ -2998,8 +3180,8 @@ net_ProcessPop3 (ActiveEntry *ce)
 				FREEIF(cd->sender_info);
 				FREE(ce->con_data);
 
-				/* release the semaphore which prevents biff from interrupting connections */
-				net_pop3_block_biff = FALSE;
+				/* release the semaphore which prevents POP3 from creating more connections */
+				net_pop3_block = FALSE;
 
 				if (oldStatus == MK_INTERRUPTED)
 					return MK_INTERRUPTED;	/* Make sure everyone knows we got canceled */
@@ -3007,7 +3189,7 @@ net_ProcessPop3 (ActiveEntry *ce)
 				break;
 
 			default:
-				PR_ASSERT(0);
+				XP_ASSERT(0);
 
 	      }  /* end switch */
 
@@ -3032,7 +3214,7 @@ net_InterruptPop3(ActiveEntry * ce)
 {
     Pop3ConData * cd = (Pop3ConData *)ce->con_data;
 
-	TRACEMSG(("NET_InterruptPop3 called"));
+	TRACEMSG(("net_InterruptPop3 called"));
 
 	cd->next_state = POP3_SEND_QUIT; /* interrupt does not give enough time for the quit
 										command to be executed on the server, leaving us

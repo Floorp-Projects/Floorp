@@ -15,21 +15,19 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH		= ../..
+DEPTH		= ../../..
 
-MODULE		= cnetinit
-
-ifndef MODULAR_NETLIB
-LIBRARY_NAME	= cnetinit
+MODULE		= mailbxurl
+LIBRARY_NAME	= mailbxurl
 
 CSRCS		= \
-	cnetinit.c	\
+	mkmailbx.c	\
 	$(NULL)
-endif
 
-EXPORTS= cnetinit.h
+EXPORTS= mkmailbx.h
 
-REQUIRES	= netcache network img layer fileurl httpurl ftpurl abouturl \
-	gophurl jsurl remoturl dataurl util security
+REQUIRES	= imap4url netcache network nspr2 dbm util pref js java fileurl \
+	security layer img httpurl mimetype htmldlgs
 
 include $(DEPTH)/config/rules.mk
+

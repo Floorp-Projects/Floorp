@@ -19,6 +19,7 @@
  * Designed and Implemented by Lou Montulli circa '94
  */
 
+#include "rosetta.h"
 #include "xp.h"
 #include "plstr.h"
 #include "prmem.h"
@@ -1001,7 +1002,7 @@ net_ProcessGopher(ActiveEntry * cur_entry)
 										 "Gopher", 
 										 70, 
 										 &CE_SOCK, 
-										 FALSE, 
+										 HG10300 
 										 &CD_TCP_CON_DATA, 
 										 CE_WINDOW_ID,
 										 &CE_URL_S->error_msg,

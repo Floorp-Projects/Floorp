@@ -28,7 +28,6 @@
 #include "dirprefs.h" /* for DIR_AttributeId */
 
 #define FE_IMPLEMENTS_BOOLEAN_OR
-#define B3_SEARCH_API
 
 typedef enum
 {

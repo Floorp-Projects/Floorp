@@ -39,29 +39,18 @@ LLIBS=  \
 	$(NULL)
 MISCDEP=$(LLIBS)
 OBJS=   \
-	.\$(OBJDIR)\imap4url.obj		\
-	.\$(OBJDIR)\imapbody.obj		\
-	.\$(OBJDIR)\imapearl.obj		\
-	.\$(OBJDIR)\imaphier.obj		\
-	.\$(OBJDIR)\imappars.obj		\
-	.\$(OBJDIR)\mkimap4.obj		\
+	.\$(OBJDIR)\mknews.obj		\
+	.\$(OBJDIR)\mknewsgr.obj		\
 	$(NULL)
 
 CSRCS =	\
-	imap4url.c	\
-	$(NULL)
-
-CPPSRCS		= \
-	imapbody.cpp	\
-	imapearl.cpp	\
-	imaphier.cpp	\
-	imappars.cpp	\
-	mkimap4.cpp	\
+	mknews.c	\
+	mknewsgr.c	\
 	$(NULL)
 
 
-LIBRARY_NAME=imap4url 
-MODULE=imap4url 
+LIBRARY_NAME=nntpurl 
+MODULE=nntpurl 
 DEPTH=..\..\..
 
 LOCAL_INCLUDES=-I. -I$(DEPTH)/dist/public/zlib  -I$(DEPTH)/dist/public/parse
@@ -70,8 +59,8 @@ INCLUDES = $(LOCAL_INCLUDES)
 
 EXTRA_LIBS=
 
-REQUIRES= ldap network nspr2 security 
-EXPORTS= imap4pvt.h imap4url.h imapbody.h imaphier.h mkimap4.h
+REQUIRES= ldap network httpurl
+EXPORTS= mknews.h mknewsgr.h
 
 # use LINCS on win32 for now since REQUIRES seems to be broken
 #!if "$(MOZ_BITS)" != "16"
@@ -85,9 +74,9 @@ LINCS= \
     -I$(PUBLIC)\security	\
     -I$(PUBLIC)\netcache	\
     -I$(PUBLIC)\network \
-    -I$(DEPTH)\lib\libmsg \
-    -I$(PUBLIC)\mimetype \
     -I$(PUBLIC)\ldap \
+    -I$(PUBLIC)\httpurl \
+    -I$(PUBLIC)\mimetype \
 #!endif
 
 include <$(DEPTH)\config\rules.mak> 

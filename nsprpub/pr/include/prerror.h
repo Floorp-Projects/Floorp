@@ -25,7 +25,7 @@ PR_BEGIN_EXTERN_C
 
 typedef PRInt32 PRErrorCode;
 
-#define PR_NSPR_ERROR_BASE -6000
+#define PR_NSPR_ERROR_BASE -2600
 
 #define PR_OUT_OF_MEMORY_ERROR              PR_NSPR_ERROR_BASE + 0
                                     /* Insufficient memory to perform request   */

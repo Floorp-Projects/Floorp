@@ -15,21 +15,19 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH		= ../..
+DEPTH		= ../../..
 
-MODULE		= cnetinit
-
-ifndef MODULAR_NETLIB
-LIBRARY_NAME	= cnetinit
+MODULE		= pop3url
+LIBRARY_NAME	= pop3url
 
 CSRCS		= \
-	cnetinit.c	\
+	mkpop3.c	\
 	$(NULL)
-endif
 
-EXPORTS= cnetinit.h
+EXPORTS= mkpop3.h
 
-REQUIRES	= netcache network img layer fileurl httpurl ftpurl abouturl \
-	gophurl jsurl remoturl dataurl util security
+REQUIRES	= netcache network nspr2 dbm util pref js java fileurl \
+	security layer img httpurl mimetype htmldlgs
 
 include $(DEPTH)/config/rules.mk
+
