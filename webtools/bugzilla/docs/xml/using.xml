@@ -619,30 +619,144 @@
     <section id="emailsettings">
       <title>Email Settings</title>
 
-      <para>On this tab you can reduce or increase the amount of email sent
-      you from Bugzilla, opting in our out depending on your relationship to
-      the bug and the change that was made to it. 
-      </para>
-      
       <para>
-      You can also do further filtering on the client side by 
-      using the X-Bugzilla-Reason mail header which Bugzilla
-      adds to all bugmail. This tells you what relationship you have to the
-      bug in question,
-      and can be any of Owner, Reporter, QAcontact, CClist, Voter and
-      WatchingComponent.</para>
+        This tab controls the amount of email Bugzilla sends you.
+      </para>
 
-      <para>By entering user email names, delineated by commas, into the
-      "Users to watch" text entry box you can receive a copy of all the
-      bugmail of other users (security settings permitting.) This powerful
-      functionality enables seamless transitions as developers change
-      projects or users go on holiday.</para>
+      <para>
+        The first item on this page is marked <quote>Users to watch</quote>.
+        When you enter one or more comma-delineated user accounts (usually email
+        addresses) into the text entry box, you will receive a copy of all the
+        bugmail those users are sent (security settings permitting).
+        This powerful functionality enables seamless transitions as developers
+        change projects or users go on holiday.
+      </para>
 
       <note>
-        <para>The ability to watch other users may not be available in all
-        Bugzilla installations. If you can't see it, ask your 
-        administrator.</para>
+        <para>
+          The ability to watch other users may not be available in all
+          Bugzilla installations. If you don't see this feature, and feel
+          that you need it, speak to your administrator.
+        </para>
       </note>
+
+      <para>
+        In general, users have almost complete control over how much (or
+        how little) email Bugzilla sends them. If you want to receive the
+        maximum amount of email possible, click the <quote>Enable All 
+        Mail</quote> button. If you don't want to receive any email from
+        Bugzilla at all, click the <quote>Disable All Mail</quote> button.
+      </para>
+
+      <note>
+        <para>
+          Your Bugzilla administrator can stop a user from receiving
+          bugmail by adding the user's name to the 
+          <filename>data/nomail</filename> file. This is a drastic step
+          best taken only for disabled accounts, as it overrides the 
+          the user's individual mail preferences.
+        </para>
+      </note>
+  
+      <para>
+        If you'd like to set your bugmail to something besides
+        'Completely ON' and 'Completely OFF', the
+        <quote>Field/recipient specific options</quote> table
+        allows you to do just that. The rows of the table
+        define events that can happen to a bug -- things like
+        attachments being added, new comments being made, the
+        priority changing, etc. The columns in the table define
+        your relationship with the bug:
+      </para>
+
+      <itemizedlist spacing="compact">
+        <listitem>
+          <para>
+            Reporter - Where you are the person who initially
+            reported the bug. Your name/account appears in the
+            <quote>Reporter:</quote> field.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            Assignee - Where you are the person who has been
+            designated as the one responsible for the bug. Your
+            name/account appears in the <quote>Assigned To:</quote>
+            field of the bug.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            QA Contact - You are one of the designated
+            QA Contacts for the bug. Your account appears in the 
+            <quote>QA Contact:</quote> text-box of the bug.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            CC - You are on the list CC List for the bug.
+            Your account appears in the <quote>CC:</quote> text box
+            of the bug.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            Voter - You have placed one or more votes for the bug.
+            Your account appears only if someone clicks on the 
+            <quote>Show votes for this bug</quote> link on the bug.
+          </para>
+        </listitem>
+      </itemizedlist>
+
+
+      <note>
+        <para>
+          Some columns may not be visible for your installation, depending
+          on your site's configuration.
+        </para>
+      </note>
+
+      <para>
+        To fine-tune your bugmail, decide the events for which you want
+        to receive bugmail; then decide if you want to receive it all
+        the time (enable the checkbox for every column), or only when
+        you have a certain relationship with a bug (enable the checkbox
+        only for those columns). For example: if you didn't want to
+        receive mail when someone added themselves to the CC list, you
+        could uncheck all the boxes in the <quote>CC Field Changes</quote>
+        line. As another example, if you never wanted to receive email
+        on bugs you reported unless the bug was resolved, you would
+        un-check all boxes in the <quote>Reporter</quote> column
+        except for the one on the <quote>The bug is resolved or
+        verified</quote> row.
+      </para>
+
+      <note>
+        <para>
+          Bugzilla adds the <quote>X-Bugzilla-Reason</quote> header to
+          all bugmail it sends, describing the recipient's relationship
+          (AssignedTo, Reporter, QAContact, CC, or Voter) to the bug.
+          This header can be used to do further client-side filtering.
+        </para>
+      </note>
+
+      <para>
+        Two items not in the table (<quote>Email me when someone
+        asks me to set a flag</quote> and <quote>Email me when someone
+        sets a flag I asked for</quote>) define how you want to
+        receive bugmail with regards to flags. Their use is quite
+        straightforward; enable the checkboxes if you want Bugzilla to
+        send you mail under either of the above conditions.
+      </para>
+
+      <para>
+        By default, Bugzilla sends out email regardless of who made the
+        change... even if you were the one responsible for generating
+        the email in the first place. If you don't care to receive bugmail
+        from your own changes, check the box marked <quote>Only email me
+        reports of changes made by other people</quote>.
+      </para>
+
     </section>
 
     <section id="permissionsettings">

@@ -313,25 +313,35 @@
 
           <listitem>
             <para>
-            <emphasis>Disable Text</emphasis>: 
-            If you type anything in this box, including just a space, the
-            user is prevented from logging in, or making any changes to 
-            bugs via the web interface. 
-            The HTML you type in this box is presented to the user when
-            they attempt to perform these actions, and should explain
-            why the account was disabled.
-            <warning>
-              <para>Don't disable all the administrator accounts!</para>
-            </warning>
-
-            <note>
-              <para>The user can still submit bugs via
-              the e-mail gateway, if you set it up, even if the disabled text
-              field is filled in. The e-mail gateway should 
-              <emphasis>not</emphasis>
-              be enabled for secure installations of Bugzilla.</para>
-            </note>
+              <emphasis>Disable Text</emphasis>: 
+              If you type anything in this box, including just a space, the
+              user is prevented from logging in, or making any changes to 
+              bugs via the web interface. 
+              The HTML you type in this box is presented to the user when
+              they attempt to perform these actions, and should explain
+              why the account was disabled.
             </para>
+            <para>
+              Users with disabled accounts will continue to receive
+              mail from Bugzilla; furthermore, they will not be able
+              to log in themselves to change their own preferences and
+              stop it. If you want an account (disabled or active) to
+              stop receiving mail, add the account name (one account
+              per line) to the file <filename>data/nomail</filename>.
+            </para>
+            <note>
+              <para>
+                Even users whose accounts have been disabled can still
+                submit bugs via the e-mail gateway, if one exists.
+                The e-mail gateway should <emphasis>not</emphasis> be
+                enabled for secure installations of Bugzilla.
+              </para>
+            </note>
+            <warning>
+              <para>
+                Don't disable all the administrator accounts!
+              </para>
+            </warning>
           </listitem>
 
           <listitem>
