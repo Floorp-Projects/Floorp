@@ -7257,7 +7257,9 @@ void CEditBuffer::ChangeTableSelection(ED_HitType iHitType, ED_MoveSelType iMove
     ClearTableAndCellSelection();
 
     // First see if we are changing the current selection type
-    if( iHitType != ED_HIT_NONE && pData && iHitType != pData->iSelectionType )
+    if( iHitType != ED_HIT_NONE &&
+        ((pData && iHitType != pData->iSelectionType) ||
+         (pData == NULL && iMoveType == ED_MOVE_NONE)) )
     {
         // This is relatively simple as long as we can trust that the
         //   caret is in the "focus cell" 
