@@ -60,17 +60,17 @@ Rights Reserved.
 	</rule>
   </template>
 
-  <treecol style="width:20px" id="ThreadColumn" rdf:resource="http://home.netscape.com/NC-rdf#Thread"/>
-  <treecol style="width:27%" id="SubjectColumn" rdf:resource="http://home.netscape.com/NC-rdf#Subject"/>
-  <treecol style="width:13%" id="AuthorColumn" rdf:resource="http://home.netscape.com/NC-rdf#Sender"/>
-  <treecol style="width:20px" id="UnreadButtonColumn"/>
-  <treecol style="width:10%" id="DateColumn" rdf:resource="http://home.netscape.com/NC-rdf#Date"/>
-  <treecol style="width:7%" id="PriorityColumn" rdf:resource="http://home.netscape.com/NC-rdf#Priority"/>
-  <treecol style="width:20px" id="FlaggedButtonColumn"/>
-  <treecol style="width:7%" id="StatusColumn" rdf:resource="http://home.netscape.com/NC-rdf#Status"/>
-  <treecol style="width:7%" id="SizeColumn" rdf:resource="http://home.netscape.com/NC-rdf#Size"/>
-  <treecol style="width:7%" id="UnreadColumn" rdf:resource="http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
-  <treecol style="width:7%" id="TotalColumn" rdf:resource="http://home.netscape.com/NC-rdf#TotalMessages"/>
+  <treecol width="20" id="ThreadColumn" rdf:resource="http://home.netscape.com/NC-rdf#Thread"/>
+  <treecol width="7*" id="SubjectColumn" rdf:resource="http://home.netscape.com/NC-rdf#Subject"/>
+  <treecol width="4*" id="AuthorColumn" rdf:resource="http://home.netscape.com/NC-rdf#Sender"/>
+  <treecol width="20" id="UnreadButtonColumn"/>
+  <treecol width="2*" id="DateColumn" rdf:resource="http://home.netscape.com/NC-rdf#Date"/>
+  <treecol width="1*" id="PriorityColumn" rdf:resource="http://home.netscape.com/NC-rdf#Priority"/>
+  <treecol width="20" id="FlaggedButtonColumn"/>
+  <treecol width="1*" id="StatusColumn" rdf:resource="http://home.netscape.com/NC-rdf#Status"/>
+  <treecol width="1*" id="SizeColumn" rdf:resource="http://home.netscape.com/NC-rdf#Size"/>
+  <treecol width="1*" id="UnreadColumn" rdf:resource="http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
+  <treecol width="1*" id="TotalColumn" rdf:resource="http://home.netscape.com/NC-rdf#TotalMessages"/>
   <treehead>
     <treerow>
 		<treecell onclick="return top.ChangeThreadView();" class='threadColumnHeader' id="ThreadColumnHeader"/> 
