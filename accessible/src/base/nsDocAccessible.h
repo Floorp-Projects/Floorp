@@ -39,7 +39,7 @@
 #ifndef _nsDocAccessible_H_
 #define _nsDocAccessible_H_
 
-#include "nsAccessibleWrap.h"
+#include "nsBaseWidgetAccessible.h"
 #include "nsHashtable.h"
 #include "nsIAccessibleDocument.h"
 #include "nsIAccessibleEventReceiver.h"
@@ -57,7 +57,7 @@ class nsIScrollableView;
 
 const PRUint32 kDefaultCacheSize = 256;
 
-class nsDocAccessible : public nsAccessibleWrap,
+class nsDocAccessible : public nsBlockAccessible,
                         public nsIAccessibleDocument,
                         public nsIAccessibleEventReceiver,
                         public nsIWebProgressListener,

@@ -80,7 +80,7 @@
 // construction 
 //-----------------------------------------------------
 nsDocAccessible::nsDocAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell):
-  nsAccessibleWrap(aDOMNode, aShell), 
+  nsBlockAccessible(aDOMNode, aShell), 
   mAccessNodeCache(nsnull), mWnd(nsnull), 
   mScrollWatchTimer(nsnull), mDocLoadTimer(nsnull), 
   mWebProgress(nsnull), mEditor(nsnull), 
@@ -134,10 +134,10 @@ NS_INTERFACE_MAP_BEGIN(nsDocAccessible)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIAccessibleDocument)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
-NS_INTERFACE_MAP_END_INHERITING(nsAccessible)
+NS_INTERFACE_MAP_END_INHERITING(nsBlockAccessible)
 
-NS_IMPL_ADDREF_INHERITED(nsDocAccessible, nsAccessible)
-NS_IMPL_RELEASE_INHERITED(nsDocAccessible, nsAccessible)
+NS_IMPL_ADDREF_INHERITED(nsDocAccessible, nsBlockAccessible)
+NS_IMPL_RELEASE_INHERITED(nsDocAccessible, nsBlockAccessible)
 
 NS_IMETHODIMP nsDocAccessible::AddEventListeners()
 {
@@ -339,7 +339,7 @@ NS_IMETHODIMP nsDocAccessible::Init()
       }
     }
   }
-  return nsAccessibleWrap::Init();
+  return nsBlockAccessible::Init();
 }  
 
 
@@ -392,7 +392,7 @@ NS_IMETHODIMP nsDocAccessible::Shutdown()
 
   mDocument = nsnull;
 
-  return nsAccessibleWrap::Shutdown();
+  return nsBlockAccessible::Shutdown();
 }
 
 nsIFrame* nsDocAccessible::GetFrame()
