@@ -53,7 +53,6 @@ Contributor(s): ______________________________________. -->
         screenX="4" screenY="4"
         persist="screenX screenY width height sizemode"> 
 
-  <!-- Generic Utility -->
   <script type="application/x-javascript" src="chrome://global/content/nsUserSettings.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsClipboard.js"/>
@@ -61,24 +60,23 @@ Contributor(s): ______________________________________. -->
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
   <script type="application/x-javascript" src="chrome://global/content/fullScreen.js"/>
   
-  <!-- Content Area -->
   <script type="application/x-javascript" src="chrome://browser/content/nsBrowserStatusHandler.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/nsBrowserContentListener.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaClick.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaDD.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/findUtils.js"/>
 
-  <!-- Shared Bookmarks Utility Library -->
   <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarksOverlay.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/personalToolbar.js"/>
   
-  <!-- Navigator -->
   <script type="application/x-javascript" src="chrome://browser/content/browser.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/browser-2.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/navigatorDD.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/sessionHistoryUI.js"/>
   <script type="application/x-javascript" src="chrome://global/content/charsetOverlay.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/policy/policy.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/utilityOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/builtinURLs.js"/>
 
   <!-- hook for stringbundle overlays -->
   <stringbundleset id="stringbundleset">
@@ -90,10 +88,22 @@ Contributor(s): ______________________________________. -->
   </stringbundleset>
 
   <commandset id="commands">    
-    <commandset id="globalEditMenuItems"/>
-    <commandset id="selectEditMenuItems"/>
-    <commandset id="undoEditMenuItems"/>
-    <commandset id="clipboardEditMenuItems"/>
+    <commandset id="globalEditMenuItems"
+                commandupdater="true"
+                events="focus"
+                oncommandupdate="goUpdateGlobalEditMenuItems()"/>
+    <commandset id="selectEditMenuItems"
+                commandupdater="true"
+                events="select"
+                oncommandupdate="goUpdateSelectEditMenuItems()"/>
+    <commandset id="undoEditMenuItems"
+                commandupdater="true"
+                events="undo"
+                oncommandupdate="goUpdateUndoEditMenuItems()"/>
+    <commandset id="clipboardEditMenuItems"
+                commandupdater="true"
+                events="clipboard"
+                oncommandupdate="goUpdatePasteMenuItems()"/>
   </commandset>
     
   <!-- broadcasters are appended from the overlay -->
@@ -387,7 +397,7 @@ Contributor(s): ______________________________________. -->
     <statusbarpanel class="statusbarpanel-progress">
       <progressmeter class="progressmeter-statusbar" id="statusbar-icon" mode="normal" value="0"/>
     </statusbarpanel>
-    <statusbarpanel class="statusbarpanel-iconic" id="offline-status"/>
+    <statusbarpanel class="statusbarpanel-iconic" id="offline-status" observes="Communicator:WorkMode"/>
     <statusbarpanel class="statusbarpanel-iconic" id="security-button" onclick="displayPageInfo()"/>
 <!--
     <statusbarpanel>

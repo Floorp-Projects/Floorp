@@ -450,6 +450,7 @@ function Startup()
   gURLBar = document.getElementById("urlbar");
 
   registerZoomManager();
+  utilityOnLoad();
   
   SetPageProxyState("invalid", null);
 
@@ -671,6 +672,8 @@ function Shutdown()
   window.XULBrowserWindow = null;
 
   BrowserFlushBookmarksAndHistory();
+  
+  utilityOnUnload();
 
   // unregister us as a pref listener
   removePrefListener(gButtonPrefListener);

@@ -18,6 +18,7 @@ browser.jar:
         content/browser/turboDialog.xul              (content/turboDialog.xul)
         content/browser/viewsource.js                (content/viewsource.js)
         content/browser/viewSource.xul               (content/viewSource.xul)
+        content/browser/utilityOverlay.js            (content/utilityOverlay.js)
 classic.jar:
         skin/classic/browser/browser.css             (skin/browser.css)
         skin/classic/browser/contents.rdf            (skin/contents.rdf)

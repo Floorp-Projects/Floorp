@@ -24,8 +24,8 @@
    -->
 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
-<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/platformCommunicatorOverlay.xul"?>
 <?xul-overlay href="chrome://browser/content/platformNavigationBindings.xul"?>
 
 <!DOCTYPE window [
@@ -33,16 +33,24 @@
 %navigatorDTD;
 <!ENTITY % contentAreaCommandsDTD SYSTEM "chrome://communicator/locale/contentAreaCommands.dtd" >
 %contentAreaCommandsDTD;
+<!ENTITY % globalRegionDTD SYSTEM "chrome://global-region/locale/region.dtd">
+%globalRegionDTD;
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
+%brandDTD;
 ]>
 
 <overlay id="navigatorOverlay"
          xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/x-javascript" src="chrome://communicator/content/utilityOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/builtinURLs.js"/>
 
   <!-- Keysets -->
   <keyset id="navKeys">
-    <!-- File Menu -->
-    <key id="key_newNavigator"/>
+    <key id="key_newNavigator"
+         key="&newNavigatorCmd.key;"
+         command="cmd_newNavigator"
+         modifiers="accel"/>
     <key id="key_newNavigatorTab" key="&tabCmd.commandkey;" modifiers="accel" command="cmd_newNavigatorTab"/>
     <key id="openLocationKb"   key="&openCmd.commandkey;" command="Browser:Open" modifiers="accel"/>
     <key id="openFileKb"         key="&openFileCmd.commandkey;" command="Browser:OpenFile"  modifiers="accel"/>
@@ -52,14 +60,24 @@
     <key id="key_closeWindow"/>
     <key id="key_quit"/>
 
-    <!-- Edit Menu -->
-    <key id="key_undo"/>
-    <key id="key_redo"/>
-    <key id="key_cut"/>
-    <key id="key_copy"/>
-    <key id="key_paste"/>
-    <key id="key_delete"/>
-    <key id="key_selectAll"/>
+    <key id="key_undo"
+         key="&undoCmd.key;"
+         modifiers="accel"/>
+    <key id="key_redo"
+         key="&redoCmd.key;"
+         modifiers="accel"/>
+    <key id="key_cut"
+         key="&cutCmd.key;"
+         modifiers="accel"/>
+    <key id="key_copy"
+         key="&copyCmd.key;"
+         modifiers="accel"/>
+    <key id="key_paste"
+         key="&pasteCmd.key;"
+         modifiers="accel"/>
+    <key id="key_selectAll"
+         key="&selectAllCmd.key;"
+         modifiers="accel"/>
   
           <!-- View Menu -->
     <key id="key_reload"  key="&reloadCmd.commandkey;" oncommand="BrowserReload();" modifiers="accel"/>
@@ -90,7 +108,8 @@
   </keyset>
 
   <commandset id="commands">
-    <command id="cmd_newNavigator"/>
+    <command id="cmd_newNavigator"
+             oncommand="OpenBrowserWindow()"/>
     <command id="cmd_newNavigatorTab" oncommand="BrowserOpenTab();"/>
 
     <command id="Browser:OpenFile"  oncommand="BrowserOpenFileWindow();"/>
@@ -103,19 +122,39 @@
     <command id="cmd_close" oncommand="BrowserCloseTabOrWindow()"/>
     <command id="cmd_closeWindow" oncommand="BrowserCloseWindow()"/>
 
-    <!-- Edit Menu -->
-    <command id="cmd_undo"/>
-    <command id="cmd_redo"/>
-    <command id="cmd_cut"/>
-    <command id="cmd_copy"/>
-    <command id="cmd_paste"/>
-    <command id="cmd_delete"/>
-    <command id="cmd_selectAll" observes="isImage"/>
+    <command id="cmd_undo" 
+             oncommand="goDoCommand('cmd_undo')"
+             disabled="true"/>
+    <command id="cmd_redo" 
+             oncommand="goDoCommand('cmd_redo')"
+             disabled="true"/>
+    <command id="cmd_cut" 
+             oncommand="goDoCommand('cmd_cut')"
+             disabled="true"/>
+    <command id="cmd_copy" 
+             oncommand="goDoCommand('cmd_copy')"
+             disabled="true"/>
+    <command id="cmd_paste" 
+             oncommand="goDoCommand('cmd_paste')"
+             disabled="true"/>
+    <command id="cmd_delete"
+             oncommand="goDoCommand('cmd_delete')"
+             valueDefault="&deleteCmd.label;"
+             disabled="true"/>
+    <command id="cmd_selectAll"
+             oncommand="goDoCommand('cmd_selectAll')"
+             disabled="true"
+             observes="isImage"/>
 
-    <!-- Content area context menu -->
-    <command id="cmd_copyLink"/>
-    <command id="cmd_copyImageLocation"/>
-    <command id="cmd_copyImageContents"/>
+    <command id="cmd_copyLink"
+             oncommand="goDoCommand('cmd_copyLink')"
+             disabled="false"/>
+    <command id="cmd_copyImageLocation"
+             oncommand="goDoCommand('cmd_copyImageLocation')"
+             disabled="false"/>
+    <command id="cmd_copyImageContents"
+             oncommand="goDoCommand('cmd_copyImageContents')"
+             disabled="false"/>
 
     <!-- View Menu -->
     <command id="View:PageSource" oncommand="BrowserViewSource();"/>
@@ -144,7 +183,9 @@
   <broadcasterset id="navBroadcasters">
     <broadcaster id="canGoBack"    disabled="true"/>
     <broadcaster id="canGoForward" disabled="true"/>
-    <broadcaster id="Communicator:WorkMode"/>
+    <broadcaster id="Communicator:WorkMode"
+                 label="&offlineGoOfflineCmd.label;"
+                 oncommand="toggleOfflineStatus();"/>
     <broadcaster id="cmd_viewnavbar" oncommand="goToggleToolbar( 'nav-bar','cmd_viewnavbar');" checked="true"/>
     <broadcaster id="cmd_viewpersonaltoolbar" oncommand="goToggleToolbar('PersonalToolbar','cmd_viewpersonaltoolbar');" checked="true"/>
     <broadcaster id="cmd_viewtaskbar" oncommand="goToggleToolbar('status-bar','cmd_viewtaskbar');" checked="true"/>
@@ -154,8 +195,8 @@
 
   <!-- Menu -->
   <menubar id="main-menubar" class="chromeclass-menubar">
-    <menu id="menu_File">
-      <menupopup id="menu_FilePopup" onpopupshowing="getContentAreaFrameCount();">
+  <menu label="&fileMenu.label;" accesskey="&fileMenu.accesskey;">
+    <menupopup id="menu_FilePopup" onpopupshowing="getContentAreaFrameCount();">
         <menuitem label="&browserCmd.label;" accesskey="&browserCmd.accesskey;" key="key_newNavigator" command="cmd_newNavigator"/>
         <menuitem command="cmd_newNavigatorTab" key="key_newNavigatorTab"
                   label="&tabCmd.label;" accesskey="&tabCmd.accesskey;"/>
@@ -166,32 +207,68 @@
         <menuseparator id="menu_closeSeparator" hidden="true"/>
         <menuseparator/>
         <menuitem label="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;" key="key_savePage" command="Browser:SavePage"/>
-        <menuitem label="&saveFrameCmd.label;" accesskey="&saveFrameCmd.accesskey;" oncommand="saveFrameDocument();" hidden="true"/>
+        <menuitem id="savepage" label="&saveFrameCmd.label;" accesskey="&saveFrameCmd.accesskey;" oncommand="saveFrameDocument();" hidden="true"/>
         <menuseparator/>
         <menuitem id="printSetupMenuItem" label="&printSetupCmd.label;" accesskey="&printSetupCmd.accesskey;" command="Browser:PrintSetup"/>
         <menuitem id="printPreviewMenuItem" label="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;" command="Browser:PrintPreview"/>
         <menuitem id="printMenuItem" label="&printCmd.label;" accesskey="&printCmd.accesskey;" key="printKb" command="Browser:Print"/>
         <menuseparator/>
-        <menuitem id="offlineGoOfflineCmd"/>
+        <menuitem id="offlineGoOfflineCmd"
+                  label="&offlineGoOfflineCmd.label;"
+                  accesskey="&offlineGoOfflineCmd.accesskey;"
+                  observes="Communicator:WorkMode"/>
       </menupopup>
     </menu>
 
-    <menu id="menu_Edit">
-      <menupopup id="menu_Edit_Popup">
-        <menuitem id="menu_undo"/>
-        <menuitem id="menu_redo"/>
+    <menu label="&editMenu.label;"
+          accesskey="&editMenu.accesskey;">
+      <menupopup>
+        <menuitem id="menu_undo"
+                  label="&undoCmd.label;"
+                  key="key_undo"
+                  accesskey="&undoCmd.accesskey;"
+                  command="cmd_undo"/>
+        <menuitem id="menu_redo"
+                  label="&redoCmd.label;"
+                  key="key_redo"
+                  accesskey="&redoCmd.accesskey;"
+                  command="cmd_redo"/>
         <menuseparator/>
-        <menuitem id="menu_cut"/>
-        <menuitem id="menu_copy"/>
-        <menuitem id="menu_paste"/>
-        <menuitem id="menu_delete"/>
+        <menuitem id="menu_cut"
+                  label="&cutCmd.label;"
+                  key="key_cut"
+                  accesskey="&cutCmd.accesskey;"
+                  command="cmd_cut"/>
+        <menuitem id="menu_copy"
+                  label="&copyCmd.label;"
+                  key="key_copy"
+                  accesskey="&copyCmd.accesskey;"
+                  command="cmd_copy"/>
+        <menuitem id="menu_paste"
+                  label="&pasteCmd.label;"
+                  key="key_paste"
+                  accesskey="&pasteCmd.accesskey;"
+                  command="cmd_paste"/>
+        <menuitem id="menu_delete"
+                  label="&deleteCmd.label;"
+                  key="key_delete"
+                  accesskey="&deleteCmd.accesskey;"
+                  command="cmd_delete"/>
         <menuseparator/>
-        <menuitem id="menu_selectAll"/>
+        <menuitem id="menu_selectAll"
+                  label="&selectAllCmd.label;"
+                  key="key_selectAll"
+                  accesskey="&selectAllCmd.accesskey;"
+                  command="cmd_selectAll"/>
         <menuseparator/>
         <menuitem label="&findOnCmd.label;" accesskey="&findOnCmd.accesskey;" key="key_find" command="Browser:Find"/>
         <menuitem label="&findAgainCmd.label;" accesskey="&findAgainCmd.accesskey;" key="key_findAgain" command="Browser:FindAgain"/>
         <menuseparator id="menu_PrefsSeparator"/> 
-        <menuitem id="menu_preferences" oncommand="goPreferences('navigator.xul', 'chrome://communicator/content/pref/pref-navigator.xul', 'navigator')"/>
+        <menuitem label="&preferencesCmd.label;"
+                  key="key_preferences"
+                  accesskey="&preferencesCmd.accesskey;"
+                  oncommand="goPreferences('navigator.xul',
+                                           'chrome://communicator/content/pref/pref-navigator.xul', 'navigator')"/>
       </menupopup>
     </menu>
 
@@ -241,7 +318,7 @@
             </template>
     
             <menupopup>
-            <menu label="&charsetMenuAutodet.label;" accesskey="&charsetMenuAutodet.accesskey;" datasources="rdf:charset-menu" ref="NC:BrowserAutodetMenuRoot">
+              <menu label="&charsetMenuAutodet.label;" accesskey="&charsetMenuAutodet.accesskey;" datasources="rdf:charset-menu" ref="NC:BrowserAutodetMenuRoot">
                 <template>
                     <rule rdf:type="http://home.netscape.com/NC-rdf#CharsetDetector">
                         <menupopup>
@@ -251,8 +328,8 @@
                 </template>
                 <menupopup>
                 </menupopup>
-            </menu>
-            <menu label="&charsetMenuMore.label;" accesskey="&charsetMenuMore.accesskey;" datasources="rdf:charset-menu" ref="NC:BrowserMoreCharsetMenuRoot">
+              </menu>
+              <menu label="&charsetMenuMore.label;" accesskey="&charsetMenuMore.accesskey;" datasources="rdf:charset-menu" ref="NC:BrowserMoreCharsetMenuRoot">
                 <template>
                     <rule>
                         <menupopup>
@@ -398,8 +475,23 @@
   <menu id="tasksMenu"/>
   <menu id="windowMenu"/>
   
-  <menu accesskey="&helpMenuCmd.accesskey;" id="menu_Help"/>
-
+  <menu id="menu_Help"
+        label="&helpMenu.label;"
+        accesskey="&helpMenu.accesskey;">
+    <menupopup>
+      <menuitem accesskey="&releaseCmd.accesskey;"
+                label="&releaseCmd.label;"
+                oncommand="openTopWin('&releaseURL;');"/>
+      <menuseparator/>
+      <menuitem class="about"
+                accesskey="&aboutCommPluginsCmd.accesskey;"
+                label="&aboutCommPluginsCmd.label;"
+                oncommand="openTopWin('about:plugins')"/>
+      <menuitem accesskey="&aboutCmd.accesskey;"
+                label="&aboutCmd.label;"
+                oncommand="goAboutDialog();"/>
+    </menupopup>
+  </menu>
 </menubar>
 
 </overlay>
