@@ -111,8 +111,7 @@ function Init()
     // TODO
 
     // XXX hack to force the tree to rebuild
-    var treebody = document.getElementById('NC:FlashRoot');
-    treebody.setAttribute('id', 'NC:FlashRoot');
+    tree.setAttribute('ref', 'NC:FlashRoot');
 }
 
 
