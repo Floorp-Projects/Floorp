@@ -1158,6 +1158,7 @@ NS_IMETHODIMP
 nsBoxFrame::RemoveFrame(nsIAtom*        aListName,
                         nsIFrame*       aOldFrame)
 {
+  NS_PRECONDITION(!aListName, "We don't support out-of-flow kids");
   nsPresContext* presContext = GetPresContext();
   nsBoxLayoutState state(presContext);
 
@@ -1182,6 +1183,7 @@ nsBoxFrame::InsertFrames(nsIAtom*        aListName,
                          nsIFrame*       aPrevFrame,
                          nsIFrame*       aFrameList)
 {
+   NS_PRECONDITION(!aListName, "We don't support out-of-flow kids");
    nsBoxLayoutState state(GetPresContext());
 
    // insert the child frames
@@ -1208,6 +1210,7 @@ NS_IMETHODIMP
 nsBoxFrame::AppendFrames(nsIAtom*        aListName,
                          nsIFrame*       aFrameList)
 {
+   NS_PRECONDITION(!aListName, "We don't support out-of-flow kids");
    nsBoxLayoutState state(GetPresContext());
 
    // append the new frames
