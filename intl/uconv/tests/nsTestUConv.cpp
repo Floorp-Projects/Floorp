@@ -830,6 +830,42 @@ nsresult testMUTF7Decoder()
   }
 }
 
+/**
+ * Test the UTF-7 decoder.
+ */
+nsresult testUTF7Decoder()
+{
+  char * testName = "T108";
+  printf("\n[%s] Unicode <- UTF7\n", testName);
+
+  // create converter
+  CREATE_DECODER("utf-7");
+
+  // test data
+  char src[] = {"+ADwAIQ-DOC"};
+  PRUnichar exp[] = {'<','!','D','O','C'};
+
+  // test converter - normal operation
+  res = testDecoder(dec, src, ARRAY_SIZE(src)-1, exp, ARRAY_SIZE(exp), testName);
+
+  // reset converter
+  if (NS_SUCCEEDED(res)) res = resetDecoder(dec, testName);
+
+  // test converter - stress test
+  if (NS_SUCCEEDED(res)) 
+    res = testStressDecoder(dec, src, ARRAY_SIZE(src)-1, exp, ARRAY_SIZE(exp), testName);
+
+  // release converter
+  NS_RELEASE(dec);
+
+  if (NS_FAILED(res)) {
+    return res;
+  } else {
+    printf("Test Passed.\n");
+    return NS_OK;
+  }
+}
+
 //----------------------------------------------------------------------
 // Encoders testing functions
 
@@ -1076,6 +1112,7 @@ nsresult testAll()
   testSJISDecoder();
   testUTF8Decoder();
   testMUTF7Decoder();
+  testUTF7Decoder();
 
   // test encoders
   testLatin1Encoder();
