@@ -367,6 +367,11 @@ nsStdURL::GetString(char** result, char* fromEscapedStr, Format toFormat)
 {
     // Given str "foo%20bar", gets "foo bar" if UNESCAPED
     nsresult rv = NS_OK;
+    if (!fromEscapedStr || fromEscapedStr[0] == '\0') {
+        *result = nsnull;
+        return NS_OK;
+    }
+
     if (toFormat == UNESCAPED) {
         rv = nsURLUnescape(fromEscapedStr, result);
     } else
