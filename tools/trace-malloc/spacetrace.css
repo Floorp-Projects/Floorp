@@ -1,0 +1,80 @@
+/* header stuff */
+table.main  {
+  position: relative;
+  right: 0px;
+  border-spacing: 0px;
+}
+
+.spacetrace-header {
+  border: 2px inset;
+  float: right;
+}
+
+.header-item {
+  border: 2px outset;
+  background: lightgrey;
+}
+
+.header-item > a {
+  font-weight: bold;
+  text-decoration: none;
+}
+
+
+.category-title, .header-item {
+  padding: 2px; 
+  margin: 0px;
+  font-weight: bold;
+}
+
+.category-title {
+  background: lightgrey;
+}
+
+/* footer stuff */
+.footer-separator {
+  border: 1px inset;
+}
+
+.footer {
+  text-align: right;
+}
+
+.footer-text {
+  font-style: italic;
+}
+
+
+/* data tables */
+
+/* headers at the top of specific call site pages */
+
+table.data-header {
+  border: 1px solid black;
+}
+
+/* lists of callsites/etc */
+table.data td {
+  border-top: 1px solid;
+}
+
+table.data {
+  clear: right;
+}
+
+table.data th {
+  text-align: right;
+}
+
+th.callsite {
+  text-align: left !important;
+}
+
+/* links to source */
+.source-extra {
+  display: none;
+}
+
+a.source, a.callsite {
+  text-decoration: none;
+}
