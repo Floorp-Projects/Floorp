@@ -158,6 +158,7 @@ alpha*-*-osf*)
 
 *-bsdi*)
     DSO_CFLAGS=''
+    DSO_LDOPTS='-r'
     ;;
 
 *-freebsd*)
