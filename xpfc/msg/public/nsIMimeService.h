@@ -21,7 +21,7 @@
 
 #include "nsISupports.h"
 #include "nsString.h"
-#include "nsIMIMEMessage.h"
+#include "nsIMimeMessage.h"
 
 //08d3c0f0-6f90-11d2-8dbc-00805f8a7ab6
 #define NS_IMIME_SERVICE_IID   \

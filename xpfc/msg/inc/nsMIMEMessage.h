@@ -20,7 +20,7 @@
 #define nsMIMEMessage_h___
 
 #include "nsMessage.h"
-#include "nsIMIMEMessage.h"
+#include "nsIMimeMessage.h"
 #include "nsIMIMEBodyPart.h"
 #include "mime.h"
 
