@@ -69,6 +69,7 @@
 #include "nsIContent.h"
 #include "nsSVGNumber.h"
 #include "nsIDOMSVGStopElement.h"
+#include "nsLayoutAtoms.h"
   
 typedef nsContainerFrame  nsSVGGradientFrameBase;
 
@@ -120,6 +121,20 @@ public:
   // nsIFrame interface:
   NS_IMETHOD DidSetStyleContext(nsPresContext* aPresContext);
 
+  /**
+   * Get the "type" of the frame
+   *
+   * @see nsLayoutAtoms::svgGradientFrame
+   */
+  virtual nsIAtom* GetType() const;
+
+#ifdef DEBUG
+  NS_IMETHOD GetFrameName(nsAString& aResult) const
+  {
+    return MakeFrameName(NS_LITERAL_STRING("SVGGradient"), aResult);
+  }
+#endif // DEBUG
+
 protected:
   virtual ~nsSVGGradientFrame();
 
@@ -168,6 +183,21 @@ public:
 
   // nsISVGGradient interface gets inherited from nsSVGGradientFrame
 
+  /**
+   * Get the "type" of the frame
+   *
+   * @see nsLayoutAtoms::svgLinearGradientFrame
+   */
+  virtual nsIAtom* GetType() const;
+
+#ifdef DEBUG
+  NS_IMETHOD GetFrameName(nsAString& aResult) const
+  {
+    return MakeFrameName(NS_LITERAL_STRING("SVGLinearGradient"), aResult);
+  }
+#endif // DEBUG
+
+
 protected:
   virtual ~nsSVGLinearGradientFrame();
 
@@ -202,6 +232,20 @@ public:
   NS_DECL_NSISVGRADIALGRADIENT
 
   // nsISVGGradient interface gets inherited from nsSVGGradientFrame
+
+  /**
+   * Get the "type" of the frame
+   *
+   * @see nsLayoutAtoms::svgLinearGradientFrame
+   */
+  virtual nsIAtom* GetType() const;
+
+#ifdef DEBUG
+  NS_IMETHOD GetFrameName(nsAString& aResult) const
+  {
+    return MakeFrameName(NS_LITERAL_STRING("SVGRadialGradient"), aResult);
+  }
+#endif // DEBUG
 
 protected:
   virtual ~nsSVGRadialGradientFrame();
@@ -278,6 +322,12 @@ nsSVGGradientFrame::DidSetStyleContext(nsPresContext* aPresContext)
   WillModify(mod_other);
   DidModify(mod_other);
   return NS_OK;
+}
+
+nsIAtom*
+nsSVGGradientFrame::GetType() const
+{
+  return nsLayoutAtoms::svgGradientFrame;
 }
 
 //----------------------------------------------------------------------
@@ -633,6 +683,12 @@ nsSVGGradientFrame::GetStopElement(PRInt32 aIndex, nsIDOMSVGStopElement * *aStop
 // Linear Gradients
 // -------------------------------------------------------------------------
 
+nsIAtom*
+nsSVGLinearGradientFrame::GetType() const
+{
+  return nsLayoutAtoms::svgLinearGradientFrame;
+}
+
 //----------------------------------------------------------------------
 // nsISupports methods
 
@@ -820,6 +876,12 @@ nsSVGLinearGradientFrame::GetY2(float *aY2)
 NS_INTERFACE_MAP_BEGIN(nsSVGRadialGradientFrame)
   NS_INTERFACE_MAP_ENTRY(nsISVGRadialGradient)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGRadialGradientFrameBase)
+
+nsIAtom*
+nsSVGRadialGradientFrame::GetType() const
+{
+  return nsLayoutAtoms::svgRadialGradientFrame;
+}
 
 // Implementation
 nsSVGRadialGradientFrame::~nsSVGRadialGradientFrame()

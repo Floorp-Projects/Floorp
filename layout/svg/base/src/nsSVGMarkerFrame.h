@@ -43,6 +43,7 @@
 #include "nsIDOMSVGRect.h"
 #include "nsIDOMSVGAnimatedEnum.h"
 #include "nsISVGMarkable.h"
+#include "nsLayoutAtoms.h"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -73,6 +74,20 @@ public:
   // nsISVGValueObserver interface:
   NS_IMETHOD DidModifySVGObservable(nsISVGValue* observable,
                                     nsISVGValue::modificationType aModType);
+
+  /**
+   * Get the "type" of the frame
+   *
+   * @see nsLayoutAtoms::svgMarkerFrame
+   */
+  virtual nsIAtom* GetType() const;
+
+#ifdef DEBUG
+  NS_IMETHOD GetFrameName(nsAString& aResult) const
+  {
+    return MakeFrameName(NS_LITERAL_STRING("SVGMarker"), aResult);
+  }
+#endif
 
   void PaintMark(nsISVGRendererCanvas *aCanvas,
                  nsSVGPathGeometryFrame *aParent,

@@ -46,6 +46,7 @@
 #include "nsIDOMSVGRectElement.h"
 #include "nsINameSpaceManager.h"
 #include "nsSVGAtoms.h"
+#include "nsLayoutAtoms.h"
 
 class nsSVGRectFrame : public nsSVGPathGeometryFrame
 {
@@ -64,6 +65,20 @@ public:
 
   // nsISVGPathGeometrySource interface:
   NS_IMETHOD ConstructPath(nsISVGRendererPathBuilder *pathBuilder);
+
+  /**
+   * Get the "type" of the frame
+   *
+   * @see nsLayoutAtoms::svgRectFrame
+   */
+  virtual nsIAtom* GetType() const;
+
+#ifdef DEBUG
+  NS_IMETHOD GetFrameName(nsAString& aResult) const
+  {
+    return MakeFrameName(NS_LITERAL_STRING("SVGRect"), aResult);
+  }
+#endif
 
 private:
   nsCOMPtr<nsIDOMSVGLength> mX;
@@ -271,4 +286,10 @@ nsSVGRectFrame::ConstructPath(nsISVGRendererPathBuilder* pathBuilder)
   pathBuilder->ClosePath(&x,&y);
 
   return NS_OK;
+}
+
+nsIAtom *
+nsSVGRectFrame::GetType() const
+{
+  return nsLayoutAtoms::svgRectFrame;
 }

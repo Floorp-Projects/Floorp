@@ -46,6 +46,7 @@
 #include "nsSVGMatrix.h"
 #include "nsSVGClipPathFrame.h"
 #include "nsISVGRendererCanvas.h"
+#include "nsLayoutAtoms.h"
 #include <math.h>
 
 //----------------------------------------------------------------------
@@ -71,6 +72,12 @@ NS_NewSVGGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewF
   *aNewFrame = it;
 
   return NS_OK;
+}
+
+nsIAtom *
+nsSVGGFrame::GetType() const
+{
+  return nsLayoutAtoms::svgGFrame;
 }
 
 //----------------------------------------------------------------------

@@ -43,6 +43,7 @@
 //#include "nsASVGPathBuilder.h"
 #include "nsISVGRendererPathBuilder.h"
 #include "nsISVGMarkable.h"
+#include "nsLayoutAtoms.h"
 
 class nsSVGPolygonFrame : public nsSVGPathGeometryFrame,
                           public nsISVGMarkable
@@ -70,6 +71,20 @@ public:
 
    // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+
+  /**
+   * Get the "type" of the frame
+   *
+   * @see nsLayoutAtoms::svgPolygonFrame
+   */
+  virtual nsIAtom* GetType() const;
+
+#ifdef DEBUG
+  NS_IMETHOD GetFrameName(nsAString& aResult) const
+  {
+    return MakeFrameName(NS_LITERAL_STRING("SVGPolygon"), aResult);
+  }
+#endif
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
@@ -227,4 +242,10 @@ nsSVGPolygonFrame::GetMarkPoints(nsVoidArray *aMarks) {
     nsSVGMarkerFrame::bisect(prevAngle, angle);
   ((nsSVGMark *)aMarks->ElementAt(0))->angle =
     nsSVGMarkerFrame::bisect(angle, startAngle);
+}
+
+nsIAtom *
+nsSVGPolygonFrame::GetType() const
+{
+  return nsLayoutAtoms::svgPolygonFrame;
 }

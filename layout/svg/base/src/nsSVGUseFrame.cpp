@@ -43,6 +43,7 @@
 #include "nsISVGValue.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsSVGMatrix.h"
+#include "nsLayoutAtoms.h"
 
 typedef nsSVGGFrame nsSVGUseFrameBase;
 
@@ -74,6 +75,20 @@ public:
        nsIFrame*        aParent,
        nsStyleContext*  aContext,
        nsIFrame*        aPrevInFlow);
+
+  /**
+   * Get the "type" of the frame
+   *
+   * @see nsLayoutAtoms::svgUseFrame
+   */
+  virtual nsIAtom* GetType() const;
+
+#ifdef DEBUG
+  NS_IMETHOD GetFrameName(nsAString& aResult) const
+  {
+    return MakeFrameName(NS_LITERAL_STRING("SVGUse"), aResult);
+  }
+#endif
 
   // nsIAnonymousContentCreator
   NS_IMETHOD CreateAnonymousContent(nsPresContext* aPresContext,
@@ -143,6 +158,12 @@ nsresult nsSVGUseFrame::Init()
   }
 
   return NS_OK;
+}
+
+nsIAtom *
+nsSVGUseFrame::GetType() const
+{
+  return nsLayoutAtoms::svgUseFrame;
 }
 
 //----------------------------------------------------------------------

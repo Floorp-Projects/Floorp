@@ -77,6 +77,7 @@
 #include "nsIWindowWatcher.h"
 #include "nsIDialogParamBlock.h"
 #include "nsIDOMWindow.h"
+#include "nsLayoutAtoms.h"
 
 ////////////////////////////////////////////////////////////////////////
 // VMRectInvalidator: helper class for invalidating rects on the viewmanager.
@@ -219,6 +220,20 @@ public:
                     PRUint32 aFlags = 0);
 
   PRBool CanPaintBackground() { return PR_FALSE; }
+
+  /**
+   * Get the "type" of the frame
+   *
+   * @see nsLayoutAtoms::svgOuterSVGFrame
+   */
+  virtual nsIAtom* GetType() const;
+
+#ifdef DEBUG
+  NS_IMETHOD GetFrameName(nsAString& aResult) const
+  {
+    return MakeFrameName(NS_LITERAL_STRING("SVGOuterSVG"), aResult);
+  }
+#endif
 
   // nsISVGValueObserver
   NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
@@ -914,6 +929,12 @@ nsSVGOuterSVGFrame::Paint(nsPresContext* aPresContext,
   return NS_OK;
   // see if we have to draw a selection frame around this container
   //return nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+}
+
+nsIAtom *
+nsSVGOuterSVGFrame::GetType() const
+{
+  return nsLayoutAtoms::svgOuterSVGFrame;
 }
 
 //----------------------------------------------------------------------

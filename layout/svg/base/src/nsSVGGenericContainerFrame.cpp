@@ -186,6 +186,12 @@ nsSVGGenericContainerFrame::AttributeChanged(nsIContent*     aChild,
   return NS_OK;
 }
 
+nsIAtom *
+nsSVGGenericContainerFrame::GetType() const
+{
+  return nsLayoutAtoms::svgGenericContainerFrame;
+}
+
 
 //----------------------------------------------------------------------
 // nsISVGChildFrame methods

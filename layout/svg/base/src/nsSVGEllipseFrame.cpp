@@ -45,6 +45,7 @@
 #include "nsIDOMSVGElement.h"
 #include "nsIDOMSVGSVGElement.h"
 #include "nsISVGRendererPathBuilder.h"
+#include "nsLayoutAtoms.h"
 
 class nsSVGEllipseFrame : public nsSVGPathGeometryFrame
 {
@@ -54,6 +55,20 @@ class nsSVGEllipseFrame : public nsSVGPathGeometryFrame
   virtual ~nsSVGEllipseFrame();
 
   virtual nsresult Init();
+
+  /**
+   * Get the "type" of the frame
+   *
+   * @see nsLayoutAtoms::svgEllipseFrame
+   */
+  virtual nsIAtom* GetType() const;
+
+#ifdef DEBUG
+  NS_IMETHOD GetFrameName(nsAString& aResult) const
+  {
+    return MakeFrameName(NS_LITERAL_STRING("SVGEllipse"), aResult);
+  }
+#endif
 
   // nsISVGValueObserver interface:
   NS_IMETHOD DidModifySVGObservable(nsISVGValue* observable,
@@ -158,6 +173,12 @@ nsresult nsSVGEllipseFrame::Init()
   }
 
   return NS_OK; 
+}
+
+nsIAtom *
+nsSVGEllipseFrame::GetType() const
+{
+  return nsLayoutAtoms::svgEllipseFrame;
 }
 
 //----------------------------------------------------------------------

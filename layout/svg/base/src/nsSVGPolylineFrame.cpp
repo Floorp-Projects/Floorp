@@ -43,6 +43,7 @@
 //#include "nsASVGPathBuilder.h"
 #include "nsISVGRendererPathBuilder.h"
 #include "nsISVGMarkable.h"
+#include "nsLayoutAtoms.h"
 
 class nsSVGPolylineFrame : public nsSVGPathGeometryFrame,
                            public nsISVGMarkable
@@ -55,6 +56,20 @@ protected:
   virtual nsresult Init();
 
 public:
+  /**
+   * Get the "type" of the frame
+   *
+   * @see nsLayoutAtoms::svgPolylineFrame
+   */
+  virtual nsIAtom* GetType() const;
+
+#ifdef DEBUG
+  NS_IMETHOD GetFrameName(nsAString& aResult) const
+  {
+    return MakeFrameName(NS_LITERAL_STRING("SVGPolyline"), aResult);
+  }
+#endif
+
   // nsISVGValueObserver interface:
   NS_IMETHOD DidModifySVGObservable(nsISVGValue* observable,
                                     nsISVGValue::modificationType aModType);
@@ -125,6 +140,12 @@ nsresult nsSVGPolylineFrame::Init()
     value->AddObserver(this);
   return NS_OK; 
 }  
+
+nsIAtom *
+nsSVGPolylineFrame::GetType() const
+{
+  return nsLayoutAtoms::svgPolylineFrame;
+}
 
 //----------------------------------------------------------------------
 // nsISVGValueObserver methods:

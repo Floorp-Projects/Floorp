@@ -218,6 +218,12 @@ nsSVGClipPathFrame::ClipHitTest(nsISVGChildFrame* aParent,
   return NS_OK;
 }
 
+nsIAtom *
+nsSVGClipPathFrame::GetType() const
+{
+  return nsLayoutAtoms::svgClipPathFrame;
+}
+
 already_AddRefed<nsIDOMSVGMatrix>
 nsSVGClipPathFrame::GetCanvasTM()
 {

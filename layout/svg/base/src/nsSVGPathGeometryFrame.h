@@ -49,6 +49,7 @@
 #include "nsISVGOuterSVGFrame.h"
 #include "nsSVGMarkerFrame.h"
 #include "nsSVGGradient.h"
+#include "nsLayoutAtoms.h"
 
 class nsPresContext;
 class nsIDOMSVGMatrix;
@@ -87,6 +88,22 @@ public:
                                PRInt32         aHint);
 
   NS_IMETHOD DidSetStyleContext(nsPresContext* aPresContext);
+
+  /**
+   * Get the "type" of the frame
+   *
+   * @see nsLayoutAtoms::svgPathGeometryFrame
+   */
+  virtual nsIAtom* GetType() const;
+
+#ifdef DEBUG
+  NS_IMETHOD GetFrameName(nsAString& aResult) const
+  {
+    return MakeFrameName(NS_LITERAL_STRING("SVGPathGeometry"), aResult);
+  }
+#endif
+
+protected:
   
   // nsISVGValueObserver
   NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,

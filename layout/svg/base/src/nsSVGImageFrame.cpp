@@ -54,6 +54,7 @@
 #include "nsIImage.h"
 #include "imgIRequest.h"
 #include "nsSVGClipPathFrame.h"
+#include "nsLayoutAtoms.h"
 
 #define NS_GET_BIT(rowptr, x) (rowptr[(x)>>3] &  (1<<(7-(x)&0x7)))
 
@@ -95,6 +96,20 @@ public:
 
   // nsISVGChildFrame interface:
   NS_IMETHOD Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips);
+
+  /**
+   * Get the "type" of the frame
+   *
+   * @see nsLayoutAtoms::svgImageFrame
+   */
+  virtual nsIAtom* GetType() const;
+
+#ifdef DEBUG
+  NS_IMETHOD GetFrameName(nsAString& aResult) const
+  {
+    return MakeFrameName(NS_LITERAL_STRING("SVGImage"), aResult);
+  }
+#endif
 
 private:
   nsCOMPtr<nsIDOMSVGLength> mX;
@@ -426,6 +441,12 @@ nsSVGImageFrame::Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwip
     canvas->PopClip();
 
   return NS_OK;
+}
+
+nsIAtom *
+nsSVGImageFrame::GetType() const
+{
+  return nsLayoutAtoms::svgImageFrame;
 }
 
 nsresult

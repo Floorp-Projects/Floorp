@@ -47,6 +47,7 @@
 #include "nsISVGRendererPathBuilder.h"
 #include "nsISVGMarkable.h"
 #include "nsISupports.h"
+#include "nsLayoutAtoms.h"
 
 class nsSVGPathFrame : public nsSVGPathGeometryFrame,
                        public nsISVGMarkable
@@ -71,6 +72,20 @@ public:
 
    // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+
+  /**
+   * Get the "type" of the frame
+   *
+   * @see nsLayoutAtoms::svgPathFrame
+   */
+  virtual nsIAtom* GetType() const;
+
+#ifdef DEBUG
+  NS_IMETHOD GetFrameName(nsAString& aResult) const
+  {
+    return MakeFrameName(NS_LITERAL_STRING("SVGPath"), aResult);
+  }
+#endif
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
@@ -937,4 +952,10 @@ nsSVGPathFrame::GetMarkPoints(nsVoidArray *aMarks) {
 
   if (aMarks->Count())
     ((nsSVGMark *)aMarks->ElementAt(aMarks->Count()-1))->angle = prevAngle;
+}
+
+nsIAtom *
+nsSVGPathFrame::GetType() const
+{
+  return nsLayoutAtoms::svgPathFrame;
 }

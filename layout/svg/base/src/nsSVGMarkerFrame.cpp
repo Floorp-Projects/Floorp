@@ -387,3 +387,9 @@ nsSVGMarkerFrame::bisect(float a1, float a2)
   else
     return M_PI + (a1+a2)/2;
 }
+
+nsIAtom *
+nsSVGMarkerFrame::GetType() const
+{
+  return nsLayoutAtoms::svgMarkerFrame;
+}

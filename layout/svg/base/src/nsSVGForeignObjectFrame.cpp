@@ -62,6 +62,7 @@
 #include "nsSVGPoint.h"
 #include "nsSVGRect.h"
 #include "nsSVGMatrix.h"
+#include "nsLayoutAtoms.h"
 
 typedef nsBlockFrame nsSVGForeignObjectFrameBase;
 
@@ -109,6 +110,23 @@ public:
   NS_IMETHOD  ReplaceFrame(nsIAtom*        aListName,
                            nsIFrame*       aOldFrame,
                            nsIFrame*       aNewFrame);
+
+  /**
+   * Get the "type" of the frame
+   *
+   * @see nsLayoutAtoms::svgForeignObjectFrame
+   */
+  // XXX Need to make sure that any of the code examining
+  // frametypes, particularly code looking at block and area
+  // also handles foreignObject before we return our own frametype
+  // virtual nsIAtom* GetType() const;
+
+#ifdef DEBUG
+  NS_IMETHOD GetFrameName(nsAString& aResult) const
+  {
+    return MakeFrameName(NS_LITERAL_STRING("SVGForeignObject"), aResult);
+  }
+#endif
 
   // nsISVGValueObserver
   NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
@@ -414,6 +432,15 @@ nsSVGForeignObjectFrame::ReplaceFrame(nsIAtom*        aListName,
 	Update();
 	return rv;
 }
+
+// XXX Need to make sure that any of the code examining
+// frametypes, particularly code looking at block and area
+// also handles foreignObject before we return our own frametype
+// nsIAtom *
+// nsSVGForeignObjectFrame::GetType() const
+// {
+//   return nsLayoutAtoms::svgForeignObjectFrame;
+// }
 
 //----------------------------------------------------------------------
 // nsISVGValueObserver methods:

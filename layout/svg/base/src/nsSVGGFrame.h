@@ -48,6 +48,20 @@ class nsSVGGFrame : public nsSVGGFrameBase
 public:
   nsSVGGFrame() : mPropagateTransform(PR_TRUE) {}
 
+  /**
+   * Get the "type" of the frame
+   *
+   * @see nsLayoutAtoms::svgGFrame
+   */
+  virtual nsIAtom* GetType() const;
+
+#ifdef DEBUG
+  NS_IMETHOD GetFrameName(nsAString& aResult) const
+  {
+    return MakeFrameName(NS_LITERAL_STRING("SVGG"), aResult);
+  }
+#endif
+
 protected:
   friend nsresult
   NS_NewSVGGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);

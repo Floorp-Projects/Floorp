@@ -175,6 +175,12 @@ nsSVGPathGeometryFrame::DidSetStyleContext(nsPresContext* aPresContext)
   return NS_OK;
 }
 
+nsIAtom *
+nsSVGPathGeometryFrame::GetType() const
+{
+  return nsLayoutAtoms::svgPathGeometryFrame;
+}
+
 //----------------------------------------------------------------------
 // nsISVGChildFrame methods
 

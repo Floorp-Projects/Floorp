@@ -46,6 +46,7 @@
 #include "nsISVGContainerFrame.h"
 #include "nsISVGRendererCanvas.h"
 #include "nsISVGOuterSVGFrame.h"
+#include "nsLayoutAtoms.h"
 
 typedef nsContainerFrame nsSVGGenericContainerFrameBase;
 
@@ -88,7 +89,19 @@ public:
                                PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
                                PRInt32         aModType);
+  /**
+   * Get the "type" of the frame
+   *
+   * @see nsLayoutAtoms::svgGenericContainerFrame
+   */
+  virtual nsIAtom* GetType() const;
 
+#ifdef DEBUG
+  NS_IMETHOD GetFrameName(nsAString& aResult) const
+  {
+    return MakeFrameName(NS_LITERAL_STRING("SVGGenericContainer"), aResult);
+  }
+#endif
 
   // nsISVGChildFrame interface:
   NS_IMETHOD Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips);
