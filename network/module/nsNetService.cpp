@@ -27,7 +27,7 @@
 /* XXX: Legacy definitions... */
 MWContext *new_stub_context();
 void free_stub_context(MWContext *window_id);
-void bam_exit_routine(URL_Struct *URL_s, int status, MWContext *window_id);
+static void bam_exit_routine(URL_Struct *URL_s, int status, MWContext *window_id);
 
 extern "C" {
 #include "fileurl.h"
