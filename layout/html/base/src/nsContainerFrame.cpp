@@ -257,6 +257,7 @@ nsContainerFrame::GetFrameForPointUsing(nsIPresContext* aPresContext,
   *aFrame = this;
 
   nsIFrame *childFrame = 0;
+  nsresult rv = NS_ERROR_FAILURE;
 
   // Attempt to find the first child that contains the desired
   // point. We try to use a quick check on the child frames bbox to
@@ -271,7 +272,7 @@ nsContainerFrame::GetFrameForPointUsing(nsIPresContext* aPresContext,
       // contains the point.
       tmp.MoveTo(aPoint.x - kidRect.x, aPoint.y - kidRect.y);
 
-      nsresult rv = kid->GetFrameForPoint(aPresContext, tmp, aFrame);
+      rv = kid->GetFrameForPoint(aPresContext, tmp, aFrame);
 
       if (NS_SUCCEEDED(rv) && *aFrame) {
         // We found the target frame somewhere in the child frame.
@@ -287,23 +288,30 @@ nsContainerFrame::GetFrameForPointUsing(nsIPresContext* aPresContext,
     kid->GetNextSibling(&kid);
   }
 
-  // Try again, this time looking only inside child frames that have
-  // outside children.
-  FirstChild(aPresContext, aList, &kid);
-  while (nsnull != kid) {
-    nsFrameState state;
-    kid->GetFrameState(&state);
-    if (NS_FRAME_OUTSIDE_CHILDREN & state) {
-      kid->GetRect(kidRect);
-      tmp.MoveTo(aPoint.x - kidRect.x, aPoint.y - kidRect.y);
-      if (NS_OK == kid->GetFrameForPoint(aPresContext, tmp, aFrame)) {
-        return NS_OK;
+  //Only keep looking outside if we didn't absolutely find a child leaf node.
+  //This is indicated by the successful return from GetFrameForPoint.  If we
+  //only found a container frame we'll have set childFrame to our best guess
+  //at a container frame but rv will still have failed so we should go on 
+  //looking for the correct leaf frame in the outside children.
+  if (NS_FAILED(rv)) {
+    // Try again, this time looking only inside child frames that have
+    // outside children.
+    FirstChild(aPresContext, aList, &kid);
+    while (nsnull != kid) {
+      nsFrameState state;
+      kid->GetFrameState(&state);
+      if (NS_FRAME_OUTSIDE_CHILDREN & state) {
+        kid->GetRect(kidRect);
+        tmp.MoveTo(aPoint.x - kidRect.x, aPoint.y - kidRect.y);
+        if (NS_OK == kid->GetFrameForPoint(aPresContext, tmp, aFrame)) {
+          return NS_OK;
+        }
+        else {
+          *aFrame = this;
+        }
       }
-      else {
-        *aFrame = this;
-      }
+      kid->GetNextSibling(&kid);
     }
-    kid->GetNextSibling(&kid);
   }
 
   if (childFrame) {
