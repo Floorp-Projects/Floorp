@@ -72,6 +72,9 @@ public:
 	// for nsMsgLineBuffer
 	virtual PRInt32 HandleLine(char *line, PRUint32 line_size);
 
+    // override to clear all passwords associated with server
+    NS_IMETHODIMP ForgetPassword();
+
 protected:
 	nsresult CreateProtocolInstance(nsINNTPProtocol ** aNntpConnection, nsIURI *url,
                                              nsIMsgWindow *window);

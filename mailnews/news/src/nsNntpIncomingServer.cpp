@@ -1330,3 +1330,58 @@ nsNntpIncomingServer::SetDumpListener(nsISubscribeDumpListener *dumpListener)
     NS_ENSURE_SUCCESS(rv,rv);
     return mInner->SetDumpListener(dumpListener);
 }
+
+NS_IMETHODIMP
+nsNntpIncomingServer::ForgetPassword()
+{
+    nsresult rv;
+
+    // clear password of root folder (for the news account)
+    nsCOMPtr<nsIFolder> rootFolder;
+    rv = GetRootFolder(getter_AddRefs(rootFolder));
+    NS_ENSURE_SUCCESS(rv,rv);
+    if (!rootFolder) return NS_ERROR_FAILURE;
+
+    nsCOMPtr <nsIMsgNewsFolder> newsFolder = do_QueryInterface(rootFolder, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+    if (!newsFolder) return NS_ERROR_FAILURE;
+
+    rv = newsFolder->ForgetGroupUsername();
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = newsFolder->ForgetGroupPassword();
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    // clear password of all child folders
+    nsCOMPtr<nsIEnumerator> subFolders;
+
+    rv = rootFolder->GetSubFolders(getter_AddRefs(subFolders));
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    nsAdapterEnumerator *simpleEnumerator = new nsAdapterEnumerator(subFolders);
+    if (!simpleEnumerator) return NS_ERROR_OUT_OF_MEMORY;
+
+    PRBool moreFolders = PR_FALSE;
+        
+    nsresult return_rv = NS_OK;
+
+    while (NS_SUCCEEDED(simpleEnumerator->HasMoreElements(&moreFolders)) && moreFolders) {
+        nsCOMPtr<nsISupports> child;
+        rv = simpleEnumerator->GetNext(getter_AddRefs(child));
+        if (NS_SUCCEEDED(rv) && child) {
+            newsFolder = do_QueryInterface(child, &rv);
+            if (NS_SUCCEEDED(rv) && newsFolder) {
+                rv = newsFolder->ForgetGroupUsername();
+                if (NS_FAILED(rv)) return_rv = rv;
+                rv = newsFolder->ForgetGroupPassword();
+                if (NS_FAILED(rv)) return_rv = rv;
+            }
+            else {
+                return_rv = NS_ERROR_FAILURE;
+            }
+        }
+    }
+    delete simpleEnumerator;
+
+    return return_rv;
+}
+
