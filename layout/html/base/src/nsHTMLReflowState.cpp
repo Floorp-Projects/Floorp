@@ -1316,7 +1316,9 @@ GetVerticalMarginBorderPadding(const nsHTMLReflowState* aReflowState)
 
 /* Get the height based on the viewport of the containing block specified 
  * in aReflowState when the containing block has mComputedHeight == NS_AUTOHEIGHT
- * and it is the body.
+ * This will walk up the chain of containing blocks looking for a computed height
+ * until it finds the canvas frame, or it encounters a frame that is not a block
+ * or and area frame. This handles compatibility with IE (see bug 85016)
  */
 nscoord
 CalcQuirkContainingBlockHeight(const nsHTMLReflowState& aReflowState)
@@ -1337,18 +1339,16 @@ CalcQuirkContainingBlockHeight(const nsHTMLReflowState& aReflowState)
       if (NS_OK == rs->frame->QueryInterface(NS_GET_IID(nsIFormManager), (void **)&formFrame)) {
         continue;
       }
-      if (!firstBlockRS) {
-        firstBlockRS = (nsHTMLReflowState*)rs;
-        if (NS_AUTOHEIGHT == rs->mComputedHeight) continue;
+      firstBlockRS = (nsHTMLReflowState*)rs;
+      if (NS_AUTOHEIGHT == rs->mComputedHeight) {
+        continue;
       }
-      else break;
     }
     else if (nsLayoutAtoms::areaFrame == frameType.get()) {
-      if (!firstAreaRS) {
-        firstAreaRS = (nsHTMLReflowState*)rs;
-        if (NS_AUTOHEIGHT == rs->mComputedHeight) continue;
+      firstAreaRS = (nsHTMLReflowState*)rs;
+      if (NS_AUTOHEIGHT == rs->mComputedHeight) {
+        continue;
       }
-      else break;
     }
     else if (nsLayoutAtoms::canvasFrame == frameType.get()) {
       // Use scroll frames' computed height if we have one, this will
@@ -1372,8 +1372,30 @@ CalcQuirkContainingBlockHeight(const nsHTMLReflowState& aReflowState)
     // if we got to the canvas frame, then subtract out 
     // margin/border/padding for the BODY and HTML elements
     if (nsLayoutAtoms::canvasFrame == frameType.get()) {
+
       result -= GetVerticalMarginBorderPadding(firstBlockRS); 
       result -= GetVerticalMarginBorderPadding(firstAreaRS); 
+
+#ifdef DEBUG
+      // make sure the Area is the HTML and the Block is the BODY
+      nsCOMPtr<nsIContent> frameContent;
+      nsCOMPtr<nsIAtom> contentTag;
+      if(firstBlockRS) {
+        firstBlockRS->frame->GetContent(getter_AddRefs(frameContent));
+        if (frameContent) {
+          frameContent->GetTag(*getter_AddRefs(contentTag));
+          NS_ASSERTION(contentTag.get() == nsHTMLAtoms::body, "block is not BODY");
+        }
+      }
+      if(firstAreaRS) {
+        firstAreaRS->frame->GetContent(getter_AddRefs(frameContent));
+        if (frameContent) {
+          frameContent->GetTag(*getter_AddRefs(contentTag));
+          NS_ASSERTION(contentTag.get() == nsHTMLAtoms::html, "Area frame is not HTML element");
+        }
+      }
+#endif
+      
     }
     // if we got to the html frame, then subtract out 
     // margin/border/padding for the BODY element
