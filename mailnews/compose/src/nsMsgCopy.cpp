@@ -465,12 +465,16 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
           nsCOMPtr<nsIImapIncomingServer> imapServer = do_QueryInterface(server);
           // Make sure an specific IMAP folder has correct personal namespace
           // See bugzilla bug 90494 (http://bugzilla.mozilla.org/show_bug.cgi?id=90494)
+          PRBool namespacePrefixAdded = PR_FALSE;
+          nsXPIDLCString folderUriWithNamespace;
           if (imapServer)
           {
-            nsXPIDLCString folderUriWithNamespace;
             imapServer->GetUriWithNamespacePrefixIfNecessary(kPersonalNamespace, aFolderURI, getter_Copies(folderUriWithNamespace));
             if (!folderUriWithNamespace.IsEmpty())
+            {
               rv = rootMsgFolder->GetChildWithURI(folderUriWithNamespace, PR_TRUE, PR_FALSE, msgFolder);
+              namespacePrefixAdded = PR_TRUE;
+            }
             else
               rv = rootMsgFolder->GetChildWithURI(aFolderURI, PR_TRUE, PR_FALSE, msgFolder);
           }
@@ -480,8 +484,24 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
              CreateIfMissing does that provided we pass in a dummy folder */
           if (!*msgFolder)
           {
-            *msgFolder = folderResource;  
-            NS_ADDREF(*msgFolder);
+            if (namespacePrefixAdded)
+            {
+              nsCOMPtr<nsIRDFResource> resource;
+              rv = rdf->GetResource(folderUriWithNamespace, getter_AddRefs(resource));
+              if (NS_FAILED(rv)) return rv;
+
+              nsCOMPtr <nsIMsgFolder> folderResource;
+              folderResource = do_QueryInterface(resource, &rv);
+              if (NS_FAILED(rv)) return rv;
+
+              *msgFolder = folderResource;
+              NS_ADDREF(*msgFolder);
+            }
+            else
+            {
+              *msgFolder = folderResource;
+              NS_ADDREF(*msgFolder);
+            }
           }
           return rv;
         }
