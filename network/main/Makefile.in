@@ -27,10 +27,6 @@ include $(topsrcdir)/config/config.mk
 MODULE		= network
 LIBRARY_NAME	= network
 
-ifdef MOZ_MAIL_NEWS
-CPPSRCS= mkabook.cpp	
-endif
-
 CSRCS		= \
 	jscookie.c	\
 	mkautocf.c	\
@@ -62,22 +58,14 @@ EXPORTS= mkstream.h mkparse.h mkfsort.h mksort.h mkgeturl.h \
 	netstream.h mkselect.h mktcp.h netutils.h mkpadpac.h mkautocf.h mkhelp.h \
         mkutils.h mktrace.h net_xp_file.h mkprefs.h
 
-ifdef MOZ_MAIL_NEWS
-EXPORTS += mkldap.h
-endif # MOZ_MAIL_NEWS
-
 EXPORTS	:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 REQUIRES	= ldapurl imap4url jtools progress dbm util js parse lay style pref htmldlgs java \
 	libfont netcache httpurl cnetinit security img layer netcnvts network \
-	mimetype ldap net
+	mimetype ldap net sockstuburl
 
 ifdef NU_CACHE
 REQUIRES += cache 
-endif
-
-ifdef MOZ_MAIL_NEWS
-REQUIRES += mailbxurl nntpurl pop3url
 endif
 
 ifdef MOZ_SMOOTH_PROGRESS
