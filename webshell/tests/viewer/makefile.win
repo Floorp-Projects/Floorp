@@ -45,6 +45,7 @@ REQUIRES	= xpcom \
 		  wallet \
 		  windowwatcher \
 		  js \
+		  unicharutil \
 		  $(NULL)
 
 include <$(DEPTH)/config/config.mak>
