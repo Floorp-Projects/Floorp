@@ -213,7 +213,7 @@ static NSString *PrintToolbarItemIdentifier	= @"Print Toolbar Item";
   int fudgeFactor = 12; // Not sure how to get the drawer's border info, so we fudge it for now.
   drawerSize.width += fudgeFactor;
   if (windowFrame.origin.x + windowFrame.size.width + drawerSize.width >
-      screenFrame.size.width) {
+       screenFrame.origin.x + screenFrame.size.width) {
     // We need to adjust the window so that it can fit.
     float shrinkDelta = (windowFrame.size.width + drawerSize.width) - screenFrame.size.width;
     if (shrinkDelta < 0) shrinkDelta = 0;
