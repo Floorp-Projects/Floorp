@@ -68,11 +68,11 @@ nsresult nsSmtpService::SendMailMessage(const nsFilePath& aFilePath, const nsStr
 		nsServiceManager::ReleaseService(kCMsgMailSessionCID, mailSession);
 		if (NS_SUCCEEDED(rv) && identity)
 		{
-			const char * hostName = nsnull;
-			const char * senderName = nsnull;
+			char * hostName = nsnull;
+			char * senderName = nsnull;
 
-			identity->GetSmtpServer(&hostName);
-			identity->GetSmtpName(&senderName);
+			identity->GetSmtpHostname(&hostName);
+			identity->GetSmtpUsername(&senderName);
 			rv = NS_MsgBuildMailtoUrl(aFilePath, hostName, senderName, aRecipients, aUrlListener, &urlToRun); // this ref counts urlToRun
 			if (NS_SUCCEEDED(rv) && urlToRun)
 			{	
