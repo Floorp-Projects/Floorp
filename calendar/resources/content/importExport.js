@@ -1147,18 +1147,23 @@ function eventArrayToICalString( calendarEventArray, doPatchForExport )
    for( eventArrayIndex = 0;  eventArrayIndex < calendarEventArray.length; ++eventArrayIndex )
    {
       var calendarEvent = calendarEventArray[ eventArrayIndex ].clone();
+      calendarEvent = calendarEvent.QueryInterface(Components.interfaces.calIEvent);
       
       // convert time to represent local to produce correct DTSTART and DTEND
-      if(calendarEvent.allDay != true)
-         convertLocalToZuluEvent( calendarEvent );
-      
+      if(calendarEvent.isAllDay != true) {
+	var startDate = calendarEvent.startDate;
+	var endDate = calendarEvent.endDate;
+	calendarEvent.startDate = startDate.getInTimezone(null);
+	calendarEvent.endDate = endDate.getInTimezone(null);
+      }
       // check if all required properties are available
+      /*
       if( calendarEvent.method == 0 )
          calendarEvent.method = calendarEvent.ICAL_METHOD_PUBLISH;
       if( calendarEvent.stamp.year ==  0 )
          calendarEvent.stamp.setTime( new Date() );
-
-      var eventString = calendarEvent.getIcalString();
+      */
+      var eventString = calendarEvent.icalString;
       if ( doPatchForExport )
       { 
         if (doMerge)
@@ -1185,6 +1190,7 @@ function eventArrayToICalString( calendarEventArray, doPatchForExport )
       eventStrings[eventArrayIndex] = eventString;
    }
    // concatenate all at once to avoid excess string copying on long calendars.
+
    return eventStrings.join("");
 }
 

@@ -48,12 +48,12 @@ function calendarViewClick ( aEvent ) {
     dayViewHourClick( aEvent );
 
   if(currentTargetFirstClassName == "day-view-event-class")
-    gCalendarWindow.EventSelection.replaceSelection( currentTarget.calendarEventDisplay.event );
+    gCalendarWindow.EventSelection.replaceSelection( currentTarget.event );
      //dayEventItemClick( aEvent.target, aEvent );
 
 
   if(currentTargetFirstClassName == "week-view-event-class")
-    gCalendarWindow.EventSelection.replaceSelection( currentTarget.calendarEventDisplay.event );
+    gCalendarWindow.EventSelection.replaceSelection( currentTarget.event );
 
   //if (gCalendarWindow.currentView == gCalendarWindow.weekView)
     //weekViewHourClick( aEvent );
@@ -111,8 +111,10 @@ var calendarViewDNDObserver = {
       // We are going to drag an event
       var dragEvents = gCalendarWindow.EventSelection.selectedEvents;
       aXferData.data= new TransferData();
+
       aXferData.data.addDataForFlavour("text/calendar", eventArrayToICalString( dragEvents ) );
       aXferData.data.addDataForFlavour("text/unicode", eventArrayToICalString( dragEvents, true ) );
+
       //if (aEvent.ctrlKey)
       //  action.action = nsIDragService.DRAGDROP_ACTION_COPY ;
       aEvent.preventBubble();
@@ -201,16 +203,18 @@ var calendarViewDNDObserver = {
         var beginEventIndex = icalStr.indexOf("BEGIN:VEVENT");
         var endEventIndex = icalStr.indexOf("END:VEVENT") + 10;
         var eventData = icalStr.substring(beginEventIndex, endEventIndex);
-        dropEvent.parseIcalString( eventData );
+
+        // set the event based on parsing ical data
+        dropEvent.icalString = eventData;
 
         // calculate new start/end time for droplocation
         // use the minutes from the event, and change the hour to the hour dropped in
-        var gDropzoneStartTime = new Date( dropEvent.start.getTime() );
+        var gDropzoneStartTime = new Date( dropEvent.startDate.jsDate );
 
         if(aEvent.target.getAttribute( "hour" ))
           gDropzoneStartTime.setHours( aEvent.target.getAttribute( "hour" ) );
         else
-          gDropzoneStartTime.setHours( aEvent.target.parentNode.calendarEventDisplay.event.start.hour );
+          gDropzoneStartTime.setHours( aEvent.target.parentNode.event.startDate.hour );
 
         if(aEvent.target.getAttribute( "day" )) {
           //We are is the week view, so we check the drop day
@@ -218,30 +222,45 @@ var calendarViewDNDObserver = {
           gDropzoneStartTime.setDate(theNewDate);
         }
 
-        var draggedTime = gDropzoneStartTime - dropEvent.start ;
-        var eventDuration = dropEvent.end.getTime() - dropEvent.start.getTime();
+        var eventDuration = dropEvent.duration;
 
         if(aDragSession.dragAction == nsIDragService.DRAGDROP_ACTION_MOVE) {
-          var calendarEvent = gICalLib.fetchEvent( dropEvent.id );
+          var calendarEvent = null;
+          var operationListener = {
+            onOperationComplete: function(calendar, status, type, id, detail) {
 
-          if( calendarEvent != null ) {
-            calendarEvent.start.setTime(gDropzoneStartTime.getTime() );
-            calendarEvent.end.setTime ( calendarEvent.start.getTime() + eventDuration );
+              var newStartDate = jsDateToDateTime(gDropzoneStartTime);
 
-            // LINAGORA: Needed to update remote calendar
-            modifyEventDialogResponse( calendarEvent, calendarEvent.parent.server );
-            // gICalLib.modifyEvent( calendarEvent );
-          } else {
-            alert(" Event with id: " + dropEvent.id + " not found");
+              if (calendarEvent) {
+                // if we got a calendar event from onGetResult, then clone it and modify its
+                // time directly and then call modify on it
+                var newEvent = calendarEvent.clone().QueryInterface(Components.interfaces.calIEvent);
+                newEvent.startDate = newStartDate;
+                newEvent.endDate = newStartDate.clone();
+                newEvent.endDate.addDuration(eventDuration);
+                newEvent.parent.modifyItem(newEvent, null);
+              } else {
+                // if we didn't get a calendar event, then we want to open the edit dialog with
+                // the new event
+
+                dropEvent.id = newEventId;
+                // XXX TODO Check if stamp/DTSTAMP is correclty set to current time
+                dropEvent.startDate = newStartDate;
+                dropEvent.endDate = newStartDate.clone();
+                dropEvent.endDate.addDuration(eventDuration);
+                editNewEvent( dropEvent );
+              }
+            },
+            onGetResult: function(calendar, status, type, detail, count, items) {
+              if (count == 1) {
+                calendarEvent = items[0].QueryInterface(calIEvent);
+                
+              }
+            }
           }
+          getCalendar().getItem(dropEvent.id, operationListener);
         } else {
-          // create a copy of the dragged event on the droplocation
-          dropEvent.id = newEventId;
-          // XXX TODO Check if stamp/DTSTAMP is correclty set to current time
-          dropEvent.start.setTime(gDropzoneStartTime.getTime() );
-          dropEvent.end.setTime ( dropEvent.start.getTime() + eventDuration );
-
-          editNewEvent( dropEvent );
+          dump("failed\n");
         }
         break;
 
