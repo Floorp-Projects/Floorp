@@ -53,6 +53,8 @@ public:
   NS_IMETHOD GetStartNodeAndOffset(nsCOMPtr<nsIDOMNode> *aTxnStartNode, PRInt32 *aTxnStartOffset)=0;
 
   NS_IMETHOD ForwardEndBatchTo(nsIAbsorbingTransaction *aForwardingAddress)=0;
+  
+  NS_IMETHOD Commit()=0;
 };
 
 #endif // nsIAbsorbingTransaction_h__

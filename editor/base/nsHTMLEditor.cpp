@@ -113,6 +113,7 @@ static char hrefText[] = "href";
 static char anchorTxt[] = "anchor";
 static char namedanchorText[] = "namedanchor";
 nsIAtom *nsHTMLEditor::gTypingTxnName;
+nsIAtom *nsHTMLEditor::gIMETxnName;
 nsIAtom *nsHTMLEditor::gDeleteTxnName;
 
 
@@ -214,6 +215,10 @@ nsHTMLEditor::nsHTMLEditor()
     gTypingTxnName = NS_NewAtom("Typing");
   else
     NS_ADDREF(gTypingTxnName);
+  if (!gIMETxnName)
+    gIMETxnName = NS_NewAtom("IME");
+  else
+    NS_ADDREF(gIMETxnName);
   if (!gDeleteTxnName)
     gDeleteTxnName = NS_NewAtom("Deleting");
   else
@@ -228,6 +233,14 @@ nsHTMLEditor::~nsHTMLEditor()
     refCount = gTypingTxnName->Release();
     if (0==refCount) {
       gTypingTxnName = nsnull;
+    }
+  }
+
+  if (gIMETxnName)  // we addref'd in the constructor
+  { // want to release it without nulling out the pointer.
+    refCount = gIMETxnName->Release();
+    if (0==refCount) {
+      gIMETxnName = nsnull;
     }
   }
 
@@ -3784,13 +3797,11 @@ nsHTMLEditor::SetCompositionString(const nsString& aCompositionString, nsIPrivat
   nsCOMPtr<nsIDOMSelection> selection;
   nsresult result = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(result)) return result;
-  nsTextRulesInfo ruleInfo(nsTextEditRules::kInsertTextIME);
-  PRBool cancel, handled;
-  result = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
-  if (cancel || NS_FAILED(result)) return result;
+
+  nsAutoPlaceHolderBatch batch(this, gIMETxnName);
+
+  result = InsertText(aCompositionString);
   
-  result = SetInputMethodText(aCompositionString,aTextRangeList);
-  if (NS_FAILED(result)) return result;
   mIMEBufferLength = aCompositionString.Length();
 
   if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
@@ -3799,7 +3810,6 @@ nsHTMLEditor::SetCompositionString(const nsString& aCompositionString, nsIPrivat
   ps->GetCaret(getter_AddRefs(caretP));
   caretP->GetWindowRelativeCoordinates(aReply->mCursorPosition,aReply->mCursorIsCollapsed);
 
-  result = mRules->DidDoAction(selection, &ruleInfo, result);
   return result;
 }
 

@@ -31,7 +31,6 @@
 #include "JoinElementTxn.h"
 #include "nsStyleSheetTxns.h"
 #include "IMETextTxn.h"
-#include "IMECommitTxn.h"
 
 TransactionFactory::TransactionFactory()
 {
@@ -68,8 +67,6 @@ TransactionFactory::GetNewTransaction(REFNSIID aTxnType, EditTxn **aResult)
     *aResult = new EditAggregateTxn();
   else if (aTxnType.Equals(IMETextTxn::GetCID()))
     *aResult = new IMETextTxn();
-  else if (aTxnType.Equals(IMECommitTxn::GetCID()))
-    *aResult = new IMECommitTxn();
   else if (aTxnType.Equals(AddStyleSheetTxn::GetCID()))
     *aResult = new AddStyleSheetTxn();
   else if (aTxnType.Equals(RemoveStyleSheetTxn::GetCID()))

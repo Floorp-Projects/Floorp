@@ -101,7 +101,6 @@ public:
 protected:
 
   NS_IMETHOD CollapseTextSelection(void);
-  NS_IMETHOD CollapseTextSelectionOnCommit(void);
 
   /** the text element to operate upon */
   nsCOMPtr<nsIDOMCharacterData> mElement;
