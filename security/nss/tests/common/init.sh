@@ -149,18 +149,19 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     OS_ARCH=`(cd $COMMON; gmake os_arch)`
     OS_NAME=`uname -s | sed -e "s/-[0-9]*\.[0-9]*//"`
 
-    if [ "${OS_ARCH}" = "WINNT" -a "$OS_NAME"  != "CYGWIN_NT" ]; then
-        PATH=${DIST}/${OBJDIR}/bin\;${DIST}/${OBJDIR}/lib\;$PATH
-        PATH=`perl ../path_uniq -d ';' "$PATH"`
-    else
-        PATH=${DIST}/${OBJDIR}/bin:${DIST}/${OBJDIR}/lib:$PATH
-        PATH=`perl ../path_uniq -d ':' "$PATH"`
-    fi
-echo $PATH
+    if [ -z "${DON_T_SET_PATHS}" -o "${DON_T_SET_PATHS}" != "TRUE" ] ; then
+        if [ "${OS_ARCH}" = "WINNT" -a "$OS_NAME"  != "CYGWIN_NT" ]; then
+            PATH=${DIST}/${OBJDIR}/bin\;${DIST}/${OBJDIR}/lib\;$PATH
+            PATH=`perl ../path_uniq -d ';' "$PATH"`
+        else
+            PATH=${DIST}/${OBJDIR}/bin:${DIST}/${OBJDIR}/lib:$PATH
+            PATH=`perl ../path_uniq -d ':' "$PATH"`
+        fi
 
-    LD_LIBRARY_PATH=${DIST}/${OBJDIR}/lib
-    SHLIB_PATH=${DIST}/${OBJDIR}/lib
-    LIBPATH=${DIST}/${OBJDIR}/lib
+        LD_LIBRARY_PATH=${DIST}/${OBJDIR}/lib
+        SHLIB_PATH=${DIST}/${OBJDIR}/lib
+        LIBPATH=${DIST}/${OBJDIR}/lib
+    fi
 
     if [ ! -d "${TESTDIR}" ]; then
         echo "$SCRIPTNAME init: Creating ${TESTDIR}"
@@ -200,6 +201,7 @@ echo $PATH
                 version=$w
         done
         HOSTDIR=${TESTDIR}/${HOST}.$version
+        echo "$SCRIPTNAME init: HOSTDIR $HOSTDIR"
         echo $HOSTDIR
         if [ ! -d $HOSTDIR ] ; then
             echo "$SCRIPTNAME: Fatal: Remote side of dist. stress test "
@@ -233,6 +235,12 @@ echo $PATH
         mkdir -p ${HOSTDIR}
     fi
 
+    if [ -z "${LOGFILE}" ]; then
+        LOGFILE=${HOSTDIR}/output.log
+    fi
+    if [ ! -f "${LOGFILE}" ]; then
+        touch ${LOGFILE}
+    fi
     if [ -z "${RESULTS}" ]; then
         RESULTS=${HOSTDIR}/results.html
     fi
@@ -240,28 +248,27 @@ echo $PATH
         cp ${COMMON}/results_header.html ${RESULTS}
         html "<H4>Platform: ${OBJDIR}<BR>" 
         html "Test Run: ${HOST}.$version</H4>" 
+        html "${BC_ACTION}"
         html "<HR><BR>" 
         html "<HTML><BODY>" 
 
-        echo "********************************************"
-        echo "   Platform: ${OBJDIR}"
-        echo "   Results: ${HOST}.$version"
-        echo "********************************************"
+        echo "********************************************" | tee ${LOGFILE}
+        echo "   Platform: ${OBJDIR}" | tee ${LOGFILE}
+        echo "   Results: ${HOST}.$version" | tee ${LOGFILE}
+        echo "********************************************" | tee ${LOGFILE}
+	echo "$BC_ACTION" | tee ${LOGFILE}
     #if running remote side of the distributed stress test let the user know who it is...
     elif [ -n "$DO_REM_ST" -a "$DO_REM_ST" = "TRUE" ] ; then
-        echo "********************************************"
-        echo "   Platform: ${OBJDIR}"
-        echo "   Results: ${HOST}.$version"
-        echo "   remote side of distributed stress test "
-        echo "   `uname -n -s`"
-        echo "********************************************"
+        echo "********************************************" | tee ${LOGFILE}
+        echo "   Platform: ${OBJDIR}" | tee ${LOGFILE}
+        echo "   Results: ${HOST}.$version" | tee ${LOGFILE}
+        echo "   remote side of distributed stress test " | tee ${LOGFILE}
+        echo "   `uname -n -s`" | tee ${LOGFILE}
+        echo "********************************************" | tee ${LOGFILE}
     fi
-    if [ -z "${LOGFILE}" ]; then
-        LOGFILE=${HOSTDIR}/output.log
-    fi
-    if [ ! -f "${LOGFILE}" ]; then
-        touch ${LOGFILE}
-    fi
+
+    echo "$SCRIPTNAME init: Testing PATH $PATH against LIB $LD_LIBRARY_PATH" |
+        tee ${LOGFILE}
 
     KILL="kill"
     if  [ "${OS_ARCH}" = "Linux" ]; then
