@@ -63,7 +63,9 @@ var expectedvalues = [];
  * should generate SyntaxErrors. That's what we're testing for.
  *
  * To allow the test to compile and run, we have to hide the errors
- * inside eval strings, and check they are caught at run-time -
+ * inside eval strings, and check they are caught at run-time.
+ *
+ * Inside such strings, remember to escape any escape character!
  */
 status = inSection(1);
 testThis(' /(/ ');
@@ -72,10 +74,10 @@ status = inSection(2);
 testThis(' /)/ ');
 
 status = inSection(3);
-testThis(' /(abc\)def(g/ ');
+testThis(' /(abc\\)def(g/ ');
 
 status = inSection(4);
-testThis(' /\(abc)def)g/ ');
+testThis(' /\\(abc)def)g/ ');
 
 
 /*
@@ -83,22 +85,22 @@ testThis(' /\(abc)def)g/ ');
  * any errors. Note we use checkThis() instead of testThis().
  */
 status = inSection(5);
-checkThis(' /\(/ ');
+checkThis(' /\\(/ ');
 
 status = inSection(6);
-checkThis(' /\)/ ');
+checkThis(' /\\)/ ');
 
 status = inSection(7);
-checkThis(' /(abc)def\(g/ ');
+checkThis(' /(abc)def\\(g/ ');
 
 status = inSection(8);
-checkThis(' /(abc\)def)g/ ');
+checkThis(' /(abc\\)def)g/ ');
 
 status = inSection(9);
-checkThis(' /(abc(\))def)g/ ');
+checkThis(' /(abc(\\))def)g/ ');
 
 status = inSection(10);
-checkThis(' /(abc([x\)yz]+)def)g/ ');
+checkThis(' /(abc([x\\)yz]+)def)g/ ');
 
 
 
@@ -112,10 +114,10 @@ status = inSection(12);
 testThis(' /]/ ');
 
 status = inSection(13);
-testThis(' /[abc\]def[g/ ');
+testThis(' /[abc\\]def[g/ ');
 
 status = inSection(14);
-testThis(' /\[abc]def]g/ ');
+testThis(' /\\[abc]def]g/ ');
 
 
 /*
@@ -123,22 +125,22 @@ testThis(' /\[abc]def]g/ ');
  * any errors. Note we use checkThis() instead of testThis().
  */
 status = inSection(15);
-checkThis(' /\[/ ');
+checkThis(' /\\[/ ');
 
 status = inSection(16);
-checkThis(' /\]/ ');
+checkThis(' /\\]/ ');
 
 status = inSection(17);
-checkThis(' /[abc]def\[g/ ');
+checkThis(' /[abc]def\\[g/ ');
 
 status = inSection(18);
-checkThis(' /[abc\]def]g/ ');
+checkThis(' /[abc\\]def]g/ ');
 
 status = inSection(19);
-checkThis(' /(abc[\]]def)g/ ');
+checkThis(' /(abc[\\]]def)g/ ');
 
 status = inSection(20);
-checkThis(' /[abc(x\]yz+)def]g/ ');
+checkThis(' /[abc(x\\]yz+)def]g/ ');
 
 
 
@@ -157,10 +159,10 @@ testThis(' /abc}def/ ');
  * any errors. Note we use checkThis() instead of testThis().
  */
 status = inSection(23);
-checkThis(' /abc\{def/ ');
+checkThis(' /abc\\{def/ ');
 
 status = inSection(24);
-checkThis(' /abc\}def/ ');
+checkThis(' /abc\\}def/ ');
 
 
 
