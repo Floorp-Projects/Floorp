@@ -3,12 +3,19 @@
 # have been sent to newsbot.
 # Created 16 Mar 1999 by endico@mozilla.org
 #
+# i had to use ksh because sh doesn't recognize -nt
+# find a more portable way to do this that doesn't suck as badly as using find
+
 PATH=/opt/local/bin:/opt/cvs-tools/bin:/usr/ucb:$PATH
 export PATH
 
-# i had to use ksh because sh doesn't recognize -nt
-# find a more portable way to do this that doesn't suck as badly as using find
-#
+CVSROOT=:pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot
+export CVSROOT
+
+# update the newsbot sources
+cvs -d $CVSROOT update -dP
+
+
 # Run newsbot if new mail has arrived or the code has been updated.
 if [ \( /var/mail/newsbot -nt /opt/newsbot/newsbot.html \) -o  \
      \( /opt/newsbot/newsbot.pl -nt /opt/newsbot/newsbot.html \) ]
