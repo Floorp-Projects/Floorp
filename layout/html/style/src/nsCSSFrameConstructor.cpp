@@ -5356,7 +5356,7 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
       return rv;
 
      // Retrieve the anonymous content that we should build.
-    nsCOMPtr<nsISupportsArray> anonymousItems;
+    nsCOMPtr<nsIDOMNodeList> anonymousItems;
     nsCOMPtr<nsIContent> childElement;
     PRBool multiple;
     xblService->GetContentList(aParent, getter_AddRefs(anonymousItems), getter_AddRefs(childElement), &multiple);
@@ -5375,16 +5375,17 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
 
       // Build the frames for the anonymous content.
       PRUint32 count = 0;
-      anonymousItems->Count(&count);
+      anonymousItems->GetLength(&count);
 
       for (PRUint32 i=0; i < count; i++)
       {
         // get our child's content and set its parent to our content
-        nsCOMPtr<nsIContent> content;
-        if (NS_FAILED(anonymousItems->QueryElementAt(i, NS_GET_IID(nsIContent), getter_AddRefs(content))))
+        nsCOMPtr<nsIDOMNode> elt;
+        if (NS_FAILED(anonymousItems->Item(i, getter_AddRefs(elt))))
             continue;
 
         // create the frame and attach it to our frame
+        nsCOMPtr<nsIContent> content(do_QueryInterface(elt));
         ConstructFrame(aPresShell, aPresContext, aState, content, aNewFrame, aChildItems);
       }
 
@@ -5605,7 +5606,7 @@ nsCSSFrameConstructor::CreateAnonymousTableCellFrames(nsIPresShell*        aPres
 
     // Retrieve the anonymous content that we should build.
     nsCOMPtr<nsIContent> childElement;
-    nsCOMPtr<nsISupportsArray> anonymousItems;
+    nsCOMPtr<nsIDOMNodeList> anonymousItems;
     PRBool multiple;
     xblService->GetContentList(aParent, getter_AddRefs(anonymousItems), getter_AddRefs(childElement), &multiple);
     
@@ -5614,16 +5615,17 @@ nsCSSFrameConstructor::CreateAnonymousTableCellFrames(nsIPresShell*        aPres
 
     // Build the frames for the anonymous content.
     PRUint32 count = 0;
-    anonymousItems->Count(&count);
+    anonymousItems->GetLength(&count);
 
     for (PRUint32 i=0; i < count; i++)
     {
       // get our child's content and set its parent to our content
-      nsCOMPtr<nsIContent> content;
-      if (NS_FAILED(anonymousItems->QueryElementAt(i, NS_GET_IID(nsIContent), getter_AddRefs(content))))
-        continue;
+      nsCOMPtr<nsIDOMNode> elt;
+      if (NS_FAILED(anonymousItems->Item(i, getter_AddRefs(elt))))
+          continue;
 
       // create the frame and attach it to our frame
+      nsCOMPtr<nsIContent> content(do_QueryInterface(elt));
       ConstructFrame(aPresShell, aPresContext, aState, content, aNewFrame, aChildItems);
     }
 
