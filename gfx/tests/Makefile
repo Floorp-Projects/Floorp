@@ -59,5 +59,5 @@ $(PROGS):$(OBJDIR)/%: $(OBJDIR)/%.o $(EX_LIBS)
 export::
 
 install:: $(TARGETS)
-	$(INSTALL) $(TARGETS) $(DIST)/bin
+	$(INSTALL) $(PROGS) $(DIST)/bin
 
