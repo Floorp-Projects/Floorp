@@ -1322,11 +1322,6 @@ char * EDT_GetDefaultPublishURL(MWContext * pMWContext, char **ppFilename, char 
  */
 XP_Bool EDT_GetPublishingHistory(unsigned n, char** loc, char** u, char** p);
 
-/*
- *    Copy the last publish location to the 0th history, move everyone up one.
- */
-void   EDT_SyncPublishingHistory(void);
-
 /* Get URL and TITLE from the recently-edited history list kept in preferences
  * Similar to Publish history list, except caller should NOT XP_FREE the returned strings
  *   because they are cached in local string arrays for quicker access
