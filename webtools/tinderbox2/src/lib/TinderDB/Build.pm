@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.19 $ 
-# $Date: 2001/03/30 15:37:44 $ 
+# $Revision: 1.20 $ 
+# $Date: 2001/03/30 19:54:50 $ 
 # $Author: kestes%tradinglinx.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -264,13 +264,6 @@ sub gettree_header {
   (TreeData::tree_exists($tree)) ||
     die("Tree: $tree, not defined.");
   
-  my (@ignoring_builds) = sort keys %{ $IGNORE_BUILDS{$tree} };
-  
-  if (@ignoring_builds) {
-    $out .= "Currently ignoring builds: @ignoring_builds \n";
-    $num_lines++;
-  }
-
   # this is not working the way I want it to.  Individual columns are
   # good but the max/min to combine multiple columns is broken.  We
   # need to introduce the notion of "adjecent cell" to get this to
