@@ -1654,9 +1654,10 @@ nsHTMLEditor::RebuildDocumentFromSource(const nsAReadableString& aSourceString)
   // Now we must copy attributes user might have edited on the <body> tag
   //  because InsertHTML (actually, CreateContextualFragment()) 
   //  will never return a body node in the DOM fragment
-  nsReadingIterator<PRUnichar> beginclosebody = endbody;//<bodyX
+  
+  // We already know where "<body" begins
+  nsReadingIterator<PRUnichar> beginclosebody = beginbody;
   nsReadingIterator<PRUnichar> endclosebody;
-  aSourceString.BeginReading(beginclosebody);
   aSourceString.EndReading(endclosebody);
   if (!FindInReadable(NS_LITERAL_STRING(">"),beginclosebody,endclosebody))
     return NS_ERROR_FAILURE;
@@ -1665,7 +1666,6 @@ nsHTMLEditor::RebuildDocumentFromSource(const nsAReadableString& aSourceString)
   // Truncate at the end of the body tag
   
   // Kludge of the year: fool the parser by replacing "body" with "div" so we get a node
-  bodyTag.ToLowerCase();
   bodyTag.ReplaceSubstring(NS_ConvertASCIItoUCS2("body"), NS_ConvertASCIItoUCS2("div"));
 
   nsCOMPtr<nsIDOMRange> range;
