@@ -112,6 +112,12 @@ org.mozilla.dom.test.ElementImpl_getElementsByTagNameNS_String_String_1
 org.mozilla.dom.test.ElementImpl_getElementsByTagNameNS_String_String_2
 org.mozilla.dom.test.ElementImpl_getElementsByTagNameNS_String_String_3
 org.mozilla.dom.test.ElementImpl_getTagName
+org.mozilla.dom.test.ElementImpl_hasAttribute_String_0
+org.mozilla.dom.test.ElementImpl_hasAttribute_String_1
+org.mozilla.dom.test.ElementImpl_hasAttributeNS_String_String_0
+org.mozilla.dom.test.ElementImpl_hasAttributeNS_String_String_1
+org.mozilla.dom.test.ElementImpl_hasAttributeNS_String_String_2
+org.mozilla.dom.test.ElementImpl_hasAttributeNS_String_String_3
 org.mozilla.dom.test.ElementImpl_normalize
 org.mozilla.dom.test.ElementImpl_removeAttributeNode_Attr_0
 org.mozilla.dom.test.ElementImpl_removeAttributeNode_Attr_1
