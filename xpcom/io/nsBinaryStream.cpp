@@ -463,6 +463,30 @@ nsBinaryInputStream::ReadCString(nsACString& aString)
     return NS_OK;
 }
 
+
+// sometimes, WriteSegmentToString will be handed an odd-number of
+// bytes, which means we only have half of the last PRUnichar
+struct WriteStringClosure {
+    nsAString* mString;
+    PRPackedBool mHasCarryoverByte;
+    char mCarryoverByte;
+};
+
+// there are a few cases we have to account for here:
+// * even length buffer, no carryover - easy, just append
+// * odd length buffer, no carryover - the last byte needs to be saved
+//                                     for carryover
+// * odd length buffer, with carryover - first byte needs to be used
+//                              with the carryover byte, and
+//                              the rest of the even length
+//                              buffer is appended as normal
+// * even length buffer, with carryover - the first byte needs to be
+//                              used with the previous carryover byte.
+//                              this gives you an odd length buffer,
+//                              so you have to save the last byte for
+//                              the next carryover
+
+
 // same version of the above, but with correct casting and endian swapping
 static NS_METHOD
 WriteSegmentToString(nsIInputStream* aStream,
@@ -472,7 +496,38 @@ WriteSegmentToString(nsIInputStream* aStream,
                      PRUint32 aCount,
                      PRUint32 *aWriteCount)
 {
-    nsAString* outString = NS_STATIC_CAST(nsAString*,aClosure);
+    NS_PRECONDITION(aCount > 0, "Why are we being told to write 0 bytes?");
+    NS_PRECONDITION(sizeof(PRUnichar) == 2, "We can't handle other sizes!");
+    
+    WriteStringClosure* closure = NS_STATIC_CAST(WriteStringClosure*,aClosure);
+    nsAString* outString = closure->mString;
+
+    // we're always going to consume the whole buffer no matter what
+    // happens, so take care of that right now.. that allows us to
+    // tweak aCount later. Do NOT move this!
+    *aWriteCount = aCount;
+
+    // if the last Write had an odd-number of bytes read, then 
+    if (closure->mHasCarryoverByte) {
+        // re-create the two-byte sequence we want to work with
+        char bytes[2] = { closure->mCarryoverByte, *aFromSegment };
+        PRUnichar unichar = *(PRUnichar*)bytes;
+        // Now the little endianness dance
+#ifdef IS_LITTLE_ENDIAN
+        outString->Append(PRUnichar(NS_SWAP16(unichar)));
+#else
+        outString->Append(newByte);        
+#endif
+        
+        // now skip past the first byte of the buffer.. code from here
+        // can assume normal operations, but should not assume aCount
+        // is relative to the ORIGINAL buffer
+        ++aFromSegment;
+        --aCount;
+
+        closure->mHasCarryoverByte = PR_FALSE;
+    }
+    
     const PRUnichar *unicodeSegment =
         NS_REINTERPRET_CAST(const PRUnichar*, aFromSegment);
     PRUint32 segmentLength = aCount / sizeof(PRUnichar);
@@ -485,7 +540,16 @@ WriteSegmentToString(nsIInputStream* aStream,
     outString->Append(unicodeSegment, segmentLength);
 #endif
 
-    *aWriteCount = aCount;
+    // remember this is the modifed aCount and aFromSegment,
+    // so that will take into account the fact that we might have
+    // skipped the first byte in the buffer
+    if (aCount % sizeof(PRUnichar) != 0) {
+        // we must have had a carryover byte, that we'll need the next
+        // time around
+        closure->mCarryoverByte = aFromSegment[aCount - 1];
+        closure->mHasCarryoverByte = PR_TRUE;
+    }
+    
     return NS_OK;
 }
 
@@ -500,8 +564,16 @@ nsBinaryInputStream::ReadString(nsAString& aString)
     if (NS_FAILED(rv)) return rv;
 
     aString.Truncate();
-    rv = ReadSegments(WriteSegmentToString, &aString, length*sizeof(PRUnichar), &bytesRead);
+    
+    WriteStringClosure closure;
+    closure.mString = &aString;
+    closure.mHasCarryoverByte = PR_FALSE;
+    
+    rv = ReadSegments(WriteSegmentToString, &closure,
+                      length*sizeof(PRUnichar), &bytesRead);
     if (NS_FAILED(rv)) return rv;
+
+    NS_ASSERTION(!closure.mHasCarryoverByte, "some strange stream corruption!");
     
     if (bytesRead != length*sizeof(PRUnichar))
         return NS_ERROR_FAILURE;
