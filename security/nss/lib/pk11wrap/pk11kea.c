@@ -68,9 +68,6 @@ pk11_FindRSAPubKey(PK11SlotInfo *slot)
     return pk11_FindObjectByTemplate(slot,theTemplate,template_count);
 }
 
-SECKEYPublicKey *PK11_ExtractPublicKey(PK11SlotInfo *slot, KeyType keyType,
-					 CK_OBJECT_HANDLE id);
-
 PK11SymKey *
 pk11_KeyExchange(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
 		 	CK_ATTRIBUTE_TYPE operation, PK11SymKey *symKey)

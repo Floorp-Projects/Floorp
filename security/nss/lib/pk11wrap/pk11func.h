@@ -231,7 +231,10 @@ PK11SymKey *PK11_CreateSymKey(PK11SlotInfo *slot,
 void PK11_FreeSymKey(PK11SymKey *key);
 PK11SymKey *PK11_ReferenceSymKey(PK11SymKey *symKey);
 PK11SymKey *PK11_ImportSymKey(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
-    PK11Origin origin, CK_ATTRIBUTE_TYPE operation, SECItem *key,void *wincx);
+    PK11Origin origin, CK_ATTRIBUTE_TYPE operation, SECItem *key, void *wincx);
+PK11SymKey *PK11_ImportSymKeyWithFlags(PK11SlotInfo *slot, 
+    CK_MECHANISM_TYPE type, PK11Origin origin, CK_ATTRIBUTE_TYPE operation, 
+    SECItem *key, CK_FLAGS flags, PRBool isPerm, void *wincx);
 PK11SymKey *PK11_SymKeyFromHandle(PK11SlotInfo *slot, PK11SymKey *parent,
     PK11Origin origin, CK_MECHANISM_TYPE type, CK_OBJECT_HANDLE keyID, 
     PRBool owner, void *wincx);
@@ -243,6 +246,8 @@ CK_OBJECT_HANDLE PK11_ImportPublicKey(PK11SlotInfo *slot,
 				SECKEYPublicKey *pubKey, PRBool isToken);
 PK11SymKey *PK11_KeyGen(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
 				SECItem *param,	int keySize,void *wincx);
+PK11SymKey * PK11_ListFixedKeysInSlot(PK11SlotInfo *slot, char *nickname,
+								void *wincx);
 
 /* Key Generation specialized for SDR (fixed DES3 key) */
 PK11SymKey *PK11_GenDES3TokenKey(PK11SlotInfo *slot, SECItem *keyid, void *cx);
@@ -272,11 +277,23 @@ PK11SymKey *PK11_PubUnwrapSymKey(SECKEYPrivateKey *key, SECItem *wrapppedKey,
 	 CK_MECHANISM_TYPE target, CK_ATTRIBUTE_TYPE operation, int keySize);
 PK11SymKey *PK11_FindFixedKey(PK11SlotInfo *slot, CK_MECHANISM_TYPE type, 
 						SECItem *keyID, void *wincx);
-SECStatus PK11_DeleteTokenPrivateKey(SECKEYPrivateKey *privKey);
+SECStatus PK11_DeleteTokenPrivateKey(SECKEYPrivateKey *privKey,PRBool force);
+SECStatus PK11_DeleteTokenPublicKey(SECKEYPublicKey *pubKey);
+SECStatus PK11_DeleteTokenSymKey(PK11SymKey *symKey);
 SECStatus PK11_DeleteTokenCertAndKey(CERTCertificate *cert,void *wincx);
 SECKEYPrivateKey * PK11_LoadPrivKey(PK11SlotInfo *slot,
 		SECKEYPrivateKey *privKey, SECKEYPublicKey *pubKey, 
 					PRBool token, PRBool sensitive);
+SECKEYPublicKey *PK11_ExtractPublicKey(PK11SlotInfo *slot, KeyType keyType,
+					 CK_OBJECT_HANDLE id);
+char * PK11_GetSymKeyNickname(PK11SymKey *symKey);
+char * PK11_GetPrivateKeyNickname(SECKEYPrivateKey *privKey);
+char * PK11_GetPublicKeyNickname(SECKEYPublicKey *pubKey);
+SECStatus PK11_SetSymKeyNickname(PK11SymKey *symKey, const char *nickname);
+SECStatus PK11_SetPrivateKeyNickname(SECKEYPrivateKey *privKey, 
+							const char *nickname);
+SECStatus PK11_SetPublicKeyNickname(SECKEYPublicKey *pubKey, 
+							const char *nickname);
 
 /* size to hold key in bytes */
 unsigned int PK11_GetKeyLength(PK11SymKey *key);
@@ -353,6 +370,11 @@ SECItem * PK11_GetKeyIDFromPrivateKey(SECKEYPrivateKey *key, void *wincx);
 SECItem* PK11_DEREncodePublicKey(SECKEYPublicKey *pubk);
 PK11SymKey* PK11_CopySymKeyForSigning(PK11SymKey *originalKey,
 	CK_MECHANISM_TYPE mech);
+SECKEYPrivateKeyList* PK11_ListPrivKeysInSlot(PK11SlotInfo *slot,
+						 char *nickname, void *wincx);
+SECKEYPublicKeyList* PK11_ListPublicKeysInSlot(PK11SlotInfo *slot,
+							char *nickname);
+/* depricated */
 SECKEYPrivateKeyList* PK11_ListPrivateKeysInSlot(PK11SlotInfo *slot);
 
 /**********************************************************************
@@ -421,10 +443,8 @@ SECStatus PK11_TraverseCertsForNicknameInSlot(SECItem *nickname,
 	void *arg);
 SECStatus PK11_TraverseCertsInSlot(PK11SlotInfo *slot,
        SECStatus(* callback)(CERTCertificate*, void *), void *arg);
-CERTCertList *
-PK11_ListCerts(PK11CertListType type, void *pwarg);
-CERTCertList *
-PK11_ListCertsInSlot(PK11SlotInfo *slot);
+CERTCertList * PK11_ListCerts(PK11CertListType type, void *pwarg);
+CERTCertList * PK11_ListCertsInSlot(PK11SlotInfo *slot);
 SECStatus PK11_LookupCrls(CERTCrlHeadNode *nodes, int type, void *wincx);
 
 
@@ -522,6 +542,12 @@ PK11_SaveSMimeProfile(PK11SlotInfo *slot, char *emailAddr, SECItem *derSubj,
 			SECItem *emailProfile, SECItem *profileTime);
 
 PRBool SECMOD_HasRootCerts(void);
+
+PRBool PK11_IsPermObject(PK11SlotInfo *slot, CK_OBJECT_HANDLE handle);
+
+char * PK11_GetObjectNickname(PK11SlotInfo *slot, CK_OBJECT_HANDLE id) ;
+SECStatus PK11_SetObjectNickname(PK11SlotInfo *slot, CK_OBJECT_HANDLE id, 
+						const char *nickname) ;
 
 SEC_END_PROTOS
 

@@ -4369,3 +4369,56 @@ have_key_len:
 
     return CKR_OK;
 }
+
+PRBool
+PK11_IsPermObject(PK11SlotInfo *slot, CK_OBJECT_HANDLE handle)
+{
+    return (PRBool) PK11_HasAttributeSet(slot, handle, CKA_TOKEN);
+}
+
+char *
+PK11_GetObjectNickname(PK11SlotInfo *slot, CK_OBJECT_HANDLE id) 
+{
+    char *nickname = NULL;
+    SECItem result;
+    SECStatus rv;
+
+    rv = PK11_ReadAttribute(slot,id,CKA_LABEL,NULL,&result);
+    if (rv != SECSuccess) {
+	return NULL;
+    }
+
+    nickname = PORT_ZAlloc(result.len);
+    if (nickname == NULL) {
+	PORT_Free(result.data);
+	return NULL;
+    }
+    PORT_Memcpy(nickname, result.data, result.len);
+    PORT_Free(result.data);
+    return nickname;
+}
+
+SECStatus
+PK11_SetObjectNickname(PK11SlotInfo *slot, CK_OBJECT_HANDLE id, 
+						const char *nickname) 
+{
+    int len = PORT_Strlen(nickname)-1;
+    CK_ATTRIBUTE setTemplate;
+    CK_RV crv;
+
+    if (len < 0) {
+	return SECFailure;
+    }
+
+    PK11_SETATTRS(&setTemplate, CKA_LABEL, (CK_CHAR *) nickname, len);
+    PK11_EnterSlotMonitor(slot);
+    crv = PK11_GETTAB(slot)->C_SetAttributeValue(slot->session, id,
+			&setTemplate, 1);
+    PK11_ExitSlotMonitor(slot);
+    if (crv != CKR_OK) {
+	PK11_ExitSlotMonitor(slot);
+	PORT_SetError(PK11_MapError(crv));
+	return SECFailure;
+    }
+    return SECSuccess;
+}

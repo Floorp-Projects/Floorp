@@ -33,7 +33,7 @@
  *
  * key.h - public data structures and prototypes for the private key library
  *
- * $Id: keyhi.h,v 1.6 2001/09/20 21:30:46 relyea%netscape.com Exp $
+ * $Id: keyhi.h,v 1.7 2002/02/03 03:37:17 relyea%netscape.com Exp $
  */
 
 #ifndef _KEYHI_H_
@@ -250,6 +250,23 @@ SECKEY_AddPrivateKeyToListTail( SECKEYPrivateKeyList *list,
 #define PRIVKEY_LIST_HEAD(l) ((SECKEYPrivateKeyListNode*)PR_LIST_HEAD(&l->list))
 #define PRIVKEY_LIST_NEXT(n) ((SECKEYPrivateKeyListNode *)n->links.next)
 #define PRIVKEY_LIST_END(n,l) (((void *)n) == ((void *)&l->list))
+
+SECKEYPublicKeyList*
+SECKEY_NewPublicKeyList(void);
+
+void
+SECKEY_DestroyPublicKeyList(SECKEYPublicKeyList *keys);
+
+void
+SECKEY_RemovePublicKeyListNode(SECKEYPublicKeyListNode *node);
+
+SECStatus
+SECKEY_AddPublicKeyToListTail( SECKEYPublicKeyList *list,
+                                SECKEYPublicKey *key);
+
+#define PUBKEY_LIST_HEAD(l) ((SECKEYPublicKeyListNode*)PR_LIST_HEAD(&l->list))
+#define PUBKEY_LIST_NEXT(n) ((SECKEYPublicKeyListNode *)n->links.next)
+#define PUBKEY_LIST_END(n,l) (((void *)n) == ((void *)&l->list))
 
 SEC_END_PROTOS
 

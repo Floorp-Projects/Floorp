@@ -210,5 +210,14 @@ typedef struct {
     PRArenaPool *arena;
 } SECKEYPrivateKeyList;
 
+typedef struct {
+    PRCList links;
+    SECKEYPublicKey *key;
+} SECKEYPublicKeyListNode;
+
+typedef struct {
+    PRCList list;
+    PRArenaPool *arena;
+} SECKEYPublicKeyList;
 #endif /* _KEYTHI_H_ */
 

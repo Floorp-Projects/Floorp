@@ -89,6 +89,8 @@ CK_RV pk11_notify(CK_SESSION_HANDLE session, CK_NOTIFICATION event,
 void pk11_SignedToUnsigned(CK_ATTRIBUTE *attrib);
 CK_OBJECT_HANDLE pk11_FindObjectByTemplate(PK11SlotInfo *slot,
 					CK_ATTRIBUTE *inTemplate,int tsize);
+CK_OBJECT_HANDLE *pk11_FindObjectsByTemplate(PK11SlotInfo *slot,
+			CK_ATTRIBUTE *inTemplate,int tsize, int *objCount);
 SECStatus PK11_UpdateSlotAttribute(PK11SlotInfo *slot,
 				 PK11DefaultArrayEntry *entry, PRBool add);
 

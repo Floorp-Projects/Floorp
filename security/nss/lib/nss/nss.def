@@ -630,7 +630,21 @@ NSS_Get_SEC_SignedCertificateTemplate;
 NSS_Get_SEC_UTF8StringTemplate;
 ;+# for JSS
 PK11_ImportDERPrivateKeyInfoAndReturnKey;
+PK11_ImportPublicKey;
 PK11_ImportPrivateKeyInfoAndReturnKey;
+PK11_ImportSymKeyWithFlags;
+PK11_ListPublicKeysInSlot;
+PK11_ListPrivKeysInSlot;
+PK11_ListFixedKeysInSlot;
+PK11_DeleteTokenPrivateKey;
+PK11_DeleteTokenPublicKey;
+PK11_DeleteTokenSymKey;
+PK11_GetSymKeyNickname;
+PK11_GetPublicKeyNickname;
+PK11_GetPrivateKeyNickname;
+PK11_SetSymKeyNickname;
+PK11_SetPublicKeyNickname;
+PK11_SetPrivateKeyNickname;
 SECKEY_DecodeDERSubjectPublicKeyInfo;
 ;+# for debugging
 nss_DumpCertificateCacheInfo;
