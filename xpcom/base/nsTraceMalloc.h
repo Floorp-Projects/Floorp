@@ -45,7 +45,7 @@ PR_BEGIN_EXTERN_C
  * NS_TraceMallocStartup comment (below) for magic number differences in log
  * file structure.
  */
-#define NS_TRACE_MALLOC_MAGIC           "XPCOM\nTMLog02\r\n\032"
+#define NS_TRACE_MALLOC_MAGIC           "XPCOM\nTMLog03\r\n\032"
 #define NS_TRACE_MALLOC_MAGIC_SIZE      16
 
 /**
@@ -102,6 +102,9 @@ typedef struct nsTMStats {
  *       maxkids parent callsite serial,
  *       maxstack top callsite serial
  *
+ * Event Operands (magic TMLog03)
+ *   'T' seconds, microseconds, caption
+ *
  * See xpcom/base/bloatblame.c for an example log-file reader.
  */
 #define TM_EVENT_LIBRARY        'L'
@@ -112,6 +115,7 @@ typedef struct nsTMStats {
 #define TM_EVENT_REALLOC        'R'
 #define TM_EVENT_FREE           'F'
 #define TM_EVENT_STATS          'Z'
+#define TM_EVENT_TIMESTAMP      'T'
 
 PR_EXTERN(void) NS_TraceMallocStartup(int logfd);
 
@@ -148,6 +152,11 @@ PR_EXTERN(int) NS_TraceMallocChangeLogFD(int fd);
  * Do nothing if fd is -1.
  */
 PR_EXTERN(void) NS_TraceMallocCloseLogFD(int fd);
+
+/**
+ * Emit a timestamp event with the given caption to the current log file. 
+ */
+PR_EXTERN(void) NS_TraceMallocLogTimestamp(const char *caption);
 
 PR_END_EXTERN_C
 

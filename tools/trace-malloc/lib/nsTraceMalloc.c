@@ -41,7 +41,6 @@
  * - diagnose rusty's SMP realloc oldsize corruption bug
  * - #ifdef __linux__/x86 and port to other platforms
  * - unify calltree with gc/boehm somehow (common utility lib?)
- * - provide NS_TraceMallocTimestamp() or do it internally
  */
 #include <errno.h>
 #include <fcntl.h>
@@ -50,6 +49,7 @@
 #include <setjmp.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include "plhash.h"
 #include "prlog.h"
 #include "prmon.h"
@@ -1236,6 +1236,27 @@ NS_TraceMallocCloseLogFD(int fd)
     if (tmmon)
         PR_ExitMonitor(tmmon);
     close(fd);
+}
+
+PR_IMPLEMENT(void)
+NS_TraceMallocLogTimestamp(const char *caption)
+{
+    logfile *fp;
+    struct timeval tv;
+
+    if (tmmon)
+        PR_EnterMonitor(tmmon);
+
+    fp = logfp;
+    log_byte(fp, TM_EVENT_TIMESTAMP);
+
+    gettimeofday(&tv, NULL);
+    log_uint32(fp, (uint32) tv.tv_sec);
+    log_uint32(fp, (uint32) tv.tv_usec);
+    log_string(fp, caption);
+
+    if (tmmon)
+        PR_ExitMonitor(tmmon);
 }
 
 #endif /* NS_TRACE_MALLOC */
