@@ -122,7 +122,7 @@ nsJSIID::GetName(char * *aName)
             if(NS_SUCCEEDED(iim->GetNameForIID(&mID, &name)) && name)
             {
                 setName(name);
-                XPCMem::Free(name);
+                nsAllocator::Free(name);
             }
             NS_RELEASE(iim);
         }
@@ -130,7 +130,7 @@ nsJSIID::GetName(char * *aName)
             mName = gNoString;
     }
 
-    *aName = (char*) XPCMem::Clone(mName, strlen(mName)+1);
+    *aName = (char*) nsAllocator::Clone(mName, strlen(mName)+1);
     return *aName ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
@@ -143,7 +143,7 @@ nsJSIID::GetNumber(char * *aNumber)
             mNumber = gNoString;
     }
 
-    *aNumber = (char*) XPCMem::Clone(mNumber, strlen(mNumber)+1);
+    *aNumber = (char*) nsAllocator::Clone(mNumber, strlen(mNumber)+1);
     return *aNumber ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
@@ -151,7 +151,7 @@ nsJSIID::GetNumber(char * *aNumber)
 NS_IMETHODIMP
 nsJSIID::GetId(nsID* *aId)
 {
-    *aId = (nsID*) XPCMem::Clone(&mID, sizeof(nsID));
+    *aId = (nsID*) nsAllocator::Clone(&mID, sizeof(nsID));
     return *aId ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
@@ -177,7 +177,7 @@ nsJSIID::equals(nsIJSID *other, PRBool *_retval)
     if(NS_SUCCEEDED(other->GetId(&otherID)))
     {
         *_retval = mID.Equals(*otherID);
-        XPCMem::Free(otherID);
+        nsAllocator::Free(otherID);
     }
     return NS_OK;
 }
@@ -214,7 +214,7 @@ nsJSIID::init(const char *idString, PRBool *_retval)
                     mID = *pid;
                     setName(idString);
                     success = PR_TRUE;
-                    XPCMem::Free(pid);
+                    nsAllocator::Free(pid);
                 }
                 NS_RELEASE(iim);
             }
@@ -313,7 +313,7 @@ nsJSCID::GetName(char * *aName)
 {
     if(!mName)
         mName = gNoString;
-    *aName = (char*) XPCMem::Clone(mName, strlen(mName)+1);
+    *aName = (char*) nsAllocator::Clone(mName, strlen(mName)+1);
     return *aName ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
@@ -326,7 +326,7 @@ nsJSCID::GetNumber(char * *aNumber)
             mNumber = gNoString;
     }
 
-    *aNumber = (char*) XPCMem::Clone(mNumber, strlen(mNumber)+1);
+    *aNumber = (char*) nsAllocator::Clone(mNumber, strlen(mNumber)+1);
     return *aNumber ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
@@ -334,7 +334,7 @@ nsJSCID::GetNumber(char * *aNumber)
 NS_IMETHODIMP
 nsJSCID::GetId(nsID* *aId)
 {
-    *aId = (nsID*) XPCMem::Clone(&mID, sizeof(nsID));
+    *aId = (nsID*) nsAllocator::Clone(&mID, sizeof(nsID));
     return *aId ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
@@ -360,7 +360,7 @@ nsJSCID::equals(nsIJSID *other, PRBool *_retval)
     if(NS_SUCCEEDED(other->GetId(&otherID)))
     {
         *_retval = mID.Equals(*otherID);
-        XPCMem::Free(otherID);
+        nsAllocator::Free(otherID);
     }
     return NS_OK;
 }

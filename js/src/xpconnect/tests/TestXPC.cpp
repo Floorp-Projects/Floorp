@@ -51,9 +51,9 @@ static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
 
 static void RegAllocator()
 {
-    nsComponentManager::RegisterComponent(kAllocatorCID, NULL, NULL, XPCOM_DLL, 
+    nsComponentManager::RegisterComponent(kAllocatorCID, NULL, NULL, XPCOM_DLL,
                                     PR_FALSE, PR_FALSE);
-}    
+}
 
 
 /***************************************************************************/
@@ -68,7 +68,7 @@ MyScriptable::MyScriptable()
 {
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
-}    
+}
 
 static NS_DEFINE_IID(kMyScriptableIID, NS_IXPCSCRIPTABLE_IID);
 NS_IMPL_ISUPPORTS(MyScriptable, kMyScriptableIID);
@@ -90,10 +90,10 @@ NS_IMPL_ISUPPORTS(MyScriptable, kMyScriptableIID);
     XPC_IMPLEMENT_FORWARD_FINALIZE(MyScriptable);
 
 NS_IMETHODIMP
-MyScriptable::DefaultValue(JSContext *cx, JSObject *obj,             
-                            JSType type, jsval *vp,                         
-                            nsIXPConnectWrappedNative* wrapper,             
-                            nsIXPCScriptable* arbitrary,                    
+MyScriptable::DefaultValue(JSContext *cx, JSObject *obj,
+                            JSType type, jsval *vp,
+                            nsIXPConnectWrappedNative* wrapper,
+                            nsIXPCScriptable* arbitrary,
                             JSBool* retval)
 {
     if(type == JSTYPE_STRING || type == JSTYPE_VOID)
@@ -103,7 +103,7 @@ MyScriptable::DefaultValue(JSContext *cx, JSObject *obj,
         return NS_OK;
     }
     return arbitrary->DefaultValue(cx, obj, type, vp, wrapper, NULL, retval);
-}                                                             
+}
 
 /***************************************************************************/
 
@@ -123,7 +123,7 @@ NS_IMETHODIMP nsTestXPCFoo::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
   *aInstancePtr = NULL;
 
-  if (aIID.Equals(nsITestXPCFoo::GetIID()) || 
+  if (aIID.Equals(nsITestXPCFoo::GetIID()) ||
       aIID.Equals(nsITestXPCFoo2::GetIID()) ||
       aIID.Equals(nsISupports::GetIID())) {
     *aInstancePtr = (void*) this;
@@ -169,7 +169,7 @@ public:
     NS_IMETHOD SetReceiver(nsIEcho* aReceiver);
     NS_IMETHOD SendOneString(const char* str);
     NS_IMETHOD In2OutOneInt(int input, int* output);
-    NS_IMETHOD In2OutAddTwoInts(int input1, 
+    NS_IMETHOD In2OutAddTwoInts(int input1,
                                 int input2,
                                 int* output1,
                                 int* output2,
@@ -217,8 +217,25 @@ public:
     /* void SharedTest ([shared, retval] out string str); */
     NS_IMETHOD SharedString(char **str);
 
+    /* void ReturnCode_NS_OK (); */
+    NS_IMETHOD ReturnCode_NS_OK();
+
+    /* void ReturnCode_NS_COMFALSE (); */
+    NS_IMETHOD ReturnCode_NS_COMFALSE();
+
+    /* void ReturnCode_NS_ERROR_NULL_POINTER (); */
+    NS_IMETHOD ReturnCode_NS_ERROR_NULL_POINTER();
+
+    /* void ReturnCode_NS_ERROR_UNEXPECTED (); */
+    NS_IMETHOD ReturnCode_NS_ERROR_UNEXPECTED();
+
+    /* void ReturnCode_NS_ERROR_OUT_OF_MEMORY (); */
+    NS_IMETHOD ReturnCode_NS_ERROR_OUT_OF_MEMORY();
+
+
+
     MyEcho();
-private: 
+private:
     nsIEcho* mReceiver;
     nsIAllocator* mAllocator;
 };
@@ -226,7 +243,7 @@ private:
 static NS_DEFINE_IID(kMyEchoIID, NS_IECHO_IID);
 NS_IMPL_ISUPPORTS(MyEcho, kMyEchoIID);
 
-MyEcho::MyEcho() 
+MyEcho::MyEcho()
     : mReceiver(NULL)
 {
     NS_INIT_REFCNT();
@@ -257,9 +274,9 @@ NS_IMETHODIMP MyEcho::In2OutOneInt(int input, int* output)
 {
     *output = input;
     return NS_OK;
-}    
+}
 
-NS_IMETHODIMP MyEcho::In2OutAddTwoInts(int input1, 
+NS_IMETHODIMP MyEcho::In2OutAddTwoInts(int input1,
                                        int input2,
                                        int* output1,
                                        int* output2,
@@ -285,14 +302,14 @@ NS_IMETHODIMP MyEcho::In2OutOneString(const char* input, char** output)
     if(output)
         *output = NULL;
     return NS_ERROR_FAILURE;
-}    
+}
 
 NS_IMETHODIMP MyEcho::SimpleCallNoEcho()
 {
     return NS_OK;
-}    
+}
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 MyEcho::SendManyTypes(PRUint8              p1,
                       PRInt16             p2,
                       PRInt32             p3,
@@ -314,9 +331,9 @@ MyEcho::SendManyTypes(PRUint8              p1,
         return mReceiver->SendManyTypes(p1, p2, p3, p4, p5, p6, p7, p8, p9,
                                         p10, p11, p12, p13, p14, p15, p16);
     return NS_OK;
-}    
+}
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 MyEcho::SendInOutManyTypes(PRUint8*    p1,
                            PRInt16*   p2,
                            PRInt32*   p3,
@@ -340,31 +357,31 @@ MyEcho::SendInOutManyTypes(PRUint8*    p1,
     return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 MyEcho::MethodWithNative(int p1, void* p2)
 {
     return NS_OK;
-}    
-
-NS_IMETHODIMP 
-MyEcho::ReturnCode(int code)
-{
-    return (nsresult) code;        
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
+MyEcho::ReturnCode(int code)
+{
+    return (nsresult) code;
+}
+
+NS_IMETHODIMP
 MyEcho::FailInJSTest(int fail)
 {
     if(mReceiver)
         return mReceiver->FailInJSTest(fail);
     return NS_OK;
-}        
+}
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 MyEcho::SharedString(char **str)
 {
     *str = "a static string";
-/*    
+/*
     // to do non-shared we clone the string:
     char buf[] = "a static string";
     int len;
@@ -372,7 +389,27 @@ MyEcho::SharedString(char **str)
     memcpy(*str, buf, len);
 */
     return NS_OK;
-}        
+}
+
+NS_IMETHODIMP
+MyEcho::ReturnCode_NS_OK()
+{return NS_OK;}
+
+NS_IMETHODIMP
+MyEcho::ReturnCode_NS_COMFALSE()
+{return NS_COMFALSE;}
+
+NS_IMETHODIMP
+MyEcho::ReturnCode_NS_ERROR_NULL_POINTER()
+{return NS_ERROR_NULL_POINTER;}
+
+NS_IMETHODIMP
+MyEcho::ReturnCode_NS_ERROR_UNEXPECTED()
+{return NS_ERROR_UNEXPECTED;}
+
+NS_IMETHODIMP
+MyEcho::ReturnCode_NS_ERROR_OUT_OF_MEMORY()
+{return NS_ERROR_OUT_OF_MEMORY;}
 
 /***************************************************************************/
 
@@ -494,7 +531,7 @@ int main()
         return 1;
     }
     nsIXPConnectWrappedNative* comp_wrapper;
-    if(NS_FAILED(xpc->WrapNative(jscontext, comp, 
+    if(NS_FAILED(xpc->WrapNative(jscontext, comp,
                               nsIXPCComponents::GetIID(), &comp_wrapper)))
     {
         printf("failed to build wrapper for Components native object");
@@ -546,7 +583,7 @@ int main()
         wrapper->GetJSObject(&glob);
         JS_DefineFunctions(jscontext, glob, glob_functions);
 
-        
+
         nsIXPCComponents* comp = XPC_GetXPConnectComponentsObject();
         if(!comp)
         {
@@ -554,7 +591,7 @@ int main()
             return 1;
         }
         nsIXPConnectWrappedNative* comp_wrapper;
-        if(NS_FAILED(xpc->WrapNative(jscontext, comp, 
+        if(NS_FAILED(xpc->WrapNative(jscontext, comp,
                                   nsIXPCComponents::GetIID(), &comp_wrapper)))
         {
             printf("failed to build wrapper for Components native object");
@@ -615,14 +652,14 @@ int main()
                     JSObject* test_js_obj;
                     ptr->Test(11, 13, &result);
                     printf("call to ptr->Test returned %d\n", result);
-    
+
                     nsIXPConnectWrappedJSMethods* methods;
 
-                    wrapper3->QueryInterface(nsIXPConnectWrappedJSMethods::GetIID(), 
+                    wrapper3->QueryInterface(nsIXPConnectWrappedJSMethods::GetIID(),
                                             (void**) &methods);
                     methods->GetJSObject(&test_js_obj);
 
-                    printf("call to methods->GetJSObject() returned: %s\n", 
+                    printf("call to methods->GetJSObject() returned: %s\n",
                             test_js_obj == JSVAL_TO_OBJECT(v) ?
                             "expected result" : "WRONG RESULT" );
 

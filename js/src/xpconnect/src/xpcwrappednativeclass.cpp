@@ -96,7 +96,7 @@ nsXPCWrappedNativeClass::~nsXPCWrappedNativeClass()
     mXPCContext->GetWrappedNativeClassMap()->Remove(this);
     DestroyMemberDescriptors();
     if(mName)
-        XPCMem::Free(mName);
+        nsAllocator::Free(mName);
     NS_RELEASE(mInfo);
 }
 
@@ -385,8 +385,14 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
     nsresult invokeResult;
     nsID* conditional_iid = NULL;
     uintN err;
+    XPCContext* xpcc = nsXPConnect::GetContext(cx);
 
     *vp = JSVAL_NULL;
+
+    if(!xpcc)
+        goto done;
+    
+    xpcc->SetLastResult(NS_ERROR_UNEXPECTED);
 
     // make sure we have what we need
 
@@ -514,7 +520,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
         }
         if(conditional_iid)
         {
-            XPCMem::Free((void*)conditional_iid);
+            nsAllocator::Free((void*)conditional_iid);
             conditional_iid = NULL;
         }
     }
@@ -522,7 +528,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
     // do the invoke
     invokeResult = XPTC_InvokeByIndex(wrapper->GetNative(), vtblIndex,
                                       paramCount, dispatchParams);
-
+    xpcc->SetLastResult(invokeResult);
     if(NS_FAILED(invokeResult))
     {
         ThrowBadResultException(cx, desc, invokeResult);
@@ -557,8 +563,8 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
                 const nsXPTType& type = param.GetType();
                 if(!type.IsPointer() || type.TagPart() != nsXPTType::T_IID ||
                    !(conditional_iid = (nsID*)
-                         XPCMem::Clone(dispatchParams[arg_num].val.p, 
-                                       sizeof(nsID))))
+                         nsAllocator::Clone(dispatchParams[arg_num].val.p, 
+                                          sizeof(nsID))))
                 {
                     ThrowBadParamException(XPCJSError::CANT_GET_PARAM_IFACE_INFO,
                                            cx, desc, i);
@@ -588,7 +594,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
             }
             if(conditional_iid)
             {
-                XPCMem::Free((void*)conditional_iid);
+                nsAllocator::Free((void*)conditional_iid);
                 conditional_iid = NULL;
             }
         }
@@ -605,12 +611,12 @@ done:
         if(!p)
             continue;
         if(dp->IsValOwned())
-            XPCMem::Free(p);
+            nsAllocator::Free(p);
         if(dp->IsValInterface())
             ((nsISupports*)p)->Release();
     }
     if(conditional_iid)
-        XPCMem::Free((void*)conditional_iid);
+        nsAllocator::Free((void*)conditional_iid);
 
     if(dispatchParams && dispatchParams != paramBuffer)
         delete [] dispatchParams;

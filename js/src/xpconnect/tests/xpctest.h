@@ -114,6 +114,21 @@ class nsIEcho : public nsISupports {
   /* void SharedString ([shared, retval] out string str); */
   NS_IMETHOD SharedString(char **str) = 0;
 
+  /* void ReturnCode_NS_OK (); */
+  NS_IMETHOD ReturnCode_NS_OK() = 0;
+
+  /* void ReturnCode_NS_COMFALSE (); */
+  NS_IMETHOD ReturnCode_NS_COMFALSE() = 0;
+
+  /* void ReturnCode_NS_ERROR_NULL_POINTER (); */
+  NS_IMETHOD ReturnCode_NS_ERROR_NULL_POINTER() = 0;
+
+  /* void ReturnCode_NS_ERROR_UNEXPECTED (); */
+  NS_IMETHOD ReturnCode_NS_ERROR_UNEXPECTED() = 0;
+
+  /* void ReturnCode_NS_ERROR_OUT_OF_MEMORY (); */
+  NS_IMETHOD ReturnCode_NS_ERROR_OUT_OF_MEMORY() = 0;
+
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
   static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIEcho *priv);

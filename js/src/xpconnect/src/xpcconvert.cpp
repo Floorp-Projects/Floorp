@@ -453,7 +453,7 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
             if(useAllocator)
             {
                 int len = strlen(bytes)+1;
-                if(!(*((void**)d) = XPCMem::Alloc(len)))
+                if(!(*((void**)d) = nsAllocator::Alloc(len)))
                 {
                     return JS_FALSE;
                 }
@@ -478,7 +478,7 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
             if(useAllocator)
             {
                 int byte_len = (JS_GetStringLength(str)+1)*sizeof(jschar);
-                if(!(*((void**)d) = XPCMem::Alloc(byte_len)))
+                if(!(*((void**)d) = nsAllocator::Alloc(byte_len)))
                 {
                     // XXX should report error
                     return JS_FALSE;

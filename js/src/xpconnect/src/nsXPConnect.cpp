@@ -143,7 +143,7 @@ nsXPConnect::IsISupportsDescendent(nsIInterfaceInfo* info)
     if(NS_SUCCEEDED(oldest->GetIID(&iid)))
     {
         retval = iid->Equals(nsISupports::GetIID());
-        XPCMem::Free(iid);
+        nsAllocator::Free(iid);
     }
     NS_RELEASE(oldest);
     return retval;
