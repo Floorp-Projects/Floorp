@@ -29,6 +29,8 @@ CHROME_L10N = \
 	.\pref-imageblocking.dtd \
 	.\pref-appearance.dtd \
 	.\pref-applications.dtd \
+	.\pref-applications.properties \
+	.\pref-applications-edit.dtd \
 	.\pref-cache.dtd \
 	.\pref-charset.dtd \
 	.\pref-colors.dtd \

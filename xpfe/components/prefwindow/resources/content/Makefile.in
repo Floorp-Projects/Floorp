@@ -36,6 +36,11 @@ CHROME_CONTENT = \
 		pref-imageblocking.xul \
 		pref-appearance.xul \
 		pref-applications.xul \
+		pref-applications.js \
+		pref-applications-edit.xul \
+		pref-applications-new.js \
+		pref-applications-new.xul \
+		overrideHandler.js \
 		pref-cache.xul \
 		pref-cache.js \
 		pref-charset.xul \

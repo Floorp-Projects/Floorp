@@ -1,0 +1,33 @@
+
+<!ENTITY  editType.label                        "Edit Type">
+<!ENTITY  extension.label                       "Extension:">
+<!ENTITY  mimetype.label                        "MIME Type:">
+<!ENTITY  mimetype.accesskey                    "m">
+<!ENTITY  outgoingDefault.label                 "Use this MIME as the outgoing type for these file extensions">
+<!ENTITY  outgoingDefault.accesskey             "d">
+
+<!ENTITY  handledby.label                       "Handled By">
+
+<!ENTITY  navigator.label                       "Navigator">
+<!ENTITY  navigator.accesskey                   "n">
+<!ENTITY  saveToDisk.label                      "Save to Disk">
+<!ENTITY  saveToDisk.accesskey                  "s">
+<!ENTITY  application.label                     "Application">
+<!ENTITY  application.accesskey                 "a">
+
+<!ENTITY  browse.label                          "Choose...">
+<!ENTITY  browse.accesskey                      "c">
+
+<!ENTITY  askBeforeOpen.label                   "Ask me before opening downloaded files of this type">
+<!ENTITY  askBeforeOpen.accesskey               "k">
+
+<!ENTITY  newDescription.label                  "Description of type:">
+<!ENTITY  newDescription.accesskey              "d">
+<!ENTITY  newExtensions.label                   "File extension:">
+<!ENTITY  newExtensions.accesskey               "e">
+<!ENTITY  newMIME.label                         "MIME type:">
+<!ENTITY  newMIME.accesskey                     "m">
+<!ENTITY  newAppPath.label                      "Application to use:">
+<!ENTITY  newAppPath.accesskey                  "a">
+<!ENTITY  newTypeTitle.label                    "New Type">
+
