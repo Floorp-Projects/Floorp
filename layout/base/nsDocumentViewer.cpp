@@ -151,11 +151,6 @@ static NS_DEFINE_IID(kPrinterEnumeratorCID, NS_PRINTER_ENUMERATOR_CID);
 #include "nsIScrollable.h"
 #include "nsIWebBrowserPrint.h" // needed for PrintPreview Navigation constants
 
-// Print Progress
-#include "nsPrintProgress.h"
-#include "nsPrintProgressParams.h"
-
-
 // Print error dialog
 #include "nsIPrompt.h"
 #include "nsIWindowWatcher.h"
