@@ -162,18 +162,6 @@ nsresult nsCopySupport::HTMLCopy(nsISelection *aSel, nsIDocument *aDoc, PRInt16 
         nsCOMPtr<nsIFormatConverter> htmlConverter = do_CreateInstance(kHTMLConverterCID);
         NS_ENSURE_TRUE(htmlConverter, NS_ERROR_FAILURE);
         trans->SetConverter(htmlConverter);
-      
-        // Add the html DataFlavor to the transferable
-        trans->AddDataFlavor(kHTMLMime);
-        // Add the htmlcontext DataFlavor to the transferable
-        trans->AddDataFlavor(kHTMLContext);
-        // Add the htmlinfo DataFlavor to the transferable
-        trans->AddDataFlavor(kHTMLInfo);
-      }
-      else
-      {
-       // Add the unicode DataFlavor to the transferable
-        trans->AddDataFlavor(kUnicodeMime);
       }
       
       // get wStrings to hold clip data
@@ -201,15 +189,35 @@ nsresult nsCopySupport::HTMLCopy(nsISelection *aSel, nsIDocument *aDoc, PRInt16 
       nsCOMPtr<nsISupports> genericDataObj ( do_QueryInterface(dataWrapper) );
       if (bIsHTMLCopy)
       {
-        trans->SetTransferData(kHTMLMime, genericDataObj, buffer.Length()*2);
-        genericDataObj = do_QueryInterface(contextWrapper);
-        trans->SetTransferData(kHTMLContext, genericDataObj, parents.Length()*2);
-        genericDataObj = do_QueryInterface(infoWrapper);
-        trans->SetTransferData(kHTMLInfo, genericDataObj, info.Length()*2);
+        if (buffer.Length())
+        {
+          // Add the html DataFlavor to the transferable
+          trans->AddDataFlavor(kHTMLMime);
+          trans->SetTransferData(kHTMLMime, genericDataObj, buffer.Length()*2);
+        }
+        if (parents.Length())
+        {
+          // Add the htmlcontext DataFlavor to the transferable
+          trans->AddDataFlavor(kHTMLContext);
+          genericDataObj = do_QueryInterface(contextWrapper);
+          trans->SetTransferData(kHTMLContext, genericDataObj, parents.Length()*2);
+        }
+        if (info.Length())
+        {
+          // Add the htmlinfo DataFlavor to the transferable
+          trans->AddDataFlavor(kHTMLInfo);
+          genericDataObj = do_QueryInterface(infoWrapper);
+          trans->SetTransferData(kHTMLInfo, genericDataObj, info.Length()*2);
+        }
       }
       else
       {
-        trans->SetTransferData(kUnicodeMime, genericDataObj, buffer.Length()*2);
+        if (buffer.Length())
+        {
+         // Add the unicode DataFlavor to the transferable
+          trans->AddDataFlavor(kUnicodeMime);
+          trans->SetTransferData(kUnicodeMime, genericDataObj, buffer.Length()*2);
+        }
       }
       // put the transferable on the clipboard
       clipboard->SetData(trans, nsnull, aClipboardID);
