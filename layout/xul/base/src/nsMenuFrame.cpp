@@ -150,7 +150,7 @@ nsMenuFrame::HandleEvent(nsIPresContext& aPresContext,
                              nsEventStatus&  aEventStatus)
 {
   aEventStatus = nsEventStatus_eConsumeDoDefault;
-  if (aEvent->message == NS_MOUSE_LEFT_CLICK) {
+  if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
     // The menu item was clicked. Bring up the menu.
     nsIFrame* frame = mPopupFrames.FirstChild();
     if (frame) {
@@ -171,7 +171,7 @@ nsMenuFrame::ToggleMenuState()
     
   if (mMenuOpen) {
     // Close the menu.
-    child->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, PR_TRUE);
+    child->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, "false", PR_TRUE);
     mMenuOpen = PR_FALSE;
   }
   else {
@@ -213,16 +213,16 @@ nsMenuFrame::Reflow(nsIPresContext&   aPresContext,
     nscoord h = aDesiredSize.height;
     nsresult rv = ReflowChild(frame, aPresContext, aDesiredSize, kidReflowState, aStatus);
  
-    // Don't let it affect our size.
-    aDesiredSize.width = w;
-    aDesiredSize.height = h;
-
      // Set the child's width and height to its desired size
     nsRect rect;
     frame->GetRect(rect);
     rect.width = aDesiredSize.width;
     rect.height = aDesiredSize.height;
     frame->SetRect(rect);
+
+    // Don't let it affect our size.
+    aDesiredSize.width = w;
+    aDesiredSize.height = h;
   }
   return rv;
 }
