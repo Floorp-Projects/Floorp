@@ -178,6 +178,8 @@ extern nsresult
 NS_NewSVGTextFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
 extern nsresult
 NS_NewSVGTSpanFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame* parent, nsIFrame** aNewFrame);
+extern nsresult
+NS_NewSVGDefsFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
 #endif
 
 #include "nsIDocument.h"
@@ -6869,8 +6871,10 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsIPresShell*            aPresShell,
     rv = NS_NewSVGPolylineFrame(aPresShell, aContent, &newFrame);
   else if (aTag == nsSVGAtoms::circle)
     rv = NS_NewSVGCircleFrame(aPresShell, aContent, &newFrame);
-  else if (aTag == nsSVGAtoms::defs)
-    rv = NS_NewSVGGenericContainerFrame(aPresShell, aContent, &newFrame);
+  else if (aTag == nsSVGAtoms::defs) {
+    processChildren = PR_TRUE;
+    rv = NS_NewSVGDefsFrame(aPresShell, aContent, &newFrame);
+  }
   else if (aTag == nsSVGAtoms::ellipse)
     rv = NS_NewSVGEllipseFrame(aPresShell, aContent, &newFrame);
   else if (aTag == nsSVGAtoms::line)

@@ -249,6 +249,7 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_SVGGElement_id,
   eDOMClassInfo_SVGForeignObjectElement_id,
   eDOMClassInfo_SVGPathElement_id,
+  eDOMClassInfo_SVGDefsElement_id,
   
   // other SVG classes
   eDOMClassInfo_SVGAnimatedLength_id,

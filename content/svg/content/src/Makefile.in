@@ -103,6 +103,7 @@ CPPSRCS		= \
 		nsSVGTransformList.cpp \
 		nsSVGValue.cpp \
 		nsSVGViewportRect.cpp \
+		nsSVGDefsElement.cpp \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk

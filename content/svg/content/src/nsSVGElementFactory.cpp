@@ -72,6 +72,8 @@ nsresult
 NS_NewSVGImageElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
 NS_NewSVGStyleElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
+NS_NewSVGDefsElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 
 
 class nsSVGElementFactory : public nsIElementFactory
@@ -157,6 +159,8 @@ nsSVGElementFactory::CreateInstanceByTag(nsINodeInfo *aNodeInfo,
     return NS_NewSVGImageElement(aResult, aNodeInfo);
   if (name == nsSVGAtoms::style)
     return NS_NewSVGStyleElement(aResult, aNodeInfo);
+  if (name == nsSVGAtoms::defs)
+    return NS_NewSVGDefsElement(aResult, aNodeInfo);
 
   // if we don't know what to create, just create a standard xml element:
   return NS_NewXMLElement(aResult, aNodeInfo);

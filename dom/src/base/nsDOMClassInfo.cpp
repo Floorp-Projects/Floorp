@@ -334,6 +334,7 @@
 #include "nsIDOMSVGURIReference.h"
 #include "nsIDOMSVGStyleElement.h"
 #include "nsIDOMSVGStylable.h"
+#include "nsIDOMSVGDefsElement.h"
 #endif
 
 #include "nsIImageDocument.h"
@@ -798,6 +799,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(SVGForeignObjectElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGPathElement, nsElementSH,
+                           ELEMENT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGDefsElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
 
   // other SVG classes
@@ -2186,6 +2189,11 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(SVGPathElement, nsIDOMSVGPathElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGPathElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGAnimatedPathData)
+    DOM_CLASSINFO_SVG_GRAPHIC_ELEMENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGDefsElement, nsIDOMSVGDefsElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGDefsElement)
     DOM_CLASSINFO_SVG_GRAPHIC_ELEMENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
