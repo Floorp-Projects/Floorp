@@ -691,7 +691,7 @@ nsJARChannel::GetContentType(char* *aContentType)
             nsCRT::free(fileName);
         } 
         else {
-            rv = NS_ERROR_FAILURE;
+            rv = NS_ERROR_OUT_OF_MEMORY;
         }
 
         if (NS_FAILED(rv)) {
