@@ -530,6 +530,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
   static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
   static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+  static NS_DEFINE_IID(kParserBundleIID, NS_IPARSER_BUNDLE_IID);
 
   if (needsParser)
   {
@@ -553,6 +554,21 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 #else
   NS_PRECONDITION(nsnull != aContainer, "No content viewer container");
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aContainer));
+
+  if(mParser) {
+    nsCOMPtr<nsIWebShellServices> webShellServices(do_QueryInterface(docShell));
+    nsISupportsParserBundle* parserBundle=nsnull;
+    
+    nsresult result=mParser->QueryInterface(kParserBundleIID,(void**)&parserBundle);
+    
+    if(NS_SUCCEEDED(result)) {
+      // We do this to help consumers who don't have access to the webshell.
+      nsAutoString theID;
+      theID.AssignWithConversion("webshell");
+      parserBundle->SetDataIntoBundle(theID,webShellServices);
+      NS_IF_RELEASE(parserBundle);
+    }
+  }
 
   //
   // The following logic is mirrored in nsWebShell::Embed!

@@ -1314,7 +1314,6 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
 
     case eHTMLTag_noembed:
     case eHTMLTag_noframes:
-    case eHTMLTag_nolayer:
     case eHTMLTag_noscript:
       mSink->mInsideNoXXXTag++;
       break;
