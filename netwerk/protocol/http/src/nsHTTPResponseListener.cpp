@@ -59,19 +59,16 @@ static const int kMAX_HEADER_SIZE = 60000;
 nsHTTPResponseListener::nsHTTPResponseListener(nsHTTPChannel* aConnection):
     mFirstLineParsed(PR_FALSE),
     mHeadersDone(PR_FALSE),
-    mAsyncReadAfterAsyncOpen(PR_FALSE),
-    mFiredOnHeadersAvailable(PR_FALSE),
-    mFiredOpenOnStartRequest(PR_FALSE),
-    mReadLength(0),
+    mAborted(PR_FALSE),
     mResponse(nsnull),
-    mResponseContext(nsnull),
     mBytesReceived(0)
 {
     NS_INIT_REFCNT();
 
     NS_ASSERTION(aConnection, "HTTPChannel is null.");
-    mConnection = aConnection;
-    NS_IF_ADDREF(mConnection);
+    mChannel = aConnection;
+    NS_IF_ADDREF(mChannel);
+    mChannel->mRawResponseListener = this;
 
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("Creating nsHTTPResponseListener [this=%x].\n", this));
@@ -83,7 +80,7 @@ nsHTTPResponseListener::~nsHTTPResponseListener()
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("Deleting nsHTTPResponseListener [this=%x].\n", this));
 
-    NS_IF_RELEASE(mConnection);
+    NS_IF_RELEASE(mChannel);
     NS_IF_RELEASE(mResponse);
 }
 
@@ -121,7 +118,7 @@ nsHTTPResponseListener::OnDataAvailable(nsIChannel* channel,
             return NS_ERROR_OUT_OF_MEMORY;
         }
         NS_ADDREF(mResponse);
-        mConnection->SetResponse(mResponse);
+        mChannel->SetResponse(mResponse);
     }
     //
     // Parse the status line and the response headers from the server
@@ -172,7 +169,7 @@ nsHTTPResponseListener::OnDataAvailable(nsIChannel* channel,
     // so when we finally push the stream to the consumer via AsyncRead,
     // we're sure to pass him all the data that has queued up.
 
-    if (mConnection->mOpenObserver && !mAsyncReadAfterAsyncOpen) {
+    if (mChannel->mOpenObserver && !mResponseDataListener) {
         mBytesReceived += i_Length;
         mDataStream = i_pStream;
     } else {
@@ -181,7 +178,7 @@ nsHTTPResponseListener::OnDataAvailable(nsIChannel* channel,
         // Abort the connection if the consumer has been released.  This will 
         // happen if a redirect has been processed...
         //
-        if (!mConsumer) {
+        if (mAborted) {
             // XXX: What should the return code be?
             rv = NS_BINDING_ABORTED;
         }
@@ -192,8 +189,8 @@ nsHTTPResponseListener::OnDataAvailable(nsIChannel* channel,
                        ("\tOnDataAvailable [this=%x]. Calling consumer "
                         "OnDataAvailable.\tlength:%d\n", this, i_Length));
 
-                rv = mConsumer->OnDataAvailable(mConnection, mResponseContext, i_pStream, 0, 
-                                                  i_Length);
+                rv = mResponseDataListener->OnDataAvailable(mChannel, mChannel->mResponseContext,
+                                                            i_pStream, 0, i_Length);
                 if (NS_FAILED(rv)) {
                   PR_LOG(gHTTPLog, PR_LOG_ERROR, 
                          ("\tOnDataAvailable [this=%x]. Consumer failed!"
@@ -201,7 +198,7 @@ nsHTTPResponseListener::OnDataAvailable(nsIChannel* channel,
                 }
             }
         } 
-    } // end !mConnection->mOpenObserver
+    } // end !mChannel->mOpenObserver
 
     return rv;
 }
@@ -210,8 +207,6 @@ nsHTTPResponseListener::OnDataAvailable(nsIChannel* channel,
 NS_IMETHODIMP
 nsHTTPResponseListener::OnStartRequest(nsIChannel* channel, nsISupports* i_pContext)
 {
-    nsresult rv;
-
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("nsHTTPResponseListener::OnStartRequest [this=%x].\n", this));
 
@@ -219,12 +214,7 @@ nsHTTPResponseListener::OnStartRequest(nsIChannel* channel, nsISupports* i_pCont
     mHeadersDone     = PR_FALSE;
     mFirstLineParsed = PR_FALSE;
 
-    // Cache the nsIStreamListener and ISupports context of the consumer...
-    rv = mConnection->GetResponseDataListener(getter_AddRefs(mConsumer));
-    if (NS_SUCCEEDED(rv))
-        mConnection->GetResponseContext(getter_AddRefs(mResponseContext));
-
-    return rv;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -255,24 +245,27 @@ nsHTTPResponseListener::OnStopRequest(nsIChannel* channel,
     }
 
     // Notify the HTTPChannel that the response has completed...
-    NS_ASSERTION(mConnection, "HTTPChannel is null.");
-    if (mConnection) {
-        mConnection->ResponseCompleted(channel, i_Status, i_pMsg);
+    NS_ASSERTION(mChannel, "HTTPChannel is null.");
+    if (mChannel) {
+        mChannel->ResponseCompleted(channel, i_Status, i_pMsg);
     }
 
-    if (mConnection->mOpenObserver) {
-        // we're done processing the data
-        rv = mConnection->mOpenObserver->OnStopRequest(mConnection,
-                                                   mConnection->mOpenContext,
-                                                   i_Status, i_pMsg);
-        if (NS_FAILED(rv)) return rv;
+    // Call the consumer OnStopRequest(...) to end the request...
+    if (mResponseDataListener && !mAborted) {
+      rv = mResponseDataListener->OnStopRequest(mChannel, mChannel->mResponseContext, i_Status, i_pMsg);
+
+      if (NS_FAILED(rv)) {
+        PR_LOG(gHTTPLog, PR_LOG_ERROR, 
+               ("nsHTTPChannel::OnStopRequest(...) [this=%x]."
+                "\tOnStopRequest to consumer failed! Status:%x\n",
+                this, rv));
+      }
     }
 
     // The HTTPChannel is no longer needed...
-    NS_IF_RELEASE(mConnection);
-
-    // The Response Context is no longer needed...
-    mResponseContext = nsnull;
+    mChannel->mRawResponseListener = 0;
+    NS_IF_RELEASE(mChannel);
+    NS_IF_RELEASE(mResponse);
 
     return rv;
 }
@@ -284,35 +277,17 @@ nsresult nsHTTPResponseListener::FireSingleOnData(nsIStreamListener *aListener, 
 {
     nsresult rv;
 
-    mConsumer = aListener;
-    mResponseContext = aContext;
-
     if (mHeadersDone) {
         rv = FinishedResponseHeaders();
         if (NS_FAILED(rv)) return rv;
         
         if (mBytesReceived) {
-            rv = mConsumer->OnDataAvailable(mConnection, mResponseContext,
-                                            mDataStream, 0, mBytesReceived);
+            rv = mResponseDataListener->OnDataAvailable(mChannel, mChannel->mResponseContext,
+                                                        mDataStream, 0, mBytesReceived);
         }
         mDataStream = 0;
     }
     
-    mAsyncReadAfterAsyncOpen = PR_TRUE;
-    return rv;
-}
-
-nsresult nsHTTPResponseListener::FireOnHeadersAvailable()
-{
-    nsresult rv;
-    NS_ASSERTION(mHeadersDone, "Headers have not been received!");
-
-    if (mHeadersDone) {
-        rv = mConnection->OnHeadersAvailable();
-    } else {
-        rv = NS_ERROR_FAILURE;
-    }
-
     return rv;
 }
 
@@ -518,44 +493,14 @@ nsresult nsHTTPResponseListener::FinishedResponseHeaders(void)
 {
   nsresult rv;
 
-  if (mFiredOnHeadersAvailable)
-      return NS_OK;
-
-  rv = NS_OK;
-
-  PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-         ("nsHTTPResponseListener::FinishedResponseHeaders [this=%x].\n",
-          this));
-
-  if (mConnection->mOpenObserver && !mFiredOpenOnStartRequest) {
-      mConnection->mRawResponseListener = this;
-      rv = mConnection->mOpenObserver->OnStartRequest(mConnection, 
-                                                      mConnection->mOpenContext);
-      mFiredOpenOnStartRequest = PR_TRUE;
-
-      // We want to defer header completion notification until the 
-      // caller actually does an AsyncRead();
-      if (!mAsyncReadAfterAsyncOpen)
-          return rv;
-  }
-
-  // Notify the consumer that headers are available...
-  FireOnHeadersAvailable();
-  mFiredOnHeadersAvailable = PR_TRUE;
-
-  //
-  // Check the status code to see if any special processing is necessary.
-  //
-  // If a redirect (ie. 30x) occurs, the mConsumer is released and a new
-  // request is issued...
-  //
-  rv = ProcessStatusCode();
+  rv = mChannel->FinishedResponseHeaders();
+  if (NS_FAILED(rv)) return rv;
 
   //
   // Fire the OnStartRequest notification - now that user data is available
   //
-  if (NS_SUCCEEDED(rv) && mConsumer) {
-    rv = mConsumer->OnStartRequest(mConnection, mResponseContext);
+  if (NS_SUCCEEDED(rv) && mResponseDataListener && !mAborted) {
+    rv = mResponseDataListener->OnStartRequest(mChannel, mChannel->mResponseContext);
     if (NS_FAILED(rv)) {
       PR_LOG(gHTTPLog, PR_LOG_ERROR, 
              ("\tOnStartRequest [this=%x]. Consumer failed!"
@@ -564,169 +509,4 @@ nsresult nsHTTPResponseListener::FinishedResponseHeaders(void)
   } 
 
   return rv;
-}
-
-nsresult nsHTTPResponseListener::ProcessStatusCode(void)
-{
-  nsresult rv = NS_OK;
-  PRUint32 statusCode, statusClass;
-
-  statusCode = 0;
-  rv = mResponse->GetStatus(&statusCode);
-
-  PRBool authAttempt = PR_FALSE;
-  mConnection->GetAuthTriedWithPrehost(&authAttempt);
-  
-  if ( statusCode != 401 && authAttempt) {
-    // we know this auth challenge response was successful. cache any authentication 
-    // now so URLs within this body can use it.
-    nsAuthEngine* pEngine;
-    NS_ASSERTION(mConnection->mHandler, "HTTP handler went away");
-    if (NS_SUCCEEDED(mConnection->mHandler->GetAuthEngine(&pEngine)) )
-      {
-        nsXPIDLCString authString;
-        NS_ASSERTION(mConnection->mRequest, "HTTP request went away");
-        rv = mConnection->mRequest->GetHeader(nsHTTPAtoms::Authorization, 
-                                              getter_Copies(authString));
-        if (NS_FAILED(rv)) return rv;
-
-        nsCOMPtr<nsIURI> luri;
-        rv = mConnection->GetURI(getter_AddRefs(luri));
-        if (NS_FAILED(rv)) return rv;
-              
-        pEngine->SetAuthString(luri, authString);
-      }
-  }
-  
-  statusClass = statusCode / 100;
-
-  switch (statusClass) {
-    //
-    // Informational: 1xx
-    //
-    case 1:
-      PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-             ("ProcessStatusCode [this=%x].\tStatus - Informational: %d.\n",
-              this, statusCode));
-      break;
-
-    //
-    // Successful: 2xx
-    //
-    case 2:
-      PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-             ("ProcessStatusCode [this=%x].\tStatus - Successful: %d.\n",
-              this, statusCode));
-      // If channel's AuthTriedWithPrehost then enter this user/pass and 
-      // authstring into the auth list. 
-      break;
-
-    //
-    // Redirection: 3xx
-    //
-    case 3:
-      PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-             ("ProcessStatusCode [this=%x].\tStatus - Redirection: %d.\n",
-              this, statusCode));
-      rv = ProcessRedirection(statusCode);
-      break;
-
-    //
-    // Client Error: 4xx
-    //
-    case 4:
-      PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-            ("ProcessStatusCode [this=%x].\tStatus - Client Error: %d.\n",
-            this, statusCode));
-      if (401 == statusCode) {
-        rv = ProcessAuthentication(statusCode);
-      }
-      break;
-
-    //
-    // Server Error: 5xo
-    //
-    case 5:
-      PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-             ("ProcessStatusCode [this=%x].\tStatus - Server Error: %d.\n",
-              this, statusCode));
-      break;
-
-    //
-    // Unknown Status Code catagory...
-    //
-    default:
-      PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-             ("ProcessStatusCode [this=%x].\tStatus - Unknown Status Code catagory: %d.\n",
-              this, statusCode));
-      break;
-  }
-
-  return rv;
-}
-
-
-
-nsresult
-nsHTTPResponseListener::ProcessRedirection(PRInt32 aStatusCode)
-{
-  nsresult rv = NS_OK;
-  nsXPIDLCString location;
-
-  mResponse->GetHeader(nsHTTPAtoms::Location, getter_Copies(location));
-
-  if (((301 == aStatusCode) || (302 == aStatusCode)) && (location))
-  {
-      nsCOMPtr<nsIChannel> channel;
-
-      rv = mConnection->Redirect(location, getter_AddRefs(channel));
-      if (NS_SUCCEEDED(rv)) {
-        /*
-           Disconnect the consumer from this response listener...  
-           This allows the entity that follows to be discarded 
-           without notifying the consumer...
-        */
-        mConsumer = 0;
-        mResponseContext = 0;
-      }
-  }
-  return rv;
-}
-
-nsresult
-nsHTTPResponseListener::ProcessAuthentication(PRInt32 aStatusCode)
-{
-    NS_ASSERTION(aStatusCode == 401, // thats all we handle for now... 
-            "We don't handle other types of errors!"); 
-
-    if (aStatusCode != 401)
-        return NS_OK; // Let life go on...
-
-    nsresult rv = NS_OK;
-    nsXPIDLCString challenge; // identifies the auth type and realm.
-
-    if (NS_FAILED(rv = mResponse->GetHeader(
-                nsHTTPAtoms::WWW_Authenticate, 
-                getter_Copies(challenge))))
-     // We can't send user-password without this challenge.
-        return rv;
-    // TODO Add proxy-authenticate header check too...
-     // can we do * on an XPIDLCString? check... todo
-    if (!challenge || !*challenge)
-        return rv;
-
-    nsCOMPtr<nsIChannel> channel;
-    if (NS_FAILED(rv = mConnection->Authenticate(challenge, 
-                    getter_AddRefs(channel))))
-        return rv;
-
-
-    /*
-       Disconnect the consumer from this response listener...  
-       This allows the entity that follows to be discarded 
-       without notifying the consumer...
-    */
-    mConsumer = 0;
-    mResponseContext = 0;
-    return rv;
 }

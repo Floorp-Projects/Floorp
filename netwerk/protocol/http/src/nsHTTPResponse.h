@@ -78,6 +78,7 @@ public:
     nsresult            EmitHeaders(nsCString& aResult);
      
     PRBool              IsStale(PRBool aUseHeuristicExpiration);
+    nsresult            ParseDateHeader(nsIAtom *aAtom, PRTime *aResultTime, PRBool *aHeaderIsPresent);
  
 protected:
     virtual ~nsHTTPResponse();

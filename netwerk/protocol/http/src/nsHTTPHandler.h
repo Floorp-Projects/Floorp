@@ -46,6 +46,7 @@
 #include "nsAuthEngine.h"
 #include "nsAuthEngine.h"
 #include "nsIProxy.h"
+#include "prtime.h"
 
 //Forward decl.
 class nsHashtable;
@@ -161,6 +162,8 @@ public:
         *o_AuthEngine = &mAuthEngine;
         return NS_OK;
     };
+  
+    PRTime GetSessionStartTime() { return mSessionStartTime; }
 
 protected:
 
@@ -181,6 +184,7 @@ protected:
     char*           mProxy;
     PRInt32         mProxyPort;
     PRBool          mUseProxy; 
+    PRTime          mSessionStartTime;
 };
 
 #endif /* _nsHTTPHandler_h_ */

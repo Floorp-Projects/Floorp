@@ -63,10 +63,15 @@ public:
     NS_DECL_NSISTREAMLISTENER
 
     nsresult FireSingleOnData(nsIStreamListener *aListener, nsISupports *aContext);
+    void     Abort() { mAborted = PR_TRUE; }
+    void     SetResponseDataListener(nsIStreamListener *aListener) {
+      mResponseDataListener = aListener;
+    }
 
 protected:
     // nsHTTPResponseListener methods...
     nsresult FireOnHeadersAvailable();
+    nsresult FinishedResponseHeaders();
 
     nsresult ParseStatusLine(nsIBufferInputStream* in, PRUint32 aLength,
                              PRUint32 *aBytesRead);
@@ -74,26 +79,14 @@ protected:
     nsresult ParseHTTPHeader(nsIBufferInputStream* in, PRUint32 aLength, 
                              PRUint32* aBytesRead);
 
-    nsresult FinishedResponseHeaders();
-
-    nsresult ProcessHeader(nsIAtom* aHeader, nsCString& aValue, nsHTTPResponse& aResponse);
-    nsresult ProcessStatusCode();
-    nsresult ProcessRedirection(PRInt32 aStatusCode);
-	nsresult ProcessAuthentication(PRInt32 aStatusCode);
-
 protected:
-
+    nsCOMPtr<nsIStreamListener> mResponseDataListener;
     nsCString                   mHeaderBuffer;
-    nsHTTPChannel*      	    mConnection;
-    nsCOMPtr<nsIStreamListener> mConsumer;
-    PRBool              	    mFirstLineParsed;
-    PRBool              	    mHeadersDone;
-    PRBool                    mAsyncReadAfterAsyncOpen; // we're only listening for data
-    PRBool                    mFiredOnHeadersAvailable; // Called OnHeadersAvailable()
-    PRBool                    mFiredOpenOnStartRequest; // Called mOpenObserver->OnStartRequest
-    PRUint32            	    mReadLength; // Already read
-    nsHTTPResponse*     	    mResponse;
-    nsCOMPtr<nsISupports> 	    mResponseContext;
+    nsHTTPChannel*      	      mChannel;
+    nsHTTPResponse*             mResponse;
+    PRBool              	      mFirstLineParsed;
+    PRBool              	      mHeadersDone;
+    PRBool                      mAborted;
 
     nsCOMPtr<nsIInputStream>    mDataStream;
     PRUint32                    mBytesReceived; 
