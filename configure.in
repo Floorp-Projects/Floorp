@@ -608,6 +608,10 @@ if test "$GNU_CC"; then
     DSO_LDOPTS='-shared -Wl,-h -Wl,$@'
     DSO_CFLAGS=''
     DSO_PIC_CFLAGS='-fPIC'
+    _MOZ_RTTI_FLAGS_ON=${_COMPILER_PREFIX}-frtti
+    _MOZ_RTTI_FLAGS_OFF=${_COMPILER_PREFIX}-fno-rtti
+    _MOZ_EXCEPTIONS_FLAGS_ON='-fhandle-exceptions'
+    _MOZ_EXCEPTIONS_FLAGS_OFF='-fno-handle-exceptions'
 
     # Turn on GNU specific features
     # -Wall - turn on all warnings
@@ -731,6 +735,7 @@ case "$target" in
     AC_CHECK_LIB(bind,main,LIBS="$LIBS -lbind")
     _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wno-multichar"
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-multichar"
+    _MOZ_USE_RTTI=1
     ;;
 
 *-bsdi*)
@@ -832,6 +837,8 @@ case "$target" in
     DSO_LDOPTS='-elf -shared'
     MKSHLIB='$(CCC) $(CXXFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
     MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
+    _MOZ_EXCEPTIONS_FLAGS_OFF="-LANG:exceptions=OFF"
+    _MOZ_EXCEPTIONS_FLAGS_ON="-LANG:exceptions=ON"
     if test "$GNU_CC"; then
        MKSHLIB_FORCE_ALL='-Wl,-all'
        MKSHLIB_UNFORCE_ALL='-Wl,-none'
@@ -2134,8 +2141,6 @@ dnl By default, turn rtti and exceptions off on g++/egcs
 dnl ========================================================
 if test "$GNU_CXX"; then
 
-  _MOZ_RTTI_FLAGS=${_COMPILER_PREFIX}-fno-rtti
-
   AC_MSG_CHECKING(for C++ exceptions flag)
 
   dnl They changed -f[no-]handle-exceptions to -f[no-]exceptions in g++ 2.8
@@ -2153,10 +2158,8 @@ if test "$GNU_CXX"; then
   rm -f conftest*])
 
   AC_MSG_RESULT($ac_cv_cxx_exceptions_flags)
-  _MOZ_EXCEPTIONS_FLAGS=$ac_cv_cxx_exceptions_flags
-fi
-if test "$MIPSPRO_CXX"; then
-  _MOZ_EXCEPTIONS_FLAGS="-LANG:exceptions=OFF"
+  _MOZ_EXCEPTIONS_FLAGS_OFF=$ac_cv_cxx_exceptions_flags
+  _MOZ_EXCEPTIONS_FLAGS_ON=`echo $ac_cv_cxx_exceptions_flags | sed 's|no-||'`
 fi
 
 dnl ========================================================
@@ -3984,26 +3987,34 @@ if test "$_IGNORE_LONG_LONG_WARNINGS"; then
 fi
 
 dnl ========================================================
-dnl C++ rtti (g++/egcs only - for now)
+dnl C++ rtti
 dnl Should be smarter and check that the compiler does indeed have rtti
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(cpp-rtti,
 [  --enable-cpp-rtti       Enable C++ RTTI ],
-    _MOZ_RTTI_FLAGS=-frtti)
+[ _MOZ_USE_RTTI=1 ],
+[ _MOZ_USE_RTTI= ])
+
+if test "$_MOZ_USE_RTTI"; then
+   _MOZ_RTTI_FLAGS=$_MOZ_RTTI_FLAGS_ON
+else
+   _MOZ_RTTI_FLAGS=$_MOZ_RTTI_FLAGS_OFF
+fi
 
 dnl ========================================================
 dnl C++ exceptions (g++/egcs only - for now)
 dnl Should be smarter and check that the compiler does indeed have exceptions
 dnl ========================================================
-_MOZ_CPP_EXCEPTIONS=
 MOZ_ARG_ENABLE_BOOL(cpp-exceptions,
 [  --enable-cpp-exceptions Enable C++ exceptions ],
-[ if test "$MIPSPRO_CXX"; then
-    _MOZ_EXCEPTIONS_FLAGS=-LANG:exceptions=ON
+[ _MOZ_CPP_EXCEPTIONS=1 ],
+[ _MOZ_CPP_EXCEPTIONS= ])
+
+if test "$_MOZ_CPP_EXCEPTIONS"; then
+    _MOZ_EXCEPTIONS_FLAGS=$_MOZ_EXCEPTIONS_FLAGS_ON
 else
-    _MOZ_EXCEPTIONS_FLAGS=-fexceptions 
+    _MOZ_EXCEPTIONS_FLAGS=$_MOZ_EXCEPTIONS_FLAGS_OFF
 fi
-_MOZ_CPP_EXCEPTIONS=1 ])
 
 # Irix & OSF native compilers do not like exception declarations 
 # when exceptions are disabled
