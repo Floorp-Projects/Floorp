@@ -57,6 +57,10 @@ public:
   // When modifying this list, also modify nsXPLookAndFeel::sColorPrefs
   // in widget/src/xpwidgts/nsXPLookAndFeel.cpp.
   typedef enum {
+
+    // WARNING : NO NEGATIVE VALUE IN THIS ENUMERATION
+    // see patch in bug 57757 for more information
+
     eColor_WindowBackground,
     eColor_WindowForeground,
     eColor_WidgetBackground,
