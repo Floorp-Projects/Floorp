@@ -41,6 +41,9 @@
 #define VIEWER_DEMO10           40021
 #define VIEWER_DEMO11           40022
 #define VIEWER_DEMO12           40023
+#define VIEWER_DEMO13           40024
+#define VIEWER_DEMO14           40025
+#define VIEWER_DEMO15           40026
 
 #define VIEWER_VISUAL_DEBUGGING     40028
 #define VIEWER_REFLOW_TEST          40029

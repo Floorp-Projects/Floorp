@@ -74,6 +74,9 @@ resource 'MENU' (2000+3, "demo")
 		"demo #8", noicon, nokey, nomark, plain;
 		"demo #9", noicon, nokey, nomark, plain;
 		"demo #10", noicon, nokey, nomark, plain;
+		"demo #11", noicon, nokey, nomark, plain;
+		"demo #12", noicon, nokey, nomark, plain;
+		"demo #13", noicon, nokey, nomark, plain;
 	}
 };
 
