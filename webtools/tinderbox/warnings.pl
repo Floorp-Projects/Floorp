@@ -390,7 +390,7 @@ sub print_html_by_who {
         $total_unignored_count total warnings
       </font><p>
     
-      <table cellspacing=0 cellpadding=0 border=0><tr bgcolor="#F0A000"><td>
+      <table cellspacing=0 cellpadding=0 border=0><tr bgcolor="#ededed"><td>
       <table cellpadding=2 cellspacing=2 border=0><tr bgcolor="#FFFFFF">
         <th colspan=2><font size="+1" face="Helvetica,Arial">
           Summary</font></th></tr>
