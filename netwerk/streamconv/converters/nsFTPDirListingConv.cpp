@@ -96,6 +96,8 @@ DetermineServerType (nsCString &fromMIMEString, const PRUnichar *aFromType)
         return CMS;
     } else if (-1 != fromMIMEString.Find("tcpc")) {
         return TCPC;
+    } else if (-1 != fromMIMEString.Find("os2")) {
+        return OS_2;
     }
 
     return GENERIC;
@@ -926,6 +928,65 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCAutoString &aString) {
             }
             break; //END EPLF
         }
+
+        case OS_2:
+        {
+            if(!PL_strncmp(line, "total ", 6)
+               || (PL_strnstr(line, "not authorized") != NULL)
+               || (PL_strnstr(line, "Path not found") != NULL)
+               || (PL_strnstr(line, "No Files") != NULL)) {
+                NS_DELETEXPCOM(thisEntry);
+                if (cr)
+                    line = eol+2;
+                else
+                    line = eol+1;
+                continue;
+            }
+
+            char *name;
+            nsCAutoString str;
+
+            if(PL_strnstr(line, "DIR")) {
+                thisEntry->mType = Dir;
+                thisEntry->mSupressSize = PR_TRUE;
+            }
+            else
+                thisEntry->mType = File;
+
+            PRInt32 error;
+            line[18] = '\0';
+            str = line;
+            str.StripWhitespace();
+            thisEntry->mContentLen = str.ToInteger(&error, 10);
+
+            InitPRExplodedTime(thisEntry->mMDTM);
+            line[37] = '\0';
+            str = &line[35];
+            thisEntry->mMDTM.tm_month = str.ToInteger(&error, 10) - 1;
+
+            line[40] = '\0';
+            str = &line[38];
+            thisEntry->mMDTM.tm_mday = str.ToInteger(&error, 10);
+
+            line[43] = '\0';
+            str = &line[41];
+            thisEntry->mMDTM.tm_year = str.ToInteger(&error, 10);
+
+            line[48] = '\0';
+            str = &line[46];
+            thisEntry->mMDTM.tm_hour = str.ToInteger(&error, 10);
+
+            line[51] = '\0';
+            str = &line[49];
+            thisEntry->mMDTM.tm_min = str.ToInteger(&error, 10);
+
+            name = &line[53];
+            escName = nsEscape(name, url_Path);
+            thisEntry->mName = escName;
+
+            nsMemory::Free(escName);
+            break;
+        }	
 
         default:
         {

@@ -72,6 +72,7 @@ typedef enum _FTP_Server_Type {
     VMS,
     NT,
     EPLF,
+    OS_2,
     ERROR_TYPE
 } FTP_Server_Type;
 

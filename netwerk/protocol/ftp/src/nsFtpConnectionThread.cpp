@@ -1079,6 +1079,10 @@ nsFtpState::R_syst() {
         {
             mServerType = FTP_NT_TYPE;
         }
+        else if ( mResponseMsg.Find("OS/2", PR_TRUE) > -1)
+        {
+            mServerType = FTP_OS2_TYPE;
+        }
         else
         {
             NS_ASSERTION(0, "Server type list format unrecognized.");
@@ -1943,6 +1947,9 @@ nsFtpState::SetDirMIMEType(nsString& aString) {
         break;
     case FTP_NT_TYPE:
         aString.Append(NS_LITERAL_STRING("nt"));
+        break;
+    case FTP_OS2_TYPE:
+        aString.Append(NS_LITERAL_STRING("os2"));
         break;
     default:
         aString.Append(NS_LITERAL_STRING("generic"));

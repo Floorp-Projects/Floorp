@@ -53,6 +53,7 @@
 #define FTP_GENERIC_TYPE     0
 #define FTP_UNIX_TYPE        1
 #define FTP_NT_TYPE          9
+#define FTP_OS2_TYPE         11
 
 // ftp states
 typedef enum _FTP_STATE {

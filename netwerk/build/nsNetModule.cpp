@@ -205,6 +205,7 @@ nsresult NS_NewStreamConv(nsStreamConverterService **aStreamConv);
 
 #define FTP_UNIX_TO_INDEX            "?from=text/ftp-dir-unix&to=application/http-index-format"
 #define FTP_NT_TO_INDEX              "?from=text/ftp-dir-nt&to=application/http-index-format"
+#define FTP_OS2_TO_INDEX              "?from=text/ftp-dir-os2&to=application/http-index-format"
 #define GOPHER_TO_INDEX              "?from=text/gopher-dir&to=application/http-index-format"
 #define INDEX_TO_HTML                "?from=application/http-index-format&to=text/html"
 #define MULTI_MIXED_X                "?from=multipart/x-mixed-replace&to=*/*"
@@ -233,6 +234,7 @@ static PRUint32 g_StreamConverterCount = 15;
 static char *g_StreamConverterArray[] = {
         FTP_UNIX_TO_INDEX,
         FTP_NT_TO_INDEX,
+        FTP_OS2_TO_INDEX,
         GOPHER_TO_INDEX,
         INDEX_TO_HTML,
         MULTI_MIXED_X,
@@ -704,6 +706,12 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
     { "FTPDirListingConverter", 
       NS_FTPDIRLISTINGCONVERTER_CID,
       NS_ISTREAMCONVERTER_KEY FTP_NT_TO_INDEX, 
+      CreateNewFTPDirListingConv
+    },
+
+    { "FTPDirListingConverter", 
+      NS_FTPDIRLISTINGCONVERTER_CID,
+      NS_ISTREAMCONVERTER_KEY FTP_OS2_TO_INDEX, 
       CreateNewFTPDirListingConv
     },
 
