@@ -158,7 +158,6 @@ sub execute_tests {
         my $expected_exit = ($test =~ /\-n\.js$/) ? 3 : 0;
         my ($got_exit, $exit_signal);
         my $failure_lines;
-        my $bug_line;
         my $bug_number;
         my $status_lines;
 
@@ -192,7 +191,7 @@ sub execute_tests {
              &xp_path($opt_suite_path . $test));
 
         open (OUTPUT, $shell_command . $file_param . 
-              &xp_path($opt_suite_path . $test) . $redirect_command . " |");	
+              &xp_path($opt_suite_path . $test) . $redirect_command . " |");
         @output = <OUTPUT>;
         close (OUTPUT);
         
@@ -209,7 +208,6 @@ sub execute_tests {
         }
 
         $failure_lines = "";
-        $bug_line = "";
         $bug_number = "";
         $status_lines = "";
 
@@ -232,9 +230,7 @@ sub execute_tests {
             # XXX modified to allow for multiple.
             if ($line =~ /bugnumber\s*\:?\s*(.*)/i) {
                 $1 =~ /(\n+)/;
-                $bug_number = "Bug Number $1";
-                $bug_line = "<a href='$opt_bug_url$1' target='other_window'>" .
-                  "$bug_number</a>";
+                $bug_number = $1;
             }
 
             # and watch for status
@@ -254,12 +250,13 @@ sub execute_tests {
                              "$expected_exit, got $got_exit\n" .
                              "Testcase terminated with signal $exit_signal\n" .
                              "Complete testcase output was:\n" .
-                             join ("\n",@output), $bug_number, $bug_line);
+                             join ("\n",@output), $bug_number);
         } elsif ($failure_lines) {
             # only offending lines if exit codes matched
-            &report_failure ($test, "$status_lines\nFailure messages were:\n$failure_lines",
-                             $bug_number, $bug_line);
-        }        
+            &report_failure ($test, "$status_lines\n".
+                             "Failure messages were:\n$failure_lines",
+                             $bug_number);
+        }
         
         &dd ("exit code $got_exit, exit signal $exit_signal.");
 
@@ -534,13 +531,13 @@ sub get_engine_command {
         $retval = &get_rhino_engine_command;
     } elsif ($opt_engine_type eq "xpcshell") {
         &dd ("getting xpcshell engine command.");
-        $retval = &get_xpc_engine_command;	
+        $retval = &get_xpc_engine_command;
     } elsif ($opt_engine_type =~ /^lc(opt|debug)$/) {
         &dd ("getting liveconnect engine command.");
-        $retval = &get_lc_engine_command;	
+        $retval = &get_lc_engine_command;   
     } elsif ($opt_engine_type =~ /^sm(opt|debug)$/) {
         &dd ("getting spidermonkey engine command.");
-        $retval = &get_sm_engine_command;	
+        $retval = &get_sm_engine_command;
     } else {
         die ("Unknown engine type selected, '$opt_engine_type'.\n");
     }
@@ -1087,24 +1084,31 @@ sub get_js_files {
 }
 
 sub report_failure {
-    my ($test, $message, $bug_number, $bug_line) = @_;
+    my ($test, $message, $bug_number) = @_;
+    my $bug_line = "";
 
     $failures_reported++;
 
     $message =~ s/\n+/\n/g;
     $test =~ s/\:/\//g;
-    
-     if ($opt_console_failures) {
+
+    if ($opt_console_failures) {
         if($bug_number) {
-            print STDERR ("*-* Testcase $test failed:\n$bug_number\n$message\n");
+            print STDERR ("*-* Testcase $test failed:\nBug Number $bug_number".
+                          "\n$message\n");
         } else {
             print STDERR ("*-* Testcase $test failed:\n$message\n");
         }
     }
 
     $message =~ s/\n/<br>\n/g;
-
     $html .= "<a name='failure$failures_reported'></a>";
+
+    if ($bug_number) {
+        $bug_line = "<a href='$opt_bug_url$bug_number' target='other_window'>".
+                    "Bug Number $bug_number</a>";
+    }
+
     if ($opt_lxr_url) {
         $test =~ /\/?([^\/]+\/[^\/]+\/[^\/]+)$/;
         $test = $1;
