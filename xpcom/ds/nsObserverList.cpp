@@ -60,16 +60,16 @@ nsObserverList::~nsObserverList(void)
 nsresult
 nsObserverList::AddObserver(nsIObserver* anObserver, PRBool ownsWeak)
 {
-	nsresult rv;
-	PRBool inserted;
+    nsresult rv;
+    PRBool inserted;
     
     NS_ENSURE_ARG(anObserver);
-  
-	nsAutoLock lock(mLock);
 
-	if (!mObserverList) {
+    nsAutoLock lock(mLock);
+
+    if (!mObserverList) {
         rv = NS_NewISupportsArray(getter_AddRefs(mObserverList));
-		if (NS_FAILED(rv)) return rv;
+        if (NS_FAILED(rv)) return rv;
     }
 
 #ifdef NS_WEAK_OBSERVERS
@@ -92,8 +92,8 @@ nsObserverList::AddObserver(nsIObserver* anObserver, PRBool ownsWeak)
 
     inserted = mObserverList->AppendElement(observerRef); 
 #else
-	if(*anObserver)
-		inserted = mObserverList->AppendElement(*anObserver);
+    if (*anObserver)
+        inserted = mObserverList->AppendElement(*anObserver);
 #endif
     return inserted ? NS_OK : NS_ERROR_FAILURE;
 }
@@ -105,23 +105,27 @@ nsObserverList::RemoveObserver(nsIObserver* anObserver)
     
     NS_ENSURE_ARG(anObserver);
 
- 	nsAutoLock lock(mLock);
+    nsAutoLock lock(mLock);
 
     if (!mObserverList)
-        return NS_ERROR_FAILURE;
+       return NS_ERROR_FAILURE;
     
 #ifdef NS_WEAK_OBSERVERS
     nsCOMPtr<nsISupportsWeakReference> weakRefFactory = do_QueryInterface(anObserver);
     nsCOMPtr<nsISupports> observerRef;
-    if ( weakRefFactory )
+    if (weakRefFactory) {
         observerRef = getter_AddRefs(NS_STATIC_CAST(nsISupports*, NS_GetWeakReference(weakRefFactory)));
-    else
+        if (observerRef)
+            removed = mObserverList->RemoveElement(observerRef);
+        if (!removed)
+            observerRef = anObserver;
+    } else
         observerRef = anObserver;
-    
-	if(observerRef)
-		removed = mObserverList->RemoveElement(observerRef);  
+
+    if (!removed && observerRef)
+        removed = mObserverList->RemoveElement(observerRef);  
 #else
-    if(*anObserver)
+    if (*anObserver)
         removed = mObserverList->RemoveElement(*anObserver);
 #endif
     return removed ? NS_OK : NS_ERROR_FAILURE;
