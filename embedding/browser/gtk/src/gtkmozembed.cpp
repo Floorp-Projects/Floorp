@@ -588,8 +588,10 @@ gtk_moz_embed_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
 
   widget->allocation = *allocation;
 
+#ifdef DEBUG_blizzard
   g_print("gtk_moz_embed_size allocate for %p to %d %d %d %d\n", widget, 
 	  allocation->x, allocation->y, allocation->width, allocation->height);
+#endif
 
   if (GTK_WIDGET_REALIZED(widget))
   {
