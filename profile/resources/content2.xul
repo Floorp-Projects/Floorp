@@ -32,7 +32,7 @@ function commit()
 	parent.profDir = element.value;
 }
 
-setTimeout("InitializeValues()", 0);
+//setTimeout("InitializeValues()", 0);
 </script>
 
 
@@ -45,7 +45,7 @@ You may use the name provided here or use one of your own.
 <p>
 Enter New Profile name 
 <br></br>
-<input type="text" id="ProfileName" size="30"/>
+<input type="text" id="ProfileName" value="mozProfile" size="30"/>
 </p>
 
 <p>
@@ -58,8 +58,5 @@ directory (by leaving the box blank).
 <input type="text" id="ProfileDir" size="30"/>
 </p>
 
-
-<p>
-Please click Next to continue
-</p>
 </xul:window>
+
