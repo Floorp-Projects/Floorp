@@ -370,7 +370,8 @@ nsHttpPipeline::SetConnection(nsAHttpConnection *conn)
     // no need to be inside the lock
     for (PRInt8 i=0; i<mNumTrans; ++i) {
         NS_ASSERTION(mTransactionQ[i], "no transaction");
-        mTransactionQ[i]->SetConnection(this);
+        if (mTransactionQ[i])
+            mTransactionQ[i]->SetConnection(this);
     }
 }
 
@@ -435,15 +436,17 @@ nsHttpPipeline::OnDataWritable(nsIOutputStream *stream)
 
         // fill the pipe
         for (PRInt32 i=0; i<mNumTrans; ++i) {
-            NS_ASSERTION(mTransactionQ[i], "no transaction");
-            while (1) {
-                rv = mTransactionQ[i]->OnDataWritable(outputStream);
-                if (rv == NS_BASE_STREAM_CLOSED)
-                    break; // advance to next transaction
-                if (NS_FAILED(rv))
-                    return rv; // something bad happened!!
-                // else, there's more to write (the transaction may be
-                // writing in small chunks).
+            // maybe this transaction has already been canceled...
+            if (mTransactionQ[i]) {
+                while (1) {
+                    rv = mTransactionQ[i]->OnDataWritable(outputStream);
+                    if (rv == NS_BASE_STREAM_CLOSED)
+                        break; // advance to next transaction
+                    if (NS_FAILED(rv))
+                        return rv; // something bad happened!!
+                    // else, there's more to write (the transaction may be
+                    // writing in small chunks).
+                }
             }
         }
     }
@@ -591,9 +594,11 @@ nsHttpPipeline::OnStopTransaction(nsresult status)
         NS_ASSERTION(NS_FAILED(status), "unexpected cancelation status");
         NS_ASSERTION(mCurrentReader == -1, "unexpected reader");
         for (PRInt8 i=0; i<mNumTrans; ++i) {
-            NS_ASSERTION(mTransactionQ[i], "no transaction");
-            mTransactionQ[i]->OnStopTransaction(status);
-            DropTransaction_Locked(i);
+            // maybe this transaction has already been canceled...
+            if (mTransactionQ[i]) {
+                mTransactionQ[i]->OnStopTransaction(status);
+                DropTransaction_Locked(i);
+            }
         }
     }
 
@@ -677,8 +682,11 @@ PRUint32
 nsHttpPipeline::GetRequestSize_Locked()
 {
     PRUint32 size = 0;
-    for (PRInt8 i=0; i<mNumTrans; ++i)
-        size += mTransactionQ[i]->GetRequestSize();
+    for (PRInt8 i=0; i<mNumTrans; ++i) {
+        // maybe this transaction has already been canceled...
+        if (mTransactionQ[i])
+            size += mTransactionQ[i]->GetRequestSize();
+    }
     LOG(("  request-size=%u\n", size));
     return size; 
 }
