@@ -49,6 +49,7 @@ public:
 
   // nsIMenuBar Methods
   NS_IMETHOD GetParent(nsIWidget *&aParent);
+  NS_IMETHOD SetParent(nsIWidget * aParent);
   NS_IMETHOD AddMenu(nsIMenu * aMenu);
   NS_IMETHOD GetMenuCount(PRUint32 &aCount);
   NS_IMETHOD GetMenuAt(const PRUint32 aCount, nsIMenu *& aMenu);

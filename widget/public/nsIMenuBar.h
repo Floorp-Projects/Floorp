@@ -51,6 +51,12 @@ class nsIMenuBar : public nsISupports {
     NS_IMETHOD GetParent(nsIWidget *&aParent) = 0;
 
    /**
+    * Set the MenuBar's Parent
+    *
+    */
+    NS_IMETHOD SetParent(nsIWidget *aParent) = 0;
+
+   /**
     * Adds the Menu 
     *
     */

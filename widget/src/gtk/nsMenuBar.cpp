@@ -89,8 +89,7 @@ nsMenuBar::~nsMenuBar()
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBar::Create(nsIWidget *aParent)
 {
-  mParent = aParent;
-  NS_IF_ADDREF(mParent);
+  SetParent(aParent);
   mMenuBar = gtk_menu_bar_new();
   mParent->SetMenuBar(this);
   gtk_widget_show(mMenuBar);
@@ -103,6 +102,16 @@ NS_METHOD nsMenuBar::GetParent(nsIWidget *&aParent)
 {
   aParent = mParent;
   NS_IF_ADDREF(aParent);
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuBar::SetParent(nsIWidget *aParent)
+{
+
+  NS_IF_RELEASE(mParent);
+  mParent = aParent;
+  NS_IF_ADDREF(mParent);
   return NS_OK;
 }
 
@@ -189,4 +198,3 @@ nsEventStatus nsMenuBar::MenuDeselected(const nsMenuEvent & aMenuEvent)
 {
   return nsEventStatus_eIgnore;
 }
-
