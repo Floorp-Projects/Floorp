@@ -1,0 +1,45 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "nsISupports.idl"
+interface nsIChannel;
+
+[scriptable, uuid(2F0F927A-8677-11d3-989D-001083010E9B)]
+interface nsIContentHandler : nsISupports
+{
+  /* CanHandleContent returns true if this content handler wants
+     to handle this particular content type and false otherwise.
+     aContentType --> is the content type of the document
+     aCommand --> is a layout specific action command i.e. "view"
+     aWindowTarget --> can be null for the normal case. It refers to the
+                       target window name the content needs to be displayed in.
+  */
+  void CanHandleContent(in string aContentType,
+                        in string aCommand, 
+                        in string aWindowTarget, 
+                        out boolean aCanHandle);
+
+  /* HandleContent works as the name implies =). aChannel is an open channel
+     whose content type is already known (aContentType) */
+  void HandleContent(in string aContentType,
+                     in string aCommand,
+                     in string aWindowTarget,
+                     in nsIChannel aChannel);
+  
+  attribute nsIContentHandler parentHandler; 
+};
