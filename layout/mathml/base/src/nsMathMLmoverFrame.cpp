@@ -208,6 +208,12 @@ XXX The winner is the outermost in conflicting settings like these:
        NS_MATHML_DISPLAYSTYLE | compress);
   }
 
+  // disable the strecth-all flag if we are going to act like an overscript
+  if ( NS_MATHML_IS_MOVABLELIMITS(mPresentationData.flags) &&
+      !NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags)) {
+    mEmbellishData.flags &= ~NS_MATHML_STRETCH_ALL_CHILDREN_HORIZONTALLY;
+  }
+
   return rv;
 }
 
