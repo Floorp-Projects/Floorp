@@ -374,6 +374,26 @@ nsMsgIdentity::SetSignature(nsIFileSpec *sig)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsMsgIdentity::ClearAllValues()
+{
+    nsresult rv;
+    nsCAutoString rootPref("mail.identity.");
+    rootPref += m_identityKey;
+
+    rv = m_prefs->EnumerateChildren(rootPref, clearPrefEnum, (void *)m_prefs);
+
+    return rv;
+}
+
+void
+nsMsgIdentity::clearPrefEnum(const char *aPref, void *aClosure)
+{
+    nsIPref *prefs = (nsIPref *)aClosure;
+    prefs->ClearUserPref(aPref);
+}
+
+
 NS_IMPL_GETSET(nsMsgIdentity, VCard, nsIMsgVCard*, m_vCard);
   
 NS_IMPL_GETTER_STR(nsMsgIdentity::GetKey, m_identityKey);

@@ -73,6 +73,8 @@ protected:
   
   nsresult CreateRootFolder();
 
+  // pref callback to clear the user prefs
+  static void clearPrefEnum(const char  *aPref, void *aClosure);
 };
 
 #endif // nsMsgIncomingServer_h__

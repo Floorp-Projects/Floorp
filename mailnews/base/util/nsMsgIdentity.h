@@ -27,12 +27,6 @@
 #include "nsIPref.h"
 #include "msgCore.h"
 
-///////////////////////////////////////////////////////////////////////////////////
-// an identity is an object designed to encapsulate all the information we need 
-// to know about a user identity. I expect this interface to grow and change a lot
-// as we flesh out our thoughts on multiple identities and what properties go into
-// these identities.
-//////////////////////////////////////////////////////////////////////////////////
 
 
 class NS_MSG_BASE nsMsgIdentity : public nsIMsgIdentity
@@ -71,6 +65,9 @@ protected:
   nsresult getDefaultIntPref(const char *pref, PRInt32 *);
   nsresult setIntPref(const char *pref, PRInt32);
 
+private:
+  static void clearPrefEnum(const char *aPref, void *aClosure);
+  
 };
 
 

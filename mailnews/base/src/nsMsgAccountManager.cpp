@@ -502,7 +502,33 @@ nsMsgAccountManager::RemoveAccount(nsIMsgAccount *aAccount)
     NS_IF_RELEASE(removedServer);
     
     NotifyServerUnloaded(server);
+
+    // now clear out the server once and for all.
+    // watch out! could be scary
+    server->ClearAllValues();
   }
+  nsCOMPtr<nsISupportsArray> identityArray;
+  
+  rv = aAccount->GetIdentities(getter_AddRefs(identityArray));
+  if (NS_SUCCEEDED(rv)) {
+
+    PRUint32 count=0;
+    identityArray->Count(&count);
+
+    PRUint32 i;
+    for (i=0; i<count; i++) {
+      nsCOMPtr<nsIMsgIdentity> identity;
+      rv = identityArray->QueryElementAt(i, NS_GET_IID(nsIMsgIdentity),
+                                         (void **)getter_AddRefs(identity));
+      if (NS_SUCCEEDED(rv))
+        // clear out all identity information.
+        // watch out! could be scary
+        identity->ClearAllValues();
+    }
+
+  }
+
+  aAccount->ClearAllValues();
   return NS_OK;
 }
 

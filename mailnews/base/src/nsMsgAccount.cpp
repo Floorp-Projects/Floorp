@@ -354,3 +354,21 @@ nsMsgAccount::ToString(PRUnichar **aResult)
 }
 
 
+NS_IMETHODIMP
+nsMsgAccount::ClearAllValues()
+{
+    nsresult rv;
+    nsCAutoString rootPref("mail.account.");
+    rootPref += m_accountKey;
+
+    rv = m_prefs->EnumerateChildren(rootPref, clearPrefEnum, (void *)m_prefs);
+
+    return rv;
+}
+
+void
+nsMsgAccount::clearPrefEnum(const char *aPref, void *aClosure)
+{
+    nsIPref *prefs = (nsIPref *)aClosure;
+    prefs->ClearUserPref(aPref);
+}

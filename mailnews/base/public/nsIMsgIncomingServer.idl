@@ -139,6 +139,12 @@ interface nsIMsgIncomingServer : nsISupports {
   nsIFileSpec getFileValue(in string attr);
   void setFileValue(in string attr, in nsIFileSpec value);
 
+  /**
+   * this is really dangerous. this destroys all pref values
+   * do not call this unless you know what you're doing!
+   */
+  void clearAllValues();
+  
   attribute boolean valid;
   
   wstring toString();

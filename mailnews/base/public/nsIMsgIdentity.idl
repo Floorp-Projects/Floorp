@@ -93,6 +93,12 @@ interface nsIMsgIdentity : nsISupports {
    * to ask the user to complete all the fields
    */
   attribute boolean valid;
+
+  /**
+   * this is really dangerous. this destroys all pref values
+   * do not call this unless you know what you're doing!
+   */
+  void clearAllValues();
   
   wstring toString();
 };

@@ -750,6 +750,26 @@ nsMsgIncomingServer::Equals(nsIMsgIncomingServer *server, PRBool *_retval)
     return rv;
 }
 
+NS_IMETHODIMP
+nsMsgIncomingServer::ClearAllValues()
+{
+    nsresult rv;
+    nsCAutoString rootPref("mail.server.");
+    rootPref += m_serverKey;
+
+    rv = m_prefs->EnumerateChildren(rootPref, clearPrefEnum, (void *)m_prefs);
+
+    return rv;
+}
+
+void
+nsMsgIncomingServer::clearPrefEnum(const char *aPref, void *aClosure)
+{
+    nsIPref *prefs = (nsIPref *)aClosure;
+    prefs->ClearUserPref(aPref);
+}
+
+
 // use the convenience macros to implement the accessors
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, HostName, "hostname");
 NS_IMPL_SERVERPREF_INT(nsMsgIncomingServer, Port, "port");
