@@ -707,6 +707,7 @@ NS_IMETHODIMP	nsWindow::Update(nsIRenderingContext* aRenderingContext)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
+	Invalidate(PR_FALSE);
 	return NS_OK;
 }
 
