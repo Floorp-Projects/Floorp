@@ -51,59 +51,92 @@ namespace ICG {
     using namespace JSClasses;
     
 
-    struct VariableList {
+    struct VariableList {       // Maps from variable (parameter) name to a TypedRegister.
+                                // But because we also want to map from a register number to
+                                // it's type, we keep the TypedRegsters in a separate array and
+                                // just store the index in the name map.
 
         typedef std::map<String, uint32, std::less<String> > VariableMap;
+        typedef VariableMap::value_type MapValue;
+
         VariableMap variableMap;
-
-        std::vector<TypedRegister> registerMap;
+        std::vector<TypedRegister> registerList;
     
-        void setRegisterForVariable(const StringAtom& name, TypedRegister r) 
-        {
-            VariableMap::iterator i = variableMap.find(name);
-            ASSERT(i != variableMap.end());
-            registerMap[(*i).second] = r;
-        }
-
         TypedRegister findVariable(const StringAtom& name)
         {
             VariableMap::iterator i = variableMap.find(name);
-            return (i == variableMap.end()) ? TypedRegister(NotARegister, &None_Type) : registerMap[(*i).second];
+            return (i == variableMap.end()) 
+                        ? TypedRegister(NotARegister, &None_Type) 
+                        : registerList[i->second];
         }
 
         void add(const StringAtom& name, TypedRegister r)
         {
-            variableMap[name] = r.first;
-            registerMap.resize(r.first + 1);
-            registerMap[r.first] = r;
+            variableMap.insert(MapValue(name, r.first));
+            registerList.resize(r.first + 1);
+            registerList[r.first] = r;
         }
 
         TypedRegister getRegister(uint32 i)
         {
-            ASSERT(i < registerMap.size());
-            return registerMap[i];
+            ASSERT(i < registerList.size());
+            return registerList[i];
         }
+
 
     };
 
+    struct ParameterList : public VariableList {
+        typedef enum { 
+            NoRestParameter, 
+            HasRestParameterBeforeBar, 
+            HasRestParameterAfterBar, 
+            HasUnnamedRestParameter 
+        } RestParameterStatus;
+
+        
+        
+        std::vector<bool> mOptionalParameters;      // whether or not a parameter has an optional value
+                                                    // ordered by lexical ordering === register number.
+        RestParameterStatus mRestParameter;
+        uint32 mPositionalCount;                    // number of positional parameters
+
+
+
+
+        ParameterList() : mRestParameter(NoRestParameter), mPositionalCount(0) { }
+
+        void add(const StringAtom& name, TypedRegister r, bool isOptional)
+        {
+            VariableList::add(name, r);
+            mOptionalParameters.resize(r.first + 1);
+            mOptionalParameters[r.first] = isOptional;
+        }
+
+        uint32 size()   { return registerList.size(); }     // the variableMap may be larger since it contains aliases
+
+        bool isOptional(uint32 i)   { ASSERT(i < mOptionalParameters.size()); return mOptionalParameters[i]; }
+
+        void setRestParameter(RestParameterStatus rs)   { mRestParameter = rs; }
+        void setPositionalCount(uint32 x)               { mPositionalCount = x; }
+
+    };
+
+
     typedef std::map<uint32, uint32, std::less<uint32> > InstructionMap;
-   
 
     class ICodeModule {
     public:
         ICodeModule(InstructionStream *iCode, VariableList *variables,
-                    uint32 maxRegister, uint32 maxParameter,
+                    ParameterList *parameters,
+                    uint32 maxRegister,
                     InstructionMap *instructionMap, 
-                    bool hasRestParameter, bool hasNamedRestParameter,
                     JSType *resultType) :
-            its_iCode(iCode), itsVariables(variables),
-            mParameterCount(maxParameter), itsMaxRegister(maxRegister),
+            its_iCode(iCode), itsVariables(variables), itsParameters(parameters),
+            itsMaxRegister(maxRegister),
             mID(++sMaxID), mInstructionMap(instructionMap), 
             mParameterInit(NULL), 
-            mNonOptionalParameterCount(maxParameter),
             mEntryPoint(0),
-            mHasRestParameter(hasRestParameter),
-            mHasNamedRestParameter(hasNamedRestParameter),
             mResultType(resultType)
         {
         }
@@ -122,16 +155,13 @@ namespace ICG {
         
         InstructionStream *its_iCode;
         VariableList *itsVariables;
-        uint32 mParameterCount;
+        ParameterList *itsParameters;
         uint32 itsMaxRegister;
         uint32 mID;
         InstructionMap *mInstructionMap;
         String mFileName;
         uint32 *mParameterInit;
-        uint32 mNonOptionalParameterCount;
         uint32 mEntryPoint;
-        bool mHasRestParameter;
-        bool mHasNamedRestParameter;
         JSType *mResultType;
 
         static uint32 sMaxID;
@@ -172,10 +202,10 @@ namespace ICG {
         LabelList labels;
         
         Register mTopRegister;              // highest (currently) allocated register
-        uint32   mParameterCount;           // number of parameters declared for the function
-                                            // these must come before any variables declared.
         TypedRegister mExceptionRegister;   // reserved to carry the exception object.
         VariableList *variableList;         // name|register pair for each variable
+        ParameterList *parameterList;       // name|register pair for each parameter
+                                            // (with #0 reserved for 'this' regardless of scope)
         
         Context *mContext;                  // the world and global object
         LabelStack mLabelStack;             // stack of LabelEntry objects, one per nested looping construct
@@ -185,8 +215,6 @@ namespace ICG {
         JSClass *mClass;                    // enclosing class when generating code for methods
         ICodeGeneratorFlags mFlags;         // assorted flags
         LabelList *pLabels;                 // label for each parameter initialization entry point
-        bool mHasRestParameter;             // true if this function has a ... parameter
-        bool mHasNamedRestParameter;        // true if this function has a named ... parameter
 
         const StringAtom &mInitName;
 
@@ -204,7 +232,7 @@ namespace ICG {
             return mTopRegister++;
         }
 
-        void resetTopRegister() { mTopRegister = mParameterCount; }
+        void resetTopRegister() { mTopRegister = 0; }
         void resetStatement()   { resetTopRegister(); }
 
         TypedRegister allocateRegister(const StringAtom& name, JSType *type);
@@ -280,15 +308,40 @@ namespace ICG {
         void throwStmt(TypedRegister r)         { iCode->push_back(new Throw(r)); }
         void debuggerStmt()                     { iCode->push_back(new Debugger()); }
 
-        TypedRegister allocateVariable(const StringAtom& name);
-        TypedRegister allocateVariable(const StringAtom& name, const StringAtom& typeName);
-        TypedRegister allocateVariable(const StringAtom& name, JSType *type) ;
+        TypedRegister allocateVariable(const StringAtom& name)
+        { 
+            return allocateVariable(name, &Any_Type);
+        }
         
-        TypedRegister allocateParameter(const StringAtom& name)         { mParameterCount++; return allocateRegister(name, &Any_Type); }
-        TypedRegister allocateParameter(const StringAtom& name, const StringAtom& typeName) 
-                                                                        { mParameterCount++; return allocateRegister(name, findType(typeName)); }
-        TypedRegister allocateParameter(const StringAtom& name, JSType *type) 
-                                                                        { mParameterCount++; return allocateRegister(name, type); }
+        TypedRegister allocateVariable(const StringAtom& name, const StringAtom& typeName)
+        {
+            return allocateVariable(name, findType(typeName));
+        }
+        
+        TypedRegister allocateVariable(const StringAtom& name, JSType *type)
+        { 
+            TypedRegister r = allocateRegister(name, type);
+            variableList->add(name, r);
+            return r;
+        }
+        
+        TypedRegister allocateParameter(const StringAtom& name, bool isOptional)
+        { 
+            return allocateParameter(name, isOptional, &Any_Type);
+        }
+        
+        TypedRegister allocateParameter(const StringAtom& name, bool isOptional, const StringAtom& typeName)
+        {
+            return allocateParameter(name, isOptional, findType(typeName));
+        }
+        
+        TypedRegister allocateParameter(const StringAtom& name, bool isOptional, JSType *type)
+        { 
+            TypedRegister r = allocateRegister(name, type);
+            parameterList->add(name, r, isOptional);
+            return r;
+        }
+
         
         Formatter& print(Formatter& f);
         

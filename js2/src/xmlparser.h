@@ -63,7 +63,7 @@ public:
     XMLTag(String name) : mName(name), mFlag(Tag)  { }
     
     void addAttribute(const String &name, const String &value)    { mAttributeList.insert(AttributeValue(name, value) ); }
-    bool getValue(const String &name, String &value);
+    bool getValue(const String &name, String &value);   // returns the value of the most newly inserted attribute 'name'.
     bool hasAttribute(const String &name)                 { return (mAttributeList.find(name) != mAttributeList.end()); }
 
     String &name()      { return mName; }
