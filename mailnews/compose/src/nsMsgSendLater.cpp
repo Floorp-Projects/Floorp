@@ -133,8 +133,8 @@ nsresult rv;
 
   char      *aUnixStyleFilePath;
 
-  nsString2      recips;
-  (void) mMessage->GetRecipients(recips);
+  nsString      recips;
+  mMessage->GetRecipients(recips);
   printf("SEND THIS : [%s]\n", recips.GetBuffer());
 
   mMessage->GetRecipients(recips);
@@ -186,7 +186,7 @@ nsMsgSendLater::StartNextMailFileSend()
     return NS_OK;
   }
 
-	nsCOMPtr<nsISupports>   currentItem;
+  nsCOMPtr<nsISupports>   currentItem;
 
   rv = mEnumerator->CurrentItem(getter_AddRefs(currentItem));
   if (NS_FAILED(rv))
@@ -194,24 +194,24 @@ nsMsgSendLater::StartNextMailFileSend()
     return NS_ERROR_FAILURE;
   }
 
-  mMessage = do_QueryInterface(currentItem, &rv);
-  if(NS_FAILED(rv) || (!mMessage))
+  mMessage = do_QueryInterface(currentItem); 
+  if(!mMessage)
   {
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIRDFResource>  mRDFNode ;
-  mRDFNode = do_QueryInterface(mMessage, &rv);
-  if(NS_FAILED(rv) || (!mRDFNode))
+  nsCOMPtr<nsIRDFResource>  myRDFNode ;
+  myRDFNode = do_QueryInterface(mMessage, &rv);
+  if(NS_FAILED(rv) || (!myRDFNode))
   {
     return NS_ERROR_FAILURE;
   }
 
-  mRDFNode->GetValue(&aMessageURI);
+  myRDFNode->GetValue(&aMessageURI);
 
   char *tString = nsnull;
-  nsString2      subject;
-  (void)mMessage->GetSubject(subject);
+  nsString      subject;
+  mMessage->GetSubject(subject);
   tString = subject.ToNewCString();
   printf("Fun subject %s\n", tString);
   PR_FREEIF(tString);
