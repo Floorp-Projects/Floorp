@@ -141,19 +141,17 @@ PRBool
 nsMsgNewsFolder::isNewsHost() 
 {
   // this will do for now.  Eventually, this will go away...
-
-  PRInt32 rootURIlen = PL_strlen(kNewsRootURI);
   PRInt32 mURIlen = PL_strlen(mURI);
 
   // if we are shorter than news://, we are too short to be a host
-  if (mURIlen <= rootURIlen) {
+  if (mURIlen <= kNewsRootURILen) {
     return PR_FALSE;
   }
   
-  if (PL_strncmp(mURI, kNewsRootURI, rootURIlen) == 0) {
+  if (PL_strncmp(mURI, kNewsRootURI, kNewsRootURILen) == 0) {
     // if we get here, mURI looks like this:  news://x
     // where x is non-empty, and may contain "/"
-    char *rightAfterTheRoot = mURI+rootURIlen+1;
+    char *rightAfterTheRoot = mURI+kNewsRootURILen+1;
 #ifdef DEBUG_sspitzer_
     printf("search for a slash in %s\n",rightAfterTheRoot);
 #endif
@@ -334,7 +332,7 @@ nsMsgNewsFolder::CreateSubFolders(nsFileSpec &path)
     // news://foobar
     // all we want is foobar
     // so skip over news:// (a.k.a. kNewsRootURI)
-    newshostname = PR_smprintf("%s", mURI + PL_strlen(kNewsRootURI) + 1);
+    newshostname = PR_smprintf("%s", mURI + kNewsRootURILen + 1);
     if (newshostname == nsnull) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -373,10 +371,7 @@ nsresult nsMsgNewsFolder::AddSubfolder(nsAutoString name, nsIMsgFolder **child)
 		return NS_ERROR_NULL_POINTER;
 
 	nsresult rv = NS_OK;
-	nsIRDFService* rdf;
-	rv = nsServiceManager::GetService(kRDFServiceCID,
-                                    nsIRDFService::GetIID(),
-                                    (nsISupports**)&rdf);
+	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv); 
 
 	if(NS_FAILED(rv))
 		return rv;
@@ -404,7 +399,6 @@ nsresult nsMsgNewsFolder::AddSubfolder(nsAutoString name, nsIMsgFolder **child)
 	mSubFolders->AppendElement(folder);
 	*child = folder;
 	NS_ADDREF(*child);
-    (void)nsServiceManager::ReleaseService(kRDFServiceCID, rdf);
 
 	return rv;
 }

@@ -75,7 +75,7 @@ nsresult nsNewsMessage::GetFolderFromURI(nsIMsgFolder **folder)
 		nsString folderOnly, folderURIStr;
 
 		if (messageFolderURIStr.Find(kNewsMessageRootURI) != ((PRInt32)-1))			{
-			messageFolderURIStr.Right(folderOnly, messageFolderURIStr.Length() -nsCRT::strlen(kNewsMessageRootURI));
+			messageFolderURIStr.Right(folderOnly, messageFolderURIStr.Length() - kNewsMessageRootURILen);
 			folderURIStr = kNewsRootURI;
 			folderURIStr+= folderOnly;
 			nsIRDFResource *folderResource;

@@ -95,7 +95,7 @@ nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
 	}
 
   // the server name is the first component of the path, so extract it out
-  PRInt32 hostStart;
+  PRInt32 hostStart = 0;
 
   hostStart = uri.Find('/');
   if (hostStart <= 0) return NS_ERROR_FAILURE;
@@ -202,7 +202,7 @@ nsresult nsBuildNewsMessageURI(const char *baseURI, PRUint32 key, char** uri)
 
   // chop off news:/
   if (tailURI.Find(kNewsRootURI) == 0)
-    tailURI.Cut(0, PL_strlen(kNewsRootURI));
+    tailURI.Cut(0, kNewsRootURILen);
   
   const char *tail = tailURI.ToNewCString();
     
