@@ -819,6 +819,31 @@ PR_IMPLEMENT(PRStatus) PR_CallOnce(
     return once->status;
 }
 
+PR_IMPLEMENT(PRStatus) PR_CallOnceWithArg(
+    PRCallOnceType      *once,
+    PRCallOnceWithArgFN  func,
+    void                *arg)
+{
+    if (!_pr_initialized) _PR_ImplicitInitialization();
+
+    if (!once->initialized) {
+	if (PR_AtomicSet(&once->inProgress, 1) == 0) {
+	    once->status = (*func)(arg);
+	    PR_Lock(mod_init.ml);
+	    once->initialized = 1;
+	    PR_NotifyAllCondVar(mod_init.cv);
+	    PR_Unlock(mod_init.ml);
+	} else {
+	    PR_Lock(mod_init.ml);
+	    while (!once->initialized) {
+		PR_WaitCondVar(mod_init.cv, PR_INTERVAL_NO_TIMEOUT);
+            }
+	    PR_Unlock(mod_init.ml);
+	}
+    }
+    return once->status;
+}
+
 PRBool _PR_Obsolete(const char *obsolete, const char *preferred)
 {
 #if defined(DEBUG)
