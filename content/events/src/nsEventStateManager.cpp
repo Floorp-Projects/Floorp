@@ -2861,7 +2861,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
   if (NS_FAILED(result))
     return result;
 
-  result = trav->NewFrameTraversal(getter_AddRefs(frameTraversal), EXTENSIVE,
+  result = trav->NewFrameTraversal(getter_AddRefs(frameTraversal), EXTENSIVE_PREORDER,
                                    mPresContext, aFrame);
   if (NS_FAILED(result))
     return NS_OK;
