@@ -1120,6 +1120,7 @@ PRInt32 GetIndexOfChildOrSynonym(nsTagStack& aTagStack,eHTMLTags aChildTag) {
  *  @param   aTag -- tag enum of child to be tested
  *  @return  PR_TRUE if autoclosure should occur
  */ 
+static
 eHTMLTags FindAutoCloseTargetForEndTag(eHTMLTags aCurrentTag,nsTagStack& aTagStack) {
   int theTopIndex=aTagStack.mCount;
   eHTMLTags thePrevTag=aTagStack.Last();
@@ -1703,6 +1704,7 @@ PRBool CNavDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild) const {
  * @param 
  * @return
  */
+static
 PRBool IsCompatibleTag(eHTMLTags aTag1,eHTMLTags aTag2) {
   PRBool result=PR_FALSE;
 
@@ -1897,6 +1899,7 @@ eHTMLTags CNavDTD::GetTopNode() const {
  * @param   tag to be found
  * @return  index of topmost tag occurance -- may be -1 (kNotFound).
  */
+static
 PRInt32 GetTopmostIndexOfBelowOffset(eHTMLTags aTag,PRInt32 anOffset){
   PRInt32 result=-1;
   return result;
