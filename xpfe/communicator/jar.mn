@@ -12,8 +12,21 @@ comm.jar:
     content/communicator/tasksOverlay.xul                (resources/content/tasksOverlay.xul) 
     content/communicator/browserBindings.xul             (resources/content/browserBindings.xul) 
     content/communicator/editorBindings.xul              (resources/content/editorBindings.xul) 
-    content/communicator/platformBrowserBindings.xul     (resources/content/win/platformBrowserBindings.xul) 
-    content/communicator/platformEditorBindings.xul      (resources/content/win/platformEditorBindings.xul) 
+#ifdef XP_MACOSX
+    content/communicator/platformBrowserBindings.xul     (resources/content/mac/platformBrowserBindings.xul)
+    content/communicator/platformEditorBindings.xul      (resources/content/mac/platformEditorBindings.xul)
+    content/communicator/platformCommunicatorOverlay.xul (resources/content/mac/platformCommunicatorOverlay.xul)
+#else
+#ifdef XP_UNIX
+    content/communicator/platformBrowserBindings.xul     (resources/content/unix/platformBrowserBindings.xul)
+    content/communicator/platformEditorBindings.xul      (resources/content/unix/platformEditorBindings.xul)
+    content/communicator/platformCommunicatorOverlay.xul (resources/content/unix/platformCommunicatorOverlay.xul)
+#else
+    content/communicator/platformBrowserBindings.xul     (resources/content/win/platformBrowserBindings.xul)
+    content/communicator/platformEditorBindings.xul      (resources/content/win/platformEditorBindings.xul)
+    content/communicator/platformCommunicatorOverlay.xul (resources/content/win/platformCommunicatorOverlay.xul)
+#endif
+#endif
     content/communicator/builtinURLs.js                  (resources/content/builtinURLs.js)
     content/communicator/contentAreaUtils.js             (resources/content/contentAreaUtils.js) 
     content/communicator/contentAreaDD.js                (resources/content/contentAreaDD.js) 
