@@ -23,6 +23,16 @@
 #include "nsITextContent.h"
 #include "nsStyleConsts.h"
 
+
+#include "nsIServiceManager.h"
+#include "nsUnicharUtilCIID.h"
+#include "nsICaseConversion.h"
+
+static NS_DEFINE_IID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
+static NS_DEFINE_IID(kICaseConversionIID, NS_ICASECONVERSION_IID);
+static nsICaseConversion* gCaseConv =  nsnull;
+
+
 // XXX put a copy in nsHTMLIIDs
 static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);
 
@@ -106,6 +116,16 @@ nsTextTransformer::Init(/*nsTextRun& aTextRun, XXX*/
   mWhiteSpace = styleText->mWhiteSpace;
   mTextTransform = styleText->mTextTransform;
 
+  if(NS_STYLE_TEXT_TRANSFORM_NONE != mTextTransform)
+  {
+     if(nsnull == gCaseConv) {
+        nsresult res;
+        res = nsServiceManager::GetService(kUnicharUtilCID, kICaseConversionIID,
+                                 (nsISupports**)&gCaseConv);
+        NS_ASSERTION( NS_SUCCEEDED(res), "cannot get UnicharUtil");
+        NS_ASSERTION( gCaseConv != NULL, "cannot get UnicharUtil");
+     }
+  }
   return NS_OK;
 }
 
@@ -188,20 +208,6 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
   else if (CH_NBSP == firstChar) {
     firstChar = ' ';
   }
-  else {
-    switch (mTextTransform) {
-    case NS_STYLE_TEXT_TRANSFORM_LOWERCASE:
-      if (XP_IS_UPPERCASE(firstChar)) {
-        firstChar = XP_TO_LOWER(firstChar);
-      }
-      break;
-    case NS_STYLE_TEXT_TRANSFORM_UPPERCASE:
-      if (XP_IS_LOWERCASE(firstChar)) {
-        firstChar = XP_TO_UPPER(firstChar);
-      }
-      break;
-    }
-  }
   *bp++ = firstChar;
   if (offset == frag->GetLength()) {
     mCurrentFrag = ++frag;
@@ -244,19 +250,6 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
             if (CH_NBSP == ch) ch = ' ';
             if (ch > MAX_UNIBYTE) mHasMultibyte = PR_TRUE;
             cp++;
-
-            switch (mTextTransform) {
-            case NS_STYLE_TEXT_TRANSFORM_LOWERCASE:
-              if (XP_IS_UPPERCASE(ch)) {
-                ch = XP_TO_LOWER(ch);
-              }
-              break;
-            case NS_STYLE_TEXT_TRANSFORM_UPPERCASE:
-              if (XP_IS_LOWERCASE(ch)) {
-                ch = XP_TO_UPPER(ch);
-              }
-              break;
-            }
 
             // Store character in buffer; grow buffer if we have to
             NS_ASSERTION(bp < bufEnd, "whoops");
@@ -309,19 +302,6 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
             if (ch > MAX_UNIBYTE) mHasMultibyte = PR_TRUE;
             cp++;
 
-            switch (mTextTransform) {
-            case NS_STYLE_TEXT_TRANSFORM_LOWERCASE:
-              if (XP_IS_UPPERCASE(ch)) {
-                ch = XP_TO_LOWER(ch);
-              }
-              break;
-            case NS_STYLE_TEXT_TRANSFORM_UPPERCASE:
-              if (XP_IS_LOWERCASE(ch)) {
-                ch = XP_TO_UPPER(ch);
-              }
-              break;
-            }
-
             // Store character in buffer; grow buffer if we have to
             NS_ASSERTION(bp < bufEnd, "whoops");
             *bp++ = ch;
@@ -356,21 +336,22 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
 
  done:;
 
-  if (!aInWord && !isWhitespace &&
-      (NS_STYLE_TEXT_TRANSFORM_CAPITALIZE == mTextTransform)) {
-    PRInt32 n = wordLen;
-    PRUnichar* bp = mBuffer;
-    for (; --n >= 0; bp++) {
-      PRUnichar ch = *bp;
-      if (' ' == ch) {
-        // Skip over NBSP's that were mapped to space
-        continue;
-      }
-      if (XP_IS_LOWERCASE(ch)) {
-        *bp = XP_TO_UPPER(ch);
-      }
-      break;
-    }
+  if (!isWhitespace)
+  {
+     switch(mTextTransform)
+     {
+       case NS_STYLE_TEXT_TRANSFORM_CAPITALIZE:
+           gCaseConv->ToTitle(mBuffer, mBuffer, wordLen, !aInWord);
+         break;
+       case NS_STYLE_TEXT_TRANSFORM_LOWERCASE:
+           gCaseConv->ToLower(mBuffer, mBuffer, wordLen );
+         break;
+       case NS_STYLE_TEXT_TRANSFORM_UPPERCASE:
+           gCaseConv->ToUpper(mBuffer, mBuffer, wordLen );
+         break;
+       default:
+         break;
+     }
   }
 
  really_done:;
@@ -443,20 +424,6 @@ nsTextTransformer::GetPrevWord(PRBool aInWord,
   else if (CH_NBSP == firstChar) {
     firstChar = ' ';
   }
-  else {
-    switch (mTextTransform) {
-    case NS_STYLE_TEXT_TRANSFORM_LOWERCASE:
-      if (XP_IS_UPPERCASE(firstChar)) {
-        firstChar = XP_TO_LOWER(firstChar);
-      }
-      break;
-    case NS_STYLE_TEXT_TRANSFORM_UPPERCASE:
-      if (XP_IS_LOWERCASE(firstChar)) {
-        firstChar = XP_TO_UPPER(firstChar);
-      }
-      break;
-    }
-  }
   *bp++ = firstChar;
   mCurrentFragOffset = offset +1;
   if (offset < 0) {
@@ -502,19 +469,6 @@ nsTextTransformer::GetPrevWord(PRBool aInWord,
             if (CH_NBSP == ch) ch = ' ';
             if (ch > MAX_UNIBYTE) mHasMultibyte = PR_TRUE;
             cp--;
-
-            switch (mTextTransform) {
-            case NS_STYLE_TEXT_TRANSFORM_LOWERCASE:
-              if (XP_IS_UPPERCASE(ch)) {
-                ch = XP_TO_LOWER(ch);
-              }
-              break;
-            case NS_STYLE_TEXT_TRANSFORM_UPPERCASE:
-              if (XP_IS_LOWERCASE(ch)) {
-                ch = XP_TO_UPPER(ch);
-              }
-              break;
-            }
 
             // Store character in buffer; grow buffer if we have to
             NS_ASSERTION(bp < bufEnd, "whoops");
@@ -567,19 +521,6 @@ nsTextTransformer::GetPrevWord(PRBool aInWord,
             if (ch > MAX_UNIBYTE) mHasMultibyte = PR_TRUE;
             cp--;
 
-            switch (mTextTransform) {
-            case NS_STYLE_TEXT_TRANSFORM_LOWERCASE:
-              if (XP_IS_UPPERCASE(ch)) {
-                ch = XP_TO_LOWER(ch);
-              }
-              break;
-            case NS_STYLE_TEXT_TRANSFORM_UPPERCASE:
-              if (XP_IS_LOWERCASE(ch)) {
-                ch = XP_TO_UPPER(ch);
-              }
-              break;
-            }
-
             // Store character in buffer; grow buffer if we have to
             NS_ASSERTION(bp < bufEnd, "whoops");
             *bp++ = ch;
@@ -620,22 +561,24 @@ nsTextTransformer::GetPrevWord(PRBool aInWord,
 
  done:;
 
-  if (!aInWord && !isWhitespace &&
-      (NS_STYLE_TEXT_TRANSFORM_CAPITALIZE == mTextTransform)) {
-    PRInt32 n = wordLen;
-    PRUnichar* bp = mBuffer;
-    for (; --n >= 0; bp++) {
-      PRUnichar ch = *bp;
-      if (' ' == ch) {
-        // Skip over NBSP's that were mapped to space
-        continue;
-      }
-      if (XP_IS_LOWERCASE(ch)) {
-        *bp = XP_TO_UPPER(ch);
-      }
-      break;
-    }
+  if (!isWhitespace)
+  {
+     switch(mTextTransform)
+     {
+       case NS_STYLE_TEXT_TRANSFORM_CAPITALIZE:
+           gCaseConv->ToTitle(mBuffer, mBuffer, wordLen, !aInWord);
+         break;
+       case NS_STYLE_TEXT_TRANSFORM_LOWERCASE:
+           gCaseConv->ToLower(mBuffer, mBuffer, wordLen );
+         break;
+       case NS_STYLE_TEXT_TRANSFORM_UPPERCASE:
+           gCaseConv->ToUpper(mBuffer, mBuffer, wordLen );
+         break;
+       default:
+         break;
+     }
   }
+
 
  really_done:;
   mOffset -= contentLen;
