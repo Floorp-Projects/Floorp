@@ -84,6 +84,7 @@ public:
   static nsresult WrapNative(JSContext *cx, JSObject *scope,
                              nsISupports *native, const nsIID& aIID,
                              jsval *vp);
+  static nsresult ThrowJSException(JSContext *cx, nsresult aResult);
 
 protected:
   const nsDOMClassInfoID mID;
