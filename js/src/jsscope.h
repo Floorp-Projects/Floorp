@@ -146,7 +146,10 @@ struct JSScopeProperty {
     (((sprop)->attrs & JSPROP_SETTER)                                         \
      ? js_InternalCall(cx, obj, OBJECT_TO_JSVAL(SPROP_SETTER(sprop,obj2)),    \
                        1, vp, vp)                                             \
-     : SPROP_SETTER(sprop,obj2)(cx, OBJ_THIS_OBJECT(cx,obj), sprop->id, vp))
+     : ((sprop)->attrs & JSPROP_GETTER)                                       \
+          ? (JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,               \
+                                    JSMSG_GETTER_ONLY, NULL), JS_FALSE)       \
+          : SPROP_SETTER(sprop,obj2)(cx, OBJ_THIS_OBJECT(cx,obj), sprop->id, vp))
 
 extern JSScope *
 js_GetMutableScope(JSContext *cx, JSObject *obj);

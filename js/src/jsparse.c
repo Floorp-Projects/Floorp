@@ -220,6 +220,13 @@ CheckGetterOrSetter(JSContext *cx, JSTokenStream *ts, JSTokenType tt)
         return TOK_ERROR;
     }
     CURRENT_TOKEN(ts).t_op = op;
+    if (!js_ReportCompileErrorNumber(cx, ts,
+                                     JSREPORT_WARNING |
+                                     JSREPORT_STRICT,
+                                     JSMSG_DEPRECATED_USAGE,
+                                     ATOM_BYTES(atom))) {
+        return TOK_ERROR;
+    }
     return tt;
 }
 #endif
@@ -2360,6 +2367,8 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     JSTokenType tt;
     JSParseNode *pn, *pn2, *pn3;
     char *badWord;
+    JSAtom *atom;
+    JSRuntime *rt;
 
 #if JS_HAS_SHARP_VARS
     JSParseNode *defsharp;
@@ -2473,6 +2482,31 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                         pn3->pn_dval = CURRENT_TOKEN(ts).t_dval;
                     break;
                   case TOK_NAME:
+#if JS_HAS_GETTER_SETTER
+                    atom = CURRENT_TOKEN(ts).t_atom;
+                    rt = cx->runtime;
+                    if (atom == rt->atomState.getAtom || 
+                        atom == rt->atomState.setAtom) {
+                        op = (atom == rt->atomState.getAtom)
+                             ? JSOP_GETTER 
+                             : JSOP_SETTER;
+                        if (js_MatchToken(cx, ts, TOK_NAME)) {
+                            pn3 = NewParseNode(cx, &CURRENT_TOKEN(ts), 
+                                                                PN_NAME);
+                            if (!pn3) 
+                                return NULL;
+                            pn3->pn_atom = CURRENT_TOKEN(ts).t_atom;
+                            pn3->pn_expr = NULL;
+                            /* have to fake a 'function' token */
+                            CURRENT_TOKEN(ts).t_op = JSOP_NOP;
+                            CURRENT_TOKEN(ts).type = TOK_FUNCTION;
+                            pn2 = FunctionDef(cx, ts, tc, JS_TRUE);
+                            pn2 = NewBinary(cx, TOK_COLON, op, pn3, pn2);
+                            goto skip;
+                        }
+                    }
+                    /* else fall thru ... */
+#endif
                   case TOK_STRING:
                     pn3 = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_NULLARY);
                     if (pn3)
@@ -2501,6 +2535,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                 }
                 op = CURRENT_TOKEN(ts).t_op;
                 pn2 = NewBinary(cx, TOK_COLON, op, pn3, AssignExpr(cx, ts, tc));
+skip:
                 if (!pn2)
                     return NULL;
                 PN_APPEND(pn, pn2);
