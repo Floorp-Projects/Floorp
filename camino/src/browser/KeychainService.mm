@@ -914,20 +914,21 @@ KeychainFormSubmitObserver::CheckChangeDataYN(nsIDOMWindowInternal* window)
   [super dealloc];
 }
 
-- (void)onLoadingCompleted:(BOOL)succeeded;
+//
+// -fillDOMWindow:
+//
+// Given a dom window (the root of a page, frame, or iframe), fill in the username
+// and password if there are appropriate fields in any frame within this "window". Once
+// it's done, it recurses over all of the subframes and fills them in as well.
+//
+- (void)fillDOMWindow:(nsIDOMWindow*)inDOMWindow
 {
-  if(!succeeded)
-    return;
-
   KeychainService* keychain = [KeychainService instance];
   if(![keychain isEnabled] || ![keychain isAutoFillEnabled])
     return;
 
-  nsCOMPtr<nsIDOMWindow> domWin = getter_AddRefs([mBrowserView getContentWindow]);
-  if (!domWin)
-    return;
   nsCOMPtr<nsIDOMDocument> domDoc;
-  domWin->GetDocument(getter_AddRefs(domDoc));
+  inDOMWindow->GetDocument(getter_AddRefs(domDoc));
   nsCOMPtr<nsIDocument> doc ( do_QueryInterface(domDoc) );
   if (!doc) {
     NS_ASSERTION(0, "no document available");
@@ -948,7 +949,7 @@ KeychainFormSubmitObserver::CheckChangeDataYN(nsIDOMWindowInternal* window)
 
   //
   // Seek out username and password element in all forms. If found in
-  // a form, check the keychain to see if the username passowrd are
+  // a form, check the keychain to see if the username password are
   // stored and prefill the elements.
   //
   for (PRUint32 formX = 0; formX < numForms; formX++) {
@@ -1009,6 +1010,34 @@ KeychainFormSubmitObserver::CheckChangeDataYN(nsIDOMWindowInternal* window)
     }
 
   } // for each form on page
+
+  // recursively check sub-frames and iframes
+  nsCOMPtr<nsIDOMWindowCollection> frames;
+  inDOMWindow->GetFrames(getter_AddRefs(frames));
+  if (frames) {
+    PRUint32 numFrames;
+    frames->GetLength(&numFrames);
+    for (PRUint32 i = 0; i < numFrames; i++) {
+      nsCOMPtr<nsIDOMWindow> frameNode;
+      frames->Item(i, getter_AddRefs(frameNode));
+      if (frameNode)
+        [self fillDOMWindow:frameNode];
+    }
+  }
+}
+
+- (void)onLoadingCompleted:(BOOL)succeeded;
+{
+  if(!succeeded)
+    return;
+  
+  // prime the pump with the top dom window.
+  nsCOMPtr<nsIDOMWindow> domWin = getter_AddRefs([mBrowserView getContentWindow]);
+  if (!domWin)
+    return;
+  
+  // recursively fill frames and iFrames. 
+  [self fillDOMWindow:domWin];
 }
 
 - (void)onLoadingStarted
