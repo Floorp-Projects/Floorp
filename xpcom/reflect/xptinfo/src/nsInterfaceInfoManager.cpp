@@ -40,6 +40,8 @@
 #include "prio.h"
 #include "plstr.h"
 #include "prenv.h"
+#include "prlog.h"
+#include "prprf.h"
 
 // this after nsISupports, to pick up IID
 // so that xpt stuff doesn't try to define it itself...
