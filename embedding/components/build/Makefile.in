@@ -85,7 +85,7 @@ ifdef MOZ_PROFILESHARING
 REQUIRES += profilesharingsetup
 endif
 
-CPPSRCS		= nsModule.cpp
+CPPSRCS		= nsEmbeddingModule.cpp
 
 SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/$(LIB_PREFIX)windowwatcher_s.$(LIB_SUFFIX) \
