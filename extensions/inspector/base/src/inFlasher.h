@@ -43,9 +43,9 @@
 
 #include "nsIInspectorCSSUtils.h"
 #include "nsIDOMElement.h"
-#include "nsIPresShell.h"
-#include "nsIFrame.h"
 #include "nsIRenderingContext.h"
+
+#include "nsCOMPtr.h"
 
 #define BOUND_INNER 0
 #define BOUND_OUTER 1
@@ -63,13 +63,12 @@ public:
   virtual ~inFlasher();
 
 protected:
-  nsIFrame* GetFrameFor(nsIDOMElement* aElement, nsIPresShell* aShell);
-  nsIPresShell* GetPresShellFor(nsISupports* aThing);
-
-  NS_IMETHOD DrawOutline(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight, nscolor aColor, 
-                           PRUint32 aThickness, float aP2T, nsIRenderingContext* aRenderContext);
-  NS_IMETHOD DrawLine(nscoord aX, nscoord aY, nscoord aLength, PRUint32 aThickness, 
-                        PRBool aDir, PRBool aBounds, float aP2T, nsIRenderingContext* aRenderContext);
+  nsresult DrawOutline(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
+                       nscolor aColor, PRUint32 aThickness, float aP2T,
+                       nsIRenderingContext* aRenderContext);
+  nsresult DrawLine(nscoord aX, nscoord aY, nscoord aLength, PRUint32 aThickness, 
+                    PRBool aDir, PRBool aBounds, float aP2T,
+                    nsIRenderingContext* aRenderContext);
 
   nsCOMPtr<nsIInspectorCSSUtils> mCSSUtils;
 };
