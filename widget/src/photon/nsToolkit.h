@@ -40,8 +40,8 @@ public:
   static PhDrawContext_t *GetDefaultPhotonDrawContext();
 
 private:
-                   
-  static PhDrawContext_t *mDefaultPhotonDrawContext;
+  static PRBool                     mPtInited;                   
+  static PhDrawContext_t  *mDefaultPhotonDrawContext;
 };
 
 

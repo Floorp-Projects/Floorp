@@ -63,6 +63,8 @@
 #include "nsXIFFormatConverter.h"
 #include "nsDragService.h"
 
+#include <prlog.h>
+struct PRLogModuleInfo  *PhWidLog =  nsnull;
 #include "nsPhWidgetLog.h"
 
 static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
@@ -133,6 +135,12 @@ nsWidgetFactory::nsWidgetFactory(const nsCID &aClass)
 {   
   NS_INIT_REFCNT();
   mClassID = aClass;
+
+  if (!PhWidLog)
+  {
+    PhWidLog =  PR_NewLogModule("PhWidLog");
+  }
+
   PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidgetFactory::nsWidgetFactory Constructor Called\n"));
 
 }   

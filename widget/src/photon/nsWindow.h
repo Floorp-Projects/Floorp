@@ -73,11 +73,12 @@ public:
   NS_IMETHOD            RemoveTooltips();
   NS_IMETHOD            BeginResizingChildren(void);
   NS_IMETHOD            EndResizingChildren(void);
-  virtual PRBool        IsChild() { return(PR_FALSE); };
-  virtual void          SetIsDestroying( PRBool val) { mIsDestroying = val; };
-  virtual int           GetMenuBarHeight();
+  virtual PRBool           IsChild() { return(PR_FALSE); };
+  virtual void               SetIsDestroying( PRBool val) { mIsDestroying = val; };
+  virtual int                 GetMenuBarHeight();
   NS_IMETHOD            Destroy(void);
-  NS_IMETHOD            Flash(void);
+  NS_IMETHOD            GetAttention(void);
+  NS_IMETHOD            SetModal(PRBool aModal);
 
   /* Add this because of bug 11088 */
   virtual NS_IMETHOD    Move(PRInt32 aX, PRInt32 aY);
@@ -121,6 +122,7 @@ protected:
 //  nsWindowType          mWindowType;
 //  nsBorderStyle         mBorderStyle;
   static PRBool         mResizeQueueInited;
+  static int            mModalCount;
   PRBool                mIsResizing;
   nsFont                *mFont;
   nsIMenuBar            *mMenuBar;

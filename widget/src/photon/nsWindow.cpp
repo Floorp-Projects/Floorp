@@ -44,9 +44,10 @@
 #include "nsIMenuItem.h"
 #include "nsIMenuListener.h"
 
-PRBool            nsWindow::mResizeQueueInited = PR_FALSE;
+PRBool             nsWindow::mResizeQueueInited = PR_FALSE;
 DamageQueueEntry  *nsWindow::mResizeQueue = nsnull;
 PtWorkProcId_t    *nsWindow::mResizeProcID = nsnull;
+int                nsWindow::mModalCount = -1;
 
 //-------------------------------------------------------------------------
 //
@@ -514,7 +515,7 @@ NS_METHOD nsWindow::CreateNative(PtWidget_t *parentWidget)
       PtAddCallback(mWidget, Pt_CB_RESIZE, ResizeHandler, nsnull ); 
       PtAddEventHandler( mWidget,
         Ph_EV_PTR_MOTION_BUTTON | Ph_EV_PTR_MOTION_NOBUTTON |
-        Ph_EV_BUT_PRESS | Ph_EV_BUT_RELEASE |Ph_EV_BOUNDARY
+        Ph_EV_BUT_PRESS | Ph_EV_BUT_RELEASE |Ph_EV_BOUNDARY|Ph_EV_DRAG
 //		| Ph_EV_WM
 //        | Ph_EV_EXPOSE
         , RawEventHandler, this );
@@ -1896,52 +1897,8 @@ NS_METHOD nsWindow::ModalEventFilter(PRBool aRealEvent, void *aEvent,
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::ModalEventFilter aEvent=<%p> - Not Implemented.\n", aEvent));
 
-#if 1
-    *aForWindow = PR_FALSE;
+   *aForWindow = PR_TRUE;
     return NS_OK;
-#else
-  PRBool isInWindow, isMouseEvent;
-  PhEvent_t *msg = (PhEvent_t *) aEvent;
-
-  if (aRealEvent == PR_FALSE)
-  {
-    *aForWindow = PR_FALSE;
-    return NS_OK;
-  }
-
-  isInWindow = PR_FALSE;
-
-  // Get native window
-  PtWidget_t *win;
-  win = (PtWidget_t *)GetNativeData(NS_NATIVE_WINDOW);
-  PtWidget_t *eWin = (PtWidget_t *) msg->collector.handle;
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::ModalEventFilter win=<%p> eWin=<%p>\n",win, eWin));
-
-  if (nsnull != eWin) {
-    if (win == eWin) {
-      isInWindow = PR_TRUE;
-    }
-  }
-  
-  switch(msg->type)
-  {
-    case Ph_EV_BUT_PRESS:
-    case Ph_EV_BUT_RELEASE:
-    case Ph_EV_BUT_REPEAT:
-    case Ph_EV_PTR_MOTION_BUTTON:
-    case Ph_EV_PTR_MOTION_NOBUTTON:
-       isMouseEvent = PR_TRUE;
-       break;
-    default:
-       isMouseEvent = PR_FALSE;
-       break;
-  }
-
-  *aForWindow = isInWindow == PR_TRUE || isMouseEvent == PR_FALSE ? PR_TRUE : PR_FALSE;
-
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::ModalEventFilter isInWindow=<%d> isMouseEvent=<%d> aForWindow=<%d>\n", isInWindow, isMouseEvent, *aForWindow));
-  return NS_OK;
-#endif
 }
 
 int nsWindow::MenuRegionCallback( PtWidget_t *widget, ApInfo_t *apinfo, PtCallbackInfo_t *cbinfo)
@@ -1980,11 +1937,11 @@ int nsWindow::MenuRegionCallback( PtWidget_t *widget, ApInfo_t *apinfo, PtCallba
   return (Pt_CONTINUE);
 }
 
-NS_METHOD nsWindow::Flash()
+NS_METHOD nsWindow::GetAttention()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow:Flash this=(%p)\n", this ));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::GetAttention this=(%p)\n", this ));
   
-  NS_WARNING("nsWindow:Flash Called...\n");
+  NS_WARNING("nsWindow::GetAttention Called...\n");
   
   if ((mWidget) && (mWidget->parent) && (!PtIsFocused(mWidget)))
   {
@@ -1995,3 +1952,39 @@ NS_METHOD nsWindow::Flash()
   return NS_OK;
 }
 
+NS_IMETHODIMP nsWindow::SetModal(PRBool aModal)
+{
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::SetModal this=<%p> mModalCount=<%d> mWidget=<%p>\n", this, mModalCount, mWidget));
+  nsresult res = NS_ERROR_FAILURE;
+  
+  if (!mWidget)
+	return NS_ERROR_FAILURE;
+
+  PtWidget_t *toplevel = PtFindDisjoint(mWidget);
+  if (!toplevel)
+	return NS_ERROR_FAILURE;
+	
+  if (aModal)
+  {
+    if (mModalCount != -1)
+	{
+	  NS_ASSERTION(0, "nsWindow::SetModalAlready have a Modal Window, Can't have 2");	
+	}
+	else
+    {
+	  mModalCount = PtModalStart();
+	  res = NS_OK;
+    }
+
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::SetModal after call to PtModalStart mModalCount=<%d>\n", mModalCount));
+  }
+  else
+  {
+	PtModalEnd( mModalCount );
+	mModalCount = -1;  
+    res = NS_OK;
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::SetModal after call to PtModalEnd mModalCount=<%d>\n", mModalCount));
+  }
+
+  return res;
+}
