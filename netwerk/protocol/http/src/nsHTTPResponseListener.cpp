@@ -417,7 +417,7 @@ nsresult nsHTTPResponseListener::ParseStatusLine(nsIBufferInputStream* in,
   // Parse the HTTP-Version:: "HTTP" "/" 1*DIGIT "." 1*DIGIT
   //
 
-  offset = mHeaderBuffer.Find(' ');
+  offset = mHeaderBuffer.FindChar(' ');
   (void) mHeaderBuffer.Left(str, offset);
   if (!str.Length()) {
     // The status line is bogus...
@@ -437,7 +437,7 @@ nsresult nsHTTPResponseListener::ParseStatusLine(nsIBufferInputStream* in,
   //
   PRInt32 statusCode;
 
-  offset = mHeaderBuffer.Find(' ');
+  offset = mHeaderBuffer.FindChar(' ');
   (void) mHeaderBuffer.Left(str, offset);
   if (3 != str.Length()) {
     // The status line is bogus...
@@ -613,7 +613,7 @@ nsresult nsHTTPResponseListener::ParseHTTPHeader(nsIBufferInputStream* in,
   nsAutoString headerKey(eOneByte);
   nsCOMPtr<nsIAtom> headerAtom;
 
-  colonOffset = mHeaderBuffer.Find(':');
+  colonOffset = mHeaderBuffer.FindChar(':');
   if (-1 == colonOffset) {
     //
     // The header is malformed... Just clear it.
@@ -686,7 +686,7 @@ nsresult nsHTTPResponseListener::ProcessHeader(nsIAtom* aHeader,
     //
     // Set the content-type in the HTTPChannel...
     //
-    semicolon = aValue.Find(';');
+    semicolon = aValue.FindChar(';');
     if (-1 != semicolon) {
       aValue.Left(buffer, semicolon);
       mConnection->SetContentType(buffer.GetBuffer());
