@@ -186,7 +186,9 @@ nsMessenger::SetWindow(nsIDOMWindow *aWin, nsIMsgWindow *aMsgWindow)
 			if (aStatusFeedback)
 				aStatusFeedback->SetWebShell(nsnull, nsnull);
 		}
-		return NS_ERROR_NULL_POINTER;
+    // it isn't an error to pass in null for aWin, in fact it means we are shutting
+    // down and we should start cleaning things up...
+		return NS_OK;
 	}
 
   mMsgWindow = aMsgWindow;
