@@ -36,6 +36,7 @@
 
 #define NC_RDF_NEWABCARD			"http://home.netscape.com/NC-rdf#NewCard"
 #define NC_RDF_DELETE				"http://home.netscape.com/NC-rdf#Delete"
+#define NC_RDF_DELETECARD			"http://home.netscape.com/NC-rdf#DeleteCards"
 #define NC_RDF_NEWDIRECTORY			"http://home.netscape.com/NC-rdf#NewDirectory"
 
 class nsAddressBook : public nsIAddressBook, public nsICmdLineHandler

@@ -61,6 +61,7 @@ nsIRDFResource* nsAbDirectoryDataSource::kNC_DirUri = nsnull;
 
 // commands
 nsIRDFResource* nsAbDirectoryDataSource::kNC_Delete = nsnull;
+nsIRDFResource* nsAbDirectoryDataSource::kNC_DeleteCards = nsnull;
 nsIRDFResource* nsAbDirectoryDataSource::kNC_NewDirectory = nsnull;
 
 #define NC_RDF_CHILD				"http://home.netscape.com/NC-rdf#child"
@@ -70,6 +71,7 @@ nsIRDFResource* nsAbDirectoryDataSource::kNC_NewDirectory = nsnull;
 
 //Directory Commands
 #define NC_RDF_DELETE				"http://home.netscape.com/NC-rdf#Delete"
+#define NC_RDF_DELETECARDS			"http://home.netscape.com/NC-rdf#DeleteCards"
 #define NC_RDF_NEWDIRECTORY			"http://home.netscape.com/NC-rdf#NewDirectory"
 
 ////////////////////////////////////////////////////////////////////////
@@ -102,6 +104,7 @@ nsAbDirectoryDataSource::~nsAbDirectoryDataSource (void)
 	NS_RELEASE2(kNC_DirUri, refcnt);
 
 	NS_RELEASE2(kNC_Delete, refcnt);
+	NS_RELEASE2(kNC_DeleteCards, refcnt);
 	NS_RELEASE2(kNC_NewDirectory, refcnt);
 
 	/* free all directories */
@@ -133,6 +136,7 @@ nsAbDirectoryDataSource::Init()
 		mRDFService->GetResource(NC_RDF_DIRURI, &kNC_DirUri);
 
 		mRDFService->GetResource(NC_RDF_DELETE, &kNC_Delete);
+		mRDFService->GetResource(NC_RDF_DELETECARDS, &kNC_DeleteCards);
 		mRDFService->GetResource(NC_RDF_NEWDIRECTORY, &kNC_NewDirectory);
 	}
 
@@ -341,6 +345,7 @@ nsAbDirectoryDataSource::GetAllCommands(nsIRDFResource* source,
     rv = NS_NewISupportsArray(getter_AddRefs(cmds));
     if (NS_FAILED(rv)) return rv;
     cmds->AppendElement(kNC_Delete);
+    cmds->AppendElement(kNC_DeleteCards);
     cmds->AppendElement(kNC_NewDirectory);
   }
 
@@ -365,7 +370,7 @@ nsAbDirectoryDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* 
 		directory = do_QueryInterface(source, &rv);
     if (NS_SUCCEEDED(rv)) {
       // we don't care about the arguments -- directory commands are always enabled
-      if (!((aCommand == kNC_Delete) ||
+      if (!((aCommand == kNC_Delete) || (aCommand == kNC_DeleteCards) ||
 		    (aCommand == kNC_NewDirectory))) {
         *aResult = PR_FALSE;
         return NS_OK;
@@ -385,14 +390,17 @@ nsAbDirectoryDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSource
 	nsresult rv = aSources->Count(&cnt);
 	if (NS_FAILED(rv)) return rv;
 
+	if ((aCommand == kNC_Delete))  
+		rv = DoDeleteFromDirectory(aSources, aArguments);
+
 	for (i = 0; i < cnt; i++) 
 	{
 		nsCOMPtr<nsISupports> supports = getter_AddRefs(aSources->ElementAt(i));
 		nsCOMPtr<nsIAbDirectory> directory = do_QueryInterface(supports, &rv);
 		if (NS_SUCCEEDED(rv)) 
 		{
-			if ((aCommand == kNC_Delete))  
-				rv = DoDeleteFromDirectory(directory, aArguments);
+			if ((aCommand == kNC_DeleteCards))  
+				rv = DoDeleteCardsFromDirectory(directory, aArguments);
 			else if((aCommand == kNC_NewDirectory)) 
 				rv = DoNewDirectory(directory, aArguments);
 		}
@@ -565,16 +573,41 @@ nsAbDirectoryDataSource::createDirectoryChildNode(nsIAbDirectory *directory,
 		return NS_RDF_NO_VALUE;
 }
 
-nsresult nsAbDirectoryDataSource::DoDeleteFromDirectory(nsIAbDirectory *directory, nsISupportsArray *arguments)
+nsresult nsAbDirectoryDataSource::DoDeleteFromDirectory(nsISupportsArray *parentDirs, nsISupportsArray *delDirs)
+{
+	PRUint32 item, itemCount;
+	nsresult rv = parentDirs->Count(&itemCount);
+	if (NS_FAILED(rv)) return rv;
+
+	nsCOMPtr<nsISupportsArray> dirArray;
+	NS_NewISupportsArray(getter_AddRefs(dirArray));
+
+	for (item = 0; item < itemCount; item++) 
+	{
+		nsCOMPtr<nsISupports> supports = getter_AddRefs(parentDirs->ElementAt(item));
+		nsCOMPtr<nsIAbDirectory> parent = do_QueryInterface(supports, &rv);
+		if (NS_SUCCEEDED(rv)) 
+		{
+			nsCOMPtr<nsISupports> supports = getter_AddRefs(delDirs->ElementAt(item));
+			nsCOMPtr<nsIAbDirectory> deletedDir(do_QueryInterface(supports));
+			if(deletedDir)
+			{
+				rv = parent->DeleteDirectory(deletedDir);
+			}
+		}
+	}
+	return rv;
+}
+
+nsresult nsAbDirectoryDataSource::DoDeleteCardsFromDirectory(nsIAbDirectory *directory, nsISupportsArray *arguments)
 {
 	nsresult rv = NS_OK;
 	PRUint32 itemCount;
 	rv = arguments->Count(&itemCount);
 	if (NS_FAILED(rv)) return rv;
 	
-	nsCOMPtr<nsISupportsArray> cardArray, dirArray;
+	nsCOMPtr<nsISupportsArray> cardArray;
 	NS_NewISupportsArray(getter_AddRefs(cardArray));
-	NS_NewISupportsArray(getter_AddRefs(dirArray));
 
 	//Split up deleted items into different type arrays to be passed to the folder
 	//for deletion.
@@ -583,14 +616,9 @@ nsresult nsAbDirectoryDataSource::DoDeleteFromDirectory(nsIAbDirectory *director
 	{
 		nsCOMPtr<nsISupports> supports = getter_AddRefs(arguments->ElementAt(item));
 		nsCOMPtr<nsIAbCard> deletedCard(do_QueryInterface(supports));
-		nsCOMPtr<nsIAbDirectory> deletedDir(do_QueryInterface(supports));
 		if (deletedCard)
 		{
 			cardArray->AppendElement(supports);
-		}
-		else if(deletedDir)
-		{
-			dirArray->AppendElement(supports);
 		}
 	}
 	PRUint32 cnt;
@@ -598,15 +626,8 @@ nsresult nsAbDirectoryDataSource::DoDeleteFromDirectory(nsIAbDirectory *director
 	if (NS_FAILED(rv)) return rv;
 	if (cnt > 0)
 		rv = directory->DeleteCards(cardArray);
-
-	rv = dirArray->Count(&cnt);
-	if (NS_FAILED(rv)) return rv;
-	if (cnt > 0)
-		rv = directory->DeleteDirectories(dirArray);
-
 	return rv;
 }
-
 
 nsresult nsAbDirectoryDataSource::DoNewDirectory(nsIAbDirectory *directory, nsISupportsArray *arguments)
 {

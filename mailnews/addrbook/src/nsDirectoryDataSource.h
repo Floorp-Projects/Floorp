@@ -102,8 +102,10 @@ protected:
 	static nsresult getDirectoryArcLabelsOut(nsIAbDirectory *directory,
 										   nsISupportsArray **arcs);
 
-	nsresult DoDeleteFromDirectory(nsIAbDirectory *directory,
-							  nsISupportsArray *arguments);
+	nsresult DoDeleteFromDirectory(nsISupportsArray *parentDirs,
+							  nsISupportsArray *delDirs);
+	nsresult DoDeleteCardsFromDirectory(nsIAbDirectory *directory,
+							  nsISupportsArray *delDirs);
 
 	nsresult DoDirectoryAssert(nsIAbDirectory *directory, 
 					nsIRDFResource *property, nsIRDFNode *target);
@@ -121,6 +123,7 @@ protected:
 
 	// commands
 	static nsIRDFResource* kNC_Delete;
+	static nsIRDFResource* kNC_DeleteCards;
 	static nsIRDFResource* kNC_NewDirectory;
 
 };

@@ -161,7 +161,7 @@ NS_IMETHODIMP nsAddressBook::DeleteCards
 
 	dirArray->AppendElement(resource);
 	
-	rv = DoCommand(database, NC_RDF_DELETE, dirArray, resourceArray);
+	rv = DoCommand(database, NC_RDF_DELETECARD, dirArray, resourceArray);
 
 	return rv;
 }
@@ -202,14 +202,14 @@ NS_IMETHODIMP nsAddressBook::NewAddressBook
 	rdfService->GetLiteral(nameStr.GetUnicode(), getter_AddRefs(nameLiteral));
 	nameArray->AppendElement(nameLiteral);
 
-	DoCommand(db, "http://home.netscape.com/NC-rdf#NewDirectory", dirArray, nameArray);
+	DoCommand(db, NC_RDF_NEWDIRECTORY, dirArray, nameArray);
 	return rv;
 }
 
 NS_IMETHODIMP nsAddressBook::DeleteAddressBooks
-(nsIRDFCompositeDataSource* db, nsIDOMXULElement *srcDirectory, nsIDOMNodeList *nodeList)
+(nsIRDFCompositeDataSource* db, nsISupportsArray *parentDir, nsIDOMNodeList *nodeList)
 {
-	if(!db || !srcDirectory || !nodeList)
+	if(!db || !parentDir || !nodeList)
 		return NS_ERROR_NULL_POINTER;
 
 	nsresult rv = NS_OK;
@@ -217,31 +217,12 @@ NS_IMETHODIMP nsAddressBook::DeleteAddressBooks
 	if(NS_FAILED(rv))
 		return rv;
 
-	nsCOMPtr<nsISupportsArray> dirArray;
-
-	rv = NS_NewISupportsArray(getter_AddRefs(dirArray));
-	if(NS_FAILED(rv))
-		return NS_ERROR_OUT_OF_MEMORY;
-
-	nsCOMPtr<nsIRDFResource> parentResource;
-	char *parentUri = PR_smprintf("%s", kDirectoryDataSourceRoot);
-	rv = rdfService->GetResource(parentUri, getter_AddRefs(parentResource));
-	nsCOMPtr<nsIAbDirectory> parentDir = do_QueryInterface(parentResource);
-	if (!parentDir)
-		return NS_ERROR_NULL_POINTER;
-	if (parentUri)
-		PR_smprintf_free(parentUri);
-
-	dirArray->AppendElement(parentResource);
-
-
 	nsCOMPtr<nsISupportsArray> resourceArray;
-
 	rv = ConvertDOMListToResourceArray(nodeList, getter_AddRefs(resourceArray));
 	if(NS_FAILED(rv))
 		return rv;
 
-	DoCommand(db, NC_RDF_DELETE, dirArray, resourceArray);
+	DoCommand(db, NC_RDF_DELETE, parentDir, resourceArray);
 	return rv;
 }
 

@@ -1642,6 +1642,11 @@ nsresult nsAddrDatabase::AddListCardColumnsToRow(nsIAbCard *pCard, nsIMdbRow *pL
 					AddPrimaryEmail(pCardRow, pUTF8Email);
 					err = m_mdbPabTable->AddRow(GetEnv(), pCardRow);
 				}
+
+				//notify RDF a new card row
+				nsCOMPtr<nsIAbCard>	newCard;
+				CreateABCard(pCardRow, getter_AddRefs(newCard));
+				NotifyCardEntryChange(AB_NotifyInserted, newCard, NULL);
 			}
 			PR_FREEIF(pUTF8Email);
 
@@ -1797,6 +1802,11 @@ NS_IMETHODIMP nsAddrDatabase::CreateMailListAndAddToDB(nsIAbDirectory *newList, 
 		AddListAttributeColumnsToRow(newList, listRow);
 		AddRecordKeyColumnToRow(listRow);
 		err = m_mdbPabTable->AddRow(GetEnv(), listRow);
+
+		nsCOMPtr<nsIAbCard> listCard;
+		CreateABListCard(listRow, getter_AddRefs(listCard));
+		NotifyCardEntryChange(AB_NotifyInserted, listCard, NULL);
+
 		listRow->CutStrongRef(GetEnv());
 	}
 	if (NS_FAILED(err)) return err;
@@ -3198,6 +3208,27 @@ nsresult nsAddrDatabase::GetListFromDB(nsIAbDirectory *newList, nsIMdbRow* listR
 		newList->SetDescription(unicodeStr);
 		nsAllocator::Free(tempCString);
 		PR_Free(unicodeStr);
+	}
+
+	PRUint32 totalAddress = GetListAddressTotal(listRow);
+	PRUint32 pos;
+	for (pos = 1; pos <= totalAddress; pos++)
+	{
+		mdb_token listAddressColumnToken;
+		mdb_id rowID;
+
+		char columnStr[16];
+		sprintf(columnStr, kMailListAddressFormat, pos);
+		GetStore()->StringToToken(GetEnv(), columnStr, &listAddressColumnToken);
+
+		nsIMdbRow* cardRow;
+		err = GetIntColumn(listRow, listAddressColumnToken, (PRUint32*)&rowID, 0);
+		err = GetCardRowByRowID(rowID, &cardRow);
+
+		nsCOMPtr<nsIAbCard> card;
+		err = CreateABCard(cardRow, getter_AddRefs(card));
+		newList->AddAddressToList(card);
+//		NS_IF_ADDREF(card);
 	}
 
 	return err;

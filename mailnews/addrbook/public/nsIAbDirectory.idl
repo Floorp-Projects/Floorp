@@ -44,7 +44,7 @@ interface nsIAbDirectory : nsISupports {
 	readonly attribute nsIEnumerator childCards;
 	nsIAbCard addChildCards(in string uriName);
 	nsIAbDirectory addDirectory(in string uriName);
-	void deleteDirectories(in nsISupportsArray dierctories);
+	void deleteDirectory(in nsIAbDirectory dierctory);
 	void deleteCards(in nsISupportsArray cards);
 	boolean hasCard(in nsIAbCard cards);
 	boolean hasDirectory(in nsIAbDirectory dir);

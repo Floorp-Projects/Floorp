@@ -62,6 +62,15 @@ nsAbDirProperty::nsAbDirProperty(void)
 nsAbDirProperty::~nsAbDirProperty(void)
 {
 	PR_FREEIF(m_DbPath);
+	if (m_AddressList)
+	{
+		PRUint32 count;
+		nsresult rv = m_AddressList->Count(&count);
+		NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
+		PRInt32 i;
+		for (i = count - 1; i >= 0; i--)
+			m_AddressList->RemoveElementAt(i);
+	}
 }
 
 NS_IMPL_ADDREF(nsAbDirProperty)
@@ -180,7 +189,7 @@ nsAbDirProperty::AddDirectory(const char *uriName, nsIAbDirectory **childDir)
 { return NS_OK; }
 
 NS_IMETHODIMP
-nsAbDirProperty::DeleteDirectories(nsISupportsArray *dierctories)
+nsAbDirProperty::DeleteDirectory(nsIAbDirectory *dierctory)
 { return NS_OK; }
 
 NS_IMETHODIMP
@@ -302,6 +311,7 @@ NS_IMETHODIMP nsAbDirProperty::AddAddressToList(nsIAbCard *card)
 	if (!m_AddressList)
 		NS_NewISupportsArray(getter_AddRefs(m_AddressList));
 	m_AddressList->AppendElement(card);
+	NS_IF_ADDREF(card);
 	return NS_OK;
 }
 
@@ -325,13 +335,10 @@ NS_IMETHODIMP nsAbDirProperty::AddMailListToDatabase(const char *uri)
 		if(NS_FAILED(rv))
 			return rv;
 		nsCOMPtr<nsIRDFResource> parentResource;
-		char *parentUri = PR_smprintf("%s", kDirectoryDataSourceRoot);
-		rv = rdfService->GetResource(parentUri, getter_AddRefs(parentResource));
+		rv = rdfService->GetResource(uri, getter_AddRefs(parentResource));
 		nsCOMPtr<nsIAbDirectory> parentDir = do_QueryInterface(parentResource);
 		if (!parentDir)
 			return NS_ERROR_NULL_POINTER;
-		if (parentUri)
-			PR_smprintf_free(parentUri);
 
 		char *listUri = PR_smprintf("%s/MailList%ld", uri, m_dbRowID);
 		if (listUri)

@@ -153,7 +153,7 @@ NS_IMETHODIMP nsAbDirectory::OnListEntryChange
 		nsCOMPtr<nsIRDFResource> res;
 		rv = rdf->GetResource(listURI, getter_AddRefs(res));
 		if(listURI)
-			PR_smprintf_free(listURI);
+			nsAllocator::Free(listURI);
 		if (NS_SUCCEEDED(rv))
 		{
 			nsCOMPtr<nsIAbDirectory> listDir = do_QueryInterface(res);
@@ -341,6 +341,11 @@ NS_IMETHODIMP nsAbDirectory::CreateNewDirectory(const PRUnichar *dirName, const 
 	char *uri = PR_smprintf("%s%s", kDirectoryDataSourceRoot, server->fileName);
 	if (uri)
 	{
+		nsCOMPtr<nsIAddrDatabase>  database;  
+		NS_WITH_SERVICE(nsIAddressBook, addresBook, kAddrBookCID, &rv); 
+		if (NS_SUCCEEDED(rv))
+			rv = addresBook->GetAbDatabaseFromURI(uri, getter_AddRefs(database));
+
 		rv = AddDirectory(uri, getter_AddRefs(newDir));
 		PR_smprintf_free(uri);
 		if (NS_SUCCEEDED(rv) && newDir)
@@ -440,6 +445,29 @@ NS_IMETHODIMP nsAbDirectory::DeleteCards(nsISupportsArray *cards)
 				else
 				{
 					mDatabase->DeleteCard(card, PR_TRUE);
+					PRBool bIsMailList = PR_FALSE;
+					card->GetIsMailList(&bIsMailList);
+					if (bIsMailList)
+					{
+						//to do, get mailing list dir side uri and notify rdf to remove it
+						PRUint32 rowID;
+						card->GetDbRowID(&rowID);
+						char *listUri = PR_smprintf("%s/MailList%ld", mURI, rowID);
+						if (listUri)
+						{
+							nsresult rv = NS_OK;
+							NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
+							if(NS_FAILED(rv))
+								return rv;
+							nsCOMPtr<nsIRDFResource> listResource;
+							rv = rdfService->GetResource(listUri, getter_AddRefs(listResource));
+							nsCOMPtr<nsIAbDirectory> listDir = do_QueryInterface(listResource);
+							if (listDir)
+								NotifyItemDeleted(listDir);
+							PR_smprintf_free(listUri);
+							return NS_OK;
+						}
+					}
 				}
 			}
 		}
@@ -450,6 +478,11 @@ NS_IMETHODIMP nsAbDirectory::DeleteCards(nsISupportsArray *cards)
 
 nsresult nsAbDirectory::DeleteDirectoryCards(nsIAbDirectory* directory, DIR_Server *server)
 {
+	if (!server->fileName)  // file name does not exist
+		return NS_OK;
+	if (PL_strlen(server->fileName) == 0)  // file name does not exist
+		return NS_OK;
+
 	nsresult rv = NS_OK;
 	nsFileSpec* dbPath = nsnull;
 	nsCOMPtr<nsIAddrDatabase> database;
@@ -518,55 +551,45 @@ nsresult nsAbDirectory::DeleteDirectoryCards(nsIAbDirectory* directory, DIR_Serv
 	return rv;
 }
 
-NS_IMETHODIMP nsAbDirectory::DeleteDirectories(nsISupportsArray *dierctories)
+NS_IMETHODIMP nsAbDirectory::DeleteDirectory(nsIAbDirectory *directory)
 {
 	nsresult rv = NS_ERROR_FAILURE;
 
-	PRUint32 i, dirCount;
-	rv = dierctories->Count(&dirCount);
-	if (NS_FAILED(rv)) return rv;
-	for (i = 0; i < dirCount; i++)
+	if (directory)
 	{
-		nsCOMPtr<nsISupports> dirSupports;
-		nsCOMPtr<nsIAbDirectory> directory;
-		dirSupports = getter_AddRefs(dierctories->ElementAt(i));
-		directory = do_QueryInterface(dirSupports, &rv);
-		if (NS_SUCCEEDED(rv) && directory)
-		{
-			DIR_Server *server = nsnull;
-			rv = directory->GetServer(&server);
-			if (server) 
-			{	//it's an address book
-				DeleteDirectoryCards(directory, server);
+		DIR_Server *server = nsnull;
+		rv = directory->GetServer(&server);
+		if (server)
+		{	//it's an address book
+			DeleteDirectoryCards(directory, server);
 
-				DIR_DeleteServerFromList(server);
+			DIR_DeleteServerFromList(server);
 
-				rv = mSubDirectories->RemoveElement(directory);
-				NotifyItemDeleted(directory);
-			}
-			else
-			{	//it's a mailing list
-				nsresult rv = NS_OK;
+			rv = mSubDirectories->RemoveElement(directory);
+			NotifyItemDeleted(directory);
+		}
+		else
+		{	//it's a mailing list
+			nsresult rv = NS_OK;
 
-				char *uri;
-				rv = directory->GetDirUri(&uri);
-				if (NS_FAILED(rv)) return rv;
+			char *uri;
+			rv = directory->GetDirUri(&uri);
+			if (NS_FAILED(rv)) return rv;
 
-				nsCOMPtr<nsIAddrDatabase> database;
-				NS_WITH_SERVICE(nsIAddressBook, addresBook, kAddrBookCID, &rv); 
+			nsCOMPtr<nsIAddrDatabase> database;
+			NS_WITH_SERVICE(nsIAddressBook, addresBook, kAddrBookCID, &rv); 
+			if (NS_SUCCEEDED(rv))
+			{
+				rv = addresBook->GetAbDatabaseFromURI(uri, getter_AddRefs(database));				
+				nsAllocator::Free(uri);
+
 				if (NS_SUCCEEDED(rv))
-				{
-					rv = addresBook->GetAbDatabaseFromURI(uri, getter_AddRefs(database));				
-					nsAllocator::Free(uri);
+					rv = database->DeleteMailList(directory, PR_TRUE);
 
-					if (NS_SUCCEEDED(rv))
-						rv = database->DeleteMailList(directory, PR_TRUE);
+				if (NS_SUCCEEDED(rv))
+					database->Commit(kLargeCommit);
 
-					if (NS_SUCCEEDED(rv))
-						database->Commit(kLargeCommit);
-
-					NotifyItemDeleted(directory);
-				}
+				NotifyItemDeleted(directory);
 			}
 		}
 	}

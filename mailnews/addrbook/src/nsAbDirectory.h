@@ -53,7 +53,7 @@ public:
 	NS_IMETHOD GetChildCards(nsIEnumerator* *result);
 	NS_IMETHOD AddChildCards(const char *uriName, nsIAbCard **childCard);
 	NS_IMETHOD AddDirectory(const char *uriName, nsIAbDirectory **childDir);
-  	NS_IMETHOD DeleteDirectories(nsISupportsArray *directories);
+  	NS_IMETHOD DeleteDirectory(nsIAbDirectory *directory);
  	NS_IMETHOD DeleteCards(nsISupportsArray *cards);
  	NS_IMETHOD HasCard(nsIAbCard *cards, PRBool *hasCard);
 	NS_IMETHOD HasDirectory(nsIAbDirectory *dir, PRBool *hasDir);

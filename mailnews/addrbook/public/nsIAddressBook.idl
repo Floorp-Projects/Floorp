@@ -24,6 +24,7 @@
 #include "xulstubs.idl"
 #include "nsIRDFCompositeDataSource.idl"
 #include "nsIAddrDatabase.idl"
+#include "nsISupportsArray.idl"
 
 
 %{C++
@@ -39,7 +40,7 @@ interface nsIAddressBook : nsISupports {
 
     void deleteCards(in nsIDOMXULElement tree, in nsIDOMXULElement srcDir, in nsIDOMNodeList node);
 	void newAddressBook(in nsIRDFCompositeDataSource db, in nsIDOMXULElement srcDir, in wstring name);
-    void deleteAddressBooks(in nsIRDFCompositeDataSource db, in nsIDOMXULElement srcDir, in nsIDOMNodeList node);
+    void deleteAddressBooks(in nsIRDFCompositeDataSource db, in nsISupportsArray parentDir, in nsIDOMNodeList node);
     void printCard();
     void printAddressbook();
     void setWebShellWindow(in nsIDOMWindow win);
