@@ -42,32 +42,32 @@ function nsHelperAppLauncherDialog() {
 nsHelperAppLauncherDialog.prototype= {
     // Statics.
     nsIHelperAppLauncher : Components.interfaces.nsIHelperAppLauncher,
+    nsIMIMEInfo			 : Components.interfaces.nsIMIMEInfo,
     nsIFilePicker        : Components.interfaces.nsIFilePicker,
 
     // Fill dialog from app launcher attributes.
     initDialog : function () {
         // "Always ask me" is always set (or else we wouldn't have got here!).
         document.getElementById( "alwaysAskMe" ).checked = true;
+        document.getElementById( "alwaysAskMe" ).setAttribute( "disabled", "true" );
 
         // Pre-select the choice the user made last time.
-        if ( this.appLauncher.MIMEInfo.preferredAction != this.nsIHelperAppLauncher.saveToDisk ) {
+        if ( this.appLauncher.MIMEInfo.preferredAction != this.nsIMIMEInfo.saveToDisk ) {
             // Run app.
             document.getElementById( "runApp" ).checked = true;
 
             this.chosenApp = this.appLauncher.MIMEInfo.preferredApplicationHandler;
-
-            if ( this.chosenApp ) {
+            var applicationDescription = this.appLauncher.MIMEInfo.applicationDescription;
+            if (applicationDescription != "")
+              document.getElementById( "appName" ).value = applicationDescription;
+            else
                 // If a user-chosen application, show its path.
                 document.getElementById( "appName" ).value = this.chosenApp.unicodePath;
-            } else {
-                // If a system-specified one, show description.
-                document.getElementById( "appName" ).value = this.appLauncher.MIMEInfo.applicationDescription;
-            }
         } else {
             // Save to disk.
             document.getElementById( "saveToDisk" ).checked = true;
             // Disable choose app button.
-            document.getElementById( "choseApp" ).setAttribute( "disabled", "true" );
+            document.getElementById( "chooseApp" ).setAttribute( "disabled", "true" );
         }
 
         // Put content type into dialog text.
