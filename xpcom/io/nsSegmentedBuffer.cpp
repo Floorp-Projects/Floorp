@@ -133,6 +133,7 @@ nsSegmentedBuffer::Empty()
         mSegmentArray = nsnull;
     }
     mSegmentArrayCount = NS_SEGMENTARRAY_INITIAL_COUNT;
+    mFirstSegmentIndex = mLastSegmentIndex = 0;
 }
 
 #ifdef DEBUG
