@@ -209,7 +209,8 @@ void testCollector()
     ConsCell* cell;
     ConsCell** link = &head;
     
-    for (uint32 i = 0; i < kCellCount; ++i) {
+    uint32 i;
+    for (i = 0; i < kCellCount; ++i) {
         *link = cell = new (gc) ConsCell;
         ASSERT(cell);
         cell->car = i;
@@ -224,7 +225,7 @@ void testCollector()
     
     // walk the list again to verify that it is intact.
     link = &head;
-    for (uint32 i = 0; i < kCellCount; i++) {
+    for (i = 0; i < kCellCount; i++) {
         cell = *link;
         ASSERT(cell);
         ASSERT(cell->car == (float64)i);
