@@ -90,12 +90,12 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
 
     nsRect  rect(0, 0, mRect.width, mRect.height);
 
-    // empty cells do not render
+    nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
+                                    aDirtyRect, rect, *myColor);
+
+    // empty cells do not render their border
     if (0!=mPass1DesiredSize.width || 0!=mPass1DesiredSize.height)
     {
-      nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                      aDirtyRect, rect, *myColor);
-
       nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                   aDirtyRect, rect, *mySpacing, 0);
     }
@@ -347,9 +347,6 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
              this, cellHeight, kidSize.height, topInset, bottomInset);
   // next determine the cell's width
   nscoord cellWidth = kidSize.width;      // at this point, we've factored in the cell's style attributes
-  // NAV4 compatibility: only add insets if cell content was not 0 width
-  if (0!=kidSize.width)
-    cellWidth += leftInset + rightInset;    // factor in insets
 
   // Nav4 hack for 0 width cells.  If the cell has any content, it must have a desired width of at least 1
   // see testcase "cellHeights.html"
@@ -365,14 +362,21 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
       grandChild->ChildCount(childCount);
       if (0!=childCount)
       {
-        cellWidth=1;
+        nscoord one = ((nscoord)(NS_INT_PIXELS_TO_TWIPS(1, aPresContext.GetPixelsToTwips())));
+        cellWidth = 1;
+        if (gsDebug) 
+          printf ("setting cellWidth=1 because it was 0 but there's some content\n");
         if (nsnull!=aDesiredSize.maxElementSize && 0==pMaxElementSize->width)
-          pMaxElementSize->width=1;
+          pMaxElementSize->width=1; // insets added in below
       }
     }
   }
   */
   // end Nav4 hack for 0 width cells
+
+  // NAV4 compatibility: only add insets if cell content was not 0 width
+  if (0!=cellWidth)
+    cellWidth += leftInset + rightInset;    // factor in insets
 
   // set the cell's desired size and max element size
   aDesiredSize.width = cellWidth;
