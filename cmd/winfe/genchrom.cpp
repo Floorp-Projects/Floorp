@@ -1086,25 +1086,20 @@ void CGenericChrome::SetWindowTitle(const char *lpszText)
 		cs += " - ";
 	}
 	cs += m_csWindowTitle;
-
-#if 0
-    //  Ampersand fix, reported by ben@algroup.co.uk
-    //  Not needed under win98; win95 or NT specific?
-    int iLen = cs.GetLength() - 1;
-    while(iLen >= 0)    {
-        if('&' == cs[iLen]) {
-            cs.Insert(iLen, '&');
-        }
-        iLen--;
-    }
-#endif
-
 	m_pParent->SetWindowText(cs);
 }
 
 void CGenericChrome::SetDocumentTitle(const char *lpszText)
 {
-    SetWindowTitle(lpszText);
+	m_csDocTitle = lpszText;
+
+	CString cs;
+	cs = m_csDocTitle;
+	if (!m_csDocTitle.IsEmpty()) {
+		cs += " - ";
+	}
+	cs += m_csWindowTitle;
+	m_pParent->SetWindowText(cs);
 }	
 
 // Constructor and Destructor
