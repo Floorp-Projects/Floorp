@@ -25,7 +25,7 @@ function toHistory()
       }
     }
     if (toolkitCore) {
-      toolkitCore.ShowWindow("resource://res/samples/history.xul",window);
+      toolkitCore.ShowWindow("resource:/res/samples/history.xul",window);
     }
 }
 

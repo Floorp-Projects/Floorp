@@ -52,7 +52,7 @@
   <box align="horizontal"  class="box-group">
 
       <tree id="other-panels" style="width:15em;height:15em;"
-            datasources="resource://res/rdf/sidebar-registry.rdf"
+            datasources="resource:/res/rdf/sidebar-registry.rdf"
             onclick="selected()"
             ref="NC:SidebarRoot" >
     

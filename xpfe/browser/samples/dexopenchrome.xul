@@ -38,7 +38,7 @@
         }
       }
       dump("******* " + features + "\n");
-      window.openDialog("resource://res/samples/dexparamdialog."+extension,
+      window.openDialog("resource:/res/samples/dexparamdialog."+extension,
         "New", features, {remind:true});
     }
     ]]>
