@@ -39,6 +39,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "domstubs.idl"
+#include "nsIDOM3Node.idl"
 
 /**
  * The nsIDOMNode interface is the primary datatype for the entire 
@@ -108,16 +109,4 @@ interface nsIDOMNode : nsISupports
   readonly attribute DOMString        localName;
   // Introduced in DOM Level 2:
   boolean            hasAttributes();
-};
-
-
-[scriptable, uuid(29fb2a18-1dd2-11b2-8dd9-a6fd5d5ad12f)]
-interface nsIDOM3Node : nsISupports
-{
-  // Introduced in DOM Level 3:
-  readonly attribute DOMString        baseURI;
- // Introduced in DOM Level 3:
-  DOMString          lookupNamespacePrefix(in DOMString namespaceURI);
-  // Introduced in DOM Level 3:
-  DOMString          lookupNamespaceURI(in DOMString prefix);
 };
