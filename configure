@@ -7434,6 +7434,9 @@ layout/xml/content/src/Makefile
 layout/xml/document/Makefile
 layout/xml/document/public/Makefile
 layout/xml/document/src/Makefile
+layout/xul/Makefile
+layout/xul/content/Makefile
+layout/xul/content/src/Makefile
 layout/tools/Makefile
 lib/liblayer/Makefile
 lib/liblayer/include/Makefile
