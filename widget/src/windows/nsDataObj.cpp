@@ -52,6 +52,9 @@
 #include "nsXPIDLString.h"
 #include "nsIImage.h"
 #include "nsImageClipboard.h"
+#include "nsIDirectoryService.h"
+#include "nsILocalFile.h"
+#include "nsDirectoryServiceDefs.h"
 #include "prprf.h"
 #include "nsCRT.h"
 
@@ -91,8 +94,7 @@ nsDataObj::nsDataObj()
   mDataFlavors    = new nsVoidArray();
 
   m_enumFE = new CEnumFormatEtc(32);
-  m_enumFE->AddRef();
-
+  m_enumFE->AddRef();  
 }
 
 //-----------------------------------------------------
@@ -184,7 +186,8 @@ STDMETHODIMP nsDataObj::GetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
 
   static CLIPFORMAT fileDescriptorFlavor = ::RegisterClipboardFormat( CFSTR_FILEDESCRIPTOR ); 
   static CLIPFORMAT fileFlavor = ::RegisterClipboardFormat( CFSTR_FILECONTENTS ); 
-  static CLIPFORMAT UniformResourceLocator = ::RegisterClipboardFormat( CFSTR_SHELLURL ); 
+  static CLIPFORMAT UniformResourceLocator = ::RegisterClipboardFormat( CFSTR_SHELLURL );
+  static CLIPFORMAT PreferredDropEffect = ::RegisterClipboardFormat( CFSTR_PREFERREDDROPEFFECT );
 
   ULONG count;
   FORMATETC fe;
@@ -202,6 +205,9 @@ STDMETHODIMP nsDataObj::GetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
         case CF_UNICODETEXT:
         return GetText(*df, *pFE, *pSTM);
                   
+        case CF_HDROP:
+          return GetFile(*df, *pFE, *pSTM);
+
         // Someone is asking for an image
         case CF_DIB:
           return GetDib(*df, *pFE, *pSTM);
@@ -219,6 +225,8 @@ STDMETHODIMP nsDataObj::GetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
             return GetFileContents ( *pFE, *pSTM );
           if ( format == UniformResourceLocator )
             return GetUniformResourceLocator( *pFE, *pSTM );
+          if ( format == PreferredDropEffect )
+            return GetPreferredDropEffect( *pFE, *pSTM );
           PRNTDEBUG2("***** nsDataObj::GetData - Unknown format %u\n", format);
           return GetText(*df, *pFE, *pSTM);
         } //switch
@@ -615,6 +623,31 @@ nsDataObj :: IsInternetShortcut ( )
   
 } // IsInternetShortcut
 
+HRESULT nsDataObj::GetPreferredDropEffect ( FORMATETC& aFE, STGMEDIUM& aSTG )
+{
+  HRESULT res = S_OK;
+  aSTG.tymed = TYMED_HGLOBAL;
+  aSTG.pUnkForRelease = NULL;    
+  HGLOBAL hGlobalMemory = NULL;
+  hGlobalMemory = ::GlobalAlloc(GMEM_MOVEABLE, sizeof(DWORD));
+  if (hGlobalMemory) {
+    DWORD* pdw = (DWORD*) ::GlobalLock(hGlobalMemory);
+    // The PreferredDropEffect clipboard format is only registered if a drag/drop
+    // of an image happens from Mozilla to the desktop.  We want its value
+    // to be DROPEFFECT_MOVE in that case so that the file is moved from the
+    // temporary location, not copied.
+    // This value should, ideally, be set on the data object via SetData() but 
+    // our IDataObject implementation doesn't implement SetData.  It adds data
+    // to the data object lazily only when the drop target asks for it.
+    *pdw = (DWORD) DROPEFFECT_MOVE;
+    BOOL status = ::GlobalUnlock(hGlobalMemory);
+  }
+  else {
+    res = E_OUTOFMEMORY;
+  }
+  aSTG.hGlobal = hGlobalMemory;
+  return res;
+}
 
 //-----------------------------------------------------
 HRESULT nsDataObj::GetText(const nsACString & aDataFlavor, FORMATETC& aFE, STGMEDIUM& aSTG)
@@ -713,6 +746,80 @@ HRESULT nsDataObj::GetText(const nsACString & aDataFlavor, FORMATETC& aFE, STGME
 }
 
 //-----------------------------------------------------
+HRESULT nsDataObj::GetFile(const nsACString & aDataFlavor, FORMATETC& aFE, STGMEDIUM& aSTG)
+{
+  HRESULT res = S_OK;
+  if (strcmp(PromiseFlatCString(aDataFlavor).get(), kFilePromiseMime) == 0) {
+    // XXX We are copying the file twice below.  Once from the original location to the temporary
+    // one (here) and then from the temporary location to the drop location (done by the drop target
+    // when this function returns).  If the file being drag-dropped is in the cache, we should be able to
+    // just pass back its file name to the drop target and save a copy.  Need help here!
+    nsresult rv;
+    if (!mCachedTempFile) {
+      // Save the file to a temporary location.      
+      nsCOMPtr<nsILocalFile> dropDirectory;
+      nsCOMPtr<nsIProperties> directoryService = 
+        do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+      if (!directoryService || NS_FAILED(rv)) return ResultFromScode(E_FAIL);
+      directoryService->Get(NS_OS_TEMP_DIR, 
+                            NS_GET_IID(nsIFile), 
+                            getter_AddRefs(dropDirectory));
+      nsCOMPtr<nsISupports> localFileISupports = do_QueryInterface(dropDirectory);
+      rv = mTransferable->SetTransferData(kFilePromiseDirectoryMime, localFileISupports, sizeof(nsILocalFile*));
+      if (NS_FAILED(rv)) return ResultFromScode(E_FAIL);
+      nsCOMPtr<nsISupports> fileDataPrimitive;
+      PRUint32 dataSize = 0;
+      rv = mTransferable->GetTransferData(kFilePromiseMime, getter_AddRefs(fileDataPrimitive), &dataSize);
+      if (NS_FAILED(rv)) return ResultFromScode(E_FAIL);      
+      
+      mCachedTempFile = do_QueryInterface(fileDataPrimitive);
+      if (!mCachedTempFile) return ResultFromScode(E_FAIL);
+    }
+
+    // Pass the file name back to the drop target so that it can copy to the drop location
+    nsCAutoString path;
+    rv = mCachedTempFile->GetNativePath(path);
+    if (NS_FAILED(rv)) return ResultFromScode(E_FAIL);
+    const char* pFileName = path.get();
+    // Two null characters are needed to terminate the file name list
+    PRUint32 allocLen = path.Length() + 2;
+    HGLOBAL hGlobalMemory = NULL;
+    aSTG.tymed = TYMED_HGLOBAL;
+    aSTG.pUnkForRelease = NULL;    
+    hGlobalMemory = ::GlobalAlloc(GMEM_MOVEABLE, sizeof(DROPFILES) + allocLen);
+    if (hGlobalMemory) {      
+      BOOL status;
+      DROPFILES* pDropFile = NS_REINTERPRET_CAST(DROPFILES*, ::GlobalLock(hGlobalMemory));
+
+      // First, populate drop file structure
+      pDropFile->pFiles = sizeof(DROPFILES);   // offset to start of file name char array
+      pDropFile->fNC = 0;
+      pDropFile->pt.x = 0;
+      pDropFile->pt.y = 0;
+      pDropFile->fWide = 0;
+      
+      // Copy the filename right after the DROPFILES structure
+      char* dest = NS_REINTERPRET_CAST(char*, pDropFile);
+      dest += pDropFile->pFiles;
+      const char* source = pFileName;
+      memcpy (NS_REINTERPRET_CAST(char*, dest), source, allocLen - 1);    // copies the null character in pFileName as well
+
+      // Two null characters are needed at the end of the file name.  
+      // Lookup the CF_HDROP shell clipboard format for more info.
+      // Add the second null character right after the first one.
+      dest[allocLen - 1] = '\0';
+
+      status = ::GlobalUnlock(hGlobalMemory);
+    }
+    else {
+      res = E_OUTOFMEMORY;
+    }
+    aSTG.hGlobal = hGlobalMemory;
+  }
+  return res;
+}
+
+//-----------------------------------------------------
 HRESULT nsDataObj::GetMetafilePict(FORMATETC&, STGMEDIUM&)
 {
 	return ResultFromScode(E_NOTIMPL);
@@ -774,8 +881,19 @@ void nsDataObj::AddDataFlavor(const char* aDataFlavor, LPFORMATETC aFE)
   // Later, OLE will tell us it's needs a certain type of FORMATETC (text, unicode, etc)
   // so we will look up data flavor that corresponds to the FE
   // and then ask the transferable for that type of data
-  mDataFlavors->AppendElement(new nsCAutoString(aDataFlavor));
-  m_enumFE->AddFE(aFE);
+
+  // Add CF_HDROP to the head of the list so that it is returned first
+  // when the drop target calls EnumFormatEtc to enumerate through the FE list
+  // We use the CF_HDROP format to copy file contents when an image is dragged
+  // from Mozilla to a drop target.
+  if (aFE->cfFormat == CF_HDROP) {
+    mDataFlavors->InsertElementAt(new nsCAutoString(aDataFlavor), 0);
+    m_enumFE->InsertFEAt(aFE, 0);
+  }  
+  else {
+    mDataFlavors->AppendElement(new nsCAutoString(aDataFlavor));
+    m_enumFE->AddFE(aFE);
+  }
 }
 
 //-----------------------------------------------------
