@@ -646,20 +646,24 @@ static id gSharedProgressController = nil;
 
 #pragma mark -
 
-// implement to zoom to a size that just fits the contents
+// zoom to fit contents, but don't go under minimum size
 -(NSRect)windowWillUseStandardFrame:(NSWindow *)sender defaultFrame:(NSRect)defaultFrame
 {
-  NSSize scrollFrameSize = [NSScrollView frameSizeForContentSize:[mStackView bounds].size
-                                           hasHorizontalScroller:NO hasVerticalScroller:YES borderType:NSNoBorder];
-  
-  NSSize curScrollFrameSize = [mScrollView frame].size;
-  float frameDelta = (scrollFrameSize.height - curScrollFrameSize.height);
-  
   NSRect windowFrame = [[self window] frame];
-  windowFrame.size.height += frameDelta;
-  windowFrame.origin.y    -= frameDelta;		// maintain top
+  NSSize curScrollFrameSize = [mScrollView frame].size;
+  NSSize scrollFrameSize = [NSScrollView frameSizeForContentSize:[mStackView bounds].size
+                                         hasHorizontalScroller:NO hasVerticalScroller:YES borderType:NSNoBorder];
+  float frameDelta = (curScrollFrameSize.height - scrollFrameSize.height);
   
+  // don't get vertically smaller than the default window size
+  if ((windowFrame.size.height - frameDelta) < mDefaultWindowSize.height) {
+    frameDelta = windowFrame.size.height - mDefaultWindowSize.height;
+  }
+  
+  windowFrame.size.height -= frameDelta;
+  windowFrame.origin.y    += frameDelta; // maintain top
   windowFrame.size.width  = mDefaultWindowSize.width;
+  
   // cocoa will ensure that the window fits onscreen for us
 	return windowFrame;
 }
