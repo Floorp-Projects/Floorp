@@ -197,11 +197,11 @@ echo "<TR><TH width=500>Test Case</TH><TH width=50>Result</TH></TR>" >> ${RESULT
 cd ${CLIENTDIR}
 
 # Launch the server
-echo "selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -i ${SERVERPID} -w nss & "
+echo "selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -i ${SERVERPID} -w nss -c ABCDEFabcdefghijklm & "
 if [ ${fileout} -eq 1 ]; then
-    selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -i ${SERVERPID} -w nss > ${SERVEROUTFILE} 2>&1 & 
+    selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -i ${SERVERPID} -w nss -c ABCDEFabcdefghijklm > ${SERVEROUTFILE} 2>&1 & 
 else
-    selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -w nss -i ${SERVERPID} & 
+    selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -w nss -i ${SERVERPID} -c ABCDEFabcdefghijklm & 
 fi
 # wait until it's alive
 echo "tstclnt -p ${PORT} -h ${HOST} -q -d ${CLIENTDIR} < ${REQUEST_FILE}"
@@ -212,7 +212,7 @@ else
     echo "<TR><TD> Wait for Server </TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
 fi
 
-NULL_SERVER=0
+NULL_SERVER=1	#test to see if we need to restart the server
 
  cat ${SSLCOV} | while read tls param testname
 do
