@@ -2297,7 +2297,7 @@ nsresult nsMsgDBView::DeleteMessages(nsIMsgWindow *window, nsMsgViewIndex *indic
 {
   if (m_deletingRows)  
   {
-    NS_ASSERTION(PR_FALSE, "Last delete did not complete");
+    NS_WARNING("Last delete did not complete");
     return NS_OK;
   }
   nsresult rv = NS_OK;
@@ -2313,10 +2313,9 @@ nsresult nsMsgDBView::DeleteMessages(nsIMsgWindow *window, nsMsgViewIndex *indic
       messageArray->AppendElement(msgHdr);
 
   }
-  if (mDeleteModel != nsMsgImapDeleteModels::IMAPDelete)
+  rv = m_folder->DeleteMessages(messageArray, window, deleteStorage, PR_FALSE, nsnull, PR_TRUE /*allow Undo*/ );
+  if (NS_SUCCEEDED(rv) && mDeleteModel != nsMsgImapDeleteModels::IMAPDelete)
     m_deletingRows = PR_TRUE;
-  m_folder->DeleteMessages(messageArray, window, deleteStorage, PR_FALSE, nsnull, PR_TRUE /*allow Undo*/ );
-
   return rv;
 }
 
