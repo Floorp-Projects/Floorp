@@ -735,20 +735,23 @@ NS_IMETHODIMP
 nsNntpCacheStreamListener::OnStartRequest(nsIRequest *request, nsISupports * aCtxt)
 {
   nsCOMPtr <nsILoadGroup> loadGroup;
+  nsCOMPtr <nsIRequest> ourRequest = do_QueryInterface(mChannelToUse);
+
   mChannelToUse->GetLoadGroup(getter_AddRefs(loadGroup));
   if (loadGroup)
-    loadGroup->AddRequest(request, nsnull /* context isupports */);
-  return mListener->OnStartRequest(request, aCtxt);
+    loadGroup->AddRequest(ourRequest, nsnull /* context isupports */);
+  return mListener->OnStartRequest(ourRequest, aCtxt);
 }
 
 NS_IMETHODIMP
 nsNntpCacheStreamListener::OnStopRequest(nsIRequest *request, nsISupports * aCtxt, nsresult aStatus, const PRUnichar* aMsg)
 {
-  nsresult rv = mListener->OnStopRequest(request, aCtxt, aStatus, aMsg);
+  nsCOMPtr <nsIRequest> ourRequest = do_QueryInterface(mChannelToUse);
+  nsresult rv = mListener->OnStopRequest(ourRequest, aCtxt, aStatus, aMsg);
   nsCOMPtr <nsILoadGroup> loadGroup;
   mChannelToUse->GetLoadGroup(getter_AddRefs(loadGroup));
   if (loadGroup)
-      loadGroup->RemoveRequest(request, nsnull, aStatus, nsnull);
+      loadGroup->RemoveRequest(ourRequest, nsnull, aStatus, nsnull);
 
   // clear out mem cache entry so we're not holding onto it.
   if (mRunningUrl)
@@ -762,7 +765,8 @@ nsNntpCacheStreamListener::OnStopRequest(nsIRequest *request, nsISupports * aCtx
 NS_IMETHODIMP
 nsNntpCacheStreamListener::OnDataAvailable(nsIRequest *request, nsISupports * aCtxt, nsIInputStream * aInStream, PRUint32 aSourceOffset, PRUint32 aCount)
 {
-  return mListener->OnDataAvailable(request, aCtxt, aInStream, aSourceOffset, aCount);
+    nsCOMPtr <nsIRequest> ourRequest = do_QueryInterface(mChannelToUse);
+    return mListener->OnDataAvailable(ourRequest, aCtxt, aInStream, aSourceOffset, aCount);
 }
 
 
