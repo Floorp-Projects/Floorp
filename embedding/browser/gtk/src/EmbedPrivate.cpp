@@ -136,7 +136,7 @@ EmbedPrivate::Init(GtkMozEmbed *aOwningWidget)
   // It is assumed that this will be destroyed when we go out of
   // scope.
   mContentListener = new EmbedContentListener();
-  mContentListenerGuard = mContentListener;
+  mContentListenerGuard = NS_STATIC_CAST(nsISupports*, NS_STATIC_CAST(nsIURIContentListener*, mContentListener));
   mContentListener->Init(this);
 
   // Create our key listener object and initialize it.  It is assumed
