@@ -29,8 +29,7 @@
 #include "nsInterfaceInfoManager.h"
 #include "xptinfo.h"
 
-static NS_DEFINE_IID(kIInterfaceInfoIID, NS_IINTERFACEINFO_IID);
-NS_IMPL_ISUPPORTS(nsInterfaceInfo, kIInterfaceInfoIID);
+NS_IMPL_ISUPPORTS1(nsInterfaceInfo, nsIInterfaceInfo)
 
 nsInterfaceInfo::nsInterfaceInfo(nsInterfaceRecord *record,
                                  nsInterfaceInfo *parent)

@@ -50,8 +50,7 @@ AtomImpl::~AtomImpl()
   }
 }
 
-static NS_DEFINE_IID(kIAtomIID, NS_IATOM_IID);
-NS_IMPL_ISUPPORTS(AtomImpl, kIAtomIID);
+NS_IMPL_ISUPPORTS1(AtomImpl, nsIAtom)
 
 void* AtomImpl::operator new(size_t size, const PRUnichar* us, PRInt32 uslen)
 {

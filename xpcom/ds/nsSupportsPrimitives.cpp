@@ -23,7 +23,7 @@
 
 /***************************************************************************/
 
-NS_IMPL_ISUPPORTS(nsSupportsIDImpl, NS_GET_IID(nsISupportsID))
+NS_IMPL_ISUPPORTS1(nsSupportsIDImpl, nsISupportsID)
 
 nsSupportsIDImpl::nsSupportsIDImpl()
     : mData(nsnull)
@@ -98,7 +98,7 @@ NS_IMETHODIMP nsSupportsIDImpl::toString(char **_retval)
 
 /***************************************************************************/
 
-NS_IMPL_ISUPPORTS(nsSupportsStringImpl, NS_GET_IID(nsISupportsString))
+NS_IMPL_ISUPPORTS1(nsSupportsStringImpl, nsISupportsString)
 
 nsSupportsStringImpl::nsSupportsStringImpl()
     : mData(nsnull)
@@ -151,7 +151,7 @@ NS_IMETHODIMP nsSupportsStringImpl::toString(char **_retval)
 
 /***************************************************************************/
 
-NS_IMPL_ISUPPORTS(nsSupportsWStringImpl, NS_GET_IID(nsISupportsWString))
+NS_IMPL_ISUPPORTS1(nsSupportsWStringImpl, nsISupportsWString)
 
 nsSupportsWStringImpl::nsSupportsWStringImpl()
     : mData(nsnull)
@@ -204,7 +204,7 @@ NS_IMETHODIMP nsSupportsWStringImpl::toString(PRUnichar **_retval)
 
 /***************************************************************************/
 
-NS_IMPL_ISUPPORTS(nsSupportsPRBoolImpl, NS_GET_IID(nsISupportsPRBool))
+NS_IMPL_ISUPPORTS1(nsSupportsPRBoolImpl, nsISupportsPRBool)
 
 nsSupportsPRBoolImpl::nsSupportsPRBoolImpl()
     : mData(PR_FALSE)
@@ -247,7 +247,7 @@ NS_IMETHODIMP nsSupportsPRBoolImpl::toString(char **_retval)
 
 /***************************************************************************/
 
-NS_IMPL_ISUPPORTS(nsSupportsPRUint8Impl, NS_GET_IID(nsISupportsPRUint8))
+NS_IMPL_ISUPPORTS1(nsSupportsPRUint8Impl, nsISupportsPRUint8)
 
 nsSupportsPRUint8Impl::nsSupportsPRUint8Impl()
     : mData(0)
@@ -294,7 +294,7 @@ NS_IMETHODIMP nsSupportsPRUint8Impl::toString(char **_retval)
 
 /***************************************************************************/
 
-NS_IMPL_ISUPPORTS(nsSupportsPRUint16Impl, NS_GET_IID(nsISupportsPRUint16))
+NS_IMPL_ISUPPORTS1(nsSupportsPRUint16Impl, nsISupportsPRUint16)
 
 nsSupportsPRUint16Impl::nsSupportsPRUint16Impl()
     : mData(0)
@@ -341,7 +341,7 @@ NS_IMETHODIMP nsSupportsPRUint16Impl::toString(char **_retval)
 
 /***************************************************************************/
 
-NS_IMPL_ISUPPORTS(nsSupportsPRUint32Impl, NS_GET_IID(nsISupportsPRUint32))
+NS_IMPL_ISUPPORTS1(nsSupportsPRUint32Impl, nsISupportsPRUint32)
 
 nsSupportsPRUint32Impl::nsSupportsPRUint32Impl()
     : mData(0)
@@ -388,7 +388,7 @@ NS_IMETHODIMP nsSupportsPRUint32Impl::toString(char **_retval)
 
 /***************************************************************************/
 
-NS_IMPL_ISUPPORTS(nsSupportsPRUint64Impl, NS_GET_IID(nsISupportsPRUint64))
+NS_IMPL_ISUPPORTS1(nsSupportsPRUint64Impl, nsISupportsPRUint64)
 
 nsSupportsPRUint64Impl::nsSupportsPRUint64Impl()
     : mData(LL_ZERO)
@@ -435,7 +435,7 @@ NS_IMETHODIMP nsSupportsPRUint64Impl::toString(char **_retval)
 
 /***************************************************************************/
 
-NS_IMPL_ISUPPORTS(nsSupportsPRTimeImpl, NS_GET_IID(nsISupportsPRTime))
+NS_IMPL_ISUPPORTS1(nsSupportsPRTimeImpl, nsISupportsPRTime)
 
 nsSupportsPRTimeImpl::nsSupportsPRTimeImpl()
     : mData(LL_ZERO)
@@ -482,7 +482,7 @@ NS_IMETHODIMP nsSupportsPRTimeImpl::toString(char **_retval)
 
 /***************************************************************************/
 
-NS_IMPL_ISUPPORTS(nsSupportsCharImpl, NS_GET_IID(nsISupportsChar))
+NS_IMPL_ISUPPORTS1(nsSupportsCharImpl, nsISupportsChar)
 
 nsSupportsCharImpl::nsSupportsCharImpl()
     : mData(0)
@@ -529,7 +529,7 @@ NS_IMETHODIMP nsSupportsCharImpl::toString(char **_retval)
 
 /***************************************************************************/
 
-NS_IMPL_ISUPPORTS(nsSupportsPRInt16Impl, NS_GET_IID(nsISupportsPRInt16))
+NS_IMPL_ISUPPORTS1(nsSupportsPRInt16Impl, nsISupportsPRInt16)
 
 nsSupportsPRInt16Impl::nsSupportsPRInt16Impl()
     : mData(0)
@@ -576,7 +576,7 @@ NS_IMETHODIMP nsSupportsPRInt16Impl::toString(char **_retval)
 
 /***************************************************************************/
 
-NS_IMPL_ISUPPORTS(nsSupportsPRInt32Impl, NS_GET_IID(nsISupportsPRInt32))
+NS_IMPL_ISUPPORTS1(nsSupportsPRInt32Impl, nsISupportsPRInt32)
 
 nsSupportsPRInt32Impl::nsSupportsPRInt32Impl()
     : mData(0)
@@ -623,7 +623,7 @@ NS_IMETHODIMP nsSupportsPRInt32Impl::toString(char **_retval)
 
 /***************************************************************************/
 
-NS_IMPL_ISUPPORTS(nsSupportsPRInt64Impl, NS_GET_IID(nsISupportsPRInt64))
+NS_IMPL_ISUPPORTS1(nsSupportsPRInt64Impl, nsISupportsPRInt64)
 
 nsSupportsPRInt64Impl::nsSupportsPRInt64Impl()
     : mData(LL_ZERO)
@@ -670,7 +670,7 @@ NS_IMETHODIMP nsSupportsPRInt64Impl::toString(char **_retval)
 
 /***************************************************************************/
 
-NS_IMPL_ISUPPORTS(nsSupportsFloatImpl, NS_GET_IID(nsISupportsFloat))
+NS_IMPL_ISUPPORTS1(nsSupportsFloatImpl, nsISupportsFloat)
 
 nsSupportsFloatImpl::nsSupportsFloatImpl()
     : mData(float(0.0))
@@ -717,7 +717,7 @@ NS_IMETHODIMP nsSupportsFloatImpl::toString(char **_retval)
 
 /***************************************************************************/
 
-NS_IMPL_ISUPPORTS(nsSupportsDoubleImpl, NS_GET_IID(nsISupportsDouble))
+NS_IMPL_ISUPPORTS1(nsSupportsDoubleImpl, nsISupportsDouble)
 
 nsSupportsDoubleImpl::nsSupportsDoubleImpl()
     : mData(double(0.0))
@@ -765,7 +765,7 @@ NS_IMETHODIMP nsSupportsDoubleImpl::toString(char **_retval)
 /***************************************************************************/
 
 
-NS_IMPL_ISUPPORTS(nsSupportsVoidImpl, NS_GET_IID(nsISupportsVoid))
+NS_IMPL_ISUPPORTS1(nsSupportsVoidImpl, nsISupportsVoid)
 
 nsSupportsVoidImpl::nsSupportsVoidImpl()
     : mData(nsnull)

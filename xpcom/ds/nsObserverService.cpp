@@ -28,8 +28,7 @@
 #include "nsHashtable.h"
 #include "nsString.h"
 
-static NS_DEFINE_IID(kIObserverServiceIID, NS_IOBSERVERSERVICE_IID);
-static NS_DEFINE_IID(kObserverServiceCID, NS_OBSERVERSERVICE_CID);
+static NS_DEFINE_CID(kObserverServiceCID, NS_OBSERVERSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -39,7 +38,7 @@ static nsObserverService* gObserverService = nsnull; // The one-and-only Observe
 // nsObserverService Implementation
 
 
-NS_IMPL_ISUPPORTS(nsObserverService, kIObserverServiceIID);
+NS_IMPL_ISUPPORTS1(nsObserverService, nsIObserverService)
 
 NS_COM nsresult NS_NewObserverService(nsIObserverService** anObserverService)
 {

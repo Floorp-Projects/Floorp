@@ -32,7 +32,7 @@
 #include "nsIThread.h"
 
 
-static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 /***************************************************************************/
 /* nsProxyCreateInstance                                                   */
@@ -58,8 +58,8 @@ nsProxyCreateInstance::nsProxyCreateInstance()
 nsProxyCreateInstance::~nsProxyCreateInstance()
 {
 }
-static NS_DEFINE_IID(kIProxyCreateInstanceIID,NS_IPROXYCREATEINSTANCE_IID);
-NS_IMPL_ISUPPORTS(nsProxyCreateInstance, kIProxyCreateInstanceIID);
+
+NS_IMPL_ISUPPORTS1(nsProxyCreateInstance, nsIProxyCreateInstance)
 
 NS_IMETHODIMP nsProxyCreateInstance::CreateInstanceByIID(const nsIID & cid, nsISupports *aOuter, const nsIID & iid, void * *result)
 {
@@ -94,8 +94,7 @@ NS_IMETHODIMP nsProxyCreateInstance::CreateInstanceByProgID(const char *aProgID,
 
 nsProxyObjectManager* nsProxyObjectManager::mInstance = nsnull;
 
-static NS_DEFINE_IID(kIProxyEventManager, NS_IPROXYEVENT_MANAGER_IID);
-NS_IMPL_ISUPPORTS(nsProxyObjectManager, kIProxyEventManager)
+NS_IMPL_ISUPPORTS1(nsProxyObjectManager, nsIProxyObjectManager)
 
 nsProxyObjectManager::nsProxyObjectManager()
 {
@@ -284,7 +283,7 @@ nsProxyEventFactory::~nsProxyEventFactory(void)
 {
 }
 
-NS_IMPL_ISUPPORTS(nsProxyEventFactory,nsIFactory::GetIID())
+NS_IMPL_ISUPPORTS1(nsProxyEventFactory,nsIFactory)
 
 NS_IMETHODIMP
 nsProxyEventFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -327,7 +326,7 @@ nsProxyEventFactory::LockFactory(PRBool aLock)
 ////////////////////////////////////////////////////////////////////////////////
 // DLL Entry Points:
 ////////////////////////////////////////////////////////////////////////////////
-static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
+static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
 extern "C" NS_EXPORT PRBool

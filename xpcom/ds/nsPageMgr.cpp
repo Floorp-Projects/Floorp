@@ -538,27 +538,7 @@ nsPageMgr::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
     return NS_OK;
 }
 
-NS_IMPL_ADDREF(nsPageMgr);
-NS_IMPL_RELEASE(nsPageMgr);
-
-NS_IMETHODIMP
-nsPageMgr::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-    NS_ASSERTION(aInstancePtr != nsnull, "null ptr");
-    static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-    if (aIID.Equals(nsIPageManager::GetIID()) ||
-        aIID.Equals(kISupportsIID)) {
-        *aInstancePtr = NS_STATIC_CAST(nsIPageManager*, this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    if (aIID.Equals(nsIAllocator::GetIID())) {
-        *aInstancePtr = NS_STATIC_CAST(nsIAllocator*, this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    return NS_NOINTERFACE;
-}
+NS_IMPL_ISUPPORTS2(nsPageMgr, nsIPageManager, nsIAllocator)
 
 /******************************************************************************/
 

@@ -24,8 +24,6 @@
 
 #include "nsIEnumerator.h"
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
 ////////////////////////////////////////////////////////////////////////
 
 class EmptyEnumeratorImpl : public nsISimpleEnumerator
@@ -48,7 +46,7 @@ public:
             return NS_ERROR_NULL_POINTER;
 
         if (iid.Equals(nsISimpleEnumerator::GetIID()) ||
-            iid.Equals(kISupportsIID)) {
+            iid.Equals(NS_GET_IID(nsISupports))) {
             *result = (nsISimpleEnumerator*) this;
             NS_ADDREF(this);
             return NS_OK;

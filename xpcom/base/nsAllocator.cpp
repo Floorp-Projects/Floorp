@@ -112,8 +112,7 @@ nsAllocatorFactory::~nsAllocatorFactory(void)
 {
 }
 
-static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-NS_IMPL_ISUPPORTS(nsAllocatorFactory, kIFactoryIID);
+NS_IMPL_ISUPPORTS1(nsAllocatorFactory, nsIFactory)
 
 NS_METHOD
 nsAllocatorFactory::CreateInstance(nsISupports *aOuter,

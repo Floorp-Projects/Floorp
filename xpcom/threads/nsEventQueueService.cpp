@@ -22,16 +22,13 @@
 #include "nsComponentManager.h"
 #include "nsIEventQueue.h"
 
-static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
-
-static NS_DEFINE_IID(kIEventQueueIID, NS_IEVENTQUEUE_IID);
-static NS_DEFINE_IID(kEventQueueCID, NS_EVENTQUEUE_CID);
+static NS_DEFINE_CID(kEventQueueCID, NS_EVENTQUEUE_CID);
 
 EventQueueStack::EventQueueStack(EventQueueStack* next)
 :mNextQueue(next)
 {
   // Create our thread queue using the component manager
-	if (NS_FAILED(nsComponentManager::CreateInstance(kEventQueueCID, NULL, kIEventQueueIID,
+	if (NS_FAILED(nsComponentManager::CreateInstance(kEventQueueCID, NULL, NS_GET_IID(nsIEventQueue),
 		(void**)&mEventQueue))) {
 		mEventQueue = NULL;
 	}
@@ -74,7 +71,7 @@ void EventQueueStack::SetNext(EventQueueStack* aStack)
 ////////////////////////////////////////////////////////////////////////////////
 
 /* nsISupports interface implementation... */
-NS_IMPL_ISUPPORTS(EventQueueEntry,nsCOMTypeInfo<nsISupports>::GetIID());
+NS_IMPL_ISUPPORTS0(EventQueueEntry)
 
 EventQueueEntry::EventQueueEntry()
 {
@@ -162,7 +159,7 @@ nsEventQueueServiceImpl::Create(nsISupports *aOuter, REFNSIID aIID, void **aResu
 }
 
 /* nsISupports interface implementation... */
-NS_IMPL_ISUPPORTS(nsEventQueueServiceImpl,kIEventQueueServiceIID);
+NS_IMPL_ISUPPORTS1(nsEventQueueServiceImpl,nsIEventQueueService)
 
 /* nsIEventQueueService interface implementation... */
 
@@ -229,7 +226,7 @@ nsEventQueueServiceImpl::CreateFromPLEventQueue(PLEventQueue* aPLEventQueue, nsI
 	// Create our thread queue using the component manager
 	nsresult rv;
 	nsIEventQueue* aQueue;
-	if (NS_FAILED(rv = nsComponentManager::CreateInstance(kEventQueueCID, NULL, kIEventQueueIID,
+	if (NS_FAILED(rv = nsComponentManager::CreateInstance(kEventQueueCID, NULL, NS_GET_IID(nsIEventQueue),
 		            (void**)&aQueue))) {
 		return rv;
 	}

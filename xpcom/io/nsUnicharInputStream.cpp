@@ -32,7 +32,6 @@
 #include <unistd.h>
 #endif
 
-static NS_DEFINE_IID(kIUnicharInputStreamIID, NS_IUNICHAR_INPUT_STREAM_IID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 class StringUnicharInputStream : public nsIUnicharInputStream {
@@ -98,7 +97,7 @@ nsresult StringUnicharInputStream::Close()
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(StringUnicharInputStream, kIUnicharInputStreamIID);
+NS_IMPL_ISUPPORTS1(StringUnicharInputStream, nsIUnicharInputStream)
 
 NS_COM nsresult
 NS_NewStringUnicharInputStream(nsIUnicharInputStream** aInstancePtrResult,
@@ -115,7 +114,7 @@ NS_NewStringUnicharInputStream(nsIUnicharInputStream** aInstancePtrResult,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return it->QueryInterface(kIUnicharInputStreamIID,
+  return it->QueryInterface(NS_GET_IID(nsIUnicharInputStream),
                             (void**) aInstancePtrResult);
 }
 
@@ -201,7 +200,7 @@ ConverterInputStream::ConverterInputStream(nsIInputStream* aStream,
   mUnicharDataLength = 0;
 }
 
-NS_IMPL_ISUPPORTS(ConverterInputStream,kIUnicharInputStreamIID);
+NS_IMPL_ISUPPORTS1(ConverterInputStream,nsIUnicharInputStream)
 
 ConverterInputStream::~ConverterInputStream()
 {
@@ -315,6 +314,6 @@ NS_NewConverterStream(nsIUnicharInputStream** aInstancePtrResult,
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kIUnicharInputStreamIID, 
+  return it->QueryInterface(NS_GET_IID(nsIUnicharInputStream), 
                             (void **) aInstancePtrResult);
 }

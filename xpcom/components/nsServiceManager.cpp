@@ -188,27 +188,7 @@ nsServiceManagerImpl::~nsServiceManagerImpl(void)
     }
 }
 
-static NS_DEFINE_IID(kIServiceManagerIID, NS_ISERVICEMANAGER_IID);
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
-NS_IMPL_ADDREF(nsServiceManagerImpl);
-NS_IMPL_RELEASE(nsServiceManagerImpl);
-
-NS_IMETHODIMP
-nsServiceManagerImpl::QueryInterface(const nsIID& aIID, void* *aInstancePtr)
-{
-    if (NULL == aInstancePtr) {
-        return NS_ERROR_NULL_POINTER; 
-    } 
-    *aInstancePtr = NULL; 
-    if (aIID.Equals(kIServiceManagerIID) ||
-        aIID.Equals(kISupportsIID)) {
-        *aInstancePtr = (void*) this; 
-        AddRef(); 
-        return NS_OK; 
-    } 
-    return NS_NOINTERFACE; 
-}
+NS_IMPL_ISUPPORTS1(nsServiceManagerImpl, nsIServiceManager)
 
 NS_IMETHODIMP
 nsServiceManagerImpl::GetService(const nsCID& aClass, const nsIID& aIID,

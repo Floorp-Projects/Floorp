@@ -50,7 +50,7 @@ nsSupportsArray::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
   return rv;
 }
 
-NS_IMPL_ISUPPORTS(nsSupportsArray, nsISupportsArray::GetIID());
+NS_IMPL_ISUPPORTS1(nsSupportsArray, nsISupportsArray)
 
 void nsSupportsArray::DeleteArray(void)
 {

@@ -28,9 +28,6 @@
 #include "nsIServiceManager.h"
 #include "nsIAllocator.h"
         
-static NS_DEFINE_IID(kProxyObjectManagerIID, NS_IPROXYEVENT_MANAGER_IID);
-static NS_DEFINE_IID(kProxyObject_Identity_Class_IID, NS_PROXYEVENT_IDENTITY_CLASS_IID);
-
 static void* EventHandler(PLEvent *self);
 static void DestroyHandler(PLEvent *self);
 
@@ -56,8 +53,7 @@ nsProxyObjectCallInfo::~nsProxyObjectCallInfo()
         free( (void*) mParameterList);
 }
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-NS_IMPL_ISUPPORTS(nsProxyObject, kISupportsIID)
+NS_IMPL_ISUPPORTS0(nsProxyObject)
 
 nsProxyObject::nsProxyObject()
 {
@@ -251,6 +247,9 @@ nsProxyObject::AutoProxyParameterList(PRUint32 methodIndex, nsXPTMethodInfo *met
                 continue;
 
             nsISupports *aProxyObject;
+
+							// I wish I could get rid of this instance of |NS_DEFINE_IID|, but |ProxyEventClassIdentity| is not visible from here
+						static NS_DEFINE_IID(kProxyObject_Identity_Class_IID, NS_PROXYEVENT_IDENTITY_CLASS_IID);
             rv = anInterface->QueryInterface(kProxyObject_Identity_Class_IID, (void**)&aProxyObject);
         
             if (NS_FAILED(rv))
@@ -259,7 +258,7 @@ nsProxyObject::AutoProxyParameterList(PRUint32 methodIndex, nsXPTMethodInfo *met
                 nsIProxyObjectManager*  manager;
 
                 rv = nsServiceManager::GetService( NS_XPCOMPROXY_PROGID, 
-                                                   kProxyObjectManagerIID,
+                                                   NS_GET_IID(nsIProxyObjectManager),
                                                    (nsISupports **)&manager);
         
                 if (NS_SUCCEEDED(rv))

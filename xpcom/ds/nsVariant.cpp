@@ -44,7 +44,7 @@ protected:
     nsVariantValue mValue;
 };
 
-NS_IMPL_ISUPPORTS(nsVariant, nsIVariant::GetIID());
+NS_IMPL_ISUPPORTS1(nsVariant, nsIVariant)
 
 nsVariant::nsVariant(nsVariantType type, nsVariantValue& value)
     : mType(type), mValue(value)

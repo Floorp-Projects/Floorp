@@ -30,23 +30,7 @@ nsGenericFactory::~nsGenericFactory()
 		(*mDestructor) ();
 }
 
-NS_METHOD nsGenericFactory::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-    if (NULL == aInstancePtr) {                                            
-        return NS_ERROR_NULL_POINTER;                                        
-    }                                                                      
-    if (aIID.Equals(nsIGenericFactory::GetIID()) ||
-        aIID.Equals(nsIFactory::GetIID()) ||
-    	aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
-        *aInstancePtr = (nsIGenericFactory*) this;
-        NS_ADDREF_THIS();
-        return NS_OK; 
-    } 
-    return NS_NOINTERFACE;
-}
-
-NS_IMPL_ADDREF(nsGenericFactory)
-NS_IMPL_RELEASE(nsGenericFactory)
+NS_IMPL_ISUPPORTS2(nsGenericFactory, nsIGenericFactory, nsIFactory)
 
 NS_IMETHODIMP nsGenericFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {

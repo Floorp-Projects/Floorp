@@ -129,8 +129,7 @@ nsDll::Init(const char *libPersistentDescriptor)
 
     // Create a FileSpec from the persistentDescriptor
     nsIFileSpec *dllSpec = NULL;
-    NS_DEFINE_IID(kFileSpecIID, NS_IFILESPEC_IID);
-    rv = nsComponentManager::CreateInstance(NS_FILESPEC_PROGID, NULL, kFileSpecIID, (void **) &dllSpec);
+    rv = nsComponentManager::CreateInstance(NS_FILESPEC_PROGID, NULL, NS_GET_IID(nsIFileSpec), (void **) &dllSpec);
     if (NS_FAILED(rv))
     {
         m_status = DLL_INVALID_PARAM;
