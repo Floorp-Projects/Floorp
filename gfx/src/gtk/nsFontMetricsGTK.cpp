@@ -3980,7 +3980,7 @@ nsFontMetricsGTK::GetBoundingMetrics(const char *aString, PRUint32 aLength,
         rv = mCurrentFont->GetBoundingMetrics(unichars, len,
                                               aBoundingMetrics);
     }
-    if (!mCurrentFont->GetXFontIs10646()) {
+    else if (!mCurrentFont->GetXFontIs10646()) {
         // 8 bit data with an 8 bit font
         NS_ASSERTION(xFont->IsSingleByte(),"wrong string/font size");
         xFont->TextExtents8(aString, aLength,
