@@ -16,11 +16,11 @@
 
 /* starting interface nsINNTPHost */
 
-/* {ADFB3740-AA57-11d2-B7ED-00805F05FFA5} */
-#define NS_INNTPHOST_IID_STR "ADFB3740-AA57-11d2-B7ED-00805F05FFA5"
+/* {6b128da0-d74f-11d2-b7f9-00805f05ffa5} */
+#define NS_INNTPHOST_IID_STR "6b128da0-d74f-11d2-b7f9-00805f05ffa5"
 #define NS_INNTPHOST_IID \
-  {0xADFB3740, 0xAA57, 0x11d2, \
-    { 0xB7, 0xED, 0x00, 0x80, 0x5F, 0x05, 0xFF, 0xA5 }}
+  {0x6b128da0, 0xd74f, 0x11d2, \
+    { 0xb7, 0xf9, 0x00, 0x80, 0x5f, 0x05, 0xff, 0xa5 }}
 
 class nsINNTPHost : public nsISupports {
  public: 
