@@ -333,7 +333,7 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
   // See whether we have 'auto' scrollbars
   // XXX What about the case where we're shrink-wrapping our height?
   if (aReflowState.mStyleDisplay->mOverflow == NS_STYLE_OVERFLOW_SCROLL) {
-    // Always show scrollbars, so subtract for the space talen up by the
+    // Always show scrollbars, so subtract for the space taken up by the
     // vertical scrollbar
     if (!unconstrainedWidth) {
       scrollAreaSize.width -= NSToCoordRound(sbWidth);
@@ -508,7 +508,8 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
   // Compute our desired size
   aDesiredSize.width = scrollAreaSize.width;
   aDesiredSize.width += border.left + border.right;
-  if (kidDesiredSize.height > scrollAreaSize.height) {
+  if ((kidDesiredSize.height > scrollAreaSize.height) ||
+      (aReflowState.mStyleDisplay->mOverflow == NS_STYLE_OVERFLOW_SCROLL)) {
     aDesiredSize.width += NSToCoordRound(sbWidth);
   }
   
