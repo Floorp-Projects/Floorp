@@ -48,6 +48,7 @@ REQUIRES = 	\
 		js \
 		windowwatcher \
 		intl \
+		pref \
 		$(NULL)
 
 CPPSRCS = nsFormFillController.cpp \

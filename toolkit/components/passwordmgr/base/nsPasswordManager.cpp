@@ -227,13 +227,12 @@ nsPasswordManager::Init()
   nsCOMPtr<nsIPrefService> prefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
   NS_ASSERTION(prefService, "No pref service");
 
-  nsCOMPtr<nsIPrefBranch> prefBranch;
-  prefService->GetBranch("signon.", getter_AddRefs(prefBranch));
-  NS_ASSERTION(prefBranch, "No pref branch");
+  prefService->GetBranch("signon.", getter_AddRefs(mPrefBranch));
+  NS_ASSERTION(mPrefBranch, "No pref branch");
 
-  prefBranch->GetBoolPref("rememberSignons", &sRememberPasswords);
+  mPrefBranch->GetBoolPref("rememberSignons", &sRememberPasswords);
 
-  nsCOMPtr<nsIPrefBranchInternal> branchInternal = do_QueryInterface(prefBranch);
+  nsCOMPtr<nsIPrefBranchInternal> branchInternal = do_QueryInterface(mPrefBranch);
 
   // Have the pref service hold a weak reference; the service manager
   // will be holding a strong reference.
@@ -259,7 +258,7 @@ nsPasswordManager::Init()
 
   // Now read in the signon file
   nsXPIDLCString signonFile;
-  prefBranch->GetCharPref("SignonFileName", getter_Copies(signonFile));
+  mPrefBranch->GetCharPref("SignonFileName", getter_Copies(signonFile));
   NS_ASSERTION(!signonFile.IsEmpty(), "Fallback for signon filename not present");
 
   NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(mSignonFile));
@@ -553,7 +552,7 @@ nsPasswordManager::Observe(nsISupports* aSubject,
 {
   if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
     nsCOMPtr<nsIPrefBranch> branch = do_QueryInterface(aSubject);
-    NS_ASSERTION(branch, "subject should be a pref branch");
+    NS_ASSERTION(branch == mPrefBranch, "unexpected pref change notification");
 
     branch->GetBoolPref("rememberSignons", &sRememberPasswords);
   }
