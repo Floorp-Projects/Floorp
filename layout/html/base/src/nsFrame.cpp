@@ -1680,7 +1680,7 @@ nsFrame::XMLQuote(nsString& aString)
       len += 3;
       i += 3;
     }
-    else if (ch == '"') {
+    else if (ch == '\"') {
       nsAutoString tmp("&quot;");
       aString.Cut(i, 1);
       aString.Insert(tmp, i);
