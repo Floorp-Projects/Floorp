@@ -25,7 +25,7 @@
 #include <gtk/gtk.h>
 
 class nsDrawingSurfaceGTK : public nsIDrawingSurface,
-                            nsIDrawingSurfaceGTK
+                            public nsIDrawingSurfaceGTK
 {
 public:
   nsDrawingSurfaceGTK();
