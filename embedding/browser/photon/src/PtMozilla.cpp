@@ -511,11 +511,15 @@ static void mozilla_modify( PtWidget_t *widget, PtArg_t const *argt ) {
 			WWWRequest *pPageInfo = ( WWWRequest * ) argt->value;
 			PpPrintContext_t *pc = moz_construct_print_context( pPageInfo );
 
+#if 0 // until patch can be put in from Bug 112048
 			nsresult rv;
 			nsCOMPtr<nsIPrintOptions> printService =
 			             do_GetService(kPrintOptionsCID, &rv);
 			printService->SetEndPageRange( (PRInt32) pc ); /* use SetEndPageRange/GetEndPageRange to convey the print context */
 			print->Print( window, printService, moz->MyBrowser->WebBrowserContainer );
+#else
+			print->Print( window, nsnull, moz->MyBrowser->WebBrowserContainer );
+#endif
 		    }
 		    break;
 
