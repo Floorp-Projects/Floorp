@@ -72,6 +72,7 @@ Rights Reserved.
 				 valueAddressBook="&deleteAbCmd.label;"
 				 valueCard="&deleteCardCmd.label;"
 				 valueCards="&deleteCardsCmd.label;"/>
+	<broadcaster id="cmd_CardProperties" oncommand="AbEditCard();"/>
 	<broadcaster id='button_delete'/>
 	<broadcaster id='cmd_selectAll'/>
 	<broadcaster id="cmd_preferences"/>
@@ -88,6 +89,7 @@ Rights Reserved.
 	<!-- Edit Menu -->
 	<key id="key_delete"/>
 	<key id="key_selectAll"/>
+	<key id="key_CardProperties" key="&cardPropertiesCmd.key;" observes="cmd_CardProperties" modifiers="accel"/>
 </keyset>
 
 <popupset id="aTooltipSet"/>
@@ -122,9 +124,10 @@ Rights Reserved.
 			<menuseparator/>
 			<menuitem id="menu_selectAll"/>
 			<menuseparator/>
-			<menuitem value="&editCardCmd.label;"
-			          accesskey="&editCardCmd.accesskey;"
-			          oncommand="AbEditCard();"/>
+			<menuitem value="&cardPropertiesCmd.label;"
+			          accesskey="&cardPropertiesCmd.accesskey;"
+				  key="key_CardProperties"
+				  observes="cmd_CardProperties"/>
 			<menuseparator/>
 			<menuitem id="menu_preferences" oncommand="goPreferences('addressbook.xul', 'chrome://messenger/content/addressbook/pref-addressing.xul')"/>
 		  </menupopup>

@@ -50,9 +50,10 @@ Rights Reserved.
 <!ENTITY deleteAbCmd.label					"Delete Address Book">  
 <!ENTITY deleteCardCmd.label				"Delete Card">  
 <!ENTITY deleteCardsCmd.label				"Delete Selected Cards">  
-<!ENTITY editCardCmd.label					"Edit Card...">
+<!ENTITY cardPropertiesCmd.label			"Card Properties...">
 <!-- LOCALIZATION NOTE (editCardCmd.accesskey) : DONT_TRANSLATE -->  
-<!ENTITY editCardCmd.accesskey				"e">  
+<!ENTITY cardPropertiesCmd.accesskey			"i">  
+<!ENTITY cardPropertiesCmd.key				"i">  
 
 <!-- View Menu -->
 <!ENTITY showAbToolbarCmd.label				"Address Book Toolbar">  
