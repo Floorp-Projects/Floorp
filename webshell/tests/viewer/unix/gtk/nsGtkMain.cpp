@@ -26,7 +26,6 @@
 #include "plevent.h"
 #include "prinit.h"
 #include "prlog.h"
-#include "dlfcn.h"
 
 static nsNativeViewerApp* gTheApp;
 
