@@ -26,8 +26,8 @@
 var UBound = 0;
 var bug = '(none)';
 var summary = 'Testing is operator on user-defined classes';
-var cnYES = 'given obj is given Class == true';
-var cnNO = 'given obj is given Class == false';
+var cnYES = 'instance X is class X == true';
+var cnNO = 'instance X is class X == false';
 var cnRED = 'red';
 var status = '';
 var statusitems = [];
