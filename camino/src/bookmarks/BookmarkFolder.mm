@@ -796,7 +796,19 @@ NSString* BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
   [self setTitle:[aDict objectForKey:BMTitleKey]];
   [self setDescription:[aDict objectForKey:BMFolderDescKey]];
   [self setKeyword:[aDict objectForKey:BMFolderKeywordKey]];
-  [self setSpecialFlag:[[aDict objectForKey:BMFolderTypeKey] unsignedIntValue]];
+  unsigned int flag = [[aDict objectForKey:BMFolderTypeKey] unsignedIntValue];
+  // on the off chance we've imported somebody else's bookmarks after startup,
+  // we need to clear any super special flags on it.  if we have a shared bookmark manager,
+  // we're not in startup, so clear things out.
+  if ([BookmarkManager sharedBookmarkManager]) {
+    if ((flag & kBookmarkRootFolder) != 0)
+      flag &= ~kBookmarkRootFolder;
+    if ((flag & kBookmarkToolbarFolder) != 0)
+      flag &= ~kBookmarkToolbarFolder;
+    if ((flag & kBookmarkSmartFolder) != 0)
+      flag &= ~kBookmarkSmartFolder;
+  }
+  [self setSpecialFlag:flag];
   enumerator = [[aDict objectForKey:BMChildrenKey] objectEnumerator];
   while ((aKid = [enumerator nextObject]) && noErr) {
     if ([aKid objectForKey:BMChildrenKey])
@@ -972,13 +984,13 @@ NSString* BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
       formatString = @"%@<DT><H3 FOLDER_GROUP=\"true\">%@</H3>\n%@<DL><p>\n";
     else
       formatString = @"%@<DT><H3>%@</H3>\n%@<DL><p>\n";
-    htmlString = [NSString stringWithFormat:formatString, padString, [NSString stringWithUTF8String:[[mTitle stringByAddingAmpEscapes] UTF8String]], padString];
+    htmlString = [NSString stringWithFormat:formatString, padString,[mTitle stringByAddingAmpEscapes],padString];
   }
   // Toolbar Folder
   else if ([self isToolbar])
     htmlString = [NSString stringWithFormat:@"%@<DT><H3 PERSONAL_TOOLBAR_FOLDER=\"true\">%@</H3>\n%@<DL><p>\n",
       padString,
-      [NSString stringWithUTF8String:[[mTitle stringByAddingAmpEscapes] UTF8String]],
+      [mTitle stringByAddingAmpEscapes],
       padString];
   // Root Folder
   else if ([self isRoot]) 

@@ -606,15 +606,15 @@ static void doHTTPUpdateCallBack(CFReadStreamRef stream, CFStreamEventType type,
   for (unsigned i = 0;i<aPad;i++)
     [padString insertString:@"    " atIndex:0];  
   if ([mDescription length] > 0)
-    formatString = @"%@<DT><A HREF=\"%s\">%s</A>\n%@<DD>%s\n";
+    formatString = @"%@<DT><A HREF=\"%@\">%@</A>\n%@<DD>%@\n";
   else
-    formatString = @"%@<DT><A HREF=\"%s\">%s</A>\n";
+    formatString = @"%@<DT><A HREF=\"%@\">%@</A>\n";
   return [NSString stringWithFormat:formatString,
     padString,
-    [[self url] UTF8String],
-    [[mTitle stringByAddingAmpEscapes] UTF8String],
+    [self url],
+    [mTitle stringByAddingAmpEscapes],
     padString,
-    [[mDescription stringByAddingAmpEscapes] UTF8String]];
+    [mDescription stringByAddingAmpEscapes]];
 }
 
 //

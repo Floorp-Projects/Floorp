@@ -809,10 +809,9 @@ static unsigned gFirstUserCollection = 0;
 
 - (void) writeHTMLFile:(NSString *)pathToFile
 {
-  NSString *htmlString = [[self rootBookmarks] writeHTML:0];
-  if (![htmlString writeToFile:[pathToFile stringByStandardizingPath] atomically:YES])
+  NSData *htmlData = [[[self rootBookmarks] writeHTML:0] dataUsingEncoding:NSUTF8StringEncoding];
+  if (![htmlData writeToFile:[pathToFile stringByStandardizingPath] atomically:YES])
     NSLog(@"writeHTML: Failed to write file %@",pathToFile);
-  return;
 }
 
 -(void) writeSafariFile:(NSString *)pathToFile
@@ -820,15 +819,13 @@ static unsigned gFirstUserCollection = 0;
   NSDictionary* dict = [[self rootBookmarks] writeSafariDictionary];
   if (![dict writeToFile:[pathToFile stringByStandardizingPath] atomically:YES])
     NSLog(@"writeSafariFile: Failed to write file %@",pathToFile);
-  return;
-  
 }
+
 -(void)writePropertyListFile:(NSString *)pathToFile
 {
   NSDictionary* dict = [[self rootBookmarks] writeNativeDictionary];
   if (![dict writeToFile:[pathToFile stringByStandardizingPath] atomically:YES])
     NSLog(@"writePropertyList: Failed to write file %@",pathToFile);
-  return;
 }
 
 
