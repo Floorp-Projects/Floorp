@@ -74,6 +74,9 @@ static char* startURL;
 static nsVoidArray* gWindows;
 static PRBool gDoPurify;
 static PRBool gDoQuantify;
+static PRBool gLoadTestFromFile;
+static PRInt32 gDelay=1;
+static char gInputFileName[_MAX_PATH+1];
 
 // Debug Robot options
 static int gDebugRobotLoads = 5000;
@@ -194,6 +197,62 @@ void AddTestDocs(nsDocLoader* aDocLoader)
     PR_snprintf(url, 500, "%s/test%d.html", SAMPLES_BASE_URL, docnum);
     aDocLoader->AddURL(url);
   }
+}
+
+//----------------------------------------------------------------------
+
+/*
+ * SelfTest methods
+ */
+void AddTestDocsFromFile(nsDocLoader* aDocLoader, char *aFileName)
+{
+  /* Steve's table test code.  
+     Assumes you have a file in the current working directory called aFileName
+     that contains a list of URLs, one per line, of files to load.
+   */
+
+  PRFileDesc* input = PR_Open(aFileName, PR_RDONLY, 0);
+  if (nsnull==input)
+  {
+    printf("FAILED TO OPEN %s!", aFileName);
+    return;
+  }
+  // read one line of input and pass it in as a URL
+  char *inputString = new char[10000];
+  if (nsnull==inputString)
+  {
+    printf("couldn't allocate buffer, insufficient memory\n");
+    exit (-1);
+  }
+  nsCRT::memset(inputString, 0, 10000);
+  PR_Read(input, inputString, 10000);
+  PR_Close(input);
+
+  char *nextInput = inputString;
+  while (nsnull!=nextInput && nsnull!=*nextInput)
+  {
+    char * endOfLine = PL_strchr(nextInput, '\n');
+    if (nsnull!=nextInput)
+    {
+      if (nsnull!=endOfLine)
+      {
+        char save = *endOfLine;
+        *endOfLine = nsnull;
+      }
+      if ('#' != *nextInput)  // use '#' as a comment character
+      {
+        aDocLoader->AddURL(nextInput);
+      }
+      if (nsnull!=endOfLine)
+      {
+        nextInput = endOfLine+1;
+      }
+      else
+        nextInput = nsnull;
+    }
+  }
+  if (nsnull!=inputString)
+    delete [] inputString;
 }
 
 //----------------------------------------------------------------------
@@ -693,12 +752,17 @@ WinMain(HANDLE instance, HANDLE prevInstance, LPSTR cmdParam, int nCmdShow)
   // Determine if we should run the purify test
   nsDocLoader* dl = nsnull;
   if (gDoPurify) {
-    dl = new nsDocLoader(wd->ww);
+    dl = new nsDocLoader(wd->ww, gDelay);
 
     // Add the documents to the loader
     AddTestDocs(dl);
 
     // Start the timer
+    dl->StartTimedLoading();
+  }
+  else if (gLoadTestFromFile) {
+    dl = new nsDocLoader(wd->ww, gDelay);
+    AddTestDocsFromFile(dl, gInputFileName);
     dl->StartTimedLoading();
   }
   else {
@@ -792,6 +856,15 @@ BOOL CreateRobotDialog(HWND hParent)
    return result;
 }
 
+void PrintHelpInfo(char **argv)
+{
+  fprintf(stderr, "Usage: %s [-p][-q][-f filename][-d #] [starting url]\n", argv[0]);
+  fprintf(stderr, "\t-p   -- run purify\n");
+  fprintf(stderr, "\t-q   -- run quantify\n");
+  fprintf(stderr, "\t-d # -- set the delay between URL loads to # (in milliseconds)\n");
+  fprintf(stderr, "\t-f filename -- read a list of URLs from <filename>\n");
+}
+
 void main(int argc, char **argv)
 {
   for (int i = 1; i < argc; i++) {
@@ -802,8 +875,26 @@ void main(int argc, char **argv)
       else if (strcmp(argv[i], "-q") == 0) {
         gDoQuantify = PR_TRUE;
       }
+      else if (strcmp(argv[i], "-f") == 0) {
+        gLoadTestFromFile = PR_TRUE;
+        i++;
+        if (i>=argc || nsnull==argv[i] || nsnull==*(argv[i]))
+        {
+          PrintHelpInfo(argv);
+          exit(-1);
+        }
+        strcpy(gInputFileName, argv[i]);
+      }
+      else if (strcmp(argv[i], "-d") == 0) {
+        i++;
+        if (i>=argc || 1!=sscanf(argv[i], "%d", &gDelay))
+        {
+          PrintHelpInfo(argv);
+          exit(-1);
+        }
+      }
       else {
-        fprintf(stderr, "Usage: %s [-p][-q] [starting url]\n", argv[0]);
+        PrintHelpInfo(argv);
         exit(-1);
       }
     }
@@ -815,5 +906,7 @@ void main(int argc, char **argv)
   }
   WinMain(GetModuleHandle(NULL), NULL, 0, SW_SHOW);
 }
+
+
 
 
