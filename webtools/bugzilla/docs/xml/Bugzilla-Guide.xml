@@ -121,7 +121,7 @@ try to avoid clutter and feel free to waste space in the code to make it more re
       <para>  
 	      This documentation is maintained in DocBook 4.1.2 XML format.
         Changes are best submitted as plain text or XML diffs, attached
-        to a bug filed in the &bzg-bugs; compontent.
+        to a bug filed in the &bzg-bugs; component.
       </para>
       <![%bz-devel;[
         <para>This is a development version of this guide.  Information in it
