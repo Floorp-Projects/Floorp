@@ -78,6 +78,7 @@ public:
 	NS_IMETHOD ForceClosed();
 
 	NS_IMETHOD CreateNewCardAndAddToDB(nsIAbCard *newCard, PRBool notify);
+	NS_IMETHOD CreateNewListCardAndAddToDB(PRUint32 listRowID, nsIAbCard *newCard, PRBool notify);
 	NS_IMETHOD CreateMailListAndAddToDB(nsIAbDirectory *newList, PRBool notify);
 	NS_IMETHOD EnumerateCards(nsIAbDirectory *directory, nsIEnumerator **result);
 	NS_IMETHOD GetMailingListsFromDB(nsIAbDirectory *parentDir);
@@ -85,6 +86,10 @@ public:
 	NS_IMETHOD DeleteCard(nsIAbCard *newCard, PRBool notify);
 	NS_IMETHOD EditCard(nsIAbCard *card, PRBool notify);
 	NS_IMETHOD ContainsCard(nsIAbCard *card, PRBool *hasCard);
+	NS_IMETHOD DeleteMailList(nsIAbDirectory *mailList, PRBool notify);
+	NS_IMETHOD EditMailList(nsIAbDirectory *mailList, PRBool notify);
+	NS_IMETHOD ContainsMailList(nsIAbDirectory *mailList, PRBool *hasCard);
+	NS_IMETHOD DeleteCardFromMailList(nsIAbDirectory *mailList, nsIAbCard *card, PRBool beNotify);
 
 	NS_IMETHOD GetCardForEmailAddress(nsIAbDirectory *directory, const char *emailAddress, nsIAbCard **card);
 
@@ -217,6 +222,7 @@ public:
 	{ return AddCharStringColumn(row, m_NotesColumnToken, value); }
 
 	NS_IMETHOD CreateCollationKey(const PRUnichar *sourceStr, nsString& resultStr);
+	NS_IMETHOD GetDirectoryName(PRUnichar **name);
 
 	//////////////////////////////////////////////////////////////////////////////
 	// nsAddrDatabase methods:
@@ -279,6 +285,7 @@ protected:
 	nsresult GetListFromDB(nsIAbDirectory *newCard, nsIMdbRow* cardRow);
 	nsresult GetAnonymousAttributesFromDB();
 	nsresult AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *cardRow);
+	nsresult AddListCardColumnsToRow(nsIAbCard *pCard, nsIMdbRow *pListRow, PRUint32 pos);
 	nsresult AddListAttributeColumnsToRow(nsIAbDirectory *list, nsIMdbRow *listRow);
 	nsresult RemoveAnonymousList(nsVoidArray* pArray);
 	nsresult SetAnonymousAttribute(nsVoidArray** pAttrAray, 
@@ -291,6 +298,9 @@ protected:
 	nsresult FindAttributeRow(nsIMdbTable* pTable, mdb_token columnToken, nsIMdbRow** row);
 	nsresult GetRowForEmailAddress(const char *emailAddress, nsIMdbRow	**cardRow);
 	nsresult CreateCard(nsIMdbRow* cardRow, mdb_id listRowID, nsIAbCard **result);
+	nsresult SetListAddressTotal(nsIMdbRow* listRow, PRUint32 total);
+	nsresult DeleteCardFromListRow(nsIMdbRow* pListRow, mdb_id cardRowID);
+	void DeleteCardFromAllMailLists(mdb_id cardRowID);
 
 	nsresult GetCollationKeyGenerator();
 

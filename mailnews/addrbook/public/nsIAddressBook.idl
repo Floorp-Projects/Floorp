@@ -23,7 +23,7 @@
 #include "nsISupports.idl"
 #include "xulstubs.idl"
 #include "nsIRDFCompositeDataSource.idl"
-#include "nsIAbCard.idl"
+#include "nsIAddrDatabase.idl"
 
 
 %{C++
@@ -46,5 +46,6 @@ interface nsIAddressBook : nsISupports {
 	void importAddressBook();
     void convertLDIFtoMAB(in nsIFileSpec fileSpec, in boolean migrating);
     void convertNA2toLDIF(in nsIFileSpec srcFileSpec, in nsIFileSpec dstFileSpec);
+    void getAbDatabaseFromURI(in string URI, out nsIAddrDatabase db);
 };
 

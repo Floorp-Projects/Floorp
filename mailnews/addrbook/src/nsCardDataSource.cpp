@@ -323,7 +323,7 @@ NS_IMETHODIMP nsAbCardDataSource::GetTargets(nsIRDFResource* source,
         return NS_ERROR_OUT_OF_MEMORY;
       NS_ADDREF(cursor);
       *targets = cursor;
-      rv = NS_OK;
+	  return NS_OK;
     }
   }
   else {
@@ -336,10 +336,10 @@ NS_IMETHODIMP nsAbCardDataSource::GetTargets(nsIRDFResource* source,
 		  return NS_ERROR_OUT_OF_MEMORY;
 	  NS_ADDREF(cursor);
 	  *targets = cursor;
-	  rv = NS_OK;
+	  return NS_OK;
   }
 
-  return rv;
+  return NS_NewEmptyEnumerator(targets);
 }
 
 NS_IMETHODIMP nsAbCardDataSource::HasAssertion(nsIRDFResource* source,

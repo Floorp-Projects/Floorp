@@ -36,10 +36,13 @@
 #include "nsAddrDatabase.h"
 #include "nsIAddrBookSession.h"
 #include "nsIPref.h"
+#include "nsIAddressBook.h"
 
 static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRDATABASE_CID);
 static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kAddrBookCID, NS_ADDRESSBOOK_CID);
 
 
 /* The definition is nsAddressBook.cpp */
@@ -633,7 +636,7 @@ NS_IMETHODIMP nsAbCardProperty::GetCardURI(char **uri)
 			if (file && m_dbRowID)
 			{
 				if (m_bIsMailList)
-					cardURI = PR_smprintf("%s%s/List%ld", kCardDataSourceRoot, file, m_dbRowID);
+					cardURI = PR_smprintf("%s%s/ListCard%ld", kCardDataSourceRoot, file, m_dbRowID);
 				else
 					cardURI = PR_smprintf("%s%s/Card%ld", kCardDataSourceRoot, file, m_dbRowID);
 			}
@@ -664,23 +667,51 @@ nsresult nsAbCardProperty::GetCardDatabase(const char *uri)
 		const char* file = nsnull;
 		file = &(uri[PL_strlen(kDirectoryDataSourceRoot)]);
 		(*dbPath) += file;
+		
+		if (dbPath->Exists())
+		{
+			NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDBCID, &rv);
 
-		NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDBCID, &rv);
-
-		if (NS_SUCCEEDED(rv) && addrDBFactory)
-			rv = addrDBFactory->Open(dbPath, PR_TRUE, getter_AddRefs(mCardDatabase), PR_TRUE);
+			if (NS_SUCCEEDED(rv) && addrDBFactory)
+				rv = addrDBFactory->Open(dbPath, PR_TRUE, getter_AddRefs(mCardDatabase), PR_TRUE);
+		}
+		else
+			rv = NS_ERROR_FAILURE;
 	}
 	return rv;
 }
 
 NS_IMETHODIMP nsAbCardProperty::AddCardToDatabase(const char *uri)
 {
+	nsresult rv = NS_OK;
+	PRBool bInMailList = PR_FALSE;
+
 	if (!mCardDatabase && uri)
-		GetCardDatabase(uri);
+		rv = GetCardDatabase(uri);
+	if (NS_FAILED(rv)) //maillist
+	{
+		NS_WITH_SERVICE(nsIAddressBook, addresBook, kAddrBookCID, &rv); 
+		if (NS_SUCCEEDED(rv))
+			rv = addresBook->GetAbDatabaseFromURI(uri, getter_AddRefs(mCardDatabase));
+		bInMailList = PR_TRUE;
+	}
 
 	if (mCardDatabase)
 	{
-		mCardDatabase->CreateNewCardAndAddToDB(this, PR_TRUE);
+		if (bInMailList)
+		{
+			char* listString = PL_strrstr(uri, "MailList");
+			if (listString)
+			{
+				listString += PL_strlen("MailList");
+				PRInt32 listID = atoi(listString);
+				mCardDatabase->CreateNewListCardAndAddToDB(listID, this, PR_TRUE);
+			}
+			else
+				return NS_ERROR_FAILURE;
+		}
+		else
+			mCardDatabase->CreateNewCardAndAddToDB(this, PR_TRUE);
 		mCardDatabase->Commit(kLargeCommit);
 		return NS_OK;
 	}
@@ -1215,6 +1246,38 @@ nsAbCardProperty::GetName(PRUnichar * *aName)
 NS_IMETHODIMP 
 nsAbCardProperty::SetName(const PRUnichar * aName)
 {
+	return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsAbCardProperty::GetPrintCardUrl(char * *aPrintCardUrl)
+{
+static const char *kAbPrintUrlFormat = "addbook:printone?email=%s&folder=%s";
+
+	if (!aPrintCardUrl)
+		return NS_ERROR_NULL_POINTER;
+
+	PRUnichar *email = nsnull;
+	GetPrimaryEmail(&email);
+	nsString emailStr(email);
+
+	PRUnichar *dirName = nsnull;
+	if (mCardDatabase)
+		mCardDatabase->GetDirectoryName(&dirName);
+	nsString dirNameStr(dirName);
+	dirNameStr.ReplaceSubstring(" ", "%20");
+
+	char *emailCharStr = emailStr.ToNewCString();
+	char *dirCharStr = dirNameStr.ToNewCString();
+
+	*aPrintCardUrl = PR_smprintf(kAbPrintUrlFormat, emailCharStr, dirCharStr);
+
+	nsAllocator::Free(emailCharStr);
+	nsAllocator::Free(dirCharStr);
+
+	PR_FREEIF(dirName);
+	PR_FREEIF(email);
+
 	return NS_OK;
 }
 

@@ -196,6 +196,8 @@ NS_IMETHODIMP nsAbDirectoryDataSource::GetTargets(nsIRDFResource* source,
                                                 nsISimpleEnumerator** targets)
 {
   nsresult rv = NS_RDF_NO_VALUE;
+  if(!targets)
+	  return NS_ERROR_NULL_POINTER;
 
   nsCOMPtr<nsIAbDirectory> directory(do_QueryInterface(source, &rv));
   if (NS_SUCCEEDED(rv) && directory)
@@ -212,7 +214,7 @@ NS_IMETHODIMP nsAbDirectoryDataSource::GetTargets(nsIRDFResource* source,
         return NS_ERROR_OUT_OF_MEMORY;
       NS_ADDREF(cursor);
       *targets = cursor;
-      rv = NS_OK;
+	  return NS_OK;
 	}
     else if((kNC_DirName == property)) 
 	{ 
@@ -222,7 +224,7 @@ NS_IMETHODIMP nsAbDirectoryDataSource::GetTargets(nsIRDFResource* source,
         return NS_ERROR_OUT_OF_MEMORY;
       NS_ADDREF(cursor);
       *targets = cursor;
-      rv = NS_OK;
+	  return NS_OK;
     }
     else if((kNC_CardChild == property))
     { 
@@ -237,7 +239,7 @@ NS_IMETHODIMP nsAbDirectoryDataSource::GetTargets(nsIRDFResource* source,
 			return NS_ERROR_OUT_OF_MEMORY;
 		  NS_ADDREF(cursor);
 		  *targets = cursor;
-		  rv = NS_OK;
+		  return NS_OK;
 	  }
     }
 	else if((kNC_DirUri == property)) 
@@ -248,23 +250,10 @@ NS_IMETHODIMP nsAbDirectoryDataSource::GetTargets(nsIRDFResource* source,
         return NS_ERROR_OUT_OF_MEMORY;
       NS_ADDREF(cursor);
       *targets = cursor;
-      rv = NS_OK;
+	  return NS_OK;
     }
   }
-  else {
-	  //create empty cursor
-	  nsCOMPtr<nsISupportsArray> assertions;
-      NS_NewISupportsArray(getter_AddRefs(assertions));
-	  nsArrayEnumerator* cursor = 
-		  new nsArrayEnumerator(assertions);
-	  if(cursor == nsnull)
-		  return NS_ERROR_OUT_OF_MEMORY;
-	  NS_ADDREF(cursor);
-	  *targets = cursor;
-	  rv = NS_OK;
-  }
-
-  return rv;
+  return NS_NewEmptyEnumerator(targets);
 }
 
 NS_IMETHODIMP nsAbDirectoryDataSource::Assert(nsIRDFResource* source,

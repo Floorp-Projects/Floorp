@@ -73,6 +73,12 @@ NS_IMETHODIMP nsAbRDFResource::OnCardEntryChange
   return NS_OK;
 }
 
+NS_IMETHODIMP nsAbRDFResource::OnListEntryChange
+(PRUint32 abCode, nsIAbDirectory *list, nsIAddrDBListener *instigator)
+{
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsAbRDFResource::OnAnnouncerGoingAway(nsIAddrDBAnnouncer *instigator)
 {
   return NS_OK;

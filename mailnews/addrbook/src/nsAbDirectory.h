@@ -58,11 +58,13 @@ public:
  	NS_IMETHOD HasCard(nsIAbCard *cards, PRBool *hasCard);
 	NS_IMETHOD HasDirectory(nsIAbDirectory *dir, PRBool *hasDir);
 	NS_IMETHOD CreateNewDirectory(const PRUnichar *dirName, const char *fileName, PRBool migrating);
+	NS_IMETHOD CreateNewMailingList(const char* uri, nsIAbDirectory *list);
 	NS_IMETHOD GetDirUri(char **uri);
 
 	// nsIAddrDBListener methods:
 	NS_IMETHOD OnCardAttribChange(PRUint32 abCode, nsIAddrDBListener *instigator);
 	NS_IMETHOD OnCardEntryChange(PRUint32 abCode, nsIAbCard *card, nsIAddrDBListener *instigator);
+	NS_IMETHOD OnListEntryChange(PRUint32 abCode, nsIAbDirectory *list, nsIAddrDBListener *instigator);
 
 	PRBool IsMailingList(){ return (mIsMailingList == 1); }
 

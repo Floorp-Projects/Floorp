@@ -337,6 +337,40 @@ NS_IMETHODIMP nsAddressBook::SetWebShellWindow(nsIDOMWindow *aWin)
    return NS_OK;
 }
 
+NS_IMETHODIMP nsAddressBook::GetAbDatabaseFromURI(const char *uri, nsIAddrDatabase **db)
+{
+	nsCOMPtr<nsIAddrDatabase> database;  
+
+	nsresult rv = NS_ERROR_NULL_POINTER;
+	if (uri)
+	{
+		nsFileSpec* dbPath = nsnull;
+
+		NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
+		if(NS_SUCCEEDED(rv))
+			abSession->GetUserProfileDirectory(&dbPath);
+		
+		nsString file(&(uri[PL_strlen(kDirectoryDataSourceRoot)]));
+		PRInt32 pos = file.Find("/");
+		if (pos != -1)
+			file.Truncate(pos);
+		(*dbPath) += file;
+
+		NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDBCID, &rv);
+
+		if (NS_SUCCEEDED(rv) && addrDBFactory)
+			rv = addrDBFactory->Open(dbPath, PR_TRUE, getter_AddRefs(database), PR_TRUE);
+		if (NS_SUCCEEDED(rv) && database)
+		{
+			*db = database;
+			NS_IF_ADDREF(*db);
+		}
+		else
+			rv = NS_ERROR_NULL_POINTER;
+	}
+	return rv;
+}
+
 
 typedef enum
 {

@@ -33,6 +33,7 @@
 #include "nsAddrDatabase.h"
 #include "nsIAbListener.h"
 #include "nsIAddrBookSession.h"
+#include "nsIAddressBook.h"
 
 #include "nsIFileSpec.h"
 #include "nsIFileLocator.h"
@@ -50,6 +51,7 @@ static NS_DEFINE_CID(kAbCardCID, NS_ABCARD_CID);
 static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRDATABASE_CID);
 static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
+static NS_DEFINE_CID(kAddrBookCID, NS_ADDRESSBOOK_CID);
 
 nsAbDirectory::nsAbDirectory(void)
   :  nsAbRDFResource(),
@@ -126,6 +128,56 @@ NS_IMETHODIMP nsAbDirectory::OnCardEntryChange
 		nsCOMPtr<nsISupports> cardSupports(do_QueryInterface(card, &rv));
 		if(NS_SUCCEEDED(rv))
 			NotifyItemDeleted(cardSupports);
+	}
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsAbDirectory::OnListEntryChange
+(PRUint32 abCode, nsIAbDirectory *list, nsIAddrDBListener *instigator)
+{
+	return NS_OK;
+
+	nsresult rv = NS_OK;
+	if (abCode == AB_NotifyInserted && list)
+	{ 
+		NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+
+		if(NS_FAILED(rv))
+			return rv;
+
+		char* listURI = nsnull;
+		rv = list->GetDirUri(&listURI);
+		if (NS_FAILED(rv) || !listURI)
+			return NS_ERROR_NULL_POINTER;
+
+		nsCOMPtr<nsIRDFResource> res;
+		rv = rdf->GetResource(listURI, getter_AddRefs(res));
+		if(listURI)
+			PR_smprintf_free(listURI);
+		if (NS_SUCCEEDED(rv))
+		{
+			nsCOMPtr<nsIAbDirectory> listDir = do_QueryInterface(res);
+			if (listDir)
+			{
+				listDir->CopyMailList(list);
+				if (mDatabase)
+				{
+					nsCOMPtr<nsIAddrDBListener> listener(do_QueryInterface(listDir, &rv));
+					if (NS_FAILED(rv)) 
+						return NS_ERROR_NULL_POINTER;
+					mDatabase->AddListener(listener);
+				}
+				nsCOMPtr<nsISupports> listSupports(do_QueryInterface(listDir));
+				if (listSupports)
+					NotifyItemAdded(listSupports);
+			}
+		}
+	}
+	else if (abCode == AB_NotifyDeleted && list)
+	{
+		nsCOMPtr<nsISupports> listSupports(do_QueryInterface(list, &rv));
+		if(NS_SUCCEEDED(rv))
+			NotifyItemDeleted(listSupports);
 	}
 	return NS_OK;
 }
@@ -296,16 +348,30 @@ NS_IMETHODIMP nsAbDirectory::CreateNewDirectory(const PRUnichar *dirName, const 
 			newDir->SetDirName((PRUnichar *)dirName);
 			newDir->SetServer(server);
 
-//			nsCOMPtr<nsISupports> dirSupports(do_QueryInterface(newDir, &rv));
-
-//			if (NS_SUCCEEDED(rv))
-				NotifyItemAdded(newDir);
+			NotifyItemAdded(newDir);
 			return rv;
 		}
 		else
 			return NS_ERROR_NULL_POINTER;
 	}
 	return NS_ERROR_NULL_POINTER;
+}
+
+NS_IMETHODIMP nsAbDirectory::CreateNewMailingList(const char* uri, nsIAbDirectory *list)
+{
+	if (!uri)
+		return NS_ERROR_NULL_POINTER;
+	
+	nsCOMPtr<nsIAbDirectory> newList;
+	nsresult rv = AddDirectory(uri, getter_AddRefs(newList));
+	if (NS_SUCCEEDED(rv) && newList)
+	{
+		newList->CopyMailList(list);
+		NotifyItemAdded(newList);
+		return rv;
+	}
+	else
+		return NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP nsAbDirectory::AddChildCards(const char *uriName, nsIAbCard **childCard)
@@ -369,7 +435,12 @@ NS_IMETHODIMP nsAbDirectory::DeleteCards(nsISupportsArray *cards)
 			card = do_QueryInterface(cardSupports, &rv);
 			if (card)
 			{
-				mDatabase->DeleteCard(card, PR_TRUE);
+				if (IsMailingList())
+					mDatabase->DeleteCardFromMailList(this, card, PR_TRUE);
+				else
+				{
+					mDatabase->DeleteCard(card, PR_TRUE);
+				}
 			}
 		}
 		mDatabase->Commit(kLargeCommit);
@@ -464,14 +535,38 @@ NS_IMETHODIMP nsAbDirectory::DeleteDirectories(nsISupportsArray *dierctories)
 		{
 			DIR_Server *server = nsnull;
 			rv = directory->GetServer(&server);
-			if (server)
-			{
+			if (server) 
+			{	//it's an address book
 				DeleteDirectoryCards(directory, server);
 
 				DIR_DeleteServerFromList(server);
 
 				rv = mSubDirectories->RemoveElement(directory);
 				NotifyItemDeleted(directory);
+			}
+			else
+			{	//it's a mailing list
+				nsresult rv = NS_OK;
+
+				char *uri;
+				rv = directory->GetDirUri(&uri);
+				if (NS_FAILED(rv)) return rv;
+
+				nsCOMPtr<nsIAddrDatabase> database;
+				NS_WITH_SERVICE(nsIAddressBook, addresBook, kAddrBookCID, &rv); 
+				if (NS_SUCCEEDED(rv))
+				{
+					rv = addresBook->GetAbDatabaseFromURI(uri, getter_AddRefs(database));				
+					nsAllocator::Free(uri);
+
+					if (NS_SUCCEEDED(rv))
+						rv = database->DeleteMailList(directory, PR_TRUE);
+
+					if (NS_SUCCEEDED(rv))
+						database->Commit(kLargeCommit);
+
+					NotifyItemDeleted(directory);
+				}
 			}
 		}
 	}
@@ -501,9 +596,33 @@ NS_IMETHODIMP nsAbDirectory::HasDirectory(nsIAbDirectory *dir, PRBool *hasDir)
 	if (!hasDir)
 		return NS_ERROR_NULL_POINTER;
 
-	DIR_Server* dirServer = nsnull;
-	dir->GetServer(&dirServer);
-	nsresult rv = DIR_ContainsServer(dirServer, hasDir);
+	nsresult rv = NS_ERROR_FAILURE;
+	PRBool bIsMailingList  = PR_FALSE;
+	dir->GetIsMailList(&bIsMailingList);
+	if (bIsMailingList)
+	{
+		char *uri;
+		rv = dir->GetDirUri(&uri);
+		if (NS_FAILED(rv)) return rv;
+		nsCOMPtr<nsIAddrDatabase> database;
+		NS_WITH_SERVICE(nsIAddressBook, addresBook, kAddrBookCID, &rv); 
+		if (NS_SUCCEEDED(rv))
+		{
+			rv = addresBook->GetAbDatabaseFromURI(uri, getter_AddRefs(database));				
+			nsAllocator::Free(uri);
+		}
+		if(NS_SUCCEEDED(rv) && database)
+		{
+			if(NS_SUCCEEDED(rv))
+				rv = database->ContainsMailList(dir, hasDir);
+		}
+	}
+	else
+	{
+		DIR_Server* dirServer = nsnull;
+		dir->GetServer(&dirServer);
+		rv = DIR_ContainsServer(dirServer, hasDir);
+	}
 	return rv;
 }
 

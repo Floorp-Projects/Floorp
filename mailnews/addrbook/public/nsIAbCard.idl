@@ -71,6 +71,7 @@ interface nsIAbCard : nsISupports {
 	attribute wstring notes;
 	attribute unsigned long lastModifiedDate;
 	attribute wstring name;
+	readonly attribute string printCardUrl;
 
 	attribute boolean sendPlainText;
 	attribute boolean isMailList;

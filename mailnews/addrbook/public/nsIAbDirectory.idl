@@ -49,8 +49,10 @@ interface nsIAbDirectory : nsISupports {
 	boolean hasCard(in nsIAbCard cards);
 	boolean hasDirectory(in nsIAbDirectory dir);
 	void createNewDirectory(in wstring dirName, in string fileName, in boolean migrating);
+	void createNewMailingList(in string uri, in nsIAbDirectory list);
 	string getDirUri();
 	void addMailListToDirectory(in nsIAbDirectory mailList);
+	void copyMailList(in nsIAbDirectory srcList);
 
 	attribute wstring listName;
 	attribute wstring listNickName;
@@ -61,4 +63,5 @@ interface nsIAbDirectory : nsISupports {
 
 	void addAddressToList(in nsIAbCard card);
 	void addMailListToDatabase(in string uri);
+	void editMailListToDatabase(in string uri);
 };

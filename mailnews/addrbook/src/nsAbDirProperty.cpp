@@ -33,6 +33,7 @@
 #include "nsAddrDatabase.h"
 #include "nsIAbListener.h"
 #include "nsIAddrBookSession.h"
+#include "nsIAddressBook.h"
 
 #include "mdb.h"
 #include "prlog.h"
@@ -46,8 +47,8 @@ extern const char *kDirectoryDataSourceRoot;
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 static NS_DEFINE_CID(kAbCardCID, NS_ABCARD_CID);
-static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRDATABASE_CID);
 static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
+static NS_DEFINE_CID(kAddrBookCID, NS_ADDRESSBOOK_CID);
 
 nsAbDirProperty::nsAbDirProperty(void)
   : m_DirName(""), m_LastModifiedDate(0),
@@ -202,6 +203,10 @@ nsAbDirProperty::CreateNewDirectory(const PRUnichar *dirName, const char *fileNa
 { return NS_OK; }
 
 NS_IMETHODIMP
+nsAbDirProperty::CreateNewMailingList(const char* uri, nsIAbDirectory *list)
+{ return NS_OK; }
+
+NS_IMETHODIMP
 nsAbDirProperty::GetDirUri(char **uri)
 { return NS_OK; }
 
@@ -309,29 +314,90 @@ NS_IMETHODIMP nsAbDirProperty::AddMailListToDatabase(const char *uri)
 
 	nsCOMPtr<nsIAddrDatabase>  listDatabase;  
 
-	NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
+	NS_WITH_SERVICE(nsIAddressBook, addresBook, kAddrBookCID, &rv); 
 	if (NS_SUCCEEDED(rv))
-	{
-		nsFileSpec* dbPath;
-		abSession->GetUserProfileDirectory(&dbPath);
-
-		const char* file = nsnull;
-		file = &(uri[PL_strlen(kDirectoryDataSourceRoot)]);
-		(*dbPath) += file;
-
-		NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDBCID, &rv);
-
-		if (NS_SUCCEEDED(rv) && addrDBFactory)
-			rv = addrDBFactory->Open(dbPath, PR_TRUE, getter_AddRefs(listDatabase), PR_TRUE);
-	}
+		rv = addresBook->GetAbDatabaseFromURI(uri, getter_AddRefs(listDatabase));
 
 	if (listDatabase)
 	{
 		listDatabase->CreateMailListAndAddToDB(this, PR_TRUE);
 		listDatabase->Commit(kLargeCommit);
 		listDatabase = null_nsCOMPtr();
-		return NS_OK;
+
+		NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
+		if(NS_FAILED(rv))
+			return rv;
+		nsCOMPtr<nsIRDFResource> parentResource;
+		char *parentUri = PR_smprintf("%s", kDirectoryDataSourceRoot);
+		rv = rdfService->GetResource(parentUri, getter_AddRefs(parentResource));
+		nsCOMPtr<nsIAbDirectory> parentDir = do_QueryInterface(parentResource);
+		if (!parentDir)
+			return NS_ERROR_NULL_POINTER;
+		if (parentUri)
+			PR_smprintf_free(parentUri);
+
+		char *listUri = PR_smprintf("%s/MailList%ld", uri, m_dbRowID);
+		if (listUri)
+		{
+			parentDir->CreateNewMailingList(listUri, this);
+			PR_smprintf_free(listUri);
+			return NS_OK;
+		}
+		else
+			return NS_ERROR_FAILURE;
 	}
 	else
 		return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsAbDirProperty::EditMailListToDatabase(const char *uri)
+{
+	nsresult rv = NS_OK;
+
+	nsCOMPtr<nsIAddrDatabase>  listDatabase;  
+
+	NS_WITH_SERVICE(nsIAddressBook, addresBook, kAddrBookCID, &rv); 
+	if (NS_SUCCEEDED(rv))
+		rv = addresBook->GetAbDatabaseFromURI(uri, getter_AddRefs(listDatabase));
+
+	if (listDatabase)
+	{
+		listDatabase->EditMailList(this, PR_TRUE);
+		listDatabase->Commit(kLargeCommit);
+		listDatabase = null_nsCOMPtr();
+
+		//notify RDF property change
+		return NS_OK;
+
+	}
+	else
+		return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP nsAbDirProperty::CopyMailList(nsIAbDirectory* srcList)
+{
+	PRUnichar *str = nsnull;
+	srcList->GetListName(&str);
+	SetListName(str);
+	PR_FREEIF(str);
+	srcList->GetListNickName(&str);
+	SetListNickName(str);
+	PR_FREEIF(str);
+	srcList->GetDescription(&str);
+	SetDescription(str);
+	PR_FREEIF(str);
+
+	SetIsMailList(PR_TRUE);
+
+	nsISupportsArray* pAddressLists;
+	srcList->GetAddressLists(&pAddressLists);
+	NS_IF_ADDREF(pAddressLists);
+	SetAddressLists(pAddressLists);
+
+	PRUint32 rowID;
+	srcList->GetDbRowID(&rowID);
+	SetDbRowID(rowID);
+
+	return NS_OK;
 }

@@ -52,13 +52,19 @@ interface nsIAddrDatabase : nsIAddrDBAnnouncer {
 	void forceClosed();
 
 	void createNewCardAndAddToDB(in nsIAbCard newCard, in boolean beNotify);
-	void CreateMailListAndAddToDB(in nsIAbDirectory newList, in boolean beNotify);
+	void createNewListCardAndAddToDB(in unsigned long listRowID, in nsIAbCard newCard, in boolean beNotify);
+	void createMailListAndAddToDB(in nsIAbDirectory newList, in boolean beNotify);
 	nsIEnumerator enumerateCards(in nsIAbDirectory directory);
 	nsIEnumerator EnumerateListAddresses(in nsIAbDirectory directory);
 	void GetMailingListsFromDB(in nsIAbDirectory parentDir);
 	void deleteCard(in nsIAbCard card, in boolean beNotify);
 	void editCard(in nsIAbCard card, in boolean beNotify);
 	boolean containsCard(in nsIAbCard card);
+	void deleteMailList(in nsIAbDirectory mailList, in boolean beNotify);
+	void editMailList(in nsIAbDirectory mailList, in boolean beNotify);
+	boolean containsMailList(in nsIAbDirectory mailList);
+	void deleteCardFromMailList(in nsIAbDirectory mailList, in nsIAbCard card, in boolean beNotify);
+	wstring getDirectoryName();
 
 	nsIAbCard getCardForEmailAddress(in nsIAbDirectory directory, in string emailAddress);
 
