@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
 {
   nsXREAppData appData;
   appData.SetSplashEnabled(PR_FALSE);
-  appData.SetProductName(NS_LITERAL_CSTRING("Firefox"));
+  appData.SetProductName(NS_LITERAL_CSTRING("Phoenix"));
   appData.SetUseStartupPrefs(PR_FALSE);
 
   return xre_main(argc, argv, appData);
