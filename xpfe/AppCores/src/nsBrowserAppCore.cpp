@@ -148,7 +148,6 @@ nsBrowserAppCore::nsBrowserAppCore()
   mWebShell             = nsnull;
   mContentAreaWebShell  = nsnull;
   mGHistory             = nsnull;
-  mSearchContext        = nsnull;
   mSHistory             = nsnull;
   IncInstanceCount();
   NS_INIT_REFCNT();
@@ -157,24 +156,14 @@ nsBrowserAppCore::nsBrowserAppCore()
 
 nsBrowserAppCore::~nsBrowserAppCore()
 {
-  EndObserving();
-
-  NS_IF_RELEASE(mToolbarWindow);
-  NS_IF_RELEASE(mToolbarScriptContext);
-  NS_IF_RELEASE(mContentWindow);
-  NS_IF_RELEASE(mContentScriptContext);
-  NS_IF_RELEASE(mWebShellWin);
-  NS_IF_RELEASE(mWebShell);
-  NS_IF_RELEASE(mContentAreaWebShell);
-  NS_IF_RELEASE(mSearchContext);
-
-  if (nsnull != mGHistory) {
-    nsServiceManager::ReleaseService(kCGlobalHistoryCID, mGHistory);
-  }
- if (nsnull != mSHistory) {
-    nsServiceManager::ReleaseService(kCSessionHistoryCID, mSHistory);
-  }
-  NS_IF_RELEASE(mSHistory);
+  // We own none of these things, so no need to release
+  //NS_IF_RELEASE(mToolbarWindow)
+  //NS_IF_RELEASE(mToolbarScriptContext);
+  //NS_IF_RELEASE(mContentWindow);
+  //NS_IF_RELEASE(mContentScriptContext);
+  //NS_IF_RELEASE(mWebShellWin);
+  //NS_IF_RELEASE(mWebShell);
+  //NS_IF_RELEASE(mContentAreaWebShell);
 
   DecInstanceCount();  
 }
@@ -204,11 +193,19 @@ nsBrowserAppCore::QueryInterface(REFNSIID aIID,void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
+  /* This isn't supported any more
   if (aIID.Equals(kIStreamObserverIID)) {
     *aInstancePtr = (void*) ((nsIStreamObserver*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
+*/
+  if (aIID.Equals(nsIDocumentLoaderObserver::GetIID())) {
+    *aInstancePtr = (void*) ((nsIDocumentLoaderObserver*)this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+
   if (aIID.Equals( nsIObserver::GetIID())) {
     *aInstancePtr = (void*) ((nsIObserver*)this);
     NS_ADDREF_THIS();
@@ -367,7 +364,8 @@ nsresult ProfileDirectory(nsFileSpec& dirSpec) {
 }
 
 PRInt32
-newWind(char* urlName) {
+newWind(char* urlName)
+{
   nsresult rv;
   
   char *  urlstr=nsnull;
@@ -392,7 +390,6 @@ newWind(char* urlName) {
    */
   ///write me...
   nsIURL* url;
-  nsIWebShellWindow* newWindow;
   
 #ifndef NECKO
   rv = NS_NewURL(&url, urlstr);
@@ -409,7 +406,8 @@ newWind(char* urlName) {
 #endif // NECKO
   if (NS_FAILED(rv)) return rv;
 
-  appShell->CreateTopLevelWindow(nsnull, url, PR_TRUE, newWindow,
+  nsCOMPtr<nsIWebShellWindow> newWindow;
+  appShell->CreateTopLevelWindow(nsnull, url, PR_TRUE, *getter_AddRefs(newWindow),
               nsnull, nsnull, 615, 480);
 
   NS_RELEASE(url);
@@ -896,8 +894,11 @@ nsBrowserAppCore::SetToolbarWindow(nsIDOMWindow* aWin)
     return NS_ERROR_NULL_POINTER;
 
   mToolbarWindow = aWin;
-  NS_ADDREF(aWin);
-  mToolbarScriptContext = GetScriptContext(aWin);
+  // NS_ADDREF(aWin);			 WE DO NOT OWN THIS
+  
+  // we do not own the script context, so don't addref it
+  nsCOMPtr<nsIScriptContext>	scriptContext = getter_AddRefs(GetScriptContext(aWin));
+  mToolbarScriptContext = scriptContext;
 
 	return NS_OK;
 }
@@ -910,9 +911,13 @@ nsBrowserAppCore::SetContentWindow(nsIDOMWindow* aWin)
     return NS_ERROR_NULL_POINTER;
 
   mContentWindow = aWin;
+  // NS_ADDREF(aWin); WE DO NOT OWN THIS
 
-  NS_ADDREF(aWin);
-  mContentScriptContext = GetScriptContext(aWin);
+
+  // we do not own the script context, so don't addref it
+  nsCOMPtr<nsIScriptContext>	scriptContext = getter_AddRefs(GetScriptContext(aWin));
+  mContentScriptContext = scriptContext;
+
   nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(mContentWindow) );
   if (!globalObj) {
     return NS_ERROR_FAILURE;
@@ -922,7 +927,7 @@ nsBrowserAppCore::SetContentWindow(nsIDOMWindow* aWin)
   globalObj->GetWebShell(getter_AddRefs(webShell));
   if (webShell) {
     mContentAreaWebShell = webShell;
-    NS_ADDREF(mContentAreaWebShell);
+    // NS_ADDREF(mContentAreaWebShell); WE DO NOT OWN THIS
     webShell->SetDocLoaderObserver((nsIDocumentLoaderObserver *)this);
     webShell->SetSessionHistory((nsISessionHistory *)this);
 
@@ -957,7 +962,7 @@ nsBrowserAppCore::SetWebShellWindow(nsIDOMWindow* aWin)
   globalObj->GetWebShell(&webShell);
   if (nsnull != webShell) {
     mWebShell = webShell;
-    NS_ADDREF(mWebShell);
+    //NS_ADDREF(mWebShell); WE DO NOT OWN THIS
     const PRUnichar * name;
     webShell->GetName( &name);
     nsAutoString str(name);
@@ -968,8 +973,12 @@ nsBrowserAppCore::SetWebShellWindow(nsIDOMWindow* aWin)
 
     nsIWebShellContainer * webShellContainer;
     webShell->GetContainer(webShellContainer);
-    if (nsnull != webShellContainer) {
-      if (NS_OK == webShellContainer->QueryInterface(kIWebShellWindowIID, (void**) &mWebShellWin)) {
+    if (nsnull != webShellContainer)
+    {
+    	nsCOMPtr<nsIWebShellWindow> webShellWin;
+      if (NS_OK == webShellContainer->QueryInterface(kIWebShellWindowIID, getter_AddRefs(webShellWin)))
+      {
+        mWebShellWin = webShellWin;		// WE DO NOT OWN THIS
       }
       NS_RELEASE(webShellContainer);
     }
@@ -1302,7 +1311,7 @@ nsBrowserAppCore::Goto(PRInt32 aGotoIndex, nsIWebShell * aPrev)
 {
    nsresult rv;
    if (mSHistory) 
-      rv = mSHistory->Goto(aGotoIndex, aPrev);
+     rv = mSHistory->Goto(aGotoIndex, aPrev);
    return rv;
 }
 
@@ -1415,7 +1424,7 @@ nsBrowserAppCore::NewWindow()
    */
   ///write me...
   nsIURL* url;
-  nsIWebShellWindow* newWindow;
+
 #ifndef NECKO  
   rv = NS_NewURL(&url, urlstr);
 #else
@@ -1431,7 +1440,8 @@ nsBrowserAppCore::NewWindow()
 #endif // NECKO
   if (NS_FAILED(rv)) return rv;
 
-  appShell->CreateTopLevelWindow(nsnull, url, PR_TRUE, newWindow,
+  nsCOMPtr<nsIWebShellWindow> newWindow;
+  appShell->CreateTopLevelWindow(nsnull, url, PR_TRUE, *getter_AddRefs(newWindow),
               nsnull, nsnull, 615, 480);
   NS_RELEASE(url);
   
@@ -1540,7 +1550,17 @@ nsBrowserAppCore::Print()
 
 NS_IMETHODIMP    
 nsBrowserAppCore::Close()
-{  
+{ 
+  EndObserving();
+
+  if (nsnull != mGHistory) {
+    nsServiceManager::ReleaseService(kCGlobalHistoryCID, mGHistory);
+  }
+  mGHistory = nsnull;
+
+	// session history is an instance, not a service
+  NS_IF_RELEASE(mSHistory);
+
   return NS_OK;
 }
 
@@ -1569,7 +1589,7 @@ nsBrowserAppCore::InitializeSearch( nsIFindComponent *finder )
 
     if ( finder && !mSearchContext ) {
         // Create the search context for this browser window.
-        rv = finder->CreateContext( mContentAreaWebShell, nsnull, &mSearchContext);
+        rv = finder->CreateContext( mContentAreaWebShell, nsnull, getter_AddRefs(mSearchContext));
         if ( NS_FAILED( rv ) ) {
             #ifdef NS_DEBUG
             printf( "%s %d CreateContext failed, rv=0x%X\n",
