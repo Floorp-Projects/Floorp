@@ -214,6 +214,11 @@ public:
 
     virtual ~nsXPIDLCString();
 
+	/**
+	 * Assign a single-byte string to this wrapper. Copies and owns the result.
+	 */
+	nsXPIDLCString& operator =(const char* aString);
+
     /**
      * Return a reference to the immutable single-byte string.
      */

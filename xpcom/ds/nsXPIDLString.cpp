@@ -119,6 +119,18 @@ nsXPIDLCString::~nsXPIDLCString()
 }
 
 
+nsXPIDLCString& nsXPIDLCString::operator =(const char* aCString)
+{
+    if (mBufOwner && mBuf)
+        XPIDL_FREE(mBuf);
+	
+    mBuf = Copy(aCString);
+    mBufOwner = PR_TRUE;
+    
+    return *this;
+}
+
+
 nsXPIDLCString::operator const char*()
 {
     return mBuf;
