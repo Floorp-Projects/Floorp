@@ -326,7 +326,7 @@ BOOL CWizardUI::SetDescription(WIDGET *w)
 		selected = ((CListBox *)w->control)->GetCurSel();
 	else if (w->type == "CheckListBox")
 		selected = ((CCheckListBox *)w->control)->GetCurSel();
-	else if (w->type == "ComboBox")
+	else if ((w->type == "ComboBox") || (w->type == "DropBox"))
 		selected = ((CComboBox *)w->control)->GetCurSel();
 	
 	if (selected == -1 || selected >= w->numOfOptDesc)
@@ -497,7 +497,7 @@ void CWizardUI::UpdateScreenWidget(WIDGET *curWidget)
 		if (!selectedSomething)
 			selRv = ((CListBox*)curWidget->control)->SetCurSel(0);
 	}
-	else if(curWidget->type == "ComboBox")
+	else if((curWidget->type == "ComboBox") || (curWidget->type == "DropBox"))
 	{
 		((CComboBox*)curWidget->control)->ResetContent();
 
@@ -702,7 +702,7 @@ void CWizardUI::CreateControls()
 			((CCheckListBox*)curWidget->control)->ModifyStyleEx(NULL, WS_EX_CLIENTEDGE, 0);
 
 		}
-		else if (widgetType == "ComboBox") {
+		else if ((widgetType == "ComboBox") ||(widgetType == "DropBox")) {
 			curWidget->control = new CComboBox;
 			rv = ((CComboBox*)curWidget->control)->Create(CBS_DROPDOWNLIST | WS_TABSTOP|WS_VSCROLL   , tmpRect, this, ID);
 
@@ -939,7 +939,7 @@ CString CWizardUI::GetScreenValue(WIDGET *curWidget)
 			}
 		}
 	}
-	else if (widgetType == "ComboBox")
+	else if ((widgetType == "ComboBox") || (widgetType == "DropBox"))
 	{
 		int selectedIndex = ((CComboBox*)curWidget->control)->GetCurSel();
 		if (selectedIndex != -1)
