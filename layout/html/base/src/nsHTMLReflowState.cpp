@@ -556,6 +556,7 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
       if ((eStyleUnit_Auto == mStyleSpacing->mMargin.GetLeftUnit()) ||
           (eStyleUnit_Auto == mStyleSpacing->mMargin.GetRightUnit())) {
 
+        // Calculate the amount of space for margins
         nscoord availMarginSpace = containingBlockWidth -
           computedOffsets.left - mComputedBorderPadding.left -
           computedWidth - mComputedBorderPadding.right -
@@ -568,10 +569,12 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
             computedMargin.left = availMarginSpace / 2;
             computedMargin.right = availMarginSpace - computedMargin.left;
           } else {
-            computedMargin.left = availMarginSpace;
+            // Just 'margin-left' is 'auto'
+            computedMargin.left = availMarginSpace - computedMargin.right;
           }
         } else {
-          computedMargin.right = availMarginSpace;
+          // Just 'margin-right' is 'auto'
+          computedMargin.right = availMarginSpace - computedMargin.left;
         }
       }
     }
@@ -670,6 +673,7 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
         if ((eStyleUnit_Auto == mStyleSpacing->mMargin.GetTopUnit()) ||
             (eStyleUnit_Auto == mStyleSpacing->mMargin.GetBottomUnit())) {
   
+          // Calculate the amount of space for margins
           nscoord availMarginSpace = containingBlockHeight - computedOffsets.top -
             mComputedBorderPadding.top - computedHeight - mComputedBorderPadding.bottom -
             computedOffsets.bottom;
@@ -681,10 +685,12 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
               computedMargin.top = availMarginSpace / 2;
               computedMargin.bottom = availMarginSpace - computedMargin.top;
             } else {
-              computedMargin.top = availMarginSpace;
+              // Just 'margin-top' is 'auto'
+              computedMargin.top = availMarginSpace - computedMargin.bottom;
             }
           } else {
-            computedMargin.bottom = availMarginSpace;
+            // Just 'margin-bottom' is 'auto'
+            computedMargin.bottom = availMarginSpace - computedMargin.top;
           }
         }
       }
