@@ -36,9 +36,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsCOMPtr.h"
 #include "nsTransformMediator.h"
 #include "nsIComponentManager.h"
+#include "nsIContent.h"
+#include "nsIDocument.h"
+#include "nsIDOMElement.h"
+#include "nsIServiceManagerUtils.h"
+#include "nsObserverService.h"
 #include "nsString.h"
 
 nsresult
@@ -60,10 +64,10 @@ NS_NewTransformMediator(nsITransformMediator** aInstancePtrResult,
   return CallQueryInterface(it, aInstancePtrResult);
 }
 
-nsTransformMediator::nsTransformMediator()
+nsTransformMediator::nsTransformMediator() : mEnabled(PR_FALSE),
+                                             mStyleInvalid(PR_FALSE)
 {
   NS_INIT_REFCNT();
-  mEnabled = PR_FALSE;
 }
 
 nsTransformMediator::~nsTransformMediator()
@@ -98,13 +102,38 @@ NS_IMPL_ISUPPORTS1(nsTransformMediator, nsITransformMediator)
 void
 nsTransformMediator::TryToTransform()
 {
-  if (mEnabled && mSourceDOM && mStyleDOM &&
-      mResultDoc && mObserver && mTransformer) 
+  if (mSourceDOM && mStyleDOM && mResultDoc && mObserver) 
   {
-    mTransformer->TransformDocument(mSourceDOM, 
-                                    mStyleDOM,
-                                    mResultDoc,
-                                    mObserver);
+    if (mEnabled && mTransformer) {
+      mTransformer->TransformDocument(mSourceDOM, 
+                                      mStyleDOM,
+                                      mResultDoc,
+                                      mObserver);
+    }
+    else if (mStyleInvalid) {
+      // Copy the error message from the stylesheet document to the result
+      // result document and notify the observer.
+      nsCOMPtr<nsIDOMElement> docElement;
+      mResultDoc->GetDocumentElement(getter_AddRefs(docElement));
+      nsCOMPtr<nsIDOMNode> newRoot, root;
+      mResultDoc->ImportNode(mStyleDOM, PR_TRUE, getter_AddRefs(newRoot));
+      if (docElement) {
+        nsCOMPtr<nsIDOMNode> origRoot;
+        root = newRoot;
+        mResultDoc->ReplaceChild(docElement, root, getter_AddRefs(origRoot));
+      }
+      else {
+        mResultDoc->AppendChild(newRoot, getter_AddRefs(root));
+      }
+
+      nsresult rv;
+      nsCOMPtr<nsIObserverService> anObserverService =
+          do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+      if (NS_SUCCEEDED(rv)) {
+        anObserverService->AddObserver(mObserver, "xslt-done", PR_TRUE);
+        anObserverService->NotifyObservers(root, "xslt-done", nsnull);
+      }
+    }
   }
 }
 
@@ -154,5 +183,12 @@ nsTransformMediator::SetTransformObserver(nsIObserver* aObserver)
 {
   mObserver = aObserver;
   TryToTransform();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTransformMediator::SetStyleInvalid(PRBool aInvalid)
+{
+  mStyleInvalid = aInvalid;
   return NS_OK;
 }

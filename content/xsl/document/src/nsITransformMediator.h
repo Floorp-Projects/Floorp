@@ -65,13 +65,13 @@ class nsITransformMediator : public nsISupports {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITRANSFORM_MEDIATOR_IID);
 
-  NS_IMETHOD SetEnabled(PRBool aValue)=0;
-  NS_IMETHOD SetSourceContentModel(nsIDOMNode* aSource)=0;
-  NS_IMETHOD SetStyleSheetContentModel(nsIDOMNode* aStyle)=0;
-  NS_IMETHOD SetResultDocument(nsIDOMDocument* aDoc)=0;
-  NS_IMETHOD GetResultDocument(nsIDOMDocument** aDoc)=0;
-  NS_IMETHOD SetTransformObserver(nsIObserver* aObserver)=0;
-
+  NS_IMETHOD SetEnabled(PRBool aValue) = 0;
+  NS_IMETHOD SetSourceContentModel(nsIDOMNode* aSource) = 0;
+  NS_IMETHOD SetStyleSheetContentModel(nsIDOMNode* aStyle) = 0;
+  NS_IMETHOD SetResultDocument(nsIDOMDocument* aDoc) = 0;
+  NS_IMETHOD GetResultDocument(nsIDOMDocument** aDoc) = 0;
+  NS_IMETHOD SetTransformObserver(nsIObserver* aObserver) = 0;
+  NS_IMETHOD SetStyleInvalid(PRBool aInvalid) = 0;
 };
 
 extern nsresult NS_NewTransformMediator(nsITransformMediator** aInstancePtrResult,                                        

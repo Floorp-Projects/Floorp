@@ -39,6 +39,7 @@
 #ifndef nsTransformMediator_h__
 #define nsTransformMediator_h__
 
+#include "nsCOMPtr.h"
 #include "nsITransformMediator.h"
 #include "nsIDocumentTransformer.h"
 #include "nsIDOMNode.h"
@@ -62,11 +63,13 @@ public:
   NS_IMETHOD SetResultDocument(nsIDOMDocument* aDoc);
   NS_IMETHOD GetResultDocument(nsIDOMDocument** aDoc);
   NS_IMETHOD SetTransformObserver(nsIObserver* aObserver);
+  NS_IMETHOD SetStyleInvalid(PRBool aInvalid);
 
 protected:
   void TryToTransform();
 
   PRBool mEnabled;
+  PRBool mStyleInvalid;
   nsCOMPtr<nsIDocumentTransformer> mTransformer; // Strong reference
   nsCOMPtr<nsIDOMNode> mSourceDOM;               // Strong reference
   nsCOMPtr<nsIDOMNode> mStyleDOM;                // Strong reference

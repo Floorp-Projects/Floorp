@@ -55,29 +55,20 @@ public:
                 nsIURI* aURL,
                 nsIWebShell* aContainer);
 
-  // nsISupports
-  //NS_DECL_ISUPPORTS
-
   // nsIContentSink
   NS_IMETHOD WillBuildModel(void);
   NS_IMETHOD DidBuildModel(PRInt32 aQualityLevel);
-  //NS_IMETHOD WillInterrupt(void);
-  //NS_IMETHOD WillResume(void);
-  //NS_IMETHOD SetParser(nsIParser* aParser);  
-  //NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
-  //NS_IMETHOD CloseContainer(const nsIParserNode& aNode);
-  //NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
-  //NS_IMETHOD AddComment(const nsIParserNode& aNode);
-  //NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
-  //NS_IMETHOD NotifyError(const nsParserError* aError);
-  //NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode=0);
 
-  // nsIXMLContentSink
-  //NS_IMETHOD AddXMLDecl(const nsIParserNode& aNode);  
-  //NS_IMETHOD AddCharacterData(const nsIParserNode& aNode);
-  //NS_IMETHOD AddUnparsedEntity(const nsIParserNode& aNode);
-  //NS_IMETHOD AddNotation(const nsIParserNode& aNode);
-  //NS_IMETHOD AddEntityReference(const nsIParserNode& aNode);
+  // nsIExpatSink
+  NS_IMETHOD HandleStartElement(const PRUnichar *aName,
+                                const PRUnichar **aAtts,
+                                PRUint32 aAttsCount,
+                                PRUint32 aIndex,
+                                PRUint32 aLineNumber);
+  NS_IMETHOD HandleProcessingInstruction(const PRUnichar *aTarget,
+                                         const PRUnichar *aData);
+  NS_IMETHOD ReportError(const PRUnichar *aErrorText,
+                         const PRUnichar *aSourceText);
 
 protected:
   NS_IMETHOD ProcessStyleLink(nsIContent* aElement,

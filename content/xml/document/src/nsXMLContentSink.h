@@ -187,7 +187,6 @@ protected:
   nsIURI*          mDocumentBaseURL; // can be set via HTTP headers
   nsIWebShell*     mWebShell;
   nsIParser*       mParser;
-  nsIContent*      mRootElement;
   nsIContent*      mDocElement;
   nsAutoVoidArray* mNameSpaceStack;
   PRUnichar*       mText;
