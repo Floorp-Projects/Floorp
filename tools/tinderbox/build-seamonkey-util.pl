@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.284 $ ';
+$::UtilsVersion = '$Revision: 1.285 $ ';
 
 package TinderUtils;
 
@@ -400,7 +400,7 @@ sub SetupEnv {
 
     # Codesighs/codesize test needs this to pull the right stuff.
     if ($Settings::CodesizeTest or $Settings::EmbedCodesizeTest) {
-      $ENV{MOZ_MAPINFO} = "1";
+      $ENV{MOZ_CO_MODULE} = "$ENV{MOZ_CO_MODULE} mozilla/tools/codesighs";
     }
 
 }
