@@ -1143,6 +1143,25 @@ nsresult nsMsgSearchTerm::MatchSize (PRUint32 sizeToMatch, PRBool *pResult)
 	return NS_OK;
 }
 
+nsresult nsMsgSearchTerm::MatchLabel(nsMsgLabelValue aLabelValue, PRBool *pResult)
+{
+  NS_ENSURE_ARG_POINTER(pResult);
+  PRBool result = PR_FALSE;
+  switch (m_operator)
+  {
+  case nsMsgSearchOp::Is:
+    if (m_value.u.label == aLabelValue)
+      result = PR_TRUE;
+    break;
+  default:
+    if (m_value.u.label != aLabelValue)
+      result = PR_TRUE;
+    break;
+  }
+  
+  *pResult = result;
+  return NS_OK;	
+}
 
 nsresult nsMsgSearchTerm::MatchStatus (PRUint32 statusToMatch, PRBool *pResult)
 {
@@ -1443,6 +1462,9 @@ nsresult nsMsgResultElement::AssignValues (nsIMsgSearchValue *src, nsMsgSearchVa
 	case nsMsgSearchAttrib::AgeInDays:
         err = src->GetAge(&dst->u.age);
 		break;
+    case nsMsgSearchAttrib::Label:
+        err = src->GetLabel(&dst->u.label);
+        break;
 	default:
 		if (dst->attribute < nsMsgSearchAttrib::kNumMsgSearchAttributes)
 		{

@@ -62,6 +62,7 @@ interface nsIMsgSearchTerm : nsISupports {
     boolean matchPriority(in nsMsgPriorityValue priority);
     boolean matchAge(in PRTime days);
     boolean matchSize(in unsigned long size);
+	boolean matchLabel(in nsMsgLabelValue aLabelValue);
 
     boolean matchBody(in nsIMsgSearchScopeTerm scopeTerm,
                       in unsigned long offset,

@@ -55,6 +55,7 @@ interface nsIMsgSearchValue : nsISupports {
     attribute nsMsgKey msgKey;
     attribute unsigned long age; // in days
     attribute nsIMsgFolder folder;
+	attribute nsMsgLabelValue label;
 
     wstring toString();
 };

@@ -104,9 +104,9 @@ interface nsMsgSearchAttrib {
 	
     // 32 - 48, reserved for ab / LDAP;
 
+    const nsMsgSearchAttribValue Label = 48; /* mail only...can search by label */
     //49 is for showing customize... in ui headers start from 50 onwards up until 99.
 	const nsMsgSearchAttribValue OtherHeader = 49;  /* for mail and news. MUST ALWAYS BE LAST attribute since we can have an arbitrary # of these... */
-
     const nsMsgSearchAttribValue kNumMsgSearchAttributes = 100;      /* must be last attribute */
 };
 
@@ -193,6 +193,7 @@ typedef struct nsMsgSearchValue
         nsMsgKey key;
 		PRUint32 age; /* in days */
 		nsIMsgFolder *folder;
+		nsMsgLabelValue label;
     } u;
     char *string;
 } nsMsgSearchValue;

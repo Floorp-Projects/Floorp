@@ -648,6 +648,13 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
             err = pTerm->MatchAge (date, &result);
           }
           break;
+        case nsMsgSearchAttrib::Label:
+          {
+            nsMsgLabelValue label;
+            msgToMatch->GetLabel(&label);
+            err = pTerm->MatchLabel(label, &result);
+          }          
+          break;         
         default:
           // XXX todo
           // for the temporary return receipts filters, we use a custom header for Content-Type
