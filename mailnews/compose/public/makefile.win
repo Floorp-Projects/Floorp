@@ -30,6 +30,7 @@ EXPORTS =	 						\
 			nsIMsgSend.h			\
 			nsMsgSendFact.h			\
 			nsISmtpUrl.h			\
+			nsISmtpService.h		\
 			MsgCompGlue.h			\
 			$(NULL)
 
