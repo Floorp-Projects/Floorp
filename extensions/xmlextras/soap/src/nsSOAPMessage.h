@@ -43,8 +43,8 @@ NS_DECL_NSISOAPMESSAGE protected:
 
   PRUint16 GetEnvelopeWithVersion(nsIDOMElement * *aEnvelope);
   nsresult GetEncodingWithVersion(nsIDOMElement * aFirst,
-				  PRUint16 * aVersion,
-				  nsISOAPEncoding ** aEncoding);
+                                  PRUint16 * aVersion,
+                                  nsISOAPEncoding ** aEncoding);
    nsCOMPtr < nsIDOMDocument > mMessage;
    nsCOMPtr < nsISOAPEncoding > mEncoding;
   nsString mActionURI;

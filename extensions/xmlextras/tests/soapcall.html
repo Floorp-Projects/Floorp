@@ -74,6 +74,21 @@ function makeCall(syncCall, faultCall) {
   // we don't need it to be named
   s.encode(1, "GetLastTradePrice", "uri:some-namespace", 0, null, 3, new Array(p1, p2, p3, p4, new SOAPParameter(new Dog("Fido", "Lab", "Black"))));
 
+
+  //  The following line allows the browser with default security 
+  //  settings to attach a verifySource header instead of requesting 
+  //  UniversalBrowserRead.  Uncomment it if the server permits
+  //  verifySource headers.  If the server does not permit them, then
+  //  this setting will cause the service request to fail:
+
+  //s.verifySourceHeader = true;
+
+  //  If no verification of source headers is occurring, then it is necessary
+  //  to request privileges.
+
+  if (!s.verifySourceHeader)
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+
   if (syncCall) {
     var r = s.invoke();
     oncompletion(r, s, 0);

@@ -56,6 +56,21 @@ function makeCall(values) {
 
   if (currentCall != null) { currentCall.abort(); }
   document.getElementById("BUTTON").value = "Wait";
+
+  //  The following line allows the browser with default security 
+  //  settings to attach a verifySource header instead of requesting 
+  //  UniversalBrowserRead.  Uncomment it if the server permits
+  //  verifySource headers.  If the server does not permit them, then
+  //  this setting will cause the service request to fail:
+
+  //s.verifySourceHeader = true;
+
+  //  If no verification of source headers is occurring, then it is necessary
+  //  to request privileges.
+
+  if (!s.verifySourceHeader)
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+
   currentCall = s.asyncInvoke(oncompletion);
   
 }

@@ -20,9 +20,15 @@
  * Contributor(s): 
  */
 
+#include "nsXPIDLString.h"
 #include "nsHTTPSOAPTransport.h"
 #include "nsIComponentManager.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMText.h"
+#include "nsIURI.h"
+#include "nsNetUtil.h"
+#include "nsIScriptSecurityManager.h"
+#include "nsICodebasePrincipal.h"
 #include "nsIVariant.h"
 #include "nsString.h"
 #include "nsSOAPUtils.h"
@@ -31,6 +37,7 @@
 #include "nsISOAPCallCompletion.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMSerializer.h"
+#include "nsMemory.h"
 
 nsHTTPSOAPTransport::nsHTTPSOAPTransport()
 {
@@ -62,9 +69,172 @@ nsresult DebugPrintDOM(nsIDOMNode * node)
 #else
 #define DEBUG_DUMP_DOCUMENT(message,doc)
 #endif
+
+static NS_NAMED_LITERAL_STRING(kStringSchemaType, "string");
+
+/**
+ * Get and check the transport URI for accessibility.  In the future,
+ * this might also attempt to automatically add a mustUnderstand
+ * header to messages for untrusted sources and send them anyway.
+ */
+static nsresult GetTransportURI(nsISOAPCall * aCall, nsAString & aURI)
+{
+  nsresult rc = aCall->GetTransportURI(aURI);
+  if (NS_FAILED(rc))
+    return rc;
+  
+  // Create a new URI
+  nsCOMPtr<nsIURI> uri;
+  rc = NS_NewURI(getter_AddRefs(uri), aURI, nsnull);
+  if (NS_FAILED(rc)) return rc;
+
+  // Get security manager, check to see if we're allowed to call this URI.
+  nsCOMPtr<nsIScriptSecurityManager> secMan = 
+           do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rc);
+  if (NS_FAILED(rc)) 
+    return rc;
+  PRBool safe = PR_FALSE;
+  rc = aCall->GetVerifySourceHeader(&safe);
+  if (NS_FAILED(rc)) 
+    return rc;
+  if (!safe) {
+    if (NS_FAILED(secMan->CheckConnect(nsnull, uri, "SOAPCall", "invoke")))
+      return NS_ERROR_FAILURE;
+  }
+  else {
+    if (NS_FAILED(secMan->CheckConnect(nsnull, uri, "SOAPCall", "invokeVerifySourceHeader")))
+      return NS_ERROR_FAILURE;
+
+    nsAutoString sourceURI;
+
+    {
+
+      nsCOMPtr<nsIPrincipal> principal;
+      rc = secMan->GetSubjectPrincipal(getter_AddRefs(principal));
+      if (NS_FAILED(rc)) 
+        return rc;
+      if (!principal) {
+        return NS_ERROR_FAILURE;  //  There must be a principal to send a source-verified message.
+      }
+      nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal,&rc);
+      if (NS_FAILED(rc)) 
+        return rc;
+  
+      if (!codebase) {
+        return NS_ERROR_FAILURE;  //  There must be a principal to send a source-verified message.
+      }
+  
+      char* str;
+
+      rc = codebase->GetSpec(&str);
+      if (NS_FAILED(rc)) 
+        return rc;
+      CopyASCIItoUCS2(nsDependentCString(str), sourceURI);
+      nsMemory::Free(str);
+
+    }
+
+//  Adding a header to tell the server that it must understand and verify the source of the call
+
+    nsCOMPtr<nsIDOMElement> element;
+    rc = aCall->GetHeader(getter_AddRefs(element));
+    if (NS_FAILED(rc)) 
+      return rc;
+    if (!element)
+      return NS_ERROR_FAILURE;
+    //  Node ignored on remove / append calls
+    nsCOMPtr<nsIDOMNode> ignore;
+    //  Remove any existing elements that may conflict with this verifySource identification
+    nsCOMPtr<nsIDOMElement> verifySource;
+    for (;;) {
+      nsSOAPUtils::GetSpecificChildElement(nsnull, element, nsSOAPUtils::kVerifySourceNamespaceURI, 
+        nsSOAPUtils::kVerifySourceHeader, getter_AddRefs(verifySource));
+      if (verifySource) {
+        element->RemoveChild(verifySource, getter_AddRefs(ignore));
+        if (NS_FAILED(rc))
+          return rc;
+      }
+      else
+       break;
+    }
+    //  Document as factory
+    nsCOMPtr<nsIDOMDocument> document;
+    rc = element->GetOwnerDocument(getter_AddRefs(document));
+    if (NS_FAILED(rc)) 
+      return rc;
+    //  Proper version to use of SOAP
+    PRUint16 version;
+    rc = aCall->GetVersion(&version);
+    if (NS_FAILED(rc)) 
+      return rc;
+    //  Proper schema to use for types
+    nsAutoString XSURI;
+    nsAutoString XSIURI;
+    if (version == nsISOAPMessage::VERSION_1_1) {
+      XSURI.Assign(nsSOAPUtils::kXSURI1999);
+      XSIURI.Assign(nsSOAPUtils::kXSIURI1999);
+    }
+    else {
+      XSURI.Assign(nsSOAPUtils::kXSURI);
+      XSIURI.Assign(nsSOAPUtils::kXSIURI);
+    }
+    //  Create the header and append it with mustUnderstand and normal encoding.
+    rc = document->CreateElementNS(nsSOAPUtils::kVerifySourceNamespaceURI, 
+      nsSOAPUtils::kVerifySourceHeader, 
+      getter_AddRefs(verifySource));
+    if (NS_FAILED(rc)) 
+      return rc;
+    rc = element->AppendChild(verifySource, getter_AddRefs(ignore));
+    if (NS_FAILED(rc)) 
+      return rc;
+    rc = verifySource->SetAttributeNS(*nsSOAPUtils::kSOAPEnvURI[version],
+      nsSOAPUtils::kMustUnderstandAttribute,nsSOAPUtils::kTrueA);// mustUnderstand
+    if (NS_FAILED(rc)) 
+      return rc;
+    rc = verifySource->SetAttributeNS(*nsSOAPUtils::kSOAPEnvURI[version], 
+      nsSOAPUtils::kEncodingStyleAttribute,
+      *nsSOAPUtils::kSOAPEncURI[version]);// 1.2 encoding
+    if (NS_FAILED(rc)) 
+      return rc;
+
+    //  Prefixed string for xsi:string
+    nsAutoString stringType;
+    {
+      nsAutoString prefix;
+      rc = nsSOAPUtils::MakeNamespacePrefix(nsnull, verifySource, XSURI, stringType);
+      if (NS_FAILED(rc)) 
+        return rc;
+      stringType.Append(nsSOAPUtils::kQualifiedSeparator);
+      stringType.Append(kStringSchemaType);
+    }
+
+    //  If it is available, add the sourceURI 
+    if (!sourceURI.IsEmpty()) {
+      rc = document->CreateElementNS(nsSOAPUtils::kVerifySourceNamespaceURI,
+        nsSOAPUtils::kVerifySourceURI,getter_AddRefs(element));
+      if (NS_FAILED(rc)) 
+        return rc;
+      rc = verifySource->AppendChild(element, getter_AddRefs(ignore));
+      if (NS_FAILED(rc)) 
+        return rc;
+      rc = element->SetAttributeNS(XSIURI,
+        nsSOAPUtils::kXSITypeAttribute,stringType);
+      if (NS_FAILED(rc)) 
+        return rc;
+      nsCOMPtr<nsIDOMText> text;
+      rc = document->CreateTextNode(sourceURI, getter_AddRefs(text));
+      if (NS_FAILED(rc)) 
+      return rc;
+      element->AppendChild(text, getter_AddRefs(ignore));
+      if (NS_FAILED(rc)) 
+      return rc;
+    }
+  }
+  return NS_OK;
+}
+
 /* void syncCall (in nsISOAPCall aCall, in nsISOAPResponse aResponse); */
-NS_IMETHODIMP nsHTTPSOAPTransport::SyncCall(nsISOAPCall * aCall,
-					    nsISOAPResponse * aResponse)
+NS_IMETHODIMP nsHTTPSOAPTransport::SyncCall(nsISOAPCall * aCall, nsISOAPResponse * aResponse)
 {
   NS_ENSURE_ARG(aCall);
 
@@ -78,17 +248,18 @@ NS_IMETHODIMP nsHTTPSOAPTransport::SyncCall(nsISOAPCall * aCall,
   if (!messageDocument)
     return NS_ERROR_NOT_INITIALIZED;
 
-  DEBUG_DUMP_DOCUMENT("Synchronous Request", messageDocument)
-      request = do_CreateInstance(NS_XMLHTTPREQUEST_CONTRACTID, &rv);
-  if (NS_FAILED(rv))
-    return rv;
-
   nsAutoString uri;
-  rv = aCall->GetTransportURI(uri);
+  rv = GetTransportURI(aCall, uri);
   if (NS_FAILED(rv))
     return rv;
   if (AStringIsNull(uri))
     return NS_ERROR_NOT_INITIALIZED;
+
+  DEBUG_DUMP_DOCUMENT("Synchronous Request", messageDocument)
+
+  request = do_CreateInstance(NS_XMLHTTPREQUEST_CONTRACTID, &rv);
+  if (NS_FAILED(rv))
+    return rv;
 
   rv = request->OpenRequest("POST", NS_ConvertUCS2toUTF8(uri).get(),
 			    PR_FALSE, nsnull, nsnull);
@@ -262,8 +433,7 @@ NS_IMETHODIMP
   if (!messageDocument)
     return NS_ERROR_NOT_INITIALIZED;
 
-  DEBUG_DUMP_DOCUMENT("Asynchronous Request", messageDocument)
-      request = do_CreateInstance(NS_XMLHTTPREQUEST_CONTRACTID, &rv);
+  request = do_CreateInstance(NS_XMLHTTPREQUEST_CONTRACTID, &rv);
   if (NS_FAILED(rv))
     return rv;
 
@@ -273,12 +443,13 @@ NS_IMETHODIMP
     return rv;
 
   nsAutoString uri;
-  rv = aCall->GetTransportURI(uri);
+  rv = GetTransportURI(aCall, uri);
   if (NS_FAILED(rv))
     return rv;
   if (AStringIsNull(uri))
     return NS_ERROR_NOT_INITIALIZED;
 
+  DEBUG_DUMP_DOCUMENT("Asynchronous Request", messageDocument)
   rv = request->OpenRequest("POST", NS_ConvertUCS2toUTF8(uri).get(),
 			    PR_TRUE, nsnull, nsnull);
   if (NS_FAILED(rv))

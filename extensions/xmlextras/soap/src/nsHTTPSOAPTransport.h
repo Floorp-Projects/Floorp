@@ -54,9 +54,9 @@ class nsHTTPSOAPTransportCompletion:public nsIDOMEventListener,
 public:
   nsHTTPSOAPTransportCompletion();
   nsHTTPSOAPTransportCompletion(nsISOAPCall * call,
-				nsISOAPResponse * response,
-				nsIXMLHttpRequest * request,
-				nsISOAPResponseListener * listener);
+                                nsISOAPResponse * response,
+                                nsIXMLHttpRequest * request,
+                                nsISOAPResponseListener * listener);
   virtual ~ nsHTTPSOAPTransportCompletion();
 
   NS_DECL_ISUPPORTS NS_DECL_NSISOAPCALLCOMPLETION

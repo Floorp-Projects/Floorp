@@ -43,7 +43,7 @@ public:
   NS_DECL_NSISOAPBLOCK
       // nsIJSNativeInitializer
   NS_IMETHOD Initialize(JSContext * cx, JSObject * obj,
-			PRUint32 argc, jsval * argv);
+                        PRUint32 argc, jsval * argv);
 
 protected:
   nsString mNamespaceURI;

@@ -34,7 +34,7 @@
 //
 /////////////////////////////////////////////
 
-nsSOAPCall::nsSOAPCall()
+nsSOAPCall::nsSOAPCall():mVerifySourceHeader(PR_FALSE)
 {
 }
 
@@ -49,6 +49,20 @@ NS_IMPL_CI_INTERFACE_GETTER2(nsSOAPCall, nsISOAPMessage, nsISOAPCall)
     NS_INTERFACE_MAP_ENTRY(nsISOAPCall)
     NS_IMPL_QUERY_CLASSINFO(nsSOAPCall)
     NS_INTERFACE_MAP_END_INHERITING(nsSOAPMessage)
+/* attribute boolean verifySourceHeader; */
+NS_IMETHODIMP nsSOAPCall::GetVerifySourceHeader(PRBool * aVerifySourceHeader)
+{
+  NS_ENSURE_ARG_POINTER(aVerifySourceHeader);
+  *aVerifySourceHeader = mVerifySourceHeader;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsSOAPCall::SetVerifySourceHeader(PRBool aVerifySourceHeader)
+{
+  mVerifySourceHeader = aVerifySourceHeader;
+  return NS_OK;
+}
+
 /* attribute DOMString transportURI; */
 NS_IMETHODIMP nsSOAPCall::GetTransportURI(nsAString & aTransportURI)
 {

@@ -28,17 +28,17 @@
 #include "nsCOMPtr.h"
 
 NS_NAMED_LITERAL_STRING(realSOAPEnvURI1,
-			"http://schemas.xmlsoap.org/soap/envelope/");
+                        "http://schemas.xmlsoap.org/soap/envelope/");
 NS_NAMED_LITERAL_STRING(realSOAPEnvURI2,
-			"http://www.w3.org/2001/09/soap-envelope");
+                        "http://www.w3.org/2001/09/soap-envelope");
 const nsAString *nsSOAPUtils::kSOAPEnvURI[] =
     { &realSOAPEnvURI1, &realSOAPEnvURI2
 };
 
 NS_NAMED_LITERAL_STRING(realSOAPEncURI1,
-			"http://schemas.xmlsoap.org/soap/encoding/");
+                        "http://schemas.xmlsoap.org/soap/encoding/");
 NS_NAMED_LITERAL_STRING(realSOAPEncURI2,
-			"http://www.w3.org/2001/09/soap-encoding");
+                        "http://www.w3.org/2001/09/soap-encoding");
 const nsAString *nsSOAPUtils::kSOAPEncURI[] =
     { &realSOAPEncURI1, &realSOAPEncURI2
 };
@@ -114,12 +114,12 @@ const
     nsAString & nsSOAPUtils::kQualifiedSeparator = realQualifiedSeparator;
 
 NS_NAMED_LITERAL_STRING(realXMLNamespaceNamespaceURI,
-			"http://www.w3.org/2000/xmlns/");
+                        "http://www.w3.org/2000/xmlns/");
 const nsAString &
     nsSOAPUtils::kXMLNamespaceNamespaceURI = realXMLNamespaceNamespaceURI;
 
 NS_NAMED_LITERAL_STRING(realXMLNamespaceURI,
-			"http://www.w3.org/XML/1998/namespace");
+                        "http://www.w3.org/XML/1998/namespace");
 const
  nsAString & nsSOAPUtils::kXMLNamespaceURI = realXMLNamespaceURI;
 
@@ -142,11 +142,20 @@ const nsAString & nsSOAPUtils::kTrueA = realTrueA;
 NS_NAMED_LITERAL_STRING(realFalseA, "0");
 const nsAString & nsSOAPUtils::kFalseA = realFalseA;
 
+NS_NAMED_LITERAL_STRING(realVerifySourceHeader, "verifySource");
+const nsAString & nsSOAPUtils::kVerifySourceHeader = realVerifySourceHeader;
+
+NS_NAMED_LITERAL_STRING(realVerifySourceURI, "uri");
+const nsAString & nsSOAPUtils::kVerifySourceURI = realVerifySourceURI;
+
+NS_NAMED_LITERAL_STRING(realVerifySourceNamespaceURI, "urn:inet:www.mozilla.org:user-agent");
+const nsAString & nsSOAPUtils::kVerifySourceNamespaceURI = realVerifySourceNamespaceURI;
+
 void nsSOAPUtils::GetSpecificChildElement(nsISOAPEncoding * aEncoding,
                                           nsIDOMElement * aParent,
-					  const nsAString & aNamespace,
-					  const nsAString & aType,
-					  nsIDOMElement * *aElement)
+                                          const nsAString & aNamespace,
+                                          const nsAString & aType,
+                                          nsIDOMElement * *aElement)
 {
   nsCOMPtr < nsIDOMElement > sibling;
 
@@ -159,9 +168,9 @@ void nsSOAPUtils::GetSpecificChildElement(nsISOAPEncoding * aEncoding,
 
 void nsSOAPUtils::GetSpecificSiblingElement(nsISOAPEncoding * aEncoding,
                                             nsIDOMElement * aSibling,
-					    const nsAString & aNamespace,
-					    const nsAString & aType,
-					    nsIDOMElement * *aElement)
+                                            const nsAString & aNamespace,
+                                            const nsAString & aType,
+                                            nsIDOMElement * *aElement)
 {
   nsCOMPtr < nsIDOMElement > sibling;
 
@@ -191,7 +200,7 @@ void nsSOAPUtils::GetSpecificSiblingElement(nsISOAPEncoding * aEncoding,
 }
 
 void nsSOAPUtils::GetFirstChildElement(nsIDOMElement * aParent,
-				       nsIDOMElement ** aElement)
+                                       nsIDOMElement ** aElement)
 {
   nsCOMPtr < nsIDOMNode > child;
 
@@ -210,7 +219,7 @@ void nsSOAPUtils::GetFirstChildElement(nsIDOMElement * aParent,
 }
 
 void nsSOAPUtils::GetNextSiblingElement(nsIDOMElement * aStart,
-					nsIDOMElement ** aElement)
+                                        nsIDOMElement ** aElement)
 {
   nsCOMPtr < nsIDOMNode > sibling;
 
@@ -221,7 +230,7 @@ void nsSOAPUtils::GetNextSiblingElement(nsIDOMElement * aStart,
     sibling->GetNodeType(&type);
     if (nsIDOMNode::ELEMENT_NODE == type) {
       sibling->QueryInterface(NS_GET_IID(nsIDOMElement),
-			      (void **) aElement);
+                              (void **) aElement);
       break;
     }
     nsCOMPtr < nsIDOMNode > temp = sibling;
@@ -231,7 +240,7 @@ void nsSOAPUtils::GetNextSiblingElement(nsIDOMElement * aStart,
 
 nsresult
     nsSOAPUtils::GetElementTextContent(nsIDOMElement * aElement,
-				       nsAString & aText)
+                                       nsAString & aText)
 {
   nsCOMPtr < nsIDOMNode > child;
   nsAutoString rtext;
@@ -240,13 +249,13 @@ nsresult
     PRUint16 type;
     child->GetNodeType(&type);
     if (nsIDOMNode::TEXT_NODE == type
-	|| nsIDOMNode::CDATA_SECTION_NODE == type) {
+        || nsIDOMNode::CDATA_SECTION_NODE == type) {
       nsCOMPtr < nsIDOMText > text = do_QueryInterface(child);
       nsAutoString data;
       text->GetData(data);
       rtext.Append(data);
     } else if (nsIDOMNode::ELEMENT_NODE == type) {
-      return NS_ERROR_ILLEGAL_VALUE;	//  This was interpreted as a simple value, yet had complex content in it.
+      return NS_ERROR_ILLEGAL_VALUE;        //  This was interpreted as a simple value, yet had complex content in it.
     }
     nsCOMPtr < nsIDOMNode > temp = child;
     GetNextSibling(temp, getter_AddRefs(child));
@@ -274,7 +283,7 @@ PRBool nsSOAPUtils::HasChildElements(nsIDOMElement * aElement)
 }
 
 void nsSOAPUtils::GetNextSibling(nsIDOMNode * aSibling,
-				 nsIDOMNode ** aNext)
+                                 nsIDOMNode ** aNext)
 {
   nsCOMPtr < nsIDOMNode > last;
   nsCOMPtr < nsIDOMNode > current;
@@ -310,8 +319,8 @@ void nsSOAPUtils::GetNextSibling(nsIDOMNode * aSibling,
 nsresult
     nsSOAPUtils::GetNamespaceURI(nsISOAPEncoding * aEncoding,
                                  nsIDOMElement * aScope,
-				 const nsAString & aQName,
-				 nsAString & aURI)
+                                 const nsAString & aQName,
+                                 nsAString & aURI)
 {
   aURI.Truncate(0);
   PRInt32 i = aQName.FindChar(':');
@@ -338,15 +347,15 @@ nsresult
         return rc;
       if (attrs) {
         rc = attrs->GetNamedItemNS(kXMLNamespaceNamespaceURI, prefix,
-				   getter_AddRefs(temp));
+                                   getter_AddRefs(temp));
         if (NS_FAILED(rc))
-	  return rc;
+          return rc;
         if (temp != nsnull) {
-	  rc = temp->GetNodeValue(result);
+          rc = temp->GetNodeValue(result);
           if (NS_FAILED(rc))
             return rc;
-	  break;
-	}
+          break;
+        }
       }
       rc = current->GetParentNode(getter_AddRefs(temp));
       if (NS_FAILED(rc))
@@ -365,7 +374,7 @@ nsresult
 
 nsresult
     nsSOAPUtils::GetLocalName(const nsAString & aQName,
-			      nsAString & aLocalName)
+                              nsAString & aLocalName)
 {
   PRInt32 i = aQName.FindChar(':');
   if (i < 0)
@@ -378,8 +387,8 @@ nsresult
 nsresult
     nsSOAPUtils::MakeNamespacePrefix(nsISOAPEncoding * aEncoding,
                                      nsIDOMElement * aScope,
-				     const nsAString & aURI,
-				     nsAString & aPrefix)
+                                     const nsAString & aURI,
+                                     nsAString & aPrefix)
 {
 //  This may change for level 3 serialization, so be sure to gut this
 //  and call the standardized level 3 method when it is available.
@@ -404,7 +413,7 @@ nsresult
   nsCOMPtr < nsIDOMNode > temp;
   nsAutoString tstr;
   nsresult rc;
-  PRUint32 maxns = 0;		//  Keep track of max generated NS
+  PRUint32 maxns = 0;                //  Keep track of max generated NS
   for (;;) {
     rc = current->GetAttributes(getter_AddRefs(attrs));
     if (NS_FAILED(rc))
@@ -412,67 +421,67 @@ nsresult
     if (attrs) {
       PRUint32 i = 0;
       for (;;) {
-	attrs->Item(i++, getter_AddRefs(temp));
-	if (!temp)
-	  break;
-	temp->GetNamespaceURI(tstr);
-	if (!tstr.Equals(nsSOAPUtils::kXMLNamespaceNamespaceURI))
-	  continue;
-	temp->GetNodeValue(tstr);
-	if (tstr.Equals(externalURI)) {
-	  nsAutoString prefix;
-	  rc = temp->GetLocalName(prefix);
-	  if (NS_FAILED(rc))
-	    return rc;
-	  nsCOMPtr < nsIDOMNode > check = aScope;
-	  PRBool hasDecl;
-	  nsCOMPtr < nsIDOMElement > echeck;
-	  while (check != current) {	// Make sure prefix is not overridden
-	    echeck = do_QueryInterface(check);
-	    if (echeck) {
-	      rc = echeck->
-		  HasAttributeNS(nsSOAPUtils::
-				 kXMLNamespaceNamespaceURI, prefix,
-				 &hasDecl);
-	      if (NS_FAILED(rc))
-		return rc;
-	      if (hasDecl)
-		break;
-	      echeck->GetParentNode(getter_AddRefs(check));
-	    }
-	  }
-	  if (check == current) {
-	    aPrefix.Assign(prefix);
-	    return NS_OK;
-	  }
-	}
-	rc = temp->GetLocalName(tstr);
-	if (NS_FAILED(rc))
-	  return rc;
-	else {			//  Decode the generated namespace into a number
-	  nsReadingIterator < PRUnichar > i1;
-	  nsReadingIterator < PRUnichar > i2;
-	  tstr.BeginReading(i1);
-	  tstr.EndReading(i2);
-	  if (i1 == i2 || *i1 != 'n')
-	    continue;
-	  i1++;
-	  if (i1 == i2 || *i1 != 's')
-	    continue;
-	  i1++;
-	  PRUint32 n = 0;
-	  while (i1 != i2) {
-	    PRUnichar c = *i1;
-	    i1++;
-	    if (c < '0' || c > '9') {
-	      n = 0;
-	      break;
-	    }
-	    n = n * 10 + (c - '0');
-	  }
-	  if (n > maxns)
-	    maxns = n;
-	}
+        attrs->Item(i++, getter_AddRefs(temp));
+        if (!temp)
+          break;
+        temp->GetNamespaceURI(tstr);
+        if (!tstr.Equals(nsSOAPUtils::kXMLNamespaceNamespaceURI))
+          continue;
+        temp->GetNodeValue(tstr);
+        if (tstr.Equals(externalURI)) {
+          nsAutoString prefix;
+          rc = temp->GetLocalName(prefix);
+          if (NS_FAILED(rc))
+            return rc;
+          nsCOMPtr < nsIDOMNode > check = aScope;
+          PRBool hasDecl;
+          nsCOMPtr < nsIDOMElement > echeck;
+          while (check != current) {        // Make sure prefix is not overridden
+            echeck = do_QueryInterface(check);
+            if (echeck) {
+              rc = echeck->
+                  HasAttributeNS(nsSOAPUtils::
+                                 kXMLNamespaceNamespaceURI, prefix,
+                                 &hasDecl);
+              if (NS_FAILED(rc))
+                return rc;
+              if (hasDecl)
+                break;
+              echeck->GetParentNode(getter_AddRefs(check));
+            }
+          }
+          if (check == current) {
+            aPrefix.Assign(prefix);
+            return NS_OK;
+          }
+        }
+        rc = temp->GetLocalName(tstr);
+        if (NS_FAILED(rc))
+          return rc;
+        else {                        //  Decode the generated namespace into a number
+          nsReadingIterator < PRUnichar > i1;
+          nsReadingIterator < PRUnichar > i2;
+          tstr.BeginReading(i1);
+          tstr.EndReading(i2);
+          if (i1 == i2 || *i1 != 'n')
+            continue;
+          i1++;
+          if (i1 == i2 || *i1 != 's')
+            continue;
+          i1++;
+          PRUint32 n = 0;
+          while (i1 != i2) {
+            PRUnichar c = *i1;
+            i1++;
+            if (c < '0' || c > '9') {
+              n = 0;
+              break;
+            }
+            n = n * 10 + (c - '0');
+          }
+          if (n > maxns)
+            maxns = n;
+        }
       }
     }
     current->GetParentNode(getter_AddRefs(temp));
@@ -516,9 +525,9 @@ nsresult
  */
 PRBool nsSOAPUtils::GetAttribute(nsISOAPEncoding *aEncoding,
                                   nsIDOMElement * aElement,
-				  const nsAString & aNamespaceURI,
-				  const nsAString & aLocalName,
-				  nsAString & aValue)
+                                  const nsAString & aNamespaceURI,
+                                  const nsAString & aLocalName,
+                                  nsAString & aValue)
 {
   nsAutoString value;
   nsresult rc = aEncoding->GetExternalSchemaURI(aNamespaceURI, value);  //  Try most-likely result first.

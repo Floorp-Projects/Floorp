@@ -31,39 +31,39 @@ class nsSOAPUtils {
 public:
   static void GetSpecificChildElement(nsISOAPEncoding * aEncoding,
                                       nsIDOMElement * aParent,
-				      const nsAString & aNamespace,
-				      const nsAString & aType,
-				      nsIDOMElement * *aElement);
+                                      const nsAString & aNamespace,
+                                      const nsAString & aType,
+                                      nsIDOMElement * *aElement);
   static void GetSpecificSiblingElement(nsISOAPEncoding * aEncoding,
                                         nsIDOMElement * aSibling,
-					const nsAString & aNamespace,
-					const nsAString & aType,
-					nsIDOMElement * *aElement);
+                                        const nsAString & aNamespace,
+                                        const nsAString & aType,
+                                        nsIDOMElement * *aElement);
   static void GetFirstChildElement(nsIDOMElement * aParent,
-				   nsIDOMElement ** aElement);
+                                   nsIDOMElement ** aElement);
   static void GetNextSiblingElement(nsIDOMElement * aStart,
-				    nsIDOMElement ** aElement);
+                                    nsIDOMElement ** aElement);
   static nsresult GetElementTextContent(nsIDOMElement * aElement,
-					nsAString & aText);
+                                        nsAString & aText);
   static PRBool HasChildElements(nsIDOMElement * aElement);
 
   static void GetNextSibling(nsIDOMNode * aSibling, nsIDOMNode ** aNext);
   static nsresult MakeNamespacePrefix(nsISOAPEncoding *aEncoding,
                                       nsIDOMElement * aElement,
-				      const nsAString & aURI,
-				      nsAString & aPrefix);
+                                      const nsAString & aURI,
+                                      nsAString & aPrefix);
   static nsresult GetNamespaceURI(nsISOAPEncoding *aEncoding,
                                   nsIDOMElement * aElement,
-				  const nsAString & aQName,
-				  nsAString & aURI);
+                                  const nsAString & aQName,
+                                  nsAString & aURI);
   static nsresult GetLocalName(const nsAString & aQName,
-			       nsAString & aLocalName);
+                               nsAString & aLocalName);
 
   static PRBool GetAttribute(nsISOAPEncoding *aEncoding,
                                   nsIDOMElement * aElement,
-				  const nsAString & aNamespaceURI,
-				  const nsAString & aLocalName,
-				  nsAString & aValue);
+                                  const nsAString & aNamespaceURI,
+                                  const nsAString & aLocalName,
+                                  nsAString & aValue);
 
 // All those missing string functions have to come from somewhere...
 
@@ -102,13 +102,16 @@ public:
   static const nsAString & kTrueA;
   static const nsAString & kFalse;
   static const nsAString & kFalseA;
+  static const nsAString & kVerifySourceHeader;
+  static const nsAString & kVerifySourceURI;
+  static const nsAString & kVerifySourceNamespaceURI;
 };
 
 //  Used to support null strings.
 
 inline PRBool AStringIsNull(const nsAString & aString)
 {
-  return aString.IsVoid() || aString.IsEmpty();	// Get rid of empty hack when string implementations support.
+  return aString.IsVoid() || aString.IsEmpty();        // Get rid of empty hack when string implementations support.
 }
 
 inline void SetAStringToNull(nsAString & aString)
@@ -122,7 +125,7 @@ NS_ENSURE_FALSE(AStringIsNull(arg), NS_ERROR_INVALID_ARG)
 
 inline void
 SOAPEncodingKey(const nsAString & aURI, const nsAString & aType,
-		nsAString & result)
+                nsAString & result)
 {
   result.Assign(aURI);
   result.Append(nsSOAPUtils::kEncodingSeparator);

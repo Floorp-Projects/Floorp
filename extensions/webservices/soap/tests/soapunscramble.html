@@ -54,6 +54,21 @@ function makeCall(language,word) {
   2, new Array(new SOAPParameter(language,"language"), new SOAPParameter(word,"word")));
     if (currentCall != null) { currentCall.abort(); }
   document.getElementById('BUTTON').value = "Wait...";
+
+  //  The following line allows the browser with default security 
+  //  settings to attach a verifySource header instead of requesting 
+  //  UniversalBrowserRead.  Uncomment it if the server permits
+  //  verifySource headers.  If the server does not permit them, then
+  //  this setting will cause the service request to fail:
+
+  s.verifySourceHeader = true;
+
+  //  If no verification of source headers is occurring, then it is necessary
+  //  to request privileges.
+
+  if (!s.verifySourceHeader)
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+
   currentCall = s.asyncInvoke(oncompletion);
 }
 function loadLanguages()
@@ -70,6 +85,21 @@ function loadLanguages()
   // we don't need it to be named
   s.encode(0, "languages", "http://soaptests.mozilla.org/unscramble", 0, null, 0, null);
     if (currentCall != null) { currentCall.abort(); }
+
+  //  The following line allows the browser with default security 
+  //  settings to attach a verifySource header instead of requesting 
+  //  UniversalBrowserRead.  Uncomment it if the server permits
+  //  verifySource headers.  If the server does not permit them, then
+  //  this setting will cause the service request to fail:
+
+  s.verifySourceHeader = true;
+
+  //  If no verification of source headers is occurring, then it is necessary
+  //  to request privileges.
+
+  if (!s.verifySourceHeader)
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+
     var list = s.invoke(oncompletion).getParameters(false, {})[0].value;
     for (i = 0; i < list.length; i++) {
       var option = document.createElement("option");

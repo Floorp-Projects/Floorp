@@ -42,6 +42,7 @@ public:
 NS_DECL_NSISOAPCALL protected:
 
    nsString mTransportURI;
+  PRBool mVerifySourceHeader;
   nsresult GetTransport(nsISOAPTransport ** aTransport);
 };
 

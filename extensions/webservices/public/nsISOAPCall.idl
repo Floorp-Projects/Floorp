@@ -52,6 +52,36 @@ interface nsISOAPCall:nsISOAPMessage {
   attribute AString transportURI;
 
   /**
+   * Enables alternative security model which may be available
+   *   from participating services.  Securely adds a 
+   *   "verifySource" header to the outgoing message with 
+   *   "mustUnderstand" enabled, which permits the server to 
+   *   decide whether the call should be honored from that 
+   *   particular source.  i
+   * <p>When this verification header is enabled, the 
+   *   calling script is released from the draconion 
+   *   security checks of unverified SOAP calls.  But
+   *   the service being invoked must not reject the
+   *   message, which is the prescribed action if a SOAP
+   *   server receives a header of type "mustUnderstand" that
+   *   it does not understand.
+   * <p>Servers which accept "verified" messages
+   *   containing this header relieve the user of having to
+   *   configure and trust the domain of the web page never 
+   *   to exploit behind his firewall, because the
+   *   responsibility is assumed by the service.  If the
+   *   service is not behind a firewall, then merely
+   *   ignoring the packet is enough to free all
+   *   users of this facility to call the server whatever
+   *   their security configurations for unverified calls
+   *   may be.  But it only works with services that 
+   *   accept these verifySource headers.
+   * <p>It is possible for a user to disable even verified
+   *   SOAP calls, but this is not the default setting.
+   */
+  attribute boolean verifySourceHeader;
+
+  /**
    * Synchronously invoke the call. The method returns only when 
    * we receive a response (or an error occurs).  The
    * <code>transportURI</code> must have been set, the 

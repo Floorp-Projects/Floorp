@@ -49,8 +49,8 @@ class nsSOAPEncoding:public nsISOAPEncoding {
 public:
   NS_DECL_ISUPPORTS NS_DECL_NSISOAPENCODING nsSOAPEncoding();
   nsSOAPEncoding(const nsAString & aStyleURI,
-		 nsSOAPEncodingRegistry * aRegistry,
-		 nsISOAPEncoding * aDefaultEncoding);
+                 nsSOAPEncodingRegistry * aRegistry,
+                 nsISOAPEncoding * aDefaultEncoding);
   virtual ~ nsSOAPEncoding();
   /* additional members */
 
