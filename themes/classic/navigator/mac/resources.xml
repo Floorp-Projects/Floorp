@@ -4,8 +4,10 @@
           
  <binding id="resource_bundle_navigator">
    <resources>
+     <image src="chrome://navigator/skin/back.gif" />
      <image src="chrome://navigator/skin/back-hover.gif" />
      <image src="chrome://navigator/skin/back-hover-active.gif" />
+     <image src="chrome://navigator/skin/forward.gif" />
      <image src="chrome://navigator/skin/forward-hover.gif" />
      <image src="chrome://navigator/skin/forward-hover-active.gif" />
      <image src="chrome://navigator/skin/stop-hover.gif" />

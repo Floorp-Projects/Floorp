@@ -4,8 +4,10 @@
           
  <binding id="resource_bundle_navigator">
    <resources>
+     <image src="chrome://navigator/skin/btn1/back.gif"/>
      <image src="chrome://navigator/skin/btn1/back-hov.gif"/>
      <image src="chrome://navigator/skin/btn1/back-act.gif"/>
+     <image src="chrome://navigator/skin/btn1/forward.gif"/>
      <image src="chrome://navigator/skin/btn1/forward-hov.gif"/>
      <image src="chrome://navigator/skin/btn1/forward-act.gif"/>
      <image src="chrome://navigator/skin/btn1/reload-hov.gif"/>
