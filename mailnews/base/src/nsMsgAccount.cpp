@@ -115,7 +115,7 @@ nsMsgAccount::GetIncomingServer(nsIMsgIncomingServer * *aIncomingServer)
     PR_FREEIF(serverKeyPref);
 
     // the server pref doesn't exist
-    if (NS_FAILED(rv)) return NS_ERROR_NOT_INITIALIZED;
+    if (NS_FAILED(rv)) return rv;
     
 #ifdef DEBUG_alecf
     printf("\t%s's server: %s\n", m_accountKey, serverKey);
@@ -130,7 +130,7 @@ nsMsgAccount::GetIncomingServer(nsIMsgIncomingServer * *aIncomingServer)
     PR_FREEIF(serverTypePref);
 
     // the server type doesn't exist!
-    if (NS_FAILED(rv)) return NS_ERROR_NOT_INITIALIZED;
+    if (NS_FAILED(rv)) return rv;
     
 #ifdef DEBUG_alecf
     if (NS_FAILED(rv)) {
