@@ -58,7 +58,7 @@ REQUIRES        = xpcom \
                   gfx2 \
                   webbrwsr \
                   unicharutil \
-			commandhandler \
+                  commandhandler \
                   $(NULL)
 
 CPPSRCS  = \
