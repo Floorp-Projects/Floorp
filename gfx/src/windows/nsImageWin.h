@@ -19,6 +19,7 @@
 #ifndef nsImageWin_h___
 #define nsImageWin_h___
 
+#include <windows.h>
 #include "nsIImage.h"
 
 class nsImageWin : public nsIImage
