@@ -100,6 +100,7 @@ $output .= "<A HREF='toplevel.cgi" . BatchIdPart('?') . "'>$toplevel</a>/ ";
 
 my ($dir_head, $dir_tail) = $dir =~ m@(.*/)?(.+)@;
 $dir_head = "" unless defined $dir_head;
+$dir_tail = "" unless defined $dir_tail;
 my $link_path = "";
 foreach my $path (split('/',$dir_head)) {
     $link_path .= $path;
