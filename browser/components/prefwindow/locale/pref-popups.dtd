@@ -10,9 +10,7 @@
 <!ENTITY popupView.label                "Manage Popup Permissions">
 <!ENTITY popupView.accesskey            "m">
 
-<!ENTITY div.blessedservers.label       "Allow these sites to open pop-up windows:">
+<!ENTITY div.blessedservers.label       "Always allow the sites below to open pop-up windows:">
 
 <!ENTITY removepermission.label         "Remove Site">
 <!ENTITY removeallpermissions.label     "Remove All Sites">
-
-<!ENTITY treehead.sitename.label        "Site">

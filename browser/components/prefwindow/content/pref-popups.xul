@@ -107,7 +107,9 @@ function Permission(number, host, rawHost, type, capability) {
 
 var permissionmanager = Components.classes["@mozilla.org/permissionmanager;1"].getService();
 permissionmanager = permissionmanager.QueryInterface(Components.interfaces.nsIPermissionManager);
-  
+var popupmanager = Components.classes["@mozilla.org/PopupWindowManager;1"].getService();
+popupmanager = popupmanager.QueryInterface(Components.interfaces.nsIPopupWindowManager);
+
 function DeleteAllFromTree
     (tree, view, table, deletedTable, removeButton, removeAllButton) {
 
@@ -262,7 +264,7 @@ function FinalizePermissionDeletions() {
                     .getService(Components.interfaces.nsIIOService);
 
   for (var p=0; p<deletedPermissions.length; p++) {
-    if (deletedPermissions[p].type == popupType) {
+    if (deletedPermissions[p].type == 2) {
       // we lost the URI's original scheme, but this will do because the scheme
       // is stripped later anyway.
       var uri = ioService.newURI("http://"+deletedPermissions[p].host, null, null);
@@ -303,7 +305,7 @@ function HandlePermissionKeyPress(e) {
             onkeypress="HandlePermissionKeyPress(event)"
             onselect="PermissionSelected();">
         <treecols>
-          <treecol id="siteCol" label="&treehead.sitename.label;" flex="1"/>
+          <treecol id="siteCol" hideheader="true" flex="1"/>
         </treecols>
         <treechildren/>
       </tree>
