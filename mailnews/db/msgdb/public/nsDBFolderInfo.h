@@ -24,7 +24,6 @@
 
 #include "nsString.h"
 #include "MailNewsTypes.h"
-#include "xp.h"
 #include "mdb.h"
 #include "nsMsgKeyArray.h"
 #include "nsIDBFolderInfo.h"

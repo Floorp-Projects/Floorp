@@ -528,8 +528,6 @@ nsMailDatabase::CreateMsgHdr(nsIMdbRow* hdrRow, nsFileSpec& path, nsMsgKey key, 
 {
     nsresult rv;
 
-    printf("nsMailDatabase::CreateMsgHdr()\n");
-
 	nsIRDFService *rdf;
 	rv = nsServiceManager::GetService(kRDFServiceCID, 
                                       nsIRDFService::GetIID(), 
