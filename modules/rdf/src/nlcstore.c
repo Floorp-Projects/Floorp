@@ -27,6 +27,7 @@
 #include "mcf.h"
 #include "xpassert.h"
 
+#include "utils.h"
 
 	/* globals */
 PRBool doingFirstTimeInitp = 0;
