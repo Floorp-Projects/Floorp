@@ -33,7 +33,7 @@ static NS_DEFINE_CID(kJavaStubsAndProxies,BC_JAVASTUBSANDPROXIES_CID);
 static NS_DEFINE_CID(kXPCOMStubsAndProxies,BC_XPCOMSTUBSANDPROXIES_CID);
 static NS_DEFINE_CID(kORBComponent,BC_ORBCOMPONENT_CID);
 
-NS_IMPL_ISUPPORTS1(bcJavaComponentFactory, nsIFactory)
+NS_IMPL_THREADSAFE_ISUPPORTS1(bcJavaComponentFactory, nsIFactory)
 
 
 bcJavaComponentFactory::bcJavaComponentFactory(const char *_location) {
