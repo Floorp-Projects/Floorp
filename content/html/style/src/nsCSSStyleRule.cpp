@@ -78,6 +78,9 @@ static NS_DEFINE_IID(kCSSContentSID, NS_CSS_CONTENT_SID);
 static NS_DEFINE_IID(kCSSUserInterfaceSID, NS_CSS_USER_INTERFACE_SID);
 static NS_DEFINE_IID(kCSSBreaksSID, NS_CSS_BREAKS_SID);
 static NS_DEFINE_IID(kCSSPageSID, NS_CSS_PAGE_SID);
+#ifdef INCLUDE_XUL
+static NS_DEFINE_IID(kCSSXULSID, NS_CSS_XUL_SID);
+#endif
 
 // -- nsCSSSelector -------------------------------
 
@@ -3319,6 +3322,34 @@ MapDeclarationPrintInto(nsICSSDeclaration* aDeclaration,
 	}
 }
 
+#ifdef INCLUDE_XUL
+static void 
+MapDeclarationXULInto(nsICSSDeclaration* aDeclaration, 
+                      nsIMutableStyleContext* aContext, nsIStyleContext* aParentContext,
+                      nsStyleFont* aFont, nsIPresContext* aPresContext)
+{
+  nsCSSXUL*  ourXUL;
+  if (NS_OK == aDeclaration->GetData(kCSSXULSID, (nsCSSStruct**)&ourXUL)) {
+    if (nsnull != ourXUL) {
+      nsStyleXUL* xul = (nsStyleXUL*)aContext->GetMutableStyleData(eStyleStruct_XUL);
+
+      const nsStyleXUL* parentXUL = xul;
+      if (nsnull != aParentContext) {
+        parentXUL = (const nsStyleXUL*)aParentContext->GetStyleData(eStyleStruct_XUL);
+      }
+
+      // box-orient: enum, inherit
+      if (eCSSUnit_Enumerated == ourXUL->mBoxOrient.GetUnit()) {
+        xul->mBoxOrient = ourXUL->mBoxOrient.GetIntValue();
+      }
+      else if (eCSSUnit_Inherit == ourXUL->mBoxOrient.GetUnit()) {
+        xul->mBoxOrient = parentXUL->mBoxOrient;
+      }
+    }
+  }
+}
+#endif // INCLUDE_XUL
+
 void MapDeclarationInto(nsICSSDeclaration* aDeclaration, 
                         nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
 {
@@ -3336,6 +3367,9 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
     MapDeclarationContentInto(aDeclaration, aContext, parentContext, font, aPresContext);
     MapDeclarationUIInto(aDeclaration, aContext, parentContext, font, aPresContext);
     MapDeclarationPrintInto(aDeclaration, aContext, parentContext, font, aPresContext);
+#ifdef INCLUDE_XUL
+    MapDeclarationXULInto(aDeclaration, aContext, parentContext, font, aPresContext);
+#endif
 
     NS_IF_RELEASE(parentContext);
   }

@@ -1734,6 +1734,63 @@ PRUint32 StylePrintImpl::ComputeCRC32(PRUint32 aCrc) const
 #pragma mark -
 #endif
 
+#ifdef INCLUDE_XUL
+// --------------------
+// nsStyleXUL
+//
+nsStyleXUL::nsStyleXUL() { }
+nsStyleXUL::~nsStyleXUL() { }
+
+struct StyleXULImpl: public nsStyleXUL {
+  StyleXULImpl() { }
+
+  void ResetFrom(const nsStyleXUL* aParent, nsIPresContext* aPresContext);
+  void SetFrom(const nsStyleXUL& aSource);
+  void CopyTo(nsStyleXUL& aDest) const;
+  PRInt32 CalcDifference(const StyleXULImpl& aOther) const;
+  PRUint32 ComputeCRC32(PRUint32 aCrc) const;
+
+private:  // These are not allowed
+  StyleXULImpl(const StyleXULImpl& aOther);
+  StyleXULImpl& operator=(const StyleXULImpl& aOther);
+};
+
+void StyleXULImpl::ResetFrom(const nsStyleXUL* aParent, nsIPresContext* aPresContext)
+{
+  mBoxOrient = NS_STYLE_BOX_ORIENT_HORIZONTAL;
+}
+
+void StyleXULImpl::SetFrom(const nsStyleXUL& aSource)
+{
+  nsCRT::memcpy((nsStyleXUL*)this, &aSource, sizeof(nsStyleXUL));
+}
+
+void StyleXULImpl::CopyTo(nsStyleXUL& aDest) const
+{
+  nsCRT::memcpy(&aDest, (const nsStyleXUL*)this, sizeof(nsStyleXUL));
+}
+
+PRInt32 StyleXULImpl::CalcDifference(const StyleXULImpl& aOther) const
+{
+  if (mBoxOrient == aOther.mBoxOrient)
+    return NS_STYLE_HINT_NONE;
+  return NS_STYLE_HINT_REFLOW;
+}
+
+PRUint32 StyleXULImpl::ComputeCRC32(PRUint32 aCrc) const
+{
+  PRUint32 crc = aCrc;
+#ifdef COMPUTE_STYLEDATA_CRC
+  crc = AccumulateCRC(crc,(const char *)&mBoxOrient,sizeof(mBoxOrient));
+#endif
+  return crc;
+}
+
+#ifdef XP_MAC
+#pragma mark -
+#endif
+#endif // INCLUDE_XUL
+
 //----------------------------------------------------------------------
 
 #ifdef SHARE_STYLECONTEXTS
@@ -1945,6 +2002,22 @@ void StyleOutlineImplLog::ResetFrom(const nsStyleOutline* aParent, nsIPresContex
 	mSetFromParent = (aParent != nsnull);
 }
 
+#ifdef INCLUDE_XUL
+//  StyleXULImpl       mXUL;
+struct StyleXULImplLog: public StyleXULImpl {
+  void ResetFrom(const nsStyleXUL* aParent, nsIPresContext* aPresContext);
+  StyleXULImpl mInternalXUL;
+  bool mSetFromParent;
+};
+
+void StyleXULImplLog::ResetFrom(const nsStyleXUL* aParent, nsIPresContext* aPresContext)
+{
+	StyleXULImpl::ResetFrom(aParent, aPresContext);
+	CopyTo(mInternalXUL);
+	mSetFromParent = (aParent != nsnull);
+}
+#endif // INCLUDE_XUL
+
 #ifdef XP_MAC
 #pragma mark -
 #endif
@@ -1996,6 +2069,9 @@ private:  // all data and methods private: only friends have access
 	StylePaddingImplLog				 mPadding;
 	StyleBorderImplLog				 mBorder;
 	StyleOutlineImplLog				 mOutline;
+#ifdef INCLUDE_XUL
+  StyleXULImplLog            mXUL;
+#endif
 #else
   StyleFontImpl           mFont;
   StyleColorImpl          mColor;
@@ -2011,6 +2087,9 @@ private:  // all data and methods private: only friends have access
 	StylePaddingImpl				mPadding;
 	StyleBorderImpl					mBorder;
 	StyleOutlineImpl				mOutline;
+#ifdef INCLUDE_XUL
+  StyleXULImpl            mXUL;
+#endif
 #endif
 
   PRUint32                mRefCnt;
@@ -2145,6 +2224,9 @@ static void LogStyleStructs(nsStyleContextData* aStyleContextData)
 		    case eStyleStruct_Padding: 				printf("eStyleStruct_Padding        "); sizeOfStruct = sizeof(StylePaddingImpl);  break;
 		    case eStyleStruct_Border: 				printf("eStyleStruct_Border         "); sizeOfStruct = sizeof(StyleBorderImpl);  break;
 		    case eStyleStruct_Outline: 				printf("eStyleStruct_Outline        "); sizeOfStruct = sizeof(StyleOutlineImpl);  break;
+#ifdef INCLUDE_XUL
+        case eStyleStruct_XUL:            printf("eStyleStruct_XUL            "); sizeOfStruct = sizeof(StyleXULImpl); break;      
+#endif
       }
 		  short percentDefault = (totalCount == 0 ? 0 : ((100 * defaultStruct[i]) / totalCount));
 	    short percentFromParent = (defaultStruct[i] == 0 ? 0 : ((100 * setFromParent[i]) / defaultStruct[i]));
@@ -2284,6 +2366,15 @@ static void LogStyleStructs(nsStyleContextData* aStyleContextData)
 			    	setFromParent[i]++;
 		    }
 		    break;
+#ifdef INCLUDE_XUL
+      case eStyleStruct_XUL:
+		    if (aStyleContextData->mXUL.CalcDifference(aStyleContextData->mXUL.mInternalXUL) == NS_STYLE_HINT_NONE) {
+		    	defaultStruct[i]++;
+			    if (aStyleContextData->mXUL.mSetFromParent)
+			    	setFromParent[i]++;
+		    }
+		    break;
+#endif
     }
   }
 
@@ -2330,6 +2421,9 @@ PRUint32 nsStyleContextData::ComputeCRC32(PRUint32 aCrc) const
 	crc = mPadding.ComputeCRC32(crc);
 	crc = mBorder.ComputeCRC32(crc);
 	crc = mOutline.ComputeCRC32(crc);
+#ifdef INCLUDE_XUL
+  crc = mXUL.ComputeCRC32(crc);
+#endif
 #else
   crc = 0;
 #endif
@@ -2467,6 +2561,9 @@ protected:
 	StylePaddingImpl				mPadding;
 	StyleBorderImpl					mBorder;
 	StyleOutlineImpl				mOutline;
+#ifdef INCLUDE_XUL
+  StyleXULImpl            mXUL;
+#endif
 
 #endif // #ifdef SHARE_STYLECONTEXTS
 
@@ -2512,6 +2609,9 @@ StyleContextImpl::StyleContextImpl(nsIStyleContext* aParent,
     mTable(),
     mContent(),
     mUserInterface(),
+#ifdef INCLUDE_XUL
+    mXUL(),
+#endif
     mPrint()
 #endif
 {
@@ -2900,6 +3000,9 @@ static void LogGetStyleDataCall(nsStyleStructID aSID, LogCallType aLogCallType, 
 		    case eStyleStruct_Border: 				printf("eStyleStruct_Border         "); break;
 		    case eStyleStruct_Outline: 				printf("eStyleStruct_Outline        "); break;
 		    case eStyleStruct_BorderPaddingShortcut: 				printf("BorderPaddingShortcut       "); break;
+#ifdef INCLUDE_XUL
+        case eStyleStruct_XUL:            printf("eStyleStruct_XUL            "); break;
+#endif
       }
 			short percent = 100*calls[i]/totalCalls;
 			short avdepth = calls[i] == 0 ? 0 : round(float(depth[i])/float(calls[i]));
@@ -3028,6 +3131,11 @@ const nsStyleStruct* StyleContextImpl::GetStyleData(nsStyleStructID aSID)
     case eStyleStruct_Outline:
     	result = & GETSCDATA(Outline);
     	break;
+#ifdef INCLUDE_XUL
+    case eStyleStruct_XUL:
+    	result = & GETSCDATA(XUL);
+    	break;
+#endif
     default:
       NS_ERROR("Invalid style struct id");
       break;
@@ -3090,6 +3198,11 @@ nsStyleStruct* StyleContextImpl::GetMutableStyleData(nsStyleStructID aSID)
     case eStyleStruct_Outline:
     	result = & GETSCDATA(Outline);
     	break;
+#ifdef INCLUDE_XUL
+    case eStyleStruct_XUL:
+    	result = & GETSCDATA(XUL);
+    	break;
+#endif
     default:
       NS_ERROR("Invalid style struct id");
       break;
@@ -3170,6 +3283,11 @@ StyleContextImpl::GetStyle(nsStyleStructID aSID, nsStyleStruct& aStruct) const
     case eStyleStruct_Outline:
       GETSCDATA(Outline).CopyTo((nsStyleOutline&)aStruct);
     	break;
+#ifdef INCLUDE_XUL
+    case eStyleStruct_XUL:
+      GETSCDATA(XUL).CopyTo((nsStyleXUL&)aStruct);
+    	break;
+#endif
     case eStyleStruct_BorderPaddingShortcut: {
       nsMargin border, padding;
       if (GETSCDATA(Border).GetBorder(border)) {
@@ -3239,6 +3357,11 @@ StyleContextImpl::SetStyle(nsStyleStructID aSID, const nsStyleStruct& aStruct)
     case eStyleStruct_Outline:
       GETSCDATA(Outline).SetFrom((const nsStyleOutline&)aStruct);
     	break;
+#ifdef INCLUDE_XUL
+    case eStyleStruct_XUL:
+      GETSCDATA(XUL).SetFrom((const nsStyleXUL&)aStruct);
+    	break;
+#endif
     default:
       NS_ERROR("Invalid style struct id");
       result = NS_ERROR_INVALID_ARG;
@@ -3299,6 +3422,9 @@ StyleContextImpl::RemapStyle(nsIPresContext* aPresContext, PRBool aRecurse)
     GETSCDATA(Padding).ResetFrom(&(mParent->GETSCDATA(Padding)), aPresContext);
     GETSCDATA(Border).ResetFrom(&(mParent->GETSCDATA(Border)), aPresContext);
     GETSCDATA(Outline).ResetFrom(&(mParent->GETSCDATA(Outline)), aPresContext);
+#ifdef INCLUDE_XUL
+    GETSCDATA(XUL).ResetFrom(&(mParent->GETSCDATA(XUL)), aPresContext);
+#endif
   }
   else {
     GETSCDATA(Font).ResetFrom(nsnull, aPresContext);
@@ -3315,6 +3441,9 @@ StyleContextImpl::RemapStyle(nsIPresContext* aPresContext, PRBool aRecurse)
     GETSCDATA(Padding).ResetFrom(nsnull, aPresContext);
     GETSCDATA(Border).ResetFrom(nsnull, aPresContext);
     GETSCDATA(Outline).ResetFrom(nsnull, aPresContext);
+#ifdef INCLUDE_XUL
+    GETSCDATA(XUL).ResetFrom(nsnull, aPresContext);
+#endif
   }
 
   PRUint32 cnt = 0;
@@ -3396,6 +3525,9 @@ StyleContextImpl::RemapStyle(nsIPresContext* aPresContext, PRBool aRecurse)
       GETSCDATA(Padding).ResetFrom(nsnull, aPresContext);
       GETSCDATA(Border).ResetFrom(nsnull, aPresContext);
       GETSCDATA(Outline).ResetFrom(nsnull, aPresContext);
+#ifdef INCLUDE_XUL
+      GETSCDATA(XUL).ResetFrom(nsnull, aPresContext);
+#endif
       GETSCDATA(Display).mVisible = visible;
       GETSCDATA(Display).mDirection = direction;
       GETSCDATA(Display).mLanguage = language;
@@ -3589,6 +3721,15 @@ StyleContextImpl::CalcStyleDifference(nsIStyleContext* aOther, PRInt32& aHint,PR
         aHint = hint;
       }
     }
+#ifdef INCLUDE_XUL
+    if (aStopAtFirstDifference && aHint > NS_STYLE_HINT_NONE) return NS_OK;
+    if (aHint < NS_STYLE_HINT_MAX) {
+      hint = GETSCDATA(XUL).CalcDifference(other->GETSCDATA(XUL));
+      if (aHint < hint) {
+        aHint = hint;
+      }
+    }
+#endif
   }
   return NS_OK;
 }
@@ -3897,6 +4038,10 @@ void StyleContextImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
     totalSize += (long)sizeof(GETSCDATA(Border));
 	  printf( " - StyleOutlineImpl:         %ld\n", (long)sizeof(GETSCDATA(Outline)));
     totalSize += (long)sizeof(GETSCDATA(Outline));
+#ifdef INCLUDE_XUL
+    printf( " - StyleXULImpl:         %ld\n", (long)sizeof(GETSCDATA(XUL)));
+    totalSize += (long)sizeof(GETSCDATA(XUL));
+#endif
     printf( " - Total:                  %ld\n", (long)totalSize);
     printf( "*************************************\n");
   }

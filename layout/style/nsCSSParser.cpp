@@ -1318,6 +1318,7 @@ PRBool CSSParserImpl::ParseSelectorList(PRInt32& aErrorCode,
       REPORT_UNEXPECTED_EOF();
       break;
     }
+
     if (eCSSToken_Symbol == tk->mType) {
       if (',' == tk->mSymbol) {
         SelectorList* newList = nsnull;
@@ -3187,6 +3188,11 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
   case eCSSProperty_left:
   case eCSSProperty_right:
 	  return ParseVariant(aErrorCode, aValue, VARIANT_AHLP, nsnull);
+#ifdef INCLUDE_XUL
+  case eCSSProperty_box_orient:
+    return ParseVariant(aErrorCode, aValue, VARIANT_HK,
+                        nsCSSProps::kBoxOrientKTable);
+#endif
   case eCSSProperty_box_sizing:
     return ParseVariant(aErrorCode, aValue, VARIANT_HK,
                         nsCSSProps::kBoxSizingKTable);
