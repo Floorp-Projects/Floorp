@@ -568,6 +568,9 @@ protected:
 
   static UINT   gCurrentKeyboardCP;
   static HKL    gKeyboardLayout;
+  static PRBool gSwitchKeyboardLayout;
+
+  HKL           mLastKeyboardLayout;
 
   // Drag & Drop
   nsNativeDragTarget * mNativeDragTarget;

@@ -1069,6 +1069,9 @@ pref("advanced.system.supportDDEExec", true);
 // Use CP932 compatible map for JIS X 0208
 pref("intl.jis0208.map", "CP932");
 
+// Switch the keyboard layout per window
+pref("intl.keyboard.per_window_layout", false);
+
 # WINNT
 #endif
 
