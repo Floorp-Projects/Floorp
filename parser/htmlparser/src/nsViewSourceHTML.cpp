@@ -399,11 +399,13 @@ nsresult CViewSourceHTML::CreateNewInstance(nsIDTD** aInstancePtrResult){
 eAutoDetectResult CViewSourceHTML::CanParse(CParserContext& aParserContext,nsString& aBuffer, PRInt32 aVersion) {
   eAutoDetectResult result=eUnknownDetect;
 
-  if(aParserContext.mMimeType.EqualsWithConversion(kPlainTextContentType) ||
-     aParserContext.mMimeType.EqualsWithConversion(kTextCSSContentType)) {
-    result=eValidDetect;
-  }
-  else if(eViewSource==aParserContext.mParserCommand) {
+  if(eViewSource==aParserContext.mParserCommand) {
+    if(aParserContext.mMimeType.EqualsWithConversion(kPlainTextContentType) ||
+       aParserContext.mMimeType.EqualsWithConversion(kTextCSSContentType) ||
+       aParserContext.mMimeType.EqualsWithConversion(kTextJSContentType) ||
+       aParserContext.mMimeType.EqualsWithConversion(kApplicationJSContentType)) {
+      result=eValidDetect;
+    }
     if(aParserContext.mMimeType.EqualsWithConversion(kXMLTextContentType) ||
        aParserContext.mMimeType.EqualsWithConversion(kXMLApplicationContentType) ||
        aParserContext.mMimeType.EqualsWithConversion(kXHTMLApplicationContentType) ||

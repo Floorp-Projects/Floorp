@@ -358,6 +358,8 @@ const PRUnichar kNullCh           = '\0';
 #define kPlainTextContentType "text/plain"
 #define kViewSourceCommand    "view-source"
 #define kTextCSSContentType   "text/css"
+#define kApplicationJSContentType   "application/x-javascript"
+#define kTextJSContentType    "text/javascript"
 #define kRTFTextContentType   "text/rtf"
 
 

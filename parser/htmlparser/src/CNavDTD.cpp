@@ -377,6 +377,15 @@ eAutoDetectResult CNavDTD::CanParse(CParserContext& aParserContext,nsString& aBu
     else if(PR_TRUE==aParserContext.mMimeType.EqualsWithConversion(kPlainTextContentType)) {
       result=ePrimaryDetect;
     } 
+    else if(PR_TRUE==aParserContext.mMimeType.EqualsWithConversion(kTextCSSContentType)) {
+      result=ePrimaryDetect;
+    } 
+    else if(PR_TRUE==aParserContext.mMimeType.EqualsWithConversion(kApplicationJSContentType)) {
+      result=ePrimaryDetect;
+    } 
+    else if(PR_TRUE==aParserContext.mMimeType.EqualsWithConversion(kTextJSContentType)) {
+      result=ePrimaryDetect;
+    } 
     else {
       //otherwise, look into the buffer to see if you recognize anything...
       PRBool theBufHasXML=PR_FALSE;
