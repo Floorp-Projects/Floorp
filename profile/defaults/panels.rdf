@@ -51,7 +51,7 @@
   </RDF:Description>
   <RDF:Description about="urn:sidebar:panel:bookmarks">
     <NC:title>&sidebar.panel.client-bookmarks;</NC:title>
-    <NC:content>chrome://communicator/content/bookmarks/bm-panel.xul</NC:content>
+    <NC:content>chrome://communicator/content/bookmarks/bookmarksPanel.xul</NC:content>
   </RDF:Description>
   <RDF:Description about="urn:sidebar:panel:history">
     <NC:title>&sidebar.panel.client-history;</NC:title>
