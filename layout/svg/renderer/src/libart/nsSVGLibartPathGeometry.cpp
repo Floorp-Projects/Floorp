@@ -53,6 +53,13 @@
 #include "nsMemory.h"
 #include "prdtoa.h"
 
+// comment from art_vpath_path.c: The Adobe PostScript reference
+// manual defines flatness as the maximum deviation between any
+// point on the vpath approximation and the corresponding point on the
+// "true" curve, and we follow this definition here. A value of 0.25
+// should ensure high quality for aa rendering.
+#define SVG_BEZIER_FLATNESS 0.5
+
 /**
  * \addtogroup libart_renderer Libart Rendering Engine
  * @{
@@ -86,8 +93,6 @@ protected:
   ArtVpath *GetPath();
   ArtSVP *GetFill();
   ArtSVP *GetStroke();
-  
-  double GetBezierFlatness();
   
   private:
   nsCOMPtr<nsISVGPathGeometrySource> mSource;
@@ -204,7 +209,7 @@ nsSVGLibartPathGeometry::GetPath()
 
   // 3. convert the bpath into a vpath:
   if (bpath)
-    mVPath = art_bez_path_to_vec(bpath, GetBezierFlatness());
+    mVPath = art_bez_path_to_vec(bpath, SVG_BEZIER_FLATNESS);
 
   return mVPath;
 }
@@ -227,30 +232,6 @@ nsSVGLibartPathGeometry::GetStroke()
   mStroke.Build(GetPath(), mSource);
   
   return mStroke.GetSvp();
-}
-
-double
-nsSVGLibartPathGeometry::GetBezierFlatness()
-{
-// comment from art_vpath_path.c: The Adobe PostScript reference
-// manual defines flatness as the maximum deviation between any
-// point on the vpath approximation and the corresponding point on the
-// "true" curve, and we follow this definition here. A value of 0.25
-// should ensure high quality for aa rendering.
-
-  double flatness = 0.5;
-  
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
-	if (!prefs) return flatness;
-
-  // XXX: wouldn't it be great if nsIPref had a 'GetFloatPref()'-function?
-  char	*valuestr = nsnull;
-  if (NS_SUCCEEDED(prefs->CopyCharPref("svg.bezier_flatness",&valuestr)) && (valuestr)) {
-    flatness = PR_strtod(valuestr, nsnull);
-    nsMemory::Free(valuestr);
-  }
-
-  return flatness;
 }
 
 //----------------------------------------------------------------------
