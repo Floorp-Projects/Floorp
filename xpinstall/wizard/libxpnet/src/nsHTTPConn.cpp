@@ -112,7 +112,36 @@ nsHTTPConn::Open()
 }
 
 int
+nsHTTPConn::ResumeOrGet(HTTPGetCB aCallback, char *aDestFile)
+{
+    struct stat stbuf;
+    int rv = 0;
+    int resPos = 0;
+    
+    if (!aDestFile)
+        return E_PARAM;
+
+    /* stat local file */
+    rv = stat(aDestFile, &stbuf);
+    if (rv == 0)
+        resPos = stbuf.st_size;
+
+    return Get(aCallback, aDestFile, resPos);
+
+    // XXX TO DO:
+    // XXX handle proxies
+}
+
+int 
 nsHTTPConn::Get(HTTPGetCB aCallback, char *aDestFile)
+{
+    // deprecated API; wrapper for backwards compatibility
+
+    return ResumeOrGet(aCallback, aDestFile);
+}
+
+int
+nsHTTPConn::Get(HTTPGetCB aCallback, char *aDestFile, int aResumePos)
 {
     int rv;
     char *pathToUse;
@@ -136,11 +165,11 @@ nsHTTPConn::Get(HTTPGetCB aCallback, char *aDestFile)
     }
 
     // issue request
-    rv = Request();
+    rv = Request(aResumePos);
 
     // recv response
     if (rv == OK)
-        rv = Response(aCallback, aDestFile);
+        rv = Response(aCallback, aDestFile, aResumePos);
 
     return rv;
 }
@@ -169,7 +198,7 @@ nsHTTPConn::SetProxyInfo(char *aProxiedURL, char *aProxyUser,
 }
 
 int
-nsHTTPConn::Request()
+nsHTTPConn::Request(int aResumePos)
 {
     char req[kReqBufSize];
     char hdr[kHdrBufSize];
@@ -249,6 +278,13 @@ nsHTTPConn::Request()
         
     }
 
+    // byte range support
+    if (aResumePos > 0)
+    {
+        sprintf(hdr, "Range: bytes=%d-%s", aResumePos, kCRLF);
+        strcat(req, hdr);
+    }
+
     // headers all done so indicate
     strcat(req, kCRLF);
 
@@ -264,7 +300,7 @@ nsHTTPConn::Request()
 }
 
 int 
-nsHTTPConn::Response(HTTPGetCB aCallback, char *aDestFile)
+nsHTTPConn::Response(HTTPGetCB aCallback, char *aDestFile, int aResumePos)
 {
     // NOTE: overwrites dest file if it already exists
 
@@ -279,9 +315,24 @@ nsHTTPConn::Response(HTTPGetCB aCallback, char *aDestFile)
         return E_PARAM;
 
     // open dest file 
-    destFd = fopen(aDestFile, "w+b");
-    if (!destFd)
-        return E_OPEN_FILE;
+    if (aResumePos > 0)
+    {
+        destFd = fopen(aDestFile, "r+b");
+        if (!destFd)
+            return E_OPEN_FILE;
+
+        if (fseek(destFd, aResumePos, SEEK_SET) != 0)
+        {
+            fclose(destFd);
+            return E_SEEK_FILE;
+        }
+    }
+    else
+    {
+        destFd = fopen(aDestFile, "w+b");
+        if (!destFd)
+            return E_OPEN_FILE;
+    }
 
     // iteratively recv response 
     do
@@ -324,9 +375,10 @@ nsHTTPConn::Response(HTTPGetCB aCallback, char *aDestFile)
 
         if (fwriteLen > 0)
             bytesWritten += fwriteLen;
-        if (aCallback && (aCallback(bytesWritten, expectedSize) == E_USER_CANCEL))
-              rv = E_USER_CANCEL; /* we want to ignore all errors returned
-                                   * from aCallback() except E_USER_CANCEL */
+        if (aCallback && 
+           (aCallback(bytesWritten, expectedSize) == E_USER_CANCEL))
+              rv = E_USER_CANCEL; // we want to ignore all errors returned
+                                  // from aCallback() except E_USER_CANCEL 
 
     } while (rv == nsSocket::E_READ_MORE || rv == nsSocket::OK);
 

@@ -37,7 +37,9 @@ public:
     ~nsHTTPConn();
 
     int Open();
+    int ResumeOrGet(HTTPGetCB aCallback, char *aDestFile);
     int Get(HTTPGetCB aCallback, char *aDestFile);
+    int Get(HTTPGetCB aCallback, char *aDestFile, int aResumePos);
     int Close();
 
     void SetProxyInfo(char *aProxiedURL, char *aProxyUser, 
@@ -54,12 +56,13 @@ public:
         E_REQ_INCOMPLETE    = -804,
         E_B64_ENCODE        = -805,
         E_OPEN_FILE         = -806,
+        E_SEEK_FILE         = -807,
         E_USER_CANCEL       = -813
     };
 
 private:
-    int Request();
-    int Response(HTTPGetCB aCallback, char *aDestFile);
+    int Request(int aResumePos);
+    int Response(HTTPGetCB aCallback, char *aDestFile, int aResumePos);
     void ParseContentLength(const char *aBuf, int *aLength);
     int Base64Encode(const unsigned char *in_str, int in_len,
                      char *out_str, int out_len);
