@@ -499,6 +499,38 @@ nsContainerFrame::PositionFrameView(nsIPresContext* aPresContext,
   }
 }
 
+static PRBool
+NonZeroStyleCoord(const nsStyleCoord& aCoord) {
+  switch (aCoord.GetUnit()) {
+  case eStyleUnit_Percent:
+    return aCoord.GetPercentValue() > 0;
+  case eStyleUnit_Coord:
+    return aCoord.GetCoordValue() > 0;
+  case eStyleUnit_Null:
+    return PR_FALSE;
+  default:
+    return PR_TRUE;
+  }
+}
+
+static PRBool
+HasNonZeroBorderRadius(nsIStyleContext* aStyleContext) {
+  const nsStyleBorder* border;
+  ::GetStyleData(aStyleContext, &border);
+
+  nsStyleCoord coord;
+  border->mBorderRadius.GetTop(coord);
+  if (NonZeroStyleCoord(coord)) return PR_TRUE;    
+  border->mBorderRadius.GetRight(coord);
+  if (NonZeroStyleCoord(coord)) return PR_TRUE;    
+  border->mBorderRadius.GetBottom(coord);
+  if (NonZeroStyleCoord(coord)) return PR_TRUE;    
+  border->mBorderRadius.GetLeft(coord);
+  if (NonZeroStyleCoord(coord)) return PR_TRUE;    
+
+  return PR_FALSE;
+}
+
 static void
 SyncFrameViewGeometryDependentProperties(nsIPresContext*  aPresContext,
                                          nsIFrame*        aFrame,
@@ -525,7 +557,8 @@ SyncFrameViewGeometryDependentProperties(nsIPresContext*  aPresContext,
   PRBool  viewHasTransparentContent =
     !hasBG ||
     (bg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) ||
-    !aFrame->CanPaintBackground();
+    !aFrame->CanPaintBackground() ||
+    HasNonZeroBorderRadius(aStyleContext);
   if (isCanvas && viewHasTransparentContent) {
     nsIView* rootView;
     vm->GetRootView(rootView);
