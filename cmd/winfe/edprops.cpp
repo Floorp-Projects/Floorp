@@ -106,7 +106,7 @@ EnumTrueTypeFonts(LPLOGFONT lpnlf, LPTEXTMETRIC lpntm, int nFontType, LPARAM lPa
 {
 	if (lpntm->tmPitchAndFamily & (/*TMPF_VECTOR|TMPF_DEVICE|*/TMPF_TRUETYPE)){
         
-        if( wfe_iTrueTypeFontCount == 0 )
+        if( wfe_iTrueTypeFontLimit == 0 )
         {
             // For this usage, lParam = handle to a CComboBox or CListBox we are filling
             // (This is same as ListBox_AddString macro in WINDOWSX.H)
