@@ -20,7 +20,6 @@ DEPTH=..\..
 DIRS=public src  \
      ucvlatin \
      ucvja \
-     ucvja2 \
      ucvcn \
      ucvtw \
      ucvtw2 \
