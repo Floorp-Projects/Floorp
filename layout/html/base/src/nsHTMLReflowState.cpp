@@ -48,6 +48,8 @@
 #include "nsBlockFrame.h"
 #include "nsLineBox.h"
 #include "nsImageFrame.h"
+#include "nsIPref.h"
+#include "nsIServiceManager.h"
 
 #ifdef NS_DEBUG
 #undef NOISY_VERTICAL_ALIGN
@@ -57,6 +59,10 @@
 
 // hack for bug 50695
 #include "nsIFormManager.h"
+
+// Prefs-driven control for |text-decoration: blink|
+static PRPackedBool sBlinkPrefIsLoaded = PR_FALSE;
+static PRPackedBool sBlinkIsAllowed = PR_TRUE;
 
 #ifdef DEBUG
 const char*
@@ -1535,6 +1541,34 @@ nsHTMLReflowState::ComputeContainingBlockRectangle(nsIPresContext*          aPre
   }
 }
 
+// Prefs callback to pick up changes
+static int PR_CALLBACK PrefsChanged(const char *aPrefName, void *instance)
+{
+    PRBool boolPref;
+    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
+    if (prefs && NS_SUCCEEDED(prefs->GetBoolPref("browser.blink_allowed", 
+                                                 &boolPref)))
+        sBlinkIsAllowed = boolPref;
+    return 0; /* PREF_OK */
+}
+
+// Check to see if |text-decoration: blink| is allowed.  The first time
+// called, register the callback and then force-load the pref.  After that,
+// just use the cached value.
+static PRBool BlinkIsAllowed(void)
+{
+    if (!sBlinkPrefIsLoaded) {
+        // Set up a listener and check the initial value
+        nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
+        if (prefs) 
+            prefs->RegisterCallback("browser.blink_allowed", PrefsChanged, 
+                                    nsnull);
+        PrefsChanged(nsnull, nsnull);
+        sBlinkPrefIsLoaded = PR_TRUE;
+    }
+    return sBlinkIsAllowed;
+}
+
 // XXX refactor this code to have methods for each set of properties
 // we are computing: width,height,line-height; margin; offsets
 
@@ -1830,9 +1864,9 @@ nsHTMLReflowState::InitConstraints(nsIPresContext* aPresContext,
                           aContainingBlockHeight);
     }
   }
-  /* Check for blinking text. */
+  // Check for blinking text and permission to display it
   mBlinks = (parentReflowState && parentReflowState->mBlinks);
-  if (!mBlinks) {
+  if (!mBlinks && BlinkIsAllowed()) {
     const nsStyleTextReset* st;
     frame->GetStyleData(eStyleStruct_TextReset,
                         (const nsStyleStruct*&)st);
