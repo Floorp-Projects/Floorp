@@ -58,6 +58,7 @@
 #include "nsIDOMElementObserver.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeObserver.h"
+#include "nsIDOMXULTreeElement.h"
 #include "nsIDocument.h"
 #include "nsINameSpaceManager.h"
 #include "nsIRDFContentModelBuilder.h"
@@ -116,6 +117,9 @@ class RDFTreeBuilderImpl : public RDFGenericBuilderImpl
 public:
     RDFTreeBuilderImpl();
     virtual ~RDFTreeBuilderImpl();
+
+    // nsIRDFContentModelBuilder interface
+    NS_IMETHOD SetDataBase(nsIRDFCompositeDataSource* aDataBase);
 
     // Implementation methods
     nsresult
@@ -260,6 +264,33 @@ RDFTreeBuilderImpl::~RDFTreeBuilderImpl(void)
         NS_RELEASE(kTreeIndentationAtom);
         NS_RELEASE(kTreeItemAtom);
     }
+}
+
+
+////////////////////////////////////////////////////////////////////////
+// nsIRDFContentModelBuilder interface
+
+NS_IMETHODIMP
+RDFTreeBuilderImpl::SetDataBase(nsIRDFCompositeDataSource* aDataBase)
+{
+    NS_PRECONDITION(mRoot != nsnull, "not initialized");
+    if (! mRoot)
+        return NS_ERROR_NOT_INITIALIZED;
+
+    nsresult rv;
+    if (NS_FAILED(rv = RDFGenericBuilderImpl::SetDataBase(aDataBase)))
+        return rv;
+
+    // Now set the database on the tree root, so that script writers
+    // can access it.
+    nsCOMPtr<nsIDOMXULTreeElement> element( do_QueryInterface(mRoot) );
+    NS_ASSERTION(element, "not a XULTreeElement");
+    if (! element)
+        return NS_ERROR_UNEXPECTED;
+
+    rv = element->SetDatabase(aDataBase);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "couldn't set database on tree element");
+    return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////
