@@ -170,6 +170,8 @@ CSSFirstLineRule::MapStyleInto(nsIStyleContext* aContext,
       }
     }
   }
+
+  NS_RELEASE(parentContext);
   return NS_OK;
 }
 
@@ -194,26 +196,63 @@ CSSFirstLetterRule::CSSFirstLetterRule(nsIHTMLCSSStyleSheet* aSheet)
 {
 }
 
+// Fixup the style context so that all of the properties that don't
+// apply (CSS2 spec section 5.12.2) don't apply.
+//
+// These properties apply: font-properties, color-properties,
+// backgorund-properties, text-decoration, vertical-align,
+// text-transform, line-height, margin-properties,
+// padding-properties, border-properties, float, text-shadow and
+// clear.
+//
+// Everything else doesn't apply.
 NS_IMETHODIMP
 CSSFirstLetterRule::MapStyleInto(nsIStyleContext* aContext,
                                  nsIPresContext* aPresContext)
 {
-  // These properties apply: font-properties, color-properties,
-  // backgorund-properties, word-spacing, letter-spacing,
-  // text-decoration, vertical-align, text-transform, line-height,
-  // text-shadow, and clear.
-  //
-  // Everything else doesn't apply.
+  nsIStyleContext* parentContext;
+  parentContext = aContext->GetParent();
 
-  // Disable border
-  nsStyleSpacing* spacing = (nsStyleSpacing*)
-    aContext->GetMutableStyleData(eStyleStruct_Spacing);
-  if (spacing) {
-    spacing->SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
-    spacing->SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_NONE);
-    spacing->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
-    spacing->SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_NONE);
+  // Undo any change made to "direction"
+  nsStyleDisplay* display = (nsStyleDisplay*)
+    aContext->GetMutableStyleData(eStyleStruct_Display);
+  if (parentContext) {
+    const nsStyleDisplay* parentDisplay = (const nsStyleDisplay*)
+      parentContext->GetStyleData(eStyleStruct_Display);
+    if (parentDisplay) {
+      display->mDirection = parentDisplay->mDirection;
+    }
   }
+
+  // Undo any change made to "cursor"
+  nsStyleColor* color = (nsStyleColor*)
+    aContext->GetMutableStyleData(eStyleStruct_Color);
+  if (parentContext) {
+    const nsStyleColor* parentColor = (const nsStyleColor*)
+      parentContext->GetStyleData(eStyleStruct_Color);
+    if (parentColor) {
+      color->mCursor = parentColor->mCursor;
+    }
+  }
+
+  // Undo any change to quotes
+  nsStyleContent* content = (nsStyleContent*)
+    aContext->GetMutableStyleData(eStyleStruct_Content);
+  if (parentContext) {
+    const nsStyleContent* parentContent = (const nsStyleContent*)
+      parentContext->GetStyleData(eStyleStruct_Content);
+    if (parentContent) {
+      nsAutoString open, close;
+      PRUint32 i, n = parentContent->QuotesCount();
+      content->AllocateQuotes(n);
+      for (i = 0; i < n; i++) {
+        parentContent->GetQuotesAt(i, open, close);
+        content->SetQuotesAt(i, open, close);
+      }
+    }
+  }
+
+  NS_RELEASE(parentContext);
   return NS_OK;
 }
 
@@ -282,6 +321,7 @@ protected:
   nsIDocument*    mDocument;
 
   CSSFirstLineRule* mFirstLineRule;
+  CSSFirstLetterRule* mFirstLetterRule;
 };
 
 
@@ -325,7 +365,8 @@ HTMLCSSStyleSheetImpl::HTMLCSSStyleSheetImpl()
   : nsIHTMLCSSStyleSheet(),
     mURL(nsnull),
     mDocument(nsnull),
-    mFirstLineRule(nsnull)
+    mFirstLineRule(nsnull),
+    mFirstLetterRule(nsnull)
 {
   NS_INIT_REFCNT();
 }
@@ -336,6 +377,10 @@ HTMLCSSStyleSheetImpl::~HTMLCSSStyleSheetImpl()
   if (nsnull != mFirstLineRule) {
     mFirstLineRule->mSheet = nsnull;
     NS_RELEASE(mFirstLineRule);
+  }
+  if (nsnull != mFirstLetterRule) {
+    mFirstLetterRule->mSheet = nsnull;
+    NS_RELEASE(mFirstLetterRule);
   }
 }
 
@@ -428,6 +473,20 @@ PRInt32 HTMLCSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
       }
     } 
   }
+  if (aPseudoTag == nsHTMLAtoms::firstLetterPseudo) {
+    if (aResults->Count()) { 
+      if (nsnull == mFirstLetterRule) {
+        mFirstLetterRule = new CSSFirstLetterRule(this);
+        if (mFirstLetterRule) {
+          NS_ADDREF(mFirstLetterRule);
+        }
+      }
+      if (mFirstLetterRule) {
+        aResults->AppendElement(mFirstLetterRule); 
+        return 1; 
+      }
+    } 
+  }
   // else no pseudo frame style... 
   return 0;
 }
@@ -467,6 +526,10 @@ HTMLCSSStyleSheetImpl::Reset(nsIURL* aURL)
   if (nsnull != mFirstLineRule) {
     mFirstLineRule->mSheet = nsnull;
     NS_RELEASE(mFirstLineRule);
+  }
+  if (nsnull != mFirstLetterRule) {
+    mFirstLetterRule->mSheet = nsnull;
+    NS_RELEASE(mFirstLetterRule);
   }
   return NS_OK;
 }
