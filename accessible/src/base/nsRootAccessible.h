@@ -40,14 +40,14 @@
 #define _nsRootAccessible_H_
 
 #include "nsDocAccessibleWrap.h"
+#include "nsHashtable.h"
+#include "nsIAccessibilityService.h"
 #include "nsIAccessibleEventReceiver.h"
 #include "nsIAccessibleDocument.h"
+#include "nsIDocument.h"
+#include "nsIDOMFocusListener.h"
 #include "nsIDOMFormListener.h"
 #include "nsIDOMXULListener.h"
-#include "nsIDOMFocusListener.h"
-#include "nsIDocument.h"
-#include "nsIAccessibilityService.h"
-#include "nsHashtable.h"
 
 class nsIAccessibleEventListener;
 
@@ -102,8 +102,9 @@ class nsRootAccessible : public nsDocAccessibleWrap,
     void ShutdownAll();
 
   protected:
-    void GetTargetNode(nsIDOMEvent *aEvent, nsIDOMNode **aTargetNode);
+    static void GetTargetNode(nsIDOMEvent *aEvent, nsIDOMNode **aTargetNode);
     void FireAccessibleFocusEvent(nsIAccessible *focusAccessible, nsIDOMNode *focusNode);
+    void GetEventShell(nsIDOMNode *aNode, nsIPresShell **aEventShell);
     nsCOMPtr<nsIAccessibilityService> mAccService;
     nsCOMPtr<nsIAccessibleCaret> mCaretAccessible;
 };

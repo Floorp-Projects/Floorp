@@ -175,7 +175,7 @@ NS_IMETHODIMP nsRootAccessible::AddEventListeners()
     
     rv = target->AddEventListener(NS_LITERAL_STRING("DOMMenuBarInactive"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
-    
+
     AddContentDocListeners();
   }
   if (!mCaretAccessible)
@@ -198,6 +198,9 @@ NS_IMETHODIMP nsRootAccessible::RemoveEventListeners()
     target->RemoveEventListener(NS_LITERAL_STRING("DOMMenuItemActive"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     target->RemoveEventListener(NS_LITERAL_STRING("DOMMenuBarActive"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     target->RemoveEventListener(NS_LITERAL_STRING("DOMMenuBarInactive"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
+    target->RemoveEventListener(NS_LITERAL_STRING("DOMMenuBarInactive"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
+    target->RemoveEventListener(NS_LITERAL_STRING("RadioStateChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
+    target->RemoveEventListener(NS_LITERAL_STRING("ListitemStateChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
   }
 
   if (mScrollWatchTimer) {
@@ -246,6 +249,21 @@ void nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *focusAccessible, 
   }
 }
 
+void nsRootAccessible::GetEventShell(nsIDOMNode *aNode, nsIPresShell **aEventShell)
+{
+  // XXX aaronl - this is not ideal.
+  // We could avoid this whole section and the fallible 
+  // doc->GetShellAt(0, ...) by putting the event handler
+  // on nsDocAccessible instead.
+  // The disadvantage would be that we would be seeing some events
+  // for inner documents that we don't care about.
+  nsCOMPtr<nsIDOMDocument> domDocument;
+  aNode->GetOwnerDocument(getter_AddRefs(domDocument));
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDocument));
+  if (doc)
+    doc->GetShellAt(0, aEventShell);
+}
+
 // --------------- nsIDOMEventListener Methods (3) ------------------------
 
 NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
@@ -279,21 +297,10 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
   }
 #endif
 
-  nsCOMPtr<nsIAccessible> accessible;
-
-  // XXX aaronl - this is not ideal.
-  // We could avoid this whole section and the fallible 
-  // doc->GetShellAt(0, ...) by putting the event handler
-  // on nsDocAccessible instead.
-  // The disadvantage would be that we would be seeing some events
-  // for inner documents that we don't care about.
-  nsCOMPtr<nsIDOMDocument> domDocument;
-  targetNode->GetOwnerDocument(getter_AddRefs(domDocument));
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDocument));
   nsCOMPtr<nsIPresShell> eventShell;
-  if (doc) {
-    doc->GetShellAt(0, getter_AddRefs(eventShell));
-  }
+  GetEventShell(targetNode, getter_AddRefs(eventShell));
+
+  nsCOMPtr<nsIAccessible> accessible;
   if (!eventShell ||
       NS_FAILED(mAccService->GetAccessibleInShell(targetNode, eventShell,
                                                   getter_AddRefs(accessible))))

@@ -817,9 +817,9 @@ nsWindow::~nsWindow()
 {
 #ifdef ACCESSIBILITY
   if (mRootAccessible) {
-    nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(mRootAccessible));
-    if (accessNode) {
-      accessNode->Shutdown();
+    nsCOMPtr<nsIAccessibleDocument> accessDoc(do_QueryInterface(mRootAccessible));
+    if (accessDoc) {
+      accessDoc->Destroy();
     }
     mRootAccessible->Release();
     mRootAccessible = nsnull;

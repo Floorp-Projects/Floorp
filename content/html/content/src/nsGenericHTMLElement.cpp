@@ -3726,6 +3726,18 @@ nsGenericHTMLContainerElement::ReplaceChildAt(nsIContent* aKid,
         doc->ContentReplaced(this, oldKid, aKid, aIndex);
       }
     }
+    if (nsGenericElement::HasMutationListeners(this, NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED)) {
+      nsMutationEvent mutation;
+      mutation.eventStructType = NS_MUTATION_EVENT;
+      mutation.message = NS_MUTATION_SUBTREEMODIFIED;
+      mutation.mTarget = do_QueryInterface(this);
+      mutation.mRelatedNode = do_QueryInterface(oldKid);
+    
+      nsEventStatus status = nsEventStatus_eIgnore;
+      HandleDOMEvent(nsnull, &mutation, nsnull,
+                     NS_EVENT_FLAG_INIT, &status);
+    }
+
     if (oldKid) {
       oldKid->SetDocument(nsnull, PR_TRUE, PR_TRUE);
       oldKid->SetParent(nsnull);

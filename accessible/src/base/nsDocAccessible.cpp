@@ -41,9 +41,12 @@
 #include "nsIPresShell.h"
 #include "nsIFrame.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMNSDocument.h"
+#include "nsIDOMEventTarget.h"
+#include "nsIDOMEvent.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentType.h"
+#include "nsIDOMNSDocument.h"
+#include "nsIDOMMutationEvent.h"
 #ifdef MOZ_XUL
 #include "nsIXULDocument.h"
 #endif
@@ -109,8 +112,9 @@ nsDocAccessible::~nsDocAccessible()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED5(nsDocAccessible, nsAccessible, nsIAccessibleDocument, 
+NS_IMPL_ISUPPORTS_INHERITED6(nsDocAccessible, nsAccessible, nsIAccessibleDocument, 
                              nsIAccessibleEventReceiver, nsIWebProgressListener, 
+                             nsIDOMMutationListener,
                              nsIScrollPositionListener, nsISupportsWeakReference)
 
 NS_IMETHODIMP nsDocAccessible::AddEventListeners()
@@ -244,17 +248,34 @@ NS_IMETHODIMP nsDocAccessible::CacheAccessNode(void *aUniqueID, nsIAccessNode *a
   return NS_OK;
 }
 
+NS_IMETHODIMP nsDocAccessible::Destroy()
+{
+#ifdef OLD_HASH
+  nsVoidKey key(NS_STATIC_CAST(void*, mWeakShell));
+  gGlobalDocAccessibleCache->Remove(&key);
+#else
+  gGlobalDocAccessibleCache->Remove(NS_STATIC_CAST(void*, mWeakShell));
+#endif
+  return Shutdown();
+}
+
 NS_IMETHODIMP nsDocAccessible::Shutdown()
 {
   if (!mWeakShell) {
     return NS_OK;  // Already shutdown
   }
 
-  void* presShellKey = NS_STATIC_CAST(void*, mWeakShell);
   mWeakShell = nsnull;  // Avoid reentrancy
 
   RemoveEventListeners();
-  mScrollWatchTimer = mDocLoadTimer = nsnull;
+  if (mScrollWatchTimer) {
+    mScrollWatchTimer->Cancel();
+    mScrollWatchTimer = nsnull;
+  }
+  if (mDocLoadTimer) {
+    mDocLoadTimer->Cancel();
+    mDocLoadTimer = nsnull;
+  }
   mWebProgress = nsnull;
 
   if (mAccessNodeCache) {
@@ -269,12 +290,6 @@ NS_IMETHODIMP nsDocAccessible::Shutdown()
   }
 
   NS_ASSERTION(gGlobalDocAccessibleCache, "Global doc cache does not exist");
-#ifdef OLD_HASH
-  nsVoidKey key(presShellKey);
-  gGlobalDocAccessibleCache->Remove(&key);
-#else
-  gGlobalDocAccessibleCache->Remove(presShellKey);
-#endif
   mDocument = nsnull;
   return nsAccessibleWrap::Shutdown();
 }
@@ -363,6 +378,29 @@ void nsDocAccessible::AddContentDocListeners()
                                           nsITimer::TYPE_ONE_SHOT);
     }
   }
+
+  // add ourself as a mutation event listener 
+  // (this slows down mozilla about 3%, but only used when accessibility APIs active)
+  nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(mDocument));
+  NS_ASSERTION(target, "No dom event target for document");
+  nsresult rv = target->AddEventListener(NS_LITERAL_STRING("DOMAttrModified"), 
+    this, PR_TRUE);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
+  rv = target->AddEventListener(NS_LITERAL_STRING("DOMSubtreeModified"), 
+    this, PR_TRUE);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
+  rv = target->AddEventListener(NS_LITERAL_STRING("DOMNodeInserted"), 
+    this, PR_TRUE);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
+  rv = target->AddEventListener(NS_LITERAL_STRING("DOMNodeRemoved"), 
+    this, PR_TRUE);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
+  rv = target->AddEventListener(NS_LITERAL_STRING("DOMNodeInsertedIntoDocument"), 
+    this, PR_TRUE);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
+  rv = target->AddEventListener(NS_LITERAL_STRING("DOMNodeRemovedFromDocument"), 
+    this, PR_TRUE);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
 }
 
 void nsDocAccessible::RemoveContentDocListeners()
@@ -378,13 +416,21 @@ void nsDocAccessible::RemoveContentDocListeners()
   // Remove scroll position listener
   nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mWeakShell));
   RemoveScrollListener(presShell);
+
+  nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(mDocument));
+  NS_ASSERTION(target, "No dom event target for document");
+  target->RemoveEventListener(NS_LITERAL_STRING("DOMAttrModified"), this, PR_TRUE);
+  target->RemoveEventListener(NS_LITERAL_STRING("DOMSubtreeModified"), this, PR_TRUE);
+  target->RemoveEventListener(NS_LITERAL_STRING("DOMNodeInserted"), this, PR_TRUE);
+  target->RemoveEventListener(NS_LITERAL_STRING("DOMNodeRemoved"), this, PR_TRUE);
+  target->RemoveEventListener(NS_LITERAL_STRING("DOMNodeInsertedIntoDocument"), this, PR_TRUE);
+  target->RemoveEventListener(NS_LITERAL_STRING("DOMNodeRemovedFromDocument"), this, PR_TRUE);
 }
 
 void nsDocAccessible::FireDocLoadFinished()
 {
-  NS_ASSERTION(mDocument, "No Document - Bug 202972");
-  if (!mDocument)
-    return;
+  if (!mDocument || !mWeakShell)
+    return;  // Document has been shut down
 
   // Hook up our new accessible with our parent
   if (!mParent) {
@@ -535,8 +581,8 @@ NS_IMETHODIMP nsDocAccessible::OnLocationChange(nsIWebProgress *aWebProgress,
 {
   // Load has been verified, it will occur, about to commence
 
-  // We won't fire a "doc finished loading" event on this nsRootAccessible 
-  // Instead we fire that on the new nsRootAccessible that is created for the new doc
+  // We won't fire a "doc finished loading" event on this nsDocAccessible 
+  // Instead we fire that on the new nsDocAccessible that is created for the new doc
   mIsNewDocument = PR_FALSE;   // We're a doc that's going away
 
   if (mBusy != eBusyStateLoading) {
@@ -570,5 +616,189 @@ NS_IMETHODIMP nsDocAccessible::OnSecurityChange(nsIWebProgress *aWebProgress,
 {
   NS_NOTREACHED("notification excluded in AddProgressListener(...)");
   return NS_OK;
+}
+
+// ---------- Mutation event listeners ------------
+NS_IMETHODIMP nsDocAccessible::NodeInserted(nsIDOMEvent* aEvent)
+{
+  HandleMutationEvent(aEvent, nsIAccessibleEventReceiver::EVENT_CREATE);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDocAccessible::NodeRemoved(nsIDOMEvent* aEvent)
+{
+  // The related node for the event will be the parent of the removed node or subtree
+
+  HandleMutationEvent(aEvent, nsIAccessibleEventReceiver::EVENT_DESTROY);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDocAccessible::SubtreeModified(nsIDOMEvent* aEvent)
+{
+  HandleMutationEvent(aEvent, nsIAccessibleEventReceiver::EVENT_REORDER);
+ 
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDocAccessible::AttrModified(nsIDOMEvent* aMutationEvent)
+{
+  // XXX todo
+  // We will probably need to handle special cases here
+  // For example, if an <img>'s usemap attribute is modified
+  // Otherwise it may just be a state change, for example an object changing
+  // its visibility.
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDocAccessible::NodeRemovedFromDocument(nsIDOMEvent* aMutationEvent)
+{
+  // Not implemented yet, see bug 74220
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDocAccessible::NodeInsertedIntoDocument(nsIDOMEvent* aMutationEvent)
+{
+
+  // Not implemented yet, see bug 74219
+  // This is different from NodeInserted() in that it's fired when
+  // a node is inserted into a document, but isn't necessarily mean that
+  // it's becoming part of the DOM tree.
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDocAccessible::HandleEvent(nsIDOMEvent* aEvent)
+{
+  NS_NOTREACHED("Should be handled by specific methods like NodeInserted, etc.");
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDocAccessible::CharacterDataModified(nsIDOMEvent* aMutationEvent)
+{
+  return NS_OK;
+}
+
+void nsDocAccessible::InvalidateCacheSubtree(nsIDOMNode *aStartNode)
+{
+  // Invalidate cache subtree
+  // We have to check for accessibles for each dom node by traversing DOM tree
+  // instead of just the accessible tree, although that would be faster
+  // Otherwise we might miss the nsAccessNode's that are not nsAccessible's.
+
+  if (!aStartNode)
+    return;
+  nsCOMPtr<nsIDOMNode> iterNode(aStartNode), nextNode;
+  nsCOMPtr<nsIAccessNode> accessNode;
+
+  do {
+    GetCachedAccessNode(NS_STATIC_CAST(void*, iterNode), 
+                        getter_AddRefs(accessNode));
+    if (accessNode) {
+      // XXX aaronl todo: accessibles that implement their own subtrees,
+      // like html combo boxes and xul trees, need to shutdown all of their own
+      // children when they override Shutdown()
+      accessNode->Shutdown();
+    }
+
+    iterNode->GetFirstChild(getter_AddRefs(nextNode));
+    if (nextNode) {
+      iterNode = nextNode;
+      continue;
+    }
+
+    if (iterNode == aStartNode)
+      break;
+    iterNode->GetNextSibling(getter_AddRefs(nextNode));
+    if (nextNode) {
+      iterNode = nextNode;
+      continue;
+    }
+
+    do {
+      iterNode->GetParentNode(getter_AddRefs(nextNode));
+      if (!nextNode || nextNode == aStartNode) {
+        return;
+      }
+      nextNode->GetNextSibling(getter_AddRefs(iterNode));
+      if (iterNode)
+        break;
+      iterNode = nextNode;
+    } while (PR_TRUE);
+  }
+  while (iterNode && iterNode != aStartNode);
+}
+
+void nsDocAccessible::HandleMutationEvent(nsIDOMEvent *aEvent, PRUint32 aAccessibleEventType) 
+{
+  if (mBusy != eBusyStateDone)
+    return;  // We don't want mutation events until doc is fully loaded
+
+  nsCOMPtr<nsIDOMEvent> domEvent(do_QueryInterface(aEvent));
+  nsCOMPtr<nsIDOMEventTarget> domEventTarget;
+  if (domEvent) {
+    domEvent->GetTarget(getter_AddRefs(domEventTarget));
+  }
+  nsCOMPtr<nsIDOMNode> targetNode(do_QueryInterface(domEventTarget));
+  if (!targetNode)
+    return;
+
+  nsCOMPtr<nsIDOMNode> subTreeNode;
+  if (aAccessibleEventType == nsIAccessibleEventReceiver::EVENT_CREATE) {
+    // DOMNodeInserted
+    // We'll need to invalidate the child count and cached children of
+    // the direct parent, otherwise no new accessibles will appear at this
+    // place in the tree.
+    // However, don't invalidate the entire subtree - most of it is still good.
+    targetNode->GetParentNode(getter_AddRefs(subTreeNode));
+    NS_ASSERTION(subTreeNode, "No valid parent of insertion");
+    targetNode = subTreeNode;
+  }
+  else {
+    if (aAccessibleEventType == nsIAccessibleEventReceiver::EVENT_REORDER) {
+      // DOMSubtreeModified
+      // The event target is the parent of the reordered tree
+      // We don't want to invalidate that entire subtree.
+      nsCOMPtr<nsIDOMMutationEvent> mutationEvent(do_QueryInterface(aEvent));
+      NS_ASSERTION(mutationEvent, "Not a mutation event!");
+      mutationEvent->GetRelatedNode(getter_AddRefs(subTreeNode));
+      NS_ASSERTION(subTreeNode, "No old sub tree being replaced in DOMSubtreeModified");
+    }
+    else {
+      // nsIAccessibleEventReceiver::EVENT_DESTROY / DOMNodeRemoved
+      subTreeNode = targetNode;
+    }
+    InvalidateCacheSubtree(subTreeNode);
+  }
+
+  // We need to get an accessible for the mutation event's target node
+  // If there is no accessible for that node, we need to keep moving up the parent
+  // chain so there is some accessible.
+  // We will use this accessible to fire the accessible mutation event.
+  // We're guaranteed success, because we will eventually end up at the doc accessible,
+  // and there is always one of those.
+  // XXX aaronl todo: are MSAA mutation events always fired on the container?
+  //                  if so, we always need to get the dom parent at least once
+
+  nsCOMPtr<nsIAccessibilityService> accService = 
+    do_GetService("@mozilla.org/accessibilityService;1");
+  if (!accService)
+    return;
+
+  nsCOMPtr<nsIAccessible> accessible;
+  while (NS_FAILED(accService->GetAccessibleInWeakShell(targetNode, mWeakShell, 
+                                                        getter_AddRefs(accessible)))) {
+    targetNode->GetParentNode(getter_AddRefs(subTreeNode));
+    NS_ASSERTION(subTreeNode, "Crawled up parent chain without finding accessible");
+    targetNode = subTreeNode;
+  }
+
+  accessible->InvalidateChildren();
+
+#ifdef XP_WIN
+  // Windows MSAA clients crash if the listen to create or destroy events
+  aAccessibleEventType = nsIAccessibleEventReceiver::EVENT_REORDER;
+#endif
+  accessible->FireToolkitEvent(aAccessibleEventType, accessible, nsnull);
 }
 
