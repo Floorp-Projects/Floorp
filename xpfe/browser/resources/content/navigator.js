@@ -77,7 +77,8 @@ function getContentAreaFrameCount()
 // When a content area frame is focused, update the focused frame URL
 function contentAreaFrameFocus()
 {
-  if (isDocumentFrame(document.commandDispatcher.focusedWindow)) {
+  var focusedWindow = document.commandDispatcher.focusedWindow;
+  if (isDocumentFrame(focusedWindow)) {
     gFocusedURL = focusedWindow.location.href;
     var saveFrameItem = document.getElementById("savepage");
     saveFrameItem.removeAttribute("hidden");
