@@ -25,42 +25,71 @@
 #include "nsIDOMNamedNodeMap.h"
 #include "nsCOMPtr.h"
 
-NS_NAMED_LITERAL_STRING(nsSOAPUtils::kSOAPEnvURI,"http://schemas.xmlsoap.org/soap/envelope/");
-NS_NAMED_LITERAL_STRING(nsSOAPUtils::kSOAPEncodingURI,"http://schemas.xmlsoap.org/soap/encoding/");
-NS_NAMED_LITERAL_STRING(nsSOAPUtils::kSOAPEnvPrefix,"SOAP-ENV");
-NS_NAMED_LITERAL_STRING(nsSOAPUtils::kSOAPEncodingPrefix,"SOAP-ENC");
-NS_NAMED_LITERAL_STRING(nsSOAPUtils::kXSURI,"http://www.w3.org/2001/XMLSchema");
-NS_NAMED_LITERAL_STRING(nsSOAPUtils::kXSIURI,"http://www.w3.org/2001/XMLSchema-instance");
-NS_NAMED_LITERAL_STRING(nsSOAPUtils::kXSDURI,"http://www.w3.org/2001/XMLSchema-datatypes");
-NS_NAMED_LITERAL_STRING(nsSOAPUtils::kXSIPrefix,"xsi");
-NS_NAMED_LITERAL_STRING(nsSOAPUtils::kXSITypeAttribute,"type");
-NS_NAMED_LITERAL_STRING(nsSOAPUtils::kXSPrefix,"xs");
-NS_NAMED_LITERAL_STRING(nsSOAPUtils::kXSDPrefix,"xsd");
-NS_NAMED_LITERAL_STRING(nsSOAPUtils::kEncodingStyleAttribute,"encodingStyle");
-NS_NAMED_LITERAL_STRING(nsSOAPUtils::kActorAttribute,"actor");
-NS_NAMED_LITERAL_STRING(nsSOAPUtils::kMustUnderstandAttribute,"mustUnderstand");
-NS_NAMED_LITERAL_STRING(nsSOAPUtils::kEnvelopeTagName,"Envelope");
-NS_NAMED_LITERAL_STRING(nsSOAPUtils::kHeaderTagName,"Header");
-NS_NAMED_LITERAL_STRING(nsSOAPUtils::kBodyTagName,"Body");
-NS_NAMED_LITERAL_STRING(nsSOAPUtils::kFaultTagName,"Fault");
-NS_NAMED_LITERAL_STRING(nsSOAPUtils::kFaultCodeTagName,"faultcode");
-NS_NAMED_LITERAL_STRING(nsSOAPUtils::kFaultStringTagName,"faultstring");
-NS_NAMED_LITERAL_STRING(nsSOAPUtils::kFaultActorTagName,"faultactor");
-NS_NAMED_LITERAL_STRING(nsSOAPUtils::kFaultDetailTagName,"detail");
+NS_NAMED_LITERAL_STRING(realSOAPEnvURI,"http://schemas.xmlsoap.org/soap/envelope/");
+const nsAString& nsSOAPUtils::kSOAPEnvURI = realSOAPEnvURI;
+NS_NAMED_LITERAL_STRING(realSOAPEncodingURI,"http://schemas.xmlsoap.org/soap/encoding/");
+const nsAString& nsSOAPUtils::kSOAPEncodingURI = realSOAPEncodingURI;
+NS_NAMED_LITERAL_STRING(realSOAPEnvPrefix,"SOAP-ENV");
+const nsAString& nsSOAPUtils::kSOAPEnvPrefix = realSOAPEnvPrefix;
+NS_NAMED_LITERAL_STRING(realSOAPEncodingPrefix,"SOAP-ENC");
+const nsAString& nsSOAPUtils::kSOAPEncodingPrefix = realSOAPEncodingPrefix;
+NS_NAMED_LITERAL_STRING(realXSURI,"http://www.w3.org/2001/XMLSchema");
+const nsAString& nsSOAPUtils::kXSURI = realXSURI;
+NS_NAMED_LITERAL_STRING(realXSIURI,"http://www.w3.org/2001/XMLSchema-instance");
+const nsAString& nsSOAPUtils::kXSIURI = realXSIURI;
+NS_NAMED_LITERAL_STRING(realXSDURI,"http://www.w3.org/2001/XMLSchema-datatypes");
+const nsAString& nsSOAPUtils::kXSDURI = realXSDURI;
+NS_NAMED_LITERAL_STRING(realXSIPrefix,"xsi");
+const nsAString& nsSOAPUtils::kXSIPrefix = realXSIPrefix;
+NS_NAMED_LITERAL_STRING(realXSITypeAttribute,"type");
+const nsAString& nsSOAPUtils::kXSITypeAttribute = realXSITypeAttribute;
+NS_NAMED_LITERAL_STRING(realXSPrefix,"xs");
+const nsAString& nsSOAPUtils::kXSPrefix = realXSPrefix;
+NS_NAMED_LITERAL_STRING(realXSDPrefix,"xsd");
+const nsAString& nsSOAPUtils::kXSDPrefix = realXSDPrefix;
+NS_NAMED_LITERAL_STRING(realEncodingStyleAttribute,"encodingStyle");
+const nsAString& nsSOAPUtils::kEncodingStyleAttribute = realEncodingStyleAttribute;
+NS_NAMED_LITERAL_STRING(realActorAttribute,"actor");
+const nsAString& nsSOAPUtils::kActorAttribute = realActorAttribute;
+NS_NAMED_LITERAL_STRING(realMustUnderstandAttribute,"mustUnderstand");
+const nsAString& nsSOAPUtils::kMustUnderstandAttribute = realMustUnderstandAttribute;
+NS_NAMED_LITERAL_STRING(realEnvelopeTagName,"Envelope");
+const nsAString& nsSOAPUtils::kEnvelopeTagName = realEnvelopeTagName;
+NS_NAMED_LITERAL_STRING(realHeaderTagName,"Header");
+const nsAString& nsSOAPUtils::kHeaderTagName = realHeaderTagName;
+NS_NAMED_LITERAL_STRING(realBodyTagName,"Body");
+const nsAString& nsSOAPUtils::kBodyTagName = realBodyTagName;
+NS_NAMED_LITERAL_STRING(realFaultTagName,"Fault");
+const nsAString& nsSOAPUtils::kFaultTagName = realFaultTagName;
+NS_NAMED_LITERAL_STRING(realFaultCodeTagName,"faultcode");
+const nsAString& nsSOAPUtils::kFaultCodeTagName = realFaultCodeTagName;
+NS_NAMED_LITERAL_STRING(realFaultStringTagName,"faultstring");
+const nsAString& nsSOAPUtils::kFaultStringTagName = realFaultStringTagName;
+NS_NAMED_LITERAL_STRING(realFaultActorTagName,"faultactor");
+const nsAString& nsSOAPUtils::kFaultActorTagName = realFaultActorTagName;
+NS_NAMED_LITERAL_STRING(realFaultDetailTagName,"detail");
 
-NS_NAMED_LITERAL_STRING(nsSOAPUtils::kEncodingSeparator,"#");
-NS_NAMED_LITERAL_STRING(nsSOAPUtils::kQualifiedSeparator,":");
+NS_NAMED_LITERAL_STRING(realEncodingSeparator,"#");
+const nsAString& nsSOAPUtils::kEncodingSeparator = realEncodingSeparator;
+NS_NAMED_LITERAL_STRING(realQualifiedSeparator,":");
+const nsAString& nsSOAPUtils::kQualifiedSeparator = realQualifiedSeparator;
 
-NS_NAMED_LITERAL_STRING(nsSOAPUtils::kXMLNamespaceNamespaceURI, "htp://www.w3.org/2000/xmlns/");
-NS_NAMED_LITERAL_STRING(nsSOAPUtils::kXMLNamespaceURI, "htp://www.w3.org/XML/1998/namespace");
-NS_NAMED_LITERAL_STRING(nsSOAPUtils::kXMLPrefix, "xml:");
-NS_NAMED_LITERAL_STRING(nsSOAPUtils::kXMLNamespacePrefix, "xmlns:");
+NS_NAMED_LITERAL_STRING(realXMLNamespaceNamespaceURI, "htp://www.w3.org/2000/xmlns/");
+const nsAString& nsSOAPUtils::kXMLNamespaceNamespaceURI = realXMLNamespaceNamespaceURI;
+NS_NAMED_LITERAL_STRING(realXMLNamespaceURI, "htp://www.w3.org/XML/1998/namespace");
+const nsAString& nsSOAPUtils::kXMLNamespaceURI = realXMLNamespaceURI;
+NS_NAMED_LITERAL_STRING(realXMLPrefix, "xml:");
+const nsAString& nsSOAPUtils::kXMLPrefix = realXMLPrefix;
+NS_NAMED_LITERAL_STRING(realXMLNamespacePrefix, "xmlns:");
+const nsAString& nsSOAPUtils::kXMLNamespacePrefix = realXMLNamespacePrefix;
 
-NS_NAMED_LITERAL_STRING(nsSOAPUtils::kTrue, "true");
-NS_NAMED_LITERAL_STRING(nsSOAPUtils::kFalse, "false");
+NS_NAMED_LITERAL_STRING(realTrue, "true");
+const nsAString& nsSOAPUtils::kTrue = realTrue;
+NS_NAMED_LITERAL_STRING(realFalse, "false");
 
-NS_NAMED_LITERAL_STRING(nsSOAPUtils::kTrueA, "1");
-NS_NAMED_LITERAL_STRING(nsSOAPUtils::kFalseA, "0");
+NS_NAMED_LITERAL_STRING(realTrueA, "1");
+const nsAString& nsSOAPUtils::kTrueA = realTrueA;
+NS_NAMED_LITERAL_STRING(realFalseA, "0");
 
 void 
 nsSOAPUtils::GetSpecificChildElement(
