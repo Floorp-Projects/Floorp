@@ -116,6 +116,7 @@ endif
 REQUIRES += \
 		  xfeicons \
 		  progress \
+		  privacy \
 		  $(NULL)
 
 ifdef MOZ_FULLCIRCLE
@@ -291,12 +292,8 @@ BASIC_LIBS	= \
 		  $(DIST)/lib/libpng.a \
 		  $(DIST)/lib/libmariner.a \
 		  $(DIST)/lib/libimg.a \
+		  $(DIST)/lib/libprivacy.a \
 		  $(NULL)
-
-ifdef MOZ_PRIVACY
-BASIC_LIBS	+= $(DIST)/lib/libprivacy.a 
-REQUIRES	+= privacy
-endif
 
 ifdef MOZ_LOC_INDEP
 BASIC_LIBS	+= $(DIST)/lib/libli.a
