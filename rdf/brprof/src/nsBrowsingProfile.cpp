@@ -47,17 +47,6 @@ DEFINE_RDF_VOCAB(OPENDIR_NAMESPACE_URI, OPENDIR, Topic);
 DEFINE_RDF_VOCAB(OPENDIR_NAMESPACE_URI, OPENDIR, narrow);
 DEFINE_RDF_VOCAB(OPENDIR_NAMESPACE_URI, OPENDIR, catid);
 
-#if 0
-static PRBool
-peq(nsIRDFResource* r1, nsIRDFResource* r2)
-{
-    PRBool eq;
-    return NS_SUCCEEDED(r1->EqualsResource(r2, &eq)) && eq;
-}
-#else
-#define peq(r1, r2)     ((r1) == (r2))
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////
 
 struct nsCategory {
@@ -110,6 +99,15 @@ public:
     static nsIRDFResource* kOPENDIR_Topic;
     static nsIRDFResource* kOPENDIR_narrow;
     static nsIRDFResource* kOPENDIR_catid;
+
+    // To deal with endian-ness
+    static void Uint8ToHex(PRUint8 aNum, char aBuf[2]);
+    static void Uint16ToHex(PRUint16 aNum, char aBuf[4]);
+    static void Uint32ToHex(PRUint32 aNum, char aBuf[8]);
+
+    static void HexToUint8(const char aBuf[2], PRUint8* aNum);
+    static void HexToUint16(const char aBuf[4], PRUint16* aNum);
+    static void HexToUint32(const char aBuf[8], PRUint32* aNum);
 
 protected:
     const char* mUserProfileName;
@@ -185,8 +183,10 @@ nsBrowsingProfile::Init(const char* userProfileName)
         if (NS_FAILED(rv)) return rv;
     }
 
-    // XXX: TODO
-    // Grovel through the history data source to initialize the profile
+    // XXX: TODO Grovel through the history data source to initialize
+    // the profile. This gets done automagically so long as the
+    // history data source creates the profile, which is kind of
+    // wrong.
 
     // add ourself as an observer so that we can keep the profile
     // in-sync as the user browses.
@@ -279,13 +279,33 @@ NS_IMETHODIMP
 nsBrowsingProfile::GetCookieString(char buf[kBrowsingProfileCookieSize])
 {
     // translate mVector to hex
-    PRUint8* vector = (PRUint8*)&mVector;
-    for (PRUint32 i = 0; i < sizeof(mVector); i++) {
-        unsigned char c = vector[i];
-        *buf++ = kHexMap[c >> 4];
-        *buf++ = kHexMap[c & 0x0F];
+
+    char* p = buf;
+
+    Uint32ToHex(mVector.mHeader.mInfo.mCheck, p);
+    p += 8;
+
+    Uint16ToHex(mVector.mHeader.mInfo.mMajorVersion, p);
+    p += 4;
+
+    Uint16ToHex(mVector.mHeader.mInfo.mMinorVersion, p);
+    p += 4;
+
+    while (p < buf + sizeof(mVector.mHeader))
+        *p++ = '0'; // pad with zeroes
+
+    for (PRInt32 i = 0; i < nsBrowsingProfile_CategoryCount; ++i) {
+        Uint16ToHex(mVector.mCategory[i].mID, p);
+        p += 4;
+
+        Uint8ToHex(mVector.mCategory[i].mVisitCount, p);
+        p += 2;
+
+        Uint8ToHex(mVector.mCategory[i].mFlags, p);
+        p += 2;
     }
-    *buf = '\0';
+
+    *p = '\0';
     return NS_OK;
 }
 
@@ -293,22 +313,29 @@ NS_IMETHODIMP
 nsBrowsingProfile::SetCookieString(char buf[kBrowsingProfileCookieSize])
 {
     // translate mVector from hex
-    PRUint8* vector = (PRUint8*)&mVector;
-    for (PRUint32 i = 0; i < sizeof(mVector); i++) {
-        char* hip = PL_strchr(kHexMap, *buf++);
-        NS_ASSERTION(hip != nsnull, "invalid character");
-        if (! hip)
-            return NS_ERROR_FAILURE;
 
-        char* lop = PL_strchr(kHexMap, *buf++);
-        NS_ASSERTION(lop != nsnull, "invalid character");
-        if (! lop)
-            return NS_ERROR_FAILURE;
+    char* p = buf;
+    HexToUint32(p, &mVector.mHeader.mInfo.mCheck);
+    p += 8;
 
-        PRUint8 hi = hip - kHexMap;
-        PRUint8 lo = lop - kHexMap;
-        vector[i] = (hi << 4) + lo;
+    HexToUint16(p, &mVector.mHeader.mInfo.mMajorVersion);
+    p += 4;
+
+    HexToUint16(p, &mVector.mHeader.mInfo.mMinorVersion);
+    //p += 4;
+
+    p = buf + sizeof(mVector.mHeader);
+    for (PRInt32 i = 0; i < nsBrowsingProfile_CategoryCount; ++i) {
+        HexToUint16(p, &mVector.mCategory[i].mID);
+        p += 4;
+
+        HexToUint8(p, &mVector.mCategory[i].mVisitCount);
+        p += 2;
+
+        HexToUint8(p, &mVector.mCategory[i].mFlags);
+        p += 2;
     }
+    
     return NS_OK;
 }
 
@@ -533,7 +560,7 @@ nsBrowsingProfile::OnAssert(nsIRDFResource* subject,
                             nsIRDFNode* object)
 {
     nsresult rv = NS_OK;
-    if (peq(predicate, kNC_Page)) {
+    if (predicate == kNC_Page) {
         nsIRDFResource* objRes;
         rv = object->QueryInterface(kIRDFResourceIID, (void**)&objRes);
         if (NS_FAILED(rv)) return rv;
@@ -555,6 +582,91 @@ nsBrowsingProfile::OnUnassert(nsIRDFResource* subject,
     // we don't care about history entries going away
     return NS_OK;
 }
+
+
+void
+nsBrowsingProfile::Uint8ToHex(PRUint8 aNum, char aBuf[2])
+{
+    char* p = aBuf + 2;
+    while (--p >= aBuf) {
+        *p = kHexMap[aNum & 0x0f];
+        aNum = aNum >> 4;
+    }
+}
+
+void
+nsBrowsingProfile::Uint16ToHex(PRUint16 aNum, char aBuf[4])
+{
+    char* p = aBuf + 4;
+    while (--p >= aBuf) {
+        *p = kHexMap[aNum & 0x0f];
+        aNum = aNum >> 4;
+    }
+}
+
+void
+nsBrowsingProfile::Uint32ToHex(PRUint32 aNum, char aBuf[8])
+{
+    char* p = aBuf + 8;
+    while (--p >= aBuf) {
+        *p = kHexMap[aNum & 0x0f];
+        aNum = aNum >> 4;
+    }
+}
+
+
+void
+nsBrowsingProfile::HexToUint8(const char aBuf[2], PRUint8* aNum)
+{
+    const char* p = aBuf + 2;
+    PRUint32 num = 0;
+    while (--p >= aBuf) {
+        const char* hex = PL_strchr(kHexMap, *p);
+        NS_ASSERTION(hex != nsnull, "invalid character");
+        if (! hex)
+            break;
+
+        num = num << 4;
+        num += (hex - kHexMap);
+    }
+    *aNum = num;
+}
+
+void
+nsBrowsingProfile::HexToUint16(const char aBuf[4], PRUint16* aNum)
+{
+    const char* p = aBuf + 4;
+    PRUint32 num = 0;
+    while (--p >= aBuf) {
+        const char* hex = PL_strchr(kHexMap, *p);
+        NS_ASSERTION(hex != nsnull, "invalid character");
+        if (! hex)
+            break;
+
+        num = num << 4;
+        num += (hex - kHexMap);
+    }
+    *aNum = num;
+}
+
+void
+nsBrowsingProfile::HexToUint32(const char aBuf[8], PRUint32* aNum)
+{
+    const char* p = aBuf + 8;
+    PRUint32 num = 0;
+    while (--p >= aBuf) {
+        const char* hex = PL_strchr(kHexMap, *p);
+        NS_ASSERTION(hex != nsnull, "invalid character");
+        if (! hex)
+            break;
+
+        num = num << 4;
+        num += (hex - kHexMap);
+    }
+    *aNum = num;
+}
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
