@@ -33,8 +33,10 @@ EXPORTS		= \
 		  nsIAllocator.h \
 		  nsICollection.h \
 		  nsID.h \
+		  nsIID.h \
 		  nsIFactory.h \
 		  nsISupports.h \
+		  nsISupportsUtils.h \
 		  nsIPtr.h \
 		  nsIServiceManager.h \
 		  nsISupportsArray.h \
