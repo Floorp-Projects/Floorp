@@ -37,6 +37,7 @@
 #include "Xm/DrawingA.h"
 
 #include "X11/Intrinsic.h"
+#include "X11/cursorfont.h"
 
 #include "stdio.h"
 
@@ -195,6 +196,7 @@ nsWindow::nsWindow(nsISupports *aOuter):
   mVisible = PR_FALSE;
   mDisplayed = PR_FALSE;
   mLowerLeft = PR_FALSE;
+  mCursor = eCursor_standard;
 
 }
 
@@ -290,7 +292,7 @@ void nsWindow::CreateGC()
 
     XGCValues values;
     Window w;
-    Display * d = XtDisplay(mWidget);
+    Display * d = ::XtDisplay(mWidget);
     
     w = ::XCreateSimpleWindow(d,
 			      RootWindow(d,DefaultScreen(d)),
@@ -366,10 +368,6 @@ void nsWindow::CreateMainWindow(nsNativeWidget aNativeParent,
   if (aWidgetParent) {
     aWidgetParent->AddChild(this);
   }
-
-  // Force cursor to default setting
-  mCursor = eCursor_select;
-  SetCursor(eCursor_standard);
 
   InitCallbacks();
 
@@ -878,6 +876,42 @@ nsCursor nsWindow::GetCursor()
 
 void nsWindow::SetCursor(nsCursor aCursor)
 {
+  if (PR_FALSE == mDisplayed)
+   return;
+  // Only change cursor if it's changing
+  if (aCursor != mCursor) {
+    Cursor newCursor = 0;
+    Display *display = ::XtDisplay(mWidget);
+    Window window = ::XtWindow(mWidget);
+
+    switch(aCursor) {
+      case eCursor_select:
+        newCursor = XCreateFontCursor(display, XC_xterm);
+      break;
+   
+      case eCursor_wait: 
+        newCursor = XCreateFontCursor(display, XC_watch);
+      break;
+
+      case eCursor_hyperlink:
+        newCursor = XCreateFontCursor(display, XC_hand2);
+      break;
+
+      case eCursor_standard:
+       // newCursor = XCreateFontCursor(display, XC_left_ptr);
+        newCursor = XCreateFontCursor(display, XC_left_ptr);
+      break;
+
+      default:
+        NS_ASSERTION(0, "Invalid cursor type");
+      break;
+    }
+
+    if (0 != newCursor) {
+      mCursor = aCursor;
+      ::XDefineCursor(display, window, newCursor);
+    }
+ }
 }
     
 //-------------------------------------------------------------------------
