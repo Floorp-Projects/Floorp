@@ -101,7 +101,6 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryPh :: CreateDeviceContextSpec(nsIWidget 
 		if (pc)
 		{
 			specPh->SetPrintContext(pc);
-			printf("Set print context: %X\n", pc);
 		}
 		rv = specPh->Init(aWidget, aPrintSettings, aQuiet);
 		if (NS_SUCCEEDED(rv)) {

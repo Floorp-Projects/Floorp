@@ -218,10 +218,17 @@ NS_IMETHODIMP nsFontMetricsPh::Init ( const nsFont& aFont, nsIAtom* aLangGroup, 
 	if(aFont.style & NS_FONT_STYLE_OBLIQUE)
 	   uiFlags |= PF_STYLE_ANTIALIAS;
 
+#if (Ph_LIB_VERSION > 200) // a header changed in RTP 6.2
+	if( PfGenerateFontName( (char *)str, uiFlags, sizePoints, (char *)NSFullFontName ) == NULL )
+	  {
+		  PfGenerateFontName( (char *)"Courier 10 Pitch BT", uiFlags, sizePoints, (char *)NSFullFontName );
+	  }
+#else
 	if( PfGenerateFontName( (uchar_t *)str, uiFlags, sizePoints, (uchar_t *)NSFullFontName ) == NULL )
 	  {
 		  PfGenerateFontName( (uchar_t *)"Courier 10 Pitch BT", uiFlags, sizePoints, (uchar_t *)NSFullFontName );
 	  }
+#endif
 
 	/* Once the Photon Font String is built get the attributes */
 	FontQueryInfo *node;

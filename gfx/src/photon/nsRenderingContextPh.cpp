@@ -1189,6 +1189,31 @@ NS_IMETHODIMP nsRenderingContextPh::RetrieveCurrentNativeGraphicData( PRUint32 *
 	return NS_OK;
 }
 
+#ifdef MOZ_MATHML
+  /**
+   * Returns metrics (in app units) of an 8-bit character string
+   */
+NS_IMETHODIMP nsRenderingContextPh::GetBoundingMetrics(const char*        aString,
+                                PRUint32           aLength,
+                                nsBoundingMetrics& aBoundingMetrics)
+{
+	return NS_ERROR_FAILURE;
+}
+
+  /**
+   * Returns metrics (in app units) of a Unicode character string
+   */
+NS_IMETHODIMP nsRenderingContextPh::GetBoundingMetrics(const PRUnichar*   aString,
+                                PRUint32           aLength,
+                                nsBoundingMetrics& aBoundingMetrics,
+                                PRInt32*           aFontID = nsnull)
+{
+	return NS_ERROR_FAILURE;
+}
+
+#endif /* MOZ_MATHML */
+
+
 void nsRenderingContextPh::UpdateGC()
 {
 	PgSetGC(mGC);	/* new */

@@ -330,13 +330,21 @@ NS_IMETHODIMP nsDeviceContextPh :: CheckFontExistence( const nsString& aFontName
   if( fontName ) {
 		FontID *id = NULL;
 
+#if (Ph_LIB_VERSION > 200) // a header changed in RTP 6.2
+		if( ( id = PfFindFont( (char *)fontName, 0, 0 ) ) ) {
+#else
 		if( ( id = PfFindFont( (uchar_t *)fontName, 0, 0 ) ) ) {
+#endif
 			if( !mFontLoadCache ) mFontLoadCache = new nsHashtable();
 
 			nsCStringKey key((char *)(PfConvertFontID(id)));
 			if( !mFontLoadCache->Exists( &key ) ) {
 				char FullFontName[MAX_FONT_TAG];
+#if (Ph_LIB_VERSION > 200) // a header changed in RTP 6.2
+				PfGenerateFontName((char  *)fontName, nsnull, 8, (char *)FullFontName);
+#else
 				PfGenerateFontName((uchar_t  *)fontName, nsnull, 8, (uchar_t *)FullFontName);
+#endif
 				PfLoadFont(FullFontName, PHFONT_LOAD_METRICS, nsnull);
 				PfLoadMetrics(FullFontName);
 				// add this font to the table
