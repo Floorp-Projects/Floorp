@@ -1497,34 +1497,16 @@ public final class Context {
     public WrapHandler getWrapHandler() {
         return wrapHandler;
     }
+    
+    public DebuggableEngine getDebuggableEngine() {
+        if (debuggableEngine == null)
+            debuggableEngine = new DebuggableEngineImpl(this);
+        return debuggableEngine;
+    }
 
-    /**** debugger oriented portion of API ****/
+    /********** end of API **********/
     
-    public void setBreakNextLine(boolean inLineStepMode) {
-        this.inLineStepMode = inLineStepMode;
-    }
-    
-    public boolean getBreakNextLine() {
-        return inLineStepMode;
-    }
-    
-    public void setDebugger(Debugger debugger) {
-        this.debugger = debugger;
-    }
-    
-    public Debugger getDebugger() {
-        return debugger;
-    }
-    
-    public Frame getFrame(int frameNumber) {
-        return (Frame) frameStack.elementAt(frameStack.size() - frameNumber - 1);
-    }
-    
-    public int getFrameCount() {
-        return frameStack == null ? 0 : frameStack.size();
-    }
-    
-    void pushFrame(Frame frame) {
+    void pushFrame(DebugFrame frame) {
         if (frameStack == null)
             frameStack = new java.util.Stack();
         frameStack.push(frame);
@@ -1534,10 +1516,6 @@ public final class Context {
         frameStack.pop();
     }
     
-    private java.util.Stack frameStack;
-    
-    
-    /********** end of API **********/
 
     /**
      * Internal method that reports an error for missing calls to
@@ -1874,7 +1852,9 @@ public final class Context {
     private int optimizationLevel;
     WrapHandler wrapHandler;
     Debugger debugger;
+    DebuggableEngine debuggableEngine;
     boolean inLineStepMode;
+    java.util.Stack frameStack;    
     private int enterCount;
     private ListenerCollection listeners;
     private Hashtable hashtable;

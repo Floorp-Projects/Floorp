@@ -39,7 +39,7 @@ package org.mozilla.javascript.debug;
 
 import org.mozilla.javascript.*;
 
-public interface Frame {
+public interface DebugFrame {
 
     public Scriptable getVariableObject();
     

@@ -1443,13 +1443,14 @@ class ContextWindow extends JPanel implements ActionListener {
 	if(e.getActionCommand().equals("ContextSwitch")) {
 	    ContextHelper helper = new ContextHelper();
 	    Context cx = db.getCurrentContext();
+	    DebuggableEngine engine = cx.getDebuggableEngine();
 	    helper.attach(cx);
 	    int frameIndex = context.getSelectedIndex();
 	    context.setToolTipText(toolTips.elementAt(frameIndex).toString());
 	    Scriptable obj;
-	    int frameCount = cx.getFrameCount();
+	    int frameCount = engine.getFrameCount();
 	    if(frameIndex < frameCount) {
-		obj = cx.getFrame(frameIndex).getVariableObject();
+		obj = engine.getFrame(frameIndex).getVariableObject();
 	    } else {
 		helper.reset();
 		return;
@@ -1646,9 +1647,11 @@ class SetFileText implements Runnable {
 class UpdateContext implements Runnable {
     JSDebugger db;
     Context cx;
+    DebuggableEngine engine;
     UpdateContext(JSDebugger db, Context cx) {
 	this.db = db;
 	this.cx = cx;
+	this.engine = cx.getDebuggableEngine();
     }
 
     public void run() {
@@ -1656,11 +1659,11 @@ class UpdateContext implements Runnable {
 	JComboBox ctx = db.context.context;
 	Vector toolTips = db.context.toolTips;
 	db.context.disableUpdate();
-	int frameCount = cx.getFrameCount();
+	int frameCount = engine.getFrameCount();
 	ctx.removeAllItems();
 	toolTips.clear();
 	for(int i = 0; i < frameCount; i++) {
-	    org.mozilla.javascript.debug.Frame frame = cx.getFrame(i);
+	    DebugFrame frame = engine.getFrame(i);
 	    String sourceName = frame.getSourceName();
 	    String location;
 	    String shortName = sourceName;
@@ -1917,7 +1920,8 @@ class OpenFile implements Runnable {
     }
     public void run() {
 	Context cx = Context.enter();
-	cx.setBreakNextLine(true);
+	DebuggableEngine engine = cx.getDebuggableEngine();
+	engine.setBreakNextLine(true);
 	try {
 	    cx.compileReader(scope, new FileReader(fileName),
 			     fileName, 1, null);
@@ -1948,7 +1952,8 @@ class LoadFile implements Runnable {
     }
     public void run() {
 	Context cx = Context.enter();
-	cx.setBreakNextLine(true);
+	DebuggableEngine engine = cx.getDebuggableEngine();
+	engine.setBreakNextLine(true);
 	try {
 	    cx.evaluateReader(scope, new FileReader(fileName),
 			      fileName, 1, null);
@@ -2010,7 +2015,8 @@ public class JSDebugger extends JFrame implements Debugger, ContextListener {
     static Thread mainThread; // thread used to run the shell
 
     public void contextCreated(Context cx) {
-	cx.setDebugger(this);
+	DebuggableEngine engine = cx.getDebuggableEngine();
+	engine.setDebugger(this);
 	cx.setGeneratingDebug(true);
 	cx.setOptimizationLevel(-1);
 	// if the user pressed "Break" or if this thread is the shell's 
@@ -2018,7 +2024,7 @@ public class JSDebugger extends JFrame implements Debugger, ContextListener {
 	// with a file argument on the command line it will
 	// break at the start of the file
 	if(breakFlag || Thread.currentThread() == mainThread) {
-	    cx.setBreakNextLine(true);
+	    engine.setBreakNextLine(true);
 	}
     }
     
@@ -2028,7 +2034,7 @@ public class JSDebugger extends JFrame implements Debugger, ContextListener {
 	// from its thread (we cause that to happen below
 	// in interrupted)
 	if(!contexts.contains(cx)) {
-	    if(cx.getDebugger() == this) {
+	    if(cx.getDebuggableEngine().getDebugger() == this) {
 		contexts.add(cx);
 	    }
 	}
@@ -2051,7 +2057,7 @@ public class JSDebugger extends JFrame implements Debugger, ContextListener {
 	    Iterator iter = contexts.iterator();
 	    while(iter.hasNext()) {
 		Context cx = (Context)iter.next();
-		cx.setBreakNextLine(true);
+		cx.getDebuggableEngine().setBreakNextLine(true);
 	    }
 	}
     }
@@ -2147,7 +2153,8 @@ public class JSDebugger extends JFrame implements Debugger, ContextListener {
     
     public void handleExceptionThrown(Context cx, Object e) {
 	if(breakOnExceptions) {
-	    org.mozilla.javascript.debug.Frame frame = cx.getFrame(0);  
+	    DebuggableEngine engine = cx.getDebuggableEngine();
+	    DebugFrame frame = engine.getFrame(0);  
 	    String sourceName = frame.getSourceName();
 	    int lineNumber = frame.getLineNumber();
 	    FileWindow w = null;
@@ -2351,18 +2358,18 @@ public class JSDebugger extends JFrame implements Debugger, ContextListener {
     int frameIndex = -1;
 
     void contextSwitch(int frameIndex) {
-	Context cx  = getCurrentContext();
+	Context cx = getCurrentContext();
+	DebuggableEngine engine = cx.getDebuggableEngine();
 	ContextHelper helper = new ContextHelper();
 	helper.attach(cx);
 	if(cx != null) {
-	    int frameCount = cx.getFrameCount();
+	    int frameCount = engine.getFrameCount();
 	    if(frameIndex < 0 || frameIndex >= frameCount) {
 		helper.reset();
 		return;
 	    }
 	    this.frameIndex = frameIndex;
-	    org.mozilla.javascript.debug.Frame frame = 
-		cx.getFrame(frameIndex);
+	    DebugFrame frame = engine.getFrame(frameIndex);
 	    String sourceName = frame.getSourceName();
 	    if(sourceName == null || sourceName.equals("<stdin>")) {
 		console.show();
@@ -2460,6 +2467,7 @@ public class JSDebugger extends JFrame implements Debugger, ContextListener {
 	}
 	do {
 	    currentContext = cx;
+	    DebuggableEngine engine = cx.getDebuggableEngine();
 	    Thread thread = Thread.currentThread();
 	    statusBar.setText("Thread: " + thread.toString());
 	    ThreadState state = (ThreadState)threadState.get(thread);
@@ -2468,10 +2476,9 @@ public class JSDebugger extends JFrame implements Debugger, ContextListener {
 		stopAtFrameDepth = state.stopAtFrameDepth;
 	    }
 	    if(runToCursorFile != null && thread == runToCursorThread) {
-		int frameCount = cx.getFrameCount();
+		int frameCount = engine.getFrameCount();
 		if(frameCount > 0) {
-		    org.mozilla.javascript.debug.Frame frame = 
-			cx.getFrame(0);  
+		    DebugFrame frame = engine.getFrame(0);  
 		    String sourceName = frame.getSourceName();
 		    if(sourceName != null) {
 			try {
@@ -2499,7 +2506,7 @@ public class JSDebugger extends JFrame implements Debugger, ContextListener {
 		}
 	    }
 	    if(stopAtFrameDepth > 0) {
-		if (cx.getFrameCount() > stopAtFrameDepth) {
+		if (engine.getFrameCount() > stopAtFrameDepth) {
 		    break;
 		}
 	    }
@@ -2507,13 +2514,13 @@ public class JSDebugger extends JFrame implements Debugger, ContextListener {
 		state.stopAtFrameDepth = -1;
 	    }
 	    threadState.remove(thread);
-	    int frameCount = cx.getFrameCount();
+	    int frameCount = engine.getFrameCount();
 	    this.frameIndex = frameCount -1;
 	    int line = 0;
 	    if(frameCount == 0) {
 		break;
 	    }
-	    org.mozilla.javascript.debug.Frame frame = cx.getFrame(0);
+	    DebugFrame frame = engine.getFrame(0);
 	    String fileName = frame.getSourceName();
 	    if(fileName != null && !fileName.equals("<stdin>")) {
 		try {
@@ -2521,7 +2528,7 @@ public class JSDebugger extends JFrame implements Debugger, ContextListener {
 		} catch(IOException exc) {
 		}
 	    }
-	    cx.setBreakNextLine(false);
+	    engine.setBreakNextLine(false);
 	    line = frame.getLineNumber();
 	    int enterCount = 0;
 	    boolean isDispatchThread = 
@@ -2622,8 +2629,8 @@ public class JSDebugger extends JFrame implements Debugger, ContextListener {
 	    }
 	    switch(returnValue) {
 	    case STEP_OVER:
-		cx.setBreakNextLine(true);
-		stopAtFrameDepth = cx.getFrameCount();
+		engine.setBreakNextLine(true);
+		stopAtFrameDepth = engine.getFrameCount();
 		if(state == null) {
 		    state = new ThreadState();
 		}
@@ -2631,15 +2638,15 @@ public class JSDebugger extends JFrame implements Debugger, ContextListener {
 		threadState.put(thread, state);
 		break;
 	    case STEP_INTO:
-		cx.setBreakNextLine(true);
+		engine.setBreakNextLine(true);
 		if(state != null) {
 		    state.stopAtFrameDepth = -1;
 		}
 		break;
 	    case STEP_OUT:
-		stopAtFrameDepth = cx.getFrameCount() -1;
+		stopAtFrameDepth = engine.getFrameCount() -1;
 		if(stopAtFrameDepth > 0) {
-		    cx.setBreakNextLine(true);
+		    engine.setBreakNextLine(true);
 		    if(state == null) {
 			state = new ThreadState();
 		    }
@@ -2648,7 +2655,7 @@ public class JSDebugger extends JFrame implements Debugger, ContextListener {
 		}
 		break;
 	    case RUN_TO_CURSOR:
-		cx.setBreakNextLine(true);
+		engine.setBreakNextLine(true);
 		if(state != null) {
 		    state.stopAtFrameDepth = -1;
 		}
@@ -2951,22 +2958,23 @@ public class JSDebugger extends JFrame implements Debugger, ContextListener {
 
     String eval(String expr) {
 	Context cx = getCurrentContext();
+	DebuggableEngine engine = cx.getDebuggableEngine();
 	if(cx == null) return "undefined";
 	ContextHelper helper = new ContextHelper();
 	helper.attach(cx);
-	if(frameIndex >= cx.getFrameCount()) {
+	if(frameIndex >= engine.getFrameCount()) {
 	    helper.reset();
 	    return "undefined";
 	}
 	String resultString;
-	cx.setDebugger(null);
+	engine.setDebugger(null);
 	cx.setGeneratingDebug(false);
 	cx.setOptimizationLevel(-1);
-	boolean breakNextLine = cx.getBreakNextLine();
-	cx.setBreakNextLine(false);
+	boolean breakNextLine = engine.getBreakNextLine();
+	engine.setBreakNextLine(false);
 	try {
 	    Scriptable scope;
-	    scope = cx.getFrame(frameIndex).getVariableObject();
+	    scope = engine.getFrame(frameIndex).getVariableObject();
 	    Object result;
 	    if(scope instanceof NativeCall) {
 		NativeCall call = (NativeCall)scope;
@@ -2991,10 +2999,10 @@ public class JSDebugger extends JFrame implements Debugger, ContextListener {
 	if(resultString == null) {
 	    resultString = "null";
 	}
-	cx.setDebugger(this);
+	engine.setDebugger(this);
 	cx.setGeneratingDebug(true);
 	cx.setOptimizationLevel(-1);
-	cx.setBreakNextLine(breakNextLine);
+	engine.setBreakNextLine(breakNextLine);
 	helper.reset();
 	return resultString;
     }
@@ -3142,7 +3150,7 @@ public class JSDebugger extends JFrame implements Debugger, ContextListener {
 			return Main.getScope();
 		    }
 		});
-	    Main.main(args);
+	    Main.exec(args);
 	} catch(Exception exc) {
 	    exc.printStackTrace();
 	}

@@ -33,45 +33,19 @@
  * file under either the NPL or the GPL.
  */
 
-package org.mozilla.javascript;
+// API class
 
-import java.util.Vector;
+package org.mozilla.javascript.debug;
 
-import org.mozilla.javascript.debug.*;
+import org.mozilla.javascript.*;
 
-class InterpreterFrame implements DebugFrame {
-    
-    InterpreterFrame(Scriptable scope, InterpreterData data, Scriptable obj) {
-        this.scope = scope;
-        this.data = data;
-        this.lineNumber = -1;
-        this.obj = obj;
-    }
+public interface DebugFrame {
 
-    public Scriptable getVariableObject() {
-        return scope;
-    }
+    public Scriptable getVariableObject();
     
-    public String getSourceName() {
-        return data.itsSourceFile;
-    }
+    public String getSourceName();
     
-    public void setLineNumber(int lineNumber) {
-        this.lineNumber = lineNumber;
-    }
+    public int getLineNumber();
     
-    public int getLineNumber() {
-        return lineNumber;
-    }
-    
-    public DebuggableScript getScript() {
-        if (obj instanceof DebuggableScript)
-            return (DebuggableScript) obj;
-        return null;
-    }
-    
-    private Scriptable scope;
-    private InterpreterData data;
-    private Scriptable obj;
-    private int lineNumber;
+    public DebuggableScript getScript();
 }

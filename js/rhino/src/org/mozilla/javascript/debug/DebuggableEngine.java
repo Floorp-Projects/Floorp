@@ -88,5 +88,5 @@ public interface DebuggableEngine {
      *         of range or the engine isn't currently saving 
      *         frames
      */
-    public Frame getFrame(int frameNumber);
+    public DebugFrame getFrame(int frameNumber);
 }

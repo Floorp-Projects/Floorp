@@ -39,7 +39,7 @@ import java.util.Vector;
 
 import org.mozilla.javascript.debug.*;
 
-class InterpreterFrame implements Frame {
+class InterpreterFrame implements DebugFrame {
     
     InterpreterFrame(Scriptable scope, InterpreterData data, Scriptable obj) {
         this.scope = scope;

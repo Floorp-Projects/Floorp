@@ -1904,7 +1904,7 @@ public class Interpreter extends LabelTable {
                         if ((iCode[pc] & 0xff) == TokenStream.BREAKPOINT ||
                             cx.inLineStepMode) 
                         {
-                            cx.getDebugger().handleBreakpointHit(cx);
+                            cx.getDebuggableEngine().getDebugger().handleBreakpointHit(cx);
                         }
                         pc += 2;
                         break;
