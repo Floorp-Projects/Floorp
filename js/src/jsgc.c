@@ -551,7 +551,7 @@ js_MarkGCThing(JSContext *cx, void *thing, void *arg)
 
 #ifdef GC_MARK_DEBUG
     if (js_LiveThingToFind == thing)
-        gc_dump_thing(rt, thing, flags, prev, stderr);
+        gc_dump_thing(rt, thing, flags, arg, stderr);
 #endif
 
     if (flags & GCF_MARK)
@@ -562,7 +562,7 @@ js_MarkGCThing(JSContext *cx, void *thing, void *arg)
 
 #ifdef GC_MARK_DEBUG
     if (js_DumpGCHeap)
-        gc_dump_thing(rt, thing, flags, prev, js_DumpGCHeap);
+        gc_dump_thing(rt, thing, flags, arg, js_DumpGCHeap);
 #endif
 
     if ((flags & GCF_TYPEMASK) == GCX_OBJECT) {
