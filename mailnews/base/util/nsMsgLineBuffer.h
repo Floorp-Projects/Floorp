@@ -30,6 +30,7 @@ public:
 	nsByteArray();
 	virtual ~nsByteArray();
 	PRUint32	GetSize() {return m_bufferSize;}
+	PRUint32	GetBufferPos() {return m_bufferPos;}
 	nsresult	GrowBuffer(PRUint32 desired_size, PRUint32 quantum = 1024);
 	nsresult	AppendString(const char *string);
 	nsresult	AppendBuffer(const char *buffer, PRUint32 length);
