@@ -54,6 +54,7 @@
 #include "nsIStreamConverterService.h"
 #include "nsWeakReference.h"
 #include "nsIHttpChannel.h"
+#include "nsIMultiPartChannel.h"
 #include "netCore.h"
 #include "nsCRT.h"
 
@@ -284,29 +285,83 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
     nsCOMPtr<nsIURIContentListener> contentListener;
     nsXPIDLCString desiredContentType;
 
-    //
-    // First step:  See if any nsIURIContentListener prefers to handle this
-    //              content type.
-    //
-    PRBool abortDispatch = PR_FALSE;
-    rv = uriLoader->DispatchContent(contentType.get(),
-                                    mIsContentPreferred, 
-                                    request, aCtxt, 
-                                    m_contentListener, 
-                                    m_originalContext,
-                                    getter_Copies(desiredContentType), 
-                                    getter_AddRefs(contentListener),
-                                    &abortDispatch);  
+    // Check whether the data should be forced to be handled
+    // externally.  This could happen because the Content-Disposition
+    // header is set so, or, in the future, because the user has
+    // specified external handling for the MIME type.
+    PRBool forceExternalHandling = PR_FALSE;
+    nsCAutoString disposition;
+    nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(request));
+    if (httpChannel)
+    {
+      rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("content-disposition"),
+                                          disposition);
+    }
+    else
+    {
+      nsCOMPtr<nsIMultiPartChannel> multipartChannel(do_QueryInterface(request));
+      if (multipartChannel)
+      {
+        rv = multipartChannel->GetContentDisposition(disposition);
+      }
+    }
 
-    // if the uri loader says to abort the dispatch then someone
-    // else must have stepped in and taken over for us...so stop..
+    if (NS_SUCCEEDED(rv) && !disposition.IsEmpty())
+    {
+      nsCAutoString::const_iterator start, end;
+      disposition.BeginReading(start);
+      disposition.EndReading(end);
+      // skip leading whitespace
+      while (start != end && nsCRT::IsAsciiSpace(*start))
+      {
+        ++start;
+      }
+      nsCAutoString::const_iterator iter = start;
+      // walk forward till we hit the next whitespace or semicolon
+      while (iter != end && *iter != ';' && !nsCRT::IsAsciiSpace(*iter))
+      {
+        ++iter;
+      }
+      if (start != iter &&
+          Substring(start, iter).Equals(NS_LITERAL_CSTRING("attachment"),
+                                        nsCaseInsensitiveCStringComparator()))
+      {
+        // We have a content-disposition of "attachment"
+        forceExternalHandling = PR_TRUE;
+      }
+    }
+    
+    if (!forceExternalHandling)
+    {
+      //
+      // First step:  See if any nsIURIContentListener prefers to handle this
+      //              content type.
+      //
+      PRBool abortDispatch = PR_FALSE;
+      rv = uriLoader->DispatchContent(contentType.get(),
+                                      mIsContentPreferred, 
+                                      request, aCtxt, 
+                                      m_contentListener, 
+                                      m_originalContext,
+                                      getter_Copies(desiredContentType), 
+                                      getter_AddRefs(contentListener),
+                                      &abortDispatch);  
 
-    if (abortDispatch) return NS_OK;
+      // if the uri loader says to abort the dispatch then someone
+      // else must have stepped in and taken over for us...so stop..
+
+      if (abortDispatch) return NS_OK;
+    }
+
     //
     // Second step:  If no listener prefers this type, see if any stream
     //               decoders exist to transform this content type into
     //               some other.
     //
+
+    // We always want to do this, since even content being forced to
+    // be handled externally may need decoding (eg via the unknown
+    // content decoder)
     if (!contentListener) 
     {
       rv = RetargetOutput(request, contentType.get(), "*/*", nsnull);
@@ -331,41 +386,46 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
     //
     if (contentListener)
     {
-      PRBool bAbortProcess = PR_FALSE;     
-      nsCAutoString contentTypeToUse;
-      if (desiredContentType)
-        contentTypeToUse.Assign(desiredContentType);
-      else
-        contentTypeToUse.Assign(contentType);
-
-      // We need to first figure out if we are retargeting the load to a content listener
-      // that is different from the one that originated the request....if so, set
-      // LOAD_RETARGETED_DOCUMENT_URI on the channel. 
-
-      if (contentListener.get() != m_contentListener.get())
+      if (!forceExternalHandling)
       {
-         // we must be retargeting...so set an appropriate flag on the channel
-        nsLoadFlags loadFlags = 0;
-        aChannel->GetLoadFlags(&loadFlags);
-        loadFlags |= nsIChannel::LOAD_RETARGETED_DOCUMENT_URI;
-        aChannel->SetLoadFlags(loadFlags);
+        PRBool bAbortProcess = PR_FALSE;     
+        nsCAutoString contentTypeToUse;
+        if (desiredContentType)
+          contentTypeToUse.Assign(desiredContentType);
+        else
+          contentTypeToUse.Assign(contentType);
+
+        // We need to first figure out if we are retargeting the load
+        // to a content listener that is different from the one that
+        // originated the request....if so, set
+        // LOAD_RETARGETED_DOCUMENT_URI on the channel.
+
+        if (contentListener != m_contentListener)
+        {
+          // we must be retargeting...so set an appropriate flag on
+          // the channel
+          nsLoadFlags loadFlags = 0;
+          aChannel->GetLoadFlags(&loadFlags);
+          loadFlags |= nsIChannel::LOAD_RETARGETED_DOCUMENT_URI;
+          aChannel->SetLoadFlags(loadFlags);
+        }
+
+        rv = contentListener->DoContent(contentTypeToUse.get(),
+                                        mIsContentPreferred,
+                                        request,
+                                        getter_AddRefs(contentStreamListener),
+                                        &bAbortProcess);
+
+        // Do not continue loading if nsIURIContentListener::DoContent(...)
+        // fails - It means that an unexpected error occurred...
+        //
+        // If bAbortProcess is TRUE then the listener is doing all the work from
+        // here...we are done!!!
+        if (NS_FAILED(rv) || bAbortProcess) {
+          return rv;
+        }
       }
-
-      rv = contentListener->DoContent(contentTypeToUse.get(),
-                                      mIsContentPreferred,
-                                      request,
-                                      getter_AddRefs(contentStreamListener),
-                                      &bAbortProcess);
-
-      // Do not continue loading if nsIURIContentListener::DoContent(...)
-      // fails - It means that an unexpected error occurred...
-      //
-      // If bAbortProcess is TRUE then the listener is doing all the work from
-      // here...we are done!!!
-      if (NS_FAILED(rv) || bAbortProcess) {
-        return rv;
-      }
-
+      
       // try to detect if there is a helper application we an use...
       if (!contentStreamListener)
       {
