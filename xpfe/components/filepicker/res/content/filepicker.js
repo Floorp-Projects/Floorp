@@ -27,18 +27,18 @@
  */
 
 const nsIFilePicker       = Components.interfaces.nsIFilePicker;
-const nsIDirectoryServiceProvider = Components.interfaces.nsIDirectoryServiceProvider;
-const nsIDirectoryServiceProvider_CONTRACTID = "@mozilla.org/file/directory_service;1";
+const nsIProperties       = Components.interfaces.nsIProperties;
+const NS_DIRECTORYSERVICE_CONTRACTID = "@mozilla.org/file/directory_service;1";
 const nsITreeBoxObject = Components.interfaces.nsITreeBoxObject;
 const nsIFileView = Components.interfaces.nsIFileView;
-const nsFileView_CONTRACTID = "@mozilla.org/filepicker/fileview;1";
+const NS_FILEVIEW_CONTRACTID = "@mozilla.org/filepicker/fileview;1";
 const nsITreeView = Components.interfaces.nsITreeView;
 const nsILocalFile = Components.interfaces.nsILocalFile;
 const nsIFile = Components.interfaces.nsIFile;
-const nsLocalFile_CONTRACTID = "@mozilla.org/file/local;1";
-const nsIPromptService_CONTRACTID = "@mozilla.org/embedcomp/prompt-service;1";
+const NS_LOCALFILE_CONTRACTID = "@mozilla.org/file/local;1";
+const NS_PROMPTSERVICE_CONTRACTID = "@mozilla.org/embedcomp/prompt-service;1";
 
-var sfile = Components.classes[nsLocalFile_CONTRACTID].createInstance(nsILocalFile);
+var sfile = Components.classes[NS_LOCALFILE_CONTRACTID].createInstance(nsILocalFile);
 var retvals;
 var filePickerMode;
 var homeDir;
@@ -58,7 +58,7 @@ function filepickerLoad() {
 
   textInput = document.getElementById("textInput");
   okButton = document.documentElement.getButton("accept");
-  treeView = Components.classes[nsFileView_CONTRACTID].createInstance(nsIFileView);
+  treeView = Components.classes[NS_FILEVIEW_CONTRACTID].createInstance(nsIFileView);
 
   if (window.arguments) {
     var o = window.arguments[0];
@@ -154,17 +154,17 @@ function filepickerLoad() {
 
 function setInitialDirectory(directory)
 {
-  // get the home dir
-  var dirServiceProvider = Components.classes[nsIDirectoryServiceProvider_CONTRACTID]
-                                     .getService(nsIDirectoryServiceProvider);
-  var persistent = new Object();
-  homeDir = dirServiceProvider.getFile("Home", persistent);
+  // Start in the user's home directory
+  var dirService = Components.classes[NS_DIRECTORYSERVICE_CONTRACTID]
+                             .getService(nsIProperties);
+  homeDir = dirService.get("Home", Components.interfaces.nsIFile);
 
   if (directory) {
     sfile.initWithPath(directory);
+    if (!sfile.exists() || !sfile.isDirectory())
+      directory = false;
   }
-  if (!directory || !(sfile.exists() && sfile.isDirectory())) {
-    // Start in the user's home directory
+  if (!directory) {
     sfile.initWithPath(homeDir.path);
   }
 
@@ -193,7 +193,7 @@ function showErrorDialog(titleStrName, messageStrName, file)
   var errorMessage =
     gFilePickerBundle.getFormattedString(messageStrName, [file.path]);
   var promptService =
-    Components.classes[nsIPromptService_CONTRACTID].getService(Components.interfaces.nsIPromptService);
+    Components.classes[NS_PROMPTSERVICE_CONTRACTID].getService(Components.interfaces.nsIPromptService);
 
   promptService.alert(window, errorTitle, errorMessage);
 }
@@ -309,7 +309,7 @@ function selectOnOK()
             gFilePickerBundle.getFormattedString("confirmFileReplacing",
                                                  [file.path]);
           
-          promptService = Components.classes[nsIPromptService_CONTRACTID].getService(Components.interfaces.nsIPromptService);
+          promptService = Components.classes[NS_PROMPTSERVICE_CONTRACTID].getService(Components.interfaces.nsIPromptService);
           var rv = promptService.confirm(window, title, message);
           if (rv) {
             ret = nsIFilePicker.returnReplace;
@@ -351,7 +351,7 @@ function selectOnOK()
             errorMessage =
               gFilePickerBundle.getFormattedString("saveWithoutPermissionMessage_dir", [parent.path]);
           }
-          promptService = Components.classes[nsIPromptService_CONTRACTID].getService(Components.interfaces.nsIPromptService);
+          promptService = Components.classes[NS_PROMPTSERVICE_CONTRACTID].getService(Components.interfaces.nsIPromptService);
           promptService.alert(window, errorTitle, errorMessage);
           ret = nsIFilePicker.returnCancel;
         }
@@ -603,7 +603,7 @@ function onDirectoryChanged(target)
 {
   var path = target.getAttribute("label");
 
-  var file = Components.classes[nsLocalFile_CONTRACTID].createInstance(nsILocalFile);
+  var file = Components.classes[NS_LOCALFILE_CONTRACTID].createInstance(nsILocalFile);
   file.initWithPath(path);
 
   if (!sfile.equals(file)) {
@@ -658,7 +658,7 @@ function goHome() {
 function newDir() {
   var file;
   var promptService =
-    Components.classes[nsIPromptService_CONTRACTID].getService(Components.interfaces.nsIPromptService);
+    Components.classes[NS_PROMPTSERVICE_CONTRACTID].getService(Components.interfaces.nsIPromptService);
   var dialogTitle =
     gFilePickerBundle.getString("promptNewDirTitle");
   var dialogMsg =
