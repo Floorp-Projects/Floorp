@@ -25,8 +25,6 @@
 	getenv() will override Metrowerks' standard, useless version.
  */
 
-#ifdef DEBUG
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -134,5 +132,3 @@ char* std::getenv(const char * name)
 	static Environment env;
 	return env.get(name);
 }
-
-#endif /* DEBUG */
