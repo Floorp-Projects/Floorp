@@ -51,6 +51,9 @@
 #include "xpctest.h"
 #include "jsapi.h"
 
+#include "nsITimer.h"
+#include "nsITimerCallback.h"
+
 // {ED132C20-EED1-11d2-BAA4-00805F8A5DD7}
 #define NS_ECHO_CID \
 { 0xed132c20, 0xeed1, 0x11d2, \

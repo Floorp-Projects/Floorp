@@ -59,5 +59,9 @@ CPPSRCS		= \
 		xpctest_out.cpp \
 		$(NULL)
 
+LIBS += \
+		$(MOZ_TIMER_LIBS) \
+		$(NULL)
+
 include $(topsrcdir)/config/rules.mk
 
