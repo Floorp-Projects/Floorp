@@ -66,6 +66,7 @@ public final class JSSProvider extends java.security.Provider {
         // Message Digesting
         /////////////////////////////////////////////////////////////
 
+/*
         put("MessageDigest.SHA-1",
                 "org.mozilla.jss.provider.java.security.JSSMessageDigestSpi$SHA1");
         put("MessageDigest.MD2",
@@ -75,6 +76,7 @@ public final class JSSProvider extends java.security.Provider {
 
         put("Alg.Alias.MessageDigest.SHA1", "SHA-1");
         put("Alg.Alias.MessageDigest.SHA", "SHA-1");
+*/
 
         /////////////////////////////////////////////////////////////
         // SecureRandom
@@ -116,6 +118,8 @@ public final class JSSProvider extends java.security.Provider {
             "org.mozilla.jss.provider.javax.crypto.JSSCipherSpi$AES");
         put("Cipher.RC4",
             "org.mozilla.jss.provider.javax.crypto.JSSCipherSpi$RC4");
+        put("Cipher.RSA",
+            "org.mozilla.jss.provider.javax.crypto.JSSCipherSpi$RSA");
 
         /////////////////////////////////////////////////////////////
         // KeyGenerator

@@ -59,6 +59,12 @@ import org.mozilla.jss.crypto.JSSSecureRandom;
 import org.mozilla.jss.CryptoManager;
 import org.mozilla.jss.util.Assert;
 import org.mozilla.jss.pkcs11.PK11SecureRandom;
+import org.mozilla.jss.pkcs11.PK11PubKey;
+import org.mozilla.jss.pkcs11.PK11PrivKey;
+import org.mozilla.jss.pkix.primitive.SubjectPublicKeyInfo;
+import org.mozilla.jss.asn1.ASN1Util;
+import org.mozilla.jss.asn1.BIT_STRING;
+import org.mozilla.jss.asn1.InvalidBERException;
 
 class JSSCipherSpi extends javax.crypto.CipherSpi {
     private String algFamily=null;
@@ -99,7 +105,7 @@ class JSSCipherSpi extends javax.crypto.CipherSpi {
         wrapper = null;
 
         params = givenParams;
-        if( algFamily==null || algMode==null || algPadding==null) {
+        if( algFamily==null ) {
             throw new InvalidAlgorithmParameterException(
                 "incorrectly specified algorithm");
         }
@@ -111,10 +117,14 @@ class JSSCipherSpi extends javax.crypto.CipherSpi {
 
         StringBuffer buf = new StringBuffer();
         buf.append(algFamily);
-        buf.append('/');
-        buf.append(algMode);
-        buf.append('/');
-        buf.append(algPadding);
+        if( algMode != null ) {
+            buf.append('/');
+            buf.append(algMode);
+        }
+        if( algPadding != null ) {
+            buf.append('/');
+            buf.append(algPadding);
+        }
 
         if( opmode == Cipher.ENCRYPT_MODE || opmode == Cipher.DECRYPT_MODE ) {
             if( ! (key instanceof SecretKeyFacade) ) {
@@ -397,10 +407,13 @@ class JSSCipherSpi extends javax.crypto.CipherSpi {
         throws InvalidKeyException, NoSuchAlgorithmException
     {
         try {
+            int idx = wrappedKeyAlg.indexOf('/');
+            if( idx != -1 ) {
+                wrappedKeyAlg = wrappedKeyAlg.substring(0, idx);
+            }
 
             SymmetricKey.Type wrappedKeyType =
-                SymmetricKey.Type.fromName(
-                    wrappedKeyAlg.substring(0, wrappedKeyAlg.indexOf('/')));
+                SymmetricKey.Type.fromName(wrappedKeyAlg);
 
             // Specify 0 for key length. This will use the default key length.
             // Won't work for algorithms without a default, like RC4, unless a
@@ -429,11 +442,29 @@ class JSSCipherSpi extends javax.crypto.CipherSpi {
     }
 
     public int engineGetKeySize(Key key) throws InvalidKeyException {
-        if( ! (key instanceof SecretKeyFacade) ) {
-            throw new InvalidKeyException("key must be JSS key");
+        if( key instanceof PK11PrivKey ) {
+            return ((PK11PrivKey)key).getStrength();
+        } else if( key instanceof PK11PubKey ) {
+            try {
+                byte[] encoded = ((PK11PubKey)key).getEncoded();
+                SubjectPublicKeyInfo.Template spkiTemp =
+                    new SubjectPublicKeyInfo.Template();
+                SubjectPublicKeyInfo spki = (SubjectPublicKeyInfo)
+                    ASN1Util.decode(spkiTemp, encoded);
+                BIT_STRING pk = spki.getSubjectPublicKey();
+                return pk.getBits().length - pk.getPadCount();
+            } catch(InvalidBERException e) {
+                throw new InvalidKeyException("Exception while decoding " +
+                    "public key: " + e.getMessage());
+            }
+        } else if( key instanceof SecretKeyFacade ) {
+            SymmetricKey symkey = ((SecretKeyFacade)key).key;
+            return symkey.getLength();
+        } else {
+            throw new InvalidKeyException(
+                "Unsupported key type: " + key.getClass().getName() +
+                ". Only JSS keys are supported.");
         }
-        SymmetricKey symkey = ((SecretKeyFacade)key).key;
-        return symkey.getLength();
     }
 
     static public class DES extends JSSCipherSpi {
@@ -454,6 +485,11 @@ class JSSCipherSpi extends javax.crypto.CipherSpi {
     static public class RC4 extends JSSCipherSpi {
         public RC4() {
             super("RC4");
+        }
+    }
+    static public class RSA extends JSSCipherSpi {
+        public RSA() {
+            super("RSA");
         }
     }
 
