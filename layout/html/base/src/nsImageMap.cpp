@@ -448,6 +448,7 @@ void RectArea::ParseCoords(const nsAString& aSpec)
     if (NS_FAILED(rv))
       return;
 
+    // XXX GetOwnerDocument
     nsCOMPtr<nsINodeInfo> nodeInfo;
     mArea->GetNodeInfo(getter_AddRefs(nodeInfo));
     NS_ASSERTION(nodeInfo, "Element with no nodeinfo");
@@ -736,10 +737,12 @@ void CircleArea::GetRect(nsIPresContext* aCX, nsRect& aRect)
 //----------------------------------------------------------------------
 
 
-nsImageMap::nsImageMap()
+nsImageMap::nsImageMap() :
+  mPresShell(nsnull),
+  mImageFrame(nsnull),
+  mDocument(nsnull),
+  mContainsBlockContents(PR_FALSE)
 {
-  mDocument = nsnull;
-  mContainsBlockContents = PR_FALSE;
 }
 
 nsImageMap::~nsImageMap()
@@ -759,8 +762,8 @@ nsImageMap::~nsImageMap()
   }
 
   FreeAreas();
-  if (nsnull != mDocument) {
-    mDocument->RemoveObserver(NS_STATIC_CAST(nsIDocumentObserver*, this));
+  if (mDocument) {
+    mDocument->RemoveObserver(this);
   }
 }
 
@@ -815,12 +818,9 @@ nsImageMap::Init(nsIPresShell* aPresShell, nsIFrame* aImageFrame, nsIDOMHTMLMapE
   nsresult rv;
   mMap = do_QueryInterface(aMap, &rv);
   NS_ASSERTION(mMap, "aMap is not an nsIHTMLContent!");
-  rv = mMap->GetDocument(&mDocument);
-  if (NS_SUCCEEDED(rv) && mDocument) {
-    mDocument->AddObserver(NS_STATIC_CAST(nsIDocumentObserver*, this));
-    // mDocument is a weak reference, so release the reference we got
-    nsIDocument *temp = mDocument;
-    NS_RELEASE(temp);
+  mDocument = mMap->GetDocument();
+  if (mDocument) {
+    mDocument->AddObserver(this);
   }
 
   // "Compile" the areas in the map into faster access versions
@@ -1026,8 +1026,7 @@ PRBool
 nsImageMap::IsAncestorOf(nsIContent* aContent,
                          nsIContent* aAncestorContent)
 {
-  nsCOMPtr<nsIContent> parent;
-  aContent->GetParent(getter_AddRefs(parent));
+  nsCOMPtr<nsIContent> parent = aContent->GetParent();
   if (parent) {
     return parent == aAncestorContent ||
            IsAncestorOf(parent, aAncestorContent);
@@ -1043,9 +1042,8 @@ nsImageMap::ContentChanged(nsIDocument *aDocument,
 {
   // If the parent of the changing content node is our map then update
   // the map.
-  nsCOMPtr<nsIContent> parent;
-  nsresult rv = aContent->GetParent(getter_AddRefs(parent));
-  if (NS_SUCCEEDED(rv) && (nsnull != parent)) {
+  nsIContent* parent = aContent->GetParent();
+  if (parent) {
     if ((parent == mMap) || 
         (mContainsBlockContents && IsAncestorOf(parent, mMap))) {
       UpdateAreas();
@@ -1063,8 +1061,7 @@ nsImageMap::AttributeChanged(nsIDocument *aDocument,
 {
   // If the parent of the changing content node is our map then update
   // the map.
-  nsCOMPtr<nsIContent> parent;
-  aContent->GetParent(getter_AddRefs(parent));
+  nsIContent* parent = aContent->GetParent();
   if ((parent == mMap) || 
       (mContainsBlockContents && IsAncestorOf(parent, mMap))) {
     UpdateAreas();
@@ -1153,9 +1150,9 @@ nsImageMap::ChangeFocus(nsIDOMEvent* aEvent, PRBool aFocus) {
             //Set or Remove internal focus
             area->HasFocus(aFocus);
             //Now invalidate the rect
-            nsCOMPtr<nsIDocument> doc;
+            nsCOMPtr<nsIDocument> doc = targetContent->GetDocument();
             //This check is necessary to see if we're still attached to the doc
-            if (NS_SUCCEEDED(targetContent->GetDocument(getter_AddRefs(doc))) && doc) {
+            if (doc) {
               nsCOMPtr<nsIPresShell> presShell;
               doc->GetShellAt(0, getter_AddRefs(presShell));
               if (presShell) {

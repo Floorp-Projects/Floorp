@@ -262,22 +262,19 @@ nsTextInputListener::NotifySelectionChanged(nsIDOMDocument* aDoc, nsISelection* 
     mFrame->GetFormContent(*getter_AddRefs(content));
     if (content) 
     {
-      nsCOMPtr<nsIDocument> doc;
-      if (NS_SUCCEEDED(content->GetDocument(getter_AddRefs(doc))))
+      nsCOMPtr<nsIDocument> doc = content->GetDocument();
+      if (doc) 
       {
-        if (doc) 
+        nsCOMPtr<nsIPresShell> presShell;
+        doc->GetShellAt(0, getter_AddRefs(presShell));
+        if (presShell) 
         {
-          nsCOMPtr<nsIPresShell> presShell;
-          doc->GetShellAt(0, getter_AddRefs(presShell));
-          if (presShell) 
-          {
-            nsEventStatus status = nsEventStatus_eIgnore;
-            nsEvent event;
-            event.eventStructType = NS_EVENT;
-            event.message = NS_FORM_SELECTED;
+          nsEventStatus status = nsEventStatus_eIgnore;
+          nsEvent event;
+          event.eventStructType = NS_EVENT;
+          event.message = NS_FORM_SELECTED;
 
-            presShell->HandleEventWithTarget(&event,mFrame,content,NS_EVENT_FLAG_INIT,&status);
-          }
+          presShell->HandleEventWithTarget(&event,mFrame,content,NS_EVENT_FLAG_INIT,&status);
         }
       }
     }
@@ -384,12 +381,11 @@ nsTextInputListener::UpdateTextInputCommands(const nsAString& commandsToUpdate)
   nsIContent* content = mFrame->GetContent();
   NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
   
-  nsCOMPtr<nsIDocument> doc;
-  nsresult rv = content->GetDocument(getter_AddRefs(doc));
+  nsCOMPtr<nsIDocument> doc = content->GetDocument();
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject;
-  rv = doc->GetScriptGlobalObject(getter_AddRefs(scriptGlobalObject));
+  nsresult rv = doc->GetScriptGlobalObject(getter_AddRefs(scriptGlobalObject));
   NS_ENSURE_TRUE(scriptGlobalObject, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDOMWindowInternal> domWindow = do_QueryInterface(scriptGlobalObject);

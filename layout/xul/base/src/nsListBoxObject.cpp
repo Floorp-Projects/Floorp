@@ -186,8 +186,7 @@ FindBodyContent(nsIContent* aParent, nsIContent** aResult)
     NS_IF_ADDREF(*aResult);
   }
   else {
-    nsCOMPtr<nsIDocument> doc;
-    aParent->GetDocument(getter_AddRefs(doc));
+    nsIDocument* doc = aParent->GetDocument();
     nsCOMPtr<nsIBindingManager> bindingManager;
     doc->GetBindingManager(getter_AddRefs(bindingManager));
     nsCOMPtr<nsIDOMNodeList> kids;

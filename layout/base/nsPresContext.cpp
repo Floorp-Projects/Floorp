@@ -1393,8 +1393,7 @@ nsPresContext::LoadImage(const nsString& aURL,
     nsCOMPtr<nsIDOMElement> element(do_QueryInterface(content));
 
     if (content && element) {
-      nsCOMPtr<nsIDocument> document;
-      rv = content->GetDocument(getter_AddRefs(document));
+      nsCOMPtr<nsIDocument> document = content->GetDocument();
 
       // If there is no document, skip the policy check
       // XXXldb This really means the document is being destroyed, so

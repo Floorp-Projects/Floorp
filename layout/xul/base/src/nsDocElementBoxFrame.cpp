@@ -124,8 +124,7 @@ nsDocElementBoxFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsINodeInfoManager> nodeInfoManager;
-  nsCOMPtr<nsIDocument> doc;
-  mContent->GetDocument(getter_AddRefs(doc));
+  nsIDocument* doc = mContent->GetDocument();
   if (!doc)
     // The page is currently being torn down.  Why bother.
     return NS_ERROR_FAILURE;

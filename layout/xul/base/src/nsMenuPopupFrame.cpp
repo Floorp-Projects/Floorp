@@ -223,8 +223,7 @@ nsMenuPopupFrame::Init(nsIPresContext*  aPresContext,
   widgetData.mBorderStyle = eBorderStyle_default;
   widgetData.clipSiblings = PR_TRUE;
 
-  nsCOMPtr<nsIContent> parentContent;
-  aContent->GetParent(getter_AddRefs(parentContent));
+  nsIContent* parentContent = aContent->GetParent();
   nsCOMPtr<nsIAtom> tag;
   if (parentContent)
     parentContent->GetTag(getter_AddRefs(tag));
@@ -632,8 +631,7 @@ nsMenuPopupFrame::AdjustClientXYForNestedDocuments ( nsIDOMXULDocument* inPopupD
   nsCOMPtr<nsIContent> targetAsContent ( do_QueryInterface(targetNode) );
   nsCOMPtr<nsIWidget> targetDocumentWidget;
   if ( targetAsContent ) {
-    nsCOMPtr<nsIDocument> targetDocument;
-    targetAsContent->GetDocument(getter_AddRefs(targetDocument));
+    nsCOMPtr<nsIDocument> targetDocument = targetAsContent->GetDocument();
     if (targetDocument) {
       nsCOMPtr<nsIPresShell> shell;
       targetDocument->GetShellAt(0, getter_AddRefs(shell));
@@ -1456,8 +1454,7 @@ NS_IMETHODIMP nsMenuPopupFrame::ConsumeOutsideClicks(PRBool& aConsumeOutsideClic
 
   aConsumeOutsideClicks = PR_TRUE;
 
-  nsCOMPtr<nsIContent> parentContent;
-  mContent->GetParent(getter_AddRefs(parentContent));
+  nsCOMPtr<nsIContent> parentContent = mContent->GetParent();
 
   if (parentContent) {
     nsCOMPtr<nsIAtom> parentTag;
@@ -1702,8 +1699,7 @@ nsMenuPopupFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, PRBool& doActi
   nsIMenuFrame* frameAfter = nsnull;
   nsIMenuFrame* frameShortcut = nsnull;
 
-  nsCOMPtr<nsIContent> parentContent;
-  mContent->GetParent(getter_AddRefs(parentContent));
+  nsIContent* parentContent = mContent->GetParent();
   if (parentContent) {
     nsCOMPtr<nsIAtom> tag;
     parentContent->GetTag(getter_AddRefs(tag));
@@ -2090,9 +2086,7 @@ nsMenuPopupFrame::InstallKeyboardNavigator()
   if (mKeyboardNavigator)
     return NS_OK;
 
-  nsCOMPtr<nsIDocument> doc;
-  mContent->GetDocument(getter_AddRefs(doc));
-  nsCOMPtr<nsIDOMEventReceiver> target = do_QueryInterface(doc);
+  nsCOMPtr<nsIDOMEventReceiver> target = do_QueryInterface(mContent->GetDocument());
   
   mTarget = target;
   mKeyboardNavigator = new nsMenuListener(this);

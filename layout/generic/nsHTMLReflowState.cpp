@@ -1325,15 +1325,10 @@ IsInitialContainingBlock(nsIFrame* aFrame)
 {
   nsIContent* content = aFrame->GetContent();
 
-  if (content) {
-    nsCOMPtr<nsIContent> parentContent;
-
-    content->GetParent(getter_AddRefs(parentContent));
-    if (!parentContent) {
-      // The containing block corresponds to the document element so it's
-      // the initial containing block
-      return PR_TRUE;
-    }
+  if (content && !content->GetParent()) {
+    // The containing block corresponds to the document element so it's
+    // the initial containing block
+    return PR_TRUE;
   }
   return PR_FALSE;
 }
@@ -2780,13 +2775,10 @@ nsHTMLReflowState::IsBidiFormControl(nsIPresContext* aPresContext)
   // find out if the reflow root is a descendant of a form control.
   // Otherwise, just test this content node
   if (mReflowDepth == 0) {
-    while (content) {
+    for ( ; content; content = content->GetParent()) {
       if (content->IsContentOfType(nsIContent::eHTML_FORM_CONTROL)) {
         return PR_TRUE;
       }
-      nsCOMPtr<nsIContent> parent;
-      content->GetParent(getter_AddRefs(parent));
-      content = parent;
     }
   } else {
     return (content->IsContentOfType(nsIContent::eHTML_FORM_CONTROL));

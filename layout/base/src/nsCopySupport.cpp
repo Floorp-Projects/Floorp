@@ -352,21 +352,22 @@ nsresult nsCopySupport::IsPlainTextContext(nsISelection *aSel, nsIDocument *aDoc
     return NS_ERROR_NULL_POINTER;
   range->GetCommonAncestorContainer(getter_AddRefs(commonParent));
 
-  nsCOMPtr<nsIContent> tmp, selContent( do_QueryInterface(commonParent) );
-  while (selContent)
+  for (nsCOMPtr<nsIContent> selContent(do_QueryInterface(commonParent));
+       selContent;
+       selContent = selContent->GetParent())
   {
     // checking for selection inside a plaintext form widget
     nsCOMPtr<nsIAtom> atom;
     selContent->GetTag(getter_AddRefs(atom));
 
-    if (atom.get() == nsHTMLAtoms::input ||
-        atom.get() == nsHTMLAtoms::textarea)
+    if (atom == nsHTMLAtoms::input ||
+        atom == nsHTMLAtoms::textarea)
     {
       *aIsPlainTextContext = PR_TRUE;
       break;
     }
 
-    if (atom.get() == nsHTMLAtoms::body)
+    if (atom == nsHTMLAtoms::body)
     {
       // check for moz prewrap style on body.  If it's there we are 
       // in a plaintext editor.  This is pretty cheezy but I haven't 
@@ -380,8 +381,6 @@ nsresult nsCopySupport::IsPlainTextContext(nsISelection *aSel, nsIDocument *aDoc
         break;
       }
     }
-    selContent->GetParent(getter_AddRefs(tmp));
-    selContent = tmp;
   }
   
   // also consider ourselves in a text widget if we can't find an html document

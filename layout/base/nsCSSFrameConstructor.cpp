@@ -7985,17 +7985,14 @@ ShouldIgnoreSelectChild(nsIContent* aContainer)
 
   if (containerTag == nsHTMLAtoms::optgroup ||
       containerTag == nsHTMLAtoms::select) {
-    nsCOMPtr<nsIContent> selectContent = aContainer;
-    nsCOMPtr<nsIContent> tmpContent;
+    nsIContent* selectContent = aContainer;
     
-    while (selectContent) {
-      if (containerTag == nsHTMLAtoms::select)
+    while (containerTag != nsHTMLAtoms::select) {
+      selectContent = selectContent->GetParent();
+      if (!selectContent) {
         break;
-      
-      tmpContent = selectContent;
-      tmpContent->GetParent(getter_AddRefs(selectContent));
-      if (selectContent)
-        selectContent->GetTag(getter_AddRefs(containerTag));
+      }
+      selectContent->GetTag(getter_AddRefs(containerTag));
     }
     
     nsCOMPtr<nsISelectElement> selectElement = do_QueryInterface(selectContent);
@@ -8097,11 +8094,11 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
   PRBool hasInsertion = PR_FALSE;
   if (!multiple) {
     nsCOMPtr<nsIBindingManager> bindingManager;
-    nsCOMPtr<nsIDocument> document;
+    nsIDocument* document = nsnull; 
     nsCOMPtr<nsIContent> firstAppendedChild;
     aContainer->ChildAt(aNewIndexInContainer, getter_AddRefs(firstAppendedChild));
     if (firstAppendedChild) {
-      firstAppendedChild->GetDocument(getter_AddRefs(document));
+      document = firstAppendedChild->GetDocument();
     }
     if (document)
       document->GetBindingManager(getter_AddRefs(bindingManager));
@@ -8969,8 +8966,7 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext*        aPresContext,
       // Check again to see if the frame we are manipulating is part
       // of a block-in-inline hierarchy.
       if (IsFrameSpecial(parentFrame)) {
-        nsCOMPtr<nsIContent> parentContainer;
-        blockContent->GetParent(getter_AddRefs(parentContainer));
+        nsCOMPtr<nsIContent> parentContainer = blockContent->GetParent();
 #ifdef DEBUG
         if (gNoisyContentUpdates) {
           printf("nsCSSFrameConstructor::ContentInserted: parentFrame=");
@@ -9944,8 +9940,7 @@ nsCSSFrameConstructor::ContentChanged(nsIPresContext* aPresContext,
         if (haveFirstLetterStyle) {
           // The block has first-letter style. Use content-replaced to
           // repair the blocks frame structure properly.
-          nsCOMPtr<nsIContent> container;
-          aContent->GetParent(getter_AddRefs(container));
+          nsCOMPtr<nsIContent> container = aContent->GetParent();
           if (container) {
             PRInt32 ix;
             container->IndexOf(aContent, ix);
@@ -10055,18 +10050,10 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList,
   return NS_OK;
 }
 
-inline already_AddRefed<nsIContent>
-parent_of(nsIContent *aContent)
-{
-  nsIContent *parent = nsnull;
-  aContent->GetParent(&parent);
-  return parent;
-}
-
 static PRBool
 IsAncestorOf(nsIContent *aAncestor, nsIContent *aDescendant)
 {
-  for (nsCOMPtr<nsIContent> n = aDescendant; n; n = parent_of(n))
+  for (nsIContent* n = aDescendant; n; n = n->GetParent())
     if (n == aAncestor)
       return PR_TRUE;
   return PR_FALSE;
@@ -11272,10 +11259,8 @@ nsCSSFrameConstructor::FindFrameWithContent(nsIPresContext*  aPresContext,
           // child frames, too.
           // We also need to search if the child content is anonymous and scoped
           // to the parent content.
-          nsCOMPtr<nsIContent> parentScope;
-          kidContent->GetBindingParent(getter_AddRefs(parentScope));
           if (aParentContent == kidContent ||
-              (aParentContent && (aParentContent == parentScope))) 
+              (aParentContent && (aParentContent == kidContent->GetBindingParent()))) 
           {
 #ifdef NOISY_FINDFRAME
             FFWC_recursions++;
@@ -11358,14 +11343,13 @@ nsCSSFrameConstructor::FindPrimaryFrameFor(nsIPresContext*  aPresContext,
   // - internal table frames (row-group, row, cell, col-group, col)
   //
   // That means we need to need to search for the frame
-  nsCOMPtr<nsIContent>   parentContent; // we get this one time
   nsIFrame*              parentFrame;   // this pointer is used to iterate across all frames that map to parentContent
 
   // Get the frame that corresponds to the parent content object.
   // Note that this may recurse indirectly, because the pres shell will
   // call us back if there is no mapping in the hash table
-  aContent->GetParent(getter_AddRefs(parentContent));
-  if (parentContent.get()) {
+  nsCOMPtr<nsIContent> parentContent = aContent->GetParent(); // Get this once
+  if (parentContent) {
     aFrameManager->GetPrimaryFrameFor(parentContent, &parentFrame);
     while (parentFrame) {
       // Search the child frames for a match
@@ -11455,8 +11439,7 @@ nsCSSFrameConstructor::GetInsertionPoint(nsIPresShell* aPresShell,
   if (!container)
     return NS_OK;
 
-  nsCOMPtr<nsIDocument> document;
-  container->GetDocument(getter_AddRefs(document));
+  nsIDocument* document = container->GetDocument();
   if (!document)
     return NS_OK;
 
@@ -11469,9 +11452,7 @@ nsCSSFrameConstructor::GetInsertionPoint(nsIPresShell* aPresShell,
   if (aChildContent) {
     // We've got an explicit insertion child. Check to see if it's
     // anonymous.
-    nsCOMPtr<nsIContent> bindingParent;
-    aChildContent->GetBindingParent(getter_AddRefs(bindingParent));
-    if (bindingParent == container) {
+    if (aChildContent->GetBindingParent() == container) {
       // This child content is anonymous. Don't use the insertion
       // point, since that's only for the explicit kids.
       return NS_OK;
@@ -11585,8 +11566,7 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIPresContext* aPresContext,
   // If there is no document, we don't want to recreate frames for it.  (You
   // shouldn't generally be giving this method content without a document
   // anyway).
-  nsCOMPtr<nsIDocument> doc;
-  aContent->GetDocument(getter_AddRefs(doc));
+  nsCOMPtr<nsIDocument> doc = aContent->GetDocument();
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
   // Is the frame `special'? If so, we need to reframe the containing
@@ -11630,8 +11610,7 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIPresContext* aPresContext,
   }
 
   nsresult rv = NS_OK;
-  nsCOMPtr<nsIContent> container;
-  aContent->GetParent(getter_AddRefs(container));
+  nsCOMPtr<nsIContent> container = aContent->GetParent();
   if (container) {
     PRInt32 indexInContainer;
     rv = container->IndexOf(aContent, indexInContainer);
@@ -11667,8 +11646,7 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIPresContext* aPresContext,
     // However, double check that it's really part of the document,
     // since rebuilding the frame tree can have bad effects, especially
     // if it's the frame tree for chrome (see bug 157322).
-    nsCOMPtr<nsIDocument> doc;
-    aContent->GetDocument(getter_AddRefs(doc));
+    nsIDocument* doc = aContent->GetDocument();
     NS_ASSERTION(doc, "received style change for content not in document");
     if (doc)
       ReconstructDocElementHierarchy(aPresContext);
@@ -13336,8 +13314,7 @@ nsCSSFrameConstructor::WipeContainingBlock(nsIPresContext* aPresContext,
       // Tell parent of the containing block to reformulate the
       // entire block. This is painful and definitely not optimal
       // but it will *always* get the right answer.
-      nsCOMPtr<nsIContent> parentContainer;
-      aBlockContent->GetParent(getter_AddRefs(parentContainer));
+      nsCOMPtr<nsIContent> parentContainer = aBlockContent->GetParent();
 #ifdef DEBUG
       if (gNoisyContentUpdates) {
         printf("nsCSSFrameConstructor::WipeContainingBlock: aBlockContent=%p parentContainer=%p\n",
@@ -13662,11 +13639,10 @@ nsCSSFrameConstructor::ReframeContainingBlock(nsIPresContext* aPresContext, nsIF
     // so GetFloaterContainingBlock(aPresContext, aFrame) has been removed
 
     // And get the containingBlock's content
-    nsIContent* blockContent = containingBlock->GetContent();
+    nsCOMPtr<nsIContent> blockContent = containingBlock->GetContent();
     if (blockContent) {
       // Now find the containingBlock's content's parent
-      nsCOMPtr<nsIContent> parentContainer;
-      blockContent->GetParent(getter_AddRefs(parentContainer));
+      nsCOMPtr<nsIContent> parentContainer = blockContent->GetParent();
       if (parentContainer) {
 #ifdef DEBUG
         if (gNoisyContentUpdates) {

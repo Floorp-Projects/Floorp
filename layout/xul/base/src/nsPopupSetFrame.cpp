@@ -558,8 +558,7 @@ nsPopupSetFrame::ActivatePopup(nsPopupFrameList* aEntry, PRBool aActivateFlag)
       // can get into trouble if a dialog with a modal event loop comes along and
       // processes the reflows before we get to call DestroyChain(). Processing the
       // reflow will cause the popup to show itself again. (bug 71219)
-      nsCOMPtr<nsIDocument> doc;
-      aEntry->mPopupContent->GetDocument(getter_AddRefs(doc));
+      nsIDocument* doc = aEntry->mPopupContent->GetDocument();
       if (doc)
         doc->FlushPendingNotifications();
          
@@ -613,9 +612,7 @@ nsPopupSetFrame::OnCreate(PRInt32 aX, PRInt32 aY, nsIContent* aPopupContent)
     // of them has a command attribute.  If so, then several attributes must
     // potentially be updated.
  
-    nsCOMPtr<nsIDocument> doc;
-    aPopupContent->GetDocument(getter_AddRefs(doc));
-    nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(doc));
+    nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(aPopupContent->GetDocument()));
 
     PRInt32 count;
     aPopupContent->ChildCount(count);

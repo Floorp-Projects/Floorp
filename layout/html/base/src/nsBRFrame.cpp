@@ -228,8 +228,10 @@ NS_IMETHODIMP BRFrame::GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
 {
   if (!mContent)
     return NS_ERROR_NULL_POINTER;
-  nsresult result = mContent->GetParent(aContent);
-  if (NS_SUCCEEDED(result) && *aContent)
+  NS_IF_ADDREF(*aContent = mContent->GetParent());
+
+  nsresult result = NS_OK;
+  if (*aContent)
     result = (*aContent)->IndexOf(mContent, aOffsetBegin);
   aOffsetEnd = aOffsetBegin;
   aBeginFrameContent = PR_TRUE;
@@ -241,14 +243,11 @@ NS_IMETHODIMP BRFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStru
   if (!aPos)
     return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr<nsIContent> parentContent;
   PRInt32 offsetBegin; //offset of this content in its parents child list. base 0
 
-  nsresult result = mContent->GetParent(getter_AddRefs(parentContent));
-
-
-  if (NS_SUCCEEDED(result) && parentContent)
-    result = parentContent->IndexOf(mContent, offsetBegin);
+  nsCOMPtr<nsIContent> parentContent = mContent->GetParent();
+  if (parentContent)
+    parentContent->IndexOf(mContent, offsetBegin);
 
   if (aPos->mAmount != eSelectLine && aPos->mAmount != eSelectBeginLine 
       && aPos->mAmount != eSelectEndLine) //then we must do the adjustment to make sure we leave this frame

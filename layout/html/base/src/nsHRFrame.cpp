@@ -380,8 +380,8 @@ HRuleFrame::GetContentAndOffsetsFromPoint(nsIPresContext* aPresContext,
   thisRect.x = offsetPoint.x;
   thisRect.y = offsetPoint.y;
 
-  rv = mContent->GetParent(aNewContent);
-  if (!*aNewContent) return rv;
+  NS_IF_ADDREF(*aNewContent = mContent->GetParent());
+  if (!*aNewContent) return NS_OK;
   
   rv = (*aNewContent)->IndexOf(mContent, aContentOffset);
   if (NS_FAILED(rv)) return rv;

@@ -179,8 +179,7 @@ nsBoxObject::GetOffsetRect(nsRect& aRect)
   aRect.x = aRect.y = 0;
   aRect.Empty();
  
-  nsCOMPtr<nsIDocument> doc;
-  mContent->GetDocument(getter_AddRefs(doc));
+  nsCOMPtr<nsIDocument> doc = mContent->GetDocument();
 
   if (doc) {
     // Get Presentation shell 0
@@ -284,8 +283,7 @@ nsBoxObject::GetScreenRect(nsRect& aRect)
   aRect.x = aRect.y = 0;
   aRect.Empty();
  
-  nsCOMPtr<nsIDocument> doc;
-  mContent->GetDocument(getter_AddRefs(doc));
+  nsCOMPtr<nsIDocument> doc = mContent->GetDocument();
 
   if (doc) {
     // Get Presentation shell 0

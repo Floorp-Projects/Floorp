@@ -630,7 +630,7 @@ nsMathMLFrame::MapAttributesIntoCSS(nsIPresContext* aPresContext,
     if (!sheet) {
       // first time... we do this to defer the lookup up to the
       // point where we encounter attributes that actually matter
-      aContent->GetDocument(getter_AddRefs(doc));
+      doc = aContent->GetDocument();
       if (!doc) 
         return 0;
       GetMathMLAttributeStyleSheet(aPresContext, getter_AddRefs(sheet));

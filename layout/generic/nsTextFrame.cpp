@@ -658,7 +658,7 @@ public:
     {}
   };
 
-  nsIDocument* GetDocument(nsIPresContext* aPresContext);
+  already_AddRefed<nsIDocument> GetDocument(nsIPresContext* aPresContext);
 
   PRIntn PrepareUnicodeText(nsTextTransformer& aTransformer,
                             nsAutoIndexBuffer* aIndexBuffer,
@@ -1024,10 +1024,8 @@ DrawSelectionIterator::DrawSelectionIterator(nsIContent *aContent,
     mSelectionPseudoBGIsTransparent = PR_FALSE;
 
     if (aContent) {
-      nsCOMPtr<nsIContent> parentContent;
-      aContent->GetParent(getter_AddRefs(parentContent));
       nsRefPtr<nsStyleContext> sc;
-      sc = aPresContext->ProbePseudoStyleContextFor(parentContent,
+      sc = aPresContext->ProbePseudoStyleContextFor(aContent->GetParent(),
 						    nsCSSPseudoElements::mozSelection,
 						    aStyleContext);
       if (sc) {
@@ -1347,20 +1345,15 @@ nsTextFrame::~nsTextFrame()
   }
 }
 
-nsIDocument*
+already_AddRefed<nsIDocument>
 nsTextFrame::GetDocument(nsIPresContext* aPresContext)
 {
   nsIDocument* result = nsnull;
   if (mContent) {
-    mContent->GetDocument(&result);
+    NS_IF_ADDREF(result = mContent->GetDocument());
   }
   if (!result && aPresContext) {
-    nsIPresShell* shell;
-    aPresContext->GetShell(&shell);
-    if (shell) {
-      shell->GetDocument(&result);
-      NS_RELEASE(shell);
-    }
+    aPresContext->GetPresShell()->GetDocument(&result);
   }
   return result;
 }
@@ -2519,7 +2512,7 @@ nsTextFrame::GetPositionSlowly(nsIPresContext* aPresContext,
       *aNewContent = mContent;
       aOffset =0;
   }
-  nsCOMPtr<nsIDocument> doc(getter_AddRefs(GetDocument(aPresContext)));
+  nsCOMPtr<nsIDocument> doc(GetDocument(aPresContext));
 
   // Make enough space to transform
   nsAutoTextBuffer paintBuffer;
@@ -3429,7 +3422,7 @@ nsTextFrame::GetPosition(nsIPresContext* aCX,
       SetFontFromStyle(acx, mStyleContext);
 
       // Get the renderable form of the text
-      nsCOMPtr<nsIDocument> doc(getter_AddRefs(GetDocument(aCX)));
+      nsCOMPtr<nsIDocument> doc(GetDocument(aCX));
       nsCOMPtr<nsILineBreaker> lb;
       doc->GetLineBreaker(getter_AddRefs(lb));
       nsTextTransformer tx(lb, nsnull, aCX);
@@ -3767,7 +3760,7 @@ nsTextFrame::GetPointFromOffset(nsIPresContext* aPresContext,
   }
 
   // Transform text from content into renderable form
-  nsCOMPtr<nsIDocument> doc(getter_AddRefs(GetDocument(aPresContext)));
+  nsCOMPtr<nsIDocument> doc(GetDocument(aPresContext));
   nsCOMPtr<nsILineBreaker> lb;
   doc->GetLineBreaker(getter_AddRefs(lb));
   nsTextTransformer tx(lb, nsnull, aPresContext);
@@ -3975,14 +3968,12 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
     case eSelectNoAmount:
     {
       // Transform text from content into renderable form
-      nsIDocument* doc;
-      result = mContent->GetDocument(&doc);
-      if (NS_FAILED(result) || !doc) {
-        return result;
+      nsIDocument* doc = mContent->GetDocument();
+      if (!doc) {
+        return NS_OK;
       }
       nsCOMPtr<nsILineBreaker> lb;
       doc->GetLineBreaker(getter_AddRefs(lb));
-      NS_RELEASE(doc);
 
       nsTextTransformer tx(lb, nsnull, aPresContext);
       PrepareUnicodeText(tx, &indexBuffer, &paintBuffer, &textLength);
@@ -4007,14 +3998,12 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
     case eSelectCharacter:
     {
       // Transform text from content into renderable form
-      nsIDocument* doc;
-      result = mContent->GetDocument(&doc);
-      if (NS_FAILED(result) || !doc) {
-        return result;
+      nsIDocument* doc = mContent->GetDocument();
+      if (!doc) {
+        return NS_OK;
       }
       nsCOMPtr<nsILineBreaker> lb;
       doc->GetLineBreaker(getter_AddRefs(lb));
-      NS_RELEASE(doc);
 
       nsTextTransformer tx(lb, nsnull, aPresContext);
       PrepareUnicodeText(tx, &indexBuffer, &paintBuffer, &textLength);
@@ -4153,9 +4142,8 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
     case eSelectWord:
     {
       // Transform text from content into renderable form
-      nsIDocument* doc;
-      result = mContent->GetDocument(&doc);
-      if (NS_FAILED(result) || !doc) {
+      nsIDocument* doc = mContent->GetDocument();
+      if (!doc) {
         return result;
       }
 
@@ -4163,7 +4151,6 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
       doc->GetLineBreaker(getter_AddRefs(lb));
       nsCOMPtr<nsIWordBreaker> wb;
       doc->GetWordBreaker(getter_AddRefs(wb));
-      NS_RELEASE(doc);
 
       nsTextTransformer tx(lb, wb, aPresContext);
 
@@ -5345,8 +5332,7 @@ nsTextFrame::Reflow(nsIPresContext*          aPresContext,
   nscoord maxWidth = aReflowState.availableWidth;
 
   // Setup text transformer to transform this frames text content
-  nsCOMPtr<nsIDocument> doc;
-  mContent->GetDocument(getter_AddRefs(doc));
+  nsIDocument* doc = mContent->GetDocument();
   if (!doc) {
     NS_WARNING("Content has no document.");
     return NS_ERROR_FAILURE; 

@@ -1591,8 +1591,7 @@ nsObjectFrame::Paint(nsIPresContext*      aPresContext,
     // for THIS content node in order to call ->Print() on the right plugin
 
     // first, we need to get the document
-    nsCOMPtr<nsIDocument> doc;
-    mContent->GetDocument(getter_AddRefs(doc));
+    nsCOMPtr<nsIDocument> doc = mContent->GetDocument();
     NS_ENSURE_TRUE(doc, NS_ERROR_NULL_POINTER);
 
     // now we need to get the shell for the screen
@@ -1964,9 +1963,7 @@ nsresult nsObjectFrame::GetPluginInstance(nsIPluginInstance*& aPluginInstance)
 nsresult
 nsObjectFrame::NotifyContentObjectWrapper()
 {
-  nsCOMPtr<nsIDocument> doc;
-
-  mContent->GetDocument(getter_AddRefs(doc));
+  nsCOMPtr<nsIDocument> doc = mContent->GetDocument();
   NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<nsIScriptGlobalObject> sgo;

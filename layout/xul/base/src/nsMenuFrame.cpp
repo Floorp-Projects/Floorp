@@ -1512,11 +1512,8 @@ nsMenuFrame::BuildAcceleratorText()
   if (keyValue.IsEmpty())
     return;
 
-  nsCOMPtr<nsIDocument> document;
-  mContent->GetDocument(getter_AddRefs(document));
-
   // Turn the document into a DOM document so we can use getElementById
-  nsCOMPtr<nsIDOMDocument> domDocument(do_QueryInterface(document));
+  nsCOMPtr<nsIDOMDocument> domDocument(do_QueryInterface(mContent->GetDocument()));
   if (!domDocument)
     return;
 
@@ -1710,14 +1707,12 @@ nsMenuFrame::Execute(nsGUIEvent *aEvent)
 
   // XXX HACK. Just gracefully exit if the node has been removed, e.g., window.close()
   // was executed.
-  nsCOMPtr<nsIDocument> doc;
-  content->GetDocument(getter_AddRefs(doc));
-
   nsIFrame* primary = nsnull;
   if (shell) shell->GetPrimaryFrameFor(content, &primary);
 
   // Now properly close them all up.
-  if (doc && (primary == me) && mMenuParent) // <-- HACK IS HERE. ICK.
+  if (content->GetDocument() &&     // <-- HACK IS HERE. ICK.
+      (primary == me) && mMenuParent)
     mMenuParent->DismissChain();
   // END HACK
 
@@ -1764,9 +1759,7 @@ nsMenuFrame::OnCreate()
   // of them has a command attribute.  If so, then several attributes must
   // potentially be updated.
   if (child) {
-    nsCOMPtr<nsIDocument> doc;
-    child->GetDocument(getter_AddRefs(doc));
-    nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(doc));
+    nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(child->GetDocument()));
 
     PRInt32 count;
     child->ChildCount(count);

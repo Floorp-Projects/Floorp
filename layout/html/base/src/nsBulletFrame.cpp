@@ -144,7 +144,7 @@ nsBulletFrame::Init(nsIPresContext*  aPresContext,
     nsCOMPtr<nsIURI> documentURI;
     nsCOMPtr<nsIDocument> doc;
     if (mContent) {
-      (void) mContent->GetDocument(getter_AddRefs(doc));
+      doc = mContent->GetDocument();
       if (doc) {
         doc->GetDocumentURL(getter_AddRefs(documentURI));
       }
@@ -1648,7 +1648,7 @@ nsBulletFrame::Reflow(nsIPresContext* aPresContext,
         nsCOMPtr<nsIURI> documentURI;
         nsCOMPtr<nsIDocument> doc;
         if (mContent) {
-          (void) mContent->GetDocument(getter_AddRefs(doc));
+          doc = mContent->GetDocument();
           if (doc) {
             doc->GetDocumentURL(getter_AddRefs(documentURI));
           }

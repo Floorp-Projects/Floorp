@@ -283,8 +283,7 @@ nsHTMLFramesetFrame::Observe(nsISupports* aObject, const char* aAction,
 {
   nsAutoString prefName(aPrefName);
   if (prefName.Equals(NS_LITERAL_STRING(kFrameResizePref))) {
-    nsCOMPtr<nsIDocument> doc;
-    mContent->GetDocument(getter_AddRefs(doc));
+    nsCOMPtr<nsIDocument> doc = mContent->GetDocument();
     if (doc) {
       doc->BeginUpdate();
       doc->AttributeWillChange(mContent,
@@ -707,15 +706,11 @@ nsHTMLFramesetFrame* nsHTMLFramesetFrame::GetFramesetParent(nsIFrame* aChild)
   nsIContent* content = aChild->GetContent();
 
   if (content) { 
-    nsCOMPtr<nsIContent> contentParent;
-    content->GetParent(getter_AddRefs(contentParent));
+    nsCOMPtr<nsIContent> contentParent = content->GetParent();
 
-    nsCOMPtr<nsIHTMLContent> contentParent2 =
-      do_QueryInterface(contentParent);
-
-    if (contentParent2) {
+    if (contentParent && contentParent->IsContentOfType(nsIContent::eHTML)) {
       nsCOMPtr<nsIAtom> tag;
-      contentParent2->GetTag(getter_AddRefs(tag));
+      contentParent->GetTag(getter_AddRefs(tag));
 
       if (tag == nsHTMLAtoms::frameset) {
         nsIFrame* fptr = aChild->GetParent();

@@ -857,12 +857,12 @@ nsFrame::Paint(nsIPresContext*      aPresContext,
     return NS_OK; //if frame does not allow selection. do nothing
 
 
-  nsCOMPtr<nsIContent> newContent;
-  result = mContent->GetParent(getter_AddRefs(newContent));
+  nsCOMPtr<nsIContent> newContent = mContent->GetParent();
 
-//check to see if we are anonymouse content
+  //check to see if we are anonymous content
   PRInt32 offset;
-  if (NS_SUCCEEDED(result) && newContent){
+  if (newContent) {
+    // XXXbz there has GOT to be a better way of determining this!
     result = newContent->IndexOf(mContent, offset);
     if (NS_FAILED(result)) 
       return result;
@@ -1098,9 +1098,7 @@ nsFrame::GetDataForTableSelection(nsIFrameSelection *aFrameSelection,
   nsIContent* tableOrCellContent = frame->GetContent();
   if (!tableOrCellContent) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIContent> parentContent;
-  result = tableOrCellContent->GetParent(getter_AddRefs(parentContent));
-  if (NS_FAILED(result)) return result;
+  nsCOMPtr<nsIContent> parentContent = tableOrCellContent->GetParent();
   if (!parentContent) return NS_ERROR_FAILURE;
 
   PRInt32 offset;
@@ -1331,11 +1329,10 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
 
   nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
   if (!isEditor && !keyEvent->isAlt) {
-    nsCOMPtr<nsIContent> content;
-    GetContent (getter_AddRefs(content));
     static NS_NAMED_LITERAL_STRING(simple, "simple");
     
-    while (content) {
+    for (nsIContent* content = mContent; content;
+         content = content->GetParent()) {
        // are we a link with an href? If so, bail out now!
        nsAutoString href;
        // a?
@@ -1379,12 +1376,6 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
              frameRect.y <= aEvent->point.y && (frameRect.y + frameRect.height >= aEvent->point.y))
            return NS_OK;
        }
-  
-       // now try the parent
-       nsCOMPtr<nsIContent> parent;
-       content->GetParent(getter_AddRefs(parent));
-       content.swap(parent);
-  
     } // if browser, not editor
   }
 
@@ -2007,11 +1998,9 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
 
         nsIContent* kidContent = GetContent();
         if (kidContent) {
-          nsCOMPtr<nsIContent> content;
+          nsCOMPtr<nsIContent> content = kidContent->GetParent();
 
-          result = kidContent->GetParent(getter_AddRefs(content));
-
-          if (NS_SUCCEEDED(result) && content) {
+          if (content) {
             PRInt32 kidCount = 0;
 
             result = content->ChildCount(kidCount);
@@ -2120,7 +2109,7 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
   thisRect.x = offsetPoint.x;
   thisRect.y = offsetPoint.y;
 
-  result = mContent->GetParent(aNewContent);
+  NS_IF_ADDREF(*aNewContent = mContent->GetParent());
   if (*aNewContent){
     
     PRInt32 contentOffset(aContentOffset); //temp to hold old value in case of failure
@@ -2660,9 +2649,7 @@ PRInt32 nsFrame::ContentIndexInContainer(const nsIFrame* aFrame)
 
   nsIContent* content = aFrame->GetContent();
   if (content) {
-    nsCOMPtr<nsIContent> parentContent;
-
-    content->GetParent(getter_AddRefs(parentContent));
+    nsIContent* parentContent = content->GetParent();
     if (parentContent) {
       parentContent->IndexOf(content, result);
     }
@@ -3109,11 +3096,10 @@ nsFrame::GetPointFromOffset(nsIPresContext* inPresContext, nsIRenderingContext* 
   nsPoint bottomLeft(0, 0);
   if (mContent)
   {
-    nsCOMPtr<nsIContent> newContent;
-    PRInt32 newOffset;
-    nsresult result = mContent->GetParent(getter_AddRefs(newContent));
+    nsIContent* newContent = mContent->GetParent();
     if (newContent){
-      result = newContent->IndexOf(mContent, newOffset);
+      PRInt32 newOffset;
+      nsresult result = newContent->IndexOf(mContent, newOffset);
       if (NS_FAILED(result)) 
       {
         return result;
@@ -3305,8 +3291,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
                 nsIContent* content = resultFrame->GetContent();
                 if (content)
                 {
-                  nsCOMPtr<nsIContent> parent;
-                  content->GetParent(getter_AddRefs(parent));
+                  nsIContent* parent = content->GetParent();
                   if (parent)
                   {
                     aPos->mResultContent = parent;
@@ -3665,10 +3650,9 @@ nsFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
     {
       if (mContent)
       {
-        nsCOMPtr<nsIContent> newContent;
-        PRInt32 newOffset;
-        result = mContent->GetParent(getter_AddRefs(newContent));
+        nsIContent* newContent = mContent->GetParent();
         if (newContent){
+          PRInt32 newOffset;
           aPos->mResultContent = newContent;
           result = newContent->IndexOf(mContent, newOffset);
           if (aPos->mStartOffset < 0)//start at "end"
