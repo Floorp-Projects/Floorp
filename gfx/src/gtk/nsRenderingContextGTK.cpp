@@ -909,49 +909,42 @@ nsRenderingContextGTK::GetWidth(const PRUnichar* aString, PRUint32 aLength,
     g_return_val_if_fail(aString != NULL, NS_ERROR_FAILURE);
 
     nsFontMetricsGTK* metrics = (nsFontMetricsGTK*) mFontMetrics;
-    GdkFont* prevFont = nsnull;
-    nsFontCharSetInfo* prevCharSetInfo = nsnull;
+    nsFontGTK* prevFont = nsnull;
     gint rawWidth = 0;
     PRUint32 start = 0;
     PRUint32 i;
     for (i = 0; i < aLength; i++) {
       PRUnichar c = aString[i];
-      GdkFont* currFont = nsnull;
-      nsFontCharSetInfo* currCharSetInfo = nsnull;
-      nsFontGTK* font = metrics->mLoadedFonts;
-      nsFontGTK* end = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
+      nsFontGTK* currFont = nsnull;
+      nsFontGTK** font = metrics->mLoadedFonts;
+      nsFontGTK** end = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
       while (font < end) {
-        if (FONT_HAS_GLYPH(font->mMap, c)) {
-	  currFont = font->mFont;
-	  currCharSetInfo = font->mCharSetInfo;
+        if (FONT_HAS_GLYPH((*font)->mMap, c)) {
+	  currFont = *font;
 	  goto FoundFont; // for speed -- avoid "if" statement
 	}
 	font++;
       }
-      font = metrics->FindFont(c);
-      currFont = font->mFont;
-      currCharSetInfo = font->mCharSetInfo;
+      currFont = metrics->FindFont(c);
 FoundFont:
       // XXX avoid this test by duplicating code -- erik
       if (prevFont) {
 	if (currFont != prevFont) {
-          rawWidth += nsFontMetricsGTK::GetWidth(prevFont, prevCharSetInfo,
-	    &aString[start], i - start);
+          rawWidth += nsFontMetricsGTK::GetWidth(prevFont, &aString[start],
+	    i - start);
 	  prevFont = currFont;
-	  prevCharSetInfo = currCharSetInfo;
 	  start = i;
 	}
       }
       else {
         prevFont = currFont;
-	prevCharSetInfo = currCharSetInfo;
 	start = i;
       }
     }
 
     if (prevFont) {
-      rawWidth += nsFontMetricsGTK::GetWidth(prevFont, prevCharSetInfo,
-        &aString[start], i - start);
+      rawWidth += nsFontMetricsGTK::GetWidth(prevFont, &aString[start],
+        i - start);
     }
 
     aWidth = NSToCoordRound(rawWidth * mP2T);
@@ -1122,27 +1115,22 @@ nsRenderingContextGTK::DrawString(const PRUnichar* aString, PRUint32 aLength,
     mTMatrix->TransformCoord(&x, &y);
 
     nsFontMetricsGTK* metrics = (nsFontMetricsGTK*) mFontMetrics;
-    GdkFont* prevFont = nsnull;
-    nsFontCharSetInfo* prevCharSetInfo = nsnull;
+    nsFontGTK* prevFont = nsnull;
     PRUint32 start = 0;
     PRUint32 i;
     for (i = 0; i < aLength; i++) {
       PRUnichar c = aString[i];
-      GdkFont* currFont = nsnull;
-      nsFontCharSetInfo* currCharSetInfo = nsnull;
-      nsFontGTK* font = metrics->mLoadedFonts;
-      nsFontGTK* end = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
+      nsFontGTK* currFont = nsnull;
+      nsFontGTK** font = metrics->mLoadedFonts;
+      nsFontGTK** end = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
       while (font < end) {
-        if (FONT_HAS_GLYPH(font->mMap, c)) {
-	  currFont = font->mFont;
-	  currCharSetInfo = font->mCharSetInfo;
+        if (FONT_HAS_GLYPH((*font)->mMap, c)) {
+	  currFont = *font;
 	  goto FoundFont; // for speed -- avoid "if" statement
 	}
 	font++;
       }
-      font = metrics->FindFont(c);
-      currFont = font->mFont;
-      currCharSetInfo = font->mCharSetInfo;
+      currFont = metrics->FindFont(c);
 FoundFont:
       // XXX avoid this test by duplicating code -- erik
       if (prevFont) {
@@ -1154,26 +1142,23 @@ FoundFont:
 	      x = aX;
 	      y = aY;
               mTMatrix->TransformCoord(&x, &y);
-              nsFontMetricsGTK::DrawString(mSurface, prevFont, prevCharSetInfo,
-	        x, y, str, 1);
+              nsFontMetricsGTK::DrawString(mSurface, prevFont, x, y, str, 1);
 	      aX += *aSpacing++;
 	      str++;
 	    }
 	  }
 	  else {
-            nsFontMetricsGTK::DrawString(mSurface, prevFont, prevCharSetInfo,
-	      x, y, &aString[start], i - start);
-            x += nsFontMetricsGTK::GetWidth(prevFont, prevCharSetInfo,
+            nsFontMetricsGTK::DrawString(mSurface, prevFont, x, y,
 	      &aString[start], i - start);
+            x += nsFontMetricsGTK::GetWidth(prevFont, &aString[start],
+	      i - start);
 	  }
 	  prevFont = currFont;
-	  prevCharSetInfo = currCharSetInfo;
 	  start = i;
 	}
       }
       else {
         prevFont = currFont;
-	prevCharSetInfo = currCharSetInfo;
 	start = i;
       }
     }
@@ -1186,15 +1171,14 @@ FoundFont:
 	  x = aX;
 	  y = aY;
           mTMatrix->TransformCoord(&x, &y);
-          nsFontMetricsGTK::DrawString(mSurface, prevFont, prevCharSetInfo,
-	    x, y, str, 1);
+          nsFontMetricsGTK::DrawString(mSurface, prevFont, x, y, str, 1);
 	  aX += *aSpacing++;
 	  str++;
 	}
       }
       else {
-        nsFontMetricsGTK::DrawString(mSurface, prevFont, prevCharSetInfo,
-          x, y, &aString[start], i - start);
+        nsFontMetricsGTK::DrawString(mSurface, prevFont, x, y, &aString[start],
+	  i - start);
       }
     }
   }
