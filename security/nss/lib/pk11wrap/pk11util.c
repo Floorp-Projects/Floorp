@@ -525,7 +525,6 @@ SECMOD_FindSlot(SECMODModule *module,const char *name)
     if (retSlot == NULL) {
 	PORT_SetError(SEC_ERROR_NO_SLOT_SELECTED);
     }
-    return NULL;
     return retSlot;
 }
 
