@@ -636,7 +636,7 @@ int nsDeviceContextPh::prefChanged(const char *aPref, void *aClosure)
 }
 
 
-NS_IMETHODIMP nsDeviceContextPh :: BeginDocument(void)
+NS_IMETHODIMP nsDeviceContextPh :: BeginDocument(PRUnichar * aTitle)
 {
   nsresult    ret_code = NS_ERROR_FAILURE;
   int         err;

@@ -828,7 +828,7 @@ NS_IMETHODIMP nsDeviceContextWin :: GetDeviceContextFor(nsIDeviceContextSpec *aD
   return ((nsDeviceContextWin *)aContext)->Init(dc, this);
 }
 
-NS_IMETHODIMP nsDeviceContextWin :: BeginDocument(void)
+NS_IMETHODIMP nsDeviceContextWin :: BeginDocument(PRUnichar * aTitle)
 {
   nsresult rv = NS_OK;
 

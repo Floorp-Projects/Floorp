@@ -168,7 +168,7 @@ nsresult nsDeviceContextOS2::Init( nsNativeDeviceContext aContext,
   // We need to begin a document now, because the client is entitled at
   // this point to do stuff like create fonts, which required the PS to
   // be associated with a DC which has been DEVESC_STARTDOC'd.
-  BeginDocument();
+  BeginDocument(nsnull);
 #endif
 
   return NS_OK;
@@ -928,7 +928,7 @@ nsresult nsDeviceContextOS2::CreateFontAliasTable()
 }
 
 // Printing ------------------------------------------------------------------
-nsresult nsDeviceContextOS2::BeginDocument()
+nsresult nsDeviceContextOS2::BeginDocument(PRUnichar * aTitle)
 {
    NS_ASSERTION(mPrintDC, "BeginDocument for non-print DC");
    if( mPrintState == nsPrintState_ePreBeginDoc)

@@ -395,7 +395,7 @@ NS_IMETHODIMP nsDeviceContextXlib::GetDeviceContextFor(nsIDeviceContextSpec *aDe
   return rv;
 }
 
-NS_IMETHODIMP nsDeviceContextXlib::BeginDocument(void)
+NS_IMETHODIMP nsDeviceContextXlib::BeginDocument(PRUnichar * aTitle)
 {
   PR_LOG(DeviceContextXlibLM, PR_LOG_DEBUG, ("nsDeviceContextXlib::BeginDocument()\n"));
   return NS_OK;

@@ -596,7 +596,7 @@ NS_IMETHODIMP nsDeviceContextMotif::GetDeviceContextFor(nsIDeviceContextSpec *aD
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsDeviceContextMotif::BeginDocument(void)
+NS_IMETHODIMP nsDeviceContextMotif::BeginDocument(PRUnichar * aTitle)
 {
   return NS_OK;
 }

@@ -343,11 +343,11 @@ NS_IMETHODIMP nsDeviceContextXP::GetDeviceContextFor(nsIDeviceContextSpec *aDevi
 /** ---------------------------------------------------
  *  See documentation in nsIDeviceContext.h
  */
-NS_IMETHODIMP nsDeviceContextXP::BeginDocument(void)
+NS_IMETHODIMP nsDeviceContextXP::BeginDocument(PRUnichar * aTitle)
 {  
   nsresult  rv = NS_OK;
   if (mPrintContext != nsnull) {
-      rv = mPrintContext->BeginDocument();
+      rv = mPrintContext->BeginDocument(aTitle);
   } 
   return rv;
 }

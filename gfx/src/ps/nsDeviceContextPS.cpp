@@ -304,7 +304,7 @@ NS_IMETHODIMP nsDeviceContextPS::GetDeviceContextFor(nsIDeviceContextSpec *aDevi
  *  See documentation in nsIDeviceContext.h
  *	@update 12/21/98 dwc
  */
-NS_IMETHODIMP nsDeviceContextPS::BeginDocument(void)
+NS_IMETHODIMP nsDeviceContextPS::BeginDocument(PRUnichar * aTitle)
 {  
   nsIDeviceContextSpecPS *psSpec;
   nsresult res = NS_OK;
