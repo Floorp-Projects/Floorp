@@ -72,6 +72,7 @@ public:
   NS_IMETHOD GetControllers(nsIControllers** aResult);
 
   NS_IMETHOD MoveFocus(PRBool aForward, nsIDOMElement* aElt);
+  NS_IMETHOD RewindFocusState();
 
   // nsIDOMFocusListener
   NS_IMETHOD Focus(nsIDOMEvent* aEvent);
@@ -89,7 +90,9 @@ public:
 // Members
 protected:
   nsCOMPtr<nsIDOMElement> mCurrentElement; // [OWNER]
+  nsCOMPtr<nsIDOMElement> mPreviousElement; // [OWNER]
   nsCOMPtr<nsIDOMWindowInternal> mCurrentWindow; // [OWNER]
+  nsCOMPtr<nsIDOMWindowInternal> mPreviousWindow; // [OWNER]
   nsCOMPtr<nsIDOMNode> mPopupNode; // [OWNER]
 
   PRUint32 mSuppressFocus;

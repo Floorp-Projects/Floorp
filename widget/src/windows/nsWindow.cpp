@@ -3920,6 +3920,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         result = DispatchFocus(NS_GOTFOCUS, isMozWindowTakingFocus);
         if(gJustGotActivate) {
           gJustGotActivate = PR_FALSE;
+          gJustGotDeactivate = PR_FALSE;
           result = DispatchFocus(NS_ACTIVATE, isMozWindowTakingFocus);
         }
 #ifdef ACCESSIBILITY
@@ -4035,6 +4036,22 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
               InitEvent(event, NS_SIZEMODE);
 
               result = DispatchWindowEvent(&event);
+
+              if (pl.showCmd == SW_SHOWMINIMIZED) {
+                // Deactivate
+                char className[19];
+                ::GetClassName((HWND)wParam, className, 19);
+                if(strcmp(className, WindowClass()))
+                  isMozWindowTakingFocus = PR_FALSE;
+
+                gJustGotDeactivate = PR_FALSE;
+                result = DispatchFocus(NS_DEACTIVATE, isMozWindowTakingFocus);
+              } else if (pl.showCmd == SW_SHOWNORMAL){
+                // Make sure we're active
+                result = DispatchFocus(NS_GOTFOCUS, PR_TRUE);
+                result = DispatchFocus(NS_ACTIVATE, PR_TRUE);
+              }
+
               NS_RELEASE(event.widget);
             }
             break;
