@@ -1899,10 +1899,10 @@ void nsTreeRowGroupFrame::ScrollByLines(nsIPresContext* aPresContext,
     scrollTo = 0;
   if (!IsValidRow(scrollTo + visRows - 1))  // don't go down too far
     scrollTo = totalRows - visRows + 1;
-  nsAutoString value;
-  value.Append(scrollTo);
 
   scrollTo *= SCROLL_FACTOR;
+  nsAutoString value;
+  value.Append(scrollTo);
 
   nsCOMPtr<nsIContent> scrollbarContent;
   mScrollbar->GetContent(getter_AddRefs(scrollbarContent));
