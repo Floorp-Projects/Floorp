@@ -506,7 +506,8 @@ nsDiskCacheStreamIO::Flush()
             rv = cacheMap->DeleteStorage(record, nsDiskCache::kData);
             if (NS_FAILED(rv)) {
                 NS_WARNING("cacheMap->DeleteStorage() failed.");
-                return  rv;    // XXX doom cache entry
+                cacheMap->DoomRecord(record);
+                return  rv;
             }
         }
     
