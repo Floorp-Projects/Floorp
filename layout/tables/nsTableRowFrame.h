@@ -163,8 +163,8 @@ public:
 
   /** returns the tallest child in this row (ignoring any cell with rowspans) */
   nscoord GetTallestChild() const;
-  nscoord GetChildMaxTopMargin() const;
-  nscoord GetChildMaxBottomMargin() const;
+  nscoord GetTopMargin() const;
+  nscoord GetBottomMargin() const;
 
   /** returns the ordinal position of this row in its table */
   virtual PRInt32 GetRowIndex() const;
@@ -183,6 +183,11 @@ public:
                        nscoord                  aAvailableHeight,
                        nsReflowStatus&          aStatus);
   void InsertCellFrame(nsTableCellFrame* aFrame, nsTableCellFrame* aPrevSibling);
+
+  nsresult CalculateCellActualSize(nsIFrame* aRowFrame,
+                                   nscoord&  aDesiredWidth,
+                                   nscoord&  aDesiredHeight,
+                                   nscoord   aAvailWidth);
 
 protected:
 
@@ -272,12 +277,6 @@ protected:
                            nsReflowStatus&      aStatus,
                            nsTableCellFrame *   aStartFrame,
                            PRBool               aDoSiblings);
-
-  nsresult CalculateCellActualSize(RowReflowState& aReflowState,
-                                   nsIFrame*       aRowFrame,
-                                   nscoord&        aDesiredWidth,
-                                   nscoord&        aDesiredHeight,
-                                   nscoord         aAvailWidth);
 
   nscoord CalculateCellAvailableWidth(nsTableFrame* aTableFrame,
                                       nsIFrame*     aCellFrame,
