@@ -1678,6 +1678,11 @@ struct nsDomainEntry {
         int thisLen = mOrigin.Length();
         if (len < thisLen)
             return PR_FALSE;
+        if (mOrigin.RFindChar(':', PR_FALSE, thisLen-1, 1) != -1)
+        //-- Policy applies to all URLs of this scheme, compare scheme only
+            return mOrigin.EqualsWithConversion(anOrigin, PR_TRUE, thisLen);
+
+        //-- Policy applies to a particular host; compare scheme://host.domain
         if (!mOrigin.Equals(anOrigin + (len - thisLen)))
             return PR_FALSE;
         if (len == thisLen)
@@ -1717,16 +1722,25 @@ nsScriptSecurityManager::GetPrefName(nsIPrincipal *principal,
                 const char *s = origin;
                 const char *nextToLastDot = nsnull;
                 const char *lastDot = nsnull;
+                const char *colon = nsnull;
                 const char *p = s;
                 while (*p) {
                     if (*p == '.') {
                         nextToLastDot = lastDot;
                         lastDot = p;
                     }
+                    if (!colon && *p == ':')
+                        colon = p;
                     p++;
                 }
                 nsCStringKey key(nextToLastDot ? nextToLastDot+1 : s);
                 nsDomainEntry *de = (nsDomainEntry *) mOriginToPolicyMap->Get(&key);
+                if (!de)
+                {
+                    nsCAutoString scheme(s, colon-s+1);
+                    nsCStringKey schemeKey(scheme);
+                    de = (nsDomainEntry *) mOriginToPolicyMap->Get(&schemeKey);
+                }
                 while (de) {
                     if (de->Matches(s)) {
                         policy = &de->mPolicy;
