@@ -298,7 +298,14 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
      * jpeg_start_compress().
      */
     int row_stride;
+#ifdef XP_MAC
+    if(mInfo.output_components == 1)
+      row_stride = mInfo.output_width * 1;
+    else
+      row_stride = mInfo.output_width * 4;
+#else
     row_stride = mInfo.output_width * mInfo.output_components;
+#endif
     mSamples = (*mInfo.mem->alloc_sarray)((j_common_ptr) &mInfo,
                                            JPOOL_IMAGE,
                                            row_stride, 1);
@@ -308,7 +315,11 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
 
     /* Allocate RGB buffer for conversion from greyscale. */
     if (mInfo.output_components != 3) {
+#ifdef XP_MAC
+      row_stride = mInfo.output_width * 4;
+#else
       row_stride = mInfo.output_width * 3;
+#endif
       mSamples3 = (*mInfo.mem->alloc_sarray)((j_common_ptr) &mInfo,
                                               JPOOL_IMAGE,
                                               row_stride, 1);
@@ -354,6 +365,7 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
 
       /* If we've completed image output ... */
       NS_ASSERTION(mInfo.output_scanline == mInfo.output_height, "We didn't process all of the data!");
+      mState = JPEG_DONE;    
     }
   }
 
@@ -441,12 +453,8 @@ nsJPEGDecoder::OutputScanlines(int num_scanlines)
       JSAMPROW samples;
       
       /* Request one scanline.  Returns 0 or 1 scanlines. */
-      int ns;
-      if(mInfo.output_components == 1)
-        ns = jpeg_read_scanlines(&mInfo, mSamples3, 1);
-      else
-        ns = jpeg_read_scanlines(&mInfo, mSamples, 1);
-        
+      int ns = jpeg_read_scanlines(&mInfo, mSamples, 1);
+      
       if (ns != 1) {
         return PR_FALSE; /* suspend */
       }
@@ -460,11 +468,20 @@ nsJPEGDecoder::OutputScanlines(int num_scanlines)
 
         /* Convert from grayscale to RGB. */
         while (j1 < j1end) {
+#ifdef XP_MAC
+          j = *j1++;
+          j3[0] = 0;
+          j3[1] = j;
+          j3[2] = j;
+          j3[3] = j;
+          j3 += 4;
+#else
           j = *j1++;
           j3[0] = j;
           j3[1] = j;
           j3[2] = j;
           j3 += 3;
+#endif
         }
         samples = mSamples3[0];
       } else {
@@ -485,7 +502,23 @@ nsJPEGDecoder::OutputScanlines(int num_scanlines)
 
         samples = ptrOutputBuf;
 #else
+#ifdef XP_MAC
+        memset(mRGBPadRow, 0, mInfo.output_width * 4);
+        PRUint8 *ptrOutputBuf = mRGBPadRow;
+
+        JSAMPLE *j1 = mSamples[0];
+        for (PRUint32 i=0;i<mInfo.output_width;++i) {
+          ptrOutputBuf[0] = 0;
+          ptrOutputBuf[1] = *j1++;
+          ptrOutputBuf[2] = *j1++;
+          ptrOutputBuf[3] = *j1++;
+          ptrOutputBuf += 4;
+        }
+
+        samples = mRGBPadRow;
+#else
         samples = mSamples[0];
+#endif
 #endif
       }
 
