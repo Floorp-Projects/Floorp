@@ -93,6 +93,7 @@ nsMenu::nsMenu() : nsIMenu()
   mIsEnabled     = PR_TRUE;
   mListener      = nsnull;
   mConstructed   = nsnull;
+  mDestroyHandlerCalled = PR_FALSE;
   
   mDOMNode       = nsnull;
   mDOMElement    = nsnull;
@@ -584,6 +585,11 @@ nsEventStatus nsMenu::MenuItemSelected(const nsMenuEvent & aMenuEvent)
           eventStatus = listener->MenuSelected(event);
           if(eventStatus != nsEventStatus_eIgnore)
           {
+            // call our ondestroy handler now because the menu is going away.
+            // do it now before sending the event into the dom in case our window
+            // goes away.
+            OnDestroy();
+            
             /* call back into this method with the proper "this" */
             eventStatus = listener->MenuItemSelected(aMenuEvent);
 	          NS_RELEASE(menu);
@@ -604,6 +610,11 @@ nsEventStatus nsMenu::MenuItemSelected(const nsMenuEvent & aMenuEvent)
     if(mMenuItemVoidArray[menuItemID-1]) {
 	    ((nsIMenuItem*)mMenuItemVoidArray[menuItemID-1])->QueryInterface(NS_GET_IID(nsIMenuListener), &menuListener);
       if(menuListener) {
+        // call our ondestroy handler now because the menu is going away.
+        // do it now before sending the event into the dom in case our window
+        // goes away.
+        OnDestroy();
+        
         eventStatus = menuListener->MenuItemSelected(aMenuEvent);
         NS_IF_RELEASE(menuListener);
         if(nsEventStatus_eIgnore != eventStatus)
@@ -624,6 +635,11 @@ nsEventStatus nsMenu::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 		    nsIMenuListener * menuListener = nsnull;
 		    ((nsISupports*)mMenuItemVoidArray[i-1])->QueryInterface(NS_GET_IID(nsIMenuListener), &menuListener);
 		    if(menuListener){
+          // call our ondestroy handler now because the menu is going away.
+          // do it now before sending the event into the dom in case our window
+          // goes away.
+          OnDestroy();
+          
 		      eventStatus = menuListener->MenuItemSelected(aMenuEvent);
 		      NS_IF_RELEASE(menuListener);
 		      if(nsEventStatus_eIgnore != eventStatus)
@@ -723,6 +739,9 @@ nsEventStatus nsMenu::MenuConstruct(
     void              * menuNode,
 	  void              * aWebShell)
 {
+  // reset destroy handler flag so that we'll know to fire it next time this menu goes away.
+  mDestroyHandlerCalled = PR_FALSE;
+  
    //printf("nsMenu::MenuConstruct called for %s = %d \n", mLabel.ToNewCString(), mMacMenuHandle);
    // Begin menuitem inner loop
   
@@ -1589,21 +1608,22 @@ nsMenu::OnCreate()
   
   nsCOMPtr<nsIPresContext> presContext;
   MenuHelpers::WebShellToPresContext ( mWebShell, getter_AddRefs(presContext) );
-  
-  nsresult rv;
-  nsCOMPtr<nsIDOMNode> menuPopup;
-  GetMenuPopupElement(getter_AddRefs(menuPopup));
-  nsCOMPtr<nsIContent> popupContent ( do_QueryInterface(menuPopup) );
-  if ( popupContent ) 
-    rv = popupContent->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
-  else {
-    nsCOMPtr<nsIContent> me ( do_QueryInterface(mDOMNode) );
-    if ( me )
-      rv = me->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
-  }
+  if ( presContext ) {
+    nsresult rv;
+    nsCOMPtr<nsIDOMNode> menuPopup;
+    GetMenuPopupElement(getter_AddRefs(menuPopup));
+    nsCOMPtr<nsIContent> popupContent ( do_QueryInterface(menuPopup) );
+    if ( popupContent ) 
+      rv = popupContent->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+    else {
+      nsCOMPtr<nsIContent> me ( do_QueryInterface(mDOMNode) );
+      if ( me )
+        rv = me->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+    }
+    if ( NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault )
+      return PR_FALSE;
+ }
 
-  if ( NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault )
-    return PR_FALSE;
   return PR_TRUE;
 }
 
@@ -1617,6 +1637,9 @@ nsMenu::OnCreate()
 PRBool
 nsMenu::OnDestroy()
 {
+  if ( mDestroyHandlerCalled )
+    return PR_TRUE;
+
   nsEventStatus status = nsEventStatus_eIgnore;
   nsMouseEvent event;
   event.eventStructType = NS_EVENT;
@@ -1630,21 +1653,24 @@ nsMenu::OnDestroy()
   
   nsCOMPtr<nsIPresContext> presContext;
   MenuHelpers::WebShellToPresContext ( mWebShell, getter_AddRefs(presContext) );
-    
-  nsresult rv;
-  nsCOMPtr<nsIDOMNode> menuPopup;
-  GetMenuPopupElement(getter_AddRefs(menuPopup));
-  nsCOMPtr<nsIContent> popupContent ( do_QueryInterface(menuPopup) );
-  if ( popupContent ) 
-    rv = popupContent->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
-  else {
-    nsCOMPtr<nsIContent> me ( do_QueryInterface(mDOMNode) );
-    if ( me )
-      rv = me->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
-  }
+  if ( presContext ) {    
+    nsresult rv;
+    nsCOMPtr<nsIDOMNode> menuPopup;
+    GetMenuPopupElement(getter_AddRefs(menuPopup));
+    nsCOMPtr<nsIContent> popupContent ( do_QueryInterface(menuPopup) );
+    if ( popupContent ) 
+      rv = popupContent->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+    else {
+      nsCOMPtr<nsIContent> me ( do_QueryInterface(mDOMNode) );
+      if ( me )
+        rv = me->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+    }
 
-  if ( NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault )
-    return PR_FALSE;
+    mDestroyHandlerCalled = PR_TRUE;
+    
+    if ( NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault )
+      return PR_FALSE;
+  }
   return PR_TRUE;
 }
 
