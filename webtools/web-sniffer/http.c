@@ -323,12 +323,11 @@ httpGetObject(HTTP *http, App *app, int sock, URL *url, unsigned char **headers)
 	get = "GET ";
 	httpStr = " HTTP/1.0\n";
 
-	len = 0;
 	p = NULL;
 	buf = NULL;
 	for (i = 0; i < 2; i++)
 	{
-		len += countOrCopy(&p, get);
+		len = countOrCopy(&p, get);
 		if (url->path)
 		{
 			len += countOrCopy(&p, (char *) url->path);
