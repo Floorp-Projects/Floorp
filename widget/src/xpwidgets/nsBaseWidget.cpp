@@ -733,6 +733,12 @@ NS_METHOD nsBaseWidget::SetModal(void)
   return NS_ERROR_FAILURE;
 }
 
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsBaseWidget::CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture)
+{
+  return NS_ERROR_FAILURE;
+}
+
 #ifdef NS_DEBUG
 //////////////////////////////////////////////////////////////
 //
