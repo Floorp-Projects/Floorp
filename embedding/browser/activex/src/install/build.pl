@@ -8,6 +8,7 @@
 $dir_sep = '\\';
 $moz = "$ENV{'MOZ_SRC'}\\mozilla";
 $moz_dist = "$moz\\dist\\Embed";
+$moz_redist = "$moz\\..\\redist";
 $moz_embedding_config = "$moz\\embedding\\config";
 $moz =~ s/\//$dir_sep/g;
 $moz_major_version=1;
@@ -24,19 +25,21 @@ $files_nsh = "files.nsh";
 @dirs = ();
 
 print "Mozilla ActiveX control builder\n\n";
+print "Hold onto your hats, this could be a rough trip\n";
 
 # Copy the client-win to embedding/config
 # cp client-win $moz_embedding_config
 
 # Run the make in embedding/config to ensure a dist
-# cd $moz_embedding_config
-# @make = ( "make" );
-# system(@make);
+#chdir $moz_embedding_config or die("Can't cd into $moz_embedding_config!");
+#@make = ( "make" );
+#system(@make);
 
 # Generate local settings
 print "Opening $local_nsh for writing\n";
 open(NSH, ">$local_nsh") or die("Can't write local settings to $local_nsh");
 print NSH "!define DISTDIR \"$moz_dist\"\n";
+print NSH "!define REDISTDIR \"$moz_redist\"\n";
 print NSH "!define VERSION \"$moz_version\"\n";
 print NSH "!define MAJOR_VERSION \"$moz_major_version\"\n";
 print NSH "!define MINOR_VERSION \"$moz_minor_version\"\n";
