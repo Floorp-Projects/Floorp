@@ -49,6 +49,8 @@
 #include "nsIServiceManager.h"
 #include "nsIDOMNode.h"
 #include "nsLayoutAtoms.h"
+// MouseEvent suppression in PP
+#include "nsGUIEvent.h"
 
 static NS_DEFINE_CID(kTextNodeCID,   NS_TEXTNODE_CID);
 
@@ -628,6 +630,12 @@ nsGfxButtonControlFrame::HandleEvent(nsIPresContext* aPresContext,
                                       nsGUIEvent*     aEvent,
                                       nsEventStatus*  aEventStatus)
 {
+  // temp fix until Bug 124990 gets fixed
+  PRBool isPaginated = PR_FALSE;
+  aPresContext->IsPaginated(&isPaginated);
+  if (isPaginated && NS_IS_MOUSE_EVENT(aEvent)) {
+    return NS_OK;
+  }
   // Override the HandleEvent to prevent the nsFrame::HandleEvent
   // from being called. The nsFrame::HandleEvent causes the button label
   // to be selected (Drawn with an XOR rectangle over the label)
