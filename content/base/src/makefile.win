@@ -57,7 +57,6 @@ REQUIRES	= xpcom \
 		  gfx2 \
 		  uriloader \
 		  webBrowser_core\
-		  embedding\
 		  $(NULL)
 
 CPP_OBJS=					\

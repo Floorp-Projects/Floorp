@@ -39,8 +39,6 @@ REQUIRES	= xpcom \
 		  gfx2 \
 		  content \
 		  gfx \
-		  webBrowser_core \
-      gfx \
 		  $(NULL)
 
 include <$(DEPTH)\config\config.mak>

@@ -42,7 +42,6 @@ REQUIRES	= xpcom \
 		  layout \
 		  layout_xul \
 		  necko \
-		  webBrowser_core \
 		  unicharutil \
 		  $(NULL)
 

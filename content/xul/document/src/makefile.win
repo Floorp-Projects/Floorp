@@ -47,9 +47,7 @@ REQUIRES	= xpcom \
             layout_xul \
             content \
             webshell \
-            webBrowser_core \
             unicharutil \
-            commandhandler \
             $(NULL)
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
