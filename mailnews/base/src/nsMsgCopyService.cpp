@@ -287,13 +287,15 @@ nsMsgCopyService::DoNextCopy()
     found:
         if (copyRequest && !copyRequest->m_processed)
         {
+            if (copyRequest->m_listener)
+                copyRequest->m_listener->OnStartCopy(copyRequest->m_listenerData);
             if (copyRequest->m_requestType == nsCopyMessagesType &&
                 copySource)
             {
+                copySource->m_processed = PR_TRUE;
                 rv = copyRequest->m_dstFolder->CopyMessages
                     (copySource->m_msgFolder, copySource->m_messageArray,
                      copyRequest->m_isMoveOrDraft, copyRequest->m_txnMgr);
-                copySource->m_processed = PR_TRUE;
                                                                 
             }
             else if (copyRequest->m_requestType == nsCopyFileMessageType)
@@ -314,10 +316,10 @@ nsMsgCopyService::DoNextCopy()
                         aMessage = do_QueryInterface(aSupport, &rv);
                         copySource->m_processed = PR_TRUE;
                     }
+                    copyRequest->m_processed = PR_TRUE;
                     rv = copyRequest->m_dstFolder->CopyFileMessage
                         (aSpec, aMessage, copyRequest->m_isMoveOrDraft,
                          copyRequest->m_listenerData, copyRequest->m_txnMgr);
-                    copyRequest->m_processed = PR_TRUE;
                 }
             }
         }
