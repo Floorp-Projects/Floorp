@@ -3363,9 +3363,17 @@ nsGenericHTMLFormElement::FindAndSetForm()
 
 //----------------------------------------------------------------------
 
+nsGenericHTMLFrameElement::~nsGenericHTMLFrameElement()
+{
+  if (mFrameLoader) {
+    mFrameLoader->Destroy();
+  }
+}
+
 NS_INTERFACE_MAP_BEGIN(nsGenericHTMLFrameElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLFrameElement)
   NS_INTERFACE_MAP_ENTRY(nsIChromeEventHandler)
+  NS_INTERFACE_MAP_ENTRY(nsIFrameLoaderOwner)
 NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLElement)
 
 nsresult
@@ -3418,6 +3426,13 @@ nsGenericHTMLFrameElement::EnsureFrameLoader()
   if (!mFrameLoader)
     return NS_ERROR_OUT_OF_MEMORY;
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGenericHTMLFrameElement::GetFrameLoader(nsIFrameLoader **aFrameLoader)
+{
+  NS_IF_ADDREF(*aFrameLoader = mFrameLoader);
   return NS_OK;
 }
 
@@ -3500,12 +3515,6 @@ nsGenericHTMLFrameElement::HandleChromeEvent(nsPresContext* aPresContext,
                                              nsEventStatus* aEventStatus)
 {
   return HandleDOMEvent(aPresContext, aEvent, aDOMEvent, aFlags,aEventStatus);
-}
-
-PRBool
-nsGenericHTMLFrameElement::IsContentOfType(PRUint32 aFlags) const
-{
-  return !(aFlags & ~(eELEMENT | eHTML | eFRAME_ELEMENT));
 }
 
 //----------------------------------------------------------------------

@@ -69,7 +69,7 @@
 #include "nsIDOMHTMLFrameElement.h"
 #include "nsIDOMHTMLIFrameElement.h"
 #include "nsIDOMXULElement.h"
-#include "nsFrameLoader.h"
+#include "nsIFrameLoader.h"
 #include "nsLayoutAtoms.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsXPIDLString.h"
@@ -157,7 +157,7 @@ protected:
                               nsHTMLReflowMetrics& aDesiredSize);
   virtual PRIntn GetSkipSides() const;
 
-  nsRefPtr<nsFrameLoader> mFrameLoader;
+  nsCOMPtr<nsIFrameLoader> mFrameLoader;
   PRPackedBool mOwnsFrameLoader;
   PRPackedBool mIsInline;
   nsIView* mInnerView;
@@ -597,11 +597,10 @@ nsSubDocumentFrame::GetDocShell(nsIDocShell **aDocShell)
   }
 
   if (!mFrameLoader) {
-    nsGenericHTMLFrameElement *frameElement =
-      nsGenericHTMLFrameElement::FromContent(content);
+    nsCOMPtr<nsIFrameLoaderOwner> loaderOwner = do_QueryInterface(content);
 
-    if (frameElement) {
-      mFrameLoader = frameElement->GetFrameLoader();
+    if (loaderOwner) {
+      loaderOwner->GetFrameLoader(getter_AddRefs(mFrameLoader));
     }
 
     if (!mFrameLoader) {

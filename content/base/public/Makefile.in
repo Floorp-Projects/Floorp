@@ -92,6 +92,7 @@ XPIDLSRCS	= \
 		nsIScriptEventHandler.idl \
 		nsIScriptEventManager.idl \
 		nsIImageLoadingContent.idl \
+		nsIFrameLoader.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

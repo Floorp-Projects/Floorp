@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Johnny Stenback <jst@netscape.com> (original author)
+ *   Brian Ryner <bryner@brianryner.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,32 +37,33 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsFrameLoader_h_
-#define nsFrameLoader_h_
+#include "nsISupports.idl"
 
-#include "nsIDocShell.h"
-#include "nsStringFwd.h"
-#include "nsIFrameLoader.h"
+interface nsIDocShell;
 
-class nsIContent;
-
-class nsFrameLoader : public nsIFrameLoader
+[scriptable, uuid(eb1a6413-c79f-4189-95b9-7070df9529b1)]
+interface nsIFrameLoader : nsISupports
 {
-public:
-  nsFrameLoader(nsIContent *aOwner) : mOwnerContent(aOwner) {}
+  /**
+   * Get the docshell from the frame loader.
+   */
+  readonly attribute nsIDocShell docShell;
 
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIFRAMELOADER
+  /**
+   * Start loading the frame. This method figures out what to load
+   * from the owner content in the frame loader.
+   */
+  void loadFrame();
 
-private:
-  ~nsFrameLoader() { nsFrameLoader::Destroy(); }
-
-  NS_HIDDEN_(nsresult) EnsureDocShell();
-  NS_HIDDEN_(void) GetURL(nsString& aURL);
-
-  nsCOMPtr<nsIDocShell> mDocShell;
-
-  nsIContent *mOwnerContent; // WEAK
+  /**
+   * Destroy the frame loader and everything inside it. This will
+   * clear the weak owner content reference.
+   */
+  void destroy();
 };
 
-#endif
+[scriptable, uuid(feaf9285-05ac-4898-a69f-c3bd350767e4)]
+interface nsIFrameLoaderOwner : nsISupports
+{
+  readonly attribute nsIFrameLoader frameLoader;
+};
