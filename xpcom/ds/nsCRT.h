@@ -141,6 +141,9 @@ public:
   }
 
   static PRInt32 strncmp(const char* s1, const char* s2, PRInt32 aMaxLen) {
+    // inline the first test (assumes strings are not null):
+    PRInt32 diff = ((const unsigned char*)s1)[0] - ((const unsigned char*)s2)[0];
+    if (diff != 0) return diff;
     return PRInt32(PL_strncmp(s1,s2,aMaxLen));
   }
   

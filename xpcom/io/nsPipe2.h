@@ -41,6 +41,7 @@ public:
     NS_IMETHOD OnEmpty() = 0;
 };
 
+#if 0
 /**
  * The signature for the reader function passed to WriteSegment. This 
  * specifies where the data should come from that gets written into the buffer.
@@ -72,6 +73,7 @@ typedef NS_CALLBACK(nsWriteSegmentFun)(void* closure,
                                        PRUint32 toOffset,
                                        PRUint32 count,
                                        PRUint32 *writeCount);
+#endif
 
 #define NS_PIPE_DEFAULT_SEGMENT_SIZE    4096
 #define NS_PIPE_DEFAULT_BUFFER_SIZE     (1024*1024)

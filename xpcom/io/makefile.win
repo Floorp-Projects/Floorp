@@ -32,13 +32,13 @@ EXPORTS =                          \
         nsIStringStream.h          \
         nsIUnicharInputStream.h    \
         nsSpecialSystemDirectory.h \
-        nsPipe2.h                  \
         $(NULL)			
 
 NO_XPT_GEN=1
 XPIDL_MODULE = xpcom_io
 
 XPIDLSRCS =                         \
+        .\nsIPipe.idl               \
         .\nsIFileSpec.idl           \
         .\nsIBaseStream.idl         \
         .\nsIInputStream.idl        \

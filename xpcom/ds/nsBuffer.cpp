@@ -60,14 +60,14 @@ nsBuffer::Init(PRUint32 growBySize, PRUint32 maxSize,
 
 nsBuffer::~nsBuffer()
 {
-  // Free any allocated pages...
-  while (!PR_CLIST_IS_EMPTY(&mSegments)) {
-    PRCList* header = (PRCList*)mSegments.next;
-    char* segment = (char*)header;
+    // Free any allocated pages...
+    while (!PR_CLIST_IS_EMPTY(&mSegments)) {
+        PRCList* header = (PRCList*)mSegments.next;
+        char* segment = (char*)header;
 
-    PR_REMOVE_LINK(header);     // unlink from mSegments
-    (void) mAllocator->Free(segment);
-  }
+        PR_REMOVE_LINK(header);     // unlink from mSegments
+        (void) mAllocator->Free(segment);
+    }
 
     NS_IF_RELEASE(mObserver);
     NS_IF_RELEASE(mAllocator);
