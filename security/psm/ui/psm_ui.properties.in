@@ -2125,7 +2125,7 @@ parent.sa_message_sign_status = 2;
 <tr VALIGN=TOP>
 
 <td><H1>
-{digital_signature_not_valid}
+{digital_signature_not_valid}  %1$s
 </H1>
 
 <P>
@@ -2168,7 +2168,7 @@ parent.sa_message_sign_status = 2;
 <DIV CLASS=Explanationbox>
 
 <UL><LI>
-{signing_cert_is_expired}
+{signing_cert_is_expired}  %1$s
 </LI></UL>
 <BLOCKQUOTE>
 {may_be_caused_incorrect_clock}
@@ -2202,7 +2202,7 @@ parent.sa_message_sign_status = 2;
 <DIV CLASS=Explanationbox>
 
 <UL><LI>
-{signing_certificate_revoked}
+{signing_certificate_revoked} %1%s
 </LI></UL>
 <BLOCKQUOTE>
 {do_not_trust_until_sender_verifies}
@@ -2236,9 +2236,11 @@ parent.sa_message_sign_status = 2;
 {invalid_digital_signature_because}</p>
 <DIV CLASS=Explanationbox>
 
-<UL><LI>
-{signing_cert_issuer_unknown}
-</LI></UL>
+<UL>
+<LI>
+{signing_cert_issuer_unknown}  %3$s
+</LI>
+</UL>
 
 <table border=0> 
 <tr valign="Top">
@@ -2282,7 +2284,7 @@ parent.sa_message_sign_status = 2;
 <DIV CLASS=Explanationbox>
 
 <UL><LI>
-{signing_cert_issuer_not_trusted}
+{signing_cert_issuer_not_trusted} %4$s
 </LI></UL>
 <BLOCKQUOTE>
 {trust_this_cert_or_all_issued_by}
@@ -2337,7 +2339,7 @@ parent.sa_message_sign_status = 2;
 {invalid_digital_signature_because}</p>
 <DIV CLASS=Explanationbox>
 <UL><LI>
-{signing_cert_issuer_expired}
+{signing_cert_issuer_expired} %1$s
 </LI></UL>
 <BLOCKQUOTE>
 {may_be_caused_incorrect_clock}
