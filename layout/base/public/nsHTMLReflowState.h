@@ -220,6 +220,10 @@ struct nsHTMLReflowState {
   // is from the top of the frame tree.
   PRInt32 mReflowDepth;
 
+#ifdef IBMBIDI
+  nscoord mRightEdge;
+#endif
+
 #ifdef DEBUG
   // hook for attaching debug info (e.g. tables may attach a timer during reflow)
   void* mDebugHook;
