@@ -37,7 +37,8 @@ class nsIWidget;
 class nsIPopUpMenu : public nsISupports {
 
   public:
- 
+    static const nsIID& IID() { static nsIID iid = NS_IPOPUPMENU_IID; return iid; }
+
    /**
     * Creates the PopUpMenu
     *
