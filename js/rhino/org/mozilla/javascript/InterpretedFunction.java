@@ -75,7 +75,7 @@ class InterpretedFunction extends NativeFunction implements DebuggableScript {
         throws JavaScriptException
     {            
         if (itsClosure != null)
-        	scope = itsClosure;
+            scope = itsClosure;
         else if (!itsData.itsUseDynamicScope)
             scope = getParentScope();
         if (itsData.itsNeedsActivation)

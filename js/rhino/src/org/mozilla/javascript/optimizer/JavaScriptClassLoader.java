@@ -58,12 +58,12 @@ final class JavaScriptClassLoader extends ClassLoader {
     {
         Class clazz = findLoadedClass(name);
         if (clazz == null) {
-        	// Experimental change for JShell, use outer class loader.
-	        ClassLoader loader = JavaScriptClassLoader.class.getClassLoader();
-	        if (loader != null)
-	        	return loader.loadClass(name);
+            // Experimental change for JShell, use outer class loader.
+            ClassLoader loader = JavaScriptClassLoader.class.getClassLoader();
+            if (loader != null)
+                return loader.loadClass(name);
             clazz = findSystemClass(name);
-	    }
+        }
         if (resolve)
             resolveClass(clazz);
         return clazz;

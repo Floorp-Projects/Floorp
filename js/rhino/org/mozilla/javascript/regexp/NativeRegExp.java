@@ -91,7 +91,8 @@ public class NativeRegExp extends ScriptableObject implements Function {
     }
 
     public void init(Context cx, Scriptable scope, String source, 
-                                                String global, boolean flat) {
+                     String global, boolean flat) 
+    {
         this.source = source;
         flags = 0;
         if (global != null) {
