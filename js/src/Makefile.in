@@ -228,6 +228,14 @@ else
 	$(CC) -o $@ -c $(CFLAGS) $<
 endif
 
+# An AIX Optimization bug causes PR_dtoa() to produce wrong result.
+# This suppresses optimization for this single compilation unit.
+ifeq ($(OS_ARCH), AIX)
+jsdtoa.o:
+	@$(MAKE_OBJDIR)
+	$(CC) -o $@ -c $(filter-out -O, $(CFLAGS)) jsdtoa.c
+endif
+
 # ripped from $(topsrcdir)/config/rules.mk
 $(FDLIBM_LIBRARY):
 	set -e;					\
