@@ -868,5 +868,18 @@ NS_IMETHODIMP GtkMozEmbedChrome::SetTitle(const PRUnichar * aTitle)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+GtkMozEmbedChrome::SetPersistence(PRBool aPersistX, PRBool aPersistY,
+                                  PRBool aPersistCX, PRBool aPersistCY,
+                                  PRBool aPersistSizeMode)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 
-
+NS_IMETHODIMP
+GtkMozEmbedChrome::GetPersistence(PRBool* aPersistX, PRBool* aPersistY,
+                                  PRBool* aPersistCX, PRBool* aPersistCY,
+                                  PRBool* aPersistSizeMode)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}

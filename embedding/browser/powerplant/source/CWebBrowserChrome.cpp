@@ -166,9 +166,30 @@ NS_IMETHODIMP CWebBrowserChrome::ShowAsModal(void)
 }
 
 
+NS_IMETHODIMP
+CWebBrowserChrome::SetPersistence(PRBool aPersistX, PRBool aPersistY,
+                                  PRBool aPersistCX, PRBool aPersistCY,
+                                  PRBool aPersistSizeMode)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+CWebBrowserChrome::GetPersistence(PRBool* aPersistX, PRBool* aPersistY,
+                                  PRBool* aPersistCX, PRBool* aPersistCY,
+                                  PRBool* aPersistSizeMode)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 //*****************************************************************************
 // CWebBrowserChrome::nsIWebProgressListener
 //*****************************************************************************   
+
+NS_IMETHODIMP CWebBrowserChrome::OnProgressChange(nsIChannel *channel, PRInt32 curSelfProgress, PRInt32 maxSelfProgress, PRInt32 curTotalProgress, PRInt32 maxTotalProgress)
+{
+   return NS_OK;
+}
 
 NS_IMETHODIMP CWebBrowserChrome::OnProgressChange(nsIWebProgress *progress, nsIRequest *request,
                                                   PRInt32 curSelfProgress, PRInt32 maxSelfProgress,
