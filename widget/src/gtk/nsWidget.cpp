@@ -160,10 +160,6 @@ NS_IMETHODIMP nsWidget::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
   gint x;
   gint y;
 
-#ifdef DEBUG_pavlov
-  g_print("nsWidget::WidgetToScreen\n");
-#endif
-
   if (mWidget)
   {
     if (mWidget->window)
@@ -171,9 +167,6 @@ NS_IMETHODIMP nsWidget::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
       gdk_window_get_origin(mWidget->window, &x, &y);
       aNewRect.x = x + aOldRect.x;
       aNewRect.y = y + aOldRect.y;
-#ifdef DEBUG_pavlov
-      g_print("  x = %i, y = %i\n", x, y);
-#endif
     }
     else
       return NS_ERROR_FAILURE;
@@ -518,12 +511,6 @@ NS_IMETHODIMP nsWidget::SetFocus(void)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWidget::GetBounds(nsRect &aRect)
-{
-  aRect = mBounds;
-  return NS_OK;
-}
-
 //-------------------------------------------------------------------------
 //
 // Get this component font
@@ -674,17 +661,17 @@ NS_IMETHODIMP nsWidget::SetCursor(nsCursor aCursor)
 
 NS_IMETHODIMP nsWidget::Invalidate(PRBool aIsSynchronous)
 {
-  if (mWidget == nsnull)
+  if (!mWidget)
     return NS_OK; // mWidget will be null during printing. 
 
-  if (!GTK_IS_WIDGET (mWidget))
+  if (!GTK_IS_WIDGET(mWidget))
     return NS_ERROR_FAILURE;
 
-  if (!GTK_WIDGET_REALIZED (GTK_WIDGET(mWidget)))
+  if (!GTK_WIDGET_REALIZED(mWidget) || !GTK_WIDGET_VISIBLE(mWidget))
     return NS_ERROR_FAILURE;
 
   if (aIsSynchronous) {
-    ::gtk_widget_draw(mWidget, NULL);
+    ::gtk_widget_draw(mWidget, (GdkRectangle *) NULL);
     mUpdateArea.SetRect(0, 0, 0, 0);
   } else {
     ::gtk_widget_queue_draw(mWidget);
@@ -696,15 +683,14 @@ NS_IMETHODIMP nsWidget::Invalidate(PRBool aIsSynchronous)
 
 NS_IMETHODIMP nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 {
-  if (mWidget)
+  if (!mWidget)
     return NS_OK;  // mWidget is null during printing
 
-  if (!GTK_IS_WIDGET (mWidget))
+  if (!GTK_IS_WIDGET(mWidget))
     return NS_ERROR_FAILURE;
 
-  if (!GTK_WIDGET_REALIZED (GTK_WIDGET(mWidget)))
+  if (!GTK_WIDGET_REALIZED(mWidget) || !GTK_WIDGET_VISIBLE(mWidget))
     return NS_ERROR_FAILURE;
-
 
   if (aIsSynchronous)
   {
@@ -791,12 +777,6 @@ NS_IMETHODIMP nsWidget::SetColorMap(nsColorMap *aColorMap)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWidget::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
-{
-  NS_NOTYETIMPLEMENTED("nsWidget::Scroll");
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsWidget::BeginResizingChildren(void)
 {
   return NS_OK;
@@ -818,20 +798,6 @@ NS_IMETHODIMP nsWidget::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
 {
   mPreferredWidth  = aWidth;
   mPreferredHeight = aHeight;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsWidget::SetMenuBar(nsIMenuBar * aMenuBar)
-{
-  g_print("bleh\n");
-  NS_NOTYETIMPLEMENTED("nsWidget::SetMenuBar");
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsWidget::ShowMenuBar(PRBool aShow)
-{
-  g_print("bleh\n");
-  NS_NOTYETIMPLEMENTED("nsWidget::ShowMenuBar");
   return NS_OK;
 }
 
@@ -2325,7 +2291,7 @@ nsWidget::GetWindowForSetBackground()
 
   if (mWidget)
   {
-	gdk_window = mWidget->window;
+    gdk_window = mWidget->window;
   }
 
   return gdk_window;

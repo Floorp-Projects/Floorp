@@ -68,9 +68,6 @@ public:
   NS_IMETHOD           Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth,
                               PRInt32 aHeight, PRBool aRepaint);
 
-  NS_IMETHOD           Invalidate(PRBool aIsSynchronous);
-  NS_IMETHOD           Invalidate(const nsRect &aRect, PRBool aIsSynchronous);
-
   NS_IMETHOD           BeginResizingChildren(void);
   NS_IMETHOD           EndResizingChildren(void);
   NS_IMETHOD           Destroy(void);
