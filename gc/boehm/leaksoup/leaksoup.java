@@ -37,24 +37,26 @@
 import java.io.*;
 import java.util.*;
 
-class Leak {
-	String mAddress;
-	Type mType;
-	Object[] mReferences;
+class Leak extends Reference {
+	String mName;
 	long mCrawlOffset;
-	int mCrawlCount;
-	int mRefCount;
+	short mCrawlCount;
+	short mRefCount;
+	short mChildCount;
 	Leak[] mParents;
 	int mTotalSize;
+	boolean mMarked;
 
-	Leak(String addr, Type type, Object[] refs, long crawlOffset, int crawlCount) {
-		mAddress = addr;
-		mReferences = refs;
+	Leak(String addr, Type type, Object[] refs, long crawlOffset, short crawlCount) {
+	    super(addr, type, refs);
+	    mName = addr;
 		mCrawlOffset = crawlOffset;
 		mCrawlCount = crawlCount;
 		mRefCount = 0;
-		mType = type;
+		mChildCount = 0;
+		mParents = null;
 		mTotalSize = 0;
+		mMarked = false;
 	}
 	
 	void setParents(Vector parents) {
@@ -100,11 +102,94 @@ class Leak {
 		}
 	}
 
-	public String toString() {
-		return ("<A HREF=\"#" + mAddress + "\">" + mAddress + "</A> [" + mRefCount + "] " + mType + "{" + mTotalSize + "}");
+	void clearMarks() {
+		// first, clear mark.
+		mMarked = false;
+		
+		// then, visit all nodes that haven't been visited,
+		// and clear each one's mark.
+		int count = mReferences.length;
+		for (int i = 0; i < count; ++i) {
+			Object ref = mReferences[i];
+			if (ref instanceof Leak) {
+				Leak leak = (Leak) ref;
+				if (leak.mMarked)
+					leak.clearMarks();
+			}
+		}
 	}
 	
-	static class ByCount implements QuickSort.Comparator {
+	static final char INDENT = '\t';
+	
+    void printGraph(PrintWriter out) {
+	    printGraph(out, 0);
+	    clearMarks();
+    }
+
+	private void printGraph(PrintWriter out, int indent) {
+		// first, mark this node as having been visited.
+		// we only want to include nodes that haven't been
+		// visited in our total size.
+		mMarked = true;
+		for (int i = 0; i < indent; ++i)
+		    out.print(INDENT);
+		out.println(toString());
+		
+		// then, visit all nodes that haven't been visited,
+		// and include their total size in ours.
+		int count = mReferences.length;
+		if (count > 0) {
+		    int subIndent = indent + 1;
+    		for (int i = 0; i < count; ++i) {
+    			Object ref = mReferences[i];
+    			if (ref instanceof Leak) {
+    				Leak leak = (Leak) ref;
+    				if (!leak.mMarked)
+        				leak.printGraph(out, subIndent);
+    			}
+    		}
+    	}
+	}
+	
+	void printCycle(PrintWriter out) {
+	    printCycle(out, 0);
+	    clearMarks();
+	}
+	
+	private void printCycle(PrintWriter out, int indent) {
+		// first, mark this node as having been visited.
+		// we only want to include nodes that haven't been
+		// visited in our total size.
+		mMarked = true;
+		
+		// then, visit all nodes that haven't been visited,
+		// and include their total size in ours.
+		if (mChildCount > 0) {
+		    // don't print leaf nodes in a cycle. they aren't interesting.
+    		for (int i = 0; i < indent; ++i)
+    		    out.print(INDENT);
+    		out.println(toString());
+		    int subIndent = indent + 1;
+    		int count = mReferences.length;
+    		for (int i = 0; i < count; ++i) {
+    			Object ref = mReferences[i];
+    			if (ref instanceof Leak) {
+    				Leak leak = (Leak) ref;
+    				if (!leak.mMarked)
+        				leak.printCycle(out, subIndent);
+    			}
+    		}
+    	}
+	}
+
+	public String toString() {
+		return ("<A HREF=\"#" + mName + "\">" + mName + "</A> [" + mRefCount + "] " + mType + "{" + mTotalSize + "}");
+	}
+	
+	/**
+	 * Sorts in order of increasing reference count.
+	 */
+	static class ByRefCount extends QuickSort.Comparator {
 		public int compare(Object obj1, Object obj2) {
 			Leak l1 = (Leak) obj1, l2 = (Leak) obj2;
 			return (l1.mRefCount - l2.mRefCount);
@@ -112,9 +197,19 @@ class Leak {
 	}
 
 	/**
+	 * Sorts in order of decreasing number of children.
+	 */
+	public static class ByChildCount extends QuickSort.Comparator {
+		public int compare(Object obj1, Object obj2) {
+			Leak l1 = (Leak) obj1, l2 = (Leak) obj2;
+			return (l2.mChildCount - l1.mChildCount);
+		}
+	}
+
+	/**
 	 * Sorts in order of decreasing total size.
 	 */
-	static class ByTotalSize implements QuickSort.Comparator {
+	static class ByTotalSize extends QuickSort.Comparator {
 		public int compare(Object obj1, Object obj2) {
 			Leak l1 = (Leak) obj1, l2 = (Leak) obj2;
 			return (l2.mTotalSize - l1.mTotalSize);
@@ -218,7 +313,7 @@ public class leaksoup {
 					
 				    // record the offset of the stack crawl, which will be read in and formatted at the end, to save memory.
 					long crawlOffset = reader.offset;
-					int crawlCount = 0;
+					short crawlCount = 0;
 					for (line = reader.readLine(); line != null && !line.startsWith("Leaked "); line = reader.readLine())
 						++crawlCount;
 
@@ -248,14 +343,14 @@ public class leaksoup {
 				Leak leak = (Leak) e.nextElement();
 				Object[] refs = leak.mReferences;
 				int count = refs.length;
-				for (int i = 0; i < count; i++) {
-					String addr = (String) refs[i];
+				for (int r = 0; r < count; ++r) {
+					String addr = (String) refs[r];
 					Leak ref = (Leak) leakTable.get(addr);
 					if (ref != null) {
 						// increase the ref count.
 						ref.mRefCount++;
 						// change string to ref itself.
-						refs[i] = ref;
+						refs[r] = ref;
 						// add leak to ref's parents vector.
 						Vector parents = (Vector) parentTable.get(ref);
 						if (parents == null) {
@@ -272,6 +367,44 @@ public class leaksoup {
 			// be nice to the GC.
 			leakTable.clear();
 			leakTable = null;
+
+            // sort the leaks by address, and find interior pointers.
+            {
+                QuickSort byAddress = new QuickSort(new Reference.ByAddress());
+                byAddress.sort(leaks);
+            }
+            
+            for (int i = 0; i < leakCount; ++i) {
+                Leak leak = leaks[i];
+                Object[] refs = leak.mReferences;
+                int count = refs.length;
+                short childCount = 0;
+                for (int r = 0; r < count; ++r) {
+                    if (refs[r] instanceof String) {
+                        String addr = (String) refs[r];
+                        if (addr.equals("0x00000000")) continue;
+                        int address = (int) Long.parseLong(addr.substring(2), 16);
+                        Leak ref = (Leak) Reference.findNearest(leaks, address);
+                        if (ref != null) {
+    						// increase the ref count.
+    						ref.mRefCount++;
+    						// change string to ref itself.
+    						refs[r] = ref;
+						    // add leak to ref's parents vector.
+    						Vector parents = (Vector) parentTable.get(ref);
+    						if (parents == null) {
+    							parents = new Vector();
+    							parentTable.put(ref, parents);
+    						}
+    						parents.addElement(leak);
+    						++childCount;
+                        }
+                    } else {
+                        ++childCount;
+                    }
+                }
+                leak.mChildCount = childCount;
+            }
 			
 			// set the parents of each leak.
 			e = parentTable.keys();
@@ -292,32 +425,22 @@ public class leaksoup {
 			Date now = new Date();
 			out.println("<TITLE>Leaks as of " + now + "</TITLE>");
 
-			// print leak summary.
-			out.println("<H2>Leak Summary</H2>");
-			out.println("total objects leaked = " + leakCount + "<BR>");
-			out.println("total memory leaked  = " + totalSize + " bytes.<BR>");
-			
-			// sort the leaks by reference count. then compute each root leak's total size.
-			QuickSort byCount = new QuickSort(new Leak.ByCount());
-			byCount.sort(leaks);
-			for (int i = 0; i < leakCount; ++i) {
-				Leak leak = leaks[i];
-				if (leak.mTotalSize == 0)
-					leak.computeTotalSize();
-			}
-			
-			// print the object histogram report.
-    		out.println("<H2>Leak Histogram:</H2>");
-			printHistogram(out, hist);
-			
+            // print leak summary.
+            out.println("<H2>Leak Summary</H2>");
+            out.println("total objects leaked = " + leakCount + "<BR>");
+            out.println("total memory leaked  = " + totalSize + " bytes.<BR>");
+
+    		printLeakHistogram(out, hist);
+	        printLeakStructure(out, leaks);
+
 			// open original file again, as a RandomAccessFile, to read in stack crawl information.
-			RandomAccessFile in = new RandomAccessFile(inputName, "r");
 			
 			// print the leak report.
-			if (ROOTS_ONLY)
-				printRootLeaks(in, out, leaks);
-			else
+			if (!ROOTS_ONLY) {
+    			RandomAccessFile in = new RandomAccessFile(inputName, "r");
 				printLeaks(in, out, leaks);
+				in.close();
+			}
 			
 			out.close();
 		} catch (Exception e) {
@@ -329,10 +452,10 @@ public class leaksoup {
 	 * Sorts the bins of a histogram by (count * typeSize) to show the
 	 * most pressing leaks.
 	 */
-	static class HistComparator implements QuickSort.Comparator {
+	static class ByTypeBinSize extends QuickSort.Comparator {
 		Histogram hist;
 		
-		HistComparator(Histogram hist) {
+		ByTypeBinSize(Histogram hist) {
 			this.hist = hist;
 		}
 	
@@ -342,12 +465,13 @@ public class leaksoup {
 		}
 	}
 
-	static void printHistogram(PrintWriter out, Histogram hist) throws IOException {
+	static void printLeakHistogram(PrintWriter out, Histogram hist) throws IOException {
 		// sort the types by histogram count.
 		Object[] types = hist.objects();
-		QuickSort sorter = new QuickSort(new HistComparator(hist));
-		sorter.sort(types);
+		QuickSort byTypeBinSize = new QuickSort(new ByTypeBinSize(hist));
+		byTypeBinSize.sort(types);
 		
+		out.println("<H2>Leak Histogram</H2>");
 		out.println("<PRE>");
 		int index = types.length;
 		while (index > 0) {
@@ -356,6 +480,60 @@ public class leaksoup {
 			out.println(type.toString() + " : " + count + " {" + (count * type.mSize) + "}");
 		}
 		out.println("</PRE>");
+	}
+	
+	static void printLeakStructure(PrintWriter out, Leak[] leaks) {
+        // print root leaks. consider only leaks with a reference
+        // count of 0, which when fixed, will hopefully reclaim
+        // all of the objects below them in the graph.
+        {
+            QuickSort byRefCount = new QuickSort(new Leak.ByRefCount());
+            byRefCount.sort(leaks);
+        }
+        
+        int rootCount = 0;
+        int leakCount = leaks.length;
+        for (int i = 0; i < leakCount; ++i) {
+            Leak leak = leaks[i];
+            if (leak.mRefCount > 0)
+                break;
+            ++rootCount;
+            leak.computeTotalSize();
+        }
+
+        {
+            QuickSort byTotalSize = new QuickSort(new Leak.ByTotalSize());
+            byTotalSize.sort(leaks, rootCount);
+        }
+
+        out.println("<H2>Leak Roots</H2>");
+        out.println("<PRE>");
+        for (int i = 0; i < rootCount; ++i) {
+            Leak leak = leaks[i];
+            leak.printGraph(out);
+        }
+        out.println("</PRE>");
+
+        // print leak cycles. traverse the leaks from objects with most number
+        // of children to least, so that leaf objects will be printed after
+        // their parents.
+        {
+            QuickSort byChildCount = new QuickSort(new Leak.ByChildCount());
+            byChildCount.sort(leaks);
+        }
+        
+        out.println("<H2>Leak Cycles</H2>");
+        out.println("<PRE>");
+        for (int i = 0; i < leakCount; ++i) {
+            Leak leak = leaks[i];
+            // if an object's total size isn't known yet, then it must
+            // be a member of a cycle, since it wasn't reached when traversing roots.
+            if (leak.mTotalSize == 0) {
+                leak.computeTotalSize();
+                leak.printCycle(out);
+            }
+        }
+        out.println("</PRE>");
 	}
 	
 	static StringBuffer appendChar(StringBuffer buffer, int ch) {
@@ -400,21 +578,11 @@ public class leaksoup {
 		QuickSort bySize = new QuickSort(new Leak.ByTotalSize());
 		bySize.sort(leaks);
 
-		out.println("<H2>Leak Roots</H2>");
-		
-		out.println("<PRE>");
-
-		int leakCount = leaks.length;
-		for (int i = 0; i < leakCount; i++) {
-			Leak leak = leaks[i];
-			if (leak.mRefCount == 0)
-				out.println(leak);
-		}
-		
-		Type anchorType = null;
-
 		// now, print the report, sorted by type size.
-		for (int i = 0; i < leakCount; i++) {
+		out.println("<PRE>");
+		Type anchorType = null;
+        int leakCount = leaks.length;
+		for (int i = 0; i < leakCount; ++i) {
 			Leak leak = leaks[i];
 			if (anchorType != leak.mType) {
 				anchorType = leak.mType;
@@ -422,10 +590,10 @@ public class leaksoup {
 				out.println("<A NAME=\"" + anchorType.mName + "_" + anchorType.mSize + "\"></A>");
 				out.println("<H3>" + anchorType + " Leaks</H3>");
 			}
-			out.println("<A NAME=\"" + leak.mAddress + "\"></A>");
+			out.println("<A NAME=\"" + leak.mName + "\"></A>");
 			if (leak.mParents != null) {
 				out.print(leak);
-				out.println(" <A HREF=\"#" + leak.mAddress + "_parents\">parents</A>");
+				out.println(" <A HREF=\"#" + leak.mName + "_parents\">parents</A>");
 			} else {
 				out.println(leak);
 			}
@@ -436,7 +604,7 @@ public class leaksoup {
 				printField(out, refs[j]);
 			// print object's stack crawl:
 			in.seek(leak.mCrawlOffset);
-			int crawlCount = leak.mCrawlCount;
+			short crawlCount = leak.mCrawlCount;
 			while (crawlCount-- > 0) {
 			    String line = in.readLine();
 				String location = FileLocator.getFileLocation(line);
@@ -444,7 +612,7 @@ public class leaksoup {
 			}
 			// print object's parents.
 			if (leak.mParents != null) {
-				out.println("<A NAME=\"" + leak.mAddress + "_parents\"></A>");
+				out.println("<A NAME=\"" + leak.mName + "_parents\"></A>");
 				out.println("\nLeak Parents:");
 				Leak[] parents = leak.mParents;
 				count = parents.length;
@@ -452,56 +620,6 @@ public class leaksoup {
 					out.println("\t" + parents[j]);
 			}
 		}
-
-		out.println("</PRE>");
-	}
-	
-	static void printRootLeaks(RandomAccessFile in, PrintWriter out, Leak[] leaks) throws IOException {
-		// sort the leaks by total size.
-		QuickSort bySize = new QuickSort(new Leak.ByTotalSize());
-		bySize.sort(leaks);
-
-		out.println("<H2>Leak Roots Only</H2>");
-		
-		out.println("<PRE>");
-
-		int leakCount = leaks.length;
-		for (int i = 0; i < leakCount; i++) {
-			Leak leak = leaks[i];
-			if (leak.mRefCount == 0)
-				out.println(leak);
-		}
-
-		Type anchorType = null;
-
-		// now, print just the root leaks.
-		for (int i = 0; i < leakCount; i++) {
-			Leak leak = leaks[i];
-			if (leak.mRefCount > 0)
-				continue;
-			if (anchorType != leak.mType) {
-				anchorType = leak.mType;
-				out.println("\n<HR>");
-				out.println("<A NAME=\"" + anchorType.mName + "_" + anchorType.mSize + "\"></A>");
-				out.println("<H3>" + anchorType + " Leaks</H3>");
-			}
-			out.println("<A NAME=\"" + leak.mAddress + "\"></A>");
-			out.println(leak);
-			// print object's fields:
-			Object[] refs = leak.mReferences;
-			int count = refs.length;
-			for (int j = 0; j < count; j++)
-				printField(out, refs[j]);
-			// print object's stack crawl:
-			in.seek(leak.mCrawlOffset);
-			int crawlCount = leak.mCrawlCount;
-			while (crawlCount-- > 0) {
-			    String line = in.readLine();
-				String location = FileLocator.getFileLocation(line);
-				out.println(location);
-			}
-		}
-
 		out.println("</PRE>");
 	}
 }

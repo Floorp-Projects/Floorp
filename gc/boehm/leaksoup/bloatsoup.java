@@ -90,7 +90,7 @@ public class bloatsoup {
         }
     }
 
-    static class ByTypeBloat implements QuickSort.Comparator {
+    static class ByTypeBloat extends QuickSort.Comparator {
         Histogram hist;
         
         ByTypeBloat(Histogram hist) {
@@ -108,7 +108,7 @@ public class bloatsoup {
      * Sorts the bins of a histogram by (count * typeSize) to show the
      * most pressing leaks.
      */
-    static class HistComparator implements QuickSort.Comparator {
+    static class HistComparator extends QuickSort.Comparator {
         Histogram hist;
         
         HistComparator(Histogram hist) {
@@ -124,7 +124,7 @@ public class bloatsoup {
     static void printHistogram(PrintWriter out, Histogram hist, String dir) throws IOException {
         // sort the types by histogram count.
         Object[] types = hist.objects();
-        QuickSort sorter = new QuickSort(new leaksoup.HistComparator(hist));
+        QuickSort sorter = new QuickSort(new HistComparator(hist));
         sorter.sort(types);
         
         out.println("<PRE>");

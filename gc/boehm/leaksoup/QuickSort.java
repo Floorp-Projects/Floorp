@@ -1,12 +1,12 @@
 public class QuickSort {
-	public interface Comparator {
-		int compare(Object obj1, Object obj2);
+	public static abstract class Comparator {
+		public abstract int compare(Object obj1, Object obj2);
 	}
 
-	Comparator itsComparator;
+	private Comparator mComparator;
 
 	public QuickSort(Comparator comparator) {
-		itsComparator = comparator;
+		mComparator = comparator;
 	}
 
    /** This is a generic version of C.A.R Hoare's Quick Sort 
@@ -38,13 +38,13 @@ public class QuickSort {
 				/* find the first element that is greater than or equal to 
 				* the partition element starting from the left Index.
 				*/
-				while (( lo < hi0 ) && ( itsComparator.compare(a[lo], mid) < 0 ))
+				while (( lo < hi0 ) && ( mComparator.compare(a[lo], mid) < 0 ))
 					++lo;
 
 				/* find an element that is smaller than or equal to 
 				* the partition element starting from the right Index.
 				*/
-				while (( hi > lo0 ) && ( itsComparator.compare(a[hi], mid) > 0 ))
+				while (( hi > lo0 ) && ( mComparator.compare(a[hi], mid) > 0 ))
 					--hi;
 
 				// if the indexes have not crossed, swap

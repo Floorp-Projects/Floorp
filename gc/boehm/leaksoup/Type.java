@@ -62,7 +62,7 @@ class Type {
 		return "<A HREF=\"#" + mName + "_" + mSize + "\">&LT;" + mName + "&GT;</A> (" + mSize + ")";
 	}
 
-	static class Comparator implements QuickSort.Comparator {
+	static class Comparator extends QuickSort.Comparator {
 		public int compare(Object obj1, Object obj2) {
 			Type t1 = (Type) obj1, t2 = (Type) obj2;
 			return (t1.mSize - t2.mSize);
