@@ -22,9 +22,20 @@
 #include "nsISupports.h"
 #include "nsString.h"
 
-class nsIDataFlavor;
-class nsISupportsArray;
+class nsString;
+class nsVoidArray;
 class nsIFormatConverter;
+
+#define kTextMime      "text/plain"
+#define kXIFMime       "text/xif"
+#define kUnicodeMime   "text/unicode"
+#define kHTMLMime      "text/html"
+#define kAOLMailMime   "AOLMAIL"
+#define kPNGImageMime  "image/png"
+#define kJPEGImageMime "image/jpg"
+#define kGIFImageMime  "image/gif"
+#define kDropFilesMime "text/dropfiles"
+
 
 // {8B5314BC-DB01-11d2-96CE-0060B0FB9956}
 #define NS_ITRANSFERABLE_IID      \
@@ -43,7 +54,7 @@ class nsITransferable : public nsISupports {
     * @param  aDataFlavorList fills list with supported flavors. This is a copy of
     *          the internal list, so it may be edited w/out affecting the transferable.
     */
-  NS_IMETHOD FlavorsTransferableCanExport ( nsISupportsArray** outFlavorList ) = 0;
+  NS_IMETHOD FlavorsTransferableCanExport ( nsVoidArray** outFlavorList ) = 0;
 
   /**
     * Get the list of data flavors that this transferable supports (w/out conversion). 
@@ -53,15 +64,7 @@ class nsITransferable : public nsISupports {
     * @param  aDataFlavorList fills list with supported flavors. This is a copy of
     *          the internal list, so it may be edited w/out affecting the transferable.
     */
-    NS_IMETHOD GetTransferDataFlavors(nsISupportsArray ** aDataFlavorList) = 0;
-
-  /**
-    * See if the given flavor is supported  
-    *
-    * @param  aFlavor the flavor to check
-    * @result Returns NS_OK if supported, return NS_ERROR_FAILURE if not
-    */
-    NS_IMETHOD IsDataFlavorSupported(nsIDataFlavor * aFlavor) = 0;
+    NS_IMETHOD GetTransferDataFlavors(nsVoidArray ** aDataFlavorList) = 0;
 
   /**
     * Given a flavor retrieve the data. 
@@ -70,13 +73,64 @@ class nsITransferable : public nsISupports {
     * @param  aData the data. This is NOT a copy, so the caller MUST NOT DELETE it.
     * @param  aDataLen the length of the data
     */
-    NS_IMETHOD GetTransferData(nsIDataFlavor * aFlavor, void ** aData, PRUint32 * aDataLen) = 0;
+    NS_IMETHOD GetTransferData(nsString * aFlavor, void ** aData, PRUint32 * aDataLen) = 0;
 
   /**
     * Returns PR_TRUE if the data is large.
     *
     */
     NS_IMETHOD_(PRBool) IsLargeDataSet() = 0;
+
+    ///////////////////////////////
+    // Setter part of interface 
+    ///////////////////////////////
+
+  /**
+    * Computes a list of flavors that the transferable can accept into it, either through
+    * intrinsic knowledge or input data converters.
+    *
+    * @param  outFlavorList fills list with supported flavors. This is a copy of
+    *          the internal list, so it may be edited w/out affecting the transferable.
+    */
+  NS_IMETHOD FlavorsTransferableCanImport ( nsVoidArray** outFlavorList ) = 0;
+
+  /**
+    * Gets the data from the transferable as a specified DataFlavor. The transferable still
+    * owns the data, so the caller must NOT delete it.
+    *
+    * @param  aFlavor the flavor of data that is being set
+    * @param  aData the data 
+    * @param  aDataLen the length of the data
+    */
+    NS_IMETHOD SetTransferData(nsString * aFlavor, void * aData, PRUint32 aDataLen) = 0;
+
+  /**
+    * Add the data flavor, indicating that this transferable 
+    * can receive this type of flavor
+    *
+    * @param  aDataFlavor a new data flavor to handle
+    */
+    NS_IMETHOD AddDataFlavor(nsString * aDataFlavor) = 0;
+
+  /**
+    * Removes the data flavor by MIME name (NOT by pointer addr)
+    *
+    * @param  aDataFlavor a data flavor to remove
+    */
+    NS_IMETHOD RemoveDataFlavor(nsString * aDataFlavor) = 0;
+
+  /**
+    * Sets the converter for this transferable
+    *
+    */
+    NS_IMETHOD SetConverter(nsIFormatConverter * aConverter) = 0;
+
+  /**
+    * Gets the converter for this transferable
+    *
+    */
+    NS_IMETHOD GetConverter(nsIFormatConverter ** aConverter) = 0;
+
 
 };
 

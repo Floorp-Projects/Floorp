@@ -26,8 +26,7 @@
 
 #define MAX_FORMATS 32
 
-class nsIDataFlavor;
-class nsISupportsArray;
+class nsVoidArray;
 class CEnumFormatEtc;
 class nsITransferable;
 
@@ -61,10 +60,10 @@ class nsDataObj : public IDataObject
 		virtual HRESULT SetMetafilePict(FORMATETC&  FE, STGMEDIUM&  STM);
 
     // support for clipboard
-    void AddDataFlavor(nsIDataFlavor * aDataFlavor, LPFORMATETC aFE);
+    void AddDataFlavor(nsString * aDataFlavor, LPFORMATETC aFE);
     void SetTransferable(nsITransferable * aTransferable);
 
-		virtual HRESULT GetText(nsIDataFlavor * aDF, FORMATETC&  FE, STGMEDIUM&  STM);
+		virtual HRESULT GetText(nsString * aDF, FORMATETC&  FE, STGMEDIUM&  STM);
 
 		// Return the registered OLE class ID of this object's CfDataObj.
 		CLSID GetClassID() const;
@@ -139,7 +138,7 @@ class nsDataObj : public IDataObject
    	static ULONG g_cRef;              // the cum reference count of all instances
 		ULONG        m_cRef;              // the reference count
 
-    nsISupportsArray * mDataFlavors;  // we own and ref count the array
+    nsVoidArray * mDataFlavors;       // we own and its contents
 
     nsITransferable  * mTransferable; // nsDataObj owns and ref counts nsITransferable, 
                                       // the nsITransferable does know anything about the nsDataObj

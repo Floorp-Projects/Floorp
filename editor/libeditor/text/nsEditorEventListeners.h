@@ -26,7 +26,6 @@
 #include "nsIDOMDragListener.h"
 #include "nsIDOMCompositionListener.h"
 #include "nsITextEditor.h"
-#include "nsIDataFlavor.h"
 #include "nsCOMPtr.h"
 
 /** The nsTextEditorKeyListener public nsIDOMKeyListener
@@ -198,9 +197,6 @@ public:
 
 protected:
   nsCOMPtr<nsITextEditor> mEditor;
-
-  nsCOMPtr<nsIDataFlavor> mTextDataFlavor;
-  nsCOMPtr<nsIDataFlavor> mImageDataFlavor;
 
 };
 

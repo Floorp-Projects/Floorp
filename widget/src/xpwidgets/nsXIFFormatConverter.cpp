@@ -16,9 +16,9 @@
  * Reserved.
  */
 
-#include "nsIDataFlavor.h"
+#include "nsString.h"
 #include "nsWidgetsCID.h"
-#include "nsISupportsArray.h"
+#include "nsVoidArray.h"
 #include "nsRepository.h"
 
 // These are temporary
@@ -37,7 +37,7 @@
 #include "nsHTMLToTXTSinkStream.h"
 #include "nsXIFDTD.h"
 
-#include "nsIDataFlavor.h"
+#include "nsString.h"
 #include "nsWidgetsCID.h"
 #include "nsXIFFormatConverter.h"
 
@@ -46,10 +46,6 @@ static NS_DEFINE_IID(kIXIFFormatConverterIID,  NS_IFORMATCONVERTER_IID);
 
 static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
 static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
-
-static NS_DEFINE_IID(kIDataFlavorIID,    NS_IDATAFLAVOR_IID);
-static NS_DEFINE_IID(kCDataFlavorCID,    NS_DATAFLAVOR_CID);
-
 
 NS_IMPL_ADDREF(nsXIFFormatConverter)
 NS_IMPL_RELEASE(nsXIFFormatConverter)
@@ -98,28 +94,15 @@ nsresult nsXIFFormatConverter::QueryInterface(const nsIID& aIID, void** aInstanc
 }
 
 
-static void AddFlavor(nsISupportsArray * aArray, const nsString & aMime, const nsString & aReadable)
-{
-  nsIDataFlavor * flavor;
-  nsresult rv = nsComponentManager::CreateInstance(kCDataFlavorCID, nsnull, kIDataFlavorIID, (void**) &flavor);
-  if (NS_OK == rv) {
-    flavor->Init(aMime, aReadable);
-    if (nsnull != flavor) {
-      aArray->AppendElement(flavor);
-    }
-  }
-}
-
 /**
   * 
   *
   */
-NS_IMETHODIMP nsXIFFormatConverter::GetInputDataFlavors(nsISupportsArray ** aDataFlavorList)
+NS_IMETHODIMP nsXIFFormatConverter::GetInputDataFlavors(nsVoidArray ** aDataFlavorList)
 {
-  nsISupportsArray * array;
-  nsresult rv = NS_NewISupportsArray(&array);
-  if (NS_OK == rv) {
-    AddFlavor(array, kXIFMime, "XIF");
+  nsVoidArray * array = new nsVoidArray();
+  if (nsnull != array) {
+    array->AppendElement(new nsString(kXIFMime));
     *aDataFlavorList = array;
   }
   return NS_OK;
@@ -129,15 +112,14 @@ NS_IMETHODIMP nsXIFFormatConverter::GetInputDataFlavors(nsISupportsArray ** aDat
   * 
   *
   */
-NS_IMETHODIMP nsXIFFormatConverter::GetOutputDataFlavors(nsISupportsArray ** aDataFlavorList)
+NS_IMETHODIMP nsXIFFormatConverter::GetOutputDataFlavors(nsVoidArray ** aDataFlavorList)
 {
-  nsISupportsArray * array;
-  nsresult rv = NS_NewISupportsArray(&array);
-  if (NS_OK == rv) {
-    AddFlavor(array, kXIFMime,     "XIF");
-    AddFlavor(array, kTextMime,    "Text");
-    AddFlavor(array, kAOLMailMime, "AOLMail");
-    AddFlavor(array, kHTMLMime,    "HTML");
+  nsVoidArray * array = new nsVoidArray();
+  if (nsnull != array) {
+    array->AppendElement(new nsString(kXIFMime));
+    array->AppendElement(new nsString(kTextMime));
+    array->AppendElement(new nsString(kAOLMailMime));
+    array->AppendElement(new nsString(kHTMLMime));
     *aDataFlavorList = array;
   }
   return NS_OK;
@@ -149,25 +131,19 @@ NS_IMETHODIMP nsXIFFormatConverter::GetOutputDataFlavors(nsISupportsArray ** aDa
   * 
   *
   */
-NS_IMETHODIMP nsXIFFormatConverter::CanConvert(nsIDataFlavor * aFromDataFlavor, nsIDataFlavor * aToDataFlavor)
+NS_IMETHODIMP nsXIFFormatConverter::CanConvert(nsString * aFromDataFlavor, nsString * aToDataFlavor)
 {
 
   // This method currently only converts from XIF to the others
-  nsAutoString  fromMimeInQuestion;
-  aFromDataFlavor->GetMimeType(fromMimeInQuestion);
-
-  if (!fromMimeInQuestion.Equals(kXIFMime)) {
+  if (!aFromDataFlavor->Equals(kXIFMime)) {
     return NS_ERROR_FAILURE;
   }
 
-  nsAutoString  toMimeInQuestion;
-  aToDataFlavor->GetMimeType(toMimeInQuestion);
-
-  if (toMimeInQuestion.Equals(kTextMime)) {
+  if (aToDataFlavor->Equals(kTextMime)) {
     return NS_OK;
-  } else if (toMimeInQuestion.Equals(kHTMLMime)) {
+  } else if (aToDataFlavor->Equals(kHTMLMime)) {
     return NS_OK;
-  } else if (toMimeInQuestion.Equals(kAOLMailMime)) {
+  } else if (aToDataFlavor->Equals(kAOLMailMime)) {
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -177,36 +153,31 @@ NS_IMETHODIMP nsXIFFormatConverter::CanConvert(nsIDataFlavor * aFromDataFlavor, 
   * 
   *
   */
-NS_IMETHODIMP nsXIFFormatConverter::Convert(nsIDataFlavor * aFromDataFlavor, void * aFromData, PRUint32 aDataLen,
-                                      nsIDataFlavor * aToDataFlavor, void ** aToData, PRUint32 * aDataToLen)
+NS_IMETHODIMP nsXIFFormatConverter::Convert(nsString * aFromDataFlavor, void * aFromData, PRUint32 aDataLen,
+                                            nsString * aToDataFlavor, void ** aToData, PRUint32 * aDataToLen)
 {
 
   // This method currently only converts from XIF to the others
-  nsAutoString  fromMimeInQuestion;
-  aFromDataFlavor->GetMimeType(fromMimeInQuestion);
 
-  if (!fromMimeInQuestion.Equals(kXIFMime)) {
+  if (!aFromDataFlavor->Equals(kXIFMime)) {
     return NS_ERROR_FAILURE;
   }
-
-  nsAutoString  toMimeInQuestion;
-  aToDataFlavor->GetMimeType(toMimeInQuestion);
 
   nsAutoString text;
   nsAutoString srcText;
   srcText.SetString((char *)aFromData, aDataLen);
 
-  if (toMimeInQuestion.Equals(kTextMime)) {
+  if (aToDataFlavor->Equals(kTextMime)) {
     if (NS_OK == ConvertFromXIFToText(srcText, text)) {
       *aToData = (void *)text.ToNewCString();
       *aDataToLen = text.Length();
     }
-  } else if (toMimeInQuestion.Equals(kHTMLMime)) {
+  } else if (aToDataFlavor->Equals(kHTMLMime)) {
     if (NS_OK == ConvertFromXIFToHTML(srcText, text)) {
       *aToData = (void *)text.ToNewCString();
       *aDataToLen = text.Length();
     }
-  } else if (toMimeInQuestion.Equals(kAOLMailMime)) {
+  } else if (aToDataFlavor->Equals(kAOLMailMime)) {
     if (NS_OK == ConvertFromXIFToAOLMail(srcText, text)) {
       *aToData = (void *)text.ToNewCString();
       *aDataToLen = text.Length();

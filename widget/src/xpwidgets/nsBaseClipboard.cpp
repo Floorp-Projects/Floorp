@@ -18,17 +18,14 @@
 
 #include "nsBaseClipboard.h"
 
-#include "nsISupportsArray.h"
 #include "nsIClipboardOwner.h"
-#include "nsIDataFlavor.h"
+#include "nsString.h"
 
 #include "nsIWidget.h"
 #include "nsIComponentManager.h"
 #include "nsWidgetsCID.h"
 
 // interface definitions
-static NS_DEFINE_IID(kIDataFlavorIID,    NS_IDATAFLAVOR_IID);
-
 static NS_DEFINE_IID(kIWidgetIID,        NS_IWIDGET_IID);
 static NS_DEFINE_IID(kWindowCID,         NS_WINDOW_CID);
 
@@ -74,12 +71,12 @@ nsresult nsBaseClipboard::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
   nsresult rv = NS_NOINTERFACE;
 
-  /*static NS_DEFINE_IID(kIClipboard, NS_ICLIPBOARD_IID);
+  static NS_DEFINE_IID(kIClipboard, NS_ICLIPBOARD_IID);
   if (aIID.Equals(kIClipboard)) {
     *aInstancePtr = (void*) ((nsIClipboard*)this);
     NS_ADDREF_THIS();
     return NS_OK;
-  }*/
+  }
 
   return rv;
 }
@@ -131,22 +128,6 @@ NS_IMETHODIMP nsBaseClipboard::GetData(nsITransferable * aTransferable)
   return NS_ERROR_FAILURE;
 }
 
-
-
-/**
-  * This checks to see if the transferable in the clipboard object supports
-  * a particular data flavor
-  *
-  */
-NS_IMETHODIMP nsBaseClipboard::IsDataFlavorSupported(nsIDataFlavor * aDataFlavor)
-{
-  // make sure we have a good transferable
-  if (nsnull == mTransferable) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return mTransferable->IsDataFlavorSupported(aDataFlavor);
-}
 
 /**
   * 

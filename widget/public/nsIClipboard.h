@@ -20,10 +20,10 @@
 #define nsIClipboard_h__
 
 #include "nsISupports.h"
+#include "nsString.h"
 
 class nsITransferable;
 class nsIClipboardOwner;
-class nsIDataFlavor;
 
 // {8B5314BA-DB01-11d2-96CE-0060B0FB9956}
 #define NS_ICLIPBOARD_IID      \
@@ -53,14 +53,6 @@ class nsIClipboard : public nsISupports {
     */
   
     NS_IMETHOD GetData(nsITransferable * aTransferable) = 0;
-
-   /**
-    * Check to set if ant of the native data on the clipboard matches this data flavor
-    *
-    * @result NS_OK if if the data flavor is supported and, NS_ERROR_FAILURE is it is not
-    */
-  
-    NS_IMETHOD IsDataFlavorSupported(nsIDataFlavor * aDataFlavor) = 0;
 
    /**
     * This empties the clipboard and notifies the clipboard owner

@@ -133,7 +133,7 @@ NS_IMETHODIMP nsBaseDragService::GetData (nsITransferable * aTransferable)
 }
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsBaseDragService::IsDataFlavorSupported(nsIDataFlavor * aDataFlavor)
+NS_IMETHODIMP nsBaseDragService::IsDataFlavorSupported(nsString * aDataFlavor)
 {
   return NS_ERROR_FAILURE;
 }

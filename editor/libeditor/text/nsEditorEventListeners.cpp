@@ -48,13 +48,11 @@ static NS_DEFINE_IID(kIDOMCharacterDataIID, NS_IDOMCHARACTERDATA_IID);
 #include "nsIDragService.h"
 #include "nsIDragSession.h"
 #include "nsITransferable.h"
-#include "nsIGenericTransferable.h"
-#include "nsIDataFlavor.h"
 #include "nsIFormatConverter.h"
 
 // Drag & Drop, Clipboard Support
 static NS_DEFINE_CID(kCDragServiceCID,         NS_DRAGSERVICE_CID);
-static NS_DEFINE_CID(kCGenericTransferableCID, NS_GENERICTRANSFERABLE_CID);
+static NS_DEFINE_CID(kCTransferableCID,        NS_TRANSFERABLE_CID);
 static NS_DEFINE_IID(kCDataFlavorCID,          NS_DATAFLAVOR_CID);
 static NS_DEFINE_IID(kCXIFFormatConverterCID,  NS_XIFFORMATCONVERTER_CID);
 
@@ -924,19 +922,6 @@ NS_IMPL_RELEASE(nsTextEditorDragListener)
 nsTextEditorDragListener::nsTextEditorDragListener() 
 {
   NS_INIT_REFCNT();
-  
-  nsresult rv = nsComponentManager::CreateInstance(kCDataFlavorCID, nsnull, 
-                                                   nsIDataFlavor::GetIID(), 
-                                                   (void**) getter_AddRefs(mTextDataFlavor));
-  if (NS_OK == rv) {
-    mTextDataFlavor->Init(kTextMime, "");
-  }
-
-  /*rv = nsComponentManager::CreateInstance(kCDataFlavorCID, nsnull, 
-                                                   nsIDataFlavor::GetIID(), (void**) getter_AddRefs(mImageDataFlavor));
-  if (NS_OK == rv) {
-    mImageDataFlavor->Init(kJPEGImageMime, "");
-  }*/
 }
 
 nsTextEditorDragListener::~nsTextEditorDragListener() 
@@ -991,7 +976,8 @@ nsTextEditorDragListener::DragEnter(nsIDOMEvent* aDragEvent)
   if (NS_OK == rv) {
     nsCOMPtr<nsIDragSession> dragSession(do_QueryInterface(dragService));
 
-    if (dragSession && (NS_OK == dragSession->IsDataFlavorSupported(mTextDataFlavor))) {
+    nsAutoString textFlavor(kTextMime);
+    if (dragSession && NS_OK == dragSession->IsDataFlavorSupported(&textFlavor)) {
       dragSession->SetCanDrop(PR_TRUE);
     }
     
@@ -1012,8 +998,8 @@ nsTextEditorDragListener::DragOver(nsIDOMEvent* aDragEvent)
                                            (nsISupports **)&dragService);
   if (NS_OK == rv) {
     nsCOMPtr<nsIDragSession> dragSession(do_QueryInterface(dragService));
-
-    if (dragSession && NS_OK == dragSession->IsDataFlavorSupported(mTextDataFlavor)) {
+    nsAutoString textFlavor(kTextMime);
+    if (dragSession && NS_OK == dragSession->IsDataFlavorSupported(&textFlavor)) {
       dragSession->SetCanDrop(PR_TRUE);
     } 
     
@@ -1051,18 +1037,19 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
     if (dragSession) {
 
       // Create transferable for getting the drag data
-      nsCOMPtr<nsIGenericTransferable> genericTrans;
-      rv = nsComponentManager::CreateInstance(kCGenericTransferableCID, nsnull, 
-                                              nsIGenericTransferable::GetIID(), 
-                                              (void**) getter_AddRefs(genericTrans));
+      nsCOMPtr<nsITransferable> trans;
+      rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
+                                              nsITransferable::GetIID(), 
+                                              (void**) getter_AddRefs(trans));
       if (NS_OK == rv) {
         // Add the text Flavor to the transferable, 
         // because that is the only type of data we are looking for at the moment
-        genericTrans->AddDataFlavor(mTextDataFlavor);
+        nsAutoString textMime(kTextMime);
+        trans->AddDataFlavor(&textMime);
         //genericTrans->AddDataFlavor(mImageDataFlavor);
 
         // Query to get the standard interface that the drag service knows about
-        nsCOMPtr<nsITransferable> trans (do_QueryInterface(genericTrans));
+        nsCOMPtr<nsITransferable> trans (do_QueryInterface(trans));
         if (trans) {
 
           // Fill the transferable with our requested data flavor
@@ -1072,7 +1059,7 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
           // Note: the transferable owns the pointer to the data
           char *str = 0;
           PRUint32 len;
-          trans->GetTransferData(mTextDataFlavor, (void **)&str, &len);
+          trans->GetTransferData(&textMime, (void **)&str, &len);
 
           // If the string was not empty then paste it in
           if (str) {

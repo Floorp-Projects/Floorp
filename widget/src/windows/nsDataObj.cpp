@@ -20,13 +20,9 @@
 //#include "DragDrop.h"
 #include "nsDataObj.h"
 #include "nsString.h"
-#include "nsISupportsArray.h"
-#include "nsIDataFlavor.h"
+#include "nsVoidArray.h"
 #include "nsITransferable.h"
 #include "IENUMFE.h"
-
-// interface definitions
-static NS_DEFINE_IID(kIDataFlavorIID,    NS_IDATAFLAVOR_IID);
 
 //#include "OLEIDL.h"
 #include "OLE2.h"
@@ -59,8 +55,7 @@ nsDataObj::nsDataObj()
 {
 	m_cRef	        = 0;
   mTransferable   = nsnull;
-  nsresult result = NS_NewISupportsArray(&mDataFlavors);
-  NS_ADDREF(mDataFlavors);
+  mDataFlavors    = new nsVoidArray();
 
   m_enumFE = new CEnumFormatEtc(32);
   m_enumFE->AddRef();
@@ -73,7 +68,11 @@ nsDataObj::nsDataObj()
 nsDataObj::~nsDataObj()
 {
   NS_IF_RELEASE(mTransferable);
-  NS_IF_RELEASE(mDataFlavors);
+  PRInt32 i;
+  for (i=0;i<mDataFlavors->Count();i++) {
+    nsString * df = (nsString *)mDataFlavors->ElementAt(i);
+    delete df;
+  }
 
 	m_cRef = 0;
   m_enumFE->Release();
@@ -151,9 +150,8 @@ STDMETHODIMP nsDataObj::GetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
   FORMATETC fe;
   m_enumFE->Reset();
   while (NOERROR == m_enumFE->Next(1, &fe, &count)) {
-    nsIDataFlavor * df;
-    nsISupports * supports = mDataFlavors->ElementAt(dfInx);
-    if (NS_OK == supports->QueryInterface(kIDataFlavorIID, (void **)&df)) {
+    nsString * df = (nsString *)mDataFlavors->ElementAt(dfInx);
+    if (nsnull != df) {
 		  if (FormatsMatch(fe, *pFE)) {
 			  pSTM->pUnkForRelease = NULL;
 			  CLIPFORMAT format = pFE->cfFormat;
@@ -172,9 +170,7 @@ STDMETHODIMP nsDataObj::GetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
             break;
         } //switch
       } // if
-      NS_RELEASE(df);
     }
-    NS_RELEASE(supports);
     dfInx++;
   } // while
 
@@ -329,7 +325,7 @@ HRESULT nsDataObj::GetDib(FORMATETC&, STGMEDIUM&)
 }
 
 //-----------------------------------------------------
-HRESULT nsDataObj::GetText(nsIDataFlavor * aDF, FORMATETC& aFE, STGMEDIUM& aSTG)
+HRESULT nsDataObj::GetText(nsString * aDF, FORMATETC& aFE, STGMEDIUM& aSTG)
 {
   char     * data;
   PRUint32   len;
@@ -451,13 +447,13 @@ CLSID nsDataObj::GetClassID() const
 //-----------------------------------------------------
 // Registers a the DataFlavor/FE pair
 //-----------------------------------------------------
-void nsDataObj::AddDataFlavor(nsIDataFlavor * aDataFlavor, LPFORMATETC aFE)
+void nsDataObj::AddDataFlavor(nsString * aDataFlavor, LPFORMATETC aFE)
 {
   // These two lists are the mapping to and from data flavors and FEs
   // Later, OLE will tell us it's needs a certain type of FORMATETC (text, unicode, etc)
   // so we will look up data flavor that corresponds to the FE
   // and then ask the transferable for that type of data
-  mDataFlavors->AppendElement(aDataFlavor);
+  mDataFlavors->AppendElement(new nsString(*aDataFlavor));
   m_enumFE->AddFE(aFE);
 
 }

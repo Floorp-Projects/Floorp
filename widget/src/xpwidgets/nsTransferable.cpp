@@ -17,10 +17,10 @@
  */
 
 #include "nsTransferable.h"
-#include "nsIDataFlavor.h"
+#include "nsString.h"
 #include "nsDataFlavor.h"
 #include "nsWidgetsCID.h"
-#include "nsISupportsArray.h"
+#include "nsVoidArray.h"
 #include "nsIFormatConverter.h"
 #include "nsVoidArray.h"
 #include "nsIComponentManager.h"
@@ -28,18 +28,15 @@
  
 
 static NS_DEFINE_IID(kITransferableIID,        NS_ITRANSFERABLE_IID);
-static NS_DEFINE_IID(kIGenericTransferableIID, NS_IGENERICTRANSFERABLE_IID);
-static NS_DEFINE_IID(kIDataFlavorIID,          NS_IDATAFLAVOR_IID);
-static NS_DEFINE_IID(kCDataFlavorCID,          NS_DATAFLAVOR_CID);
 
 
 NS_IMPL_ADDREF(nsTransferable)
 NS_IMPL_RELEASE(nsTransferable)
 
 typedef struct {
-  nsIDataFlavor * mFlavor;
-  char *   mData;
-  PRUint32 mDataLen;
+  nsString * mFlavor;
+  char *     mData;
+  PRUint32   mDataLen;
 } DataStruct;
 
 //-------------------------------------------------------------------------
@@ -64,7 +61,7 @@ nsTransferable::~nsTransferable()
   for (i=0;i<mDataArray->Count();i++) {
     DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
     if (data) {
-      NS_RELEASE(data->mFlavor);
+      delete data->mFlavor;
       if (data->mData) {
         delete[] data->mData;
       }
@@ -95,12 +92,6 @@ nsresult nsTransferable::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     return NS_OK;
   }
 
-  if (aIID.Equals(kIGenericTransferableIID)) {
-    *aInstancePtr = (void*) ((nsIGenericTransferable*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
   return rv;
 }
 
@@ -109,62 +100,38 @@ nsresult nsTransferable::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   * 
   *
   */
-NS_IMETHODIMP nsTransferable::GetTransferDataFlavors(nsISupportsArray ** aDataFlavorList)
+NS_IMETHODIMP nsTransferable::GetTransferDataFlavors(nsVoidArray ** aDataFlavorList)
 {
-  nsISupportsArray * array;
-  nsresult rv = NS_NewISupportsArray(&array);
-  if (NS_OK == rv) {
+  nsVoidArray * array = new nsVoidArray();
+  if (nsnull != array) {
     PRInt32 i;
     for (i=0;i<mDataArray->Count();i++) {
       DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
-      array->AppendElement(data->mFlavor);    // this addref's for us
+      array->AppendElement(data->mFlavor);    
     }
     *aDataFlavorList = array;
+  } else {
+    aDataFlavorList = nsnull;
   }
   return NS_OK;
-}
-
-/**
-  * 
-  *
-  */
-NS_IMETHODIMP nsTransferable::IsDataFlavorSupported(nsIDataFlavor * aDataFlavor)
-{
-  nsAutoString  mimeInQuestion;
-  aDataFlavor->GetMimeType(mimeInQuestion);
-
-  PRInt32 i;
-  for (i=0;i<mDataArray->Count();i++) {
-    DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
-    nsAutoString mime;
-    data->mFlavor->GetMimeType(mime);
-    if (mimeInQuestion.Equals(mime)) {
-      return NS_OK;
-    }
-  }
-  return NS_ERROR_FAILURE;
 }
 
 /**
   * The transferable owns the data (memory) and only gives the aData a copy of the pointer address to it.
   *
   */
-NS_IMETHODIMP nsTransferable::GetTransferData(nsIDataFlavor * aDataFlavor, void ** aData, PRUint32 * aDataLen)
+NS_IMETHODIMP nsTransferable::GetTransferData(nsString * aDataFlavor, void ** aData, PRUint32 * aDataLen)
 {
-  nsAutoString  mimeInQuestion;
-  aDataFlavor->GetMimeType(mimeInQuestion);
 
   PRInt32 i;
   for (i=0;i<mDataArray->Count();i++) {
     DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
-    nsAutoString mime;
-    data->mFlavor->GetMimeType(mime);
-    if (mimeInQuestion.Equals(mime)) {
-       *aData    = data->mData;
-       *aDataLen = data->mDataLen;
-       if (nsnull != data->mData && data->mDataLen > 0) {
-         return NS_OK;
-       }
+    if (aDataFlavor->Equals(*data->mFlavor)) {
+      *aData    = data->mData;
+      *aDataLen = data->mDataLen;
+      if (nsnull != data->mData && data->mDataLen > 0) {
+        return NS_OK;
+      }
     }
   }
 
@@ -184,21 +151,16 @@ NS_IMETHODIMP nsTransferable::GetTransferData(nsIDataFlavor * aDataFlavor, void 
   * The transferable now owns the data (the memory pointing to it)
   *
   */
-NS_IMETHODIMP nsTransferable::SetTransferData(nsIDataFlavor * aDataFlavor, void * aData, PRUint32 aDataLen)
+NS_IMETHODIMP nsTransferable::SetTransferData(nsString * aDataFlavor, void * aData, PRUint32 aDataLen)
 {
   if (aData == nsnull) {
     return NS_ERROR_FAILURE;
   }
 
-  nsAutoString  mimeInQuestion;
-  aDataFlavor->GetMimeType(mimeInQuestion);
-
   PRInt32 i;
   for (i=0;i<mDataArray->Count();i++) {
     DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
-    nsAutoString mime;
-    data->mFlavor->GetMimeType(mime);
-    if (mimeInQuestion.Equals(mime)) {
+    if (aDataFlavor->Equals(*data->mFlavor)) {
       if (nsnull != data->mData) {
         delete[] data->mData;
       }
@@ -215,33 +177,26 @@ NS_IMETHODIMP nsTransferable::SetTransferData(nsIDataFlavor * aDataFlavor, void 
   * 
   *
   */
-NS_IMETHODIMP nsTransferable::AddDataFlavor(nsIDataFlavor * aDataFlavor)
+NS_IMETHODIMP nsTransferable::AddDataFlavor(nsString * aDataFlavor)
 {
   if (nsnull == aDataFlavor) {
     return NS_ERROR_FAILURE;
   }
 
-  nsAutoString  mimeInQuestion;
-  aDataFlavor->GetMimeType(mimeInQuestion);
-
   // Do we have the data flavor already?
   PRInt32 i;
   for (i=0;i<mDataArray->Count();i++) {
     DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
-    nsAutoString mime;
-    data->mFlavor->GetMimeType(mime);
-    if (mimeInQuestion.Equals(mime)) {
+    if (aDataFlavor->Equals(*data->mFlavor)) {
       return NS_ERROR_FAILURE;
     }
   }
 
   // Create a new "slot" for the data
   DataStruct * data = new DataStruct;
-  data->mFlavor     = aDataFlavor;
+  data->mFlavor     = new nsString(*aDataFlavor);
   data->mData       = nsnull;
   data->mDataLen    = 0;
-
-  NS_ADDREF(aDataFlavor);
 
   mDataArray->AppendElement((void *)data);
 
@@ -251,23 +206,21 @@ NS_IMETHODIMP nsTransferable::AddDataFlavor(nsIDataFlavor * aDataFlavor)
   * 
   *
   */
-NS_IMETHODIMP nsTransferable::RemoveDataFlavor(nsIDataFlavor * aDataFlavor)
+NS_IMETHODIMP nsTransferable::RemoveDataFlavor(nsString * aDataFlavor)
 {
   if (nsnull == aDataFlavor) {
     return NS_ERROR_FAILURE;
   }
 
-  nsAutoString  mimeInQuestion;
-  aDataFlavor->GetMimeType(mimeInQuestion);
-
   // Do we have the data flavor already?
   PRInt32 i;
   for (i=0;i<mDataArray->Count();i++) {
     DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
-    nsAutoString mime;
-    data->mFlavor->GetMimeType(mime);
-    if (mimeInQuestion.Equals(mime)) {
-      delete data;
+    if (aDataFlavor->Equals(*data->mFlavor)) {
+      delete data->mFlavor;
+      if (data->mData) {
+        delete[] data->mData;
+      }
       mDataArray->RemoveElementAt(i);
       return NS_OK;
     }
@@ -319,7 +272,7 @@ NS_IMETHODIMP nsTransferable::GetConverter(nsIFormatConverter ** aConverter)
 // intrinsic knowledge or input data converters.
 //
 NS_IMETHODIMP
-nsTransferable :: FlavorsTransferableCanImport ( nsISupportsArray** outFlavorList )
+nsTransferable :: FlavorsTransferableCanImport ( nsVoidArray** outFlavorList )
 {
   if ( !outFlavorList )
     return NS_ERROR_INVALID_ARG;
@@ -331,17 +284,16 @@ nsTransferable :: FlavorsTransferableCanImport ( nsISupportsArray** outFlavorLis
   nsCOMPtr<nsIFormatConverter> converter;
   GetConverter(getter_AddRefs(converter));
   if ( converter ) {
-    nsCOMPtr<nsISupportsArray> convertedList;
-    converter->GetInputDataFlavors(getter_AddRefs(convertedList));
-    if ( convertedList ) {
+    nsVoidArray * convertedList;
+    converter->GetInputDataFlavors(&convertedList);
+    if ( nsnull != convertedList ) {
       PRUint32 i;
-      PRUint32 cnt;
-      nsresult rv = convertedList->Count(&cnt);
-      if (NS_FAILED(rv)) return rv;
+      PRUint32 cnt = convertedList->Count();
       for (i=0;i<cnt;i++) {
-  	    nsCOMPtr<nsISupports> temp = getter_AddRefs(convertedList->ElementAt(i));
-        (*outFlavorList)->AppendElement(temp);    // this addref's for us
+  	    nsString * temp = (nsString *)convertedList->ElementAt(i);
+        (*outFlavorList)->AppendElement(temp);    
       } // foreach flavor that can be converted to
+      delete convertedList;
     }
   } // if a converter exists
 
@@ -357,7 +309,7 @@ nsTransferable :: FlavorsTransferableCanImport ( nsISupportsArray** outFlavorLis
 // intrinsic knowledge or output data converters.
 //
 NS_IMETHODIMP
-nsTransferable :: FlavorsTransferableCanExport ( nsISupportsArray** outFlavorList )
+nsTransferable :: FlavorsTransferableCanExport ( nsVoidArray** outFlavorList )
 {
   if ( !outFlavorList )
     return NS_ERROR_INVALID_ARG;
@@ -369,15 +321,13 @@ nsTransferable :: FlavorsTransferableCanExport ( nsISupportsArray** outFlavorLis
   nsCOMPtr<nsIFormatConverter> converter;
   GetConverter(getter_AddRefs(converter));
   if ( converter ) {
-    nsCOMPtr<nsISupportsArray> convertedList;
-    converter->GetOutputDataFlavors(getter_AddRefs(convertedList));
-    if ( convertedList ) {
+    nsVoidArray * convertedList;
+    converter->GetOutputDataFlavors(&convertedList);
+    if ( nsnull != convertedList ) {
       PRUint32 i;
-      PRUint32 cnt;
-      nsresult rv = convertedList->Count(&cnt);
-      if (NS_FAILED(rv)) return rv;
+      PRUint32 cnt = convertedList->Count();
       for (i=0;i<cnt;i++) {
-  	    nsCOMPtr<nsISupports> temp = getter_AddRefs(convertedList->ElementAt(i));
+  	    nsString * temp = (nsString *)convertedList->ElementAt(i);
         (*outFlavorList)->AppendElement(temp);    // this addref's for us
       } // foreach flavor that can be converted to
     }

@@ -24,7 +24,6 @@
 #include "nsNativeDragTarget.h"
 #include "nsNativeDragSource.h"
 #include "nsClipboard.h"
-#include "nsIDataFlavor.h"
 #include "nsISupportsArray.h"
 
 #include <OLE2.h>
@@ -206,7 +205,7 @@ NS_IMETHODIMP nsDragService::SetIDataObject (IDataObject * aDataObj)
 }
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsDragService::IsDataFlavorSupported(nsIDataFlavor * aDataFlavor)
+NS_IMETHODIMP nsDragService::IsDataFlavorSupported(nsString * aDataFlavor)
 {
   if (nsnull == aDataFlavor || nsnull == mDataObject) {
     return NS_ERROR_FAILURE;
@@ -215,10 +214,7 @@ NS_IMETHODIMP nsDragService::IsDataFlavorSupported(nsIDataFlavor * aDataFlavor)
   //DWORD   types[]  = {TYMED_HGLOBAL, TYMED_FILE, TYMED_ISTREAM, TYMED_GDI};
   //PRInt32 numTypes = 4;
 
-  nsString mime;
-  aDataFlavor->GetMimeType(mime);
-
-  UINT format = nsClipboard::GetFormat(mime);
+  UINT format = nsClipboard::GetFormat(*aDataFlavor);
 
   // XXX at the moment we only support global memory transfers
   // It is here where we will add support for native images 

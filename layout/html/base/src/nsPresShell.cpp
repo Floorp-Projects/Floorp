@@ -67,22 +67,17 @@
 #include "nsLayoutAtoms.h"
 #include "nsPlaceholderFrame.h"
 
-#include "nsIDataFlavor.h"
-
 // Drag & Drop, Clipboard
 #include "nsWidgetsCID.h"
 #include "nsIClipboard.h"
 #include "nsITransferable.h"
-#include "nsIGenericTransferable.h"
-#include "nsIDataFlavor.h"
 #include "nsIFormatConverter.h"
 #include "nsIWebShell.h"
 
 
 // Drag & Drop, Clipboard Support
 static NS_DEFINE_CID(kCClipboardCID,           NS_CLIPBOARD_CID);
-static NS_DEFINE_CID(kCGenericTransferableCID, NS_GENERICTRANSFERABLE_CID);
-static NS_DEFINE_IID(kCDataFlavorCID,          NS_DATAFLAVOR_CID);
+static NS_DEFINE_CID(kCTransferableCID,        NS_TRANSFERABLE_CID);
 static NS_DEFINE_IID(kCXIFConverterCID,        NS_XIFFORMATCONVERTER_CID);
 
 static PRBool gsNoisyRefs = PR_FALSE;
@@ -1545,43 +1540,33 @@ PresShell::DoCopy()
 
       // Create a data flavor to tell the transferable 
       // that it is about to receive XIF
-      nsCOMPtr<nsIDataFlavor> flavor;
-      rv = nsComponentManager::CreateInstance(kCDataFlavorCID, 
-                                              nsnull, 
-                                              nsIDataFlavor::GetIID(), (void**) getter_AddRefs(flavor));
+      nsAutoString flavor(kXIFMime);
+
+      // Create a transferable for putting data on the Clipboard
+      nsCOMPtr<nsITransferable> trans;
+      rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
+                                              nsITransferable::GetIID(), 
+                                              (void**) getter_AddRefs(trans));
       if (NS_OK == rv) {
-        // Initialize data flavor to XIF
-        flavor->Init(kXIFMime, "XIF");
-
-        // Create a transferable for putting data on the Clipboard
-        nsCOMPtr<nsIGenericTransferable> genericTrans;
-        rv = nsComponentManager::CreateInstance(kCGenericTransferableCID, nsnull, 
-                                                nsIGenericTransferable::GetIID(), 
-                                                (void**) getter_AddRefs(genericTrans));
+        // The data on the clipboard will be in "XIF" format
+        // so give the clipboard transferable a "XIFConverter" for 
+        // converting from XIF to other formats
+        nsCOMPtr<nsIFormatConverter> xifConverter;
+        rv = nsComponentManager::CreateInstance(kCXIFConverterCID, nsnull, 
+                                                nsIFormatConverter::GetIID(), (void**) getter_AddRefs(xifConverter));
         if (NS_OK == rv) {
-          // The data on the clipboard will be in "XIF" format
-          // so give the clipboard transferable a "XIFConverter" for 
-          // converting from XIF to other formats
-          nsCOMPtr<nsIFormatConverter> xifConverter;
-          rv = nsComponentManager::CreateInstance(kCXIFConverterCID, nsnull, 
-                                                  nsIFormatConverter::GetIID(), (void**) getter_AddRefs(xifConverter));
-          if (NS_OK == rv) {
-            // Add the XIF DataFlavor to the transferable
-            // this tells the transferable that it can handle receiving the XIF format
-            genericTrans->AddDataFlavor(flavor);
+          // Add the XIF DataFlavor to the transferable
+          // this tells the transferable that it can handle receiving the XIF format
+          trans->AddDataFlavor(&flavor);
 
-            // Add the converter for going from XIF to other formats
-            genericTrans->SetConverter(xifConverter);
+          // Add the converter for going from XIF to other formats
+          trans->SetConverter(xifConverter);
 
-            // Now add the XIF data to the transferable
-            genericTrans->SetTransferData(flavor, buffer.ToNewCString(), buffer.Length());
+          // Now add the XIF data to the transferable
+          trans->SetTransferData(&flavor, buffer.ToNewCString(), buffer.Length());
 
-            // put the transferable on the clipboard
-            nsCOMPtr<nsITransferable> trans = do_QueryInterface(genericTrans);
-            if (trans) {
-              clipboard->SetData(trans, nsnull);
-            }
-          }
+          // put the transferable on the clipboard
+          clipboard->SetData(trans, nsnull);
         }
       }
       nsServiceManager::ReleaseService(kCClipboardCID, clipboard);

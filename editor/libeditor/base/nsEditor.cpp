@@ -81,14 +81,12 @@
 #include "nsWidgetsCID.h"
 #include "nsIClipboard.h"
 #include "nsITransferable.h"
-#include "nsIGenericTransferable.h"
-#include "nsIDataFlavor.h"
+#include "nsITransferable.h"
 #include "nsIFormatConverter.h"
 
 // Drag & Drop, Clipboard Support
 static NS_DEFINE_CID(kCClipboardCID,           NS_CLIPBOARD_CID);
-static NS_DEFINE_CID(kCGenericTransferableCID, NS_GENERICTRANSFERABLE_CID);
-static NS_DEFINE_IID(kCDataFlavorCID,          NS_DATAFLAVOR_CID);
+static NS_DEFINE_CID(kCTransferableCID,        NS_TRANSFERABLE_CID);
 static NS_DEFINE_IID(kCXIFFormatConverterCID,  NS_XIFFORMATCONVERTER_CID);
 
 static NS_DEFINE_IID(kIContentIID,          NS_ICONTENT_IID);
@@ -849,6 +847,7 @@ NS_IMETHODIMP nsEditor::Copy()
 
 NS_IMETHODIMP nsEditor::Paste()
 {
+
   //printf("nsEditor::Paste\n");
   nsString stuffToPaste;
 
@@ -859,49 +858,32 @@ NS_IMETHODIMP nsEditor::Paste()
                                              (nsISupports **)&clipboard);
 
   // Create generic Transferable for getting the data
-  nsCOMPtr<nsIGenericTransferable> genericTrans;
-  rv = nsComponentManager::CreateInstance(kCGenericTransferableCID, nsnull, 
-                                          nsIGenericTransferable::GetIID(), 
-                                          (void**) getter_AddRefs(genericTrans));
+  nsCOMPtr<nsITransferable> trans;
+  rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
+                                          nsITransferable::GetIID(), 
+                                          (void**) getter_AddRefs(trans));
   if (NS_OK == rv) {
     // Get the nsITransferable interface for getting the data from the clipboard
-    nsCOMPtr<nsITransferable> trans(do_QueryInterface(genericTrans));
     if (trans) {
-      nsCOMPtr<nsIDataFlavor> flavor;
-
       // Create the desired DataFlavor for the type of data we want to get out of the transferable
-      rv = nsComponentManager::CreateInstance(kCDataFlavorCID, nsnull, nsIDataFlavor::GetIID(), (void**) getter_AddRefs(flavor));
-      if (NS_OK == rv) {
-        // Initialize the DataFlavor and set it into the GenericTransferable
-        flavor->Init(kTextMime, kTextMime);
+      nsAutoString flavor(kTextMime);
 
-//#define TEST_IS_DATA_FLAVOR_SUPPORTED 1
-#ifdef TEST_IS_DATA_FLAVOR_SUPPORTED
-        // For testing IsDataFlavorSupported:
-        rv = trans->IsDataFlavorSupported(flavor);
-        if (!NS_SUCCEEDED(rv)) {
-          printf("\07>>>>>>>>>>>>> transferable doesn't support text data flavor\n");
-          //return rv;
-        }
-#endif /* TEST_IS_DATA_FLAVOR_SUPPORTED */
+      trans->AddDataFlavor(&flavor);
 
-        genericTrans->AddDataFlavor(flavor);
+      // Get the Data from the clipboard
+      clipboard->GetData(trans);
 
-        // Get the Data from the clipboard
-        clipboard->GetData(trans);
+      // Now we ask the transferable for the data
+      // it still owns the data, we just have a pointer to it.
+      // If it can't support a "text" output of the data the call will fail
+      char *str = 0;
+      PRUint32 len;
+      if (NS_OK == trans->GetTransferData(&flavor, (void **)&str, &len)) {
 
-        // Now we ask the transferable for the data
-        // it still owns the data, we just have a pointer to it.
-        // If it can't support a "text" output of the data the call will fail
-        char *str = 0;
-        PRUint32 len;
-        if (NS_OK == trans->GetTransferData(flavor, (void **)&str, &len)) {
-
-          // Make adjustments for null terminated strings
-          if (str && len > 0) {
-            // stuffToPaste is ready for insertion into the content
-            stuffToPaste.SetString(str, len);
-          }
+        // Make adjustments for null terminated strings
+        if (str && len > 0) {
+          // stuffToPaste is ready for insertion into the content
+          stuffToPaste.SetString(str, len);
         }
       }
     }

@@ -20,8 +20,8 @@
 #define nsIDragSession_h__
 
 #include "nsISupports.h"
+#include "nsString.h"
 
-class  nsIDataFlavor;
 class  nsITransferable;
 struct nsSize;
 
@@ -100,7 +100,7 @@ class nsIDragSession : public nsISupports {
     * @result NS_OK if if the data flavor is supported and, NS_ERROR_FAILURE is it is not
     */
 
-    NS_IMETHOD IsDataFlavorSupported(nsIDataFlavor * aDataFlavor) = 0;
+    NS_IMETHOD IsDataFlavorSupported(nsString * aDataFlavor) = 0;
 };
 
 #endif

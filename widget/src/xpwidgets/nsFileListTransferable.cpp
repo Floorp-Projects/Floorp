@@ -18,9 +18,8 @@
 
 #include "nsFileSpec.h"
 #include "nsFileListTransferable.h"
-#include "nsIDataFlavor.h"
+#include "nsString.h"
 #include "nsWidgetsCID.h"
-#include "nsISupportsArray.h"
 #include "nsVoidArray.h"
 #include "nsIComponentManager.h"
 #include "nsCOMPtr.h"
@@ -39,12 +38,7 @@ nsFileListTransferable::nsFileListTransferable()
   NS_INIT_REFCNT();
   mFileList = new nsVoidArray();
   
-  nsresult rv = nsComponentManager::CreateInstance(kCDataFlavorCID, nsnull, 
-                                                   nsIDataFlavor::GetIID(), 
-                                                   (void**) getter_AddRefs(mFileListDataFlavor));
-  if (NS_OK == rv) {
-    mFileListDataFlavor->Init(kDropFilesMime, "File List");
-  }
+  mFileListDataFlavor = kDropFilesMime;
 
 }
 
@@ -78,12 +72,6 @@ nsresult nsFileListTransferable::QueryInterface(const nsIID& aIID, void** aInsta
     return NS_OK;
   }
 
-  if (aIID.Equals(nsIGenericTransferable::GetIID())) {
-    *aInstancePtr = (void*) ((nsIGenericTransferable*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
   if (aIID.Equals(nsIFileListTransferable::GetIID())) {
     *aInstancePtr = (void*) ((nsIFileListTransferable*)this);
     NS_ADDREF_THIS();
@@ -94,29 +82,30 @@ nsresult nsFileListTransferable::QueryInterface(const nsIID& aIID, void** aInsta
 }
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsFileListTransferable::GetTransferDataFlavors(nsISupportsArray ** aDataFlavorList)
+NS_IMETHODIMP nsFileListTransferable::GetTransferDataFlavors(nsVoidArray ** aDataFlavorList)
 {
-  nsISupportsArray * array;
-  nsresult rv = NS_NewISupportsArray(&array);
-  if (NS_OK == rv) {
-    array->AppendElement(mFileListDataFlavor);    // this addref's for us
+  nsVoidArray * array = new nsVoidArray();
+  if (nsnull != array) {
+    array->AppendElement(new nsString(mFileListDataFlavor));    // this addref's for us
     *aDataFlavorList = array;
+  } else {
+    aDataFlavorList = nsnull;
   }
   return NS_OK;
 }
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsFileListTransferable::IsDataFlavorSupported(nsIDataFlavor * aDataFlavor)
+NS_IMETHODIMP nsFileListTransferable::IsDataFlavorSupported(nsString * aDataFlavor)
 {
-  return (mFileListDataFlavor->Equals(aDataFlavor)?NS_OK:NS_ERROR_FAILURE);
+  return (mFileListDataFlavor.Equals(*aDataFlavor)?NS_OK:NS_ERROR_FAILURE);
 }
 
 //-------------------------------------------------------------------------
 // The transferable owns the data (memory) and only gives the aData a copy of the pointer address to it.
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsFileListTransferable::GetTransferData(nsIDataFlavor * aDataFlavor, void ** aData, PRUint32 * aDataLen)
+NS_IMETHODIMP nsFileListTransferable::GetTransferData(nsString * aDataFlavor, void ** aData, PRUint32 * aDataLen)
 {
-  if (nsnull != mFileList && mFileListDataFlavor->Equals(aDataFlavor)) {
+  if (nsnull != mFileList && mFileListDataFlavor.Equals(*aDataFlavor)) {
     *aData    = mFileList;
     *aDataLen = mFileList->Count();
   } else {
@@ -146,9 +135,9 @@ void nsFileListTransferable::ClearFileList()
 //---------------------------------------------------
 // The transferable now owns the data (the memory pointing to it)
 //---------------------------------------------------
-NS_IMETHODIMP nsFileListTransferable::SetTransferData(nsIDataFlavor * aDataFlavor, void * aData, PRUint32 aDataLen)
+NS_IMETHODIMP nsFileListTransferable::SetTransferData(nsString * aDataFlavor, void * aData, PRUint32 aDataLen)
 {
-  if (aData == nsnull &&  mFileListDataFlavor->Equals(aDataFlavor)) {
+  if (aData == nsnull &&  mFileListDataFlavor.Equals(*aDataFlavor)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -213,8 +202,7 @@ NS_IMETHODIMP nsFileListTransferable::GetFileList(nsVoidArray * aFileList)
 // Computes a list of flavors that the transferable can accept into it, either through
 // intrinsic knowledge or input data converters.
 //---------------------------------------------------
-NS_IMETHODIMP
-nsFileListTransferable::FlavorsTransferableCanImport( nsISupportsArray** aOutFlavorList )
+NS_IMETHODIMP nsFileListTransferable::FlavorsTransferableCanImport( nsVoidArray ** aOutFlavorList )
 {
   if ( !aOutFlavorList )
     return NS_ERROR_INVALID_ARG;
@@ -231,7 +219,7 @@ nsFileListTransferable::FlavorsTransferableCanImport( nsISupportsArray** aOutFla
 // intrinsic knowledge or output data converters.
 //---------------------------------------------------
 NS_IMETHODIMP
-nsFileListTransferable::FlavorsTransferableCanExport( nsISupportsArray** aOutFlavorList )
+nsFileListTransferable::FlavorsTransferableCanExport( nsVoidArray** aOutFlavorList )
 {
   if ( !aOutFlavorList )
     return NS_ERROR_INVALID_ARG;
@@ -241,13 +229,13 @@ nsFileListTransferable::FlavorsTransferableCanExport( nsISupportsArray** aOutFla
 } // FlavorsTransferableCanImport
 
 //---------------------------------------------------
-NS_IMETHODIMP nsFileListTransferable::AddDataFlavor(nsIDataFlavor * aDataFlavor)
+NS_IMETHODIMP nsFileListTransferable::AddDataFlavor(nsString * aDataFlavor)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //---------------------------------------------------
-NS_IMETHODIMP nsFileListTransferable::RemoveDataFlavor(nsIDataFlavor * aDataFlavor)
+NS_IMETHODIMP nsFileListTransferable::RemoveDataFlavor(nsString * aDataFlavor)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
