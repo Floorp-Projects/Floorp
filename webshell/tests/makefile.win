@@ -18,6 +18,6 @@
 DEPTH=..\..
 IGNORE_MANIFEST=1
 
-DIRS= viewer imgtest nettest
+DIRS= viewer imgtest
 
 include <$(DEPTH)\config\rules.mak>
