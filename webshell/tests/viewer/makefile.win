@@ -60,6 +60,7 @@ LINCS=  \
   -I$(PUBLIC)\java \
   -I$(PUBLIC)\plugin \
   -I$(PUBLIC)\pref \
+  -I$(PUBLIC)\profile \
   -I$(PUBLIC)\editor \
   -I$(PUBLIC)\uconv \
   -I$(PUBLIC)\strres \

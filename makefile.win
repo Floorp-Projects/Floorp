@@ -45,6 +45,7 @@ DIRS = \
   jpeg				\
   modules\libreg		\
   xpcom				\
+  profile			\
   modules\zlib			\
   modules\libjar        \
   modules\libutil		\
