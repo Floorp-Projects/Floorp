@@ -42,8 +42,9 @@ use vars qw( $template $vars );
 # Make sure the user is logged in and is an administrator.
 Bugzilla->login(LOGIN_REQUIRED);
 UserInGroup("editcomponents")
-  || ThrowUserError("authorization_failure", 
-                    { action => "administer flag types" });
+  || ThrowUserError("auth_failure", {group  => "editcomponents",
+                                     action => "edit",
+                                     object => "flagtypes"});
 
 # Suppress "used only once" warnings.
 use vars qw(@legal_product @legal_components %components);

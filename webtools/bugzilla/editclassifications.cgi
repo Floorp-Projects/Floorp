@@ -78,7 +78,11 @@ Bugzilla->login(LOGIN_REQUIRED);
 
 print $cgi->header();
 
-ThrowUserError("auth_cant_edit_classifications") unless UserInGroup("editclassifications");
+UserInGroup("editclassifications")
+  || ThrowUserError("auth_failure", {group  => "editclassifications",
+                                     action => "edit",
+                                     object => "classifications"});
+
 ThrowUserError("auth_classification_not_enabled") unless Param("useclassification");
 
 #

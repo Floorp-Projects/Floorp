@@ -243,17 +243,12 @@ print Bugzilla->cgi->header();
 
 $editall = UserInGroup("editusers");
 
-if (!$editall) {
-    if (!Bugzilla->user->can_bless) {
-        PutHeader("Not allowed");
-        print "Sorry, you aren't a member of the 'editusers' group, and you\n";
-        print "don't have permissions to put people in or out of any group.\n";
-        print "And so, you aren't allowed to add, modify or delete users.\n";
-        PutTrailer();
-        exit;
-    }
-}
-
+$editall
+  || Bugzilla->user->can_bless
+  || ThrowUserError("auth_failure", {group  => "editusers",
+                                     reason => "cant_bless",
+                                     action => "edit",
+                                     object => "users"});
 
 
 #
@@ -385,13 +380,10 @@ if ($action eq 'list') {
 #
 
 if ($action eq 'add') {
+    $editall || ThrowUserError("auth_failure", {group  => "editusers",
+                                                action => "add",
+                                                object => "users"});
     PutHeader("Add user");
-    if (!$editall) {
-        print "Sorry, you don't have permissions to add new users.";
-        PutTrailer();
-        exit;
-    }
-
     print "<FORM METHOD=POST ACTION=editusers.cgi>\n";
     print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
 
@@ -415,13 +407,9 @@ if ($action eq 'add') {
 #
 
 if ($action eq 'new') {
-    PutHeader("Adding new user");
-
-    if (!$editall) {
-        print "Sorry, you don't have permissions to add new users.";
-        PutTrailer();
-        exit;
-    }
+    $editall || ThrowUserError("auth_failure", {group  => "editusers",
+                                                action => "add",
+                                                object => "users"});
 
     # Cleanups and valididy checks
     my $realname = trim($::FORM{realname} || '');
@@ -432,6 +420,7 @@ if ($action eq 'new') {
     my $disabledtext = trim($::FORM{disabledtext} || '');
     my $emailregexp = Param("emailregexp");
 
+    PutHeader("Adding new user");
     unless ($user) {
         print "You must enter a name for the new user. Please press\n";
         print "<b>Back</b> and try again.\n";
@@ -494,17 +483,10 @@ if ($action eq 'new') {
 #
 
 if ($action eq 'del') {
-    PutHeader("Delete user $user");
-    if (!$candelete) {
-        print "Sorry, deleting users isn't allowed.";
-        PutTrailer();
-        exit;
-    }
-    if (!$editall) {
-        print "Sorry, you don't have permissions to delete users.";
-        PutTrailer();
-        exit;
-    }
+    $candelete || ThrowUserError("users_deletion_disabled");
+    $editall || ThrowUserError("auth_failure", {group  => "editusers",
+                                                action => "delete",
+                                                object => "users"});
     CheckUser($user);
 
     # display some data about the user
@@ -514,6 +496,7 @@ if ($action eq 'del') {
       FetchSQLData();
     $realname = ($realname ? html_quote($realname) : "<FONT COLOR=\"red\">missing</FONT>");
     
+    PutHeader("Delete user $user");
     print "<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0>\n";
     print "<TR BGCOLOR=\"#6666FF\">\n";
     print "  <TH VALIGN=\"top\" ALIGN=\"left\">Part</TH>\n";
@@ -628,17 +611,10 @@ if ($action eq 'del') {
 #
 
 if ($action eq 'delete') {
-    PutHeader("Deleting user");
-    if (!$candelete) {
-        print "Sorry, deleting users isn't allowed.";
-        PutTrailer();
-        exit;
-    }
-    if (!$editall) {
-        print "Sorry, you don't have permissions to delete users.";
-        PutTrailer();
-        exit;
-    }
+    $candelete || ThrowUserError("users_deletion_disabled");
+    $editall || ThrowUserError("auth_failure", {group  => "editusers",
+                                                action => "delete",
+                                                object => "users"});
     CheckUser($user);
 
     SendSQL("SELECT userid
@@ -651,8 +627,9 @@ if ($action eq 'delete') {
              WHERE login_name=" . SqlQuote($user));
     SendSQL("DELETE FROM user_group_map
              WHERE user_id=" . $userid);
-    print "User deleted.<BR>\n";
 
+    PutHeader("Deleting user");
+    print "User deleted.<BR>\n";
     PutTrailer($localtrailer);
     exit;
 }

@@ -244,15 +244,10 @@ Bugzilla->login(LOGIN_REQUIRED);
 
 print Bugzilla->cgi->header();
 
-unless (UserInGroup("editcomponents")) {
-    PutHeader("Not allowed");
-    print "Sorry, you aren't a member of the 'editcomponents' group.\n";
-    print "And so, you aren't allowed to add, modify or delete products.\n";
-    PutTrailer();
-    exit;
-}
-
-
+UserInGroup("editcomponents")
+  || ThrowUserError("auth_failure", {group  => "editcomponents",
+                                     action => "edit",
+                                     object => "products"});
 
 #
 # often used variables

@@ -17,6 +17,7 @@
   # Rights Reserved.
   #
   # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #                 Frédéric Buclin <LpSolit@netscape.net>
   #%]
 
 [%# INTERFACE:
@@ -96,14 +97,60 @@
     account creation. Please contact an administrator to get a new account
     created.
 
-  [% ELSIF error == "auth_cant_edit_groups" %]
-    [% title = "Not authorized to edit groups" %]
-    Sorry, you aren't a member of the 'creategroups' group. And so,
-    you aren't allowed to edit the groups.
+  [% ELSIF error == "auth_failure" %]
+    [% title = "Authorization Required" %]
+    Sorry,
+    [% IF group %]
+      you aren't a member of the '[% group FILTER html %]' group,
+    [% END %]
 
-  [% ELSIF error == "authorization_failure" %]
-    [% title = "Authorization Failed" %]
-    You are not allowed to [% action FILTER html %].
+    [% IF reason %]
+      [% IF group %] and [% END %]
+      [% IF reason == "cant_bless" %]
+        you don't have permissions to put people in or out of any group,
+      [% END %]
+    [% END %]
+
+    and so you aren't allowed to
+    [% IF action == "add" %]
+      add new
+    [% ELSIF action == "modify" %]
+      modify
+    [% ELSIF action == "delete" %]
+      delete
+    [% ELSIF action == "edit" %]
+      add, modify or delete
+    [% ELSIF action == "schedule" %]
+      schedule
+    [% ELSIF action == "use" %]
+      use
+    [% END %]
+
+    [% IF object == "charts" %]
+      the "New Charts" feature
+    [% ELSIF object == "classifications" %]
+      classifications
+    [% ELSIF object == "components" %]
+      components
+    [% ELSIF object == "flagtypes" %]
+      flag types
+    [% ELSIF object == "groups" %]
+      groups
+    [% ELSIF object == "keywords" %]
+      keywords
+    [% ELSIF object == "milestones" %]
+      milestones
+    [% ELSIF object == "parameters" %]
+      parameters
+    [% ELSIF object == "products" %]
+      products
+    [% ELSIF object == "reports" %]
+      whine reports
+    [% ELSIF object == "users" %]
+      users
+    [% ELSIF object == "versions" %]
+      versions
+    [% END %].
 
   [% ELSIF error == "attachment_access_denied" %]
     [% title = "Access Denied" %]
@@ -146,11 +193,6 @@
     [% title = "Classification Not Enabled" %]
     Sorry, classification is not enabled.
 
-  [% ELSIF error == "auth_cant_edit_classifications" %]
-    [% title = "Access Denied" %]
-    Sorry, you aren't a member of the 'editclassifications' group, and so
-    you aren't allowed to add, modify or delete classifications.
-
   [% ELSIF error == "classification_not_specified" %]
     [% title = "You Must Supply A Classification Name" %]
     You must enter a classification name.
@@ -175,16 +217,6 @@
   [% ELSIF error == "cant_delete_default_classification" %]
      Sorry, but you can not delete the default classification,
      '[% name FILTER html %]'.
-
-  [% ELSIF error == "auth_cant_edit_components" %]
-    [% title = "Access Denied" %]
-    Sorry, you aren't a member of the 'editcomponents' group, and so
-    you aren't allowed to add, modify or delete components.
-
-  [% ELSIF error == "auth_cant_edit_milestones" %]
-    [% title = "Access Denied" %]
-    Sorry, you aren't a member of the 'editcomponents' group, and so
-    you aren't allowed to add, modify or delete milestones.
 
   [% ELSIF error == "auth_cant_edit_versions" %]
     [% title = "Access Denied" %]
@@ -554,11 +586,6 @@
   [% ELSIF error == "invalid_username_or_password" %]
     [% title = "Invalid Username Or Password" %]
     The username or password you entered is not valid.
-
-  [% ELSIF error == "keyword_access_denied" %]
-    [% title = "Access Denied" %]
-    Sorry, you aren't a member of the 'editkeywords' group, and so
-    you aren't allowed to add, modify or delete keywords.
 
   [% ELSIF error == "keyword_already_exists" %]
     [% title = "Keyword Already Exists" %]
@@ -958,6 +985,10 @@
     The version '[% version FILTER html %]' for product 
     '[% product FILTER html %]' does not exist.
 
+  [% ELSIF error == "users_deletion_disabled" %]
+    [% title = "Deletion not activated" %]
+    Sorry, the deletion of user accounts is not allowed.
+
   [% ELSIF error == "votes_must_be_nonnegative" %]
     [% title = "Votes Must Be Non-negative" %]
     Only use non-negative numbers for your [% terms.bug %] votes.
@@ -978,11 +1009,6 @@
     [% title = "Value Out Of Range" %]
     Value is out of range for field 
     <em>[% field_descs.$field FILTER html %]</em>.
-
-  [% ELSIF error == "whine_access_denied" %]
-    [% title = "Access Denied" %]
-    Sorry, you aren't a member of the 'bz_canusewhines' group, and so
-    you aren't allowed to schedule whine reports.
 
   [% ELSIF error == "zero_length_file" %]
     [% title = "File Is Empty" %]

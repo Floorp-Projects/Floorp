@@ -72,7 +72,10 @@ my $sth; # database statement handle
 my $events = get_events($userid);
 
 # First see if this user may use whines
-ThrowUserError('whine_access_denied') unless (UserInGroup('bz_canusewhines'));
+UserInGroup("bz_canusewhines")
+  || ThrowUserError("auth_failure", {group  => "bz_canusewhines",
+                                     action => "schedule",
+                                     object => "reports"});
 
 # May this user send mail to other users?
 my $can_mail_others = UserInGroup('bz_canusewhineatothers');

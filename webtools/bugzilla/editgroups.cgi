@@ -40,7 +40,10 @@ Bugzilla->login(LOGIN_REQUIRED);
 
 print Bugzilla->cgi->header();
 
-ThrowUserError("auth_cant_edit_groups") unless UserInGroup("creategroups");
+UserInGroup("creategroups")
+  || ThrowUserError("auth_failure", {group  => "creategroups",
+                                     action => "edit",
+                                     object => "groups"});
 
 my $action = trim($cgi->param('action') || '');
 

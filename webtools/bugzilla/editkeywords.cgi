@@ -58,11 +58,10 @@ Bugzilla->login(LOGIN_REQUIRED);
 
 print Bugzilla->cgi->header();
 
-unless (UserInGroup("editkeywords")) {
-    ThrowUserError("keyword_access_denied");
-    exit;
-}
-
+UserInGroup("editkeywords")
+  || ThrowUserError("auth_failure", {group  => "editkeywords",
+                                     action => "edit",
+                                     object => "keywords"});
 
 my $action  = trim($cgi->param('action')  || '');
 $vars->{'action'} = $action;

@@ -125,11 +125,10 @@ Bugzilla->login(LOGIN_REQUIRED);
 
 print Bugzilla->cgi->header();
 
-unless (UserInGroup("editcomponents")) {
-    ThrowUserError('auth_cant_edit_milestones');    
-    exit;
-}
-
+UserInGroup("editcomponents")
+  || ThrowUserError("auth_failure", {group  => "editcomponents",
+                                     action => "edit",
+                                     object => "milestones"});
 
 #
 # often used variables
