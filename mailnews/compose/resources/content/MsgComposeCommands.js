@@ -443,7 +443,7 @@ function getCurrentIdentity()
     var identitySelect = document.getElementById("msgIdentity");
     var identityKey = identitySelect.value;
     dump("Looking for identity " + identityKey + "\n");
-    var identity = accountManager.GetIdentityByKey(identityKey);
+    var identity = accountManager.getIdentity(identityKey);
     
     return identity;
 }
