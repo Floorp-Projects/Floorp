@@ -24,7 +24,9 @@
 #define _MSGCOM_H_
 
 #include "rosetta.h"
+#if 0
 #include "libmime.h"
+#endif
 
 #define SUBSCRIBE_USE_OLD_API
 
@@ -64,9 +66,11 @@
  */
 
 
+#if 0
 #include "xp_mcom.h"
 #include "xp_core.h"
 #include "ntypes.h"
+#endif
 #include "msgtypes.h"
 
 /* ===========================================================================
@@ -778,8 +782,6 @@ class AB_ContainerInfo;
 typedef struct AB_ContainerInfo AB_ContainerInfo;
 #endif
 
-/* used in MWContext to communicate IMAP stuff between libmsg and libnet */
-
 #ifdef XP_CPLUSPLUS
 class MSG_IMAPFolderInfoMail;
 class TImapServerState;
@@ -1107,185 +1109,7 @@ int32 MSG_SetDBCacheSize(int32 newCacheSize);
 
 extern MSG_Master* MSG_InitializeMail(MSG_Prefs* prefs);
 
-/* Routines to create the various panes.  Those panes that require a true
-   MWContext* take it as a parameter.  Any given thread pane is always
-   associated with a particular folder pane; any given message pane is always
-   associated with a particular thread pane.
 
-   The entire creation process goes like this:
-
-   - The FE decides to create a new pane.
-
-     - The FE creates any necessary contexts and maybe some windows and stuff
-   that it will associate with the pane.  
-
-   - The FE calls MSG_Create*Pane() to create the pane object itself.  When
-   creating a folderpane, the FE must also provide a pointer to a MSG_Prefs
-   object that contains the preferences to be used for the folderpane.  The FE
-   must be sure not to destroy that MSG_Prefs object as long as the folderpane
-   exists. Any later change made to the MSG_Prefs will automatically be
-   reflected in the folderpane and all related panes.  (Also note that when
-   creating a folderpane, msglib uses the context type to determine whether
-   this is for mail or news.)
-
-   - The FE puts the resulting pane structure into its datastructures
-   somewhere, and probably calls MSG_SetFEData() to assocatiate that
-   datastructure with the pane.
-
-*/
-
-extern MSG_Pane* MSG_CreateFolderPane(MWContext* context,
-									  MSG_Master* master);
-
-
-extern MSG_Pane* MSG_CreateThreadPane(MWContext* context,
-									  MSG_Master* master);
-
-extern MSG_Pane* MSG_CreateMessagePane(MWContext* context,
-									   MSG_Master* master);
-
-extern int MSG_SetMessagePaneCallbacks(MSG_Pane* messagepane,
-									   MSG_MessagePaneCallbacks* callbacks,
-									   void* closure);
-
-extern MSG_MessagePaneCallbacks*
-MSG_GetMessagePaneCallbacks(MSG_Pane* messagepane, void** closure);
-
-
-extern MSG_Pane* MSG_CreateCompositionPane(MWContext* context,
-										   MWContext* old_context,
-										   MSG_Prefs* prefs,
-										   MSG_CompositionFields* fields,
-										   MSG_Master* master);
-
-extern int
-MSG_SetCompositionPaneCallbacks(MSG_Pane* composepane,
-								MSG_CompositionPaneCallbacks* callbacks,
-								void* closure);
-
-/* Typically, progress panes come down when you receive all connections complete,
-	or you get a FE_PaneChanged MSG_PaneProgressDone, which gets sent when a
-	command runs in a progress pane which doesn't launch a url.
-*/
-extern MSG_Pane* MSG_CreateProgressPane (MWContext *context,
-										 MSG_Master *master,
-										 MSG_Pane *parentPane);
-
-/* WinFE (at least) has found that creating the composition pane in one swell
-   foop is too much to handle.  They really want to create the pane pointer,
-   but not start its initializing until some later point.  (The reason this is
-   nasty is that composition pane initialization can sometimes happen in the
-   background as we download attachments.)  So, if you don't want to call
-   MSG_CreateCompositionPane(), you can instead call
-   MSG_CreateCompositionPaneNoInit() and then soon call
-   MSG_InitializeCompositionPane().  What fun. */
-
-extern MSG_Pane* MSG_CreateCompositionPaneNoInit(MWContext* context,
-												 MSG_Prefs* prefs,
-												 MSG_Master* master);
-
-extern int MSG_InitializeCompositionPane(MSG_Pane* comppane, 
-										 MWContext* old_context,
-										 MSG_CompositionFields* fields);
-
-
-
-
-extern MSG_Pane* MSG_CreateSearchPane (MWContext *context,
-									   MSG_Master *master);
-
-#ifdef SUBSCRIBE_USE_OLD_API
-/* This routine is obsoleted; instead, use MSG_CreateSubscribePaneOnHost(). */
-extern MSG_Pane* MSG_CreateSubscribePane(MWContext* context,
-										 MSG_Master* master);
-
-/* Bring up the subscribe UI on the given newshost.  If host is NULL,
-   uses the default newshost. */
-extern MSG_Pane* MSG_CreateSubscribePaneOnHost(MWContext* context,
-											   MSG_Master* master,
-											   MSG_NewsHost* host);
-#endif /* SUBSCRIBE_USE_OLD_API */
-
-/* Bring up the subscribe UI on the given news or imap host.
-   If host is NULL, uses the default newshost. */
-extern MSG_Pane* MSG_CreateSubscribePaneForHost(MWContext* context,
-											   MSG_Master* master,
-											   MSG_Host* host);
-
-
-/* Tells the FEs to bring up the subscribe UI on the given news
-   or imap host. */
-extern XP_Bool FE_CreateSubscribePaneOnHost(MSG_Master* master,
-											MWContext* parentContext,
-											MSG_Host* host);
-
-/* Message compositions sometimes (usually) get kicked off by the backend
-   (like, the user clicks on a "mailto" link).  So, this call requests the FE
-   to create a new context, and call MSG_CreateCompositionPane and bring up a
-   composition window.  The given context and MSG_CompositionFields* are to be
-   passed on to MSG_CreateCompositionPane(), and lets the backend know what the
-   initial values of all the fields are to be.  The FE should then query the
-   pane (using MSG_GetCompHeader() and MSG_GetCompBody()) so that it can find
-   out what to display in the UI.
-
-   The FE should bring up either the plaintext composition or the html
-   composition window, depending on the user's preference.  One exception,
-   though: the FE must first check MSG_GetForcePlainText().  If TRUE, then
-   we are replying to a plaintext message, and the FE *must* bring up the
-   plaintext composition window.
-
- */
-
-
-extern MSG_Pane* FE_CreateCompositionPane(MWContext* old_context,
-										  MSG_CompositionFields* fields,
-										  const char* initialText,
-										  MSG_EditorType editorType);
-
-
-
-
-/* ===========================================================================
-   						RANDOM CORE FUNCTIONS (to sort)
-   ===========================================================================
- */
-
-
-/* Due to addition of Java/JavaScript MailNews API, other things in addition
-   to composition can be kicked off by the backend, so we provide the
-   following FE functions to handle those cases.
-*/
-
-/* Ask the FE for the current master.  FE should create one if it doesn't exist */
-extern MSG_Master* FE_GetMaster();
-
-/* Routines to associate or get arbitrary FE-specific data from a pane. */
-
-extern void MSG_SetFEData(MSG_Pane* pane, void* data);
-extern void* MSG_GetFEData(MSG_Pane* pane);
-
-/* Routines to to special things when Netscape mail is not being used */
-
-extern XP_Bool FE_IsAltMailUsed(MWContext * context);
-
-typedef enum {
-	MSG_IMAPUpgradeAutomatic,	/* automatically try to upgrade */
-	MSG_IMAPUpgradeCustom,		/* the user will select folders manually */
-	MSG_IMAPUpgradeDont			/* Cancel or error - don't upgrade now */
-} MSG_IMAPUpgradeType;
-
-#if defined(XP_WIN) || defined (XP_MAC) || defined(XP_UNIX) || defined(XP_BEOS)
-#define FE_IMPLEMENTS_IMAP_SUBSCRIBE_UPGRADE
-#endif
-
-#ifdef FE_IMPLEMENTS_IMAP_SUBSCRIBE_UPGRADE
-
-/* Routine to bring up the IMAP Subscription Upgrade dialog box.
-   context is the context of the parent of this dialog box;
-   hostName is the name of the IMAP host which will be upgraded.
-*/
-extern MSG_IMAPUpgradeType FE_PromptIMAPSubscriptionUpgrade (MWContext * context, const char *hostName);
-#endif
 
 /*  This function is called by the backend to notify the frontend details about 
 	new mail state so that the FE can notify the stand-alone biff that something
@@ -1309,10 +1133,6 @@ typedef enum {
 	MSG_IMAPDeleteIsDeleteNoTrash	/* delete is shift delete - don't create or use trash */
 } MSG_IMAPDeleteModel;
 
-/* run the url in the given pane. This will set the msg_pane member
-   in url, interrupt the context, and then call FE_GetURL */
-extern int MSG_GetURL(MSG_Pane *pane, URL_Struct* url);
-
 /* routines to set and get the text type, setting true indicates that the
    text is HTML */
 
@@ -1324,23 +1144,9 @@ extern void MSG_SetHTMLMarkup(MSG_Pane * composepane,XP_Bool flag);
 extern MSG_PaneType MSG_GetPaneType(MSG_Pane* pane);
 
 
-/* Finds a pane with the given type.  First, it looks for a pane which has the
-   given context associated with it; failing that, it returns any pane it can
-   find.
- */
-extern MSG_Pane* MSG_FindPane(MWContext* context, MSG_PaneType type);
-
-/* really find the pane of passed type with given context, NULL otherwise */
-extern MSG_Pane *MSG_FindPaneOfContext (MWContext *context, MSG_PaneType type);
-
 extern MSG_Pane *MSG_FindPaneOfType(MSG_Master *master, MSG_FolderInfo *id, MSG_PaneType type);
 
 extern MSG_Pane *MSG_FindPaneFromUrl (MSG_Pane *pane, const char *url, MSG_PaneType type);
-
-/* Returns the context associated with a given pane.  If this pane doesn't have
-   a context (i.e., it's a threadpane), then it will return NULL. */
-
-extern MWContext* MSG_GetContext(MSG_Pane* pane);
 
 
 /* Returns the MSG_Prefs* object that is being used to determine the
@@ -1448,9 +1254,6 @@ extern int MSG_MarkReadByDate (MSG_Pane* pane, time_t startDate, time_t endDate)
 /* notification from Server Admin page via JavaScript that an imap folder has changed */
 extern void MSG_IMAPFolderChangedNotification(const char *folder_url);
 
-/* record the imap connection in the move state of the current context */
-extern void MSG_StoreNavigatorIMAPConnectionInMoveState(MWContext *context, 
-													    TNavigatorImapConnection *connection);
 
 /* Determines whether we are currently actually showing the recipients
    in the "Sender" column of the display (because we are in the "sent"
@@ -1593,9 +1396,6 @@ extern MSG_ViewIndex MSG_ThreadIndexOfMsg(MSG_Pane* pane, MessageKey key);
    statically allocated buffer; the caller should copy it somewhere. */
 extern const char* MSG_FormatDate(MSG_Pane* pane, time_t date);
 
-/* If you don't have a pane and need to format a date ... */
-extern const char* MSG_FormatDateFromContext(MWContext *context, time_t date);
-
 /* Change the priority on a mail message */
 extern XP_Bool MSG_SetPriority(MSG_Pane *pane, /* thread or message */
 						   MessageKey key, 
@@ -1607,10 +1407,6 @@ extern XP_Bool MSG_SetPriority(MSG_Pane *pane, /* thread or message */
    renamed back onto the given filename, using XP_FileRename().
  
    The returned filename will be freed using XP_FREE().  */
-
-/* #### this should be replaced with a backup-version-hacking XP_FileOpen */
-extern char* FE_GetTempFileFor(MWContext* context, const char* fname,
-							   XP_FileType ftype, XP_FileType* rettype);
 
 
 
@@ -1678,14 +1474,6 @@ extern int MSG_ResultsRecipients(MSG_Pane* composepane,
 extern void MSG_SetPostDeliveryActionInfo (MSG_Pane* pane, 
 										   void *actionInfo);
 extern uint32 MSG_GetActionInfoFlags (void *actionInfo);
-
-/* Setting the preloaded attachments to a compose window. Drafts only */
-extern int MSG_SetPreloadedAttachments ( MSG_Pane *composepane,
-										 MWContext *context,
-										 void *attachmentData,
-										 void *attachments,
-										 int attachments_count );
-
 #ifdef XP_UNIX
 /* This is how the XFE implements non-POP message delivery.  The given donefunc
    will be called when the incorporate actually finishes, which may be before
@@ -1791,11 +1579,6 @@ typedef enum MSG_AdminURLType
 	MSG_AdminFolder,
 	MSG_AdminServerLists
 } MSG_AdminURLType;
-
-/* use this to run the url */
-extern XP_Bool MSG_GetAdminUrlForFolder(MWContext *context, MSG_FolderInfo *folder, MSG_AdminURLType type);
-/* use this to decide to show buttons and/or menut items */
-extern XP_Bool MSG_HaveAdminUrlForFolder(MSG_FolderInfo *folder, MSG_AdminURLType type);
 
 /* ===========================================================================
    							LIST CALLBACKS
@@ -2363,10 +2146,6 @@ extern void MSG_FreeAttachmentList(MSG_Pane* messagepane,
 
 
 
-/* These return NULL if they fail. Caller must call NET_FreeURLStruct */ 
-extern URL_Struct*  MSG_ConstructUrlForPane(MSG_Pane *pane);
-extern URL_Struct*  MSG_ConstructUrlForMessage(MSG_Pane *pane, MessageKey key);
-extern URL_Struct*	MSG_ConstructUrlForFolder(MSG_Pane *pane, MSG_FolderInfo *folder);
 /* Returns whether the user has asked to rot13 messages displayed in
    this pane.  (Used by libmime.) */
 extern XP_Bool MSG_ShouldRot13Message(MSG_Pane* messagepane);
@@ -2410,9 +2189,6 @@ extern void MSG_SetBiffStatFile(const char* filename);
 #endif
 /* Causes a biff check to occur immediately.  This gets caused
    automatically by MSG_SetBiffInterval or whenever libmsg gets new mail. */
-extern void MSG_BiffCheckNow(MWContext* context);
-/* Tell the FE to render in all the right places this latest knowledge as to
-   whether we have new mail waiting. */
 extern void FE_UpdateBiff(MSG_BIFF_STATE state);
 /* END OBSOLETE functions */
 
@@ -2425,11 +2201,6 @@ extern void FE_UpdateBiff(MSG_BIFF_STATE state);
 	The biff master takes care of the objects, their timers and so on. The objects
 	are used to see if new mail is available at a particular server or folder.
 */
-
-extern int MSG_BiffInit(MWContext* context, MSG_Prefs* prefs);
-extern int MSG_BiffCleanupContext(MWContext* context);		/* cleanup */
-extern void MSG_Biff_Master_FE_Progress(MWContext *context, char *msg);
-extern XP_Bool MSG_Biff_Master_NikiCallingGetNewMail();
 
 
 /* ===========================================================================
@@ -2447,28 +2218,11 @@ extern XP_Bool MSG_RequiresNewsWindow (const char *url);
 extern XP_Bool MSG_RequiresBrowserWindow (const char *url);
 extern XP_Bool MSG_RequiresComposeWindow (const char *url);
 
-/* If this URL requires a particular kind of window, and this is not
-   that kind of window, then we need to find or create one.
-   This routine takes a URL_Struct, which allows it to be smarter than
-   the obsolete routine which takes a url string.
- */
-extern XP_Bool MSG_NewWindowRequiredForURL (MWContext *context, URL_Struct *urlStruct);
-
-/* If we're in a mail window, and clicking on a link which will itself
-   require a mail window, then don't allow this to show up in a different
-   window - since there can be only one mail window.
- */
-extern XP_Bool MSG_NewWindowProhibited (MWContext *context, const char *url);
-
 
 /* When the front end loads a url, it needs to know what kind of pane the url
 	should be loaded into.
 */
 extern MSG_PaneType MSG_PaneTypeForURL(const char *url);
-
-/* Returns the number of bytes available on the disk where the given directory
-   is - this is so we know whether there is room to incorporate new mail.  */
-extern uint32 FE_DiskSpaceAvailable (MWContext* context, const char* dir);
 
 /* Counts bytes for a POP3 message being downloaded and returns TRUE if it is
 	too early to have a message ended because we found CRLF.CRLF
@@ -2529,65 +2283,12 @@ extern XP_Bool MSG_GetNewsSigningPreference(void);
    ===========================================================================
  */
 
-/* This is how the `mailto' parser asks the message library to create a
-   message composition window.  That window has its own context.  The
-   `old_context' arg is the context from which the mailto: URL was loaded.
-   It may be NULL.
-
-   Any of the fields may be 0 or "".  Some of them (From, BCC, Organization,
-   etc) will be given default values if none is provided.
-
-   This returns the new composition pane.
- */
-extern MSG_Pane* MSG_ComposeMessage(MWContext *old_context,
-									const char *from,
-									const char *reply_to,
-									const char *to,
-									const char *cc,
-									const char *bcc,
-									const char *fcc,
-									const char *newsgroups,
-									const char *followup_to,
-									const char *organization,
-									const char *subject,
-									const char *references,
-									const char *other_random_headers,
-									const char *priority,
-									const char *attachment,
-									const char *newspost_url,
-									const char *body,
-									XP_Bool force_plain_text,
-									const char* html_part);
-
-extern MSG_CompositionFields* MSG_CreateCompositionFields(
-									const char *from,
-									const char *reply_to,
-									const char *to,
-									const char *cc,
-									const char *bcc,
-									const char *fcc,
-									const char *newsgroups,
-									const char *followup_to,
-									const char *organization,
-									const char *subject,
-									const char *references,
-									const char *other_random_headers,
-									const char *priority,
-									const char *attachment,
-									const char *newspost_url);
-
 extern void MSG_DestroyCompositionFields(MSG_CompositionFields *fields);
 
 /* Tell the FE that something has changed in the composition (like, we
    finished quoting or something) so that it needs to update the status of
    toolbars and stuff.  This call should go away.  ###tw */
 extern void FE_UpdateCompToolbar(MSG_Pane* comppane);
-
-
-/* Tell the FE that we're all done with the given context (which was associated
-   with a composition pane that we're destroying).  Presumably, the FE will
-   then destroy the context. */
-extern void FE_DestroyMailCompositionContext(MWContext* context);
 
 
 
@@ -2746,21 +2447,7 @@ extern int MSG_SanityCheck(MSG_Pane* comppane, int skippast);
 /* Get the URL associated with this context (the "X-Url" field.) */
 extern const char* MSG_GetAssociatedURL(MSG_Pane* comppane);
 
-
-/* This is completely foul, but the FE needs to call this from within
-   FE_AllConnectionsComplete() when the context->type is
-   MWContextMessageComposition.
- */
-extern void MSG_MailCompositionAllConnectionsComplete (MSG_Pane* pane);
-
-
 /*  */
-
-
-/* Bring up the dialog box that presents the user with the list of domains that
-   have been marked for HTML, and let the user edit them. */
-
-extern int MSG_DisplayHTMLDomainsDialog(MWContext* context);
 
 
 /* Returns whether the given folderinfo represents a newsgroup where
@@ -2768,14 +2455,6 @@ extern int MSG_DisplayHTMLDomainsDialog(MWContext* context);
    for that newsgroup.  This call should only be done on newsgroups. */
 
 extern XP_Bool MSG_IsHTMLOK(MSG_Master* master, MSG_FolderInfo* group);
-
-/* Sets whether the given newsgroup can have HTML.  This can potentially
-   pop up a confirmation window, so we ask for a MWContext* to use for that
-   (yick).  The folderinfo provided must represent a newsgroup.  This is to
-   be used in the property dialog for that newsgroup. */
-
-extern int MSG_SetIsHTMLOK(MSG_Master* master, MSG_FolderInfo* group,
-						   MWContext* context, XP_Bool value);
 
 
 
@@ -2838,30 +2517,6 @@ MSG_GetAttachmentList(MSG_Pane* comppane);
    headers that ought to be displayed (and checked in the "view" menu.)
  */
 extern MSG_HEADER_SET MSG_GetInterestingHeaders(MSG_Pane* comppane);
-
-
-
-/* This function creates a new, blank mail message composition window.  It
-   causes calls to FE_CreateCompositionPane, which should drive the creation
-   of the window.
- */
-
-MSG_Pane* MSG_Mail(MWContext *old_context);
-
-/* Convenience function to start composing a mail message from a web
-   browser window - the currently-loaded document will be the default
-   attachment should the user choose to attach it.  The context may
-   be of any type, or NULL.  Returns the new message composition pane.
- 
-   This is going away, you should call MSG_MailDocumentURL with NULL
-   for the second argument.
-*/
-extern MSG_Pane* MSG_MailDocument(MWContext *context);
-/* 
-   Another version of MSG_MailDocument where pAttachmentURL explicitly gives the URL to attach.
-   MSG_MailDocument() is still there for backwards compatability.
- */
-extern MSG_Pane* MSG_MailDocumentURL(MWContext *context,const char *pAttachmentURL);
 
 /* These routines were in mime.h, but defined in libmsg...*/
 
@@ -2933,13 +2588,6 @@ extern char *MSG_MakeFullAddress (const char* name, const char* addr);
  */
 extern int MSG_UnquotePhraseOrAddr (char *line, char** lineout);
 
-
-/* Returns the address book context, creating it if necessary.  A mail pane is
-   passed in, on the unlikely chance that it might be useful for the FE.  If
-   "viewnow" is TRUE, then present the address book window to the user;
-   otherwise, don't (unless it is already visible).*/
-
-extern MWContext* FE_GetAddressBookContext(MSG_Pane* pane, XP_Bool viewnow);
 
 /* Notify the address book panes that the list of directory servers has changed 
 	This is only called from the address book. */
