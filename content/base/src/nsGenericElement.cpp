@@ -1324,7 +1324,6 @@ nsGenericElement::GetNodeInfo(nsINodeInfo*& aResult) const
   return NS_OK;
 }
 
-
 nsresult
 nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                  nsEvent* aEvent,
@@ -1396,29 +1395,12 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
   //Capturing stage evaluation
   if (NS_EVENT_FLAG_BUBBLE != aFlags) {
     //Initiate capturing phase.  Special case first call to document
-    if (NS_EVENT_FLAG_INIT & aFlags) {
-      //Set flag to PR_TRUE here so capture will still work even with no document.  If 
-      //the document is there and correctly has no capturers it will reset back to false.
-      intermediateCapture = PR_TRUE;
-      if (mDocument) {
-        mDocument->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, aEventStatus);
-
-        //Now check for the presence of intermediate capturers registered at document;
-        intermediateCapture = mDocument->EventCaptureRegistration(0);
-      }
-
-      //If intermediate capturers exist, pass capturing up the tree before local evaulation
-      if (intermediateCapture && mParent) {
-        // Pass off to our parent.
-        mParent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, aEventStatus);
-      }
+    if (mParent) {
+      mParent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, aEventStatus);
     }
-    else {
-      //If we've been called during the event capture phase when the event didn't initiate on this element 
-      //then intermediate capturers must exist. Pass capturing up the tree before local evaulation.
-      if (mParent) {
-        mParent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, aEventStatus);
-      }
+    else if (mDocument != nsnull) {
+        ret = mDocument->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
+                                        NS_EVENT_FLAG_CAPTURE, aEventStatus);
     }
   }
 
