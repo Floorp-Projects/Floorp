@@ -68,7 +68,7 @@ public class TestProps {
       componentManager.createInstanceByContractID(NS_PROPERTIES_CONTRACTID, null,
                                                   nsIProperties.NS_IPROPERTIES_IID);
     if (props == null) {
-      throw new RuntimeException("Failed to create nsIMutableArray.");
+      throw new RuntimeException("Failed to create nsIProperties.");
     }
 
     // create the nsISupports objects we will use
