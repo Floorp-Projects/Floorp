@@ -16,16 +16,19 @@
  * Reserved.
  */
 
+#include <io.h>
 #include "nsIContent.h"
 #include "nsIInputStream.h"
 #include "nsINetService.h"
 #include "nsINetService.h"
+#include "nsIOutputStream.h"
 #include "nsIPostToServer.h"
 #include "nsIRDFDataBase.h"
 #include "nsIRDFDataSource.h"
 #include "nsIRDFDocument.h"
 #include "nsIRDFNode.h"
-#include "nsIRDFResourceManager.h"
+#include "nsIRDFService.h"
+#include "nsIRDFXMLSource.h"
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
@@ -58,9 +61,10 @@ static NS_DEFINE_CID(kNetServiceCID,            NS_NETSERVICE_CID);
 // rdf
 static NS_DEFINE_CID(kRDFBookMarkDataSourceCID, NS_RDFBOOKMARKDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFHTMLDocumentCID,       NS_RDFHTMLDOCUMENT_CID);
-static NS_DEFINE_CID(kRDFMemoryDataSourceCID,   NS_RDFMEMORYDATASOURCE_CID);
-static NS_DEFINE_CID(kRDFResourceManagerCID,    NS_RDFRESOURCEMANAGER_CID);
-static NS_DEFINE_CID(kRDFSimpleDataBaseCID,     NS_RDFSIMPLEDATABASE_CID);
+static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
+static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kRDFDataBaseCID,           NS_RDFDATABASE_CID);
+static NS_DEFINE_CID(kRDFSimpleContentSinkCID,  NS_RDFSIMPLECONTENTSINK_CID);
 static NS_DEFINE_CID(kRDFStreamDataSourceCID,   NS_RDFSTREAMDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFTreeDocumentCID,       NS_RDFTREEDOCUMENT_CID);
 
@@ -76,8 +80,10 @@ static NS_DEFINE_CID(kNameSpaceManagerCID,      NS_NAMESPACEMANAGER_CID);
 // IIDs
 
 //NS_DEFINE_IID(kIPostToServerIID,       NS_IPOSTTOSERVER_IID);
+NS_DEFINE_IID(kIOutputStreamIID,       NS_IOUTPUTSTREAM_IID);
 NS_DEFINE_IID(kIRDFDataSourceIID,      NS_IRDFDATASOURCE_IID);
-NS_DEFINE_IID(kIRDFResourceManagerIID, NS_IRDFRESOURCEMANAGER_IID);
+NS_DEFINE_IID(kIRDFServiceIID,         NS_IRDFSERVICE_IID);
+NS_DEFINE_IID(kIRDFXMLSourceIID,       NS_IRDFXMLSOURCE_IID);
 
 static nsresult
 SetupRegistry(void)
@@ -86,9 +92,10 @@ SetupRegistry(void)
 
     nsRepository::RegisterFactory(kRDFBookMarkDataSourceCID, RDF_DLL,    PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kRDFHTMLDocumentCID,       RDF_DLL,    PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kRDFMemoryDataSourceCID,   RDF_DLL,    PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kRDFResourceManagerCID,    RDF_DLL,    PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kRDFSimpleDataBaseCID,     RDF_DLL,    PR_FALSE, PR_FALSE);
+    nsRepository::RegisterFactory(kRDFInMemoryDataSourceCID, RDF_DLL,    PR_FALSE, PR_FALSE);
+    nsRepository::RegisterFactory(kRDFServiceCID,            RDF_DLL,    PR_FALSE, PR_FALSE);
+    nsRepository::RegisterFactory(kRDFSimpleContentSinkCID,  RDF_DLL,    PR_FALSE, PR_FALSE);
+    nsRepository::RegisterFactory(kRDFDataBaseCID,           RDF_DLL,    PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kRDFStreamDataSourceCID,   RDF_DLL,    PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kRDFTreeDocumentCID,       RDF_DLL,    PR_FALSE, PR_FALSE);
 
@@ -101,6 +108,34 @@ SetupRegistry(void)
 }
 
 
+////////////////////////////////////////////////////////////////////////
+
+class ConsoleOutputStreamImpl : public nsIOutputStream
+{
+public:
+    ConsoleOutputStreamImpl(void) {}
+    virtual ~ConsoleOutputStreamImpl(void) {}
+
+    // nsISupports interface
+    NS_DECL_ISUPPORTS
+
+    // nsIBaseStream interface
+    NS_IMETHOD Close(void) {
+        return NS_OK;
+    }
+
+    // nsIOutputStream interface
+    NS_IMETHOD Write(const char* aBuf, PRUint32 aOffset, PRUint32 aCount, PRUint32 *aWriteCount) {
+        write(1, aBuf + aOffset, aCount);
+        *aWriteCount = aCount;
+        return NS_OK;
+    }
+};
+
+NS_IMPL_ISUPPORTS(ConsoleOutputStreamImpl, kIOutputStreamIID);
+
+
+////////////////////////////////////////////////////////////////////////
 
 int
 main(int argc, char** argv)
@@ -118,6 +153,8 @@ main(int argc, char** argv)
     SetupRegistry();
 
     nsIRDFDataSource* ds = nsnull;
+    nsIRDFXMLSource* xmlSource = nsnull;
+    PRInt32 i;
 
     if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFStreamDataSourceCID,
                                                     nsnull,
@@ -128,9 +165,16 @@ main(int argc, char** argv)
     if (NS_FAILED(rv = ds->Init(argv[1])))
         goto done;
 
-    while (1) {
+    // XXX This is really gross. I need to figure out the right way to do it...
+    for (i = 0; i < 1000000; ++i) {
 		PLEvent* event = PL_GetEvent(mainQueue);
-		PL_HandleEvent(event);
+        PL_HandleEvent(event);
+    }
+
+    if (NS_SUCCEEDED(ds->QueryInterface(kIRDFXMLSourceIID, (void**) &xmlSource))) {
+        ConsoleOutputStreamImpl* out = new ConsoleOutputStreamImpl();
+        xmlSource->Serialize(out);
+        NS_RELEASE(xmlSource);
     }
 
 done:

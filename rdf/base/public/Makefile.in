@@ -31,7 +31,8 @@ EXPORTS =			\
 	nsIRDFDataSource.h      \
         nsIRDFNode.h            \
 	nsIRDFObserver.h        \
-        nsIRDFResourceManager.h \
+	nsIRDFResourceFactory.h	\
+        nsIRDFService.h         \
         nsIRDFXMLSource.h       \
         $(NULL)
 

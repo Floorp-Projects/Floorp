@@ -59,7 +59,7 @@
 #include "nsIRDFDataBase.h"
 #include "nsIRDFDocument.h"
 #include "nsIRDFNode.h"
-#include "nsIRDFResourceManager.h"
+#include "nsIRDFService.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
 #include "nsRDFCID.h"
@@ -78,12 +78,12 @@ static NS_DEFINE_IID(kIJSScriptObjectIID,     NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIRDFContentIID,         NS_IRDFCONTENT_IID);
 static NS_DEFINE_IID(kIRDFDataBaseIID,        NS_IRDFDATABASE_IID);
 static NS_DEFINE_IID(kIRDFDocumentIID,        NS_IRDFDOCUMENT_IID);
-static NS_DEFINE_IID(kIRDFResourceManagerIID, NS_IRDFRESOURCEMANAGER_IID);
+static NS_DEFINE_IID(kIRDFServiceIID,         NS_IRDFSERVICE_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID,  NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIXMLContentIID,         NS_IXMLCONTENT_IID);
 
-static NS_DEFINE_CID(kRDFResourceManagerCID,  NS_RDFRESOURCEMANAGER_CID);
+static NS_DEFINE_CID(kRDFServiceCID,          NS_RDFSERVICE_CID);
 
 
 
@@ -924,9 +924,9 @@ nsRDFElement::GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, nsString& aResu
 #if defined(CREATE_PROPERTIES_AS_ATTRIBUTES)
     // XXX I'm not sure if we should support properties as attributes
     // or not...
-    nsIRDFResourceManager* mgr = nsnull;
-    if (NS_FAILED(rv = nsServiceManager::GetService(kRDFResourceManagerCID,
-                                                    kIRDFResourceManagerIID,
+    nsIRDFService* mgr = nsnull;
+    if (NS_FAILED(rv = nsServiceManager::GetService(kRDFServiceCID,
+                                                    kIRDFServiceIID,
                                                     (nsISupports**) &mgr)))
         return rv;
     
@@ -952,7 +952,7 @@ done:
     NS_IF_RELEASE(property);
     NS_IF_RELEASE(value);
     NS_IF_RELEASE(db);
-    nsServiceManager::ReleaseService(kRDFResourceManagerCID, mgr);
+    nsServiceManager::ReleaseService(kRDFServiceCID, mgr);
 
 #endif // defined(CREATE_PROPERTIES_AS_ATTRIBUTES)
     return rv;
@@ -1007,9 +1007,9 @@ nsRDFElement::GetAttributeNameAt(PRInt32 aIndex,
 #if defined(CREATE_PROPERTIES_AS_ATTRIBUTES)
     // XXX I'm not sure if we should support attributes or not...
 
-    nsIRDFResourceManager* mgr = nsnull;
-    if (NS_FAILED(rv = nsServiceManager::GetService(kRDFResourceManagerCID,
-                                                    kIRDFResourceManagerIID,
+    nsIRDFService* mgr = nsnull;
+    if (NS_FAILED(rv = nsServiceManager::GetService(kRDFServiceCID,
+                                                    kIRDFServiceIID,
                                                     (nsISupports**) &mgr)))
         return rv;
     
@@ -1050,7 +1050,7 @@ nsRDFElement::GetAttributeNameAt(PRInt32 aIndex,
 done:
     NS_IF_RELEASE(properties);
     NS_IF_RELEASE(db);
-    nsServiceManager::ReleaseService(kRDFResourceManagerCID, mgr);
+    nsServiceManager::ReleaseService(kRDFServiceCID, mgr);
 
     return rv;
 #endif // defined(CREATE_PROPERTIES_AS_ATTRIBUTES)
@@ -1293,14 +1293,14 @@ nsRDFElement::SetResource(const nsString& aURI)
 
     nsresult rv;
 
-    nsIRDFResourceManager* mgr = nsnull;
-    if (NS_FAILED(rv = nsServiceManager::GetService(kRDFResourceManagerCID,
-                                                    kIRDFResourceManagerIID,
-                                                    (nsISupports**) &mgr)))
+    nsIRDFService* service = nsnull;
+    if (NS_FAILED(rv = nsServiceManager::GetService(kRDFServiceCID,
+                                                    kIRDFServiceIID,
+                                                    (nsISupports**) &service)))
         return rv;
     
-    rv = mgr->GetUnicodeResource(aURI, &mResource); // implicit AddRef()
-    nsServiceManager::ReleaseService(kRDFResourceManagerCID, mgr);
+    rv = service->GetUnicodeResource(aURI, &mResource); // implicit AddRef()
+    nsServiceManager::ReleaseService(kRDFServiceCID, service);
 
     return rv;
 }
@@ -1370,22 +1370,22 @@ nsRDFElement::SetProperty(const nsString& aPropertyURI, const nsString& aValue)
 #endif
 
     nsresult rv;
-    nsIRDFResourceManager* mgr = nsnull;
+    nsIRDFService* service = nsnull;
 
-    if (NS_FAILED(rv = nsServiceManager::GetService(kRDFResourceManagerCID,
-                                                    kIRDFResourceManagerIID,
-                                                    (nsISupports**) &mgr)))
+    if (NS_FAILED(rv = nsServiceManager::GetService(kRDFServiceCID,
+                                                    kIRDFServiceIID,
+                                                    (nsISupports**) &service)))
         return rv;
     
     nsIRDFResource* property = nsnull;
     nsIRDFLiteral* value     = nsnull;
     nsIRDFDataBase* db       = nsnull;
 
-    if (NS_FAILED(rv = mgr->GetUnicodeResource(aPropertyURI, &property)))
+    if (NS_FAILED(rv = service->GetUnicodeResource(aPropertyURI, &property)))
         goto done;
 
     // XXX assume it's a literal?
-    if (NS_FAILED(rv = mgr->GetLiteral(aValue, &value)))
+    if (NS_FAILED(rv = service->GetLiteral(aValue, &value)))
         goto done;
 
     if (NS_FAILED(rv = mDocument->GetDataBase(db)))
@@ -1397,7 +1397,7 @@ done:
     NS_IF_RELEASE(db);
     NS_IF_RELEASE(value);
     NS_IF_RELEASE(property);
-    nsServiceManager::ReleaseService(kRDFResourceManagerCID, mgr);
+    nsServiceManager::ReleaseService(kRDFServiceCID, service);
 
     return rv;
 }

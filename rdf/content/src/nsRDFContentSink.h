@@ -26,7 +26,7 @@ class nsIURL;
 class nsVoidArray;
 class nsIRDFResource;
 class nsIRDFDataSource;
-class nsIRDFResourceManager;
+class nsIRDFService;
 class nsINameSpaceManager;
 
 typedef enum {
@@ -112,7 +112,7 @@ protected:
     virtual nsresult OpenValue(const nsIParserNode& aNode);
 
     // Miscellaneous RDF junk
-    nsIRDFResourceManager* mResourceMgr;
+    nsIRDFService*         mRDFService;
     nsIRDFDataSource*      mDataSource;
     RDFContentSinkState    mState;
 

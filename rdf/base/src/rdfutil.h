@@ -31,7 +31,7 @@ class nsIRDFCursor;
 class nsIRDFDataBase;
 class nsIRDFDataSource;
 class nsIRDFNode;
-class nsIRDFResourceManager;
+class nsIRDFService;
 class nsString;
 
 /**
@@ -47,7 +47,7 @@ rdf_IsOrdinalProperty(const nsIRDFResource* property);
  * rdf:Bag.
  */
 PR_EXTERN(PRBool)
-rdf_IsContainer(nsIRDFResourceManager* mgr,
+rdf_IsContainer(nsIRDFService* service,
                 nsIRDFDataSource* db,
                 nsIRDFResource* resource);
 
@@ -58,7 +58,7 @@ rdf_IsContainer(nsIRDFResourceManager* mgr,
 
 // 0. node, node, node
 PR_EXTERN(nsresult)
-rdf_Assert(nsIRDFResourceManager* mgr, // unused
+rdf_Assert(nsIRDFService* service, // unused
            nsIRDFDataSource* ds,
            nsIRDFResource* subject,
            nsIRDFResource* predicate,
@@ -66,7 +66,7 @@ rdf_Assert(nsIRDFResourceManager* mgr, // unused
 
 // 1. string, string, string
 PR_EXTERN(nsresult)
-rdf_Assert(nsIRDFResourceManager* mgr,
+rdf_Assert(nsIRDFService* service,
            nsIRDFDataSource* ds,
            const nsString& subjectURI,
            const nsString& predicateURI,
@@ -74,7 +74,7 @@ rdf_Assert(nsIRDFResourceManager* mgr,
 
 // 2. node, node, string
 PR_EXTERN(nsresult)
-rdf_Assert(nsIRDFResourceManager* mgr,
+rdf_Assert(nsIRDFService* service,
            nsIRDFDataSource* ds,
            nsIRDFResource* subject,
            nsIRDFResource* predicate,
@@ -82,7 +82,7 @@ rdf_Assert(nsIRDFResourceManager* mgr,
 
 // 3. node, string, string
 PR_EXTERN(nsresult)
-rdf_Assert(nsIRDFResourceManager* mgr,
+rdf_Assert(nsIRDFService* service,
            nsIRDFDataSource* ds,
            nsIRDFResource* subject,
            const nsString& predicateURI,
@@ -90,7 +90,7 @@ rdf_Assert(nsIRDFResourceManager* mgr,
 
 // 4. node, string, node
 PR_EXTERN(nsresult)
-rdf_Assert(nsIRDFResourceManager* mgr,
+rdf_Assert(nsIRDFService* service,
            nsIRDFDataSource* ds,
            nsIRDFResource* subject,
            const nsString& predicateURI,
@@ -98,7 +98,7 @@ rdf_Assert(nsIRDFResourceManager* mgr,
 
 // 5. string, string, node
 PR_EXTERN(nsresult)
-rdf_Assert(nsIRDFResourceManager* mgr,
+rdf_Assert(nsIRDFService* service,
            nsIRDFDataSource* ds,
            const nsString& subjectURI,
            const nsString& predicateURI,
@@ -109,7 +109,7 @@ rdf_Assert(nsIRDFResourceManager* mgr,
  * resource URI.
  */
 PR_EXTERN(nsresult)
-rdf_CreateAnonymousResource(nsIRDFResourceManager* mgr,
+rdf_CreateAnonymousResource(nsIRDFService* service,
                             nsIRDFResource** result);
 
 
@@ -117,7 +117,7 @@ rdf_CreateAnonymousResource(nsIRDFResourceManager* mgr,
  * Create a bag resource.
  */
 PR_EXTERN(nsresult)
-rdf_MakeBag(nsIRDFResourceManager* mgr,
+rdf_MakeBag(nsIRDFService* service,
             nsIRDFDataSource* ds,
             nsIRDFResource* resource);
 
@@ -125,7 +125,7 @@ rdf_MakeBag(nsIRDFResourceManager* mgr,
  * Create a sequence resource.
  */
 PR_EXTERN(nsresult)
-rdf_MakeSeq(nsIRDFResourceManager* mgr,
+rdf_MakeSeq(nsIRDFService* service,
             nsIRDFDataSource* ds,
             nsIRDFResource* resource);
 
@@ -133,7 +133,7 @@ rdf_MakeSeq(nsIRDFResourceManager* mgr,
  * Create an alternation resource.
  */
 PR_EXTERN(nsresult)
-rdf_MakeAlt(nsIRDFResourceManager* mgr,
+rdf_MakeAlt(nsIRDFService* service,
             nsIRDFDataSource* ds,
             nsIRDFResource* resource);
 
@@ -142,7 +142,7 @@ rdf_MakeAlt(nsIRDFResourceManager* mgr,
  * Add an element to the container.
  */
 PR_EXTERN(nsresult)
-rdf_ContainerAddElement(nsIRDFResourceManager* mgr,
+rdf_ContainerAddElement(nsIRDFService* service,
                         nsIRDFDataSource* ds,
                         nsIRDFResource* container,
                         nsIRDFNode* element);

@@ -21,6 +21,7 @@ LIBRARY_NAME=rdfdatasource_s
 
 CPP_OBJS=\
         .\$(OBJDIR)\nsBookmarkDataSource.obj    \
+        .\$(OBJDIR)\nsMailDataSource.obj        \
         .\$(OBJDIR)\nsStreamDataSource.obj      \
 	$(NULL)
 

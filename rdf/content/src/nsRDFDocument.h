@@ -29,6 +29,7 @@ class nsIParser;
 class nsISupportsArray;
 class nsINameSpaceManager;
 class nsIRDFNode;
+class nsIRDFService;
 
 /**
  * An NGLayout document context for displaying an RDF graph.
@@ -234,7 +235,7 @@ protected:
     nsIStyleSheet*         mAttrStyleSheet;
     nsIParser*             mParser;
     nsIRDFDataBase*        mDB;
-    nsIRDFResourceManager* mResourceMgr;
+    nsIRDFService*         mRDFService;
     nsISupportsArray*      mTreeProperties;
 };
 

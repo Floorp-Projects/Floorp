@@ -1,9 +1,9 @@
 # target: rdf.shlb
 mozilla/rdf/base/src/nsContainerCursor.cpp
+mozilla/rdf/base/src/nsDataBase.cpp
 mozilla/rdf/base/src/nsEmptyCursor.cpp
-mozilla/rdf/base/src/nsMemoryDataSource.cpp
-mozilla/rdf/base/src/nsRDFResourceManager.cpp
-mozilla/rdf/base/src/nsSimpleDataBase.cpp
+mozilla/rdf/base/src/nsInMemoryDataSource.cpp
+mozilla/rdf/base/src/nsRDFService.cpp
 mozilla/rdf/base/src/rdfutil.cpp
 mozilla/rdf/build/nsRDFFactory.cpp
 mozilla/rdf/content/src/nsRDFContentSink.cpp
@@ -14,4 +14,5 @@ mozilla/rdf/content/src/nsRDFHTMLDocument.cpp
 mozilla/rdf/content/src/nsRDFSimpleContentSink.cpp
 mozilla/rdf/content/src/nsRDFTreeDocument.cpp
 mozilla/rdf/datasource/src/nsBookmarkDataSource.cpp
+mozilla/rdf/datasource/src/nsMailDataSource.cpp
 mozilla/rdf/datasource/src/nsStreamDataSource.cpp

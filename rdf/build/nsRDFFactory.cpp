@@ -18,7 +18,8 @@
 
 #include "nsISupports.h"
 #include "nsIFactory.h"
-#include "nsIRDFResourceManager.h"
+#include "nsIRDFContentSink.h"
+#include "nsIRDFService.h"
 #include "nsRDFBaseDataSources.h"
 #include "nsRDFBuiltInDataSources.h"
 #include "nsRDFDocument.h"
@@ -28,10 +29,11 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,  NS_IFACTORY_IID);
 
 static NS_DEFINE_CID(kRDFBookmarkDataSourceCID, NS_RDFBOOKMARKDATASOURCE_CID);
+static NS_DEFINE_CID(kRDFDataBaseCID,           NS_RDFDATABASE_CID);
 static NS_DEFINE_CID(kRDFHTMLDocumentCID,       NS_RDFHTMLDOCUMENT_CID);
-static NS_DEFINE_CID(kRDFMemoryDataSourceCID,   NS_RDFMEMORYDATASOURCE_CID);
-static NS_DEFINE_CID(kRDFResourceManagerCID,    NS_RDFRESOURCEMANAGER_CID);
-static NS_DEFINE_CID(kRDFSimpleDataBaseCID,     NS_RDFSIMPLEDATABASE_CID);
+static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
+static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kRDFSimpleContentSinkCID,  NS_RDFSIMPLECONTENTSINK_CID);
 static NS_DEFINE_CID(kRDFStreamDataSourceCID,   NS_RDFSTREAMDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFTreeDocumentCID,       NS_RDFTREEDOCUMENT_CID);
 
@@ -112,28 +114,25 @@ RDFFactoryImpl::CreateInstance(nsISupports *aOuter,
     nsresult rv;
     PRBool wasRefCounted = PR_TRUE;
     nsISupports *inst = nsnull;
-    if (mClassID.Equals(kRDFResourceManagerCID)) {
-        if (NS_FAILED(rv = NS_NewRDFResourceManager((nsIRDFResourceManager**) &inst)))
+    if (mClassID.Equals(kRDFServiceCID)) {
+        if (NS_FAILED(rv = NS_NewRDFService((nsIRDFService**) &inst)))
             return rv;
     }
-    else if (mClassID.Equals(kRDFMemoryDataSourceCID)) {
-#ifdef _WIN32
+    else if (mClassID.Equals(kRDFInMemoryDataSourceCID)) {
+
         if (NS_FAILED(rv = NS_NewRDFInMemoryDataSource((nsIRDFDataSource**) &inst)))
-#else
-        if (NS_FAILED(rv = NS_NewRDFMemoryDataSource((nsIRDFDataSource**) &inst)))
-#endif
             return rv;
     }
     else if (mClassID.Equals(kRDFStreamDataSourceCID)) {
-        if (NS_FAILED(rv = NS_NewRDFStreamDataSource((nsIRDFDataSource**) &inst)))
-            return rv;
+        //        if (NS_FAILED(rv = NS_NewRDFStreamDataSource((nsIRDFDataSource**) &inst)))
+          return rv;
     }
     else if (mClassID.Equals(kRDFBookmarkDataSourceCID)) {
         if (NS_FAILED(rv = NS_NewRDFBookmarkDataSource((nsIRDFDataSource**) &inst)))
             return rv;
     }
-    else if (mClassID.Equals(kRDFSimpleDataBaseCID)) {
-        if (NS_FAILED(rv = NS_NewRDFSimpleDataBase((nsIRDFDataBase**) &inst)))
+    else if (mClassID.Equals(kRDFDataBaseCID)) {
+        if (NS_FAILED(rv = NS_NewRDFDataBase((nsIRDFDataBase**) &inst)))
             return rv;
     }
     else if (mClassID.Equals(kRDFHTMLDocumentCID)) {
@@ -142,6 +141,10 @@ RDFFactoryImpl::CreateInstance(nsISupports *aOuter,
     }
     else if (mClassID.Equals(kRDFTreeDocumentCID)) {
         if (NS_FAILED(rv = NS_NewRDFTreeDocument((nsIRDFDocument**) &inst)))
+            return rv;
+    }
+    else if (mClassID.Equals(kRDFSimpleContentSinkCID)) {
+        if (NS_FAILED(rv = NS_NewRDFSimpleContentSink((nsIRDFContentSink**) &inst)))
             return rv;
     }
     else {

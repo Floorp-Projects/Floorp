@@ -28,19 +28,19 @@
 
 /**
  *
- * Nodes are created using an instance of nsIRDFResourceManager, which
+ * Nodes are created using an instance of nsIRDFService, which
  * should be obtained from the service manager:
  *
- * nsIRDFResourceManager* mgr;
- * if (NS_SUCCEEDED(nsServiceManager::GetService(kCRDFResourceManagerCID,
- *                                               kIRDFResourceManagerIID,
- *                                               &mgr))) {
+ * nsIRDFService* service;
+ * if (NS_SUCCEEDED(nsServiceManager::GetService(kCRDFServiceCID,
+ *                                               kIRDFServiceIID,
+ *                                               (nsISupports**) &service))) {
  *      nsIRDFNode* node;
- *      if (NS_SUCCEEDED(mgr->GetResource("http://foo.bar/", node))) {
+ *      if (NS_SUCCEEDED(service->GetResource("http://foo.bar/", node))) {
  *          // do something useful here...
  *          NS_IF_RELEASE(node);
  *      }
- *      nsServiceManager::ReleaseService(kCRDFManagerCID, mgr);
+ *      nsServiceManager::ReleaseService(kCRDFServiceCID, mgr);
  *  }
  *
  */

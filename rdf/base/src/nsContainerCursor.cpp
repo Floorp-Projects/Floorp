@@ -20,7 +20,7 @@
 #include "nsIRDFCursor.h"
 #include "nsIRDFDataSource.h"
 #include "nsIRDFNode.h"
-#include "nsIRDFResourceManager.h"
+#include "nsIRDFService.h"
 #include "nsIServiceManager.h"
 #include "nsRDFCID.h"
 #include "nsString.h"
@@ -55,10 +55,10 @@
 static NS_DEFINE_IID(kIRDFAssertionCursorIID, NS_IRDFASSERTIONCURSOR_IID);
 static NS_DEFINE_IID(kIRDFCursorIID,          NS_IRDFCURSOR_IID);
 static NS_DEFINE_IID(kIRDFLiteralIID,         NS_IRDFLITERAL_IID);
-static NS_DEFINE_IID(kIRDFResourceManagerIID, NS_IRDFRESOURCEMANAGER_IID);
+static NS_DEFINE_IID(kIRDFServiceIID,         NS_IRDFSERVICE_IID);
 static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
 
-static NS_DEFINE_CID(kRDFResourceManagerCID,  NS_RDFRESOURCEMANAGER_CID);
+static NS_DEFINE_CID(kRDFServiceCID,          NS_RDFSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -71,7 +71,7 @@ DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, nextVal); // ad hoc way to make contain
 
 class ContainerCursorImpl : public nsIRDFAssertionCursor {
 private:
-    nsIRDFResourceManager* mResourceMgr;
+    nsIRDFService* mRDFService;
     nsIRDFDataSource* mDataSource;
     nsIRDFResource* mContainer;
     nsIRDFNode* mNext;
@@ -90,6 +90,7 @@ public:
     NS_IMETHOD GetPredicate(nsIRDFResource** aPredicate);
     NS_IMETHOD GetObject(nsIRDFNode** aObject);
     NS_IMETHOD GetTruthValue(PRBool* aTruthValue);
+    NS_IMETHOD GetValue(nsIRDFNode** aValue);
 };
 
 ContainerCursorImpl::ContainerCursorImpl(nsIRDFDataSource* ds,
@@ -101,13 +102,13 @@ ContainerCursorImpl::ContainerCursorImpl(nsIRDFDataSource* ds,
     NS_IF_ADDREF(mContainer);
 
     nsresult rv;
-    rv = nsServiceManager::GetService(kRDFResourceManagerCID,
-                                      kIRDFResourceManagerIID,
-                                      (nsISupports**) &mResourceMgr);
+    rv = nsServiceManager::GetService(kRDFServiceCID,
+                                      kIRDFServiceIID,
+                                      (nsISupports**) &mRDFService);
 
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to acquire resource manager");
 
-    NS_ASSERTION(rdf_IsContainer(mResourceMgr, mDataSource, container), "not a container");
+    NS_ASSERTION(rdf_IsContainer(mRDFService, mDataSource, container), "not a container");
 }
 
 
@@ -115,8 +116,8 @@ ContainerCursorImpl::~ContainerCursorImpl(void)
 {
     NS_IF_RELEASE(mNext);
 
-    if (mResourceMgr)
-        nsServiceManager::ReleaseService(kRDFResourceManagerCID, mResourceMgr);
+    if (mRDFService)
+        nsServiceManager::ReleaseService(kRDFServiceCID, mRDFService);
 
     NS_IF_RELEASE(mContainer);
     NS_IF_RELEASE(mDataSource);
@@ -158,7 +159,7 @@ ContainerCursorImpl::Advance(void)
     PRInt32 err;
 
     // XXX we could cache all this crap when the cursor gets created.
-    if (NS_FAILED(rv = mResourceMgr->GetResource(kURIRDF_nextVal, &RDF_nextVal)))
+    if (NS_FAILED(rv = mRDFService->GetResource(kURIRDF_nextVal, &RDF_nextVal)))
         goto done;
 
     if (NS_FAILED(rv = mDataSource->GetTarget(mContainer, RDF_nextVal, PR_TRUE, &nextNode)))
@@ -242,12 +243,28 @@ ContainerCursorImpl::GetPredicate(nsIRDFResource** aPredicate)
     s.Append(mCounter, 10);
 
     // this'll AddRef(), null check, etc.
-    return mResourceMgr->GetUnicodeResource(s, aPredicate);
+    return mRDFService->GetUnicodeResource(s, aPredicate);
 }
 
 
 NS_IMETHODIMP
 ContainerCursorImpl::GetObject(nsIRDFNode** aObject)
+{
+    NS_PRECONDITION(aObject != nsnull, "null ptr");
+    if (! aObject)
+        return NS_ERROR_NULL_POINTER;
+
+    if (! mNext)
+        return NS_ERROR_UNEXPECTED;
+
+    NS_ADDREF(mNext);
+    *aObject = mNext;
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+ContainerCursorImpl::GetValue(nsIRDFNode** aObject)
 {
     NS_PRECONDITION(aObject != nsnull, "null ptr");
     if (! aObject)

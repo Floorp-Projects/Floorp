@@ -42,6 +42,16 @@ public:
      * unless a catastrophic error occurs.
      */
     NS_IMETHOD Advance(void) = 0;
+     /* Retrieve the data source from which the current item was obtained.
+     * @return NS_OK, unless a catastrophic error occurs.
+     */
+    NS_IMETHOD GetDataSource(nsIRDFDataSource** aDataSource) = 0;
+    /**
+     * Irrespective of the query, a cursor is an interator over a set.
+     * This allows you to obtain the current value.
+     */
+    NS_IMETHOD GetValue(nsIRDFNode** aValue) = 0;
+
 };
 
 
@@ -55,13 +65,6 @@ public:
  */
 class nsIRDFAssertionCursor : public nsIRDFCursor {
 public:
-    /**
-     * Retrieve the data source in which the assertion actually
-     * lives.
-     * XXX Is it dangerous to be exposing naked data sources like this?
-     * @return NS_OK, unless a catastrophic error occurs.
-     */
-    NS_IMETHOD GetDataSource(nsIRDFDataSource** aDataSource) = 0;
 
     /**
      * Retrieve the assertion's subject resource.
@@ -99,12 +102,7 @@ public:
  */
 class nsIRDFArcsOutCursor : public nsIRDFCursor {
 public:
-    /**
-     * Retrieve the data source in which the arc is stored.
-     * XXX Is it dangerous to be exposing naked data sources like this?
-     * @return NS_OK, unless a catastrophic error occurs.
-     */
-    NS_IMETHOD GetDataSource(nsIRDFDataSource** aDataSource) = 0;
+    
 
     /**
      * Retrieve the "subject" node from which the arcs originate.
@@ -117,12 +115,13 @@ public:
      * @return NS_OK, unless a catastrophic error occurs.
      */
     NS_IMETHOD GetPredicate(nsIRDFResource** aPredicate) = 0;
-
     /**
      * Retrieve the truth value of the arc.
      * @return NS_OK, unless a catastrophic error occurs.
-     */
+     * xxx rvg --- truth value doesn't make sense here. 
     NS_IMETHOD GetTruthValue(PRBool* aTruthValue) = 0;
+    */
+
 };
 
 
@@ -136,12 +135,6 @@ public:
  */
 class nsIRDFArcsInCursor : public nsIRDFCursor {
 public:
-    /**
-     * Retrieve the data source in which the arc is stored.
-     * XXX Is it dangerous to be exposing naked data sources like this?
-     * @return NS_OK, unless a catastrophic error occurs.
-     */
-    NS_IMETHOD GetDataSource(nsIRDFDataSource** aDataSource) = 0;
 
     /**
      * Retrieve the "object" node in which the arc terminates.
@@ -154,12 +147,13 @@ public:
      * @return NS_OK, unless a catastrophic error occurs.
      */
     NS_IMETHOD GetPredicate(nsIRDFResource** aPredicate) = 0;
-
     /**
      * Retrieve the truth value of the arc.
      * @return NS_OK, unless a catastrophic error occurs.
-     */
+     * xxx rvg --- truth value doesn't make sense here. 
     NS_IMETHOD GetTruthValue(PRBool* aTruthValue) = 0;
+    */
+
 };
 
 

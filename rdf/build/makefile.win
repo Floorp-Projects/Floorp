@@ -41,6 +41,8 @@ LLIBS=\
  $(DIST)\lib\libplc21.lib        \
  $(LIBNSPR)  
 
+MISCDEP=$(LLIBS)
+
 # XXX Note dependencies on implementation dirs for factory methods.
 
 LINCS=  -I$(PUBLIC)\rdf                 \
