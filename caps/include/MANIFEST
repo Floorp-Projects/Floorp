@@ -1,3 +1,4 @@
+nsAggregatePrincipal.h
 nsBasePrincipal.h
 nsCertificatePrincipal.h
 nsCodebasePrincipal.h

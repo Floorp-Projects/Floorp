@@ -26,6 +26,7 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIPref.h"
 #include "nsIURL.h"
+#include "nsIJARURI.h"
 #include "nspr.h"
 #include "plstr.h"
 #include "nsCOMPtr.h"
@@ -33,6 +34,7 @@
 #include "nsSystemPrincipal.h"
 #include "nsCodebasePrincipal.h"
 #include "nsCertificatePrincipal.h"
+#include "nsAggregatePrincipal.h"
 #include "nsCRT.h"
 #include "nsXPIDLString.h"
 #include "nsIJSContextStack.h"
@@ -83,42 +85,6 @@ GetCurrentContext() {
 
 static nsDOMProp 
 findDomProp(const char *propName, int n);
-
-/////////////////////
-// nsIPrincipalKey //
-/////////////////////
-
-class nsIPrincipalKey : public nsHashKey {
-public:
-    nsIPrincipalKey(nsIPrincipal* key) {
-        mKey = key;
-        NS_IF_ADDREF(mKey);
-    }
-    
-    ~nsIPrincipalKey(void) {
-        NS_IF_RELEASE(mKey);
-    }
-    
-    PRUint32 HashValue(void) const {
-        PRUint32 hash;
-        mKey->HashValue(&hash);
-        return hash;
-    }
-    
-    PRBool Equals(const nsHashKey *aKey) const {
-        PRBool eq;
-        mKey->Equals(((nsIPrincipalKey *) aKey)->mKey, &eq);
-        return eq;
-    }
-    
-    nsHashKey *Clone(void) const {
-        return new nsIPrincipalKey(mKey);
-    }
-
-protected:
-    nsIPrincipal* mKey;
-};
-
 
 ///////////////////////
 // nsSecurityNameSet //
@@ -485,7 +451,9 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aFromURI, nsIURI *aURI,
     nsXPIDLCString scheme;
     if (NS_FAILED(aURI->GetScheme(getter_Copies(scheme))))
         return NS_ERROR_FAILURE;
-    if (nsCRT::strcasecmp(scheme, fromScheme) == 0) {
+    
+    if (nsCRT::strcasecmp(scheme, fromScheme) == 0)
+    {
         // every scheme can access another URI from the same scheme
         return NS_OK;
     }
@@ -495,28 +463,28 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aFromURI, nsIURI *aURI,
         const char *name;
         Action action;
     } protocolList[] = {
-     "about",           AboutProtocol,
-     "data",            AllowProtocol,
-     "file",            DenyProtocol,
-     "ftp",             AllowProtocol,
-     "http",            AllowProtocol,
-     "https",           AllowProtocol,
-     "jar",             AllowProtocol,
-     "keyword",         DenyProtocol,
-     "res",             DenyProtocol,
-     "resource",        DenyProtocol,
-     "datetime",        DenyProtocol,
-     "finger",          AllowProtocol,
-     "chrome",          DenyProtocol,
-     "javascript",      AllowProtocol,
-     "mailto",          AllowProtocol,
-     "imap",            DenyProtocol,
-     "mailbox",         DenyProtocol,
-     "pop3",            DenyProtocol,
-     "news",            AllowProtocol,
+        { "about",           AboutProtocol },
+        { "data",            AllowProtocol },
+        { "file",            DenyProtocol  },
+        { "ftp",             AllowProtocol },
+        { "http",            AllowProtocol },
+        { "https",           AllowProtocol },
+        { "jar",             AllowProtocol   },
+        { "keyword",         DenyProtocol  },
+        { "res",             DenyProtocol  },
+        { "resource",        DenyProtocol  },
+        { "datetime",        DenyProtocol  },
+        { "finger",          AllowProtocol },
+        { "chrome",          DenyProtocol  },
+        { "javascript",      AllowProtocol },
+        { "mailto",          AllowProtocol },
+        { "imap",            DenyProtocol  },
+        { "mailbox",         DenyProtocol  },
+        { "pop3",            DenyProtocol  },
+        { "news",            AllowProtocol },
     };
 
-    for (int i=0; i < sizeof(protocolList)/sizeof(protocolList[0]); i++) {
+    for (unsigned i=0; i < sizeof(protocolList)/sizeof(protocolList[0]); i++) {
         if (nsCRT::strcasecmp(scheme, protocolList[i].name) == 0) {
             switch (protocolList[i].action) {
             case AllowProtocol:
@@ -575,31 +543,40 @@ nsScriptSecurityManager::GetSystemPrincipal(nsIPrincipal **result)
 NS_IMETHODIMP
 nsScriptSecurityManager::GetCertificatePrincipal(const char* aIssuerName,
                                                  const char* aSerialNumber,
+                                                 const char* aCompanyName,
                                                  nsIPrincipal **result)
 {
     nsresult rv;
+    //-- Create a certificate principal
     nsCertificatePrincipal *certificate = new nsCertificatePrincipal();
     if (!certificate)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(certificate);
-    if (NS_FAILED(certificate->Init(aIssuerName, aSerialNumber))) 
+    if (NS_FAILED(certificate->Init(aIssuerName, aSerialNumber, aCompanyName)))
     {
         NS_RELEASE(certificate);
         return NS_ERROR_FAILURE;
     }
-    nsCOMPtr<nsIPrincipal> principal = 
-      do_QueryInterface((nsBasePrincipal*)certificate, &rv);
+    nsCOMPtr<nsIPrincipal> principal = do_QueryInterface((nsBasePrincipal*)certificate, &rv);
     NS_RELEASE(certificate);
-    if (NS_FAILED(rv))
-        return rv;
+    if (NS_FAILED(rv)) return rv;
 
     if (mPrincipals) {
         // Check to see if we already have this principal.
         nsIPrincipalKey key(principal);
-        nsCOMPtr<nsIPrincipal> p2 = (nsIPrincipal *) mPrincipals->Get(&key);
-        if (p2) 
-            principal = p2;
+        nsCOMPtr<nsIPrincipal> fromTable = (nsIPrincipal *) mPrincipals->Get(&key);
+        if (fromTable) 
+            principal = fromTable;
     }
+
+    //-- Bundle this certificate principal into an aggregate principal
+    nsAggregatePrincipal* agg = new nsAggregatePrincipal();
+    if (!agg) return NS_ERROR_OUT_OF_MEMORY;
+    rv = agg->SetCertificate(principal);
+    if (NS_FAILED(rv)) return rv;
+    principal = do_QueryInterface((nsBasePrincipal*)agg, &rv);
+    if (NS_FAILED(rv)) return rv;
+
     *result = principal;
     NS_ADDREF(*result);
     return NS_OK;
@@ -635,7 +612,6 @@ nsScriptSecurityManager::GetCodebasePrincipal(nsIURI *aURI,
     NS_ADDREF(*result);
     return NS_OK;
 }
-
 
 NS_IMETHODIMP
 nsScriptSecurityManager::CanExecuteScripts(nsIPrincipal *principal,
@@ -944,26 +920,22 @@ nsScriptSecurityManager::EnableCapability(const char *capability)
             canEnable = nsIPrincipal::ENABLE_DENIED;
         PR_FREEIF(message);
         if (remember) {
+            //-- Save principal to prefs and to mPrincipals
             if (NS_FAILED(principal->SetCanEnableCapability(capability, canEnable)))
                 return NS_ERROR_FAILURE;
-            mIsWritingPrefs = PR_TRUE;
-            if (NS_FAILED(principal->WriteToPrefs(mPrefs))) {
-                mIsWritingPrefs = PR_FALSE;
-                return NS_ERROR_FAILURE;
-            }
-            mIsWritingPrefs = PR_FALSE;
-            if (NS_FAILED(mPrefs->SavePrefFile()))
-                return NS_ERROR_FAILURE;
-            nsIPrincipalKey key(principal);
             if (!mPrincipals) {
                 mPrincipals = new nsSupportsHashtable(31);
                 if (!mPrincipals)
                     return NS_ERROR_OUT_OF_MEMORY;
             }
-            // This is a little sneaky. "supports" below is a void *, which won't 
-            // be refcounted, but is matched with a key that is the same object,
-            // which will be refcounted.
-            mPrincipals->Put(&key, principal);
+            mIsWritingPrefs = PR_TRUE;
+            if (NS_FAILED(principal->Save(mPrincipals, mPrefs))) {
+                mIsWritingPrefs = PR_FALSE;
+                return NS_ERROR_FAILURE;
+            } 
+            mIsWritingPrefs = PR_FALSE;
+            if (NS_FAILED(mPrefs->SavePrefFile()))
+                return NS_ERROR_FAILURE;
         }
     }
     if (canEnable != nsIPrincipal::ENABLE_GRANTED) {

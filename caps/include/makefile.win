@@ -36,6 +36,7 @@ EXPORTS=                           \
         nsBasePrincipal.h          \
         nsCertificatePrincipal.h   \
         nsCodebasePrincipal.h      \
+        nsAggregatePrincipal.h     \
         nsJSPrincipals.h           \
         nsScriptSecurityManager.h  \
         nsSystemPrincipal.h        \

@@ -28,6 +28,7 @@ XPIDLSRCS=                                \
            .\nsIPrincipal.idl             \
            .\nsICertificatePrincipal.idl  \
            .\nsICodebasePrincipal.idl     \
+           .\nsIAggregatePrincipal.idl    \
             $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

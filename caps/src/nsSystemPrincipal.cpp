@@ -37,9 +37,9 @@ NSBASEPRINCIPALS_ADDREF(nsSystemPrincipal);
 NSBASEPRINCIPALS_RELEASE(nsSystemPrincipal);
 
 
-////////////////////////////////////
-// Methods implementing nsIPrincipal
-////////////////////////////////////
+///////////////////////////////////////
+// Methods implementing nsIPrincipal //
+///////////////////////////////////////
 
 NS_IMETHODIMP
 nsSystemPrincipal::ToString(char **result)
@@ -115,15 +115,16 @@ nsSystemPrincipal::DisableCapability(const char *capability, void **annotation)
 }
 
 NS_IMETHODIMP
-nsSystemPrincipal::ToStreamableForm(char **aResult)
+nsSystemPrincipal::Save(nsSupportsHashtable* aPrincipals, nsIPref* prefs)
 {
     // The system principal should never be streamed out
     return NS_ERROR_FAILURE; 
 }
 
-//////////////////////////////////////////
-// Constructor, Destructor, initialization
-//////////////////////////////////////////
+
+/////////////////////////////////////////////
+// Constructor, Destructor, initialization //
+/////////////////////////////////////////////
 
 nsSystemPrincipal::nsSystemPrincipal()
 {
