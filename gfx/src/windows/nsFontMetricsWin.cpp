@@ -2920,8 +2920,6 @@ nsFontMetricsWin::FindGenericFont(HDC aDC, PRUnichar aChar)
   // This is a nifty hook that we will use to just iterate over
   // the list of names using the callback mechanism of nsFont...
   nsFont font("", 0, 0, 0, 0, 0);
-  nsCAutoString pref;
-  nsXPIDLString value;
 
   if (mLangGroup) {
     nsAutoString langGroup;
@@ -3576,11 +3574,6 @@ nsFontWinUnicode::DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
   // than relying on loading and underline or strikeout font so very
   // few fonts should have mUnderlinedOrStrikeOut set.
   if (mUnderlinedOrStrikeOut) {
-     //XXX: This code to test the OS version
-     //was lifted out of nsRenderingContext
-     //It really should be moved to a common location that both
-     //the rendering context and nsFontMetricsWin can access.
-     // Determine if OS = WIN95
     if (IsWin95OrWin98()) {
       // Clip out the extra underline/strikethru caused by the
       // bug in WIN95.
@@ -4684,8 +4677,7 @@ nsFontMetricsWinA::FindGlobalFont(HDC aDC, PRUnichar c)
       if (subset) {
         return subset;
       }
-      // assumes that LoadGlobalFont leaves the new font at the end
-      mLoadedFonts.RemoveElementAt(mLoadedFonts.Count()-1);
+      mLoadedFonts.RemoveElement(font);
       delete font;
     }
   }
@@ -4738,8 +4730,7 @@ nsFontMetricsWinA::FindSubstituteFont(HDC aDC, PRUnichar aChar)
             mSubstituteFont = (nsFontWin*)substituteFont;
             return substituteSubset;
           }
-          // assumes that LoadSubstituteFont leaves the new font at the end
-          mLoadedFonts.RemoveElementAt(mLoadedFonts.Count()-1);
+          mLoadedFonts.RemoveElement(substituteFont);
           delete substituteFont;
         }
       }
