@@ -1342,7 +1342,7 @@ nsTableRowFrame::IR_TargetIsChild(nsIPresContext*          aPresContext,
         PRInt32 rowSpan = aTableFrame.GetEffectiveRowSpan(*cellFrame);
         if (rowSpan == 1) {
          tallestCellGotShorter = 
-           TallestCellGotShorter(oldCellDesAscent, cellMet.descent, mMaxCellDescent);
+           TallestCellGotShorter(oldCellDesDescent, cellMet.descent, mMaxCellDescent);
         }
       }
     }
