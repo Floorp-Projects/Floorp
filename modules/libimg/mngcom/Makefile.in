@@ -30,12 +30,6 @@ LIBRARY_NAME	= nsmng
 IS_COMPONENT	= 1
 REQUIRES	= xpcom string img layout util locale mng jpeg
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-EXTRA_DSO_LIBS  = libmozmng
-else
-EXTRA_DSO_LIBS  = mozmng
-endif
-
 CPPSRCS		= \
 		nsMNGDecoder.cpp \
 		nsMNGModule.cpp \
@@ -43,7 +37,7 @@ CPPSRCS		= \
 
 LOCAL_INCLUDES	= -I$(srcdir)
 
-EXTRA_DSO_LDOPTS = -L$(DIST)/lib $(EXTRA_DSO_LIBS) $(JPEG_LIBS) $(ZLIB_LIBS) \
+EXTRA_DSO_LDOPTS = $(MNG_LIBS) $(JPEG_LIBS) $(ZLIB_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
