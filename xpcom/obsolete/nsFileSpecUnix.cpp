@@ -690,7 +690,7 @@ static void CopyUTF8toUTF16NFC(const nsACString& aSrc, nsAString& aResult)
         nsAutoBuffer<UniChar, 512> buffer;
         if (buffer.EnsureElemCapacity(length)) {
             CFStringGetCharacters(inStr, CFRangeMake(0, length), buffer.get());
-            aResult.Assign(buffer, length);
+            aResult.Assign(buffer.get(), length);
         }
         else 
             CopyUTF8toUTF16(aSrc, aResult);
