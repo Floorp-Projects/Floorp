@@ -47,55 +47,15 @@ import java.util.Hashtable;
  */
 
 class OptTransformer extends NodeTransformer {
-    private Hashtable theFnClassNameList;
 
-    OptTransformer(IRFactory irFactory, Hashtable theFnClassNameList) {
-        super(irFactory);
-        this.theFnClassNameList = theFnClassNameList;
-    }
-
-    public NodeTransformer newInstance() {
-        Hashtable listCopy = (Hashtable) theFnClassNameList.clone();
-        return new OptTransformer(irFactory, listCopy);
-    }
-
-    public ScriptOrFnNode transform(ScriptOrFnNode scriptOrFn) {
-
-        // Collect all of the script contained functions into a hashtable
-        // so that the call optimizer can access the class name & parameter
-        // count for any call it encounters
-        if (scriptOrFn.getType() == TokenStream.SCRIPT) {
-            collectContainedFunctions(scriptOrFn);
-        }
-        return super.transform(scriptOrFn);
-    }
-
-    private int detectDirectCall(Node node, ScriptOrFnNode tree)
+    OptTransformer(IRFactory irFactory, Hashtable possibleDirectCalls)
     {
-        Context cx = Context.getCurrentContext();
-        int optLevel = cx.getOptimizationLevel();
-        Node left = node.getFirstChild();
+        super(irFactory);
+        this.possibleDirectCalls = possibleDirectCalls;
+    }
 
-        // count the arguments
-        int argCount = 0;
-        Node arg = left.getNext();
-        while (arg != null) {
-            arg = arg.getNext();
-            argCount++;
-        }
-
-        if (tree.getType() == TokenStream.FUNCTION && optLevel > 0) {
-            if (left.getType() == TokenStream.NAME) {
-                markDirectCall(tree, node, argCount, left.getString());
-            } else {
-                if (left.getType() == TokenStream.GETPROP) {
-                    Node name = left.getFirstChild().getNext();
-                    markDirectCall(tree, node, argCount, name.getString());
-                }
-            }
-        }
-
-        return argCount;
+    protected NodeTransformer newInstance() {
+        return new OptTransformer(irFactory, possibleDirectCalls);
     }
 
     protected void visitNew(Node node, ScriptOrFnNode tree) {
@@ -104,62 +64,62 @@ class OptTransformer extends NodeTransformer {
     }
 
     protected void visitCall(Node node, ScriptOrFnNode tree) {
-        int argCount = detectDirectCall(node, tree);
-        if (inFunction && (argCount == 0)) {
-            ((OptFunctionNode)tree).itsContainsCalls0 = true;
-        }
-
+        detectDirectCall(node, tree);
         super.visitCall(node, tree);
     }
 
-    /*
-     * Optimize a call site by converting call("a", b, c) into :
-     *
-     *       FunctionObjectFor"a" <-- instance variable init'd by constructor
-     *
-     *       // this is a DIRECTCALL node
-     *       fn = GetProp(tmp = GetBase("a"), "a");
-     *       if (fn == FunctionObjectFor"a")
-     *           fn.call(tmp, b, c)
-     *       else
-     *           ScriptRuntime.Call(fn, tmp, b, c)
-     */
-    private void markDirectCall(Node containingTree, Node callNode,
-                                int argCount, String targetName)
+    private void detectDirectCall(Node node, ScriptOrFnNode tree)
     {
-        OptFunctionNode theFunction
-                    = (OptFunctionNode)theFnClassNameList.get(targetName);
-        if (theFunction != null) {
-            int N = theFunction.getParamCount();
-            // Refuse to directCall any function with more
-            // than 32 parameters - prevent code explosion
-            // for wacky test cases
-            if (N > 32)
-                return;
+        if (tree.getType() == TokenStream.FUNCTION) {
+            Node left = node.getFirstChild();
 
-            if (argCount == N) {
-                callNode.putProp(Node.DIRECTCALL_PROP, theFunction);
-                theFunction.setIsTargetOfDirectCall();
+            // count the arguments
+            int argCount = 0;
+            Node arg = left.getNext();
+            while (arg != null) {
+                arg = arg.getNext();
+                argCount++;
             }
-        }
-    }
 
-    /**
-     * Collect all of the contained functions into a hashtable
-     * so that the call optimizer can access the class name & parameter
-     * count for any call it encounters
-     */
-    private void collectContainedFunctions(ScriptOrFnNode scriptOrFn) {
-        int functionCount = scriptOrFn.getFunctionCount();
-        for (int i = 0; i != functionCount; ++i) {
-            OptFunctionNode f = (OptFunctionNode)scriptOrFn.getFunctionNode(i);
-            if (f.getType() == FunctionNode.FUNCTION_STATEMENT) {
-                String name = f.getFunctionName();
-                if (name.length() != 0) {
-                    theFnClassNameList.put(name, f);
+            if (argCount == 0) {
+                ((OptFunctionNode)tree).itsContainsCalls0 = true;
+            }
+
+            /*
+             * Optimize a call site by converting call("a", b, c) into :
+             *
+             *  FunctionObjectFor"a" <-- instance variable init'd by constructor
+             *
+             *  // this is a DIRECTCALL node
+             *  fn = GetProp(tmp = GetBase("a"), "a");
+             *  if (fn == FunctionObjectFor"a")
+             *      fn.call(tmp, b, c)
+             *  else
+             *      ScriptRuntime.Call(fn, tmp, b, c)
+             */
+            if (possibleDirectCalls != null) {
+                String targetName = null;
+                if (left.getType() == TokenStream.NAME) {
+                    targetName = left.getString();
+                } else if (left.getType() == TokenStream.GETPROP) {
+                    targetName = left.getFirstChild().getNext().getString();
+                }
+                if (targetName != null) {
+                    OptFunctionNode fn;
+                    fn = (OptFunctionNode)possibleDirectCalls.get(targetName);
+                    if (fn != null && argCount == fn.getParamCount()) {
+                        // Refuse to directCall any function with more
+                        // than 32 parameters - prevent code explosion
+                        // for wacky test cases
+                        if (argCount <= 32) {
+                            node.putProp(Node.DIRECTCALL_PROP, fn);
+                            fn.setIsTargetOfDirectCall();
+                        }
+                    }
                 }
             }
         }
     }
 
+    private Hashtable possibleDirectCalls;
 }

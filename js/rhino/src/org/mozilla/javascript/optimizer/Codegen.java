@@ -77,12 +77,38 @@ public class Codegen extends Interpreter {
     public ScriptOrFnNode
     transform(Context cx, IRFactory irFactory, ScriptOrFnNode tree)
     {
-        int optimizationLevel = cx.getOptimizationLevel();
-        OptTransformer opt = new OptTransformer(irFactory, new Hashtable(11));
-        tree = opt.transform(tree);
-        if (optimizationLevel > 0) {
-            (new Optimizer(irFactory)).optimize(tree, optimizationLevel);
+        int optLevel = cx.getOptimizationLevel();
+        Hashtable possibleDirectCalls = null;
+        if (optLevel > 0) {
+           /*
+            * Collect all of the contained functions into a hashtable
+            * so that the call optimizer can access the class name & parameter
+            * count for any call it encounters
+            */
+            if (tree.getType() == TokenStream.SCRIPT) {
+                int functionCount = tree.getFunctionCount();
+                for (int i = 0; i != functionCount; ++i) {
+                    OptFunctionNode fn;
+                    fn = (OptFunctionNode)tree.getFunctionNode(i);
+                    if (fn.getType() == FunctionNode.FUNCTION_STATEMENT) {
+                        String name = fn.getFunctionName();
+                        if (name.length() != 0) {
+                            if (possibleDirectCalls == null) {
+                                possibleDirectCalls = new Hashtable();
+                            }
+                            possibleDirectCalls.put(name, fn);
+                        }
+                    }
+                }
+            }
         }
+
+        (new OptTransformer(irFactory, possibleDirectCalls)).transform(tree);
+
+        if (optLevel > 0) {
+            (new Optimizer(irFactory)).optimize(tree, optLevel);
+        }
+
         return tree;
     }
 
