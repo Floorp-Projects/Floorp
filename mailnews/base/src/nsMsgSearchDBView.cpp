@@ -130,7 +130,7 @@ nsresult nsMsgSearchDBView::OnNewHeader(nsMsgKey newKey, nsMsgKey aParentKey, PR
 
 nsresult nsMsgSearchDBView::GetMsgHdrForViewIndex(nsMsgViewIndex index, nsIMsgDBHdr **msgHdr)
 {
-  nsresult rv;
+  nsresult rv = NS_MSG_INVALID_DBVIEW_INDEX;
   nsCOMPtr <nsISupports> supports = getter_AddRefs(m_folders->ElementAt(index));
 	if(supports)
 	{

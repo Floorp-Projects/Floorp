@@ -110,11 +110,10 @@ nsMsgTxn::SetTransactionType(PRUint32 txnType)
 nsresult 
 nsMsgTxn::CheckForToggleDelete(nsIMsgFolder *aFolder, const nsMsgKey &aMsgKey, PRBool *aResult)
 {
-  nsresult rv;
   NS_ENSURE_ARG(aResult);
   nsCOMPtr<nsIMsgDBHdr> message;
   nsCOMPtr<nsIMsgDatabase> db;
-  aFolder->GetMsgDatabase(nsnull,getter_AddRefs(db));
+  nsresult rv = aFolder->GetMsgDatabase(nsnull,getter_AddRefs(db));
   if (db)
   {
     PRBool containsKey;

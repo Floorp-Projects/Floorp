@@ -986,7 +986,7 @@ PRBool PR_CALLBACK nsMsgAccountManager::cleanupOnExit(nsHashKey *aKey, void *aDa
   nsIMsgIncomingServer *server = (nsIMsgIncomingServer*)aData;
   PRBool emptyTrashOnExit = PR_FALSE;
   PRBool cleanupInboxOnExit = PR_FALSE;
-  nsresult rv, rv1, rv2;
+  nsresult rv;
     
   server->GetEmptyTrashOnExit(&emptyTrashOnExit);
   nsCOMPtr <nsIImapIncomingServer> imapserver = do_QueryInterface(server);
@@ -1043,8 +1043,8 @@ PRBool PR_CALLBACK nsMsgAccountManager::cleanupOnExit(nsHashKey *aKey, void *aDa
                inboxFolder->GetFlags(&flags);
                if (flags & MSG_FOLDER_FLAG_INBOX)
                {
-                 rv1 = inboxFolder->Compact(urlListener, nsnull /* msgwindow */);
-                 if (NS_SUCCEEDED(rv1))
+                 rv = inboxFolder->Compact(urlListener, nsnull /* msgwindow */);
+                 if (NS_SUCCEEDED(rv))
                    accountManager->SetFolderDoingCleanupInbox(inboxFolder);
                  break;
                 }
@@ -1055,15 +1055,15 @@ PRBool PR_CALLBACK nsMsgAccountManager::cleanupOnExit(nsHashKey *aKey, void *aDa
                           
            if (emptyTrashOnExit)
            {
-             rv2 = folder->EmptyTrash(nsnull, urlListener);
-             if (isImap && NS_SUCCEEDED(rv2))
+             rv = folder->EmptyTrash(nsnull, urlListener);
+             if (isImap && NS_SUCCEEDED(rv))
                accountManager->SetFolderDoingEmptyTrash(folder);
            }
                     
            if (isImap && urlListener)
            {
              PRBool inProgress = PR_FALSE;
-             if (cleanupInboxOnExit && NS_SUCCEEDED(rv1))
+             if (cleanupInboxOnExit)
              {
                accountManager->GetCleanupInboxInProgress(&inProgress);
                while (inProgress)
@@ -1076,7 +1076,7 @@ PRBool PR_CALLBACK nsMsgAccountManager::cleanupOnExit(nsHashKey *aKey, void *aDa
                    eventQueue->ProcessPendingEvents();
                }
              }
-             if (emptyTrashOnExit && NS_SUCCEEDED(rv2))
+             if (emptyTrashOnExit)
              {
                accountManager->GetEmptyTrashInProgress(&inProgress);
                while (inProgress)
