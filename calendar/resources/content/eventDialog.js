@@ -465,19 +465,12 @@ function loadCalendarEventDialog()
     }
     */
 
-
     // update enabling and disabling
     updateRepeatItemEnabled();
     updateStartEndItemEnabled();
-
     updateAddExceptionButton();
-
-    //set the advanced weekly repeating stuff
-
-    // enable/disable subordinate buttons of textboxes
-    /*  these are listboxes, not textboxes
-    processTextboxWithButton( "exception-dates-listbox", "delete-exception-button" );
-    processTextboxWithButton( "invite-email-field", "invite-email-button" ); */
+    updateDeleteExceptionButton();
+    updateRemoveAttachmentButton();
 
     // start focus on title
     var firstFocus = document.getElementById("title-field");
@@ -487,7 +480,9 @@ function loadCalendarEventDialog()
     opener.setCursor( "auto" );
 
     self.focus();
-    return;
+
+    // fix a strict warning about not always returning a value
+    return true;
 }
 
 
@@ -1017,6 +1012,10 @@ function updateRepeatItemEnabled()
    
    // extra interface depending on units
    updateRepeatUnitExtensions();
+
+   // show/hide the exception buttons
+   updateAddExceptionButton();
+   updateDeleteExceptionButton();
 }
 
 
@@ -1216,35 +1215,53 @@ function updateAddExceptionButton()
 }
 
 
+function updateDeleteExceptionButton()
+{
+    var repeatCheckBox = document.getElementById( "repeat-checkbox" );
+
+    if ( !repeatCheckBox.checked ) {
+        disableElement("delete-exception-button");
+    } else {
+        updateListboxDeleteButton("exception-dates-listbox", "delete-exception-button");
+    }
+}
+
+
 function removeSelectedExceptionDate()
 {
     var exceptionsListbox = document.getElementById( "exception-dates-listbox" );
     var SelectedItem = exceptionsListbox.selectedItem;
 
-    if( SelectedItem )
+    if ( SelectedItem )
         exceptionsListbox.removeChild( SelectedItem );
+
+    // the file list changed - see if we have to enable/disable any buttons
+    updateAddExceptionButton()
+    updateDeleteExceptionButton();
 }
 
 
 function addException( dateToAdd )
 {
-   if( !dateToAdd ) {
-      //get the date from the date and time box.
-      //returns a date object
-      dateToAdd = document.getElementById( "exceptions-date-picker" ).value;
-   }
+    if ( !dateToAdd ) {
+       // get the date from the date and time box.
+       // returns a date object
+       dateToAdd = document.getElementById( "exceptions-date-picker" ).value;
+    }
    
-   if( isAlreadyException( dateToAdd ) )
-      return;
+    if ( isAlreadyException( dateToAdd ) )
+       return;
 
-   var DateLabel = formatDate( dateToAdd );
+    var DateLabel = formatDate( dateToAdd );
 
-   //add a row to the listbox.
-   var listbox = document.getElementById( "exception-dates-listbox" );
-   //ensure user can see that add occurred (also, avoid bug 231765, bug 250123)
-   listbox.ensureElementIsVisible( listbox.appendItem( DateLabel, dateToAdd.getTime() ));
+    // add a row to the listbox.
+    var listbox = document.getElementById( "exception-dates-listbox" );
+    // ensure user can see that add occurred (also, avoid bug 231765, bug 250123)
+    listbox.ensureElementIsVisible( listbox.appendItem( DateLabel, dateToAdd.getTime() ));
 
-   //sizeToContent();
+    // the file list changed - see if we have to enable/disable any buttons
+    updateAddExceptionButton()
+    updateDeleteExceptionButton();
 }
 
 
@@ -1358,18 +1375,39 @@ function removeSelectedAttachment()
 
     if(SelectedItem)
         attachmentListbox.removeChild(SelectedItem);
+
+    updateRemoveAttachmentButton()
 }
 
 
 function addAttachment(attachmentToAdd)
 {
-   if(!attachmentToAdd)
-      return;
-   
-   //add a row to the listbox
-   document.getElementById("attachmentBucket").appendItem(attachmentToAdd.url, attachmentToAdd.url);
+    if( !attachmentToAdd || isAlreadyAttachment(attachmentToAdd) )
+        return;
 
-   //sizeToContent();
+    //add a row to the listbox
+    document.getElementById("attachmentBucket").appendItem(attachmentToAdd.url, attachmentToAdd.url);
+
+    updateRemoveAttachmentButton();
+}
+
+
+function isAlreadyAttachment(attachmentToAdd)
+{
+    //check to make sure that the file is not already attached
+    var listbox = document.getElementById("attachmentBucket");
+
+    for( var i = 0; i < listbox.childNodes.length; i++ ) {
+        if( attachmentToAdd.url == listbox.childNodex[i].url )
+            return true;
+    }
+    return false;
+}
+
+
+function updateRemoveAttachmentButton()
+{
+    updateListboxDeleteButton("attachmentBucket", "attachment-delete-button");
 }
 
 

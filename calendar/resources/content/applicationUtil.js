@@ -217,6 +217,16 @@ function processEnableCheckbox( checkboxId, elementId )
 }
 
 
+function updateListboxDeleteButton( listboxId, buttonId )
+{
+    if ( document.getElementById( listboxId ).getRowCount() > 0 ) {
+        enableElement( buttonId );
+    } else {
+        disableElement( buttonId );
+    }
+}
+
+
 /*
  *   Update plural singular menu items
  */

@@ -699,48 +699,44 @@
                      hidden="true"/>
             </radiogroup>
           </hbox>
+          <hbox>
+            <separator class="thin"/>
+          </hbox>
         </groupbox>
       </hbox>
       <hbox flex="1">
         <spacer class="repeat-left-spacer" />
         <groupbox flex="1">
           <caption label="&newevent.exceptions.caption;"/>
-          <grid>
-            <columns>
-              <column flex="1"/>
-              <column/>
-            </columns>
-            <rows>
-              <row>
-                <hbox align="center">
-                  <datepicker id="exceptions-date-picker"
-                              disable-controller="repeat"
-                              onchange="updateAddExceptionButton();"
-                              value=""/>
-                </hbox>
-                <button id="exception-add-button"
-                        label="&newevent.addexceptions.label;"
-                        disable-controller="repeat"
-                        oncommand="addException()"/>
-              </row>
-              <row>
-                <listbox id="exception-dates-listbox"
-                         disable-controller="repeat"
-                         rows="4"/>
-                <!-- oninput="textboxChanged( this.id, 'delete-exception-button' );" -->
-                <vbox>
-                  <button id="delete-exception-button"
-                          label="&newevent.deleteexceptions.label;"
-                          disabled="true"
-                          oncommand="removeSelectedExceptionDate()"/>
-                </vbox>
-              </row>
-            </rows>
-          </grid>
+          <hbox align="start" flex="1">
+            <vbox flex="1" align="start" pack="start">
+              <datepicker id="exceptions-date-picker"
+                          disable-controller="repeat"
+                          onchange="updateAddExceptionButton();"
+                          value=""/>
+              <spacer flex="1"/>
+            </vbox>
+            <vbox flex="1" align="start" pack="start">
+              <listbox id="exception-dates-listbox"
+                       disable-controller="repeat"
+                       flex="1"/> <!--rows="4"-->
+            </vbox>
+            <vbox flex="1" align="center" pack="center">
+              <button id="exception-add-button"
+                      label="&newevent.addexceptions.label;"
+                      disable-controller="repeat"
+                      oncommand="addException()"/>
+              <button id="delete-exception-button"
+                      label="&newevent.deleteexceptions.label;"
+                      disabled="true"
+                      oncommand="removeSelectedExceptionDate()"/>
+              <spacer flex="1"/>
+            </vbox>
+          </hbox>
+          <hbox>
+            <separator class="thin"/>
+          </hbox>
         </groupbox>
-        </hbox>
-        <hbox flex="2">
-          <spacer flex="2"/>
         </hbox>
       </vbox>
     </tabpanel><!-- /Repeat -->
@@ -869,9 +865,11 @@
                   ondragexit="nsDragAndDrop.dragExit(event, attachmentBucketObserver);"/>
               <hbox pack="end">
                  <spacer flex="1"/>
-                 <button onclick="removeSelectedAttachment()"
+                 <button id="attachment-delete-button"
+                         onclick="removeSelectedAttachment()"
                          label="&newevent.removeselectedfile.label;"/>
-                 <button onclick="AttachFile()"
+                 <button id="attachment-add-button"
+                         onclick="AttachFile()"
                          label="Attach File..."/>
                          <!-- XXX Localize "&newevent.choosefile.label;" -->
               </hbox>
