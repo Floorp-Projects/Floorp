@@ -121,6 +121,7 @@ public:
 	NS_IMETHOD              Destroy();
 	virtual nsIWidget*      GetParent(void);
 	NS_IMETHOD              Show(PRBool bState);
+ 	NS_IMETHOD              CaptureMouse(PRBool aCapture);
 	NS_IMETHOD              CaptureRollupEvents(nsIRollupListener *aListener,
 	                                            PRBool aDoCapture,
 	                                            PRBool aConsumeRollupEvent);

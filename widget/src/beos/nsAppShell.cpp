@@ -507,8 +507,7 @@ void nsAppShell::ConsumeRedundantMouseMoveEvent(MethodInfo *pNewEventMInfo)
     MethodInfo *mInfoPrev = (MethodInfo *)previtem->ifdata.data;
     if (!mInfoPrev
       || mInfoPrev->widget != widget0
-      || mInfoPrev->target != target0
-      || mInfoPrev->methodId != nsWindow::ONMOUSE) continue;
+      || mInfoPrev->target != target0) continue;
     // if other mouse event was found, then no sequential.
     if (mInfoPrev->args[0] != NS_MOUSE_MOVE) break;
     // check if other conditions are the same
