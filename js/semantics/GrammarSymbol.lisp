@@ -269,34 +269,56 @@
 
 
 ; Emit markup for a general-nonterminal.  subscript is an optional integer.
-(defun depict-general-nonterminal (markup-stream general-nonterminal &optional subscript)
-  (depict-char-style (markup-stream ':nonterminal)
-    (labels
-      ((depict-nonterminal-parameter (markup-stream parameter)
-         (if (nonterminal-attribute? parameter)
-           (depict-char-style (markup-stream ':nonterminal-attribute)
-             (depict markup-stream (symbol-lower-mixed-case-name parameter)))
-           (depict-nonterminal-argument-symbol markup-stream parameter)))
-       
-       (depict-parametrized-nonterminal (symbol parameters)
-         (depict markup-stream (symbol-upper-mixed-case-name symbol))
-         (depict-char-style (markup-stream ':superscript)
-           (depict-list markup-stream #'depict-nonterminal-parameter parameters
-                        :separator ","))))
-      
-      (cond
-       ((keywordp general-nonterminal)
-        (depict markup-stream (symbol-upper-mixed-case-name general-nonterminal)))
-       ((attributed-nonterminal? general-nonterminal)
-        (depict-parametrized-nonterminal (attributed-nonterminal-symbol general-nonterminal)
-                                         (attributed-nonterminal-attributes general-nonterminal)))
-       ((generic-nonterminal? general-nonterminal)
-        (depict-parametrized-nonterminal (generic-nonterminal-symbol general-nonterminal)
-                                         (generic-nonterminal-parameters general-nonterminal)))
-       (t (error "Bad nonterminal ~S" general-nonterminal)))
-      (when subscript
-        (depict-char-style (markup-stream ':plain-subscript)
-          (depict-integer markup-stream subscript))))))
+; link should be one of:
+;   :reference   if this is a reference of this general-nonterminal;
+;   :external    if this is an external reference of this general-nonterminal;
+;   :definition  if this is a definition of this general-nonterminal;
+;   nil          if this use of the general-nonterminal should not be cross-referenced.
+(defun depict-general-nonterminal (markup-stream general-nonterminal link &optional subscript)
+  (labels
+    ((depict-nonterminal-name (markup-stream symbol)
+       (let ((name (symbol-upper-mixed-case-name symbol)))
+         (depict-link (markup-stream link "N-" name t)
+           (depict markup-stream name))))
+     
+     (depict-nonterminal-parameter (markup-stream parameter)
+       (if (nonterminal-attribute? parameter)
+         (depict-char-style (markup-stream ':nonterminal-attribute)
+           (depict markup-stream (symbol-lower-mixed-case-name parameter)))
+         (depict-nonterminal-argument-symbol markup-stream parameter)))
+     
+     (depict-parametrized-nonterminal (markup-stream symbol parameters)
+       (depict-nonterminal-name markup-stream symbol)
+       (depict-char-style (markup-stream ':superscript)
+         (depict-list markup-stream #'depict-nonterminal-parameter parameters
+                      :separator ",")))
+     
+     (depict-general (markup-stream)      
+       (depict-char-style (markup-stream ':nonterminal)
+         (cond
+          ((keywordp general-nonterminal)
+           (depict-nonterminal-name markup-stream general-nonterminal))
+          ((attributed-nonterminal? general-nonterminal)
+           (depict-parametrized-nonterminal markup-stream
+                                            (attributed-nonterminal-symbol general-nonterminal)
+                                            (attributed-nonterminal-attributes general-nonterminal)))
+          ((generic-nonterminal? general-nonterminal)
+           (depict-parametrized-nonterminal markup-stream
+                                            (generic-nonterminal-symbol general-nonterminal)
+                                            (generic-nonterminal-parameters general-nonterminal)))
+          (t (error "Bad nonterminal ~S" general-nonterminal)))
+         (when subscript
+           (depict-char-style (markup-stream ':plain-subscript)
+             (depict-integer markup-stream subscript))))))
+    
+    (if (or (eq link :definition)
+            (and (or (eq link :reference) (eq link :external))
+                 (keywordp general-nonterminal)
+                 (null subscript)))
+      (depict-link (markup-stream link "N-" (symbol-upper-mixed-case-name (general-grammar-symbol-symbol general-nonterminal)) t)
+        (setq link nil)
+        (depict-general markup-stream))
+      (depict-general markup-stream))))
 
 
 ;;; ------------------------------------------------------------------------------------------------------
@@ -334,11 +356,40 @@
        (remove-if (complement #'nonterminal-argument?) (generic-nonterminal-parameters general-grammar-symbol))))
 
 
+; Return the general-grammar-symbol expanded into source form that can be interned to yield the same
+; general-grammar-symbol.
+(defun general-grammar-symbol-source (general-grammar-symbol)
+  (cond
+   ((attributed-nonterminal? general-grammar-symbol)
+    (cons (attributed-nonterminal-symbol general-grammar-symbol) (attributed-nonterminal-attributes general-grammar-symbol)))
+   ((generic-nonterminal? general-grammar-symbol)
+    (cons (generic-nonterminal-symbol general-grammar-symbol) (generic-nonterminal-parameters general-grammar-symbol)))
+   (t (assert-type general-grammar-symbol (or keyword terminal)))))
+
+
 ; Emit markup for a general-grammar-symbol.  subscript is an optional integer.
-(defun depict-general-grammar-symbol (markup-stream general-grammar-symbol &optional subscript)
+; link should be one of:
+;   :reference   if this is a reference of this general-grammar-symbol;
+;   :external    if this is an external reference of this general-grammar-symbol;
+;   :definition  if this is a definition of this general-grammar-symbol;
+;   nil          if this use of the general-grammar-symbol should not be cross-referenced.
+(defun depict-general-grammar-symbol (markup-stream general-grammar-symbol link &optional subscript)
   (if (general-nonterminal? general-grammar-symbol)
-    (depict-general-nonterminal markup-stream general-grammar-symbol subscript)
+    (depict-general-nonterminal markup-stream general-grammar-symbol link subscript)
     (depict-terminal markup-stream general-grammar-symbol subscript)))
+
+
+; Styled text can include (:grammar-symbol <grammar-symbol-source> [<subscript>]) as long as
+; *styled-text-grammar-parametrization* is bound around the call to depict-styled-text.
+(defvar *styled-text-grammar-parametrization*)
+
+(defun depict-grammar-symbol-styled-text (markup-stream grammar-symbol-source &optional subscript)
+  (depict-general-grammar-symbol markup-stream
+                                 (grammar-parametrization-intern *styled-text-grammar-parametrization* grammar-symbol-source)
+                                 :reference
+                                 subscript))
+
+(setf (styled-text-depictor :grammar-symbol) #'depict-grammar-symbol-styled-text)
 
 
 ;;; ------------------------------------------------------------------------------------------------------
@@ -398,7 +449,7 @@
                           (error "Duplicate nonterminal argument ~S" argument))))))
               arguments)
         (values (make-generic-nonterminal symbol parameters) arguments)))
-    (values grammar-symbol-source nil)))
+    (values (assert-type grammar-symbol-source (or keyword terminal)) nil)))
 
 
 ; Call f on each possible binding permutation of the given arguments concatenated with the bindings in
