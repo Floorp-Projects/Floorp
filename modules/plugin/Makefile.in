@@ -43,6 +43,10 @@ endif
 ifeq ($(OS_ARCH),WINNT)
 DIRS		+= samples/default/windows
 endif
+
+ifeq ($(OS_ARCH),OS2)
+DIRS		+= samples/default/os2
+endif
  
 include $(topsrcdir)/config/rules.mk
 
