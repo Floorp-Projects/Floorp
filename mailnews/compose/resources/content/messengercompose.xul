@@ -173,8 +173,6 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 
 		<menuitem value="&attachFileCmd.label;" accesskey="&attachFileCmd.accesskey;" observes="cmd_attachFile"/>
 		<menuitem value="&attachPageCmd.label;" accesskey="&attachPageCmd.accesskey;" oncommand="AttachPage()"/>
-		<!-- the next menu item is TEMPORARY until we figure how to hook up the deleted key in the attachment tree -->
-		<menuitem value="&removeLastAttachmentCmd.label;" oncommand="RemoveSelectedAttachment()"/>
 	    <menuseparator/>
 		
 		<menuitem value="&sendNowCmd.label;" accessKey="&sendNowCmd.accesskey;" observes="cmd_sendNow"/>
@@ -398,10 +396,10 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 			<box align="vertical" flex="75%">
 				<spring style="height:0.5em"/>
 				<box align="horizontal">
-                    <text value="&fromAddr.label;" />
+                    <text value="&fromAddr.label;"/>
 					<spring style="width:0.5em"/>
-					<menulist id="msgIdentity" value="..." oncommand="contentChanged=true; LoadIdentity(false);">
-                        <menupopup id="msgIdentityPopup" />
+					<menulist id="msgIdentity" value="..." flex="100%" oncommand="contentChanged=true; LoadIdentity(false);">
+                        <menupopup id="msgIdentityPopup" flex="100%"/>
                     </menulist>
 				</box> 
 				<spring style="height:0.5em"/>
@@ -411,9 +409,9 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 				<spring style="height:0.5em"/>
 				
 				<box align="horizontal">
-					<html:div>&subject.label;</html:div>
+					<text value="&subject.label;"/>
 					<spring style="width:0.5em"/>
-				    <html:input id="msgSubject" type="text" flex="100%"
+				    <textfield id="msgSubject" type="text" flex="100%"
 						onkeyup="SetComposeWindowTitle(event.which);
 						         if (event.which == 13)
 						            contentWindow.focus();"
@@ -432,12 +430,12 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 			<box align="vertical" flex="25%">
 				<spring style="height:0.5em"/>
 				<box align="vertical" style="height:1em">
-					<html:div flex="100%">&attachments.label;</html:div>
+					<text value="&attachments.label;" flex="100%"/>
 				</box>
 				<spring style="height:0.5em"/>
 				<box align="vertical" style="height:8.5em; background-color:white; border-top:solid black 1px">
 					<tree id="attachmentBucket" flex="100%" style="width:0px"
-						onkeypress="if (event.which == 8) RemoveSelectedAttachment();"
+						onkeypress="if (event.keyCode == 8 || event.keyCode == 46) RemoveSelectedAttachment();"
 						onchange="contentChanged=true;">
 						<treecol style="width:100%"/>
 

@@ -43,9 +43,9 @@ Rights Reserved.
 					<treeitem>
 						<treerow>
 							<treecell allowevents="true">
-							    <!--menulist id="msgRecipientType#1" style="width:0px"
+							    <menulist id="msgRecipientType#1"
 								    onclick="awNotAnEmptyArea(event)"
-								    onchange="contentChanged=true;">
+								    oncommand="contentChanged=true;">
 							        <menupopup>
 							            <menuitem value="&toAddr.label;"/>
 							            <menuitem value="&ccAddr.label;"/>
@@ -54,32 +54,15 @@ Rights Reserved.
 							            <menuitem value="&newsgroupsAddr.label;"/>
 							            <menuitem value="&followupAddr.label;"/>
 							        </menupopup>
-							    </menulist-->
-								<html:select id="msgRecipientType#1"
-								    onclick="awNotAnEmptyArea(event)"
-								    onchange="contentChanged=true;">
-									<html:option value="addr_to">&toAddr.label;</html:option>
-									<html:option value="addr_cc">&ccAddr.label;</html:option>
-									<html:option value="addr_bcc">&bccAddr.label;</html:option>
-									<html:option value="addr_reply">&replyAddr.label;</html:option>
-									<html:option value="addr_newsgroups">&newsgroupsAddr.label;</html:option>
-									<html:option value="addr_followup">&followupAddr.label;</html:option>
-								</html:select>
+							    </menulist>
 							
-								<image onclick="awNotAnEmptyArea(event)"/>
-							
-								<!--html:input id="msgRecipient#1"
+							    <box autostretch="never">
+								    <image onclick="awNotAnEmptyArea(event)"/>
+								</box>
+
+								<textfield id="msgRecipient#1"
 											flex="100%"
-											class="addressingWidget"
-											type="text"
-											onkeyup="if (event.which == 13)
-											{ AutoCompleteAddress(this); awReturnHit(this); }"
-											onkeydown="if (event.which == 9) awTabFromRecipient(this, event);"
-											onchange="contentChanged=true; awInputChanged(this);"
-											onclick="awNotAnEmptyArea(event);"
-											/-->
-								<autocomplete id="msgRecipient#1"
-											flex="100%"
+											autocomplete="true"
 											class="addressingWidget"
 											style="width:0px"
 											onkeyup="if (event.which == 13) awReturnHit(this);"

@@ -25,7 +25,6 @@
 	<!ENTITY attachFileCmd.accesskey "F">
 <!ENTITY attachPageCmd.label "Attach Web Page...">
 	<!ENTITY attachPageCmd.accesskey "W">
-<!ENTITY removeLastAttachmentCmd.label "Remove Selected Attachment">
 <!ENTITY sendNowCmd.label "Send">
 	<!ENTITY sendNowCmd.keycode "VK_ENTER">
 	<!ENTITY sendNowCmd.accesskey "d">
