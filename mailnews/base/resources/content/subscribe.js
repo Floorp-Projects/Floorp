@@ -92,8 +92,8 @@ function SetUpServerMenu()
 
 var MySubscribeListener = {
 	OnDonePopulating: function() {
-		gStatusFeedback.ShowProgress(100);
-		gStatusFeedback.ShowStatusString(Bundle.GetStringFromName("doneString"));
+		gStatusFeedback.showProgress(100);
+		gStatusFeedback.showStatusString(Bundle.GetStringFromName("doneString"));
 		gStatusBar.setAttribute("mode","normal");
 
         // only re-root the tree, if it is null.
@@ -135,8 +135,8 @@ function SetUpTree(forceToServer)
         gSubscribeTree.database.RemoveDataSource(subscribeDS);
 		gSubscribableServer.subscribeListener = MySubscribeListener;
 
-		gStatusFeedback.ShowProgress(0);
-		gStatusFeedback.ShowStatusString(Bundle.GetStringFromName("pleaseWaitString"));
+		gStatusFeedback.showProgress(0);
+		gStatusFeedback.showStatusString(Bundle.GetStringFromName("pleaseWaitString"));
 		gStatusBar.setAttribute("mode","undetermined");
 
 		gSubscribableServer.startPopulating(msgWindow, forceToServer);
@@ -322,8 +322,8 @@ function SubscribeOnClick(event)
 				
 				//dump("do twisty for " + uri + "\n");
 
-				gStatusFeedback.ShowProgress(0);
-				gStatusFeedback.ShowStatusString(Bundle.GetStringFromName("pleaseWaitString"));
+				gStatusFeedback.showProgress(0);
+				gStatusFeedback.showStatusString(Bundle.GetStringFromName("pleaseWaitString"));
 				gStatusBar.setAttribute("mode","undetermined");
 
 				gSubscribableServer.startPopulatingWithUri(msgWindow, true /* force to server */, uri);
