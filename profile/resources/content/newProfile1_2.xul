@@ -41,7 +41,7 @@
   <html>&pnl2.pname.label;</html> 
 
 
-  <textbox id="ProfileName" value="&pnl2.defaultPName.label;" onblur="updateProfileName();"/>
+  <textbox id="ProfileName" value="&pnl2.defaultPName.label;" onkeypress="updateProfileName();"/>
 
   <separator/>
 
