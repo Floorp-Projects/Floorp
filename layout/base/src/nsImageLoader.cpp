@@ -81,10 +81,13 @@ nsImageLoader::Destroy()
 }
 
 nsresult
-nsImageLoader::Load(const nsAReadableString &aURI)
+nsImageLoader::Load(nsIURI *aURI)
 {
   if (!mFrame)
     return NS_ERROR_NOT_INITIALIZED;
+
+  if (!aURI)
+    return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsILoadGroup> loadGroup;
   nsCOMPtr<nsIURI> uri;
@@ -101,20 +104,11 @@ nsImageLoader::Load(const nsAReadableString &aURI)
   // Get the document's loadgroup
   doc->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
 
-  doc->GetBaseURL(*getter_AddRefs(baseURI));
-
-  NS_NewURI(getter_AddRefs(uri), aURI, baseURI);
-
-  // NS_NewURI can fail to return a uri instance
-  if (uri == nsnull) {
-    return NS_ERROR_FAILURE;
-  }
-
   if (mRequest) {
     nsCOMPtr<nsIURI> oldURI;
     mRequest->GetURI(getter_AddRefs(oldURI));
     PRBool eq = PR_FALSE;
-    uri->Equals(oldURI, &eq);
+    aURI->Equals(oldURI, &eq);
     if (eq) {
       return NS_OK;
     }
@@ -123,7 +117,7 @@ nsImageLoader::Load(const nsAReadableString &aURI)
   nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1", &rv));
   if (NS_FAILED(rv)) return rv;
 
-  return il->LoadImage(uri, loadGroup, NS_STATIC_CAST(imgIDecoderObserver *, this), 
+  return il->LoadImage(aURI, loadGroup, NS_STATIC_CAST(imgIDecoderObserver *, this), 
                        nsnull, nsIRequest::LOAD_BACKGROUND, nsnull, nsnull, getter_AddRefs(mRequest));
 }
 
