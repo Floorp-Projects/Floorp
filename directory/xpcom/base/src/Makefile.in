@@ -53,6 +53,7 @@ CPPSRCS		= \
 		nsLDAPMessage.cpp \
 		nsLDAPConnection.cpp \
 		nsLDAPOperation.cpp \
+		nsLDAPURL.cpp \
 		ldapSearch.cpp \
 		$(NULL)
 

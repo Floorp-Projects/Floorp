@@ -31,43 +31,24 @@
  * GPL.
  */
 
-#include "nsIGenericFactory.h"
-#include "nsLDAPProtocolHandler.h"
-#include "nsLDAPChannel.h"
-#include "nsLDAPService.h"
-#include "nsLDAPConnection.h"
-#include "nsLDAPOperation.h"
-#include "nsLDAPMessage.h"
-#include "nsLDAPURL.h"
+#include "ldap.h"
+#include "nsILDAPURL.h"
 
-// use the default constructor
-//
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPProtocolHandler);
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsLDAPService, Init);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPConnection);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPOperation);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPMessage);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPURL);
+// cb7c67f8-0053-4072-89e9-501cbd1b35ab
+#define NS_LDAPURL_CID \
+{ 0xcb7c67f8, 0x0053, 0x4072, \
+  { 0x89, 0xe9, 0x50, 0x1c, 0xbd, 0x1b, 0x35, 0xab}}
 
-// a table of the CIDs implemented by this module (in this case, just one)
-//
-static nsModuleComponentInfo components[] =
+class nsLDAPURL : public nsILDAPURL
 {
-    { "LDAP Protocol Handler", NS_LDAPPROTOCOLHANDLER_CID, 
-	  NS_NETWORK_PROTOCOL_PROGID_PREFIX "ldap", 
-	  nsLDAPProtocolHandlerConstructor },	
-    { "LDAP Service", NS_LDAPSERVICE_CID, "mozilla.network.ldapservice", 
-	  nsLDAPServiceConstructor },
-    { "LDAP Connection", NS_LDAPCONNECTION_CID,
-	  "mozilla.network.ldapconnection", nsLDAPConnectionConstructor },
-    { "LDAP Operation", NS_LDAPOPERATION_CID,
-	  "mozilla.network.ldapoperation", nsLDAPOperationConstructor },
-    { "LDAP Message", NS_LDAPMESSAGE_CID,
-	  "mozilla.network.ldapmessage", nsLDAPMessageConstructor },
-    { "LDAP URL", NS_LDAPURL_CID,
-	  "mozilla.network.ldapurl", nsLDAPURLConstructor }
-};
+  public:
+    NS_DECL_ISUPPORTS;
+    NS_DECL_NSIURI;
+    NS_DECL_NSILDAPURL;
 
-// implement the NSGetModule() exported function
-//
-NS_IMPL_NSGETMODULE("nsLDAPProtocolModule", components);
+    nsLDAPURL();
+    virtual ~nsLDAPURL();
+
+  protected:
+    LDAPURLDesc *mDesc; 	// the URL descriptor we're wrapping
+};

@@ -45,6 +45,7 @@ XPIDLSRCS	= 	nsILDAPConnection.idl \
 			nsILDAPOperation.idl \
 			nsILDAPMessage.idl \
 			nsILDAPMessageListener.idl \
+			nsILDAPURL.idl \
 			$(NULL)
 
 include $(topsrcdir)/config/rules.mk
