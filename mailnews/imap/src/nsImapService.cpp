@@ -2586,12 +2586,15 @@ NS_IMETHODIMP nsImapService::GetScheme(char * *aScheme)
 
 NS_IMETHODIMP nsImapService::GetDefaultPort(PRInt32 *aDefaultPort)
 {
-	nsresult rv = NS_OK;
-	if (aDefaultPort)
-		*aDefaultPort = IMAP_PORT;
-	else
-		rv = NS_ERROR_NULL_POINTER;
-	return rv; 	
+    NS_ENSURE_ARG_POINTER(aDefaultPort);
+    *aDefaultPort = IMAP_PORT;
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImapService::GetDefaultServerPort(PRInt32 *aDefaultPort)
+{
+    return GetDefaultPort(aDefaultPort);
 }
 
 NS_IMETHODIMP nsImapService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI **_retval)

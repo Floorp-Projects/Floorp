@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -1138,12 +1138,15 @@ NS_IMETHODIMP nsNntpService::GetScheme(char * *aScheme)
 
 NS_IMETHODIMP nsNntpService::GetDefaultPort(PRInt32 *aDefaultPort)
 {
-	nsresult rv = NS_OK;
-	if (aDefaultPort)
-		*aDefaultPort = NEWS_PORT;
-	else
-		rv = NS_ERROR_NULL_POINTER;
-	return rv; 	
+    NS_ENSURE_ARG_POINTER(aDefaultPort);
+    *aDefaultPort = NEWS_PORT;
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNntpService::GetDefaultServerPort(PRInt32 *aDefaultPort)
+{
+    return GetDefaultPort(aDefaultPort);
 }
 
 NS_IMETHODIMP nsNntpService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI **_retval)

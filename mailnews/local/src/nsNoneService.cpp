@@ -137,3 +137,12 @@ nsNoneService::GetDefaultCopiesAndFoldersPrefsToServer(PRBool *aDefaultCopiesAnd
     *aDefaultCopiesAndFoldersPrefsToServer = PR_TRUE;
     return NS_OK;
 }   
+
+NS_IMETHODIMP
+nsNoneService::GetDefaultServerPort(PRInt32 *aDefaultPort)
+{
+    NS_ASSERTION(0, "This should probably never be called!");
+    NS_ENSURE_ARG_POINTER(aDefaultPort);
+    *aDefaultPort = -1;
+    return NS_OK;
+}

@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -32,12 +32,52 @@
 [scriptable, uuid(53d0214a-689c-11d3-80f5-00a0c900d445)]
 interface nsIMsgProtocolInfo : nsISupports
 {
+    /**
+     * the default path to store local data for this type of
+     * server. Each server is usually in a subdirectory below this
+     */
     attribute nsIFileSpec defaultLocalPath;
+
+    /**
+     * the IID of the protocol-specific interface for this server
+     * usually used from JS to dynamically get server-specific attributes
+     */
     readonly attribute nsIIDPtr serverIID;
+
+    /**
+     * does this server type require a username?
+     * for instance, news does not but IMAP/POP do
+     */
     readonly attribute boolean requiresUsername;
+
+    /**
+     * if the pretty name of the server should
+     * just be the e-mail address. Otherwise it usually
+     * ends up being something like "news on hostname"
+     */
     readonly attribute boolean preflightPrettyNameWithEmailAddress;
+
+    /**
+     * can this type of server be removed from the account manager?
+     * for instance, local mail is not removable
+     */
     readonly attribute boolean canDelete;
+
+    /**
+     * can you duplicate this server?
+     * for instance, local mail is unique and should not be duplicated.
+     */
     readonly attribute boolean canDuplicate;
+
+    /**
+     * Whether Fcc/Sent/etc should be on this server or
+     * on a local server
+    */
 	readonly attribute boolean defaultCopiesAndFoldersPrefsToServer;
+
+    /* the default port
+       This is similar to nsIProtocolHanderl.defaultPort,
+       but for architectural reasons, there is a mail-specific interface to this */
+    readonly attribute long defaultServerPort;
 };
 

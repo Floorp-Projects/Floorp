@@ -32,6 +32,7 @@
 #include "nsWeakReference.h"
 
 class nsIMsgFolderCache;
+class nsIMsgProtocolInfo;
 
 /*
  * base class for nsIMsgIncomingServer - derive your class from here
@@ -53,7 +54,7 @@ class NS_MSG_BASE nsMsgIncomingServer : public nsIMsgIncomingServer,
   
 private:
   nsIPref *m_prefs;
-  char *m_serverKey;
+  nsCString m_serverKey;
   nsCString m_password;
   PRBool m_serverBusy;
 
@@ -75,6 +76,7 @@ protected:
   nsresult CreateRootFolder();
   nsresult StorePassword();  // stuff the password in the single signon database
 
+  nsresult getProtocolInfo(nsIMsgProtocolInfo **aResult);
   nsFileSpec mFilterFile;
   nsCOMPtr<nsIMsgFilterList> mFilterList;
   // pref callback to clear the user prefs

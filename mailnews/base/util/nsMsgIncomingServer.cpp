@@ -62,16 +62,16 @@ static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kMsgFilterServiceCID, NS_MSGFILTERSERVICE_CID);
 
+#define PORT_NOT_SET -1
+
 MOZ_DECL_CTOR_COUNTER(nsMsgIncomingServer);
 
 nsMsgIncomingServer::nsMsgIncomingServer():
     m_prefs(0),
-    m_serverKey(0),
     m_rootFolder(0)
 {
   NS_INIT_REFCNT();
   m_serverBusy = PR_FALSE;
-  m_password = "";
 }
 
 nsMsgIncomingServer::~nsMsgIncomingServer()
@@ -86,7 +86,6 @@ nsMsgIncomingServer::~nsMsgIncomingServer()
     if (m_prefs) nsServiceManager::ReleaseService(kPrefServiceCID,
                                                   m_prefs,
                                                   nsnull);
-    PR_FREEIF(m_serverKey)
 }
 
 NS_IMPL_THREADSAFE_ADDREF(nsMsgIncomingServer);
@@ -110,8 +109,7 @@ nsMsgIncomingServer::SetKey(const char * serverKey)
                                           NS_GET_IID(nsIPref),
                                           (nsISupports**)&m_prefs);
 
-    PR_FREEIF(m_serverKey);
-    m_serverKey = PL_strdup(serverKey);
+    m_serverKey = serverKey;
     return rv;
 }
     
@@ -701,13 +699,8 @@ NS_IMETHODIMP
 nsMsgIncomingServer::SetDefaultLocalPath(nsIFileSpec *aDefaultLocalPath)
 {
     nsresult rv;
-    nsXPIDLCString type;
-    GetType(getter_Copies(type));
-
-    nsCAutoString progid(NS_MSGPROTOCOLINFO_PROGID_PREFIX);
-    progid.Append(type);
-
-    NS_WITH_SERVICE(nsIMsgProtocolInfo, protocolInfo, progid, &rv);
+    nsCOMPtr<nsIMsgProtocolInfo> protocolInfo;
+    rv = getProtocolInfo(getter_AddRefs(protocolInfo));
     if (NS_FAILED(rv)) return rv;
 
     rv = protocolInfo->SetDefaultLocalPath(aDefaultLocalPath);
@@ -723,16 +716,12 @@ nsMsgIncomingServer::GetLocalPath(nsIFileSpec **aLocalPath)
     rv = GetFileValue("directory", aLocalPath);
     if (NS_SUCCEEDED(rv) && *aLocalPath) return rv;
     
-    // otherwise, create the path using.  note we are using the
+    // otherwise, create the path using the protocol info.
+    // note we are using the
     // hostname, unless that directory exists.
 	// this should prevent all collisions.
-    nsXPIDLCString type;
-    GetType(getter_Copies(type));
-
-    nsCAutoString progid(NS_MSGPROTOCOLINFO_PROGID_PREFIX);
-    progid.Append(type);
-
-    NS_WITH_SERVICE(nsIMsgProtocolInfo, protocolInfo, progid, &rv);
+    nsCOMPtr<nsIMsgProtocolInfo> protocolInfo;
+    rv = getProtocolInfo(getter_AddRefs(protocolInfo));
     if (NS_FAILED(rv)) return rv;
     
     nsCOMPtr<nsIFileSpec> path;
@@ -964,9 +953,68 @@ nsMsgIncomingServer::GetHostName(char **aResult)
     return rv;
 }
 
+NS_IMETHODIMP
+nsMsgIncomingServer::GetPort(PRInt32 *aPort)
+{
+    NS_ENSURE_ARG_POINTER(aPort);
+    nsresult rv;
+    
+    rv = GetIntValue("port", aPort);
+    if (*aPort != PORT_NOT_SET) return rv;
+    
+    // if the port isn't set, use the default
+    // port based on the protocol
+    nsCOMPtr<nsIMsgProtocolInfo> protocolInfo;
+
+    rv = getProtocolInfo(getter_AddRefs(protocolInfo));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return protocolInfo->GetDefaultServerPort(aPort);
+}
+
+NS_IMETHODIMP
+nsMsgIncomingServer::SetPort(PRInt32 aPort)
+{
+    nsresult rv;
+    
+    nsCOMPtr<nsIMsgProtocolInfo> protocolInfo;
+    rv = getProtocolInfo(getter_AddRefs(protocolInfo));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRInt32 defaultPort;
+    rv = protocolInfo->GetDefaultServerPort(&defaultPort);
+    if (NS_SUCCEEDED(rv) && aPort == defaultPort)
+        // clear it out by setting it to the default
+        rv = SetIntValue("port", PORT_NOT_SET);
+    else
+        rv = SetIntValue("port", aPort);
+
+    return NS_OK;
+}
+
+nsresult
+nsMsgIncomingServer::getProtocolInfo(nsIMsgProtocolInfo **aResult)
+{
+    NS_ENSURE_ARG_POINTER(aResult);
+    nsresult rv;
+
+    nsXPIDLCString type;
+    rv = GetType(getter_Copies(type));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCAutoString progid(NS_MSGPROTOCOLINFO_PROGID_PREFIX);
+    progid.Append(type);
+
+    nsCOMPtr<nsIMsgProtocolInfo> protocolInfo =
+        do_GetService(progid, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    *aResult = protocolInfo;
+    NS_ADDREF(*aResult);
+    return NS_OK;
+}
+
 // use the convenience macros to implement the accessors
-//NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, HostName, "hostname");
-NS_IMPL_SERVERPREF_INT(nsMsgIncomingServer, Port, "port");
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, Username, "userName");
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, PrefPassword, "password");
 NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, DoBiff, "check_new_mail");

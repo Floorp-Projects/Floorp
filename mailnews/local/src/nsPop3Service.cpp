@@ -270,12 +270,9 @@ NS_IMETHODIMP nsPop3Service::GetScheme(char * *aScheme)
 
 NS_IMETHODIMP nsPop3Service::GetDefaultPort(PRInt32 *aDefaultPort)
 {
-	nsresult rv = NS_OK;
-	if (aDefaultPort)
-		*aDefaultPort = POP3_PORT;
-	else
-		rv = NS_ERROR_NULL_POINTER;
-	return rv; 	
+    NS_ENSURE_ARG_POINTER(aDefaultPort);
+    *aDefaultPort = POP3_PORT;
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsPop3Service::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI **_retval)
@@ -441,6 +438,12 @@ nsPop3Service::GetCanDuplicate(PRBool *aCanDuplicate)
         *aCanDuplicate = PR_TRUE;
         return NS_OK;
 }        
+
+NS_IMETHODIMP
+nsPop3Service::GetDefaultServerPort(PRInt32 *aPort)
+{
+    return GetDefaultPort(aPort);
+}
 
 NS_IMETHODIMP
 nsPop3Service::GetDefaultCopiesAndFoldersPrefsToServer(PRBool *aDefaultCopiesAndFoldersPrefsToServer)
