@@ -18,7 +18,7 @@
 		<treecol style="width:100%"/>
 
 		<treechildren id="bucketBody">
-			<treeitem>
+			<treeitem id="bucketItem">
 				<treerow>
 					<treecell/>
 				</treerow>

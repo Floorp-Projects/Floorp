@@ -111,6 +111,7 @@
     onload="OnLoadAddressBook()">
 
 <html:script language="JavaScript" src="chrome://addressbook/content/addressbook.js"/>
+<html:script language="JavaScript" src="resource://res/samples/DumpDOM.js"/>
 
   <menubar>
     <menu name="&fileMenu.label;">

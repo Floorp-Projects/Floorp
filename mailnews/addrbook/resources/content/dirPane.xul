@@ -38,11 +38,10 @@
 		</treerow>
 	</treehead>
 
-	<treechildren rdf:containment="http://home.netscape.com/NC-rdf#child" rdf:ignore="http://home.netscape.com/NC-rdf#CardChild">
+	<treechildren rdf:containment="http://home.netscape.com/NC-rdf#child"
+				  rdf:ignore="http://home.netscape.com/NC-rdf#CardChild"
+				  open="true">
 		<treeitem ref="abdirectory:/" open="true">
-			<treerow>
-				<treecell/>
-			</treerow>
 		</treeitem>
 	</treechildren>
 </tree>

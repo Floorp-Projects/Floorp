@@ -59,7 +59,7 @@ Rights Reserved.
         style="width:100%; height:100%; padding:0px">
 
 <html:script language="JavaScript" src="chrome://addressbook/content/addressbook.js"/>
-
+<html:script language="JavaScript" src="resource://res/samples/DumpDOM.js"/>
 
 <box align="vertical" style="width:100%; height:100%">
 	<!-- Thin box across top, show names containing & stop, search buttons -->
@@ -95,9 +95,6 @@ Rights Reserved.
 
 					<treechildren rdf:containment="http://home.netscape.com/NC-rdf#child" rdf:ignore="http://home.netscape.com/NC-rdf#CardChild">
 						<treeitem ref="abdirectory:/" open="true">
-							<treerow>
-								<treecell/>
-							</treerow>
 						</treeitem>
 					</treechildren>
 				</tree>

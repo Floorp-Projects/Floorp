@@ -71,16 +71,7 @@
 			</treerow>
 		</treehead>
 
-		<treechildren id="" name="cardTreeBody">
-			<treeitem>
-				<treerow><treecell/></treerow>
-				<treerow><treecell/></treerow>
-				<treerow><treecell/></treerow>
-				<treerow><treecell/></treerow>
-				<treerow><treecell/></treerow>
-				<treerow><treecell/></treerow>
-			</treeitem>
-		</treechildren>
+		<treechildren id="" name="cardTreeBody" open="true"/>
 	</tree>
 
 </window>
