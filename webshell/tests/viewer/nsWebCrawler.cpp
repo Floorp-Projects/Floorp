@@ -51,6 +51,7 @@
 #include "prprf.h"
 #include "nsIContentViewer.h"
 #include "nsIContentViewerFile.h"
+#include "nsIDocShell.h"
 
 static NS_DEFINE_IID(kIDocumentLoaderObserverIID, NS_IDOCUMENTLOADEROBSERVER_IID);
 static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
@@ -305,7 +306,8 @@ nsWebCrawler::OnEndDocumentLoad(nsIDocumentLoader* loader,
         nsIWebShell* webshell = nsnull;
         mBrowser->GetWebShell(webshell);
 
-        webshell->GetContentViewer(getter_AddRefs(viewer));
+        nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(webshell));
+        docShell->GetContentViewer(getter_AddRefs(viewer));
 
         if (viewer){
           nsCOMPtr<nsIContentViewerFile> viewerFile = do_QueryInterface(viewer);
@@ -440,15 +442,6 @@ nsWebCrawler::OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsWebCrawler::HandleUnknownContentType(nsIDocumentLoader* loader,
-                                       nsIChannel* channel,
-                                       const char *aContentType,
-                                       const char *aCommand)
-{
-  return NS_OK;
-}
-
 FILE*
 nsWebCrawler::GetOutputFile(nsIURI *aURL, nsString& aOutputName)
 {
@@ -547,7 +540,8 @@ nsWebCrawler::Start()
   // Enable observing each URL load...
   nsIWebShell* shell = nsnull;
   mBrowser->GetWebShell(shell);
-  shell->SetDocLoaderObserver(this);
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(shell));
+  docShell->SetDocLoaderObserver(this);
   shell->GetDocumentLoader(*getter_AddRefs(mDocLoader));
   NS_RELEASE(shell);
   if (mPendingURLs.Count() > 1) {
@@ -756,9 +750,10 @@ nsWebCrawler::FindMoreURLs()
 {
   nsIWebShell* shell = nsnull;
   mBrowser->GetWebShell(shell);
-  if (nsnull != shell) {
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(shell));
+  if (docShell) {
     nsIContentViewer* cv = nsnull;
-    shell->GetContentViewer(&cv);
+    docShell->GetContentViewer(&cv);
     if (nsnull != cv) {
       nsIDocumentViewer* docv = nsnull;
       cv->QueryInterface(kIDocumentViewerIID, (void**) &docv);
@@ -858,9 +853,10 @@ nsWebCrawler::GetPresShell()
   nsIWebShell* webShell;
   mBrowser->GetWebShell(webShell);
   nsIPresShell* shell = nsnull;
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(webShell));
   if (nsnull != webShell) {
     nsIContentViewer* cv = nsnull;
-    webShell->GetContentViewer(&cv);
+    docShell->GetContentViewer(&cv);
     if (nsnull != cv) {
       nsIDocumentViewer* docv = nsnull;
       cv->QueryInterface(kIDocumentViewerIID, (void**) &docv);
