@@ -94,7 +94,7 @@
  * of a header!
  */
 
-#ifdef HAVE_VISIBILITY_ATTRIBUTE
+#ifdef HAVE_VISIBILITY_ATTRIBUTE_notyet
 #define NS_VISIBILITY_(vis) __attribute__ ((visibility (#vis)))
 #define NS_HIDDEN_(type)   type NS_VISIBILITY(hidden)
 #else
