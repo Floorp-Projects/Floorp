@@ -5,12 +5,13 @@
     enum {
         ADD, /* dest, source1, source2 */
         AND, /* dest, source1, source2 */
+        BIND_THIS, /* result, this, target */
         BITNOT, /* dest, source */
         BRANCH, /* target label */
         BRANCH_FALSE, /* target label, condition */
         BRANCH_INITIALIZED, /* target label, condition */
         BRANCH_TRUE, /* target label, condition */
-        CALL, /* result, target, this, args */
+        CALL, /* result, target, args */
         CAST, /* dest, rvalue, toType */
         COMPARE_EQ, /* dest, source1, source2 */
         COMPARE_GE, /* dest, source1, source2 */
@@ -95,6 +96,22 @@
         /* print() and printOperands() inherited from Arithmetic */
     };
 
+    class BindThis : public Instruction_3<TypedRegister, TypedRegister, TypedRegister> {
+    public:
+        /* result, this, target */
+        BindThis (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3) :
+            Instruction_3<TypedRegister, TypedRegister, TypedRegister>
+            (BIND_THIS, aOp1, aOp2, aOp3) {};
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[BIND_THIS] << "\t" << mOp1 << ", " << mOp2 << ", " << mOp3;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << getRegisterValue(registers, mOp1.first) << ", " << getRegisterValue(registers, mOp2.first) << ", " << getRegisterValue(registers, mOp3.first);
+            return f;
+        }
+    };
+
     class Bitnot : public Instruction_2<TypedRegister, TypedRegister> {
     public:
         /* dest, source */
@@ -153,18 +170,18 @@
         /* print() and printOperands() inherited from GenericBranch */
     };
 
-    class Call : public Instruction_4<TypedRegister, TypedRegister, TypedRegister, ArgumentList*> {
+    class Call : public Instruction_3<TypedRegister, TypedRegister, ArgumentList*> {
     public:
-        /* result, target, this, args */
-        Call (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3, ArgumentList* aOp4) :
-            Instruction_4<TypedRegister, TypedRegister, TypedRegister, ArgumentList*>
-            (CALL, aOp1, aOp2, aOp3, aOp4) {};
+        /* result, target, args */
+        Call (TypedRegister aOp1, TypedRegister aOp2, ArgumentList* aOp3) :
+            Instruction_3<TypedRegister, TypedRegister, ArgumentList*>
+            (CALL, aOp1, aOp2, aOp3) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[CALL] << "\t" << mOp1 << ", " << mOp2 << ", " << mOp3 << ", " << mOp4;
+            f << opcodeNames[CALL] << "\t" << mOp1 << ", " << mOp2 << ", " << mOp3;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << getRegisterValue(registers, mOp1.first) << ", " << getRegisterValue(registers, mOp2.first) << ", " << getRegisterValue(registers, mOp3.first);
+            f << getRegisterValue(registers, mOp1.first) << ", " << getRegisterValue(registers, mOp2.first);
             return f;
         }
     };
@@ -1127,6 +1144,7 @@
     char *opcodeNames[] = {
         "ADD               ",
         "AND               ",
+        "BIND_THIS         ",
         "BITNOT            ",
         "BRANCH            ",
         "BRANCH_FALSE      ",

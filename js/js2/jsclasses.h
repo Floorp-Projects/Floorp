@@ -348,6 +348,7 @@ namespace JSClasses {
         }
         
 #if !defined(XP_MAC)
+        void operator delete(void* /*ptr*/) {}
         void operator delete(void* /*ptr*/, JSClass* /*thisClass*/) {}
 #endif
         

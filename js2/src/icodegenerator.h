@@ -348,8 +348,9 @@ namespace ICG {
         TypedRegister op(ICodeOp op, TypedRegister source);
         TypedRegister op(ICodeOp op, TypedRegister source1, TypedRegister source2);
         TypedRegister binaryOp(ICodeOp op, TypedRegister source1, TypedRegister source2);
-        TypedRegister call(TypedRegister base, TypedRegister target, ArgumentList *args);
+        TypedRegister call(TypedRegister target, ArgumentList *args);
         TypedRegister directCall(JSFunction *target, ArgumentList *args);
+        TypedRegister bindThis(TypedRegister thisArg, TypedRegister target);
         TypedRegister getMethod(TypedRegister thisArg, uint32 slotIndex);
 
         void move(TypedRegister destination, TypedRegister source);

@@ -695,7 +695,17 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     ASSERT(base.isObject());        // XXX runtime error
                     JSClass *theClass = dynamic_cast<JSClass*>(base.object->getType());
                     ASSERT(theClass);
-                    (*registers)[dst(gm).first] = theClass->getMethod(src2(gm));
+                    (*registers)[dst(gm).first] = new JSBoundThis(base, theClass->getMethod(src2(gm)));
+                }
+                break;
+
+            case BIND_THIS:
+                {
+                    BindThis* bt = static_cast<BindThis*>(instruction);
+                    JSValue base = (*registers)[src1(bt).first];
+                    JSValue target = (*registers)[src2(bt).first];
+                    ASSERT(target.isFunction());
+                    (*registers)[dst(bt).first] = new JSBoundThis(base, target.function);
                 }
                 break;
 
@@ -715,9 +725,9 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     if (!target)
                         throw new JSException("Call to non callable object");
                     if (target->isNative()) {
-                        ArgumentList *params = op4(call);
+                        ArgumentList *params = op3(call);
                         JSValues argv(params->size() + 1);
-                        argv[0] = (*registers)[op3(call).first];
+                        argv[0] = target->getThis();        //(*registers)[op3(call).first];
                         JSValues::size_type i = 1;
                         for (ArgumentList::const_iterator src = params->begin(), end = params->end();
                                         src != end; ++src, ++i) {
@@ -730,7 +740,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     }
                     else {
                         ICodeModule *icm = target->getICode();
-                        ArgumentList *args = op4(call);
+                        ArgumentList *args = op3(call);
 
                         // if all the parameters are positional
 //                        if (icm->itsParameters->mPositionalCount == icm->itsParameters->size())
@@ -824,7 +834,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                         }
 
                         mLinkage = new Linkage(mLinkage, ++mPC, mActivation, mGlobal, op1(call));
-                        mActivation = new Activation(icm, mActivation, (*registers)[op3(call).first], callArgs);
+                        mActivation = new Activation(icm, mActivation, target->getThis()/*(*registers)[op3(call).first]*/, callArgs);
                         registers = &mActivation->mRegisters;
                         mPC = mActivation->mICode->its_iCode->begin();
                         endPC = mActivation->mICode->its_iCode->end();
