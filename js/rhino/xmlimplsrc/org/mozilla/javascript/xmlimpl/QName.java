@@ -109,15 +109,19 @@ final class QName extends IdScriptableObject
     public boolean equals(Object obj)
     {
         if(!(obj instanceof QName)) return false;
-        return equivalentValues((QName)obj).booleanValue();
+        return equals((QName)obj);
     }
 
-    public Boolean equivalentValues(Object value)
+    protected Object equivalentValues(Object value)
     {
-        if(!(value instanceof QName)) return null;
+        if(!(value instanceof QName)) return Scriptable.NOT_FOUND;
+        boolean result = equals((QName)value);
+        return result ? Boolean.TRUE : Boolean.FALSE;
+    }
 
+    private boolean equals(QName q)
+    {
         boolean result;
-        QName q = (QName)value;
 
         if (uri == null) {
             result = q.uri == null && localName.equals(q.localName);
@@ -125,7 +129,7 @@ final class QName extends IdScriptableObject
             result = uri.equals(q.uri) && localName.equals(q.localName);
         }
 
-        return result ? Boolean.TRUE : Boolean.FALSE;
+        return result;
     }
 
     /**

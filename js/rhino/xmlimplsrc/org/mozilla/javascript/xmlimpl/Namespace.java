@@ -127,14 +127,19 @@ class Namespace extends IdScriptableObject
     public boolean equals(Object obj)
     {
         if (!(obj instanceof Namespace)) return false;
-        return equivalentValues(obj).booleanValue();
+        return equals((Namespace)obj);
     }
 
-    public Boolean equivalentValues(Object value)
+    protected Object equivalentValues(Object value)
     {
-        if (!(value instanceof Namespace)) return null;
-        Namespace n = (Namespace)value;
-        return uri().equals(n.uri()) ? Boolean.TRUE : Boolean.FALSE;
+        if (!(value instanceof Namespace)) return Scriptable.NOT_FOUND;
+        boolean result = equals((Namespace)value);
+        return result ? Boolean.TRUE : Boolean.FALSE;
+    }
+
+    private boolean equals(Namespace n)
+    {
+        return uri().equals(n.uri());
     }
 
     /**

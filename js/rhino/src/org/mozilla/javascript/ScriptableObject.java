@@ -613,26 +613,28 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      */
     public boolean hasInstance(Scriptable instance) {
         // Default for JS objects (other than Function) is to do prototype
-        // chasing.  This will be overridden in NativeFunction and non-JS objects.
+        // chasing.  This will be overridden in NativeFunction and non-JS
+        // objects.
 
         return ScriptRuntime.jsDelegatesTo(instance, this);
     }
 
     /**
      * Custom <tt>==</tt> operator.
-     * Should return <tt>null</tt> if this object does not have custom equality
-     * operator for the given value,
+     * Must return {@link Scriptable#NOT_FOUND} if this object does not
+     * have custom equality operator for the given value,
      * <tt>Boolean.TRUE</tt> if this object is equivalent to <tt>value</tt>,
      * <tt>Boolean.FALSE</tt> if this object is not equivalent to
      * <tt>value</tt>.
      * <p>
      * The default implementation returns Boolean.TRUE
-     * if <tt>this == value</tt> or null otherwise to indicate no custom
-     * equality is available unless <tt>value</tt> is <tt>this</tt>.
+     * if <tt>this == value</tt> or {@link Scriptable#NOT_FOUND} otherwise.
+     * It indicates that by default custom equality is available only if
+     * <tt>value</tt> is <tt>this</tt> in which case true is returned.
      */
-    protected Boolean equivalentValues(Object value)
+    protected Object equivalentValues(Object value)
     {
-        return (this == value) ? Boolean.TRUE : null;
+        return (this == value) ? Boolean.TRUE : Scriptable.NOT_FOUND;
     }
 
     /**

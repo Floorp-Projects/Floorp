@@ -157,13 +157,12 @@ abstract class XMLObjectImpl extends XMLObject
 
     /**
      * XMLObject always compare with any value and equivalentValues
-     * never returns null for them but rather calls equivalentXml(value)
-     * and box the result as Boolean.
+     * never returns {@link Scriptable#NOT_FOUND} for them but rather
+     * calls equivalentXml(value) and wrap the result as Boolean.
      */
-    protected final Boolean equivalentValues(Object value)
+    protected final Object equivalentValues(Object value)
     {
         boolean result = equivalentXml(value);
-
         return result ? Boolean.TRUE : Boolean.FALSE;
     }
 

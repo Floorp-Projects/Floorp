@@ -2471,9 +2471,9 @@ public class ScriptRuntime {
                 return true;
             }
             if (y instanceof ScriptableObject) {
-                Boolean test = ((ScriptableObject)y).equivalentValues(x);
-                if (test != null) {
-                    return test.booleanValue();
+                Object test = ((ScriptableObject)y).equivalentValues(x);
+                if (test != Scriptable.NOT_FOUND) {
+                    return ((Boolean)test).booleanValue();
                 }
             }
             return false;
@@ -2487,9 +2487,9 @@ public class ScriptRuntime {
                 return b == ((Boolean)y).booleanValue();
             }
             if (y instanceof ScriptableObject) {
-                Boolean test = ((ScriptableObject)y).equivalentValues(x);
-                if (test != null) {
-                    return test.booleanValue();
+                Object test = ((ScriptableObject)y).equivalentValues(x);
+                if (test != Scriptable.NOT_FOUND) {
+                    return ((Boolean)test).booleanValue();
                 }
             }
             return eqNumber(b ? 1.0 : 0.0, y);
@@ -2500,15 +2500,15 @@ public class ScriptRuntime {
                     return true;
                 }
                 if (x instanceof ScriptableObject) {
-                    Boolean test = ((ScriptableObject)x).equivalentValues(y);
-                    if (test != null) {
-                        return test.booleanValue();
+                    Object test = ((ScriptableObject)x).equivalentValues(y);
+                    if (test != Scriptable.NOT_FOUND) {
+                        return ((Boolean)test).booleanValue();
                     }
                 }
                 if (y instanceof ScriptableObject) {
-                    Boolean test = ((ScriptableObject)y).equivalentValues(x);
-                    if (test != null) {
-                        return test.booleanValue();
+                    Object test = ((ScriptableObject)y).equivalentValues(x);
+                    if (test != Scriptable.NOT_FOUND) {
+                        return ((Boolean)test).booleanValue();
                     }
                 }
                 if (x instanceof Wrapper && y instanceof Wrapper) {
@@ -2517,9 +2517,9 @@ public class ScriptRuntime {
                 return false;
             } else if (y instanceof Boolean) {
                 if (x instanceof ScriptableObject) {
-                    Boolean test = ((ScriptableObject)x).equivalentValues(y);
-                    if (test != null) {
-                        return test.booleanValue();
+                    Object test = ((ScriptableObject)x).equivalentValues(y);
+                    if (test != Scriptable.NOT_FOUND) {
+                        return ((Boolean)test).booleanValue();
                     }
                 }
                 double d = ((Boolean)y).booleanValue() ? 1.0 : 0.0;
@@ -2551,9 +2551,9 @@ public class ScriptRuntime {
                 if (y == Undefined.instance) { return false; }
                 if (y instanceof ScriptableObject) {
                     Object xval = new Double(x);
-                    Boolean test = ((ScriptableObject)y).equivalentValues(xval);
-                    if (test != null) {
-                        return test.booleanValue();
+                    Object test = ((ScriptableObject)y).equivalentValues(xval);
+                    if (test != Scriptable.NOT_FOUND) {
+                        return ((Boolean)test).booleanValue();
                     }
                 }
                 y = toPrimitive(y);
@@ -2578,9 +2578,9 @@ public class ScriptRuntime {
             } else if (y instanceof Scriptable) {
                 if (y == Undefined.instance) { return false; }
                 if (y instanceof ScriptableObject) {
-                    Boolean test = ((ScriptableObject)y).equivalentValues(x);
-                    if (test != null) {
-                        return test.booleanValue();
+                    Object test = ((ScriptableObject)y).equivalentValues(x);
+                    if (test != Scriptable.NOT_FOUND) {
+                        return ((Boolean)test).booleanValue();
                     }
                 }
                 y = toPrimitive(y);
