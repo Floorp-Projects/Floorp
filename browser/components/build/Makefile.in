@@ -46,6 +46,7 @@ endif
 LOCAL_INCLUDES = \
 	-I$(srcdir)/../bookmarks/src \
 	-I$(srcdir)/../migration/src \
+	-I$(srcdir)/../shell/src \
 	$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
@@ -61,10 +62,6 @@ ifeq ($(OS_ARCH),WINNT)
 SHARED_LIBRARY_LIBS += \
   $(DIST)/lib/$(LIB_PREFIX)migration_s.$(LIB_SUFFIX) \
   $(DIST)/lib/$(LIB_PREFIX)shellservice_s.$(LIB_SUFFIX) \
-  $(NULL)
-
-LOCAL_INCLUDES  += \
-  -I$(srcdir)/../shell/src \
   $(NULL)
 endif
 
