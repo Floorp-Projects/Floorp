@@ -463,6 +463,7 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
     PRInt32 whitespace;
     if(NS_SUCCEEDED(GetValueOfAttribute(aNode, "style", style)) &&
        (-1 != (whitespace = style.Find("white-space:"))))
+       /* DELETEME: What, if the style is defined in an external stylesheet? */
     {
       if (-1 != style.Find("-moz-pre-wrap", PR_TRUE, whitespace))
       {
@@ -532,40 +533,37 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
   if (type == eHTMLTag_ul)
   {
     // Indent here to support nested list, which aren't included in li :-(
+    EnsureVerticalSpace(1); // Must end the current line before we change indent.
     mIndent += gIndentSizeList;
-    EnsureVerticalSpace(1);
   }
   else if (type == eHTMLTag_ol)
   {
+    EnsureVerticalSpace(1); // Must end the current line before we change indent.
     if (mOLStackIndex < OLStackSize)
       mOLStack[mOLStackIndex++] = 1;  // XXX should get it from the node!
     mIndent += gIndentSizeList;  // see ul
-    EnsureVerticalSpace(1);
   }
   else if (type == eHTMLTag_li)
   {
-    nsAutoString temp = Spaces(gIndentSizeList - gOLNumberWidth - 2);
     if (mTagStackIndex > 1 && mTagStack[mTagStackIndex-2] == eHTMLTag_ol)
     {
-      nsAutoString number;
       if (mOLStackIndex > 0)
         // This is what nsBulletFrame does for OLs:
-        number.Append(mOLStack[mOLStackIndex-1]++, 10);
+        mInIndentString.Append(mOLStack[mOLStackIndex-1]++, 10);
       else
-        number += "#";
-      temp += Spaces(gOLNumberWidth - number.Length()) + number + '.';
+        mInIndentString.Append("#");
+
+      mInIndentString.Append('.');
+
     }
     else
-      temp += Spaces(gOLNumberWidth) + "*";
-    temp += ' ';
-
-
-    mIndent -= gIndentSizeList;    // don't indent first line so much
-    Write(temp);   //CHANGE: does not work as intended. waiting for bug #17883
-    mIndent += gIndentSizeList;
+      mInIndentString.Append('*');
+    
+    mInIndentString.Append(' ');
   }
   else if (type == eHTMLTag_blockquote)
   {
+    EnsureVerticalSpace(0);
     // Find out whether it's a type=cite, and insert "> " instead.
     // Eventually we should get the value of the pref controlling citations,
     // and handle AOL-style citations as well.
@@ -585,7 +583,7 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
     nsAutoString url;
     if (NS_SUCCEEDED(GetValueOfAttribute(aNode, "href", url))
         && !url.IsEmpty())
-      mURL = url;
+      mURL = url.StripChars("\"");
   }
   else if (type == eHTMLTag_img)
   {
@@ -597,15 +595,15 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
           && !desc.IsEmpty())
       {
         temp += " (";
-        temp += desc;
+        temp += desc.StripChars("\"");
         temp += " <";
-        temp += url;
+        temp += url.StripChars("\"");
         temp += ">) ";
       }
       else
       {
         temp += " <";
-        temp += url;
+        temp += url.StripChars("\"");
         temp += "> ";
       }
       Write(temp);
@@ -613,7 +611,7 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
   }
   else if (type == eHTMLTag_sup)
     Write("^");
-  //don't know a plain text representation of sub
+  // I don't know a plain text representation of sub
   else if (type == eHTMLTag_strong || type == eHTMLTag_b)
     Write("*");
   else if (type == eHTMLTag_em || type == eHTMLTag_i)
@@ -703,7 +701,8 @@ nsHTMLToTXTSinkStream::CloseContainer(const nsIParserNode& aNode)
       if(mCacheLine) {
         AddToLine(nsAutoString(" ").GetUnicode(), 1);
       } else {
-        WriteSimple(" ");
+        nsAutoString space(" ");
+        WriteSimple(space);
       }
       mInWhitespace = PR_TRUE;
     }
@@ -844,8 +843,14 @@ void nsHTMLToTXTSinkStream::EnsureBufferSize(PRInt32 aNewSize)
   }
 }
 
-void nsHTMLToTXTSinkStream::EncodeToBuffer(const nsString& aSrc)
+void nsHTMLToTXTSinkStream::EncodeToBuffer(nsString& aSrc)
 {
+  // First, replace all nbsp characters with spaces,
+  // which the unicode encoder won't do for us.
+  PRUnichar nbsp = 160;
+  PRUnichar space = ' ';
+  aSrc.ReplaceChar(nbsp, space);
+
   if (mUnicodeEncoder == nsnull)
   {
     NS_WARNING("The unicode encoder needs to be initialized");
@@ -868,14 +873,6 @@ void nsHTMLToTXTSinkStream::EncodeToBuffer(const nsString& aSrc)
     PRInt32 temp = mBufferLength;
     if (NS_SUCCEEDED(result))
       result = mUnicodeEncoder->Finish(mBuffer,&temp);
-
-// XXX UGH!  This is awful and needs to be removed.
-#define CH_NBSP 160
-    for (PRInt32 i = 0; i < mBufferLength; i++)
-    {
-      if (mBuffer[i] == char(CH_NBSP))
-        mBuffer[i] = ' ';
-    }
   }
 }
 
@@ -913,7 +910,7 @@ nsHTMLToTXTSinkStream::FlushLine()
  *  @param   
  *  @return  
  */
-void nsHTMLToTXTSinkStream::WriteSimple(const nsString& aString)
+void nsHTMLToTXTSinkStream::WriteSimple(nsString& aString)
 {
   // If a encoder is being used then convert first convert the input string
   if (mUnicodeEncoder != nsnull)
@@ -1079,29 +1076,31 @@ nsHTMLToTXTSinkStream::WriteQuotesAndIndent()
 {
   // Put the mail quote "> " chars in, if appropriate:
   if (mCiteQuoteLevel>0) {
-    // Check for out of memory?
-    char* gts = NS_STATIC_CAST(char*, nsAllocator::Alloc(mCiteQuoteLevel+2));
+    nsAutoString quotes;
     for(int i=0; i<mCiteQuoteLevel; i++) {
-      gts[i]='>';
+      quotes.Append('>');
     }
-    gts[mCiteQuoteLevel] = ' ';
-    gts[mCiteQuoteLevel+1] = '\0';
-    nsAutoString temp(gts);
-    WriteSimple(temp);
+    quotes.Append(' ');
+    WriteSimple(quotes);
     mColPos += (mCiteQuoteLevel+1);
-    nsAllocator::Free(gts);
   }
+  
   // Indent if necessary
-  if (mIndent > 0) {
-    char* spaces = NS_STATIC_CAST(char*, nsAllocator::Alloc(mIndent+1));
-    for (int i=0; i<mIndent; ++i)
-      spaces[i] = ' ';
-    spaces[mIndent] = '\0';
-    nsAutoString temp(spaces);
-    WriteSimple(temp);
-    mColPos += mIndent;
-    nsAllocator::Free(spaces);
+  PRInt32 indentwidth = mIndent - mInIndentString.Length();
+  if (indentwidth > 0) {
+    nsAutoString spaces;
+    for (int i=0; i<indentwidth; ++i)
+      spaces.Append(' ');
+    WriteSimple(spaces);
+    mColPos += indentwidth;
   }
+  
+  if(mInIndentString.Length()>0) {
+    WriteSimple(mInIndentString);
+    mColPos += mInIndentString.Length();
+    mInIndentString.Truncate();
+  }
+  
 }
 
 #ifdef DEBUG_akkana_not
