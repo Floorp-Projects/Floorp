@@ -25,7 +25,7 @@
 #include "nsGCCache.h"
 /* The GC cache is shared among all windows, since it doesn't hog
    any scarce resources (like colormap entries.) */
-static struct GCData gc_cache [30] = { { 0, }, };
+static struct GCData gc_cache [30];
 static int gc_cache_fp;
 static int gc_cache_wrapped_p = 0;
 
