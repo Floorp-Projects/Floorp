@@ -39,11 +39,12 @@
                                            (#?2000 #?2001 #?2002 #?2003 #?2004 #?2005 #?2006 #?2007)
                                            (#?2008 #?2009 #?200A #?200B)
                                            (#?3000)) ())
-               (:line-terminator (#?000A #?000D #?2028 #?2029) ())
+               (:line-terminator (#?000A #?000D #?0085 #?2028 #?2029) ())
                (:non-terminator (- :unicode-character :line-terminator)
                                 (($default-action $default-action)))
                (:non-terminator-or-slash (- :non-terminator (#\/)) ())
                (:non-terminator-or-asterisk-or-slash (- :non-terminator (#\* #\/)) ())
+               (:white-space-or-line-terminator-char (+ :white-space-character :line-terminator) ())
                (:initial-identifier-character (+ :unicode-initial-alphabetic (#\$ #\_))
                                               (($default-action $default-action)))
                (:continuing-identifier-character (+ :unicode-alphanumeric (#\$ #\_))
@@ -250,7 +251,9 @@
          (production :initial-identifier-character-or-escape (#\\ :hex-escape) initial-identifier-character-or-escape-escape
            (lex (begin 
                  (const ch char16 (lex :hex-escape))
-                 (if (is-initial-identifier-character ch)
+                 (if (lisp-call initial-identifier-character? (ch)
+                                boolean
+                       "the nonterminal " (:grammar-symbol :initial-identifier-character) " can expand into " (:expr string (vector ch)))
                    (return ch)
                    (throw syntax-error))))
            (contains-escapes true)))
@@ -265,23 +268,15 @@
          (production :continuing-identifier-character-or-escape (#\\ :hex-escape) continuing-identifier-character-or-escape-escape
            (lex (begin
                  (const ch char16 (lex :hex-escape))
-                 (if (is-continuing-identifier-character ch)
+                 (if (lisp-call continuing-identifier-character? (ch)
+                                boolean
+                       "the nonterminal " (:grammar-symbol :continuing-identifier-character) " can expand into " (:expr string (vector ch)))
                    (return ch)
                    (throw syntax-error))))
            (contains-escapes true)))
        
        (%charclass :continuing-identifier-character)
        (%print-actions)
-       
-       (define (is-initial-identifier-character (ch char16 :unused)) boolean
-         (bottom (:keyword return) " " (:tag true) " if the nonterminal " (:grammar-symbol :initial-identifier-character) " can expand into " (:local ch)
-                 " and " (:tag false) " otherwise."))
-       (defprimitive is-initial-identifier-character (lambda (ch) (initial-identifier-character? ch)))
-       
-       (define (is-continuing-identifier-character (ch char16 :unused)) boolean
-         (bottom (:keyword return) " " (:tag true) " if the nonterminal " (:grammar-symbol :continuing-identifier-character) " can expand into " (:local ch)
-                 " and " (:tag false) " otherwise."))
-       (defprimitive is-continuing-identifier-character (lambda (ch) (continuing-identifier-character? ch)))
        
        
        (%heading 2 "Punctuators")
@@ -554,16 +549,7 @@
        (%charclass :ordinary-reg-exp-char)
        (%print-actions)
        
-       (%heading 1 "String to Number Conversion")
-       
-       (deftag +zero)
-       (deftag -zero)
-       (deftag +infinity)
-       (deftag -infinity)
-       (deftag nan)
-       (deftype extended-rational (union rational (tag +zero -zero +infinity -infinity nan)))
-       
-       (%heading 2 "ToGeneralNumber Conversion")
+       (%heading 1 "String-to-Number Conversion")
        
        (rule :string-numeric-literal ((lex extended-rational))
          (production :string-numeric-literal (:string-white-space) string-numeric-literal-white-space
@@ -580,6 +566,17 @@
            (lex (if (> (lex :optional-sign) 0) +infinity -infinity)))
          (production :signed-decimal-literal (#\N #\a #\N) signed-decimal-literal-nan
            (lex nan)))
+       
+       (production :string-white-space () string-white-space-empty)
+       (production :string-white-space (:string-white-space :white-space-or-line-terminator-char) string-white-space-character)
+       (%charclass :white-space-or-line-terminator-char)
+       
+       (deftag +zero)
+       (deftag -zero)
+       (deftag +infinity)
+       (deftag -infinity)
+       (deftag nan)
+       (deftype extended-rational (union rational (tag +zero -zero +infinity -infinity nan)))
        (%print-actions)
        
        (define (combine-with-sign (sign (integer-list -1 1)) (q rational)) extended-rational
@@ -594,12 +591,6 @@
          (production :string-decimal-literal (:string-white-space :signed-decimal-literal) string-decimal-literal-signed-decimal-literal
            (lex (lex :signed-decimal-literal))))
        (%print-actions)
-       
-       (%heading 2 "White Space")
-       
-       (production :string-white-space () string-white-space-empty)
-       (production :string-white-space (:string-white-space :white-space-character) string-white-space-character)
-       (production :string-white-space (:string-white-space :line-terminator) string-white-space-line-terminator)
        )))
   
   (defparameter *ll* (world-lexer *lw* 'code-lexer))
@@ -608,9 +599,18 @@
   (defparameter *lm* (lexer-metagrammar *ll*)))
 
 
+; Convert the string to an extended-rational if the entire string is an expansion of the :string-numeric-literal nonterminal.
 (defun string-to-extended-rational (string)
   (handler-case
     (first (action-parse *lg* (lexer-classifier *ll*) (cons '$string-to-number (coerce string 'list))))
+    (syntax-error () :syntax-error)))
+
+
+; Convert the string to an extended-rational if a prefix of the string is an expansion of the :string-decimal-literal nonterminal.
+; Pick the longest prefix that works.  No indication is given of any ignored trailing characters.
+(defun string-prefix-to-float (string)
+  (handler-case
+    (first (action-metaparse *lm* (lexer-classifier *ll*) (cons '$parse-float (coerce string 'list))))
     (syntax-error () :syntax-error)))
 
 
