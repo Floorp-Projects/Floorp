@@ -20,7 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Adam Lock <adamlock@netscape.com>
+ *
+ *   Adam Lock <adamlock@eircom.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -355,7 +356,7 @@ protected:
     // List of browsers
     static nsVoidArray sBrowserList;
 
-    // Pointer to web shell manager
+    // Pointer to web browser manager
     CWebBrowserContainer    * mWebBrowserContainer;
     // CComObject to IHTMLDocument implementer
     CIEHtmlDocumentInstance * mIERootDocument;
@@ -363,15 +364,14 @@ protected:
     // Mozilla interfaces
     nsCOMPtr<nsIWebBrowser> mWebBrowser;
     nsCOMPtr<nsIBaseWindow> mWebBrowserAsWin;
+    nsCOMPtr<nsIEditingSession> mEditingSession;
+    nsCOMPtr<nsICommandManager> mCommandManager;
 
     // Context menu
     nsCOMPtr<nsIDOMNode>    mContextNode;
     
     // Prefs service
     nsCOMPtr<nsIPref>       mPrefs;
-
-    // Editor associated with this browser instance.
-    nsCOMPtr<nsIEditor>     mEditor;
 
     // Flag to indicate if browser is created or not
     BOOL                    mValidBrowserFlag;

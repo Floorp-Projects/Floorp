@@ -21,7 +21,7 @@
  *
  * Contributor(s):
  *
- *   Adam Lock <adamlock@netscape.com>
+ *   Adam Lock <adamlock@eircom.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -180,7 +180,7 @@ CMozillaBrowser::CMozillaBrowser()
     mBrowserHelperList = NULL;
     mBrowserHelperListCount = 0;
 
-    // Initialise the web shell
+    // Initialise the web browser
     Initialize();
 }
 
@@ -192,7 +192,7 @@ CMozillaBrowser::~CMozillaBrowser()
 {
     NG_TRACE_METHOD(CMozillaBrowser::~CMozillaBrowser);
     
-    // Close the web shell
+    // Close the web browser
     Terminate();
 }
 
@@ -204,10 +204,10 @@ CMozillaBrowser::~CMozillaBrowser()
 static inline BOOL _IsEqualGUID(REFGUID rguid1, REFGUID rguid2)
 {
    return (
-	  ((PLONG) &rguid1)[0] == ((PLONG) &rguid2)[0] &&
-	  ((PLONG) &rguid1)[1] == ((PLONG) &rguid2)[1] &&
-	  ((PLONG) &rguid1)[2] == ((PLONG) &rguid2)[2] &&
-	  ((PLONG) &rguid1)[3] == ((PLONG) &rguid2)[3]);
+      ((PLONG) &rguid1)[0] == ((PLONG) &rguid2)[0] &&
+      ((PLONG) &rguid1)[1] == ((PLONG) &rguid2)[1] &&
+      ((PLONG) &rguid1)[2] == ((PLONG) &rguid2)[2] &&
+      ((PLONG) &rguid1)[3] == ((PLONG) &rguid2)[3]);
 }
 
 STDMETHODIMP CMozillaBrowser::InterfaceSupportsErrorInfo(REFIID riid)
@@ -411,7 +411,7 @@ LRESULT CMozillaBrowser::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 {
     NG_TRACE_METHOD(CMozillaBrowser::OnCreate);
 
-    // Create the NGLayout WebShell
+    // Create the web browser
     CreateBrowser();
 
     // TODO create and register a drop target
@@ -488,7 +488,7 @@ LRESULT CMozillaBrowser::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
     rc.left = 0;
     rc.top = 0;
 
-    // Pass resize information down to the WebShell...
+    // Pass resize information down to the browser...
     if (mWebBrowserAsWin)
     {
         mWebBrowserAsWin->SetPosition(rc.left, rc.top);
@@ -956,7 +956,7 @@ LRESULT CMozillaBrowser::OnLinkProperties(WORD wNotifyCode, WORD wID, HWND hWndC
 
 ///////////////////////////////////////////////////////////////////////////////
 
-// Initialises the web shell engine
+// Initialises the web browser engine
 HRESULT CMozillaBrowser::Initialize()
 {
 #ifdef HACK_NON_REENTRANCY
@@ -1089,7 +1089,7 @@ HRESULT CMozillaBrowser::Initialize()
     return S_OK;
 }
 
-// Terminates the web shell engine
+// Terminates the web browser engine
 HRESULT CMozillaBrowser::Terminate()
 {
 #ifdef HACK_NON_REENTRANCY
@@ -1108,7 +1108,7 @@ HRESULT CMozillaBrowser::Terminate()
 }
 
 
-// Create and initialise the web shell
+// Create and initialise the web browser
 HRESULT CMozillaBrowser::CreateBrowser() 
 {    
     NG_TRACE_METHOD(CMozillaBrowser::CreateBrowser);
@@ -1183,6 +1183,10 @@ HRESULT CMozillaBrowser::CreateBrowser()
     nsCOMPtr<nsIWebBrowserFocus> browserAsFocus = do_QueryInterface(mWebBrowser);
     browserAsFocus->Activate();
 
+    // Get an editor session
+    mEditingSession = do_GetInterface(mWebBrowser);
+    mCommandManager = do_GetInterface(mWebBrowser);
+
     // Append browser to browser list
     sBrowserList.AppendElement(this);
 
@@ -1221,6 +1225,8 @@ HRESULT CMozillaBrowser::DestroyBrowser()
         mWebBrowserContainer = NULL;
     }
 
+    mEditingSession = nsnull;
+    mCommandManager = nsnull;
     mWebBrowser = nsnull;
 
     return S_OK;
@@ -1231,6 +1237,17 @@ HRESULT CMozillaBrowser::DestroyBrowser()
 HRESULT CMozillaBrowser::SetEditorMode(BOOL bEnabled)
 {
     NG_TRACE_METHOD(CMozillaBrowser::SetEditorMode);
+
+    if (!mEditingSession || !mCommandManager)
+        return E_FAIL;
+  
+    nsCOMPtr<nsIDOMWindow> domWindow;
+    nsresult rv = GetDOMWindow(getter_AddRefs(domWindow));
+    if (NS_FAILED(rv))
+        return E_FAIL;
+
+    rv = mEditingSession->MakeWindowEditable(domWindow, "html", PR_FALSE);
+ 
     return S_OK;
 }
 
@@ -1239,38 +1256,22 @@ HRESULT CMozillaBrowser::OnEditorCommand(DWORD nCmdID)
 {
     NG_TRACE_METHOD(CMozillaBrowser::OnEditorCommand);
 
-    static nsIAtom * propB = NS_NewAtom("b");       
-    static nsIAtom * propI = NS_NewAtom("i");     
-    static nsIAtom * propU = NS_NewAtom("u");     
+    nsCOMPtr<nsIDOMWindow> domWindow;
+    GetDOMWindow(getter_AddRefs(domWindow));
 
-    if (!mEditModeFlag)
-    {
-        return E_UNEXPECTED;
-    }
-    if (!mEditor)
-    {
-        NG_ASSERT(0);
-        return E_UNEXPECTED;
-    }
-
-    nsCOMPtr<nsIHTMLEditor> pHtmlEditor = do_QueryInterface(mEditor);
-
-    bool bToggleInlineProperty = false;
-    nsIAtom *pInlineProperty = nsnull;
+    const char *styleCommand = nsnull;
+    nsICommandParams *commandParams = nsnull;
 
     switch (nCmdID)
     {
     case IDM_BOLD:
-        pInlineProperty = propB;
-        bToggleInlineProperty = true;
+        styleCommand = "cmd_bold";
         break;
     case IDM_ITALIC:
-        pInlineProperty = propI;
-        bToggleInlineProperty = true;
+        styleCommand = "cmd_italic";
         break;
     case IDM_UNDERLINE:
-        pInlineProperty = propU;
-        bToggleInlineProperty = true;
+        styleCommand = "cmd_underline";
         break;
     
     // TODO add the rest!
@@ -1280,26 +1281,9 @@ HRESULT CMozillaBrowser::OnEditorCommand(DWORD nCmdID)
         break;
     }
 
-    // Does the instruction involve toggling something? e.g. B, U, I
-    if (bToggleInlineProperty)
-    {
-        PRBool bFirst = PR_TRUE;
-        PRBool bAny = PR_TRUE;
-        PRBool bAll = PR_TRUE;
-
-        // Set or remove
-        pHtmlEditor->GetInlineProperty(pInlineProperty, nsAutoString(), nsAutoString(), &bFirst, &bAny, &bAll);
-        if (bAny)
-        {
-            pHtmlEditor->RemoveInlineProperty(pInlineProperty, nsAutoString());
-        }
-        else
-        {
-            pHtmlEditor->SetInlineProperty(pInlineProperty, nsAutoString(), nsAutoString());
-        }
-    }
-
-    return S_OK;
+    return mCommandManager ?
+        mCommandManager->DoCommand(styleCommand, commandParams, domWindow) :
+        NS_ERROR_FAILURE;
 }
 
 
@@ -2018,14 +2002,14 @@ NS_IMETHODIMP SimpleDirectoryProvider::GetFile(const char *prop, PRBool *persist
     NS_ENSURE_ARG_POINTER(persistent);
     NS_ENSURE_ARG_POINTER(_retval);
 
-	*_retval = nsnull;
-	*persistent = PR_TRUE;
+    *_retval = nsnull;
+    *persistent = PR_TRUE;
 
     // Only need to support NS_APP_APPLICATION_REGISTRY_DIR, NS_APP_APPLICATION_REGISTRY_FILE, and
     // NS_APP_USER_PROFILES_ROOT_DIR. Unsupported keys fallback to the default service provider
     
     nsCOMPtr<nsILocalFile> localFile;
-	nsresult rv = NS_ERROR_FAILURE;
+    nsresult rv = NS_ERROR_FAILURE;
 
     if (nsCRT::strcmp(prop, NS_APP_APPLICATION_REGISTRY_DIR) == 0)
     {
@@ -2040,10 +2024,10 @@ NS_IMETHODIMP SimpleDirectoryProvider::GetFile(const char *prop, PRBool *persist
         localFile = mUserProfileDir;
     }
     
-	if (localFile)
-		return localFile->QueryInterface(NS_GET_IID(nsIFile), (void**) _retval);
-		
-	return rv;
+    if (localFile)
+        return CallQueryInterface(localFile, _retval);
+        
+    return rv;
 }
 
 

@@ -20,8 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Adam Lock <adamlock@netscape.com>
  *
+ *   Adam Lock <adamlock@eircom.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -97,10 +97,9 @@
 #include "nsISelection.h"
 #include "nsIPresContext.h"
 #include "nsIPrompt.h"
-
-#include "nsEditorCID.h"
 #include "nsIEditor.h"
-#include "nsIHtmlEditor.h"
+#include "nsIEditingSession.h"
+#include "nsICommandManager.h"
 
 #include "nsIDocument.h"
 #include "nsIDocumentObserver.h"
