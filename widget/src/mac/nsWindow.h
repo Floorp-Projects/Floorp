@@ -140,7 +140,6 @@ public:
     char gInstanceClassName[256];
 protected:
 
-  void CreateGC();
   void CreateWindow(nsNativeWidget aNativeParent, nsIWidget *aWidgetParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
@@ -217,6 +216,8 @@ protected:
   friend InnerSupport;
 
 private:
+	WindowPtr	mWindowPtr;
+	
   //GC mGC;
 };
 
