@@ -113,7 +113,6 @@ PRLogModuleInfo *IMAP;
 static NS_DEFINE_CID(kIStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_CID(kCImapService, NS_IMAPSERVICE_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 static NS_DEFINE_CID(kStreamListenerTeeCID, NS_STREAMLISTENERTEE_CID);
@@ -7629,10 +7628,11 @@ nsImapMockChannel::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry, nsCache
 
 nsresult nsImapMockChannel::OpenCacheEntry()
 {
-  nsresult rv = NS_OK;
+  nsresult rv;
   // get the cache session from our imap service...
-  nsCOMPtr<nsIImapService> imapService = do_GetService(kCImapService, &rv);
+  nsCOMPtr<nsIImapService> imapService = do_GetService(NS_IMAPSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
+
   nsCOMPtr<nsICacheSession> cacheSession;
   rv = imapService->GetCacheSession(getter_AddRefs(cacheSession));
   NS_ENSURE_SUCCESS(rv, rv);
