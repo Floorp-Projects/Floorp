@@ -705,10 +705,12 @@ nsHTMLContentSinkStream::CloseHTML(const nsIParserNode& aNode){
   * @return PR_TRUE if successful. 
   */     
 NS_IMETHODIMP
-nsHTMLContentSinkStream::OpenHead(const nsIParserNode& aNode){
+nsHTMLContentSinkStream::OpenHead(const nsIParserNode& aNode)
+{
   eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
   if (tag == eHTMLTag_head)
   AddStartTag(aNode);
+
   return NS_OK;
 }
 
@@ -930,6 +932,26 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
 
   if (IndentChildren(tag))
     mIndent++;
+
+  if (tag == eHTMLTag_head)
+  {
+    if (mCharsetOverride.Length() > 0)
+    {
+      Write(NS_LINEBREAK);
+      Write("<meta http-equiv=\"Content-Type\" content=\"text/html\"; charset=\"");
+      Write(mCharsetOverride);
+      Write("\">");
+      Write(NS_LINEBREAK);
+    }
+
+    if(mDoHeader)
+    {
+      Write(gHeaderComment);
+      Write(NS_LINEBREAK);
+      Write(gDocTypeHeader);
+      Write(NS_LINEBREAK);
+    }
+  }
 }
 
 
@@ -1240,14 +1262,10 @@ nsHTMLContentSinkStream::CloseContainer(const nsIParserNode& aNode){
   * @update 5/7/98 gess
   */     
 NS_IMETHODIMP
-nsHTMLContentSinkStream::WillBuildModel(void){
+nsHTMLContentSinkStream::WillBuildModel(void)
+{
   mTabLevel=-1;
-  if(mDoHeader) {
-    Write(gHeaderComment);
-    Write(NS_LINEBREAK);
-    Write(gDocTypeHeader);
-    Write(NS_LINEBREAK);
-   }
+
   return NS_OK;
 }
 
