@@ -25,5 +25,4 @@ nsIImapMessageSink.h
 nsIImapExtensionSink.h
 nsIImapMiscellaneousSink.h
 nsIImapService.h
-nsIImapIncomingServer.h
 nsIImapFlagAndUidState.h

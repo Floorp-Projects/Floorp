@@ -19,7 +19,9 @@ DEPTH=..\..\..
 MODULE= msgimap
 
 XPIDLSRCS =	\
-			.\nsIImapServerSink.idl
+			.\nsIImapServerSink.idl	\
+			.\nsIImapIncomingServer.idl \
+			$(NULL)
 
 ################################################################################
 ## exports
@@ -34,7 +36,6 @@ EXPORTS =								\
 			nsIImapExtensionSink.h		\
 			nsIImapMiscellaneousSink.h	\
 			nsIImapService.h			\
-			nsIImapIncomingServer.h		\
 			nsIImapFlagAndUidState.h	\
 			$(NULL)
 

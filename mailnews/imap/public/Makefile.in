@@ -25,6 +25,7 @@ include $(DEPTH)/config/autoconf.mk
 
 XPIDLSRCS =				  \
 		nsIImapServerSink.idl	\
+		nsIImapIncomingServer.idl \
 		$(NULL)
 
 EXPORTS= 								\
@@ -37,7 +38,6 @@ EXPORTS= 								\
 			nsIImapExtensionSink.h 		\
 			nsIImapMiscellaneousSink.h 	\
 			nsIImapFlagAndUidState.h	\
-			nsIImapIncomingServer.h		\
 			nsIImapService.h			\
 			$(NULL)
 

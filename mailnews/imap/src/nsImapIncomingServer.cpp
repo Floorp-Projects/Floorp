@@ -70,12 +70,6 @@ public:
 	NS_IMETHOD GetServerURI(char * *aServerURI);
 
 	// we support the nsIImapIncomingServer interface
-    NS_IMETHOD GetMaximumConnectionsNumber(PRInt32* maxConnections);
-    NS_IMETHOD SetMaximumConnectionsNumber(PRInt32 maxConnections);
-
-    NS_IMETHOD GetTimeOutLimits(PRInt32* minutes);
-    NS_IMETHOD SetTimeOutLimits(PRInt32 minutes);
-    
     NS_IMETHOD GetImapConnectionAndLoadUrl(nsIEventQueue* aClientEventQueue,
                                            nsIImapUrl* aImapUrl,
                                            nsIUrlListener* aUrlListener = 0,
@@ -83,29 +77,39 @@ public:
                                            nsIURI** aURL = 0);
     NS_IMETHOD LoadNextQueuedUrl();
     NS_IMETHOD RemoveConnection(nsIImapProtocol* aImapConnection);
-
-	/* attribute string personal namespace; */
-	NS_IMETHOD GetPersonalNamespace(char * *aPersonalNamespace);
-	NS_IMETHOD SetPersonalNamespace(char * aPersonalNamespace);
-
-	/* attribute string public namespace; */
-	NS_IMETHOD GetPublicNamespace(char * *aPublicNamespace);
-	NS_IMETHOD SetPublicNamespace(char * aPublicNamespace);
-
-		/* attribute string personal namespace; */
-	NS_IMETHOD GetOtherUsersNamespace(char * *aOtherUsersNamespace);
-	NS_IMETHOD SetOtherUsersNamespace(char * aOtherUsersNamespace);
-
-	/* attribute boolean using subscription */
-	NS_IMETHOD GetUsingSubscription(PRBool *usingSubscription);
-	NS_IMETHOD SetUsingSubscription(PRBool usingSubscription);
-
-	// attribute unsigned long capability
-	NS_IMETHOD GetCapabilityPref(PRInt32 *aResult);
-	NS_IMETHOD SetCapabilityPref(PRInt32 aCapability);
-
+    
+    NS_IMETHOD GetMaximumConnectionsNumber(PRInt32* maximumConnectionsNumber);
+    NS_IMETHOD SetMaximumConnectionsNumber(PRInt32 maximumConnectionsNumber);
+    NS_IMETHOD GetTimeOutLimits(PRInt32* minutes);
+    NS_IMETHOD SetTimeOutLimits(PRInt32 minutes);
+    NS_IMETHOD GetAdminUrl(char * *aAdminUrl);
+    NS_IMETHOD SetAdminUrl(char * aAdminUrl);
+    NS_IMETHOD GetCapabilityPref(PRInt32 *aCapabilityPref);
+    NS_IMETHOD SetCapabilityPref(PRInt32 aCapabilityPref);
+    NS_IMETHOD GetCleanupInboxOnExit(PRBool *aCleanupInboxOnExit);
+    NS_IMETHOD SetCleanupInboxOnExit(PRBool aCleanupInboxOnExit);
+    NS_IMETHOD GetDeleteModel(PRInt32 *aDeleteModel);
+    NS_IMETHOD SetDeleteModel(PRInt32 aDeleteModel);
+    NS_IMETHOD GetDualUseFolders(PRBool *aDualUseFolders);
+    NS_IMETHOD SetDualUseFolders(PRBool aDualUseFolders);
+    NS_IMETHOD GetEmptyTrashOnExit(PRBool *aEmptyTrashOnExit);
+    NS_IMETHOD SetEmptyTrashOnExit(PRBool aEmptyTrashOnExit);
+    NS_IMETHOD GetEmptyTrashThreshhold(PRInt32 *aEmptyTrashThreshhold);
+    NS_IMETHOD SetEmptyTrashThreshhold(PRInt32 aEmptyTrashThreshhold);
+    NS_IMETHOD GetOtherUsersNamespace(char * *aOtherUsersNamespace);
+    NS_IMETHOD SetOtherUsersNamespace(char * aOtherUsersNamespace);
+    NS_IMETHOD GetPersonalNamespace(char * *aPersonalNamespace);
+    NS_IMETHOD SetPersonalNamespace(char * aPersonalNamespace);
+    NS_IMETHOD GetPublicNamespace(char * *aPublicNamespace);
+    NS_IMETHOD SetPublicNamespace(char * aPublicNamespace);
+    NS_IMETHOD GetOfflineDownload(PRBool *aOfflineDownload);
+    NS_IMETHOD SetOfflineDownload(PRBool aOfflineDownload);
+    NS_IMETHOD GetOverrideNamespaces(PRBool *aOverrideNamespaces);
+    NS_IMETHOD SetOverrideNamespaces(PRBool aOverrideNamespaces);
+    NS_IMETHOD GetUsingSubscription(PRBool *aUsingSubscription);
+    NS_IMETHOD SetUsingSubscription(PRBool aUsingSubscription); 
+    
 	NS_IMETHOD PerformBiff();
-
 
 	// nsIImapServerSink impl
 	NS_DECL_NSIIMAPSERVERSINK
@@ -246,8 +250,35 @@ NS_IMETHODIMP nsImapIncomingServer::GetServerURI(char ** aServerURI)
 	return rv;
 }
 
+NS_IMPL_SERVERPREF_STR(nsImapIncomingServer, AdminUrl,
+                       "admin_url");
+
+NS_IMPL_SERVERPREF_BOOL(nsImapIncomingServer, UsingSubscription,
+                        "using_subscription");
+
+NS_IMPL_SERVERPREF_BOOL(nsImapIncomingServer, CleanupInboxOnExit,
+                        "cleanup_inbox_on_exit");
+			
+NS_IMPL_SERVERPREF_BOOL(nsImapIncomingServer, DualUseFolders,
+                        "dual_use_folders");
+			
+NS_IMPL_SERVERPREF_BOOL(nsImapIncomingServer, EmptyTrashOnExit,
+                        "empty_trash_on_exit");
+
+NS_IMPL_SERVERPREF_BOOL(nsImapIncomingServer, OfflineDownload,
+                        "offline_download");
+
+NS_IMPL_SERVERPREF_BOOL(nsImapIncomingServer, OverrideNamespaces,
+                        "override_namespaces");
+			
 NS_IMPL_SERVERPREF_INT(nsImapIncomingServer, MaximumConnectionsNumber,
                        "max_cached_connections");
+
+NS_IMPL_SERVERPREF_INT(nsImapIncomingServer, EmptyTrashThreshhold,
+                       "empty_trash_threshhold");
+
+NS_IMPL_SERVERPREF_INT(nsImapIncomingServer, DeleteModel,
+                       "delete_model");
 
 NS_IMPL_SERVERPREF_INT(nsImapIncomingServer, TimeOutLimits,
                        "timeout");
@@ -255,13 +286,14 @@ NS_IMPL_SERVERPREF_INT(nsImapIncomingServer, TimeOutLimits,
 NS_IMPL_SERVERPREF_INT(nsImapIncomingServer, CapabilityPref,
                        "capability");
 
-NS_IMPL_SERVERPREF_STR(nsImapIncomingServer, PersonalNamespace, "namespace.personal");
+NS_IMPL_SERVERPREF_STR(nsImapIncomingServer, PersonalNamespace,
+                       "namespace.personal");
 
-NS_IMPL_SERVERPREF_STR(nsImapIncomingServer, PublicNamespace, "namespace.public");
+NS_IMPL_SERVERPREF_STR(nsImapIncomingServer, PublicNamespace,
+                       "namespace.public");
 
-NS_IMPL_SERVERPREF_STR(nsImapIncomingServer, OtherUsersNamespace, "namespace.other_users");
-
-NS_IMPL_SERVERPREF_BOOL(nsImapIncomingServer, UsingSubscription, "using_subscription");
+NS_IMPL_SERVERPREF_STR(nsImapIncomingServer, OtherUsersNamespace,
+                       "namespace.other_users");
 
 NS_IMETHODIMP
 nsImapIncomingServer::GetImapConnectionAndLoadUrl(nsIEventQueue*
@@ -1147,6 +1179,7 @@ NS_IMETHODIMP nsImapIncomingServer::PromptForPassword(char ** aPassword)
 	return GetPassword(PR_TRUE, aPassword);
 }
 
+// for the nsIImapServerSink interface
 NS_IMETHODIMP  nsImapIncomingServer::SetCapability(PRUint32 capability)
 {
 	m_capability = capability;
