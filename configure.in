@@ -328,7 +328,7 @@ DLL_SUFFIX=so
 OBJ_SUFFIX=o
 LIB_SUFFIX=a
 TARGET_MD_ARCH=unix
-DIRENT_INO='d_ino'
+DIRENT_INO=d_ino
 
 OS_TARGET=`uname -s`
 OS_ARCH=`uname -s | sed -e 's|/|_|g'`
@@ -695,7 +695,7 @@ alpha*-*-osf*)
     ;;
 
 *-qnx*) 
-    DIRENT_INO='d_stat.st_ino'
+    DIRENT_INO=d_stat.st_ino
     dnl Solves the problems the QNX compiler has with nsCOMPtr.h.
     AC_DEFINE(NSCAP_DISABLE_TEST_DONTQUERY_CASES)
     AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
@@ -778,7 +778,7 @@ esac
 
 dnl Only one oddball right now (QNX), but this gives us flexibility
 dnl if any other platforms need to override this in the future.
-AC_DEFINE_UNQUOTED(D_INO,"$DIRENT_INO")
+AC_DEFINE_UNQUOTED(D_INO,$DIRENT_INO)
 
 dnl ========================================================
 dnl Any platform that doesn't have MKSHLIB_FORCE_ALL defined
