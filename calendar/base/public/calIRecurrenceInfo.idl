@@ -71,7 +71,7 @@ interface calIRecurrenceInfo : nsISupports
 
   attribute long recurType;
 
-  attribute calIDatetime recurStart;
+  attribute calIDateTime recurStart;
 
   // setting either of these attributes calculates the other.
   // recurCount of -1 or null recurEnd means "forever"
