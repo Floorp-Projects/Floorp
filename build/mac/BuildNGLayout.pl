@@ -21,12 +21,21 @@
 # Contributor(s): 
 #
 
+use Cwd;
+
+# Make sure we add the config dir to search
+BEGIN
+{
+  my ($inc_path) = cwd();
+  $inc_path =~ s/:build:mac$/:config:/;
+  push(@INC, $inc_path);
+}
+
 #
 # build script (optimized)
 #
 use Mac::Processes;
 use NGLayoutBuildList;
-use Cwd;
 use Moz;
 
 #-----------------------------------------------
@@ -37,6 +46,7 @@ $CARBON					= 0;	# turn on to build with TARGET_CARBON
 $PROFILE				= 0;
 $GC_LEAK_DETECTOR		= 0;	# turn on to use GC leak detection
 $INCLUDE_CLASSIC_SKIN 	= 1; 
+$MOZILLA_OFFICIAL       = 1;
 
 $pull{all} 				= 0;
 $pull{moz}				= 0;
@@ -198,8 +208,8 @@ Checkout();
 ConfigureBuildSystem();
 
 my(@gen_files) = (
-    ":mozilla:xpfe:appshell:public:nsBuildID.h",
-    ":mozilla:xpfe:browser:resources:locale:en-US:navigator.dtd"
+    ":mozilla:config:nsBuildID.h",
+    ":mozilla:xpfe:global:build.dtd"
 );
 SetBuildNumber(":mozilla:config:build_number", ":mozilla:config:aboutime.pl", \@gen_files);
 

@@ -21,12 +21,21 @@
 # Contributor(s): 
 #
 
+use Cwd;
+
+# Make sure we add the config dir to search
+BEGIN
+{
+  my ($inc_path) = cwd();
+  $inc_path =~ s/:build:mac$/:config:/;
+  push(@INC, $inc_path);
+}
+
 #
 # build script (debug)
 #
 use Mac::Processes;
 use NGLayoutBuildList;
-use Cwd;
 use Moz;
 
 $DEBUG                  = 1;
@@ -193,6 +202,12 @@ Moz::StopForErrors();
 Checkout();
 
 ConfigureBuildSystem();
+
+my(@gen_files) = (
+    ":mozilla:config:nsBuildID.h",
+    ":mozilla:xpfe:global:build.dtd"
+);
+SetBuildNumber(":mozilla:config:build_number", ":mozilla:config:aboutime.pl", \@gen_files);
 
 chdir($MOZ_SRC);
 BuildDist();

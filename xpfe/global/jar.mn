@@ -41,6 +41,7 @@ toolkit.jar:
 	content/global/xul.css                      (resources/content/xul.css) 
 	content/global/toolbarBindings.xml          (resources/content/toolbarBindings.xml) 
         content/global/stringbundleBindings.xml     (resources/content/stringbundleBindings.xml)
+	content/global/build.dtd                    (build.dtd)
 
 en-US.jar:
     locale/en-US/global/contents.rdf                (resources/locale/en-US/contents.rdf) 

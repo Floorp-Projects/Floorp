@@ -48,7 +48,7 @@ INSTALL_FILE_LIST=$(MOZ_TOOLS)\bin\fullsoft.dll $(MOZ_TOOLS)\bin\talkback.cnt $(
 INSTALL_DIR=$(DIST)\bin
 !endif
 
-GARBAGE = *.obj *.sbr *.pdb
+GARBAGE = *.obj *.sbr *.pdb build_number nsBuildID.h
 
 #//------------------------------------------------------------------------
 #//
@@ -58,16 +58,19 @@ GARBAGE = *.obj *.sbr *.pdb
 include <$(DEPTH)/config/config.mak>
 include <$(DEPTH)/config/rules.mak>
 
-# update build number from within make script
-build_number::
 !ifdef MOZILLA_OFFICIAL 
-    echo Generating build number...
-    $(RM) $@
-    $(PERL) bdate.pl > $@
-    echo Setting build number...
-    $(PERL) aboutime.pl $(DEPTH)/xpfe/browser/resources/locale/en-US/navigator.dtd $@
-    $(PERL) aboutime.pl $(DEPTH)/xpfe/appshell/public/nsBuildID.h $@
+_BN_OFFICIAL=1
+!else
+_BN_OFFICIAL=
 !endif
+
+# update build number from within make script
+build_number:
+	$(PERL) -I. bdate.pl $@ $(_BN_OFFICIAL)
+
+nsBuildID.h: build_number nsBuildID.h.in
+	$(RM) $@
+	$(PERL) -I. aboutime.pl $@ build_number nsBuildID.h.in
 
 #// Rule to set the timebomb on official mozilla builds
 
@@ -94,7 +97,7 @@ bin2rc.exe:: bin2rc.c
 makedep.exe:: makedep.cpp
     $(CC) -MT /O2 /GB $**
 
-export:: makecopy.exe mangle.exe mantomak.exe bin2rc.exe makedep.exe build_number
+export:: makecopy.exe mangle.exe mantomak.exe bin2rc.exe makedep.exe build_number nsBuildID.h
        $(MAKE_INSTALL) nsBuildID.h $(PUBLIC)
 
 !ifdef MOZ_FULLCIRCLE

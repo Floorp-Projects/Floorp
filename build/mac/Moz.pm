@@ -35,6 +35,7 @@ use Mac::Types;
 use Mac::Events;
 use Mac::Processes;
 use File::Copy;
+use mozBDate;
 
 @ISA				= qw(Exporter);
 @EXPORT			= qw(LaunchCodeWarrior BuildProject BuildProjectClean GetFileModDate OpenErrorLog MakeAlias StopForErrors DontStopForErrors InstallFromManifest InstallResources SetBuildNumber SetAgentString SetTimeBomb Delay ActivateApplication);
@@ -413,23 +414,13 @@ sub InstallResources($;$;$)
 sub SetBuildNumber($$$)
 {
     my($build_num_file, $build_gen_script, $files_to_touch) = @_;
-    
-    open (OUTPUT, ">$build_num_file") || die "could not open buildnumber";
-
-    open (BDATE, "perl :mozilla:config:bdate.pl|");
+    mozBDate::UpdateBuildNumber($build_num_file, $::MOZILLA_OFFICIAL);
    
-    while (<BDATE>) {
-      print OUTPUT $_;
-    }
-
-    close (BDATE);
-    close (OUTPUT);
-
     my($file);
     foreach $file (@$files_to_touch)
     {
-        print "Writing build number to $file\n";
-        system ("perl $build_gen_script $file $build_num_file");    
+        print "Writing build number to $file from ${file}.in\n";
+        mozBDate::SubstituteBuildNumber($file,$build_num_file,"${file}.in");
     }
 }
 
