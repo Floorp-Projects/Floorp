@@ -235,8 +235,14 @@ static nsFontCharSetInfo CNS116437 =
   { "x-cns-11643-7", DoubleByteConvert, 1 };
 static nsFontCharSetInfo GB2312 =
   { "gb_2312-80", DoubleByteConvert, 1 };
+static nsFontCharSetInfo GB18030_0 =
+  { "gb18030.2000-0", DoubleByteConvert, 1 };
+static nsFontCharSetInfo GB18030_1 =
+  { "gb18030.2000-1", DoubleByteConvert, 1 };
 static nsFontCharSetInfo GBK =
   { "x-gbk-noascii", DoubleByteConvert, 1};
+static nsFontCharSetInfo HKSCS =
+  { "hkscs-1", DoubleByteConvert, 1 };
 static nsFontCharSetInfo JISX0208 =
   { "jis_0208-1983", DoubleByteConvert, 1 };
 static nsFontCharSetInfo JISX0212 =
@@ -343,7 +349,10 @@ static nsFontCharSetMap gCharSetMap[] =
   { "gb2312.1980-0",      &GB2312        },
   { "gb2312.1980-1",      &GB2312        },
   { "gb13000.1993-1",     &GBK           },
+  { "gb18030.2000-0",     &GB18030_0     },
+  { "gb18030.2000-1",     &GB18030_1     },
   { "gbk-0",              &GBK           },
+  { "hkscs-1",            &HKSCS         },
   { "hp-japanese15",      &Unknown       },
   { "hp-japaneseeuc",     &Unknown       },
   { "hp-roman8",          &Unknown       },
