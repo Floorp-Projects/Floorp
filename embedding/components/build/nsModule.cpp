@@ -45,7 +45,6 @@
 #include "nsFind.h"
 #include "nsWebBrowserFind.h"
 #include "nsWebBrowserPersist.h"
-#include "nsDOMWalker.h"
 #include "nsCommandManager.h"
 #include "nsControllerCommandManager.h"
 #include "nsCommandParams.h"
@@ -60,7 +59,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsJSConsoleService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFind)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebBrowserFind)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebBrowserPersist)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMWalker)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsControllerCommandManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCommandManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsCommandParams, Init)
@@ -77,7 +75,6 @@ static const nsModuleComponentInfo gComponents[] = {
   { "WebBrowserFind",           NS_WEB_BROWSER_FIND_CID, NS_WEB_BROWSER_FIND_CONTRACTID, nsWebBrowserFindConstructor },
   { NS_APPSTARTUPNOTIFIER_CLASSNAME, NS_APPSTARTUPNOTIFIER_CID, NS_APPSTARTUPNOTIFIER_CONTRACTID, nsAppStartupNotifierConstructor },
   { "WebBrowserPersist Component", NS_WEBBROWSERPERSIST_CID, NS_WEBBROWSERPERSIST_CONTRACTID, nsWebBrowserPersistConstructor },
-  { "DOM Walker", NS_DOMWALKER_CID, NS_DOMWALKER_CONTRACTID, nsDOMWalkerConstructor },
   { "Controller Command Manager", NS_CONTROLLERCOMMANDMANAGER_CID, NS_CONTROLLERCOMMANDMANAGER_CONTRACTID, nsControllerCommandManagerConstructor },
   { "Command Manager", NS_COMMAND_MANAGER_CID, NS_COMMAND_MANAGER_CONTRACTID, nsCommandManagerConstructor },
   { "Command Params", NS_COMMAND_PARAMS_CID, NS_COMMAND_PARAMS_CONTRACTID, nsCommandParamsConstructor },
