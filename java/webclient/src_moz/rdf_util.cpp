@@ -48,7 +48,7 @@ nsresult rdf_InitRDFUtils()
 
     // Init the global instances
     
-    if (NULL == gBookmarks) {
+    if (nsnull == gBookmarks) {
         // Get the bookmarks service
         rv = nsServiceManager::GetService(NS_IBOOKMARKSSERVICE_PROGID,
                                           NS_GET_IID(nsIBookmarksService),
@@ -58,7 +58,7 @@ nsresult rdf_InitRDFUtils()
         }
     }
 
-    if (NULL == gBookmarksDataSource) {
+    if (nsnull == gBookmarksDataSource) {
         // get the bookmarks service as an RDFDataSource
         rv = gBookmarks->QueryInterface(NS_GET_IID(nsIRDFDataSource),
                                         getter_AddRefs(gBookmarksDataSource));
@@ -67,7 +67,7 @@ nsresult rdf_InitRDFUtils()
         }
     }
 
-    if (NULL == gRDF) {
+    if (nsnull == gRDF) {
         // get the RDF service
         rv = nsServiceManager::GetService(NS_IRDFSERVICE_PROGID,
                                           NS_GET_IID(nsIRDFService),
@@ -77,7 +77,7 @@ nsresult rdf_InitRDFUtils()
         }
     }
     
-    if (NULL == gRDFCU) {
+    if (nsnull == gRDFCU) {
         // get the RDF service
         rv = nsServiceManager::GetService(NS_ICONTAINERUTILS_PROGID,
                                           NS_GET_IID(nsIRDFContainerUtils),
@@ -89,7 +89,7 @@ nsresult rdf_InitRDFUtils()
 
     // init the properties
     // find the nsIRDFResource for the bookmarks
-    if (NULL == kNC_BookmarksRoot) {
+    if (nsnull == kNC_BookmarksRoot) {
         rv = gRDF->GetResource(BOOKMARKS_URI, 
                                getter_AddRefs(kNC_BookmarksRoot));
         if (NS_FAILED(rv)) {
@@ -97,7 +97,7 @@ nsresult rdf_InitRDFUtils()
         }
     }
 
-    if (NULL == kNC_Name) {
+    if (nsnull == kNC_Name) {
         rv = gRDF->GetResource("http://home.netscape.com/NC-rdf#Name", 
                                getter_AddRefs(kNC_Name));
         if (NS_FAILED(rv)) {
@@ -105,14 +105,14 @@ nsresult rdf_InitRDFUtils()
         }
     }
 
-    if (NULL == kNC_URL) {
+    if (nsnull == kNC_URL) {
         rv = gRDF->GetResource("http://home.netscape.com/NC-rdf#URL", 
                                getter_AddRefs(kNC_URL));
         if (NS_FAILED(rv)) {
             return rv;
         }
     }
-    if (NULL == kNC_Folder) {
+    if (nsnull == kNC_Folder) {
       rv = gRDF->GetResource("http://home.netscape.com/NC-rdf#Folder", 
                             getter_AddRefs(kNC_Folder));
       if (NS_FAILED(rv)) {
@@ -120,7 +120,7 @@ nsresult rdf_InitRDFUtils()
       }
     }
   
-    if (NULL == kRDF_type) {
+    if (nsnull == kRDF_type) {
       rv = gRDF->GetResource("http://home.netscape.com/NC-rdf#type", 
 			     getter_AddRefs(kRDF_type));
       if (NS_FAILED(rv)) {
@@ -136,7 +136,7 @@ void rdf_recursiveResourceTraversal(nsCOMPtr<nsIRDFResource> currentResource)
 {
     nsresult rv;
     PRBool result;
-    const PRUnichar *textForNode = NULL;
+    const PRUnichar *textForNode = nsnull;
     nsCOMPtr<nsISupports> supportsResult;
     nsCOMPtr<nsIRDFNode> node;
     nsCOMPtr<nsIRDFLiteral> literal;
@@ -144,7 +144,7 @@ void rdf_recursiveResourceTraversal(nsCOMPtr<nsIRDFResource> currentResource)
     nsCOMPtr<nsIRDFContainer> container;
     nsCOMPtr<nsISimpleEnumerator> elements;
         
-    // ASSERT(NULL != gRDFCU)
+    // ASSERT(nsnull != gRDFCU)
 
     rv = gRDFCU->IsContainer(gBookmarksDataSource, currentResource, 
                              &result);
@@ -344,7 +344,7 @@ nsresult rdf_getChildAt(int index, nsIRDFResource *theParent,
     nsCOMPtr<nsIRDFResource> childResource;
     nsresult rv;
     PRBool result, hasChildAtIndex = PR_FALSE;
-    *retval = NULL;
+    *retval = nsnull;
     PRInt32 i = 0;
 
     rv = gRDFCU->IsContainer(gBookmarksDataSource, parent, 
