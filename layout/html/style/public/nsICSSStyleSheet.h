@@ -44,7 +44,7 @@ public:
   virtual nsresult  GetStyleSheetAt(PRInt32 aIndex, nsICSSStyleSheet*& aSheet) const = 0;
 
   NS_IMETHOD  SetTitle(const nsString& aTitle) = 0;
-  NS_IMETHOD  AppendMedium(const nsString& aMedium) = 0;
+  NS_IMETHOD  AppendMedium(nsIAtom* aMedium) = 0;
   NS_IMETHOD  SetOwningNode(nsIDOMNode* aOwningNode) = 0;
 };
 
