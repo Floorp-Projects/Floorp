@@ -1107,7 +1107,7 @@ nsRenderingContextOS2 :: InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nsco
 {
    nsRect tr(aX, aY, aWidth, aHeight);
    LONG CurMix = GFX (::GpiQueryMix (mPS), FM_ERROR);
-   GFX (::GpiSetMix (mPS, FM_XOR), FALSE);
+   GFX (::GpiSetMix (mPS, FM_INVERT), FALSE);
    PMDrawRect(tr, FALSE);
    GFX (::GpiSetMix (mPS, CurMix), FALSE);
    return NS_OK;
