@@ -327,11 +327,11 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
   nsCOMPtr<nsIPref> pref = do_GetService(NS_PREF_CONTRACTID);
   if (pref) {
     GetEdgePaperMargin(pref, mPageData->mEdgePaperMargin);
-    nscoord inchInTwips = NS_INCHES_TO_TWIPS(1.0);
+    nscoord extraThreshold = PR_MAX(pageSize.width, pageSize.height)/10;
     PRInt32 gapInTwips;
     if (NS_SUCCEEDED(pref->GetIntPref("print.print_extra_margin", &gapInTwips))) {
       gapInTwips = PR_MAX(gapInTwips, 0);
-      gapInTwips = PR_MIN(gapInTwips, inchInTwips); // an inch is still probably excessive
+      gapInTwips = PR_MIN(gapInTwips, extraThreshold); // clamp to 1/10 of the largest dim of the page
       extraGap   = nscoord(gapInTwips);
     }
   }
@@ -706,10 +706,6 @@ nsSimplePageSequenceFrame::StartPrint(nsIPresContext*   aPresContext,
   nsCOMPtr<nsIDeviceContext> dc;
   aPresContext->GetDeviceContext(getter_AddRefs(dc));
   NS_ASSERTION(dc, "nsIDeviceContext can't be NULL!");
-
-  nsCOMPtr<nsIPresShell> presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
-  NS_ASSERTION(presShell, "nsIPresShell can't be NULL!");
 
   nsresult rv = NS_OK;
 
