@@ -178,6 +178,7 @@
                   if (child.getAttribute("sort") == sortResource) {
                     child.setAttribute("sortActive", "true");
                     child.setAttribute("sortDirection", sortDirection);
+dump('sort:'+sortResource+"sortDirection:"+sortDirection+"\n")
                     this.treeBuilder.sort(child, false);
                     break;
                   }
@@ -186,6 +187,7 @@
               }
             }
             catch (e) {
+dump("error in refresh sort:"+e)
             }
           }
 
@@ -374,8 +376,8 @@
         ]]></body>
       </method>
 
-      <field name="_itemToBeToggled">  null</field>
-      <field name="_parentToBeToggled">null</field>
+      <field name="_itemToBeToggled">  []</field>
+      <field name="_parentToBeToggled">[]</field>
       <method name="preUpdateTreeSelection">
         <parameter name="aTxn"/>
         <body><![CDATA[
@@ -442,7 +444,9 @@
           if (!isFolderGroup && selection.isContainer[0]) {
             if (this.clickCount == 1) {
               if (row.value >= 0) {
+dump("row:"+row+"\n")
                 this.treeBoxObject.view.toggleOpenState(row.value);
+dump("after\n")
               }
             }
             if (selection.protocol[0] == "file")
@@ -508,8 +512,6 @@
             // Notify the datasource that we're about to begin a batch operation
             var observer = this.mOuter.tree.builder.QueryInterface(Components.interfaces.nsIRDFObserver);
             observer.beginUpdateBatch(this.db);
-            this.mOuter._itemToBeToggled   = [];
-            this.mOuter._parentToBeToggled = [];
             BookmarksController.doCommand(aCommand, selection, target);
             observer.endUpdateBatch(this.db);
             this.mOuter.tree.builder.rebuild();
@@ -571,8 +573,6 @@
           // Notify the datasource that we're about to begin a batch operation
           var observer = this.mOuter.tree.builder.QueryInterface(Components.interfaces.nsIRDFObserver);
           observer.beginUpdateBatch(this.db);
-          this.mOuter._itemToBeToggled   = [];
-          this.mOuter._parentToBeToggled = [];
           const kDSIID = Components.interfaces.nsIDragService;
           const kCopyAction = kDSIID.DRAGDROP_ACTION_COPY + kDSIID.DRAGDROP_ACTION_LINK;
           if (dragSession.dragAction & kCopyAction)
@@ -658,27 +658,39 @@ dump("ONSELECTION CHANGED\n")
 
         mOuter: this,
 
+        willDo: function (aTxmgr, aTxn) {
+          this.mOuter._itemToBeToggled   = [];
+          this.mOuter._parentToBeToggled = [];
+        },
+
         didDo: function (aTxmgr, aTxn) {
           this.mOuter.preUpdateTreeSelection(aTxn);
+        },
+
+        willUndo: function (aTxmgr, aTxn) {
+          this.mOuter._itemToBeToggled   = [];
+          this.mOuter._parentToBeToggled = [];
         },
 
         didUndo: function (aTxmgr, aTxn) {
           this.mOuter.preUpdateTreeSelection(aTxn);
         },
 
+        willRedo: function (aTxmgr, aTxn) {
+          this.mOuter._itemToBeToggled   = [];
+          this.mOuter._parentToBeToggled = [];
+        },
+
         didRedo: function (aTxmgr, aTxn) {
           this.mOuter.preUpdateTreeSelection(aTxn);
         },
 
-        didMerge       : function (aTxmgr, aTransaction) {},
-        didBeginBatch  : function (aTxmgr, aTransaction) {},
-        didEndBatch    : function (aTxmgr, aTransaction) {},
-        willDo         : function (aTxmgr, aTransaction) {},
-        willUndo       : function (aTxmgr, aTransaction) {},
-        willRedo       : function (aTxmgr, aTransaction) {},
-        willMerge      : function (aTxmgr, aTransaction) {},
-        willBeginBatch : function (aTxmgr, aTransaction) {},
-        willEndBatch   : function (aTxmgr, aTransaction) {}
+        didMerge       : function (aTxmgr, aTxn) {},
+        didBeginBatch  : function (aTxmgr, aTxn) {},
+        didEndBatch    : function (aTxmgr, aTxn) {},
+        willMerge      : function (aTxmgr, aTxn) {},
+        willBeginBatch : function (aTxmgr, aTxn) {},
+        willEndBatch   : function (aTxmgr, aTxn) {}
       })
       ]]></field>
     </implementation>
