@@ -20,8 +20,7 @@
  * Contributor(s): 
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
- *    
- * $Id: AttributeExpr.cpp,v 1.6 2001/07/02 20:10:49 sicking%bigfoot.com Exp $
+ * 
  */
 
 #include "Expr.h"

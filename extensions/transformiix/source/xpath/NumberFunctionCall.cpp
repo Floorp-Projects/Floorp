@@ -25,7 +25,6 @@
  * Nisheeth Ranjan, nisheeth@netscape.com
  *   -- implemented rint function, which was not available on Windows.
  *
- * $Id: NumberFunctionCall.cpp,v 1.14 2001/07/02 20:11:00 sicking%bigfoot.com Exp $
  */
 
 /*

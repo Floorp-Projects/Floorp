@@ -18,8 +18,7 @@
  * Contributor(s):
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
- *    
- * $Id: ExtensionFunctionCall.cpp,v 1.2 2001/07/02 09:24:10 peterv%netscape.com Exp $
+ * 
  */
 
 #include "FunctionLib.h"

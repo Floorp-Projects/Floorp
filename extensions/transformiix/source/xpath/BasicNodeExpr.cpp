@@ -20,16 +20,10 @@
  * Contributor(s): 
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
- *    
- * $Id: BasicNodeExpr.cpp,v 1.6 2001/07/02 20:10:50 sicking%bigfoot.com Exp $
+ *
  */
 
 #include "Expr.h"
-
-/**
- * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.6 $ $Date: 2001/07/02 20:10:50 $
-**/
 
 //- Constructors -/
 

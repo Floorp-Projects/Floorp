@@ -31,12 +31,6 @@
 #include <iostream.h>
 #endif
 
-/**
- * @author <a href="kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.6 $ $Date: 2001/06/20 06:00:37 $
-**/
-
-
   //-------------/
  //- Constants -/
 //-------------/

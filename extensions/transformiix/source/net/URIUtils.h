@@ -46,9 +46,6 @@
 /**
  * A utility class for URI handling
  * Not yet finished, only handles file URI at this point
- * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.16 $ $Date: 2001/06/10 16:42:12 $
- *
 **/
 
 class URIUtils {

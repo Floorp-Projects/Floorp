@@ -20,7 +20,6 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: DefaultStringComparator.cpp,v 1.2 2001/06/26 14:07:34 peterv%netscape.com Exp $
  */
 
 #include "StringComparator.h"

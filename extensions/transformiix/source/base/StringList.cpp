@@ -27,7 +27,6 @@
 
 /**
  * StringList
- * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
 **/
 
 #ifdef TX_EXE

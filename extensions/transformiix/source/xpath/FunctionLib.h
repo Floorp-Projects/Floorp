@@ -27,7 +27,6 @@
  * Marina Mechtcheriakova
  *   -- added support for lang function
  *
- * $Id: FunctionLib.h,v 1.11 2001/07/02 20:10:57 sicking%bigfoot.com Exp $
  */
 
 #ifndef TRANSFRMX_FUNCTIONLIB_H

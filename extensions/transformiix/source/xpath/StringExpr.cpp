@@ -20,16 +20,13 @@
  * Contributor(s): 
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
- *    
- * $Id: StringExpr.cpp,v 1.4 2001/07/02 20:11:04 sicking%bigfoot.com Exp $
+ * 
  */
 
 #include "Expr.h"
 
 /**
  * StringExpr
- * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.4 $ $Date: 2001/07/02 20:11:04 $
 **/
 
 /**

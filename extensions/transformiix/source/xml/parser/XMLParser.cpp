@@ -48,19 +48,6 @@
 /**
  *  Implementation of an In-Memory DOM based XML parser.  The actual XML
  *  parsing is provided by EXPAT.
- *
- * @author <a href="kvisco@ziplink.net">Keith Visco</a>
- * @author <a href="tomk@mitre.org">Tom Kneeland</a>
- * @author <a href="kbob@oblix.com">Bob Miller</a>
- * 
- * Modification History:
- * Who  When         What
- * TK   05/03/99     Created
- * KV   06/15/1999   Fixed bug in parse method which read from cin instead of
- *                   the istream parameter.
- * KV   06/15/1999   Changed #parse method to return a Document
- * KV   06/17/1999   made a bunch of changes
- *
 **/
 
 /**

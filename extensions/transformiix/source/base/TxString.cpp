@@ -845,8 +845,6 @@ MBool String::isEqual(const String& data) const
 
 /**
  * Returns index of last occurrence of data
- * <BR />
- * Added implementation 19990729 (kvisco)
 **/
 PRInt32 String::lastIndexOf(UNICODE_CHAR data) const
 {
@@ -855,8 +853,6 @@ PRInt32 String::lastIndexOf(UNICODE_CHAR data) const
 
 /**
  * Returns the index of the last occurrence of data starting at offset
- * <BR />
- * Added implementation 19990729 (kvisco)
 **/
 PRInt32 String::lastIndexOf(UNICODE_CHAR data, PRInt32 offset) const
 {
@@ -873,8 +869,6 @@ PRInt32 String::lastIndexOf(UNICODE_CHAR data, PRInt32 offset) const
 
 /**
  * Returns the index of the last occurrence of data
- * <BR />
- * Added implementation 19990729 (kvisco)
 **/
 PRInt32 String::lastIndexOf(const String& data) const
 {
@@ -883,9 +877,6 @@ PRInt32 String::lastIndexOf(const String& data) const
 
 /**
  * Returns the index of the last occurrence of data starting at offset
- * <BR />
- * Added implementation 19990729 (kvisco)
- * TK 12/09/1999 - Completed implementation...
 **/
 PRInt32 String::lastIndexOf(const String& data, PRInt32 offset) const
 {

@@ -20,15 +20,12 @@
  * Contributor(s): 
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
- *    
- * $Id: ExprParser.h,v 1.6 2001/07/02 20:10:54 sicking%bigfoot.com Exp $
+ * 
  */
 
 /**
  * ExprParser
  * This class is used to parse XSL Expressions
- * @author <A href="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.6 $ $Date: 2001/07/02 20:10:54 $
  * @see ExprLexer
 **/
 

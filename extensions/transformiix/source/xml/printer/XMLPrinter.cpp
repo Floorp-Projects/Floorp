@@ -23,7 +23,6 @@
  * Bob Miller, kbob@oblix.com
  *    -- plugged core leak.
  *
- * $Id: XMLPrinter.cpp,v 1.8 2001/05/14 14:22:45 axel%pike.org Exp $
  */
 
 #include "printers.h"
@@ -35,8 +34,6 @@
 /**
  * A class for printing XML nodes.
  * This class was ported from XSL:P Java source
- * @author <a href="kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.8 $ $Date: 2001/05/14 14:22:45 $
 **/
 
 /**

@@ -30,15 +30,12 @@
  *   -- fixed bug in ::parsePredicates,
  *      made sure we continue looking for more predicates.
  *
- * $Id: ExprParser.cpp,v 1.16 2001/07/02 20:10:52 sicking%bigfoot.com Exp $
  */
 
 /**
  * ExprParser
  * This class is used to parse XSL Expressions
- * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
  * @see ExprLexer
- * @version $Revision: 1.16 $ $Date: 2001/07/02 20:10:52 $
 **/
 
 #include "ExprParser.h"

@@ -24,13 +24,10 @@
  *    -- 19990806 
  *       - In method ::peek() changed ListItem::ListItem to List::ListItem
  *
- * $Id: Stack.cpp,v 1.3 2001/07/02 23:40:21 sicking%bigfoot.com Exp $
  */
 
 /**
  * Stack
- * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.3 $ $Date: 2001/07/02 23:40:21 $
 **/
 
 #include "Stack.h"

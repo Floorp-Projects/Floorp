@@ -21,13 +21,10 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: NamedMap.h,v 1.7 2001/06/26 14:08:58 peterv%netscape.com Exp $
  */
 
 /**
  * A Named Map for TxObjects
- * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.7 $ $Date: 2001/06/26 14:08:58 $
 **/
 
 #ifndef TRANSFRMX_NAMEDMAP_H
@@ -65,7 +62,7 @@ public:
 
     /**
      * Returns a list of all the keys of this NamedMap.
-     * <BR />
+     *
      * You will need to delete this List when you are done with it.
     **/
     StringList* keys();

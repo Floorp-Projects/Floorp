@@ -25,8 +25,6 @@
 
 /**
  * XMLDOMUtils
- * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.18 $ $Date: 2001/07/02 09:24:58 $
 **/
 
 #include "XMLDOMUtils.h"

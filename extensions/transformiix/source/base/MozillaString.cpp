@@ -561,8 +561,6 @@ MBool String::isEqualIgnoreCase(const String& data) const
 
 /**
  * Returns index of last occurrence of data
- * <BR />
- * Added implementation 19990729 (kvisco)
 **/
 PRInt32 String::lastIndexOf(UNICODE_CHAR data) const
 {
@@ -573,8 +571,6 @@ PRInt32 String::lastIndexOf(UNICODE_CHAR data) const
  * Returns the index of the last occurrence of data starting at offset.
  * NOTE: offset start counting from the LEFT, just like nsString expects.
  * ( nsString::RFindChar(PRUnichar, PRBool, PRInt32) )
- * <BR />
- * Added implementation 19990729 (kvisco)
 **/
 PRInt32 String::lastIndexOf(UNICODE_CHAR data, PRInt32 offset) const
 {
@@ -583,8 +579,6 @@ PRInt32 String::lastIndexOf(UNICODE_CHAR data, PRInt32 offset) const
 
 /**
  * Returns the index of the last occurrence of data
- * <BR />
- * Added implementation 19990729 (kvisco)
 **/
 PRInt32 String::lastIndexOf(const String& data) const
 {
@@ -597,8 +591,6 @@ PRInt32 String::lastIndexOf(const String& data) const
  * PRUnichar* array, we will take the safe road by converting our String
  * object into an nsString, and then using that for the search.
  * ( nsString::RFind(const nsString&, PRBool, PRInt32) )
- * <BR />
- * Added implementation 19990729 (kvisco)
 **/
 PRInt32 String::lastIndexOf(const String& data, PRInt32 offset) const
 {

@@ -20,12 +20,10 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: Map.cpp,v 1.4 2001/06/26 14:08:23 peterv%netscape.com Exp $
  */
 
 /*
  * A Hashtable for TxObjects
- * @version $Revision: 1.4 $ $Date: 2001/06/26 14:08:23 $
  */
 
 

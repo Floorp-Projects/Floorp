@@ -19,7 +19,6 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: ArrayList.h,v 1.2 2000/09/06 07:05:32 kvisco%ziplink.net Exp $
  */
 
 /**

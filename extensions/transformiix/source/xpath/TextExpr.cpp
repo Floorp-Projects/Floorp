@@ -20,8 +20,7 @@
  * Contributor(s): 
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
- *    
- * $Id: TextExpr.cpp,v 1.5 2001/07/02 20:11:05 sicking%bigfoot.com Exp $
+ * 
  */
 
 #include "Expr.h"

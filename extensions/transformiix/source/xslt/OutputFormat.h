@@ -19,7 +19,6 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: OutputFormat.h,v 1.2 2000/04/12 22:33:34 nisheeth%netscape.com Exp $
  */
 
 
@@ -29,10 +28,6 @@
 #include "TxString.h"
 #include "baseutils.h"
 
-/**
- * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.2 $ $Date: 2000/04/12 22:33:34 $
-**/
 class OutputFormat {
 
  public:

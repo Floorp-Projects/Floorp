@@ -40,8 +40,6 @@
 
 /**
  * Default constructor for a txList;
- * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.11 $ $Date: 2001/07/02 23:40:20 $
 **/
 
 txList::txList() {

@@ -21,7 +21,7 @@
  *
  * Michel Casabianca, casa@sdv.fr
  *    -- added additional empty elements to the HTML tag list
- * $Id: HTMLPrinter.cpp,v 1.6 2001/05/14 14:22:44 axel%pike.org Exp $
+ *
  */
 
 #include "printers.h"
@@ -33,8 +33,6 @@
 /**
  * A class for printing XML nodes.
  * This class was ported from XSL:P Java source
- * @author <a href="kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.6 $ $Date: 2001/05/14 14:22:44 $
 **/
   //---------------/
  //- Contructors -/

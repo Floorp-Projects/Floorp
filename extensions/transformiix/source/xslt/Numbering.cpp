@@ -21,13 +21,10 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: Numbering.cpp,v 1.3 2001/07/02 09:24:26 peterv%netscape.com Exp $
  */
 
 /**
  * Numbering methods
- * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.3 $ $Date: 2001/07/02 09:24:26 $
 **/
 
 #include "Numbering.h"

@@ -61,8 +61,6 @@
 
 /**
  * A class for Processing XSL Stylesheets
- * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.24 $ $Date: 2001/06/26 11:58:53 $
 **/
 class XSLTProcessor
 #ifndef TX_EXE

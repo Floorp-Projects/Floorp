@@ -20,8 +20,7 @@
  * Contributor(s): 
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
- *    
- * $Id: BooleanResult.cpp,v 1.7 2001/07/02 20:10:51 sicking%bigfoot.com Exp $
+ *
  */
 
 /*
