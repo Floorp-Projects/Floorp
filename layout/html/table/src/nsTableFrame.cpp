@@ -339,6 +339,21 @@ nsTableFrame::Init(nsIPresContext&  aPresContext,
 
 nsTableFrame::~nsTableFrame()
 {
+  if (NS_STYLE_BORDER_COLLAPSE==GetBorderCollapseStyle())
+  {
+		PRInt32 i=0;
+		for ( ; i<4; i++)
+		{
+			nsBorderEdge *border = (nsBorderEdge *)(mBorderEdges.mEdges[i].ElementAt(0));
+			while (border) 
+			{
+				delete border;
+				mBorderEdges.mEdges[i].RemoveElementAt(0);
+				border = (nsBorderEdge *)(mBorderEdges.mEdges[i].ElementAt(0));
+			}
+		}
+  }
+
   if (nsnull!=mCellMap) {
     delete mCellMap; 
     mCellMap = nsnull;
@@ -358,6 +373,7 @@ nsTableFrame::~nsTableFrame()
     delete mColCache;
     mColCache = nsnull;
   }
+
 }
 
 NS_IMETHODIMP
@@ -903,7 +919,10 @@ void nsTableFrame::AppendLayoutData(nsVoidArray* aList, nsTableCellFrame* aTable
 void nsTableFrame::SetBorderEdgeLength(PRUint8 aSide, PRInt32 aIndex, nscoord aLength)
 {
   nsBorderEdge *border = (nsBorderEdge *)(mBorderEdges.mEdges[aSide].ElementAt(aIndex));
-  border->mLength = aLength;
+  if (border)
+  {
+    border->mLength = aLength;
+  }
 }
 
 void nsTableFrame::DidComputeHorizontalCollapsingBorders(nsIPresContext& aPresContext,
@@ -983,7 +1002,6 @@ void nsTableFrame::ComputeHorizontalCollapsingBorders(nsIPresContext& aPresConte
   PRInt32 rowCount = mCellMap->GetRowCount();
   if (aStartRowIndex>=rowCount)
   {
-    NS_ASSERTION(PR_FALSE, "aStartRowIndex>=rowCount in ComputeHorizontalCollapsingBorders");
     return; // we don't have the requested row yet
   }
 
@@ -1027,7 +1045,6 @@ void nsTableFrame::ComputeVerticalCollapsingBorders(nsIPresContext& aPresContext
     endRowIndex=rowCount-1;
   if (aStartRowIndex>=rowCount)
   {
-    NS_ASSERTION(PR_FALSE, "aStartRowIndex>=rowCount in ComputeVerticalCollapsingBorders");
     return; // we don't have the requested row yet
   }
 
@@ -4748,15 +4765,15 @@ void nsTableFrame::GetTableBorderAt(nsMargin &aBorder, PRInt32 aRowIndex, PRInt3
   if (NS_STYLE_BORDER_COLLAPSE==GetBorderCollapseStyle())
   {
     nsBorderEdge *border = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_LEFT].ElementAt(aRowIndex));
-	if (border) {
-    aBorder.left = border->mWidth;
-    border = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_RIGHT].ElementAt(aRowIndex));
-    aBorder.right = border->mWidth;
-    border = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_TOP].ElementAt(aColIndex));
-    aBorder.top = border->mWidth;
-    border = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_TOP].ElementAt(aColIndex));
-    aBorder.bottom = border->mWidth;
-	}
+		if (border) {
+			aBorder.left = border->mWidth;
+			border = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_RIGHT].ElementAt(aRowIndex));
+			aBorder.right = border->mWidth;
+			border = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_TOP].ElementAt(aColIndex));
+			aBorder.top = border->mWidth;
+			border = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_TOP].ElementAt(aColIndex));
+			aBorder.bottom = border->mWidth;
+		}
   }
   else
   {

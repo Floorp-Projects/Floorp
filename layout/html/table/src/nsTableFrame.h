@@ -805,6 +805,7 @@ public: /* ----- Cell Map public methods ----- */
   /** returns PR_TRUE if table layout requires a preliminary pass over the content */
   PRBool RequiresPass1Layout();
 
+
   /*---------------- nsITableLayout methods ------------------------*/
   
   /** Get the cell and associated data for a table cell from the frame's cellmap */
@@ -821,6 +822,7 @@ public: /* ----- Cell Map public methods ----- */
   NS_IMETHOD GetTableSize(PRInt32& aRowCount, PRInt32& aColCount);
 
   /*------------end of nsITableLayout methods -----------------------*/
+
 
 public:
   static nsIAtom* gColGroupAtom;
