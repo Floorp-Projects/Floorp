@@ -290,6 +290,7 @@ profile/Makefile
 profile/src/Makefile
 profile/public/Makefile
 profile/resources/Makefile
+profile/defaults/Makefile
 rdf/Makefile
 rdf/base/Makefile
 rdf/base/idl/Makefile
