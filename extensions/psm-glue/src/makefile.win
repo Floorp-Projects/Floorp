@@ -37,7 +37,7 @@ include <$(DEPTH)/config/config.mak>
 
 LINCS = $(LINCS)     \
     -I$(PUBLIC)      \
-    -I$(PUBLIC)/security \
+    -I$(XPDIST)/public/security \
     $(NULL)
 
 LLIBS   = \
