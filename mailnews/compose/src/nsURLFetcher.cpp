@@ -453,7 +453,7 @@ nsURLFetcher::OnHeadersAvailable(nsISupports *aContext)
 }
 
 NS_IMETHODIMP
-nsURLFetcher::OnRedirect(nsISupports *aContext, nsIURI *aNewLocation)
+nsURLFetcher::OnRedirect(nsIChannel *aOldChannel, nsIChannel *aNewChannel)
 {
   mRedirection = PR_TRUE;
   return NS_OK;
