@@ -32,5 +32,6 @@ nsIMsgStatusFeedback.idl
 nsIMsgMailNewsUrl.idl
 nsIMsgWindowData.idl
 nsIUrlListenerManager.idl
+nsIMsgProtocolInfo.idl
 
 
