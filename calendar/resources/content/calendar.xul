@@ -66,6 +66,7 @@
     <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/global.dtd" > %dtd1;
     <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd2;
     <!ENTITY % dtd4 SYSTEM "chrome://calendar/locale/calendarMenu.dtd" > %dtd4;
+    <!ENTITY % calendarMenuOverlayDTD SYSTEM "chrome://calendar/locale/calendarMenuOverlay.dtd" > %calendarMenuOverlayDTD;
 ]>
 
 
@@ -128,6 +129,8 @@
    <menuitem label="&calendar.context.weekview;" oncommand="gCalendarWindow.switchToWeekView()"/>
    <menuitem label="&calendar.context.monthview;" oncommand="gCalendarWindow.switchToMonthView()"/>
    <menuseparator/>
+   <menuitem label="&file.mail.event;" observes="send_event_command" oncommand="sendEvent();"/>
+   <menuseparator/>
    <menuitem label="&calendar.context.toggleBackground;" oncommand="MonthView.toggleBackground()"/>
    <menuitem label="&calendar.context.reload;" oncommand="window.location = 'chrome://calendar/content/calendar.xul';"/>
 </popup>
@@ -170,7 +173,7 @@
 
 <!-- V I S I B L E  C O N T E N T  -->
 
-   <vbox id="calendar-top-box" flex="1">
+   <vbox id="calendar-top-box" flex="1" context="context-menu">
      
      <!-- Calendar Controls-->
     
@@ -187,7 +190,7 @@
           <grippy class="sidebar-splitter-grippy"/>
          </splitter>
    		<!-- Begin Day/Month/Week Deck -->
-         <deck id="calendar-deck" selectedIndex="0" flex="1" context="context-menu">
+         <deck id="calendar-deck" selectedIndex="0" flex="1">
    				 
    			 <!-- Calendar Month View -->
    			    
