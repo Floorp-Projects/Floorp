@@ -458,7 +458,7 @@ nsRuleNode::GetBits(PRInt32 aType, PRUint32* aResult)
 }
 
 nsresult 
-nsRuleNode::Transition(nsIStyleRule* aRule, nsRuleNode** aResult)
+nsRuleNode::Transition(nsIStyleRule* aRule, PRBool aIsInlineStyle, nsRuleNode** aResult)
 {
   nsRuleNode* next = nsnull;
 
@@ -475,6 +475,7 @@ nsRuleNode::Transition(nsIStyleRule* aRule, nsRuleNode** aResult)
       ConvertChildrenToHash();
   }
 
+  PRBool createdNode = PR_FALSE;
   if (ChildrenAreHashed()) {
     ChildrenHashEntry *entry = NS_STATIC_CAST(ChildrenHashEntry*,
         PL_DHashTableOperate(ChildrenHash(), aRule, PL_DHASH_ADD));
@@ -488,6 +489,7 @@ nsRuleNode::Transition(nsIStyleRule* aRule, nsRuleNode** aResult)
         *aResult = nsnull;
         return NS_ERROR_OUT_OF_MEMORY;
       }
+      createdNode = PR_TRUE;
     }
   } else if (!next) {
     // Create the new entry in our list.
@@ -497,8 +499,23 @@ nsRuleNode::Transition(nsIStyleRule* aRule, nsRuleNode** aResult)
       return NS_ERROR_OUT_OF_MEMORY;
     }
     SetChildrenList(new (mPresContext) nsRuleList(next, ChildrenList()));
+    createdNode = PR_TRUE;
   }
     
+  if (aIsInlineStyle && createdNode) {
+    // We just made a new rule node for an inline style rule (e.g., for
+    // the style attribute on an HTML, SVG, or XUL element).  In order to
+    // fix bug 99344, we have to maintain a mapping from inline style rules
+    // to all the rule nodes in a rule tree that correspond to the inline
+    // style rule.  
+    // Obtain our style set and then add this rule node to our mapping.
+    nsCOMPtr<nsIPresShell> shell;
+    mPresContext->GetShell(getter_AddRefs(shell));
+    nsCOMPtr<nsIStyleSet> styleSet;
+    shell->GetStyleSet(getter_AddRefs(styleSet));
+    styleSet->AddRuleNodeMapping(next);
+  }
+
   *aResult = next;
   return NS_OK;
 }

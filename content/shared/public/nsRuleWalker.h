@@ -44,9 +44,9 @@ public:
   nsRuleNode* GetCurrentNode() { return mCurrent; }
   void SetCurrentNode(nsRuleNode* aNode) { mCurrent = aNode; }
 
-  void Forward(nsIStyleRule* aRule) { 
+  void Forward(nsIStyleRule* aRule, PRBool aIsInlineStyle = PR_FALSE) { 
     nsRuleNode* next;
-    mCurrent->Transition(aRule, &next);
+    mCurrent->Transition(aRule, aIsInlineStyle, &next);
     mCurrent = next;
   }
 

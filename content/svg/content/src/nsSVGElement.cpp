@@ -471,7 +471,7 @@ nsSVGElement::WalkInlineStyleRules(nsRuleWalker* aRuleWalker)
   nsCOMPtr<nsIStyleRule> rule;
   mStyle->GetStyleRule(mDocument, getter_AddRefs(rule));
   if (aRuleWalker && rule) {
-    aRuleWalker->Forward(rule);
+    aRuleWalker->Forward(rule, PR_TRUE);
   }
   return NS_OK;
 }
