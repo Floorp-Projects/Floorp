@@ -105,6 +105,8 @@ public:
   static const PRInt32 kBackgroundInlinePolicyKTable[];
   static const PRInt32 kBackgroundOriginKTable[];
   static const PRInt32 kBackgroundRepeatKTable[];
+  static const PRInt32 kBackgroundXPositionKTable[];
+  static const PRInt32 kBackgroundYPositionKTable[];
   static const PRInt32 kBorderCollapseKTable[];
   static const PRInt32 kBorderColorKTable[];
   static const PRInt32 kBorderStyleKTable[];
@@ -118,6 +120,7 @@ public:
   static const PRInt32 kStrokeLinecapKTable[];
   static const PRInt32 kStrokeLinejoinKTable[];
 #endif
+  static const PRInt32 kBoxPropSourceKTable[];
   static const PRInt32 kBoxSizingKTable[];
   static const PRInt32 kCaptionSideKTable[];
   static const PRInt32 kClearKTable[];

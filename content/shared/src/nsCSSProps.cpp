@@ -266,6 +266,20 @@ const PRInt32 nsCSSProps::kBackgroundRepeatKTable[] = {
   -1,-1
 };
 
+const PRInt32 nsCSSProps::kBackgroundXPositionKTable[] = {
+  eCSSKeyword_left,   0,
+  eCSSKeyword_center, 50,
+  eCSSKeyword_right,  100,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kBackgroundYPositionKTable[] = {
+  eCSSKeyword_top,    0,
+  eCSSKeyword_center, 50,
+  eCSSKeyword_bottom, 100,
+  -1,-1
+};
+
 const PRInt32 nsCSSProps::kBorderCollapseKTable[] = {
   eCSSKeyword_collapse,  NS_STYLE_BORDER_COLLAPSE,
   eCSSKeyword_separate,  NS_STYLE_BORDER_SEPARATE,
@@ -298,6 +312,12 @@ const PRInt32 nsCSSProps::kBorderWidthKTable[] = {
   eCSSKeyword_thin, NS_STYLE_BORDER_WIDTH_THIN,
   eCSSKeyword_medium, NS_STYLE_BORDER_WIDTH_MEDIUM,
   eCSSKeyword_thick, NS_STYLE_BORDER_WIDTH_THICK,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kBoxPropSourceKTable[] = {
+  eCSSKeyword_physical,     NS_BOXPROP_SOURCE_PHYSICAL,
+  eCSSKeyword_logical,      NS_BOXPROP_SOURCE_LOGICAL,
   -1,-1
 };
 
@@ -917,25 +937,10 @@ nsCSSProps::SearchKeywordTable(PRInt32 aValue, const PRInt32 aTable[])
 }
 
 // XXX TODO These table names should be additional parameters of the
-// properties below in nsCSSPropList.h (and the two below should be like
-// the rest).
+// properties below in nsCSSPropList.h.
 const nsAFlatCString& 
 nsCSSProps::LookupPropertyValue(nsCSSProperty aProp, PRInt32 aValue)
 {
-static const PRInt32 kBackgroundXPositionKTable[] = {
-  eCSSKeyword_left,   0,
-  eCSSKeyword_center, 50,
-  eCSSKeyword_right,  100,
-  -1,-1
-};
-
-static const PRInt32 kBackgroundYPositionKTable[] = {
-  eCSSKeyword_top,    0,
-  eCSSKeyword_center, 50,
-  eCSSKeyword_bottom, 100,
-  -1,-1
-};
-
   switch (aProp)  {
 
   case eCSSProperty__moz_border_radius:
@@ -1157,11 +1162,23 @@ static const PRInt32 kBackgroundYPositionKTable[] = {
 
   case eCSSProperty_margin:
   case eCSSProperty_margin_bottom:
+  case eCSSProperty_margin_end:
+  case eCSSProperty_margin_end_value:
   case eCSSProperty_margin_left:
+  case eCSSProperty_margin_left_value:
   case eCSSProperty_margin_right:
+  case eCSSProperty_margin_right_value:
+  case eCSSProperty_margin_start:
+  case eCSSProperty_margin_start_value:
   case eCSSProperty_margin_top:
   case eCSSProperty_marker_offset:
     break;
+
+  case eCSSProperty_margin_left_ltr_source:
+  case eCSSProperty_margin_left_rtl_source:
+  case eCSSProperty_margin_right_ltr_source:
+  case eCSSProperty_margin_right_rtl_source:
+    return SearchKeywordTable(aValue, kBoxPropSourceKTable);
 
   case eCSSProperty_marks:
     return SearchKeywordTable(aValue, kPageMarksKTable);
@@ -1191,11 +1208,23 @@ static const PRInt32 kBackgroundYPositionKTable[] = {
   
   case eCSSProperty_padding:
   case eCSSProperty_padding_bottom:
+  case eCSSProperty_padding_end:
+  case eCSSProperty_padding_end_value:
   case eCSSProperty_padding_left:
+  case eCSSProperty_padding_left_value:
   case eCSSProperty_padding_right:
+  case eCSSProperty_padding_right_value:
+  case eCSSProperty_padding_start:
+  case eCSSProperty_padding_start_value:
   case eCSSProperty_padding_top:
   case eCSSProperty_page:
     break;
+
+  case eCSSProperty_padding_left_ltr_source:
+  case eCSSProperty_padding_left_rtl_source:
+  case eCSSProperty_padding_right_ltr_source:
+  case eCSSProperty_padding_right_rtl_source:
+    return SearchKeywordTable(aValue, kBoxPropSourceKTable);
 
   case eCSSProperty_page_break_before:
   case eCSSProperty_page_break_after:
@@ -1551,11 +1580,49 @@ static const nsCSSProperty gListStyleSubpropTable[] = {
 static const nsCSSProperty gMarginSubpropTable[] = {
   // Code relies on these being in top-right-bottom-left order.
   eCSSProperty_margin_top,
-  eCSSProperty_margin_right,
+  eCSSProperty_margin_right_value,
   eCSSProperty_margin_bottom,
-  eCSSProperty_margin_left,
+  eCSSProperty_margin_left_value,
+  // extras:
+  eCSSProperty_margin_left_ltr_source,
+  eCSSProperty_margin_left_rtl_source,
+  eCSSProperty_margin_right_ltr_source,
+  eCSSProperty_margin_right_rtl_source,
   eCSSProperty_UNKNOWN
 };
+
+static const nsCSSProperty gMarginLeftSubpropTable[] = {
+  // nsCSSParser::ParseDirectionalBoxProperty depends on this order
+  eCSSProperty_margin_left_value,
+  eCSSProperty_margin_left_ltr_source,
+  eCSSProperty_margin_left_rtl_source,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gMarginRightSubpropTable[] = {
+  // nsCSSParser::ParseDirectionalBoxProperty depends on this order
+  eCSSProperty_margin_right_value,
+  eCSSProperty_margin_right_ltr_source,
+  eCSSProperty_margin_right_rtl_source,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gMozMarginStartSubpropTable[] = {
+  // nsCSSParser::ParseDirectionalBoxProperty depends on this order
+  eCSSProperty_margin_start_value,
+  eCSSProperty_margin_left_ltr_source,
+  eCSSProperty_margin_right_rtl_source,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gMozMarginEndSubpropTable[] = {
+  // nsCSSParser::ParseDirectionalBoxProperty depends on this order
+  eCSSProperty_margin_end_value,
+  eCSSProperty_margin_right_ltr_source,
+  eCSSProperty_margin_left_rtl_source,
+  eCSSProperty_UNKNOWN
+};
+
 
 static const nsCSSProperty gMozOutlineSubpropTable[] = {
   // nsCSSDeclaration.cpp outputs the subproperties in this order.
@@ -1568,9 +1635,46 @@ static const nsCSSProperty gMozOutlineSubpropTable[] = {
 static const nsCSSProperty gPaddingSubpropTable[] = {
   // Code relies on these being in top-right-bottom-left order.
   eCSSProperty_padding_top,
-  eCSSProperty_padding_right,
+  eCSSProperty_padding_right_value,
   eCSSProperty_padding_bottom,
-  eCSSProperty_padding_left,
+  eCSSProperty_padding_left_value,
+  // extras:
+  eCSSProperty_padding_left_ltr_source,
+  eCSSProperty_padding_left_rtl_source,
+  eCSSProperty_padding_right_ltr_source,
+  eCSSProperty_padding_right_rtl_source,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gPaddingLeftSubpropTable[] = {
+  // nsCSSParser::ParseDirectionalBoxProperty depends on this order
+  eCSSProperty_padding_left_value,
+  eCSSProperty_padding_left_ltr_source,
+  eCSSProperty_padding_left_rtl_source,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gPaddingRightSubpropTable[] = {
+  // nsCSSParser::ParseDirectionalBoxProperty depends on this order
+  eCSSProperty_padding_right_value,
+  eCSSProperty_padding_right_ltr_source,
+  eCSSProperty_padding_right_rtl_source,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gMozPaddingStartSubpropTable[] = {
+  // nsCSSParser::ParseDirectionalBoxProperty depends on this order
+  eCSSProperty_padding_start_value,
+  eCSSProperty_padding_left_ltr_source,
+  eCSSProperty_padding_right_rtl_source,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gMozPaddingEndSubpropTable[] = {
+  // nsCSSParser::ParseDirectionalBoxProperty depends on this order
+  eCSSProperty_padding_end_value,
+  eCSSProperty_padding_right_ltr_source,
+  eCSSProperty_padding_left_rtl_source,
   eCSSProperty_UNKNOWN
 };
 
