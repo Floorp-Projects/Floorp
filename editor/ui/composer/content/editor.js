@@ -91,18 +91,36 @@ const nsIFilePicker = Components.interfaces.nsIFilePicker;
 
 const kEditorToolbarPrefs = "editor.toolbars.showbutton.";
 
-function ShowHideToolbarButton(prefName) {
-  var id = prefName.substr(kEditorToolbarPrefs.length) + "Button";
-  var button = document.getElementById(id);
-  if (button)
-    button.hidden = !gPrefs.getBoolPref(prefName);
+function ShowHideToolbarSeparators(toolbar) {
+  var childNodes = toolbar.childNodes;
+  var separator = null;
+  var hideSeparator = true;
+  for (var i = 0; childNodes[i].localName != "spacer"; i++) {
+    if (childNodes[i].localName == "toolbarseparator") {
+      if (separator)
+        separator.hidden = true;
+      separator = childNodes[i];
+    } else if (!childNodes[i].hidden) {
+      if (separator)
+        separator.hidden = hideSeparator;
+      separator = null;
+      hideSeparator = false;
+    }
+  }
 }
 
 function ShowHideToolbarButtons()
 {
   var array = GetPrefs().getChildList(kEditorToolbarPrefs, {});
-  for (var i in array)
-    ShowHideToolbarButton(array[i]);
+  for (var i in array) {
+    var prefName = array[i];
+    var id = prefName.substr(kEditorToolbarPrefs.length) + "Button";
+    var button = document.getElementById(id);
+    if (button)
+      button.hidden = !gPrefs.getBoolPref(prefName);
+  }
+  ShowHideToolbarSeparators(document.getElementById("EditToolbar"));
+  ShowHideToolbarSeparators(document.getElementById("FormatToolbar"));
 }
   
 function AddToolbarPrefListener()
@@ -134,7 +152,12 @@ const gEditorToolbarPrefListener =
     if (topic != "nsPref:changed")
       return;
 
-    ShowHideToolbarButton(prefName);
+    var id = prefName.substr(kEditorToolbarPrefs.length) + "Button";
+    var button = document.getElementById(id);
+    if (button) {
+      button.hidden = !gPrefs.getBoolPref(prefName);
+      ShowHideToolbarSeparators(button.parentNode);
+    }
   }
 };
 

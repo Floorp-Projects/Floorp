@@ -51,6 +51,11 @@
           </treerow>
         </treeitem>  
         -->
+        <treeitem>
+          <treerow>
+            <treecell url="chrome://editor/content/pref-toolbars.xul" label="Toolbars"/> 
+          </treerow>
+        </treeitem>  
       </treechildren>
     </treeitem>
   </treechildren>
