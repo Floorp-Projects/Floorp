@@ -85,9 +85,15 @@
     <td colspan="[% show_attachment_flags ? 4 : 3 %]">
       <a href="attachment.cgi?bugid=[% bugid %]&amp;action=enter">Create a New Attachment</a> (proposed patch, testcase, etc.)
     </td>
-    <td colspan="1">
-      <a href="attachment.cgi?bugid=[% bugid %]&amp;action=viewall">View All</a>
-    </td>
+    [% IF attachments.size %]
+      <td>
+        <a href="attachment.cgi?bugid=[% bugid %]&amp;action=viewall">View All</a>
+      </td>
+    [% ELSE %]
+      <td class="bz_disabled">
+        View All
+      </td>
+    [% END %]	
   </tr>
 </table>
 <br>
