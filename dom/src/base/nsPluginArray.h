@@ -26,6 +26,7 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMPluginArray.h"
 #include "nsIDOMPlugin.h"
+#include "nsIPluginHost.h"
 
 class nsIDOMNavigator;
 class nsIDocShell;
@@ -46,6 +47,8 @@ public:
   NS_IMETHOD NamedItem(const nsAReadableString& aName, nsIDOMPlugin** aReturn);
   NS_IMETHOD Refresh(PRBool aReloadDocuments);
 
+  nsresult GetPluginHost(nsIPluginHost** aPluginHost);
+
 private:
   nsresult GetPlugins();
 
@@ -55,7 +58,7 @@ public:
 protected:
   void *mScriptObject;
   nsIDOMNavigator* mNavigator;
-  nsIPluginHost* mPluginHost;
+  nsCOMPtr<nsIPluginHost> mPluginHost;
   PRUint32 mPluginCount;
   nsIDOMPlugin** mPluginArray;
   nsIDocShell* mDocShell; // weak reference
