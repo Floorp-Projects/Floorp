@@ -49,7 +49,6 @@ EXPORTS =				\
 		nsMsgMessageFlags.h	\
 		nsMsgLocalFolderHdrs.h  \
 		nsMsgMD5.h	\
-		nsIMsg.h \
 		nsIMsgMailNewsUrl.h	\
 		nsIUrlListenerManager.h \
 		nsICopyMessageListener.h \
