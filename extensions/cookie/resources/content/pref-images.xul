@@ -57,7 +57,7 @@
   {
     var enabled;
     try {
-      enabled = parent.hPrefWindow.getPref("bool", "imageblocker.enabled"))
+      enabled = parent.hPrefWindow.getPref("bool", "imageblocker.enabled");
     }
     catch(ex) {
       enabled = false;
