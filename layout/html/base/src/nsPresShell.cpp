@@ -4597,6 +4597,7 @@ PresShell::UnsuppressAndInvalidate()
       nsCOMPtr<nsIContentViewer> cv;
       cvc->GetContentViewer(getter_AddRefs(cv));
       if (cv) {
+        nsCOMPtr<nsIPresShell> kungFuDeathGrip(this);
         cv->Show();
         // Calling |Show| may destroy us.  Not sure why yet, but it's
         // a smoketest blocker.
