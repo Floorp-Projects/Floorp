@@ -1047,7 +1047,7 @@ http_handle_request(void *arg)
     /* Find the target object, if one has been explicitly specified. */
     http_find_target(req);
 
-#ifdef XP_MAC
+#if 0 // XP_MAC 
 	/* Test pattern for now. */
 	rv = SSM_HTTPSendUTF8String(req, "Hi, I got all of your request.\r\n");
 	rv = SSM_HTTPSendUTF8String(req, req->rawreqbuf);

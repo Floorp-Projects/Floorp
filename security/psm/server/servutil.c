@@ -372,7 +372,7 @@ void SSM_Debug(SSMResource *conn, char *msg)
 
 void SSM_DebugP(char *fmt, ...)
 {
-#if defined(DEBUG) && !defined(XP_MAC)
+#if defined(DEBUG)
     char *tmp = NULL, *tmp2 = NULL;
 	char *timeStamp = NULL;
     PRFileDesc *sock = NULL;
