@@ -1686,6 +1686,14 @@ NS_IMETHODIMP nsImapIncomingServer::OnLogonRedirectionReply(const PRUnichar *pHo
         pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
                                             getter_AddRefs(aEventQueue));
 
+	// logoff so some one else can use the connection.
+	if (m_logonRedirector)
+	{
+		nsXPIDLCString userName;
+
+		GetUsername(getter_Copies(userName));
+		m_logonRedirector->Logoff(userName);
+	}
 	m_redirectedLogonRetries = 0; // we got through, so reset this counter.
 
     PRUint32 cnt = 0;
