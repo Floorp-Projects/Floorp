@@ -76,7 +76,7 @@ nsPrintJobPreviewPS::Init(nsIDeviceContextSpecPS *aSpec)
 /**** nsPrintJobFilePS - Print-to-file support ****/
 
 /* Print-to-file constructor */
-nsPrintJobFilePS::nsPrintJobFilePS() : mDestHandle(nsnull) { };
+nsPrintJobFilePS::nsPrintJobFilePS() : mDestHandle(nsnull) { }
 
 /* Print-to-file destructor */
 nsPrintJobFilePS::~nsPrintJobFilePS()
