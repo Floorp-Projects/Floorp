@@ -124,6 +124,9 @@
 
         <!-- Tasks menu -->
         <menu id="tasksMenu"/>
+
+        <!-- Tasks menu -->
+        <menu id="windowMenu"/>
       </menubar>  
 
       <!-- Debug toolbar -->
