@@ -73,11 +73,11 @@ static const char* kTag##prefix##_##name = #name
 
 
 /* ProgID prefixes for RDF DLL registration. */
-#define NS_RDF_PROGID                           "component:||netscape|rdf"
-#define NS_RDF_DATASOURCE_PROGID                NS_RDF_PROGID "|datasource"
-#define NS_RDF_DATASOURCE_PROGID_PREFIX         NS_RDF_DATASOURCE_PROGID "?name#"
-#define NS_RDF_RESOURCE_FACTORY_PROGID          "component:||netscape|rdf|resource-factory"
-#define NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX   NS_RDF_RESOURCE_FACTORY_PROGID "?name#"
+#define NS_RDF_PROGID                           "component://netscape/rdf"
+#define NS_RDF_DATASOURCE_PROGID                NS_RDF_PROGID "/datasource"
+#define NS_RDF_DATASOURCE_PROGID_PREFIX         NS_RDF_DATASOURCE_PROGID "?name="
+#define NS_RDF_RESOURCE_FACTORY_PROGID          "component://netscape/rdf/resource-factory"
+#define NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX   NS_RDF_RESOURCE_FACTORY_PROGID "?name="
 
 
 /*@}*/
