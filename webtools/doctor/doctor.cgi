@@ -320,10 +320,10 @@ sub RetrieveFile
     $command =~ s/\Q$READ_CVS_PASSWORD\E/[password]/g;
     $errors =~ s/\Q$READ_CVS_PASSWORD\E/[password]/g;
     
-    DisplayError("I could not check the file out from the repository.<br> 
-                  <strong>Command:</strong> <em>$command</em><br>
-                  <strong>Error Code:</strong> <em>$error_code</em><br> 
-                  <strong>Error Message:</strong><b><pre>$errors</pre>");
+    DisplayCVSError("I could not check the file out from the repository.",
+                    $command,
+                    $error_code,
+                    $errors);
     exit;
   }
   
@@ -429,7 +429,6 @@ sub CommitFile
   DeleteTempDir();
   
   $vars->{'file'} = $file;
-  $vars->{'at_sign'} = $at_sign;
   
   print $request->header;
   $template->process("committed.tmpl", $vars)
@@ -464,9 +463,10 @@ sub CheckOutFile
     $command =~ s/\Q$READ_CVS_PASSWORD\E/[password]/g;
     $errors =~ s/\Q$READ_CVS_PASSWORD\E/[password]/g;
     
-    DisplayError("I could not check the file out from the repository.<br> 
-                  <strong>Command:</strong> <em>$command</em><br>
-                  <strong>Error Message:</strong><b><pre>$errors</pre>");
+    DisplayCVSError("I could not check the file out from the repository.",
+                    $command,
+                    undef,
+                    $errors);
     
     DeleteTempDir();
     exit;
@@ -535,10 +535,11 @@ sub DiffFile
     $command =~ s/\Q$READ_CVS_PASSWORD\E/[password]/g;
     $errors =~ s/\Q$READ_CVS_PASSWORD\E/[password]/g;
     
-    DisplayError("I could not diff your version of the file against 
-                  the version in the repository.<br>
-                  <strong>Command:</strong> <em>$command</em><br>
-                  <strong>Error Message:</strong><b><pre>$errors</pre>");
+    DisplayCVSError("I could not diff your version of the file against 
+                     the version in the repository.",
+                    $command,
+                    undef,
+                    $errors);
     
     DeleteTempDir();
     exit;
@@ -585,10 +586,11 @@ sub CheckInFile
     $command =~ s/\Q$password\E/[password]/g;
     $errors =~ s/\Q$password\E/[password]/g;
     
-    DisplayError("I could not check your version of the file
-                  into the repository.<br>
-                  <strong>Command:</strong> <em>$command</em><br>
-                  <strong>Error Message:</strong><br><pre>$errors</pre>");
+    DisplayCVSError("I could not check your version of the file
+                     into the repository.",
+                    $command,
+                    undef,
+                    $errors);
     
     DeleteTempDir();
     exit;
@@ -608,6 +610,28 @@ sub DisplayError
   
   print $request->header;
   $template->process("error.tmpl", $vars)
+    || die("<strong>Template Error</strong>: <em>" . $template->error() . "</em>
+            while trying to deliver error message <strong>$vars->{'title'}</strong>: 
+            <em>$vars->{'message'}</em>.");
+}
+
+sub DisplayCVSError 
+{
+  ($vars->{'message'}, 
+   $vars->{'cvs_command'}, 
+   $vars->{'cvs_error_code'}, 
+   $vars->{'cvs_error_message'},
+   $vars->{'title'}) = @_;
+  
+  $vars->{'title'} ||= "CVS Error";
+
+  chdir($HOME) 
+    || die("Could not change back to original working directory 
+            to deliver error message <strong>$vars->{'title'}</strong>: 
+            <em>$vars->{'message'}</em>.");
+  
+  print $request->header;
+  $template->process("cvs-error.tmpl", $vars)
     || die("<strong>Template Error</strong>: <em>" . $template->error() . "</em>
             while trying to deliver error message <strong>$vars->{'title'}</strong>: 
             <em>$vars->{'message'}</em>.");
