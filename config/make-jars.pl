@@ -2,6 +2,9 @@
 
 # make-jars [-d <destPath>] < <manifest.jr>
 
+use Getopt::Std;
+use Cwd;
+
 sub JarIt
 {
     my ($jarfile, $args) = @_;
@@ -72,8 +75,6 @@ sub EnsureFileInDir
     }
     return 0;
 }
-
-use Getopt::Std;
 
 getopt("d:o:");
 
