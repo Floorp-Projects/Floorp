@@ -3474,14 +3474,18 @@ PRBool nsWindow::OnDragLeave( MPARAM mp1, MPARAM mp2)
   return PR_TRUE;
 }
 
-extern BOOL GetURLObjectContents(PDRAGITEM pDragItem);
+// --------------------------------------------------------------------------
+
+extern nsresult GetURLObjectContents(const char *pszPath, char **ppszURL);
+
+// --------------------------------------------------------------------------
 
 PRBool nsWindow::OnDrop(MPARAM mp1, MPARAM mp2)
 {
   nsresult rv;
   PDRAGINFO pdraginfo = (PDRAGINFO)mp1;
   DRAGITEM dragitem;
-  
+
   nsCOMPtr<nsIDragService> dragService = do_GetService("@mozilla.org/widget/dragservice;1", &rv);
   nsCOMPtr<nsIDragSession> dragSession;
   dragService->GetCurrentSession(getter_AddRefs(dragSession));
@@ -3505,51 +3509,49 @@ PRBool nsWindow::OnDrop(MPARAM mp1, MPARAM mp2)
     nsCOMPtr<nsITransferable> trans(do_CreateInstance("@mozilla.org/widget/transferable;1"));
   
     DrgQueryDragitem(pdraginfo, sizeof(DRAGITEM), &dragitem, 0);
-    if (DrgVerifyType(&dragitem, "UniformResourceLocator"))
-    {
-      GetURLObjectContents(&dragitem);
-    }
-  
-    PSZ pszURL;
-    PSZ pszProtocol;
-    PSZ pszTargetName;
-    ULONG ulLength;
-    ulLength = DrgQueryStrNameLen(dragitem.hstrSourceName);
-    pszURL = (PSZ)nsMemory::Alloc(ulLength+1);
-    DrgQueryStrName(dragitem.hstrSourceName, ulLength+1, pszURL);
-    ulLength = DrgQueryStrNameLen(dragitem.hstrContainerName);
-    pszProtocol = (PSZ)nsMemory::Alloc(ulLength+1);
-    DrgQueryStrName(dragitem.hstrContainerName, ulLength+1, pszProtocol);
-    ulLength = DrgQueryStrNameLen(dragitem.hstrTargetName);
-    pszTargetName = (PSZ)nsMemory::Alloc(ulLength+1);
-    DrgQueryStrName(dragitem.hstrTargetName, ulLength+1, pszTargetName);
 
+    // get the dropped file's path
+    ULONG ulCnrLength = DrgQueryStrNameLen(dragitem.hstrContainerName);
+    ULONG ulSrcLength = DrgQueryStrNameLen(dragitem.hstrSourceName);
+    char* pszPath = (char*)nsMemory::Alloc(ulCnrLength+ulSrcLength+1);
+    DrgQueryStrName(dragitem.hstrContainerName, ulCnrLength+1, pszPath);
+    DrgQueryStrName(dragitem.hstrSourceName, ulSrcLength+1, &pszPath[ulCnrLength]);
 
     // add a special flavor if we're an anchor to indicate that we have a URL
     // in the drag data
     nsCAutoString dragData;
+
+    // if this is a URL object, get the file's content;
+    // the function allocs a buffer we have to free
     if (DrgVerifyType(&dragitem, "UniformResourceLocator"))
     {
-      dragData += pszProtocol;
+      char* pszURL;
+      if (NS_FAILED(GetURLObjectContents(pszPath, &pszURL)))
+        return NS_ERROR_FAILURE;
       dragData += pszURL;
-    } else {
+      nsMemory::Free(pszURL);
+    }
+    // otherwise, turn the path into a URL
+    else
+    {
       nsCOMPtr<nsILocalFile> file;
-      char filepath[CCHMAXPATH];
-      strcpy(filepath, pszProtocol);
-      strcat(filepath, pszURL);
-      if ( NS_SUCCEEDED(NS_NewNativeLocalFile(nsDependentCString(filepath), PR_TRUE, getter_AddRefs(file))) ) {
+      if ( NS_SUCCEEDED(NS_NewNativeLocalFile(nsDependentCString(pszPath), PR_TRUE, getter_AddRefs(file))) )
+      {
         nsCAutoString urlSpec;
         NS_GetURLSpecFromFile(file, urlSpec);
         dragData += urlSpec;
-
       }
     }
+
+    // get the suggested target name & use it as a title
+    ULONG ulLength = DrgQueryStrNameLen(dragitem.hstrTargetName);
+    PSZ pszTitle = (PSZ)nsMemory::Alloc(ulLength+1);
+    DrgQueryStrName(dragitem.hstrTargetName, ulLength+1, pszTitle);
     dragData += NS_LITERAL_CSTRING("\n");
-    dragData += pszTargetName;
-    nsMemory::Free(pszURL);
-    nsMemory::Free(pszProtocol);
-    nsMemory::Free(pszTargetName);
-    DrgFreeDraginfo(pdraginfo);
+    dragData += pszTitle;
+
+    nsMemory::Free(pszPath);
+    nsMemory::Free(pszTitle);
     
     nsCOMPtr<nsISupportsString> urlPrimitive(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
     if ( !urlPrimitive )
@@ -3566,6 +3568,13 @@ PRBool nsWindow::OnDrop(MPARAM mp1, MPARAM mp2)
   }
 
   DispatchDragDropEvent(NS_DRAGDROP_DROP);
+
+  // target deletes the string handles
+  DrgDeleteDraginfoStrHandles(pdraginfo);
+
+  // if the source was Moz, this will fail (as it should) because
+  // we're still in DrgDrag;  in that case the source will free this
+  DrgFreeDraginfo(pdraginfo);
 
   if (mNativeDrag && dragSession) {
     dragService->EndDragSession();
