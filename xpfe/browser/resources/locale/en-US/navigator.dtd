@@ -316,6 +316,7 @@
 <!ENTITY locationBar.tooltip          "Location and search field">
 <!ENTITY internetKeyword.tooltip      "Return to previously viewed page or choose keyword">
 
+<!ENTITY menuBar.tooltip              "Menu bar">
 <!ENTITY personalBar.tooltip          "Personal toolbar">
 <!ENTITY navigationBar.tooltip        "Navigation toolbar">
 
