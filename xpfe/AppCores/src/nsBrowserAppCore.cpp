@@ -57,12 +57,14 @@
 #include "nsICmdLineService.h"
 #include "nsIGlobalHistory.h"
 
-#include "nsIRelatedLinksDataSource.h"
 #include "nsIDOMXULDocument.h"
 
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsFileSpec.h"  // needed for nsAutoCString
+
+#include "nsIDocumentLoader.h"
+#include "nsIObserverService.h"
 
 #ifdef ClientWallet
 #include "nsIFileLocator.h"
@@ -86,11 +88,6 @@ static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 #include "nsINetService.h"
 NS_DEFINE_IID(kINetServiceIID,            NS_INETSERVICE_IID);
 NS_DEFINE_IID(kNetServiceCID,             NS_NETSERVICE_CID);
-
-// For related links
-#include "nsRDFCID.h"
-#include "nsIRDFService.h"
-NS_DEFINE_CID(kRDFServiceCID,             NS_RDFSERVICE_CID);
 
 // Stuff to implement find/findnext
 #include "nsIFindComponent.h"
@@ -746,130 +743,127 @@ static nsresult setAttribute( nsIWebShell *shell,
 // nsIDocumentLoaderObserver methods
 
 NS_IMETHODIMP
-nsBrowserAppCore::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURL* aURL, const char* aCommand)
+nsBrowserAppCore::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURL* aURL, const char* aCommand)
 {
+  NS_PRECONDITION(aLoader != nsnull, "null ptr");
+  if (! aLoader)
+    return NS_ERROR_NULL_POINTER;
+
+  NS_PRECONDITION(aURL != nsnull, "null ptr");
+  if (! aURL)
+    return NS_ERROR_NULL_POINTER;
+
+  nsresult rv;
+
+  // Notify observers that a document load has started in the
+  // content window.
+  NS_WITH_SERVICE(nsIObserverService, observer, NS_OBSERVERSERVICE_PROGID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  const char* url;
+  rv = aURL->GetSpec(&url);
+  if (NS_FAILED(rv)) return rv;
+
+  nsAutoString urlStr(url);
+
+  static PRUnichar kStartDocumentLoad[] = L"StartDocumentLoad";
+  rv = observer->Notify(mContentWindow,
+                        kStartDocumentLoad,
+                        urlStr.GetUnicode());
+
+  // XXX Ignore rv for now. They are using nsIEnumerator instead of
+  // nsISimpleEnumerator.
+
   // Kick start the throbber
-   setAttribute( mWebShell, "Browser:Throbber", "busy", "true" );
+  setAttribute( mWebShell, "Browser:Throbber", "busy", "true" );
 
   // Enable the Stop buton
-   setAttribute( mWebShell, "canStop", "disabled", "false" );
+  setAttribute( mWebShell, "canStop", "disabled", "false" );
 
-   return NS_OK;
+  return NS_OK;
 }
 
 
 NS_IMETHODIMP
-nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURL *aUrl, PRInt32 aStatus)
+nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIURL *aUrl, PRInt32 aStatus)
 {
+  NS_PRECONDITION(aLoader != nsnull, "null ptr");
+  if (! aLoader)
+    return NS_ERROR_NULL_POINTER;
 
-    const char* spec =nsnull;
+  NS_PRECONDITION(aUrl != nsnull, "null ptr");
+  if (! aUrl)
+    return NS_ERROR_NULL_POINTER;
 
-	aUrl->GetSpec(&spec);
+  nsresult rv;
 
-    if (aStatus != NS_OK) {
-		goto done;
-	}
-    
-    // Update global history.
-    //NS_ASSERTION(mGHistory != nsnull, "history not initialized");
-    if (mGHistory && mWebShell) {
-        nsresult rv;
+  // Notify observers that a document load has started in the
+  // content window.
+  NS_WITH_SERVICE(nsIObserverService, observer, NS_OBSERVERSERVICE_PROGID, &rv);
+  if (NS_FAILED(rv)) return rv;
 
-        nsAutoString url(spec);
-        char* urlSpec = url.ToNewCString();
-        do {
-            if (NS_FAILED(rv = mGHistory->AddPage(urlSpec, /* XXX referrer? */ nsnull, PR_Now()))) {
-                NS_ERROR("unable to add page to history");
-                break;
-            }
+  const char* url;
+  rv = aUrl->GetSpec(&url);
+  if (NS_FAILED(rv)) return rv;
 
-            const PRUnichar* title;
-            if (NS_FAILED(rv = mWebShell->GetTitle(&title))) {
-                NS_ERROR("unable to get doc title");
-                break;
-            }
+  nsAutoString urlStr(url);
 
-            if (NS_FAILED(rv = mGHistory->SetPageTitle(urlSpec, title))) {
-                NS_ERROR("unable to set doc title");
-                break;
-            }
-        } while (0);
-        delete[] urlSpec;
-    }
+  static PRUnichar kEndDocumentLoad[] = L"EndDocumentLoad";
+  static PRUnichar kFailDocumentLoad[] = L"FailDocumentLoad";
 
-    // Update Related Links
-    if (mWebShell)
-    {
-    	nsCOMPtr<nsIScriptContextOwner>	newContextOwner;
-    	newContextOwner = do_QueryInterface(mWebShell);
-    	if (newContextOwner)
-    	{
-    		nsCOMPtr<nsIScriptGlobalObject>	newGlobalObject;
-    		nsresult			rv;
-    		if (NS_SUCCEEDED(rv = newContextOwner->GetScriptGlobalObject(getter_AddRefs(newGlobalObject))))
-    		{
-    			if (newGlobalObject)
-			{
-				nsCOMPtr<nsIDOMWindow>	aDOMWindow;
-				aDOMWindow = do_QueryInterface(newGlobalObject);
-				if (aDOMWindow)
-				{
-					nsCOMPtr<nsIDOMDocument>	aDOMDocument;
-					if (NS_SUCCEEDED(rv = aDOMWindow->GetDocument(getter_AddRefs(aDOMDocument))))
-					{
-						nsCOMPtr<nsIDOMXULDocument>	xulDoc( do_QueryInterface(aDOMDocument) );
-						if (xulDoc)
-						{
-							NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
-							if (NS_SUCCEEDED(rv))
-							{
-								nsCOMPtr<nsIRDFDataSource>	relatedLinksDS;
-								if (NS_SUCCEEDED(rv = rdfService->GetDataSource("rdf:relatedlinks", getter_AddRefs(relatedLinksDS))))
-								{
-									nsCOMPtr<nsIRDFRelatedLinksDataSource>	rl(do_QueryInterface(relatedLinksDS));
-									if (rl)
-									{
-										rl->SetRelatedLinksURL(spec);
-									}
-								}
-							}
-						}
-					}
-				}
-    			}
-    		}
-    	}
-    }
-    
-done:
-     // Stop the throbber and set the urlbar string
+  rv = observer->Notify(mContentWindow,
+                        NS_SUCCEEDED(aStatus) ? kEndDocumentLoad : kFailDocumentLoad,
+                        urlStr.GetUnicode());
+
+  // XXX Ignore rv for now. They are using nsIEnumerator instead of
+  // nsISimpleEnumerator.
+
+  // Update global history.
+  //NS_ASSERTION(mGHistory != nsnull, "history not initialized");
+  if (mGHistory && mWebShell) {
+    nsresult rv;
+
+    do {
+      rv = mGHistory->AddPage(url, /* XXX referrer? */ nsnull, PR_Now());
+      if (NS_FAILED(rv)) break;
+
+      const PRUnichar* title;
+      rv = mWebShell->GetTitle(&title);
+      if (NS_FAILED(rv)) break;
+
+      rv = mGHistory->SetPageTitle(url, title);
+      if (NS_FAILED(rv)) break;
+    } while (0);
+  }
+
+  // Stop the throbber and set the urlbar string
 	if (aStatus == NS_OK)
-      setAttribute( mWebShell, "urlbar", "value", spec);
+    setAttribute( mWebShell, "urlbar", "value", url);
 
-    setAttribute( mWebShell, "Browser:Throbber", "busy", "false" );
+  setAttribute( mWebShell, "Browser:Throbber", "busy", "false" );
 
-     // Check with the content area webshell if back and forward
-     // buttons can be enabled
-    nsresult rv = mContentAreaWebShell->CanForward();
-    setAttribute(mWebShell, "canGoForward", "disabled", (rv == NS_OK) ? "" : "true");
+  // Check with the content area webshell if back and forward
+  // buttons can be enabled
+  rv = mContentAreaWebShell->CanForward();
+  setAttribute(mWebShell, "canGoForward", "disabled", (rv == NS_OK) ? "" : "true");
 
-    rv = mContentAreaWebShell->CanBack();
-    setAttribute(mWebShell, "canGoBack", "disabled", (rv == NS_OK) ? "" : "true");
+  rv = mContentAreaWebShell->CanBack();
+  setAttribute(mWebShell, "canGoBack", "disabled", (rv == NS_OK) ? "" : "true");
 
 	//Disable the Stop button
 	setAttribute( mWebShell, "canStop", "disabled", "true" );
 
-    /* To satisfy a request from the QA group */
+  /* To satisfy a request from the QA group */
 	if (aStatus == NS_OK) {
-      fprintf(stdout, "Document %s loaded successfully\n", spec);
-      fflush(stdout);
+    fprintf(stdout, "Document %s loaded successfully\n", url);
+    fflush(stdout);
 	}
 	else {
-      fprintf(stdout, "Error loading URL %s \n", spec);
-      fflush(stdout);
+    fprintf(stdout, "Error loading URL %s \n", url);
+    fflush(stdout);
 	}
 
-   return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
