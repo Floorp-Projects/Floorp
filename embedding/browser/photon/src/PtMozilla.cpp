@@ -676,8 +676,6 @@ mozilla_set_pref( PtWidget_t *widget, char *option, char *value )
 		pref->SetIntPref( "network.proxy.gopher_port", atoi(value) );
 
 /* TCP/IP options */
-	else if( !strcmp( option, "socket_timeout" ) )
-		pref->SetIntPref( "network.http.connect.timeout", atoi( value ) );
 	else if( !strcmp( option, "max_connections" ) )
 		pref->SetIntPref( "network.http.max-connections", atoi( value ) );
 
@@ -931,11 +929,6 @@ static void mozilla_get_pref( PtWidget_t *widget, char *option, char *value ) {
 		}
 
 /* TCP/IP options */
-  else if( !strcmp( option, "socket_timeout" ) ) {
-		int n;
-		pref->GetIntPref( "network.http.connect.timeout", &n );
-		sprintf( value, "%d", n );
-		}
   else if( !strcmp( option, "max_connections" ) ) {
 		int n;
 		pref->GetIntPref( "network.http.max-connections", &n );
