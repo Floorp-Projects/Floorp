@@ -71,6 +71,12 @@
       border                : 1px solid transparent;
     }
     
+  .menubutton-dual.toolbar[disabled="true"]:hover > .menubutton-dual-ex-button,
+  .menubutton-dual.toolbar[disabled="true"][buttonover="true"] > .menubutton-dual-ex-button
+    {
+      border                : 1px solid transparent;
+    }
+
   /* 3) dropmarker gets outset border */
   .menubutton-dual.toolbar[buttonover="true"] > .menubutton-dual-dropmarker-box
     {
@@ -116,6 +122,7 @@
   .menubutton-dual.toolbar[buttondown="true"][disabled="true"] > .menubutton-dual-dropmarker-box
     {
       border                : 1px solid transparent;
+      padding               : 0px
     }
     
 /* ACTION: mouse over the menu */
@@ -140,11 +147,6 @@
       border-bottom         : 1px solid threedshadow;
     }
     
-  .menubutton-dual.toolbar[disabled="true"]:hover > .menubutton-dual-ex-button
-    {
-      border                : 1px solid transparent;
-    }
-
   /* 3). dropmarker gets outset border */
   .menubutton-dual.toolbar:hover > .menubutton-dual-dropmarker-box
     {
@@ -186,8 +188,6 @@
       padding               : 2px 0px 0px 0px;
     }
 
-  
-  
 /*
 .menubutton-dual.toolbar.top
   {

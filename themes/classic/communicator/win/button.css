@@ -39,6 +39,12 @@
       color               : graytext;
     }
 
+  .button-toolbar-1[disabled="true"]:hover:active > .button-internal-box,
+  .button-toolbar-2[disabled="true"]:hover:active > .button-internal-box
+    {
+      color               : graytext;
+    }
+
   .button-toolbar-1:hover > .button-internal-box,
   .button-toolbar-2:hover > .button-internal-box
     {
