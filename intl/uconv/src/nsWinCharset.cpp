@@ -59,11 +59,12 @@ nsPlatformCharset::nsPlatformCharset()
 
   nsAutoString acpKey(NS_LITERAL_STRING("acp."));
   acpKey.AppendInt(PRInt32(::GetACP() & 0x00FFFF), 10);
-  nsresult res = MapToCharset(acpKey, mCharset);
+  MapToCharset(acpKey, mCharset);
 
   NS_TIMELINE_STOP_TIMER("nsPlatformCharset()");
   NS_TIMELINE_MARK_TIMER("nsPlatformCharset()");
-          }
+}
+
 nsPlatformCharset::~nsPlatformCharset()
 {
   PR_AtomicDecrement(&gCnt);
