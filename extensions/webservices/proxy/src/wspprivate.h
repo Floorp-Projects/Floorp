@@ -43,7 +43,7 @@
 
 // XPCOM includes
 #include "nsCOMPtr.h"
-#include "nsSupportsArray.h"
+#include "nsCOMArray.h"
 #include "nsIPropertyBag.h"
 #include "nsIException.h"
 #include "nsIExceptionService.h"
@@ -168,7 +168,7 @@ protected:
   nsCOMPtr<nsIInterfaceInfoManager> mInterfaceInfoManager;
   nsString mQualifier;
   PRBool mIsAsync;
-  nsSupportsArray mPendingCalls;
+  nsCOMArray<nsIWebServiceCallContext> mPendingCalls;
   const nsIID* mIID;
   nsCOMPtr<nsISupports> mAsyncListener;
   nsCOMPtr<nsIInterfaceInfo> mListenerInterfaceInfo;

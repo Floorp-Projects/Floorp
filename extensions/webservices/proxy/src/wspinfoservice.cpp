@@ -41,7 +41,8 @@
 #include "wspprivate.h"
 
 /***************************************************************************/
-// IIDX is used as a way to hold and share our commone set of interface indexes.
+// IIDX is used as a way to hold and share our common set of interface
+// indexes.
 
 class IIDX {
 public:
@@ -55,10 +56,18 @@ public:
     IDX_Count  // Just a count of the above.
   };
 
-  PRUint16  Get(IndexID id) const {NS_ASSERTION(id<IDX_Count, "bad");
-                  return mData[id];}
-  PRUint16* GetAddr(IndexID id)   {NS_ASSERTION(id<IDX_Count, "bad");
-                  return &mData[id];}
+  PRUint16  Get(IndexID id) const
+  {
+    NS_ASSERTION(id < IDX_Count, "bad");
+    return mData[id];
+  }
+
+  PRUint16* GetAddr(IndexID id)
+  {
+    NS_ASSERTION(id < IDX_Count, "bad");
+    return &mData[id];
+  }
+
 private:
   PRUint16 mData[IDX_Count];
 };
@@ -71,20 +80,38 @@ private:
 class ParamAccumulator
 {
 private:
-  enum {MAX_BUILTIN = 8,
-        ALLOCATION_INCREMENT = 16,
-        MAX_TOTAL = 255}; // The typelib format limits us to 255 params.
+  enum {
+    MAX_BUILTIN = 8,
+    ALLOCATION_INCREMENT = 16,
+    MAX_TOTAL = 255
+  }; // The typelib format limits us to 255 params.
 
 public:
-  PRUint16 GetCount() const {return mCount;}
-  XPTParamDescriptor* GetArray() {return mArray;}
-  void Clear() {mCount = 0;}
+  PRUint16 GetCount() const
+  {
+    return mCount;
+  }
+  XPTParamDescriptor* GetArray()
+  {
+    return mArray;
+  }
+  void Clear()
+  {
+    mCount = 0;
+  }
 
   XPTParamDescriptor* GetNextParam();
 
   ParamAccumulator()
-    : mCount(0), mAvailable(MAX_BUILTIN), mArray(mBuiltinSpace) {}
-  ~ParamAccumulator() {if(mArray != mBuiltinSpace) delete [] mArray;}
+    : mCount(0), mAvailable(MAX_BUILTIN), mArray(mBuiltinSpace)
+  {
+  }
+
+  ~ParamAccumulator()
+  {
+    if(mArray != mBuiltinSpace)
+      delete [] mArray;
+  }
 private:
   PRUint16            mCount;
   PRUint16            mAvailable;
@@ -92,7 +119,8 @@ private:
   XPTParamDescriptor  mBuiltinSpace[MAX_BUILTIN];
 };
 
-XPTParamDescriptor* ParamAccumulator::GetNextParam()
+XPTParamDescriptor*
+ParamAccumulator::GetNextParam()
 {
   if (mCount == MAX_TOTAL) {
     NS_WARNING("Too many params!");
@@ -106,6 +134,13 @@ XPTParamDescriptor* ParamAccumulator::GetNextParam()
     }
 
     memcpy(newArray, mArray, newAvailable * sizeof(XPTParamDescriptor));
+
+    if (mArray != mBuiltinSpace) {
+      // The old array was heap allocated, delete so that we don't
+      // leak it.
+      delete [] mArray;
+    }
+
     mArray = newArray;
     mAvailable = newAvailable;
   }
@@ -120,7 +155,8 @@ XPTParamDescriptor* ParamAccumulator::GetNextParam()
 // life of the process. These uuids should not be shared with other processes
 // or persisted. 
 
-static nsresult NewUniqueID(nsID *aID)
+static nsresult
+NewUniqueID(nsID *aID)
 {
   // XXX Hack Alert. This was generated on jband's 'bugsfree' machine and
   // *ought* not to conflict with any existing guids. We should find a
@@ -142,10 +178,9 @@ static nsresult NewUniqueID(nsID *aID)
 // FindInterfaceByName finds an interface info keyed by interface name. It
 // searches the super manager and any additional managers
 
-static nsresult FindInterfaceByName(const char* aName,
-                                    nsIInterfaceInfoSuperManager* iism,
-                                    nsIInterfaceInfoManager **aSet,
-                                    nsIInterfaceInfo **_retval)
+static nsresult
+FindInterfaceByName(const char* aName, nsIInterfaceInfoSuperManager* iism,
+                    nsIInterfaceInfoManager **aSet, nsIInterfaceInfo **_retval)
 {
   if (NS_SUCCEEDED(iism->GetInfoForName(aName, _retval)) && *_retval) {
     NS_ADDREF(*aSet = iism);
@@ -164,7 +199,7 @@ static nsresult FindInterfaceByName(const char* aName,
     while (NS_SUCCEEDED(list->HasMoreElements(&more)) && more &&
            NS_SUCCEEDED(list->GetNext(getter_AddRefs(current))) && current) {
       if (NS_SUCCEEDED(current->GetInfoForName(aName, _retval)) &&
-         *_retval) {
+          *_retval) {
         NS_ADDREF(*aSet = current.get());
         return NS_OK;
       }
@@ -178,10 +213,9 @@ static nsresult FindInterfaceByName(const char* aName,
 // FindInterfaceByName finds the *index* of an interface info in the given
 // generic info set keyed by interface name. 
 
-static nsresult FindInterfaceIndexByName(const char* aName,
-                                         nsIInterfaceInfoSuperManager* iism,
-                                         nsIGenericInterfaceInfoSet* aSet,
-                                         PRUint16* aIndex)
+static nsresult
+FindInterfaceIndexByName(const char* aName, nsIInterfaceInfoSuperManager* iism,
+                         nsIGenericInterfaceInfoSet* aSet, PRUint16* aIndex)
 {
   nsresult rv = aSet->IndexOfByName(aName, aIndex);
   if (NS_SUCCEEDED(rv)) {
@@ -202,10 +236,9 @@ static nsresult FindInterfaceIndexByName(const char* aName,
 // specific interface info that we expect to find in the super manager keyed 
 // by interface id.
  
-static nsresult AppendStandardInterface(const nsIID& iid,
-                                        nsIInterfaceInfoSuperManager* iism,
-                                        nsIGenericInterfaceInfoSet* set,
-                                        PRUint16* aIndex)
+static nsresult
+AppendStandardInterface(const nsIID& iid, nsIInterfaceInfoSuperManager* iism,
+                        nsIGenericInterfaceInfoSet* set, PRUint16* aIndex)
 {
   nsresult rv;
   nsCOMPtr<nsIInterfaceInfo> tempInfo;
@@ -222,10 +255,9 @@ static nsresult AppendStandardInterface(const nsIID& iid,
 // BuildInterfaceName is used to construct the name of an interface
 // based on three AStrings.
 
-static void BuildInterfaceName(const nsAString& qualifier,
-                               const nsAString& name,
-                               const nsAString& uri,
-                               nsACString& aCIdentifier)
+static void
+BuildInterfaceName(const nsAString& qualifier, const nsAString& name,
+                   const nsAString& uri, nsACString& aCIdentifier)
 {
   WSPFactory::XML2C(qualifier, aCIdentifier);
 
@@ -240,23 +272,22 @@ static void BuildInterfaceName(const nsAString& qualifier,
 /***************************************************************************/
 // Forward declaration...
 
-static nsresult AppendMethodsForModelGroup(nsIInterfaceInfoSuperManager* iism,
-                                           nsIGenericInterfaceInfoSet* aSet,
-                                           nsISchemaModelGroup* aModuleGroup,
-                                           const IIDX& iidx,
-                                           XPTParamDescriptor* defaultResult,
-                                           nsIGenericInterfaceInfo* aInfo,
-                                           const nsAString& qualifier);
+static nsresult
+AppendMethodsForModelGroup(nsIInterfaceInfoSuperManager* iism,
+                           nsIGenericInterfaceInfoSet* aSet,
+                           nsISchemaModelGroup* aModelGroup,
+                           const IIDX& iidx, XPTParamDescriptor* defaultResult,
+                           nsIGenericInterfaceInfo* aInfo,
+                           const nsAString& qualifier);
 
 // Forward declaration...
-static nsresult GetParamDescOfType(nsIInterfaceInfoSuperManager* iism,
-                                   nsIGenericInterfaceInfoSet* aSet,
-                                   nsISchemaType* aType,
-                                   const IIDX& iidx,
-                                   XPTParamDescriptor* defaultResult,
-                                   const nsAString& qualifier,
-                                   PRUint32 depth,
-                                   ParamAccumulator* aParams);
+static nsresult
+GetParamDescOfType(nsIInterfaceInfoSuperManager* iism,
+                   nsIGenericInterfaceInfoSet* aSet,
+                   nsISchemaType* aType, const IIDX& iidx,
+                   XPTParamDescriptor* defaultResult,
+                   const nsAString& qualifier, PRUint32 depth,
+                   ParamAccumulator* aParams);
 
 /***************************************************************************/
 // AppendMethodForParticle appends a method to a 'struct' interface 
@@ -264,13 +295,13 @@ static nsresult GetParamDescOfType(nsIInterfaceInfoSuperManager* iism,
 // particles that are themselves modelgroups (by recurring into 
 // AppendMethodsForModelGroup). At also knows how to deal with arrays.
 
-static nsresult AppendMethodForParticle(nsIInterfaceInfoSuperManager* iism,
-                                        nsIGenericInterfaceInfoSet* aSet,
-                                        nsISchemaParticle* aParticle,
-                                        const IIDX& iidx,
-                                        XPTParamDescriptor* defaultResult,
-                                        nsIGenericInterfaceInfo* aInfo,
-                                        const nsAString& qualifier)
+static nsresult
+AppendMethodForParticle(nsIInterfaceInfoSuperManager* iism,
+                        nsIGenericInterfaceInfoSet* aSet,
+                        nsISchemaParticle* aParticle, const IIDX& iidx,
+                        XPTParamDescriptor* defaultResult,
+                        nsIGenericInterfaceInfo* aInfo,
+                        const nsAString& qualifier)
 {
   nsresult rv;
   XPTMethodDescriptor methodDesc;
@@ -280,7 +311,7 @@ static nsresult AppendMethodForParticle(nsIInterfaceInfoSuperManager* iism,
   ParamAccumulator params;
   PRUint16 i;
 
-  // If the particle is itself a moduleGroup, then flatten in its methods.
+  // If the particle is itself a modelGroup, then flatten in its methods.
   nsCOMPtr<nsISchemaModelGroup> modelGroup(do_QueryInterface(aParticle));
   if (modelGroup) {
     return AppendMethodsForModelGroup(iism, aSet, modelGroup, iidx, 
@@ -302,14 +333,13 @@ static nsresult AppendMethodForParticle(nsIInterfaceInfoSuperManager* iism,
     return NS_ERROR_UNEXPECTED;
   }
 
-  nsCAutoString identifierName;
   nsAutoString name;
-
   rv = aParticle->GetName(name);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
+  nsCAutoString identifierName;
   WSPFactory::XML2C(name, identifierName);
 
   rv = GetParamDescOfType(iism, aSet, schemaType, iidx, defaultResult,
@@ -361,24 +391,24 @@ static nsresult AppendMethodForParticle(nsIInterfaceInfoSuperManager* iism,
 // AppendMethodsForModelGroup iterates the group's particles and calls 
 // AppendMethodForParticle for each.
 
-static nsresult AppendMethodsForModelGroup(nsIInterfaceInfoSuperManager* iism,
-                                           nsIGenericInterfaceInfoSet* aSet,
-                                           nsISchemaModelGroup* aModuleGroup,
-                                           const IIDX& iidx,
-                                           XPTParamDescriptor* defaultResult,
-                                           nsIGenericInterfaceInfo* aInfo,
-                                           const nsAString& qualifier)
+static nsresult
+AppendMethodsForModelGroup(nsIInterfaceInfoSuperManager* iism,
+                           nsIGenericInterfaceInfoSet* aSet,
+                           nsISchemaModelGroup* aModelGroup,
+                           const IIDX& iidx, XPTParamDescriptor* defaultResult,
+                           nsIGenericInterfaceInfo* aInfo,
+                           const nsAString& qualifier)
 {
   nsresult rv;
   PRUint32 particleCount;
-  rv = aModuleGroup->GetParticleCount(&particleCount);
+  rv = aModelGroup->GetParticleCount(&particleCount);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
   for (PRUint32 i = 0; i < particleCount; i++) {
     nsCOMPtr<nsISchemaParticle> particle;
-    rv = aModuleGroup->GetParticle(i, getter_AddRefs(particle));
+    rv = aModelGroup->GetParticle(i, getter_AddRefs(particle));
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -398,14 +428,14 @@ static nsresult AppendMethodsForModelGroup(nsIInterfaceInfoSuperManager* iism,
 // create one. In our world these 'struct' interfaces are discovered by
 // name: qualifier+typename+typetargetnamespace.
 
-static nsresult FindOrConstructInterface(nsIInterfaceInfoSuperManager* iism,
-                                         nsIGenericInterfaceInfoSet* aSet,
-                                         nsISchemaComplexType* aComplexType,
-                                         nsISchemaModelGroup* aModuleGroup,
-                                         const IIDX& iidx,
-                                         XPTParamDescriptor* defaultResult,
-                                         const nsAString& qualifier,
-                                         PRUint16* aTypeIndex)
+static nsresult
+FindOrConstructInterface(nsIInterfaceInfoSuperManager* iism,
+                         nsIGenericInterfaceInfoSet* aSet,
+                         nsISchemaComplexType* aComplexType,
+                         nsISchemaModelGroup* aModelGroup,
+                         const IIDX& iidx, XPTParamDescriptor* defaultResult,
+                         const nsAString& qualifier,
+                         PRUint16* aTypeIndex)
 {
   nsresult rv;
   nsCAutoString qualifiedName;
@@ -445,7 +475,7 @@ static nsresult FindOrConstructInterface(nsIInterfaceInfoSuperManager* iism,
     return rv;
   }
 
-  return AppendMethodsForModelGroup(iism, aSet, aModuleGroup, iidx, 
+  return AppendMethodsForModelGroup(iism, aSet, aModelGroup, iidx, 
                                     defaultResult, newInfo, qualifier);
 }
 
@@ -458,14 +488,12 @@ static nsresult FindOrConstructInterface(nsIInterfaceInfoSuperManager* iism,
 // Note that the flags that control param passing (such as XPT_PD_IN, 
 // XPT_PD_OUT, XPT_PD_DIPPER, and XPT_PD_RETVAL) are *not* set by this method.
 
-static nsresult GetParamDescOfType(nsIInterfaceInfoSuperManager* iism,
-                                   nsIGenericInterfaceInfoSet* aSet,
-                                   nsISchemaType* aType,
-                                   const IIDX& iidx,
-                                   XPTParamDescriptor* defaultResult,
-                                   const nsAString& qualifier,
-                                   PRUint32 depth,
-                                   ParamAccumulator* aParams)
+static nsresult
+GetParamDescOfType(nsIInterfaceInfoSuperManager* iism,
+                   nsIGenericInterfaceInfoSet* aSet, nsISchemaType* aType,
+                   const IIDX& iidx, XPTParamDescriptor* defaultResult,
+                   const nsAString& qualifier, PRUint32 depth,
+                   ParamAccumulator* aParams)
 {
   XPTTypeDescriptor* additionalType;
   PRUint16 typeIndex;
@@ -723,15 +751,9 @@ do_simple:
       case nsISchemaBuiltinType::BUILTIN_TYPE_BOOLEAN:
         paramDesc->type.prefix.flags = TD_BOOL;
         return NS_OK;
-      case nsISchemaBuiltinType::BUILTIN_TYPE_TIME:
-        paramDesc->type.prefix.flags = TD_DOMSTRING | XPT_TDP_POINTER;
-        return NS_OK;
-
       case nsISchemaBuiltinType::BUILTIN_TYPE_DATETIME:
         // XXX date type?
-        paramDesc->type.prefix.flags = TD_DOMSTRING | XPT_TDP_POINTER;
-        return NS_OK;
-
+      case nsISchemaBuiltinType::BUILTIN_TYPE_TIME:
       case nsISchemaBuiltinType::BUILTIN_TYPE_DURATION:
       case nsISchemaBuiltinType::BUILTIN_TYPE_DATE:
       case nsISchemaBuiltinType::BUILTIN_TYPE_GMONTH:
@@ -795,13 +817,11 @@ do_simple:
 // appropriate schema type so that it can call GetParamDescOfType to do the
 // rest of the work of filliung in a param descriptor.
 
-static nsresult GetParamDescOfPart(nsIInterfaceInfoSuperManager* iism,
-                                   nsIGenericInterfaceInfoSet* aSet,
-                                   nsIWSDLPart* aPart,
-                                   const IIDX& iidx,
-                                   XPTParamDescriptor* defaultResult,
-                                   const nsAString& qualifier,
-                                   ParamAccumulator* aParams)
+static nsresult
+GetParamDescOfPart(nsIInterfaceInfoSuperManager* iism,
+                   nsIGenericInterfaceInfoSet* aSet, nsIWSDLPart* aPart,
+                   const IIDX& iidx, XPTParamDescriptor* defaultResult,
+                   const nsAString& qualifier, ParamAccumulator* aParams)
 {
   nsresult rv;
 
@@ -841,32 +861,30 @@ static nsresult GetParamDescOfPart(nsIInterfaceInfoSuperManager* iism,
   nsCOMPtr<nsISchemaElement> element(do_QueryInterface(schemaComponent));
   if (element) {
     rv = element->GetType(getter_AddRefs(type));
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
   }
   else {
     type = do_QueryInterface(schemaComponent, &rv);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
   }
 
-  return GetParamDescOfType(iism, aSet, type, iidx, defaultResult,
-                            qualifier, 0, aParams);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  return GetParamDescOfType(iism, aSet, type, iidx, defaultResult, qualifier,
+                            0, aParams);
 }
 
 /***************************************************************************/
 // AccumulateParamsForMessage iterates the parts of a given message and
 // accumulates the param descriptors.
 
-static nsresult AccumulateParamsForMessage(nsIInterfaceInfoSuperManager* iism,
-                                           nsIGenericInterfaceInfoSet* aSet,
-                                           nsIWSDLMessage* aMsg,
-                                           const IIDX& iidx,
-                                           XPTParamDescriptor* defaultResult,
-                                           const nsAString& qualifier,
-                                           ParamAccumulator* aParams)
+static nsresult
+AccumulateParamsForMessage(nsIInterfaceInfoSuperManager* iism,
+                           nsIGenericInterfaceInfoSet* aSet,
+                           nsIWSDLMessage* aMsg, const IIDX& iidx,
+                           XPTParamDescriptor* defaultResult,
+                           const nsAString& qualifier,
+                           ParamAccumulator* aParams)
 {
   nsresult rv;
   PRUint32 partCount;
@@ -887,7 +905,8 @@ static nsresult AccumulateParamsForMessage(nsIInterfaceInfoSuperManager* iism,
     // constructing a nested set of compound types and adding them
     // to the set.
 
-    rv = GetParamDescOfPart(iism, aSet, part, iidx, defaultResult, qualifier, aParams);
+    rv = GetParamDescOfPart(iism, aSet, part, iidx, defaultResult, qualifier,
+                            aParams);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -915,45 +934,27 @@ nsWSPInterfaceInfoService::~nsWSPInterfaceInfoService()
 // It returns the interface info and optionally the interface info set - 
 // which allows the caller to gather information on the referenced interfaces. 
 
-/* nsIInterfaceInfo infoForPort (in nsIWSDLPort aPort, in AString aPortURL, in AString aQualifier, in PRBool aIsAsync, out nsIInterfaceInfoManager aSet); */
-NS_IMETHODIMP nsWSPInterfaceInfoService::InfoForPort(nsIWSDLPort *aPort, const nsAString & aPortURL, const nsAString & aQualifier, PRBool aIsAsync, nsIInterfaceInfoManager **aSet, nsIInterfaceInfo **_retval)
+/* nsIInterfaceInfo infoForPort (in nsIWSDLPort aPort, in AString
+   aPortURL, in AString aQualifier, in PRBool aIsAsync, out
+   nsIInterfaceInfoManager aSet); */
+NS_IMETHODIMP
+nsWSPInterfaceInfoService::InfoForPort(nsIWSDLPort *aPort,
+                                       const nsAString & aPortURL,
+                                       const nsAString & aQualifier,
+                                       PRBool aIsAsync,
+                                       nsIInterfaceInfoManager **aSet,
+                                       nsIInterfaceInfo **_retval)
 {
+  if (!aPort) {
+    // aPort can't be null.
+    return NS_ERROR_NULL_POINTER;
+  }
+
   nsresult rv;
 
   nsCAutoString primaryName;
   nsCAutoString primaryAsyncName;
   nsAutoString portName;
-
-  IIDX iidx;
-  PRUint16 listenerIndex;
-
-  nsCOMPtr<nsIGenericInterfaceInfo> primaryInfo;
-  nsCOMPtr<nsIGenericInterfaceInfo> primaryAsyncInfo;
-  nsCOMPtr<nsIGenericInterfaceInfo> listenerInfo;
-
-  ParamAccumulator inParams;
-  ParamAccumulator outParams;
-
-  XPTParamDescriptor* tempParamArray;
-  XPTParamDescriptor* defaultResult;
-
-  XPTParamDescriptor* primaryParamArray;
-  XPTParamDescriptor* primaryAsyncParamArray;
-  XPTParamDescriptor* listenerParamArray;
-
-  nsCOMPtr<nsIInterfaceInfo> tempInfo;
-  nsID tempID;
-  nsCAutoString tempCString;
-  nsAutoString tempString;
-
-  XPTMethodDescriptor methodDesc;
-  XPTParamDescriptor paramDesc;
-  XPTParamDescriptor* pparamDesc;
-
-  PRUint16 ignoredIndex;
-
-  PRUint32 i;
-  PRUint32 k;
 
   nsCOMPtr<nsIInterfaceInfoSuperManager> iism =
     do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID);
@@ -982,6 +983,31 @@ NS_IMETHODIMP nsWSPInterfaceInfoService::InfoForPort(nsIWSDLPort *aPort, const n
   }
 
   // No, we need to build all the stuff...
+
+  nsCOMPtr<nsIGenericInterfaceInfo> primaryInfo;
+  nsCOMPtr<nsIGenericInterfaceInfo> primaryAsyncInfo;
+  nsCOMPtr<nsIGenericInterfaceInfo> listenerInfo;
+
+  ParamAccumulator inParams;
+  ParamAccumulator outParams;
+
+  XPTParamDescriptor* tempParamArray;
+  XPTParamDescriptor* defaultResult;
+
+  XPTParamDescriptor* primaryParamArray;
+  XPTParamDescriptor* primaryAsyncParamArray;
+  XPTParamDescriptor* listenerParamArray;
+
+  nsCOMPtr<nsIInterfaceInfo> tempInfo;
+  nsCAutoString tempCString;
+  nsAutoString tempString;
+
+  IIDX iidx;
+  PRUint16 listenerIndex;
+
+  XPTMethodDescriptor methodDesc;
+  XPTParamDescriptor paramDesc;
+  XPTParamDescriptor* pparamDesc;
 
   // Create a new info set.
 
@@ -1024,6 +1050,9 @@ NS_IMETHODIMP nsWSPInterfaceInfoService::InfoForPort(nsIWSDLPort *aPort, const n
   }
 
   // Create and add the primary interface.
+
+  PRUint16 ignoredIndex;
+  nsID tempID;
 
   ::NewUniqueID(&tempID);
   rv = set->CreateAndAppendInterface(primaryName.get(), tempID,
@@ -1107,7 +1136,8 @@ NS_IMETHODIMP nsWSPInterfaceInfoService::InfoForPort(nsIWSDLPort *aPort, const n
   tempParamArray[0].flags = XPT_PD_IN;
 
   tempParamArray[1].type.prefix.flags = TD_INTERFACE_TYPE | XPT_TDP_POINTER;
-  tempParamArray[1].type.type.iface = iidx.Get(IIDX::IDX_nsIWebServiceCallContext);
+  tempParamArray[1].type.type.iface =
+    iidx.Get(IIDX::IDX_nsIWebServiceCallContext);
   tempParamArray[1].flags = XPT_PD_IN;
 
   methodDesc.name     = "onError";
@@ -1129,6 +1159,7 @@ NS_IMETHODIMP nsWSPInterfaceInfoService::InfoForPort(nsIWSDLPort *aPort, const n
     return rv;
   }
 
+  PRUint32 i;
   for (i = 0; i < methodCount; i++)
   {
     nsCOMPtr<nsIWSDLOperation> op;
@@ -1178,7 +1209,8 @@ NS_IMETHODIMP nsWSPInterfaceInfoService::InfoForPort(nsIWSDLPort *aPort, const n
     }
 
     PRUint16 primaryAsyncParamCount = inParams.GetCount() + 1;
-    rv = set->AllocateParamArray(primaryAsyncParamCount, &primaryAsyncParamArray);
+    rv = set->AllocateParamArray(primaryAsyncParamCount,
+                                 &primaryAsyncParamArray);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -1195,7 +1227,8 @@ NS_IMETHODIMP nsWSPInterfaceInfoService::InfoForPort(nsIWSDLPort *aPort, const n
     // primary and primaryAsync.
 
     pparamDesc = inParams.GetArray();
-    for (k = 0; k < inParams.GetCount(); pparamDesc++, k++) {
+
+    for (PRUint32 k = 0; k < inParams.GetCount(); pparamDesc++, k++) {
       // set direction flag
       pparamDesc->flags |= XPT_PD_IN;
 
@@ -1263,7 +1296,6 @@ NS_IMETHODIMP nsWSPInterfaceInfoService::InfoForPort(nsIWSDLPort *aPort, const n
         pparamDesc->type.argnum = 
             pparamDesc->type.argnum2 = k; // not '-1' because of leading arg  
       }
-    
     }
 
     memcpy(listenerParamArray, 

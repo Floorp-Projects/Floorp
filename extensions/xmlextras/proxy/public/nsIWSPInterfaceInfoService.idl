@@ -50,11 +50,11 @@
 [scriptable, uuid(8c7bf4bc-d3fe-4524-b213-ce578bfe936e)]
 interface nsIWSPInterfaceInfoService : nsISupports
 {
-    nsIInterfaceInfo infoForPort(in nsIWSDLPort aPort, 
-                                 in AString aPortURL,
-                                 in AString aQualifier,
-                                 in PRBool aIsAsync,
-                                 out nsIInterfaceInfoManager aSet);
+  nsIInterfaceInfo infoForPort(in nsIWSDLPort aPort,
+                               in AString aPortURL,
+                               in AString aQualifier,
+                               in PRBool aIsAsync,
+                               out nsIInterfaceInfoManager aSet);
 };
 
 %{ C++

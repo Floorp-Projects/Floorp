@@ -53,16 +53,14 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWSDLLOADLISTENER
 
-  nsresult Run(const nsAString & wsdlURL, 
-               const nsAString & portname, 
-               const nsAString & qualifier, 
-               PRBool isAsync, 
+  nsresult Run(const nsAString & wsdlURL, const nsAString & portname,
+               const nsAString & qualifier, PRBool isAsync,
                nsIWebServiceProxyCreationListener* aListener);
 
 private:
   nsString mWSDLURL;
-  nsString mPortName; 
-  nsString mQualifier; 
+  nsString mPortName;
+  nsString mQualifier;
   PRBool   mIsAsync;
   nsCOMPtr<nsIWebServiceProxyCreationListener> mListener;
 };
@@ -73,16 +71,14 @@ WSPAsyncProxyCreator::WSPAsyncProxyCreator()
 
 WSPAsyncProxyCreator::~WSPAsyncProxyCreator()
 {
-  // do nothing...  
+  // do nothing...
 }
 
 NS_IMPL_ISUPPORTS1(WSPAsyncProxyCreator, nsIWSDLLoadListener)
 
-nsresult 
-WSPAsyncProxyCreator::Run(const nsAString & wsdlURL, 
-                          const nsAString & portname, 
-                          const nsAString & qualifier, 
-                          PRBool isAsync, 
+nsresult
+WSPAsyncProxyCreator::Run(const nsAString& wsdlURL, const nsAString& portname,
+                          const nsAString& qualifier, PRBool isAsync,
                           nsIWebServiceProxyCreationListener* aListener)
 {
   mWSDLURL   = wsdlURL;
@@ -92,40 +88,45 @@ WSPAsyncProxyCreator::Run(const nsAString & wsdlURL,
   mListener  = aListener;
 
   nsresult rv;
-  nsCOMPtr<nsIWSDLLoader> loader = do_CreateInstance(NS_WSDLLOADER_CONTRACTID, &rv);
+  nsCOMPtr<nsIWSDLLoader> loader =
+    do_CreateInstance(NS_WSDLLOADER_CONTRACTID, &rv);
   if (!loader) {
     return rv;
   }
-  
+
   rv = loader->LoadAsync(mWSDLURL, mPortName, this);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  
+
   return NS_OK;
 }
 
 /* void onLoad (in nsIWSDLPort port); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 WSPAsyncProxyCreator::OnLoad(nsIWSDLPort *port)
 {
   nsresult rv;
-  
-  nsCOMPtr<nsIWSPInterfaceInfoService> iis = do_GetService(NS_WSP_INTERFACEINFOSERVICE_CONTRACTID, &rv);
+
+  nsCOMPtr<nsIWSPInterfaceInfoService> iis =
+    do_GetService(NS_WSP_INTERFACEINFOSERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) {
-    return OnError(rv, NS_LITERAL_STRING("Can't get nsIWSPInterfaceInfoService"));
+    return OnError(rv,
+                   NS_LITERAL_STRING("Can't get nsIWSPInterfaceInfoService"));
   }
   nsCOMPtr<nsIInterfaceInfoManager> manager;
   nsCOMPtr<nsIInterfaceInfo> iinfo;
-  
-  rv = iis->InfoForPort(port, mWSDLURL, mQualifier, mIsAsync, 
+
+  rv = iis->InfoForPort(port, mWSDLURL, mQualifier, mIsAsync,
                         getter_AddRefs(manager), getter_AddRefs(iinfo));
   if (NS_FAILED(rv)) {
-    return OnError(rv, NS_LITERAL_STRING("Couldn't find interface info for port"));
+    return OnError(rv,
+                   NS_LITERAL_STRING("Couldn't find interface info for port"));
   }
 
-  nsCOMPtr<nsIWebServiceProxy> proxy(do_CreateInstance(NS_WEBSERVICEPROXY_CONTRACTID, &rv));
-  if (!proxy) {
+  nsCOMPtr<nsIWebServiceProxy> proxy =
+    do_CreateInstance(NS_WEBSERVICEPROXY_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) {
     return OnError(rv, NS_LITERAL_STRING("Couldn't create proxy"));
   }
 
@@ -140,7 +141,7 @@ WSPAsyncProxyCreator::OnLoad(nsIWSDLPort *port)
 }
 
 /* void onError (in nsresult status, in AString statusMessage); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 WSPAsyncProxyCreator::OnError(nsresult status, const nsAString & statusMessage)
 {
   // XXX need to build an exception. It would be nice to have a generic
@@ -148,6 +149,9 @@ WSPAsyncProxyCreator::OnError(nsresult status, const nsAString & statusMessage)
 
   nsCAutoString temp(ToNewUTF8String(statusMessage));
   nsCOMPtr<nsIException> e = new WSPException(status, temp.get(), nsnull);
+  if (!e) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   mListener->OnError(e);
   return NS_OK;
@@ -167,24 +171,28 @@ WSPFactory::~WSPFactory()
 NS_IMPL_ISUPPORTS1_CI(WSPFactory, nsIWebServiceProxyFactory)
 
 /* nsIWebServiceProxy createProxy (in AString wsdlURL, in AString portname, in AString qualifier, in boolean isAsync); */
-NS_IMETHODIMP 
-WSPFactory::CreateProxy(const nsAString & wsdlURL, 
-                        const nsAString & portname, 
-                        const nsAString & qualifier, 
-                        PRBool isAsync, 
+NS_IMETHODIMP
+WSPFactory::CreateProxy(const nsAString & wsdlURL,
+                        const nsAString & portname,
+                        const nsAString & qualifier,
+                        PRBool isAsync,
                         nsIWebServiceProxy **_retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* void createProxyAsync (in AString wsdlURL, in AString portname, in AString qualifier, in boolean isAsync, in nsIWebServiceProxyCreationListener listener); */
-NS_IMETHODIMP 
-WSPFactory::CreateProxyAsync(const nsAString & wsdlURL, 
-                             const nsAString & portname, 
-                             const nsAString & qualifier, 
-                             PRBool isAsync, 
+NS_IMETHODIMP
+WSPFactory::CreateProxyAsync(const nsAString& wsdlURL,
+                             const nsAString& portname,
+                             const nsAString& qualifier, PRBool isAsync,
                              nsIWebServiceProxyCreationListener *listener)
 {
+  if (!listener) {
+    // A listener is required.
+    return NS_ERROR_NULL_POINTER;
+  }
+
   nsCOMPtr<WSPAsyncProxyCreator> creator = new WSPAsyncProxyCreator();
   if(!creator)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -248,7 +256,7 @@ WSPFactory::C2XML(const nsACString& aCIdentifier,
 
   return NS_OK;
 }
- 
+
 void
 WSPFactory::XML2C(const nsAString& aXMLIndentifier,
                   nsACString& aCIdentifier)
@@ -271,14 +279,14 @@ WSPFactory::XML2C(const nsAString& aXMLIndentifier,
       // Escape the character and append to the string
       char buf[6];
       buf[0] = P2M_ESCAPE_CHARACTER;
-      
+
       for (int i = 3; i >= 0; i--) {
         PRUint16 v = (uch >> 4*i) & 0xf;
         buf[4-i] = (char) (v + ((v > 9) ? 'a'-10 : '0'));
       }
-      
+
       buf[5] = 0;
-      
+
       aCIdentifier.Append(buf, 5);
     }
   }

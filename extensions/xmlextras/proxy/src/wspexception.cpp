@@ -45,7 +45,7 @@ WSPException::WSPException(nsISOAPFault* aFault, nsresult aStatus)
 {
 }
 
-WSPException::WSPException(nsresult aStatus, const char* aMsg, 
+WSPException::WSPException(nsresult aStatus, const char* aMsg,
                            nsISupports* aData)
   : mFault(nsnull), mData(aData), mStatus(aStatus), mMsg(nsnull)
 {
@@ -65,14 +65,14 @@ WSPException::~WSPException()
 NS_IMPL_ISUPPORTS1_CI(WSPException, nsIException)
 
 /* readonly attribute string message; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 WSPException::GetMessage(char * *aMessage)
 {
   NS_ENSURE_ARG_POINTER(aMessage);
 
-  nsAutoString faultString;
   *aMessage = nsnull;
   if (mFault) {
+    nsAutoString faultString;
     mFault->GetFaultString(faultString);
     *aMessage = ToNewUTF8String(faultString);
   }
@@ -85,7 +85,7 @@ WSPException::GetMessage(char * *aMessage)
 }
 
 /* readonly attribute nsresult result; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 WSPException::GetResult(nsresult *aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
@@ -94,13 +94,13 @@ WSPException::GetResult(nsresult *aResult)
 }
 
 /* readonly attribute string name; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 WSPException::GetName(char * *aName)
 {
   NS_ENSURE_ARG_POINTER(aName);
-  nsAutoString faultCode;
   *aName = nsnull;
   if (mFault) {
+    nsAutoString faultCode;
     mFault->GetFaultCode(faultCode);
     *aName = ToNewUTF8String(faultCode);
   }
@@ -108,7 +108,7 @@ WSPException::GetName(char * *aName)
 }
 
 /* readonly attribute string filename; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 WSPException::GetFilename(char * *aFilename)
 {
   NS_ENSURE_ARG_POINTER(aFilename);
@@ -117,7 +117,7 @@ WSPException::GetFilename(char * *aFilename)
 }
 
 /* readonly attribute PRUint32 lineNumber; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 WSPException::GetLineNumber(PRUint32 *aLineNumber)
 {
   NS_ENSURE_ARG_POINTER(aLineNumber);
@@ -126,7 +126,7 @@ WSPException::GetLineNumber(PRUint32 *aLineNumber)
 }
 
 /* readonly attribute PRUint32 columnNumber; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 WSPException::GetColumnNumber(PRUint32 *aColumnNumber)
 {
   NS_ENSURE_ARG_POINTER(aColumnNumber);
@@ -135,7 +135,7 @@ WSPException::GetColumnNumber(PRUint32 *aColumnNumber)
 }
 
 /* readonly attribute nsIStackFrame location; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 WSPException::GetLocation(nsIStackFrame * *aLocation)
 {
   NS_ENSURE_ARG_POINTER(aLocation);
@@ -144,7 +144,7 @@ WSPException::GetLocation(nsIStackFrame * *aLocation)
 }
 
 /* readonly attribute nsIException inner; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 WSPException::GetInner(nsIException * *aInner)
 {
   NS_ENSURE_ARG_POINTER(aInner);
@@ -153,7 +153,7 @@ WSPException::GetInner(nsIException * *aInner)
 }
 
 /* readonly attribute nsISupports data; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 WSPException::GetData(nsISupports * *aData)
 {
   NS_ENSURE_ARG_POINTER(aData);
@@ -172,7 +172,7 @@ WSPException::GetData(nsISupports * *aData)
 }
 
 /* string toString (); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 WSPException::ToString(char **_retval)
 {
   if (mFault) {

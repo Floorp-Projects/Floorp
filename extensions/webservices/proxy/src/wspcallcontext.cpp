@@ -45,8 +45,7 @@
 #include "nsISOAPParameter.h"
 #include "nsIWSDLSOAPBinding.h"
 
-WSPCallContext::WSPCallContext(WSPProxy* aProxy,
-                               nsISOAPCall* aSOAPCall,
+WSPCallContext::WSPCallContext(WSPProxy* aProxy, nsISOAPCall* aSOAPCall,
                                const nsAString& aMethodName,
                                nsIWSDLOperation* aOperation)
   : mProxy(aProxy), mCall(aSOAPCall), mMethodName(aMethodName),
@@ -60,13 +59,13 @@ WSPCallContext::~WSPCallContext()
   NS_IF_RELEASE(mProxy);
 }
 
-NS_IMPL_ISUPPORTS3_CI(WSPCallContext, 
+NS_IMPL_ISUPPORTS3_CI(WSPCallContext,
                       nsIWebServiceCallContext,
                       nsIWebServiceSOAPCallContext,
                       nsISOAPResponseListener)
 
 /* readonly attribute nsIWebServiceProxy proxy; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 WSPCallContext::GetProxy(nsIWebServiceProxy * *aProxy)
 {
   NS_ENSURE_ARG_POINTER(aProxy);
@@ -78,7 +77,7 @@ WSPCallContext::GetProxy(nsIWebServiceProxy * *aProxy)
 }
 
 /* readonly attribute AString methodName; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 WSPCallContext::GetMethodName(nsAString & aMethodName)
 {
   aMethodName.Assign(mMethodName);
@@ -86,7 +85,7 @@ WSPCallContext::GetMethodName(nsAString & aMethodName)
 }
 
 /* readonly attribute PRUint32 status; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 WSPCallContext::GetStatus(PRUint32 *aStatus)
 {
   NS_ENSURE_ARG_POINTER(aStatus);
@@ -95,7 +94,7 @@ WSPCallContext::GetStatus(PRUint32 *aStatus)
 }
 
 /* readonly attribute nsIException pendingException; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 WSPCallContext::GetPendingException(nsIException * *aPendingException)
 {
   NS_ENSURE_ARG_POINTER(aPendingException);
@@ -105,7 +104,7 @@ WSPCallContext::GetPendingException(nsIException * *aPendingException)
 }
 
 /* readonly attribute nsIWSDLOperation operation; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 WSPCallContext::GetOperation(nsIWSDLOperation * *aOperation)
 {
   NS_ENSURE_ARG_POINTER(aOperation);
@@ -115,7 +114,7 @@ WSPCallContext::GetOperation(nsIWSDLOperation * *aOperation)
 }
 
 /* void abort (in nsIException error); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 WSPCallContext::Abort(nsIException *error)
 {
   nsresult rv = NS_OK;
@@ -134,7 +133,7 @@ WSPCallContext::Abort(nsIException *error)
 }
 
 /* readonly attribute nsISOAPResponse soapResponse; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 WSPCallContext::GetSoapResponse(nsISOAPResponse * *aSoapResponse)
 {
   NS_ENSURE_ARG_POINTER(aSoapResponse);
@@ -145,13 +144,11 @@ WSPCallContext::GetSoapResponse(nsISOAPResponse * *aSoapResponse)
   return NS_OK;
 }
 
-/* boolean handleResponse (in nsISOAPResponse aResponse, in nsISOAPCall aCall, in nsresult status, in boolean aLast); */
-NS_IMETHODIMP 
-WSPCallContext::HandleResponse(nsISOAPResponse *aResponse, 
-                               nsISOAPCall *aCall, 
-                               nsresult status, 
-                               PRBool aLast, 
-                               PRBool *_retval)
+/* boolean handleResponse (in nsISOAPResponse aResponse, in
+   nsISOAPCall aCall, in nsresult status, in boolean aLast); */
+NS_IMETHODIMP
+WSPCallContext::HandleResponse(nsISOAPResponse *aResponse, nsISOAPCall *aCall,
+                               nsresult status, PRBool aLast, PRBool *_retval)
 {
   NS_ASSERTION(aCall == mCall, "unexpected call instance");
   NS_ASSERTION(aLast, "only single response expected");
@@ -161,7 +158,7 @@ WSPCallContext::HandleResponse(nsISOAPResponse *aResponse,
   return NS_OK;
 }
 
-nsresult 
+nsresult
 WSPCallContext::CallAsync(PRUint32 aListenerMethodIndex,
                           nsISupports* aListener)
 {
@@ -169,10 +166,9 @@ WSPCallContext::CallAsync(PRUint32 aListenerMethodIndex,
   mListenerMethodIndex = aListenerMethodIndex;
   return mCall->AsyncInvoke(this, getter_AddRefs(mCompletion));
 }
- 
-nsresult 
-WSPCallContext::CallSync(PRUint32 aMethodIndex,
-                         nsXPTCMiniVariant* params)
+
+nsresult
+WSPCallContext::CallSync(PRUint32 aMethodIndex, nsXPTCMiniVariant* params)
 {
   nsCOMPtr<nsISOAPResponse> response;
   nsresult rv = mCall->Invoke(getter_AddRefs(response));
@@ -190,13 +186,15 @@ WSPCallContext::CallCompletionListener()
 #define PARAM_BUFFER_COUNT     8  /* Never set less than 2 */
 
   if (!mProxy) {
+    NS_ERROR("Huh, no proxy?");
+
     return NS_OK;
   }
   nsXPTCVariant paramBuffer[PARAM_BUFFER_COUNT];
   nsXPTCVariant* dispatchParams = nsnull;
- 
+
   nsCOMPtr<nsISOAPResponse> response;
-    nsCOMPtr<nsISOAPFault> fault;
+  nsCOMPtr<nsISOAPFault> fault;
   mCompletion->GetResponse(getter_AddRefs(response));
   if (response) {
     rv = response->GetFault(getter_AddRefs(fault));
@@ -214,10 +212,11 @@ WSPCallContext::CallCompletionListener()
 
   nsCOMPtr<nsIInterfaceInfo> listenerInterfaceInfo;
   mProxy->GetListenerInterfaceInfo(getter_AddRefs(listenerInterfaceInfo));
-  NS_ASSERTION(listenerInterfaceInfo, "WSPCallContext:Missing listener interface info");
+  NS_ASSERTION(listenerInterfaceInfo,
+               "WSPCallContext:Missing listener interface info");
 
   const nsXPTMethodInfo* methodInfo;
-  rv = listenerInterfaceInfo->GetMethodInfo(mListenerMethodIndex, 
+  rv = listenerInterfaceInfo->GetMethodInfo(mListenerMethodIndex,
                                             &methodInfo);
   if (NS_FAILED(rv)) {
     return rv;
@@ -240,11 +239,11 @@ WSPCallContext::CallCompletionListener()
     dp->ClearFlags();
     dp->val.p = nsnull;
   }
- 
+
   PRUint32 headerCount, bodyCount;
   nsISOAPHeaderBlock** headerBlocks;
   nsISOAPParameter** bodyBlocks;
-  
+
   // If we have an exception, report it now
   if (mException) {
     dispatchParams[0].val.p = NS_STATIC_CAST(nsIException*, mException);
@@ -252,7 +251,7 @@ WSPCallContext::CallCompletionListener()
 
     dispatchParams[1].val.p = NS_STATIC_CAST(nsIWebServiceCallContext*, this);
     dispatchParams[1].SetValIsInterface();
-    
+
     rv = XPTC_InvokeByIndex(mAsyncListener, 3, 2, dispatchParams);
   }
   else if (response) {
@@ -265,8 +264,9 @@ WSPCallContext::CallCompletionListener()
     if (NS_FAILED(rv)) {
       goto call_completion_end;
     }
-  
-    nsCOMPtr<nsISOAPOperationBinding> operationBinding = do_QueryInterface(binding, &rv);
+
+    nsCOMPtr<nsISOAPOperationBinding> operationBinding =
+      do_QueryInterface(binding, &rv);
     if (NS_FAILED(rv)) {
       goto call_completion_end;
     }
@@ -293,7 +293,7 @@ WSPCallContext::CallCompletionListener()
     output->GetPartCount(&partCount);
 
     PRUint32 maxParamIndex = methodInfo->GetParamCount()-1;
-    
+
     PRUint32 bodyEntry = 0, headerEntry = 0, paramIndex = 0;
     for (i = 0; i < partCount; paramIndex++, i++) {
       nsCOMPtr<nsIWSDLPart> part;
@@ -305,12 +305,13 @@ WSPCallContext::CallCompletionListener()
       if (NS_FAILED(rv)) {
         goto call_completion_end;
       }
-      
-      nsCOMPtr<nsISOAPPartBinding> partBinding = do_QueryInterface(binding, &rv);
+
+      nsCOMPtr<nsISOAPPartBinding> partBinding =
+        do_QueryInterface(binding, &rv);
       if (NS_FAILED(rv)) {
         goto call_completion_end;
       }
-      
+
       PRUint16 location;
       partBinding->GetLocation(&location);
 
@@ -347,37 +348,38 @@ WSPCallContext::CallCompletionListener()
 
       nsCOMPtr<nsIVariant> value;
       rv = block->GetValue(getter_AddRefs(value));
-      if (NS_FAILED(rv)) {
+      if (NS_FAILED(rv) || !value) {
         goto call_completion_end;
       }
 
-      nsXPTCVariant* vars = dispatchParams+paramIndex;
-     
+      nsXPTCVariant* vars = dispatchParams + paramIndex;
+
       if (paramIndex < maxParamIndex &&
           methodInfo->GetParam((PRUint8)(paramIndex+1)).GetType().IsArray()) {
-        paramIndex++;        
+        paramIndex++;
       }
 
-      NS_ASSERTION(paramIndex <= maxParamIndex, "WSDL/IInfo param count mismatch");
-      
+      NS_ASSERTION(paramIndex <= maxParamIndex,
+                   "WSDL/IInfo param count mismatch");
+
       const nsXPTParamInfo& paramInfo = methodInfo->GetParam(paramIndex);
       rv = WSPProxy::VariantToInParameter(listenerInterfaceInfo,
-                                          mListenerMethodIndex,
-                                          &paramInfo,
+                                          mListenerMethodIndex, &paramInfo,
                                           value, vars);
       if (NS_FAILED(rv)) {
         goto call_completion_end;
       }
     }
 
-    NS_ASSERTION(paramIndex == maxParamIndex, "WSDL/IInfo param count mismatch");
+    NS_ASSERTION(paramIndex == maxParamIndex,
+                 "WSDL/IInfo param count mismatch");
 
-    dispatchParams[paramIndex].val.p = 
+    dispatchParams[paramIndex].val.p =
         NS_STATIC_CAST(nsIWebServiceCallContext*, this);
     dispatchParams[paramIndex].SetValIsInterface();
 
     rv = XPTC_InvokeByIndex(mAsyncListener, mListenerMethodIndex,
-                            paramCount, dispatchParams);    
+                            paramCount, dispatchParams);
   }
   else {
     rv = NS_ERROR_FAILURE;
@@ -390,12 +392,12 @@ call_completion_end:
   if (bodyCount) {
     NS_FREE_XPCOM_ISUPPORTS_POINTER_ARRAY(bodyCount, bodyBlocks);
   }
-  if(dispatchParams && dispatchParams != paramBuffer) {
+  if(dispatchParams != paramBuffer) {
     delete [] dispatchParams;
   }
   nsCOMPtr<nsIWebServiceCallContext> kungFuDeathGrip(this);
   mProxy->CallCompleted(this);
   NS_RELEASE(mProxy);
-  
+
   return rv;
 }

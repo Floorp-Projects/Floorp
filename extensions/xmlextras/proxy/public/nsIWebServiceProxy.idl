@@ -182,7 +182,6 @@ interface nsIWebServiceProxy : nsISupports {
    */
   readonly attribute AString qualifier;
 
-
   /**
    * An enumerator that returns the set of pending calls for the
    * service proxy. Each call is an instance of the 
@@ -191,7 +190,6 @@ interface nsIWebServiceProxy : nsISupports {
    * @see nsIWebServiceCallContext
    */
   readonly attribute nsISimpleEnumerator pendingCalls;  
-
   
   /**
    * The name of the primary interface for this proxy. This may or may not be

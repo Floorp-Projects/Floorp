@@ -47,11 +47,13 @@
 // xpcom includes
 #include "nsIServiceManager.h"
 
-class WSPComplexTypeProperty : public nsIProperty {
+class WSPComplexTypeProperty : public nsIProperty
+{
 public:
-  WSPComplexTypeProperty(const nsAString& aName,
-                         nsIVariant* aValue);
-  virtual ~WSPComplexTypeProperty() {}
+  WSPComplexTypeProperty(const nsAString& aName, nsIVariant* aValue);
+  virtual ~WSPComplexTypeProperty()
+  {
+  }
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPROPERTY
@@ -65,6 +67,7 @@ WSPComplexTypeProperty::WSPComplexTypeProperty(const nsAString& aName,
                                                nsIVariant* aValue)
   : mName(aName), mValue(aValue)
 {
+  NS_ASSERTION(mValue, "Null value!");
 }
 
 NS_IMPL_ISUPPORTS1(WSPComplexTypeProperty, nsIProperty)
@@ -73,16 +76,16 @@ NS_IMPL_ISUPPORTS1(WSPComplexTypeProperty, nsIProperty)
 NS_IMETHODIMP 
 WSPComplexTypeProperty::GetName(nsAString & aName)
 {
-    aName.Assign(mName);
-    return NS_OK;
+  aName.Assign(mName);
+  return NS_OK;
 }
 
 /* readonly attribute nsIVariant value; */
 NS_IMETHODIMP 
 WSPComplexTypeProperty::GetValue(nsIVariant * *aValue)
 {
-    NS_ADDREF(*aValue = mValue);
-    return NS_OK;
+  NS_ADDREF(*aValue = mValue);
+  return NS_OK;
 }
 
 
@@ -212,7 +215,8 @@ NS_IMPL_ISUPPORTS2_CI(WSPComplexTypeWrapper,
 NS_IMETHODIMP 
 WSPComplexTypeWrapper::GetEnumerator(nsISimpleEnumerator * *aEnumerator)
 {
-  WSPComplexTypeEnumerator* enumerator = new WSPComplexTypeEnumerator(this, mInterfaceInfo);
+  WSPComplexTypeEnumerator* enumerator =
+    new WSPComplexTypeEnumerator(this, mInterfaceInfo);
   if (!enumerator) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -224,7 +228,7 @@ WSPComplexTypeWrapper::GetEnumerator(nsISimpleEnumerator * *aEnumerator)
 
 /* nsIVariant getProperty (in AString name); */
 NS_IMETHODIMP 
-WSPComplexTypeWrapper::GetProperty(const nsAString & name, 
+WSPComplexTypeWrapper::GetProperty(const nsAString & name,
                                    nsIVariant **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
@@ -330,8 +334,8 @@ WSPComplexTypeWrapper::GetPropertyValue(PRUint32 aMethodIndex,
     var[1].SetPtrIsData();
     var[1].ptr = &var[1].val;
 
-    rv = mInterfaceInfo->GetTypeForParam(aMethodIndex, &paramInfo2,
-                                         1, &arrayType);
+    rv = mInterfaceInfo->GetTypeForParam(aMethodIndex, &paramInfo2, 1,
+                                         &arrayType);
     if (NS_FAILED(rv)) {
       return rv;
     }

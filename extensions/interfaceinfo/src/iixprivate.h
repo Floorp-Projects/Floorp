@@ -74,7 +74,10 @@ public:
     nsGenericInterfaceInfoSet();
     virtual ~nsGenericInterfaceInfoSet();
 
-    XPTArena* GetArena() {return mArena;}
+    XPTArena* GetArena()
+    {
+        return mArena;
+    }
 
     const XPTTypeDescriptor* GetAdditionalTypeAt(PRUint16 aIndex)
     {
@@ -92,10 +95,20 @@ private:
     nsresult IndexOfIID(const nsIID & aIID, PRUint16 *_retval);
     nsresult IndexOfName(const char* aName, PRUint16 *_retval);
 
-    void* SetOwnedFlag(void* p) {return (void*) ((long)p | 1);}
-    void* ClearOwnedFlag(void* p) {return (void*) ((long)p & ~(long)1);}
-    PRBool CheckOwnedFlag(void* p) {return (PRBool) ((long)p & (long)1);}
-
+    void* SetOwnedFlag(void* p)
+    {
+        NS_ASSERTION(sizeof(void *) == sizeof(long),
+                     "The size of a pointer != size of long!");
+        return (void*) ((long)p | 1);
+    }
+    void* ClearOwnedFlag(void* p)
+    {
+        return (void*) ((long)p & ~(long)1);
+    }
+    PRBool CheckOwnedFlag(void* p)
+    {
+        return (PRBool) ((long)p & (long)1);
+    }
 
 private:
     nsVoidArray mInterfaces;
@@ -112,15 +125,18 @@ public:
     NS_DECL_NSIINTERFACEINFO
     NS_DECL_NSIGENERICINTERFACEINFO
 
-    nsGenericInterfaceInfo(); // not implemented
     nsGenericInterfaceInfo(nsGenericInterfaceInfoSet* aSet,
                            const char *aName, 
                            const nsIID & aIID, 
-                           nsIInterfaceInfo* mParent,
+                           nsIInterfaceInfo* aParent,
                            PRUint8 aFlags); 
-    virtual ~nsGenericInterfaceInfo() {}
+    virtual ~nsGenericInterfaceInfo()
+    {
+    }
 
 private:
+    nsGenericInterfaceInfo(); // not implemented
+
     const XPTTypeDescriptor* GetPossiblyNestedType(const XPTParamDescriptor* param)
     {
         const XPTTypeDescriptor* td = &param->type;

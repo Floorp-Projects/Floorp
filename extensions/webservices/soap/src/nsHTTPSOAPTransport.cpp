@@ -425,7 +425,9 @@ NS_IMETHODIMP
       rv = mRequest->GetResponseXML(getter_AddRefs(document));
       if (NS_SUCCEEDED(rv) && document) {
         rv = mResponse->SetMessage(document);
-      DEBUG_DUMP_DOCUMENT("Asynchronous Response", document)} else {
+        DEBUG_DUMP_DOCUMENT("Asynchronous Response", document)
+      } 
+      else {
         mResponse = nsnull;
       }
     } else {

@@ -61,7 +61,7 @@ WSPPropertyBagWrapper::Init(nsIPropertyBag* aPropertyBag,
 }
 
 NS_METHOD
-WSPPropertyBagWrapper::Create(nsISupports* outer, const nsIID& aIID, 
+WSPPropertyBagWrapper::Create(nsISupports* outer, const nsIID& aIID,
                               void* *aInstancePtr)
 {
   NS_ENSURE_ARG_POINTER(aInstancePtr);
@@ -86,24 +86,21 @@ WSPPropertyBagWrapper::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   if((mIID && aIID.Equals(*mIID)) || aIID.Equals(NS_GET_IID(nsISupports))) {
     *aInstancePtr = NS_STATIC_CAST(nsXPTCStubBase*, this);
-    NS_ADDREF_THIS();
-    return NS_OK;
   }
   else if (aIID.Equals(NS_GET_IID(nsIWebServicePropertyBagWrapper))) {
     *aInstancePtr = NS_STATIC_CAST(nsIWebServicePropertyBagWrapper*, this);
-    NS_ADDREF_THIS();
-    return NS_OK;    
   }
   else if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {
     *aInstancePtr = NS_STATIC_CAST(nsIClassInfo*, this);
-    NS_ADDREF_THIS();
-    return NS_OK;    
+  } else {
+    return NS_ERROR_NO_INTERFACE;
   }
-        
-  return NS_ERROR_NO_INTERFACE;
+
+  NS_ADDREF_THIS();
+  return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 WSPPropertyBagWrapper::CallMethod(PRUint16 methodIndex,
                                   const nsXPTMethodInfo* info,
                                   nsXPTCMiniVariant* params)
@@ -116,83 +113,80 @@ WSPPropertyBagWrapper::CallMethod(PRUint16 methodIndex,
     NS_ERROR("WSPPropertyBagWrapper: bad method index");
     return NS_ERROR_FAILURE;
   }
-  else {
-    rv = WSPFactory::C2XML(nsDependentCString(info->GetName()),
-                           propName);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    
-    rv = mPropertyBag->GetProperty(propName, getter_AddRefs(val));
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    
-    nsCOMPtr<nsIInterfaceInfo> iinfo;
-    if (info->IsGetter()) {
-      const nsXPTParamInfo& paramInfo = info->GetParam(0);
-      const nsXPTType& type = paramInfo.GetType();
-      uint8 type_tag = type.TagPart();
-      
-      if (type_tag == nsXPTType::T_INTERFACE) {
-        rv = mInterfaceInfo->GetInfoForParam(methodIndex, &paramInfo, 
-                                             getter_AddRefs(iinfo));
-        if (NS_FAILED(rv)) {
-          return rv;
-        }
-      }
-      
-      rv = WSPProxy::VariantToValue(type_tag, params[0].val.p, iinfo, val);
-    }
-    else if (info->GetParamCount() == 2) {
-      // If it's not an explicit getter, it has to be an array 
-      // getter method.
 
-      // The first parameter should be the array length out param
-      const nsXPTParamInfo& paramInfo1 = info->GetParam(0);
-      const nsXPTType& type1 = paramInfo1.GetType();
-      if (!paramInfo1.IsOut() || (type1.TagPart() != nsXPTType::T_U32)) {
-        NS_ERROR("Unexpected parameter type for getter");
-        return NS_ERROR_FAILURE;
-      }
+  rv = WSPFactory::C2XML(nsDependentCString(info->GetName()), propName);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
-      // The second parameter should be the array out pointer
-      // itself.
-      const nsXPTParamInfo& paramInfo2 = info->GetParam(1);
-      const nsXPTType& type2 = paramInfo2.GetType();
-      if (!paramInfo2.IsOut() || !type2.IsArray()) {
-        NS_ERROR("Unexpected parameter type for getter");
-        return NS_ERROR_FAILURE;
-      }
+  rv = mPropertyBag->GetProperty(propName, getter_AddRefs(val));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
-      nsXPTType arrayType;
-      rv = mInterfaceInfo->GetTypeForParam(methodIndex, &paramInfo2,
-                                           1, &arrayType);
+  nsCOMPtr<nsIInterfaceInfo> iinfo;
+  if (info->IsGetter()) {
+    const nsXPTParamInfo& paramInfo = info->GetParam(0);
+    const nsXPTType& type = paramInfo.GetType();
+    uint8 type_tag = type.TagPart();
+
+    if (type_tag == nsXPTType::T_INTERFACE) {
+      rv = mInterfaceInfo->GetInfoForParam(methodIndex, &paramInfo,
+                                           getter_AddRefs(iinfo));
       if (NS_FAILED(rv)) {
         return rv;
       }
-    
-      if (arrayType.IsInterfacePointer()) {
-        rv = mInterfaceInfo->GetInfoForParam(methodIndex, &paramInfo2, 
-                                             getter_AddRefs(iinfo));
-        if (NS_FAILED(rv)) {
-          return rv;
-        }
-      }
-
-      rv = WSPProxy::VariantToArrayValue(arrayType.TagPart(), params, 
-                                         iinfo, val);
     }
-    else {
-      NS_ERROR("Unexpected method signature for property bag wrapper");
+
+    rv = WSPProxy::VariantToValue(type_tag, params[0].val.p, iinfo, val);
+  }
+  else if (info->GetParamCount() == 2) {
+    // If it's not an explicit getter, it has to be an array getter
+    // method.
+
+    // The first parameter should be the array length out param
+    const nsXPTParamInfo& paramInfo1 = info->GetParam(0);
+    const nsXPTType& type1 = paramInfo1.GetType();
+    if (!paramInfo1.IsOut() || (type1.TagPart() != nsXPTType::T_U32)) {
+      NS_ERROR("Unexpected parameter type for getter");
       return NS_ERROR_FAILURE;
     }
+
+    // The second parameter should be the array out pointer itself.
+    const nsXPTParamInfo& paramInfo2 = info->GetParam(1);
+    const nsXPTType& type2 = paramInfo2.GetType();
+    if (!paramInfo2.IsOut() || !type2.IsArray()) {
+      NS_ERROR("Unexpected parameter type for getter");
+      return NS_ERROR_FAILURE;
+    }
+
+    nsXPTType arrayType;
+    rv = mInterfaceInfo->GetTypeForParam(methodIndex, &paramInfo2,
+                                         1, &arrayType);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    if (arrayType.IsInterfacePointer()) {
+      rv = mInterfaceInfo->GetInfoForParam(methodIndex, &paramInfo2,
+                                           getter_AddRefs(iinfo));
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+    }
+
+    rv = WSPProxy::VariantToArrayValue(arrayType.TagPart(), params, iinfo,
+                                       val);
+  }
+  else {
+    NS_ERROR("Unexpected method signature for property bag wrapper");
+    return NS_ERROR_FAILURE;
   }
 
   return rv;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 WSPPropertyBagWrapper::GetInterfaceInfo(nsIInterfaceInfo** info)
 {
   NS_ENSURE_ARG_POINTER(info);
@@ -209,8 +203,9 @@ WSPPropertyBagWrapper::GetInterfaceInfo(nsIInterfaceInfo** info)
 //
 ///////////////////////////////////////////////////
 
-/* void getInterfaces (out PRUint32 count, [array, size_is (count), retval] out nsIIDPtr array); */
-NS_IMETHODIMP 
+/* void getInterfaces (out PRUint32 count, [array, size_is (count),
+   retval] out nsIIDPtr array); */
+NS_IMETHODIMP
 WSPPropertyBagWrapper::GetInterfaces(PRUint32 *count, nsIID * **array)
 {
   *count = 2;
@@ -220,17 +215,27 @@ WSPPropertyBagWrapper::GetInterfaces(PRUint32 *count, nsIID * **array)
   }
 
   iids[0] = NS_STATIC_CAST(nsIID *, nsMemory::Clone(mIID, sizeof(nsIID)));
+  if (!iids[0]) {
+    nsMemory::Free(iids);
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   const nsIID& wsiid = NS_GET_IID(nsIWebServicePropertyBagWrapper);
   iids[1] = NS_STATIC_CAST(nsIID *, nsMemory::Clone(&wsiid, sizeof(nsIID)));
-  
+  if (!iids[1]) {
+    nsMemory::Free(iids[0]);
+    nsMemory::Free(iids);
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   *array = iids;
 
   return NS_OK;
 }
 
 /* nsISupports getHelperForLanguage (in PRUint32 language); */
-NS_IMETHODIMP 
-WSPPropertyBagWrapper::GetHelperForLanguage(PRUint32 language, 
+NS_IMETHODIMP
+WSPPropertyBagWrapper::GetHelperForLanguage(PRUint32 language,
                                             nsISupports **_retval)
 {
   *_retval = nsnull;
@@ -238,15 +243,21 @@ WSPPropertyBagWrapper::GetHelperForLanguage(PRUint32 language,
 }
 
 /* readonly attribute string contractID; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 WSPPropertyBagWrapper::GetContractID(char * *aContractID)
 {
-  *aContractID = ToNewUTF8String(NS_LITERAL_STRING(NS_WEBSERVICEPROPERTYBAGWRAPPER_CONTRACTID));
+  *aContractID = (char *)
+    nsMemory::Clone(NS_WEBSERVICEPROPERTYBAGWRAPPER_CONTRACTID,
+                    sizeof(NS_WEBSERVICEPROPERTYBAGWRAPPER_CONTRACTID));
+  if (!*aContractID) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   return NS_OK;
 }
 
 /* readonly attribute string classDescription; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 WSPPropertyBagWrapper::GetClassDescription(char * *aClassDescription)
 {
   *aClassDescription = nsnull;
@@ -254,7 +265,7 @@ WSPPropertyBagWrapper::GetClassDescription(char * *aClassDescription)
 }
 
 /* readonly attribute nsCIDPtr classID; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 WSPPropertyBagWrapper::GetClassID(nsCID * *aClassID)
 {
   *aClassID = nsnull;
@@ -262,7 +273,7 @@ WSPPropertyBagWrapper::GetClassID(nsCID * *aClassID)
 }
 
 /* readonly attribute PRUint32 implementationLanguage; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 WSPPropertyBagWrapper::GetImplementationLanguage(PRUint32 *aImplementationLanguage)
 {
   *aImplementationLanguage = nsIProgrammingLanguage::CPLUSPLUS;
@@ -270,7 +281,7 @@ WSPPropertyBagWrapper::GetImplementationLanguage(PRUint32 *aImplementationLangua
 }
 
 /* readonly attribute PRUint32 flags; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 WSPPropertyBagWrapper::GetFlags(PRUint32 *aFlags)
 {
   *aFlags = nsIClassInfo::DOM_OBJECT;
@@ -278,7 +289,7 @@ WSPPropertyBagWrapper::GetFlags(PRUint32 *aFlags)
 }
 
 /* [notxpcom] readonly attribute nsCID classIDNoAlloc; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 WSPPropertyBagWrapper::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
 {
   return NS_ERROR_NOT_AVAILABLE;

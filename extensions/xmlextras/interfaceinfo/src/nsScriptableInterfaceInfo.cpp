@@ -41,7 +41,8 @@
 #include "iixprivate.h"
 
 /***************************************************************************/
-static inline nsresult CloneString(const char* inStr, char** outStr)
+static inline
+nsresult CloneString(const char* inStr, char** outStr)
 {
     *outStr = (char*) nsMemory::Clone(inStr, strlen(inStr)+1);
     return *outStr ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
@@ -59,14 +60,18 @@ public:
     static nsresult Create(const nsXPTType& aType,
                            nsIScriptableDataType** aResult);
 
-    nsScriptableDataType(); // not implemented
-
     nsScriptableDataType(const nsXPTType& aType)
-        : mType(aType) {}
+        : mType(aType)
+    {
+    }
 
-    virtual ~nsScriptableDataType() {}
+    virtual ~nsScriptableDataType()
+    {
+    }
 
 private:
+    nsScriptableDataType(); // not implemented
+
     nsXPTType mType;
 };
 
@@ -161,13 +166,18 @@ public:
                            const nsXPTParamInfo& aParam,
                            nsIScriptableParamInfo** aResult);
 
-    nsScriptableParamInfo(); // not implemented
     nsScriptableParamInfo(nsIInterfaceInfo* aInfo,
                            const nsXPTParamInfo& aParam)
-        : mInfo(aInfo), mParam(aParam) {}
-    virtual ~nsScriptableParamInfo() {}
+        : mInfo(aInfo), mParam(aParam)
+    {
+    }
+    virtual ~nsScriptableParamInfo()
+    {
+    }
 
 private:
+    nsScriptableParamInfo(); // not implemented
+
     // Holding onto the interface info keeps the underlying param alive.
     nsCOMPtr<nsIInterfaceInfo> mInfo;
     nsXPTParamInfo             mParam;
@@ -237,7 +247,8 @@ nsScriptableParamInfo::GetType(nsIScriptableDataType * *aType)
     return nsScriptableDataType::Create(mParam.GetType(), aType);
 }
 
-/* [noscript] void getParamInfo ([shared, const, retval] out nsXPTParamInfoPtr aInfo); */
+/* [noscript] void getParamInfo ([shared, const, retval] out
+   nsXPTParamInfoPtr aInfo); */
 NS_IMETHODIMP
 nsScriptableParamInfo::GetParamInfo(const nsXPTParamInfo * *aInfo)
 {
@@ -259,8 +270,12 @@ public:
     nsScriptableConstant(); // not implemented
     nsScriptableConstant(nsIInterfaceInfo* aInfo,
                          const nsXPTConstant& aConst)
-        : mInfo(aInfo), mConst(aConst) {}
-    virtual ~nsScriptableConstant() {}
+        : mInfo(aInfo), mConst(aConst)
+    {
+    }
+    virtual ~nsScriptableConstant()
+    {
+    }
 private:
     // Holding onto the interface info keeps the underlying const alive.
     nsCOMPtr<nsIInterfaceInfo> mInfo;
@@ -354,13 +369,19 @@ public:
                            const nsXPTMethodInfo& aMethod,
                            nsIScriptableMethodInfo** aResult);
 
-    nsScriptableMethodInfo(); // not implemented
     nsScriptableMethodInfo(nsIInterfaceInfo* aInfo,
                             const nsXPTMethodInfo& aMethod)
-        : mInfo(aInfo), mMethod(aMethod) {}
-    virtual ~nsScriptableMethodInfo() {}
+        : mInfo(aInfo), mMethod(aMethod)
+    {
+    }
+    virtual ~nsScriptableMethodInfo()
+    {
+    }
 private:
-    // Holding onto the interface info keeps the underlying method alive.
+    nsScriptableMethodInfo(); // not implemented
+
+    // Holding onto the interface info keeps the underlying method
+    // alive.
     nsCOMPtr<nsIInterfaceInfo> mInfo;
     const nsXPTMethodInfo&     mMethod;
 };
@@ -442,7 +463,8 @@ nsScriptableMethodInfo::GetParam(PRUint8 idx, nsIScriptableParamInfo **_retval)
 {
     if(idx >= mMethod.GetParamCount())
         return NS_ERROR_INVALID_ARG;
-    return nsScriptableParamInfo::Create(mInfo, mMethod.GetParam(idx), _retval);
+    return nsScriptableParamInfo::Create(mInfo, mMethod.GetParam(idx),
+                                         _retval);
 }
 
 /* readonly attribute nsIScriptableParamInfo result; */
@@ -505,24 +527,27 @@ nsScriptableInterfaceInfo::SetInfo(nsIInterfaceInfo * aInfo)
 
 /***************************************************************************/
 
-typedef PRBool (*InfoTester)(nsIInterfaceInfoManager* manager, const void* data,
-                             nsIInterfaceInfo** info);
+typedef PRBool (*InfoTester)(nsIInterfaceInfoManager* manager,
+                             const void* data, nsIInterfaceInfo** info);
 
-static PRBool IIDTester(nsIInterfaceInfoManager* manager, const void* data,
-                        nsIInterfaceInfo** info)
+static PRBool
+IIDTester(nsIInterfaceInfoManager* manager, const void* data,
+          nsIInterfaceInfo** info)
 {
     return NS_SUCCEEDED(manager->GetInfoForIID((const nsIID *) data, info)) &&
            *info;
 }
 
-static PRBool NameTester(nsIInterfaceInfoManager* manager, const void* data,
-                      nsIInterfaceInfo** info)
+static PRBool
+NameTester(nsIInterfaceInfoManager* manager, const void* data,
+           nsIInterfaceInfo** info)
 {
     return NS_SUCCEEDED(manager->GetInfoForName((const char *) data, info)) &&
            *info;
 }
 
-static nsresult FindInfo(InfoTester tester, const void* data, nsIInterfaceInfo** info)
+static nsresult
+FindInfo(InfoTester tester, const void* data, nsIInterfaceInfo** info)
 {
     nsCOMPtr<nsIInterfaceInfoManager> iim = 
         dont_AddRef(XPTI_GetInterfaceInfoManager());
@@ -666,7 +691,8 @@ nsScriptableInterfaceInfo::GetConstantCount(PRUint16 *aConstantCount)
 
 /* nsIScriptableMethodInfo getMethodInfo (in PRUint16 index); */
 NS_IMETHODIMP
-nsScriptableInterfaceInfo::GetMethodInfo(PRUint16 index, nsIScriptableMethodInfo **_retval)
+nsScriptableInterfaceInfo::GetMethodInfo(PRUint16 index,
+                                         nsIScriptableMethodInfo **_retval)
 {
     if(!mInfo)
         return NS_ERROR_NOT_INITIALIZED;
@@ -679,9 +705,12 @@ nsScriptableInterfaceInfo::GetMethodInfo(PRUint16 index, nsIScriptableMethodInfo
     return nsScriptableMethodInfo::Create(mInfo, *methodInfo, _retval);
 }
 
-/* nsIScriptableMethodInfo getMethodInfoForName (in string methodName, out PRUint16 index); */
+/* nsIScriptableMethodInfo getMethodInfoForName (in string methodName,
+   out PRUint16 index); */
 NS_IMETHODIMP
-nsScriptableInterfaceInfo::GetMethodInfoForName(const char *methodName, PRUint16 *index, nsIScriptableMethodInfo **_retval)
+nsScriptableInterfaceInfo::GetMethodInfoForName(const char *methodName,
+                                                PRUint16 *index,
+                                                nsIScriptableMethodInfo **_retval)
 {
     if(!mInfo)
         return NS_ERROR_NOT_INITIALIZED;
@@ -696,7 +725,8 @@ nsScriptableInterfaceInfo::GetMethodInfoForName(const char *methodName, PRUint16
 
 /* nsIScriptableConstant getConstant (in PRUint16 index); */
 NS_IMETHODIMP
-nsScriptableInterfaceInfo::GetConstant(PRUint16 index, nsIScriptableConstant **_retval)
+nsScriptableInterfaceInfo::GetConstant(PRUint16 index,
+                                       nsIScriptableConstant **_retval)
 {
     if(!mInfo)
         return NS_ERROR_NOT_INITIALIZED;
@@ -709,9 +739,12 @@ nsScriptableInterfaceInfo::GetConstant(PRUint16 index, nsIScriptableConstant **_
     return nsScriptableConstant::Create(mInfo, *constant, _retval);
 }
 
-/* nsIScriptableInterfaceInfo getInfoForParam (in PRUint16 methodIndex, in nsIScriptableParamInfo param); */
+/* nsIScriptableInterfaceInfo getInfoForParam (in PRUint16
+   methodIndex, in nsIScriptableParamInfo param); */
 NS_IMETHODIMP
-nsScriptableInterfaceInfo::GetInfoForParam(PRUint16 methodIndex, nsIScriptableParamInfo *param, nsIScriptableInterfaceInfo **_retval)
+nsScriptableInterfaceInfo::GetInfoForParam(PRUint16 methodIndex,
+                                           nsIScriptableParamInfo *param,
+                                           nsIScriptableInterfaceInfo **_retval)
 {
     if(!mInfo)
         return NS_ERROR_NOT_INITIALIZED;
@@ -733,9 +766,12 @@ nsScriptableInterfaceInfo::GetInfoForParam(PRUint16 methodIndex, nsIScriptablePa
     return NS_OK;
 }
 
-/* nsIIDPtr getIIDForParam (in PRUint16 methodIndex, in nsIScriptableParamInfo param); */
+/* nsIIDPtr getIIDForParam (in PRUint16 methodIndex, in
+   nsIScriptableParamInfo param); */
 NS_IMETHODIMP
-nsScriptableInterfaceInfo::GetIIDForParam(PRUint16 methodIndex, nsIScriptableParamInfo *param, nsIID * *_retval)
+nsScriptableInterfaceInfo::GetIIDForParam(PRUint16 methodIndex,
+                                          nsIScriptableParamInfo *param,
+                                          nsIID * *_retval)
 {
     if(!mInfo)
         return NS_ERROR_NOT_INITIALIZED;
@@ -748,9 +784,13 @@ nsScriptableInterfaceInfo::GetIIDForParam(PRUint16 methodIndex, nsIScriptablePar
     return mInfo->GetIIDForParam(methodIndex, paramInfo, _retval);
 }
 
-/* nsIScriptableDataType getTypeForParam (in PRUint16 methodIndex, in nsIScriptableParamInfo param, in PRUint16 dimension); */
+/* nsIScriptableDataType getTypeForParam (in PRUint16 methodIndex, in
+   nsIScriptableParamInfo param, in PRUint16 dimension); */
 NS_IMETHODIMP
-nsScriptableInterfaceInfo::GetTypeForParam(PRUint16 methodIndex, nsIScriptableParamInfo *param, PRUint16 dimension, nsIScriptableDataType **_retval)
+nsScriptableInterfaceInfo::GetTypeForParam(PRUint16 methodIndex,
+                                           nsIScriptableParamInfo *param,
+                                           PRUint16 dimension,
+                                           nsIScriptableDataType **_retval)
 {
     if(!mInfo)
         return NS_ERROR_NOT_INITIALIZED;
@@ -769,9 +809,13 @@ nsScriptableInterfaceInfo::GetTypeForParam(PRUint16 methodIndex, nsIScriptablePa
     return nsScriptableDataType::Create(type, _retval);
 }
 
-/* PRUint8 getSizeIsArgNumberForParam (in PRUint16 methodIndex, in nsIScriptableParamInfo param, in PRUint16 dimension); */
+/* PRUint8 getSizeIsArgNumberForParam (in PRUint16 methodIndex, in
+   nsIScriptableParamInfo param, in PRUint16 dimension); */
 NS_IMETHODIMP
-nsScriptableInterfaceInfo::GetSizeIsArgNumberForParam(PRUint16 methodIndex, nsIScriptableParamInfo *param, PRUint16 dimension, PRUint8 *_retval)
+nsScriptableInterfaceInfo::GetSizeIsArgNumberForParam(PRUint16 methodIndex,
+                                                      nsIScriptableParamInfo *param,
+                                                      PRUint16 dimension,
+                                                      PRUint8 *_retval)
 {
     if(!mInfo)
         return NS_ERROR_NOT_INITIALIZED;
@@ -781,13 +825,17 @@ nsScriptableInterfaceInfo::GetSizeIsArgNumberForParam(PRUint16 methodIndex, nsIS
     if(NS_FAILED(rv))
         return rv;
 
-    return mInfo->GetSizeIsArgNumberForParam(methodIndex, paramInfo,
-                                             dimension, _retval);
+    return mInfo->GetSizeIsArgNumberForParam(methodIndex, paramInfo, dimension,
+                                             _retval);
 }
 
-/* PRUint8 getLengthIsArgNumberForParam (in PRUint16 methodIndex, in nsIScriptableParamInfo param, in PRUint16 dimension); */
+/* PRUint8 getLengthIsArgNumberForParam (in PRUint16 methodIndex, in
+   nsIScriptableParamInfo param, in PRUint16 dimension); */
 NS_IMETHODIMP
-nsScriptableInterfaceInfo::GetLengthIsArgNumberForParam(PRUint16 methodIndex, nsIScriptableParamInfo *param, PRUint16 dimension, PRUint8 *_retval)
+nsScriptableInterfaceInfo::GetLengthIsArgNumberForParam(PRUint16 methodIndex,
+                                                        nsIScriptableParamInfo *param,
+                                                        PRUint16 dimension,
+                                                        PRUint8 *_retval)
 {
     if(!mInfo)
         return NS_ERROR_NOT_INITIALIZED;
@@ -801,9 +849,12 @@ nsScriptableInterfaceInfo::GetLengthIsArgNumberForParam(PRUint16 methodIndex, ns
                                                dimension, _retval);
 }
 
-/* PRUint8 getInterfaceIsArgNumberForParam (in PRUint16 methodIndex, in nsIScriptableParamInfo param); */
+/* PRUint8 getInterfaceIsArgNumberForParam (in PRUint16 methodIndex,
+   in nsIScriptableParamInfo param); */
 NS_IMETHODIMP
-nsScriptableInterfaceInfo::GetInterfaceIsArgNumberForParam(PRUint16 methodIndex, nsIScriptableParamInfo *param, PRUint8 *_retval)
+nsScriptableInterfaceInfo::GetInterfaceIsArgNumberForParam(PRUint16 methodIndex,
+                                                           nsIScriptableParamInfo *param,
+                                                           PRUint8 *_retval)
 {
     if(!mInfo)
         return NS_ERROR_NOT_INITIALIZED;
