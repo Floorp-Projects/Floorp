@@ -22,8 +22,11 @@
  * Contributor(s):
  *   David Epstein <depstein@netscape.com> 
  *   Ashish Bhatt <ashishbhatt@netscape.com> 
+
  *
+
  *
+
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -50,9 +53,13 @@
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 CnsIObserServ::CnsIObserServ()
+
 {
+
 	mRefCnt = 1 ;
+
 }
+
 
 CnsIObserServ::~CnsIObserServ()
 {
@@ -72,32 +79,57 @@ ObserverElement ObserverTable[] = {
 	{"session-logout", PR_FALSE}	
 }; 
 
+
 void CnsIObserServ::OnStartTests(UINT nMenuID)
+
 {
+
 	// Calls  all or indivdual test cases on the basis of the 
 	// option selected from menu.
 
+
 	switch(nMenuID)
+
 	{
+
 	case ID_INTERFACES_NSIOBSERVERSERVICE_RUNALLTESTS :
+
 		RunAllTests();
+
 		break;
+
 	case ID_INTERFACES_NSIOBSERVERSERVICE_ADDOBSERVERS :
+
 		AddObserversTest();
+
 		break;
+
 	case ID_INTERFACES_NSIOBSERVERSERVICE_ENUMERATEOBSERVERS : 
+
 		EnumerateObserversTest();
+
 		break;
+
 	case ID_INTERFACES_NSIOBSERVERSERVICE_NOTIFYOBSERVERS :
+
 		NotifyObserversTest();
+
 		break;
+
 	case ID_INTERFACES_NSIOBSERVERSERVICE_REMOVEOBSERVERS :
+
 		RemoveObserversTest();
+
 		break;
+
 	default :
+
 		AfxMessageBox("Not added menu handler for this menu item");
+
 		break;
+
 	}
+
 }
 void CnsIObserServ::RunAllTests()
 {
@@ -120,7 +152,9 @@ void CnsIObserServ::AddObserversTest()
 		return;
 	}
 
+
 	observerService->AddObserver(this, "text/xml", PR_TRUE);
+
 
 	for (i=0; i<10; i++)
 	{
@@ -144,6 +178,7 @@ void CnsIObserServ::RemoveObserversTest()
 		return;
 	}
 
+
 	AddObserversTest();
 
 	for (i=0; i<10; i++)
@@ -152,6 +187,7 @@ void CnsIObserServ::RemoveObserversTest()
 		RvTestResult(rv, "RemoveObservers() test", 2);
 	}
 }
+
 
 void CnsIObserServ::NotifyObserversTest()
 {
@@ -172,13 +208,17 @@ void CnsIObserServ::EnumerateObserversTest()
 		return;
 	}
 
+
 	AddObserversTest();
 
 	for (i=0; i<10; i++)
 	{
 		// need to handle Simple Enumerator
+
 		rv = observerService->EnumerateObservers(ObserverTable[i].theTopic, 
+
 												 getter_AddRefs(simpleEnum));
+
 
 		RvTestResult(rv, "EnumerateObserversTest() test", 2);
 		if (!simpleEnum)
@@ -189,11 +229,16 @@ void CnsIObserServ::EnumerateObserversTest()
 
 		nsCOMPtr<nsIObserver> observer;
 		PRBool theLoop = PR_TRUE;
+
 		PRBool bLoop = PR_TRUE;
+
 		while( NS_SUCCEEDED(simpleEnum->HasMoreElements(&theLoop)) && bLoop) 
 		{
 
+
 			simpleEnum->GetNext(getter_AddRefs(observer));
+
+
 
 			rv = observer->Observe(observer, ObserverTable[i].theTopic, 0);
 			RvTestResult(rv, "Observer() test", 2);	
@@ -212,6 +257,7 @@ void CnsIObserServ::EnumerateObserversTest()
 
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(CnsIObserServ,  nsIObserver,  nsISupportsWeakReference);
+
 
 
 NS_IMETHODIMP CnsIObserServ::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
