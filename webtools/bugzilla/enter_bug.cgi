@@ -196,8 +196,8 @@ sub pickos {
             /\(.*Mac OS 8\.0.*\)/ && do {return "Mac System 8.0";};
             /\(.*Mac OS 8[^.].*\)/ && do {return "Mac System 8.0";};
             /\(.*Mac OS 8.*\)/ && do {return "Mac System 8.6";};
-            /\(.*Mac OS X.*\)/ && do {return "MacOS X";};
-            /\(.*Darwin.*\)/ && do {return "MacOS X";};
+            /\(.*Mac OS X.*\)/ && do {return "Mac OS X 10.0";};
+            /\(.*Darwin.*\)/ && do {return "Mac OS X 10.0";};
         # Silly
             /\(.*Mac.*PowerPC.*\)/ && do {return "Mac System 9.x";};
             /\(.*Mac.*PPC.*\)/ && do {return "Mac System 9.x";};
