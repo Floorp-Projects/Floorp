@@ -87,11 +87,11 @@ tab {
   border: none;
   font: small-caption;
   color: buttontext;
-  -moz-user-focus: normal !important;
+  -moz-user-focus: normal;
 }
 
 tab > .tab-box > .tab-text {
-  border: 1px solid threedface;
+  border: 1px solid transparent;
   padding: 0px 1px 0px 1px;
 }
 
@@ -279,3 +279,6 @@ tabcontrol[orient="horizontal"] > tabbox[orient="vertical"] > tab[afterselected=
 tabcontrol[orient="horizontal"] > tabbox[orient="vertical"] > tab[afterselected="true"] > .tab-box {
   border-top: none !important;
 }
+
+
+

@@ -22,6 +22,8 @@
 
 /* This contains CSS just for editor toolbars */
 
+@import url("chrome://editor/skin/EditModeTabs.css");
+
 #EditorToolbox 
   {
     min-width             : 1px;
@@ -30,18 +32,30 @@
 #EditModeToolbar 
   {
     padding               : 0px;
-    border-top            : 1px solid #003366;
+    vertical-align: top;
     border-bottom         : 1px solid darkgray;
     margin-bottom         : 0px;
     min-width             : 1px;
     color                 : white;
-    background-color      : #999999;
+    background-color      : threedface;
     overflow              : hidden;
   }
 
-#EditModeToolbar > toolbargrippy {
-	display: none;
-}
+#EditModeToolbar > .toolbar-holder 
+  {
+    border-top: none;
+    padding-bottom: 2px;
+  }
+  
+#EditModeToolbar > toolbargrippy 
+  {
+    display: none;
+  }
+  
+#EditModeLabel 
+  {
+    display: none;
+  }
 
 button.edit-mode:hover, 
 button.edit-mode:hover:active,
@@ -759,6 +773,4 @@ button.edit-mode[selected="1"]:hover:active
   {
     margin                : 9px 2px 2px 9px;
   }
-  
-  
   

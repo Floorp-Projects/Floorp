@@ -19,8 +19,8 @@
 # Contributor(s): 
 #
 
-DEPTH		= ../../..
-THEME_ROOT_DEPTH = @srcdir@/..
+DEPTH		= ../../../..
+THEME_ROOT_DEPTH = @srcdir@/../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
@@ -31,14 +31,8 @@ include $(THEME_ROOT_DEPTH)/theme.mk
 SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)/editor/skin
 
 EXPORT_RESOURCE_SAMPLES = \
-	EdImageMap.css \
-	EdImageMapPage.css \
-	EditorDialog.css  \
-	EditorToolbars.css \
-	editor.css \
+	EditModeTabs.css \
 	$(NULL)
-
-DIRS =  images win
 
 include $(topsrcdir)/config/rules.mk
 

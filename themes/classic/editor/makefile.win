@@ -22,7 +22,7 @@
 DEPTH		= ..\..\..
 THEME_ROOT_DEPTH = ..
 
-DIRS= images
+DIRS= images win
 
 include <$(DEPTH)\config\rules.mak>
 include <$(THEME_ROOT_DEPTH)\theme.mk>
