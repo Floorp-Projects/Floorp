@@ -25,7 +25,6 @@ var removeButton;
 var gHeaderInputElement;
 var gArrayHdrs;
 var gHdrsList;
-var gTree;
 var gContainer;
 
 function onLoad()
@@ -42,7 +41,6 @@ function onLoad()
     }
     gHeaderInputElement = document.getElementById("headerInput");
     gHdrsList = document.getElementById("headerList");
-    gTree = document.getElementById("headerTree");
     gArrayHdrs = new Array();
     addButton = document.getElementById("addButton");
     removeButton = document.getElementById("removeButton");
@@ -104,10 +102,10 @@ function duplicateHdrExists(hdr)
   
 function onRemoveHeader()
 {
-  var treeItem = gTree.selectedItems[0]
-  if (!treeItem) return;
-  gHdrsList.removeChild(treeItem);
-  var selectedHdr = GetTreeItemAttributeStr(treeItem);
+  var listitem = gHdrsList.selectedItems[0]
+  if (!listitem) return;
+  gHdrsList.removeChild(listitem);
+  var selectedHdr = GetListItemAttributeStr(listitem);
   var j=0;
   for (var i=0;i<gArrayHdrs.length; i++) 
   {
@@ -120,30 +118,24 @@ function onRemoveHeader()
 
 }
 
-function GetTreeItemAttributeStr(treeItem)
+function GetListItemAttributeStr(listitem)
 {
-   if (treeItem)
-     return TrimString(treeItem.firstChild.firstChild.getAttribute("label"));
+   if (listitem)
+     return TrimString(listitem.getAttribute("label"));
  
    return "";
 }
 
 function addRow(newHdr)
 {
-  var treeitem = document.createElement("treeitem");
-  var row = document.createElement("treerow");
-  var treecell = document.createElement("treecell");
-  treecell.setAttribute("flex", "1");
-  treecell.setAttribute("label", newHdr);
-  row.appendChild(treecell);
-  treeitem.appendChild(row);
-  gHdrsList.appendChild(treeitem);
-  
+  var listitem = document.createElement("listitem");
+  listitem.setAttribute("label", newHdr);
+  gHdrsList.appendChild(listitem);  
 }
 
 function updateButtons()
 {
-    var headerSelected = (gTree.selectedItems.length > 0);
+    var headerSelected = (gHdrsList.selectedItems.length > 0);
     removeButton.disabled = !headerSelected;
 }
 

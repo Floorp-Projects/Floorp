@@ -54,9 +54,7 @@ Original Contributor(s): Navin Gupta <naving@netscape.com>
 
       <row flex="1">
         <vbox>
-          <tree id="headerTree" flex="1" onclick="updateButtons();">
-            <treechildren id="headerList" flex="1"/>
-          </tree>
+          <listbox id="headerList" flex="1" onselect="updateButtons();"/>
         </vbox>
 
         <vbox>
