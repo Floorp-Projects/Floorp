@@ -293,7 +293,7 @@ pref("network.http.accept.default", "text/xml, application/xml, application/xhtm
 pref("network.http.sendRefererHeader",      2); // 0=don't send any, 1=send only on clicks, 2=send on image requests as well
 
 // Enable http compression: comment this out in case of problems with 1.1
-pref("network.http.accept-encoding" ,"gzip,deflate,compress,identity");
+pref("network.http.accept-encoding" ,"gzip, deflate, compress;q=0.9");
 
 pref("network.http.pipelining"      , false);
 pref("network.http.proxy.pipelining", false);
