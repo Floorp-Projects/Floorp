@@ -314,9 +314,7 @@ public:
 
   nsresult StyleChangedReflow(nsBlockReflowState& aState);
 
-#if 0
   nsresult FindTextRuns(nsBlockReflowState& aState);
-#endif
 
   nsresult ChildIncrementalReflow(nsBlockReflowState& aState);
 
@@ -414,10 +412,6 @@ public:
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
 
   // nsIHTMLReflow
-#if 0
-  NS_IMETHOD FindTextRuns(nsLineLayout& aLineLayout,
-                          nsIReflowCommand* aReflowCommand);
-#endif
   NS_IMETHOD Reflow(nsIPresContext& aPresContext,
                     nsHTMLReflowMetrics& aMetrics,
                     const nsHTMLReflowState& aReflowState,
@@ -846,16 +840,6 @@ BulletFrame::Reflow(nsIPresContext& aPresContext,
   aStatus = NS_FRAME_COMPLETE;
   return NS_OK;
 }
-
-#if 0
-NS_IMETHODIMP
-BulletFrame::FindTextRuns(nsLineLayout& aLineLayout,
-                          nsIReflowCommand* aReflowCommand)
-{
-  aLineLayout.EndTextRun();
-  return NS_OK;
-}
-#endif
 
 //----------------------------------------------------------------------
 
@@ -1304,7 +1288,6 @@ nsBlockReflowState::nsBlockReflowState(nsIPresContext& aPresContext,
   // coordinate system origin for later.
   mSpaceManager->Translate(mBorderPadding.left, mBorderPadding.top);
   mSpaceManager->GetTranslation(mSpaceManagerX, mSpaceManagerY);
-frame->ListTag(stdout); printf(": BEGIN: BP=%d,%d,%d,%d spaceManager=%d,%d\n", mBorderPadding, mSpaceManagerX, mSpaceManagerY);
 
   mPresContext = aPresContext;
   mBlock = (nsBlockFrame*) frame;
@@ -1371,7 +1354,6 @@ frame->ListTag(stdout); printf(": BEGIN: BP=%d,%d,%d,%d spaceManager=%d,%d\n", m
 
 nsBlockReflowState::~nsBlockReflowState()
 {
-frame->ListTag(stdout); printf(": END\n");
   // Restore the coordinate system
   mSpaceManager->Translate(-mBorderPadding.left, -mBorderPadding.top);
 
@@ -1415,7 +1397,6 @@ nsBlockReflowState::GetAvailableSpace()
   // Compute the bounding rect of the available space, i.e. space
   // between any left and right floaters.
   mCurrentBand.ComputeAvailSpaceRect();
-mBlock->ListTag(stdout); printf(": availSpace=%d,%d,%d,%d\n", mCurrentBand.availSpace);
 
   NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
      ("nsBlockReflowState::GetAvailableSpace: band={%d,%d,%d,%d} count=%d",
@@ -2122,13 +2103,11 @@ nsBlockFrame::AppendNewFrames(nsIPresContext& aPresContext,
 nsresult
 nsBlockFrame::InitialReflow(nsBlockReflowState& aState)
 {
-#if 0
   // Generate text-run information
   nsresult rv = FindTextRuns(aState);
   if (NS_OK != rv) {
     return rv;
   }
-#endif
 
   // Reflow everything
   aState.GetAvailableSpace();
@@ -2182,13 +2161,11 @@ nsBlockFrame::FrameAppendedReflow(nsBlockReflowState& aState)
   // impacted line will be marked dirty
   AppendNewFrames(aState.mPresContext, firstAppendedFrame);
 
-#if 0
   // Generate text-run information
   rv = FindTextRuns(aState);
   if (NS_OK != rv) {
     return rv;
   }
-#endif
 
   // Recover our reflow state
   LineData* firstDirtyLine = mLines;
@@ -2245,7 +2222,6 @@ nsBlockFrame::FrameAppendedReflow(nsBlockReflowState& aState)
   return ReflowLinesAt(aState, firstDirtyLine);
 }
 
-#if 0
 // XXX keep the text-run data in the first-in-flow of the block
 nsresult
 nsBlockFrame::FindTextRuns(nsBlockReflowState& aState)
@@ -2262,17 +2238,15 @@ nsBlockFrame::FindTextRuns(nsBlockReflowState& aState)
       nsIFrame* frame = line->mFirstChild;
       PRInt32 n = line->mChildCount;
       while (--n >= 0) {
-        nsIInlineReflow* inlineReflow;
-        if (NS_OK == frame->QueryInterface(kIInlineReflowIID,
-                                           (void**)&inlineReflow)) {
-          nsresult rv = inlineReflow->FindTextRuns(aState.mLineLayout,
-                                                   aState.reflowCommand);
+        nsIHTMLReflow* hr;
+        if (NS_OK == frame->QueryInterface(kIHTMLReflowIID, (void**)&hr)) {
+          nsresult rv = hr->FindTextRuns(aState.mLineLayout);
           if (NS_OK != rv) {
             return rv;
           }
         }
         else {
-          // A frame that doesn't implement nsIInlineReflow isn't text
+          // A frame that doesn't implement nsIHTMLReflow isn't text
           // therefore it will end an open text run.
           aState.mLineLayout.EndTextRun();
         }
@@ -2293,7 +2267,6 @@ nsBlockFrame::FindTextRuns(nsBlockReflowState& aState)
 
   return NS_OK;
 }
-#endif
 
 nsresult
 nsBlockFrame::FrameInsertedReflow(nsBlockReflowState& aState)

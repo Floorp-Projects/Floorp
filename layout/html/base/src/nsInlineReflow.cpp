@@ -62,7 +62,6 @@ nsInlineReflow::~nsInlineReflow()
 void
 nsInlineReflow::Init(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-mOuterFrame->ListTag(stdout); printf(": IR: init: %d,%d,%d,%d\n", aX, aY, aWidth, aHeight);
   mLeftEdge = aX;
   mX = aX;
   if (NS_UNCONSTRAINEDSIZE == aWidth) {
@@ -99,7 +98,6 @@ nsInlineReflow::UpdateBand(nscoord aX, nscoord aY,
                            nscoord aWidth, nscoord aHeight,
                            PRBool aPlacedLeftFloater)
 {
-mOuterFrame->ListTag(stdout); printf(": IR: update: %d,%d,%d,%d\n", aX, aY, aWidth, aHeight, aPlacedLeftFloater ? "left" : "right");
   NS_PRECONDITION(mX == mLeftEdge, "update-band called after place-frame");
 
   mLeftEdge = aX;

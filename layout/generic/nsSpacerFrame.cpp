@@ -37,10 +37,6 @@ public:
   SpacerFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 
   // nsIHTMLReflow
-#if 0
-  NS_IMETHOD FindTextRuns(nsLineLayout&     aLineLayout,
-                          nsIReflowCommand* aReflowCommand);
-#endif
   NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
@@ -149,16 +145,6 @@ SpacerFrame::Reflow(nsIPresContext&          aPresContext,
 
   return NS_OK;
 }
-
-#if 0
-NS_IMETHODIMP
-SpacerFrame::FindTextRuns(nsLineLayout&     aLineLayout,
-                          nsIReflowCommand* aReflowCommand)
-{
-  aLineLayout.EndTextRun();
-  return NS_OK;
-}
-#endif
 
 PRUint8
 SpacerFrame::GetType()

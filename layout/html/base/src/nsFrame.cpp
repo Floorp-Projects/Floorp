@@ -16,6 +16,7 @@
  * Reserved.
  */
 #include "nsFrame.h"
+#include "nsLineLayout.h"
 #include "nsIContent.h"
 #include "nsIAtom.h"
 #include "nsString.h"
@@ -303,7 +304,7 @@ NS_IMETHODIMP nsFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
   return NS_OK;
 }
 
-NS_METHOD nsFrame::DeleteFrame(nsIPresContext& aPresContext)
+NS_IMETHODIMP nsFrame::DeleteFrame(nsIPresContext& aPresContext)
 {
   //XXX Why is this done in nsFrame instead of some frame class
   // that actually loads images?
@@ -336,7 +337,7 @@ nsFrame::SizeOfWithoutThis(nsISizeOfHandler* aHandler) const
   // support
 }
 
-NS_METHOD nsFrame::GetContent(nsIContent*& aContent) const
+NS_IMETHODIMP nsFrame::GetContent(nsIContent*& aContent) const
 {
   if (nsnull != mContent) {
     NS_ADDREF(mContent);
@@ -345,7 +346,7 @@ NS_METHOD nsFrame::GetContent(nsIContent*& aContent) const
   return NS_OK;
 }
 
-NS_METHOD nsFrame::GetStyleContext(nsIPresContext*   aPresContext,
+NS_IMETHODIMP nsFrame::GetStyleContext(nsIPresContext*   aPresContext,
                                    nsIStyleContext*& aStyleContext)
 {
   if ((nsnull == mStyleContext) && (nsnull != aPresContext)) {
@@ -359,7 +360,7 @@ NS_METHOD nsFrame::GetStyleContext(nsIPresContext*   aPresContext,
   return NS_OK;
 }
 
-NS_METHOD nsFrame::SetStyleContext(nsIPresContext* aPresContext,nsIStyleContext* aContext)
+NS_IMETHODIMP nsFrame::SetStyleContext(nsIPresContext* aPresContext,nsIStyleContext* aContext)
 {
   NS_PRECONDITION(nsnull != aContext, "null ptr");
   if (aContext != mStyleContext) {
@@ -375,12 +376,12 @@ NS_METHOD nsFrame::SetStyleContext(nsIPresContext* aPresContext,nsIStyleContext*
 }
 
 // Subclass hook for style post processing
-NS_METHOD nsFrame::DidSetStyleContext(nsIPresContext* aPresContext)
+NS_IMETHODIMP nsFrame::DidSetStyleContext(nsIPresContext* aPresContext)
 {
   return NS_OK;
 }
 
-NS_METHOD nsFrame::GetStyleData(nsStyleStructID aSID, const nsStyleStruct*& aStyleStruct) const
+NS_IMETHODIMP nsFrame::GetStyleData(nsStyleStructID aSID, const nsStyleStruct*& aStyleStruct) const
 {
   NS_ASSERTION(mStyleContext!=nsnull,"null style context");
   if (mStyleContext) {
@@ -393,25 +394,25 @@ NS_METHOD nsFrame::GetStyleData(nsStyleStructID aSID, const nsStyleStruct*& aSty
 
 // Geometric and content parent member functions
 
-NS_METHOD nsFrame::GetContentParent(nsIFrame*& aParent) const
+NS_IMETHODIMP nsFrame::GetContentParent(nsIFrame*& aParent) const
 {
   aParent = mContentParent;
   return NS_OK;
 }
 
-NS_METHOD nsFrame::SetContentParent(const nsIFrame* aParent)
+NS_IMETHODIMP nsFrame::SetContentParent(const nsIFrame* aParent)
 {
   mContentParent = (nsIFrame*)aParent;
   return NS_OK;
 }
 
-NS_METHOD nsFrame::GetGeometricParent(nsIFrame*& aParent) const
+NS_IMETHODIMP nsFrame::GetGeometricParent(nsIFrame*& aParent) const
 {
   aParent = mGeometricParent;
   return NS_OK;
 }
 
-NS_METHOD nsFrame::SetGeometricParent(const nsIFrame* aParent)
+NS_IMETHODIMP nsFrame::SetGeometricParent(const nsIFrame* aParent)
 {
   mGeometricParent = (nsIFrame*)aParent;
   return NS_OK;
@@ -419,34 +420,34 @@ NS_METHOD nsFrame::SetGeometricParent(const nsIFrame* aParent)
 
 // Bounding rect member functions
 
-NS_METHOD nsFrame::GetRect(nsRect& aRect) const
+NS_IMETHODIMP nsFrame::GetRect(nsRect& aRect) const
 {
   aRect = mRect;
   return NS_OK;
 }
 
-NS_METHOD nsFrame::GetOrigin(nsPoint& aPoint) const
+NS_IMETHODIMP nsFrame::GetOrigin(nsPoint& aPoint) const
 {
   aPoint.x = mRect.x;
   aPoint.y = mRect.y;
   return NS_OK;
 }
 
-NS_METHOD nsFrame::GetSize(nsSize& aSize) const
+NS_IMETHODIMP nsFrame::GetSize(nsSize& aSize) const
 {
   aSize.width = mRect.width;
   aSize.height = mRect.height;
   return NS_OK;
 }
 
-NS_METHOD nsFrame::SetRect(const nsRect& aRect)
+NS_IMETHODIMP nsFrame::SetRect(const nsRect& aRect)
 {
   MoveTo(aRect.x, aRect.y);
   SizeTo(aRect.width, aRect.height);
   return NS_OK;
 }
 
-NS_METHOD nsFrame::MoveTo(nscoord aX, nscoord aY)
+NS_IMETHODIMP nsFrame::MoveTo(nscoord aX, nscoord aY)
 {
   mRect.x = aX;
   mRect.y = aY;
@@ -467,7 +468,7 @@ NS_METHOD nsFrame::MoveTo(nscoord aX, nscoord aY)
   return NS_OK;
 }
 
-NS_METHOD nsFrame::SizeTo(nscoord aWidth, nscoord aHeight)
+NS_IMETHODIMP nsFrame::SizeTo(nscoord aWidth, nscoord aHeight)
 {
   mRect.width = aWidth;
   mRect.height = aHeight;
@@ -484,7 +485,7 @@ NS_METHOD nsFrame::SizeTo(nscoord aWidth, nscoord aHeight)
 
 // Child frame enumeration
 
-NS_METHOD nsFrame::FirstChild(nsIFrame*& aFirstChild) const
+NS_IMETHODIMP nsFrame::FirstChild(nsIFrame*& aFirstChild) const
 {
   aFirstChild = nsnull;
   return NS_OK;
@@ -511,7 +512,7 @@ PRBool nsFrame::DisplaySelection(nsIPresContext& aPresContext, PRBool isOkToTurn
   return result;
 }
 
-NS_METHOD nsFrame::Paint(nsIPresContext&      aPresContext,
+NS_IMETHODIMP nsFrame::Paint(nsIPresContext&      aPresContext,
                          nsIRenderingContext& aRenderingContext,
                          const nsRect&        aDirtyRect)
 {
@@ -571,7 +572,7 @@ NS_METHOD nsFrame::Paint(nsIPresContext&      aPresContext,
 /**
   *
  */
-NS_METHOD nsFrame::HandleEvent(nsIPresContext& aPresContext, 
+NS_IMETHODIMP nsFrame::HandleEvent(nsIPresContext& aPresContext, 
                                nsGUIEvent*     aEvent,
                                nsEventStatus&  aEventStatus)
 {
@@ -618,7 +619,7 @@ NS_METHOD nsFrame::HandleEvent(nsIPresContext& aPresContext,
 /**
   * Handles the Mouse Press Event for the frame
  */
-NS_METHOD nsFrame::HandlePress(nsIPresContext& aPresContext, 
+NS_IMETHODIMP nsFrame::HandlePress(nsIPresContext& aPresContext, 
                                nsGUIEvent*     aEvent,
                                nsEventStatus&  aEventStatus)
 {
@@ -804,7 +805,7 @@ NS_METHOD nsFrame::HandlePress(nsIPresContext& aPresContext,
 
 }
 
-NS_METHOD nsFrame::HandleDrag(nsIPresContext& aPresContext, 
+NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext& aPresContext, 
                               nsGUIEvent*     aEvent,
                               nsEventStatus&  aEventStatus)
 {
@@ -928,7 +929,7 @@ NS_METHOD nsFrame::HandleDrag(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
-NS_METHOD nsFrame::HandleRelease(nsIPresContext& aPresContext, 
+NS_IMETHODIMP nsFrame::HandleRelease(nsIPresContext& aPresContext, 
                                  nsGUIEvent*     aEvent,
                                  nsEventStatus&  aEventStatus)
 {
@@ -1069,7 +1070,7 @@ void nsFrame::AdjustPointsInSameContent(nsIPresContext& aPresContext,
   //}
 }
 
-NS_METHOD nsFrame::GetCursorAndContentAt(nsIPresContext& aPresContext,
+NS_IMETHODIMP nsFrame::GetCursorAndContentAt(nsIPresContext& aPresContext,
                                const nsPoint&  aPoint,
                                nsIFrame**      aFrame,
                                nsIContent**    aContent,
@@ -1081,14 +1082,14 @@ NS_METHOD nsFrame::GetCursorAndContentAt(nsIPresContext& aPresContext,
 }
 
 // Resize and incremental reflow
-NS_METHOD
+NS_IMETHODIMP
 nsFrame::GetFrameState(nsFrameState& aResult)
 {
   aResult = mState;
   return NS_OK;
 }
 
-NS_METHOD
+NS_IMETHODIMP
 nsFrame::SetFrameState(nsFrameState aNewState)
 {
   mState = aNewState;
@@ -1097,7 +1098,7 @@ nsFrame::SetFrameState(nsFrameState aNewState)
 
 // nsIHTMLReflow member functions
 
-NS_METHOD
+NS_IMETHODIMP
 nsFrame::WillReflow(nsIPresContext& aPresContext)
 {
   NS_FRAME_TRACE_MSG(NS_FRAME_TRACE_CALLS,
@@ -1106,7 +1107,7 @@ nsFrame::WillReflow(nsIPresContext& aPresContext)
   return NS_OK;
 }
 
-NS_METHOD
+NS_IMETHODIMP
 nsFrame::DidReflow(nsIPresContext& aPresContext,
                    nsDidReflowStatus aStatus)
 {
@@ -1131,10 +1132,11 @@ nsFrame::DidReflow(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
-NS_METHOD nsFrame::Reflow(nsIPresContext&          aPresContext,
-                          nsHTMLReflowMetrics&     aDesiredSize,
-                          const nsHTMLReflowState& aReflowState,
-                          nsReflowStatus&          aStatus)
+NS_IMETHODIMP
+nsFrame::Reflow(nsIPresContext&          aPresContext,
+                nsHTMLReflowMetrics&     aDesiredSize,
+                const nsHTMLReflowState& aReflowState,
+                nsReflowStatus&          aStatus)
 {
   aDesiredSize.width = 0;
   aDesiredSize.height = 0;
@@ -1153,8 +1155,9 @@ NS_METHOD nsFrame::Reflow(nsIPresContext&          aPresContext,
   return NS_OK;
 }
 
-NS_METHOD nsFrame::GetReflowMetrics(nsIPresContext&      aPresContext,
-                                    nsHTMLReflowMetrics& aMetrics)
+NS_IMETHODIMP
+nsFrame::GetReflowMetrics(nsIPresContext&      aPresContext,
+                          nsHTMLReflowMetrics& aMetrics)
 {
   aMetrics.width = mRect.width;
   aMetrics.height = mRect.height;
@@ -1163,7 +1166,14 @@ NS_METHOD nsFrame::GetReflowMetrics(nsIPresContext&      aPresContext,
   return NS_OK;
 }
 
-NS_METHOD nsFrame::ContentChanged(nsIPresContext* aPresContext,
+NS_IMETHODIMP
+nsFrame::FindTextRuns(nsLineLayout& aLineLayout)
+{
+  aLineLayout.EndTextRun();
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsFrame::ContentChanged(nsIPresContext* aPresContext,
                                   nsIContent*     aChild,
                                   nsISupports*    aSubContent)
 {
@@ -1180,13 +1190,13 @@ NS_IMETHODIMP nsFrame::AttributeChanged(nsIPresContext* aPresContext,
 
 // Flow member functions
 
-NS_METHOD nsFrame::IsSplittable(nsSplittableType& aIsSplittable) const
+NS_IMETHODIMP nsFrame::IsSplittable(nsSplittableType& aIsSplittable) const
 {
   aIsSplittable = NS_FRAME_NOT_SPLITTABLE;
   return NS_OK;
 }
 
-NS_METHOD nsFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
+NS_IMETHODIMP nsFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
                                          nsIFrame*        aParent,
                                          nsIStyleContext* aStyleContext,
                                          nsIFrame*&       aContinuingFrame)
@@ -1196,68 +1206,68 @@ NS_METHOD nsFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_METHOD nsFrame::GetPrevInFlow(nsIFrame*& aPrevInFlow) const
+NS_IMETHODIMP nsFrame::GetPrevInFlow(nsIFrame*& aPrevInFlow) const
 {
   aPrevInFlow = nsnull;
   return NS_OK;
 }
 
-NS_METHOD nsFrame::SetPrevInFlow(nsIFrame*)
+NS_IMETHODIMP nsFrame::SetPrevInFlow(nsIFrame*)
 {
   NS_ERROR("not splittable");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_METHOD nsFrame::GetNextInFlow(nsIFrame*& aNextInFlow) const
+NS_IMETHODIMP nsFrame::GetNextInFlow(nsIFrame*& aNextInFlow) const
 {
   aNextInFlow = nsnull;
   return NS_OK;
 }
 
-NS_METHOD nsFrame::SetNextInFlow(nsIFrame*)
+NS_IMETHODIMP nsFrame::SetNextInFlow(nsIFrame*)
 {
   NS_ERROR("not splittable");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_METHOD nsFrame::AppendToFlow(nsIFrame* aAfterFrame)
+NS_IMETHODIMP nsFrame::AppendToFlow(nsIFrame* aAfterFrame)
 {
   NS_ERROR("not splittable");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_METHOD nsFrame::PrependToFlow(nsIFrame* aBeforeFrame)
+NS_IMETHODIMP nsFrame::PrependToFlow(nsIFrame* aBeforeFrame)
 {
   NS_ERROR("not splittable");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_METHOD nsFrame::RemoveFromFlow()
+NS_IMETHODIMP nsFrame::RemoveFromFlow()
 {
   NS_ERROR("not splittable");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_METHOD nsFrame::BreakFromPrevFlow()
+NS_IMETHODIMP nsFrame::BreakFromPrevFlow()
 {
   NS_ERROR("not splittable");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_METHOD nsFrame::BreakFromNextFlow()
+NS_IMETHODIMP nsFrame::BreakFromNextFlow()
 {
   NS_ERROR("not splittable");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 // Associated view object
-NS_METHOD nsFrame::GetView(nsIView*& aView) const
+NS_IMETHODIMP nsFrame::GetView(nsIView*& aView) const
 {
   aView = mView;
   return NS_OK;
 }
 
-NS_METHOD nsFrame::SetView(nsIView* aView)
+NS_IMETHODIMP nsFrame::SetView(nsIView* aView)
 {
   nsresult  rv;
 
@@ -1273,7 +1283,7 @@ NS_METHOD nsFrame::SetView(nsIView* aView)
 }
 
 // Find the first geometric parent that has a view
-NS_METHOD nsFrame::GetParentWithView(nsIFrame*& aParent) const
+NS_IMETHODIMP nsFrame::GetParentWithView(nsIFrame*& aParent) const
 {
   aParent = mGeometricParent;
 
@@ -1292,7 +1302,7 @@ NS_METHOD nsFrame::GetParentWithView(nsIFrame*& aParent) const
 
 // Returns the offset from this frame to the closest geometric parent that
 // has a view. Also returns the containing view or null in case of error
-NS_METHOD nsFrame::GetOffsetFromView(nsPoint& aOffset, nsIView*& aView) const
+NS_IMETHODIMP nsFrame::GetOffsetFromView(nsPoint& aOffset, nsIView*& aView) const
 {
   nsIFrame* frame = (nsIFrame*)this;
 
@@ -1311,7 +1321,7 @@ NS_METHOD nsFrame::GetOffsetFromView(nsPoint& aOffset, nsIView*& aView) const
   return NS_OK;
 }
 
-NS_METHOD nsFrame::GetWindow(nsIWidget*& aWindow) const
+NS_IMETHODIMP nsFrame::GetWindow(nsIWidget*& aWindow) const
 {
   nsIFrame* frame = (nsIFrame*)this;
 
@@ -1359,7 +1369,7 @@ nsFrame::Invalidate(const nsRect& aDamageRect,
 }
 
 // Style sizing methods
-NS_METHOD nsFrame::IsPercentageBase(PRBool& aBase) const
+NS_IMETHODIMP nsFrame::IsPercentageBase(PRBool& aBase) const
 {
   const nsStylePosition* position;
   GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position);
@@ -1380,7 +1390,7 @@ NS_METHOD nsFrame::IsPercentageBase(PRBool& aBase) const
   return NS_OK;
 }
 
-NS_METHOD nsFrame::GetAutoMarginSize(PRUint8 aSide, nscoord& aSize) const
+NS_IMETHODIMP nsFrame::GetAutoMarginSize(PRUint8 aSide, nscoord& aSize) const
 {
   aSize = 0;  // XXX probably not right, subclass override?
   return NS_OK;
@@ -1389,27 +1399,27 @@ NS_METHOD nsFrame::GetAutoMarginSize(PRUint8 aSide, nscoord& aSize) const
 
 // Sibling pointer used to link together frames
 
-NS_METHOD nsFrame::GetNextSibling(nsIFrame*& aNextSibling) const
+NS_IMETHODIMP nsFrame::GetNextSibling(nsIFrame*& aNextSibling) const
 {
   aNextSibling = mNextSibling;
   return NS_OK;
 }
 
-NS_METHOD nsFrame::SetNextSibling(nsIFrame* aNextSibling)
+NS_IMETHODIMP nsFrame::SetNextSibling(nsIFrame* aNextSibling)
 {
   mNextSibling = aNextSibling;
   return NS_OK;
 }
 
 // Transparency query
-NS_METHOD nsFrame::IsTransparent(PRBool& aTransparent) const
+NS_IMETHODIMP nsFrame::IsTransparent(PRBool& aTransparent) const
 {
   //XXX this needs to be overridden in just about every leaf class? MMP
   aTransparent = PR_TRUE;
   return NS_OK;
 }
 
-NS_METHOD nsFrame::Scrolled(nsIView *aView)
+NS_IMETHODIMP nsFrame::Scrolled(nsIView *aView)
 {
   return NS_OK;
 }
@@ -1435,7 +1445,7 @@ PRInt32 nsFrame::ContentIndexInContainer(const nsIFrame* aFrame)
 }
 
 // Debugging
-NS_METHOD nsFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const
+NS_IMETHODIMP nsFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const
 {
   // if a filter is present, only output this frame if the filter says we should
   nsIAtom* tag;
@@ -1467,7 +1477,7 @@ NS_METHOD nsFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) cons
 }
 
 // Output the frame's tag
-NS_METHOD nsFrame::ListTag(FILE* out) const
+NS_IMETHODIMP nsFrame::ListTag(FILE* out) const
 {
   nsIAtom* tag;
   mContent->GetTag(tag);
@@ -1482,7 +1492,7 @@ NS_METHOD nsFrame::ListTag(FILE* out) const
   return NS_OK;
 }
 
-NS_METHOD nsFrame::VerifyTree() const
+NS_IMETHODIMP nsFrame::VerifyTree() const
 {
   NS_ASSERTION(0 == (mState & NS_FRAME_IN_REFLOW), "frame is in reflow");
   return NS_OK;

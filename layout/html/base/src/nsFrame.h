@@ -187,6 +187,7 @@ public:
                         nsDidReflowStatus aStatus);
   NS_IMETHOD  GetReflowMetrics(nsIPresContext&      aPresContext,
                                nsHTMLReflowMetrics& aMetrics);
+  NS_IMETHOD FindTextRuns(nsLineLayout& aLineLayout);
 
   // Selection Methods
   // XXX Doc me...

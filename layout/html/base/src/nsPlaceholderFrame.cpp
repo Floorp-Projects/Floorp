@@ -56,16 +56,6 @@ nsPlaceholderFrame::~nsPlaceholderFrame()
 {
 }
 
-#if 0
-NS_IMETHODIMP
-nsPlaceholderFrame::FindTextRuns(nsLineLayout&     aLineLayout,
-                                 nsIReflowCommand* aReflowCommand)
-{
-  aLineLayout.EndTextRun();
-  return NS_OK;
-}
-#endif
-
 NS_IMETHODIMP
 nsPlaceholderFrame::Reflow(nsIPresContext&          aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,

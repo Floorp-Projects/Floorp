@@ -68,10 +68,7 @@ public:
                                    nsIFrame*& aContinuingFrame);
 
   // nsIHTMLReflow
-#if 0
-  NS_IMETHOD FindTextRuns(nsLineLayout& aLineLayout,
-                          nsIReflowCommand* aReflowCommand);
-#endif
+  NS_IMETHOD FindTextRuns(nsLineLayout& aLineLayout);
   NS_IMETHOD Reflow(nsIPresContext& aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
@@ -237,10 +234,8 @@ nsInlineFrame::CreateContinuingFrame(nsIPresContext&  aCX,
   return NS_OK;
 }
 
-#if 0
 NS_IMETHODIMP
-nsInlineFrame::FindTextRuns(nsLineLayout&  aLineLayout,
-                            nsIReflowCommand* aReflowCommand)
+nsInlineFrame::FindTextRuns(nsLineLayout& aLineLayout)
 {
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                  ("enter nsInlineFrame::FindTextRuns"));
@@ -252,16 +247,15 @@ nsInlineFrame::FindTextRuns(nsLineLayout&  aLineLayout,
   // Ask each child frame for its text runs
   nsIFrame* frame = mFirstChild;
   while (nsnull != frame) {
-    nsIInlineReflow* inlineReflow;
-    if (NS_OK == frame->QueryInterface(kIInlineReflowIID,
-                                       (void**)&inlineReflow)) {
-      rv = inlineReflow->FindTextRuns(aLineLayout, aReflowCommand);
+    nsIHTMLReflow* hr;
+    if (NS_OK == frame->QueryInterface(kIHTMLReflowIID, (void**)&hr)) {
+      rv = hr->FindTextRuns(aLineLayout);
       if (NS_OK != rv) {
         return rv;
       }
     }
     else {
-      // A frame that doesn't implement nsIInlineReflow isn't text
+      // A frame that doesn't implement nsIHTMLReflow isn't text
       // therefore it will end an open text run.
       aLineLayout.EndTextRun();
     }
@@ -272,7 +266,6 @@ nsInlineFrame::FindTextRuns(nsLineLayout&  aLineLayout,
                  ("exit nsInlineFrame::FindTextRuns rv=%x", rv));
   return rv;
 }
-#endif
 
 void
 nsInlineFrame::InsertNewFrame(nsIPresContext& aPresContext,
@@ -352,7 +345,6 @@ nsInlineFrame::Reflow(nsIPresContext& aPresContext,
   NS_ASSERTION(nsnull != aReflowState.spaceManager, "no space manager");
   aReflowState.spaceManager->Translate(state.mBorderPadding.left,
                                        state.mBorderPadding.top);
-nscoord sx, sy; aReflowState.spaceManager->GetTranslation(sx, sy); ListTag(stdout); printf(": BEGIN: BP=%d,%d,%d,%d spaceManager=%d,%d\n", state.mBorderPadding, sx, sy);
 
   // Based on the type of reflow, switch out to the appropriate
   // routine.
@@ -413,13 +405,11 @@ nscoord sx, sy; aReflowState.spaceManager->GetTranslation(sx, sy); ListTag(stdou
     aStatus = ResizeReflow(state, inlineReflow);
   }
   ComputeFinalSize(state, inlineReflow, aMetrics);
-// ListTag(stdout); printf(": exit carriedMargins=%d,%d\n", aMetrics.mCarriedOutTopMargin, aMetrics.mCarriedOutBottomMargin);
 
   // Now translate in by our border and padding
   aReflowState.lineLayout->PopInline();
   aReflowState.spaceManager->Translate(-state.mBorderPadding.left,
                                        -state.mBorderPadding.top);
-ListTag(stdout); printf(": END\n");
 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
      ("exit nsInlineFrame::InlineReflow size=%d,%d status=%x nif=%p",
@@ -771,7 +761,6 @@ nsInlineFrame::ReflowFrame(nsInlineReflowState& aState,
     }
   }
 
-ListTag(stdout); printf(": child="); aFrame->ListTag(stdout); printf(": reflowStatus=%x\n", aReflowStatus);
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                  ("nsInlineFrame::ReflowMapped: frame=%p reflowStatus=%x",
                   aFrame, aReflowStatus));
