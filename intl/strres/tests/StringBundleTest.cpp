@@ -23,7 +23,7 @@
 #define NS_IMPL_IDS
 
 #include "nsCOMPtr.h"
-#include "nsIPersistentProperties.h"
+#include "nsIPersistentProperties2.h"
 #include "nsIStringBundle.h"
 #include "nsIEventQueueService.h"
 #include "nsILocale.h"
