@@ -91,6 +91,7 @@
 #include "nsIWebBrowser.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIWebShell.h"
+#include "nsIComputedDOMStyle.h"
 #include "nsDOMCID.h"
 #include "nsDOMError.h"
 
@@ -2492,12 +2493,26 @@ NS_IMETHODIMP GlobalWindowImpl::GetComputedStyle(nsIDOMElement* aElt,
                                                  nsIDOMCSSStyleDeclaration** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
+  NS_ENSURE_ARG_POINTER(aElt);
   *aReturn = nsnull;
 
-  // This is not implemented yet, throw an DOM exception so that the user
-  // doesn't expect this to work.
+  NS_ENSURE_TRUE(mDocShell, NS_OK);
 
-  return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  nsCOMPtr<nsIPresShell> presShell;
+  mDocShell->GetPresShell(getter_AddRefs(presShell));
+  NS_ENSURE_TRUE(presShell, NS_OK);
+
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIComputedDOMStyle> compStyle;
+
+  compStyle = do_CreateInstance("component://netscape/DOM/Level2/CSS/computedStyleDeclaration", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = compStyle->Init(aElt, aPseudoElt, presShell);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return compStyle->QueryInterface(NS_GET_IID(nsIDOMCSSStyleDeclaration),
+                                   (void **)aReturn);
 }
 
 //*****************************************************************************
