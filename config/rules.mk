@@ -935,7 +935,7 @@ endif
 # that are built using other static libraries.  Confused...?
 #
 ifdef SHARED_LIBRARY_LIBS
-ifeq (,$(filter-out OS2 WINNT, $(OS_ARCH)))
+ifeq (,$(GNU_LD)$(filter-out OS2 WINNT, $(OS_ARCH)))
 ifneq (,$(BUILD_STATIC_LIBS)$(FORCE_STATIC_LIB))
 LOBJS	+= $(SHARED_LIBRARY_LIBS)
 endif
@@ -952,7 +952,7 @@ endif
 
 $(LIBRARY): $(OBJS) $(LOBJS) $(SHARED_LIBRARY_LIBS) $(EXTRA_DEPS) Makefile Makefile.in
 	rm -f $@
-ifneq (,$(filter-out OS2 WINNT, $(OS_ARCH)))
+ifneq (,$(GNU_LD)$(filter-out OS2 WINNT, $(OS_ARCH)))
 ifdef SHARED_LIBRARY_LIBS
 	@rm -f $(SUB_LOBJS)
 	@for lib in $(SHARED_LIBRARY_LIBS); do $(AR_EXTRACT) $${lib}; $(CLEANUP2); done
