@@ -53,6 +53,7 @@
 #include "nsIDOMHTMLBodyElement.h"
 #include "nsINameSpaceManager.h"
 #include "nsGenericDOMNodeList.h"
+#include "nsICSSLoader.h"
 
 #ifdef PCB_USE_PROTOCOL_CONNECTION
 // beard: how else would we get the referrer to a URL?
@@ -118,6 +119,7 @@ nsHTMLDocument::nsHTMLDocument()
   mParser = nsnull;
   nsHTMLAtoms::AddrefAtoms();
   mDTDMode = eDTDMode_NoQuirks;
+  mCSSLoader = nsnull;
 
   // Find/Search Init
   mSearchStr             = nsnull;
@@ -168,6 +170,7 @@ nsHTMLDocument::~nsHTMLDocument()
     NS_RELEASE(map);
   }
   NS_IF_RELEASE(mForms);
+  NS_IF_RELEASE(mCSSLoader);
 
 // XXX don't bother doing this until the dll is unloaded???
 //  nsHTMLAtoms::ReleaseAtoms();
@@ -503,39 +506,10 @@ void nsHTMLDocument::InternalAddStyleSheet(nsIStyleSheet* aSheet)  // subclass h
   }
 }
 
-NS_IMETHODIMP
-nsHTMLDocument::InsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex, PRBool aNotify)
+void
+nsHTMLDocument::InternalInsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex)
 {
-  NS_PRECONDITION(nsnull != aSheet, "null ptr");
   mStyleSheets.InsertElementAt(aSheet, aIndex + 1); // offset one for the attr style sheet
-
-  NS_ADDREF(aSheet);
-  aSheet->SetOwningDocument(this);
-
-  PRBool enabled = PR_TRUE;
-  aSheet->GetEnabled(enabled);
-
-  PRInt32 count;
-  PRInt32 index;
-  if (enabled) {
-    count = mPresShells.Count();
-    for (index = 0; index < count; index++) {
-      nsIPresShell* shell = (nsIPresShell*)mPresShells.ElementAt(index);
-      nsCOMPtr<nsIStyleSet> set;
-      shell->GetStyleSet(getter_AddRefs(set));
-      if (set) {
-        set->AddDocStyleSheet(aSheet, this);
-      }
-    }
-  }
-  if (aNotify) {  // notify here even if disabled, there may have been others that weren't notified
-    count = mObservers.Count();
-    for (index = 0; index < count; index++) {
-      nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(index);
-      observer->StyleSheetAdded(this, aSheet);
-    }
-  }
-  return NS_OK;
 }
 
 
@@ -602,6 +576,18 @@ nsHTMLDocument:: SetBaseTarget(const nsString& aTarget)
     }
   }
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLDocument::GetCSSLoader(nsICSSLoader*& aLoader)
+{
+  nsresult result = NS_OK;
+  if (! mCSSLoader) {
+    result = NS_NewCSSLoader(this, &mCSSLoader);
+  }
+  aLoader = mCSSLoader;
+  NS_IF_ADDREF(aLoader);
+  return result;
 }
 
 
