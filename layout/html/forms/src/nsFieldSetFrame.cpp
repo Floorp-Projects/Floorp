@@ -464,7 +464,8 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
             nsHTMLReflowMetrics kidDesiredSize(aDesiredSize.maxElementSize, aDesiredSize.mFlags);
             // Reflow the frame
             ReflowChild(mContentFrame, aPresContext, kidDesiredSize, kidReflowState,
-                        kidReflowState.mComputedMargin.left, kidReflowState.mComputedMargin.top,
+                        borderPadding.left + kidReflowState.mComputedMargin.left,
+                        borderPadding.top + mLegendSpace + kidReflowState.mComputedMargin.top,
                         0, aStatus);
 #ifdef NOISY_REFLOW
             printf("  returned (%d, %d)\n", kidDesiredSize.width, kidDesiredSize.height);
