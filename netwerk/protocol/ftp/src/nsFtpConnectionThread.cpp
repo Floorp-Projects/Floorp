@@ -1025,7 +1025,7 @@ nsFtpState::S_user() {
     } else {
         if (mUsername.IsEmpty()) {
             if (!mAuthPrompter) return NS_ERROR_NOT_INITIALIZED;
-            PRUnichar *user = nsnull, *passwd = nsnull;
+            nsXPIDLString user, passwd;
             PRBool retval;
             nsCAutoString prePath;
             rv = mURL->GetPrePath(prePath);
@@ -1048,8 +1048,8 @@ nsFtpState::S_user() {
                                                           formatedString,
                                                           prePathU.get(),
                                                           nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY,
-                                                          &user, 
-                                                          &passwd, 
+                                                          getter_Copies(user), 
+                                                          getter_Copies(passwd), 
                                                           &retval);
 
             // if the user canceled or didn't supply a username we want to fail
@@ -1125,7 +1125,7 @@ nsFtpState::S_pass() {
         if (mPassword.IsEmpty() || mRetryPass) {
             if (!mAuthPrompter) return NS_ERROR_NOT_INITIALIZED;
 
-            PRUnichar *passwd = nsnull;
+            nsXPIDLString passwd;
             PRBool retval;
             
             nsCAutoString prePath;
@@ -1150,7 +1150,7 @@ nsFtpState::S_pass() {
                                                formatedString,
                                                prePathU.get(), 
                                                nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY,
-                                               &passwd, &retval);
+                                               getter_Copies(passwd), &retval);
 
             // we want to fail if the user canceled. Note here that if they want
             // a blank password, we will pass it along.
