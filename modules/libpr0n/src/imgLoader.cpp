@@ -109,6 +109,8 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsILoadGroup *aLoadGroup, imgID
 
   imgRequest *request = nsnull;
 
+  nsresult rv;
+
   // XXX For now ignore the cache key. We will need it in the future
   // for correctly dealing with image load requests that are a result
   // of post data.
@@ -152,6 +154,43 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsILoadGroup *aLoadGroup, imgID
     }
   }
 
+  //
+  // Get the current EventQueue...  This is used as a cacheId to prevent
+  // sharing requests which are being loaded across multiple event queues...
+  //
+  nsCOMPtr<nsIEventQueueService> eventQService;
+  nsCOMPtr<nsIEventQueue> activeQ;
+
+  eventQService = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) 
+    return rv;
+        
+  rv = eventQService->ResolveEventQueue(NS_CURRENT_EVENTQ, getter_AddRefs(activeQ));
+  if (NS_FAILED(rv))
+    return rv;
+
+  void *cacheId = activeQ.get();
+  PRBool bCanCacheRequest = PR_TRUE;
+  if (request) {
+    if (!request->IsReusable(cacheId)) {
+      //
+      // The current request is still being loaded and lives on a different
+      // event queue.
+      //
+      // Since its event queue is NOT active, do not reuse this imgRequest !!
+      // Instead, force a new request to be created but DO NOT allow it to be
+      // cached!
+      //
+      PR_LOG(gImgLog, PR_LOG_DEBUG,
+             ("[this=%p] imgLoader::LoadImage -- DANGER!! Unable to use cached imgRequest [request=%p]\n", this, request));
+
+      entry = nsnull;
+      NS_RELEASE(request);
+
+      bCanCacheRequest = PR_FALSE;
+    }
+  }
+
   if (!request) {
     /* no request from the cache.  do a new load */
     LOG_SCOPE(gImgLog, "imgLoader::LoadImage |cache miss|");
@@ -177,9 +216,12 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsILoadGroup *aLoadGroup, imgID
     PR_LOG(gImgLog, PR_LOG_DEBUG,
            ("[this=%p] imgLoader::LoadImage -- Created new imgRequest [request=%p]\n", this, request));
 
-    imgCache::Put(aURI, request, getter_AddRefs(entry));
+    // Add the new request into the imgCache if its cachable...
+    if (bCanCacheRequest) {
+      imgCache::Put(aURI, request, getter_AddRefs(entry));
+    }
 
-    request->Init(newChannel, entry);
+    request->Init(newChannel, entry, cacheId);
 
     PR_LOG(gImgLog, PR_LOG_DEBUG,
            ("[this=%p] imgLoader::LoadImage -- Calling channel->AsyncOpen()\n", this));
@@ -249,7 +291,7 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsILoadGroup *aLoadGroup, imgID
 
   LOG_MSG(gImgLog, "imgLoader::LoadImage", "creating proxy request.");
 
-  nsresult rv = CreateNewProxyForRequest(request, aLoadGroup, aObserver, aCX, aLoadFlags, aRequest, _retval);
+  rv = CreateNewProxyForRequest(request, aLoadGroup, aObserver, aCX, aLoadFlags, aRequest, _retval);
 
   NS_RELEASE(request);
 
@@ -263,6 +305,7 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
 {
   NS_ASSERTION(channel, "imgLoader::LoadImageWithChannel -- NULL channel pointer");
 
+  nsresult rv;
   imgRequest *request = nsnull;
 
   nsCOMPtr<nsIURI> uri;
@@ -281,6 +324,21 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
 
     *listener = nsnull; // give them back a null nsIStreamListener
   } else {
+    //
+    // Get the current EventQueue...  This is used as a cacheId to prevent
+    // sharing requests which are being loaded across multiple event queues...
+    //
+    nsCOMPtr<nsIEventQueueService> eventQService;
+    nsCOMPtr<nsIEventQueue> activeQ;
+
+    eventQService = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) 
+      return rv;
+        
+    rv = eventQService->ResolveEventQueue(NS_CURRENT_EVENTQ, getter_AddRefs(activeQ));
+    if (NS_FAILED(rv))
+      return rv;
+
     NS_NEWXPCOM(request, imgRequest);
     if (!request) return NS_ERROR_OUT_OF_MEMORY;
 
@@ -288,7 +346,7 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
 
     imgCache::Put(uri, request, getter_AddRefs(entry));
 
-    request->Init(channel, entry);
+    request->Init(channel, entry, activeQ.get());
 
     ProxyListener *pl = new ProxyListener(NS_STATIC_CAST(nsIStreamListener *, request));
     if (!pl) {
@@ -307,7 +365,7 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
   nsCOMPtr<nsILoadGroup> loadGroup;
   channel->GetLoadGroup(getter_AddRefs(loadGroup));
 
-  nsresult rv = CreateNewProxyForRequest(request, loadGroup, aObserver, cx, nsIRequest::LOAD_NORMAL, nsnull, _retval);
+  rv = CreateNewProxyForRequest(request, loadGroup, aObserver, cx, nsIRequest::LOAD_NORMAL, nsnull, _retval);
 
   NS_RELEASE(request);
 
