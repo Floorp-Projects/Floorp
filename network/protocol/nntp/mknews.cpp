@@ -29,7 +29,7 @@
 #include "mime.h"
 #include "shist.h"
 #include "glhist.h"
-#include "xp_reg.h"
+/*#include "xp_reg.h"*/
 #include "mknews.h"
 #include "mktcp.h"
 #include "mkparse.h"
@@ -38,9 +38,6 @@
 #include "mkaccess.h"
 #include "mksort.h"
 #include "netcache.h"
-#if 0
-#include "mkextcac.h"
-#endif
 #include "libi18n.h"
 #include "gui.h"
 
@@ -129,6 +126,8 @@ PR_LOG(NNTP, out, buf) ;
 static int net_xpat_send (ActiveEntry*);
 static int net_list_pretty_names(ActiveEntry*);
 
+int net_ProcessNews(ActiveEntry *cur_entry);
+
 #ifdef PROFILE
 #pragma profile on
 #endif
@@ -169,7 +168,6 @@ static int net_list_pretty_names(ActiveEntry*);
 
 /* globals
  */
-PRIVATE char * NET_NewsHost = NULL;
 PRIVATE XP_List * nntp_connection_list=0;
 
 PRIVATE XP_Bool net_news_last_username_probably_valid=FALSE;
@@ -1307,11 +1305,7 @@ net_send_first_nntp_command (ActiveEntry *ce)
         if (slash)
           {
             *slash = '\0';
-#ifdef __alpha
             (void) sscanf(slash+1, "%d-%d", &cd->first_art, &cd->last_art);
-#else
-            (void) sscanf(slash+1, "%ld-%ld", &cd->first_art, &cd->last_art);
-#endif
           }
 
 		StrAllocCopy (cd->control_con->current_group, cd->group_name);
@@ -1737,7 +1731,7 @@ net_news_begin_authorize(ActiveEntry * ce)
 {
 	char * command = 0;
     NewsConData * cd = (NewsConData *)ce->con_data;
-	char * username = 0, * munged_username = 0;
+	char * username = 0;
 	char * cp;
 
 #ifdef CACHE_NEWSGRP_PASSWORD
@@ -1901,7 +1895,7 @@ net_news_authorize_response(ActiveEntry * ce)
 		/* password required
 		 */	
 		char * command = 0;
-		char * password = 0, * munged_password = 0;
+		char * password = 0;
 		char * cp;
 
 		if (cd->pane)
@@ -2323,11 +2317,7 @@ net_read_xover_begin (ActiveEntry *ce)
 	   xover data for.
 	 */
     sscanf(cd->response_txt,
-#ifdef __alpha
 		   "%d %d %d", 
-#else
-		   "%ld %ld %ld", 
-#endif
 		   &count, 
 		   &cd->first_possible_art, 
 		   &cd->last_possible_art);
@@ -3496,11 +3486,7 @@ static int net_list_xactive_response(ActiveEntry *ce)
 				char flags[32];	/* ought to be big enough */
 				*s = 0;
 				sscanf(s + 1,
-			#ifdef __alpha
 					   "%d %d %31s", 
-			#else
-					   "%ld %ld %31s", 
-			#endif
 					   &cd->first_possible_art, 
 					   &cd->last_possible_art,
 					   flags);
@@ -3825,11 +3811,7 @@ NET_parse_news_url (const char *url,
 	 it wasn't specified.
    */
   s = PL_strchr (host_and_port, ':');
-#ifdef OSF1
   if (s && sscanf (s+1, " %u ", &port) == 1 &&
-#else
-  if (s && sscanf (s+1, " %lu ", &port) == 1 &&
-#endif
 	  HG05998)
 	*s = 0;
 
@@ -4176,11 +4158,7 @@ NET_NewsLoad (ActiveEntry *ce, char *proxy_server)
   colon = PL_strchr (host_and_port, ':');
   if (colon) {
 	*colon = '\0';
-#ifdef OSF1
 	sscanf (colon+1, " %u ", &port);
-#else
-	sscanf (colon+1, " %lu ", &port);
-#endif
   }
   cd->host = MSG_CreateNewsHost(MSG_GetMaster(cd->pane), host_and_port,
 								bVal, port);
@@ -4531,7 +4509,7 @@ NET_NewsLoad (ActiveEntry *ce, char *proxy_server)
   }
   else 
   {
-	  return (NET_ProcessNews (ce));
+	  return (net_ProcessNews (ce));
   }
 }
 /* process the offline news state machine, such as it is. */
@@ -4605,7 +4583,7 @@ NET_ProcessOfflineNews(ActiveEntry *ce, NewsConData *cd)
  * returns negative when completely done
  */
 MODULE_PRIVATE int
-NET_ProcessNews (ActiveEntry *ce)
+net_ProcessNews (ActiveEntry *ce)
 {
     NewsConData * cd = (NewsConData *)ce->con_data;
 
@@ -5267,7 +5245,7 @@ NET_InterruptNews(ActiveEntry * ce)
 	if (cd->control_con)
 		cd->control_con->prev_cache = FALSE;   /* to keep if from reconnecting */
  
-    return(NET_ProcessNews(ce));
+    return(net_ProcessNews(ce));
 }
 
 /* Free any memory used up
