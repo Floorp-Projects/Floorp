@@ -501,7 +501,7 @@
       </xul:hbox>
       <xul:hbox mousethrough="always">
         <xul:hbox mousethrough="always" id="overflow-padder"/>
-        <xul:toolbarbutton mousethrough="never" collapsed="true" type="menu"
+        <xul:toolbarbutton mousethrough="never" collapsed="true" type="menu" class="chevron"
               datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch" 
               ref="NC:PersonalToolbarFolder" flags="dont-test-empty"
               oncommand="BookmarksUtils.loadBookmarkBrowser(event, this.database)"

@@ -777,3 +777,12 @@ toolbar[iconsize="small"] #navigator-throbber[busy="true"] {
 .tabs-closebutton:hover:active {
   -moz-image-region: rect(0px 110px 20px 90px);
 }
+
+toolbarbutton.chevron {
+  list-style-image: url("chrome://global/skin/toolbar/chevron.gif") !important;
+}
+
+
+toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
+  display: none;
+}
