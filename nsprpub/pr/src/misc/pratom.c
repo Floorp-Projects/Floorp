@@ -34,7 +34,7 @@
  * compiled in.
  */
 
-#ifndef _PR_HAVE_ATOMIC_OPS
+#if !defined(_PR_HAVE_ATOMIC_OPS)
 
 #if defined(_PR_PTHREADS) && !defined(_PR_DCETHREADS)
 /*
@@ -207,7 +207,7 @@ _PR_MD_ATOMIC_SET(PRInt32 *val, PRInt32 newval)
  * The lock contention should be acceptable.
  */
 static PRLock *atomic_lock = NULL;
-void _PR_MD_INIT_ATOMIC()
+void _PR_MD_INIT_ATOMIC(void)
 {
     if (atomic_lock == NULL) {
         atomic_lock = PR_NewLock();

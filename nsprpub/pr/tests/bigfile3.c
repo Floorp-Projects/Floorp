@@ -24,7 +24,7 @@
 #include <windows.h>
 #endif
 
-#define TEST_FILE_NAME "m:\\bigfile3.txt"
+#define TEST_FILE_NAME "bigfile3.txt"
 
 #define MESSAGE "Hello world!"
 #define MESSAGE_SIZE 13

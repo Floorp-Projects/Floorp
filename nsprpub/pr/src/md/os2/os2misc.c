@@ -23,6 +23,11 @@
 #include <string.h>
 #include "primpl.h"
 
+extern int   _CRT_init(void);
+extern void  _CRT_term(void);
+extern void __ctordtorInit(int flag);
+extern void __ctordtorTerm(int flag);
+
 char *
 _PR_MD_GET_ENV(const char *name)
 {
@@ -303,7 +308,9 @@ PRProcess * _PR_CreateOS2Process(
    HFILE hStdIn  = 0,
            hStdOut = 0, 
            hStdErr = 0;
-
+   HFILE hStdInSave  = -1,
+         hStdOutSave = -1, 
+         hStdErrSave = -1;
 
    proc = PR_NEW(PRProcess);
    if (!proc) {
@@ -343,16 +350,19 @@ PRProcess * _PR_CreateOS2Process(
        * and gross I know. If you know a better way, please use it.
        */
        if (attr->stdinFd) {
-            hStdIn = (HFILE) attr->stdinFd->secret->md.osfd;
-            DosDupHandle(0, &hStdIn);
+            hStdIn = 0;
+            DosDupHandle(hStdIn, &hStdInSave);
+            DosDupHandle((HFILE) attr->stdinFd->secret->md.osfd, &hStdIn);
         }
         if (attr->stdoutFd) {
-            hStdOut = (HFILE) attr->stdoutFd->secret->md.osfd;
-            DosDupHandle(1, &hStdOut);
+            hStdOut = 1;
+            DosDupHandle(hStdOut, &hStdOutSave);
+            DosDupHandle((HFILE) attr->stdoutFd->secret->md.osfd, &hStdOut);
         }
         if (attr->stderrFd) {
-            hStdErr = (HFILE) attr->stderrFd->secret->md.osfd;
-            DosDupHandle(2, &hStdErr);
+            hStdErr = 2;
+            DosDupHandle(hStdErr, &hStdErrSave);
+            DosDupHandle((HFILE) attr->stderrFd->secret->md.osfd, &hStdErr);
         }
    }
 
@@ -365,17 +375,17 @@ PRProcess * _PR_CreateOS2Process(
                        argv[0]);
 
    /* Restore our old values.  Hope this works */
-   if(hStdIn){
-      hStdIn = 0;
-      DosDupHandle(0, &hStdIn);      
+   if(hStdInSave != -1){
+      DosDupHandle(hStdInSave, &hStdIn);
+      DosClose(hStdInSave);
    }
-   if(hStdOut){
-      hStdOut = 1;
-      DosDupHandle(1, &hStdOut);      
+   if(hStdOutSave != -1){
+      DosDupHandle(hStdOutSave, &hStdOut);
+      DosClose(hStdOutSave);
    }
-   if(hStdErr){
-      hStdErr = 1;
-      DosDupHandle(0, &hStdErr);      
+   if(hStdErrSave != -1){
+      DosDupHandle(hStdErrSave, &hStdErr);
+      DosClose(hStdErrSave);
    }
 
    if (retVal != NO_ERROR) {
@@ -509,3 +519,37 @@ PRStatus _MD_CloseFileMap(PRFileMap *fmap)
     return PR_FAILURE;
 }
 
+/*
+ *  Automatically set apptype switch for interactive and other
+ *  tests that create an invisible plevent window.
+ */
+unsigned long _System _DLL_InitTerm( unsigned long mod_handle, unsigned long flag)
+{
+   unsigned long rc = 0; /* failure */
+
+   if( !flag)
+   {
+      /* init */
+      if( _CRT_init() == 0)
+      {
+         PPIB pPib;
+         PTIB pTib;
+
+         /* probably superfluous, but can't hurt */
+         __ctordtorInit(0);
+
+         DosGetInfoBlocks( &pTib, &pPib);
+         pPib->pib_ultype = 3; /* PM */
+
+         rc = 1;
+      }
+   }
+   else
+   {
+      __ctordtorTerm(0);
+      _CRT_term();
+      rc = 1;
+   }
+
+   return rc;
+}

@@ -28,6 +28,7 @@
 #ifdef XP_OS2_VACPP
 #include <direct.h>
 #else
+#include <limits.h>
 #include <dirent.h>
 #include <fcntl.h>
 #include <io.h>
@@ -153,7 +154,7 @@ _PR_MD_OPEN(const char *name, PRIntn osflags, int mode)
 PRInt32
 _PR_MD_READ(PRFileDesc *fd, void *buf, PRInt32 len)
 {
-    PRUword bytes;
+    ULONG bytes;
     int rv;
 
     rv = DosRead((HFILE)fd->secret->md.osfd,
@@ -172,13 +173,13 @@ _PR_MD_READ(PRFileDesc *fd, void *buf, PRInt32 len)
         return -1;
     }
     }
-    return bytes;
+    return (PRInt32)bytes;
 }
 
 PRInt32
 _PR_MD_WRITE(PRFileDesc *fd, const void *buf, PRInt32 len)
 {
-    PRUword bytes;
+    PRInt32 bytes;
     int rv; 
 
     /* No longer using DosWrite since it doesn't convert \n to \n\r like C runtime does */
@@ -195,7 +196,7 @@ _PR_MD_WRITE(PRFileDesc *fd, const void *buf, PRInt32 len)
     }
 #else
     bytes = write(fd->secret->md.osfd, buf, len);
-    if (rv == -1) 
+    if (bytes == -1) 
        _PR_MD_MAP_WRITE_ERROR(errno);
 #endif
 
@@ -220,6 +221,7 @@ _PR_MD_LSEEK(PRFileDesc *fd, PRInt32 offset, PRSeekWhence whence)
 PRInt64
 _PR_MD_LSEEK64(PRFileDesc *fd, PRInt64 offset, PRSeekWhence whence)
 {
+#ifdef NO_LONG_LONG
     PRInt64 result;
     PRInt32 rv, low = offset.lo, hi = offset.hi;
     PRUword newLocation;
@@ -235,6 +237,45 @@ _PR_MD_LSEEK64(PRFileDesc *fd, PRInt64 offset, PRSeekWhence whence)
     result.lo = newLocation;
     result.hi = hi;
 	return result;
+
+#else
+    PRInt32 where, rc, lo = (PRInt32)offset, hi = (PRInt32)(offset >> 32);
+    PRUint64 rv;
+    PRUint32 newLocation, uhi;
+
+    switch (whence)
+      {
+      case PR_SEEK_SET:
+        where = FILE_BEGIN;
+        break;
+      case PR_SEEK_CUR:
+        where = FILE_CURRENT;
+        break;
+      case PR_SEEK_END:
+        where = FILE_END;
+        break;
+      default:
+        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+        return -1;
+}
+
+    rc = DosSetFilePtr((HFILE)fd->secret->md.osfd, lo, where, (PULONG)&newLocation);
+     
+    if (rc != NO_ERROR) {
+      _PR_MD_MAP_LSEEK_ERROR(rc);
+      return -1;
+    }
+    
+    uhi = (PRUint32)hi;
+    PR_ASSERT((PRInt32)uhi >= 0);
+    rv = uhi;
+    PR_ASSERT((PRInt64)rv >= 0);
+    rv = (rv << 32);
+    PR_ASSERT((PRInt64)rv >= 0);
+    rv += newLocation;
+    PR_ASSERT((PRInt64)rv >= 0);
+    return (PRInt64)rv;
+#endif
 }
 
 PRInt32
@@ -443,6 +484,7 @@ _PR_MD_GETFILEINFO(const char *fn, PRFileInfo *info)
 {
     struct stat sb;
     PRInt32 rv;
+    PRInt64 s, s2us;
  
     if ( (rv = _PR_MD_STAT(fn, &sb)) == 0 ) {
         if (info) {
@@ -453,8 +495,13 @@ _PR_MD_GETFILEINFO(const char *fn, PRFileInfo *info)
             else
                 info->type = PR_FILE_OTHER;
             info->size = sb.st_size;
-            info->modifyTime.lo = sb.st_mtime;
-            info->creationTime.lo = sb.st_ctime;
+            LL_I2L(s2us, PR_USEC_PER_SEC);
+            LL_I2L(s, sb.st_mtime);
+            LL_MUL(s, s, s2us);
+            info->modifyTime = s;
+            LL_I2L(s, sb.st_ctime);
+            LL_MUL(s, s, s2us);
+            info->creationTime = s;
         }
     }
     return rv;
@@ -468,7 +515,7 @@ _PR_MD_GETFILEINFO64(const char *fn, PRFileInfo64 *info)
     if (0 == rv)
     {
         info->type = info32.type;
-        info->size.lo = info32.size;
+        LL_UI2L(info->size,info32.size);
         info->modifyTime = info32.modifyTime;
         info->creationTime = info32.creationTime;
     }
@@ -493,6 +540,7 @@ _PR_MD_GETOPENFILEINFO(const PRFileDesc *fd, PRFileInfo *info)
     * point is now moot.
     */
    struct stat hinfo;
+    PRInt64 s, s2us;
 
     _setmode(fd->secret->md.osfd, O_BINARY);
     if(fstat((int)fd->secret->md.osfd, &hinfo) != NO_ERROR) {
@@ -506,8 +554,13 @@ _PR_MD_GETOPENFILEINFO(const PRFileDesc *fd, PRFileInfo *info)
         info->type = PR_FILE_FILE;
 
     info->size = hinfo.st_size;
-    info->modifyTime.lo = hinfo.st_mtime;
-    info->creationTime.lo = hinfo.st_ctime;
+    LL_I2L(s2us, PR_USEC_PER_SEC);
+    LL_I2L(s, hinfo.st_mtime);
+    LL_MUL(s, s, s2us);
+    info->modifyTime = s;
+    LL_I2L(s, hinfo.st_ctime);
+    LL_MUL(s, s, s2us);
+    info->creationTime = s;
 
     return 0;
 }
@@ -520,7 +573,8 @@ _PR_MD_GETOPENFILEINFO64(const PRFileDesc *fd, PRFileInfo64 *info)
    if (0 == rv)
    {
        info->type = info32.type;
-       info->size.lo = info32.size;
+       LL_UI2L(info->size,info32.size);
+
        info->modifyTime = info32.modifyTime;
        info->creationTime = info32.creationTime;
    }
@@ -650,4 +704,29 @@ _PR_MD_UNLOCKFILE(PRInt32 f)
 		return PR_FAILURE;
     }
 } /* end _PR_MD_UNLOCKFILE() */
+
+PRStatus
+_PR_MD_SET_FD_INHERITABLE(PRFileDesc *fd, PRBool inheritable)
+{
+    int rv = 0;
+    ULONG flags;
+
+    rv = DosQueryFHState((HFILE)fd->secret->md.osfd, &flags);
+    if (rv != 0) {
+        PR_SetError(PR_UNKNOWN_ERROR, _MD_ERRNO());
+        return PR_FAILURE;
+    }
+
+    if (inheritable)
+      flags &= OPEN_FLAGS_NOINHERIT;
+    else
+      flags |= OPEN_FLAGS_NOINHERIT;
+
+    rv = DosSetFHState((HFILE)fd->secret->md.osfd, flags);
+    if (rv != 0) {
+        PR_SetError(PR_UNKNOWN_ERROR, _MD_ERRNO());
+        return PR_FAILURE;
+    }
+    return PR_SUCCESS;
+}
 

@@ -38,13 +38,13 @@ else
 ifeq ($(OS_TARGET), WIN16)
 MDCPUCFG_H = _win16.cfg
 else
-ifeq ($(OS_TARGET),OS2)
-MDCPUCFG_H = _os2.cfg
-else
 MDCPUCFG_H = _winnt.cfg
 endif
 endif
 endif
+
+ifeq ($(OS_ARCH),OS2)
+MDCPUCFG_H = _os2.cfg
 endif
 
 ifeq ($(OS_ARCH),AIX)

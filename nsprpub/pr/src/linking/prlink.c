@@ -82,8 +82,13 @@ struct PRLibrary {
     const PRStaticLinkTable*    staticTable;
 
 #ifdef XP_PC
+#ifdef XP_OS2
+    HMODULE                     dlh;
+#else
     HINSTANCE                   dlh;
 #endif
+#endif
+
 #ifdef XP_MAC
     CFragConnectionID           dlh;
 #endif

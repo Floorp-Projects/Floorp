@@ -28,6 +28,8 @@ OPTIMIZER =
 endif
 endif
 
+CSRCS = mygetval.c mysetval.c
+
 INCLUDES = -I$(DIST)/include
 
 OBJS = $(OBJDIR)/mygetval.$(OBJ_SUFFIX) \
@@ -38,7 +40,7 @@ W16OBJS = $(subst $(space),$(comma)$(space),$(OBJS))
 endif
 
 ifeq ($(OS_ARCH), WINNT)
-ifeq (,$(filter-out WIN16 OS2,$(OS_TARGET)))
+ifeq ($(OS_TARGET), WIN16)
 # do nothing
 else
 DLLBASE=/BASE:0x30000000
@@ -47,10 +49,10 @@ RESNAME=../../../pr/src/nspr.rc
 endif
 endif
 
-ifeq ($(OS_ARCH), WINNT)
-IMPORT_LIBRARY	= $(OBJDIR)/my.lib
+ifeq (,$(filter-out WINNT OS2,$(OS_ARCH)))
+IMPORT_LIBRARY	= $(OBJDIR)/my.$(LIB_SUFFIX)
 SHARED_LIBRARY	= $(OBJDIR)/my.dll
-ifeq ($(OS_TARGET), OS2)
+ifeq ($(OS_ARCH), OS2)
 LIBRARY		= $(OBJDIR)/my_s.lib
 # XXX $(LIBRARY) probably doesn't need to be added to TARGETS.
 TARGETS		= $(LIBRARY) $(SHARED_LIBRARY) $(IMPORT_LIBRARY)

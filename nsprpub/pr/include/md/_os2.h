@@ -251,6 +251,7 @@ extern PRInt32 _MD_CloseSocket(PRInt32 osfd);
 #define _MD_SETSOCKOPT                (_PR_MD_SETSOCKOPT)
 #define _MD_SELECT                    select
 #define _MD_FSYNC                     _PR_MD_FSYNC
+#define _MD_SET_FD_INHERITABLE        (_PR_MD_SET_FD_INHERITABLE)
 
 #define _MD_INIT_ATOMIC               _PR_MD_INIT_ATOMIC
 #define _MD_ATOMIC_INCREMENT(x)       _PR_MD_ATOMIC_INCREMENT(x)
@@ -265,6 +266,7 @@ extern PRInt32 _MD_CloseSocket(PRInt32 osfd);
 #define _MD_SOCKET                    (_PR_MD_SOCKET)
 extern PRInt32 _MD_SocketAvailable(PRFileDesc *fd);
 #define _MD_SOCKETAVAILABLE           _MD_SocketAvailable
+#define _MD_PIPEAVAILABLE             _MD_SocketAvailable
 #define _MD_CONNECT                   (_PR_MD_CONNECT)
 extern PRInt32 _MD_Accept(PRFileDesc *fd, PRNetAddr *raddr, PRUint32 *rlen,
         PRIntervalTime timeout);
@@ -492,6 +494,7 @@ typedef struct _CONTEXTRECORD {
 #endif
 
 extern APIRET (* APIENTRY QueryThreadContext)(TID, ULONG, PCONTEXTRECORD);
+unsigned long _System _DLL_InitTerm( unsigned long mod_handle, unsigned long flag);
 
 /*
 #define _pr_tid            (((PTIB2)_getTIBvalue(offsetof(TIB, tib_ptib2)))->tib2_ultid)
@@ -502,7 +505,7 @@ extern APIRET (* APIENTRY QueryThreadContext)(TID, ULONG, PCONTEXTRECORD);
  * little bit easier.  Only add one here if it is a DIRECT mapping.  We are
  * not emulating anything.  Just mapping.
  */
-#define FreeLibrary(x) DosFreeModule(x)
+#define FreeLibrary(x) DosFreeModule((HMODULE)x)
 #define OutputDebugString(x)
                                
 #endif /* nspr_os2_defs_h___ */

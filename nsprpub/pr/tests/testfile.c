@@ -35,6 +35,7 @@
 #include <os2.h>
 #ifdef XP_OS2_EMX
 #include <getopt.h>
+#include <errno.h>
 #endif /* XP_OS2_EMX */
 #endif /* XP_OS2 */
 
@@ -48,7 +49,7 @@ static int _debug_on = 0;
 extern void SetupMacPrintfLog(char *logFile);
 #endif
 
-#ifdef XP_PC
+#ifdef XP_WIN
 #define mode_t int
 #endif
 
@@ -111,7 +112,9 @@ PRThread* create_new_thread(PRThreadType type,
 PRInt32 native_thread = 0;
 
 	PR_ASSERT(state == PR_UNJOINABLE_THREAD);
-#if (defined(_PR_PTHREADS) && !defined(_PR_DCETHREADS)) || defined(WIN32)
+
+#if (defined(_PR_PTHREADS) && !defined(_PR_DCETHREADS)) || defined(WIN32) || defined(XP_OS2)
+
 	switch(index %  4) {
 		case 0:
 			scope = (PR_LOCAL_THREAD);
@@ -136,6 +139,17 @@ PRInt32 native_thread = 0;
 			return((PRThread *) tid);
 		else
 			return (NULL);
+#elif defined(XP_OS2)
+        TID tid;
+
+        tid = (TID)_beginthread((void(* _Optlink)(void*))start,
+                                NULL, 32768, arg);
+        if (tid == -1) {
+          printf("_beginthread failed. errno %d\n", errno);
+          return (NULL);
+        }
+        else
+          return((PRThread *) tid);
 #else
 		HANDLE thandle;
 		unsigned tid;

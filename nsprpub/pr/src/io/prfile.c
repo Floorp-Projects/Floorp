@@ -638,12 +638,20 @@ PR_IMPLEMENT(PRStatus) PR_CreatePipe(
     (*readPipe)->secret->inheritable = PR_TRUE;
     (*writePipe)->secret->inheritable = PR_TRUE;
     return PR_SUCCESS;
-#elif defined(XP_UNIX)
+#elif defined(XP_UNIX) || defined(XP_OS2)
+#ifdef XP_OS2
+    HFILE pipefd[2];
+#else
     int pipefd[2];
+#endif
 
     if (!_pr_initialized) _PR_ImplicitInitialization();
 
+#ifdef XP_OS2
+    if (DosCreatePipe(&pipefd[0], &pipefd[1], 4096) != 0) {
+#else
     if (pipe(pipefd) == -1) {
+#endif
         /* XXX map pipe error */
         PR_SetError(PR_UNKNOWN_ERROR, errno);
         return PR_FAILURE;

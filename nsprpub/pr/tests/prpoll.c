@@ -20,6 +20,10 @@
 #include <windows.h>
 #endif
 
+#ifdef XP_OS2_VACPP
+#include <io.h>      /* for close() */
+#endif
+
 #include "prinit.h"
 #include "prio.h"
 #include "prlog.h"

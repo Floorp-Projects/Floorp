@@ -23,6 +23,11 @@ include $(MOD_DEPTH)/config/config.mk
 
 DIRS = io linking malloc md memory misc threads
 
+# For VAC++ 4 geticcdata rule in config/OS2.mk
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+CSRCS = prvrsion.c
+endif
+
 ifeq ($(USE_PTHREADS), 1)
 	DIRS += pthreads
 endif
@@ -135,12 +140,8 @@ OS_LIBS		= -lsocket -lnsl -lgen -lresolv
 endif
 
 ifeq ($(OS_ARCH),WINNT)
-ifeq ($(OS_TARGET),OS2)
-# We define this in os2.mk.
-else
 ifneq ($(OS_TARGET),WIN16)
 OS_LIBS		= wsock32.lib winmm.lib
-endif
 endif
 endif
 
@@ -165,7 +166,6 @@ OBJS = \
 	threads/$(OBJDIR)/prrwlock.$(OBJ_SUFFIX) \
 	threads/$(OBJDIR)/prtpd.$(OBJ_SUFFIX) \
     linking/$(OBJDIR)/prlink.$(OBJ_SUFFIX) \
-    malloc/$(OBJDIR)/prmalloc.$(OBJ_SUFFIX) \
     malloc/$(OBJDIR)/prmem.$(OBJ_SUFFIX) \
     md/$(OBJDIR)/prosdep.$(OBJ_SUFFIX) \
     memory/$(OBJDIR)/prshm.$(OBJ_SUFFIX) \
@@ -191,6 +191,11 @@ OBJS = \
     misc/$(OBJDIR)/prthinfo.$(OBJ_SUFFIX) \
     misc/$(OBJDIR)/prtrace.$(OBJ_SUFFIX) \
     misc/$(OBJDIR)/prtime.$(OBJ_SUFFIX)
+
+# ilib now rejects empty objects
+ifneq ($(MOZ_OS2_TOOLS),VACPP)
+OBJS += malloc/$(OBJDIR)/prmalloc.$(OBJ_SUFFIX)
+endif
 
 ifdef USE_PTHREADS
 OBJS += \
@@ -240,7 +245,7 @@ OBJS += \
 endif
 
 ifeq ($(OS_ARCH), WINNT)
-ifneq (,$(filter-out WIN16 OS2,$(OS_TARGET)))
+ifneq ($(OS_TARGET),WIN16)
 DLLBASE=/BASE:0x30000000
 RES=$(OBJDIR)/nspr.res
 RESNAME=nspr.rc
@@ -291,18 +296,6 @@ OBJS +=	md/windows/$(OBJDIR)/w95io.$(OBJ_SUFFIX) \
 	md/windows/$(OBJDIR)/w32shm.$(OBJ_SUFFIX)	\
 	md/windows/$(OBJDIR)/w95dllmain.$(OBJ_SUFFIX)
 else
-ifeq ($(OS_TARGET),OS2)
-OBJS +=	md/os2/$(OBJDIR)/os2io.$(OBJ_SUFFIX) \
-	md/os2/$(OBJDIR)/os2sock.$(OBJ_SUFFIX) \
-	md/os2/$(OBJDIR)/os2thred.$(OBJ_SUFFIX) \
-	md/os2/$(OBJDIR)/os2cv.$(OBJ_SUFFIX) \
-	md/os2/$(OBJDIR)/os2gc.$(OBJ_SUFFIX) \
-	md/os2/$(OBJDIR)/os2misc.$(OBJ_SUFFIX) \
-	md/os2/$(OBJDIR)/os2inrval.$(OBJ_SUFFIX) \
-	md/os2/$(OBJDIR)/os2sem.$(OBJ_SUFFIX)	\
-	md/os2/$(OBJDIR)/os2_errors.$(OBJ_SUFFIX) \
-	md/os2/$(OBJDIR)/os2poll.$(OBJ_SUFFIX)
-else
 OBJS +=	md/windows/$(OBJDIR)/ntdllmn.$(OBJ_SUFFIX) \
 	md/windows/$(OBJDIR)/ntio.$(OBJ_SUFFIX) \
 	md/windows/$(OBJDIR)/ntgc.$(OBJ_SUFFIX) \
@@ -317,8 +310,21 @@ OBJS +=	md/windows/$(OBJDIR)/ntdllmn.$(OBJ_SUFFIX) \
 	md/windows/$(OBJDIR)/w32poll.$(OBJ_SUFFIX)
 endif
 endif
-endif
 
+else
+
+ifeq ($(OS_ARCH),OS2)
+OBJS +=	md/os2/$(OBJDIR)/os2io.$(OBJ_SUFFIX) \
+	md/os2/$(OBJDIR)/os2sock.$(OBJ_SUFFIX) \
+	md/os2/$(OBJDIR)/os2thred.$(OBJ_SUFFIX) \
+	md/os2/$(OBJDIR)/os2cv.$(OBJ_SUFFIX) \
+	md/os2/$(OBJDIR)/os2gc.$(OBJ_SUFFIX) \
+	md/os2/$(OBJDIR)/os2misc.$(OBJ_SUFFIX) \
+	md/os2/$(OBJDIR)/os2inrval.$(OBJ_SUFFIX) \
+	md/os2/$(OBJDIR)/os2sem.$(OBJ_SUFFIX)	\
+	md/os2/$(OBJDIR)/os2_errors.$(OBJ_SUFFIX) \
+	md/os2/$(OBJDIR)/os2poll.$(OBJ_SUFFIX) \
+	md/os2/$(OBJDIR)/os2rng.$(OBJ_SUFFIX)
 else
 
 ifeq ($(OS_ARCH), BeOS)
@@ -328,7 +334,7 @@ else
 	# Unix
 	include md/unix/objs.mk
 endif
-
+endif
 endif
 
 LIBRARY_NAME = nspr
@@ -349,17 +355,19 @@ endif
 ECHO = echo
 INCLUDES = -I$(DIST)/include
 TINC = $(OBJDIR)/_pr_bld.h
+
+ifeq ($(OS_TARGET),OS2)
+PROD = nspr$(MOD_VERSION).$(DLL_SUFFIX)
+else
 PROD = $(notdir $(SHARED_LIBRARY))
+endif
+
 NOW = $(MOD_DEPTH)/config/$(OBJDIR)/now
 SH_DATE = $(shell date)
 SH_NOW = $(shell $(NOW))
 
 ifeq ($(OS_ARCH), WINNT)
-ifeq ($(OS_TARGET),OS2)
-	SUF =
-else
 	SUF = i64
-endif
 else
 	SUF = LL
 endif
@@ -379,13 +387,13 @@ $(TINC):
 
 $(OBJDIR)/prvrsion.$(OBJ_SUFFIX): prvrsion.c $(TINC)
 ifeq ($(OS_ARCH), WINNT)
-ifdef XP_OS2_EMX
-	$(CC) -o $@ -c $(CFLAGS) -I$(OBJDIR) prvrsion.c
-else
 	$(CC) -Fo$@ -c $(CFLAGS) -I$(OBJDIR) prvrsion.c
-endif
+else
+ifeq ($(MOZ_OS2_TOOLS), VACPP)
+	$(CC) -Fo$@ -c $(CFLAGS) -I$(OBJDIR) prvrsion.c
 else
 	$(CC) -o $@ -c $(CFLAGS) -I$(OBJDIR) prvrsion.c
+endif
 endif
 #
 # Version information generation (end)

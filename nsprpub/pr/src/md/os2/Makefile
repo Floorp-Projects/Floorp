@@ -33,6 +33,7 @@ CSRCS = \
     os2sock.c \
     os2_errors.c \
     os2poll.c \
+    os2rng.c \
     $(NULL)
 endif
 

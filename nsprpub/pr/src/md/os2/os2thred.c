@@ -23,6 +23,10 @@
 #include <time.h>     /* for _tzset() */
 #endif
 
+#ifdef XP_OS2_EMX
+#include <signal.h>
+#endif
+
 /* --- Declare these to avoid "implicit" warnings --- */
 PR_EXTERN(void) _PR_MD_NEW_SEM(_MDSemaphore *md, PRUintn value);
 PR_EXTERN(void) _PR_MD_DESTROY_SEM(_MDSemaphore *md);
@@ -51,7 +55,7 @@ _PR_MD_EARLY_INIT()
 {
    HMODULE hmod;
 
-   if (DosLoadModule(NULL, 0, "DOSCALL1.DLL", &hmod) == 0)
+   if (DosLoadModule(NULL, 0, "DOSCALL1", &hmod) == 0)
        DosQueryProcAddr(hmod, 877, "DOSQUERYTHREADCONTEXT",
                         (PFN *)&QueryThreadContext);
 
@@ -76,6 +80,15 @@ _pr_SetThreadMDHandle(PRThread *thread)
 PR_IMPLEMENT(PRStatus)
 _PR_MD_INIT_THREAD(PRThread *thread)
 {
+#ifdef XP_OS2_EMX
+   /* disable SIGPIPE */
+   struct sigaction sa;
+   sa.sa_handler = SIG_IGN;
+   sa.sa_flags = 0;
+   sigemptyset( &sa.sa_mask);
+   sigaction( SIGPIPE, &sa, NULL);
+#endif
+
    if (thread->flags & (_PR_PRIMORDIAL | _PR_ATTACHED)) {
       _pr_SetThreadMDHandle(thread);
    }

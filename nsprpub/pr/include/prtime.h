@@ -253,7 +253,7 @@ NSPR_API(PRStatus) PR_ParseTimeString (
 /*
  * FIXME: should we also have a formatting function, such as asctime, ctime,
  * and strftime in standard C library?  But this would involve
- * internationalization issues.  Might want to provide a US Engligh version.
+ * internationalization issues.  Might want to provide a US English version.
  */
 
 /**********************************************************************/

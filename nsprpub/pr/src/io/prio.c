@@ -122,7 +122,7 @@ PR_IMPLEMENT(PRStatus) PR_SetFDInheritable(
     PRFileDesc *fd,
     PRBool inheritable)
 {
-#if defined(XP_UNIX) || defined(WIN32)
+#if defined(XP_UNIX) || defined(WIN32) || defined(XP_OS2)
     /*
      * Only a non-layered, NSPR file descriptor can be inherited
      * by a child process.
