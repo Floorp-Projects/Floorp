@@ -915,7 +915,7 @@ _PR_MD_SET_FD_INHERITABLE(PRFileDesc *fd, PRBool inheritable)
             HANDLE_FLAG_INHERIT,
             inheritable ? HANDLE_FLAG_INHERIT : 0);
     if (0 == rv) {
-        PR_SetError(PR_UNKNOWN_ERROR, GetLastError());
+        _PR_MD_MAP_DEFAULT_ERROR(GetLastError());
         return PR_FAILURE;
     }
     return PR_SUCCESS;
