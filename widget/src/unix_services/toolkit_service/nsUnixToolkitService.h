@@ -27,9 +27,20 @@ class nsUnixToolkitService : public nsIUnixToolkitService
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD SetToolkitName(const nsString & aToolkitName);
+  NS_IMETHOD SetWidgetToolkitName(const nsString & aToolkitName);
+  NS_IMETHOD SetGfxToolkitName(const nsString & aToolkitName);
+
   NS_IMETHOD IsValidToolkit(const nsString & aToolkitName,
                             PRBool * aResultOut);
+  NS_IMETHOD IsValidWidgetToolkit(const nsString & aToolkitName,
+                                  PRBool * aResultOut);
+  NS_IMETHOD IsValidGfxToolkit(const nsString & aToolkitName,
+                               PRBool * aResultOut);
+
   NS_IMETHOD GetToolkitName(nsString & aToolkitNameOut);
+  NS_IMETHOD GetWidgetToolkitName(nsString & aToolkitNameOut);
+  NS_IMETHOD GetGfxToolkitName(nsString & aToolkitNameOut);
+
   NS_IMETHOD GetWidgetDllName(nsString & aWidgetDllNameOut);
   NS_IMETHOD GetGfxDllName(nsString & aGfxDllNameOut);
 
@@ -37,13 +48,16 @@ class nsUnixToolkitService : public nsIUnixToolkitService
 
 private:
 
-  static nsresult GlobalGetToolkitName(nsString & aStringOut);
+  static nsresult GlobalGetWidgetToolkitName(nsString & aStringOut);
+  static nsresult GlobalGetGfxToolkitName(nsString & aStringOut);
 
-  static nsresult EnsureToolkitName();
+  static nsresult EnsureWidgetToolkitName();
+  static nsresult EnsureGfxToolkitName();
 
   static nsresult Cleanup();
 
-  static nsString *     sToolkitName;
+  static nsString *     sWidgetToolkitName;
+  static nsString *     sGfxToolkitName;
   static nsString *     sWidgetDllName;
   static nsString *     sGfxDllName;
   static const nsCID *  sTimerCID;
