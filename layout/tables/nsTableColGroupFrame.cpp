@@ -118,7 +118,8 @@ nsTableColGroupFrame::InitNewFrames(nsIPresContext& aPresContext, nsIFrame* aChi
 NS_IMETHODIMP
 nsTableColGroupFrame::AppendNewFrames(nsIPresContext& aPresContext, nsIFrame* aChildList)
 {
-  mFrames.AppendFrames(nsnull, aChildList);
+  if (nsnull!=aChildList)
+    mFrames.AppendFrames(nsnull, aChildList);
   return NS_OK;
 }
 
