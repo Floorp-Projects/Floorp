@@ -34,6 +34,11 @@ var consoleListener = {
 }
 
 /*
+ * Keeps the number of errors to prevent leak
+ */
+var num_errors=0;
+
+/*
  * Gets the current context of the console service and dumps it to the window,
  * and registers a listener with the service to be called on additional errors.
  */
@@ -65,8 +70,20 @@ function onLoadJSConsole()
     // In case getMessageArray returns 0-length array as null.
     if (messages == null)
         messages = [];
-    
-    for (i = 0; i < messages.length; i++) {
+
+	var i;
+	var cleared=0;
+
+	//Checks if console ever been cleared
+    for (i = messages.length-1; i >=0 ; i--) { 
+       	if (messages[i].message == "__CLEAR__") {
+			cleared = i + 1;
+			break;
+		}
+    }
+
+	//Populates tree with error messages after latest "clear"
+	for(i = cleared; i < messages.length; i++) {
         appendMessage(messages[i]);
     }
 
@@ -103,6 +120,8 @@ function onUnloadJSConsole()
  */
 function appendMessage(messageObject)
 {
+
+	if(messageObject.message == "__CLEAR__") {return;}
     var c = document.getElementById("consoleTreeChildren");
     var item = document.createElement("treeitem");
     var row = document.createElement("treerow");
@@ -157,20 +176,22 @@ function appendMessage(messageObject)
     row.appendChild(cell);
     item.appendChild(row);
     c.appendChild(item);
+	num_errors++;
+
+	//Deletes top error if error console is long
+	if(num_errors>200) { deleteOne(); }
+
 }
 
 function changeMode (aMode, aElement)
 {
   var broadcaster = document.getElementById(aElement.getAttribute("observes"));
   var bcset = document.getElementById("broadcasterset");
-  for (var i = 0; i < bcset.childNodes.length; i++) {
-    bcset.childNodes[i].removeAttribute("toggled");
-    bcset.childNodes[i].removeAttribute("checked");
-  }
-  broadcaster.setAttribute("toggled", "true");
-  broadcaster.setAttribute("checked", "true");
   var tree = document.getElementById("console");
   switch (aMode) {
+  	case "clear":
+	  clear();
+	  return;
     case "errors":
       tree.setAttribute("mode", "errors");
       break;
@@ -182,7 +203,64 @@ function changeMode (aMode, aElement)
       tree.removeAttribute("mode");
       break;
   }
+
+  for (var i = 0; i < bcset.childNodes.length; i++) {
+    bcset.childNodes[i].removeAttribute("toggled");
+    bcset.childNodes[i].removeAttribute("checked");
+  }
+  broadcaster.setAttribute("toggled", "true");
+  broadcaster.setAttribute("checked", "true");
 }
 
-// XXX q: if window is open, does it grow forever?  Is that OK?
-// or should it do its own retiring?
+/*
+ * If clear selected, __CLEAR__ message is logged to service and window cleared
+ * When console next run, will only list messages after the latest"__CLEAR__"
+ * message.
+ */
+function clear () 
+{
+
+    try {
+        var cs_class = Components.classes['mozilla.consoleservice.1'];
+        var cs_iface = Components.interfaces.nsIConsoleService;
+        var cs_isupports = cs_class.getService();
+        var cs = cs_isupports.QueryInterface(cs_iface);
+    } catch(exn) {
+        // Couldn't get the console service for some reason...
+        // pretend it never happened.
+        return;
+    }
+
+    cs.logStringMessage("__CLEAR__");
+
+	var tree = document.getElementById("console");
+    var treeChildren = document.getElementById("consoleTreeChildren");
+
+	tree.removeChild(treeChildren);
+
+	treeChildren = document.createElement ("treechildren");
+	treeChildren.setAttribute ("id", "consoleTreeChildren");
+	treeChildren.setAttribute ("flex", "1");
+	tree.appendChild(treeChildren);
+
+  
+	num_errors=0;
+    return true;
+	
+}
+
+/*
+ * Used to help prevent too much memory allocation by JS console
+ * Deletes the top-most node
+ */
+function deleteOne () 
+{
+
+    var tree = document.getElementById("consoleTreeChildren");
+
+	var node = tree.firstChild;
+	tree.removeChild(node);
+	num_errors--;
+    return true;
+	
+}

@@ -77,6 +77,7 @@ Contributor(s): ______________________________________. -->
     <button class="button-toolbar" observes="Console:ShowAll" oncommand="changeMode('all', this);" value="&all.label;"/>
     <button class="button-toolbar" observes="Console:ShowErrors" oncommand="changeMode('errors', this);" value="&errors.label;"/>
     <button class="button-toolbar" observes="Console:ShowWarnings" oncommand="changeMode('warnings', this);" value="&warnings.label;"/>
+    <button class="button-toolbar" observes="Console:Clear" oncommand="changeMode('clear', this);" value="&clear.label;"/>
   </toolbar>
 </toolbox>
   
@@ -92,6 +93,7 @@ Contributor(s): ______________________________________. -->
       <menuitem type="radio" observes="Console:ShowAll" value="&all.label;" oncommand="changeMode('all', this);"/>
       <menuitem type="radio" observes="Console:ShowErrors" value="&errors.label;" oncommand="changeMode('errors', this);"/>
       <menuitem type="radio" observes="Console:ShowWarnings" value="&warnings.label;" oncommand="changeMode('warnings', this);"/>
+      <menuitem type="radio" observes="Console:Clear" value="&clear.label;" oncommand="changeMode('clear', this);"/>
     </popup>
   </popupset>  
   
@@ -99,6 +101,7 @@ Contributor(s): ______________________________________. -->
     <broadcaster id="Console:ShowAll" toggled="true" checked="true"/>
     <broadcaster id="Console:ShowErrors"/>
     <broadcaster id="Console:ShowWarnings"/>
+    <broadcaster id="Console:Clear"/>
   </broadcasterset>
   
 </window>
