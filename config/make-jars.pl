@@ -5,9 +5,9 @@
 sub JarIt
 {
     my ($jarfile, $args) = @_;
-    print "+++ jaring $jarfile\n";
-    flush;
     system "zip -u $jarfile $args\n";
+    my $cwd = cwd();
+    print "+++ jarred $cwd => $jarfile\n";
 }
 
 sub MkDirs
@@ -25,7 +25,7 @@ sub MkDirs
     }
     else {
         my $dir = $path;
-        if ($dir =~ "") { return 0; } 
+        if ($dir eq "") { return 0; } 
         if (!-e $dir) {
             mkdir($dir, 0777) || die "error: can't create '$dir': $!";
         }

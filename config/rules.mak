@@ -357,6 +357,11 @@ install::
     @$(W95MAKE) install $(MAKEDIR) $(DIRS)
 !endif # DIRS
 
+xinstall::
+!ifdef DIRS
+    @$(W95MAKE) install $(MAKEDIR) $(DIRS)
+!endif # DIRS
+
 depend::
 !ifdef DIRS
     @$(W95MAKE) depend $(MAKEDIR) $(DIRS)
@@ -393,6 +398,9 @@ libs::
 	@set MAKE_ARGS=$@
 
 install:: 
+	@set MAKE_ARGS=$@
+
+xinstall:: 
 	@set MAKE_ARGS=$@
 
 mangle:: 
@@ -447,6 +455,8 @@ libs::
     @echo The libs build phase is obsolete.
 
 install:: $(DIRS) $(LIBRARY)
+
+xinstall:: $(DIRS)
 
 depend:: $(DIRS)
 
@@ -884,10 +894,8 @@ JAR_MANIFEST = jar.mn
 !if exist($(JAR_MANIFEST))
 
 xinstall:: 
-        @echo +++ make: packaging jars from $(JAR_MANIFEST)
         $(PERL) $(DEPTH)\config\make-jars.pl -d $(DIST)\bin\chrome < $(JAR_MANIFEST)
 
 !endif
 
 ################################################################################
-
