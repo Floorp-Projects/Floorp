@@ -553,7 +553,7 @@ endif
 endif
 
 # Dependent libs
-ifdef USE_DEPENDENT_LIBS
+ifdef USE_DEPENDENT_LIBS_BACKED_OUT
 ifdef IS_COMPONENT
 
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
