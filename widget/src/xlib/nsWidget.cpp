@@ -32,8 +32,10 @@ nsWidget::nsWidget() : nsBaseWidget()
 
 nsWidget::~nsWidget()
 {
-  XFreeGC(gDisplay, mGC);
-  XDestroyWindow(gDisplay, mBaseWindow);
+  if (mGC)
+    XFreeGC(gDisplay, mGC);
+  if (mBaseWindow)
+    XDestroyWindow(gDisplay, mBaseWindow);
 }
 
 NS_IMETHODIMP nsWidget::Create(nsIWidget *aParent,

@@ -138,5 +138,9 @@ extern "C"
 unsigned long
 xlib_rgb_xpixel_from_rgb (unsigned int rgb);
 
+extern "C"
+Colormap
+xlib_rgb_get_cmap (void);
+
 #endif
 

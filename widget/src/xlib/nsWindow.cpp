@@ -18,6 +18,8 @@
 
 #include "nsWindow.h"
 
+
+
 nsWindow::nsWindow() : nsWidget()
 {
   NS_INIT_REFCNT();
@@ -42,8 +44,13 @@ nsWindow::CreateNative(Window aParent, nsRect aRect)
   attr.event_mask = SubstructureNotifyMask | StructureNotifyMask | ExposureMask;
   // set the default background color to that awful gray
   attr.background_pixel = bg_pixel;
+  // set the colormap
+  attr.colormap = xlib_rgb_get_cmap();
   // here's what's in the struct
   attr_mask = CWBitGravity | CWEventMask | CWBackPixel;
+  // check to see if there was actually a colormap.
+  if (attr.colormap)
+    attr_mask |= CWColormap;
 
   printf("Creating XWindow: x %d y %d w %d h %d\n",
          aRect.x, aRect.y, aRect.width, aRect.height);
@@ -69,7 +76,7 @@ nsWindow::CreateNative(Window aParent, nsRect aRect)
                               0, // border width
                               gDepth,
                               InputOutput,    // class
-                              CopyFromParent, // visual
+                              gVisual,        // get the visual from xlibrgb
                               attr_mask,
                               &attr);
   // map this window and flush the connection.  we want to see this
