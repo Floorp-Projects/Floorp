@@ -29,8 +29,6 @@ include $(DEPTH)/config/autoconf.mk
 FILES		= \
 		ClassifiedPlus.gif		\
 		ClassifiedPlus.src		\
-		Jobs.gif			\
-		Jobs.src			\
 		Music_Artist.gif		\
 		Music_Artist.src		\
 		Shareware.gif			\
