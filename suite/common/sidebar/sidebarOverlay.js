@@ -281,16 +281,5 @@ function dumpTree(node, depth) {
   }
 }
 
-// To get around "window.onload" not working in viewer.
-function sidebarOverlayBoot()
-{
-    var panels = document.getElementById('sidebar-panels');
-    if (panels == null) {
-        setTimeout(sidebarOverlayBoot, 1);
-    }
-    else {
-        sidebarOverlayInit();
-    }
-}
-
-setTimeout('sidebarOverlayBoot()', 0);
+// Install our load handler
+addEventListener("load", sidebarOverlayInit, false);
