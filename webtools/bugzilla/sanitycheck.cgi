@@ -31,6 +31,7 @@ print "Content-type: text/html\n";
 print "\n";
 
 ConnectToDatabase();
+SendSQL("set SQL_BIG_TABLES=1");
 
 my $offervotecacherebuild = 0;
 
