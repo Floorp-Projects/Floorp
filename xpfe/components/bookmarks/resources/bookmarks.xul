@@ -44,6 +44,7 @@
 <!ENTITY tree.header.name.label           "Name">
 <!ENTITY tree.header.url.label            "URL">
 <!ENTITY tree.header.shortcut.label       "Shortcut URL">
+<!ENTITY tree.header.description.label  "Description">
 <!ENTITY bookmarksWindowTitle.label	"Bookmarks">
 ]>
 
@@ -115,6 +116,9 @@
            <treecell>
              <titledbutton value="rdf:http://home.netscape.com/NC-rdf#ShortcutURL" align="right" style="list-style-image: none;" />
            </treecell>
+           <treecell>
+             <titledbutton value="rdf:http://home.netscape.com/NC-rdf#Description" align="right" style="list-style-image: none;" />
+           </treecell>
          </treerow>
        </treeitem>
      </rule>
@@ -123,6 +127,7 @@
   <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
   <treecol id="URLColumn" rdf:resource="http://home.netscape.com/NC-rdf#URL"/>
   <treecol id="ShortcutURLColumn" rdf:resource="http://home.netscape.com/NC-rdf#ShortcutURL"/>
+  <treecol id="DescriptionColumn" rdf:resource="http://home.netscape.com/NC-rdf#Description"/>
 
   <treehead>
     <treerow>
@@ -138,6 +143,10 @@
 	<xul:observes element="ShortcutURLColumn" attribute="sortActive"/>
 	<xul:observes element="ShortcutURLColumn" attribute="sortDirection"/>
       &tree.header.shortcut.label;</treecell>
+      <treecell onclick="return doSort('DescriptionColumn');">
+	<xul:observes element="DescriptionColumn" attribute="sortActive"/>
+	<xul:observes element="DescriptionColumn" attribute="sortDirection"/>
+      &tree.header.description.label;</treecell>
     </treerow>
   </treehead>
 
