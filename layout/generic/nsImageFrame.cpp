@@ -739,6 +739,14 @@ nsImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
     }
   }
 
+  // Handle intrinsic sizes and their interaction with
+  // {min-,max-,}{width,height} according to the rules in
+  // http://www.w3.org/TR/CSS21/visudet.html#min-max-widths
+
+  // Note: throughout the following section of the function, I avoid
+  // a * (b / c) because of its reduced accuracy relative to a * b / c
+  // or (a * b) / c (which are equivalent).
+
   float t2p, sp2t;
   t2p = aPresContext->TwipsToPixels();
   aPresContext->GetScaledPixelsToTwips(&sp2t);
@@ -751,50 +759,131 @@ nsImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
       NSToCoordRound(float(mIntrinsicSize.height) * t2st);
 
   // Determine whether the image has fixed content width
-  nscoord widthConstraint = aReflowState.mComputedWidth;
+  nscoord width = aReflowState.mComputedWidth;
   nscoord minWidth = aReflowState.mComputedMinWidth;
   nscoord maxWidth = aReflowState.mComputedMaxWidth;
 
   // Determine whether the image has fixed content height
-  nscoord heightConstraint = aReflowState.mComputedHeight;
+  nscoord height = aReflowState.mComputedHeight;
   nscoord minHeight = aReflowState.mComputedMinHeight;
   nscoord maxHeight = aReflowState.mComputedMaxHeight;
 
-  PRBool isAutoWidth = widthConstraint == NS_INTRINSICSIZE;
+  PRBool isAutoWidth = width == NS_INTRINSICSIZE;
+  PRBool isAutoHeight = height == NS_UNCONSTRAINEDSIZE;
   if (isAutoWidth) {
-    widthConstraint = intrinsicWidth;
-  }
-  PRBool isAutoHeight = heightConstraint == NS_UNCONSTRAINEDSIZE;
-  if (isAutoHeight) {
-    heightConstraint = intrinsicHeight;
-  }
+    if (isAutoHeight) {
 
-  nscoord newWidth = MINMAX(widthConstraint, minWidth, maxWidth);
-  nscoord newHeight = MINMAX(heightConstraint, minHeight, maxHeight);
+      // 'auto' width, 'auto' height
+      // XXX nsHTMLReflowState should already ensure this
+      if (minWidth > maxWidth)
+        maxWidth = minWidth;
+      if (minHeight > maxHeight)
+        maxHeight = minHeight;
 
-  if (isAutoWidth && newWidth != intrinsicWidth) {
-    isAutoWidth = PR_FALSE;
-  }
-  if (isAutoHeight && newHeight != intrinsicHeight) {
-    isAutoHeight = PR_FALSE;
-  }
+      nscoord heightAtMaxWidth, heightAtMinWidth,
+              widthAtMaxHeight, widthAtMinHeight;
+      if (intrinsicWidth > 0) {
+        heightAtMaxWidth = maxWidth * intrinsicHeight / intrinsicWidth;
+        if (heightAtMaxWidth < minHeight)
+          heightAtMaxWidth = minHeight;
+        heightAtMinWidth = minWidth * intrinsicHeight / intrinsicWidth;
+        if (heightAtMinWidth > maxHeight)
+          heightAtMinWidth = maxHeight;
+      } else {
+        heightAtMaxWidth = intrinsicHeight;
+        heightAtMinWidth = intrinsicHeight;
+      }
 
-  // XXXldb This isn't quite right -- if an image has both 'max-width'
-  // and 'max-height', both smaller than the intrinsic dimensions but with
-  // different ratios to the intrinsic dimensions, then the image should
-  // stay in proportion, but this leaves the image misproportioned.
-  if (isAutoWidth) {
-    if (!isAutoHeight && intrinsicHeight != 0) {
-       newWidth = (intrinsicWidth * newHeight) / intrinsicHeight;
+      if (intrinsicHeight > 0) {
+        widthAtMaxHeight = maxHeight * intrinsicWidth / intrinsicHeight;
+        if (widthAtMaxHeight < minWidth)
+          widthAtMaxHeight = minWidth;
+        widthAtMinHeight = minHeight * intrinsicWidth / intrinsicHeight;
+        if (widthAtMinHeight > maxWidth)
+          widthAtMinHeight = maxWidth;
+      } else {
+        widthAtMaxHeight = intrinsicWidth;
+        widthAtMinHeight = intrinsicWidth;
+      }
+
+      if (intrinsicWidth > maxWidth) {
+        if (intrinsicHeight > maxHeight) {
+          if (maxWidth * intrinsicHeight <= maxHeight * intrinsicWidth) {
+            width = maxWidth;
+            height = heightAtMaxWidth;
+          } else {
+            height = maxHeight;
+            width = widthAtMaxHeight;
+          }
+        } else {
+          width = maxWidth;
+          height = heightAtMaxWidth;
+        }
+      } else if (intrinsicWidth < minWidth) {
+        if (intrinsicHeight < minHeight) {
+          if (minWidth * intrinsicHeight <= minHeight * intrinsicWidth) {
+            height = minHeight;
+            width = widthAtMinHeight;
+          } else {
+            width = minWidth;
+            height = heightAtMinWidth;
+          }
+        } else {
+          width = minWidth;
+          height = heightAtMinWidth;
+        }
+      } else {
+        if (intrinsicHeight > maxHeight) {
+          height = maxHeight;
+          width = widthAtMaxHeight;
+        } else if (intrinsicHeight < minHeight) {
+          height = minHeight;
+          width = widthAtMinHeight;
+        } else {
+          width = intrinsicWidth;
+          height = intrinsicHeight;
+        }
+      }
+
+    } else {
+
+      // 'auto' width, non-'auto' height
+      // XXX nsHTMLReflowState should already ensure this
+      height = MINMAX(height, minHeight, maxHeight);
+      if (intrinsicHeight != 0) {
+        width = intrinsicWidth * height / intrinsicHeight;
+      } else {
+        width = intrinsicWidth;
+      }
+      width = MINMAX(width, minWidth, maxWidth);
+
     }
   } else {
-    if (isAutoHeight && intrinsicWidth != 0) {
-       newHeight = (intrinsicHeight * newWidth) / intrinsicWidth;
+    if (isAutoHeight) {
+
+      // non-'auto' width, 'auto' height
+      // XXX nsHTMLReflowState should already ensure this
+      width = MINMAX(width, minWidth, maxWidth);
+      if (intrinsicWidth != 0) {
+        height = intrinsicHeight * width / intrinsicWidth;
+      } else {
+        height = intrinsicHeight;
+      }
+      height = MINMAX(height, minHeight, maxHeight);
+
+    } else {
+
+      // non-'auto' width, non-'auto' height
+      // XXX nsHTMLReflowState should already ensure this
+      height = MINMAX(height, minHeight, maxHeight);
+      // XXX nsHTMLReflowState should already ensure this
+      width = MINMAX(width, minWidth, maxWidth);
+
     }
   }
 
-  if (mComputedSize.width != newWidth || mComputedSize.height != newHeight) {
-    mComputedSize.SizeTo(newWidth, newHeight);
+  if (mComputedSize.width != width || mComputedSize.height != height) {
+    mComputedSize.SizeTo(width, height);
     RecalculateTransform(nsnull);
   }
 
