@@ -218,7 +218,7 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
             rv = binDirectory->IsDirectory(&value);
 
             if (NS_SUCCEEDED(rv) && value)
-                directoryService->Define("xpcom.currentProcess", binDirectory);
+                directoryService->Define("xpcom.currentProcessDirectory", binDirectory);
         }
 
         rv = compMgr->Init();
