@@ -134,6 +134,10 @@ class nsInstall
             ABORT_INSTALL               = -227,
             DOWNLOAD_ERROR              = -228,
             SCRIPT_ERROR                = -229,
+            DESTINATION_ALREADY_EXISTS  = -230,
+            DESTINATION_DOES_NOT_EXIST  = -231,
+            DESTINATION_IS_FILE         = -232,
+            DIRECTORY_IS_FILE           = -233,
             
             OUT_OF_MEMORY               = -299,
 
