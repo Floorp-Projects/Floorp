@@ -182,6 +182,11 @@ namespace Silverstone.Manticore.Toolkit
       if (childTarget == null && parentTarget == null)
         return;
 
+      // Determine based on conditions defined by the |TreeView|
+      // whether or not this node should be built. 
+      if (!mTreeView.ShouldBuild(childTarget))
+        return;
+
       int childKey = childTarget.Data.GetHashCode();
       if (!mNodes.ContainsKey(childKey)) 
       {
@@ -263,8 +268,13 @@ namespace Silverstone.Manticore.Toolkit
         CommandTarget current = items.Current as CommandTarget;
         if (current != null) 
         {
+          // Determine based on conditions defined by the |TreeView|
+          // whether or not this node should be built. 
+          if (!mTreeView.ShouldBuild(current))
+            continue;
+
           String id = current.Data as String; 
-          
+         
           int idKey = id.GetHashCode();
           
           if (!mNodes.ContainsKey(idKey)) 

@@ -232,6 +232,11 @@ namespace Silverstone.Manticore.Toolkit
     /// </summary>
     protected Color mIconTransparentColor;
 
+    public virtual bool ShouldBuild(CommandTarget aTarget)
+    {
+      return true;
+    }
+
     public int GetIconIndex(String aIconURL)
     {
       if (aIconURL == "")

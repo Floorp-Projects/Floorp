@@ -86,6 +86,10 @@ namespace Silverstone.Manticore.Bookmarks
       mFolderTree.SelectedImageIndex = -1;
       mFolderTree.Size = new System.Drawing.Size(208, 144);
       mFolderTree.TabIndex = 5;
+
+      // Only show folders in this |TreeView|
+      mFolderTree.AddCriteria(new String[] {"container", "true"});
+
       Controls.Add(mFolderTree);
       mFolderTree.Build();
 

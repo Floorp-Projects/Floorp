@@ -223,7 +223,7 @@ namespace Silverstone.Manticore.Browser
     public void OnTitleChange(String aTitle)
     {
       mTitle = aTitle;
-      this.Text = (aTitle == "about:blank") ? "Manticore" : aTitle + " - Manticore";
+      this.Text = (aTitle == "about:blank") ? "No page to display" : aTitle;
     }
 
     public void OnStatusTextChange(String aStatusText)
@@ -270,6 +270,12 @@ namespace Silverstone.Manticore.Browser
           break;
         case "file-exit":
           Quit();
+          break;
+        case "view-statusbar":
+          if (mStatusBar.Visible)
+            mStatusBar.Hide();
+          else
+            mStatusBar.Show();
           break;
         case "view-go-back":
           mWebBrowser.GoBack();

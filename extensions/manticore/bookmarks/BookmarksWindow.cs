@@ -40,7 +40,10 @@ namespace Silverstone.Manticore.Bookmarks
   using System.ComponentModel;
   using System.Windows.Forms;
 
+  using Silverstone.Manticore.App;
+  using Silverstone.Manticore.Core;
   using Silverstone.Manticore.Toolkit;
+  using Silverstone.Manticore.Bookmarks;
 
   /// <summary>
 	/// Summary description for BookmarksWindow.
@@ -49,7 +52,7 @@ namespace Silverstone.Manticore.Bookmarks
 	{
     private System.Windows.Forms.StatusBar statusBar1;
     private System.Windows.Forms.StatusBarPanel statusBarPanel1;
-    private ManticoreTreeView treeView1;
+    private BookmarksTreeView mBookmarksTree;
 		/// <summary>
 		/// Required designer variable.
 		/// </summary>
@@ -65,18 +68,21 @@ namespace Silverstone.Manticore.Bookmarks
 			InitializeComponent();
 
       // 
-      // treeView1
+      // mBookmarksTree
       // 
-      treeView1 = new ManticoreTreeView();
-      treeView1.Dock = System.Windows.Forms.DockStyle.Fill;
-      treeView1.ImageIndex = -1;
-      treeView1.Name = "treeView1";
-      treeView1.SelectedImageIndex = -1;
-      treeView1.Size = new System.Drawing.Size(584, 409);
-      treeView1.TabIndex = 1;
+      mBookmarksTree = new BookmarksTreeView("BookmarksRoot");
+      mBookmarksTree.Dock = System.Windows.Forms.DockStyle.Fill;
+      mBookmarksTree.ImageIndex = -1;
+      mBookmarksTree.Name = "bookmarksTree";
+      mBookmarksTree.SelectedImageIndex = -1;
+      mBookmarksTree.Size = new System.Drawing.Size(584, 409);
+      mBookmarksTree.TabIndex = 1;
 
-      mBuilder = new BaseTreeBuilder(treeView1, null);
-      mBuilder.Build();
+      mBookmarksTree.AfterSelect += new TreeViewEventHandler(OnTreeAfterSelect);
+      mBookmarksTree.DoubleClick += new EventHandler(OnTreeDoubleClick);
+
+      Controls.Add(mBookmarksTree);
+      mBookmarksTree.Build();
     }
 
 		/// <summary>
@@ -124,9 +130,7 @@ namespace Silverstone.Manticore.Bookmarks
       // 
       this.AutoScaleBaseSize = new System.Drawing.Size(5, 13);
       this.ClientSize = new System.Drawing.Size(584, 429);
-      this.Controls.AddRange(new System.Windows.Forms.Control[] {
-                                                                  this.treeView1,
-                                                                  this.statusBar1});
+      this.Controls.AddRange(new System.Windows.Forms.Control[] {this.statusBar1});
       this.Name = "BookmarksWindow";
       this.Text = "Bookmarks for %USER%";
       ((System.ComponentModel.ISupportInitialize)(this.statusBarPanel1)).EndInit();
@@ -134,5 +138,22 @@ namespace Silverstone.Manticore.Bookmarks
 
     }
 		#endregion
+
+    protected void OnTreeAfterSelect(Object sender, TreeViewEventArgs e)
+    {
+      ManticoreTreeNode node = e.Node as ManticoreTreeNode;
+      Bookmarks bmks = ServiceManager.Bookmarks;
+      String bookmarkURL = bmks.GetBookmarkAttribute(node.Data as String, "url");
+      statusBar1.Text = bookmarkURL;
+    }
+
+    protected void OnTreeDoubleClick(Object sender, EventArgs e)
+    {
+      ManticoreTreeNode node = mBookmarksTree.SelectedNode as ManticoreTreeNode;
+      Bookmarks bmks = ServiceManager.Bookmarks;
+      String bookmarkURL = bmks.GetBookmarkAttribute(node.Data as String, "url");
+      ManticoreApp.MostRecentBrowserWindow.LoadURL(bookmarkURL);
+    }
+
 	}
 }

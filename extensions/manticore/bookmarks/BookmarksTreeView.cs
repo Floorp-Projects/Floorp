@@ -37,6 +37,7 @@ namespace Silverstone.Manticore.Bookmarks
   using System;
   using System.Drawing;
   using System.Windows.Forms;
+  using System.Collections;
   
   using Silverstone.Manticore.Core;
   using Silverstone.Manticore.Toolkit;
@@ -47,6 +48,7 @@ namespace Silverstone.Manticore.Bookmarks
   public class BookmarksTreeView : ManticoreTreeView
   {
     protected BaseTreeBuilder mBuilder;
+    protected Queue mFilterAttributes;
 
     public BookmarksTreeView(String aRoot)
     {
@@ -91,6 +93,30 @@ namespace Silverstone.Manticore.Bookmarks
       }
     }
 
+    public void AddCriteria(String[] aAttrValuePair)
+    {
+      if (mFilterAttributes == null)
+        mFilterAttributes = new Queue();
+      mFilterAttributes.Enqueue(aAttrValuePair);
+    }
+
+    public override bool ShouldBuild(CommandTarget aTarget)
+    {
+      Bookmarks bmks = ServiceManager.Bookmarks;
+
+      if (mFilterAttributes != null) 
+      {
+        IEnumerator criteria = mFilterAttributes.GetEnumerator();
+        while (criteria.MoveNext()) 
+        {
+          String[] singleCriteria = criteria.Current as String[];
+            if (bmks.GetBookmarkAttribute(aTarget.Data as String, singleCriteria[0]) != singleCriteria[1])
+              return false;
+        }
+      }
+      return true;
+    }
+
     public override int GetIconIndex(CommandTarget aTarget)
     {
       int index = 2;
@@ -133,7 +159,7 @@ namespace Silverstone.Manticore.Bookmarks
     protected void OnAfterLabelEdit(Object sender, NodeLabelEditEventArgs e)
     {
       ManticoreTreeNode root = GetRootItem();
-      if (root != null) 
+      if (root != null && e.Label != "") 
       {
         ManticoreTreeNode temp = e.Node as ManticoreTreeNode;
         String parentID = root.Data as String;
