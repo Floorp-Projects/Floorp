@@ -972,9 +972,7 @@ NS_IMETHODIMP nsScrollingView :: ComputeContainerSize()
 
       if (NS_OK == win->QueryInterface(kIScrollbarIID, (void **)&scrollv))
       {
-        // XXX Shouldn't this check also take into account the height of the
-        // horizontal scrollbar if we need one?
-        if ((mSizeY > controlRect.height) &&
+        if ((mSizeY > (controlRect.height - ((nsnull != scrollh) ? hheight : 0))) &&
             (mScrollPref != nsScrollPreference_kNeverScroll))
         {
           //we need to be able to scroll
@@ -1040,9 +1038,7 @@ NS_IMETHODIMP nsScrollingView :: ComputeContainerSize()
 
       if (NS_OK == win->QueryInterface(kIScrollbarIID, (void **)&scrollh))
       {
-        // XXX Shouldn't this check also take into account the width of the
-        // vertical scrollbar if we have one?
-        if ((mSizeX > controlRect.width) &&
+        if ((mSizeX > (controlRect.width - ((nsnull != scrollv) ? vwidth : 0))) &&
             (mScrollPref != nsScrollPreference_kNeverScroll))
         {
           //we need to be able to scroll
