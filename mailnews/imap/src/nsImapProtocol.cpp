@@ -821,7 +821,7 @@ NS_IMETHODIMP nsImapProtocol::OnDataAvailable(nsIURL* aURL, nsIInputStream *aISt
 {
     PR_CEnterMonitor(this);
 
-    nsIImapUrl *aImapUrl;
+    nsIImapUrl *aImapUrl = nsnull;
     nsresult res = aURL->QueryInterface(nsIImapUrl::GetIID(), (void**)&aImapUrl);
 
     if(NS_SUCCEEDED(res) && aLength > 0)
@@ -841,9 +841,9 @@ NS_IMETHODIMP nsImapProtocol::OnDataAvailable(nsIURL* aURL, nsIInputStream *aISt
 		PR_EnterMonitor(m_dataAvailableMonitor);
         PR_Notify(m_dataAvailableMonitor);
 		PR_ExitMonitor(m_dataAvailableMonitor);
-		NS_RELEASE(aImapUrl);
 	}
-     
+
+    NS_IF_RELEASE (aImapUrl);
     PR_CExitMonitor(this);
 
 	return res;
