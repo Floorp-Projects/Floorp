@@ -260,9 +260,9 @@ sub packit {
         TinderUtils::run_shell_command "cp $package_location/sea/*.exe $stagedir/";
       }
 
-      # If mozilla/dist/install/*.installer.msi exists, copy it to the staging
+      # If mozilla/dist/install/*.msi exists, copy it to the staging
       # directory.
-      my @msi = grep { -f $_ } <${package_location}/*.installer.msi>;
+      my @msi = grep { -f $_ } <${package_location}/*.msi>;
       if ( scalar(@msi) gt 0 ) {
 	my $msi_files = join(' ', @msi);
         TinderUtils::run_shell_command "cp $msi_files $stagedir/";
