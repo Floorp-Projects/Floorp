@@ -75,7 +75,6 @@ LongRect		destRect,viewRect;
 PRUint32		teFlags=0;
 GrafPtr			curport;
 PRInt32			offx,offy;
-nsWindow		*thewindow;
 
 
   mParent = aParent;
@@ -88,8 +87,6 @@ nsWindow		*thewindow;
   if (aParent) 
   	{
     window = (WindowPtr) aParent->GetNativeData(NS_NATIVE_WIDGET);
-    //window = thewindow->GetWindowPtr();
-    //window = 
     }
 	else 
 		if (aAppShell)
@@ -157,6 +154,19 @@ NS_IMETHODIMP nsTextWidget::Create(nsNativeWidget aParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
+nsWindow		*theNsWindow=nsnull;
+nsRefData		*theRefData;
+
+	if(0!=aParent)
+		{
+		theRefData = (nsRefData*)(((WindowPeek)aParent)->refCon);
+		theNsWindow = (nsWindow*)theRefData->GetCurWidget();
+		}
+		
+	if(nsnull!=theNsWindow)
+		Create(theNsWindow, aRect,aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData);
+
+	//NS_ERROR("This Widget must not use this Create method");
 	return NS_OK;
 }
 
@@ -202,13 +212,10 @@ RgnHandle						thergn;
 	thergn = ::NewRgn();
 	::GetClip(thergn);
 	::ClipRect(&macrect);
-	//::EraseRoundRect(&macrect,10,10);
-	//::PenSize(1,1);
-	//::FrameRoundRect(&macrect,10,10); 
-
 	WEActivate(mTE_Data);
 	WEUpdate(nsnull,mTE_Data);
 	::PenSize(1,1);
+	::FrameRect(&macrect);
 	::SetClip(thergn);
 	::SetOrigin(0,0);
 	::SetPort(theport);
@@ -255,8 +262,6 @@ PRInt16 modifiers=0;
 nsRect	therect;
 Rect		macrect;
 PRInt32				offx,offy;
-
-	
 	
 	switch (aEvent.message)
 		{
@@ -352,19 +357,120 @@ char					*str;
 	return NS_OK;
 }
 
+/*  Resize 
+ *  @update  dwc 10/01/98
+ *  @param   aWidth -- x offset in widget local coordinates
+ *  @param   aHeight -- y offset in widget local coordinates
+ *  @param   aW
+ *  @return  PR_TRUE if the pt is contained in the widget
+ */
+NS_IMETHODIMP nsTextWidget::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
+{
+nsSizeEvent 	event;
+LongRect			macRect;
+
+  mBounds.width  = aWidth;
+  mBounds.height = aHeight;
+  
+   if(nsnull!=mWindowRegion)
+  	::DisposeRgn(mWindowRegion);
+	mWindowRegion = NewRgn();
+	SetRectRgn(mWindowRegion,mBounds.x,mBounds.y,mBounds.x+mBounds.width,mBounds.y+mBounds.height);
+	
+	if(mTE_Data != nsnull)
+		{
+		macRect.top = mBounds.y;
+		macRect.left = mBounds.x;
+		macRect.bottom = mBounds.y+mBounds.height;
+		macRect.right = mBounds.x+mBounds.width;
+		WESetDestRect(&macRect,mTE_Data);
+		WESetViewRect(&macRect,mTE_Data);
+		}
+			 
+
+  if (aRepaint)
+  	{
+  	UpdateVisibilityFlag();
+  	UpdateDisplay();
+  	}
+  
+  event.message = NS_SIZE;
+  event.point.x = 0;
+  event.point.y = 0;
+  event.windowSize = &mBounds;
+  event.eventStructType = NS_SIZE_EVENT;
+  event.widget = this;
+ 	this->DispatchEvent(&event);
+	return NS_OK;
+}
+
+    
+//-------------------------------------------------------------------------
+//
+// Resize this component
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsTextWidget::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
+{
+nsSizeEvent 	event;
+LongRect			macRect;
+
+  mBounds.x      = aX;
+  mBounds.y      = aY;
+  mBounds.width  = aWidth;
+  mBounds.height = aHeight;
+  if(nsnull!=mWindowRegion)
+  	::DisposeRgn(mWindowRegion);
+	mWindowRegion = NewRgn();
+	SetRectRgn(mWindowRegion,mBounds.x,mBounds.y,mBounds.x+mBounds.width,mBounds.y+mBounds.height);
+
+	if(mTE_Data != nsnull)
+		{
+		macRect.top = mBounds.y;
+		macRect.left = mBounds.x;
+		macRect.bottom = mBounds.y+mBounds.height;
+		macRect.right = mBounds.x+mBounds.width;
+		WESetDestRect(&macRect,mTE_Data);
+		WESetViewRect(&macRect,mTE_Data);
+		}
+
+  if (aRepaint)
+  	{
+  	UpdateVisibilityFlag();
+  	UpdateDisplay();
+  	}
+  
+  event.message = NS_SIZE;
+  event.point.x = 0;
+  event.point.y = 0;
+  event.windowSize = &mBounds;
+  event.widget = this;
+  event.eventStructType = NS_SIZE_EVENT;
+ 	this->DispatchEvent(&event);
+	return NS_OK;
+}
+
 //--------------------------------------------------------------
 PRUint32  nsTextWidget::SetText(const nsString& aText, PRUint32& aSize)
 { 
 char buffer[256];
 PRInt32 len;
+PRInt32				offx,offy;
+GrafPtr				theport;
 
-	this->RemoveText();
+	CalcOffset(offx,offy);
+	::GetPort(&theport);
+	::SetPort(mWindowPtr);
+	::SetOrigin(-offx,-offy);
+ 
+ 	this->RemoveText();
 	aText.ToCString(buffer,255);
 	len = strlen(buffer);
 
 	WEInsert(buffer,len,0,0,mTE_Data);
 
 	aSize = len;
+	::SetPort(theport);
   return NS_OK;
 }
 
@@ -373,12 +479,20 @@ PRUint32  nsTextWidget::InsertText(const nsString &aText, PRUint32 aStartPos, PR
 { 
 char buffer[256];
 PRInt32 len;
+PRInt32				offx,offy;
+GrafPtr				theport;
+
+			CalcOffset(offx,offy);
+			::GetPort(&theport);
+			::SetPort(mWindowPtr);
+			::SetOrigin(-offx,-offy);
 
 	aText.ToCString(buffer,255);
 	len = strlen(buffer);
 	
 	WEInsert(buffer,len,0,0,mTE_Data);
 	aSize = len;
+	::SetPort(theport);
   return NS_OK;
 }
 
@@ -431,6 +545,7 @@ NS_METHOD nsTextWidget::GetCaretPosition(PRUint32& aPos)
 PRBool nsTextWidget::AutoErase()
 {
   //return mHelper->AutoErase();
+  return PR_TRUE;
 }
 
 
