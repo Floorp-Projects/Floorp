@@ -20,4 +20,11 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-include $(DEPTH)/config/autoconf.mk
+EXPORTS         = \
+                platform.h \
+                $(NULL)
+
+EXPORTS         := $(addprefix $(srcdir)/, $(EXPORTS))
+
+include $(topsrcdir)/config/rules.mk
+
