@@ -514,3 +514,10 @@ LocationImpl::Replace(const nsString& aUrl)
 
   return NS_OK;
 }
+
+NS_IMETHODIMP    
+LocationImpl::ToString(nsString& aReturn)
+{
+  return GetHref(aReturn);
+}
+

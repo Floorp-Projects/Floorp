@@ -284,6 +284,7 @@ public:
   NS_IMETHOD    SetSearch(const nsString& aSearch);
   NS_IMETHOD    Reload(JSContext *cx, jsval *argv, PRUint32 argc);
   NS_IMETHOD    Replace(const nsString& aUrl);
+  NS_IMETHOD    ToString(nsString& aReturn);
 
 protected:
   nsresult SetURL(nsIURL* aURL);

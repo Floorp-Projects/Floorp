@@ -39,7 +39,7 @@
         void  resizeBy(in long widthDif, in long heightDif);        
         void  scrollTo(in long xScroll, in long yScroll);
         void  scrollBy(in long xScrollDif, in long yScrollDif);        
- 
+
         void clearTimeout(in long timerID);
         void clearInterval(in long timerID);
         long setTimeout(/* ... */);

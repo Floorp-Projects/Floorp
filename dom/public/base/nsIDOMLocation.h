@@ -61,6 +61,8 @@ public:
   NS_IMETHOD    Reload(JSContext *cx, jsval *argv, PRUint32 argc)=0;
 
   NS_IMETHOD    Replace(const nsString& aUrl)=0;
+
+  NS_IMETHOD    ToString(nsString& aReturn)=0;
 };
 
 
@@ -83,6 +85,7 @@ public:
   NS_IMETHOD    SetSearch(const nsString& aSearch);  \
   NS_IMETHOD    Reload(JSContext *cx, jsval *argv, PRUint32 argc);  \
   NS_IMETHOD    Replace(const nsString& aUrl);  \
+  NS_IMETHOD    ToString(nsString& aReturn);  \
 
 
 
@@ -105,6 +108,7 @@ public:
   NS_IMETHOD    SetSearch(const nsString& aSearch) { return _to##SetSearch(aSearch); } \
   NS_IMETHOD    Reload(JSContext *cx, jsval *argv, PRUint32 argc) { return _to##Reload(cx, argv, argc); }  \
   NS_IMETHOD    Replace(const nsString& aUrl) { return _to##Replace(aUrl); }  \
+  NS_IMETHOD    ToString(nsString& aReturn) { return _to##ToString(aReturn); }  \
 
 
 extern nsresult NS_InitLocationClass(nsIScriptContext *aContext, void **aPrototype);
