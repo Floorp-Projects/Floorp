@@ -46,7 +46,7 @@
 
 #define DBG 0
 
-extern void XtMoveWindow(Widget w, Position x, Position y);
+extern void XtMoveWidget(Widget w, Position x, Position y);
 
 Widget gFirstTopLevelWindow = 0;
 
