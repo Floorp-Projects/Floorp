@@ -61,7 +61,7 @@ NS_METHOD nsTextWidget::CreateNative(GtkWidget *parentWindow)
   gtk_widget_set_name(mWidget, "nsTextWidget");
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "key_release_event",
-                     GTK_SIGNAL_FUNC(nsGtkWidget_Text_Callback),
+                     GTK_SIGNAL_FUNC(handle_key_release_event),
                      this);
   gtk_widget_show(mWidget);
   return NS_OK;
@@ -98,7 +98,7 @@ PRBool nsTextWidget::OnPaint(nsPaintEvent & aEvent)
 
 
 //--------------------------------------------------------------
-PRBool nsTextWidget::OnResize(nsSizeEvent &aEvent)
+PRBool nsTextWidget::OnResize(nsRect &aWindowRect)
 {
   return PR_FALSE;
 }

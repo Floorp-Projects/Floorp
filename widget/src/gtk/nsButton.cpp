@@ -131,7 +131,7 @@ PRBool nsButton::OnPaint(nsPaintEvent &aEvent)
   return PR_FALSE;
 }
 
-PRBool nsButton::OnResize(nsSizeEvent &aEvent)
+PRBool nsButton::OnResize(nsRect &aWindowRect)
 {
   return PR_FALSE;
 }

@@ -191,6 +191,39 @@ static void set_icon (GdkWindow * w)
   gdk_pixmap_unref(pmap);
 }
 
+void nsWindow::InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint)
+{
+    event.widget = this;
+    NS_IF_ADDREF(event.widget);
+
+    GdkEventConfigure *ge;
+    ge = (GdkEventConfigure*)gtk_get_current_event();
+
+    if (aPoint == nsnull) {     // use the point from the event
+      // get the message position in client coordinates and in twips
+
+      if (mWidget != NULL) {
+ //       ::ScreenToClient(mWnd, &cpos);
+        event.point.x = PRInt32(ge->x);
+        event.point.y = PRInt32(ge->y);
+      } else {
+        event.point.x = 0;
+        event.point.y = 0;
+      }
+    }     
+    else {                      // use the point override if provided
+      event.point.x = aPoint->x;
+      event.point.y = aPoint->y;
+    }
+
+    event.time = gdk_event_get_time((GdkEvent*)ge);
+    event.message = aEventType;
+
+//    mLastPoint.x = event.point.x;
+//    mLastPoint.y = event.point.y;
+}
+
+
 //-------------------------------------------------------------------------
 //
 // Create the native widget
@@ -201,6 +234,7 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
   GtkWidget *mainWindow;
 
   mWidget = gtk_layout_new(PR_FALSE, PR_FALSE);
+
   gtk_widget_set_events (mWidget,
                          GDK_BUTTON_PRESS_MASK |
                          GDK_BUTTON_RELEASE_MASK |
@@ -219,9 +253,9 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
                        GTK_SIGNAL_FUNC(window_realize_callback),
                        NULL);
 
-    gtk_signal_connect(GTK_OBJECT(mWidget),
-                       "size_allocate",
-                       GTK_SIGNAL_FUNC(nsGtkWidget_Resize_EventHandler),
+    gtk_signal_connect(GTK_OBJECT(mainWindow),
+                       "configure_event",
+                       GTK_SIGNAL_FUNC(handle_configure_event),
                        this);
 
 // VBox for the menu, etc.
@@ -247,43 +281,46 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
 void nsWindow::InitCallbacks(char * aName)
 {
   gtk_signal_connect(GTK_OBJECT(mWidget),
+                     "configure_event",
+                     GTK_SIGNAL_FUNC(handle_configure_event),
+                     this);
+
+  gtk_signal_connect(GTK_OBJECT(mWidget),
                      "button_press_event",
-		     GTK_SIGNAL_FUNC(nsGtkWidget_ButtonPressMask_EventHandler),
+		     GTK_SIGNAL_FUNC(handle_button_press_event),
 		     this);
 
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "button_release_event",
-		     GTK_SIGNAL_FUNC(nsGtkWidget_ButtonReleaseMask_EventHandler),
+		     GTK_SIGNAL_FUNC(handle_button_release_event),
 		     this);
 
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "motion_notify_event",
-		     GTK_SIGNAL_FUNC(nsGtkWidget_ButtonMotionMask_EventHandler),
+		     GTK_SIGNAL_FUNC(handle_motion_notify_event),
 		     this);
 
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "enter_notify_event",
-		     GTK_SIGNAL_FUNC(nsGtkWidget_EnterMask_EventHandler),
+		     GTK_SIGNAL_FUNC(handle_enter_notify_event),
 		     this);
 
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "leave_notify_event",
-		     GTK_SIGNAL_FUNC(nsGtkWidget_LeaveMask_EventHandler),
+		     GTK_SIGNAL_FUNC(handle_leave_notify_event),
 		     this);
-
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "expose_event",
-		     GTK_SIGNAL_FUNC(nsGtkWidget_ExposureMask_EventHandler),
+		     GTK_SIGNAL_FUNC(handle_expose_event),
 		     this);
-
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "key_press_event",
-		     GTK_SIGNAL_FUNC(nsGtkWidget_KeyPressMask_EventHandler),
+		     GTK_SIGNAL_FUNC(handle_key_press_event),
 		     this);
 
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "key_release_event",
-		     GTK_SIGNAL_FUNC(nsGtkWidget_KeyReleaseMask_EventHandler),
+		     GTK_SIGNAL_FUNC(handle_key_release_event),
 		     this);
 }
 
@@ -640,24 +677,33 @@ void nsWindow::OnDestroy()
   //   NS_IF_RELEASE(mAppShell);
 }
 
-PRBool nsWindow::OnResize(nsSizeEvent &aEvent)
+PRBool nsWindow::OnResize(nsRect &aWindowRect)
 {
-  nsRect* size = aEvent.windowSize;
+  if (mEventCallback) {
+    nsSizeEvent event;
+    nsRect winBounds;
 
-  if (mEventCallback && !mIgnoreResize) {
-    return DispatchWindowEvent(&aEvent);
+    InitEvent(event, NS_SIZE);
+    event.windowSize = &aWindowRect;
+    event.eventStructType = NS_SIZE_EVENT;
+    GetBounds(winBounds);
+  
+    event.mWinWidth  = winBounds.width;
+    event.mWinHeight = winBounds.height;
+
+    PRBool result = DispatchWindowEvent(&event);
+    NS_IF_RELEASE(event.widget);
+    return result;
   }
-
   return PR_FALSE;
 }
 
-PRBool nsWindow::OnKey(PRUint32 aEventType, PRUint32 aKeyCode, nsKeyEvent* aEvent)
+PRBool nsWindow::OnKey(nsKeyEvent &aEvent)
 {
   if (mEventCallback) {
-    return DispatchWindowEvent(aEvent);
+    return DispatchWindowEvent(&aEvent);
   }
-  else
-   return PR_FALSE;
+ return PR_FALSE;
 }
 
 
@@ -669,7 +715,7 @@ PRBool nsWindow::DispatchFocus(nsGUIEvent &aEvent)
  return PR_FALSE;
 }
 
-PRBool nsWindow::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
+PRBool nsWindow::OnScroll(nsScrollbarEvent &aEvent, PRUint32 cPos)
 {
   return PR_FALSE;
 }

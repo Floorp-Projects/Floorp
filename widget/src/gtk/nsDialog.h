@@ -43,7 +43,7 @@ public:
   NS_IMETHOD     GetLabel(nsString& aBuffer);
 
   virtual PRBool OnPaint(nsPaintEvent & aEvent);
-  virtual PRBool OnResize(nsSizeEvent &aEvent);
+  virtual PRBool OnResize(nsRect &aWindowRect);
 
   //virtual void PreCreateWidget(nsWidgetInitData *aInitData);
 

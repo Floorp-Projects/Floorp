@@ -174,7 +174,7 @@ PRBool nsLabel::OnPaint(nsPaintEvent &aEvent)
   return PR_FALSE;
 }
 
-PRBool nsLabel::OnResize(nsSizeEvent &aEvent)
+PRBool nsLabel::OnResize(nsRect &aWindowRect)
 {
     return PR_FALSE;
 }

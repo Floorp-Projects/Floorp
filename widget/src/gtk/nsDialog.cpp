@@ -139,7 +139,7 @@ PRBool nsDialog::OnPaint(nsPaintEvent &aEvent)
   return PR_FALSE;
 }
 
-PRBool nsDialog::OnResize(nsSizeEvent &aEvent)
+PRBool nsDialog::OnResize(nsRect &aWindowRect)
 {
     return PR_FALSE;
 }
