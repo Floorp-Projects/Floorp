@@ -1604,8 +1604,7 @@ nsGenericHTMLElement::SetAttr(nsINodeInfo* aNodeInfo,
 
   // We still rely on the old way of setting the attribute.
 
-  return NS_STATIC_CAST(nsIContent *, this)->SetAttr(nsid, atom, aValue,
-                                                     aNotify);
+  return SetAttr(nsid, atom, aValue, aNotify);
 }
 
 PRBool nsGenericHTMLElement::IsEventName(nsIAtom* aName)
@@ -3569,11 +3568,10 @@ nsGenericHTMLContainerElement::CopyInnerTo(nsIContent* aSrcContent,
                                            nsGenericHTMLContainerElement* aDst,
                                            PRBool aDeep)
 {
-  nsresult result = nsGenericHTMLElement::CopyInnerTo(aSrcContent,
-                                                      aDst,
-                                                      aDeep);
-  if (NS_FAILED(result)) {
-    return result;
+  nsresult rv = nsGenericHTMLElement::CopyInnerTo(aSrcContent, aDst, aDeep);
+
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
   if (aDeep) {
@@ -3581,29 +3579,24 @@ nsGenericHTMLContainerElement::CopyInnerTo(nsIContent* aSrcContent,
     PRInt32 count = mChildren.Count();
     for (index = 0; index < count; index++) {
       nsIContent* child = (nsIContent*)mChildren.ElementAt(index);
-      if (nsnull != child) {
-        nsIDOMNode* node;
-        result = child->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)&node);
-        if (NS_OK == result) {
-          nsIDOMNode* newNode;
 
-          result = node->CloneNode(aDeep, &newNode);
-          if (NS_OK == result) {
-            nsIContent* newContent;
+      nsCOMPtr<nsIDOMNode> node(do_QueryInterface(child));
 
-            result = newNode->QueryInterface(NS_GET_IID(nsIContent), (void**)&newContent);
-            if (NS_OK == result) {
-              result = aDst->AppendChildTo(newContent, PR_FALSE, PR_FALSE);
-              NS_RELEASE(newContent);
+      if (node) {
+        nsCOMPtr<nsIDOMNode> newNode;
+
+        rv = node->CloneNode(aDeep, getter_AddRefs(newNode));
+        if (node) {
+          nsCOMPtr<nsIContent> newContent(do_QueryInterface(newNode));
+
+          if (newContent) {
+            rv = aDst->AppendChildTo(newContent, PR_FALSE, PR_FALSE);
             }
-            NS_RELEASE(newNode);
           }
-          NS_RELEASE(node);
         }
 
-        if (NS_OK != result) {
-          return result;
-        }
+      if (NS_FAILED(rv)) {
+        return rv;
       }
     }
   }
