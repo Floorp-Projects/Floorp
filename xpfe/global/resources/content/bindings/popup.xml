@@ -174,9 +174,9 @@
         </body>
       </method> 
       
-      <property name="screenLeft">0</property>
-      <property name="screenTop">0</property>
-      <property name="resizerDirection">0</property>
+      <field name="screenLeft">0</field>
+      <field name="screenTop">0</field>
+      <field name="resizerDirection">0</field>
     </implementation>
     
     <handlers>
@@ -367,11 +367,11 @@
     <implementation>
       
       <!-- Popup Manipulation Constants -->
-      <property name="MANIPULATE_NONE"      readonly="true">0</property>
-      <property name="MANIPULATE_MOVE"      readonly="true">1</property>
-      <property name="MANIPULATE_SIZE_EW"   readonly="true">2</property>
-      <property name="MANIPULATE_SIZE_NS"   readonly="true">3</property>
-      <property name="MANIPULATE_SIZE_DIAG" readonly="true">4</property>
+      <field name="MANIPULATE_NONE"      readonly="true">0</field>
+      <field name="MANIPULATE_MOVE"      readonly="true">1</field>
+      <field name="MANIPULATE_SIZE_EW"   readonly="true">2</field>
+      <field name="MANIPULATE_SIZE_NS"   readonly="true">3</field>
+      <field name="MANIPULATE_SIZE_DIAG" readonly="true">4</field>
       
       <method name="handleMouseMove">
         <parameter name="aEvent"/>
@@ -463,9 +463,9 @@
         ]]>
         </body>
       </method>
-      <property name="screenLeft">0</property>
-      <property name="screenTop">0</property>
-      <property name="manipulateMode">0</property>
+      <field name="screenLeft">0</field>
+      <field name="screenTop">0</field>
+      <field name="manipulateMode">0</field>
     </implementation>
     <handlers>
       <handler event="mousedown" phase="capturing"> 

@@ -31,12 +31,12 @@
       <property name="treeBoxObject"
                 onget="return this.boxObject.QueryInterface(Components.interfaces.nsITreeBoxObject);"
                 readonly="true"/>
-      <property name="isUpSelection">
+      <field name="isUpSelection">
         0
-      </property>
-      <property name="isDownSelection">
+      </field>
+      <field name="isDownSelection">
         0
-      </property>
+      </field>
       <method name="getNextItem">
         <parameter name="startItem"/>
         <parameter name="delta"/>

@@ -287,8 +287,10 @@
             catch (exc) {}
             if (!entry)
               aElt.setAttribute(aAttr, iconURL);
-            else
+            else {
+              entry.close();
               entry = null;
+            }
           ]]>
         </body>
       </method>

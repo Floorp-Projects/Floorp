@@ -135,7 +135,7 @@
       </property>
 
       <!-- the number of sessions currently in use -->
-      <property name="sessionCount">0</property>
+      <field name="sessionCount">0</field>
 
       <!-- number of milliseconds after a keystroke before a search begins -->
       <property name="timeout"
@@ -242,46 +242,46 @@
                 onget="return this.getAttribute('userAction');"/>
       
       <!-- state which indicates if the last search had no matches -->
-      <property name="noMatch">true</property>
+      <field name="noMatch">true</field>
 
       <!-- state which indicates a search is currently happening -->
-      <property name="isSearching">false</property>
+      <field name="isSearching">false</field>
 
       <!-- state which indicates a search timeout is current waiting -->
       <property name="isWaiting" 
                 onget="return this.mAutoCompleteTimer != 0;"/>
 
       <!-- reference to the results popup element -->
-      <property name="resultsPopup"><![CDATA[
+      <field name="resultsPopup"><![CDATA[
         var elt = document.getAnonymousElementByAttribute(this, "anonid", "popup");
         elt.__AUTOCOMPLETE_BOX__ = this;
         elt;
-      ]]></property>
+      ]]></field>
 
       <!-- =================== PRIVATE PROPERTIES =================== -->
 
-      <property name="mSessions">null</property>
-      <property name="mListeners">null</property>
-      <property name="mLastResults">null</property>
-      <property name="mLastStatus">null</property>
-      <property name="mLastKeyCode">null</property>
-      <property name="mAutoCompleteTimer">0</property>
-      <property name="mMenuOpen">false</property>
-      <property name="mFireAfterSearch">false</property>
-      <property name="mFinishAfterSearch">false</property>
-      <property name="mNeedToFinish">false</property>
-      <property name="mNeedToComplete">false</property>
-      <property name="mTransientValue">false</property>
-      <property name="mView">null</property>
-      <property name="currentSearchString">null</property>
-      <property name="ignoreInputEvent">false</property>
-      <property name="oninit">null</property>
-      <property name="ontextcommand">null</property>
-      <property name="ontextrevert">null</property>
-      <property name="onerrorcommand">null</property>
+      <field name="mSessions">null</field>
+      <field name="mListeners">null</field>
+      <field name="mLastResults">null</field>
+      <field name="mLastStatus">null</field>
+      <field name="mLastKeyCode">null</field>
+      <field name="mAutoCompleteTimer">0</field>
+      <field name="mMenuOpen">false</field>
+      <field name="mFireAfterSearch">false</field>
+      <field name="mFinishAfterSearch">false</field>
+      <field name="mNeedToFinish">false</field>
+      <field name="mNeedToComplete">false</field>
+      <field name="mTransientValue">false</field>
+      <field name="mView">null</field>
+      <field name="currentSearchString">null</field>
+      <field name="ignoreInputEvent">false</field>
+      <field name="oninit">null</field>
+      <field name="ontextcommand">null</field>
+      <field name="ontextrevert">null</field>
+      <field name="onerrorcommand">null</field>
       <field name="mDefaultMatchFilled">false</field>
 
-      <property name="mAutoCompleteListener"><![CDATA[
+      <field name="mAutoCompleteListener"><![CDATA[
         var listener = function(aSession) { this.sessionName = aSession };
         listener.prototype = {
           param: this,
@@ -292,17 +292,17 @@
           }
         };
         listener;
-      ]]></property>
+      ]]></field>
 
-      <property name="mPopupSetElt"><![CDATA[
+      <field name="mPopupSetElt"><![CDATA[
         var elt = document.getAnonymousElementByAttribute(this, "anonid", "popupset");
         elt.__AUTOCOMPLETE_BOX__ = this;
         elt;
-      ]]></property>
+      ]]></field>
 
-      <property name="mInputElt"><![CDATA[
+      <field name="mInputElt"><![CDATA[
         document.getAnonymousElementByAttribute(this, "anonid", "textbox");
-      ]]></property>
+      ]]></field>
 
       <!-- =================== PUBLIC METHODS =================== -->
 
@@ -1096,7 +1096,7 @@
 
       <!-- =================== OUTLINER VIEW =================== -->
 
-      <property name="view"><![CDATA[
+      <field name="view"><![CDATA[
         ({
           mTextbox: this,
           mOutliner: null,
@@ -1237,7 +1237,7 @@
           performActionOnRow: function(aAction, aRow) {},
           performActionOnCell: function(aAction, aRow, aColId) {}
         });
-      ]]></property>
+      ]]></field>
 
     </implementation>
 
@@ -1279,13 +1279,13 @@
      <property name="textbox"
                 onget="return '__AUTOCOMPLETE_BOX__' in this ? this.__AUTOCOMPLETE_BOX__ : null;"/>
       
-      <property name="outliner">
+      <field name="outliner">
         document.getAnonymousElementByAttribute(this, "anonid", "outliner");
-      </property>
+      </field>
 
-      <property name="outlinerbody">
+      <field name="outlinerbody">
         document.getAnonymousElementByAttribute(this, "anonid", "outlinerbody");
-      </property>
+      </field>
 
       <property name="view" onget="return this.mView;">
         <setter><![CDATA[
@@ -1303,7 +1303,7 @@
                 onget="return this.textbox.view.selectedIndex"
                 onset="this.textbox.view.selectedIndex = val; return val;"/>
 
-     <property name="mLastRows">0</property>
+     <field name="mLastRows">0</field>
 
       <method name="initialize">
         <body><![CDATA[
@@ -1470,7 +1470,7 @@
       <property name="textbox"
                 onget="return this.__AUTOCOMPLETE_BOX__;"/>
 
-      <property name="mLastMoveTime">new Date()</property>
+      <field name="mLastMoveTime">new Date()</field>
 
       <method name="getHoverCell">
         <parameter name="aEvent"/>

@@ -56,7 +56,7 @@
     -->
   <binding id="inline-edit-base" extends="chrome://global/content/bindings/general.xml#basetext">
     <implementation>
-      <property name="_mode">0</property>
+      <field name="_mode">0</field>
       <method name="setMode">
         <parameter name="val"/>
         <body>
@@ -98,15 +98,15 @@
         ]]>
         </body>
       </method>
-      <property name="_observers">
+      <field name="_observers">
       <![CDATA[
         ({
           reject: [], 
           accept: []
         })
       ]]>
-      </property>
-      <property name="valueIsRejected">false</property>
+      </field>
+      <field name="valueIsRejected">false</field>
       <method name="addObserver">
         <parameter name="aObserver"/>
         <parameter name="aTopic"/>
@@ -146,7 +146,7 @@
         ]]>
         </body>
       </method>
-      <property name="valueIsAccepted">false</property>
+      <field name="valueIsAccepted">false</field>
       <method name="fieldChange">
         <parameter name="aEvent"/>
         <body>

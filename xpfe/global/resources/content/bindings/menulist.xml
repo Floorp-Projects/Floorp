@@ -97,9 +97,9 @@
                                        return val;"
                                 onget="return (this.getAttribute('disabled')=='true');"/>
 
-      <property name="selectedInternal">
+      <field name="selectedInternal">
         null
-      </property>
+      </field>
 
       <property name="selectedIndex">
         <getter>
@@ -294,7 +294,7 @@
         </body>
       </method>
 
-      <property name="inputField" readonly="true">
+      <field name="inputField" readonly="true">
        <![CDATA[
         var v = document.getAnonymousNodes(this);
         var input = null;
@@ -309,7 +309,7 @@
         }
         input;
       ]]>
-      </property>
+      </field>
       <property name="label"      onset="this.inputField.value = val; return val;"
                                   onget="return this.inputField.value;"/>
 
