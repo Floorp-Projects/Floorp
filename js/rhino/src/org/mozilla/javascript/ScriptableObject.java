@@ -225,7 +225,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable {
                     start.put(name, start, value);
                     return;
                 }
-                slot = getSlotToSet(name, hash, false);
+                slot = getSlotToSet(name, hash);
             }
         }
         if ((slot.attributes & ScriptableObject.READONLY) != 0)
@@ -297,7 +297,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable {
                 start.put(index, start, value);
                 return;
             }
-            slot = getSlotToSet(null, index, false);
+            slot = getSlotToSet(null, index);
         }
         if ((slot.attributes & ScriptableObject.READONLY) != 0)
             return;
@@ -1196,9 +1196,8 @@ public abstract class ScriptableObject implements Scriptable, Serializable {
                 throw PropertyException.withMessage0("msg.setter.parms");
             }
         }
-        GetterSlot slot = (GetterSlot)getSlotToSet(propertyName,
-                                                   propertyName.hashCode(),
-                                                   true);
+        
+        GetterSlot slot = new GetterSlot();
         slot.delegateTo = delegateTo;
         slot.getter = getter;
         slot.setter = setter;
@@ -1206,6 +1205,12 @@ public abstract class ScriptableObject implements Scriptable, Serializable {
         slot.value = null;
         slot.attributes = (short) attributes;
         slot.flags = (byte)flags;
+
+        Slot inserted = addSlot(propertyName, propertyName.hashCode(), slot);
+        if (inserted != slot) {
+            throw new RuntimeException("Property already exists"); 
+        }
+        
     }
 
     /**
@@ -1621,11 +1626,13 @@ public abstract class ScriptableObject implements Scriptable, Serializable {
         return null;
     }
 
-    private Slot getSlotToSet(String id, int index, boolean getterSlot) {
+    // First search for the existing slot without using synchronization
+    // and if not found, call addSlot which is synchronized
+    private Slot getSlotToSet(String id, int index) {
         // Get stable reference
         Slot[] array = slots;
         if (array == null) {
-            return addSlot(id, index, getterSlot);
+            return addSlot(id, index, null);
         }
         int start = (index & 0x7fffffff) % array.length;
         boolean sawRemoved = false;
@@ -1633,7 +1640,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable {
         do {
             Slot slot = array[i];
             if (slot == null) {
-                return addSlot(id, index, getterSlot);
+                return addSlot(id, index, null);
             }
             if (slot == REMOVED) {
                 sawRemoved = true;
@@ -1650,7 +1657,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable {
         // Table could be full, but with some REMOVED elements. 
         // Call to addSlot will use a slot currently taken by 
         // a REMOVED.
-        return addSlot(id, index, getterSlot);
+        return addSlot(id, index, null);
     }
 
     /**
@@ -1661,13 +1668,17 @@ public abstract class ScriptableObject implements Scriptable, Serializable {
      * since another thread could have added the given property or
      * caused the table to grow while this thread was searching.
      */
-    private synchronized Slot addSlot(String id, int index, boolean getterSlot)
-    {
+    private synchronized Slot addSlot(String id, int index, Slot newSlot) {
         if (count == -1)
             throw Context.reportRuntimeError0("msg.add.sealed");
         
         if (slots == null) { slots = new Slot[5]; }
+        
+        return addSlotImpl(id, index, newSlot);
+    }
 
+    // Must be inside synchronized (this)
+    private Slot addSlotImpl(String id, int index, Slot newSlot) {
         int start = (index & 0x7fffffff) % slots.length;
         int i = start;
         do {
@@ -1675,9 +1686,9 @@ public abstract class ScriptableObject implements Scriptable, Serializable {
             if (slot == null || slot == REMOVED) {
                 if ((4 * (count+1)) > (3 * slots.length)) {
                     grow();
-                    return getSlotToSet(id, index, getterSlot);
+                    return addSlotImpl(id, index, newSlot);
                 }
-                slot = getterSlot ? new GetterSlot() : new Slot();
+                slot = (newSlot == null) ? new Slot() : newSlot;
                 slot.stringKey = id;
                 slot.intKey = index;
                 slots[i] = slot;
@@ -1711,13 +1722,12 @@ public abstract class ScriptableObject implements Scriptable, Serializable {
         getSlot(name, index, true);
     }
 
-    /**
-     * Grow the hash table to accommodate new entries.
-     *
-     * Note that by assigning the new array back at the end we
-     * can continue reading the array from other threads.
-     */
-    private synchronized void grow() {
+     // Grow the hash table to accommodate new entries.
+     //
+     // Note that by assigning the new array back at the end we
+     // can continue reading the array from other threads.
+     // Must be inside synchronized (this)
+    private void grow() {
         Slot[] newSlots = new Slot[slots.length*2 + 1];
         for (int j=slots.length-1; j >= 0 ; j--) {
             Slot slot = slots[j];
