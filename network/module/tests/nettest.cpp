@@ -32,6 +32,7 @@
 #include "nsRepository.h"
 #include "nsString.h"
 
+
 int urlLoaded;
 PRBool bTraceEnabled;
 PRBool bLoadAsync;
@@ -45,13 +46,20 @@ PRBool bLoadAsync;
 #ifdef XP_MAC
 #include "nsMacRepository.h"
 #else
-#define NETLIB_DLL "netlib.so"
+#define NETLIB_DLL "libnetlib.so"
 #endif
 #endif
 
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 
 NS_DEFINE_IID(kIPostToServerIID, NS_IPOSTTOSERVER_IID);
+
+#ifdef XP_UNIX
+extern "C" char *fe_GetConfigDir(void) {
+  printf("XXX: return /tmp for fe_GetConfigDir\n");
+  return strdup("/tmp");
+}
+#endif /* XP_UNIX */
 
 
 /* XXX: Don't include net.h... */
