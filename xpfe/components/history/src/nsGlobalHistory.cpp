@@ -212,7 +212,13 @@ static PRBool HasCell(nsIMdbEnv *aEnv, nsIMdbRow* aRow, mdb_column aCol)
 {
   mdbYarn yarn;
   mdb_err err = aRow->AliasCellYarn(aEnv, aCol, &yarn);
-  return (err == 0);
+
+  // no cell
+  if (err != 0)
+    return PR_FALSE;
+
+  // if we have the cell, make sure it has a value??
+  return (yarn.mYarn_Fill != 0);
 }
 
 
