@@ -134,7 +134,6 @@ nsMimeXULEmitter::~nsMimeXULEmitter(void)
     delete mBodyFileSpec;
 }
 
-
 // Attachment handling routines
 nsresult
 nsMimeXULEmitter::StartAttachment(const char *name, const char *contentType, const char *url)
@@ -603,34 +602,6 @@ nsMimeXULEmitter::DumpAttachmentMenu()
 		  UtilityWrite("<menuitem value=\"");
 		  UtilityWrite(attachInfo->displayName);
 		  UtilityWrite("\" oncommand=\"OpenAttachURL('");
-          escapedUrl = nsEscape(attachInfo->urlSpec, url_Path);
-          if (escapedUrl)
-          {
-            UtilityWrite(escapedUrl);
-            nsCRT::free(escapedUrl);
-          }
-          else
-          {
-            UtilityWrite(attachInfo->urlSpec);
-          }
-		  UtilityWriteCRLF("' );\"  />");
-	  }
-	  UtilityWriteCRLF("</menupopup>");
-	  UtilityWriteCRLF("</menu>");
-
-	  UtilityWriteCRLF("<menu value=\"Save Attachment(s)\">");
-	  UtilityWriteCRLF("<menupopup>");
-
-	  for (i=0; i<mAttachArray->Count(); i++)
-	  {
-		  attachmentInfoType *attachInfo = (attachmentInfoType
-											*)mAttachArray->ElementAt(i);
-		  if (!attachInfo)
-			  continue;
-		  
-		  UtilityWrite("<menuitem value=\"");
-		  UtilityWrite(attachInfo->displayName);
-		  UtilityWrite("\" oncommand=\"SaveAttachURL('");
           escapedUrl = nsEscape(attachInfo->urlSpec, url_Path);
           if (escapedUrl)
           {
