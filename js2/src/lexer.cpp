@@ -466,6 +466,8 @@ void JS::Lexer::lexToken(bool preferRegExp)
     Token::Kind kind;
 
     if (lexingUnit) {
+        if (reader.peek() == '_')
+            syntaxError("Unit suffix may not begin with an underscore", 0);
         lexIdentifier(t.chars, false);
         ASSERT(t.chars.size());
         kind = Token::unit;   // unit

@@ -67,7 +67,7 @@ namespace JavaScript {
         void operator=(const Reader&);  // No assignment operator
       public:
 
-        char16 get() {ASSERT(p <= end);return *p++;}
+        char16 get() {ASSERT(p <= end); return *p++;}
         char16 peek() {ASSERT(p <= end); return *p;}
         void unget(size_t n = 1) {ASSERT(p >= begin + n); p -= n;}
         size_t getPos() const {return toSize_t(p - begin);}
