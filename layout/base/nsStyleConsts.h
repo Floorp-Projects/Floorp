@@ -181,7 +181,8 @@
 #define NS_STYLE_BG_X_POSITION_LENGTH           0x08
 #define NS_STYLE_BG_Y_POSITION_PERCENT          0x10
 #define NS_STYLE_BG_Y_POSITION_LENGTH           0x20
-#define NS_STYLE_BG_PROPOGATED                  0x80
+#define NS_STYLE_BG_PROPAGATED_TO_PARENT        0x40 // for the BodyFixupRule
+#define NS_STYLE_BG_PROPAGATED_FROM_CHILD       0x80 //    ''        ''
 
 // See nsStyleColor
 #define NS_STYLE_BG_REPEAT_OFF                  0x00

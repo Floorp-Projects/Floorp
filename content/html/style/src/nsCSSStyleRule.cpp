@@ -1961,9 +1961,18 @@ MapDeclarationColorInto(nsICSSDeclaration* aDeclaration,
 
       // background-color: color, string, enum (flags), inherit
       if (eCSSUnit_Inherit == ourColor->mBackColor.GetUnit()) { // do inherit first, so SetColor doesn't do it
-        color->mBackgroundColor = parentColor->mBackgroundColor;
+        const nsStyleColor* inheritColor = parentColor;
+        if (inheritColor->mBackgroundFlags & NS_STYLE_BG_PROPAGATED_TO_PARENT) {
+          if (nsnull != aParentContext) {
+            nsIStyleContext* grandParentContext = aParentContext->GetParent();
+            if (nsnull != grandParentContext) {
+              inheritColor = (const nsStyleColor*)grandParentContext->GetStyleData(eStyleStruct_Color);
+            }
+          }
+        }
+        color->mBackgroundColor = inheritColor->mBackgroundColor;
         color->mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
-        color->mBackgroundFlags |= (parentColor->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT);
+        color->mBackgroundFlags |= (inheritColor->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT);
       }
       else if (SetColor(ourColor->mBackColor, parentColor->mBackgroundColor, 
                         aPresContext, color->mBackgroundColor)) {
