@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS			:= public
 
-PROGRAM			:= viewer
+PROGRAM			:= viewer$(BIN_SUFFIX)
 
 CPPSRCS			= \
 			$(TOOLKIT_CPPSRCS) \
@@ -84,6 +84,9 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
 BEOS_PROGRAM_RESOURCE	= $(srcdir)/viewer-beos.rsrc
 TOOLKIT_CPPSRCS		= nsBeOSMain.cpp
 endif
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+TOOLKIT_CPPSRCS		= nsOS2Main.cpp
+endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),photon)
 TOOLKIT_CPPSRCS		= nsPhMain.cpp nsPhMenu.cpp
 endif
@@ -134,10 +137,15 @@ QT_LIBS			= -lviewer_qt_s $(XP_LIBS) $(MOZ_QT_LDFLAGS)
 XLIB_LIBS		= -lviewer_xlib_s $(XP_LIBS) $(MOZ_XLIB_LDFLAGS)
 GTK_LIBS		= -lviewer_gtk_s -lgtksuperwin $(XP_LIBS) $(MOZ_GTK_LDFLAGS)
 
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+XP_DIST_DEP_LIBS    := $(patsubst -l%,$(DIST)/lib/%.lib,$(XP_DIST_LIBS))
+else
 XP_DIST_DEP_LIBS	:= $(filter-out -L$(DIST)/bin -L$(DIST)/lib, $(XP_DIST_LIBS))
+XP_DIST_DEP_LIBS	:= $(addprefix $(DIST)/,$(patsubst -l%,bin/lib%$(DLL_SUFFIX),$(XP_DIST_DEP_LIBS:-l%_s=lib/lib%_s.a)))
+endif
 
 EXTRA_DEPS		= \
-			$(addprefix $(DIST)/,$(patsubst -l%,bin/lib%$(DLL_SUFFIX),$(XP_DIST_DEP_LIBS:-l%_s=lib/lib%_s.a))) \
+			$(XP_DIST_DEP_LIBS) \
 			$(UNIX_VIEWER_TK_LIBS) \
 			$(XP_NS_UNDERBAR_CRAP) \
 			$(NULL)

@@ -110,10 +110,8 @@ endif
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
 EXTRA_DSO_LIBS		:= $(addsuffix .$(LIB_SUFFIX),$(addprefix $(DIST)/lib/,$(EXTRA_DSO_LIBS)))
 EXTRA_DSO_LIBS		:= $(filter-out %/bin %/lib,$(EXTRA_DSO_LIBS))
-VACPP_LDOPTS        := $(filter -l%,$(EXTRA_DSO_LDOPTS))
-VACPP_LDOPTS        := $(subst -l,$(DIST)/lib/,$(VACPP_LDOPTS))
-VACPP_LDOPTS        := $(addsuffix .$(LIB_SUFFIX),$(VACPP_LDOPTS))
-EXTRA_DSO_LDOPTS    := $(VACPP_LDOPTS) $(filter-out -l%,$(EXTRA_DSO_LDOPTS))
+EXTRA_DSO_LDOPTS    := $(patsubst -l%,$(DIST)/lib/%.$(LIB_SUFFIX),$(EXTRA_DSO_LDOPTS))
+LIBS                := $(patsubst -l%,$(DIST)/lib/%.$(LIB_SUFFIX),$(LIBS))
 else
 EXTRA_DSO_LIBS		:= $(addprefix -l,$(EXTRA_DSO_LIBS))
 endif
@@ -482,7 +480,7 @@ endif
 ifdef SHARED_LIBRARY
 ifdef IS_COMPONENT
 ifeq ($(OS_ARCH),OS2)
-	$(INSTALL) $(IFLAGS2) $(IMPORT_LIBRARY) $(DIST)/lib
+	$(INSTALL) $(IFLAGS2) $(IMPORT_LIBRARY) $(DIST)/lib/components
 else
 	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DIST)/lib/components
 	$(ELF_DYNSTR_GC) $(DIST)/lib/components/$(SHARED_LIBRARY)
