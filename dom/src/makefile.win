@@ -18,47 +18,6 @@
 DEPTH=..\..
 IGNORE_MANIFEST=1
 
-DIRS = coreDOM
-MAKE_OBJ_TYPE = DLL
-DLLNAME = jsdom
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
-
-DEFINES=-D_IMPL_NS_DOM -DWIN32_LEAN_AND_MEAN
-CPPSRCS =				\
-	nsJSEnvironment.cpp		\
-	nsJSWindow.cpp          \
-	nsJSNavigator.cpp       \
-	nsGlobalWindow.cpp      \
-	$(NULL)
-
-MODULE=raptor 
-
-REQUIRES=xpcom raptor js netlib
-
-CPP_OBJS=	.\$(OBJDIR)\nsJSEnvironment.obj .\$(OBJDIR)\nsJSWindow.obj \
-    .\$(OBJDIR)\nsGlobalWindow.obj .\$(OBJDIR)\nsJSNavigator.obj
-
-LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor -I$(XPDIST)\public\dom -I$(XPDIST)\public\js -I$(PUBLIC)\netlib
-
-LCFLAGS = \
-        $(LCFLAGS) \
-        $(DEFINES) \
-        $(NULL)
-
-LLIBS=				\
- $(DIST)\lib\libplc21.lib       \
- $(DIST)\lib\xpcom32.lib	\
- $(DIST)\lib\raptorbase.lib	\
- $(DIST)\lib\netlib.lib         \
- $(DIST)\lib\js3240.lib		\
- $(DIST)\lib\domcore_s.lib	\
- $(LIBNSPR)  
+DIRS = base coreDOM html build
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL) $(DLL) $(DIST)\bin
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-
-clobber::
-	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib

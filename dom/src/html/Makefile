@@ -17,7 +17,7 @@
 
 DEPTH=../../..
 
-LIBRARY_NAME = domhtml_s
+LIBRARY_NAME = jsdomhtml_s
 
 CPPSRCS =			\
 	nsJSHTMLIFrameElement.cpp \
@@ -81,13 +81,13 @@ CPPSRCS =			\
 	nsJSHTMLUListElement.cpp \
 	$(NULL)
 
-LIBRARY_NAME = jsdom
-
 DEFINES = -D_IMPL_NS_DOM
 
 MODULE = raptor
 
 REQUIRES = xpcom raptor dom js netlib
+
+include $(DEPTH)/config/config.mk
 
 MKSHLIB :=
 

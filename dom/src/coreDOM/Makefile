@@ -17,7 +17,7 @@
 
 DEPTH=../../..
 
-LIBRARY_NAME = domcore_s
+LIBRARY_NAME = jsdomcore_s
 
 CPPSRCS =			\
 	nsJSNode.cpp		\
@@ -37,8 +37,8 @@ MODULE = raptor
 
 REQUIRES = xpcom raptor dom js netlib
 
+include $(DEPTH)/config/config.mk
+
 MKSHLIB :=
 
 include $(DEPTH)/config/rules.mk
-
-export:: $(LIBRARY)
