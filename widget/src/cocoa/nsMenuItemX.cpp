@@ -46,7 +46,6 @@
 #include "nsIMenuBar.h"
 #include "nsIWidget.h"
 #include "nsIMenuListener.h"
-#include "nsDynamicMDEF.h"
 #include "nsINameSpaceManager.h"
 #include "nsWidgetAtoms.h"
 #include "nsIServiceManager.h"
@@ -56,7 +55,7 @@
 #include "nsGUIEvent.h"
 
 
-#if DEBUG
+#if 0
 nsInstanceCounter   gMenuItemCounterX("nsMenuItemX");
 #endif
 
@@ -76,7 +75,7 @@ nsMenuItemX::nsMenuItemX()
   mIsChecked          = PR_FALSE;
   mMenuType           = eRegular;
 
-#if DEBUG
+#if 0
   ++gMenuItemCounterX;
 #endif 
 }
@@ -88,7 +87,7 @@ nsMenuItemX::~nsMenuItemX()
 {
   mManager->Unregister(mContent);
 
-#if DEBUG
+#if 0
   --gMenuItemCounterX;
 #endif 
 }

@@ -45,7 +45,6 @@
 
 #include "nsMenuBarX.h"
 #include "nsMenuX.h"
-#include "nsDynamicMDEF.h"
 
 #include "nsISupports.h"
 #include "nsIWidget.h"
