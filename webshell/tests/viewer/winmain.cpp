@@ -34,6 +34,7 @@
 #include "nsIPresContext.h"
 #include "nsIDocument.h"
 #include "nsIDocumentObserver.h"
+#include "nsIURL.h"
 #include "nsUnitConversion.h"
 #include "nsVoidArray.h"
 #include "nsCRT.h"
@@ -48,6 +49,9 @@
 #include <malloc.h>
 #include "nsIScriptContext.h"
 #include "nsDocLoader.h"
+
+// DebugRobot call
+extern "C" NS_EXPORT int DebugRobot(nsVoidArray * workList);
 
 // Selection Repaint includes
 #include "nsIPresShell.h"
@@ -458,7 +462,17 @@ WndProc(HWND hWnd, UINT msg, WPARAM param, LPARAM lparam)
         wd->ww->DumpStyle();
       }
       break;
-
+    case VIEWER_DEBUGROBOT:
+      if ((nsnull != wd) && (nsnull != wd->ww)) {
+         nsIDocument* doc = wd->ww->GetDocument();
+         if (nsnull!=doc) {
+            const char * str = doc->GetDocumentURL()->GetSpec();
+            nsVoidArray * gWorkList = new nsVoidArray();
+            gWorkList->AppendElement(new nsString(str));
+            DebugRobot(gWorkList);
+         }
+      }
+      break;
     case VIEWER_ONE_COLUMN:
     case VIEWER_TWO_COLUMN:
     case VIEWER_THREE_COLUMN:
