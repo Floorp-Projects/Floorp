@@ -113,13 +113,9 @@ W32LOBJS = $(OBJS: .= +-.)
 
 
 all::
-    @date /T
-    @time /T
     $(NMAKE) -f makefile.win export
     $(NMAKE) -f makefile.win libs
     $(NMAKE) -f makefile.win install
-    @date /T
-    @time /T
 
 #//------------------------------------------------------------------------
 #//
