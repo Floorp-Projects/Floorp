@@ -13,6 +13,7 @@ nsIPresShell.h
 nsIReflowCommand.h
 nsISelection.h
 nsISpaceManager.h
+nsLayoutAtoms.h
 nsStyleCoord.h
 nsStyleStruct.h
 nsStyleConsts.h

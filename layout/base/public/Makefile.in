@@ -44,6 +44,7 @@ EXPORTS =				\
 	nsIStyleSet.h			\
 	nsIStyleSheet.h			\
 	nsITextContent.h		\
+	nsLayoutAtoms.h			\
 	nsStyleConsts.h			\
 	nsStyleCoord.h			\
 	nsStyleStruct.h			\
