@@ -72,6 +72,8 @@ CSingleLock prevLock(&prevSyncCodeSegment);
 
 BOOL isBuildInstaller;
 BOOL isCDLayoutCreated;
+UINT nID;
+UINT wNotifyCode;
 
 //extern CProgDialog myProgDialog;
 
@@ -333,8 +335,8 @@ BOOL CWizardUI::SetDescription(WIDGET *w)
 
 BOOL CWizardUI::OnCommand(WPARAM wParam, LPARAM lParam) 
 {
-	UINT nID = LOWORD(wParam);
-	UINT wNotifyCode = HIWORD(wParam);
+	nID = LOWORD(wParam);
+	wNotifyCode = HIWORD(wParam);
 	// Get screen values exchanged
 	UpdateData(TRUE);
 

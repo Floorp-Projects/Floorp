@@ -38,6 +38,9 @@ extern char asePath[MAX_SIZE];
 extern char nciPath[MAX_SIZE];
 extern char tmpPath[MAX_SIZE];
 CString returnDir;
+extern UINT nID;
+extern UINT wNotifyCode;
+
 
 extern _declspec (dllimport) WIDGET ptr_ga[1000];
 
@@ -111,6 +114,9 @@ BOOL CInterpret::NewConfig(WIDGET *curWidget, CString globalsName, CString Dialo
 		((CComboBox*)tmpWidget->control)->SelectString(0, configField);
 	
 	SetGlobal(globalsName, configField);
+	SetGlobal("CustomizationList", configField);
+	
+	IsSameCache = FALSE;
 
 	return TRUE;
 }
@@ -596,6 +602,13 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 					CachePath = newDir + "\\" + CacheFile;
 					theApp.FillGlobalWidgetArray(CachePath);  // Ignore failure, we'll write one out later
 					IsSameCache = FALSE;
+				}
+				else if (strcmp(pcmd, "WriteCache") ==0)
+				{
+					WIDGET *w = findWidget(parms);
+					if (w)
+						if((wNotifyCode == CBN_SELCHANGE) || (wNotifyCode == CBN_CLOSEUP) || (wNotifyCode == CBN_SELENDOK))
+							IsSameCache = FALSE;
 				}
 				else if (strcmp(pcmd, "VerifyVal") == 0)
 				{
