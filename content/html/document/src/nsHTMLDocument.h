@@ -238,7 +238,7 @@ protected:
   static PRBool MatchFormControls(nsIContent* aContent, PRInt32 aNamespaceID,
                                   nsIAtom* aAtom, const nsAString& aData);
 
-  static nsresult GetSourceDocumentURI(nsIURI** sourceURI);
+  static nsIPrincipal *GetCallerPrincipal();
 
   static void DocumentWriteTerminationFunc(nsISupports *aRef);
 
@@ -250,8 +250,7 @@ protected:
   nsresult WriteCommon(const nsAString& aText,
                        PRBool aNewlineTerminate);
   nsresult ScriptWriteCommon(PRBool aNewlineTerminate);
-  nsresult OpenCommon(nsIURI* aUrl, const nsACString& aContentType,
-                      PRBool aReplace);
+  nsresult OpenCommon(const nsACString& aContentType, PRBool aReplace);
 
   nsresult CreateAndAddWyciwygChannel(void);
   nsresult RemoveWyciwygChannel(void);
