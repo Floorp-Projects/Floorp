@@ -3849,6 +3849,15 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
 
                   PRBool isText = (type.IsEmpty() || (type.CompareWithConversion("text", PR_TRUE)==0));
                   PRBool isPassword = (type.CompareWithConversion("password", PR_TRUE)==0);
+
+                  // don't save password if field was left blank
+                  if (isPassword) {
+                    nsAutoString val;
+                    (void) inputElement->GetValue(val);
+                    if (val.IsEmpty()) {
+                      isPassword = PR_FALSE;
+                    }
+                  }
 #define WALLET_DONT_CACHE_ALL_PASSWORDS
 #ifdef WALLET_DONT_CACHE_ALL_PASSWORDS
                   if (isPassword) {
