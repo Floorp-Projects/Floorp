@@ -567,15 +567,19 @@ LModelObject* CHTMLView::GetFormElemBaseModel(void)
 // by using ::CopyBits() to scroll the image in the view and then set the update
 // rgn appropriately so that the compositor can blit it to the screen.
 
-void CHTMLView :: ScrollBits ( Int32 inLeftDelta, Int32 inTopDelta )
+void 
+CHTMLView :: ScrollBits ( Int32 inLeftDelta, Int32 inTopDelta )
 {
 	if (FocusExposed()) {
-		// Get Frame in local coords from clip rect (there might be a frame around view)
+			
+		// Get Frame in local coords from clip rect (there might be a border around view)
 		StRegion clipRgn;
 		Rect frame;
-		::GetClip ( clipRgn );
+		::GetClip(clipRgn);
 		clipRgn.GetBounds(frame);
-				
+		
+		StRegion totalView(frame);
+		
 		// compute the source rect (rect that gets scrolled)
 		Rect source = frame;
 		if ( inTopDelta > 0 )
@@ -585,8 +589,8 @@ void CHTMLView :: ScrollBits ( Int32 inLeftDelta, Int32 inTopDelta )
 		if ( inLeftDelta > 0 )
 			source.left += inLeftDelta;
 		else if ( inLeftDelta < 0 )
-			source.right -= inLeftDelta;			
-		
+			source.right -= inLeftDelta;	
+
 		// compute the destination of copybits (post-scroll)
 		Rect dest = source;
 		if ( inTopDelta ) {
@@ -597,21 +601,57 @@ void CHTMLView :: ScrollBits ( Int32 inLeftDelta, Int32 inTopDelta )
 			dest.left -= inLeftDelta;
 			dest.right -= inLeftDelta;
 		}
-
+		
 		// compute the area that is to be updated by subtracting the dest from the visible area
 		StRegion updateRgn(frame);
 		StRegion destRgn(dest);
 		::DiffRgn ( updateRgn, destRgn, updateRgn );
-		
-		// use copybits to simulate a ScrollRect()
-		StColorPenState saved;
-		StColorPenState::Normalize();
-		::CopyBits ( &GetMacPort()->portBits, &GetMacPort()->portBits, &source, &dest, srcCopy, nil );
+			
+			
+		if(::EmptyRgn(mCachedPort->visRgn))		
+		{
+			::CopyBits ( 
+				&mCachedPort->portBits, 
+				&mCachedPort->portBits, 
+				&source, 
+				&dest, 
+				srcCopy, 
+				nil);
+		}
+		else
+		{
+			// compute the non-visable region
+			StRegion nonVisableRgn;
+			::DiffRgn ( totalView, mCachedPort->visRgn, nonVisableRgn );
+			
+			// compute the extra area that may need to be updated
+			// scoll the non-visable region to determine what needs updating
+			::OffsetRgn ( nonVisableRgn, -inLeftDelta, -inTopDelta );
+			
+			// calculate a mask region to not copy the non-visble portions of the window from the port
+			StRegion copyMaskRgn;
+			::DiffRgn(totalView, nonVisableRgn, copyMaskRgn);
+			
+			// use copybits to simulate a ScrollRect()
+			StColorPenState saved;
+			StColorPenState::Normalize();	 	
+
+			::CopyBits ( 
+				&mCachedPort->portBits, 
+				&mCachedPort->portBits, 
+				&source, 
+				&dest, 
+				srcCopy, 
+				copyMaskRgn);
+				
+			// union the update regions together and invalidate them
+			::UnionRgn(nonVisableRgn, updateRgn, updateRgn);
+		}
 		
 		::OffsetRgn(updateRgn, -mPortOrigin.h, -mPortOrigin.v);
 		InvalPortRgn(updateRgn);
 	}
-	
+
 } // ScrollBits
 
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
