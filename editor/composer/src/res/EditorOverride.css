@@ -29,7 +29,7 @@
 
 /* Primary cursor is text I-beam */
 
-*:scrolled-content, a:link {
+:canvas, a:link {
   cursor: text;
 }
 
@@ -40,7 +40,7 @@
 
 img, img[usemap], area,
 object, object[usemap], 
-applet, hr, button, input, select,
+applet, hr, button, input, isindex, textarea, select,
 a:link img, a:visited img, a:active img,
 a[name]:empty {
   cursor: default;
