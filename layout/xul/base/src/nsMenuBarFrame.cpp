@@ -238,6 +238,13 @@ nsMenuBarFrame::KeyboardNavigation(PRUint32 aDirection)
     else GetPreviousMenuItem(mCurrentMenu, &nextItem);
 
     SetCurrentMenuItem(nextItem);
+    if (nextItem) {
+      nsMenuFrame* menu = (nsMenuFrame*)nextItem;
+      if (menu->IsOpen()) {
+        // Select the first item.
+        menu->SelectFirstItem();
+      }
+    }
   }
   else if (aDirection == NS_VK_UP || aDirection == NS_VK_DOWN) {
     // Open the menu and select its first item.
