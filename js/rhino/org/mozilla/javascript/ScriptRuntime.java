@@ -1928,12 +1928,11 @@ public class ScriptRuntime {
     }
     
     public static void setAdapterProto(Scriptable obj, Object adapter) {
-        Scriptable p = obj.getPrototype();
+        Scriptable oldProto = obj.getPrototype();
         Scriptable scope = ScriptableObject.getTopLevelScope(obj);
-        if (p == null || p == ScriptableObject.getObjectPrototype(scope)) {
-            Scriptable wrapped = (Scriptable) Context.toObject(adapter, scope);
-            obj.setPrototype(wrapped);
-        }
+        Scriptable wrapped = (Scriptable) Context.toObject(adapter, scope);
+        obj.setPrototype(wrapped);
+        wrapped.setPrototype(oldProto);
     }
     
     public static Scriptable initVarObj(Context cx, Scriptable scope,
