@@ -524,7 +524,6 @@ widget/src/os2/res/Makefile
 widget/src/os2/tests/Makefile
 widget/src/qt/Makefile
 widget/src/xlibxtbin/Makefile
-widget/src/xlib/window_service/Makefile
 widget/src/xpwidgets/Makefile
 widget/src/support/Makefile
 widget/timer/Makefile
