@@ -3490,6 +3490,7 @@ NS_IMETHODIMP nsViewManager::RenderOffscreen(nsIView* aView, nsRect aRect,
   PL_FinishArenaPool(&displayArena);
 
   localcx.swap(*aRenderedContext);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsViewManager::Display(nsIView* aView, nscoord aX, nscoord aY, const nsRect& aClipRect)
