@@ -37,8 +37,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.16 $ 
-# $Date: 2002/05/03 00:19:39 $ 
+# $Revision: 1.17 $ 
+# $Date: 2002/05/09 03:09:12 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/BT_Generic.pm,v $ 
 # $Name:  $ 
@@ -76,31 +76,13 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.16 $ )[1];
+$VERSION = ( qw $Revision: 1.17 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
 
 # name of the bug tracking system
 $BT_NAME = $TinderConfig::BT_NAME || "BT";
-
-# remove all records from the database which are older then last_time.
-
-sub trim_db_history {
-  my ($self, $tree,) = (@_);
-
-  my ($last_time) =  $main::TIME - $TinderDB::TRIM_SECONDS;
-
-  # sort numerically ascending
-  my (@times) = sort {$a <=> $b} keys %{ $DATABASE{$tree} };
-  foreach $time (@times) {
-    ($time >= $last_time) && last;
-
-    delete $DATABASE{$tree}{$time};
-  }
-
-  return ;
-}
 
 
 # get the recent data from where the MDA puts the parsed data.
@@ -158,7 +140,7 @@ sub apply_db_updates {
         $TinderDB::MAX_UPDATES_SINCE_TRIM)
      ) {
     $METADATA{$tree}{'updates_since_trim'}=0;
-    trim_db_history(@_);
+    $self->trim_db_history(@_);
   }
 
   # Be sure to save the updates to the database before we delete their
@@ -181,16 +163,172 @@ sub status_table_legend {
 }
 
 
+
+sub notice_association {
+    return BTData::get_all_columns();
+}
+
+
 sub status_table_header {
   my $out = '';
 
-  my (@progress_states) = BTData::get_all_progress_states();
+  my (@columns) = BTData::get_all_columns();
 
-  foreach $progress (@progress_states) {  
-    $out .= "\t<th>$BT_NAME $progress</th>\n";
+  foreach $column (@columns) {  
+    $out .= "\t<th>$BT_NAME $column</th>\n";
   }
 
   return ($out);
+}
+
+
+sub render_bug {
+    my ($rec) = @_;
+    
+    my $tree = $rec->{'tinderbox_tree'};
+    my $status = $rec->{'tinderbox_status'};
+    my $column = $BTData::STATUS_PROGRESS{$status};
+
+
+    my ($table) = '';
+    my ($num_rows) = 0;
+    my ($max_length) = 0;
+    
+    # display all the interesting fields
+    
+    foreach $field (@BTData::DISPLAY_FIELDS) {
+        
+        my ($value) = $rec->{$field};
+        
+        # many fields tend to be empty because it diffs the bug
+        # reports and only reports the lines which change and a few
+        # lines of context.
+        
+        ($value) || 
+            next;
+        
+        # $max_length = main::max($max_length , length($value));
+        $num_rows++;
+        $table .= (
+                   "\t".
+                   "<tt>$field</tt>".
+                   ": ".
+                   $value.
+                   "<br>\n".
+                   "");
+    } # foreach $field 
+    
+    ($table) ||
+        return ;
+
+    $table = (
+              "Ticket updated at: ".
+              localtime($time).
+              "<br>\n".
+              $table.
+              "");
+    
+    # fix the size so that long summaries do not cause our window
+    # to get too large.
+    
+    $max_length = 40;
+    
+    # a link to the cgibin page which displays the bug
+    
+    my ($href) = BTData::rec2bug_url($rec);
+    my ($window_title) = "$BT_NAME Info bug_id: $bug_id";
+    
+    # we display the list of names in 'teletype font' so that the
+    # names do not bunch together. It seems to make a difference if
+    # there is a <cr> between each link or not, but it does make a
+    # difference if we close the <tt> for each author or only for
+    # the group of links.
+    my ($query_link) = 
+      HTMLPopUp::Link(
+                      "linktxt" => "<tt>$bug_id</tt>",
+                      "href" => $href,
+                      
+                      "windowtxt" => $table,
+                      "windowtitle" => $window_title,
+                      "windowheight" => ($num_rows * 25) + 100,
+                      "windowwidth" => ($max_length * 15) + 100,
+                      );
+    
+    # put each link on its own line and add good comments so we
+    # can debug the HTML.
+    
+    my $out = (
+               "\t\t<!-- BT: ".("bug_id: $bug_id, ".
+                                "Time: '".localtime($time)."', ".
+                                "Column: $column, ".
+                                "Status: $status, ".
+                                "Tree: $tree, ".
+                                "").
+               "  -->\n".
+               "\t\t".$query_link."\n".
+               "");
+    
+
+    return $out;
+}
+
+
+# Return all the bug_ids which changed at any point between the two
+# row times which represent this cell.  Further the data msut be in
+# the column we are currently rendering, that means that the status
+# must map into the correct column.
+
+sub cell_data {
+    my ($tree, $db_index, $last_time, $column) = @_;
+    
+    
+    my (%bug_ids) = ();
+    
+    while (1) {
+        my ($time) = $DB_TIMES[$db_index];
+        
+        # find the DB entries which are needed for this cell
+        ($time < $last_time) && last;
+        ($db_index >= $#DB_TIMES) && last;
+        
+        $db_index++;
+        foreach $status (keys %{ $DATABASE{$tree}{$time} }) {
+  
+          ($column eq $BTData::STATUS_PROGRESS{$status}) ||
+                next;
+
+            my ($out) = '';
+            foreach $bug_id (sort keys %{ $DATABASE{$tree}{$time}{$status} }) {
+
+                # keep most recent bug report
+                ($bug_ids{$bug_id}) && next;
+
+                my ($rec) = $DATABASE{$tree}{$time}{$status}{$bug_id};
+                $bug_ids{$bug_id} = $rec;
+                
+            } # foreach $bug_id
+            
+        } # foreach $status
+    } # while (1)
+
+    return ($db_index, \%bug_ids);
+}
+
+
+# Create one cell (possibly taking up many rows) which will show
+# that no authors have checked in during this time.
+
+sub render_empty_cell {
+    my ($tree, $till_time, $rowspan) = @_;
+
+    my $local_till_time = localtime($till_time);
+    return ("\t<!-- BT_Generic: empty data. ".
+            "tree: $tree, ".
+            "filling till: '$local_till_time', ".
+            "-->\n".
+            
+            "\t\t<td align=center rowspan=$rowspan>".
+            "$HTMLPopUp::EMPTY_TABLE_CELL</td>\n");
 }
 
 
@@ -212,10 +350,14 @@ sub status_table_start {
   my ($first_cell_seconds) = 2*($row_times->[0] - $row_times->[1]);
   my ($earliest_data) = $row_times->[0] + $first_cell_seconds;
 
-  $NEXT_DB = 0;
-  while ( ($DB_TIMES[$NEXT_DB] > $earliest_data) &&    
-          ($NEXT_DB < $#DB_TIMES) ) {
-    $NEXT_DB++
+  my (@columns) = BTData::get_all_columns();
+
+  foreach $column (@columns) {  
+      $NEXT_DB{$tree}{$column} = 0;
+      while ( ($DB_TIMES[$NEXT_DB] > $earliest_data) &&    
+              ($NEXT_DB{$tree} < $#DB_TIMES) ) {
+          $NEXT_DB{$tree}{$column}++;
+      }
   }
 
   return ;  
@@ -223,144 +365,96 @@ sub status_table_start {
 
 
 
+sub render_one_column {
+    my ($self, $row_times, $row_index, $tree, $column) = @_;
+    my @html;
+
+    # skip this column because it is part of a multi-row missing data
+    # cell?
+    
+    if ( $NEXT_ROW{$tree}{$column} != $row_index ) {
+        
+        push @html, ("\t<!-- BT_Generic: skipping. ".
+                     "tree: $tree, ".
+                     "additional_skips: ".
+                     ($NEXT_ROW{$tree}{$column} - $row_index).", ".
+                     " -->\n");
+        return @html;
+    }
+    
+    my ($db_index,  $bug_ids) =
+        cell_data($tree, 
+                  $NEXT_DB{$tree}{$column}, 
+                  $row_times->[$row_index], 
+                  $column);
+    
+    if (scalar(%{$bug_ids})) {
+        
+        $NEXT_DB{$tree}{$column} = $db_index;
+        $NEXT_ROW{$tree}{$column} = $row_index + 1;
+        foreach $bug_id (sort keys %{$bug_ids}) {
+            my $html = render_bug($bug_ids->{$bug_id});
+            push @html, $html;
+        }
+        my $out = (
+                   "\t<td align=center>\n".
+                   "@html".
+                   "\t</td>\n".
+                   "");
+
+        return $out;          
+    }
+
+    # Create a multi-row dummy cell for missing data.
+    # Cell stops if there is data in the following cell.
+    
+    my $rowspan = 0;
+    my ($next_db_index);
+    $next_db_index = $db_index;
+    
+    while (
+           ($row_index+$rowspan <=  $#{ $row_times }) &&
+
+           (!(scalar(%{$bug_ids}))) 
+           ) {
+        
+        $db_index = $next_db_index;
+        $rowspan++ ;
+        
+          ($next_db_index, $bug_ids) =
+              cell_data($tree, 
+                        $db_index, 
+                        $row_times->[$row_index+$rowspan], 
+                        $column);
+    }
+    
+    $NEXT_ROW{$tree}{$column} = $row_index + $rowspan;
+    $NEXT_DB{$tree}{$column} = $db_index;
+    
+    @html= render_empty_cell($tree, 
+                             $row_times->[$row_index+$rowspan], 
+                             $rowspan);
+
+    return @html;
+}
 
 
 sub status_table_row {
-  my ($self, $row_times, $row_index, $tree, ) = @_;
-
-  my (@outrow) = ();
-
-  # find all the bug_ids which changed at any point in this cell.
-
-  my (%bug_ids) = ();
-  
-  while (1) {
-   my ($time) = $DB_TIMES[$NEXT_DB];
-
-    # find the DB entries which are needed for this cell
-    ($time < $row_times->[$row_index]) && last;
-
-    $NEXT_DB++;
-
-    foreach $status (keys %{ $DATABASE{$tree}{$time} }) {
-
-      # do not display bugs whos status_progres is null, these have
-      # been deemed uninteresting.
-
-      ($BTData::STATUS_PROGRESS{$status}) ||
-        next;
-
-      my ($query_links) = '';
-      foreach $bug_id (sort keys %{ $DATABASE{$tree}{$time}{$status} }) {
-	
-	my ($table) = '';
-	my ($num_rows) = 0;
-	my ($max_length) = 0;
-        my ($rec) = $DATABASE{$tree}{$time}{$status}{$bug_id};
-
-	# display all the interesting fields
-	
-	foreach $field (@BTData::DISPLAY_FIELDS) {
-
-	  my ($value) = $rec->{$field};
-
-          # many fields tend to be empty because it diffs the bug
-          # reports and only reports the lines which change and a few
-          # lines of context.
-
-          ($value) || 
-            next;
-
-          # $max_length = main::max($max_length , length($value));
-	  $num_rows++;
-	  $table .= (
-		     "\t".
-		     "<tt>$field</tt>".
-		     ": ".
-		     $value.
-		     "<br>\n".
-		     "");
-	} # foreach $field 
-
-        ($table) ||
-          next;
-
-        $table = (
-                  "Ticket updated at: ".
-                  localtime($time).
-                  "<br>\n".
-                  $table.
-                  "");
-
-        # fix the size so that long summaries do not cause our window
-        # to get too large.
-
-	$max_length = 40;
-
-	# a link to the cgibin page which displays the bug
-	
-	my ($href) = BTData::rec2bug_url($rec);
-	my ($window_title) = "$BT_NAME Info bug_id: $bug_id";
-
-	# we display the list of names in 'teletype font' so that the
-	# names do not bunch together. It seems to make a difference if
-	# there is a <cr> between each link or not, but it does make a
-	# difference if we close the <tt> for each author or only for
-	# the group of links.
-	my ($query_link) = 
-	  HTMLPopUp::Link(
-			  "linktxt" => "<tt>$bug_id</tt>",
-			  "href" => $href,
-			  
-			  "windowtxt" => $table,
-			  "windowtitle" => $window_title,
-			  "windowheight" => ($num_rows * 25) + 100,
-			  "windowwidth" => ($max_length * 15) + 100,
-			 );
-
-	# put each link on its own line and add good comments so we
-	# can debug the HTML.
-
-	$query_link =  "\t\t".$query_link."\n";
-	
-	$query_links .= (
-                         "\t\t<!-- BT: ".("bug_id: $bug_id, ".
-                                          "Time: '".localtime($time)."', ".
-                                          "Progress: $progress, ".
-                                          "Status: $status, ".
-                                          "Tree: $tree, ".
-                                          "").
-                         "  -->\n".
-                         "");
-	
-	$query_links .= $query_link;
-      } # foreach $bug_id
-
-      my ($progress) = $BTData::STATUS_PROGRESS{$status};
-      $bug_ids{$progress} .= $query_links;
-    } # foreach $status
-  } # while (1)
-
- 
-  my (@progress_states) = BTData::get_all_progress_states();
-
-  foreach $progress (@progress_states) {
-
-    if ($bug_ids{$progress}) {
-      push @outrow, (
-                     "\t<td align=center>\n".
-                     $bug_ids{$progress}.
-                     "\t</td>\n".
-                     "");
-    } else {
-      
-      push @outrow, ("\t<!-- skipping: BT: Progress: $progress tree: $tree -->".
-                     "<td align=center>$HTMLPopUp::EMPTY_TABLE_CELL</td>\n");
-    }
+    my ($self, $row_times, $row_index, $tree, ) = @_;
     
-  }
+    my (@outrow) = ();
+    
+    my (@columns) = BTData::get_all_columns();
+    foreach $column (@columns) {
+        push @outrow, render_one_column(
+                                        $self, $row_times, 
+                                        $row_index, $tree, 
+                                        $column);
+    }
 
-  return @outrow; 
+    return @outrow;
 }
 
+
 1;
+
