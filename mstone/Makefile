@@ -26,8 +26,8 @@ GNUPLOTFILES	= gnuplot gnuplot_x11 gnuplot.1 gnuplot.gih Copyright
 VERSION		= 4.2
 TARBALL		= mstone-$(VERSION)-$(NSARCH)$(OBJDIR_TAG).tar.gz
 ZIPFILE		= mstone-$(VERSION)-$(NSARCH)$(OBJDIR_TAG).zip
-TARBALL_ALL	= mstone-$(VERSION)-all-$(OBJDIR_TAG).tar.gz
-ZIPFILE_ALL	= mstone-$(VERSION)-all-$(OBJDIR_TAG).zip
+TARBALL_ALL	= mstone-$(VERSION)-all$(OBJDIR_TAG).tar.gz
+ZIPFILE_ALL	= mstone-$(VERSION)-all$(OBJDIR_TAG).zip
 
 NTFILES		= mstone.bat process.bat setup.bat
 
@@ -99,13 +99,13 @@ $(PKGDIR)/perl:
 # operating system independent share-files (at least for Unix)
 pkg-share-files:: mkpkgdirs
 	@$(ECHO) "\n===== [`date`] making package share-files...\n"
-	$(CP) mstone setup process $(PKGDIR)
+	$(CP) mstone process $(PKGDIR)
 	(cd $(PKGDIR); [ ! -f setup ] || rm -f setup; ln -s mstone setup)
 	(cd $(PKGDIR); [ ! -f cleanup ] || rm -f cleanup; ln -s mstone cleanup)
 	(cd $(PKGDIR); [ ! -f checktime ] || rm -f checktime; ln -s mstone checktime)
 	(cd $(PKGDIR); [ ! -f timesync ] || rm -f timesync; ln -s mstone timesync)
 	$(CP) nsarch bin/*.pl $(PKGDIR)/bin
-	$(CP) conf/*.wld conf/*.html $(PKGDIR)/conf
+	$(CP) conf/*.wld conf/*.wld.in conf/*.html $(PKGDIR)/conf
 	$(CP) data/*.msg $(PKGDIR)/data
 	$(CP) doc/*.html doc/*.gif $(PKGDIR)/doc
 	$(CP) INSTALL $(PKGDIR)
@@ -190,7 +190,7 @@ dist::
 	@[ ! -d "$(DIST)" ] || ($(ECHO) "Error: $(DIST) already exists" && \
 		$(MAKE) usage && /bin/false)
 	mkdir -p $(DIST)
-	cp -p build/$(TARBALL_ALL) build/$(ZIPFILE_ALL) $(DIST)/
+	cp -p build/mstone-$(VERSION)-all_*.tar.gz build/mstone-$(VERSION)-all_*.zip $(DIST)/
 	(cd build/package; tar cf - *.OBJ) | (cd $(DIST); tar xf - )
 	for l in $(DIST)/*_???.OBJ ; do \
 		(cd $$l; ln -s mstone mailstone); done

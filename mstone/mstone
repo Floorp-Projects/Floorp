@@ -84,7 +84,7 @@ setup_perl() {
 
 # Get the default version of mailclient
 setup_mailclient() {
-    [ -n "$OUROS" ] || have_nsarch $1
+    [ -n "$OUROS" ] || run_nsarch $1
     (cd bin; ln -s $OUROS/bin/mailclient ./ )
 }
 
@@ -120,7 +120,13 @@ else				# or the name we were called
 	if [ -n "$sm" ] ; then
 		mode=$sm
 	fi
+fi
 
+# see if setup was ever run
+if [ "$mode" != setup -a "$mode" != cleanup \
+	-a \( ! -x perl/bin/perl -o ! -f .license \) ] ; then
+    echo "mstone setup was never run.  Running setup."
+    mode=setup
 fi
 
 if [ "$mode" = setup ] ; then	# setup mode
@@ -159,11 +165,6 @@ else				# run a mstone test
 
     testcase=$1			# get testname
     shift
-
-    if [ ! -x perl/bin/perl -o ! -f .license ] ; then # see if setup was ever run
-       echo "Critical files are missing.  Run setup."
-       exit 2;
-    fi
 
     if [ -f $testcase ] ; then	# if they gave us the full path
 	testfile=$testcase
