@@ -2403,7 +2403,7 @@ EOF
     fi
     ;;
 
-alpha-*-linux*)
+alpha*-*-linux*)
 	CFLAGS="$CFLAGS -mieee" ;;
 
 alpha*-*-osf*)
