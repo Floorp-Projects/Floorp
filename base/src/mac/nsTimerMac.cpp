@@ -39,12 +39,16 @@ class TimerImpl : public nsITimer
 // TimerImpl implements nsITimer API
 //========================================================================================
 {
+    friend class TimerPeriodical;
+    
   private:
     nsTimerCallbackFunc mCallbackFunc;
     nsITimerCallback * mCallbackObject;
     void * mClosure;
     PRUint32 mDelay;
     PRUint32 mFireTime;  // Timer should fire when TickCount >= this number
+    TimerImpl * mPrev; 
+    TimerImpl * mNext; 
   
   public:
 
@@ -103,10 +107,10 @@ class TimerPeriodical  : public Repeater
 // TimerPeriodical is a singleton Repeater subclass that fires
 // off TimerImpl. The firing is done on idle.
 //========================================================================================
-{  
+{      
     static TimerPeriodical * gPeriodical;
     
-        list<TimerImpl*> mTimers;
+    TimerImpl* mTimers;
   
   public:
     // Returns the singleton instance
@@ -140,6 +144,8 @@ TimerImpl::TimerImpl()
 ,  mClosure(nsnull)
 ,  mDelay(0)
 ,  mFireTime(0)
+,  mPrev(nsnull)
+,  mNext(nsnull)
 #if DEBUG
 ,  mSignature(eGoodTimerSignature)
 #endif
@@ -185,7 +191,6 @@ nsresult TimerImpl::Init(nsITimerCallback *aCallback,
 void TimerImpl::Cancel()
 //----------------------------------------------------------------------------------------
 {
-
   TimerPeriodical::GetPeriodical()->RemoveTimer(this);
 }
 
@@ -251,26 +256,70 @@ TimerPeriodical * TimerPeriodical::GetPeriodical()
 
 TimerPeriodical::TimerPeriodical()
 {
+  mTimers = nsnull;
 }
 
 TimerPeriodical::~TimerPeriodical()
 {
-  PR_ASSERT(mTimers.size() == 0);
+  PR_ASSERT(mTimers == 0);
 }
 
 nsresult TimerPeriodical::AddTimer( TimerImpl * aTimer)
 {
   // make sure it's not already there
-  mTimers.remove(aTimer);
-  mTimers.push_back(aTimer);
+  RemoveTimer(aTimer);
+  // keep list sorted by fire time
+  if (mTimers)
+  {
+    if (aTimer->GetFireTime() < mTimers->GetFireTime())
+    {
+      mTimers->mPrev = aTimer;
+      aTimer->mNext = mTimers;
+      mTimers = aTimer;
+    }
+    else
+    {
+      TimerImpl *t = mTimers;
+      TimerImpl *prevt;
+      // we know we will enter the while loop at least the first
+      // time, and thus prevt will be initialized
+      while (t && (t->GetFireTime() <= aTimer->GetFireTime()))
+      {
+        prevt = t;
+        t = t->mNext;
+      }
+      aTimer->mPrev = prevt;
+      aTimer->mNext = prevt->mNext;
+      prevt->mNext = aTimer;
+      if (aTimer->mNext) aTimer->mNext->mPrev = aTimer;
+    }
+  }
+  else mTimers = aTimer;
+  
   StartRepeating();
   return NS_OK;
 }
 
 nsresult TimerPeriodical::RemoveTimer( TimerImpl * aTimer)
 {
-  mTimers.remove(aTimer);
-  if ( mTimers.size() == 0 )
+  TimerImpl* t = mTimers;
+  TimerImpl* next_t = nsnull;
+  if (t) next_t = t->mNext;
+  while (t)
+  {
+    if (t == aTimer)
+    {
+      if (mTimers == t) mTimers = t->mNext;
+      if (t->mPrev) t->mPrev->mNext = t->mNext;
+      if (t->mNext) t->mNext->mPrev = t->mPrev;
+      t->mNext = nsnull;
+      t->mPrev = nsnull;
+    }
+    t = next_t;
+    if (t) next_t = t->mNext;
+  }
+ 
+  if ( mTimers == nsnull )
     StopRepeating();
   return NS_OK;
 }
@@ -280,33 +329,23 @@ nsresult TimerPeriodical::RemoveTimer( TimerImpl * aTimer)
 // fires off the appropriate ones
 void  TimerPeriodical::RepeatAction( const EventRecord &inMacEvent)
 {
-  list<TimerImpl*>::iterator iter = mTimers.begin();
-  list<TimerImpl*> fireList;
-  
-  while (iter != mTimers.end())
+  PRBool done = false;  
+  while (!done)
   {
-    TimerImpl* timer = *iter;
-    
-    NS_ASSERTION(timer->IsGoodTimer(), "Bad timer!");
-    
-    if (timer->GetFireTime() <= inMacEvent.when)
+    TimerImpl* t = mTimers;
+    while (t)
     {
-      mTimers.erase(iter++);
-      NS_ADDREF(timer);
-      fireList.push_back(timer);
-    }
-    else
+      NS_ASSERTION(t->IsGoodTimer(), "Bad timer!");
+    
+      if (t->GetFireTime() <= inMacEvent.when)
       {
-        iter++;
+        RemoveTimer(t);
+        t->Fire();
+        break;
       }
-  }
-  if ( mTimers.size() == 0 )
-     StopRepeating();
-     
-  for (iter=fireList.begin(); iter!=fireList.end(); iter++)
-  {
-    (*iter)->Fire();
-    NS_RELEASE(*iter);
+      t = t->mNext;
+    }
+    done = true;
   }
 }
 
