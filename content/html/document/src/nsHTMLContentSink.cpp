@@ -1003,9 +1003,7 @@ NS_IMETHODIMP HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
     // XXX SCRIPT tag evaluation is currently turned off till we
     // get more scripts working.
     FlushText();
-#if 0
     ProcessSCRIPTTag(aNode);
-#endif
     return NS_OK;
 
   case eHTMLTag_area:
