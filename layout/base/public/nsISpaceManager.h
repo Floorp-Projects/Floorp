@@ -43,17 +43,17 @@ struct nsSize;
 struct nsBandTrapezoid {
   enum State {Available, Occupied, OccupiedMultiple};
 
-  nscoord   yTop, yBottom;            // top and bottom y-coordinates
-  nscoord   xTopLeft, xBottomLeft;    // left edge x-coordinates
-  nscoord   xTopRight, xBottomRight;  // right edge x-coordinates
-  State     state;                    // state of the space
+  nscoord   mTopY, mBottomY;            // top and bottom y-coordinates
+  nscoord   mTopLeftX, mBottomLeftX;    // left edge x-coordinates
+  nscoord   mTopRightX, mBottomRightX;  // right edge x-coordinates
+  State     mState;                     // state of the space
   union {
-    nsIFrame*          frame;  // single frame occupying the space
-    const nsVoidArray* frames; // list of frames occupying the space
+    nsIFrame*          mFrame;  // single frame occupying the space
+    const nsVoidArray* mFrames; // list of frames occupying the space
   };
 
   // Get the height of the trapezoid
-  nscoord GetHeight() const {return yBottom - yTop;}
+  nscoord GetHeight() const {return mBottomY - mTopY;}
 
   // Get the bouding rect of the trapezoid
   void    GetRect(nsRect& aRect) const;
@@ -67,9 +67,9 @@ struct nsBandTrapezoid {
  * @see #GetBandData()
  */
 struct nsBandData {
-  PRInt32          count;      // [out] actual number of trapezoids in the band data
-  PRInt32          size;       // [in] the size of the array (number of trapezoids)
-  nsBandTrapezoid* trapezoids; // [out] array of length 'size'
+  PRInt32          mCount;      // [out] actual number of trapezoids in the band data
+  PRInt32          mSize;       // [in] the size of the array (number of trapezoids)
+  nsBandTrapezoid* mTrapezoids; // [out] array of length 'size'
 };
 
 /**
@@ -186,18 +186,18 @@ public:
 
 inline void nsBandTrapezoid::GetRect(nsRect& aRect) const
 {
-  aRect.x = PR_MIN(xTopLeft, xBottomLeft);
-  aRect.y = yTop;
-  aRect.width = PR_MAX(xTopRight, xBottomRight) - aRect.x;
-  aRect.height = yBottom - yTop;
+  aRect.x = PR_MIN(mTopLeftX, mBottomLeftX);
+  aRect.y = mTopY;
+  aRect.width = PR_MAX(mTopRightX, mBottomRightX) - aRect.x;
+  aRect.height = mBottomY - mTopY;
 }
 
 inline void nsBandTrapezoid::operator=(const nsRect& aRect)
 {
-  xTopLeft = xBottomLeft = aRect.x;
-  xTopRight = xBottomRight = aRect.XMost();
-  yTop = aRect.y;
-  yBottom = aRect.YMost();
+  mTopLeftX = mBottomLeftX = aRect.x;
+  mTopRightX = mBottomRightX = aRect.XMost();
+  mTopY = aRect.y;
+  mBottomY = aRect.YMost();
 }
 
 #endif /* nsISpaceManager_h___ */

@@ -42,11 +42,11 @@ public:
 
   // Get the raw trapezoid count for this band.
   PRInt32 GetTrapezoidCount() const {
-    return count;
+    return mCount;
   }
 
   const nsBandTrapezoid* GetTrapezoid(PRInt32 aIndex) const {
-    return &trapezoids[aIndex];
+    return &mTrapezoids[aIndex];
   }
 
   // Get the number of floaters that are impacting the current

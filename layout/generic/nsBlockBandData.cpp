@@ -28,15 +28,15 @@ nsBlockBandData::nsBlockBandData()
     mSpaceManagerY(0),
     mSpace(0, 0)
 {
-  size = 12;
-  trapezoids = mData;
+  mSize = 12;
+  mTrapezoids = mData;
 }
 
 nsBlockBandData::~nsBlockBandData()
 {
   NS_IF_RELEASE(mSpaceManager);
-  if (trapezoids != mData) {
-    delete [] trapezoids;
+  if (mTrapezoids != mData) {
+    delete [] mTrapezoids;
   }
 }
 
@@ -69,15 +69,15 @@ nsBlockBandData::GetAvailableSpace(nscoord aY, nsRect& aResult)
   nsresult rv = mSpaceManager->GetBandData(aY, mSpace, *this);
   while (NS_FAILED(rv)) {
     // We need more space for our bands
-    if (trapezoids != mData) {
-      delete [] trapezoids;
+    if (mTrapezoids != mData) {
+      delete [] mTrapezoids;
     }
-    PRInt32 newSize = size * 2;
-    trapezoids = new nsBandTrapezoid[newSize];
-    if (!trapezoids) {
+    PRInt32 newSize = mSize * 2;
+    mTrapezoids = new nsBandTrapezoid[newSize];
+    if (!mTrapezoids) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    size = newSize;
+    mSize = newSize;
     rv = mSpaceManager->GetBandData(aY, mSpace, *this);
   }
 
@@ -97,7 +97,7 @@ nsBlockBandData::GetAvailableSpace(nscoord aY, nsRect& aResult)
 void
 nsBlockBandData::ComputeAvailSpaceRect()
 {
-  if (0 == count) {
+  if (0 == mCount) {
     mAvailSpace.x = 0;
     mAvailSpace.y = 0;
     mAvailSpace.width = 0;
@@ -105,26 +105,26 @@ nsBlockBandData::ComputeAvailSpaceRect()
     return;
   }
 
-  nsBandTrapezoid* trapezoid = trapezoids;
+  nsBandTrapezoid* trapezoid = mTrapezoids;
   nsBandTrapezoid* rightTrapezoid = nsnull;
 
   PRInt32 floaters = 0;
-  if (count > 1) {
+  if (mCount > 1) {
     // If there's more than one trapezoid that means there are floaters
     PRInt32 i;
 
     // Examine each trapezoid in the band, counting up the number of
     // left and right floaters. Use the right-most floater to
     // determine where the right edge of the available space is.
-    for (i = 0; i < count; i++) {
-      trapezoid = &trapezoids[i];
-      if (trapezoid->state != nsBandTrapezoid::Available) {
+    for (i = 0; i < mCount; i++) {
+      trapezoid = &mTrapezoids[i];
+      if (trapezoid->mState != nsBandTrapezoid::Available) {
         const nsStyleDisplay* display;
-        if (nsBandTrapezoid::OccupiedMultiple == trapezoid->state) {
-          PRInt32 j, numFrames = trapezoid->frames->Count();
+        if (nsBandTrapezoid::OccupiedMultiple == trapezoid->mState) {
+          PRInt32 j, numFrames = trapezoid->mFrames->Count();
           NS_ASSERTION(numFrames > 0, "bad trapezoid frame list");
           for (j = 0; j < numFrames; j++) {
-            nsIFrame* f = (nsIFrame*) trapezoid->frames->ElementAt(j);
+            nsIFrame* f = (nsIFrame*) trapezoid->mFrames->ElementAt(j);
             f->GetStyleData(eStyleStruct_Display,
                             (const nsStyleStruct*&)display);
             if (NS_STYLE_FLOAT_LEFT == display->mFloats) {
@@ -133,12 +133,12 @@ nsBlockBandData::ComputeAvailSpaceRect()
             else if (NS_STYLE_FLOAT_RIGHT == display->mFloats) {
               floaters++;
               if ((nsnull == rightTrapezoid) && (i > 0)) {
-                rightTrapezoid = &trapezoids[i - 1];
+                rightTrapezoid = &mTrapezoids[i - 1];
               }
             }
           }
         } else {
-          trapezoid->frame->GetStyleData(eStyleStruct_Display,
+          trapezoid->mFrame->GetStyleData(eStyleStruct_Display,
                                     (const nsStyleStruct*&)display);
           if (NS_STYLE_FLOAT_LEFT == display->mFloats) {
             floaters++;
@@ -146,14 +146,14 @@ nsBlockBandData::ComputeAvailSpaceRect()
           else if (NS_STYLE_FLOAT_RIGHT == display->mFloats) {
             floaters++;
             if ((nsnull == rightTrapezoid) && (i > 0)) {
-              rightTrapezoid = &trapezoids[i - 1];
+              rightTrapezoid = &mTrapezoids[i - 1];
             }
           }
         }
       }
     }
   }
-  else if (trapezoids[0].state != nsBandTrapezoid::Available) {
+  else if (mTrapezoids[0].mState != nsBandTrapezoid::Available) {
     // We have a floater using up all the available space
     floaters = 1;
   }
@@ -166,18 +166,18 @@ nsBlockBandData::ComputeAvailSpaceRect()
 
   // When there is no available space, we still need a proper X
   // coordinate to place objects that end up here anyway.
-  if (nsBandTrapezoid::Available != trapezoid->state) {
+  if (nsBandTrapezoid::Available != trapezoid->mState) {
     const nsStyleDisplay* display;
-    if (nsBandTrapezoid::OccupiedMultiple == trapezoid->state) {
+    if (nsBandTrapezoid::OccupiedMultiple == trapezoid->mState) {
       // It's not clear what coordinate to use when there is no
       // available space and the space is multiply occupied...So: If
       // any of the floaters that are a part of the trapezoid are left
       // floaters then we move over to the right edge of the
       // unavaliable space.
-      PRInt32 j, numFrames = trapezoid->frames->Count();
+      PRInt32 j, numFrames = trapezoid->mFrames->Count();
       NS_ASSERTION(numFrames > 0, "bad trapezoid frame list");
       for (j = 0; j < numFrames; j++) {
-        nsIFrame* f = (nsIFrame*) trapezoid->frames->ElementAt(j);
+        nsIFrame* f = (nsIFrame*) trapezoid->mFrames->ElementAt(j);
         f->GetStyleData(eStyleStruct_Display,
                         (const nsStyleStruct*&)display);
         if (NS_STYLE_FLOAT_LEFT == display->mFloats) {
@@ -187,7 +187,7 @@ nsBlockBandData::ComputeAvailSpaceRect()
       }
     }
     else {
-      trapezoid->frame->GetStyleData(eStyleStruct_Display,
+      trapezoid->mFrame->GetStyleData(eStyleStruct_Display,
                                      (const nsStyleStruct*&)display);
       if (NS_STYLE_FLOAT_LEFT == display->mFloats) {
         mAvailSpace.x = mAvailSpace.XMost();
@@ -293,22 +293,22 @@ nsBlockBandData::ClearFloaters(nscoord aY, PRUint8 aBreakType)
     // this band.
     nscoord yMost = aYS;
     PRInt32 i;
-    for (i = 0; i < count; i++) {
-      nsBandTrapezoid* trapezoid = &trapezoids[i];
-      if (nsBandTrapezoid::Available != trapezoid->state) {
-        if (nsBandTrapezoid::OccupiedMultiple == trapezoid->state) {
-          PRInt32 fn, numFrames = trapezoid->frames->Count();
+    for (i = 0; i < mCount; i++) {
+      nsBandTrapezoid* trapezoid = &mTrapezoids[i];
+      if (nsBandTrapezoid::Available != trapezoid->mState) {
+        if (nsBandTrapezoid::OccupiedMultiple == trapezoid->mState) {
+          PRInt32 fn, numFrames = trapezoid->mFrames->Count();
           NS_ASSERTION(numFrames > 0, "bad trapezoid frame list");
           for (fn = 0; fn < numFrames; fn++) {
-            nsIFrame* frame = (nsIFrame*) trapezoid->frames->ElementAt(fn);
+            nsIFrame* frame = (nsIFrame*) trapezoid->mFrames->ElementAt(fn);
             if (ShouldClearFrame(frame, aBreakType)) {
-              nscoord ym = trapezoid->yBottom + mSpaceManagerY;
+              nscoord ym = trapezoid->mBottomY + mSpaceManagerY;
               if (ym > yMost) yMost = ym;
             }
           }
         }
-        else if (ShouldClearFrame(trapezoid->frame, aBreakType)) {
-          nscoord ym = trapezoid->yBottom + mSpaceManagerY;
+        else if (ShouldClearFrame(trapezoid->mFrame, aBreakType)) {
+          nscoord ym = trapezoid->mBottomY + mSpaceManagerY;
           if (ym > yMost) yMost = ym;
         }
       }
@@ -331,9 +331,9 @@ nsBlockBandData::GetMaxElementSize(nscoord* aWidthResult,
   nsRect r;
   nscoord maxWidth = 0;
   nscoord maxHeight = 0;
-  for (PRInt32 i = 0; i < count; i++) {
-    const nsBandTrapezoid* trap = &trapezoids[i];
-    if (trap->state != nsBandTrapezoid::Available) {
+  for (PRInt32 i = 0; i < mCount; i++) {
+    const nsBandTrapezoid* trap = &mTrapezoids[i];
+    if (trap->mState != nsBandTrapezoid::Available) {
       // Get the width of the impacted area and update the maxWidth
       trap->GetRect(r);
       if (r.width > maxWidth) maxWidth = r.width;
@@ -341,16 +341,16 @@ nsBlockBandData::GetMaxElementSize(nscoord* aWidthResult,
       // Get the total height of the frame to compute the maxHeight,
       // not just the height that is part of this band.
       // XXX vertical margins!
-      if (nsBandTrapezoid::OccupiedMultiple == trap->state) {
-        PRInt32 j, numFrames = trap->frames->Count();
+      if (nsBandTrapezoid::OccupiedMultiple == trap->mState) {
+        PRInt32 j, numFrames = trap->mFrames->Count();
         NS_ASSERTION(numFrames > 0, "bad trapezoid frame list");
         for (j = 0; j < numFrames; j++) {
-          nsIFrame* f = (nsIFrame*) trap->frames->ElementAt(j);
+          nsIFrame* f = (nsIFrame*) trap->mFrames->ElementAt(j);
           f->GetRect(r);
           if (r.height > maxHeight) maxHeight = r.height;
         }
       } else {
-        trap->frame->GetRect(r);
+        trap->mFrame->GetRect(r);
         if (r.height > maxHeight) maxHeight = r.height;
       }
     }

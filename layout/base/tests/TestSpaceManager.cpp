@@ -753,20 +753,20 @@ PRBool MySpaceManager::TestGetBandData()
   // that's large enough
   nsBandData      bandData;
   nsBandTrapezoid trapezoids[16];
-  bandData.size = 16;
-  bandData.trapezoids = trapezoids;
+  bandData.mSize = 16;
+  bandData.mTrapezoids = trapezoids;
   status = GetBandData(100, nsSize(10000,10000), bandData);
   NS_ASSERTION(NS_SUCCEEDED(status), "unexpected status");
 
   // Verify that there are seven trapezoids
-  if (bandData.count != 7) {
+  if (bandData.mCount != 7) {
     printf("TestGetBandData: wrong trapezoid count (#3)\n");
     return PR_FALSE;
   }
   
   // Get the band data using a very large clip rect and a band data struct
   // that's too small
-  bandData.size = 3;
+  bandData.mSize = 3;
   status = GetBandData(100, nsSize(10000,10000), bandData);
   if (NS_SUCCEEDED(status)) {
     printf("TestGetBandData: ignored band data count (#4)\n");
@@ -775,7 +775,7 @@ PRBool MySpaceManager::TestGetBandData()
 
   // Make sure the count has been updated to reflect the number of trapezoids
   // required
-  if (bandData.count <= bandData.size) {
+  if (bandData.mCount <= bandData.mSize) {
     printf("TestGetBandData: bad band data count (#5)\n");
     return PR_FALSE;
   }
