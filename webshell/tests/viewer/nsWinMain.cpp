@@ -20,10 +20,12 @@
 #include "nsViewerApp.h"
 #include "nsBrowserWindow.h"
 #include "nsITimer.h"
+#include "JSConsole.h"
 #include "plevent.h"
 
 extern "C" int  NET_PollSockets();
 
+JSConsole *gConsole;
 HANDLE gInstance, gPrevInstance;
 static nsITimer* gNetTimer;
 
@@ -54,15 +56,11 @@ nsNativeViewerApp::Run()
   MSG msg;
   PollNet(0, 0);
   while (::GetMessage(&msg, NULL, 0, 0)) {
-    if (
-#if 0
-!JSConsole::sAccelTable ||
+    if (!JSConsole::sAccelTable ||
         !gConsole ||
         !gConsole->GetMainWindow() ||
-        !TranslateAccelerator(gConsole->GetMainWindow(), JSConsole::sAccelTable, &msg)
-#endif
-        1
-      ) {
+        !TranslateAccelerator(gConsole->GetMainWindow(),
+                              JSConsole::sAccelTable, &msg)) {
       TranslateMessage(&msg);
       DispatchMessage(&msg);
       NET_PollSockets();
@@ -70,8 +68,6 @@ nsNativeViewerApp::Run()
   }
   return msg.wParam;
 }
-
-//----------------------------------------------------------------------
 
 //----------------------------------------------------------------------
 

@@ -24,6 +24,7 @@
 #include "nsINetService.h"
 #include "nsRepository.h"
 #include "nsDocLoader.h"
+#include "JSConsole.h"
 #include "prprf.h"
 #include "plstr.h"
 
@@ -414,6 +415,7 @@ static int gDebugRobotLoads = 5000;
 static char gVerifyDir[_MAX_PATH];
 static BOOL gVisualDebug = TRUE;
 
+extern JSConsole *gConsole;
 extern HANDLE gInstance, gPrevInstance;
 
 extern "C" NS_EXPORT int DebugRobot(
@@ -427,16 +429,11 @@ void yieldProc(const char * str)
   MSG msg;
   while (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE)) {
     GetMessage(&msg, NULL, 0, 0);
-    if (
-#if 0
-      !JSConsole::sAccelTable ||
+    if (!JSConsole::sAccelTable ||
         !gConsole ||
         !gConsole->GetMainWindow() ||
-        !TranslateAccelerator(gConsole->GetMainWindow(), JSConsole::sAccelTable, &msg)
-#else
-      1
-#endif
-      ) {
+        !TranslateAccelerator(gConsole->GetMainWindow(),
+                              JSConsole::sAccelTable, &msg)) {
       TranslateMessage(&msg);
       DispatchMessage(&msg);
       /* Pump Netlib... */
@@ -741,10 +738,8 @@ nsViewerApp::CreateSiteWalker(nsBrowserWindow* aWindow)
 
 #ifdef XP_PC
 #include "jsconsres.h"
-#include "JSConsole.h"
 
 static NS_DEFINE_IID(kIScriptContextOwnerIID, NS_ISCRIPTCONTEXTOWNER_IID);
-JSConsole *gConsole = NULL;
 
 void DestroyConsole()
 {
