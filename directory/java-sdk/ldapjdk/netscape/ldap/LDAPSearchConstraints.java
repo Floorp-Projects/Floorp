@@ -330,14 +330,20 @@ public class LDAPSearchConstraints implements Cloneable {
     }
 
     /**
-     * Set and get the maximum number of unread entries any search listener can
+     * Set the maximum number of unread entries any search listener can
      * have before we stop reading from the server.
+     * @param backlog The maximum number of unread entries per listener
      */
-    void setMaxBacklog( int backlog ) {
+    public void setMaxBacklog( int backlog ) {
         m_maxBacklog = backlog;
     }
 
-    int getMaxBacklog() {
+    /**
+     * Get the maximum number of unread entries any search listener can
+     * have before we stop reading from the server.
+     * @return The maximum number of unread entries per listener
+     */
+    public int getMaxBacklog() {
         return m_maxBacklog;
     }
 

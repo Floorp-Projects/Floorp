@@ -131,8 +131,11 @@ public class LDAPAttribute {
         synchronized(this) {
             try {
                 for (int i=0; i<values.length; i++) {
-                    if ( values[i] != null )
+                    if ( values[i] != null ) {
                         v.addElement(new String ((byte[])values[i], "UTF8"));
+                    } else {
+                        v.addElement( new String( "" ) );
+                    }
                 }
             } catch ( Exception e ) {
                 return null;
@@ -151,8 +154,11 @@ public class LDAPAttribute {
         Vector v = new Vector();
         synchronized(this) {
             for (int i=0; i<values.length; i++) {
-                if ( values[i] != null )
+                if ( values[i] != null ) {
                     v.addElement(values[i]);
+                } else {
+                    v.addElement( new byte[0] );
+                }
             }
         }
         return v.elements();

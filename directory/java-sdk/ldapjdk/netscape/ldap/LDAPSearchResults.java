@@ -52,6 +52,7 @@ public class LDAPSearchResults implements Enumeration {
     private String[] currAttrs;
     private boolean currAttrsOnly;
     private Vector referralResults = new Vector();
+    private Vector exceptions;
 
     // only used for the persistent search
     private boolean firstResult = false;
@@ -141,12 +142,17 @@ public class LDAPSearchResults implements Enumeration {
     void add( JDAPSearchResultReference sr ) {
         /* convert to LDAPReferralException */
         String urls[] = sr.getUrls();
-        if (urls != null)
-            entries.addElement(new LDAPReferralException(null, 0, urls));
+        if (urls != null) {
+            if (exceptions == null)
+                exceptions = new Vector();
+            exceptions.addElement(new LDAPReferralException(null, 0, urls));
+        }
     }
 
     void add(LDAPException e) {
-        entries.addElement(e);
+        if (exceptions == null)
+            exceptions = new Vector();
+        exceptions.addElement(e);
     }
 
     /**
@@ -366,6 +372,12 @@ public class LDAPSearchResults implements Enumeration {
             return nextReferralElement();
         }
 
+        if ((exceptions != null) && (exceptions.size() > 0)) {
+            Object obj = exceptions.elementAt(0);
+            exceptions.removeElementAt(0);
+            return obj;
+        }
+
         return null;
     }
 
@@ -411,16 +423,20 @@ public class LDAPSearchResults implements Enumeration {
         while ((entries.size() == 0) && (!searchComplete))
             fetchResult();
 
-        while (referralResults.size() > 0) {
-            LDAPSearchResults res =
-              (LDAPSearchResults)referralResults.elementAt(0);
-            if (res.hasMoreElements())
-                return true;
-            else
-                referralResults.removeElementAt(0);
+        if ((entries.size() == 0) && 
+          ((exceptions == null) || (exceptions.size() == 0))) {
+            while (referralResults.size() > 0) {
+                LDAPSearchResults res =
+                  (LDAPSearchResults)referralResults.elementAt(0);
+                if (res.hasMoreElements())
+                    return true;
+                else
+                    referralResults.removeElementAt(0);
+            }
         }
 
-        return (entries.size() > 0);
+        return ((entries.size() > 0) || 
+          ((exceptions != null) && (exceptions.size() > 0)));
     }
 
     /**
@@ -434,6 +450,9 @@ public class LDAPSearchResults implements Enumeration {
               (LDAPSearchResults)referralResults.elementAt(i);
             totalReferralEntries = totalReferralEntries+res.getCount();
         }
+
+        if (exceptions != null)
+            return (entries.size() + exceptions.size() + totalReferralEntries);
         return (entries.size() + totalReferralEntries);
     }
 
@@ -442,7 +461,7 @@ public class LDAPSearchResults implements Enumeration {
      * @return Message id.
      */
     int getID() {
-        if ( (resultSource == null) || searchComplete )
+        if ( resultSource == null )
             return -1;
         return resultSource.getID();
     }

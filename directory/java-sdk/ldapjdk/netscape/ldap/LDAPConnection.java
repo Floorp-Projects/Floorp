@@ -3157,6 +3157,12 @@ public class LDAPConnection implements LDAPv3, Cloneable {
             return;
         }
         setOption(option, value, defaultConstraints);
+        if ( (option == MAXBACKLOG) && (th != null) ) {
+            int val = ((Integer)value).intValue();
+            if ( val >= 1 ) {
+                th.setMaxBacklog( val );
+            }
+        }
     }
 
     private static void setOption( int option, Object value, LDAPSearchConstraints cons ) throws LDAPException {
@@ -3949,6 +3955,7 @@ class LDAPConnThread extends Thread {
                sufficient privileges to connect to the desired host */
             if (factory == null) {
                 m_socket = new Socket (host, port);
+//                m_socket.setSoLinger( false, -1 );
             } else {
                 m_socket = factory.makeSocket(host, port);
             }
