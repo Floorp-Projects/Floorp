@@ -123,7 +123,6 @@ nsPop3Sink::BeginMailDelivery(PRBool* aBool)
 #endif
     nsFileSpec fileSpec(m_mailDirectory);
     fileSpec += "Inbox";
-    printf("\nDirectory: %s\n", (const char *) fileSpec);
     m_outFileStream = new nsOutputFileStream(fileSpec, 
                                              PR_WRONLY | PR_CREATE_FILE | PR_APPEND);
 
