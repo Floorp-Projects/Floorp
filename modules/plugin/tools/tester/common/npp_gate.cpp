@@ -43,6 +43,7 @@
 #include "logger.h"
 
 extern CLogger * pLogger;
+
 static char szINIFile[] = NPAPI_INI_FILE_NAME;
 static char szTarget[] = LOGGER_DEFAULT_TARGET;
 
@@ -77,18 +78,24 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc, ch
     pLogger = new CLogger(szTarget);
   }
 
-  pLogger->associate(pPlugin);
-
   char szFileName[_MAX_PATH];
   pPlugin->getModulePath(szFileName, sizeof(szFileName));
   strcat(szFileName, szINIFile);
   pLogger->restorePreferences(szFileName);
   
+  pLogger->associate(pPlugin);
+
+  if (pPlugin->isStandAlone())
+    pPlugin->initStandAlone();
+
 Return:
   DWORD dwTickReturn = XP_GetTickCount();
   pLogger->appendToLog(action_npp_new, dwTickEnter, dwTickReturn, (DWORD)ret, 
                        (DWORD)pluginType, (DWORD)instance, 
                        (DWORD)mode, (DWORD)argc, (DWORD)argn, (DWORD)argv, (DWORD)saved);
+
+  pPlugin->autoStartScriptIfNeeded();
+
   return ret;
 }
 
@@ -106,6 +113,9 @@ NPError NPP_Destroy (NPP instance, NPSavedData** save)
 
   pPlugin = (CPluginBase *)instance->pdata;
   if(pPlugin) {
+    if (pPlugin->isStandAlone())
+      pPlugin->shutStandAlone();
+
     pPlugin->shut();
     DestroyPlugin(pPlugin);
     goto Return;
@@ -149,39 +159,42 @@ NPError NPP_SetWindow (NPP instance, NPWindow* pNPWindow)
     goto Return;
   }
 
-  // window just created
-  if(!pPlugin->isInitialized() && pNPWindow->window) { 
-    if(!pPlugin->init((DWORD)pNPWindow->window)) {
-      delete pPlugin;
-      pPlugin = NULL;
-      ret = NPERR_MODULE_LOAD_FAILED_ERROR;
+  if (!pPlugin->isStandAlone())
+  {
+    // window just created
+    if(!pPlugin->isInitialized() && pNPWindow->window) { 
+      if(!pPlugin->init((DWORD)pNPWindow->window)) {
+        delete pPlugin;
+        pPlugin = NULL;
+        ret = NPERR_MODULE_LOAD_FAILED_ERROR;
+        goto Return;
+      }
+
+      if(pLogger->getShowImmediatelyFlag()) {
+        pLogger->dumpLogToTarget();
+        pLogger->clearLog();
+      }
       goto Return;
     }
 
-    if(pLogger->getShowImmediatelyFlag()) {
-      pLogger->dumpLogToTarget();
-      pLogger->clearLog();
+    // window goes away
+    if(!pNPWindow->window && pPlugin->isInitialized()) {
+      pPlugin->shut();
+      ret = NPERR_NO_ERROR;
+      goto Return;
     }
-    goto Return;
-  }
 
-  // window goes away
-  if(!pNPWindow->window && pPlugin->isInitialized()) {
-    pPlugin->shut();
-    ret = NPERR_NO_ERROR;
-    goto Return;
-  }
+    // window resized?
+    if(pPlugin->isInitialized() && pNPWindow->window) {
+      ret = NPERR_NO_ERROR;
+      goto Return;
+    }
 
-  // window resized?
-  if(pPlugin->isInitialized() && pNPWindow->window) {
-    ret = NPERR_NO_ERROR;
-    goto Return;
-  }
-
-  // this should not happen, nothing to do
-  if(!pNPWindow->window && !pPlugin->isInitialized()) {
-    ret = NPERR_NO_ERROR;
-    goto Return;
+    // this should not happen, nothing to do
+    if(!pNPWindow->window && !pPlugin->isInitialized()) {
+      ret = NPERR_NO_ERROR;
+      goto Return;
+    }
   }
 
 Return:

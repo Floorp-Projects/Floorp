@@ -394,3 +394,7 @@ DWORD CPluginBase::makeNPNCall(NPAPI_Action action, DWORD dw1, DWORD dw2, DWORD 
 
   return dwRet;
 }
+
+void CPluginBase::autoStartScriptIfNeeded()
+{
+}

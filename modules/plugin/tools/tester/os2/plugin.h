@@ -87,6 +87,7 @@ public:
   BOOL m_Pref_bToFrame;
   BOOL m_Pref_bFlushNow;
   BOOL m_Pref_bRememberLastCall;
+  BOOL m_Pref_bStandAlone;
 
 // public interface
 public:
@@ -101,6 +102,10 @@ public:
   void getModulePath(LPSTR szPath, int iSize);
   int messageBox(LPSTR szMessage, LPSTR szTitle, UINT uStyle);
   void getLogFileName(LPSTR szLogFileName, int iSize);
+  BOOL initStandAlone(); // create separate native window
+  void shutStandAlone(); // destroy separate native window
+  BOOL isStandAlone(); // is our GUI is in a separate native window
+  void outputToNativeWindow(LPSTR szString); // used to output log in StandAlone mode
 
   ULONG makeNPNCall(NPAPI_Action = action_invalid, 
                     ULONG dw1 = 0L, ULONG dw2 = 0L, 

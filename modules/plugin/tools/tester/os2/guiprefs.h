@@ -48,6 +48,7 @@
 #define KEY_LOADSTATUS_WINDOW       "LoadStatusWindow"
 #define KEY_REMEMBER_LAST_API_CALL  "RememberLastAPICall"
 #define KEY_LAST_API_CALL           "LastAPICall"
+#define KEY_STAND_ALONE             "StandAloneWindow"
 
 #define ENTRY_YES             "Yes"
 #define ENTRY_NO              "No"

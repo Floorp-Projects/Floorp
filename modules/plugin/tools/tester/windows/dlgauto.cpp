@@ -80,6 +80,10 @@ static void onCommand(HWND hWnd, int id, HWND hWndCtl, UINT codeNotify)
       strcat(szLogFileName, ".log");
       Edit_SetText(GetDlgItem(GetParent(hWnd), IDC_EDIT_LOG_FILE_NAME), szLogFileName);
 
+      // restore
+      if(p)
+        *p = '.';
+
       pPlugin->updatePrefs(gp_scriptfile, FALSE, szString);
 
       break;
@@ -198,7 +202,8 @@ static BOOL onInitDialog(HWND hWnd, HWND hWndFocus, LPARAM lParam)
   int iTopMargin = 188;
   SetWindowPos(hWnd, NULL, 0,iTopMargin, 0,0, SWP_NOZORDER | SWP_NOSIZE);
 
-  Edit_SetText(GetDlgItem(hWnd, IDC_EDIT_SCRIPT_FILE_NAME), pPlugin->m_Pref_szScriptFile);
+  if (pPlugin)
+    Edit_SetText(GetDlgItem(hWnd, IDC_EDIT_SCRIPT_FILE_NAME), (LPCSTR)pPlugin->m_Pref_szScriptFile);
 
   Static_SetText(GetDlgItem(hWnd, IDC_STATIC_REPETITIONS_LEFT), "");
   ShowWindow(GetDlgItem(hWnd, IDC_STATIC_REPETITIONS_LABEL), SW_HIDE);

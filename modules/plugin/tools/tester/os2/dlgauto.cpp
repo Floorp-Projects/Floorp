@@ -80,6 +80,10 @@ static void onCommand(HWND hWnd, int id, HWND hWndCtl, USHORT codeNotify)
       strcat(szLogFileName, ".log");
       WinSetWindowText(WinWindowFromID(WinQueryWindow(hWnd, QW_PARENT), IDC_EDIT_LOG_FILE_NAME), szLogFileName);
 
+      // restore
+      if(p)
+        *p = '.';
+
       pPlugin->updatePrefs(gp_scriptfile, FALSE, szString);
 
       break;

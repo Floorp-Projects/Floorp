@@ -39,11 +39,11 @@ BEGIN
     GROUPBOX        "Log",IDC_STATIC,7,20,105,70
     CONTROL         "To file:",IDC_CHECK_LOG_TO_FILE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,33,34,10
-    EDITTEXT        IDC_EDIT_LOG_FILE_NAME,50,31,55,14,ES_AUTOHSCROLL
-    CONTROL         "To frame",IDC_CHECK_LOG_TO_FRAME,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,13,60,41,10
-    PUSHBUTTON      "Flush",IDC_BUTTON_FLUSH,57,59,24,12
-    PUSHBUTTON      "Clear",IDC_BUTTON_CLEAR,81,59,24,12
+    EDITTEXT        IDC_EDIT_LOG_FILE_NAME,50,31,56,14,ES_AUTOHSCROLL
+    CONTROL         "To window",IDC_CHECK_LOG_TO_FRAME,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,60,47,10
+    PUSHBUTTON      "Flush",IDC_BUTTON_FLUSH,63,59,22,12
+    PUSHBUTTON      "Clear",IDC_BUTTON_CLEAR,85,59,22,12
     CONTROL         "Flush immediately",IDC_CHECK_SHOW_LOG,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,26,75,71,10
     CONTROL         "Remember last API call",IDC_CHECK_REMEMBER_LAST,"Button",
@@ -104,8 +104,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,5,0,0
- PRODUCTVERSION 1,5,0,0
+ FILEVERSION 1,6,0,0
+ PRODUCTVERSION 1,6,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x3L
@@ -125,7 +125,7 @@ BEGIN
             VALUE "FileDescription", "32-bit NPAPI test plugin\0"
             VALUE "FileExtents", "pts\0"
             VALUE "FileOpenName", "API (*.pts)\0"
-            VALUE "FileVersion", "1, 5, 0, 0\0"
+            VALUE "FileVersion", "1, 6, 0, 0\0"
             VALUE "InternalName", "npapi.dll\0"
             VALUE "LegalCopyright", "Copyright © 1997-2001\0"
             VALUE "LegalTrademarks", "\0"
@@ -133,7 +133,7 @@ BEGIN
             VALUE "OriginalFilename", "npapi.dll\0"
             VALUE "PrivateBuild", "\0"
             VALUE "ProductName", "Netscape NPAPI Tester Plugin\0"
-            VALUE "ProductVersion", "1, 5, 0, 0\0"
+            VALUE "ProductVersion", "1, 6, 0, 0\0"
             VALUE "SpecialBuild", "\0"
         END
     END
@@ -204,6 +204,15 @@ END
 
 #endif    // APSTUDIO_INVOKED
 
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_ICON_APP            ICON    DISCARDABLE     "icon.ico"
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 
