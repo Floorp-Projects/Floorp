@@ -101,7 +101,8 @@ static char *nsMailboxGetURI(char *nativepath)
             
             // the relpath is just past the serverpath
             char *relpath = nativepath + len;
-            // this may break if local paths are not stored with "/"
+            // skip past leading / if any
+            while (*relpath == '/') relpath++;
             uri = PR_smprintf("mailbox://%s/%s", hostname, relpath);
 
             PL_strfree(hostname);
