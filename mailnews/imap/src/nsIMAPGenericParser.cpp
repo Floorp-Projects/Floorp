@@ -487,8 +487,6 @@ char *nsIMAPGenericParser::CreateQuoted(PRBool /*skipToEnd*/)
       //			if (!nsCRT::strcmp(fCurrentTokenPlaceHolder, CRLF))
       //				fAtEndOfLine = PR_TRUE;
       AdvanceTokenizerStartingPoint ((fNextToken - fLineOfTokens) + returnString.Length() + escapeCharsCut + 2);
-      if (!nsCRT::strcmp(fLineOfTokens, CRLF))
-        fAtEndOfLine = PR_TRUE;
     }
     else
     {
@@ -522,16 +520,12 @@ char *nsIMAPGenericParser::CreateLiteral()
     return nsnull;
   
   char *returnString = (char *) PR_Malloc(numBytes);
-  
-  if (returnString)
-  {
+    if (!returnString)
+        return nsnull;
+ 
     *(returnString + numberOfCharsInMessage) = 0; // Null terminate it first
     
     PRBool terminatedLine = PR_FALSE;
-    while (ContinueParse() && (charsReadSoFar < numberOfCharsInMessage))
-    {
-      if (!terminatedLine)
-      {
         if (fCurrentTokenPlaceHolder &&
           *fCurrentTokenPlaceHolder == nsCRT::LF &&
           *(fCurrentTokenPlaceHolder+1))
@@ -544,11 +538,12 @@ char *nsIMAPGenericParser::CreateLiteral()
         {
           // We have to read the next line from AdvanceToNextLine().
           terminatedLine = PR_TRUE;
-          AdvanceToNextLine();
         }
-      }
-      else
+    while (ContinueParse() && (charsReadSoFar < numberOfCharsInMessage))
+    {
+      if(terminatedLine)
         AdvanceToNextLine();
+
       if (ContinueParse())
       {
         currentLineLength = strlen(terminatedLine ? fCurrentLine : fCurrentTokenPlaceHolder);
@@ -559,18 +554,36 @@ char *nsIMAPGenericParser::CreateLiteral()
         memcpy(returnString + charsReadSoFar, terminatedLine ? fCurrentLine : fCurrentTokenPlaceHolder, bytesToCopy); 
         charsReadSoFar += bytesToCopy;
       }
+      if (charsReadSoFar < numberOfCharsInMessage) // read the next line
+          terminatedLine = PR_TRUE;
     }
     
     if (ContinueParse())
     {
       if (bytesToCopy == 0)
       {
-        skip_to_CRLF();
-        fAtEndOfLine = PR_TRUE;
+          // the loop above was never executed, we just move to the next line
+          if(terminatedLine) {
+              AdvanceToNextLine();
+              AdvanceTokenizerStartingPoint(0);
+          }
       }
       else if (currentLineLength == bytesToCopy)
       {
-        fAtEndOfLine = PR_TRUE;
+          // We have consumed the entire line.
+          // Consider the input  "A1 {4}\r\nL2\r\n A3\r\n" which is read
+          // line-by-line.  Reading 3 Astrings, this should result in 
+          // "A1", "L2\r\n", and "A3".  Note that this confuses the parser, 
+          // since the second line is "L2\r\n" where the "\r\n" is part of the
+          // literal.  Hence, the 'full' imap line was not read in yet after the
+          // second line of input (which is where we are now).  We now read the
+          // next line to ensure that the next call to AdvanceToNextToken()
+          // would lead to fNextToken=="A3" in our example.
+          // Note that setting fAtEndOfLine=PR_TRUE is wrong here, since the "\r\n"
+          // were just some characters from the literal; at_end_of_line() would
+          // give a misleading result.
+          AdvanceToNextLine();
+          AdvanceTokenizerStartingPoint(0);
       }
       else
       {
@@ -583,13 +596,8 @@ char *nsIMAPGenericParser::CreateLiteral()
           2 /* CRLF */ +
           (fNextToken - fLineOfTokens)
           );
-        if (!*fCurrentTokenPlaceHolder)	// landed on a token boundary
-          fCurrentTokenPlaceHolder++;
-        if (!nsCRT::strcmp(fCurrentTokenPlaceHolder, CRLF))
-          fAtEndOfLine = PR_TRUE;
       }	
     }
-  }
   
   return returnString;
 }

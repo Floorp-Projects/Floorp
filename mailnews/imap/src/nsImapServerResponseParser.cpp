@@ -912,13 +912,6 @@ void nsImapServerResponseParser::mailbox(nsImapMailboxSpec *boxSpec)
   else 
   {
     boxname = CreateAstring();
-    // handle a literal ending the line here
-    if (fTokenizerAdvanced)
-    {
-      fTokenizerAdvanced = PR_FALSE;
-      if (!PL_strcmp(fCurrentTokenPlaceHolder, CRLF))
-        fAtEndOfLine = PR_FALSE;
-    }
     fNextToken = GetNextToken();
   }
   
