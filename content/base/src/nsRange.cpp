@@ -45,12 +45,26 @@ static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
 static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 
+PRMonitor*   nsRange::mMonitor = nsnull;
 nsVoidArray* nsRange::mStartAncestors = nsnull;      
 nsVoidArray* nsRange::mEndAncestors = nsnull;        
 nsVoidArray* nsRange::mStartAncestorOffsets = nsnull; 
 nsVoidArray* nsRange::mEndAncestorOffsets = nsnull;  
 
 nsresult NS_NewContentIterator(nsIContentIterator** aInstancePtrResult);
+
+
+/******************************************************
+ * stack based utilty class for managing monitor
+ ******************************************************/
+
+class nsAutoRangeLock
+{
+  public:
+    nsAutoRangeLock()  { nsRange::Lock(); }
+    ~nsAutoRangeLock() { nsRange::Unlock(); }
+};
+
 
 /******************************************************
  * non members
@@ -455,7 +469,8 @@ PRBool nsRange::IsIncreasing(nsIDOMNode* aStartN, PRInt32 aStartOffset,
       return PR_TRUE;
   }
   
-  // XXX - therad safety - need locks around here to end of routine
+  // thread safety - need locks around here to end of routine to protect use of static members
+  nsAutoRangeLock lock;
   
   // lazy allocation of static arrays
   if (!mStartAncestors)
@@ -1151,7 +1166,7 @@ nsresult nsRange::DeleteContents()
   while (cN && (NS_COMFALSE == iter->IsDone()))
   {
     // if node is not an ancestor of start node, delete it
-    if (mStartAncestors->IndexOf(NS_STATIC_CAST(void*,cN)) == -1)
+    if (startAncestorList.IndexOf(NS_STATIC_CAST(void*,cN)) == -1)
     {
       deleteList.AppendElement(NS_STATIC_CAST(void*,cN));
     }
@@ -1922,3 +1937,25 @@ nsRange::SetScriptObject(void *aScriptObject)
 }
 
 // END nsIScriptContextOwner interface implementations
+
+nsresult
+nsRange::Lock()
+{
+  if (!mMonitor)
+    mMonitor = ::PR_NewMonitor();
+
+  if (mMonitor)
+    PR_EnterMonitor(mMonitor);
+
+  return NS_OK;
+}
+
+nsresult
+nsRange::Unlock()
+{
+  if (mMonitor)
+    PR_ExitMonitor(mMonitor);
+
+  return NS_OK;
+}
+

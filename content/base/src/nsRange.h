@@ -27,6 +27,7 @@
 #include "nsIContent.h"
 #include "nsIDOMNode.h"
 #include "nsIScriptObjectOwner.h"
+#include "prmon.h"
 
 class nsVoidArray;
 
@@ -111,10 +112,11 @@ public:
   PRInt32      mEndOffset;
   nsCOMPtr<nsIDOMNode> mStartParent;
   nsCOMPtr<nsIDOMNode> mEndParent;
-  static nsVoidArray  *mStartAncestors;       // just keeping these around to avoid reallocing the arrays.
+  static PRMonitor    *mMonitor;              // monitor to protect the following statics
+  static nsVoidArray  *mStartAncestors;       // just keeping these static to avoid reallocing the arrays.
   static nsVoidArray  *mEndAncestors;         // the contents of these arrays are discarded across calls.
-  static nsVoidArray  *mStartAncestorOffsets; // 
-  static nsVoidArray  *mEndAncestorOffsets;   // XXX - thread safety alert - need to lock usage of these
+  static nsVoidArray  *mStartAncestorOffsets; // this also makes nsRange objects lighter weight.
+  static nsVoidArray  *mEndAncestorOffsets;   // 
 
   // no copy's or assigns
   nsRange(const nsRange&);
@@ -129,6 +131,8 @@ public:
   static nsresult      GetDOMNodeFromContent(nsIContent* inContentNode, nsCOMPtr<nsIDOMNode>* outDomNode);
   static nsresult      GetContentFromDOMNode(nsIDOMNode* inDomNode, nsCOMPtr<nsIContent>* outContentNode);
   static nsresult      PopRanges(nsIDOMNode* aDestNode, PRInt32 aOffset, nsIContent* aSourceNode);
+  static nsresult      Lock();
+  static nsresult      Unlock();
   
   static nsresult CloneSibsAndParents(nsIDOMNode* parentNode,
                                       PRInt32 nodeOffset,
