@@ -1555,7 +1555,7 @@ GlobalWindowImpl::Open(JSContext *cx,
     }
 
     NS_RELEASE(newWindow);
-    NS_RELEASE(newInnerShell);
+    NS_IF_RELEASE(newInnerShell);
     NS_RELEASE(newOuterShell);
     NS_RELEASE(newContextOwner);
   }
@@ -1585,9 +1585,11 @@ GlobalWindowImpl::CheckWindowName(JSContext *cx, nsString& aName)
   for (index = 0; index < aName.Length(); index++) {
     mChar = aName.CharAt(index);
     if (!nsString::IsAlpha(mChar) && !nsString::IsDigit(mChar) && mChar != '_') {
+      char* cp = aName.ToNewCString();
       JS_ReportError(cx,
         "illegal character '%c' ('\\%o') in window name %s",
-        mChar, mChar, aName);
+        mChar, mChar, cp);
+      delete [] cp;
       return NS_ERROR_FAILURE;
     }
   }
