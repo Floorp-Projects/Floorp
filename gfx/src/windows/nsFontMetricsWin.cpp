@@ -247,10 +247,10 @@ NS_IMETHODIMP nsFontCleanupObserver::Observe(nsISupports *aSubject, const PRUnic
 static nsFontCleanupObserver *gFontCleanupObserver;
 
 static nsresult
-InitGlobals(void)
+InitFontEncodingProperties(void)
 {
-  // load the special encoding resolver
   nsresult rv;
+  // load the special encoding resolver
   nsCOMPtr<nsIURI> uri;
   rv = NS_NewURI(getter_AddRefs(uri), "resource:/res/fonts/fontEncoding.properties");
   if (NS_SUCCEEDED(rv)) {
@@ -266,11 +266,12 @@ InitGlobals(void)
       }
     }
   }
-  if (NS_FAILED(rv)) {
-    FreeGlobals();
-    return rv;
-  }
+  return rv;
+}
 
+static nsresult
+InitGlobals(void)
+{
   nsServiceManager::GetService(kCharsetConverterManagerCID,
     NS_GET_IID(nsICharsetConverterManager2), (nsISupports**) &gCharsetManager);
   if (!gCharsetManager) {
@@ -1056,13 +1057,31 @@ static PRUint8 gCharsetToBit[eCharset_COUNT] =
 static nsresult
 GetEncoding(const char* aFontName, nsString& aValue)
 {
+  // this is "MS P Gothic" in Japanese
+  static const char* mspgothic=  
+    "\x82\x6c\x82\x72 \x82\x6f\x83\x53\x83\x56\x83\x62\x83\x4e";
+  // below is a list of common used name for startup
+  if ( (!strcmp(aFontName, "Tahoma" )) ||
+       (!strcmp(aFontName, "Arial" )) ||
+       (!strcmp(aFontName, "Times New Roman" )) ||
+       (!strcmp(aFontName, "Courier New" )) ||
+       (!strcmp(aFontName, mspgothic )) )
+    return NS_ERROR_NOT_AVAILABLE; // error mean do not get a special encoding
+
   nsAutoString name;
   name.Assign(NS_LITERAL_STRING("encoding."));
   name.AppendWithConversion(aFontName);
   name.Append(NS_LITERAL_STRING(".ttf"));
   name.StripWhitespace();
   name.ToLowerCase();
-  return gFontEncodingProperties->GetStringProperty(name, aValue);
+
+  // if we have not init the property yet, init it right now.
+  if (! gFontEncodingProperties)
+    InitFontEncodingProperties();
+
+  if (gFontEncodingProperties)
+    return gFontEncodingProperties->GetStringProperty(name, aValue);
+  return NS_ERROR_NOT_AVAILABLE;
 }
 
 // This function uses the charset converter manager to get a pointer on the 
