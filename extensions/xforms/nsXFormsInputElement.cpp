@@ -59,7 +59,7 @@
 #include "nsIDOMXPathExpression.h"
 
 /**
- * Implementation of the XForms \<input\> and \<textarea\> elements.
+ * Implementation of the \<input\>, \<secret\>, and \<textarea\> elements.
  */
 class nsXFormsInputElement : public nsXFormsXMLVisualStub,
                              public nsIDOMFocusListener,
@@ -92,16 +92,22 @@ public:
   NS_IMETHOD Focus(nsIDOMEvent *aEvent);
   NS_IMETHOD Blur(nsIDOMEvent *aEvent);
 
-  nsXFormsInputElement(PRBool isTextArea = PR_FALSE)
+  enum ControlType {
+    eType_Input,
+    eType_Secret,
+    eType_TextArea
+  };
+
+  nsXFormsInputElement(ControlType aType)
     : mElement(nsnull)
-    , mIsTextArea(isTextArea)
+    , mType(aType)
     {}
 
 private:
   nsCOMPtr<nsIDOMElement> mLabel;
   nsCOMPtr<nsIDOMElement> mControl;
   nsIDOMElement *mElement;
-  PRBool mIsTextArea;
+  ControlType mType;
 };
 
 NS_IMPL_ISUPPORTS_INHERITED3(nsXFormsInputElement,
@@ -143,7 +149,7 @@ nsXFormsInputElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
   domDoc->CreateElementNS(NS_LITERAL_STRING(NS_NAMESPACE_XHTML),
                           NS_LITERAL_STRING("label"),
                           getter_AddRefs(mLabel));
-  NS_ENSURE_TRUE(mLabel, NS_ERROR_FAILURE);
+  NS_ENSURE_STATE(mLabel);
 
   nsCOMPtr<nsIDOMElement> element;
   nsCOMPtr<nsIDOMNode> childReturn;
@@ -151,15 +157,23 @@ nsXFormsInputElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
   domDoc->CreateElementNS(NS_LITERAL_STRING(NS_NAMESPACE_XHTML),
                           NS_LITERAL_STRING("span"),
                           getter_AddRefs(element));
-  NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);
+  NS_ENSURE_STATE(element);
 
   mLabel->AppendChild(element, getter_AddRefs(childReturn));
 
   domDoc->CreateElementNS(NS_LITERAL_STRING(NS_NAMESPACE_XHTML),
-                          mIsTextArea ? NS_LITERAL_STRING("textarea")
-                                      : NS_LITERAL_STRING("input"),
+                          mType == eType_TextArea
+                              ? NS_LITERAL_STRING("textarea")
+                              : NS_LITERAL_STRING("input"),
                           getter_AddRefs(mControl));
-  NS_ENSURE_TRUE(mControl, NS_ERROR_FAILURE);
+  NS_ENSURE_STATE(mControl);
+
+  if (mType == eType_Secret) {
+    nsCOMPtr<nsIDOMHTMLInputElement> input = do_QueryInterface(mControl);
+    NS_ENSURE_STATE(input);
+
+    input->SetType(NS_LITERAL_STRING("password"));
+  }
 
   mLabel->AppendChild(mControl, getter_AddRefs(childReturn));
 
@@ -294,7 +308,7 @@ nsXFormsInputElement::Blur(nsIDOMEvent *aEvent)
     return NS_OK;
 
   nsAutoString value;
-  if (mIsTextArea) {
+  if (mType == eType_TextArea) {
     nsCOMPtr<nsIDOMHTMLTextAreaElement> textArea = do_QueryInterface(mControl);
     NS_ENSURE_STATE(textArea);
 
@@ -305,7 +319,7 @@ nsXFormsInputElement::Blur(nsIDOMEvent *aEvent)
 
     nsAutoString type;
     input->GetType(type);
-    if (type.EqualsLiteral("checkbox")) {
+    if (mType == eType_Input && type.EqualsLiteral("checkbox")) {
       PRBool checked;
       input->GetChecked(&checked);
       value.AssignASCII(checked ? "1" : "0", 1);
@@ -377,7 +391,7 @@ nsXFormsInputElement::Refresh()
   nsAutoString text;
   nsXFormsUtils::GetNodeValue(resultNode, text);
 
-  if (mIsTextArea) {
+  if (mType == eType_TextArea) {
     nsCOMPtr<nsIDOMHTMLTextAreaElement> textArea = do_QueryInterface(mControl);
     NS_ENSURE_STATE(textArea);
 
@@ -387,22 +401,25 @@ nsXFormsInputElement::Refresh()
     nsCOMPtr<nsIDOMHTMLInputElement> input = do_QueryInterface(mControl);
     NS_ENSURE_STATE(input);
 
-    nsCOMPtr<nsISchemaType> type;
-    model->GetTypeForControl(this, getter_AddRefs(type));
-    nsCOMPtr<nsISchemaBuiltinType> biType = do_QueryInterface(type);
-    PRUint16 typeValue = nsISchemaBuiltinType::BUILTIN_TYPE_STRING;
+    if (mType == eType_Input) {
+      nsCOMPtr<nsISchemaType> type;
+      model->GetTypeForControl(this, getter_AddRefs(type));
+      nsCOMPtr<nsISchemaBuiltinType> biType = do_QueryInterface(type);
+      PRUint16 typeValue = nsISchemaBuiltinType::BUILTIN_TYPE_STRING;
+      if (biType)
+        biType->GetBuiltinType(&typeValue);
 
-    if (biType)
-      biType->GetBuiltinType(&typeValue);
+      if (typeValue == nsISchemaBuiltinType::BUILTIN_TYPE_BOOLEAN) {
+        input->SetAttribute(NS_LITERAL_STRING("type"),
+                             NS_LITERAL_STRING("checkbox"));
 
-    if (typeValue == nsISchemaBuiltinType::BUILTIN_TYPE_BOOLEAN) {
-      input->SetAttribute(NS_LITERAL_STRING("type"),
-                           NS_LITERAL_STRING("checkbox"));
-
-      input->SetChecked(text.EqualsLiteral("true") ||
-                         text.EqualsLiteral("1"));
+        input->SetChecked(text.EqualsLiteral("true") ||
+                           text.EqualsLiteral("1"));
+      } else {
+        input->RemoveAttribute(NS_LITERAL_STRING("type"));
+        input->SetValue(text);
+      }
     } else {
-      input->RemoveAttribute(NS_LITERAL_STRING("type"));
       input->SetValue(text);
     }
 
@@ -415,7 +432,18 @@ nsXFormsInputElement::Refresh()
 NS_HIDDEN_(nsresult)
 NS_NewXFormsInputElement(nsIXTFElement **aResult)
 {
-  *aResult = new nsXFormsInputElement();
+  *aResult = new nsXFormsInputElement(nsXFormsInputElement::eType_Input);
+  if (!*aResult)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*aResult);
+  return NS_OK;
+}
+
+NS_HIDDEN_(nsresult)
+NS_NewXFormsSecretElement(nsIXTFElement **aResult)
+{
+  *aResult = new nsXFormsInputElement(nsXFormsInputElement::eType_Secret);
   if (!*aResult)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -426,7 +454,7 @@ NS_NewXFormsInputElement(nsIXTFElement **aResult)
 NS_HIDDEN_(nsresult)
 NS_NewXFormsTextAreaElement(nsIXTFElement **aResult)
 {
-  *aResult = new nsXFormsInputElement(PR_TRUE);
+  *aResult = new nsXFormsInputElement(nsXFormsInputElement::eType_TextArea);
   if (!*aResult)
     return NS_ERROR_OUT_OF_MEMORY;
 

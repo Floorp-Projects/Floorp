@@ -45,6 +45,7 @@
 
 // Form controls
 NS_HIDDEN_(nsresult) NS_NewXFormsInputElement(nsIXTFElement **aElement);
+NS_HIDDEN_(nsresult) NS_NewXFormsSecretElement(nsIXTFElement **aElement);
 NS_HIDDEN_(nsresult) NS_NewXFormsTextAreaElement(nsIXTFElement **aElement);
 NS_HIDDEN_(nsresult) NS_NewXFormsGroupElement(nsIXTFElement **aElement);
 NS_HIDDEN_(nsresult) NS_NewXFormsOutputElement(nsIXTFElement **aElement);
@@ -86,6 +87,8 @@ nsXFormsElementFactory::CreateElement(const nsAString& aTagName,
     return NS_NewXFormsStubElement(aElement);
   if (aTagName.EqualsLiteral("input"))
     return NS_NewXFormsInputElement(aElement);
+  if (aTagName.EqualsLiteral("secret"))
+    return NS_NewXFormsSecretElement(aElement);
   if (aTagName.EqualsLiteral("textarea"))
     return NS_NewXFormsTextAreaElement(aElement);
   if (aTagName.EqualsLiteral("group"))
