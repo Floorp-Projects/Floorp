@@ -83,6 +83,7 @@
 
 #include "nsILocalFile.h"
 #include "nsLocalFile.h"
+#include "nsNativeCharsetUtils.h"
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsICategoryManager.h"
@@ -332,6 +333,7 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
     rv = nsMemoryImpl::Startup();
     if (NS_FAILED(rv)) return rv;
 
+    NS_StartupNativeCharsetUtils();
     NS_StartupLocalFile();
 
     StartupSpecialSystemDirectory();
@@ -585,6 +587,7 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 
     // Shutdown nsLocalFile string conversion
     NS_ShutdownLocalFile();
+    NS_ShutdownNativeCharsetUtils();
 
     // Shutdown the timer thread and all timers that might still be alive before
     // shutting down the component manager
