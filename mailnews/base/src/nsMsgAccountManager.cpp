@@ -59,7 +59,7 @@
 #include "nsMsgFolderFlags.h"
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
-#include "nsImapIncomingServer.h" // XXX Should this be here? - bug 63087
+#include "nsIImapIncomingServer.h" 
 
 #if defined(DEBUG_alecf_) || defined(DEBUG_sspitzer_) || defined(DEBUG_seth_)
 #define DEBUG_ACCOUNTMANAGER 1
@@ -956,7 +956,9 @@ PRBool PR_CALLBACK nsMsgAccountManager::cleanupInboxOnExit(nsHashKey *aKey, void
           PRBool isImap = (type ? PL_strcmp(type, "imap") == 0 :PR_FALSE);
 		  if (isImap) 
 		  {
-		       nsImapIncomingServer *imapserver = (nsImapIncomingServer*)aData;
+		   nsCOMPtr <nsIImapIncomingServer> imapserver = do_QueryInterface(msgserver);
+           if (imapserver)
+           {
                PRBool cleanupInboxOnExit = PR_FALSE;
     
                imapserver->GetCleanupInboxOnExit(&cleanupInboxOnExit);
@@ -1016,6 +1018,7 @@ PRBool PR_CALLBACK nsMsgAccountManager::cleanupInboxOnExit(nsHashKey *aKey, void
 				}
 			}
 		  }
+      }
 	   }
 	}
   return PR_TRUE;
