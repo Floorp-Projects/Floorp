@@ -592,6 +592,8 @@ nsHTMLEditor::NodeIsBlockStatic(nsIDOMNode *aNode, PRBool *aIsBlock)
       tagAtom==nsEditProperty::th         ||
       tagAtom==nsEditProperty::td         ||
       tagAtom==nsEditProperty::li         ||
+      tagAtom==nsEditProperty::dt         ||
+      tagAtom==nsEditProperty::dd         ||
       tagAtom==nsEditProperty::pre)
   {
     *aIsBlock = PR_TRUE;
