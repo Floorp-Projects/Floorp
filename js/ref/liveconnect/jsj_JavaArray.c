@@ -79,9 +79,17 @@ access_java_array_element(JSContext *cx,
             member_name = JS_GetStringBytes(JSVAL_TO_STRING(idval));
             
             if (do_assignment) {
-                JS_ReportError(cx, "Attempt to write to invalid Java array "
-                    "element \"%s\"", member_name);
-                return JS_FALSE;
+                JSVersion version = JS_GetVersion(cx);
+
+                if (!JSVERSION_IS_ECMA(version)) {
+ 
+                    JS_ReportError(cx, "Attempt to write to invalid Java array "
+                                       "element \"%s\"", member_name);
+                    return JS_FALSE;
+                } else {
+                    *vp = JSVAL_VOID;
+                    return JS_TRUE;
+                }
             } else {
                 if (!strcmp(member_name, "length")) {
                     array_length = jsj_GetJavaArrayLength(cx, jEnv, java_array);
@@ -170,7 +178,7 @@ JavaArray_defineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                          JSPropertyOp getter, JSPropertyOp setter,
                          uintN attrs, JSProperty **propp)
 {
-    JS_ReportError(cx, "Elements of JavaArray objects may not be deleted");
+    JS_ReportError(cx, "Cannot define a new property in a JavaArray");
     return JS_FALSE;
 }
 
@@ -200,8 +208,16 @@ JavaArray_setAttributes(JSContext *cx, JSObject *obj, jsid id,
 static JSBool
 JavaArray_deleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
-    JS_ReportError(cx, "Elements of JavaArray objects may not be deleted");
-    return JS_FALSE;
+    JSVersion version = JS_GetVersion(cx);
+
+    if (!JSVERSION_IS_ECMA(version)) {
+        JS_ReportError(cx, "Properties of JavaArray objects may not be deleted");
+        return JS_FALSE;
+    } else {
+        /* Attempts to delete permanent properties are silently ignored
+           by ECMAScript. */
+        return JS_TRUE;
+    }
 }
 
 static JSBool
