@@ -1,4 +1,4 @@
-#!gmake
+#
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
 # compliance with the NPL.  You may obtain a copy of the NPL at
@@ -14,19 +14,8 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH	= ../..
-topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
-srcdir		= @srcdir@
+DEPTH=..\..\..\..\..
+IGNORE_MANIFEST=1
+DIRS=win32
 
-include $(DEPTH)/config/autoconf.mk
-
-DIRS	= public src
-
-DIRS    += tests
-
-DIRS	+= tools
-
-# DIRS	+= xptinfo xptcall
-
-include $(topsrcdir)/config/rules.mk
+include <$(DEPTH)\config\rules.mak>

@@ -1,4 +1,5 @@
-#!gmake
+#!nmake
+#
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
 # compliance with the NPL.  You may obtain a copy of the NPL at
@@ -14,19 +15,27 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH	= ../..
-topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
-srcdir		= @srcdir@
+DEPTH=..\..\..\..\..\..
+IGNORE_MANIFEST=1
+include <$(DEPTH)\config\config.mak>
 
-include $(DEPTH)/config/autoconf.mk
+DEFINES=-DWIN32_LEAN_AND_MEAN -DEXPORT_XPTC_API
 
-DIRS	= public src
+LINCS=-I..\.. -I$(PUBLIC)\xptcall -I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
+      -I$(PUBLIC)\libxpt -I$(PUBLIC)\xptinfo
 
-DIRS    += tests
+LCFLAGS = \
+        $(LCFLAGS) \
+        $(DEFINES) \
+        $(NULL)
 
-DIRS	+= tools
+LIBRARY_NAME			= xptcmd
 
-# DIRS	+= xptinfo xptcall
+OBJS=					\
+	.\$(OBJDIR)\xptcinvoke.obj	\
+	.\$(OBJDIR)\xptcstubs.obj	\
+	$(NULL)
 
-include $(topsrcdir)/config/rules.mk
+include <$(DEPTH)\config\rules.mak>
+
+install:: $(LIBRARY)

@@ -144,7 +144,7 @@ private:
 
 
 // forward declaration
-struct nsXPCMiniVariant;
+struct nsXPTCMiniVariant;
 
 class nsXPTConstant : public XPTConstDescriptor
 {
@@ -160,8 +160,8 @@ public:
         {return type.prefix;}
 
     // XXX this is ugly
-    const nsXPCMiniVariant* GetValue() const
-        {return (nsXPCMiniVariant*) &value;}
+    const nsXPTCMiniVariant* GetValue() const
+        {return (nsXPTCMiniVariant*) &value;}
 private:
     nsXPTConstant();    // no implementation
 // NO DATA - this a flyweight wrapper
