@@ -19,14 +19,50 @@ built
 Mozilla from source and your environment is currently set up for such a build -
 see the <a href="http://www.mozilla.org/build/">Mozilla build documentation</a>
 for more information.</p>
-<h2>Windows Instructions</h2>
-<p>Windows builds now use the standard Mozilla build process.&nbsp; You can
+<p>PyXPCOM can be built on Windows using either the <i>nmake makefile.win</i>
+process, or the <i>configure; gmake</i> process used by Linux.</p>
+<h2>configure; gmake Instructions</h2>
+<h3>Preparing for the build</h3>
+<ul>
+  <li>Apply the patch in <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=129216">bugzilla
+    bug 129216</a>. (If this bug is marked as &quot;FIXED&quot;, it probably
+    means there is no need to apply the patch and that these docs are out of
+    date)</li>
+  <li>On Linux, you must have Python built for dynamic linking.&nbsp; <a href="http://aspn.activestate.com/ASPN/Python">ActivePython</a>
+    2.1 is one such build.</li>
+  <li>On Windows, you must have a Python source tree installed and built.&nbsp;
+    Patches gratefully accepted that allow an installed Python to be used (it
+    should not be hard!)</li>
+  <li>Ensure the Python interpreter you wish to use is on your path, such that
+    &quot;python&quot; will execute it correctly.&nbsp; The configure process
+    uses this to locate the Python support files.</li>
+</ul>
+<h3>Building</h3>
+<ul>
+  <li>From the top-level Mozilla directory, execute <i>./configure
+    --enable-extensions=extensions/pyxpcom</i>. As per the Mozilla build
+    instructions, you may add this option to your <i>.mozconfig</i> file.&nbsp;
+    If you wish to enable debugging, just enable it as you would normally for
+    Mozilla; PyXPCOM will pick up the same settings.<br>
+    (On Windows you will need to execute <i>sh ./configure ...</i> if running
+    from a Command Prompt.&nbsp; See the <a href="http://www.mozilla.org/build/win32.html#ss2.2b">Mozilla
+    win32 specific gmake build instructions</a> for more details.</li>
+  <li>Build the Mozilla tree as normal; PyXPCOM will automatically be
+    built.&nbsp; Alternatively, change to the top-level PyXPCOM directory and
+    execute <i>gmake</i> in that directory.</li>
+</ul>
+<h2>Windows makefile.win Instructions</h2>
+<p>Windows builds still support the Windows makefile.win build process.&nbsp; You can
 build them by performing the following steps</p>
+<h3>Preparing for the build</h3>
 <ul>
   <li>Ensure your machine is setup to build Mozilla and XPCOM itself.</li>
   <li>Set PYTHON_SRC to point to your Python source root directory.&nbsp; This
     can either be the root of a &quot;binary&quot; install (with headers and
     libraries) or a Python source tree.</li>
+</ul>
+<h3>Building</h3>
+<ul>
   <li>Change to the <i>mozilla/extensions/python/xpcom</i> directory.</li>
   <li>Run <i>nmake -f makefile.win</i>.&nbsp; This should build the extensions
     and install them into the <i>{mozilla-dist-directory}/bin/Python</i>
@@ -34,95 +70,40 @@ build them by performing the following steps</p>
   <li>Change to the xpcom/test directory, and run python <i>regrtest.py</i> (or <i>python_d
     regrtest.py</i> for debug builds)</li>
 </ul>
-<h2>Linux Instructions</h2>
-<p>These instructions apply to Linux, and hopefully soon they will die!</p>
-<p>This section covers:</p>
+<h2>PyXPCOM outside Mozilla</h2>
+<p>When you are using PyXPCOM from inside mozilla, no additional configuration
+options should be necessary.&nbsp; However, if you wish to use PyXPCOM from
+stand-alone Python (ie, so you can write simple Python scripts that can be
+executed normally and use XPCOM), then additional environment variables must be
+setup.</p>
 <ul>
-  <li>
-    <p align="left"><a href="#ConfigureTheEnvironment">Configuring your
-    Environment</a></li>
-  <li>
-    <p align="left"><a href="#BuildingTheExtensions">Building</a></li>
-  <li>
-    <p align="left"><a href="#RunningTheTests">Testing your Setup</a></li>
-  <li><a href="#Registration">Registering the Loader and Test
-    Component</a></li>
-  <li><a href="#RunningTheTests">Running the test suite</a></li>
-</ul>
-<h2><a name="ConfigureTheEnvironment">Configuring your Environment</a></h2>
-<p>In addition to the existing environment requirements for building Mozilla itself, the
-Python XPCOM package has the following requirements:</p>
-<ul>
-  <li>
-<a name="MozillaDirectory"><b>Mozilla Directory</b></a><b> - </b>Ensure the Mozilla
-<i> bin</i> directory is on your PATH
-(LD_LIBRARY_PATH
-on Unix) so Python can locate the <i> xpcom.dll</i> module needed for
-core XPCOM services.</li>
-  <li><a name="PYTHONPATH"><b>PYTHONPATH</b></a> - <tt>PYTHONPATH</tt> needs to be set appropriately.&nbsp;Ensure
-the parent to this <i>xpcom</i> directory is on your path so &quot;import
-xpcom&quot; locates this directory.&nbsp; Note that the Mozilla <i>components</i> directory does not need to be on the <tt>PYTHONPATH</tt>,
-but any modules used by your components must be set correctly.&nbsp; If anything
-is wrong here you should get a normal <tt>ImportError</tt>.</li>
+  <li><a name="PYTHONPATH"><b>PYTHONPATH</b></a> - <tt>PYTHONPATH</tt>  needs to
+    be set appropriately.&nbsp;You must manually ensure that the <i>mozilla/dist/bin/python</i>
+    directory (which is where PyXPCOM was installed during the build process) is
+    listed.&nbsp; Note that when PyXPCOM is used from within Mozilla (or any
+    other xpcom process), this path will automatically be added to sys.path.&nbsp;
+    It is only when Python directly uses xpcom that this step is necessary.<br>
+    If anything is wrong here you should get a normal <tt>ImportError</tt>.</li>
 </ul>
 <blockquote>
   <p>Note that on Windows, the PYTHONPATH is generally maintained in the
   Registry; however, you can set this variable at a DOS prompt, and it will still be
 added to the core PYTHONPATH.
 </blockquote>
-<h2><a name="BuildingTheExtensions">Building</a></h2>
-<p>The initial release of the Python XPCOM package has a very simple, hard-coded
-build process.&nbsp; The intention is to include this package in the Mozilla
-source tree, and integrate the build with the Mozilla build.&nbsp; Until this
-happens, perform the following steps:</p>
 <ul>
-  <li>Ensure you can successfully build Mozilla itself from source-code.</li>
-  <li>Unpack this source code, and change to the <i>xpcom</i> directory under
-    the root <i>PyXPCOM</i> directory.</li>
-  <li>For Windows, edit <i>makefile.stupid.win</i>, while for Linux, edit <i>makefile.stupid.linux</i></li>
-  <li>As per the instructions at the top of the makefile, edit the MOZ_SRC,
-    INSTALLDIR and PYTHON_SRC definitions appropriately.</li>
+  <li><b><a name="PATH">PATH</a>, LD_LIBRARY_PATH, etc</b> - On Windows, you
+    must ensure that the Mozilla bin directory is listed on your PATH, or that
+    you execute your scripts with the Mozilla bin directory as the current
+    directory.<br>
+    On Linux, you must set your PATH and LD_LIBRARY_PATH variables
+    appropriately.&nbsp; However, you may find it simpler and easier to use the <i>run-mozilla.sh</i>
+    script in the Mozilla bin directory.&nbsp; For example, changing to the
+    Mozilla bin directory and executing:<br>
+    <i>./run-mozilla.sh python ~/src/mozilla/extensions/python/xpcom/test/regrtest.py</i><br>
+    should setup a correct environment and execute the PyXPCOM test suite.</li>
 </ul>
-<h3>Build Example: Building on Linux</h3>
-<p>For this example, we will assume that the source-code for Mozilla is in ~/src/mozilla,
-the source-code for the PyXPCOM package is in ~/src/pyxpcom. Further, we assume
-that you have ActivePython 2.0 installed in <i>/usr/local/ActivePython2.0</i>,
-and wish to install the built Python XPCOM package so it exists in <i>/usr/local/ActivePython2.0/lib/python2.0/site-packages/xpcom</i>.</p>
-<p>To build the package in this environment, you would perform the following
-steps:</p>
-<ul>
-  <li>Unpack the PyXPCOM package source-code into the appropriate directory</li>
-  <li>Edit makefile.stupid.linux with the following changes (substituting
-    username accordingly):<br>
-    <i>MOZ_SRC=/home/username/src<br>
-    INSTALLDIR=/usr/local/ActivePython-2.0/site-packages<br>
-    PYTHON_SRC=/usr/local/ActivePython-2.0</i></li>
-  <li>Build: As a regular user, from the top-level Python xpcom source
-    directory (i.e., the directory with <i>makefile.stupid.linux</i>), execute
-    the command:<br>
-    <i>make -f makefile.stupid.linux DEBUG=1</i></li>
-  <li>Install: Log in as a user with permissions to install into the relevant directories
-    (usually the root user).&nbsp; From the top-level Python xpcom source
-    directory (i.e., the directory with <i>makefile.stupid.linux</i>), execute
-    the command:<br>
-    <i>make -f makefile.stupid.linux DEBUG=1 install</i></li>
-  <li>Switch back to a regular user, ready for testing!</li>
-</ul>
-<p>NOTE: The instructions above are for a Debug build, as this is the default
-Mozilla build type.&nbsp; If you have configured Mozilla to build a Release
-version of Mozilla, you can drop the DEBUG=1 option.&nbsp; It is important that
-PyXPCOM and Mozilla itself are consistent with respect to Release and Debug
-builds.&nbsp; For more details, please consult the makefile.</p>
-<p>If everything appears to work and you are brave, you may also like to execute
-<i>make -f makefile.stupid.linux test</i> to execute the test script.&nbsp;
-Otherwise, continue to the following section where we confirm the installation
-step--by-step.</p>
 <h2><a name="RunningTheTests">Testing your Setup</a></h2>
-<p>The Python XPCOM Package has a complete test suite.&nbsp; If you are
-impatient, you can simply execute <i>make -f makefile.stupid.linux test</i> (for
-Linux) or <i>nmake -f makefile.stupid.linux test</i> (for Windows).&nbsp; If
-this command indicates that the tests succeeded, then you can ignore the rest of
-this section.</p>
+<p>The Python XPCOM Package has a complete test suite.</p>
 <p>In the rest of this section, we walk through some simpler tests a step at a time,
 to help diagnose any problems.</p>
 <p><b>Note:</b> We recommend you do all your testing outside of <i> mozilla.exe</i>; it is far simpler to test all of
@@ -136,11 +117,13 @@ this using the PyXPCOM package stand-alone.</p>
   <li>Start Python, and check<br>
     &gt;&gt;&gt; <i>import xpcom</i><br>
     works. If not, <a href="#PYTHONPATH">check your PYTHONPATH</a> - the
-    main PyXPCOM package can not be located..</li>
+    main PyXPCOM package can not be located.&nbsp; Also check your <a href="#PATH">PATH</a>,
+    and if you are on Linux, remember that executing ./run-mozilla.sh python is
+    the easiest way.</li>
   <li>Check<i><br>
     &gt;&gt;&gt; import xpcom._xpcom</i><br>
 
-works. If not, then most likely your <a href="#MozillaDirectory">Mozilla
+works. If not, then most likely your <a href="#PATH">Mozilla
     directory is not on your path</a>, or something is wrong with <i>_xpcom(_d).pyd/_xpcommodule.so</i>.</li>
 
   <li>Next run a simple test: <i>test/test_misc.py</i>.&nbsp;With a Windows debug build, the command may look like:<br>
@@ -148,7 +131,9 @@ works. If not, then most likely your <a href="#MozillaDirectory">Mozilla
     </i>or on Linux<br>
     <i>/home/user/src/mozilla/dist/bin$ python /home/user/src/python/xpcom/test/test_misc.py</i></li>
 </ol>
-<p>If you can't get this going, you won't get much further! If you do, the
+<p>If you can't get this going, you won't get much further! (You may see a few
+errors - that is OK, as long as it appears something worked!).&nbsp; If
+everything looks OK, the
 next step is to register our test component and run our full test suite.</p>
 <h2><a name="Registration">Registering the Loader and Test Component</a></h2>
 <p>First register the generic Python loader. For instructions, see the <a href="file:///F:/src/as/Komodo/src/pyxpcom/xpcom/doc/architecture.html">architecture
@@ -162,9 +147,10 @@ finally you can test it!</p>
     for Unix), and the files <i> py_test_component.py </i> and <i> py_test_component.idl</i> into
     the Mozilla <i>bin/components</i> directory.&nbsp; If not, copy the files
     there manually.</li>
-  <li>Run <i>regxpcom</i>.&nbsp;<i>regxpcom</i> is a standard Mozilla
-    executable, found in the <i>bin</i>  directory, that detects whether the DLL and .py
-    files have been added and registers them accordingly.&nbsp; You should
+  <li>Run <i>regxpcom </i>(or .<i>/run-mozilla.sh ./regxpcom</i> if appropriate).&nbsp;<i>regxpcom</i> is a standard Mozilla
+    executable, found in the <i>bin</i>  directory, that detects the new DLL and
+    .py
+    files and registers them accordingly.&nbsp; You should
     see a few messages that include the following:</li>
 </ol>
 <blockquote>
@@ -183,6 +169,11 @@ you do not see these messages the first time you run it, there is the
 possibility that some other process, possibly the build process, has already
 executed this step.</p>
 <h2><b>Running the Test Suite</b></h2>
+<p>Before running the test suite, you should change to the <i>mozilla/xpcom/sample</i>
+directory and build it.&nbsp; This will build and install a sample component
+which is used by the test suite.&nbsp; If you do not have this component
+available, some of the Python tests will fail.</p>
+
 <p>To run the test suite, run <i>xpcom/test/regrtest.py.</i>&nbsp; This runs the
 tests and ensures that the test output is as expected.&nbsp; If all tests
 pass, you have a fully functioning Python XPCOM package.&nbsp; Enjoy!</p>
