@@ -26,6 +26,10 @@
 
 #include "nsITextWidget.h"
 
+/**
+ * Native WIN32 single line edit control wrapper. 
+ */
+
 class nsTextWidget : public nsTextHelper
 {
 

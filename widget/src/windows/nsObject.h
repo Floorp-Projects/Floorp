@@ -21,13 +21,11 @@
 
 #include "nsdefs.h"
 #include "nsCList.h"
-
 #include "nsISupports.h"
-
 #include "prmon.h"
 
-/*
- * nsObject is the base class for all widgets 
+/**
+ * nsObject is the base class for all native widgets 
  */
 
 class nsObject : public nsISupports
@@ -37,7 +35,6 @@ public:
                             nsObject(nsISupports *aOuter);
     virtual                 ~nsObject();
 
-    // the evil triad.
     // Implementation of those, always forward to the outer object.
     NS_IMETHOD              QueryInterface(const nsIID& aIID, 
                                            void** aInstancePtr);

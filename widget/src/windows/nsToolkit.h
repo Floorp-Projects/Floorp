@@ -24,13 +24,16 @@
 
 struct MethodInfo;
 
-//
-// nsToolkit is a wrapper around the thread running the message pump
-//
+/**
+ * Wrapper around the thread running the message pump.
+ * The toolkit abstraction is necessary because the message pump must
+ * execute within the same thread that created the widget under Win32.
+ */ 
+
 class nsToolkit : public nsIToolkit
 {
 
-public:
+  public:
                             nsToolkit();
 
     NS_DECL_ISUPPORTS
@@ -41,8 +44,7 @@ public:
             void            CallMethod(MethodInfo *info);
 
             // Return whether the current thread is the application's Gui thread.  
-            PRBool            IsGuiThread(void)      { return (PRBool)(mGuiThread == PR_GetCurrentThread());}
-
+            PRBool          IsGuiThread(void)      { return (PRBool)(mGuiThread == PR_GetCurrentThread());}
             PRThread*       GetGuiThread(void)       { return mGuiThread;   }
             HWND            GetDispatchWindow(void)  { return mDispatchWnd; }
 
@@ -78,11 +80,14 @@ inline void nsToolkit::CallMethod(MethodInfo *info)
     ::SendMessage(mDispatchWnd, WM_CALLMETHOD, (WPARAM)0, (LPARAM)info);
 }
 
-//
-// MouseTrailer is used to make sure exit/enter mouse messages 
-// are always dispatched
-//
 class  nsWindow;
+
+/**
+ * Makes sure exit/enter mouse messages are always dispatched.
+ * In the case where the mouse has exited the outer most window the
+ * only way to tell if it has exited is to set a timer and look at the
+ * mouse pointer to see if it is within the outer most window.
+ */ 
 
 class MouseTrailer {
 
@@ -92,7 +97,7 @@ public:
     static  void           SetMouseTrailerWindow(nsWindow * aNSWin);
 
 private:
-    // Global nsToolkit Instance
+      /// Global nsToolkit Instance
     static MouseTrailer* theMouseTrailer;
 
 public:
@@ -102,6 +107,13 @@ public:
             void            DestroyTimer();
 
 private:
+      /**
+       * Handle timer events
+       * @param hWnd handle to window
+       * @param msg  Win32 message
+       * @param event Win32 event
+       * @param time time of the event
+       */
     static  void            CALLBACK TimerProc(HWND hWnd, 
                                                 UINT msg, 
                                                 UINT event, 
@@ -110,9 +122,14 @@ private:
                             MouseTrailer();
 
 private:
-    // global information for mouse enter/exit events
+    /* global information for mouse enter/exit events
+     */
+    //@{
+      /// last window
     static nsWindow* mHoldMouse;
+      /// timer ID
     UINT mTimerId;
+    //@}
 
 };
 

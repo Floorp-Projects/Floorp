@@ -292,7 +292,7 @@ nsRadioGroup::Enumerator::~Enumerator()
 }
 
 //
-// The evil triad
+// nsISupports methods
 //
 NS_IMPL_ISUPPORTS(nsRadioGroup::Enumerator, NS_IENUMERATOR_IID);
 

@@ -22,6 +22,10 @@
 #include "nsITextWidget.h"
 #include "nsWindow.h"
 
+/**
+ * Base class for nsTextAreaWidget and nsTextWidget
+ */
+
 class nsTextHelper : public nsWindow, public nsITextWidget
 {
 

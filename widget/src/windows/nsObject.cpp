@@ -27,7 +27,7 @@ int32 nsObject::s_nObjects = 0;
 #endif
 
 /**
-  * constructor
+ * constructor
  */
 nsObject::nsObject(nsISupports *aOuter)
 {
@@ -52,7 +52,7 @@ nsObject::nsObject(nsISupports *aOuter)
 
 
 /**
-  * destructor
+ * destructor
  */
 nsObject::~nsObject()
 {
@@ -68,7 +68,7 @@ nsObject::~nsObject()
 }
 
 /**
-  * The evil triad
+ * nsISupports methods
  */
 nsresult nsObject::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
@@ -76,7 +76,7 @@ nsresult nsObject::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 }
 
 /**
-  *
+ *
  */
 nsrefcnt nsObject::AddRef(void)
 {
@@ -84,7 +84,7 @@ nsrefcnt nsObject::AddRef(void)
 }
 
 /**
-  *
+ *
  */
 nsrefcnt nsObject::Release(void)
 {
@@ -92,21 +92,21 @@ nsrefcnt nsObject::Release(void)
 }
 
 /**
-  *
+ *
  */
 inline nsrefcnt nsObject::AddRefObject(void) { 
   return ++mRefCnt; 
 }
 
 /**
-  *
+ *
  */
 inline nsrefcnt nsObject::ReleaseObject(void) { 
   return (--mRefCnt) ? mRefCnt : (delete this, 0); 
 }
 
 /**
-  *
+ *
  */
 nsresult nsObject::QueryObject(const nsIID& aIID, void** aInstancePtr)
 {
@@ -125,8 +125,9 @@ nsresult nsObject::QueryObject(const nsIID& aIID, void** aInstancePtr)
 
 
 /**
-  * static utility. Delete all live objects
+ * static utility. Delete all live objects
  */
+
 void nsObject::DeleteAllObjects(void)
 {
     PR_EnterMonitor(s_liveChainMutex);

@@ -288,7 +288,7 @@ class nsIWidget : public nsISupports {
     /**
      * Set the cursor for this widget
      *
-     * @aCursor the new cursor for this widget
+     * @param aCursor the new cursor for this widget
      */
 
     virtual void SetCursor(nsCursor aCursor) = 0;

@@ -25,6 +25,10 @@
 
 #include "nsICheckButton.h"
 
+/**
+ * Native Win32 Checkbox wrapper
+ */
+
 class nsCheckButton : public nsWindow,
                       public nsICheckButton
 {
@@ -41,7 +45,7 @@ public:
     // nsIWidget interface
     BASE_IWIDGET_IMPL
 
-    // nsIChecknsButton part
+    // nsICheckButton part
     virtual void            SetLabel(const nsString& aText);
     virtual void            GetLabel(nsString& aBuffer);
 

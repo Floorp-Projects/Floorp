@@ -24,6 +24,10 @@
 #include "nsSwitchToUIThread.h"
 #include "nsIListBox.h"
 
+/**
+ * Native Win32 Listbox wrapper
+ */
+
 class nsListBox :   public nsWindow,
                     public nsIListBox
 {

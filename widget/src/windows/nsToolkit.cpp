@@ -138,7 +138,7 @@ nsToolkit::~nsToolkit()
 
 //-------------------------------------------------------------------------
 //
-// The evil triad in a single shot macro
+// nsISupports implementation macro
 //
 //-------------------------------------------------------------------------
 NS_IMPL_ISUPPORTS(nsToolkit, NS_ITOOLKIT_IID)
