@@ -26,6 +26,8 @@
 
 */
 
+@import url(chrome://communicator/skin/);
+
 /* Hide twisty for files */
 .treecell-indent[type="FILE"] > .tree-cell-twisty 
   {

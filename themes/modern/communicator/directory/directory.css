@@ -25,6 +25,8 @@
   == Styles specific to the directory listing window.
   ======================================================================= */
 
+@import url(chrome://communicator/skin/);
+
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 .treecell-filename {
