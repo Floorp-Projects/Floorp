@@ -736,7 +736,7 @@ NS_METHOD nsWindow::IsVisible(PRBool & bState)
 // Move this component
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsWindow::Move(PRUint32 aX, PRUint32 aY)
+NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
 {
 	bool mustunlock = false;
 	bool havewindow = false;
@@ -769,7 +769,7 @@ NS_METHOD nsWindow::Move(PRUint32 aX, PRUint32 aY)
 // Resize this component
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
+NS_METHOD nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
 	bool mustunlock = false;
 	bool havewindow = false;
@@ -809,10 +809,10 @@ NS_METHOD nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 // Resize this component
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsWindow::Resize(PRUint32 aX,
-                      PRUint32 aY,
-                      PRUint32 aWidth,
-                      PRUint32 aHeight,
+NS_METHOD nsWindow::Resize(PRInt32 aX,
+                      PRInt32 aY,
+                      PRInt32 aWidth,
+                      PRInt32 aHeight,
                       PRBool   aRepaint)
 {
 	bool mustunlock = false;
