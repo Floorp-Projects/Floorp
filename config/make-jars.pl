@@ -48,7 +48,7 @@ sub zipErrorCheck($)
 {
     my ($err) = @_;
     return if ($err == 0 || $err == 12);
-    die ("Error invoking zip: $err\n");
+    die ("Error invoking zip: $err");
 }
 
 sub JarIt
@@ -142,13 +142,13 @@ sub EnsureFileInDir
         }
 
         if (!-e $file) {
-            die "error: file '$file' doesn't exist\n";
+            die "error: file '$file' doesn't exist";
         }
         if (!-e $dir) {
-            mkpath($dir, 0, 0775) || die "can't mkpath $dir: $!\n";
+            mkpath($dir, 0, 0775) || die "can't mkpath $dir: $!";
         }
         unlink $destPath;       # in case we had a symlink on unix
-        copy($file, $destPath) || die "copy($file, $destPath) failed: $!\n";
+        copy($file, $destPath) || die "copy($file, $destPath) failed: $!";
 
         # fix the mod date so we don't jar everything (is this faster than just jarring everything?)
         my $atime = stat($file)->atime || die $!;
@@ -173,12 +173,12 @@ while (<STDIN>) {
             if (/^\s+([\w\d.\-\_\\\/]+)\s*(\([\w\d.\-\_\\\/]+\))?$\s*/) {
                 my $dest = $1;
                 my $srcPath = defined($2) ? substr($2, 1, -1) : $2;
-		EnsureFileInDir("$chromeDir/$jarfile", $baseFilesDir, $dest, $srcPath, 1);
+		EnsureFileInDir("$chromeDir/$jarfile", $baseFilesDir, $dest, $srcPath, 0);
                 $args = "$args$dest ";
             } elsif (/^\+\s+([\w\d.\-\_\\\/]+)\s*(\([\w\d.\-\_\\\/]+\))?$\s*/) {
                 my $dest = $1;
                 my $srcPath = defined($2) ? substr($2, 1, -1) : $2;
-                EnsureFileInDir("$chromeDir/$jarfile", $baseFilesDir, $dest, $srcPath, 0);
+                EnsureFileInDir("$chromeDir/$jarfile", $baseFilesDir, $dest, $srcPath, 1);
                 $overrides = "$overrides$dest ";
             } elsif (/^\s*$/) {
                 # end with blank line
