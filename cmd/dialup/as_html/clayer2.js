@@ -258,7 +258,8 @@ function generateControls()
 			if ( editMode == true )
 				showBack = true;
 		}
-		else if ( formName == "2stpwrap.htm" )
+		//else if ( formName == "2stpwrap.htm" )
+		else if ( formName == "2step.htm" )
 		{
 			showNext = false;
 			showConnectISP = true;
