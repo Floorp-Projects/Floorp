@@ -110,11 +110,7 @@ MFILE:
 	  print STDERR "Entering $curdir..                 \r";
 	}
 	chdir "$curdir" || next;
-	if ($^O eq "linux") {
-      next if (! -e "$curdir/Makefile");
-	} elsif ($^O eq "MSWin32") {
-      next if (! -e "$curdir/makefile.win");
-	}
+	next if (! -e "$curdir/Makefile");
 	
 	$current_dirs = "";
 	open(MAKEOUT, "$makecommand echo-dirs echo-module echo-requires|") || die "Can't make: $!\n";
@@ -173,6 +169,7 @@ sub build_deps_matrix_from_file {
 
 	  # Add the module to the list of modules.
 	  $toplevel_modules{$line[0]}++;
+	  $all_modules{$line[0]}++;
       } elsif (/style=filled/) {
 	  chomp;
 	  s/^\s+//;  # Strip off leading spaces.
@@ -181,7 +178,7 @@ sub build_deps_matrix_from_file {
 	  # Pick off module
 	  @line = split(' \[', $_);
 	  $all_modules{$line[0]}++;
-      }
+      }	
   }
   close DEPS_FILE;
 
