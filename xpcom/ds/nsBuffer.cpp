@@ -362,7 +362,7 @@ nsBuffer::GetReadableAmount(PRUint32 *result)
     return NS_ERROR_FAILURE;
 }
 
-typedef PRInt32 (*compare_t)(const char*, const char*, PRUint32);
+#define COMPARE(s1, s2, i)	ignoreCase ? nsCRT::strncasecmp((const char *)s1, (const char *)s2, (PRUint32)i) : nsCRT::strncmp((const char *)s1, (const char *)s2, (PRUint32)i)
 
 NS_IMETHODIMP
 nsBuffer::Search(const char* string, PRBool ignoreCase, 
@@ -375,8 +375,6 @@ nsBuffer::Search(const char* string, PRBool ignoreCase,
     PRUint32 bufSegLen1;
     PRUint32 segmentPos = 0;
     PRUint32 strLen = nsCRT::strlen(string);
-    compare_t compare = 
-        ignoreCase ? (compare_t)nsCRT::strncasecmp : (compare_t)nsCRT::strncmp;
 
     rv = GetReadSegment(segmentPos, &bufSeg1, &bufSegLen1);
     if (NS_FAILED(rv) || bufSegLen1 == 0) {
@@ -389,7 +387,7 @@ nsBuffer::Search(const char* string, PRBool ignoreCase,
         PRUint32 i;
         // check if the string is in the buffer segment
         for (i = 0; i < bufSegLen1 - strLen + 1; i++) {
-            if (compare(&bufSeg1[i], string, strLen) == 0) {
+            if (COMPARE(&bufSeg1[i], string, strLen) == 0) {
                 *found = PR_TRUE;
                 *offsetSearchedTo = segmentPos + i;
                 return NS_OK;
@@ -417,8 +415,8 @@ nsBuffer::Search(const char* string, PRBool ignoreCase,
             PRUint32 strPart2Len = strLen - strPart1Len;
             const char* strPart2 = &string[strLen - strPart2Len];
             PRUint32 bufSeg1Offset = bufSegLen1 - strPart1Len;
-            if (compare(&bufSeg1[bufSeg1Offset], string, strPart1Len) == 0 &&
-                compare(bufSeg2, strPart2, strPart2Len) == 0) {
+            if (COMPARE(&bufSeg1[bufSeg1Offset], string, strPart1Len) == 0 &&
+                COMPARE(bufSeg2, strPart2, strPart2Len) == 0) {
                 *found = PR_TRUE;
                 *offsetSearchedTo = segmentPos - strPart1Len;
                 return NS_OK;
