@@ -74,7 +74,7 @@
 
 #pragma mark CPluginManager
 
-class CPluginManager : public nsIPluginManager2, public nsIServiceManager, public nsIMemory {
+class CPluginManager : public nsIPluginManager2, public nsIServiceManagerObsolete, public nsIMemory {
 public:
 	// Need an operator new for this.
 	void* operator new(size_t size) { return ::NPN_MemAlloc(size); }

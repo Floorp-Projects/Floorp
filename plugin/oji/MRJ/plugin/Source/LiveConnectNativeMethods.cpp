@@ -356,7 +356,7 @@ void MessageRunnable::execute(JNIEnv* env)
     nsIThreadManager* threadManager = NULL;
     if (theServiceManager->GetService(nsIJVMManager::GetCID(), NS_GET_IID(nsIThreadManager), (nsISupports**)&threadManager) == NS_OK) {
         threadManager->PostEvent(mThreadID, this, PR_FALSE);
-        theServiceManager->ReleaseService(nsIJVMManager::GetCID(), threadManager);
+        NS_RELEASE(threadManager);
     }
 }
 
@@ -367,7 +367,7 @@ NS_IMETHODIMP MessageRunnable::Run()
         JNIEnv* proxyEnv = NULL;
         if (javaManager->GetProxyJNI(&proxyEnv) == NS_OK && proxyEnv != NULL)
             mMessage->execute(proxyEnv);
-        theServiceManager->ReleaseService(nsIJVMManager::GetCID(), javaManager);
+        NS_RELEASE(javaManager);
     }
     return NS_OK;
 }
