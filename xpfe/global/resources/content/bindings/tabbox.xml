@@ -109,44 +109,72 @@
         ]]>
         </setter>
       </property>
+
+      <field name="_keyEventHandler" readonly="true">
+      <![CDATA[({
+        tabbox: this,
+        handleEvent: function handleEvent(event) {
+          switch (event.keyCode) {
+            case event.DOM_VK_TAB:
+              if (event.ctrlKey && !event.altKey && !event.metaKey)
+                if (this.tabbox._tabs && this.tabbox.handleCtrlTab) {
+                  this.tabbox._tabs.advanceSelectedTab(event.shiftKey ? -1 : 1);
+                  event.stopPropagation();
+                  event.preventDefault();
+                }
+              break;
+            case event.DOM_VK_PAGE_UP:
+              if (event.ctrlKey && !event.shiftKey && !event.altKey && !event.metaKey)
+                if (this.tabbox._tabs && this.tabbox.handleCtrlPageUpDown) {
+                  this.tabbox._tabs.advanceSelectedTab(-1);
+                  event.stopPropagation();
+                  event.preventDefault();
+                }
+              break;
+            case event.DOM_VK_PAGE_DOWN:
+              if (event.ctrlKey && !event.shiftKey && !event.altKey && !event.metaKey)
+                if (this.tabbox._tabs && this.tabbox.handleCtrlPageUpDown) {
+                  this.tabbox._tabs.advanceSelectedTab(1);
+                  event.stopPropagation();
+                  event.preventDefault();
+                }
+              break;
+          }
+        }
+      })]]>
+      </field>
+
+      <field name="_eventNode">
+        var eventNode = this;
+        switch (this.getAttribute("eventnode")) {
+          case "parent": eventNode = this.parentNode; break;
+          case "window": eventNode = window; break;
+          case "document": eventNode = document; break;
+        }
+        eventNode;
+      </field>
+
+      <property name="eventNode" onget="return this._eventNode;">
+        <setter>
+          <![CDATA[
+            if (val != this._eventNode) {
+              val.addEventListener("keypress", this._keyEventHandler, false);
+              this._eventNode.removeEventListener("keypress", this._keyEventHandler, false);
+              this._eventNode = val;
+            }
+            return val;
+          ]]>
+        </setter>
+      </property>
+
+      <constructor>
+        this._eventNode.addEventListener("keypress", this._keyEventHandler, false);
+      </constructor>
+
+      <destructor>
+        this._eventNode.removeEventListener("keypress", this._keyEventHandler, false);
+      </destructor>
     </implementation>
-    
-    <handlers>
-      <handler event="keypress" keycode="vk_tab" modifiers="control">
-        <![CDATA[
-         if (this._tabs && this.handleCtrlTab) {
-           this._tabs.advanceSelectedTab(1);
-           event.preventDefault();
-         }
-         ]]>
-      </handler>
-      
-      <handler event="keypress" keycode="vk_tab" modifiers="control,shift">
-        <![CDATA[
-         if (this._tabs && this.handleCtrlTab) {
-           this._tabs.advanceSelectedTab(-1);
-           event.preventDefault();
-         }
-         ]]>
-      </handler>
-
-      <handler event="keypress" keycode="vk_page_up" modifiers="control">
-        <![CDATA[
-         if (this._tabs && this.handleCtrlPageUpDown) {
-           this._tabs.advanceSelectedTab(-1);
-         }
-         ]]>
-      </handler>
-
-      <handler event="keypress" keycode="vk_page_down" modifiers="control">
-        <![CDATA[
-         if (this._tabs && this.handleCtrlPageUpDown) {
-           this._tabs.advanceSelectedTab(1);
-         }
-         ]]>
-      </handler>
-
-    </handlers>
   </binding>
 
   <binding id="tabs" display="xul:box"
