@@ -218,7 +218,7 @@ NSS_CO_MODULE += \
 		mozilla/security/aclocal.m4 \
 		$(NULL)
 
-NSS_CO_TAG = NSS_AUTOCONF_BRANCH
+NSS_CO_TAG = NSS_CLIENT_BRANCH
 endif
 		
 NSS_CO_FLAGS := -P

@@ -14013,6 +14013,9 @@ fi
 fi
 
 if test "$MOZ_PSM"; then
+    if test ! -d security; then
+        rm -rf security; mkdir security
+    fi
     ac_configure_args="$_SUBDIR_CONFIG_ARGS --with-dist-prefix=$MOZ_BUILD_ROOT/dist --with-mozilla --disable-cmd"
     
 if test "$no_recursion" != yes; then
@@ -14040,7 +14043,7 @@ if test "$no_recursion" != yes; then
     esac
   done
 
-  for ac_config_dir in security; do
+  for ac_config_dir in security/nss; do
 
     # Do not complain, so a configure script can configure whichever
     # parts of a large source tree are present.
