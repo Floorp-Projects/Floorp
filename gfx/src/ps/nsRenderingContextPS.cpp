@@ -1100,33 +1100,37 @@ nsRenderingContextPS :: DrawString(const char *aString, PRUint32 aLength,
   nsFontMetricsPS *metrics = NS_REINTERPRET_CAST(nsFontMetricsPS *, mFontMetrics.get());
   NS_ENSURE_TRUE(metrics, NS_ERROR_FAILURE);
 
-  nsFontPS* fontPS = metrics->GetFontPS();
+  nsCOMPtr<nsIAtom> langGroup;
+  mFontMetrics->GetLangGroup(getter_AddRefs(langGroup));
+  mPSObj->setlanggroup(langGroup);
+
+  if (aLength == 0)
+    return NS_OK;
+  nsFontPS* fontPS = nsFontPS::FindFont(aString[0], *metrics->GetFont(), metrics);
   NS_ENSURE_TRUE(fontPS, NS_ERROR_FAILURE);
-
-  PRInt32 x = aX;
-  PRInt32 y = aY;
-
-  mPSObj->setlanggroup(nsnull);
-
   fontPS->SetupFont(this);
 
-  PRInt32 dxMem[500];
-  PRInt32* dx0 = 0;
-  if (aSpacing) {
-    dx0 = dxMem;
-    if (aLength > 500) {
-      dx0 = new PRInt32[aLength];
-      NS_ENSURE_TRUE(dx0, NS_ERROR_OUT_OF_MEMORY);
+  PRUint32 i, start = 0;
+  for (i=0; i<aLength; i++) {
+    nsFontPS* fontThisChar;
+    fontThisChar = nsFontPS::FindFont(aString[i], *metrics->GetFont(), metrics);
+    NS_ENSURE_TRUE(fontThisChar, NS_ERROR_FAILURE);
+    if (fontThisChar != fontPS) {
+      // draw text up to this point
+      aX += DrawString(aString+start, i-start, aX, aY, fontPS, 
+                       aSpacing?aSpacing+start:nsnull);
+      start = i;
+
+      // setup for following text
+      fontPS = fontThisChar;
+      fontPS->SetupFont(this);
     }
-    mTranMatrix->ScaleXCoords(aSpacing, aLength, dx0);
   }
 
-  mTranMatrix->TransformCoord(&x, &y);
-  fontPS->DrawString(this, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), aString, aLength);
-
-  if ((aSpacing) && (dx0 != dxMem)) {
-    delete [] dx0;
-  }
+  // draw the last part
+  if (aLength-start)
+    DrawString(aString+start, aLength-start, aX, aY, fontPS, 
+               aSpacing?aSpacing+start:nsnull);
 
   return NS_OK;
 }
@@ -1145,12 +1149,6 @@ nsRenderingContextPS :: DrawString(const PRUnichar *aString, PRUint32 aLength,
   nsFontMetricsPS *metrics = NS_REINTERPRET_CAST(nsFontMetricsPS *, mFontMetrics.get());
   NS_ENSURE_TRUE(metrics, NS_ERROR_FAILURE);
 
-  nsFontPS* fontPS = metrics->GetFontPS();
-  NS_ENSURE_TRUE(fontPS, NS_ERROR_FAILURE);
-
-  PRInt32 x = aX;
-  PRInt32 y = aY;
-
   nsCOMPtr<nsIAtom> langGroup = nsnull;
   mFontMetrics->GetLangGroup(getter_AddRefs(langGroup));
   mPSObj->setlanggroup(langGroup.get());
@@ -1158,7 +1156,76 @@ nsRenderingContextPS :: DrawString(const PRUnichar *aString, PRUint32 aLength,
   /* build up conversion table */
   mPSObj->preshow(aString, aLength);
 
+  if (aLength == 0)
+    return NS_OK;
+  nsFontPS* fontPS = nsFontPS::FindFont(aString[0], *metrics->GetFont(), metrics);
+  NS_ENSURE_TRUE(fontPS, NS_ERROR_FAILURE);
   fontPS->SetupFont(this);
+
+  PRUint32 i, start = 0;
+  for (i=0; i<aLength; i++) {
+    nsFontPS* fontThisChar;
+    fontThisChar = nsFontPS::FindFont(aString[i], *metrics->GetFont(), metrics);
+    NS_ENSURE_TRUE(fontThisChar, NS_ERROR_FAILURE);
+    if (fontThisChar != fontPS) {
+      // draw text up to this point
+      aX += DrawString(aString+start, i-start, aX, aY, fontPS, 
+                       aSpacing?aSpacing+start:nsnull);
+      start = i;
+
+      // setup for following text
+      fontPS = fontThisChar;
+      fontPS->SetupFont(this);
+    }
+  }
+
+  // draw the last part
+  if (aLength-start)
+    DrawString(aString+start, aLength-start, aX, aY, fontPS, 
+               aSpacing?aSpacing+start:nsnull);
+
+  return NS_OK;
+}
+
+PRInt32 
+nsRenderingContextPS::DrawString(const char *aString, PRUint32 aLength,
+                                 nscoord &aX, nscoord &aY, nsFontPS* aFontPS,
+                                 const nscoord* aSpacing)
+{
+  nscoord width = 0;
+  PRInt32 x = aX;
+  PRInt32 y = aY;
+
+  PRInt32 dxMem[500];
+  PRInt32* dx0 = 0;
+  if (aSpacing) {
+    dx0 = dxMem;
+    if (aLength > 500) {
+      dx0 = new PRInt32[aLength];
+      NS_ENSURE_TRUE(dx0, NS_ERROR_OUT_OF_MEMORY);
+    }
+    mTranMatrix->ScaleXCoords(aSpacing, aLength, dx0);
+  }
+
+  mTranMatrix->TransformCoord(&x, &y);
+  width = aFontPS->DrawString(this, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), aString, aLength);
+
+  if ((aSpacing) && (dx0 != dxMem)) {
+    delete [] dx0;
+  }
+
+  return width;
+}
+
+
+PRInt32 
+nsRenderingContextPS::DrawString(const PRUnichar *aString, PRUint32 aLength,
+                                 nscoord aX, nscoord aY, nsFontPS* aFontPS,
+                                 const nscoord* aSpacing)
+{
+  nscoord width = 0;
+  PRInt32 x = aX;
+  PRInt32 y = aY;
 
   if (aSpacing) {
     // Slow, but accurate rendering
@@ -1167,16 +1234,17 @@ nsRenderingContextPS :: DrawString(const PRUnichar *aString, PRUint32 aLength,
       x = aX;
       y = aY;
       mTranMatrix->TransformCoord(&x, &y);
-      fontPS->DrawString(this, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), aString, 1);
+      aFontPS->DrawString(this, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), aString, 1);
       aX += *aSpacing++;
       aString++;
     }
+    width = aX;
   } else {
     mTranMatrix->TransformCoord(&x, &y);
-    fontPS->DrawString(this, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), aString, aLength);
+    width = aFontPS->DrawString(this, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), aString, aLength);
   }
 
-  return NS_OK;
+  return width;
 }
 
 /** ---------------------------------------------------

@@ -51,6 +51,8 @@
 #include "nsCompressedCharMap.h"
 #include "nsPostScriptObj.h"
 #include "nsIFontCatalogService.h"
+#include "nsVoidArray.h"
+#include "nsHashtable.h"
 
 class nsPSFontGenerator;
 class nsDeviceContextPS;
@@ -114,8 +116,12 @@ public:
   inline void SetAveCharWidth(nscoord aAveCharWidth) { mAveCharWidth = aAveCharWidth; };
   inline void SetSpaceWidth(nscoord aSpaceWidth) { mSpaceWidth = aSpaceWidth; };
 
-  inline nsFontPS* GetFontPS() { return mFontPS; }
   inline nsDeviceContextPS* GetDeviceContext() { return mDeviceContext; }
+  inline nsFont* GetFont() { return mFont; };
+  inline nsVoidArray* GetFontsPS() { return mFontsPS; };
+  inline nsHashtable *GetFontsAlreadyLoadedList() {return mFontsAlreadyLoaded;};
+  inline int GetFontPSState() { return mFontPSState; };
+  inline void IncrementFontPSState() { mFontPSState++; };
 
 #if defined(XP_WIN)
 // this routine is defined here so the PostScript module can be debugged
@@ -157,7 +163,9 @@ protected:
   nscoord             mSpaceWidth;
   nscoord             mAveCharWidth;
 
-  nsFontPS*           mFontPS;
+  nsVoidArray         *mFontsPS;
+  nsHashtable         *mFontsAlreadyLoaded;
+  int                 mFontPSState;
 };
 
 class nsFontPS
@@ -168,7 +176,10 @@ public:
   virtual ~nsFontPS();
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
-  static nsFontPS* FindFont(const nsFont& aFont, nsFontMetricsPS* aFontMetrics);
+  static nsFontPS* FindFont(char aChar, const nsFont& aFont, 
+                            nsFontMetricsPS* aFontMetrics);
+  static nsFontPS* FindFont(PRUnichar aChar, const nsFont& aFont, 
+                            nsFontMetricsPS* aFontMetrics);
   static nsPSFontGenerator* GetPSFontGenerator(nsFontMetricsPS* aFontMetrics,
                                                nsCStringKey& aKey);
   inline PRInt32 SupportsChar(PRUnichar aChar)
@@ -239,20 +250,39 @@ public:
   nsString     mFamilyName;
 };
 
+typedef struct {
+  nsITrueTypeFontCatalogEntry *entry;
+  nsFontPS *fontps;
+  unsigned short *ccmap;
+} fontps;
+
 #ifdef MOZ_ENABLE_FREETYPE2
 
 #include "nsIFreeType2.h"
 
+typedef struct {
+  nsVoidArray *fontps;
+  const nsFont* nsfont;
+  nsCAutoString lang;
+  nsHashtable *alreadyLoaded;
+  PRUint16 slant;
+  PRUint16 weight;
+} fontPSInfo;
+
 class nsFontPSFreeType : public nsFontPS
 {
 public:
-  static nsFontPS* FindFont(const nsFont& aFont, nsFontMetricsPS* aFontMetrics);
+  static nsFontPS* FindFont(PRUnichar aChar, const nsFont& aFont,
+                            nsFontMetricsPS* aFontMetrics);
   static nsresult  FindFontEntry(const nsFont& aFont, nsIAtom* aLanguage,
                                  nsITrueTypeFontCatalogEntry** aEntry);
-  static nsresult  GetFontEntry(nsACString& aFamilyName, nsACString& aLanguage,
-                                PRUint16 aWeight, PRUint16 aWidth,
-                                PRUint16 aSlant, PRUint16 aSpacing,
-                                nsITrueTypeFontCatalogEntry** aEntry);
+  static nsresult  AddFontEntries(nsACString& aFamilyName,
+                                  nsACString& aLanguage,
+                                  PRUint16 aWeight, PRUint16 aWidth,
+                                  PRUint16 aSlant, PRUint16 aSpacing,
+                                  fontPSInfo* aFpi);
+  static PRBool CSSFontEnumCallback(const nsString& aFamily, PRBool aGeneric,
+                                    void* aFpi);
   nsresult         Init(nsITrueTypeFontCatalogEntry* aEntry,
                         nsPSFontGenerator* aPSFontGen);
 
@@ -292,6 +322,8 @@ protected:
   FTC_Image_Desc  mImageDesc;
 
 
+  static PRBool AddUserPref(nsIAtom *aLang, const nsFont& aFont,
+                            fontPSInfo *aFpi);
   int     ascent();
   int     descent();
   PRBool  getXHeight(unsigned long &aVal);
