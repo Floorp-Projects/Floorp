@@ -75,4 +75,6 @@ class nsDownloadListener;
 -(void) setSourceURL: (const PRUnichar*)aSource;
 -(void) setDestination: (const PRUnichar*)aDestination;
 
+-(NSProgressIndicator*) progressBar;
+
 @end

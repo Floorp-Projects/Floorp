@@ -258,9 +258,10 @@ static NSString *LeaveOpenToolbarItemIdentifier		= @"Leave Open Toggle Toolbar I
                                                aInputStream, aBypassCache);
     NS_ADDREF(mDownloadListener);
 }
--(id) progressBar
+
+-(NSProgressIndicator*) progressBar
 {
-    return mProgressBar;
+	return mProgressBar;
 }
 
 -(void) setSourceURL: (const PRUnichar*)aSource
