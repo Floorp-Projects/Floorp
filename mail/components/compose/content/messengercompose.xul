@@ -101,6 +101,7 @@
   <command id="cmd_new" oncommand="goDoCommand('cmd_newMessage')"/>
   <command id="cmd_attachFile" oncommand="goDoCommand('cmd_attachFile')"/>
   <command id="cmd_attachPage" oncommand="goDoCommand('cmd_attachPage')"/>
+  <command id="cmd_attachVCard" checked="false" oncommand="ToggleAttachVCard(event.target)"/>
   <command id="cmd_close" oncommand="goDoCommand('cmd_close')"/>
   <command id="cmd_saveDefault" oncommand="goDoCommand('cmd_saveDefault')"/>
   <command id="cmd_saveAsFile" oncommand="goDoCommand('cmd_saveAsFile')"/>
@@ -348,6 +349,8 @@
           <menuitem label="&quoteCmd.label;" accesskey="&quoteCmd.accesskey;" command="cmd_quoteMessage"/>
           <menuseparator/>
           <menuitem id="returnReceiptMenu" type="checkbox" label="&returnReceiptMenu.label;" accesskey="&returnReceiptMenu.accesskey;" checked="false" oncommand="ToggleReturnReceipt(event.target)"/>
+          <menuitem type="checkbox" label="&attachVCardMenu.label;" accesskey="&attachVCardMenu.accesskey;" command="cmd_attachVCard"/>
+          <menuseparator/>
           <menu id="outputFormatMenu" label="&outputFormatMenu.label;" accesskey="&outputFormatMenu.accesskey;" oncommand="OutputFormatMenuSelect(event.target)">
             <menupopup>
               <menuitem type="radio" name="output_format" label="&autoFormatCmd.label;" accesskey="&autoFormatCmd.accesskey;" id="format_auto" checked="true"/>
@@ -470,6 +473,8 @@
          <menupopup>
            <menuitem label="&attachFileButton.label;" accesskey="&attachFileCmd.accesskey;" command="cmd_attachFile"/>
            <menuitem label="&attachPageButton.label;" accesskey="&attachPageCmd.accesskey;" command="cmd_attachPage"/>
+           <menuseparator/>
+           <menuitem type="checkbox" label="&attachVCardButton.label;" accesskey="&attachVCardCmd.accesskey;" command="cmd_attachVCard"/>
          </menupopup>
     </toolbarbutton>
     

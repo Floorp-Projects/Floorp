@@ -17,6 +17,10 @@
 <!ENTITY attachPageCmd.label "Attach Web Page...">
 <!ENTITY attachPageCmd.accesskey "W">
 <!ENTITY attachPageButton.label "Web Page...">
+<!ENTITY attachVCardCmd.accesskey "P">
+<!--LOCALIZATION NOTE attachVCardButton.label Don't translate the term 'vCard' -->
+<!ENTITY attachVCardButton.label "Personal Card (vCard)">
+
 <!ENTITY closeCmd.label "Close">
 <!ENTITY closeCmd.key "W">
 <!ENTITY closeCmd.accesskey "c">
@@ -116,6 +120,11 @@
 <!ENTITY checkSpellingCmd.accesskey "S">
 <!ENTITY quoteCmd.label "Quote Message">
 <!ENTITY quoteCmd.accesskey "Q">
+
+<!--LOCALIZATION NOTE attachVCardCmd.label Don't translate the term 'vCard' -->
+<!ENTITY attachVCardMenu.label "Attach Personal Card (vCard)"> 
+<!ENTITY attachVCardMenu.accesskey "v">
+
 <!ENTITY returnReceiptMenu.label "Return Receipt">
 <!ENTITY returnReceiptMenu.accesskey "t">
 <!ENTITY outputFormatMenu.label "Format">

@@ -94,6 +94,7 @@ var gCharsetConvertManager;
 
 var gLastWindowToHaveFocus;
 var gReceiptOptionChanged;
+var gAttachVCardOptionChanged;
 
 var gMailSession;
 
@@ -138,6 +139,7 @@ function InitializeGlobalVariables()
 
   gLastWindowToHaveFocus = null;
   gReceiptOptionChanged = false;
+  gAttachVCardOptionChanged = false;
 }
 InitializeGlobalVariables();
 
@@ -1241,6 +1243,8 @@ function ComposeStartup(recycled, aParams)
       }
       document.getElementById("returnReceiptMenu").setAttribute('checked', 
                                          gMsgCompose.compFields.returnReceipt);
+      document.getElementById("cmd_attachVCard").setAttribute('checked', 
+                                         gMsgCompose.compFields.attachVCard);
 
       // If recycle, editor is already created
       if (!recycled) 
@@ -1900,6 +1904,17 @@ function ToggleReturnReceipt(target)
     }
 }
 
+function ToggleAttachVCard(target)
+{
+    var msgCompFields = gMsgCompose.compFields;
+    if (msgCompFields)
+    {
+        msgCompFields.attachVCard = ! msgCompFields.attachVCard;
+        target.setAttribute('checked', msgCompFields.attachVCard);
+        gAttachVCardOptionChanged = true;
+    }
+}
+
 function queryISupportsArray(supportsArray, iid) {
     var result = new Array;
     for (var i=0; i<supportsArray.Count(); i++) {
@@ -2351,11 +2366,6 @@ function AttachmentElementHasItems()
   return element ? element.childNodes.length : 0;
 }  
 
-function AttachVCard()
-{
-  dump("AttachVCard()\n");
-}
-
 function DetermineHTMLAction(convertible)
 {
     var obj;
@@ -2470,6 +2480,7 @@ function LoadIdentity(startup)
           var prevReplyTo = prevIdentity.replyTo;
           var prevBcc = "";
           var prevReceipt = prevIdentity.requestReturnReceipt;
+          var prevAttachVCard = prevIdentity.attachVCard;
 
           if (prevIdentity.doBcc)
             prevBcc += prevIdentity.doBccList;
@@ -2477,6 +2488,8 @@ function LoadIdentity(startup)
           var newReplyTo = gCurrentIdentity.replyTo;
           var newBcc = "";
           var newReceipt = gCurrentIdentity.requestReturnReceipt;
+          var newAttachVCard = gCurrentIdentity.attachVCard;
+
           if (gCurrentIdentity.doBcc)
             newBcc += gCurrentIdentity.doBccList;          
 
@@ -2491,6 +2504,13 @@ function LoadIdentity(startup)
             document.getElementById("returnReceiptMenu").setAttribute('checked',msgCompFields.returnReceipt);
           }
 
+          if (!gAttachVCardOptionChanged &&
+              prevAttachVCard == msgCompFields.attachVCard &&
+              prevAttachVCard != newAttachVCard)
+          {
+            msgCompFields.attachVCard = newAttachVCard;
+            document.getElementById("cmd_attachVCard").setAttribute('checked',msgCompFields.attachVCard);
+          }
 
           if (newReplyTo != prevReplyTo)
           {

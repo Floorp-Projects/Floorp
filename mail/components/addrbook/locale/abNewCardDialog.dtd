@@ -1,6 +1,3 @@
-<!-- Title -->
-<!ENTITY editcardWindow.title            "New Card">
-
 <!-- Labels -->
 <!ENTITY chooseAddressBook.label         "Add to: ">
 <!ENTITY chooseAddressBook.accesskey     "A">
