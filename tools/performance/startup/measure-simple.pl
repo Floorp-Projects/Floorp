@@ -41,6 +41,10 @@ END_USAGE
 
   # Build up command string.
   my $cwd = Cwd::getcwd();
+
+  # take care of cygwin adding /cygdrive/<driveletter>
+  $cwd =~ s/\/cygdrive\/(.)/$1:/;
+
   my $cmd = "$exe -P \"Default User\" file:///$cwd/quit.html";
   print "cmd = $cmd\n";
   print "$ntimes times\n";
