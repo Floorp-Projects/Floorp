@@ -1,3 +1,6 @@
-en-US.jar:
-+        locale/en-US/global/brand.dtd                      (brand.dtd)
-+        locale/en-US/global/brand.properties               (brand.properties)
+#filter substitution
+
+@AB_CD@.jar:
+*   locale/branding/contents.rdf            (contents.rdf)
++   locale/branding/brand.dtd               (brand.dtd)
++   locale/branding/brand.properties        (brand.properties)

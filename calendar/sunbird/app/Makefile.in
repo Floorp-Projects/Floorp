@@ -48,6 +48,8 @@ DIRS		= profile/extensions profile
 
 PREF_JS_EXPORTS = $(srcdir)/profile/sunbird.js
 
+DEFINES += -DAB_CD=$(AB_CD)
+
 ifeq ($(USE_SHORT_LIBNAME), 1)
 PROGRAM = sunbird$(BIN_SUFFIX)
 else
