@@ -187,19 +187,19 @@ NS_IMETHODIMP nsAddressBook::NewAddressBook(nsIAbDirectoryProperties *aPropertie
 
   nsresult rv;
 
-    nsCOMPtr<nsIRDFService> rdfService = do_GetService (NS_RDF_CONTRACTID "/rdf-service;1", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIRDFService> rdfService = do_GetService (NS_RDF_CONTRACTID "/rdf-service;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIRDFResource> parentResource;
-    rv = rdfService->GetResource(NS_LITERAL_CSTRING(kAllDirectoryRoot),
-                                 getter_AddRefs(parentResource));
-    NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIRDFResource> parentResource;
+  rv = rdfService->GetResource(NS_LITERAL_CSTRING(kAllDirectoryRoot),
+                               getter_AddRefs(parentResource));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIAbDirectory> parentDir = do_QueryInterface(parentResource, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-        
+  nsCOMPtr<nsIAbDirectory> parentDir = do_QueryInterface(parentResource, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   rv = parentDir->CreateNewDirectory(aProperties);
-    return rv;
+  return rv;
 }
 
 NS_IMETHODIMP nsAddressBook::ModifyAddressBook
@@ -245,42 +245,38 @@ nsresult nsAddressBook::DoCommand(nsIRDFDataSource* db,
                                   nsISupportsArray *srcArray,
                                   nsISupportsArray *argumentArray)
 {
+  nsresult rv = NS_OK;
 
-    nsresult rv = NS_OK;
+  nsCOMPtr<nsIRDFService> rdfService = do_GetService (NS_RDF_CONTRACTID "/rdf-service;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIRDFService> rdfService = do_GetService (NS_RDF_CONTRACTID "/rdf-service;1", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIRDFResource> commandResource;
+  rv = rdfService->GetResource(command, getter_AddRefs(commandResource));
+  if(NS_SUCCEEDED(rv))
+  {
+    rv = db->DoCommand(srcArray, commandResource, argumentArray);
+  }
 
-    nsCOMPtr<nsIRDFResource> commandResource;
-    rv = rdfService->GetResource(command, getter_AddRefs(commandResource));
-    if(NS_SUCCEEDED(rv))
-    {
-        rv = db->DoCommand(srcArray, commandResource, argumentArray);
-    }
-
-    return rv;
-
+  return rv;
 }
 
 NS_IMETHODIMP nsAddressBook::SetDocShellWindow(nsIDOMWindowInternal *aWin)
 {
-   NS_PRECONDITION(aWin != nsnull, "null ptr");
-   if (!aWin)
-       return NS_ERROR_NULL_POINTER;
+  NS_PRECONDITION(aWin != nsnull, "null ptr");
+  if (!aWin)
+    return NS_ERROR_NULL_POINTER;
  
-   nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(aWin) );
-   if (!globalObj) {
-     return NS_ERROR_FAILURE;
-   }
- 
-   globalObj->GetDocShell(&mDocShell);
-   if (!mDocShell)
-     return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(aWin) );
+  if (!globalObj) {
+    return NS_ERROR_FAILURE;
+  }
 
-   // Make reference weak by releasing
-   mDocShell->Release();
- 
-   return NS_OK;
+  // mDocShell is a weak reference
+  mDocShell = globalObj->GetDocShell();
+  if (!mDocShell)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsAddressBook::GetAbDatabaseFromURI(const char *aURI, nsIAddrDatabase **aDB)
@@ -427,9 +423,9 @@ public:
 
 AddressBookParser::AddressBookParser(nsIFileSpec * fileSpec, PRBool migrating, nsIAddrDatabase *db, PRBool bStoreLocAsHome, PRBool bImportingComm4x)
 {
-    mFileSpec = fileSpec;
-    mDbUri = nsnull;
-    mMigrating = migrating;
+  mFileSpec = fileSpec;
+  mDbUri = nsnull;
+  mMigrating = migrating;
   mDatabase = db;
   if (mDatabase)
     mDeleteDB = PR_FALSE;

@@ -40,7 +40,6 @@
 #define nsJSEventListener_h__
 
 #include "nsIDOMKeyEvent.h"
-#include "nsIScriptEventListener.h"
 #include "nsIJSEventListener.h"
 #include "nsIDOMMouseListener.h"
 #include "jsapi.h"
@@ -58,18 +57,13 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  //nsIDOMEventListener interface
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
+  // nsIDOMEventListener interface
+  NS_DECL_NSIDOMEVENTLISTENER
 
-  //nsIJSEventListener interface
-  NS_IMETHOD GetEventTarget(nsIScriptContext** aContext,
-                            nsISupports** aTarget);
-
-  NS_IMETHOD SetEventName(nsIAtom* aName);
+  // nsIJSEventListener interface
+  virtual void SetEventName(nsIAtom* aName);
 
 protected:
-  nsCOMPtr<nsIScriptContext> mContext;
-  nsISupports* mObject;
   nsCOMPtr<nsIAtom> mEventName;
   
   enum nsReturnResult {

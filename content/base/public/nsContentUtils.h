@@ -172,19 +172,15 @@ public:
 
   // These are copied from nsJSUtils.h
 
-  static nsresult GetStaticScriptGlobal(JSContext* aContext,
-                                        JSObject* aObj,
-                                        nsIScriptGlobalObject** aNativeGlobal);
+  static nsIScriptGlobalObject *GetStaticScriptGlobal(JSContext* aContext,
+                                                      JSObject* aObj);
 
-  static nsresult GetStaticScriptContext(JSContext* aContext,
-                                         JSObject* aObj,
-                                         nsIScriptContext** aScriptContext);
+  static nsIScriptContext *GetStaticScriptContext(JSContext* aContext,
+                                                  JSObject* aObj);
 
-  static nsresult GetDynamicScriptGlobal(JSContext *aContext,
-                                         nsIScriptGlobalObject** aNativeGlobal);
+  static nsIScriptGlobalObject *GetDynamicScriptGlobal(JSContext *aContext);
 
-  static nsresult GetDynamicScriptContext(JSContext *aContext,
-                                          nsIScriptContext** aScriptContext);
+  static nsIScriptContext *GetDynamicScriptContext(JSContext *aContext);
 
   static PRUint32 CopyNewlineNormalizedUnicodeTo(const nsAString& aSource, 
                                                  PRUint32 aSrcOffset, 
@@ -224,7 +220,7 @@ public:
    *
    * @param aDocShell The docshell or null if no JS context
    */
-  static void GetDocShellFromCaller(nsIDocShell** aDocShell);
+  static nsIDocShell *GetDocShellFromCaller();
 
   /**
    * Get the document through the JS context that's currently on the stack.
@@ -232,7 +228,7 @@ public:
    *
    * @param aDocument The document or null if no JS context
    */
-  static void GetDocumentFromCaller(nsIDOMDocument** aDocument);
+  static nsIDOMDocument *GetDocumentFromCaller();
 
   // Check if a node is in the document prolog, i.e. before the document
   // element.

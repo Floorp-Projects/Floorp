@@ -85,24 +85,24 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIScriptGlobalObject methods
-    NS_IMETHOD SetContext(nsIScriptContext *aContext);
-    NS_IMETHOD GetContext(nsIScriptContext **aContext);
-    NS_IMETHOD SetNewDocument(nsIDOMDocument *aDocument,
-                              PRBool aRemoveEventListeners,
-                              PRBool aClearScope);
-    NS_IMETHOD SetDocShell(nsIDocShell *aDocShell);
-    NS_IMETHOD GetDocShell(nsIDocShell **aDocShell);
-    NS_IMETHOD SetOpenerWindow(nsIDOMWindowInternal *aOpener);
-    NS_IMETHOD SetGlobalObjectOwner(nsIScriptGlobalObjectOwner* aOwner);
-    NS_IMETHOD GetGlobalObjectOwner(nsIScriptGlobalObjectOwner** aOwner);
-    NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, 
-                              nsEvent* aEvent, 
-                              nsIDOMEvent** aDOMEvent,
-                              PRUint32 aFlags,
-                              nsEventStatus* aEventStatus);
-    NS_IMETHOD_(JSObject *) GetGlobalJSObject();
-    NS_IMETHOD OnFinalize(JSObject *aObject);
-    NS_IMETHOD SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts);
+    virtual void SetContext(nsIScriptContext *aContext);
+    virtual nsIScriptContext *GetContext();
+    virtual nsresult SetNewDocument(nsIDOMDocument *aDocument,
+                                    PRBool aRemoveEventListeners,
+                                    PRBool aClearScope);
+    virtual void SetDocShell(nsIDocShell *aDocShell);
+    virtual nsIDocShell *GetDocShell();
+    virtual void SetOpenerWindow(nsIDOMWindowInternal *aOpener);
+    virtual void SetGlobalObjectOwner(nsIScriptGlobalObjectOwner* aOwner);
+    virtual nsIScriptGlobalObjectOwner *GetGlobalObjectOwner();
+    virtual nsresult HandleDOMEvent(nsIPresContext* aPresContext, 
+                                    nsEvent* aEvent, 
+                                    nsIDOMEvent** aDOMEvent,
+                                    PRUint32 aFlags,
+                                    nsEventStatus* aEventStatus);
+    virtual JSObject *GetGlobalJSObject();
+    virtual void OnFinalize(JSObject *aObject);
+    virtual void SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts);
 
     // nsIScriptObjectPrincipal methods
     NS_IMETHOD GetPrincipal(nsIPrincipal** aPrincipal);
@@ -406,8 +406,7 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
     if (! mRoot)
        return NS_ERROR_OUT_OF_MEMORY;
 
-    nsCOMPtr<nsIScriptContext> scriptContext;
-    rv |= mGlobalObject->GetContext(getter_AddRefs(scriptContext));
+    nsIScriptContext *scriptContext = mGlobalObject->GetContext();
     NS_ASSERTION(scriptContext != nsnull,
                  "no prototype script context!");
 
@@ -500,10 +499,9 @@ nsXULPrototypeDocument::Write(nsIObjectOutputStream* aStream)
     // Now serialize the document contents
     nsCOMPtr<nsIScriptGlobalObject> globalObject;
     rv |= GetScriptGlobalObject(getter_AddRefs(globalObject));
-    
-    nsCOMPtr<nsIScriptContext> scriptContext;
-    rv |= globalObject->GetContext(getter_AddRefs(scriptContext));
-    
+
+    nsIScriptContext *scriptContext = globalObject->GetContext();
+
     if (mRoot)
         rv |= mRoot->Serialize(aStream, scriptContext, &nodeInfos);
  
@@ -791,34 +789,33 @@ NS_INTERFACE_MAP_END
 // nsIScriptGlobalObject methods
 //
 
-NS_IMETHODIMP
+void
 nsXULPDGlobalObject::SetContext(nsIScriptContext *aContext)
 {
     mScriptContext = aContext;
-    return NS_OK;
 }
 
 
-NS_IMETHODIMP
-nsXULPDGlobalObject::GetContext(nsIScriptContext **aContext)
+nsIScriptContext *
+nsXULPDGlobalObject::GetContext()
 {
     // This whole fragile mess is predicated on the fact that
     // GetContext() will be called before GetScriptObject() is.
     if (! mScriptContext) {
         nsCOMPtr<nsIDOMScriptObjectFactory> factory =
             do_GetService(kDOMScriptObjectFactoryCID);
-        NS_ENSURE_TRUE(factory, NS_ERROR_FAILURE);
+        NS_ENSURE_TRUE(factory, nsnull);
 
         nsresult rv =
             factory->NewScriptContext(nsnull, getter_AddRefs(mScriptContext));
         if (NS_FAILED(rv))
-            return rv;
+            return nsnull;
 
         JSContext *cx = (JSContext *)mScriptContext->GetNativeContext();
 
         mJSObject = ::JS_NewObject(cx, &gSharedGlobalClass, nsnull, nsnull);
         if (!mJSObject)
-            return NS_ERROR_OUT_OF_MEMORY;
+            return nsnull;
 
         ::JS_SetGlobalObject(cx, mJSObject);
 
@@ -828,13 +825,11 @@ nsXULPDGlobalObject::GetContext(nsIScriptContext **aContext)
         NS_ADDREF(this);
     }
 
-    *aContext = mScriptContext;
-    NS_IF_ADDREF(*aContext);
-    return NS_OK;
+    return mScriptContext;
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsXULPDGlobalObject::SetNewDocument(nsIDOMDocument *aDocument,
                                     PRBool aRemoveEventListeners,
                                     PRBool aClearScope)
@@ -844,48 +839,44 @@ nsXULPDGlobalObject::SetNewDocument(nsIDOMDocument *aDocument,
 }
 
 
-NS_IMETHODIMP
+void
 nsXULPDGlobalObject::SetDocShell(nsIDocShell *aDocShell)
 {
     NS_NOTREACHED("waaah!");
-    return NS_ERROR_UNEXPECTED;
 }
 
 
-NS_IMETHODIMP
-nsXULPDGlobalObject::GetDocShell(nsIDocShell **aDocShell)
+nsIDocShell *
+nsXULPDGlobalObject::GetDocShell()
 {
     NS_WARNING("waaah!");
-    return NS_ERROR_UNEXPECTED;
+
+    return nsnull;
 }
 
 
-NS_IMETHODIMP
+void
 nsXULPDGlobalObject::SetOpenerWindow(nsIDOMWindowInternal *aOpener)
 {
     NS_NOTREACHED("waaah!");
-    return NS_ERROR_UNEXPECTED;
 }
 
 
-NS_IMETHODIMP
+void
 nsXULPDGlobalObject::SetGlobalObjectOwner(nsIScriptGlobalObjectOwner* aOwner)
 {
     mGlobalObjectOwner = aOwner; // weak reference
-    return NS_OK;
 }
 
 
-NS_IMETHODIMP
-nsXULPDGlobalObject::GetGlobalObjectOwner(nsIScriptGlobalObjectOwner** aOwner)
+nsIScriptGlobalObjectOwner *
+nsXULPDGlobalObject::GetGlobalObjectOwner()
 {
-    *aOwner = mGlobalObjectOwner;
-    NS_IF_ADDREF(*aOwner);
-    return NS_OK;
+    return mGlobalObjectOwner;
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsXULPDGlobalObject::HandleDOMEvent(nsIPresContext* aPresContext, 
                                        nsEvent* aEvent, 
                                        nsIDOMEvent** aDOMEvent,
@@ -896,7 +887,7 @@ nsXULPDGlobalObject::HandleDOMEvent(nsIPresContext* aPresContext,
     return NS_ERROR_UNEXPECTED;
 }
 
-NS_IMETHODIMP_(JSObject *)
+JSObject *
 nsXULPDGlobalObject::GetGlobalJSObject()
 {
     // The prototype document has its own special secret script object
@@ -913,22 +904,18 @@ nsXULPDGlobalObject::GetGlobalJSObject()
     return ::JS_GetGlobalObject(cx);
 }
 
-NS_IMETHODIMP
+void
 nsXULPDGlobalObject::OnFinalize(JSObject *aObject)
 {
     NS_ASSERTION(aObject == mJSObject, "Wrong object finalized!");
 
     mJSObject = nsnull;
-
-    return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsXULPDGlobalObject::SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts)
 {
     // We don't care...
-
-    return NS_OK;
 }
 
 

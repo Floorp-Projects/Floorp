@@ -249,10 +249,8 @@ nsMsgPrintEngine::SetWindow(nsIDOMWindowInternal *aWin)
   nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(aWin) );
   NS_ENSURE_TRUE(globalObj, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDocShell> docShell;
-  globalObj->GetDocShell(getter_AddRefs(docShell));
-
-  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
+  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem =
+    do_QueryInterface(globalObj->GetDocShell());
   NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDocShellTreeItem> rootAsItem;
@@ -291,12 +289,9 @@ nsMsgPrintEngine::ShowWindow(PRBool aShow)
   nsCOMPtr <nsIScriptGlobalObject> globalScript = do_QueryInterface(mWindow, &rv);
 
   NS_ENSURE_SUCCESS(rv,rv);
-  nsCOMPtr <nsIDocShell> docShell;
 
-  rv = globalScript->GetDocShell(getter_AddRefs(docShell));
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  nsCOMPtr <nsIWebShell> webShell = do_QueryInterface(docShell, &rv);
+  nsCOMPtr <nsIWebShell> webShell =
+    do_QueryInterface(globalScript->GetDocShell(), &rv);
   NS_ENSURE_SUCCESS(rv,rv);
 
   nsCOMPtr <nsIWebShellContainer> webShellContainer;
@@ -307,7 +302,7 @@ nsMsgPrintEngine::ShowWindow(PRBool aShow)
     nsCOMPtr <nsIWebShellWindow> webShellWindow = do_QueryInterface(webShellContainer, &rv);
     NS_ENSURE_SUCCESS(rv,rv);
 
-    nsCOMPtr<nsIDocShellTreeItem>  treeItem(do_QueryInterface(docShell, &rv));
+    nsCOMPtr<nsIDocShellTreeItem>  treeItem(do_QueryInterface(webShell, &rv));
     NS_ENSURE_SUCCESS(rv,rv);
 
     nsCOMPtr<nsIDocShellTreeOwner> treeOwner;

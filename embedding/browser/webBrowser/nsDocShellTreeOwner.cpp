@@ -97,7 +97,7 @@ GetEventReceiver ( nsWebBrowser* inBrowser, nsIDOMEventReceiver** outEventRcvr )
   NS_ENSURE_TRUE(chromeHandler, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDOMEventReceiver> rcvr = do_QueryInterface(chromeHandler);
-  *outEventRcvr = rcvr.get();
+  *outEventRcvr = rcvr;
   NS_IF_ADDREF(*outEventRcvr);
   
   return NS_OK;
@@ -243,14 +243,14 @@ nsDocShellTreeOwner::FindItemWithName(const PRUnichar* aName,
   nsCOMPtr<nsIDocShellTreeOwner> reqAsTreeOwner(do_QueryInterface(aRequestor));
 
   if(mTreeOwner) {
-    if (mTreeOwner != reqAsTreeOwner.get())
-      return mTreeOwner->FindItemWithName(aName, mWebBrowser->mDocShellAsItem.get(),
+    if (mTreeOwner != reqAsTreeOwner)
+      return mTreeOwner->FindItemWithName(aName, mWebBrowser->mDocShellAsItem,
                                           aFoundItem);
     return NS_OK;
   }
 
   // finally, failing everything else, search all windows, if we're not already
-  if (mWebBrowser->mDocShellAsItem.get() != aRequestor)
+  if (mWebBrowser->mDocShellAsItem != aRequestor)
     return FindItemWithNameAcrossWindows(aName, aFoundItem);
 
   return NS_OK; // failed
@@ -284,15 +284,12 @@ nsDocShellTreeOwner::FindChildWithName(const PRUnichar *aName, PRBool aRecurse,
     if (frame) {
       nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(frame));
       if (sgo) {
-        nsCOMPtr<nsIDocShell> docshell;
-        sgo->GetDocShell(getter_AddRefs(docshell));
-        if (docshell) {
-          nsCOMPtr<nsIDocShellTreeItem> item(do_QueryInterface(docshell));
-          if (item && item.get() != aRequestor) {
-            rv = item->FindItemWithName(aName, mWebBrowser->mDocShellAsItem, aFoundItem);
-            if (NS_FAILED(rv) || *aFoundItem)
-              break;
-          }
+        nsCOMPtr<nsIDocShellTreeItem> item =
+          do_QueryInterface(sgo->GetDocShell());
+        if (item && item != aRequestor) {
+          rv = item->FindItemWithName(aName, mWebBrowser->mDocShellAsItem, aFoundItem);
+          if (NS_FAILED(rv) || *aFoundItem)
+            break;
         }
       }
     }
@@ -326,15 +323,12 @@ nsDocShellTreeOwner::FindItemWithNameAcrossWindows(const PRUnichar* aName,
       // it's a DOM Window. cut straight to the ScriptGlobalObject.
       nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(nextSupWindow));
       if (sgo) {
-        nsCOMPtr<nsIDocShell> docshell;
-        sgo->GetDocShell(getter_AddRefs(docshell));
-        if (docshell) {
-          nsCOMPtr<nsIDocShellTreeItem> item(do_QueryInterface(docshell));
-          if (item) {
-            rv = item->FindItemWithName(aName, item, aFoundItem);
-            if (NS_FAILED(rv) || *aFoundItem)
-              break;
-          }
+        nsCOMPtr<nsIDocShellTreeItem> item =
+          do_QueryInterface(sgo->GetDocShell());
+        if (item) {
+          rv = item->FindItemWithName(aName, item, aFoundItem);
+          if (NS_FAILED(rv) || *aFoundItem)
+            break;
         }
       }
     }
@@ -422,7 +416,7 @@ nsDocShellTreeOwner::GetPrimaryContentShell(nsIDocShellTreeItem** aShell)
    if(mTreeOwner)
        return mTreeOwner->GetPrimaryContentShell(aShell);
 
-   *aShell = (mPrimaryContentShell ? mPrimaryContentShell : mWebBrowser->mDocShellAsItem.get());
+   *aShell = (mPrimaryContentShell ? mPrimaryContentShell : mWebBrowser->mDocShellAsItem);
    NS_IF_ADDREF(*aShell);
 
    return NS_OK;
@@ -437,7 +431,7 @@ nsDocShellTreeOwner::SizeShellTo(nsIDocShellTreeItem* aShellItem,
    if(mTreeOwner)
       return mTreeOwner->SizeShellTo(aShellItem, aCX, aCY);
 
-   if(aShellItem == mWebBrowser->mDocShellAsItem.get())
+   if(aShellItem == mWebBrowser->mDocShellAsItem)
       return mWebBrowserChrome->SizeBrowserTo(aCX, aCY);
 
    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(aShellItem));

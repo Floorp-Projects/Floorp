@@ -93,9 +93,9 @@ static void DOMWindowToTreeOwner(
     return; // with webWindow unchanged -- its constructor gives it a null ptr
   }
   nsCOMPtr<nsIScriptGlobalObject> globalScript(do_QueryInterface(DOMWindow));
-  nsCOMPtr<nsIDocShell> docShell;
+  nsIDocShell *docShell = nsnull;
   if (globalScript) {
-    globalScript->GetDocShell(getter_AddRefs(docShell));
+    docShell = globalScript->GetDocShell();
   }
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
   if(!docShellAsItem)

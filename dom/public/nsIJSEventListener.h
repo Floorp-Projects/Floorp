@@ -39,9 +39,8 @@
 #ifndef nsIJSEventListener_h__
 #define nsIJSEventListener_h__
 
-#include "nsISupports.h"
+#include "nsIScriptContext.h"
 
-class nsIScriptContext;
 class nsIScriptObjectOwner;
 class nsIDOMEventListener;
 class nsIAtom;
@@ -52,13 +51,42 @@ class nsIAtom;
 
 // Implemented by JS event listeners. Used to retrieve the
 // JSObject corresponding to the event target.
-class nsIJSEventListener : public nsISupports {
+class nsIJSEventListener : public nsISupports
+{
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IJSEVENTLISTENER_IID)
 
-  NS_IMETHOD GetEventTarget(nsIScriptContext** aContext,
-                            nsISupports** aTarget) = 0;
-  NS_IMETHOD SetEventName(nsIAtom* aName) = 0;
+  nsIJSEventListener(nsIScriptContext *aContext, nsISupports *aTarget)
+    : mContext(aContext), mTarget(aTarget)
+  {
+    // mTarget is a weak reference. We are guaranteed because of the
+    // ownership model that the target will be freed (and the
+    // references dropped) before either the context or the owner goes
+    // away.
+
+    NS_IF_ADDREF(mContext);
+  }
+
+  nsIScriptContext *GetEventContext()
+  {
+    return mContext;
+  }
+
+  nsISupports *GetEventTarget()
+  {
+    return mTarget;
+  }
+
+  virtual void SetEventName(nsIAtom* aName) = 0;
+
+protected:
+  ~nsIJSEventListener()
+  {
+    NS_IF_RELEASE(mContext);
+  }
+
+  nsIScriptContext *mContext;
+  nsISupports *mTarget;
 };
 
 #endif // nsIJSEventListener_h__

@@ -58,13 +58,12 @@
  */
 static nsresult getScriptCodebase(JSContext* cx, nsIURI* *result)
 {
-    nsCOMPtr<nsIScriptContext> scriptContext;
-    GetScriptContextFromJSContext(cx, getter_AddRefs(scriptContext));
+    nsIScriptContext *scriptContext = GetScriptContextFromJSContext(cx);
 
     if (scriptContext) {
-        nsCOMPtr<nsIScriptGlobalObject> scriptGlobal;
-        scriptContext->GetGlobalObject(getter_AddRefs(scriptGlobal));
-        nsCOMPtr<nsIScriptObjectPrincipal> scriptObjectPrincipal = do_QueryInterface(scriptGlobal);
+        nsCOMPtr<nsIScriptObjectPrincipal> scriptObjectPrincipal =
+            do_QueryInterface(scriptContext->GetGlobalObject());
+
         if (scriptObjectPrincipal) {
             nsCOMPtr<nsIPrincipal> principal;
             scriptObjectPrincipal->GetPrincipal(getter_AddRefs(principal));

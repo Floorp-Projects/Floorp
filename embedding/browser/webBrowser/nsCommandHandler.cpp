@@ -52,12 +52,10 @@ nsresult nsCommandHandler::GetCommandHandler(nsICommandHandler **aCommandHandler
         return NS_ERROR_FAILURE;
     }
 
-    nsCOMPtr<nsIDocShell> docShell;
-    globalObj->GetDocShell(getter_AddRefs(docShell));
-
     // Get the document tree owner
 
-    nsCOMPtr<nsIDocShellTreeItem> docShellAsTreeItem(do_QueryInterface(docShell));
+    nsCOMPtr<nsIDocShellTreeItem> docShellAsTreeItem =
+      do_QueryInterface(globalObj->GetDocShell());
     nsIDocShellTreeOwner *treeOwner = nsnull;
     docShellAsTreeItem->GetTreeOwner(&treeOwner);
 

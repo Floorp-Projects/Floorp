@@ -185,9 +185,8 @@ nsHTTPIndex::OnFTPControlLog(PRBool server, const char *msg)
     nsCOMPtr<nsIScriptGlobalObject> scriptGlobal(do_GetInterface(mRequestor));
     NS_ENSURE_TRUE(scriptGlobal, NS_OK);
 
-    nsCOMPtr<nsIScriptContext> context;
-    nsresult rv = scriptGlobal->GetContext(getter_AddRefs(context));
-    NS_ENSURE_SUCCESS(rv, NS_OK);
+    nsIScriptContext *context = scriptGlobal->GetContext();
+    NS_ENSURE_TRUE(context, NS_OK);
 
     JSContext* jscontext = NS_REINTERPRET_CAST(JSContext*,
                                                context->GetNativeContext());
@@ -263,8 +262,7 @@ nsHTTPIndex::OnStartRequest(nsIRequest *request, nsISupports* aContext)
     nsCOMPtr<nsIScriptGlobalObject> scriptGlobal(do_GetInterface(mRequestor));
     NS_ENSURE_TRUE(scriptGlobal, NS_ERROR_FAILURE);
 
-    nsCOMPtr<nsIScriptContext> context;
-    rv = scriptGlobal->GetContext(getter_AddRefs(context));
+    nsIScriptContext *context = scriptGlobal->GetContext();
     NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
 
     JSContext* jscontext = NS_REINTERPRET_CAST(JSContext*,

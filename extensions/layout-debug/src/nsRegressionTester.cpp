@@ -178,6 +178,9 @@ nsRegressionTester::GetDocShellFromWindow(nsIDOMWindow* inWindow, nsIDocShell** 
 {
   nsCOMPtr<nsIScriptGlobalObject> scriptObj(do_QueryInterface(inWindow));
   if (!scriptObj) return NS_ERROR_FAILURE;
-  
-  return scriptObj->GetDocShell(outShell);
+
+  *outShell = scriptObj->GetDocShell();
+  NS_IF_ADDREF(*outShell);
+
+  return NS_OK;
 }

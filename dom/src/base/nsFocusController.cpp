@@ -136,9 +136,7 @@ nsFocusController::SetFocusedWindow(nsIDOMWindowInternal* aWindow)
   if (aWindow && (mCurrentWindow != aWindow)) {
     nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(aWindow);
     if (sgo) {
-      nsCOMPtr<nsIDocShell> docShell;
-      sgo->GetDocShell(getter_AddRefs(docShell));
-      nsCOMPtr<nsIBaseWindow> basewin = do_QueryInterface(docShell);
+      nsCOMPtr<nsIBaseWindow> basewin = do_QueryInterface(sgo->GetDocShell());
       if (basewin)
         basewin->SetFocus();
     }
@@ -513,11 +511,11 @@ nsFocusController::UpdateWWActiveWindow()
 
   // This gets the toplevel DOMWindow
   nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(mCurrentWindow);
-  nsCOMPtr<nsIDocShell> docShell;
-  sgo->GetDocShell(getter_AddRefs(docShell));
-  if (!docShell) return;
 
-  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
+  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem =
+    do_QueryInterface(sgo->GetDocShell());
+  if (!docShellAsItem) return;
+
   nsCOMPtr<nsIDocShellTreeItem> rootItem;
   docShellAsItem->GetRootTreeItem(getter_AddRefs(rootItem));
   NS_ASSERTION(rootItem, "Invalid docshell tree - no root!");

@@ -1920,8 +1920,7 @@ nsObjectFrame::NotifyContentObjectWrapper()
   if (!sgo)
     return;
 
-  nsCOMPtr<nsIScriptContext> scx;
-  sgo->GetContext(getter_AddRefs(scx));
+  nsIScriptContext *scx = sgo->GetContext();
   if (!scx)
     return;
 

@@ -71,10 +71,9 @@ GetRootDocShell(nsIDOMWindow *aWindow)
 
   nsCOMPtr<nsIScriptGlobalObject> globalObj(do_QueryInterface(aWindow));
   if (globalObj) {
-    nsCOMPtr<nsIDocShell> docShell;
-    globalObj->GetDocShell(getter_AddRefs(docShell));
+    nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
+      do_QueryInterface(globalObj->GetDocShell());
 
-    nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem(do_QueryInterface(docShell));
     if (docShellTreeItem) {
       nsCOMPtr<nsIDocShellTreeItem> rootItem;
       docShellTreeItem->GetRootTreeItem(getter_AddRefs(rootItem));

@@ -686,8 +686,7 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
   // want to continue in the face of errors.
   nsCOMPtr<nsIScriptGlobalObject> parentSGO(do_QueryInterface(aParent));
   if (parentSGO) {
-    nsCOMPtr<nsIDocShell> parentDocshell;
-    parentSGO->GetDocShell(getter_AddRefs(parentDocshell));
+    nsIDocShell *parentDocshell = parentSGO->GetDocShell();
     // parentDocshell may be null if the parent got closed in the meantime
     if (parentDocshell) {
       nsCOMPtr<nsIContentViewer> parentContentViewer;
@@ -708,13 +707,9 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
   }
 
   if (uriToLoad) { // get the script principal and pass it to docshell
+    JSContext *cx = GetJSContextFromCallStack();
 
     // get the security manager
-    nsCOMPtr<nsIScriptSecurityManager> secMan;
-    JSContext                         *cx;
-    nsCOMPtr<nsIScriptContext>         scriptCX;
-
-    cx = GetJSContextFromCallStack();
     if (!cx)
       cx = GetJSContextFromWindow(aParent);
     if (!cx) {
@@ -723,18 +718,15 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
         return rv;
       cx = contextGuard.get();
     }
-    JSObject *scriptObject = GetWindowScriptObject(aParent ? aParent : *_retval);
-    nsWWJSUtils::nsGetStaticScriptContext(cx, scriptObject,
-                                          getter_AddRefs(scriptCX));
-    if (scriptCX &&
-        NS_FAILED(scriptCX->GetSecurityManager(getter_AddRefs(secMan))))
-      return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
     newDocShell->CreateLoadInfo(getter_AddRefs(loadInfo));
     NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
 
-    if (!uriToLoadIsChrome && secMan) {
+    if (!uriToLoadIsChrome) {
+      nsCOMPtr<nsIScriptSecurityManager> secMan =
+        do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
+
       nsCOMPtr<nsIPrincipal> principal;
       if (NS_FAILED(secMan->GetSubjectPrincipal(getter_AddRefs(principal))))
         return NS_ERROR_FAILURE;
@@ -754,10 +746,8 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
 
     // get its document, if any
     if (stack && NS_SUCCEEDED(stack->Peek(&ccx)) && ccx) {
-
-      nsCOMPtr<nsIScriptGlobalObject> sgo;
-      nsWWJSUtils::nsGetStaticScriptGlobal(ccx, ::JS_GetGlobalObject(ccx),
-                                           getter_AddRefs(sgo));
+      nsIScriptGlobalObject *sgo =
+        nsWWJSUtils::GetStaticScriptGlobal(ccx, ::JS_GetGlobalObject(ccx));
 
       nsCOMPtr<nsPIDOMWindow> w(do_QueryInterface(sgo));
       if (w) {
@@ -1112,12 +1102,9 @@ nsWindowWatcher::URIfromURL(const char *aURL,
      in nsGlobalWindow.cpp.) */
   JSContext *cx = GetJSContextFromCallStack();
   if (cx) {
-    nsCOMPtr<nsIScriptContext> scriptcx;
-    nsWWJSUtils::nsGetDynamicScriptContext(cx, getter_AddRefs(scriptcx));
+    nsIScriptContext *scriptcx = nsWWJSUtils::GetDynamicScriptContext(cx);
     if (scriptcx) {
-      nsCOMPtr<nsIScriptGlobalObject> gobj;
-      scriptcx->GetGlobalObject(getter_AddRefs(gobj));
-      baseWindow = do_QueryInterface(gobj);
+      baseWindow = do_QueryInterface(scriptcx->GetGlobalObject());
     }
   }
 
@@ -1642,8 +1629,7 @@ nsWindowWatcher::AttachArguments(nsIDOMWindow *aWindow,
   nsCOMPtr<nsIScriptGlobalObject> scriptGlobal(do_QueryInterface(aWindow));
   NS_ENSURE_TRUE(scriptGlobal, NS_ERROR_UNEXPECTED);
 
-  nsCOMPtr<nsIScriptContext> scriptContext;
-  scriptGlobal->GetContext(getter_AddRefs(scriptContext));
+  nsIScriptContext *scriptContext = scriptGlobal->GetContext();
   if (scriptContext) {
     JSContext *cx;
     cx = (JSContext *)scriptContext->GetNativeContext();
@@ -1981,8 +1967,7 @@ nsWindowWatcher::GetWindowTreeItem(nsIDOMWindow *inWindow,
 
   nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(inWindow));
   if (sgo) {
-    nsCOMPtr<nsIDocShell> docshell;
-    sgo->GetDocShell(getter_AddRefs(docshell));
+    nsIDocShell *docshell = sgo->GetDocShell();
     if (docshell)
       CallQueryInterface(docshell, outTreeItem);
   }
@@ -2020,8 +2005,7 @@ nsWindowWatcher::GetJSContextFromWindow(nsIDOMWindow *aWindow)
   if (aWindow) {
     nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(aWindow));
     if (sgo) {
-      nsCOMPtr<nsIScriptContext> scx;
-      sgo->GetContext(getter_AddRefs(scx));
+      nsIScriptContext *scx = sgo->GetContext();
       if (scx)
         cx = (JSContext *) scx->GetNativeContext();
     }

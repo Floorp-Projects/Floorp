@@ -999,8 +999,7 @@ nsHTMLDocument::EndLoad()
       stack->Peek(&cx);
 
       if (cx) {
-        nsCOMPtr<nsIScriptContext> scx;
-        nsContentUtils::GetDynamicScriptContext(cx, getter_AddRefs(scx));
+        nsIScriptContext *scx = nsContentUtils::GetDynamicScriptContext(cx);
 
         if (scx) {
           // The load of the document was terminated while we're
@@ -2158,8 +2157,7 @@ nsHTMLDocument::GetSourceDocumentURI(nsIURI** sourceURI)
   *sourceURI = nsnull;
 
   // XXX This will fail on non-DOM contexts :(
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  nsContentUtils::GetDocumentFromCaller(getter_AddRefs(domDoc));
+  nsIDOMDocument *domDoc = nsContentUtils::GetDocumentFromCaller();
 
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
   if (!doc) {
@@ -3717,8 +3715,7 @@ nsHTMLDocument::SetDesignMode(const nsAString & aDesignMode)
   if (!mScriptGlobalObject)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDocShell> docshell;
-  mScriptGlobalObject->GetDocShell(getter_AddRefs(docshell));
+  nsIDocShell *docshell = mScriptGlobalObject->GetDocShell();
   if (!docshell)
     return NS_ERROR_FAILURE;
 
@@ -3788,8 +3785,7 @@ nsHTMLDocument::GetMidasCommandManager(nsICommandManager** aCmdMgr)
   if (!mScriptGlobalObject)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDocShell> docshell;
-  mScriptGlobalObject->GetDocShell(getter_AddRefs(docshell));
+  nsIDocShell *docshell = mScriptGlobalObject->GetDocShell();
   if (!docshell)
     return NS_ERROR_FAILURE;
 

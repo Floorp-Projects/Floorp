@@ -2490,20 +2490,19 @@ nsRange::CreateContextualFragment(const nsAString& aFragment,
         if (NS_SUCCEEDED(result) &&
            (!subjectPrin || sysPrin.get() == subjectPrin.get())) {
           nsIScriptGlobalObject *globalObj = document->GetScriptGlobalObject();
-
-          nsCOMPtr<nsIScriptContext> scriptContext;
-          if (globalObj) {
-            result = globalObj->GetContext(getter_AddRefs(scriptContext));
-          }
-
           JSContext* cx = nsnull;
-          if (NS_SUCCEEDED(result) && scriptContext) {
-            cx = (JSContext*)scriptContext->GetNativeContext();
+
+          if (globalObj) {
+            nsIScriptContext *scriptContext = globalObj->GetContext();
+
+            if (scriptContext) {
+              cx = (JSContext*)scriptContext->GetNativeContext();
+            }
           }
 
-          if(cx) {
-            ContextStack = do_GetService("@mozilla.org/js/xpc/ContextStack;1", &result);
-            if(NS_SUCCEEDED(result)) {
+          if (cx) {
+            ContextStack = do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+            if (ContextStack) {
               result = ContextStack->Push(cx);
             }
           }

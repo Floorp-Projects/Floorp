@@ -1143,8 +1143,7 @@ nsBindingManager::GetBindingImplementation(nsIContent* aContent, REFNSIID aIID,
       if (!global)
         return NS_NOINTERFACE;
 
-      nsCOMPtr<nsIScriptContext> context;
-      global->GetContext(getter_AddRefs(context));
+      nsIScriptContext *context = global->GetContext();
       if (!context)
         return NS_NOINTERFACE;
 
@@ -1157,7 +1156,6 @@ nsBindingManager::GetBindingImplementation(nsIContent* aContent, REFNSIID aIID,
         return NS_NOINTERFACE;
 
       nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
-
       xpConnect->GetWrappedNativeOfNativeObject(jscontext,
                                                 JS_GetGlobalObject(jscontext),
                                                 aContent,

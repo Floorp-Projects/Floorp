@@ -82,7 +82,7 @@ protected:
     
     nsresult    OnFind(nsIDOMWindow *aFoundWindow);
     
-    nsresult    GetDocShellFromWindow(nsIDOMWindow *inWindow, nsIDocShell** outDocShell);
+    nsIDocShell *GetDocShellFromWindow(nsIDOMWindow *inWindow);
 
     void        SetSelectionAndScroll(nsIDOMRange* aRange,
                                       nsISelectionController* aSelCon);

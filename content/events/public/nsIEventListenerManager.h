@@ -99,8 +99,7 @@ public:
   * name aName and function body aFunc.
   * @param an event listener
   */
-  NS_IMETHOD AddScriptEventListener(nsIScriptContext*aContext,
-                                    nsISupports *aObject,
+  NS_IMETHOD AddScriptEventListener(nsISupports *aObject,
                                     nsIAtom *aName,
                                     const nsAString& aFunc,
                                     PRBool aDeferCompilation) = 0;

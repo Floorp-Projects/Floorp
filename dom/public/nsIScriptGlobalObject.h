@@ -60,18 +60,19 @@ struct JSObject;
  * per-window global state.
  */
 
-class nsIScriptGlobalObject : public nsISupports {
+class nsIScriptGlobalObject : public nsISupports
+{
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISCRIPTGLOBALOBJECT_IID)
 
-  NS_IMETHOD       SetContext(nsIScriptContext *aContext) = 0;
-  NS_IMETHOD       GetContext(nsIScriptContext **aContext) = 0;
-  NS_IMETHOD       SetNewDocument(nsIDOMDocument *aDocument,
+  virtual void SetContext(nsIScriptContext *aContext) = 0;
+  virtual nsIScriptContext *GetContext() = 0;
+  virtual nsresult SetNewDocument(nsIDOMDocument *aDocument,
                                   PRBool aRemoveEventListeners,
                                   PRBool aClearScope) = 0;
-  NS_IMETHOD       SetDocShell(nsIDocShell *aDocShell) = 0;
-  NS_IMETHOD       GetDocShell(nsIDocShell **aDocShell) = 0;
-  NS_IMETHOD       SetOpenerWindow(nsIDOMWindowInternal *aOpener)=0;
+  virtual void SetDocShell(nsIDocShell *aDocShell) = 0;
+  virtual nsIDocShell *GetDocShell() = 0;
+  virtual void SetOpenerWindow(nsIDOMWindowInternal *aOpener)=0;
 
     /**
    * Let the script global object know who its owner is.
@@ -79,7 +80,7 @@ public:
    * will be told when the owner goes away.
    * @return NS_OK if the method is successful
    */
-  NS_IMETHOD SetGlobalObjectOwner(nsIScriptGlobalObjectOwner* aOwner) = 0;
+  virtual void SetGlobalObjectOwner(nsIScriptGlobalObjectOwner* aOwner) = 0;
 
   /**
    * Get the owner of the script global object. The method
@@ -87,26 +88,26 @@ public:
    * XPCOM rules, even though the internal reference itself
    * is a "weak" reference.
    */
-  NS_IMETHOD GetGlobalObjectOwner(nsIScriptGlobalObjectOwner** aOwner) = 0;
+  virtual nsIScriptGlobalObjectOwner *GetGlobalObjectOwner() = 0;
 
-  NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, 
-                            nsEvent* aEvent, 
-                            nsIDOMEvent** aDOMEvent,
-                            PRUint32 aFlags,
-                            nsEventStatus* aEventStatus)=0;
+  virtual nsresult HandleDOMEvent(nsIPresContext* aPresContext, 
+                                  nsEvent* aEvent, 
+                                  nsIDOMEvent** aDOMEvent,
+                                  PRUint32 aFlags,
+                                  nsEventStatus* aEventStatus)=0;
 
-  NS_IMETHOD_(JSObject *) GetGlobalJSObject() = 0;
+  virtual JSObject *GetGlobalJSObject() = 0;
 
   /**
    * Called when the global JSObject is finalized
    */
 
-  NS_IMETHOD OnFinalize(JSObject *aJSObject) = 0;
+  virtual void OnFinalize(JSObject *aJSObject) = 0;
 
   /**
    * Called when scripts are enabled/disabled.
    */
-  NS_IMETHOD SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts) = 0;
+  virtual void SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts) = 0;
 };
 
 #endif

@@ -112,30 +112,24 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
    XML_HTTP_REQUEST_SENT |                  \
    XML_HTTP_REQUEST_STOPPED)
 
-static void
-GetCurrentContext(nsIScriptContext **aScriptContext)
+static nsIScriptContext *
+GetCurrentContext()
 {
-  *aScriptContext = nsnull;
-
   // Get JSContext from stack.
   nsCOMPtr<nsIJSContextStack> stack =
     do_GetService("@mozilla.org/js/xpc/ContextStack;1");
 
   if (!stack) {
-    return;
+    return nsnull;
   }
 
   JSContext *cx;
 
-  if (NS_FAILED(stack->Peek(&cx))) {
-    return;
+  if (NS_FAILED(stack->Peek(&cx)) || !cx) {
+    return nsnull;
   }
 
-  if (cx) {
-    GetScriptContextFromJSContext(cx, aScriptContext);
-  }
-
-  return;
+  return GetScriptContextFromJSContext(cx);
 }
 
 /**
@@ -151,9 +145,8 @@ GetDocumentFromScriptContext(nsIScriptContext *aScriptContext)
   if (!aScriptContext)
     return nsnull;
 
-  nsCOMPtr<nsIScriptGlobalObject> global;
-  aScriptContext->GetGlobalObject(getter_AddRefs(global));
-  nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(global);
+  nsCOMPtr<nsIDOMWindow> window =
+    do_QueryInterface(aScriptContext->GetGlobalObject());
   nsIDocument *doc = nsnull;
   if (window) {
     nsCOMPtr<nsIDOMDocument> domdoc;
@@ -233,7 +226,7 @@ nsXMLHttpRequest::AddEventListener(const nsAString& type,
   else {
     return NS_ERROR_INVALID_ARG;
   }
-  GetCurrentContext(getter_AddRefs(mScriptContext));
+  mScriptContext = GetCurrentContext();
 
   return NS_OK;
 }
@@ -290,7 +283,7 @@ nsXMLHttpRequest::SetOnreadystatechange(nsIOnReadystatechangeHandler * aOnreadys
 {
   mOnReadystatechangeListener = aOnreadystatechange;
 
-  GetCurrentContext(getter_AddRefs(mScriptContext));
+  mScriptContext = GetCurrentContext();
 
   return NS_OK;
 }
@@ -313,7 +306,7 @@ nsXMLHttpRequest::SetOnload(nsIDOMEventListener * aOnLoad)
 {
   mOnLoadListener = aOnLoad;
 
-  GetCurrentContext(getter_AddRefs(mScriptContext));
+  mScriptContext = GetCurrentContext();
 
   return NS_OK;
 }
@@ -335,7 +328,7 @@ nsXMLHttpRequest::SetOnerror(nsIDOMEventListener * aOnerror)
 {
   mOnErrorListener = aOnerror;
 
-  GetCurrentContext(getter_AddRefs(mScriptContext));
+  mScriptContext = GetCurrentContext();
 
   return NS_OK;
 }
@@ -602,7 +595,7 @@ nsXMLHttpRequest::GetLoadGroup(nsILoadGroup **aLoadGroup)
   *aLoadGroup = nsnull;
 
   if (!mScriptContext) {
-    GetCurrentContext(getter_AddRefs(mScriptContext));
+    mScriptContext = GetCurrentContext();
   }
 
   nsCOMPtr<nsIDocument> doc = GetDocumentFromScriptContext(mScriptContext);
@@ -620,7 +613,7 @@ nsXMLHttpRequest::GetBaseURI(nsIURI **aBaseURI)
   *aBaseURI = nsnull;
 
   if (!mScriptContext) {
-    GetCurrentContext(getter_AddRefs(mScriptContext));
+    mScriptContext = GetCurrentContext();
     if (!mScriptContext) {
       return NS_OK;
     }
@@ -1321,7 +1314,7 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
 
   if (!mScriptContext) {
     // We need a context to check if redirect (if any) is allowed
-    GetCurrentContext(getter_AddRefs(mScriptContext));
+    mScriptContext = GetCurrentContext();
   }
 
   // Hook us up to listen to redirects and the like

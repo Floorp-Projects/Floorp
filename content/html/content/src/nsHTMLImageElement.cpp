@@ -170,10 +170,8 @@ NS_NewHTMLImageElement(nsIHTMLContent** aInstancePtrResult,
   nsresult rv;
   nsCOMPtr<nsINodeInfo> nodeInfo(aNodeInfo);
   if (!nodeInfo) {
-    nsCOMPtr<nsIDOMDocument> dom_doc;
-    nsContentUtils::GetDocumentFromCaller(getter_AddRefs(dom_doc));
-
-    nsCOMPtr<nsIDocument> doc(do_QueryInterface(dom_doc));
+    nsCOMPtr<nsIDocument> doc =
+      do_QueryInterface(nsContentUtils::GetDocumentFromCaller());
     NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
 
     nsINodeInfoManager *nodeInfoManager = doc->GetNodeInfoManager();
@@ -454,7 +452,6 @@ NS_IMETHODIMP
 nsHTMLImageElement::SetHeight(PRInt32 aHeight)
 {
   nsAutoString val;
-
   val.AppendInt(aHeight);
 
   return nsGenericHTMLLeafElement::SetAttr(kNameSpaceID_None,
@@ -474,7 +471,6 @@ NS_IMETHODIMP
 nsHTMLImageElement::SetWidth(PRInt32 aWidth)
 {
   nsAutoString val;
-
   val.AppendInt(aWidth);
 
   return nsGenericHTMLLeafElement::SetAttr(kNameSpaceID_None,

@@ -304,21 +304,19 @@ void nsMsgComposeService::CloseWindow(nsIDOMWindowInternal *domWindow)
     nsCOMPtr<nsIScriptGlobalObject> globalObj(do_QueryInterface(domWindow));
     if (globalObj)
     {
-      globalObj->GetDocShell(getter_AddRefs(docshell));
-      if (docshell)
+      nsCOMPtr<nsIDocShellTreeItem> treeItem =
+        do_QueryInterface(globalObj->GetDocShell());
+
+      if (treeItem)
       {
-        nsCOMPtr<nsIDocShellTreeItem>  treeItem(do_QueryInterface(docshell));
-        if (treeItem)
+        nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+        treeItem->GetTreeOwner(getter_AddRefs(treeOwner));
+        if (treeOwner)
         {
-          nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
-          treeItem->GetTreeOwner(getter_AddRefs(treeOwner));
-          if (treeOwner)
-          {
-            nsCOMPtr<nsIBaseWindow> baseWindow;
-            baseWindow = do_QueryInterface(treeOwner);
-            if (baseWindow)
-              baseWindow->Destroy();
-          }
+          nsCOMPtr<nsIBaseWindow> baseWindow;
+          baseWindow = do_QueryInterface(treeOwner);
+          if (baseWindow)
+            baseWindow->Destroy();
         }
       }
     }
@@ -690,11 +688,9 @@ HWND hwndForComposeDOMWindow( nsISupports *window )
   nsCOMPtr<nsIScriptGlobalObject> ppScriptGlobalObj( do_QueryInterface(window) );
   if ( !ppScriptGlobalObj )
       return 0;
-  nsCOMPtr<nsIDocShell> ppDocShell;
-  ppScriptGlobalObj->GetDocShell( getter_AddRefs( ppDocShell ) );
-  if ( !ppDocShell ) return 0;
-  
-  nsCOMPtr<nsIBaseWindow> ppBaseWindow( do_QueryInterface( ppDocShell ) );
+
+  nsCOMPtr<nsIBaseWindow> ppBaseWindow =
+    do_QueryInterface( ppScriptGlobalObj->GetDocShell() );
   if (!ppBaseWindow) return 0;
 
   nsCOMPtr<nsIWidget> ppWidget;
@@ -889,10 +885,8 @@ nsresult nsMsgComposeService::ShowCachedComposeWindow(nsIDOMWindowInternal *aCom
   nsCOMPtr <nsIScriptGlobalObject> globalScript = do_QueryInterface(aComposeWindow, &rv);
 
   NS_ENSURE_SUCCESS(rv,rv);
-  nsCOMPtr <nsIDocShell> docShell;
 
-  rv = globalScript->GetDocShell(getter_AddRefs(docShell));
-  NS_ENSURE_SUCCESS(rv,rv);
+  nsIDocShell *docShell = globalScript->GetDocShell();
 
   nsCOMPtr <nsIWebShell> webShell = do_QueryInterface(docShell, &rv);
   NS_ENSURE_SUCCESS(rv,rv);

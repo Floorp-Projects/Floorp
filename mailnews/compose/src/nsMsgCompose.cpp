@@ -522,11 +522,9 @@ nsMsgCompose::ConvertAndLoadComposeWindow(nsString& aPrefix,
     if (!aBuf.IsEmpty() && mailEditor)
     {
       // XXX see bug #206793
-      nsCOMPtr<nsIDocShell> docshell;
+      nsIDocShell *docshell = nsnull;
       nsCOMPtr<nsIScriptGlobalObject> globalObj = do_QueryInterface(m_window);
-      if (globalObj)
-        globalObj->GetDocShell(getter_AddRefs(docshell));
-      if (docshell)
+      if (globalObj && (docshell = globalObj->GetDocShell()))
         docshell->SetAppType(nsIDocShell::APP_TYPE_MAIL);
 
       if (aHTMLEditor && !mCiteReference.IsEmpty())
@@ -710,13 +708,12 @@ nsMsgCompose::Initialize(nsIDOMWindowInternal *aWindow, nsIMsgComposeParams *par
   if (aWindow)
   {
     m_window = aWindow;
-    nsCOMPtr<nsIDocShell> docshell;
     nsCOMPtr<nsIScriptGlobalObject> globalObj(do_QueryInterface(aWindow));
     if (!globalObj)
       return NS_ERROR_FAILURE;
-    
-    globalObj->GetDocShell(getter_AddRefs(docshell));
-    nsCOMPtr<nsIDocShellTreeItem>  treeItem(do_QueryInterface(docshell));
+
+    nsCOMPtr<nsIDocShellTreeItem>  treeItem =
+      do_QueryInterface(globalObj->GetDocShell());
     nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
     rv = treeItem->GetTreeOwner(getter_AddRefs(treeOwner));
     if (NS_FAILED(rv)) return rv;
@@ -1268,8 +1265,7 @@ NS_IMETHODIMP nsMsgCompose::CloseWindow(PRBool recycleIt)
         nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(m_window));
         if (sgo)
         {
-          nsCOMPtr<nsIScriptContext> scriptContext;
-          sgo->GetContext(getter_AddRefs(scriptContext));
+          nsIScriptContext *scriptContext = sgo->GetContext();
           if (scriptContext)
             scriptContext->GC();
         }
@@ -1336,8 +1332,7 @@ NS_IMETHODIMP nsMsgCompose::InitEditor(nsIEditor* aEditor, nsIDOMWindow* aConten
 
   nsCOMPtr<nsIScriptGlobalObject> globalObj = do_QueryInterface(m_window);
 
-  nsCOMPtr<nsIDocShell> docShell;
-  globalObj->GetDocShell(getter_AddRefs(docShell));
+  nsIDocShell *docShell = globalObj->GetDocShell();
   NS_ENSURE_TRUE(docShell, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<nsIContentViewer> childCV;
@@ -2376,10 +2371,10 @@ QuotingOutputStreamListener::InsertToCompose(nsIEditor *aEditor,
       nsCOMPtr<nsIDOMWindowInternal> domWindow;
       if (compose)
         compose->GetDomWindow(getter_AddRefs(domWindow));
-      nsCOMPtr<nsIDocShell> docshell;
+      nsIDocShell *docshell = nsnull;
       nsCOMPtr<nsIScriptGlobalObject> globalObj = do_QueryInterface(domWindow);
       if (globalObj)
-        globalObj->GetDocShell(getter_AddRefs(docshell));
+        docshell = globalObj->GetDocShell();
       if (docshell)
         docshell->SetAppType(nsIDocShell::APP_TYPE_MAIL);
       

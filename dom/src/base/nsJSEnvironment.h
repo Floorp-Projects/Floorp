@@ -58,7 +58,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD       EvaluateString(const nsAString& aScript,
+  virtual nsresult EvaluateString(const nsAString& aScript,
                                   void *aScopeObject,
                                   nsIPrincipal *principal,
                                   const char *aURL,
@@ -66,7 +66,7 @@ public:
                                   const char* aVersion,
                                   nsAString& aRetValue,
                                   PRBool* aIsUndefined);
-  NS_IMETHOD       EvaluateStringWithValue(const nsAString& aScript,
+  virtual nsresult EvaluateStringWithValue(const nsAString& aScript,
                                      void *aScopeObject,
                                      nsIPrincipal *aPrincipal,
                                      const char *aURL,
@@ -75,7 +75,7 @@ public:
                                      void* aRetValue,
                                      PRBool* aIsUndefined);
 
-  NS_IMETHOD       CompileScript(const PRUnichar* aText,
+  virtual nsresult CompileScript(const PRUnichar* aText,
                                  PRInt32 aTextLength,
                                  void *aScopeObject,
                                  nsIPrincipal *principal,
@@ -83,24 +83,24 @@ public:
                                  PRUint32 aLineNo,
                                  const char* aVersion,
                                  void** aScriptObject);
-  NS_IMETHOD       ExecuteScript(void* aScriptObject,
+  virtual nsresult ExecuteScript(void* aScriptObject,
                                  void *aScopeObject,
                                  nsAString* aRetValue,
                                  PRBool* aIsUndefined);
-  NS_IMETHOD       CompileEventHandler(void *aTarget,
+  virtual nsresult CompileEventHandler(void *aTarget,
                                        nsIAtom *aName,
                                        const nsAString& aBody,
                                        const char *aURL,
                                        PRUint32 aLineNo,
                                        PRBool aShared,
                                        void** aHandler);
-  NS_IMETHOD       CallEventHandler(void *aTarget, void *aHandler, 
-                                    PRUint32 argc, void *argv, 
+  virtual nsresult CallEventHandler(void *aTarget, void *aHandler, 
+                                    PRUint32 argc, void *argv,
                                     PRBool *aBoolResult);
-  NS_IMETHOD       BindCompiledEventHandler(void *aTarget,
+  virtual nsresult BindCompiledEventHandler(void *aTarget,
                                             nsIAtom *aName,
                                             void *aHandler);
-  NS_IMETHOD       CompileFunction(void* aTarget,
+  virtual nsresult CompileFunction(void* aTarget,
                                    const nsACString& aName,
                                    PRUint32 aArgCount,
                                    const char** aArgArray,
@@ -110,26 +110,25 @@ public:
                                    PRBool aShared,
                                    void** aFunctionObject);
 
-  NS_IMETHOD SetDefaultLanguageVersion(const char* aVersion);
-  NS_IMETHOD GetGlobalObject(nsIScriptGlobalObject** aGlobalObject);
-  NS_IMETHOD_(void *) GetNativeContext();
-  NS_IMETHOD InitContext(nsIScriptGlobalObject *aGlobalObject);
-  NS_IMETHOD IsContextInitialized();
-  NS_IMETHOD GC();
-  NS_IMETHOD GetSecurityManager(nsIScriptSecurityManager** aInstancePtr);
+  virtual void SetDefaultLanguageVersion(const char* aVersion);
+  virtual nsIScriptGlobalObject *GetGlobalObject();
+  virtual void *GetNativeContext();
+  virtual nsresult InitContext(nsIScriptGlobalObject *aGlobalObject);
+  virtual PRBool IsContextInitialized();
+  virtual void GC();
 
-  NS_IMETHOD ScriptEvaluated(PRBool aTerminated);
-  NS_IMETHOD SetOwner(nsIScriptContextOwner* owner);
-  NS_IMETHOD GetOwner(nsIScriptContextOwner** owner);
-  NS_IMETHOD SetTerminationFunction(nsScriptTerminationFunc aFunc,
-                                    nsISupports* aRef);
-  NS_IMETHOD GetScriptsEnabled(PRBool *aEnabled);
-  NS_IMETHOD SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts);
+  virtual void ScriptEvaluated(PRBool aTerminated);
+  virtual void SetOwner(nsIScriptContextOwner* owner);
+  virtual nsIScriptContextOwner *GetOwner();
+  virtual void SetTerminationFunction(nsScriptTerminationFunc aFunc,
+                                      nsISupports* aRef);
+  virtual PRBool GetScriptsEnabled();
+  virtual void SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts);
 
-  NS_IMETHOD GetProcessingScriptTag(PRBool * aResult);
-  NS_IMETHOD SetProcessingScriptTag(PRBool  aResult);
+  virtual PRBool GetProcessingScriptTag();
+  virtual void SetProcessingScriptTag(PRBool aResult);
 
-  NS_IMETHOD SetGCOnDestruction(PRBool aGCOnDestruction);
+  virtual void SetGCOnDestruction(PRBool aGCOnDestruction);
 
   NS_DECL_NSIXPCSCRIPTNOTIFY
 

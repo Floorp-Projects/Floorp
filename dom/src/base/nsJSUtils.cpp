@@ -91,9 +91,8 @@ nsJSUtils::GetCallingLocation(JSContext* aContext, const char* *aFilename,
   return JS_FALSE;
 }
 
-void
-nsJSUtils::ConvertStringToJSVal(const nsString& aProp, JSContext* aContext,
-                                jsval* aReturn)
+jsval
+nsJSUtils::ConvertStringToJSVal(const nsString& aProp, JSContext* aContext)
 {
   JSString *jsstring =
     ::JS_NewUCStringCopyN(aContext, NS_REINTERPRET_CAST(const jschar*,
@@ -101,7 +100,7 @@ nsJSUtils::ConvertStringToJSVal(const nsString& aProp, JSContext* aContext,
                           aProp.Length());
 
   // set the return value
-  *aReturn = STRING_TO_JSVAL(jsstring);
+  return STRING_TO_JSVAL(jsstring);
 }
 
 PRBool
@@ -162,9 +161,8 @@ nsJSUtils::ConvertJSValToUint32(PRUint32* aProp, JSContext* aContext,
   return JS_TRUE;
 }
 
-nsresult
-nsJSUtils::GetStaticScriptGlobal(JSContext* aContext, JSObject* aObj,
-                                 nsIScriptGlobalObject** aNativeGlobal)
+nsIScriptGlobalObject *
+nsJSUtils::GetStaticScriptGlobal(JSContext* aContext, JSObject* aObj)
 {
   nsISupports* supports;
   JSClass* clazz;
@@ -172,7 +170,7 @@ nsJSUtils::GetStaticScriptGlobal(JSContext* aContext, JSObject* aObj,
   JSObject* glob = aObj; // starting point for search
 
   if (!glob)
-    return NS_ERROR_FAILURE;
+    return nsnull;
 
   while ((parent = ::JS_GetParent(aContext, glob)))
     glob = parent;
@@ -183,47 +181,44 @@ nsJSUtils::GetStaticScriptGlobal(JSContext* aContext, JSObject* aObj,
       !(clazz->flags & JSCLASS_HAS_PRIVATE) ||
       !(clazz->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS) ||
       !(supports = (nsISupports*)::JS_GetPrivate(aContext, glob))) {
-    return NS_ERROR_FAILURE;
+    return nsnull;
   }
 
   nsCOMPtr<nsIXPConnectWrappedNative> wrapper(do_QueryInterface(supports));
-  NS_ENSURE_TRUE(wrapper, NS_ERROR_UNEXPECTED);
+  NS_ENSURE_TRUE(wrapper, nsnull);
 
   nsCOMPtr<nsISupports> native;
   wrapper->GetNative(getter_AddRefs(native));
 
-  return CallQueryInterface(native, aNativeGlobal);
+  nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(native));
+
+  // We're returning a pointer to something that's about to be
+  // released, but that's ok here.
+  return sgo;
 }
 
-nsresult
-nsJSUtils::GetStaticScriptContext(JSContext* aContext, JSObject* aObj,
-                                  nsIScriptContext** aScriptContext)
+nsIScriptContext *
+nsJSUtils::GetStaticScriptContext(JSContext* aContext, JSObject* aObj)
 {
-  nsCOMPtr<nsIScriptGlobalObject> nativeGlobal;
-  GetStaticScriptGlobal(aContext, aObj, getter_AddRefs(nativeGlobal));
+  nsIScriptGlobalObject *nativeGlobal = GetStaticScriptGlobal(aContext, aObj);
   if (!nativeGlobal)
-    return NS_ERROR_FAILURE;
-  nsIScriptContext* scriptContext = nsnull;
-  nativeGlobal->GetContext(&scriptContext);
-  *aScriptContext = scriptContext;
-  return scriptContext ? NS_OK : NS_ERROR_FAILURE;
+    return nsnull;
+
+  return nativeGlobal->GetContext();
 }
 
-nsresult
-nsJSUtils::GetDynamicScriptGlobal(JSContext* aContext,
-                                  nsIScriptGlobalObject** aNativeGlobal)
+nsIScriptGlobalObject *
+nsJSUtils::GetDynamicScriptGlobal(JSContext* aContext)
 {
-  nsCOMPtr<nsIScriptContext> scriptCX;
-  GetDynamicScriptContext(aContext, getter_AddRefs(scriptCX));
+  nsIScriptContext *scriptCX = GetDynamicScriptContext(aContext);
   if (!scriptCX)
-    return NS_ERROR_FAILURE;
-  return scriptCX->GetGlobalObject(aNativeGlobal);
+    return nsnull;
+  return scriptCX->GetGlobalObject();
 }
 
-nsresult
-nsJSUtils::GetDynamicScriptContext(JSContext *aContext,
-                                   nsIScriptContext** aScriptContext)
+nsIScriptContext *
+nsJSUtils::GetDynamicScriptContext(JSContext *aContext)
 {
-  return GetScriptContextFromJSContext(aContext, aScriptContext);
+  return GetScriptContextFromJSContext(aContext);
 }
 

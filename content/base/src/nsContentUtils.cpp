@@ -158,21 +158,18 @@ nsContentUtils::GetParserServiceWeakRef()
 }
 
 // static
-nsresult
-nsContentUtils::GetStaticScriptGlobal(JSContext* aContext, JSObject* aObj,
-                                      nsIScriptGlobalObject** aNativeGlobal)
+nsIScriptGlobalObject *
+nsContentUtils::GetStaticScriptGlobal(JSContext* aContext, JSObject* aObj)
 {
   if (!sXPConnect) {
-    *aNativeGlobal = nsnull;
-
-    return NS_OK;
+    return nsnull;
   }
 
   JSObject* parent;
   JSObject* glob = aObj; // starting point for search
 
   if (!glob)
-    return NS_ERROR_FAILURE;
+    return nsnull;
 
   while (nsnull != (parent = JS_GetParent(aContext, glob))) {
     glob = parent;
@@ -180,54 +177,47 @@ nsContentUtils::GetStaticScriptGlobal(JSContext* aContext, JSObject* aObj,
 
   nsCOMPtr<nsIXPConnectWrappedNative> wrapped_native;
 
-  nsresult rv =
-    sXPConnect->GetWrappedNativeOfJSObject(aContext, glob,
-                                           getter_AddRefs(wrapped_native));
-  NS_ENSURE_SUCCESS(rv, rv);
+  sXPConnect->GetWrappedNativeOfJSObject(aContext, glob,
+                                         getter_AddRefs(wrapped_native));
+  NS_ENSURE_TRUE(wrapped_native, nsnull);
 
   nsCOMPtr<nsISupports> native;
-  rv = wrapped_native->GetNative(getter_AddRefs(native));
-  NS_ENSURE_SUCCESS(rv, rv);
+  wrapped_native->GetNative(getter_AddRefs(native));
 
-  return CallQueryInterface(native, aNativeGlobal);
+  nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(native));
+
+  // This will return a pointer to something that's about to be
+  // released, but that's ok here.
+  return sgo;
 }
 
 //static
-nsresult
+nsIScriptContext *
 nsContentUtils::GetStaticScriptContext(JSContext* aContext,
-                                       JSObject* aObj,
-                                       nsIScriptContext** aScriptContext)
+                                       JSObject* aObj)
 {
-  nsCOMPtr<nsIScriptGlobalObject> nativeGlobal;
-  GetStaticScriptGlobal(aContext, aObj, getter_AddRefs(nativeGlobal));
+  nsIScriptGlobalObject *nativeGlobal = GetStaticScriptGlobal(aContext, aObj);
   if (!nativeGlobal)
-    return NS_ERROR_FAILURE;
-  nsIScriptContext* scriptContext = nsnull;
-  nativeGlobal->GetContext(&scriptContext);
-  *aScriptContext = scriptContext;
-  return scriptContext ? NS_OK : NS_ERROR_FAILURE;
+    return nsnull;
+  return nativeGlobal->GetContext();
 }
 
 //static
-nsresult
-nsContentUtils::GetDynamicScriptGlobal(JSContext* aContext,
-                                       nsIScriptGlobalObject** aNativeGlobal)
+nsIScriptGlobalObject *
+nsContentUtils::GetDynamicScriptGlobal(JSContext* aContext)
 {
-  nsCOMPtr<nsIScriptContext> scriptCX;
-  GetDynamicScriptContext(aContext, getter_AddRefs(scriptCX));
+  nsIScriptContext *scriptCX = GetDynamicScriptContext(aContext);
   if (!scriptCX) {
-    *aNativeGlobal = nsnull;
-    return NS_ERROR_FAILURE;
+    return nsnull;
   }
-  return scriptCX->GetGlobalObject(aNativeGlobal);
+  return scriptCX->GetGlobalObject();
 }
 
 //static
-nsresult
-nsContentUtils::GetDynamicScriptContext(JSContext *aContext,
-                                        nsIScriptContext** aScriptContext)
+nsIScriptContext *
+nsContentUtils::GetDynamicScriptContext(JSContext *aContext)
 {
-  return GetScriptContextFromJSContext(aContext, aScriptContext);
+  return GetScriptContextFromJSContext(aContext);
 }
 
 template <class OutputIterator>
@@ -746,31 +736,26 @@ nsContentUtils::doReparentContentWrapper(nsIContent *aChild,
   return rv;
 }
 
-static
-nsresult GetContextFromDocument(nsIDocument *aDocument, JSContext **cx)
+static JSContext *
+GetContextFromDocument(nsIDocument *aDocument)
 {
-  *cx = nsnull;
-
   nsIScriptGlobalObject *sgo = aDocument->GetScriptGlobalObject();
 
   if (!sgo) {
     // No script global, no context.
 
-    return NS_OK;
+    return nsnull;
   }
 
-  nsCOMPtr<nsIScriptContext> scx;
-  sgo->GetContext(getter_AddRefs(scx));
+  nsIScriptContext *scx = sgo->GetContext();
 
   if (!scx) {
     // No context left in the old scope...
 
-    return NS_OK;
+    return nsnull;
   }
 
-  *cx = (JSContext *)scx->GetNativeContext();
-
-  return NS_OK;
+  return (JSContext *)scx->GetNativeContext();
 }
 
 // static
@@ -813,9 +798,7 @@ nsContentUtils::ReparentContentWrapper(nsIContent *aContent,
     new_parent = aNewParent;
   }
 
-  JSContext *cx = nsnull;
-
-  GetContextFromDocument(old_doc, &cx);
+  JSContext *cx = GetContextFromDocument(old_doc);
 
   if (!cx) {
     // No JSContext left in the old scope, can't find the old wrapper
@@ -857,49 +840,51 @@ nsContentUtils::ReparentContentWrapper(nsIContent *aContent,
                                   obj);
 }
 
-void
-nsContentUtils::GetDocShellFromCaller(nsIDocShell** aDocShell)
+nsIDocShell *
+nsContentUtils::GetDocShellFromCaller()
 {
-  *aDocShell = nsnull;
   if (!sThreadJSContextStack) {
-    return;
+    return nsnull;
   }
 
   JSContext *cx = nsnull;
   sThreadJSContextStack->Peek(&cx);
 
   if (cx) {
-    nsCOMPtr<nsIScriptGlobalObject> sgo;
-    GetDynamicScriptGlobal(cx, getter_AddRefs(sgo));
+    nsIScriptGlobalObject *sgo = GetDynamicScriptGlobal(cx);
 
     if (sgo) {
-      sgo->GetDocShell(aDocShell);
+      return sgo->GetDocShell();
     }
   }
+
+  return nsnull;
 }
 
-void
-nsContentUtils::GetDocumentFromCaller(nsIDOMDocument** aDocument)
+nsIDOMDocument *
+nsContentUtils::GetDocumentFromCaller()
 {
-  *aDocument = nsnull;
   if (!sThreadJSContextStack) {
-    return;
+    return nsnull;
   }
 
   JSContext *cx = nsnull;
   sThreadJSContextStack->Peek(&cx);
 
+  nsCOMPtr<nsIDOMDocument> doc;
+
   if (cx) {
-    nsCOMPtr<nsIScriptGlobalObject> sgo;
-    GetDynamicScriptGlobal(cx, getter_AddRefs(sgo));
+    nsIScriptGlobalObject *sgo = GetDynamicScriptGlobal(cx);
 
     nsCOMPtr<nsIDOMWindowInternal> win(do_QueryInterface(sgo));
-    if (!win) {
-      return;
+    if (win) {
+      win->GetDocument(getter_AddRefs(doc));
     }
-
-    win->GetDocument(aDocument);
   }
+
+  // This will return a pointer to something we're about to release,
+  // but that's ok here.
+  return doc;
 }
 
 PRBool
@@ -1635,7 +1620,7 @@ nsCxPusher::Push(nsISupports *aCurrentTarget)
   JSContext *cx = nsnull;
 
   if (sgo) {
-    sgo->GetContext(getter_AddRefs(mScx));
+    mScx = sgo->GetContext();
 
     if (mScx) {
       cx = (JSContext *)mScx->GetNativeContext();

@@ -337,21 +337,19 @@ enter_js_from_java_impl(JNIEnv *jEnv, char **errp,
     nsCOMPtr<nsISecurityContext> javaSecurityContext = do_QueryInterface(credentials);
     if (javaSecurityContext) {
         if (pJSCX) {
-            nsCOMPtr<nsIScriptContext> scriptContext;
-            GetScriptContextFromJSContext(pJSCX,
-                                          getter_AddRefs(scriptContext));
+            nsIScriptContext *scriptContext =
+                GetScriptContextFromJSContext(pJSCX);
 
             if (scriptContext) {
-                nsCOMPtr<nsIScriptGlobalObject> global;
-                scriptContext->GetGlobalObject(getter_AddRefs(global));
+                nsIScriptGlobalObject *global =
+                    scriptContext->GetGlobalObject();
                 NS_ASSERTION(global, "script context has no global object");
 
-                if (global) {
-                    nsCOMPtr<nsIScriptObjectPrincipal> globalData = do_QueryInterface(global);
-                    if (globalData) {
-                        if (NS_FAILED(globalData->GetPrincipal(getter_AddRefs(principal))))
-                            return NS_ERROR_FAILURE;
-                    }
+                nsCOMPtr<nsIScriptObjectPrincipal> globalData =
+                    do_QueryInterface(global);
+                if (globalData) {
+                    if (NS_FAILED(globalData->GetPrincipal(getter_AddRefs(principal))))
+                        return NS_ERROR_FAILURE;
                 }
             }
         }
@@ -407,8 +405,7 @@ exit_js_impl(JNIEnv *jEnv, JSContext *cx)
     // The main idea is to execute terminate function if have any;
     if (cx)
     {
-        nsCOMPtr<nsIScriptContext> scriptContext;
-        GetScriptContextFromJSContext(cx, getter_AddRefs(scriptContext));
+        nsIScriptContext *scriptContext = GetScriptContextFromJSContext(cx);
 
         if (scriptContext)
         {

@@ -94,11 +94,9 @@ HWND hwndForDOMWindow( nsISupports *window )
   nsCOMPtr<nsIScriptGlobalObject> ppScriptGlobalObj( do_QueryInterface(window) );
   if ( !ppScriptGlobalObj )
       return 0;
-  nsCOMPtr<nsIDocShell> ppDocShell;
-  ppScriptGlobalObj->GetDocShell( getter_AddRefs( ppDocShell ) );
-  if ( !ppDocShell ) return 0;
   
-  nsCOMPtr<nsIBaseWindow> ppBaseWindow( do_QueryInterface( ppDocShell ) );
+  nsCOMPtr<nsIBaseWindow> ppBaseWindow =
+      do_QueryInterface( ppScriptGlobalObj->GetDocShell() );
   if (!ppBaseWindow) return 0;
 
   nsCOMPtr<nsIWidget> ppWidget;

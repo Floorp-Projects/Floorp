@@ -124,8 +124,7 @@ nsWalletlibService::WALLET_RequestToCapture(nsIDOMWindowInternal* aWin,
 
   nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject;
   scriptGlobalObject = do_QueryInterface(aWin);
-  nsCOMPtr<nsIDocShell> docShell;
-  scriptGlobalObject->GetDocShell(getter_AddRefs(docShell));
+  nsIDocShell *docShell = scriptGlobalObject->GetDocShell();
 
   nsCOMPtr<nsIPresShell> presShell;
   if(docShell)
@@ -152,8 +151,7 @@ nsWalletlibService::WALLET_Prefill(PRBool quick,
 {
   nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject;
   scriptGlobalObject = do_QueryInterface(aWin);
-  nsCOMPtr<nsIDocShell> docShell;
-  scriptGlobalObject->GetDocShell(getter_AddRefs(docShell));
+  nsIDocShell *docShell = scriptGlobalObject->GetDocShell();
 
   nsCOMPtr<nsIPresShell> presShell;
   if(docShell)

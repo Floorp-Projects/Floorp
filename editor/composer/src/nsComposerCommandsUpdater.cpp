@@ -233,9 +233,7 @@ nsComposerCommandsUpdater::Init(nsIDOMWindow* aDOMWindow)
   nsCOMPtr<nsIScriptGlobalObject> scriptObject(do_QueryInterface(aDOMWindow));
   if (scriptObject)
   {
-    nsCOMPtr<nsIDocShell> docShell;
-    scriptObject->GetDocShell(getter_AddRefs(docShell));
-    mDocShell = docShell.get();		
+    mDocShell = scriptObject->GetDocShell();
   }
   return NS_OK;
 }

@@ -1558,10 +1558,10 @@ static void ShowConsole(nsBrowserWindow* aWindow)
                                                   MAKEINTRESOURCE(ACCELERATOR_TABLE));
       }
       
-      nsIScriptContext *context = nsnull;
       nsCOMPtr<nsIScriptGlobalObject> scriptGlobal(do_GetInterface(aWindow->mDocShell));
-      if (scriptGlobal) {       
-        if ((NS_OK == scriptGlobal->GetContext(&context)) && context) {
+      if (scriptGlobal) {
+        nsIScriptContext *context;
+        if ((context = scriptGlobal->GetContext())) {
 
           // create the console
           gConsole = JSConsole::CreateConsole();

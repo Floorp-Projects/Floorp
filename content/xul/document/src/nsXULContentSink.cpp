@@ -1446,8 +1446,7 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
           if (doc) {
               nsIScriptGlobalObject* globalObject = doc->GetScriptGlobalObject();
               if (globalObject) {
-                  nsCOMPtr<nsIScriptContext> scriptContext;
-                  globalObject->GetContext(getter_AddRefs(scriptContext));
+                  nsIScriptContext *scriptContext = globalObject->GetContext();
                   if (scriptContext)
                       script->DeserializeOutOfLine(nsnull, scriptContext);
               }

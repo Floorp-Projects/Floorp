@@ -144,9 +144,8 @@ NS_IMETHODIMP nsWebBrowserFind::FindNext(PRBool *outDidFind)
     if (!mSearchSubFrames && !mSearchParentFrames)
         return NS_OK;
 
-    nsCOMPtr<nsIDocShell>  rootDocShell;
-    rv = GetDocShellFromWindow(rootFrame, getter_AddRefs(rootDocShell));
-    if (NS_FAILED(rv)) return rv;
+    nsIDocShell *rootDocShell = GetDocShellFromWindow(rootFrame);
+    if (!rootDocShell) return NS_ERROR_FAILURE;
     
     PRInt32 enumDirection;
     if (mFindBackwards)
@@ -160,12 +159,10 @@ NS_IMETHODIMP nsWebBrowserFind::FindNext(PRBool *outDidFind)
     if (NS_FAILED(rv)) return rv;
         
     // remember where we started
-    nsCOMPtr<nsIDocShell>  startingShell;
-    rv = GetDocShellFromWindow(searchFrame, getter_AddRefs(startingShell));
+    nsCOMPtr<nsIDocShellTreeItem> startingItem =
+        do_QueryInterface(GetDocShellFromWindow(searchFrame), &rv);
     if (NS_FAILED(rv)) return rv;
-    nsCOMPtr<nsIDocShellTreeItem> startingItem = do_QueryInterface(startingShell, &rv);
-    if (NS_FAILED(rv)) return rv;
-    
+
     nsCOMPtr<nsIDocShellTreeItem> curItem;
 
     // XXX We should avoid searching in frameset documents here.
@@ -619,8 +616,7 @@ NS_IMETHODIMP nsWebBrowserFind::SetSearchParentFrames(PRBool aSearchParentFrames
 
 void nsWebBrowserFind::MoveFocusToCaret(nsIDOMWindow *aWindow)
 {
-  nsCOMPtr<nsIDocShell> docShell;
-  GetDocShellFromWindow(aWindow, getter_AddRefs(docShell));
+  nsIDocShell *docShell = GetDocShellFromWindow(aWindow);
   if (!docShell)
     return;
   nsCOMPtr<nsIPresShell> presShell;
@@ -683,9 +679,7 @@ nsresult nsWebBrowserFind::SearchInFrame(nsIDOMWindow* aWindow,
     nsCOMPtr<nsIDOMWindow> searchFrame = do_QueryReferent(mCurrentSearchFrame);    
     // Get the selection controller -- we'd better do this every time,
     // since the doc might have changed since the last time.
-    nsCOMPtr<nsIDocShell> docShell;
-    rv = GetDocShellFromWindow(aWindow, getter_AddRefs(docShell));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsIDocShell *docShell = GetDocShellFromWindow(aWindow);
     NS_ENSURE_ARG_POINTER(docShell);
 
     nsCOMPtr<nsIPresShell> presShell;
@@ -797,18 +791,15 @@ nsresult nsWebBrowserFind::OnFind(nsIDOMWindow *aFoundWindow)
 
   GetDocShellFromWindow
 
-  Utility method. This will always return an error if no docShell
+  Utility method. This will always return nsnull if no docShell
   is returned. Oh why isn't there a better way to do this?
 ----------------------------------------------------------------------------*/
-nsresult
-nsWebBrowserFind::GetDocShellFromWindow(nsIDOMWindow *inWindow, nsIDocShell** outDocShell)
+nsIDocShell *
+nsWebBrowserFind::GetDocShellFromWindow(nsIDOMWindow *inWindow)
 {
   nsCOMPtr<nsIScriptGlobalObject> scriptGO(do_QueryInterface(inWindow));
-  if (!scriptGO) return NS_ERROR_FAILURE;
+  if (!scriptGO) return nsnull;
 
-  nsresult rv = scriptGO->GetDocShell(outDocShell);
-  if (NS_FAILED(rv)) return rv;
-  if (!*outDocShell) return NS_ERROR_FAILURE;
-  return NS_OK;
+  return scriptGO->GetDocShell();
 }
 

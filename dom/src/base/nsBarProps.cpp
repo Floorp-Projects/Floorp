@@ -278,14 +278,13 @@ ScrollbarsPropImpl::~ScrollbarsPropImpl()
 NS_IMETHODIMP
 ScrollbarsPropImpl::GetVisible(PRBool *aVisible)
 {
-  NS_ENSURE_ARG_POINTER(aVisible);
   *aVisible = PR_TRUE; // one assumes
 
   nsCOMPtr<nsIDOMWindow> domwin(do_QueryReferent(mDOMWindowWeakref));
   if (domwin) { // dom window not deleted
-    nsCOMPtr<nsIDocShell> docshell;
-    mDOMWindow->GetDocShell(getter_AddRefs(docshell));
-    nsCOMPtr<nsIScrollable> scroller(do_QueryInterface(docshell));
+    nsCOMPtr<nsIScrollable> scroller =
+      do_QueryInterface(mDOMWindow->GetDocShell());
+
     if (scroller) {
       PRInt32 prefValue = aVisible ? NS_STYLE_OVERFLOW_AUTO :
                                      NS_STYLE_OVERFLOW_HIDDEN;
@@ -315,9 +314,9 @@ ScrollbarsPropImpl::SetVisible(PRBool aVisible)
 
   nsCOMPtr<nsIDOMWindow> domwin(do_QueryReferent(mDOMWindowWeakref));
   if (domwin) { // dom window must still exist. use away.
-    nsCOMPtr<nsIDocShell> docshell;
-    mDOMWindow->GetDocShell(getter_AddRefs(docshell));
-    nsCOMPtr<nsIScrollable> scroller(do_QueryInterface(docshell));
+    nsCOMPtr<nsIScrollable> scroller =
+      do_QueryInterface(mDOMWindow->GetDocShell());
+
     if (scroller) {
       PRInt32 prefValue = aVisible ? NS_STYLE_OVERFLOW_AUTO :
                                      NS_STYLE_OVERFLOW_HIDDEN;

@@ -165,7 +165,6 @@ nsresult
 PrefObserver::Subscribe()
 {
     NS_ENSURE_TRUE(mPrefBranch, NS_ERROR_FAILURE);
-    nsresult rv;
 
     mPrefBranch->AddObserver(kProxyPref, this, PR_TRUE);
     mPrefBranch->AddObserver(kUserAgentPref, this, PR_TRUE);
@@ -180,7 +179,6 @@ nsresult
 PrefObserver::Unsubscribe()
 {
     NS_ENSURE_TRUE(mPrefBranch, NS_ERROR_FAILURE);
-    nsresult rv;
 
     mPrefBranch->RemoveObserver(kProxyPref, this);
     mPrefBranch->RemoveObserver(kUserAgentPref, this);

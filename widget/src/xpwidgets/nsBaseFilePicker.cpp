@@ -65,8 +65,7 @@ NS_IMETHODIMP nsBaseFilePicker::DOMWindowToWidget(nsIDOMWindowInternal *dw, nsIW
 
   nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(dw);
   if (sgo) {
-    nsCOMPtr<nsIDocShell> docShell;
-    sgo->GetDocShell(getter_AddRefs(docShell));
+    nsIDocShell *docShell = sgo->GetDocShell();
     
     if (docShell) {
 

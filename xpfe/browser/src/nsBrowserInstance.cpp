@@ -424,8 +424,7 @@ nsBrowserInstance::ReinitializeContentVariables()
   nsCOMPtr<nsIScriptGlobalObject> globalObj(do_QueryInterface(contentWindow));
 
   if (globalObj) {
-    nsCOMPtr<nsIDocShell> docShell;
-    globalObj->GetDocShell(getter_AddRefs(docShell));
+    nsIDocShell *docShell = globalObj->GetDocShell();
 
     mContentAreaDocShellWeak = do_GetWeakReference(docShell); // Weak reference
 
@@ -587,9 +586,9 @@ nsBrowserInstance::SetWebShellWindow(nsIDOMWindowInternal* aWin)
   }
 
   if (APP_DEBUG) {
-    nsCOMPtr<nsIDocShell> docShell;
-    globalObj->GetDocShell(getter_AddRefs(docShell));
-    nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
+    nsCOMPtr<nsIDocShellTreeItem> docShellAsItem =
+      do_QueryInterface(globalObj->GetDocShell());
+
     if (docShellAsItem) {
       // inform our top level webshell that we are its parent URI content listener...
       nsXPIDLString name;

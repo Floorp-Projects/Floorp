@@ -891,10 +891,10 @@ nsImageMap::UpdateAreas()
 nsresult
 nsImageMap::AddArea(nsIContent* aArea)
 {
-  nsAutoString shape, coords, baseURL, noHref;
+  nsAutoString shape, coords;
   aArea->GetAttr(kNameSpaceID_None, nsHTMLAtoms::shape, shape);
   aArea->GetAttr(kNameSpaceID_None, nsHTMLAtoms::coords, coords);
-  PRBool hasURL = (PRBool)(NS_CONTENT_ATTR_HAS_VALUE != aArea->GetAttr(kNameSpaceID_None, nsHTMLAtoms::nohref, noHref));
+  PRBool hasURL = !aArea->HasAttr(kNameSpaceID_None, nsHTMLAtoms::nohref);
 
   //Add focus listener to track area focus changes
   nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(aArea));

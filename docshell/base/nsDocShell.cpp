@@ -1096,10 +1096,12 @@ nsresult nsDocShell::FindTarget(const PRUnichar *aWindowTarget,
         if (NS_FAILED(rv)) return rv;
 
         // This will AddRef() aResult...
-        rv = sgo->GetDocShell(aResult);
+        *aResult = sgo->GetDocShell();
 
         // If all went well, indicate that a new window has been created.
         if (*aResult) {
+            NS_ADDREF(*aResult);
+
             *aIsNewWindow = PR_TRUE;
 
             // if we just open a new window for this link, charset from current docshell 

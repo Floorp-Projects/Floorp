@@ -368,8 +368,7 @@ nsDOMImplementation::CreateDocument(const nsAString& aNamespaceURI,
   nsresult rv = NS_NewDOMDocument(aReturn, aNamespaceURI, aQualifiedName,
                                   aDoctype, mBaseURI);
 
-  nsCOMPtr<nsIDocShell> docShell;
-  nsContentUtils::GetDocShellFromCaller(getter_AddRefs(docShell));
+  nsIDocShell *docShell = nsContentUtils::GetDocShellFromCaller();
   if (docShell) {
     nsCOMPtr<nsIPresContext> presContext;
     docShell->GetPresContext(getter_AddRefs(presContext));
@@ -1757,11 +1756,8 @@ nsDocument::EndLoad()
   nsCOMPtr<nsIDOMEventTarget> target_frame;
 
   if (mScriptGlobalObject) {
-    nsCOMPtr<nsIDocShell> docShell;
-    mScriptGlobalObject->GetDocShell(getter_AddRefs(docShell));
-
     nsCOMPtr<nsIDocShellTreeItem> docShellAsItem =
-      do_QueryInterface(docShell);
+      do_QueryInterface(mScriptGlobalObject->GetDocShell());
 
     if (docShellAsItem) {
       docShellAsItem->GetSameTypeParent(getter_AddRefs(docShellParent));
@@ -3788,10 +3784,8 @@ nsDocument::FlushPendingNotifications(PRBool aFlushReflows,
   // that uses mParentDocument, but mParentDocument is never set in
   // the current code!
 
-  nsCOMPtr<nsIDocShell> docShell;
-  mScriptGlobalObject->GetDocShell(getter_AddRefs(docShell));
-
-  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
+  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem =
+    do_QueryInterface(mScriptGlobalObject->GetDocShell());
 
   if (docShellAsItem) {
     nsCOMPtr<nsIDocShellTreeItem> docShellParent;
@@ -3923,8 +3917,7 @@ nsDocument::IsScriptEnabled()
   nsIScriptGlobalObject* globalObject = GetScriptGlobalObject();
   NS_ENSURE_TRUE(globalObject, PR_TRUE);
 
-  nsCOMPtr<nsIScriptContext> scriptContext;
-  globalObject->GetContext(getter_AddRefs(scriptContext));
+  nsIScriptContext *scriptContext = globalObject->GetContext();
   NS_ENSURE_TRUE(scriptContext, PR_TRUE);
 
   JSContext* cx = (JSContext *) scriptContext->GetNativeContext();

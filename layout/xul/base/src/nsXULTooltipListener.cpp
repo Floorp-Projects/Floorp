@@ -566,8 +566,9 @@ nsXULTooltipListener::GetTooltipFor(nsIContent* aTarget, nsIContent** aTooltip)
   }
   nsIScriptGlobalObject *global = document->GetScriptGlobalObject();
   if (global) {
-    nsCOMPtr<nsIScriptContext> context;
-    if (NS_SUCCEEDED(global->GetContext(getter_AddRefs(context))) && context) {
+    nsIScriptContext *context = global->GetContext();
+
+    if (context) {
       nsCOMPtr<nsIDOMWindowInternal> domWindow = do_QueryInterface(global);
       if (!domWindow)
         return NS_ERROR_FAILURE;

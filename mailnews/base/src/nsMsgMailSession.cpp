@@ -341,9 +341,8 @@ nsresult nsMsgMailSession::GetTopmostMsgWindow(nsIMsgWindow* *aMsgWindow)
         nsCOMPtr<nsIScriptGlobalObject> globalObj = do_QueryInterface(topMostWindow, &rv);
         NS_ENSURE_SUCCESS(rv, rv);
   
-        nsCOMPtr<nsIDocShell> topDocShell;  // use this for the match
-        rv = globalObj->GetDocShell(getter_AddRefs(topDocShell));
-        NS_ENSURE_SUCCESS(rv, rv);
+        // use this for the match
+        nsIDocShell *topDocShell = globalObj->GetDocShell();
 
         // loop for the msgWindow array to find the match
         nsCOMPtr<nsIDocShell> docShell;

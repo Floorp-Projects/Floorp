@@ -390,7 +390,7 @@ NS_IMPL_RELEASE(GlobalWindowImpl)
 // GlobalWindowImpl::nsIScriptGlobalObject
 //*****************************************************************************
 
-NS_IMETHODIMP
+void
 GlobalWindowImpl::SetContext(nsIScriptContext* aContext)
 {
   // if setting the context to null, then we won't get to clean up the
@@ -406,10 +406,7 @@ GlobalWindowImpl::SetContext(nsIScriptContext* aContext)
   mContext = aContext;
 
   if (mContext) {
-    nsCOMPtr<nsIDOMWindowInternal> parent;
-    GetParentInternal(getter_AddRefs(parent));
-
-    if (parent) {
+    if (GetParentInternal()) {
       // This window is a [i]frame, don't bother GC'ing when the
       // frame's context is destroyed since a GC will happen when the
       // frameset or host document is destroyed anyway.
@@ -417,16 +414,12 @@ GlobalWindowImpl::SetContext(nsIScriptContext* aContext)
       mContext->SetGCOnDestruction(PR_FALSE);
     }
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-GlobalWindowImpl::GetContext(nsIScriptContext ** aContext)
+nsIScriptContext *
+GlobalWindowImpl::GetContext()
 {
-  NS_IF_ADDREF(*aContext = mContext);
-
-  return NS_OK;
+  return mContext;
 }
 
 NS_IMETHODIMP
@@ -436,7 +429,7 @@ GlobalWindowImpl::SetOpenerScriptURL(nsIURI* aURI)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
                                  PRBool aRemoveEventListeners,
                                  PRBool aClearScopeHint)
@@ -671,11 +664,11 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 GlobalWindowImpl::SetDocShell(nsIDocShell* aDocShell)
 {
   if (aDocShell == mDocShell)
-    return NS_OK;
+    return;
 
   // SetDocShell(nsnull) means the window is being torn down. Drop our
   // reference to the script context, allowing it to be deleted
@@ -755,43 +748,33 @@ GlobalWindowImpl::SetDocShell(nsIDocShell* aDocShell)
       else NS_NewWindowRoot(this, getter_AddRefs(mChromeEventHandler));
     }
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-GlobalWindowImpl::GetDocShell(nsIDocShell ** aDocShell)
+nsIDocShell *
+GlobalWindowImpl::GetDocShell()
 {
-  NS_IF_ADDREF(*aDocShell = mDocShell);
-
-  return NS_OK;
+  return mDocShell;
 }
 
-NS_IMETHODIMP
+void
 GlobalWindowImpl::SetOpenerWindow(nsIDOMWindowInternal* aOpener)
 {
   mOpener = aOpener;
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 GlobalWindowImpl::SetGlobalObjectOwner(nsIScriptGlobalObjectOwner* aOwner)
 {
   mGlobalObjectOwner = aOwner;  // Note this is supposed to be a weak ref.
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-GlobalWindowImpl::GetGlobalObjectOwner(nsIScriptGlobalObjectOwner ** aOwner)
+nsIScriptGlobalObjectOwner *
+GlobalWindowImpl::GetGlobalObjectOwner()
 {
-  NS_ENSURE_ARG_POINTER(aOwner);
-
-  NS_IF_ADDREF(*aOwner = mGlobalObjectOwner);
-
-  return NS_OK;
+  return mGlobalObjectOwner;
 }
 
-NS_IMETHODIMP
+nsresult
 GlobalWindowImpl::HandleDOMEvent(nsIPresContext* aPresContext,
                                  nsEvent* aEvent,
                                  nsIDOMEvent** aDOMEvent,
@@ -929,9 +912,6 @@ GlobalWindowImpl::HandleDOMEvent(nsIPresContext* aPresContext,
   if (aEvent->message == NS_PAGE_LOAD) {
     nsCOMPtr<nsIContent> content(do_QueryInterface(mFrameElement));
 
-    nsCOMPtr<nsIDOMWindowInternal> parent;
-    GetParentInternal(getter_AddRefs(parent));
-
     nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(mDocShell));
 
     PRInt32 itemType = nsIDocShellTreeItem::typeChrome;
@@ -940,7 +920,8 @@ GlobalWindowImpl::HandleDOMEvent(nsIPresContext* aPresContext,
       treeItem->GetItemType(&itemType);
     }
 
-    if (content && parent && itemType != nsIDocShellTreeItem::typeChrome) {
+    if (content && GetParentInternal() &&
+        itemType != nsIDocShellTreeItem::typeChrome) {
       // If we're not in chrome, or at a chrome boundary, fire the
       // onload event for the frame element.
 
@@ -987,7 +968,7 @@ GlobalWindowImpl::GetGlobalJSObject()
   return mJSObject;
 }
 
-NS_IMETHODIMP
+void
 GlobalWindowImpl::OnFinalize(JSObject *aJSObject)
 {
   if (aJSObject == mJSObject) {
@@ -997,11 +978,9 @@ GlobalWindowImpl::OnFinalize(JSObject *aJSObject)
   } else {
     NS_WARNING("Weird, we're finalized with a null mJSObject?");
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 GlobalWindowImpl::SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts)
 {
   if (aEnabled && aFireTimeouts) {
@@ -1010,8 +989,6 @@ GlobalWindowImpl::SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts)
 
     RunTimeout(nsnull);
   }
-
-  return NS_OK;
 }
 
 
@@ -1049,16 +1026,12 @@ GlobalWindowImpl::GetPrincipal(nsIPrincipal** result)
   // loading a frameset that has a <frame src="javascript:xxx">, in
   // that case the global window is used in JS before we've loaded
   // a document into the window.
-  nsCOMPtr<nsIDOMWindowInternal> parent;
 
-  GetParentInternal(getter_AddRefs(parent));
+  nsCOMPtr<nsIScriptObjectPrincipal> objPrincipal =
+    do_QueryInterface(GetParentInternal());
 
-  if (parent) {
-    nsCOMPtr<nsIScriptObjectPrincipal> objPrincipal(do_QueryInterface(parent));
-
-    if (objPrincipal) {
-      return objPrincipal->GetPrincipal(result);
-    }
+  if (objPrincipal) {
+    return objPrincipal->GetPrincipal(result);
   }
 
   return NS_ERROR_FAILURE;
@@ -1475,9 +1448,9 @@ GlobalWindowImpl::GetOpener(nsIDOMWindowInternal** aOpener)
   // So, we look in the opener's root docshell to see if it's a mail window.
   nsCOMPtr<nsIScriptGlobalObject> openerSGO(do_QueryInterface(mOpener));
   if (openerSGO) {
-    nsCOMPtr<nsIDocShell> openerDocShell;
-    openerSGO->GetDocShell(getter_AddRefs(openerDocShell));
-    nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(openerDocShell));
+    nsCOMPtr<nsIDocShellTreeItem> docShellAsItem =
+      do_QueryInterface(openerSGO->GetDocShell());
+
     if (docShellAsItem) {
       nsCOMPtr<nsIDocShellTreeItem> openerRootItem;
       docShellAsItem->GetRootTreeItem(getter_AddRefs(openerRootItem));
@@ -2094,9 +2067,7 @@ NS_IMETHODIMP GlobalWindowImpl::SetFullScreen(PRBool aFullScreen)
   // SetFullScreen needs to be called on the root window, so get that
   // via the DocShell tree, and if we are not already the root,
   // call SetFullScreen on that window instead.
-  nsCOMPtr<nsIDocShell> docShell;
-  GetDocShell(getter_AddRefs(docShell));
-  nsCOMPtr<nsIDocShellTreeItem> treeItem = do_QueryInterface(docShell);
+  nsCOMPtr<nsIDocShellTreeItem> treeItem = do_QueryInterface(mDocShell);
   nsCOMPtr<nsIDocShellTreeItem> rootItem;
   treeItem->GetRootTreeItem(getter_AddRefs(rootItem));
   nsCOMPtr<nsIDOMWindowInternal> window = do_GetInterface(rootItem);
@@ -3282,12 +3253,9 @@ GlobalWindowImpl::FireAbuseEvents(PRBool aBlocked, PRBool aWindow,
     JSContext *cx = nsnull;
     stack->Peek(&cx);
     if (cx) {
-      nsCOMPtr<nsIScriptContext> currentCX;
-      nsJSUtils::GetDynamicScriptContext(cx, getter_AddRefs(currentCX));
+      nsIScriptContext *currentCX = nsJSUtils::GetDynamicScriptContext(cx);
       if (currentCX) {
-        nsCOMPtr<nsIScriptGlobalObject> gobj;
-        currentCX->GetGlobalObject(getter_AddRefs(gobj));
-        contextWindow = do_QueryInterface(gobj);
+        contextWindow = do_QueryInterface(currentCX->GetGlobalObject());
       }
     }
   }
@@ -3654,13 +3622,13 @@ GlobalWindowImpl::Close()
   }
 
   if (cx) {
-    nsCOMPtr<nsIScriptContext> currentCX;
-    nsJSUtils::GetDynamicScriptContext(cx, getter_AddRefs(currentCX));
+    nsIScriptContext *currentCX = nsJSUtils::GetDynamicScriptContext(cx);
 
     if (currentCX && currentCX == mContext) {
-      return currentCX->SetTerminationFunction(CloseWindow,
-                                               NS_STATIC_CAST(nsIDOMWindow *,
-                                                              this));
+      currentCX->SetTerminationFunction(CloseWindow,
+                                        NS_STATIC_CAST(nsIDOMWindow *,
+                                                       this));
+      return NS_OK;
     }
   }
 
@@ -3710,10 +3678,7 @@ GlobalWindowImpl::GetFrameElement(nsIDOMElement** aFrameElement)
 {
   *aFrameElement = nsnull;
 
-  nsCOMPtr<nsIDocShell> docShell;
-  GetDocShell(getter_AddRefs(docShell));
-
-  nsCOMPtr<nsIDocShellTreeItem> docShellTI(do_QueryInterface(docShell));
+  nsCOMPtr<nsIDocShellTreeItem> docShellTI(do_QueryInterface(mDocShell));
 
   if (!docShellTI) {
     return NS_OK;
@@ -4361,11 +4326,11 @@ GlobalWindowImpl::GetPrivateRoot(nsIDOMWindowInternal ** aParent)
   GetTop(getter_AddRefs(parent));
 
   nsCOMPtr<nsIScriptGlobalObject> parentTop = do_QueryInterface(parent);
-  nsCOMPtr<nsIDocShell> docShell;
   NS_ASSERTION(parentTop, "cannot get parentTop");
   if(parentTop == nsnull)
     return NS_ERROR_FAILURE;
-  parentTop->GetDocShell(getter_AddRefs(docShell));
+
+  nsIDocShell *docShell = parentTop->GetDocShell();
 
   // Get the chrome event handler from the doc shell, since we only
   // want to deal with XUL chrome handlers and not the new kind of
@@ -4719,19 +4684,22 @@ GlobalWindowImpl::GetInterface(const nsIID & aIID, void **aSink)
 // GlobalWindowImpl: Window Control Functions
 //*****************************************************************************
 
-void
-GlobalWindowImpl::GetParentInternal(nsIDOMWindowInternal **aParent)
+nsIDOMWindowInternal *
+GlobalWindowImpl::GetParentInternal()
 {
-  *aParent = nsnull;
+  nsIDOMWindowInternal *parentInternal = nsnull;
 
   nsCOMPtr<nsIDOMWindow> parent;
-
   GetParent(getter_AddRefs(parent));
 
   if (parent && parent != NS_STATIC_CAST(nsIDOMWindow *, this)) {
-    CallQueryInterface(parent, aParent);
-    NS_ASSERTION(*aParent, "Huh, parent not an nsIDOMWindowInternal?");
+    nsCOMPtr<nsIDOMWindowInternal> tmp(do_QueryInterface(parent));
+    NS_ASSERTION(parent, "Huh, parent not an nsIDOMWindowInternal?");
+
+    parentInternal = tmp;
   }
+
+  return parentInternal;
 }
 
 NS_IMETHODIMP
@@ -5032,10 +5000,7 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
     return;
   }
 
-  PRBool scripts_enabled = PR_TRUE;
-  mContext->GetScriptsEnabled(&scripts_enabled);
-
-  if (!scripts_enabled) {
+  if (!mContext->GetScriptsEnabled()) {
     // Scripts were enabled once in this window (unless aTimeout ==
     // nsnull) but now scripts are disabled (we might be in
     // print-preview, for instance), this means we shouldn't run any
@@ -5313,11 +5278,11 @@ nsTimeoutImpl::Release(nsIScriptContext *aContext)
     return;
 
   if (mExpr || mFunObj) {
-    nsCOMPtr<nsIScriptContext> scx(aContext);
+    nsIScriptContext *scx = aContext;
     JSRuntime *rt = nsnull;
 
     if (!scx && mWindow) {
-      mWindow->GetContext(getter_AddRefs(scx));
+      scx = mWindow->GetContext();
     }
 
     if (scx) {
@@ -5643,13 +5608,12 @@ GlobalWindowImpl::SecurityCheckURL(const char *aURL)
   nsIURI* baseURI = nsnull;
   nsCOMPtr<nsIURI> uriToLoad;
 
-  nsCOMPtr<nsIScriptContext> scriptcx;
-  nsJSUtils::GetDynamicScriptContext(cx, getter_AddRefs(scriptcx));
+  nsIScriptContext *scriptcx = nsJSUtils::GetDynamicScriptContext(cx);
 
   if (scriptcx) {
-    nsCOMPtr<nsIScriptGlobalObject> gobj;
-    scriptcx->GetGlobalObject(getter_AddRefs(gobj));
-    nsCOMPtr<nsIDOMWindow> caller(do_QueryInterface(gobj));
+    nsCOMPtr<nsIDOMWindow> caller =
+      do_QueryInterface(scriptcx->GetGlobalObject());
+
     if (caller) {
       nsCOMPtr<nsIDOMDocument> callerDOMdoc;
       caller->GetDocument(getter_AddRefs(callerDOMdoc));

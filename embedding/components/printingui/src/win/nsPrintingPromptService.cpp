@@ -141,12 +141,9 @@ nsPrintingPromptService::GetHWNDForDOMWindow(nsIDOMWindow *aWindow)
 
     // Now we might be the Browser so check this path
     nsCOMPtr<nsIScriptGlobalObject> scriptGlobal(do_QueryInterface(aWindow));
-    nsCOMPtr<nsIDocShell> docShell;
-    scriptGlobal->GetDocShell(getter_AddRefs(docShell));
-    if (!docShell) return nsnull;
 
-    nsCOMPtr<nsIDocShellTreeItem> treeItem;
-    treeItem = do_QueryInterface(docShell);
+    nsCOMPtr<nsIDocShellTreeItem> treeItem =
+        do_QueryInterface(scriptGlobal->GetDocShell());
     if (!treeItem) return nsnull;
 
     nsCOMPtr<nsIDocShellTreeOwner> treeOwner;

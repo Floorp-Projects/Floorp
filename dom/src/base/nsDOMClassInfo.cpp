@@ -2965,8 +2965,7 @@ needsSecurityCheck(JSContext *cx, nsIXPConnectWrappedNative *wrapper)
       return PR_TRUE;
     }
 
-    nsCOMPtr<nsIScriptContext> otherScriptContext;
-    sgo->GetContext(getter_AddRefs(otherScriptContext));
+    nsIScriptContext *otherScriptContext = sgo->GetContext();
 
     if (!otherScriptContext) {
       return PR_TRUE;
@@ -3055,10 +3054,9 @@ nsDOMClassInfo::doCheckPropertyAccess(JSContext *cx, JSObject *obj, jsval id,
     }
   }
 
-  nsCOMPtr<nsIScriptContext> scx;
-  sgo->GetContext(getter_AddRefs(scx));
+  nsIScriptContext *scx = sgo->GetContext();
 
-  if (!scx || NS_FAILED(scx->IsContextInitialized())) {
+  if (!scx || !scx->IsContextInitialized()) {
     return NS_OK;
   }
 
@@ -3224,11 +3222,7 @@ nsWindowSH::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     nsresult rv = window->GetLocation(getter_AddRefs(location));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsDependentString href(NS_REINTERPRET_CAST(PRUnichar *,
-                                               ::JS_GetStringChars(val)),
-                           ::JS_GetStringLength(val));
-
-    rv = location->SetHref(href);
+    rv = location->SetHref(nsDependentJSString(val));
     NS_ENSURE_SUCCESS(rv, rv);
 
     return WrapNative(cx, obj, location, NS_GET_IID(nsIDOMLocation), vp);
@@ -3331,9 +3325,7 @@ BaseStubConstructor(const nsGlobalNameStruct *name_struct, JSContext *cx,
 
   nsCOMPtr<nsIScriptObjectOwner> owner(do_QueryInterface(native));
   if (owner) {
-    nsCOMPtr<nsIScriptContext> context;
-
-    nsJSUtils::GetStaticScriptContext(cx, obj, getter_AddRefs(context));
+    nsIScriptContext *context = nsJSUtils::GetStaticScriptContext(cx, obj);
     if (!context) {
       nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_UNEXPECTED);
 
@@ -3711,9 +3703,7 @@ nsWindowSH::GlobalResolve(nsISupports *native, JSContext *cx, JSObject *obj,
 
   NS_ENSURE_TRUE(gNameSpaceManager, NS_ERROR_NOT_INITIALIZED);
 
-  nsDependentString name(NS_REINTERPRET_CAST(const PRUnichar*,
-                                             ::JS_GetStringChars(str)),
-                         ::JS_GetStringLength(str));
+  nsDependentJSString name(str);
 
   const nsGlobalNameStruct *name_struct = nsnull;
   const PRUnichar *class_name = nsnull;
@@ -4015,8 +4005,7 @@ nsWindowSH::GlobalResolve(nsISupports *native, JSContext *cx, JSObject *obj,
 
     nsCOMPtr<nsIScriptObjectOwner> owner(do_QueryInterface(native));
     if (owner) {
-      nsCOMPtr<nsIScriptContext> context;
-      nsJSUtils::GetStaticScriptContext(cx, obj, getter_AddRefs(context));
+      nsIScriptContext *context = nsJSUtils::GetStaticScriptContext(cx, obj);
       NS_ENSURE_TRUE(context, NS_ERROR_UNEXPECTED);
 
       JSObject *prop_obj = nsnull;
@@ -4048,9 +4037,7 @@ nsWindowSH::GlobalResolve(nsISupports *native, JSContext *cx, JSObject *obj,
     nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(native));
     NS_ENSURE_TRUE(sgo, NS_ERROR_UNEXPECTED);
 
-    nsCOMPtr<nsIScriptContext> context;
-
-    sgo->GetContext(getter_AddRefs(context));
+    nsIScriptContext *context = sgo->GetContext();
     NS_ENSURE_TRUE(context, NS_ERROR_UNEXPECTED);
 
     rv = nameset->InitializeNameSet(context);
@@ -4092,17 +4079,15 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                        JSObject **objp, PRBool *_retval)
 {
   if (JSVAL_IS_STRING(id)) {
-    JSString *str = JSVAL_TO_STRING(id);
     nsCOMPtr<nsISupports> native;
     wrapper->GetNative(getter_AddRefs(native));
 
     nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(native));
     NS_ENSURE_TRUE(sgo, NS_ERROR_UNEXPECTED);
 
-    nsCOMPtr<nsIScriptContext> my_context;
-    sgo->GetContext(getter_AddRefs(my_context));
+    nsIScriptContext *my_context = sgo->GetContext();
 
-    if (!my_context || NS_FAILED(my_context->IsContextInitialized())) {
+    if (!my_context || !my_context->IsContextInitialized()) {
       // The context is not yet initialized so there's nothing we can do
       // here yet.
 
@@ -4148,10 +4133,9 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     // method on an interface that would let us just call into the
     // window code directly...
 
-    nsCOMPtr<nsIDocShell> docShell;
-    sgo->GetDocShell(getter_AddRefs(docShell));
+    JSString *str = JSVAL_TO_STRING(id);
 
-    nsCOMPtr<nsIDocShellTreeNode> dsn(do_QueryInterface(docShell));
+    nsCOMPtr<nsIDocShellTreeNode> dsn(do_QueryInterface(sgo->GetDocShell()));
 
     PRInt32 count = 0;
 
@@ -4404,7 +4388,9 @@ nsWindowSH::Finalize(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(native));
   NS_ENSURE_TRUE(sgo, NS_ERROR_UNEXPECTED);
 
-  return sgo->OnFinalize(obj);
+  sgo->OnFinalize(obj);
+
+  return NS_OK;
 }
 
 
@@ -4645,10 +4631,8 @@ nsEventReceiverSH::RegisterCompileHandler(nsIXPConnectWrappedNative *wrapper,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIScriptContext> script_cx;
-  nsresult rv = nsJSUtils::GetStaticScriptContext(cx, obj,
-                                                  getter_AddRefs(script_cx));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsIScriptContext *script_cx = nsJSUtils::GetStaticScriptContext(cx, obj);
+  NS_ENSURE_TRUE(script_cx, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<nsISupports> native;
   wrapper->GetNative(getter_AddRefs(native));
@@ -4662,12 +4646,10 @@ nsEventReceiverSH::RegisterCompileHandler(nsIXPConnectWrappedNative *wrapper,
   receiver->GetListenerManager(getter_AddRefs(manager));
   NS_ENSURE_TRUE(manager, NS_ERROR_UNEXPECTED);
 
-  JSString *str = JSVAL_TO_STRING(id);
-  const PRUnichar *ustr = NS_REINTERPRET_CAST(const PRUnichar *,
-                                              ::JS_GetStringChars(str));
-
-  nsCOMPtr<nsIAtom> atom(do_GetAtom(ustr));
+  nsCOMPtr<nsIAtom> atom(do_GetAtom(nsDependentJSString(id)));
   NS_ENSURE_TRUE(atom, NS_ERROR_OUT_OF_MEMORY);
+
+  nsresult rv;
 
   if (compile) {
     rv = manager->CompileScriptEventListener(script_cx, native, atom,
@@ -4936,13 +4918,8 @@ nsNamedArraySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     wrapper->GetNative(getter_AddRefs(native));
 
     nsCOMPtr<nsISupports> item;
-
-    JSString *str = JSVAL_TO_STRING(id);
-    nsDependentString name(NS_REINTERPRET_CAST(const PRUnichar *,
-                                               ::JS_GetStringChars(str)),
-                           ::JS_GetStringLength(str));
-
-    nsresult rv = GetNamedItem(native, name, getter_AddRefs(item));
+    nsresult rv = GetNamedItem(native, nsDependentJSString(id),
+                               getter_AddRefs(item));
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (item) {
@@ -5300,11 +5277,7 @@ nsDocumentSH::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       JSString *val = ::JS_ValueToString(cx, *vp);
       NS_ENSURE_TRUE(val, NS_ERROR_UNEXPECTED);
 
-      nsDependentString href(NS_REINTERPRET_CAST(const PRUnichar *,
-                                                 ::JS_GetStringChars(val)),
-                             ::JS_GetStringLength(val));
-
-      nsresult rv = location->SetHref(href);
+      nsresult rv = location->SetHref(nsDependentJSString(val));
       NS_ENSURE_SUCCESS(rv, rv);
 
       return WrapNative(cx, obj, location, NS_GET_IID(nsIDOMLocation), vp);
@@ -5343,12 +5316,9 @@ nsHTMLDocumentSH::ResolveImpl(JSContext *cx,
   // should map to <input name="1">. Thus we can't use
   // JSVAL_TO_STRING() here.
   JSString *str = JS_ValueToString(cx, id);
+  NS_ENSURE_TRUE(str, NS_ERROR_UNEXPECTED);
 
-  const nsDependentString name(NS_REINTERPRET_CAST(const PRUnichar *,
-                                                   ::JS_GetStringChars(str)),
-                               ::JS_GetStringLength(str));
-
-  return doc->ResolveName(name, nsnull, result);
+  return doc->ResolveName(nsDependentJSString(str), nsnull, result);
 }
 
 // static
@@ -5533,9 +5503,7 @@ nsHTMLFormElementSH::FindNamedItem(nsIForm *aForm, JSString *str,
 {
   *aResult = nsnull;
 
-  nsDependentString name(NS_REINTERPRET_CAST(const PRUnichar *,
-                                             ::JS_GetStringChars(str)),
-                         ::JS_GetStringLength(str));
+  nsDependentJSString name(str);
 
   aForm->ResolveName(name, aResult);
 

@@ -819,9 +819,8 @@ END_COM_MAP()
         if (!globalObject)
             return E_UNEXPECTED;
 
-        nsCOMPtr<nsIScriptContext> scriptContext;
-        if (NS_FAILED(globalObject->GetContext(getter_AddRefs(scriptContext))) ||
-                !scriptContext)
+        nsIScriptContext *scriptContext = globalObject->GetContext();
+        if (!scriptContext)
             return E_UNEXPECTED;
 
         nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDocument));

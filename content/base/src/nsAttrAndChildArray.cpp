@@ -664,8 +664,11 @@ nsAttrAndChildArray::AddAttrSlot()
     return PR_FALSE;
   }
   void** offset = mImpl->mBuffer + slotCount * ATTRSIZE;
-  memmove(&ATTRS(mImpl)[slotCount + 1], &ATTRS(mImpl)[slotCount],
-          childCount * sizeof(nsIContent*));
+
+  if (childCount > 0) {
+    memmove(&ATTRS(mImpl)[slotCount + 1], &ATTRS(mImpl)[slotCount],
+            childCount * sizeof(nsIContent*));
+  }
 
   SetAttrSlotCount(slotCount + 1);
   offset[0] = nsnull;

@@ -207,16 +207,15 @@ nsHTMLScriptEventHandler::Invoke(nsISupports *aTargetObject,
 
   // Get the script context...
   nsCOMPtr<nsIDOMDocument> domdoc;
-  nsCOMPtr<nsIScriptContext> scriptContext;
-  nsCOMPtr<nsIScriptGlobalObject> sgo;
+  nsIScriptContext *scriptContext = nsnull;
 
   mOuter->GetOwnerDocument(getter_AddRefs(domdoc));
 
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(domdoc));
   if (doc) {
-    sgo = doc->GetScriptGlobalObject();
+    nsIScriptGlobalObject *sgo = doc->GetScriptGlobalObject();
     if (sgo) {
-      sgo->GetContext(getter_AddRefs(scriptContext));
+      scriptContext = sgo->GetContext();
     }
   }
   // Fail if is no script context is available...
@@ -280,7 +279,7 @@ nsHTMLScriptEventHandler::Invoke(nsISupports *aTargetObject,
 
   // Compile the event handler script...
   void* funcObject = nsnull;
-  nsCString funcName(NS_LITERAL_CSTRING("anonymous"));
+  NS_NAMED_LITERAL_CSTRING(funcName, "anonymous");
 
   rv = scriptContext->CompileFunction(scriptObject,
                                       funcName,   // method name

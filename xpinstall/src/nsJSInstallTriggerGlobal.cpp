@@ -237,15 +237,14 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
     {
         PRBool result;
 
-        nsCOMPtr<nsIScriptContext> scriptContext;
-        GetScriptContextFromJSContext(cx, getter_AddRefs(scriptContext));
+        nsIScriptContext *scriptContext = GetScriptContextFromJSContext(cx);
         if (scriptContext)
         {
-            nsCOMPtr<nsIScriptGlobalObject> globalObject;
-            scriptContext->GetGlobalObject(getter_AddRefs(globalObject));
+            nsIScriptGlobalObject *globalObject =
+                scriptContext->GetGlobalObject();
             if (globalObject)
             {
-                nativeThis->Install(globalObject, trigger,&result);
+                nativeThis->Install(globalObject, trigger, &result);
                 *rval = BOOLEAN_TO_JSVAL(result);
                 return JS_TRUE;
             }
@@ -319,13 +318,12 @@ InstallTriggerGlobalInstallChrome(JSContext *cx, JSObject *obj, uintN argc, jsva
         if (item && item->IsRelativeURL())
             item->mURL.Insert( baseURL, 0 );
 
-        nsCOMPtr<nsIScriptContext> scriptContext;
-        GetScriptContextFromJSContext(cx, getter_AddRefs(scriptContext));
+        nsIScriptContext *scriptContext = GetScriptContextFromJSContext(cx);
 
         if (scriptContext)
         {
-            nsCOMPtr<nsIScriptGlobalObject> globalObject;
-            scriptContext->GetGlobalObject(getter_AddRefs(globalObject));
+            nsIScriptGlobalObject *globalObject =
+                scriptContext->GetGlobalObject();
             if (globalObject)
             {
                 nsresult rv = nativeThis->InstallChrome(globalObject, chromeType, item, &nativeRet);
@@ -371,13 +369,12 @@ InstallTriggerGlobalStartSoftwareUpdate(JSContext *cx, JSObject *obj, uintN argc
         return JS_FALSE;
     }
 
-    nsCOMPtr<nsIScriptContext> scriptContext;
-    GetScriptContextFromJSContext(cx, getter_AddRefs(scriptContext));
+    nsIScriptContext *scriptContext = GetScriptContextFromJSContext(cx);
 
     if (scriptContext)
     {
-        nsCOMPtr<nsIScriptGlobalObject> globalObject;
-        scriptContext->GetGlobalObject(getter_AddRefs(globalObject));
+        nsIScriptGlobalObject *globalObject =
+            scriptContext->GetGlobalObject();
         if (globalObject)
         {
              if(NS_OK != nativeThis->StartSoftwareUpdate(globalObject, b0, b1, &nativeRet))
@@ -682,8 +679,7 @@ NS_NewScriptInstallTriggerGlobal(nsIScriptContext *aContext,
     return NS_ERROR_FAILURE;
   }
 
-  result = aSupports->QueryInterface(NS_GET_IID(nsIDOMInstallTriggerGlobal),
-                                     (void **)&installTriggerGlobal);
+  result = CallQueryInterface(aSupports, &installTriggerGlobal);
   if (NS_OK != result) {
     return result;
   }

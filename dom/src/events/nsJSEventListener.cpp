@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsJSEventListener.h"
 #include "nsString.h"
-#include "nsIScriptEventListener.h"
+#include "nsReadableUtils.h"
 #include "nsIServiceManager.h"
 #include "nsIJSContextStack.h"
 #include "nsIScriptSecurityManager.h"
@@ -51,15 +51,9 @@
  * nsJSEventListener implementation
  */
 nsJSEventListener::nsJSEventListener(nsIScriptContext *aContext, 
-                                     nsISupports *aObject) 
+                                     nsISupports *aObject)
+  : nsIJSEventListener(aContext, aObject)
 {
-
-  // mObject is a weak reference. We are guaranteed
-  // because of the ownership model that this object will be
-  // freed (and the references dropped) before either the context
-  // or the owner goes away.
-  mContext = aContext;
-  mObject = aObject;
   mReturnResult = nsReturnResult_eNotSet;
 }
 
@@ -79,13 +73,14 @@ NS_IMPL_RELEASE(nsJSEventListener)
 
 //static nsString onPrefix = "on";
 
-nsresult nsJSEventListener::SetEventName(nsIAtom* aName)
+void
+nsJSEventListener::SetEventName(nsIAtom* aName)
 {
   mEventName = aName;
-  return NS_OK;
 }
 
-nsresult nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
+nsresult
+nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
 {
   jsval funval;
   jsval arg;
@@ -122,7 +117,7 @@ nsresult nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
 
   // root
   nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
-  rv = xpc->WrapNative(cx, ::JS_GetGlobalObject(cx), mObject,
+  rv = xpc->WrapNative(cx, ::JS_GetGlobalObject(cx), mTarget,
                        NS_GET_IID(nsISupports), getter_AddRefs(wrapper));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -191,22 +186,6 @@ nsresult nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
   }
 
   return rv;
-}
-
-NS_IMETHODIMP 
-nsJSEventListener::GetEventTarget(nsIScriptContext**aContext, 
-                                  nsISupports** aTarget)
-{
-  NS_ENSURE_ARG_POINTER(aContext);
-  NS_ENSURE_ARG_POINTER(aTarget);
-
-  *aContext = mContext;
-  NS_ADDREF(*aContext);
-
-  *aTarget = mObject;
-  NS_ADDREF(*aTarget);
-
-  return NS_OK;
 }
 
 /*

@@ -130,22 +130,23 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIScriptGlobalObject
-  NS_IMETHOD SetContext(nsIScriptContext *aContext);
-  NS_IMETHOD GetContext(nsIScriptContext **aContext);
-  NS_IMETHOD SetNewDocument(nsIDOMDocument *aDocument,
-                            PRBool aRemoveEventListeners,
-                            PRBool aClearScopeHint);
-  NS_IMETHOD SetDocShell(nsIDocShell* aDocShell);
-  NS_IMETHOD GetDocShell(nsIDocShell** aDocShell);
-  NS_IMETHOD SetOpenerWindow(nsIDOMWindowInternal *aOpener);
-  NS_IMETHOD SetGlobalObjectOwner(nsIScriptGlobalObjectOwner* aOwner);
-  NS_IMETHOD GetGlobalObjectOwner(nsIScriptGlobalObjectOwner** aOwner);
-  NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
-                            nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
-                            nsEventStatus* aEventStatus);
-  NS_IMETHOD_(JSObject *) GetGlobalJSObject();
-  NS_IMETHOD OnFinalize(JSObject *aJSObject);
-  NS_IMETHOD SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts);
+  virtual void SetContext(nsIScriptContext *aContext);
+  virtual nsIScriptContext *GetContext();
+  virtual nsresult SetNewDocument(nsIDOMDocument *aDocument,
+                                  PRBool aRemoveEventListeners,
+                                  PRBool aClearScopeHint);
+  virtual void SetDocShell(nsIDocShell* aDocShell);
+  virtual nsIDocShell *GetDocShell();
+  virtual void SetOpenerWindow(nsIDOMWindowInternal *aOpener);
+  virtual void SetGlobalObjectOwner(nsIScriptGlobalObjectOwner* aOwner);
+  virtual nsIScriptGlobalObjectOwner *GetGlobalObjectOwner();
+  virtual nsresult HandleDOMEvent(nsIPresContext* aPresContext,
+                                  nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
+                                  PRUint32 aFlags,
+                                  nsEventStatus* aEventStatus);
+  virtual JSObject *GetGlobalJSObject();
+  virtual void OnFinalize(JSObject *aJSObject);
+  virtual void SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts);
 
   // nsIScriptObjectPrincipal
   NS_IMETHOD GetPrincipal(nsIPrincipal **prin);
@@ -219,7 +220,7 @@ protected:
   void ClearControllers();
 
   // Get the parent, returns null if this is a toplevel window
-  void GetParentInternal(nsIDOMWindowInternal **parent);
+  nsIDOMWindowInternal *GetParentInternal();
 
   // Window Control Functions
   NS_IMETHOD OpenInternal(const nsAString& aUrl,
@@ -488,7 +489,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD_(void)       SetDocShell(nsIDocShell *aDocShell);
+  void SetDocShell(nsIDocShell *aDocShell);
 
   // nsIDOMLocation
   NS_DECL_NSIDOMLOCATION
