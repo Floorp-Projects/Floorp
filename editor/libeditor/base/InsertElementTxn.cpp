@@ -87,7 +87,7 @@ NS_IMETHODIMP InsertElementTxn::Do(void)
   {
     PRUint32 count;
     childNodes->GetLength(&count);
-    if (mOffset>count) mOffset = count;
+    if (mOffset>(PRInt32)count) mOffset = count;
     result = childNodes->Item(mOffset, getter_AddRefs(refNode));
     if (NS_FAILED(result)) return result; 
     // note, it's ok for mRefNode to be null.  that means append
