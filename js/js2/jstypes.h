@@ -234,6 +234,7 @@ namespace JSTypes {
     public:
         JSObject()                      { init(objectPrototypeObject); }
         JSObject(JSValue &constructor)  { init(constructor.object->getProperty(widenCString("prototype")).object); }
+        JSObject(JSObject *prototype)   { init(prototype); }
     
         static void initObjectObject(JSScope *g);
 
@@ -367,6 +368,8 @@ namespace JSTypes {
      * compiled code of the function.
      */
     class JSFunction : public JSObject {
+        static String FunctionString;
+        static JSObject *functionPrototypeObject;
         ICodeModule* mICode;
     protected:
         JSFunction() : mICode(0) {}
@@ -375,7 +378,9 @@ namespace JSTypes {
 	    typedef gc_allocator<JSFunction, traits> allocator;
 		
     public:
-        JSFunction(ICodeModule* iCode) : mICode(iCode) {}
+        static void JSFunction::initFunctionObject(JSScope *g);
+
+        JSFunction(ICodeModule* iCode);
         ~JSFunction();
     
         void* operator new(size_t) { return allocator::allocate(1); }
@@ -558,6 +563,8 @@ namespace JSTypes {
 
     
     inline void JSObject::init(JSObject* prototype) { mPrototype = prototype; mType = &Any_Type; mClass = new JSString(ObjectString); }
+    
+    inline JSFunction::JSFunction(ICodeModule* iCode) : mICode(iCode), JSObject(functionPrototypeObject) { setClass(new JSString(FunctionString)); }
 
 
 } /* namespace JSTypes */    

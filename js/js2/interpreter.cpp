@@ -129,6 +129,15 @@ public:
     ~autosaver() { mRef = mOld; }
 };
 
+ICodeModule* Context::compile(const String &source)
+{
+    Arena a;
+    String filename = widenCString("Some source source");
+    Parser p(getWorld(), a, source, filename);
+    StmtNode *parsedStatements = p.parseProgram();
+    return genCode(parsedStatements, filename);
+}
+
 JSValue Context::readEvalFile(FILE* in, const String& fileName)
 {
     String buffer;
@@ -162,7 +171,7 @@ JSValue Context::readEvalFile(FILE* in, const String& fileName)
             }
     	    stdOut << '\n';
 
-			// Generate code for parsedStatements, which is a linked 
+	    // Generate code for parsedStatements, which is a linked 
             // list of zero or more statements
             ICodeModule* icm = genCode(parsedStatements, fileName);
             if (icm) {
@@ -508,6 +517,7 @@ void Context::initContext()
     
     // 'Object', 'Date', 'RegExp', 'Array' etc are all (constructor) properties of the global object
     JSObject::initObjectObject(mGlobal);
+    JSFunction::initFunctionObject(mGlobal);
     
     // the 'Math' object just has some useful properties 
     JSMath::initMathObject(mGlobal);
@@ -715,7 +725,6 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
             case NEW_OBJECT:
                 {
                     NewObject* no = static_cast<NewObject*>(instruction);
-                    JSObject *obj = new JSObject();
                     if (src1(no).first != NotARegister)
                         (*registers)[dst(no).first] = new JSObject((*registers)[src1(no).first]);
                     else

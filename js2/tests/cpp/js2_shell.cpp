@@ -303,7 +303,6 @@ static void testCompile()
     JSScope glob;
     Context cx(world, &glob);
     glob.defineNativeFunction(world.identifiers["print"], print);
-
     for (uint i = 0; i < sizeof(tests) / sizeof(char *); i++) {
         String testScript = widenCString(tests[i]);
         Arena a;
