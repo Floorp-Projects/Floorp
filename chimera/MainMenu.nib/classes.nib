@@ -41,6 +41,7 @@
                 smallerTextSize = id; 
                 toggleBookmarksToolbar = id; 
                 toggleOfflineMode = id; 
+                toggleSidebar = id; 
                 viewSource = id; 
             }; 
             CLASS = MainController; 
@@ -56,7 +57,7 @@
                 mCreateBookmarksSeparatorMenuItem = NSMenuItem; 
                 mFilterList = NSPopUpButton; 
                 mFilterView = NSView; 
-                mOfflineMenuItem = NSMenuItem; 
+                mToggleSidebarMenuItem = NSMenuItem; 
             }; 
             SUPERCLASS = NSObject; 
         }, 

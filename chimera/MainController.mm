@@ -146,8 +146,10 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
     
   // Set the menu item's text to "Go Online" if we're currently
   // offline.
+/*
   if (mOffline)
     [mOfflineMenuItem setTitle: @"Go Online"];	// XXX localize me
+*/
 }
 
 -(IBAction)newWindow:(id)aSender
@@ -278,10 +280,12 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
     // Update the menu item text.
     // Set the menu item's text to "Go Online" if we're currently
     // offline.
+/*
     if (mOffline)
         [mOfflineMenuItem setTitle: @"Go Online"];
     else
         [mOfflineMenuItem setTitle: @"Work Offline"];
+*/
         
     // Indicate that we are working offline.
     [[NSNotificationCenter defaultCenter] postNotificationName:@"offlineModeChanged" object:nil];
@@ -439,7 +443,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   // them or we may get this event at startup before we've had time to load
   // our window.
   BrowserWindowController* controller = [self getMainWindowBrowserController];
-  if (reuseWindow && controller && [controller canMakeNewTabs]) {
+  if (reuseWindow && controller && [controller newTabsAllowed]) {
     [controller openNewTabWithURL:inURLString referrer:aReferrer loadInBackground:loadInBackground];
   }
   else {
@@ -717,6 +721,25 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
       return NO;
   }
 
+  if (action == @selector(toggleSidebar:)) {
+      if (browserController) {
+          NSDrawer *sidebar = [browserController sidebarDrawer];
+          if (sidebar) {
+              int sidebarState = [sidebar state]; 
+              if (sidebarState == NSDrawerOpenState)
+                  [mToggleSidebarMenuItem setTitle: NSLocalizedString(@"Hide Sidebar",@"")];
+              else
+                  [mToggleSidebarMenuItem setTitle: NSLocalizedString(@"Show Sidebar",@"")];
+              return YES;
+          }
+          else
+              return NO;
+      }
+      else
+          return NO;
+  }
+  
+
   // only activate if we've got multiple tabs open.
   if ((action == @selector(closeTab:) ||
        action == @selector (nextTab:) ||
@@ -748,6 +771,14 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   
   // default return
   return YES;
+}
+
+-(IBAction) toggleSidebar:(id)sender
+{
+    BrowserWindowController *browserController = [self getMainWindowBrowserController];
+    if (!browserController) return;
+
+    [browserController toggleSidebar:sender];
 }
 
 -(IBAction) toggleBookmarksToolbar:(id)aSender

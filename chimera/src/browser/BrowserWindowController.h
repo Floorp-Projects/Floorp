@@ -265,5 +265,8 @@ class nsIDOMNode;
 // cache the toolbar defaults we parse from a plist
 + (NSArray*) toolbarDefaults;
 
+// Accessor to get the sidebar drawer
+- (NSDrawer *)sidebarDrawer;
+
 @end
 
