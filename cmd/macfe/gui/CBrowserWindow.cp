@@ -142,8 +142,11 @@ CBrowserWindow::~CBrowserWindow()
 		// Kludgy, but prevents crash in LUndoer caused by view being destroyed before
 		// attachments.  This happens if a form element which is a text field exists.
 
-	// there is no need to save the state of the selector widget or the nav center shelf
-	// because the prefs are always correctly updated on a state change.
+	// if there is a popdown window and it is our child, it will be destroyed when the
+	// window closes down. 
+	if ( sPopdownParent && sPopdownParent->GetSuperView() == this )
+		ClosePopdownTreeView();
+	
 }
 
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
@@ -1788,6 +1791,20 @@ void CBrowserWindow :: ReadWindowStatus ( LStream *inStatusData )
 
 
 //
+// IsPopdownTreeViewVisible [static]
+//
+// Allows anyone to check and see if there is a popdown tree view currently displayed
+// in a browser window
+//
+bool
+CBrowserWindow :: IsPopdownTreeViewVisible ( )
+{
+	return sPopdownParent && sPopdownParent->IsVisible();
+
+} // IsPopdownTreeViewVisible
+
+
+//
 // ClipOutPopdown [static]
 //
 // Adds to the current clipRgn the popdown box, if visible. |inView| is needed so we
@@ -1796,7 +1813,7 @@ void CBrowserWindow :: ReadWindowStatus ( LStream *inStatusData )
 void
 CBrowserWindow :: ClipOutPopdown ( LView* inView )
 {
-	if ( sPopdownParent && sPopdownParent->IsVisible() ) {
+	if ( IsPopdownTreeViewVisible() ) {
 		StRegion clip;
 		::GetClip(clip);
 		
@@ -1821,9 +1838,12 @@ CBrowserWindow :: ClipOutPopdown ( LView* inView )
 void
 CBrowserWindow :: PopDownTreeView ( Uint16 inLeft, Uint16 inTop, HT_Resource inResource )
 {
+	// blow away the old one if it is around.
+	if ( sPopdownParent )
+		ClosePopdownTreeView();
+		
 	try { 
-		if ( !sPopdownParent )
-			sPopdownParent = dynamic_cast<CPopdownRDFCoordinator*>
+		sPopdownParent = dynamic_cast<CPopdownRDFCoordinator*>
 									(UReanimator::CreateView(CPopdownRDFCoordinator::res_ID, this, this));
 	}
 	catch ( ... ) {
@@ -1852,7 +1872,6 @@ CBrowserWindow :: PopDownTreeView ( Uint16 inLeft, Uint16 inTop, HT_Resource inR
 		
 		sSavedPopdownTarget = LCommander::GetTarget();
 		LCommander::SwitchTarget(sPopdownParent);
-		
 		sPopdownParent->AddListener(this);		// listen for close messages
 		sPopdownParent->Show();
 		
@@ -1868,16 +1887,20 @@ CBrowserWindow :: PopDownTreeView ( Uint16 inLeft, Uint16 inTop, HT_Resource inR
 //
 // ClosePopdownTreeView
 //
-// Closes up the popdown tree view. Don't actually delete it, as we will probably be using it
-// again.
+// Closes up the popdown tree view and deletes it. Why do we have to delete it, you ask?
+// The scrollbar control, when it is created, stores the window port. Obviously, when the
+// window in which the popdown was first created in goes away, kablooie.
 //
 void
-CBrowserWindow :: ClosePopdownTreeView ( ) 
+CBrowserWindow :: ClosePopdownTreeView ( )
 {
 	if ( sPopdownParent ) {
 		sPopdownParent->Hide();
 		sPopdownParent->RemoveListener(this);
 		LCommander::SwitchTarget(sSavedPopdownTarget);
+
+		delete sPopdownParent;		// removes from parent view
+		sPopdownParent = NULL;
 	}
 
 } // ClosePopdownTreeView
@@ -1909,7 +1932,7 @@ CBrowserWindow :: OpenDockedTreeView ( HT_Resource inTopNode )
 void
 CBrowserWindow :: Click( SMouseDownEvent &inMouseDown )
 {
-	if ( sPopdownParent && sPopdownParent->IsVisible() ) {
+	if ( IsPopdownTreeViewVisible() ) {
 		LPane *clickedPane = FindSubPaneHitBy(inMouseDown.wherePort.h, inMouseDown.wherePort.v);
 		if ( clickedPane == sPopdownParent )
 			clickedPane->Click(inMouseDown);

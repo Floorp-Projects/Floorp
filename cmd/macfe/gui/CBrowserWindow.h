@@ -194,7 +194,8 @@ class CBrowserWindow : public CNetscapeWindow, public CSaveWindowStatus, public 
 		virtual void 			ClosePopdownTreeView ( ) ;
 		virtual void			OpenDockedTreeView ( HT_Resource inTopNode ) ;
 		static void				ClipOutPopdown ( LView* inView ) ;
-	
+		static bool				IsPopdownTreeViewVisible ( ) ;
+
 	protected:
 		virtual	void				FinishCreateSelf(void);
 		const CHTMLView*			GetHTMLView() const { return mHTMLView; }
