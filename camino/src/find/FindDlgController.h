@@ -36,7 +36,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #import <AppKit/AppKit.h>
-#include "nsIWebBrowserFind.h"
 
 @interface FindDlgController : NSWindowController {
     IBOutlet NSTextField* mSearchField;
@@ -44,14 +43,9 @@
     IBOutlet NSButton* mWrapAroundBox;
     IBOutlet NSButton* mSearchBackwardsBox;
     IBOutlet NSButton* mFindButton;
-    
-    NSString* mSearchText;
 }
 
 - (IBAction) find: (id)aSender;
-- (IBAction) findAgain: (id)aSender;
-- (void) storeSearchText:(NSString*)inText;
-- (NSString*)getSearchText;
 
   // delegates for NSTextView
 - (void)controlTextDidChange:(NSNotification *)aNotification;

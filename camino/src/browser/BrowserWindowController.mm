@@ -1402,6 +1402,16 @@ static NSArray* sToolbarDefaults = nil;
     wrap:inWrap backwards:inBackwards];
 }
 
+- (BOOL)findInPage
+{
+  return [[mBrowserView getBrowserView] findInPage];
+}
+
+- (NSString*)lastFindText
+{
+  return [[mBrowserView getBrowserView] lastFindText];
+}
+
 - (void)addBookmarkExtended: (BOOL)aIsFromMenu isFolder:(BOOL)aIsFolder URL:(NSString*)aURL title:(NSString*)aTitle
 {
   [mSidebarBookmarksDataSource ensureBookmarks];

@@ -32,7 +32,16 @@
 
 @protocol Find
 
+// Start a find at the current caret position
 - (BOOL)findInPageWithPattern:(NSString*)text caseSensitive:(BOOL)inCaseSensitive
         wrap:(BOOL)inWrap backwards:(BOOL)inBackwards;
+
+
+// Same as above, but use most recent values for search string,
+// case sensitivity, wrap-around, and backwards search.
+- (BOOL)findInPage;
+
+// Get the most recent search string.
+- (NSString*)lastFindText;
 
 @end

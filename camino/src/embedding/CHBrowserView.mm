@@ -578,6 +578,28 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
     return found;
 }
 
+- (BOOL)findInPage
+{
+  nsCOMPtr<nsIWebBrowserFind> webFind = do_GetInterface(_webBrowser);
+  if (!webFind)
+    return NO;
+
+  PRBool found;
+  webFind->FindNext(&found);
+  return (BOOL)found;
+}
+
+- (NSString*)lastFindText
+{
+  nsCOMPtr<nsIWebBrowserFind> webFind = do_GetInterface(_webBrowser);
+  if (!webFind)
+    return nil;
+
+  nsXPIDLString searchString;
+  webFind->GetSearchString(getter_Copies(searchString));
+  return [NSString stringWithPRUnichars:searchString.get()];
+}
+
 - (void)saveURL: (NSView*)aFilterView url: (NSString*)aURLSpec suggestedFilename: (NSString*)aFilename
 {
   nsCOMPtr<nsIURI> url;

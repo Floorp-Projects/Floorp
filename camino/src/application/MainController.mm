@@ -512,8 +512,9 @@ const int kReuseWindowOnAE = 2;
 //
 -(IBAction) findAgain:(id)aSender
 {
-  if ( mFindDialog )
-    [mFindDialog findAgain:aSender];
+  BrowserWindowController* browserController = [self getMainWindowBrowserController];
+  if (browserController)
+    [browserController findInPage];
   else
     NSBeep();
 }
@@ -986,7 +987,7 @@ const int kReuseWindowOnAE = 2;
   
   // check if someone has previously done a find before allowing findAgain to be enabled
   if (action == @selector(findAgain:))
-    return (browserController && mFindDialog && [[mFindDialog getSearchText] length] > 0);
+    return (browserController && [[browserController lastFindText] length] > 0);
   
   // check what the state of the personal toolbar should be, but only if there is a browser
   // window open. Popup windows that have the personal toolbar removed should always gray

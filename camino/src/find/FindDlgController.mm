@@ -36,30 +36,13 @@
  * ***** END LICENSE BLOCK ***** */
 
 #import "FindDlgController.h"
-#import "BrowserWindowController.h"
 #import "Find.h"
-#include "nsCOMPtr.h"
 
+@interface FindDlgController(Private)
+  - (NSString*)getSearchText;
+@end
 
 @implementation FindDlgController
-
-- (id)initWithWindowNibName:(NSString *)windowNibName
-{
-  if ( (self = [super initWithWindowNibName:windowNibName]) )
-    mSearchText = nil;
-  return self;
-}
-
-- (void)dealloc
-{
-  [mSearchText release];
-  [super dealloc];
-}
-
-- (void)windowDidLoad
-{
-}
-
 
 //
 // -find
@@ -76,10 +59,9 @@
     BOOL wrapSearch = [mWrapAroundBox state];
     BOOL searchBack = [mSearchBackwardsBox state];
 
-    [self storeSearchText:[mSearchField stringValue]];
-
-    BOOL found = [browserController findInPageWithPattern:mSearchText caseSensitive:!ignoreCase
-        wrap:wrapSearch backwards:searchBack];
+    BOOL found = [browserController findInPageWithPattern:[mSearchField stringValue]
+                  caseSensitive:!ignoreCase wrap:wrapSearch
+                  backwards:searchBack];
 
     if (! found ) 
       NSBeep();
@@ -91,30 +73,6 @@
 
 
 //
-// -findAgain
-//
-// Someone hit "find again" in the edit menu, send the action to the window controller of the
-// frontmost browser window. Beep if we didn't find something.
-//
--(IBAction) findAgain: (id)aSender
-{
-  NSWindowController* controller = [[NSApp mainWindow] windowController];
-  if ( [controller conformsToProtocol:@protocol(Find)] ) {
-    id<Find> browserController = controller;
-    BOOL ignoreCase = [mIgnoreCaseBox state];
-    BOOL wrapSearch = [mWrapAroundBox state];
-    BOOL searchBack = [mSearchBackwardsBox state];
-    
-    BOOL found = [browserController findInPageWithPattern:mSearchText caseSensitive:!ignoreCase
-        wrap:wrapSearch backwards:searchBack];
-    if ( !found )
-      NSBeep();
-  }
-  else
-    NSBeep();
-}
-
-//
 // controlTextDidChange
 //
 // Check if there is anything in the text field, and if not, disable the find button
@@ -122,21 +80,34 @@
 - (void)controlTextDidChange:(NSNotification *)aNotification
 {
   if ( [[mSearchField stringValue] length] )
-    [mFindButton setEnabled:PR_TRUE];
+    [mFindButton setEnabled:YES];
   else
-    [mFindButton setEnabled:PR_FALSE];    
+    [mFindButton setEnabled:NO];
 }
 
-- (void)storeSearchText:(NSString*)inText
-{
-  [mSearchText autorelease];
-  mSearchText = inText;
-  [mSearchText retain];
-}
-
+// Retrieve the most recent search string
 - (NSString*)getSearchText
 {
-  return mSearchText;
+  NSWindowController* controller = [[NSApp mainWindow] windowController];
+  if (![controller conformsToProtocol:@protocol(Find)])
+    return nil;
+
+  id<Find> browserController = controller;
+  return [browserController lastFindText];
+}
+
+- (IBAction)showWindow:(id)sender
+{
+  // Sync our text field with the most recent browser search string.
+  // We assume here that the frontmost window is a browser window.
+
+  NSWindowController* controller = [[NSApp mainWindow] windowController];
+  if ( [controller conformsToProtocol:@protocol(Find)] ) {
+    id<Find> browserController = controller;
+    [mSearchField setStringValue:[browserController lastFindText]];
+  }
+
+  return [super showWindow:sender];
 }
 
 @end
