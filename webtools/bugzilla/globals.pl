@@ -658,10 +658,9 @@ sub GenerateRandomPassword {
     # Generated passwords are eight characters long by default.
     $size ||= 8;
 
-    # The list of characters that can appear in a password.
-    # If you change this you must also update &ValidatePassword below.
-    my @pwchars = (0..9, 'A'..'Z', 'a'..'z', '-', '_');
-    #my @pwchars = (0..9, 'A'..'Z', 'a'..'z', '-', '_', '!', '@', '#', '$', '%', '^', '&', '*');
+    # The list of characters that can appear in a randomly generated password.
+    # Note that users can put any character into a password they choose themselves.
+    my @pwchars = (0..9, 'A'..'Z', 'a'..'z', '-', '_', '!', '@', '#', '$', '%', '^', '&', '*');
 
     # The number of characters in the list.
     my $pwcharslen = scalar(@pwchars);
@@ -688,9 +687,7 @@ sub ValidatePassword {
 
     my ($password, $matchpassword) = @_;
     
-    if ( $password !~ /^[a-zA-Z0-9-_]*$/ ) {
-        return "The password contains an illegal character.  Legal characters are letters, numbers, hyphens (-), and underlines (_).";
-    } elsif ( length($password) < 3 ) {
+    if ( length($password) < 3 ) {
         return "The password is less than three characters long.  It must be at least three characters.";
     } elsif ( length($password) > 16 ) {
         return "The password is more than 16 characters long.  It must be no more than 16 characters.";

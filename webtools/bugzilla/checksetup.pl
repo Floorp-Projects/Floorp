@@ -1508,9 +1508,8 @@ _End_Of_SQL_
         chomp $pass1;
         if(! $pass1 ) {
           print "\n\nIt's just plain stupid to not have a password.  Try again!\n";
-        } elsif ( $pass1 !~ /^[a-zA-Z0-9-_]{3,16}$/ ) {
-          print "The password must be 3-16 characters in length 
-                 and contain only letters, numbers, hyphens (-), and underlines (_).";
+        } elsif ( $pass1 !~ /^.{3,16}$/ ) {
+          print "The password must be 3-16 characters in length.";
         }
       }
       print "\nPlease retype the password to verify: ";
