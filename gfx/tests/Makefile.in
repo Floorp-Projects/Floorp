@@ -35,7 +35,7 @@ include $(topsrcdir)/config/config.mk
 INCLUDES+=-I$(srcdir)/../src -I$(PUBLIC)/raptor -I$(PUBLIC)/xpcom
 
 ifndef NECKO
-LIBS =		\
+NET_LIBS =		\
 	-lnetlib \
 	-lhttpurl \
 	-lgophurl \
@@ -51,12 +51,12 @@ LIBS =		\
 	-lpwcac \
 	$(NULL)
 else
-LIBS =		\
+NET_LIBS =		\
 	-lneckoutil_s \
 	$(NULL)
 endif
 
-LIBS += \
+LIBS = \
 	-lraptorgfx \
 	-lgfx$(MOZ_TOOLKIT) \
 	$(TK_LIBS) \
@@ -71,6 +71,7 @@ LIBS += \
 	-l$(MOZ_LIB_UTIL_PREFIX)util \
 	-lxp \
 	$(NSPR_LIBS) \
+	$(NET_LIBS)	 \
 	$(ZLIB_LIBS) \
 	$(NULL)
 
