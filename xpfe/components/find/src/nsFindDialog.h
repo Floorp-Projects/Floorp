@@ -99,9 +99,13 @@ public:
     void SetWindow( nsIWebShellWindow *aWindow );
 
 protected:
+
+    void IndicateSuccess(PRBool aMatchFound);
+    
     nsCOMPtr<nsIFindComponent>         mComponent;
     nsFindComponent::Context          *mContext;
     nsCOMPtr<nsIWebShell>              mDialogWebShell;
     nsCOMPtr<nsIWebShellWindow>        mDialogWindow;
+    PRBool                             mBeepIfNoFind;
 }; // nsFindDialog
 
