@@ -37,6 +37,7 @@
 <!ENTITY bookmarks.location.label     "Location:">
 <!ENTITY bookmarks.shortcut.label     "Keyword:">
 <!ENTITY bookmarks.description.label  "Description:">
+<!ENTITY bookmarks.webpanels.label    "Load this bookmark in the Web Panels sidebar">
 
 <!ENTITY checkforupdates.legend.label "Check this location for updates:">
 <!ENTITY when.label                   "When:">
