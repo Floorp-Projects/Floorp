@@ -953,6 +953,26 @@ function MsgCompactFolder()
         var folderList = tree.selectedItems;
         if (folderList)
         {
+            var messageUri = "";
+            var selctedFolderUri = "";
+            var isImap = false;
+            if (folderList.length == 1)
+            {
+                selectedFolderUri = folderList[0].getAttribute('id');
+                var threadTree = GetThreadTree();
+                var messageList = threadTree.selectedItems;
+                if (messageList && messageList.length == 1)
+                    messageUri = messageList[0].getAttribute('id');
+                if (selectedFolderUri.indexOf("imap:") != -1)
+                {
+                    isImap = true;
+                }
+                else
+                {
+                    ClearThreadTreeSelection();
+                    ClearMessagePane();
+                }
+            }
             var i;
             var folder;
             for(i = 0; i < folderList.length; i++)
@@ -961,10 +981,21 @@ function MsgCompactFolder()
                 if (folder)
                 {
                     folderuri = folder.getAttribute('id');
-                    dump(folderuri);
+                    dump(folderuri + "\n");
                     dump("folder = " + folder.nodeName + "\n"); 
                     messenger.CompactFolder(tree.database, folder.resource);
                 }
+            }
+            if (!isImap && selectedFolderUri && selectedFolderUri != "")
+            {
+                /* this doesn't work; local compact is now an async operation
+                dump("selected folder = " + selectedFolderUri + "\n");
+                var selectedFolder =
+                    document.getElementById(selectedFolderUri);
+                ChangeSelection(tree, selectedFolder);
+                */
+                tree.clearItemSelection();
+                tree.clearCellSelection();
             }
         }
 	}
