@@ -429,6 +429,24 @@ void CBrowserShell::MoveBy(SInt32	inHorizDelta,
 }
 
 
+void CBrowserShell::ActivateSelf()
+{
+    EventRecord osEvent;
+    osEvent.what = activateEvt;
+    osEvent.modifiers = activeFlag;
+    PRBool handled = PR_FALSE;
+    mEventSink->DispatchEvent(&osEvent, &handled);
+}
+
+void CBrowserShell::DeactivateSelf()
+{
+    EventRecord osEvent;
+    osEvent.what = activateEvt;
+    osEvent.modifiers = 0;
+    PRBool handled = PR_FALSE;
+    mEventSink->DispatchEvent(&osEvent, &handled);
+}
+
 void CBrowserShell::ShowSelf()
 {
     mWebBrowserAsBaseWin->SetVisibility(PR_TRUE);
