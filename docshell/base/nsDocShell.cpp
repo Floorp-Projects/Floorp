@@ -320,6 +320,19 @@ NS_IMETHODIMP nsDocShell::GetPresContext(nsIPresContext** aPresContext)
    return NS_OK;
 }
 
+NS_IMETHODIMP nsDocShell::GetPresShell(nsIPresShell** aPresShell)
+{
+   NS_ENSURE_ARG_POINTER(aPresShell);
+   
+   nsCOMPtr<nsIPresContext> presContext;
+   NS_ENSURE_SUCCESS(GetPresContext(getter_AddRefs(presContext)), 
+      NS_ERROR_FAILURE);
+
+   NS_ENSURE_SUCCESS(presContext->GetShell(aPresShell), NS_ERROR_FAILURE);
+
+   return NS_OK;
+}
+
 NS_IMETHODIMP nsDocShell::GetContentViewer(nsIContentViewer** aContentViewer)
 {
    NS_ENSURE_ARG_POINTER(aContentViewer);
@@ -390,7 +403,7 @@ NS_IMETHODIMP nsDocShell::SetPrefs(nsIPref* aPrefs)
 NS_IMETHODIMP nsDocShell::GetRootDocShell(nsIDocShell** aRootDocShell)
 {
   NS_ENSURE_ARG_POINTER(aRootDocShell);
-  *aRootDocShell = this;
+  *aRootDocShell = NS_STATIC_CAST(nsIDocShell*, this);
 
   nsCOMPtr<nsIDocShell> parent;
   NS_ENSURE_TRUE(GetParent(getter_AddRefs(parent)), NS_ERROR_FAILURE);
@@ -1536,19 +1549,6 @@ nsresult nsDocShell::GetRootScrollableView(nsIScrollableView** aOutScrollView)
 
    return NS_OK;
 } 
-
-nsresult nsDocShell::GetPresShell(nsIPresShell** aPresShell)
-{
-   NS_ENSURE_ARG_POINTER(aPresShell);
-   
-   nsCOMPtr<nsIPresContext> presContext;
-   NS_ENSURE_SUCCESS(GetPresContext(getter_AddRefs(presContext)), 
-      NS_ERROR_FAILURE);
-
-   NS_ENSURE_SUCCESS(presContext->GetShell(aPresShell), NS_ERROR_FAILURE);
-
-   return NS_OK;
-}
 
 nsresult nsDocShell::EnsureContentListener()
 {

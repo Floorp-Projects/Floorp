@@ -103,7 +103,6 @@ protected:
    nsresult GetChildOffset(nsIDOMNode* aChild, nsIDOMNode* aParent, 
       PRInt32* aOffset);
    nsresult GetRootScrollableView(nsIScrollableView** aOutScrollView);
-   nsresult GetPresShell(nsIPresShell** aPresShell);
    nsresult EnsureContentListener();
 
    void SetCurrentURI(nsIURI* aUri);
