@@ -1990,13 +1990,13 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
       // Skip over generated content kid frames, or frames
       // that don't have a proper parent-child relationship!
 
-      PRBool skipThisKid = (GetStateBits() & NS_FRAME_GENERATED_CONTENT) != 0;
+      PRBool skipThisKid = (kid->GetStateBits() & NS_FRAME_GENERATED_CONTENT) != 0;
 #if 0
-      else {
+      if (!skipThisKid) {
         // The frame's content is not generated. Now check
         // if it is anonymous content!
 
-        nsIContent* kidContent = GetContent();
+        nsIContent* kidContent = kid->GetContent();
         if (kidContent) {
           nsCOMPtr<nsIContent> content = kidContent->GetParent();
 
@@ -4545,13 +4545,11 @@ nsFrame::GetLastLeaf(nsIPresContext* aPresContext, nsIFrame **aFrame)
     return;
   nsIFrame *child = *aFrame;
   nsresult result;
-  nsIFrame *lookahead = nsnull;
   //if we are a block frame then go for the last line of 'this'
   while (1){
-    result = child->FirstChild(aPresContext, nsnull, &lookahead);
-    if (NS_FAILED(result) || !lookahead)
+    result = child->FirstChild(aPresContext, nsnull, &child);
+    if (NS_FAILED(result) || !child)
       return;//nothing to do
-    child = lookahead;
     while (child->GetNextSibling())
       child = child->GetNextSibling();
     *aFrame = child;
@@ -4565,13 +4563,11 @@ nsFrame::GetFirstLeaf(nsIPresContext* aPresContext, nsIFrame **aFrame)
   if (!aFrame || !*aFrame)
     return;
   nsIFrame *child = *aFrame;
-  nsIFrame *lookahead;
   nsresult result;
   while (1){
-    result = child->FirstChild(aPresContext, nsnull, &lookahead);
-    if (NS_FAILED(result) || !lookahead)
+    result = child->FirstChild(aPresContext, nsnull, &child);
+    if (NS_FAILED(result) || !child)
       return;//nothing to do
-    child = lookahead;
     *aFrame = child;
   }
 }
