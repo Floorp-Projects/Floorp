@@ -192,3 +192,8 @@ PRBool nsRegionUnix :: ForEachRect(nsRectInRegionFunc *func, void *closure)
   return PR_FALSE;
 }
 
+
+Region nsRegionUnix :: GetXRegion(void)
+{
+  return (mRegion);
+}
