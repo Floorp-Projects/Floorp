@@ -29,7 +29,7 @@
  # the GPL.  If you do not delete the provisions above, a recipient
  # may use your version of this file under either the MPL or the
  # GPL.
- #  $Id: mpi_x86.s,v 1.2 2000/08/31 03:45:39 nelsonb%netscape.com Exp $
+ #  $Id: mpi_x86.s,v 1.3 2001/01/12 01:37:02 nelsonb%netscape.com Exp $
  #
 
 .text
@@ -64,6 +64,7 @@ s_mpv_mul_d:
     sub    $28,%esp
     push   %edi
     push   %esi
+    push   %ebx
     movl   $0,%ebx		# carry = 0
     mov    12(%ebp),%ecx	# ecx = a_len
     mov    20(%ebp),%edi
@@ -85,6 +86,7 @@ s_mpv_mul_d:
     jnz    1b			# jmp if a_len != 0
 2:
     mov    %ebx,0(%edi)		# *c = carry
+    pop    %ebx
     pop    %esi
     pop    %edi
     leave  
@@ -121,6 +123,7 @@ s_mpv_mul_d_add:
     sub    $28,%esp
     push   %edi
     push   %esi
+    push   %ebx
     movl   $0,%ebx		# carry = 0
     mov    12(%ebp),%ecx	# ecx = a_len
     mov    20(%ebp),%edi
@@ -145,6 +148,7 @@ s_mpv_mul_d_add:
     jnz    3b			# jmp if a_len != 0
 4:
     mov    %ebx,0(%edi)		# *c = carry
+    pop    %ebx
     pop    %esi
     pop    %edi
     leave  
@@ -181,6 +185,7 @@ s_mpv_mul_d_add_prop:
     sub    $28,%esp
     push   %edi
     push   %esi
+    push   %ebx
     movl   $0,%ebx		# carry = 0
     mov    12(%ebp),%ecx	# ecx = a_len
     mov    20(%ebp),%edi
@@ -216,6 +221,7 @@ s_mpv_mul_d_add_prop:
     stosl			# [es:edi] = ax; edi += 4;
     jc     7b
 8:
+    pop    %ebx
     pop    %esi
     pop    %edi
     leave  
@@ -249,6 +255,7 @@ s_mpv_sqr_add_prop:
      sub    $12,%esp
      push   %edi
      push   %esi
+     push   %ebx
      movl   $0,%ebx		# carry = 0
      mov    12(%ebp),%ecx	# a_len
      mov    16(%ebp),%edi	# edi = ps
@@ -286,6 +293,7 @@ s_mpv_sqr_add_prop:
     stosl			# [es:edi] = ax; edi += 4;
     jc     12b
 14:
+    pop    %ebx
     pop    %esi
     pop    %edi
     leave  
@@ -299,14 +307,13 @@ s_mpv_sqr_add_prop:
  # mp_err s_mpv_div_2dx1d(mp_digit Nhi, mp_digit Nlo, mp_digit divisor,
  # 		          mp_digit *qp, mp_digit *rp)
 
- # Dump of assembler code for function s_mpv_div_2dx1d:
- # 
- #  esp +  0:	return address
- #  esp +  4:	Nhi	argument
- #  esp +  8:	Nlo	argument
- #  esp + 12:	divisor	argument
- #  esp + 16:	qp	argument
- #  esp + 20:   rp	argument
+ #  esp +  0:   Caller's ebx
+ #  esp +  4:	return address
+ #  esp +  8:	Nhi	argument
+ #  esp + 12:	Nlo	argument
+ #  esp + 16:	divisor	argument
+ #  esp + 20:	qp	argument
+ #  esp + 24:   rp	argument
  #  registers:
  # 	eax:
  #	ebx:	carry
@@ -315,18 +322,21 @@ s_mpv_sqr_add_prop:
  #	esi:	a ptr
  #	edi:	c ptr
  # 
+
 .globl	s_mpv_div_2dx1d
 .type	s_mpv_div_2dx1d,@function
 s_mpv_div_2dx1d:
-       mov    4(%esp),%edx
-       mov    8(%esp),%eax
-       mov    12(%esp),%ebx
-       div    %ebx
+       push   %ebx
+       mov    8(%esp),%edx
+       mov    12(%esp),%eax
        mov    16(%esp),%ebx
-       mov    %eax,0(%ebx)
+       div    %ebx
        mov    20(%esp),%ebx
+       mov    %eax,0(%ebx)
+       mov    24(%esp),%ebx
        mov    %edx,0(%ebx)
        xor    %eax,%eax		# return zero
+       pop    %ebx
        ret    
        nop
   
