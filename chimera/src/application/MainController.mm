@@ -64,7 +64,6 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 {
     [super dealloc];
     [mFindDialog release];
-    [mPreferenceManager release];
     printf("Main controller died.\n");
 }
 
@@ -291,7 +290,14 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
     mMenuBookmarks->RemoveObserver();
     delete mMenuBookmarks;
     mMenuBookmarks = nsnull;
+    
+    // Release before calling TermEmbedding since we need to access XPCOM
+    // to save preferences
+    [mPreferenceManager release];
+    
     nsCocoaBrowserService::TermEmbedding();
+    
+    [self autorelease];
 }
 
 // Bookmarks menu actions.
@@ -402,28 +408,6 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   [[[mApplication mainWindow] windowController] smallerTextSize];
 }
 
-- (IBAction)toggleSmoothText:(id)aSender
-{
-  // Grab the prefs service and just set the pref directly.
-  nsCOMPtr<nsIPrefBranch> pref(do_GetService("@mozilla.org/preferences-service;1"));
-  if (!pref)
-    return; // Something bad happened if we can't get prefs.
-
-  int mode;
-  pref->GetIntPref("nglayout.mac.renderingmode", &mode);
-  if (mode == 0) {
-    // Turn on ATSUI Quartz.
-    pref->SetIntPref("nglayout.mac.renderingmode", 1);
-    // Check the menu.
-    [aSender setState: NSOnState];
-  } else {
-    // Turn off ATSUI Quartz and use Quickdraw.
-    pref->SetIntPref("nglayout.mac.renderingmode", 0);
-    // Uncheck the menu.
-    [aSender setState: NSOffState];
-  }
-}
-
 -(IBAction) viewSource:(id)aSender
 {
   NSWindow* mainWindow = [mApplication mainWindow];
@@ -431,25 +415,9 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
     [[mainWindow windowController] viewSource: self];
 }
 
-static PRBool gSetupSmoothTextMenu = PR_FALSE;
 
 -(BOOL)validateMenuItem: (id <NSMenuItem> )aMenuItem
 {
-  // XXXDWH I should not be using strings here.  Not localizable.
-  // SHould use tags instead.
-  if ([[aMenuItem title] isEqualToString: @"Smooth Text"] &&
-      !gSetupSmoothTextMenu) {
-    gSetupSmoothTextMenu = PR_TRUE;
-    // Grab the prefs service and just set the pref directly.
-    nsCOMPtr<nsIPrefBranch> pref(do_GetService("@mozilla.org/preferences-service;1"));
-    int mode;
-    pref->GetIntPref("nglayout.mac.renderingmode", &mode);
-    if (mode == 0)
-      [aMenuItem setState: NSOffState];
-    else
-      [aMenuItem setState: NSOnState];	
-  }
-
   return YES;
 }
 
