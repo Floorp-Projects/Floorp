@@ -80,6 +80,7 @@ export libs install clobber clobber_all clean depend::
 	set INCLUDE=%WATC_INC%
 	set LIB=%WATC_LIB%
 !endif
+	cd lib
 	$(GMAKE) $(GMAKE_FLAGS) $@
 !if "$(MOZ_BITS)" == "16"
 	set PATH=%MSVCPATH%
