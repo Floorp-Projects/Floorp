@@ -54,6 +54,9 @@
 #include "nsSpecialSystemDirectory.h"
 #include "nsGtkMozRemoteHelper.h"
 
+#include "nsIDragService.h"
+#include "nsIDragSessionGTK.h"
+
 #include <unistd.h>
 
 #ifdef NEED_USLEEP_PROTOTYPE
@@ -64,6 +67,7 @@ extern "C" int usleep(unsigned int);
 #endif
 
 #undef DEBUG_DND_XLATE
+#undef DEBUG_DND_EVENTS
 #undef DEBUG_FOCUS
 #undef DEBUG_GRAB
 #define MODAL_TIMERS_BROKEN
@@ -75,6 +79,8 @@ extern "C" int usleep(unsigned int);
 (CAPS_LOCK_IS_ON && debug_WantPaintFlashing())
 
 #define kWindowPositionSlop 10
+
+static NS_DEFINE_IID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
 
 gint handle_toplevel_focus_in (
     GtkWidget *      aWidget, 
@@ -156,6 +162,11 @@ nsWindow::nsWindow()
     mLastDragMotionWindow = NULL;
   mBlockMozAreaFocusIn = PR_FALSE;
   mLastGrabFailed = PR_TRUE;
+  mDragMotionWidget = 0;
+  mDragMotionContext = 0;
+  mDragMotionX = 0;
+  mDragMotionY = 0;
+  mDragMotionTime = 0;
 }
 
 //-------------------------------------------------------------------------
@@ -165,6 +176,9 @@ nsWindow::nsWindow()
 //-------------------------------------------------------------------------
 nsWindow::~nsWindow()
 {
+  // make sure to unset any drag motion timers here.
+  ResetDragMotionTimer(0, 0, 0, 0, 0);
+
   //  printf("%p nsWindow::~nsWindow\n", this);
   // make sure that we release the grab indicator here
   if (sGrabWindow == this) {
@@ -1370,103 +1384,6 @@ nsWindow::HandleGDKEvent(GdkEvent *event)
   }
 }
 
-void
-nsWindow::InstallToplevelDragDataReceivedSignal(void)
-{
-  NS_ASSERTION( nsnull != mShell, "mShell is null");
-  
-  InstallSignal(mShell,
-                (gchar *)"drag_data_received",
-                GTK_SIGNAL_FUNC(nsWindow::ToplevelDragDataReceivedSignal));
-}
-
-/* static */
-void nsWindow::ToplevelDragDataReceivedSignal(GtkWidget         *aWidget,
-                                              GdkDragContext    *aDragContext,
-                                              gint               x,
-                                              gint               y,
-                                              GtkSelectionData  *aSelectionData,
-                                              guint              aInfo,
-                                              guint32            aTime,
-                                              gpointer           aData)
-{
-   nsWindow *widget = (nsWindow *)aData;
-   NS_ASSERTION(nsnull != widget, "instance pointer is null");
-
-   widget->OnDragDataReceivedSignal(aWidget, aDragContext, x, y, aSelectionData, aInfo, aTime);
-}
-
-void
-nsWindow::InstallToplevelDragBeginSignal(void)
-{
-  NS_ASSERTION( nsnull != mShell, "mShell is null");
-  
-  InstallSignal(mShell,
-                (gchar *)"drag_begin",
-                GTK_SIGNAL_FUNC(nsWindow::ToplevelDragBeginSignal));
-}
-
-/* static */
-gint
-nsWindow::ToplevelDragBeginSignal(GtkWidget *aWidget,
-                                  GdkDragContext   *aDragContext,
-                                  gint x,
-                                  gint y,
-                                  guint time,
-                                  void *aData)
-{
-  g_print("nsWindow::ToplevelDragBeginSignal\n");
-  return PR_FALSE;
-}
-
-/* static */
-gint
-nsWindow::ToplevelDragLeaveSignal(GtkWidget *      aWidget,
-                                  GdkDragContext   *aDragContext,
-                                  guint            aTime,
-                                  void             *aData)
-{
-  if (mLastDragMotionWindow) {
-    mLastDragMotionWindow->OnDragLeaveSignal(aDragContext, aTime);
-    mLastLeaveWindow = mLastDragMotionWindow;
-    mLastDragMotionWindow = NULL;
-  }
-  else {
-    g_print("Warning: no motion window set\n");
-  }
-  
-  return PR_TRUE;
-}
-
-void
-nsWindow::InstallToplevelDragMotionSignal(void)
-{
-  NS_ASSERTION( nsnull != mShell, "mShell is null");
-  
-  InstallSignal(mShell,
-                (gchar *)"drag_motion",
-                GTK_SIGNAL_FUNC(nsWindow::ToplevelDragMotionSignal));
-  
-}
-
-/* static */
-gint
-nsWindow::ToplevelDragMotionSignal(GtkWidget *      aWidget,
-                                   GdkDragContext   *aDragContext,
-                                   gint             x,
-                                   gint             y,
-                                   guint            time,
-                                   void             *aData)
-{
-  nsWindow *widget = (nsWindow *)aData;
-
-  NS_ASSERTION(nsnull != widget, "instance pointer is null");
-
-  widget->OnToplevelDragMotion(aWidget, aDragContext, x, y, time);
-
-  return TRUE;
-}
-
 #ifdef NS_DEBUG
 
 /* static */
@@ -1570,181 +1487,6 @@ nsWindow::DumpWindowTree(void)
 }
 
 #endif /* NS_DEBUG */
-
-void
-nsWindow::OnToplevelDragMotion     (GtkWidget      *aWidget,
-                                    GdkDragContext *aDragContext,
-                                    gint            x,
-                                    gint            y,
-                                    guint           aTime)
-{
-
-#ifdef DEBUG_DND_XLATE
-  DumpWindowTree();
-#endif
-
-  nscoord retx = 0;
-  nscoord rety = 0;
-
-  Window thisWindow = GDK_WINDOW_XWINDOW(aWidget->window);
-  Window returnWindow = None;
-  returnWindow = GetInnerMostWindow(thisWindow, thisWindow, x, y, &retx, &rety, 0);
-
-  nsWindow *innerMostWidget = NULL;
-  innerMostWidget = GetnsWindowFromXWindow(returnWindow);
-
-  if (!innerMostWidget)
-    innerMostWidget = this;
-
-#ifdef DEBUG_DND_XLATE
-  g_print("innerMostWidget is %p\n", innerMostWidget);
-#endif
-
-  // check to see if there was a drag motion window already in place
-  if (mLastDragMotionWindow) {
-    // if it wasn't this
-    if (mLastDragMotionWindow != innerMostWidget) {
-      // send a drag event to the last window that got a motion event
-      mLastDragMotionWindow->OnDragLeaveSignal(aDragContext, aTime);
-    }
-  }
-
-  // set the last window to this 
-  mLastDragMotionWindow = innerMostWidget;
-
-  if (!innerMostWidget->mIsDragDest)
-  {
-    // this will happen on the first motion event, so we will generate an ENTER event
-    innerMostWidget->OnDragEnterSignal(aDragContext, x, y, aTime);
-  }
-
-  // notify the drag service that we are starting a drag motion.
-  StartDragMotion(aWidget, aDragContext, aTime);
-
-  nsMouseEvent event;
-
-  event.message = NS_DRAGDROP_OVER;
-  event.eventStructType = NS_DRAGDROP_EVENT;
-
-  event.widget = innerMostWidget;
-
-  event.point.x = retx;
-  event.point.y = rety;
-
-  innerMostWidget->AddRef();
-
-  innerMostWidget->DispatchMouseEvent(event);
-
-  innerMostWidget->Release();
-
-  // we're done with the drag motion event.  notify the drag service.
-  EndDragMotion(aWidget, aDragContext, aTime);
-}
-
-void
-nsWindow::OnToplevelDragDrop       (GtkWidget      *aWidget,
-                                    GdkDragContext *aDragContext,
-                                    gint            x,
-                                    gint            y,
-                                    guint           aTime)
-{
-
-  g_print("OnToplevelDragDrop\n");
-#ifdef DEBUG_DND_XLATE
-  DumpWindowTree();
-#endif
-  nscoord retx = 0;
-  nscoord rety = 0;
-
-  Window thisWindow = GDK_WINDOW_XWINDOW(aWidget->window);
-  Window returnWindow = None;
-  returnWindow = GetInnerMostWindow(thisWindow, thisWindow, x, y, &retx, &rety, 0);
-
-  nsWindow *innerMostWidget = NULL;
-  innerMostWidget = GetnsWindowFromXWindow(returnWindow);
-
-  if (!innerMostWidget)
-    innerMostWidget = this;
-
-#ifdef DEBUG_DND_XLATE
-  g_print("innerMostWidget is %p\n", innerMostWidget);
-#endif
-
-  // check to see if there was a drag motion window already in place
-  if (mLastDragMotionWindow) {
-    // if it wasn't this
-    if (mLastDragMotionWindow != innerMostWidget) {
-      // send a drag event to the last window that got a motion event
-      mLastDragMotionWindow->OnDragLeaveSignal(aDragContext, aTime);
-    }
-  }
-
-  // set the last window to this 
-  mLastDragMotionWindow = innerMostWidget;
-
-  if (!innerMostWidget->mIsDragDest)
-  {
-    // this will happen on the first motion event, so we will generate an ENTER event
-    innerMostWidget->OnDragEnterSignal(aDragContext, x, y, aTime);
-  }
-
-  UpdateDragContext(aWidget, aDragContext, aTime);
-
-  nsMouseEvent event;
-
-  event.message = NS_DRAGDROP_DROP;
-  event.eventStructType = NS_DRAGDROP_EVENT;
-
-  event.widget = innerMostWidget;
-
-  event.point.x = retx;
-  event.point.y = rety;
-
-  innerMostWidget->AddRef();
-
-  innerMostWidget->DispatchMouseEvent(event);
-
-  innerMostWidget->Release();
-
-  // before we unset the context we need to do a drop_finish
-
-  gdk_drop_finish(aDragContext, TRUE, aTime);
-
-  // after a drop takes place we need to make sure that the drag
-  // service doesn't think that it still has a context.  if the other
-  // way ( besides the drop ) to end a drag event is during the leave
-  // event and and that case is handled in that handler.
-  UpdateDragContext(NULL, NULL, 0);
-
-}
-
-void
-nsWindow::InstallToplevelDragDropSignal(void)
-{
-  NS_ASSERTION( nsnull != mShell, "mShell is null");
-
-  InstallSignal(mShell,
-                (gchar *)"drag_drop",
-                GTK_SIGNAL_FUNC(nsWindow::ToplevelDragDropSignal));
-}
-
-/* static */
-gint
-nsWindow::ToplevelDragDropSignal(GtkWidget *      aWidget,
-                                 GdkDragContext   *aDragContext,
-                                 gint             x,
-                                 gint             y,
-                                 guint            aTime,
-                                 void             *aData)
-{
-  nsWindow *widget = (nsWindow *)aData;
-
-  NS_ASSERTION(nsnull != widget, "instance pointer is null");
-
-  widget->OnToplevelDragDrop(aWidget, aDragContext, x, y, aTime);
-
-  return PR_TRUE;
-}
 
 void
 nsWindow::OnDestroySignal(GtkWidget* aGtkWidget)
@@ -2026,21 +1768,35 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
         gdk_window_set_transient_for(mShell->window, topLevelParent);
     }
 
-    // install the drag and drop signals for the toplevel window.
-    InstallToplevelDragBeginSignal();
-    InstallToplevelDragMotionSignal();
-    InstallToplevelDragDropSignal();
-    InstallToplevelDragDataReceivedSignal();
+    // set up our drag and drop for the shell
+    gtk_drag_dest_set(mShell,
+                      (GtkDestDefaults)0,
+                      NULL,
+                      0,
+                      (GdkDragAction)0);
 
-    // set the shell window as a drop target
-    gtk_drag_dest_set (mShell,
-                       (GtkDestDefaults)0,
-                       NULL,
-                       0,
-                       (GdkDragAction)0);
+    gtk_signal_connect(GTK_OBJECT(mShell),
+                       "drag_motion",
+                       GTK_SIGNAL_FUNC(nsWindow::DragMotionSignal),
+                       this);
+    gtk_signal_connect(GTK_OBJECT(mShell),
+                       "drag_leave",
+                       GTK_SIGNAL_FUNC(nsWindow::DragLeaveSignal),
+                       this);
+    gtk_signal_connect(GTK_OBJECT(mShell),
+                       "drag_drop",
+                       GTK_SIGNAL_FUNC(nsWindow::DragDropSignal),
+                       this);
+    gtk_signal_connect(GTK_OBJECT(mShell),
+                       "drag_data_received",
+                       GTK_SIGNAL_FUNC(nsWindow::DragDataReceived),
+                       this);
   }
 
   if (mMozArea) {
+
+    // add our key event masks so that we can pass events to the inner
+    // windows.
     AddToEventMask(mMozArea, GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK);
     gtk_signal_connect(GTK_OBJECT(mMozArea),
                        "key_press_event",
@@ -3209,7 +2965,402 @@ void nsWindow::StoreProperty(char *property, unsigned char *data)
                        (gint)strlen((char *)data)); /* size of data */
 }
 
+// These are all of our drag and drop operations
+/* static */
+gint
+nsWindow::DragMotionSignal (GtkWidget *      aWidget,
+                            GdkDragContext   *aDragContext,
+                            gint             aX,
+                            gint             aY,
+                            guint            aTime,
+                            void             *aData)
+{
+  nsWindow *window = (nsWindow *)aData;
+  return window->OnDragMotionSignal(aWidget, aDragContext, aX, aY, aTime, aData);
+}
 
+gint nsWindow::OnDragMotionSignal      (GtkWidget *      aWidget,
+                                        GdkDragContext   *aDragContext,
+                                        gint             aX,
+                                        gint             aY,
+                                        guint            aTime,
+                                        void             *aData)
+{
+#ifdef DEBUG_DND_EVENTS
+  g_print("nsWindow::OnDragMotionSignal\n");
+#endif /* DEBUG_DND_EVENTS */
+
+  // Reset out drag motion timer
+  ResetDragMotionTimer(aWidget, aDragContext, aX, aY, aTime);
+
+  // get our drag context
+  nsCOMPtr<nsIDragService> dragService = do_GetService(kCDragServiceCID);
+  nsCOMPtr<nsIDragSessionGTK> dragSessionGTK = do_QueryInterface(dragService);
+
+  // first, figure out which internal widget this drag motion actually
+  // happened on
+  nscoord retx = 0;
+  nscoord rety = 0;
+
+  Window thisWindow = GDK_WINDOW_XWINDOW(aWidget->window);
+  Window returnWindow = None;
+  returnWindow = GetInnerMostWindow(thisWindow, thisWindow, aX, aY,
+                                    &retx, &rety, 0);
+
+  nsWindow *innerMostWidget = NULL;
+  innerMostWidget = GetnsWindowFromXWindow(returnWindow);
+
+  if (!innerMostWidget)
+    innerMostWidget = this;
+
+  // check to see if there was a drag motion window already in place
+  if (mLastDragMotionWindow) {
+    // if it wasn't this
+    if (mLastDragMotionWindow != innerMostWidget) {
+      // send a drag event to the last window that got a motion event
+      mLastDragMotionWindow->OnDragLeave();
+      // and enter on the new one
+      innerMostWidget->OnDragEnter(retx, rety);
+      
+    }
+  }
+  else {
+    // if there was no other motion window, then we're starting a
+    // drag.
+    dragService->StartDragSession();
+    // if there was no other motion window, send an enter event
+    innerMostWidget->OnDragEnter(retx, rety);
+  }
+
+  // set the last window to the innerMostWidget
+  mLastDragMotionWindow = innerMostWidget;
+
+  // update the drag context
+  dragSessionGTK->TargetSetLastContext(aWidget, aDragContext, aTime);
+
+  // notify the drag service that we are starting a drag motion.
+  dragSessionGTK->TargetStartDragMotion();
+
+  nsMouseEvent event;
+
+  event.message = NS_DRAGDROP_OVER;
+  event.eventStructType = NS_DRAGDROP_EVENT;
+
+  event.widget = innerMostWidget;
+
+  event.point.x = retx;
+  event.point.y = rety;
+
+  innerMostWidget->AddRef();
+
+  innerMostWidget->DispatchMouseEvent(event);
+
+  innerMostWidget->Release();
+
+  // we're done with the drag motion event.  notify the drag service.
+  dragSessionGTK->TargetEndDragMotion(aWidget, aDragContext, aTime);
+  
+  // and unset our context
+  dragSessionGTK->TargetSetLastContext(0, 0, 0);
+
+  return TRUE;
+}
+
+/* static */
+void
+nsWindow::DragLeaveSignal  (GtkWidget *      aWidget,
+                            GdkDragContext   *aDragContext,
+                            guint            aTime,
+                            gpointer         aData)
+{
+  nsWindow *window = (nsWindow *)aData;
+  window->OnDragLeaveSignal(aWidget, aDragContext, aTime, aData);
+}
+
+void 
+nsWindow::OnDragLeaveSignal       (GtkWidget *      aWidget,
+                                   GdkDragContext   *aDragContext,
+                                   guint            aTime,
+                                   gpointer         aData)
+{
+#ifdef DEBUG_DND_EVENTS
+  g_print("nsWindow::OnDragLeaveSignal\n");
+#endif /* DEBUG_DND_EVENTS */
+
+  // make sure to unset any drag motion timers here.
+  ResetDragMotionTimer(0, 0, 0, 0, 0);
+  
+  if (mLastDragMotionWindow) {
+    // send our leave signal
+    mLastDragMotionWindow->OnDragLeave();
+    mLastDragMotionWindow = 0;
+    // since we're leaving a toplevel window, inform the drag service
+    // that we're ending the drag
+    nsCOMPtr<nsIDragService> dragService = do_GetService(kCDragServiceCID);
+    dragService->EndDragSession();
+  }
+}
+
+/* static */
+gint
+nsWindow::DragDropSignal   (GtkWidget        *aWidget,
+                            GdkDragContext   *aDragContext,
+                            gint             aX,
+                            gint             aY,
+                            guint            aTime,
+                            void             *aData)
+{
+  nsWindow *window = (nsWindow *)aData;
+  return window->OnDragDropSignal(aWidget, aDragContext, aX, aY, aTime, aData);
+}
+
+gint
+nsWindow::OnDragDropSignal        (GtkWidget        *aWidget,
+                                   GdkDragContext   *aDragContext,
+                                   gint             aX,
+                                   gint             aY,
+                                   guint            aTime,
+                                   void             *aData)
+{
+#ifdef DEBUG_DND_EVENTS
+  g_print("nsWindow::OnDragDropSignal\n");
+#endif /* DEBUG_DND_EVENTS */
+
+  // get our drag context
+  nsCOMPtr<nsIDragService> dragService = do_GetService(kCDragServiceCID);
+  nsCOMPtr<nsIDragSessionGTK> dragSessionGTK = do_QueryInterface(dragService);
+
+  nscoord retx = 0;
+  nscoord rety = 0;
+  
+  Window thisWindow = GDK_WINDOW_XWINDOW(aWidget->window);
+  Window returnWindow = None;
+  returnWindow = GetInnerMostWindow(thisWindow, thisWindow, aX, aY, 
+                                    &retx, &rety, 0);
+
+  nsWindow *innerMostWidget = NULL;
+  innerMostWidget = GetnsWindowFromXWindow(returnWindow);
+
+  // set this now before any of the drag enter or leave events happen
+  dragSessionGTK->TargetSetLastContext(aWidget, aDragContext, aTime);
+
+  if (!innerMostWidget)
+    innerMostWidget = this;
+
+  // check to see if there was a drag motion window already in place
+  if (mLastDragMotionWindow) {
+    // if it wasn't this
+    if (mLastDragMotionWindow != innerMostWidget) {
+      // send a drag event to the last window that got a motion event
+      mLastDragMotionWindow->OnDragLeave();
+      // and enter on the new one
+      innerMostWidget->OnDragEnter(retx, rety);
+    }
+  }
+  else {
+    // ok, fire up the drag session so that we think that a drag is in
+    // progress
+    dragService->StartDragSession();
+    // if there was no other motion window, send an enter event
+    innerMostWidget->OnDragEnter(retx, rety);
+  }
+
+  // set the last window to this 
+  mLastDragMotionWindow = innerMostWidget;
+
+  // What we do here is dispatch a new drag motion event to
+  // re-validate the drag target and then we do the drop.  The events
+  // look the same except for the type.
+
+  innerMostWidget->AddRef();
+
+  nsMouseEvent event;
+
+  event.message = NS_DRAGDROP_OVER;
+  event.eventStructType = NS_DRAGDROP_EVENT;
+  event.widget = innerMostWidget;
+  event.point.x = retx;
+  event.point.y = rety;
+
+  innerMostWidget->DispatchMouseEvent(event);
+
+  event.message = NS_DRAGDROP_DROP;
+  event.eventStructType = NS_DRAGDROP_EVENT;
+  event.widget = innerMostWidget;
+  event.point.x = retx;
+  event.point.y = rety;
+
+  innerMostWidget->DispatchMouseEvent(event);
+
+  innerMostWidget->Release();
+
+  // before we unset the context we need to do a drop_finish
+
+  gdk_drop_finish(aDragContext, TRUE, aTime);
+
+  // after a drop takes place we need to make sure that the drag
+  // service doesn't think that it still has a context.  if the other
+  // way ( besides the drop ) to end a drag event is during the leave
+  // event and and that case is handled in that handler.
+  dragSessionGTK->TargetSetLastContext(0, 0, 0);
+
+  // send our drag exit event
+  innerMostWidget->OnDragLeave();
+  // and clear the mLastDragMotion window
+  mLastDragMotionWindow = 0;
+
+  // and end our drag session
+  dragService->EndDragSession();
+
+
+  return TRUE;
+}
+
+// when the data has been received
+/* static */
+void
+nsWindow::DragDataReceived (GtkWidget         *aWidget,
+                            GdkDragContext    *aDragContext,
+                            gint               aX,
+                            gint               aY,
+                            GtkSelectionData  *aSelectionData,
+                            guint              aInfo,
+                            guint32            aTime,
+                            gpointer           aData)
+{
+  nsWindow *window = (nsWindow *)aData;
+  window->OnDragDataReceived(aWidget, aDragContext, aX, aY,
+                             aSelectionData, aInfo, aTime, aData);
+}
+
+void
+nsWindow::OnDragDataReceived      (GtkWidget         *aWidget,
+                                   GdkDragContext    *aDragContext,
+                                   gint               aX,
+                                   gint               aY,
+                                   GtkSelectionData  *aSelectionData,
+                                   guint              aInfo,
+                                   guint32            aTime,
+                                   gpointer           aData)
+{
+#ifdef DEBUG_DND_EVENTS
+  g_print("nsWindow::OnDragDataReceived\n");
+#endif /* DEBUG_DND_EVENTS */
+  // get our drag context
+  nsCOMPtr<nsIDragService> dragService = do_GetService(kCDragServiceCID);
+  nsCOMPtr<nsIDragSessionGTK> dragSessionGTK = do_QueryInterface(dragService);
+
+  dragSessionGTK->TargetDataReceived(aWidget, aDragContext, aX, aY,
+                                     aSelectionData, aInfo, aTime);
+}
+ 
+void
+nsWindow::OnDragLeave(void)
+{
+#ifdef DEBUG_DND_EVENTS
+  g_print("nsWindow::OnDragLeave\n");
+#endif /* DEBUG_DND_EVENTS */
+
+  nsMouseEvent event;
+
+  event.message = NS_DRAGDROP_EXIT;
+  event.eventStructType = NS_DRAGDROP_EVENT;
+
+  event.widget = this;
+
+  event.point.x = 0;
+  event.point.y = 0;
+
+  AddRef();
+
+  DispatchMouseEvent(event);
+
+  Release();
+}
+
+void
+nsWindow::OnDragEnter(nscoord aX, nscoord aY)
+{
+#ifdef DEBUG_DND_EVENTS
+  g_print("nsWindow::OnDragEnter\n");
+#endif /* DEBUG_DND_EVENTS */
+  
+  nsMouseEvent event;
+
+  event.message = NS_DRAGDROP_ENTER;
+  event.eventStructType = NS_DRAGDROP_EVENT;
+
+  event.widget = this;
+
+  event.point.x = aX;
+  event.point.y = aY;
+
+  AddRef();
+
+  DispatchMouseEvent(event);
+
+  Release();
+}
+
+void
+nsWindow::ResetDragMotionTimer(GtkWidget *aWidget,
+                               GdkDragContext *aDragContext,
+                               gint aX, gint aY, guint aTime)
+{
+  
+  // We have to be careful about ref ordering here.  if aWidget ==
+  // mDraMotionWidget be careful not to let the refcnt drop to zero.
+  // Same with the drag context.
+  if (aWidget)
+    gtk_widget_ref(aWidget);
+  if (mDragMotionWidget)
+    gtk_widget_unref(mDragMotionWidget);
+  mDragMotionWidget = aWidget;
+
+  if (aDragContext)
+    gdk_drag_context_ref(aDragContext);
+  if (mDragMotionContext)
+    gdk_drag_context_unref(mDragMotionContext);
+  mDragMotionContext = aDragContext;
+
+  mDragMotionX = aX;
+  mDragMotionY = aY;
+  mDragMotionTime = aTime;
+
+  // clear the timer
+  if (!aWidget) {
+    // destroying the timer will cancel it
+    mDragMotionTimer = 0;
+#ifdef DEBUG_DND_EVENTS
+    g_print("*** canceled motion timer\n");
+#endif
+    return;
+  }
+  
+  // otherwise we create a new timer
+  mDragMotionTimer = do_CreateInstance("component://netscape/timer");
+  NS_ASSERTION(mDragMotionTimer, "Failed to create drag motion timer!");
+  mDragMotionTimer->Init(DragMotionTimerCallback, this, 100);
+}
+
+void
+nsWindow::FireDragMotionTimer(void)
+{
+#ifdef DEBUG_DND_EVENTS
+  g_print("nsWindow::FireDragMotionTimer\n");
+#endif
+  OnDragMotionSignal(mDragMotionWidget, mDragMotionContext,
+                     mDragMotionX, mDragMotionY, mDragMotionTime, 
+                     this);
+}
+
+/* static */
+void
+nsWindow::DragMotionTimerCallback(nsITimer *aTimer, void *aClosure)
+{
+  nsWindow *window = (nsWindow *)aClosure;
+  window->FireDragMotionTimer();
+}
 
 ChildWindow::ChildWindow()
 {

@@ -33,32 +33,34 @@ typedef void (*nsIDragSessionGTKTimeCB)(guint32 *aTime);
 { 0xa6b49c42, 0x1dd1, 0x11b2, { 0xb2, 0xdf, 0xc1, 0xd6, 0x1d, 0x67, 0x45, 0xcf } };
 
 class nsIDragSessionGTK : public nsISupports {
- public:
+public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDRAGSESSIONGTK_IID)
 
-  NS_IMETHOD SetLastContext  (GtkWidget      *aWidget,
-                              GdkDragContext *aContext,
-                              guint           aTime) = 0;
-  NS_IMETHOD StartDragMotion (GtkWidget      *aWidget,
-                              GdkDragContext *aContext,
-                              guint           aTime) = 0;
-  NS_IMETHOD EndDragMotion   (GtkWidget      *aWidget,
-                              GdkDragContext *aContext,
-                              guint           aTime) = 0;
-  NS_IMETHOD SetDataReceived (GtkWidget         *aWidget,
-                              GdkDragContext    *context,
-                              gint               x,
-                              gint               y,
-                              GtkSelectionData  *selection_data,
-                              guint              info,
-                              guint32            aTime) = 0;
-  NS_IMETHOD DataGetSignal   (GtkWidget        *widget,
-                              GdkDragContext   *context,
-                              GtkSelectionData *selection_data,
-                              guint             info,
-                              guint32           aTime,
-                              gpointer          data) = 0;
-  NS_IMETHOD SetTimeCallback (nsIDragSessionGTKTimeCB aCallback) = 0;
+  // Thse are all target methods - that is when the mozilla is a
+  // target of a drag.  Any methods related to when mozilla starts a
+  // drag are elsewhere.
+    
+  // this sets the last drag context used where mozilla is the target
+  // of a drag
+  NS_IMETHOD TargetSetLastContext  (GtkWidget      *aWidget,
+                                    GdkDragContext *aContext,
+                                    guint           aTime) = 0;
+  // this is called at the beginning of a drag motion event
+  NS_IMETHOD TargetStartDragMotion (void) = 0;
+  // this is called at the end of a drag motion event
+  NS_IMETHOD TargetEndDragMotion   (GtkWidget      *aWidget,
+                                    GdkDragContext *aContext,
+                                    guint           aTime) = 0;
+  // this is called when data is received after being sent above
+  NS_IMETHOD TargetDataReceived    (GtkWidget         *aWidget,
+                                    GdkDragContext    *aContext,
+                                    gint               aX,
+                                    gint               aY,
+                                    GtkSelectionData  *aSelection_data,
+                                    guint              aInfo,
+                                    guint32            aTime) = 0;
+  // this sets a callback for time related fun
+  NS_IMETHOD TargetSetTimeCallback (nsIDragSessionGTKTimeCB aCallback) = 0;
 
 };
 
