@@ -212,7 +212,7 @@
     <content excludes="observes,template">
       <xul:box class="progressmeter-internal-box" flex="1">
         <xul:stack class="progressmeter-stack" flex="1">
-          <xul:progressbar class="progressmeter-progressbar" inherits="value">
+          <xul:progressbar class="progressmeter-progressbar" inherits="value,statusbar">
             <xul:box class="progress-bar"/>
             <xul:box class="progress-remainder"/>
           </xul:progressbar>
@@ -515,7 +515,7 @@
   <!-- XUL <statusbar> -->
   <binding id="statusbar" extends="xul:box"/>
     
-  <binding id="statusbar-panel" extends="xul:box">
+  <binding id="statusbar-panel" extends="xul:button">
     <content excludes="observes,template" autostretch="never" valign="middle">
       <xul:image class="statusbar-panel-icon" inherits="src"/>
       <xul:text class="statusbar-panel-text" inherits="value,crop" crop="right" flex="1"/>

@@ -181,6 +181,7 @@ var nsDragAndDrop = {
           nsDragAndDrop.mDragSession.getData(trans, i);
           supportsArray.AppendElement(trans);
         }
+      dump("*** supportsArray = " + supportsArray.Count() + "\n");
       return supportsArray;
     }
 
