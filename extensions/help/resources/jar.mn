@@ -9,7 +9,6 @@ help.jar:
 
 en-US.jar:
         locale/en-US/help/mozillahelp.rdf               (locale/en-US/mozillahelp.rdf)
-        locale/en-US/help/testhelp.rdf                  (locale/en-US/testhelp.rdf)
         locale/en-US/help/help-glossary.rdf             (locale/en-US/help-glossary.rdf)
 *       locale/en-US/help/contents.rdf                  (locale/en-US/contents.rdf)
         locale/en-US/help/developer_tools.xhtml         (locale/en-US/developer_tools.xhtml)
@@ -23,7 +22,7 @@ en-US.jar:
         locale/en-US/help/nav_help.xhtml                (locale/en-US/nav_help.xhtml)
         locale/en-US/help/mail_help.xhtml               (locale/en-US/mail_help.xhtml)
         locale/en-US/help/mail_sec_help.xhtml           (locale/en-US/mail_sec_help.xhtml)
-        locale/en-US/help/composer_help.html            (locale/en-US/composer_help.html)
+        locale/en-US/help/composer_help.xhtml           (locale/en-US/composer_help.xhtml)
         locale/en-US/help/customize_help.xhtml          (locale/en-US/customize_help.xhtml)
         locale/en-US/help/certs_help.xhtml              (locale/en-US/certs_help.xhtml)
         locale/en-US/help/cert_dialog_help.xhtml        (locale/en-US/cert_dialog_help.xhtml)
@@ -42,7 +41,6 @@ en-US.jar:
         locale/en-US/help/using_certs_help.xhtml        (locale/en-US/using_certs_help.xhtml)
         locale/en-US/help/validation_help.xhtml         (locale/en-US/validation_help.xhtml)
         locale/en-US/help/helpFileLayout.css            (locale/en-US/helpFileLayout.css)
-        locale/en-US/help/content_style.css             (locale/en-US/content_style.css)
         locale/en-US/help/help.dtd                      (locale/en-US/help.dtd)
         locale/en-US/help/helpMenuOverlay.dtd           (locale/en-US/helpMenuOverlay.dtd)
         locale/en-US/help/images/anchor-in-doc.gif      (locale/en-US/images/anchor-in-doc.gif)
