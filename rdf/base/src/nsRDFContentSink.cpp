@@ -238,7 +238,6 @@ protected:
     PRUnichar* mText;
     PRInt32 mTextLength;
     PRInt32 mTextSize;
-    PRBool mConstrainSize;
 
     struct NameSpaceEntry {
     public:
@@ -349,7 +348,6 @@ RDFContentSinkImpl::RDFContentSinkImpl()
     : mText(nsnull),
       mTextLength(0),
       mTextSize(0),
-      mConstrainSize(PR_TRUE),
       mNameSpaceStack(nsnull),
       mState(eRDFContentSinkState_InProlog),
       mParseMode(eRDFContentSinkParseMode_Literal),
@@ -854,45 +852,36 @@ RDFContentSinkImpl::FlushText(PRBool aCreateTextNode, PRBool* aDidFlush)
 nsresult
 RDFContentSinkImpl::AddText(const PRUnichar* aText, PRInt32 aLength)
 {
-  // Create buffer when we first need it
-  if (0 == mTextSize) {
-      mText = (PRUnichar *) PR_MALLOC(sizeof(PRUnichar) * 4096);
-      if (nsnull == mText) {
-          return NS_ERROR_OUT_OF_MEMORY;
-      }
-      mTextSize = 4096;
-  }
-
-  // Copy data from string into our buffer; flush buffer when it fills up
-  PRInt32 offset = 0;
-  while (0 != aLength) {
-    PRInt32 amount = mTextSize - mTextLength;
-    if (amount > aLength) {
-        amount = aLength;
-    }
-    if (0 == amount) {
-      if (mConstrainSize) {
-        nsresult rv = FlushText();
-        if (NS_OK != rv) {
-            return rv;
-        }
-      }
-      else {
-        mTextSize += aLength;
-        mText = (PRUnichar *) PR_REALLOC(mText, sizeof(PRUnichar) * mTextSize);
-        if (nsnull == mText) {
+    // Create buffer when we first need it
+    if (0 == mTextSize) {
+        mText = (PRUnichar *) PR_MALLOC(sizeof(PRUnichar) * 4096);
+        if (!mText) {
             return NS_ERROR_OUT_OF_MEMORY;
         }
-      }
+        mTextSize = 4096;
     }
-    memcpy(&mText[mTextLength],aText + offset, sizeof(PRUnichar) * amount);
-    
-    mTextLength += amount;
-    offset += amount;
-    aLength -= amount;
-  }
 
-  return NS_OK;
+    // Copy data from string into our buffer; grow the buffer as needed.
+    // It never shrinks, but since the content sink doesn't stick around,
+    // this shouldn't be a bloat issue.
+    PRInt32 amount = mTextSize - mTextLength;
+    if (amount < aLength) {
+        // Grow the buffer by at least a factor of two to prevent thrashing.
+        // Since PR_REALLOC will leave mText intact if the call fails,
+        // don't clobber mText or mTextSize until the new mem is allocated.
+        PRInt32 newSize = (2 * mTextSize > (mTextSize + aLength)) ?
+                          (2 * mTextSize) : (mTextSize + aLength);
+        PRUnichar* newText = 
+            (PRUnichar *) PR_REALLOC(mText, sizeof(PRUnichar) * newSize);
+        if (!newText)
+            return NS_ERROR_OUT_OF_MEMORY;
+        mTextSize = newSize;
+        mText = newText;
+    }
+    memcpy(&mText[mTextLength], aText, sizeof(PRUnichar) * aLength);
+    mTextLength += aLength;
+
+    return NS_OK;
 }
 
 nsresult
