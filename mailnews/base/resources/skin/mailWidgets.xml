@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+
+<bindings id="mailWidgetsBindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:html="http://www.w3.org/TR/REC-html40"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  
+  <binding id="searchattribute" >
+    <content>
+      <xul:box>
+        <xul:text style="border: 1px solid blue" value="searchattr!"/>
+        <xul:image inherits="src"/>
+        <xul:text style="border: 1px solid blue" value="searchattr2!"/>
+      </xul:box>
+    </content>
+  </binding>
+
+  <binding id="searchoperator" extends="xul:box">
+    <content>
+      <xul:text value="operator!"/>
+    </content>
+  </binding>
+
+</bindings>

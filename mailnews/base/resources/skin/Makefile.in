@@ -33,6 +33,7 @@ EXPORT_RESOURCE_SAMPLES = \
 		folderPane.css \
 		threadPane.css \
 		msgHdrViewOverlay.css \
+		mailWidgets.xml \
 		mailfolder.gif \
 		open-mailfolder.gif \
 		message-mail.gif \

@@ -106,6 +106,7 @@ install::
 	$(MAKE_INSTALL) server-remote-lock.gif				$(DIST)\bin\chrome\messenger\skin
   $(MAKE_INSTALL) attach.gif		                $(DIST)\bin\chrome\messenger\skin
   $(MAKE_INSTALL) addtoab.gif		                $(DIST)\bin\chrome\messenger\skin
+	$(MAKE_INSTALL) mailWidgets.xml		$(DIST)\bin\chrome\messenger\skin
 
 clobber::
 	rm -f $(DIST)\chrome\messenger\skin\messenger.css

@@ -301,3 +301,11 @@ treeitem[Enabled="true"] > treerow > treecell.enabledcol > .tree-button {
 treecell.enabledcol > .tree-button {
   list-style-image: url("chrome://messenger/skin/readmail.gif");
 }
+
+searchattribute {
+  behavior: url(chrome://messenger/skin/mailWidgets.xml#searchattribute);
+}
+
+searchoperator {
+  behavior: url(chrome://messenger/skin/mailWidgets.xml#searchoperator);
+}
