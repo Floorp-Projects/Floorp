@@ -71,11 +71,16 @@ public:
 private:
   friend class imgRequestProxy;
 
-  inline PRUint32 GetImageStatus() { return mImageStatus; }
-  inline nsresult GetResultFromImageStatus(PRUint32 aStatus);
+  inline PRUint32 GetImageStatus() const { return mImageStatus; }
+  inline nsresult GetResultFromImageStatus(PRUint32 aStatus) const;
   void Cancel(nsresult aStatus);
   nsresult GetURI(nsIURI **aURI);
   void RemoveFromCache();
+  inline const char *GetMimeType() const { 
+    if (mContentType.IsEmpty())
+      return nsnull;
+    return mContentType.get();
+  }
 
 public:
   NS_DECL_IMGILOAD

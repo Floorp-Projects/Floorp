@@ -60,16 +60,16 @@ protected:
   friend class imgRequest;
 
   /* non-virtual imgIDecoderObserver methods */
-  void OnStartDecode   (nsISupports *aCX);
-  void OnStartContainer(nsISupports *aCX, imgIContainer *aContainer);
-  void OnStartFrame    (nsISupports *aCX, gfxIImageFrame *aFrame);
-  void OnDataAvailable (nsISupports *aCX, gfxIImageFrame *aFrame, const nsRect * aRect);
-  void OnStopFrame     (nsISupports *aCX, gfxIImageFrame *aFrame);
-  void OnStopContainer (nsISupports *aCX, imgIContainer *aContainer);
-  void OnStopDecode    (nsISupports *aCX, nsresult status, const PRUnichar *statusArg); 
+  void OnStartDecode   (void);
+  void OnStartContainer(imgIContainer *aContainer);
+  void OnStartFrame    (gfxIImageFrame *aFrame);
+  void OnDataAvailable (gfxIImageFrame *aFrame, const nsRect * aRect);
+  void OnStopFrame     (gfxIImageFrame *aFrame);
+  void OnStopContainer (imgIContainer *aContainer);
+  void OnStopDecode    (nsresult status, const PRUnichar *statusArg); 
 
   /* non-virtual imgIContainerObserver methods */
-  void FrameChanged(imgIContainer *aContainer, nsISupports *aCX, gfxIImageFrame *aFrame, nsRect * aDirtyRect);
+  void FrameChanged(imgIContainer *aContainer, gfxIImageFrame *aFrame, nsRect * aDirtyRect);
 
   /* non-virtual nsIRequestObserver methods */
   void OnStartRequest(nsIRequest *request, nsISupports *ctxt);

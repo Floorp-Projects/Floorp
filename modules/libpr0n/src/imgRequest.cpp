@@ -97,11 +97,11 @@ nsresult imgRequest::AddProxy(imgRequestProxy *proxy)
 
   // OnStartDecode
   if (mState & onStartDecode)
-    proxy->OnStartDecode(nsnull);
+    proxy->OnStartDecode();
 
   // OnStartContainer
   if (mState & onStartContainer)
-    proxy->OnStartContainer(nsnull, mImage);
+    proxy->OnStartContainer(mImage);
 
   // Send frame messages (OnStartFrame, OnDataAvailable, OnStopFrame)
   PRUint32 nframes = 0;
@@ -116,31 +116,31 @@ nsresult imgRequest::AddProxy(imgRequestProxy *proxy)
     NS_ASSERTION(frame, "GetCurrentFrame gave back a null frame!");
 
     // OnStartFrame
-    proxy->OnStartFrame(nsnull, frame);
+    proxy->OnStartFrame(frame);
 
     if (!(mState & onStopContainer)) {
       // OnDataAvailable
       nsRect r;
       frame->GetRect(r);  // XXX we should only send the currently decoded rectangle here.
-      proxy->OnDataAvailable(nsnull, frame, &r);
+      proxy->OnDataAvailable(frame, &r);
     } else {
       // OnDataAvailable
       nsRect r;
       frame->GetRect(r);  // We're done loading this image, send the the whole rect
-      proxy->OnDataAvailable(nsnull, frame, &r);
+      proxy->OnDataAvailable(frame, &r);
 
       // OnStopFrame
-      proxy->OnStopFrame(nsnull, frame);
+      proxy->OnStopFrame(frame);
     }
   }
 
   // OnStopContainer
   if (mState & onStopContainer)
-    proxy->OnStopContainer(nsnull, mImage);
+    proxy->OnStopContainer(mImage);
 
   // OnStopDecode
   if (mState & onStopDecode)
-    proxy->OnStopDecode(nsnull, GetResultFromImageStatus(mImageStatus), nsnull);
+    proxy->OnStopDecode(GetResultFromImageStatus(mImageStatus), nsnull);
 
   if (mImage && (mObservers.Count() == 1)) {
     LOG_MSG(gImgLog, "imgRequest::AddProxy", "starting animation");
@@ -169,7 +169,7 @@ nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus)
 
   // make sure that observer gets an OnStopDecode message sent to it
   if (!(mState & onStopDecode)) {
-    proxy->OnStopDecode(nsnull, aStatus, nsnull);
+    proxy->OnStopDecode(aStatus, nsnull);
   }
 
   // make sure that observer gets an OnStopRequest message sent to it
@@ -204,7 +204,7 @@ nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus)
   return NS_OK;
 }
 
-nsresult imgRequest::GetResultFromImageStatus(PRUint32 aStatus)
+nsresult imgRequest::GetResultFromImageStatus(PRUint32 aStatus) const
 {
   nsresult rv = NS_OK;
 
@@ -253,7 +253,6 @@ nsresult imgRequest::GetURI(nsIURI **aURI)
   return NS_ERROR_FAILURE;
 }
 
-
 void imgRequest::RemoveFromCache()
 {
   LOG_SCOPE(gImgLog, "imgRequest::RemoveFromCache");
@@ -296,7 +295,7 @@ NS_IMETHODIMP imgRequest::FrameChanged(imgIContainer *container, nsISupports *cx
   PRInt32 count = mObservers.Count();
   for (PRInt32 i = 0; i < count; i++) {
     imgRequestProxy *proxy = NS_STATIC_CAST(imgRequestProxy*, mObservers[i]);
-    if (proxy) proxy->FrameChanged(container, cx, newframe, dirtyRect);
+    if (proxy) proxy->FrameChanged(container, newframe, dirtyRect);
 
     // If this assertion fires, it means that imgRequest notifications could
     // be dropped!
@@ -319,7 +318,7 @@ NS_IMETHODIMP imgRequest::OnStartDecode(imgIRequest *request, nsISupports *cx)
   PRInt32 count = mObservers.Count();
   for (PRInt32 i = 0; i < count; i++) {
     imgRequestProxy *proxy = NS_STATIC_CAST(imgRequestProxy*, mObservers[i]);
-    if (proxy) proxy->OnStartDecode(cx);
+    if (proxy) proxy->OnStartDecode();
 
     // If this assertion fires, it means that imgRequest notifications could
     // be dropped!
@@ -353,7 +352,7 @@ NS_IMETHODIMP imgRequest::OnStartContainer(imgIRequest *request, nsISupports *cx
   PRInt32 count = mObservers.Count();
   for (PRInt32 i = 0; i < count; i++) {
     imgRequestProxy *proxy = NS_STATIC_CAST(imgRequestProxy*, mObservers[i]);
-    if (proxy) proxy->OnStartContainer(cx, image);
+    if (proxy) proxy->OnStartContainer(image);
 
     // If this assertion fires, it means that imgRequest notifications could
     // be dropped!
@@ -373,7 +372,7 @@ NS_IMETHODIMP imgRequest::OnStartFrame(imgIRequest *request, nsISupports *cx, gf
   PRInt32 count = mObservers.Count();
   for (PRInt32 i = 0; i < count; i++) {
     imgRequestProxy *proxy = NS_STATIC_CAST(imgRequestProxy*, mObservers[i]);
-    if (proxy) proxy->OnStartFrame(cx, frame);
+    if (proxy) proxy->OnStartFrame(frame);
 
     // If this assertion fires, it means that imgRequest notifications could
     // be dropped!
@@ -396,7 +395,7 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(imgIRequest *request, nsISupports *cx,
   PRInt32 count = mObservers.Count();
   for (PRInt32 i = 0; i < count; i++) {
     imgRequestProxy *proxy = NS_STATIC_CAST(imgRequestProxy*, mObservers[i]);
-    if (proxy) proxy->OnDataAvailable(cx, frame, rect);
+    if (proxy) proxy->OnDataAvailable(frame, rect);
 
     // If this assertion fires, it means that imgRequest notifications could
     // be dropped!
@@ -432,7 +431,7 @@ NS_IMETHODIMP imgRequest::OnStopFrame(imgIRequest *request, nsISupports *cx, gfx
   PRInt32 count = mObservers.Count();
   for (PRInt32 i = 0; i < count; i++) {
     imgRequestProxy *proxy = NS_STATIC_CAST(imgRequestProxy*, mObservers[i]);
-    if (proxy) proxy->OnStopFrame(cx, frame);
+    if (proxy) proxy->OnStopFrame(frame);
 
     // If this assertion fires, it means that imgRequest notifications could
     // be dropped!
@@ -453,7 +452,7 @@ NS_IMETHODIMP imgRequest::OnStopContainer(imgIRequest *request, nsISupports *cx,
   PRInt32 count = mObservers.Count();
   for (PRInt32 i = 0; i < count; i++) {
     imgRequestProxy *proxy = NS_STATIC_CAST(imgRequestProxy*, mObservers[i]);
-    if (proxy) proxy->OnStopContainer(cx, image);
+    if (proxy) proxy->OnStopContainer(image);
 
     // If this assertion fires, it means that imgRequest notifications could
     // be dropped!
@@ -480,7 +479,7 @@ NS_IMETHODIMP imgRequest::OnStopDecode(imgIRequest *aRequest, nsISupports *aCX, 
   PRInt32 count = mObservers.Count();
   for (PRInt32 i = 0; i < count; i++) {
     imgRequestProxy *proxy = NS_STATIC_CAST(imgRequestProxy*, mObservers[i]);
-    if (proxy) proxy->OnStopDecode(aCX, GetResultFromImageStatus(mImageStatus), aStatusArg);
+    if (proxy) proxy->OnStopDecode(GetResultFromImageStatus(mImageStatus), aStatusArg);
 
     // If this assertion fires, it means that imgRequest notifications could
     // be dropped!
