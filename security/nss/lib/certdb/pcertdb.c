@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.1 2000/03/31 19:42:39 relyea%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.2 2000/04/06 00:24:43 thayes%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -5484,15 +5484,83 @@ typedef struct SPKDigestInfoStr {
 	(((SPKDigestInfo *)(handle->spkDigestInfo))->table)
 
 /*
+** Hash allocator ops for the SPKDigest hash table.  The rules are:
+**   + The index and value fields are "owned" by the hash table, and are
+**     freed when the table entry is deleted.
+**   + Replacing a value in the table is not allowed, since the caller can't
+**     tell whether the index field was used or not, resulting in a memory
+**     leak.  (This is a bug in the PL_Hash routines.
+*/
+static void * PR_CALLBACK
+spkAllocTable(void *pool, PRSize size)
+{
+#if defined(XP_MAC)
+#pragma unused (pool)
+#endif
+
+    return PR_MALLOC(size);
+}
+
+static void PR_CALLBACK
+spkFreeTable(void *pool, void *item)
+{
+#if defined(XP_MAC)
+#pragma unused (pool)
+#endif
+
+    PR_Free(item);
+}
+
+/* NOTE: the key argument here appears to be useless, since the RawAdd
+ * routine in PL_Hash just uses the original anyway.
+ */
+static PLHashEntry * PR_CALLBACK
+spkAllocEntry(void *pool, const void *key)
+{
+#if defined(XP_MAC)
+#pragma unused (pool,key)
+#endif
+
+    return PR_NEW(PLHashEntry);
+}
+
+static void PR_CALLBACK
+spkFreeEntry(void *pool, PLHashEntry *he, PRUintn flag)
+{
+#if defined(XP_MAC)
+#pragma unused (pool)
+#endif
+
+    SECItem *value = (SECItem *)he->value;
+
+    /* The flag should always be to free the whole entry.  Otherwise the
+     * index field gets leaked because the caller can't tell whether
+     * the "new" value (which is the same as the old) was used or not.
+     */
+    PORT_Assert(flag == HT_FREE_ENTRY);
+
+    /* We always free the value */
+    SECITEM_FreeItem(value, PR_TRUE);
+    
+    if (flag == HT_FREE_ENTRY)
+    {
+        /* Comes from BTOA, is this the right free call? */
+        PORT_Free((char *)he->key);
+        PR_Free(he);
+    }
+}
+
+static PLHashAllocOps spkHashAllocOps = {
+    spkAllocTable, spkFreeTable,
+    spkAllocEntry, spkFreeEntry
+};
+
+
+/*
  * Create the key hash lookup table.  Note that the table, and the
  * structure which holds it and a little more information, is never freed.
  * This is because the temporary database is never actually closed out,
- * so there is no safe/obvious place to free the whole thing.  Also,
- * every time an entry is added to the table, the key under which it is
- * added is leaked.  I think the only way to fix that is to provide our
- * own allocation functions to PL_NewHashTable.  But I'm not in the mood
- * to do that, given that all of this is about to change, and we should
- * have the key hash lookup done inside the permanent database itself.
+ * so there is no safe/obvious place to free the whole thing.
  *
  * The database must be locked already.
  */
@@ -5512,7 +5580,7 @@ InitDBspkDigestInfo(CERTCertDBHandle *handle)
 
     table = PL_NewHashTable(128, PL_HashString, PL_CompareStrings,
 			    (PLHashComparator) SECITEM_ItemsAreEqual,
-			    NULL, NULL);
+			    &spkHashAllocOps, NULL);
     if ( table == NULL ) {
 	PORT_Free(spkDigestInfo);
 	return(SECFailure);
@@ -5662,7 +5730,6 @@ RemoveCertFromSPKDigestTableForAlg(CERTCertDBHandle *handle,
 				   CERTCertificate *cert, SECOidTag digestAlg)
 {
     SECStatus rv = SECSuccess;
-    SECItem *certDBKey = NULL;
     char *index = NULL;
     PLHashTable *table;
 
@@ -5678,25 +5745,11 @@ RemoveCertFromSPKDigestTableForAlg(CERTCertDBHandle *handle,
 	goto done;
     }
 
-    /*
-     * Get hold of this value so we can free it after doing the remove.
-     */
-    certDBKey = PL_HashTableLookup(table, index);
-    if ( certDBKey == NULL ) {
-	/* not found means nothing to remove, which is fine */
-	goto done;
-    }
-
     if ( PL_HashTableRemove(table, index) != PR_TRUE ) {
-	/* This should not actually happen, since we already did a lookup. */
-	PORT_Assert(0);
-	rv = SECFailure;
+	/* not found means nothing to remove, which is fine */
     }
 
 done:
-    if ( certDBKey != NULL ) {
-	SECITEM_FreeItem(certDBKey, PR_TRUE);
-    }
     if ( index != NULL ) {
 	PORT_Free(index);
     }
@@ -5743,7 +5796,7 @@ AddCertToSPKDigestTableForAlg(CERTCertDBHandle *handle, CERTCertificate *cert,
 			      SECItem *certDBKey, SECOidTag digestAlg)
 {
     SECStatus rv = SECFailure;
-    SECItem *oldCertDBKey = NULL;
+    SECItem *oldCertDBKey;
     PRBool addit = PR_TRUE;
     CERTCertificate *oldCert = NULL;
     char *index = NULL;
@@ -5785,7 +5838,6 @@ AddCertToSPKDigestTableForAlg(CERTCertDBHandle *handle, CERTCertificate *cert,
 	    if ( cert == oldCert ) {
 		/* They are the same cert, so we are done. */
 		addit = PR_FALSE;
-		oldCertDBKey = NULL;		/* don't want to free it */
 	    } else if ( CERT_IsNewer(cert, oldCert) ) {
 		if ( PL_HashTableRemove(table, index) != PR_TRUE ) {
 		    goto loser;
@@ -5793,7 +5845,6 @@ AddCertToSPKDigestTableForAlg(CERTCertDBHandle *handle, CERTCertificate *cert,
 	    } else {
 		/* oldCert is "newer", so we are done. */
 		addit = PR_FALSE;
-		oldCertDBKey = NULL;		/* don't want to free it */
 	    }
 	}
     }
@@ -5814,9 +5865,6 @@ AddCertToSPKDigestTableForAlg(CERTCertDBHandle *handle, CERTCertificate *cert,
     rv = SECSuccess;
 
 loser:
-    if ( oldCertDBKey != NULL ) {
-	SECITEM_FreeItem(oldCertDBKey, PR_TRUE);
-    }
     if ( index != NULL ) {
 	PORT_Free(index);
     }
