@@ -52,7 +52,6 @@
 #include "nsTopProgressNotifier.h"
 #include "nsLoggingProgressNotifier.h"
 
-#include "nsIAppShellComponent.h"
 #include "nsIRegistry.h"
 #include "nsBuildID.h"
 
@@ -89,12 +88,6 @@ nsSoftwareUpdate* nsSoftwareUpdate::mInstance = nsnull;
 nsCOMPtr<nsIFile> nsSoftwareUpdate::mProgramDir = nsnull;
 char*             nsSoftwareUpdate::mLogName = nsnull;
 
-#if NOTIFICATION_ENABLE
-#include "nsUpdateNotification.h"
-static NS_DEFINE_CID(kUpdateNotificationCID, NS_XPI_UPDATE_NOTIFIER_CID);
-nsIUpdateNotification*      nsSoftwareUpdate::mUpdateNotifier= nsnull;
-#endif
-
 
 nsSoftwareUpdate *
 nsSoftwareUpdate::GetInstance()
@@ -110,12 +103,10 @@ nsSoftwareUpdate::GetInstance()
 
 nsSoftwareUpdate::nsSoftwareUpdate()
 : mInstalling(PR_FALSE),
-  mStubLockout(PR_FALSE),
+  mMasterListener(0),
   mReg(0)
 {
     NS_INIT_ISUPPORTS();
-    mMasterListener = new nsTopProgressListener;
-    NS_IF_ADDREF (mMasterListener);
     
     mLock = PR_NewLock();
 
@@ -168,7 +159,6 @@ nsSoftwareUpdate::~nsSoftwareUpdate()
 
     NR_ShutdownRegistry();
 
-    //NS_IF_RELEASE( mProgramDir );
     NS_IF_RELEASE (mMasterListener);
     mInstance = nsnull;
 
@@ -181,78 +171,24 @@ nsSoftwareUpdate::~nsSoftwareUpdate()
 //------------------------------------------------------------------------
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsSoftwareUpdate,
-			      nsISoftwareUpdate,
+                              nsISoftwareUpdate,
                               nsPIXPIStubHook);
-
-NS_IMETHODIMP
-nsSoftwareUpdate::Initialize( nsIAppShellService *anAppShell, nsICmdLineService  *aCmdLineService ) 
-{
-    // Close the registry if open. We left it open through most of startup
-    // so it wouldn't get opened and closed a lot by different services
-    if (mReg) 
-        NR_RegClose(mReg);
-
-    // prevent use of nsPIXPIStubHook by browser
-    mStubLockout = PR_TRUE;
-
-    /***************************************/
-    /* Register us with NetLib             */
-    /***************************************/
-        // FIX 
-
-
-    /***************************************/
-    /* Create a top level observer         */
-    /***************************************/
-
-    nsLoggingProgressListener *logger = new nsLoggingProgressListener();
-    RegisterListener(logger);
-    
-#if NOTIFICATION_ENABLE
-    /***************************************/
-    /* Create a Update notification object */
-    /***************************************/
-    NS_IF_RELEASE(mUpdateNotifier);
-
-    nsComponentManager::CreateInstance(kUpdateNotificationCID,
-                                       nsnull,
-                                       NS_GET_IID(nsIUpdateNotification),
-                                       (void**)&mUpdateNotifier);
-
-#endif
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSoftwareUpdate::Shutdown()
-{
-#if NOTIFICATION_ENABLED
-    if (mUpdateNotifier)
-    {
-        mUpdateNotifier->DisplayUpdateDialog();
-        NS_RELEASE(mUpdateNotifier);
-    }
-#endif
-
-    // nothing to do here. Should we UnregisterService?
-    return NS_OK;
-}
 
 
 NS_IMETHODIMP 
 nsSoftwareUpdate::RegisterListener(nsIXPIListener *aListener)
 {
-    // we are going to ignore the returned ID and enforce that once you 
-    // register a Listener, you can not remove it.  This should at some
-    // point be fixed.
+    // once you register a Listener, you can not remove it.
+    // This should get changed at some point.
 
-  if (mMasterListener)
-  {
+    if (!mMasterListener)
+        CreateMasterListener();
+
+    if (!mMasterListener)
+        return NS_ERROR_FAILURE;
+    
     mMasterListener->RegisterListener(aListener);
     return NS_OK;
-  }
-  else
-    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -262,27 +198,41 @@ nsSoftwareUpdate::GetMasterListener(nsIXPIListener **aListener)
     if (!aListener)
         return NS_ERROR_NULL_POINTER;
 
-    if (mMasterListener)
-    {
-      NS_ADDREF (mMasterListener);
-      *aListener = mMasterListener;
-      return NS_OK;
-    }
-    else
-      return NS_ERROR_FAILURE;
+    if (!mMasterListener)
+        CreateMasterListener();
+
+    if (!mMasterListener)
+        return NS_ERROR_FAILURE;
+
+    NS_ADDREF (mMasterListener);
+    *aListener = mMasterListener;
+    return NS_OK;
 }
 
 
 NS_IMETHODIMP
 nsSoftwareUpdate::SetActiveListener(nsIXPIListener *aListener)
 {
-  if (mMasterListener)
-  {
+    if (!mMasterListener)
+        CreateMasterListener();
+
+    if (!mMasterListener)
+        return NS_ERROR_FAILURE;
+
     mMasterListener->SetActiveListener (aListener);
     return NS_OK;
-  }
-  else
-    return NS_ERROR_FAILURE;
+}
+
+void nsSoftwareUpdate::CreateMasterListener()
+{
+    mMasterListener = new nsTopProgressListener;
+    if (mMasterListener)
+    {
+        NS_ADDREF(mMasterListener);
+
+        nsLoggingProgressListener *logger = new nsLoggingProgressListener();
+        mMasterListener->RegisterListener(logger);
+    }
 }
 
 NS_IMETHODIMP
@@ -468,6 +418,11 @@ nsSoftwareUpdate::RunNextInstall()
     nsInstallInfo*  info = nsnull;
 
     PR_Lock(mLock);
+
+    // make sure master master listener exists
+    if (!mMasterListener)
+        CreateMasterListener();
+
     if (!mInstalling) 
     {
         if ( mJarInstallQueue.Count() > 0 )
@@ -503,14 +458,8 @@ nsSoftwareUpdate::RunNextInstall()
 NS_IMETHODIMP
 nsSoftwareUpdate::StubInitialize(nsIFile *aDir, const char* logName)
 {
-    if (mStubLockout)
-        return NS_ERROR_ABORT;
-    else if ( !aDir )
+    if ( !aDir )
         return NS_ERROR_NULL_POINTER;
-
-
-    // only allow once, it could be a mess if we've already started installing
-    mStubLockout = PR_TRUE;
 
     // fix GetFolder return path
     nsresult rv = aDir->Clone(getter_AddRefs(mProgramDir));
@@ -528,10 +477,6 @@ nsSoftwareUpdate::StubInitialize(nsIFile *aDir, const char* logName)
         if (!mLogName)
             return NS_ERROR_OUT_OF_MEMORY;
     }
-
-    // Create the logfile observer
-    nsLoggingProgressListener *logger = new nsLoggingProgressListener();
-    RegisterListener(logger);
 
     return rv;
 }
@@ -551,7 +496,7 @@ nsSoftwareUpdateNameSet::~nsSoftwareUpdateNameSet()
 }
 
 NS_IMPL_ISUPPORTS(nsSoftwareUpdateNameSet,
-		  NS_GET_IID(nsIScriptExternalNameSet));
+                  NS_GET_IID(nsIScriptExternalNameSet));
 
 
 NS_IMETHODIMP
@@ -574,7 +519,7 @@ nsSoftwareUpdateNameSet::InitializeNameSet(nsIScriptContext* aScriptContext)
 // generic factory.
 
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsSoftwareUpdate,
-					 nsSoftwareUpdate::GetInstance);
+                                         nsSoftwareUpdate::GetInstance);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsInstallTrigger);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsInstallVersion);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSoftwareUpdateNameSet);
@@ -604,13 +549,13 @@ RegisterSoftwareUpdate( nsIComponentManager *aCompMgr,
   nsXPIDLCString previous;
   rv = catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY,
                                 "InstallVersion",
-				NS_INSTALLVERSIONCOMPONENT_CONTRACTID,
+                                NS_INSTALLVERSIONCOMPONENT_CONTRACTID,
                                 PR_TRUE, PR_TRUE, getter_Copies(previous));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_PROPERTY_CATEGORY,
                                 "InstallTrigger",
-				NS_INSTALLTRIGGERCOMPONENT_CONTRACTID,
+                                NS_INSTALLTRIGGERCOMPONENT_CONTRACTID,
                                 PR_TRUE, PR_TRUE, getter_Copies(previous));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -627,7 +572,7 @@ static nsModuleComponentInfo components[] =
        nsSoftwareUpdateConstructor,
        RegisterSoftwareUpdate
     },
-	   
+   
     { "InstallTrigger Component", 
        NS_SoftwareUpdateInstallTrigger_CID,
        NS_INSTALLTRIGGERCOMPONENT_CONTRACTID, 
@@ -650,16 +595,7 @@ static nsModuleComponentInfo components[] =
       NS_SOFTWAREUPDATENAMESET_CID,
       NS_SOFTWAREUPDATENAMESET_CONTRACTID,
       nsSoftwareUpdateNameSetConstructor 
-    },
-
-#if NOTIFICATION_ENABLED 
-    { "XPInstall Update Notifier", 
-      NS_XPI_UPDATE_NOTIFIER_CID,
-      NS_XPI_UPDATE_NOTIFIER_CONTRACTID, 
-      nsXPINotifierImpl::New
-    },
-#endif
-
+    }
 };
 
 
