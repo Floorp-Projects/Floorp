@@ -68,7 +68,7 @@ class NS_COM nsGetInterface : public nsCOMPtr_helper
       virtual nsresult NS_FASTCALL operator()( const nsIID&, void** ) const;
 
     private:
-      nsCOMPtr<nsISupports> mSource;
+      nsISupports*          mSource;
       nsresult*             mErrorPtr;
   };
 
