@@ -1126,6 +1126,8 @@ sub unix_to_win {
       $path =~ s/$path_sep/$win_sep/g;
   }
 
+  # translate cygwin-style paths, since the shells are not linked with cygwin
+  $path =~ s#^/cygdrive/([a-zA-Z])/#\1:/#;
   return $path;
 }
 
