@@ -43,10 +43,13 @@ Rights Reserved.
 <html:script language="JavaScript" src="chrome://addressbook/content/abCommon.js"/>
 <!--html:script language="JavaScript" src="resource:/res/samples/DumpDOM.js"/-->
 
+<commands id="commands">
+	<commandset id="CommandUpdate_AddressBook" onchange="CommandUpdate_AddressBook()"/>
+</commands>
+
 <broadcasterset id="broadcasterset">
-	//<broadcaster id="CommandUpdate_AddressBook" onchange="CommandUpdate_AddressBook()"/>
 	<!-- File Menu -->
-	<broadcaster id="cmd_PrintCard" oncommand="AbPrintCard()"/>
+	<broadcaster id="cmd_PrintCard" oncommand="AbPrintCard()" disabled="true"/>
  	<broadcaster id="cmd_close" oncommand="AbClose()"/>
  	<broadcaster id="cmd_quit"/>
 	<!-- Edit Menu -->
@@ -56,12 +59,12 @@ Rights Reserved.
 	<broadcaster id="cmd_copy" oncommand="AbEditCopy()"/>
 	<broadcaster id="cmd_paste" oncommand="AbEditPaste()"/>
 	<broadcaster id="cmd_delete" oncommand="AbDelete()"/>
-	<broadcaster id="cmd_selectAll" oncommand="AbSelectAll()"/>
+	<broadcaster id='cmd_selectAll' oncommand="goDoCommand('cmd_selectAll')" onchange="goUpdateCommand('cmd_selectAll')"/>
 </broadcasterset>
 
 <keyset id="keyset">
 	<!-- File Menu -->
-	<key id="key_PrintCard" disabled="true" command="true" key="P" observes="cmd_PrintCard" />
+	<key id="key_PrintCard" command="true" key="P" observes="cmd_PrintCard" />
 	<key id="key_close"/>
 	<key id="key_quit"/>
 	<!-- Edit Menu -->

@@ -40,7 +40,7 @@ Rights Reserved.
 		<html:label for="abPopup">&chooseAddressBook.label;</html:label>
 		<html:select id="abPopup" ref="abdirectory://" datasources="rdf:addressdirectory"> 
 			<template> 
-				<html:option uri="..." value="...">
+				<html:option uri="..." value="rdf:http://home.netscape.com/NC-rdf#DirUri">
 					<text value="rdf:http://home.netscape.com/NC-rdf#DirName"/>
 				</html:option>
 			</template> 

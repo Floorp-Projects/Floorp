@@ -1,5 +1,84 @@
 // functions needed from abMainWindow and abSelectAddresses
 
+// Controller object for Results Pane
+var ResultsPaneController =
+{
+	IsCommandEnabled: function(command)
+	{
+		dump("IsCommandEnabled" + "\n");
+		switch ( command )
+		{
+			case "cmd_selectAll":
+				return true;
+			default:
+				return false;
+		}
+	},
+
+	DoCommand: function(command)
+	{
+		switch ( command )
+		{
+			case "cmd_selectAll":
+				var resultsTree = document.getElementById('resultsTree');
+				if ( resultsTree )
+				{
+					dump("select all now!!!!!!" + "\n");
+					resultsTree.selectAll();
+				}
+				break;
+		}
+	}
+};
+
+
+// Controller object for Dir Pane
+var DirPaneController =
+{
+	IsCommandEnabled: function(command)
+	{
+		dump("IsCommandEnabled" + "\n");
+		switch ( command )
+		{
+			case "cmd_selectAll":
+				return true;
+			default:
+				return false;
+		}
+	},
+
+	DoCommand: function(command)
+	{
+		switch ( command )
+		{
+			case "cmd_selectAll":
+				var dirTree = document.getElementById('dirTree');
+				if ( dirTree )
+				{
+					dump("select all now!!!!!!" + "\n");
+					dirTree.selectAll();
+				}
+				break;
+		}
+	}
+};
+
+function SetupCommandUpdateHandlers()
+{
+	var widget;
+	
+	// dir pane
+	widget = document.getElementById('dirTree');
+	if ( widget )
+		widget.controller = DirPaneController;
+	
+	// results pane
+	widget = document.getElementById('resultsTree');
+	if ( widget )
+		widget.controller = ResultsPaneController;
+}
+
+
 function AbNewCard()
 {
 	var selectedAB = 0;

@@ -18,8 +18,10 @@ function OnLoadAddressBook()
 		dump("failed to set webshell window\n");
 	}
 
-	document.commandDispatcher.addCommand(document.getElementById('CommandUpdate_AddressBook'));
+	//document.commandDispatcher.addCommand(document.getElementById('CommandUpdate_AddressBook'));
+	document.commandDispatcher.addCommand(document.getElementById('cmd_selectAll'));
 	
+	SetupCommandUpdateHandlers();
 	SelectFirstAddressBook();
 }
 
@@ -42,23 +44,10 @@ function CommandUpdate_AddressBook()
 		oneOrMoreAddressesSelected = true;
 	
 	// set commands to enabled / disabled
-	SetCommandEnabled('cmd_PrintCard', oneOrMoreAddressesSelected);
-	SetCommandEnabled('cmd_SortByName', oneAddressBookSelected);
-	SetCommandEnabled('cmd_SortByEmail', oneAddressBookSelected);
-	SetCommandEnabled('cmd_SortByPhone', oneAddressBookSelected);
-}
-
-function SetCommandEnabled(id, enabled)
-{
-	var node = document.getElementById(id);
-
-	if ( node )
-	{
-		if ( enabled )
-			node.removeAttribute("disabled");
-		else
-			node.setAttribute('disabled', 'true');
-	}
+	goSetCommandEnabled('cmd_PrintCard', oneOrMoreAddressesSelected);
+	goSetCommandEnabled('cmd_SortByName', oneAddressBookSelected);
+	goSetCommandEnabled('cmd_SortByEmail', oneAddressBookSelected);
+	goSetCommandEnabled('cmd_SortByPhone', oneAddressBookSelected);
 }
 
 
