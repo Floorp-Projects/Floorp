@@ -72,11 +72,22 @@ OS_LFLAGS=/DEBUG /DEBUGTYPE:CV /PDB:NONE
 !endif
 
 !else
-#
-# optimize it
+
+
+# if MOZ_DEBUG is not set and MOZ_DEBUGOPT is set, then we generate
+# an optimized build with debugging symbols. useful for debugging
+# compiler optimization bugs
+
+!ifdef MOZ_DEBUGOPT
+OS_LFLAGS=/DEBUG /DEBUGTYPE:CV /PDB:NONE /opt:ref
+OPTIMIZER=/Zi -O1 -UDEBUG -DNDEBUG
+!else
+# MOZ_DEBUG not set.
+# optimize it, no symbols
 #
 OPTIMIZER=-O1 -UDEBUG -DNDEBUG
 OS_LFLAGS=
+!endif
 
 !endif
 !endif
