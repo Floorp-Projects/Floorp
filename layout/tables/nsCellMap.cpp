@@ -36,9 +36,9 @@ CellData::~CellData()
 // nsCellMap
 
 nsCellMap::nsCellMap(int aRowCount, int aColCount)
-  : mRowCount(0),
-    mNumCollapsedRows(0),
+  : mNumCollapsedRows(0),
     mNumCollapsedCols(0),
+    mRowCount(0),
     mNextAvailRowIndex(0)
 {
   mIsCollapsedRows = nsnull;
