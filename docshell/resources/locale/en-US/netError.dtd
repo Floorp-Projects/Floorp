@@ -33,3 +33,6 @@
 <!ENTITY netReset.title "netReset title">
 <!ENTITY netReset.longDesc "netReset long description goes here.">
 
+<!ENTITY netOffline.title "netOffline title">
+<!ENTITY netOffline.longDesc "netOffline long description goes here.">
+

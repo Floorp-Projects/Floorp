@@ -164,6 +164,18 @@ static NS_DEFINE_CID(kCDOMRangeCID,           NS_RANGE_CID);
 
 //----------------------------------------------------------------------
 
+static PRBool
+IsOffline()
+{
+    PRBool offline;
+    nsCOMPtr<nsIIOService> ios(do_GetIOService());
+    if (ios)
+        ios->GetOffline(&offline);
+    return offline;
+}
+
+//----------------------------------------------------------------------
+
 // Note: operator new zeros our memory
 nsWebShell::nsWebShell() : nsDocShell()
 {
@@ -986,86 +998,96 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
        * the cache is not in cache. May be this is one of those 
        * postdata results. Throw a  dialog to the user,
        * saying that the page has expired from cache and ask if 
-       * they wish to refetch the page from the net.
+       * they wish to refetch the page from the net. Do this only
+       * if the request is a form post.
        */
-      nsCOMPtr<nsIPrompt> prompter;
-      PRBool repost;
-      nsCOMPtr<nsIStringBundle> stringBundle;
-      GetPromptAndStringBundle(getter_AddRefs(prompter), 
-                                getter_AddRefs(stringBundle));
- 
-      if (stringBundle && prompter) {
-        nsXPIDLString messageStr;
-        nsresult rv = stringBundle->GetStringFromName(NS_LITERAL_STRING("repost").get(), 
-                                                      getter_Copies(messageStr));
-          
-        if (NS_SUCCEEDED(rv) && messageStr) {
-          prompter->Confirm(nsnull, messageStr, &repost);
-          /* If the user pressed cancel in the dialog, 
-           * return failure. Don't try to load the page with out 
-           * the post data. 
-           */
-          if (!repost)
-            return NS_OK;
+      nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
+      nsCAutoString method;
+      if (httpChannel)
+        httpChannel->GetRequestMethod(method);
+      if (method.Equals("POST") && !IsOffline()) {
+        nsCOMPtr<nsIPrompt> prompter;
+        PRBool repost;
+        nsCOMPtr<nsIStringBundle> stringBundle;
+        GetPromptAndStringBundle(getter_AddRefs(prompter), 
+                                  getter_AddRefs(stringBundle));
+   
+        if (stringBundle && prompter) {
+          nsXPIDLString messageStr;
+          nsresult rv = stringBundle->GetStringFromName(NS_LITERAL_STRING("repost").get(), 
+                                                        getter_Copies(messageStr));
+            
+          if (NS_SUCCEEDED(rv) && messageStr) {
+            prompter->Confirm(nsnull, messageStr, &repost);
+            /* If the user pressed cancel in the dialog, 
+             * return failure. Don't try to load the page with out 
+             * the post data. 
+             */
+            if (!repost)
+              return NS_OK;
 
-          // The user wants to repost the data to the server. 
-          // If the page was loaded due to a back/forward/go
-          // operation, update the session history index.
-          // This is similar to the updating done in 
-          // nsDocShell::OnNewURI() for regular pages          
-          nsCOMPtr<nsISHistory> rootSH=mSessionHistory;
-          if (!mSessionHistory) {
-            nsCOMPtr<nsIDocShellTreeItem> root;
-            //Get the root docshell
-            GetSameTypeRootTreeItem(getter_AddRefs(root));
-            if (root) {
-              // QI root to nsIWebNavigation
-              nsCOMPtr<nsIWebNavigation> rootAsWebnav(do_QueryInterface(root));
-              if (rootAsWebnav) {
-               // Get the handle to SH from the root docshell          
-               rootAsWebnav->GetSessionHistory(getter_AddRefs(rootSH));             
+            // The user wants to repost the data to the server. 
+            // If the page was loaded due to a back/forward/go
+            // operation, update the session history index.
+            // This is similar to the updating done in 
+            // nsDocShell::OnNewURI() for regular pages          
+            nsCOMPtr<nsISHistory> rootSH=mSessionHistory;
+            if (!mSessionHistory) {
+              nsCOMPtr<nsIDocShellTreeItem> root;
+              //Get the root docshell
+              GetSameTypeRootTreeItem(getter_AddRefs(root));
+              if (root) {
+                // QI root to nsIWebNavigation
+                nsCOMPtr<nsIWebNavigation> rootAsWebnav(do_QueryInterface(root));
+                if (rootAsWebnav) {
+                 // Get the handle to SH from the root docshell          
+                 rootAsWebnav->GetSessionHistory(getter_AddRefs(rootSH));             
+                }
+              }
+            }  // mSessionHistory
+
+            if (rootSH && (mLoadType & LOAD_CMD_HISTORY)) {
+              nsCOMPtr<nsISHistoryInternal> shInternal(do_QueryInterface(rootSH));
+              if (shInternal)
+               shInternal->UpdateIndex();
+            }
+            /* The user does want to repost the data to the server.
+             * Initiate a new load again.
+             */
+            /* Get the postdata if any from the channel */
+            nsCOMPtr<nsIInputStream> inputStream;
+            nsCOMPtr<nsIURI> referrer;
+            if (channel) {
+              nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
+   
+              if(httpChannel) {
+                httpChannel->GetReferrer(getter_AddRefs(referrer));
+                httpChannel->GetUploadStream(getter_AddRefs(inputStream));
               }
             }
-          }  // mSessionHistory
-
-          if (rootSH && (mLoadType & LOAD_CMD_HISTORY)) {
-            nsCOMPtr<nsISHistoryInternal> shInternal(do_QueryInterface(rootSH));
-            if (shInternal)
-             shInternal->UpdateIndex();
-          }
-          /* The user does want to repost the data to the server.
-           * Initiate a new load again.
-           */
-          /* Get the postdata if any from the channel */
-          nsCOMPtr<nsIInputStream> inputStream;
-          nsCOMPtr<nsIURI> referrer;
-          if (channel) {
-            nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
- 
-            if(httpChannel) {
-              httpChannel->GetReferrer(getter_AddRefs(referrer));
-              httpChannel->GetUploadStream(getter_AddRefs(inputStream));
+            nsCOMPtr<nsISeekableStream> postDataSeekable(do_QueryInterface(inputStream));
+            if (postDataSeekable)
+            {
+               postDataSeekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
             }
-          }
-          nsCOMPtr<nsISeekableStream> postDataSeekable(do_QueryInterface(inputStream));
-          if (postDataSeekable)
-          {
-             postDataSeekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
-          }
-          InternalLoad(url,                               // URI
-                       referrer,                          // Refering URI
-                       nsnull,                            // Owner
-                       PR_TRUE,                           // Inherit owner
-                       nsnull,                            // No window target
-                       inputStream,                       // Post data stream
-                       nsnull,                            // No headers stream
-                       LOAD_RELOAD_BYPASS_PROXY_AND_CACHE,// Load type
-                       nsnull,                            // No SHEntry
-                       PR_TRUE,                           // first party site
-                       nsnull,                            // No nsIDocShell
-                       nsnull);                           // No nsIRequest
+            InternalLoad(url,                               // URI
+                         referrer,                          // Refering URI
+                         nsnull,                            // Owner
+                         PR_TRUE,                           // Inherit owner
+                         nsnull,                            // No window target
+                         inputStream,                       // Post data stream
+                         nsnull,                            // No headers stream
+                         LOAD_RELOAD_BYPASS_PROXY_AND_CACHE,// Load type
+                         nsnull,                            // No SHEntry
+                         PR_TRUE,                           // first party site
+                         nsnull,                            // No nsIDocShell
+                         nsnull);                           // No nsIRequest
           }
         }
+      }
+      else {
+        DisplayLoadError(aStatus, url, nsnull);
+      }
     }
   } // if we have a host
 

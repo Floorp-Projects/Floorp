@@ -209,16 +209,26 @@ nsHttpChannel::Connect(PRBool firstTime)
     // true when called from AsyncOpen
     if (firstTime) {
         PRBool delayed = PR_FALSE;
+        PRBool offline = PR_FALSE;
+    
+        // are we offline?
+        nsCOMPtr<nsIIOService> ioService;
+        rv = nsHttpHandler::get()->GetIOService(getter_AddRefs(ioService));
+        if (NS_FAILED(rv)) return rv;
+
+        ioService->GetOffline(&offline);
+        if (offline)
+            mFromCacheOnly = PR_TRUE;
 
         // open a cache entry for this channel...
-        rv = OpenCacheEntry(&delayed);
+        rv = OpenCacheEntry(offline, &delayed);
 
         if (NS_FAILED(rv)) {
             LOG(("OpenCacheEntry failed [rv=%x]\n", rv));
             // if this channel is only allowed to pull from the cache, then
             // we must fail if we were unable to open a cache entry.
             if (mFromCacheOnly)
-                return mPostID ? NS_ERROR_DOCUMENT_NOT_CACHED : rv;
+                return NS_ERROR_DOCUMENT_NOT_CACHED;
             // otherwise, let's just proceed without using the cache.
         }
  
@@ -239,11 +249,11 @@ nsHttpChannel::Connect(PRBool firstTime)
             return ReadFromCache();
         }
         else if (mFromCacheOnly) {
-            // The cache no longer contains the requested resource, and we
-            // are not allowed to refetch it, so there's nothing more to do.
-            // If this was a refetch of a POST transaction's resposne, then
-            // this failure indicates that the response is no longer cached.
-            return mPostID ? NS_ERROR_DOCUMENT_NOT_CACHED : NS_BINDING_FAILED;
+            // the cache contains the requested resource, but it must be 
+            // validated before we can reuse it.  since we are not allowed
+            // to hit the net, there's nothing more to do.  the document
+            // is effectively not in the cache.
+            return NS_ERROR_DOCUMENT_NOT_CACHED;
         }
     }
 
@@ -836,7 +846,7 @@ nsHttpChannel::ProcessNotModified()
 }
 
 nsresult
-nsHttpChannel::OpenCacheEntry(PRBool *delayed)
+nsHttpChannel::OpenCacheEntry(PRBool offline, PRBool *delayed)
 {
     nsresult rv;
 
@@ -882,20 +892,10 @@ nsHttpChannel::OpenCacheEntry(PRBool *delayed)
                                                getter_AddRefs(session));
     if (NS_FAILED(rv)) return rv;
 
-    // Are we offline?
-    PRBool offline = PR_FALSE;
-    
-    nsCOMPtr<nsIIOService> ioService;
-    rv = nsHttpHandler::get()->GetIOService(getter_AddRefs(ioService));
-    ioService->GetOffline(&offline);
-
     // Set the desired cache access mode accordingly...
     nsCacheAccessMode accessRequested;
-    if (offline) {
-        // Since we are offline, we can only read from the cache.
-        accessRequested = nsICache::ACCESS_READ;
-        mFromCacheOnly = PR_TRUE;
-    }
+    if (offline)
+        accessRequested = nsICache::ACCESS_READ; // have no way of writing to cache
     else if (mLoadFlags & LOAD_BYPASS_CACHE)
         accessRequested = nsICache::ACCESS_WRITE; // replace cache entry
     else
@@ -913,7 +913,7 @@ nsHttpChannel::OpenCacheEntry(PRBool *delayed)
         // we'll have to wait for the cache entry
         *delayed = PR_TRUE;
     }
-    else if (rv == NS_OK) {
+    else if (NS_SUCCEEDED(rv)) {
         mCacheEntry->GetAccessGranted(&mCacheAccess);
         LOG(("got cache entry [access=%x]\n", mCacheAccess));
     }
@@ -3220,11 +3220,16 @@ nsHttpChannel::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry,
 
     nsresult rv;
 
-    if (NS_FAILED(mStatus)) {
+    if (mCanceled && NS_FAILED(mStatus)) {
         LOG(("channel was canceled [this=%x status=%x]\n", this, mStatus));
         rv = mStatus;
     }
-    else // advance to the next state...
+    else if (mFromCacheOnly && NS_FAILED(status))
+        // if this channel is only allowed to pull from the cache, then
+        // we must fail if we were unable to open a cache entry.
+        rv = NS_ERROR_DOCUMENT_NOT_CACHED;
+    else
+        // advance to the next state...
         rv = Connect(PR_FALSE);
 
     // a failure from Connect means that we have to abort the channel.
