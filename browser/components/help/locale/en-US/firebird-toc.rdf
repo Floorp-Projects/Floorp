@@ -249,13 +249,25 @@
   <rdf:Description about="#menu">
     <nc:subheadings>
       <rdf:Seq>
+        <rdf:li> <rdf:Description ID="menu-firefox" nc:name="&brandShortName; (Mac only)" nc:link="menu_reference.xhtml#firefox"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-file" nc:name="File" nc:link="menu_reference.xhtml#file"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-edit" nc:name="Edit" nc:link="menu_reference.xhtml#edit"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-view" nc:name="View" nc:link="menu_reference.xhtml#view"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-go" nc:name="Go" nc:link="menu_reference.xhtml#go"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-bookmarks" nc:name="Bookmarks" nc:link="menu_reference.xhtml#bookmarks"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-tools" nc:name="Tools" nc:link="menu_reference.xhtml#tools"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="menu-window" nc:name="Window (Mac only)" nc:link="menu_reference.xhtml#window"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-help" nc:name="Help" nc:link="menu_reference.xhtml#help"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+  <rdf:Description about="#menu-firefox">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="menu-firefox-about" nc:name="About &brandFullName;" nc:link="menu_reference.xhtml#about_mac"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="menu-firefox-preferences" nc:name="Preferences..." nc:link="menu_reference.xhtml#prefs_mac"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="menu-firefox-quit" nc:name="Quit &brandShortName;" nc:link="menu_reference.xhtml#quit_mac"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -388,13 +400,21 @@
     </nc:subheadings>
   </rdf:Description>
 
+  <rdf:Description about="#menu-window">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="menu-window-minimize" nc:name="Minimize" nc:link="menu_reference.xhtml#minimize"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="menu-window-zoom" nc:name="Zoom" nc:link="menu_reference.xhtml#zoom"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="menu-window-open-windows" nc:name="(Open Windows)" nc:link="menu_reference.xhtml#open-windows"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
   <rdf:Description about="#menu-help">
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> <rdf:Description ID="menu-help-help-contents" nc:name="Help Contents" nc:link="menu_reference.xhtml#help_contents"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="menu-help-for-ie-users" nc:name="For Internet Explorer Users" nc:link="menu_reference.xhtml#for_ie_users"/> </rdf:li>
-        <!--rdf:li> <rdf:Description ID="menu-help-release-notes" nc:name="Release Notes" nc:link="menu_reference.xhtml#release_notes"/> </rdf:li-->
-        <rdf:li> <rdf:Description ID="menu-help-tell-a-friend" nc:name="Tell a Friend" nc:link="menu_reference.xhtml#tell_friend"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="menu-help-for-ie-users" nc:name="For Internet Explorer Users (Windows only)" nc:link="menu_reference.xhtml#for_ie_users"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-help-promote" nc:name="Promote &brandShortName;" nc:link="menu_reference.xhtml#promote"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-help-about-mozilla-firebird" nc:name="About &brandFullName;" nc:link="menu_reference.xhtml#about_mozilla_firebird"/> </rdf:li>
       </rdf:Seq>
