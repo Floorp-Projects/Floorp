@@ -1,0 +1,50 @@
+#include "nsIStreamListener.idl"
+#include "nsIInputStream.idl"
+#include "nsIURI.idl"
+
+// There are three ways to use a stream converter:
+// 1. SYNCRONOUS. Stream to Stream.
+//    You can supply the service with a stream of type X
+//    and it will convert it to your desired output type and return
+//    a converted stream to you.
+// 
+// 2. ASYNCRONOUS. Stream to nsIStreamListener
+//    You can supply the service with a stream of type X
+//    and it will convert it to your desired output type and return
+//    converted data to you via the nsIStreamListener you passed in
+//    by calling its nsIStreamListener::OnDataAvailable() method.
+//
+// 3. ASYNCRONOUS. nsIStreamListener to nsIStreamListener
+//    You can supply data directly to the service by calling it's
+//    nsIStreamListener::OnDataAvailable() method. It will then
+//    convert that data from type X to your desired output type and
+//    return converted data to you via the nsIStreamListener you passed
+//    in by calling its OnDataAvailable() method.
+
+[scriptable, uuid(46484B30-3BD2-11d3-A16C-0050041CAF44)]
+interface nsIStreamConverter : nsIStreamListener {
+	
+    // SYNCRONOUS VERSION
+
+	// Converts aFromStream of type aFromType, to a resulting stream of type aToType.
+	// Use this when you have a stream as input.
+    nsIInputStream Convert(in nsIInputStream aFromStream,
+						   in wstring aFromType,
+						   in wstring aToType);
+
+	// ASYNCRONOUS VERSIONS
+
+	// Converts aFromStream of type aFromType, to type aToType pushing the converted
+	// data out to the caller via aListener::OnDataAvailable().
+	void AsyncConvertStream(in nsIInputStream aFromStream,
+				 in wstring aFromType,
+				 in wstring aToType,
+				 in nsIStreamListener aListener);
+
+	// Converts data arriving via the service's nsIStreamListener::OnDataAvailable() method
+	// from type aFromType to aToType pushing the converted data out to the caller via
+	// aListener::OnDataAvailable().
+	void AsyncConvertData(in wstring aFromType,
+				 in wstring aToType,
+				 in nsIStreamListener aListener);
+};

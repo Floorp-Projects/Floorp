@@ -1,0 +1,25 @@
+#include "nsIStreamConverter.idl"
+
+// The nsIStreamConverterService acts as a higher level stream converter factory
+// responsible for locating and creating the appropriate stream converters in order
+// to convert data from type X to type Z. It is responsible for any intermediary
+// conversion required in order to get from X to Z, if direct conversion is not
+// possible.
+//
+
+%{C++
+
+#define NS_STREAMCONVERTERSERVICE_CID                             \
+{ /* 892FFEB0-3F80-11d3-A16C-0050041CAF44 */         \
+    0x892ffeb0,                                      \
+    0x3f80,                                          \
+    0x11d3,                                          \
+    {0xa1, 0x6c, 0x00, 0x50, 0x04, 0x1c, 0xaf, 0x44} \
+}
+
+%}
+
+[scriptable, uuid(00362090-3B97-11d3-A16C-0050041CAF44)]
+interface nsIStreamConverterService : nsIStreamConverter {
+    // no methods. only implements nsIStreamConverter
+};
