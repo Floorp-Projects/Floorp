@@ -60,6 +60,7 @@ nsresult nsButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 	return nsWindow::QueryInterface(aIID,aInstancePtr);
 }
 
+#pragma mark -
 //-------------------------------------------------------------------------
 //
 //
@@ -67,7 +68,7 @@ nsresult nsButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 NS_METHOD nsButton::SetLabel(const nsString& aText)
 {
 	mLabel = aText;
-	Invalidate(PR_FALSE);
+	Invalidate(PR_TRUE);
 	return NS_OK;
 }
 
