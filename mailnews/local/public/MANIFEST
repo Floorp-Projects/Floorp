@@ -16,10 +16,11 @@
 # This is a list of local files which get copied to the mozilla:dist:mailnews directory
 #
 
-nsIPop3Sink.h
+#[installed by xpidl] nsIPop3Sink.h
+#[installed by xpidl] nsIMailboxService.h
+#[installed by xpidl] nsIPop3Service.h
+#[installed by xpidl] nsIPop3IncomingServer.h
+
 nsIPop3URL.h
 nsIMailboxUrl.h
-nsIMailboxService.h
-nsIPop3Service.h
-nsIPop3IncomingServer.h
 nsIMsgParseMailMsgState.h

@@ -16,30 +16,31 @@
 # This is a list of local files which get copied to the mozilla:dist:mailnews directory
 #
 
+#[installed by xpidl] nsIMsgHost.h
+#[installed by xpidl] nsIFolder.h
+#[installed by xpidl] nsIMsgFolder.h
+#[installed by xpidl] nsIUrlListener.h
+#[installed by xpidl] nsIFolderListener.h
+#[installed by xpidl] nsIMsgMailSession.h
+#[installed by xpidl] nsIMsgIdentity.h
+#[installed by xpidl] nsIDOMMsgAppCore.h
+#[installed by xpidl] nsIMsgGroupRecord.h
+#[installed by xpidl] nsICopyMessageListener.h
+#[installed by xpidl] nsIMessageView.h
+#[installed by xpidl] nsIMsgSignature.h
+#[installed by xpidl] nsIMsgVCard.h
+#[installed by xpidl] nsIMsgAccount.h
+#[installed by xpidl] nsIMsgAccountManager.h
+#[installed by xpidl] nsIMsgIdentity.h
+#[installed by xpidl] nsIMsgIncomingServer.h
+#[installed by xpidl] nsIMsgThread.h
+#[installed by xpidl] nsIMsgMessageService.h
+#[installed by xpidl] nsIMessage.h
+
 msgCore.h
 nsMsgFolderFlags.h
 nsMsgLocalFolderHdrs.h
 nsMsgHeaderMasks.h
 nsMsgMessageFlags.h
-nsIMsgHost.h
-nsIFolder.h
-nsIMsgFolder.h
 nsIMsgMailNewsUrl.h
 nsIUrlListenerManager.h
-nsIUrlListener.h
-nsIFolderListener.h
-nsIMsgMailSession.h
-nsIMsgIdentity.h
-nsIDOMMsgAppCore.h
-nsIMsgGroupRecord.h
-nsICopyMessageListener.h
-nsIMessageView.h
-nsIMsgSignature.h
-nsIMsgVCard.h
-nsIMsgAccount.h
-nsIMsgAccountManager.h
-nsIMsgIdentity.h
-nsIMsgIncomingServer.h
-nsIMsgThread.h
-nsIMsgMessageService.h
-nsIMessage.h

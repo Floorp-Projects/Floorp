@@ -16,14 +16,15 @@
 # This is a list of local files which get copied to the mozilla:dist:mailnews directory
 #
 
-nsINNTPNewsgroupList.h
-nsINNTPCategory.h
-nsINNTPCategoryContainer.h
-nsINNTPHost.h
-nsINNTPNewsgroup.h
-nsIMsgOfflineNewsState.h
-nsINNTPArticleList.h
-nsINntpUrl.h
+#[installed by xpidl] nsINNTPNewsgroupList.h
+#[installed by xpidl] nsINNTPCategory.h
+#[installed by xpidl] nsINNTPCategoryContainer.h
+#[installed by xpidl] nsINNTPHost.h
+#[installed by xpidl] nsINNTPNewsgroup.h
+#[installed by xpidl] nsIMsgOfflineNewsState.h
+#[installed by xpidl] nsINNTPArticleList.h
+#[installed by xpidl] nsINntpService.h
+#[installed by xpidl] nsINntpIncomingServer.h
+
 nsINNTPNewsgroupPost.h
-nsINntpService.h
-nsINntpIncomingServer.h
+nsINntpUrl.h

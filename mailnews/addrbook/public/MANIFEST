@@ -16,7 +16,7 @@
 # This is a list of local files which get copied to the mozilla:dist:mailnews directory
 #
 
-nsIAbBase.h
-nsIAbListener.h
-nsIAbDirectory.h
-nsIAbCard.h
+#[installed by xpidl] nsIAbBase.h
+#[installed by xpidl] nsIAbListener.h
+#[installed by xpidl] nsIAbDirectory.h
+#[installed by xpidl] nsIAbCard.h
