@@ -6,12 +6,12 @@
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <keyset id="browserKeySet">
-    <key id="key_page_up" keycode="VK_PAGE_UP" shift="false" control="false"
+    <key id="key_page_up" keycode="VK_PAGE_UP" shift="false" control="false" alt="false"
         onkeypress="
             var controller =
             document.commandDispatcher.getControllerForCommand('cmd_scrollPageUp');
             controller.doCommand('cmd_scrollPageUp');"/>
-    <key id="key_page_down" keycode="VK_PAGE_DOWN" shift="false" control="false"
+    <key id="key_page_down" keycode="VK_PAGE_DOWN" shift="false" control="false" alt="false"
         onkeypress="
             var controller =
             document.commandDispatcher.getControllerForCommand('cmd_scrollPageDown');
@@ -29,12 +29,12 @@
             controller.doCommand('cmd_scrollPageDown');
     "/>
 
-    <key id="key_page_up" keycode="VK_UP" shift="false" control="false"
+    <key id="key_page_up" keycode="VK_UP" shift="false" control="false" alt="false"
         onkeypress="
             var controller =
             document.commandDispatcher.getControllerForCommand('cmd_scrollLineUp');
             controller.doCommand('cmd_scrollLineUp');"/>
-    <key id="key_page_down" keycode="VK_DOWN" shift="false" control="false"
+    <key id="key_page_down" keycode="VK_DOWN" shift="false" control="false" alt="false"
         onkeypress="
             var controller =
             document.commandDispatcher.getControllerForCommand('cmd_scrollLineDown');
