@@ -207,7 +207,8 @@ nsMenuBarFrame::GetNextMenuItem(nsIFrame* aStart, nsIFrame** aResult)
     // See if it's a menu item.
     nsCOMPtr<nsIAtom> tag;
     current->GetTag(*getter_AddRefs(tag));
-    if (tag.get() == nsXULAtoms::xpmenu) {
+    if (tag.get() == nsXULAtoms::xpmenu ||
+        tag.get() == nsXULAtoms::xpmenuitem) {
       *aResult = currFrame;
       return NS_OK;
     }
@@ -224,7 +225,8 @@ nsMenuBarFrame::GetNextMenuItem(nsIFrame* aStart, nsIFrame** aResult)
     // See if it's a menu item.
     nsCOMPtr<nsIAtom> tag;
     current->GetTag(*getter_AddRefs(tag));
-    if (tag.get() == nsXULAtoms::xpmenu) {
+    if (tag.get() == nsXULAtoms::xpmenu ||
+        tag.get() == nsXULAtoms::xpmenuitem) {
       *aResult = currFrame;
       return NS_OK;
     }
@@ -255,7 +257,8 @@ nsMenuBarFrame::GetPreviousMenuItem(nsIFrame* aStart, nsIFrame** aResult)
     // See if it's a menu item.
     nsCOMPtr<nsIAtom> tag;
     current->GetTag(*getter_AddRefs(tag));
-    if (tag.get() == nsXULAtoms::xpmenu) {
+    if (tag.get() == nsXULAtoms::xpmenu ||
+        tag.get() == nsXULAtoms::xpmenuitem) {
       *aResult = currFrame;
       return NS_OK;
     }
@@ -272,7 +275,8 @@ nsMenuBarFrame::GetPreviousMenuItem(nsIFrame* aStart, nsIFrame** aResult)
     // See if it's a menu item.
     nsCOMPtr<nsIAtom> tag;
     current->GetTag(*getter_AddRefs(tag));
-    if (tag.get() == nsXULAtoms::xpmenu) {
+    if (tag.get() == nsXULAtoms::xpmenu ||
+        tag.get() == nsXULAtoms::xpmenuitem) {
       *aResult = currFrame;
       return NS_OK;
     }

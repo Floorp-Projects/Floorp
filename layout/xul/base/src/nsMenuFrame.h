@@ -31,7 +31,7 @@
 #include "nsFrameList.h"
 #include "nsIMenuParent.h"
 
-nsresult NS_NewMenuFrame(nsIFrame** aResult) ;
+nsresult NS_NewMenuFrame(nsIFrame** aResult, PRInt32 aFlags) ;
 
 class nsMenuBarFrame;
 class nsMenuPopupFrame;
@@ -86,12 +86,14 @@ public:
   void SelectFirstItem();
 
   PRBool IsOpen() { return mMenuOpen; };
+  void SetIsMenu(PRBool aIsMenu) { mIsMenu = aIsMenu; };
 
 protected:
   void GetMenuChildrenElement(nsIContent** aResult);
 
 protected:
   nsFrameList mPopupFrames;
+  PRBool mIsMenu; // Whether or not we can even have children or not.
   PRBool mMenuOpen;
   nsIMenuParent* mMenuParent; // Our parent menu.
 }; // class nsMenuFrame
