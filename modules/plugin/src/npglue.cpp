@@ -2983,7 +2983,8 @@ np_newstream(URL_Struct *urls, np_handle *handle, np_instance *instance)
 
     /* and call the plugin */
     instance->reentrant = 1;
-    stype = (uint) stype2 = NP_NORMAL;
+    stype = NP_NORMAL;
+    stype2 = NP_NORMAL;
     TRACEMSG(("npglue.c: CallNPP_NewStreamProc"));
     if (handle->userPlugin) {
         nsPluginInstancePeer* peerInst = (nsPluginInstancePeer*)instance->npp->pdata;
