@@ -19,15 +19,16 @@
 #include "nsISupports.idl"
 
 [object, uuid(E628ED10-9452-11d2-B7EA-00805F05FFA5)]
-interface nsINetNewsgroup : nsISupports {
+interface nsIMsgNewsgroup : nsISupports {
   
-  attribute string prettyName;
+  attribute string name;
   
   attribute string password;
   attribute string username;
 
   attribute boolean needsExtraInfo;
   
+  boolean IsOfflineArticle(in long num);
   
 };
 

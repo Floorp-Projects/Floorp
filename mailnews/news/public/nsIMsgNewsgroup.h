@@ -7,27 +7,27 @@
 
 #include "nsISupports.h" /* interface nsISupports */
 
-/* starting interface nsINetNewsgroup */
+/* starting interface nsIMsgNewsgroup */
 
 /* {E628ED10-9452-11d2-B7EA-00805F05FFA5} */
-#define NS_INETNEWSGROUP_IID_STR "E628ED10-9452-11d2-B7EA-00805F05FFA5"
-#define NS_INETNEWSGROUP_IID \
+#define NS_IMSGNEWSGROUP_IID_STR "E628ED10-9452-11d2-B7EA-00805F05FFA5"
+#define NS_IMSGNEWSGROUP_IID \
   {0xE628ED10, 0x9452, 0x11d2, \
     { 0xB7, 0xEA, 0x00, 0x80, 0x5F, 0x05, 0xFF, 0xA5 }}
 
-class nsINetNewsgroup : public nsISupports {
+class nsIMsgNewsgroup : public nsISupports {
  private:
   void operator delete(void *); // NOT TO BE IMPLEMENTED
 
  public: 
   static const nsIID& IID() {
-    static nsIID iid = NS_INETNEWSGROUP_IID;
+    static nsIID iid = NS_IMSGNEWSGROUP_IID;
     return iid;
   }
 
-  /* attribute string prettyName; */
-  NS_IMETHOD GetPrettyName(char * *aPrettyName) = 0;
-  NS_IMETHOD SetPrettyName(char * aPrettyName) = 0;
+  /* attribute string name; */
+  NS_IMETHOD GetName(char * *aName) = 0;
+  NS_IMETHOD SetName(char * aName) = 0;
 
   /* attribute string password; */
   NS_IMETHOD GetPassword(char * *aPassword) = 0;
@@ -40,6 +40,9 @@ class nsINetNewsgroup : public nsISupports {
   /* attribute boolean needsExtraInfo; */
   NS_IMETHOD IsNeedsExtraInfo(PRBool *aIsNeedsExtraInfo) = 0;
   NS_IMETHOD SetNeedsExtraInfo(PRBool aNeedsExtraInfo) = 0;
+
+  /* boolean IsOfflineArticle(in  num); */
+  NS_IMETHOD IsOfflineArticle(PRInt32 num, PRBool *_retval) = 0;
 };
 
 #endif /* __nsIMsgNewsgroup_h__ */
