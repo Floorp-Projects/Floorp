@@ -521,21 +521,38 @@ nsPostScriptObj::begin_document()
 int i;
 FILE *f;
 
+  nscoord paper_width = mPrintContext->prSetup->left
+    + mPrintContext->prSetup->width + mPrintContext->prSetup->right;
+  nscoord paper_height = mPrintContext->prSetup->bottom
+    + mPrintContext->prSetup->height + mPrintContext->prSetup->top;
+  const char *orientation;
+
+  if (paper_height < paper_width) {
+    // prSetup->width and height have been swapped, indicating landscape.
+    // The bounding box etc. must be in terms of the default PS coordinate
+    // system.
+    nscoord temp = paper_width;
+    paper_width = paper_height;
+    paper_height = temp;
+    orientation = "Landscape";
+  }
+  else
+    orientation = "Portrait";
+
   XL_SET_NUMERIC_LOCALE();
   f = mPrintContext->prSetup->out;
   fprintf(f, "%%!PS-Adobe-3.0\n");
   fprintf(f, "%%%%BoundingBox: %g %g %g %g\n",
     NSTwipsToFloatPoints(mPrintContext->prSetup->left),
-    NSTwipsToFloatPoints(mPrintContext->prSetup->top),
-    NSTwipsToFloatPoints(mPrintContext->prSetup->width-mPrintContext->prSetup->right),
-    NSTwipsToFloatPoints(mPrintContext->prSetup->height-(mPrintContext->prSetup->bottom + mPrintContext->prSetup->top)));
+    NSTwipsToFloatPoints(mPrintContext->prSetup->bottom),
+    NSTwipsToFloatPoints(paper_width - mPrintContext->prSetup->right),
+    NSTwipsToFloatPoints(paper_height - mPrintContext->prSetup->top));
 
   fprintf(f, "%%%%Creator: Mozilla PostScript module (%s/%lu)\n",
              "rv:" MOZILLA_VERSION, (unsigned long)NS_BUILD_ID);
   fprintf(f, "%%%%DocumentData: Clean8Bit\n");
   fprintf(f, "%%%%DocumentPaperSizes: %s\n", mPrintSetup->paper_size->name);
-  fprintf(f, "%%%%Orientation: %s\n",
-              (mPrintContext->prSetup->width < mPrintContext->prSetup->height) ? "Portrait" : "Landscape");
+  fprintf(f, "%%%%Orientation: %s\n", orientation);
 
   // hmm, n_pages is always zero so don't use it
 #if 0
@@ -569,6 +586,22 @@ FILE *f;
     
     // now begin prolog 
   fprintf(f, "%%%%BeginProlog\n");
+
+  // Tell the printer what size paper it should use
+  fprintf(f,
+    "/setpagedevice where\n"			// Test for the feature
+    "{ pop 2 dict\n"				// Set up a dictionary
+    "  dup /PageSize [ %g %g ] put\n"		// Paper dimensions
+    "  dup /ImagingBBox [ %g %g %g %g ] put\n"	// Bounding box
+    "  setpagedevice\n"				// Install settings
+    "} if\n", 
+    NSTwipsToFloatPoints(paper_width),
+    NSTwipsToFloatPoints(paper_height),
+    NSTwipsToFloatPoints(mPrintContext->prSetup->left),
+    NSTwipsToFloatPoints(mPrintContext->prSetup->bottom),
+    NSTwipsToFloatPoints(paper_width - mPrintContext->prSetup->right),
+    NSTwipsToFloatPoints(paper_height - mPrintContext->prSetup->top));
+
   fprintf(f, "[");
   for (i = 0; i < 256; i++){
 	  if (*isotab[i] == '\0'){
