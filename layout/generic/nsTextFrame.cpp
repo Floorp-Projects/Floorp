@@ -2207,7 +2207,7 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
 {
   nsCOMPtr<nsISelectionController> selCon;
   nsCOMPtr<nsIPresShell> shell;
-  PRBool  displaySelection,canDarkenColor;
+  PRBool  displaySelection,canDarkenColor=PR_FALSE;
   PRBool  isPaginated;
   PRBool  isSelected;
   PRInt16 selectionValue;
@@ -2891,7 +2891,7 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
   nsCOMPtr<nsISelectionController> selCon;
   nsCOMPtr<nsIPresShell> shell;
   PRBool  displaySelection;
-  PRBool  isPaginated,canDarkenColor;
+  PRBool  isPaginated,canDarkenColor=PR_FALSE;
   PRBool  isSelected;
   PRInt16 selectionValue;
   nsCOMPtr<nsILineBreaker> lb;
@@ -3067,7 +3067,7 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
 
   nsCOMPtr<nsISelectionController> selCon;
   nsCOMPtr<nsIPresShell> shell;
-  PRBool  displaySelection,canDarkenColor;
+  PRBool  displaySelection,canDarkenColor=PR_FALSE;
   PRBool  isPaginated;
   PRBool  isSelected;
   PRInt16 selectionValue;
