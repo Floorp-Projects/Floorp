@@ -128,12 +128,6 @@ static NS_NAMED_LITERAL_STRING(kNonNegativeIntegerSchemaType,
                         "nonNegativeInteger");
 static NS_NAMED_LITERAL_STRING(kPositiveIntegerSchemaType, "positiveInteger");
 
-#define MAX_ARRAY_DIMENSIONS 100
-
-//
-// Macros to declare and implement the default encoder classes
-//
-
 #define DECLARE_ENCODER(name) \
 class ns##name##Encoder : \
   public nsISOAPEncoder, \
@@ -184,7 +178,6 @@ ns##name##Encoder::~ns##name##Encoder() {}
   SetEncoder(encodingKey, handler); \
   SetDecoder(encodingKey, handler); \
 }
-
 #define REGISTER_SCHEMA_ENCODER(name) REGISTER_ENCODER(name,Schema,nsSOAPUtils::kXSURI)
 #define REGISTER_SOAP_ENCODER(name) REGISTER_ENCODER(name,SOAP,nsSOAPUtils::kSOAPEncURI)
 
@@ -209,17 +202,11 @@ ns##name##Encoder::~ns##name##Encoder() {}
   REGISTER_SCHEMA_ENCODER(UnsignedLong)\
   REGISTER_SCHEMA_ENCODER(UnsignedInt)\
   REGISTER_SCHEMA_ENCODER(UnsignedShort)\
-  REGISTER_SCHEMA_ENCODER(UnsignedByte)
+  REGISTER_SCHEMA_ENCODER(UnsignedByte)\
 
-//
-// Default SOAP Encodings
-//
-
-NS_IMPL_ADDREF(nsDefaultSOAPEncoding_1_1)
-NS_IMPL_RELEASE(nsDefaultSOAPEncoding_1_1)
-
-nsDefaultSOAPEncoding_1_1::nsDefaultSOAPEncoding_1_1() 
-: nsSOAPEncoding(nsSOAPUtils::kSOAPEncURI11, nsnull, nsnull)
+nsDefaultSOAPEncoder_1_1::nsDefaultSOAPEncoder_1_1() : nsSOAPEncoding(nsSOAPUtils::kSOAPEncURI11,
+               nsnull,
+               nsnull)
 {
   PRUint16 version = nsISOAPMessage::VERSION_1_1;
   PRBool result;
@@ -229,11 +216,9 @@ nsDefaultSOAPEncoding_1_1::nsDefaultSOAPEncoding_1_1()
   REGISTER_ENCODERS
 }
 
-NS_IMPL_ADDREF(nsDefaultSOAPEncoding_1_2)
-NS_IMPL_RELEASE(nsDefaultSOAPEncoding_1_2)
-
-nsDefaultSOAPEncoding_1_2::nsDefaultSOAPEncoding_1_2() 
-: nsSOAPEncoding(nsSOAPUtils::kSOAPEncURI, nsnull, nsnull)
+nsDefaultSOAPEncoder_1_2::nsDefaultSOAPEncoder_1_2() : nsSOAPEncoding(nsSOAPUtils::kSOAPEncURI,
+               nsnull,
+               nsnull)
 {
   PRUint16 version = nsISOAPMessage::VERSION_1_2;
   PRBool result;
@@ -243,9 +228,7 @@ nsDefaultSOAPEncoding_1_2::nsDefaultSOAPEncoding_1_2()
   REGISTER_ENCODERS
 }
 
-//
-// Default Encoders -- static helper functions intermixed
-//
+//  Here is the implementation of the encoders.
 
 //  Getting the immediate supertype of any type
 static nsresult GetSupertype(nsISOAPEncoding * aEncoding, nsISchemaType* aType, nsISchemaType** _retval)
@@ -1053,22 +1036,16 @@ NS_IMETHODIMP
     return rc;
 //  We still have to fake this one, because there is no any simple type in schema.
   if (aName.IsEmpty() && !aSchemaType) {
-    return EncodeSimpleValue(aEncoding, 
-                             value,
-                             nsSOAPUtils::kSOAPEncURI,
-                             kAnySimpleTypeSchemaType,
-                             aSchemaType,
-                             aDestination,
+    return EncodeSimpleValue(aEncoding, value,
+        nsSOAPUtils::kSOAPEncURI, kAnySimpleTypeSchemaType, aSchemaType, aDestination,
                              aReturnValue);
   }
-  return EncodeSimpleValue(aEncoding,
-                           value,
-                           aNamespaceURI,
-                           aName,
-                           aSchemaType,
-                           aDestination,
+  return EncodeSimpleValue(aEncoding, value,
+                           aNamespaceURI, aName, aSchemaType, aDestination,
                            aReturnValue);
 }
+
+#define MAX_ARRAY_DIMENSIONS 100
 
 /**
  * Recursive method used by array encoding which counts the sizes of the specified dimensions

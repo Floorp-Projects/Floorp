@@ -43,6 +43,7 @@
 #include "nsSOAPMessage.h"
 #include "nsSOAPParameter.h"
 #include "nsSOAPHeaderBlock.h"
+#include "nsSOAPEncoding.h"
 #include "nsSOAPException.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMAttr.h"

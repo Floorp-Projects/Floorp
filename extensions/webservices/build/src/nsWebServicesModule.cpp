@@ -59,7 +59,7 @@
 #include "nsWebScriptsAccess.h"
 
 ////////////////////////////////////////////////////////////////////////
-// Define the constructor function for the objects
+// Define the contructor function for the objects
 //
 // NOTE: This creates an instance of objects by using the default constructor
 //
@@ -73,8 +73,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSOAPEncoding)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSOAPFault)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSOAPHeaderBlock)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSOAPParameter)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDefaultSOAPEncoding_1_1)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDefaultSOAPEncoding_1_2)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDefaultSOAPEncoder_1_1)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDefaultSOAPEncoder_1_2)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTTPSOAPTransport)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTTPSSOAPTransport)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSOAPPropertyBagMutator)
@@ -276,12 +276,12 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_CI_INTERFACE_GETTER_NAME(nsSOAPParameter), 
     nsnull, &NS_CLASSINFO_NAME(nsSOAPParameter), 
     nsIClassInfo::DOM_OBJECT },
-  { "Default SOAP 1.1 Encoding", NS_DEFAULTSOAPENCODING_1_1_CID,
-    NS_DEFAULTSOAPENCODING_1_1_CONTRACTID, 
-    nsDefaultSOAPEncoding_1_1Constructor },
-  { "Default SOAP 1.2 Encoding", NS_DEFAULTSOAPENCODING_1_2_CID,
-    NS_DEFAULTSOAPENCODING_1_2_CONTRACTID, 
-    nsDefaultSOAPEncoding_1_2Constructor },
+  { "Default SOAP 1.1 Encoder", NS_DEFAULTSOAPENCODER_1_1_CID,
+    NS_DEFAULTSOAPENCODER_1_1_CONTRACTID, 
+    nsDefaultSOAPEncoder_1_1Constructor },
+  { "Default SOAP 1.2 Encoder", NS_DEFAULTSOAPENCODER_1_2_CID,
+    NS_DEFAULTSOAPENCODER_1_2_CONTRACTID, 
+    nsDefaultSOAPEncoder_1_2Constructor },
   { "HTTP SOAP Transport", NS_HTTPSOAPTRANSPORT_CID,
     NS_HTTPSOAPTRANSPORT_CONTRACTID, 
     nsHTTPSOAPTransportConstructor, nsnull, nsnull, nsnull,

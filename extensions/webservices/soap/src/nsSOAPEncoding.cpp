@@ -177,7 +177,7 @@ nsSOAPEncoding::nsSOAPEncoding() : mEncoders(),
 {
   mStyleURI.Assign(nsSOAPUtils::kSOAPEncURI11);
   mRegistry = new nsSOAPEncodingRegistry(this);
-  mDefaultEncoding = do_GetService(NS_DEFAULTSOAPENCODING_1_1_CONTRACTID);
+  mDefaultEncoding = do_GetService(NS_DEFAULTSOAPENCODER_1_1_CONTRACTID);
 }
 
 nsSOAPEncoding::nsSOAPEncoding(const nsAString & aStyleURI, 

@@ -36,8 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsSOAPEncoding_h__
-#define nsSOAPEncoding_h__
+#ifndef nsSOAPEncodingRegistry_h__
+#define nsSOAPEncodingRegistry_h__
 
 #include "nsString.h"
 #include "nsIDOMElement.h"
@@ -47,6 +47,7 @@
 #include "nsCOMPtr.h"
 #include "nsHashtable.h"
 #include "nsISchema.h"
+#include "nsWeakReference.h"
 
 // Notes regarding the ownership model between the nsSOAPEncoding (encoding)
 //   and the nsSOAPEncodingRegsitry (registry). To avoid cyclic referencing
