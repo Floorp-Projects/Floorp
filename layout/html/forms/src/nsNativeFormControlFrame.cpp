@@ -77,7 +77,7 @@ nsNativeFormControlFrame::Reflow(nsIPresContext&          aPresContext,
   }
 
 	if (! requiresWidget) {
-		return Inherited::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+		return nsFormControlFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 	}
 
   // add ourself as an nsIFormControlFrame

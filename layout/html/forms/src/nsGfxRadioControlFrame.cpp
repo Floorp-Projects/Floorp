@@ -86,7 +86,7 @@ nsGfxRadioControlFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
 										  &mRadioButtonFaceStyle);
 
   if ((mRadioButtonFaceStyle && oldRadioButtonFaceStyle.get()) && (mRadioButtonFaceStyle != oldRadioButtonFaceStyle.get())) {
-    Inherited::CaptureStyleChangeFor(this, oldRadioButtonFaceStyle, mRadioButtonFaceStyle, 
+    nsRadioControlFrame::CaptureStyleChangeFor(this, oldRadioButtonFaceStyle, mRadioButtonFaceStyle, 
                               aParentChange, aChangeList, aLocalChange);
   }
 
