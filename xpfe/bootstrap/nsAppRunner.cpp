@@ -171,8 +171,8 @@ int main(int argc, char* argv[])
 #if defined(NS_USING_PROFILES)
 	nsFileSpec currProfileDirSpec;
 	PRBool profileDirSet = PR_FALSE;
-	PRBool runProfMgr = PR_FALSE;
 	nsIProfile *profileService = nsnull;
+	char *profstr = nsnull;
 #endif // defined(NS_USING_PROFILES)
 
   /* 
@@ -318,8 +318,25 @@ int main(int argc, char* argv[])
 			if (currProfileDirString)
 			    currProfileDirSpec = currProfileDirString;
 			else
-				currProfileDirSpec
-				    = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_CurrentWorkingDirectory);
+			{
+				// No directory name provided. Get File Locator
+				nsIFileLocator* locator = nsnull;
+				rv = nsServiceManager::GetService(kFileLocatorCID, kIFileLocatorIID, (nsISupports**)&locator);
+				if (NS_FAILED(rv) || !locator)
+					return NS_ERROR_FAILURE;
+				
+				// Get current profile, make the new one a sibling...
+				rv = locator->GetFileLocation(nsSpecialFileSpec::App_UserProfileDirectory50, &currProfileDirSpec);
+				if (NS_FAILED(rv))
+					return NS_ERROR_FAILURE;
+				currProfileDirSpec.SetLeafName(currProfileName);
+
+				if (locator)
+				{
+					rv = locator->ForgetProfileDir();
+					nsServiceManager::ReleaseService(kFileLocatorCID, locator);
+				}
+			}
 
 			fprintf(stderr, "profileName & profileDir are: %s\n", cmdResult);
 			profileService->SetProfileDir(currProfileName, currProfileDirSpec);
@@ -333,10 +350,31 @@ int main(int argc, char* argv[])
     if (NS_SUCCEEDED(rv))
     {		
 		if (cmdResult) {
-			runProfMgr = PR_TRUE;
-			urlstr = "resource:/res/profile/profileManagerContainer.xul"; 
+			profstr = "resource:/res/profile/profileManagerContainer.xul"; 
 		}
     }
+
+	// Start Profile Wizard
+	rv = cmdLineArgs->GetCmdLineValue("-ProfileWizard", &cmdResult);
+    if (NS_SUCCEEDED(rv))
+    {		
+		if (cmdResult) {
+			profstr = "resource:/res/profile/cpw.xul"; 
+		}
+    }
+
+	// Start Migaration activity
+	rv = cmdLineArgs->GetCmdLineValue("-installer", &cmdResult);
+    if (NS_SUCCEEDED(rv))
+    {		
+		if (cmdResult) {
+#ifdef XP_PC
+			profileService->MigrateProfileInfo(); 
+#endif
+			profstr = "resource:/res/profile/profileManagerContainer.xul";
+		}
+    }
+
 #endif // defined(NS_USING_PROFILES)
     
     rv = cmdLineArgs->GetCmdLineValue("-editor", &cmdResult);
@@ -416,34 +454,6 @@ int main(int argc, char* argv[])
   if (NS_FAILED(rv)) {
     goto done;
   }
- 
-#if defined (NS_USING_PROFILES)
-  /* 
-   * If default profile is current, launch CreateProfile Wizard. 
-   */ 
-  
-	if (!runProfMgr)
-	{
-
-      int numProfiles = 0; 
-
-      profileService->GetProfileCount(&numProfiles); 
-
-      NS_ASSERTION(numProfiles > 0, "Oops, no profiles yet!"); 
-      if (numProfiles == 1)
-      {
-          char* profileName = nsnull;
-          profileService->GetCurrentProfile(&profileName);
-          if (profileName && strcmp(profileName, "default") == 0)
-		  {
-              urlstr = "resource:/res/profile/cpw.xul"; 
-		  }
-      }
-	}
-
-
-#endif
-
  
   /*
    * Post an event to the shell instance to load the AppShell 
@@ -538,6 +548,80 @@ int main(int argc, char* argv[])
       nsServiceManager::ReleaseService(kAppCoresManagerCID, appCoresManager);
 		}
   }
+
+#if defined (NS_USING_PROFILES)
+	/* 
+	 * If default profile is current, launch CreateProfile Wizard. 
+	 */ 
+	if (!profileDirSet)
+	{
+		int numProfiles = 0; 
+		nsIURL* profURL = nsnull;
+
+		PRInt32 profWinWidth  = 615;
+		PRInt32 profWinHeight = 500;
+
+		nsIWebShellWindow*  profWindow;
+		nsIAppShellService* profAppShell;
+
+		/*
+	 	 * Create the Application Shell instance...
+		 */
+		rv = nsServiceManager::GetService(kAppShellServiceCID,
+                                    kIAppShellServiceIID,
+                                    (nsISupports**)&profAppShell);
+		if (NS_FAILED(rv)) {
+			goto done;
+		}
+
+		profileService->GetProfileCount(&numProfiles); 
+
+		NS_ASSERTION(numProfiles > 0, "Oops, no profiles yet!"); 
+    
+		if (!profstr)
+		{
+			if (numProfiles == 1)
+			{
+				char* profileName = nsnull;
+				profileService->GetCurrentProfile(&profileName);
+          
+				if (profileName && strcmp(profileName, "default") == 0)
+				{
+					profstr = "resource:/res/profile/cpw.xul"; 
+				}
+			}
+
+			if (numProfiles > 1)
+			{
+				profstr = "resource:/res/profile/profileManagerContainer.xul"; 
+			}	
+		}
+
+		if (profstr)
+		{
+			rv = NS_NewURL(&profURL, profstr);
+	
+			if (NS_FAILED(rv)) {
+				goto done;
+			} 
+
+			rv = profAppShell->CreateTopLevelWindow(nsnull, profURL, PR_TRUE, profWindow,
+				       nsnull, nsnull, profWinWidth, profWinHeight);
+
+			NS_RELEASE(profURL);
+		
+			if (NS_FAILED(rv)) 
+			{
+				goto done;
+			}
+
+			/*
+			 * Start up the main event loop...
+			 */	
+			rv = profAppShell->Run();
+		}
+	}
+#endif
 
   if ( !useArgs ) {
       rv = appShell->CreateTopLevelWindow(nsnull, url, PR_TRUE, newWindow,
