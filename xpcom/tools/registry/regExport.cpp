@@ -235,11 +235,11 @@ static void displayValues( nsIRegistry *reg, nsIRegistry::Key root ) {
                             // Print value contents.
                             switch ( type ) {
                                 case nsIRegistry::String: {
-                                        char *value;
-                                        rv = reg->GetString( root, name, &value );
+                                        char *strValue;
+                                        rv = reg->GetString( root, name, &strValue );
                                         if ( rv == NS_OK ) {
-                                            printString( value, strlen(name) );
-                                            PR_Free( value );
+                                            printString( strValue, strlen(name) );
+                                            PR_Free( strValue );
                                         } else {
                                             printf( "\t Error getting string value, rv=0x%08X", (int)rv );
                                         }
