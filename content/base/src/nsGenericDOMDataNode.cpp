@@ -1061,9 +1061,13 @@ nsGenericDOMDataNode::SetText(const PRUnichar* aBuffer,
     nsMutationEvent mutation(NS_MUTATION_CHARACTERDATAMODIFIED, node);
 
     mutation.mPrevAttrValue = oldValue;
-    nsDependentString newVal(aBuffer);
-    if (!newVal.IsEmpty())
-      mutation.mNewAttrValue = do_GetAtom(newVal);
+    if (aLength > 0) {
+      // Must use Substring() since nsDependentString() requires null
+      // terminated strings.
+      mutation.mNewAttrValue =
+        do_GetAtom(Substring(aBuffer, aBuffer + aLength));
+    }
+
     nsEventStatus status = nsEventStatus_eIgnore;
     HandleDOMEvent(nsnull, &mutation, nsnull,
                    NS_EVENT_FLAG_INIT, &status);
@@ -1102,8 +1106,13 @@ nsGenericDOMDataNode::SetText(const char* aBuffer, PRUint32 aLength,
     nsMutationEvent mutation(NS_MUTATION_CHARACTERDATAMODIFIED, node);
 
     mutation.mPrevAttrValue = oldValue;
-    if (*aBuffer)
-      mutation.mNewAttrValue = do_GetAtom(aBuffer);
+    if (aLength > 0) {
+      // Must use Substring() since nsDependentCString() requires null
+      // terminated strings.
+      mutation.mNewAttrValue =
+        do_GetAtom(Substring(aBuffer, aBuffer + aLength));
+    }
+
     nsEventStatus status = nsEventStatus_eIgnore;
     HandleDOMEvent(nsnull, &mutation, nsnull,
                    NS_EVENT_FLAG_INIT, &status);

@@ -1822,8 +1822,8 @@ nsComboboxControlFrame::ActuallyDisplayText(nsAString& aText, PRBool aNotify)
   if (aText.IsEmpty()) {
     // Have to use a non-breaking space for line-height calculations
     // to be right
-    static const PRUnichar spaceArr[] = { 0xA0, 0x00 };
-    mDisplayContent->SetText(spaceArr, 2, aNotify);
+    static const PRUnichar space = 0xA0;
+    mDisplayContent->SetText(&space, 1, aNotify);
   } else {
     mDisplayContent->SetText(aText, aNotify);
   }
