@@ -1,5 +1,6 @@
 nsIBindingManager.h
 nsIXBLBinding.h
+nsIXBLBindingAttachedHandler.h
 nsIXBLDocumentInfo.h
 nsIXBLService.h
 
