@@ -97,6 +97,17 @@ function EditCardCancelButton()
 	dump("Cancel Hit\n");
 }
 
+function ResultsPaneSelectionChange(abNode)
+{
+	var doc = parent.parent.frames["resultsFrame"].document;
+	
+	var selArray = doc.getElementsByAttribute('selected', 'true');
+	if ( selArray && (selArray.length == 1) )
+		DisplayCardViewPane(selArray[0]);
+	else
+		ClearCardViewPane();
+}
+
 function DisplayCardViewPane(abNode)
 {
 	var uri = abNode.getAttribute('id');

@@ -20,7 +20,7 @@
 
 
 <tree rdf:datasources="rdf:addressdirectory rdf:addresscard" id="resultTree" 
-	  onclick="DisplayCardViewPane(event.target.parentNode)">
+	  onchange="ResultsPaneSelectionChange(event.target.parentNode)">
   <treecol style="width:13%" id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#PersonName"/>
   <treecol style="width:21%" id="EmailColumn" rdf:resource="http://home.netscape.com/NC-rdf#Email"/>
   <treecol style="width:13%" id="WorkPhoneColumn" rdf:resource="http://home.netscape.com/NC-rdf#WorkPhone"/>
