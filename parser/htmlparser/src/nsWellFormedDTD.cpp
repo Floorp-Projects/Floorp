@@ -146,6 +146,17 @@ CWellFormedDTD::~CWellFormedDTD(){
 }
 
 /**
+ * Call this method if you want the DTD to construct a fresh 
+ * instance of itself. 
+ * @update	gess7/23/98
+ * @param 
+ * @return
+ */
+nsresult CWellFormedDTD::CreateNewInstance(nsIDTD** aInstancePtrResult){
+  return NS_NewWellFormed_DTD(aInstancePtrResult);
+}
+
+/**
  * This method is called to determine if the given DTD can parse
  * a document in a given source-type. 
  * NOTE: Parsing always assumes that the end result will involve
@@ -177,7 +188,7 @@ eAutoDetectResult CWellFormedDTD::AutoDetectContentType(nsString& aBuffer,nsStri
  * @param 
  * @return
  */
-NS_IMETHODIMP CWellFormedDTD::WillBuildModel(nsString& aFilename){
+NS_IMETHODIMP CWellFormedDTD::WillBuildModel(nsString& aFilename,PRInt32 aLevel){
   nsresult result=NS_OK;
   return result;
 }
@@ -188,7 +199,7 @@ NS_IMETHODIMP CWellFormedDTD::WillBuildModel(nsString& aFilename){
  * @param 
  * @return
  */
-NS_IMETHODIMP CWellFormedDTD::DidBuildModel(PRInt32 anErrorCode){
+NS_IMETHODIMP CWellFormedDTD::DidBuildModel(PRInt32 anErrorCode,PRInt32 aLevel){
   nsresult result=NS_OK;
 
   return result;

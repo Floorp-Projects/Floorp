@@ -149,6 +149,17 @@ COtherDTD::~COtherDTD(){
 }
 
 /**
+ * Call this method if you want the DTD to construct a fresh instance
+ * of itself
+ * @update	gess7/23/98
+ * @param 
+ * @return
+ */
+nsresult COtherDTD::CreateNewInstance(nsIDTD** aInstancePtrResult){
+  return NS_NewOtherHTMLDTD(aInstancePtrResult);
+}
+
+/**
  * This method is called to determine if the given DTD can parse
  * a document in a given source-type. 
  * NOTE: Parsing always assumes that the end result will involve
@@ -178,8 +189,8 @@ eAutoDetectResult COtherDTD::AutoDetectContentType(nsString& aBuffer,nsString& a
  * @param 
  * @return
  */
-NS_IMETHODIMP COtherDTD::WillBuildModel(nsString& aFilename) {
-  return CNavDTD::WillBuildModel(aFilename);
+NS_IMETHODIMP COtherDTD::WillBuildModel(nsString& aFilename,PRInt32 aLevel) {
+  return CNavDTD::WillBuildModel(aFilename, aLevel);
 }
 
 /**
@@ -188,8 +199,8 @@ NS_IMETHODIMP COtherDTD::WillBuildModel(nsString& aFilename) {
  * @param 
  * @return
  */
-NS_IMETHODIMP COtherDTD::DidBuildModel(PRInt32 anErrorCode){
-  return CNavDTD::DidBuildModel(anErrorCode);
+NS_IMETHODIMP COtherDTD::DidBuildModel(PRInt32 anErrorCode,PRInt32 aLevel){
+  return CNavDTD::DidBuildModel(anErrorCode, aLevel);
 }
 
 /**

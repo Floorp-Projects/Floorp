@@ -126,8 +126,15 @@ class nsXIFDTD : public nsIDTD {
      */
     virtual ~nsXIFDTD();
 
+    /**
+     * Call this method if you want the DTD to construct a clone of itself.
+     * @update	gess7/23/98
+     * @param 
+     * @return
+     */
+    virtual nsresult CreateNewInstance(nsIDTD** aInstancePtrResult);
 
-        /**
+    /**
      * This method is called to determine if the given DTD can parse
      * a document in a given source-type. 
      * NOTE: Parsing always assumes that the end result will involve
@@ -150,19 +157,19 @@ class nsXIFDTD : public nsIDTD {
 
     /**
      * 
-     * @update	gpk 06/18/98
+     * @update	gess 7/24/98
      * @param 
      * @return
      */
-    NS_IMETHOD WillBuildModel(nsString& aFileName);
+    NS_IMETHOD WillBuildModel(nsString& aFileName,PRInt32 aLevel);
 
     /**
      *  
-     * @update	gpk 06/18/98
+     * @update	gess 7/24/98
      * @param 
      * @return
      */
-    NS_IMETHOD DidBuildModel(PRInt32 aQualityLevel);
+    NS_IMETHOD DidBuildModel(PRInt32 aQualityLevel,PRInt32 aLevel);
 
     /**
      *  

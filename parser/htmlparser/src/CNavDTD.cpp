@@ -357,9 +357,19 @@ CNavDTD::CNavDTD() : nsIDTD(), mTokenDeque(gTokenKiller),
 CNavDTD::~CNavDTD(){
   DeleteTokenHandlers();
 
-  if (mDTDDebug)
-    NS_RELEASE(mDTDDebug);
-//  NS_RELEASE(mSink);
+  NS_IF_RELEASE(mDTDDebug);
+
+}
+
+/**
+ * Call this method if you want the DTD to construct a fresh 
+ * instance of itself. 
+ * @update	gess7/23/98
+ * @param 
+ * @return
+ */
+nsresult CNavDTD::CreateNewInstance(nsIDTD** aInstancePtrResult){
+  return NS_NewNavHTMLDTD(aInstancePtrResult);
 }
 
 /**
@@ -412,12 +422,12 @@ eAutoDetectResult CNavDTD::AutoDetectContentType(nsString& aBuffer,nsString& aTy
  * @param 
  * @return
  */
-nsresult CNavDTD::WillBuildModel(nsString& aFilename){
+nsresult CNavDTD::WillBuildModel(nsString& aFilename,PRInt32 aLevel){
   nsresult result=NS_OK;
 
   mFilename=aFilename;
 
-  if(mSink) {
+  if((1==aLevel) && (mSink)) {
     result = mSink->WillBuildModel();
   }
 
@@ -430,13 +440,14 @@ nsresult CNavDTD::WillBuildModel(nsString& aFilename){
  * @param 
  * @return
  */
-nsresult CNavDTD::DidBuildModel(PRInt32 anErrorCode){
+nsresult CNavDTD::DidBuildModel(PRInt32 anErrorCode,PRInt32 aLevel){
   nsresult result= NS_OK;
 
   if((kNoError==anErrorCode) && (mContextStack.mCount>0)) {
     result = CloseContainersTo(0,eHTMLTag_unknown,PR_FALSE);
   }
-  if(mSink) {
+
+  if((1==aLevel) && (mSink)) {
     result = mSink->DidBuildModel(1);
   }
 
@@ -2843,8 +2854,7 @@ CNavDTD::ConsumeWhitespace(PRUnichar aChar,
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null 
  */
-nsresult
-CNavDTD::ConsumeComment(PRUnichar aChar,CScanner& aScanner,CToken*& aToken){
+nsresult CNavDTD::ConsumeComment(PRUnichar aChar,CScanner& aScanner,CToken*& aToken){
   aToken = new CCommentToken();
   nsresult result=NS_OK;
   if(aToken) {
@@ -2863,14 +2873,18 @@ CNavDTD::ConsumeComment(PRUnichar aChar,CScanner& aScanner,CToken*& aToken){
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null 
  */
-nsresult
-CNavDTD::ConsumeText(const nsString& aString,
-                     CScanner& aScanner,
-                     CToken*& aToken){
+nsresult CNavDTD::ConsumeText(const nsString& aString,CScanner& aScanner,CToken*& aToken){
   nsresult result=NS_OK;
   if(aToken=new CTextToken(aString)) {
     PRUnichar ch=0;
     result=aToken->Consume(ch,aScanner);
+    if(result) {
+      nsString& temp=aToken->GetStringValueXXX();
+      if(0==temp.Length()){
+        delete aToken;
+      }
+      else result=kNoError;
+    }
   }
   return result;
 }
@@ -2884,10 +2898,7 @@ CNavDTD::ConsumeText(const nsString& aString,
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null 
  */
-nsresult
-CNavDTD::ConsumeNewline(PRUnichar aChar,
-                        CScanner& aScanner,
-                        CToken*& aToken){
+nsresult CNavDTD::ConsumeNewline(PRUnichar aChar,CScanner& aScanner,CToken*& aToken){
   aToken=new CNewlineToken();
   nsresult result=NS_OK;
   if(aToken) {
@@ -2918,7 +2929,6 @@ nsresult CNavDTD::ConsumeToken(CToken*& aToken){
   nsresult   result=NS_OK;
   CScanner* theScanner=mParser->GetScanner();
   if(NS_OK==result){
-    
     PRUnichar theChar;
     result=theScanner->GetChar(theChar);
     switch(result) {
@@ -2933,13 +2943,16 @@ nsresult CNavDTD::ConsumeToken(CToken*& aToken){
       default:
         switch(theChar) {
           case kLessThan:
-            return ConsumeTag(theChar,*theScanner,aToken);
+            result=ConsumeTag(theChar,*theScanner,aToken);
+            break;
 
           case kAmpersand:
-            return ConsumeEntity(theChar,*theScanner,aToken);
+            result=ConsumeEntity(theChar,*theScanner,aToken);
+            break;
           
           case kCR: case kLF:
-            return ConsumeNewline(theChar,*theScanner,aToken);
+            result=ConsumeNewline(theChar,*theScanner,aToken);
+            break;
           
           case kNotFound:
             break;
@@ -2947,15 +2960,17 @@ nsresult CNavDTD::ConsumeToken(CToken*& aToken){
           default:
             if(!nsString::IsSpace(theChar)) {
               nsAutoString temp(theChar);
-              return ConsumeText(temp,*theScanner,aToken);
+              result=ConsumeText(temp,*theScanner,aToken);
+              break;
             }
-            return ConsumeWhitespace(theChar,*theScanner,aToken);
+            result=ConsumeWhitespace(theChar,*theScanner,aToken);
+            break;
         } //switch
         break; 
     } //switch
-    if(NS_OK==result)
-      result=theScanner->Eof();
-  } //while
+//    if(NS_OK==result)
+//      result=theScanner->Eof(); 
+  } //if
   return result;
 }
 

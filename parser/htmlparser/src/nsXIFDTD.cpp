@@ -354,6 +354,16 @@ nsXIFDTD::~nsXIFDTD(){
 }
 
 
+/**
+ * Call this method if you want the DTD to construct a fresh 
+ * instance of itself. 
+ * @update	gess7/23/98
+ * @param 
+ * @return
+ */
+nsresult nsXIFDTD::CreateNewInstance(nsIDTD** aInstancePtrResult){
+  return NS_NewXIFDTD(aInstancePtrResult);
+}
 
 
 /**
@@ -393,11 +403,11 @@ eAutoDetectResult nsXIFDTD::AutoDetectContentType(nsString& aBuffer,nsString& aT
 
 /**
  * 
- * @update	gpk 06/18/98
+ * @update	gess 7/24/98
  * @param 
  * @return
  */
-nsresult nsXIFDTD::WillBuildModel(nsString& aFileName){
+nsresult nsXIFDTD::WillBuildModel(nsString& aFileName,PRInt32 aLevel){
   nsresult result=NS_OK;
 
   if(mSink)
@@ -418,11 +428,11 @@ nsresult nsXIFDTD::WillBuildModel(nsString& aFileName){
 
 /**
  * 
- * @update	gpk 06/18/98
+ * @update	gess 7/24/98
  * @param 
  * @return
  */
-nsresult nsXIFDTD::DidBuildModel(PRInt32 anErrorCode){
+nsresult nsXIFDTD::DidBuildModel(PRInt32 anErrorCode,PRInt32 aLevel){
   nsresult result=NS_OK;
 
   if(mSink) 

@@ -217,6 +217,17 @@ CRtfDTD::~CRtfDTD(){
 }
 
 /**
+ * Call this method if you want the DTD to construct fresh instance
+ * of itself.
+ * @update	gess7/23/98
+ * @param 
+ * @return
+ */
+nsresult CRtfDTD::CreateNewInstance(nsIDTD** aInstancePtrResult){
+  return NS_NewRTF_DTD(aInstancePtrResult);
+}
+
+/**
  * This method is called to determine if the given DTD can parse
  * a document in a given source-type. 
  * NOTE: Parsing always assumes that the end result will involve
@@ -251,7 +262,7 @@ eAutoDetectResult CRtfDTD::AutoDetectContentType(nsString& aBuffer,nsString& aTy
  * @param 
  * @return
  */
-NS_IMETHODIMP CRtfDTD::WillBuildModel(nsString& aFilename){
+NS_IMETHODIMP CRtfDTD::WillBuildModel(nsString& aFilename,PRInt32 aLevel){
   nsresult result=NS_OK;
   return result;
 }
@@ -262,7 +273,7 @@ NS_IMETHODIMP CRtfDTD::WillBuildModel(nsString& aFilename){
  * @param 
  * @return
  */
-NS_IMETHODIMP CRtfDTD::DidBuildModel(PRInt32 anErrorCode){
+NS_IMETHODIMP CRtfDTD::DidBuildModel(PRInt32 anErrorCode,PRInt32 aLevel){
   nsresult result=NS_OK;
 
   return result;

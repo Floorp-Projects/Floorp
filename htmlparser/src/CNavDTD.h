@@ -170,6 +170,15 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      */
     virtual ~CNavDTD();
 
+    /**
+     * Call this method if you want the DTD to construct a clone of itself.
+     * @update	gess7/23/98
+     * @param 
+     * @return
+     */
+    virtual nsresult CreateNewInstance(nsIDTD** aInstancePtrResult);
+
+
     NS_DECL_ISUPPORTS
 
     /**
@@ -212,7 +221,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
       * @param	aFilename is the name of the file being parsed.
       * @return	error code (almost always 0)
       */
-    NS_IMETHOD WillBuildModel(nsString& aFilename);
+    NS_IMETHOD WillBuildModel(nsString& aFilename,PRInt32 aLevel);
 
    /**
      * The parser uses a code sandwich to wrap the parsing process. Before
@@ -222,7 +231,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      * @param	anErrorCode contans the last error that occured
      * @return	error code
      */
-    NS_IMETHOD DidBuildModel(PRInt32 anErrorCode);
+    NS_IMETHOD DidBuildModel(PRInt32 anErrorCode,PRInt32 aLevel);
 
     /**
      *  This method is called by the parser, once for each token

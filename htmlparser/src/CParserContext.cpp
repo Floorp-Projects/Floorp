@@ -33,6 +33,15 @@ public:
 CTokenDeallocator gTokenDeallocator;
 
 
+
+/**
+ * Your friendly little constructor. Ok, it's not the friendly, but the only guy
+ * using it is the parser.
+ * @update	gess7/23/98
+ * @param   aScanner
+ * @param   aKey
+ * @param   aListener
+ */
 CParserContext::CParserContext(CScanner* aScanner,void* aKey,nsIStreamObserver* aListener) :
   mSourceType(),
   mTokenDeque(gTokenDeallocator)
@@ -69,8 +78,9 @@ CParserContext::~CParserContext(){
   if(mTransferBuffer)
     delete [] mTransferBuffer;
 
-  //Remember that it's ok to simply
-  //ignore the DTD and the prevcontext.
+  NS_RELEASE(mDTD);
+
+  //Remember that it's ok to simply ingore the PrevContext.
 
 }
 
