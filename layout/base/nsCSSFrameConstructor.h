@@ -700,6 +700,7 @@ protected:
                    nsStyleContext*          aContentStyle,
                    nsIFrame*                aScrolledFrame,
                    nsIFrame*                aParentFrame,
+                   nsIFrame*                aContentParentFrame,
                    nsIFrame*&               aNewFrame,
                    nsStyleContext*&         aScrolledChildStyle,
                    nsIFrame*                aScrollPort = nsnull);
@@ -714,6 +715,7 @@ protected:
                            nsIContent*              aContent,
                            nsStyleContext*          aContentStyle,
                            nsIFrame*                aParentFrame,
+                           nsIFrame*                aContentParentFrame,
                            nsIAtom*                 aScrolledPseudo,
                            nsIDocument*             aDocument,
                            PRBool                   aIsRoot,
@@ -741,6 +743,7 @@ protected:
                       nsIContent*              aContent,
                       nsIDocument*             aDocument,
                       nsIFrame*                aParentFrame,
+                      nsIFrame*                aContentParentFrame,
                       nsStyleContext*          aStyleContext,
                       PRBool                   aIsRoot,
                       nsIFrame*&               aNewFrame,
