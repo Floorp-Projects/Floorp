@@ -1042,8 +1042,8 @@ button.calendar-management-button:hover:active
 }
 
 
-#unifinder-search-results-tree > treechildren treeitem[selected="true"] > treerow,
-#unifinder-categories-tree > treechildren treeitem[selected="true"] > treerow
+#unifinder-search-results-tree listitem[selected="true"] > listcell,
+#unifinder-categories-tree listitem[selected="true"] > listcell
 {
    background-color        : #D5E3F2;
    color                   : #000000;
