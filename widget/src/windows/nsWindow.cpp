@@ -4338,7 +4338,7 @@ nsWindow::Flash() {
     // If window is in foreground, no notification is necessary.
     if ( GetForegroundWindow() != mWnd ) {
         // Kick off timer that does single flash till window comes to foreground.
-        SetTimer( mWnd, NS_FLASH_TIMER_ID, GetCaretBlinkTime(), nsFlashTimerFunc );
+        SetTimer( mWnd, NS_FLASH_TIMER_ID, GetCaretBlinkTime(), ((int (__stdcall*)(void))nsFlashTimerFunc) );
     }
 
     return NS_OK;
