@@ -72,3 +72,19 @@
   border-bottom: 1px solid #D5DAE5;
   border-left: 1px solid #7681A2;
 }
+
+/* when dragging stuff over personal toolbar items */
+.bookmark-item.button-toolbar[dragover-left="true"] {
+  border-left: 1px solid black;
+}
+
+.bookmark-item.button-toolbar[dragover-right="true"] {
+  border-right: 1px solid black;
+}
+
+.bookmark-item.button-toolbar[dragover-top="true"] {
+  border-top: 1px solid #7681A2;
+  border-right: 1px solid #D5DAE5;
+  border-bottom: 1px solid #D5DAE5;
+  border-left: 1px solid #7681A2;
+}

@@ -71,6 +71,9 @@ function isBookmark(aURI)
   }
 
 var personalToolbarObserver = {
+  DROP_BEFORE: -1,
+  DROP_ON: 0,
+  DROP_AFTER: 1,
   onDragStart: function (aEvent, aXferData, aDragAction)
     {
       var personalToolbar = document.getElementById("PersonalToolbar");
@@ -96,7 +99,8 @@ var personalToolbarObserver = {
   onDrop: function (aEvent, aXferData, aDragSession)
     {
       var dropElement = aEvent.target.id;
-      var elementRes = RDFUtils.getResource(aXferData.data);
+      var xferData = aXferData.data.split("\n");
+      var elementRes = RDFUtils.getResource(xferData[0]);
       var dropElementRes = RDFUtils.getResource(dropElement);
       var personalToolbarRes = RDFUtils.getResource("NC:PersonalToolbarFolder");
 
@@ -111,6 +115,10 @@ var personalToolbarObserver = {
           rdfContainer.Init(childDB, parentContainer);
           rdfContainer.RemoveElement(elementRes, true);
         }
+
+      var linkTitle;
+      if (xferData.length >= 2)
+        linkTitle = xferData[1]
       else
         {
           // look up this URL's title in global history
@@ -122,27 +130,31 @@ var personalToolbarObserver = {
             titleFromHistory = titleFromHistory.QueryInterface(Components.interfaces.nsIRDFLiteral);
           if (titleFromHistory)
             potentialTitle = titleFromHistory.Value;
-          linkTitle = potentialTitle ? potentialTitle : element;
-          childDB.Assert(elementRes, historyTitleProperty,
-                         gRDFService.GetLiteral(linkTitle), true);
+          linkTitle = potentialTitle;
+
+          if (linkTitle)
+            childDB.Assert(elementRes, historyTitleProperty, 
+                           gRDFService.GetLiteral(linkTitle), true);
         }
       rdfContainer.Init (childDB, personalToolbarRes);
       var dropIndex = rdfContainer.IndexOf(dropElementRes);
       // determine the drop position
       var dropPosition = this.determineDropPosition(aEvent);
       switch (dropPosition) {
-      case -1:
+      case this.DROP_BEFORE:
+        if (dropIndex<1) dropIndex = 1;
         rdfContainer.Init(childDB, personalToolbarRes);
-        dump("*** elt= " + elementRes.Value + "\n");
         rdfContainer.InsertElementAt(elementRes, dropIndex, true);
         break;
-      case 0:
+      case this.DROP_ON:
+        if (dropIndex<1) dropIndex = 1;
         // do something here to drop into subfolders
         rdfContainer.Init(childDB, dropElementRes);
         rdfContainer.AppendElement(elementRes);
         break;
-      case 1:
+      case this.DROP_AFTER:
       default:
+        if (dropIndex<0) dropIndex = 0;
         rdfContainer.Init (childDB, personalToolbarRes);
         rdfContainer.InsertElementAt(elementRes, dropIndex+1, true);
         break;
@@ -185,13 +197,13 @@ var personalToolbarObserver = {
 
       switch (dropPosition)
         {
-          case -1:
+          case this.DROP_BEFORE: 
             aEvent.target.setAttribute("dragover-left", "true");
             break;
-          case 1:
+          case this.DROP_AFTER:
             aEvent.target.setAttribute("dragover-right", "true");
             break;
-          case 0:
+          case this.DROP_ON:
           default:
             if (aEvent.target.getAttribute("container") == "true") {
               aEvent.target.setAttribute("dragover-top", "true");
@@ -218,27 +230,30 @@ var personalToolbarObserver = {
       var overButton = aEvent.target;
       var overButtonBoxObject = overButton.boxObject.QueryInterface(Components.interfaces.nsIBoxObject);
 
-      if (aEvent.clientX < (overButtonBoxObject.x + overButtonBoxObject.width/3))
-        {
-          if (aEvent.clientY > overButtonBoxObject.y &&
-              aEvent.clientY < overButtonBoxObject.y + overButtonBoxObject.height)
-            return -1;
-        }
-      else if (aEvent.clientX > (overButtonBoxObject.x + 2*(overButtonBoxObject.width/3)))
-        {
-          if (aEvent.clientY > overButtonBoxObject.y &&
-              aEvent.clientY < overButtonBoxObject.y + overButtonBoxObject.height)
-            return 1;
-        }
-      else if (aEvent.clientX > (overButtonBoxObject.x + overButtonBoxObject.width/3) &&
-               aEvent.clientX < ((overButtonBoxObject.x + 2*(overButtonBoxObject.width/3))))
-        {
-          if (aEvent.clientY > overButtonBoxObject.y &&
-              aEvent.clientY < overButtonBoxObject.y + overButtonBoxObject.height)
-            return 0;
-        }
+      // most things only drop on the left or right
+      var regionCount = 2;
 
-      return 0;
+      // you can drop ONTO containers, so there is a "middle" region
+      if (overButton.getAttribute("container") == "true")
+        regionCount = 3;
+
+      var regionWidth = overButtonBoxObject.width/regionCount;
+
+      // make sure we are vertically aligned with the button!
+      if (aEvent.clientY < overButtonBoxObject.y ||
+          aEvent.clientY > overButtonBoxObject.y + overButtonBoxObject.height)
+        return 0;
+
+      // in the first region?
+      if (aEvent.clientX < (overButtonBoxObject.x + regionWidth))
+          return this.DROP_BEFORE;
+
+      // in the last region?
+      if (aEvent.clientX >= (overButtonBoxObject.x + (regionCount - 1)*regionWidth))
+          return this.DROP_AFTER;
+
+      // must be in the middle somewhere
+      return this.DROP_ON;
     },
 
   // returns the parent resource of the dragged element. This is determined
@@ -246,7 +261,8 @@ var personalToolbarObserver = {
   // to find the appropriate containing node.
   findParentContainer: function (aElement)
     {
-      switch (aElement.localName)
+      if (!aElement) return null;
+      switch (aElement.localName) 
         {
           case "button":
           case "menubutton":
