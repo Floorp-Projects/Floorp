@@ -1396,19 +1396,28 @@ function canonizeUrl(aTriggeringEvent, aPostDataRef)
 
   // Prevent suffix when already exists www , http , /
   if (!/^(www|http)|\/\s*$/i.test(url)) {
+    var suffix = null;
+
     if (aTriggeringEvent && 'ctrlKey' in aTriggeringEvent &&
         aTriggeringEvent.ctrlKey && 'shiftKey' in aTriggeringEvent &&
         aTriggeringEvent.shiftKey)
-      // Tack http://www. and .org on.
-      url = "http://www." + url + ".org/";
+      suffix = ".org/";
+
     else if (aTriggeringEvent && 'ctrlKey' in aTriggeringEvent &&
         aTriggeringEvent.ctrlKey)
-      // Tack www. and .com on.
-      url = "http://www." + url + ".com/";
+      suffix = ".com/";
+
     else if (aTriggeringEvent && 'shiftKey' in aTriggeringEvent &&
         aTriggeringEvent.shiftKey)
-      // Tack www. and .org on.
-      url = "http://www." + url + ".net/";
+      suffix = ".net/";
+
+    if (suffix != null) {
+      // trim leading/trailing spaces (bug 233205)
+      url = url.replace( /^\s+/, "");
+      url = url.replace( /\s+$/, "");
+      // Tack www. and suffix on.
+      url = "http://www." + url + suffix;
+    }
   }
 
   gURLBar.value = getShortcutOrURI(url, aPostDataRef);
