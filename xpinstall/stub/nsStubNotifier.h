@@ -30,15 +30,15 @@
 #include "xpistub.h"
 #include "nsIXPINotifier.h"
 
-class nsStubNotifier : public nsIXPINotifier
+class nsStubListener : public nsIXPIListener
 {
     public:
 
-        nsStubNotifier( pfnXPIProgress );
-        virtual ~nsStubNotifier();
+        nsStubListener( pfnXPIProgress );
+        virtual ~nsStubListener();
 
         NS_DECL_ISUPPORTS
-        NS_DECL_NSIXPINOTIFIER
+        NS_DECL_NSIXPILISTENER
 
     private:
         pfnXPIProgress  m_progress;

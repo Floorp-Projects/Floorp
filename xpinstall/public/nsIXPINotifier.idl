@@ -15,7 +15,7 @@
  *
  * The Initial Developer of the Original Code is Netscape Communications 
  * Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Copyright (C) 2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s): 
@@ -26,7 +26,7 @@
 #include "nsISupports.idl"
 
 [uuid(eea90d40-b059-11d2-915e-c12b696c9333)]
-interface nsIXPINotifier : nsISupports
+interface nsIXPIListener : nsISupports
 {
         void    BeforeJavascriptEvaluation(in wstring URL);
         void    AfterJavascriptEvaluation(in wstring URL);

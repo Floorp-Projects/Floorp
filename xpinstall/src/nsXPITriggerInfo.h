@@ -29,7 +29,7 @@
 #include "nsVoidArray.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsUtils.h"
-#include "nsIXPINotifier.h"
+//#include "nsIXPINotifier.h"
 #include "nsIFileSpec.h"
 #include "nsILocalFile.h"
 #include "nsIOutputStream.h"

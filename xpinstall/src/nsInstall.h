@@ -57,6 +57,7 @@
 #include "nsIPersistentProperties2.h"
 #include "nsIEnumerator.h"
 #include "nsIZipReader.h"
+#include "nsIChromeRegistry.h"
 
 #define XPINSTALL_BUNDLE_URL "chrome://communicator/locale/xpinstall/xpinstall.properties"
 
@@ -64,34 +65,36 @@ class nsInstallInfo
 {
   public:
     
-    nsInstallInfo( nsIFile*     aFile, 
+    nsInstallInfo( PRUint32         aInstallType,
+                   nsIFile*         aFile, 
                    const PRUnichar* aURL, 
                    const PRUnichar* aArgs, 
                    PRUint32         aFlags, 
-                   nsIXPINotifier*  aNotifier);
+                   nsIXPIListener*  aListener,
+                   nsIChromeRegistry*   aChromeReg);
 
     virtual ~nsInstallInfo();
 
-    nsresult GetLocalFile(nsIFile** aSpec);
-
-    void GetURL(nsString& aURL) { aURL = mURL; }
-
-    void GetArguments(nsString& aArgs) { aArgs = mArgs; }
-    
-    PRUint32 GetFlags() { return mFlags; }
-
-    nsIXPINotifier* GetNotifier() { return mNotifier; };
+    nsIFile*            GetFile()               { return mFile; }
+    const PRUnichar*    GetURL()                { return mURL.GetUnicode(); }
+    const PRUnichar*    GetArguments()          { return mArgs.GetUnicode(); }
+    PRUint32            GetFlags()              { return mFlags; }
+    PRUint32            GetType()               { return mType; }
+    nsIXPIListener*     GetListener()           { return mListener; }
+    nsIChromeRegistry*  GetChromeRegistry()     { return mChromeReg; }
 
   private:
 
     nsresult  mError;
 
+    PRUint32   mType;
     PRUint32   mFlags;
     nsString   mURL;
     nsString   mArgs;
 
     nsCOMPtr<nsIFile>           mFile;
-    nsCOMPtr<nsIXPINotifier>    mNotifier;
+    nsCOMPtr<nsIXPIListener>    mListener;
+    nsCOMPtr<nsIChromeRegistry> mChromeReg;
 };
 
 #ifdef XP_PC
@@ -251,7 +254,7 @@ class nsInstall
         void       AddPatch(nsHashKey *aKey, nsIFile* fileName);
         void       GetPatch(nsHashKey *aKey, nsIFile** fileName);
         
-        void       GetJarFileLocation(nsString& aFile);
+        nsIFile*   GetJarFileLocation() { return mJarFileLocation; }
         void       SetJarFileLocation(nsIFile* aFile);
 
         void       GetInstallArguments(nsString& args);
@@ -304,7 +307,7 @@ class nsInstall
         //nsCOMPtr<nsISupportsArray>   mInstalledFiles;
         nsHashtable*        mPatchList;
 
-        nsIXPINotifier      *mNotifier;
+        nsIXPIListener      *mListener;
 
         nsCOMPtr<nsIStringBundle>   mStringBundle;
 

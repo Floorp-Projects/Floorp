@@ -39,9 +39,11 @@ class nsInstallFolder
     public:
         
        nsInstallFolder();
+       virtual ~nsInstallFolder();
+
        nsresult Init(nsInstallFolder& inFolder, const nsString& subString);
        nsresult Init(const nsString& aFolderID, const nsString& aRelativePath);
-       virtual ~nsInstallFolder();
+       nsresult Init(nsIFile* rawIFile);
 
        void GetDirectoryPath(nsString& aDirectoryPath);
        nsIFile* GetFileSpec();
@@ -54,7 +56,6 @@ class nsInstallFolder
         void         SetDirectoryPath(const nsString& aFolderID, const nsString& aRelativePath);
         void         PickDefaultDirectory();
         PRInt32      MapNameToEnum(const nsString&  name);
-        void         SetAppShellDirectory(PRUint32 value);
 };
 
 

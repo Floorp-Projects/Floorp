@@ -31,17 +31,17 @@
 #include "nsFileStream.h"
 
 
-class nsLoggingProgressNotifier : public nsIXPINotifier
+class nsLoggingProgressListener : public nsIXPIListener
 {
     public:
         
-        nsLoggingProgressNotifier();
-        virtual ~nsLoggingProgressNotifier();
+        nsLoggingProgressListener();
+        virtual ~nsLoggingProgressListener();
         
         NS_DECL_ISUPPORTS
 
-        // nsIXPINotifier interfaces
-        NS_DECL_NSIXPINOTIFIER
+        // nsIXPIListener interfaces
+        NS_DECL_NSIXPILISTENER
    
      private:
         void GetTime(char** aString);

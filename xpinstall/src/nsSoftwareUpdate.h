@@ -18,7 +18,6 @@ class nsInstallInfo;
 
 #include "nsIScriptExternalNameSet.h"
 #include "nsIAppShellComponent.h"
-#include "nsIXPINotifier.h"
 #include "nsPIXPIStubHook.h"
 #include "nsTopProgressNotifier.h"
 
@@ -53,14 +52,21 @@ class nsSoftwareUpdate: public nsIAppShellComponent,
         NS_IMETHOD InstallJar( nsIFile* localFile,
                                const PRUnichar* URL,
                                const PRUnichar* arguments,
-                               long flags = 0,
-                               nsIXPINotifier* notifier = 0);  
+                               PRUint32 flags = 0,
+                               nsIXPIListener* aListener = 0);
 
-        NS_IMETHOD RegisterNotifier(nsIXPINotifier *notifier);
+        NS_IMETHOD InstallChrome( PRUint32 aType,
+                                  nsIFile* aFile,
+                                  const PRUnichar* URL,
+                                  const PRUnichar* aName,
+                                  PRBool aSelect,
+                                  nsIXPIListener* aListener = 0);
+
+        NS_IMETHOD RegisterListener(nsIXPIListener *aListener);
         
         NS_IMETHOD InstallJarCallBack();
-        NS_IMETHOD GetMasterNotifier(nsIXPINotifier **notifier);
-        NS_IMETHOD SetActiveNotifier(nsIXPINotifier *notifier);
+        NS_IMETHOD GetMasterListener(nsIXPIListener **aListener);
+        NS_IMETHOD SetActiveListener(nsIXPIListener *aListener);
         NS_IMETHOD StartupTasks( PRBool* needAutoreg );
 
         /** StubInitialize() is private for the Install Wizard.
@@ -89,7 +95,7 @@ class nsSoftwareUpdate: public nsIAppShellComponent,
         PRBool            mInstalling;
         PRBool            mStubLockout;
         nsVoidArray       mJarInstallQueue;
-        nsTopProgressNotifier   mMasterNotifier;
+        nsTopProgressListener   mMasterListener;
 
         HREG              mReg;
         

@@ -246,7 +246,7 @@ InstallTriggerGlobalInstallChrome(JSContext *cx, JSObject *obj, uintN argc, jsva
 {
   nsIDOMInstallTriggerGlobal *nativeThis = (nsIDOMInstallTriggerGlobal*)JS_GetPrivate(cx, obj);
   PRBool       nativeRet;
-  PRUint32     chromeType;
+  uint32       chromeType;
   nsAutoString baseURL;
   nsAutoString sourceURL;
   nsAutoString name;
@@ -282,25 +282,22 @@ InstallTriggerGlobalInstallChrome(JSContext *cx, JSObject *obj, uintN argc, jsva
   }
 
   
-
   if ( argc >= 3 )
   {
-    chromeType = JSVAL_TO_INT(argv[0]);
+    JS_ValueToECMAUint32(cx, argv[0], &chromeType);
     ConvertJSValToStr(sourceURL, cx, argv[1]);
     ConvertJSValToStr(name, cx, argv[2]);
 
-    if ( chromeType == CHROMETYPE_SAFESKIN || chromeType == CHROMETYPE_LOCALE )
+    if ( chromeType & CHROME_ALL )
     {
-        nsresult rv;
-
+        // there's at least one known chrome type
         nsXPITriggerItem* item = new nsXPITriggerItem(name.GetUnicode(),
                                                       sourceURL.GetUnicode());
 
         if (item && item->IsRelativeURL())
             item->mURL.Insert( baseURL, 0 );
 
-        rv = nativeThis->InstallChrome(chromeType, item, &nativeRet);
-        
+        nsresult rv = nativeThis->InstallChrome(chromeType, item, &nativeRet);
         if (NS_FAILED(rv))
             return JS_FALSE;
 
@@ -672,10 +669,10 @@ static JSConstDoubleSpec diff_constants[] =
     { nsIDOMInstallTriggerGlobal::REL_DIFF,      "REL_DIFF"   },
     { nsIDOMInstallTriggerGlobal::BLD_DIFF,      "BLD_DIFF"   },
     { nsIDOMInstallTriggerGlobal::EQUAL,         "EQUAL"      },
-    { CHROMETYPE_SAFESKIN,                       "THEME"      },
-    { CHROMETYPE_LOCALE,                         "LOCALE"     },
-    { CHROMETYPE_SCRIPTSKIN,                     "SUPERSKIN"  },
-    { CHROMETYPE_PACKAGE,                        "PACKAGE"    },
+    { CHROME_SKIN,                               "SKIN"       },
+    { CHROME_LOCALE,                             "LOCALE"     },
+    { CHROME_CONTENT,                            "CONTENT"    },
+    { CHROME_ALL,                                "PACKAGE"    },
     {0}
 };
 

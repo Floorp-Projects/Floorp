@@ -42,7 +42,7 @@
 #include "nsIDOMXULDocument.h"
 
 
-class nsInstallProgressDialog : public nsIXPINotifier,
+class nsInstallProgressDialog : public nsIXPIListener,
                                 public nsIXPIProgressDlg
 {
     public: 
@@ -52,8 +52,8 @@ class nsInstallProgressDialog : public nsIXPINotifier,
         
         NS_DECL_ISUPPORTS
 
-        // implement nsIXPINotifier
-        NS_DECL_NSIXPINOTIFIER
+        // implement nsIXPIListener
+        NS_DECL_NSIXPILISTENER
 
         // implement nsIXPIProgressDlg
         NS_DECL_NSIXPIPROGRESSDLG

@@ -64,15 +64,22 @@ class nsISoftwareUpdate : public nsISupports
             NS_IMETHOD InstallJar(nsIFile* localFile,
                                   const PRUnichar* URL,
                                   const PRUnichar* arguments,
-                                  long  flags,
-                                  nsIXPINotifier* notifier = 0) = 0; 
+                                  PRUint32 flags,
+                                  nsIXPIListener* aListener = 0) = 0; 
+
+            NS_IMETHOD InstallChrome(PRUint32 aType,
+                                     nsIFile* aFile,
+                                     const PRUnichar* URL,
+                                     const PRUnichar* aName,
+                                     PRBool aSelect,
+                                     nsIXPIListener* aListener = 0) = 0;
             
-            NS_IMETHOD RegisterNotifier(nsIXPINotifier *notifier) = 0;
+            NS_IMETHOD RegisterListener(nsIXPIListener *aListener) = 0;
             
             /* FIX: these should be in a private interface */
             NS_IMETHOD InstallJarCallBack()                   = 0; 
-            NS_IMETHOD GetMasterNotifier(nsIXPINotifier **notifier) = 0;
-            NS_IMETHOD SetActiveNotifier(nsIXPINotifier *notifier) = 0;
+            NS_IMETHOD GetMasterListener(nsIXPIListener **aListener) = 0;
+            NS_IMETHOD SetActiveListener(nsIXPIListener *aListener) = 0;
             NS_IMETHOD StartupTasks( PRBool* outAutoreg ) = 0;
 };
 

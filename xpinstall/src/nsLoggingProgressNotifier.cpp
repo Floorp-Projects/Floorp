@@ -23,7 +23,6 @@
  *     Pierre Phaneuf <pp@ludusdesign.com>
  */
 
-#include "nsIXPINotifier.h"
 #include "nsLoggingProgressNotifier.h"
 
 #include "nsInstall.h"
@@ -36,13 +35,13 @@
 
 
 
-nsLoggingProgressNotifier::nsLoggingProgressNotifier()
+nsLoggingProgressListener::nsLoggingProgressListener()
     : mLogStream(0)
 {
     NS_INIT_ISUPPORTS();
 }
 
-nsLoggingProgressNotifier::~nsLoggingProgressNotifier()
+nsLoggingProgressListener::~nsLoggingProgressListener()
 {
     if (mLogStream)
     {
@@ -53,10 +52,10 @@ nsLoggingProgressNotifier::~nsLoggingProgressNotifier()
     }
 }
 
-NS_IMPL_ISUPPORTS(nsLoggingProgressNotifier, NS_GET_IID(nsIXPINotifier));
+NS_IMPL_ISUPPORTS(nsLoggingProgressListener, NS_GET_IID(nsIXPIListener));
 
 NS_IMETHODIMP
-nsLoggingProgressNotifier::BeforeJavascriptEvaluation(const PRUnichar *URL)
+nsLoggingProgressListener::BeforeJavascriptEvaluation(const PRUnichar *URL)
 {
     nsSpecialSystemDirectory logFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
 #ifdef XP_MAC
@@ -84,7 +83,7 @@ nsLoggingProgressNotifier::BeforeJavascriptEvaluation(const PRUnichar *URL)
 }
 
 NS_IMETHODIMP
-nsLoggingProgressNotifier::AfterJavascriptEvaluation(const PRUnichar *URL)
+nsLoggingProgressListener::AfterJavascriptEvaluation(const PRUnichar *URL)
 {
     if (mLogStream == nsnull) return NS_ERROR_NULL_POINTER;
     
@@ -104,7 +103,7 @@ nsLoggingProgressNotifier::AfterJavascriptEvaluation(const PRUnichar *URL)
 }
 
 NS_IMETHODIMP
-nsLoggingProgressNotifier::InstallStarted(const PRUnichar *URL, const PRUnichar* UIPackageName)
+nsLoggingProgressListener::InstallStarted(const PRUnichar *URL, const PRUnichar* UIPackageName)
 {
     if (mLogStream == nsnull) return NS_ERROR_NULL_POINTER;
 
@@ -130,13 +129,13 @@ nsLoggingProgressNotifier::InstallStarted(const PRUnichar *URL, const PRUnichar*
 }
 
 NS_IMETHODIMP
-nsLoggingProgressNotifier::ItemScheduled(const PRUnichar* message )
+nsLoggingProgressListener::ItemScheduled(const PRUnichar* message )
 {
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsLoggingProgressNotifier::FinalizeProgress(const PRUnichar* message, PRInt32 itemNum, PRInt32 totNum )
+nsLoggingProgressListener::FinalizeProgress(const PRUnichar* message, PRInt32 itemNum, PRInt32 totNum )
 {
     if (mLogStream == nsnull) return NS_ERROR_NULL_POINTER;
 
@@ -145,7 +144,7 @@ nsLoggingProgressNotifier::FinalizeProgress(const PRUnichar* message, PRInt32 it
 }
 
 NS_IMETHODIMP
-nsLoggingProgressNotifier::FinalStatus(const PRUnichar *URL, PRInt32 status)
+nsLoggingProgressListener::FinalStatus(const PRUnichar *URL, PRInt32 status)
 {
     if (mLogStream == nsnull) return NS_ERROR_NULL_POINTER;
 
@@ -178,7 +177,7 @@ nsLoggingProgressNotifier::FinalStatus(const PRUnichar *URL, PRInt32 status)
 }
 
 void 
-nsLoggingProgressNotifier::GetTime(char** aString)
+nsLoggingProgressListener::GetTime(char** aString)
 {
     PRExplodedTime et;
     char line[256];
@@ -188,7 +187,7 @@ nsLoggingProgressNotifier::GetTime(char** aString)
 }
 
 NS_IMETHODIMP
-nsLoggingProgressNotifier::LogComment(const PRUnichar* comment)
+nsLoggingProgressListener::LogComment(const PRUnichar* comment)
 {
     if (mLogStream == nsnull) return NS_ERROR_NULL_POINTER;
 

@@ -119,17 +119,27 @@ GetInstallProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
       case INSTALL_JARFILE:
       {
-        nsAutoString prop;
-        
-        a->GetJarFileLocation(prop);
-        *vp = STRING_TO_JSVAL( JS_NewUCStringCopyN(cx, prop.GetUnicode(), prop.Length()) );
-        
+        nsInstallFolder* folder = new nsInstallFolder();
+        if ( folder )
+        {
+          folder->Init(a->GetJarFileLocation());
+          JSObject* fileSpecObject = 
+              JS_NewObject(cx, &FileSpecObjectClass, gFileSpecProto, NULL);
+
+          if (fileSpecObject)
+          {
+            JS_SetPrivate(cx, fileSpecObject, folder);
+            *vp = OBJECT_TO_JSVAL(fileSpecObject);
+          }
+          else
+              delete folder;
+        }
         break;
       }
 
       case INSTALL_ARGUMENTS:
       {
-        nsString prop;
+        nsAutoString prop;
         
         a->GetInstallArguments(prop); 
         *vp = STRING_TO_JSVAL( JS_NewUCStringCopyN(cx, prop.GetUnicode(), prop.Length()) );
@@ -1437,6 +1447,24 @@ InstallPatch(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   return JS_TRUE;
 }
 
+//
+// Native method RegisterChrome
+//
+PR_STATIC_CALLBACK(JSBool)
+InstallRegisterChrome(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
+
+  // If there's no private data, this must be the prototype, so ignore
+  nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  PRUint32 installType = 0;
+  nsIFile* chrome = nsnull;
+}
+
 
 //
 // Native method ResetError
@@ -1449,26 +1477,8 @@ InstallResetError(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   *rval = JSVAL_VOID;
 
   // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  if(argc >= 0)
-  {
-    //  public int ResetError (void);
-
-    if(NS_OK != nativeThis->ResetError())
-    {
-      return JS_FALSE;
-    }
-
-    *rval = JSVAL_VOID;
-  }
-  else
-  {
-    JS_ReportError(cx, "Function ResetError requires 0 parameters");
-    return JS_FALSE;
-  }
+  if (nativeThis)
+    nativeThis->ResetError();
 
   return JS_TRUE;
 }
@@ -1860,12 +1870,12 @@ static JSFunctionSpec InstallMethods[] =
   {"logComment",                InstallLogComment,              1},
   {"patch",                     InstallPatch,                   5},
   {"performInstall",            InstallFinalizeInstall,         0},
+  {"registerChrome",            InstallRegisterChrome,          2},
   {"resetError",                InstallResetError,              0},
   {"setPackageFolder",          InstallSetPackageFolder,        1},
   {"uninstall",                 InstallUninstall,               1},
 
-  // -- new forms for the file/dir methods --
-  // (Access via Install object is deprecated)
+  // the raw file methods are deprecated, use the File object instead
   {"dirCreate",                 InstallFileOpDirCreate,                1},
   {"dirGetParent",              InstallFileOpDirGetParent,             1},
   {"dirRemove",                 InstallFileOpDirRemove,                2},

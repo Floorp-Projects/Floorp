@@ -24,7 +24,6 @@
  */
 
 
-#include "nsIXPINotifier.h"
 #include "nsInstallProgressDialog.h"
 
 #include "nsIAppShellComponentImpl.h"
@@ -72,8 +71,8 @@ nsInstallProgressDialog::QueryInterface(REFNSIID aIID,void** aInstancePtr)
   // Always NULL result, in case of failure
   *aInstancePtr = NULL;
 
-  if (aIID.Equals(NS_GET_IID(nsIXPINotifier))) {
-    *aInstancePtr = (void*) ((nsIXPINotifier*)this);
+  if (aIID.Equals(NS_GET_IID(nsIXPIListener))) {
+    *aInstancePtr = (void*) ((nsIXPIListener*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -83,7 +82,7 @@ nsInstallProgressDialog::QueryInterface(REFNSIID aIID,void** aInstancePtr)
     return NS_OK;
   }
   if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = (void*) (nsISupports*)((nsIXPINotifier*)this);
+    *aInstancePtr = (void*) (nsISupports*)((nsIXPIListener*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }

@@ -50,11 +50,12 @@
 #include "nsInstallProgressDialog.h"
 #include "nsInstallResources.h"
 #include "nsSpecialSystemDirectory.h"
-//#include "nsFileStream.h"
 #include "nsProxyObjectManager.h"
 #include "nsIDOMWindow.h"
 #include "nsDirectoryService.h"
+#include "nsFileLocations.h"
 
+#include "nsProxiedService.h"
 #include "nsIAppShellComponentImpl.h"
 #include "nsINetSupportDialogService.h"
 #include "nsIPrompt.h"
@@ -63,7 +64,7 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID );
 static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-
+static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 static NS_DEFINE_CID(kDialogParamBlockCID, NS_DialogParamBlock_CID);
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
@@ -115,8 +116,8 @@ nsXPInstallManager::QueryInterface(REFNSIID aIID,void** aInstancePtr)
   if (!aInstancePtr)
     return NS_ERROR_NULL_POINTER;
 
-  if (aIID.Equals(NS_GET_IID(nsIXPINotifier)))
-    *aInstancePtr = NS_STATIC_CAST(nsIXPINotifier*,this);
+  if (aIID.Equals(NS_GET_IID(nsIXPIListener)))
+    *aInstancePtr = NS_STATIC_CAST(nsIXPIListener*,this);
   else if (aIID.Equals(NS_GET_IID(nsIStreamListener)))
     *aInstancePtr = NS_STATIC_CAST(nsIStreamListener*,this);
   else if (aIID.Equals(NS_GET_IID(nsPIXPIManagerCallbacks)))
@@ -126,7 +127,7 @@ nsXPInstallManager::QueryInterface(REFNSIID aIID,void** aInstancePtr)
   else if (aIID.Equals(NS_GET_IID(nsIInterfaceRequestor)))
     *aInstancePtr = NS_STATIC_CAST(nsIInterfaceRequestor*,this);
   else if (aIID.Equals(NS_GET_IID(nsISupports)))
-    *aInstancePtr = NS_STATIC_CAST( nsISupports*, NS_STATIC_CAST(nsIXPINotifier*,this));
+    *aInstancePtr = NS_STATIC_CAST( nsISupports*, NS_STATIC_CAST(nsIXPIListener*,this));
   else
     *aInstancePtr = 0;
 
@@ -176,7 +177,7 @@ nsXPInstallManager::InitManager(nsXPITriggerInfo* aTriggers, PRUint32 aChromeTyp
       
       LoadDialogWithNames(ioParamBlock);
 
-      if (mChromeType == 0 || mChromeType > CHROMETYPE_SAFEMAX )
+      if (mChromeType == 0 || mChromeType > CHROME_SAFEMAX )
           OKtoInstall = ConfirmInstall(ioParamBlock);
       else
           OKtoInstall = ConfirmChromeInstall();
@@ -200,13 +201,13 @@ nsXPInstallManager::InitManager(nsXPITriggerInfo* aTriggers, PRUint32 aChromeTyp
                 if (NS_SUCCEEDED(rv))
                 {
                     rv = pmgr->GetProxyObject( NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIXPIProgressDlg),
-                            Idlg, PROXY_SYNC | PROXY_ALWAYS, getter_AddRefs(mProxy) );
+                            Idlg, PROXY_SYNC | PROXY_ALWAYS, getter_AddRefs(mDlg) );
 
                 }
                 
                 if (NS_SUCCEEDED(rv))
                 {        
-                    rv = mProxy->Open(ioParamBlock);
+                    rv = mDlg->Open(ioParamBlock);
                 }
             }
         }
@@ -301,7 +302,7 @@ PRBool nsXPInstallManager::ConfirmChromeInstall()
                                       getter_AddRefs(xpiBundle) );
         if (NS_SUCCEEDED(rv) && xpiBundle)
         {
-            if ( mChromeType == CHROMETYPE_LOCALE )
+            if ( mChromeType == CHROME_LOCALE )
             {
                 xpiBundle->GetStringFromName(
                     NS_ConvertASCIItoUCS2("ApplyNowLocale").GetUnicode(),
@@ -378,7 +379,7 @@ NS_IMETHODIMP nsXPInstallManager::DownloadNext()
             // XXX serious problem with trigger! try to carry on
             rv = DownloadNext();
         }
-        else if ( mItem->IsFileURL() )
+        else if ( mItem->IsFileURL() && mChromeType == 0 )
         {
             
             nsCOMPtr<nsIURI> pURL;
@@ -409,26 +410,8 @@ NS_IMETHODIMP nsXPInstallManager::DownloadNext()
         }
         else
         {
-            // We have one to download
-            // --- figure out a temp file name
-            nsCOMPtr<nsILocalFile> temp;
-            NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_PROGID, &rv);
-
-            directoryService->Get("system.OS_TemporaryDirectory", NS_GET_IID(nsIFile), getter_AddRefs(temp));
-
-            PRInt32 pos = mItem->mURL.RFindChar('/');
-            if ( pos != -1 )
-            {
-                nsString jarleaf;
-                mItem->mURL.Right( jarleaf, mItem->mURL.Length() - (pos + 1));
-                temp->Append(nsAutoCString(jarleaf));
-            }
-            else
-                temp->Append("xpinstall.xpi");
-
-            MakeUnique(temp); //nsIFileXXX: need MakeUnique function.
-
-            mItem->mFile = temp;
+            // We have one to download -- figure out the destination file name
+            rv = GetDestinationFile(mItem->mURL, getter_AddRefs(mItem->mFile));
             if (NS_SUCCEEDED(rv))
             {
                  // --- start the download
@@ -464,8 +447,8 @@ NS_IMETHODIMP nsXPInstallManager::DownloadNext()
         // all downloaded, queue them for installation
 
         // can't cancel from here on cause we can't undo installs in a multitrigger
-        if (mProxy)
-            mProxy->StartInstallPhase();
+        if (mDlg)
+            mDlg->StartInstallPhase();
 
         NS_WITH_SERVICE(nsISoftwareUpdate, softupdate, nsSoftwareUpdate::GetCID(), &rv);
         if (NS_SUCCEEDED(rv))
@@ -475,11 +458,22 @@ NS_IMETHODIMP nsXPInstallManager::DownloadNext()
                 mItem = (nsXPITriggerItem*)mTriggers->Get(i);
                 if ( mItem && mItem->mFile )
                 {
-                    rv = softupdate->InstallJar(mItem->mFile,
+                    if ( mChromeType == 0 ) {
+                        rv = softupdate->InstallJar(mItem->mFile,
                                                 mItem->mURL.GetUnicode(),
                                                 mItem->mArguments.GetUnicode(),
                                                 mItem->mFlags,
                                                 this );
+                    }
+                    else {
+                        rv = softupdate->InstallChrome(mChromeType,
+                                                mItem->mFile,
+                                                mItem->mURL.GetUnicode(),
+                                                mItem->mName.GetUnicode(),
+                                                mSelectChrome,
+                                                this );
+                    }
+
                     if (NS_SUCCEEDED(rv))
                         PR_AtomicIncrement(&mNumJars);
                     else
@@ -512,25 +506,21 @@ nsXPInstallManager::CancelInstall()
 
 void nsXPInstallManager::Shutdown()
 {
-    if (mProxy)
-    {
-        // proxy exists: we're being called from script thread
-        mProxy->Close();
-    }
+    if (mDlg)
+        mDlg->Close();
 
-    // Clean up downloaded files
+    // Clean up downloaded files, regular XPInstall only not chrome installs
     nsXPITriggerItem* item;
     nsCOMPtr<nsIFile> tmpSpec;
-    for (PRUint32 i = 0; i < mTriggers->Size(); i++ )
+    if ( mChromeType == 0 )
     {
-        item = NS_STATIC_CAST(nsXPITriggerItem*, mTriggers->Get(i));
-
-        if ( item && item->mFile && !item->IsFileURL() )
+        for (PRUint32 i = 0; i < mTriggers->Size(); i++ )
         {
-            item->mFile->Delete(PR_FALSE);
+            item = NS_STATIC_CAST(nsXPITriggerItem*, mTriggers->Get(i));
+            if ( item && item->mFile && !item->IsFileURL() )
+                item->mFile->Delete(PR_FALSE);
         }
     }
-
 
     NS_RELEASE_THIS();
 }
@@ -593,6 +583,79 @@ void nsXPInstallManager::LoadDialogWithNames(nsIDialogParamBlock* ioParamBlock)
         }
     }
 }
+
+
+
+NS_IMETHODIMP
+nsXPInstallManager::GetDestinationFile(nsString& url, nsILocalFile* *file)
+{
+    NS_ENSURE_ARG_POINTER(file);
+
+    nsresult rv;
+    nsString leaf;
+
+    PRInt32 pos = url.RFindChar('/');
+    url.Mid( leaf, pos+1, url.Length() );
+
+    if (mChromeType == 0 )
+    {
+        // a regular XPInstall, not chrome
+        NS_WITH_SERVICE(nsIProperties, directoryService,
+                        NS_DIRECTORY_SERVICE_PROGID, &rv);
+        if (NS_SUCCEEDED(rv))
+        {
+            nsCOMPtr<nsILocalFile> temp;
+            directoryService->Get("system.OS_TemporaryDirectory",
+                                  NS_GET_IID(nsIFile), 
+                                  getter_AddRefs(temp));
+            temp->AppendUnicode(leaf.GetUnicode());
+            MakeUnique(temp);
+            *file = temp;
+            NS_IF_ADDREF(*file);
+        }
+    }
+    else
+    {
+        // a chrome install, download straight to final destination
+        NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
+        if (NS_SUCCEEDED(rv))
+        {
+            nsCOMPtr<nsIFileSpec>   userChrome;
+            nsCOMPtr<nsILocalFile>  target;
+
+            // Get the user's Chrome directory, create if necessary
+            rv = locator->GetFileLocation(
+                            nsSpecialFileSpec::App_UserChromeDirectory,
+                            getter_AddRefs(userChrome));
+
+            NS_ASSERTION(NS_SUCCEEDED(rv) && userChrome,
+                         "App_UserChromeDirectory not defined!");
+            if (NS_SUCCEEDED(rv))
+            {
+                PRBool exists;
+                rv = userChrome->Exists(&exists);
+                if (NS_SUCCEEDED(rv) && !exists)
+                {
+                    rv = userChrome->CreateDir();
+                }
+
+                nsFileSpec  tmpSpec;
+                userChrome->GetFileSpec(&tmpSpec);
+                rv = NS_FileSpecToIFile(&tmpSpec, getter_AddRefs(target));
+
+                if (NS_SUCCEEDED(rv))
+                {
+                    target->AppendUnicode(leaf.GetUnicode());
+                    MakeUnique(target);
+                    *file = target;
+                    NS_IF_ADDREF(*file);
+                }
+            }
+        }
+    }
+    return rv;
+}
+
 
 
 NS_IMETHODIMP
@@ -738,7 +801,7 @@ nsXPInstallManager::OnProgress(nsIChannel *channel, nsISupports *ctxt, PRUint32 
             rv = channel->GetContentLength(&mContentLength);
             if (NS_FAILED(rv)) return rv;
         }
-        return mProxy->SetProgress(aProgress, mContentLength, mode);
+        return mDlg->SetProgress(aProgress, mContentLength, mode);
     }
 
     return NS_OK;
@@ -748,7 +811,7 @@ NS_IMETHODIMP
 nsXPInstallManager::OnStatus(nsIChannel *channel, nsISupports *ctxt, const PRUnichar *aMsg)
 {
     if (!mCancelled)
-        return mProxy->SetActionText(aMsg);
+        return mDlg->SetActionText(aMsg);
 
     return NS_OK;
 }
@@ -760,7 +823,7 @@ nsXPInstallManager::GetInterface(const nsIID & eventSinkIID, void* *_retval)
     return QueryInterface(eventSinkIID, (void**)_retval);
 }
 
-// IXPINotifier methods
+// IXPIListener methods
 
 NS_IMETHODIMP 
 nsXPInstallManager::BeforeJavascriptEvaluation(const PRUnichar *URL)
@@ -768,10 +831,10 @@ nsXPInstallManager::BeforeJavascriptEvaluation(const PRUnichar *URL)
     nsresult rv = NS_OK;
 
     mFinalizing = PR_FALSE;
-    mProxy->SetProgress( 0, 0, 'u' ); // turn on the barber pole
+    mDlg->SetProgress( 0, 0, 'u' ); // turn on the barber pole
 
     PRUnichar tmp[] = { '\0' };
-    mProxy->SetActionText(tmp);
+    mDlg->SetActionText(tmp);
 
     return rv;
 }
@@ -789,14 +852,14 @@ nsXPInstallManager::AfterJavascriptEvaluation(const PRUnichar *URL)
 NS_IMETHODIMP 
 nsXPInstallManager::InstallStarted(const PRUnichar *URL, const PRUnichar *UIPackageName)
 {
-    mProxy->SetActionText(nsnull);
-    return mProxy->SetHeading( nsString(UIPackageName).GetUnicode() );
+    mDlg->SetActionText(nsnull);
+    return mDlg->SetHeading( nsString(UIPackageName).GetUnicode() );
 }
 
 NS_IMETHODIMP 
 nsXPInstallManager::ItemScheduled(const PRUnichar *message)
 {
-    return mProxy->SetActionText( nsString(message).GetUnicode() );
+    return mDlg->SetActionText( nsString(message).GetUnicode() );
 }
 
 NS_IMETHODIMP 
@@ -813,12 +876,12 @@ nsXPInstallManager::FinalizeProgress(const PRUnichar *message, PRInt32 itemNum, 
             nsresult rv = mStringBundle->GetStringFromName(ucRsrcName, &ucRsrcVal);
             if (NS_SUCCEEDED(rv) && ucRsrcVal)
             {
-                mProxy->SetActionText( ucRsrcVal );
+                mDlg->SetActionText( ucRsrcVal );
                 nsCRT::free(ucRsrcVal);
             }
         }
     }
-    return mProxy->SetProgress( itemNum, totNum, 'n' );
+    return mDlg->SetProgress( itemNum, totNum, 'n' );
 }
 
 NS_IMETHODIMP 
