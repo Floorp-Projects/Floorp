@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -38,7 +38,7 @@
 // Event pump setup
 /////////////////////////////////
 #include "nsIEventQueueService.h"
-#ifdef WIN32 
+#ifdef XP_WIN
 #include <windows.h>
 #endif
 #ifdef XP_OS2
@@ -265,34 +265,39 @@ main(int argc, char* argv[])
 
     // Enter the message pump to allow the URL load to proceed.
     while ( gKeepRunning ) {
-#ifdef WIN32
+#ifdef XP_WIN
         MSG msg;
 
         if (GetMessage(&msg, NULL, 0, 0)) {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
-        } else {
-            gKeepRunning = 0;
-    }
+        } else
+            gKeepRunning = PR_FALSE;
 #else
 #ifdef XP_MAC
-    /* Mac stuff is missing here! */
+        /* Mac stuff is missing here! */
 #else
 #ifdef XP_OS2
-    QMSG qmsg;
+        QMSG qmsg;
 
-    if (WinGetMsg(0, &qmsg, 0, 0, 0))
-      WinDispatchMsg(0, &qmsg);
-    else
-      gKeepRunning = FALSE;
+        if (WinGetMsg(0, &qmsg, 0, 0, 0))
+            WinDispatchMsg(0, &qmsg);
+        else
+            gKeepRunning = PR_FALSE;
 #else
-    PLEvent *gEvent;
-    rv = gEventQ->GetEvent(&gEvent);
-    rv = gEventQ->HandleEvent(gEvent);
+#ifdef XP_UNIX
+        PLEvent *gEvent;
+        rv = gEventQ->GetEvent(&gEvent);
+        rv = gEventQ->HandleEvent(gEvent);
+        /* gKeepRunning = PR_FALSE; */
+#else
+        /* Other stuff is missing here! */
 #endif /* XP_UNIX */
 #endif /* XP_OS2 */
-#endif /* !WIN32 */
+#endif /* XP_MAC */
+#endif /* XP_WIN */
     }
 
     //return NS_ShutdownXPCOM(NULL);
+    return rv;
 }
