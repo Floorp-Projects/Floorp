@@ -168,7 +168,9 @@ protected:
   nsresult SetClickCount(nsIPresContext* aPresContext, nsMouseEvent *aEvent, nsEventStatus* aStatus);
   nsresult CheckForAndDispatchClick(nsIPresContext* aPresContext, nsMouseEvent *aEvent, nsEventStatus* aStatus);
   PRBool ChangeFocus(nsIContent* aFocus, PRInt32 aFocusedWith);
-  nsresult GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* aFrame,
+  nsresult GetNextTabbableContent(nsIContent* aRootContent,
+                                  nsIContent* aStartContent,
+                                  nsIFrame* aStartFrame,
                                   PRBool forward, PRBool ignoreTabIndex,
                                   nsIContent** aResultNode,
                                   nsIFrame** aResultFrame);
