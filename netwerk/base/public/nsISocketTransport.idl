@@ -40,11 +40,7 @@
 interface nsIInterfaceRequestor;
 interface nsISocketEventSink;
 
-%{C++
-#include "prio.h"
-%}
-
-[ptr] native PRNetAddrStar(PRNetAddr);
+[ptr] native PRNetAddrStar(union PRNetAddr);
 
 /**
  * nsISocketTransport
@@ -64,10 +60,11 @@ interface nsISocketTransport : nsITransport
      */
     readonly attribute long port;
 
-    /**
-     * Get the PRNetAddr for the underlying socket connection.
+    /** 
+     * Returns the IP address for the underlying socket connection.  This
+     * attribute is only defined once a connection has been established.
      */
-    [noscript] void getAddress(in PRNetAddrStar addr);
+    [noscript] void getAddress(in PRNetAddrStar netAddr);
 
     /**
      * Security info object returned from the PSM socket provider.  This object

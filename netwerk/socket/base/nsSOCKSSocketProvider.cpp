@@ -19,95 +19,95 @@
  *
  * Contributor(s):
  *   Justin Bradford <jab@atdot.org>
+ *   Darin Fisher <darin@meer.net>
  */
 
-#include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsSOCKSSocketProvider.h"
 #include "nsSOCKSIOLayer.h"
+#include "nsCOMPtr.h"
+#include "nsNetError.h"
 
 //////////////////////////////////////////////////////////////////////////
 
-nsSOCKSSocketProvider::nsSOCKSSocketProvider()
-{
-}
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsSOCKSSocketProvider, nsISocketProvider)
 
-nsresult
-nsSOCKSSocketProvider::Init()
+NS_METHOD
+nsSOCKSSocketProvider::CreateV4(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
-    nsresult rv = NS_OK;
+    nsresult rv;
+    nsCOMPtr<nsISocketProvider> inst =
+            new nsSOCKSSocketProvider(NS_SOCKS_VERSION_4);
+    if (!inst)
+        rv = NS_ERROR_OUT_OF_MEMORY;
+    else
+        rv = inst->QueryInterface(aIID, aResult); 
     return rv;
 }
 
-nsSOCKSSocketProvider::~nsSOCKSSocketProvider()
-{
-}
-
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsSOCKSSocketProvider, nsISocketProvider, nsISOCKSSocketProvider)
-
 NS_METHOD
-nsSOCKSSocketProvider::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+nsSOCKSSocketProvider::CreateV5(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
     nsresult rv;
-    
-    nsSOCKSSocketProvider * inst;
-    
-    if (NULL == aResult) {
-        rv = NS_ERROR_NULL_POINTER;
-        return rv;
-    }
-    *aResult = NULL;
-    if (NULL != aOuter) {
-        rv = NS_ERROR_NO_AGGREGATION;
-        return rv;
-    }
-    
-    NS_NEWXPCOM(inst, nsSOCKSSocketProvider);
-    if (NULL == inst) {
+    nsCOMPtr<nsISocketProvider> inst =
+            new nsSOCKSSocketProvider(NS_SOCKS_VERSION_5);
+    if (!inst)
         rv = NS_ERROR_OUT_OF_MEMORY;
-        return rv;
-    }
-    NS_ADDREF(inst);
-    rv = inst->QueryInterface(aIID, aResult);
-    NS_RELEASE(inst);
-    
+    else
+        rv = inst->QueryInterface(aIID, aResult); 
     return rv;
 }
 
 NS_IMETHODIMP
-nsSOCKSSocketProvider::NewSocket(const char *host, 
+nsSOCKSSocketProvider::NewSocket(PRInt32 family,
+                                 const char *host, 
                                  PRInt32 port,
                                  const char *proxyHost,
                                  PRInt32 proxyPort,
-                                 PRFileDesc **_result, 
+                                 PRFileDesc **result, 
                                  nsISupports **socksInfo)
 {
-    nsresult rv = nsSOCKSIOLayerNewSocket(host, 
-                                          port,
-                                          proxyHost,
-                                          proxyPort,
-                                          5,          // SOCKS 5
-                                          _result, 
-                                          socksInfo);
+    PRFileDesc *sock;
     
-    return (NS_FAILED(rv)) ? NS_ERROR_SOCKET_CREATE_FAILED : NS_OK;
-}
+    sock = PR_OpenTCPSocket(family);
+    if (!sock)
+        return NS_ERROR_OUT_OF_MEMORY;
 
-NS_IMETHODIMP
-nsSOCKSSocketProvider::AddToSocket(const char *host,
-                                   PRInt32 port,
-                                   const char *proxyHost,
-                                   PRInt32 proxyPort,
-                                   PRFileDesc *socket, 
-                                   nsISupports **socksInfo)
-{
-    nsresult rv = nsSOCKSIOLayerAddToSocket(host, 
+    nsresult rv = nsSOCKSIOLayerAddToSocket(family,
+                                            host, 
                                             port,
                                             proxyHost,
                                             proxyPort,
-                                            5,        // SOCKS 5
-                                            socket, 
+                                            mVersion,
+                                            sock, 
+                                            socksInfo);
+    if (NS_SUCCEEDED(rv)) {
+        *result = sock;
+        return NS_OK;
+    }
+
+    return NS_ERROR_SOCKET_CREATE_FAILED;
+}
+
+NS_IMETHODIMP
+nsSOCKSSocketProvider::AddToSocket(PRInt32 family,
+                                   const char *host,
+                                   PRInt32 port,
+                                   const char *proxyHost,
+                                   PRInt32 proxyPort,
+                                   PRFileDesc *sock, 
+                                   nsISupports **socksInfo)
+{
+    nsresult rv = nsSOCKSIOLayerAddToSocket(family,
+                                            host, 
+                                            port,
+                                            proxyHost,
+                                            proxyPort,
+                                            mVersion,
+                                            sock, 
                                             socksInfo);
     
-    return (NS_FAILED(rv)) ? NS_ERROR_SOCKET_CREATE_FAILED : NS_OK;
+    if (NS_FAILED(rv))
+        rv = NS_ERROR_SOCKET_CREATE_FAILED;
+    return rv;
 }

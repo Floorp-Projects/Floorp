@@ -36,27 +36,16 @@
 
 #include "nsISupports.idl"
 
-interface nsIDNSRequest;
-interface nsIDNSRecord;
-
 /**
- * nsIDNSListener
+ * nsIDNSRequest
  */
-[scriptable, uuid(36413eba-3a2a-444d-b88e-df9b6d306b73)]
-interface nsIDNSListener : nsISupports
+[scriptable, uuid(3e538aea-d84b-4bf4-bae1-55f9969fe50e)]
+interface nsIDNSRequest : nsISupports
 {
     /**
-     * called when an asynchronous host lookup completes.
-     *
-     * @param aRequest
-     *        the value returned from asyncResolve.
-     * @param aRecord
-     *        the DNS record corresponding to the hostname that was resolved.
-     *        this parameter is null if there was an error.
-     * @param aStatus
-     *        if the lookup failed, this parameter gives the reason.
+     * called to cancel a pending asynchronous DNS request.  the listener will
+     * passed to asyncResolve will be notified immediately with a status code
+     * of NS_ERROR_ABORT.
      */
-    void onLookupComplete(in nsIDNSRequest aRequest,
-                          in nsIDNSRecord  aRecord,
-                          in nsresult      aStatus);
+    void cancel();
 };

@@ -557,6 +557,18 @@
  * netwerk/dns/ classes
  */
 
+#define NS_DNSSERVICE_CLASSNAME \
+    "nsDNSService"
+#define NS_DNSSERVICE_CONTRACTID \
+    "@mozilla.org/network/dns-service;1"
+#define NS_DNSSERVICE_CID \
+{ /* b0ff4572-dae4-4bef-a092-83c1b88f6be9 */         \
+    0xb0ff4572,                                      \
+    0xdae4,                                          \
+    0x4bef,                                          \
+    {0xa0, 0x92, 0x83, 0xc1, 0xb8, 0x8f, 0x6b, 0xe9} \
+}
+
 #define NS_IDNSERVICE_CLASSNAME \
     "nsIDNService"
 /* ContractID of the XPCOM package that implements nsIIDNService */
@@ -585,5 +597,38 @@
 }
 
 #define NS_MIMEHEADERPARAM_CONTRACTID "@mozilla.org/network/mime-hdrparam;1"
+
+
+/******************************************************************************
+ * netwerk/socket classes
+ */
+
+#define NS_SOCKETPROVIDERSERVICE_CLASSNAME \
+    "nsSocketProviderService"
+#define NS_SOCKETPROVIDERSERVICE_CONTRACTID \
+    "@mozilla.org/network/socket-provider-service;1"
+#define NS_SOCKETPROVIDERSERVICE_CID                   \
+{ /* ed394ba0-5472-11d3-bbc8-0000861d1237 */           \
+    0xed394ba0,                                        \
+    0x5472,                                            \
+    0x11d3,                                            \
+    { 0xbb, 0xc8, 0x00, 0x00, 0x86, 0x1d, 0x12, 0x37 } \
+}
+
+#define NS_SOCKSSOCKETPROVIDER_CID                     \
+{ /* 8dbe7246-1dd2-11b2-9b8f-b9a849e4403a */           \
+    0x8dbe7246,                                        \
+    0x1dd2,                                            \
+    0x11b2,                                            \
+    { 0x9b, 0x8f, 0xb9, 0xa8, 0x49, 0xe4, 0x40, 0x3a } \
+}
+
+#define NS_SOCKS4SOCKETPROVIDER_CID                    \
+{ /* F7C9F5F4-4451-41c3-A28A-5BA2447FBACE */           \
+    0xf7c9f5f4,                                        \
+    0x4451,                                            \
+    0x41c3,                                            \
+    { 0xa2, 0x8a, 0x5b, 0xa2, 0x44, 0x7f, 0xba, 0xce } \
+}
 
 #endif // nsNetCID_h__

@@ -19,34 +19,34 @@
  *
  * Contributor(s):
  *   Justin Bradford <jab@atdot.org>
+ *   Darin Fisher <darin@meer.net>
  */
 
-#ifndef _NSSOCKSSOCKETPROVIDER_H_
-#define _NSSOCKSSOCKETPROVIDER_H_
+#ifndef nsSOCKSSocketProvider_h__
+#define nsSOCKSSocketProvider_h__
 
-#include "nsISOCKSSocketProvider.h"
+#include "nsISocketProvider.h"
 
+// values for ctor's |version| argument
+enum {
+    NS_SOCKS_VERSION_4 = 4,
+    NS_SOCKS_VERSION_5 = 5
+};
 
-/* 8dbe7246-1dd2-11b2-9b8f-b9a849e4403a */
-#define NS_SOCKSSOCKETPROVIDER_CID { 0x8dbe7246, 0x1dd2, 0x11b2, {0x9b, 0x8f, 0xb9, 0xa8, 0x49, 0xe4, 0x40, 0x3a}}
-
-class nsSOCKSSocketProvider : public nsISOCKSSocketProvider
+class nsSOCKSSocketProvider : public nsISocketProvider
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSISOCKETPROVIDER
-    NS_DECL_NSISOCKSSOCKETPROVIDER
     
-    // nsSOCKSSocketProvider methods:
-    nsSOCKSSocketProvider();
-    virtual ~nsSOCKSSocketProvider();
+    nsSOCKSSocketProvider(PRUint32 version) : mVersion(version) {}
+    virtual ~nsSOCKSSocketProvider() {}
     
-    static NS_METHOD
-    Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+    static NS_METHOD CreateV4(nsISupports *, REFNSIID aIID, void **aResult);
+    static NS_METHOD CreateV5(nsISupports *, REFNSIID aIID, void **aResult);
     
-    nsresult Init();
-    
-protected:
+private:
+    PRUint32 mVersion; // NS_SOCKS_VERSION_4 or 5
 };
 
-#endif /* _NSSOCKSSOCKETPROVIDER_H_ */
+#endif /* nsSOCKSSocketProvider_h__ */

@@ -46,8 +46,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
-#include "nsIDNSListener.h"
-#include "nsIRequest.h"
+#include "nsIDNSService.h"
 
 class nsSocketTransport;
 
@@ -164,24 +163,6 @@ private:
         STATE_TRANSFERRING
     };
 
-    class NetAddrList {
-    public:
-        NetAddrList() : mList(nsnull), mLen(0) {}
-       ~NetAddrList() { delete[] mList; }
-
-        // allocate space for the address list
-        nsresult Init(PRUint32 len);
-
-        // given a net addr in the list, return the next addr.
-        // if given NULL, then return the first addr in the list.
-        // returns NULL if given addr is the last addr.
-        PRNetAddr *GetNext(PRNetAddr *currentAddr);
-
-    private:
-        PRNetAddr *mList;
-        PRUint32   mLen;
-    };
-
     //-------------------------------------------------------------------------
     // these members are "set" at initialization time and are never modified
     // afterwards.  this allows them to be safely accessed from any thread.
@@ -210,7 +191,9 @@ private:
     PRPackedBool mInputClosed;
     PRPackedBool mOutputClosed;
 
-    nsCOMPtr<nsIRequest> mDNSRequest;
+    nsCOMPtr<nsIDNSRequest> mDNSRequest;
+    nsCOMPtr<nsIDNSRecord>  mDNSRecord;
+    PRNetAddr               mNetAddr;
 
     // socket methods (these can only be called on the socket thread):
 
@@ -296,14 +279,6 @@ private:
         else
             gSocketTransportService->PostEvent(this, MSG_OUTPUT_PENDING, 0, nsnull);
     }
-
-    //-------------------------------------------------------------------------
-    // we have to be careful with these.  they are modified on the DNS thread,
-    // while we are in the resolving state.  once we've received the event
-    // MSG_DNS_LOOKUP_COMPLETE, these can only be accessed on the socket thread.
-    //
-    NetAddrList  mNetAddrList;
-    PRNetAddr   *mNetAddr;
 };
 
 #endif // !nsSocketTransport_h__

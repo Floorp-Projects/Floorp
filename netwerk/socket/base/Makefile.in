@@ -1,3 +1,4 @@
+# vim: noexpandtab ts=4 sw=4
 #
 # The contents of this file are subject to the Netscape Public
 # License Version 1.1 (the "License"); you may not use this file
@@ -33,19 +34,20 @@ REQUIRES	= xpcom \
 		  string \
 		  $(NULL)
 
-CPPSRCS		= nsSocketProviderService.cpp nsSOCKSSocketProvider.cpp nsSOCKS4SocketProvider.cpp nsSOCKSIOLayer.cpp
+CPPSRCS		= \
+		nsSocketProviderService.cpp \
+		nsSOCKSSocketProvider.cpp \
+		nsSOCKSIOLayer.cpp \
+		$(NULL)
 
 XPIDLSRCS	= \
 		nsISocketProvider.idl \
 		nsISocketProviderService.idl \
-		nsISOCKSSocketProvider.idl \
 		nsISOCKSSocketInfo.idl \
-		nsISOCKS4SocketProvider.idl \
-		nsISOCKS4SocketInfo.idl \
-		nsISSLSocketProvider.idl \
 		nsITransportSecurityInfo.idl \
-                nsISSLSocketControl.idl \
-                $(NULL)
+		nsISSLSocketProvider.idl \
+		nsISSLSocketControl.idl \
+		$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
 NO_GEN_XPT=1

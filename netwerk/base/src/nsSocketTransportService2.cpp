@@ -41,10 +41,10 @@
 
 #include "nsSocketTransportService2.h"
 #include "nsSocketTransport2.h"
-#include "nsPrintfCString.h"
 #include "nsReadableUtils.h"
 #include "nsAutoLock.h"
 #include "nsNetError.h"
+#include "prnetdb.h"
 #include "prlock.h"
 #include "prerror.h"
 #include "plstr.h"
@@ -354,70 +354,6 @@ nsSocketTransportService::ServiceEventQ()
     return keepGoing;
 }
 
-//-----------------------------------------------------------------------------
-// host:port -> ipaddr cache
-
-PLDHashTableOps nsSocketTransportService::ops =
-{
-    PL_DHashAllocTable,
-    PL_DHashFreeTable,
-    PL_DHashGetKeyStub,
-    PL_DHashStringKey,
-    PL_DHashMatchStringKey,
-    PL_DHashMoveEntryStub,
-    PL_DHashFreeStringKey,
-    PL_DHashFinalizeStub,
-    nsnull
-};
-
-nsresult
-nsSocketTransportService::LookupHost(const nsACString &host, PRUint16 port, PRIPv6Addr *addr)
-{
-    NS_ASSERTION(!host.IsEmpty(), "empty host");
-    NS_ASSERTION(addr, "null addr");
-
-    PLDHashEntryHdr *hdr;
-    nsCAutoString hostport(host + nsPrintfCString(":%d", port));
-
-    hdr = PL_DHashTableOperate(&mHostDB, hostport.get(), PL_DHASH_LOOKUP);
-    if (PL_DHASH_ENTRY_IS_BUSY(hdr)) {
-        // found match
-        nsHostEntry *ent = NS_REINTERPRET_CAST(nsHostEntry *, hdr);
-        memcpy(addr, &ent->addr, sizeof(ent->addr));
-        return NS_OK;
-    }
-
-    return NS_ERROR_UNKNOWN_HOST;
-}
-
-nsresult
-nsSocketTransportService::RememberHost(const nsACString &host, PRUint16 port, PRIPv6Addr *addr)
-{
-    // remember hostname
-
-    PLDHashEntryHdr *hdr;
-    nsCAutoString hostport(host + nsPrintfCString(":%d", port));
-
-    hdr = PL_DHashTableOperate(&mHostDB, hostport.get(), PL_DHASH_ADD);
-    if (!hdr)
-        return NS_ERROR_FAILURE;
-
-    NS_ASSERTION(PL_DHASH_ENTRY_IS_BUSY(hdr), "entry not busy");
-
-    nsHostEntry *ent = NS_REINTERPRET_CAST(nsHostEntry *, hdr);
-    if (ent->key == nsnull) {
-        ent->key = (const void *) ToNewCString(hostport);
-        memcpy(&ent->addr, addr, sizeof(ent->addr));
-    }
-#ifdef DEBUG
-    else {
-        // verify that the existing entry is in fact a perfect match
-        NS_ASSERTION(PL_strcmp(ent->hostport(), hostport.get()) == 0, "bad match");
-        NS_ASSERTION(memcmp(&ent->addr, addr, sizeof(ent->addr)) == 0, "bad match");
-    }
-#endif
-    return NS_OK;
-}
 
 //-----------------------------------------------------------------------------
 // xpcom api
@@ -535,11 +471,6 @@ nsSocketTransportService::Run()
     gSocketThread = PR_GetCurrentThread();
 
     //
-    // Initialize hostname database
-    //
-    PL_DHashTableInit(&mHostDB, &ops, nsnull, sizeof(nsHostEntry), 0);
-
-    //
     // add thread event to poll list (mThreadEvent may be NULL)
     //
     mPollList[0].fd = mThreadEvent;
@@ -649,9 +580,6 @@ nsSocketTransportService::Run()
         DetachSocket(&mActiveList[i]);
     for (i=mIdleCount-1; i>=0; --i)
         DetachSocket(&mIdleList[i]);
-
-    // clear the hostname database
-    PL_DHashTableFinish(&mHostDB);
 
     gSocketThread = nsnull;
     return NS_OK;
