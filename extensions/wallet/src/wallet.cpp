@@ -644,6 +644,7 @@ Wallet_CheckConfirmYN
 #include "nsISecretDecoderRing.h"
 nsISecretDecoderRing* gSecretDecoderRing;
 PRBool gEncryptionFailure = PR_FALSE;
+PRInt32 gReencryptionLevel = 0;
 
 PRIVATE nsresult
 wallet_CryptSetup() {
@@ -712,12 +713,17 @@ PRIVATE nsresult DecryptString (const char * crypt, char *& text) {
 
   /* use SecretDecoderRing if crypt doesn't starts with prefix */
   if (crypt[0] != PREFIX[0]) {
-    if (!SI_GetBoolPref(pref_Crypto, PR_FALSE)) {
+    if ((gReencryptionLevel == 0) && !SI_GetBoolPref(pref_Crypto, PR_FALSE)) {
       /*
        * User's data is encrypted but pref says it's not.
        * This should never occur but it has been observed.
        * Consequence of it happening is that user will be asked for master password
        * when doing such mundane things as opening edit menu or context menu.
+       *
+       * Note that we do not want to make this test if we are in the middle of
+       * reencypting the entire database (i.e., while execute wallet_ReencryptAll).
+       * In that case the pref has already been changed and this test will always
+       * fail.  That is why we test the gReencryptionLevel indicator.
        */
       NS_ASSERTION(PR_FALSE, "wallet.crypto pref is set incorrectly");
       return NS_ERROR_FAILURE;
@@ -3111,11 +3117,10 @@ wallet_ReencryptAll(const char * newpref, void* window) {
   PRUnichar * message;
 
   /* prevent reentry for the case that the user doesn't supply correct master password */
-  static PRInt32 level = 0;
-  if (level != 0) {
+  if (gReencryptionLevel != 0) {
     return 0; /* this is PREF_NOERROR but we no longer include prefapi.h */
   }
-  level ++;
+  gReencryptionLevel ++;
   PRInt32 count = LIST_COUNT(wallet_SchemaToValue_list);
   PRInt32 i = 0;
   nsAutoString value;
@@ -3177,7 +3182,7 @@ if (!changingPassword) {
 //  message = Wallet_Localize("Converted");
 //  wallet_Alert(message, (nsIDOMWindowInternal *)window);
 //  Recycle(message);
-  level--;
+  gReencryptionLevel--;
   return 0; /* this is PREF_NOERROR but we no longer include prefapi.h */
 fail:
   /* toggle the pref back to its previous value */
@@ -3187,7 +3192,7 @@ fail:
   message = Wallet_Localize("NotConverted");
   wallet_Alert(message, (nsIDOMWindowInternal *)window);
   Recycle(message);
-  level--;
+  gReencryptionLevel--;
   return 1;
 }
 
