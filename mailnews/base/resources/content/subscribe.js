@@ -94,7 +94,7 @@ function SetUpServerMenu()
 var MySubscribeListener = {
 	OnDonePopulating: function() {
 		gStatusFeedback.showProgress(0);
-		gStatusFeedback.showStatusString(gSubscribeBundle.getString("doneString"));
+		gStatusFeedback.showStatusString("");
 		gStatusBar.setAttribute("mode","normal");
 
         // only re-root the tree, if it is null.
