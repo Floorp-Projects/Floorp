@@ -18,7 +18,6 @@
 
 
 #include "prtypes.h"
-#include "nspr.h"
 #include "prmem.h"
 #include "prmon.h"
 #include "prlog.h"
