@@ -44,7 +44,6 @@
 #include "nsIDirIndex.h"
 #include "prtime.h"
 #include "nsDateTimeFormatCID.h"
-#include "nsURLHelper.h"
 #include "nsCRT.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS4(nsIndexedToHTML,
@@ -209,7 +208,7 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
         if (NS_FAILED(rv)) return rv;
         
         nsCAutoString url;
-        rv = net_GetURLSpecFromFile(file, url);
+        rv = NS_GetURLSpecFromFile(file, url);
         if (NS_FAILED(rv)) return rv;
         baseUri.Assign(url);
         
@@ -217,7 +216,7 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
         rv = file->GetParent(getter_AddRefs(parent));
         
         if (parent && NS_SUCCEEDED(rv)) {
-            net_GetURLSpecFromFile(parent, url);
+            NS_GetURLSpecFromFile(parent, url);
             if (NS_FAILED(rv)) return rv;
             parentStr.Assign(url);
         }
