@@ -60,16 +60,57 @@ const short kDialogMarginWidth = 6;
 DragTrackingHandlerUPP nsMacWindow::sDragTrackingHandlerUPP = NewDragTrackingHandlerProc(DragTrackingHandler);
 DragReceiveHandlerUPP nsMacWindow::sDragReceiveHandlerUPP = NewDragReceiveHandlerProc(DragReceiveHandler);
 
+void SetDragActionBasedOnModifiers ( nsIDragService* inDragService, short inModifiers ) ; 
+
+
+//
+// SetDragActionsBasedOnModifiers [static]
+//
+// Examines the MacOS modifier keys and sets the appropriate drag action on the
+// drag session to copy/move/etc
+//
+void
+SetDragActionBasedOnModifiers ( nsIDragService* inDragService, short inModifiers ) 
+{
+	nsCOMPtr<nsIDragSession> dragSession;
+	inDragService->GetCurrentSession ( getter_AddRefs(dragSession) );
+	if ( dragSession ) {
+		PRUint32 action = nsIDragService::DRAGDROP_ACTION_NONE;
+		
+		// force copy = option, alias = cmd-option
+		if ( inModifiers & optionKey ) {
+			if ( inModifiers & cmdKey )
+				action = nsIDragService::DRAGDROP_ACTION_LINK;
+			else
+				action = nsIDragService::DRAGDROP_ACTION_COPY;
+		}
+
+		// I think we only need to set this when it's not "none"
+		if ( action != nsIDragService::DRAGDROP_ACTION_NONE )
+			dragSession->SetDragAction ( action );		
+	}
+
+} // SetDragActionBasedOnModifiers
+
+
 
 //¥¥¥ this should probably go into the drag session as a static
 pascal OSErr
 nsMacWindow :: DragTrackingHandler ( DragTrackingMessage theMessage, WindowPtr theWindow, 
 										void *handlerRefCon, DragReference theDrag)
 {
+	// holds our drag service across multiple calls to this callback. The reference to
+	// the service is obtained when the mouse enters the window and is released when
+	// the mouse leaves the window (or there is a drop). This prevents us from having
+	// to re-establish the connection to the service manager 15 times a second when
+	// handling the |kDragTrackingInWindow| message.
+	static nsIDragService* sDragService = nsnull;
+
 	nsMacWindow* geckoWindow = reinterpret_cast<nsMacWindow*>(handlerRefCon);
 	if ( !theWindow || !geckoWindow )
 		return dragNotAcceptedErr;
 		
+	nsresult rv = NS_OK;
 	switch ( theMessage ) {
 	
 		case kDragTrackingEnterHandler:
@@ -77,17 +118,16 @@ nsMacWindow :: DragTrackingHandler ( DragTrackingMessage theMessage, WindowPtr t
 			
 		case kDragTrackingEnterWindow:
 		{
-			printf("DragTracker :: entering window\n");
-
-			// make sure that the drag session knows about this drag
-			nsIDragService* dragService;
+			// get our drag service for the duration of the drag.
 			nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
                                        					nsIDragService::GetIID(),
-      	                            					(nsISupports **)&dragService);
-			if ( NS_SUCCEEDED(rv) && dragService ) {
-				dragService->StartDragSession();
-				nsCOMPtr<nsIDragSessionMac> macSession ( do_QueryInterface(dragService) );
-				printf("enter window, Drag ref is %ld\n", theDrag);
+      	                            					(nsISupports **)&sDragService);
+      	    NS_ASSERTION ( sDragService, "Couldn't get a drag service, we're in biiig trouble" );
+
+			// tell the session about this drag
+			if ( sDragService ) {
+				sDragService->StartDragSession();
+				nsCOMPtr<nsIDragSessionMac> macSession ( do_QueryInterface(sDragService) );
 				if ( macSession )
 					macSession->SetDragReference ( theDrag );
 			}
@@ -107,9 +147,10 @@ nsMacWindow :: DragTrackingHandler ( DragTrackingMessage theMessage, WindowPtr t
 			short modifiers;
 			::GetDragModifiers ( theDrag, &modifiers, nsnull, nsnull );
 			
-			//¥¥¥set the drag action so the frames know
-			//PRInt32 geckoEvent;
-			//ComputeDragActionBasedOnModifiers ( modifiers, &geckoEvent );
+			NS_ASSERTION ( sDragService, "If we don't have a drag service, we're fucked" );
+			
+			// set the drag action on the service so the frames know what is going on
+			SetDragActionBasedOnModifiers ( sDragService, modifiers );
 			
 			// pass into gecko for handling...
 			geckoWindow->DragEvent ( NS_DRAGDROP_OVER, mouseLocGlobal, modifiers );
@@ -118,22 +159,18 @@ nsMacWindow :: DragTrackingHandler ( DragTrackingMessage theMessage, WindowPtr t
 		
 		case kDragTrackingLeaveWindow:
 		{
-			printf("DragTracker :: leaving window\n");
-			// tell the drag session that we don't need it around anymore.
-			nsIDragService* dragService;
-			nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
-                                       					nsIDragService::GetIID(),
-      	                            					(nsISupports **)&dragService);
-			if ( NS_SUCCEEDED(rv) && dragService ) {
-				dragService->EndDragSession();
+			// tell the drag service that we're done with it.
+			if ( sDragService ) {
+				sDragService->EndDragSession();
 				
 				// clear out the dragRef in the drag session. We are guaranteed that
 				// this will be called _after_ the drop has been processed (if there
 				// is one), so we're not destroying valuable information if the drop
 				// was in our window.
-				nsCOMPtr<nsIDragSessionMac> macSession ( do_QueryInterface(dragService) );
+				nsCOMPtr<nsIDragSessionMac> macSession ( do_QueryInterface(sDragService) );
 				if ( macSession )
 					macSession->SetDragReference ( 0 );
+					
 			}
 			
 			// let gecko know that the mouse has left the window so it
@@ -143,6 +180,13 @@ nsMacWindow :: DragTrackingHandler ( DragTrackingMessage theMessage, WindowPtr t
 			geckoWindow->DragEvent ( NS_DRAGDROP_EXIT, mouseLocGlobal, 0L );
 			
 			::HideDragHilite ( theDrag );
+ 	
+ 			// we're _really_ done with it, so let go of the service.
+			if ( sDragService ) {
+				nsServiceManager::ReleaseService(kCDragServiceCID, sDragService);
+				sDragService = nsnull;			
+			}
+			
 			break;
 		}
 		
