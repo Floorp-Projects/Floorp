@@ -45,6 +45,7 @@ xmlextras       0
 mailextras      1
 xptlink         0
 psm             0
+psm2            0
 embedding_test  1
 carbon          0
 cache           0

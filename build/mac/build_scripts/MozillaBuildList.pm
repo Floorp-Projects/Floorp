@@ -325,6 +325,10 @@ sub ProcessJarManifests()
     CreateJarFromManifest(":mozilla:xpfe:global:resources:locale:en-US:mac:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:xpinstall:res:jar.mn", $chrome_dir, \%jars);
 
+    if ($main::options{psm2}) {
+    	CreateJarFromManifest(":mozilla:security:manager:ssl:resources:jar.mn", $chrome_dir, \%jars);
+    	CreateJarFromManifest(":mozilla:security:manager:pki:resources:jar.mn", $chrome_dir, \%jars);
+    }
     # bad jar.mn files
 #    CreateJarFromManifest(":mozilla:extensions:xmlterm:jar.mn", $chrome_dir, \%jars);
 
@@ -936,9 +940,14 @@ sub BuildIDLProjects()
     {
         BuildIDLProject(":mozilla:netwerk:macbuild:cacheIDL.mcp", "cache");
     }
-
-    # psm glue
-    BuildIDLProject(":mozilla:extensions:psm-glue:macbuild:psmglueIDL.mcp",         "psmglue"); 
+    if ($main::options{psm}) {
+    	# psm glue
+    	BuildIDLProject(":mozilla:extensions:psm-glue:macbuild:psmglueIDL.mcp",         "psmglue");
+	} 
+	
+	if ($main::options{psm2}) {
+    	BuildIDLProject(":mozilla:security:manager:ssl:macbuild:pipnssIDL.mcp",         "pipnss");
+	}
     
     BuildIDLProject(":mozilla:modules:libpref:macbuild:libprefIDL.mcp",             "libpref");
     BuildIDLProject(":mozilla:modules:libutil:macbuild:libutilIDL.mcp",             "libutil");
@@ -1243,7 +1252,7 @@ sub makeprops
 
 sub BuildSecurityProjects()
 {
-    unless( $main::build{security} && $main::options{psm}) { return; }
+    unless( $main::build{security} && ($main::options{psm} || $main::options{psm2})) { return; }
 
     # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
     my($D) = $main::DEBUG ? "Debug" : "";
@@ -1252,38 +1261,42 @@ sub BuildSecurityProjects()
     StartBuildModule("security");
 
     BuildOneProject(":mozilla:security:nss:macbuild:NSS.mcp","NSS$D.o", 0, 0, 0);
-    BuildOneProject(":mozilla:security:psm:lib:macbuild:PSMClient.mcp","PSMClient$D.o", 0, 0, 0);
-    BuildOneProject(":mozilla:security:psm:lib:macbuild:PSMProtocol.mcp","PSMProtocol$D.o", 0, 0, 0); 
-    BuildOneProject(":mozilla:security:psm:macbuild:PersonalSecurityMgr.mcp","PSM$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
-    BuildOneProject(":mozilla:extensions:psm-glue:macbuild:PSMGlue.mcp","PSMGlue$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    if($main::options{psm2}) {
+    	BuildOneProject(":mozilla:security:manager:ssl:macbuild:PIPNSS.mcp", "PIPNSS$D.shlb",  1, $main::ALIAS_SYM_FILES, 1);
+    	BuildOneProject(":mozilla:security:manager:pki:macbuild:PIPPKI.mcp", "PIPPKI$D.shlb",  1, $main::ALIAS_SYM_FILES, 1); 
+    } else {
+    	BuildOneProject(":mozilla:security:psm:lib:macbuild:PSMClient.mcp","PSMClient$D.o", 0, 0, 0);
+    	BuildOneProject(":mozilla:security:psm:lib:macbuild:PSMProtocol.mcp","PSMProtocol$D.o", 0, 0, 0); 
+    	BuildOneProject(":mozilla:security:psm:macbuild:PersonalSecurityMgr.mcp","PSM$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
+    	BuildOneProject(":mozilla:extensions:psm-glue:macbuild:PSMGlue.mcp","PSMGlue$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
 
-	 # make properties files for PSM User Interface
-    my($src_dir) = ":mozilla:security:psm:ui:";
+		# make properties files for PSM User Interface
+    	my($src_dir) = ":mozilla:security:psm:ui:";
 
-    opendir(DIR,$src_dir) || die "can't open directory $src_dir\n";
-    my(@prop_files) = grep { /\.properties.in$/ } readdir(DIR);
-    closedir DIR;
-	my($psm_data_dir) = $dist_dir."psmdata:";
-    mkdir($psm_data_dir, 0);
-    my($dest_dir) = $psm_data_dir."UI:";
-    mkdir($dest_dir, 0);
-	my($file);
-    foreach $file (@prop_files) {
-        $file =~ /(.+\.properties)\.in$/;
-        &makeprops($src_dir.$file, $dest_dir.$1);
-    }
-    
-    
-    my($doc_dir) = $psm_data_dir."doc:";
-    mkdir($doc_dir, 0);
-    opendir(DOC_DIR,":mozilla:security:psm:doc") || die ("Unable to open PSM doc directory");
-    my(@doc_files);
-    @doc_files = readdir(DOC_DIR);
-    closedir(DOC_DIR);
-    foreach $file (@doc_files) {
-    	copy(":mozilla:security:psm:doc:".$file, $doc_dir.$file);
-    }
-     
+    	opendir(DIR,$src_dir) || die "can't open directory $src_dir\n";
+    	my(@prop_files) = grep { /\.properties.in$/ } readdir(DIR);
+    	closedir DIR;
+		my($psm_data_dir) = $dist_dir."psmdata:";
+    	mkdir($psm_data_dir, 0);
+    	my($dest_dir) = $psm_data_dir."UI:";
+    	mkdir($dest_dir, 0);
+		my($file);
+    	foreach $file (@prop_files) {
+    	    $file =~ /(.+\.properties)\.in$/;
+    	    &makeprops($src_dir.$file, $dest_dir.$1);
+    	}
+    	
+    	
+    	my($doc_dir) = $psm_data_dir."doc:";
+    	mkdir($doc_dir, 0);
+    	opendir(DOC_DIR,":mozilla:security:psm:doc") || die ("Unable to open PSM doc directory");
+    	my(@doc_files);
+    	@doc_files = readdir(DOC_DIR);
+    	closedir(DOC_DIR);
+    	foreach $file (@doc_files) {
+    		copy(":mozilla:security:psm:doc:".$file, $doc_dir.$file);
+    	}
+    } 
     #Build the loadable module that contains the root certs.
 
 	BuildOneProject(":mozilla:security:nss:macbuild:NSSckfw.mcp", "NSSckfw$D.o", 0, 0, 0);
