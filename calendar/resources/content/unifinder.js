@@ -70,20 +70,26 @@ function resetAllowSelection()
    Do not change anything in the following lines, they are needed as described in the 
    selection observer above 
    */
-   var SearchTree = document.getElementById( UnifinderTreeName );
-   
-   SearchTree.treeBoxObject.selection.selectEventsSuppressed = false;
-   
-   SearchTree.addEventListener( "select", unifinderOnSelect, true );
-}
+   doingSelection = false;
 
+   var SearchTree = document.getElementById( UnifinderTreeName );
+   SearchTree.treeBoxObject.selection.selectEventsSuppressed = false;
+   SearchTree.addEventListener( "select", unifinderOnSelect, true );
+}  
+
+var doingSelection = false;
 
 function selectSelectedEventsInTree( EventsToSelect )
 {
+   if( doingSelection === true )
+      return;
+
+   doingSelection = true;
+
    if( EventsToSelect === false )
       EventsToSelect = gCalendarWindow.EventSelection.selectedEvents;
 
-   //dump( "\nCALENDAR unifinder.js->on selection changed" );
+   dump( "\nCALENDAR unifinder.js->on selection changed" );
    var SearchTree = document.getElementById( UnifinderTreeName );
       
    /* The following is a brutal hack, caused by 
@@ -92,11 +98,10 @@ function selectSelectedEventsInTree( EventsToSelect )
    http://bugzilla.mozilla.org/show_bug.cgi?id=168211
    Do NOT remove anything in the next 3 lines, or the selection in the tree will not work.
    */
-
-   SearchTree.treeBoxObject.selection.selectEventsSuppressed = true;
    SearchTree.onselect = null;
    SearchTree.removeEventListener( "select", unifinderOnSelect, true );
-   
+   SearchTree.treeBoxObject.selection.selectEventsSuppressed = true;
+
    if( EventsToSelect.length == 1 )
    {
       var RowToScrollTo = SearchTree.eventView.getRowOfCalendarEvent( EventsToSelect[0] );
@@ -132,7 +137,7 @@ function selectSelectedEventsInTree( EventsToSelect )
    }
    
    /* This needs to be in a setTimeout */
-   setTimeout( "resetAllowSelection()", 0 );
+   setTimeout( "resetAllowSelection()", 1 );
 }
 
 /**
@@ -165,7 +170,7 @@ var unifinderEventDataSourceObserver =
         {
             if( calendarEvent )
             {
-                refreshEventTree( getAndSetEventTable() );
+               refreshEventTree( getAndSetEventTable() );
             }
         }
    },
