@@ -157,6 +157,7 @@ public:
   // nsBrowserWindow
   void SetWebCrawler(nsWebCrawler* aWebCrawler);
   virtual nsresult CreateMenuBar(PRInt32 aWidth) = 0;
+  virtual nsresult GetMenuBarHeight(PRInt32 * aHeightOut);
   virtual nsresult CreateToolBar(PRInt32 aWidth);
   virtual nsresult CreateStatusBar(PRInt32 aWidth);
   void Layout(PRInt32 aWidth, PRInt32 aHeight);
@@ -312,6 +313,7 @@ public:
   
   virtual nsresult CreateMenuBar(PRInt32 aWidth);
   virtual nsEventStatus DispatchMenuItem(PRInt32 aID);
+  virtual nsresult GetMenuBarHeight(PRInt32 * aHeightOut);
   
 protected:
 	  NS_IMETHOD InitNativeWindow();

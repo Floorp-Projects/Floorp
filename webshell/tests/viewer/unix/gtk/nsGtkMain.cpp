@@ -60,10 +60,27 @@ nsNativeBrowserWindow::InitNativeWindow()
   return NS_OK;
 }
 
+static GtkWidget * sgHackMenuBar = nsnull;
+
 nsresult
 nsNativeBrowserWindow::CreateMenuBar(PRInt32 aWidth)
 {
-  CreateViewerMenus(mWindow,this);
+  CreateViewerMenus(mWindow,this,&sgHackMenuBar);
+  return NS_OK;
+}
+
+nsresult
+nsNativeBrowserWindow::GetMenuBarHeight(PRInt32 * aHeightOut)
+{
+  NS_ASSERTION(nsnull != aHeightOut,"null out param.");
+
+  *aHeightOut = 0;
+
+  if (nsnull != sgHackMenuBar)
+  {
+    *aHeightOut = sgHackMenuBar->allocation.height;
+  }
+
   return NS_OK;
 }
 
