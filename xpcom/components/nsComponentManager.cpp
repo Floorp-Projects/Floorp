@@ -429,6 +429,18 @@ nsComponentManagerImpl::PlatformInit(void)
     if (!mComponentsDir)
         return NS_ERROR_OUT_OF_MEMORY;
     
+	char* componentDescriptor;
+	mComponentsDir->GetPath(&componentDescriptor);
+	if (!componentDescriptor)
+		return NS_ERROR_NULL_POINTER;
+
+	mComponentsOffset = strlen(componentDescriptor);
+		
+	if (componentDescriptor)
+		nsAllocator::Free(componentDescriptor);
+
+
+
     if (mNativeComponentLoader) {
         /* now that we have the registry, Init the native loader */
         rv = mNativeComponentLoader->Init(this, mRegistry);
@@ -1345,10 +1357,14 @@ nsComponentManagerImpl::RegistryLocationForSpec(nsIFile *aSpec,
     char *persistentDescriptor;
 
     if (containedIn){
-        rv = aSpec->GetLeafName(&persistentDescriptor);
+		
+		rv = aSpec->GetPath(&persistentDescriptor);
         if (NS_FAILED(rv))
             return rv;
-        rv = MakeRegistryName(persistentDescriptor, XPCOM_RELCOMPONENT_PREFIX, 
+        
+		char* relativeLocation = persistentDescriptor + mComponentsOffset + 1;
+		
+		rv = MakeRegistryName(relativeLocation, XPCOM_RELCOMPONENT_PREFIX, 
                               aRegistryName);
     } else {
         /* absolute names include volume info on Mac, so persistent descriptor */
