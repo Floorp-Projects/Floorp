@@ -153,8 +153,8 @@ nsWebShell::nsWebShell() : nsDocShell()
 #ifdef DEBUG
   // We're counting the number of |nsWebShells| to help find leaks
   ++gNumberOfWebShells;
-#endif
   PRINTF("WEBSHELL+ = %ld\n", gNumberOfWebShells);
+#endif
 
   NS_INIT_REFCNT();
   mThreadEventQueue = nsnull;
@@ -203,8 +203,8 @@ nsWebShell::~nsWebShell()
 #ifdef DEBUG
   // We're counting the number of |nsWebShells| to help find leaks
   --gNumberOfWebShells;
-#endif
   PRINTF("WEBSHELL- = %ld\n", gNumberOfWebShells);
+#endif
 }
 
 void nsWebShell::InitFrameData()
