@@ -21,7 +21,7 @@
 # 
 
 #
-# $Id: genstats.cgi,v 1.3 1999/08/27 01:00:07 dmose%mozilla.org Exp $ 
+# $Id: genstats.cgi,v 1.4 1999/09/09 04:42:27 dmose%mozilla.org Exp $ 
 #
 # generate statistics related to non-Netscape participation in mozilla.org
 #
@@ -36,7 +36,7 @@ use Date::Format;
 
 @::STATINFO = (
 
-	["Active non-Netscape checkers-in (source only)",
+	["Active checkers-in (source only)",
 						# statistic title
 	 "bonsai",				# database
 	 "checkins.when",			# timestamp field
@@ -45,7 +45,7 @@ use Date::Format;
 		"people.id=checkins.whoid"
 	],
 
-	["New non-Netscape checkers-in (source or docs)",
+	["New checkers-in (source or docs)",
 						# statistic title
 	 "mozusers",				# database
 	 "changes.when",			# timestamp field
@@ -54,7 +54,7 @@ use Date::Format;
 		"('cvs_group','gila_group') and changes.email=users.email"
 	],
 
-	["Useful non-Netscape browser 5.0 bugs (includes NEW; excludes WORKSFORME)",
+	["Useful browser 5.0 bugs (includes NEW; excludes WORKSFORME)",
 					 	# statistic title
 	 "bugs",				# database
 	 "bugs.creation_ts",			# timestamp field
@@ -65,7 +65,7 @@ use Date::Format;
 		"('BROWSER','MailNews','NSPR','CCK')"	
 	],
 
-	["Useful non-Netscape bugs (includes NEW; excludes WORKSFORME)",
+	["Useful bugs (includes NEW; excludes WORKSFORME)",
 					 	# statistic title
 	 "bugs",				# database
 	 "bugs.creation_ts",			# timestamp field
@@ -75,7 +75,7 @@ use Date::Format;
 		"('DUPLICATE','INVALID','WORKSFORME')"
 	],
 
-	["Useful non-Netscape patches (as attributed in CVS logs)",
+	["Useful patches (as attributed in CVS logs)",
 					 	# statistic title
 	 "bonsai",				# database
 	 "checkins.when",			# timestamp field
@@ -85,7 +85,7 @@ use Date::Format;
 		'"[[:<:]][a-zA-Z0-9_\\.\\-]+@[a-zA-Z0-9_\\.\\-]+[[:>:]]"'
 	],
 
-	["Useful non-Netscape browser patches submitted via Bugzilla" 
+	["Useful browser patches submitted via Bugzilla" 
 	                 . " (includes NEW; excludes WORKSFORME)",
 						# statistic title
 	 "bugs",				# database
@@ -98,7 +98,7 @@ use Date::Format;
 		"('BROWSER','MailNews','NSPR','CCK')"	
 	],
 
-	["Non-Netscape checkins",			# title
+	["Checkins",			# title
 	 "bonsai",				# database 
          "when",				# timestamp field
 	 "people.who",				# email addr field
@@ -106,7 +106,7 @@ use Date::Format;
 		"where checkins.descid=descs.id and people.id=checkins.whoid"
 	],
 
-	["Non-Netscape files checked in",		# title
+	["Files checked in",		# title
 	 "bonsai",				# database 
          "when",				# timestamp field
 	 "people.who",				# email addr field
@@ -133,9 +133,9 @@ if (!param()) {
 	print p();
 
 	print "mozilla.org counts as ";
-	print radio_group(-name=>"mozillaOrgCountsAs",
-			  "-values"=>["Netscape","non-Netscape"],
-			  -default=>"non-Netscape");
+	print radio_group(-name=>"mozillaOrgAsNscp",
+			  "-values"=>["yes","no"],
+			  -default=>"no");
 	print p();
 
 	print "include the current (incomplete) month?";
@@ -207,9 +207,9 @@ my $q;
 # set up the appropriate SQL to describe what an "Netscape" checkin looks 
 # like, depending on whether mozilla.org is considered Netscape
 #
-if ($F::mozillaOrgCountsAs eq "Netscape") {
+if ($F::mozillaOrgAsNscp eq "yes") {
 	$NetscapeSQL = ' regexp "[@%]netscape\\.com|[@%]mozilla\\.org"';
-} elsif ($F::mozillaOrgCountsAs eq "non-Netscape" ) {
+} elsif ($F::mozillaOrgAsNscp eq "no" ) {
 	$NetscapeSQL = ' regexp "[@%]netscape\\.com"';
 } else {
 	die ("Internal error: mozillaOrgCountsAs not set");
@@ -272,9 +272,11 @@ for ( ; $curYear <= $lastYear ; $curYear++ ) {
 
 # statistics output
 #
+print p();
 print h4("\nThese statistics were generated using the assumption that " .
-		" contributions from mozilla.org should be considered " .
-		"${F::mozillaOrgCountsAs}.");
+		" contributions from mozilla.org should " .
+	        b( mozillaOrgAsNscp eq "yes" ? "" : "not ") .  
+	        "be considered Netscape contributions.");
 
 # generate the row of headers listing the months
 #
