@@ -461,7 +461,7 @@ MimeMultipart_create_child(MimeObject *obj)
       struct mime_stream_data *msd = (struct mime_stream_data *)body->options->stream_closure;
       if (!body->options->write_html_p && body->content_type && !nsCRT::strcasecmp(body->content_type, APPLICATION_APPLEFILE))
 				if (msd && msd->channel)
-        	msd->channel->SetContentType(APPLICATION_APPLEFILE);
+        	msd->channel->SetContentType(NS_LITERAL_CSTRING(APPLICATION_APPLEFILE));
     }
 #endif
 
