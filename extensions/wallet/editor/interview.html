@@ -42,9 +42,16 @@ your Form Manager Information here</font></font></font></h3></center>
                 .createInstance(Components.interfaces.nsIBrowserInstance);
    if (appCore) {
       status = appCore.walletRequestToCapture(window._content);
-      alert("Your interview information has been saved, status="+status);
+
+      if (status == -1) { /* UnableToCapture */
+        alert("UnableToCapture");
+      } else if (status == 0) { /* Captured */
+        alert("Your interview information has been saved");
+      } else if (status == +1) { /* NotCaptured */
+        alert("There is no information to save.");
+      }
     } else {
-      alert("no appCore");
+      alert("Error occured when trying to save data");
     }
   }
 
