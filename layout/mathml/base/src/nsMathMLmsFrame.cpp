@@ -1,0 +1,133 @@
+/*
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla MathML Project.
+ *
+ * The Initial Developer of the Original Code is The University Of
+ * Queensland.  Portions created by The University Of Queensland are
+ * Copyright (C) 1999 The University Of Queensland.  All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Roger B. Sidje <rbs@maths.uq.edu.au>
+ */
+
+
+#include "nsCOMPtr.h"
+#include "nsHTMLParts.h"
+#include "nsIHTMLContent.h"
+#include "nsFrame.h"
+#include "nsLineLayout.h"
+#include "nsHTMLIIDs.h"
+#include "nsIPresContext.h"
+#include "nsHTMLAtoms.h"
+#include "nsUnitConversion.h"
+#include "nsIStyleContext.h"
+#include "nsStyleConsts.h"
+#include "nsINameSpaceManager.h"
+#include "nsIRenderingContext.h"
+#include "nsIFontMetrics.h"
+#include "nsStyleUtil.h"
+
+#include "nsIDOMText.h"
+
+#include "nsMathMLmsFrame.h"
+
+//
+// <ms> -- string literal - implementation
+//
+
+nsresult
+NS_NewMathMLmsFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+{
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  if (nsnull == aNewFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsMathMLmsFrame* it = new (aPresShell) nsMathMLmsFrame;
+  if (nsnull == it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  *aNewFrame = it;
+  return NS_OK;
+}
+
+nsMathMLmsFrame::nsMathMLmsFrame()
+{
+}
+
+nsMathMLmsFrame::~nsMathMLmsFrame()
+{
+}
+
+
+NS_IMETHODIMP
+nsMathMLmsFrame::SetInitialChildList(nsIPresContext* aPresContext,
+                                     nsIAtom*        aListName,
+                                     nsIFrame*       aChildList)
+{
+  // It is assumed that the mathml.css file contains two rules:
+  // ms:before { content: open-quote; }
+  // ms:after { content: close-quote; }
+  // With these two rules, the frame construction code will
+  // create inline frames that contain text frames which themselves
+  // contain the text content of the quotes.
+  // So the main idea in this code is to see if there are lquote and 
+  // rquote attributes. If these are there, we ovewrite the default
+  // quotes in the text frames.
+
+  // But what if the mathml.css file wasn't loaded? 
+  // We also check that we are not relying on null pointers...
+
+  PRInt32 count = 0;
+  nsIFrame* rightFrame = nsnull;
+  nsIFrame* leftFrame = nsnull;
+  nsIFrame* childFrame = aChildList;
+  while (childFrame) {
+    if (0 == count) leftFrame = childFrame;
+    // 1 == count is the the frame for the actual content of <ms>
+    else if (2 == count) rightFrame = childFrame;
+    count++;
+    childFrame->GetNextSibling(&childFrame);
+  }
+
+  if (3 == count && leftFrame && rightFrame) {
+    nsAutoString value;
+    nsIFrame* textFrame;
+    nsCOMPtr<nsIContent> quoteContent;
+    // lquote
+    if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
+                     nsMathMLAtoms::lquote_, value)) {
+      leftFrame->FirstChild(aPresContext, nsnull, &textFrame);
+      if (textFrame) {
+        textFrame->GetContent(getter_AddRefs(quoteContent));
+        if (quoteContent.get()) {
+          nsCOMPtr<nsIDOMText> domText(do_QueryInterface(quoteContent));
+          if (domText.get()) domText->SetData(value);
+        }
+      }
+    }
+    // rquote
+    if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
+                     nsMathMLAtoms::rquote_, value)) {
+      rightFrame->FirstChild(aPresContext, nsnull, &textFrame);
+      if (textFrame) {
+        textFrame->GetContent(getter_AddRefs(quoteContent));
+        if (quoteContent.get()) {
+          nsCOMPtr<nsIDOMText> domText(do_QueryInterface(quoteContent));
+          if (domText.get()) domText->SetData(value);
+        }
+      }
+    }
+  }
+
+  // let the base class take care of the rest
+  return nsMathMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+}
