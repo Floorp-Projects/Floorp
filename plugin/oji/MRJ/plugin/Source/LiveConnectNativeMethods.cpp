@@ -181,6 +181,8 @@ public:
 	NS_DECL_ISUPPORTS
     
 	NS_IMETHOD Implies(const char* target, const char* action, PRBool *bAllowedAccess);
+    NS_IMETHOD GetOrigin(char* buf, int len);
+    NS_IMETHOD GetCertificateID(char* buf, int len);
 };
 
 MRJSecurityContext::MRJSecurityContext()
@@ -196,6 +198,22 @@ NS_METHOD MRJSecurityContext::Implies(const char* target, const char* action, PR
 {
 	*bAllowedAccess = (target != NULL && action == NULL);
 	return NS_OK;
+}
+
+NS_METHOD 
+nsCSecurityContext::GetOrigin(char* buf, int len)
+{
+    // ACTION: Implement me.
+
+    return PR_FALSE;
+}
+
+NS_METHOD 
+nsCSecurityContext::GetCertificateID(char* buf, int len)
+{
+    // ACTION: Implement me.
+
+    return PR_FALSE;
 }
 
 static nsISecurityContext* newSecurityContext()
