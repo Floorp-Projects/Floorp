@@ -1,0 +1,17 @@
+<!-- extracted from content/pref-debug.xul -->
+
+<!--LOCALIZATION NOTE : FILE DONT_TRANSLATE This file should not be translated -->
+<!ENTITY window.title "Debug">
+
+<!ENTITY lHeader "Debug Events">
+<!ENTITY rHeader "Event debugging preferences">
+
+<!-- Event Debugging -->
+<!ENTITY debugEventDebugging.label "Event Debugging">
+<!ENTITY debugPaintFlashing.label "Paint Flashing (Caps-Lock toggles)">
+<!ENTITY debugPaintDumping.label "Paint Dumping">
+<!ENTITY debugInvalidateDumping.label "Invalidate Dumping">
+<!ENTITY debugEventDumping.label "Event Dumping">
+<!ENTITY debugMotionEventDumping.label "Motion Event Dumping">
+<!ENTITY debugCrossingEventDumping.label "Crossing Event Dumping">
+

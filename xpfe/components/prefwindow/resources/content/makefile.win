@@ -45,6 +45,8 @@ CHROME_CONTENT = \
 	.\pref-charset.js \
 	.\pref-charset.xul \
 	.\pref-debug.xul \
+	.\pref-debug1.xul \
+	.\pref-debug2.xul \
 	.\pref-download.xul \
 	.\pref-fonts.xul \
 	.\pref-fonts.js \

@@ -52,6 +52,8 @@ CHROME_CONTENT = \
 		pref-themes.xul \
 		pref-themes.js \
 		pref-debug.xul \
+		pref-debug1.xul \
+		pref-debug2.xul \
 		pref-download.xul \
 		pref-fonts.xul \
 		pref-fonts.js \

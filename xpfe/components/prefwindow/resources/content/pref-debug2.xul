@@ -1,0 +1,65 @@
+<?xml version="1.0"?> 
+<!--
+   The contents of this file are subject to the Netscape Public
+   License Version 1.1 (the "License"); you may not use this file
+   except in compliance with the License. You may obtain a copy of
+   the License at http://www.mozilla.org/NPL/
+    
+   Software distributed under the License is distributed on an "AS
+   IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   implied. See the License for the specific language governing
+   rights and limitations under the License.
+    
+   The Original Code is Mozilla Communicator client code, released
+   March 31, 1998.
+   
+   The Initial Developer of the Original Code is Netscape
+   Communications Corporation. Portions created by Netscape are
+   Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   Rights Reserved.
+   
+   Contributor(s): 
+  -->
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-debug2.dtd" >
+
+<window xmlns:html="http://www.w3.org/1999/xhtml"
+		    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        class="color-dialog"
+        orient="vertical"
+  		  onload="parent.initPanel('chrome://communicator/content/pref/pref-debug2.xul');">
+
+  <script language="JavaScript">
+  <![CDATA[
+    _elementIDs = ["browserEnableKeepAlive", "browserEnablePipelining",
+                   "httpVersionString", "acceptEncodingString"];
+  ]]>
+  </script>
+        
+  <box class="box-smallheader" title="&lHeader;"/>
+  
+  <!-- nothing on this page has accesskeys because this is a temporary debug
+       panel and you can damn well click the widgets! -->
+
+  <titledbox orient="vertical">
+    <title><text value="&debugNetworking.label;"/></title>
+    <checkbox id="browserEnableKeepAlive" value="&debugEnableKeepAlive.label;"
+              pref="true" preftype="bool" prefstring="network.http.keep-alive"
+              prefattribute="checked"/>
+    <checkbox id="browserEnablePipelining" value="&debugEnablePipelining.label;"
+              pref="true" preftype="bool" prefstring="network.http.pipelining"
+              prefattribute="checked"/>
+    <text class="label" value="&httpVersion.label;"  for="httpVersionString"/>
+    <textfield id="httpVersionString" wsm_persist="true"  maxlength="3" flex="0"
+              pref="true" preftype="string" prefstring="network.http.version"
+              prefattribute="value"/> 
+    <text class="label" value="&acceptEncoding.label;" for="acceptEncodingString"/>
+    <textfield id="acceptEncodingString" flex="1" wsm_persist="true"
+              pref="true" preftype="string" prefstring="network.http.accept-encoding"
+              prefattribute="value"/> 
+  </titledbox>
+
+</window>
+

@@ -34,9 +34,7 @@
   <script language="JavaScript">
   <![CDATA[
     _elementIDs = ["nglayoutDebugWindow",
-                   "debugXULBoxes", "nglayoutDebugPaintFlashing", "nglayoutDebugPaintDumping",
-                   "nglayoutDebugInvalidateDumping", "nglayoutDebugEventDumping", "nglayoutDebugMotionEventDumping",
-                   "nglayoutDebugCrossingEventDumping", "nglayoutDebugDisableXULCache", "browserEnableCache",
+                   "debugXULBoxes", "nglayoutDebugDisableXULCache", "browserEnableCache",
                    "browserEnableDiskCache", "nglayoutDebugEnableXPCOMRefcntLog", "showAboutAsStupidModalWindow",
                    "browserEnableTBDnD"];
   ]]>
@@ -46,61 +44,7 @@
   
   <!-- nothing on this page has accesskeys because this is a temporary debug
        panel and you can damn well click the widgets! -->
-
-<box>
-  <!-- Event Debugging -->  
-  <titledbox orient="vertical" autostretch="never" flex="1">
-    <title><text value="&debugEventDebugging.label;"/></title>
-
-    <checkbox id="nglayoutDebugPaintFlashing" value="&debugPaintFlashing.label;"
-              pref="true" preftype="bool" prefstring="nglayout.debug.paint_flashing"
-              prefattribute="checked"/>
-    <checkbox id="nglayoutDebugPaintDumping" value="&debugPaintDumping.label;"
-              pref="true" preftype="bool" prefstring="nglayout.debug.paint_dumping"
-              prefattribute="checked"/>
-    <checkbox id="nglayoutDebugInvalidateDumping" value="&debugInvalidateDumping.label;"
-              pref="true" preftype="bool" prefstring="nglayout.debug.invalidate_dumping"
-              prefattribute="checked"/>
-    <checkbox id="nglayoutDebugEventDumping" value="&debugEventDumping.label;"
-              pref="true" preftype="bool" prefstring="nglayout.debug.invalidate_dumping"
-              prefattribute="checked"/>              
-    <checkbox id="nglayoutDebugMotionEventDumping" value="&debugMotionEventDumping.label;"
-              pref="true" preftype="bool" prefstring="nglayout.debug.motion_event_dumping"
-              prefattribute="checked"/>
-    <checkbox id="nglayoutDebugCrossingEventDumping" value="&debugCrossingEventDumping.label;"
-              pref="true" preftype="bool" prefstring="nglayout.debug.motion_event_dumping"
-              prefattribute="checked"/>
-  </titledbox>
-  <titledbox orient="vertical" autostretch="never" flex="1" valign="top">
-  	<title><text value="&widgetRendering.label;"/></title>
-    <checkbox id="nglayoutDebugWindow" value="&debugWindow.label;"
-              pref="true" preftype="bool" prefstring="nglayout.widget.debugWindow"
-              prefattribute="checked"/>
-    <checkbox id="debugXULBoxes" value="&debugXULBox.label;"
-              pref="true" preftype="bool" prefstring="xul.debug.box"
-              prefattribute="checked"/>
-  </titledbox>
-</box>
-
-<box>  
-  <titledbox orient="vertical" autostretch="never" flex="1">
-    <title><text value="&debugNetworking.label;"/></title>
-    <checkbox id="browserEnableKeepAlive" value="&debugEnableKeepAlive.label;"
-              pref="true" preftype="bool" prefstring="network.http.keep-alive"
-              prefattribute="checked"/>
-    <checkbox id="browserEnablePipelining" value="&debugEnablePipelining.label;"
-              pref="true" preftype="bool" prefstring="network.http.pipelining"
-              prefattribute="checked"/>
-    <text class="label" value="&httpVersion.label;"  for="httpVersionString"/>
-    <textfield id="httpVersionString" wsm_persist="true"  maxlength="3" flex="0"
-              pref="true" preftype="string" prefstring="network.http.version"
-              prefattribute="value"/> 
-    <text class="label" value="&acceptEncoding.label;" for="acceptEncodingString"/>
-    <textfield id="acceptEncodingString" flex="1" wsm_persist="true"
-              pref="true" preftype="string" prefstring="network.http.accept-encoding"
-              prefattribute="value"/> 
-  </titledbox>
-  <titledbox orient="vertical" autostretch="never" flex="1">
+  <titledbox orient="vertical">
     <title><text value="&debugMiscellaneous.label;"/></title>
 
     <checkbox id="nglayoutDebugDisableXULCache" value="&debugDisableXULCache.label;"
@@ -122,7 +66,20 @@
               pref="true" preftype="bool" prefstring="browser.show_about_as_stupid_modal_window"
               prefattribute="checked"/>
   </titledbox>              
-</box>
+
+
+  <titledbox orient="vertical">
+  	<title><text value="&widgetRendering.label;"/></title>
+    <checkbox id="nglayoutDebugWindow" value="&debugWindow.label;"
+              pref="true" preftype="bool" prefstring="nglayout.widget.debugWindow"
+              prefattribute="checked"/>
+    <checkbox id="debugXULBoxes" value="&debugXULBox.label;"
+              pref="true" preftype="bool" prefstring="xul.debug.box"
+              prefattribute="checked"/>
+  </titledbox>
+
+
+
 
 </window>
 
