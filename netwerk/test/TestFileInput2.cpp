@@ -26,7 +26,85 @@
 #include "nsFileSpec.h"
 #include <stdio.h>
 
-PRIntervalTime gTotalTime = 0;
+////////////////////////////////////////////////////////////////////////////////
+
+#include <math.h>
+#include "prprf.h"
+#include "nsAutoLock.h"
+
+class nsTimeSampler {
+public:
+    nsTimeSampler();
+    void Reset();
+    void StartTime();
+    void EndTime();
+    void AddTime(PRIntervalTime time);
+    PRIntervalTime LastInterval() { return mLastInterval; }
+    char* PrintStats();
+protected:
+    PRIntervalTime      mStartTime;
+    double              mSquares;
+    double              mTotalTime;
+    PRUint32            mCount;
+    PRIntervalTime      mLastInterval;
+};
+
+nsTimeSampler::nsTimeSampler()
+{
+    Reset();
+}
+
+void
+nsTimeSampler::Reset()
+{
+    mStartTime = 0;
+    mSquares = 0;
+    mTotalTime = 0;
+    mCount = 0;
+    mLastInterval = 0;
+}
+
+void
+nsTimeSampler::StartTime()
+{
+    mStartTime = PR_IntervalNow();
+}
+
+void
+nsTimeSampler::EndTime()
+{
+    NS_ASSERTION(mStartTime != 0, "Forgot to call StartTime");
+    PRIntervalTime endTime = PR_IntervalNow();
+    mLastInterval = endTime - mStartTime;
+    AddTime(mLastInterval);
+    mStartTime = 0;
+}
+
+void
+nsTimeSampler::AddTime(PRIntervalTime time)
+{
+    nsAutoCMonitor mon(this);
+    mTotalTime += time;
+    mSquares += (double)time * (double)time;
+    mCount++;
+}
+
+char*
+nsTimeSampler::PrintStats()
+{
+    double mean = mTotalTime / mCount;
+    double variance = fabs(mSquares / mCount - mean * mean);
+    double stddev = sqrt(variance);
+    PRUint32 imean = (PRUint32)mean;
+    PRUint32 istddev = (PRUint32)stddev;
+    return PR_smprintf("%d +/- %d ms", 
+                       PR_IntervalToMilliseconds(imean),
+                       PR_IntervalToMilliseconds(istddev));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+nsTimeSampler gTimeSampler;
 
 typedef nsresult (*CreateFun)(nsIRunnable* *result,
                               const char* inPath, 
@@ -64,8 +142,8 @@ public:
     NS_IMETHOD Run() {
         nsresult rv;
 
-        PRIntervalTime startTime, endTime;
-        startTime = PR_IntervalNow();
+        PRIntervalTime startTime = PR_IntervalNow();
+        PRIntervalTime endTime;
 
         nsIInputStream* inStr = nsnull;
         nsIOutputStream* outStr = nsnull;
@@ -92,13 +170,10 @@ public:
         // Copy from one to the other
         rv = Copy(inStr, outStr, mBuffer, mBufferSize, &copyCount);
         if (NS_FAILED(rv)) goto done;
-        
+
         endTime = PR_IntervalNow();
-        printf("FileSpecWorker copied %s to %s\n\tsize = %d time = %dms\n",
-               mInPath, mOutPath, copyCount,
-               PR_IntervalToMilliseconds(endTime - startTime));
-        gTotalTime += endTime - startTime;
-        
+        gTimeSampler.AddTime(endTime - startTime);
+
       done:
         NS_IF_RELEASE(outStr);
         NS_IF_RELEASE(inStr);
@@ -177,18 +252,8 @@ public:
         NS_WITH_SERVICE(nsIIOService, ioserv, kIOServiceCID, &rv);
         if (NS_FAILED(rv)) return rv;
 
-        nsIProtocolHandler* handler;
-        rv = ioserv->GetProtocolHandler("file", &handler);
-        if (NS_FAILED(rv)) return rv;
-
-        nsIFileProtocolHandler* fileHandler = nsnull;
-        rv = handler->QueryInterface(nsIFileProtocolHandler::GetIID(), 
-                                     (void**)&fileHandler);
-        NS_RELEASE(handler);
-        if (NS_FAILED(rv)) return rv;
-
-        PRIntervalTime startTime, endTime;
-        startTime = PR_IntervalNow();
+        PRIntervalTime startTime = PR_IntervalNow();
+        PRIntervalTime endTime;
 
         PRUint32 copyCount = 0;
         nsIInputStream* inStr = nsnull;
@@ -196,13 +261,13 @@ public:
         nsIFileChannel* inCh = nsnull;
         nsIFileChannel* outCh = nsnull;
 
-        rv = fileHandler->NewChannelFromNativePath(mInPath, &inCh);
+        rv = ioserv->NewChannelFromNativePath(mInPath, &inCh);
         if (NS_FAILED(rv)) goto done;
 
         rv = inCh->OpenInputStream(0, -1, &inStr);
         if (NS_FAILED(rv)) goto done;
 
-        rv = fileHandler->NewChannelFromNativePath(mOutPath, &outCh);
+        rv = ioserv->NewChannelFromNativePath(mOutPath, &outCh);
         if (NS_FAILED(rv)) goto done;
 
         rv = outCh->OpenOutputStream(0, &outStr);
@@ -213,13 +278,9 @@ public:
         if (NS_FAILED(rv)) goto done;
         
         endTime = PR_IntervalNow();
-        printf("FileSpecWorker copied %s to %s\n\tsize = %d time = %dms\n",
-               mInPath, mOutPath, copyCount,
-               PR_IntervalToMilliseconds(endTime - startTime));
-        gTotalTime += endTime - startTime;
-        
+        gTimeSampler.AddTime(endTime - startTime);
+
       done:
-        NS_RELEASE(fileHandler);
         NS_RELEASE(inStr);
         NS_RELEASE(inCh);
         NS_RELEASE(outStr);
@@ -290,9 +351,11 @@ Test(CreateFun create, PRUint32 count,
     nsresult rv;
     PRUint32 i;
 
-    printf("============Test: from %s to %s\n\tthreads = %d bufSize = %d\n",
-           inDir, outDir, count, bufSize);
-    gTotalTime = 0;
+    printf("###########\nTest: from %s to %s, bufSize = %d\n",
+           inDir, outDir, bufSize);
+    gTimeSampler.Reset();
+    nsTimeSampler testTime;
+    testTime.StartTime();
     
     nsISupportsArray* threads;
     rv = NS_NewISupportsArray(&threads);
@@ -337,8 +400,13 @@ Test(CreateFun create, PRUint32 count,
     NS_RELEASE(threads);
     NS_ASSERTION(rv == NS_OK, "failed");
 
-    printf("End Test: time = %dms\n", 
-           PR_IntervalToMilliseconds(gTotalTime));
+    testTime.EndTime();
+    char* testStats = testTime.PrintStats();
+    char* workerStats = gTimeSampler.PrintStats();
+    printf("  threads = %d\n  work time = %s,\n  test time = %s\n",
+           i, workerStats, testStats);
+    PR_smprintf_free(workerStats);
+    PR_smprintf_free(testStats);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -359,45 +427,43 @@ main(int argc, char* argv[])
                                           "components");
     if (NS_FAILED(rv)) return rv;
 
-    CreateFun create = FileChannelWorker::Create;       // FileSpecWorker::Create
+    CreateFun create = FileChannelWorker::Create;
     Test(create, 1, inDir, outDir, 16 * 1024);
-    Test(create, 1, inDir, outDir, 16 * 1024);
-#if 0
-    printf("FileChannelWorker::Create *****************************\n");
-    Test(create, 8, inDir, outDir, 16 * 1024);
-    Test(create, 8, inDir, outDir, 16 * 1024);
-    Test(create, 8, inDir, outDir, 16 * 1024);
-    Test(create, 8, inDir, outDir, 16 * 1024);
-    Test(create, 8, inDir, outDir, 16 * 1024);
-    Test(create, 8, inDir, outDir, 16 * 1024);
-    Test(create, 8, inDir, outDir, 16 * 1024);
-    Test(create, 8, inDir, outDir, 16 * 1024);
-    Test(create, 8, inDir, outDir, 16 * 1024);
+#if 1
+    printf("FileChannelWorker *****************************\n");
+    Test(create, 20, inDir, outDir, 16 * 1024);
+    Test(create, 20, inDir, outDir, 16 * 1024);
+    Test(create, 20, inDir, outDir, 16 * 1024);
+    Test(create, 20, inDir, outDir, 16 * 1024);
+    Test(create, 20, inDir, outDir, 16 * 1024);
+    Test(create, 20, inDir, outDir, 16 * 1024);
+    Test(create, 20, inDir, outDir, 16 * 1024);
+    Test(create, 20, inDir, outDir, 16 * 1024);
+    Test(create, 20, inDir, outDir, 16 * 1024);
 #endif
-#if 0
     create = FileSpecWorker::Create;
-    printf("FileSpecWorker::Create ********************************\n");
-
-    Test(create, 8, inDir, outDir, 16 * 1024);
-    Test(create, 8, inDir, outDir, 16 * 1024);
-    Test(create, 8, inDir, outDir, 16 * 1024);
-    Test(create, 8, inDir, outDir, 16 * 1024);
-    Test(create, 8, inDir, outDir, 16 * 1024);
-    Test(create, 8, inDir, outDir, 16 * 1024);
-    Test(create, 8, inDir, outDir, 16 * 1024);
-    Test(create, 8, inDir, outDir, 16 * 1024);
-    Test(create, 8, inDir, outDir, 16 * 1024);
+    printf("FileSpecWorker ********************************\n");
+#if 1
+    Test(create, 20, inDir, outDir, 16 * 1024);
+    Test(create, 20, inDir, outDir, 16 * 1024);
+    Test(create, 20, inDir, outDir, 16 * 1024);
+    Test(create, 20, inDir, outDir, 16 * 1024);
+    Test(create, 20, inDir, outDir, 16 * 1024);
+    Test(create, 20, inDir, outDir, 16 * 1024);
+    Test(create, 20, inDir, outDir, 16 * 1024);
+    Test(create, 20, inDir, outDir, 16 * 1024);
+    Test(create, 20, inDir, outDir, 16 * 1024);
 #endif
-#if 0
-    Test(create, 8, inDir, outDir, 4 * 1024);
-    Test(create, 8, inDir, outDir, 4 * 1024);
-    Test(create, 8, inDir, outDir, 4 * 1024);
-    Test(create, 8, inDir, outDir, 4 * 1024);
-    Test(create, 8, inDir, outDir, 4 * 1024);
-    Test(create, 8, inDir, outDir, 4 * 1024);
-    Test(create, 8, inDir, outDir, 4 * 1024);
-    Test(create, 8, inDir, outDir, 4 * 1024);
-    Test(create, 8, inDir, outDir, 4 * 1024);
+#if 1
+    Test(create, 20, inDir, outDir, 4 * 1024);
+    Test(create, 20, inDir, outDir, 4 * 1024);
+    Test(create, 20, inDir, outDir, 4 * 1024);
+    Test(create, 20, inDir, outDir, 4 * 1024);
+    Test(create, 20, inDir, outDir, 4 * 1024);
+    Test(create, 20, inDir, outDir, 4 * 1024);
+    Test(create, 20, inDir, outDir, 4 * 1024);
+    Test(create, 20, inDir, outDir, 4 * 1024);
+    Test(create, 20, inDir, outDir, 4 * 1024);
 #endif
 
     return 0;
