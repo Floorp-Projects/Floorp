@@ -399,7 +399,7 @@ titledbutton:active {
 }
 
 titledbutton[toggled="1"] {
-  border: 1px inset;
+  border: 1px white inset;
 
   padding-left: 3px;
   padding-right: 1px;
@@ -576,30 +576,6 @@ xpmenu[menuactive="true"] {
   color:#333366;
   text-decoration: none;
 }
-
-/*
-xpmenubar xpmenu:active {
-  text-decoration:none;
-  border: 1px inset;
-}
-
-xpmenubar xpmenu:active:-moz-outline {
-   border : 1px solid black;
-}
- 
-xpmenubar xpmenu[disabled] {
-	border: 1px solid transparent;
-}
-
-xpmenubar xpmenu[disabled]:hover {
-	border: 1px solid transparent;
-}
-
-xpmenubar xpmenu[disabled]:active {
-	border: 1px solid transparent;
-	padding: 2px;
-}
-*/
 
 /* tree related stuff */
 
@@ -785,8 +761,7 @@ tabcontrol {
    visibility: hidden;
 }
 
-/* all the debug stuff
-is here */
+/* all the debug stuff is here */
 
 box[debug] box {
   border: 1px solid blue;
