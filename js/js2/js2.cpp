@@ -282,7 +282,7 @@ static void testICG(World &world)
     // j = a.b
     icg.beginStatement(pos);
     Register r4 = icg.loadName(world.identifiers[widenCString("a")]);
-    Register r5 = icg.getProperty(world.identifiers[widenCString("b")], r4);
+    Register r5 = icg.getProperty(r4, world.identifiers[widenCString("b")]);
     icg.saveVariable(1, r5);
     
     // while (i) i = i + j;
@@ -359,7 +359,7 @@ static float64 testFunctionCall(float64 n)
     icg.beginStatement(position);
     icg.loadVariable(0);
 
-    
+    return 0.0;    
 }
 
 static float64 testFactorial(float64 n)
@@ -423,11 +423,16 @@ static float64 testObjects(World &world, int32 n)
     StringAtom& global = world.identifiers[widenCString("global")];
     initCG.beginStatement(position);
     initCG.saveName(global, initCG.newObject());
-
+    
     // global.counter = 0;
     StringAtom& counter = world.identifiers[widenCString("counter")];
     initCG.beginStatement(position);
-    initCG.setProperty(counter, initCG.loadName(global), initCG.loadImmediate(0.0));
+    initCG.setProperty(initCG.loadName(global), counter, initCG.loadImmediate(0.0));
+
+    // var array = new Array();
+    StringAtom& array = world.identifiers[widenCString("array")];
+    initCG.beginStatement(position);
+    initCG.saveName(array, initCG.newArray());
 
     ICodeModule* initCode = initCG.complete();
     
@@ -435,14 +440,19 @@ static float64 testObjects(World &world, int32 n)
 
     // function increment()
     // {
+    //   var i = global.counter;
+    //   array[i] = i;
     //   return ++global.counter;
     // }
     ICodeGenerator incrCG;
     
     incrCG.beginStatement(position);
     Register robject = incrCG.loadName(global);
-    Register rvalue = incrCG.op(ADD, incrCG.getProperty(counter, robject), incrCG.loadImmediate(1.0));
-    incrCG.setProperty(counter, robject, rvalue);
+    Register roldvalue = incrCG.getProperty(robject, counter);
+    Register rarray = incrCG.loadName(array);
+    incrCG.setElement(rarray, roldvalue, roldvalue);
+    Register rvalue = incrCG.op(ADD, roldvalue, incrCG.loadImmediate(1.0));
+    incrCG.setProperty(robject, counter, rvalue);
     incrCG.returnStatement(rvalue);
 
     ICodeModule* incrCode = incrCG.complete();
