@@ -47,7 +47,6 @@
 #define NS_FREETYPE2_CID NS_IFREETYPE2_IID
 // macros to handle FreeType2 26.6 numbers (26 bit number with 6 bit fraction)
 #define FT_16_16_TO_REG(x) ((x)>>16)
-#define FT_REG_TO_16_16(x) ((x)<<16)
 #define FT_CEIL(x) (((x) + 63) & -64)
 #define FT_TRUNC(x) ((x) >> 6)
 %}

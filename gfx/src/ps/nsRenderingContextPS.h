@@ -165,14 +165,6 @@ public:
   NS_IMETHOD DrawString(const nsString& aString, nscoord aX, nscoord aY,
                         PRInt32 aFontID,
                         const nscoord* aSpacing);
-protected:
-  PRInt32 DrawString(const PRUnichar *aString, PRUint32 aLength,
-                        nscoord aX, nscoord aY, nsFontPS* aFontPS,
-                        const nscoord* aSpacing);
-  PRInt32 DrawString(const char *aString, PRUint32 aLength,
-                        nscoord &aX, nscoord &aY, nsFontPS* aFontPS,
-                        const nscoord* aSpacing);
-public:
 
   NS_IMETHOD GetTextDimensions(const char* aString, PRUint32 aLength,
                                nsTextDimensions& aDimensions);
