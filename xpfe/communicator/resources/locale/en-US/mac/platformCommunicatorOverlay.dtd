@@ -19,3 +19,7 @@
 <!ENTITY findTypeLinksCmd.key       "">
 
 <!ENTITY accel.emacs_conflict       "accel">
+
+<!ENTITY minimizeWindowCmd.label    "Minimize">
+<!ENTITY minimizeWindowCmd.key      "M">
+<!ENTITY zoomWindowCmd.label        "Zoom">

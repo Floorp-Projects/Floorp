@@ -1636,12 +1636,19 @@ function hiddenWindowStartup()
                        'Browser:AddBookmarkAs', 'Browser:AddGroupmarkAs',
                        'cmd_undo', 'cmd_redo', 'cmd_cut', 'cmd_copy',
                        'cmd_paste', 'cmd_delete', 'cmd_selectAll',
-                       'menu_textZoom'];
+                       'menu_textZoom', 'cmd_minimizeWindow', 'cmd_zoomWindow'];
+  var broadcaster;
+
   for (var id in disabledItems) {
-    var broadcaster = document.getElementById(disabledItems[id]);
+    broadcaster = document.getElementById(disabledItems[id]);
     if (broadcaster)
       broadcaster.setAttribute("disabled", "true");
   }
+
+  // also hide the window list separator
+  var separator = document.getElementById("sep-window-list");
+  if (separator)
+    separator.setAttribute("hidden", "true");
 
   // Get the preferences service
   var prefService = Components.classes["@mozilla.org/preferences-service;1"]
