@@ -358,7 +358,7 @@ nsresult nsUnknownDecoder::FireListenerNotifications(nsIRequest* request,
     if (NS_SUCCEEDED(rv)) {
       rv = out->Write(mBuffer, mBufferLen, &len);
       if (NS_SUCCEEDED(rv)) {
-        if (len == mBufferLen) {
+        if (len && len == mBufferLen) {
           rv = mNextListener->OnDataAvailable(request, aCtxt, in, 0, len);
         } else {
           NS_ASSERTION(0, "Unable to write all the data into the pipe.");
