@@ -9,7 +9,6 @@
        <RDF:Description ID="MessengerFolders">
          <NC:title>&sidebar.folders.label;</NC:title>
          <NC:content>chrome://messenger/content/folderPane.xul</NC:content>
-         <NC:customize>chrome://messenger/content/messengerfolder-panel-cust.xul</NC:customize>
 		 <NC:height>250px</NC:height> 
        </RDF:Description>
     </RDF:li>
@@ -17,7 +16,6 @@
        <RDF:Description ID="flash">
          <NC:title>&sidebar.flash.label;</NC:title>
          <NC:content>chrome://sidebar/content/flash.xul</NC:content>
-         <NC:customize>chrome://sidebar/content/flash-cust.xul</NC:customize>
        </RDF:Description>
     </RDF:li>
   </RDF:Seq>
