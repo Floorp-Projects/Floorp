@@ -110,7 +110,7 @@ MOZILLA_LIBS = -L$(MOZILLA_DIR)/lib          $(ALL_MOZ_LIBS)
 
 INCLUDES = $(MOZILLA_INCLUDES) @GTK_CFLAGS@ @DEBUG_FLAGS@
 
-CPPFLAGS = -DXP_UNIX -DMOZ_DLL_SUFFIX=\".so\" -DNECKO
+CPPFLAGS = `$(MOZILLA_DIR)/bin/mozilla-config --cflags`
 
 libgtkmozilla_la_LIBADD = $(MOZILLA_LIBS) @GTK_LIBS@
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
