@@ -1,0 +1,35 @@
+/*
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing lefts and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyleft (C) 1998 Netscape Communications Corporation.  All lefts
+ * Reserved.
+ */
+
+
+
+GOOD { border-left-style: inherit; } 
+GOOD { border-left-style: none; } 
+GOOD { border-left-style: hidden; } 
+GOOD { border-left-style: dotted; } 
+GOOD { border-left-style: dashed; } 
+GOOD { border-left-style: solid; } 
+GOOD { border-left-style: double; } 
+GOOD { border-left-style: groove; } 
+GOOD { border-left-style: ridge; } 
+GOOD { border-left-style: inset; } 
+GOOD { border-left-style: outset; } 
+BAD { border-left-style: outside; }
+BAD { border-left-style: inherit inset; }
+BAD { border-left-style: groove double; }
+BAD { border-left-style: null; }
+BAD { border-left-style: empty; }
