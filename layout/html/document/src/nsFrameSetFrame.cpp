@@ -51,10 +51,6 @@
 #define ALL_VIS    0x000F
 #define NONE_VIS   0x0000
 
-// Use these defines
-#define NULL_POINT_X -1000000
-#define NULL_POINT_Y 1000000
-
 static PRInt32 LEFT_EDGE  = -1;
 static PRInt32 RIGHT_EDGE = 1000000;
 
@@ -197,7 +193,7 @@ nsHTMLFramesetFrame::nsHTMLFramesetFrame()
   mParentFrameborder   = eFrameborder_Yes; // default
   mParentBorderWidth   = -1; // default not set
   mParentBorderColor   = NO_COLOR; // default not set
-  mLastDragPoint.x     = mLastDragPoint.y = 0;
+  mFirstDragPoint.x     = mFirstDragPoint.y = 0;
   mMinDrag             = 0;
   mNonBorderChildCount = 0;
   mNonBlankChildCount  = 0;
@@ -1444,8 +1440,18 @@ nsHTMLFramesetFrame::StartMouseDrag(nsIPresContext&            aPresContext,
       //XXX This should go away!  Border should have own view instead
       view->SetViewFlags(NS_VIEW_PUBLIC_FLAG_DONT_CHECK_CHILDREN);
 
-      // can't set it to this event's point - it is not in framesetframe coords
-      mLastDragPoint.MoveTo(NULL_POINT_X, NULL_POINT_Y);
+      // The point isn't in frameset coords, but we're using it to compute
+      // moves relative to the start position.
+      mFirstDragPoint.MoveTo(aEvent->point.x, aEvent->point.y);
+
+      // Store the original frame sizes
+      if (mDragger->mVertical) {
+        mPrevNeighborOrigSize = mColSizes[mDragger->mPrevNeighbor];
+	mNextNeighborOrigSize = mColSizes[mDragger->mNextNeighbor];
+      } else {
+        mPrevNeighborOrigSize = mRowSizes[mDragger->mPrevNeighbor];
+	mNextNeighborOrigSize = mRowSizes[mDragger->mNextNeighbor];
+      }
 
       gDragInProgress = PR_TRUE;
     }
@@ -1457,60 +1463,29 @@ void
 nsHTMLFramesetFrame::MouseDrag(nsIPresContext& aPresContext, 
                                nsGUIEvent*     aEvent)
 {
-  if ((mLastDragPoint.x == NULL_POINT_X) &&
-      (mLastDragPoint.y == NULL_POINT_Y)) {
-    mLastDragPoint.x = aEvent->point.x;
-    mLastDragPoint.y = aEvent->point.y;
-    return;
-  }
-
   PRInt32 change; // measured positive from left-to-right or top-to-bottom
   if (mDragger->mVertical) {
-    change = aEvent->point.x - mLastDragPoint.x;
-    if (change < 0) {
-      if (mMinDrag >= -change) {
-        return;
-      }
-      PRInt32 index = mDragger->mPrevNeighbor;
-      if (mColSizes[index] + change < mMinDrag) {
-        change = mMinDrag - mColSizes[index];
-      }
-    } else if (change > 0) {
-      if (mMinDrag >= change) {
-        return;
-      }
-      PRInt32 index = mDragger->mNextNeighbor;
-      if (mColSizes[index] - change < mMinDrag) {
-        change = mColSizes[index] - mMinDrag;
-      }
+    change = aEvent->point.x - mFirstDragPoint.x;
+    if (change > mNextNeighborOrigSize - mMinDrag) {
+      change = mNextNeighborOrigSize - mMinDrag;
+    } else if (change <= mMinDrag - mPrevNeighborOrigSize) {
+      change = mMinDrag - mPrevNeighborOrigSize;
     }
-    mColSizes[mDragger->mPrevNeighbor] += change;
-    mColSizes[mDragger->mNextNeighbor] -= change;
+    mColSizes[mDragger->mPrevNeighbor] = mPrevNeighborOrigSize + change;
+    mColSizes[mDragger->mNextNeighbor] = mNextNeighborOrigSize - change;
 
     // Recompute the specs from the new sizes.
     nscoord width = mRect.width - (mNumCols - 1) * GetBorderWidth(&aPresContext);
     GenerateRowCol(&aPresContext, width, mNumCols, mColSpecs, mColSizes);
   } else {
-    change = aEvent->point.y - mLastDragPoint.y;
-    if (change < 0) {
-      if (mMinDrag >= -change) {
-        return;
-      }
-      PRInt32 index = mDragger->mPrevNeighbor;
-      if (mRowSizes[index] + change < mMinDrag) {
-        change = mMinDrag - mRowSizes[index];
-      }
-    } else if (change > 0) {
-      if (mMinDrag >= change) {
-        return;
-      }
-      PRInt32 index = mDragger->mNextNeighbor;
-      if (mRowSizes[index] - change < mMinDrag) {
-        change = mRowSizes[index] - mMinDrag;
-      }
+    change = aEvent->point.y - mFirstDragPoint.y;
+    if (change > mNextNeighborOrigSize - mMinDrag) {
+      change = mNextNeighborOrigSize - mMinDrag;
+    } else if (change <= mMinDrag - mPrevNeighborOrigSize) {
+      change = mMinDrag - mPrevNeighborOrigSize;
     }
-    mRowSizes[mDragger->mPrevNeighbor] += change;
-    mRowSizes[mDragger->mNextNeighbor] -= change;
+    mRowSizes[mDragger->mPrevNeighbor] = mPrevNeighborOrigSize + change;
+    mRowSizes[mDragger->mNextNeighbor] = mNextNeighborOrigSize - change;
 
     // Recompute the specs from the new sizes.
     nscoord height = mRect.height - (mNumRows - 1) * GetBorderWidth(&aPresContext);
@@ -1523,9 +1498,6 @@ nsHTMLFramesetFrame::MouseDrag(nsIPresContext& aPresContext,
     aPresContext.GetShell(getter_AddRefs(shell));
     shell->ResizeReflow(mTopLevelFrameset->mRect.width, mTopLevelFrameset->mRect.height);
   }
-
-  mLastDragPoint.x = aEvent->point.x;
-  mLastDragPoint.y = aEvent->point.y;
 }  
 
 void

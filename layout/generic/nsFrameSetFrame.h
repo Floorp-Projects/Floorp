@@ -243,7 +243,9 @@ protected:
 
   nsHTMLFramesetBorderFrame* mDragger;
   nsFramesetDrag   mDrag;
-  nsPoint          mLastDragPoint;
+  nsPoint          mFirstDragPoint;
+  PRInt32          mPrevNeighborOrigSize; // used during resize
+  PRInt32          mNextNeighborOrigSize;
   PRInt32          mMinDrag;
   PRInt32          mChildCount;
   nsHTMLFramesetFrame* mTopLevelFrameset;
