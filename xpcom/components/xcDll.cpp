@@ -25,12 +25,15 @@
  */
 
 #include "xcDll.h"
+#include "nsDebug.h"
 #include "nsIComponentManager.h"
+#include "nsIModule.h"
+#include "nsIFileSpec.h"
 
 // MAC ONLY
 nsDll::nsDll(const char *codeDllName, int type)
   : m_dllName(NULL), m_dllSpec(NULL), m_modDate(0), m_size(0),
-    m_instance(NULL), m_status(DLL_OK)
+    m_instance(NULL), m_status(DLL_OK), m_moduleObject(NULL)
     
 {
     if (!codeDllName || !*codeDllName)
@@ -48,21 +51,21 @@ nsDll::nsDll(const char *codeDllName, int type)
 
 nsDll::nsDll(nsIFileSpec *dllSpec)
   : m_dllName(NULL), m_dllSpec(dllSpec), m_modDate(0), m_size(0),
-    m_instance(NULL), m_status(DLL_OK)
+    m_instance(NULL), m_status(DLL_OK), m_moduleObject(NULL)
 {
     Init(dllSpec);
 }
 
 nsDll::nsDll(const char *libPersistentDescriptor)
   : m_dllName(NULL), m_dllSpec(NULL), m_modDate(0), m_size(0),
-    m_instance(NULL), m_status(DLL_OK)
+    m_instance(NULL), m_status(DLL_OK), m_moduleObject(NULL)
 {
     Init(libPersistentDescriptor);
 }
 
 nsDll::nsDll(const char *libPersistentDescriptor, PRUint32 modDate, PRUint32 fileSize)
   : m_dllName(NULL), m_dllSpec(NULL), m_modDate(0), m_size(0),
-    m_instance(NULL), m_status(DLL_OK)
+    m_instance(NULL), m_status(DLL_OK), m_moduleObject(NULL)
 {
     Init(libPersistentDescriptor);
 
@@ -245,6 +248,14 @@ PRBool nsDll::Unload(void)
 {
 	if (m_status != DLL_OK || m_instance == NULL)
 		return (PR_FALSE);
+
+    nsrefcnt refcnt;
+    if (m_moduleObject)
+    {
+        NS_RELEASE2(m_moduleObject, refcnt);
+        NS_ASSERTION(refcnt == 0, "Dll moduleObject refcount not zero.");
+    }
+
 	PRStatus ret = PR_UnloadLibrary(m_instance);
 	if (ret == PR_SUCCESS)
 	{
@@ -265,4 +276,51 @@ void * nsDll::FindSymbol(const char *symbol)
 		return (NULL);
 
 	return (PR_FindSymbol(m_instance, symbol));
+}
+
+
+// Component dll specific functions
+nsresult nsDll::GetDllSpec(nsIFileSpec **fsobj)
+{
+    NS_ASSERTION(m_dllSpec, "m_dllSpec NULL");
+    NS_ASSERTION(fsobj, "xcDll::GetModule : Null argument" );
+
+    NS_ADDREF(m_dllSpec);
+    *fsobj = m_dllSpec;
+    return NS_OK;
+}
+
+nsresult nsDll::GetModule(nsISupports *servMgr, nsIModule **cobj)
+{
+    NS_ASSERTION(cobj, "xcDll::GetModule : Null argument" );
+
+    if (m_moduleObject)
+    {
+        NS_ADDREF(m_moduleObject);
+        *cobj = m_moduleObject;
+        return NS_OK;
+    }
+
+	// If not already loaded, load it now.
+	if (Load() != PR_TRUE) return NS_ERROR_FAILURE;
+
+    // We need a nsIFileSpec for location. If we dont
+    // have one, create one.
+    if (m_dllSpec == NULL && m_dllName)
+    {
+        // Create m_dllSpec from m_dllName
+    }
+
+    nsGetModuleProc proc =
+      (nsGetModuleProc) FindSymbol(NS_GET_MODULE_SYMBOL);
+
+    if (proc == NULL) return NS_ERROR_FAILURE;
+
+    nsresult rv = (*proc) (servMgr, m_dllSpec, &m_moduleObject);
+    if (NS_SUCCEEDED(rv))
+    {
+        NS_ADDREF(m_moduleObject);
+        *cobj = m_moduleObject;
+    }
+    return rv;
 }
