@@ -17,13 +17,18 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
+
 #include "nsAppCoresManager.h"
 #include "nsAppShellCIDs.h"
 #include "nsIAppShellService.h"
 #include "nsIDOMBaseAppCore.h"
+#include "nsIDOMWindow.h"
+#include "nsIScriptGlobalObject.h"
 #include "nsIServiceManager.h"
 #include "nsISupports.h"
 #include "nsIURL.h"
+#include "nsIWebShell.h"
+#include "nsIWebShellWindow.h"
 #include "nsIWidget.h"
 #include "nsToolkitCore.h"
 
@@ -34,6 +39,7 @@ static NS_DEFINE_IID(kIAppShellServiceIID, NS_IAPPSHELL_SERVICE_IID);
 static NS_DEFINE_IID(kIDOMBaseAppCoreIID, NS_IDOMBASEAPPCORE_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIToolkitCoreIID, NS_IDOMTOOLKITCORE_IID);
+
 
 
 /////////////////////////////////////////////////////////////////////////
@@ -127,28 +133,52 @@ nsToolkitCore::ShowWindow(const nsString& aUrl, nsIDOMWindow* aParent) {
   nsresult           rv;
   nsString           controllerCID;
   nsIAppShellService *appShell;
-  nsIURL             *url;
   nsIWidget          *window;
-
-printf("in toolkitcore::ShowWindow\n");
 
   window = nsnull;
 
-  rv = NS_NewURL(&url, aUrl);
+  nsCOMPtr<nsIURL> urlObj;
+  rv = NS_NewURL(getter_AddRefs(urlObj), aUrl);
   if (NS_FAILED(rv))
     return rv;
 
   rv = nsServiceManager::GetService(kAppShellServiceCID, kIAppShellServiceIID,
                                     (nsISupports**) &appShell);
-  if (NS_SUCCEEDED(rv)) {
-    // hardwired temporary hack.  See nsAppRunner.cpp at main()
-    controllerCID = "43147b80-8a39-11d2-9938-0080c7cb1081";
-    appShell->CreateTopLevelWindow(url, controllerCID, window, nsnull, 615, 650);
-    nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
-  }
-  if (window != nsnull) {
+  if (NS_FAILED(rv))
+    return rv;
+
+  // hardwired temporary hack.  See nsAppRunner.cpp at main()
+  controllerCID = "43147b80-8a39-11d2-9938-0080c7cb1081";
+
+  nsCOMPtr<nsIWebShellWindow> webWindow = DOMWindowToWebShellWindow(aParent);
+  nsCOMPtr<nsIWidget> parent;
+  if (webWindow)
+    webWindow->GetWidget(*getter_AddRefs(parent));
+
+  appShell->CreateDialogWindow(parent, urlObj, controllerCID, window,
+                               nsnull, nsnull, 615, 650);
+  nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
+
+  if (window != nsnull)
     window->Show(PR_TRUE);
-  }
 
   return rv;
+}
+
+// horribly complicated routine to simply convert from one to the other
+nsCOMPtr<nsIWebShellWindow>
+nsToolkitCore::DOMWindowToWebShellWindow(nsIDOMWindow *DOMWindow) const {
+
+  nsCOMPtr<nsIWebShellWindow> webWindow;
+
+  nsCOMPtr<nsIScriptGlobalObject> globalScript(do_QueryInterface(DOMWindow));
+  nsCOMPtr<nsIWebShell> webshell;
+  if (globalScript)
+    globalScript->GetWebShell(getter_AddRefs(webshell));
+  if (webshell) {
+    nsCOMPtr<nsIWebShellContainer> webshellContainer;
+    webshell->GetContainer(*getter_AddRefs(webshellContainer));
+    webWindow = do_QueryInterface(webshellContainer);
+  }
+  return webWindow;
 }

@@ -65,14 +65,18 @@ public:
   NS_IMETHOD GetNativeEvent(void *& aEvent, nsIWidget* aWidget, PRBool &aIsInWindow, PRBool &aIsMouseEvent);
   NS_IMETHOD DispatchNativeEvent(void * aEvent);
   NS_IMETHOD Shutdown(void);
-  NS_IMETHOD CreateTopLevelWindow(nsIURL* aUrl, nsString& aControllerIID,
+  NS_IMETHOD CreateTopLevelWindow(nsIWidget * aParent,
+                                  nsIURL* aUrl, 
+                                  nsString& aControllerIID,
                                   nsIWidget*& aResult, nsIStreamObserver* anObserver,
+                                  nsIXULWindowCallbacks *aCallbacks,
                                   PRInt32 aInitialWidth, PRInt32 aInitialHeight);
-  NS_IMETHOD CreateDialogWindow(nsIWidget * aParent,
-                                nsIURL* aUrl, 
-                                nsString& aControllerIID,
-                                nsIWidget*& aResult, nsIStreamObserver* anObserver,
-                                PRInt32 aInitialWidth, PRInt32 aInitialHeight);
+  NS_IMETHOD CreateDialogWindow(  nsIWidget * aParent,
+                                  nsIURL* aUrl, 
+                                  nsString& aControllerIID,
+                                  nsIWidget*& aResult, nsIStreamObserver* anObserver,
+                                  nsIXULWindowCallbacks *aCallbacks,
+                                  PRInt32 aInitialWidth, PRInt32 aInitialHeight);
   NS_IMETHOD CloseTopLevelWindow(nsIWidget* aWindow);
   NS_IMETHOD RegisterTopLevelWindow(nsIWidget* aWindow);
   NS_IMETHOD UnregisterTopLevelWindow(nsIWidget* aWindow);
@@ -82,7 +86,6 @@ protected:
   virtual ~nsAppShellService();
 
   nsIAppShell* mAppShell;
-
   nsISupportsArray* mWindowList;
 };
 
@@ -197,14 +200,25 @@ nsAppShellService::Shutdown(void)
 /*
  * Create a new top level window and display the given URL within it...
  *
- * XXX:
- * Currently, the IID of the Controller object for the URL is provided as an
- * argument.  In the future, this argument will be specified by the XUL document
- * itself.
+ * @param aParent - parent for the window to be created (generally null;
+ *                  included for compatibility with dialogs).
+ *                  (currently unused).
+ * @param aURL - location of XUL window contents description
+ * @param aControllerIID - currently provided as an argument. in the future,
+ *                         this will be specified by the XUL document itself.
+ *                         (currently unused, but please specify the same
+ *                         hardwired IID as others are using).
+ * @param anObserver - a stream observer to give to the new window
+ * @param aConstructionCallbacks - methods which will be called during
+ *                                 window construction. can be null.
+ * @param aInitialWidth - width of window, in pixels (currently unused)
+ * @param aInitialHeight - height of window, in pixels (currently unused)
  */
 NS_IMETHODIMP
-nsAppShellService::CreateTopLevelWindow(nsIURL* aUrl, nsString& aControllerIID,
+nsAppShellService::CreateTopLevelWindow(nsIWidget *aParent,
+                                        nsIURL* aUrl, nsString& aControllerIID,
                                         nsIWidget*& aResult, nsIStreamObserver* anObserver,
+                                        nsIXULWindowCallbacks *aCallbacks,
                                         PRInt32 aInitialWidth, PRInt32 aInitialHeight)
 {
   nsresult rv;
@@ -214,7 +228,9 @@ nsAppShellService::CreateTopLevelWindow(nsIURL* aUrl, nsString& aControllerIID,
   if (nsnull == window) {
     rv = NS_ERROR_OUT_OF_MEMORY;
   } else {
-    rv = window->Initialize(mAppShell, aUrl, aControllerIID, anObserver, aInitialWidth, aInitialHeight);
+    rv = window->Initialize(aParent, mAppShell, aUrl, aControllerIID,
+                            anObserver, aCallbacks,
+                            aInitialWidth, aInitialHeight);
     if (NS_SUCCEEDED(rv)) {
       aResult = window->GetWidget();
       RegisterTopLevelWindow(aResult);
@@ -240,17 +256,16 @@ nsAppShellService::CloseTopLevelWindow(nsIWidget* aWindow)
 }
 
 /*
- * Create a new top level window and display the given URL within it...
- *
- * XXX:
- * Currently, the IID of the Controller object for the URL is provided as an
- * argument.  In the future, this argument will be specified by the XUL document
- * itself.
+ * Like CreateTopLevelWindow, but with dialog window borders.  This
+ * method is necessary because of the current misfortune that the window
+ * is created before its XUL description has been parsed, so the description
+ * can't affect attributes like window type.
  */
 NS_IMETHODIMP
 nsAppShellService::CreateDialogWindow(nsIWidget * aParent,
                                       nsIURL* aUrl, nsString& aControllerIID,
                                       nsIWidget*& aResult, nsIStreamObserver* anObserver,
+                                      nsIXULWindowCallbacks *aCallbacks,
                                       PRInt32 aInitialWidth, PRInt32 aInitialHeight)
 {
   nsresult rv;
@@ -260,11 +275,13 @@ nsAppShellService::CreateDialogWindow(nsIWidget * aParent,
   if (nsnull == window) {
     rv = NS_ERROR_OUT_OF_MEMORY;
   } else {
-    rv = window->Initialize(nsnull, mAppShell, aUrl, aControllerIID, anObserver,
+    rv = window->Initialize(aParent, mAppShell, aUrl, aControllerIID,
+                            anObserver, aCallbacks,
                             aInitialWidth, aInitialHeight);
     if (NS_SUCCEEDED(rv)) {
-      mWindowList->AppendElement((nsIWebShellContainer*)window);
       aResult = window->GetWidget();
+      RegisterTopLevelWindow(aResult);
+      window->Show(PR_TRUE);
     }
   }
 
@@ -286,21 +303,11 @@ nsAppShellService::RegisterTopLevelWindow(nsIWidget* aWindow)
   if (data == nsnull)
     rv = NS_ERROR_NULL_POINTER;
   else {
-#if 0
     nsWebShellWindow* window = (nsWebShellWindow *) data;
-    nsIWebShellWindow * webShellWin;
-    rv = window->QueryInterface(kIWebShellWindowIID, (void **) &webShellWin);
-    if (NS_SUCCEEDED(rv)) {
-      mWindowList->AppendElement(webShellWin);
-    }
-#else      
-    nsWebShellWindow* window = (nsWebShellWindow *) data;
-//    nsCOMPtr<nsIWebShellContainer> wsc(window); DRaM
     nsIWebShellContainer* wsc;
     rv = window->QueryInterface(kIWebShellContainerIID, (void **) &wsc);
     if (NS_SUCCEEDED(rv))
       mWindowList->AppendElement(wsc);
-#endif
   }
   return rv;
 }
@@ -317,7 +324,6 @@ nsAppShellService::UnregisterTopLevelWindow(nsIWidget* aWindow)
     rv = NS_ERROR_NULL_POINTER;
   else {
     nsWebShellWindow* window = (nsWebShellWindow *) data;
-//    nsCOMPtr<nsIWebShellContainer> wsc(window); DRaM
     nsIWebShellContainer* wsc;
     rv = window->QueryInterface(kIWebShellContainerIID, (void **) &wsc);
     if (NS_SUCCEEDED(rv))

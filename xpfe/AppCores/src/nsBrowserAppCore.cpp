@@ -331,7 +331,8 @@ nsBrowserAppCore::NewWindow()
    *      components this will be specified in the XUL description...
    */
   controllerCID = "43147b80-8a39-11d2-9938-0080c7cb1081";
-  appShell->CreateTopLevelWindow(url, controllerCID, newWindow, nsnull, 615, 650);
+  appShell->CreateTopLevelWindow(nsnull, url, controllerCID, newWindow,
+              nsnull, nsnull, 615, 650);
   NS_RELEASE(url);
   
 done:
@@ -497,7 +498,8 @@ nsBrowserAppCore::DoDialog()
    *      components this will be specified in the XUL description...
    */
   controllerCID = "43147b80-8a39-11d2-9938-0080c7cb1081";
-  appShell->CreateDialogWindow(parent, url, controllerCID, newWindow, (nsIStreamObserver *)this, 516, 650);
+  appShell->CreateDialogWindow(parent, url, controllerCID, newWindow,
+              (nsIStreamObserver *)this, nsnull, 516, 650);
   newWindow->Resize(300, 200, PR_TRUE);
   NS_RELEASE(url);
   NS_RELEASE(parent);
