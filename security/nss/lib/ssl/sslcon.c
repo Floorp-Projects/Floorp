@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslcon.c,v 1.2 2000/05/24 03:35:23 nelsonb%netscape.com Exp $
+ * $Id: sslcon.c,v 1.3 2000/06/06 20:32:18 nelsonb%netscape.com Exp $
  */
 
 #include "cert.h"
@@ -3429,11 +3429,15 @@ ssl2_HandleClientHelloMessage(sslSocket *ss)
 	ssl_ReleaseRecvBufLock(ss);
 	return rv;
     }
-    if (!ss->enableSSL2) {
-	PORT_SetError(SEC_ERROR_BAD_DATA);
-	ssl_ReleaseRecvBufLock(ss);
-	return SECFailure;
-    }
+    /* Previously, there was a test here to see if SSL2 was enabled.
+    ** If not, an error code was set, and SECFailure was returned,
+    ** without sending any error code to the other end of the connection.
+    ** That test has been removed.  If SSL2 has been disabled, there
+    ** should be no SSL2 ciphers enabled, and consequently, the code
+    ** below should send the ssl2 error message SSL_PE_NO_CYPHERS.
+    ** We now believe this is the correct thing to do, even when SSL2
+    ** has been explicitly disabled by the application.
+    */
 
     /* Extract info from message */
     ss->version = (data[1] << 8) | data[2];
