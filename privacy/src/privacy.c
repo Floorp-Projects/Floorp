@@ -256,6 +256,8 @@ prvcy_checkStandardLocation_finished
   Check for privacy policy at standard location
  */
 
+extern char* PRVCY_POLICY_FILE_NAME;
+
 PUBLIC void
 PRVCY_CheckStandardLocation(MWContext * context)
 {
@@ -272,13 +274,15 @@ PRVCY_CheckStandardLocation(MWContext * context)
      * This routine is called from the HTTP_DONE case of NET_ProcessHTTP.  But
      * that will be repeatedly called as long as we keep issuing an http request
      * in this routine.  So, to prevent looping, we will set privacy_policy_url
-     * to -1 to indicate that we already did the http request for privacy.html.
+     * to -1 to indicate that we already did the http request for 
+     * privacy_policy.html.
      */
     entry->privacy_policy_url = (char*)(-1); /* prevents looping */
 
-    /* Create a URL for privacy.html */
+    /* Create a URL for privacy_policy.html */
     privacyURL = NET_ParseURL(entry->address, GET_PROTOCOL_PART | GET_HOST_PART);
-    StrAllocCat(privacyURL, "/privacy.html");
+    StrAllocCat(privacyURL, "/");
+    StrAllocCat(privacyURL, PRVCY_POLICY_FILE_NAME);
     if (prvcy_inCache(privacyURL, &found)) {
       if (found) {
 	entry->privacy_policy_url = privacyURL;
@@ -481,7 +485,6 @@ extern int PRVCY_CAN_SET_COOKIES;
 extern int PRVCY_NEEDS_PERMISSION_TO_SET_COOKIES;
 extern int PRVCY_HAS_SET_COOKIES;
 extern int PRVCY_HAS_NOT_SET_COOKIES;
-
 
 #define BUFLEN 5000
 #define FLUSH_BUFFER			\
