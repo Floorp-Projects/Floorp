@@ -98,8 +98,7 @@ interface nsIStringBundleService : nsISupports
     in nsILocale aLocale);
   nsIStringBundle CreateAsyncBundle([const] in string aURLSpec);
 
-  nsIStringBundle CreateExtensibleBundle([const] in string aRegistryKey, 
-    in nsILocale aLocale);
+  nsIStringBundle CreateExtensibleBundle([const] in string aRegistryKey);
 
   /**
    * Formats a message string from a status code and status arguments.

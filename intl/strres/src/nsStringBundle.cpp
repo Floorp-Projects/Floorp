@@ -63,8 +63,6 @@
 
 #include "prenv.h"
 
-static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
-static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kErrorServiceCID, NS_ERRORSERVICE_CID);
 
 // XXX investigate need for proper locking in this module
@@ -86,7 +84,7 @@ public:
   NS_DECL_NSISTRINGBUNDLE
   NS_DECL_NSISTREAMLOADEROBSERVER
 
-  nsIPersistentProperties* mProps;
+  nsCOMPtr<nsIPersistentProperties> mProps;
 
 protected:
   //
@@ -94,9 +92,6 @@ protected:
   //
   nsresult GetStringFromID(PRInt32 aID, nsString& aResult);
   nsresult GetStringFromName(const nsString& aName, nsString& aResult);
-
-  nsresult GetInputStream(const char* aURLSpec, nsILocale* aLocale, nsIInputStream*& in);
-  nsresult OpenInputStream(nsString& aURLStr, nsIInputStream*& in);
 
 private:
   nsStrBundleLoadedFunc  _callback;
@@ -114,10 +109,23 @@ public:
 nsresult
 nsStringBundle::InitSyncStream(const char* aURLSpec)
 { 
+  
+  nsresult rv = NS_OK;
 
-  nsIInputStream *in = nsnull;
-  nsresult rv = GetInputStream(aURLSpec, nsnull, in);
-   
+  // plan A: don't fallback; use aURLSpec: xxx.pro -> xxx.pro
+
+#ifdef DEBUG_tao_
+    printf("\n** nsStringBundle::InitSyncStream: %s\n", aURLSpec?s:"null");
+#endif
+
+  nsCOMPtr<nsIURI> uri;
+  rv = NS_NewURI(getter_AddRefs(uri), aURLSpec);
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIInputStream> in;
+  rv = NS_OpenURI(getter_AddRefs(in), uri);
+  if (NS_FAILED(rv)) return rv;
+
   if (!in) {
 #ifdef NS_DEBUG
     if ( NS_OK == rv)
@@ -129,29 +137,24 @@ nsStringBundle::InitSyncStream(const char* aURLSpec)
 
   rv = nsComponentManager::CreateInstance(kPersistentPropertiesCID, NULL,
                                           NS_GET_IID(nsIPersistentProperties), 
-                                          (void**) &mProps);
+                                          getter_AddRefs(mProps));
   if (NS_FAILED(rv)) {
 #ifdef NS_DEBUG
     printf("create nsIPersistentProperties failed\n");
 #endif
     return rv;
   }
-  rv = mProps->Load(in);
-  NS_RELEASE(in);
-
-  return rv;
+  return mProps->Load(in);
 }
 
 nsStringBundle::~nsStringBundle()
 {
-  NS_IF_RELEASE(mProps);
 }
 
 nsStringBundle::nsStringBundle()
 {  
   NS_INIT_REFCNT();
 
-  mProps = nsnull;
   mLoaded = PR_FALSE;
   _callback = nsnull;
   _closure = nsnull;
@@ -266,22 +269,22 @@ nsStringBundle::OnStreamComplete(nsIStreamLoader* aLoader,
   nsCOMPtr<nsIInputStream> in = do_QueryInterface(stringStreamSupports, &rv);
   if (NS_FAILED(rv)) return rv;
   
-  aStatus = nsComponentManager::CreateInstance(kPersistentPropertiesCID, NULL,
+  rv = nsComponentManager::CreateInstance(kPersistentPropertiesCID, NULL,
                                                NS_GET_IID(nsIPersistentProperties), 
-                                               (void**) &mProps);
-  if (NS_FAILED(aStatus)) {
+                                               getter_AddRefs(mProps));
+  if (NS_FAILED(rv)) {
 #ifdef NS_DEBUG
     printf("create nsIPersistentProperties failed\n");
 #endif
-    return aStatus;
+    return rv;
   }
 
   // load the stream
-  aStatus = mProps->Load(in);
+  rv = mProps->Load(in);
   
   // 
   // notify
-  if (NS_SUCCEEDED(aStatus)) {
+  if (NS_SUCCEEDED(rv)) {
     mLoaded = PR_TRUE;
 
     // callback
@@ -292,14 +295,14 @@ nsStringBundle::OnStreamComplete(nsIStreamLoader* aLoader,
     // observer notification
     nsCOMPtr<nsIObserverService> os = do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
     if (os)
-      os->Notify((nsIStringBundle *) this, 
+      (void) os->Notify((nsIStringBundle *) this, 
                  NS_STRBUNDLE_LOADED_TOPIC, nsnull);
 
 #if defined(DEBUG_tao)
   printf("\n --> nsStringBundle::OnStreamComplete: end sending NOTIFICATIONS!!\n");
 #endif
   }
-  return aStatus;
+  return rv;
 }
 
 nsresult
@@ -307,7 +310,6 @@ nsStringBundle::GetStringFromID(PRInt32 aID, nsString& aResult)
 {
   if (!mProps)
     return NS_OK;
-  NS_ENSURE_TRUE(mProps, NS_ERROR_UNEXPECTED);
 
   nsAutoCMonitor(this);
   nsAutoString name;
@@ -330,7 +332,6 @@ nsStringBundle::GetStringFromName(const nsString& aName, nsString& aResult)
   if (!mProps)
     return NS_OK;
 
-  NS_ENSURE_TRUE(mProps, NS_ERROR_FAILURE);
   nsresult ret = mProps->GetStringProperty(aName, aResult);
 #ifdef DEBUG_tao_
   char *s = aResult.ToNewCString(),
@@ -426,9 +427,7 @@ nsStringBundle::GetEnumeration(nsIBidirectionalEnumerator** elements)
   if (!elements)
     return NS_ERROR_INVALID_POINTER;
 
-  nsresult ret = mProps->EnumerateProperties(elements);
-
-  return ret;
+  return mProps->EnumerateProperties(elements);
 }
 
 NS_IMETHODIMP
@@ -437,9 +436,7 @@ nsStringBundle::GetSimpleEnumeration(nsISimpleEnumerator** elements)
   if (!elements)
     return NS_ERROR_INVALID_POINTER;
 
-  nsresult ret = mProps->SimpleEnumerateProperties(elements);
-
-  return ret;
+  return mProps->SimpleEnumerateProperties(elements);
 }
 
 /* attribute boolean loaded; */
@@ -452,44 +449,6 @@ NS_IMETHODIMP nsStringBundle::SetLoaded(PRBool aLoaded)
 {
   mLoaded = aLoaded;
   return NS_OK;
-}
-
-
-nsresult
-nsStringBundle::GetInputStream(const char* aURLSpec, nsILocale* aLocale, nsIInputStream*& in) 
-{
-  in = nsnull;
-
-  nsresult ret = NS_OK;
-
-  /* locale binding */
-  nsAutoString  strFile2;
-
-   /* plan A: don't fallback; use aURLSpec: xxx.pro -> xxx.pro
-   */
-   strFile2.AssignWithConversion(aURLSpec);
-   ret = OpenInputStream(strFile2, in);
-  return ret;
-}
-
-nsresult
-nsStringBundle::OpenInputStream(nsString& aURLStr, nsIInputStream*& in) 
-{
-#ifdef DEBUG_tao_
-  {
-    char *s = aURLStr.ToNewCString();
-    printf("\n** nsStringBundle::OpenInputStream: %s\n", s?s:"null");
-    delete s;
-  }
-#endif
-  nsresult ret;
-  nsIURI* uri;
-  ret = NS_NewURI(&uri, aURLStr);
-  if (NS_FAILED(ret)) return ret;
-
-  ret = NS_OpenURI(&in, uri);
-  NS_RELEASE(uri);
-  return ret;
 }
 
 nsresult 
@@ -561,7 +520,9 @@ nsStringBundle::FormatString(const PRUnichar *aFormatStr,
 class nsExtensibleStringBundle : public nsIStringBundle
 {
   NS_DECL_ISUPPORTS
+  NS_DECL_NSISTRINGBUNDLE
 
+  nsresult Init(const char * aRegistryKey);
 private:
   
   nsISupportsArray * mBundle;
@@ -569,113 +530,97 @@ private:
 
 public:
 
-  nsExtensibleStringBundle(const char * aRegistryKey, nsILocale * aLocale, 
-      nsresult * aResult);
+  nsExtensibleStringBundle();
   virtual ~nsExtensibleStringBundle();
-
-  //--------------------------------------------------------------------------
-  // Interface nsIStringBundle [declaration]
-  NS_DECL_NSISTRINGBUNDLE
 };
 
 NS_IMPL_ISUPPORTS1(nsExtensibleStringBundle, nsIStringBundle)
 
-nsExtensibleStringBundle::nsExtensibleStringBundle(const char * aRegistryKey, 
-                                                  nsILocale * aLocale, 
-                                                  nsresult * aResult)
+nsExtensibleStringBundle::nsExtensibleStringBundle()
                                                   :mBundle(NULL)
 {
   NS_INIT_REFCNT();
 
   mLoaded = PR_FALSE;
 
+
+}
+
+nsresult
+nsExtensibleStringBundle::Init(const char * aRegistryKey) 
+{
   nsresult res = NS_OK;
-  nsIEnumerator * components = NULL;
-  nsIRegistry * registry = NULL;
+  nsCOMPtr<nsIEnumerator> components;
   nsRegistryKey uconvKey, key;
-  nsIStringBundleService * sbServ = NULL;
   PRBool regOpen = PR_FALSE;
 
   // get the Bundle Service
-  res = nsServiceManager::GetService(kStringBundleServiceCID, 
-      NS_GET_IID(nsIStringBundleService), (nsISupports **)&sbServ);
-  if (NS_FAILED(res)) goto done;
+  nsCOMPtr<nsIStringBundleService> sbServ(do_GetService(NS_STRINGBUNDLE_CONTRACTID, &res));
+  if (NS_FAILED(res)) return res;
 
   // get the registry
-  res = nsServiceManager::GetService(NS_REGISTRY_CONTRACTID, 
-    NS_GET_IID(nsIRegistry), (nsISupports**)&registry);
-  if (NS_FAILED(res)) goto done;
+  nsCOMPtr<nsIRegistry> registry(do_GetService(NS_REGISTRY_CONTRACTID, &res));
+  if (NS_FAILED(res)) return res;
 
   // open registry if necessary
   registry->IsOpen(&regOpen);
   if (!regOpen) {
     res = registry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
-    if (NS_FAILED(res)) goto done;
+    if (NS_FAILED(res)) return res;
   }
 
   // get subtree
   res = registry->GetSubtree(nsIRegistry::Common,  
     aRegistryKey, &uconvKey);
-  if (NS_FAILED(res)) goto done;
+  if (NS_FAILED(res)) return res;
 
   // enumerate subtrees
-  res = registry->EnumerateSubtrees(uconvKey, &components);
-  if (NS_FAILED(res)) goto done;
+  res = registry->EnumerateSubtrees(uconvKey, getter_AddRefs(components));
+  if (NS_FAILED(res)) return res;
   res = components->First();
-  if (NS_FAILED(res)) goto done;
+  if (NS_FAILED(res)) return res;
 
   // create the bundles array
   res = NS_NewISupportsArray(&mBundle);
-  if (NS_FAILED(res)) goto done;
+  if (NS_FAILED(res)) return res;
 
   while (NS_OK != components->IsDone()) {
-    nsISupports * base = NULL;
-    nsIRegistryNode * node = NULL;
-    char * name = NULL;
-    nsIStringBundle * bundle = NULL;
+    nsCOMPtr<nsISupports> base;
+    nsCOMPtr<nsIRegistryNode> node;
+    nsXPIDLCString name;
+    nsCOMPtr<nsIStringBundle> bundle;
 
-    res = components->CurrentItem(&base);
-    if (NS_FAILED(res)) goto done1;
+    res = components->CurrentItem(getter_AddRefs(base));
+    if (NS_FAILED(res)) return res;
 
-    res = base->QueryInterface(NS_GET_IID(nsIRegistryNode), (void**)&node);
-    if (NS_FAILED(res)) goto done1;
+    node = do_QueryInterface(base, &res);
+    if (NS_FAILED(res)) {
+      res = components->Next();
+      if (NS_FAILED(res)) return res;
+      continue;
+    }
 
     res = node->GetKey(&key);
-    if (NS_FAILED(res)) goto done1;
+    if (NS_FAILED(res)) return res;
 
-    res = registry->GetStringUTF8(key, "name", &name);
-    if (NS_FAILED(res)) goto done1;
+    res = registry->GetStringUTF8(key, "name", getter_Copies(name));
+    if (NS_FAILED(res)) return res;
 
-    res = sbServ->CreateBundle(name, nsnull, &bundle);
-    if (NS_FAILED(res)) goto done1;
+    res = sbServ->CreateBundle(name, nsnull, getter_AddRefs(bundle));
+    if (NS_FAILED(res)) {
+      res = components->Next();
+      if (NS_FAILED(res)) return res;
+      continue;
+    }
 
     res = mBundle->AppendElement(bundle);
-    if (NS_FAILED(res)) goto done1;
-
-    // printf("Name = %s\n", name);
-
-done1:
-    NS_IF_RELEASE(base);
-    NS_IF_RELEASE(node);
-    NS_IF_RELEASE(bundle);
-
-    if (name != NULL) nsCRT::free(name);
+    if (NS_FAILED(res)) return res;
 
     res = components->Next();
-    if (NS_FAILED(res)) break; // this is NOT supposed to fail!
+    if (NS_FAILED(res)) return res;
   }
 
-  // finish and clean up
-done:
-  if (registry != NULL) {
-    nsServiceManager::ReleaseService(NS_REGISTRY_CONTRACTID, registry);
-  }
-  if (sbServ != NULL) nsServiceManager::ReleaseService(
-      kStringBundleServiceCID, sbServ);
-
-  NS_IF_RELEASE(components);
-
-  *aResult = res;
+  return res;
 }
 
 nsExtensibleStringBundle::~nsExtensibleStringBundle() 
@@ -824,8 +769,6 @@ private:
   PRCList mBundleCache;
   PLArenaPool mCacheEntryPool;
 
-  // reuse the same uri structure over and over
-  nsCOMPtr<nsIURI>              mScratchUri;
   nsCOMPtr<nsIErrorService>     mErrorService;
 
   const char            *mAsync; // temporary; remove after we settle w/ sync/async
@@ -844,8 +787,6 @@ nsStringBundleService::nsStringBundleService() :
                    sizeof(bundleCacheEntry_t)*MAX_CACHED_BUNDLES,
                    sizeof(bundleCacheEntry_t));
 
-  mScratchUri = do_CreateInstance(kStandardUrlCID);
-  NS_ASSERTION(mScratchUri, "Couldn't create scratch URI");
   mErrorService = do_GetService(kErrorServiceCID);
   NS_ASSERTION(mErrorService, "Couldn't get error service");
 
@@ -1039,16 +980,16 @@ nsStringBundleService::CreateAsyncBundle(const char* aURLSpec, nsIStringBundle**
 
 NS_IMETHODIMP
 nsStringBundleService::CreateExtensibleBundle(const char* aRegistryKey, 
-                                              nsILocale* aLocale,
                                               nsIStringBundle** aResult)
 {
   if (aResult == NULL) return NS_ERROR_NULL_POINTER;
 
   nsresult res = NS_OK;
 
-  nsExtensibleStringBundle * bundle = new nsExtensibleStringBundle(
-      aRegistryKey, aLocale, &res);
+  nsExtensibleStringBundle * bundle = new nsExtensibleStringBundle();
   if (!bundle) return NS_ERROR_OUT_OF_MEMORY;
+
+  res = bundle->Init(aRegistryKey);
   if (NS_FAILED(res)) {
     delete bundle;
     return res;
