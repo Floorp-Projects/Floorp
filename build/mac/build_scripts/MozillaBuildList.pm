@@ -1668,8 +1668,6 @@ sub BuildImglib2Projects()
 
     StartBuildModule("libimg2");    
     
-    BuildOneProject(":mozilla:gfx:macbuild:gfx.xml",                            "gfx$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
-
     if ($main::options{useimg2})
     {
         BuildOneProject(":mozilla:gfx2:macbuild:gfx2.xml",                          "gfx2$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
@@ -1936,6 +1934,8 @@ sub BuildLayoutProjects()
 
     BuildProject(":mozilla:expat:macbuild:expat.xml",                           "expat$D.o");
     BuildOneProject(":mozilla:htmlparser:macbuild:htmlparser.xml",              "htmlparser$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
+
+    BuildOneProject(":mozilla:gfx:macbuild:gfx.xml",                            "gfx$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
 
     my($dbg) = $main::DEBUG ? "Dbg" : "";
     BuildOneProjectWithOutput(":mozilla:gfx:macbuild:gfxComponent.xml",         "gfxComponent$C$dbg.$S", "gfxComponent$D.$S", 1, $main::ALIAS_SYM_FILES, 1);

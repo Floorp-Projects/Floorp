@@ -121,22 +121,4 @@ extern "C" NS_GFX_(void) NS_RGB2HSV(nscolor aColor,PRUint16 &aHue,PRUint16 &aSat
 // function to convert from HSV color space to RGB color space 
 extern "C" NS_GFX_(void) NS_HSV2RGB(nscolor &aColor,PRUint16 aHue,PRUint16 aSat,PRUint16 aValue);
 
-// Gamma correction
-PR_IMPORT_DATA(PRUint8) nsGammaRamp[256], nsInverseGammaRamp[256];
-
-extern "C" NS_GFX_(double) NS_DisplayGammaValue(void);
-extern "C" NS_GFX_(void)   NS_InitializeGamma(void);
-
-#define NS_GAMMA_CORRECT_COMPONENT(x)          (nsGammaRamp[x])
-#define NS_INVERSE_GAMMA_CORRECT_COMPONENT(x)  (nsInverseGammaRamp[x])
-
-#define NS_GAMMA_CORRECT_COLOR(x)          NS_RGBA(nsGammaRamp[NS_GET_R(x)], \
-                                                   nsGammaRamp[NS_GET_G(x)], \
-                                                   nsGammaRamp[NS_GET_B(x)], \
-                                                   NS_GET_A(x))
-#define NS_INVERSE_GAMMA_CORRECT_COLOR(x)  NS_RGBA(nsInverseGammaRamp[NS_GET_R(x)], \
-                                                   nsInverseGammaRamp[NS_GET_G(x)], \
-                                                   nsInverseGammaRamp[NS_GET_B(x)], \
-                                                   NS_GET_A(x))
-
 #endif /* nsColor_h___ */

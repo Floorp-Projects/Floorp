@@ -206,10 +206,10 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
   if (png_get_gAMA(png_ptr, info_ptr, &aGamma)) {
       if (aGamma < 0)
           aGamma = 0.45455;
-      png_set_gamma(png_ptr, NS_DisplayGammaValue(), aGamma);
+      png_set_gamma(png_ptr, 2.2, aGamma);
   }
   else
-      png_set_gamma(png_ptr, NS_DisplayGammaValue(), 0.45455);
+      png_set_gamma(png_ptr, 2.2, 0.45455);
 
   /* let libpng expand interlaced images */
   if (interlace_type == PNG_INTERLACE_ADAM7) {

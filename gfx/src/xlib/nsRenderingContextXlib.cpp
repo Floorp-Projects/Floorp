@@ -546,9 +546,9 @@ void nsRenderingContextXlib::UpdateGC()
  
    unsigned long color;
    color = xxlib_rgb_xpixel_from_rgb (mXlibRgbHandle,
-                                      NS_RGB(NS_GAMMA_CORRECT_COMPONENT(NS_GET_B(mCurrentColor)),
-                                             NS_GAMMA_CORRECT_COMPONENT(NS_GET_G(mCurrentColor)),
-                                             NS_GAMMA_CORRECT_COMPONENT(NS_GET_R(mCurrentColor))));
+                                      NS_RGB(NS_GET_B(mCurrentColor),
+                                             NS_GET_G(mCurrentColor),
+                                             NS_GET_R(mCurrentColor)));
    values.foreground = color;
    valuesMask |= GCForeground;
 

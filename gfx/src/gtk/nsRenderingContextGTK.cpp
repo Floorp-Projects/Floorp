@@ -523,7 +523,7 @@ void nsRenderingContextGTK::UpdateGC()
   memset(&values, 0, sizeof(GdkGCValues));
 
   values.foreground.pixel =
-    gdk_rgb_xpixel_from_rgb(NS_TO_GDK_RGB(NS_GAMMA_CORRECT_COLOR(mCurrentColor)));
+    gdk_rgb_xpixel_from_rgb(NS_TO_GDK_RGB(mCurrentColor));
   valuesMask = GDK_GC_FOREGROUND;
 
   if ((mCurrentFont) && (mCurrentFont->GetGDKFont())) {

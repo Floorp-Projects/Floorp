@@ -297,9 +297,9 @@ void nsRenderingContextBeOS::UpdateView() {
 		if (mCurrentFont == nsnull) mCurrentFont = (BFont *)be_plain_font;
 		
 		mView->SetFont(mCurrentFont);
-		mView->SetHighColor(NS_GAMMA_CORRECT_COMPONENT(NS_GET_R(mCurrentColor)),
-                        NS_GAMMA_CORRECT_COMPONENT(NS_GET_G(mCurrentColor)),
-                        NS_GAMMA_CORRECT_COMPONENT(NS_GET_B(mCurrentColor)),
+		mView->SetHighColor(NS_GET_R(mCurrentColor),
+                        NS_GET_G(mCurrentColor),
+                        NS_GET_B(mCurrentColor),
                         255);
 
 		BRegion *region = nsnull;

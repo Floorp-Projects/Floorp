@@ -1216,7 +1216,7 @@ NS_IMETHODIMP nsRenderingContextPh::GetBoundingMetrics(const PRUnichar*   aStrin
 
 void nsRenderingContextPh::UpdateGC()
 {
-        nscolor acolor = NS_GAMMA_CORRECT_COLOR(mCurrentColor);
+        nscolor acolor = mCurrentColor;
 
 	PgSetGC(mGC);	/* new */
 	PgSetStrokeColor(NS_TO_PH_RGB(acolor));
