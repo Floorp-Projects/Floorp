@@ -80,7 +80,7 @@
 *   W I N D O W      V A R I A B L E S
 */
 
-var debugenabled=true;
+var gDebugEnabled=true;
 
 var gEvent;          // event being edited
 var gOnOkFunction;   // function to be called when user clicks OK
@@ -122,30 +122,35 @@ function loadCalendarEventDialog()
 
 
     event = args.calendarEvent;
+    var title;
 
-    if (isEvent(event))
+    if (isEvent(event)) {
         document.getElementById("component-type").selectedIndex = 0;
-    else if (isTodo(event))
+        // mode is "new or "edit" - show proper header
+        if ("new" == args.mode) {
+            title = document.getElementById("data-event-title-new").getAttribute("value");
+        } else {
+            title = document.getElementById("data-event-title-edit").getAttribute("value");
+        }
+    } else if (isTodo(event)) {
         document.getElementById("component-type").selectedIndex = 1;
-    else { /* uh... */ dump("got a bogus event\n"); }
-
-    // mode is "new or "edit" - show proper header
-    var titleDataItem = null;
-
-    if ("new" == args.mode)
-        var title = document.getElementById("data-event-title-new").getAttribute("value");
-    else {
-        title = document.getElementById("data-event-title-edit").getAttribute("value");
+        if ("new" == args.mode)
+            title = document.getElementById("data-todo-title-new").getAttribute("value");
+        else
+            title = document.getElementById("data-todo-title-edit").getAttribute("value");
+    } else {
+        /* uh... */
+        dump("got a bogus event\n");
     }
 
     //document.getElementById("calendar-new-component-window").setAttribute("title", title);
     document.title = title;
 
-    dump("-----\n");
-    dump(event);
-    dump("-----\n");
-    dump(event.startDate);
-    dump("-----\n");
+    debug("-----");
+    debug("event: "+event);
+    debug("-----");
+    debug("event.startDate: "+event.startDate);
+    debug("-----");
 
     // fill in fields from the event
     gStartDate = event.startDate.jsDate;
@@ -231,9 +236,9 @@ function loadCalendarEventDialog()
         addAttachment(thisAttachment);
     }
     */
+
     document.getElementById("exceptions-date-picker").value = gStartDate;
 
-    dump("event: "+event+"\n");
     setFieldValue("title-field",       event.title  );
     setFieldValue("description-field", event.getProperty("description"));
     setFieldValue("location-field",    event.getProperty("location"));
@@ -257,8 +262,7 @@ function loadCalendarEventDialog()
     if (!event.hasAlarm) {
         // If the event has no alarm
         setFieldValue("alarm-type", "none");
-    }    
-    else {
+    } else {
         setFieldValue("alarm-length-field",     event.getProperty("alarmLength"));
         setFieldValue("alarm-length-units",     event.getProperty("alarmUnits"));
         setFieldValue("alarm-trigger-relation", event.getProperty("ICAL_RELATED_PARAMETER"));
@@ -267,8 +271,7 @@ function loadCalendarEventDialog()
         if (alarmEmailAddress && alarmEmailAddress != "") {
             setFieldValue("alarm-type", "email");
             setFieldValue("alarm-email-field", alarmEmailAddress);
-        }
-        else {
+        } else {
             setFieldValue("alarm-type", "popup");
             /* XXX lilmatt: finish this by selection between popup and 
                popupAndSound by checking pref "calendar.alarms.playsound" */
@@ -279,8 +282,7 @@ function loadCalendarEventDialog()
     if (inviteEmailAddress != undefined && inviteEmailAddress != "") {
         setFieldValue("invite-checkbox", true, "checked");
         setFieldValue("invite-email-field", inviteEmailAddress);
-    }
-    else {
+    } else {
         setFieldValue("invite-checkbox", false, "checked");
     }
 
@@ -291,12 +293,9 @@ function loadCalendarEventDialog()
         addAttendee(attendee.id);
     }
 
-    /* XXX
-
     /* Categories stuff */
 
     // Load categories
-    /*
     var categoriesString = opener.GetUnicharPref(opener.gCalendarWindow.calendarPreferences.calendarPref, "categories.names", getDefaultCategories());
 
     var categoriesList = categoriesString.split( "," );
@@ -314,26 +313,24 @@ function loadCalendarEventDialog()
     while( oldMenulist.hasChildNodes() )
         oldMenulist.removeChild( oldMenulist.lastChild );
 
-    for (i = 0; i < categoriesList.length ; i++)
-    {
+    for (i = 0; i < categoriesList.length ; i++) {
         document.getElementById( "categories-field" ).appendItem(categoriesList[i], categoriesList[i]);
     }
 
     document.getElementById( "categories-field" ).selectedIndex = -1;
     setFieldValue( "categories-field", gEvent.categories );
-   
+
+    /* XXX
 
     // Server stuff
     document.getElementById( "server-menulist-menupopup" ).database.AddDataSource( opener.gCalendarWindow.calendarManager.rdf.getDatasource() );
     document.getElementById( "server-menulist-menupopup" ).builder.rebuild();
    
     if (args.mode == "new") {
-        if ("server" in args) {
+        if ("server" in args)
             setFieldValue( "server-field", args.server );
-        }
-        else {
+        else
             document.getElementById( "server-field" ).selectedIndex = 1;
-        }
     } else {
         if (gEvent.parent)
             setFieldValue( "server-field", gEvent.parent.server );
@@ -350,7 +347,8 @@ function loadCalendarEventDialog()
     // update enabling and disabling
     updateRepeatItemEnabled();
     updateStartEndItemEnabled();
-    updateInviteItemEnabled();
+    updateCompletedItemEnabled();
+    processInviteCheckbox();
 
     updateAddExceptionButton();
 
@@ -369,6 +367,12 @@ function loadCalendarEventDialog()
     // hide/show fields and widgets for alarm type
     processAlarmType();
 
+    // enable/disable subordinate buttons of textboxes
+    processTextboxWithButton( "uri-field", "load-url-button" );
+  /*  these are listboxes, not textboxes
+    processTextboxWithButton( "exception-dates-listbox", "delete-exception-button" );
+    processTextboxWithButton( "invite-email-field", "invite-email-button" ); */
+
     // start focus on title
     var firstFocus = document.getElementById("title-field");
     firstFocus.focus();
@@ -380,10 +384,9 @@ function loadCalendarEventDialog()
 }
 
 
-
-/**
-*   Called when the OK button is clicked.
-*/
+/*
+ * Called when the OK button is clicked.
+ */
 
 function onOKCommand()
 {
@@ -396,11 +399,13 @@ function onOKCommand()
         event = originalEvent.clone().QueryInterface(Components.interfaces.calIEvent);
 
     // get values from the form and put them into the event
+
     // calIEvent properties
     event.startDate.jsDate = gStartDate;
     event.endDate.jsDate   = gEndDate;
     event.isAllDay = getFieldValue( "all-day-event-checkbox", "checked" );
 
+    // XXX should do an idiot check here to see if duration is negative
 
     // calIItemBase properties
     event.title = getFieldValue( "title-field" );
@@ -408,9 +413,8 @@ function onOKCommand()
         event.privacy = "PRIVATE";
     else
         event.privacy = "PUBLIC";
-    if (getFieldValue( "alarm-type" ) != "" && getFieldValue( "alarm-type" ) != "none")
+    if (getFieldValue( "alarm-type" ) != "" && getFieldValue( "alarm-type" ) != "none") {
         event.hasAlarm == 1
-    if (event.hasAlarm) {
         alarmLength = getFieldValue( "alarm-length-field" );
         alarmUnits  = getFieldValue( "alarm-length-units", "value" );
         //event.alarmTime = ...
@@ -420,7 +424,7 @@ function onOKCommand()
     
     if (getFieldValue("repeat-checkbox", "checked")) {
         recurrenceInfo = createRecurrenceInfo();
-        dump ("** recurrenceInfo: " + recurrenceInfo + "\n");
+        debug("** recurrenceInfo: " + recurrenceInfo );
         recurrenceInfo.initialize(event);
 
         var recRule = new calRecurrenceRule();
@@ -478,7 +482,7 @@ function onOKCommand()
         event.recurrenceInfo = recurrenceInfo;
     }
 
-    dump ("RECURRENCE INFO ON EVENT: " + event.recurrenceInfo + "\n");
+    debug("RECURRENCE INFO ON EVENT: " + event.recurrenceInfo );
 
 
     // other properties
@@ -537,6 +541,7 @@ function onOKCommand()
    return true;
 }
 
+
 /*
  * Compare dateA with dateB ignoring time of day of each date object.
  * Comparison based on year, month, and day, ignoring rest.
@@ -559,8 +564,12 @@ function compareIgnoringTimeOfDay(dateA, dateB)
    }
 }
 
-/** Check that end date is not before start date, and update warning msg.
-    Return true if problem found. **/
+
+/*
+ * Check that end date is not before start date, and update warning message
+ * Return true if problem found.
+ */
+
 function checkSetTimeDate()
 {
    var dateComparison = compareIgnoringTimeOfDay(gEndDate, gStartDate);
@@ -571,29 +580,30 @@ function checkSetTimeDate()
    {
       // end before start, or all day event and end date is not exclusive.
       setDateError(true);
+      //showElement("end-date-warning");
       setTimeError(false);
+      //hideElement("end-time-warning");
       return false;
-   }
-   else if (dateComparison == 0)
-   {
+   } else if (dateComparison == 0) {
       setDateError(false);
+      //hideElement("end-date-warning");
       // start & end date same, so compare entire time (ms since 1970)
       var isBadEndTime = gEndDate.getTime() < gStartDate.getTime();
       setTimeError(isBadEndTime);
       return !isBadEndTime;
-   }
-   else
-   {
+   } else {
       setDateError(false);
+      //hideElement("end-date-warning");
       setTimeError(false);
+      //hideElement("end-time-warning");
       return true;
    }
-
 }
+
 
 /*
  * Check that the recurrence end date is after the end date of the event.
- * Unlike the time/date versions this one sets the error message too as is
+ * Unlike the time/date versions this one sets the error message too as it
  * doesn't depend on the outcome of any of the other tests
  */
 
@@ -616,20 +626,96 @@ function checkSetRecur()
    return(!untilDateIsBeforeEndDate);
 }
 
+
+/*
+ * Called when the start or due datetime checkbox is clicked.
+ * Enables/disables corresponding datetime picker and alarm relation.
+ */
+
+function onDateTimeCheckbox(checkbox, pickerId)
+{
+    var picker = document.getElementById( pickerId );
+    picker.disabled = !checkbox.checked;
+
+    updateAlarmItemEnabled();
+    updateOKButton();
+}
+
+
 function setRecurError(state)
 {
    document.getElementById("repeat-time-warning" ).setAttribute( "hidden", !state);
 }
+
 
 function setDateError(state)
 { 
    document.getElementById( "end-date-warning" ).setAttribute( "hidden", !state );
 }
 
+
 function setTimeError(state)
 { 
    document.getElementById( "end-time-warning" ).setAttribute( "hidden", !state );
 }
+
+
+/*
+ * Check that the due date is after the start date, if they are the same day
+ * then the checkDueTime function should catch the problem (if there is one).
+ */
+
+function checkDueDate()
+{
+  var startDate = document.getElementById( "start-datetime" ).value;
+  var dueDate = document.getElementById( "due-datetime" ).value;
+  compareIgnoringTimeOfDay(dueDate, startDate);
+}
+
+
+/*
+ * Check that start datetime <= due datetime if both exist.
+ * Provide separate error message for startDate > dueDate or
+ * startDate == dueDate && startTime > dueTime.
+ */
+
+function checkDueSetTimeDate()
+{
+  var startCheckBox = document.getElementById( "start-checkbox" );
+  var dueCheckBox = document.getElementById( "due-checkbox" );
+  if (startCheckBox.checked && dueCheckBox.checked) {
+    var CheckDueDate = checkDueDate();
+
+    if ( CheckDueDate < 0 ) {
+      // due before start
+      setDueDateError(true);
+      setDueTimeError(false);
+      return false;
+    } else if ( CheckDueDate == 0 ) {
+      setDueDateError(false);
+      // start & due same
+      var CheckDueTime = checkDueTime();
+      setDueTimeError(CheckDueTime);
+      return !CheckDueTime;
+    }
+  }
+  setDueDateError(false);
+  setDueTimeError(false);
+  return true;
+}
+
+
+function setDueDateError(state)
+{
+    document.getElementById( "due-date-warning" ).setAttribute( "hidden", !state );
+}
+
+
+function setDueTimeError(state)
+{
+    document.getElementById( "due-time-warning" ).setAttribute( "hidden", !state );
+}
+
 
 function setOkButton(state)
 {
@@ -638,6 +724,7 @@ function setOkButton(state)
    else
       document.getElementById( "calendar-new-component-window" ).getButton( "accept" ).removeAttribute( "disabled" );
 }
+
 
 function updateOKButton()
 {
@@ -648,16 +735,15 @@ function updateOKButton()
 }
 
 
-/**
-*   Called when a datepicker is finished, and a date was picked.
-*/
+/*
+ * Called when a datepicker is finished, and a date was picked.
+ */
 
 function onDateTimePick( dateTimePicker )
 {
    var pickedDateTime = new Date( dateTimePicker.value );
 
-   if( dateTimePicker.id == "end-datetime" )
-   {
+   if( dateTimePicker.id == "end-datetime" ) {
      if( getFieldValue( "all-day-event-checkbox", "checked" ) ) {
        //display enddate == ical enddate - 1 (for allday events)
        pickedDateTime.setDate( pickedDateTime.getDate() + 1 );
@@ -670,8 +756,7 @@ function onDateTimePick( dateTimePicker )
      return;
    }
 
-   if( dateTimePicker.id == "start-datetime" )
-   {
+   if( dateTimePicker.id == "start-datetime" ) {
      gStartDate = pickedDateTime;
      // preserve the previous duration by changing end
      gEndDate.setTime( gStartDate.getTime() + gDuration );
@@ -699,9 +784,10 @@ function onDateTimePick( dateTimePicker )
    updateOKButton();
 }
 
-/**
-*   Called when the repeat checkbox is clicked.
-*/
+
+/*
+ * Called when the repeat checkbox is clicked.
+ */
 
 function commandRepeat()
 {
@@ -709,9 +795,9 @@ function commandRepeat()
 }
 
 
-/**
-*   Called when the until radio is clicked.
-*/
+/*
+ * Called when the until radio is clicked.
+ */
 
 function commandUntil()
 {
@@ -720,9 +806,10 @@ function commandUntil()
    updateOKButton();
 }
 
-/**
-*   Called when the all day checkbox is clicked.
-*/
+
+/*
+ * Called when the all day checkbox is clicked.
+ */
 
 function commandAllDay()
 {
@@ -740,60 +827,31 @@ function commandAllDay()
 }
 
 
-/**
-*   Called when the invite checkbox is clicked.
-*/
+/*
+ * Called when the invite checkbox is clicked.
+ */
 
-function commandInvite()
+function processInviteCheckbox()
 {
-   updateInviteItemEnabled();
+    processEnableCheckbox( "invite-checkbox" , "invite-email-field" );
 }
 
 
-/**
-*   Enable/Disable Alarm items
-*/
-
-function updateInviteItemEnabled()
-{
-   var inviteCheckBox = document.getElementById( "invite-checkbox" );
-   
-   var inviteField = document.getElementById( "invite-email-field" );
-   
-   if( inviteCheckBox.checked )
-   {
-      // call remove attribute beacuse some widget code checks for the presense of a 
-      // disabled attribute, not the value.
-      
-      inviteField.removeAttribute( "disabled" );
-   }
-   else
-   {
-      inviteField.setAttribute( "disabled", "true" );
-   }
-}
-
-
-/**
-*   Enable/Disable Repeat items
-*/
+/*
+ * Enable/Disable Repeat items
+ */
 
 function updateRepeatItemEnabled()
 {
-   var repeatCheckBox = document.getElementById( "repeat-checkbox" );
-   
+   var repeatCheckBox    = document.getElementById( "repeat-checkbox" );
    var repeatDisableList = document.getElementsByAttribute( "disable-controller", "repeat" );
-   
-   if( repeatCheckBox.checked )
-   {
-      for( var i = 0; i < repeatDisableList.length; ++i )
-      {
+
+   if( repeatCheckBox.checked ) {
+      for( var i = 0; i < repeatDisableList.length; ++i ) {
          if( repeatDisableList[i].getAttribute( "today" ) != "true" )
             repeatDisableList[i].removeAttribute( "disabled" );
       }
-   }
-   else
-   {
+   } else {
       for( var j = 0; j < repeatDisableList.length; ++j )
          repeatDisableList[j].setAttribute( "disabled", "true" );
    }
@@ -810,18 +868,20 @@ function updateRepeatItemEnabled()
    updateRepeatUnitExtensions();
 }
 
-/**
-*   Update plural singular menu items
-*/
+
+/*
+ * Update plural singular menu items
+ */
 
 function updateRepeatPlural()
 {
     updateMenuPlural( "repeat-length-field", "repeat-length-units" );
 }
 
-/**
-*   Update plural singular menu items
-*/
+
+/*
+ * Update plural singular menu items
+ */
 
 function updateAlarmPlural()
 {
@@ -829,139 +889,63 @@ function updateAlarmPlural()
 }
 
 
-/**
-*   Update plural singular menu items
-*/
-
-function updateMenuPlural( lengthFieldId, menuId )
-{
-    var field = document.getElementById( lengthFieldId );
-    var menu = document.getElementById( menuId );
-   
-    // figure out whether we should use singular or plural 
-    
-    var length = field.value;
-    
-    var newLabelNumber; 
-    
-    // XXX This assumes that "0 days, minutes, etc." is plural in other languages.
-    if( ( Number( length ) == 0 ) || ( Number( length ) > 1 ) )
-    {
-        newLabelNumber = "labelplural"
-    }
-    else
-    {
-        newLabelNumber = "labelsingular"
-    }
-    
-    // see what we currently show and change it if required
-    
-    var oldLabelNumber = menu.getAttribute( "labelnumber" );
-    
-    if( newLabelNumber != oldLabelNumber )
-    {
-        // remember what we are showing now
-        
-        menu.setAttribute( "labelnumber", newLabelNumber );
-        
-        // update the menu items
-        
-        var items = menu.getElementsByTagName( "menuitem" );
-        
-        for( var i = 0; i < items.length; ++i )
-        {
-            var menuItem = items[i];
-            var newLabel = menuItem.getAttribute( newLabelNumber );
-            menuItem.label = newLabel;
-            menuItem.setAttribute( "label", newLabel );
-            
-        }
-        
-        // force the menu selection to redraw
-        
-        var saveSelectedIndex = menu.selectedIndex;
-        menu.selectedIndex = -1;
-        menu.selectedIndex = saveSelectedIndex;
-    }
-}
-
-/**
-*   Enable/Disable Until items
-*/
+/*
+ * Enable/Disable Until items
+ */
 
 function updateUntilItemEnabled()
 {
-   var repeatCheckBox = document.getElementById( "repeat-checkbox" );
-   var numberRadio = document.getElementById("repeat-numberoftimes-radio");
-   var numberTextBox = document.getElementById("repeat-numberoftimes-textbox");
-   
-   if( repeatCheckBox.checked && numberRadio.selected  )
-   {
-      numberTextBox.removeAttribute( "disabled"  );
-   }
-   else
-   {
-      numberTextBox.setAttribute( "disabled", "true" );
-   }
+    var repeatCheckBox = document.getElementById("repeat-checkbox");
+    var numberRadio    = document.getElementById("repeat-numberoftimes-radio");
+    var untilRadio     = document.getElementById("repeat-until-radio");
 
-   var untilRadio = document.getElementById( "repeat-until-radio" );
-   var untilPicker = document.getElementById( "repeat-end-date-picker" );
-   
-   if( repeatCheckBox.checked && untilRadio.selected  )
-   {
-      untilPicker.removeAttribute( "disabled"  );
-   }
-   else
-   {
-      untilPicker.setAttribute( "disabled", "true" );
-   }
+    if( repeatCheckBox.checked && numberRadio.selected  )
+        enableElement("repeat-numberoftimes-textbox");
+    else
+        disableElement("repeat-numberoftimes-textbox");
+
+    if( repeatCheckBox.checked && untilRadio.selected )
+        enableElement("repeat-end-date-picker");
+    else
+        disableElement("repeat-end-date-picker");
 }
 
 
 function updateRepeatUnitExtensions( )
 {
-   var repeatMenu = document.getElementById( "repeat-length-units" );
-   var weekExtensions = document.getElementById( "repeat-extenstions-week" );
-   var monthExtensions = document.getElementById( "repeat-extenstions-month" );
+    var repeatMenu = document.getElementById( "repeat-length-units" );
 
-   //FIX ME! WHEN THE WINDOW LOADS, THIS DOESN'T EXIST
-   if( repeatMenu.selectedItem )
-   {
-      switch( repeatMenu.selectedItem.value )
-      {
-           case "days":
-               weekExtensions.setAttribute( "collapsed", "true" );
-               monthExtensions.setAttribute( "collapsed", "true" );
-           break;
-           
-           case "weeks":
-               weekExtensions.removeAttribute( "collapsed" );
-               monthExtensions.setAttribute( "collapsed", "true" );
-               updateAdvancedWeekRepeat();
-           break;
-           
-           case "months":
-               weekExtensions.setAttribute( "collapsed", "true" );
-               monthExtensions.removeAttribute( "collapsed" );
-               //the following line causes resize problems after turning on repeating events
-               updateAdvancedRepeatDayOfMonth();
-           break;
-           
-           case "years":
-               weekExtensions.setAttribute( "collapsed", "true" );
-               monthExtensions.setAttribute( "collapsed", "true" );
-           break;
-       
-      }
-      sizeToContent();  
-   }
-   
+    // XXX FIX ME! WHEN THE WINDOW LOADS, THIS DOESN'T EXIST
+    if( repeatMenu.selectedItem ) {
+        switch( repeatMenu.selectedItem.value ) {
+        case "days":
+            hideElement("repeat-extensions-week");
+            hideElement("repeat-extensions-month");
+            break;
+        case "weeks":
+            showElement("repeat-extensions-week");
+            hideElement("repeat-extensions-month");
+            updateAdvancedWeekRepeat();
+            break;
+        case "months":
+            hideElement("repeat-extensions-week");
+            showElement("repeat-extensions-month");
+            //the following line causes resize problems after turning on repeating events
+            updateAdvancedRepeatDayOfMonth();
+            break;
+        case "years":
+            hideElement("repeat-extensions-week");
+            hideElement("repeat-extensions-month");
+            break;
+        }
+        sizeToContent();
+    }
 }
 
 
-/**
-*   Enable/Disable Start/End items
-*/
+/*
+ * Enable/Disable Start/End items
+ */
 
 function updateStartEndItemEnabled()
 {
@@ -976,18 +960,19 @@ function updateStartEndItemEnabled()
 }
 
 
-/**
-*   Handle key down in repeat field
-*/
+/*
+ * Handle key down in repeat field
+ */
 
 function repeatLengthKeyDown( repeatField )
 {
     updateRepeatPlural();
 }
 
-/**
-*   Handle key down in alarm field
-*/
+
+/*
+ * Handle key down in alarm field
+ */
 
 function alarmLengthKeyDown( repeatField )
 {
@@ -1002,57 +987,50 @@ function repeatUnitCommand( repeatMenu )
 
 
 /*
-** Functions for advanced repeating elements
-*/
+ * Functions for advanced repeating elements
+ */
 
 function setAdvancedWeekRepeat()
 {
    var checked = false;
 
-   if( gEvent.recurWeekdays > 0 )
-   {
-      for( var i = 0; i < 7; i++ )
-      {
+   if( gEvent.recurWeekdays > 0 ) {
+      for( var i = 0; i < 7; i++ ) {
          checked = ( ( gEvent.recurWeekdays | eval( "kRepeatDay_"+i ) ) == eval( gEvent.recurWeekdays ) );
-         
          setFieldValue( "advanced-repeat-week-"+i, checked, "checked" );
-
          setFieldValue( "advanced-repeat-week-"+i, false, "today" );
       }
    }
-  
+
    //get the day number for today.
    var dayNumber = document.getElementById( "start-datetime" ).value.getDay();
-   
+
    setFieldValue( "advanced-repeat-week-"+dayNumber, "true", "checked" );
-
    setFieldValue( "advanced-repeat-week-"+dayNumber, "true", "disabled" );
-
    setFieldValue( "advanced-repeat-week-"+dayNumber, "true", "today" );
-   
 }
 
+
 /*
-** Functions for advanced repeating elements
-*/
+ * Functions for advanced repeating elements
+ */
 
 function getAdvancedWeekRepeat()
 {
    var Total = 0;
 
-   for( var i = 0; i < 7; i++ )
-   {
+   for( var i = 0; i < 7; i++ ) {
       if( getFieldValue( "advanced-repeat-week-"+i, "checked" ) == true )
-      {
          Total += eval( "kRepeatDay_"+i );
-      }
    }
    return( Total );
 }
 
+
 /*
-** function to set the menu items text
-*/
+ * function to set the menu items text
+ */
+
 function updateAdvancedWeekRepeat()
 {
    //get the day number for today.
@@ -1061,110 +1039,93 @@ function updateAdvancedWeekRepeat()
    //uncheck them all if the repeat checkbox is checked
    var repeatCheckBox = document.getElementById( "repeat-checkbox" );
    
-   if( repeatCheckBox.checked )
-   {
+   if( repeatCheckBox.checked ) {
       //uncheck them all
-      for( var i = 0; i < 7; i++ )
-      {
+      for( var i = 0; i < 7; i++ ) {
          setFieldValue( "advanced-repeat-week-"+i, false, "disabled" );
-      
          setFieldValue( "advanced-repeat-week-"+i, false, "today" );
       }
    }
 
-   if( !repeatCheckBox.checked )
-   {
-      for( i = 0; i < 7; i++ )
-      {
+   if( !repeatCheckBox.checked ) {
+      for( i = 0; i < 7; i++ ) {
          setFieldValue( "advanced-repeat-week-"+i, false, "checked" );
       }
    }
 
    setFieldValue( "advanced-repeat-week-"+dayNumber, "true", "checked" );
-
    setFieldValue( "advanced-repeat-week-"+dayNumber, "true", "disabled" );
-
    setFieldValue( "advanced-repeat-week-"+dayNumber, "true", "today" );
 }
 
+
 /*
-** function to set the menu items text
-*/
+ * function to set the menu items text
+ */
+
 function updateAdvancedRepeatDayOfMonth()
 {
-   //get the day number for today.
-   var dayNumber = document.getElementById( "start-datetime" ).value.getDate();
-   
-   var dayExtension = getDayExtension( dayNumber );
+    //get the day number for today.
+    var dayNumber = document.getElementById( "start-datetime" ).value.getDate();
+    var dayExtension = getDayExtension( dayNumber );
+    var weekNumber = getWeekNumberOfMonth();
+    var calStrings = document.getElementById("bundle_calendar");
+    var weekNumberText = getWeekNumberText( weekNumber );
+    var dayOfWeekText = getDayOfWeek( dayNumber );
+    var ofTheMonthText = getFieldValue( "ofthemonth-text" );
+    var lastText = getFieldValue( "last-text" );
+    var onTheText = getFieldValue( "onthe-text" );
+    var dayNumberWithOrdinal = dayNumber + dayExtension;
+    var repeatSentence = calStrings.getFormattedString( "weekDayMonthLabel", [onTheText, dayNumberWithOrdinal, ofTheMonthText] );
 
-   var weekNumber = getWeekNumberOfMonth();
-   
-   var calStrings = document.getElementById("bundle_calendar");
+    document.getElementById( "advanced-repeat-dayofmonth" ).setAttribute( "label", repeatSentence );
 
-   var weekNumberText = getWeekNumberText( weekNumber );
-   var dayOfWeekText = getDayOfWeek( dayNumber );
-   var ofTheMonthText = document.getElementById( "ofthemonth-text" ).getAttribute( "value" );
-   var lastText = document.getElementById( "last-text" ).getAttribute( "value" );
-   var onTheText = document.getElementById( "onthe-text" ).getAttribute( "value" );
-   var dayNumberWithOrdinal = dayNumber + dayExtension;
-   var repeatSentence = calStrings.getFormattedString( "weekDayMonthLabel", [onTheText, dayNumberWithOrdinal, ofTheMonthText] );
-
-   document.getElementById( "advanced-repeat-dayofmonth" ).setAttribute( "label", repeatSentence );
-   
-   if( weekNumber == 4 && isLastDayOfWeekOfMonth() )
-   {
-      document.getElementById( "advanced-repeat-dayofweek" ).setAttribute( "label", calStrings.getFormattedString( "weekDayMonthLabel", [weekNumberText, dayOfWeekText, ofTheMonthText] ) );
-
-      document.getElementById( "advanced-repeat-dayofweek-last" ).removeAttribute( "collapsed" );
-
-      document.getElementById( "advanced-repeat-dayofweek-last" ).setAttribute( "label", calStrings.getFormattedString( "weekDayMonthLabel", [lastText, dayOfWeekText, ofTheMonthText] ) );
-   }
-   else if( weekNumber == 4 && !isLastDayOfWeekOfMonth() )
-   {
-      document.getElementById( "advanced-repeat-dayofweek" ).setAttribute( "label", calStrings.getFormattedString( "weekDayMonthLabel", [weekNumberText, dayOfWeekText, ofTheMonthText] ) );
-
-      document.getElementById( "advanced-repeat-dayofweek-last" ).setAttribute( "collapsed", "true" );
-   }
-   else
-   {
-      document.getElementById( "advanced-repeat-dayofweek" ).setAttribute( "label", calStrings.getFormattedString( "weekDayMonthLabel", [weekNumberText, dayOfWeekText, ofTheMonthText] ) );
-
-      document.getElementById( "advanced-repeat-dayofweek-last" ).setAttribute( "collapsed", "true" );
-   }
+    if( weekNumber == 4 && isLastDayOfWeekOfMonth() ) {
+        document.getElementById( "advanced-repeat-dayofweek" ).setAttribute( "label", calStrings.getFormattedString( "weekDayMonthLabel", [weekNumberText, dayOfWeekText, ofTheMonthText] ) );
+        showElement("advanced-repeat-dayofweek-last");
+        document.getElementById( "advanced-repeat-dayofweek-last" ).setAttribute( "label", calStrings.getFormattedString( "weekDayMonthLabel", [lastText, dayOfWeekText, ofTheMonthText] ) );
+    } else if( weekNumber == 4 && !isLastDayOfWeekOfMonth() ) {
+        document.getElementById( "advanced-repeat-dayofweek" ).setAttribute( "label", calStrings.getFormattedString( "weekDayMonthLabel", [weekNumberText, dayOfWeekText, ofTheMonthText] ) );
+        hideElement("advanced-repeat-dayofweek-last");
+    } else {
+        document.getElementById( "advanced-repeat-dayofweek" ).setAttribute( "label", calStrings.getFormattedString( "weekDayMonthLabel", [weekNumberText, dayOfWeekText, ofTheMonthText] ) );
+        hideElement("advanced-repeat-dayofweek-last");
+    }
 }
+
 
 /*
-** function to enable or disable the add exception button
-*/
+ * function to enable or disable the add exception button
+ */
+
 function updateAddExceptionButton()
 {
-   //get the date from the picker
-   var datePickerValue = document.getElementById( "exceptions-date-picker" ).value;
-   
-   if( isAlreadyException( datePickerValue ) || document.getElementById( "repeat-checkbox" ).getAttribute( "checked" ) != "true" )
-   {
-      document.getElementById( "exception-add-button" ).setAttribute( "disabled", "true" );
-   }
-   else
-   {
-      document.getElementById( "exception-add-button" ).removeAttribute( "disabled" );
-   }
+    //get the date from the picker
+    var datePickerValue = document.getElementById( "exceptions-date-picker" ).value;
+
+    if( isAlreadyException( datePickerValue ) ||
+        document.getElementById( "repeat-checkbox" ).getAttribute( "checked" ) != "true" )
+    {
+        disableElement("exception-add-button");
+    } else {
+        enableElement("exception-add-button");
+    }
 }
+
 
 function removeSelectedExceptionDate()
 {
-   var Listbox = document.getElementById( "exception-dates-listbox" );
+    var exceptionsListbox = document.getElementById( "exception-dates-listbox" );
+    var SelectedItem = exceptionsListbox.selectedItem;
 
-   var SelectedItem = Listbox.selectedItem;
-
-   if( SelectedItem )
-      Listbox.removeChild( SelectedItem );
+    if( SelectedItem )
+        exceptionsListbox.removeChild( SelectedItem );
 }
+
 
 function addException( dateToAdd )
 {
-   if( !dateToAdd )
-   {
+   if( !dateToAdd ) {
       //get the date from the date and time box.
       //returns a date object
       dateToAdd = document.getElementById( "exceptions-date-picker" ).value;
@@ -1183,13 +1144,13 @@ function addException( dateToAdd )
    sizeToContent();
 }
 
+
 function isAlreadyException( dateObj )
 {
    //check to make sure that the date is not already added.
    var listbox = document.getElementById( "exception-dates-listbox" );
 
-   for( var i = 0; i < listbox.childNodes.length; i++ )
-   {
+   for( var i = 0; i < listbox.childNodes.length; i++ ) {
       var dateToMatch = new Date( );
       
       dateToMatch.setTime( listbox.childNodes[i].value );
@@ -1199,20 +1160,19 @@ function isAlreadyException( dateObj )
    return false;
 }
 
+
 function getDayExtension( dayNumber )
 {
    var dateStringBundle = srGetStrBundle("chrome://calendar/locale/dateFormat.properties");
 
    if ( dayNumber >= 1 && dayNumber <= 31 )
-   {
       return( dateStringBundle.GetStringFromName( "ordinal.suffix."+dayNumber ) );
-   }
-   else
-   {
+   else {
       dump("ERROR: Invalid day number: " + dayNumber);
       return ( false );
    }
 }
+
 
 function getDayOfWeek( )
 {
@@ -1225,8 +1185,8 @@ function getDayOfWeek( )
    var oneBasedDayNumber = parseInt( dayNumber ) + 1;
    
    return( dateStringBundle.GetStringFromName( "day."+oneBasedDayNumber+".name" ) );
-   
 }
+
 
 function getWeekNumberOfMonth()
 {
@@ -1241,8 +1201,7 @@ function getWeekNumberOfMonth()
 
    var weekNumber = 0;
 
-   while( monthToCompare == thisMonth )
-   {
+   while( monthToCompare == thisMonth ) {
       startTime = new Date( startTime.getTime() - ( 1000 * 60 * 60 * 24 * 7 ) );
 
       monthToCompare = startTime.getMonth();
@@ -1252,6 +1211,7 @@ function getWeekNumberOfMonth()
    
    return( weekNumber );
 }
+
 
 function isLastDayOfWeekOfMonth()
 {
@@ -1266,40 +1226,37 @@ function isLastDayOfWeekOfMonth()
 
    var weekNumber = 0;
 
-   while( monthToCompare == thisMonth )
-   {
+   while( monthToCompare == thisMonth ) {
       startTime = new Date( startTime.getTime() - ( 1000 * 60 * 60 * 24 * 7 ) );
 
       monthToCompare = startTime.getMonth();
-      
+
       weekNumber++;
    }
-   
-   if( weekNumber > 3 )
-   {
+
+   if( weekNumber > 3 ) {
       var nextWeek = new Date( oldStartTime.getTime() + ( 1000 * 60 * 60 * 24 * 7 ) );
 
-      if( nextWeek.getMonth() != thisMonth )
-      {
+      if( nextWeek.getMonth() != thisMonth ) {
          //its the last week of the month
          return( true );
       }
    }
-
    return( false );
 }
+
 
 /* FILE ATTACHMENTS */
 
 function removeSelectedAttachment()
 {
-   var Listbox = document.getElementById("attachmentBucket");
+    var attachmentListbox = document.getElementById("attachmentBucket");
+    var SelectedItem = attachmentListbox.selectedItem;
 
-   var SelectedItem = Listbox.selectedItem;
-
-   if(SelectedItem)
-      Listbox.removeChild(SelectedItem);
+    if(SelectedItem)
+        attachmentListbox.removeChild(SelectedItem);
 }
+
 
 function addAttachment(attachmentToAdd)
 {
@@ -1315,24 +1272,20 @@ function addAttachment(attachmentToAdd)
 
 function getWeekNumberText( weekNumber )
 {
-   var dateStringBundle = srGetStrBundle("chrome://calendar/locale/dateFormat.properties");
-   if ( weekNumber >= 1 && weekNumber <= 4 )
-   {
-      return( dateStringBundle.GetStringFromName( "ordinal.name."+weekNumber) );
-   }
-   else if( weekNumber == 5 ) 
-   {
-       return( dateStringBundle.GetStringFromName( "ordinal.name.last" ) );
-   }
-   else
-   {
-      return( false );
-   }
+    var dateStringBundle = srGetStrBundle("chrome://calendar/locale/dateFormat.properties");
+    if ( weekNumber >= 1 && weekNumber <= 4 )
+        return( dateStringBundle.GetStringFromName( "ordinal.name."+weekNumber) );
+    else if( weekNumber == 5 )
+        return( dateStringBundle.GetStringFromName( "ordinal.name.last" ) );
+    else
+        return( false );
 }
+
+
+/* URL */
 
 var launch = true;
 
-/* URL */
 function loadURL()
 {
    if( launch == false ) //stops them from clicking on it twice
@@ -1356,7 +1309,6 @@ function loadURL()
 }
 
 
-
 /**
 *   Helper function for filling the form, set the value of a property of a XUL element
 *
@@ -1369,35 +1321,29 @@ function loadURL()
 
 function setFieldValue( elementId, newValue, propertyName  )
 {
-   var undefined;
-   
-   if( newValue !== undefined ) {
-      var field = document.getElementById( elementId );
-      
-      if( newValue === false ) {
-         try {
-             field.removeAttribute( propertyName );
-         }
-         catch (e) {
-             dump("setFieldValue: field.removeAttribute couldn't remove "+propertyName+
-                  " from "+elementId+" e: "+e+"\n");
-         }
-      }
-      else {
-         if( propertyName ) {
-             try {
-                 field.setAttribute( propertyName, newValue );
-             }
-             catch (e) {
-                 dump("setFieldValue: field.setAttribute couldn't set "+propertyName+
-                      " from "+elementId+" to "+newValue+" e: "+e+"\n");
-             }
-         }
-         else {
+    var undefined;
+
+    if( newValue !== undefined ) {
+        var field = document.getElementById( elementId );
+
+        if( newValue === false ) {
+            try {
+                field.removeAttribute( propertyName );
+            } catch (e) {
+                dump("setFieldValue: field.removeAttribute couldn't remove "+propertyName+
+                     " from "+elementId+" e: "+e+"\n");
+            }
+        } else if( propertyName ) {
+            try {
+                field.setAttribute( propertyName, newValue );
+            } catch (e) {
+                dump("setFieldValue: field.setAttribute couldn't set "+propertyName+
+                     " from "+elementId+" to "+newValue+" e: "+e+"\n");
+            }
+        } else {
             field.value = newValue;
-         }
-      }
-   }
+        }
+    }
 }
 
 
@@ -1415,17 +1361,14 @@ function setFieldValue( elementId, newValue, propertyName  )
 
 function getFieldValue( elementId, propertyName )
 {
-   var field = document.getElementById( elementId );
-   
-   if( propertyName )
-   {
-      return field[ propertyName ];
-   }
-   else
-   {
-      return field.value;
-   }
+    var field = document.getElementById( elementId );
+
+    if( propertyName )
+        return field[ propertyName ];
+    else
+        return field.value;
 }
+
 
 /**
 *   Helper function for getting a date/time from the form.
@@ -1437,13 +1380,11 @@ function getFieldValue( elementId, propertyName )
 *      newValue      - Date value of element
 */
 
-
 function getDateTimeFieldValue( elementId )
 {
    var field = document.getElementById( elementId );
    return field.editDate;
 }
-
 
 
 /**
@@ -1456,16 +1397,16 @@ function getDateTimeFieldValue( elementId )
 
 function setDateFieldValue( elementId, newDate  )
 {
-   // set the value to a formatted date string 
+   // set the value to a formatted date string
    
    var field = document.getElementById( elementId );
    field.value = formatDate( newDate );
    
-   // add an editDate property to the item to hold the Date object 
+   // add an editDate property to the item to hold the Date object
    // used in onDatePick to update the date from the date picker.
    // used in getDateTimeFieldValue to get the Date back out.
    
-   // we clone the date object so changes made in place do not propagte 
+   // we clone the date object so changes made in place do not propagte
    
    field.editDate = new Date( newDate );
 }
@@ -1485,19 +1426,19 @@ function setTimeFieldValue( elementId, newDate  )
    var field = document.getElementById( elementId );
    field.value = formatTime( newDate );
    
-   // add an editDate property to the item to hold the Date object 
+   // add an editDate property to the item to hold the Date object
    // used in onTimePick to update the date from the time picker.
    // used in getDateTimeFieldValue to get the Date back out.
    
-   // we clone the date object so changes made in place do not propagte 
+   // we clone the date object so changes made in place do not propagte
    
    field.editDate = new Date( newDate );
 }
 
 
-/**
-*   Take a Date object and return a displayable date string i.e.: May 5, 1959
-*/
+/*
+ * Take a Date object and return a displayable date string i.e.: May 5, 1959
+ */
 
 function formatDate( date )
 {
@@ -1505,9 +1446,9 @@ function formatDate( date )
 }
 
 
-/**
-*   Take a Date object and return a displayable time string i.e.: 12:30 PM
-*/
+/*
+ * Take a Date object and return a displayable time string i.e.: 12:30 PM
+ */
 
 function formatTime( time )
 {
@@ -1515,132 +1456,174 @@ function formatTime( time )
    return timeString;
 }
 
-function debug( text )
-{
-    if( debugenabled )
-        dump( "\n"+ text + "\n");
-}
 
 // XXX lilmatt's new crap for the new XUL
 
-function processAlarmType()
+
+// A textbox changed - see if its button needs to be enabled or disabled
+
+function processTextboxWithButton( textboxId, buttonId )
 {
-  var alarmMenu = document.getElementById("alarm-type");
-  if( alarmMenu.selectedItem ) {
-    dump("processAlarmType: "+alarmMenu.selectedItem.value+"\n");
-    switch( alarmMenu.selectedItem.value )
-    {
-      case "none":
-        hideElement("alarm-length-field");
-        hideElement("alarm-length-units");
-        hideElement("alarm-box-email");
+    var textboxNotEmpty;
+    if(document.getElementById( textboxId ).textLength >= 1 )
+        textboxNotEmpty = true
+    else
+        textboxNotEmpty = false
+    var buttonDisabled  = document.getElementById( buttonId ).disabled;
+    var textboxAndButton = (textboxNotEmpty + buttonDisabled);
+
+    debug("textboxNotEmpty: "  + textboxNotEmpty);
+    debug("buttonDisabled: "   + buttonDisabled);
+    debug("textboxAndButton: " + textboxAndButton);
+
+    // 0 = no text, button enabled (wrong - disable button)
+    // 1 = no text, button disabled  or text, button enabled (right) [most popular]
+    // 2 = text, button disabled (wrong - enable button)
+
+    switch(textboxAndButton) {
+    case 1:
         break;
-      case "popup":
-        showElement("alarm-length-field");
-        showElement("alarm-length-units");
-        hideElement("alarm-box-email");
+    case 0:
+        disableElement( buttonId );
         break;
-      case "popupAndSound":
-        showElement("alarm-length-field");
-        showElement("alarm-length-units");
-        hideElement("alarm-box-email");
-        break;
-      case "email":
-        showElement("alarm-length-field");
-        showElement("alarm-length-units");
-        showElement("alarm-box-email");
+    case 2:
+        enableElement( buttonId );
         break;
     }
-    // Make the window big enough for all the fields and widgets
-    window.sizeToContent();
-  }
-  else
-    dump("processAlarmType: no alarmMenu.selectedItem!\n");
 }
+
+
+function processAlarmType()
+{
+    var alarmMenu = document.getElementById("alarm-type");
+    if( alarmMenu.selectedItem ) {
+        debug("processAlarmType: " + alarmMenu.selectedItem.value );
+        switch( alarmMenu.selectedItem.value ) {
+        case "none":
+            hideElement("alarm-length-field");
+            hideElement("alarm-length-units");
+            hideElement("alarm-box-email");
+            break;
+        case "popup":
+            showElement("alarm-length-field");
+            showElement("alarm-length-units");
+            hideElement("alarm-box-email");
+            break;
+        case "popupAndSound":
+            showElement("alarm-length-field");
+            showElement("alarm-length-units");
+            hideElement("alarm-box-email");
+            break;
+        case "email":
+            showElement("alarm-length-field");
+            showElement("alarm-length-units");
+            showElement("alarm-box-email");
+            break;
+        }
+        // Make the window big enough for all the fields and widgets
+        window.sizeToContent();
+    } else
+        dump("processAlarmType: no alarmMenu.selectedItem!\n");
+}
+
 
 function processComponentType()
 {
-  var componentMenu = document.getElementById("component-type");
-  if( componentMenu.selectedItem) {
-    dump("processComponentType: "+componentMenu.selectedItem.value+"\n");
-    var args = window.arguments[0];
-    switch( componentMenu.selectedItem.value )
-    {
-      case "ICAL_COMPONENT_EVENT":
-        // Hide and show the appropriate fields and widgets
-        hideElement("task-cancelled-label");
-        hideElement("cancelled-checkbox");
-        hideElement("task-start-datetime-label");
-        hideElement("start-checkbox");
-        hideElement("due-checkbox");
-        hideElement("due-datetime");
-        hideElement("task-due-datetime-label");
-        hideElement("task-completed-label");
-        hideElement("completed-checkbox");
-        hideElement("completed-date-picker");
-        hideElement("percent-complete-menulist");
-        hideElement("percent-complete-label");
-        hideElement("task-priority-label");
-        hideElement("priority-levels");
-        showElement("end-datetime");
-        showElement("event-start-datetime-label");
-        showElement("event-end-datetime-label");
-        showElement("event-status-label");
-        showElement("event-status-field");
-        showElement("all-day-event-checkbox");
-        // Set menubar title correctly - New vs. Edit
-        if( "new" == args.mode )
-          titleDataItem = document.getElementById( "data-event-title-new" );
-        else
-          titleDataItem = document.getElementById( "data-event-title-edit" );
-        document.getElementById("calendar-new-component-window").setAttribute("title", titleDataItem.getAttribute( "value" ));
-        break;
-      case "ICAL_COMPONENT_TODO":
-        // Hide and show the appropriate fields and widgets
-        hideElement("end-datetime");
-        hideElement("event-start-datetime-label");
-        hideElement("event-end-datetime-label");
-        hideElement("event-status-label");
-        hideElement("event-status-field");
-        hideElement("all-day-event-checkbox");
-        showElement("task-cancelled-label");
-        showElement("cancelled-checkbox");
-        showElement("task-start-datetime-label");
-        showElement("start-checkbox");
-        showElement("due-checkbox");
-        showElement("due-datetime");
-        showElement("task-due-datetime-label");
-        showElement("task-completed-label");
-        showElement("completed-checkbox");
-        showElement("completed-date-picker");
-        showElement("percent-complete-menulist");
-        showElement("percent-complete-label");
-        showElement("task-priority-label");
-        showElement("priority-levels");
-        
-        // Set menubar title correctly - New vs. Edit
-        if( "new" == args.mode )
-          titleDataItem = document.getElementById( "data-event-title-new" );
-        else
-          titleDataItem = document.getElementById( "data-event-title-edit" );
-        document.getElementById("calendar-new-component-window").setAttribute("title", titleDataItem.getAttribute( "value" ));
-        break;
-      //case "ICAL_COMPONENT_JOURNAL":
-    }
-    // Make the window big enough for all the fields and widgets
-    window.sizeToContent();
-  }
-  else
-    dump("processComponentType: no componentMenu.selectedItem!\n");
+    var componentMenu = document.getElementById("component-type");
+    if( componentMenu.selectedItem) {
+        debug("processComponentType: " + componentMenu.selectedItem.value );
+        var args = window.arguments[0];
+        switch( componentMenu.selectedItem.value ) {
+        case "ICAL_COMPONENT_EVENT":
+            // Hide and show the appropriate fields and widgets
+            hideElement("todo-cancelled-label");
+            hideElement("todo-cancelled-checkbox");
+            hideElement("task-start-datetime-label");
+            hideElement("start-checkbox");
+            hideElement("due-checkbox");
+            hideElement("due-datetime");
+            hideElement("task-due-datetime-label");
+            hideElement("task-completed-label");
+            hideElement("completed-checkbox");
+            hideElement("completed-date-picker");
+            hideElement("percent-complete-menulist");
+            hideElement("percent-complete-label");
+            hideElement("task-priority-label");
+            hideElement("priority-levels");
+            showElement("start-datetime");
+            showElement("end-datetime");
+            showElement("event-start-datetime-label");
+            showElement("event-end-datetime-label");
+            showElement("event-status-label");
+            showElement("event-status-field");
+            showElement("all-day-event-checkbox");
+
+            // calling just enableElement _should_ work here, but it doesn't
+            document.getElementById("start-datetime").setAttribute( "disabled", "false" );
+            enableElement("start-datetime");
+            enableElement("end-datetime");
+
+            // Set menubar title correctly - New vs. Edit
+            if( "new" == args.mode )
+              title = document.getElementById( "data-event-title-new" );
+            else
+              title = document.getElementById( "data-event-title-edit" );
+            //document.title = title;
+            document.getElementById("calendar-new-component-window").setAttribute("title", title);
+            break;
+
+        case "ICAL_COMPONENT_TODO":
+            // Hide and show the appropriate fields and widgets
+            hideElement("end-datetime");
+            hideElement("event-start-datetime-label");
+            hideElement("event-end-datetime-label");
+            hideElement("event-status-label");
+            hideElement("event-status-field");
+            hideElement("all-day-event-checkbox");
+            showElement("todo-cancelled-label");
+            showElement("todo-cancelled-checkbox");
+            showElement("task-start-datetime-label");
+            showElement("start-checkbox");
+            showElement("due-checkbox");
+            showElement("due-datetime");
+            showElement("task-due-datetime-label");
+            showElement("task-completed-label");
+            showElement("completed-checkbox");
+            showElement("completed-date-picker");
+            showElement("percent-complete-menulist");
+            showElement("percent-complete-label");
+            showElement("task-priority-label");
+            showElement("priority-levels");
+
+            onDateTimeCheckbox("start-checkbox", "start-datetime")
+            onDateTimeCheckbox("due-checkbox", "due-datetime")
+            updateCompletedItemEnabled()
+
+            // Set menubar title correctly - New vs. Edit
+            if( "new" == args.mode )
+              title = document.getElementById( "data-todo-title-new" );
+            else
+              title = document.getElementById( "data-todo-title-edit" );
+            //document.title = title;
+            document.getElementById("calendar-new-component-window").setAttribute("title", title);
+            break;
+
+            //case "ICAL_COMPONENT_JOURNAL":
+        }
+        // Make the window big enough for all the fields and widgets
+        window.sizeToContent();
+    } else
+        dump("processComponentType: no componentMenu.selectedItem!\n");
 }
 
 
-function onIniviteAdd()
+function onInviteeAdd()
 {
     textBox = document.getElementById("invite-email-field");
     var email = "mailto:" + textBox.value;
     addAttendee(email);
 }
+
 
 function addAttendee(email)
 {
@@ -1653,79 +1636,114 @@ function addAttendee(email)
     document.getElementById("bucketBody").appendChild(treeItem);
 }
 
-/*
- * Check that the due date is after the start date, if they are the same day
- * then the checkDueTime function should catch the problem (if there is one).
- */
 
-function checkDueDate()
+/** Enable/Disable Alarm options with alarm checked.
+
+    Enables/disables alarm trigger relations menulist depending on whether
+    start/due dates are enabled.
+    If both disabled, alarm menulist is disabled.
+    If one disabled, other relation is selected and menulist is disabled.
+    (Prevents crash that occurs if alarm checked but no corresponding date.) **/
+    
+function updateAlarmItemEnabled()
 {
-   var startDate = document.getElementById( "start-datetime" ).value; 
-   var dueDate = document.getElementById( "due-datetime" ).value; 
-   
-   if( startDate.getFullYear() == dueDate.getFullYear() &&
-       startDate.getMonth() == dueDate.getMonth() &&
-       startDate.getDay() == dueDate.getDay() )
-      return( 0 );
+    var startChecked = getFieldValue("start-checkbox", "checked");
+    var dueChecked = getFieldValue("due-checkbox", "checked");
 
-   else if ( dueDate < startDate)
-      return -1;
-   else if (dueDate > startDate)
-      return 1;
-}
+    // disable alarms if and only if neither checked
+    if ( !(startChecked && dueChecked) )
+        setFieldValue("alarm-type", "none");
 
-/** Check that start datetime <= due datetime if both exist.
-    Provide separate error message for startDate > dueDate or
-    startDate == dueDate && startTime > dueTime. **/
-function checkSetTimeDate()
-{
-  var startCheckBox = document.getElementById( "start-checkbox" );
-  var dueCheckBox = document.getElementById( "due-checkbox" );
-  if (startCheckBox.checked && dueCheckBox.checked)
-  {
-    var CheckDueDate = checkDueDate();
-
-    if ( CheckDueDate < 0 )
-    {
-      // due before start
-      setDateError(true);
-      setTimeError(false);
-      return false;
-    }
-    else if ( CheckDueDate == 0 )
-    {
-      setDateError(false);
-      // start & due same
-      var CheckDueTime = checkDueTime();
-      setTimeError(CheckDueTime);
-      return !CheckDueTime;
-    }
-  }
-  setDateError(false);
-  setTimeError(false);
-  return true;
-}
-
-/**
-*   Called when the start or due datetime checkbox is clicked.
-*   Enables/disables corresponding datetime picker and alarm relation.
+/*    var alarmChecked = getFieldValue("alarm-checkbox", "checked" );
+    setFieldValue( "alarm-length-field", !alarmChecked, "disabled" );
+    setFieldValue( "alarm-length-units", !alarmChecked, "disabled" );
+    setFieldValue( "alarm-email-field", !alarmChecked, "disabled" );
+    setFieldValue( "alarm-email-checkbox", !alarmChecked, "disabled" );
 */
-function onDateTimeCheckbox(checkbox, pickerId)
+
+    // if exactly one checked, select its relation
+    if (startChecked && !dueChecked)
+        menuListFieldSelectItem("alarm-trigger-relation", "ICAL_RELATED_START");
+    else if (!startChecked && dueChecked)
+        menuListFieldSelectItem("alarm-trigger-relation", "ICAL_RELATED_END");
+
+    // choice enabled if alarm on and both dates checked,
+    var alarmEnabled
+    if ( getFieldValue("alarm-type") != "none")
+        alarmEnabled = true
+    else
+        alarmEnabled = false
+
+    var triggerChoiceEnabled = alarmEnabled && startChecked && dueChecked;
+    setFieldValue("alarm-trigger-relation", !triggerChoiceEnabled, "disabled");
+}
+
+
+/** Select value in menuList with id menuListId **/
+
+function menuListFieldSelectItem(menuListId, value)
 {
-   var picker = document.getElementById( pickerId );
-   picker.disabled = !checkbox.checked;
-
-   updateAlarmItemEnabled();   
-
-   updateOKButton();
+    menuListSelectItem(document.getElementById(menuListId), value);
 }
 
-function setDateError(state)
-{ 
-   document.getElementById( "due-date-warning" ).setAttribute( "collapsed", !state );
+
+/** Select value in menuList.  Throws string if no such value. **/
+
+function menuListSelectItem(menuList, value)
+{
+    var index = menuListIndexOf(menuList, value);
+    if (index != -1) {
+        menuList.selectedIndex = index;
+    } else {
+        throw "No such Element: "+value;
+    }
 }
 
-function setTimeError(state)
-{ 
-   document.getElementById( "due-time-warning" ).setAttribute( "collapsed", !state );
+
+/** Find index of menuitem with the given value, or return -1 if not found. **/
+
+function menuListIndexOf(menuList, value)
+{
+    var items = menuList.menupopup.childNodes;
+    var index = -1;
+    for (var i = 0; i < items.length; i++) {
+        var element = items[i];
+        if (element.nodeName == "menuitem")
+            index++;
+        if (element.getAttribute("value") == value)
+            return index;
+    }
+    return -1; // not found
 }
+
+
+function updateCompletedItemEnabled()
+{
+    var completedCheckbox = "completed-checkbox";
+
+    if( getFieldValue( completedCheckbox, "checked" ) ) {
+        enableElement("completed-date-picker");
+        disableElement("percent-complete-menulist");
+        disableElement("percent-complete-label");
+        setFieldValue( "percent-complete-menulist", "100" );
+    } else {
+        disableElement("completed-date-picker");
+        enableElement("percent-complete-menulist");
+        enableElement("percent-complete-label");
+        if( getFieldValue( "percent-complete-menulist" ) == 100 )
+            setFieldValue( "percent-complete-menulist", "0" );
+    }
+}
+
+
+function percentCompleteCommand()
+{
+    var percentcompletemenu = "percent-complete-menulist";
+    var percentcomplete = getFieldValue( "percent-complete-menulist" );
+    percentcomplete =  parseInt( percentcomplete );
+    if( percentcomplete == 100)
+        setFieldValue( "completed-checkbox", "true", "checked" );
+
+    updateCompletedItemEnabled();
+}
+

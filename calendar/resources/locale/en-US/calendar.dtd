@@ -85,7 +85,7 @@
 <!ENTITY newevent.private.label      "Private" >
 <!ENTITY newevent.private.note       "This event is private." >
 <!ENTITY newevent.alarm.label        "Alarm" >
-<!ENTITY newevent.server.label       "Calendar File" >
+<!ENTITY newevent.server.label       "Calendar" >
 <!ENTITY newevent.invite.label       "Invite" >
 <!ENTITY newevent.email.label        "Email Alarm To:" >
 <!ENTITY newevent.beforealarm.label  "before the event starts" >
@@ -105,10 +105,11 @@
 <!ENTITY newevent.endtime.tooltip    "Choose an end time for this event" >
 <!ENTITY newevent.starttimeerror.alertmessage "Your event cannot end before it has started. Please fix either the start time or the end time." >
 <!ENTITY newevent.recurendtimeerror.alertmessage "Your event's repeat time cannot be before the event end time. Please fix this, or disable repeating." >
-<!ENTITY newevent.newevent.tab.label "Event" >
-<!ENTITY newevent.recurrence.tab.label "Recurrence" >
-<!ENTITY newevent.contacts.tab.label "Contacts" >
-<!ENTITY newevent.files.tab.label "Files" >
+<!ENTITY newevent.general.tab.label         "General" >
+<!ENTITY newevent.recurrence.tab.label      "Recurrence" >
+<!ENTITY newevent.attendees.tab.label       "Attendees" >
+<!ENTITY newevent.attachments.tab.label     "Attachments" >
+<!ENTITY newevent.advanced.tab.label        "Advanced" >
 <!ENTITY newevent.status.label "Status" >
 <!ENTITY newevent.status.longlabel "Event Status">
 <!ENTITY newevent.status.needsaction.label "Needs Action" >
@@ -117,6 +118,10 @@
 <!ENTITY newevent.status.cancelled.label   "Cancelled" >
 <!ENTITY newevent.status.tentative.label   "Tentative" >
 <!ENTITY newevent.status.confirmed.label   "Confirmed" >
+<!ENTITY newevent.itemType.label            "Item Type" >
+<!ENTITY newevent.itemType.event.label      "Event" >
+<!ENTITY newevent.itemType.todo.label       "Task" >
+<!ENTITY newevent.itemType.journal.label    "Journal" >
 
 <!ENTITY newevent.advanced.repeat.dayofmonth.label "On the xth day of the month">
 <!ENTITY newevent.advanced.repeat.dayofweek.label "4th Tuesday of the month">
