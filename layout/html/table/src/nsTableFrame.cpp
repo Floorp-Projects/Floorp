@@ -3371,8 +3371,11 @@ nsTableFrame::CellChangedWidth(const nsTableCellFrame& aCellFrame,
     return PR_TRUE;
   }
 
-  PRInt32 colIndex;
+  PRInt32 rowX, colIndex, numRows;
   aCellFrame.GetColIndex(colIndex);
+  
+  PRBool originates;
+
   nsTableColFrame* colFrame = GetColFrame(colIndex);
   if (!colFrame) return PR_TRUE; // should never happen
 
@@ -3381,71 +3384,97 @@ nsTableFrame::CellChangedWidth(const nsTableCellFrame& aCellFrame,
   nscoord colMin  = colFrame->GetWidth(MIN_CON);
   nscoord colMax  = colFrame->GetWidth(DES_CON);
 
-  PRBool colMinChanged = PR_TRUE;
-  if (((cellMin > aPrevCellMin) && (cellMin <= colMin)) ||
-       (cellMin == aPrevCellMin) ||
-      // this assumes that the cell was the only contributor to the current min width
-      ((cellMin < aPrevCellMin) && (aPrevCellMin != colMin))) {
-    colMinChanged = PR_FALSE;
-  }
-  if (colMinChanged) {
-    // update the columns's min width
-    colFrame->SetWidth(MIN_CON, cellMin);
+  PRBool colMinGetsBigger  = (cellMin > colMin);
+  PRBool colMinGetsSmaller = (cellMin < colMin) && (colMin == aPrevCellMin);
+
+  if (colMinGetsBigger || colMinGetsSmaller) {
     if (ColIsSpannedInto(colIndex)) {
       // bail out if a colspan is involved
       SetNeedStrategyInit(PR_TRUE);
       return PR_TRUE;
     }
-    else {
-      // we should rebalance in case the min width determines the column width
-      SetNeedStrategyBalance(PR_TRUE);
+    if (colMinGetsBigger) {
+      // update the columns's min width
+      colFrame->SetWidth(MIN_CON, cellMin);
     }
+    else if (colMinGetsSmaller) {
+      // determine the new min width
+      numRows = GetRowCount();
+      nscoord minWidth = 0;
+      for (rowX = 0; rowX < numRows; rowX++) {
+        nsTableCellFrame* cellFrame = GetCellInfoAt(rowX, colIndex, &originates, &colSpan);
+        if (cellFrame && originates && (1 == colSpan)) {
+          minWidth = PR_MAX(minWidth, cellFrame->GetPass1MaxElementSize().width);
+        }
+      }
+      // update the columns's new min width
+      colFrame->SetWidth(MIN_CON, minWidth);
+    }
+    // we should rebalance in case the min width determines the column width
+    SetNeedStrategyBalance(PR_TRUE);
   }
 
-  PRBool colMaxChanged = PR_TRUE;
-  if (((cellMax > aPrevCellMax) && (cellMax <= colMax)) ||
-       (cellMax == aPrevCellMax) ||
-      // this conservatively assumes that the cell was the only contributor to the current max width
-      ((cellMax < aPrevCellMax) && (aPrevCellMax != colMax))) {
-    colMaxChanged = PR_FALSE;
-  }
-  if (colMaxChanged) {
-    // update the column's max width
-    colFrame->SetWidth(DES_CON, cellMax);
+  PRBool colMaxGetsBigger  = (cellMax > colMax);
+  PRBool colMaxGetsSmaller = (cellMax < colMax) && (colMax == aPrevCellMax);
+
+  if (colMaxGetsBigger || colMaxGetsSmaller) {
+    if (ColIsSpannedInto(colIndex)) {
+      // bail out if a colspan is involved
+      SetNeedStrategyInit(PR_TRUE);
+      return PR_TRUE;
+    }
     // see if the max width will be not be overshadowed by a pct, fix, or proportional width
     if ((colFrame->GetWidth(PCT) <= 0) && (colFrame->GetWidth(FIX) <= 0) &&
         (colFrame->GetWidth(MIN_PRO) <= 0)) {
-      // see if the cell is new and doesn't have a pct or fix width
-      if ((0 == aPrevCellMin) && (0 == aPrevCellMax)) {
-        const nsStylePosition* cellPosition;
-        aCellFrame.GetStyleData(eStyleStruct_Position, (const nsStyleStruct *&)cellPosition);
-        // see if there isn't a pct width on the cell
-        PRBool havePct = PR_FALSE;
-        if (eStyleUnit_Percent == cellPosition->mWidth.GetUnit()) {
-          float percent = cellPosition->mWidth.GetPercentValue();
-          if (percent > 0.0f) {
-            havePct = PR_TRUE;
+      // see if the doesn't have a pct width
+      const nsStylePosition* cellPosition;
+      aCellFrame.GetStyleData(eStyleStruct_Position, (const nsStyleStruct *&)cellPosition);
+      // see if there isn't a pct width on the cell
+      PRBool havePct = PR_FALSE;
+      if (eStyleUnit_Percent == cellPosition->mWidth.GetUnit()) {
+        float percent = cellPosition->mWidth.GetPercentValue();
+        if (percent > 0.0f) {
+          havePct = PR_TRUE;
+        }
+      }
+      if (!havePct) {
+        // see if there isn't a fix width on the cell
+        PRBool haveFix = PR_FALSE;
+        if (eStyleUnit_Coord == cellPosition->mWidth.GetUnit()) {
+          nscoord coordValue = cellPosition->mWidth.GetCoordValue();
+          if (coordValue > 0) { 
+            haveFix = PR_TRUE;
           }
         }
-        if (!havePct) {
-          // see if there isn't a fix width on the cell
-          PRBool haveFix = PR_FALSE;
-          if (eStyleUnit_Coord == cellPosition->mWidth.GetUnit()) {
-            nscoord coordValue = cellPosition->mWidth.GetCoordValue();
-            if (coordValue > 0) { 
-              haveFix = PR_TRUE;
+        if (!haveFix) {
+          // see if there isn't a prop width on the cell
+          PRBool haveProp = PR_FALSE;
+          if (eStyleUnit_Proportional == cellPosition->mWidth.GetUnit()) {
+            nscoord intValue = cellPosition->mWidth.GetIntValue();
+            if (intValue > 0) { 
+              haveProp = PR_TRUE;
             }
           }
-          if (!haveFix) {
-            if (ColIsSpannedInto(colIndex)) {
-              // bail out if a colspan is involved
-              SetNeedStrategyInit(PR_TRUE);
-              return PR_TRUE;
+          if (!haveProp) {
+            if (colMaxGetsBigger) {
+              // update the columns's new min width
+              colFrame->SetWidth(DES_CON, cellMax);
             }
-            else {
-              // we should rebalance in case the max width determines the column width
-              SetNeedStrategyBalance(PR_TRUE);
+            else if (colMaxGetsSmaller) {
+              // determine the new max width
+              numRows = GetRowCount();
+              nscoord maxWidth = 0;
+              for (rowX = 0; rowX < numRows; rowX++) {
+                nsTableCellFrame* cellFrame = GetCellInfoAt(rowX, colIndex, &originates, &colSpan);
+                if (cellFrame && originates && (1 == colSpan)) {
+                  maxWidth = PR_MAX(maxWidth, cellFrame->GetMaximumWidth());
+                }
+              }
+              // update the columns's new max width
+              colFrame->SetWidth(DES_CON, maxWidth);
             }
+            // we should rebalance in case the max width determines the column width
+            SetNeedStrategyBalance(PR_TRUE);
           }
         }
       }
@@ -4015,11 +4044,9 @@ nsTableFrame::CalcMinAndPreferredWidths(const nsHTMLReflowState& aReflowState,
   PRBool isPctWidth = PR_FALSE;
   if (!IsAutoWidth(&isPctWidth)) { // a specified fix width becomes the min or preferred width
     nscoord compWidth = aReflowState.mComputedWidth;
-    if ((NS_UNCONSTRAINEDSIZE != compWidth) && (0 != compWidth)) {
+    if ((NS_UNCONSTRAINEDSIZE != compWidth) && (0 != compWidth) && !isPctWidth) {
       compWidth += GetHorBorderPaddingWidth(aReflowState, this);
-      if (!isPctWidth) {
-        aMinWidth = PR_MAX(aMinWidth, compWidth);
-      }
+      aMinWidth = PR_MAX(aMinWidth, compWidth);
       aPrefWidth = PR_MAX(aMinWidth, compWidth);
     }
   }
