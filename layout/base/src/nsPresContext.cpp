@@ -211,8 +211,10 @@ nsPresContext::~nsPresContext()
   NS_PRECONDITION(!mShell, "Presshell forgot to clear our mShell pointer");
   SetShell(nsnull);
 
-  if (mEventManager)
+  if (mEventManager) {
     mEventManager->SetPresContext(nsnull);   // unclear if this is needed, but can't hurt
+    NS_RELEASE(mEventManager);
+  }
 
   // Unregister preference callbacks
   if (mPrefs) {
@@ -232,6 +234,8 @@ nsPresContext::~nsPresContext()
     delete mBidiUtils;
   }
 #endif // IBMBIDI
+
+  NS_IF_RELEASE(mDeviceContext);
 }
 
 NS_IMPL_ISUPPORTS2(nsPresContext, nsIPresContext, nsIObserver)
@@ -618,7 +622,8 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext)
 {
   NS_ASSERTION(!(mInitialized == PR_TRUE), "attempt to reinit pres context");
 
-  mDeviceContext = dont_QueryInterface(aDeviceContext);
+  mDeviceContext = aDeviceContext;
+  NS_IF_ADDREF(mDeviceContext);
 
   mLangService = do_GetService(NS_LANGUAGEATOMSERVICE_CONTRACTID);
   mPrefs = do_GetService(NS_PREF_CONTRACTID);
@@ -1497,24 +1502,30 @@ nsPresContext::GetContainer(nsISupports** aResult)
   return CallQueryReferent(mContainer.get(), aResult);
 }
 
-NS_IMETHODIMP
-nsPresContext::GetEventStateManager(nsIEventStateManager** aManager)
+nsIEventStateManager*
+nsIPresContext::GetEventStateManager()
 {
-  NS_PRECONDITION(aManager, "null ptr");
-
   if (!mEventManager) {
-    nsresult rv;
-    mEventManager = do_CreateInstance(kEventStateManagerCID,&rv);
+    nsresult rv = CallCreateInstance(kEventStateManagerCID, &mEventManager);
     if (NS_FAILED(rv)) {
-      return rv;
+      return nsnull;
     }
 
     //Not refcnted, set null in destructor
     mEventManager->SetPresContext(this);
   }
+  return mEventManager;
+}
 
-  *aManager = mEventManager;
-  NS_IF_ADDREF(*aManager);
+NS_IMETHODIMP
+nsPresContext::GetEventStateManager(nsIEventStateManager** aManager)
+{
+  NS_PRECONDITION(aManager, "null ptr");
+
+  *aManager = GetEventStateManager();
+  if (!*aManager)
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(*aManager);
   return NS_OK;
 }
 

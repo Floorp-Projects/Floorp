@@ -1294,18 +1294,7 @@ protected:
 
   nsresult GetSelectionForCopy(nsISelection** outSelection);
 
-  // IMPORTANT: The ownership implicit in the following member variables has been 
-  // explicitly checked and set using nsCOMPtr for owning pointers and raw COM interface 
-  // pointers for weak (ie, non owning) references. If you add any members to this
-  // class, please make the ownership explicit (pinkerton, scc).
-
-  // these are the same Document and PresContext owned by the DocViewer.
-  // we must share ownership.
-  nsCOMPtr<nsIDocument>     mDocument;
-  nsCOMPtr<nsIPresContext>  mPresContext;
-  nsCOMPtr<nsIStyleSet>     mStyleSet;
   nsICSSStyleSheet*         mPrefStyleSheet; // mStyleSet owns it but we maintaina ref, may be null
-  nsIViewManager*           mViewManager;   // [WEAK] docViewer owns it so I don't have to
   PRUint32                  mUpdateCount;
   // normal reflow commands
   nsVoidArray               mReflowCommands; 
@@ -1613,6 +1602,9 @@ PresShell::~PresShell()
 
   // if we allocated any stack memory free it.
   FreeDynamicStack();
+
+  NS_IF_RELEASE(mPresContext);
+  NS_IF_RELEASE(mDocument);
 }
 
 /**
@@ -1638,7 +1630,8 @@ PresShell::Init(nsIDocument* aDocument,
     return NS_ERROR_ALREADY_INITIALIZED;
   }
 
-  mDocument = dont_QueryInterface(aDocument);
+  mDocument = aDocument;
+  NS_ADDREF(mDocument);
   mViewManager = aViewManager;
 
   // The document viewer owns both view manager and pres shell.
@@ -1646,9 +1639,11 @@ PresShell::Init(nsIDocument* aDocument,
 
   // Bind the context to the presentation shell.
   mPresContext = aPresContext;
+  NS_ADDREF(mPresContext);
   aPresContext->SetShell(this);
 
   mStyleSet = aStyleSet;
+  NS_IF_ADDREF(mStyleSet);
 
   // Set the compatibility mode after attaching the pres context and
   // style set, but before creating any frames.
@@ -1837,7 +1832,7 @@ PresShell::Destroy()
 
   // Let the style set do its cleanup.
   mStyleSet->Shutdown(mPresContext);
-  mStyleSet = nsnull;
+  NS_RELEASE(mStyleSet);
 
   // We hold a reference to the pres context, and it holds a weak link back
   // to us. To avoid the pres context having a dangling reference, set its 
