@@ -90,6 +90,10 @@ void HankakuToZenkaku (
 {
 
     PRInt32 i,j;
+    if ( aLen == 0) {
+      *oLen = 0;
+      return;
+    }
     // loop from the first to the last char except the last one.
     for(i = j = 0; i < (aLen-1); i++,j++,aSrc++, aDest++)
     {
