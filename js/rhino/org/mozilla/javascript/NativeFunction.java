@@ -110,24 +110,19 @@ public class NativeFunction extends ScriptableObject implements Function {
      *
      */
     public boolean hasInstance(Scriptable instance) {
-
         FlattenedObject flat = new FlattenedObject(this);
-
         Object protoProp = flat.getProperty("prototype");
-        
-        if ((protoProp instanceof Scriptable) 
-                && (protoProp != Undefined.instance)) {
-            try {
-                protoProp = ((FlattenedObject)protoProp).getObject();
-                return ScriptRuntime.jsDelegatesTo(instance, (Scriptable)protoProp);
-            } catch (ClassCastException e) { }
+        if (protoProp instanceof FlattenedObject) {
+            protoProp = ((FlattenedObject)protoProp).getObject();
+            if (protoProp != Undefined.instance)
+                return ScriptRuntime.jsDelegatesTo(instance, 
+                                                   (Scriptable)protoProp);
         }
         Object[] args = { names[0] };
-        throw NativeGlobal.constructError(
-                    Context.getContext(), "TypeError",
-                    ScriptRuntime.getMessage("msg.instanceof.bad.prototype", args),
-                    instance);
-
+        String m = ScriptRuntime.getMessage("msg.instanceof.bad.prototype", 
+                                            args);
+        throw NativeGlobal.constructError(Context.getContext(), "TypeError",
+                                          m, instance);
     }
 
     /**
