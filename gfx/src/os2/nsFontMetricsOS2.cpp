@@ -1514,3 +1514,10 @@ nsFontEnumeratorOS2::HaveFontFor(const char* aLangGroup, PRBool* aResult)
   // XXX stub
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsFontEnumeratorOS2::UpdateFontList()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
