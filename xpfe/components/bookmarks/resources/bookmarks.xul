@@ -79,6 +79,7 @@
 <tree  id="bookmarksTree" ref="NC:BookmarksRoot" context="contextual"
        datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch"
        onclick="if (event.clickCount == 2) return OpenURL(event, event.target.parentNode.parentNode, 'bookmarksTree');"
+       onkeyup="if (event.keyCode == 8)	return doDelete(false);"
        style="width:100%;height:100%"
        ondragover="return DragOverTree(event);"
        ondraggesture="return BeginDragTree(event);"
