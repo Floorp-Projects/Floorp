@@ -140,6 +140,7 @@ nsresult nsPrefsCore::InitializePrefsManager()
     if (!prefs)
         return NS_ERROR_FAILURE;
     
+#if 0
     nsIFileLocator* locator;
     rv = nsServiceManager::GetService(kFileLocatorCID, kIFileLocatorIID, (nsISupports**)&locator);
     if (NS_FAILED(rv))
@@ -150,6 +151,7 @@ nsresult nsPrefsCore::InitializePrefsManager()
     nsFileSpec newPrefs;
     rv = locator->GetFileLocation(nsSpecialFileSpec::App_PreferencesFile50, &newPrefs);
 #if 0
+    // Migration?
     if (NS_FAILED(rv) || !newPrefs.Exists())
     {
         nsFileSpec oldPrefs;
@@ -196,7 +198,7 @@ nsresult nsPrefsCore::InitializePrefsManager()
     
     if (NS_FAILED(rv))
         return rv;
-
+#endif // 0
     mPrefs = prefs;
     return NS_OK;
 } // nsPrefsCore::InitializePrefsManager
@@ -366,19 +368,18 @@ nsresult nsPrefsCore::InitializeOneWidget(
             // Check the subtree first, then the real tree.
             // If the preference value is not set at all, let the HTML
             // determine the setting.
-            char* charVal;
-            if (NS_SUCCEEDED(mPrefs->CopyPathPref(tempPrefName, &charVal))
-            || NS_SUCCEEDED(mPrefs->CopyPathPref(inPrefName, &charVal)))
+            nsFileSpec specVal;
+            if (NS_SUCCEEDED(mPrefs->GetFilePref(tempPrefName, &specVal))
+            || NS_SUCCEEDED(mPrefs->GetFilePref(inPrefName, &specVal)))
             {
-                nsString newValue = charVal;
-                PR_Free(charVal);
+                nsString newValue = specVal.GetCString();
                 inElement->SetValue(newValue);
             }
             break;
         }
     }
     return NS_OK;
-}
+} // nsPrefsCore::InitializeOneWidget
 
 //----------------------------------------------------------------------------------------
 nsresult nsPrefsCore::InitializeWidgetsRecursive(nsIDOMNode* inParentNode)
@@ -520,10 +521,8 @@ nsresult nsPrefsCore::FinalizeOneWidget(
             nsresult rv = inElement->GetValue(fieldValue);
             if (NS_FAILED(rv))
                 return rv;
-            char* s = fieldValue.ToNewCString();
-            mPrefs->SetPathPref(tempPrefName, s, PR_TRUE);
-            delete [] s;
-            break;
+            nsFileSpec specValue(fieldValue);
+            mPrefs->SetFilePref(tempPrefName, &specValue, PR_TRUE);
             break;
         }
     }
@@ -532,7 +531,7 @@ nsresult nsPrefsCore::FinalizeOneWidget(
 //        inElement->SetAttribute(attributeToSet, newValue);
 //    }
     return NS_OK;
-}
+} // nsPrefsCore::FinalizeOneWidget
 
 //----------------------------------------------------------------------------------------
 nsresult nsPrefsCore::FinalizeWidgetsRecursive(nsIDOMNode* inParentNode)

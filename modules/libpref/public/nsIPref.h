@@ -22,6 +22,8 @@
 #include "jsapi.h"
 #include "nsISupports.h"
 
+class nsFileSpec;
+
 /* Temporarily conditionally compile PrefChangedFunc typedef.
 ** During migration from old libpref to nsIPref we need it in
 ** both header files.  Eventually prefapi.h will become a private
@@ -59,23 +61,47 @@ public:
 
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPREF_IID)
 
-  // Initialize/shutdown
-  NS_IMETHOD Startup(const char *filename) = 0;
-  NS_IMETHOD Shutdown() = 0;
+#ifdef PREF_SUPPORT_OLD_PATH_STRINGS
+  nsresult   Shutdown() { return ShutDown(); }
+  nsresult   Startup(void*) { return StartUp(); }
+  NS_IMETHOD ReadUserJSFile(const char *filename) = 0; // deprecated
+  NS_IMETHOD ReadLIJSFile(const char *filename) = 0; // deprecated
+  NS_IMETHOD EvaluateConfigScript(const char * js_buffer, size_t length,
+				  const char* filename, 
+				  PRBool bGlobalContext, 
+				  PRBool bCallbacks) = 0; // deprecated
+  NS_IMETHOD SavePrefFileAs(const char *filename) = 0;
+  NS_IMETHOD SaveLIPrefFile(const char *filename) = 0;
+
+  // Path prefs
+  NS_IMETHOD CopyPathPref(const char *pref, char ** return_buf) = 0;
+  NS_IMETHOD SetPathPref(const char *pref_name, 
+			 const char *path, PRBool set_default) = 0;
+#endif
+  // Initialize/shut down
+  NS_IMETHOD StartUp() = 0;
+  NS_IMETHOD StartUpWith(const nsFileSpec& inSpec) = 0;
+  NS_IMETHOD ShutDown() = 0;
 
   // Config file input
-  NS_IMETHOD ReadUserJSFile(const char *filename) = 0;
-  NS_IMETHOD ReadLIJSFile(const char *filename) = 0;
+  NS_IMETHOD ReadUserJSFile(const nsFileSpec& inSpec) = 0;
+  NS_IMETHOD ReadLIJSFile(const nsFileSpec& inSpec) = 0;
+
+  NS_IMETHOD EvaluateConfigScript(const char * js_buffer, size_t length,
+				  PRBool bGlobalContext, 
+				  PRBool bCallbacks) = 0;
+  NS_IMETHOD EvaluateConfigScriptFile(const char * js_buffer, size_t length,
+				  const nsFileSpec& inSpec, 
+				  PRBool bGlobalContext, 
+				  PRBool bCallbacks) = 0;
+
+  NS_IMETHOD SavePrefFileAs(const nsFileSpec& inSpec) = 0;
+  NS_IMETHOD SaveLIPrefFile(const nsFileSpec& inSpec) = 0;
 
   // JS stuff
   NS_IMETHOD GetConfigContext(JSContext **js_context) = 0;
   NS_IMETHOD GetGlobalConfigObject(JSObject **js_object) = 0;
   NS_IMETHOD GetPrefConfigObject(JSObject **js_object) = 0;
-
-  NS_IMETHOD EvaluateConfigScript(const char * js_buffer, size_t length,
-				  const char* filename, 
-				  PRBool bGlobalContext, 
-				  PRBool bCallbacks) = 0;
 
   // Getters
   NS_IMETHOD GetCharPref(const char *pref, 
@@ -140,18 +166,15 @@ public:
   NS_IMETHOD CopyDefaultBinaryPref(const char *pref, 
 				   void ** return_val, int * size) = 0;	
 
-  // Path prefs
-  NS_IMETHOD CopyPathPref(const char *pref, char ** return_buf) = 0;
-  NS_IMETHOD SetPathPref(const char *pref_name, 
-			 const char *path, PRBool set_default) = 0;
+  NS_IMETHOD GetFilePref(const char* pref, nsFileSpec* value) = 0;
+  NS_IMETHOD SetFilePref(
+      const char* pref, const nsFileSpec* value, PRBool setDefault) = 0;
 
   // Pref info
   NS_IMETHOD PrefIsLocked(const char *pref_name, PRBool *res) = 0;
 
   // Save pref files
-  NS_IMETHOD SavePrefFile(void) = 0;
-  NS_IMETHOD SavePrefFileAs(const char *filename) = 0;
-  NS_IMETHOD SaveLIPrefFile(const char *filename) = 0;
+  NS_IMETHOD SavePrefFile() = 0;
 
   // Callbacks
   NS_IMETHOD RegisterCallback( const char* domain,

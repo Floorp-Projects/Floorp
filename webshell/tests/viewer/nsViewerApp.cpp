@@ -127,7 +127,7 @@ nsViewerApp::~nsViewerApp()
 {
   Destroy();
   if (nsnull != mPrefs) {
-    mPrefs->Shutdown();
+    mPrefs->ShutDown();
     NS_RELEASE(mPrefs);
   }
 }
@@ -234,7 +234,7 @@ nsViewerApp::Initialize(int argc, char** argv)
   if (NS_OK != rv) {
     return rv;
   }
-  mPrefs->Startup(nsnull);
+  mPrefs->StartUp();
 
 
   // Load Fullcircle Talkback crash-reporting mechanism.

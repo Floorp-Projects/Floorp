@@ -25,7 +25,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= pref
 LIBRARY_NAME	= pref
 
-REQUIRES	= js pref dbm security ldap img layer xpcom util
+REQUIRES	= js raptorbase pref dbm security ldap img layer xpcom util
 
 ifneq ($(subst /,_,$(shell uname -s)),OS2)
 CSRCS		= unix/unixpref.c
