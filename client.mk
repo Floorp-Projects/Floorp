@@ -362,6 +362,19 @@ CHECKOUT_CALENDAR := true
 FASTUPDATE_CALENDAR := true
 endif
 
+####################################
+# CVS defines for Phoenix (pulled and built if MOZ_PHOENIX is set)
+#
+CVSCO_PHOENIX := $(CVSCO) $(CVS_CO_DATE_FLAGS) mozilla/toolkit mozilla/browser
+
+ifdef MOZ_PHOENIX
+FASTUPDATE_PHOENIX := fast_update $(CVSCO_PHOENIX)
+CHECKOUT_PHOENIX := cvs_co $(CVSCO_PHOENIX)
+else
+CHECKOUT_PHOENIX := true
+FASTUPDATE_PHOENIX := true
+endif
+
 #######################################################################
 # Rules
 # 
@@ -428,6 +441,7 @@ real_checkout:
         cvs_co $(CVSCO_IMGLIB2) && \
 	$(CHECKOUT_CALENDAR) && \
 	$(CHECKOUT_LIBART) && \
+	$(CHECKOUT_PHOENIX) && \
 	cvs_co $(CVSCO_SEAMONKEY) && \
 	cvs_co $(CVSCO_NOSUBDIRS)
 	@echo "checkout finish: "`date` | tee -a $(CVSCO_LOGFILE)
@@ -488,6 +502,7 @@ real_fast-update:
 	fast_update $(CVSCO_IMGLIB2) && \
 	$(FASTUPDATE_CALENDAR) && \
 	$(FASTUPDATE_LIBART) && \
+	$(FASTUPDATE_PHOENIX) && \
 	fast_update $(CVSCO_SEAMONKEY) && \
 	fast_update $(CVSCO_NOSUBDIRS)
 	@echo "fast_update finish: "`date` | tee -a $(CVSCO_LOGFILE)
