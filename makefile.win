@@ -61,7 +61,12 @@ CORECONF=coreconf
 CORECONF=
 !endif
 
-DIRS = $(CORECONF) $(XTRADIRS) lib network include jpeg modules\zlib \
+DIRS = \
+!ifdef MOZILLA_OFFICIAL
+config $(CORECONF) $(XTRADIRS) lib network include jpeg modules\zlib \
+!else
+    $(CORECONF) $(XTRADIRS) lib network include jpeg modules\zlib \
+!endif
 !ifdef MOZ_NETCAST
     netcast \
 !endif
