@@ -27,6 +27,10 @@ LIBRARY_NAME	= lay
 
 EXPORTS		= laylayer.h layout.h lo_funcs.h
 
+ifdef DOM
+EXPORTS		+= laystyle.h
+endif
+
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 CSRCS		= bullet.c \
