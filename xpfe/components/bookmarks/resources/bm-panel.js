@@ -146,11 +146,10 @@ function sidebarOpenURL(event, treeitem, root)
 				var src = rdf.GetResource(id, true);
 				var prop = rdf.GetResource("http://home.netscape.com/NC-rdf#URL", true);
 				var target = root.GetTarget(src, prop, true);
-			    if (target)	target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
-				if (target)	target = target.Value;
-				if (target)	id = target;
-			}
-		}
+                                if (target) target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
+				if (target) target = target.Value;
+				if (target) id = target;
+                         }	
 	}
 	catch(ex)
 	{
