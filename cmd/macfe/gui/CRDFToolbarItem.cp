@@ -26,11 +26,17 @@
 // CRDFSeparator - a separator bar
 // CRDFURLBar - the url bar w/ proxy icon
 //
+// I apologize profusely for the poor design and amount of copied code
+// from CButton. We had to do this is about a week from start to finish
+// about a month _after_ the feature-complete deadline. If you don't like
+// the code, deal (pinkerton).
+//
 
 #include "CRDFToolbarItem.h"
 #include "CToolbarModeManager.h"
 #include "UGraphicGizmos.h"
 #include "UGAAppearance.h"
+#include "URDFUtilities.h"
 
 
 extern RDF_NCVocab gNavCenter;			// RDF vocab struct for NavCenter
@@ -41,27 +47,14 @@ CRDFToolbarItem :: CRDFToolbarItem ( HT_Resource inNode )
 {
 	Assert_(mNode != NULL);
 
-
 }
 
 
 CRDFToolbarItem :: ~CRDFToolbarItem ( )
 {
 
-
-
 }
 
-
-// a strawman drawing routine for testing purposes only
-void
-CRDFToolbarItem :: DrawSelf ( )
-{
-	Rect localRect;
-	CalcLocalFrameRect ( localRect );
-
-	::FrameRect ( &localRect );
-}
 
 
 #pragma mark -
@@ -73,15 +66,12 @@ CRDFPushButton :: CRDFPushButton ( HT_Resource inNode )
 		mTitleAlignment(kAlignCenterBottom), mGraphicAlignment(kAlignCenterTop),
 		mOvalWidth(8), mOvalHeight(8)
 {
-	DebugStr("\pCreating a CRDFPushButton");
 
 }
 
 
 CRDFPushButton :: ~CRDFPushButton ( )
 {
-
-
 
 }
 
@@ -224,10 +214,16 @@ CRDFPushButton :: DrawButtonContent ( )
 void
 CRDFPushButton :: DrawButtonTitle ( )
 {
+	StColorPenState savedState;
 	StColorPenState::Normalize();
 	
 	if (IsTrackInside() || GetValue() == Button_On)
 		::OffsetRect(&mCachedTitleFrame, 1, 1);
+
+	if ( IsMouseInFrame() )
+		URDFUtilities::SetupForegroundTextColor ( HTNode(), gNavCenter->viewRolloverColor, kThemeIconLabelTextColor ) ;
+	else
+		URDFUtilities::SetupForegroundTextColor ( HTNode(), gNavCenter->viewFGColor, kThemeIconLabelTextColor ) ;
 
 	char* title = HT_GetNodeName(HTNode());
 	UGraphicGizmos::PlaceStringInRect(LStr255(title), mCachedTitleFrame, teCenter, teCenter);
@@ -245,7 +241,7 @@ void
 CRDFPushButton :: DrawButtonGraphic ( )
 {
 	char* url = NULL;
-	PRBool success = HT_GetTemplateData ( HTNode(), gNavCenter->RDF_largeIcon, HT_COLUMN_STRING, &url );
+	PRBool success = HT_GetTemplateData ( HTNode(), gNavCenter->toolbarEnabledIcon, HT_COLUMN_STRING, &url );
 	if ( success && url ) {
 
 		// setup where we should draw
@@ -291,8 +287,15 @@ CRDFPushButton :: DrawButtonOutline ( )
 													  UGAAppearance::sGAHiliteContentTint);
 			}
 
-	// Now draw GA button bevel
-	UGAAppearance::DrawGAButtonBevelTint(mCachedButtonFrame);
+	// Now draw GA button bevel, but only if HT hasn't specified a rollover color
+	StColorPenState thePenSaver;
+	thePenSaver.Normalize();
+	if ( URDFUtilities::SetupForegroundColor(HTNode(), gNavCenter->viewRolloverColor, kThemeIconLabelTextColor) ) {
+		::PenSize(2,2);
+		::FrameRoundRect(&mCachedButtonFrame, mOvalWidth, mOvalHeight);
+	}
+	else
+		UGAAppearance::DrawGAButtonBevelTint(mCachedButtonFrame);
 
 } // DrawButtonOutline
 
@@ -309,17 +312,16 @@ CRDFPushButton :: DrawButtonHilited ( )
 	StDeviceLoop	theLoop ( mCachedButtonFrame );
 	Int16			depth;
 
-	Rect frame = mCachedButtonFrame;
-
 	// Draw face of button first
 	while ( theLoop.NextDepth ( depth )) 
 		if ( depth >= 4 )		// don't do anything for black and white
-			{
+		{
+			Rect frame = mCachedButtonFrame;
 			::InsetRect(&frame, 1, 1);
 			// Do we need to do this very slight darkening?
 			UGraphicGizmos::LowerRoundRectColorVolume(frame, 4, 4, UGAAppearance::sGASevenGrayLevels);
 			::InsetRect(&frame, -1, -1);
-			}
+		}
 
 	// Now draw GA pressed button bevel
 	UGAAppearance::DrawGAButtonPressedBevelTint(mCachedButtonFrame);
@@ -380,12 +382,28 @@ CRDFPushButton :: MouseLeave( )
 		Rect portRect;
 		CalcPortFrameRect(portRect);
 		StRegion buttonRgnPort(portRect);
-		StClipRgnState savedClip(buttonRgnPort);
+//		StClipRgnState savedClip(buttonRgnPort);	///еее grrr, this doesn't work
 		
 		GetSuperView()->Draw(NULL);
 		Draw(NULL);
 	}
 }
+
+
+//
+// HotSpotAction
+//
+// Called when the mouse is clicked w/in this control
+//
+void
+CRDFPushButton :: HotSpotAction(short /* inHotSpot */, Boolean inCurrInside, Boolean inPrevInside)
+{
+	if (inCurrInside != inPrevInside) {
+		SetTrackInside(inCurrInside);
+		Draw(NULL);
+	}
+
+} // HotSpotAction
 
 
 #pragma mark -
@@ -394,7 +412,6 @@ CRDFPushButton :: MouseLeave( )
 CRDFSeparator :: CRDFSeparator ( HT_Resource inNode )
 	: CRDFToolbarItem(inNode)
 {
-	DebugStr("\pCreating a CRDFSeparator");
 
 
 }
@@ -407,13 +424,23 @@ CRDFSeparator :: ~CRDFSeparator ( )
 
 }
 
+
+// a strawman drawing routine for testing purposes only
+void
+CRDFSeparator :: DrawSelf ( )
+{
+	Rect localRect;
+	CalcLocalFrameRect ( localRect );
+
+	::FrameRect ( &localRect );
+}
+
 #pragma mark -
 
 
 CRDFURLBar :: CRDFURLBar ( HT_Resource inNode )
 	: CRDFToolbarItem(inNode)
 {
-	DebugStr("\pCreating a CRDFURLBar");
 
 
 }
@@ -425,3 +452,14 @@ CRDFURLBar :: ~CRDFURLBar ( )
 
 
 }
+
+// a strawman drawing routine for testing purposes only
+void
+CRDFURLBar :: DrawSelf ( )
+{
+	Rect localRect;
+	CalcLocalFrameRect ( localRect );
+
+	::FrameRect ( &localRect );
+}
+

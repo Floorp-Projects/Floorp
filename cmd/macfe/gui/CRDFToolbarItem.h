@@ -39,16 +39,21 @@
 // The base class for things that go on toolbars. This is a virtual class
 // and should never be instantiated by itself.
 //
-class CRDFToolbarItem : public LView
+class CRDFToolbarItem
 {
 public:
+		// Frame management routines
+		// These MUST be implemented in every subclass. We do this so subclasses 
+		// can inherit from the appropriate LView (such as LControl) w/out forcing
+		// that decision into the base class.
+	virtual void PutInside ( LView *inView, Boolean inOrient = true) = 0;
+	virtual void ResizeFrameTo ( SInt16 inWidth, SInt16 inHeight, Boolean inRefresh ) = 0;
+	virtual void PlaceInSuperFrameAt ( SInt32 inHoriz, SInt32 inVert, Boolean inRefresh ) = 0;
 
 protected:
 
 	HT_Resource HTNode ( ) { return mNode; }
 	const HT_Resource HTNode ( ) const { return mNode; }
-
-	virtual void DrawSelf ( ) ;
 	
 private:
 
@@ -71,7 +76,7 @@ private:
 //
 // It's a button, it's a slicer, it's a mulcher, it's a ....
 //
-class CRDFPushButton : public CRDFToolbarItem, public CImageIconMixin
+class CRDFPushButton : public CRDFToolbarItem, public LControl, public CImageIconMixin
 {
 public:
 	CRDFPushButton ( HT_Resource inNode ) ;
@@ -79,6 +84,16 @@ public:
 
 	void SetTrackInside(bool inInside) { mTrackInside = inInside; }
 	bool IsTrackInside() const { return mTrackInside; }
+
+	virtual void PutInside ( LView *inView, Boolean inOrient = true) { 
+		LPane::PutInside(inView, inOrient); 
+	}
+	virtual void ResizeFrameTo ( SInt16 inWidth, SInt16 inHeight, Boolean inRefresh ) {
+		LPane::ResizeFrameTo(inWidth, inHeight, inRefresh);
+	}
+	virtual void PlaceInSuperFrameAt ( SInt32 inHoriz, SInt32 inVert, Boolean inRefresh ) {
+		LPane::PlaceInSuperFrameAt(inHoriz, inVert, inRefresh);	
+	}
 
 protected:
 
@@ -105,6 +120,8 @@ protected:
 	virtual void MouseEnter ( Point inPortPt, const EventRecord &inMacEvent) ;
 	virtual void MouseWithin ( Point inPortPt, const EventRecord &inMacEvent);
 	virtual void MouseLeave(void);
+
+	virtual void HotSpotAction(short /* inHotSpot */, Boolean inCurrInside, Boolean inPrevInside) ;
 
 	bool IsMouseInFrame ( ) const { return mMouseInFrame; } ;
 	
@@ -139,12 +156,25 @@ private:
 //
 // Draws a 3d-beveled vertical separator between portions of toolbars.
 //
-class CRDFSeparator : public CRDFToolbarItem
+class CRDFSeparator : public CRDFToolbarItem, public LPane
 {
 public:
 	CRDFSeparator ( HT_Resource inNode ) ;
 	virtual ~CRDFSeparator ( ) ;
 
+		// Frame management routines
+	virtual void PutInside ( LView *inView, Boolean inOrient = true) { 
+		LPane::PutInside(inView, inOrient); 
+	}
+	virtual void ResizeFrameTo ( SInt16 inWidth, SInt16 inHeight, Boolean inRefresh ) {
+		LPane::ResizeFrameTo(inWidth, inHeight, inRefresh);
+	}
+	virtual void PlaceInSuperFrameAt ( SInt32 inHoriz, SInt32 inVert, Boolean inRefresh ) {
+		LPane::PlaceInSuperFrameAt(inHoriz, inVert, inRefresh);	
+	}
+
+	virtual void DrawSelf ( ) ;
+	
 private:
 	// items cannot be passed by value because they exist in 1-to-1 correspondance
 	// with UI elements
@@ -159,11 +189,24 @@ private:
 //
 // Our fabled url entry bar with page proxy icon.
 //
-class CRDFURLBar : public CRDFToolbarItem
+class CRDFURLBar : public CRDFToolbarItem, public LView
 {
 public:
 	CRDFURLBar ( HT_Resource inNode ) ;
 	virtual ~CRDFURLBar ( ) ;
+
+		// Frame management routines
+	virtual void PutInside ( LView *inView, Boolean inOrient = true) { 
+		LPane::PutInside(inView, inOrient); 
+	}
+	virtual void ResizeFrameTo ( SInt16 inWidth, SInt16 inHeight, Boolean inRefresh ) {
+		LPane::ResizeFrameTo(inWidth, inHeight, inRefresh);
+	}
+	virtual void PlaceInSuperFrameAt ( SInt32 inHoriz, SInt32 inVert, Boolean inRefresh ) {
+		LPane::PlaceInSuperFrameAt(inHoriz, inVert, inRefresh);	
+	}
+
+	virtual void DrawSelf ( ) ;	
 
 private:
 	// items cannot be passed by value because they exist in 1-to-1 correspondance
