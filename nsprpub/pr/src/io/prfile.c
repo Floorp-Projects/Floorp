@@ -105,6 +105,9 @@ static PRInt32 PR_CALLBACK FileSeek(PRFileDesc *fd, PRInt32 offset, PRSeekWhence
 
 static PRInt64 PR_CALLBACK FileSeek64(PRFileDesc *fd, PRInt64 offset, PRSeekWhence whence)
 {
+#ifdef XP_MAC
+#pragma unused( fd, offset, whence )
+#endif
     PRInt64 result;
 
     result = _PR_MD_LSEEK64(fd, offset, whence);
@@ -132,6 +135,9 @@ static PRInt32 PR_CALLBACK FileAvailable(PRFileDesc *fd)
 
 static PRInt64 PR_CALLBACK FileAvailable64(PRFileDesc *fd)
 {
+#ifdef XP_MAC
+#pragma unused( fd )
+#endif
     PRInt64 result, cur, end;
     PRInt64 minus_one;
 
@@ -162,6 +168,9 @@ static PRStatus PR_CALLBACK FileInfo(PRFileDesc *fd, PRFileInfo *info)
 
 static PRStatus PR_CALLBACK FileInfo64(PRFileDesc *fd, PRFileInfo64 *info)
 {
+#ifdef XP_MAC
+#pragma unused( fd, info )
+#endif
     /* $$$$ NOT YET IMPLEMENTED */
 	PRInt32 rv;
 
@@ -202,6 +211,9 @@ static PRStatus PR_CALLBACK FileClose(PRFileDesc *fd)
 static PRInt16 PR_CALLBACK FilePoll(
     PRFileDesc *fd, PRInt16 in_flags, PRInt16 *out_flags)
 {
+#ifdef XP_MAC
+#pragma unused( fd, in_flags )
+#endif
     *out_flags = 0;
     return in_flags;
 }  /* FilePoll */
@@ -355,6 +367,9 @@ PR_IMPLEMENT(PRStatus) PR_GetFileInfo(const char *fn, PRFileInfo *info)
 
 PR_IMPLEMENT(PRStatus) PR_GetFileInfo64(const char *fn, PRFileInfo64 *info)
 {
+#ifdef XP_MAC
+#pragma unused (fn, info)
+#endif
     PRInt32 rv;
 
     if (!_pr_initialized) _PR_ImplicitInitialization();

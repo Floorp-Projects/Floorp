@@ -1427,6 +1427,9 @@ PRThread* _PRI_AttachThread(PRThreadType type,
 PR_IMPLEMENT(PRThread*) PR_AttachThread(PRThreadType type,
     PRThreadPriority priority, PRThreadStack *stack)
 {
+#ifdef XP_MAC
+#pragma unused( type, priority, stack )
+#endif
     return PR_GetCurrentThread();
 }
 
