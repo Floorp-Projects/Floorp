@@ -83,18 +83,6 @@ nsMsgCompose::nsMsgCompose()
   	}
 
 	m_composeHTML = PR_FALSE;
-	// temporary - m_composeHTML from the "current" identity
-	// eventually we should know this when we open the compose window
-	// -alecf
-	nsresult rv;
-	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv);
-	if (NS_SUCCEEDED(rv))
-	{
-		nsCOMPtr<nsIMsgIdentity> identity;
-		rv = mailSession->GetCurrentIdentity(getter_AddRefs(identity));
-		if (NS_SUCCEEDED(rv))
-			rv = identity->GetComposeHtml(&m_composeHTML);
-	} 
 }
 
 
@@ -141,11 +129,18 @@ nsMsgCompose::LoadAsQuote(nsString  aTextToLoad)
   return NS_OK;
 }
 
-nsresult nsMsgCompose::Initialize(nsIDOMWindow *aWindow, const PRUnichar *originalMsgURI,
-	MSG_ComposeType type, MSG_ComposeFormat format, nsIMsgCompFields *compFields, nsISupports *object)
+nsresult nsMsgCompose::Initialize(nsIDOMWindow *aWindow,
+                                  const PRUnichar *originalMsgURI,
+                                  MSG_ComposeType type,
+                                  MSG_ComposeFormat format,
+                                  nsIMsgCompFields *compFields,
+                                  nsISupports *object,
+                                  nsIMsgIdentity *identity)
 {
 	nsresult rv = NS_OK;
 
+  m_identity = identity;
+  
 	if (aWindow)
 	{
 		m_window = aWindow;
@@ -172,10 +167,13 @@ nsresult nsMsgCompose::Initialize(nsIDOMWindow *aWindow, const PRUnichar *origin
 	{
 		case MSGCOMP_FORMAT_HTML		: m_composeHTML = PR_TRUE;					break;
 		case MSGCOMP_FORMAT_PlainText	: m_composeHTML = PR_FALSE;					break;
-    default							: /* m_composeHTML initialized in ctor */	break;
+    default							:
+      /* ask the identity which compose to use */
+      if (m_identity) m_identity->GetComposeHtml(&m_composeHTML);
+      break;
 
 	}
-	
+
 	 CreateMessage(originalMsgURI, type, format, compFields, object); //object is temporary
 
 	return rv;
@@ -517,7 +515,7 @@ nsresult nsMsgCompose::SetEditor(nsIEditorShell * aEditor)
   else if (bodyInCompFields)
     return BuildBodyMessage();
   else
-    return ProcessSignature(nsnull);
+    return ProcessSignature(nsnull, m_identity);
 } 
 
 nsresult nsMsgCompose::GetDomWindow(nsIDOMWindow * *aDomWindow)
@@ -548,11 +546,14 @@ nsresult nsMsgCompose::GetWrapLength(PRInt32 *aWrapLength)
 	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
   if (NS_FAILED(rv)) return rv;
   
-  return prefs->GetIntPref("mail.wraplength", aWrapLength);
+  return prefs->GetIntPref("mailnews.wraplength", aWrapLength);
 }
 
-nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI, MSG_ComposeType type, MSG_ComposeFormat format,
-									 nsIMsgCompFields * compFields, nsISupports * object)
+nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
+                                     MSG_ComposeType type,
+                                     MSG_ComposeFormat format,
+                                     nsIMsgCompFields * compFields,
+                                     nsISupports * object)
 {
   nsresult rv = NS_OK;
 
@@ -681,10 +682,13 @@ QuotingOutputStreamListener::~QuotingOutputStreamListener()
     NS_RELEASE(mComposeObj);
 }
 
-QuotingOutputStreamListener::QuotingOutputStreamListener(const PRUnichar * originalMsgURI, PRBool quoteHeaders) 
+QuotingOutputStreamListener::QuotingOutputStreamListener(const PRUnichar * originalMsgURI,
+                                                         PRBool quoteHeaders,
+                                                         nsIMsgIdentity *identity) 
 { 
   mComposeObj = nsnull;
   mQuoteHeaders = quoteHeaders;
+  mIdentity = identity;
 
   nsCOMPtr<nsIMessage> originalMsg = getter_AddRefs(GetIMessageFromURI(originalMsgURI));
   if (originalMsg && !quoteHeaders)
@@ -881,7 +885,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel * /* aChanne
       goto done;
     }     
     tempFile.write(nsAutoCString(mMsgBody), mMsgBody.Length());
-    mComposeObj->ProcessSignature(&tempFile);
+    mComposeObj->ProcessSignature(&tempFile, mIdentity);
     tempFile.close();
 
     // Now load the URL...
@@ -967,11 +971,14 @@ nsMsgCompose::QuoteOriginalMessage(const PRUnichar *originalMsgURI, PRInt32 what
     return NS_ERROR_FAILURE;
 
   // Create the consumer output stream.. this will receive all the HTML from libmime
-  mQuoteStreamListener = new QuotingOutputStreamListener(originalMsgURI, what != 1);
+  mQuoteStreamListener =
+    new QuotingOutputStreamListener(originalMsgURI, what != 1, m_identity);
   
   if (!mQuoteStreamListener)
   {
+#ifdef NS_DEBUG
     printf("Failed to create mQuoteStreamListener\n");
+#endif
     return NS_ERROR_FAILURE;
   }
   NS_ADDREF(mQuoteStreamListener);
@@ -1292,7 +1299,7 @@ nsMsgDocumentStateListener::NotifyDocumentStateChanged(PRBool nowDirty)
 }
 
 nsresult
-nsMsgCompose::ConvertHTMLToText(char *aSigFile, nsString &aSigData)
+nsMsgCompose::ConvertHTMLToText(nsFileSpec& aSigFile, nsString &aSigData)
 {
   nsresult    rv;
   nsString    origBuf;
@@ -1307,7 +1314,7 @@ nsMsgCompose::ConvertHTMLToText(char *aSigFile, nsString &aSigData)
 }
 
 nsresult
-nsMsgCompose::ConvertTextToHTML(char *aSigFile, nsString &aSigData)
+nsMsgCompose::ConvertTextToHTML(nsFileSpec& aSigFile, nsString &aSigData)
 {
   nsresult    rv;
   nsString    origBuf;
@@ -1323,9 +1330,8 @@ nsMsgCompose::ConvertTextToHTML(char *aSigFile, nsString &aSigData)
 }
 
 nsresult
-nsMsgCompose::LoadDataFromFile(char *sigFilePath, nsString &sigData)
+nsMsgCompose::LoadDataFromFile(nsFileSpec& fSpec, nsString &sigData)
 {
-  nsFileSpec    fSpec(sigFilePath);
   PRInt32       readSize;
   char          *readBuf;
 
@@ -1339,7 +1345,7 @@ nsMsgCompose::LoadDataFromFile(char *sigFilePath, nsString &sigData)
     return NS_ERROR_OUT_OF_MEMORY;
   nsCRT::memset(readBuf, 0, readSize + 1);
 
-  tempFile.read(readBuf, readSize);
+  readSize = tempFile.read(readBuf, readSize);
   tempFile.close();
 
   sigData = readBuf;
@@ -1370,7 +1376,8 @@ nsMsgCompose::BuildQuotedMessageAndSignature(void)
 // as a temp file and do a LoadURL operation.
 //
 nsresult
-nsMsgCompose::ProcessSignature(nsOutputFileStream *aAppendFileStream)
+nsMsgCompose::ProcessSignature(nsOutputFileStream *aAppendFileStream,
+                               nsIMsgIdentity *identity)
 {
   nsresult    rv;
 
@@ -1392,32 +1399,30 @@ nsMsgCompose::ProcessSignature(nsOutputFileStream *aAppendFileStream)
   // .html, we assume its HTML, otherwise, we assume it is plain text
   //
   nsString      urlStr;
-  char          *sigFilePath = nsnull;
+  nsCOMPtr<nsIFileSpec> sigFileSpec;
   PRBool        useSigFile = PR_FALSE;
   PRBool        htmlSig = PR_FALSE;
   nsString      sigData = "";
 
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
-  if (NS_SUCCEEDED(rv) && prefs) 
+  if (identity)
   {
-    rv = prefs->GetBoolPref("mail.use_signature_file", &useSigFile);
+    rv = identity->GetAttachSignature(&useSigFile);
     if (NS_SUCCEEDED(rv) && useSigFile) 
     {
-      rv = prefs->CopyCharPref("mail.signature_file", &sigFilePath);
+      identity->GetSignature(getter_AddRefs(sigFileSpec));
     }
   }
   
   // Setup the urlStr to load to be the signature if the user wants it 
   // that way...
   //
-  if ((useSigFile) && (sigFilePath))
+  if ((useSigFile) && (sigFileSpec))
   {
-    nsFileSpec    testSpec(sigFilePath);
+    nsFileSpec    testSpec;
+    sigFileSpec->GetFileSpec(&testSpec);
     
     if (!testSpec.Exists())
     {
-      PR_FREEIF(sigFilePath);
-      sigFilePath = nsnull;
       if (m_composeHTML)
         urlStr = "chrome://messengercompose/content/defaultHtmlBody.html";
       else
@@ -1428,7 +1433,8 @@ nsMsgCompose::ProcessSignature(nsOutputFileStream *aAppendFileStream)
       // Once we get here, we need to figure out if we have the correct file
       // type for the editor.
       //
-      char    *fileExt = nsMsgGetExtensionFromFileURL(nsString(sigFilePath));      
+      nsFileURL sigFilePath(testSpec);
+      char    *fileExt = nsMsgGetExtensionFromFileURL(nsString(sigFilePath));
 
       if ( (fileExt) && (*fileExt) )
       {
@@ -1438,16 +1444,17 @@ nsMsgCompose::ProcessSignature(nsOutputFileStream *aAppendFileStream)
 
       // is this a text sig with an HTML editor?
       if ( (m_composeHTML) && (!htmlSig) )
-        ConvertTextToHTML(sigFilePath, sigData);
+        ConvertTextToHTML(testSpec, sigData);
       // is this a HTML sig with a text window?
       else if ( (!m_composeHTML) && (htmlSig) )
-        ConvertHTMLToText(sigFilePath, sigData);
+        ConvertHTMLToText(testSpec, sigData);
       else // We have a match...
       {
-        if (!aAppendFileStream)   // Just load this URL
+        if (!aAppendFileStream)  // Just load this URL {
           urlStr = nsMsgPlatformFileToURL(testSpec);
         else
-          LoadDataFromFile(sigFilePath, sigData);  // Get the data!
+          LoadDataFromFile(testSpec, sigData);  // Get the data!
+          
       }
     }
   }
@@ -1458,8 +1465,6 @@ nsMsgCompose::ProcessSignature(nsOutputFileStream *aAppendFileStream)
     else
       urlStr = "chrome://messengercompose/content/defaultTextBody.txt";
   }
-
-  PR_FREEIF(sigFilePath);
 
   // This is the "load signature alone" operation!
   char      *htmlBreak = "<BR>";
@@ -1494,7 +1499,8 @@ nsMsgCompose::ProcessSignature(nsOutputFileStream *aAppendFileStream)
 
       tempFile.write(nsAutoCString(sigData), sigData.Length());
       tempFile.close();
-      urlStr = mSigFileSpec->GetNativePathCString();
+      nsFileURL fileUrl(*mSigFileSpec);
+      urlStr = fileUrl;
       m_editor->LoadUrl(urlStr.GetUnicode());
     }
   }

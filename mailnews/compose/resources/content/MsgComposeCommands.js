@@ -135,36 +135,23 @@ function ComposeStartup()
  	identitySelect.remove(0);   
     }
 
-    // autoselect the first identity.  soon, we'll be smarter about this
-    // and select the one that is appropriate.  bug #10235
-    try {
-	// find args.preselectid and choose it.
-	// dump("args.preselectid = " + args.preselectid + "\n");
-	options = identitySelect.options
-	var preselectindex = 0;
-	for (i=0;i<options.length;i++) {
-		// dump(options[i].value + "\n");
-		if (options[i].value == args.preselectid) {
-			preselectindex = i;
-			break;
-		}
-	}
-	identitySelect.selectedIndex = preselectindex;
-    }
-    catch (ex) {
-	// dump("failed to preselect an identity\n");
-	if (identitySelect && identitySelect.options && (identitySelect.options.length >0)) {
-		// just pick the first one
-		identitySelect.selectedIndex = 0;
-	}
-    }
+    if (args.preselectid)
+        identitySelect.value = args.preselectid;
+    else
+        identitySelect.selectedIndex = 0;
 
     // fill in Recipient type combobox
     FillRecipientTypeCombobox();
     
 	if (msgComposeService)
 	{
-		msgCompose = msgComposeService.InitCompose(window, args.originalMsg, args.type, args.format, args.fieldsAddr);
+        // this is frustrating, we need to convert the preselect identity key
+        // back to an identity, to pass to initcompose
+        // it would be nice if there was some way to actually send the
+        // identity through "args"
+        var identity = getIdentityForKey(args.preselectid);
+        
+		msgCompose = msgComposeService.InitCompose(window, args.originalMsg, args.type, args.format, args.fieldsAddr, identity);
 		if (msgCompose)
 		{
 			//Creating a Editor Shell
@@ -509,6 +496,14 @@ function getCurrentIdentity()
     var identity = accountManager.getIdentity(identityKey);
     
     return identity;
+}
+
+function getIdentityForKey(key)
+{
+    var msgService = Components.classes['component://netscape/messenger/services/session'].getService(Components.interfaces.nsIMsgMailSession);
+    var accountManager = msgService.accountManager;
+
+    return accountManager.getIdentity(key);
 }
 
 function SetComposeWindowTitle(event) 

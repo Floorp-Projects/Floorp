@@ -183,7 +183,13 @@ nsresult nsMsgComposeService::OpenComposeWindowWithCompFields(const PRUnichar *m
 	return rv;
 }
 
-nsresult nsMsgComposeService::InitCompose(nsIDOMWindow *aWindow, const PRUnichar *originalMsgURI, PRInt32 type, PRInt32 format, PRInt32 compFieldsAddr, nsIMsgCompose **_retval)
+nsresult nsMsgComposeService::InitCompose(nsIDOMWindow *aWindow,
+                                          const PRUnichar *originalMsgURI,
+                                          PRInt32 type,
+                                          PRInt32 format,
+                                          PRInt32 compFieldsAddr,
+                                          nsIMsgIdentity *identity,
+                                          nsIMsgCompose **_retval)
 {
 	nsresult rv;
 	nsIMsgCompose * msgCompose = nsnull;
@@ -210,7 +216,8 @@ nsresult nsMsgComposeService::InitCompose(nsIDOMWindow *aWindow, const PRUnichar
 // ducarroz: I am not quiet sure than dynamic_cast is supported on all platforms/compilers!
 //		nsIMsgCompFields* compFields = dynamic_cast<nsIMsgCompFields *>((nsIMsgCompFields *)compFieldsAddr);
 		nsIMsgCompFields* compFields = (nsIMsgCompFields *)compFieldsAddr;
-		msgCompose->Initialize(aWindow, originalMsgURI, type, format, compFields, object);
+		msgCompose->Initialize(aWindow, originalMsgURI, type, format,
+                           compFields, object, identity);
 		NS_IF_RELEASE(compFields);
 		m_msgQueue->AppendElement(msgCompose);
 		*_retval = msgCompose;

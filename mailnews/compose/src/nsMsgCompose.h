@@ -57,8 +57,8 @@ class nsMsgCompose : public nsIMsgCompose
   PRBool                        QuotingToFollow(void);
   nsresult                      SetQuotingToFollow(PRBool aVal);
   nsresult                      LoadAsQuote(nsString  aTextToLoad);
-  nsresult                      ConvertHTMLToText(char *aSigFile, nsString &aSigData);
-  nsresult                      ConvertTextToHTML(char *aSigFile, nsString &aSigData);
+  nsresult                      ConvertHTMLToText(nsFileSpec& aSigFile, nsString &aSigData);
+  nsresult                      ConvertTextToHTML(nsFileSpec& aSigFile, nsString &aSigData);
   nsresult                      BuildBodyMessage();
 
   nsString                      mQuoteURI;
@@ -67,10 +67,11 @@ class nsMsgCompose : public nsIMsgCompose
 
   PRInt32                       mWhatHolder;
 
-  nsresult                      ProcessSignature(nsOutputFileStream *aAppendFileStream); // for setting up the users compose window environment
+  nsresult                      ProcessSignature(nsOutputFileStream *aAppendFileStream,
+                                                 nsIMsgIdentity *identity); // for setting up the users compose window environment
   nsresult                      BuildQuotedMessageAndSignature(void);                    // for setting up the users compose window environment
 	nsresult                      ShowWindow(PRBool show);
-  nsresult                      LoadDataFromFile(char *sigFilePath, nsString &sigData);
+  nsresult                      LoadDataFromFile(nsFileSpec& fSpec, nsString &sigData);
 
 
  private:
@@ -84,6 +85,7 @@ class nsMsgCompose : public nsIMsgCompose
 	nsIWebShell                   *m_webShell;
 	nsIWebShellWindow             *m_webShellWin;
 	nsMsgCompFields               *m_compFields;
+  nsCOMPtr<nsIMsgIdentity>      m_identity;
 	PRBool						            m_composeHTML;
 	QuotingOutputStreamListener   *mQuoteStreamListener;
 	nsCOMPtr<nsIOutputStream>     mBaseStream;
@@ -104,7 +106,9 @@ class nsMsgCompose : public nsIMsgCompose
 class QuotingOutputStreamListener : public nsIStreamListener
 {
 public:
-    QuotingOutputStreamListener(const PRUnichar *originalMsgURI, PRBool quoteHeaders);
+    QuotingOutputStreamListener(const PRUnichar *originalMsgURI,
+                                PRBool quoteHeaders,
+                                nsIMsgIdentity *identity);
     virtual ~QuotingOutputStreamListener(void);
 
     NS_DECL_ISUPPORTS
@@ -120,6 +124,7 @@ private:
     nsString       				mMsgBody;
     PRBool						mQuoteHeaders;
     nsCOMPtr<nsIMimeHeaders>	mHeaders;
+    nsCOMPtr<nsIMsgIdentity> mIdentity;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////

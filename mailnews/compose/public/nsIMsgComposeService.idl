@@ -20,6 +20,7 @@
 #include "nsISupports.idl"
 #include "domstubs.idl"
 #include "nsIMsgCompose.idl"
+#include "nsIMsgIdentity.idl"
 
 %{ C++
 #include "nsIDOMWindow.h"
@@ -42,7 +43,11 @@ interface nsIMsgComposeService : nsISupports {
 	void OpenComposeWindowWithCompFields(in wstring msgComposeWindowURL, in MSG_ComposeFormat format, in nsIMsgCompFields compFields);
 
 	/* ... */
-	nsIMsgCompose InitCompose(in nsIDOMWindow aWindow, in wstring originalMsgURI, in long type, in long format, in long compFieldsAddr);
+	nsIMsgCompose InitCompose(in nsIDOMWindow aWindow,
+                              in wstring originalMsgURI,
+                              in long type, in long format,
+                              in long compFieldsAddr,
+                              in nsIMsgIdentity identity);
 
 	/* ... */
 	void DisposeCompose(in nsIMsgCompose compose, in boolean closeWindow);	
