@@ -94,6 +94,13 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSimpleStreamProvider)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifdef MOZ_NEW_CACHE
+#include "nsStreamListenerTee.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsStreamListenerTee)
+#endif
+
+///////////////////////////////////////////////////////////////////////////////
+
 #include "nsStorageTransport.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsStorageTransport)
@@ -550,14 +557,20 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
       NS_SIMPLESTREAMPROVIDER_CID,
       NS_SIMPLESTREAMPROVIDER_CONTRACTID,
       nsSimpleStreamProviderConstructor },
-    { "Async Stream Observer",
+    { NS_ASYNCSTREAMOBSERVER_CLASSNAME,
       NS_ASYNCSTREAMOBSERVER_CID,
-      "@mozilla.org/network/async-stream-observer;1",
+      NS_ASYNCSTREAMOBSERVER_CONTRACTID,
       nsAsyncStreamObserver::Create },
-    { "Async Stream Listener",
+    { NS_ASYNCSTREAMLISTENER_CLASSNAME,
       NS_ASYNCSTREAMLISTENER_CID,
-      "@mozilla.org/network/async-stream-listener;1",
+      NS_ASYNCSTREAMLISTENER_CONTRACTID,
       nsAsyncStreamListener::Create },
+#ifdef MOZ_NEW_CACHE
+    { NS_STREAMLISTENERTEE_CLASSNAME,
+      NS_STREAMLISTENERTEE_CID,
+      NS_STREAMLISTENERTEE_CONTRACTID,
+      nsStreamListenerTeeConstructor },
+#endif
     { NS_STORAGETRANSPORT_CLASSNAME,
       NS_STORAGETRANSPORT_CID,
       NS_STORAGETRANSPORT_CONTRACTID,
