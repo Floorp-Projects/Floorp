@@ -676,9 +676,11 @@ XtPointer fe_WidgetTreeWalkChildren(Widget widget,
 Widget    fe_FindWidget(Widget top, char* name); /* find widget by name */
 
 
-void DisplayPixmap(MWContext * context, IL_Pixmap * image, IL_Pixmap * mask, PRInt32  x, PRInt32  y, PRInt32  x_offset,  PRInt32 y_offset, PRInt32  width, PRInt32 height);
-void NewPixmap(MWContext *, IL_Pixmap * image, Boolean mask);
-void ImageComplete(MWContext *, IL_Pixmap * image);
+extern void fe_DisplayPixmap(MWContext * context, IL_Pixmap * image, IL_Pixmap * mask, PRInt32  x, PRInt32  y, PRInt32  x_offset,  PRInt32 y_offset, PRInt32  width, PRInt32 height);
+extern void fe_NewPixmap(MWContext *, IL_Pixmap * image, Boolean mask);
+extern void fe_ImageComplete(MWContext *, IL_Pixmap * image);
+extern void fe_load_default_font(MWContext *);
+
 
 
 XP_END_PROTOS

@@ -656,7 +656,8 @@ _IMGCB_DisplayPixmap(IMGCB* img_cb, jint op, void* dpy_cx, IL_Pixmap* image,
                             /* (fe_ContextData *) pContext->fe.data; */
 
      /* Call the context specific displayPixmap function */
-     fec->DisplayPixmap( pContext, image, mask, x, y, x_offset, y_offset, req_w, req_h);
+     if (fec->DisplayPixmap)
+       fec->DisplayPixmap( pContext, image, mask, x, y, x_offset, y_offset, req_w, req_h);
 
 }
 
