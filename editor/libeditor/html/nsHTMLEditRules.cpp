@@ -704,7 +704,7 @@ nsHTMLEditRules::GetAlignment(PRBool *aMixed, nsIHTMLEditor::EAlignment *aAlign)
 
     // use these ranges to contruct a list of nodes to act on.
     nsCOMPtr<nsISupportsArray> arrayOfNodes;
-    res = GetNodesForOperation(arrayOfRanges, address_of(arrayOfNodes), kAlign);
+    res = GetNodesForOperation(arrayOfRanges, address_of(arrayOfNodes), kAlign, PR_TRUE);
     if (NS_FAILED(res)) return res;                                 
     isupports = dont_AddRef(arrayOfNodes->ElementAt(0));
     nodeToExamine = do_QueryInterface(isupports );
