@@ -62,11 +62,34 @@ for $br (last_successful_builds($tree)) {
   $warn_file =~ s/.gz$/.html/;
 
   $fh->open(">$warn_file") or die "Unable to open $warn_file: $!\n";
-  &print_warnings_as_html($fh, $br);
+  my ($total_warnings, $time_str) = print_warnings_as_html($fh, $br);
   $fh->close;
-  warn "Wrote output to $warn_file\n";
+
+  # Make it live
+  use File::Copy 'move';
+  move($warn_file, "$tree/warnings.html");
+
+  my $warn_summary = "$tree/warn$log_file";
+  $warn_summary =~ s/.gz$/.pl/;
+
+  $fh->open(">$warn_summary") or die "Unable to open $warn_summary: $!\n";
+  $total_warnings = commify($total_warnings);
+  print $fh '$warning_summary=\'<p>Check out the '
+      ."<a href=\"http://tinderbox.mozilla.org/$tree/warnings.html\">"
+      ."$total_warnings Build Warnings</a> (updated $time_str). "
+      .'-<a href="mailto:slamm@netscape.com?subject=About the Build Warnings">'
+      .'slamm</a><p>\';'."\n";
+  $fh->close;
+
+  move($warn_summary, "$tree/warn.pl");
 
   last;
+}
+
+sub commify {
+    my $text = reverse $_[0];
+    $text =~ s/(\d\d\d)(?=\d)(?!\d*\.)/$1,/g;
+    return scalar reverse $text;
 }
 
 # end of main
@@ -264,8 +287,6 @@ sub print_warnings_as_html {
       </font><p>
     
 __END_HEADER
-  warn "$total_warnings_count warnings from $time_str\n";
-
   for $who (sort { $who_count{$b} <=> $who_count{$a}
                    || $a cmp $b } keys %who_count) {
     push @who_list, $who;
@@ -346,6 +367,8 @@ __END_FOOTER
 
   # Change default destination back.
   select($old_fh);
+
+  return ($total_warnings_count, $time_str);
 }
 
 sub print_count {
