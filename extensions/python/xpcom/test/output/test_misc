@@ -8,3 +8,4 @@ xpcom object hashing tests seemed to work
 The IID tests seemed to work
 The netscape sample worked!
 The netscape sample worked with interface flattening!
+The unwrapping tests seemed to work
