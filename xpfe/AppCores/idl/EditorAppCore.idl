@@ -43,13 +43,14 @@ interface EditorAppCore : BaseAppCore
 	
 	void insertText(in DOMString textToInsert);
 
-	void insertLink();
+  void insertLink();
 	void insertImage();
 
   Element getSelectedElement(in DOMString tagName);
   Element createElementWithDefaults(in DOMString tagName);
   Element insertElement(in Element element, in boolean deleteSelection);
-	
+	void    insertLinkAroundSelection(in Element anchorElement);
+  
 	void exit();
 
 	void setToolbarWindow(in Window win);

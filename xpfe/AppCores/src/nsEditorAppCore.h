@@ -65,6 +65,7 @@ class nsEditorAppCore : public nsBaseAppCore,
     NS_IMETHOD    GetSelectedElement(const nsString& aTagName, nsIDOMElement** aReturn);
     NS_IMETHOD    CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement** aReturn);
     NS_IMETHOD    InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection, nsIDOMElement** aReturn);
+    NS_IMETHOD    InsertLinkAroundSelection(nsIDOMElement* aAnchorElement);
 	  NS_IMETHOD    SetEditorType(const nsString& aEditorType);
 		NS_IMETHOD    SetTextProperty(const nsString& aProp, 
                                   const nsString& aAttr, 
