@@ -225,8 +225,14 @@ NS_IMETHODIMP nsDrawingSurfaceWin :: Lock(PRInt32 aX, PRInt32 aY,
           {
             ::GetObject(mLockedBitmap, sizeof(BITMAP), &mBitmap);
 
-            mLockOffset = aY;
-            mLockHeight = min((PRInt32)aHeight, (mBitmap.bmHeight - aY));
+            if (aY < 0 || aY + aHeight > mBitmap.bmHeight) {
+              ::DeleteObject(tbits);
+              return NS_ERROR_FAILURE;
+            }
+            
+            // GetDIBits always seems to interpret the scanlines as bottom-to-top.
+            mLockHeight = (PRInt32)aHeight;
+            mLockOffset = mBitmap.bmHeight - (aY + aHeight);
 
             mBitmapInfo = CreateBitmapInfo(mBitmap.bmWidth, mBitmap.bmHeight, mBitmap.bmBitsPixel, (void **)&mDIBits);
 
@@ -235,6 +241,9 @@ NS_IMETHODIMP nsDrawingSurfaceWin :: Lock(PRInt32 aX, PRInt32 aY,
                 ::GetDIBits(mDC, mLockedBitmap, mLockOffset, mLockHeight, mDIBits, mBitmapInfo, DIB_RGB_COLORS);
 
               mBitmap.bmBits = mDIBits;
+              // Note the width of the DIB-bits rows. DIB rows are DWORD-aligned,
+              // the original bitmap's rows may not have been DWORD-aligned.
+              mBitmap.bmWidthBytes = RASWIDTH(mBitmap.bmWidth, mBitmap.bmBitsPixel);
             } else {
               ::DeleteObject(tbits);
               return NS_ERROR_FAILURE;
