@@ -1,7 +1,6 @@
 /* Cascading Style Sheet for Mozilla On-Screen Help */
 
-
-
+@import url("chrome://help/content/platformClasses.css");
 
 H1, H2, H3, H4, H5, H6, P, UL, OL, DIR, MENU, DIV, 
 
