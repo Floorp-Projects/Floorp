@@ -324,8 +324,9 @@ function EditorInsertLink()
 function EditorInsertList(listType)
 {
   if (appCore) {
-    dump("Inserting link\n");
+    dump("Inserting list\n");
     appCore.insertList(listType);
+    dump("\n");
   }
 }
 
@@ -338,6 +339,23 @@ function EditorInsertImage()
     toolkitCore.ShowWindowWithArgs("chrome://editordlgs/content/EdImageProps.xul", window, editorName);
   }
 }
+
+function EditorIndent(indent)
+{
+  dump("indenting\n");
+  if (appCore) {
+    appCore.indent(indent);
+  }
+}
+
+function EditorAlign(align)
+{
+  dump("aligning\n");
+  if (appCore) {
+    appCore.align(align);
+  }
+}
+
 
 function EditorExit()
 {

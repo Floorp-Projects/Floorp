@@ -29,6 +29,7 @@
 #include "nsITransactionManager.h"
 #include "TransactionFactory.h"
 #include "nsIComponentManager.h"
+#include "nsCOMPtr.h"
 
 class nsIEditActionListener;
 class nsIDOMCharacterData;
@@ -75,6 +76,12 @@ protected:
   nsIDOMDocument * mDoc;
 
 public:
+
+  enum IterDirection
+  {
+    kIterForward,
+    kIterBackward
+  };
 
   static const char* kMOZEditorBogusNodeAttr;
   static const char* kMOZEditorBogusNodeValue;
@@ -455,6 +462,30 @@ public:
   /** returns PR_TRUE if aNode is an editable node */
   static PRBool IsEditable(nsIDOMNode *aNode);
 
+  /** from html rules code - migration in progress */
+  static nsCOMPtr<nsIAtom> GetTag(nsIDOMNode *aNode);
+  static PRBool NodesSameType(nsIDOMNode *aNode1, nsIDOMNode *aNode2);
+  static PRBool IsBlockNode(nsIDOMNode *aNode);
+  static PRBool IsInlineNode(nsIDOMNode *aNode);
+  static nsCOMPtr<nsIDOMNode> GetBlockNodeParent(nsIDOMNode *aNode);
+  static PRBool HasSameBlockNodeParent(nsIDOMNode *aNode1, nsIDOMNode *aNode2);
+  
+  static PRBool IsTextOrElementNode(nsIDOMNode *aNode);
+  static PRBool IsTextNode(nsIDOMNode *aNode);
+  
+  static PRInt32 GetIndexOf(nsIDOMNode *aParent, nsIDOMNode *aChild);
+  static nsCOMPtr<nsIDOMNode> GetChildAt(nsIDOMNode *aParent, PRInt32 aOffset);
+  
+  static nsCOMPtr<nsIDOMNode> NextNodeInBlock(nsIDOMNode *aNode, IterDirection aDir);
+  static nsresult GetStartNodeAndOffset(nsIDOMSelection *aSelection, nsCOMPtr<nsIDOMNode> *outStartNode, PRInt32 *outStartOffset);
+  static nsresult GetEndNodeAndOffset(nsIDOMSelection *aSelection, nsCOMPtr<nsIDOMNode> *outEndNode, PRInt32 *outEndOffset);
+  
+  nsresult IsPreformatted(nsIDOMNode *aNode, PRBool *aResult);
+  nsresult IsNextCharWhitespace(nsIDOMNode *aParentNode, PRInt32 aOffset, PRBool *aResult);
+  nsresult IsPrevCharWhitespace(nsIDOMNode *aParentNode, PRInt32 aOffset, PRBool *aResult);
+
+  nsresult SplitNodeDeep(nsIDOMNode *aNode, nsIDOMNode *aSplitPointParent, PRInt32 aSplitPointOffset);
+  nsresult JoinNodeDeep(nsIDOMNode *aLeftNode, nsIDOMNode *aRightNode, nsIDOMSelection *aSelection); 
 
 };
 
