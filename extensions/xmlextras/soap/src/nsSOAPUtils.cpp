@@ -1,70 +1,102 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: NPL 1.1/GPL 2.0/LGPL 2.1
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.1 (the "License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
- * http://www.mozilla.org/NPL/
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
  *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is 
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
- * the Initial Developer. All Rights Reserved.
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
  *
- * Contributor(s):
- *
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the NPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the NPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+ * Contributor(s): 
+ */
 
 #include "nsSOAPUtils.h"
 #include "nsIDOMText.h"
+#include "nsIDOMNamedNodeMap.h"
 #include "nsCOMPtr.h"
-#include "nsIJSContextStack.h"
-#include "nsISOAPParameter.h"
-#include "nsISupportsPrimitives.h"
-#include "nsIComponentManager.h"
-#include "nsIServiceManager.h"
-#include "nsXPIDLString.h"
-#include "nsReadableUtils.h"
-#include "nsISupportsArray.h"
 
-const char* nsSOAPUtils::kSOAPEnvURI = "http://schemas.xmlsoap.org/soap/envelope/";
-const char* nsSOAPUtils::kSOAPEncodingURI = "http://schemas.xmlsoap.org/soap/encoding/";
-const char* nsSOAPUtils::kSOAPEnvPrefix = "SOAP-ENV";
-const char* nsSOAPUtils::kSOAPEncodingPrefix = "SOAP-ENC";
-const char* nsSOAPUtils::kXSIURI = "http://www.w3.org/1999/XMLSchema-instance";
-const char* nsSOAPUtils::kXSDURI = "http://www.w3.org/1999/XMLSchema";
-const char* nsSOAPUtils::kXSIPrefix = "xsi";
-const char* nsSOAPUtils::kXSDPrefix = "xsd";
-const char* nsSOAPUtils::kEncodingStyleAttribute = "encodingStyle";
-const char* nsSOAPUtils::kEnvelopeTagName = "Envelope";
-const char* nsSOAPUtils::kHeaderTagName = "Header";
-const char* nsSOAPUtils::kBodyTagName = "Body";
-const char* nsSOAPUtils::kFaultTagName = "Fault";
-const char* nsSOAPUtils::kFaultCodeTagName = "faultcode";
-const char* nsSOAPUtils::kFaultStringTagName = "faultstring";
-const char* nsSOAPUtils::kFaultActorTagName = "faultactor";
-const char* nsSOAPUtils::kFaultDetailTagName = "detail";
+NS_NAMED_LITERAL_STRING(nsSOAPUtils::kSOAPEnvURI,"http://schemas.xmlsoap.org/soap/envelope/");
+NS_NAMED_LITERAL_STRING(nsSOAPUtils::kSOAPEncodingURI,"http://schemas.xmlsoap.org/soap/encoding/");
+NS_NAMED_LITERAL_STRING(nsSOAPUtils::kSOAPEnvPrefix,"SOAP-ENV");
+NS_NAMED_LITERAL_STRING(nsSOAPUtils::kSOAPEncodingPrefix,"SOAP-ENC");
+NS_NAMED_LITERAL_STRING(nsSOAPUtils::kXSIURI,"http://www.w3.org/1999/XMLSchema-instance");
+NS_NAMED_LITERAL_STRING(nsSOAPUtils::kXSDURI,"http://www.w3.org/1999/XMLSchema");
+NS_NAMED_LITERAL_STRING(nsSOAPUtils::kXSIPrefix,"xsi");
+NS_NAMED_LITERAL_STRING(nsSOAPUtils::kXSITypeAttribute,"type");
+NS_NAMED_LITERAL_STRING(nsSOAPUtils::kXSDPrefix,"xsd");
+NS_NAMED_LITERAL_STRING(nsSOAPUtils::kEncodingStyleAttribute,"encodingStyle");
+NS_NAMED_LITERAL_STRING(nsSOAPUtils::kActorAttribute,"actor");
+NS_NAMED_LITERAL_STRING(nsSOAPUtils::kEnvelopeTagName,"Envelope");
+NS_NAMED_LITERAL_STRING(nsSOAPUtils::kHeaderTagName,"Header");
+NS_NAMED_LITERAL_STRING(nsSOAPUtils::kBodyTagName,"Body");
+NS_NAMED_LITERAL_STRING(nsSOAPUtils::kFaultTagName,"Fault");
+NS_NAMED_LITERAL_STRING(nsSOAPUtils::kFaultCodeTagName,"faultcode");
+NS_NAMED_LITERAL_STRING(nsSOAPUtils::kFaultStringTagName,"faultstring");
+NS_NAMED_LITERAL_STRING(nsSOAPUtils::kFaultActorTagName,"faultactor");
+NS_NAMED_LITERAL_STRING(nsSOAPUtils::kFaultDetailTagName,"detail");
+
+NS_NAMED_LITERAL_STRING(nsSOAPUtils::kEncodingSeparator,"#");
+NS_NAMED_LITERAL_STRING(nsSOAPUtils::kQualifiedSeparator,":");
+
+NS_NAMED_LITERAL_STRING(nsSOAPUtils::kXMLNamespaceNamespaceURI, "htp://www.w3.org/2000/xmlns/");
+NS_NAMED_LITERAL_STRING(nsSOAPUtils::kXMLNamespaceURI, "htp://www.w3.org/XML/1998/namespace");
+NS_NAMED_LITERAL_STRING(nsSOAPUtils::kXMLPrefix, "xml:");
+NS_NAMED_LITERAL_STRING(nsSOAPUtils::kXMLNamespacePrefix, "xmlns:");
+
+void 
+nsSOAPUtils::GetSpecificChildElement(
+  nsIDOMElement *aParent, 
+  const nsAReadableString& aNamespace, 
+  const nsAReadableString& aType, 
+  nsIDOMElement * *aElement)
+{
+  nsCOMPtr<nsIDOMElement> sibling;
+
+  *aElement = nsnull;
+  GetFirstChildElement(aParent, getter_AddRefs(sibling));
+  if (sibling)
+  {
+    GetSpecificSiblingElement(sibling,
+      aNamespace, aType, aElement);
+  }
+}
+
+void 
+nsSOAPUtils::GetSpecificSiblingElement(
+  nsIDOMElement *aSibling, 
+  const nsAReadableString& aNamespace, 
+  const nsAReadableString& aType, 
+  nsIDOMElement * *aElement)
+{
+  nsCOMPtr<nsIDOMElement> sibling;
+
+  *aElement = nsnull;
+  sibling = aSibling;
+  do {
+    nsAutoString name, namespaceURI;
+    sibling->GetLocalName(name);
+    sibling->GetNamespaceURI(namespaceURI);
+    if (name.Equals(aType)
+      && namespaceURI.Equals(nsSOAPUtils::kSOAPEnvURI))
+    {
+      *aElement = sibling;
+      NS_ADDREF(*aElement);
+      return;
+    }
+    nsCOMPtr<nsIDOMElement> temp = sibling;
+    GetNextSiblingElement(temp, getter_AddRefs(sibling));
+  } while (sibling);
+}
 
 void
 nsSOAPUtils::GetFirstChildElement(nsIDOMElement* aParent, 
@@ -82,7 +114,7 @@ nsSOAPUtils::GetFirstChildElement(nsIDOMElement* aParent,
       break;
     }
     nsCOMPtr<nsIDOMNode> temp = child;
-    temp->GetNextSibling(getter_AddRefs(child));
+    GetNextSibling(temp, getter_AddRefs(child));
   }
 }
 
@@ -93,7 +125,7 @@ nsSOAPUtils::GetNextSiblingElement(nsIDOMElement* aStart,
   nsCOMPtr<nsIDOMNode> sibling;
 
   *aElement = nsnull;
-  aStart->GetNextSibling(getter_AddRefs(sibling));
+  GetNextSibling(aStart, getter_AddRefs(sibling));
   while (sibling) {
     PRUint16 type;
     sibling->GetNodeType(&type);
@@ -102,30 +134,35 @@ nsSOAPUtils::GetNextSiblingElement(nsIDOMElement* aStart,
       break;
     }
     nsCOMPtr<nsIDOMNode> temp = sibling;
-    temp->GetNextSibling(getter_AddRefs(sibling));
+    GetNextSibling(temp, getter_AddRefs(sibling));
   }
 }
 
-void 
+nsresult 
 nsSOAPUtils::GetElementTextContent(nsIDOMElement* aElement, 
-                                   nsString& aText)
+                                   nsAWritableString& aText)
 {
   nsCOMPtr<nsIDOMNode> child;
-  
-  aText.Truncate();
+  nsAutoString rtext;
   aElement->GetFirstChild(getter_AddRefs(child));
   while (child) {
     PRUint16 type;
     child->GetNodeType(&type);
-    if (nsIDOMNode::TEXT_NODE == type) {
+    if (nsIDOMNode::TEXT_NODE == type
+        || nsIDOMNode::CDATA_SECTION_NODE == type) {
       nsCOMPtr<nsIDOMText> text = do_QueryInterface(child);
       nsAutoString data;
       text->GetData(data);
-      aText.Append(data);
+      rtext.Append(data);
+    }
+    else if (nsIDOMNode::ELEMENT_NODE == type) {
+      return NS_ERROR_ILLEGAL_VALUE;	//  This was interpreted as a simple value, yet had complex content in it.
     }
     nsCOMPtr<nsIDOMNode> temp = child;
-    temp->GetNextSibling(getter_AddRefs(child));
+    GetNextSibling(temp, getter_AddRefs(child));
   }
+  aText.Assign(rtext);
+  return NS_OK;
 }
 
 PRBool
@@ -141,311 +178,249 @@ nsSOAPUtils::HasChildElements(nsIDOMElement* aElement)
       return PR_TRUE;
     }
     nsCOMPtr<nsIDOMNode> temp = child;
-    temp->GetNextSibling(getter_AddRefs(child));
+    GetNextSibling(temp, getter_AddRefs(child));
   }
 
   return PR_FALSE;
 }
 
 void
-nsSOAPUtils::GetInheritedEncodingStyle(nsIDOMElement* aEntry, 
-                                       char** aEncodingStyle)
+nsSOAPUtils::GetNextSibling(nsIDOMNode* aSibling, nsIDOMNode **aNext)
 {
-  nsCOMPtr<nsIDOMNode> node = aEntry;
+  nsCOMPtr<nsIDOMNode> last;
+  nsCOMPtr<nsIDOMNode> current;
+  PRUint16 type;
 
-  while (node) {
-    nsAutoString value;
-    nsCOMPtr<nsIDOMElement> element = do_QueryInterface(node);
-    if (element) {
-      element->GetAttributeNS(NS_ConvertASCIItoUCS2(nsSOAPUtils::kSOAPEnvURI), 
-                              NS_ConvertASCIItoUCS2(nsSOAPUtils::kEncodingStyleAttribute),
-                              value);
-      if (value.Length() > 0) {
-        *aEncodingStyle = ToNewCString(value);
-        return;
-      }
-    }
-    nsCOMPtr<nsIDOMNode> temp = node;
-    temp->GetParentNode(getter_AddRefs(node));
-  }
-  *aEncodingStyle = nsCRT::strdup(kSOAPEncodingURI);
-}
+  *aNext = nsnull;
+  last = aSibling;
 
-JSContext*
-nsSOAPUtils::GetSafeContext()
-{
-  // Get the "safe" JSContext: our JSContext of last resort
-  nsresult rv;
-  nsCOMPtr<nsIJSContextStack> stack = 
-           do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
-  if (NS_FAILED(rv))
-    return nsnull;
-  nsCOMPtr<nsIThreadJSContextStack> tcs = do_QueryInterface(stack);
-  JSContext* cx;
-  if (NS_FAILED(tcs->GetSafeJSContext(&cx))) {
-    return nsnull;
-  }
-  return cx;
-}
- 
-JSContext*
-nsSOAPUtils::GetCurrentContext()
-{
-  // Get JSContext from stack.
-  nsresult rv;
-  nsCOMPtr<nsIJSContextStack> stack = 
-           do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
-  if (NS_FAILED(rv))
-    return nsnull;
-  JSContext *cx;
-  if (NS_FAILED(stack->Peek(&cx)))
-    return nsnull;
-  return cx;
-}
-
-nsresult 
-nsSOAPUtils::ConvertValueToJSVal(JSContext* aContext, 
-                                 nsISupports* aValue, 
-                                 JSObject* aJSValue, 
-                                 PRInt32 aType,
-                                 jsval* vp)
-{
-  *vp = JSVAL_NULL;
-  switch(aType) {
-    case nsISOAPParameter::PARAMETER_TYPE_VOID:
-      *vp = JSVAL_VOID;
-      break;
-
-    case nsISOAPParameter::PARAMETER_TYPE_STRING:
+  last->GetNodeType(&type);
+  if (nsIDOMNode::ENTITY_REFERENCE_NODE == type) {
+    last->GetFirstChild(getter_AddRefs(current));
+    if (!last)
     {
-      nsCOMPtr<nsISupportsWString> wstr = do_QueryInterface(aValue);
-      if (!wstr) return NS_ERROR_FAILURE;
-      
-      nsXPIDLString data;
-      wstr->GetData(getter_Copies(data));
-      
-      if (data) {
-        JSString* jsstr = JS_NewUCStringCopyZ(aContext,
-                                             NS_REINTERPRET_CAST(const jschar*, (const PRUnichar*)data));
-        if (jsstr) {
-          *vp = STRING_TO_JSVAL(jsstr);
-        }
-      }
-      break;
+      last->GetNextSibling(getter_AddRefs(current));
     }
-
-    case nsISOAPParameter::PARAMETER_TYPE_BOOLEAN:
-    {
-      nsCOMPtr<nsISupportsPRBool> prb = do_QueryInterface(aValue);
-      if (!prb) return NS_ERROR_FAILURE;
-
-      PRBool data;
-      prb->GetData(&data);
-
-      if (data) {
-        *vp = JSVAL_TRUE;
-      }
-      else {
-        *vp = JSVAL_FALSE;
-      }
-      break;
-    }
-
-    case nsISOAPParameter::PARAMETER_TYPE_DOUBLE:
-    {
-      nsCOMPtr<nsISupportsDouble> dub = do_QueryInterface(aValue);
-      if (!dub) return NS_ERROR_FAILURE;
-
-      double data;
-      dub->GetData(&data);
-
-      double* dataPtr = JS_NewDouble(aContext, (jsdouble)data); 
-      *vp = DOUBLE_TO_JSVAL(dataPtr);
-
-      break;
-    }
-
-    case nsISOAPParameter::PARAMETER_TYPE_FLOAT:
-    {
-      nsCOMPtr<nsISupportsFloat> flt = do_QueryInterface(aValue);
-      if (!flt) return NS_ERROR_FAILURE;
-
-      float data;
-      flt->GetData(&data);
-
-      double* dataPtr = JS_NewDouble(aContext, (jsdouble)data); 
-      *vp = DOUBLE_TO_JSVAL(dataPtr);
-      
-      break;
-    }
-
-    case nsISOAPParameter::PARAMETER_TYPE_LONG:
-    {
-      // XXX How to express 64-bit values in JavaScript?
-      return NS_ERROR_NOT_IMPLEMENTED;
-    }
-
-    case nsISOAPParameter::PARAMETER_TYPE_INT:
-    {
-      nsCOMPtr<nsISupportsPRInt32> isupint32 = do_QueryInterface(aValue);
-      if (!isupint32) return NS_ERROR_FAILURE;
-
-      PRInt32 data;
-      isupint32->GetData(&data);
-      
-      *vp = INT_TO_JSVAL(data);
-      
-      break;
-    }
-
-    case nsISOAPParameter::PARAMETER_TYPE_SHORT:
-    {
-      nsCOMPtr<nsISupportsPRInt16> isupint16 = do_QueryInterface(aValue);
-      if (!isupint16) return NS_ERROR_FAILURE;
-
-      PRInt16 data;
-      isupint16->GetData(&data);
-      
-      *vp = INT_TO_JSVAL((PRInt32)data);
-      
-      break;
-    }
-    
-    case nsISOAPParameter::PARAMETER_TYPE_BYTE:
-    {
-      nsCOMPtr<nsISupportsChar> isupchar = do_QueryInterface(aValue);
-      if (!isupchar) return NS_ERROR_FAILURE;
-
-      char data;
-      isupchar->GetData(&data);
-      
-      *vp = INT_TO_JSVAL((PRInt32)data);
-
-      break;
-    }
-
-    case nsISOAPParameter::PARAMETER_TYPE_ARRAY:
-    {
-      nsCOMPtr<nsISupportsArray> array = do_QueryInterface(aValue);
-      if (!array) return NS_ERROR_FAILURE;
-
-      JSObject* arrayobj = JS_NewArrayObject(aContext, 0, nsnull);
-      if (!arrayobj) return NS_ERROR_FAILURE;
-
-      PRUint32 index, count;
-      array->Count(&count);
-
-      for (index = 0; index < count; index++) {
-        nsCOMPtr<nsISupports> isup = getter_AddRefs(array->ElementAt(index));
-        nsCOMPtr<nsISOAPParameter> param = do_QueryInterface(isup);
-        if (!param) return NS_ERROR_FAILURE;
-
-        nsCOMPtr<nsISupports> paramVal;
-        JSObject* paramObj;
-        PRInt32 paramType;
-
-        param->GetValueAndType(getter_AddRefs(paramVal), &paramType);
-        param->GetJSValue(&paramObj);
-
-        jsval val;
-        nsresult rv = ConvertValueToJSVal(aContext, paramVal, paramObj,
-                                          paramType, &val);
-        if (NS_FAILED(rv)) return rv;
-
-        JS_SetElement(aContext, arrayobj, (jsint)index, &val);
-      }
-
-      *vp = OBJECT_TO_JSVAL(arrayobj);
-      break;
-    }
-
-    case nsISOAPParameter::PARAMETER_TYPE_JAVASCRIPT_ARRAY:
-    case nsISOAPParameter::PARAMETER_TYPE_JAVASCRIPT_OBJECT:
-    {
-      *vp = OBJECT_TO_JSVAL(aJSValue);
-      break;
-    }
-  }
-
-  return NS_OK;
-}
-
-nsresult 
-nsSOAPUtils::ConvertJSValToValue(JSContext* aContext,
-                                 jsval val, 
-                                 nsISupports** aValue,
-                                 JSObject** aJSValue,
-                                 PRInt32* aType)
-{
-  *aValue = nsnull;
-  *aJSValue = nsnull;
-  if (JSVAL_IS_NULL(val)) {
-    *aType = nsISOAPParameter::PARAMETER_TYPE_NULL;
-  }
-  else if (JSVAL_IS_VOID(val)) {
-    *aType = nsISOAPParameter::PARAMETER_TYPE_VOID;
-  }
-  else if (JSVAL_IS_STRING(val)) {
-    JSString* jsstr;
-    *aType = nsISOAPParameter::PARAMETER_TYPE_STRING;
-    
-    jsstr = JSVAL_TO_STRING(val);
-    if (jsstr) {
-      nsCOMPtr<nsISupportsWString> wstr = do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID);
-      if (!wstr) return NS_ERROR_FAILURE;
-
-      PRUnichar* data = NS_REINTERPRET_CAST(PRUnichar*, 
-                                            JS_GetStringChars(jsstr));
-      if (data) {
-        wstr->SetData(data);
-      }
-      *aValue = wstr;
-      NS_ADDREF(*aValue);
-    }
-  }
-  else if (JSVAL_IS_DOUBLE(val)) {
-    *aType = nsISOAPParameter::PARAMETER_TYPE_DOUBLE;
-    
-    nsCOMPtr<nsISupportsDouble> dub = do_CreateInstance(NS_SUPPORTS_DOUBLE_CONTRACTID);
-    if (!dub) return NS_ERROR_FAILURE;
-
-    dub->SetData((double)(*JSVAL_TO_DOUBLE(val)));
-    *aValue = dub;
-    NS_ADDREF(*aValue);
-  }
-  else if (JSVAL_IS_INT(val)) {
-    *aType = nsISOAPParameter::PARAMETER_TYPE_INT;
-    
-    nsCOMPtr<nsISupportsPRInt32> isupint = do_CreateInstance(NS_SUPPORTS_PRINT32_CONTRACTID);
-    if (!isupint) return NS_ERROR_FAILURE;
-    
-    isupint->SetData((PRInt32)JSVAL_TO_INT(val));
-    *aValue = isupint;
-    NS_ADDREF(*aValue);
-  }
-  else if (JSVAL_IS_BOOLEAN(val)) {
-    *aType = nsISOAPParameter::PARAMETER_TYPE_BOOLEAN;
-    
-    nsCOMPtr<nsISupportsPRBool> isupbool = do_CreateInstance(NS_SUPPORTS_PRBOOL_CONTRACTID);
-    if (!isupbool) return NS_ERROR_FAILURE;
-
-    isupbool->SetData((PRBool)JSVAL_TO_BOOLEAN(val));
-    *aValue = isupbool;
-    NS_ADDREF(*aValue);
-  }
-  else if (JSVAL_IS_OBJECT(val)) {
-    JSObject* jsobj = JSVAL_TO_OBJECT(val);
-    if (JS_IsArrayObject(aContext, jsobj)) {
-      *aType = nsISOAPParameter::PARAMETER_TYPE_JAVASCRIPT_ARRAY;
-    }
-    else {
-      *aType = nsISOAPParameter::PARAMETER_TYPE_JAVASCRIPT_OBJECT;
-    }
-    *aJSValue = jsobj;
   }
   else {
-    return NS_ERROR_INVALID_ARG;
+    last->GetNextSibling(getter_AddRefs(current));
+  }
+  while (!current)
+  {
+    last->GetParentNode(getter_AddRefs(current));
+    current->GetNodeType(&type);
+    if (nsIDOMNode::ENTITY_REFERENCE_NODE == type) {
+      last = current;
+      last->GetNextSibling(getter_AddRefs(current));
+    }
+    else {
+      current = nsnull;
+      break;
+    }
+  }
+  *aNext = current;
+  NS_IF_ADDREF(*aNext);
+}
+nsresult nsSOAPUtils::GetNamespaceURI(nsIDOMElement* aScope,
+                                  const nsAReadableString & aQName, 
+                                  nsAWritableString & aURI)
+{
+  aURI.Truncate(0);
+  PRInt32 i = aQName.FindChar(':');
+  if (i < 0) {
+    return NS_OK;
+  }
+  nsAutoString prefix;
+  aQName.Left(prefix, i);
+
+  if (prefix.Equals(kXMLPrefix)) {
+    aURI.Assign(kXMLNamespaceURI);
+    return NS_OK;
   }
 
+  nsresult rc;
+  nsCOMPtr<nsIDOMNode> current = aScope;
+  nsCOMPtr<nsIDOMNamedNodeMap> attrs;
+  nsCOMPtr<nsIDOMNode> temp;
+  nsAutoString value;
+  while (current != nsnull) {
+    rc = current->GetAttributes(getter_AddRefs(attrs));
+    if (NS_FAILED(rc)) return rc;
+    if (attrs) {
+      rc = attrs->GetNamedItemNS(kXMLNamespaceNamespaceURI, prefix, getter_AddRefs(temp));
+      if (NS_FAILED(rc)) return rc;
+      if (temp != nsnull)
+	return temp->GetNodeValue(aURI);
+    }
+    rc = current->GetParentNode(getter_AddRefs(temp));
+    if (NS_FAILED(rc)) return rc;
+    current = temp;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+nsresult nsSOAPUtils::GetLocalName(const nsAReadableString & aQName, 
+                                  nsAWritableString & aLocalName)
+{
+  PRInt32 i = aQName.FindChar(':');
+  if (i < 0)
+    aLocalName = aQName;
+  else
+    aQName.Mid(aLocalName, i, aQName.Length() - i);
   return NS_OK;
+}
+
+nsresult 
+nsSOAPUtils::MakeNamespacePrefix(nsIDOMElement* aScope,
+                                 const nsAReadableString & aURI,
+                                 nsAWritableString & aPrefix)
+{
+//  This may change for level 3 serialization, so be sure to gut this
+//  and call the standardized level 3 method when it is available.
+  aPrefix.Truncate(0);
+  if (aURI.IsEmpty())
+    return NS_OK;
+  if (aURI.Equals(nsSOAPUtils::kXMLNamespaceURI)) {
+    aPrefix.Assign(nsSOAPUtils::kXMLPrefix);
+    return NS_OK;
+  }
+  nsCOMPtr<nsIDOMNode> current = aScope;
+  nsCOMPtr<nsIDOMNamedNodeMap> attrs;
+  nsCOMPtr<nsIDOMNode> temp;
+  nsAutoString tstr;
+  nsresult rc;
+  PRUint32 maxns = 0;	//  Keep track of max generated NS
+  for (;;) {
+    rc = current->GetAttributes(getter_AddRefs(attrs));
+    if (NS_FAILED(rc)) return rc;
+    if (attrs) {
+      PRUint32 i = 0;
+      for (;;)
+      {
+        attrs->Item(i++, getter_AddRefs(temp));
+        if (!temp)
+          break;
+        temp->GetNamespaceURI(tstr);
+        if (!tstr.Equals(nsSOAPUtils::kXMLNamespaceNamespaceURI))
+          continue;
+        temp->GetNodeValue(tstr);
+        if (tstr.Equals(aURI)) {
+          nsAutoString prefix;
+          rc = temp->GetLocalName(prefix);
+          if (NS_FAILED(rc)) return rc;
+          nsCOMPtr<nsIDOMNode> check = aScope;
+          PRBool hasDecl;
+	  nsCOMPtr<nsIDOMElement> echeck;
+          while (check != current) { // Make sure prefix is not overridden
+	    echeck = do_QueryInterface(check);
+	    if (echeck) {
+	      rc = echeck->HasAttributeNS(nsSOAPUtils::kXMLNamespaceNamespaceURI, prefix, &hasDecl);
+              if (NS_FAILED(rc)) return rc;
+	      if (hasDecl)
+	        break;
+              current->GetParentNode(getter_AddRefs(temp));
+	      current = temp;
+	    }
+          }
+          if (check == current) {
+	    aPrefix.Assign(prefix);
+	    return NS_OK;
+          }
+	}
+	rc = temp->GetLocalName(tstr);
+        if (NS_FAILED(rc)) 
+	  return rc;
+	else {	//  Decode the generated namespace into a number
+          nsReadingIterator<PRUnichar> i1;
+          nsReadingIterator<PRUnichar> i2;
+	  tstr.BeginReading(i1);
+	  tstr.EndReading(i2);
+	  if (i1 == i2 || *i1 != 'n') 
+	    continue;
+	  i1++;
+	  if (i1 == i2 || *i1 != 's') 
+	    continue;
+	  i1++;
+	  PRUint32 n = 0;
+	  while (i1 != i2) {
+	    PRUnichar c = *i1;
+	    i1++;
+	    if (c < '0' || c > '9') {
+	      n = 0;
+	      break;
+	    }
+	    n = n * 10 + (c - '0');
+	  }
+	  if (n > maxns)
+            maxns = n;
+	}
+      }
+    }
+    current->GetParentNode(getter_AddRefs(temp));
+    if (temp)
+      current = temp;
+    else
+      break;
+  }
+// Create a unique prefix...
+  PRUint32 len = 3;
+  PRUint32 c = maxns + 1;
+  while (c >= 10) {
+    c = c / 10;
+    len++;
+  }
+// Set the length and write it backwards since that's the easiest way..
+  aPrefix.SetLength(len);
+  nsWritingIterator<PRUnichar> i2;
+  aPrefix.EndWriting(i2);
+  c = maxns + 1;
+  while (c > 0) {
+    PRUint32 r = c % 10;
+    c = c / 10;
+    i2--;
+    *i2 = (PRUnichar)(r + '0');
+  }
+  i2--;
+  *i2 = 's';
+  i2--;
+  *i2 = 'n';
+  return NS_OK;
+}
+
+nsresult 
+nsSOAPUtils::MakeNamespacePrefixFixed(nsIDOMElement* aScope,
+		                      const nsAReadableString & aURI,
+				      nsAWritableString & aPrefix)
+{
+  if (aURI.Equals(kSOAPEncodingURI))
+    aPrefix = kSOAPEncodingPrefix;
+  else if (aURI.Equals(kSOAPEnvURI))
+    aPrefix = kSOAPEnvPrefix;
+  else if (aURI.Equals(kXSIURI))
+    aPrefix = kXSIPrefix;
+  else if (aURI.Equals(kXSDURI))
+    aPrefix = kXSDPrefix;
+  else
+    return MakeNamespacePrefix(aScope, aURI, aPrefix);
+
+  return NS_OK;
+}
+
+PRBool nsSOAPUtils::StartsWith(nsAReadableString& aSuper,
+		           nsAReadableString& aSub)
+{
+  PRUint32 c1 = aSuper.Length();
+  PRUint32 c2 = aSub.Length();
+  if (c1 < c2) return PR_FALSE;
+  if (c1 == c2) return aSuper.Equals(aSub);
+  nsReadingIterator<PRUnichar> i1;
+  nsReadingIterator<PRUnichar> i2;
+  aSuper.BeginReading(i1);
+  aSub.BeginReading(i2);
+  while (c2--) {
+    if (*i1 != *i2) return PR_FALSE;
+    i1++;
+    i2++;
+  }
+  return PR_TRUE;
 }

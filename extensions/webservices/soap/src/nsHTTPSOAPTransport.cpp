@@ -1,170 +1,196 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: NPL 1.1/GPL 2.0/LGPL 2.1
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.1 (the "License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
- * http://www.mozilla.org/NPL/
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
  *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is 
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
- * the Initial Developer. All Rights Reserved.
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
  *
- * Contributor(s):
- *
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the NPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the NPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+ * Contributor(s): 
+ */
 
 #include "nsHTTPSOAPTransport.h"
 #include "nsIComponentManager.h"
 #include "nsIDOMDocument.h"
+#include "nsString.h"
+#include "nsSOAPUtils.h"
+#include "nsSOAPCall.h"
+#include "nsSOAPResponse.h"
 #include "nsIDOMEventTarget.h"
-
-#define LOADSTR NS_LITERAL_STRING("load")
-#define ERRORSTR NS_LITERAL_STRING("error")
 
 nsHTTPSOAPTransport::nsHTTPSOAPTransport()
 {
   NS_INIT_ISUPPORTS();
-  mStatus = 0;
 }
 
 nsHTTPSOAPTransport::~nsHTTPSOAPTransport()
 {
 }
 
-NS_IMPL_ISUPPORTS2(nsHTTPSOAPTransport, nsISOAPTransport, nsIDOMEventListener)
+NS_IMPL_ISUPPORTS1_CI(nsHTTPSOAPTransport, nsISOAPTransport)
 
-/* boolean canDoSync (); */
-NS_IMETHODIMP 
-nsHTTPSOAPTransport::CanDoSync(PRBool *_retval)
+/* void syncCall (in nsISOAPCall aCall, in nsISOAPResponse aResponse); */
+NS_IMETHODIMP nsHTTPSOAPTransport::SyncCall(nsISOAPCall *aCall, nsISOAPResponse *aResponse)
 {
-  NS_ENSURE_ARG_POINTER(_retval);
-  *_retval = PR_TRUE;
-  return NS_OK;
-}
-
-/* nsIDOMDocument syncCall (in string url, in string action, in
-   nsIDOMDocument messageDocument); */
-NS_IMETHODIMP 
-nsHTTPSOAPTransport::SyncCall(const char *url, 
-			      const char *action, 
-			      nsIDOMDocument *messageDocument, 
-			      nsIDOMDocument **_retval)
-{
-  NS_ENSURE_ARG(url);
-  NS_ENSURE_ARG(messageDocument);
-  NS_ENSURE_ARG_POINTER(_retval);
+  NS_ENSURE_ARG(aCall);
 
   nsresult rv;
   nsCOMPtr<nsIXMLHttpRequest> request;
 
   request = do_CreateInstance(NS_XMLHTTPREQUEST_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+  if (NS_FAILED(rv)) return rv;
 
-  if (action) {
-    request->SetRequestHeader("SOAPAction", action);
+  nsAutoString action;
+  rv = aCall->GetActionURI(action);
+  if (NS_FAILED(rv)) return rv;
+  if (!AStringIsNull(action)) {
+    rv = request->SetRequestHeader("SOAPAction", NS_ConvertUCS2toUTF8(action).get());
+    if (NS_FAILED(rv)) return rv;
   }
 
-  rv = request->OpenRequest("POST", url, PR_FALSE, nsnull, nsnull);
-  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+  nsAutoString uri;
+  rv = aCall->GetTransportURI(uri);
+  if (NS_FAILED(rv)) return rv;
+  if (!AStringIsNull(uri)) return NS_ERROR_NOT_INITIALIZED;
+
+  nsCOMPtr<nsIDOMDocument> messageDocument;
+  rv = aCall->GetMessage(getter_AddRefs(messageDocument));
+  if (NS_FAILED(rv)) return rv;
+  if (!messageDocument) return NS_ERROR_NOT_INITIALIZED;
+
+  rv = request->OpenRequest("POST", NS_ConvertUCS2toUTF8(uri).get(), PR_FALSE, nsnull, nsnull);
+  if (NS_FAILED(rv)) return rv;
 			    
   rv = request->Send(messageDocument);
-  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+  if (NS_FAILED(rv)) return rv;
 
-  request->GetStatus(&mStatus);
+  request->GetStatus(&rv);
+  if (NS_FAILED(rv)) return rv;
 
-  rv = request->GetResponseXML(_retval);
-  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+  if (aResponse) {
+    nsCOMPtr<nsIDOMDocument> response;
+    rv = request->GetResponseXML(getter_AddRefs(response));
+    if (NS_FAILED(rv)) return rv;
+    rv = aResponse->SetMessage(response);
+    if (NS_FAILED(rv)) return rv;
+  }
 
   return NS_OK;
 }
 
-/* void asyncCall (in string url, in string action, in nsIDOMDocument
-   messageDocument, in nsISOAPTransportListener listener); */
-NS_IMETHODIMP 
-nsHTTPSOAPTransport::AsyncCall(const char *url, 
-                               const char *action, 
-                               nsIDOMDocument *messageDocument, 
-                               nsISOAPTransportListener *listener)
+class nsHTTPSOAPTransportCompletion : public nsIDOMEventListener
 {
-  NS_ENSURE_ARG(url);
-  NS_ENSURE_ARG(messageDocument);
+public:
+  nsHTTPSOAPTransportCompletion();
+  virtual ~nsHTTPSOAPTransportCompletion();
+
+  NS_DECL_ISUPPORTS
+
+  // nsIDOMEventListener
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
+
+protected:
+  nsCOMPtr<nsISOAPCall> mCall;
+  nsCOMPtr<nsISOAPResponse> mResponse;
+  nsCOMPtr<nsIXMLHttpRequest> mRequest;
+  nsCOMPtr<nsISOAPResponseListener> mListener;
+};
+
+NS_IMPL_ISUPPORTS1(nsHTTPSOAPTransportCompletion, nsIDOMEventListener)
+
+nsHTTPSOAPTransportCompletion::nsHTTPSOAPTransportCompletion()
+{
+  NS_INIT_ISUPPORTS();
+}
+nsHTTPSOAPTransportCompletion::~nsHTTPSOAPTransportCompletion()
+{
+}
+NS_IMETHODIMP
+nsHTTPSOAPTransportCompletion::HandleEvent(nsIDOMEvent* aEvent)
+{
+  nsresult rv;
+  mRequest->GetStatus(&rv);
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIDOMDocument> document;
+    rv = mRequest->GetResponseXML(getter_AddRefs(document));
+    if (NS_SUCCEEDED(rv)) {
+      rv = mResponse->SetMessage(document);
+    }
+  }
+  PRBool c;  //  In other transports, this may signal to stop returning if multiple returns
+  mListener->HandleResponse(mResponse, mCall, (PRInt32)rv, PR_TRUE, &c);
+  return NS_OK;
+}
+
+/* void asyncCall (in nsISOAPCall aCall, in nsISOAPResponseListener aListener, in nsISOAPResponse aResponse); */
+NS_IMETHODIMP nsHTTPSOAPTransport::AsyncCall(nsISOAPCall *aCall, nsISOAPResponseListener *aListener, nsISOAPResponse *aResponse)
+{
+  NS_ENSURE_ARG(aCall);
 
   nsresult rv;
+  nsCOMPtr<nsIXMLHttpRequest> request;
 
-  mRequest = do_CreateInstance(NS_XMLHTTPREQUEST_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIDOMEventTarget> eventTarget = do_QueryInterface(request, &rv);
+  if (NS_FAILED(rv)) return rv;
 
-  if (action) {
-    mRequest->SetRequestHeader("SOAPAction", action);
+  request = do_CreateInstance(NS_XMLHTTPREQUEST_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  nsAutoString action;
+  rv = aCall->GetActionURI(action);
+  if (NS_FAILED(rv)) return rv;
+  if (!AStringIsNull(action)) {
+    rv = request->SetRequestHeader("SOAPAction", NS_ConvertUCS2toUTF8(action).get());
+    if (NS_FAILED(rv)) return rv;
   }
+  nsCOMPtr<nsIDOMEventListener> listener = new nsHTTPSOAPTransportCompletion();
+  if (!listener) return NS_ERROR_OUT_OF_MEMORY;
 
-  rv = mRequest->OpenRequest("POST", url, PR_TRUE, nsnull, nsnull);
-  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+  nsAutoString uri;
+  rv = aCall->GetTransportURI(uri);
+  if (NS_FAILED(rv)) return rv;
+  if (!AStringIsNull(uri)) return NS_ERROR_NOT_INITIALIZED;
 
-  mListener = listener;
+  nsCOMPtr<nsIDOMDocument> messageDocument;
+  rv = aCall->GetMessage(getter_AddRefs(messageDocument));
+  if (NS_FAILED(rv)) return rv;
+  if (!messageDocument) return NS_ERROR_NOT_INITIALIZED;
 
-  nsCOMPtr<nsIDOMEventTarget> eventTarget(do_QueryInterface(mRequest, &rv));
-  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+  rv = request->OpenRequest("POST", NS_ConvertUCS2toUTF8(uri).get(), PR_TRUE, nsnull, nsnull);
+  if (NS_FAILED(rv)) return rv;
+			    
+  rv = request->Send(messageDocument);
+  if (NS_FAILED(rv)) return rv;
 
-  eventTarget->AddEventListener(LOADSTR, 
-			     NS_STATIC_CAST(nsIDOMEventListener*, this), PR_FALSE);
-  eventTarget->AddEventListener(ERRORSTR, 
-			     NS_STATIC_CAST(nsIDOMEventListener*, this), PR_FALSE);
+  eventTarget->AddEventListener(NS_LITERAL_STRING("load"), listener, PR_FALSE);
+  eventTarget->AddEventListener(NS_LITERAL_STRING("error"), listener, PR_FALSE);
   
-  rv = mRequest->Send(messageDocument);
-  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+  rv = request->Send(messageDocument);
+  if (NS_FAILED(rv)) return rv;
 
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTTPSOAPTransport::GetStatus(PRUint32 *aStatus)
+/* void addListener (in nsISOAPTransportListener aListener, in boolean aCapture); */
+NS_IMETHODIMP nsHTTPSOAPTransport::AddListener(nsISOAPTransportListener *aListener, PRBool aCapture)
 {
-  NS_ENSURE_ARG_POINTER(aStatus);
-
-  *aStatus = mStatus;
-  return NS_OK;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
-nsHTTPSOAPTransport::HandleEvent(nsIDOMEvent* aEvent)
+/* void removeListener (in nsISOAPTransportListener aListener, in boolean aCapture); */
+NS_IMETHODIMP nsHTTPSOAPTransport::RemoveListener(nsISOAPTransportListener *aListener, PRBool aCapture)
 {
-  nsCOMPtr<nsIDOMDocument> document;
-  PRUint32 status;
-
-  mRequest->GetResponseXML(getter_AddRefs(document));
-  mRequest->GetStatus(&status);
-
-  if (mListener) {
-    // XXX If this is an error, we need to pass in NS_ERROR_FAILURE
-    mListener->HandleResponse(document, status, NS_OK);
-    mListener = 0;
-  }
-  
-  mRequest = 0;
-
-  return NS_OK;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
+

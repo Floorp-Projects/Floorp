@@ -30,14 +30,21 @@ MODULE		= xmlextras
 XPIDL_MODULE	= xmlsoap
 
 XPIDLSRCS	= \
-		nsISOAPCall.idl  		\
-		nsISOAPParameter.idl 		\
-		nsISOAPResponse.idl       	\
-		nsISOAPResponseListener.idl 	\
-		nsISOAPEncoder.idl		\
-		nsISOAPFault.idl		\
-		nsISOAPTransport.idl		\
-	   	nsISOAPTransportListener.idl	\
+		nsISOAPAttachments.idl \
+		nsISOAPCall.idl \
+		nsISOAPDecoder.idl \
+		nsISOAPEncoder.idl \
+		nsISOAPEncoding.idl \
+		nsISOAPFault.idl \
+		nsISOAPHeaderBlock.idl \
+		nsISOAPMessage.idl \
+		nsISOAPParameter.idl \
+		nsISOAPResponse.idl \
+		nsISOAPResponseListener.idl \
+		nsISOAPService.idl \
+		nsISOAPServiceRegistry.idl \
+		nsISOAPTransport.idl \
+		nsISOAPTransportListener.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

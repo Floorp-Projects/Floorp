@@ -1,0 +1,61 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
+
+#include "nsISupports.idl"
+
+interface nsISchemaType;
+interface nsISOAPEncoding;
+interface nsIDOMElement;
+interface nsIVariant;
+interface nsISOAPAttachments;
+
+/**
+ * This interface supplies decoding of a specific
+ * part of a message XML DOM into appropriate objects
+ * for the script or application.
+ */
+
+[scriptable, uuid(4c2e02ae-1dd2-11b2-b1cd-c79dea3d46db)]
+interface nsISOAPDecoder : nsISupports {
+
+/**
+ * Decode the source DOM node
+ *
+ * @param aEncodings The encodings used to decode
+ *
+ * @param aEncodingStyleURI The encoding style
+ *
+ * @param aSource The DOM node to be decoded.
+ *
+ * @param aSchemaType The schema type of the source DOM node
+ *
+ * @param aAttachments Dispenses any attachments.
+ *
+ * @return The decoded variant, which is null if 
+ *   the operation failed or did not return a result.
+ */
+nsIVariant decode(
+    in nsISOAPEncoding aEncoding, 
+    in nsIDOMElement aSource, 
+    in nsISchemaType aSchemaType,
+    in nsISOAPAttachments aAttachments);
+};

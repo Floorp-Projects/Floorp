@@ -1,0 +1,184 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
+
+#include "nsISupports.idl"
+
+interface nsISchemaType;
+interface nsIDOMElement;
+interface nsISOAPEncoder;
+interface nsISOAPDecoder;
+interface nsISOAPMessage;
+interface nsIVariant;
+interface nsISOAPAttachments;
+interface nsISchemaCollection;
+
+/**
+ * This interface keeps track of all the known types and how
+ *   each should be encoded (by type) or decoded (by 
+ *   schema type)
+ */
+
+[scriptable, uuid(9ae49600-1dd1-11b2-877f-e62f620c5e92)]
+interface nsISOAPEncoding : nsISupports {
+
+/**
+ * The name of the encoding as it is known to SOAP.
+ */
+  readonly attribute AString styleURI;
+
+/**
+ * Get an alternative encoding.
+ *
+ * @param aStyleURI The style URI of the alternative encoding style.
+ *
+ * @param aCreateIf If true, then create the alternative style if it
+ *   does not already exist, otherwise return the existing encoding.
+ *
+ * @return The alternative encoding which corresponds to the
+ *   specified styleURI, or null if the spefied alternative encoding
+ *   does not exist and it was not requested that it be created.
+ */
+  nsISOAPEncoding getStyle(
+    in AString aStyleURI,
+    in boolean aCreateIf);
+
+/**
+  * Set an encoder in the encoding.
+  *
+  * @param aSchemaNamespaceURI The schema namespace URI to serve as key.
+  *
+  * @param aSchemaType The schema type to serve as key.
+  *
+  * @param aEncoder The encoder to be specified or null to eliminate
+  *   the encoder.
+  *
+  * @return Old encoder registered under that type in the encoding, which
+  *   should be kept by the new encoder if it is to be called back.
+  */
+  void setEncoder(in AString aSchemaNamespaceURI, in AString aSchemaType, 
+   in nsISOAPEncoder aEncoder);
+
+/**
+  * Get an encoder from the encoding.
+  *
+  * @param aSchemaNamespaceURI The schema namespace URI to serve as key.
+  *
+  * @param aSchemaType The schema type to serve as key.
+  *
+  * @return The encoder.
+  */
+  nsISOAPEncoder getEncoder(in AString aSchemaNamespaceURI, in AString aSchemaType);
+
+/**
+  * Set a decoder in the encoding.
+  *
+  * @param aSchemaNamespaceURI The schema namespace URI to serve as key.
+  *
+  * @param aSchemaType The schema type to serve as key.
+  *
+  * @param aDecoder The decoder to be specified or null to eliminate
+  *   the decoder.
+  *
+  * @return Old decoder registered under that type in the encoding, which
+  *   should be kept by the new decoder if it is to be called back.
+  */
+  void setDecoder(in AString aSchemaNamespaceURI, in AString aSchemaType, 
+   in nsISOAPDecoder aDecoder);
+
+/**
+  * Get a decoder from the encoding.
+  *
+  * @param aSchemaNamespaceURI The schema namespace URI to serve as key.
+  *
+  * @param aSchemaType The schema type to serve as key.
+  *
+  * @return The decoder.
+  */
+  nsISOAPDecoder getDecoder(in AString aSchemaNamespaceURI, in AString aSchemaType);
+
+  attribute nsISOAPEncoder defaultEncoder;
+
+  attribute nsISOAPDecoder defaultDecoder;
+
+  attribute nsISchemaCollection schemaCollection;
+
+/**
+ * Encode the source variant
+ *
+ * @param aEncodings The encodings to be used.
+ *
+ * @param aEncodingStyleURI The encoding style
+ *
+ * @param aSource The variant to be encoded, soon to become a variant
+ *
+ * @param aNamespaceURI The namespace of the thing being coded
+ *
+ * @param aName The name of the thing being coded
+ *
+ * @param aSchemaType The schema type of the thing being encoded
+ *
+ * @param aDestination The node scope where the result will live.
+ *
+ * @param aAttachments Accumulates any attachments.
+ *
+ * @return The element which was inserted and encoded.
+ */
+  nsIDOMElement encode(
+      in nsIVariant aSource, 
+      in AString aNamespaceURI,
+      in AString aName,
+      in nsISchemaType aSchemaType,
+      in nsISOAPAttachments aAttachments,
+      in nsIDOMElement aDestination);
+
+/**
+ * Decode the source DOM node
+ *
+ * @param aEncodings The encodings used to decode
+ *
+ * @param aEncodingStyleURI The encoding style
+ *
+ * @param aSource The DOM node to be decoded.
+ *
+ * @param aSchemaType The schema type of the source DOM node
+ *
+ * @param aAttachments Dispenses any attachments.
+ *
+ * @return The decoded variant, soon to become a variant, which is null if 
+ *   the operation failed or did not return a result.
+ */
+  nsIVariant decode(
+      in nsIDOMElement aSource, 
+      in nsISchemaType aSchemaType,
+      in nsISOAPAttachments aAttachments);
+};
+
+%{ C++
+#define NS_DEFAULTSOAPENCODER_CID                            \
+{ /* 06fb035c-1dd2-11b2-bc30-f6d8e314d6b9 */        \
+  0x06fb035c, 0x1dd2, 0x11b2,                       \
+ {0xbc, 0x30, 0xf6, 0xd8, 0xe3, 0x14, 0xd6, 0xb9} }
+#define NS_SOAPENCODING_CONTRACTID_PREFIX \
+"@mozilla.org/xmlextras/soap/encoding;1?uri="
+#define NS_DEFAULTSOAPENCODER_CONTRACTID \
+NS_SOAPENCODING_CONTRACTID_PREFIX "http://schemas.xmlsoap.org/soap/encoding/"
+%}

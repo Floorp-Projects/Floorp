@@ -2,11 +2,18 @@
 # This is a list of local files which get copied to the mozilla:dist:idl directory
 #
 
+nsISOAPAttachments.idl
 nsISOAPCall.idl
+nsISOAPDecoder.idl
+nsISOAPEncoder.idl
+nsISOAPEncoding.idl
+nsISOAPFault.idl
+nsISOAPHeaderBlock.idl
+nsISOAPMessage.idl
 nsISOAPParameter.idl
 nsISOAPResponse.idl
 nsISOAPResponseListener.idl
-nsISOAPEncoder.idl
-nsISOAPFault.idl
+nsISOAPService.idl
+nsISOAPServiceRegistry.idl
 nsISOAPTransport.idl
 nsISOAPTransportListener.idl

@@ -1,0 +1,65 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
+
+#include "nsISupports.idl"
+
+interface nsISOAPMessage;
+interface nsISOAPResponseListener;
+
+/**
+ * This interface describes a service which may be
+ *   applied to incoming messages.  The service is
+ *   responsible for determining whether the message
+ *   is one that it should process and rejecting it
+ *   if it is not.  Services may be chained.
+ */
+[scriptable, uuid(9927fa40-1dd1-11b2-a8d1-857ad21b872c)]
+interface nsISOAPService : nsISupports {
+/**
+ * Configuration object that may contain more info on the service
+ */
+  attribute nsISupports configuration;
+
+/**
+ * Process an incoming message.
+ *
+ * @param aMessage message to be processed
+ *
+ * @param aListener listener to which to report results
+ *
+ * @return True if the message will be handled, false if
+ *   it should be given to some other service or fail.
+ *   In case of failure, a more detailed status will be
+ *   recorded in the message.
+ */
+  boolean process(in nsISOAPMessage aMessage, 
+    in nsISOAPResponseListener aListener);
+};
+
+%{ C++
+#define NS_SOAPJSSERVICE_CID                            \
+{ /* 26a41df2-1dd2-11b2-9f29-909e637afa0e */        \
+  0x26a41df2, 0x1dd2, 0x11b2,                       \
+ {0x9f, 0x29, 0x90, 0x9e, 0x63, 0x7a, 0xfa, 0x0e} }
+#define NS_SOAPJSSERVICE_CONTRACTID \
+"@mozilla.org/xmlextras/soap/jsservice;1"
+%}

@@ -28,31 +28,25 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xmlextras
 LIBRARY_NAME	= xmlextrassoap_s
-REQUIRES	= xpcom \
-		  string \
-		  caps \
-		  dom \
-		  js \
-		  widget \
-		  gfx \
-		  layout \
-		  content \
-		  xpconnect \
-		  necko \
-		  $(NULL)
+REQUIRES	= xpcom string caps dom js widget xpconnect necko schema
 
 CPPSRCS	= 				\
-		nsSOAPCall.cpp		\
+		nsDefaultSOAPEncoder.cpp\
+		nsHTTPSOAPTransport.cpp	\
+		nsSOAPCall.cpp	        \
+		nsSOAPEncoding.cpp	\
+		nsSOAPFault.cpp	        \
+		nsSOAPHeaderBlock.cpp	\
+		nsSOAPMessage.cpp	\
+		nsSOAPParameter.cpp	\
 		nsSOAPResponse.cpp	\
 		nsSOAPUtils.cpp		\
-		nsSOAPFault.cpp		\
-		nsSOAPParameter.cpp	\
-		nsDefaultSOAPEncoder.cpp \
-		nsHTTPSOAPTransport.cpp	\
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a
 # static lib.
 FORCE_STATIC_LIB = 1
+#override NO_SHARED_LIB=1
+#override NO_STATIC_LIB=
 
 include $(topsrcdir)/config/rules.mk

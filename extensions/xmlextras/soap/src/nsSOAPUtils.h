@@ -1,89 +1,109 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: NPL 1.1/GPL 2.0/LGPL 2.1
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.1 (the "License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
- * http://www.mozilla.org/NPL/
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
  *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is 
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
- * the Initial Developer. All Rights Reserved.
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
  *
- * Contributor(s):
- *
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the NPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the NPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+ * Contributor(s): 
+ */
 
 #ifndef nsSOAPUtils_h__
 #define nsSOAPUtils_h__
 
-#include "nsIDOMElement.h"
 #include "nsString.h"
-#include "jsapi.h"
+#include "nsIDOMElement.h"
 
 class nsSOAPUtils {
 public:
+  static void GetSpecificChildElement(nsIDOMElement *aParent, 
+                                      const nsAReadableString& aNamespace, 
+                                      const nsAReadableString& aType, 
+                                      nsIDOMElement * *aElement);
+  static void GetSpecificSiblingElement(nsIDOMElement *aSibling, 
+                                        const nsAReadableString& aNamespace, 
+                                        const nsAReadableString& aType, 
+                                        nsIDOMElement * *aElement);
   static void GetFirstChildElement(nsIDOMElement* aParent, 
                                    nsIDOMElement** aElement);
   static void GetNextSiblingElement(nsIDOMElement* aStart, 
                                     nsIDOMElement** aElement);
-  static void GetElementTextContent(nsIDOMElement* aElement, 
-                                    nsString& aText);
+  static nsresult GetElementTextContent(nsIDOMElement* aElement, 
+                                    nsAWritableString& aText);
   static PRBool HasChildElements(nsIDOMElement* aElement);
-  static void GetInheritedEncodingStyle(nsIDOMElement* aEntry, 
-                                        char** aEncodingStyle);
-  static JSContext* GetSafeContext();
-  static JSContext* GetCurrentContext();
-  static nsresult ConvertValueToJSVal(JSContext* aContext, 
-                                      nsISupports* aValue, 
-                                      JSObject* aJSValue, 
-                                      PRInt32 aType,
-                                      jsval* vp);
-  static nsresult ConvertJSValToValue(JSContext* aContext,
-                                      jsval val, 
-                                      nsISupports** aValue,
-                                      JSObject** aJSValue,
-                                      PRInt32* aType);
 
-  static const char* kSOAPEnvURI;
-  static const char* kSOAPEncodingURI;
-  static const char* kSOAPEnvPrefix;
-  static const char* kSOAPEncodingPrefix;
-  static const char* kXSIURI;
-  static const char* kXSDURI;
-  static const char* kXSIPrefix;
-  static const char* kXSDPrefix;
-  static const char* kEncodingStyleAttribute;
-  static const char* kEnvelopeTagName;
-  static const char* kHeaderTagName;
-  static const char* kBodyTagName;
-  static const char* kFaultTagName;
-  static const char* kFaultCodeTagName;
-  static const char* kFaultStringTagName;
-  static const char* kFaultActorTagName;
-  static const char* kFaultDetailTagName;
+  static void GetNextSibling(nsIDOMNode* aSibling, 
+                             nsIDOMNode **aNext);
+  static nsresult MakeNamespacePrefix(nsIDOMElement* aElement,
+                                     const nsAReadableString & aURI,
+                                     nsAWritableString & aPrefix);
+  static nsresult MakeNamespacePrefixFixed(nsIDOMElement* aElement,
+                                     const nsAReadableString & aURI,
+                                     nsAWritableString & aPrefix);
+  static nsresult GetNamespaceURI(nsIDOMElement* aElement,
+                                  const nsAReadableString & aQName, 
+                                  nsAWritableString & aURI);
+  static nsresult GetLocalName(const nsAReadableString & aQName, 
+                                  nsAWritableString & aLocalName);
+
+// All those missing string functions have to come from somewhere...
+
+  static PRBool StartsWith(nsAReadableString& aSuper,
+		           nsAReadableString& aSub);
+  static nsDependentString kSOAPEnvURI;
+  static nsDependentString kSOAPEncodingURI;
+  static nsDependentString kSOAPEnvPrefix;
+  static nsDependentString kSOAPEncodingPrefix;
+  static nsDependentString kXSIURI;
+  static nsDependentString kXSDURI;
+  static nsDependentString kXSIPrefix;
+  static nsDependentString kXSITypeAttribute;
+  static nsDependentString kXSDPrefix;
+  static nsDependentString kEncodingStyleAttribute;
+  static nsDependentString kActorAttribute;
+  static nsDependentString kEnvelopeTagName;
+  static nsDependentString kHeaderTagName;
+  static nsDependentString kBodyTagName;
+  static nsDependentString kFaultTagName;
+  static nsDependentString kFaultCodeTagName;
+  static nsDependentString kFaultStringTagName;
+  static nsDependentString kFaultActorTagName;
+  static nsDependentString kFaultDetailTagName;
+  static nsDependentString kEncodingSeparator;
+  static nsDependentString kQualifiedSeparator;
+  static nsDependentString kXMLNamespaceNamespaceURI;
+  static nsDependentString kXMLNamespaceURI;
+  static nsDependentString kXMLNamespacePrefix;
+  static nsDependentString kXMLPrefix;
 };
+
+//  Used to support null strings.
+
+inline PRBool AStringIsNull(const nsAReadableString& aString)
+{
+  return aString.IsVoid() || aString.IsEmpty(); // Get rid of empty hack when string implementations support.
+}
+
+inline void SetAStringToNull(nsAWritableString& aString)
+{
+  aString.Truncate();
+  aString.SetIsVoid(PR_TRUE);
+}
+
+#define NS_SOAP_ENSURE_ARG_STRING(arg) \
+NS_ENSURE_FALSE(AStringIsNull(arg), NS_ERROR_INVALID_ARG)
+
 
 #endif

@@ -24,43 +24,30 @@ DEPTH=..\..\..\..
 LIBRARY_NAME=xmlextrassoap_s 
 MODULE=xmlextras
 
-REQUIRES = xpcom \
-		   caps \
-		   dom \
-		   necko \
-		   js \
-		   xpconnect \
-		   string \
-           $(NULL)
+REQUIRES	=  \
+    xpcom      \
+    string     \
+    caps       \
+    dom        \
+    js         \
+    widget     \
+    xpconnect  \
+    necko
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
-CPPSRCS=					\
-	nsSOAPCall.cpp				\
-	nsSOAPResponse.cpp			\
-	nsSOAPUtils.cpp				\
-	nsSOAPFault.cpp				\
-	nsSOAPParameter.cpp			\
-	nsDefaultSOAPEncoder.cpp		\
-	nsHTTPSOAPTransport.cpp			\
+OBJS=	\
+	.\$(OBJDIR)\nsDefaultSOAPEncoder.obj \
+	.\$(OBJDIR)\nsHTTPSOAPTransport.obj  \
+	.\$(OBJDIR)\nsSOAPCall.obj           \
+	.\$(OBJDIR)\nsSOAPEncoding.obj       \
+	.\$(OBJDIR)\nsSOAPFault.obj          \
+	.\$(OBJDIR)\nsSOAPHeaderBlock.obj    \
+	.\$(OBJDIR)\nsSOAPMessage.obj        \
+	.\$(OBJDIR)\nsSOAPParameter.obj      \
+	.\$(OBJDIR)\nsSOAPResponse.obj       \
+	.\$(OBJDIR)\nsSOAPUtils.obj          \
 	$(NULL)
-
-
-CPP_OBJS=					\
-	.\$(OBJDIR)\nsSOAPCall.obj		\
-	.\$(OBJDIR)\nsSOAPResponse.obj		\
-	.\$(OBJDIR)\nsSOAPUtils.obj		\
-	.\$(OBJDIR)\nsSOAPFault.obj		\
-	.\$(OBJDIR)\nsSOAPParameter.obj		\
-	.\$(OBJDIR)\nsDefaultSOAPEncoder.obj	\
-	.\$(OBJDIR)\nsHTTPSOAPTransport.obj	\
-	$(NULL)
-
-EXPORTS =					\
-	$(NULL)
-
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js \
-	-I$(PUBLIC)\dom -I$(PUBLIC)\uconv
 
 LCFLAGS = \
         $(LCFLAGS) \

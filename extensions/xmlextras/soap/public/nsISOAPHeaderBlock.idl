@@ -1,0 +1,96 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
+
+#include "nsISupports.idl"
+
+interface nsIDOMElement;
+interface nsIVariant;
+interface nsISOAPEncoding;
+interface nsISchemaType;
+interface nsISOAPAttachments;
+
+/**
+ * This interface encapsulates an arbitrary header block to be used
+ * by the soap serialization or protocol.  It formalizes a type
+ * string, a reference to the object, and a name.
+ */
+
+[scriptable, uuid(063d4a4e-1dd2-11b2-a365-cbaf1651f140)]
+interface nsISOAPHeaderBlock : nsISupports {
+    
+  /**
+   * The namespace URI of the header block.  Ignored if name is null.
+   */
+  attribute AString namespaceURI;
+    
+  /**
+   * The name of the header block. If the header block is left unnamed, it
+   * will be encoded using the element types defined in the SOAP-ENC
+   * schema. For example, <code>&lt;SOAP-ENC:int&gt;45&lt;/SOAP-ENC:int&gt;
+   * </code>
+   */
+  attribute AString name;
+
+  /**
+   * The actor URI of the header block.
+   */
+  attribute AString actorURI;
+
+  /**
+   * The encoding that was / will be applied to the
+   * header block.
+   */
+  attribute nsISOAPEncoding encoding;
+
+  /**
+   * The schema type used to encode or decode the
+   *   header block.
+   */
+  attribute nsISchemaType schemaType;
+
+  /**
+   *  The element which is the encoded value of this header block.
+   *  If this is set, value becomes a computed attribute
+   *  which is produced by decoding this element.
+   */
+  attribute nsIDOMElement element;
+
+  /**
+   *  The native value which is the decoded value of 
+   *  this header block.  If this is set, element becomes null.
+   */
+  attribute nsIVariant value;
+
+  /**
+   * The attachments which were attached to the message.
+   */
+  attribute nsISOAPAttachments attachments;
+};
+
+%{ C++
+#define NS_SOAPHEADERBLOCK_CID                        \
+{ /* 5ad0eace-1dd2-11b2-a260-ff42edcaedb3 */        \
+  0x5ad0eace, 0x1dd2, 0x11b2,                       \
+ {0xa2, 0x60, 0xff, 0x42, 0xed, 0xca, 0xed, 0xb3} }
+#define NS_SOAPHEADERBLOCK_CONTRACTID \
+"@mozilla.org/xmlextras/soap/headerblock;1"
+%}
