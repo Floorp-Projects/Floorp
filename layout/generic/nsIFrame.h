@@ -862,19 +862,6 @@ public:
                                PRInt32         aHint) = 0;
 
   /**
-   * This call is invoked when the value of a content object's state
-   * is changed. 
-   * The first frame that maps that content is asked to deal
-   * with the change by doing whatever is appropriate.
-   *
-   * @param aChild the content object
-   * @param aHint the level of change that has already been dealt with
-   */
-  NS_IMETHOD  ContentStateChanged(nsIPresContext* aPresContext,
-                                  nsIContent*     aChild,
-                                  PRInt32         aHint) = 0;
-
-  /**
    * Return how your frame can be split.
    */
   NS_IMETHOD  IsSplittable(nsSplittableType& aIsSplittable) const = 0;

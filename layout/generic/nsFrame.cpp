@@ -2355,14 +2355,6 @@ nsFrame::AttributeChanged(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsFrame::ContentStateChanged(nsIPresContext* aPresContext,
-                             nsIContent*     aChild,
-                             PRInt32         aHint)
-{
-  return NS_OK;
-}
-
 // Flow member functions
 
 NS_IMETHODIMP nsFrame::IsSplittable(nsSplittableType& aIsSplittable) const
