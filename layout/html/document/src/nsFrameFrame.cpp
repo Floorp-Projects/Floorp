@@ -324,7 +324,8 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext&          aPresContext,
 
   // Reflow the child and get its desired size
   nsHTMLReflowMetrics kidMetrics(aDesiredSize.maxElementSize);
-  nsHTMLReflowState   kidReflowState(mFirstChild, aReflowState, innerSize);
+  nsHTMLReflowState   kidReflowState(aPresContext, mFirstChild, aReflowState,
+                                     innerSize);
   nsIHTMLReflow*      htmlReflow;
 
   if (NS_OK == mFirstChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {

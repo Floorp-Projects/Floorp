@@ -123,14 +123,15 @@ nsLegendFrame::Paint(nsIPresContext& aPresContext,
 
 NS_IMETHODIMP 
 nsLegendFrame::Reflow(nsIPresContext& aPresContext,
-                               nsHTMLReflowMetrics& aDesiredSize,
-                               const nsHTMLReflowState& aReflowState,
-                               nsReflowStatus& aStatus)
+                      nsHTMLReflowMetrics& aDesiredSize,
+                      const nsHTMLReflowState& aReflowState,
+                      nsReflowStatus& aStatus)
 {
   nsSize availSize(aReflowState.maxSize);
 
   // reflow the child
-  nsHTMLReflowState reflowState(mFirstChild, aReflowState, availSize);
+  nsHTMLReflowState reflowState(aPresContext, mFirstChild, aReflowState,
+                                availSize);
   ReflowChild(mFirstChild, aPresContext, aDesiredSize, reflowState, aStatus);
 
   // get border and padding

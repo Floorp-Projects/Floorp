@@ -670,7 +670,7 @@ nsHTMLFramesetFrame::ReflowPlaceChild(nsIFrame*                aChild,
     }
   }
 
-  nsHTMLReflowState  reflowState(aChild, aReflowState, aSize);
+  nsHTMLReflowState  reflowState(aPresContext, aChild, aReflowState, aSize);
   nsIHTMLReflow*     htmlReflow;
 
   if (NS_OK == aChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
@@ -1033,6 +1033,10 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
       if (borderWidth > 0) {
         if (firstTime) { // create horizontal border
           borderFrame = new nsHTMLFramesetBorderFrame(mContent, this, borderWidth, PR_FALSE, PR_FALSE);
+          nsIStyleContext* pseudoStyleContext =
+            aPresContext.ResolvePseudoStyleContextFor(nsHTMLAtoms::horizontalFramesetBorderPseudo, this);
+          borderFrame->SetStyleContext(&aPresContext, pseudoStyleContext);
+
           mChildCount++;
           lastChild->SetNextSibling(borderFrame);
           lastChild = borderFrame;
@@ -1053,6 +1057,10 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
         if (0 == cellIndex.y) { // in 1st row
           if (firstTime) { // create vertical border
             borderFrame = new nsHTMLFramesetBorderFrame(mContent, this, borderWidth, PR_TRUE, PR_FALSE);
+            nsIStyleContext* pseudoStyleContext =
+              aPresContext.ResolvePseudoStyleContextFor(nsHTMLAtoms::verticalFramesetBorderPseudo, this);
+            borderFrame->SetStyleContext(&aPresContext, pseudoStyleContext);
+
             mChildCount++;
             lastChild->SetNextSibling(borderFrame);
             lastChild = borderFrame;
@@ -1400,7 +1408,8 @@ nsHTMLFramesetFrame::MouseDrag(nsIPresContext& aPresContext, nsGUIEvent* aEvent)
     shell = aPresContext.GetShell();
     shell->CreateRenderingContext(this, acx);
     NS_RELEASE(shell);
-    nsHTMLReflowState state(this, eReflowReason_Initial, size, acx);
+    nsHTMLReflowState state(aPresContext, this, eReflowReason_Initial,
+                            size, acx);
     state.reason = eReflowReason_Incremental;
     nsReflowStatus status;
     nsDidReflowStatus didStatus;

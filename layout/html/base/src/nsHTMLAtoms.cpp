@@ -101,6 +101,7 @@ nsIAtom* nsHTMLAtoms::h6;
 nsIAtom* nsHTMLAtoms::headers;
 nsIAtom* nsHTMLAtoms::height;
 nsIAtom* nsHTMLAtoms::hidden;
+nsIAtom* nsHTMLAtoms::horizontalFramesetBorderPseudo;
 nsIAtom* nsHTMLAtoms::hover;
 nsIAtom* nsHTMLAtoms::hr;
 nsIAtom* nsHTMLAtoms::href;
@@ -217,6 +218,7 @@ nsIAtom* nsHTMLAtoms::value;
 nsIAtom* nsHTMLAtoms::valuetype;
 nsIAtom* nsHTMLAtoms::variable;
 nsIAtom* nsHTMLAtoms::version;
+nsIAtom* nsHTMLAtoms::verticalFramesetBorderPseudo;
 nsIAtom* nsHTMLAtoms::visibility;
 nsIAtom* nsHTMLAtoms::visited;
 nsIAtom* nsHTMLAtoms::vlink;
@@ -314,6 +316,7 @@ void nsHTMLAtoms::AddrefAtoms()
     headers = NS_NewAtom("HEADERS");
     height = NS_NewAtom("HEIGHT");
     hidden = NS_NewAtom("HIDDEN");
+    horizontalFramesetBorderPseudo = NS_NewAtom("HFRAMESETBORDER");
     hover = NS_NewAtom("HOVER");
     hr = NS_NewAtom("HR");
     href = NS_NewAtom("HREF");
@@ -429,6 +432,7 @@ void nsHTMLAtoms::AddrefAtoms()
     valuetype = NS_NewAtom("VALUETYPE");
     variable = NS_NewAtom("VARIABLE");
     version = NS_NewAtom("VERSION");
+    verticalFramesetBorderPseudo = NS_NewAtom("VFRAMESETBORDER");
     visibility = NS_NewAtom("VISIBILITY");
     visited = NS_NewAtom("VISITED");
     vlink = NS_NewAtom("VLINK");
@@ -521,6 +525,7 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(headers);
     NS_RELEASE(height);
     NS_RELEASE(hidden);
+    NS_RELEASE(horizontalFramesetBorderPseudo);
     NS_RELEASE(hover);
     NS_RELEASE(hr);
     NS_RELEASE(href);
@@ -632,6 +637,7 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(valuetype);
     NS_RELEASE(variable);
     NS_RELEASE(version);
+    NS_RELEASE(verticalFramesetBorderPseudo);
     NS_RELEASE(visibility);
     NS_RELEASE(visited);
     NS_RELEASE(vlink);

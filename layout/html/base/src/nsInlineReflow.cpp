@@ -403,10 +403,11 @@ nsInlineReflow::ReflowFrame(nsHTMLReflowMetrics& aMetrics,
   }
 
   // Setup reflow state for reflowing the frame
-  nsHTMLReflowState reflowState(mFrame, mOuterReflowState, mFrameAvailSize);
+  nsHTMLReflowState reflowState(mPresContext, mFrame, mOuterReflowState,
+                                mFrameAvailSize);
   if (!mTreatFrameAsBlock) {
     mIsInlineAware = PR_TRUE;
-    reflowState.frameType = eReflowType_Inline;
+//XX    reflowState.frameType = eReflowType_Inline;
     reflowState.lineLayout = &mLineLayout;
   }
   reflowState.reason = reason;

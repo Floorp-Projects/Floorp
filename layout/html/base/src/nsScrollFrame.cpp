@@ -121,7 +121,7 @@ nsScrollBodyFrame::Reflow(nsIPresContext&          aPresContext,
     NS_ASSERTION(next == mFirstChild, "unexpected next reflow command frame");
 
     nsSize            maxSize(aReflowState.maxSize.width, NS_UNCONSTRAINEDSIZE);
-    nsHTMLReflowState kidReflowState(next, aReflowState, maxSize);
+    nsHTMLReflowState kidReflowState(aPresContext, next, aReflowState, maxSize);
     nsIHTMLReflow*    htmlReflow;
   
     if (NS_OK == mFirstChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
@@ -159,7 +159,7 @@ nsScrollBodyFrame::Reflow(nsIPresContext&          aPresContext,
         // Tile the pages vertically
         for (nsIFrame* kidFrame = mFirstChild; nsnull != kidFrame; ) {
           // Reflow the page
-          nsHTMLReflowState kidReflowState(kidFrame, aReflowState, pageSize);
+          nsHTMLReflowState kidReflowState(aPresContext, kidFrame, aReflowState, pageSize);
           nsReflowStatus    status;
 
           // Place and size the page. If the page is narrower than our
@@ -223,7 +223,7 @@ nsScrollBodyFrame::Reflow(nsIPresContext&          aPresContext,
         // Allow the frame to be as wide as our max width, and as high
         // as it wants to be.
         nsSize            maxSize(aReflowState.maxSize.width, NS_UNCONSTRAINEDSIZE);
-        nsHTMLReflowState kidReflowState(mFirstChild, aReflowState, maxSize);
+        nsHTMLReflowState kidReflowState(aPresContext, mFirstChild, aReflowState, maxSize);
         nsIHTMLReflow*    htmlReflow;
   
         if (NS_OK == mFirstChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
@@ -386,7 +386,8 @@ nsScrollInnerFrame::Reflow(nsIPresContext&          aPresContext,
   
   // Reflow the child
   nsHTMLReflowMetrics kidMetrics(aDesiredSize.maxElementSize);
-  nsHTMLReflowState   kidReflowState(mFirstChild, aReflowState, maxSize);
+
+  nsHTMLReflowState   kidReflowState(aPresContext, mFirstChild, aReflowState, maxSize);
   nsIHTMLReflow*      htmlReflow;
 
   if (NS_OK == mFirstChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
@@ -497,7 +498,7 @@ nsScrollOuterFrame::Reflow(nsIPresContext&          aPresContext,
   }
   
   // Reflow the child and get its desired size
-  nsHTMLReflowState  kidReflowState(mFirstChild, aReflowState, maxSize);
+  nsHTMLReflowState  kidReflowState(aPresContext, mFirstChild, aReflowState, maxSize);
   nsIHTMLReflow*     htmlReflow;
 
   if (NS_OK == mFirstChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {

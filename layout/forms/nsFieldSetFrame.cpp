@@ -284,7 +284,8 @@ nsFieldSetFrame::Reflow(nsIPresContext& aPresContext,
   // Try to reflow the legend into the available space. It might not fit
   nsSize legendSize(0,0);
   if (mLegendFrame) {
-    nsHTMLReflowState legendReflowState(mLegendFrame, aReflowState, availSize);
+    nsHTMLReflowState legendReflowState(aPresContext, mLegendFrame,
+                                        aReflowState, availSize);
     ReflowChild(mLegendFrame, aPresContext, aDesiredSize, legendReflowState, aStatus);
 
     legendSize.width  = aDesiredSize.width;
@@ -307,7 +308,8 @@ nsFieldSetFrame::Reflow(nsIPresContext& aPresContext,
 
   // Try to reflow the content frame into the available space. It might not fit
   nsSize contentSize(0,0);
-  nsHTMLReflowState contentReflowState(mContentFrame, aReflowState, availSize);
+  nsHTMLReflowState contentReflowState(aPresContext, mContentFrame,
+                                       aReflowState, availSize);
   nscoord contentTopOffset = (legendSize.height > border.top) 
     ? legendSize.height + padding.top
     : border.top + padding.top;
@@ -328,7 +330,8 @@ nsFieldSetFrame::Reflow(nsIPresContext& aPresContext,
 
   // need to reflow the legend a 2nd time
   if (needAnotherLegendReflow && mLegendFrame) {
-    nsHTMLReflowState legendReflowState(mLegendFrame, aReflowState, availSize);
+    nsHTMLReflowState legendReflowState(aPresContext, mLegendFrame,
+                                        aReflowState, availSize);
     ReflowChild(mLegendFrame, aPresContext, aDesiredSize, legendReflowState, aStatus);
 
     legendSize.width  = aDesiredSize.width;

@@ -60,62 +60,99 @@ struct nsHTMLReflowMetrics : nsReflowMetrics {
 //----------------------------------------------------------------------
 
 /**
- * The type of size constraint that applies to a particular dimension.
- * For the fixed and fixed content cases the min size in the reflow state
- * structure is ignored and you should use the max size value when reflowing
- * the frame.
+ * The type of size constraint that applies to a particular
+ * dimension.  For the fixed and fixed content cases the min/max
+ * width/height in the reflow state structure is ignored and you
+ * should use the max size value when reflowing the frame.
  *
  * @see nsHTMLReflowState
  */
-//XXX enum's are prefixed wrong
-enum nsReflowConstraint {
-  eReflowSize_Unconstrained = 0,  // choose whatever frame size you want
-  eReflowSize_Constrained = 1,    // choose a frame size between the min and max sizes
-  eReflowSize_Fixed = 2,          // frame size is fixed
-  eReflowSize_FixedContent = 3    // size of your content area is fixed
+enum nsHTMLFrameConstraint {
+  // Choose whatever frame size you want (there is no stylistic limitation
+  // on the size of the frame)
+  eHTMLFrameConstraint_Unconstrained,
+
+  // Choose a frame size between the min and max sizes
+  eHTMLFrameConstraint_Constrained,
+
+  // Frame size is fixed. The nsReflowState::maxSize.width value
+  // determines the fixed width.
+  eHTMLFrameConstraint_Fixed,
+
+  // Content size is fixed. The nsReflowState::maxSize.width value
+  // determines the fixed width.
+  eHTMLFrameConstraint_FixedContent
 };
 
 //----------------------------------------------------------------------
 
 /**
- * Frame type. Included as part of the reflow state.
+ * CSS Frame type. Included as part of the reflow state.
  *
  * @see nsHTMLReflowState
  *
  * XXX This requires some more thought. Are these the correct set?
  * XXX Should we treat 'replaced' as a bit flag instead of doubling the
  *     number of enumerators?
- * XXX Should the name be nsCSSReflowFrameType?
  */
-enum nsReflowFrameType {
-  eReflowType_Inline = 0,           // inline, non-replaced elements
-  eReflowType_InlineReplaced = 1,   // inline, replaced elements (e.g., image)
-  eReflowType_Block = 2,            // block-level, non-replaced elements in normal flow
-  eReflowType_BlockReplaced = 3,    // block-level, replaced elements in normal flow
-  eReflowType_Floating = 4,         // floating, non-replaced elements
-  eReflowType_FloatingReplaced = 5, // floating, replaced elements
-  eReflowType_Absolute = 6,         // absolutely positioned, non-replaced elements
-  eReflowType_AbsoluteReplaced = 7  // absolutely positioned, replaced elements
+enum nsCSSFrameType {
+  // unknown frame type
+  eCSSFrameType_Unknown,
+
+  // inline, non-replaced elements
+  eCSSFrameType_Inline,
+
+  // inline, replaced elements (e.g., image)
+  eCSSFrameType_InlineReplaced,
+
+  // block-level, non-replaced elements in normal flow
+  eCSSFrameType_Block,
+
+  // block-level, replaced elements in normal flow
+  eCSSFrameType_BlockReplaced,
+
+  // floating, non-replaced elements
+  eCSSFrameType_Floating,
+
+  // floating, replaced elements
+  eCSSFrameType_FloatingReplaced,
+
+  // absolutely positioned, non-replaced elements
+  eCSSFrameType_Absolute,
+
+  // absolutely positioned, replaced elements
+  eCSSFrameType_AbsoluteReplaced
 };
 
 //----------------------------------------------------------------------
 
+/**
+ * HTML version of the reflow state.
+ *
+ * Note: the constructors are implemented inline later on in this file
+ */
 struct nsHTMLReflowState : nsReflowState {
-  nsReflowFrameType   frameType;
-  nsISpaceManager*    spaceManager;
-  nsLineLayout*       lineLayout;  // only for inline reflow (set to NULL otherwise)
+  // The type of frame, from css's perspective. This value is
+  // initialized by the Init method below.
+  nsCSSFrameType        frameType;
 
-  // XXX None of this is currently being used...
-#if 0
-  nsReflowConstraint   widthConstraint;   // constraint that applies to width dimension
-  nsReflowConstraint   heightConstraint;  // constraint that applies to height dimension
-  nsSize               minSize;           // the min available space in which to reflow.
-                                          // Only used for eReflowSize_Constrained
-#endif
+  nsISpaceManager*      spaceManager;
+
+  // LineLayout object (only for inline reflow; set to NULL otherwise)
+  nsLineLayout*         lineLayout;
+
+  // Constraint that applies to width dimension
+  nsHTMLFrameConstraint widthConstraint;
+  nscoord               minWidth, maxWidth;
+
+  // Constraint that applies to height dimension
+  nsHTMLFrameConstraint heightConstraint;
+  nscoord               minHeight, maxHeight;
 
   // Constructs an initial reflow state (no parent reflow state) for a
   // non-incremental reflow command. Sets reflowType to eReflowType_Block
-  nsHTMLReflowState(nsIFrame*            aFrame,
+  nsHTMLReflowState(nsIPresContext&      aPresContext,
+                    nsIFrame*            aFrame,
                     nsReflowReason       aReason, 
                     const nsSize&        aMaxSize,
                     nsIRenderingContext* aContext,
@@ -123,7 +160,8 @@ struct nsHTMLReflowState : nsReflowState {
 
   // Constructs an initial reflow state (no parent reflow state) for an
   // incremental reflow command. Sets reflowType to eReflowType_Block
-  nsHTMLReflowState(nsIFrame*            aFrame,
+  nsHTMLReflowState(nsIPresContext&      aPresContext,
+                    nsIFrame*            aFrame,
                     nsIReflowCommand&    aReflowCommand,
                     const nsSize&        aMaxSize,
                     nsIRenderingContext* aContext,
@@ -133,16 +171,17 @@ struct nsHTMLReflowState : nsReflowState {
   // max size. Uses the reflow reason, space manager, reflow command, and
   // line layout from the parent's reflow state.  Defaults to a reflow
   // frame type of eReflowType_Block
-  nsHTMLReflowState(nsIFrame*                aFrame,
+  nsHTMLReflowState(nsIPresContext&          aPresContext,
+                    nsIFrame*                aFrame,
                     const nsHTMLReflowState& aParentReflowState,
-                    const nsSize&            aMaxSize,
-                    nsReflowFrameType        aFrameType = eReflowType_Block);
+                    const nsSize&            aMaxSize);
 
   // Construct a reflow state for the given inline frame, parent
   // reflow state, and max size. Uses the reflow reason, space
   // manager, and reflow command from the parent's reflow state. Sets
   // the reflow frame type to eReflowType_Inline
-  nsHTMLReflowState(nsIFrame*                aFrame,
+  nsHTMLReflowState(nsIPresContext&          aPresContext,
+                    nsIFrame*                aFrame,
                     const nsHTMLReflowState& aParentReflowState,
                     const nsSize&            aMaxSize,
                     nsLineLayout*            aLineLayout);
@@ -151,11 +190,25 @@ struct nsHTMLReflowState : nsReflowState {
   // reflow state. Uses the space manager from the parent's reflow state and
   // sets the reflow command to NULL. Sets lineLayout to NULL, and defaults to
   // a reflow frame type of eReflowType_Block
-  nsHTMLReflowState(nsIFrame*                aFrame,
+  nsHTMLReflowState(nsIPresContext&          aPresContext,
+                    nsIFrame*                aFrame,
                     const nsHTMLReflowState& aParentReflowState,
                     const nsSize&            aMaxSize,
-                    nsReflowReason           aReflowReason,
-                    nsReflowFrameType        aFrameType = eReflowType_Block);
+                    nsReflowReason           aReflowReason);
+
+protected:
+  // This method initializes the widthConstraint, heightConstraint and
+  // minSize values appropriately. It also initializes the frameType
+  // value as well. This method is automatically called by the various
+  // constructors.
+  void Init(nsIPresContext& aPresContext) {
+    DetermineFrameType(aPresContext);
+    InitConstraints(aPresContext);
+  }
+
+  void DetermineFrameType(nsIPresContext& aPresContext);
+
+  void InitConstraints(nsIPresContext& aPresContext);
 };
 
 //----------------------------------------------------------------------
@@ -224,31 +277,33 @@ public:
 // Constructs an initial reflow state (no parent reflow state) for a
 // non-incremental reflow command. Sets reflowType to eReflowType_Block
 inline
-nsHTMLReflowState::nsHTMLReflowState(nsIFrame*            aFrame,
+nsHTMLReflowState::nsHTMLReflowState(nsIPresContext&      aPresContext,
+                                     nsIFrame*            aFrame,
                                      nsReflowReason       aReason, 
                                      const nsSize&        aMaxSize,
                                      nsIRenderingContext* aContext,
                                      nsISpaceManager*     aSpaceManager)
   : nsReflowState(aFrame, aReason, aMaxSize, aContext)
 {
-  frameType = eReflowType_Block;
   spaceManager = aSpaceManager;
   lineLayout = nsnull;
+  Init(aPresContext);
 }
 
 // Constructs an initial reflow state (no parent reflow state) for an
 // incremental reflow command. Sets reflowType to eReflowType_Block
 inline
-nsHTMLReflowState::nsHTMLReflowState(nsIFrame*            aFrame,
+nsHTMLReflowState::nsHTMLReflowState(nsIPresContext&      aPresContext,
+                                     nsIFrame*            aFrame,
                                      nsIReflowCommand&    aReflowCommand,
                                      const nsSize&        aMaxSize,
                                      nsIRenderingContext* aContext,
                                      nsISpaceManager*     aSpaceManager)
   : nsReflowState(aFrame, aReflowCommand, aMaxSize, aContext)
 {
-  frameType = eReflowType_Block;
   spaceManager = aSpaceManager;
   lineLayout = nsnull;
+  Init(aPresContext);
 }
 
 // Construct a reflow state for the given frame, parent reflow state, and
@@ -256,30 +311,31 @@ nsHTMLReflowState::nsHTMLReflowState(nsIFrame*            aFrame,
 // line layout from the parent's reflow state.  Defaults to a reflow
 // frame type of eReflowType_Block
 inline
-nsHTMLReflowState::nsHTMLReflowState(nsIFrame*                aFrame,
-                                     const nsHTMLReflowState& aParentReflowState,
-                                     const nsSize&            aMaxSize,
-                                     nsReflowFrameType        aFrameType)
-  : nsReflowState(aFrame, aParentReflowState, aMaxSize)
+nsHTMLReflowState::nsHTMLReflowState(nsIPresContext&          aPresContext,
+                                     nsIFrame*                aFrame,
+                                     const nsHTMLReflowState& aParentState,
+                                     const nsSize&            aMaxSize)
+  : nsReflowState(aFrame, aParentState, aMaxSize)
 {
-  frameType = aFrameType;
-  spaceManager = aParentReflowState.spaceManager;
-  lineLayout = aParentReflowState.lineLayout;
+  spaceManager = aParentState.spaceManager;
+  lineLayout = aParentState.lineLayout;
+  Init(aPresContext);
 }
 
 // Construct a reflow state for the given inline frame, parent reflow state,
 // and max size. Uses the reflow reason, space manager, and reflow command from
 // the parent's reflow state. Sets the reflow frame type to eReflowType_Inline
 inline
-nsHTMLReflowState::nsHTMLReflowState(nsIFrame*                aFrame,
-                                     const nsHTMLReflowState& aParentReflowState,
+nsHTMLReflowState::nsHTMLReflowState(nsIPresContext&          aPresContext,
+                                     nsIFrame*                aFrame,
+                                     const nsHTMLReflowState& aParentState,
                                      const nsSize&            aMaxSize,
                                      nsLineLayout*            aLineLayout)
-  : nsReflowState(aFrame, aParentReflowState, aMaxSize)
+  : nsReflowState(aFrame, aParentState, aMaxSize)
 {
-  frameType = eReflowType_Inline;
-  spaceManager = aParentReflowState.spaceManager;
+  spaceManager = aParentState.spaceManager;
   lineLayout = aLineLayout;
+  Init(aPresContext);
 }
 
 // Constructs a reflow state that overrides the reflow reason of the parent
@@ -287,18 +343,16 @@ nsHTMLReflowState::nsHTMLReflowState(nsIFrame*                aFrame,
 // sets the reflow command to NULL. Sets lineLayout to NULL, and defaults to
 // a reflow frame type of eReflowType_Block
 inline
-nsHTMLReflowState::nsHTMLReflowState(nsIFrame*                aFrame,
-                                     const nsHTMLReflowState& aParentReflowState,
+nsHTMLReflowState::nsHTMLReflowState(nsIPresContext&          aPresContext,
+                                     nsIFrame*                aFrame,
+                                     const nsHTMLReflowState& aParentState,
                                      const nsSize&            aMaxSize,
-                                     nsReflowReason           aReflowReason,
-                                     nsReflowFrameType        aFrameType)
-  : nsReflowState(aFrame, aParentReflowState, aMaxSize, aReflowReason)
+                                     nsReflowReason           aReflowReason)
+  : nsReflowState(aFrame, aParentState, aMaxSize, aReflowReason)
 {
-  frameType = aFrameType;
-  spaceManager = aParentReflowState.spaceManager;
+  spaceManager = aParentState.spaceManager;
   lineLayout = nsnull;
+  Init(aPresContext);
 }
 
 #endif /* nsIHTMLReflow_h___ */
-
-

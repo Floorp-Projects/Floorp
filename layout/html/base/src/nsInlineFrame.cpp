@@ -214,7 +214,11 @@ NS_IMETHODIMP
 nsInlineFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
 {
   NS_PRECONDITION(nsnull == mFirstChild, "already initialized");
-  return AppendNewFrames(aPresContext, aChildList);  
+  nsresult rv = AppendNewFrames(aPresContext, aChildList);  
+  if (NS_OK != rv) {
+    return rv;
+  }
+  return rv;
 }
 
 NS_IMETHODIMP

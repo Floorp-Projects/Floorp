@@ -477,7 +477,8 @@ nsresult nsTableRowFrame::ResizeReflow(nsIPresContext&  aPresContext,
         nsSize  kidAvailSize(availWidth, NS_UNCONSTRAINEDSIZE);
 
         // Reflow the child
-        nsHTMLReflowState kidReflowState(kidFrame, aState.reflowState, kidAvailSize,
+        nsHTMLReflowState kidReflowState(aPresContext, kidFrame,
+                                         aState.reflowState, kidAvailSize,
                                          eReflowReason_Resize);
         if (gsDebug) printf ("%p RR: avail=%d\n", this, availWidth);
         nsReflowStatus status;
@@ -645,7 +646,8 @@ nsTableRowFrame::InitialReflow(nsIPresContext&  aPresContext,
         kidAvailSize.SizeTo(table->GetColumnWidth(colIndex), NS_UNCONSTRAINEDSIZE); 
       }
 
-      nsHTMLReflowState kidReflowState(kidFrame, aState.reflowState, kidAvailSize,
+      nsHTMLReflowState kidReflowState(aPresContext, kidFrame,
+                                       aState.reflowState, kidAvailSize,
                                        eReflowReason_Initial);
 
       if (gsDebug) printf ("%p InitR: avail=%d\n", this, kidAvailSize.width);
@@ -841,7 +843,8 @@ nsresult nsTableRowFrame::IncrementalReflow(nsIPresContext&  aPresContext,
   // Pass along the reflow command
   nsSize          kidMaxElementSize;
   nsHTMLReflowMetrics desiredSize(&kidMaxElementSize);
-  nsHTMLReflowState kidReflowState(kidFrame, aState.reflowState, kidAvailSize);
+  nsHTMLReflowState kidReflowState(aPresContext, kidFrame, aState.reflowState,
+                                   kidAvailSize);
 
   // XXX Unfortunately we need to reflow the child several times.
   // The first time is for the incremental reflow command. We can't pass in

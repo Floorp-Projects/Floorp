@@ -157,9 +157,6 @@ struct nsBlockReflowState : public nsFrameReflowState {
   PRUint8 mTextAlign;
   PRUint8 mPrevMarginFlags;
 
-  nsSize mStyleSize;
-  PRIntn mStyleSizeFlags;
-
   nscoord mBottomEdge;          // maximum Y
 
   PRBool mUnconstrainedWidth;
@@ -1317,18 +1314,12 @@ nsBlockReflowState::nsBlockReflowState(nsIPresContext& aPresContext,
 
   nscoord lr = mBorderPadding.left + mBorderPadding.right;
   mY = mBorderPadding.top;
-
-  // Get and apply the stylistic size. Note: do not limit the
-  // height until we are done reflowing.
-  PRIntn ss = nsCSSLayout::GetStyleSize(&aPresContext, aReflowState,
-                                        mStyleSize);
-  mStyleSizeFlags = ss;
-  if (0 != (ss & NS_SIZE_HAS_WIDTH)) {
-    // The CSS2 spec says that the width attribute defines the
-    // width of the "content area" which does not include the
-    // border padding. So we add those back in.
-    mBorderArea.width = mStyleSize.width + lr;
-    mContentArea.width = mStyleSize.width;
+  if (eHTMLFrameConstraint_Unconstrained != widthConstraint) {
+    // The CSS2 spec says that the width attribute defines the width
+    // of the "content area" which does not include the border
+    // padding. So we add those back in.
+    mBorderArea.width = minWidth + lr;
+    mContentArea.width = minWidth;
   }
   else {
     if (mUnconstrainedWidth) {
@@ -1835,11 +1826,10 @@ nsBlockFrame::ComputeFinalSize(nsBlockReflowState&  aState,
                                nsHTMLReflowMetrics& aMetrics)
 {
   // Compute final width
-  PRIntn ss = aState.mStyleSizeFlags;
-  if (NS_SIZE_HAS_WIDTH & ss) {
+  if (eHTMLFrameConstraint_Unconstrained != aState.widthConstraint) {
     // Use style defined width
     aMetrics.width = aState.mBorderPadding.left +
-      aState.mStyleSize.width + aState.mBorderPadding.right;
+      aState.minWidth + aState.mBorderPadding.right;
   }
   else {
     // There are two options here. We either shrink wrap around our
@@ -1856,10 +1846,10 @@ nsBlockFrame::ComputeFinalSize(nsBlockReflowState&  aState,
   }
 
   // Compute final height
-  if (NS_SIZE_HAS_HEIGHT & ss) {
+  if (eHTMLFrameConstraint_Unconstrained != aState.heightConstraint) {
     // Use style defined height
     aMetrics.height = aState.mBorderPadding.top +
-      aState.mStyleSize.height + aState.mBorderPadding.bottom;
+      aState.minHeight + aState.mBorderPadding.bottom;
   }
   else {
     // Shrink wrap our height around our contents.
@@ -1896,7 +1886,8 @@ nsBlockFrame::ComputeFinalSize(nsBlockReflowState&  aState,
 
   // Special check for zero sized content: If our content is zero
   // sized then we collapse into nothingness.
-  if ((NS_SIZE_HAS_BOTH != ss) &&
+  if ((eHTMLFrameConstraint_Unconstrained == aState.widthConstraint) &&
+      (eHTMLFrameConstraint_Unconstrained == aState.heightConstraint) &&
       ((0 == aState.mKidXMost - aState.mBorderPadding.left) ||
        (0 == aState.mY - aState.mBorderPadding.top))) {
     aMetrics.width = 0;
@@ -3388,7 +3379,8 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
       nsSize availSize;
       availSize.width = NS_UNCONSTRAINEDSIZE;
       availSize.height = NS_UNCONSTRAINEDSIZE;
-      nsHTMLReflowState reflowState(mBullet, aState, availSize, &aState.mLineLayout);
+      nsHTMLReflowState reflowState(aState.mPresContext, mBullet, aState,
+                                    availSize, &aState.mLineLayout);
       nsHTMLReflowMetrics metrics(nsnull);
       nsIHTMLReflow* htmlReflow;
       if (NS_OK == mBullet->QueryInterface(kIHTMLReflowIID, (void**) &htmlReflow)) {
@@ -3883,8 +3875,8 @@ nsBlockFrame::ReflowFloater(nsIPresContext& aPresContext,
   // it's maxSize will be 0,0 until we compute it (we need the reflowState
   // for nsLayout::GetStyleSize so we have to do this first)
   nsSize kidAvailSize(0, 0);
-  nsHTMLReflowState reflowState(aFloaterFrame, aState, kidAvailSize,
-                                eReflowReason_Initial);
+  nsHTMLReflowState reflowState(aPresContext, aFloaterFrame, aState,
+                                kidAvailSize, eReflowReason_Initial);
 
   // Compute the available space for the floater. Use the default
   // 'auto' width and height values

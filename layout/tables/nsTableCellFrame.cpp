@@ -295,7 +295,8 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
   nsHTMLReflowMetrics kidSize(pMaxElementSize);
   kidSize.width=kidSize.height=kidSize.ascent=kidSize.descent=0;
   SetPriorAvailWidth(aReflowState.maxSize.width);
-  nsHTMLReflowState kidReflowState(mFirstChild, aReflowState, availSize);
+  nsHTMLReflowState kidReflowState(aPresContext, mFirstChild, aReflowState,
+                                   availSize);
 
   ReflowChild(mFirstChild, aPresContext, kidSize, kidReflowState, aStatus);
 #ifdef NS_DEBUG

@@ -147,8 +147,9 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
   // wants
   if (nsnull != mFirstChild) {
     nsHTMLReflowMetrics desiredSize(nsnull);
-    nsHTMLReflowState   kidReflowState(mFirstChild, aReflowState, aReflowState.maxSize);
-    nsIHTMLReflow*      htmlReflow;
+    nsHTMLReflowState kidReflowState(aPresContext, mFirstChild, aReflowState,
+                                     aReflowState.maxSize);
+    nsIHTMLReflow* htmlReflow;
 
     if (NS_OK == mFirstChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
       ReflowChild(mFirstChild, aPresContext, desiredSize, kidReflowState, aStatus);
@@ -364,7 +365,8 @@ RootContentFrame::Reflow(nsIPresContext&          aPresContext,
     NS_ASSERTION(next == mFirstChild, "unexpected next reflow command frame");
 
     nsSize            maxSize(availWidth, NS_UNCONSTRAINEDSIZE);
-    nsHTMLReflowState kidReflowState(next, aReflowState, maxSize);
+    nsHTMLReflowState kidReflowState(aPresContext, next, aReflowState,
+                                     maxSize);
   
     // Dispatch the reflow command to our child frame. Allow it to be as high
     // as it wants
@@ -411,7 +413,8 @@ RootContentFrame::Reflow(nsIPresContext&          aPresContext,
         // Tile the pages vertically
         for (nsIFrame* kidFrame = mFirstChild; nsnull != kidFrame; ) {
           // Reflow the page
-          nsHTMLReflowState kidReflowState(kidFrame, aReflowState, pageSize,
+          nsHTMLReflowState kidReflowState(aPresContext, kidFrame,
+                                           aReflowState, pageSize,
                                            reflowReason);
           nsReflowStatus  status;
 
@@ -466,7 +469,8 @@ RootContentFrame::Reflow(nsIPresContext&          aPresContext,
   
       } else {
         nsSize            maxSize(availWidth, NS_UNCONSTRAINEDSIZE);
-        nsHTMLReflowState kidReflowState(mFirstChild, aReflowState, maxSize,
+        nsHTMLReflowState kidReflowState(aPresContext, mFirstChild,
+                                         aReflowState, maxSize,
                                          reflowReason);
   
         // Get the child's desired size. Our child's desired height is our

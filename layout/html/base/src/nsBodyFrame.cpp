@@ -185,7 +185,8 @@ nsBodyFrame::Reflow(nsIPresContext&          aPresContext,
       // compute the available space and compute the origin...
       nsIHTMLReflow*  reflow;
       if (NS_OK == nextFrame->QueryInterface(kIHTMLReflowIID, (void**)&reflow)) {
-        nsHTMLReflowState reflowState(nextFrame, aReflowState, aReflowState.maxSize);
+        nsHTMLReflowState reflowState(aPresContext, nextFrame, aReflowState,
+                                      aReflowState.maxSize);
         reflowState.spaceManager = mSpaceManager;
         reflow->WillReflow(aPresContext);
         nsresult rv = reflow->Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
@@ -249,7 +250,7 @@ nsBodyFrame::Reflow(nsIPresContext&          aPresContext,
     mFirstChild->GetRect(kidOldRect);
 
     // Get the column's desired size
-    nsHTMLReflowState reflowState(mFirstChild, *rsp, kidMaxSize);
+    nsHTMLReflowState reflowState(aPresContext, mFirstChild, *rsp, kidMaxSize);
     reflowState.spaceManager = mSpaceManager;
     nsIHTMLReflow*    htmlReflow;
 
@@ -281,7 +282,7 @@ nsBodyFrame::Reflow(nsIPresContext&          aPresContext,
     mFirstChild->SetRect(desiredRect);
   
     // Reflow any absolutely positioned frames that need reflowing
-    ReflowAbsoluteItems(&aPresContext, *rsp);
+    ReflowAbsoluteItems(aPresContext, *rsp);
 
     // Return our desired size
     ComputeDesiredSize(aPresContext, aReflowState, desiredRect,
@@ -672,8 +673,9 @@ NS_METHOD nsBodyFrame::RemoveAbsoluteItem(nsAbsoluteFrame* aAnchorFrame)
 
 // Called at the end of the Reflow() member function so we can process
 // any abolutely positioned items that need to be reflowed
-void nsBodyFrame::ReflowAbsoluteItems(nsIPresContext*          aPresContext,
-                                      const nsHTMLReflowState& aReflowState)
+void
+nsBodyFrame::ReflowAbsoluteItems(nsIPresContext& aPresContext,
+                                 const nsHTMLReflowState& aReflowState)
 {
   for (PRInt32 i = 0; i < mAbsoluteItems.Count(); i++) {
     // Get the anchor frame and its absolutely positioned frame
@@ -741,7 +743,7 @@ void nsBodyFrame::ReflowAbsoluteItems(nsIPresContext*          aPresContext,
   
       nsIHTMLReflow*  htmlReflow;
       if (NS_OK == absoluteFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
-        htmlReflow->WillReflow(*aPresContext);
+        htmlReflow->WillReflow(aPresContext);
         absoluteFrame->MoveTo(rect.x, rect.y);
 
         if (reflowFrame) {
@@ -755,10 +757,11 @@ void nsBodyFrame::ReflowAbsoluteItems(nsIPresContext*          aPresContext,
           }
       
           nsHTMLReflowMetrics desiredSize(nsnull);
-          nsHTMLReflowState   reflowState(absoluteFrame, aReflowState, availSize,
+          nsHTMLReflowState   reflowState(aPresContext, absoluteFrame,
+                                          aReflowState, availSize,
                                           reflowReason);
           nsReflowStatus      status;
-          htmlReflow->Reflow(*aPresContext, desiredSize, reflowState, status);
+          htmlReflow->Reflow(aPresContext, desiredSize, reflowState, status);
         
           // Figure out what size to actually use. If we let the child choose its
           // size, then use what the child requested. Otherwise, use the value
