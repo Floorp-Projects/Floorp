@@ -43,6 +43,7 @@ XPIDLSRCS =				  \
 		nsIMsgThread.idl	\
 		nsIMsgVCard.idl			\
 		nsIUrlListener.idl	\
+		nsIUrlListenerManager.idl \
 		nsIMsgBiffManager.idl	\
 		nsIMsgCopyService.idl	\
 		nsIMsgCopyServiceListener.idl	\
@@ -52,7 +53,6 @@ EXPORTS =				\
 		msgCore.h		\
 		nsIMsgMailNewsUrl.h	\
 		nsIMsgHdr.h		\
-		nsIUrlListenerManager.h \
 		nsMsgFolderFlags.h	\
 		nsMsgHeaderMasks.h	\
 		nsMsgMessageFlags.h	\
