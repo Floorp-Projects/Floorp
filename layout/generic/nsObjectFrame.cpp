@@ -18,7 +18,7 @@
  */
 #include "nsCOMPtr.h"
 #include "nsHTMLParts.h"
-#include "nsLeafFrame.h"
+#include "nsHTMLContainerFrame.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsWidgetsCID.h"
@@ -47,6 +47,9 @@
 
 // XXX For temporary paint code
 #include "nsIStyleContext.h"
+
+//~~~ For image mime types
+#include "net.h"
 
 class nsObjectFrame;
 
@@ -139,10 +142,20 @@ private:
   nsIPresContext    *mContext;
 };
 
-#define nsObjectFrameSuper nsLeafFrame
+#define nsObjectFrameSuper nsHTMLContainerFrame
 
 class nsObjectFrame : public nsObjectFrameSuper {
 public:
+  //~~~
+  NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
+                                 nsIAtom*        aListName,
+                                 nsIFrame*       aChildList);
+  //~~~
+  NS_IMETHOD Init(nsIPresContext&  aPresContext,
+                  nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsIStyleContext* aContext,
+                  nsIFrame*        aPrevInFlow);
   NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
@@ -155,12 +168,22 @@ public:
                    nsFramePaintLayer aWhichLayer);
   NS_IMETHOD Scrolled(nsIView *aView);
 
+  //~~~
+  NS_IMETHOD ContentChanged(nsIPresContext* aPresContext,
+                            nsIContent*     aChild,
+                            nsISupports*    aSubContent);
   //local methods
   nsresult CreateWidget(nscoord aWidth, nscoord aHeight, PRBool aViewOnly);
   nsresult GetFullURL(nsIURL*& aFullURL);
+  
+  //~~~
+  void IsSupportedImage(nsIContent* aContent, PRBool* aImage);
 
 protected:
   virtual ~nsObjectFrame();
+
+  //~~~
+  virtual PRIntn GetSkipSides() const;
 
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsHTMLReflowState& aReflowState,
@@ -189,6 +212,95 @@ static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 static NS_DEFINE_IID(kIHTMLContentIID, NS_IHTMLCONTENT_IID);
 static NS_DEFINE_IID(kILinkHandlerIID, NS_ILINKHANDLER_IID);
+
+//~~~
+PRIntn
+nsObjectFrame::GetSkipSides() const
+{
+  return 0;
+}
+
+//~~~
+NS_IMETHODIMP
+nsObjectFrame::SetInitialChildList(nsIPresContext& aPresContext,
+                                      nsIAtom*        aListName,
+                                      nsIFrame*       aChildList)
+{
+  return NS_OK;
+}
+
+//~~~
+void nsObjectFrame::IsSupportedImage(nsIContent* aContent, PRBool* aImage)
+{
+  *aImage = PR_FALSE;
+
+  if(aContent == NULL)
+    return;
+
+  nsAutoString type;
+  nsresult rv = aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::type, type);
+  if((rv == NS_CONTENT_ATTR_HAS_VALUE) && (type.Length() > 0)) 
+  {
+    if(type.EqualsIgnoreCase(IMAGE_GIF) ||
+       type.EqualsIgnoreCase(IMAGE_JPG) ||
+       type.EqualsIgnoreCase(IMAGE_PJPG)||
+       type.EqualsIgnoreCase(IMAGE_PNG) ||
+       type.EqualsIgnoreCase(IMAGE_PPM) ||
+       type.EqualsIgnoreCase(IMAGE_XBM) ||
+       type.EqualsIgnoreCase(IMAGE_XBM2)||
+       type.EqualsIgnoreCase(IMAGE_XBM3))
+    {
+      *aImage = PR_TRUE;
+    }
+    return;
+  }
+
+  nsAutoString data;
+  rv = aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::data, data);
+  if((rv == NS_CONTENT_ATTR_HAS_VALUE) && (data.Length() > 0)) 
+  {
+    return;
+  }
+}
+
+//~~~
+NS_IMETHODIMP 
+nsObjectFrame::Init(nsIPresContext&  aPresContext,
+                    nsIContent*      aContent,
+                    nsIFrame*        aParent,
+                    nsIStyleContext* aContext,
+                    nsIFrame*        aPrevInFlow)
+{
+  nsresult rv = nsObjectFrameSuper::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+
+  if(rv != NS_OK)
+    return rv;
+
+  PRBool bImage = PR_FALSE;
+
+  //Ideally should be call to imlib, when it is available
+  // and even move this code to Reflow when the stream starts to come
+  IsSupportedImage(aContent, &bImage);
+  
+  if(bImage)
+  {
+    nsIFrame * aNewFrame = nsnull;
+    rv = NS_NewImageFrame(aNewFrame);
+    if(rv != NS_OK)
+      return rv;
+
+    rv = aNewFrame->Init(aPresContext, aContent, this, aContext, aPrevInFlow);
+    if(rv == NS_OK)
+    {
+      nsHTMLContainerFrame::CreateViewForFrame(aPresContext, aNewFrame, aContext, PR_FALSE);
+      mFrames.AppendFrame(this, aNewFrame);
+    }
+    else
+      aNewFrame->DeleteFrame(aPresContext);
+  }
+
+  return rv;
+}
 
 nsresult
 nsObjectFrame::CreateWidget(nscoord aWidth, nscoord aHeight, PRBool aViewOnly)
@@ -439,6 +551,9 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 
   // XXX deal with border and padding the usual way...wrap it up!
 
+  //~~~
+  nsresult rv;
+
   nsIAtom* atom;
   mContent->GetTag(atom);
   if ((nsnull != atom) && (nsnull == mInstanceOwner)) {
@@ -590,8 +705,73 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
     NS_RELEASE(atom);
   }
 
+  if(rv == NS_OK)//~~~
+  {
+    aStatus = NS_FRAME_COMPLETE;
+    return NS_OK;
+  }
+
+  //~~~
+  //This could be an image
+  nsIFrame * child = mFrames.FirstChild();
+  if(child != nsnull)
+  {
+    nsSize availSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+    nsHTMLReflowMetrics kidDesiredSize(nsnull);
+
+    nsReflowReason reflowReason;
+    nsFrameState frameState;
+    child->GetFrameState(&frameState);
+    if (frameState & NS_FRAME_FIRST_REFLOW)
+      reflowReason = eReflowReason_Initial;
+    else
+      reflowReason = eReflowReason_Resize;
+
+    nsHTMLReflowState kidReflowState(aPresContext, child, aReflowState, availSize, reflowReason);
+
+    nsReflowStatus status;
+
+    if(PR_TRUE)//reflowReason == eReflowReason_Initial)
+    {
+      kidDesiredSize.width = NS_UNCONSTRAINEDSIZE;
+      kidDesiredSize.height = NS_UNCONSTRAINEDSIZE;
+    }
+
+    ReflowChild(child, aPresContext, kidDesiredSize, kidReflowState, status);
+
+    nsRect rect(0, 0, kidDesiredSize.width, kidDesiredSize.height);
+    child->SetRect(rect);
+
+    aMetrics.width = kidDesiredSize.width;
+    aMetrics.height = kidDesiredSize.height;
+    aMetrics.ascent = kidDesiredSize.height;
+    aMetrics.descent = 0;
+  }
+
   aStatus = NS_FRAME_COMPLETE;
   return NS_OK;
+}
+
+//~~~
+NS_IMETHODIMP
+nsObjectFrame::ContentChanged(nsIPresContext* aPresContext,
+                            nsIContent*     aChild,
+                            nsISupports*    aSubContent)
+{
+  // Generate a reflow command with this frame as the target frame
+  nsIReflowCommand* cmd;
+  nsresult          result;
+                                                
+  result = NS_NewHTMLReflowCommand(&cmd, this, nsIReflowCommand::ContentChanged);
+  if (NS_OK == result) {
+    nsIPresShell* shell;
+    aPresContext->GetShell(&shell);
+    shell->AppendReflowCommand(cmd);
+    NS_RELEASE(shell);
+    NS_RELEASE(cmd);
+  }
+
+  return result;
 }
 
 NS_IMETHODIMP
@@ -665,6 +845,14 @@ nsObjectFrame::Paint(nsIPresContext& aPresContext,
                      const nsRect& aDirtyRect,
                      nsFramePaintLayer aWhichLayer)
 {
+  //~~~
+  nsIFrame * child = mFrames.FirstChild();
+  if(child != NULL) //This is an image
+  {
+    nsObjectFrameSuper::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+    return NS_OK;
+  }
+
   if (eFramePaintLayer_Content == aWhichLayer) {
     const nsStyleFont* font = (const nsStyleFont*)
       mStyleContext->GetStyleData(eStyleStruct_Font);

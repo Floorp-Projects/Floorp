@@ -247,6 +247,12 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
     fixedContentHeight = PR_FALSE;
   }
 
+ //~~~
+  if(aDesiredSize.width == NS_UNCONSTRAINEDSIZE)
+    fixedContentWidth = PR_FALSE;
+  if(aDesiredSize.height == NS_UNCONSTRAINEDSIZE)
+    fixedContentHeight = PR_FALSE;
+
   // Choose reflow size
   if (fixedContentWidth || fixedContentHeight) {
     if (fixedContentWidth && fixedContentHeight) {
@@ -413,9 +419,20 @@ nsImageFrame::Init(nsIPresContext&  aPresContext,
   nsresult  rv = nsLeafFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
   // Set the image loader's source URL and base URL
+  //~~~
+  PRBool bSourcePresent = PR_FALSE;
+
   nsAutoString src;
   if ((NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, src)) &&
       (src.Length() > 0)) {
+    bSourcePresent = PR_TRUE;
+  }
+  else if ((NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::data, src)) &&
+      (src.Length() > 0)) {
+    bSourcePresent = PR_TRUE;
+  }
+
+  if (bSourcePresent) {
     mImageLoader.SetURLSpec(src);
     nsIURL* baseURL = nsnull;
     nsIHTMLContent* htmlContent;
