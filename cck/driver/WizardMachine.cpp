@@ -332,6 +332,8 @@ NODE* CWizardMachineApp::CreateNode(NODE *parentNode, CString iniFile)
 	CStringArray bufferArray;	
 	NODE* NewNode = (NODE *) GlobalAlloc(0,sizeof(NODE) * 1);
 
+	// Initialize all the extra fields here...
+	NewNode->isWidgetsSorted = FALSE;
 
 	NewNode->parent = parentNode;
 
