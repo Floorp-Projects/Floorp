@@ -1054,7 +1054,7 @@ function getSearchTermString(searchTerms)
   return condition;
 }
 
-function  CreateVirtualFolder(newName, parentFolder, searchFolderURIs, searchTerms, searchOnline))
+function  CreateVirtualFolder(newName, parentFolder, searchFolderURIs, searchTerms, searchOnline)
 {
   // ### need to make sure view/folder doesn't exist.
   if (searchFolderURIs && (searchFolderURIs != "") && newName && (newName != "")) 
