@@ -22,7 +22,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DEFINES +=-D_IMPL_NS_BASE
+DEFINES +=-D_IMPL_NS_BASE -I$(topsrcdir)/base/public
 
 DIRS = $(MOZ_TOOLKIT)
 
