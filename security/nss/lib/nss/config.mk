@@ -36,9 +36,75 @@
 #  are specifed as dependencies within rules.mk.
 #
 
-TARGETS        = $(LIBRARY)
-SHARED_LIBRARY =
-IMPORT_LIBRARY =
-PURE_LIBRARY   =
-PROGRAM        =
+#TARGETS        = $(LIBRARY)
+#SHARED_LIBRARY =
+#IMPORT_LIBRARY =
+#PURE_LIBRARY   =
+#PROGRAM        =
+
+# can't do this in manifest.mn because OS_ARCH isn't defined there.
+ifeq ($(OS_ARCH), WINNT)
+
+# $(PROGRAM) has explicit dependencies on $(EXTRA_LIBS)
+CRYPTOLIB=$(DIST)/lib/freebl.lib
+ifdef MOZILLA_SECURITY_BUILD
+	CRYPTOLIB=$(DIST)/lib/crypto.lib
+endif
+ifdef MOZILLA_BSAFE_BUILD
+	CRYPTOLIB+=$(DIST)/lib/bsafe$(BSAFEVER).lib
+	CRYPTOLIB+=$(DIST)/lib/freebl.lib
+endif
+
+EXTRA_LIBS += \
+	$(DIST)/lib/certhi.lib \
+	$(DIST)/lib/cryptohi.lib \
+	$(DIST)/lib/pk11wrap.lib \
+	$(DIST)/lib/certdb.lib \
+	$(DIST)/lib/softoken.lib \
+	$(CRYPTOLIB) \
+	$(DIST)/lib/secutil.lib \
+	$(DIST)/lib/dbm.lib \
+	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plc4.lib \
+	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plds4.lib \
+	$(DIST)/lib/$(NSPR31_LIB_PREFIX)nspr4.lib \
+	$(NULL)
+
+# $(PROGRAM) has NO explicit dependencies on $(OS_LIBS)
+#OS_LIBS += \
+#	wsock32.lib \
+#	winmm.lib \
+#	$(NULL)
+else
+
+# $(PROGRAM) has explicit dependencies on $(EXTRA_LIBS)
+CRYPTOLIB=$(DIST)/lib/libfreebl.$(LIB_SUFFIX)
+ifdef MOZILLA_SECURITY_BUILD
+	CRYPTOLIB=$(DIST)/lib/libcrypto.$(LIB_SUFFIX)
+endif
+ifdef MOZILLA_BSAFE_BUILD
+	CRYPTOLIB+=$(DIST)/lib/libbsafe.$(LIB_SUFFIX)
+	CRYPTOLIB+=$(DIST)/lib/libfreebl.$(LIB_SUFFIX)
+endif
+EXTRA_LIBS += \
+	$(DIST)/lib/libcerthi.$(LIB_SUFFIX) \
+	$(DIST)/lib/libpk11wrap.$(LIB_SUFFIX) \
+	$(DIST)/lib/libcryptohi.$(LIB_SUFFIX) \
+	$(DIST)/lib/libcerthi.$(LIB_SUFFIX) \
+	$(DIST)/lib/libpk11wrap.$(LIB_SUFFIX) \
+	$(DIST)/lib/libsoftoken.$(LIB_SUFFIX) \
+	$(DIST)/lib/libcertdb.$(LIB_SUFFIX) \
+	$(CRYPTOLIB) \
+	$(DIST)/lib/libsecutil.$(LIB_SUFFIX) \
+	$(DIST)/lib/libdbm.$(LIB_SUFFIX) \
+	$(NULL)
+
+# $(PROGRAM) has NO explicit dependencies on $(EXTRA_SHARED_LIBS)
+# $(EXTRA_SHARED_LIBS) come before $(OS_LIBS), except on AIX.
+EXTRA_SHARED_LIBS += \
+	-L$(DIST)/lib/ \
+	-lplc4 \
+	-lplds4 \
+	-lnspr4 \
+	$(NULL)
+endif
 

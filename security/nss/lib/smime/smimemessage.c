@@ -34,7 +34,7 @@
 /*
  * SMIME message methods
  *
- * $Id: smimemessage.c,v 1.3 2000/06/14 23:16:42 chrisk%netscape.com Exp $
+ * $Id: smimemessage.c,v 1.4 2000/12/22 17:16:21 relyea%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -120,7 +120,6 @@ NSS_SMIMEMessage_CreateEncrypted(CERTCertificate *scert,
 
     return cinfo;
 }
-#endif
 
 
 /*
@@ -213,3 +212,4 @@ loser:
 	NSS_CMSMessage_Destroy(cmsg);
     return NULL;
 }
+#endif

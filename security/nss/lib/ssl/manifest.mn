@@ -75,3 +75,4 @@ CSRCS = \
 REQUIRES = security dbm
 
 LIBRARY_NAME = ssl
+LIBRARY_VERSION = 3
