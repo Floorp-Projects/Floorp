@@ -418,7 +418,7 @@ nsImapProtocol::GetImapHostName()
 const char*
 nsImapProtocol::GetImapUserName()
 {
-  nsIMsgIncomingServer * server = m_server;
+  nsCOMPtr<nsIMsgIncomingServer> server = do_QueryReferent(m_server);
   if (!m_userName && server)
     server->GetUsername(&m_userName);
   return m_userName;
@@ -427,7 +427,7 @@ nsImapProtocol::GetImapUserName()
 const char*
 nsImapProtocol::GetImapServerKey()
 {
-  nsIMsgIncomingServer * server = m_server;
+  nsCOMPtr<nsIMsgIncomingServer> server = do_QueryReferent(m_server);
   if (!m_serverKey && server)
     server->GetKey(&m_serverKey);
   return m_serverKey;
@@ -527,13 +527,14 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
         rv = aURL->QueryInterface(NS_GET_IID(nsIImapUrl), getter_AddRefs(m_runningUrl));
         if (NS_FAILED(rv)) return rv;
 
-        if (!m_server)
-    {
-      nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_runningUrl);
-      rv = mailnewsUrl->GetServer(getter_AddRefs(m_server));
-      if (m_server)
-        m_imapServer = do_QueryInterface(m_server);
-    }
+        nsCOMPtr<nsIMsgIncomingServer> server = do_QueryReferent(m_server);
+        if (!server)
+        {
+            nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_runningUrl);
+            rv = mailnewsUrl->GetServer(getter_AddRefs(server));
+            m_server = getter_AddRefs(NS_GetWeakReference(server));
+        }
+        nsCOMPtr<nsIImapIncomingServer> imapServer = do_QueryInterface(server);
 
         nsCOMPtr<nsIStreamListener> aRealStreamListener = do_QueryInterface(aConsumer);
         m_runningUrl->GetMockChannel(getter_AddRefs(m_mockChannel));
@@ -560,14 +561,14 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
     m_hostSessionList->GetCapabilityForHost(GetImapServerKey(), capability);
     GetServerStateParser().SetCapabilityFlag(capability);
 
-    if (m_imapServer)
-      m_imapServer->GetFetchByChunks(&m_fetchByChunks);
+    if (imapServer)
+      imapServer->GetFetchByChunks(&m_fetchByChunks);
 
     if ( m_runningUrl && !m_channel /* and we don't have a transport yet */)
     {
       // extract the file name and create a file transport...
       PRInt32 port=-1;
-      m_server->GetPort(&port);
+      server->GetPort(&port);
 
       if (port <= 0) port = IMAP_PORT;
       
@@ -583,7 +584,7 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
         PRBool isSecure = PR_FALSE;
         char *connectionType = nsnull;
         
-        if (NS_SUCCEEDED(m_server->GetIsSecure(&isSecure)) && isSecure) 
+        if (NS_SUCCEEDED(server->GetIsSecure(&isSecure)) && isSecure) 
         {
           connectionType = "ssl";
           port = SECURE_IMAP_PORT;
@@ -686,10 +687,11 @@ NS_IMETHODIMP nsImapProtocol::Run()
 
     me->m_eventQueue = null_nsCOMPtr();
 
-    if (me->m_server)
+    nsCOMPtr<nsIMsgIncomingServer> me_server = do_QueryReferent(m_server);
+    if (me_server)
     {
         nsCOMPtr<nsIImapIncomingServer>
-            aImapServer(do_QueryInterface(me->m_server, &result));
+            aImapServer(do_QueryInterface(me_server, &result));
         if (NS_SUCCEEDED(result))
             aImapServer->RemoveConnection(me);
     }
@@ -1192,11 +1194,16 @@ PRBool nsImapProtocol::ProcessCurrentURL()
     SetFlag(IMAP_FIRST_PASS_IN_THREAD);
   }
 
+  // if we didn't run another url, release the server sink to
+  // cut circular refs.
+  if (!anotherUrlRun)
+      m_imapServerSink = null_nsCOMPtr();
+  
   if (GetConnectionStatus() < 0)
   {
-    nsCOMPtr<nsIImapIncomingServer> aImapServer  = do_QueryInterface(m_server, &rv);
+    nsCOMPtr<nsIImapIncomingServer> imapServer  = do_QueryReferent(m_server, &rv);
     if (NS_SUCCEEDED(rv))
-      aImapServer->RemoveConnection(this);
+      imapServer->RemoveConnection(this);
 
     if (!DeathSignalReceived()) {
         TellThreadToDie(PR_FALSE);
@@ -4052,7 +4059,7 @@ void
 nsImapProtocol::PercentProgressUpdateEvent(PRUnichar *message, PRInt32 currentProgress, PRInt32 maxProgress)
 {
 
-  PRInt64 nowMS;
+  PRInt64 nowMS = LL_ZERO;
   PRInt32 percent = (100 * currentProgress) / maxProgress;
   if (percent == m_lastPercent)
     return; // hasn't changed, right? So just return. Do we need to clear this anywhere?
@@ -5120,9 +5127,11 @@ PRBool nsImapProtocol::DeleteSubFolders(const char* selectedMailbox)
         PL_strcmp(selectedMailbox, longestName) &&
         !PL_strncmp(selectedMailbox, longestName,
                             PL_strlen(selectedMailbox)))
-      { 
-          if (m_imapServer)
-              m_imapServer->ResetConnection(longestName);
+      {
+          nsCOMPtr<nsIImapIncomingServer> imapServer =
+              do_QueryReferent(m_server);
+          if (imapServer)
+              imapServer->ResetConnection(longestName);
           PRBool deleted =
               DeleteMailboxRespectingSubscriptions(longestName);
           if (deleted)
@@ -5354,7 +5363,7 @@ void nsImapProtocol::DiscoverAllAndSubscribedBoxes()
 				}
 
 				nsresult rv;
-    			nsCOMPtr<nsIImapIncomingServer> imapServer = do_QueryInterface(m_server, &rv);
+    			nsCOMPtr<nsIImapIncomingServer> imapServer = do_QueryReferent(m_server, &rv);
 				if (NS_FAILED(rv) || !imapServer) return;
 
 				if (allPattern.Length())
@@ -6206,15 +6215,16 @@ PRBool nsImapProtocol::TryToLogon()
   nsresult rv = NS_OK;
 
   // get the password and user name for the current incoming server...
-  if (m_server)
+  nsCOMPtr<nsIMsgIncomingServer> server = do_QueryReferent(m_server);
+  if (server)
   {
     // we are in the imap thread so *NEVER* try to extract the password with UI
 	// if logon redirection has changed the password, use the cookie as the password
 	if (m_overRideUrlConnectionInfo)
 		password = nsCRT::strdup(m_logonCookie);
 	else
-		rv = m_server->GetPassword(&password);
-    rv = m_server->GetUsername(&userName);
+		rv = server->GetPassword(&password);
+    rv = server->GetUsername(&userName);
 
   }
       
@@ -6269,7 +6279,8 @@ PRBool nsImapProtocol::TryToLogon()
       {
               // login failed!
               // if we failed because of an interrupt, then do not bother the user
-              rv = m_server->ForgetPassword();
+              if (server)
+                  rv = server->ForgetPassword();
 
               if (!DeathSignalReceived())
               {

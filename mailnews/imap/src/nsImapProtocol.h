@@ -48,6 +48,7 @@
 #include "nsImapFlagAndUidState.h"
 #include "nsIMAPNamespace.h"
 #include "nsVoidArray.h"
+#include "nsWeakPtr.h"
 #include "nsMsgLineBuffer.h" // we need this to use the nsMsgLineStreamBuffer helper class...
 #include "nsIInputStream.h"
 #include "nsIMsgIncomingServer.h"
@@ -352,8 +353,7 @@ private:
   PRInt32				 m_connectionStatus;
 
 	PRBool			m_nextUrlReadyToRun;
-  nsCOMPtr<nsIMsgIncomingServer>  m_server;
-	nsCOMPtr<nsIImapIncomingServer> m_imapServer;
+  nsWeakPtr   m_server;
 
   nsCOMPtr<nsIImapMailFolderSink> m_imapMailFolderSink;
   nsCOMPtr<nsIImapMessageSink>	m_imapMessageSink;

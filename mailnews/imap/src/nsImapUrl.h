@@ -34,6 +34,7 @@
 #include "nsIImapExtensionSink.h"
 #include "nsIImapMiscellaneousSink.h"
 
+#include "nsWeakPtr.h"
 #include "nsXPIDLString.h"
 
 class nsImapUrl : public nsIImapUrl, public nsMsgMailNewsUrl, public nsIMsgMessageUrl, public nsIMsgI18NUrl
@@ -109,8 +110,7 @@ protected:
   nsIImapExtensionSink*	m_imapExtensionSink;  // not ref counted
   nsIImapMiscellaneousSink* m_imapMiscellaneousSink;  // not ref counted
 
-	// I AM using nsCOMPtr because I suspect the above problem has gone away.
-	nsCOMPtr <nsIImapServerSink> m_imapServerSink;
+  nsWeakPtr m_imapServerSink;
 
   // online message copy support; i don't have a better solution yet
   nsCOMPtr <nsISupports> m_copyState;   // now, refcounted.

@@ -184,20 +184,17 @@ NS_IMETHODIMP nsImapUrl::SetImapMessageSink(nsIImapMessageSink  * aImapMessageSi
 
 NS_IMETHODIMP nsImapUrl::GetImapServerSink(nsIImapServerSink ** aImapServerSink)
 {
-	if (aImapServerSink)
-	{
-		*aImapServerSink = m_imapServerSink;
-		NS_IF_ADDREF(*aImapServerSink);
-	}
-	else
-		return NS_ERROR_NULL_POINTER;
+    NS_ENSURE_ARG_POINTER(aImapServerSink);
 
-	return NS_OK;
+    nsCOMPtr<nsIImapServerSink> serverSink = do_QueryReferent(m_imapServerSink);
+    *aImapServerSink = serverSink;
+    NS_IF_ADDREF(*aImapServerSink);
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsImapUrl::SetImapServerSink(nsIImapServerSink  * aImapServerSink)
 {
-    m_imapServerSink = aImapServerSink;
+    m_imapServerSink = getter_AddRefs(NS_GetWeakReference(aImapServerSink));
 
 	return NS_OK;
 }
