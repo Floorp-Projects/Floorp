@@ -119,12 +119,16 @@ static nsCharSetInfo gCharSetInfo[eCharSet_COUNT] =
   { "JOHAB",       FM_DEFN_KANA,     1361, "ko-XXX", }
 };
 
+static curHashValue = 1;
+
 // font handle
 nsFontHandleOS2::nsFontHandleOS2()
 {
    memset( &fattrs, 0, sizeof fattrs);
    fattrs.usRecordLength = sizeof fattrs;
    charbox.cx = charbox.cy = 0;
+   ulHashMe = curHashValue;
+   curHashValue++;
 }
 
 void nsFontHandleOS2::SelectIntoPS( HPS hps, long lcid)
@@ -320,7 +324,7 @@ nsFontMetricsOS2::InitializeFamilyNames(void)
     }
     nsFontFamilyName* f;
     if (!IsDBCS()) {
-      f = gFamilyNameTableDBCS;
+      f = gFamilyNameTable;
     } else {
       f = gFamilyNameTableDBCS;
     } /* endif */
@@ -513,8 +517,10 @@ static PRBool
 FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
 {
   nsFontMetricsOS2* metrics = (nsFontMetricsOS2*) aData;
-  /* Hack for Truetype on OS/2 - if it's Arial and not 1252, just get another font */
-  if ((metrics->mCodePage != 1252) && (aFamily.Find("Arial", IGNORE_CASE) != -1))
+  /* Hack for Truetype on OS/2 - if it's Arial and not 1252 or 0, just get another font */
+  if ((metrics->mCodePage != 1252) &&
+      (metrics->mCodePage != 0) &&
+      (aFamily.Find("Arial", IGNORE_CASE) != -1))
      return PR_TRUE; // don't stop
   metrics->mFonts.AppendString(aFamily);
   metrics->mFontIsGeneric.AppendElement((void*) aGeneric);
@@ -665,7 +671,7 @@ HDC   ps = NULL;
    BOOL bBold = mFont->weight > NS_FONT_WEIGHT_NORMAL;
    BOOL bItalic = !!(mFont->style & NS_FONT_STYLE_ITALIC);
    FACENAMEDESC fnd = { sizeof( FACENAMEDESC),
-                        bBold ? FWEIGHT_BOLD : FWEIGHT_DONT_CARE,
+                        bBold ? FWEIGHT_BOLD : FWEIGHT_NORMAL,
                         FWIDTH_DONT_CARE,
                         0,
                         bItalic ? FTYPE_ITALIC : 0 };
