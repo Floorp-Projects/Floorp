@@ -21,6 +21,9 @@
 
 #include "nsIMenuItem.h"
 #include "nsString.h"
+#include "nsIMenuListener.h"
+
+#include "nsIXULCommand.h"
 
 class nsIMenu;
 class nsIPopUpMenu;
@@ -30,7 +33,7 @@ class nsIWidget;
  * Native GTK+ MenuItem wrapper
  */
 
-class nsMenuItem : public nsIMenuItem
+class nsMenuItem : public nsIMenuItem, public nsIMenuListener
 {
 
 public:
@@ -55,6 +58,11 @@ public:
   NS_IMETHOD GetTarget(nsIWidget *& aTarget);
   NS_IMETHOD GetNativeData(void*& aData);
 
+  // nsIMenuListener interface
+  nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent);
+  
+  NS_IMETHOD SetXULCommand(nsIXULCommand * aXULCommand);
+  
 protected:
   void Create(nsIWidget * aMBParent, GtkWidget *aParent,
               const nsString &aLabel, PRUint32 aCommand);
