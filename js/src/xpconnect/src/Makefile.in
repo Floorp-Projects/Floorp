@@ -67,6 +67,11 @@ IS_COMPONENT =  1
 endif
 endif
 
+# AIX
+ifeq ($(OS_ARCH),AIX)
+IS_COMPONENT =  1
+endif
+
 DEFINES	+= -DJSFILE -DJS_THREADSAFE
 
 CPPSRCS=		\
