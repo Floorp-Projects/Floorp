@@ -43,7 +43,8 @@ interface nsIImapIncomingServer : nsISupports {
   attribute boolean offlineDownload;
   attribute boolean overrideNamespaces;
   attribute boolean usingSubscription;
-  
+  attribute string manageMailAccountUrl;
+    
   nsIURI GetImapConnectionAndLoadUrl(in nsIEventQueue aClientEventQueue,
                                            in nsIImapUrl aImapUrl,
                                            in nsIUrlListener aUrlListener,

@@ -87,10 +87,10 @@ nsImapMailFolder::nsImapMailFolder() :
 
     // Get current thread envent queue
 
-//	NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv); 
-//    if (NS_SUCCEEDED(rv) && pEventQService)
-//        pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),
-//                                            getter_AddRefs(m_eventQueue));
+	NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv); 
+    if (NS_SUCCEEDED(rv) && pEventQService)
+        pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),
+                                            getter_AddRefs(m_eventQueue));
 	m_moveCoalescer = nsnull;
 	m_tempMsgFileSpec = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_TemporaryDirectory);
 	m_tempMsgFileSpec += "tempMessage.eml";
@@ -1406,51 +1406,6 @@ NS_IMETHODIMP nsImapMailFolder::ChildDiscoverySucceeded(
 	return rv;
 }
 
-NS_IMETHODIMP nsImapMailFolder::OnlineFolderDelete(
-	nsIImapProtocol* aProtocol, const char* folderName)
-{
-	nsresult rv = NS_ERROR_FAILURE;
-	return rv;
-}
-
-NS_IMETHODIMP nsImapMailFolder::OnlineFolderCreateFailed(
-	nsIImapProtocol* aProtocol, const char* folderName)
-{
-	nsresult rv = NS_ERROR_FAILURE;
-	return rv;
-}
-
-NS_IMETHODIMP nsImapMailFolder::OnlineFolderRename(
-    nsIImapProtocol* aProtocol, folder_rename_struct* aStruct) 
-{
-    nsresult rv = NS_ERROR_FAILURE;
-    if (aStruct && aStruct->fNewName && *aStruct->fNewName)
-    {
-        nsCOMPtr<nsIFolder> iFolder;
-        nsCOMPtr<nsIMsgImapMailFolder> parent;
-        nsCOMPtr<nsIMsgFolder> me;
-        rv = GetFolder(aStruct->fOldName, getter_AddRefs(me));
-        if (NS_FAILED(rv)) return rv;
-        rv = me->GetParent(getter_AddRefs(iFolder));
-        if (NS_SUCCEEDED(rv))
-        {
-            parent = do_QueryInterface(iFolder, &rv);
-            if (NS_SUCCEEDED(rv))
-                    parent->RemoveSubFolder(me);
-        }
-        nsCOMPtr<nsIMsgFolder> rootFolder;
-        rv = GetRootFolder(getter_AddRefs(rootFolder));
-        if (NS_SUCCEEDED(rv))
-        {
-            nsCOMPtr<nsIMsgImapMailFolder> imapRootFolder =
-                do_QueryInterface(rootFolder, &rv);
-            if (NS_SUCCEEDED(rv))
-            rv = imapRootFolder->CreateClientSubfolderInfo(aStruct->fNewName);
-        }
-    }
-	return rv;
-}
-
 NS_IMETHODIMP nsImapMailFolder::SubscribeUpgradeFinished(
 	nsIImapProtocol* aProtocol, EIMAPSubscriptionUpgradeState* aState)
 {
@@ -2521,43 +2476,6 @@ PRBool nsImapMailFolder::DeleteIsMoveToTrash()
 		PR_FREEIF(userName);
 	}
 	return rv;
-}
-
-nsresult nsImapMailFolder::GetFolder(const char* name, nsIMsgFolder** pFolder)
-{
-    nsresult rv = NS_ERROR_NULL_POINTER;
-    if (!name || !*name || !pFolder) return rv;
-    *pFolder = nsnull;
-    nsCOMPtr<nsIMsgFolder> rootFolder;
-    rv = GetRootFolder(getter_AddRefs(rootFolder));
-    if (NS_SUCCEEDED(rv) && rootFolder)
-    {
-        char* uri = nsnull;
-        rv = rootFolder->GetURI(&uri);
-        if (NS_SUCCEEDED(rv) && uri)
-        {
-            nsAutoString uriAutoString = uri;
-            uriAutoString.Append('/');
-            uriAutoString.Append(name);
-            NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
-            if (NS_FAILED(rv)) return rv;
-            char* uriString = uriAutoString.ToNewCString();
-            nsCOMPtr<nsIRDFResource> res;
-            rv = rdf->GetResource(uriString, getter_AddRefs(res));
-            if (NS_SUCCEEDED(rv))
-            {
-                nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(res, &rv));
-                if (NS_SUCCEEDED(rv) && folder)
-                {
-                    *pFolder = folder;
-                    NS_ADDREF(*pFolder);
-                }
-            }
-            delete [] uriString;
-        }
-        PR_FREEIF(uri);
-    }
-    return rv;
 }
 
 nsresult nsImapMailFolder::GetTrashFolder(nsIMsgFolder **pTrashFolder)

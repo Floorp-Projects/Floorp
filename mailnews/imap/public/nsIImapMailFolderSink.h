@@ -44,12 +44,6 @@ public:
     NS_IMETHOD UpdateImapMailboxStatus(nsIImapProtocol* aProtocol,
                                        mailbox_spec* aSpec) = 0;
     NS_IMETHOD ChildDiscoverySucceeded(nsIImapProtocol* aProtocol) = 0;
-    NS_IMETHOD OnlineFolderDelete(nsIImapProtocol* aProtocol,
-                                  const char* folderName) = 0;
-    NS_IMETHOD OnlineFolderCreateFailed(nsIImapProtocol* aProtocol,
-                                        const char* folderName) = 0;
-    NS_IMETHOD OnlineFolderRename(nsIImapProtocol* aProtocol,
-                                  folder_rename_struct* aStruct) = 0;
     NS_IMETHOD SubscribeUpgradeFinished(nsIImapProtocol* aProtocol,
                         EIMAPSubscriptionUpgradeState* aState) = 0;
     NS_IMETHOD PromptUserForSubscribeUpdatePath(nsIImapProtocol* aProtocol,

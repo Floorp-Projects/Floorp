@@ -78,12 +78,6 @@ public:
     NS_IMETHOD UpdateImapMailboxStatus(nsIImapProtocol* aProtocol,
                                        mailbox_spec* aSpec);
     NS_IMETHOD ChildDiscoverySucceeded(nsIImapProtocol* aProtocol);
-    NS_IMETHOD OnlineFolderDelete(nsIImapProtocol* aProtocol,
-                                  const char* folderName);
-    NS_IMETHOD OnlineFolderCreateFailed(nsIImapProtocol* aProtocol,
-                                        const char* folderName);
-    NS_IMETHOD OnlineFolderRename(nsIImapProtocol* aProtocol,
-                                  folder_rename_struct* aStruct);
     NS_IMETHOD SubscribeUpgradeFinished(nsIImapProtocol* aProtocol,
                         EIMAPSubscriptionUpgradeState* aState);
     NS_IMETHOD PromptUserForSubscribeUpdatePath(nsIImapProtocol* aProtocol,
@@ -297,33 +291,6 @@ struct ChildDiscoverySucceededProxyEvent : public nsImapMailFolderSinkProxyEvent
     ChildDiscoverySucceededProxyEvent(nsImapMailFolderSinkProxy* aProxy);
     virtual ~ChildDiscoverySucceededProxyEvent();
     NS_IMETHOD HandleEvent();
-};
-
-struct OnlineFolderDeleteProxyEvent : public nsImapMailFolderSinkProxyEvent
-{
-    OnlineFolderDeleteProxyEvent(nsImapMailFolderSinkProxy* aProxy,
-                                 const char* folderName);
-    virtual ~OnlineFolderDeleteProxyEvent();
-    NS_IMETHOD HandleEvent();
-    char* m_folderName;
-};
-
-struct OnlineFolderCreateFailedProxyEvent : public nsImapMailFolderSinkProxyEvent
-{
-    OnlineFolderCreateFailedProxyEvent(nsImapMailFolderSinkProxy* aProxy,
-                                       const char* folderName);
-    virtual ~OnlineFolderCreateFailedProxyEvent();
-    NS_IMETHOD HandleEvent();
-    char* m_folderName;
-};
-
-struct OnlineFolderRenameProxyEvent : public nsImapMailFolderSinkProxyEvent
-{
-    OnlineFolderRenameProxyEvent(nsImapMailFolderSinkProxy* aProxy,
-                                 folder_rename_struct* aStruct);
-    virtual ~OnlineFolderRenameProxyEvent();
-    NS_IMETHOD HandleEvent();
-    folder_rename_struct m_folderRenameStruct;
 };
 
 struct SubscribeUpgradeFinishedProxyEvent : public nsImapMailFolderSinkProxyEvent

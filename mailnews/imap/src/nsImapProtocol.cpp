@@ -4901,7 +4901,8 @@ void nsImapProtocol::FolderDeleted(const char *mailboxName)
     {
         m_runningUrl->AllocateCanonicalPath(convertedName, onlineDelimiter,
                                             &orphanedMailboxName);
-        m_imapMailFolderSink->OnlineFolderDelete(this, orphanedMailboxName);
+		if (m_imapServerSink)
+			m_imapServerSink->OnlineFolderDelete(orphanedMailboxName);
     }
 
     PR_FREEIF(convertedName);
@@ -4910,8 +4911,8 @@ void nsImapProtocol::FolderDeleted(const char *mailboxName)
 
 void nsImapProtocol::FolderNotCreated(const char *folderName)
 {
-    if (folderName)
-        m_imapMailFolderSink->OnlineFolderCreateFailed(this, folderName);
+    if (folderName && m_imapServerSink)
+        m_imapServerSink->OnlineFolderCreateFailed(folderName);
 }
 
 void nsImapProtocol::FolderRenamed(const char *oldName,
@@ -4938,8 +4939,8 @@ void nsImapProtocol::FolderRenamed(const char *oldName,
                                                 onlineDelimiter,
                                                 &orphanRenameStruct->fNewName);
 
-            m_imapMailFolderSink->OnlineFolderRename(this,
-                                                     orphanRenameStruct);
+            m_imapServerSink->OnlineFolderRename(orphanRenameStruct->fOldName,
+                                                     orphanRenameStruct->fNewName);
             PR_FREEIF(orphanRenameStruct->fHostName);
             PR_FREEIF (orphanRenameStruct->fOldName);
             PR_FREEIF(orphanRenameStruct->fNewName);

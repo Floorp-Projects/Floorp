@@ -75,6 +75,7 @@ public:
 	NS_IMETHOD PerformBiff();
 
 protected:
+	nsresult GetFolder(const char* name, nsIMsgFolder** pFolder);
 	nsresult GetUnverifiedSubFolders(nsIFolder *parentFolder, nsISupportsArray *aFoldersArray, PRInt32 *aNumUnverifiedFolders);
 	nsresult GetUnverifiedFolders(nsISupportsArray *aFolderArray, PRInt32 *aNumUnverifiedFolders);
 
@@ -91,6 +92,7 @@ private:
     nsCOMPtr<nsISupportsArray> m_urlQueue;
     nsVoidArray					m_urlConsumers;
 	PRUint32					m_capability;
+	nsCString					m_manageMailAccountUrl;
 };
 
 
@@ -613,6 +615,85 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath)
     
 	return NS_OK;
 }
+
+nsresult nsImapIncomingServer::GetFolder(const char* name, nsIMsgFolder** pFolder)
+{
+    nsresult rv = NS_ERROR_NULL_POINTER;
+    if (!name || !*name || !pFolder) return rv;
+    *pFolder = nsnull;
+    nsCOMPtr<nsIFolder> rootFolder;
+    rv = GetRootFolder(getter_AddRefs(rootFolder));
+    if (NS_SUCCEEDED(rv) && rootFolder)
+    {
+        char* uri = nsnull;
+        rv = rootFolder->GetURI(&uri);
+        if (NS_SUCCEEDED(rv) && uri)
+        {
+            nsAutoString uriAutoString = uri;
+            uriAutoString.Append('/');
+            uriAutoString.Append(name);
+            NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+            if (NS_FAILED(rv)) return rv;
+            char* uriString = uriAutoString.ToNewCString();
+            nsCOMPtr<nsIRDFResource> res;
+            rv = rdf->GetResource(uriString, getter_AddRefs(res));
+            if (NS_SUCCEEDED(rv))
+            {
+                nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(res, &rv));
+                if (NS_SUCCEEDED(rv) && folder)
+                {
+                    *pFolder = folder;
+                    NS_ADDREF(*pFolder);
+                }
+            }
+            delete [] uriString;
+        }
+        PR_FREEIF(uri);
+    }
+    return rv;
+}
+
+
+NS_IMETHODIMP  nsImapIncomingServer::OnlineFolderDelete(const char *aFolderName) 
+{
+	return NS_OK;
+}
+
+NS_IMETHODIMP  nsImapIncomingServer::OnlineFolderCreateFailed(const char *aFolderName) 
+{
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsImapIncomingServer::OnlineFolderRename(const char *oldName, const char *newName)
+{
+    nsresult rv = NS_ERROR_FAILURE;
+    if (newName && *newName)
+    {
+        nsCOMPtr<nsIFolder> iFolder;
+        nsCOMPtr<nsIMsgImapMailFolder> parent;
+        nsCOMPtr<nsIMsgFolder> me;
+        rv = GetFolder(oldName, getter_AddRefs(me));
+        if (NS_FAILED(rv)) return rv;
+        rv = me->GetParent(getter_AddRefs(iFolder));
+        if (NS_SUCCEEDED(rv))
+        {
+            parent = do_QueryInterface(iFolder, &rv);
+            if (NS_SUCCEEDED(rv))
+                    parent->RemoveSubFolder(me);
+        }
+        nsCOMPtr<nsIFolder> rootFolder;
+        rv = GetRootFolder(getter_AddRefs(rootFolder));
+        if (NS_SUCCEEDED(rv))
+        {
+            nsCOMPtr<nsIMsgImapMailFolder> imapRootFolder =
+                do_QueryInterface(rootFolder, &rv);
+            if (NS_SUCCEEDED(rv))
+            rv = imapRootFolder->CreateClientSubfolderInfo(newName);
+        }
+    }
+	return rv;
+}
+
 
 NS_IMETHODIMP nsImapIncomingServer::DiscoveryDone()
 {
@@ -1238,6 +1319,20 @@ NS_IMETHODIMP  nsImapIncomingServer::SetUserAuthenticated(PRBool authenticated)
 /* void SetMailServerUrls (in string manageMailAccount, in string manageLists, in string manageFilters); */
 NS_IMETHODIMP  nsImapIncomingServer::SetMailServerUrls(const char *manageMailAccount, const char *manageLists, const char *manageFilters)
 {
+	return SetManageMailAccountUrl((char *) manageMailAccount);
+}
+
+NS_IMETHODIMP nsImapIncomingServer::SetManageMailAccountUrl(char *manageMailAccountUrl)
+{
+	m_manageMailAccountUrl = manageMailAccountUrl;
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsImapIncomingServer::GetManageMailAccountUrl(char **manageMailAccountUrl)
+{
+	if (!manageMailAccountUrl)
+		return NS_ERROR_NULL_POINTER;
+
+	*manageMailAccountUrl = m_manageMailAccountUrl.ToNewCString();
+	return NS_OK;
+}
