@@ -1018,14 +1018,18 @@ public class Codegen extends Interpreter {
         startNewMethod("main", "([Ljava/lang/String;)V", 1, true, true);
 
         push(this.name);        // load the name of this class
+        classFile.add(ByteCode.INVOKESTATIC,
+                      "java/lang/Class",
+                      "forName",
+                      "(Ljava/lang/String;)",
+                      "Ljava/lang/Class;");
         addByteCode(ByteCode.ALOAD_0); // load 'args'
         addScriptRuntimeInvoke("main",
-                              "(Ljava/lang/String;[Ljava/lang/String;)",
+                              "(Ljava/lang/Class;[Ljava/lang/String;)",
                               "V");
         addByteCode(ByteCode.RETURN);
         finishMethod(cx, null);
     }
-
 
     private void generateExecute(Context cx) {
         String signature = "(Lorg/mozilla/javascript/Context;" +

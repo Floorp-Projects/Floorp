@@ -1818,34 +1818,31 @@ public class ScriptRuntime {
         return new ImporterTopLevel(cx);
     }
 
-    public static void main(String scriptClassName, String[] args)
+    public static void main(Class scriptClass, String[] args)
         throws JavaScriptException
     {
         Context cx = Context.enter();
-        ScriptableObject global = getGlobal(cx);
-
-        // get the command line arguments and define "arguments"
-        // array in the top-level object
-        Scriptable argsObj = cx.newArray(global, args);
-        global.defineProperty("arguments", argsObj,
-                              ScriptableObject.DONTENUM);
-
         try {
-            Class cl = loadClassName(scriptClassName);
-            Script script = (Script) cl.newInstance();
+            Script script = null;
+            try {
+                script = (Script)scriptClass.newInstance();
+            } catch (InstantiationException e) {
+            } catch (IllegalAccessException e) {
+            }
+            if (script == null) {
+                throw new RuntimeException("Error creating script object");
+            }
+            ScriptableObject global = getGlobal(cx);
+
+            // get the command line arguments and define "arguments"
+            // array in the top-level object
+            Scriptable argsObj = cx.newArray(global, args);
+            global.defineProperty("arguments", argsObj,
+                                  ScriptableObject.DONTENUM);
             script.exec(cx, global);
-            return;
-        }
-        catch (ClassNotFoundException e) {
-        }
-        catch (InstantiationException e) {
-        }
-        catch (IllegalAccessException e) {
-        }
-        finally {
+        } finally {
             Context.exit();
         }
-        throw new RuntimeException("Error creating script object");
     }
 
     public static Scriptable initScript(Context cx, Scriptable scope,
