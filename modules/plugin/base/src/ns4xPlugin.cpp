@@ -1242,6 +1242,10 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
       }
       break;
     
+    case NPPVpluginKeepLibraryInMemory: {
+      NPBool bCached = (result != nsnull);
+      return inst->SetCached(bCached);
+    }
 
     default:
       return NPERR_NO_ERROR;

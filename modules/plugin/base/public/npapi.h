@@ -38,7 +38,7 @@
 
 
 /*
- *  npapi.h $Revision: 3.21 $
+ *  npapi.h $Revision: 3.22 $
  *  Netscape client plug-in API spec
  */
 
@@ -312,7 +312,7 @@ typedef enum {
   NPPVpluginDescriptionString,
   NPPVpluginWindowBool,
   NPPVpluginTransparentBool,
-  NPPVjavaClass,
+  NPPVjavaClass,                /* Not implemented in Mozilla 1.0 */
   NPPVpluginWindowSize,
   NPPVpluginTimerInterval,
 
@@ -320,7 +320,8 @@ typedef enum {
   NPPVpluginScriptableIID = 11,
 
   /* 12 and over are available on Mozilla builds starting with 0.9.9 */
-  NPPVjavascriptPushCallerBool = 12
+  NPPVjavascriptPushCallerBool = 12,
+  NPPVpluginKeepLibraryInMemory = 13   /* available in Mozilla 1.0 */
 } NPPVariable;
 
 /*
@@ -521,7 +522,7 @@ enum NPEventType {
 #define NPVERS_WIN16_HAS_LIVECONNECT 9
 #define NPVERS_68K_HAS_LIVECONNECT   11
 #define NPVERS_HAS_WINDOWLESS        11
-
+#define NPVERS_HAS_XPCONNECT_SCRIPTING 13
 
 /*----------------------------------------------------------------------*/
 /*                        Function Prototypes                           */

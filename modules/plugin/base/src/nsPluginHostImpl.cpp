@@ -5728,21 +5728,14 @@ nsPluginHostImpl::StopPluginInstance(nsIPluginInstance* aInstance)
 
   nsActivePlugin * plugin = mActivePluginList.find(aInstance);
 
-  if(plugin != nsnull)
-  {
+  if(plugin != nsnull) {
     plugin->setStopped(PR_TRUE);  // be sure we set the "stop" bit
 
     // if the plugin does not want to be 'cached' just remove it
     PRBool doCache = PR_TRUE;
     aInstance->GetValue(nsPluginInstanceVariable_DoCacheBool, (void *) &doCache);
 
-    // we also do that for 4x plugin, shall we? Let's see if it is
-    PRBool oldSchool = PR_TRUE;
-    if(plugin->mPluginTag)
-      oldSchool = plugin->mPluginTag->mFlags & NS_PLUGIN_FLAG_OLDSCHOOL ? PR_TRUE : PR_FALSE;
-
-    if (!doCache || oldSchool)
-      {
+    if (!doCache) {
       PRLibrary * library = nsnull;
       if(plugin->mPluginTag)
         library = plugin->mPluginTag->mLibrary;
@@ -5752,9 +5745,8 @@ nsPluginHostImpl::StopPluginInstance(nsIPluginInstance* aInstance)
 
       if(unloadLibLater)
         AddToUnusedLibraryList(library);
-        }
-    else
-    {
+    } 
+    else {
       // if it is allowed to be cached simply stop it, but first we should check 
       // if we haven't exceeded the maximum allowed number of cached instances
 
@@ -5765,11 +5757,9 @@ nsPluginHostImpl::StopPluginInstance(nsIPluginInstance* aInstance)
       if (prefs) rv = prefs->GetIntPref(NS_PREF_MAX_NUM_CACHED_PLUGINS,(int *)&max_num);
       if (NS_FAILED(rv)) max_num = DEFAULT_NUMBER_OF_STOPPED_PLUGINS;
 
-      if(mActivePluginList.getStoppedCount() >= max_num)
-      {
+      if(mActivePluginList.getStoppedCount() >= max_num) {
         nsActivePlugin * oldest = mActivePluginList.findOldestStopped();
-        if(oldest != nsnull)
-        {
+        if(oldest != nsnull) {
           PRLibrary * library = oldest->mPluginTag->mLibrary;
 
           PRBool unloadLibLater = PR_FALSE;
@@ -5781,7 +5771,6 @@ nsPluginHostImpl::StopPluginInstance(nsIPluginInstance* aInstance)
       }
     }
   }
-
   return NS_OK;
 }
 
