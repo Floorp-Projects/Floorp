@@ -1268,7 +1268,8 @@ nsFrame::DidReflow(nsIPresContext* aPresContext,
   NS_FRAME_TRACE_MSG(NS_FRAME_TRACE_CALLS,
                      ("nsFrame::DidReflow: aStatus=%d", aStatus));
   if (NS_FRAME_REFLOW_FINISHED == aStatus) {
-    mState &= ~(NS_FRAME_IN_REFLOW | NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY);
+    mState &= ~(NS_FRAME_IN_REFLOW | NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY |
+                NS_FRAME_HAS_DIRTY_CHILDREN);
   }
 
   return NS_OK;
@@ -2563,6 +2564,14 @@ nsresult nsFrame::GetClosestViewForFrame(nsIPresContext* aPresContext,
   return result;
 }
 
+
+NS_IMETHODIMP
+nsFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
+{
+  NS_ASSERTION(0, "nsFrame::ReflowDirtyChild() should never be called.");  
+  return NS_ERROR_NOT_IMPLEMENTED;    
+}
+
 //-----------------------------------------------------------------------------------
 
 
@@ -2722,5 +2731,33 @@ nsFrame::VerifyDirtyBitSet(nsIFrame* aFrameList)
     f->GetFrameState(&frameState);
     NS_ASSERTION(frameState & NS_FRAME_IS_DIRTY, "dirty bit not set");
   }
+}
+
+nsresult nsFrame::CreateAndPostReflowCommand(nsIPresShell*                aPresShell,
+                                             nsIFrame*                    aTargetFrame,
+                                             nsIReflowCommand::ReflowType aReflowType,
+                                             nsIFrame*                    aChildFrame,
+                                             nsIAtom*                     aAttribute,
+                                             nsIAtom*                     aListName)
+{
+  nsresult rv;
+
+  if (!aPresShell || !aTargetFrame) {
+    rv = NS_ERROR_NULL_POINTER;
+  }
+  else {
+    nsCOMPtr<nsIReflowCommand> reflowCmd;
+    rv = NS_NewHTMLReflowCommand(getter_AddRefs(reflowCmd), aTargetFrame,
+                                 aReflowType, aChildFrame, 
+                                 aAttribute);
+    if (NS_SUCCEEDED(rv)) {
+      if (nsnull != aListName) {
+        reflowCmd->SetChildListName(aListName);
+      }
+      aPresShell->AppendReflowCommand(reflowCmd);    
+    }
+  } 
+
+  return rv;
 }
 #endif

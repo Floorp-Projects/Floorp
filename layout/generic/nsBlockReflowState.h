@@ -1462,6 +1462,9 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
     DrainOverflowLines(aPresContext);
     rv = PrepareInitialReflow(state);
     mState &= ~NS_FRAME_FIRST_REFLOW;
+    break;  
+
+  case eReflowReason_Dirty:    
     break;
 
   case eReflowReason_Incremental:
@@ -1529,9 +1532,9 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
     }
   }
 
-// XXX_pref get rid of this!
+  // XXX_pref get rid of this!
   BuildFloaterList();
-
+  
   // Compute our final size
   ComputeFinalSize(aReflowState, state, aMetrics);
 
@@ -1580,7 +1583,8 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
   
   // If this is an incremental reflow and we changed size, then make sure our
   // border is repainted if necessary
-  if (eReflowReason_Incremental == aReflowState.reason) {
+  if (eReflowReason_Incremental == aReflowState.reason ||
+      eReflowReason_Dirty == aReflowState.reason) {
     if (isStyleChange) {
       // Lots of things could have changed so damage our entire
       // bounds
@@ -2084,38 +2088,47 @@ nsBlockFrame::PrepareChildIncrementalReflow(nsBlockReflowState& aState)
     return PrepareResizeReflow(aState);
   }
 
+  // Figure out which line to mark dirty.
+  MarkLineDirty(line, prevLine);
+
+  return NS_OK;
+}
+
+nsresult
+nsBlockFrame::MarkLineDirty(nsLineBox* aLine, nsLineBox* aPrevLine)
+{
   // If the line that was affected is a block then just mark it dirty
   // so that we reflow it.
-  if (line->IsBlock()) {
-    line->MarkDirty();
+  if (aLine->IsBlock()) {
+    aLine->MarkDirty();
 #ifdef DEBUG
     if (gNoisyReflow) {
       IndentBy(stdout, gNoiseIndent);
       ListTag(stdout);
-      printf(": mark line %p dirty\n", line);
+      printf(": mark line %p dirty\n", aLine);
     }
 #endif
   }
   else {
     // Mark previous line dirty if its an inline line so that it can
     // maybe pullup something from the line just affected.
-    if (prevLine && !prevLine->IsBlock()) {
-      prevLine->MarkDirty();
+    if (aPrevLine && !aPrevLine->IsBlock()) {
+      aPrevLine->MarkDirty();
 #ifdef DEBUG
       if (gNoisyReflow) {
         IndentBy(stdout, gNoiseIndent);
         ListTag(stdout);
-        printf(": mark prev-line %p dirty\n", prevLine);
+        printf(": mark prev-line %p dirty\n", aPrevLine);
       }
 #endif
     }
     else {
-      line->MarkDirty();
+      aLine->MarkDirty();
 #ifdef DEBUG
       if (gNoisyReflow) {
         IndentBy(stdout, gNoiseIndent);
         ListTag(stdout);
-        printf(": mark line %p dirty\n", line);
+        printf(": mark line %p dirty\n", aLine);
       }
 #endif
     }
@@ -2494,7 +2507,9 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
 
   // Check whether this is an incremental reflow
   PRBool  incrementalReflow = aState.mReflowState.reason ==
-                              eReflowReason_Incremental;
+                              eReflowReason_Incremental ||
+                              aState.mReflowState.reason ==
+                              eReflowReason_Dirty;
   
   // Reflow the lines that are already ours
   aState.mPrevLine = nsnull;
@@ -3736,7 +3751,7 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
   PRUint8 lineReflowStatus = LINE_REFLOW_OK;
   PRInt32 i;
   nsIFrame* frame = aLine->mFirstChild;
-  for (i = 0; i < aLine->GetChildCount(); i++) {
+  for (i = 0; i < aLine->GetChildCount(); i++) {      
     rv = ReflowInlineFrame(aState, aLineLayout, aLine, frame,
                            &lineReflowStatus);
     if (NS_FAILED(rv)) {
@@ -5987,6 +6002,62 @@ nsBlockFrame::GetFrameForPoint(nsIPresContext* aPresContext,
     }
   }
   return rv;
+}
+
+NS_IMETHODIMP
+nsBlockFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
+{  
+  // Mark the line containing the child frame dirty.
+  if (aChild) {    
+    PRBool isFloater;
+    nsLineBox* prevLine;
+    nsLineBox* line = FindLineFor(aChild, &prevLine, &isFloater);
+    
+    if (!isFloater) {
+      if (line) MarkLineDirty(line, prevLine);
+    }
+    else {
+      line = mLines;
+      while (nsnull != line) {
+        line->MarkDirty();
+        line = line->mNext;
+      }
+#ifdef DEBUG_nisheeth      
+      NS_ASSERTION(0, "nsBlockFrame::ReflowDirtyChild: Marked all lines dirty.");
+#endif
+    }
+  }
+
+  // Either generate a reflow command to reflow the dirty child or 
+  // coalesce this reflow request with an existing reflow command    
+  if (!(mState & NS_FRAME_HAS_DIRTY_CHILDREN)) {
+    // If this is the first dirty child, 
+    // post a dirty children reflow command targeted at yourself
+    mState |= NS_FRAME_HAS_DIRTY_CHILDREN;
+
+    nsFrame::CreateAndPostReflowCommand(aPresShell, this, 
+      nsIReflowCommand::ReflowDirty, nsnull, nsnull, nsnull);
+  }
+  else {
+    if (!(mState & NS_FRAME_IS_DIRTY)) {
+      // If the parent frame is not an area frame
+      nsCOMPtr<nsIAtom> frameType;
+      mParent->GetFrameType(getter_AddRefs(frameType));      
+      if (frameType.get() != nsLayoutAtoms::areaFrame) {
+        // Mark yourself as dirty
+        mState |= NS_FRAME_IS_DIRTY;
+
+        // Cancel the dirty children reflow command you posted earlier
+        nsIReflowCommand::ReflowType type = nsIReflowCommand::ReflowDirty;
+        aPresShell->CancelReflowCommand(this, &type);
+
+        // Pass up the reflow request to the parent frame.
+        mParent->ReflowDirtyChild(aPresShell, this);
+      }
+    }
+  }
+  
+  return NS_OK;
 }
 
 //////////////////////////////////////////////////////////////////////

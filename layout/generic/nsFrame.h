@@ -31,6 +31,7 @@
 #endif
 
 #include "nsIPresShell.h"
+#include "nsIReflowCommand.h"
 
 /**
  * nsFrame logging constants. We redefine the nspr
@@ -254,8 +255,8 @@ public:
   NS_IMETHOD  SetSelected(nsIPresContext* aPresContext, nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread);
   NS_IMETHOD  GetSelected(PRBool *aSelected) const;
   NS_IMETHOD  PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos) ;
-
   NS_IMETHOD  GetOffsets(PRInt32 &aStart, PRInt32 &aEnd) const;
+  NS_IMETHOD  ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild);
 
   // nsIHTMLReflow
   NS_IMETHOD  WillReflow(nsIPresContext* aPresContext);
@@ -323,6 +324,13 @@ public:
   virtual nsresult GetClosestViewForFrame(nsIPresContext* aPresContext,
                                           nsIFrame *aFrame,
                                           nsIView **aView);
+
+  static nsresult CreateAndPostReflowCommand(nsIPresShell*                aPresShell,
+                                             nsIFrame*                    aTargetFrame,
+                                             nsIReflowCommand::ReflowType aReflowType,
+                                             nsIFrame*                    aChildFrame,
+                                             nsIAtom*                     aAttribute,
+                                             nsIAtom*                     aListName);
 
 #ifdef NS_DEBUG
   /**

@@ -26,6 +26,7 @@
 #include "nsISupports.h"
 #include "nsCoord.h"
 #include "nsIDOMSelection.h"
+#include "nsIReflowCommand.h"
 
 class nsIContent;
 class nsIDocument;
@@ -34,7 +35,6 @@ class nsIFrame;
 class nsIPresContext;
 class nsIStyleSet;
 class nsIViewManager;
-class nsIReflowCommand;
 class nsIDeviceContext;
 class nsIRenderingContext;
 class nsIPageSequenceFrame;
@@ -228,7 +228,7 @@ public:
    * Reflow commands
    */
   NS_IMETHOD AppendReflowCommand(nsIReflowCommand* aReflowCommand) = 0;
-  NS_IMETHOD CancelReflowCommand(nsIFrame* aTargetFrame) = 0;
+  NS_IMETHOD CancelReflowCommand(nsIFrame* aTargetFrame, nsIReflowCommand::ReflowType* aCmdType) = 0;
   NS_IMETHOD ProcessReflowCommands() = 0;
 
   NS_IMETHOD ClearFrameRefs(nsIFrame* aFrame) = 0;

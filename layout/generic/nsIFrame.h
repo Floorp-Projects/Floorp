@@ -165,6 +165,9 @@ typedef PRUint32 nsFrameState;
 // If this bit is set then the frame is unflowable.
 #define NS_FRAME_IS_UNFLOWABLE 0x00000800
 
+// If this bit is set, the frame has dirty children.
+#define NS_FRAME_HAS_DIRTY_CHILDREN 0x00001000
+
 // The low 16 bits of the frame state word are reserved by this API.
 #define NS_FRAME_RESERVED 0x0000FFFF
 
@@ -950,6 +953,13 @@ public:
    *  @param aPOS is defined in nsIFrameSelection
    */
   NS_IMETHOD  PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos) = 0;
+
+  /**
+   *  Called by a child frame on a parent frame to tell the parent frame that the child needs
+   *  to be reflowed.  The parent should either propagate the request to its parent frame or 
+   *  handle the request by generating a nsIReflowCommand::ReflowDirtyChildren reflow command.
+   */
+  NS_IMETHOD ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild) = 0;
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;

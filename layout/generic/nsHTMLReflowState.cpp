@@ -70,11 +70,11 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*      aPresContext,
                                      const nsSize&        aAvailableSpace)
   : mReflowDepth(0)
 {
-  NS_PRECONDITION(nsnull != aRenderingContext, "no rendering context");
+  NS_PRECONDITION(nsnull != aRenderingContext, "no rendering context");  
 
+  reason = eReflowReason_Incremental;
   parentReflowState = nsnull;
   frame = aFrame;
-  reason = eReflowReason_Incremental;
   reflowCommand = &aReflowCommand;
   availableWidth = aAvailableSpace.width;
   availableHeight = aAvailableSpace.height;

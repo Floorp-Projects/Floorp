@@ -106,6 +106,7 @@ public:
   NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
                          nsGUIEvent*     aEvent,
                          nsEventStatus*  aEventStatus);
+  NS_IMETHOD ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild);
 
   // nsIHTMLReflow
   NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
@@ -207,6 +208,9 @@ protected:
                      nsLineBox* aLine,
                      PRBool* aKeepReflowGoing,
                      PRBool aUpdateMaximumWidth);
+
+  nsresult MarkLineDirty (nsLineBox* aLine, 
+                          nsLineBox* aPrevLine);
 
   // XXX blech
   void PostPlaceLine(nsBlockReflowState& aState,
