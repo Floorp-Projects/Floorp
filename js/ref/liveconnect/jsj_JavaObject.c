@@ -496,60 +496,6 @@ JavaObject_enumerate(JSContext *cx, JSObject *obj)
     return JS_TRUE;
 }
 
-#ifdef NO_JSOBJECTOPS
-JSBool
-JavaObject_getProperty(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
-{
-    jsid id;
-    JS_ValueToId(cx, idval, &id);
-    return JavaObject_getPropertyById(cx, obj, id, vp);
-}
-
-PR_STATIC_CALLBACK(JSBool)
-JavaObject_setProperty(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
-{
-    jsid id;
-    JS_ValueToId(cx, idval, &id);
-    return JavaObject_setPropertyById(cx, obj, id, vp);
-}
-
-/*
- * Resolve a component name to be either the name of a static field or a static method
- */
-PR_CALLBACK JSBool
-JavaObject_resolve(JSContext *cx, JSObject *obj, jsval idval)
-{
-    const char *member_name;
-    jsid id;
-    JNIEnv *jEnv;
-    
-    /* printf("In JavaObject_resolve\n"); */
-    
-    /* Prototype object has no properties */
-    if (!JS_GetPrivate(cx, obj))
-        return JS_TRUE;
-
-    /* Get the Java per-thread environment pointer for this JSContext */
-    jsj_MapJSContextToJSJThread(cx, &jEnv);
-    if (!jEnv)
-        return JS_FALSE;
-    
-    JS_ValueToId(cx, idval, &id);
-    if (!lookup_member_by_id(cx, jEnv, obj, NULL, id, NULL))
-        return JS_FALSE;
-    member_name = JS_GetStringBytes(JSVAL_TO_STRING(idval));
-    return JS_DefineProperty(cx, obj, member_name, JSVAL_VOID, 0, 0,
-                             JSPROP_PERMANENT|JSPROP_ENUMERATE);
-}
-
-JSClass JavaObject_class = {
-    "JavaObject", JSCLASS_HAS_PRIVATE,
-    JS_PropertyStub, JS_PropertyStub, JavaObject_getProperty, JavaObject_setProperty,
-    JavaObject_enumerate, JavaObject_resolve,
-    JavaObject_convert, JavaObject_finalize
-};
-
-#else   /* !NO_JSOBJECTOPS */
 
 static JSBool
 JavaObject_lookupProperty(JSContext *cx, JSObject *obj, jsid id,
@@ -732,15 +678,12 @@ JSClass JavaObject_class = {
 
 extern PR_IMPORT_DATA(JSObjectOps) js_ObjectOps;
 
-#endif  /* !NO_JSOBJECTOPS */
 
 JSBool
 jsj_init_JavaObject(JSContext *cx, JSObject *global_obj)
 {
-#ifndef NO_JSOBJECTOPS
     JavaObject_ops.newObjectMap = js_ObjectOps.newObjectMap;
     JavaObject_ops.destroyObjectMap = js_ObjectOps.destroyObjectMap;
-#endif
 
     if (!JS_InitClass(cx, global_obj, 
         0, &JavaObject_class, 0, 0,

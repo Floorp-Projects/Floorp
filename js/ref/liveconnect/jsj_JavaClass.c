@@ -56,22 +56,6 @@ JavaClass_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 
     switch(type) {
 
-#ifdef NO_JSOBJECTOPS
-        Is this really needed ?
-    case JSTYPE_FUNCTION:
-    {
-        JSFunction *function;
-        JSObject *function_obj;
-        function = JS_NewFunction(cx, jsj_JavaConstructorWrapper, 0,
-                                  JSFUN_BOUND_METHOD, obj, "<init>");
-        if (!function)
-            return JS_FALSE;
-        function_obj = JS_GetFunctionObject(function);
-        *vp = OBJECT_TO_JSVAL(function_obj);
-
-        return JS_TRUE;
-    }
-#endif
 
     case JSTYPE_STRING:
         /* Convert '/' to '.' so that it looks like Java language syntax. */
@@ -252,75 +236,6 @@ JavaClass_finalize(JSContext *cx, JSObject *obj)
     jsj_ReleaseJavaClassDescriptor(cx, jEnv, class_descriptor);
 }
 
-#ifdef NO_JSOBJECTOPS
-
-PR_STATIC_CALLBACK(JSBool)
-JavaClass_getProperty(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
-{
-    jsid id;
-    JS_ValueToId(cx, idval, &id);
-    return JavaClass_getPropertyById(cx, obj, id, vp);
-}
-
-PR_STATIC_CALLBACK(JSBool)
-JavaClass_setProperty(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
-{
-    jsid id;
-    JS_ValueToId(cx, idval, &id);
-    return JavaClass_setPropertyById(cx, obj, id, vp);
-}
-
-PR_STATIC_CALLBACK(JSBool)
-JavaClass_enumerate(JSContext *cx, JSObject *obj)
-{
-    JavaMemberDescriptor *member_descriptor;
-    JavaClassDescriptor *class_descriptor;
-    JNIEnv *jEnv;
-    
-/*    printf("In JavaClass_enumerate\n");*/
-
-    /* Get the Java per-thread environment pointer for this JSContext */
-    jsj_MapJSContextToJSJThread(cx, &jEnv);
-    if (!jEnv)
-        return JS_FALSE;
-
-    class_descriptor = JS_GetPrivate(cx, obj);
-    if (!class_descriptor)
-        return JS_FALSE;
-    
-    member_descriptor = jsj_GetClassStaticMembers(cx, jEnv, class_descriptor);
-    while (member_descriptor) {
-        JS_DefineProperty(cx, obj, member_descriptor->name, JSVAL_VOID, 0, 0,
-                          JSPROP_PERMANENT|JSPROP_ENUMERATE);
-        member_descriptor = member_descriptor->next;
-    }
-    return JS_TRUE;
-}
-
-/*
- * Resolve a component name to be either the name of a static field or a static method
- */
-PR_STATIC_CALLBACK(JSBool)
-JavaClass_resolve(JSContext *cx, JSObject *obj, jsval idval)
-{
-'    const char *member_name;
-    jsid id;
-    
-    /* Get the Java per-thread environment pointer for this JSContext */
-    jsj_MapJSContextToJSJThread(cx, &jEnv);
-    if (!jEnv)
-        return JS_FALSE;
-
-    JS_ValueToId(cx, idval, &id);
-
-    if (!lookup_static_member_by_id(cx, obj, NULL, id, NULL))
-        return JS_FALSE;
-    member_name = JS_GetStringBytes(JSVAL_TO_STRING(idval));
-    return JS_DefineProperty(cx, obj, member_name, JSVAL_VOID, 0, 0,
-                             JSPROP_PERMANENT|JSPROP_ENUMERATE);
-}
-
-#else   /* !NO_JSOBJECTOPS */
 
 static JSBool
 JavaClass_lookupProperty(JSContext *cx, JSObject *obj, jsid id,
@@ -540,7 +455,6 @@ JavaClass_getObjectOps(JSContext *cx, JSClass *clazz)
     return &JavaClass_ops;
 }
 
-#endif  /* !NO_JSOBJECTOPS */
 
 JSClass JavaClass_class = {
     "JavaClass", JSCLASS_HAS_PRIVATE,

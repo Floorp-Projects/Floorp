@@ -149,109 +149,6 @@ JavaArray_setPropertyById(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return access_java_array_element(cx, jEnv, obj, id, vp, JS_TRUE);
 }
 
-#ifdef NO_JSOBJECTOPS
-
-PR_STATIC_CALLBACK(JSBool)
-JavaArray_enumerate(JSContext *cx, JSObject *obj)
-{
-    jarray java_array;
-    JavaClassDescriptor *class_descriptor;
-    JavaObjectWrapper *java_wrapper;
-    jsize array_length, index;
-    
-    /* printf("In JavaArray_enumerate\n"); */
-    
-    java_wrapper = JS_GetPrivate(cx, obj);
-
-    /* Check if this is the prototype object */
-    if (!java_wrapper)
-        return JS_TRUE;
-
-    class_descriptor = java_wrapper->class_descriptor;
-    java_array = java_wrapper->java_obj;
-    
-    PR_ASSERT(class_descriptor->type == JAVA_SIGNATURE_ARRAY);
-
-    array_length = (*jEnv)->GetArrayLength(jEnv, java_array);
-    for (index = 0; index < array_length; index++) {
-        if (!JS_DefineElement(cx, obj, index, JSVAL_VOID,
-                              0, 0, JSPROP_ENUMERATE))
-            return JS_FALSE;
-    }
-    return JavaObject_enumerate(cx, obj);
-}
-
-JSBool
-JavaArray_getProperty(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
-{
-    jsid id;
-    JS_ValueToId(cx, idval, &id);
-    return JavaArray_getPropertyById(cx, obj, id, vp);
-}
-
-PR_STATIC_CALLBACK(JSBool)
-JavaArray_setProperty(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
-{
-    jsid id;
-    JS_ValueToId(cx, idval, &id);
-    return JavaArray_setPropertyById(cx, obj, id, vp);
-}
-
-/*
- * Resolve a component name to be either the name of a static field or a static method
- */
-PR_STATIC_CALLBACK(JSBool)
-JavaArray_resolve(JSContext *cx, JSObject *obj, jsval id)
-{
-    jarray java_array;
-    const char *member_name;
-    JavaClassDescriptor *class_descriptor;
-    JavaObjectWrapper *java_wrapper;
-    jsize array_length, index;
-    
-    /* printf("In JavaArray_resolve\n"); */
-    
-    java_wrapper = JS_GetPrivate(cx, obj);
-
-    /* Check for prototype object */
-    if (!java_wrapper)
-        return JS_FALSE;
-
-    class_descriptor = java_wrapper->class_descriptor;
-    java_array = java_wrapper->java_obj;
-    
-    PR_ASSERT(class_descriptor->type == JAVA_SIGNATURE_ARRAY);
-
-    array_length = (*jEnv)->GetArrayLength(jEnv, java_array);
-
-    if (JSVAL_IS_STRING(id)) {
-        member_name = JS_GetStringBytes(JSVAL_TO_STRING(id));
-        if (!strcmp(member_name, "length")) {
-            JS_DefineProperty(cx, obj, "length", INT_TO_JSVAL(array_length),
-                              0, 0, JSPROP_READONLY);
-            return JS_TRUE;
-        }
-        return JavaObject_resolve(cx, obj, id);
-    }
-
-    if (!JSVAL_IS_INT(id)) {
-        JS_ReportError(cx, "invalid Java array index expression");
-        return JS_FALSE;
-    }
-
-    index = JSVAL_TO_INT(id);
-    return JS_DefineElement(cx, obj, index, JSVAL_VOID,
-                            0, 0, JSPROP_ENUMERATE);
-}
-
-/* The definition of the JS class JavaArray */
-JSClass JavaArray_class = {
-    "JavaArray", JSCLASS_HAS_PRIVATE,
-    JS_PropertyStub, JS_PropertyStub, JavaArray_getProperty, JavaArray_setProperty,
-    JavaArray_enumerate, JavaArray_resolve,
-    JavaObject_convert, JavaObject_finalize
-};
-#else
 static JSBool
 JavaArray_lookupProperty(JSContext *cx, JSObject *obj, jsid id,
                          JSObject **objp, JSProperty **propp
@@ -426,16 +323,13 @@ JSClass JavaArray_class = {
 
 extern PR_IMPORT_DATA(JSObjectOps) js_ObjectOps;
 
-#endif  /* NO_JSOBJECTOPS */
 
 /* Initialize the JS JavaArray class */
 JSBool
 jsj_init_JavaArray(JSContext *cx, JSObject *global_obj)
 {
-#ifndef NO_JSOBJECTOPS
     JavaArray_ops.newObjectMap = js_ObjectOps.newObjectMap;
     JavaArray_ops.destroyObjectMap = js_ObjectOps.destroyObjectMap;
-#endif
 
     if (!JS_InitClass(cx, global_obj, 
         0, &JavaArray_class, 0, 0,

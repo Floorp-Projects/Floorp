@@ -116,11 +116,7 @@ JavaStringToId(JSContext *cx, JNIEnv *jEnv, jstring jstr, jsid *idp)
         return JS_FALSE;
 
     val = STRING_TO_JSVAL(jsstr);
-#ifndef NO_JSOBJECTOPS
     JS_ValueToId(cx, STRING_TO_JSVAL(jsstr), idp);
-#else
-    *valp = val
-#endif
     return JS_TRUE;
 }
 
