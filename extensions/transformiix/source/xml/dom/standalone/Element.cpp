@@ -223,7 +223,7 @@ MBool Element::getAttr(txAtom* aLocalName, PRInt32 aNSID,
       TX_IF_RELEASE_ATOM(localName);
       return MB_TRUE;
     }
-    TX_RELEASE_IF_ATOM(localName);
+    TX_IF_RELEASE_ATOM(localName);
     item = item->next;
   }
   return MB_FALSE;
