@@ -1250,6 +1250,12 @@ mime_parse_stream_complete (nsMIMESession *stream)
     {
       // save the override flag before it's unavailable
       charsetOverride = mdd->options->override_charset;
+      if ((!mdd->mailcharset || charsetOverride) && mdd->options->default_charset)
+      {
+        PR_Free(mdd->mailcharset);
+        mdd->mailcharset = nsCRT::strdup(mdd->options->default_charset);
+      }
+
       // mscott: aren't we leaking a bunch of trings here like the charset strings and such?
       delete mdd->options;
       mdd->options = 0;
