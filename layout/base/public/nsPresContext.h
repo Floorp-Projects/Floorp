@@ -100,19 +100,21 @@ public:
    * Resolve style for the given piece of content that will be a child
    * of the aParentContext. Don't use this for pseudo frames.
    */
-  virtual nsIStyleContext* ResolveStyleContextFor(nsIContent* aContent,
-                                                  nsIStyleContext* aParentContext,
-                                                  PRBool aForceUnique = PR_FALSE) = 0;
+  NS_IMETHOD ResolveStyleContextFor(nsIContent* aContent,
+                                    nsIStyleContext* aParentContext,
+                                    nsIStyleContext** aStyleContext,
+                                    PRBool aForceUnique = PR_FALSE) = 0;
 
   /**
    * Resolve style for a pseudo frame within the given aParentContent & aParentContext.
    * The tag should be uppercase and inclue the colon.
    * ie: NS_NewAtom(":FIRST-LINE");
    */
-  virtual nsIStyleContext* ResolvePseudoStyleContextFor(nsIContent* aParentContent,
-                                                        nsIAtom* aPseudoTag,
-                                                        nsIStyleContext* aParentContext,
-                                                        PRBool aForceUnique = PR_FALSE) = 0;
+  NS_IMETHOD ResolvePseudoStyleContextFor(nsIContent* aParentContent,
+                                          nsIAtom* aPseudoTag,
+                                          nsIStyleContext* aParentContext,
+                                          nsIStyleContext** aStyleContext,
+                                          PRBool aForceUnique = PR_FALSE) = 0;
 
   /**
    * Probe style for a pseudo frame within the given aParentContent & aParentContext.

@@ -46,13 +46,15 @@ public:
   NS_IMETHOD GetCompatibilityMode(nsCompatibility& aMode);
   NS_IMETHOD SetCompatibilityMode(nsCompatibility aMode);
   NS_IMETHOD GetBaseURL(nsIURL*& aURL);
-  virtual nsIStyleContext* ResolveStyleContextFor(nsIContent* aContent,
-                                                  nsIStyleContext* aParentContext,
-                                                  PRBool aForceUnique = PR_FALSE);
-  virtual nsIStyleContext* ResolvePseudoStyleContextFor(nsIContent* aParentContent,
-                                                        nsIAtom* aPseudoTag,
-                                                        nsIStyleContext* aParentContext,
-                                                        PRBool aForceUnique = PR_FALSE);
+  NS_IMETHOD ResolveStyleContextFor(nsIContent* aContent,
+                                    nsIStyleContext* aParentContext,
+                                    nsIStyleContext** aStyleContext,
+                                    PRBool aForceUnique = PR_FALSE);
+  NS_IMETHOD ResolvePseudoStyleContextFor(nsIContent* aParentContent,
+                                          nsIAtom* aPseudoTag,
+                                          nsIStyleContext* aParentContext,
+                                          nsIStyleContext** aStyleContext,
+                                          PRBool aForceUnique = PR_FALSE);
   virtual nsIStyleContext* ProbePseudoStyleContextFor(nsIContent* aParentContent,
                                                       nsIAtom* aPseudoTag,
                                                       nsIStyleContext* aParentContext,

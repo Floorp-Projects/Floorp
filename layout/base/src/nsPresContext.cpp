@@ -286,9 +286,10 @@ nsPresContext::GetBaseURL(nsIURL*& aURL)
   return NS_OK;
 }
 
-nsIStyleContext*
+NS_IMETHODIMP
 nsPresContext::ResolveStyleContextFor(nsIContent* aContent,
                                       nsIStyleContext* aParentContext,
+                                      nsIStyleContext** aStyleContext,
                                       PRBool aForceUnique)
 {
   nsIStyleContext* result = nsnull;
@@ -299,13 +300,15 @@ nsPresContext::ResolveStyleContextFor(nsIContent* aContent,
     NS_RELEASE(set);
   }
 
-  return result;
+  *aStyleContext = result;
+  return nsnull == result ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
 }
 
-nsIStyleContext*
+NS_IMETHODIMP
 nsPresContext::ResolvePseudoStyleContextFor(nsIContent* aParentContent,
                                             nsIAtom* aPseudoTag,
                                             nsIStyleContext* aParentContext,
+                                            nsIStyleContext** aStyleContext,
                                             PRBool aForceUnique)
 {
   nsIStyleContext* result = nsnull;
@@ -316,7 +319,8 @@ nsPresContext::ResolvePseudoStyleContextFor(nsIContent* aParentContent,
     NS_RELEASE(set);
   }
 
-  return result;
+  *aStyleContext = result;
+  return nsnull == result ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
 }
 
 nsIStyleContext*
