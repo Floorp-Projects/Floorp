@@ -47,8 +47,7 @@ MAKE_OBJ_TYPE=EXE
 #// install headers
 #//
 #//------------------------------------------------------------------------
-INSTALL_DIR=$(XPDIST)\include
-INSTALL_FILE_LIST= nsres.h cdefs.h mcom_db.h ncompat.h winfile.h
+EXPORTS=nsres.h cdefs.h mcom_db.h ncompat.h winfile.h
 
 #//------------------------------------------------------------------------
 #//
@@ -58,6 +57,4 @@ INSTALL_FILE_LIST= nsres.h cdefs.h mcom_db.h ncompat.h winfile.h
 include <$(DEPTH)/config/rules.mak>
 
 CFLAGS = $(CFLAGS) -DMOZILLA_CLIENT
-
-export:: INSTALL_FILES
 
