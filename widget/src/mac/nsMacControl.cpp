@@ -100,7 +100,7 @@ PRBool nsMacControl::OnPaint(nsPaintEvent &aEvent)
 		Boolean		isVisible = IsControlVisible(mControl);
 		::SetControlVisibility(mControl, false, false);
 
-		// draw the control
+		// update title
 		if (mLabel != mLastLabel)
 		{
 			mLastLabel = mLabel;
@@ -109,6 +109,7 @@ PRBool nsMacControl::OnPaint(nsPaintEvent &aEvent)
 			::SetControlTitle(mControl, aStr);
 		}
 
+		// update bounds
 		if (mBounds != mLastBounds)
 		{
 			nsRect ctlRect;
@@ -124,6 +125,7 @@ PRBool nsMacControl::OnPaint(nsPaintEvent &aEvent)
 			mLastBounds = mBounds;
 		}
 
+		// update value
 		if (mValue != mLastValue)
 		{
 			mLastValue = mValue;
@@ -133,6 +135,7 @@ PRBool nsMacControl::OnPaint(nsPaintEvent &aEvent)
 				::SetControlValue(mControl, mValue);
 		}
 
+		// update hilite
 		PRInt16 hilite;
 		if (mEnabled)
 			hilite = (mWidgetArmed && mMouseInButton ? 1 : 0);
@@ -145,12 +148,23 @@ PRBool nsMacControl::OnPaint(nsPaintEvent &aEvent)
 		}
 
 		::SetControlVisibility(mControl, isVisible, false);
+
+		// Erase the widget rect (which can be larger than the control rect).
+		// Note: this should paint the backgrount with the right color but
+		// it doesn't work right now, see bug #5685 for more info.
+		Rect macRect;
+		nsRect bounds = mBounds;
+		bounds.x = bounds. y = 0;
+		nsRectToMacRect(bounds, macRect);
+		::EraseRect(&macRect);
+
+		// Draw the control
 		::DrawOneControl(mControl);
+
 #if TARGET_CARBON
-		Rect bounds;
-		::ValidWindowRect(mWindowPtr, ::GetControlBounds(mControl, &bounds));
+		::ValidWindowRect(mWindowPtr, &macRect);
 #else
-		::ValidRect(&(*mControl)->contrlRect);
+		::ValidRect(&macRect);
 #endif
 	}
 	return PR_FALSE;
