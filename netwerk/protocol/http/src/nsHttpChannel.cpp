@@ -453,6 +453,14 @@ nsHttpChannel::ProcessNormal()
         mResponseHead->SetHeader(nsHttp::Content_Encoding, nsnull); 
     }
 
+    // this must be called before firing OnStartRequest, since http clients,
+    // such as imagelib, expect our cache entry to already have the correct
+    // expiration time (bug 87710).
+    if (mCacheEntry) {
+        rv = InitCacheEntry();
+        if (NS_FAILED(rv)) return rv;
+    }
+
     rv = mListener->OnStartRequest(this, mListenerContext);
     if (NS_FAILED(rv)) return rv;
 
@@ -460,12 +468,10 @@ nsHttpChannel::ProcessNormal()
     ApplyContentConversions();
 
     // install cache listener if we still have a cache entry open
-    if (mCacheEntry) {
-        rv = CacheReceivedResponse();
-        if (NS_FAILED(rv)) return rv;
-    }
+    if (mCacheEntry)
+        rv = InstallCacheListener();
 
-    return NS_OK;
+    return rv;
 }
 
 //-----------------------------------------------------------------------------
@@ -625,24 +631,26 @@ nsHttpChannel::GenerateCacheKey(nsACString &cacheKey)
 nsresult
 nsHttpChannel::UpdateExpirationTime()
 {
-    nsresult rv;
-    PRUint32 now = NowInSeconds();
-    PRUint32 freshnessLifetime, currentAge, timeRemaining = 0;
+    PRUint32 now = NowInSeconds(), timeRemaining = 0;
 
     NS_ENSURE_TRUE(mResponseHead, NS_ERROR_FAILURE);
 
-    rv = mResponseHead->ComputeCurrentAge(now, mRequestTime, &currentAge); 
-    if (NS_FAILED(rv)) return rv;
+    if (!mResponseHead->MustRevalidate()) {
+        nsresult rv;
+        PRUint32 freshnessLifetime, currentAge;
 
-    rv = mResponseHead->ComputeFreshnessLifetime(&freshnessLifetime);
-    if (NS_FAILED(rv)) return rv;
+        rv = mResponseHead->ComputeCurrentAge(now, mRequestTime, &currentAge); 
+        if (NS_FAILED(rv)) return rv;
 
-    LOG(("freshnessLifetime = %u, currentAge = %u\n",
-        freshnessLifetime, currentAge));
+        rv = mResponseHead->ComputeFreshnessLifetime(&freshnessLifetime);
+        if (NS_FAILED(rv)) return rv;
 
-    if (freshnessLifetime > currentAge)
-        timeRemaining = freshnessLifetime - currentAge;
+        LOG(("freshnessLifetime = %u, currentAge = %u\n",
+            freshnessLifetime, currentAge));
 
+        if (freshnessLifetime > currentAge)
+            timeRemaining = freshnessLifetime - currentAge;
+    }
     return mCacheEntry->SetExpirationTime(now + timeRemaining);
 }
 
@@ -717,7 +725,6 @@ nsHttpChannel::CheckCache()
     }
 
     PRBool doValidation = PR_FALSE;
-    const char *val;
 
     // Be optimistic: assume that we won't need to do validation
     mRequestHead.SetHeader(nsHttp::If_Modified_Since, nsnull);
@@ -738,72 +745,14 @@ nsHttpChannel::CheckCache()
         goto end;
     }
 
-    // If the must-revalidate directive is present in the cached response, data
-    // must always be revalidated with the server, even if the user has
-    // configured validation to be turned off (See RFC 2616, section 14.9.4).
-    val = mCachedResponseHead->PeekHeader(nsHttp::Cache_Control);
-    if (val && PL_strcasestr(val, "must-revalidate")) {
-        LOG(("Validating based on \"%s\" header\n", val));
-        doValidation = PR_TRUE;
-        goto end;
-    }
-    // The no-cache directive within the 'Cache-Control:' header indicates
-    // that we must validate this cached response before reusing.
-    if (val && PL_strcasestr(val, "no-cache")) {
-        LOG(("Validating based on \"%s\" header\n", val));
-        doValidation = PR_TRUE;
-        goto end;
-    }
-    // XXX we are not quite handling no-cache correctly in this case.  We really
-    // should check for field-names and only force validation if they match
-    // existing response headers.  See RFC2616 section 14.9.1 for details.
-
-    // Although 'Pragma:no-cache' is not a standard HTTP response header (it's
-    // a request header), caching is inhibited when this header is present so
-    // as to match existing Navigator behavior.
-    val = mCachedResponseHead->PeekHeader(nsHttp::Pragma);
-    if (val && PL_strcasestr(val, "no-cache")) {
-        LOG(("Validating based on \"%s\" header\n", val));
+    // check revalidation is strictly required.
+    if (mCachedResponseHead->MustRevalidate()) {
         doValidation = PR_TRUE;
         goto end;
     }
 
-    // Compare the Expires header to the Date header.  If the server sent an
-    // Expires header with a timestamp in the past, then we must validate this
-    // cached response before reusing.
-    {
-        PRUint32 expiresVal, dateVal;
-        if (NS_SUCCEEDED(mCachedResponseHead->GetExpiresValue(&expiresVal)) &&
-            NS_SUCCEEDED(mCachedResponseHead->GetDateValue(&dateVal)) &&
-            expiresVal < dateVal) {
-            LOG(("Validating since Expires < Date\n"));
-            doValidation = PR_TRUE;
-            goto end;
-        }
-    }
-
-    // Check the Vary header.  Per comments on bug 37609, most of the request
-    // headers that we generate do not vary with the exception of Accept-Charset
-    // and Accept-Language, so we force validation only if these headers or "*"
-    // are listed with the Vary response header.
-    //
-    // XXX this may not be sufficient if embedders start tweaking or adding HTTP
-    // request headers.
-    //
-    // XXX will need to add the Accept header to this list if we start sending
-    // a full Accept header, since the addition of plugins could change this
-    // header (see bug 58040).
-    val = mCachedResponseHead->PeekHeader(nsHttp::Vary);
-    if (val && (PL_strstr(val, "*") ||
-                PL_strcasestr(val, "accept-charset") ||
-                PL_strcasestr(val, "accept-language"))) {
-        LOG(("Validating based on \"%s\" header\n", val));
-        doValidation = PR_TRUE;
-        goto end;
-    }
-
-    // delay checking this flag until we've verified that the above flags are
-    // not set.
+    // delay checking this flag until we've verified that the response headers
+    // do not require mandatory revalidation.
     if (mLoadFlags & VALIDATE_NEVER) {
         LOG(("Not validating based on VALIDATE_NEVER flag\n"));
         doValidation = PR_FALSE;
@@ -850,6 +799,7 @@ end:
     mCachedContentIsValid = !doValidation;
 
     if (doValidation) {
+        const char *val;
         // Add If-Modified-Since header if a Last-Modified was given
         val = mCachedResponseHead->PeekHeader(nsHttp::Last_Modified);
         if (!val) {
@@ -943,10 +893,13 @@ nsHttpChannel::CloseCacheEntry(nsresult status)
     return rv;
 }
 
-// Cache the network response from the server, including both the content and
-// the HTTP headers.
+// Initialize the cache entry for writing.
+//  - finalize storage policy
+//  - store security info
+//  - update expiration time
+//  - store headers and other meta data
 nsresult
-nsHttpChannel::CacheReceivedResponse()
+nsHttpChannel::InitCacheEntry()
 {
     const char *val;
     nsresult rv;
@@ -958,8 +911,10 @@ nsHttpChannel::CacheReceivedResponse()
     if (mCachedContentIsValid)
         return NS_OK;
 
-    LOG(("nsHttpChannel::CacheReceivedResponse [this=%x entry=%x]\n",
+    LOG(("nsHttpChannel::InitCacheEntry [this=%x entry=%x]\n",
         this, mCacheEntry.get()));
+
+    // XXX blow away any existing cache meta data
 
     // The no-store directive within the 'Cache-Control:' header indicates
     // that we should not store the response in a persistent cache
@@ -993,12 +948,16 @@ nsHttpChannel::CacheReceivedResponse()
     // the meta data.
     nsCAutoString head;
     mResponseHead->Flatten(head, PR_TRUE);
-    rv = mCacheEntry->SetMetaDataElement("response-head", head.get());
-    if (NS_FAILED(rv)) return rv;
+    return mCacheEntry->SetMetaDataElement("response-head", head.get());
+}
 
-    // Open an output stream to the cache entry and insert a listener tee into
-    // the chain of response listeners.
-    
+// Open an output stream to the cache entry and insert a listener tee into
+// the chain of response listeners.
+nsresult
+nsHttpChannel::InstallCacheListener()
+{
+    nsresult rv;
+
     LOG(("Preparing to write data into the cache [uri=%s]\n", mSpec.get()));
 
     rv = mCacheEntry->GetTransport(getter_AddRefs(mCacheTransport));
