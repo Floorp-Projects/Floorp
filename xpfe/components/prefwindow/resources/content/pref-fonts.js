@@ -114,17 +114,19 @@ function SetFields( aDataObject )
     
     var userResolution = document.getElementById("userResolution");
 
-    // If it's one of the hard-coded values, this will work...  
-    try
+    var item = screenResolution.getElementsByAttribute( "value", resolution )[0];
+    if (item != null)
       {
-        screenResolution.selectedItem = screenResolution.getElementsByAttribute( "value", resolution )[0];
+        // If it's one of the hard-coded values, we'll select it directly 
+        screenResolution.selectedItem = item;
         userResolution.setAttribute("hidden", "true");
-      }
-    catch (e)
+      }   
+    else
       {
         // Otherwise we need to set up the userResolution field
+        var dpi = screenResolution.getAttribute( "dpi" );
         userResolution.setAttribute("value", resolution);
-        userResolution.setAttribute("label", resolution);
+        userResolution.setAttribute("label", dpi.replace(/\$val/, resolution));
         userResolution.removeAttribute("hidden");
         screenResolution.selectedItem = userResolution;   
       }
@@ -153,6 +155,21 @@ function Startup()
 
     // eventually we should detect the default language and select it by default
     selectLanguage();
+    
+    // Allow user to ask the OS for a DPI if we are under X
+    if (navigator.appVersion.indexOf("X11") != -1)
+      {
+         document.getElementById( "systemResolution" ).removeAttribute( "hidden" ); 
+      }
+    
+    // Set up the labels for the standard issue resolutions
+    var resolution;
+    resolution = document.getElementById( "screenResolution" );
+    var dpi = resolution.getAttribute( "dpi" );
+    resolution = document.getElementById( "otherResolution" );
+    resolution.setAttribute( "value", dpi.replace(/\$val/, "72" ) );
+    resolution = document.getElementById( "defaultResolution" );
+    resolution.setAttribute( "value", dpi.replace(/\$val/, "96" ) );
   }
 
 function listElement( aListID )
@@ -419,8 +436,9 @@ function changeScreenResolution()
         if (rv.newdpi != -1) 
           {
             // They have entered values, and we have a DPI value back
+            var dpi = screenResolution.getAttribute( "dpi" );
             userResolution.setAttribute("value", rv.newdpi);
-            userResolution.setAttribute("label", rv.newdpi + " dpi");
+            userResolution.setAttribute("label", dpi.replace(/\$val/, rv.newdpi));
             userResolution.removeAttribute("hidden");
             screenResolution.selectedItem = userResolution;
           }

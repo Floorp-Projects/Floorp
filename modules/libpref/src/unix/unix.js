@@ -26,6 +26,7 @@ pref("mail.empty_trash", false);
 pref("network.hosts.smtp_server", "localhost");
 pref("network.hosts.pop_server", "pop");
 pref("mail.check_new_mail", true);
+pref("browser.display.screen_resolution", 0); // System setting
 pref("browser.startup.license_accepted", "");
 pref("browser.cache.memory_cache_size", 4096);
 pref("browser.cache.disk_cache_size", 50000);

@@ -115,6 +115,9 @@
             </menupopup>
           </menulist>
         </row>
+        <row>
+          <separator class="thin"/>
+        </row>
         <row autostretch="never" valign="middle">
           <box autostretch="never" halign="right">
             <text class="label small-margin" 
@@ -222,12 +225,19 @@
           accesskey="&resolution.accesskey;" 
           for="screenResolution"/>
     <menulist id="screenResolution" 
-              oncommand="changeScreenResolution()">
+              oncommand="changeScreenResolution()"
+              dpi="&resolution.dpival;">
       <menupopup>
-        <menuitem value="72" label="72 dpi"/>
-        <menuitem value="96" 
-                  label="96 dpi (&resolution.default;)" 
+        <menuitem value="&resolution.72.value;" 
+                  label="&resolution.72.value; &resolution.dpi;"
+                  id="otherResolution"/>
+        <menuitem value="&resolution.96.value;" 
+                  label="&resolution.96.value; &resolution.dpi;" 
                   id="defaultResolution"/>
+        <menuitem value="0"
+                  label="&resolution.system.label;" 
+                  id="systemResolution"
+                  hidden="true"/>
         <menuseparator/>
         <menuitem id="userResolution" hidden="true"/>
         <menuitem value="other" label="&resolution.other;"/>
