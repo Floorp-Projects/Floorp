@@ -259,28 +259,26 @@ nsPref::~nsPref()
 void nsPref::useDefaultPrefFile()
 //----------------------------------------------------------------------------------------
 {
+    nsFileSpec prefsFile("default_prefs.js"); // in default working directory.
     nsIFileLocator* locator = nsnull;
     nsresult rv = nsServiceManager::GetService(kFileLocatorCID, kIFileLocatorIID, (nsISupports**)&locator);
-    if (NS_FAILED(rv))
-        return;
-    if (!locator)
-        return;
-    nsFileSpec newPrefs;
-    rv = locator->GetFileLocation(nsSpecialFileSpec::App_PreferencesFile50, &newPrefs);
-    if (NS_SUCCEEDED(rv))
+    if (NS_SUCCEEDED(rv) && locator)
     {
-        if (!newPrefs.Exists())
-        {
-             nsOutputFileStream stream(newPrefs);
-             if (stream.is_open())
-             {
-                     stream << "// This is an empty prefs file" << nsEndl;
-             }
-        }
-        if (newPrefs.Exists())
-             rv = StartUpWith(newPrefs);
+	    rv = locator->GetFileLocation(nsSpecialFileSpec::App_PreferencesFile50, &prefsFile);
+	    NS_ASSERTION(NS_SUCCEEDED(rv), "ERROR: File locator cannot locate prefs file.");
+	    nsServiceManager::ReleaseService(kFileLocatorCID, locator);
     }
-    nsServiceManager::ReleaseService(kFileLocatorCID, locator);
+    if (!prefsFile.Exists())
+    {
+         nsOutputFileStream stream(prefsFile);
+         if (stream.is_open())
+         {
+             stream << "// This is an empty prefs file" << nsEndl
+                    << "// brought to you by your friendly prefs service" << nsEndl;
+         }
+    }
+    if (prefsFile.Exists())
+         rv = StartUpWith(prefsFile);
     return;
 } // nsPref::useDefaultPrefFile
 
@@ -324,8 +322,8 @@ NS_IMETHODIMP nsPref::StartUpWith(const nsFileSpec& inFile)
 
     /* --ML hash test */
     if (!gHashTable)
-    gHashTable = PR_NewHashTable(2048, PR_HashString, PR_CompareStrings,
-        PR_CompareValues, &pref_HashAllocOps, NULL);
+        gHashTable = PR_NewHashTable(2048, PR_HashString, PR_CompareStrings,
+                         PR_CompareValues, &pref_HashAllocOps, NULL);
     if (!gHashTable)
         return PR_FALSE;
 
@@ -1124,21 +1122,22 @@ PR_IMPLEMENT(PrefResult) PREF_SavePrefFileSpecWith(
     if (!stream.is_open())
         return PREF_ERROR;
 
-    stream << "// Mozilla User Preferences" << LINEBREAK
+    stream << "// Mozilla User Preferences" << nsEndl
         << "// This is a generated file!  Do not edit."
-        << LINEBREAK << LINEBREAK;
+        << nsEndl << nsEndl;
     
     /* LI_STUFF here we pass in the heSaveProc proc used so that li can do its own thing */
     PR_HashTableEnumerateEntries(gHashTable, heSaveProc, valueArray);
     
     /* Sort the preferences to make a readable file on disk */
     XP_QSORT(valueArray, gHashTable->nentries, sizeof(char*), pref_CompareStrings);
-    for (PRUint32 valueIdx = 0; valueIdx < gHashTable->nentries; valueIdx++)
+    char** walker = valueArray;
+    for (PRUint32 valueIdx = 0; valueIdx < gHashTable->nentries; valueIdx++,walker++)
     {
-        if (valueArray[valueIdx])
+        if (*walker)
         {
-            stream << valueArray[valueIdx];
-            PR_Free(valueArray[valueIdx]);
+            stream << *walker;
+            PR_Free(*walker);
         }
     }
     PR_Free(valueArray);
