@@ -33,7 +33,7 @@ TEST_DIRS		= \
 				$(NULL)
 endif
 
-ifdef eXFE_WIDGETS_BUILD_UNUSED
+ifdef XFE_WIDGETS_BUILD_UNUSED
 UNUSED_DIRS		= \
 				XfeCaption \
 				XfeComboBox \
