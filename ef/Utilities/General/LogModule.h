@@ -100,6 +100,7 @@ public:
 				~LogModuleObject();
 
 	bool		setLogFile(const char* inFileName);
+    void        flushLogFile();
 	size_t		logPrint(const char* inFormat, ...) const;
     void        setLogLevel(PRLogModuleLevel inLevel) { level = inLevel; }
 	void	    setOptions(PRLogModuleOptions inOptions) { options = inOptions; }

@@ -21,7 +21,7 @@
 
 char* disasmx86(long offset, char** startByte, char *limitByte, unsigned long flags )
 {
-    /* IMPLEMENT: replace GPL'ed code */
-    PR_ASSERT(0);
-    return NULL;
+    (*startByte) += 2;
+    // IMPLEMENT - replace GPL'ed disassembly code
+    return "x86 op";
 }
