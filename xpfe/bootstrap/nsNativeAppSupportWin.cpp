@@ -1212,7 +1212,11 @@ nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction t
                 case topicActivate: {
                     // Activate a Nav window...
                     nsCString windowID = ParseDDEArg( hsz2, 0 );
-                    if ( windowID.Equals( "-1" ) ) {
+
+                    // 4294967295 is decimal for 0xFFFFFFFF which is also a
+                    //   correct value to do that Activate last window stuff
+                    if ( windowID.Equals( "-1" ) ||
+                         windowID.Equals( "4294967295" ) ) {
                         // We only support activating the most recent window (or a new one).
                         ActivateLastWindow();
                         // Return pseudo window ID.
