@@ -60,6 +60,7 @@ struct PLEventQueue {
     PRPackedBool    nativeNotifier;
 	int notifyCount;
 #endif
+    PRBool      processingEvents;
 };
 
 #define PR_EVENT_PTR(_qp) \
@@ -106,6 +107,7 @@ PL_CreateEventQueue(char* name, PRThread* handlerThread)
     self->name = name;
     self->monitor = mon;
     self->handlerThread = handlerThread;
+    self->processingEvents = PR_FALSE;
     PR_INIT_CLIST(&self->queue);
     err = _pl_SetupNativeNotifier(self);
     if (err) goto error;
@@ -362,14 +364,18 @@ PL_ProcessPendingEvents(PLEventQueue* self)
     if (self == NULL)
     return;
 
+  if (PR_FALSE != self->processingEvents) return;
+
+    self->processingEvents = PR_TRUE;
     while (PR_TRUE) {
     PLEvent* event = PL_GetEvent(self);
-        if (event == NULL) return;
+        if (event == NULL) break;
 
     PR_LOG_BEGIN(event_lm, PR_LOG_DEBUG, ("$$$ processing event"));
     PL_HandleEvent(event);
     PR_LOG_END(event_lm, PR_LOG_DEBUG, ("$$$ done processing event"));
     }
+    self->processingEvents = PR_FALSE;
 }
 
 /*******************************************************************************
@@ -713,6 +719,27 @@ _md_EventReceiverProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 #endif
 }
 
+
+static PRBool   isInitialized;
+static PRCallOnceType once;
+static PRLock   *initLock;
+
+/*
+** InitWinEventLib() -- Create the Windows initialization lock
+**
+*/
+static PRStatus InitWinEventLib( void )
+{
+    PR_ASSERT( initLock == NULL );
+    
+    initLock = PR_NewLock();
+    if ( NULL == initLock )
+        return PR_FAILURE;
+    else
+        return PR_SUCCESS;
+} /* end InitWinEventLib() */
+
+
 PR_IMPLEMENT(void)
 PL_InitializeEventsLib(char *name)
 {
@@ -740,35 +767,55 @@ PL_InitializeEventsLib(char *name)
                                     "NSPR_PostEvent");
 #else
     WNDCLASS wc;
+    
+    /*
+    ** If this is the first call to PL_InitializeEventsLib(),
+    ** make the call to InitWinEventLib() to create the initLock.
+    **
+    ** Then lock the initializer lock to insure that
+    ** we have exclusive control over the initialization sequence.
+    **
+    */
+    PR_CallOnce( &once, InitWinEventLib );
 
-    _pr_main_event_queue = PL_CreateEventQueue(name, PR_GetCurrentThread());
+    PR_Lock( initLock );
+    if ( isInitialized == PR_FALSE )
+    {
+        isInitialized = PR_TRUE;
 
-    /* Register the windows message for NSPR Event notification */
-    _pr_PostEventMsgId = RegisterWindowMessage("NSPR_PostEvent");
+        _pr_main_event_queue = PL_CreateEventQueue(name, PR_GetCurrentThread());
 
-    /* Register the class for the event receiver window */
-    if (!GetClassInfo(_pr_hInstance, _pr_eventWindowClass, &wc)) {
-        wc.style         = 0;
-        wc.lpfnWndProc   = _md_EventReceiverProc;
-        wc.cbClsExtra    = 0;
-        wc.cbWndExtra    = 0;
-        wc.hInstance     = _pr_hInstance;
-        wc.hIcon         = NULL;
-        wc.hCursor       = NULL;
-        wc.hbrBackground = (HBRUSH) NULL;
-        wc.lpszMenuName  = (LPCSTR) NULL;
-        wc.lpszClassName = _pr_eventWindowClass;
-        RegisterClass(&wc);
-        }
+        /* Register the windows message for NSPR Event notification */
+        _pr_PostEventMsgId = RegisterWindowMessage("NSPR_PostEvent");
+
+        /* Register the class for the event receiver window */
+        if (!GetClassInfo(_pr_hInstance, _pr_eventWindowClass, &wc)) {
+            wc.style         = 0;
+            wc.lpfnWndProc   = _md_EventReceiverProc;
+            wc.cbClsExtra    = 0;
+            wc.cbWndExtra    = 0;
+            wc.hInstance     = _pr_hInstance;
+            wc.hIcon         = NULL;
+            wc.hCursor       = NULL;
+            wc.hbrBackground = (HBRUSH) NULL;
+            wc.lpszMenuName  = (LPCSTR) NULL;
+            wc.lpszClassName = _pr_eventWindowClass;
+            RegisterClass(&wc);
+            }
         
-    /* Create the event receiver window */
-    _pr_eventReceiverWindow = CreateWindow(_pr_eventWindowClass,
-                                           "NSPR:EventReceiver",
-                                            0, 0, 0, 10, 10,
-                                            NULL, NULL, _pr_hInstance,
-                                            NULL);
-    PR_ASSERT(_pr_eventReceiverWindow);
+        /* Create the event receiver window */
+        _pr_eventReceiverWindow = CreateWindow(_pr_eventWindowClass,
+                                            "NSPR:EventReceiver",
+                                                0, 0, 0, 10, 10,
+                                                NULL, NULL, _pr_hInstance,
+                                                NULL);
+        PR_ASSERT(_pr_eventReceiverWindow);
+
+        PR_LOG(event_lm, PR_LOG_DEBUG,("PL_InitializeeventsLib(). Done!\n"));
+    }
+    PR_Unlock( initLock );
 #endif
+    return;
 }
 #endif
 
@@ -786,4 +833,4 @@ PR_GetEventReceiverWindow()
 }
 #endif
 
-/******************************************************************************/
+/* --- end plevent.c --- */
