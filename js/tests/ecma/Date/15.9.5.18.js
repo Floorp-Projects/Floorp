@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,83 +35,70 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.9.5.18.js
-    ECMA Section:       15.9.5.18
-    Description:        Date.prototype.getSeconds
+   File Name:          15.9.5.18.js
+   ECMA Section:       15.9.5.18
+   Description:        Date.prototype.getSeconds
 
-    1.  Let t be this time value.
-    2.  If t is NaN, return NaN.
-    3.  Return SecFromTime(LocalTime(t)).
+   1.  Let t be this time value.
+   2.  If t is NaN, return NaN.
+   3.  Return SecFromTime(LocalTime(t)).
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
 
-    var SECTION = "15.9.5.18";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Date.prototype.getSeconds()";
+var SECTION = "15.9.5.18";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Date.prototype.getSeconds()";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = new Array();
+var TZ_ADJUST = TZ_DIFF * msPerHour;
 
-    var TZ_ADJUST = TZ_DIFF * msPerHour;
+// get the current time
+var now = (new Date()).valueOf();
 
-    // get the current time
-    var now = (new Date()).valueOf();
-
-    // calculate time for year 0
-    for ( var time = 0, year = 1969; year >= 0; year-- ) {
-        time -= TimeInYear(year);
-    }
-    // get time for 29 feb 2000
-
-    var UTC_FEB_29_2000 = TIME_2000 + 31*msPerDay + 28*msPerHour;
-
-    // get time for 1 jan 2005
-
-    var UTC_JAN_1_2005 = TIME_2000 + TimeInYear(2000)+TimeInYear(2001)+
-    TimeInYear(2002)+TimeInYear(2003)+TimeInYear(2004);
-
-    addTestCase( now );
-    addTestCase( time );
-    addTestCase( TIME_1970 );
-    addTestCase( TIME_1900 );
-    addTestCase( TIME_2000 );
-    addTestCase( UTC_FEB_29_2000 );
-    addTestCase( UTC_JAN_1_2005 );
-
-    testcases[tc++] = new TestCase( SECTION,
-                                    "(new Date(NaN)).getSeconds()",
-                                    NaN,
-                                    (new Date(NaN)).getSeconds() );
-
-    testcases[tc++] = new TestCase( SECTION,
-                                    "Date.prototype.getSeconds.length",
-                                    0,
-                                    Date.prototype.getSeconds.length );
-    test();
-function addTestCase( t ) {
-    for ( m = 0; m <= 60; m+=10 ) {
-            t += 1000;
-            testcases[tc++] = new TestCase( SECTION,
-                                    "(new Date("+t+")).getSeconds()",
-                                    SecFromTime(LocalTime(t)),
-                                    (new Date(t)).getSeconds() );
-    }
+// calculate time for year 0
+for ( var time = 0, year = 1969; year >= 0; year-- ) {
+  time -= TimeInYear(year);
 }
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
+// get time for 29 feb 2000
 
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
+var UTC_FEB_29_2000 = TIME_2000 + 31*msPerDay + 28*msPerHour;
+
+// get time for 1 jan 2005
+
+var UTC_JAN_1_2005 = TIME_2000 + TimeInYear(2000)+TimeInYear(2001)+
+TimeInYear(2002)+TimeInYear(2003)+TimeInYear(2004);
+
+addTestCase( now );
+addTestCase( time );
+addTestCase( TIME_1970 );
+addTestCase( TIME_1900 );
+addTestCase( TIME_2000 );
+addTestCase( UTC_FEB_29_2000 );
+addTestCase( UTC_JAN_1_2005 );
+
+new TestCase( SECTION,
+	      "(new Date(NaN)).getSeconds()",
+	      NaN,
+	      (new Date(NaN)).getSeconds() );
+
+new TestCase( SECTION,
+	      "Date.prototype.getSeconds.length",
+	      0,
+	      Date.prototype.getSeconds.length );
+test();
+
+function addTestCase( t ) {
+  for ( m = 0; m <= 60; m+=10 ) {
+    t += 1000;
+    new TestCase( SECTION,
+		  "(new Date("+t+")).getSeconds()",
+		  SecFromTime(LocalTime(t)),
+		  (new Date(t)).getSeconds() );
+  }
 }

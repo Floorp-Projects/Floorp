@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,79 +35,47 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.6.4.3.js
-    ECMA Section:       15.6.4.3 Boolean.prototype.valueOf()
-    Description:        Returns this boolean value.
+   File Name:          15.6.4.3.js
+   ECMA Section:       15.6.4.3 Boolean.prototype.valueOf()
+   Description:        Returns this boolean value.
 
-                        The valueOf function is not generic; it generates
-                        a runtime error if its this value is not a Boolean
-                        object.  Therefore it cannot be transferred to other
-                        kinds of objects for use as a method.
+   The valueOf function is not generic; it generates
+   a runtime error if its this value is not a Boolean
+   object.  Therefore it cannot be transferred to other
+   kinds of objects for use as a method.
 
-    Author:             christine@netscape.com
-    Date:               june 27, 1997
+   Author:             christine@netscape.com
+   Date:               june 27, 1997
 */
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
 
-    array[item++] = new TestCase( "15.8.6.4",   "new Boolean(1)",       true,   (new Boolean(1)).valueOf() );
 
-    array[item++] = new TestCase( "15.8.6.4",   "new Boolean(0)",       false,  (new Boolean(0)).valueOf() );
-    array[item++] = new TestCase( "15.8.6.4",   "new Boolean(-1)",      true,   (new Boolean(-1)).valueOf() );
-    array[item++] = new TestCase( "15.8.6.4",   "new Boolean('1')",     true,   (new Boolean("1")).valueOf() );
-    array[item++] = new TestCase( "15.8.6.4",   "new Boolean('0')",     true,   (new Boolean("0")).valueOf() );
-    array[item++] = new TestCase( "15.8.6.4",   "new Boolean(true)",    true,   (new Boolean(true)).valueOf() );
-    array[item++] = new TestCase( "15.8.6.4",   "new Boolean(false)",   false,  (new Boolean(false)).valueOf() );
-    array[item++] = new TestCase( "15.8.6.4",   "new Boolean('true')",  true,   (new Boolean("true")).valueOf() );
-    array[item++] = new TestCase( "15.8.6.4",   "new Boolean('false')", true,   (new Boolean('false')).valueOf() );
+new TestCase( "15.8.6.4",   "new Boolean(1)",       true,   (new Boolean(1)).valueOf() );
 
-    array[item++] = new TestCase( "15.8.6.4",   "new Boolean('')",      false,  (new Boolean('')).valueOf() );
-    array[item++] = new TestCase( "15.8.6.4",   "new Boolean(null)",    false,  (new Boolean(null)).valueOf() );
-    array[item++] = new TestCase( "15.8.6.4",   "new Boolean(void(0))", false,  (new Boolean(void(0))).valueOf() );
-    array[item++] = new TestCase( "15.8.6.4",   "new Boolean(-Infinity)", true, (new Boolean(Number.NEGATIVE_INFINITY)).valueOf() );
-    array[item++] = new TestCase( "15.8.6.4",   "new Boolean(NaN)",     false,  (new Boolean(Number.NaN)).valueOf() );
-    array[item++] = new TestCase( "15.8.6.4",   "new Boolean()",        false,  (new Boolean()).valueOf() );
+new TestCase( "15.8.6.4",   "new Boolean(0)",       false,  (new Boolean(0)).valueOf() );
+new TestCase( "15.8.6.4",   "new Boolean(-1)",      true,   (new Boolean(-1)).valueOf() );
+new TestCase( "15.8.6.4",   "new Boolean('1')",     true,   (new Boolean("1")).valueOf() );
+new TestCase( "15.8.6.4",   "new Boolean('0')",     true,   (new Boolean("0")).valueOf() );
+new TestCase( "15.8.6.4",   "new Boolean(true)",    true,   (new Boolean(true)).valueOf() );
+new TestCase( "15.8.6.4",   "new Boolean(false)",   false,  (new Boolean(false)).valueOf() );
+new TestCase( "15.8.6.4",   "new Boolean('true')",  true,   (new Boolean("true")).valueOf() );
+new TestCase( "15.8.6.4",   "new Boolean('false')", true,   (new Boolean('false')).valueOf() );
 
-    array[item++] = new TestCase( "15.8.6.4",   "new Boolean(x=1)",     true,   (new Boolean(x=1)).valueOf() );
-    array[item++] = new TestCase( "15.8.6.4",   "new Boolean(x=0)",     false,  (new Boolean(x=0)).valueOf() );
-    array[item++] = new TestCase( "15.8.6.4",   "new Boolean(x=false)", false,  (new Boolean(x=false)).valueOf() );
-    array[item++] = new TestCase( "15.8.6.4",   "new Boolean(x=true)",  true,   (new Boolean(x=true)).valueOf() );
-    array[item++] = new TestCase( "15.8.6.4",   "new Boolean(x=null)",  false,  (new Boolean(x=null)).valueOf() );
-    array[item++] = new TestCase( "15.8.6.4",   "new Boolean(x='')",    false,  (new Boolean(x="")).valueOf() );
-    array[item++] = new TestCase( "15.8.6.4",   "new Boolean(x=' ')",   true,   (new Boolean(x=" ")).valueOf() );
+new TestCase( "15.8.6.4",   "new Boolean('')",      false,  (new Boolean('')).valueOf() );
+new TestCase( "15.8.6.4",   "new Boolean(null)",    false,  (new Boolean(null)).valueOf() );
+new TestCase( "15.8.6.4",   "new Boolean(void(0))", false,  (new Boolean(void(0))).valueOf() );
+new TestCase( "15.8.6.4",   "new Boolean(-Infinity)", true, (new Boolean(Number.NEGATIVE_INFINITY)).valueOf() );
+new TestCase( "15.8.6.4",   "new Boolean(NaN)",     false,  (new Boolean(Number.NaN)).valueOf() );
+new TestCase( "15.8.6.4",   "new Boolean()",        false,  (new Boolean()).valueOf() );
 
-    return ( array );
-}
+new TestCase( "15.8.6.4",   "new Boolean(x=1)",     true,   (new Boolean(x=1)).valueOf() );
+new TestCase( "15.8.6.4",   "new Boolean(x=0)",     false,  (new Boolean(x=0)).valueOf() );
+new TestCase( "15.8.6.4",   "new Boolean(x=false)", false,  (new Boolean(x=false)).valueOf() );
+new TestCase( "15.8.6.4",   "new Boolean(x=true)",  true,   (new Boolean(x=true)).valueOf() );
+new TestCase( "15.8.6.4",   "new Boolean(x=null)",  false,  (new Boolean(x=null)).valueOf() );
+new TestCase( "15.8.6.4",   "new Boolean(x='')",    false,  (new Boolean(x="")).valueOf() );
+new TestCase( "15.8.6.4",   "new Boolean(x=' ')",   true,   (new Boolean(x=" ")).valueOf() );
 
-function test( array ) {
-        var passed = true;
-
-        writeHeaderToLog("15.8.6.4.3 Properties of the Boolean Object:  valueOf");
-
-        for ( i = 0; i < array.length; i++ ) {
-
-            array[i].passed = writeTestCaseResult(
-                    array[i].expect,
-                    array[i].actual,
-                    "( "+ array[i].description +" ).valueOf() = "+ array[i].actual );
-
-            array[i].reason += ( array[i].passed ) ? "" : "wrong value ";
-
-            passed = ( array[i].passed ) ? passed  : false;
-
-        }
-
-        stopTest();
-
-    //  all tests must return a boolean value
-        return ( array );
-}
-
-//  for TCMS, the testcases array must be global.
-    var testcases = getTestCases();
-
-//  all tests must call a function that returns a boolean value
-    test( testcases );
+test();

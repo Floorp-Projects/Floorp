@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,62 +35,47 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/**
-	Filename:     beginLine.js
-	Description:  'Tests regular expressions containing ^'
 
-	Author:       Nick Lerissa
-	Date:         March 10, 1998
+/**
+   Filename:     beginLine.js
+   Description:  'Tests regular expressions containing ^'
+
+   Author:       Nick Lerissa
+   Date:         March 10, 1998
 */
 
-	var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
-	var VERSION = 'no version';
-    startTest();
-	var TITLE = 'RegExp: ^';
+var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
+var VERSION = 'no version';
+startTest();
+var TITLE = 'RegExp: ^';
 
-	writeHeaderToLog('Executing script: beginLine.js');
-	writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog('Executing script: beginLine.js');
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-	var count = 0;
-	var testcases = new Array();
 
-    // 'abcde'.match(new RegExp('^ab'))
-	testcases[count++] = new TestCase ( SECTION, "'abcde'.match(new RegExp('^ab'))",
-	                                    String(["ab"]), String('abcde'.match(new RegExp('^ab'))));
+// 'abcde'.match(new RegExp('^ab'))
+new TestCase ( SECTION, "'abcde'.match(new RegExp('^ab'))",
+	       String(["ab"]), String('abcde'.match(new RegExp('^ab'))));
 
-    // 'ab\ncde'.match(new RegExp('^..^e'))
-	testcases[count++] = new TestCase ( SECTION, "'ab\ncde'.match(new RegExp('^..^e'))",
-	                                    null, 'ab\ncde'.match(new RegExp('^..^e')));
+// 'ab\ncde'.match(new RegExp('^..^e'))
+new TestCase ( SECTION, "'ab\ncde'.match(new RegExp('^..^e'))",
+	       null, 'ab\ncde'.match(new RegExp('^..^e')));
 
-    // 'yyyyy'.match(new RegExp('^xxx'))
-	testcases[count++] = new TestCase ( SECTION, "'yyyyy'.match(new RegExp('^xxx'))",
-	                                    null, 'yyyyy'.match(new RegExp('^xxx')));
+// 'yyyyy'.match(new RegExp('^xxx'))
+new TestCase ( SECTION, "'yyyyy'.match(new RegExp('^xxx'))",
+	       null, 'yyyyy'.match(new RegExp('^xxx')));
 
-    // '^^^x'.match(new RegExp('^\\^+'))
-	testcases[count++] = new TestCase ( SECTION, "'^^^x'.match(new RegExp('^\\^+'))",
-	                                    String(['^^^']), String('^^^x'.match(new RegExp('^\\^+'))));
+// '^^^x'.match(new RegExp('^\\^+'))
+new TestCase ( SECTION, "'^^^x'.match(new RegExp('^\\^+'))",
+	       String(['^^^']), String('^^^x'.match(new RegExp('^\\^+'))));
 
-    // '^^^x'.match(/^\^+/)
-	testcases[count++] = new TestCase ( SECTION, "'^^^x'.match(/^\\^+/)",
-	                                    String(['^^^']), String('^^^x'.match(/^\^+/)));
+// '^^^x'.match(/^\^+/)
+new TestCase ( SECTION, "'^^^x'.match(/^\\^+/)",
+	       String(['^^^']), String('^^^x'.match(/^\^+/)));
 
-    RegExp.multiline = true;
-    // 'abc\n123xyz'.match(new RegExp('^\d+')) <multiline==true>
-	testcases[count++] = new TestCase ( SECTION, "'abc\n123xyz'.match(new RegExp('^\\d+'))",
-	                                    String(['123']), String('abc\n123xyz'.match(new RegExp('^\\d+'))));
+RegExp.multiline = true;
+// 'abc\n123xyz'.match(new RegExp('^\d+')) <multiline==true>
+new TestCase ( SECTION, "'abc\n123xyz'.match(new RegExp('^\\d+'))",
+	       String(['123']), String('abc\n123xyz'.match(new RegExp('^\\d+'))));
 
-	function test()
-	{
-	   for ( tc=0; tc < testcases.length; tc++ ) {
-	        testcases[tc].passed = writeTestCaseResult(
-	        testcases[tc].expect,
-	        testcases[tc].actual,
-	        testcases[tc].description +" = "+
-	        testcases[tc].actual );
-	        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-	   }
-	   stopTest();
-	   return ( testcases );
-	}
-
-	test();
+test();

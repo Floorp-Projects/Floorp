@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,61 +35,56 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          7.3-1.js
-    ECMA Section:       7.3 Comments
-    Description:
+   File Name:          7.3-1.js
+   ECMA Section:       7.3 Comments
+   Description:
 
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 
 */
-    var SECTION = "7.3-1";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Comments";
+var SECTION = "7.3-1";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Comments";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
+var testcase;
 
-    test();
+testcase = new TestCase( SECTION,
+			 "a comment with a line terminator string, and text following",
+			 "pass",
+			 "pass");
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
-    array[item] = new TestCase( SECTION,
-                                  "a comment with a line terminator string, and text following",
-                                  "pass",
-                                  "pass");
+// "\u000A" testcase.actual = "fail";
 
-    // "\u000A" array[item].actual = "fail";
 
-    item++;
+testcase = new TestCase( SECTION,
+			 "// test \\n testcase.actual = \"pass\"",
+			 "pass",
+			 "" );
 
-    array[item] = new TestCase( SECTION,
-                                "// test \\n array[item].actual = \"pass\"",
-                                 "pass",
-                                 "" );
+var x = "// test \n testcase.actual = 'pass'"
 
-     var x = "// test \n array[item].actual = 'pass'"
+testcase.actual = eval(x);
 
-     array[0].actual = eval(x);
+test();
 
-     return ( array );
-}
-
+// XXX bc replace test()
 function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +":  "+
-                            testcases[tc].actual );
+  for ( tc=0; tc < testcases.length; tc++ ) {
+    testcases[tc].passed = writeTestCaseResult(
+      testcases[tc].expect,
+      testcases[tc].actual,
+      testcases[tc].description +":  "+
+      testcases[tc].actual );
 
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : " ignored chars after line terminator of single-line comment";
-    }
-    stopTest();
-    return ( testcases );
+    testcases[tc].reason += ( testcases[tc].passed ) ? "" : " ignored chars after line terminator of single-line comment";
+  }
+  stopTest();
+  return ( testcases );
 }

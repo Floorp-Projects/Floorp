@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,48 +35,48 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          proto_11.js
-    Section:
-    Description:        Global Information in Constructors
+   File Name:          proto_11.js
+   Section:
+   Description:        Global Information in Constructors
 
-    This tests Object Hierarchy and Inheritance, as described in the document
-    Object Hierarchy and Inheritance in JavaScript, last modified on 12/18/97
-    15:19:34 on http://devedge.netscape.com/.  Current URL:
-    http://devedge.netscape.com/docs/manuals/communicator/jsobj/contents.htm
+   This tests Object Hierarchy and Inheritance, as described in the document
+   Object Hierarchy and Inheritance in JavaScript, last modified on 12/18/97
+   15:19:34 on http://devedge.netscape.com/.  Current URL:
+   http://devedge.netscape.com/docs/manuals/communicator/jsobj/contents.htm
 
-    This tests the syntax ObjectName.prototype = new PrototypeObject using the
-    Employee example in the document referenced above.
+   This tests the syntax ObjectName.prototype = new PrototypeObject using the
+   Employee example in the document referenced above.
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
 
-    var SECTION = "proto_11";
-    var VERSION = "JS1_3";
-    var TITLE   = "Global Information in Constructors";
+var SECTION = "proto_11";
+var VERSION = "JS1_3";
+var TITLE   = "Global Information in Constructors";
 
-    startTest();
-    writeHeaderToLog( SECTION + " "+ TITLE);
+startTest();
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = new Array();
-    var idCounter = 1;
+var idCounter = 1;
 
 
 function Employee ( name, dept ) {
-     this.name = name || "";
-     this.dept = dept || "general";
-     this.id = idCounter++;
+    this.name = name || "";
+    this.dept = dept || "general";
+    this.id = idCounter++;
 }
 function Manager () {
-     this.reports = [];
+    this.reports = [];
 }
 Manager.prototype = new Employee();
 
 function WorkerBee ( name, dept, projs ) {
     this.base = Employee;
     this.base( name, dept)
-    this.projects = projs || new Array();
+	this.projects = projs || new Array();
 }
 WorkerBee.prototype = new Employee();
 
@@ -88,43 +89,30 @@ SalesPerson.prototype = new WorkerBee();
 function Engineer ( name, projs, machine ) {
     this.base = WorkerBee;
     this.base( name, "engineering", projs )
-    this.machine = machine || "";
+	this.machine = machine || "";
 }
 Engineer.prototype = new WorkerBee();
 
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
-    var pat = new Employee( "Toonces, Pat", "Tech Pubs" )
+var pat = new Employee( "Toonces, Pat", "Tech Pubs" )
     var terry = new Employee( "O'Sherry Terry", "Marketing" );
 
-    var les = new Engineer( "Morris, Les",  new Array("JavaScript"), "indy" );
+var les = new Engineer( "Morris, Les",  new Array("JavaScript"), "indy" );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "pat.id",
-                                    5,
-                                    pat.id );
+new TestCase( SECTION,
+	      "pat.id",
+	      5,
+	      pat.id );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "terry.id",
-                                    6,
-                                    terry.id );
+new TestCase( SECTION,
+	      "terry.id",
+	      6,
+	      terry.id );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "les.id",
-                                    7,
-                                    les.id );
+new TestCase( SECTION,
+	      "les.id",
+	      7,
+	      les.id );
 
 
-    test();
+test();
 

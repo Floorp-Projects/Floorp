@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -35,62 +36,44 @@
  *
  * ***** END LICENSE BLOCK ***** */
 /**
-    File Name:          tostring_2.js
-    Reference:          http://scopus.mcom.com/bugsplat/show_bug.cgi?id=114564
-    Description:        toString in version 120
+   File Name:          tostring_2.js
+   Reference:          http://scopus.mcom.com/bugsplat/show_bug.cgi?id=114564
+   Description:        toString in version 120
 
 
-    Author:             christine@netscape.com
-    Date:               15 June 1998
+   Author:             christine@netscape.com
+   Date:               15 June 1998
 */
 
-    var SECTION = "Array/tostring_2.js";
-    var VERSION = "JS_12";
-    startTest();
-    var TITLE   = "Array.toString";
+var SECTION = "Array/tostring_2.js";
+var VERSION = "JS_12";
+startTest();
+var TITLE   = "Array.toString";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = new Array();
-
-    var a = [];
+var a = [];
 
 
-    if ( typeof version == "function" ) {
-        writeLineToLog("version 120");
-        version(120);
-        VERSION = "120";
-    } else {
-        function version() { return 0; };
-    }
-
-    testcases[tc++] = new TestCase ( SECTION,
-        "a.toString()",
-        ( VERSION == "120" ? "[]" : "" ),
-            a.toString() );
-
-    testcases[tc++] = new TestCase ( SECTION,
-        "String( a )",
-        ( VERSION == "120" ? "[]" : "" ),
-        String( a ) );
-
-    testcases[tc++] = new TestCase ( SECTION,
-        "a +''",
-        ( VERSION == "120" ? "[]" : "" ),
-        a+"" );
-
-    test();
-
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
+if ( version() == 120 ) {
+    VERSION = "120";
+} else {
+    VERSION = "";
 }
+
+new TestCase ( SECTION,
+	       "a.toString()",
+	       ( VERSION == "120" ? "[]" : "" ),
+	       a.toString() );
+
+new TestCase ( SECTION,
+	       "String( a )",
+	       ( VERSION == "120" ? "[]" : "" ),
+	       String( a ) );
+
+new TestCase ( SECTION,
+	       "a +''",
+	       ( VERSION == "120" ? "[]" : "" ),
+	       a+"" );
+
+test();

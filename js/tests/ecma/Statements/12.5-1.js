@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,80 +35,66 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          12.5-1.js
-    ECMA Section:       The if statement
-    Description:
+   File Name:          12.5-1.js
+   ECMA Section:       The if statement
+   Description:
 
-    The production IfStatement : if ( Expression ) Statement else Statement
-    is evaluated as follows:
+   The production IfStatement : if ( Expression ) Statement else Statement
+   is evaluated as follows:
 
-    1.Evaluate Expression.
-    2.Call GetValue(Result(1)).
-    3.Call ToBoolean(Result(2)).
-    4.If Result(3) is false, go to step 7.
-    5.Evaluate the first Statement.
-    6.Return Result(5).
-    7.Evaluate the second Statement.
-    8.Return Result(7).
+   1.Evaluate Expression.
+   2.Call GetValue(Result(1)).
+   3.Call ToBoolean(Result(2)).
+   4.If Result(3) is false, go to step 7.
+   5.Evaluate the first Statement.
+   6.Return Result(5).
+   7.Evaluate the second Statement.
+   8.Return Result(7).
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
 
 
-    var SECTION = "12.5-1";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "The if statment";
+var SECTION = "12.5-1";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "The if statement";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
 
-    var testcases = new Array();
+new TestCase(   SECTION,
+		"var MYVAR; if ( true ) MYVAR='PASSED'; else MYVAR= 'FAILED';",
+		"PASSED",
+		eval("var MYVAR; if ( true ) MYVAR='PASSED'; else MYVAR= 'FAILED';") );
 
-    testcases[tc++] = new TestCase(   SECTION,
-                                    "var MYVAR; if ( true ) MYVAR='PASSED'; else MYVAR= 'FAILED';",
-                                    "PASSED",
-                                    eval("var MYVAR; if ( true ) MYVAR='PASSED'; else MYVAR= 'FAILED';") );
+new TestCase(  SECTION,
+	       "var MYVAR; if ( false ) MYVAR='FAILED'; else MYVAR= 'PASSED';",
+	       "PASSED",
+	       eval("var MYVAR; if ( false ) MYVAR='FAILED'; else MYVAR= 'PASSED';") );
 
-    testcases[tc++] = new TestCase(  SECTION,
-                                    "var MYVAR; if ( false ) MYVAR='FAILED'; else MYVAR= 'PASSED';",
-                                    "PASSED",
-                                    eval("var MYVAR; if ( false ) MYVAR='FAILED'; else MYVAR= 'PASSED';") );
+new TestCase(   SECTION,
+		"var MYVAR; if ( new Boolean(true) ) MYVAR='PASSED'; else MYVAR= 'FAILED';",
+		"PASSED",
+		eval("var MYVAR; if ( new Boolean(true) ) MYVAR='PASSED'; else MYVAR= 'FAILED';") );
 
-    testcases[tc++] = new TestCase(   SECTION,
-                                    "var MYVAR; if ( new Boolean(true) ) MYVAR='PASSED'; else MYVAR= 'FAILED';",
-                                    "PASSED",
-                                    eval("var MYVAR; if ( new Boolean(true) ) MYVAR='PASSED'; else MYVAR= 'FAILED';") );
+new TestCase(  SECTION,
+	       "var MYVAR; if ( new Boolean(false) ) MYVAR='PASSED'; else MYVAR= 'FAILED';",
+	       "PASSED",
+	       eval("var MYVAR; if ( new Boolean(false) ) MYVAR='PASSED'; else MYVAR= 'FAILED';") );
 
-    testcases[tc++] = new TestCase(  SECTION,
-                                    "var MYVAR; if ( new Boolean(false) ) MYVAR='PASSED'; else MYVAR= 'FAILED';",
-                                    "PASSED",
-                                    eval("var MYVAR; if ( new Boolean(false) ) MYVAR='PASSED'; else MYVAR= 'FAILED';") );
+new TestCase(   SECTION,
+		"var MYVAR; if ( 1 ) MYVAR='PASSED'; else MYVAR= 'FAILED';",
+		"PASSED",
+		eval("var MYVAR; if ( 1 ) MYVAR='PASSED'; else MYVAR= 'FAILED';") );
 
-    testcases[tc++] = new TestCase(   SECTION,
-                                    "var MYVAR; if ( 1 ) MYVAR='PASSED'; else MYVAR= 'FAILED';",
-                                    "PASSED",
-                                    eval("var MYVAR; if ( 1 ) MYVAR='PASSED'; else MYVAR= 'FAILED';") );
+new TestCase(  SECTION,
+	       "var MYVAR; if ( 0 ) MYVAR='FAILED'; else MYVAR= 'PASSED';",
+	       "PASSED",
+	       eval("var MYVAR; if ( 0 ) MYVAR='FAILED'; else MYVAR= 'PASSED';") );
 
-    testcases[tc++] = new TestCase(  SECTION,
-                                    "var MYVAR; if ( 0 ) MYVAR='FAILED'; else MYVAR= 'PASSED';",
-                                    "PASSED",
-                                    eval("var MYVAR; if ( 0 ) MYVAR='FAILED'; else MYVAR= 'PASSED';") );
+test();
 
-    test();
-
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -35,64 +36,41 @@
  *
  * ***** END LICENSE BLOCK ***** */
 /**
-    File Name:          15.8.2.14.js
-    ECMA Section:       15.8.2.14 Math.random()
-                        returns a number value x with a positive sign
-                        with 1 > x >= 0 with approximately uniform
-                        distribution over that range, using an
-                        implementation-dependent algorithm or strategy.
-                        This function takes no arguments.
+   File Name:          15.8.2.14.js
+   ECMA Section:       15.8.2.14 Math.random()
+   returns a number value x with a positive sign
+   with 1 > x >= 0 with approximately uniform
+   distribution over that range, using an
+   implementation-dependent algorithm or strategy.
+   This function takes no arguments.
 
-    Description:
-    Author:             christine@netscape.com
-    Date:               16 september 1997
+   Description:
+   Author:             christine@netscape.com
+   Date:               16 september 1997
 */
 
-    var SECTION = "15.8.2.14";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Math.random()";
+var SECTION = "15.8.2.14";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Math.random()";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
-    test();
+for ( var item = 0; item < 100; item++ ) {
+  var testcase = new TestCase( SECTION,  
+			       "Math.random()",    
+			       "pass",    
+			       null );
+  testcase.reason = Math.random();
+  testcase.actual = "pass";
 
+  if ( ! ( testcase.reason >= 0) ) {
+    testcase.actual = "fail";
+  }
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
-
-    for ( item = 0; item < 100; item++ ) {
-        array[item] = new TestCase( SECTION,  "Math.random()",    "pass",    null );
-    }
-
-    return ( array );
-}
-function getRandom( caseno ) {
-    testcases[caseno].reason = Math.random();
-    testcases[caseno].actual = "pass";
-
-    if ( ! ( testcases[caseno].reason >= 0) ) {
-        testcases[caseno].actual = "fail";
-    }
-
-    if ( ! (testcases[caseno].reason < 1) ) {
-        testcases[caseno].actual = "fail";
-    }
+  if ( ! (testcase.reason < 1) ) {
+    testcase.actual = "fail";
+  }
 }
 
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        getRandom( tc );
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
+test();

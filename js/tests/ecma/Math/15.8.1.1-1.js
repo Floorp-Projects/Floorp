@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -35,43 +36,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 /**
-    File Name:          15.8.1.1-1.js
-    ECMA Section:       15.8.1.1.js
-    Description:        All value properties of the Math object should have
-                        the attributes [DontEnum, DontDelete, ReadOnly]
+   File Name:          15.8.1.1-1.js
+   ECMA Section:       15.8.1.1.js
+   Description:        All value properties of the Math object should have
+   the attributes [DontEnum, DontDelete, ReadOnly]
 
-                        this test checks the ReadOnly attribute of Math.E
+   this test checks the ReadOnly attribute of Math.E
 
-    Author:             christine@netscape.com
-    Date:               16 september 1997
+   Author:             christine@netscape.com
+   Date:               16 september 1997
 */
-    var SECTION = "15.8.1.1-1";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Math.E";
+var SECTION = "15.8.1.1-1";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Math.E";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
-    test();
+new TestCase( SECTION, 
+	      "Math.E = 0; Math.E",       
+	      2.7182818284590452354,  
+	      eval("Math.E=0;Math.E") );
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
-    array[item++] = new TestCase( SECTION, "Math.E = 0; Math.E",       2.7182818284590452354,  ("Math.E=0;Math.E") );
-    return ( array );
-}
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].actual = eval( testcases[tc].actual );
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "Math.E should be read-only ";
-    }
-    stopTest();
-    return ( testcases );
-}
+test();

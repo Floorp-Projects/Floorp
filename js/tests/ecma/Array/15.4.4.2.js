@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,65 +35,74 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.4.4.2.js
-    ECMA Section:       15.4.4.2 Array.prototype.toString()
-    Description:        The elements of this object are converted to strings
-                        and these strings are then concatenated, separated by
-                        comma characters.  The result is the same as if the
-                        built-in join method were invoiked for this object
-                        with no argument.
-    Author:             christine@netscape.com
-    Date:               7 october 1997
+   File Name:          15.4.4.2.js
+   ECMA Section:       15.4.4.2 Array.prototype.toString()
+   Description:        The elements of this object are converted to strings
+   and these strings are then concatenated, separated by
+   comma characters.  The result is the same as if the
+   built-in join method were invoiked for this object
+   with no argument.
+   Author:             christine@netscape.com
+   Date:               7 october 1997
 */
 
-    var SECTION = "15.4.4.2";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Array.prototype.toString";
+var SECTION = "15.4.4.2";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Array.prototype.toString";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
+ 
+new TestCase( SECTION,  
+	      "Array.prototype.toString.length",  
+	      0,  
+	      Array.prototype.toString.length );
 
-    var testcases = getTestCases();
-    test();
+new TestCase( SECTION,  
+	      "(new Array()).toString()",     
+	      "",     
+	      (new Array()).toString() );
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
+new TestCase( SECTION,  
+	      "(new Array(2)).toString()",    
+	      ",",    
+	      (new Array(2)).toString() );
 
-    array[item++] = new TestCase( SECTION,  "Array.prototype.toString.length",  0,  Array.prototype.toString.length );
+new TestCase( SECTION,  
+	      "(new Array(0,1)).toString()",  
+	      "0,1",  
+	      (new Array(0,1)).toString() );
 
-    array[item++] = new TestCase( SECTION,  "(new Array()).toString()",     "",     (new Array()).toString() );
-    array[item++] = new TestCase( SECTION,  "(new Array(2)).toString()",    ",",    (new Array(2)).toString() );
-    array[item++] = new TestCase( SECTION,  "(new Array(0,1)).toString()",  "0,1",  (new Array(0,1)).toString() );
-    array[item++] = new TestCase( SECTION,  "(new Array( Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY)).toString()",  "NaN,Infinity,-Infinity",   (new Array( Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY)).toString() );
+new TestCase( SECTION,  
+	      "(new Array( Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY)).toString()",  
+	      "NaN,Infinity,-Infinity",   
+	      (new Array( Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY)).toString() );
 
-    array[item++] = new TestCase( SECTION,  "(new Array( Boolean(1), Boolean(0))).toString()",   "true,false",   (new Array(Boolean(1),Boolean(0))).toString() );
-    array[item++] = new TestCase( SECTION,  "(new Array(void 0,null)).toString()",    ",",    (new Array(void 0,null)).toString() );
+new TestCase( SECTION,  
+	      "(new Array( Boolean(1), Boolean(0))).toString()",   
+	      "true,false",   
+	      (new Array(Boolean(1),Boolean(0))).toString() );
 
-    var EXPECT_STRING = "";
-    var MYARR = new Array();
+new TestCase( SECTION,  
+	      "(new Array(void 0,null)).toString()",    
+	      ",",    
+	      (new Array(void 0,null)).toString() );
 
-    for ( var i = -50; i < 50; i+= 0.25 ) {
-        MYARR[MYARR.length] = i;
-        EXPECT_STRING += i +",";
-    }
+var EXPECT_STRING = "";
+var MYARR = new Array();
 
-    EXPECT_STRING = EXPECT_STRING.substring( 0, EXPECT_STRING.length -1 );
-
-    array[item++] = new TestCase( SECTION, "MYARR.toString()",  EXPECT_STRING,  MYARR.toString() );
-
-
-    return ( array );
+for ( var i = -50; i < 50; i+= 0.25 ) {
+  MYARR[MYARR.length] = i;
+  EXPECT_STRING += i +",";
 }
-function test() {
-    for ( tc=0 ; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+ testcases[tc].actual );
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
+
+EXPECT_STRING = EXPECT_STRING.substring( 0, EXPECT_STRING.length -1 );
+
+new TestCase( SECTION, 
+	      "MYARR.toString()",  
+	      EXPECT_STRING,  
+	      MYARR.toString() );
+
+test();

@@ -1,40 +1,37 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /**
-    File Name:          call-1.js
-    Section:            Function.prototype.call
-    Description:
+   File Name:          call-1.js
+   Section:            Function.prototype.call
+   Description:
 
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
-    var SECTION = "call-1";
-    var VERSION = "ECMA_2";
-    var TITLE   = "Function.prototype.call";
+var SECTION = "call-1";
+var VERSION = "ECMA_2";
+var TITLE   = "Function.prototype.call";
 
-    startTest();
-    writeHeaderToLog( SECTION + " "+ TITLE);
+startTest();
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var tc = 0;
-    var testcases = new Array();
+new TestCase( SECTION,
+	      "ToString.call( this, this )",
+	      GLOBAL,
+	      ToString.call( this, this ) );
 
+new TestCase( SECTION,
+	      "ToString.call( Boolean, Boolean.prototype )",
+	      "false",
+	      ToString.call( Boolean, Boolean.prototype ) );
 
-    testcases[tc++] = new TestCase( SECTION,
-                        "ToString.call( this, this )",
-                        GLOBAL,
-                        ToString.call( this, this ) );
+new TestCase( SECTION,
+	      "ToString.call( Boolean, Boolean.prototype.valueOf() )",
+	      "false",
+	      ToString.call( Boolean, Boolean.prototype.valueOf() ) );
 
-    testcases[tc++] = new TestCase( SECTION,
-                        "ToString.call( Boolean, Boolean.prototype )",
-                        "false",
-                        ToString.call( Boolean, Boolean.prototype ) );
-
-    testcases[tc++] = new TestCase( SECTION,
-                        "ToString.call( Boolean, Boolean.prototype.valueOf() )",
-                        "false",
-                        ToString.call( Boolean, Boolean.prototype.valueOf() ) );
-
-    test();
+test();
 
 function ToString( obj ) {
-    return obj +"";
+  return obj +"";
 }

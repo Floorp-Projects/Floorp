@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,69 +35,56 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.5.4.4-1.js
-    ECMA Section:       15.5.4.4 String.prototype.charAt(pos)
-    Description:        Returns a string containing the character at position
-                        pos in the string.  If there is no character at that
-                        string, the result is the empty string.  The result is
-                        a string value, not a String object.
+   File Name:          15.5.4.4-1.js
+   ECMA Section:       15.5.4.4 String.prototype.charAt(pos)
+   Description:        Returns a string containing the character at position
+   pos in the string.  If there is no character at that
+   string, the result is the empty string.  The result is
+   a string value, not a String object.
 
-                        When the charAt method is called with one argument,
-                        pos, the following steps are taken:
-                        1. Call ToString, with this value as its argument
-                        2. Call ToInteger pos
+   When the charAt method is called with one argument,
+   pos, the following steps are taken:
+   1. Call ToString, with this value as its argument
+   2. Call ToInteger pos
 
-                        In this test, this is a String, pos is an integer, and
-                        all pos are in range.
+   In this test, this is a String, pos is an integer, and
+   all pos are in range.
 
-    Author:             christine@netscape.com
-    Date:               2 october 1997
+   Author:             christine@netscape.com
+   Date:               2 october 1997
 */
-    var SECTION = "15.5.4.4-1";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "String.prototype.charAt";
+var SECTION = "15.5.4.4-1";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "String.prototype.charAt";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var TEST_STRING = new String( " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~" );
+var TEST_STRING = new String( " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~" );
 
-    var testcases = getTestCases();
-    test();
+var item = 0;
+var i;
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
-
-    for (  i = 0x0020; i < 0x007e; i++, item++) {
-        array[item] = new TestCase( SECTION,
-                                "TEST_STRING.charAt("+item+")",
-                                String.fromCharCode( i ),
-                                TEST_STRING.charAt( item ) );
-    }
-    for ( i = 0x0020; i < 0x007e; i++, item++) {
-        array[item] = new TestCase( SECTION,
-                                "TEST_STRING.charAt("+item+") == TEST_STRING.substring( "+item +", "+ (item+1) + ")",
-                                true,
-                                TEST_STRING.charAt( item )  == TEST_STRING.substring( item, item+1 )
-                                );
-    }
-    array[item++] = new TestCase( SECTION,  "String.prototype.charAt.length",       1,  String.prototype.charAt.length );
-
-    return array;
+for (  i = 0x0020; i < 0x007e; i++, item++) {
+  new TestCase( SECTION,
+		"TEST_STRING.charAt("+item+")",
+		String.fromCharCode( i ),
+		TEST_STRING.charAt( item ) );
 }
-function test() {
-        writeLineToLog( "TEST_STRING = new String(\" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\")" );
-        for ( tc = 0; tc < testcases.length; tc++ ) {
-            testcases[tc].passed = writeTestCaseResult(
-                    testcases[tc].expect,
-                    testcases[tc].actual,
-                    testcases[tc].description +" = "+ testcases[tc].actual );
 
-            testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value "
-        }
-        stopTest();
-
-    return ( testcases );
+for ( i = 0x0020; i < 0x007e; i++, item++) {
+  new TestCase( SECTION,
+		"TEST_STRING.charAt("+item+") == TEST_STRING.substring( "+item +", "+ (item+1) + ")",
+		true,
+		TEST_STRING.charAt( item )  == TEST_STRING.substring( item, item+1 )
+    );
 }
+
+new TestCase( SECTION,  "String.prototype.charAt.length",       1,  String.prototype.charAt.length );
+
+writeLineToLog( "TEST_STRING = new String(\" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\")" );
+
+test();
+

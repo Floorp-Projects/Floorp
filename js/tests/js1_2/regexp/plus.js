@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,69 +35,53 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/**
-	Filename:     plus.js
-	Description:  'Tests regular expressions containing +'
 
-	Author:       Nick Lerissa
-	Date:         March 10, 1998
+/**
+   Filename:     plus.js
+   Description:  'Tests regular expressions containing +'
+
+   Author:       Nick Lerissa
+   Date:         March 10, 1998
 */
 
-	var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
-	var VERSION = 'no version';
-    startTest();
-	var TITLE   = 'RegExp: +';
+var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
+var VERSION = 'no version';
+startTest();
+var TITLE   = 'RegExp: +';
 
-	writeHeaderToLog('Executing script: plus.js');
-	writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog('Executing script: plus.js');
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-	var count = 0;
-	var testcases = new Array();
+// 'abcdddddefg'.match(new RegExp('d+'))
+new TestCase ( SECTION, "'abcdddddefg'.match(new RegExp('d+'))",
+	       String(["ddddd"]), String('abcdddddefg'.match(new RegExp('d+'))));
 
-    // 'abcdddddefg'.match(new RegExp('d+'))
-	testcases[count++] = new TestCase ( SECTION, "'abcdddddefg'.match(new RegExp('d+'))",
-	                                    String(["ddddd"]), String('abcdddddefg'.match(new RegExp('d+'))));
+// 'abcdefg'.match(new RegExp('o+'))
+new TestCase ( SECTION, "'abcdefg'.match(new RegExp('o+'))",
+	       null, 'abcdefg'.match(new RegExp('o+')));
 
-    // 'abcdefg'.match(new RegExp('o+'))
-	testcases[count++] = new TestCase ( SECTION, "'abcdefg'.match(new RegExp('o+'))",
-	                                    null, 'abcdefg'.match(new RegExp('o+')));
+// 'abcdefg'.match(new RegExp('d+'))
+new TestCase ( SECTION, "'abcdefg'.match(new RegExp('d+'))",
+	       String(['d']), String('abcdefg'.match(new RegExp('d+'))));
 
-    // 'abcdefg'.match(new RegExp('d+'))
-	testcases[count++] = new TestCase ( SECTION, "'abcdefg'.match(new RegExp('d+'))",
-	                                    String(['d']), String('abcdefg'.match(new RegExp('d+'))));
+// 'abbbbbbbc'.match(new RegExp('(b+)(b+)(b+)'))
+new TestCase ( SECTION, "'abbbbbbbc'.match(new RegExp('(b+)(b+)(b+)'))",
+	       String(["bbbbbbb","bbbbb","b","b"]), String('abbbbbbbc'.match(new RegExp('(b+)(b+)(b+)'))));
 
-    // 'abbbbbbbc'.match(new RegExp('(b+)(b+)(b+)'))
-	testcases[count++] = new TestCase ( SECTION, "'abbbbbbbc'.match(new RegExp('(b+)(b+)(b+)'))",
-	                                    String(["bbbbbbb","bbbbb","b","b"]), String('abbbbbbbc'.match(new RegExp('(b+)(b+)(b+)'))));
+// 'abbbbbbbc'.match(new RegExp('(b+)(b*)'))
+new TestCase ( SECTION, "'abbbbbbbc'.match(new RegExp('(b+)(b*)'))",
+	       String(["bbbbbbb","bbbbbbb",""]), String('abbbbbbbc'.match(new RegExp('(b+)(b*)'))));
 
-    // 'abbbbbbbc'.match(new RegExp('(b+)(b*)'))
-	testcases[count++] = new TestCase ( SECTION, "'abbbbbbbc'.match(new RegExp('(b+)(b*)'))",
-	                                    String(["bbbbbbb","bbbbbbb",""]), String('abbbbbbbc'.match(new RegExp('(b+)(b*)'))));
+// 'abbbbbbbc'.match(new RegExp('b*b+'))
+new TestCase ( SECTION, "'abbbbbbbc'.match(new RegExp('b*b+'))",
+	       String(['bbbbbbb']), String('abbbbbbbc'.match(new RegExp('b*b+'))));
 
-    // 'abbbbbbbc'.match(new RegExp('b*b+'))
-	testcases[count++] = new TestCase ( SECTION, "'abbbbbbbc'.match(new RegExp('b*b+'))",
-	                                    String(['bbbbbbb']), String('abbbbbbbc'.match(new RegExp('b*b+'))));
+// 'abbbbbbbc'.match(/(b+)(b*)/)
+new TestCase ( SECTION, "'abbbbbbbc'.match(/(b+)(b*)/)",
+	       String(["bbbbbbb","bbbbbbb",""]), String('abbbbbbbc'.match(/(b+)(b*)/)));
 
-    // 'abbbbbbbc'.match(/(b+)(b*)/)
-	testcases[count++] = new TestCase ( SECTION, "'abbbbbbbc'.match(/(b+)(b*)/)",
-	                                    String(["bbbbbbb","bbbbbbb",""]), String('abbbbbbbc'.match(/(b+)(b*)/)));
+// 'abbbbbbbc'.match(new RegExp('b*b+'))
+new TestCase ( SECTION, "'abbbbbbbc'.match(/b*b+/)",
+	       String(['bbbbbbb']), String('abbbbbbbc'.match(/b*b+/)));
 
-    // 'abbbbbbbc'.match(new RegExp('b*b+'))
-	testcases[count++] = new TestCase ( SECTION, "'abbbbbbbc'.match(/b*b+/)",
-	                                    String(['bbbbbbb']), String('abbbbbbbc'.match(/b*b+/)));
-
-	function test()
-	{
-	   for ( tc=0; tc < testcases.length; tc++ ) {
-	        testcases[tc].passed = writeTestCaseResult(
-	        testcases[tc].expect,
-	        testcases[tc].actual,
-	        testcases[tc].description +" = "+
-	        testcases[tc].actual );
-	        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-	   }
-	   stopTest();
-	   return ( testcases );
-	}
-
-	test();
+test();

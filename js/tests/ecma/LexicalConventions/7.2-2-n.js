@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,62 +35,38 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          7.2.js
-    ECMA Section:       7.2 Line Terminators
-    Description:        - readability
-                        - separate tokens
-                        - may occur between any two tokens
-                        - cannot occur within any token, not even a string
-                        - affect the process of automatic semicolon insertion.
+   File Name:          7.2.js
+   ECMA Section:       7.2 Line Terminators
+   Description:        - readability
+   - separate tokens
+   - may occur between any two tokens
+   - cannot occur within any token, not even a string
+   - affect the process of automatic semicolon insertion.
 
-                        white space characters are:
-                        unicode     name            formal name     string representation
-                        \u000A      line feed       <LF>            \n
-                        \u000D      carriage return <CR>            \r
+   white space characters are:
+   unicode     name            formal name     string representation
+   \u000A      line feed       <LF>            \n
+   \u000D      carriage return <CR>            \r
 
-                        this test uses onerror to capture line numbers.  because
-                        we use on error, we can only have one test case per file.
+   this test uses onerror to capture line numbers.  because
+   we use on error, we can only have one test case per file.
 
-    Author:             christine@netscape.com
-    Date:               11 september 1997
+   Author:             christine@netscape.com
+   Date:               11 september 1997
 */
-    var SECTION = "7.2-2";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Line Terminators";
+var SECTION = "7.2-2";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Line Terminators";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
-    test();
+DESCRIPTION = "\r\r\r\nb";
+EXPECTED = "error"
 
-function test() {
-        // this is line 29
-        a = "\r\r\r\nb";
-        eval( a );
+new TestCase( SECTION,   DESCRIPTION,     "error",     eval("\r\r\r\nb"));
 
-        // if we get this far, the test failed.
-        testcases[tc].passed = writeTestCaseResult(
-                   "failure on line" + testcases[tc].expect,
-                    testcases[tc].actual,
-                    testcases[tc].description +" = "+ testcases[tc].actual );
+test();
 
-        testcases[0].passed = false;
-
-        testcases[tc].reason = "test should have caused runtime error ";
-
-        stopTest();
-
-        return ( testcases );
-}
-
-
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
-
-    array[0] = new TestCase( "7.2",    "<cr>a",     "error",     "");
-
-    return ( array );
-}

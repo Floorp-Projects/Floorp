@@ -22,6 +22,7 @@
 #
 # Contributor(s):
 #   Robert Ginda
+#   Bob Clary
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -61,45 +62,59 @@ sub main {
 
     @suite_list = sort(&get_subdirs ($suite_path));
 
-    $javascript .= "suites = new Object();\n";
+    $javascript .= "\n";
+    $javascript .= "var suites = {};\n";
+    $javascript .= "function populateSuites()\n";
+    $javascript .= "{\n";
+    $javascript .= "var currSuite;\n";
+    $javascript .= "var currDirectory;\n";
+    $javascript .= "var currTestDirs;\n";
+    $javascript .= "var currTests;\n";
 
     $html .= "<h3>Test Suites:</h3>\n";
     $html .= "<center>\n";
-    $html .= "  <input type='button' value='Select All' " .
-      "onclick='selectAll();'> ";
-    $html .= "  <input type='button' value='Select None' " .
-      "onclick='selectNone();'> ";
+    $html .= "<input type='button' value='Select All' " .
+      "onclick='selectAll();'> \n";
+    $html .= "<input type='button' value='Select None' " .
+      "onclick='selectNone();'> \n";
 
     # suite menu
-    $html .= "<table border='1'>\n";
+    $html .= "<table border='1' summary='suite menu'>\n";
     foreach $suite (@suite_list) {
 	local @readme_text = ("No description available.");
 	if (open (README, $suite_path . $suite . "/README")) {
 	    @readme_text = <README>;
 	    close (README);
 	}
-	$html .= "<tr><td><a href='\#SUITE_$suite'>$suite</a></td>" .
-	  "<td>@readme_text</td>";
-	$html .= "<td><input type='button' value='Select All' " .
-	  "onclick='selectAll(\"$suite\");'> ";
+	$html .= "<tr>\n";
+	$html .= "<td>\n";
+	$html .= "<a href='\#SUITE_$suite'>$suite</a>\n";
+	$html .= "</td>\n";
+	$html .= "<td>@readme_text</td>\n";
+	$html .= "<td>\n";
+	$html .= "<input type='button' value='Select All' " .
+	  "onclick='selectAll(\"$suite\");'> \n";
 	$html .= "<input type='button' value='Select None' " .
-	  "onclick='selectNone(\"$suite\");'></td>";
+	  "onclick='selectNone(\"$suite\");'>\n";
+	$html .= "</td>\n";
 	$html .= "<td><input readonly name='SUMMARY_$suite'></td>";
 	$html .= "</tr>";
     }
     $html .= "</table>\n";
-    $html .= "<td><input readonly name='TOTAL'></td>";
-    $html .= "</center>";
-    $html .= "<dl>\n";
+    $html .= "<div><input readonly name='TOTAL'></div>\n";
+    $html .= "</center>\n";
 
+    $html .= "<dl>\n";
     foreach $i (0 .. $#suite_list) {
 	local $prev_href = ($i > 0) ? "\#SUITE_" . $suite_list[$i - 1] : "";
-	local $next_href = ($i < $#suite_list) ? "\#SUITE_" . $suite_list[$i + 1] : "";
+	local $next_href = ($i < $#suite_list) ? "\#SUITE_" . 
+	    $suite_list[$i + 1] : "";
 	&process_suite ($suite_path, $suite_list[$i], $prev_href, $next_href);
     }
-
     $html .= "</dl>\n";
 
+    $javascript .= "}\n";
+    $javascript .= "populateSuites();\n";
 }
 
 #
@@ -109,60 +124,76 @@ sub main {
 sub process_suite {
     local ($suite_path, $suite, $prev_href, $next_href) = @_;
     local $i, @test_dir_list;    
+    local $suite_count = 0;
 
     # suite js object
-    $javascript .= "suites[\"$suite\"] = {testDirs: {}};\n";
+    $javascript .= "currSuite = suites[\"$suite\"] = " .
+	"{testDirs:{}, count:0, selected:0};\n";
+    $javascript .= "currTestDirs = currSuite.testDirs;\n";
 
     @test_dir_list = sort(&get_subdirs ($test_home . $suite));
 
     # suite header
-    $html .= "  <a name='SUITE_$suite'></a><hr><dt><big><big><b>$suite " .
-      "(" . ($#test_dir_list + 1) . " Sub-Categories)</b></big></big><br>\n";
-    $html .= "  <input type='button' value='Select All' " .
-      "onclick='selectAll(\"$suite\");'>\n";
-    $html .= "  <input type='button' value='Select None' " .
-      "onclick='selectNone(\"$suite\");'> " .
-	"[ <a href='\#top_of_page'>Top of page</a> ";
+
+    $html .= "<dt>\n";
+    $html .= "<a name='SUITE_$suite'></a>$suite " .
+      "(" . ($#test_dir_list + 1) . " Sub-Categories)\n";
+    $html .= "<input type='button' value='Select All' " .
+	"onclick='selectAll(\"$suite\");'>\n";
+    $html .= "<input type='button' value='Select None' " .
+	"onclick='selectNone(\"$suite\");'> \n";
+    $html .= "[ ";
+    $html .= "<a href='\#top_of_page'>Top of page</a> \n";
     if ($prev_href) {
-	$html .= " | <a href='$prev_href'>Previous Suite</a> ";
+	$html .= " | ";
+        $html .= "<a href='$prev_href'>Previous Suite</a> \n";
     }
     if ($next_href) {
-	$html .= " | <a href='$next_href'>Next Suite</a> ";
+	$html .= " | ";
+        $html .= "<a href='$next_href'>Next Suite</a> \n";
     }
     $html .= "]\n";
+    $html .= "</dt>\n";
+    $html .= "<dd>\n";
 
-    $html .= "  <dd>\n  <dl>\n";
-    
     foreach $i (0 .. $#test_dir_list) {
-	local $prev_href = ($i > 0) ? "\#TESTDIR_" . $suite . $test_dir_list[$i - 1] :
-	  "";
+	local $prev_href = ($i > 0) ? "\#TESTDIR_" . $suite . 
+	    $test_dir_list[$i - 1] :
+	    "";
 	local $next_href = ($i < $#test_dir_list) ?
 	  "\#TESTDIR_" . $suite . $test_dir_list[$i + 1] : "";
-	&process_test_dir ($suite_path . $suite . "/", $test_dir_list[$i], $suite, 
+	&process_test_dir ($suite_path . $suite . "/", $test_dir_list[$i], 
+			   $suite, 
 			   $prev_href, $next_href);
     }
+    $javascript .= "currSuite.count = $suite_count;\n";
 
-    $html .= "  </dl>\n";
-
+    $html .= "</dd>\n";
 }
 
 #
-# Append detail from a test directory, calling process_test for subordinate js files
+# Append detail from a test directory, 
+# calling process_test for subordinate js files
 #
 sub process_test_dir {
     local ($test_dir_path, $test_dir, $suite, $prev_href, $next_href) = @_;
 
     @test_list = sort(&get_js_files ($test_dir_path . $test_dir));
 
-    $javascript .= "suites[\"$suite\"].testDirs[\"$test_dir\"] = {tests: {}};\n";
+    $suite_count += @test_list;
 
-    $html .= "    <a name='TESTDIR_$suite$test_dir'></a>\n";
-    $html .= "    <dt><big><b>$test_dir (" . ($#test_list + 1) .
-      " tests)</b></big><br>\n";
-    $html .= "      <input type='button' value='Select All' " .
-      "onclick='selectAll(\"$suite\", \"$test_dir\");'>\n";
-    $html .= "      <input type='button' value='Select None' " .
-      "onclick='selectNone(\"$suite\", \"$test_dir\");'> ";
+    $javascript .= "currDirectory = currTestDirs[\"$test_dir\"] = " . 
+	"{tests:{}};\n";
+    $javascript .= "currTests = currDirectory.tests;\n";
+
+    $html .= "<dl>\n";
+    $html .= "<dt>\n";
+    $html .= "<a name='TESTDIR_$suite$test_dir'></a>\n";
+    $html .= "$test_dir (" . ($#test_list + 1) . " tests)\n";
+    $html .= "<input type='button' value='Select All' " .
+	"onclick='selectAll(\"$suite\", \"$test_dir\");'>\n";
+    $html .= "<input type='button' value='Select None' " .
+	"onclick='selectNone(\"$suite\", \"$test_dir\");'> ";
     $html .= "[ <a href='\#SUITE_$suite'>Top of $suite Suite</a> ";
     if ($prev_href) {
 	$html .= "| <a href='$prev_href'>Previous Category</a> ";
@@ -170,16 +201,16 @@ sub process_test_dir {
     if ($next_href) {
 	$html .= " | <a href='$next_href'>Next Category</a> ";
     }
-    $html .= "]<br>\n";
-    $html .= "    </dt>\n";
+    $html .= "]\n";
+    $html .= "</dt>\n";
 
-    $html .= "    <dl>\n";
+    $html .= "<dd>\n";
 
     foreach $test (@test_list) {
 	&process_test ($test_dir_path . $test_dir, $test);
     }
     
-    $html .= "    </dl>\n";
+    $html .= "</dl>\n";
 }
 
 
@@ -196,25 +227,32 @@ sub process_test {
       die ("Error opening " . $test_dir_path . "/" . $test);
 
     while (<TESTCASE>) {
-	if (/.*TITLE\s+\=\s+\"(.*)\"/) {
+	if (/.*(TITLE|summary)\s+\=\s+[\"\'](.*)[\"\']/i) {
+	    $title = $2;
+	    break;
+	}
+	if (/.*START\([\"\'](.*)[\"\']\);/)
+        {
 	    $title = $1;
 	    break;
 	}
     }
     close (TESTCASE);
 
-    $javascript .= "suites[\"$suite\"].testDirs[\"$test_dir\"].tests" .
-      "[\"$test\"] = \"radio$uid\"\n";
-    $html .= "      <input type='radio' value='$test' name='radio$uid' ".
-      "onclick='return onRadioClick(\"radio$uid\");'>" .
-	"<a href='$lxr_url$suite/$test_dir/$test' target='other_window'>" .
-	  "$test</a> $title<br>\n";
+    $javascript .= "currTests[\"$test\"] = {id:\"t$uid\"}\n";
+    $html .= "<dd>\n";
+    $html .= " <input type='checkbox' value='$test' name='t$uid' " .
+        "id='$suite:$test_dir:$test' ".
+	"onclick='return onRadioClick(this);'>\n";
+    $html .= "<a href='$lxr_url$suite/$test_dir/$test' target='other_window'>" .
+	"$test</a> $title\n";
+    $html .= "</dd>\n";
 
 }
 
 sub scriptTag {
 
-    return ("<script langugage='JavaScript'>@_</script>");
+    return ("<script type='text/javascript' language='JavaScript'>@_</script>");
 
 }
 
@@ -255,7 +293,7 @@ sub get_js_files {
     closedir( TEST_SUBDIR );
 
     foreach ( @subdir_files ) {
-        if ( $_ =~ /\.js$/ ) {
+        if ( ($_ =~ /\.js$/) && ($_ ne 'shell.js') && ($_ ne 'browser.js') ) {
             $js_file_array[$#js_file_array+1] = $_;
         }
     }

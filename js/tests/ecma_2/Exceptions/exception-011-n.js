@@ -38,14 +38,23 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+var SECTION = "exception-011";
+var VERSION = "ECMA_2";
+startTest();
+var TITLE   = "Don't Crash throwing undefined";
+
+writeHeaderToLog( SECTION + " "+ TITLE);
+
+writeLineToLog("Undefined throw test.");
+
+DESCRIPTION = "throw undefined";
+EXPECTED = "error";
+
+new TestCase( SECTION,  "throw undefined",  "error", eval("throw (void 0)") );
+
 test();
 
-function test()
-{
-    print ("Undefined throw test.");
-    
-    throw (void 0);
-    
-    print ("FAILED!: Should have exited with uncaught exception.");
+writeLineToLog("FAILED!: Should have exited with uncaught exception.");
 
-}
+
+

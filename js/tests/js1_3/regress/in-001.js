@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,48 +35,34 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          in-001.js
-    Section:
-    Description:
+   File Name:          in-001.js
+   Section:
+   Description:
 
-    http://scopus.mcom.com/bugsplat/show_bug.cgi?id=196109
+   http://scopus.mcom.com/bugsplat/show_bug.cgi?id=196109
 
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
-    var SECTION = "in-001";
-    var VERSION = "JS1_3";
-    var TITLE   = "Regression test for 196109";
-    var BUGNUMBER="196109";
+var SECTION = "in-001";
+var VERSION = "JS1_3";
+var TITLE   = "Regression test for 196109";
+var BUGNUMBER="196109";
 
-    startTest();
-    writeHeaderToLog( SECTION + " "+ TITLE);
+startTest();
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = new Array();
+o = {};
+o.foo = 'sil';
 
-    o = {};
-    o.foo = 'sil';
+new TestCase(
+    SECTION,
+    "\"foo\" in o",
+    true,
+    "foo" in o );
 
-    testcases[tc++] = new TestCase(
-        SECTION,
-        "\"foo\" in o",
-        true,
-        "foo" in o );
+test();
 
-    test();
-
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}

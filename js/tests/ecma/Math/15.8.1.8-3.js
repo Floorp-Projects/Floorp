@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -35,42 +36,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 /**
-    File Name:          15.8.1.8-3.js
-    ECMA Section:       15.8.1.8.js
-    Description:        All value properties of the Math object should have
-                        the attributes [DontEnum, DontDelete, ReadOnly]
+   File Name:          15.8.1.8-3.js
+   ECMA Section:       15.8.1.8.js
+   Description:        All value properties of the Math object should have
+   the attributes [DontEnum, DontDelete, ReadOnly]
 
-                        this test checks the DontDelete attribute of Math.SQRT2
+   this test checks the DontDelete attribute of Math.SQRT2
 
-    Author:             christine@netscape.com
-    Date:               16 september 1997
+   Author:             christine@netscape.com
+   Date:               16 september 1997
 */
-    var SECTION = "15.8.1.8-3";
-    var VERSION = "ECMA_1";
-    startTest();
-    var testcases = getTestCases();
+var SECTION = "15.8.1.8-3";
+var VERSION = "ECMA_1";
+startTest();
 
-    writeHeaderToLog( SECTION + " Math.SQRT2:  DontDelete");
-    test();
+writeHeaderToLog( SECTION + " Math.SQRT2:  DontDelete");
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
-    array[item++] = new TestCase( SECTION, "delete Math.SQRT2", false,     ("delete Math.SQRT2") );
-    return ( array );
-}
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].actual = eval( testcases[tc].actual );
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
+new TestCase( SECTION, 
+	      "delete Math.SQRT2", 
+	      false,     
+	      eval("delete Math.SQRT2") );
 
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "property should be read-only ";
-    }
-    stopTest();
-    return ( testcases );
-}
-
+test();

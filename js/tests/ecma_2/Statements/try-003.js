@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /**
  *  File Name:          try-003.js
  *  ECMA Section:
@@ -8,72 +9,69 @@
  *  Author:             christine@netscape.com
  *  Date:               11 August 1998
  */
-    var SECTION = "try-003";
-    var VERSION = "ECMA_2";
-    var TITLE   = "The try statement";
-    var BUGNUMBER="http://scopus.mcom.com/bugsplat/show_bug.cgi?id=313585";
+var SECTION = "try-003";
+var VERSION = "ECMA_2";
+var TITLE   = "The try statement";
+var BUGNUMBER="http://scopus.mcom.com/bugsplat/show_bug.cgi?id=313585";
 
-    startTest();
-    writeHeaderToLog( SECTION + " "+ TITLE);
+startTest();
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var tc = 0;
-    var testcases = new Array();
+// Tests start here.
 
-    // Tests start here.
+TrySomething( "x = \"hi\"", false );
+TrySomething( "throw \"boo\"", true );
+TrySomething( "throw 3", true );
 
-    TrySomething( "x = \"hi\"", false );
-    TrySomething( "throw \"boo\"", true );
-    TrySomething( "throw 3", true );
+test();
 
-    test();
+/**
+ *  This function contains a try block with no catch block,
+ *  but it does have a finally block.  Try to evaluate expressions
+ *  that do and do not throw exceptions.
+ */
 
-    /**
-     *  This function contains a try block with no catch block,
-     *  but it does have a finally block.  Try to evaluate expressions
-     *  that do and do not throw exceptions.
-     */
+function TrySomething( expression, throwing ) {
+  innerFinally = "FAIL: DID NOT HIT INNER FINALLY BLOCK";
+  if (throwing) {
+    outerCatch = "FAILED: NO EXCEPTION CAUGHT";
+  } else {
+    outerCatch = "PASS";
+  }
+  outerFinally = "FAIL: DID NOT HIT OUTER FINALLY BLOCK";
 
-    function TrySomething( expression, throwing ) {
-        innerFinally = "FAIL: DID NOT HIT INNER FINALLY BLOCK";
-        if (throwing) {
-            outerCatch = "FAILED: NO EXCEPTION CAUGHT";
-        } else {
-            outerCatch = "PASS";
-        }
-        outerFinally = "FAIL: DID NOT HIT OUTER FINALLY BLOCK";
-
-        try {
-            try {
-                eval( expression );
-            } finally {
-                innerFinally = "PASS";
-            }
-        } catch ( e  ) {
-            if (throwing) {
-                outerCatch = "PASS";
-            } else {
-                outerCatch = "FAIL: HIT OUTER CATCH BLOCK";
-            }
-        } finally {
-            outerFinally = "PASS";
-        }
-
-
-        testcases[tc++] = new TestCase(
-                SECTION,
-                "eval( " + expression +" )",
-                "PASS",
-                innerFinally );
-        testcases[tc++] = new TestCase(
-                SECTION,
-                "eval( " + expression +" )",
-                "PASS",
-                outerCatch );
-        testcases[tc++] = new TestCase(
-                SECTION,
-                "eval( " + expression +" )",
-                "PASS",
-                outerFinally );
-
-
+  try {
+    try {
+      eval( expression );
+    } finally {
+      innerFinally = "PASS";
     }
+  } catch ( e  ) {
+    if (throwing) {
+      outerCatch = "PASS";
+    } else {
+      outerCatch = "FAIL: HIT OUTER CATCH BLOCK";
+    }
+  } finally {
+    outerFinally = "PASS";
+  }
+
+
+  new TestCase(
+    SECTION,
+    "eval( " + expression +" )",
+    "PASS",
+    innerFinally );
+  new TestCase(
+    SECTION,
+    "eval( " + expression +" )",
+    "PASS",
+    outerCatch );
+  new TestCase(
+    SECTION,
+    "eval( " + expression +" )",
+    "PASS",
+    outerFinally );
+
+
+}

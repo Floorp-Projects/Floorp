@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -41,51 +42,35 @@
  *  http://scopus.mcom.com/bugsplat/show_bug.cgi?id=99232
  *
  *  eval("function f(){}function g(){}") at top level is an error for JS1.2
-      and above (missing ; between named function expressions), but declares f
-      and g as functions below 1.2.
+ and above (missing ; between named function expressions), but declares f
+ and g as functions below 1.2.
  *
  * Fails to produce error regardless of version:
  * js> version(100)
-120
-js> eval("function f(){}function g(){}")
-js> version(120);
-100
-js> eval("function f(){}function g(){}")
-js>
+ 120
+ js> eval("function f(){}function g(){}")
+ js> version(120);
+ 100
+ js> eval("function f(){}function g(){}")
+ js>
  *  Author:             christine@netscape.com
  *  Date:               11 August 1998
  */
-    var SECTION = "boolean-001.js";
-    var VERSION = "JS1_1";
-    var TITLE   = "functions not separated by semicolons are not errors in version 110 ";
-    var BUGNUMBER="99232";
+var SECTION = "function-001.js";
+var VERSION = "JS1_1";
+var TITLE   = "functions not separated by semicolons are not errors in version 110 ";
+var BUGNUMBER="99232";
 
-    startTest();
-    writeHeaderToLog( SECTION + " "+ TITLE);
+startTest();
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = new Array();
+result = "passed";
 
-    result = "passed";
+new TestCase(
+    SECTION,
+    "eval(\"function f(){}function g(){}\")",
+    void 0,
+    eval("function f(){}function g(){}") );
 
-    testcases[tc++] = new TestCase(
-        SECTION,
-        "eval(\"function f(){}function g(){}\")",
-        void 0,
-        eval("function f(){}function g(){}") );
+test();
 
-    test();
-
-
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}

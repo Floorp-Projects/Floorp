@@ -35,64 +35,36 @@
  *
  * ***** END LICENSE BLOCK ***** */
 /**
-    File Name:          7.2-3.js
-    ECMA Section:       7.2 Line Terminators
-    Description:        - readability
-                        - separate tokens
-                        - may occur between any two tokens
-                        - cannot occur within any token, not even a string
-                        - affect the process of automatic semicolon insertion.
+   File Name:          7.2-3.js
+   ECMA Section:       7.2 Line Terminators
+   Description:        - readability
+   - separate tokens
+   - may occur between any two tokens
+   - cannot occur within any token, not even a string
+   - affect the process of automatic semicolon insertion.
 
-                        white space characters are:
-                        unicode     name            formal name     string representation
-                        \u000A      line feed       <LF>            \n
-                        \u000D      carriage return <CR>            \r
+   white space characters are:
+   unicode     name            formal name     string representation
+   \u000A      line feed       <LF>            \n
+   \u000D      carriage return <CR>            \r
 
-                        this test uses onerror to capture line numbers.  because
-                        we use on error, we can only have one test case per file.
+   this test uses onerror to capture line numbers.  because
+   we use on error, we can only have one test case per file.
 
-    Author:             christine@netscape.com
-    Date:               11 september 1997
+   Author:             christine@netscape.com
+   Date:               11 september 1997
 */
-    var SECTION = "7.2-3";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Line Terminators";
+var SECTION = "7.2-3";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Line Terminators";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
-
-    var testcases = getTestCases();
-    test();
-
-function test() {
-
-        // this is line 27
-
-        a = "\r\nb";
-        eval( a );
-
-        // if we get this far, the test failed.
-        testcases[tc].passed = writeTestCaseResult(
-                   "failure on line" + testcases[tc].expect,
-                    testcases[tc].actual,
-                    testcases[tc].description +" = "+ testcases[tc].actual );
-
-        testcases[0].passed = false;
-
-        testcases[tc].reason = "test should have caused runtime error ";
-
-        stopTest();
-        return ( testcases );
-}
+writeHeaderToLog( SECTION + " "+ TITLE);
 
 
+DESCRIPTION = "\r\nb";
+EXPECTED = "error"
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
+new TestCase( SECTION,    "<cr>a",     "error",     eval("\r\nb"));
 
-    array[0] = new TestCase( "7.2",    "<cr>a",     "error",     "");
-
-    return ( array );
-}
-
+test();

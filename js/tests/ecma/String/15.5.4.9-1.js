@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,184 +35,166 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.5.4.9-1.js
-    ECMA Section:       15.5.4.9 String.prototype.substring( start )
-    Description:
+   File Name:          15.5.4.9-1.js
+   ECMA Section:       15.5.4.9 String.prototype.substring( start )
+   Description:
 
-    15.5.4.9 String.prototype.substring(start)
+   15.5.4.9 String.prototype.substring(start)
 
-    Returns a substring of the result of converting this object to a string,
-    starting from character position start and running to the end of the
-    string. The result is a string value, not a String object.
+   Returns a substring of the result of converting this object to a string,
+   starting from character position start and running to the end of the
+   string. The result is a string value, not a String object.
 
-    If the argument is NaN or negative, it is replaced with zero; if the
-    argument is larger than the length of the string, it is replaced with the
-    length of the string.
+   If the argument is NaN or negative, it is replaced with zero; if the
+   argument is larger than the length of the string, it is replaced with the
+   length of the string.
 
-    When the substring method is called with one argument start, the following
-    steps are taken:
+   When the substring method is called with one argument start, the following
+   steps are taken:
 
-    1.Call ToString, giving it the this value as its argument.
-    2.Call ToInteger(start).
-    3.Compute the number of characters in Result(1).
-    4.Compute min(max(Result(2), 0), Result(3)).
-    5.Return a string whose length is the difference between Result(3) and Result(4),
-    containing characters from Result(1), namely the characters with indices Result(4)
-    through Result(3)1, in ascending order.
+   1.Call ToString, giving it the this value as its argument.
+   2.Call ToInteger(start).
+   3.Compute the number of characters in Result(1).
+   4.Compute min(max(Result(2), 0), Result(3)).
+   5.Return a string whose length is the difference between Result(3) and Result(4),
+   containing characters from Result(1), namely the characters with indices Result(4)
+   through Result(3)1, in ascending order.
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
 
-    var SECTION = "15.5.4.9-1";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "String.prototype.substring( start )";
+var SECTION = "15.5.4.9-1";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "String.prototype.substring( start )";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
-    test();
+new TestCase( SECTION,  "String.prototype.substring.length",        2,          String.prototype.substring.length );
+new TestCase( SECTION,  "delete String.prototype.substring.length", false,      delete String.prototype.substring.length );
+new TestCase( SECTION,  "delete String.prototype.substring.length; String.prototype.substring.length", 2,      eval("delete String.prototype.substring.length; String.prototype.substring.length") );
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
+// test cases for when substring is called with no arguments.
 
-    array[item++] = new TestCase( SECTION,  "String.prototype.substring.length",        2,          String.prototype.substring.length );
-    array[item++] = new TestCase( SECTION,  "delete String.prototype.substring.length", false,      delete String.prototype.substring.length );
-    array[item++] = new TestCase( SECTION,  "delete String.prototype.substring.length; String.prototype.substring.length", 2,      eval("delete String.prototype.substring.length; String.prototype.substring.length") );
+// this is a string object
 
-    // test cases for when substring is called with no arguments.
+new TestCase(   SECTION,
+		"var s = new String('this is a string object'); typeof s.substring()",
+		"string",
+		eval("var s = new String('this is a string object'); typeof s.substring()") );
 
-    // this is a string object
-
-    array[item++] = new TestCase(   SECTION,
-                                    "var s = new String('this is a string object'); typeof s.substring()",
-                                    "string",
-                                    eval("var s = new String('this is a string object'); typeof s.substring()") );
-
-    array[item++] = new TestCase(   SECTION,
-                                    "var s = new String(''); s.substring()",
-                                    "",
-                                    eval("var s = new String(''); s.substring()") );
+new TestCase(   SECTION,
+		"var s = new String(''); s.substring()",
+		"",
+		eval("var s = new String(''); s.substring()") );
 
 
-    array[item++] = new TestCase(   SECTION,
-                                    "var s = new String('this is a string object'); s.substring()",
-                                    "this is a string object",
-                                    eval("var s = new String('this is a string object'); s.substring()") );
+new TestCase(   SECTION,
+		"var s = new String('this is a string object'); s.substring()",
+		"this is a string object",
+		eval("var s = new String('this is a string object'); s.substring()") );
 
-    array[item++] = new TestCase(   SECTION,
-                                    "var s = new String('this is a string object'); s.substring(NaN)",
-                                    "this is a string object",
-                                    eval("var s = new String('this is a string object'); s.substring(NaN)") );
-
-
-    array[item++] = new TestCase(   SECTION,
-                                    "var s = new String('this is a string object'); s.substring(-0.01)",
-                                    "this is a string object",
-                                    eval("var s = new String('this is a string object'); s.substring(-0.01)") );
+new TestCase(   SECTION,
+		"var s = new String('this is a string object'); s.substring(NaN)",
+		"this is a string object",
+		eval("var s = new String('this is a string object'); s.substring(NaN)") );
 
 
-    array[item++] = new TestCase(   SECTION,
-                                    "var s = new String('this is a string object'); s.substring(s.length)",
-                                    "",
-                                    eval("var s = new String('this is a string object'); s.substring(s.length)") );
-
-    array[item++] = new TestCase(   SECTION,
-                                    "var s = new String('this is a string object'); s.substring(s.length+1)",
-                                    "",
-                                    eval("var s = new String('this is a string object'); s.substring(s.length+1)") );
+new TestCase(   SECTION,
+		"var s = new String('this is a string object'); s.substring(-0.01)",
+		"this is a string object",
+		eval("var s = new String('this is a string object'); s.substring(-0.01)") );
 
 
-    array[item++] = new TestCase(   SECTION,
-                                    "var s = new String('this is a string object'); s.substring(Infinity)",
-                                    "",
-                                    eval("var s = new String('this is a string object'); s.substring(Infinity)") );
+new TestCase(   SECTION,
+		"var s = new String('this is a string object'); s.substring(s.length)",
+		"",
+		eval("var s = new String('this is a string object'); s.substring(s.length)") );
 
-    array[item++] = new TestCase(   SECTION,
-                                    "var s = new String('this is a string object'); s.substring(-Infinity)",
-                                    "this is a string object",
-                                    eval("var s = new String('this is a string object'); s.substring(-Infinity)") );
-
-    // this is not a String object, start is not an integer
+new TestCase(   SECTION,
+		"var s = new String('this is a string object'); s.substring(s.length+1)",
+		"",
+		eval("var s = new String('this is a string object'); s.substring(s.length+1)") );
 
 
-    array[item++] = new TestCase(   SECTION,
-                                    "var s = new Array(1,2,3,4,5); s.substring = String.prototype.substring; s.substring()",
-                                    "1,2,3,4,5",
-                                    eval("var s = new Array(1,2,3,4,5); s.substring = String.prototype.substring; s.substring()") );
+new TestCase(   SECTION,
+		"var s = new String('this is a string object'); s.substring(Infinity)",
+		"",
+		eval("var s = new String('this is a string object'); s.substring(Infinity)") );
 
-    array[item++] = new TestCase(   SECTION,
-                                    "var s = new Array(1,2,3,4,5); s.substring = String.prototype.substring; s.substring(true)",
-                                    ",2,3,4,5",
-                                    eval("var s = new Array(1,2,3,4,5); s.substring = String.prototype.substring; s.substring(true)") );
+new TestCase(   SECTION,
+		"var s = new String('this is a string object'); s.substring(-Infinity)",
+		"this is a string object",
+		eval("var s = new String('this is a string object'); s.substring(-Infinity)") );
 
-    array[item++] = new TestCase(   SECTION,
-                                    "var s = new Array(1,2,3,4,5); s.substring = String.prototype.substring; s.substring('4')",
-                                    "3,4,5",
-                                    eval("var s = new Array(1,2,3,4,5); s.substring = String.prototype.substring; s.substring('4')") );
+// this is not a String object, start is not an integer
 
-    array[item++] = new TestCase(   SECTION,
-                                    "var s = new Array(); s.substring = String.prototype.substring; s.substring('4')",
-                                    "",
-                                    eval("var s = new Array(); s.substring = String.prototype.substring; s.substring('4')") );
 
-    // this is an object object
-    array[item++] = new TestCase(   SECTION,
-                                    "var obj = new Object(); obj.substring = String.prototype.substring; obj.substring(8)",
-                                    "Object]",
-                                    eval("var obj = new Object(); obj.substring = String.prototype.substring; obj.substring(8)") );
+new TestCase(   SECTION,
+		"var s = new Array(1,2,3,4,5); s.substring = String.prototype.substring; s.substring()",
+		"1,2,3,4,5",
+		eval("var s = new Array(1,2,3,4,5); s.substring = String.prototype.substring; s.substring()") );
 
-    // this is a function object
-    array[item++] = new TestCase(   SECTION,
-                                    "var obj = new Function(); obj.substring = String.prototype.substring; obj.toString = Object.prototype.toString; obj.substring(8)",
-                                    "Function]",
-                                    eval("var obj = new Function(); obj.substring = String.prototype.substring; obj.toString = Object.prototype.toString; obj.substring(8)") );
-    // this is a number object
-    array[item++] = new TestCase(   SECTION,
-                                    "var obj = new Number(NaN); obj.substring = String.prototype.substring; obj.substring(false)",
-                                    "NaN",
-                                    eval("var obj = new Number(NaN); obj.substring = String.prototype.substring; obj.substring(false)") );
+new TestCase(   SECTION,
+		"var s = new Array(1,2,3,4,5); s.substring = String.prototype.substring; s.substring(true)",
+		",2,3,4,5",
+		eval("var s = new Array(1,2,3,4,5); s.substring = String.prototype.substring; s.substring(true)") );
 
-    // this is the Math object
-    array[item++] = new TestCase(   SECTION,
-                                    "var obj = Math; obj.substring = String.prototype.substring; obj.substring(Math.PI)",
-                                    "ject Math]",
-                                    eval("var obj = Math; obj.substring = String.prototype.substring; obj.substring(Math.PI)") );
+new TestCase(   SECTION,
+		"var s = new Array(1,2,3,4,5); s.substring = String.prototype.substring; s.substring('4')",
+		"3,4,5",
+		eval("var s = new Array(1,2,3,4,5); s.substring = String.prototype.substring; s.substring('4')") );
 
-    // this is a Boolean object
+new TestCase(   SECTION,
+		"var s = new Array(); s.substring = String.prototype.substring; s.substring('4')",
+		"",
+		eval("var s = new Array(); s.substring = String.prototype.substring; s.substring('4')") );
 
-    array[item++] = new TestCase(   SECTION,
-                                    "var obj = new Boolean(); obj.substring = String.prototype.substring; obj.substring(new Array())",
-                                    "false",
-                                    eval("var obj = new Boolean(); obj.substring = String.prototype.substring; obj.substring(new Array())") );
+// this is an object object
+new TestCase(   SECTION,
+		"var obj = new Object(); obj.substring = String.prototype.substring; obj.substring(8)",
+		"Object]",
+		eval("var obj = new Object(); obj.substring = String.prototype.substring; obj.substring(8)") );
 
-    // this is a user defined object
+// this is a function object
+new TestCase(   SECTION,
+		"var obj = new Function(); obj.substring = String.prototype.substring; obj.toString = Object.prototype.toString; obj.substring(8)",
+		"Function]",
+		eval("var obj = new Function(); obj.substring = String.prototype.substring; obj.toString = Object.prototype.toString; obj.substring(8)") );
+// this is a number object
+new TestCase(   SECTION,
+		"var obj = new Number(NaN); obj.substring = String.prototype.substring; obj.substring(false)",
+		"NaN",
+		eval("var obj = new Number(NaN); obj.substring = String.prototype.substring; obj.substring(false)") );
 
-    array[item++] = new TestCase( SECTION,
-                                    "var obj = new MyObject( null ); obj.substring(0)",
-                                    "null",
-                                    eval( "var obj = new MyObject( null ); obj.substring(0)") );
+// this is the Math object
+new TestCase(   SECTION,
+		"var obj = Math; obj.substring = String.prototype.substring; obj.substring(Math.PI)",
+		"ject Math]",
+		eval("var obj = Math; obj.substring = String.prototype.substring; obj.substring(Math.PI)") );
 
-    return array;
-}
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
+// this is a Boolean object
 
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
+new TestCase(   SECTION,
+		"var obj = new Boolean(); obj.substring = String.prototype.substring; obj.substring(new Array())",
+		"false",
+		eval("var obj = new Boolean(); obj.substring = String.prototype.substring; obj.substring(new Array())") );
+
+// this is a user defined object
+
+new TestCase( SECTION,
+	      "var obj = new MyObject( null ); obj.substring(0)",
+	      "null",
+	      eval( "var obj = new MyObject( null ); obj.substring(0)") );
+
+
+test();
+
 function MyObject( value ) {
-    this.value = value;
-    this.substring = String.prototype.substring;
-    this.toString = new Function ( "return this.value+''" );
+  this.value = value;
+  this.substring = String.prototype.substring;
+  this.toString = new Function ( "return this.value+''" );
 }

@@ -63,9 +63,7 @@
 
     writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = new Array();
-
-    testcases[tc++] = new TestCase(
+    new TestCase(
         SECTION,
         "eval(\"function f(){}function g(){}\")",
         "error",
@@ -73,17 +71,3 @@
 
     test();
 
-
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,72 +35,56 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/**
-	Filename:     RegExp_rightContext.js
-	Description:  'Tests RegExps rightContext property'
 
-	Author:       Nick Lerissa
-	Date:         March 12, 1998
+/**
+   Filename:     RegExp_rightContext.js
+   Description:  'Tests RegExps rightContext property'
+
+   Author:       Nick Lerissa
+   Date:         March 12, 1998
 */
 
-	var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
-	var VERSION = 'no version';
-    startTest();
-	var TITLE   = 'RegExp: rightContext';
+var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
+var VERSION = 'no version';
+startTest();
+var TITLE   = 'RegExp: rightContext';
 
-	writeHeaderToLog('Executing script: RegExp_rightContext.js');
-	writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog('Executing script: RegExp_rightContext.js');
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-	var count = 0;
-	var testcases = new Array();
+// 'abc123xyz'.match(/123/); RegExp.rightContext
+'abc123xyz'.match(/123/);
+new TestCase ( SECTION, "'abc123xyz'.match(/123/); RegExp.rightContext",
+	       'xyz', RegExp.rightContext);
 
-    // 'abc123xyz'.match(/123/); RegExp.rightContext
-    'abc123xyz'.match(/123/);
-	testcases[count++] = new TestCase ( SECTION, "'abc123xyz'.match(/123/); RegExp.rightContext",
-	                                    'xyz', RegExp.rightContext);
+// 'abc123xyz'.match(/456/); RegExp.rightContext
+'abc123xyz'.match(/456/);
+new TestCase ( SECTION, "'abc123xyz'.match(/456/); RegExp.rightContext",
+	       'xyz', RegExp.rightContext);
 
-    // 'abc123xyz'.match(/456/); RegExp.rightContext
-    'abc123xyz'.match(/456/);
-	testcases[count++] = new TestCase ( SECTION, "'abc123xyz'.match(/456/); RegExp.rightContext",
-	                                    'xyz', RegExp.rightContext);
+// 'abc123xyz'.match(/abc123xyz/); RegExp.rightContext
+'abc123xyz'.match(/abc123xyz/);
+new TestCase ( SECTION, "'abc123xyz'.match(/abc123xyz/); RegExp.rightContext",
+	       '', RegExp.rightContext);
 
-    // 'abc123xyz'.match(/abc123xyz/); RegExp.rightContext
-    'abc123xyz'.match(/abc123xyz/);
-	testcases[count++] = new TestCase ( SECTION, "'abc123xyz'.match(/abc123xyz/); RegExp.rightContext",
-	                                    '', RegExp.rightContext);
+// 'xxxx'.match(/$/); RegExp.rightContext
+'xxxx'.match(/$/);
+new TestCase ( SECTION, "'xxxx'.match(/$/); RegExp.rightContext",
+	       '', RegExp.rightContext);
 
-    // 'xxxx'.match(/$/); RegExp.rightContext
-    'xxxx'.match(/$/);
-	testcases[count++] = new TestCase ( SECTION, "'xxxx'.match(/$/); RegExp.rightContext",
-	                                    '', RegExp.rightContext);
+// 'test'.match(/^/); RegExp.rightContext
+'test'.match(/^/);
+new TestCase ( SECTION, "'test'.match(/^/); RegExp.rightContext",
+	       'test', RegExp.rightContext);
 
-    // 'test'.match(/^/); RegExp.rightContext
-    'test'.match(/^/);
-	testcases[count++] = new TestCase ( SECTION, "'test'.match(/^/); RegExp.rightContext",
-	                                    'test', RegExp.rightContext);
+// 'xxxx'.match(new RegExp('$')); RegExp.rightContext
+'xxxx'.match(new RegExp('$'));
+new TestCase ( SECTION, "'xxxx'.match(new RegExp('$')); RegExp.rightContext",
+	       '', RegExp.rightContext);
 
-    // 'xxxx'.match(new RegExp('$')); RegExp.rightContext
-    'xxxx'.match(new RegExp('$'));
-	testcases[count++] = new TestCase ( SECTION, "'xxxx'.match(new RegExp('$')); RegExp.rightContext",
-	                                    '', RegExp.rightContext);
+// 'test'.match(new RegExp('^')); RegExp.rightContext
+'test'.match(new RegExp('^'));
+new TestCase ( SECTION, "'test'.match(new RegExp('^')); RegExp.rightContext",
+	       'test', RegExp.rightContext);
 
-    // 'test'.match(new RegExp('^')); RegExp.rightContext
-    'test'.match(new RegExp('^'));
-	testcases[count++] = new TestCase ( SECTION, "'test'.match(new RegExp('^')); RegExp.rightContext",
-	                                    'test', RegExp.rightContext);
-
-	function test()
-	{
-	   for ( tc=0; tc < testcases.length; tc++ ) {
-	        testcases[tc].passed = writeTestCaseResult(
-	        testcases[tc].expect,
-	        testcases[tc].actual,
-	        testcases[tc].description +" = "+
-	        testcases[tc].actual );
-	        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-	   }
-	   stopTest();
-	   return ( testcases );
-	}
-
-	test();
+test();

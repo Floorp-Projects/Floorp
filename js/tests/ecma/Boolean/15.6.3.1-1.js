@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,54 +35,36 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.6.3.1-1.js
-    ECMA Section:       15.6.3 Boolean.prototype
+   File Name:          15.6.3.1-1.js
+   ECMA Section:       15.6.3 Boolean.prototype
 
-    Description:        The initial value of Boolean.prototype is the built-in
-                        Boolean prototype object (15.6.4).
+   Description:        The initial value of Boolean.prototype is the built-in
+   Boolean prototype object (15.6.4).
 
-                        The property shall have the attributes [DontEnum,
-                        DontDelete, ReadOnly ].
+   The property shall have the attributes [DontEnum,
+   DontDelete, ReadOnly ].
 
-                        This tests the DontEnum property of Boolean.prototype
+   This tests the DontEnum property of Boolean.prototype
 
-    Author:             christine@netscape.com
-    Date:               june 27, 1997
+   Author:             christine@netscape.com
+   Date:               june 27, 1997
 
 */
-    var SECTION = "15.6.3.1-1";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Boolean.prototype";
+var SECTION = "15.6.3.1-1";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Boolean.prototype";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
 
-    test();
+var array = new Array();
+var item = 0;
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
-
-    array[item++] = new TestCase( SECTION,
-                                 "var str='';for ( p in Boolean ) { str += p } str;",
-                                 "",
-                                 eval("var str='';for ( p in Boolean ) { str += p } str;") );
-    return ( array );
-}
-
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
+new TestCase( SECTION,
+	      "var str='';for ( p in Boolean ) { str += p } str;",
+	      "",
+	      eval("var str='';for ( p in Boolean ) { str += p } str;") );
+test();

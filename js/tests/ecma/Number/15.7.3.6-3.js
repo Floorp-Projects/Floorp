@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,50 +35,29 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.7.3.6-3.js
-    ECMA Section:       15.7.3.6 Number.POSITIVE_INFINITY
-    Description:        All value properties of the Number object should have
-                        the attributes [DontEnum, DontDelete, ReadOnly]
+   File Name:          15.7.3.6-3.js
+   ECMA Section:       15.7.3.6 Number.POSITIVE_INFINITY
+   Description:        All value properties of the Number object should have
+   the attributes [DontEnum, DontDelete, ReadOnly]
 
-                        this test checks the ReadOnly attribute of Number.POSITIVE_INFINITY
+   this test checks the ReadOnly attribute of Number.POSITIVE_INFINITY
 
-    Author:             christine@netscape.com
-    Date:               16 september 1997
+   Author:             christine@netscape.com
+   Date:               16 september 1997
 */
 
-    var SECTION = "15.7.3.6-3";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Number.POSITIVE_INFINITY";
+var SECTION = "15.7.3.6-3";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Number.POSITIVE_INFINITY";
 
-    writeHeaderToLog( SECTION + " "+TITLE);
+writeHeaderToLog( SECTION + " "+TITLE);
 
-    var testcases = getTestCases();
-    test( testcases );
+new TestCase( SECTION,
+	      "Number.POSITIVE_INFINITY=0; Number.POSITIVE_INFINITY",
+	      Number.POSITIVE_INFINITY,
+	      eval("Number.POSITIVE_INFINITY=0; Number.POSITIVE_INFINITY") );
 
-
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
-    array[item++] = new TestCase(
-                    SECTION,
-                    "Number.POSITIVE_INFINITY=0; Number.POSITIVE_INFINITY",
-                    Number.POSITIVE_INFINITY,
-                    "Number.POSITIVE_INFINITY=0; Number.POSITIVE_INFINITY" );
-    return ( array );
-}
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-            testcases[tc].actual = eval( testcases[tc].actual );
-
-            testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+ testcases[tc].actual );
-
-            testcases[tc].reason += "property should be readonly ";
-    }
-    stopTest();
-    return ( testcases );
-}
+test();

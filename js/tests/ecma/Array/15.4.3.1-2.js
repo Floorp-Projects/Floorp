@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,48 +35,45 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/**
-    File Name:          15.4.3.1-1.js
-    ECMA Section:       15.4.3.1 Array.prototype
-    Description:        The initial value of Array.prototype is the built-in
-                        Array prototype object (15.4.4).
 
-    Author:             christine@netscape.com
-    Date:               7 october 1997
+/**
+   File Name:          15.4.3.1-1.js
+   ECMA Section:       15.4.3.1 Array.prototype
+   Description:        The initial value of Array.prototype is the built-in
+   Array prototype object (15.4.4).
+
+   Author:             christine@netscape.com
+   Date:               7 october 1997
 */
 
-    var SECTION = "15.4.3.1-1";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Array.prototype";
+var SECTION = "15.4.3.1-1";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Array.prototype";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
-    test();
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
-    var ARRAY_PROTO = Array.prototype;
+var ARRAY_PROTO = Array.prototype;
 
-    array[item++] = new TestCase( SECTION,  "var props = ''; for ( p in Array  ) { props += p } props", "", eval("var props = ''; for ( p in Array  ) { props += p } props") );
+new TestCase( SECTION,  
+	      "var props = ''; for ( p in Array  ) { props += p } props", 
+	      "", 
+	      eval("var props = ''; for ( p in Array  ) { props += p } props") );
 
-    array[item++] = new TestCase( SECTION,  "Array.prototype = null; Array.prototype",   ARRAY_PROTO, eval("Array.prototype = null; Array.prototype") );
+new TestCase( SECTION,  
+	      "Array.prototype = null; Array.prototype",   
+	      ARRAY_PROTO, 
+	      eval("Array.prototype = null; Array.prototype") );
 
-    array[item++] = new TestCase( SECTION,  "delete Array.prototype",                   false,       delete Array.prototype );
-    array[item++] = new TestCase( SECTION,  "delete Array.prototype; Array.prototype",  ARRAY_PROTO, eval("delete Array.prototype; Array.prototype") );
+new TestCase( SECTION,  
+	      "delete Array.prototype",                   
+	      false,       
+	      delete Array.prototype );
 
-    return ( array );
-}
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+ testcases[tc].actual );
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
+new TestCase( SECTION,  
+	      "delete Array.prototype; Array.prototype",  
+	      ARRAY_PROTO, 
+	      eval("delete Array.prototype; Array.prototype") );
+
+test();

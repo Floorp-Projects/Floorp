@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -60,124 +61,264 @@ var actualmatch = '';
 var actualmatches = new Array();
 var expectedmatch = '';
 var expectedmatches = new Array();
+var e;
 
 
 string = 'foo {1} foo {2} foo';
 
-  // try an example with the braces escaped
-  status = inSection(1);
-  pattern = /\{1.*\}/g;
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('{1} foo {2}');
-  addThis();
+// try an example with the braces escaped
+status = inSection(1);
+try
+{
+    pattern = new RegExp('\{1.*\}', 'g');
+    actualmatch = string.match(pattern);
+}
+catch (e)
+{
+    pattern = 'error';
+    actualmatch = '';
+}
+expectedmatch = Array('{1} foo {2}');
+addThis();
 
-  // just like Section 1, without the braces being escaped
-  status = inSection(2);
-  pattern = /{1.*}/g;
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('{1} foo {2}');
-  addThis();
+// just like Section 1, without the braces being escaped
+status = inSection(2);
+try
+{
+    pattern = new RegExp('{1.*}', 'g');
+    actualmatch = string.match(pattern);
+}
+catch (e)
+{
+    pattern = 'error';
+    actualmatch = '';
+}
+expectedmatch = Array('{1} foo {2}');
+addThis();
 
-  // try an example with the braces escaped
-  status = inSection(3);
-  pattern = /\{1[.!\}]*\}/g;
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('{1}');
-  addThis();
+// try an example with the braces escaped
+status = inSection(3);
+try
+{
+    pattern = new RegExp('\{1[.!\}]*\}', 'g');
+    actualmatch = string.match(pattern);
+}
+catch (e)
+{
+    pattern = 'error';
+    actualmatch = '';
+}
+expectedmatch = Array('{1}');
+addThis();
 
-  // just like Section 3, without the braces being escaped
-  status = inSection(4);
-  pattern = /{1[.!}]*}/g;
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('{1}');
-  addThis();
+// just like Section 3, without the braces being escaped
+status = inSection(4);
+try
+{
+    pattern = new RegExp('{1[.!}]*}', 'g');
+    actualmatch = string.match(pattern);
+}
+catch (e)
+{
+    pattern = 'error';
+    actualmatch = '';
+}
+expectedmatch = Array('{1}');
+addThis();
 
 
 string = 'abccccc{3 }c{ 3}c{3, }c{3 ,}c{3 ,4}c{3, 4}c{3,4 }de';
 
-  // use braces in a normal quantifier construct
-  status = inSection(5);
-  pattern = /c{3}/;
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('ccc');
-  addThis();
+// use braces in a normal quantifier construct
+status = inSection(5);
+try
+{
+    pattern = new RegExp('c{3}');
+    actualmatch = string.match(pattern);
+}
+catch (e)
+{
+    pattern = 'error';
+    actualmatch = '';
+}
+expectedmatch = Array('ccc');
+addThis();
 
-  // now disrupt the quantifer - the braces should now be interpreted literally
-  status = inSection(6);
-  pattern = /c{3 }/;
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('c{3 }');
-  addThis();
+// now disrupt the quantifer - the braces should now be interpreted literally
+status = inSection(6);
+try
+{
+    pattern = new RegExp('c{3 }');
+    actualmatch = string.match(pattern);
+}
+catch (e)
+{
+    pattern = 'error';
+    actualmatch = '';
+}
+expectedmatch = Array('c{3 }');
+addThis();
 
-  status = inSection(7);
-  pattern = /c{3.}/;
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('c{3 }');
-  addThis();
+status = inSection(7);
+try
+{
+    pattern = new RegExp('c{3.}');
+    actualmatch = string.match(pattern);
+}
+catch (e)
+{
+    pattern = 'error';
+    actualmatch = '';
+}
+expectedmatch = Array('c{3 }');
+addThis();
 
-  status = inSection(8);
-  pattern = /c{3\s}/;
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('c{3 }');
-  addThis();
+status = inSection(8);
+try
+{
+    // need to escape the \ in \s since
+    // this has been converted to a constructor call 
+    // instead of a literal regexp
+    pattern = new RegExp('c{3\\s}');
+    actualmatch = string.match(pattern);
+}
+catch (e)
+{
+    pattern = 'error';
+    actualmatch = '';
+}
+expectedmatch = Array('c{3 }');
+addThis();
 
-  status = inSection(9);
-  pattern = /c{3[ ]}/;
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('c{3 }');
-  addThis();
+status = inSection(9);
+try
+{
+    pattern = new RegExp('c{3[ ]}');
+    actualmatch = string.match(pattern);
+}
+catch (e)
+{
+    pattern = 'error';
+    actualmatch = '';
+}
+expectedmatch = Array('c{3 }');
+addThis();
 
-  status = inSection(10);
-  pattern = /c{ 3}/;
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('c{ 3}');
-  addThis();
+status = inSection(10);
+try
+{
+    pattern = new RegExp('c{ 3}');
+    actualmatch = string.match(pattern);
+}
+catch (e)
+{
+    pattern = 'error';
+    actualmatch = '';
+}
+expectedmatch = Array('c{ 3}');
+addThis();
 
-  // using braces in a normal quantifier construct again
-  status = inSection(11);
-  pattern = /c{3,}/;
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('ccccc');
-  addThis();
+// using braces in a normal quantifier construct again
+status = inSection(11);
+try
+{
+    pattern = new RegExp('c{3,}');
+    actualmatch = string.match(pattern);
+}
+catch (e)
+{
+    pattern = 'error';
+    actualmatch = '';
+}
+expectedmatch = Array('ccccc');
+addThis();
 
-  // now disrupt it - the braces should now be interpreted literally
-  status = inSection(12);
-  pattern = /c{3, }/;
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('c{3, }');
-  addThis();
+// now disrupt it - the braces should now be interpreted literally
+status = inSection(12);
+try
+{
+    pattern = new RegExp('c{3, }');
+    actualmatch = string.match(pattern);
+}
+catch (e)
+{
+    pattern = 'error';
+    actualmatch = '';
+}
+expectedmatch = Array('c{3, }');
+addThis();
 
-  status = inSection(13);
-  pattern = /c{3 ,}/;
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('c{3 ,}');
-  addThis();
+status = inSection(13);
+try
+{
+    pattern = new RegExp('c{3 ,}');
+    actualmatch = string.match(pattern);
+}
+catch (e)
+{
+    pattern = 'error';
+    actualmatch = '';
+}
+expectedmatch = Array('c{3 ,}');
+addThis();
 
-  // using braces in a normal quantifier construct again
-  status = inSection(14);
-  pattern = /c{3,4}/;
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('cccc');
-  addThis();
+// using braces in a normal quantifier construct again
+status = inSection(14);
+try
+{
+    pattern = new RegExp('c{3,4}');
+    actualmatch = string.match(pattern);
+}
+catch (e)
+{
+    pattern = 'error';
+    actualmatch = '';
+}
+expectedmatch = Array('cccc');
+addThis();
 
-  // now disrupt it - the braces should now be interpreted literally
-  status = inSection(15);
-  pattern = /c{3 ,4}/;
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('c{3 ,4}');
-  addThis();
+// now disrupt it - the braces should now be interpreted literally
+status = inSection(15);
+try
+{
+    pattern = new RegExp('c{3 ,4}');
+    actualmatch = string.match(pattern);
+}
+catch (e)
+{
+    pattern = 'error';
+    actualmatch = '';
+}
+expectedmatch = Array('c{3 ,4}');
+addThis();
 
-  status = inSection(16);
-  pattern = /c{3, 4}/;
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('c{3, 4}');
-  addThis();
+status = inSection(16);
+try
+{
+    pattern = new RegExp('c{3, 4}');
+    actualmatch = string.match(pattern);
+}
+catch (e)
+{
+    pattern = 'error';
+    actualmatch = '';
+}
+expectedmatch = Array('c{3, 4}');
+addThis();
 
-  status = inSection(17);
-  pattern = /c{3,4 }/;
-  actualmatch = string.match(pattern);
-  expectedmatch = Array('c{3,4 }');
-  addThis();
+status = inSection(17);
+try
+{
+    pattern = new RegExp('c{3,4 }');
+    actualmatch = string.match(pattern);
+}
+catch (e)
+{
+    pattern = 'error';
+    actualmatch = '';
+}
+expectedmatch = Array('c{3,4 }');
+addThis();
 
 
 
@@ -190,20 +331,20 @@ test();
 
 function addThis()
 {
-  statusmessages[i] = status;
-  patterns[i] = pattern;
-  strings[i] = string;
-  actualmatches[i] = actualmatch;
-  expectedmatches[i] = expectedmatch;
-  i++;
+    statusmessages[i] = status;
+    patterns[i] = pattern;
+    strings[i] = string;
+    actualmatches[i] = actualmatch;
+    expectedmatches[i] = expectedmatch;
+    i++;
 }
 
 
 function test()
 {
-  enterFunc ('test');
-  printBugNumber (bug);
-  printStatus (summary);
-  testRegExp(statusmessages, patterns, strings, actualmatches, expectedmatches);
-  exitFunc ('test');
+    enterFunc ('test');
+    printBugNumber (bug);
+    printStatus (summary);
+    testRegExp(statusmessages, patterns, strings, actualmatches, expectedmatches);
+    exitFunc ('test');
 }

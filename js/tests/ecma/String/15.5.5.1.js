@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,72 +35,52 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.5.5.1
-    ECMA Section:       String.length
-    Description:
+   File Name:          15.5.5.1
+   ECMA Section:       String.length
+   Description:
 
-    The number of characters in the String value represented by this String
-    object.
+   The number of characters in the String value represented by this String
+   object.
 
-    Once a String object is created, this property is unchanging. It has the
-    attributes { DontEnum, DontDelete, ReadOnly }.
+   Once a String object is created, this property is unchanging. It has the
+   attributes { DontEnum, DontDelete, ReadOnly }.
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
 
-    var SECTION = "15.5.5.1";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "String.length";
+var SECTION = "15.5.5.1";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "String.length";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
-    test();
+new TestCase(   SECTION,
+		"var s = new String(); s.length",
+		0,
+		eval("var s = new String(); s.length") );
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
+new TestCase(   SECTION,
+		"var s = new String(); s.length = 10; s.length",
+		0,
+		eval("var s = new String(); s.length = 10; s.length") );
 
-    array[item++] = new TestCase(   SECTION,
-                                    "var s = new String(); s.length",
-                                    0,
-                                    eval("var s = new String(); s.length") );
+new TestCase(   SECTION,
+		"var s = new String(); var props = ''; for ( var p in s ) {  props += p; };  props",
+		"",
+		eval("var s = new String(); var props = ''; for ( var p in s ) {  props += p; };  props") );
 
-    array[item++] = new TestCase(   SECTION,
-                                    "var s = new String(); s.length = 10; s.length",
-                                    0,
-                                    eval("var s = new String(); s.length = 10; s.length") );
+new TestCase(   SECTION,
+		"var s = new String(); delete s.length",
+		false,
+		eval("var s = new String(); delete s.length") );
 
-    array[item++] = new TestCase(   SECTION,
-                                    "var s = new String(); var props = ''; for ( var p in s ) {  props += p; };  props",
-                                    "",
-                                    eval("var s = new String(); var props = ''; for ( var p in s ) {  props += p; };  props") );
+new TestCase(   SECTION,
+		"var s = new String('hello'); delete s.length; s.length",
+		5,
+		eval("var s = new String('hello'); delete s.length; s.length") );
 
-    array[item++] = new TestCase(   SECTION,
-                                    "var s = new String(); delete s.length",
-                                    false,
-                                    eval("var s = new String(); delete s.length") );
-
-    array[item++] = new TestCase(   SECTION,
-                                    "var s = new String('hello'); delete s.length; s.length",
-                                    5,
-                                    eval("var s = new String('hello'); delete s.length; s.length") );
-    return array;
-
-}
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
+test();

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -35,75 +36,59 @@
  *
  * ***** END LICENSE BLOCK ***** */
 /**
-    File Name:          toString_1.js
-    ECMA Section:       Object.toString()
-    Description:
+   File Name:          toString_1.js
+   ECMA Section:       Object.toString()
+   Description:
 
-    This checks the ToString value of Object objects under JavaScript 1.2.
+   This checks the ToString value of Object objects under JavaScript 1.2.
 
-    In JavaScript 1.2, Object.toString()
+   In JavaScript 1.2, Object.toString()
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
 
-    var SECTION = "JS1_2";
-    var VERSION = "JS1_2";
-    startTest();
-    var TITLE   = "Object.toString()";
+var SECTION = "JS1_2";
+var VERSION = "JS1_2";
+startTest();
+var TITLE   = "Object.toString()";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = new Array();
+var o = new Object();
 
-    var o = new Object();
+new TestCase( SECTION,
+	      "var o = new Object(); o.toString()",
+	      "{}",
+	      o.toString() );
 
-    testcases[testcases.length] = new TestCase( SECTION,
-        "var o = new Object(); o.toString()",
-        "{}",
-        o.toString() );
+o = {};
 
-    o = {};
+new TestCase( SECTION,
+	      "o = {}; o.toString()",
+	      "{}",
+	      o.toString() );
 
-    testcases[testcases.length] = new TestCase( SECTION,
-        "o = {}; o.toString()",
-        "{}",
-        o.toString() );
+o = { name:"object", length:0, value:"hello" }
 
-    o = { name:"object", length:0, value:"hello" }
+new TestCase( SECTION,
+	      "o = { name:\"object\", length:0, value:\"hello\" }; o.toString()",
+	      true,
+	      checkObjectToString(o.toString(), ['name:"object"', 'length:0',
+						 'value:"hello"']));
 
-    testcases[testcases.length] = new TestCase( SECTION,
-        "o = { name:\"object\", length:0, value:\"hello\" }; o.toString()",
-        true,
-        checkObjectToString(o.toString(), ['name:"object"', 'length:0',
-                                           'value:"hello"']));
+o = { name:"object", length:0, value:"hello",
+      toString:new Function( "return this.value+''" ) }
 
-     o = { name:"object", length:0, value:"hello",
-        toString:new Function( "return this.value+''" ) }
-
-    testcases[testcases.length] = new TestCase( SECTION,
-        "o = { name:\"object\", length:0, value:\"hello\", "+
-            "toString:new Function( \"return this.value+''\" ) }; o.toString()",
-        "hello",
-        o.toString() );
+new TestCase( SECTION,
+	      "o = { name:\"object\", length:0, value:\"hello\", "+
+	      "toString:new Function( \"return this.value+''\" ) }; o.toString()",
+	      "hello",
+	      o.toString() );
 
 
 
-    test();
-
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
+test();
 
 /**
  * checkObjectToString
@@ -117,7 +102,7 @@ function test() {
 function checkObjectToString(s, a) {
     var m = /^\{(.*)\}$/(s);
     if (!m)
-       return false;	// should begin and end with curly brackets
+	return false;	// should begin and end with curly brackets
     var a2 = m[1].split(", ");
     if (a.length != a2.length)
         return false;	// should be same length
@@ -125,7 +110,7 @@ function checkObjectToString(s, a) {
     a2.sort();
     for (var i=0; i < a.length; i++) {
         if (a[i] != a2[i])
-           return false;	// should have identical elements 
+	    return false;	// should have identical elements 
     }
     return true;
 }

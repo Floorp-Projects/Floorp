@@ -1,4 +1,5 @@
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+ ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -34,54 +35,35 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          7.4.3-15-n.js
-    ECMA Section:       7.4.3
+   File Name:          7.4.3-15-n.js
+   ECMA Section:       7.4.3
 
-    Description:
-    The following words are used as keywords in proposed extensions and are
-    therefore reserved to allow for the possibility of future adoption of
-    those extensions.
+   Description:
+   The following words are used as keywords in proposed extensions and are
+   therefore reserved to allow for the possibility of future adoption of
+   those extensions.
 
-    FutureReservedWord :: one of
-    case    debugger    export      super
-    catch   default     extends     switch
-    class   do          finally     throw
-    const   enum        import      try
+   FutureReservedWord :: one of
+   case    debugger    export      super
+   catch   default     extends     switch
+   class   do          finally     throw
+   const   enum        import      try
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
-    var SECTION = "7.4.3-15-n";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Future Reserved Words";
+var SECTION = "7.4.3-15-n";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Future Reserved Words";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
-    test();
+DESCRIPTION = "var import = true";
+EXPECTED = "error";
 
+new TestCase( SECTION,  "var import = true",     "error",    eval("var import = true") );
 
-
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
-    array[item++] = new TestCase( SECTION,  "var import = true",     "error",    "var import = true" );
-    return ( array );
-}
-
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].actual = eval( testcases[tc].actual );
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
+test();

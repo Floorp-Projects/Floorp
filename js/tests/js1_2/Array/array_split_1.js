@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -35,53 +36,48 @@
  *
  * ***** END LICENSE BLOCK ***** */
 /**
-    File Name:          array_split_1.js
-    ECMA Section:       Array.split()
-    Description:
+   File Name:          array_split_1.js
+   ECMA Section:       Array.split()
+   Description:
 
-    These are tests from free perl suite.
+   These are tests from free perl suite.
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
 
-    var SECTION = "Free Perl";
-    var VERSION = "JS1_2";
-    var TITLE   = "Array.split()";
+var SECTION = "Free Perl";
+var VERSION = "JS1_2";
+var TITLE   = "Array.split()";
 
-    startTest();
+startTest();
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = new Array();
+ 
+new TestCase( SECTION,
+	      "('a,b,c'.split(',')).length",
+	      3,
+	      ('a,b,c'.split(',')).length );
 
+new TestCase( SECTION,
+	      "('a,b'.split(',')).length",
+	      2,
+	      ('a,b'.split(',')).length );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "('a,b,c'.split(',')).length",
-                                    3,
-                                    ('a,b,c'.split(',')).length );
-
-    testcases[tc++] = new TestCase( SECTION,
-                                    "('a,b'.split(',')).length",
-                                    2,
-                                    ('a,b'.split(',')).length );
-
-    testcases[tc++] = new TestCase( SECTION,
-                                    "('a'.split(',')).length",
-                                    1,
-                                    ('a'.split(',')).length );
+new TestCase( SECTION,
+	      "('a'.split(',')).length",
+	      1,
+	      ('a'.split(',')).length );
 
 /*
  * Deviate from ECMA by never splitting an empty string by any separator
  * string into a non-empty array (an array of length 1 that contains the
  * empty string).
  */
-    testcases[tc++] = new TestCase( SECTION,
-                                    "(''.split(',')).length",
-                                    0,
-                                    (''.split(',')).length );
+new TestCase( SECTION,
+	      "(''.split(',')).length",
+	      0,
+	      (''.split(',')).length );
 
-
-
-
-    test();
+test();

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,59 +35,48 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.9.5.2-2.js
-    ECMA Section:       15.9.5.2 Date.prototype.toString
-    Description:
-    This function returns a string value. The contents of the string are
-    implementation dependent, but are intended to represent the Date in a
-    convenient, human-readable form in the current time zone.
+   File Name:          15.9.5.2-2.js
+   ECMA Section:       15.9.5.2 Date.prototype.toString
+   Description:
+   This function returns a string value. The contents of the string are
+   implementation dependent, but are intended to represent the Date in a
+   convenient, human-readable form in the current time zone.
 
-    The toString function is not generic; it generates a runtime error if its
-    this value is not a Date object. Therefore it cannot be transferred to
-    other kinds of objects for use as a method.
+   The toString function is not generic; it generates a runtime error if its
+   this value is not a Date object. Therefore it cannot be transferred to
+   other kinds of objects for use as a method.
 
 
-    This verifies that calling toString on an object that is not a string
-    generates a runtime error.
+   This verifies that calling toString on an object that is not a string
+   generates a runtime error.
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
 
-    var SECTION = "15.9.5.2-2";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Date.prototype.toString";
+var SECTION = "15.9.5.2-2";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Date.prototype.toString";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = new Array();
+var OBJ = new MyObject( new Date(0) );
 
-    var OBJ = new MyObject( new Date(0) );
+DESCRIPTION = "var OBJ = new MyObject( new Date(0) ); OBJ.toString()";
+EXPECTED = "error";
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "var OBJ = new MyObject( new Date(0) ); OBJ.toString()",
-                                    "error",
-                                    OBJ.toString() );
-    test();
+new TestCase( SECTION,
+	      "var OBJ = new MyObject( new Date(0) ); OBJ.toString()",
+	      "error",
+	      eval("OBJ.toString()") );
+test();
 
 function MyObject( value ) {
-    this.value = value;
-    this.valueOf = new Function( "return this.value" );
-    this.toString = Date.prototype.toString;
-    return this;
-}
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
+  this.value = value;
+  this.valueOf = new Function( "return this.value" );
+  this.toString = Date.prototype.toString;
+  return this;
 }

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,58 +35,41 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          7.4.2-1.js
-    ECMA Section:       7.4.2
+   File Name:          7.4.2-1.js
+   ECMA Section:       7.4.2
 
-    Description:
-    The following tokens are ECMAScript keywords and may not be used as
-    identifiers in ECMAScript programs.
+   Description:
+   The following tokens are ECMAScript keywords and may not be used as
+   identifiers in ECMAScript programs.
 
-    Syntax
+   Syntax
 
-    Keyword :: one of
-     break          for         new         var
-     continue       function    return      void
-     delete         if          this        while
-     else           in          typeof      with
+   Keyword :: one of
+   break          for         new         var
+   continue       function    return      void
+   delete         if          this        while
+   else           in          typeof      with
 
-    This test verifies that the keyword cannot be used as an identifier.
-    Functioinal tests of the keyword may be found in the section corresponding
-    to the function of the keyword.
+   This test verifies that the keyword cannot be used as an identifier.
+   Functioinal tests of the keyword may be found in the section corresponding
+   to the function of the keyword.
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 
 */
-    var SECTION = "7.4.2-1-n";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Keywords";
+var SECTION = "7.4.2-1-n";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Keywords";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
-    test();
+DESCRIPTION = "var break = true";
+EXPECTED = "error";
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
-    array[item++] = new TestCase( SECTION,  "var break = true",     "error",    "var break = true" );
-    return ( array );
-}
+new TestCase( SECTION,  "var break = true",     "error",    eval("var break = true") );
 
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].actual = eval( testcases[tc].actual );
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
+test();

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,102 +35,76 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          9.4-1.js
-    ECMA Section:       9.4 ToInteger
-    Description:        1.  Call ToNumber on the input argument
-                        2.  If Result(1) is NaN, return +0
-                        3.  If Result(1) is +0, -0, Infinity, or -Infinity,
-                            return Result(1).
-                        4.  Compute sign(Result(1)) * floor(abs(Result(1))).
-                        5.  Return Result(4).
+   File Name:          9.4-1.js
+   ECMA Section:       9.4 ToInteger
+   Description:        1.  Call ToNumber on the input argument
+   2.  If Result(1) is NaN, return +0
+   3.  If Result(1) is +0, -0, Infinity, or -Infinity,
+   return Result(1).
+   4.  Compute sign(Result(1)) * floor(abs(Result(1))).
+   5.  Return Result(4).
 
-                        To test ToInteger, this test uses new Date(value),
-                        15.9.3.7.  The Date constructor sets the [[Value]]
-                        property of the new object to TimeClip(value), which
-                        uses the rules:
+   To test ToInteger, this test uses new Date(value),
+   15.9.3.7.  The Date constructor sets the [[Value]]
+   property of the new object to TimeClip(value), which
+   uses the rules:
 
-                        TimeClip(time)
-                        1. If time is not finite, return NaN
-                        2. If abs(Result(1)) > 8.64e15, return NaN
-                        3. Return an implementation dependent choice of either
-                        ToInteger(Result(2)) or ToInteger(Result(2)) + (+0)
-                        (Adding a positive 0 converts -0 to +0).
+   TimeClip(time)
+   1. If time is not finite, return NaN
+   2. If abs(Result(1)) > 8.64e15, return NaN
+   3. Return an implementation dependent choice of either
+   ToInteger(Result(2)) or ToInteger(Result(2)) + (+0)
+   (Adding a positive 0 converts -0 to +0).
 
-                        This tests ToInteger for values -8.64e15 > value > 8.64e15,
-                        not including -0 and +0.
+   This tests ToInteger for values -8.64e15 > value > 8.64e15,
+   not including -0 and +0.
 
-                        For additional special cases (0, +0, Infinity, -Infinity,
-                        and NaN, see 9.4-2.js).  For value is String, see 9.4-3.js.
+   For additional special cases (0, +0, Infinity, -Infinity,
+   and NaN, see 9.4-2.js).  For value is String, see 9.4-3.js.
 
-    Author:             christine@netscape.com
-    Date:               10 july 1997
+   Author:             christine@netscape.com
+   Date:               10 july 1997
 
 */
-    var SECTION = "9.4-1";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "ToInteger";
+var SECTION = "9.4-1";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "ToInteger";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
-    test();
+// some special cases
 
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
+new TestCase( SECTION,  "td = new Date(Number.NaN); td.valueOf()",  Number.NaN, eval("td = new Date(Number.NaN); td.valueOf()") );
+new TestCase( SECTION,  "td = new Date(Infinity); td.valueOf()",    Number.NaN, eval("td = new Date(Number.POSITIVE_INFINITY); td.valueOf()") );
+new TestCase( SECTION,  "td = new Date(-Infinity); td.valueOf()",   Number.NaN, eval("td = new Date(Number.NEGATIVE_INFINITY); td.valueOf()") );
+new TestCase( SECTION,  "td = new Date(-0); td.valueOf()",          -0,         eval("td = new Date(-0); td.valueOf()" ) );
+new TestCase( SECTION,  "td = new Date(0); td.valueOf()",           0,          eval("td = new Date(0); td.valueOf()") );
 
+// value is not an integer
 
-            testcases[tc].passed = writeTestCaseResult(
-                    testcases[tc].expect,
-                    testcases[tc].actual,
-                    testcases[tc].description +" = "+ testcases[tc].actual );
+new TestCase( SECTION,  "td = new Date(3.14159); td.valueOf()",     3,          eval("td = new Date(3.14159); td.valueOf()") );
+new TestCase( SECTION,  "td = new Date(Math.PI); td.valueOf()",     3,          eval("td = new Date(Math.PI); td.valueOf()") );
+new TestCase( SECTION,  "td = new Date(-Math.PI);td.valueOf()",     -3,         eval("td = new Date(-Math.PI);td.valueOf()") );
+new TestCase( SECTION,  "td = new Date(3.14159e2); td.valueOf()",   314,        eval("td = new Date(3.14159e2); td.valueOf()") );
 
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
+new TestCase( SECTION,  "td = new Date(.692147e1); td.valueOf()",   6,          eval("td = new Date(.692147e1);td.valueOf()") );
+new TestCase( SECTION,  "td = new Date(-.692147e1);td.valueOf()",   -6,         eval("td = new Date(-.692147e1);td.valueOf()") );
 
-    // some special cases
+// value is not a number
 
-    array[item++] = new TestCase( SECTION,  "td = new Date(Number.NaN); td.valueOf()",  Number.NaN, eval("td = new Date(Number.NaN); td.valueOf()") );
-    array[item++] = new TestCase( SECTION,  "td = new Date(Infinity); td.valueOf()",    Number.NaN, eval("td = new Date(Number.POSITIVE_INFINITY); td.valueOf()") );
-    array[item++] = new TestCase( SECTION,  "td = new Date(-Infinity); td.valueOf()",   Number.NaN, eval("td = new Date(Number.NEGATIVE_INFINITY); td.valueOf()") );
-    array[item++] = new TestCase( SECTION,  "td = new Date(-0); td.valueOf()",          -0,         eval("td = new Date(-0); td.valueOf()" ) );
-    array[item++] = new TestCase( SECTION,  "td = new Date(0); td.valueOf()",           0,          eval("td = new Date(0); td.valueOf()") );
+new TestCase( SECTION,  "td = new Date(true); td.valueOf()",        1,          eval("td = new Date(true); td.valueOf()" ) );
+new TestCase( SECTION,  "td = new Date(false); td.valueOf()",       0,          eval("td = new Date(false); td.valueOf()") );
 
-    // value is not an integer
+new TestCase( SECTION,  "td = new Date(new Number(Math.PI)); td.valueOf()",  3, eval("td = new Date(new Number(Math.PI)); td.valueOf()") );
+new TestCase( SECTION,  "td = new Date(new Number(Math.PI)); td.valueOf()",  3, eval("td = new Date(new Number(Math.PI)); td.valueOf()") );
 
-    array[item++] = new TestCase( SECTION,  "td = new Date(3.14159); td.valueOf()",     3,          eval("td = new Date(3.14159); td.valueOf()") );
-    array[item++] = new TestCase( SECTION,  "td = new Date(Math.PI); td.valueOf()",     3,          eval("td = new Date(Math.PI); td.valueOf()") );
-    array[item++] = new TestCase( SECTION,  "td = new Date(-Math.PI);td.valueOf()",     -3,         eval("td = new Date(-Math.PI);td.valueOf()") );
-    array[item++] = new TestCase( SECTION,  "td = new Date(3.14159e2); td.valueOf()",   314,        eval("td = new Date(3.14159e2); td.valueOf()") );
+// edge cases
+new TestCase( SECTION,  "td = new Date(8.64e15); td.valueOf()",     8.64e15,    eval("td = new Date(8.64e15); td.valueOf()") );
+new TestCase( SECTION,  "td = new Date(-8.64e15); td.valueOf()",    -8.64e15,   eval("td = new Date(-8.64e15); td.valueOf()") );
+new TestCase( SECTION,  "td = new Date(8.64e-15); td.valueOf()",    0,          eval("td = new Date(8.64e-15); td.valueOf()") );
+new TestCase( SECTION,  "td = new Date(-8.64e-15); td.valueOf()",   0,          eval("td = new Date(-8.64e-15); td.valueOf()") );
 
-    array[item++] = new TestCase( SECTION,  "td = new Date(.692147e1); td.valueOf()",   6,          eval("td = new Date(.692147e1);td.valueOf()") );
-    array[item++] = new TestCase( SECTION,  "td = new Date(-.692147e1);td.valueOf()",   -6,         eval("td = new Date(-.692147e1);td.valueOf()") );
-
-    // value is not a number
-
-    array[item++] = new TestCase( SECTION,  "td = new Date(true); td.valueOf()",        1,          eval("td = new Date(true); td.valueOf()" ) );
-    array[item++] = new TestCase( SECTION,  "td = new Date(false); td.valueOf()",       0,          eval("td = new Date(false); td.valueOf()") );
-
-    array[item++] = new TestCase( SECTION,  "td = new Date(new Number(Math.PI)); td.valueOf()",  3, eval("td = new Date(new Number(Math.PI)); td.valueOf()") );
-    array[item++] = new TestCase( SECTION,  "td = new Date(new Number(Math.PI)); td.valueOf()",  3, eval("td = new Date(new Number(Math.PI)); td.valueOf()") );
-
-    // edge cases
-    array[item++] = new TestCase( SECTION,  "td = new Date(8.64e15); td.valueOf()",     8.64e15,    eval("td = new Date(8.64e15); td.valueOf()") );
-    array[item++] = new TestCase( SECTION,  "td = new Date(-8.64e15); td.valueOf()",    -8.64e15,   eval("td = new Date(-8.64e15); td.valueOf()") );
-    array[item++] = new TestCase( SECTION,  "td = new Date(8.64e-15); td.valueOf()",    0,          eval("td = new Date(8.64e-15); td.valueOf()") );
-    array[item++] = new TestCase( SECTION,  "td = new Date(-8.64e-15); td.valueOf()",   0,          eval("td = new Date(-8.64e-15); td.valueOf()") );
-
-    return ( array );
-}
+test();

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
 /*
  * JavaScript shared functions file for running the tests in either
  * stand-alone JavaScript engine.  To run a test, first load this file,
@@ -42,182 +42,221 @@
  */
 
 var completed = false;
-var testcases;
-var tc = 0;
+var testcases = new Array();
+var tc = testcases.length;
 
-SECTION = "";
-VERSION = "";
-BUGNUMBER="";
+var SECTION = "";
+var VERSION = "";
+var BUGNUMBER="";
 
 var TZ_DIFF = getTimeZoneDiff();
 
-var DEBUG = false;
 
-var	GLOBAL = "[object global]";
+/*
+ * constant strings
+ */
+var GLOBAL = "[object global]";
 var PASSED = " PASSED!"
 var FAILED = " FAILED! expected: ";
 
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
+var DEBUG = false;
 
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
+
+/* 
+ * wrapper for test case constructor that doesn't require the SECTION
+ * argument.
+ */
+
+function AddTestCase( description, expect, actual ) {
+  new TestCase( SECTION, description, expect, actual );
 }
 
+
+/*
+ * TestCase constructor
+ *
+ */
 function TestCase( n, d, e, a ) {
-    this.name        = n;
-    this.description = d;
-    this.expect      = e;
-    this.actual      = a;
-    this.passed      = true;
-    this.reason      = "";
-    this.bugnumber   = BUGNUMBER;
+  this.name        = n;
+  this.description = d;
+  this.expect      = e;
+  this.actual      = a;
+  this.passed      = true;
+  this.reason      = "";
+  this.bugnumber   = BUGNUMBER;
 
-    this.passed = getTestCaseResult( this.expect, this.actual );
-    if ( DEBUG ) {
-        writeLineToLog( "added " + this.description );
-    }
+  this.passed = getTestCaseResult( this.expect, this.actual );
+  if ( DEBUG ) {
+    writeLineToLog( "added " + this.description );
+  }
+  /*
+   * testcases are solely maintained in the TestCase
+   * constructor. tc will _always_ point to one past the
+   * last testcase. If an exception occurs during the call
+   * to the constructor, then we are assured that the tc
+   * index has not been incremented.
+   */
+  
+  testcases[tc++] = this;
 }
+
+/*
+ * Set up test environment.
+ *
+ */
 function startTest() {
-    if ( version ) {
-        //  JavaScript 1.3 is supposed to be compliant ecma version 1.0
-        if ( VERSION == "ECMA_1" ) {
-            version ( 130 );
-        }
-        if ( VERSION == "JS_13" ) {
-            version ( 130 );
-        }
-        if ( VERSION == "JS_12" ) {
-            version ( 120 );
-        }
-        if ( VERSION  == "JS_11" ) {
-            version ( 110 );
-        }
+  if ( version ) {
+    //  JavaScript 1.3 is supposed to be compliant ecma version 1.0
+    if ( VERSION == "ECMA_1" ) {
+      version ( 130 );
     }
-
-
-    // for ecma version 2.0, we will leave the javascript version to
-    // the default ( for now ).
-
-    writeHeaderToLog( SECTION + " "+ TITLE);
-    if ( BUGNUMBER ) {
-        writeLineToLog ("BUGNUMBER: " + BUGNUMBER );
+    if ( VERSION == "JS_13" ) {
+      version ( 130 );
     }
+    if ( VERSION == "JS_12" ) {
+      version ( 120 );
+    }
+    if ( VERSION  == "JS_11" ) {
+      version ( 110 );
+    }
+  }
 
-    testcases = new Array();
-    tc = 0;
+
+  // for ecma version 2.0, we will leave the javascript version to
+  // the default ( for now ).
+
+  writeHeaderToLog( SECTION + " "+ TITLE);
+  if ( BUGNUMBER ) {
+    writeLineToLog ("BUGNUMBER: " + BUGNUMBER );
+  }
+
 }
 
+function test() {
+  for ( tc=0; tc < testcases.length; tc++ ) {
+    try
+    {
+    testcases[tc].passed = writeTestCaseResult(
+      testcases[tc].expect,
+      testcases[tc].actual,
+      testcases[tc].description +" = "+
+      testcases[tc].actual );
+
+    testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
+    }
+    catch(e)
+    {
+      writeLineToLog('test(): empty testcase for tc = ' + tc + ' ' + e);
+    }
+  }
+  stopTest();
+  return ( testcases );
+}
+
+
+/*
+ * Compare expected result to the actual result and figure out whether
+ * the test case passed.
+ */
 function getTestCaseResult( expect, actual ) {
-    //  because ( NaN == NaN ) always returns false, need to do
-    //  a special compare to see if we got the right result.
-        if ( actual != actual ) {
-            if ( typeof actual == "object" ) {
-                actual = "NaN object";
-            } else {
-                actual = "NaN number";
-            }
-        }
-        if ( expect != expect ) {
-            if ( typeof expect == "object" ) {
-                expect = "NaN object";
-            } else {
-                expect = "NaN number";
-            }
-        }
+  //  because ( NaN == NaN ) always returns false, need to do
+  //  a special compare to see if we got the right result.
+  if ( actual != actual ) {
+    if ( typeof actual == "object" ) {
+      actual = "NaN object";
+    } else {
+      actual = "NaN number";
+    }
+  }
+  if ( expect != expect ) {
+    if ( typeof expect == "object" ) {
+      expect = "NaN object";
+    } else {
+      expect = "NaN number";
+    }
+  }
 
-        var passed = ( expect == actual ) ? true : false;
+  var passed = ( expect == actual ) ? true : false;
 
-    //  if both objects are numbers
-    // need to replace w/ IEEE standard for rounding
-        if (    !passed
-                && typeof(actual) == "number"
-                && typeof(expect) == "number"
-            ) {
-                if ( Math.abs(actual-expect) < 0.0000001 ) {
-                    passed = true;
-                }
-        }
+  //  if both objects are numbers
+  // need to replace w/ IEEE standard for rounding
+  if (    !passed
+          && typeof(actual) == "number"
+          && typeof(expect) == "number"
+    ) {
+    if ( Math.abs(actual-expect) < 0.0000001 ) {
+      passed = true;
+    }
+  }
 
-    //  verify type is the same
-        if ( typeof(expect) != typeof(actual) ) {
-            passed = false;
-        }
+  //  verify type is the same
+  if ( typeof(expect) != typeof(actual) ) {
+    passed = false;
+  }
 
-        return passed;
+  return passed;
 }
+
+
+/*
+ * Begin printing functions.  These functions use the shell's
+ * print function.  When running tests in the browser, these
+ * functions, override these functions with functions that use
+ * document.write.
+ */
 
 function writeTestCaseResult( expect, actual, string ) {
-        var passed = getTestCaseResult( expect, actual );
-        writeFormattedResult( expect, actual, string, passed );
-        return passed;
+  var passed = getTestCaseResult( expect, actual );
+  writeFormattedResult( expect, actual, string, passed );
+  return passed;
 }
 
 function writeFormattedResult( expect, actual, string, passed ) {
-        var s = string ;
-        s += ( passed ) ? PASSED : FAILED + expect;
-        writeLineToLog( s);
-        return passed;
+  var s = string ;
+  s += ( passed ) ? PASSED : FAILED + expect;
+  writeLineToLog( s);
+  return passed;
 }
 
 function writeLineToLog( string ) {
-    print( string  );
+  print( string  );
 }
 function writeHeaderToLog( string ) {
-    print( string );
+  print( string );
 }
+/* end of print functions */
+
+/*
+ * When running in the shell, run the garbage collector after the
+ * test has completed.
+ */
+
 function stopTest() {
-    var gc;
-    if ( gc != undefined ) {
-        gc();
-    }
+  var gc;
+  if ( gc != undefined ) {
+    gc();
+  }
 }
+
+/*
+ * Convenience function for displaying failed test cases.  Useful
+ * when running tests manually.
+ *
+ */
 function getFailedCases() {
   for ( var i = 0; i < testcases.length; i++ ) {
-     if ( ! testcases[i].passed ) {
-        print( testcases[i].description +" = " +testcases[i].actual +" expected: "+ testcases[i].expect );
-     }
-  }
-}
-function err( msg, page, line ) {
-    writeLineToLog( page + " failed with error: " + msg + " on line " + line );
-    testcases[tc].actual = "error";
-    testcases[tc].reason = msg;
-    writeTestCaseResult( testcases[tc].expect,
-                         testcases[tc].actual,
-                         testcases[tc].description +" = "+ testcases[tc].actual +
-                         ": " + testcases[tc].reason );
-    stopTest();
-    return true;
-}
-
-function Enumerate ( o ) {
-    var properties = new Array();
-    for ( p in o ) {
-       properties[ properties.length ] = new Array( p, o[p] );
+    if ( ! testcases[i].passed ) {
+      writeLineToLog( testcases[i].description +" = " +testcases[i].actual +" expected: "+ testcases[i].expect );
     }
-    return properties;
-}
-
-function getFailedCases() {
-  for (	var	i =	0; i < testcases.length; i++ ) {
-	 if	( !	testcases[i].passed	) {
-		writeLineToLog( testcases[i].description	+" = " +testcases[i].actual	+
-		    " expected: "+	testcases[i].expect	);
-	 }
   }
 }
-function AddTestCase( description, expect, actual ) {
-    testcases[tc++] = new TestCase( SECTION, description, expect, actual );
+function Enumerate ( o ) {
+  var properties = new Array();
+  for ( p in o ) {
+    properties[ properties.length ] = new Array( p, o[p] );
+  }
+  return properties;
 }
-
 
 /*
  * Originally, the test suite used a hard-coded value TZ_DIFF = -8. 
@@ -229,3 +268,4 @@ function getTimeZoneDiff()
 {
   return -((new Date(2000, 1, 1)).getTimezoneOffset())/60;
 }
+

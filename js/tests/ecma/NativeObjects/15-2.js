@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,6 +35,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
     File Name:          15-2.js
     ECMA Section:       15 Native ECMAScript Objects
@@ -58,36 +60,16 @@
 
     writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
-    test();
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
+    new TestCase( SECTION,  "Object.__proto__",   Function.prototype,   Object.__proto__ );
+    new TestCase( SECTION,  "Array.__proto__",    Function.prototype,   Array.__proto__ );
+    new TestCase( SECTION,  "String.__proto__",   Function.prototype,   String.__proto__ );
+    new TestCase( SECTION,  "Boolean.__proto__",  Function.prototype,   Boolean.__proto__ );
+    new TestCase( SECTION,  "Number.__proto__",   Function.prototype,   Number.__proto__ );
+    new TestCase( SECTION,  "Date.__proto__",     Function.prototype,   Date.__proto__ );
+    new TestCase( SECTION,  "TestCase.__proto__", Function.prototype,   TestCase.__proto__ );
 
-    array[item++] = new TestCase( SECTION,  "Object.__proto__",   Function.prototype,   Object.__proto__ );
-    array[item++] = new TestCase( SECTION,  "Array.__proto__",    Function.prototype,   Array.__proto__ );
-    array[item++] = new TestCase( SECTION,  "String.__proto__",   Function.prototype,   String.__proto__ );
-    array[item++] = new TestCase( SECTION,  "Boolean.__proto__",  Function.prototype,   Boolean.__proto__ );
-    array[item++] = new TestCase( SECTION,  "Number.__proto__",   Function.prototype,   Number.__proto__ );
-    array[item++] = new TestCase( SECTION,  "Date.__proto__",     Function.prototype,   Date.__proto__ );
-    array[item++] = new TestCase( SECTION,  "TestCase.__proto__", Function.prototype,   TestCase.__proto__ );
+    new TestCase( SECTION,  "eval.__proto__",     Function.prototype,   eval.__proto__ );
+    new TestCase( SECTION,  "Math.pow.__proto__", Function.prototype,   Math.pow.__proto__ );
+    new TestCase( SECTION,  "String.prototype.indexOf.__proto__", Function.prototype,   String.prototype.indexOf.__proto__ );
 
-    array[item++] = new TestCase( SECTION,  "eval.__proto__",     Function.prototype,   eval.__proto__ );
-    array[item++] = new TestCase( SECTION,  "Math.pow.__proto__", Function.prototype,   Math.pow.__proto__ );
-    array[item++] = new TestCase( SECTION,  "String.prototype.indexOf.__proto__", Function.prototype,   String.prototype.indexOf.__proto__ );
-
-    return ( array );
-}
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].actual = eval( testcases[tc].actual );
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+ testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
+test();

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -35,73 +36,50 @@
  *
  * ***** END LICENSE BLOCK ***** */
 /**
-    File Name:          15.5.4.2.js
-    ECMA Section:       15.5.4.2 String.prototype.toString
+   File Name:          15.5.4.2.js
+   ECMA Section:       15.5.4.2 String.prototype.toString
 
-    Description:
-    Author:             christine@netscape.com
-    Date:               28 october 1997
+   Description:
+   Author:             christine@netscape.com
+   Date:               28 october 1997
 
 */
-    var SECTION = "15.5.4.2";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "String.prototype.tostring";
+var SECTION = "15.5.4.2";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "String.prototype.tostring";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
-    test();
+new TestCase( SECTION, "String.prototype.toString.__proto__",  Function.prototype, String.prototype.toString.__proto__ );
+new TestCase(   SECTION,
+		"String.prototype.toString() == String.prototype.valueOf()",
+		true,
+		String.prototype.toString() == String.prototype.valueOf() );
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
-
-    array[item++] = new TestCase( SECTION, "String.prototype.toString.__proto__",  Function.prototype, String.prototype.toString.__proto__ );
-    array[item++] = new TestCase(   SECTION,
-                                    "String.prototype.toString() == String.prototype.valueOf()",
-                                    true,
-                                    String.prototype.toString() == String.prototype.valueOf() );
-
-    array[item++] = new TestCase(   SECTION, "String.prototype.toString()",     "",     String.prototype.toString() );
-    array[item++] = new TestCase(   SECTION, "String.prototype.toString.length",    0,  String.prototype.toString.length );
+new TestCase(   SECTION, "String.prototype.toString()",     "",     String.prototype.toString() );
+new TestCase(   SECTION, "String.prototype.toString.length",    0,  String.prototype.toString.length );
 
 
-    array[item++] = new TestCase(   SECTION,
-                                    "TESTSTRING = new String();TESTSTRING.valueOf() == TESTSTRING.toString()",
-                                    true,
-                                    eval("TESTSTRING = new String();TESTSTRING.valueOf() == TESTSTRING.toString()") );
-    array[item++] = new TestCase(   SECTION,
-                                    "TESTSTRING = new String(true);TESTSTRING.valueOf() == TESTSTRING.toString()",
-                                    true,
-                                    eval("TESTSTRING = new String(true);TESTSTRING.valueOf() == TESTSTRING.toString()") );
-    array[item++] = new TestCase(   SECTION,
-                                    "TESTSTRING = new String(false);TESTSTRING.valueOf() == TESTSTRING.toString()",
-                                    true,
-                                    eval("TESTSTRING = new String(false);TESTSTRING.valueOf() == TESTSTRING.toString()") );
-    array[item++] = new TestCase(   SECTION,
-                                    "TESTSTRING = new String(Math.PI);TESTSTRING.valueOf() == TESTSTRING.toString()",
-                                    true,
-                                    eval("TESTSTRING = new String(Math.PI);TESTSTRING.valueOf() == TESTSTRING.toString()") );
-    array[item++] = new TestCase(   SECTION,
-                                    "TESTSTRING = new String();TESTSTRING.valueOf() == TESTSTRING.toString()",
-                                    true,
-                                    eval("TESTSTRING = new String();TESTSTRING.valueOf() == TESTSTRING.toString()") );
+new TestCase(   SECTION,
+		"TESTSTRING = new String();TESTSTRING.valueOf() == TESTSTRING.toString()",
+		true,
+		eval("TESTSTRING = new String();TESTSTRING.valueOf() == TESTSTRING.toString()") );
+new TestCase(   SECTION,
+		"TESTSTRING = new String(true);TESTSTRING.valueOf() == TESTSTRING.toString()",
+		true,
+		eval("TESTSTRING = new String(true);TESTSTRING.valueOf() == TESTSTRING.toString()") );
+new TestCase(   SECTION,
+		"TESTSTRING = new String(false);TESTSTRING.valueOf() == TESTSTRING.toString()",
+		true,
+		eval("TESTSTRING = new String(false);TESTSTRING.valueOf() == TESTSTRING.toString()") );
+new TestCase(   SECTION,
+		"TESTSTRING = new String(Math.PI);TESTSTRING.valueOf() == TESTSTRING.toString()",
+		true,
+		eval("TESTSTRING = new String(Math.PI);TESTSTRING.valueOf() == TESTSTRING.toString()") );
+new TestCase(   SECTION,
+		"TESTSTRING = new String();TESTSTRING.valueOf() == TESTSTRING.toString()",
+		true,
+		eval("TESTSTRING = new String();TESTSTRING.valueOf() == TESTSTRING.toString()") );
 
-    return ( array );
-}
-function test( array ) {
-        for ( ; tc < testcases.length; tc++ ) {
-            testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+ testcases[tc].actual );
-
-            testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-        }
-
-        stopTest();
-
-    //  all tests must return an array of TestCase objects
-        return ( testcases );
-}
+test();

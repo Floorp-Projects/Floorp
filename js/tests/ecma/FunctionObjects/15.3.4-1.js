@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -35,61 +36,56 @@
  *
  * ***** END LICENSE BLOCK ***** */
 /**
-    File Name:          15.3.4-1.js
-    ECMA Section:       15.3.4  Properties of the Function Prototype Object
+   File Name:          15.3.4-1.js
+   ECMA Section:       15.3.4  Properties of the Function Prototype Object
 
-    Description:        The Function prototype object is itself a Function
-                        object ( its [[Class]] is "Function") that, when
-                        invoked, accepts any arguments and returns undefined.
+   Description:        The Function prototype object is itself a Function
+   object ( its [[Class]] is "Function") that, when
+   invoked, accepts any arguments and returns undefined.
 
-                        The value of the internal [[Prototype]] property
-                        object is the Object prototype object.
+   The value of the internal [[Prototype]] property
+   object is the Object prototype object.
 
-                        It is a function with an "empty body"; if it is
-                        invoked, it merely returns undefined.
+   It is a function with an "empty body"; if it is
+   invoked, it merely returns undefined.
 
-                        The Function prototype object does not have a valueOf
-                        property of its own; however it inherits the valueOf
-                        property from the Object prototype Object.
+   The Function prototype object does not have a valueOf
+   property of its own; however it inherits the valueOf
+   property from the Object prototype Object.
 
-    Author:             christine@netscape.com
-    Date:               28 october 1997
+   Author:             christine@netscape.com
+   Date:               28 october 1997
 
 */
 
-    var SECTION = "15.3.4-1";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Properties of the Function Prototype Object";
+var SECTION = "15.3.4-1";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Properties of the Function Prototype Object";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
-    test();
-
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
-    array[item++] = new TestCase(   SECTION,
-                                    "var myfunc = Function.prototype; myfunc.toString = Object.prototype.toString; myfunc.toString()",
-                                    "[object Function]",
-                                    eval("var myfunc = Function.prototype; myfunc.toString = Object.prototype.toString; myfunc.toString()"));
+new TestCase( SECTION,
+	      "var myfunc = Function.prototype; myfunc.toString = Object.prototype.toString; myfunc.toString()",
+	      "[object Function]",
+	      eval("var myfunc = Function.prototype; myfunc.toString = Object.prototype.toString; myfunc.toString()"));
 
 
-//  array[item++] = new TestCase( SECTION,  "Function.prototype.__proto__",     Object.prototype,           Function.prototype.__proto__ );
-    array[item++] = new TestCase( SECTION,  "Function.prototype.valueOf",       Object.prototype.valueOf,   Function.prototype.valueOf );
-    array[item++] = new TestCase( SECTION,  "Function.prototype()",             (void 0),                   Function.prototype() );
-    array[item++] = new TestCase( SECTION,  "Function.prototype(1,true,false,'string', new Date(),null)",  (void 0), Function.prototype(1,true,false,'string', new Date(),null) );
-    return ( array );
-}
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+ testcases[tc].actual );
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
+//  new TestCase( SECTION,  "Function.prototype.__proto__",     Object.prototype,           Function.prototype.__proto__ );
+
+new TestCase( SECTION,  
+	      "Function.prototype.valueOf",       
+	      Object.prototype.valueOf,   
+	      Function.prototype.valueOf );
+
+new TestCase( SECTION,  
+	      "Function.prototype()",             
+	      (void 0),                   
+	      Function.prototype() );
+
+new TestCase( SECTION,  
+	      "Function.prototype(1,true,false,'string', new Date(),null)",  
+	      (void 0), 
+	      Function.prototype(1,true,false,'string', new Date(),null) );
+
+test();

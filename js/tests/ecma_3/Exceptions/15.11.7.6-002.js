@@ -58,8 +58,15 @@ var expectedvalues = [];
  */
 function testDontDelete(F)
 {
+  var e;
   var orig = F.prototype;
-  delete F.prototype;
+  try 
+  {
+    delete F.prototype;
+  }
+  catch (e)
+  {
+  }
   return F.prototype === orig;
 }
 

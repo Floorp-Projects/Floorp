@@ -46,6 +46,9 @@ var SECT_SUFFIX = ' of test -';
 var VERBOSE = false;
 var callStack = new Array();
 
+function writeLineToLog( string ) {
+    print( string );
+}
 /*
  * The test driver searches for such a phrase in the test output.
  * If such phrase exists, it will set n as the expected exit code.
@@ -53,7 +56,7 @@ var callStack = new Array();
 function expectExitCode(n)
 {
 
-    print('--- NOTE: IN THIS TESTCASE, WE EXPECT EXIT CODE ' + n + ' ---');
+    writeLineToLog('--- NOTE: IN THIS TESTCASE, WE EXPECT EXIT CODE ' + n + ' ---');
 
 }
 
@@ -72,7 +75,7 @@ function inSection(x)
  */
 function inRhino()
 {
-  return (typeof defineClass == "function");
+    return (typeof defineClass == "function");
 }
 
 /*
@@ -86,7 +89,7 @@ function reportFailure (msg)
     var prefix = (funcName) ? "[reported from " + funcName + "] ": "";
     
     for (var i=0; i<lines.length; i++)
-        print (FAILED + prefix + lines[i]);
+        writeLineToLog (FAILED + prefix + lines[i]);
 
 }
 
@@ -99,7 +102,7 @@ function printStatus (msg)
     var l;
 
     for (var i=0; i<lines.length; i++)
-        print (STATUS + lines[i]);
+        writeLineToLog (STATUS + lines[i]);
 
 }
 
@@ -109,7 +112,7 @@ function printStatus (msg)
 function printBugNumber (num)
 {
 
-    print (BUGNUMBER + num);
+    writeLineToLog (BUGNUMBER + num);
 
 }
 
@@ -144,10 +147,11 @@ function reportCompare (expected, actual, description)
     if (output != "")
     {
         if (typeof description != "undefined")
-            reportFailure (description);
+            output = description + "\n" + output;
         reportFailure (output);   
     }
-
+    
+    return (output == ""); // true if passed
 }
 
 /*
@@ -194,3 +198,4 @@ function currentFunc()
     return callStack[callStack.length - 1];
     
 }
+

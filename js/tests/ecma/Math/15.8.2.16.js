@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,60 +35,96 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.8.2.16.js
-    ECMA Section:       15.8.2.16 sin( x )
-    Description:        return an approximation to the sine of the
-                        argument.  argument is expressed in radians
-    Author:             christine@netscape.com
-    Date:               7 july 1997
+   File Name:          15.8.2.16.js
+   ECMA Section:       15.8.2.16 sin( x )
+   Description:        return an approximation to the sine of the
+   argument.  argument is expressed in radians
+   Author:             christine@netscape.com
+   Date:               7 july 1997
 
 */
-    var SECTION = "15.8.2.16";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Math.sin(x)";
+var SECTION = "15.8.2.16";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Math.sin(x)";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
-    test();
+new TestCase( SECTION,
+	      "Math.sin.length",
+	      1,
+	      Math.sin.length );
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
+new TestCase( SECTION,
+	      "Math.sin()",
+	      Number.NaN,
+	      Math.sin() );
 
-    array[item++] = new TestCase( SECTION,  "Math.sin.length",      1,              Math.sin.length );
+new TestCase( SECTION,
+	      "Math.sin(null)",
+	      0,
+	      Math.sin(null) );
 
-    array[item++] = new TestCase( SECTION,  "Math.sin()",           Number.NaN,     Math.sin() );
-    array[item++] = new TestCase( SECTION,  "Math.sin(null)",       0,              Math.sin(null) );
-    array[item++] = new TestCase( SECTION,  "Math.sin(void 0)",     Number.NaN,     Math.sin(void 0) );
-    array[item++] = new TestCase( SECTION,  "Math.sin(false)",      0,              Math.sin(false) );
-    array[item++] = new TestCase( SECTION,  "Math.sin('2.356194490192')",    0.7071067811865,    Math.sin('2.356194490192') );
+new TestCase( SECTION,
+	      "Math.sin(void 0)",
+	      Number.NaN,
+	      Math.sin(void 0) );
 
-    array[item++] = new TestCase( SECTION,  "Math.sin(NaN)",        Number.NaN,     Math.sin(Number.NaN) );
-    array[item++] = new TestCase( SECTION,  "Math.sin(0)",          0,              Math.sin(0) );
-    array[item++] = new TestCase( SECTION,  "Math.sin(-0)",         -0,             Math.sin(-0));
-    array[item++] = new TestCase( SECTION,  "Math.sin(Infinity)",   Number.NaN,     Math.sin(Number.POSITIVE_INFINITY));
-    array[item++] = new TestCase( SECTION,  "Math.sin(-Infinity)",  Number.NaN,	    Math.sin(Number.NEGATIVE_INFINITY));
-    array[item++] = new TestCase( SECTION,  "Math.sin(0.7853981633974)",	0.7071067811865,    Math.sin(0.7853981633974));
-    array[item++] = new TestCase( SECTION,  "Math.sin(1.570796326795)",	    1,                  Math.sin(1.570796326795));
-    array[item++] = new TestCase( SECTION,  "Math.sin(2.356194490192)",	    0.7071067811865,    Math.sin(2.356194490192));
-    array[item++] = new TestCase( SECTION,  "Math.sin(3.14159265359)",	    0,                  Math.sin(3.14159265359));
+new TestCase( SECTION,
+	      "Math.sin(false)",
+	      0,
+	      Math.sin(false) );
 
-    return ( array );
-}
+new TestCase( SECTION,
+	      "Math.sin('2.356194490192')",
+	      0.7071067811865,
+	      Math.sin('2.356194490192') );
 
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
+new TestCase( SECTION,
+	      "Math.sin(NaN)",
+	      Number.NaN,
+	      Math.sin(Number.NaN) );
 
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
+new TestCase( SECTION,
+	      "Math.sin(0)",
+	      0,
+	      Math.sin(0) );
+
+new TestCase( SECTION,
+	      "Math.sin(-0)",
+	      -0,
+	      Math.sin(-0));
+
+new TestCase( SECTION,
+	      "Math.sin(Infinity)",
+	      Number.NaN,
+	      Math.sin(Number.POSITIVE_INFINITY));
+
+new TestCase( SECTION,
+	      "Math.sin(-Infinity)",
+	      Number.NaN,	
+	      Math.sin(Number.NEGATIVE_INFINITY));
+
+new TestCase( SECTION,
+	      "Math.sin(0.7853981633974)",
+	      0.7071067811865,
+	      Math.sin(0.7853981633974));
+
+new TestCase( SECTION,
+	      "Math.sin(1.570796326795)",	 
+	      1,
+	      Math.sin(1.570796326795));
+
+new TestCase( SECTION,
+	      "Math.sin(2.356194490192)",	 
+	      0.7071067811865,
+	      Math.sin(2.356194490192));
+
+new TestCase( SECTION,
+	      "Math.sin(3.14159265359)",	
+	      0,
+	      Math.sin(3.14159265359));
+
+test();

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,80 +35,129 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.8.2.18.js
-    ECMA Section:       15.8.2.18 tan( x )
-    Description:        return an approximation to the tan of the
-                        argument.  argument is expressed in radians
-                        special cases:
-                        - if x is NaN           result is NaN
-                        - if x is 0             result is 0
-                        - if x is -0            result is -0
-                        - if x is Infinity or -Infinity result is NaN
-    Author:             christine@netscape.com
-    Date:               7 july 1997
+   File Name:          15.8.2.18.js
+   ECMA Section:       15.8.2.18 tan( x )
+   Description:        return an approximation to the tan of the
+   argument.  argument is expressed in radians
+   special cases:
+   - if x is NaN           result is NaN
+   - if x is 0             result is 0
+   - if x is -0            result is -0
+   - if x is Infinity or -Infinity result is NaN
+   Author:             christine@netscape.com
+   Date:               7 july 1997
 */
 
-    var SECTION = "15.8.2.18";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Math.tan(x)";
-    var EXCLUDE = "true";
+var SECTION = "15.8.2.18";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Math.tan(x)";
+var EXCLUDE = "true";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
-    test();
+new TestCase( SECTION,
+	      "Math.tan.length",
+	      1,
+	      Math.tan.length );
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
+new TestCase( SECTION,
+	      "Math.tan()",
+	      Number.NaN,
+	      Math.tan() );
 
-    array[item++] = new TestCase( SECTION,  "Math.tan.length",          1,              Math.tan.length );
+new TestCase( SECTION,
+	      "Math.tan(void 0)",
+	      Number.NaN,
+	      Math.tan(void 0));
 
-    array[item++] = new TestCase( SECTION,  "Math.tan()",               Number.NaN,      Math.tan() );
-    array[item++] = new TestCase( SECTION,  "Math.tan(void 0)",         Number.NaN,     Math.tan(void 0));
-    array[item++] = new TestCase( SECTION,  "Math.tan(null)",           0,              Math.tan(null) );
-    array[item++] = new TestCase( SECTION,  "Math.tan(false)",          0,              Math.tan(false) );
+new TestCase( SECTION,
+	      "Math.tan(null)",
+	      0,
+	      Math.tan(null) );
 
-    array[item++] = new TestCase( SECTION,  "Math.tan(NaN)",            Number.NaN,     Math.tan(Number.NaN) );
-    array[item++] = new TestCase( SECTION,  "Math.tan(0)",              0,	            Math.tan(0));
-    array[item++] = new TestCase( SECTION,  "Math.tan(-0)",             -0,         	Math.tan(-0));
-    array[item++] = new TestCase( SECTION,  "Math.tan(Infinity)",       Number.NaN,     Math.tan(Number.POSITIVE_INFINITY));
-    array[item++] = new TestCase( SECTION,  "Math.tan(-Infinity)",      Number.NaN,     Math.tan(Number.NEGATIVE_INFINITY));
-    array[item++] = new TestCase( SECTION,  "Math.tan(Math.PI/4)",      1,              Math.tan(Math.PI/4));
-    array[item++] = new TestCase( SECTION,  "Math.tan(3*Math.PI/4)",    -1,             Math.tan(3*Math.PI/4));
-    array[item++] = new TestCase( SECTION,  "Math.tan(Math.PI)",        -0,             Math.tan(Math.PI));
-    array[item++] = new TestCase( SECTION,  "Math.tan(5*Math.PI/4)",    1,              Math.tan(5*Math.PI/4));
-    array[item++] = new TestCase( SECTION,  "Math.tan(7*Math.PI/4)",    -1,             Math.tan(7*Math.PI/4));
-    array[item++] = new TestCase( SECTION,  "Infinity/Math.tan(-0)",    -Infinity,      Infinity/Math.tan(-0) );
+new TestCase( SECTION,
+	      "Math.tan(false)",
+	      0,
+	      Math.tan(false) );
+
+new TestCase( SECTION,
+	      "Math.tan(NaN)",
+	      Number.NaN,
+	      Math.tan(Number.NaN) );
+
+new TestCase( SECTION,
+	      "Math.tan(0)",
+	      0,	
+	      Math.tan(0));
+
+new TestCase( SECTION,
+	      "Math.tan(-0)",
+	      -0,
+	      Math.tan(-0));
+
+new TestCase( SECTION,
+	      "Math.tan(Infinity)",
+	      Number.NaN,
+	      Math.tan(Number.POSITIVE_INFINITY));
+
+new TestCase( SECTION,
+	      "Math.tan(-Infinity)",
+	      Number.NaN,
+	      Math.tan(Number.NEGATIVE_INFINITY));
+
+new TestCase( SECTION,
+	      "Math.tan(Math.PI/4)",
+	      1,
+	      Math.tan(Math.PI/4));
+
+new TestCase( SECTION,
+	      "Math.tan(3*Math.PI/4)",
+	      -1,
+	      Math.tan(3*Math.PI/4));
+
+new TestCase( SECTION,
+	      "Math.tan(Math.PI)",
+	      -0,
+	      Math.tan(Math.PI));
+
+new TestCase( SECTION,
+	      "Math.tan(5*Math.PI/4)",
+	      1,
+	      Math.tan(5*Math.PI/4));
+
+new TestCase( SECTION,
+	      "Math.tan(7*Math.PI/4)",
+	      -1,
+	      Math.tan(7*Math.PI/4));
+
+new TestCase( SECTION,
+	      "Infinity/Math.tan(-0)",
+	      -Infinity,
+	      Infinity/Math.tan(-0) );
 
 /*
-    Arctan (x) ~ PI/2 - 1/x   for large x.  For x = 1.6x10^16, 1/x is about the last binary digit of double precision PI/2.
-    That is to say, perturbing PI/2 by this much is about the smallest rounding error possible.
+  Arctan (x) ~ PI/2 - 1/x   for large x.  For x = 1.6x10^16, 1/x is about the last binary digit of double precision PI/2.
+  That is to say, perturbing PI/2 by this much is about the smallest rounding error possible.
 
-    This suggests that the answer Christine is getting and a real Infinity are "adjacent" results from the tangent function.  I
-    suspect that tan (PI/2 + one ulp) is a negative result about the same size as tan (PI/2) and that this pair are the closest
-    results to infinity that the algorithm can deliver.
+  This suggests that the answer Christine is getting and a real Infinity are "adjacent" results from the tangent function.  I
+  suspect that tan (PI/2 + one ulp) is a negative result about the same size as tan (PI/2) and that this pair are the closest
+  results to infinity that the algorithm can deliver.
 
-    In any case, my call is that the answer we're seeing is "right".  I suggest the test pass on any result this size or larger.
-    = C =
+  In any case, my call is that the answer we're seeing is "right".  I suggest the test pass on any result this size or larger.
+  = C =
 */
-    array[item++] = new TestCase( SECTION,  "Math.tan(3*Math.PI/2) >= 5443000000000000",   true,   Math.tan(3*Math.PI/2) >= 5443000000000000 );
-    array[item++] = new TestCase( SECTION,  "Math.tan(Math.PI/2) >= 5443000000000000",      true,   Math.tan(Math.PI/2) >= 5443000000000000 );
 
-    return ( array );
-}
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
+new TestCase( SECTION,
+	      "Math.tan(3*Math.PI/2) >= 5443000000000000",
+	      true,
+	      Math.tan(3*Math.PI/2) >= 5443000000000000 );
 
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
+new TestCase( SECTION,
+	      "Math.tan(Math.PI/2) >= 5443000000000000",
+	      true,
+	      Math.tan(Math.PI/2) >= 5443000000000000 );
+
+test();

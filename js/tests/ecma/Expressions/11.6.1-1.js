@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,6 +35,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
     File Name:          11.6.1-1.js
     ECMA Section:       11.6.1 The addition operator ( + )
@@ -79,69 +81,48 @@
     var VERSION = "ECMA_1";
     startTest();
 
-    var testcases = getTestCases();
-
     writeHeaderToLog( SECTION + " The Addition operator ( + )");
-    test();
-
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
-
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
 
     // tests for boolean primitive, boolean object, Object object, a "MyObject" whose value is
     // a boolean primitive and a boolean object, and "MyValuelessObject", where the value is
     // set in the object's prototype, not the object itself.
 
-    array[item++] = new TestCase(   SECTION,
+new TestCase(   SECTION,
                                     "var EXP_1 = true; var EXP_2 = false; EXP_1 + EXP_2",
                                     1,
                                     eval("var EXP_1 = true; var EXP_2 = false; EXP_1 + EXP_2") );
 
-    array[item++] = new TestCase(   SECTION,
+new TestCase(   SECTION,
                                     "var EXP_1 = new Boolean(true); var EXP_2 = new Boolean(false); EXP_1 + EXP_2",
                                     1,
                                     eval("var EXP_1 = new Boolean(true); var EXP_2 = new Boolean(false); EXP_1 + EXP_2") );
 
-    array[item++] = new TestCase(   SECTION,
+new TestCase(   SECTION,
                                     "var EXP_1 = new Object(true); var EXP_2 = new Object(false); EXP_1 + EXP_2",
                                     1,
                                     eval("var EXP_1 = new Object(true); var EXP_2 = new Object(false); EXP_1 + EXP_2") );
 
-    array[item++] = new TestCase(   SECTION,
+new TestCase(   SECTION,
                                     "var EXP_1 = new Object(new Boolean(true)); var EXP_2 = new Object(new Boolean(false)); EXP_1 + EXP_2",
                                     1,
                                     eval("var EXP_1 = new Object(new Boolean(true)); var EXP_2 = new Object(new Boolean(false)); EXP_1 + EXP_2") );
 
-    array[item++] = new TestCase(   SECTION,
+new TestCase(   SECTION,
                                     "var EXP_1 = new MyObject(true); var EXP_2 = new MyObject(false); EXP_1 + EXP_2",
                                     1,
                                     eval("var EXP_1 = new MyObject(true); var EXP_2 = new MyObject(false); EXP_1 + EXP_2") );
 
-    array[item++] = new TestCase(   SECTION,
+new TestCase(   SECTION,
                                     "var EXP_1 = new MyObject(new Boolean(true)); var EXP_2 = new MyObject(new Boolean(false)); EXP_1 + EXP_2",
                                     "[object Object][object Object]",
                                     eval("var EXP_1 = new MyObject(new Boolean(true)); var EXP_2 = new MyObject(new Boolean(false)); EXP_1 + EXP_2") );
 
-    array[item++] = new TestCase(   SECTION,
+new TestCase(   SECTION,
                                     "var EXP_1 = new MyValuelessObject(true); var EXP_2 = new MyValuelessObject(false); EXP_1 + EXP_2",
                                     1,
                                     eval("var EXP_1 = new MyValuelessObject(true); var EXP_2 = new MyValuelessObject(false); EXP_1 + EXP_2") );
 
-    array[item++] = new TestCase(   SECTION,
+new TestCase(   SECTION,
                                     "var EXP_1 = new MyValuelessObject(new Boolean(true)); var EXP_2 = new MyValuelessObject(new Boolean(false)); EXP_1 + EXP_2",
                                     "truefalse",
                                     eval("var EXP_1 = new MyValuelessObject(new Boolean(true)); var EXP_2 = new MyValuelessObject(new Boolean(false)); EXP_1 + EXP_2") );
@@ -150,55 +131,53 @@ function getTestCases() {
     // a number primitive and a number object, and "MyValuelessObject", where the value is
     // set in the object's prototype, not the object itself.
 
-    array[item++] = new TestCase(   SECTION,
+new TestCase(   SECTION,
                                     "var EXP_1 = 100; var EXP_2 = -1; EXP_1 + EXP_2",
                                     99,
                                     eval("var EXP_1 = 100; var EXP_2 = -1; EXP_1 + EXP_2") );
 
-    array[item++] = new TestCase(   SECTION,
+new TestCase(   SECTION,
                                     "var EXP_1 = new Number(100); var EXP_2 = new Number(-1); EXP_1 + EXP_2",
                                     99,
                                     eval("var EXP_1 = new Number(100); var EXP_2 = new Number(-1); EXP_1 + EXP_2") );
 
-    array[item++] = new TestCase(   SECTION,
+new TestCase(   SECTION,
                                     "var EXP_1 = new Object(100); var EXP_2 = new Object(-1); EXP_1 + EXP_2",
                                     99,
                                     eval("var EXP_1 = new Object(100); var EXP_2 = new Object(-1); EXP_1 + EXP_2") );
 
-    array[item++] = new TestCase(   SECTION,
+new TestCase(   SECTION,
                                     "var EXP_1 = new Object(new Number(100)); var EXP_2 = new Object(new Number(-1)); EXP_1 + EXP_2",
                                     99,
                                     eval("var EXP_1 = new Object(new Number(100)); var EXP_2 = new Object(new Number(-1)); EXP_1 + EXP_2") );
 
-    array[item++] = new TestCase(   SECTION,
+new TestCase(   SECTION,
                                     "var EXP_1 = new MyObject(100); var EXP_2 = new MyObject(-1); EXP_1 + EXP_2",
                                     99,
                                     eval("var EXP_1 = new MyObject(100); var EXP_2 = new MyObject(-1); EXP_1 + EXP_2") );
 
-    array[item++] = new TestCase(   SECTION,
+new TestCase(   SECTION,
                                     "var EXP_1 = new MyObject(new Number(100)); var EXP_2 = new MyObject(new Number(-1)); EXP_1 + EXP_2",
                                     "[object Object][object Object]",
                                     eval("var EXP_1 = new MyObject(new Number(100)); var EXP_2 = new MyObject(new Number(-1)); EXP_1 + EXP_2") );
 
 
-    array[item++] = new TestCase(   SECTION,
+new TestCase(   SECTION,
                                     "var EXP_1 = new MyValuelessObject(100); var EXP_2 = new MyValuelessObject(-1); EXP_1 + EXP_2",
                                     99,
                                     eval("var EXP_1 = new MyValuelessObject(100); var EXP_2 = new MyValuelessObject(-1); EXP_1 + EXP_2") );
 
-    array[item++] = new TestCase(   SECTION,
+new TestCase(   SECTION,
                                     "var EXP_1 = new MyValuelessObject(new Number(100)); var EXP_2 = new MyValuelessObject(new Number(-1)); EXP_1 + EXP_2",
                                     "100-1",
                                     eval("var EXP_1 = new MyValuelessObject(new Number(100)); var EXP_2 = new MyValuelessObject(new Number(-1)); EXP_1 + EXP_2") );
 
-    array[item++] = new TestCase(   SECTION,
+new TestCase(   SECTION,
                                     "var EXP_1 = new MyValuelessObject( new MyValuelessObject( new Boolean(true) ) ); EXP_1 + EXP_1",
                                     "truetrue",
                                     eval("var EXP_1 = new MyValuelessObject( new MyValuelessObject( new Boolean(true) ) ); EXP_1 + EXP_1") );
 
-    return ( array );
-}
-
+test();
 
 function MyProtoValuelessObject() {
     this.valueOf = new Function ( "" );

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,49 +35,30 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.6.4-2.js
-    ECMA Section:       15.6.4 Properties of the Boolean Prototype Object
+   File Name:          15.6.4-2.js
+   ECMA Section:       15.6.4 Properties of the Boolean Prototype Object
 
-    Description:
-    The Boolean prototype object is itself a Boolean object (its [[Class]] is
-    "Boolean") whose value is false.
+   Description:
+   The Boolean prototype object is itself a Boolean object (its [[Class]] is
+   "Boolean") whose value is false.
 
-    The value of the internal [[Prototype]] property of the Boolean prototype object
-    is the Object prototype object (15.2.3.1).
+   The value of the internal [[Prototype]] property of the Boolean prototype object
+   is the Object prototype object (15.2.3.1).
 
-    Author:             christine@netscape.com
-    Date:               30 september 1997
+   Author:             christine@netscape.com
+   Date:               30 september 1997
 
 */
 
 
-    var VERSION = "ECMA_2"
-    startTest();
-    var SECTION = "15.6.4-2";
+var VERSION = "ECMA_2"
+startTest();
+var SECTION = "15.6.4-2";
 
-    writeHeaderToLog( SECTION + " Properties of the Boolean Prototype Object");
-    var testcases = getTestCases();
-    test();
+writeHeaderToLog( SECTION + " Properties of the Boolean Prototype Object");
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
+new TestCase( SECTION, "Boolean.prototype.__proto__",               Object.prototype,       Boolean.prototype.__proto__ );
 
-    array[item++] = new TestCase( SECTION, "Boolean.prototype.__proto__",               Object.prototype,       Boolean.prototype.__proto__ );
-
-    return ( array );
-}
-
-function test() {
-    for (tc = 0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-        testcases[tc].expect,
-        testcases[tc].actual,
-        testcases[tc].description +" = "+ testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value "
-    }
-    stopTest();
-    return ( testcases );
-}
+test();

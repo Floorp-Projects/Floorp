@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,48 +35,36 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.7.4.3-3.js
-    ECMA Section:       15.7.4.3.1 Number.prototype.valueOf()
-    Description:
-    Returns this number value.
+   File Name:          15.7.4.3-3.js
+   ECMA Section:       15.7.4.3.1 Number.prototype.valueOf()
+   Description:
+   Returns this number value.
 
-    The valueOf function is not generic; it generates a runtime error if its
-    this value is not a Number object. Therefore it cannot be transferred to
-    other kinds of objects for use as a method.
+   The valueOf function is not generic; it generates a runtime error if its
+   this value is not a Number object. Therefore it cannot be transferred to
+   other kinds of objects for use as a method.
 
-    Author:             christine@netscape.com
-    Date:               16 september 1997
+   Author:             christine@netscape.com
+   Date:               16 september 1997
 */
-    var SECTION = "15.7.4.3-3-n";
-    var VERSION = "ECMA_1";
-    startTest();
-    var testcases = getTestCases();
+var SECTION = "15.7.4.3-3-n";
+var VERSION = "ECMA_1";
+startTest();
 
-    writeHeaderToLog( SECTION + " Number.prototype.valueOf()");
-    test();
+writeHeaderToLog( SECTION + " Number.prototype.valueOf()");
 
+//    new TestCase("15.7.4.1", "v = Number.prototype.valueOf; num = 3; num.valueOf = v; num.valueOf()", "error",  eval("v = Number.prototype.valueOf; num = 3; num.valueOf = v; num.valueOf()") );
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
+DESCRIPTION = "v = Number.prototype.valueOf; o = new String('Infinity'); o.valueOf = v; o.valueOf()";
+EXPECTED = "error";
 
-//    array[item++] = new TestCase("15.7.4.1", "v = Number.prototype.valueOf; num = 3; num.valueOf = v; num.valueOf()", "error",  "v = Number.prototype.valueOf; num = 3; num.valueOf = v; num.valueOf()" );
-    array[item++] = new TestCase("15.7.4.1", "v = Number.prototype.valueOf; o = new String('Infinity'); o.valueOf = v; o.valueOf()", "error",  "v = Number.prototype.valueOf; o = new String('Infinity'); o.valueOf = v; o.valueOf()" );
-//    array[item++] = new TestCase("15.7.4.1", "v = Number.prototype.valueOf; o = new Object(); o.valueOf = v; o.valueOf()", "error",  "v = Number.prototype.valueOf; o = new Object(); o.valueOf = v; o.valueOf()" );
+new TestCase("15.7.4.1", 
+	     "v = Number.prototype.valueOf; o = new String('Infinity'); o.valueOf = v; o.valueOf()", 
+	     "error",  
+	     eval("v = Number.prototype.valueOf; o = new String('Infinity'); o.valueOf = v; o.valueOf()") );
 
-    return ( array );
-}
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].actual = eval( testcases[tc].actual );
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+ testcases[tc].actual );
+//    new TestCase("15.7.4.1", "v = Number.prototype.valueOf; o = new Object(); o.valueOf = v; o.valueOf()", "error",  eval("v = Number.prototype.valueOf; o = new Object(); o.valueOf = v; o.valueOf()") );
 
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
+test();

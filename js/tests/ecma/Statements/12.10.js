@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,46 +35,25 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          12.10-1.js
-    ECMA Section:       12.10 The with statement
-    Description:
+   File Name:          12.10-1.js
+   ECMA Section:       12.10 The with statement
+   Description:
 
-    Author:             christine@netscape.com
-    Date:               11 september 1997
+   Author:             christine@netscape.com
+   Date:               11 september 1997
 */
-    var SECTION = "12.10-1";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "The with statement";
+var SECTION = "12.10-1";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "The with statement";
 
-    var testcases = getTestCases();
+writeHeaderToLog( SECTION +" "+ TITLE);
 
-    writeHeaderToLog( SECTION +" "+ TITLE);
+new TestCase(   SECTION,
+		"var x; with (7) x = valueOf(); typeof x;",
+		"number",
+		eval("var x; with(7) x = valueOf(); typeof x;") );
 
-    test();
-
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
-
-    array[item++] = new TestCase(   SECTION,
-                                    "var x; with (7) x = valueOf(); typeof x;",
-                                    "number",
-                                    eval("var x; with(7) x = valueOf(); typeof x;") );
-    return ( array );
-}
-
+test();

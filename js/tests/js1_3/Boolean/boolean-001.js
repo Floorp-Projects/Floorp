@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -43,21 +44,19 @@
  *  Author:             christine@netscape.com
  *  Date:               11 August 1998
  */
-    var SECTION = "boolean-001.js";
-    var VERSION = "JS_1.3";
-    var TITLE   = "new Boolean(false) should evaluate to false";
+var SECTION = "boolean-001.js";
+var VERSION = "JS_1.3";
+var TITLE   = "new Boolean(false) should evaluate to false";
 
-    startTest();
-    writeHeaderToLog( SECTION + " "+ TITLE);
+startTest();
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = new Array();
+BooleanTest( "new Boolean(true)",  new Boolean(true),  true );
+BooleanTest( "new Boolean(false)", new Boolean(false), true );
+BooleanTest( "true",               true,               true );
+BooleanTest( "false",              false,              false );
 
-    BooleanTest( "new Boolean(true)",  new Boolean(true),  true );
-    BooleanTest( "new Boolean(false)", new Boolean(false), true );
-    BooleanTest( "true",               true,               true );
-    BooleanTest( "false",              false,              false );
-
-    test();
+test();
 
 function BooleanTest( string, object, expect ) {
     if ( object ) {
@@ -66,23 +65,10 @@ function BooleanTest( string, object, expect ) {
         result = false;
     }
 
-    testcases[tc++] = new TestCase(
+    new TestCase(
         SECTION,
         string,
         expect,
         result );
 }
 
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}

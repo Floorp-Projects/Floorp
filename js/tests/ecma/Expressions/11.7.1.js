@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,6 +35,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
     File Name:          11.7.1.js
     ECMA Section:       11.7.1 The Left Shift Operator ( << )
@@ -63,41 +65,21 @@
     var VERSION = "ECMA_1";
     startTest();
 
-    var testcases = getTestCases();
-
     writeHeaderToLog( SECTION + " The left shift operator ( << )");
-    test();
-
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
 
     for ( power = 0; power < 33; power++ ) {
         shiftexp = Math.pow( 2, power );
 
         for ( addexp = 0; addexp < 33; addexp++ ) {
-            array[item++] = new TestCase( SECTION,
-                                    shiftexp + " << " + addexp,
-                                    LeftShift( shiftexp, addexp ),
-                                    shiftexp << addexp );
+            new TestCase( SECTION,
+                          shiftexp + " << " + addexp,
+                          LeftShift( shiftexp, addexp ),
+                          shiftexp << addexp );
         }
     }
 
-    return ( array );
-}
+test();
+
 function ToInteger( n ) {
     n = Number( n );
     var sign = ( n < 0 ) ? -1 : 1;

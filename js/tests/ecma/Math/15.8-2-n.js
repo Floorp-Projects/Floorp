@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -35,64 +36,44 @@
  *
  * ***** END LICENSE BLOCK ***** */
 /**
-    File Name:          15.8-2.js
-    ECMA Section:       15.8 The Math Object
+   File Name:          15.8-2.js
+   ECMA Section:       15.8 The Math Object
 
-    Description:
+   Description:
 
-    The Math object is merely a single object that has some named properties,
-    some of which are functions.
+   The Math object is merely a single object that has some named properties,
+   some of which are functions.
 
-    The value of the internal [[Prototype]] property of the Math object is the
-    Object prototype object (15.2.3.1).
+   The value of the internal [[Prototype]] property of the Math object is the
+   Object prototype object (15.2.3.1).
 
-    The Math object does not have a [[Construct]] property; it is not possible
-    to use the Math object as a constructor with the new operator.
+   The Math object does not have a [[Construct]] property; it is not possible
+   to use the Math object as a constructor with the new operator.
 
-    The Math object does not have a [[Call]] property; it is not possible to
-    invoke the Math object as a function.
+   The Math object does not have a [[Call]] property; it is not possible to
+   invoke the Math object as a function.
 
-    Recall that, in this specification, the phrase "the number value for x" has
-    a technical meaning defined in section 8.5.
+   Recall that, in this specification, the phrase "the number value for x" has
+   a technical meaning defined in section 8.5.
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 
 */
 
-    var SECTION = "15.8-2-n";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "The Math Object";
+var SECTION = "15.8-2-n";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "The Math Object";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
-    test();
+DESCRIPTION = "MYMATH = new Math()";
+EXPECTED = "error";
 
+new TestCase( SECTION,
+	      "MYMATH = new Math()",
+	      "error",
+	      eval("MYMATH = new Math()") );
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
-    array[item++] = new TestCase( SECTION,
-                                 "MYMATH = new Math()",
-                                 "error",
-                                 "MYMATH = new Math()" );
-
-    return ( array );
-}
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].actual = eval( testcases[tc].actual );
-
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += "Math does not have the [Construct] property";
-    }
-    stopTest();
-    return ( testcases );
-}
+test();

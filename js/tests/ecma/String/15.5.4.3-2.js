@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -35,70 +36,52 @@
  *
  * ***** END LICENSE BLOCK ***** */
 /**
-    File Name:          15.5.4.3-2.js
-    ECMA Section:       15.5.4.3 String.prototype.valueOf()
+   File Name:          15.5.4.3-2.js
+   ECMA Section:       15.5.4.3 String.prototype.valueOf()
 
-    Description:        Returns this string value.
+   Description:        Returns this string value.
 
-                        The valueOf function is not generic; it generates a
-                        runtime error if its this value is not a String object.
-                        Therefore it connot be transferred to the other kinds of
-                        objects for use as a method.
+   The valueOf function is not generic; it generates a
+   runtime error if its this value is not a String object.
+   Therefore it connot be transferred to the other kinds of
+   objects for use as a method.
 
-    Author:             christine@netscape.com
-    Date:               1 october 1997
+   Author:             christine@netscape.com
+   Date:               1 october 1997
 */
 
 
-    var SECTION = "15.5.4.3-2";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "String.prototype.valueOf";
+var SECTION = "15.5.4.3-2";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "String.prototype.valueOf";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
-    test();
+new TestCase( SECTION,
+	      "var valof=String.prototype.valueOf; astring=new String(); astring.valueOf = valof; astring.valof()",
+	      "",
+	      eval("var valof=String.prototype.valueOf; astring=new String(); astring.valueOf = valof; astring.valueOf()") );
 
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].actual = eval(testcases[tc].actual );
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
+new TestCase( SECTION,
+	      "var valof=String.prototype.valueOf; astring=new String(0); astring.valueOf = valof; astring.valof()",
+	      "0",
+	      eval("var valof=String.prototype.valueOf; astring=new String(0); astring.valueOf = valof; astring.valueOf()") );
 
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
+new TestCase( SECTION,
+	      "var valof=String.prototype.valueOf; astring=new String('hello'); astring.valueOf = valof; astring.valof()",
+	      "hello",
+	      eval("var valof=String.prototype.valueOf; astring=new String('hello'); astring.valueOf = valof; astring.valueOf()") );
 
-    array[item++] = new TestCase( SECTION,
-                                  "var valof=String.prototype.valueOf; astring=new String(); astring.valueOf = valof; astring.valof()",
-                                  "",
-                                  "var valof=String.prototype.valueOf; astring=new String(); astring.valueOf = valof; astring.valueOf()" );
-    array[item++] = new TestCase( SECTION,
-                                  "var valof=String.prototype.valueOf; astring=new String(0); astring.valueOf = valof; astring.valof()",
-                                  "0",
-                                  "var valof=String.prototype.valueOf; astring=new String(0); astring.valueOf = valof; astring.valueOf()" );
-    array[item++] = new TestCase( SECTION,
-                                  "var valof=String.prototype.valueOf; astring=new String('hello'); astring.valueOf = valof; astring.valof()",
-                                  "hello",
-                                  "var valof=String.prototype.valueOf; astring=new String('hello'); astring.valueOf = valof; astring.valueOf()" );
-    array[item++] = new TestCase( SECTION,
-                                  "var valof=String.prototype.valueOf; astring=new String(''); astring.valueOf = valof; astring.valof()",
-                                  "",
-                                  "var valof=String.prototype.valueOf; astring=new String(''); astring.valueOf = valof; astring.valueOf()" );
+new TestCase( SECTION,
+	      "var valof=String.prototype.valueOf; astring=new String(''); astring.valueOf = valof; astring.valof()",
+	      "",
+	      eval("var valof=String.prototype.valueOf; astring=new String(''); astring.valueOf = valof; astring.valueOf()") );
 /*
-    array[item++] = new TestCase( SECTION,
-                                  "var valof=String.prototype.valueOf; astring=new Number(); astring.valueOf = valof; astring.valof()",
-                                  "error",
-                                  "var valof=String.prototype.valueOf; astring=new Number(); astring.valueOf = valof; astring.valueOf()" );
+  new TestCase( SECTION,
+  "var valof=String.prototype.valueOf; astring=new Number(); astring.valueOf = valof; astring.valof()",
+  "error",
+  eval("var valof=String.prototype.valueOf; astring=new Number(); astring.valueOf = valof; astring.valueOf()") );
 */
-    return ( array );
-}
+
+test();

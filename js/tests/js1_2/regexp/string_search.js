@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,69 +35,53 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/**
-	Filename:     string_search.js
-	Description:  'Tests the search method on Strings using regular expressions'
 
-	Author:       Nick Lerissa
-	Date:         March 12, 1998
+/**
+   Filename:     string_search.js
+   Description:  'Tests the search method on Strings using regular expressions'
+
+   Author:       Nick Lerissa
+   Date:         March 12, 1998
 */
 
-	var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
-	var VERSION = 'no version';
-    startTest();
-	var TITLE   = 'String: search';
+var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
+var VERSION = 'no version';
+startTest();
+var TITLE   = 'String: search';
 
-	writeHeaderToLog('Executing script: string_search.js');
-	writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog('Executing script: string_search.js');
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-	var count = 0;
-	var testcases = new Array();
+// 'abcdefg'.search(/d/)
+new TestCase ( SECTION, "'abcdefg'.search(/d/)",
+	       3, 'abcdefg'.search(/d/));
 
-    // 'abcdefg'.search(/d/)
-	testcases[count++] = new TestCase ( SECTION, "'abcdefg'.search(/d/)",
-	                                    3, 'abcdefg'.search(/d/));
+// 'abcdefg'.search(/x/)
+new TestCase ( SECTION, "'abcdefg'.search(/x/)",
+	       -1, 'abcdefg'.search(/x/));
 
-    // 'abcdefg'.search(/x/)
-	testcases[count++] = new TestCase ( SECTION, "'abcdefg'.search(/x/)",
-	                                    -1, 'abcdefg'.search(/x/));
+// 'abcdefg123456hijklmn'.search(/\d+/)
+new TestCase ( SECTION, "'abcdefg123456hijklmn'.search(/\d+/)",
+	       7, 'abcdefg123456hijklmn'.search(/\d+/));
 
-    // 'abcdefg123456hijklmn'.search(/\d+/)
-	testcases[count++] = new TestCase ( SECTION, "'abcdefg123456hijklmn'.search(/\d+/)",
-	                                    7, 'abcdefg123456hijklmn'.search(/\d+/));
+// 'abcdefg123456hijklmn'.search(new RegExp())
+new TestCase ( SECTION, "'abcdefg123456hijklmn'.search(new RegExp())",
+	       0, 'abcdefg123456hijklmn'.search(new RegExp()));
 
-    // 'abcdefg123456hijklmn'.search(new RegExp())
-	testcases[count++] = new TestCase ( SECTION, "'abcdefg123456hijklmn'.search(new RegExp())",
-	                                    0, 'abcdefg123456hijklmn'.search(new RegExp()));
+// 'abc'.search(new RegExp('$'))
+new TestCase ( SECTION, "'abc'.search(new RegExp('$'))",
+	       3, 'abc'.search(new RegExp('$')));
 
-    // 'abc'.search(new RegExp('$'))
-	testcases[count++] = new TestCase ( SECTION, "'abc'.search(new RegExp('$'))",
-	                                    3, 'abc'.search(new RegExp('$')));
+// 'abc'.search(new RegExp('^'))
+new TestCase ( SECTION, "'abc'.search(new RegExp('^'))",
+	       0, 'abc'.search(new RegExp('^')));
 
-    // 'abc'.search(new RegExp('^'))
-	testcases[count++] = new TestCase ( SECTION, "'abc'.search(new RegExp('^'))",
-	                                    0, 'abc'.search(new RegExp('^')));
+// 'abc1'.search(/.\d/)
+new TestCase ( SECTION, "'abc1'.search(/.\d/)",
+	       2, 'abc1'.search(/.\d/));
 
-    // 'abc1'.search(/.\d/)
-	testcases[count++] = new TestCase ( SECTION, "'abc1'.search(/.\d/)",
-	                                    2, 'abc1'.search(/.\d/));
+// 'abc1'.search(/\d{2}/)
+new TestCase ( SECTION, "'abc1'.search(/\d{2}/)",
+	       -1, 'abc1'.search(/\d{2}/));
 
-    // 'abc1'.search(/\d{2}/)
-	testcases[count++] = new TestCase ( SECTION, "'abc1'.search(/\d{2}/)",
-	                                    -1, 'abc1'.search(/\d{2}/));
-
-function test()
-	{
-	   for ( tc=0; tc < testcases.length; tc++ ) {
-	        testcases[tc].passed = writeTestCaseResult(
-	        testcases[tc].expect,
-	        testcases[tc].actual,
-	        testcases[tc].description +" = "+
-	        testcases[tc].actual );
-	        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-	   }
-	   stopTest();
-	   return ( testcases );
-	}
-
-	test();
+test();

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,31 +35,30 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          proto_10.js
-    Section:
-    Description:        Determining Instance Relationships
+   File Name:          proto_10.js
+   Section:
+   Description:        Determining Instance Relationships
 
-    This tests Object Hierarchy and Inheritance, as described in the document
-    Object Hierarchy and Inheritance in JavaScript, last modified on 12/18/97
-    15:19:34 on http://devedge.netscape.com/.  Current URL:
-    http://devedge.netscape.com/docs/manuals/communicator/jsobj/contents.htm
+   This tests Object Hierarchy and Inheritance, as described in the document
+   Object Hierarchy and Inheritance in JavaScript, last modified on 12/18/97
+   15:19:34 on http://devedge.netscape.com/.  Current URL:
+   http://devedge.netscape.com/docs/manuals/communicator/jsobj/contents.htm
 
-    This tests the syntax ObjectName.prototype = new PrototypeObject using the
-    Employee example in the document referenced above.
+   This tests the syntax ObjectName.prototype = new PrototypeObject using the
+   Employee example in the document referenced above.
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
 
-    var SECTION = "proto_10";
-    var VERSION = "JS1_3";
-    var TITLE   = "Determining Instance Relationships";
+var SECTION = "proto_10";
+var VERSION = "JS1_3";
+var TITLE   = "Determining Instance Relationships";
 
-    startTest();
-    writeHeaderToLog( SECTION + " "+ TITLE);
-
-    var testcases = new Array();
+startTest();
+writeHeaderToLog( SECTION + " "+ TITLE);
 
 function InstanceOf( object, constructor ) {
     while ( object != null ) {
@@ -70,19 +70,19 @@ function InstanceOf( object, constructor ) {
     return false;
 }
 function Employee ( name, dept ) {
-     this.name = name || "";
-     this.dept = dept || "general";
+    this.name = name || "";
+    this.dept = dept || "general";
 }
 
 function Manager () {
-     this.reports = [];
+    this.reports = [];
 }
 Manager.prototype = new Employee();
 
 function WorkerBee ( name, dept, projs ) {
     this.base = Employee;
     this.base( name, dept)
-    this.projects = projs || new Array();
+	this.projects = projs || new Array();
 }
 WorkerBee.prototype = new Employee();
 
@@ -95,73 +95,60 @@ SalesPerson.prototype = new WorkerBee();
 function Engineer ( name, projs, machine ) {
     this.base = WorkerBee;
     this.base( name, "engineering", projs )
-    this.machine = machine || "";
+	this.machine = machine || "";
 }
 Engineer.prototype = new WorkerBee();
 
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
+var pat = new Engineer()
 
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
-    var pat = new Engineer()
+    new TestCase( SECTION,
+		  "pat.__proto__ == Engineer.prototype",
+		  true,
+		  pat.__proto__ == Engineer.prototype );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "pat.__proto__ == Engineer.prototype",
-                                    true,
-                                    pat.__proto__ == Engineer.prototype );
+new TestCase( SECTION,
+	      "pat.__proto__.__proto__ == WorkerBee.prototype",
+	      true,
+	      pat.__proto__.__proto__ == WorkerBee.prototype );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "pat.__proto__.__proto__ == WorkerBee.prototype",
-                                    true,
-                                    pat.__proto__.__proto__ == WorkerBee.prototype );
+new TestCase( SECTION,
+	      "pat.__proto__.__proto__.__proto__ == Employee.prototype",
+	      true,
+	      pat.__proto__.__proto__.__proto__ == Employee.prototype );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "pat.__proto__.__proto__.__proto__ == Employee.prototype",
-                                    true,
-                                    pat.__proto__.__proto__.__proto__ == Employee.prototype );
+new TestCase( SECTION,
+	      "pat.__proto__.__proto__.__proto__.__proto__ == Object.prototype",
+	      true,
+	      pat.__proto__.__proto__.__proto__.__proto__ == Object.prototype );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "pat.__proto__.__proto__.__proto__.__proto__ == Object.prototype",
-                                    true,
-                                    pat.__proto__.__proto__.__proto__.__proto__ == Object.prototype );
-
-    testcases[tc++] = new TestCase( SECTION,
-                                    "pat.__proto__.__proto__.__proto__.__proto__.__proto__ == null",
-                                    true,
-                                    pat.__proto__.__proto__.__proto__.__proto__.__proto__ == null );
+new TestCase( SECTION,
+	      "pat.__proto__.__proto__.__proto__.__proto__.__proto__ == null",
+	      true,
+	      pat.__proto__.__proto__.__proto__.__proto__.__proto__ == null );
 
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "InstanceOf( pat, Engineer )",
-                                    true,
-                                    InstanceOf( pat, Engineer ) );
+new TestCase( SECTION,
+	      "InstanceOf( pat, Engineer )",
+	      true,
+	      InstanceOf( pat, Engineer ) );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "InstanceOf( pat, WorkerBee )",
-                                    true,
-                                    InstanceOf( pat, WorkerBee ) );
+new TestCase( SECTION,
+	      "InstanceOf( pat, WorkerBee )",
+	      true,
+	      InstanceOf( pat, WorkerBee ) );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "InstanceOf( pat, Employee )",
-                                    true,
-                                    InstanceOf( pat, Employee ) );
+new TestCase( SECTION,
+	      "InstanceOf( pat, Employee )",
+	      true,
+	      InstanceOf( pat, Employee ) );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "InstanceOf( pat, Object )",
-                                    true,
-                                    InstanceOf( pat, Object ) );
+new TestCase( SECTION,
+	      "InstanceOf( pat, Object )",
+	      true,
+	      InstanceOf( pat, Object ) );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "InstanceOf( pat, SalesPerson )",
-                                    false,
-                                    InstanceOf ( pat, SalesPerson ) );
-    test();
+new TestCase( SECTION,
+	      "InstanceOf( pat, SalesPerson )",
+	      false,
+	      InstanceOf ( pat, SalesPerson ) );
+test();

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,90 +35,73 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/**
-	Filename:     octal.js
-	Description:  'Tests regular expressions containing \<number> '
 
-	Author:       Nick Lerissa
-	Date:         March 10, 1998
+/**
+   Filename:     octal.js
+   Description:  'Tests regular expressions containing \<number> '
+
+   Author:       Nick Lerissa
+   Date:         March 10, 1998
 */
 
-	var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
-	var VERSION = 'no version';
-    startTest();
-	var TITLE   = 'RegExp: \# (octal) ';
+var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
+var VERSION = 'no version';
+startTest();
+var TITLE   = 'RegExp: \# (octal) ';
 
-	writeHeaderToLog('Executing script: octal.js');
-	writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog('Executing script: octal.js');
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-	var count = 0;
-	var testcases = new Array();
+var testPattern = '\\101\\102\\103\\104\\105\\106\\107\\110\\111\\112\\113\\114\\115\\116\\117\\120\\121\\122\\123\\124\\125\\126\\127\\130\\131\\132';
 
+var testString = "12345ABCDEFGHIJKLMNOPQRSTUVWXYZ67890";
 
-	var testPattern = '\\101\\102\\103\\104\\105\\106\\107\\110\\111\\112\\113\\114\\115\\116\\117\\120\\121\\122\\123\\124\\125\\126\\127\\130\\131\\132';
+new TestCase ( SECTION,
+	       "'" + testString + "'.match(new RegExp('" + testPattern + "'))",
+	       String(["ABCDEFGHIJKLMNOPQRSTUVWXYZ"]), String(testString.match(new RegExp(testPattern))));
 
-	var testString = "12345ABCDEFGHIJKLMNOPQRSTUVWXYZ67890";
+testPattern = '\\141\\142\\143\\144\\145\\146\\147\\150\\151\\152\\153\\154\\155\\156\\157\\160\\161\\162\\163\\164\\165\\166\\167\\170\\171\\172';
 
-	testcases[count++] = new TestCase ( SECTION,
-	                                    "'" + testString + "'.match(new RegExp('" + testPattern + "'))",
-	                                    String(["ABCDEFGHIJKLMNOPQRSTUVWXYZ"]), String(testString.match(new RegExp(testPattern))));
+testString = "12345AabcdefghijklmnopqrstuvwxyzZ67890";
 
-    testPattern = '\\141\\142\\143\\144\\145\\146\\147\\150\\151\\152\\153\\154\\155\\156\\157\\160\\161\\162\\163\\164\\165\\166\\167\\170\\171\\172';
+new TestCase ( SECTION,
+	       "'" + testString + "'.match(new RegExp('" + testPattern + "'))",
+	       String(["abcdefghijklmnopqrstuvwxyz"]), String(testString.match(new RegExp(testPattern))));
 
-	testString = "12345AabcdefghijklmnopqrstuvwxyzZ67890";
+testPattern = '\\40\\41\\42\\43\\44\\45\\46\\47\\50\\51\\52\\53\\54\\55\\56\\57\\60\\61\\62\\63';
 
-	testcases[count++] = new TestCase ( SECTION,
-	                                    "'" + testString + "'.match(new RegExp('" + testPattern + "'))",
-	                                    String(["abcdefghijklmnopqrstuvwxyz"]), String(testString.match(new RegExp(testPattern))));
+testString = "abc !\"#$%&'()*+,-./0123ZBC";
 
-    testPattern = '\\40\\41\\42\\43\\44\\45\\46\\47\\50\\51\\52\\53\\54\\55\\56\\57\\60\\61\\62\\63';
+new TestCase ( SECTION,
+	       "'" + testString + "'.match(new RegExp('" + testPattern + "'))",
+	       String([" !\"#$%&'()*+,-./0123"]), String(testString.match(new RegExp(testPattern))));
 
-	testString = "abc !\"#$%&'()*+,-./0123ZBC";
+testPattern = '\\64\\65\\66\\67\\70\\71\\72\\73\\74\\75\\76\\77\\100';
 
-	testcases[count++] = new TestCase ( SECTION,
-	                                    "'" + testString + "'.match(new RegExp('" + testPattern + "'))",
-	                                    String([" !\"#$%&'()*+,-./0123"]), String(testString.match(new RegExp(testPattern))));
+testString = "123456789:;<=>?@ABC";
 
-    testPattern = '\\64\\65\\66\\67\\70\\71\\72\\73\\74\\75\\76\\77\\100';
+new TestCase ( SECTION,
+	       "'" + testString + "'.match(new RegExp('" + testPattern + "'))",
+	       String(["456789:;<=>?@"]), String(testString.match(new RegExp(testPattern))));
 
-	testString = "123456789:;<=>?@ABC";
+testPattern = '\\173\\174\\175\\176';
 
-	testcases[count++] = new TestCase ( SECTION,
-	                                    "'" + testString + "'.match(new RegExp('" + testPattern + "'))",
-	                                    String(["456789:;<=>?@"]), String(testString.match(new RegExp(testPattern))));
+testString = "1234{|}~ABC";
 
-    testPattern = '\\173\\174\\175\\176';
+new TestCase ( SECTION,
+	       "'" + testString + "'.match(new RegExp('" + testPattern + "'))",
+	       String(["{|}~"]), String(testString.match(new RegExp(testPattern))));
 
-	testString = "1234{|}~ABC";
+new TestCase ( SECTION,
+	       "'canthisbeFOUND'.match(new RegExp('[A-\\132]+'))",
+	       String(["FOUND"]), String('canthisbeFOUND'.match(new RegExp('[A-\\132]+'))));
 
-	testcases[count++] = new TestCase ( SECTION,
-	                                    "'" + testString + "'.match(new RegExp('" + testPattern + "'))",
-	                                    String(["{|}~"]), String(testString.match(new RegExp(testPattern))));
+new TestCase ( SECTION,
+	       "'canthisbeFOUND'.match(new RegExp('[\\141-\\172]+'))",
+	       String(["canthisbe"]), String('canthisbeFOUND'.match(new RegExp('[\\141-\\172]+'))));
 
-	testcases[count++] = new TestCase ( SECTION,
-	                                    "'canthisbeFOUND'.match(new RegExp('[A-\\132]+'))",
-	                                    String(["FOUND"]), String('canthisbeFOUND'.match(new RegExp('[A-\\132]+'))));
+new TestCase ( SECTION,
+	       "'canthisbeFOUND'.match(/[\\141-\\172]+/)",
+	       String(["canthisbe"]), String('canthisbeFOUND'.match(/[\141-\172]+/)));
 
-	testcases[count++] = new TestCase ( SECTION,
-	                                    "'canthisbeFOUND'.match(new RegExp('[\\141-\\172]+'))",
-	                                    String(["canthisbe"]), String('canthisbeFOUND'.match(new RegExp('[\\141-\\172]+'))));
-
-	testcases[count++] = new TestCase ( SECTION,
-	                                    "'canthisbeFOUND'.match(/[\\141-\\172]+/)",
-	                                    String(["canthisbe"]), String('canthisbeFOUND'.match(/[\141-\172]+/)));
-
-	function test()
-	{
-	   for ( tc=0; tc < testcases.length; tc++ ) {
-	        testcases[tc].passed = writeTestCaseResult(
-	        testcases[tc].expect,
-	        testcases[tc].actual,
-	        testcases[tc].description +" = "+
-	        testcases[tc].actual );
-	        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-	   }
-	   stopTest();
-	   return ( testcases );
-	}
-
-	test();
+test();

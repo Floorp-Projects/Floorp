@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,43 +35,42 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          proto_2.js
-    Section:
-    Description:        new PrototypeObject
+   File Name:          proto_2.js
+   Section:
+   Description:        new PrototypeObject
 
-    This tests Object Hierarchy and Inheritance, as described in the document
-    Object Hierarchy and Inheritance in JavaScript, last modified on 12/18/97
-    15:19:34 on http://devedge.netscape.com/.  Current URL:
-    http://devedge.netscape.com/docs/manuals/communicator/jsobj/contents.htm
+   This tests Object Hierarchy and Inheritance, as described in the document
+   Object Hierarchy and Inheritance in JavaScript, last modified on 12/18/97
+   15:19:34 on http://devedge.netscape.com/.  Current URL:
+   http://devedge.netscape.com/docs/manuals/communicator/jsobj/contents.htm
 
-    This tests the syntax ObjectName.prototype = new PrototypeObject using the
-    Employee example in the document referenced above.
+   This tests the syntax ObjectName.prototype = new PrototypeObject using the
+   Employee example in the document referenced above.
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
 
-    var SECTION = "proto_2";
-    var VERSION = "JS1_3";
-    var TITLE   = "new PrototypeObject";
+var SECTION = "proto_2";
+var VERSION = "JS1_3";
+var TITLE   = "new PrototypeObject";
 
-    startTest();
-    writeHeaderToLog( SECTION + " "+ TITLE);
-
-    var testcases = new Array();
+startTest();
+writeHeaderToLog( SECTION + " "+ TITLE);
 
 function Employee () {
-     this.name = "";
-     this.dept = "general";
+    this.name = "";
+    this.dept = "general";
 }
 function Manager () {
-     this.reports = [];
+    this.reports = [];
 }
 Manager.prototype = new Employee();
 
 function WorkerBee () {
-     this.projects = new Array();
+    this.projects = new Array();
 }
 
 WorkerBee.prototype = new Employee;
@@ -88,50 +88,36 @@ function Engineer () {
 Engineer.prototype = new WorkerBee;
 
 
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
+var employee    = new Employee();
+var manager     = new Manager();
+var workerbee   = new WorkerBee();
+var salesperson = new SalesPerson();
+var engineer    = new Engineer();
 
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
+new TestCase( SECTION,
+	      "employee.__proto__ == Employee.prototype",
+	      true,
+	      employee.__proto__ == Employee.prototype );
 
-    var employee    = new Employee();
-    var manager     = new Manager();
-    var workerbee   = new WorkerBee();
-    var salesperson = new SalesPerson();
-    var engineer    = new Engineer();
+new TestCase( SECTION,
+	      "manager.__proto__ == Manager.prototype",
+	      true,
+	      manager.__proto__ == Manager.prototype );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "employee.__proto__ == Employee.prototype",
-                                    true,
-                                    employee.__proto__ == Employee.prototype );
+new TestCase( SECTION,
+	      "workerbee.__proto__ == WorkerBee.prototype",
+	      true,
+	      workerbee.__proto__ == WorkerBee.prototype );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "manager.__proto__ == Manager.prototype",
-                                    true,
-                                    manager.__proto__ == Manager.prototype );
+new TestCase( SECTION,
+	      "salesperson.__proto__ == SalesPerson.prototype",
+	      true,
+	      salesperson.__proto__ == SalesPerson.prototype );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "workerbee.__proto__ == WorkerBee.prototype",
-                                    true,
-                                    workerbee.__proto__ == WorkerBee.prototype );
+new TestCase( SECTION,
+	      "engineer.__proto__ == Engineer.prototype",
+	      true,
+	      engineer.__proto__ == Engineer.prototype );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "salesperson.__proto__ == SalesPerson.prototype",
-                                    true,
-                                    salesperson.__proto__ == SalesPerson.prototype );
-
-    testcases[tc++] = new TestCase( SECTION,
-                                    "engineer.__proto__ == Engineer.prototype",
-                                    true,
-                                    engineer.__proto__ == Engineer.prototype );
-
-    test();
+test();
 

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -33,7 +34,8 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK *****
+ * ***** END LICENSE BLOCK ***** */
+/*
  *
  * Date: 26 November 2000
  *
@@ -60,6 +62,7 @@
  * This should throw an exception ... we test for this.
  *
  */
+
 //-------------------------------------------------------------------------------------------------
 var bug = '61266';
 var summary = 'Negative test: Passing (RegExp object, flag) to RegExp() constructor';
@@ -87,6 +90,9 @@ flags[1] = 'g';
 flags[2] = 'm';
 
 
+DESCRIPTION = "Negative test: Passing (RegExp object, flag) to RegExp() constructor"
+EXPECTED = "error";
+
 
 //-------------------------------------------------------------------------------------------------
 test();
@@ -95,37 +101,37 @@ test();
 
 function test() 
 {
-  enterFunc ('test'); 
-  printBugNumber (bug);
-  printStatus (summary);
+    enterFunc ('test'); 
+    printBugNumber (bug);
+    printStatus (summary);
 
-  for (i in patterns)
-  {
-    s = patterns[i];
-
-    for (j in flags)
+    for (i in patterns)
     {
-      f = flags[j];
-      printStatus(getStatus(s, f));
-      obj1 = new RegExp(s, f);   
-      obj2 = new RegExp(obj1, f);   // this should cause an exception 
+        s = patterns[i];
 
-      // WE SHOULD NEVER REACH THIS POINT -
-      reportFailure(cnFAILURE);
+        for (j in flags)
+        {
+            f = flags[j];
+            printStatus(getStatus(s, f));
+            obj1 = new RegExp(s, f);   
+            obj2 = new RegExp(obj1, f);   // this should cause an exception 
+
+            // WE SHOULD NEVER REACH THIS POINT -
+            reportFailure(cnFAILURE);
+        }
     }
-  }
-  
-  exitFunc ('test');
+
+    exitFunc ('test');
 }
 
 
 function getStatus(regexp, flag)
 { 
-  return (statprefix  +  quote(regexp) +  statsuffix  +   flag); 
+    return (statprefix  +  quote(regexp) +  statsuffix  +   flag); 
 }
 
 
 function quote(text)
 {
-  return (singlequote  +  text  + singlequote);
+    return (singlequote  +  text  + singlequote);
 }

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -35,61 +36,37 @@
  *
  * ***** END LICENSE BLOCK ***** */
 /**
-    File Name:          15.5.4.5-4.js
-    ECMA Section:       15.5.4.5 String.prototype.charCodeAt(pos)
+   File Name:          15.5.4.5-4.js
+   ECMA Section:       15.5.4.5 String.prototype.charCodeAt(pos)
 
-    Description:        Returns a nonnegative integer less than 2^16.
+   Description:        Returns a nonnegative integer less than 2^16.
 
-    Author:             christine@netscape.com
-    Date:               28 october 1997
+   Author:             christine@netscape.com
+   Date:               28 october 1997
 
 */
-    var VERSION = "0697";
-    startTest();
-    var SECTION = "15.5.4.5-4";
+var VERSION = "0697";
+startTest();
+var SECTION = "15.5.4.5-4";
 
-    writeHeaderToLog( SECTION + " String.prototype.charCodeAt(pos)" );
-    var tc= 0;
-    var testcases = getTestCases();
+writeHeaderToLog( SECTION + " String.prototype.charCodeAt(pos)" );
 
-//  all tests must call a function that returns an array of TestCase objects.
-    test();
+var MAXCHARCODE = Math.pow(2,16);
+var item=0, CHARCODE;
 
-function getTestCases() {
-    var array = new Array();
-    var MAXCHARCODE = Math.pow(2,16);
-    var item=0, CHARCODE;
-
-    for ( CHARCODE=0; CHARCODE <256; CHARCODE++ ) {
-        array[item++] = new TestCase( SECTION,
-                                     "(String.fromCharCode("+CHARCODE+")).charCodeAt(0)",
-                                     CHARCODE,
-                                     (String.fromCharCode(CHARCODE)).charCodeAt(0) );
-    }
-    for ( CHARCODE=256; CHARCODE < 65536; CHARCODE+=999 ) {
-        array[item++] = new TestCase( SECTION,
-                                     "(String.fromCharCode("+CHARCODE+")).charCodeAt(0)",
-                                     CHARCODE,
-                                     (String.fromCharCode(CHARCODE)).charCodeAt(0) );
-    }
-
-    array[item++] = new TestCase( SECTION, "(String.fromCharCode(65535)).charCodeAt(0)", 65535,     (String.fromCharCode(65535)).charCodeAt(0) );
-
-    return ( array );
+for ( CHARCODE=0; CHARCODE <256; CHARCODE++ ) {
+  new TestCase( SECTION,
+		"(String.fromCharCode("+CHARCODE+")).charCodeAt(0)",
+		CHARCODE,
+		(String.fromCharCode(CHARCODE)).charCodeAt(0) );
 }
-function test() {
-        for ( tc = 0; tc < testcases.length; tc++ ) {
-            testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+ testcases[tc].actual );
-
-            testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-
-        }
-
-        stopTest();
-
-    //  all tests must return an array of TestCase objects
-        return ( testcases );
+for ( CHARCODE=256; CHARCODE < 65536; CHARCODE+=999 ) {
+  new TestCase( SECTION,
+		"(String.fromCharCode("+CHARCODE+")).charCodeAt(0)",
+		CHARCODE,
+		(String.fromCharCode(CHARCODE)).charCodeAt(0) );
 }
+
+new TestCase( SECTION, "(String.fromCharCode(65535)).charCodeAt(0)", 65535,     (String.fromCharCode(65535)).charCodeAt(0) );
+
+test();

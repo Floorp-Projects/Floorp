@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,89 +35,74 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.9.5.3-2.js
-    ECMA Section:       15.9.5.3-2 Date.prototype.valueOf
-    Description:
+   File Name:          15.9.5.3-2.js
+   ECMA Section:       15.9.5.3-2 Date.prototype.valueOf
+   Description:
 
-    The valueOf function returns a number, which is this time value.
+   The valueOf function returns a number, which is this time value.
 
-    The valueOf function is not generic; it generates a runtime error if
-    its this value is not a Date object.  Therefore it cannot be transferred
-    to other kinds of objects for use as a method.
+   The valueOf function is not generic; it generates a runtime error if
+   its this value is not a Date object.  Therefore it cannot be transferred
+   to other kinds of objects for use as a method.
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
 
-    var SECTION = "15.9.5.3-2";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Date.prototype.valueOf";
+var SECTION = "15.9.5.3-2";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Date.prototype.valueOf";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = new Array();
+var TZ_ADJUST = TZ_DIFF * msPerHour;
+var now = (new Date()).valueOf();
+var UTC_29_FEB_2000 = TIME_2000 + 31*msPerDay + 28*msPerDay;
+var UTC_1_JAN_2005 = TIME_2000 + TimeInYear(2000) + TimeInYear(2001)+
+TimeInYear(2002)+TimeInYear(2003)+TimeInYear(2004);
 
+addTestCase( now );
+addTestCase( TIME_1970 );
+addTestCase( TIME_1900 );
+addTestCase( TIME_2000 );
+addTestCase( UTC_29_FEB_2000 );
+addTestCase( UTC_1_JAN_2005 );
 
-    var TZ_ADJUST = TZ_DIFF * msPerHour;
-    var now = (new Date()).valueOf();
-    var UTC_29_FEB_2000 = TIME_2000 + 31*msPerDay + 28*msPerDay;
-    var UTC_1_JAN_2005 = TIME_2000 + TimeInYear(2000) + TimeInYear(2001)+
-    TimeInYear(2002)+TimeInYear(2003)+TimeInYear(2004);
-
-    addTestCase( now );
-    addTestCase( TIME_1970 );
-    addTestCase( TIME_1900 );
-    addTestCase( TIME_2000 );
-    addTestCase( UTC_29_FEB_2000 );
-    addTestCase( UTC_1_JAN_2005 );
-
-    test();
+test();
 
 function addTestCase( t ) {
-    testcases[tc++] = new TestCase( SECTION,
-                                    "(new Date("+t+").valueOf()",
-                                    t,
-                                    (new Date(t)).valueOf() );
+  new TestCase( SECTION,
+		"(new Date("+t+").valueOf()",
+		t,
+		(new Date(t)).valueOf() );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "(new Date("+(t+1)+").valueOf()",
-                                    t+1,
-                                    (new Date(t+1)).valueOf() );
+  new TestCase( SECTION,
+		"(new Date("+(t+1)+").valueOf()",
+		t+1,
+		(new Date(t+1)).valueOf() );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "(new Date("+(t-1)+").valueOf()",
-                                    t-1,
-                                    (new Date(t-1)).valueOf() );
+  new TestCase( SECTION,
+		"(new Date("+(t-1)+").valueOf()",
+		t-1,
+		(new Date(t-1)).valueOf() );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "(new Date("+(t-TZ_ADJUST)+").valueOf()",
-                                    t-TZ_ADJUST,
-                                    (new Date(t-TZ_ADJUST)).valueOf() );
+  new TestCase( SECTION,
+		"(new Date("+(t-TZ_ADJUST)+").valueOf()",
+		t-TZ_ADJUST,
+		(new Date(t-TZ_ADJUST)).valueOf() );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "(new Date("+(t+TZ_ADJUST)+").valueOf()",
-                                    t+TZ_ADJUST,
-                                    (new Date(t+TZ_ADJUST)).valueOf() );
+  new TestCase( SECTION,
+		"(new Date("+(t+TZ_ADJUST)+").valueOf()",
+		t+TZ_ADJUST,
+		(new Date(t+TZ_ADJUST)).valueOf() );
 }
 
 function MyObject( value ) {
-    this.value = value;
-    this.valueOf = Date.prototype.valueOf;
-    this.toString = new Function( "return this+\"\";");
-    return this;
-}
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
+  this.value = value;
+  this.valueOf = Date.prototype.valueOf;
+  this.toString = new Function( "return this+\"\";");
+  return this;
 }

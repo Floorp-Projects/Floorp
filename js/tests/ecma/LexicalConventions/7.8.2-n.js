@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -35,29 +36,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 /**
-    File Name:          7.8.2.js
-    ECMA Section:       7.8.2 Examples of Automatic Semicolon Insertion
-    Description:        compare some specific examples of the automatic
-                        insertion rules in the EMCA specification.
-    Author:             christine@netscape.com
-    Date:               15 september 1997
+   File Name:          7.8.2.js
+   ECMA Section:       7.8.2 Examples of Automatic Semicolon Insertion
+   Description:        compare some specific examples of the automatic
+   insertion rules in the EMCA specification.
+   Author:             christine@netscape.com
+   Date:               15 september 1997
 */
 
-    var SECTION="7.8.2";
-    var VERSION="ECMA_1"
-    startTest();
-    writeHeaderToLog(SECTION+" "+"Examples of Semicolon Insertion");
+var SECTION="7.8.2";
+var VERSION="ECMA_1"
+startTest();
+writeHeaderToLog(SECTION+" "+"Examples of Semicolon Insertion");
 
-    testcases = getTestCases();
-    test();
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
+//    new TestCase( "7.8.2",  "{ 1 \n 2 } 3",      3,         eval("{ 1 \n 2 } 3") );
 
-//    array[item++] = new TestCase( "7.8.2",  "{ 1 \n 2 } 3",      3,         "{ 1 \n 2 } 3" );
-    array[item++] = new TestCase( "7.8.2",  "{ 1 2 } 3",         "error",   eval("{1 2 } 3")     );
+DESCRIPTION = "{ 1 2 } 3";
+EXPECTED = "error";
 
-    return ( array );
-}
+new TestCase( "7.8.2",  "{ 1 2 } 3",         "error",   eval("{1 2 } 3")     );
 
+test();

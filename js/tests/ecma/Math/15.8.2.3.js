@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,72 +35,122 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.8.2.3.js
-    ECMA Section:       15.8.2.3 asin( x )
-    Description:        return an approximation to the arc sine of the
-                        argument.  the result is expressed in radians and
-                        range is from -PI/2 to +PI/2.  special cases:
-                        - if x is NaN,  the result is NaN
-                        - if x > 1,     the result is NaN
-                        - if x < -1,    the result is NaN
-                        - if x == +0,   the result is +0
-                        - if x == -0,   the result is -0
-    Author:             christine@netscape.com
-    Date:               7 july 1997
+   File Name:          15.8.2.3.js
+   ECMA Section:       15.8.2.3 asin( x )
+   Description:        return an approximation to the arc sine of the
+   argument.  the result is expressed in radians and
+   range is from -PI/2 to +PI/2.  special cases:
+   - if x is NaN,  the result is NaN
+   - if x > 1,     the result is NaN
+   - if x < -1,    the result is NaN
+   - if x == +0,   the result is +0
+   - if x == -0,   the result is -0
+   Author:             christine@netscape.com
+   Date:               7 july 1997
 
 */
-    var SECTION = "15.8.2.3";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Math.asin()";
+var SECTION = "15.8.2.3";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Math.asin()";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
-    test();
+new TestCase( SECTION,
+	      "Math.asin()",
+	      Number.NaN,
+	      Math.asin() );
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
+new TestCase( SECTION,
+	      "Math.asin(void 0)",
+	      Number.NaN,
+	      Math.asin(void 0) );
 
-    array[item++] = new TestCase( SECTION, "Math.asin()",           Number.NaN,     Math.asin() );
-    array[item++] = new TestCase( SECTION, "Math.asin(void 0)",     Number.NaN,     Math.asin(void 0) );
-    array[item++] = new TestCase( SECTION, "Math.asin(null)",       0,              Math.asin(null) );
-    array[item++] = new TestCase( SECTION, "Math.asin(NaN)",        Number.NaN,     Math.asin(Number.NaN)   );
+new TestCase( SECTION,
+	      "Math.asin(null)",
+	      0,
+	      Math.asin(null) );
 
-    array[item++] = new TestCase( SECTION, "Math.asin('string')",   Number.NaN,     Math.asin("string")     );
-    array[item++] = new TestCase( SECTION, "Math.asin('0')",        0,              Math.asin("0") );
-    array[item++] = new TestCase( SECTION, "Math.asin('1')",        Math.PI/2,      Math.asin("1") );
-    array[item++] = new TestCase( SECTION, "Math.asin('-1')",       -Math.PI/2,     Math.asin("-1") );
-    array[item++] = new TestCase( SECTION, "Math.asin(Math.SQRT1_2+'')",    Math.PI/4,  Math.asin(Math.SQRT1_2+'') );
-    array[item++] = new TestCase( SECTION, "Math.asin(-Math.SQRT1_2+'')",   -Math.PI/4, Math.asin(-Math.SQRT1_2+'') );
+new TestCase( SECTION,
+	      "Math.asin(NaN)",
+	      Number.NaN,
+	      Math.asin(Number.NaN)   );
 
-    array[item++] = new TestCase( SECTION, "Math.asin(1.000001)",    Number.NaN,    Math.asin(1.000001)     );
-    array[item++] = new TestCase( SECTION, "Math.asin(-1.000001)",   Number.NaN,    Math.asin(-1.000001)    );
-    array[item++] = new TestCase( SECTION, "Math.asin(0)",           0,             Math.asin(0)            );
-    array[item++] = new TestCase( SECTION, "Math.asin(-0)",          -0,            Math.asin(-0)           );
+new TestCase( SECTION,
+	      "Math.asin('string')",
+	      Number.NaN,
+	      Math.asin("string")     );
 
-    array[item++] = new TestCase( SECTION, "Infinity/Math.asin(-0)",    -Infinity,  Infinity/Math.asin(-0) );
+new TestCase( SECTION,
+	      "Math.asin('0')",
+	      0,
+	      Math.asin("0") );
 
-    array[item++] = new TestCase( SECTION, "Math.asin(1)",              Math.PI/2,  Math.asin(1)            );
-    array[item++] = new TestCase( SECTION, "Math.asin(-1)",             -Math.PI/2, Math.asin(-1)            );
-    array[item++] = new TestCase( SECTION, "Math.asin(Math.SQRT1_2))",  Math.PI/4,  Math.asin(Math.SQRT1_2) );
-    array[item++] = new TestCase( SECTION, "Math.asin(-Math.SQRT1_2))", -Math.PI/4, Math.asin(-Math.SQRT1_2));
+new TestCase( SECTION,
+	      "Math.asin('1')",
+	      Math.PI/2,
+	      Math.asin("1") );
 
-    return ( array );
-}
+new TestCase( SECTION,
+	      "Math.asin('-1')",
+	      -Math.PI/2,
+	      Math.asin("-1") );
 
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
+new TestCase( SECTION,
+	      "Math.asin(Math.SQRT1_2+'')",
+	      Math.PI/4,
+	      Math.asin(Math.SQRT1_2+'') );
 
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
+new TestCase( SECTION,
+	      "Math.asin(-Math.SQRT1_2+'')",
+	      -Math.PI/4,
+	      Math.asin(-Math.SQRT1_2+'') );
+
+new TestCase( SECTION,
+	      "Math.asin(1.000001)",
+	      Number.NaN,
+	      Math.asin(1.000001)     );
+
+new TestCase( SECTION,
+	      "Math.asin(-1.000001)",
+	      Number.NaN,
+	      Math.asin(-1.000001)    );
+
+new TestCase( SECTION,
+	      "Math.asin(0)",
+	      0,
+	      Math.asin(0)            );
+
+new TestCase( SECTION,
+	      "Math.asin(-0)",
+	      -0,
+	      Math.asin(-0)           );
+
+new TestCase( SECTION,
+	      "Infinity/Math.asin(-0)",
+	      -Infinity,
+	      Infinity/Math.asin(-0) );
+
+new TestCase( SECTION,
+	      "Math.asin(1)",
+	      Math.PI/2,
+	      Math.asin(1)            );
+
+new TestCase( SECTION,
+	      "Math.asin(-1)",
+	      -Math.PI/2,
+	      Math.asin(-1)            );
+
+new TestCase( SECTION,
+	      "Math.asin(Math.SQRT1_2))",
+	      Math.PI/4,
+	      Math.asin(Math.SQRT1_2) );
+
+new TestCase( SECTION,
+	      "Math.asin(-Math.SQRT1_2))",
+	      -Math.PI/4,
+	      Math.asin(-Math.SQRT1_2));
+
+test();

@@ -58,8 +58,15 @@ var expectedvalues = [];
  */
 function testReadOnly(F)
 {
+  var e;
   var orig = F.prototype;
-  F.prototype = new Object();
+  try
+  {
+    F.prototype = new Object();
+  }
+  catch (e)
+  {
+  }
   return F.prototype === orig;
 }
 

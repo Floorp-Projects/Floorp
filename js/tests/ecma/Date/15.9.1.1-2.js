@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,64 +35,54 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.9.1.1-2.js
-    ECMA Section:       15.9.1.1 Time Range
-     Description:
-                            - leap seconds are ignored
-                            - assume 86400000 ms / day
-                            - numbers range fom +/- 9,007,199,254,740,991
-                            - ms precision for any instant that is within
-                              approximately +/-285,616 years from 1 jan 1970
-                              UTC
-                            - range of times supported is -100,000,000 days
-                              to 100,000,000 days from 1 jan 1970 12:00 am
-                            - time supported is 8.64e5*10e8 milliseconds from
-                              1 jan 1970 UTC  (+/-273972.6027397 years)
-    Author:             christine@netscape.com
-    Date:               9 july 1997
+   File Name:          15.9.1.1-2.js
+   ECMA Section:       15.9.1.1 Time Range
+   Description:
+   - leap seconds are ignored
+   - assume 86400000 ms / day
+   - numbers range fom +/- 9,007,199,254,740,991
+   - ms precision for any instant that is within
+   approximately +/-285,616 years from 1 jan 1970
+   UTC
+   - range of times supported is -100,000,000 days
+   to 100,000,000 days from 1 jan 1970 12:00 am
+   - time supported is 8.64e5*10e8 milliseconds from
+   1 jan 1970 UTC  (+/-273972.6027397 years)
+   Author:             christine@netscape.com
+   Date:               9 july 1997
 */
 
-function test() {
+//  every one hundred years contains:
+//    24 years with 366 days
+//
+//  every four hundred years contains:
+//    97 years with 366 days
+//   303 years with 365 days
+//
+//   86400000*366*97  =    3067372800000
+//  +86400000*365*303 =  + 9555408000000
+//                    =    1.26227808e+13
 
-    writeHeaderToLog("15.8.1.1 Time Range");
+var FOUR_HUNDRED_YEARS = 1.26227808e+13;
+var SECTION         =  "15.9.1.1-2";
 
-    for (       M_SECS = 0, CURRENT_YEAR = 1970;
-                M_SECS > -8640000000000000;
-                tc++,   M_SECS -= FOUR_HUNDRED_YEARS, CURRENT_YEAR -= 400 ) {
+writeHeaderToLog("15.8.1.1 Time Range");
 
-        testcases[tc] = new TestCase( SECTION, "new Date("+M_SECS+")", CURRENT_YEAR, (new Date( M_SECS )).getUTCFullYear() );
+var M_SECS;
+var CURRENT_YEAR;
 
-        testcases[tc].passed =  writeTestCaseResult(
-                                testcases[tc].expect,
-                                testcases[tc].actual,
-                                testcases[tc].description + " = " +
-                                testcases[tc].actual );
+for ( M_SECS = 0, CURRENT_YEAR = 1970;
+      M_SECS > -8640000000000000;
+      M_SECS -= FOUR_HUNDRED_YEARS, CURRENT_YEAR -= 400 ) {
 
-        if ( ! testcases[tc].passed ) {
-            testcases[tc].reason = "wrong year value";
-        }
-    }
+  new TestCase( SECTION, 
+		"new Date("+M_SECS+")", 
+		CURRENT_YEAR, 
+		(new Date( M_SECS )).getUTCFullYear() );
 
-    stopTest();
-
-    return ( testcases );
 }
-    //  every one hundred years contains:
-    //    24 years with 366 days
-    //
-    //  every four hundred years contains:
-    //    97 years with 366 days
-    //   303 years with 365 days
-    //
-    //   86400000*366*97  =    3067372800000
-    //  +86400000*365*303 =  + 9555408000000
-    //                    =    1.26227808e+13
 
-    var FOUR_HUNDRED_YEARS = 1.26227808e+13;
-    var SECTION         =  "15.9.1.1-2";
-    var tc              = 0;
-    var testcases       = new Array();
-
-    test();
+test();
 

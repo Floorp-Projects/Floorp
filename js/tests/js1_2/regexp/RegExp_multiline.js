@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,111 +35,95 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/**
-	Filename:     RegExp_multiline.js
-	Description:  'Tests RegExps multiline property'
 
-	Author:       Nick Lerissa
-	Date:         March 12, 1998
+/**
+   Filename:     RegExp_multiline.js
+   Description:  'Tests RegExps multiline property'
+
+   Author:       Nick Lerissa
+   Date:         March 12, 1998
 */
 
-	var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
-	var VERSION = 'no version';
-    startTest();
-	var TITLE   = 'RegExp: multiline';
+var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
+var VERSION = 'no version';
+startTest();
+var TITLE   = 'RegExp: multiline';
 
-	writeHeaderToLog('Executing script: RegExp_multiline.js');
-	writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog('Executing script: RegExp_multiline.js');
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-	var count = 0;
-	var testcases = new Array();
+// First we do a series of tests with RegExp.multiline set to false (default value)
+// Following this we do the same tests with RegExp.multiline set true(**).
+// RegExp.multiline
+new TestCase ( SECTION, "RegExp.multiline",
+	       false, RegExp.multiline);
 
-    // First we do a series of tests with RegExp.multiline set to false (default value)
-    // Following this we do the same tests with RegExp.multiline set true(**).
-    // RegExp.multiline
-	testcases[count++] = new TestCase ( SECTION, "RegExp.multiline",
-	                                    false, RegExp.multiline);
+// (multiline == false) '123\n456'.match(/^4../)
+new TestCase ( SECTION, "(multiline == false) '123\\n456'.match(/^4../)",
+	       null, '123\n456'.match(/^4../));
 
-    // (multiline == false) '123\n456'.match(/^4../)
-	testcases[count++] = new TestCase ( SECTION, "(multiline == false) '123\\n456'.match(/^4../)",
-	                                    null, '123\n456'.match(/^4../));
+// (multiline == false) 'a11\na22\na23\na24'.match(/^a../g)
+new TestCase ( SECTION, "(multiline == false) 'a11\\na22\\na23\\na24'.match(/^a../g)",
+	       String(['a11']), String('a11\na22\na23\na24'.match(/^a../g)));
 
-    // (multiline == false) 'a11\na22\na23\na24'.match(/^a../g)
-	testcases[count++] = new TestCase ( SECTION, "(multiline == false) 'a11\\na22\\na23\\na24'.match(/^a../g)",
-	                                    String(['a11']), String('a11\na22\na23\na24'.match(/^a../g)));
+// (multiline == false) 'a11\na22'.match(/^.+^./)
+new TestCase ( SECTION, "(multiline == false) 'a11\na22'.match(/^.+^./)",
+	       null, 'a11\na22'.match(/^.+^./));
 
-    // (multiline == false) 'a11\na22'.match(/^.+^./)
-	testcases[count++] = new TestCase ( SECTION, "(multiline == false) 'a11\na22'.match(/^.+^./)",
-	                                    null, 'a11\na22'.match(/^.+^./));
+// (multiline == false) '123\n456'.match(/.3$/)
+new TestCase ( SECTION, "(multiline == false) '123\\n456'.match(/.3$/)",
+	       null, '123\n456'.match(/.3$/));
 
-    // (multiline == false) '123\n456'.match(/.3$/)
-	testcases[count++] = new TestCase ( SECTION, "(multiline == false) '123\\n456'.match(/.3$/)",
-	                                    null, '123\n456'.match(/.3$/));
+// (multiline == false) 'a11\na22\na23\na24'.match(/a..$/g)
+new TestCase ( SECTION, "(multiline == false) 'a11\\na22\\na23\\na24'.match(/a..$/g)",
+	       String(['a24']), String('a11\na22\na23\na24'.match(/a..$/g)));
 
-    // (multiline == false) 'a11\na22\na23\na24'.match(/a..$/g)
-	testcases[count++] = new TestCase ( SECTION, "(multiline == false) 'a11\\na22\\na23\\na24'.match(/a..$/g)",
-	                                    String(['a24']), String('a11\na22\na23\na24'.match(/a..$/g)));
+// (multiline == false) 'abc\ndef'.match(/c$...$/)
+new TestCase ( SECTION, "(multiline == false) 'abc\ndef'.match(/c$...$/)",
+	       null, 'abc\ndef'.match(/c$...$/));
 
-    // (multiline == false) 'abc\ndef'.match(/c$...$/)
-	testcases[count++] = new TestCase ( SECTION, "(multiline == false) 'abc\ndef'.match(/c$...$/)",
-	                                    null, 'abc\ndef'.match(/c$...$/));
+// (multiline == false) 'a11\na22\na23\na24'.match(new RegExp('a..$','g'))
+new TestCase ( SECTION, "(multiline == false) 'a11\\na22\\na23\\na24'.match(new RegExp('a..$','g'))",
+	       String(['a24']), String('a11\na22\na23\na24'.match(new RegExp('a..$','g'))));
 
-    // (multiline == false) 'a11\na22\na23\na24'.match(new RegExp('a..$','g'))
-	testcases[count++] = new TestCase ( SECTION, "(multiline == false) 'a11\\na22\\na23\\na24'.match(new RegExp('a..$','g'))",
-	                                    String(['a24']), String('a11\na22\na23\na24'.match(new RegExp('a..$','g'))));
+// (multiline == false) 'abc\ndef'.match(new RegExp('c$...$'))
+new TestCase ( SECTION, "(multiline == false) 'abc\ndef'.match(new RegExp('c$...$'))",
+	       null, 'abc\ndef'.match(new RegExp('c$...$')));
 
-    // (multiline == false) 'abc\ndef'.match(new RegExp('c$...$'))
-	testcases[count++] = new TestCase ( SECTION, "(multiline == false) 'abc\ndef'.match(new RegExp('c$...$'))",
-	                                    null, 'abc\ndef'.match(new RegExp('c$...$')));
+// **Now we do the tests with RegExp.multiline set to true
+// RegExp.multiline = true; RegExp.multiline
+RegExp.multiline = true;
+new TestCase ( SECTION, "RegExp.multiline = true; RegExp.multiline",
+	       true, RegExp.multiline);
 
-    // **Now we do the tests with RegExp.multiline set to true
-    // RegExp.multiline = true; RegExp.multiline
-    RegExp.multiline = true;
-	testcases[count++] = new TestCase ( SECTION, "RegExp.multiline = true; RegExp.multiline",
-	                                    true, RegExp.multiline);
+// (multiline == true) '123\n456'.match(/^4../)
+new TestCase ( SECTION, "(multiline == true) '123\\n456'.match(/^4../)",
+	       String(['456']), String('123\n456'.match(/^4../)));
 
-    // (multiline == true) '123\n456'.match(/^4../)
-	testcases[count++] = new TestCase ( SECTION, "(multiline == true) '123\\n456'.match(/^4../)",
-	                                    String(['456']), String('123\n456'.match(/^4../)));
+// (multiline == true) 'a11\na22\na23\na24'.match(/^a../g)
+new TestCase ( SECTION, "(multiline == true) 'a11\\na22\\na23\\na24'.match(/^a../g)",
+	       String(['a11','a22','a23','a24']), String('a11\na22\na23\na24'.match(/^a../g)));
 
-    // (multiline == true) 'a11\na22\na23\na24'.match(/^a../g)
-	testcases[count++] = new TestCase ( SECTION, "(multiline == true) 'a11\\na22\\na23\\na24'.match(/^a../g)",
-	                                    String(['a11','a22','a23','a24']), String('a11\na22\na23\na24'.match(/^a../g)));
+// (multiline == true) 'a11\na22'.match(/^.+^./)
+//new TestCase ( SECTION, "(multiline == true) 'a11\na22'.match(/^.+^./)",
+//                                    String(['a11\na']), String('a11\na22'.match(/^.+^./)));
 
-    // (multiline == true) 'a11\na22'.match(/^.+^./)
-	//testcases[count++] = new TestCase ( SECTION, "(multiline == true) 'a11\na22'.match(/^.+^./)",
-	//                                    String(['a11\na']), String('a11\na22'.match(/^.+^./)));
+// (multiline == true) '123\n456'.match(/.3$/)
+new TestCase ( SECTION, "(multiline == true) '123\\n456'.match(/.3$/)",
+	       String(['23']), String('123\n456'.match(/.3$/)));
 
-    // (multiline == true) '123\n456'.match(/.3$/)
-	testcases[count++] = new TestCase ( SECTION, "(multiline == true) '123\\n456'.match(/.3$/)",
-	                                    String(['23']), String('123\n456'.match(/.3$/)));
+// (multiline == true) 'a11\na22\na23\na24'.match(/a..$/g)
+new TestCase ( SECTION, "(multiline == true) 'a11\\na22\\na23\\na24'.match(/a..$/g)",
+	       String(['a11','a22','a23','a24']), String('a11\na22\na23\na24'.match(/a..$/g)));
 
-    // (multiline == true) 'a11\na22\na23\na24'.match(/a..$/g)
-	testcases[count++] = new TestCase ( SECTION, "(multiline == true) 'a11\\na22\\na23\\na24'.match(/a..$/g)",
-	                                    String(['a11','a22','a23','a24']), String('a11\na22\na23\na24'.match(/a..$/g)));
+// (multiline == true) 'a11\na22\na23\na24'.match(new RegExp('a..$','g'))
+new TestCase ( SECTION, "(multiline == true) 'a11\\na22\\na23\\na24'.match(new RegExp('a..$','g'))",
+	       String(['a11','a22','a23','a24']), String('a11\na22\na23\na24'.match(new RegExp('a..$','g'))));
 
-    // (multiline == true) 'a11\na22\na23\na24'.match(new RegExp('a..$','g'))
-	testcases[count++] = new TestCase ( SECTION, "(multiline == true) 'a11\\na22\\na23\\na24'.match(new RegExp('a..$','g'))",
-	                                    String(['a11','a22','a23','a24']), String('a11\na22\na23\na24'.match(new RegExp('a..$','g'))));
+// (multiline == true) 'abc\ndef'.match(/c$....$/)
+//new TestCase ( SECTION, "(multiline == true) 'abc\ndef'.match(/c$.+$/)",
+//                                    'c\ndef', String('abc\ndef'.match(/c$.+$/)));
 
-    // (multiline == true) 'abc\ndef'.match(/c$....$/)
-	//testcases[count++] = new TestCase ( SECTION, "(multiline == true) 'abc\ndef'.match(/c$.+$/)",
-	//                                    'c\ndef', String('abc\ndef'.match(/c$.+$/)));
+RegExp.multiline = false;
 
-	RegExp.multiline = false;
-
-	function test()
-	{
-	   for ( tc=0; tc < testcases.length; tc++ ) {
-	        testcases[tc].passed = writeTestCaseResult(
-	        testcases[tc].expect,
-	        testcases[tc].actual,
-	        testcases[tc].description +" = "+
-	        testcases[tc].actual );
-	        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-	   }
-	   stopTest();
-	   return ( testcases );
-	}
-
-	test();
+test();

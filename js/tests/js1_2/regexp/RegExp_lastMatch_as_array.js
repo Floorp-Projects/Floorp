@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,67 +35,52 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/**
-	Filename:     RegExp_lastMatch_as_array.js
-	Description:  'Tests RegExps $& property (same tests as RegExp_lastMatch.js but using $&)'
 
-	Author:       Nick Lerissa
-	Date:         March 13, 1998
+/**
+   Filename:     RegExp_lastMatch_as_array.js
+   Description:  'Tests RegExps $& property (same tests as RegExp_lastMatch.js but using $&)'
+
+   Author:       Nick Lerissa
+   Date:         March 13, 1998
 */
 
-	var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
-	var VERSION = 'no version';
-    startTest();
-	var TITLE   = 'RegExp: $&';
+var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
+var VERSION = 'no version';
+startTest();
+var TITLE   = 'RegExp: $&';
 
-	writeHeaderToLog('Executing script: RegExp_lastMatch_as_array.js');
-	writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog('Executing script: RegExp_lastMatch_as_array.js');
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-	var count = 0;
-	var testcases = new Array();
 
-    // 'foo'.match(/foo/); RegExp['$&']
-    'foo'.match(/foo/);
-	testcases[count++] = new TestCase ( SECTION, "'foo'.match(/foo/); RegExp['$&']",
-	                                    'foo', RegExp['$&']);
+// 'foo'.match(/foo/); RegExp['$&']
+'foo'.match(/foo/);
+new TestCase ( SECTION, "'foo'.match(/foo/); RegExp['$&']",
+	       'foo', RegExp['$&']);
 
-    // 'foo'.match(new RegExp('foo')); RegExp['$&']
-    'foo'.match(new RegExp('foo'));
-	testcases[count++] = new TestCase ( SECTION, "'foo'.match(new RegExp('foo')); RegExp['$&']",
-	                                    'foo', RegExp['$&']);
+// 'foo'.match(new RegExp('foo')); RegExp['$&']
+'foo'.match(new RegExp('foo'));
+new TestCase ( SECTION, "'foo'.match(new RegExp('foo')); RegExp['$&']",
+	       'foo', RegExp['$&']);
 
-    // 'xxx'.match(/bar/); RegExp['$&']
-    'xxx'.match(/bar/);
-	testcases[count++] = new TestCase ( SECTION, "'xxx'.match(/bar/); RegExp['$&']",
-	                                    'foo', RegExp['$&']);
+// 'xxx'.match(/bar/); RegExp['$&']
+'xxx'.match(/bar/);
+new TestCase ( SECTION, "'xxx'.match(/bar/); RegExp['$&']",
+	       'foo', RegExp['$&']);
 
-    // 'xxx'.match(/$/); RegExp['$&']
-    'xxx'.match(/$/);
-	testcases[count++] = new TestCase ( SECTION, "'xxx'.match(/$/); RegExp['$&']",
-	                                    '', RegExp['$&']);
+// 'xxx'.match(/$/); RegExp['$&']
+'xxx'.match(/$/);
+new TestCase ( SECTION, "'xxx'.match(/$/); RegExp['$&']",
+	       '', RegExp['$&']);
 
-    // 'abcdefg'.match(/^..(cd)[a-z]+/); RegExp['$&']
-    'abcdefg'.match(/^..(cd)[a-z]+/);
-	testcases[count++] = new TestCase ( SECTION, "'abcdefg'.match(/^..(cd)[a-z]+/); RegExp['$&']",
-	                                    'abcdefg', RegExp['$&']);
+// 'abcdefg'.match(/^..(cd)[a-z]+/); RegExp['$&']
+'abcdefg'.match(/^..(cd)[a-z]+/);
+new TestCase ( SECTION, "'abcdefg'.match(/^..(cd)[a-z]+/); RegExp['$&']",
+	       'abcdefg', RegExp['$&']);
 
-    // 'abcdefgabcdefg'.match(/(a(b(c(d)e)f)g)\1/); RegExp['$&']
-    'abcdefgabcdefg'.match(/(a(b(c(d)e)f)g)\1/);
-	testcases[count++] = new TestCase ( SECTION, "'abcdefgabcdefg'.match(/(a(b(c(d)e)f)g)\\1/); RegExp['$&']",
-	                                    'abcdefgabcdefg', RegExp['$&']);
+// 'abcdefgabcdefg'.match(/(a(b(c(d)e)f)g)\1/); RegExp['$&']
+'abcdefgabcdefg'.match(/(a(b(c(d)e)f)g)\1/);
+new TestCase ( SECTION, "'abcdefgabcdefg'.match(/(a(b(c(d)e)f)g)\\1/); RegExp['$&']",
+	       'abcdefgabcdefg', RegExp['$&']);
 
-	function test()
-	{
-	   for ( tc=0; tc < testcases.length; tc++ ) {
-	        testcases[tc].passed = writeTestCaseResult(
-	        testcases[tc].expect,
-	        testcases[tc].actual,
-	        testcases[tc].description +" = "+
-	        testcases[tc].actual );
-	        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-	   }
-	   stopTest();
-	   return ( testcases );
-	}
-
-	test();
+test();

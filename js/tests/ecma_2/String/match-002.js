@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /**
  *  File Name:          String/match-002.js
  *  ECMA Section:       15.6.4.9
@@ -33,136 +34,136 @@
  *
  */
 
-    var SECTION = "String/match-002.js";
-    var VERSION = "ECMA_2";
-    var TITLE   = "String.prototype.match( regexp )";
+var SECTION = "String/match-002.js";
+var VERSION = "ECMA_2";
+var TITLE   = "String.prototype.match( regexp )";
 
-    startTest();
+startTest();
 
-    // the regexp argument is not a RegExp object
-    // this is not a string object
+// the regexp argument is not a RegExp object
+// this is not a string object
 
-    AddRegExpCases( /([\d]{5})([-\ ]?[\d]{4})?$/,
-                          "/([\d]{5})([-\ ]?[\d]{4})?$/",
-                          "Boston, Mass. 02134",
-                          14,
-                          ["02134", "02134", undefined]);
+AddRegExpCases( /([\d]{5})([-\ ]?[\d]{4})?$/,
+		"/([\d]{5})([-\ ]?[\d]{4})?$/",
+		"Boston, Mass. 02134",
+		14,
+		["02134", "02134", undefined]);
 
-    AddGlobalRegExpCases( /([\d]{5})([-\ ]?[\d]{4})?$/g,
-                          "/([\d]{5})([-\ ]?[\d]{4})?$/g",
-                          "Boston, Mass. 02134",
-                          ["02134"]);
+AddGlobalRegExpCases( /([\d]{5})([-\ ]?[\d]{4})?$/g,
+		      "/([\d]{5})([-\ ]?[\d]{4})?$/g",
+		      "Boston, Mass. 02134",
+		      ["02134"]);
 
-    // set the value of lastIndex
-    re = /([\d]{5})([-\ ]?[\d]{4})?$/;
-    re.lastIndex = 0;
+// set the value of lastIndex
+re = /([\d]{5})([-\ ]?[\d]{4})?$/;
+re.lastIndex = 0;
 
-    s = "Boston, MA 02134";
+s = "Boston, MA 02134";
 
-    AddRegExpCases( re,
-                     "re = /([\d]{5})([-\ ]?[\d]{4})?$/; re.lastIndex =0",
-                     s,
-                     s.lastIndexOf("0"),
-                     ["02134", "02134", undefined]);
+AddRegExpCases( re,
+		"re = /([\d]{5})([-\ ]?[\d]{4})?$/; re.lastIndex =0",
+		s,
+		s.lastIndexOf("0"),
+		["02134", "02134", undefined]);
 
 
-    re.lastIndex = s.length;
+re.lastIndex = s.length;
 
-    AddRegExpCases( re,
-                    "re = /([\d]{5})([-\ ]?[\d]{4})?$/; re.lastIndex = " +
-                    s.length,
-                    s,
-                    s.lastIndexOf("0"),
-                    ["02134", "02134", undefined] );
+AddRegExpCases( re,
+		"re = /([\d]{5})([-\ ]?[\d]{4})?$/; re.lastIndex = " +
+		s.length,
+		s,
+		s.lastIndexOf("0"),
+		["02134", "02134", undefined] );
 
-    re.lastIndex = s.lastIndexOf("0");
+re.lastIndex = s.lastIndexOf("0");
 
-    AddRegExpCases( re,
-                    "re = /([\d]{5})([-\ ]?[\d]{4})?$/; re.lastIndex = " +
-                    s.lastIndexOf("0"),
-                    s,
-                    s.lastIndexOf("0"),
-                    ["02134", "02134", undefined]);
+AddRegExpCases( re,
+		"re = /([\d]{5})([-\ ]?[\d]{4})?$/; re.lastIndex = " +
+		s.lastIndexOf("0"),
+		s,
+		s.lastIndexOf("0"),
+		["02134", "02134", undefined]);
 
-    re.lastIndex = s.lastIndexOf("0") + 1;
+re.lastIndex = s.lastIndexOf("0") + 1;
 
-    AddRegExpCases( re,
-                    "re = /([\d]{5})([-\ ]?[\d]{4})?$/; re.lastIndex = " +
-                    s.lastIndexOf("0") +1,
-                    s,
-                    s.lastIndexOf("0"),
-                    ["02134", "02134", undefined]);
+AddRegExpCases( re,
+		"re = /([\d]{5})([-\ ]?[\d]{4})?$/; re.lastIndex = " +
+		s.lastIndexOf("0") +1,
+		s,
+		s.lastIndexOf("0"),
+		["02134", "02134", undefined]);
 
-    test();
+test();
 
 function AddRegExpCases(
-    regexp, str_regexp, string, index, matches_array ) {
+  regexp, str_regexp, string, index, matches_array ) {
 
   // prevent a runtime error
 
-    if ( regexp.exec(string) == null || matches_array == null ) {
-        AddTestCase(
-          string + ".match(" + regexp +")",
-          matches_array,
-          string.match(regexp) );
-
-        return;
-    }
-
+  if ( regexp.exec(string) == null || matches_array == null ) {
     AddTestCase(
-        "( " + string  + " ).match(" + str_regexp +").length",
-        matches_array.length,
-        string.match(regexp).length );
+      string + ".match(" + regexp +")",
+      matches_array,
+      string.match(regexp) );
 
+    return;
+  }
+
+  AddTestCase(
+    "( " + string  + " ).match(" + str_regexp +").length",
+    matches_array.length,
+    string.match(regexp).length );
+
+  AddTestCase(
+    "( " + string + " ).match(" + str_regexp +").index",
+    index,
+    string.match(regexp).index );
+
+  AddTestCase(
+    "( " + string + " ).match(" + str_regexp +").input",
+    string,
+    string.match(regexp).input );
+
+  var limit = matches_array.length > string.match(regexp).length ?
+    matches_array.length :
+    string.match(regexp).length;
+
+  for ( var matches = 0; matches < limit; matches++ ) {
     AddTestCase(
-        "( " + string + " ).match(" + str_regexp +").index",
-        index,
-        string.match(regexp).index );
-
-    AddTestCase(
-        "( " + string + " ).match(" + str_regexp +").input",
-        string,
-        string.match(regexp).input );
-
-    var limit = matches_array.length > string.match(regexp).length ?
-                matches_array.length :
-                string.match(regexp).length;
-
-    for ( var matches = 0; matches < limit; matches++ ) {
-        AddTestCase(
-            "( " + string + " ).match(" + str_regexp +")[" + matches +"]",
-            matches_array[matches],
-            string.match(regexp)[matches] );
-    }
+      "( " + string + " ).match(" + str_regexp +")[" + matches +"]",
+      matches_array[matches],
+      string.match(regexp)[matches] );
+  }
 }
 
 function AddGlobalRegExpCases(
-    regexp, str_regexp, string, matches_array ) {
+  regexp, str_regexp, string, matches_array ) {
 
   // prevent a runtime error
 
-    if ( regexp.exec(string) == null || matches_array == null ) {
-        AddTestCase(
-          regexp + ".exec(" + string +")",
-          matches_array,
-          regexp.exec(string) );
-
-        return;
-    }
-
+  if ( regexp.exec(string) == null || matches_array == null ) {
     AddTestCase(
-        "( " + string  + " ).match(" + str_regexp +").length",
-        matches_array.length,
-        string.match(regexp).length );
+      regexp + ".exec(" + string +")",
+      matches_array,
+      regexp.exec(string) );
 
-    var limit = matches_array.length > string.match(regexp).length ?
-                matches_array.length :
-                string.match(regexp).length;
+    return;
+  }
 
-    for ( var matches = 0; matches < limit; matches++ ) {
-        AddTestCase(
-            "( " + string + " ).match(" + str_regexp +")[" + matches +"]",
-            matches_array[matches],
-            string.match(regexp)[matches] );
-    }
+  AddTestCase(
+    "( " + string  + " ).match(" + str_regexp +").length",
+    matches_array.length,
+    string.match(regexp).length );
+
+  var limit = matches_array.length > string.match(regexp).length ?
+    matches_array.length :
+    string.match(regexp).length;
+
+  for ( var matches = 0; matches < limit; matches++ ) {
+    AddTestCase(
+      "( " + string + " ).match(" + str_regexp +")[" + matches +"]",
+      matches_array[matches],
+      string.match(regexp)[matches] );
+  }
 }

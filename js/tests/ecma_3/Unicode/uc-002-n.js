@@ -38,17 +38,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-test();
+DESCRIPTION = "Non-character escapes in identifiers negative test.";
+EXPECTED = "error";
 
-function test()
-{
-    enterFunc ("test");
+enterFunc ("test");
 
-    printStatus ("Non-character escapes in identifiers negative test.");
-    printBugNumber (23607);
+printStatus ("Non-character escapes in identifiers negative test.");
+printBugNumber (23607);
 
-    reportCompare ("error", eval("\u0020 = 5"),
-                   "Non-character escapes in identifiers negative test.");
+eval("\u0020 = 5");
+reportFailure("Previous statement should have thrown an error.");
 
-    exitFunc ("test");
-}
+exitFunc ("test");
+

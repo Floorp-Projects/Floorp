@@ -129,3 +129,4 @@ function singleQuote(text)
 {
   return CHAR_QT + text + CHAR_QT;
 }
+

@@ -44,6 +44,7 @@
  * call F,G WITHOUT providing an argument. This caused a crash
  * on the second call to obj.toString() or print(obj) below -
  */
+
 //-----------------------------------------------------------------------------
 var bug = 104584;
 var summary = "Testing that we don't crash on this code -";
@@ -68,7 +69,7 @@ function G(obj)
 {
   if(!obj)
     obj = {};
-  print(obj);
+  writeLineToLog(obj);
   gc();
-  print(obj);
+  writeLineToLog(obj);
 }

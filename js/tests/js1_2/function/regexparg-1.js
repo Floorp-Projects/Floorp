@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,80 +35,65 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          regexparg-1.js
-    Description:	
+   File Name:          regexparg-1.js
+   Description:	
 
-    Regression test for 
-    http://scopus/bugsplat/show_bug.cgi?id=122787
-    Passing a regular expression as the first constructor argument fails
+   Regression test for 
+   http://scopus/bugsplat/show_bug.cgi?id=122787
+   Passing a regular expression as the first constructor argument fails
 
-    Author:             christine@netscape.com
-    Date:               15 June 1998
+   Author:             christine@netscape.com
+   Date:               15 June 1998
 */
 
-    var SECTION = "JS_1.2";
-    var VERSION = "JS_1.2";
-    startTest();
-    var TITLE   = "The variable statment";
+var SECTION = "JS_1.2";
+var VERSION = "JS_1.2";
+startTest();
+var TITLE   = "The variable statement";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = new Array();
+function f(x) {return x;}
 
-    function f(x) {return x;}
+x = f(/abc/);
 
-    x = f(/abc/);
+new TestCase( SECTION,
+	      "function f(x) {return x;}; f()",
+	      void 0,
+	      f() );
 
-    testcases[tc++] = new TestCase( SECTION,
-       "function f(x) {return x;}; f()",
-       void 0,
-       f() );
+new TestCase( SECTION,
+	      "f(\"hi\")",
+	      "hi",
+	      f("hi") );
 
-    testcases[tc++] = new TestCase( SECTION,
-        "f(\"hi\")",
-        "hi",
-        f("hi") );
+new TestCase( SECTION,
+	      "new f(/abc/) +''",
+	      "/abc/",
+	      new f(/abc/) +"" );
 
-    testcases[tc++] = new TestCase( SECTION,
-        "new f(/abc/) +''",
-        "/abc/",
-        new f(/abc/) +"" );
-
-    testcases[tc++] = new TestCase( SECTION,
-         "f(/abc/)+'')",
-         "/abc/",
-         f(/abc/) +'');    
+new TestCase( SECTION,
+	      "f(/abc/)+'')",
+	      "/abc/",
+	      f(/abc/) +'');    
         
-    testcases[tc++] = new TestCase( SECTION,
-        "typeof f(/abc/)",
-        "function",
-        typeof f(/abc/) );
+new TestCase( SECTION,
+	      "typeof f(/abc/)",
+	      "function",
+	      typeof f(/abc/) );
 
-    testcases[tc++] = new TestCase( SECTION,
-        "typeof new f(/abc/)",
-        "function",
-        typeof new f(/abc/) );
+new TestCase( SECTION,
+	      "typeof new f(/abc/)",
+	      "function",
+	      typeof new f(/abc/) );
 
-    testcases[tc++] = new TestCase( SECTION,
-         "x = new f(/abc/); x(\"hi\")",
-         null,
-         x("hi") );
+new TestCase( SECTION,
+	      "x = new f(/abc/); x(\"hi\")",
+	      null,
+	      x("hi") );
 
 
- // js> x()
-    test();
-
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
+// js> x()
+test();

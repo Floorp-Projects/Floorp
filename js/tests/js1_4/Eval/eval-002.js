@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -63,30 +64,28 @@
  * of the evalnative method.
  *
  */
-    var SECTION = "eval-002.js";
-    var VERSION = "JS1_4";
-    var TITLE   = "Calling eval indirectly should NOT fail in version 140";
-    var BUGNUMBER="38512";
+var SECTION = "eval-002.js";
+var VERSION = "JS1_4";
+var TITLE   = "Calling eval indirectly should NOT fail in version 140";
+var BUGNUMBER="38512";
 
-    startTest();
-    writeHeaderToLog( SECTION + " "+ TITLE);
+startTest();
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = new Array();
+var MY_EVAL = eval;
+var RESULT = "";
+var EXPECT = 1 + "testString"
 
-    var MY_EVAL = eval;
-    var RESULT = "";
-    var EXPECT = 1 + "testString"
+EvalTest();
 
-    EvalTest();
-
-    test();
+test();
 
 
 function EvalTest() 
 {    
-   MY_EVAL( "RESULT = EXPECT" );
+    MY_EVAL( "RESULT = EXPECT" );
  
-    testcases[tc++] = new TestCase(
+    new TestCase(
         SECTION,
         "Call eval indirectly",
         EXPECT,

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,84 +35,71 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/**
-	Filename:     RegExp_input_as_array.js
-	Description:  'Tests RegExps $_ property  (same tests as RegExp_input.js but using $_)'
 
-	Author:       Nick Lerissa
-	Date:         March 13, 1998
+/**
+   Filename:     RegExp_input_as_array.js
+   Description:  'Tests RegExps $_ property  (same tests as RegExp_input.js but using $_)'
+
+   Author:       Nick Lerissa
+   Date:         March 13, 1998
 */
 
-	var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
-	var VERSION = 'no version';
-    startTest();
-	var TITLE   = 'RegExp: input';
+var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
+var VERSION = 'no version';
+startTest();
+var TITLE   = 'RegExp: input';
 
-	writeHeaderToLog('Executing script: RegExp_input.js');
-	writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog('Executing script: RegExp_input.js');
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-	var count = 0;
-	var testcases = new Array();
+var count = 0;
+var testcases = new Array();
 
-    RegExp['$_'] = "abcd12357efg";
+RegExp['$_'] = "abcd12357efg";
 
-    // RegExp['$_'] = "abcd12357efg"; RegExp['$_']
-    RegExp['$_'] = "abcd12357efg";
-	testcases[count++] = new TestCase ( SECTION, "RegExp['$_'] = 'abcd12357efg'; RegExp['$_']",
-	                                    "abcd12357efg", RegExp['$_']);
+// RegExp['$_'] = "abcd12357efg"; RegExp['$_']
+RegExp['$_'] = "abcd12357efg";
+new TestCase ( SECTION, "RegExp['$_'] = 'abcd12357efg'; RegExp['$_']",
+	       "abcd12357efg", RegExp['$_']);
 
-    // RegExp['$_'] = "abcd12357efg"; /\d+/.exec('2345')
-    RegExp['$_'] = "abcd12357efg";
-	testcases[count++] = new TestCase ( SECTION, "RegExp['$_'] = 'abcd12357efg'; /\\d+/.exec('2345')",
-	                                    String(["2345"]), String(/\d+/.exec('2345')));
+// RegExp['$_'] = "abcd12357efg"; /\d+/.exec('2345')
+RegExp['$_'] = "abcd12357efg";
+new TestCase ( SECTION, "RegExp['$_'] = 'abcd12357efg'; /\\d+/.exec('2345')",
+	       String(["2345"]), String(/\d+/.exec('2345')));
 
-    // RegExp['$_'] = "abcd12357efg"; /\d+/.exec()
-    RegExp['$_'] = "abcd12357efg";
-	testcases[count++] = new TestCase ( SECTION, "RegExp['$_'] = 'abcd12357efg'; /\\d+/.exec()",
-	                                    String(["12357"]), String(/\d+/.exec()));
+// RegExp['$_'] = "abcd12357efg"; /\d+/.exec()
+RegExp['$_'] = "abcd12357efg";
+new TestCase ( SECTION, "RegExp['$_'] = 'abcd12357efg'; /\\d+/.exec()",
+	       String(["12357"]), String(/\d+/.exec()));
 
-    // RegExp['$_'] = "abcd12357efg"; /[h-z]+/.exec()
-    RegExp['$_'] = "abcd12357efg";
-	testcases[count++] = new TestCase ( SECTION, "RegExp['$_'] = 'abcd12357efg'; /[h-z]+/.exec()",
-	                                    null, /[h-z]+/.exec());
+// RegExp['$_'] = "abcd12357efg"; /[h-z]+/.exec()
+RegExp['$_'] = "abcd12357efg";
+new TestCase ( SECTION, "RegExp['$_'] = 'abcd12357efg'; /[h-z]+/.exec()",
+	       null, /[h-z]+/.exec());
 
-    // RegExp['$_'] = "abcd12357efg"; /\d+/.test('2345')
-    RegExp['$_'] = "abcd12357efg";
-	testcases[count++] = new TestCase ( SECTION, "RegExp['$_'] = 'abcd12357efg'; /\\d+/.test('2345')",
-	                                    true, /\d+/.test('2345'));
+// RegExp['$_'] = "abcd12357efg"; /\d+/.test('2345')
+RegExp['$_'] = "abcd12357efg";
+new TestCase ( SECTION, "RegExp['$_'] = 'abcd12357efg'; /\\d+/.test('2345')",
+	       true, /\d+/.test('2345'));
 
-    // RegExp['$_'] = "abcd12357efg"; /\d+/.test()
-    RegExp['$_'] = "abcd12357efg";
-	testcases[count++] = new TestCase ( SECTION, "RegExp['$_'] = 'abcd12357efg'; /\\d+/.test()",
-	                                    true, /\d+/.test());
+// RegExp['$_'] = "abcd12357efg"; /\d+/.test()
+RegExp['$_'] = "abcd12357efg";
+new TestCase ( SECTION, "RegExp['$_'] = 'abcd12357efg'; /\\d+/.test()",
+	       true, /\d+/.test());
 
-    // RegExp['$_'] = "abcd12357efg"; /[h-z]+/.test()
-    RegExp['$_'] = "abcd12357efg";
-	testcases[count++] = new TestCase ( SECTION, "RegExp['$_'] = 'abcd12357efg'; /[h-z]+/.test()",
-	                                    false, /[h-z]+/.test());
+// RegExp['$_'] = "abcd12357efg"; /[h-z]+/.test()
+RegExp['$_'] = "abcd12357efg";
+new TestCase ( SECTION, "RegExp['$_'] = 'abcd12357efg'; /[h-z]+/.test()",
+	       false, /[h-z]+/.test());
 
-    // RegExp['$_'] = "abcd12357efg"; (new RegExp('\d+')).test()
-    RegExp['$_'] = "abcd12357efg";
-	testcases[count++] = new TestCase ( SECTION, "RegExp['$_'] = 'abcd12357efg'; (new RegExp('\d+')).test()",
-	                                    true, (new RegExp('\d+')).test());
+// RegExp['$_'] = "abcd12357efg"; (new RegExp('\d+')).test()
+RegExp['$_'] = "abcd12357efg";
+new TestCase ( SECTION, "RegExp['$_'] = 'abcd12357efg'; (new RegExp('\d+')).test()",
+	       true, (new RegExp('\d+')).test());
 
-    // RegExp['$_'] = "abcd12357efg"; (new RegExp('[h-z]+')).test()
-    RegExp['$_'] = "abcd12357efg";
-	testcases[count++] = new TestCase ( SECTION, "RegExp['$_'] = 'abcd12357efg'; (new RegExp('[h-z]+')).test()",
-	                                    false, (new RegExp('[h-z]+')).test());
+// RegExp['$_'] = "abcd12357efg"; (new RegExp('[h-z]+')).test()
+RegExp['$_'] = "abcd12357efg";
+new TestCase ( SECTION, "RegExp['$_'] = 'abcd12357efg'; (new RegExp('[h-z]+')).test()",
+	       false, (new RegExp('[h-z]+')).test());
 
-	function test()
-	{
-	   for ( tc=0; tc < testcases.length; tc++ ) {
-	        testcases[tc].passed = writeTestCaseResult(
-	        testcases[tc].expect,
-	        testcases[tc].actual,
-	        testcases[tc].description +" = "+
-	        testcases[tc].actual );
-	        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-	   }
-	   stopTest();
-	   return ( testcases );
-	}
-
-	test();
+test();

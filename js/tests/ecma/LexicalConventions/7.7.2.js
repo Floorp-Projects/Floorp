@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,57 +35,35 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          7.7.2.js
-    ECMA Section:       7.7.2 Boolean Literals
+   File Name:          7.7.2.js
+   ECMA Section:       7.7.2 Boolean Literals
 
-    Description:        BooleanLiteral::
-                        true
-                        false
+   Description:        BooleanLiteral::
+   true
+   false
 
-                        The value of the Boolean literal true is a value of the
-                        Boolean type, namely true.
+   The value of the Boolean literal true is a value of the
+   Boolean type, namely true.
 
-                        The value of the Boolean literal false is a value of the
-                        Boolean type, namely false.
+   The value of the Boolean literal false is a value of the
+   Boolean type, namely false.
 
-    Author:             christine@netscape.com
-    Date:               16 september 1997
+   Author:             christine@netscape.com
+   Date:               16 september 1997
 */
 
-    var SECTION = "7.7.2";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Boolean Literals";
+var SECTION = "7.7.2";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Boolean Literals";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
-    test();
+// StringLiteral:: "" and ''
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
+new TestCase( SECTION, "true",     Boolean(true),     true );
+new TestCase( SECTION, "false",    Boolean(false),    false );
 
-    // StringLiteral:: "" and ''
-
-    array[item++] = new TestCase( SECTION, "true",     Boolean(true),     true );
-    array[item++] = new TestCase( SECTION, "false",    Boolean(false),    false );
-
-    return ( array );
-}
-function test() {
-        for ( tc=0; tc < testcases.length; tc++ ) {
-            testcases[tc].actual = testcases[tc].actual;
-
-            testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+ testcases[tc].actual );
-
-            testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-
-        stopTest();
-        }
-        return ( testcases );
-}
+test();

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,87 +35,69 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          8.6.2.1-1.js
-    ECMA Section:       8.6.2.1 Get (Value)
-    Description:
+   File Name:          8.6.2.1-1.js
+   ECMA Section:       8.6.2.1 Get (Value)
+   Description:
 
-    When the [[Get]] method of O is called with property name P, the following
-    steps are taken:
+   When the [[Get]] method of O is called with property name P, the following
+   steps are taken:
 
-    1.  If O doesn't have a property with name P, go to step 4.
-    2.  Get the value of the property.
-    3.  Return Result(2).
-    4.  If the [[Prototype]] of O is null, return undefined.
-    5.  Call the [[Get]] method of [[Prototype]] with property name P.
-    6.  Return Result(5).
+   1.  If O doesn't have a property with name P, go to step 4.
+   2.  Get the value of the property.
+   3.  Return Result(2).
+   4.  If the [[Prototype]] of O is null, return undefined.
+   5.  Call the [[Get]] method of [[Prototype]] with property name P.
+   6.  Return Result(5).
 
-    This tests [[Get]] (Value).
+   This tests [[Get]] (Value).
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
-    var SECTION = "8.6.2.1-1";
-    var VERSION = "ECMA_1";
-    startTest();
-    var testcases = getTestCases();
+var SECTION = "8.6.2.1-1";
+var VERSION = "ECMA_1";
+startTest();
 
-    writeHeaderToLog( SECTION + " [[Get]] (Value)");
-    test();
+writeHeaderToLog( SECTION + " [[Get]] (Value)");
 
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
+new TestCase( SECTION,  "var OBJ = new MyValuelessObject(true); OBJ.valueOf()",     true,           eval("var OBJ = new MyValuelessObject(true); OBJ.valueOf()") );
+//    new TestCase( SECTION,  "var OBJ = new MyProtoValuelessObject(true); OBJ + ''",     "undefined",    eval("var OBJ = new MyProtoValuelessObject(); OBJ + ''") );
+new TestCase( SECTION,  "var OBJ = new MyProtolessObject(true); OBJ.valueOf()",     true,           eval("var OBJ = new MyProtolessObject(true); OBJ.valueOf()") );
+new TestCase( SECTION,  "var OBJ = new MyObject(true); OBJ.valueOf()",              true,           eval("var OBJ = new MyObject(true); OBJ.valueOf()") );
 
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
+new TestCase( SECTION,  "var OBJ = new MyValuelessObject(Number.POSITIVE_INFINITY); OBJ.valueOf()",     Number.POSITIVE_INFINITY,           eval("var OBJ = new MyValuelessObject(Number.POSITIVE_INFINITY); OBJ.valueOf()") );
+//    new TestCase( SECTION,  "var OBJ = new MyProtoValuelessObject(Number.POSITIVE_INFINITY); OBJ + ''",     "undefined",                        eval("var OBJ = new MyProtoValuelessObject(); OBJ + ''") );
+new TestCase( SECTION,  "var OBJ = new MyProtolessObject(Number.POSITIVE_INFINITY); OBJ.valueOf()",     Number.POSITIVE_INFINITY,           eval("var OBJ = new MyProtolessObject(Number.POSITIVE_INFINITY); OBJ.valueOf()") );
+new TestCase( SECTION,  "var OBJ = new MyObject(Number.POSITIVE_INFINITY); OBJ.valueOf()",              Number.POSITIVE_INFINITY,           eval("var OBJ = new MyObject(Number.POSITIVE_INFINITY); OBJ.valueOf()") );
 
-    array[item++] = new TestCase( SECTION,  "var OBJ = new MyValuelessObject(true); OBJ.valueOf()",     true,           eval("var OBJ = new MyValuelessObject(true); OBJ.valueOf()") );
-//    array[item++] = new TestCase( SECTION,  "var OBJ = new MyProtoValuelessObject(true); OBJ + ''",     "undefined",    eval("var OBJ = new MyProtoValuelessObject(); OBJ + ''") );
-    array[item++] = new TestCase( SECTION,  "var OBJ = new MyProtolessObject(true); OBJ.valueOf()",     true,           eval("var OBJ = new MyProtolessObject(true); OBJ.valueOf()") );
-    array[item++] = new TestCase( SECTION,  "var OBJ = new MyObject(true); OBJ.valueOf()",              true,           eval("var OBJ = new MyObject(true); OBJ.valueOf()") );
+new TestCase( SECTION,  "var OBJ = new MyValuelessObject('string'); OBJ.valueOf()",     'string',           eval("var OBJ = new MyValuelessObject('string'); OBJ.valueOf()") );
+//    new TestCase( SECTION,  "var OBJ = new MyProtoValuelessObject('string'); OJ + ''",     "undefined",      eval("var OBJ = new MyProtoValuelessObject(); OBJ + ''") );
+new TestCase( SECTION,  "var OBJ = new MyProtolessObject('string'); OBJ.valueOf()",     'string',           eval("var OBJ = new MyProtolessObject('string'); OBJ.valueOf()") );
+new TestCase( SECTION,  "var OBJ = new MyObject('string'); OBJ.valueOf()",              'string',           eval("var OBJ = new MyObject('string'); OBJ.valueOf()") );
 
-    array[item++] = new TestCase( SECTION,  "var OBJ = new MyValuelessObject(Number.POSITIVE_INFINITY); OBJ.valueOf()",     Number.POSITIVE_INFINITY,           eval("var OBJ = new MyValuelessObject(Number.POSITIVE_INFINITY); OBJ.valueOf()") );
-//    array[item++] = new TestCase( SECTION,  "var OBJ = new MyProtoValuelessObject(Number.POSITIVE_INFINITY); OBJ + ''",     "undefined",                        eval("var OBJ = new MyProtoValuelessObject(); OBJ + ''") );
-    array[item++] = new TestCase( SECTION,  "var OBJ = new MyProtolessObject(Number.POSITIVE_INFINITY); OBJ.valueOf()",     Number.POSITIVE_INFINITY,           eval("var OBJ = new MyProtolessObject(Number.POSITIVE_INFINITY); OBJ.valueOf()") );
-    array[item++] = new TestCase( SECTION,  "var OBJ = new MyObject(Number.POSITIVE_INFINITY); OBJ.valueOf()",              Number.POSITIVE_INFINITY,           eval("var OBJ = new MyObject(Number.POSITIVE_INFINITY); OBJ.valueOf()") );
+test();
 
-    array[item++] = new TestCase( SECTION,  "var OBJ = new MyValuelessObject('string'); OBJ.valueOf()",     'string',           eval("var OBJ = new MyValuelessObject('string'); OBJ.valueOf()") );
-//    array[item++] = new TestCase( SECTION,  "var OBJ = new MyProtoValuelessObject('string'); OJ + ''",     "undefined",      eval("var OBJ = new MyProtoValuelessObject(); OBJ + ''") );
-    array[item++] = new TestCase( SECTION,  "var OBJ = new MyProtolessObject('string'); OBJ.valueOf()",     'string',           eval("var OBJ = new MyProtolessObject('string'); OBJ.valueOf()") );
-    array[item++] = new TestCase( SECTION,  "var OBJ = new MyObject('string'); OBJ.valueOf()",              'string',           eval("var OBJ = new MyObject('string'); OBJ.valueOf()") );
-
-    return ( array );
-}
 function MyProtoValuelessObject(value) {
-    this.valueOf = new Function ( "" );
-    this.__proto__ = null;
+  this.valueOf = new Function ( "" );
+  this.__proto__ = null;
 }
 
 function MyProtolessObject( value ) {
-    this.valueOf = new Function( "return this.value" );
-    this.__proto__ = null;
-    this.value = value;
+  this.valueOf = new Function( "return this.value" );
+  this.__proto__ = null;
+  this.value = value;
 }
 function MyValuelessObject(value) {
-    this.__proto__ = new MyPrototypeObject(value);
+  this.__proto__ = new MyPrototypeObject(value);
 }
 function MyPrototypeObject(value) {
-    this.valueOf = new Function( "return this.value;" );
-    this.toString = new Function( "return (this.value + '');" );
-    this.value = value;
+  this.valueOf = new Function( "return this.value;" );
+  this.toString = new Function( "return (this.value + '');" );
+  this.value = value;
 }
 function MyObject( value ) {
-    this.valueOf = new Function( "return this.value" );
-    this.value = value;
+  this.valueOf = new Function( "return this.value" );
+  this.value = value;
 }

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,93 +35,79 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          9.2.js
-    ECMA Section:       9.2  Type Conversion:  ToBoolean
-    Description:        rules for converting an argument to a boolean.
-                        undefined           false
-                        Null                false
-                        Boolean             input argument( no conversion )
-                        Number              returns false for 0, -0, and NaN
-                                            otherwise return true
-                        String              return false if the string is empty
-                                            (length is 0) otherwise the result is
-                                            true
-                        Object              all return true
+   File Name:          9.2.js
+   ECMA Section:       9.2  Type Conversion:  ToBoolean
+   Description:        rules for converting an argument to a boolean.
+   undefined           false
+   Null                false
+   Boolean             input argument( no conversion )
+   Number              returns false for 0, -0, and NaN
+   otherwise return true
+   String              return false if the string is empty
+   (length is 0) otherwise the result is
+   true
+   Object              all return true
 
-    Author:             christine@netscape.com
-    Date:               14 july 1997
+   Author:             christine@netscape.com
+   Date:               14 july 1997
 */
-    var SECTION = "9.2";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "ToBoolean";
+var SECTION = "9.2";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "ToBoolean";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = new Array();
+// special cases here
 
-    // special cases here
+new TestCase( SECTION,   "Boolean()",                     false,  Boolean() );
+new TestCase( SECTION,   "Boolean(var x)",                false,  Boolean(eval("var x")) );
+new TestCase( SECTION,   "Boolean(void 0)",               false,  Boolean(void 0) );
+new TestCase( SECTION,   "Boolean(null)",                 false,  Boolean(null) );
+new TestCase( SECTION,   "Boolean(false)",                false,  Boolean(false) );
+new TestCase( SECTION,   "Boolean(true)",                 true,   Boolean(true) );
+new TestCase( SECTION,   "Boolean(0)",                    false,  Boolean(0) );
+new TestCase( SECTION,   "Boolean(-0)",                   false,  Boolean(-0) );
+new TestCase( SECTION,   "Boolean(NaN)",                  false,  Boolean(Number.NaN) );
+new TestCase( SECTION,   "Boolean('')",                   false,  Boolean("") );
 
-    testcases[tc++] = new TestCase( SECTION,   "Boolean()",                     false,  Boolean() );
-    testcases[tc++] = new TestCase( SECTION,   "Boolean(var x)",                false,  Boolean(eval("var x")) );
-    testcases[tc++] = new TestCase( SECTION,   "Boolean(void 0)",               false,  Boolean(void 0) );
-    testcases[tc++] = new TestCase( SECTION,   "Boolean(null)",                 false,  Boolean(null) );
-    testcases[tc++] = new TestCase( SECTION,   "Boolean(false)",                false,  Boolean(false) );
-    testcases[tc++] = new TestCase( SECTION,   "Boolean(true)",                 true,   Boolean(true) );
-    testcases[tc++] = new TestCase( SECTION,   "Boolean(0)",                    false,  Boolean(0) );
-    testcases[tc++] = new TestCase( SECTION,   "Boolean(-0)",                   false,  Boolean(-0) );
-    testcases[tc++] = new TestCase( SECTION,   "Boolean(NaN)",                  false,  Boolean(Number.NaN) );
-    testcases[tc++] = new TestCase( SECTION,   "Boolean('')",                   false,  Boolean("") );
+// normal test cases here
 
-    // normal test cases here
+new TestCase( SECTION,   "Boolean(Infinity)",             true,   Boolean(Number.POSITIVE_INFINITY) );
+new TestCase( SECTION,   "Boolean(-Infinity)",            true,   Boolean(Number.NEGATIVE_INFINITY) );
+new TestCase( SECTION,   "Boolean(Math.PI)",              true,   Boolean(Math.PI) );
+new TestCase( SECTION,   "Boolean(1)",                    true,   Boolean(1) );
+new TestCase( SECTION,   "Boolean(-1)",                   true,   Boolean(-1) );
+new TestCase( SECTION,   "Boolean([tab])",                true,   Boolean("\t") );
+new TestCase( SECTION,   "Boolean('0')",                  true,   Boolean("0") );
+new TestCase( SECTION,   "Boolean('string')",             true,   Boolean("string") );
 
-    testcases[tc++] = new TestCase( SECTION,   "Boolean(Infinity)",             true,   Boolean(Number.POSITIVE_INFINITY) );
-    testcases[tc++] = new TestCase( SECTION,   "Boolean(-Infinity)",            true,   Boolean(Number.NEGATIVE_INFINITY) );
-    testcases[tc++] = new TestCase( SECTION,   "Boolean(Math.PI)",              true,   Boolean(Math.PI) );
-    testcases[tc++] = new TestCase( SECTION,   "Boolean(1)",                    true,   Boolean(1) );
-    testcases[tc++] = new TestCase( SECTION,   "Boolean(-1)",                   true,   Boolean(-1) );
-    testcases[tc++] = new TestCase( SECTION,   "Boolean([tab])",                true,   Boolean("\t") );
-    testcases[tc++] = new TestCase( SECTION,   "Boolean('0')",                  true,   Boolean("0") );
-    testcases[tc++] = new TestCase( SECTION,   "Boolean('string')",             true,   Boolean("string") );
+// ToBoolean (object) should always return true.
+new TestCase( SECTION,   "Boolean(new String() )",        true,   Boolean(new String()) );
+new TestCase( SECTION,   "Boolean(new String('') )",      true,   Boolean(new String("")) );
 
-    // ToBoolean (object) should always return true.
-    testcases[tc++] = new TestCase( SECTION,   "Boolean(new String() )",        true,   Boolean(new String()) );
-    testcases[tc++] = new TestCase( SECTION,   "Boolean(new String('') )",      true,   Boolean(new String("")) );
+new TestCase( SECTION,   "Boolean(new Boolean(true))",    true,   Boolean(new Boolean(true)) );
+new TestCase( SECTION,   "Boolean(new Boolean(false))",   true,   Boolean(new Boolean(false)) );
+new TestCase( SECTION,   "Boolean(new Boolean() )",       true,   Boolean(new Boolean()) );
 
-    testcases[tc++] = new TestCase( SECTION,   "Boolean(new Boolean(true))",    true,   Boolean(new Boolean(true)) );
-    testcases[tc++] = new TestCase( SECTION,   "Boolean(new Boolean(false))",   true,   Boolean(new Boolean(false)) );
-    testcases[tc++] = new TestCase( SECTION,   "Boolean(new Boolean() )",       true,   Boolean(new Boolean()) );
+new TestCase( SECTION,   "Boolean(new Array())",          true,   Boolean(new Array()) );
 
-    testcases[tc++] = new TestCase( SECTION,   "Boolean(new Array())",          true,   Boolean(new Array()) );
+new TestCase( SECTION,   "Boolean(new Number())",         true,   Boolean(new Number()) );
+new TestCase( SECTION,   "Boolean(new Number(-0))",       true,   Boolean(new Number(-0)) );
+new TestCase( SECTION,   "Boolean(new Number(0))",        true,   Boolean(new Number(0)) );
+new TestCase( SECTION,   "Boolean(new Number(NaN))",      true,   Boolean(new Number(Number.NaN)) );
 
-    testcases[tc++] = new TestCase( SECTION,   "Boolean(new Number())",         true,   Boolean(new Number()) );
-    testcases[tc++] = new TestCase( SECTION,   "Boolean(new Number(-0))",       true,   Boolean(new Number(-0)) );
-    testcases[tc++] = new TestCase( SECTION,   "Boolean(new Number(0))",        true,   Boolean(new Number(0)) );
-    testcases[tc++] = new TestCase( SECTION,   "Boolean(new Number(NaN))",      true,   Boolean(new Number(Number.NaN)) );
+new TestCase( SECTION,   "Boolean(new Number(-1))",       true,   Boolean(new Number(-1)) );
+new TestCase( SECTION,   "Boolean(new Number(Infinity))", true,   Boolean(new Number(Number.POSITIVE_INFINITY)) );
+new TestCase( SECTION,   "Boolean(new Number(-Infinity))",true,   Boolean(new Number(Number.NEGATIVE_INFINITY)) );
 
-    testcases[tc++] = new TestCase( SECTION,   "Boolean(new Number(-1))",       true,   Boolean(new Number(-1)) );
-    testcases[tc++] = new TestCase( SECTION,   "Boolean(new Number(Infinity))", true,   Boolean(new Number(Number.POSITIVE_INFINITY)) );
-    testcases[tc++] = new TestCase( SECTION,   "Boolean(new Number(-Infinity))",true,   Boolean(new Number(Number.NEGATIVE_INFINITY)) );
+new TestCase( SECTION,    "Boolean(new Object())",       true,       Boolean(new Object()) );
+new TestCase( SECTION,    "Boolean(new Function())",     true,       Boolean(new Function()) );
+new TestCase( SECTION,    "Boolean(new Date())",         true,       Boolean(new Date()) );
+new TestCase( SECTION,    "Boolean(new Date(0))",         true,       Boolean(new Date(0)) );
+new TestCase( SECTION,    "Boolean(Math)",         true,       Boolean(Math) );
 
-    testcases[tc++] = new TestCase( SECTION,    "Boolean(new Object())",       true,       Boolean(new Object()) );
-    testcases[tc++] = new TestCase( SECTION,    "Boolean(new Function())",     true,       Boolean(new Function()) );
-    testcases[tc++] = new TestCase( SECTION,    "Boolean(new Date())",         true,       Boolean(new Date()) );
-    testcases[tc++] = new TestCase( SECTION,    "Boolean(new Date(0))",         true,       Boolean(new Date(0)) );
-    testcases[tc++] = new TestCase( SECTION,    "Boolean(Math)",         true,       Boolean(Math) );
+test();
 
-    test();
-
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}

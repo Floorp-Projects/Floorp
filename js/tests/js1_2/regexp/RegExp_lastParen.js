@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,82 +35,66 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/**
-	Filename:     RegExp_lastParen.js
-	Description:  'Tests RegExps lastParen property'
 
-	Author:       Nick Lerissa
-	Date:         March 12, 1998
+/**
+   Filename:     RegExp_lastParen.js
+   Description:  'Tests RegExps lastParen property'
+
+   Author:       Nick Lerissa
+   Date:         March 12, 1998
 */
 
-	var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
-	var VERSION = 'no version';
-    startTest();
-	var TITLE   = 'RegExp: lastParen';
+var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
+var VERSION = 'no version';
+startTest();
+var TITLE   = 'RegExp: lastParen';
 
-	writeHeaderToLog('Executing script: RegExp_lastParen.js');
-	writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog('Executing script: RegExp_lastParen.js');
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-	var count = 0;
-	var testcases = new Array();
+// 'abcd'.match(/(abc)d/); RegExp.lastParen
+'abcd'.match(/(abc)d/);
+new TestCase ( SECTION, "'abcd'.match(/(abc)d/); RegExp.lastParen",
+	       'abc', RegExp.lastParen);
 
-    // 'abcd'.match(/(abc)d/); RegExp.lastParen
-    'abcd'.match(/(abc)d/);
-	testcases[count++] = new TestCase ( SECTION, "'abcd'.match(/(abc)d/); RegExp.lastParen",
-	                                    'abc', RegExp.lastParen);
+// 'abcd'.match(new RegExp('(abc)d')); RegExp.lastParen
+'abcd'.match(new RegExp('(abc)d'));
+new TestCase ( SECTION, "'abcd'.match(new RegExp('(abc)d')); RegExp.lastParen",
+	       'abc', RegExp.lastParen);
 
-    // 'abcd'.match(new RegExp('(abc)d')); RegExp.lastParen
-    'abcd'.match(new RegExp('(abc)d'));
-	testcases[count++] = new TestCase ( SECTION, "'abcd'.match(new RegExp('(abc)d')); RegExp.lastParen",
-	                                    'abc', RegExp.lastParen);
+// 'abcd'.match(/(bcd)e/); RegExp.lastParen
+'abcd'.match(/(bcd)e/);
+new TestCase ( SECTION, "'abcd'.match(/(bcd)e/); RegExp.lastParen",
+	       'abc', RegExp.lastParen);
 
-    // 'abcd'.match(/(bcd)e/); RegExp.lastParen
-    'abcd'.match(/(bcd)e/);
-	testcases[count++] = new TestCase ( SECTION, "'abcd'.match(/(bcd)e/); RegExp.lastParen",
-	                                    'abc', RegExp.lastParen);
+// 'abcdefg'.match(/(a(b(c(d)e)f)g)/); RegExp.lastParen
+'abcdefg'.match(/(a(b(c(d)e)f)g)/);
+new TestCase ( SECTION, "'abcdefg'.match(/(a(b(c(d)e)f)g)/); RegExp.lastParen",
+	       'd', RegExp.lastParen);
 
-    // 'abcdefg'.match(/(a(b(c(d)e)f)g)/); RegExp.lastParen
-    'abcdefg'.match(/(a(b(c(d)e)f)g)/);
-	testcases[count++] = new TestCase ( SECTION, "'abcdefg'.match(/(a(b(c(d)e)f)g)/); RegExp.lastParen",
-	                                    'd', RegExp.lastParen);
+// 'abcdefg'.match(/(a(b)c)(d(e)f)/); RegExp.lastParen
+'abcdefg'.match(/(a(b)c)(d(e)f)/);
+new TestCase ( SECTION, "'abcdefg'.match(/(a(b)c)(d(e)f)/); RegExp.lastParen",
+	       'e', RegExp.lastParen);
 
-    // 'abcdefg'.match(/(a(b)c)(d(e)f)/); RegExp.lastParen
-    'abcdefg'.match(/(a(b)c)(d(e)f)/);
-	testcases[count++] = new TestCase ( SECTION, "'abcdefg'.match(/(a(b)c)(d(e)f)/); RegExp.lastParen",
-	                                    'e', RegExp.lastParen);
+// 'abcdefg'.match(/(^)abc/); RegExp.lastParen
+'abcdefg'.match(/(^)abc/);
+new TestCase ( SECTION, "'abcdefg'.match(/(^)abc/); RegExp.lastParen",
+	       '', RegExp.lastParen);
 
-    // 'abcdefg'.match(/(^)abc/); RegExp.lastParen
-    'abcdefg'.match(/(^)abc/);
-	testcases[count++] = new TestCase ( SECTION, "'abcdefg'.match(/(^)abc/); RegExp.lastParen",
-	                                    '', RegExp.lastParen);
+// 'abcdefg'.match(/(^a)bc/); RegExp.lastParen
+'abcdefg'.match(/(^a)bc/);
+new TestCase ( SECTION, "'abcdefg'.match(/(^a)bc/); RegExp.lastParen",
+	       'a', RegExp.lastParen);
 
-    // 'abcdefg'.match(/(^a)bc/); RegExp.lastParen
-    'abcdefg'.match(/(^a)bc/);
-	testcases[count++] = new TestCase ( SECTION, "'abcdefg'.match(/(^a)bc/); RegExp.lastParen",
-	                                    'a', RegExp.lastParen);
+// 'abcdefg'.match(new RegExp('(^a)bc')); RegExp.lastParen
+'abcdefg'.match(new RegExp('(^a)bc'));
+new TestCase ( SECTION, "'abcdefg'.match(new RegExp('(^a)bc')); RegExp.lastParen",
+	       'a', RegExp.lastParen);
 
-    // 'abcdefg'.match(new RegExp('(^a)bc')); RegExp.lastParen
-    'abcdefg'.match(new RegExp('(^a)bc'));
-	testcases[count++] = new TestCase ( SECTION, "'abcdefg'.match(new RegExp('(^a)bc')); RegExp.lastParen",
-	                                    'a', RegExp.lastParen);
+// 'abcdefg'.match(/bc/); RegExp.lastParen
+'abcdefg'.match(/bc/);
+new TestCase ( SECTION, "'abcdefg'.match(/bc/); RegExp.lastParen",
+	       '', RegExp.lastParen);
 
-    // 'abcdefg'.match(/bc/); RegExp.lastParen
-    'abcdefg'.match(/bc/);
-	testcases[count++] = new TestCase ( SECTION, "'abcdefg'.match(/bc/); RegExp.lastParen",
-	                                    '', RegExp.lastParen);
-
-	function test()
-	{
-	   for ( tc=0; tc < testcases.length; tc++ ) {
-	        testcases[tc].passed = writeTestCaseResult(
-	        testcases[tc].expect,
-	        testcases[tc].actual,
-	        testcases[tc].description +" = "+
-	        testcases[tc].actual );
-	        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-	   }
-	   stopTest();
-	   return ( testcases );
-	}
-
-	test();
+test();

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -43,24 +44,25 @@
  *  Author:             christine@netscape.com
  *  Date:               11 August 1998
  */
-    var SECTION = "funtion-004-n.js";
-    var VERSION = "JS1_4";
-    var TITLE   = "Regression test case for 310502";
-    var BUGNUMBER="310502";
+var SECTION = "funtion-004-n.js";
+var VERSION = "JS1_4";
+var TITLE   = "Regression test case for 310502";
+var BUGNUMBER="310502";
 
-    startTest();
+startTest();
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = new Array();
+var o  = {};
+o.call = Function.prototype.call;
 
-    var o  = {};
-    o.call = Function.prototype.call;
+DESCRIPTION = "var o = {}; o.call = Function.prototype.call; o.call()";
+EXPECTED = "error";
 
-    testcases[tc++] = new TestCase(
-        SECTION,
-        "var o = {}; o.call = Function.prototype.call; o.call()",
-        "error",
-        o.call() );
+new TestCase(
+    SECTION,
+    "var o = {}; o.call = Function.prototype.call; o.call()",
+    "error",
+    o.call() );
 
-    test();
+test();

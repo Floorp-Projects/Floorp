@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,117 +35,101 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          11.1.1.js
-    ECMA Section:       11.1.1 The this keyword
-    Description:
+   File Name:          11.1.1.js
+   ECMA Section:       11.1.1 The this keyword
+   Description:
 
-    The this keyword evaluates to the this value of the execution context.
+   The this keyword evaluates to the this value of the execution context.
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
-    var SECTION = "11.1.1";
-    var VERSION = "ECMA_1";
-    startTest();
+var SECTION = "11.1.1";
+var VERSION = "ECMA_1";
+startTest();
 
-    writeHeaderToLog( SECTION + " The this keyword");
+writeHeaderToLog( SECTION + " The this keyword");
 
-    var testcases = new Array();
-    var item = 0;
+var GLOBAL_OBJECT = this.toString();
 
-    var GLOBAL_OBJECT = this.toString();
+// this in global code and eval(this) in global code should return the global object.
 
-    // this in global code and eval(this) in global code should return the global object.
+new TestCase( SECTION,
+	      "Global Code: this.toString()",
+	      GLOBAL_OBJECT,
+	      this.toString() );
 
-    testcases[item++] = new TestCase(   SECTION,
-                                        "Global Code: this.toString()",
-                                        GLOBAL_OBJECT,
-                                        this.toString() );
+new TestCase( SECTION,
+	      "Global Code:  eval('this.toString()')",
+	      GLOBAL_OBJECT,
+	      eval('this.toString()') );
 
-    testcases[item++] = new TestCase(   SECTION,
-                                        "Global Code:  eval('this.toString()')",
-                                        GLOBAL_OBJECT,
-                                        eval('this.toString()') );
+// this in anonymous code called as a function should return the global object.
 
-    // this in anonymous code called as a function should return the global object.
+new TestCase( SECTION,
+	      "Anonymous Code: var MYFUNC = new Function('return this.toString()'); MYFUNC()",
+	      GLOBAL_OBJECT,
+	      eval("var MYFUNC = new Function('return this.toString()'); MYFUNC()") );
 
-    testcases[item++] = new TestCase(   SECTION,
-                                        "Anonymous Code: var MYFUNC = new Function('return this.toString()'); MYFUNC()",
-                                        GLOBAL_OBJECT,
-                                        eval("var MYFUNC = new Function('return this.toString()'); MYFUNC()") );
+// eval( this ) in anonymous code called as a function should return that function's activation object
 
-    // eval( this ) in anonymous code called as a function should return that function's activation object
+new TestCase( SECTION,
+	      "Anonymous Code: var MYFUNC = new Function('return (eval(\"this.toString()\")'); (MYFUNC()).toString()",
+	      GLOBAL_OBJECT,
+	      eval("var MYFUNC = new Function('return eval(\"this.toString()\")'); (MYFUNC()).toString()") );
 
-    testcases[item++] = new TestCase(   SECTION,
-                                        "Anonymous Code: var MYFUNC = new Function('return (eval(\"this.toString()\")'); (MYFUNC()).toString()",
-                                        GLOBAL_OBJECT,
-                                        eval("var MYFUNC = new Function('return eval(\"this.toString()\")'); (MYFUNC()).toString()") );
+// this and eval( this ) in anonymous code called as a constructor should return the object
 
-    // this and eval( this ) in anonymous code called as a constructor should return the object
+new TestCase( SECTION,
+	      "Anonymous Code: var MYFUNC = new Function('this.THIS = this'); ((new MYFUNC()).THIS).toString()",
+	      "[object Object]",
+	      eval("var MYFUNC = new Function('this.THIS = this'); ((new MYFUNC()).THIS).toString()") );
 
-    testcases[item++] = new TestCase(   SECTION,
-                                        "Anonymous Code: var MYFUNC = new Function('this.THIS = this'); ((new MYFUNC()).THIS).toString()",
-                                        "[object Object]",
-                                        eval("var MYFUNC = new Function('this.THIS = this'); ((new MYFUNC()).THIS).toString()") );
+new TestCase( SECTION,
+	      "Anonymous Code: var MYFUNC = new Function('this.THIS = this'); var FUN1 = new MYFUNC(); FUN1.THIS == FUN1",
+	      true,
+	      eval("var MYFUNC = new Function('this.THIS = this'); var FUN1 = new MYFUNC(); FUN1.THIS == FUN1") );
 
-    testcases[item++] = new TestCase(   SECTION,
-                                        "Anonymous Code: var MYFUNC = new Function('this.THIS = this'); var FUN1 = new MYFUNC(); FUN1.THIS == FUN1",
-                                        true,
-                                        eval("var MYFUNC = new Function('this.THIS = this'); var FUN1 = new MYFUNC(); FUN1.THIS == FUN1") );
+new TestCase( SECTION,
+	      "Anonymous Code: var MYFUNC = new Function('this.THIS = eval(\"this\")'); ((new MYFUNC().THIS).toString()",
+	      "[object Object]",
+	      eval("var MYFUNC = new Function('this.THIS = eval(\"this\")'); ((new MYFUNC()).THIS).toString()") );
 
-    testcases[item++] = new TestCase(   SECTION,
-                                        "Anonymous Code: var MYFUNC = new Function('this.THIS = eval(\"this\")'); ((new MYFUNC().THIS).toString()",
-                                        "[object Object]",
-                                        eval("var MYFUNC = new Function('this.THIS = eval(\"this\")'); ((new MYFUNC()).THIS).toString()") );
+new TestCase( SECTION,
+	      "Anonymous Code: var MYFUNC = new Function('this.THIS = eval(\"this\")'); var FUN1 = new MYFUNC(); FUN1.THIS == FUN1",
+	      true,
+	      eval("var MYFUNC = new Function('this.THIS = eval(\"this\")'); var FUN1 = new MYFUNC(); FUN1.THIS == FUN1") );
 
-    testcases[item++] = new TestCase(   SECTION,
-                                        "Anonymous Code: var MYFUNC = new Function('this.THIS = eval(\"this\")'); var FUN1 = new MYFUNC(); FUN1.THIS == FUN1",
-                                        true,
-                                        eval("var MYFUNC = new Function('this.THIS = eval(\"this\")'); var FUN1 = new MYFUNC(); FUN1.THIS == FUN1") );
+// this and eval(this) in function code called as a function should return the global object.
+new TestCase( SECTION,
+	      "Function Code:  ReturnThis()",
+	      GLOBAL_OBJECT,
+	      ReturnThis() );
 
-    // this and eval(this) in function code called as a function should return the global object.
-    testcases[item++] = new TestCase(   SECTION,
-                                        "Function Code:  ReturnThis()",
-                                        GLOBAL_OBJECT,
-                                        ReturnThis() );
+new TestCase( SECTION,
+	      "Function Code:  ReturnEvalThis()",
+	      GLOBAL_OBJECT,
+	      ReturnEvalThis() );
 
-    testcases[item++] = new TestCase(   SECTION,
-                                        "Function Code:  ReturnEvalThis()",
-                                        GLOBAL_OBJECT,
-                                        ReturnEvalThis() );
+//  this and eval(this) in function code called as a contructor should return the object.
+new TestCase( SECTION,
+	      "var MYOBJECT = new ReturnThis(); MYOBJECT.toString()",
+	      "[object Object]",
+	      eval("var MYOBJECT = new ReturnThis(); MYOBJECT.toString()") );
 
-    //  this and eval(this) in function code called as a contructor should return the object.
-    testcases[item++] = new TestCase(   SECTION,
-                                        "var MYOBJECT = new ReturnThis(); MYOBJECT.toString()",
-                                        "[object Object]",
-                                        eval("var MYOBJECT = new ReturnThis(); MYOBJECT.toString()") );
+new TestCase( SECTION,
+	      "var MYOBJECT = new ReturnEvalThis(); MYOBJECT.toString()",
+	      "[object Object]",
+	      eval("var MYOBJECT = new ReturnEvalThis(); MYOBJECT.toString()") );
 
-    testcases[item++] = new TestCase(   SECTION,
-                                        "var MYOBJECT = new ReturnEvalThis(); MYOBJECT.toString()",
-                                        "[object Object]",
-                                        eval("var MYOBJECT = new ReturnEvalThis(); MYOBJECT.toString()") );
+test();
 
-
-
-    test();
-
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
 function ReturnThis() {
-    return this.toString();
+  return this.toString();
 }
+
 function ReturnEvalThis() {
-    return( eval("this.toString()") );
+  return( eval("this.toString()") );
 }

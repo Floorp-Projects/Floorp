@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,59 +35,38 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.4.4.js
-    ECMA Section:       15.4.4 Properties of the Array Prototype Object
-    Description:        The value of the internal [[Prototype]] property of
-                        the Array prototype object is the Object prototype
-                        object.
+   File Name:          15.4.4.js
+   ECMA Section:       15.4.4 Properties of the Array Prototype Object
+   Description:        The value of the internal [[Prototype]] property of
+   the Array prototype object is the Object prototype
+   object.
 
-                        Note that the Array prototype object is itself an
-                        array; it has a length property (whose initial value
-                        is (0) and the special [[Put]] method.
+   Note that the Array prototype object is itself an
+   array; it has a length property (whose initial value
+   is (0) and the special [[Put]] method.
 
-    Author:             christine@netscape.com
-    Date:               7 october 1997
+   Author:             christine@netscape.com
+   Date:               7 october 1997
 */
 
-    var SECTION = "15.4.4";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Properties of the Array Prototype Object";
+var SECTION = "15.4.4";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Properties of the Array Prototype Object";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
-    test();
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
-
-//  these testcases are ECMA_2
-//    array[item++] = new TestCase( SECTION,	"Array.prototype.__proto__",          Object.prototype,           Array.prototype.__proto__ );
-//    array[item++] = new TestCase( SECTION,	"Array.__proto__.valueOf == Object.__proto__.valueOf",  true, (Array.__proto__.valueOf == Object.__proto__.valueOf) );
-
-    array[item++] = new TestCase( SECTION,	"Array.prototype.length",   0,          Array.prototype.length );
+new TestCase( SECTION,	"Array.prototype.length",   0,          Array.prototype.length );
 
 //  verify that prototype object is an Array object.
-    array[item++] = new TestCase( SECTION,	"typeof Array.prototype",    "object",   typeof Array.prototype );
+new TestCase( SECTION,	"typeof Array.prototype",    "object",   typeof Array.prototype );
 
-    array[item++] = new TestCase( SECTION,
-                                    "Array.prototype.toString = Object.prototype.toString; Array.prototype.toString()",
-                                    "[object Array]",
-                                    eval("Array.prototype.toString = Object.prototype.toString; Array.prototype.toString()") );
+new TestCase( SECTION,
+	      "Array.prototype.toString = Object.prototype.toString; Array.prototype.toString()",
+	      "[object Array]",
+	      eval("Array.prototype.toString = Object.prototype.toString; Array.prototype.toString()") );
 
-    return ( array );
-}
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+ testcases[tc].actual );
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
+test();

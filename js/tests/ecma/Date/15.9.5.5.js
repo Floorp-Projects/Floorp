@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,109 +35,96 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.9.5.5.js
-    ECMA Section:       15.9.5.5
-    Description:        Date.prototype.getYear
+   File Name:          15.9.5.5.js
+   ECMA Section:       15.9.5.5
+   Description:        Date.prototype.getYear
 
-    This function is specified here for backwards compatibility only. The
-    function getFullYear is much to be preferred for nearly all purposes,
-    because it avoids the "year 2000 problem."
+   This function is specified here for backwards compatibility only. The
+   function getFullYear is much to be preferred for nearly all purposes,
+   because it avoids the "year 2000 problem."
 
-        1.  Let t be this time value.
-    2.  If t is NaN, return NaN.
-    3.  Return YearFromTime(LocalTime(t)) 1900.
+   1.  Let t be this time value.
+   2.  If t is NaN, return NaN.
+   3.  Return YearFromTime(LocalTime(t)) 1900.
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
 
-    var SECTION = "15.9.5.5";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Date.prototype.getYear()";
+var SECTION = "15.9.5.5";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Date.prototype.getYear()";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = new Array();
+var TZ_ADJUST = TZ_DIFF * msPerHour;
 
-    var TZ_ADJUST = TZ_DIFF * msPerHour;
+// get the current time
+var now = (new Date()).valueOf();
 
-    // get the current time
-    var now = (new Date()).valueOf();
+// calculate time for year 0
+for ( var time = 0, year = 1969; year >= 0; year-- ) {
+  time -= TimeInYear(year);
+}
+// get time for 29 feb 2000
 
-    // calculate time for year 0
-    for ( var time = 0, year = 1969; year >= 0; year-- ) {
-        time -= TimeInYear(year);
-    }
-    // get time for 29 feb 2000
+var UTC_FEB_29_2000 = TIME_2000 + 31*msPerDay + 28*msPerHour;
 
-    var UTC_FEB_29_2000 = TIME_2000 + 31*msPerDay + 28*msPerHour;
+addTestCase( now );
+addTestCase( time );
+addTestCase( TIME_1970 );
+addTestCase( TIME_1900 );
+addTestCase( TIME_2000 );
+addTestCase( UTC_FEB_29_2000 );
 
-    addTestCase( now );
-    addTestCase( time );
-    addTestCase( TIME_1970 );
-    addTestCase( TIME_1900 );
-    addTestCase( TIME_2000 );
-    addTestCase( UTC_FEB_29_2000 );
+new TestCase( SECTION,
+	      "(new Date(NaN)).getYear()",
+	      NaN,
+	      (new Date(NaN)).getYear() );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "(new Date(NaN)).getYear()",
-                                    NaN,
-                                    (new Date(NaN)).getYear() );
+new TestCase( SECTION,
+	      "Date.prototype.getYear.length",
+	      0,
+	      Date.prototype.getYear.length );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "Date.prototype.getYear.length",
-                                    0,
-                                    Date.prototype.getYear.length );
+test();
 
-    test();
 function addTestCase( t ) {
-    testcases[tc++] = new TestCase( SECTION,
-                                    "(new Date("+t+")).getYear()",
-                                    GetYear(YearFromTime(LocalTime(t))),
-                                    (new Date(t)).getYear() );
+  new TestCase( SECTION,
+		"(new Date("+t+")).getYear()",
+		GetYear(YearFromTime(LocalTime(t))),
+		(new Date(t)).getYear() );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "(new Date("+(t+1)+")).getYear()",
-                                    GetYear(YearFromTime(LocalTime(t+1))),
-                                    (new Date(t+1)).getYear() );
+  new TestCase( SECTION,
+		"(new Date("+(t+1)+")).getYear()",
+		GetYear(YearFromTime(LocalTime(t+1))),
+		(new Date(t+1)).getYear() );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "(new Date("+(t-1)+")).getYear()",
-                                    GetYear(YearFromTime(LocalTime(t-1))),
-                                    (new Date(t-1)).getYear() );
+  new TestCase( SECTION,
+		"(new Date("+(t-1)+")).getYear()",
+		GetYear(YearFromTime(LocalTime(t-1))),
+		(new Date(t-1)).getYear() );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "(new Date("+(t-TZ_ADJUST)+")).getYear()",
-                                    GetYear(YearFromTime(LocalTime(t-TZ_ADJUST))),
-                                    (new Date(t-TZ_ADJUST)).getYear() );
+  new TestCase( SECTION,
+		"(new Date("+(t-TZ_ADJUST)+")).getYear()",
+		GetYear(YearFromTime(LocalTime(t-TZ_ADJUST))),
+		(new Date(t-TZ_ADJUST)).getYear() );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "(new Date("+(t+TZ_ADJUST)+")).getYear()",
-                                    GetYear(YearFromTime(LocalTime(t+TZ_ADJUST))),
-                                    (new Date(t+TZ_ADJUST)).getYear() );
+  new TestCase( SECTION,
+		"(new Date("+(t+TZ_ADJUST)+")).getYear()",
+		GetYear(YearFromTime(LocalTime(t+TZ_ADJUST))),
+		(new Date(t+TZ_ADJUST)).getYear() );
 }
 function GetYear( year ) {
 /*
-    if ( year >= 1900 && year < 2000 ) {
-        return year - 1900;
-    } else {
-        return year;
-    }
+  if ( year >= 1900 && year < 2000 ) {
+  return year - 1900;
+  } else {
+  return year;
+  }
 */
-    return year - 1900;
-}
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
+  return year - 1900;
 }

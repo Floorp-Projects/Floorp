@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,53 +35,35 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          11.12-3.js
-    ECMA Section:       11.12
-    Description:
+   File Name:          11.12-3.js
+   ECMA Section:       11.12
+   Description:
 
-    The grammar for a ConditionalExpression in ECMAScript is a little bit
-    different from that in C and Java, which each allow the second
-    subexpression to be an Expression but restrict the third expression to
-    be a ConditionalExpression.  The motivation for this difference in
-    ECMAScript is to allow an assignment expression to be governed by either
-    arm of a conditional and to eliminate the confusing and fairly useless
-    case of a comma expression as the center expression.
+   The grammar for a ConditionalExpression in ECMAScript is a little bit
+   different from that in C and Java, which each allow the second
+   subexpression to be an Expression but restrict the third expression to
+   be a ConditionalExpression.  The motivation for this difference in
+   ECMAScript is to allow an assignment expression to be governed by either
+   arm of a conditional and to eliminate the confusing and fairly useless
+   case of a comma expression as the center expression.
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
 
-    var SECTION = "11.12-3";
-    var VERSION = "ECMA_1";
-    startTest();
-    writeHeaderToLog( SECTION + " Conditional operator ( ? : )");
+var SECTION = "11.12-3";
+var VERSION = "ECMA_1";
+startTest();
+writeHeaderToLog( SECTION + " Conditional operator ( ? : )");
 
-    var testcases = new Array();
+// the following expression should NOT be an error in JS.
 
-    // the following expression should NOT be an error in JS.
+new TestCase( SECTION,
+	      "var MYVAR =  true ? ('FAIL1', 'PASSED') : 'FAIL2'; MYVAR",
+	      "PASSED",
+	      eval("var MYVAR =  true ? ('FAIL1', 'PASSED') : 'FAIL2'; MYVAR"));
 
-    testcases[tc] = new TestCase( SECTION,
-                                    "var MYVAR =  true ? ('FAIL1', 'PASSED') : 'FAIL2'; MYVAR",
-                                    "PASSED",
-                                    "var MYVAR =  true ? ('FAIL1', 'PASSED') : 'FAIL2'; MYVAR" );
+test();
 
-    // get around potential parse time error by putting expression in an eval statement
-
-    testcases[tc].actual = eval ( testcases[tc].actual );
-
-    test();
-
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,68 +35,74 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          11.12.js
-    ECMA Section:       11.12 Conditional Operator
-    Description:
-    Logi
+   File Name:          11.12.js
+   ECMA Section:       11.12 Conditional Operator
+   Description:
+   Logi
 
-    calORExpression ? AssignmentExpression : AssignmentExpression
+   calORExpression ? AssignmentExpression : AssignmentExpression
 
-    Semantics
+   Semantics
 
-    The production ConditionalExpression :
-    LogicalORExpression ? AssignmentExpression : AssignmentExpression
-    is evaluated as follows:
+   The production ConditionalExpression :
+   LogicalORExpression ? AssignmentExpression : AssignmentExpression
+   is evaluated as follows:
 
-    1.  Evaluate LogicalORExpression.
-    2.  Call GetValue(Result(1)).
-    3.  Call ToBoolean(Result(2)).
-    4.  If Result(3) is false, go to step 8.
-    5.  Evaluate the first AssignmentExpression.
-    6.  Call GetValue(Result(5)).
-    7.  Return Result(6).
-    8.  Evaluate the second AssignmentExpression.
-    9.  Call GetValue(Result(8)).
+   1.  Evaluate LogicalORExpression.
+   2.  Call GetValue(Result(1)).
+   3.  Call ToBoolean(Result(2)).
+   4.  If Result(3) is false, go to step 8.
+   5.  Evaluate the first AssignmentExpression.
+   6.  Call GetValue(Result(5)).
+   7.  Return Result(6).
+   8.  Evaluate the second AssignmentExpression.
+   9.  Call GetValue(Result(8)).
    10.  Return Result(9).
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
-    var SECTION = "11.12";
-    var VERSION = "ECMA_1";
-    startTest();
-    var testcases = getTestCases();
+var SECTION = "11.12";
+var VERSION = "ECMA_1";
+startTest();
 
-    writeHeaderToLog( SECTION + " Conditional operator( ? : )");
-    test();
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
+writeHeaderToLog( SECTION + " Conditional operator( ? : )");
 
-    array[item++] = new TestCase( SECTION,    "true ? 'PASSED' : 'FAILED'",     "PASSED",       (true?"PASSED":"FAILED"));
-    array[item++] = new TestCase( SECTION,    "false ? 'FAILED' : 'PASSED'",     "PASSED",      (false?"FAILED":"PASSED"));
+new TestCase( SECTION,    
+              "true ? 'PASSED' : 'FAILED'",     
+              "PASSED",       
+              (true?"PASSED":"FAILED"));
 
-    array[item++] = new TestCase( SECTION,    "1 ? 'PASSED' : 'FAILED'",     "PASSED",          (true?"PASSED":"FAILED"));
-    array[item++] = new TestCase( SECTION,    "0 ? 'FAILED' : 'PASSED'",     "PASSED",          (false?"FAILED":"PASSED"));
-    array[item++] = new TestCase( SECTION,    "-1 ? 'PASSED' : 'FAILED'",     "PASSED",          (true?"PASSED":"FAILED"));
+new TestCase( SECTION,    
+              "false ? 'FAILED' : 'PASSED'",     
+              "PASSED",      
+              (false?"FAILED":"PASSED"));
 
-    array[item++] = new TestCase( SECTION,    "NaN ? 'FAILED' : 'PASSED'",     "PASSED",          (Number.NaN?"FAILED":"PASSED"));
+new TestCase( SECTION,    
+              "1 ? 'PASSED' : 'FAILED'",     
+              "PASSED",          
+              (true?"PASSED":"FAILED"));
 
-    array[item++] = new TestCase( SECTION,    "var VAR = true ? , : 'FAILED'", "PASSED",           (VAR = true ? "PASSED" : "FAILED") );
+new TestCase( SECTION,    
+              "0 ? 'FAILED' : 'PASSED'",     
+              "PASSED",          
+              (false?"FAILED":"PASSED"));
 
-    return ( array );
-}
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
+new TestCase( SECTION,    
+              "-1 ? 'PASSED' : 'FAILED'",     
+              "PASSED",          
+              (true?"PASSED":"FAILED"));
 
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
+new TestCase( SECTION,    
+              "NaN ? 'FAILED' : 'PASSED'",     
+              "PASSED",          
+              (Number.NaN?"FAILED":"PASSED"));
+
+new TestCase( SECTION,    
+              "var VAR = true ? , : 'FAILED'", 
+              "PASSED",           
+              (VAR = true ? "PASSED" : "FAILED") );
+
+test();

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,52 +35,31 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.7.3.1-4.js
-    ECMA Section:       15.7.3.1 Number.prototype
-    Description:        All value properties of the Number object should have
-                        the attributes [DontEnum, DontDelete, ReadOnly]
+   File Name:          15.7.3.1-4.js
+   ECMA Section:       15.7.3.1 Number.prototype
+   Description:        All value properties of the Number object should have
+   the attributes [DontEnum, DontDelete, ReadOnly]
 
-                        this test checks the DontEnum attribute of Number.prototype
+   this test checks the DontEnum attribute of Number.prototype
 
-    Author:             christine@netscape.com
-    Date:               16 september 1997
+   Author:             christine@netscape.com
+   Date:               16 september 1997
 */
 
-    var VERSION = "ECMA_1";
-    startTest();
-    var SECTION = "15.7.3.1-3";
-    var TITLE   = "Number.prototype";
+var VERSION = "ECMA_1";
+startTest();
+var SECTION = "15.7.3.1-3";
+var TITLE   = "Number.prototype";
 
-    writeHeaderToLog( SECTION + " Number.prototype:  DontEnum Attribute");
+writeHeaderToLog( SECTION + " Number.prototype:  DontEnum Attribute");
 
-    var testcases = getTestCases();
+new TestCase(
+  SECTION,
+  "var string = ''; for ( prop in Number ) { string += ( prop == 'prototype' ) ? prop: '' } string;",
+  "",
+  eval("var string = ''; for ( prop in Number ) { string += ( prop == 'prototype' ) ? prop : '' } string;")
+  );
 
-    test( testcases );
-
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
-
-    array[item++] = new TestCase(
-                    SECTION,
-                    "var string = ''; for ( prop in Number ) { string += ( prop == 'prototype' ) ? prop: '' } string;",
-                    "",
-                    eval("var string = ''; for ( prop in Number ) { string += ( prop == 'prototype' ) ? prop : '' } string;")
-                    );
-
-    return ( array );
-}
-
-function test() {
-    for ( tc = 0; tc < testcases.length; tc++ ) {
-        writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-        testcases[tc].reason += "property should not be enumerated ";
-    }
-    stopTest();
-    return ( testcases );
-}
+test();

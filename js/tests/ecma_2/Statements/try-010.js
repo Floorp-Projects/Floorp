@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /**
  *  File Name:          try-010.js
  *  ECMA Section:
@@ -10,61 +11,58 @@
  *  Author:             christine@netscape.com
  *  Date:               11 August 1998
  */
-    var SECTION = "try-010";
-    var VERSION = "ECMA_2";
-    var TITLE   = "The try statement: try in a tryblock";
+var SECTION = "try-010";
+var VERSION = "ECMA_2";
+var TITLE   = "The try statement: try in a tryblock";
 
-    startTest();
-    writeHeaderToLog( SECTION + " "+ TITLE);
+startTest();
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var tc = 0;
-    var testcases = new Array();
-
-    var EXCEPTION_STRING = "Exception thrown: ";
-    var NO_EXCEPTION_STRING = "No exception thrown:  ";
+var EXCEPTION_STRING = "Exception thrown: ";
+var NO_EXCEPTION_STRING = "No exception thrown:  ";
 
 
-    NestedTry( new TryObject( "No Exceptions Thrown",  NoException, NoException, 43 ) );
-    NestedTry( new TryObject( "Throw Exception in Outer Try", ThrowException, NoException, 48 ));
-    NestedTry( new TryObject( "Throw Exception in Inner Try", NoException, ThrowException, 45 ));
-    NestedTry( new TryObject( "Throw Exception in Both Trys", ThrowException, ThrowException, 48 ));
+NestedTry( new TryObject( "No Exceptions Thrown",  NoException, NoException, 43 ) );
+NestedTry( new TryObject( "Throw Exception in Outer Try", ThrowException, NoException, 48 ));
+NestedTry( new TryObject( "Throw Exception in Inner Try", NoException, ThrowException, 45 ));
+NestedTry( new TryObject( "Throw Exception in Both Trys", ThrowException, ThrowException, 48 ));
 
-    test();
+test();
 
-    function TryObject( description, tryOne, tryTwo, result ) {
-        this.description = description;
-        this.tryOne = tryOne;
-        this.tryTwo = tryTwo;
-        this.result = result;
+function TryObject( description, tryOne, tryTwo, result ) {
+  this.description = description;
+  this.tryOne = tryOne;
+  this.tryTwo = tryTwo;
+  this.result = result;
+}
+function ThrowException() {
+  throw EXCEPTION_STRING + this.value;
+}
+function NoException() {
+  return NO_EXCEPTION_STRING + this.value;
+}
+function NestedTry( object ) {
+  result = 0;
+  try {
+    object.tryOne();
+    result += 1;
+    try {
+      object.tryTwo();
+      result += 2;
+    } catch ( e ) {
+      result +=4;
+    } finally {
+      result += 8;
     }
-    function ThrowException() {
-        throw EXCEPTION_STRING + this.value;
-    }
-    function NoException() {
-        return NO_EXCEPTION_STRING + this.value;
-    }
-    function NestedTry( object ) {
-        result = 0;
-        try {
-            object.tryOne();
-            result += 1;
-            try {
-                object.tryTwo();
-                result += 2;
-            } catch ( e ) {
-                result +=4;
-            } finally {
-                result += 8;
-            }
-        } catch ( e ) {
-            result += 16;
-        } finally {
-            result += 32;
-        }
+  } catch ( e ) {
+    result += 16;
+  } finally {
+    result += 32;
+  }
 
-        testcases[tc++] = new TestCase(
-            SECTION,
-            object.description,
-            object.result,
-            result );
-    }
+  new TestCase(
+    SECTION,
+    object.description,
+    object.result,
+    result );
+}

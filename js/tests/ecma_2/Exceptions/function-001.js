@@ -27,9 +27,6 @@
     startTest();
     writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var tc = 0;
-    var testcases = new Array();
-
     var result = "fail";
     var exception = "no exception thrown";
 
@@ -40,7 +37,7 @@
         exception = e.toString();
     }
 
-    testcases[tc++] = new TestCase(
+    new TestCase(
         SECTION,
         "eval(\"function f(){}function g(){}\") (threw "+exception,
         "pass",
@@ -48,17 +45,3 @@
 
     test();
 
-
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}

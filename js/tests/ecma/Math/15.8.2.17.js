@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,81 +35,181 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.8.2.17.js
-    ECMA Section:       15.8.2.17  Math.sqrt(x)
-    Description:        return an approximation to the squareroot of the argument.
-                        special cases:
-                        -   if x is NaN         return NaN
-                        -   if x < 0            return NaN
-                        -   if x == 0           return 0
-                        -   if x == -0          return -0
-                        -   if x == Infinity    return Infinity
-    Author:             christine@netscape.com
-    Date:               7 july 1997
+   File Name:          15.8.2.17.js
+   ECMA Section:       15.8.2.17  Math.sqrt(x)
+   Description:        return an approximation to the squareroot of the argument.
+   special cases:
+   -   if x is NaN         return NaN
+   -   if x < 0            return NaN
+   -   if x == 0           return 0
+   -   if x == -0          return -0
+   -   if x == Infinity    return Infinity
+   Author:             christine@netscape.com
+   Date:               7 july 1997
 */
 
-    var SECTION = "15.8.2.17";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Math.sqrt(x)";
+var SECTION = "15.8.2.17";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Math.sqrt(x)";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
-    test();
+new TestCase( SECTION,
+	      "Math.sqrt.length",
+	      1,
+	      Math.sqrt.length );
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
+new TestCase( SECTION,
+	      "Math.sqrt()",
+	      Number.NaN,
+	      Math.sqrt() );
 
-    array[item++] = new TestCase( SECTION,  "Math.sqrt.length",     1,              Math.sqrt.length );
+new TestCase( SECTION,
+	      "Math.sqrt(void 0)",
+	      Number.NaN,
+	      Math.sqrt(void 0) );
 
-    array[item++] = new TestCase( SECTION,  "Math.sqrt()",          Number.NaN,     Math.sqrt() );
-    array[item++] = new TestCase( SECTION,  "Math.sqrt(void 0)",    Number.NaN,     Math.sqrt(void 0) );
-    array[item++] = new TestCase( SECTION,  "Math.sqrt(null)",      0,              Math.sqrt(null) );
-    array[item++] = new TestCase( SECTION,  "Math.sqrt(true)",      1,              Math.sqrt(1) );
-    array[item++] = new TestCase( SECTION,  "Math.sqrt(false)",     0,              Math.sqrt(false) );
-    array[item++] = new TestCase( SECTION,  "Math.sqrt('225')",     15,             Math.sqrt('225') );
+new TestCase( SECTION,
+	      "Math.sqrt(null)",
+	      0,
+	      Math.sqrt(null) );
 
-    array[item++] = new TestCase( SECTION,  "Math.sqrt(NaN)",       Number.NaN,     Math.sqrt(Number.NaN) );
-    array[item++] = new TestCase( SECTION,  "Math.sqrt(-Infinity)", Number.NaN,     Math.sqrt(Number.NEGATIVE_INFINITY));
-    array[item++] = new TestCase( SECTION,  "Math.sqrt(-1)",        Number.NaN,     Math.sqrt(-1));
-    array[item++] = new TestCase( SECTION,  "Math.sqrt(-0.5)",      Number.NaN,     Math.sqrt(-0.5));
-    array[item++] = new TestCase( SECTION,  "Math.sqrt(0)",         0,              Math.sqrt(0));
-    array[item++] = new TestCase( SECTION,  "Math.sqrt(-0)",        -0,             Math.sqrt(-0));
-    array[item++] = new TestCase( SECTION,  "Infinity/Math.sqrt(-0)",   -Infinity,  Infinity/Math.sqrt(-0) );
-    array[item++] = new TestCase( SECTION,  "Math.sqrt(Infinity)",  Number.POSITIVE_INFINITY,   Math.sqrt(Number.POSITIVE_INFINITY));
-    array[item++] = new TestCase( SECTION,  "Math.sqrt(1)",         1,              Math.sqrt(1));
-    array[item++] = new TestCase( SECTION,  "Math.sqrt(2)",         Math.SQRT2,     Math.sqrt(2));
-    array[item++] = new TestCase( SECTION,  "Math.sqrt(0.5)",       Math.SQRT1_2,   Math.sqrt(0.5));
-    array[item++] = new TestCase( SECTION,  "Math.sqrt(4)",         2,              Math.sqrt(4));
-    array[item++] = new TestCase( SECTION,  "Math.sqrt(9)",         3,              Math.sqrt(9));
-    array[item++] = new TestCase( SECTION,  "Math.sqrt(16)",        4,              Math.sqrt(16));
-    array[item++] = new TestCase( SECTION,  "Math.sqrt(25)",        5,              Math.sqrt(25));
-    array[item++] = new TestCase( SECTION,  "Math.sqrt(36)",        6,              Math.sqrt(36));
-    array[item++] = new TestCase( SECTION,  "Math.sqrt(49)",        7,              Math.sqrt(49));
-    array[item++] = new TestCase( SECTION,  "Math.sqrt(64)",        8,              Math.sqrt(64));
-    array[item++] = new TestCase( SECTION,  "Math.sqrt(256)",       16,             Math.sqrt(256));
-    array[item++] = new TestCase( SECTION,  "Math.sqrt(10000)",     100,            Math.sqrt(10000));
-    array[item++] = new TestCase( SECTION,  "Math.sqrt(65536)",     256,            Math.sqrt(65536));
-    array[item++] = new TestCase( SECTION,  "Math.sqrt(0.09)",      0.3,            Math.sqrt(0.09));
-    array[item++] = new TestCase( SECTION,  "Math.sqrt(0.01)",      0.1,            Math.sqrt(0.01));
-    array[item++] = new TestCase( SECTION,  "Math.sqrt(0.00000001)",0.0001,         Math.sqrt(0.00000001));
+new TestCase( SECTION,
+	      "Math.sqrt(true)",
+	      1,
+	      Math.sqrt(1) );
 
-    return ( array );
-}
+new TestCase( SECTION,
+	      "Math.sqrt(false)",
+	      0,
+	      Math.sqrt(false) );
 
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
+new TestCase( SECTION,
+	      "Math.sqrt('225')",
+	      15,
+	      Math.sqrt('225') );
 
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
+new TestCase( SECTION,
+	      "Math.sqrt(NaN)",
+	      Number.NaN,
+	      Math.sqrt(Number.NaN) );
+
+new TestCase( SECTION,
+	      "Math.sqrt(-Infinity)", 
+	      Number.NaN,
+	      Math.sqrt(Number.NEGATIVE_INFINITY));
+
+new TestCase( SECTION,
+	      "Math.sqrt(-1)",
+	      Number.NaN,
+	      Math.sqrt(-1));
+
+new TestCase( SECTION,
+	      "Math.sqrt(-0.5)",
+	      Number.NaN,
+	      Math.sqrt(-0.5));
+
+new TestCase( SECTION,
+	      "Math.sqrt(0)",
+	      0,
+	      Math.sqrt(0));
+
+new TestCase( SECTION,
+	      "Math.sqrt(-0)",
+	      -0,
+	      Math.sqrt(-0));
+
+new TestCase( SECTION,
+	      "Infinity/Math.sqrt(-0)",
+	      -Infinity,
+	      Infinity/Math.sqrt(-0) );
+
+new TestCase( SECTION,
+	      "Math.sqrt(Infinity)",
+	      Number.POSITIVE_INFINITY,
+	      Math.sqrt(Number.POSITIVE_INFINITY));
+
+new TestCase( SECTION,
+	      "Math.sqrt(1)",
+	      1,
+	      Math.sqrt(1));
+
+new TestCase( SECTION,
+	      "Math.sqrt(2)",
+	      Math.SQRT2,
+	      Math.sqrt(2));
+
+new TestCase( SECTION,
+	      "Math.sqrt(0.5)",
+	      Math.SQRT1_2,
+	      Math.sqrt(0.5));
+
+new TestCase( SECTION,
+	      "Math.sqrt(4)",
+	      2,
+	      Math.sqrt(4));
+
+new TestCase( SECTION,
+	      "Math.sqrt(9)",
+	      3,
+	      Math.sqrt(9));
+
+new TestCase( SECTION,
+	      "Math.sqrt(16)",
+	      4,
+	      Math.sqrt(16));
+
+new TestCase( SECTION,
+	      "Math.sqrt(25)",
+	      5,
+	      Math.sqrt(25));
+
+new TestCase( SECTION,
+	      "Math.sqrt(36)",
+	      6,
+	      Math.sqrt(36));
+
+new TestCase( SECTION,
+	      "Math.sqrt(49)",
+	      7,
+	      Math.sqrt(49));
+
+new TestCase( SECTION,
+	      "Math.sqrt(64)",
+	      8,
+	      Math.sqrt(64));
+
+new TestCase( SECTION,
+	      "Math.sqrt(256)",
+	      16,
+	      Math.sqrt(256));
+
+new TestCase( SECTION,
+	      "Math.sqrt(10000)",
+	      100,
+	      Math.sqrt(10000));
+
+new TestCase( SECTION,
+	      "Math.sqrt(65536)",
+	      256,
+	      Math.sqrt(65536));
+
+new TestCase( SECTION,
+	      "Math.sqrt(0.09)",
+	      0.3,
+	      Math.sqrt(0.09));
+
+new TestCase( SECTION,
+	      "Math.sqrt(0.01)",
+	      0.1,
+	      Math.sqrt(0.01));
+
+new TestCase( SECTION,
+	      "Math.sqrt(0.00000001)",
+	      0.0001,
+	      Math.sqrt(0.00000001));
+
+test();

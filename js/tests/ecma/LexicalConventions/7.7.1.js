@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,54 +35,28 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          7.7.1.js
-    ECMA Section:       7.7.1 Null Literals
+   File Name:          7.7.1.js
+   ECMA Section:       7.7.1 Null Literals
 
-    Description:        NullLiteral::
-                        null
+   Description:        NullLiteral::
+   null
 
 
-                        The value of the null literal null is the sole value
-                        of the Null type, namely null.
+   The value of the null literal null is the sole value
+   of the Null type, namely null.
 
-    Author:             christine@netscape.com
-    Date:               21 october 1997
+   Author:             christine@netscape.com
+   Date:               21 october 1997
 */
-    var SECTION = "7.7.1";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Null Literals";
+var SECTION = "7.7.1";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Null Literals";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
-    test();
+new TestCase( SECTION, "null",     null,        null);
 
-
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
-
-    array[item++] = new TestCase( SECTION, "null",     null,        null);
-
-    return ( array );
-}
-
-function test() {
-        for ( tc=0; tc < testcases.length; tc++ ) {
-            testcases[tc].actual = testcases[tc].actual;
-
-            testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+ testcases[tc].actual );
-
-            testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-        }
-
-        stopTest();
-
-    //  all tests must return the test array
-        return ( testcases );
-}
+test();

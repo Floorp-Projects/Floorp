@@ -48,6 +48,7 @@
  *   print(sum);  // should fail with 'sum is not defined' "
  *
  */
+
 //-----------------------------------------------------------------------------
 var UBound = 0;
 var bug = '(none)';
@@ -65,7 +66,7 @@ var expect= ERR_REF_YES;
 try
 {
   var f = function sum(){};
-  print(sum);
+  writeLineToLog(sum);
 }
 catch (e)
 {

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,47 +35,26 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.6.4.1.js
-    ECMA Section:       15.6.4.1 Boolean.prototype.constructor
+   File Name:          15.6.4.1.js
+   ECMA Section:       15.6.4.1 Boolean.prototype.constructor
 
-    Description:        The initial value of Boolean.prototype.constructor
-                        is the built-in Boolean constructor.
+   Description:        The initial value of Boolean.prototype.constructor
+   is the built-in Boolean constructor.
 
-    Author:             christine@netscape.com
-    Date:               30 september 1997
+   Author:             christine@netscape.com
+   Date:               30 september 1997
 
 */
-    var SECTION = "15.6.4.1";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Boolean.prototype.constructor"
-    writeHeaderToLog( SECTION + TITLE );
+var SECTION = "15.6.4.1";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Boolean.prototype.constructor"
+writeHeaderToLog( SECTION + TITLE );
 
-    var testcases = getTestCases();
-    test();
-
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
-
-    array[item++] = new TestCase( SECTION,
-                                "( Boolean.prototype.constructor == Boolean )",
-                                true ,
-                                (Boolean.prototype.constructor == Boolean) );
-
-    return ( array );
-}
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
+new TestCase( SECTION,
+	      "( Boolean.prototype.constructor == Boolean )",
+	      true ,
+	      (Boolean.prototype.constructor == Boolean) );
+test();

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,55 +35,44 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.9.5.3-1.js
-    ECMA Section:       15.9.5.3-1 Date.prototype.valueOf
-    Description:
+   File Name:          15.9.5.3-1.js
+   ECMA Section:       15.9.5.3-1 Date.prototype.valueOf
+   Description:
 
-    The valueOf function returns a number, which is this time value.
+   The valueOf function returns a number, which is this time value.
 
-    The valueOf function is not generic; it generates a runtime error if
-    its this value is not a Date object.  Therefore it cannot be transferred
-    to other kinds of objects for use as a method.
+   The valueOf function is not generic; it generates a runtime error if
+   its this value is not a Date object.  Therefore it cannot be transferred
+   to other kinds of objects for use as a method.
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
 
-    var SECTION = "15.9.5.3-1-n";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Date.prototype.valueOf";
+var SECTION = "15.9.5.3-1-n";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Date.prototype.valueOf";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = new Array();
+var OBJ = new MyObject( new Date(0) );
 
-    var OBJ = new MyObject( new Date(0) );
+DESCRIPTION = "var OBJ = new MyObject( new Date(0) ); OBJ.valueOf()";
+EXPECTED = "error";
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "var OBJ = new MyObject( new Date(0) ); OBJ.valueOf()",
-                                    "error",
-                                    OBJ.valueOf() );
-    test();
+new TestCase( SECTION,
+	      "var OBJ = new MyObject( new Date(0) ); OBJ.valueOf()",
+	      "error",
+	      eval("OBJ.valueOf()") );
+test();
 
 function MyObject( value ) {
-    this.value = value;
-    this.valueOf = Date.prototype.valueOf;
+  this.value = value;
+  this.valueOf = Date.prototype.valueOf;
 //  The following line causes an infinte loop
 //    this.toString = new Function( "return this+\"\";");
-    return this;
-}
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
+  return this;
 }

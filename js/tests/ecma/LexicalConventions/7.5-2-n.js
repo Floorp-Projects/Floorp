@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,47 +35,28 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          7.5-2-n.js
-    ECMA Section:       7.5 Identifiers
-    Description:        Identifiers are of unlimited length
-                        - can contain letters, a decimal digit, _, or $
-                        - the first character cannot be a decimal digit
-                        - identifiers are case sensitive
+   File Name:          7.5-2-n.js
+   ECMA Section:       7.5 Identifiers
+   Description:        Identifiers are of unlimited length
+   - can contain letters, a decimal digit, _, or $
+   - the first character cannot be a decimal digit
+   - identifiers are case sensitive
 
-    Author:             christine@netscape.com
-    Date:               11 september 1997
+   Author:             christine@netscape.com
+   Date:               11 september 1997
 */
-    var SECTION = "7.5-2-n";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Identifiers";
+var SECTION = "7.5-2-n";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Identifiers";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
-    test();
+DESCRIPTION = "var 0abc";
+EXPECTED = "error";
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
+new TestCase( SECTION,    "var 0abc",   "error",    eval("var 0abc") );
 
-    array[item++] = new TestCase( SECTION,    "var 0abc",   "error",    "var 0abc" );
-    return ( array );
-}
-
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].actual = eval( testcases[tc].actual );
-
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +":  "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : " ignored chars after line terminator of single-line comment";
-    }
-    stopTest();
-    return ( testcases );
-}
+test();

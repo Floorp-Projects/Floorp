@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,45 +35,34 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.8.1.2-1.js
-    ECMA Section:       15.8.2.js
-    Description:        All value properties of the Math object should have
-                        the attributes [DontEnum, DontDelete, ReadOnly]
+   File Name:          15.8.1.2-1.js
+   ECMA Section:       15.8.2.js
+   Description:        All value properties of the Math object should have
+   the attributes [DontEnum, DontDelete, ReadOnly]
 
-                        this test checks the DontDelete attribute of Math.LN10
+   this test checks the DontDelete attribute of Math.LN10
 
-    Author:             christine@netscape.com
-    Date:               16 september 1997
+   Author:             christine@netscape.com
+   Date:               16 september 1997
 */
 
-    var SECTION = "15.8.1.2-2";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Math.LN10";
+var SECTION = "15.8.1.2-2";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Math.LN10";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
-    test();
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
-    array[item++] = new TestCase( SECTION, "delete( Math.LN10 ); Math.LN10",   2.302585092994046,       "delete(Math.LN10); Math.LN10" );
-    array[item++] = new TestCase( SECTION, "delete( Math.LN10 ); ",             false,                  "delete(Math.LN10)" );
-    return ( array );
-}
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].actual = eval( testcases[tc].actual );
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
+new TestCase( SECTION, 
+	      "delete( Math.LN10 ); Math.LN10",   
+	      2.302585092994046,       
+	      eval("delete(Math.LN10); Math.LN10") );
 
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "property should be read-only ";
-    }
-    stopTest();
-    return ( testcases );
-}
+new TestCase( SECTION, 
+	      "delete( Math.LN10 ); ",             
+	      false,                  
+	      eval("delete(Math.LN10)") );
+
+test();

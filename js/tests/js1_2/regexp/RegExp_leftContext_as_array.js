@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,72 +35,56 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/**
-	Filename:     RegExp_leftContext_as_array.js
-	Description:  'Tests RegExps leftContext property (same tests as RegExp_leftContext.js but using $`)'
 
-	Author:       Nick Lerissa
-	Date:         March 12, 1998
+/**
+   Filename:     RegExp_leftContext_as_array.js
+   Description:  'Tests RegExps leftContext property (same tests as RegExp_leftContext.js but using $`)'
+
+   Author:       Nick Lerissa
+   Date:         March 12, 1998
 */
 
-	var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
-	var VERSION = 'no version';
-    startTest();
-	var TITLE   = 'RegExp: $`';
+var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
+var VERSION = 'no version';
+startTest();
+var TITLE   = 'RegExp: $`';
 
-	writeHeaderToLog('Executing script: RegExp_leftContext_as_array.js');
-	writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog('Executing script: RegExp_leftContext_as_array.js');
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-	var count = 0;
-	var testcases = new Array();
+// 'abc123xyz'.match(/123/); RegExp['$`']
+'abc123xyz'.match(/123/);
+new TestCase ( SECTION, "'abc123xyz'.match(/123/); RegExp['$`']",
+	       'abc', RegExp['$`']);
 
-    // 'abc123xyz'.match(/123/); RegExp['$`']
-    'abc123xyz'.match(/123/);
-	testcases[count++] = new TestCase ( SECTION, "'abc123xyz'.match(/123/); RegExp['$`']",
-	                                    'abc', RegExp['$`']);
+// 'abc123xyz'.match(/456/); RegExp['$`']
+'abc123xyz'.match(/456/);
+new TestCase ( SECTION, "'abc123xyz'.match(/456/); RegExp['$`']",
+	       'abc', RegExp['$`']);
 
-    // 'abc123xyz'.match(/456/); RegExp['$`']
-    'abc123xyz'.match(/456/);
-	testcases[count++] = new TestCase ( SECTION, "'abc123xyz'.match(/456/); RegExp['$`']",
-	                                    'abc', RegExp['$`']);
+// 'abc123xyz'.match(/abc123xyz/); RegExp['$`']
+'abc123xyz'.match(/abc123xyz/);
+new TestCase ( SECTION, "'abc123xyz'.match(/abc123xyz/); RegExp['$`']",
+	       '', RegExp['$`']);
 
-    // 'abc123xyz'.match(/abc123xyz/); RegExp['$`']
-    'abc123xyz'.match(/abc123xyz/);
-	testcases[count++] = new TestCase ( SECTION, "'abc123xyz'.match(/abc123xyz/); RegExp['$`']",
-	                                    '', RegExp['$`']);
+// 'xxxx'.match(/$/); RegExp['$`']
+'xxxx'.match(/$/);
+new TestCase ( SECTION, "'xxxx'.match(/$/); RegExp['$`']",
+	       'xxxx', RegExp['$`']);
 
-    // 'xxxx'.match(/$/); RegExp['$`']
-    'xxxx'.match(/$/);
-	testcases[count++] = new TestCase ( SECTION, "'xxxx'.match(/$/); RegExp['$`']",
-	                                    'xxxx', RegExp['$`']);
+// 'test'.match(/^/); RegExp['$`']
+'test'.match(/^/);
+new TestCase ( SECTION, "'test'.match(/^/); RegExp['$`']",
+	       '', RegExp['$`']);
 
-    // 'test'.match(/^/); RegExp['$`']
-    'test'.match(/^/);
-	testcases[count++] = new TestCase ( SECTION, "'test'.match(/^/); RegExp['$`']",
-	                                    '', RegExp['$`']);
+// 'xxxx'.match(new RegExp('$')); RegExp['$`']
+'xxxx'.match(new RegExp('$'));
+new TestCase ( SECTION, "'xxxx'.match(new RegExp('$')); RegExp['$`']",
+	       'xxxx', RegExp['$`']);
 
-    // 'xxxx'.match(new RegExp('$')); RegExp['$`']
-    'xxxx'.match(new RegExp('$'));
-	testcases[count++] = new TestCase ( SECTION, "'xxxx'.match(new RegExp('$')); RegExp['$`']",
-	                                    'xxxx', RegExp['$`']);
+// 'test'.match(new RegExp('^')); RegExp['$`']
+'test'.match(new RegExp('^'));
+new TestCase ( SECTION, "'test'.match(new RegExp('^')); RegExp['$`']",
+	       '', RegExp['$`']);
 
-    // 'test'.match(new RegExp('^')); RegExp['$`']
-    'test'.match(new RegExp('^'));
-	testcases[count++] = new TestCase ( SECTION, "'test'.match(new RegExp('^')); RegExp['$`']",
-	                                    '', RegExp['$`']);
-
-	function test()
-	{
-	   for ( tc=0; tc < testcases.length; tc++ ) {
-	        testcases[tc].passed = writeTestCaseResult(
-	        testcases[tc].expect,
-	        testcases[tc].actual,
-	        testcases[tc].description +" = "+
-	        testcases[tc].actual );
-	        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-	   }
-	   stopTest();
-	   return ( testcases );
-	}
-
-	test();
+test();

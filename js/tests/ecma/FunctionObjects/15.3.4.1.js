@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -35,43 +36,23 @@
  *
  * ***** END LICENSE BLOCK ***** */
 /**
-    File Name:          15.3.4.1.js
-    ECMA Section:       15.3.4.1  Function.prototype.constructor
+   File Name:          15.3.4.1.js
+   ECMA Section:       15.3.4.1  Function.prototype.constructor
 
-    Description:        The initial value of Function.prototype.constructor
-                        is the built-in Function constructor.
-    Author:             christine@netscape.com
-    Date:               28 october 1997
+   Description:        The initial value of Function.prototype.constructor
+   is the built-in Function constructor.
+   Author:             christine@netscape.com
+   Date:               28 october 1997
 
 */
 
-    var SECTION = "15.3.4.1";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Function.prototype.constructor";
+var SECTION = "15.3.4.1";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Function.prototype.constructor";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
-    test();
+new TestCase( SECTION, "Function.prototype.constructor",   Function,   Function.prototype.constructor );
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
-
-    array[item++] = new TestCase( SECTION, "Function.prototype.constructor",   Function,   Function.prototype.constructor );
-
-    return ( array );
-}
-function test( array ) {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+ testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
+test();

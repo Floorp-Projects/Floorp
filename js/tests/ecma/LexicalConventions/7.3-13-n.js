@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,48 +35,30 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          7.3-13-n.js
-    ECMA Section:       7.3 Comments
-    Description:
+   File Name:          7.3-13-n.js
+   ECMA Section:       7.3 Comments
+   Description:
 
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 
 */
-    var SECTION = "7.3-13-n";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Comments";
+var SECTION = "7.3-13-n";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Comments";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
-    test();
+DESCRIPTION = "nested comment";
+EXPECTED = "error";
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
-    array[item++] = new TestCase( SECTION,
-                                  "nested comment",
-                                  "error",
-                                  "pass");
-        return ( array );
-}
-function test() {
+var testcase = new TestCase( SECTION,
+			     "nested comment",
+			     "error",
+			     eval("/*/*\"fail\";*/*/"));
 
-    /*/*testcases[tc].actual="fail";*/*/
-
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +":  "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : " ignored chars after line terminator of single-line comment";
-    }
-    stopTest();
-    return ( testcases );
-}
+test();

@@ -1,138 +1,50 @@
-<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
 <html>
   <head>
     <title>Core JavaScript Tests</title>
 
-    <script language="JavaScript">
-      function selectAll (suite, testDir)
-      {
-	  if (typeof suite == "undefined")
-	      for (var suite in suites)
-		  setAllDirs (suite, true);
-	  else if (typeof testDir == "undefined")
-	      setAllDirs (suite, true);
-	  else
-	      setAllTests (suite, testDir, true);
-	  updateTotals();
-      }
+    <script type="text/javascript" src="menuhead.js"></script>
 
-      function selectNone (suite, testDir)
-      {
-	  
-	  if (typeof suite == "undefined")
-	      for (var suite in suites)
-		  setAllDirs (suite, false);
-	  else if (typeof testDir == "undefined")
-	      setAllDirs (suite, false);
-	  else
-	      setAllTests (suite, testDir, false);
-	  updateTotals();	
-      }
-
-      function setAllDirs (suite, value)
-      {
-	  var dir;
-	  for (dir in suites[suite].testDirs)
-	      setAllTests (suite, dir, value);
-
-      }
-
-      function setAllTests (suite, testDir, value)
-      {
-	  var test, radioName;
-	  
-	  for (test in suites[suite].testDirs[testDir].tests)
-	  {
-	      radioName = suites[suite].testDirs[testDir].tests[test];
-	      document.forms["testCases"].elements[radioName].checked = value;
-	  }
-
-      }
-
-      function createList ()
-      {
-	  var suite, testDir, test, radioName;
-	  var elements = document.forms["testCases"].elements;
-
-	  var win = window.open ("about:blank", "other_window");
-	  win.document.open();
-	  win.document.write ("<pre>\n");
-	  
-	  win.document.write ("# Created " + new Date() + "\n");
-
-	  for (suite in suites)
-	      win.document.write ("# " + suite + ": " + 
-				  elements["SUMMARY_" + suite].value + "\n");
-	  win.document.write ("# TOTAL: " + elements["TOTAL"].value + "\n");
-
-	  for (suite in suites)
-	      for (testDir in suites[suite].testDirs)
-		  for (test in suites[suite].testDirs[testDir].tests)
-		  {  
-		      radioName = suites[suite].testDirs[testDir].tests[test];
-		      if (elements[radioName].checked)
-			  win.document.write (suite + "/" + testDir + "/" + 
-					      elements[radioName].value + "\n");
-		  }
-	  
-	  win.document.close();
-
-      }
-
-      function onRadioClick (name)
-      {
-	  var radio = document.forms["testCases"].elements[name];
-	  radio.checked = !radio.checked;
-	  setTimeout ("updateTotals();", 100);
-	  return false;
-      }
-    
-      function updateTotals()
-      {
-	  var suite, testDir, test, radioName, selected, available, pct;
-	  var totalAvailable = 0, totalSelected = 0;
-	  
-	  var elements = document.forms["testCases"].elements;
-
-	  for (suite in suites)
-	  {
-	      selected = available = 0;
-	      for (testDir in suites[suite].testDirs)
-		  for (test in suites[suite].testDirs[testDir].tests)
-		  {  
-		      available++
-		      radioName = suites[suite].testDirs[testDir].tests[test];
-		      if (elements[radioName].checked)
-			  selected++;
-		  }
-	      totalSelected += selected;
-	      totalAvailable += available;
-	      pct = parseInt((selected / available) * 100);
-	      if (isNaN(pct))
-		  pct = 0;
-	      
-	      elements["SUMMARY_" + suite].value = selected + "/" + available +
-                  " (" + pct + "%) selected";
-	  }
-
-	  pct = parseInt((totalSelected / totalAvailable) * 100);
-	  if (isNaN(pct))
-	      pct = 0;
-	      
-	  elements["TOTAL"].value = totalSelected + "/" + totalAvailable + " (" +
-	      pct + "%) selected";
-
-      }
-    
-    </script>
-
+    <style type="text/css">
+    dt { font-weight: bold; padding: 1em; }
+    </style>
   </head>
 
   <body bgcolor="white" onLoad="updateTotals()">
     <a name='top_of_page'></a>
     <h1>Core JavaScript Tests</h1>
 
-    <form name="testCases">
+    <form name="testCases" action="">
     <input type='button' value='Export Test List' onClick='createList();'>
     <input type='button' value='Import Test List' 
       onClick='window.open("importList.html", "other_window");'>
+
+    <h2>Browser Test Options</h2>
+    <p>
+    &lt;script
+    <select name="language">
+      <option value="language;javascript" default>language="javascript"</option>
+      <option value="language;javascript1.1">language="javascript1.1"</option>
+      <option value="language;javascript1.2">language="javascript1.2"</option>
+      <option value="language;javascript1.3">language="javascript1.3"</option>
+      <option value="language;javascript1.4">language="javascript1.4"</option>
+      <option value="language;javascript1.5">language="javascript1.5"</option>
+      <option value="type;text/javascript">type="text/javascript"</option>
+      <option value="type;text/javascript;version=1.1">type="text/javascript;version=1.1"</option>
+      <option value="type;text/javascript;version=1.2">type="text/javascript;version=1.2"</option>
+      <option value="type;text/javascript;version=1.3">type="text/javascript;version=1.3"</option>
+      <option value="type;text/javascript;version=1.4">type="text/javascript;version=1.4"</option>
+      <option value="type;text/javascript;version=1.5">type="text/javascript;version=1.5"</option>
+    </select>&gt;
+    DOCTYPE 
+    <select name="doctype">
+    <option value="quirks">Quirks</option>
+    <option value="standards">Standards</option>
+    </select>
+    Output Format
+    <select name="outputformat">
+    <option value="html">HTML</option>
+    <option value="javascript">JavaScript</option>
+    </select>
+    Failures only <input type="checkbox" name="failures">
+    <input type='button' value='Execute Test List' onClick='executeList();'>
+    </p>
