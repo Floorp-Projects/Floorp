@@ -276,6 +276,9 @@ function GoNextMessage(type, startFromBeginning)
     if (!succeeded) {
       CrossFolderNavigation(type, true);
     }
+    else {
+      SetFocusAfterGoNextMessage();
+    }
   }
   catch (ex) {
     dump("GoNextMessage ex = " + ex + "\n");
