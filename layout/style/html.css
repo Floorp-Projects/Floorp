@@ -773,6 +773,11 @@ input[type="button"][disabled], input[type="button"][disabled]:active {
   color: gray;
 }
 
+input[type="button"][disabled]:-moz-text {
+  color: gray;
+  font:button;
+}
+
 /* HTML 4 Button */
 button { 
   font:button;
@@ -823,6 +828,11 @@ button[disabled], button[disabled]:active {
   border: 1px solid rgb(156, 154, 156);
   padding: 1px;
   color: gray;
+}
+
+button[disabled]:-moz-text {
+  color: gray;
+  font:button;
 }
 
 /* text input */
