@@ -19,6 +19,7 @@
 # Rights Reserved.
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
+#                 Jacob Steenhagen <jake@acutex.net>
 
 use diagnostics;
 use strict;
@@ -27,17 +28,24 @@ require "CGI.pl";
 
 ConnectToDatabase();
 
-my @row;
-if (defined $::FORM{'attach_id'}) {
-    SendSQL("select mimetype, thedata from attachments where attach_id =".SqlQuote($::FORM{'attach_id'}));
-    @row = FetchSQLData();
-}
-if (!@row) {
-    print "Content-type: text/html\n\n";
-    PutHeader("Bad ID");
-    print "Please hit back and try again.\n";
+quietly_check_login();
+
+if ($::FORM{attach_id} !~ /^[1-9][0-9]*$/) {
+    DisplayError("Attachment ID should be numeric.");
     exit;
 }
-print qq{Content-type: $row[0]\n\n$row[1]};
+
+SendSQL("select bug_id, mimetype, thedata from attachments where attach_id = $::FORM{'attach_id'}");
+my ($bug_id, $mimetype, $thedata) = FetchSQLData();
+
+if (!$bug_id) {
+    DisplayError("Attachment $::FORM{attach_id} does not exist.");
+    exit;
+}
+
+# Make sure the user can see the bug to which this file is attached
+ValidateBugID($bug_id);
+
+print qq{Content-type: $mimetype\n\n$thedata};
 
     
