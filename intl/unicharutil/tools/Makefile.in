@@ -48,11 +48,15 @@ $(PROGS): $(OBJS)
 
 export::
 
-install:: $(TARGETS)
-	$(INSTALL) $(PROGS) $(DIST)/bin
-	$(INSTALL) $(srcdir)/data/ctype.dat $(DIST)/bin/res/unicharutil
-	$(INSTALL) $(srcdir)/data/case.dat $(DIST)/bin/res/unicharutil
+#install:: $(TARGETS)
+#	$(INSTALL) $(PROGS) $(DIST)/bin
+#	$(INSTALL) $(srcdir)/data/ctype.dat $(DIST)/bin/res/unicharutil
+#	$(INSTALL) $(srcdir)/data/case.dat $(DIST)/bin/res/unicharutil
+#
+#clobber::
+#	rm -f $(DIST)/bin/ucgendat
+#	rm -f $(PROGS) $(OBJS)
+
+install::
 
 clobber::
-	rm -f $(DIST)/bin/ucgendat
-	rm -f $(PROGS) $(OBJS)
