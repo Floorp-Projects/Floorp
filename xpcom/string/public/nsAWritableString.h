@@ -156,7 +156,35 @@ class nsWritingIterator
           return mPosition - mFragment.mStart;
         }
 
-      nsWritingIterator<CharT>& advance( difference_type );
+      nsWritingIterator<CharT>&
+      advance( difference_type n )
+        {
+          while ( n > 0 )
+            {
+              difference_type one_hop = NS_MIN(n, size_forward());
+
+              NS_ASSERTION(one_hop>0, "Infinite loop: can't advance a writing iterator beyond the end of a string");
+                // perhaps I should |break| if |!one_hop|?
+
+              mPosition += one_hop;
+              normalize_forward();
+              n -= one_hop;
+            }
+
+          while ( n < 0 )
+            {
+              normalize_backward();
+              difference_type one_hop = NS_MAX(n, -size_backward());
+
+              NS_ASSERTION(one_hop<0, "Infinite loop: can't advance (backward) a writing iterator beyond the end of a string");
+                // perhaps I should |break| if |!one_hop|?
+
+              mPosition += one_hop;
+              n -= one_hop;
+            }
+
+          return *this;
+        }
 
         /**
          * Really don't want to call these two operations |+=| and |-=|.
@@ -188,6 +216,7 @@ class nsWritingIterator
         }
   };
 
+#if 0
 template <class CharT>
 nsWritingIterator<CharT>&
 nsWritingIterator<CharT>::advance( difference_type n )
@@ -218,7 +247,7 @@ nsWritingIterator<CharT>::advance( difference_type n )
 
     return *this;
   }
-
+#endif
 
 /*
   This file defines the abstract interfaces |nsAWritableString| and
