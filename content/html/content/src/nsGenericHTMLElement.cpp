@@ -1708,8 +1708,6 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsIContent* aOuter,
     // nsILink interface to get a canonified URL that has been
     // correctly escaped and URL-encoded for the document's charset.
     nsCOMPtr<nsILink> link = do_QueryInterface(aOuter);
-    NS_ASSERTION(link != nsnull, "aOuter is not an nsILink");
-
     if (!link)
       return NS_ERROR_UNEXPECTED;
 
