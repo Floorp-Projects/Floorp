@@ -520,54 +520,6 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
 
 
 //---------------------------------------------------------------
-// XXX This will be going away when I get the "default" handle done for toolbars
-static nsEventStatus PR_CALLBACK
-HandleToolbarEvent(nsGUIEvent *aEvent)
-{
-  nsEventStatus result = nsEventStatus_eIgnore;
-  nsIToolbar * toolbar;
-	if (NS_OK == aEvent->widget->QueryInterface(kIToolbarIID,(void**)&toolbar)) {
-    result = toolbar->HandleEvent(aEvent);
-    NS_RELEASE(toolbar);
-  }
-  return result;
-}
-
-//---------------------------------------------------------------
-// XXX This will be going away when I get the "default" handle done for toolbars managers
-static nsEventStatus PR_CALLBACK
-HandleToolbarMgrEvent(nsGUIEvent *aEvent)
-{
-  nsEventStatus result = nsEventStatus_eIgnore;
-
-  switch(aEvent->message) {
-    case NS_PAINT: {
-      nsRect r;
-      aEvent->widget->GetBounds(r);
-      r.x = 0;
-      r.y = 0;
-      nsIRenderingContext *drawCtx = ((nsPaintEvent*)aEvent)->renderingContext;
-      drawCtx->SetColor(aEvent->widget->GetBackgroundColor());
-      drawCtx->FillRect(r);
-
-      //nsRect rect(*(((nsPaintEvent*)aEvent)->rect));
-      nsRect rect(r);
-      drawCtx->SetColor(NS_RGB(128,128,128));
-      drawCtx->DrawLine(0,0,rect.width,0);
-      //drawCtx->SetColor(NS_RGB(255,255,255));
-      //drawCtx->DrawLine(0,1,rect.width,1);
-      //drawCtx->SetColor(NS_RGB(255,255,255));
-      //drawCtx->DrawLine(0,0,rect.width,0);
-      drawCtx->SetColor(NS_RGB(128,128,128));
-      drawCtx->DrawLine(0,rect.height-1,rect.width,rect.height-1);
-    }
-    break;
-  } //switch
-
-  return result;
-}
-
-//---------------------------------------------------------------
 // XXX This is needed for now, but I will be putting a listener on the text widget
 // eventually this will be replaced with and formal "URLBar" implementation
 static nsEventStatus PR_CALLBACK
@@ -1454,7 +1406,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   if (NS_OK != mToolbarMgr->QueryInterface(kIWidgetIID,(void**)&toolbarMgrWidget)) {
     return rv;
   }
-	toolbarMgrWidget->Create(mWindow, rr, HandleToolbarMgrEvent, NULL);
+	toolbarMgrWidget->Create(mWindow, rr, nsnull, NULL);
 	toolbarMgrWidget->SetBackgroundColor(windowBGColor);
 	toolbarMgrWidget->Show(PR_TRUE);
 
@@ -1479,13 +1431,13 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   mBtnToolbar->SetMargin(1);
   mBtnToolbar->SetHGap(2);
 
-	toolbarWidget->Create(toolbarMgrWidget, rrr, HandleToolbarEvent, NULL);
+	toolbarWidget->Create(toolbarMgrWidget, rrr, nsnull, NULL);
 	toolbarWidget->SetBackgroundColor(windowBGColor);
 	toolbarWidget->Show(PR_TRUE);
   mToolbarMgr->AddToolbar(mBtnToolbar);
 
   nsIWidget * tab = nsnull;
-  mBtnToolbar->CreateTab(tab);
+//  mBtnToolbar->CreateTab(tab);
   NS_IF_RELEASE(tab);
 
 
@@ -1580,13 +1532,13 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   mURLToolbar->SetMargin(1);
   mURLToolbar->SetHGap(2);
 
-	urlToolbarWidget->Create(toolbarMgrWidget, rr, HandleToolbarEvent, NULL);
+	urlToolbarWidget->Create(toolbarMgrWidget, rr, nsnull, NULL);
 	urlToolbarWidget->SetBackgroundColor(windowBGColor);
 	urlToolbarWidget->Show(PR_TRUE);
   mToolbarMgr->AddToolbar(mURLToolbar);
 
   tab = nsnull;
-  mURLToolbar->CreateTab(tab);
+//  mURLToolbar->CreateTab(tab);
   NS_IF_RELEASE(tab);
 
 
@@ -1722,13 +1674,13 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   personalToolbar->SetHGap(2);
   personalToolbar->SetWrapping(PR_TRUE);
 
-  personalToolbarWidget->Create(toolbarMgrWidget, rrr, HandleToolbarEvent, NULL);
+  personalToolbarWidget->Create(toolbarMgrWidget, rrr, nsnull, NULL);
 	personalToolbarWidget->SetBackgroundColor(windowBGColor);
 	personalToolbarWidget->Show(PR_TRUE);
   mToolbarMgr->AddToolbar(personalToolbar);
 
   tab = nsnull;
-  personalToolbar->CreateTab(tab);
+//  personalToolbar->CreateTab(tab);
   NS_IF_RELEASE(tab);
 
 
@@ -1824,7 +1776,7 @@ nsBrowserWindow::CreateStatusBar(PRInt32 aWidth)
   mStatusBar->SetHGap(2);
   mStatusBar->SetBorderType(eToolbarBorderType_none);
 
-	statusWidget->Create(mWindow, rrr, HandleToolbarEvent, NULL);
+	statusWidget->Create(mWindow, rrr, nsnull, NULL);
 	statusWidget->SetBackgroundColor(windowBGColor);
 	statusWidget->Show(PR_TRUE);
 
@@ -1907,7 +1859,7 @@ nsBrowserWindow::CreateStatusBar(PRInt32 aWidth)
   mStatusAppBar->SetHGap(2);
   mStatusAppBar->SetBorderType(eToolbarBorderType_full);
 
-	mStatusAppBarWidget->Create(statusWidget, rrr, HandleToolbarEvent, NULL);
+	mStatusAppBarWidget->Create(statusWidget, rrr, nsnull, NULL);
 	mStatusAppBarWidget->SetBackgroundColor(windowBGColor);
 	mStatusAppBarWidget->Show(PR_TRUE);
 
