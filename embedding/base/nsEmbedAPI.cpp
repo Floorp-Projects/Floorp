@@ -28,6 +28,7 @@
 #include "nsIStringBundle.h"
 
 #include "nsIDirectoryService.h"
+#include "nsDirectoryServiceDefs.h"
 
 #include "nsEmbedAPI.h"
 #include "nsLiteralString.h"
@@ -106,6 +107,31 @@ nsresult NS_InitEmbedding(nsILocalFile *mozBinDirectory,
         {
             NS_ASSERTION(PR_FALSE, "Could not AutoRegister");
             return rv;
+        }
+
+        // If the application is using an MRE, then, 
+        // auto register components in the MRE directory as well.
+        //
+        // The application indicates that it's using an MRE by
+        // returning a valid nsIFile when queried (via appFileLocProvider)
+        // for the NS_MRE_DIR atom as shown below
+        //
+        if (appFileLocProvider)
+        {
+            nsCOMPtr<nsIFile> mreDir;
+            PRBool persistent = PR_TRUE;
+
+            appFileLocProvider->GetFile(NS_MRE_DIR, &persistent, getter_AddRefs(mreDir));
+
+            if (mreDir)
+            {
+                rv = registrar->AutoRegister(mreDir);
+                if (NS_FAILED(rv))
+                {
+                    NS_ASSERTION(PR_FALSE, "Could not AutoRegister MRE components");
+                    return rv;
+                }
+            }
         }
 
         sRegistryInitializedFlag = PR_TRUE;
