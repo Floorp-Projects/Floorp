@@ -258,7 +258,7 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
     NS_PRECONDITION(s, "bad param");
     NS_PRECONDITION(d, "bad param");
 
-    jsdouble* dbl;
+    jsdouble* dbl = nsnull;
 
     if(pErr)
         *pErr = NS_ERROR_XPC_BAD_CONVERT_NATIVE;
