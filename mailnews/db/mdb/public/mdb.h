@@ -860,6 +860,8 @@ public:
     nsIMdbPortTableCursor** acqCursor); // all such tables in the port
   // } ----- end table methods -----
 
+	nsVoidArray		m_tables;
+
 // } ===== end nsIMdbPort methods =====
 };
 
@@ -1484,6 +1486,8 @@ public:
     nsIMdbEnv* ev, // context
     mdb_column inColumn) ; // the column to index if ever sorted
   // } ----- end index methods -----
+
+   // ************************** mdbstubs hack
 	nsVoidArray		m_rows;
 // } ===== end nsIMdbTable methods =====
 };
