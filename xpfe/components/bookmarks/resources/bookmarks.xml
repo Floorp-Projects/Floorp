@@ -1,4 +1,30 @@
-<?xml version="1.0" ?> 
+<?xml version="1.0"?>  
+
+<!-- -*- Mode: HTML; indent-tabs-mode: nil; -*- -->
+<!--
+
+  The contents of this file are subject to the Netscape Public
+  License Version 1.1 (the "License"); you may not use this file
+  except in compliance with the License. You may obtain a copy of
+  the License at http://www.mozilla.org/NPL/
+ 
+  Software distributed under the License is distributed on an "AS
+  IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  implied. See the License for the specific language governing
+  rights and limitations under the License.
+ 
+  The Original Code is mozilla.org code.
+ 
+  The Initial Developer of the Original Code is Netscape
+  Communications Corporation.  Portions created by Netscape are
+  Copyright (C) 1998 Netscape Communications Corporation. All
+  Rights Reserved.
+ 
+  Contributor(s): 
+    Ben Goodger <ben@netscape.com> (Original Author)
+    Blake Ross <blakeross@telocity.com>
+
+-->
 <!DOCTYPE window [
   <!ENTITY % bookmarksDTD SYSTEM "chrome://communicator/locale/bookmarks/bookmarks.dtd" >
   %bookmarksDTD;
@@ -1057,17 +1083,21 @@
             rangeMax = { };
             rangeMin = { };
             boxObject.selection.getRangeAt(i, rangeMin, rangeMax);
+            const kPrefSvcContractID = "@mozilla.org/preferences;1";
+            const kPrefSvcIID = Components.interfaces.nsIPrefService;
+            var prefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
+            var bookmarksPrefs = prefSvc.getBranch("browser.bookmarks.");
+
             for (var j = rangeMax.value; j >= rangeMin.value; --j) {
               var resource = outlinerBuilder.getResourceAtIndex(j);
               if (resource.Value == "NC:BookmarksRoot")
                 continue;
+              if (resource.Value == "NC:SystemBookmarksStaticRoot")
+                bookmarksPrefs.setBoolPref("show_static_system_bookmarks", false);
+
               var currType = this.getTypeAtIndex(j);
-              if (currType == this.NC_NS + "IEFavoriteFolder") {
-                const kPrefSvcContractID = "@mozilla.org/preferences;1";
-                const kPrefSvcIID = Components.interfaces.nsIPref;
-                const kPrefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
-                kPrefSvc.SetBoolPref("browser.bookmarks.import_system_favorites", false);
-              }
+              if (currType == this.NC_NS + "IEFavoriteFolder")
+                bookmarksPrefs.setBoolPref("import_system_favorites", false);
               else if (currType != this.NC_NS + "Bookmark" && 
                        currType != this.NC_NS + "BookmarkSeparator" &&
                        currType != this.NC_NS + "Folder")
@@ -1582,9 +1612,13 @@
       <parameter name="aEvent"/>
       <parameter name="aInNewWindow"/>
         <body><![CDATA[
-          if (this.outlinerBoxObject.view.isContainer(this.outlinerBoxObject.selection.currentIndex))
+          if (this.outlinerBoxObject.view.isContainer(this.outlinerBoxObject.selection.currentIndex)) {
+            dump("*** this = " + this.clickCount + "\n");
+            if (this.clickCount == 1) 
+              this.outlinerBoxObject.view.toggleOpenState(this.currentIndex);
             return;
-    
+          }
+          
           var urlRes, urlValue;
           if (aEvent && aEvent.altKey)
             this.openPropertiesForItem();
@@ -1693,6 +1727,9 @@
         </statusbar>
       </vbox>
     </xbl:content>
+    <implementation>
+      <field name="clickCount">2</field>
+    </implementation>
   </binding>
   <!-- Single column outliner -->
   <binding id="bookmarks-outliner-name" extends="chrome://communicator/content/bookmarks/bookmarks.xml#bookmarks-outliner">
@@ -1730,6 +1767,9 @@
         </outlinercols>
       </outliner>
     </xbl:content>
+    <implementation>
+      <field name="clickCount">1</field>
+    </implementation>
   </binding>
   <!-- Outliner with folders only -->
   <binding id="bookmarks-outliner-folders" extends="chrome://communicator/content/bookmarks/bookmarks.xml#bookmarks-outliner">
@@ -1756,6 +1796,9 @@
         </outlinercols>
       </outliner>
     </xbl:content>
+    <implementation>
+      <field name="clickCount">1</field>
+    </implementation>
   </binding>
 </bindings>
 <!--

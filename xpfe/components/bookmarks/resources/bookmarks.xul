@@ -60,10 +60,6 @@
   <!-- XXX - This should SO become an XBL widget -->
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"></script>
   
-  <!-- Shared Bookmarks Utility Library -->
-  <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"/>
-  <!-- Tree-based Bookmarks UI Utility Library -->
-  <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksTree.js"/>
   <!-- Bookmarks Window -->
   <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarks.js"/>
 
@@ -151,6 +147,7 @@
                     label="&command.properties.label;" 
                     accesskey="&command.properties.accesskey;" />
           <menuitem id="menu_sendPage" hidden="true"/>
+          <menuitem label="Import IE Favorites" oncommand="importIEFavorites();"/>
         </menupopup>
       </menu>
       <menu id="menu_Edit">

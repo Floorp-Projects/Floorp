@@ -70,31 +70,43 @@ class nsBookmarksService : public nsIBookmarksService,
 			   public nsSupportsWeakReference
 {
 protected:
-	nsIRDFDataSource*		mInner;
-	nsCOMPtr<nsIRDFResource>	busyResource;
-	nsCOMPtr<nsISupportsArray>      mObservers;
-	nsCOMPtr<nsIStringBundle>	mBundle;
-	nsCOMPtr<nsITimer>		mTimer;
-    nsCOMPtr<nsIIOService>	mNetService;
-    nsCOMPtr<nsICacheService> mCacheService;
-    nsCOMPtr<nsICacheSession> mCacheSession;
-	PRUint32			htmlSize;
-    PRInt32             mUpdateBatchNest;
-	nsString			mPersonalToolbarName;
-	PRBool		mBookmarksAvailable;
-	PRBool		mDirty;
-	PRBool		mBrowserIcons;
-	PRBool		busySchedule;
+  nsIRDFDataSource*		            mInner;
+  nsCOMPtr<nsIRDFResource>	      busyResource;
+  nsCOMPtr<nsISupportsArray>      mObservers;
+  nsCOMPtr<nsIStringBundle>	      mBundle;
+  nsCOMPtr<nsITimer>              mTimer;
+  nsCOMPtr<nsIIOService>          mNetService;
+  nsCOMPtr<nsICacheService>       mCacheService;
+  nsCOMPtr<nsICacheSession>       mCacheSession;
 
-#ifdef	XP_MAC
-	PRBool				mIEFavoritesAvailable;
+  PRUint32      htmlSize;
+  PRInt32       mUpdateBatchNest;
+  nsString      mPersonalToolbarName;
+  PRBool        mBookmarksAvailable;
+  PRBool        mDirty;
+  PRBool        mBrowserIcons;
+  PRBool        busySchedule;
 
-	nsresult ReadFavorites();
+  // System Bookmark parsing
+#ifdef XP_WIN
+  // @param aDirectory      - Favorites Folder to import from.
+  // @param aParentResource - Folder into which to place imported
+  //                          Favorites.
+  nsresult      ParseFavoritesFolder(nsIFile* aDirectory, 
+                                     nsIRDFResource* aParentResource);
+#elif XP_MAC
+  PRBool        mIEFavoritesAvailable;
+
+  nsresult      ReadFavorites();
 #endif
 
-static	void	FireTimer(nsITimer* aTimer, void* aClosure);
-nsresult	ExamineBookmarkSchedule(nsIRDFResource *theBookmark, PRBool & examineFlag);
-nsresult	GetBookmarkToPing(nsIRDFResource **theBookmark);
+#if defined(XP_WIN) || defined(XP_MAC)
+  void          HandleSystemBookmarks(nsIRDFNode* aNode);
+#endif
+
+  static void FireTimer(nsITimer* aTimer, void* aClosure);
+  nsresult ExamineBookmarkSchedule(nsIRDFResource *theBookmark, PRBool & examineFlag);
+  nsresult GetBookmarkToPing(nsIRDFResource **theBookmark);
 
 	nsresult GetBookmarksFile(nsFileSpec* aResult);
 	nsresult WriteBookmarks(nsFileSpec *bookmarksFile, nsIRDFDataSource *ds, nsIRDFResource *root);
@@ -113,7 +125,7 @@ nsresult	GetBookmarkToPing(nsIRDFResource **theBookmark);
 	nsresult getFolderViaHint(nsIRDFResource *src, PRBool fallbackFlag, nsIRDFResource **folder);
 	nsresult importBookmarks(nsISupportsArray *aArguments);
 	nsresult exportBookmarks(nsISupportsArray *aArguments);
-    nsresult ProcessCachedBookmarkIcon(nsIRDFResource* aSource, const PRUnichar *iconURL, nsIRDFNode** aTarget);
+  nsresult ProcessCachedBookmarkIcon(nsIRDFResource* aSource, const PRUnichar *iconURL, nsIRDFNode** aTarget);
 	nsresult getResourceFromLiteralNode(nsIRDFNode *node, nsIRDFResource **res);
   void AnnotateBookmarkSchedule(nsIRDFResource* aSource, PRBool scheduleFlag);
   nsresult IsBookmarkedInternal(nsIRDFResource *bookmark, PRBool *isBookmarkedFlag);
