@@ -50,12 +50,10 @@ Contributor(s): ______________________________________. -->
     <!-- we may like to load this into a tabpanel set as per mpt's post -->
     <spring style="width: 7px;"/>
     <!-- tree sidebar -->
-    <html:div flex="40%">
-      <tree id="prefsTree" class="inset"/>
-    </html:div>
+    <tree flex="4" style="width: 0px;" id="prefsTree" class="inset"/>
     <spring style="width: 10px;"/>
     <!-- content frame -->
-    <html:iframe id="panelFrame" name="panelFrame" flex="60%"/>
+    <html:iframe id="panelFrame" name="panelFrame" style="width:0px" flex="6"/>
     <html:script language="javascript">
       if( window.arguments[0] ) 
         document.getElementById("panelFrame").setAttribute("src", window.arguments[0] );
