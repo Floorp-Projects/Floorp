@@ -46,6 +46,8 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   buttons="accept"
   onload="document.documentElement.getButton('accept').focus();"
+  width="500"
+  height="480"
   ondialogaccept="return true;">
 
   <tabbox flex="1">
