@@ -41,6 +41,7 @@
 #define kPNGImageMime  "image/png"
 #define kJPEGImageMime "image/jpg"
 #define kGIFImageMime  "image/gif"
+#define kDropFilesMime "text/dropfiles"
 
 class nsIDataFlavor : public nsISupports {
 
