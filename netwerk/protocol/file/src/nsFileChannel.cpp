@@ -35,6 +35,7 @@
 #include "prio.h"
 #include "prmem.h" // XXX can be removed when we start doing real content-type discovery
 #include "nsCOMPtr.h"
+#include "nsXPIDLString.h"
 
 #include "nsIMIMEService.h"
 
@@ -42,6 +43,11 @@ static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
 
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+
+#ifdef STREAM_CONVERTER_HACK
+#include "nsIAllocator.h"
+static NS_DEFINE_CID(kStreamConverterCID,    NS_STREAM_CONVERTER_CID);
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -51,7 +57,8 @@ nsFileChannel::nsFileChannel()
       mSuspended(PR_FALSE), mFileStream(nsnull),
       mBufferInputStream(nsnull), mBufferOutputStream(nsnull),
       mStatus(NS_OK), mHandler(nsnull), mSourceOffset(0),
-      mLoadAttributes(LOAD_NORMAL)
+      mLoadAttributes(LOAD_NORMAL),
+	  mReadFixedAmount(PR_FALSE)
 {
     NS_INIT_REFCNT();
 }
@@ -81,13 +88,29 @@ nsFileChannel::Init(nsFileProtocolHandler* handler,
     mURI = uri;
     NS_ADDREF(mURI);
 
-    // XXX temporary, until we integrate more thoroughly with nsFileSpec
-    char* url;
-    rv = mURI->GetSpec(&url);
-    if (NS_FAILED(rv)) return rv;
-    nsFileURL fileURL(url);
-    delete [] url;
-    mSpec = fileURL;
+    // if we support the nsIURL interface then use it to get just
+	// the file path with no other garbage!
+	nsCOMPtr<nsIURL> aUrl = do_QueryInterface(mURI, &rv);
+	if (NS_SUCCEEDED(rv) && aUrl) // does it support the url interface?
+	{
+		nsXPIDLCString fileString;
+		aUrl->DirFile(getter_Copies(fileString));
+		// to be mac friendly you need to convert a file path to a nsFilePath before
+		// passing it to a nsFileSpec...
+		nsFilePath filePath(fileString);
+		mSpec = filePath;
+	}
+	else
+	{
+		// otherwise do the best we can by using the spec for the uri....
+		// XXX temporary, until we integrate more thoroughly with nsFileSpec
+		char* url;
+		rv = mURI->GetSpec(&url);
+		if (NS_FAILED(rv)) return rv;
+		nsFileURL fileURL(url);
+		delete [] url;
+		mSpec = fileURL;
+	}
 
     mEventQueue = queue;
     NS_IF_ADDREF(mEventQueue);
@@ -412,7 +435,7 @@ nsFileChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
 {
     nsAutoMonitor mon(mMonitor);
 
-    nsresult rv;
+    nsresult rv = NS_OK;
 
     NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
@@ -424,7 +447,56 @@ nsFileChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
         if (NS_FAILED(rv)) return rv;
     }
 
-    rv = serv->NewAsyncStreamListener(listener, mEventQueue, &mListener);
+	// mscott --  this is just one temporary hack until we have a legit stream converter
+	// story going....if the file we are opening is an rfc822 file then we want to 
+	// go out and convert the data into html before we try to load it. so I'm inserting
+	// code which if we are rfc-822 will cause us to literally insert a converter between
+	// the file channel stream of incoming data and the consumer at the other end of the
+	// AsyncRead call...
+
+#ifdef STREAM_CONVERTER_HACK
+	nsXPIDLCString aContentType;
+	rv = GetContentType(getter_Copies(aContentType));
+	if (NS_SUCCEEDED(rv) && PL_strcasecmp("message/rfc822", aContentType) == 0)
+	{
+		// okay we are an rfc822 message...
+		// (0) Create an instance of an RFC-822 stream converter...
+		// because I need this converter to be around for the lifetime of the channel,
+		// I'm making it a member variable.
+		// (1) create a proxied stream listener for the caller of this method
+		// (2) set this proxied listener as the listener on the output stream
+		// (3) create a proxied stream listener for the converter
+		// (4) set mListener to be the stream converter's listener.
+
+		// (0) create a stream converter
+		nsCOMPtr<nsIStreamConverter2> mimeParser;
+		// mscott - we could generalize this hack to work with other stream converters by simply
+		// using the content type of the file to generate a progid for a stream converter and use
+		// that instead of a class id...
+		if (!mStreamConverter)
+			rv = nsComponentManager::CreateInstance(kStreamConverterCID, 
+													NULL, nsCOMTypeInfo<nsIStreamConverter2>::GetIID(), 
+													(void **) getter_AddRefs(mStreamConverter)); 
+		if (NS_FAILED(rv)) return rv;
+
+		// (1) and (2)
+		nsCOMPtr<nsIStreamListener> proxiedConsumerListener;
+		rv = serv->NewAsyncStreamListener(listener, mEventQueue, getter_AddRefs(proxiedConsumerListener));
+		if (NS_FAILED(rv)) return rv;
+
+		// (3) set the stream converter as the listener on the channel
+		mListener = mStreamConverter;
+		NS_IF_ADDREF(mListener); // mListener is NOT a com ptr...
+
+		// now set the output stream correctly
+		mStreamConverter->Init(mURI, proxiedConsumerListener, this);
+		mStreamConverter->GetContentType(getter_Copies(mStreamConverterOutType));
+	}
+	else
+		rv = serv->NewAsyncStreamListener(listener, mEventQueue, &mListener);
+#else   
+	rv = serv->NewAsyncStreamListener(listener, mEventQueue, &mListener);
+#endif
     if (NS_FAILED(rv)) return rv;
 
 #if 0
@@ -450,7 +522,16 @@ nsFileChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
 
     mState = START_READ;
     mSourceOffset = startPosition;
-    mAmount = readCount;
+
+	// did the user request a specific number of bytes to read?
+	// if they passed in -1 then they want all bytes to be read.f
+	if (readCount > 0) // did the user pass in
+	{
+		mReadFixedAmount = PR_TRUE;
+		mAmount = (PRUint32) readCount; // mscott - this is a safe cast!
+	}
+	else
+		mAmount = 0; // don't worry we'll ignore this parameter from here on out because mReadFixedAmount is false
 
     rv = mHandler->DispatchRequest(this);
     if (NS_FAILED(rv)) return rv;
@@ -488,13 +569,35 @@ nsFileChannel::SetLoadAttributes(PRUint32 aLoadAttributes)
 NS_IMETHODIMP
 nsFileChannel::GetContentType(char * *aContentType)
 {
-    nsresult rv;
+    nsresult rv = NS_OK;
+#ifdef STREAM_CONVERTER_HACK
+	// okay, if we already have a stream converter hooked up to the channel
+	// then we want to LIE about the content type...the content type is really
+	// the stream converter out type...
+	if (mStreamConverter) 
+	{
+		*aContentType = (char *) nsAllocator::Clone(mStreamConverterOutType, nsCRT::strlen(mStreamConverterOutType) + 1);
+		return rv;
+	}
+#endif
+
+	// we need to try to get the file name from a nsIURL in order to lose the query and ref stuff
+	// that may be tacked on....I left the old code which incorrectly did this under a #if 0 in
+	// case we need to add it back in later...
+	nsXPIDLCString fileName;
+	nsCOMPtr<nsIURL> urlForm = do_QueryInterface(mURI, &rv);
+	NS_ASSERTION(urlForm, "bad assumption here....");
+	urlForm->GetFileName(getter_Copies(fileName));
+
+#if 0
     char *cStrSpec= nsnull;
     rv = mURI->GetSpec(&cStrSpec);
     if (!cStrSpec)
         return NS_ERROR_OUT_OF_MEMORY;
     // find the file extension
     nsString2 specStr(cStrSpec);
+#endif
+	nsString2 specStr(fileName);
     nsString2 extStr;
     PRInt32 extLoc = specStr.RFindChar('.');
     if (-1 != extLoc) {
@@ -594,8 +697,15 @@ nsFileChannel::Process(void)
           mStatus = fileStr->GetLength(&inLen);
           if (NS_FAILED(mStatus)) goto error;
 
+		  // mscott --> if the user wanted to only read a fixed number of bytes
+		  // we need to honor that...
+		  if (mReadFixedAmount) 
+			  inLen = inLen < mAmount ? inLen : mAmount; // take the min(inLen, mAmount)
+
           PRUint32 amt;
           mStatus = mBufferOutputStream->WriteFrom(fileStr, inLen, &amt);
+		  if (mReadFixedAmount)
+			  mAmount -= amt;   // subtract off the amount we just read from mAmount.
           if (NS_FAILED(mStatus)) goto error;
           if (mStatus == NS_BASE_STREAM_WOULD_BLOCK || amt == 0) {
               // Our nsIBufferObserver will have been called from WriteFrom
@@ -611,6 +721,12 @@ nsFileChannel::Process(void)
               if (NS_FAILED(mStatus)) goto error;
           }
           
+		  if (mReadFixedAmount && mAmount == 0)
+		  {
+			  Cancel(); // stop reading data...we are done
+			  return;
+		  }
+
           mSourceOffset += amt;
 
           // stay in the READING state
