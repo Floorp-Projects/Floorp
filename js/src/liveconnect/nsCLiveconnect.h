@@ -77,7 +77,7 @@ public:
      *                     wrapped up as java wrapper netscape.javascript.JSObject.
      */
     NS_IMETHOD	
-    GetMember(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize length, void* principalsArray[], 
+    GetMember(JNIEnv *jEnv, lcjsobject obj, const jchar *name, jsize length, void* principalsArray[], 
               int numPrincipals, nsISupports *securitySupports, jobject *pjobj);
 
     /**
@@ -89,7 +89,7 @@ public:
      *                     the member. 
      */
     NS_IMETHOD	
-    GetSlot(JNIEnv *jEnv, jsobject obj, jint slot, void* principalsArray[], 
+    GetSlot(JNIEnv *jEnv, lcjsobject obj, jint slot, void* principalsArray[], 
             int numPrincipals, nsISupports *securitySupports,  jobject *pjobj);
 
     /**
@@ -102,7 +102,7 @@ public:
      *                     then a internal mapping is consulted to convert to a NJSObject.
      */
     NS_IMETHOD	
-    SetMember(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize length, jobject jobj, void* principalsArray[], 
+    SetMember(JNIEnv *jEnv, lcjsobject obj, const jchar *name, jsize length, jobject jobj, void* principalsArray[], 
               int numPrincipals, nsISupports *securitySupports);
 
     /**
@@ -115,7 +115,7 @@ public:
      *                     then a internal mapping is consulted to convert to a NJSObject.
      */
     NS_IMETHOD	
-    SetSlot(JNIEnv *jEnv, jsobject obj, jint slot, jobject jobj,  void* principalsArray[], 
+    SetSlot(JNIEnv *jEnv, lcjsobject obj, jint slot, jobject jobj,  void* principalsArray[], 
             int numPrincipals, nsISupports *securitySupports);
 
     /**
@@ -125,7 +125,7 @@ public:
      * @param name       - Name of a member.
      */
     NS_IMETHOD	
-    RemoveMember(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize length,  void* principalsArray[], 
+    RemoveMember(JNIEnv *jEnv, lcjsobject obj, const jchar *name, jsize length,  void* principalsArray[], 
                  int numPrincipals, nsISupports *securitySupports);
 
     /**
@@ -137,7 +137,7 @@ public:
      * @param pjobj      - return value.
      */
     NS_IMETHOD	
-    Call(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize length, jobjectArray jobjArr, void* principalsArray[], 
+    Call(JNIEnv *jEnv, lcjsobject obj, const jchar *name, jsize length, jobjectArray jobjArr, void* principalsArray[], 
          int numPrincipals, nsISupports *securitySupports, jobject *pjobj);
 
     /**
@@ -150,7 +150,7 @@ public:
      * @param pjobj              - return value.
      */
     NS_IMETHOD	
-    Eval(JNIEnv *jEnv, jsobject obj, const jchar *script, jsize length, void* principalsArray[], 
+    Eval(JNIEnv *jEnv, lcjsobject obj, const jchar *script, jsize length, void* principalsArray[], 
          int numPrincipals, nsISupports *securitySupports, jobject *pjobj);
 
     /**
@@ -164,7 +164,7 @@ public:
      */
     NS_IMETHOD	
     GetWindow(JNIEnv *jEnv, void *pJavaObject,  void* principalsArray[], 
-              int numPrincipals, nsISupports *securitySupports, jsobject *pobj);
+              int numPrincipals, nsISupports *securitySupports, lcjsobject *pobj);
 
     /**
      * Get the window object for a plugin instance.
@@ -173,7 +173,7 @@ public:
      * @param obj        - A Native JS Object.
      */
     NS_IMETHOD	
-    FinalizeJSObject(JNIEnv *jEnv, jsobject obj);
+    FinalizeJSObject(JNIEnv *jEnv, lcjsobject obj);
 
     /**
      * Get the window object for a plugin instance.
@@ -183,7 +183,7 @@ public:
      * @param jstring    - Return value as a jstring representing a JS object.
      */
     NS_IMETHOD
-    ToString(JNIEnv *jEnv, jsobject obj, jstring *pjstring);
+    ToString(JNIEnv *jEnv, lcjsobject obj, jstring *pjstring);
     ////////////////////////////////////////////////////////////////////////////
     // from nsCLiveconnect:
 
