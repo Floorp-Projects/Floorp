@@ -51,6 +51,8 @@ public:
   virtual void SetDimensions(nscoord width, nscoord height);
   virtual nsEventStatus HandleEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags);
   virtual void AdjustChildWidgets(nscoord aDx, nscoord aDy);
+  virtual PRBool Paint(nsIRenderingContext& rc, const nsRect& rect,
+                     PRUint32 aPaintFlags, nsIView *aBackstop = nsnull);
 
   //nsIScrollableView interface
   virtual void ComputeContainerSize();
