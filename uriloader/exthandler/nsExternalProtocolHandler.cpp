@@ -124,7 +124,7 @@ NS_IMETHODIMP nsExtProtocolChannel::GetURI(nsIURI* *aURI)
   return NS_OK; 
 }
  
-NS_IMETHODIMP nsExtProtocolChannel::SetURI(nsIURI* aURI)
+nsresult nsExtProtocolChannel::SetURI(nsIURI* aURI)
 {
   mUrl = aURI;
   return NS_OK; 
