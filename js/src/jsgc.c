@@ -1082,7 +1082,7 @@ MARK_GC_THING(JSContext *cx, void *thing, uint8 *flagp, void *arg)
 
         /* Mark slots if they are small enough to be GC-allocated. */
         if (vp[-1] * sizeof(jsval) <= GC_NBYTES_MAX)
-            GC_MARK(cx, vp - 1, js_private_str, arg);
+            GC_MARK(cx, vp - 1, "slots", arg);
 
         /* Switch to Deutsch-Schorr-Waite if we exhaust our stack quota. */
         if (!JS_CHECK_STACK_SIZE(cx, stackDummy)) {
@@ -1124,13 +1124,10 @@ MARK_GC_THING(JSContext *cx, void *thing, uint8 *flagp, void *arg)
                     if (!sprop) {
                         switch (slot) {
                           case JSSLOT_PROTO:
-                            strcpy(name, "__proto__");
+                            strcpy(name, js_proto_str);
                             break;
                           case JSSLOT_PARENT:
-                            strcpy(name, "__parent__");
-                            break;
-                          case JSSLOT_PRIVATE:
-                            strcpy(name, "__private__");
+                            strcpy(name, js_parent_str);
                             break;
                           default:
                             JS_snprintf(name, sizeof name,
@@ -1520,7 +1517,7 @@ js_GC(JSContext *cx, uintN gcflags)
     if (!(gcflags & GC_ALREADY_LOCKED))
         JS_LOCK_GC(rt);
 
-    /* Do nothing if no assignment has executed since the last GC. */
+    /* Do nothing if no mutator has executed since the last GC. */
     if (!rt->gcPoke) {
         METER(rt->gcStats.nopoke++);
         if (!(gcflags & GC_ALREADY_LOCKED))
