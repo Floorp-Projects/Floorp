@@ -1174,19 +1174,8 @@ nsSecureBrowserUIImpl::IsURLHTTPS(nsIURI* aURL, PRBool* value)
 
 	if (!aURL)
 		return NS_OK;
-  
-	nsCAutoString scheme;
-	aURL->GetScheme(scheme);
 
-  // If no scheme, it's not an https url - not necessarily an error.
-  // See bugs 54845 and 54966  
-	if (scheme.IsEmpty())
-		return NS_OK;
-  
-	if (!PL_strncasecmp(scheme.get(), "https",  5))
-		*value = PR_TRUE;
-	
-	return NS_OK;
+  return aURL->SchemeIs("https", value);
 }
 
 void
@@ -1222,13 +1211,15 @@ nsSecureBrowserUIImpl::CheckPost(nsIURI *formURL, nsIURI *actionURL, PRBool *oka
   if (NS_FAILED(rv))
     return rv;
   
-  // if we are posting to a secure link from a secure page, all is okay.
-  if (actionSecure && formSecure) {
+  // If we are posting to a secure link, all is okay.
+  // It doesn't matter whether the currently viewed page is secure or not,
+  // because the data will be sent to a secure URL.
+  if (actionSecure) {
     return NS_OK;
   }
     
   // posting to insecure webpage from a secure webpage.
-  if (!actionSecure && formSecure) {
+  if (formSecure) {
     *okayToPost = ConfirmPostToInsecureFromSecure();
   } else {
     *okayToPost = ConfirmPostToInsecure();
