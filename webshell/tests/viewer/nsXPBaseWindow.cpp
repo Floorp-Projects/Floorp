@@ -392,7 +392,7 @@ NS_IMETHODIMP nsXPBaseWindow::GetTitle(const PRUnichar** aResult)
 NS_IMETHODIMP nsXPBaseWindow::LoadURL(const nsString& aURL)
 {
    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebShell));
-   webNav->LoadURI(aURL.get(), nsIWebNavigation::LOAD_FLAGS_NONE);
+   webNav->LoadURI(aURL.get(), nsIWebNavigation::LOAD_FLAGS_NONE, nsnull, nsnull, nsnull);
    return NS_OK;
 }
 

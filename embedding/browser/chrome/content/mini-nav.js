@@ -221,7 +221,7 @@ function SetMenuItemAttr( id, attr, val )
 
 function loadURI(uri)
 {
-  getWebNavigation().loadURI(uri, nsIWebNavigation.LOAD_FLAGS_NONE);
+  getWebNavigation().loadURI(uri, nsIWebNavigation.LOAD_FLAGS_NONE, null, null, null);
 }
 
 function BrowserLoadURL()

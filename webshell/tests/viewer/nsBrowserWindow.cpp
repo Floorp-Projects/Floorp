@@ -855,7 +855,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
       url.AppendInt(ix, 10);
       url.AppendWithConversion(".html");
       nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
-      webNav->LoadURI(url.get(), nsIWebNavigation::LOAD_FLAGS_NONE);
+      webNav->LoadURI(url.get(), nsIWebNavigation::LOAD_FLAGS_NONE, nsnull, nsnull, nsnull);
     }
     break;
 
@@ -864,7 +864,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
       nsAutoString url; url.AssignWithConversion(SAMPLES_BASE_URL);
       url.AppendWithConversion("/toolbarTest1.xul");
       nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
-      webNav->LoadURI(url.get(), nsIWebNavigation::LOAD_FLAGS_NONE);
+      webNav->LoadURI(url.get(), nsIWebNavigation::LOAD_FLAGS_NONE, nsnull, nsnull, nsnull);
       break;
     }
   case VIEWER_XPTOOLKITTREE1:
@@ -872,7 +872,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
       nsAutoString url; url.AssignWithConversion(SAMPLES_BASE_URL);
       url.AppendWithConversion("/treeTest1.xul");
       nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
-      webNav->LoadURI(url.get(), nsIWebNavigation::LOAD_FLAGS_NONE);
+      webNav->LoadURI(url.get(), nsIWebNavigation::LOAD_FLAGS_NONE, nsnull, nsnull, nsnull);
       break;
     }
   
@@ -1028,7 +1028,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
 
   /* invoke the javascript wallet editor */
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
-  webNav->LoadURI(urlString.get(), nsIWebNavigation::LOAD_FLAGS_NONE);
+  webNav->LoadURI(urlString.get(), nsIWebNavigation::LOAD_FLAGS_NONE, nsnull, nsnull, nsnull);
   }
   break;
 #endif
@@ -1078,7 +1078,7 @@ void
 nsBrowserWindow::GoTo(const PRUnichar* aURL)
 {
    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
-   webNav->LoadURI(aURL, nsIWebNavigation::LOAD_FLAGS_NONE);
+   webNav->LoadURI(aURL, nsIWebNavigation::LOAD_FLAGS_NONE, nsnull, nsnull, nsnull);
 }
 
 
@@ -1140,7 +1140,10 @@ nsBrowserWindow::DoFileOpen()
       // Ask the Web widget to load the file URL
       nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
       webNav->LoadURI(NS_ConvertASCIItoUCS2(url.get()).get(),
-                      nsIWebNavigation::LOAD_FLAGS_NONE);
+                      nsIWebNavigation::LOAD_FLAGS_NONE,
+                      nsnull,
+                      nsnull,
+                      nsnull);
       SetVisibility(PR_TRUE);
     }
   }

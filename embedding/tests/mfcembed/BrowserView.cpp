@@ -701,14 +701,17 @@ void CBrowserView::OnFileSaveAs()
 
 void CBrowserView::OpenURL(const char* pUrl)
 {
-    if(mWebNav)
-        mWebNav->LoadURI(NS_ConvertASCIItoUCS2(pUrl).get(), nsIWebNavigation::LOAD_FLAGS_NONE);
+    OpenURL(NS_ConvertASCIItoUCS2(pUrl).get());
 }
 
 void CBrowserView::OpenURL(const PRUnichar* pUrl)
 {
     if(mWebNav)
-        mWebNav->LoadURI(pUrl, nsIWebNavigation::LOAD_FLAGS_NONE);
+        mWebNav->LoadURI(pUrl,                              // URI string
+                         nsIWebNavigation::LOAD_FLAGS_NONE, // Load flags
+                         nsnull,                            // Refering URI
+                         nsnull,                            // Post data
+                         nsnull);                           // Extra headers
 }
 
 CBrowserFrame* CBrowserView::CreateNewBrowserFrame(PRUint32 chromeMask, 

@@ -34,7 +34,6 @@ nsDocShellLoadInfo::nsDocShellLoadInfo()
 	NS_INIT_REFCNT();
    mLoadType = nsIDocShellLoadInfo::loadNormal;
    mInheritOwner = PR_FALSE;
-   mTarget.Assign("");
 }
 
 nsDocShellLoadInfo::~nsDocShellLoadInfo()
@@ -130,16 +129,16 @@ NS_IMETHODIMP nsDocShellLoadInfo::SetSHEntry(nsISHEntry* aSHEntry)
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellLoadInfo::GetTarget(char** aTarget)
+NS_IMETHODIMP nsDocShellLoadInfo::GetTarget(PRUnichar** aTarget)
 {
    NS_ENSURE_ARG_POINTER(aTarget);
 
-   *aTarget = ToNewCString(mTarget);
+   *aTarget = ToNewUnicode(mTarget);
 
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellLoadInfo::SetTarget(const char* aTarget)
+NS_IMETHODIMP nsDocShellLoadInfo::SetTarget(const PRUnichar* aTarget)
 {
    mTarget.Assign(aTarget);
    return NS_OK;

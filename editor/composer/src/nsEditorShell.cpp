@@ -1630,9 +1630,15 @@ nsEditorShell::LoadUrl(const PRUnichar *url)
   if (NS_FAILED(rv)) return rv;
   
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mContentAreaDocShell));
-  NS_ENSURE_SUCCESS(webNav->LoadURI(url, nsIWebNavigation::LOAD_FLAGS_NONE), NS_ERROR_FAILURE);
+  rv = webNav->LoadURI(url,                               // uri string
+                       nsIWebNavigation::LOAD_FLAGS_NONE, // load flags
+                       nsnull,                            // referrer
+                       nsnull,                            // post-data stream
+                       nsnull);                           // headers stream
 
-  return NS_OK;
+  NS_ASSERTION(NS_SUCCEEDED(rv), "LoadURI failed!");
+
+  return rv;
 }
 
 

@@ -1868,7 +1868,11 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
     nsCOMPtr<nsIWebNavigation> spIWebNavigation = do_QueryInterface(mWebBrowser);
     if (spIWebNavigation)
     {
-        res = spIWebNavigation->LoadURI(sUrl.get(), nsIWebNavigation::LOAD_FLAGS_NONE);
+        res = spIWebNavigation->LoadURI(sUrl.get(),
+                                        nsIWebNavigation::LOAD_FLAGS_NONE,
+                                        nsnull,
+                                        nsnull,
+                                        nsnull);
     }
 
     return res;

@@ -494,7 +494,6 @@ void LoadURLInWindow(WindowPtr wind, const char* urlString)
   }
 }
 
-
 void LoadURLInXULWindow(nsIXULWindow* inWindow, const char* urlString)
 {
   nsCOMPtr<nsIDocShellTreeItem> contentShell;
@@ -505,7 +504,7 @@ void LoadURLInXULWindow(nsIXULWindow* inWindow, const char* urlString)
   ThrowErrIfNil(webNav, paramErr);
 
   nsAutoString urlWString; urlWString.AssignWithConversion(urlString);	
-  webNav->LoadURI(urlWString.get(), nsIWebNavigation::LOAD_FLAGS_NONE);
+  webNav->LoadURI(urlWString.get(), nsIWebNavigation::LOAD_FLAGS_NONE, nsnull, nsnull, nsnull);
 }
 
 

@@ -410,6 +410,49 @@ ConvertDocShellLoadInfoToLoadType(nsDocShellInfoLoadType aDocShellLoadType)
 }
 
 
+nsDocShellInfoLoadType
+nsDocShell::ConvertLoadTypeToDocShellLoadInfo(PRUint32 aLoadType)
+{
+    nsDocShellInfoLoadType docShellLoadType = nsIDocShellLoadInfo::loadNormal;
+    switch (aLoadType) {
+    case LOAD_NORMAL:
+        docShellLoadType = nsIDocShellLoadInfo::loadNormal;
+        break;
+    case LOAD_NORMAL_REPLACE:
+        docShellLoadType = nsIDocShellLoadInfo::loadNormalReplace;
+        break;
+    case LOAD_HISTORY:
+        docShellLoadType = nsIDocShellLoadInfo::loadHistory;
+        break;
+    case LOAD_RELOAD_NORMAL:
+        docShellLoadType = nsIDocShellLoadInfo::loadReloadNormal;
+        break;
+    case LOAD_RELOAD_CHARSET_CHANGE:
+        docShellLoadType = nsIDocShellLoadInfo::loadReloadCharsetChange;
+        break;
+    case LOAD_RELOAD_BYPASS_CACHE:
+        docShellLoadType = nsIDocShellLoadInfo::loadReloadBypassCache;
+        break;
+    case LOAD_RELOAD_BYPASS_PROXY:
+        docShellLoadType = nsIDocShellLoadInfo::loadReloadBypassProxy;
+        break;
+    case LOAD_RELOAD_BYPASS_PROXY_AND_CACHE:
+        docShellLoadType = nsIDocShellLoadInfo::loadReloadBypassProxyAndCache;
+        break;
+    case LOAD_LINK:
+        docShellLoadType = nsIDocShellLoadInfo::loadLink;
+        break;
+    case LOAD_REFRESH:
+        docShellLoadType = nsIDocShellLoadInfo::loadRefresh;
+        break;
+    case LOAD_BYPASS_HISTORY:
+        docShellLoadType = nsIDocShellLoadInfo::loadBypassHistory;
+        break;
+    }
+
+    return docShellLoadType;
+}                                                                               
+
 //*****************************************************************************
 // nsDocShell::nsIDocShell
 //*****************************************************************************   
@@ -424,7 +467,7 @@ nsDocShell::LoadURI(nsIURI * aURI,
     nsCOMPtr<nsISupports> owner;
     PRBool inheritOwner = PR_FALSE;
     nsCOMPtr<nsISHEntry> shEntry;
-    nsXPIDLCString target;
+    nsXPIDLString target;
     PRUint32 loadType = MAKE_LOAD_TYPE(LOAD_NORMAL, aLoadFlags);    
 
     NS_ENSURE_ARG(aURI);
@@ -530,14 +573,11 @@ nsDocShell::LoadURI(nsIURI * aURI,
             }
         }
 
-        nsAutoString windowTarget;
-        windowTarget.AssignWithConversion(target);
-
         rv = InternalLoad(aURI,
                           referrer,
                           owner,
                           inheritOwner,
-                          windowTarget.get(),
+                          target.get(),
                           postStream,
                           nsnull,         // No headers stream
                           loadType,
@@ -2140,7 +2180,11 @@ NS_IMETHODIMP nsDocShell::GotoIndex(PRInt32 aIndex)
 
 
 NS_IMETHODIMP
-nsDocShell::LoadURI(const PRUnichar * aURI, PRUint32 aLoadFlags)
+nsDocShell::LoadURI(const PRUnichar * aURI,
+                    PRUint32 aLoadFlags,
+                    nsIURI * aReferingURI,
+                    nsIInputStream * aPostStream,
+                    nsIInputStream * aHeaderStream)
 {
     nsCOMPtr<nsIURI> uri;
 
@@ -2192,15 +2236,24 @@ nsDocShell::LoadURI(const PRUnichar * aURI, PRUint32 aLoadFlags)
                               NS_LITERAL_STRING("malformedURI").get(),
                               getter_Copies(messageStr)),
                           NS_ERROR_FAILURE);
-
         prompter->Alert(nsnull, messageStr.get());
     }
 
     if (NS_FAILED(rv) || !uri)
         return NS_ERROR_FAILURE;
 
-    NS_ENSURE_SUCCESS(LoadURI(uri, nsnull, aLoadFlags), NS_ERROR_FAILURE);
-    return NS_OK;
+    nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
+    rv = CreateLoadInfo(getter_AddRefs(loadInfo));
+    if (NS_FAILED(rv)) return rv;
+
+    loadInfo->SetLoadType(ConvertLoadTypeToDocShellLoadInfo(aLoadFlags));
+    loadInfo->SetPostDataStream(aPostStream);
+
+    // XXX: Need to pass in the extra headers stream too...
+    // XXX: Need to pass in referer...
+
+    rv = LoadURI(uri, loadInfo, 0);
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -2296,6 +2349,17 @@ nsDocShell::GetCurrentURI(nsIURI ** aURI)
     NS_ENSURE_ARG_POINTER(aURI);
 
     *aURI = mCurrentURI;
+    NS_IF_ADDREF(*aURI);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::GetReferingURI(nsIURI ** aURI)
+{
+    NS_ENSURE_ARG_POINTER(aURI);
+
+    *aURI = mReferrerURI;
     NS_IF_ADDREF(*aURI);
 
     return NS_OK;
@@ -4142,7 +4206,7 @@ nsresult nsDocShell::DoURILoad(nsIURI * aURI,
     nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
     //
     // If this is a HTTP channel, then set up the HTTP specific information
-    // (ie. POST data, referer, ...)
+    // (ie. POST data, referrer, ...)
     //
     if (httpChannel) {
         nsCOMPtr<nsICachingChannel>  cacheChannel(do_QueryInterface(httpChannel));

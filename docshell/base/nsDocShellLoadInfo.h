@@ -51,7 +51,7 @@ protected:
    PRBool                           mInheritOwner;
    nsDocShellInfoLoadType           mLoadType;
    nsCOMPtr<nsISHEntry>             mSHEntry;
-   nsCString mTarget;
+   nsString                         mTarget;
    nsCOMPtr<nsIInputStream>         mPostDataStream;
 };
 

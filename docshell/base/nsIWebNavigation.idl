@@ -135,9 +135,15 @@ interface nsIWebNavigation : nsISupports
   * @param uri       - The URI string to load.
   * @param loadFlags - Flags modifying load behaviour. Generally you will pass
   *                    LOAD_FLAGS_NONE for this parameter.
+  * @param referrer  - The referring URI.  If this argument is NULL, the
+  *                    referring URI will be inferred internally.
   * @param postData  - nsIInputStream containing POST data for the request.
   */
-  void loadURI(in wstring uri, in unsigned long loadFlags);
+  void loadURI(in wstring uri,
+               in unsigned long loadFlags,
+               in nsIURI referrer,
+               in nsIInputStream postData,
+               in nsIInputStream headers);
 
  /**
   * Tells the Object to reload the current page.
@@ -184,6 +190,11 @@ interface nsIWebNavigation : nsISupports
   * The current URI that is loaded.
   */
   readonly attribute nsIURI currentURI;
+
+ /**
+  * The refering URI.
+  */
+  readonly attribute nsIURI referingURI;
 
  /**
   * The session history object used to store the session history for the

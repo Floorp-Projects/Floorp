@@ -70,7 +70,6 @@
 #include "nsIContentViewer.h"
 #include "nsIContentViewerEdit.h"
 #include "nsIWebShell.h"
-#include "nsIWebNavigation.h"
 #include "nsIDocShell.h"
 #include "nsIWebShellWindow.h"
 #include "nsIWebBrowserChrome.h"
@@ -618,7 +617,11 @@ nsBrowserInstance::LoadUrl(const PRUnichar * urlToLoad)
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
     
   // Normal browser.
-  rv = webNav->LoadURI( urlToLoad, nsIWebNavigation::LOAD_FLAGS_NONE );
+  rv = webNav->LoadURI( urlToLoad,                          // URI string
+                        nsIWebNavigation::LOAD_FLAGS_NONE,  // Load flags
+                        nsnull,                             // Refering URI
+                        nsnull,                             // Post data
+                        nsnull );                           // Extra headers
 
   return rv;
 }

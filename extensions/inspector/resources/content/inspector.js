@@ -300,7 +300,7 @@ InspectorApp.prototype =
 
   browseToURL: function(aURL)
   {
-    this.webNavigation.loadURI(aURL, nsIWebNavigation.LOAD_FLAGS_NONE);
+    this.webNavigation.loadURI(aURL, nsIWebNavigation.LOAD_FLAGS_NONE, null, null, null);
   },
 
   goToWindow: function(aMenuitem)

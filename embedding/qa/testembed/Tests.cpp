@@ -226,7 +226,10 @@ void CTests::OnTestsChangeUrl()
 		QAOutput("Begin Change URL test.", 1);
 		strcpy(theUrl, myDialog.m_urlfield);
 		rv = qaWebNav->LoadURI(NS_ConvertASCIItoUCS2(theUrl).get(), 
-						nsIWebNavigation::LOAD_FLAGS_BYPASS_HISTORY);
+						nsIWebNavigation::LOAD_FLAGS_BYPASS_HISTORY,
+            nsnull,
+            nsnull,
+            nsnull);
 	    RvTestResult(rv, "rv LoadURI() test", 1);
 		FormatAndPrintOutput("The url = ", theUrl, 2); 
 
