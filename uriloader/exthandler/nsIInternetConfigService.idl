@@ -36,9 +36,51 @@ interface nsIURL;
 
 native FSSpec(FSSpec);
 
-[uuid(9B8B9D80-5F4F-11D4-9696-0060083A0BCF)]
+[scriptable, uuid(9B8B9D80-5F4F-11D4-9696-0060083A0BCF)]
 interface nsIInternetConfigService : nsISupports
 {
+  const unsigned long eICColor_WebBackgroundColour = 1;
+  const unsigned long eICColor_WebReadColor = 2;
+  const unsigned long eICColor_WebTextColor = 3;
+  const unsigned long eICColor_WebUnreadColor = 4;
+  const unsigned long eICBoolean_WebUnderlineLinks = 11;
+  const unsigned long eICString_WWWHomePage = 101;
+  const unsigned long eICString_WebSearchPagePrefs = 102;
+  const unsigned long eICString_MacSearchHost = 103;
+  const unsigned long eICString_FTPHost = 121;
+  const unsigned long eICBoolean_UsePassiveFTP = 122;
+  const unsigned long eICBoolean_UseFTPProxy = 123;      const unsigned long eICString_FTPProxyUser = 124; 
+  const unsigned long eICString_FTPProxyAccount = 125;   const unsigned long eICString_FTPProxyHost = 126;
+  const unsigned long eICString_FTPProxyPassword = 127;
+  const unsigned long eICBoolean_UseHTTPProxy = 130;     const unsigned long eICString_HTTPProxyHost = 131;
+  const unsigned long eICString_LDAPSearchbase = 201;    const unsigned long eICString_LDAPServer = 202;
+  const unsigned long eICString_SMTPHost = 221;
+  const unsigned long eICString_Email = 222;
+  const unsigned long eICString_MailAccount = 223;       const unsigned long eICString_MailPassword = 224;
+  const unsigned long eICText_MailHeaders = 225;         const unsigned long eICText_Signature = 226;
+  const unsigned long eICBoolean_NewMailDialog = 231;
+  const unsigned long eICBoolean_NewMailFlashIcon = 232;
+  const unsigned long eICBoolean_NewMailPlaySound = 233; const unsigned long eICString_NewMailSoundName = 234;
+  const unsigned long eICString_NNTPHost = 241;
+  const unsigned long eICString_NewsAuthUsername = 242;  const unsigned long eICString_NewsAuthPassword = 243;
+  const unsigned long eICText_NewsHeaders = 244;
+  const unsigned long eICString_InfoMacPreferred = 245;
+  const unsigned long eICString_Organization = 251;      const unsigned long eICString_RealName = 252;
+  const unsigned long eICText_SnailMailAddress = 253;
+  const unsigned long eICString_QuotingString = 254;
+  const unsigned long eICString_GopherHost = 301;
+  const unsigned long eICBoolean_UseGopherProxy = 302;   const unsigned long eICString_GopherProxy = 303;
+  const unsigned long eICBoolean_UseSocks = 321;         const unsigned long eICString_SocksHost = 322;
+  const unsigned long eICString_TelnetHost = 331;
+  const unsigned long eICString_IRCHost = 341;
+  const unsigned long eICString_NTPHost = 351;
+  const unsigned long eICString_WAISGateway = 381;
+  const unsigned long eICString_FingerHost = 382;        const unsigned long eICText_Plan = 383;
+  const unsigned long eICString_WhoisHost = 384;
+  const unsigned long eICString_PhHost = 385;
+  const unsigned long eICString_ArchiePreferred = 386;
+  const unsigned long eICString_UMichPreferred = 391;
+
   void launchURL(in string url);
   
   boolean hasMappingForMIMEType(in string mimetype);
@@ -52,7 +94,13 @@ interface nsIInternetConfigService : nsISupports
   
   void getMIMEInfoFromTypeCreator(in PRUint32 aType, in PRUint32 aCreator, in string aFileExt, out nsIMIMEInfo mimeInfo);
   
-  void getDownloadFolder(out FSSpec fsspec);
+  [noscript] void getDownloadFolder(out FSSpec fsspec);
   
-  void getString(in string key, out string value);
+  string getString(in unsigned long keyenum);
+
+  unsigned long getColor(in unsigned long keyenum);
+
+  boolean getBoolean(in unsigned long keyenum);
+  
+  wstring getText(in unsigned long keyenum, out unsigned long length);
 };

@@ -31,6 +31,7 @@
 #include "nsXPIDLString.h"
 #include "nsMimeTypes.h"
 #include <TextUtils.h>
+#include "nsColor.h"
 
 // helper converter function.....
 static void ConvertCharStringToStr255( char* inString, Str255& outString  )
@@ -380,8 +381,158 @@ NS_IMETHODIMP nsInternetConfigService::GetDownloadFolder(FSSpec *fsspec)
   return rv;
 }
 
-/* void getString (in string key, out string value); */
-NS_IMETHODIMP nsInternetConfigService::GetString(const char *key, char **value)
+nsresult nsInternetConfigService::GetICKeyPascalString(PRUint32 inIndex, unsigned char **outICKey)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult result = NS_OK;
+
+  switch (inIndex)
+  {
+    case eICColor_WebBackgroundColour: *outICKey = kICWebBackgroundColour; break;
+    case eICColor_WebReadColor:        *outICKey = kICWebReadColor;        break;
+    case eICColor_WebTextColor:        *outICKey = kICWebTextColor;        break;
+    case eICColor_WebUnreadColor:      *outICKey = kICWebUnreadColor;      break;
+
+    case eICBoolean_WebUnderlineLinks: *outICKey = kICWebUnderlineLinks;  break;
+    case eICBoolean_UseFTPProxy:       *outICKey = kICUseFTPProxy;        break;
+    case eICBoolean_UsePassiveFTP:     *outICKey = kICUsePassiveFTP;      break;
+    case eICBoolean_UseHTTPProxy:      *outICKey = kICUseHTTPProxy;       break;
+    case eICBoolean_NewMailDialog:     *outICKey = kICNewMailDialog;      break;
+    case eICBoolean_NewMailFlashIcon:  *outICKey = kICNewMailFlashIcon;   break;
+    case eICBoolean_NewMailPlaySound:  *outICKey = kICNewMailPlaySound;   break;
+    case eICBoolean_UseGopherProxy:    *outICKey = kICUseGopherProxy;     break;
+    case eICBoolean_UseSocks:          *outICKey = kICUseSocks;           break;
+
+    case eICString_WWWHomePage:        *outICKey = kICWWWHomePage;        break;
+    case eICString_WebSearchPagePrefs: *outICKey = kICWebSearchPagePrefs; break;
+    case eICString_MacSearchHost:      *outICKey = kICMacSearchHost;      break;
+    case eICString_FTPHost:            *outICKey = kICFTPHost;            break;
+    case eICString_FTPProxyUser:       *outICKey = kICFTPProxyUser;       break;
+    case eICString_FTPProxyAccount:    *outICKey = kICFTPProxyAccount;    break;
+    case eICString_FTPProxyHost:       *outICKey = kICFTPProxyHost;       break;
+    case eICString_FTPProxyPassword:   *outICKey = kICWWWHomePage;        break;
+    case eICString_HTTPProxyHost:      *outICKey = kICHTTPProxyHost;      break;
+    case eICString_LDAPSearchbase:     *outICKey = kICLDAPSearchbase;     break;
+    case eICString_LDAPServer:         *outICKey = kICLDAPServer;         break;
+    case eICString_SMTPHost:           *outICKey = kICSMTPHost;           break;
+    case eICString_Email:              *outICKey = kICEmail;              break;
+    case eICString_MailAccount:        *outICKey = kICMailAccount;        break;
+    case eICString_MailPassword:       *outICKey = kICMailPassword;       break;
+    case eICString_NewMailSoundName:   *outICKey = kICNewMailSoundName;   break;
+    case eICString_NNTPHost:           *outICKey = kICNNTPHost;           break;
+    case eICString_NewsAuthUsername:   *outICKey = kICNewsAuthUsername;   break;
+    case eICString_NewsAuthPassword:   *outICKey = kICNewsAuthPassword;   break;
+    case eICString_InfoMacPreferred:   *outICKey = kICInfoMacPreferred;   break;
+    case eICString_Organization:       *outICKey = kICOrganization;       break;
+    case eICString_QuotingString:      *outICKey = kICQuotingString;      break;
+    case eICString_RealName:           *outICKey = kICRealName;           break;
+    case eICString_FingerHost:         *outICKey = kICFingerHost;         break;
+    case eICString_GopherHost:         *outICKey = kICGopherHost;         break;
+    case eICString_GopherProxy:        *outICKey = kICGopherProxy;        break;
+    case eICString_SocksHost:          *outICKey = kICSocksHost;          break;
+    case eICString_TelnetHost:         *outICKey = kICTelnetHost;         break;
+    case eICString_IRCHost:            *outICKey = kICIRCHost;            break;
+    case eICString_UMichPreferred:     *outICKey = kICUMichPreferred;     break;
+    case eICString_WAISGateway:        *outICKey = kICWAISGateway;        break;
+    case eICString_WhoisHost:          *outICKey = kICWhoisHost;          break;
+    case eICString_PhHost:             *outICKey = kICPhHost;             break;
+    case eICString_NTPHost:            *outICKey = kICNTPHost;            break;
+    case eICString_ArchiePreferred:    *outICKey = kICArchiePreferred;    break;
+    
+    case eICText_MailHeaders:          *outICKey = kICMailHeaders;        break;
+    case eICText_Signature:            *outICKey = kICSignature;          break;
+    case eICText_NewsHeaders:          *outICKey = kICNewsHeaders;        break;
+    case eICText_SnailMailAddress:     *outICKey = kICSnailMailAddress;   break;
+    case eICText_Plan:                 *outICKey = kICPlan;               break;
+
+    default:
+      result = NS_ERROR_INVALID_ARG;
+  }
+
+  return result;
+}
+
+
+nsresult nsInternetConfigService::GetICPreference(PRUint32 inKey, 
+                                                  void *outData, long *ioSize)
+{
+  unsigned char *icKey;
+  nsresult result = GetICKeyPascalString( inKey, &icKey );
+  if (NS_FAILED(result))
+    return result;
+
+  ICInstance instance = nsInternetConfig::GetInstance();
+  if ( !instance )
+    return NS_ERROR_FAILURE;
+
+  OSStatus err;
+  ICAttr junk;
+  err = ::ICGetPref( instance, icKey, &junk, outData, ioSize );
+  if ( err )
+    return NS_ERROR_UNEXPECTED;
+
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP nsInternetConfigService::GetString(PRUint32 inKey, char **value)
+{
+  long size = 256;
+  char buffer[256];
+  nsresult result = GetICPreference( inKey, (void *)&buffer, &size );
+  if ( result == NS_OK ) {
+    if ( size == 0 ) {
+      *value = nsnull;
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    // Buffer is a Pascal string; convert it to a c-string
+    nsCString temp( &buffer[1], buffer[0] );
+    *value = temp.ToNewCString();
+  }
+
+  return result;
+}
+
+
+NS_IMETHODIMP nsInternetConfigService::GetColor(PRUint32 inKey, PRUint32 *outColor)
+{
+  RGBColor buffer;
+  long size = sizeof(RGBColor);
+  nsresult result = GetICPreference( inKey, &buffer, &size );
+  if ( result == NS_OK ) {
+    if ( size != sizeof(RGBColor) ) {
+      *outColor = NS_RGB(0xff, 0xff, 0xff); // default to white if we didn't get the right size
+      return NS_OK;
+    }
+
+    // convert to a web color
+    *outColor = NS_RGB( buffer.red>>8, buffer.green>>8, buffer.blue>>8 );
+  }
+
+  return result;
+}
+
+
+NS_IMETHODIMP nsInternetConfigService::GetBoolean(PRUint32 inKey, PRBool *outFlag)
+{
+  Boolean buffer;
+  long size = sizeof(Boolean);
+  nsresult result = GetICPreference( inKey, (void *)&buffer, &size );
+  if ( result == NS_OK ) {
+    if ( size < sizeof(Boolean) ) {
+      *outFlag = PR_FALSE;  // default to false if we didn't get the right amount of data
+      return NS_OK;
+    }
+
+    *outFlag = buffer;
+    result = NS_OK;
+  }
+
+  return result;
+}
+
+
+NS_IMETHODIMP nsInternetConfigService::GetText(PRUint32 inKey, PRUint32 *ioLength, PRUnichar **outText)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
