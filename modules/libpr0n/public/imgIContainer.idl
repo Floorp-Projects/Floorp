@@ -26,7 +26,6 @@
 #include "gfxIFormats.idl"
 
 interface gfxIImageFrame;
-interface nsIEnumerator;
 interface imgIContainerObserver;
 
 /**
@@ -103,8 +102,6 @@ interface imgIContainer : nsISupports
   /* notification that the entire image has been decoded */
   void decodingComplete();
   
-  nsIEnumerator enumerate();
-
   void clear();
 
   void startAnimation();

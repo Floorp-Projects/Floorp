@@ -186,14 +186,6 @@ imgContainerMNG::DecodingComplete(void)
   return NS_OK;
 }
 
-//****************************************************************************
-/* nsIEnumerator enumerate (); */
-NS_IMETHODIMP
-imgContainerMNG::Enumerate(nsIEnumerator **_retval)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 /* void clear (); */
 NS_IMETHODIMP
 imgContainerMNG::Clear()

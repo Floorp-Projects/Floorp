@@ -247,13 +247,6 @@ NS_IMETHODIMP imgContainerGIF::DecodingComplete(void)
   return NS_OK;
 }
 
-//******************************************************************************
-/* nsIEnumerator enumerate (); */
-NS_IMETHODIMP imgContainerGIF::Enumerate(nsIEnumerator **_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 /* void clear (); */
 NS_IMETHODIMP imgContainerGIF::Clear()
 {
