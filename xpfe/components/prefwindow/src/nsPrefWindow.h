@@ -2,6 +2,7 @@
 #define _nsPrefWindow_h_
 
 #include "nsIPrefWindow.h"
+//#include "nsIAppShellComponentImpl.h"
 #include "nsString.h"
 
 class nsIDOMNode;
@@ -11,16 +12,23 @@ class nsIPref;
 //========================================================================================
 class nsPrefWindow
 //========================================================================================
-  : public nsIPrefWindow 
+  : public nsIPrefWindow
+//  , public nsAppShellComponentImpl
 {
   public:
+    NS_DEFINE_STATIC_CID_ACCESSOR(NS_PREFWINDOW_CID);
 
     nsPrefWindow();
     virtual ~nsPrefWindow();
                  
 
+    // This class implements the nsISupports interface functions.
     NS_DECL_ISUPPORTS
 
+//    // This class implements the nsIAppShellComponent interface functions.
+//    NS_DECL_IAPPSHELLCOMPONENT
+
+    // This class implements the nsIFindComponent interface functions.
 	NS_IMETHOD Init(const PRUnichar *id);
 	NS_IMETHOD ShowWindow(nsIDOMWindow *currentFrontWin);
 	NS_IMETHOD ChangePanel(const PRUnichar *url);
@@ -37,6 +45,9 @@ class nsPrefWindow
 	  , eString
 	  , ePath
 	};
+
+    static nsPrefWindow* Get();
+    static PRBool        InstanceExists();
 
   protected:
     
@@ -60,6 +71,8 @@ class nsPrefWindow
 
   protected:
 
+	static nsPrefWindow* sPrefWindow;
+	static PRUint32      sInstanceCount;
     nsString             mTreeScript;     
     nsString             mPanelScript;     
 

@@ -27,6 +27,7 @@ LIBRARY_NAME=mozsampl
 IS_COMPONENT=1
 CPPSRCS= \
 		nsPrefWindow.cpp \
+		nsPrefWindowFactory.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
