@@ -34,6 +34,14 @@ const kClassicMailLayout = 0;
 const kWideMailLayout = 1;
 const kVerticalMailLayout = 2;
 
+// Per message headder flags to keep track of whether the user is allowing remote
+// content for a particular message. 
+// if you change or add more values to these constants, be sure to modify
+// the corresponding definitions in nsMsgContentPolicy.cpp
+const kNoRemoteContentPolicy = 0;
+const kBlockRemoteContent = 1;
+const kAllowRemoteContent = 2;
+
 var gMessengerBundle;
 var gPromptService;
 var gOfflinePromptsBundle;
@@ -2048,6 +2056,41 @@ function SetUpJunkBar(aMsgHdr)
   return (isJunk && isAlreadyCollapsed) || (!isJunk && !isAlreadyCollapsed);
 }
 
+// hides or shows the remote content bar based on the property in the msg hdr
+function SetUpRemoteContentBar(aMsgHdr)
+{
+  var showRemoteContentBar = false;
+  if (aMsgHdr && aMsgHdr.getUint32Property("remoteContentPolicy") == kBlockRemoteContent)
+    showRemoteContentBar = true;
+
+  var remoteContentBar = document.getElementById("remoteContentBar");
+  
+  if (showRemoteContentBar)
+    remoteContentBar.removeAttribute("collapsed");
+  else
+    remoteContentBar.setAttribute("collapsed","true");
+}
+
+function LoadMsgWithRemoteContent()
+{
+  // we want to get the msg hdr for the currently selected message
+  // change the "remoteContentBar" property on it
+  // then reload the message
+
+  var msgURI = GetLoadedMessage();
+  var msgHdr = null;
+    
+  if (msgURI && !(/type=x-message-display/.test(msgURI)))
+  {
+    msgHdr = messenger.messageServiceFromURI(msgURI).messageURIToMsgHdr(msgURI);
+    if (msgHdr)
+    {
+      msgHdr.setUint32Property("remoteContentPolicy", kAllowRemoteContent); 
+      MsgReload();
+    }
+  }
+}
+
 function MarkCurrentMessageAsRead()
 {
   gDBView.doCommand(nsMsgViewCommandType.markMessagesRead);
@@ -2082,13 +2125,10 @@ function OnMsgLoaded(aUrl)
     if (!folder || !msgURI)
       return;
 
-    if (/type=x-message-display/.test(msgURI))
-      SetUpJunkBar(null);
-    else
-    {
+    if (!(/type=x-message-display/.test(msgURI)))
       msgHdr = messenger.messageServiceFromURI(msgURI).messageURIToMsgHdr(msgURI);
-      SetUpJunkBar(msgHdr);
-    }
+        
+    SetUpJunkBar(msgHdr);
 
     // we just finished loading a message. set a timer to actually mark the message is read after n seconds
     // where n can be configured by the user.

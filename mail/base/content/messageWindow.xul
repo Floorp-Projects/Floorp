@@ -132,6 +132,7 @@
         ondragexit="nsDragAndDrop.dragExit(event, messagepaneObserver);">
 
     <hbox id="junkBar"/>
+    <hbox id="remoteContentBar"/>
 
     <hbox id="msgHeaderView"/>
 

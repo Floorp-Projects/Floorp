@@ -584,6 +584,10 @@
 <!ENTITY notJunkButton.label "This is Not Junk">
 <!ENTITY junkInfoButton.label "?">
 
+<!-- Remote Content Bar -->
+<!ENTITY remoteContenMessage.label "To protect your privacy, &brandShortName; has blocked remote images in this message." >
+<!ENTITY loadRemoteContentButton.label "Show Images">
+
 <!-- Search Bar -->
 <!ENTITY quickSearchCmd.key "k">
 

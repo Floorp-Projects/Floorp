@@ -414,6 +414,10 @@ var messageHeaderSink = {
     { 
       OnMsgLoaded(url);
     },
+    
+    onMsgHasRemoteContent: function(aMsgHdr)
+    {
+    },
 
     mSecurityInfo  : null,
     getSecurityInfo: function()

@@ -47,8 +47,23 @@
 #include "nsString.h"
 #include "nsIContentPolicy.h"
 
+#include "nsIMsgMailNewsUrl.h"
+#include "nsIMsgWindow.h"
+#include "nsIMimeMiscStatus.h"
+#include "nsIMsgMessageService.h"
+#include "nsIMsgHdr.h"
+#include "nsMsgUtils.h"
+
 static const char kBlockRemoteImages[] = "mailnews.message_display.disable_remote_image";
 static const char kAllowPlugins[] = "mailnews.message_display.allow.plugins";
+
+// Per message headder flags to keep track of whether the user is allowing remote
+// content for a particular message. 
+// if you change or add more values to these constants, be sure to modify
+// the corresponding definitions in mailWindowOverlay.js
+#define kNoRemoteContentPolicy 0
+#define kBlockRemoteContent 1
+#define kAllowRemoteContent 2
 
 NS_IMPL_ADDREF(nsMsgContentPolicy)
 NS_IMPL_RELEASE(nsMsgContentPolicy)
@@ -149,6 +164,53 @@ nsMsgContentPolicy::ShouldLoad(PRUint32          aContentType,
         // check the 'disable remote images pref' and block the image if appropriate
         *aDecision = mBlockRemoteImages ? nsIContentPolicy::REJECT_REQUEST  :
                                           nsIContentPolicy::ACCEPT;
+
+        // get the msg hdr for the message URI we are actually loading
+        NS_ENSURE_TRUE(aRequestingLocation, NS_OK);
+        nsCOMPtr<nsIMsgMessageUrl> msgUrl = do_QueryInterface(aRequestingLocation, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsXPIDLCString resourceURI;
+        msgUrl->GetUri(getter_Copies(resourceURI));
+        
+        // now get the msg service for this URI
+        nsCOMPtr<nsIMsgMessageService> msgService;
+
+        rv = GetMessageServiceFromURI(resourceURI.get(), getter_AddRefs(msgService));
+        NS_ENSURE_SUCCESS(rv, rv);
+        
+        nsCOMPtr<nsIMsgDBHdr> msgHdr;
+        msgService->MessageURIToMsgHdr(resourceURI, getter_AddRefs(msgHdr));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        // first, get the hasRemoteContent property
+        PRUint32 remoteContentPolicy = kNoRemoteContentPolicy;
+        msgHdr->GetUint32Property("remoteContentPolicy", &remoteContentPolicy); 
+
+        if (!remoteContentPolicy) // kNoRemoteContentPolicy means we have never set a value on the message
+           msgHdr->SetUint32Property("remoteContentPolicy", kBlockRemoteContent); // this message contains blocked remote content
+
+        if (remoteContentPolicy != kAllowRemoteContent && mBlockRemoteImages) 
+        {
+          // now we need to call out the msg sink informing it that this message has remote content
+          nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(aRequestingLocation, &rv);
+          NS_ENSURE_SUCCESS(rv, rv);
+        
+          nsCOMPtr<nsIMsgWindow> msgWindow;
+          rv = mailnewsUrl->GetMsgWindow(getter_AddRefs(msgWindow));
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          nsCOMPtr<nsIMsgHeaderSink> msgHdrSink;
+          rv = msgWindow->GetMsgHeaderSink(getter_AddRefs(msgHdrSink));
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          msgHdrSink->OnMsgHasRemoteContent(msgHdr); // notify the UI to show the remote content hdr bar so the user can overide
+        }
+        else if (remoteContentPolicy == kAllowRemoteContent)
+        {
+          // user wants to see the remote content for this mesage
+          *aDecision = nsIContentPolicy::ACCEPT;
+        }
       }
     }
   }

@@ -459,6 +459,7 @@ function loadStartPage() {
     try {
         // collapse the junk bar
         SetUpJunkBar(null);
+        SetUpRemoteContentBar(null);
 
         var startpageenabled = pref.getBoolPref("mailnews.start_page.enabled");
 

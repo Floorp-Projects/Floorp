@@ -306,6 +306,7 @@ var messageHeaderSink = {
       gBuildAttachmentPopupForCurrentMsg = true;
       ClearAttachmentList();
       ClearEditMessageButton();
+      SetUpRemoteContentBar(null);
 
       for (index in gMessageListeners)
         gMessageListeners[index].onStartHeaders();
@@ -435,6 +436,11 @@ var messageHeaderSink = {
     onEndMsgHeaders: function(url)
     { 
       OnMsgLoaded(url);
+    },
+    onMsgHasRemoteContent: function(aMsgHdr)
+    {
+      dump('entering on msg has remote content\n\n');
+      SetUpRemoteContentBar(aMsgHdr);
     },
 
     mSecurityInfo  : null,
@@ -892,7 +898,13 @@ function AddExtraAddressProcessing(emailAddress, addressNode)
   var displayName = addressNode.getTextAttribute("displayName");  
   var emailAddress = addressNode.getTextAttribute("emailAddress");
 
-  if (gShowCondensedEmailAddresses && displayName && useDisplayNameForAddress(emailAddress))
+  // always show the address for the from and reply-to fields
+  var parentElementId = addressNode.parentNode.id;
+  var condenseName = true;
+  if (parentElementId == "expandedfromBox" || parentElementId == "expandedreply-toBox")
+    condenseName = false;
+
+  if (condenseName && gShowCondensedEmailAddresses && displayName && useDisplayNameForAddress(emailAddress))
   {
     addressNode.setAttribute('label', displayName); 
     addressNode.setAttribute("tooltiptext", emailAddress);

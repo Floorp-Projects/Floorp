@@ -1837,6 +1837,13 @@
   <button label="&notJunkButton.label;" oncommand="JunkSelectedMessages(false)"/>
 </hbox>
 
+<hbox id="remoteContentBar" collapsed="true" align="center">
+  <image id="remoteContentImage"/>
+  <label id="remoteContentMessage" value="&remoteContenMessage.label;"/>
+  <spacer flex="1"/>
+  <button label="&loadRemoteContentButton.label;" oncommand="LoadMsgWithRemoteContent()"/>
+</hbox>
+
 <statusbar class="chromeclass-status" id="status-bar">
   <hbox insertbefore="unreadMessageCount" flex="1">
     <statusbarpanel id="statusText" label="&statusText.label;" flex="1"/>

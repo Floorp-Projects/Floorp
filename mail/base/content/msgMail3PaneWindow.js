@@ -1205,6 +1205,7 @@ function ClearMessagePane()
 
     // hide the junk bar
     SetUpJunkBar(null);
+    SetUpRemoteContentBar(null);
   }
 }
 

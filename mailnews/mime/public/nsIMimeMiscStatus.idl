@@ -44,6 +44,7 @@ interface nsIStreamListener;
 interface nsIChannel;
 interface nsIMsgMailNewsUrl;
 interface nsIUTF8StringEnumerator;
+interface nsIMsgDBHdr;
 
 [scriptable, uuid(4644FB25-5255-11d3-82B8-444553540002)] 
 interface nsIMimeMiscStatus : nsISupports{
@@ -79,4 +80,6 @@ interface nsIMsgHeaderSink : nsISupports {
     void onEndMsgDownload(in nsImsgMailNewsUrl url);
 
 	attribute nsISupports securityInfo;
+
+    void onMsgHasRemoteContent(in nsIMsgDBHdr aMsgHdr);
 };

@@ -365,6 +365,7 @@
 
         <vbox id="messagepanebox" flex="1" minheight="100" height="200" minwidth="100" width="200" persist="collapsed height width">
           <hbox id="junkBar"/>
+          <hbox id="remoteContentBar"/>
           <hbox id="msgHeaderView"/>
           <browser id="messagepane" context="messagePaneContext" autofind="false"
                    minheight="1" flex="1" name="messagepane"
