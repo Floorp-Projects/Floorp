@@ -35,7 +35,7 @@ class nsIDOMEvent;
 
 //----------------------------------------------------------------------
 
-class nsXULCommand : public nsIXULCommand //public nsIMenuListener
+class nsXULCommand : public nsIXULCommand
 
 {
 public:
@@ -58,6 +58,7 @@ public:
 
   // nsIMenuListener 
   virtual nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent);
+  virtual nsEventStatus MenuDeselected(const nsMenuEvent & aMenuEvent) ;
 
 protected:
   NS_IMETHOD ExecuteJavaScriptString(nsIWebShell* aWebShell, nsString& aJavaScript);
