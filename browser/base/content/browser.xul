@@ -92,99 +92,105 @@ Contributor(s):
   <commandset commandupdater="true"
               events="clipboard"
               oncommandupdate="goUpdatePasteMenuItems()"/>
-  <command id="cmd_newNavigator"
-           oncommand="OpenBrowserWindow()"/>
-  <command id="cmd_bm_open"                      oncommand="goDoCommand('cmd_bm_open');"/>
-  <command id="cmd_bm_openinnewwindow"           oncommand="goDoCommand('cmd_bm_openinnewwindow');"/>
-  <command id="cmd_bm_openinnewtab"              oncommand="goDoCommand('cmd_bm_openinnewtab');"/>
-  <command id="cmd_bm_expandfolder"              oncommand="goDoCommand('cmd_bm_expandfolder');"/>
-  <command id="cmd_bm_openfolder"                oncommand="goDoCommand('cmd_bm_openfolder');"/>
-  <command id="cmd_bm_managefolder"              oncommand="goDoCommand('cmd_bm_managefolder');"/>
-  <command id="cmd_bm_newfolder"                 oncommand="goDoCommand('cmd_bm_newfolder');"/>
-  <command id="cmd_bm_newbookmark"               oncommand="goDoCommand('cmd_bm_newbookmark');"/>
-  <command id="cmd_bm_newseparator"              oncommand="goDoCommand('cmd_bm_newseparator');"/>
-  <command id="cmd_bm_find"                      oncommand="goDoCommand('cmd_bm_find');"/>
-  <command id="cmd_bm_properties"                oncommand="goDoCommand('cmd_bm_properties');"/>
-  <command id="cmd_bm_rename"                    oncommand="goDoCommand('cmd_bm_rename');"/>
-  <command id="cmd_bm_moveBookmark"              oncommand="goDoCommand('cmd_bm_moveBookmark');"/>
-  <command id="cmd_bm_cut"                       oncommand="goDoCommand('cmd_bm_cut');"/>
-  <command id="cmd_bm_copy"                      oncommand="goDoCommand('cmd_bm_copy');"/>
-  <command id="cmd_bm_paste"                     oncommand="goDoCommand('cmd_bm_paste');"/>
-  <command id="cmd_bm_delete"                    oncommand="goDoCommand('cmd_bm_delete');"/>
-
-  <command id="cmd_newNavigatorTab" oncommand="BrowserOpenTab();"/>
-  <command id="Browser:OpenFile"  oncommand="BrowserOpenFileWindow();"/>
-  <command id="Browser:SavePage" oncommand="saveDocument(window._content.document);"/>
-  <command id="Browser:Print" oncommand="BrowserPrint();"/>
-  <command id="cmd_quit"/>
-  <command id="cmd_close" oncommand="BrowserCloseTabOrWindow()"/>
-  <command id="cmd_closeWindow" oncommand="BrowserCloseWindow()"/>
-  <command id="cmd_CustomizeToolbars" oncommand="BrowserCustomizeToolbar()"/>
   
-  <command id="cmd_copyLink"
-           oncommand="goDoCommand('cmd_copyLink')"
-           disabled="false"/>
-  <command id="cmd_copyImageLocation"
-           oncommand="goDoCommand('cmd_copyImageLocation')"
-           disabled="false"/>
-  <command id="cmd_copyImageContents"
-           oncommand="goDoCommand('cmd_copyImageContents')"
-           disabled="false"/>
-  <command id="cmd_undo" 
-           oncommand="goDoCommand('cmd_undo')"
-           disabled="true"/>
-  <command id="cmd_redo" 
-           oncommand="goDoCommand('cmd_redo')"
-           disabled="true"/>
-  <command id="cmd_cut" 
-           oncommand="goDoCommand('cmd_cut')"
-           disabled="true"/>
-  <command id="cmd_copy" 
-           oncommand="goDoCommand('cmd_copy')"
-           disabled="true"/>
-  <command id="cmd_paste" 
-           oncommand="goDoCommand('cmd_paste')"
-           disabled="true"/>
-  <command id="cmd_delete"
-           oncommand="goDoCommand('cmd_delete')"
-           valueDefault="&deleteCmd.label;"
-           disabled="true"/>
-  <command id="cmd_selectAll" observes="isImage"
-           oncommand="goDoCommand('cmd_selectAll')"
-           disabled="true"/>
+  <commandset id="mainCommandSet">
+    <command id="cmd_newNavigator"
+             oncommand="OpenBrowserWindow()"/>
+    <command id="cmd_bm_open"                      oncommand="goDoCommand('cmd_bm_open');"/>
+    <command id="cmd_bm_openinnewwindow"           oncommand="goDoCommand('cmd_bm_openinnewwindow');"/>
+    <command id="cmd_bm_openinnewtab"              oncommand="goDoCommand('cmd_bm_openinnewtab');"/>
+    <command id="cmd_bm_expandfolder"              oncommand="goDoCommand('cmd_bm_expandfolder');"/>
+    <command id="cmd_bm_openfolder"                oncommand="goDoCommand('cmd_bm_openfolder');"/>
+    <command id="cmd_bm_managefolder"              oncommand="goDoCommand('cmd_bm_managefolder');"/>
+    <command id="cmd_bm_newfolder"                 oncommand="goDoCommand('cmd_bm_newfolder');"/>
+    <command id="cmd_bm_newbookmark"               oncommand="goDoCommand('cmd_bm_newbookmark');"/>
+    <command id="cmd_bm_newseparator"              oncommand="goDoCommand('cmd_bm_newseparator');"/>
+    <command id="cmd_bm_find"                      oncommand="goDoCommand('cmd_bm_find');"/>
+    <command id="cmd_bm_properties"                oncommand="goDoCommand('cmd_bm_properties');"/>
+    <command id="cmd_bm_rename"                    oncommand="goDoCommand('cmd_bm_rename');"/>
+    <command id="cmd_bm_moveBookmark"              oncommand="goDoCommand('cmd_bm_moveBookmark');"/>
+    <command id="cmd_bm_cut"                       oncommand="goDoCommand('cmd_bm_cut');"/>
+    <command id="cmd_bm_copy"                      oncommand="goDoCommand('cmd_bm_copy');"/>
+    <command id="cmd_bm_paste"                     oncommand="goDoCommand('cmd_bm_paste');"/>
+    <command id="cmd_bm_delete"                    oncommand="goDoCommand('cmd_bm_delete');"/>
 
-  <command id="View:PageSource" oncommand="BrowserViewSourceOfDocument(_content.document);"/>
-  <command id="View:PageInfo" oncommand="BrowserPageInfo();"/>
-  <command id="View:FullScreen" oncommand="BrowserFullScreen();"/>
+    <command id="cmd_newNavigatorTab" oncommand="BrowserOpenTab();"/>
+    <command id="Browser:OpenFile"  oncommand="BrowserOpenFileWindow();"/>
+    <command id="Browser:SavePage" oncommand="saveDocument(window._content.document);"/>
+    <command id="Browser:Print" oncommand="BrowserPrint();"/>
+    <command id="cmd_quit"/>
+    <command id="cmd_close" oncommand="BrowserCloseTabOrWindow()"/>
+    <command id="cmd_closeWindow" oncommand="BrowserCloseWindow()"/>
+    <command id="cmd_CustomizeToolbars" oncommand="BrowserCustomizeToolbar()"/>
   
-  <command id="Browser:Find" oncommand="BrowserFind();" observes="isImage"/>
-  <command id="Browser:FindAgain" oncommand="BrowserFindAgain();" observes="isImage"/>
+    <command id="cmd_copyLink"
+             oncommand="goDoCommand('cmd_copyLink')"
+             disabled="false"/>
+    <command id="cmd_copyImageLocation"
+             oncommand="goDoCommand('cmd_copyImageLocation')"
+             disabled="false"/>
+    <command id="cmd_copyImageContents"
+             oncommand="goDoCommand('cmd_copyImageContents')"
+             disabled="false"/>
+    <command id="cmd_undo" 
+             oncommand="goDoCommand('cmd_undo')"
+             disabled="true"/>
+    <command id="cmd_redo" 
+             oncommand="goDoCommand('cmd_redo')"
+             disabled="true"/>
+    <command id="cmd_cut" 
+             oncommand="goDoCommand('cmd_cut')"
+             disabled="true"/>
+    <command id="cmd_copy" 
+             oncommand="goDoCommand('cmd_copy')"
+             disabled="true"/>
+    <command id="cmd_paste" 
+             oncommand="goDoCommand('cmd_paste')"
+             disabled="true"/>
+    <command id="cmd_delete"
+             oncommand="goDoCommand('cmd_delete')"
+             valueDefault="&deleteCmd.label;"
+             disabled="true"/>
+    <command id="cmd_selectAll" observes="isImage"
+             oncommand="goDoCommand('cmd_selectAll')"
+             disabled="true"/>
+
+    <command id="View:PageSource" oncommand="BrowserViewSourceOfDocument(_content.document);"/>
+    <command id="View:PageInfo" oncommand="BrowserPageInfo();"/>
+    <command id="View:FullScreen" oncommand="BrowserFullScreen();"/>
   
-  <command id="Browser:AddBookmarkAs" oncommand="addBookmarkAs(document.getElementById('content'));"/>
+    <command id="Browser:Find" oncommand="BrowserFind();" observes="isImage"/>
+    <command id="Browser:FindAgain" oncommand="BrowserFindAgain();" observes="isImage"/>
   
-  <command id="Browser:Home"    oncommand="BrowserHome();"/>
-  <command id="Browser:Back"    oncommand="BrowserBack();" disabled="true"/>
-  <command id="Browser:Forward" oncommand="BrowserForward();" disabled="true"/>
-  <command id="Browser:Stop"    oncommand="BrowserStop();" disabled="true"/>
-  <command id="cmd_textZoomReduce"  oncommand="ZoomManager.prototype.getInstance().reduce();"/>
-  <command id="cmd_textZoomEnlarge" oncommand="ZoomManager.prototype.getInstance().enlarge();"/>
-  <command id="Browser:OpenLocation" oncommand="openLocation();"/>
-  <broadcaster id="viewDownloadsSidebar" autoCheck="false" label="&downloadsButton.label;"
-               type="checkbox" group="sidebar" sidebarurl="chrome://browser/content/downloads/downloadPanel.xul"
-               sidebartitle="&currentDownloads.label;"
-               oncommand="toggleSidebar('viewDownloadsSidebar');"/>
+    <command id="Browser:AddBookmarkAs" oncommand="addBookmarkAs(document.getElementById('content'));"/>
+  
+    <command id="Browser:Home"    oncommand="BrowserHome();"/>
+    <command id="Browser:Back"    oncommand="BrowserBack();" disabled="true"/>
+    <command id="Browser:Forward" oncommand="BrowserForward();" disabled="true"/>
+    <command id="Browser:Stop"    oncommand="BrowserStop();" disabled="true"/>
+    <command id="cmd_textZoomReduce"  oncommand="ZoomManager.prototype.getInstance().reduce();"/>
+    <command id="cmd_textZoomEnlarge" oncommand="ZoomManager.prototype.getInstance().enlarge();"/>
+    <command id="Browser:OpenLocation" oncommand="openLocation();"/>
+  </commandset>
 
-  <broadcaster id="viewBookmarksSidebar" autoCheck="false" label="&bookmarksButton.label;"
-               type="checkbox" group="sidebar" sidebarurl="chrome://browser/content/bookmarks/bookmarksPanel.xul"
-               oncommand="toggleSidebar('viewBookmarksSidebar');"/>
+  <broadcasterset id="mainBroadcasterSet">
+    <broadcaster id="viewDownloadsSidebar" autoCheck="false" label="&downloadsButton.label;"
+                 type="checkbox" group="sidebar" sidebarurl="chrome://browser/content/downloads/downloadPanel.xul"
+                 sidebartitle="&currentDownloads.label;"
+                 oncommand="toggleSidebar('viewDownloadsSidebar');"/>
 
-  <broadcaster id="viewHistorySidebar" autoCheck="false" label="&historyButton.label;"
-               type="checkbox" group="sidebar" sidebarurl="chrome://browser/content/history/history-panel.xul"
-               oncommand="toggleSidebar('viewHistorySidebar');"/>
+    <broadcaster id="viewBookmarksSidebar" autoCheck="false" label="&bookmarksButton.label;"
+                 type="checkbox" group="sidebar" sidebarurl="chrome://browser/content/bookmarks/bookmarksPanel.xul"
+                 oncommand="toggleSidebar('viewBookmarksSidebar');"/>
 
-  <broadcaster id="isImage"/>
+    <broadcaster id="viewHistorySidebar" autoCheck="false" label="&historyButton.label;"
+                 type="checkbox" group="sidebar" sidebarurl="chrome://browser/content/history/history-panel.xul"
+                 oncommand="toggleSidebar('viewHistorySidebar');"/>
 
-  <keyset>
+    <broadcaster id="isImage"/>
+  </broadcasterset>
+
+  <keyset id="mainKeyset">
     <key id="key_newNavigator"
          key="&newNavigatorCmd.key;"
          command="cmd_newNavigator"
@@ -238,196 +244,198 @@ Contributor(s):
     <keyset id="navigationKeys"/>  
   </keyset>
   
-  <popup id="backMenu" position="after_start" onpopupshowing="return BrowserBackMenu(event);" oncommand="gotoHistoryIndex(event);"/>
-  <popup id="forwardMenu" position="after_start" onpopupshowing="return BrowserForwardMenu(event);" oncommand="gotoHistoryIndex(event);"/>
-  <tooltip id="aHTMLTooltip" onpopupshowing="return FillInHTMLTooltip(document.tooltipNode);"/>
+  <popupset id="mainPopupSet">
+    <popup id="backMenu" position="after_start" onpopupshowing="return BrowserBackMenu(event);" oncommand="gotoHistoryIndex(event);"/>
+    <popup id="forwardMenu" position="after_start" onpopupshowing="return BrowserForwardMenu(event);" oncommand="gotoHistoryIndex(event);"/>
+    <tooltip id="aHTMLTooltip" onpopupshowing="return FillInHTMLTooltip(document.tooltipNode);"/>
 
-  <popup id="SearchBarPopup" position="after_start"
-         datasources="rdf:internetsearch" ref="NC:SearchEngineRoot" 
-         oncommand="return SearchBarPopupCommand(event);"
-         onpopupshowing="return SearchBarPopupShowing(event);">
-    <menuitem id="miSearchModeFind" type="checkbox"
-              label="&findOnSearchBarCmd.label;" accesskey="&findOnCmd.accesskey;"/>
-    <menuseparator/>
+    <popup id="SearchBarPopup" position="after_start"
+           datasources="rdf:internetsearch" ref="NC:SearchEngineRoot" 
+           oncommand="return SearchBarPopupCommand(event);"
+           onpopupshowing="return SearchBarPopupShowing(event);">
+      <menuitem id="miSearchModeFind" type="checkbox"
+                label="&findOnSearchBarCmd.label;" accesskey="&findOnCmd.accesskey;"/>
+      <menuseparator/>
 
-    <template>
-      <menuitem type="checkbox"
-                uri="..." value="..."
-                src="rdf:http://home.netscape.com/NC-rdf#Icon"
-                label="rdf:http://home.netscape.com/NC-rdf#Name"/>
-    </template>
-  </popup>
+      <template>
+        <menuitem type="checkbox"
+                  uri="..." value="..."
+                  src="rdf:http://home.netscape.com/NC-rdf#Icon"
+                  label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+      </template>
+    </popup>
 
-  <popup type="autocomplete" id="PopupAutoComplete"/>
+    <popup type="autocomplete" id="PopupAutoComplete"/>
 
-  <popup id="toolbar-context-menu">
-    <menuitem command="cmd_CustomizeToolbars"
-              label="&viewCustomizeToolbar.label;"
-              accesskey="&viewCustomizeToolbar.accesskey;"/>
-  </popup>
+    <popup id="toolbar-context-menu">
+      <menuitem command="cmd_CustomizeToolbars"
+                label="&viewCustomizeToolbar.label;"
+                accesskey="&viewCustomizeToolbar.accesskey;"/>
+    </popup>
 
-  <popup id="contentAreaContextMenu"
-         onpopupshowing="gContextMenu = new nsContextMenu( this ); return gContextMenu.shouldDisplay;"
-         onpopuphiding="gContextMenu = null;">
-    <menuitem id="context-openlink"
-              label="&openLinkCmd.label;"
-              accesskey="&openLinkCmd.accesskey;"
-              oncommand="gContextMenu.openLink();"/>
-    <menuitem id="context-openlinkintab"
-              label="&openLinkCmdInTab.label;"
-              accesskey="&openLinkCmdInTab.accesskey;"
-              oncommand="gContextMenu.openLinkInTab();"/>
-    <menuseparator id="context-sep-open"/>
-    <menuitem id="context-bookmarklink"
-              label="&bookmarkLinkCmd.label;"
-              accesskey="&bookmarkLinkCmd.accesskey;"
-              oncommand="BookmarksUtils.addBookmark(gContextMenu.linkURL(),
-                                                    gContextMenu.linkText(), 
-                                                    undefined, true);"/>
-    <menuitem id="context-savelink"
-              label="&saveLinkCmd.label;"
-              accesskey="&saveLinkCmd.accesskey;"
-              oncommand="gContextMenu.saveLink();"/>
-    <menuitem id="context-copyemail"
-              label="&copyEmailCmd.label;"
-              accesskey="&copyEmailCmd.accesskey;"
-              oncommand="gContextMenu.copyEmail();"/>
-    <menuitem id="context-copylink"
-              label="&copyLinkCmd.label;"
-              accesskey="&copyLinkCmd.accesskey;"
-              command="cmd_copyLink"/>
-    <menuseparator id="context-sep-copylink"/>
-    <menuitem id="context-viewimage"
-              label="&viewImageCmd.label;"
-              accesskey="&viewImageCmd.accesskey;"
-              oncommand="gContextMenu.viewImage();"/>
-    <menuitem id="context-copyimage"
-              label="&copyImageCmd.label;"
-              accesskey="&copyImageCmd.accesskey;"
-              command="cmd_copyImageLocation"/>
-    <menuseparator id="context-sep-copyimage"/>
-    <menuitem id="context-saveimage"
-              label="&saveImageCmd.label;"
-              accesskey="&saveImageCmd.accesskey;"
-              oncommand="gContextMenu.saveImage();"/>
-    <menuitem id="context-setWallpaper"
-              label="&setWallpaperCmd.label;"
-              accesskey="&setWallpaperCmd.accesskey;"
-              oncommand="gContextMenu.setWallpaper();"/>
-    <menuitem id="context-back"
-              label="&backCmd.label;"
-              accesskey="&backCmd.accesskey;"
-              command="Browser:Back"/>
-    <menuitem id="context-forward"
-              label="&forwardCmd.label;"
-              accesskey="&forwardCmd.accesskey;"
-              command="Browser:Forward"/>
-    <menuitem id="context-reload"
-              label="&reloadCmd.label;"
-              accesskey="&reloadCmd.accesskey;"
-              oncommand="BrowserReload();"/>
-    <menuitem id="context-stop"
-              label="&stopCmd.label;"
-              accesskey="&stopCmd.accesskey;"
-              command="Browser:Stop"/>
-    <menuseparator id="context-sep-stop"/>
-    <menuitem id="context-bookmarkpage"
-              label="&bookmarkPageCmd.label;"
-              accesskey="&bookmarkPageCmd.accesskey;"
-              oncommand="addBookmarkAs(document.getElementById('content'));"/>
-    <menuitem id="context-savepage"
-              label="&savePageCmd.label;"
-              accesskey="&savePageCmd.accesskey;"
-              oncommand="saveDocument(window._content.document);"/>
-    <menuseparator id="context-sep-viewbgimage"/>
-    <menuitem id="context-viewbgimage"
-              label="&viewBGImageCmd.label;"
-              accesskey="&viewBGImageCmd.accesskey;"
-              oncommand="gContextMenu.viewBGImage();"/>
-    <menuitem id="context-undo"
-              label="&undoCmd.label;"
-              accesskey="&undoCmd.accesskey;"
-              command="cmd_undo"/>
-    <menuseparator id="context-sep-undo"/>
-    <menuitem id="context-cut"
-              label="&cutCmd.label;"
-              accesskey="&cutCmd.accesskey;"
-              command="cmd_cut"/>
-    <menuitem id="context-copy"
-              label="&copyCmd.label;"
-              accesskey="&copyCmd.accesskey;"
-              command="cmd_copy"/>
-    <menuitem id="context-paste"
-              label="&pasteCmd.label;"
-              accesskey="&pasteCmd.accesskey;"
-              command="cmd_paste"/>
-    <menuitem id="context-delete"
-              label="&deleteCmd.label;"
-              accesskey="&deleteCmd.accesskey;"
-              command="cmd_delete"/>
-    <menuseparator id="context-sep-paste"/>
-    <menuitem id="context-selectall"
-              label="&selectAllCmd.label;"
-              accesskey="&selectAllCmd.accesskey;"
-              command="cmd_selectAll"/>      
-    <menuseparator id="context-sep-selectall"/>
-    <menuitem id="context-searchselect"
-              accesskey="&search.accesskey;"
-              oncommand="OpenSearch('internet', false, gContextMenu.searchSelected(), true);"/>
-    <menuseparator id="frame-sep"/>
-    <menu id="frame" label="&thisFrameMenu.label;" accesskey="&thisFrameMenu.accesskey;">
-      <menupopup>
-        <menuitem label="&showOnlyThisFrameCmd.label;"
-                  accesskey="&showOnlyThisFrameCmd.accesskey;"
-                  oncommand="gContextMenu.showOnlyThisFrame();"/>
-        <menuitem label="&openFrameCmd.label;"
-                  accesskey="&openFrameCmd.accesskey;"
-                  oncommand="gContextMenu.openFrame();"/>
-        <menuitem label="&openFrameCmdInTab.label;"
-                  accesskey="&openFrameCmdInTab.accesskey;"
-                  oncommand="gContextMenu.openFrameInTab();"/>
-        <menuseparator/>
-        <menuitem label="&reloadFrameCmd.label;"
-                  accesskey="&reloadFrameCmd.accesskey;"
-                  oncommand="gContextMenu.reloadFrame();"/>
-        <menuseparator/>
-        <menuitem label="&bookmarkFrameCmd.label;"
-                  accesskey="&bookmarkFrameCmd.accesskey;"
-                  oncommand="gContextMenu.addBookmarkForFrame();"/>
-        <menuitem label="&saveFrameCmd.label;"
-                  accesskey="&saveFrameCmd.accesskey;"
-                  oncommand="saveDocument(gContextMenu.target.ownerDocument);"/>
-        <menuseparator/>
-        <menuitem label="&viewFrameSourceCmd.label;"
-                  accesskey="&viewFrameSourceCmd.accesskey;"
-                  oncommand="gContextMenu.viewFrameSource();"/>
-        <menuitem label="&viewFrameInfoCmd.label;"
-                  accesskey="&viewFrameInfoCmd.accesskey;"
-                  oncommand="gContextMenu.viewFrameInfo();"/>        
-      </menupopup>
-    </menu>
-    <menuseparator id="context-sep-properties"/>
-    <menuitem id="context-viewpartialsource-selection"
-              label="&viewPartialSourceForSelectionCmd.label;"
-              accesskey="&viewPartialSourceCmd.accesskey;"
-              oncommand="gContextMenu.viewPartialSource('selection');"/>
-    <menuitem id="context-viewpartialsource-mathml"
-              label="&viewPartialSourceForMathMLCmd.label;"
-              accesskey="&viewPartialSourceCmd.accesskey;"
-              oncommand="gContextMenu.viewPartialSource('mathml');"/>
-    <menuitem id="context-viewsource"
-              label="&viewPageSourceCmd.label;"
-              accesskey="&viewPageSourceCmd.accesskey;"
-              oncommand="BrowserViewSourceOfDocument(_content.document);"/>
-    <menuitem id="context-viewinfo"
-              label="&viewPageInfoCmd.label;"
-              accesskey="&viewPageInfoCmd.accesskey;"
-              oncommand="gContextMenu.viewInfo();"/>
-    <menuitem id="context-metadata"
-              label="&metadataCmd.label;"
-              accesskey="&metadataCmd.accesskey;"
-              oncommand="gContextMenu.showMetadata();"/>
-  </popup>
+    <popup id="contentAreaContextMenu"
+           onpopupshowing="gContextMenu = new nsContextMenu( this ); return gContextMenu.shouldDisplay;"
+           onpopuphiding="gContextMenu = null;">
+      <menuitem id="context-openlink"
+                label="&openLinkCmd.label;"
+                accesskey="&openLinkCmd.accesskey;"
+                oncommand="gContextMenu.openLink();"/>
+      <menuitem id="context-openlinkintab"
+                label="&openLinkCmdInTab.label;"
+                accesskey="&openLinkCmdInTab.accesskey;"
+                oncommand="gContextMenu.openLinkInTab();"/>
+      <menuseparator id="context-sep-open"/>
+      <menuitem id="context-bookmarklink"
+                label="&bookmarkLinkCmd.label;"
+                accesskey="&bookmarkLinkCmd.accesskey;"
+                oncommand="BookmarksUtils.addBookmark(gContextMenu.linkURL(),
+                                                      gContextMenu.linkText(), 
+                                                      undefined, true);"/>
+      <menuitem id="context-savelink"
+                label="&saveLinkCmd.label;"
+                accesskey="&saveLinkCmd.accesskey;"
+                oncommand="gContextMenu.saveLink();"/>
+      <menuitem id="context-copyemail"
+                label="&copyEmailCmd.label;"
+                accesskey="&copyEmailCmd.accesskey;"
+                oncommand="gContextMenu.copyEmail();"/>
+      <menuitem id="context-copylink"
+                label="&copyLinkCmd.label;"
+                accesskey="&copyLinkCmd.accesskey;"
+                command="cmd_copyLink"/>
+      <menuseparator id="context-sep-copylink"/>
+      <menuitem id="context-viewimage"
+                label="&viewImageCmd.label;"
+                accesskey="&viewImageCmd.accesskey;"
+                oncommand="gContextMenu.viewImage();"/>
+      <menuitem id="context-copyimage"
+                label="&copyImageCmd.label;"
+                accesskey="&copyImageCmd.accesskey;"
+                command="cmd_copyImageLocation"/>
+      <menuseparator id="context-sep-copyimage"/>
+      <menuitem id="context-saveimage"
+                label="&saveImageCmd.label;"
+                accesskey="&saveImageCmd.accesskey;"
+                oncommand="gContextMenu.saveImage();"/>
+      <menuitem id="context-setWallpaper"
+                label="&setWallpaperCmd.label;"
+                accesskey="&setWallpaperCmd.accesskey;"
+                oncommand="gContextMenu.setWallpaper();"/>
+      <menuitem id="context-back"
+                label="&backCmd.label;"
+                accesskey="&backCmd.accesskey;"
+                command="Browser:Back"/>
+      <menuitem id="context-forward"
+                label="&forwardCmd.label;"
+                accesskey="&forwardCmd.accesskey;"
+                command="Browser:Forward"/>
+      <menuitem id="context-reload"
+                label="&reloadCmd.label;"
+                accesskey="&reloadCmd.accesskey;"
+                oncommand="BrowserReload();"/>
+      <menuitem id="context-stop"
+                label="&stopCmd.label;"
+                accesskey="&stopCmd.accesskey;"
+                command="Browser:Stop"/>
+      <menuseparator id="context-sep-stop"/>
+      <menuitem id="context-bookmarkpage"
+                label="&bookmarkPageCmd.label;"
+                accesskey="&bookmarkPageCmd.accesskey;"
+                oncommand="addBookmarkAs(document.getElementById('content'));"/>
+      <menuitem id="context-savepage"
+                label="&savePageCmd.label;"
+                accesskey="&savePageCmd.accesskey;"
+                oncommand="saveDocument(window._content.document);"/>
+      <menuseparator id="context-sep-viewbgimage"/>
+      <menuitem id="context-viewbgimage"
+                label="&viewBGImageCmd.label;"
+                accesskey="&viewBGImageCmd.accesskey;"
+                oncommand="gContextMenu.viewBGImage();"/>
+      <menuitem id="context-undo"
+                label="&undoCmd.label;"
+                accesskey="&undoCmd.accesskey;"
+                command="cmd_undo"/>
+      <menuseparator id="context-sep-undo"/>
+      <menuitem id="context-cut"
+                label="&cutCmd.label;"
+                accesskey="&cutCmd.accesskey;"
+                command="cmd_cut"/>
+      <menuitem id="context-copy"
+                label="&copyCmd.label;"
+                accesskey="&copyCmd.accesskey;"
+                command="cmd_copy"/>
+      <menuitem id="context-paste"
+                label="&pasteCmd.label;"
+                accesskey="&pasteCmd.accesskey;"
+                command="cmd_paste"/>
+      <menuitem id="context-delete"
+                label="&deleteCmd.label;"
+                accesskey="&deleteCmd.accesskey;"
+                command="cmd_delete"/>
+      <menuseparator id="context-sep-paste"/>
+      <menuitem id="context-selectall"
+                label="&selectAllCmd.label;"
+                accesskey="&selectAllCmd.accesskey;"
+                command="cmd_selectAll"/>      
+      <menuseparator id="context-sep-selectall"/>
+      <menuitem id="context-searchselect"
+                accesskey="&search.accesskey;"
+                oncommand="OpenSearch('internet', false, gContextMenu.searchSelected(), true);"/>
+      <menuseparator id="frame-sep"/>
+      <menu id="frame" label="&thisFrameMenu.label;" accesskey="&thisFrameMenu.accesskey;">
+        <menupopup>
+          <menuitem label="&showOnlyThisFrameCmd.label;"
+                    accesskey="&showOnlyThisFrameCmd.accesskey;"
+                    oncommand="gContextMenu.showOnlyThisFrame();"/>
+          <menuitem label="&openFrameCmd.label;"
+                    accesskey="&openFrameCmd.accesskey;"
+                    oncommand="gContextMenu.openFrame();"/>
+          <menuitem label="&openFrameCmdInTab.label;"
+                    accesskey="&openFrameCmdInTab.accesskey;"
+                    oncommand="gContextMenu.openFrameInTab();"/>
+          <menuseparator/>
+          <menuitem label="&reloadFrameCmd.label;"
+                    accesskey="&reloadFrameCmd.accesskey;"
+                    oncommand="gContextMenu.reloadFrame();"/>
+          <menuseparator/>
+          <menuitem label="&bookmarkFrameCmd.label;"
+                    accesskey="&bookmarkFrameCmd.accesskey;"
+                    oncommand="gContextMenu.addBookmarkForFrame();"/>
+          <menuitem label="&saveFrameCmd.label;"
+                    accesskey="&saveFrameCmd.accesskey;"
+                    oncommand="saveDocument(gContextMenu.target.ownerDocument);"/>
+          <menuseparator/>
+          <menuitem label="&viewFrameSourceCmd.label;"
+                    accesskey="&viewFrameSourceCmd.accesskey;"
+                    oncommand="gContextMenu.viewFrameSource();"/>
+          <menuitem label="&viewFrameInfoCmd.label;"
+                    accesskey="&viewFrameInfoCmd.accesskey;"
+                    oncommand="gContextMenu.viewFrameInfo();"/>        
+        </menupopup>
+      </menu>
+      <menuseparator id="context-sep-properties"/>
+      <menuitem id="context-viewpartialsource-selection"
+                label="&viewPartialSourceForSelectionCmd.label;"
+                accesskey="&viewPartialSourceCmd.accesskey;"
+                oncommand="gContextMenu.viewPartialSource('selection');"/>
+      <menuitem id="context-viewpartialsource-mathml"
+                label="&viewPartialSourceForMathMLCmd.label;"
+                accesskey="&viewPartialSourceCmd.accesskey;"
+                oncommand="gContextMenu.viewPartialSource('mathml');"/>
+      <menuitem id="context-viewsource"
+                label="&viewPageSourceCmd.label;"
+                accesskey="&viewPageSourceCmd.accesskey;"
+                oncommand="BrowserViewSourceOfDocument(_content.document);"/>
+      <menuitem id="context-viewinfo"
+                label="&viewPageInfoCmd.label;"
+                accesskey="&viewPageInfoCmd.accesskey;"
+                oncommand="gContextMenu.viewInfo();"/>
+      <menuitem id="context-metadata"
+                label="&metadataCmd.label;"
+                accesskey="&metadataCmd.accesskey;"
+                oncommand="gContextMenu.showMetadata();"/>
+    </popup>
+  </popupset>
 
   <!-- Total hack. Used by the Go menu to build up items. -->
   <tree id="hiddenHistoryTree" hidden="true" collapsed="true" datasources="rdf:null"
@@ -481,7 +489,7 @@ Contributor(s):
     
         <menu label="&editMenu.label;"
               accesskey="&editMenu.accesskey;">
-          <menupopup>
+          <menupopup id="menu_EditPopup">
             <menuitem label="&undoCmd.label;"
                       key="key_undo"
                       accesskey="&undoCmd.accesskey;"
@@ -519,7 +527,7 @@ Contributor(s):
         </menu>
     
         <menu label="&viewMenu.label;" accesskey="&viewMenu.accesskey;">
-          <menupopup>
+          <menupopup id="menu_viewPopup">
             <menu label="&viewToolbarsMenu.label;" accesskey="&viewToolbarsMenu.accesskey;"
                   onpopupshowing="onViewToolbarsPopupShowing(event);">
               <menupopup onpopupshowing="updateToolbarStates(this);"> 
@@ -724,12 +732,12 @@ Contributor(s):
         </menu>
           
       <menu label="&tasksMenu.label;" accesskey="&tasksMenu.accesskey;">
-        <menupopup>
-          <menuitem label="&javaScriptConsoleCmd.label;" accesskey="&javaScriptConsoleCmd.accesskey;" oncommand="toJavaScriptConsole();"/>
-          <menuseparator/>
+        <menupopup id="menu_ToolsPopup">
+          <menuitem id="javascriptConsole" label="&javaScriptConsoleCmd.label;" accesskey="&javaScriptConsoleCmd.accesskey;" oncommand="toJavaScriptConsole();"/>
+          <menuseparator id="firstSep"/>
           <menuitem accesskey="&pageInfoCmd.accesskey;"   label="&pageInfoCmd.label;"   key="key_viewInfo"   command="View:PageInfo"/>          
           <menuitem accesskey="&pageSourceCmd.accesskey;" label="&pageSourceCmd.label;" key="key_viewSource" command="View:PageSource"/>
-          <menuseparator/>
+          <menuseparator id="secondSep"/>
           <menuitem label="&preferencesCmd.label;"
                     accesskey="&preferencesCmd.accesskey;"
                     oncommand="goPreferences('navigator', 'chrome://browser/content/pref/pref-navigator.xul', 'navigator')"/>
@@ -738,7 +746,7 @@ Contributor(s):
       
       <menu label="&helpMenu.label;"
             accesskey="&helpMenu.accesskey;">
-        <menupopup>
+        <menupopup id="menu_HelpPopup">
           <menuitem accesskey="&releaseCmd.accesskey;"
                     label="&releaseCmd.label;"
                     oncommand="openTopWin('&releaseURL;');"/>
@@ -908,7 +916,7 @@ Contributor(s):
     
   </toolbox>
   
-  <hbox flex="1">
+  <hbox flex="1" id="contentEnclosure">
     <vbox id="sidebar-box" hidden="true">
       <sidebarheader align="center">
         <label id="sidebar-title"/>
