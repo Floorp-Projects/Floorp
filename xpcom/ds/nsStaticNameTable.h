@@ -70,7 +70,6 @@ public:
 private:
   nsDependentCString*   mNameArray;
   PLDHashTable mNameTable;
-  PRInt32      mCount;
   nsDependentCString    mNullStr;
 };
 
