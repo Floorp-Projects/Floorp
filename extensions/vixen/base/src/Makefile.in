@@ -39,3 +39,6 @@ override NO_STATIC_LIB=
 
 include $(topsrcdir)/config/rules.mk
 
+install::
+	$(INSTALL) vxVixenService.js $(DIST)/bin/components
+
