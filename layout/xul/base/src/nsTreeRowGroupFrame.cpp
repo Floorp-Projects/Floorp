@@ -91,12 +91,14 @@ nsTreeRowGroupFrame::~nsTreeRowGroupFrame()
 {
   nsCOMPtr<nsIContent> content;
   GetContent(getter_AddRefs(content));
-  nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(content));
+  nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(content));
 
   // NOTE: the last Remove will delete the drag capturer
-  reciever->RemoveEventListener("dragover", mDragCapturer, PR_TRUE);
-  reciever->RemoveEventListener("dragexit", mDragCapturer, PR_TRUE);
-
+  if ( receiver ) {
+    receiver->RemoveEventListener("dragover", mDragCapturer, PR_TRUE);
+    receiver->RemoveEventListener("dragexit", mDragCapturer, PR_TRUE);
+  }
+  
   NS_IF_RELEASE(mContentChain);
 }
 
@@ -153,19 +155,20 @@ nsTreeRowGroupFrame::Init ( nsIPresContext*  aPresContext, nsIContent* aContent,
                              nsIFrame* aParent, nsIStyleContext* aContext, nsIFrame* aPrevInFlow)
 {
   nsresult rv = nsTableRowGroupFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  if ( NS_SUCCEEDED(rv) ) {
+    nsCOMPtr<nsIContent> content;
+    GetContent(getter_AddRefs(content));
+    nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(content));
 
-  nsCOMPtr<nsIContent> content;
-  GetContent(getter_AddRefs(content));
-  nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(content));
-
-  // register our drag over and exit capturers. These annotate the content object
-  // with enough info to determine where the drop would happen so that JS down the 
-  // line can do the right thing.
-  mDragCapturer = new nsTreeItemDragCapturer(this, aPresContext);
-  receiver->AddEventListener("dragover", mDragCapturer, PR_TRUE);
-  receiver->AddEventListener("dragexit", mDragCapturer, PR_TRUE);
-
-  return NS_OK;
+    // register our drag over and exit capturers. These annotate the content object
+    // with enough info to determine where the drop would happen so that JS down the 
+    // line can do the right thing.
+    mDragCapturer = new nsTreeItemDragCapturer(this, aPresContext);
+    receiver->AddEventListener("dragover", mDragCapturer, PR_TRUE);
+    receiver->AddEventListener("dragexit", mDragCapturer, PR_TRUE);
+  }
+  
+  return rv;
 
 } // Init
 
