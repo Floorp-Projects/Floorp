@@ -58,13 +58,11 @@ void NET_ClientProtocolInitialize()
 {
     NET_InitFileProtocol();
     NET_InitHTTPProtocol();
-#if 0
     NET_InitMemCacProtocol();
     NET_InitFTPProtocol();
     NET_InitAboutProtocol();
     NET_InitGopherProtocol();
     NET_InitRemoteProtocol();
-#endif
 }
 
 
