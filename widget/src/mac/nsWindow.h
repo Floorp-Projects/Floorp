@@ -193,7 +193,8 @@ protected:
 
 	virtual PRBool			OnPaint(nsPaintEvent & aEvent);
 
-	// our own impl of ::ScrollRect() that uses CopyBits so that it looks good
+	// our own impl of ::ScrollRect() that uses CopyBits so that it looks good. On 
+	// Carbon, this just calls ::ScrollWindowRect()
 	void					ScrollBits ( Rect & foo, PRInt32 inLeftDelta, PRInt32 inTopDelta ) ;
 
   void          CombineRects ( TRectArray & inRectArray ) ;

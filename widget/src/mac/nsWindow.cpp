@@ -1675,6 +1675,7 @@ void nsWindow::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
 }
 
 
+
 //
 // ScrollBits
 //
@@ -1687,12 +1688,16 @@ void nsWindow::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
 // This will also work with system floating windows over the area that is
 // scrolling.
 //
-// ¥¥¥¥ This routine really needs to be Carbonized!!!! It is nowhere close,
-// ¥¥¥¥ even though there are a couple of carbon ifdefs here already.
+// Under Carbon, this whole routine is basically moot as Apple has answered
+// our prayers with ::ScrollWindowRect().
 //
 void
 nsWindow :: ScrollBits ( Rect & inRectToScroll, PRInt32 inLeftDelta, PRInt32 inTopDelta )
-{
+{                        
+#if TARGET_CARBON
+  ::ScrollWindowRect ( mWindowPtr, &inRectToScroll, inLeftDelta, inTopDelta, 
+                        kScrollWindowInvalidate, NULL );
+#else
 	// Get Frame in local coords from clip rect (there might be a border around view)
 	StRegionFromPool clipRgn;
 	if ( !clipRgn ) return;
@@ -1723,22 +1728,6 @@ nsWindow :: ScrollBits ( Rect & inRectToScroll, PRInt32 inLeftDelta, PRInt32 inT
 	::RectRgn(updateRgn, &frame);
 	::DiffRgn (updateRgn, destRgn, updateRgn);
 
-#if TARGET_CARBON
-  RgnHandle visRgn = ::NewRgn();
-  ::GetPortVisibleRegion(::GetWindowPort(mWindowPtr), visRgn);
-  if (::EmptyRgn(visRgn))
-  {
-    PixMapHandle portPixH = ::GetPortPixMap(::GetWindowPort(mWindowPtr));
-    ::HLock((Handle) portPixH);
-    ::CopyBits ( *((BitMapHandle) portPixH),
-                 *((BitMapHandle) portPixH),
-                 &source, 
-                 &dest, 
-                 srcCopy, 
-                 nil);
-    ::HUnlock((Handle) portPixH);
-  }
-#else
 	if(::EmptyRgn(mWindowPtr->visRgn))		
 	{
 		::CopyBits ( 
@@ -1749,18 +1738,13 @@ nsWindow :: ScrollBits ( Rect & inRectToScroll, PRInt32 inLeftDelta, PRInt32 inT
 			srcCopy, 
 			nil);
 	}
-#endif
 	else
 	{
 		// compute the non-visible region
 		StRegionFromPool nonVisibleRgn;
 		if ( !nonVisibleRgn ) return;
 
-#if TARGET_CARBON
-    ::DiffRgn ( totalVisRgn, visRgn, nonVisibleRgn );
-#else
     ::DiffRgn ( totalVisRgn, mWindowPtr->visRgn, nonVisibleRgn );
-#endif
 		
 		// compute the extra area that may need to be updated
 		// scoll the non-visible region to determine what needs updating
@@ -1777,17 +1761,6 @@ nsWindow :: ScrollBits ( Rect & inRectToScroll, PRInt32 inLeftDelta, PRInt32 inT
 		::RGBForeColor(&black);
 		::RGBBackColor(&white);
 		::PenNormal();	
-#if TARGET_CARBON
-    PixMapHandle portPixH = ::GetPortPixMap(::GetWindowPort(mWindowPtr));
-    ::HLock((Handle) portPixH);
-    ::CopyBits ( *((BitMapHandle) portPixH),
-                 *((BitMapHandle) portPixH),
-                 &source, 
-                 &dest, 
-                 srcCopy, 
-                 copyMaskRgn);
-    ::HUnlock((Handle) portPixH);
-#else
 		::CopyBits ( 
 			&mWindowPtr->portBits, 
 			&mWindowPtr->portBits, 
@@ -1795,18 +1768,13 @@ nsWindow :: ScrollBits ( Rect & inRectToScroll, PRInt32 inLeftDelta, PRInt32 inT
 			&dest, 
 			srcCopy, 
 			copyMaskRgn);
-#endif
 
 		// union the update regions together and invalidate them
 		::UnionRgn(nonVisibleRgn, updateRgn, updateRgn);
 	}
 	
-#if TARGET_CARBON
-  ::DisposeRgn(visRgn);
-#endif
   // If the region to be scrolled contains regions which are currently dirty,
   // we must scroll those too, and union them with the updateRgn.
-#if !TARGET_CARBON
   // get a copy of the dirty region
   StRegionFromPool  winUpdateRgn;
   if (!winUpdateRgn) return;
@@ -1831,11 +1799,9 @@ nsWindow :: ScrollBits ( Rect & inRectToScroll, PRInt32 inLeftDelta, PRInt32 inT
   // and add it to the dirty region
   ::UnionRgn(updateRgn, winUpdateRgn, updateRgn);
   
-#endif
-
-//printf("*******scrolling invalidating %ld %ld %ld %ld\n", (**updateRgn).rgnBBox.top, (**updateRgn).rgnBBox.left, (**updateRgn).rgnBBox.bottom,
-//        (**updateRgn).rgnBBox.right);
 	::InvalWindowRgn(mWindowPtr, updateRgn);
+	
+#endif // !TARGET_CARBON
 }
 
 
@@ -1874,7 +1840,6 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 
 	StartDraw();
 
-#if 1
 		// Clip to the windowRegion instead of the visRegion (note: the visRegion
 		// is equal to the windowRegion minus the children). The result is that
 		// ScrollRect() scrolls the visible bits of this widget as well as its children.
@@ -1882,11 +1847,7 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 
 		// Scroll the bits now. We've rolled our own because ::ScrollRect looks ugly
 		ScrollBits(macRect,aDx,aDy);
-#else
-		StRegionFromPool updateRgn;
-		::ScrollRect(&macRect, aDx, aDy, updateRgn);
-		::InvalRgn(updateRgn);
-#endif
+
 	EndDraw();
 
 scrollChildren:
