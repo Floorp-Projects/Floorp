@@ -35,7 +35,7 @@ ifdef MOZ_NEO
 DIRS	+= libneo
 endif
 
-DIRS	+= libnet libparse plugin xlate xp
+DIRS	+= libparse plugin xlate xp
 
 ifdef MOZ_MAIL_NEWS
 DIRS	+= libaddr libmime
