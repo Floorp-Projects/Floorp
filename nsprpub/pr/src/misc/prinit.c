@@ -158,7 +158,7 @@ void _PR_ImplicitInitialization()
 	_PR_InitStuff();
 
     /* Enable interrupts */
-#ifndef _PR_GLOBAL_THREADS_ONLY
+#if !defined(_PR_PTHREADS) && !defined(_PR_GLOBAL_THREADS_ONLY)
     _PR_MD_START_INTERRUPTS();
 #endif
 
