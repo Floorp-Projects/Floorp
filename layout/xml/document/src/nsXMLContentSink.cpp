@@ -751,7 +751,7 @@ nsresult nsXMLContentSink::CreateSourceText(const nsParserError* aError, nsStrin
 
   sourceText.Append(aError->sourceLine);
   sourceText.Append("\n");
-  for (int i = 0; i < errorPosition - 1; i++)
+  for (int i = 0; i < errorPosition; i++)
     sourceText.Append("-");
   sourceText.Append("^");
 
