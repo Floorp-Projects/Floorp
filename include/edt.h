@@ -406,9 +406,17 @@ ED_ElementType EDT_GetCurrentElementType( MWContext *pContext );
 */
 ED_TextFormat EDT_GetCharacterFormatting( MWContext *pContext );
 void EDT_FormatCharacter( MWContext *pContext, ED_TextFormat p);
-/* These use the older "relative" scale of 1 to 7 */
+
+/* Next 4 use the older "relative" scale of 1 to 7 */
+
+/* Decrease or increase by 1 unit
+ * Goes through selection to keep relative size differences
+*/
+void EDT_DecreaseFontSize( MWContext *pContext );
+void EDT_IncreaseFontSize( MWContext *pContext );
 int EDT_GetFontSize( MWContext *pContext );
-void EDT_SetFontSize( MWContext *pContext, int );
+void EDT_SetFontSize( MWContext *pContext, int iSize );
+
 
 /* These use the new absolute point size*/
 void EDT_SetFontPointSize( MWContext *pContext, int iPoints );
@@ -471,6 +479,18 @@ char * EDT_TranslateToXPFontFace( char * pFontFace );
 
 XP_Bool EDT_GetFontColor( MWContext *pContext, LO_Color *pDestColor );
 void EDT_SetFontColor( MWContext *pContext, LO_Color *pColor);
+
+/* Get the current Cell, Table, or Page background based on caret location 
+ * Returns the element type of the background we obtained, one of:
+ *     ED_ELEMENT_NONE if error,
+ *     ED_ELEMENT_TEXT (for page background)
+ *     ED_ELEMENT_TABLE or ED_ELEMENT_CELL for table and cell
+*/
+ED_ElementType EDT_GetBackgroundColor( MWContext *pContext, LO_Color *pColor );
+
+/* Set the selected cell or table's background, or current cell (contains caret)
+   or the page background (caret is not in a table) */
+void EDT_SetBackgroundColor( MWContext *pContext, LO_Color *pColor );
 
 /* Parse a font colors string in the format: "r,g,b,ColorName" where colors for r,g,b
  *  are decimal strings in range 0-255
@@ -563,6 +583,11 @@ XP_Bool EDT_SelectionContainsLink( MWContext *pContext );
 ** Use result to paste into Excell spreadsheets
 */
 char *EDT_GetTabDelimitedTextFromSelectedCells( MWContext *pContext );
+
+/* Test if there's a selection, and the beginning and end are not
+ *  split across a cell boundary
+*/
+XP_Bool EDT_CanConvertTextToTable(MWContext *pMWContext);
 
 /* Convert Selected text into a table (put each paragraph in separate cell)
  * Number of rows is automatic - creates as many as needed

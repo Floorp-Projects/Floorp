@@ -939,6 +939,9 @@ PUBLIC void FE_DisplayGenericCaret(MWContext * context, LO_Any * pLoAny,
 #ifdef XP_WIN
 /* Ask front end to show where a dragged set of table cells may be dropped */
 PUBLIC void FE_DisplayDropTableFeedback(MWContext * context, EDT_DragTableData *pDragData);
+
+/* Convert an HTML SIZE param value (1-7) into POINT-SIZE value */
+PUBLIC int16 FE_CalcFontPointSize(MWContext * pMWContext, intn iSize, XP_Bool bFixedWidth);
 #endif
 
 PUBLIC Bool FE_GetCaretPosition(MWContext *context, LO_Position* where,
