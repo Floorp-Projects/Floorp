@@ -581,6 +581,11 @@ nsMsgAccountManager::upgradePrefs()
         PR_Free(oldstr);
     }
     
+    rv = m_prefs->GetIntPref("mail.wrap_column", &oldint);
+    if (NS_SUCCEEDED(rv)) {
+        identity->SetWrapColumn(oldint);
+    }
+    
     // generic server stuff
 
     // pop stuff

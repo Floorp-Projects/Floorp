@@ -37,5 +37,5 @@ interface nsIMsgIdentity : nsISupports {
   attribute nsIMsgVCard vCard;
   attribute string smtpHostname;
   attribute string smtpUsername;
-
+  attribute long wrapColumn;
 };

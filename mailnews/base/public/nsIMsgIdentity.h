@@ -78,6 +78,10 @@ class nsIMsgIdentity : public nsISupports {
   NS_IMETHOD GetSmtpUsername(char * *aSmtpUsername) = 0;
   NS_IMETHOD SetSmtpUsername(char * aSmtpUsername) = 0;
 
+  /* attribute long wrapColumn; */
+  NS_IMETHOD GetWrapColumn(PRInt32 *aWrapColumn) = 0;
+  NS_IMETHOD SetWrapColumn(PRInt32 aWrapColumn) = 0;
+
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
   static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIMsgIdentity *priv);
