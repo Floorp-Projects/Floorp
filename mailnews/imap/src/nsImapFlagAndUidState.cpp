@@ -21,6 +21,7 @@
 #include "nsImapCore.h"
 #include "nsImapFlagAndUidState.h"
 #include "prcmon.h"
+#include "nspr.h"
 
 NS_IMETHODIMP nsImapFlagAndUidState::GetNumberOfMessages(PRInt32 *result)
 {
@@ -163,7 +164,7 @@ void nsImapFlagAndUidState::AddUidFlagPair(PRUint32 uid, imapMessageFlagsType fl
 	// search for the slot for this uid-flag pair
 
 	PRInt32 insertionIndex = -1;
-	XP_Bool foundIt = FALSE;
+	PRBool foundIt = FALSE;
 
 	GetMessageFlagsFromUID(uid, &foundIt, &insertionIndex);
 
