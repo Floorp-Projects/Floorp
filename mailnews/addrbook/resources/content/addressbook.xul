@@ -44,8 +44,20 @@ Rights Reserved.
 <!--
 <html:script language="JavaScript" src="resource:/res/samples/DumpDOM.js"/>
 -->
-<broadcaster id="CommandUpdate_AddressBook" onchange="CommandUpdate_AddressBook()"/>
-<broadcaster id="cmd_NewMessage"/>
+<broadcasterset id="broadcasterset">
+	//<broadcaster id="CommandUpdate_AddressBook" onchange="CommandUpdate_AddressBook()"/>
+	<broadcaster id="cmd_PrintCard" oncommand="AbPrintCard()"/>
+	<broadcaster id="cmd_Close" oncommand="AbClose()"/>
+</broadcasterset>
+
+<keyset id="keyset">
+	<key id="key_PrintCard" disabled="true" command="true" key="P" observes="cmd_PrintCard" />
+	
+	<!-- temporary -->
+	<key id="key_Close" command="true" key="w" observes="cmd_Close" />
+	<!--key id="key_Quit" command="true" key="Q" observes="cmd_Quit" /-->
+</keyset>
+
 
   <toolbox>
   <menubar>
@@ -67,10 +79,12 @@ Rights Reserved.
 			<menuseparator/>
 			<menuitem id="pageSetup"/>
 			<menuitem value="&printPreviewCmd.label;" oncommand="AbPrintPreview()"/>
-			<menuitem value="&printCardViewCmd.label;" oncommand="AbPrintCard()"/>
+			<menuitem value="&printCardViewCmd.label;" key="key_PrintCard" observes="cmd_PrintCard"/>
 			<menuitem value="&printAddressBook.label;" oncommand="AbPrintAddressBook()"/>
 			<menuseparator/>
-			<menuitem value="&closeCmd.label;" oncommand="AbClose()"/>
+			<menuitem value="&closeCmd.label;"
+					  key="key_Close"
+					  observes="cmd_Close"/>
 			</menupopup>
 		</menu>
 		
@@ -105,11 +119,20 @@ Rights Reserved.
 			</menu>
 			<menu value="&sortMenu.label;">
 			    <menupopup>
-				<menuitem value="&sortByNameCmd.label;" oncommand="AbSortByName()"/>
-				<menuitem value="&sortByEmailCmd.label;" oncommand="AbSortByEmail()"/>
+				<menuitem value="&sortByNameCmd.label;"
+						  id="cmd_SortByName"
+						  disabled="true"
+						  oncommand="top.SortResultPane('NameColumn', 'http://home.netscape.com/NC-rdf#DisplayName')"/>
+				<menuitem value="&sortByEmailCmd.label;"
+						  id="cmd_SortByEmail"
+						  disabled="true"
+						  oncommand="top.SortResultPane('EmailColumn', 'http://home.netscape.com/NC-rdf#PrimaryEmail')"/>
 				<menuitem value="&sortByOrganizationCmd.label;" oncommand="AbSortByOrganization()"/>
 				<menuitem value="&sortByNicknameCmd.label;" oncommand="AbSortByNickname()"/>
-				<menuitem value="&sortByPhoneCmd.label;" oncommand="AbSortByPhoneNumber()"/>
+				<menuitem value="&sortByPhoneCmd.label;"
+						  id="cmd_SortByPhone"
+						  disabled="true"
+						  oncommand="top.SortResultPane('WorkPhoneColumn', 'http://home.netscape.com/NC-rdf#WorkPhone')"/>
 				<menuitem value="&sortByCityCmd.label;" oncommand="AbSortByCity()"/>
 				<menuseparator/>
 				<menuitem value="&sortAscendingCmd.label;" oncommand="AbSortAscending()"/>

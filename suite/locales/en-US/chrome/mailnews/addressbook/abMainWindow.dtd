@@ -56,12 +56,12 @@ Rights Reserved.
 <!ENTITY showAbToolbarCmd.label					".Address Book Toolbar">  
 <!ENTITY showCardPane.label						".Card Pane">  
 <!ENTITY showTaskbar.label						".Taskbar">  
-<!ENTITY sortMenu.label						".Sort"> 
-<!ENTITY sortByNameCmd.label					".by Name">  
-<!ENTITY sortByEmailCmd.label					".by Email">  
+<!ENTITY sortMenu.label						"Sort"> 
+<!ENTITY sortByNameCmd.label					"by Name">  
+<!ENTITY sortByEmailCmd.label					"by Email">  
 <!ENTITY sortByOrganizationCmd.label			".by Organization">  
 <!ENTITY sortByNicknameCmd.label				".by Nickname">  
-<!ENTITY sortByPhoneCmd.label					".by Phone Number">  
+<!ENTITY sortByPhoneCmd.label					"by Phone Number">  
 <!ENTITY sortByCityCmd.label					".by City">  
 <!ENTITY sortAscendingCmd.label					".Ascending">  
 <!ENTITY sortDescendingCmd.label				".Descending">  

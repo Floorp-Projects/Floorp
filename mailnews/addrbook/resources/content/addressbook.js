@@ -25,6 +25,38 @@ function OnLoadAddressBook()
 function CommandUpdate_AddressBook()
 {
 	dump("CommandUpdate_AddressBook\n");
+	
+	// get selection info from dir pane
+	var tree = document.getElementById('dirTree');
+	var oneAddressBookSelected = false;
+	if ( tree && tree.selectedItems && (tree.selectedItems.length == 1) )
+		oneAddressBookSelected = true;
+	dump("oneAddressBookSelected = " + oneAddressBookSelected + "\n");
+		
+	// get selection info from results pane
+	var selectedAddresses = GetSelectedAddresses();
+	var oneOrMoreAddressesSelected = false;
+	if ( selectedAddresses )
+		oneOrMoreAddressesSelected = true;
+	
+	// set commands to enabled / disabled
+	SetCommandEnabled('cmd_PrintCard', oneOrMoreAddressesSelected);
+	SetCommandEnabled('cmd_SortByName', oneAddressBookSelected);
+	SetCommandEnabled('cmd_SortByEmail', oneAddressBookSelected);
+	SetCommandEnabled('cmd_SortByPhone', oneAddressBookSelected);
+}
+
+function SetCommandEnabled(id, enabled)
+{
+	var node = document.getElementById(id);
+
+	if ( node )
+	{
+		if ( enabled )
+			node.removeAttribute("disabled");
+		else
+			node.setAttribute('disabled', 'true');
+	}
 }
 
 
