@@ -2313,9 +2313,11 @@ nsresult nsMsgDBView::DeleteMessages(nsIMsgWindow *window, nsMsgViewIndex *indic
       messageArray->AppendElement(msgHdr);
 
   }
-  rv = m_folder->DeleteMessages(messageArray, window, deleteStorage, PR_FALSE, nsnull, PR_TRUE /*allow Undo*/ );
-  if (NS_SUCCEEDED(rv) && mDeleteModel != nsMsgImapDeleteModels::IMAPDelete)
+  if (mDeleteModel != nsMsgImapDeleteModels::IMAPDelete)
     m_deletingRows = PR_TRUE;
+  rv = m_folder->DeleteMessages(messageArray, window, deleteStorage, PR_FALSE, nsnull, PR_TRUE /*allow Undo*/ );
+  if (NS_FAILED(rv))
+    m_deletingRows = PR_FALSE;
   return rv;
 }
 
