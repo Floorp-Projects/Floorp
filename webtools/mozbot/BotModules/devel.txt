@@ -638,6 +638,31 @@ recommended.
     $self->ctcpReply($event, 'VERSION', "mozbot $VERSION (@modulenames)");
 
 
+*** getMessageQueue()
+
+ Returns a reference to the message queue. Manipulating this is
+ probably not a good idea. In particular, don't add anything to this
+ array, use the say(), directSay(), channelSay(), announce(),
+ tellAdmin(), etc, methods defined below.
+
+ Each item in this array is an array ref, consisting of three
+ subitems. The first subitem is a scalar with the name of the channel
+ or nick targetted, the second is the message to send, and the third
+ is a scalar equal to one of: 'msg', 'me', 'notice', 'ctcpSend',
+ 'ctcpReply'. The second subitem is a scalar, except in the case of
+ 'ctcpSend' messages, in which case it's an array ref consisting of
+ first the type of the CTCP message, and then the data.
+
+ Note: Don't use 'delete' to remove items from this array, since that
+ leaves undefs in the array, which will later cause a crash.
+
+ Example:
+    my $queue = $self->getMessageQueue();
+    foreach my $message (@$queue) {
+        ++$count if $message->[0] eq $event->{'from'};
+    }
+
+
 *** getHelpLine()
 
  Returns the bot's help line.
@@ -849,6 +874,9 @@ recommended.
 
  This is what the 'help' command uses to pretty print its output.
 
+ This is basically the same as wordWrap() but it can change the order
+ of the input.
+
  Example:
     my @result = $self->prettyPrint($linelength, undef, 'Info: ', ' -- ', @infoItems);
 
@@ -862,6 +890,9 @@ recommended.
  items across lines. The $prefix may be undef.
 
  Returns the result of all that.
+
+ This is basically the same as prettyPrint() but it doesn't change the
+ order of the input.
 
  Example:
     my @result = $self->wordWrap($linelength, undef, 'Info: ', ' ', split(/\s+/os, @lines);
@@ -885,7 +916,7 @@ recommended.
  
  Example:
      $pattern = $self->sanitizeRegexp($pattern);
-     $data =~ /$pattern//gosi;
+     $data =~ /$pattern//gsi;
 
 
 -- end --

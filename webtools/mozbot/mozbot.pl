@@ -883,7 +883,7 @@ sub drainmsgqueue {
             $self->ctcp($type, $who, @$msg);
             # $type = 'XXX';
         } elsif ($do eq 'ctcpReply') {
-            { local $" = ' '; &debug("->$who CTCP NOTICE $msg"); }
+            &debug("->$who CTCP NOTICE $msg");
             $self->ctcp_reply($who, $msg);
             # $type = 'XXX';
         } else {
@@ -1543,6 +1543,15 @@ sub getURI {
 sub getModule {
     my $self = shift;
     return &::getModule(@_);
+}
+
+# returns a reference to @msgqueue
+# manipulating this is probably not a good idea. In particular,
+# don't add anything to this array (use the appropriate methods
+# instead, those that use &::sendmsg, below).
+sub getMessageQueue {
+    my $self = shift;
+    return \@msgqueue;
 }
 
 # returns the value of $helpline

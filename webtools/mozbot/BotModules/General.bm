@@ -26,6 +26,7 @@ sub Help {
     return {
         '' => 'The module that provides the bot-wide services.',
         'help' => 'Gives information about modules and commands. Syntax: help [<topic>]',
+        'shutup' => 'Tells the bot to stop talking to you. Syntax: shut up',
     };
 }
 
@@ -82,6 +83,35 @@ sub Told {
                 $self->directSay($event, $_);
             }
             $self->directSay($event, 'For help on a particular topic, type \'help <topic>\'. Note that some commands may be disabled in certain channels.');
+        }
+    } elsif ($message =~ /^\s*shut\s*up\s*$/osi) {
+        my $queue = $self->getMessageQueue();
+        my @messages = @$queue;
+        @$queue = ();
+        my $count = 0;
+        if ($event->{'channel'}) {
+            foreach my $message (@messages) {
+                if ($message->[0] eq $event->{'channel'} and
+                    ref $message->[1] eq 'SCALAR' and
+                    $message->[1] =~ m/^\Q$event->{'from'}\E:/osi) {
+                    ++$count;
+                } else {
+                    push(@$queue, $message);
+                }
+            }
+        } else {
+            foreach my $message (@messages) {
+                if (lc $message->[0] eq lc $event->{'from'}) {
+                    ++$count;
+                } else {
+                    push(@$queue, $message);
+                }
+            }
+        }
+        if ($count) {
+            $self->say($event, "$event->{'from'}: Dropped $count messages.");
+        } else {
+            $self->say($event, "$event->{'from'}: I wasn't talking to you.");
         }
     } else {
         return $self->SUPER::Told(@_);
