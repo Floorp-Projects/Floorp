@@ -2638,6 +2638,16 @@ if test "$MOZ_MAIL_NEWS"; then
 fi
 AC_SUBST(MOZ_MAIL_NEWS)
 
+dnl Turn on the new lightweight gfx text control frames
+MOZ_ENDER_LITE=0
+MOZ_ARG_ENABLE_BOOL(ender-lite,
+[  --enable-ender-lite      Enable new lightweight text control frames],
+  MOZ_ENDER_LITE=1 )
+if test "$MOZ_ENDER_LITE"; then
+  AC_DEFINE(MOZ_ENDER_LITE)
+fi
+AC_SUBST(MOZ_ENDER_LITE)
+
 dnl make sure that we compile in multi-processor support
 NS_MT_SUPPORTED=1
 AC_DEFINE(NS_MT_SUPPORTED)
