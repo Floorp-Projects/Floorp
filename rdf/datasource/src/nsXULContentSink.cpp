@@ -636,6 +636,7 @@ XULContentSinkImpl::DoneLoadingStyle(nsIUnicharStreamLoader* aLoader,
             // XXX We have no way of indicating failure. Silently fail?
             rv = d->mSink->LoadStyleSheet(d->mURL, uin, d->mIsActive, 
                                           d->mTitle, d->mMedia, d->mElement);
+            NS_RELEASE(uin);
         }
     }
     
