@@ -167,6 +167,7 @@ js_DestroyContext(JSContext *cx, JSGCMode gcmode)
     JS_UNLOCK_GC(rt);
 
     if (last) {
+#ifdef JS_THREADSAFE
         /*
          * If cx is not in a request already, begin one now so that we wait
          * for any racing GC started on a not-last context to finish, before
@@ -179,6 +180,7 @@ js_DestroyContext(JSContext *cx, JSGCMode gcmode)
          */
         if (cx->requestDepth == 0)
             JS_BeginRequest(cx);
+#endif
 
         /* Unpin all pinned atoms before final GC. */
         js_UnpinPinnedAtoms(&rt->atomState);
