@@ -476,7 +476,11 @@ PERMISSION_Read() {
    * host \t number permission \t number permission ... \n
    * if this format isn't respected we move onto the next line in the file.
    */
-  while(CKutil_GetLine(strm,buffer) != -1) {
+
+#define BUFSIZE 4096
+  char readbuffer[BUFSIZE];
+  PRInt32 next = BUFSIZE, count = BUFSIZE;
+  while(CKutil_GetLine(strm, readbuffer, BUFSIZE, next, count, buffer) != -1) {
     if ( !buffer.IsEmpty() ) {
       char firstChar = buffer.CharAt(0);
       if (firstChar == '#' || firstChar == nsCRT::CR ||

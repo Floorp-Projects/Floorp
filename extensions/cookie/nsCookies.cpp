@@ -1698,7 +1698,11 @@ COOKIE_Read() {
    * expires is a time_t integer
    * cookie can have tabs
    */
-  while (CKutil_GetLine(strm,buffer) != -1){
+
+#define BUFSIZE 4096
+  char readbuffer[BUFSIZE];
+  PRInt32 next = BUFSIZE, count = BUFSIZE;
+  while (CKutil_GetLine(strm, readbuffer, BUFSIZE, next, count, buffer) != -1){
     added_to_list = PR_FALSE;
 
     if ( !buffer.IsEmpty() ) {
