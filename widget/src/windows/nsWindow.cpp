@@ -1389,7 +1389,7 @@ PRBool nsWindow::OnKey(PRUint32 aEventType, PRBool aCalcCharCode, TCHAR aCharCod
   }
 
   event.keyCode = nChar;
-printf("charCode %d  keyCode %d\n",  event.charCode, event.keyCode);
+  //printf("charCode %d  keyCode %d\n",  event.charCode, event.keyCode);
 
   event.isShift   = mIsShiftDown;
   event.isControl = mIsControlDown;
