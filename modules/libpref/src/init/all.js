@@ -176,8 +176,8 @@ pref("browser.history.grouping", "day");
 pref("browser.sessionhistory.max_entries", 50);
 
 // Translation service
-pref("browser.translation.service", "http://www.teletranslator.com:8120/?AlisUI=frames_ex/moz_home&alis_info=moz&AlisTargetURI=");
-pref("browser.translation.serviceDomain", "teletranslator.com");
+pref("browser.translation.service", "http://translate.google.com/translate?prev=/language_tools&u=");
+pref("browser.translation.serviceDomain", "translate.google.com");
   
 // Platform for Internet Content Selection
 pref("browser.PICS.ratings_enabled", false);
