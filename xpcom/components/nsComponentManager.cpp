@@ -1954,9 +1954,11 @@ nsComponentManagerImpl::UnloadLibraries(nsIServiceManager *serviceMgr, PRInt32 a
     /* iterate over all known loaders and ask them to autoregister. */
     // Skip mNativeComponentLoader
     for (int i=NS_COMPONENT_TYPE_NATIVE + 1; i<mNLoaderData; i++) {
-        rv = mLoaderData[i].loader->UnloadAll(aWhen);
-        if (NS_FAILED(rv))
-            break;
+        if (mLoaderData[i].loader) {
+            rv = mLoaderData[i].loader->UnloadAll(aWhen);
+            if (NS_FAILED(rv))
+                break;
+        }
     }
 
     // UnloadAll the native loader
