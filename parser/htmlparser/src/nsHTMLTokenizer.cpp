@@ -625,13 +625,13 @@ nsresult nsHTMLTokenizer::ConsumeAttributes(PRUnichar aChar,CStartToken* aToken,
       //and a textkey of "/". We should destroy it, and tell the 
       //start token it was empty.
       if(NS_SUCCEEDED(result)) {
-        PRBool isUsableAttr=PR_TRUE;
+        PRBool isUsableAttr = PR_TRUE;
         const nsAReadableString& key=theToken->GetKey();
         const nsAReadableString& text=theToken->GetValue();
          // support XML like syntax to fix bugs like 44186
         if(!key.IsEmpty() && kForwardSlash==key.First() && text.IsEmpty()) {
-          aToken->SetEmpty(PR_TRUE);
-          isUsableAttr = (mFlags & NS_IPARSER_FLAG_VIEW_SOURCE)? PR_TRUE:PR_FALSE; // Fix bug 103095
+          isUsableAttr = PRBool(mFlags & NS_IPARSER_FLAG_VIEW_SOURCE); // Fix bug 103095
+          aToken->SetEmpty(isUsableAttr);
         }
         if(isUsableAttr) {
           theAttrCount++;
