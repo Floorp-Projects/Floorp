@@ -34,6 +34,7 @@ REQUIRES	= content \
 		  string \
 		  gfx \
 		  dom \
+		  webshell \
 		  htmlparser \
 		  lwbrk \
 		  necko \
