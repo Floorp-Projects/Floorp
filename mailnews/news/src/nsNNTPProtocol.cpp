@@ -657,7 +657,7 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 		  goto FAIL;
 		}
 #endif
-      /*	  PR_ASSERT (!group && !message_id && !commandSpecificData); */
+      /*	  NS_ASSERTION (!group && !message_id && !commandSpecificData, "something not null"); */
 	  m_typeWanted = NEWS_POST;
 	  NET_SACopy(&m_path, "");
 	}
@@ -956,7 +956,7 @@ nsresult nsNNTPProtocol::ParseURL(nsIURI * aURL, PRBool * bValP, char ** aGroup,
 	  if (message_id)
 	  {
 		  /* Move past the @. */
-		  PR_ASSERT (s && *s == '@');
+		  NS_ASSERTION (s && *s == '@', "move past the @");
 		  start = s;
 	  }
 	  else
@@ -994,7 +994,7 @@ nsresult nsNNTPProtocol::ParseURL(nsIURI * aURL, PRBool * bValP, char ** aGroup,
 	}
 
   FAIL:
-  PR_ASSERT (!message_id || message_id != group);
+  NS_ASSERTION (!message_id || message_id != group, "something not null");
   if (status >= 0)
   {  
       if (aGroup) 
@@ -1746,7 +1746,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURI * url)
 		}
 		else
 		{
-			PR_ASSERT(PR_FALSE);
+			NS_ASSERTION(PR_FALSE, "unexpected");
 			m_nextState = NNTP_ERROR;
 		}
 	}
@@ -1873,7 +1873,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommandResponse()
             
 			nsMsgKey key = nsMsgKey_None;
 			rv = m_runningURL->GetMessageKey(&key);
-            PR_ASSERT(m_messageID && (key != nsMsgKey_None));
+            NS_ASSERTION(m_messageID && (key != nsMsgKey_None), "unexpected");
 			if (m_messageID && (key != nsMsgKey_None)) {
 				PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE,"<P>&lt;%.512s&gt; (%lu)", m_messageID, key);
 				m_tempErrorStream->Write(outputBuffer, PL_strlen(outputBuffer), &count);
@@ -1940,7 +1940,7 @@ PRInt32 nsNNTPProtocol::SendGroupForArticle()
 
   PR_FREEIF(m_currentGroup);
   rv = m_newsgroup->GetName(&m_currentGroup);
-  PR_ASSERT(NS_SUCCEEDED(rv));
+  NS_ASSERTION(NS_SUCCEEDED(rv), "GetName failed");
   char outputBuffer[OUTPUT_BUFFER_SIZE];
   
   PR_snprintf(outputBuffer, 
@@ -2007,7 +2007,7 @@ PRInt32 nsNNTPProtocol::BeginArticle()
   if (m_typeWanted == CANCEL_WANTED)
   {
 #ifdef UNREADY_CODE
-	  PR_ASSERT(ce->format_out == FO_PRESENT);
+	  NS_ASSERTION(ce->format_out == FO_PRESENT, "format_out != FO_PRESENT");
 	  ce->format_out = FO_PRESENT;
 #endif
   }
@@ -2027,7 +2027,7 @@ PRInt32 nsNNTPProtocol::BeginArticle()
 	}
 
   cd->stream = NET_StreamBuilder(ce->format_out, ce->URL_s, ce->window_id);
-  PR_ASSERT (cd->stream);
+  NS_ASSERTION (cd->stream, "no stream");
   if (!cd->stream) return -1;
 #endif
 
@@ -2593,7 +2593,7 @@ PRInt32 nsNNTPProtocol::AuthorizationResponse()
         return(MK_NNTP_AUTH_FAILED);
 	  }
 		
-	PR_ASSERT(0); /* should never get here */
+	NS_ASSERTION(0,"should never get here");
 	return(-1);
 
 }
@@ -2642,7 +2642,7 @@ PRInt32 nsNNTPProtocol::PasswordResponse()
         return(MK_NNTP_AUTH_FAILED);
 	  }
 		
-	PR_ASSERT(0); /* should never get here */
+	NS_ASSERTION(0,"should never get here");
 	return(-1);
 }
 
@@ -2711,7 +2711,7 @@ PRInt32 nsNNTPProtocol::ProcessNewsgroups(nsIInputStream * inputStream, PRUint32
 		  if (NS_SUCCEEDED(rv) && m_newsgroup)
 		  {
                 rv = m_newsHost->FindGroup(groupName, getter_AddRefs(m_newsgroup));
-                PR_ASSERT(NS_SUCCEEDED(rv));
+                NS_ASSERTION(NS_SUCCEEDED(rv), "FindGroup failed");
 				m_nextState = NNTP_LIST_XACTIVE;
 #ifdef DEBUG_NEWS
 				printf("listing xactive for %s\n", groupName);
@@ -3074,7 +3074,7 @@ PRInt32 nsNNTPProtocol::ReadXoverResponse()
 		   something went very wrong, since our servers do XOVER.  Thus
 		   the assert.
          */
-		/*PR_ASSERT (0);*/
+		/*NS_ASSERTION (0,"something went very wrong");*/
 		m_nextState = NNTP_READ_GROUP;
 		SetFlag(NNTP_NO_XOVER_SUPPORT);
     }
@@ -3135,7 +3135,7 @@ PRInt32 nsNNTPProtocol::ReadXover(nsIInputStream * inputStream, PRUint32 length)
 	}
 
     rv = m_newsgroupList->ProcessXOVERLINE(line, &status);
-	PR_ASSERT(NS_SUCCEEDED(rv));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to process the XOVERLINE");
 
     m_numArticlesLoaded++;
     PR_FREEIF(line);
@@ -3664,8 +3664,7 @@ PRInt32 nsNNTPProtocol::DisplayNewsRCResponse()
                                               high ? atol(high) : 0,
                                               atol(num_arts), PR_FALSE);
 #else
-        printf("seth hack\n");
-        PR_ASSERT(0);
+        NS_ASSERTION(0,"hack required");
 #endif
 		if (status < 0)
 		  return status;
@@ -3685,8 +3684,7 @@ PRInt32 nsNNTPProtocol::DisplayNewsRCResponse()
         m_newsHost->DisplaySubscribedGroup(m_currentGroup,
 	                                             0, 0, 0, PR_FALSE);
 #else
-        printf("seth hack\n");
-        PR_ASSERT(0);
+        NS_ASSERTION(0,"hack required");
 #endif
 	  }
 
@@ -3805,14 +3803,14 @@ PRInt32 nsNNTPProtocol::DoCancel()
 	 message at it...   But the normal posting code doesn't do this check.
 	 Why?
    */
-  PR_ASSERT (m_responseCode == MK_NNTP_RESPONSE_POST_SEND_NOW);
+  NS_ASSERTION (m_responseCode == MK_NNTP_RESPONSE_POST_SEND_NOW, "code != POST_SEND_NOW");
 
   // These shouldn't be set yet, since the headers haven't been "flushed"
   // "Distribution: " doesn't appear to be required, so
   // don't assert on m_cancelDistribution
-  PR_ASSERT (m_cancelID &&
+  NS_ASSERTION (m_cancelID &&
 			 m_cancelFromHdr &&
-			 m_cancelNewsgroups);
+			 m_cancelNewsgroups, "null ptr");
 
   newsgroups = m_cancelNewsgroups;
   distribution = m_cancelDistribution;
@@ -3823,7 +3821,7 @@ PRInt32 nsNNTPProtocol::DoCancel()
   NS_WITH_SERVICE(nsIPrompt, dialog, kCNetSupportDialogCID, &rv);
   if (NS_FAILED(rv) || !dialog) return -1;  /* unable to get the dialog service */
 
-  PR_ASSERT (id && newsgroups);
+  NS_ASSERTION (id && newsgroups, "null ptr");
   if (!id || !newsgroups) return -1; /* "unknown error"... */
 
   m_cancelNewsgroups = nsnull;
@@ -3969,7 +3967,7 @@ PRInt32 nsNNTPProtocol::DoCancel()
     // delete the message from the db here.
     nsMsgKey key = nsMsgKey_None;
     rv = m_runningURL->GetMessageKey(&key);
-    PR_ASSERT(NS_SUCCEEDED(rv));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "GetMessageKey failed");
     char *newsgroupname = nsnull;
     rv = m_runningURL->GetNewsgroupName(&newsgroupname);
     NS_ASSERTION(NS_SUCCEEDED(rv) && newsgroupname && (key != nsMsgKey_None), "need more to remove this message from the db");
@@ -4215,7 +4213,7 @@ PRInt32 nsNNTPProtocol::ListXActiveResponse(nsIInputStream * inputStream, PRUint
 	char *line;
 	PRUint32 status = 0;
 
-	PR_ASSERT(m_responseCode == MK_NNTP_RESPONSE_LIST_OK);
+	NS_ASSERTION(m_responseCode == MK_NNTP_RESPONSE_LIST_OK, "code != LIST_OK");
 	if (m_responseCode != MK_NNTP_RESPONSE_LIST_OK)
 	{
 		m_nextState = DISPLAY_NEWSGROUPS;
@@ -4368,7 +4366,7 @@ PRInt32 nsNNTPProtocol::ListGroupResponse(nsIInputStream * inputStream, PRUint32
 	char *line;
 	PRUint32 status = 0;
 
-	PR_ASSERT(m_responseCode == MK_NNTP_RESPONSE_GROUP_SELECTED);
+	NS_ASSERTION(m_responseCode == MK_NNTP_RESPONSE_GROUP_SELECTED, "code != GROUP_SELECTED");
 	if (m_responseCode != MK_NNTP_RESPONSE_GROUP_SELECTED)
 	{
 		m_nextState = NEWS_DONE; 
@@ -4412,7 +4410,7 @@ PRInt32 nsNNTPProtocol::ListGroupResponse(nsIInputStream * inputStream, PRUint32
 
 PRInt32 nsNNTPProtocol::Search()
 {
-	PR_ASSERT(PR_FALSE);
+	NS_ASSERTION(0,"Search not implemented");
 	return 0;
 }
 
@@ -4497,7 +4495,7 @@ PRInt32 nsNNTPProtocol::SetupForTransfer()
 #endif
 	else
 	  {
-		PR_ASSERT(0);
+		NS_ASSERTION(0, "unexpected");
 		return -1;
 	  }
 
@@ -4961,7 +4959,7 @@ nsresult nsNNTPProtocol::CloseSocket()
         nsresult rv;
        /* XXX - how/when to Release() this? */
         rv = m_newsgroupList->FinishXOVERLINE(status,&status);
-		PR_ASSERT(NS_SUCCEEDED(rv));
+		NS_ASSERTION(NS_SUCCEEDED(rv), "FinishXOVERLINE failed");
 		if (NS_SUCCEEDED(rv) && status >= 0 && status < 0)
 					  status = status;
 	}

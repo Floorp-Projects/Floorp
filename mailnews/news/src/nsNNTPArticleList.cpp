@@ -113,10 +113,8 @@ nsNNTPArticleList::FinishAddingArticleKeys()
 {
 	// make sure none of the deleted turned up on the idsOnServer list
 #ifdef HAVE_NEWSDB
-#ifdef DEBUG_bienvenu
 	for (PRInt32 i = 0; i < m_idsDeleted.GetSize(); i++)
-		PR_ASSERT (!m_idsOnServer.set->IsMember(m_idsDeleted.GetAt(i)));
-#endif
+		NS_ASSERTION((!m_idsOnServer.set->IsMember(m_idsDeleted.GetAt(i)), "a deleted turned up on the idsOnServer list");
 #endif
 	return 0;
 }

@@ -240,7 +240,7 @@ nsMsgNewsFolder::AddSubfolder(nsAutoString name, nsIMsgFolder **child, char *set
 
 nsresult nsMsgNewsFolder::ParseFolder(nsFileSpec& path)
 {
-  PR_ASSERT(0);
+  NS_ASSERTION(0,"ParseFolder not implemented");
  	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -323,14 +323,14 @@ nsMsgNewsFolder::GetSubFolders(nsIEnumerator* *result)
 NS_IMETHODIMP
 nsMsgNewsFolder::AddUnique(nsISupports* element)
 {
-  PR_ASSERT(0);
+  NS_ASSERTION(0,"AddUnique not implemented");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsMsgNewsFolder::ReplaceElement(nsISupports* element, nsISupports* newElement)
 {
-  PR_ASSERT(0);
+  NS_ASSERTION(0,"ReplaceElement not implemented");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -498,19 +498,19 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateSubfolder(const char *newsgroupname)
 
 NS_IMETHODIMP nsMsgNewsFolder::Delete()
 {
-  PR_ASSERT(0);
+  NS_ASSERTION(0,"Delete not implemented");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsMsgNewsFolder::Rename(const char *newName)
 {
-  PR_ASSERT(0);
+  NS_ASSERTION(0,"Rename not implemented");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsMsgNewsFolder::Adopt(nsIMsgFolder *srcFolder, PRUint32 *outPos)
 {
-  PR_ASSERT(0);  
+  NS_ASSERTION(0,"Adopt not implemented");  
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -803,13 +803,13 @@ NS_IMETHODIMP nsMsgNewsFolder::GetCanBeRenamed(PRBool *canBeRenamed)
 
 NS_IMETHODIMP nsMsgNewsFolder::GetRequiresCleanup(PRBool *requiresCleanup)
 {
-  PR_ASSERT(0);
+  NS_ASSERTION(0,"GetRequiresCleanup not implemented");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsMsgNewsFolder::GetSizeOnDisk(PRUint32 *size)
 {
-  PR_ASSERT(0);
+  NS_ASSERTION(0, "GetSizeOnDisk not implemented");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -1155,7 +1155,7 @@ nsMsgNewsFolder::HandleLine(char* line, PRUint32 line_size)
 		for (child = group->GetNextAlphabetic() ;
 			 child != end ;
 			 child = child->GetNextAlphabetic()) {
-			PR_ASSERT(child);
+			NS_ASSERTION(child,"null ptr");
 			if (!child) break;
 			char* fullname = child->GetFullName();
 			if (!fullname) break;

@@ -61,7 +61,7 @@ nsresult nsNNTPHost::Initialize(nsINntpUrl *runningURL, const char *username, co
 	m_username = nsnull;
     }
     
-	PR_ASSERT(port);
+	NS_ASSERTION(port, "port was 0");
 	if (port == 0) port = NEWS_PORT;
 	m_port = port;
 
@@ -137,7 +137,7 @@ void
 nsNNTPHost::OpenGroupFile(const PRIntn permissions)
 {
 #ifdef UNREADY_CODE
-	PR_ASSERT(permissions);
+	NS_ASSERTION(permissions, "no permissions");
 	if (!permissions) return;
 	if (m_groupFile) {
 		if (m_groupFilePermissions &&
@@ -207,7 +207,7 @@ nsNNTPHost::WriteNewsrc()
 {
 	if (!m_groups) return NS_ERROR_NOT_INITIALIZED;
 #ifdef UNREADY_CODE
-	PR_ASSERT(m_dirty);
+	NS_ASSERTON(m_dirty, "m_dirty is null");
 	// Just to be sure.  It's safest to go ahead and write it out anyway,
 	// even if we do somehow get called without the dirty bit set.
 
@@ -414,11 +414,11 @@ nsNNTPHost::SetNewsRCFilename(char* name)
 
 		// OK, now create the new empty hostinfo file.
 		OpenGroupFile(XP_FILE_WRITE_BIN);
-		PR_ASSERT(m_groupFile);
+		NS_ASSERTION(m_groupFile, "null ptr");
 		if (!m_groupFile)
 			return NS_ERROR_NOT_INITIALIZED;
 		OpenGroupFile();
-		PR_ASSERT(m_groupFile);
+		NS_ASSERTION(m_groupFile, "null ptr");
 		if (!m_groupFile)
 			return NS_ERROR_NOT_INITIALIZED;
 
@@ -494,15 +494,14 @@ nsNNTPHost::ReadInitialPart()
 	m_block[0] = '\0';
 	if (version != 1) {
 		// The file got clobbered or damaged somehow.  Throw it away.
-#ifdef DEBUG_bienvenu
-		if (length > 0)
-			PR_ASSERT(PR_FALSE);	// this really shouldn't happen, right?
+#ifdef DEBUG_NEWS
+		NS_ASSERTION(length <= 0, "length > 0");
 #endif
 		OpenGroupFile(XP_FILE_WRITE_BIN);
-		PR_ASSERT(m_groupFile);
+		NS_ASSERTION(m_groupFile, "null ptr");
 		if (!m_groupFile) return -1;
 		OpenGroupFile();
-		PR_ASSERT(m_groupFile);
+		NS_ASSERTION(m_groupFile, "null ptr");
 		if (!m_groupFile) return -1;
 
 		m_groupTreeDirty = 2;
@@ -557,7 +556,7 @@ nsNNTPHost::SaveHostInfo()
 	char* ptrcomma = nsnull;
 	char* filename = nsnull;
 	PRInt32 length = CreateFileHeader();
-	PR_ASSERT(length < m_blockSize - 50);
+	NS_ASSERTION(length < m_blockSize - 50, "length >= m_blockSize - 50");
 	if (m_inhaled || length != m_fileStart) {
 		m_groupTreeDirty = 2;
 	}
@@ -615,12 +614,12 @@ nsNNTPHost::SaveHostInfo()
 				m_block[l] = '\0';
 				char* p1 = PL_strchr(ptr, LINEBREAK_START);
 				char* p2 = PL_strchr(m_block, LINEBREAK_START);
-				PR_ASSERT(p1);
+				NS_ASSERTION(p1,"null ptr");
 				if (!p1 || !p2 || (p1 - ptr) != (p2 - m_block)) {
 					m_groupTreeDirty = 2;
 					break;
 				}
-				PR_ASSERT(grec->GetFileOffset() > 100);	// header is at least 100 bytes long
+				NS_ASSERTION(grec->GetFileOffset() > 100, "header is at least 100 bytes long");
 				XP_FileSeek(m_groupFile, grec->GetFileOffset(), SEEK_SET);
 				XP_FileWrite(ptr, PL_strlen(ptr), m_groupFile);
 				PR_Free(ptr);
@@ -680,7 +679,7 @@ nsNNTPHost::SaveHostInfo()
 				goto FAIL;
 			}
 			ptrcomma = PL_strchr(ptr, ',');
-			PR_ASSERT(ptrcomma);
+			NS_ASSERTION(ptrcomma, "null ptr");
 			if (!ptrcomma) {
 				status = -1;
 				goto FAIL;
@@ -798,11 +797,16 @@ nsNNTPHost::InhaleLine(char* line, PRUint32 length, void* closure)
 			else if (c == '.') {
 				parent = state->lastInhaled;
 				char* ptr = state->lastfullname + (lastdot - line);
-				PR_ASSERT(parent);
+				NS_ASSERTION(parent, "null ptr");
 				while (parent && ptr) {
 					parent = parent->GetParent();
-					PR_ASSERT(parent);
-					ptr = PL_strchr(ptr + 1, '.');
+					NS_ASSERTION(parent, "null ptr");
+					if (parent) {
+						ptr = PL_strchr(ptr + 1, '.');
+					}
+					else {
+						ptr = nsnull;
+					}
 				}
 			}
 		}
@@ -810,7 +814,7 @@ nsNNTPHost::InhaleLine(char* line, PRUint32 length, void* closure)
 
 		if (!parent) parent = state->tree->FindDescendant(line);
 		*lastdot = '.';
-		PR_ASSERT(parent);
+		NS_ASSERTION(parent, "null ptr");
 		if (!parent) {
 			status = -1;
 			goto DONE;
@@ -838,7 +842,7 @@ nsNNTPHost::InhaleLine(char* line, PRUint32 length, void* closure)
 		}
 		if (tmp == nsnull) status = -2;	// Indicates we're done.
 	}
-	PR_ASSERT(comma - line < ((PRInt32)sizeof(state->lastfullname)));
+	NS_ASSERTION(comma - line < ((PRInt32)sizeof(state->lastfullname)), "unexpected");
 	if ((comma - line)/sizeof(char) < sizeof(state->lastfullname)) {
 		PL_strncpyz(state->lastfullname, line, comma - line + 1);
 		state->lastfullname[comma - line] = '\0';
@@ -861,7 +865,7 @@ nsNNTPHost::Inhale(PRBool force)
 		}
 		m_inhaled = PR_FALSE;
 	}
-	PR_ASSERT(!m_inhaled);
+	NS_ASSERTION(!m_inhaled, "m_inhaled is not null");
 	if (m_inhaled) return -1;
 	PRInt32 status = 0;
 	OpenGroupFile();
@@ -905,7 +909,7 @@ nsNNTPHost::Inhale(PRBool force)
 PRInt32
 nsNNTPHost::Exhale()
 {
-	PR_ASSERT(m_inhaled);
+	NS_ASSERTION(m_inhaled, "null ptr");
 	if (!m_inhaled) return -1;
 	PRInt32 status = SaveHostInfo();
 	while (m_groupTree->GetChildren()) {
@@ -919,7 +923,7 @@ nsNNTPHost::Exhale()
 PRInt32
 nsNNTPHost::EmptyInhale()
 {
-	PR_ASSERT(!m_inhaled);
+	NS_ASSERTION(!m_inhaled, "m_inhaled is not null");
 	if (m_inhaled) return -1;
 	while (m_groupTree->GetChildren()) {
 		delete m_groupTree->GetChildren();
@@ -992,7 +996,7 @@ nsNNTPHost::AddGroup(const char *name,
 
 	if (!group->IsCategoryContainer() && group->IsCategory()) {
 		nsMsgGroupRecord *container = group->GetCategoryContainer();
-		PR_ASSERT(container);
+		NS_ASSERTION(container,"null ptr");
 		if (!container) goto DONE;
 		containerName = container->GetFullName();
 		if (!containerName) goto DONE; // Out of memory.
@@ -1067,16 +1071,15 @@ nsNNTPHost::AddGroup(const char *name,
 			if (NS_SUCCEEDED(rv) &&
                 PL_strcmp(name, name)) {
 				rv = FindGroup(name, &newsInfo);
-				PR_ASSERT(NS_SUCCEEDED(rv));
+				NS_ASSERTION(NS_SUCCEEDED(rv), "didn't find group");
 			}
 		}
 #else
-        printf("hacked up nsNNTPHost.cpp\n");
-        PR_ASSERT(0);
+        NS_ASSERTION(0, "hacked up nsNNTPHost.cpp");
 #endif /* SETH_HACK */
 		PR_Free(groupLine);
 	}
-	PR_ASSERT(newsInfo);
+	NS_ASSERTION(newsInfo, "null ptr");
 	if (!newsInfo) goto DONE;
 
 	if (group->IsCategoryContainer()) {
@@ -1087,7 +1090,7 @@ nsNNTPHost::AddGroup(const char *name,
 		for (child = group->GetNextAlphabetic() ;
 			 child != end ;
 			 child = child->GetNextAlphabetic()) {
-			PR_ASSERT(child);
+			NS_ASSERTION(child, "null ptr");
 			if (!child) break;
 			char* fullname = child->GetFullName();
 			if (!fullname) break;
@@ -1107,8 +1110,7 @@ nsNNTPHost::AddGroup(const char *name,
 #if SETH_HACK
 					ProcessLine(groupLine, PL_strlen(groupLine));
 #else
-                    printf("hacked up nsNNTPHost.cpp\n");
-                    PR_ASSERT(0);
+                    NS_ASSERTION(0, "hacked up nsNNTPHost.cpp");
 #endif /* SETH_HACK */
 					PR_Free(groupLine);
 				}
@@ -1128,7 +1130,7 @@ nsNNTPHost::AddGroup(const char *name,
 			catContainer = SwitchNewsToCategoryContainer(newsInfo);
             if (catContainer) rv = NS_OK;
 		}
-		PR_ASSERT(NS_SUCCEEDED(rv));
+		NS_ASSERTION(NS_SUCCEEDED(rv), "failed to SwitchNewsToCategoryContainer");
 		if (NS_SUCCEEDED(rv)) {
             // XXX should this call be on catContainer or newsInfo?
             nsIMsgFolder *folder = getFolderFor(newsInfo);
@@ -2079,7 +2081,7 @@ nsNNTPHost::LoadSingleEntry(nsMsgGroupRecord* parent, char* name,
 	if (parent != m_groupTree) {
 		char* pname = parent->GetFullName();
 		if (pname) {
-			PR_ASSERT(PL_strncmp(pname, name, PL_strlen(pname)) == 0);
+			NS_ASSERTION(PL_strncmp(pname, name, PL_strlen(pname)) == 0, "pname != name");
 			delete [] pname;
 			pname = nsnull;
 		}
@@ -2129,10 +2131,10 @@ nsNNTPHost::FindOrCreateGroup(const char* name,
 	
 	nsMsgGroupRecord* parent = m_groupTree;
 	const char* start = name;
-	PR_ASSERT(start && *start);
+	NS_ASSERTION(start && *start, "name was bad");
 	if (!start || !*start) return nsnull;
 
-	PR_ASSERT(*start != '.');	// names can't start with ".".
+	NS_ASSERTION(*start != '.', "names can't start with .");
 	if (*start == '.') return nsnull;
 	
 	while (*start)
@@ -2141,10 +2143,9 @@ nsNNTPHost::FindOrCreateGroup(const char* name,
 		const char* end = PL_strchr(start, '.');
 		if (!end) end = start + PL_strlen(start);
 		PRInt32 length = end - start;
-		PR_ASSERT(length > 0);	// names can't contain ".." or end in
-								// a ".".
+		NS_ASSERTION(length > 0, "names can't contain .. or end in .");
 		if (length <= 0) return nsnull;
-		PR_ASSERT((PRUint32)length < sizeof(buf));
+		NS_ASSERTION((PRUint32)length < sizeof(buf), "bad length");
 		if ((PRUint32)length >= sizeof(buf)) return nsnull;
 		PL_strncpyz(buf, start, length + 1);
 		buf[length] = '\0';
@@ -2223,11 +2224,11 @@ nsNNTPHost::AssureAllDescendentsLoaded(nsMsgGroupRecord* group)
 {
 #ifdef UNREADY_CODE
 	PRInt32 status = 0;
-	PR_ASSERT(group);
+	NS_ASSERTION(group, "null ptr");
 	if (!group) return -1;
 	if (group->IsDescendentsLoaded()) return 0;
 	m_blockStart = group->GetFileOffset();
-	PR_ASSERT(group->GetFileOffset() > 0);
+	NS_ASSERTION(group->GetFileOffset() > 0, "bad offset");
 	if (group->GetFileOffset() == 0) return -1;
 	InhaleState state;
 	state.tree = m_groupTree;
@@ -2235,7 +2236,7 @@ nsNNTPHost::AssureAllDescendentsLoaded(nsMsgGroupRecord* group)
 	state.onlyIfChild = group;
 	state.lastInhaled = nsnull;
 	OpenGroupFile();
-	PR_ASSERT(m_groupFile);
+	NS_ASSERTION(m_groupFile, "null ptr");
 	if (!m_groupFile) return -1;
 	XP_FileSeek(m_groupFile, group->GetFileOffset(), SEEK_SET);
 	char* buffer = nsnull;
@@ -2417,19 +2418,19 @@ nsNNTPHost::DeleteFiles ()
 {
 #ifdef UNREADY_CODE
 	// hostinfo.dat
-	PR_ASSERT(m_hostinfofilename);
+	NS_ASSERTION(m_hostinfofilename, "null ptr");
 	if (m_hostinfofilename)
 		XP_FileRemove (m_hostinfofilename, xpXoverCache);
 
 	// newsrc file
 	const char *newsrc = GetNewsrcFileName();
-	PR_ASSERT(newsrc);
+	NS_ASSERTION(newsrc,"null ptr");
 	if (newsrc)
 		XP_FileRemove (newsrc, xpNewsRC);
 
 	// Delete directory
 	const char *dbdirname = GetDBDirName();
-	PR_ASSERT(dbdirname);
+	NS_ASSERTION(dbdirname, "null ptr");
 	if (dbdirname)
 		return XP_RemoveDirectory (dbdirname, xpXoverCache);
 #endif
@@ -2592,8 +2593,7 @@ nsNNTPHost::DisplaySubscribedGroup(nsINNTPNewsgroup *newsgroup,
 #if SETH_HACK
         rv = AddGroup(group, nsnull, &newsgroup);
 #else
-        printf("seth hack\n");
-        PR_ASSERT(0);
+	NS_ASSERTION(0, "hack required.");
 #endif
     }
 

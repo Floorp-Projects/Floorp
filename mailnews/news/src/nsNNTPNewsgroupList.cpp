@@ -108,7 +108,7 @@ nsNNTPNewsgroupList::Initialize(nsINNTPHost *host, nsINntpUrl *runningURL, nsINN
 	m_lastMsgNumber = 0;
 	m_set = nsnull;
 #ifdef HAVE_PANES
-	PR_ASSERT(pane);
+	NS_ASSERTION(pane, "null ptr");
 	m_pane = pane;
 	m_master = pane->GetMaster();
 #endif
@@ -204,7 +204,7 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
 {
 	PRBool emptyGroup_p = PR_FALSE;
 
-	PR_ASSERT(first && last);
+	NS_ASSERTION(first && last, "no first or no last");
 	if (!first || !last) return NS_MSG_FAILURE;
 
 	*first = 0;
@@ -308,7 +308,7 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
 	{
 	/* We're displaying some other group.  Clear out that display, and set up
 	   everything to return the proper first chunk. */
-    		PR_ASSERT(PR_FALSE);	// ### dmb todo - need nwo way of doing this
+    		NS_ASSERTION(0, "todo - need new way of doing");
             if (emptyGroup_p) {
                 if (status) *status=0;
                 return NS_OK;
@@ -475,7 +475,7 @@ nsNNTPNewsgroupList::InitXOVER(PRInt32 first_msg, PRInt32 last_msg)
 #endif
 	/* Consistency checks, not that I know what to do if it fails (it will
 	 probably handle it OK...) */
-	PR_ASSERT(first_msg <= last_msg);
+	NS_ASSERTION(first_msg <= last_msg, "first > last");
 
 	/* If any XOVER lines from the last time failed to come in, mark those
 	   messages as read. */
@@ -709,7 +709,7 @@ nsNNTPNewsgroupList::ProcessXOVERLINE(const char *line, PRUint32 *status)
 	PRBool read_p = PR_FALSE;
 	nsresult rv = NS_OK;
 
-	PR_ASSERT (line);
+	NS_ASSERTION(line, "null ptr");
 	if (!line)
         return NS_ERROR_NULL_POINTER;
 
@@ -725,8 +725,8 @@ nsNNTPNewsgroupList::ProcessXOVERLINE(const char *line, PRUint32 *status)
 	else
 		return NS_ERROR_NOT_INITIALIZED;
 
-	PR_ASSERT(message_number > m_lastProcessedNumber ||
-			message_number == 1);
+	NS_ASSERTION(message_number > m_lastProcessedNumber ||
+			message_number == 1, "bad message_number");
 	if (m_set && message_number > m_lastProcessedNumber + 1)
 	{
 		/* There are some articles that XOVER skipped; they must no longer
