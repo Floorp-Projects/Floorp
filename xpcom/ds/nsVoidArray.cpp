@@ -303,6 +303,31 @@ void nsVoidArray::Compact()
   }
 }
 
+// Needed because we want to pass the pointer to the item in the array
+// to the comparator function, not a pointer to the pointer in the array.
+struct VoidArrayComparatorContext {
+  nsVoidArrayComparatorFunc mComparatorFunc;
+  void* mData;
+};
+
+PR_STATIC_CALLBACK(int)
+VoidArrayComparator(const void* aElement1, const void* aElement2, void* aData)
+{
+  VoidArrayComparatorContext* ctx = NS_STATIC_CAST(VoidArrayComparatorContext*, aData);
+  return (*ctx->mComparatorFunc)(*NS_STATIC_CAST(void* const*, aElement1),
+                                 *NS_STATIC_CAST(void* const*, aElement2),
+                                  ctx->mData);
+}
+
+void nsVoidArray::Sort(nsVoidArrayComparatorFunc aFunc, void* aData)
+{
+  if (mImpl && mImpl->mCount > 1) {
+    VoidArrayComparatorContext ctx = {aFunc, aData};
+    NS_QuickSort(mImpl->mArray, mImpl->mCount, sizeof(void*),
+                 VoidArrayComparator, &ctx);
+  }
+}
+
 PRBool nsVoidArray::EnumerateForwards(nsVoidArrayEnumFunc aFunc, void* aData)
 {
   PRInt32 index = -1;
@@ -422,17 +447,12 @@ nsStringArray::IndexOf(const nsAReadableString& aPossibleString) const
 PRInt32 
 nsStringArray::IndexOfIgnoreCase(const nsAReadableString& aPossibleString) const
 {
-  // XXX
-  // nsString::EqualsIgnoreCase() doesn't take a nsAReadableString& so we
-  // construct a stack based string here and do a copy...
-  nsAutoString possible_string(aPossibleString);
-
   if (mImpl) {
     void** ap = mImpl->mArray;
     void** end = ap + mImpl->mCount;
     while (ap < end) {
       nsString* string = NS_STATIC_CAST(nsString*, *ap);
-      if (string->EqualsIgnoreCase(possible_string)) {
+      if (!Compare(*string, aPossibleString, nsCaseInsensitiveStringComparator())) {
         return ap - mImpl->mArray;
       }
       ap++;
@@ -506,7 +526,32 @@ nsStringArray::Clear(void)
   nsVoidArray::Clear();
 }
 
+PR_STATIC_CALLBACK(int)
+CompareString(const nsString* aString1, const nsString* aString2, void*)
+{
+  return Compare(*aString1, *aString2);
+}
 
+PR_STATIC_CALLBACK(int)
+CompareStringIgnoreCase(const nsString* aString1, const nsString* aString2, void*)
+{
+  return Compare(*aString1, *aString2, nsCaseInsensitiveStringComparator());
+}
+
+void nsStringArray::Sort(void)
+{
+  Sort(CompareString, nsnull);
+}
+
+void nsStringArray::SortIgnoreCase(void)
+{
+  Sort(CompareStringIgnoreCase, nsnull);
+}
+
+void nsStringArray::Sort(nsStringArrayComparatorFunc aFunc, void* aData)
+{
+  nsVoidArray::Sort(NS_REINTERPRET_CAST(nsVoidArrayComparatorFunc, aFunc), aData);
+}
 
 PRBool 
 nsStringArray::EnumerateForwards(nsStringArrayEnumFunc aFunc, void* aData)
@@ -696,7 +741,32 @@ nsCStringArray::Clear(void)
   nsVoidArray::Clear();
 }
 
+PR_STATIC_CALLBACK(int)
+CompareCString(const nsCString* aCString1, const nsCString* aCString2, void*)
+{
+  return Compare(*aCString1, *aCString2);
+}
 
+PR_STATIC_CALLBACK(int)
+CompareCStringIgnoreCase(const nsCString* aCString1, const nsCString* aCString2, void*)
+{
+  return Compare(*aCString1, *aCString2, nsCaseInsensitiveCStringComparator());
+}
+
+void nsCStringArray::Sort(void)
+{
+  Sort(CompareCString, nsnull);
+}
+
+void nsCStringArray::SortIgnoreCase(void)
+{
+  Sort(CompareCStringIgnoreCase, nsnull);
+}
+
+void nsCStringArray::Sort(nsCStringArrayComparatorFunc aFunc, void* aData)
+{
+  nsVoidArray::Sort(NS_REINTERPRET_CAST(nsVoidArrayComparatorFunc, aFunc), aData);
+}
 
 PRBool 
 nsCStringArray::EnumerateForwards(nsCStringArrayEnumFunc aFunc, void* aData)
