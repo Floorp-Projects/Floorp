@@ -54,7 +54,7 @@ public final class PasswordConverter
             }
             bytes[b++] = 0;
             bytes[b++] = 0;
-            Assert.assert(b == bytes.length);
+            Assert._assert(b == bytes.length);
 
             return bytes;
         }

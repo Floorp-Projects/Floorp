@@ -45,7 +45,7 @@ import java.util.Enumeration;
  * freed properly.
  *
  * @author nicolson
- * @version $Revision: 1.2 $ $Date: 2000/12/19 06:18:56 $ 
+ * @version $Revision: 1.3 $ $Date: 2002/05/02 04:04:23 $ 
  */
 public abstract class NativeProxy
 {
@@ -54,7 +54,7 @@ public abstract class NativeProxy
      * Default constructor. Should not be called.
      */
     private NativeProxy() {
-        Assert.assert(false);
+        Assert._assert(false);
     }
 
     /**
@@ -67,7 +67,7 @@ public abstract class NativeProxy
      * NativeProxy instance acts as a proxy for that native data structure.
      */
     public NativeProxy(byte[] pointer) {
-		Assert.assert(pointer!=null);
+		Assert._assert(pointer!=null);
         if(Debug.DEBUG) {
             registryIndex = register();
         }
@@ -184,7 +184,7 @@ public abstract class NativeProxy
         Long element;
 
         element = (Long) registry.remove(Lindex);
-        Assert.assert(element != null);
+        Assert._assert(element != null);
     }
 
     /**

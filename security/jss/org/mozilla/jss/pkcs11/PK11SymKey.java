@@ -39,7 +39,7 @@ import org.mozilla.jss.util.Assert;
 public final class PK11SymKey implements SymmetricKey {
 
     protected PK11SymKey(byte[] pointer) {
-        Assert.assert(pointer!=null);
+        Assert._assert(pointer!=null);
         keyProxy  = new SymKeyProxy(pointer);
     }
 

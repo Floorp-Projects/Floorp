@@ -66,7 +66,7 @@ public final class PK11KeyPairGenerator
     public PK11KeyPairGenerator(PK11Token token, KeyPairAlgorithm algorithm)
         throws NoSuchAlgorithmException, TokenException
     {
-        Assert.assert(token!=null && algorithm!=null);
+        Assert._assert(token!=null && algorithm!=null);
 
         mKeygenOnInternalToken = false;
 
@@ -113,7 +113,7 @@ public final class PK11KeyPairGenerator
             params =
                 new RSAParameterSpec(strength, DEFAULT_RSA_PUBLIC_EXPONENT);
         } else {
-            Assert.assert( algorithm == KeyPairAlgorithm.DSA );
+            Assert._assert( algorithm == KeyPairAlgorithm.DSA );
             if(strength==512) {
                 params = PQG512;
             } else if(strength==768) {
@@ -159,7 +159,7 @@ public final class PK11KeyPairGenerator
                         "RSA Public Exponent must fit in 31 or fewer bits.");
             }
         } else {
-            Assert.assert( algorithm == KeyPairAlgorithm.DSA);
+            Assert._assert( algorithm == KeyPairAlgorithm.DSA);
             if(! (params instanceof DSAParameterSpec) ) {
                 throw new InvalidAlgorithmParameterException();
             }
@@ -190,7 +190,7 @@ public final class PK11KeyPairGenerator
                                     temporaryPairMode);
             }
         } else {
-            Assert.assert( algorithm == KeyPairAlgorithm.DSA );
+            Assert._assert( algorithm == KeyPairAlgorithm.DSA );
             if(params==null) {
                 params = PQG1024;
             }
@@ -331,9 +331,9 @@ public final class PK11KeyPairGenerator
     private static synchronized void
     testDefaults() {
         if(Debug.DEBUG && !defaultsTested) {
-            Assert.assert(PQG1024.paramsAreValid());
-            Assert.assert(PQG768.paramsAreValid());
-            Assert.assert(PQG512.paramsAreValid());
+            Assert._assert(PQG1024.paramsAreValid());
+            Assert._assert(PQG768.paramsAreValid());
+            Assert._assert(PQG512.paramsAreValid());
 			System.out.println("Default PQG Parameters passed!");
             defaultsTested = true;
         }

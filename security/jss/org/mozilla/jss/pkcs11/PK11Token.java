@@ -45,7 +45,7 @@ import java.security.InvalidParameterException;
  * CryptoManager class.
  *
  * @author nicolson
- * @version $Revision: 1.3 $ $Date: 2002/04/19 22:41:37 $ 
+ * @version $Revision: 1.4 $ $Date: 2002/05/02 04:03:49 $ 
  * @see org.mozilla.jss.CryptoManager
  */
 public final class PK11Token implements CryptoToken {
@@ -71,7 +71,7 @@ public final class PK11Token implements CryptoToken {
 	getSignatureContext(SignatureAlgorithm algorithm) 
 		throws NoSuchAlgorithmException, TokenException
 	{
-        Assert.assert(algorithm!=null);
+        Assert._assert(algorithm!=null);
 		return Tunnel.constructSignature( algorithm,
                     new PK11Signature(this, algorithm) );
 	}
@@ -147,7 +147,7 @@ public final class PK11Token implements CryptoToken {
 	getKeyPairGenerator(KeyPairAlgorithm algorithm)
 		throws NoSuchAlgorithmException, TokenException
 	{
-        Assert.assert(algorithm!=null);
+        Assert._assert(algorithm!=null);
         return new KeyPairGenerator(algorithm,
                                     new PK11KeyPairGenerator(this, algorithm));
 	}
@@ -524,7 +524,7 @@ public final class PK11Token implements CryptoToken {
      * Default constructor should never be called.
      */
     protected PK11Token() {
-        Assert.assert(false);
+        Assert._assert(false);
     }
 
     /**
@@ -533,7 +533,7 @@ public final class PK11Token implements CryptoToken {
      * @param pointer A byte array containing a pointer to a PKCS #11 slot.
      */
     protected PK11Token(byte[] pointer, boolean internal, boolean keyStorage) {
-        Assert.assert(pointer!=null);
+        Assert._assert(pointer!=null);
         tokenProxy = new TokenProxy(pointer);
         mIsInternalCryptoToken = internal;
         mIsInternalKeyStorageToken = keyStorage;
@@ -542,7 +542,7 @@ public final class PK11Token implements CryptoToken {
 
 /*
 	protected PK11Token(TokenProxy proxy) {
-        Assert.assert(proxy!=null);
+        Assert._assert(proxy!=null);
 		this.tokenProxy = proxy;
 	}
 */

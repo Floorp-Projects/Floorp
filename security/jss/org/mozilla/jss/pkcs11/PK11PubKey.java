@@ -42,7 +42,7 @@ public class PK11PubKey extends org.mozilla.jss.pkcs11.PK11Key
 	implements java.security.PublicKey {
 
     protected PK11PubKey(byte[] pointer) {
-        Assert.assert(pointer!=null);
+        Assert._assert(pointer!=null);
         keyProxy = new PublicKeyProxy(pointer);
     }
 

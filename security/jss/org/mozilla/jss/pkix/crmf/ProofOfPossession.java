@@ -171,7 +171,7 @@ public class ProofOfPossession implements ASN1Value {
         } else if( type == KEY_ENCIPHERMENT ) {
             return Tag.get(2);
         } else {
-            Assert.assert( type == KEY_AGREEMENT );
+            Assert._assert( type == KEY_AGREEMENT );
             return Tag.get(3);
         }
     }
@@ -187,7 +187,7 @@ public class ProofOfPossession implements ASN1Value {
             EXPLICIT e = new EXPLICIT( Tag.get(2), keyEncipherment );
             e.encode(ostream);
         } else {
-            Assert.assert( type == KEY_AGREEMENT );
+            Assert._assert( type == KEY_AGREEMENT );
             // a CHOICE must be explicitly tagged
             EXPLICIT e = new EXPLICIT( Tag.get(3), keyAgreement );
             e.encode(ostream);
@@ -236,7 +236,7 @@ public class ProofOfPossession implements ASN1Value {
                 EXPLICIT e = (EXPLICIT) c.getValue();
                 return createKeyEncipherment( (POPOPrivKey) e.getContent() );
             } else {
-                Assert.assert( c.getTag().equals(Tag.get(3)) );
+                Assert._assert( c.getTag().equals(Tag.get(3)) );
                 EXPLICIT e = (EXPLICIT) c.getValue();
                 return createKeyAgreement( (POPOPrivKey) e.getContent() );
             }

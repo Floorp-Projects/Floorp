@@ -171,7 +171,7 @@ public class ASN1Header {
                 next = (byte) inInt;
                 bV.addElement( new Byte(next) );
             } while( (next & 0x80) == 0x80 );
-            Assert.assert( bV.size() > 0 );
+            Assert._assert( bV.size() > 0 );
 
             //
             // Copy Vector of 7-bit bytes into array of 8-bit bytes.
@@ -190,10 +190,10 @@ public class ASN1Header {
             // end (LSB) to the beginning (MSB).
             a = bA.length - 1;
             for( v=bV.size()-1 ; v >= 0; v--) {
-                Assert.assert( v >= 0 );
-                Assert.assert( v < bV.size() );
-                Assert.assert( a >= 0 );
-                Assert.assert( a < bA.length );
+                Assert._assert( v >= 0 );
+                Assert._assert( v < bV.size() );
+                Assert._assert( a >= 0 );
+                Assert._assert( a < bA.length );
 
                 // MSB is not part of the number
                 byte b = (byte) ( ((Byte)bV.elementAt(v)).byteValue() & 0x7f );
@@ -203,7 +203,7 @@ public class ASN1Header {
                     // in the array.  We've already got the less-significant
                     // bits, now copy the more-significant bits into
                     // the next element of the array.
-                    Assert.assert( a > 0 );
+                    Assert._assert( a > 0 );
                     --a;
                     bA[a] |= b >>> (8-shift);
                 }
@@ -264,7 +264,7 @@ public class ASN1Header {
     {
         this.tag = tag;
         this.form = form;
-        Assert.assert(contentLength >= 0);
+        Assert._assert(contentLength >= 0);
         this.contentLength = contentLength;
     }
 
@@ -348,7 +348,7 @@ public class ASN1Header {
      */
     public static byte[] unsignedBigIntToByteArray(BigInteger bi) {
         // make sure it is not negative
-        Assert.assert( bi.compareTo(BigInteger.valueOf(0)) != -1 );
+        Assert._assert( bi.compareTo(BigInteger.valueOf(0)) != -1 );
 
         // find minimal number of bytes to hold this value
         int bitlen = bi.bitLength(); // minimal number of bits, without sign
@@ -366,8 +366,8 @@ public class ASN1Header {
             return withSign;
         } else {
             // trim off extra byte at the beginning
-            Assert.assert( bytelen == withSign.length - 1 );
-            Assert.assert( withSign[0] == 0 );
+            Assert._assert( bytelen == withSign.length - 1 );
+            Assert._assert( withSign[0] == 0 );
             byte[] without = new byte[bytelen];
             System.arraycopy(withSign,1, without, 0, bytelen);
             return without;

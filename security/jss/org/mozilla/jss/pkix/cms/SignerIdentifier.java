@@ -132,7 +132,7 @@ public class SignerIdentifier implements ASN1Value {
         if( type == SUBJECT_KEY_IDENTIFIER ) {
             return Tag.get(0);
         } else {
-            Assert.assert( type == ISSUER_AND_SERIALNUMBER );
+            Assert._assert( type == ISSUER_AND_SERIALNUMBER );
             return IssuerAndSerialNumber.TAG;
         }
     }
@@ -145,7 +145,7 @@ public class SignerIdentifier implements ASN1Value {
             //e.encode(ostream);
             subjectKeyIdentifier.encode(Tag.get(0), ostream);
         } else {
-            Assert.assert( type == ISSUER_AND_SERIALNUMBER );
+            Assert._assert( type == ISSUER_AND_SERIALNUMBER );
             issuerAndSerialNumber.encode(ostream);
         }
     }
@@ -189,7 +189,7 @@ public class SignerIdentifier implements ASN1Value {
             if( c.getTag() == SEQUENCE.TAG ) {
                 return createIssuerAndSerialNumber( (IssuerAndSerialNumber) c.getValue() );
             } else {
-                Assert.assert( c.getTag().equals(Tag.get(0)) );
+                Assert._assert( c.getTag().equals(Tag.get(0)) );
                 //EXPLICIT e = (EXPLICIT) c.getValue();
 				//ASN1Value dski =  e.getContent();
 				//OCTET_STRING ski = (OCTET_STRING) e.getContent();

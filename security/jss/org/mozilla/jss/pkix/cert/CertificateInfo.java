@@ -238,7 +238,7 @@ public class CertificateInfo implements ASN1Value {
      * Should only be called if this field is present.
      */
     public BIT_STRING getIssuerUniqueIdentifier() {
-        Assert.assert(issuerUniqueIdentifier != null);
+        Assert._assert(issuerUniqueIdentifier != null);
         return issuerUniqueIdentifier;
     }
 
@@ -259,7 +259,7 @@ public class CertificateInfo implements ASN1Value {
         return (subjectUniqueIdentifier!=null);
     }
     public BIT_STRING getSubjectUniqueIdentifier() {
-        Assert.assert(subjectUniqueIdentifier != null);
+        Assert._assert(subjectUniqueIdentifier != null);
         return subjectUniqueIdentifier;
     }
 
@@ -286,7 +286,7 @@ public class CertificateInfo implements ASN1Value {
         if( Debug.DEBUG ) {
             int size = extensions.size();
             for(int i=0; i < size; i++) {
-                Assert.assert(extensions.elementAt(i) instanceof Extension);
+                Assert._assert(extensions.elementAt(i) instanceof Extension);
             }
         }
         verifyNotNull(extensions);

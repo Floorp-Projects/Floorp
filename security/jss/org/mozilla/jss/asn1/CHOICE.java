@@ -106,7 +106,7 @@ public class CHOICE implements ASN1Value {
     public void encode( Tag implicitTag, OutputStream ostream )
         throws IOException
     {
-        Assert.assert(implicitTag.equals(tag));
+        Assert._assert(implicitTag.equals(tag));
         val.encode( tag, ostream );
     }
     

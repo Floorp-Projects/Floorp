@@ -267,14 +267,14 @@ final class PK11KeyWrapper implements KeyWrapper {
         checkWrappee(toBeWrapped);
 
         if( symKey != null ) {
-            Assert.assert( privKey==null && pubKey==null );
+            Assert._assert( privKey==null && pubKey==null );
             return nativeWrapPrivWithSym(token, toBeWrapped, symKey, algorithm,
                 IV);
         } else {
             throw new InvalidKeyException(
                 "Wrapping a private key with a public key is not supported");
             /*
-            Assert.assert( pubKey!=null && privKey==null && symKey==null );
+            Assert._assert( pubKey!=null && privKey==null && symKey==null );
             return nativeWrapPrivWithPub(token, toBeWrapped, pubKey, algorithm,
                     IV);
             */
@@ -295,11 +295,11 @@ final class PK11KeyWrapper implements KeyWrapper {
         checkWrappee(toBeWrapped);
 
         if( symKey != null ) {
-            Assert.assert( privKey==null && pubKey==null );
+            Assert._assert( privKey==null && pubKey==null );
             return nativeWrapSymWithSym(token, toBeWrapped, symKey, algorithm,
                         IV);
         } else {
-            Assert.assert( pubKey!=null && privKey==null && symKey==null );
+            Assert._assert( pubKey!=null && privKey==null && symKey==null );
             return nativeWrapSymWithPub(token, toBeWrapped, pubKey, algorithm,
                         IV);
         }
@@ -417,14 +417,14 @@ final class PK11KeyWrapper implements KeyWrapper {
         byte[] publicValue = extractPublicValue(publicKey, type);
 
         if( symKey != null ) {
-            Assert.assert(pubKey==null && privKey==null);
+            Assert._assert(pubKey==null && privKey==null);
             return nativeUnwrapPrivWithSym(token, symKey, wrapped, algorithm,
                         algFromType(type), publicValue, IV, temporary );
         } else {
             throw new InvalidKeyException("Unwrapping a private key with"
                 + " a private key is not supported");
             /*
-            Assert.assert(privKey!=null && pubKey==null && symKey==null);
+            Assert._assert(privKey!=null && pubKey==null && symKey==null);
             return nativeUnwrapPrivWithPriv(token, privKey, wrapped, algorithm,
                         algFromType(type), publicValue, IV, temporary );
             */
@@ -505,11 +505,11 @@ final class PK11KeyWrapper implements KeyWrapper {
                 usageEnum );
         } else {
             if( symKey != null ) {
-                Assert.assert(pubKey==null && privKey==null);
+                Assert._assert(pubKey==null && privKey==null);
                 return nativeUnwrapSymWithSym(token, symKey, wrapped, algorithm,
                         algFromType(type), keyLen, IV, usageEnum);
             } else {
-                Assert.assert(privKey!=null && pubKey==null && symKey==null);
+                Assert._assert(privKey!=null && pubKey==null && symKey==null);
                 return nativeUnwrapSymWithPriv(token, privKey, wrapped,
                     algorithm, algFromType(type), keyLen, IV, usageEnum );
             }
@@ -521,7 +521,7 @@ final class PK11KeyWrapper implements KeyWrapper {
         if(type == PrivateKey.RSA) {
             return KeyPairAlgorithm.RSAFamily;
         } else {
-            Assert.assert(type == PrivateKey.DSA);
+            Assert._assert(type == PrivateKey.DSA);
             return KeyPairAlgorithm.DSAFamily;
         }
     }
@@ -533,7 +533,7 @@ final class PK11KeyWrapper implements KeyWrapper {
         } else if( type == SymmetricKey.DES3 ) {
             return EncryptionAlgorithm.DES3_ECB;
         } else {
-            Assert.assert( type == SymmetricKey.RC4 );
+            Assert._assert( type == SymmetricKey.RC4 );
             return EncryptionAlgorithm.RC4;
         }
     }

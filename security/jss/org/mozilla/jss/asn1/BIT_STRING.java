@@ -95,7 +95,7 @@ public class BIT_STRING implements ASN1Value {
         // allocate enough bytes to hold all the bits
         bits = new byte[(numBits+7) / 8];
         padCount = bits.length - numBits;
-        Assert.assert( padCount >= 0 );
+        Assert._assert( padCount >= 0 );
 
         for(int i=0; i < numBits; i++) {
             if( bs.get(i) ) {

@@ -68,7 +68,7 @@ public class Base64OutputStream extends FilterOutputStream {
 	public Base64OutputStream(PrintStream out, int quadsPerLine) {
 		this(out);
 		doLineBreaks = true;
-		Assert.assert(quadsPerLine>0, "quadsPerLine must be > 0");
+		Assert._assert(quadsPerLine>0, "quadsPerLine must be > 0");
 		charsPerLine = quadsPerLine*4;
 	}
 		
@@ -82,10 +82,10 @@ public class Base64OutputStream extends FilterOutputStream {
 					((PrintStream)out).println();
 					charsOnLine=0;
 				}
-				Assert.assert(charsOnLine < charsPerLine);
+				Assert._assert(charsOnLine < charsPerLine);
 			}
 		}
-		Assert.assert(inputCount < 3);
+		Assert._assert(inputCount < 3);
 	}
 
 	/**

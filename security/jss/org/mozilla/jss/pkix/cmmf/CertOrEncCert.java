@@ -73,7 +73,7 @@ public class CertOrEncCert implements ASN1Value {
     public void encode(Tag implicitTag, OutputStream ostream)
         throws IOException
     {
-        Assert.assert( implicitTag.equals(TAG) );
+        Assert._assert( implicitTag.equals(TAG) );
         ostream.write(encoding);
     }
 }

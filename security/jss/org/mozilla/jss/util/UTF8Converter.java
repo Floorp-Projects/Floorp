@@ -101,7 +101,7 @@ public class UTF8Converter {
 		boolean failed = true;
 		boolean orphaned_low = false;
 
-		Assert.assert(unicode != null);
+		Assert._assert(unicode != null);
 		if(unicode == null) {
 			return null;
 		}
@@ -251,16 +251,16 @@ public class UTF8Converter {
 
 				// It worked with the Java class, so it should have worked
 				// with my class
-				Assert.assert(utf8 != null);
+				Assert._assert(utf8 != null);
 
 				// Compare the arrays
 				if(nullTerminate) {
-					Assert.assert(utf8.length-1 == output.length);
+					Assert._assert(utf8.length-1 == output.length);
 				} else {
-					Assert.assert(utf8.length == output.length);
+					Assert._assert(utf8.length == output.length);
 				}
 				for(i=0; i<output.length; i++) {
-					Assert.assert(utf8[i] == output[i]);
+					Assert._assert(utf8[i] == output[i]);
 				}
 
 			  } catch(UnsupportedEncodingException e) {
@@ -269,7 +269,7 @@ public class UTF8Converter {
 			  } catch(IOException e) {
 					// If it failed with the Java class it should have failed
 					// with mine
-					Assert.assert(utf8 == null);
+					Assert._assert(utf8 == null);
 			  } catch(Exception e) {
 					// Nothing else should be thrown here
 					Assert.notReached("UTF8Converter validation threw an"+
@@ -286,7 +286,7 @@ public class UTF8Converter {
 	public static void wipeBytes(byte[] array) {
 		int i;
 
-		Assert.assert(array != null);
+		Assert._assert(array != null);
 		if(array == null) {
 			return;
 		}
@@ -361,7 +361,7 @@ public class UTF8Converter {
 		System.out.println("Maximum buffer size test:");
 		unicode = new char[] {'\uffff', '\uffff', '\uffff', '\uffff'};
 		utf8 = UnicodeToUTF8(unicode);
-		Assert.assert(utf8.length == 12);
+		Assert._assert(utf8.length == 12);
 		System.out.println("8 bytes of unicode --> "+utf8.length+
 			" bytes of utf8\n");
 
@@ -371,8 +371,8 @@ public class UTF8Converter {
 		System.out.println("Empty input test:");
 		unicode = new char[0];
 		utf8 = UnicodeToUTF8(unicode);
-		Assert.assert(utf8 != null);
-		Assert.assert(utf8.length == 0);
+		Assert._assert(utf8 != null);
+		Assert._assert(utf8.length == 0);
 		System.out.println("given 0 bytes Unicode, produces 0 length utf8\n");
 
 		//

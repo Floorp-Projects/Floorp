@@ -152,7 +152,7 @@ public class ResponseBody implements ASN1Value {
         {
             SEQUENCE seq = (SEQUENCE) seqt.decode(implicitTag, istream);
 
-            Assert.assert(seq.size() == 3);
+            Assert._assert(seq.size() == 3);
 
             return new ResponseBody(
                             (SEQUENCE)      seq.elementAt(0),

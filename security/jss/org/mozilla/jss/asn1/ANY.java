@@ -209,7 +209,7 @@ public class ANY implements ASN1Value {
     {
         byte[] contents = getContents();
         ASN1Header oldHead = getHeader();
-        Assert.assert( contents.length == oldHead.getContentLength() );
+        Assert._assert( contents.length == oldHead.getContentLength() );
 
         ASN1Header newHead = new ASN1Header( alternateTag, oldHead.getForm(),
                                 contents.length);

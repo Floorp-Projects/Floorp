@@ -340,7 +340,7 @@ public class EncryptedContentInfo implements ASN1Value {
                 seqt.addOptionalElement(new Tag(0), new OCTET_STRING.Template());
 
                 SEQUENCE seq = (SEQUENCE) seqt.decode(implicitTag,istream);
-                Assert.assert(seq.size() ==3);
+                Assert._assert(seq.size() ==3);
 
                 return new EncryptedContentInfo(
                     (OBJECT_IDENTIFIER)   seq.elementAt(0),

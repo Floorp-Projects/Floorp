@@ -116,14 +116,14 @@ public class EncryptedKey implements ASN1Value {
             throws IOException {
 
         // no IMPLICIT tags allowed on ANY
-        Assert.assert( getTag().equals(implicitTag));
+        Assert._assert( getTag().equals(implicitTag));
 
         if( type == ENCRYPTED_VALUE ) {
-            Assert.assert( encryptedValue != null );
+            Assert._assert( encryptedValue != null );
             encryptedValue.encode(implicitTag, ostream);
         } else {
-            Assert.assert(type == ENVELOPED_DATA);
-            Assert.assert(envelopedData != null);
+            Assert._assert(type == ENVELOPED_DATA);
+            Assert._assert(envelopedData != null);
             envelopedData.encode(implicitTag, ostream);
         }
     }
@@ -160,7 +160,7 @@ public class EncryptedKey implements ASN1Value {
             if( choice.getTag().equals(SEQUENCE.TAG) ) {
                 return new EncryptedKey( (EncryptedValue) choice.getValue() );
             } else {
-                Assert.assert( choice.getTag().equals(new Tag(0)) );
+                Assert._assert( choice.getTag().equals(new Tag(0)) );
                 return new EncryptedKey( (ANY) choice.getValue() );
             }
 

@@ -154,7 +154,7 @@ public class OtherInfo implements ASN1Value {
         if( type == FAIL ) {
             return INTEGER.TAG;
         } else {
-            Assert.assert( type == PEND );
+            Assert._assert( type == PEND );
             return PendInfo.TAG;
         }
     }
@@ -164,7 +164,7 @@ public class OtherInfo implements ASN1Value {
         if( type == FAIL ) {
             failInfo.encode(ostream);
         } else {
-            Assert.assert( type == PEND );
+            Assert._assert( type == PEND );
             pendInfo.encode(ostream);
         }
     }
@@ -204,7 +204,7 @@ public class OtherInfo implements ASN1Value {
             if( c.getTag().equals(INTEGER.TAG) ) {
                 return new OtherInfo(FAIL, (INTEGER) c.getValue() , null);
             } else {
-                Assert.assert( c.getTag().equals(PendInfo.TAG) );
+                Assert._assert( c.getTag().equals(PendInfo.TAG) );
                 return new OtherInfo(PEND, null, (PendInfo) c.getValue());
             }
         }

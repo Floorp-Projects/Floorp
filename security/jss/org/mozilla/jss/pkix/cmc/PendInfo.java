@@ -151,7 +151,7 @@ public class PendInfo implements ASN1Value {
         {
             SEQUENCE seq = (SEQUENCE) seqt.decode(implicitTag, istream);
 
-            Assert.assert(seq.size() == 2);
+            Assert._assert(seq.size() == 2);
 
             return new PendInfo(
                             (OCTET_STRING)      seq.elementAt(0),

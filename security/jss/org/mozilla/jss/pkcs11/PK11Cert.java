@@ -134,12 +134,12 @@ public class PK11Cert implements org.mozilla.jss.crypto.X509Certificate {
 	// Construction
 	/////////////////////////////////////////////////////////////
 	//PK11Cert(CertProxy proxy) {
-    //    Assert.assert(proxy!=null);
+    //    Assert._assert(proxy!=null);
 	//	this.certProxy = proxy;
 	//}
 
 	PK11Cert(byte[] pointer) {
-        Assert.assert(pointer!=null);
+        Assert._assert(pointer!=null);
 		certProxy = new CertProxy(pointer);
 	}
 

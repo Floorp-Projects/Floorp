@@ -88,9 +88,9 @@ public class RecipientInfo implements ASN1Value {
 			   AlgorithmIdentifier keyEncryptionAlgorithmID,
 			   OCTET_STRING encryptedKey) {
 
-	Assert.assert(issuerAndSerialNumber != null);
-	Assert.assert(keyEncryptionAlgorithmID != null);
-	Assert.assert(encryptedKey != null);
+	Assert._assert(issuerAndSerialNumber != null);
+	Assert._assert(keyEncryptionAlgorithmID != null);
+	Assert._assert(encryptedKey != null);
 
 
         this.version = version;
@@ -145,7 +145,7 @@ public class RecipientInfo implements ASN1Value {
                 seqt.addElement(new OCTET_STRING.Template());
 
                 SEQUENCE seq = (SEQUENCE) seqt.decode(implicitTag,istream);
-                Assert.assert(seq.size() ==4);
+                Assert._assert(seq.size() ==4);
 
                 return new RecipientInfo(
                     (INTEGER)               seq.elementAt(0),

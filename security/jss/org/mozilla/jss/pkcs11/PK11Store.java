@@ -97,7 +97,7 @@ public final class PK11Store implements CryptoStore {
 	////////////////////////////////////////////////////////////
     protected boolean updated;
 	public PK11Store(TokenProxy proxy) {
-        Assert.assert(proxy!=null);
+        Assert._assert(proxy!=null);
 		this.storeProxy = proxy;
 	}
 

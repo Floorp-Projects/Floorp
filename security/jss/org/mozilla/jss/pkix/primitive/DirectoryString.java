@@ -177,7 +177,7 @@ public class DirectoryString implements ASN1Value {
         public ASN1Value decode(Tag implicitTag, InputStream istream)
             throws IOException, InvalidBERException
         {
-            Assert.assert( tagMatch(implicitTag) );
+            Assert._assert( tagMatch(implicitTag) );
             return decode(istream);
         } 
     }

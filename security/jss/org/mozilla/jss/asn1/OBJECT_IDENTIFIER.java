@@ -191,12 +191,12 @@ public class OBJECT_IDENTIFIER implements ASN1Value {
      * off, it just checks for null.
      */
     private static void checkLongArray(long[] numbers) {
-        Assert.assert(numbers != null);
+        Assert._assert(numbers != null);
         if(numbers == null) {
             throw new NullPointerException();
         }
-        Assert.assert(numbers.length >= 2);
-        Assert.assert( numbers[0]==0 || numbers[0]==1 || numbers[0]==2 );
+        Assert._assert(numbers.length >= 2);
+        Assert._assert( numbers[0]==0 || numbers[0]==1 || numbers[0]==2 );
     }
     
 
@@ -220,7 +220,7 @@ public class OBJECT_IDENTIFIER implements ASN1Value {
         while(stok.hasMoreElements()) {
             numbers[i++] = Long.parseLong( stok.nextToken() );
         }
-        Assert.assert( i == numbers.length );
+        Assert._assert( i == numbers.length );
         checkLongArray(numbers);
     }
 
@@ -353,17 +353,17 @@ public class OBJECT_IDENTIFIER implements ASN1Value {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
         // handle first number
-        Assert.assert(numbers.length >= 2);
+        Assert._assert(numbers.length >= 2);
         long n = numbers[0];
-        Assert.assert( n == 0 || n == 1 || n == 2 );
+        Assert._assert( n == 0 || n == 1 || n == 2 );
         long outb = ( numbers[0] * 40 ) + numbers[1];
-        Assert.assert( ((byte)outb) == outb );
+        Assert._assert( ((byte)outb) == outb );
         out.write( (byte)outb );
 
         // handle consecutive numbers
         for( int i = 2; i < numbers.length; i++ ) {
             n = numbers[i];
-            Assert.assert( n >= 0 );
+            Assert._assert( n >= 0 );
 
             // array of output bytes, in reverse order.  10 bytes, at 7 bits
             // per byte, is 70 bits, which is more than enough to handle
@@ -383,7 +383,7 @@ public class OBJECT_IDENTIFIER implements ASN1Value {
                 // all but last byte have MSB==1
                 out.write( rev[idx--]  | 0x80 );
             }
-            Assert.assert(idx == 0);
+            Assert._assert(idx == 0);
             // last byte has MSB==0
             out.write( rev[0] );
         }
@@ -505,7 +505,7 @@ public static class Template implements ASN1Template {
             throw new InvalidBERException("End-of-file reached while "+
                 "decoding OBJECT IDENTIFIER");
         }
-        Assert.assert( (n & 0xff) == n );
+        Assert._assert( (n & 0xff) == n );
         return (byte) n;
     }
         

@@ -126,7 +126,7 @@ public class TaggedRequest implements ASN1Value {
         if( type == PKCS10 ) {
             return Tag.get(0);
         } else {
-            Assert.assert( type == CRMF );
+            Assert._assert( type == CRMF );
             return Tag.get(1);
         }
     }
@@ -139,7 +139,7 @@ public class TaggedRequest implements ASN1Value {
             //EXPLICIT e = new EXPLICIT( Tag.get(0), tcr );
             //e.encode(ostream);
         } else {
-            Assert.assert( type == CRMF );
+            Assert._assert( type == CRMF );
             crm.encode(Tag.get(1), ostream);
             // a CHOICE must be explicitly tagged
             //EXPLICIT e = new EXPLICIT( Tag.get(1), crm );
@@ -194,7 +194,7 @@ public class TaggedRequest implements ASN1Value {
 				//						 e.getContent(), null );
                 return new TaggedRequest(PKCS10, (TaggedCertificationRequest) c.getValue() , null);
             } else {
-                Assert.assert( c.getTag().equals(Tag.get(1)) );
+                Assert._assert( c.getTag().equals(Tag.get(1)) );
                 //EXPLICIT e = (EXPLICIT) c.getValue();
                 //return new TaggedRequest(CRMF, null,
 				//						 (CertReqMsg) e.getContent() );

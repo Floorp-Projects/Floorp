@@ -167,7 +167,7 @@ public class POPOPrivKey implements ASN1Value {
         } else if(type == SUBSEQUENT_MESSAGE) {
             return Tag.get(1);
         } else {
-            Assert.assert(type == DHMAC);
+            Assert._assert(type == DHMAC);
             return Tag.get(2);
         }
     }
@@ -178,7 +178,7 @@ public class POPOPrivKey implements ASN1Value {
         } else if(type == SUBSEQUENT_MESSAGE) {
             subsequentMessage.encode(Tag.get(1), ostream);
         } else {
-            Assert.assert(type == DHMAC);
+            Assert._assert(type == DHMAC);
             dhMAC.encode(Tag.get(2), ostream);
         }
     }
@@ -247,7 +247,7 @@ public class POPOPrivKey implements ASN1Value {
                 }
                 return createSubsequentMessage( i );
             } else {
-                Assert.assert( chosen.equals(Tag.get(2)) );
+                Assert._assert( chosen.equals(Tag.get(2)) );
                 return createDhMAC( (BIT_STRING) choice.getValue() );
             }
         }

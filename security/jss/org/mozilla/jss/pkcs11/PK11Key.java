@@ -86,12 +86,12 @@ abstract class PK11Key {
     // Override serialization methods so that we don't get serialized,
     // even though we are supposed to support it as an implementation of Key.
     private void writeObject(ObjectOutputStream out) throws IOException {
-        Assert.assert(false, "PKCS#11 Key is not really serializable");
+        Assert._assert(false, "PKCS#11 Key is not really serializable");
     }
 
     private void readObject(ObjectInputStream in)
         throws IOException, ClassNotFoundException {
-        Assert.assert(false, "PKCS#11 Key is not really serializable");
+        Assert._assert(false, "PKCS#11 Key is not really serializable");
     }
 
 

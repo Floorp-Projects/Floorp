@@ -424,7 +424,7 @@ public static class Template implements ASN1Template {
         if( remainingContent > 0 ) {
             throw new InvalidBERException("SEQUENCE is longer than expected "+remainingContent+" expected");
         }
-        Assert.assert( remainingContent == 0 || remainingContent == -1 );
+        Assert._assert( remainingContent == 0 || remainingContent == -1 );
 
         // If this was indefinite-length encoding, consume the end-of-contents
         if( remainingContent == -1 ) {
@@ -436,7 +436,7 @@ public static class Template implements ASN1Template {
 
         // Make sure we stayed in sync
         if( ! repeatableElement ) {
-            Assert.assert(index == seq.size());
+            Assert._assert(index == seq.size());
         }
 
         return seq;

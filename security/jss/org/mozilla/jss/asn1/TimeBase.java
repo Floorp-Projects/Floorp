@@ -95,27 +95,27 @@ public abstract class TimeBase implements ASN1Value {
         }
 
         val = cal.get(Calendar.MONTH) + 1;
-        Assert.assert( val >= 1 && val <= 12 );
+        Assert._assert( val >= 1 && val <= 12 );
         ostream.write( (val / 10) + '0' );
         ostream.write( (val % 10) + '0' );
 
         val = cal.get(Calendar.DAY_OF_MONTH);
-        Assert.assert( val >=1 && val <= 31 );
+        Assert._assert( val >=1 && val <= 31 );
         ostream.write( (val / 10) + '0' );
         ostream.write( (val % 10) + '0' );
 
         val = cal.get(Calendar.HOUR_OF_DAY);
-        Assert.assert( val >= 0 && val <= 23 );
+        Assert._assert( val >= 0 && val <= 23 );
         ostream.write( (val / 10) + '0' );
         ostream.write( (val % 10) + '0' );
 
         val = cal.get(Calendar.MINUTE);
-        Assert.assert( val >=0 && val <= 59 );
+        Assert._assert( val >=0 && val <= 59 );
         ostream.write( (val / 10) + '0' );
         ostream.write( (val % 10) + '0' );
 
         val = cal.get(Calendar.SECOND);
-        Assert.assert( val >= 0 && val <= 59 );
+        Assert._assert( val >= 0 && val <= 59 );
         ostream.write( (val / 10) + '0' );
         ostream.write( (val % 10) + '0' );
 

@@ -87,7 +87,7 @@ public class DigestInfo implements ASN1Value {
      */
     private static boolean byteArraysAreSame(byte[] left, byte[] right) {
 
-        Assert.assert(left!=null && right!=null);
+        Assert._assert(left!=null && right!=null);
 
         if( left.length != right.length ) {
             return false;
