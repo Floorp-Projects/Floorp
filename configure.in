@@ -297,6 +297,8 @@ case "$target" in
     ;;
 
 *-*-sunos*) 
+    AS='$(CC)'
+    ASFLAGS='$(CFLAGS)'
     DSO_LDOPTS=''
     MKSHLIB='$(LD) $(DSO_LDOPTS)'
     MKCSHLIB='$(LD) $(DSO_LDOPTS)'
