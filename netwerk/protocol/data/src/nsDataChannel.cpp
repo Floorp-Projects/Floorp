@@ -140,7 +140,7 @@ nsDataChannel::ParseData() {
     *comma = '\0';
 
     // determine if the data is base64 encoded.
-    char *base64 = PL_strstr(buffer, "base64");
+    char *base64 = PL_strstr(buffer, ";base64");
     if (base64) {
         lBase64 = PR_TRUE;
         *base64 = '\0';
@@ -155,9 +155,14 @@ nsDataChannel::ParseData() {
         char *semiColon = PL_strchr(buffer, ';');
         if (semiColon)
             *semiColon = '\0';
-
-        mContentType = buffer;
-        ToLowerCase(mContentType);
+        
+        if (semiColon == buffer || base64 == buffer) {
+          // there is no content type, but there are other parameters
+          mContentType = NS_LITERAL_CSTRING("text/plain");
+        } else {
+          mContentType = buffer;
+          ToLowerCase(mContentType);
+        }
 
         if (semiColon) {
             char *charset = PL_strcasestr(semiColon + 1, "charset=");
@@ -202,7 +207,7 @@ nsDataChannel::ParseData() {
     }
 
     if (lBase64) {
-        *base64 = 'b';
+        *base64 = ';';
         PRInt32 resultLen = 0;
         if (dataBuffer[dataLen-1] == '=') {
             if (dataBuffer[dataLen-2] == '=')
