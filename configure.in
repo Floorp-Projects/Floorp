@@ -5311,7 +5311,9 @@ mingw*|cygwin*|msvc*|mks*)
     AS="\$(CYGWIN_WRAPPER) $AS"
     RC="\$(CYGWIN_WRAPPER) $RC"
     MIDL="\$(CYGWIN_WRAPPER) $MIDL"
-    PERL="\$(CYGWIN_WRAPPER) $PERL"
+    if test -z "${_CYGWIN_PERL}"; then
+        PERL="\$(CYGWIN_WRAPPER) $PERL"
+    fi
     ;;
 esac
 
