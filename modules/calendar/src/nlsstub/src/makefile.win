@@ -24,7 +24,7 @@ DEPTH = $(NS_DEPTH)
 
 LIBRARY_NAME = nlsstub10
 
-LCFLAGS= -DLIBJULIAN $(LCFLAGS)
+LCFLAGS= -DLIBJULIAN $(LCFLAGS) -D_IMPL_NS_NLS
 
 DLLNAME         = nlsstub10
 PDBFILE         = $(DLLNAME).pdb
@@ -40,17 +40,27 @@ REQUIRES=nspr
 
 OBJS = \
         .\$(OBJDIR)\nlsloc.obj \
+        .\$(OBJDIR)\calendar.obj \
+        .\$(OBJDIR)\datefmt.obj \
+        .\$(OBJDIR)\gregocal.obj \
+        .\$(OBJDIR)\locid.obj \
+        .\$(OBJDIR)\parsepos.obj \
+        .\$(OBJDIR)\simpletz.obj \
+        .\$(OBJDIR)\smpdtfmt.obj \
+        .\$(OBJDIR)\timezone.obj \
+        .\$(OBJDIR)\unistring.obj \
         $(NULL)
 
 LLIBS = $(LLIBS) \
+    $(DIST)\lib\raptorbase.lib \
     $(DIST)\lib\libnspr21.lib \
     $(DIST)\lib\libplc21.lib \
     $(NULL)
 
-LINCS=-I$(XPDIST)\public\nls
+LINCS=-I$(XPDIST)\public\nls -I$(XPDIST)\public\raptor -I$(XPDIST)\public\xpcom
 
 #// From the old Manifest file
-CPPSRCS=nlsloc.cpp
+CPPSRCS=nlsloc.cpp calendar.cpp datefmt.cpp gregocal.cpp locid.cpp parsepos.cpp simpletz.cpp smpdtfmt.cpp timezone.cpp unistring.cpp
 
 
 
