@@ -361,6 +361,14 @@ nsXULKeyListenerImpl::nsXULKeyListenerImpl(void)
   gRefCnt++;
   if (gRefCnt == 1) {
     mKeyBindingTable = new nsSupportsHashtable();
+
+#define LEAK_KEY_BINDINGS_TABLE_BUG_27739
+#ifdef LEAK_KEY_BINDINGS_TABLE_BUG_27739
+    // XXX This is a total hack to deal with bug 27739. At some point,
+    // the keybindings table will go away, and we won't need to worry
+    // about this leak anymore.
+    ++gRefCnt;
+#endif
   }
 }
 
