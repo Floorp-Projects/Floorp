@@ -157,6 +157,7 @@ gfx/src/xlib/Makefile
 gfx/src/os2/Makefile
 gfx/src/xlibrgb/Makefile
 gfx/src/windows/Makefile
+gfx/src/cairo/Makefile
 gfx/tests/Makefile
 "
 
