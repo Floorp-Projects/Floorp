@@ -1224,8 +1224,6 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName, nsIMsgWind
 			nsCOMPtr<nsISupports> newFolderSupport = do_QueryInterface(newFolder);
 			NotifyItemAdded(parentSupport, newFolderSupport, "folderView");
 		}
-        Release(); // really remove ourself from the system; since we need to
-                   // regenerate the folder uri from the parent folder.
         /***** jefft -
         * Needs to find a way to reselect the new renamed folder and the
         * message being selected.
