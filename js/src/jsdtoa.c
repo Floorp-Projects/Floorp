@@ -1229,24 +1229,6 @@ void js_FinishDtoa(void)
 
 /* nspr2 watcom bug ifdef omitted */
 
-#ifdef XP_OS2
-/* On OS/2, some system function calls seem to change the FPU control word, 
- * such that we crash with a floating underflow exception.  The FIX_FPU() call 
- * in jsnum.c does not always work, as sometimes it happens BEFORE the OS/2
- * system call that horks the FPU control word.  So, on OS/2, we need to do
- * what the comment at the top of this file (around line 80) suggests: setting
- * the FPU precision (& exceptions mask) before calling strtod or dtoa.
- *
- * Set the exception mask to mask all exceptions and set the FPU precision
- * to 53 bit mantissa.
- * On Alpha platform this is handled via Compiler option.
- */
- #define FIX_FPU()    _control87((CW_DEFAULT & ~MCW_PC) | PC_53, 0xffff)
-#else
- #define FIX_FPU()    ((void)0)
-#endif
-
-
 JS_FRIEND_API(double)
 JS_strtod(CONST char *s00, char **se, int *err)
 {
@@ -1259,7 +1241,7 @@ JS_strtod(CONST char *s00, char **se, int *err)
     ULong y, z;
     Bigint *bb, *bb1, *bd, *bd0, *bs, *delta;
 
-    FIX_FPU();
+    SET_FPU();
 
     *err = 0;
 
@@ -1881,7 +1863,8 @@ ret:
     RELEASE_DTOA_LOCK();
     if (se)
         *se = (char *)s;
-    return sign ? -rv : rv;
+    rv0 = sign ? -rv : rv;
+    goto ret1;
 
 nomem:
     Bfree(bb);
@@ -1890,7 +1873,11 @@ nomem:
     Bfree(bd0);
     Bfree(delta);
     *err = JS_DTOA_ENOMEM;
-    return 0;
+    rv0 = 0;
+
+ret1:
+    RESTORE_FPU();
+    return rv0;
 }
 
 
@@ -2108,8 +2095,9 @@ js_dtoa(double d, int mode, JSBool biasUp, int ndigits,
     Bigint *b, *b1, *delta, *mlo, *mhi, *S;
     double d2, ds, eps;
     char *s;
+    JSBool ok;
 
-    FIX_FPU();
+    SET_FPU();
 
     if (word0(d) & Sign_bit) {
         /* set sign for everything, including 0's and NaNs */
@@ -2126,14 +2114,16 @@ js_dtoa(double d, int mode, JSBool biasUp, int ndigits,
         if ((s[0] == 'I' && bufsize < 9) || (s[0] == 'N' && bufsize < 4)) {
             JS_ASSERT(JS_FALSE);
 /*          JS_SetError(JS_BUFFER_OVERFLOW_ERROR, 0); */
-            return JS_FALSE;
+            ok = JS_FALSE;
+            goto ret2;
         }
         strcpy(buf, s);
         if (rve) {
             *rve = buf[3] ? buf + 8 : buf + 3;
             JS_ASSERT(**rve == '\0');
         }
-        return JS_TRUE;
+        ok = JS_TRUE;
+        goto ret2;
     }
     
     b = NULL;                           /* initialize for abort protection */
@@ -2146,7 +2136,8 @@ js_dtoa(double d, int mode, JSBool biasUp, int ndigits,
         if (bufsize < 2) {
             JS_ASSERT(JS_FALSE);
 /*          JS_SetError(JS_BUFFER_OVERFLOW_ERROR, 0); */
-            return JS_FALSE;
+            ok = JS_FALSE;
+            goto ret2;
         }
         buf[0] = '0'; buf[1] = '\0';  /* copy "0" to buffer */
         if (rve)
@@ -2159,7 +2150,8 @@ js_dtoa(double d, int mode, JSBool biasUp, int ndigits,
         if (mlo != mhi)
             Bfree(mlo);
         Bfree(mhi);
-        return JS_TRUE;
+        ok = JS_TRUE;
+        goto ret2;
     }
 
     b = d2b(d, &be, &bbits);
@@ -2288,7 +2280,8 @@ js_dtoa(double d, int mode, JSBool biasUp, int ndigits,
     if (bufsize <= (size_t)i) {
         Bfree(b);
         JS_ASSERT(JS_FALSE);
-        return JS_FALSE;
+        ok = JS_FALSE;
+        goto ret2;
     }
     s = buf;
 
@@ -2751,7 +2744,8 @@ js_dtoa(double d, int mode, JSBool biasUp, int ndigits,
     if (rve)
         *rve = s;
     *decpt = k + 1;
-    return JS_TRUE;
+    ok =  JS_TRUE;
+    goto ret2;
 
 nomem:
     Bfree(S);
@@ -2761,7 +2755,11 @@ nomem:
         Bfree(mhi);
     }
     Bfree(b);
-    return JS_FALSE;
+    ok = JS_FALSE;
+    
+ret2:
+    RESTORE_FPU();
+    return ok;
 }
 
 
