@@ -40,6 +40,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIDOMWindow.h"
+#include "nsIDOMWindowUtils.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMNSHTMLDocument.h"
 #include "nsIDocument.h"
@@ -153,15 +154,13 @@ nsEditingSession::MakeWindowEditable(nsIDOMWindow *aWindow,
   if (NS_FAILED(rv)) return rv;
 
   // Disable JavaScript in this document:
-  nsCOMPtr<nsIScriptGlobalObject> sgo (do_QueryInterface(aWindow));
-  if (sgo)
-  {
-    nsIScriptContext *scriptContext = sgo->GetContext();
-    if (scriptContext)
-    {
-      mScriptsEnabled = scriptContext->GetScriptsEnabled();
-      scriptContext->SetScriptsEnabled(PR_FALSE, PR_TRUE);
-    }
+  PRBool scriptsEnabled;
+  rv = docShell->GetAllowJavascript(&scriptsEnabled);
+  if (NS_FAILED(rv)) return rv;
+  mScriptsEnabled = scriptsEnabled;
+  if (scriptsEnabled) {
+    rv = docShell->SetAllowJavascript(PR_FALSE);
+    if (NS_FAILED(rv)) return rv;
   }
 
   // Always remove existing editor
@@ -379,23 +378,18 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
 
   // Flush out frame construction to make sure that the subframe's
   // presshell is set up if it needs to be.
-  // XXXbz we really shouldn't need a presShell/presContext here!
   nsCOMPtr<nsIDocument> document(do_QueryInterface(doc));
   if (document) {
     document->FlushPendingNotifications(Flush_Frames);
   }
-  
-  nsCOMPtr<nsIPresShell> presShell;
-  rv = docShell->GetPresShell(getter_AddRefs(presShell));
-  if (NS_FAILED(rv)) return rv;
-  if (!presShell) return NS_ERROR_FAILURE;
 
   // Disable animation of images in this document:
-  nsPresContext *presContext = presShell->GetPresContext();
-  if (!presContext) return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIDOMWindowUtils> utils(do_QueryInterface(aWindow));
+  if (!utils) return NS_ERROR_FAILURE;
 
-  mImageAnimationMode = presContext->ImageAnimationMode();
-  presContext->SetImageAnimationMode(imgIContainer::kDontAnimMode);
+  rv = utils->GetImageAnimationMode(&mImageAnimationMode);
+  if (NS_FAILED(rv)) return rv;
+  utils->SetImageAnimationMode(imgIContainer::kDontAnimMode);
 
   // create and set editor
   nsCOMPtr<nsIEditorDocShell> editorDocShell = do_QueryInterface(docShell, &rv);
@@ -436,6 +430,12 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
   rv = editor->AddDocumentStateListener(
       NS_STATIC_CAST(nsIDocumentStateListener*, stateMaintainer));
   if (NS_FAILED(rv)) return rv;
+
+  // XXXbz we really shouldn't need a presShell here!
+  nsCOMPtr<nsIPresShell> presShell;
+  rv = docShell->GetPresShell(getter_AddRefs(presShell));
+  if (NS_FAILED(rv)) return rv;
+  if (!presShell) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsISelectionController> selCon = do_QueryInterface(presShell);
   rv = editor->Init(domDoc, presShell, nsnull /* root content */,
@@ -611,25 +611,13 @@ nsEditingSession::TearDownEditorOnWindow(nsIDOMWindow *aWindow)
   }
 
   // Make things the way they were before we started editing.
-  nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(aWindow));
-
-  if (sgo) {
-    nsIScriptContext *scriptContext = sgo->GetContext();
-
-    if (mScriptsEnabled && scriptContext)
-    {
-      scriptContext->SetScriptsEnabled(PR_TRUE, PR_TRUE);
-    }
-
-    nsCOMPtr<nsIPresShell> presShell;
-    nsIDocShell *docShell = sgo->GetDocShell();
-    docShell->GetPresShell(getter_AddRefs(presShell));
-
-    nsPresContext *presContext;
-    if (presShell && (presContext = presShell->GetPresContext())) {
-      presContext->SetImageAnimationMode(mImageAnimationMode);
-    }
+  if (mScriptsEnabled) {
+    docShell->SetAllowJavascript(PR_TRUE);
   }
+
+  nsCOMPtr<nsIDOMWindowUtils> utils(do_QueryInterface(aWindow));
+  if (utils)
+    utils->SetImageAnimationMode(mImageAnimationMode);
 
   return rv;
 }
