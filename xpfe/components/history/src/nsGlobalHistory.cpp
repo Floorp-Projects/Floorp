@@ -1750,8 +1750,7 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
           if (strcmp(filename.get(), "/") == 0) {
             // if the top of a site does not have a title
             // (common for redirections) then return the hostname
-            return GetTarget(aSource, kNC_Hostname, aTruthValue, aTarget);
-            
+            rv = GetRowValue(row, kToken_HostnameColumn, filename);
           }
         }
 
