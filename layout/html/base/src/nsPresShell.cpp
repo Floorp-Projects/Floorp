@@ -92,6 +92,9 @@
 #include "nsIEventQueue.h"
 #include "nsIEventQueueService.h"
 #include "nsIScrollableFrame.h"
+#include "prtime.h"
+#include "prlong.h"
+
 
 
 // Drag & Drop, Clipboard Support
@@ -110,6 +113,7 @@ static NS_DEFINE_IID(kCXIFConverterCID,        NS_XIFFORMATCONVERTER_CID);
 static NS_DEFINE_IID(kFrameSelectionCID, NS_FRAMESELECTION_CID);
 static NS_DEFINE_IID(kCRangeCID, NS_RANGE_CID);
 static NS_DEFINE_IID(kEventQueueServiceCID,   NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 // IID's
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -132,8 +136,21 @@ static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
 static NS_DEFINE_IID(kIScrollableFrameIID, NS_ISCROLLABLE_FRAME_IID);
 
+
+// The upper bound on the amount of time to spend reflowing.  When this bound is exceeded
+// and reflow commands are still queued up, a reflow event is posted.  The idea is for reflow
+// to not hog the processor beyond the time specifed in gMaxRCProcessingTime.
+// This data member is initialized from the layout.reflow.timeslice pref.
+// It is used only when asynchronous reflow is enabled by setting gDoAsyncReflow to PR_TRUE.
+#define NS_MAX_REFLOW_TIME    1000000
+static PRTime gMaxRCProcessingTime = -1;
+
 // Largest chunk size we recycle
 static const int  gMaxRecycledSize = 200;
+
+// Flag for enabling/disabling asynchronous reflow
+// Set via the "layout.reflow.async" pref
+static PRBool gDoAsyncReflow = PR_FALSE;
 
 // Memory is allocated 4-byte aligned. We have recyclers for chunks up to
 // 200 bytes
@@ -435,7 +452,7 @@ public:
                               nsIStyleSheet* aStyleSheet,
                               nsIStyleRule* aStyleRule);
   NS_IMETHOD DocumentWillBeDestroyed(nsIDocument *aDocument);
-  
+
 protected:
   virtual ~PresShell();
 
@@ -479,14 +496,17 @@ protected:
   PRBool                        mPendingReflowEvent;
   nsCOMPtr<nsIEventQueue>       mEventQueue;
   FrameArena                    mFrameArena;
+  PRTime                        mAccumulatedReflowTime;  // Time spent in reflow command processing so far
 
   MOZ_TIMER_DECLARE(mReflowWatch)  // Used for measuring time spent in reflow
-  MOZ_TIMER_DECLARE(mFrameCreationWatch)  // Used for measuring time spent in frame creation
+  MOZ_TIMER_DECLARE(mFrameCreationWatch)  // Used for measuring time spent in frame creation    
+
 
 #ifdef DEBUG_nisheeth
   PRInt32 mReflows;
   PRInt32 mDiscardedReflowCommands;
 #endif
+
 
 private:
   //helper funcs for disabing autoscrolling
@@ -519,7 +539,6 @@ VerifyStyleTree(nsIFrameManager* aFrameManager)
 #else
 #define VERIFY_STYLE_TREE
 #endif
-
 
 #ifdef NS_DEBUG
 /**
@@ -790,6 +809,22 @@ PresShell::Init(nsIDocument* aDocument,
   if (NS_SUCCEEDED(result))                    // XXX this implies that the UI is the current thread.
     result = eventService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(mEventQueue));
   
+
+  if (gMaxRCProcessingTime == -1) {
+    // First, set the defaults
+    gMaxRCProcessingTime = NS_MAX_REFLOW_TIME;
+    gDoAsyncReflow = PR_FALSE;
+
+    // Get the prefs service
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &result);
+    if (NS_SUCCEEDED(result)) {
+      PRInt32 timeSlice;
+      prefs->GetIntPref("layout.reflow.timeslice", &timeSlice);
+      LL_I2L(gMaxRCProcessingTime, timeSlice);
+      prefs->GetBoolPref("layout.reflow.async", &gDoAsyncReflow);
+    }
+  }
+
   return NS_OK;
 }
 
@@ -1037,6 +1072,21 @@ NS_IMETHODIMP
 PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
 {
   nsIContent* root = nsnull;
+
+#ifdef NS_DEBUG
+  if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
+    nsCOMPtr<nsIURI> uri;
+    if (mDocument) {
+      uri = dont_AddRef(mDocument->GetDocumentURL());
+      if (uri) {
+        char* url = nsnull;
+        uri->GetSpec(&url);
+        printf("*** PresShell::InitialReflow (this=%p, url='%s')\n", this, url);
+        Recycle(url);
+      }
+    }
+  }
+#endif
 
   StCaretHider  caretHider(this);			// stack-based class hides caret until dtor.
   
@@ -1515,7 +1565,7 @@ PresShell::StyleChangeReflow()
     NS_FRAME_LOG(NS_FRAME_TRACE_CALLS, ("exit nsPresShell::StyleChangeReflow"));
   }
 
-  ExitReflowLock(PR_TRUE, PR_TRUE);
+  ExitReflowLock(PR_TRUE, !gDoAsyncReflow);
 
   return NS_OK; //XXX this needs to be real. MMP
 }
@@ -1660,9 +1710,10 @@ PresShell::AlreadyInQueue(nsIReflowCommand* aReflowCommand)
 {
   PRInt32 i, n = mReflowCommands.Count();
   nsIFrame* targetFrame;
-  PRBool inQueue = PR_FALSE;
+  PRBool inQueue = PR_FALSE;  
 
-  return PR_FALSE;  // Turn off coalescing of reflow commands
+  if (!gDoAsyncReflow)
+    return PR_FALSE;
 
   if (NS_SUCCEEDED(aReflowCommand->GetTarget(targetFrame))) {
     // Iterate over the reflow commands and compare the targeted frames.
@@ -1676,9 +1727,15 @@ PresShell::AlreadyInQueue(nsIReflowCommand* aReflowCommand)
           aReflowCommand->GetType(RCType);
           rc->GetType(queuedRCType);
           if (targetFrame == targetOfQueuedRC &&
-            RCType == queuedRCType) {
+            RCType == queuedRCType) {            
 #ifdef DEBUG_nisheeth
             mDiscardedReflowCommands++;
+#endif
+#ifdef DEBUG
+            if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
+              printf("*** PresShell::AlreadyInQueue(): Discarding reflow command: this=%p\n", this);
+              aReflowCommand->List(stdout);
+            }
 #endif
             inQueue = PR_TRUE;
             break;
@@ -1697,21 +1754,19 @@ PresShell::AppendReflowCommand(nsIReflowCommand* aReflowCommand)
 #ifdef DEBUG
   if (mInVerifyReflow) {
     return NS_OK;
-  }
-  if (GetVerifyReflowEnable()) {
-    if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
-      printf("PresShell@%p: adding reflow command\n", this);
-      aReflowCommand->List(stdout);
-      if (VERIFY_REFLOW_REALLY_NOISY_RC & gVerifyReflowFlags) {
-        printf("Current content model:\n");
-        nsCOMPtr<nsIContent> rootContent;
-        rootContent = getter_AddRefs(mDocument->GetRootContent());
-        if (rootContent) {
-          rootContent->List(stdout, 0);
-        }
+  }  
+  if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
+    printf("\nPresShell@%p: adding reflow command\n", this);
+    aReflowCommand->List(stdout);
+    if (VERIFY_REFLOW_REALLY_NOISY_RC & gVerifyReflowFlags) {
+      printf("Current content model:\n");
+      nsCOMPtr<nsIContent> rootContent;
+      rootContent = getter_AddRefs(mDocument->GetRootContent());
+      if (rootContent) {
+        rootContent->List(stdout, 0);
       }
     }
-  }
+  }  
 #endif
   nsresult rv = NS_OK;
   if (!AlreadyInQueue(aReflowCommand)) {
@@ -1732,10 +1787,12 @@ PresShell::CancelReflowCommand(nsIFrame* aTargetFrame)
       nsIFrame* target;
       if (NS_SUCCEEDED(rc->GetTarget(target))) {
         if (target == aTargetFrame) {
-#if 0
-          printf("PresShell: removing rc=%p for frame ", rc);
-          nsFrame::ListTag(stdout, aTargetFrame);
-          printf("\n");
+#ifdef DEBUG
+          if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
+            printf("PresShell: removing rc=%p for frame ", rc);
+            nsFrame::ListTag(stdout, aTargetFrame);
+            printf("\n");
+          }
 #endif
           mReflowCommands.RemoveElementAt(i);
           NS_RELEASE(rc);
@@ -1759,10 +1816,15 @@ struct ReflowEvent : public PLEvent {
   void HandleEvent() {
     nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
     if (presShell) {
+#ifdef DEBUG
+      if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
+         printf("\n*** Handling reflow event: PresShell=%p, event=%p\n", presShell, this);
+      }
+#endif
+      presShell->SetReflowEventStatus(PR_FALSE);
       presShell->EnterReflowLock();
       presShell->ProcessReflowCommands();
-      presShell->ExitReflowLock(PR_FALSE, PR_TRUE);
-      presShell->SetReflowEventStatus(PR_FALSE);
+      presShell->ExitReflowLock(PR_FALSE, PR_TRUE);      
     }
     else
       mPresShell = 0;    
@@ -1801,10 +1863,14 @@ ReflowEvent::ReflowEvent(nsIPresShell* aPresShell, nsIEventQueue* aQueue)
 void
 PresShell::PostReflowEvent()
 {
-  if (!mPendingReflowEvent) {
+  if (!mPendingReflowEvent && mReflowCommands.Count() > 0) {
     ReflowEvent* ev;    
-
     ev = new ReflowEvent((nsIPresShell*) this, mEventQueue);    
+#ifdef DEBUG
+    if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
+      printf("\n*** PresShell::PostReflowEvent(), this=%p, event=%p\n", this, ev);
+    }
+#endif
     mPendingReflowEvent = PR_TRUE;
   }
 }
@@ -1813,11 +1879,14 @@ NS_IMETHODIMP
 PresShell::ProcessReflowCommands()
 {
   MOZ_TIMER_DEBUGLOG(("Start: Reflow: PresShell::ProcessReflowCommands(), this=%p\n", this));
-  MOZ_TIMER_START(mReflowWatch);
+  MOZ_TIMER_START(mReflowWatch);  
+  PRTime beforeReflow, afterReflow;
+  PRInt64 diff;    
+
   if (0 != mReflowCommands.Count()) {
     nsHTMLReflowMetrics   desiredSize(nsnull);
     nsIRenderingContext*  rcx;
-    nsIFrame*             rootFrame;
+    nsIFrame*             rootFrame;        
 
 #ifdef DEBUG_nisheeth
     mReflows++;
@@ -1832,8 +1901,9 @@ PresShell::ProcessReflowCommands()
         printf("ProcessReflowCommands: begin incremental reflow\n");
       }
     }
-    if (VERIFY_REFLOW_DUMP_COMMANDS & gVerifyReflowFlags) {
+    if (VERIFY_REFLOW_DUMP_COMMANDS & gVerifyReflowFlags) {      
       PRInt32 i, n = mReflowCommands.Count();
+      printf("\nPresShell::ProcessReflowCommands: this=%p, count=%d\n", this, n);
       for (i = 0; i < n; i++) {
         nsIReflowCommand* rc = (nsIReflowCommand*)
           mReflowCommands.ElementAt(i);
@@ -1841,23 +1911,52 @@ PresShell::ProcessReflowCommands()
       }
     }
 #endif
-
+    
     while (0 != mReflowCommands.Count()) {
       // Use RemoveElementAt in case the reflowcommand dispatches a
       // new one during its execution.
       nsIReflowCommand* rc = (nsIReflowCommand*) mReflowCommands.ElementAt(0);
-      mReflowCommands.RemoveElementAt(0);
+      mReflowCommands.RemoveElementAt(0);      
 
       // Dispatch the reflow command
       nsSize          maxSize;
       rootFrame->GetSize(maxSize);
+      if (gDoAsyncReflow) beforeReflow = PR_Now();
       rc->Dispatch(mPresContext, desiredSize, maxSize, *rcx);
+      if (gDoAsyncReflow) afterReflow = PR_Now();
       NS_RELEASE(rc);
       VERIFY_STYLE_TREE;
+
+      if (gDoAsyncReflow) {
+        LL_SUB(diff, afterReflow, beforeReflow);      
+        LL_ADD(mAccumulatedReflowTime, mAccumulatedReflowTime, diff);
+        if (LL_CMP(mAccumulatedReflowTime, >, gMaxRCProcessingTime))
+          break;
+      }
     }
     NS_IF_RELEASE(rcx);
 
+    if (gDoAsyncReflow) {
+      if (mReflowCommands.Count() > 0) {
+        // Reflow Commands are still queued up.
+        // Schedule a reflow event to handle them asynchronously.
+        PostReflowEvent();
+      }
 #ifdef DEBUG
+      if (VERIFY_REFLOW_DUMP_COMMANDS & gVerifyReflowFlags) {
+        PRInt32 reflowTime;
+        LL_L2I(reflowTime, mAccumulatedReflowTime);
+        printf("Time spent in PresShell::ProcessReflowCommands(), this=%p, time=%d micro seconds\n", this, reflowTime);
+      }
+#endif            
+      mAccumulatedReflowTime = 0;
+    }
+    
+#ifdef DEBUG
+    if (VERIFY_REFLOW_DUMP_COMMANDS & gVerifyReflowFlags) {
+      printf("\nPresShell::ProcessReflowCommands() finished: this=%p\n", this);
+    }
+
     if (nsIFrameDebug::GetVerifyTreeEnable()) {
       nsIFrameDebug*  frameDebug;
 
@@ -1886,9 +1985,9 @@ PresShell::ProcessReflowCommands()
     }
 #endif
   }
-
+  
   MOZ_TIMER_DEBUGLOG(("Stop: Reflow: PresShell::ProcessReflowCommands(), this=%p\n", this));
-  MOZ_TIMER_STOP(mReflowWatch);
+  MOZ_TIMER_STOP(mReflowWatch);  
   return NS_OK;
 }
 
@@ -2249,7 +2348,7 @@ PresShell::ContentChanged(nsIDocument *aDocument,
   EnterReflowLock();
   nsresult rv = mStyleSet->ContentChanged(mPresContext, aContent, aSubContent);
   VERIFY_STYLE_TREE;
-  ExitReflowLock(PR_TRUE, PR_TRUE);
+  ExitReflowLock(PR_TRUE, !gDoAsyncReflow);
 
   return rv;
 }
@@ -2262,7 +2361,7 @@ PresShell::ContentStatesChanged(nsIDocument* aDocument,
   EnterReflowLock();
   nsresult rv = mStyleSet->ContentStatesChanged(mPresContext, aContent1, aContent2);
   VERIFY_STYLE_TREE;
-  ExitReflowLock(PR_TRUE, PR_TRUE);
+  ExitReflowLock(PR_TRUE, !gDoAsyncReflow);
 
   return rv;
 }
@@ -2278,7 +2377,7 @@ PresShell::AttributeChanged(nsIDocument *aDocument,
   EnterReflowLock();
   nsresult rv = mStyleSet->AttributeChanged(mPresContext, aContent, aNameSpaceID, aAttribute, aHint);
   VERIFY_STYLE_TREE;
-  ExitReflowLock(PR_TRUE, PR_TRUE);
+  ExitReflowLock(PR_TRUE, !gDoAsyncReflow);
   return rv;
 }
 
@@ -2305,7 +2404,7 @@ PresShell::ContentAppended(nsIDocument *aDocument,
 
   MOZ_TIMER_DEBUGLOG(("Stop: Frame Creation: PresShell::ContentAppended(), this=%p\n", this));
   MOZ_TIMER_STOP(mFrameCreationWatch);
-  ExitReflowLock(PR_TRUE, PR_TRUE);
+  ExitReflowLock(PR_TRUE, !gDoAsyncReflow);
   return rv;
 }
 
@@ -2318,7 +2417,7 @@ PresShell::ContentInserted(nsIDocument* aDocument,
   EnterReflowLock();
   nsresult  rv = mStyleSet->ContentInserted(mPresContext, aContainer, aChild, aIndexInContainer);
   VERIFY_STYLE_TREE;
-  ExitReflowLock(PR_TRUE, PR_TRUE);
+  ExitReflowLock(PR_TRUE, !gDoAsyncReflow);
   return rv;
 }
 

@@ -754,9 +754,10 @@ FrameManager::HandlePLEvent(CantRenderReplacedElementEvent* aEvent)
   // Notify the style system and then process any reflow commands that
   // are generated
   nsCOMPtr<nsIPresContext>  presContext;
+  frameManager->mPresShell->EnterReflowLock();
   frameManager->mPresShell->GetPresContext(getter_AddRefs(presContext));
-  frameManager->mStyleSet->CantRenderReplacedElement(presContext, aEvent->mFrame);
-  frameManager->mPresShell->ProcessReflowCommands();
+  frameManager->mStyleSet->CantRenderReplacedElement(presContext, aEvent->mFrame);    
+  frameManager->mPresShell->ExitReflowLock(PR_TRUE, PR_TRUE);
 }
 
 void
