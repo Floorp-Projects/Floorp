@@ -17,6 +17,9 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
+#ifdef NGPREFS
+#define INITGUID
+#endif
 #include "nsViewerApp.h"
 #include "nsBrowserWindow.h"
 #include "nsWidgetsCID.h"
@@ -50,6 +53,9 @@
 
 #ifdef XP_PC
 #include "JSConsole.h"
+#ifdef NGPREFS
+#include "ngprefs.h"
+#endif
 #endif
 
 extern nsresult NS_NewBrowserWindowFactory(nsIFactory** aFactory);
@@ -87,8 +93,8 @@ nsViewerApp::~nsViewerApp()
   }
 }
 
-NS_IMPL_ADDREF(nsViewerApp)
-NS_IMPL_RELEASE(nsViewerApp)
+NS_IMPL_THREADSAFE_ADDREF(nsViewerApp)
+NS_IMPL_THREADSAFE_RELEASE(nsViewerApp)
 
 nsresult
 nsViewerApp::QueryInterface(REFNSIID aIID, void** aInstancePtrResult) 
@@ -99,14 +105,24 @@ nsViewerApp::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
   }
   if (aIID.Equals(kINetContainerApplicationIID)) {
     *aInstancePtrResult = (void*) ((nsIBrowserWindow*)this);
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kISupportsIID)) {
     *aInstancePtrResult = (void*) ((nsISupports*)((nsIBrowserWindow*)this));
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
+#if defined(NS_DEBUG) 
+  /*
+   * Check for the debug-only interface indicating thread-safety
+   */
+  static NS_DEFINE_IID(kIsThreadsafeIID, NS_ISTHREADSAFE_IID);
+  if (aIID.Equals(kIsThreadsafeIID)) {
+    return NS_OK;
+  }
+#endif /* NS_DEBUG */
+
   return NS_NOINTERFACE;
 }
 
@@ -184,7 +200,7 @@ nsViewerApp::Initialize(int argc, char** argv)
 #endif
 
   // Finally process our arguments
-  rv = ProcessArguments(argc, argv); 
+  rv = ProcessArguments(argc, argv);
 
   mIsInitialized = PR_TRUE;
   return rv;
@@ -205,6 +221,7 @@ nsViewerApp::Exit()
   NS_RELEASE(mAppShell);
   return NS_OK;
 }
+
 
 static void
 PrintHelpInfo(char **argv)
@@ -276,13 +293,13 @@ AddTestDocsFromFile(nsWebCrawler* aCrawler, const nsString& aFileName)
   }
 
   fclose(fp);
-}*/
-
+}
+*/
 NS_IMETHODIMP
 nsViewerApp::ProcessArguments(int argc, char** argv)
 {
-  /*mCrawler = new nsWebCrawler(this);
-  mCrawler->AddRef();
+/*  mCrawler = new nsWebCrawler(this);
+  NS_ADDREF(mCrawler);
 
   int i;
   for (i = 1; i < argc; i++) {
@@ -448,9 +465,9 @@ nsViewerApp::OpenWindow()
   bw->SetApp(this);
   bw->Init(mAppShell, mPrefs, nsRect(0, 0, 620, 400), PRUint32(~0), mAllowPlugins);
   bw->Show();
-  //mCrawler->SetBrowserWindow(bw);
+  /*mCrawler->SetBrowserWindow(bw);
 
-  /*if (mDoPurify) {
+  if (mDoPurify) {
     for (PRInt32 i = 0; i < mRepeatCount; i++) {
       for (int docnum = 0; docnum < mNumSamples; docnum++) {
         char url[500];
@@ -497,6 +514,7 @@ nsViewerApp::OpenWindow(PRUint32 aNewChromeMask, nsIBrowserWindow*& aNewWindow)
 //----------------------------------------
 
 // nsINetContainerApplication implementation
+// XXX:  These methods are called by the netlib thread...
 
 NS_IMETHODIMP    
 nsViewerApp::GetAppCodeName(nsString& aAppCodeName)
@@ -610,12 +628,12 @@ static void* GetWidgetNativeData(nsISupports* aObject)
 
 
 
-#ifdef XP_PC
+#ifdef XP_PC_ROBOT
 extern JSConsole *gConsole;
 // XXX temporary robot code until it's made XP
 extern HINSTANCE gInstance, gPrevInstance;
 
-/*extern "C" NS_EXPORT int DebugRobot(
+extern "C" NS_EXPORT int DebugRobot(
   nsVoidArray * workList, nsIWebShell * ww,
   int imax, char * verify_dir,
   void (*yieldProc)(const char *));
@@ -635,7 +653,7 @@ void yieldProc(const char * str)
       DispatchMessage(&msg);
     }
   }
-}*/
+}
 #endif
 
 
@@ -650,7 +668,7 @@ nsEventStatus PR_CALLBACK HandleRobotEvent(nsGUIEvent *aEvent)
     return result;
   }
 
-  switch(aEvent->message) {
+/*  switch(aEvent->message) {
     case NS_MOUSE_LEFT_BUTTON_UP: {
       if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == GetWidgetNativeData(mCancelBtn)) {
         NS_ShowWidget(mRobotDialog,PR_FALSE);
@@ -696,7 +714,7 @@ nsEventStatus PR_CALLBACK HandleRobotEvent(nsGUIEvent *aEvent)
     default:
       result = nsEventStatus_eIgnore;
   } //switch
-
+*/
   return result;
 }
 
@@ -847,13 +865,13 @@ nsViewerApp::CreateRobot(nsBrowserWindow* aWindow)
         const char * str = doc->GetDocumentURL()->GetSpec();
         nsVoidArray * gWorkList = new nsVoidArray();
         gWorkList->AppendElement(new nsString(str));
-#if defined(XP_PC) && defined(NS_DEBUG)
-        /*DebugRobot( 
+#if defined(XP_PC_ROBOT) && defined(NS_DEBUG)
+        DebugRobot( 
           gWorkList, 
           gVisualDebug ? aWindow->mWebShell : nsnull, 
           gDebugRobotLoads, 
           PL_strdup(gVerifyDir),
-          yieldProc);*/
+          yieldProc);
 #endif
       }
     }
@@ -1186,7 +1204,7 @@ nsViewerApp::CreateSiteWalker(nsBrowserWindow* aWindow)
 
 //----------------------------------------
 
-#ifdef XP_PC
+#ifdef XP_PC_ROBOT
 #include "jsconsres.h"
 
 static NS_DEFINE_IID(kIScriptContextOwnerIID, NS_ISCRIPTCONTEXTOWNER_IID);
@@ -1202,7 +1220,7 @@ static void DestroyConsole()
 
 static void ShowConsole(nsBrowserWindow* aWindow)
 {
-    HWND hWnd = (HWND)aWindow->mWindow->GetNativeData(NS_NATIVE_WIDGET);
+ /*   HWND hWnd = (HWND)aWindow->mWindow->GetNativeData(NS_NATIVE_WIDGET);
     if (!gConsole) {
 
       // load the accelerator table for the console
@@ -1232,17 +1250,35 @@ static void ShowConsole(nsBrowserWindow* aWindow)
       else {
         MessageBox(hWnd, "Unable to load JavaScript", "Viewer Error", MB_ICONSTOP);
       }
-    }
+    }*/
 }
 #endif
 
 NS_IMETHODIMP
 nsViewerApp::CreateJSConsole(nsBrowserWindow* aWindow)
 {
-#ifdef XP_PC
+#ifdef XP_PC_ROBOT
   if (nsnull == gConsole) {
     ShowConsole(aWindow);
   }
+#endif
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsViewerApp::DoPrefs(nsBrowserWindow* aWindow)
+{
+#if defined(XP_PC) && defined(NGPREFS)
+  INGLayoutPrefs *pPrefs;
+  CoInitialize(NULL);
+
+  HRESULT res = CoCreateInstance(CLSID_NGLayoutPrefs, NULL, 
+                                 CLSCTX_INPROC_SERVER,
+                                 IID_INGLayoutPrefs, (void**)&pPrefs);
+
+  pPrefs->Show(NULL);
+  pPrefs->Release();
+  CoUninitialize();
 #endif
   return NS_OK;
 }

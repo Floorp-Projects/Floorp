@@ -104,6 +104,7 @@ static NS_DEFINE_IID(kCToolbarManagerCID, NS_TOOLBARMANAGER_CID);
 static NS_DEFINE_IID(kCToolbarItemHolderCID, NS_TOOLBARITEMHOLDER_CID);
 static NS_DEFINE_IID(kCPopUpMenuCID, NS_POPUPMENU_CID);
 static NS_DEFINE_IID(kCMenuButtonCID, NS_MENUBUTTON_CID);
+static NS_DEFINE_IID(kCToolkitCID, NS_TOOLKIT_CID);
 
 extern "C" void
 NS_SetupRegistry()
@@ -149,5 +150,6 @@ NS_SetupRegistry()
   nsRepository::RegisterFactory(kCToolbarItemHolderCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCPopUpMenuCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCMenuButtonCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCToolkitCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
 
 }
