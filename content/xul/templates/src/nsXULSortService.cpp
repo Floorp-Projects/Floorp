@@ -1314,7 +1314,10 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
   sortInfo.inbetweenSeparatorSort = PR_FALSE;
   sortInfo.cacheFirstHint = PR_TRUE;
 
-  sortInfo.mInner = sortState->mCache ? sortState->mCache : nsnull;
+  if (sortState->mCache)
+	sortInfo.mInner = sortState->mCache;
+  else
+	sortInfo.mInner = nsnull;
 
   if (container != sortState->lastContainer.get()) {
     sortState->lastContainer = container;
