@@ -69,7 +69,7 @@
 
 static nsresult MacErrorMapper(OSErr inErr);
 static OSErr FindRunningAppBySignature(OSType aAppSig, ProcessSerialNumber& outPsn);
-static void CopyUTF8toUTF16NFC(nsACString& aSrc, nsAString& aResult);
+static void CopyUTF8toUTF16NFC(const nsACString& aSrc, nsAString& aResult);
 
 //*****************************************************************************
 //  Local Helper Classes
@@ -2185,7 +2185,7 @@ static OSErr FindRunningAppBySignature(OSType aAppSig, ProcessSerialNumber& outP
 // while most other OS', server-side programs usually expect NFC.
 
 typedef void (*UnicodeNormalizer) (CFMutableStringRef, CFStringNormalizationForm);
-static void CopyUTF8toUTF16NFC(nsACString& aSrc, nsAString& aResult)
+static void CopyUTF8toUTF16NFC(const nsACString& aSrc, nsAString& aResult)
 {
     static PRBool sChecked = PR_FALSE;
     static UnicodeNormalizer sUnicodeNormalizer = NULL;
