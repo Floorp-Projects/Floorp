@@ -383,7 +383,7 @@ private:
      *  @param   aParseMode  -- Used with aMimeType to choose the correct DTD.
      *  @return  NS_OK if succeeded else ERROR.
      */
-    static nsresult CreateCompatibleDTDForMimeType(nsIDTD** aDTD, const nsString* aMimeType=nsnull, 
+    static nsresult CreateCompatibleDTDForMimeType(nsIDTD** aDTD, const nsString* aMimeType, 
                                                    eParseMode aParseMode=eParseMode_unknown);
      /**
      *  Call this method to determine a DTD for a given command
@@ -393,7 +393,7 @@ private:
      *  @param   aCommand    -- A command for which a DTD is to be selected.
      *  @return  NS_OK if succeeded else ERROR.
      */
-    static nsresult CreateCompatibleDTDForCommand(nsIDTD**  aDTD, eParserCommands aCommand=eViewNormal);
+    static nsresult CreateCompatibleDTDForCommand(nsIDTD**  aDTD, eParserCommands aCommand);
 protected:
     //*********************************************
     // And now, some data members...
