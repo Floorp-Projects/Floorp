@@ -126,10 +126,12 @@ MRJSession::MRJSession()
 											&callbacks, kTextEncodingMacRoman, NULL);
 		
 		// capture the main environment, so it can be distinguished from true Java threads.
-		if (mStatus == noErr) mMainEnv = ::JMGetCurrentEnv(mSession);
+		if (mStatus == noErr) {
+			mMainEnv = ::JMGetCurrentEnv(mSession);
 		
-		// create a monitor for the message queue to unblock Java threads.
-		mMessageMonitor = new MRJMonitor(this);
+			// create a monitor for the message queue to unblock Java threads.
+			mMessageMonitor = new MRJMonitor(this);
+		}
 	} else {
 		mStatus = kJMVersionError;
 	}
