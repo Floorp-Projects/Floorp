@@ -245,12 +245,12 @@ protected:
 protected:
 
   static nsBlinkTimer* sTextBlinker;
-  static PRInt32       sState; // 0-2 == on; 3 == off
+  static PRUint32      sState; // 0-2 == on; 3 == off
   
 };
 
 nsBlinkTimer* nsBlinkTimer::sTextBlinker = nsnull;
-PRBool        nsBlinkTimer::sState = 0;
+PRUint32      nsBlinkTimer::sState = 0;
 
 #ifdef NOISY_BLINK
 static PRTime gLastTick;
