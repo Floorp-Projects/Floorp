@@ -66,6 +66,15 @@ class nsIPlugin : public nsIFactory {
 public:
 	NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPLUGIN_IID)
 
+	/**
+	 * Creates a new plugin instance, based on a MIME type. This
+	 * allows different impelementations to be created depending on
+	 * the specified MIME type.
+	 */
+    NS_IMETHOD CreatePluginInstance(nsISupports *aOuter, REFNSIID aIID, 
+                                    const char* aPluginMIMEType,
+                                    void **aResult) = 0;
+
     /**
      * Initializes the plugin and will be called before any new instances are
      * created. It is passed browserInterfaces on which QueryInterface
