@@ -35,6 +35,7 @@
 #endif /* __sun */
 
 #ifdef linux
+#undef LINUX
 #define LINUX 1
 #endif /* linux */
 
