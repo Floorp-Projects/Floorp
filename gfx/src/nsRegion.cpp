@@ -382,7 +382,7 @@ void nsRegion::Optimize ()
 
 void nsRegion::MoveInto (nsRegion& aDestRegion, const RgnRect* aStartRect)
 {
-  RgnRect* pRect = NS_STATIC_CAST (RgnRect*, aStartRect);
+  RgnRect* pRect = NS_CONST_CAST (RgnRect*, aStartRect);
   RgnRect* pPrev = pRect->prev;
 
   while (pRect != &mRectListHead)
