@@ -945,7 +945,7 @@ nsPresContext::GetScaledPixelsToTwips(float* aResult) const
 }
 
 nsresult
-nsPresContext::LoadImage(nsIURI* aURL,
+nsPresContext::LoadImage(imgIRequest* aImage,
                          nsIFrame* aTargetFrame,//may be null (precached image)
                          imgIRequest **aRequest)
 {
@@ -955,30 +955,6 @@ nsPresContext::LoadImage(nsIURI* aURL,
   nsImageLoader *loader = NS_REINTERPRET_CAST(nsImageLoader*, mImageLoaders.Get(&key)); // addrefs
 
   if (!loader) {
-    nsIContent* content = aTargetFrame->GetContent();
-
-    // Check with the content-policy things to make sure this load is permitted.
-    nsresult rv;
-    nsCOMPtr<nsIDOMElement> element(do_QueryInterface(content));
-
-    if (content && element) {
-      nsCOMPtr<nsIDocument> document = content->GetDocument();
-
-      // If there is no document, skip the policy check
-      // XXXldb This really means the document is being destroyed, so
-      // perhaps we're better off skipping the load entirely.
-      if (document) {
-        nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(document->GetScriptGlobalObject()));
-        if (domWin) {
-          PRBool shouldLoad = PR_TRUE;
-          rv = NS_CheckContentLoadPolicy(nsIContentPolicy::IMAGE,
-                                         aURL, element, domWin, &shouldLoad);
-          if (NS_SUCCEEDED(rv) && !shouldLoad)
-            return NS_ERROR_FAILURE;
-        }
-      }
-    }
-
     loader = new nsImageLoader();
     if (!loader)
       return NS_ERROR_OUT_OF_MEMORY;
@@ -989,7 +965,7 @@ nsPresContext::LoadImage(nsIURI* aURL,
     mImageLoaders.Put(&key, loader);
   }
 
-  loader->Load(aURL);
+  loader->Load(aImage);
 
   NS_IF_ADDREF(*aRequest = loader->GetRequest());
 

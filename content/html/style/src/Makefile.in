@@ -48,6 +48,7 @@ REQUIRES	= xpcom \
 		  view \
 		  intl \
 		  pref \
+		  imglib2 \
 		  $(NULL)
 
 CPPSRCS		= \

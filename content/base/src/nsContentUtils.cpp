@@ -78,6 +78,11 @@
 #include "nsIFormControl.h"
 #include "nsHTMLAtoms.h"
 #include "nsLayoutAtoms.h"
+#include "imgIDecoderObserver.h"
+#include "imgIRequest.h"
+#include "imgILoader.h"
+#include "nsILoadGroup.h"
+#include "nsContentPolicyUtils.h"
 
 static const char kJSStackContractID[] = "@mozilla.org/js/xpc/ContextStack;1";
 static NS_DEFINE_IID(kParserServiceCID, NS_PARSERSERVICE_CID);
@@ -89,6 +94,7 @@ nsIThreadJSContextStack *nsContentUtils::sThreadJSContextStack = nsnull;
 nsIParserService *nsContentUtils::sParserService = nsnull;
 nsINameSpaceManager *nsContentUtils::sNameSpaceManager = nsnull;
 nsIIOService *nsContentUtils::sIOService = nsnull;
+imgILoader *nsContentUtils::sImgLoader = nsnull;
 
 PRBool nsContentUtils::sInitialized = PR_FALSE;
 
@@ -132,6 +138,13 @@ nsContentUtils::Init()
     sIOService = nsnull;
   }
 
+  // Ignore failure and just don't load images
+  rv = CallGetService("@mozilla.org/image/loader;1", &sImgLoader);
+  if (NS_FAILED(rv)) {
+    // no image loading for us.  Oh, well.
+    sImgLoader = nsnull;
+  }
+  
   sInitialized = PR_TRUE;
 
   return NS_OK;
@@ -402,6 +415,7 @@ nsContentUtils::Shutdown()
   NS_IF_RELEASE(sNameSpaceManager);
   NS_IF_RELEASE(sParserService);
   NS_IF_RELEASE(sIOService);
+  NS_IF_RELEASE(sImgLoader);
 }
 
 // static
@@ -1653,6 +1667,71 @@ nsContentUtils::GetNodeInfoFromQName(const nsAString& aNamespaceURI,
          (xmlns && nsID != kNameSpaceID_XMLNS) ||
          (nsID == kNameSpaceID_XMLNS && !xmlns) ?
          NS_ERROR_DOM_NAMESPACE_ERR : NS_OK;
+}
+
+// static
+nsresult
+nsContentUtils::CanLoadImage(nsIURI* aURI, nsISupports* aContext,
+                             nsIDocument* aLoadingDocument)
+{
+  NS_PRECONDITION(aURI, "Must have a URI");
+  NS_PRECONDITION(aLoadingDocument, "Must have a document");
+
+  // XXXbz Do security manager check here!
+
+  // Check with content policy
+  nsIScriptGlobalObject* globalScript = aLoadingDocument->GetScriptGlobalObject();
+
+  if (!globalScript) {
+    // just let it load.  Documents loaded as data should take care to
+    // prevent image loading themselves.
+    return NS_OK;
+  }
+  
+  nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(globalScript));
+
+  PRBool shouldLoad = PR_TRUE;
+  nsresult rv = NS_CheckContentLoadPolicy(nsIContentPolicy::IMAGE, aURI,
+                                          aContext,
+                                          domWin, &shouldLoad);
+  if (NS_SUCCEEDED(rv) && !shouldLoad) {
+    return NS_ERROR_IMAGE_BLOCKED;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsContentUtils::LoadImage(nsIURI* aURI, nsIDocument* aLoadingDocument,
+                          imgIDecoderObserver* aObserver,
+                          PRInt32 aLoadFlags, imgIRequest** aRequest)
+{
+  NS_PRECONDITION(aURI, "Must have a URI");
+  NS_PRECONDITION(aLoadingDocument, "Must have a document");
+  NS_PRECONDITION(aRequest, "Null out param");
+
+  if (!sImgLoader) {
+    // nothing we can do here
+    return NS_OK;
+  }
+  
+  nsCOMPtr<nsILoadGroup> loadGroup = aLoadingDocument->GetDocumentLoadGroup();
+  NS_WARN_IF_FALSE(loadGroup, "Could not get loadgroup; onload may fire too early");
+
+  nsIURI *documentURI = aLoadingDocument->GetDocumentURI();
+
+  // XXXbz using "documentURI" for the initialDocumentURI is not quite
+  // right, but the best we can do here...
+  return sImgLoader->LoadImage(aURI,                 /* uri to load */
+                               documentURI,          /* initialDocumentURI */
+                               documentURI,          /* referrer */
+                               loadGroup,            /* loadgroup */
+                               aObserver,            /* imgIDecoderObserver */
+                               aLoadingDocument,     /* uniquification key */
+                               aLoadFlags,           /* load flags */
+                               nsnull,               /* cache key */
+                               nsnull,               /* existing request*/
+                               aRequest);
 }
 
 void

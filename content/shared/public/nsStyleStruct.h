@@ -54,6 +54,7 @@
 #include "nsIURI.h"
 
 class nsIFrame;
+class imgIRequest;
 
 enum nsStyleStructID {
 
@@ -147,7 +148,7 @@ struct nsStyleColor : public nsStyleStruct {
 struct nsStyleBackground : public nsStyleStruct {
   nsStyleBackground(nsIPresContext* aPresContext);
   nsStyleBackground(const nsStyleBackground& aOther);
-  ~nsStyleBackground() {};
+  ~nsStyleBackground();
 
   NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_Background)
 
@@ -183,7 +184,7 @@ struct nsStyleBackground : public nsStyleStruct {
     mBackgroundYPosition;         // [reset]
 
   nscolor mBackgroundColor;       // [reset]
-  nsCOMPtr<nsIURI> mBackgroundImage; // [reset]
+  nsCOMPtr<imgIRequest> mBackgroundImage; // [reset]
 
   PRBool IsTransparent() const
   {

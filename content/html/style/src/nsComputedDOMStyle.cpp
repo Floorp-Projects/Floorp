@@ -60,6 +60,7 @@
 
 #include "nsCSSPseudoElements.h"
 #include "nsStyleSet.h"
+#include "imgIRequest.h"
 
 #if defined(DEBUG_bzbarsky) || defined(DEBUG_caillon)
 #define DEBUG_ComputedDOMStyle
@@ -723,7 +724,11 @@ nsComputedDOMStyle::GetBackgroundImage(nsIFrame *aFrame,
     if (color->mBackgroundFlags & NS_STYLE_BG_IMAGE_NONE) {
       val->SetIdent(nsLayoutAtoms::none);
     } else {
-      val->SetURI(color->mBackgroundImage);
+      nsCOMPtr<nsIURI> uri;
+      if (color->mBackgroundImage) {
+        color->mBackgroundImage->GetURI(getter_AddRefs(uri));
+      }
+      val->SetURI(uri);
     }
   }
 

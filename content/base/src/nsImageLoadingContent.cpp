@@ -66,6 +66,8 @@
 #include "nsLayoutAtoms.h"
 #include "nsIFrame.h"
 
+#include "nsContentUtils.h"
+
 // Statics
 imgILoader* nsImageLoadingContent::sImgLoader = nsnull;
 nsIIOService* nsImageLoadingContent::sIOService = nsnull;
@@ -407,7 +409,7 @@ nsImageLoadingContent::ImageURIChanged(const nsACString& aNewURI)
   // not to show the broken image icon.  If the load is blocked by the
   // content policy or security manager, we will want to cancel with
   // the error code from those.
-  nsresult cancelResult = CanLoadImage(imageURI, doc);
+  nsresult cancelResult = nsContentUtils::CanLoadImage(imageURI, this, doc);
   if (NS_SUCCEEDED(cancelResult)) {
     cancelResult = NS_ERROR_IMAGE_SRC_CHANGED;
   }
@@ -421,11 +423,6 @@ nsImageLoadingContent::ImageURIChanged(const nsACString& aNewURI)
     return NS_OK;
   }
 
-  nsCOMPtr<nsILoadGroup> loadGroup = doc->GetDocumentLoadGroup();
-  NS_WARN_IF_FALSE(loadGroup, "Could not get loadgroup; onload may fire too early");
-
-  nsIURI *documentURI = doc->GetDocumentURI();
-
   nsCOMPtr<imgIRequest> & req = mCurrentRequest ? mPendingRequest : mCurrentRequest;
 
   // It may be that one of our frames has replaced itself with alt text... This
@@ -436,18 +433,8 @@ nsImageLoadingContent::ImageURIChanged(const nsACString& aNewURI)
   // that have changed to alt text on us yet.
   PRBool mayNeedReframe = mHaveHadObserver && !mCurrentRequest;
   
-  // XXXbz using "documentURI" for the initialDocumentURI is not quite
-  // right, but the best we can do here...
-  rv = sImgLoader->LoadImage(imageURI,                /* uri to load */
-                             documentURI,             /* initialDocumentURI */
-                             documentURI,             /* referrer */
-                             loadGroup,               /* loadgroup */
-                             this,                    /* imgIDecoderObserver */
-                             doc,                     /* uniquification key */
-                             nsIRequest::LOAD_NORMAL, /* load flags */
-                             nsnull,                  /* cache key */
-                             nsnull,                  /* existing request*/
-                             getter_AddRefs(req));
+  rv = nsContentUtils::LoadImage(imageURI, doc, this, nsIRequest::LOAD_NORMAL,
+                                 getter_AddRefs(req));
 
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -516,34 +503,6 @@ nsImageLoadingContent::CancelImageRequests(nsresult aReason)
     }
   }
 }
-
-nsresult
-nsImageLoadingContent::CanLoadImage(nsIURI* aURI, nsIDocument* aDocument)
-{
-  NS_PRECONDITION(aURI, "Null URI");
-  NS_PRECONDITION(aDocument, "Null document!");
-  
-  // Check with the content-policy things to make sure this load is permitted.
-
-  nsIScriptGlobalObject *globalScript = aDocument->GetScriptGlobalObject();
-  if (!globalScript) {
-    // just let it load.  Documents loaded as data should take care to
-    // prevent image loading themselves.
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(globalScript));
-
-  PRBool shouldLoad = PR_TRUE;
-  nsresult rv = NS_CheckContentLoadPolicy(nsIContentPolicy::IMAGE, aURI, this,
-                                          domWin, &shouldLoad);
-  if (NS_SUCCEEDED(rv) && !shouldLoad) {
-    return NS_ERROR_IMAGE_BLOCKED;
-  }
-
-  return NS_OK;
-}
-
 
 nsIDocument*
 nsImageLoadingContent::GetOurDocument()

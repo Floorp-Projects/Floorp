@@ -55,6 +55,8 @@
 
 #include "nsBidiUtils.h"
 
+#include "imgIRequest.h"
+
 inline PRBool IsFixedUnit(nsStyleUnit aUnit, PRBool aEnumOK)
 {
   return PRBool((aUnit == eStyleUnit_Null) || 
@@ -160,6 +162,22 @@ static PRBool EqualURIs(nsIURI *aURI1, nsIURI *aURI2)
          (aURI1 && aURI2 &&
           NS_SUCCEEDED(aURI1->Equals(aURI2, &eq)) && // not equal on fail
           eq);
+}
+
+static PRBool EqualImages(imgIRequest *aImage1, imgIRequest* aImage2)
+{
+  if (aImage1 == aImage2) {
+    return PR_TRUE;
+  }
+
+  if (!aImage1 || !aImage2) {
+    return PR_FALSE;
+  }
+
+  nsCOMPtr<nsIURI> uri1, uri2;
+  aImage1->GetURI(getter_AddRefs(uri1));
+  aImage2->GetURI(getter_AddRefs(uri2));
+  return EqualURIs(uri1, uri2);
 }
 
 // --------------------
@@ -1019,6 +1037,10 @@ nsStyleBackground::nsStyleBackground(const nsStyleBackground& aSource)
 {
 }
 
+nsStyleBackground::~nsStyleBackground()
+{
+}
+
 nsChangeHint nsStyleBackground::CalcDifference(const nsStyleBackground& aOther) const
 {
   if (mBackgroundAttachment != aOther.mBackgroundAttachment
@@ -1036,7 +1058,7 @@ nsChangeHint nsStyleBackground::CalcDifference(const nsStyleBackground& aOther) 
       (mBackgroundClip == aOther.mBackgroundClip) &&
       (mBackgroundInlinePolicy == aOther.mBackgroundInlinePolicy) &&
       (mBackgroundOrigin == aOther.mBackgroundOrigin) &&
-      EqualURIs(mBackgroundImage, aOther.mBackgroundImage) &&
+      EqualImages(mBackgroundImage, aOther.mBackgroundImage) &&
       ((!(mBackgroundFlags & NS_STYLE_BG_X_POSITION_PERCENT) ||
        (mBackgroundXPosition.mFloat == aOther.mBackgroundXPosition.mFloat)) &&
        (!(mBackgroundFlags & NS_STYLE_BG_X_POSITION_LENGTH) ||

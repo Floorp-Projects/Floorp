@@ -260,7 +260,7 @@ public:
    * method will be invoked (via the ViewManager) so that the
    * appropriate damage repair is done.
    */
-  virtual nsresult LoadImage(nsIURI* aURL,
+  virtual nsresult LoadImage(imgIRequest* aImage,
                              nsIFrame* aTargetFrame,
                              imgIRequest **aRequest) = 0;
 

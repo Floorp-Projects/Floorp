@@ -54,6 +54,7 @@
 #include "nsRuleNode.h"
 #include "nsUnitConversion.h"
 #include "nsStyleContext.h"
+#include "imgIRequest.h"
 
 #ifdef DEBUG
 // #define NOISY_DEBUG
@@ -532,6 +533,18 @@ public:
     }
   }
 
+  URICString(imgIRequest* aImageRequest) {
+    nsCOMPtr<nsIURI> uri;
+    if (aImageRequest) {
+      aImageRequest->GetURI(getter_AddRefs(uri));
+    }
+    if (uri) {
+      uri->GetSpec(*this);
+    } else {
+      Assign("[none]");
+    }
+  }
+  
   URICString& operator=(const URICString& aOther) {
     Assign(aOther);
     return *this;

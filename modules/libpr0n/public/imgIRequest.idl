@@ -69,5 +69,13 @@ interface imgIRequest : nsIRequest
   readonly attribute imgIDecoderObserver decoderObserver;
 
   readonly attribute string mimeType;
+
+  /**
+   * Clone this request; the returned request will have aObserver as the
+   * observer.  aObserver will be notified synchronously (before the clone()
+   * call returns) with all the notifications that have already been dispatched
+   * for this image load.
+   */
+  imgIRequest clone(in imgIDecoderObserver aObserver);
 };
 

@@ -83,51 +83,31 @@ nsImageLoader::Destroy()
 }
 
 nsresult
-nsImageLoader::Load(nsIURI *aURI)
+nsImageLoader::Load(imgIRequest *aImage)
 {
   if (!mFrame)
     return NS_ERROR_NOT_INITIALIZED;
 
-  if (!aURI)
+  if (!aImage)
     return NS_ERROR_FAILURE;
-
-  nsIPresShell *shell = mPresContext->GetPresShell();
-  if (!shell) return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDocument> doc;
-  nsresult rv = shell->GetDocument(getter_AddRefs(doc));
-  if (NS_FAILED(rv)) return rv;
-
-  // Get the document's loadgroup
-  nsCOMPtr<nsILoadGroup> loadGroup = doc->GetDocumentLoadGroup();
 
   if (mRequest) {
     nsCOMPtr<nsIURI> oldURI;
     mRequest->GetURI(getter_AddRefs(oldURI));
+    nsCOMPtr<nsIURI> newURI;
+    aImage->GetURI(getter_AddRefs(newURI));
     PRBool eq = PR_FALSE;
-    aURI->Equals(oldURI, &eq);
-    if (eq) {
+    nsresult rv = newURI->Equals(oldURI, &eq);
+    if (NS_SUCCEEDED(rv) && eq) {
       return NS_OK;
     }
 
     // Now cancel the old request so it won't hold a stale ref to us.
     mRequest->Cancel(NS_ERROR_FAILURE);
+    mRequest = nsnull;
   }
 
-  nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1", &rv));
-  if (NS_FAILED(rv)) return rv;
-
-  // If Paint Forcing is enabled, then force all background image loads
-  // to complete before firing onload for the document
-  static PRInt32 loadFlag
-    = PR_GetEnv("MOZ_FORCE_PAINT_AFTER_ONLOAD")
-      ? (PRInt32)nsIRequest::LOAD_NORMAL
-      : (PRInt32)nsIRequest::LOAD_BACKGROUND;
-
-  // XXX: initialDocumentURI is NULL!
-  return il->LoadImage(aURI, nsnull, doc->GetDocumentURI(), loadGroup,
-                       this, doc, loadFlag, nsnull, nsnull,
-                       getter_AddRefs(mRequest));
+  return aImage->Clone(this, getter_AddRefs(mRequest));
 }
 
                     
@@ -188,6 +168,11 @@ NS_IMETHODIMP nsImageLoader::OnStopFrame(imgIRequest *aRequest,
   }
 #endif
 
+  if (!mRequest) {
+    // We're in the middle of a paint anyway
+    return NS_OK;
+  }
+  
   // Draw the background image
   RedrawDirtyFrame(nsnull);
   return NS_OK;
@@ -213,6 +198,11 @@ NS_IMETHODIMP nsImageLoader::FrameChanged(imgIContainer *aContainer,
   if (!mFrame)
     return NS_ERROR_FAILURE;
 
+  if (!mRequest) {
+    // We're in the middle of a paint anyway
+    return NS_OK;
+  }
+  
   nsRect r(*dirtyRect);
 
   float p2t;

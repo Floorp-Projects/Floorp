@@ -74,6 +74,7 @@
 #include "nsLayoutErrors.h"
 #include "nsLayoutUtils.h"
 #include "nsAutoPtr.h"
+#include "imgIRequest.h"
 
 #include "nsFrameManager.h"
 
@@ -1420,14 +1421,20 @@ nsFrameManager::ReResolveStyleContext(nsIPresContext    *aPresContext,
         const nsStyleBackground* oldColor = oldContext->GetStyleBackground();
         const nsStyleBackground* newColor = newContext->GetStyleBackground();
 
-        PRBool equal;
-        if (oldColor->mBackgroundImage &&
-            (!newColor->mBackgroundImage ||
-             NS_FAILED(oldColor->mBackgroundImage->Equals(
-                                        newColor->mBackgroundImage, &equal)) ||
-             !equal)) {
-          // stop the image loading for the frame, the image has changed
-          aPresContext->StopImagesFor(aFrame);
+        if (oldColor->mBackgroundImage) {
+          PRBool stopImages = !newColor->mBackgroundImage;
+          if (!stopImages) {
+            nsCOMPtr<nsIURI> oldURI, newURI;
+            oldColor->mBackgroundImage->GetURI(getter_AddRefs(oldURI));
+            newColor->mBackgroundImage->GetURI(getter_AddRefs(newURI));
+            PRBool equal;
+            stopImages =
+              NS_FAILED(oldURI->Equals(newURI, &equal)) || !equal;
+          }
+          if (stopImages) {
+            // stop the image loading for the frame, the image has changed
+            aPresContext->StopImagesFor(aFrame);
+          }
         }
       }
       oldContext->Release();

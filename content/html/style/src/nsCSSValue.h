@@ -46,6 +46,10 @@
 #include "nsUnitConversion.h"
 #include "nsIURI.h"
 #include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
+
+class imgIRequest;
+class nsIDocument;
 
 enum nsCSSUnit {
   eCSSUnit_Null         = 0,      // (n/a) null unit, value is not specified
@@ -59,6 +63,7 @@ enum nsCSSUnit {
   eCSSUnit_Counter      = 12,     // (PRUnichar*) a counter(string,[string]) value
   eCSSUnit_Counters     = 13,     // (PRUnichar*) a counters(string,string[,string]) value
   eCSSUnit_URL          = 14,     // (nsCSSValue::URL*) value
+  eCSSUnit_Image        = 15,     // (nsCSSValue::Image*) value
   eCSSUnit_Integer      = 50,     // (int) simple value
   eCSSUnit_Enumerated   = 51,     // (int) value has enumerated meaning
   eCSSUnit_Color        = 80,     // (color) an RGBA value
@@ -118,6 +123,9 @@ public:
   struct URL;
   friend struct URL;
 
+  struct Image;
+  friend struct Image;
+  
   // for valueless units only (null, auto, inherit, none, normal)
   nsCSSValue(nsCSSUnit aUnit = eCSSUnit_Null)
     : mUnit(aUnit)
@@ -134,6 +142,7 @@ public:
   nsCSSValue(const nsAString& aValue, nsCSSUnit aUnit);
   nsCSSValue(nscolor aValue);
   nsCSSValue(URL* aValue);
+  nsCSSValue(Image* aValue);
   nsCSSValue(const nsCSSValue& aCopy);
   ~nsCSSValue();
 
@@ -204,16 +213,25 @@ public:
 
   nsIURI* GetURLValue() const
   {
-    NS_ASSERTION(mUnit == eCSSUnit_URL, "not a URL value");
-    return mValue.mURL->mURI;
+    NS_ASSERTION(mUnit == eCSSUnit_URL || mUnit == eCSSUnit_Image,
+                 "not a URL value");
+    return mUnit == eCSSUnit_URL ?
+      mValue.mURL->mURI : mValue.mImage->mURI;
   }
 
   const PRUnichar* GetOriginalURLValue() const
   {
-    NS_ASSERTION(mUnit == eCSSUnit_URL, "not a URL value");
-    return mValue.mURL->mString;
+    NS_ASSERTION(mUnit == eCSSUnit_URL || mUnit == eCSSUnit_Image,
+                 "not a URL value");
+    return mUnit == eCSSUnit_URL ?
+      mValue.mURL->mString : mValue.mImage->mString;
   }
 
+  // Not making this inline because that would force us to include
+  // imgIRequest.h, which leads to REQUIRES hell, since this header is included
+  // all over.
+  imgIRequest* GetImageValue() const;
+  
   nscoord   GetLengthTwips() const;
 
   void  Reset()  // sets to null
@@ -223,6 +241,8 @@ public:
       nsCRT::free(mValue.mString);
     } else if (eCSSUnit_URL == mUnit) {
       mValue.mURL->Release();
+    } else if (eCSSUnit_Image == mUnit) {
+      mValue.mImage->Release();
     }
     mUnit = eCSSUnit_Null;
     mValue.mInt = 0;
@@ -234,11 +254,13 @@ public:
   void  SetStringValue(const nsAString& aValue, nsCSSUnit aUnit);
   void  SetColorValue(nscolor aValue);
   void  SetURLValue(nsCSSValue::URL* aURI);
+  void  SetImageValue(nsCSSValue::Image* aImage);
   void  SetAutoValue();
   void  SetInheritValue();
   void  SetInitialValue();
   void  SetNoneValue();
   void  SetNormalValue();
+  void  StartImageLoad(nsIDocument* aDocument) const;  // Not really const, but pretending
 
 #ifdef DEBUG
   void  AppendToString(nsAString& aBuffer, nsCSSProperty aPropID = eCSSProperty_UNKNOWN) const;
@@ -282,8 +304,26 @@ public:
 
     void AddRef() { ++mRefCnt; }
     void Release() { if (--mRefCnt == 0) delete this; }
-  private:
+  protected:
     nsrefcnt mRefCnt;
+  };
+
+  MOZ_DECL_CTOR_COUNTER(nsCSSValue::Image)
+
+  struct nsCSSValue::Image : public nsCSSValue::URL {
+    // Not making the constructor and destructor inline because that would
+    // force us to include imgIRequest.h, which leads to REQUIRES hell, since
+    // this header is included all over.
+    Image(nsIURI* aURI, const PRUnichar* aString, nsIDocument* aDocument);
+    ~Image();
+
+    // Inherit operator== from nsCSSValue::URL
+
+    nsCOMPtr<imgIRequest> mRequest; // null == image load blocked or somehow failed
+
+    // Override AddRef/Release so we delete ourselves via the right pointer.
+    void AddRef() { ++mRefCnt; }
+    void Release() { if (--mRefCnt == 0) delete this; }
   };
 
 protected:
@@ -294,6 +334,7 @@ protected:
     PRUnichar* mString;
     nscolor    mColor;
     URL*       mURL;
+    Image*     mImage;
   }         mValue;
 };
 

@@ -37,6 +37,7 @@ REQUIRES	= xpcom \
 		  dom \
 		  necko \
 		  unicharutil \
+		  imglib2 \
 		  $(NULL)
 
 CPPSRCS		= \

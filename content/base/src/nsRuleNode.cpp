@@ -55,6 +55,7 @@
 #include "nsStyleContext.h"
 #include "nsStyleSet.h"
 #include "nsSize.h"
+#include "imgIRequest.h"
 
 /*
  * For storage of an |nsRuleNode|'s children in a linked list.
@@ -2942,9 +2943,9 @@ nsRuleNode::ComputeBackgroundData(nsStyleStruct* aStartStruct,
     bg->mBackgroundFlags |= NS_STYLE_BG_COLOR_TRANSPARENT;
   }
 
-  // background-image: url, none, inherit
-  if (eCSSUnit_URL == colorData.mBackImage.GetUnit()) {
-    bg->mBackgroundImage = colorData.mBackImage.GetURLValue();
+  // background-image: url (stored as image), none, inherit
+  if (eCSSUnit_Image == colorData.mBackImage.GetUnit()) {
+    bg->mBackgroundImage = colorData.mBackImage.GetImageValue();
     bg->mBackgroundFlags &= ~NS_STYLE_BG_IMAGE_NONE;
   }
   else if (eCSSUnit_None == colorData.mBackImage.GetUnit()) {

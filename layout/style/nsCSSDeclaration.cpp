@@ -415,7 +415,7 @@ PRBool nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty, const n
 
     aResult.Append(PRUnichar(')'));
   }
-  else if (eCSSUnit_URL == unit) {
+  else if (eCSSUnit_URL == unit || eCSSUnit_Image == unit) {
     aResult.Append(NS_LITERAL_STRING("url(") +
                    nsDependentString(aValue.GetOriginalURLValue()) +
                    NS_LITERAL_STRING(")"));
@@ -441,6 +441,7 @@ PRBool nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty, const n
 
     case eCSSUnit_String:       break;
     case eCSSUnit_URL:          break;
+    case eCSSUnit_Image:        break;
     case eCSSUnit_Attr:
     case eCSSUnit_Counter:
     case eCSSUnit_Counters:     aResult.Append(PRUnichar(')'));    break;
