@@ -62,7 +62,7 @@ else
 }
 
 # Check for changedsince param, and see if it's a positive integer
-if (defined(param("changedsince")) && param("changedsince") =~ /^\d{1,4}$/) 
+if (defined(param("changedsince")) && param("changedsince") =~ /^\d{1-4}$/) 
 {
 	$changedsince = param("changedsince");
 }
@@ -75,7 +75,7 @@ else
 $before = &days_ago($changedsince);		
 
 # check for max rows parameter
-if (defined(param("maxrows")) && param("maxrows") =~ /^\d{1,4}$/)
+if (defined(param("maxrows")) && param("maxrows") =~ /^\d{1-4}$/)
 {
 	$maxrows = param("maxrows");
 }
