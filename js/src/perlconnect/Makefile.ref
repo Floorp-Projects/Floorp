@@ -43,8 +43,16 @@ DEPTH = ..
 #
 # XCFLAGS may be set in the environment or on the gmake command line
 #
+CC = cc
+
 CFLAGS          += $(OPTIMIZER) $(OS_CFLAGS) $(DEFINES) $(INCLUDES) \
-                  -DJSFILE $(XCFLAGS)
+		  -DXP_UNIX -DSVR4 -DSYSV -D_BSD_SOURCE -DPOSIX_SOURCE -DX86_LINUX \
+		  -DDEBUG -DDEBUG_livshits -Dbool=char -DHAS_BOOL -DGCC_OPT_BUG -D_XOPEN_SOURCE
+
+#                  -DJSFILE $(XCFLAGS)\
+#		  -DSVR4 -DSYSV -D_BSD_SOURCE -DPOSIX_SOURCE -DX86_LINUX 
+
+
 LDFLAGS		+= -lm $(XLDFLAGS)
 
 #
@@ -80,8 +88,8 @@ PC_CFILES =	\
 	JS.c \
 	$(NULL)
 
-JS.c: JS.xs typemap
-	perl jsperlbuild.pl
+#JS.c: JS.xs typemap
+#	perl jsperlbuild.pl
 
 LIB_CFILES  = $(PC_CFILES)
 

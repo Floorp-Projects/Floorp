@@ -52,6 +52,7 @@ foreach(@INC){
 if(-e $xsubpp && -e $typemap){
 	$res = `perl $xsubpp -typemap $typemap -typemap typemap JS.xs > JS.c`;
 	if(-e "JS.c"){
+	        print "Successfuly built JS.c\n";
 		exit(0);
 	}
 	else{
