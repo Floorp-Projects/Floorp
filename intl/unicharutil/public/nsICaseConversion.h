@@ -77,7 +77,10 @@ public:
   NS_IMETHOD ToUpper(const PRUnichar* anIn, PRUint32 aLen, nsString& anOut, const PRUnichar* aLocale=nsnull) = 0;
   NS_IMETHOD ToLower(const PRUnichar* anIn, PRUint32 aLen, nsString& anOut, const PRUnichar* aLocale=nsnull ) = 0;
   NS_IMETHOD ToTitle(const PRUnichar* anIn, PRUint32 aLen, nsString& anOut, const PRUnichar* aLocale=nsnull, PRBool aStartInWordBoundary=PR_TRUE) = 0;
-   
+
+  // case-insensitive PRUnichar* comparison - aResult returns similar
+  // to strcasecmp
+  NS_IMETHOD CaseInsensitiveCompare(const PRUnichar* aLeft, const PRUnichar* aRight, PRUint32 aLength, PRInt32* aResult) = 0;
 };
 
 #endif  /* nsICaseConversion_h__ */

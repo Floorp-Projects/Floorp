@@ -70,6 +70,7 @@ public:
   NS_IMETHOD ToUpper(const PRUnichar* anIn, PRUint32 aLen, nsString& anOut, const PRUnichar* aLocale=nsnull) ;
   NS_IMETHOD ToLower(const PRUnichar* anIn, PRUint32 aLen, nsString& anOut, const PRUnichar* aLocale=nsnull );
   NS_IMETHOD ToTitle(const PRUnichar* anIn, PRUint32 aLen, nsString& anOut, const PRUnichar* aLocale=nsnull, PRBool aStartInWordBoundary=PR_TRUE) ;
+  NS_IMETHOD CaseInsensitiveCompare(const PRUnichar* aLeft, const PRUnichar* aRight, PRUint32 aLength, PRInt32 *aResult);
 private:
   static nsrefcnt gInit;
 };
