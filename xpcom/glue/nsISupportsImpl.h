@@ -49,21 +49,7 @@
 #include "pratom.h"   /* needed for PR_AtomicIncrement and PR_AtomicDecrement */
 
 #include "nsDebug.h"
-
-#ifdef XPCOM_GLUE
-// nsTraceRefcnt needs a cleaning...
-#define NS_LOG_ADDREF(_p, _rc, _type, _size)
-#define NS_LOG_RELEASE(_p, _rc, _type)
-#define NS_LOG_NEW_XPCOM(_p,_type,_size,_file,_line)
-#define NS_LOG_DELETE_XPCOM(_p,_file,_line)
-#define NS_LOG_ADDREF_CALL(_p,_rc,_file,_line) _rc
-#define NS_LOG_RELEASE_CALL(_p,_rc,_file,_line) _rc
-#define MOZ_DECL_CTOR_COUNTER(_type)
-#define MOZ_COUNT_CTOR(_type)
-#define MOZ_COUNT_DTOR(_type)
-#else
 #include "nsTraceRefcnt.h" 
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 // Macros to help detect thread-safety:

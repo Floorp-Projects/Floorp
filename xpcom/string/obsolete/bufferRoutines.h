@@ -77,7 +77,7 @@ static PRBool track_illegal = PR_TRUE;
 static PRBool track_latin1  = PR_TRUE;
 
 #ifdef XP_UNIX
-#include "nsTraceRefcnt.h"
+#include "nsTraceRefcntImpl.h"
 class CTraceFile {
 public:
    CTraceFile() {
@@ -104,7 +104,7 @@ public:
         fprintf(mFile, "\n");
         fprintf(mFile, "ENDDATA\n");
         fprintf(mFile, "BEGINSTACK\n");
-        nsTraceRefcnt::WalkTheStack(mFile);
+        nsTraceRefcntImpl::WalkTheStack(mFile);
         fprintf(mFile, "\n");
         fprintf(mFile, "ENDSTACK\n");
         fflush(mFile);
@@ -127,7 +127,7 @@ public:
         fprintf(mFile, "\n");
         fprintf(mFile, "ENDDATA\n");
         fprintf(mFile, "BEGINSTACK\n");
-        nsTraceRefcnt::WalkTheStack(mFile);
+        nsTraceRefcntImpl::WalkTheStack(mFile);
         fprintf(mFile, "\n");
         fprintf(mFile, "ENDSTACK\n");
         fflush(mFile);

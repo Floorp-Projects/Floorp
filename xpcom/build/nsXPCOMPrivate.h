@@ -81,6 +81,7 @@ typedef nsresult (PR_CALLBACK *NewLocalFileFunc)(const nsAString &path, PRBool f
 typedef nsresult (PR_CALLBACK *NewNativeLocalFileFunc)(const nsACString &path, PRBool followLinks, nsILocalFile* *result);
 
 typedef nsresult (PR_CALLBACK *GetDebugFunc)(nsIDebug* *result);
+typedef nsresult (PR_CALLBACK *GetTraceRefcntFunc)(nsITraceRefcnt* *result);
 // PRIVATE
 typedef nsresult (PR_CALLBACK *RegisterXPCOMExitRoutineFunc)(XPCOMExitRoutine exitRoutine, PRUint32 priority);
 typedef nsresult (PR_CALLBACK *UnregisterXPCOMExitRoutineFunc)(XPCOMExitRoutine exitRoutine);
@@ -103,6 +104,7 @@ typedef struct XPCOMFunctions{
 
     // Added Post 1.4
     GetDebugFunc getDebug;
+    GetTraceRefcntFunc getTraceRefcnt;
     
 } XPCOMFunctions;
 

@@ -48,6 +48,7 @@
 #include "nsIThread.h"
 #include "nsDeque.h"
 #include "nsTraceRefcnt.h"
+#include "nsTraceRefcntImpl.h"
 #include "nsXPIDLString.h"
 #include "nsIEnumerator.h"
 #include "nsEnumeratorUtils.h"
@@ -117,7 +118,8 @@ void XXXNeverCalled()
     a.Free(0, 0);
     nsIThread::GetCurrent(nsnull);
     nsDeque(nsnull);
-    nsTraceRefcnt::DumpStatistics();
+    nsTraceRefcnt::LogAddCOMPtr(nsnull, nsnull);
+    nsTraceRefcntImpl::DumpStatistics();
     NS_NewEmptyEnumerator(nsnull);
     nsArrayEnumerator(nsnull);
     NS_QuickSort(nsnull, 0, 0, nsnull, nsnull);

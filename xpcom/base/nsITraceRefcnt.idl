@@ -37,31 +37,36 @@
 
 #include "nsISupports.idl"
 
-/**
- * nsIDebug is an interface between XPCOM Glue and XPCOM.  Users should access
- * the nsIDebug interface through the static class nsDebug.
- * @see nsDebug.h
+/**  
+ * nsITraceRefcnt is an interface between XPCOM Glue and XPCOM.  Users should
+ * access the nsITraceRefcnt interface through the static class nsTraceRefcnt.
+ * @see nsTraceRefcnt.h
  *    
  * @status UNDER_REVIEW
- *
  */
 
-[scriptable, uuid(3bf0c3d7-3bd9-4cf2-a971-33572c503e1e)]
-interface nsIDebug : nsISupports
+[uuid(273dc92f-0fe6-4545-96a9-21be77828039)]
+interface nsITraceRefcnt : nsISupports
 {
-  void assertion(in string aStr,
-                 in string aExpr,
-                 in string aFile, 
-                 in long aLine);
+  void logAddRef(in voidPtr aPtr,
+                 in nsrefcnt aNewRefcnt,
+                 in string aTypeName,
+                 in unsigned long aInstanceSize);
 
-  void warning(in string aStr,
-               in string aFile,
-               in long aLine);
-               
-  void break(in string aFile, 
-             in long aLine);
+  void logRelease(in voidPtr aPtr,
+                  in nsrefcnt aNewRefcnt,
+                  in string aTypeName);
 
-  void abort(in string aFile, 
-             in long aLine);
+  void logCtor(in voidPtr aPtr,
+               in string aTypeName,
+               in unsigned long aInstanceSize);
+
+  void logDtor(in voidPtr aPtr,
+               in string aTypeName,
+               in unsigned long aInstanceSize);
+
+
+  void logAddCOMPtr(in voidPtr aPtr, in nsISupports aObject);
+
+  void logReleaseCOMPtr(in voidPtr aPtr, in nsISupports aObject);
 };
-

@@ -36,15 +36,15 @@ REQUIRES	= string \
 
 CPPSRCS		= \
 		nsAllocator.cpp \
-		nsMemoryImpl.cpp \
-		nsErrorService.cpp \
-		nsTraceRefcnt.cpp \
-		nsID.cpp \
 		nsCWeakReference.cpp \
-		nsConsoleService.cpp \
 		nsConsoleMessage.cpp \
+		nsConsoleService.cpp \
 		nsDebugImpl.cpp \
+		nsErrorService.cpp \
 		nsExceptionService.cpp \
+		nsID.cpp \
+		nsMemoryImpl.cpp \
+		nsTraceRefcntImpl.cpp \
 		$(NULL)
 
 ifdef GC_LEAK_DETECTOR
@@ -56,14 +56,14 @@ endif
 EXPORTS		= \
 		nsAgg.h \
 		nsAutoPtr.h \
-		nsIAllocator.h \
+		nsCWeakReference.h \
 		nsCom.h \
 		nsComObsolete.h \
-		nsCWeakReference.h \
 		nsDebugImpl.h \
+		nsIAllocator.h \
 		nsIID.h \
 		nsISupportsObsolete.h \
-		nsTraceRefcnt.h \
+		nsTraceRefcntImpl.h \
 		nsWeakPtr.h \
 		$(NULL)
 
@@ -80,26 +80,26 @@ CPPSRCS		+= nsStackFrameUnix.cpp
 endif
 
 SDK_XPIDLSRCS   = \
+		nsIDebug.idl               \
 		nsIInterfaceRequestor.idl  \
+		nsIMemory.idl		   \
 		nsIProgrammingLanguage.idl \
 		nsISupports.idl		   \
+		nsITraceRefcnt.idl         \
 		nsIWeakReference.idl	   \
-		nsIMemory.idl		   \
-		nsIDebug.idl               \
 		nsrootidl.idl		   \
 
 SDK_HEADERS     = \
 		nsError.h \
+		nsID.h \
 		nsISupportsBase.h \
 		nscore.h \
-		nsID.h \
-
 
 XPIDLSRCS	= \
-		nsIErrorService.idl \
-		nsIConsoleService.idl \
-		nsIConsoleMessage.idl \
 		nsIConsoleListener.idl \
+		nsIConsoleMessage.idl \
+		nsIConsoleService.idl \
+		nsIErrorService.idl \
 		nsIException.idl \
 		nsIExceptionService.idl \
 		$(NULL)

@@ -50,6 +50,7 @@
 
 #include "nsMemoryImpl.h"
 #include "nsDebugImpl.h"
+#include "nsTraceRefcntImpl.h"
 #include "nsErrorService.h"
 #include "nsByteBuffer.h"
 
@@ -385,6 +386,27 @@ nsresult NS_COM NS_GetDebug(nsIDebug** result)
     return rv;
 }
 
+#ifdef NS_BUILD_REFCNT_LOGGING
+// gTraceRefcnt will be freed during shutdown.
+static nsITraceRefcnt* gTraceRefcnt = nsnull;
+#endif
+
+nsresult NS_COM NS_GetTraceRefcnt(nsITraceRefcnt** result)
+{
+#ifdef NS_BUILD_REFCNT_LOGGING
+    nsresult rv = NS_OK;
+    if (!gTraceRefcnt)
+    {
+        rv = nsTraceRefcntImpl::Create(nsnull, 
+                                       NS_GET_IID(nsITraceRefcnt), 
+                                       (void**)&gTraceRefcnt);
+    }
+    NS_IF_ADDREF(*result = gTraceRefcnt);
+    return rv;
+#else
+    return NS_ERROR_NOT_INITIALIZED;
+#endif
+}
 
 nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
                              nsIFile* binDirectory)
@@ -406,7 +428,7 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
     gXPCOMShuttingDown = PR_FALSE;
 
 #ifdef NS_BUILD_REFCNT_LOGGING
-    nsTraceRefcnt::Startup();
+    nsTraceRefcntImpl::Startup();
 #endif
 
     // Establish the main thread here.
@@ -777,9 +799,9 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
     NS_IF_RELEASE(gDebug);
 
 #ifdef NS_BUILD_REFCNT_LOGGING
-    nsTraceRefcnt::DumpStatistics();
-    nsTraceRefcnt::ResetStatistics();
-    nsTraceRefcnt::Shutdown();
+    nsTraceRefcntImpl::DumpStatistics();
+    nsTraceRefcntImpl::ResetStatistics();
+    nsTraceRefcntImpl::Shutdown();
 #endif
 
 #ifdef GC_LEAK_DETECTOR
@@ -857,7 +879,13 @@ NS_GetFrozenFunctions(XPCOMFunctions *functions, const char* libraryPath)
     }
 
     functions->getDebug = (GetDebugFunc) PR_FindSymbol(xpcomLib, "NS_GetDebug");
-    if (! functions->unregisterExitRoutine) {
+    if (! functions->getDebug) {
+        PR_UnloadLibrary(xpcomLib);
+        return NS_ERROR_FAILURE;
+    }
+
+    functions->getTraceRefcnt = (GetTraceRefcntFunc) PR_FindSymbol(xpcomLib, "NS_GetTraceRefcnt");
+    if (! functions->getTraceRefcnt) {
         PR_UnloadLibrary(xpcomLib);
         return NS_ERROR_FAILURE;
     }

@@ -63,7 +63,6 @@
 
 /**
  * Macro for instantiating a new object that implements nsISupports.
- * Use this in your factory methods to allow for refcnt tracing.
  * Note that you can only use this if you adhere to the no arguments
  * constructor com policy (which you really should!).
  * @param _result Where the new instance pointer is stored
@@ -72,17 +71,14 @@
 #define NS_NEWXPCOM(_result,_type)                                            \
   PR_BEGIN_MACRO                                                              \
     _result = new _type();                                                    \
-    NS_LOG_NEW_XPCOM(_result, #_type, sizeof(_type), __FILE__, __LINE__);     \
   PR_END_MACRO
 
 /**
  * Macro for deleting an object that implements nsISupports.
- * Use this in your Release methods to allow for refcnt tracing.
  * @param _ptr The object to delete.
  */
 #define NS_DELETEXPCOM(_ptr)                                                  \
   PR_BEGIN_MACRO                                                              \
-    NS_LOG_DELETE_XPCOM((_ptr), __FILE__, __LINE__);                          \
     delete (_ptr);                                                            \
   PR_END_MACRO
 
@@ -91,7 +87,7 @@
  * @param _ptr The interface pointer.
  */
 #define NS_ADDREF(_ptr) \
-  NS_LOG_ADDREF_CALL((_ptr), (_ptr)->AddRef(), __FILE__, __LINE__)
+  (_ptr)->AddRef()
 
 /**
  * Macro for adding a reference to this. This macro should be used
@@ -100,23 +96,23 @@
  * that entire problem.
  */
 #define NS_ADDREF_THIS() \
-  NS_LOG_ADDREF_CALL(this, AddRef(), __FILE__, __LINE__)
+  AddRef()
 
 
 extern "C++" {
 // ...because some one is accidentally including this file inside
 // an |extern "C"|
 
+
+// Making this a |inline| |template| allows |expr| to be evaluated only once,
+// yet still denies you the ability to |AddRef()| an |nsCOMPtr|.
 template <class T>
 inline
 nsrefcnt
 ns_if_addref( T expr )
-    // Making this a |inline| |template| allows |expr| to be evaluated only once,
-    //  yet still denies you the ability to |AddRef()| an |nsCOMPtr|.
-    // Note that |NS_ADDREF()| already has this property in the non-logging case.
-  {
+{
     return expr ? expr->AddRef() : 0;
-  }
+}
 
 } /* extern "C++" */
 
@@ -124,18 +120,10 @@ ns_if_addref( T expr )
  * Macro for adding a reference to an interface that checks for NULL.
  * @param _expr The interface pointer.
  */
-#ifdef NS_BUILD_REFCNT_LOGGING
-#define NS_IF_ADDREF(_expr)                                                   \
-  ((0 != (_expr))                                                             \
-   ? NS_LOG_ADDREF_CALL((_expr), ns_if_addref(_expr), __FILE__, __LINE__)     \
-   : 0)
-#else
 #define NS_IF_ADDREF(_expr) ns_if_addref(_expr)
-#endif
 
 /*
- * Given these declarations, it explicitly OK and (in the non-logging build) efficient
- * to end a `getter' with:
+ * Given these declarations, it explicitly OK and efficient to end a `getter' with:
  *
  *    NS_IF_ADDREF(*result = mThing);
  *
@@ -143,37 +131,22 @@ ns_if_addref( T expr )
  * _illegal_ to say |NS_IF_ADDREF(mThing)|.
  */
 
-
-
-
 /**
  * Macro for releasing a reference to an interface.
- *
- * Note that when NS_LOSING_ARCHITECTURE is defined that the release will
- * be done before the trace message is logged. If the reference count
- * goes to zero and implementation of Release logs a message, the two
- * messages will be logged out of order.
- *
  * @param _ptr The interface pointer.
  */
 #define NS_RELEASE(_ptr)                                                      \
   PR_BEGIN_MACRO                                                              \
-    NS_LOG_RELEASE_CALL((_ptr), (_ptr)->Release(), __FILE__, __LINE__);       \
+    (_ptr)->Release();                                                        \
     (_ptr) = 0;                                                               \
   PR_END_MACRO
 
 /**
  * Macro for releasing a reference to an interface.
- *
- * Note that when NS_LOSING_ARCHITECTURE is defined that the release will
- * be done before the trace message is logged. If the reference count
- * goes to zero and implementation of Release logs a message, the two
- * messages will be logged out of order.
- *
  * @param _ptr The interface pointer.
  */
 #define NS_RELEASE_THIS() \
-    NS_LOG_RELEASE_CALL(this, Release(), __FILE__, __LINE__)
+    Release()
 
 /**
  * Macro for releasing a reference to an interface, except that this
@@ -181,33 +154,22 @@ ns_if_addref( T expr )
  * The interface pointer argument will only be NULLed if the reference count
  * goes to zero.
  *
- * Note that when NS_LOSING_ARCHITECTURE is defined that the release will
- * be done before the trace message is logged. If the reference count
- * goes to zero and implementation of Release logs a message, the two
- * messages will be logged out of order.
- *
  * @param _ptr The interface pointer.
  */
 #define NS_RELEASE2(_ptr,_rv)                                                 \
   PR_BEGIN_MACRO                                                              \
-    _rv = NS_LOG_RELEASE_CALL((_ptr), (_ptr)->Release(),__FILE__,__LINE__);   \
+    _rv = (_ptr)->Release();                                                  \
     if (0 == (_rv)) (_ptr) = 0;                                               \
   PR_END_MACRO
 
 /**
  * Macro for releasing a reference to an interface that checks for NULL;
- *
- * Note that when NS_LOSING_ARCHITECTURE is defined that the release will
- * be done before the trace message is logged. If the reference count
- * goes to zero and implementation of Release logs a message, the two
- * messages will be logged out of order.
- *
  * @param _ptr The interface pointer.
  */
 #define NS_IF_RELEASE(_ptr)                                                   \
   PR_BEGIN_MACRO                                                              \
     if (_ptr) {                                                               \
-      NS_LOG_RELEASE_CALL((_ptr), (_ptr)->Release(), __FILE__, __LINE__);     \
+      (_ptr)->Release();                                                      \
       (_ptr) = 0;                                                             \
     }                                                                         \
   PR_END_MACRO
@@ -228,9 +190,6 @@ ns_if_addref( T expr )
 #define NS_ISUPPORTS_CAST(__unambiguousBase, __expr) \
   NS_STATIC_CAST(nsISupports*, NS_STATIC_CAST(__unambiguousBase, __expr))
 
-
-
-
 extern "C++" {
 // ...because some one is accidentally including this file inside
 // an |extern "C"|
@@ -239,17 +198,17 @@ class nsISupports;
 
 template <class T>
 struct nsCOMTypeInfo
-  {
+{
     static const nsIID& GetIID() { return T::GetIID(); }
-  };
+};
 
 NS_SPECIALIZE_TEMPLATE
 struct nsCOMTypeInfo<nsISupports>
-  {
+{
     static const nsIID& GetIID() {
         static const nsIID iid_NS_ISUPPORTS_IID = NS_ISUPPORTS_IID; return iid_NS_ISUPPORTS_IID;
     }
-  };
+};
 
 #define NS_GET_IID(T) nsCOMTypeInfo<T>::GetIID()
 
@@ -258,13 +217,13 @@ template <class T, class DestinationType>
 inline
 nsresult
 CallQueryInterface( T* aSource, DestinationType** aDestination )
-  {
+{
     NS_PRECONDITION(aSource, "null parameter");
     NS_PRECONDITION(aDestination, "null parameter");
-
+    
     return aSource->QueryInterface(NS_GET_IID(DestinationType),
                                    NS_REINTERPRET_CAST(void**, aDestination));
-  }
+}
 
 } // extern "C++"
 

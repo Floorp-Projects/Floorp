@@ -22,7 +22,7 @@
 #include "nscore.h"
 #include "nsStatistics.h"
 #include "nsISupportsUtils.h"
-#include "nsTraceRefcnt.h" // for NS_MeanAndStdDev
+#include "nsTraceRefcntImpl.h" // for NS_MeanAndStdDev
 #include "plhash.h"
 
 inline PLHashNumber

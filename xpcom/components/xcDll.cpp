@@ -64,6 +64,8 @@
 #endif
 #endif /* defined(DEBUG) */
 
+#include "nsTraceRefcntImpl.h"
+
 #define UNLOAD_DEPENDENT_LIBS
 #ifdef HPUX
 #undef UNLOAD_DEPENDENT_LIBS
@@ -131,7 +133,7 @@ PRBool nsDll::Load(void)
     if (m_dllSpec)
     {
 #ifdef NS_BUILD_REFCNT_LOGGING
-        nsTraceRefcnt::SetActivityIsLegal(PR_FALSE);
+        nsTraceRefcntImpl::SetActivityIsLegal(PR_FALSE);
 #endif
         
     // Load any library dependencies
@@ -250,13 +252,13 @@ PRBool nsDll::Load(void)
 #endif
 
 #ifdef NS_BUILD_REFCNT_LOGGING
-        nsTraceRefcnt::SetActivityIsLegal(PR_TRUE);
+        nsTraceRefcntImpl::SetActivityIsLegal(PR_TRUE);
         if (m_instance) {
             // Inform refcnt tracer of new library so that calls through the
             // new library can be traced.
             nsXPIDLCString displayPath;
             GetDisplayPath(displayPath);
-            nsTraceRefcnt::LoadLibrarySymbols(displayPath.get(), m_instance);
+            nsTraceRefcntImpl::LoadLibrarySymbols(displayPath.get(), m_instance);
         }
 #endif
     }
@@ -282,11 +284,11 @@ PRBool nsDll::Unload(void)
     Shutdown();
 
 #ifdef NS_BUILD_REFCNT_LOGGING
-    nsTraceRefcnt::SetActivityIsLegal(PR_FALSE);
+    nsTraceRefcntImpl::SetActivityIsLegal(PR_FALSE);
 #endif
 	PRStatus ret = PR_UnloadLibrary(m_instance);
 #ifdef NS_BUILD_REFCNT_LOGGING
-    nsTraceRefcnt::SetActivityIsLegal(PR_TRUE);
+    nsTraceRefcntImpl::SetActivityIsLegal(PR_TRUE);
 #endif
 
 	if (ret == PR_SUCCESS)

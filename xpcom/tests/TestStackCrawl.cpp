@@ -1,11 +1,11 @@
 #include <stdio.h>
 
 #include "nsISupportsUtils.h"
-#include "nsTraceRefCnt.h"
+#include "nsTraceRefCntImpl.h"
 
 int main(int argc, char* argv[])
 {
-    nsTraceRefcnt::WalkTheStack(stdout);
+    nsTraceRefcntImpl::WalkTheStack(stdout);
     return 0;
 }
 

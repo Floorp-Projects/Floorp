@@ -47,6 +47,7 @@
 #include "nsNetUtil.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsILocalFile.h"
+#include "nsTraceRefcntImpl.h"
 
 #ifdef XP_MAC
 extern "C" void GC_gcollect(void);
@@ -64,7 +65,7 @@ nsAboutBloat::NewChannel(nsIURI *aURI, nsIChannel **result)
     rv = aURI->GetPath(path);
     if (NS_FAILED(rv)) return rv;
 
-    nsTraceRefcnt::StatisticsType statType = nsTraceRefcnt::ALL_STATS;
+    nsTraceRefcntImpl::StatisticsType statType = nsTraceRefcntImpl::ALL_STATS;
     PRBool clear = PR_FALSE;
     PRBool leaks = PR_FALSE;
 
@@ -73,7 +74,7 @@ nsAboutBloat::NewChannel(nsIURI *aURI, nsIChannel **result)
         nsCAutoString param;
         (void)path.Right(param, path.Length() - (pos+1));
         if (param.Equals("new"))
-            statType = nsTraceRefcnt::NEW_STATS;
+            statType = nsTraceRefcntImpl::NEW_STATS;
         else if (param.Equals("clear"))
             clear = PR_TRUE;
         else if (param.Equals("leaks"))
@@ -82,7 +83,7 @@ nsAboutBloat::NewChannel(nsIURI *aURI, nsIChannel **result)
 
     nsCOMPtr<nsIInputStream> inStr;
     if (clear) {
-        nsTraceRefcnt::ResetStatistics();
+        nsTraceRefcntImpl::ResetStatistics();
 
         const char* msg = "Bloat statistics cleared.";
         rv = NS_NewCStringInputStream(getter_AddRefs(inStr), nsDependentCString(msg));
@@ -98,7 +99,7 @@ nsAboutBloat::NewChannel(nsIURI *aURI, nsIChannel **result)
     }
     else {
         nsCOMPtr<nsIFile> file;
-        rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR, 
+        rv = NS_GetSpecialDirectory(NS_OS_CURRENT_PROCESS_DIR, 
                                     getter_AddRefs(file));       
         if (NS_FAILED(rv)) return rv;
 
@@ -118,7 +119,7 @@ nsAboutBloat::NewChannel(nsIURI *aURI, nsIChannel **result)
         }
 
         nsCAutoString dumpFileName;
-        if (statType == nsTraceRefcnt::ALL_STATS)
+        if (statType == nsTraceRefcntImpl::ALL_STATS)
             dumpFileName += "all-";
         else
             dumpFileName += "new-";
@@ -137,7 +138,7 @@ nsAboutBloat::NewChannel(nsIURI *aURI, nsIChannel **result)
         rv = lfile->OpenANSIFileDesc("w", &out);
         if (NS_FAILED(rv)) return rv;
 
-        rv = nsTraceRefcnt::DumpStatistics(statType, out);
+        rv = nsTraceRefcntImpl::DumpStatistics(statType, out);
         ::fclose(out);
         if (NS_FAILED(rv)) return rv;
 

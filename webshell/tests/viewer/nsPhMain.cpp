@@ -150,7 +150,7 @@ void abnormal_exit_handler(int signum)
 #if 0
     printf("stack logged to someplace\n");
     printf("need to fix xpcom/base/nsTraceRefCnt.cpp in WalkTheStack.\n");
-    nsTraceRefcnt::WalkTheStack(stdout);
+    nsTraceRefcntImpl::WalkTheStack(stdout);
 #endif
 
     printf("Sleeping for 5 minutes.\n");
