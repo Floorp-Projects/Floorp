@@ -64,6 +64,7 @@ LIBS = \
 	-lraptorgfx \
 	-limg \
 	-lmozutil \
+	-lnntp	\
 	$(JPEG_LIBS) \
 	$(PNG_LIBS)  \
 	$(ZLIB_LIBS) \

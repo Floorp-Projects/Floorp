@@ -34,14 +34,37 @@
 #include "nsINetService.h"
 #include "nsIComponentManager.h"
 #include "nsString.h"
-#include "nsParseMailbox.h"
 #include "nsXPComCIID.h"
 
 #include "nsNewsDatabase.h"
 #include "nsMsgDBCID.h"
 #include "nsCRT.h"
 
+#include "nsIPref.h"
+#include "nsIFileLocator.h"
+
+#include "nsNewsUtils.h"
+
+#ifdef XP_PC
+#define NETLIB_DLL "netlib.dll"
+#define XPCOM_DLL  "xpcom32.dll"
+#define PREF_DLL   "xppref32.dll"
+#define APPSHELL_DLL "nsappshell.dll"
+#else
+#ifdef XP_MAC
+#include "nsMacRepository.h"
+#else
+#define NETLIB_DLL "libnetlib.so"
+#define XPCOM_DLL  "libxpcom.so"
+#define PREF_DLL   "libpref.so"
+#define APPCORES_DLL  "libappcores.so"
+#define APPSHELL_DLL "libnsappshell.so"
+#endif
+#endif
+
 static NS_DEFINE_CID(kCNewsDB, NS_NEWSDB_CID);
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+static NS_DEFINE_IID(kFileLocatorCID, NS_FILELOCATOR_CID);
 
 class newsTestDriver
 {
@@ -50,7 +73,7 @@ public:
 	virtual ~newsTestDriver();
 	nsresult RunDriver();
     nsresult GetDatabase();
-    nsresult GetPath(nsFileSpec& aPathName);
+    nsresult GetPath(const char *uri, nsFileSpec& aPathName);
 
 protected:
     nsIMsgDatabase   *m_newsDB;
@@ -88,9 +111,10 @@ nsresult newsTestDriver::RunDriver()
             return rv;
         }
 
-        newMsgHdr->SetSubject("hello, world");
+        newMsgHdr->SetSubject("RedHat 6.0 available");
         newMsgHdr->SetFlags(MSG_FLAG_READ);
-        newMsgHdr->SetAuthor("zelig@allen.com");
+        newMsgHdr->SetAuthor("ramiro@netscape.com (Ramiro Estrugo)");
+	newMsgHdr->SetMessageId("<37295058.FED53E36@netscape.com>");
 
         rv = m_newsDB->AddNewHdrToDB(newMsgHdr, PR_TRUE);
         if (NS_FAILED(rv)) {
@@ -113,28 +137,27 @@ nsresult newsTestDriver::RunDriver()
         m_newsDB->Close(PR_TRUE);
     }
 
-    NS_RELEASE(m_newsDB);
-    m_newsDB = nsnull;
-    
     return rv;
 }
 
-nsresult newsTestDriver::GetPath(nsFileSpec& aPathName)
+nsresult newsTestDriver::GetPath(const char *uri, nsFileSpec& aPathName)
 {
-    /* eventually turn news://news.mozilla.org/netscape.public.mozilla.unix 
-       into /u/sspitzer/mozillanews/news.mozilla.org/netscape.public.mozilla.unix 
-       getting /u/sspitzer/mozillanews from the account manager (which gets it
-       from the prefs 
-    */
-  aPathName = "/u/sspitzer/mozillanews/news.mcom.com.sbd/mcom.linux";
-  return NS_OK;
+  nsresult rv = NS_OK;
+
+  rv = nsNewsURI2Path(kNewsRootURI, uri, aPathName);
+
+#ifdef DEBUG_sspitzer
+  printf("newsTestDriver::GetPath(%s,??) -> %s\n", uri, (const char *)aPathName);
+#endif
+
+  return rv;
 }
 
 nsresult newsTestDriver::GetDatabase()
 {
     if (m_newsDB == nsnull) {
         nsNativeFileSpec path;
-		nsresult rv = GetPath(path);
+		nsresult rv = GetPath("news://news.mcom.com/mcom.linux", path);
 		if (NS_FAILED(rv)) return rv;
 
         nsresult newsDBOpen = NS_OK;
@@ -167,6 +190,19 @@ nsresult newsTestDriver::GetDatabase()
 
 int main()
 {
+    nsresult result;
+
+    nsComponentManager::RegisterComponent(kPrefCID, nsnull, nsnull, PREF_DLL, PR_TRUE, PR_TRUE);
+    nsComponentManager::RegisterComponent(kFileLocatorCID,  NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
+	// make sure prefs get initialized and loaded..
+	// mscott - this is just a bad bad bad hack right now until prefs
+	// has the ability to take nsnull as a parameter. Once that happens,
+	// prefs will do the work of figuring out which prefs file to load...
+	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &result); 
+    if (NS_FAILED(result) || prefs == nsnull) {
+        exit(result);
+    }
+
     newsTestDriver * driver = new newsTestDriver();
 	if (driver)
 	{
