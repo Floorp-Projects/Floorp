@@ -19,6 +19,7 @@
 #include "nsIThread.h"
 #include "nsIByteBufferInputStream.h"
 #include "nsIBuffer.h"
+#include "nsIServiceManager.h"
 #include "prprf.h"
 #include "prinrval.h"
 #include "plstr.h"
@@ -136,6 +137,15 @@ main(int argc, char* argv[])
     nsresult rv;
     nsIInputStream* in;
     nsIOutputStream* out;
+    nsIServiceManager* servMgr;
+
+    rv = NS_InitXPCOM(&servMgr);
+    if (NS_FAILED(rv)) return rv;
+
+    // XXX why do I have to do this?!
+    rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup,
+                                          "components");
+    if (NS_FAILED(rv)) return rv;
 
     if (argc > 1 && nsCRT::strcmp(argv[1], "-trace") == 0)
         gTrace = PR_TRUE;
