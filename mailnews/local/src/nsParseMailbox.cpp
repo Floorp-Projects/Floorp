@@ -283,6 +283,11 @@ void nsMsgMailboxParser::DoneParsingFolder(nsresult status)
 	// only mark the db valid if we've succeeded.
 	if (NS_SUCCEEDED(status) && m_mailDB)	// finished parsing, so flush db folder info 
 		UpdateDBFolderInfo();
+	else if (m_mailDB)
+	{
+		m_mailDB->SetSummaryValid(PR_FALSE);
+		m_mailDB->Commit(nsMsgDBCommitType::kLargeCommit);
+	}
 
 //	if (m_folder != nsnull)
 //		m_folder->SummaryChanged();

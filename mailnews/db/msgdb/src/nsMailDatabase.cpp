@@ -371,7 +371,7 @@ void nsMailDatabase::UpdateFolderFlag(nsIMsgDBHdr *mailHdr, PRBool bSet,
 		}
 		else
 		{
-			m_dbFolderInfo->SetFolderDate(0);	// that ought to do the trick.
+			m_dbFolderInfo->SetVersion(0);	// that ought to do the trick.
 		}
 	}
 	return ret;

@@ -253,6 +253,11 @@ nsresult nsDBFolderInfo::LoadMemberVariables()
 	GetInt32PropertyWithToken(m_folderDateColumnToken, (PRInt32 &) m_folderDate);
 	GetInt32PropertyWithToken(m_imapUidValidityColumnToken, m_ImapUidValidity);
 	GetInt32PropertyWithToken(m_expiredMarkColumnToken, (PRInt32 &) m_expiredMark);
+
+	PRInt32 version;
+
+	GetInt32PropertyWithToken(m_versionColumnToken, version);
+	m_version = (PRUint16) version;
 	return ret;
 }
 
