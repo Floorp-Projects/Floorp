@@ -116,8 +116,6 @@
 
 <!-- Pop up menus -->
 
-<popup id="savetip"/>
-
 <popup id="context-menu">
    <menuitem label="&calendar.context.newevent;" oncommand="newEventCommand()"/>
    <menuitem label="&calendar.context.modifyevent;" observes="modify_command" oncommand="unifinderModifyCommand()"/>
@@ -165,11 +163,7 @@
    </toolbar>
 </toolbox>
 
-		<popupset>
-		<popup id="savetip" style="background-color: #FFFFC0;">
-			<label id="popuptooltiptext" value=" "/>
-		</popup>
-		</popupset>
+<tooltip id="savetip"/>
 
 <!-- V I S I B L E  C O N T E N T  -->
 

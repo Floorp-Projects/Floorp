@@ -490,7 +490,6 @@ function modifyEventDialogResponse( calendarEvent )
 
 function getPreviewText( calendarEventDisplay )
 {
-   var TextToReturn = " At "+calendarEventDisplay.displayDate+" you have an event titled: "+calendarEventDisplay.event.title;
 	var HolderBox = document.createElement( "vbox" );
 
    var TitleHtml = document.createElement( "description" );
@@ -512,7 +511,6 @@ function getPreviewText( calendarEventDisplay )
    var DescriptionText = document.createTextNode( "Description: "+calendarEventDisplay.event.description );
    DescriptionHtml.appendChild( DescriptionText );
    HolderBox.appendChild( DescriptionHtml );
-
 
    return ( HolderBox );
 }
