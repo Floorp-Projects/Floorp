@@ -139,7 +139,9 @@ Contributor(s): ______________________________________. -->
                   <menuitem value="&newPageFromDraftCmd.label;" oncommand="BrowserNewWindow();"/>
               </menupopup>
             </menu>
+
           <menuitem value="&openCmd.label;" oncommand="BrowserOpenWindow();"/>
+          <menuitem value="&openFileCmd.label;" oncommand="BrowserOpenFileWindow();"/>
           <menuseparator/>
           <menuitem value="&sendPageCmd.label;" oncommand="BrowserReload();"/>
           <menuitem value="&editPageCmd.label;" oncommand="BrowserEditPage(window.content.location.href);" />
