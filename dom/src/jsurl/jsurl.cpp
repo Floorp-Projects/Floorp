@@ -438,7 +438,7 @@ PR_IMPLEMENT(void)
 NET_InitJavaScriptProtocol(void)
 {
 #ifdef NECKO
-  NS_WARNING("Brendan said he would implement the javascript: protocol.");
+  NS_ASSERTION(0, "Brendan said he would implement the javascript: protocol.");
 #else
         static NET_ProtoImpl mocha_proto_impl;
 
