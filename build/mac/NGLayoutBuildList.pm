@@ -357,11 +357,11 @@ sub MakeResourceAliases()
 	_InstallResources(":mozilla:xpinstall:res:skin:MANIFEST",							"$xpinstall_ch_dir:skin:default:", 0);
 	
 	my($profile_chrome_dir) = "$chrome_dir" . "Profile";
-	_InstallResources(":mozilla:profile:resources:content:MANIFEST",							"$profile_chrome_dir:content:default", 0);
-	_InstallResources(":mozilla:profile:resources:skin:MANIFEST",							"$profile_chrome_dir:skin:default", 0);
+	_InstallResources(":mozilla:profile:resources:content:MANIFEST",					"$profile_chrome_dir:content:default", 0);
+	_InstallResources(":mozilla:profile:resources:skin:MANIFEST",						"$profile_chrome_dir:skin:default", 0);
 	_InstallResources(":mozilla:profile:resources:locale:en-US:MANIFEST",				"$profile_chrome_dir:locale:en-US:", 0);
-	_InstallResources(":mozilla:profile:pref-migrator:resources:content:MANIFEST","$profile_chrome_dir:content:default", 0);
-	_InstallResources(":mozilla:profile:pref-migrator:resources:locale:en-US:MANIFEST","$profile_chrome_dir:locale:en-US:", 0);
+	_InstallResources(":mozilla:profile:pref-migrator:resources:content:MANIFEST",		"$profile_chrome_dir:content:default", 0);
+	_InstallResources(":mozilla:profile:pref-migrator:resources:locale:en-US:MANIFEST",	"$profile_chrome_dir:locale:en-US:", 0);
 
 	# need to duplicate this line if more files in default profile folder
 	my($defaults_dir) = "$dist_dir" . "Defaults:";
@@ -372,7 +372,7 @@ sub MakeResourceAliases()
 	mkdir($default_profile_dir, 0);
 
 	_copy(":mozilla:profile:defaults:bookmarks.html",									"$default_profile_dir"."bookmarks.html");
-	_copy(":mozilla:profile:defaults:panels.rdf",									"$default_profile_dir"."panels.rdf");
+	_copy(":mozilla:profile:defaults:panels.rdf",										"$default_profile_dir"."panels.rdf");
 
 	# Default _pref_ directory stuff
 	my($default_pref_dir) = "$defaults_dir"."Pref:";
@@ -423,10 +423,12 @@ sub MakeResourceAliases()
 
 	if ($main::build{extensions})
 	{
-		my($irc_bin_dir) = "$dist_dir"."irc";
-		_InstallResources(":mozilla:extensions:irc:js:lib:MANIFEST",					"$irc_bin_dir:js:lib");
-		_InstallResources(":mozilla:extensions:irc:xul:lib:MANIFEST",					"$irc_bin_dir:xul:lib");
-		_InstallResources(":mozilla:extensions:irc:xul:tests:MANIFEST",					"$irc_bin_dir:tests");
+		my($irc_bin_dir) = "$chrome_dir"."Chatzilla";
+		_InstallResources(":mozilla:extensions:irc:js:lib:MANIFEST",					"$irc_bin_dir:content:default:lib:js");
+		_InstallResources(":mozilla:extensions:irc:xul:lib:MANIFEST",					"$irc_bin_dir:content:default:lib:xul");
+		_InstallResources(":mozilla:extensions:irc:xul:content:MANIFEST",				"$irc_bin_dir:content:default");
+		_InstallResources(":mozilla:extensions:irc:xul:skin:MANIFEST",					"$irc_bin_dir:skin:default");
+		_InstallResources(":mozilla:extensions:irc:xul:skin:images:MANIFEST",			"$irc_bin_dir:skin:default:images");
 	}
 
 	# if ($main::build{mailnews})
@@ -536,6 +538,13 @@ sub MakeResourceAliases()
 	_InstallResources(":mozilla:xpfe:components:xfer:resources:MANIFEST",					"$global_chrome_dir:content:default");
 	_InstallResources(":mozilla:xpfe:components:xfer:resources:locale:MANIFEST",			"$global_chrome_dir:locale");
 	
+ 	{
+ 		my($pref_chrome_dir) = "$chrome_dir" . "Pref";
+ 		_InstallResources(":mozilla:xpfe:components:prefwindow:resources:content:MANIFEST", 		"$pref_chrome_dir:content:default:", 0);
+ 		_InstallResources(":mozilla:xpfe:components:prefwindow:resources:skin:MANIFEST",			"$pref_chrome_dir:skin:default:", 0);
+ 		_InstallResources(":mozilla:xpfe:components:prefwindow:resources:locale:en-US:MANIFEST",	"$pref_chrome_dir:locale:en-US:", 0);
+ 	}
+
 	{
 		 my($wallet_chrome_dir) = "$chrome_dir" . "Wallet";
 		_InstallResources(":mozilla:extensions:wallet:cookieviewer:MANIFEST",				"$wallet_chrome_dir:content:default:", 0);
