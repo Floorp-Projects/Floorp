@@ -34,7 +34,7 @@
 /*
  * Stuff specific to S/MIME policy and interoperability.
  *
- * $Id: smimeutil.c,v 1.8 2002/06/10 22:00:32 ddrinan%netscape.com Exp $
+ * $Id: smimeutil.c,v 1.9 2002/07/30 20:44:13 bishakhabanerjee%netscape.com Exp $
  */
 
 #include "secmime.h"
@@ -246,10 +246,13 @@ nss_smime_get_cipher_for_alg_and_key(SECAlgorithmID *algid, PK11SymKey *key, uns
 	switch (keylen_bits) {
 	case 40:
 	    c = SMIME_RC2_CBC_40;
+	    break;
 	case 64:
 	    c = SMIME_RC2_CBC_64;
+	    break;
 	case 128:
 	    c = SMIME_RC2_CBC_128;
+	    break;
 	default:
 	    rv = SECFailure;
 	    break;
@@ -257,10 +260,13 @@ nss_smime_get_cipher_for_alg_and_key(SECAlgorithmID *algid, PK11SymKey *key, uns
 	break;
     case SEC_OID_DES_CBC:
 	c = SMIME_DES_CBC_56;
+	break;
     case SEC_OID_DES_EDE3_CBC:
 	c = SMIME_DES_EDE3_168;
+	break;
     case SEC_OID_FORTEZZA_SKIPJACK:
 	c = SMIME_FORTEZZA;
+	break;
     default:
 	rv = SECFailure;
     }
