@@ -46,8 +46,6 @@
   { 0x96, 0xea, 0x0, 0x60, 0xb0, 0xfb, 0x99, 0x56 } }
 // {162A2AE3-5A79-11d3-96EA-0060B0FB9956}
 
-class nsIDOMHTMLOptionElement;
-
 /** 
   * nsISelectControlFrame is the interface for combo boxes and listboxes
   */
@@ -84,13 +82,6 @@ public:
   NS_IMETHOD OnOptionSelected(nsIPresContext* aPresContext,
                               PRInt32 aIndex,
                               PRBool aSelected) = 0;
-
-  /**
-   * Notify the frame when an option's text changes
-   * (We don't pass in the index because it would be expensive for
-   * the option to figure that out)
-   */
-  NS_IMETHOD OnOptionTextChanged(nsIDOMHTMLOptionElement* option) = 0;
 
   /**
    * For the content model to tell if there's a dummy frame or not
