@@ -71,12 +71,24 @@ CPPSRCS		= \
 		nsGfxScrollFrame.cpp \
 		nsScrollPortFrame.cpp \
 		$(NULL)
+ifdef IBMBIDI
+CPPSRCS		+= \
+		nsBidiFrames.cpp \
+		$(NULL)
+endif
 
 EXPORTS		= \
 		nsIHTMLContent.h \
 		nsILineIterator.h \
 		nsHTMLParts.h \
 		$(NULL)
+
+ifdef IBMBIDI
+EXPORTS		+= \
+		nsTextTransformer.h \
+		nsBidiFrames.h      \
+		$(NULL)
+endif
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
