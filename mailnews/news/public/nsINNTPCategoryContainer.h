@@ -7,6 +7,7 @@
 
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsINNTPNewsgroup.h" /* interface nsINNTPNewsgroup */
+#include "nsINNTPNewsgroupList.h" /* interface nsINNTPNewsgroupList */
 
 
 /* starting interface nsINNTPCategoryContainer */
@@ -18,8 +19,6 @@
     { 0xb7, 0xef, 0x00, 0x80, 0x5f, 0x05, 0xff, 0xa5 }}
 
 class nsINNTPCategoryContainer : public nsISupports {
- private:
-
  public: 
   static const nsIID& IID() {
     static nsIID iid = NS_INNTPCATEGORYCONTAINER_IID;

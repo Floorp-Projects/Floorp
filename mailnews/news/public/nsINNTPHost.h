@@ -19,8 +19,7 @@
     { 0xB7, 0xED, 0x00, 0x80, 0x5F, 0x05, 0xFF, 0xA5 }}
 
 class nsINNTPHost : public nsISupports {
- private:
-  public: 
+ public: 
   static const nsIID& IID() {
     static nsIID iid = NS_INNTPHOST_IID;
     return iid;

@@ -7,6 +7,7 @@
 
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsINNTPNewsgroup.h" /* interface nsINNTPNewsgroup */
+#include "nsINNTPNewsgroupList.h" /* interface nsINNTPNewsgroupList */
 
 
 /* starting interface nsIMsgOfflineNewsState */
@@ -18,9 +19,6 @@
     { 0xB7, 0xEB, 0x00, 0x80, 0x5F, 0x05, 0xFF, 0xA5 }}
 
 class nsIMsgOfflineNewsState : public nsISupports {
- private:
-  void operator delete(void *); // NOT TO BE IMPLEMENTED
-
  public: 
   static const nsIID& IID() {
     static nsIID iid = NS_IMSGOFFLINENEWSSTATE_IID;

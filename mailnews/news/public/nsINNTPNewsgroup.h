@@ -18,8 +18,6 @@
     { 0xB7, 0xEE, 0x00, 0x80, 0x5F, 0x05, 0xFF, 0xA5 }}
 
 class nsINNTPNewsgroup : public nsISupports {
- private:
-
  public: 
   static const nsIID& IID() {
     static nsIID iid = NS_INNTPNEWSGROUP_IID;
@@ -27,42 +25,42 @@ class nsINNTPNewsgroup : public nsISupports {
   }
 
   /*  <IDL>  */
-  NS_IMETHOD GetName(char * *aName) const = 0;
+  NS_IMETHOD GetName(char * *aName) = 0;
   NS_IMETHOD SetName(char * aName) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD GetPrettyName(char * *aPrettyName) const = 0;
+  NS_IMETHOD GetPrettyName(char * *aPrettyName) = 0;
   NS_IMETHOD SetPrettyName(char * aPrettyName) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD GetPassword(char * *aPassword) const = 0;
+  NS_IMETHOD GetPassword(char * *aPassword) = 0;
   NS_IMETHOD SetPassword(char * aPassword) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD GetUsername(char * *aUsername) const = 0;
+  NS_IMETHOD GetUsername(char * *aUsername) = 0;
   NS_IMETHOD SetUsername(char * aUsername) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD GetNeedsExtraInfo(PRBool *aNeedsExtraInfo) const = 0;
+  NS_IMETHOD GetNeedsExtraInfo(PRBool *aNeedsExtraInfo) = 0;
   NS_IMETHOD SetNeedsExtraInfo(PRBool aNeedsExtraInfo) = 0;
 
   /*  <IDL>  */
   NS_IMETHOD IsOfflineArticle(PRInt32 num, PRBool *_retval) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD GetCategory(PRBool *aCategory) const = 0;
+  NS_IMETHOD GetCategory(PRBool *aCategory) = 0;
   NS_IMETHOD SetCategory(PRBool aCategory) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD GetSubscribed(PRBool *aSubscribed) const = 0;
+  NS_IMETHOD GetSubscribed(PRBool *aSubscribed) = 0;
   NS_IMETHOD SetSubscribed(PRBool aSubscribed) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD GetWantNewTotals(PRBool *aWantNewTotals) const = 0;
+  NS_IMETHOD GetWantNewTotals(PRBool *aWantNewTotals) = 0;
   NS_IMETHOD SetWantNewTotals(PRBool aWantNewTotals) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD GetNewsgroupList(nsINNTPNewsgroupList * *aNewsgroupList) const = 0;
+  NS_IMETHOD GetNewsgroupList(nsINNTPNewsgroupList * *aNewsgroupList) = 0;
   NS_IMETHOD SetNewsgroupList(nsINNTPNewsgroupList * aNewsgroupList) = 0;
 
   /*  <IDL>  */
