@@ -34,7 +34,7 @@
 /*
  * CMS decoding.
  *
- * $Id: cmsdecode.c,v 1.6 2003/05/14 22:34:21 relyea%netscape.com Exp $
+ * $Id: cmsdecode.c,v 1.7 2003/12/04 00:14:24 nelsonb%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -48,15 +48,15 @@
 #include "secerr.h"
 
 struct NSSCMSDecoderContextStr {
-    SEC_ASN1DecoderContext *		dcx;		/* ASN.1 decoder context */
-    NSSCMSMessage *			cmsg;		/* backpointer to the root message */
-    SECOidTag				type;		/* type of message */
-    NSSCMSContent			content;	/* pointer to message */
-    NSSCMSDecoderContext *		childp7dcx;	/* inner CMS decoder context */
-    PRBool				saw_contents;
-    int					error;
-    NSSCMSContentCallback		cb;
-    void *				cb_arg;
+    SEC_ASN1DecoderContext *	dcx;		/* ASN.1 decoder context */
+    NSSCMSMessage *		cmsg;		/* backpointer to the root message */
+    SECOidTag			type;		/* type of message */
+    NSSCMSContent		content;	/* pointer to message */
+    NSSCMSDecoderContext *	childp7dcx;	/* inner CMS decoder context */
+    PRBool			saw_contents;
+    int				error;
+    NSSCMSContentCallback	cb;
+    void *			cb_arg;
 };
 
 struct NSSCMSDecoderDataStr {
@@ -66,13 +66,13 @@ struct NSSCMSDecoderDataStr {
 
 typedef struct NSSCMSDecoderDataStr NSSCMSDecoderData;
 
-static void nss_cms_decoder_update_filter (void *arg, const char *data, unsigned long len,
-                          int depth, SEC_ASN1EncodingPart data_kind);
+static void      nss_cms_decoder_update_filter (void *arg, const char *data, 
+                 unsigned long len, int depth, SEC_ASN1EncodingPart data_kind);
 static SECStatus nss_cms_before_data(NSSCMSDecoderContext *p7dcx);
 static SECStatus nss_cms_after_data(NSSCMSDecoderContext *p7dcx);
 static SECStatus nss_cms_after_end(NSSCMSDecoderContext *p7dcx);
-static void nss_cms_decoder_work_data(NSSCMSDecoderContext *p7dcx, 
-			     const unsigned char *data, unsigned long len, PRBool final);
+static void      nss_cms_decoder_work_data(NSSCMSDecoderContext *p7dcx, 
+		 const unsigned char *data, unsigned long len, PRBool final);
 static NSSCMSDecoderData *nss_cms_create_decoder_data(PRArenaPool *poolp);
 
 extern const SEC_ASN1Template NSSCMSMessageTemplate[];
@@ -129,7 +129,8 @@ nss_cms_decoder_notify(void *arg, PRBool before, void *dest, int depth)
 	 */
 	if (after && dest == &(rootcinfo->contentType)) {
 	    p7dcx->type = NSS_CMSContentInfo_GetContentTypeTag(rootcinfo);
-	    p7dcx->content = rootcinfo->content;	/* is this ready already ? need to alloc? */
+	    p7dcx->content = rootcinfo->content;	
+	    /* is this ready already ? need to alloc? */
 	    /* XXX yes we need to alloc -- continue here */
 	}
 	break;
@@ -138,8 +139,10 @@ nss_cms_decoder_notify(void *arg, PRBool before, void *dest, int depth)
 	/* otherwise, we handle this type implicitely in the inner decoders */
 
 	if (before && dest == &(rootcinfo->content)) {
-	    /* fake it to cause the filter to put the data in the right place... */
-	    /* we want the ASN.1 decoder to deliver the decoded bytes to us from now on */
+	    /* cause the filter to put the data in the right place... 
+	    ** We want the ASN.1 decoder to deliver the decoded bytes to us 
+	    ** from now on 
+	    */
 	    SEC_ASN1DecoderSetFilterProc(p7dcx->dcx,
 					  nss_cms_decoder_update_filter,
 					  p7dcx,
@@ -159,13 +162,14 @@ nss_cms_decoder_notify(void *arg, PRBool before, void *dest, int depth)
     case SEC_OID_PKCS7_ENCRYPTED_DATA:
 
 	if (before && dest == &(rootcinfo->content))
-	    break;					/* we're not there yet */
+	    break;     /* we're not there yet */
 
 	if (p7dcx->content.pointer == NULL)
 	    p7dcx->content = rootcinfo->content;
 
 	/* get this data type's inner contentInfo */
-	cinfo = NSS_CMSContent_GetContentInfo(p7dcx->content.pointer, p7dcx->type);
+	cinfo = NSS_CMSContent_GetContentInfo(p7dcx->content.pointer, 
+	                                      p7dcx->type);
 
 	if (before && dest == &(cinfo->contentType)) {
 	    /* at this point, set up the &%$&$ back pointer */
@@ -191,14 +195,18 @@ nss_cms_decoder_notify(void *arg, PRBool before, void *dest, int depth)
 	}
 
 	if (before && dest == &(cinfo->rawContent)) {
-	    /* we want the ASN.1 decoder to deliver the decoded bytes to us from now on */
-	    SEC_ASN1DecoderSetFilterProc(p7dcx->dcx, nss_cms_decoder_update_filter,
-					  p7dcx, (PRBool)(p7dcx->cb != NULL));
+	    /* we want the ASN.1 decoder to deliver the decoded bytes to us 
+	    ** from now on 
+	    */
+	    SEC_ASN1DecoderSetFilterProc(p7dcx->dcx, 
+	                                 nss_cms_decoder_update_filter, 
+					 p7dcx, (PRBool)(p7dcx->cb != NULL));
 
 
 	    /* we're right in front of the data */
 	    if (nss_cms_before_data(p7dcx) != SECSuccess) {
-		SEC_ASN1DecoderClearFilterProc(p7dcx->dcx);	/* stop all processing */
+		SEC_ASN1DecoderClearFilterProc(p7dcx->dcx);	
+		/* stop all processing */
 		p7dcx->error = PORT_GetError();
 	    }
 	}
@@ -216,7 +224,7 @@ nss_cms_decoder_notify(void *arg, PRBool before, void *dest, int depth)
     case SEC_OID_PKCS7_AUTHENTICATED_DATA:
 #endif
     default:
-	/* unsupported or unknown message type - fail (more or less) gracefully */
+	/* unsupported or unknown message type - fail  gracefully */
 	p7dcx->error = SEC_ERROR_UNSUPPORTED_MESSAGE_TYPE;
 	break;
     }
@@ -244,28 +252,24 @@ nss_cms_before_data(NSSCMSDecoderContext *p7dcx)
     case SEC_OID_PKCS7_SIGNED_DATA:
 	/* we're decoding a signedData, so set up the digests */
 	rv = NSS_CMSSignedData_Decode_BeforeData(p7dcx->content.signedData);
-	if (rv != SECSuccess)
-	    return SECFailure;
 	break;
     case SEC_OID_PKCS7_DIGESTED_DATA:
 	/* we're encoding a digestedData, so set up the digest */
 	rv = NSS_CMSDigestedData_Decode_BeforeData(p7dcx->content.digestedData);
-	if (rv != SECSuccess)
-	    return SECFailure;
 	break;
     case SEC_OID_PKCS7_ENVELOPED_DATA:
-	rv = NSS_CMSEnvelopedData_Decode_BeforeData(p7dcx->content.envelopedData);
-	if (rv != SECSuccess)
-	    return SECFailure;
+	rv = NSS_CMSEnvelopedData_Decode_BeforeData(
+	                             p7dcx->content.envelopedData);
 	break;
     case SEC_OID_PKCS7_ENCRYPTED_DATA:
-	rv = NSS_CMSEncryptedData_Decode_BeforeData(p7dcx->content.encryptedData);
-	if (rv != SECSuccess)
-	    return SECFailure;
+	rv = NSS_CMSEncryptedData_Decode_BeforeData(
+	                             p7dcx->content.encryptedData);
 	break;
     default:
 	return SECFailure;
     }
+    if (rv != SECSuccess)
+	return SECFailure;
 
     /* ok, now we have a pointer to cinfo */
     /* find out what kind of data is encapsulated */
@@ -288,7 +292,7 @@ nss_cms_before_data(NSSCMSDecoderContext *p7dcx)
     if ((template = NSS_CMSUtil_GetTemplateByTypeTag(childtype)) == NULL)
 	return SECFailure;
 
-    childp7dcx = (NSSCMSDecoderContext *)PORT_ZAlloc(sizeof(NSSCMSDecoderContext));
+    childp7dcx = PORT_ZNew(NSSCMSDecoderContext);
     if (childp7dcx == NULL)
 	return SECFailure;
 
@@ -301,12 +305,14 @@ nss_cms_before_data(NSSCMSDecoderContext *p7dcx)
 	goto loser;
 
     /* start the child decoder */
-    childp7dcx->dcx = SEC_ASN1DecoderStart(poolp, childp7dcx->content.pointer, template);
+    childp7dcx->dcx = SEC_ASN1DecoderStart(poolp, childp7dcx->content.pointer, 
+                                           template);
     if (childp7dcx->dcx == NULL)
 	goto loser;
 
     /* the new decoder needs to notify, too */
-    SEC_ASN1DecoderSetNotifyProc(childp7dcx->dcx, nss_cms_decoder_notify, childp7dcx);
+    SEC_ASN1DecoderSetNotifyProc(childp7dcx->dcx, nss_cms_decoder_notify, 
+                                 childp7dcx);
 
     /* tell the parent decoder that it needs to feed us the content data */
     p7dcx->childp7dcx = childp7dcx;
@@ -315,7 +321,9 @@ nss_cms_before_data(NSSCMSDecoderContext *p7dcx)
 
     childp7dcx->cmsg = p7dcx->cmsg;	/* backpointer to root message */
 
-    /* should the child decoder encounter real data, it needs to give it to the caller */
+    /* should the child decoder encounter real data, 
+    ** it must give it to the caller 
+    */
     childp7dcx->cb = p7dcx->cb;
     childp7dcx->cb_arg = p7dcx->cb_arg;
 
@@ -339,11 +347,8 @@ loser:
 static SECStatus
 nss_cms_after_data(NSSCMSDecoderContext *p7dcx)
 {
-    PLArenaPool *poolp;
     NSSCMSDecoderContext *childp7dcx;
     SECStatus rv = SECFailure;
-
-    poolp = p7dcx->cmsg->poolp;
 
     /* Handle last block. This is necessary to flush out the last bytes
      * of a possibly incomplete block */
@@ -372,13 +377,16 @@ nss_cms_after_data(NSSCMSDecoderContext *p7dcx)
 	rv = NSS_CMSSignedData_Decode_AfterData(p7dcx->content.signedData);
 	break;
     case SEC_OID_PKCS7_ENVELOPED_DATA:
-	rv = NSS_CMSEnvelopedData_Decode_AfterData(p7dcx->content.envelopedData);
+	rv = NSS_CMSEnvelopedData_Decode_AfterData(
+	                            p7dcx->content.envelopedData);
 	break;
     case SEC_OID_PKCS7_DIGESTED_DATA:
-	rv = NSS_CMSDigestedData_Decode_AfterData(p7dcx->content.digestedData);
+	rv = NSS_CMSDigestedData_Decode_AfterData(
+	                           p7dcx->content.digestedData);
 	break;
     case SEC_OID_PKCS7_ENCRYPTED_DATA:
-	rv = NSS_CMSEncryptedData_Decode_AfterData(p7dcx->content.encryptedData);
+	rv = NSS_CMSEncryptedData_Decode_AfterData(
+	                            p7dcx->content.encryptedData);
 	break;
     case SEC_OID_PKCS7_DATA:
 	/* do nothing */
@@ -394,26 +402,29 @@ done:
 static SECStatus
 nss_cms_after_end(NSSCMSDecoderContext *p7dcx)
 {
-    SECStatus rv;
-    PLArenaPool *poolp;
-
-    poolp = p7dcx->cmsg->poolp;
+    SECStatus rv = SECSuccess;
 
     switch (p7dcx->type) {
     case SEC_OID_PKCS7_SIGNED_DATA:
-	rv = NSS_CMSSignedData_Decode_AfterEnd(p7dcx->content.signedData);
+	if (p7dcx->content.signedData)
+	    rv = NSS_CMSSignedData_Decode_AfterEnd(p7dcx->content.signedData);
 	break;
     case SEC_OID_PKCS7_ENVELOPED_DATA:
-	rv = NSS_CMSEnvelopedData_Decode_AfterEnd(p7dcx->content.envelopedData);
+	if (p7dcx->content.envelopedData)
+	    rv = NSS_CMSEnvelopedData_Decode_AfterEnd(
+	                               p7dcx->content.envelopedData);
 	break;
     case SEC_OID_PKCS7_DIGESTED_DATA:
-	rv = NSS_CMSDigestedData_Decode_AfterEnd(p7dcx->content.digestedData);
+	if (p7dcx->content.digestedData)
+	    rv = NSS_CMSDigestedData_Decode_AfterEnd(
+	                              p7dcx->content.digestedData);
 	break;
     case SEC_OID_PKCS7_ENCRYPTED_DATA:
-	rv = NSS_CMSEncryptedData_Decode_AfterEnd(p7dcx->content.encryptedData);
+	if (p7dcx->content.encryptedData)
+	    rv = NSS_CMSEncryptedData_Decode_AfterEnd(
+	                               p7dcx->content.encryptedData);
 	break;
     case SEC_OID_PKCS7_DATA:
-	rv = SECSuccess;
 	break;
     default:
 	rv = SECFailure;	/* we should not have got that far... */
@@ -518,9 +529,10 @@ nss_cms_decoder_work_data(NSSCMSDecoderContext *p7dcx,
     if (cinfo->digcx)
 	NSS_CMSDigestContext_Update(cinfo->digcx, data, len);
 
-    /* at this point, we have the plain decoded & decrypted data */
-    /* which is either more encoded DER which we need to hand to the child decoder */
-    /*              or data we need to hand back to our caller */
+    /* at this point, we have the plain decoded & decrypted data 
+    ** which is either more encoded DER (which we need to hand to the child 
+    ** decoder) or data we need to hand back to our caller 
+    */
 
     /* pass the content back to our caller or */
     /* feed our freshly decrypted and decoded data into child decoder */
@@ -589,7 +601,8 @@ nss_cms_decoder_update_filter (void *arg, const char *data, unsigned long len,
 
     /* pass on the content bytes only */
     if (data_kind == SEC_ASN1_Contents)
-	nss_cms_decoder_work_data(p7dcx, (const unsigned char *) data, len, PR_FALSE);
+	nss_cms_decoder_work_data(p7dcx, (const unsigned char *) data, len, 
+	                          PR_FALSE);
 }
 
 /*
@@ -604,7 +617,8 @@ NSSCMSDecoderContext *
 NSS_CMSDecoder_Start(PRArenaPool *poolp,
 		      NSSCMSContentCallback cb, void *cb_arg,
 		      PK11PasswordFunc pwfn, void *pwfn_arg,
-		      NSSCMSGetDecryptKeyCallback decrypt_key_cb, void *decrypt_key_cb_arg)
+		      NSSCMSGetDecryptKeyCallback decrypt_key_cb, 
+		      void *decrypt_key_cb_arg)
 {
     NSSCMSDecoderContext *p7dcx;
     NSSCMSMessage *cmsg;
@@ -613,10 +627,10 @@ NSS_CMSDecoder_Start(PRArenaPool *poolp,
     if (cmsg == NULL)
 	return NULL;
 
-    NSS_CMSMessage_SetEncodingParams(cmsg, pwfn, pwfn_arg, decrypt_key_cb, decrypt_key_cb_arg,
-					NULL, NULL);
+    NSS_CMSMessage_SetEncodingParams(cmsg, pwfn, pwfn_arg, decrypt_key_cb, 
+                                     decrypt_key_cb_arg, NULL, NULL);
 
-    p7dcx = (NSSCMSDecoderContext*)PORT_ZAlloc(sizeof(NSSCMSDecoderContext));
+    p7dcx = PORT_ZNew(NSSCMSDecoderContext);
     if (p7dcx == NULL) {
 	NSS_CMSMessage_Destroy(cmsg);
 	return NULL;
@@ -644,10 +658,14 @@ NSS_CMSDecoder_Start(PRArenaPool *poolp,
  * NSS_CMSDecoder_Update - feed DER-encoded data to decoder
  */
 SECStatus
-NSS_CMSDecoder_Update(NSSCMSDecoderContext *p7dcx, const char *buf, unsigned long len)
+NSS_CMSDecoder_Update(NSSCMSDecoderContext *p7dcx, const char *buf, 
+                      unsigned long len)
 {
-    if (p7dcx->dcx != NULL && p7dcx->error == 0) {	/* if error is set already, don't bother */
-	if (SEC_ASN1DecoderUpdate (p7dcx->dcx, buf, len) != SECSuccess) {
+    SECStatus rv;
+    if (p7dcx->dcx != NULL && p7dcx->error == 0) {	
+    	/* if error is set already, don't bother */
+	rv = SEC_ASN1DecoderUpdate(p7dcx->dcx, buf, len);
+	if (rv != SECSuccess) {
 	    p7dcx->error = PORT_GetError();
 	    PORT_Assert (p7dcx->error);
 	    if (p7dcx->error == 0)
@@ -691,10 +709,11 @@ NSS_CMSDecoder_Finish(NSSCMSDecoderContext *p7dcx)
 
     cmsg = p7dcx->cmsg;
 
-    if (p7dcx->dcx == NULL || SEC_ASN1DecoderFinish(p7dcx->dcx) != SECSuccess ||
+    if (p7dcx->dcx == NULL || 
+        SEC_ASN1DecoderFinish(p7dcx->dcx) != SECSuccess ||
 	nss_cms_after_end(p7dcx) != SECSuccess)
     {
-	NSS_CMSMessage_Destroy(cmsg);	/* needs to get rid of pool if it's ours */
+	NSS_CMSMessage_Destroy(cmsg);	/* get rid of pool if it's ours */
 	cmsg = NULL;
     }
 
@@ -706,13 +725,15 @@ NSSCMSMessage *
 NSS_CMSMessage_CreateFromDER(SECItem *DERmessage,
 		    NSSCMSContentCallback cb, void *cb_arg,
 		    PK11PasswordFunc pwfn, void *pwfn_arg,
-		    NSSCMSGetDecryptKeyCallback decrypt_key_cb, void *decrypt_key_cb_arg)
+		    NSSCMSGetDecryptKeyCallback decrypt_key_cb, 
+		    void *decrypt_key_cb_arg)
 {
     NSSCMSDecoderContext *p7dcx;
 
     /* first arg(poolp) == NULL => create our own pool */
-    p7dcx = NSS_CMSDecoder_Start(NULL, cb, cb_arg, pwfn, pwfn_arg, decrypt_key_cb, decrypt_key_cb_arg);
-    (void) NSS_CMSDecoder_Update(p7dcx, (char *)DERmessage->data, DERmessage->len);
+    p7dcx = NSS_CMSDecoder_Start(NULL, cb, cb_arg, pwfn, pwfn_arg, 
+                                 decrypt_key_cb, decrypt_key_cb_arg);
+    NSS_CMSDecoder_Update(p7dcx, (char *)DERmessage->data, DERmessage->len);
     return NSS_CMSDecoder_Finish(p7dcx);
 }
 
