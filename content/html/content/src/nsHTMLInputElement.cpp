@@ -435,19 +435,26 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   // CheckedChanged() are false--i.e. the value has not been changed by the
   // user or by JS)
   //
+  // We only really need to call reset for the value so that the text control
+  // knows the new value.  No other reason.
+  //
   if (aName == nsHTMLAtoms::value &&
       !GET_BOOLBIT(mBitField, BF_VALUE_CHANGED) &&
       (mType == NS_FORM_INPUT_TEXT ||
        mType == NS_FORM_INPUT_PASSWORD ||
-       mType == NS_FORM_INPUT_FILE ||
-       mType == NS_FORM_INPUT_HIDDEN)) {
+       mType == NS_FORM_INPUT_FILE)) {
     Reset();
   }
+  //
+  // Checked must be set no matter what type of control it is, since
+  // GetChecked() must reflect the new value
+  //
   if (aName == nsHTMLAtoms::checked &&
-      !GET_BOOLBIT(mBitField, BF_CHECKED_CHANGED) &&
-      (mType == NS_FORM_INPUT_CHECKBOX ||
-       mType == NS_FORM_INPUT_RADIO)) {
-    Reset();
+      !GET_BOOLBIT(mBitField, BF_CHECKED_CHANGED)) {
+    PRBool resetVal;
+    GetDefaultChecked(&resetVal);
+    SetChecked(resetVal);
+    SetCheckedChanged(PR_FALSE);
   }
 }
 
