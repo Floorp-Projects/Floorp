@@ -215,6 +215,21 @@ NS_METHOD nsWindow::PreCreateWidget(nsWidgetInitData *aInitData)
   return NS_ERROR_FAILURE;
 }
 
+
+// Drag & Drop stuff.
+enum {
+  TARGET_STRING,
+  TARGET_ROOTWIN
+};
+
+static GtkTargetEntry target_table[] = {
+  { "STRING",     0, TARGET_STRING },
+  { "text/plain", 0, TARGET_STRING },
+  { "application/x-rootwin-drop", 0, TARGET_ROOTWIN }
+};
+static guint n_targets = sizeof(target_table) / sizeof(target_table[0]);
+
+
 //-------------------------------------------------------------------------
 //
 // Create the native widget
@@ -314,6 +329,13 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
   gtk_widget_set_name(mWidget, "nsWindow");
   //  mCursor = eCursor_select;
   //  SetCursor(eCursor_standard);
+
+  // Initialize this window instance as a drag target.
+  gtk_drag_dest_set (mWidget,
+                     GTK_DEST_DEFAULT_ALL,
+                     target_table, n_targets - 1, /* no rootwin */
+                     GDK_ACTION_COPY | GDK_ACTION_MOVE);
+
   return NS_OK;
 }
 
@@ -717,6 +739,7 @@ NS_METHOD ChildWindow::Destroy()
   IndentByDepth(stdout);
   printf("ChildWindow::Destroy:%p  \n", this);
 #endif
+
   // Skip over baseclass Destroy method which doesn't do what we want;
   // instead make sure widget destroy method gets invoked.
   return nsWidget::Destroy();
