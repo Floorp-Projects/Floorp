@@ -28,8 +28,8 @@ function CustomizeMailToolbar(id)
   for (var i = 0; i < menubar.childNodes.length; ++i)
     menubar.childNodes[i].setAttribute("disabled", true);
     
-  //var cmd = document.getElementById("cmd_CustomizeToolbars");
-  //cmd.setAttribute("disabled", "true");
+  var customizePopup = document.getElementById("CustomizeMailToolbar"); 
+  customizePopup.setAttribute("disabled", "true");
    
    window.openDialog("chrome://global/content/customizeToolbar.xul", "CustomizeToolbar",
                      "chrome,all,dependent", document.getElementById(id));
@@ -44,8 +44,8 @@ function MailToolboxCustomizeDone(aToolboxChanged)
   for (var i = 0; i < menubar.childNodes.length; ++i)
     menubar.childNodes[i].setAttribute("disabled", false);
 
-  //var cmd = document.getElementById("cmd_CustomizeToolbars");
-  //cmd.removeAttribute("disabled");
+  var customizePopup = document.getElementById("CustomizeMailToolbar");
+  customizePopup.removeAttribute("disabled");
 
   // make sure our toolbar buttons have the correct enabled state restored to them...
   if (this.UpdateMailToolbar != undefined)

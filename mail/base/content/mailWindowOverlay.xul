@@ -118,7 +118,6 @@
    <command id="cmd_viewWatchedThreadsWithUnread" oncommand="goDoCommand('cmd_viewWatchedThreadsWithUnread')" disabled="true"/>
    <command id="cmd_viewIgnoredThreads" oncommand="goDoCommand('cmd_viewIgnoredThreads')" disabled="true"/>
    <command id="cmd_sortByThread" oncommand="goDoCommand('cmd_sortByThread')" disabled="true"/>
-   <command id="cmd_CustomizeToolbars" oncommand="CustomizeMailToolbar('mail-toolbox')"/>
    <commandset id="viewZoomCommands"/>
 </commandset>
 
@@ -964,7 +963,7 @@
 </popup>
 
 <popup id="toolbar-context-menu">
-  <menuitem oncommand="CustomizeMailToolbar('mail-toolbox');" label="&customizeToolbar.label;" accesskey="&customizeToolbar.accesskey;"/>
+  <menuitem oncommand="CustomizeMailToolbar('mail-toolbox');" id="CustomizeMailToolbar" label="&customizeToolbar.label;" accesskey="&customizeToolbar.accesskey;"/>
 </popup>
 
 <toolbox id="mail-toolbox" class="toolbox-top" mode="icons">  
