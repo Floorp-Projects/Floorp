@@ -83,6 +83,7 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIRadioControlElement.h"
 #include "nsIRadioVisitor.h"
+#include "nsIRadioGroupContainer.h"
 
 static const int NS_FORM_CONTROL_LIST_HASHTABLE_SIZE = 16;
 
@@ -95,7 +96,8 @@ class nsHTMLFormElement : public nsGenericHTMLContainerElement,
                           public nsIDOMHTMLFormElement,
                           public nsIDOMNSHTMLFormElement,
                           public nsIWebProgressListener,
-                          public nsIForm
+                          public nsIForm,
+                          public nsIRadioGroupContainer
 {
 public:
   nsHTMLFormElement() :
@@ -142,11 +144,17 @@ public:
   NS_IMETHOD ResolveName(const nsAString& aName,
                          nsISupports** aReturn);
   NS_IMETHOD IndexOfControl(nsIFormControl* aControl, PRInt32* aIndex);
+
+  // nsIRadioGroupContainer
   NS_IMETHOD SetCurrentRadioButton(const nsAString& aName,
                                    nsIDOMHTMLInputElement* aRadio);
   NS_IMETHOD GetCurrentRadioButton(const nsAString& aName,
                                    nsIDOMHTMLInputElement** aRadio);
   NS_IMETHOD WalkRadioGroup(const nsAString& aName, nsIRadioVisitor* aVisitor);
+  NS_IMETHOD AddToRadioGroup(const nsAString& aName,
+                             nsIFormControl* aRadio);
+  NS_IMETHOD RemoveFromRadioGroup(const nsAString& aName,
+                                  nsIFormControl* aRadio);
 
 #ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
@@ -410,6 +418,7 @@ NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLFormElement,
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLFormElement)
   NS_INTERFACE_MAP_ENTRY(nsIForm)
   NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
+  NS_INTERFACE_MAP_ENTRY(nsIRadioGroupContainer)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLFormElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
@@ -1163,14 +1172,6 @@ nsHTMLFormElement::RemoveElement(nsIFormControl* aChild)
 {
   NS_ENSURE_TRUE(mControls, NS_ERROR_UNEXPECTED);
 
-  mControls->mElements.RemoveElement(aChild);
-
-  if (mControls->mNotInElements) {
-    nsISupportsKey key(aChild);
-
-    mControls->mNotInElements->Remove(&key);
-  }
-
   //
   // Remove it from the radio group if it's a radio button
   //
@@ -1178,8 +1179,16 @@ nsHTMLFormElement::RemoveElement(nsIFormControl* aChild)
   aChild->GetType(&type);
   if (type == NS_FORM_INPUT_RADIO) {
     nsCOMPtr<nsIRadioControlElement> radio = do_QueryInterface(aChild);
-    nsresult rv = radio->RemovedFromRadioGroup(this, nsnull);
+    nsresult rv = radio->WillRemoveFromRadioGroup();
     NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  mControls->mElements.RemoveElement(aChild);
+
+  if (mControls->mNotInElements) {
+    nsISupportsKey key(aChild);
+
+    mControls->mNotInElements->Remove(&key);
   }
 
   return NS_OK;
@@ -1369,10 +1378,6 @@ nsHTMLFormElement::WalkRadioGroup(const nsAString& aName,
           aVisitor->Visit(formControl, &stopIterating);
         }
       } else {
-        //
-        // If it's a list, we have to find the first non-disabled one and
-        // select it.
-        //
         nsCOMPtr<nsIDOMNodeList> nodeList(do_QueryInterface(item));
         if (nodeList) {
           PRUint32 length = 0;
@@ -1398,6 +1403,20 @@ nsHTMLFormElement::WalkRadioGroup(const nsAString& aName,
   }
 
   return rv;
+}
+
+NS_IMETHODIMP
+nsHTMLFormElement::AddToRadioGroup(const nsAString& aName,
+                                   nsIFormControl* aRadio)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLFormElement::RemoveFromRadioGroup(const nsAString& aName,
+                                        nsIFormControl* aRadio)
+{
+  return NS_OK;
 }
 
 

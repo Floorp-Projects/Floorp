@@ -126,6 +126,11 @@
 #include "nsPIBoxObject.h"
 #include "nsXULAtoms.h"
 
+// for radio group stuff
+#include "nsIDOMHTMLInputElement.h"
+#include "nsIRadioVisitor.h"
+#include "nsIFormControl.h"
+
 #ifdef IBMBIDI
 #include "nsBidiUtils.h"
 #endif
@@ -141,6 +146,17 @@ static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
 #include "nsIHttpChannel.h"
 #include "nsIPref.h"
+
+/**
+ * A struct that holds all the information about a radio group.
+ */
+struct nsRadioGroupStruct
+{
+  /** A strong pointer to the currently selected radio button. */
+  nsCOMPtr<nsIDOMHTMLInputElement> mSelectedRadioButton;
+  nsSmallVoidArray mRadioButtons;
+};
+
 
 nsDOMStyleSheetList::nsDOMStyleSheetList(nsIDocument *aDocument)
 {
@@ -636,6 +652,7 @@ NS_INTERFACE_MAP_BEGIN(nsDocument)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
   NS_INTERFACE_MAP_ENTRY(nsIDOM3Node)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+  NS_INTERFACE_MAP_ENTRY(nsIRadioGroupContainer)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDocument)
   if (aIID.Equals(NS_GET_IID(nsIDOMXPathEvaluator)) &&
       (!gCheckedForXPathDOM || gHaveXPathDOM)) {
@@ -3760,6 +3777,95 @@ nsDocument::GetContainer(nsISupports **aContainer)
   NS_IF_ADDREF(*aContainer);
 
   return NS_OK;
+}
+
+nsresult
+nsDocument::GetRadioGroup(const nsAString& aName,
+                          nsRadioGroupStruct **aRadioGroup)
+{
+  nsStringKey key(aName);
+  nsRadioGroupStruct* radioGroup = (nsRadioGroupStruct*)mRadioGroups.Get(&key);
+  
+  if (!radioGroup) {
+    radioGroup = new nsRadioGroupStruct();
+    NS_ENSURE_TRUE(radioGroup, NS_ERROR_OUT_OF_MEMORY);
+    mRadioGroups.Put(&key, radioGroup);
+  }
+  *aRadioGroup = radioGroup;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocument::SetCurrentRadioButton(const nsAString& aName,
+                                  nsIDOMHTMLInputElement* aRadio)
+{
+  nsRadioGroupStruct* radioGroup = nsnull;
+  GetRadioGroup(aName, &radioGroup);
+  if (radioGroup) {
+    radioGroup->mSelectedRadioButton = aRadio;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocument::GetCurrentRadioButton(const nsAString& aName,
+                                  nsIDOMHTMLInputElement** aRadio)
+{
+  nsRadioGroupStruct* radioGroup = nsnull;
+  GetRadioGroup(aName, &radioGroup);
+  if (radioGroup) {
+    *aRadio = radioGroup->mSelectedRadioButton;
+    NS_IF_ADDREF(*aRadio);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocument::AddToRadioGroup(const nsAString& aName,
+                            nsIFormControl* aRadio)
+{
+  nsRadioGroupStruct* radioGroup = nsnull;
+  GetRadioGroup(aName, &radioGroup);
+  if (radioGroup) {
+    radioGroup->mRadioButtons.AppendElement(aRadio);
+    NS_IF_ADDREF(aRadio);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocument::RemoveFromRadioGroup(const nsAString& aName,
+                                 nsIFormControl* aRadio)
+{
+  nsRadioGroupStruct* radioGroup = nsnull;
+  GetRadioGroup(aName, &radioGroup);
+  if (radioGroup) {
+    if (radioGroup->mRadioButtons.RemoveElement(aRadio)) {
+      NS_IF_RELEASE(aRadio);
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocument::WalkRadioGroup(const nsAString& aName,
+                           nsIRadioVisitor* aVisitor)
+{
+  nsresult rv = NS_OK;
+  nsRadioGroupStruct* radioGroup = nsnull;
+  GetRadioGroup(aName, &radioGroup);
+  if (radioGroup) {
+    PRBool stop = PR_FALSE;
+    for (int i = 0; i < radioGroup->mRadioButtons.Count(); i++) {
+      aVisitor->Visit(NS_STATIC_CAST(nsIFormControl *,
+                      radioGroup->mRadioButtons.ElementAt(i)), &stop);
+      if (stop) {
+        break;
+      }
+    }
+  }
+  return rv;
 }
 
 #ifdef IBMBIDI

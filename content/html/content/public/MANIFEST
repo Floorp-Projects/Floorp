@@ -8,5 +8,6 @@ nsILink.h
 nsIOptionElement.h
 nsIRadioControlElement.h
 nsIRadioVisitor.h
+nsIRadioGroupContainer.h
 nsIScriptElement.h
 nsITextControlElement.h
