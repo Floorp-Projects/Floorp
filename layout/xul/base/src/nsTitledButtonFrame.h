@@ -30,7 +30,7 @@ class nsTitledButtonFrame : public nsLeafFrame, public nsIBox
 {
 public:
 
-  enum CroppingStyle { CropLeft, CropRight, CropCenter };
+  enum CroppingStyle { CropNone, CropLeft, CropRight, CropCenter };
 
   friend nsresult NS_NewTitledButtonFrame(nsIFrame** aNewFrame);
 

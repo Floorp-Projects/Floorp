@@ -299,15 +299,17 @@ nsTitledButtonFrame::UpdateAttributes(nsIPresContext&  aPresContext)
   else 
 	  mAlign = NS_SIDE_BOTTOM;
 
-  value=CROP_RIGHT;
+  value="";
 	mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::crop, value);
 
   if (value.EqualsIgnoreCase(CROP_LEFT))
 	  mCropType = CropLeft;
   else if (value.EqualsIgnoreCase(CROP_CENTER))
 	  mCropType = CropCenter;
-  else 
+  else if (value.EqualsIgnoreCase(CROP_RIGHT))
 	  mCropType = CropRight;
+  else 
+    mCropType = CropNone;
 
   value = "";
 	mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value);
@@ -493,25 +495,25 @@ nsTitledButtonFrame::LayoutTitleAndImage(nsIPresContext& aPresContext,
 				  // get title
 				  CalculateTitleForWidth(aPresContext, aRenderingContext, rect.width - (mImageRect.width + spacing));
 
- 				  // title left
-				  mTitleRect.x = left_x;
-				  mTitleRect.y = center_y  - mTitleRect.height/2;
+ 				  // image left
+				  mImageRect.x = left_x;
+				  mImageRect.y = center_y  - mImageRect.height/2;
 
-				  // image after text
-				  mImageRect.x = mTitleRect.x + mTitleRect.width + spacing;
-				  mImageRect.y = center_y - mImageRect.height/2;
+				  // text after image
+				  mTitleRect.x = mImageRect.x + mImageRect.width + spacing;
+				  mTitleRect.y = center_y - mTitleRect.height/2;
 			  }       
 			  break;
 			  case NS_SIDE_RIGHT: {
 				  CalculateTitleForWidth(aPresContext, aRenderingContext, rect.width - (mImageRect.width + spacing));
 
- 				  // title right
-				  mTitleRect.x = right_x - mTitleRect.width;
-				  mTitleRect.y = center_y - mTitleRect.height/2;
+ 				  // image right
+				  mImageRect.x = right_x - mImageRect.width;
+				  mImageRect.y = center_y - mImageRect.height/2;
 
-  				  // image left of title
-				  mImageRect.x = mTitleRect.x - spacing - mImageRect.width;
-				  mImageRect.y = center_y  - mImageRect.height/2;
+  				  // text left of image
+				  mTitleRect.x = mImageRect.x - spacing - mTitleRect.width;
+				  mTitleRect.y = center_y  - mTitleRect.height/2;
 
 			   }
 			  break;
@@ -585,6 +587,7 @@ nsTitledButtonFrame::CalculateTitleForWidth(nsIPresContext& aPresContext, nsIRen
    // ok crop things
     switch (mCropType)
     {
+       case CropNone:
        case CropRight: 
        {
 		   nscoord cwidth;
@@ -1269,19 +1272,22 @@ nsTitledButtonFrame::GetBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflow
       case NS_SIDE_TOP:
       case NS_SIDE_BOTTOM:
 
-      if (mHasImage)
+        // if we have an image add the image to our min size
+        if (mHasImage)
            aSize.minSize.width = aSize.prefSize.width;
-        else
-           aSize.minSize.width = size.width;
+
+        // if we are not cropped then our min size also includes the text.
+        if (mCropType == CropNone) 
+           aSize.minSize.width = PR_MAX(size.width, aSize.minSize.width);
 
 		  if (size.width > aSize.prefSize.width)
 			  aSize.prefSize.width = size.width;
 
-  		  if (mTitle.Length() > 0) 
+  		  if (mTitle.Length() > 0) {
              aSize.prefSize.height += size.height;
-			 
-  		  if (mTitle.Length() > 0 && mHasImage) 
-              aSize.prefSize.height += mSpacing;
+  		       if (mHasImage) 
+                aSize.prefSize.height += mSpacing;
+        }
 
         aSize.minSize.height = aSize.prefSize.height;
 
@@ -1293,16 +1299,21 @@ nsTitledButtonFrame::GetBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflow
 
       if (mHasImage)
          aSize.minSize.width = aSize.prefSize.width;
-      else
-         aSize.minSize.width = size.width;
-
-   		if (mTitle.Length() > 0) 
-             aSize.prefSize.width += size.width;
-
-		  if (mTitle.Length() > 0 && mHasImage)
-             aSize.prefSize.width += mSpacing;
       
-         break;
+      // if we are not cropped then our min size also includes the text.
+      if (mCropType == CropNone) 
+         aSize.minSize.width += size.width;
+
+      if (mTitle.Length() > 0) {
+         aSize.prefSize.width += size.width;
+      
+         if (mHasImage) {
+            aSize.prefSize.width += mSpacing;
+            aSize.minSize.width += mSpacing;
+         }
+      }
+
+      break;
    }
 
    nsMargin focusBorder = mRenderer.GetAddedButtonBorderAndPadding();
