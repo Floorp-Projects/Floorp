@@ -124,7 +124,6 @@ NSString *MVPreferencesWindowNotification = @"MVPreferencesWindowNotification";
     [multiView setPreferencePanes:panes];
     mainView = multiView;
   }
-  [self showAll:nil];
 
   [window setDelegate:self];
 
@@ -180,6 +179,8 @@ NSString *MVPreferencesWindowNotification = @"MVPreferencesWindowNotification";
 
   [window setInitialFirstResponder:mainView];
   [window makeFirstResponder:mainView];
+  if ([NSToolbar instancesRespondToSelector:@selector(setSelectedItemIdentifier:)])
+    [[window toolbar] setSelectedItemIdentifier:MVToolbarShowAllItemIdentifier];
 }
 
 - (void) selectPreferencePaneByIdentifier:(NSString *) identifier
@@ -235,6 +236,8 @@ NSString *MVPreferencesWindowNotification = @"MVPreferencesWindowNotification";
 
       [window setInitialFirstResponder:[pane initialKeyView]];
       [window makeFirstResponder:[pane initialKeyView]];
+      if ([NSToolbar instancesRespondToSelector:@selector(setSelectedItemIdentifier:)])
+        [[window toolbar] setSelectedItemIdentifier:currentPaneIdentifier];
     }
     else {
       NSRunCriticalAlertPanel( NSLocalizedString( @"Preferences Error", nil ),
@@ -315,6 +318,18 @@ NSString *MVPreferencesWindowNotification = @"MVPreferencesWindowNotification";
     [items addObject:[item bundleIdentifier]];
   //[items addObject:MVToolbarShowAllItemIdentifier];
   [items addObject:NSToolbarSeparatorItemIdentifier];
+  return items;
+}
+
+// For OS X 10.3, set the selectable toolbar items (draws a gray rect around the active icon in the toolbar)
+- (NSArray *) toolbarSelectableItemIdentifiers:(NSToolbar *)toolbar
+{
+  NSMutableArray* items = [NSMutableArray array];
+  NSEnumerator* enumerator = [panes objectEnumerator];
+  id item = nil;
+  while ( ( item = [enumerator nextObject] ) )
+    [items addObject:[item bundleIdentifier]];
+  [items addObject:MVToolbarShowAllItemIdentifier];
   return items;
 }
 
