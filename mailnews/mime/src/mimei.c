@@ -61,6 +61,7 @@
 #include "mimeebod.h"	/*   |--- MimeExternalBody							*/
 #include "prmem.h"
 #include "plstr.h"
+#include "prlink.h"
 #include "mimecth.h"
 
 /* ==========================================================================
@@ -76,9 +77,7 @@ static int mime_classinit(MimeObjectClass *class);
 typedef struct {
   char        *content_type;
   char        *file_name;
-#ifdef XP_PC
-  HINSTANCE   ct_handler;
-#endif
+  PRLibrary   *ct_handler;
 } cthandler_struct;
 
 cthandler_struct    *cthandler_list = NULL;
@@ -143,33 +142,32 @@ get_plugin_count(void)
 char *
 get_content_type(cthandler_struct *ct)
 {
-#ifdef XP_PC
-  char * (FAR PASCAL *lpfnMIME_GetContentType) (void);
+  typedef char * (*mime_get_ct_fn_type)(void);
 
-  (FARPROC)lpfnMIME_GetContentType = GetProcAddress(ct->ct_handler, "MIME_GetContentType"); 
-  if (!lpfnMIME_GetContentType)
+//  char * (FAR PASCAL *lpfnMIME_GetContentType) (void);
+
+//  (FARPROC)lpfnMIME_GetContentType = GetProcAddress(ct->ct_handler, "MIME_GetContentType"); 
+//  mime_get_ct_fn_type getct_fn = GetProcAddress(ct->ct_handler, "MIME_GetContentType"); 
+//  if (!lpfnMIME_GetContentType)
+  mime_get_ct_fn_type getct_fn = (mime_get_ct_fn_type) PR_FindSymbol(ct->ct_handler, "MIME_GetContentType"); 
+  if (!getct_fn)
     return NULL;
 
-  return ( (*lpfnMIME_GetContentType) () );
-#else /* Unix and Mac */
-  return NULL;
-#endif
+//  return ( (*lpfnMIME_GetContentType) () );
+  return ( (getct_fn) () );
 }
 
 MimeObjectClass * 
 create_content_type_handler_class(cthandler_struct *ct)
 {
-#ifdef XP_PC
-  MimeObjectClass * (FAR PASCAL *lpfnMIME_CreateContentTypeHandlerClass) (const char *);
+//  MimeObjectClass * (FAR PASCAL *lpfnMIME_CreateContentTypeHandlerClass) (const char *);
+  typedef MimeObjectClass * (*mime_create_class_fn_type)(const char *);
 
-  (FARPROC)lpfnMIME_CreateContentTypeHandlerClass = GetProcAddress(ct->ct_handler, "MIME_CreateContentTypeHandlerClass"); 
-  if (lpfnMIME_CreateContentTypeHandlerClass)
-    return (lpfnMIME_CreateContentTypeHandlerClass)(ct->content_type);
+  mime_create_class_fn_type class_fn = (mime_create_class_fn_type) PR_FindSymbol(ct->ct_handler, "MIME_CreateContentTypeHandlerClass"); 
+  if (class_fn)
+    return (class_fn)(ct->content_type);
   else
     return NULL;
-#else /* Unix and Mac */
-  return NULL;
-#endif
 }
 
 /*
@@ -217,31 +215,29 @@ do_plugin_discovery(void)
 
     if (PL_strncasecmp(MIME_PLUGIN_PREFIX, dirEntry->name, PL_strlen(MIME_PLUGIN_PREFIX)) == 0)
     {
-#ifdef XP_PC
       PL_strcpy(full_name, path);
       PL_strcat(full_name, "\\");
       PL_strcat(full_name, dirEntry->name);
-      cthandler_list[count].ct_handler = LoadLibrary(full_name);
+      cthandler_list[count].ct_handler = PR_LoadLibrary(full_name);
       if (!cthandler_list[count].ct_handler)
         continue;
 
       cthandler_list[count].file_name = PL_strdup(full_name);
       if (!cthandler_list[count].file_name)
       {
-        FreeLibrary(cthandler_list[count].ct_handler);
+        PR_UnloadLibrary(cthandler_list[count].ct_handler);
         continue;
       }
 
       cthandler_list[count].content_type = PL_strdup(get_content_type(&(cthandler_list[count])));
       if (!cthandler_list[count].content_type)
       {
-        FreeLibrary(cthandler_list[count].ct_handler);
+        PR_UnloadLibrary(cthandler_list[count].ct_handler);
         PR_FREEIF(cthandler_list[count].file_name);
         continue;
       }
 
       ++count;
-#endif
     }
   } while (dirEntry != NULL);
 
