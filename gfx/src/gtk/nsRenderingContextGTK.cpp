@@ -513,7 +513,7 @@ NS_IMETHODIMP nsRenderingContextGTK::CreateDrawingSurface(nsRect *aBounds,
     return NS_ERROR_FAILURE;
   }
  
-  g_return_val_if_fail ((aBounds != NULL), NS_ERROR_FAILURE);
+  g_return_val_if_fail (aBounds != NULL, NS_ERROR_FAILURE);
   g_return_val_if_fail ((aBounds->width != 0) && (aBounds->height != 0), NS_ERROR_FAILURE);
  
   pixmap = ::gdk_pixmap_new(mRenderingSurface->drawable, aBounds->width, aBounds->height, -1);
@@ -542,11 +542,10 @@ NS_IMETHODIMP nsRenderingContextGTK::DestroyDrawingSurface(nsDrawingSurface aDS)
 
 NS_IMETHODIMP nsRenderingContextGTK::DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
 {
-  g_return_val_if_fail ((mTMatrix != NULL) ||
-			(mRenderingSurface != NULL) ||
-			(mRenderingSurface->drawable != NULL) ||
-			(mRenderingSurface->gc != NULL),
-			NS_ERROR_FAILURE);
+  g_return_val_if_fail(mTMatrix != NULL, NS_ERROR_FAILURE);
+  g_return_val_if_fail(mRenderingSurface != NULL, NS_ERROR_FAILURE);
+  g_return_val_if_fail(mRenderingSurface->drawable != NULL, NS_ERROR_FAILURE);
+  g_return_val_if_fail(mRenderingSurface->gc != NULL, NS_ERROR_FAILURE);
 
   mTMatrix->TransformCoord(&aX0,&aY0);
   mTMatrix->TransformCoord(&aX1,&aY1);
@@ -562,11 +561,10 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawPolyline(const nsPoint aPoints[], PRInt
 {
   PRUint32 i ;
 
-  g_return_val_if_fail ((mTMatrix != NULL) ||
-                        (mRenderingSurface != NULL) ||
-                        (mRenderingSurface->drawable != NULL) ||
-                        (mRenderingSurface->gc != NULL),
-			NS_ERROR_FAILURE);
+  g_return_val_if_fail(mTMatrix != NULL, NS_ERROR_FAILURE);
+  g_return_val_if_fail(mRenderingSurface != NULL, NS_ERROR_FAILURE);
+  g_return_val_if_fail(mRenderingSurface->drawable != NULL, NS_ERROR_FAILURE);
+  g_return_val_if_fail(mRenderingSurface->gc != NULL, NS_ERROR_FAILURE);
 
   GdkPoint *pts = new GdkPoint[aNumPoints];
 	for (PRInt32 i = 0; i < aNumPoints; i++)
@@ -645,11 +643,10 @@ NS_IMETHODIMP nsRenderingContextGTK::FillRect(nscoord aX, nscoord aY, nscoord aW
 
 NS_IMETHODIMP nsRenderingContextGTK::DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
-  g_return_val_if_fail ((mTMatrix != NULL) ||
-			(mRenderingSurface != NULL) ||
-			(mRenderingSurface->drawable != NULL) ||
-			(mRenderingSurface->gc != NULL),
-			NS_ERROR_FAILURE);
+  g_return_val_if_fail(mTMatrix != NULL, NS_ERROR_FAILURE);
+  g_return_val_if_fail(mRenderingSurface != NULL, NS_ERROR_FAILURE);
+  g_return_val_if_fail(mRenderingSurface->drawable != NULL, NS_ERROR_FAILURE);
+  g_return_val_if_fail(mRenderingSurface->gc != NULL, NS_ERROR_FAILURE);
 
   GdkPoint *pts = new GdkPoint[aNumPoints];
 	for (PRInt32 i = 0; i < aNumPoints; i++)
@@ -668,11 +665,10 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawPolygon(const nsPoint aPoints[], PRInt3
 
 NS_IMETHODIMP nsRenderingContextGTK::FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
-  g_return_val_if_fail ((mTMatrix != NULL) ||
-			(mRenderingSurface != NULL) ||
-			(mRenderingSurface->drawable != NULL) ||
-			(mRenderingSurface->gc != NULL),
-			NS_ERROR_FAILURE);
+  g_return_val_if_fail(mTMatrix != NULL, NS_ERROR_FAILURE);
+  g_return_val_if_fail(mRenderingSurface != NULL, NS_ERROR_FAILURE);
+  g_return_val_if_fail(mRenderingSurface->drawable != NULL, NS_ERROR_FAILURE);
+  g_return_val_if_fail(mRenderingSurface->gc != NULL, NS_ERROR_FAILURE);
 
   GdkPoint *pts = new GdkPoint[aNumPoints];
 	for (PRInt32 i = 0; i < aNumPoints; i++)
@@ -696,11 +692,10 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawEllipse(const nsRect& aRect)
 
 NS_IMETHODIMP nsRenderingContextGTK::DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-  g_return_val_if_fail ((mTMatrix != NULL) ||
-			(mRenderingSurface != NULL) ||
-			(mRenderingSurface->drawable != NULL) ||
-			(mRenderingSurface->gc != NULL),
-			NS_ERROR_FAILURE);
+  g_return_val_if_fail(mTMatrix != NULL, NS_ERROR_FAILURE);
+  g_return_val_if_fail(mRenderingSurface != NULL, NS_ERROR_FAILURE);
+  g_return_val_if_fail(mRenderingSurface->drawable != NULL, NS_ERROR_FAILURE);
+  g_return_val_if_fail(mRenderingSurface->gc != NULL, NS_ERROR_FAILURE);
 
   nscoord x,y,w,h;
 
@@ -725,11 +720,10 @@ NS_IMETHODIMP nsRenderingContextGTK::FillEllipse(const nsRect& aRect)
 
 NS_IMETHODIMP nsRenderingContextGTK::FillEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-  g_return_val_if_fail ((mTMatrix != NULL) ||
-			(mRenderingSurface != NULL) ||
-			(mRenderingSurface->drawable != NULL) ||
-			(mRenderingSurface->gc != NULL),
-			NS_ERROR_FAILURE);
+  g_return_val_if_fail(mTMatrix != NULL, NS_ERROR_FAILURE);
+  g_return_val_if_fail(mRenderingSurface != NULL, NS_ERROR_FAILURE);
+  g_return_val_if_fail(mRenderingSurface->drawable != NULL, NS_ERROR_FAILURE);
+  g_return_val_if_fail(mRenderingSurface->gc != NULL, NS_ERROR_FAILURE);
 
   nscoord x,y,w,h;
 
@@ -757,11 +751,10 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawArc(nscoord aX, nscoord aY,
                                              nscoord aWidth, nscoord aHeight,
                                              float aStartAngle, float aEndAngle)
 {
-  g_return_val_if_fail ((mTMatrix != NULL) ||
-			(mRenderingSurface != NULL) ||
-			(mRenderingSurface->drawable != NULL) ||
-			(mRenderingSurface->gc != NULL),
-			NS_ERROR_FAILURE);
+  g_return_val_if_fail(mTMatrix != NULL, NS_ERROR_FAILURE);
+  g_return_val_if_fail(mRenderingSurface != NULL, NS_ERROR_FAILURE);
+  g_return_val_if_fail(mRenderingSurface->drawable != NULL, NS_ERROR_FAILURE);
+  g_return_val_if_fail(mRenderingSurface->gc != NULL, NS_ERROR_FAILURE);
 
   nscoord x,y,w,h;
 
@@ -791,11 +784,10 @@ NS_IMETHODIMP nsRenderingContextGTK::FillArc(nscoord aX, nscoord aY,
                                              nscoord aWidth, nscoord aHeight,
                                              float aStartAngle, float aEndAngle)
 {
-  g_return_val_if_fail ((mTMatrix != NULL) ||
-			(mRenderingSurface != NULL) ||
-			(mRenderingSurface->drawable != NULL) ||
-			(mRenderingSurface->gc != NULL),
-			NS_ERROR_FAILURE);
+  g_return_val_if_fail(mTMatrix != NULL, NS_ERROR_FAILURE);
+  g_return_val_if_fail(mRenderingSurface != NULL, NS_ERROR_FAILURE);
+  g_return_val_if_fail(mRenderingSurface->drawable != NULL, NS_ERROR_FAILURE);
+  g_return_val_if_fail(mRenderingSurface->gc != NULL, NS_ERROR_FAILURE);
 
   nscoord x,y,w,h;
 
@@ -844,10 +836,11 @@ NS_IMETHODIMP nsRenderingContextGTK::GetWidth(const char *aString, nscoord &aWid
 NS_IMETHODIMP nsRenderingContextGTK::GetWidth(const char *aString,
                                               PRUint32 aLength, nscoord &aWidth)
 {
-  g_return_val_if_fail ((aString != NULL) ||
-			(aLength != 0) ||
-			(aWidth != 0),
-			NS_ERROR_FAILURE);
+  g_return_val_if_fail(aString != NULL, NS_ERROR_FAILURE);
+  /* this really shouldn't be 0, and this gets called quite a bit.  not sure
+   * why.  could someone fix this on the XP side please?
+   */
+//  g_return_val_if_fail(aLength != 0, NS_ERROR_FAILURE);
 
   PRInt32     rc;
 
@@ -863,10 +856,11 @@ NS_IMETHODIMP nsRenderingContextGTK::GetWidth(const char *aString,
 NS_IMETHODIMP nsRenderingContextGTK::GetWidth(const PRUnichar *aString,
                                               PRUint32 aLength, nscoord &aWidth)
 {
-  g_return_val_if_fail ((aString != NULL) ||
-			(aLength != 0) ||
-			(aWidth != 0),
-			NS_ERROR_FAILURE);
+    g_return_val_if_fail(aString != NULL, NS_ERROR_FAILURE);
+  /* this really shouldn't be 0, and this gets called quite a bit.  not sure
+   * why.  could someone fix this on the XP side please?
+   */
+//    g_return_val_if_fail(aLength != 0, NS_ERROR_FAILURE);
 
     nsString nsStr;
     nsStr.SetString(aString, aLength);
@@ -882,14 +876,15 @@ nsRenderingContextGTK::DrawString(const char *aString, PRUint32 aLength,
                                   nscoord aWidth,
                                   const nscoord* aSpacing)
 {
-  g_return_val_if_fail ((aString != NULL) ||
-			(aLength != 0) ||
-			(aWidth != 0) ||
-			(mTMatrix != NULL) ||
-			(mRenderingSurface != NULL) ||
-			(mRenderingSurface->drawable != NULL) ||
-			(mRenderingSurface->gc != NULL),
-			NS_ERROR_FAILURE);
+  g_return_val_if_fail(aString != NULL, NS_ERROR_FAILURE);
+  /* this really shouldn't be 0, and this gets called quite a bit.  not sure
+   * why.  could someone fix this on the XP side please?
+   */
+//  g_return_val_if_fail(aLength != 0, NS_ERROR_FAILURE);
+  g_return_val_if_fail(mTMatrix != NULL, NS_ERROR_FAILURE);
+  g_return_val_if_fail(mRenderingSurface != NULL, NS_ERROR_FAILURE);
+  g_return_val_if_fail(mRenderingSurface->drawable != NULL, NS_ERROR_FAILURE);
+  g_return_val_if_fail(mRenderingSurface->gc != NULL, NS_ERROR_FAILURE);
 
   nscoord x = aX;
   nscoord y = aY;
@@ -1017,11 +1012,11 @@ nsRenderingContextGTK::CopyOffScreenBits(nsDrawingSurface aSrcSurf,
   nsRect                drect = aDestBounds;
   nsDrawingSurfaceGTK  *destsurf;
 
-  g_return_val_if_fail ((mTMatrix != NULL) ||
-			(mRenderingSurface != NULL) ||
-			(mRenderingSurface->drawable != NULL) ||
-			(mRenderingSurface->gc != NULL),
-			NS_ERROR_FAILURE);
+  g_return_val_if_fail(aSrcSurf != NULL, NS_ERROR_FAILURE);
+  g_return_val_if_fail(mTMatrix != NULL, NS_ERROR_FAILURE);
+  g_return_val_if_fail(mRenderingSurface != NULL, NS_ERROR_FAILURE);
+  g_return_val_if_fail(mRenderingSurface->drawable != NULL, NS_ERROR_FAILURE);
+  g_return_val_if_fail(mRenderingSurface->gc != NULL, NS_ERROR_FAILURE);
 
   if (aCopyFlags & NS_COPYBITS_TO_BACK_BUFFER)
   {
@@ -1055,12 +1050,10 @@ nsRenderingContextGTK::SetClipRectInPixels(const nsRect& aRect,
                                            nsClipCombine aCombine,
                                            PRBool &aClipEmpty)
 {
-
-  g_return_val_if_fail ((mTMatrix != NULL) ||
-			(mRenderingSurface != NULL) ||
-			(mRenderingSurface->drawable != NULL) ||
-			(mRenderingSurface->gc != NULL),
-			NS_ERROR_FAILURE);
+  g_return_val_if_fail(mTMatrix != NULL, NS_ERROR_FAILURE);
+  g_return_val_if_fail(mRenderingSurface != NULL, NS_ERROR_FAILURE);
+  g_return_val_if_fail(mRenderingSurface->drawable != NULL, NS_ERROR_FAILURE);
+  g_return_val_if_fail(mRenderingSurface->gc != NULL, NS_ERROR_FAILURE);
 
   PRBool bEmpty = PR_FALSE;
 
