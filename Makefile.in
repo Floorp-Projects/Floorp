@@ -79,7 +79,6 @@ DIRS +=				\
   silentdl			\
   xpinstall			\
   sun-java			\
-  timer             \
   profile			\
   $(NULL)
 

@@ -327,16 +327,6 @@ sun-java/stubs/Makefile
 sun-java/stubs/include/Makefile
 sun-java/stubs/jri/Makefile
 sun-java/stubs/src/Makefile
-timer/Makefile
-timer/public/Makefile
-timer/src/Makefile
-timer/src/beos/Makefile
-timer/src/photon/Makefile
-timer/src/rhapsody/Makefile
-timer/src/unix/Makefile
-timer/src/unix/gtk/Makefile
-timer/src/unix/motif/Makefile
-timer/src/unix/xlib/Makefile
 caps/Makefile
 caps/idl/Makefile
 caps/include/Makefile
@@ -366,6 +356,16 @@ widget/src/xpwidgets/Makefile
 widget/tests/Makefile
 widget/tests/scribble/Makefile
 widget/tests/widget/Makefile
+widget/timer/Makefile
+widget/timer/public/Makefile
+widget/timer/src/Makefile
+widget/timer/src/beos/Makefile
+widget/timer/src/photon/Makefile
+widget/timer/src/rhapsody/Makefile
+widget/timer/src/unix/Makefile
+widget/timer/src/unix/gtk/Makefile
+widget/timer/src/unix/motif/Makefile
+widget/timer/src/unix/xlib/Makefile
 #
 # New xpcom hiearchy
 #
