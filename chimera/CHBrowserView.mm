@@ -733,8 +733,6 @@ nsCocoaBrowserListener::SetContainer(id <NSBrowserContainer> aContainer)
 
 - (void)dealloc 
 {
-  [super dealloc];
-  
   NS_RELEASE(_listener);
   NS_IF_RELEASE(_webBrowser);
   
@@ -743,6 +741,8 @@ nsCocoaBrowserListener::SetContainer(id <NSBrowserContainer> aContainer)
 #if DEBUG
   NSLog(@"CHBrowserView died.");
 #endif
+
+  [super dealloc];
 }
 
 - (void)setFrame:(NSRect)frameRect 
