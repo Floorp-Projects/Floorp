@@ -1776,7 +1776,7 @@ BOOL C3PaneMailFrame::FileBookmark()
 				const char *name = (folderLine.prettyName && folderLine.prettyName[0]) ?
 								   folderLine.prettyName : folderLine.name;
 
-				HT_AddBookmark((char*)name, url->address); // Updated to Aurora (Dave H.)
+				HT_AddBookmark(url->address, (char*)name); // Updated to Aurora (Dave H.)
 				NET_FreeURLStruct( url );
 				res = TRUE;
 			}
@@ -1792,7 +1792,7 @@ BOOL C3PaneMailFrame::FileBookmark()
 				char *name = (buf && buf[0]) ? buf : messageLine.subject;
 
 				if ( url ) {			
-					HT_AddBookmark((char*)name, url->address); // Updated to Aurora (Dave H.) 
+					HT_AddBookmark(url->address, (char*)name); // Updated to Aurora (Dave H.) 
 					NET_FreeURLStruct( url );
 					res = TRUE;
 				}

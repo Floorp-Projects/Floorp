@@ -720,7 +720,7 @@ BOOL CFolderFrame::FileBookmark()
 	m_pOutliner->GetSelection(indices, count);
 
 	if (count < 1) {
-		HT_AddBookmark((char*)(szLoadString(IDS_TITLE_COLLECTIONS)), "mailbox:"); 
+		HT_AddBookmark("mailbox:", (char*)(szLoadString(IDS_TITLE_COLLECTIONS))); 
 		// Updated to Aurora (Dave H.)
 		res = TRUE;
 	} else {
@@ -734,7 +734,7 @@ BOOL CFolderFrame::FileBookmark()
 					const char *name = (folderLine.prettyName && folderLine.prettyName[0]) ?
 									   folderLine.prettyName : folderLine.name;
 
-					HT_AddBookmark((char*)name, url->address); // updated to Aurora (Dave H.)
+					HT_AddBookmark(url->address, (char*)name); // updated to Aurora (Dave H.)
 					NET_FreeURLStruct( url );
 					res = TRUE;
 				}

@@ -1401,7 +1401,7 @@ void CNetscapeView::OnPopupAddLinkToBookmarks()
 	CreateTextAndAnchor(csText, csAnchor);
 
     if (csAnchor.GetLength()) {
-		HT_AddBookmark((char*)(const char*)csText, (char*)(const char*)csAnchor);
+		HT_AddBookmark((char*)(const char*)csAnchor, (char*)(const char*)csText);
 	}
 }
 

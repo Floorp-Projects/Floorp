@@ -1183,7 +1183,7 @@ void CAbstractCX::AddToBookmarks()
 	History_entry *pHistEnt = SHIST_GetCurrent( &(GetContext()->hist) );
 	ASSERT(pHistEnt);
 
-	HT_AddBookmark( GetContext()->title, pHistEnt->address );
+	HT_AddBookmark( pHistEnt->address, GetContext()->title );
 }
 
 void CAbstractCX::CopySelection()	{
