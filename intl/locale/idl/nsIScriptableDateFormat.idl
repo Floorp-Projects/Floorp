@@ -1,0 +1,73 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "nsISupports.idl"
+
+typedef long nsDateFormatSelector;
+%{ C++
+enum
+{
+    kDateFormatNone = 0,            // do not include the date  in the format string
+    kDateFormatLong,                // provides the long date format for the given locale
+    kDateFormatShort,               // provides the short date format for the given locale
+    kDateFormatYearMonth,           // formats using only the year and month 
+    kDateFormatWeekday              // week day (e.g. Mon, Tue)
+};
+%}
+
+typedef long nsTimeFormatSelector;
+%{ C++
+enum
+{
+    kTimeFormatNone = 0,            // don't include the time in the format string
+    kTimeFormatSeconds,             // provides the time format with seconds in the  given locale 
+    kTimeFormatNoSeconds,           // provides the time format without seconds in the given locale 
+    kTimeFormatSecondsForce24Hour,  // forces the time format to use the 24 clock, regardless of the locale conventions
+    kTimeFormatNoSecondsForce24Hour // forces the time format to use the 24 clock, regardless of the locale conventions
+};
+%}
+
+
+[scriptable, uuid(0c89efb0-1aae-11d3-9141-006008a6edf6)]
+interface nsIScriptableDateFormat : nsISupports {
+    // format date and time, locale is language country pair (e.g. en-US) or empty string for application default
+    void FormatDateTime(in wstring locale, 
+                        in nsDateFormatSelector dateFormatSelector, 
+                        in nsTimeFormatSelector timeFormatSelector,
+                        in long year, 
+                        in long month, 
+                        in long day, 
+                        in long hour, 
+                        in long minute, 
+                        in long second,
+                        [shared, retval] out wstring dateTimeString);
+    // format date, locale is language country pair (e.g. en-US) or empty string for application default
+    void FormatDate(in wstring locale, 
+                    in nsDateFormatSelector dateFormatSelector, 
+                    in long year, 
+                    in long month, 
+                    in long day, 
+                    [shared, retval] out wstring dateString);
+    // format time, locale is language country pair (e.g. en-US) or empty string for application default
+    void FormatTime(in wstring locale, 
+                    in nsTimeFormatSelector timeFormatSelector,
+                    in long hour, 
+                    in long minute, 
+                    in long second,
+                    [shared, retval] out wstring timeString);
+};
