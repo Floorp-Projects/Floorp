@@ -19,6 +19,34 @@
   # Contributor(s): Myk Melez <myk@mozilla.org>
   #%]
 
+<script type="text/javascript">
+  // Enables or disables a requestee field depending on whether
+  // the user is requesting that flag type.
+  function toggleRequesteeField(selectField)
+  {
+    var flagID = selectField.name.replace(/flag_type-(\d+)/, "$1");
+    var requesteeField = document.getElementById("requestee-" + flagID);
+    if (!requesteeField) return;
+    if   (selectField.value == "?") requesteeField.disabled = false;
+    else                            requesteeField.disabled = true;
+  }
+  
+  // Disables requestee fields when the window is loaded since they
+  // shouldn't be enabled until the user requests that flag type.
+  function disableRequesteeFields()
+  {
+    var inputElements = document.getElementsByTagName("input");
+    var inputElement;
+    for ( var i=0 ; i<inputElements.length ; i++ )
+    {
+      inputElement = inputElements.item(i);
+      if (inputElement.name.search(/^requestee-(\d+)$/) != -1)
+        inputElement.disabled = true;
+    }
+  }
+  window.onload = disableRequesteeFields;
+</script>
+
 <table id="flags">
 
   [% FOREACH type = flag_types %]
@@ -31,7 +59,7 @@
           [% type.name FILTER html %]
         </td>
         <td>
-          <select name="flag-[% flag.id %]">
+          <select name="flag-[% flag.id %]" onchange="toggleRequesteeField(this);">
             <option value="X"></option>
             [% IF type.is_active %]
               <option value="+" [% "selected" IF flag.status == "+" %]>+</option>
@@ -45,9 +73,13 @@
           </select>
         </td>
         <td>
-          [% IF flag.status == "?" && flag.requestee %]([% flag.requestee.nick FILTER html %])
+          [% IF flag.status == "?" %]
+            [% IF flag.requestee %]([% flag.requestee.nick FILTER html %])[% END %]
           [% ELSIF type.is_requestable && type.is_active %]
-            <span style="white-space: nowrap;">(<input type="text" name="requestee-[% type.id %]" size="8" maxlength="255">)</span>
+            <span style="white-space: nowrap;">
+              (<input type="text" id="requestee-[% type.id %]" 
+                      name="requestee-[% type.id %]" size="8" maxlength="255">)
+            </span>
           [% END %]
         </td>
       </tr>
@@ -57,7 +89,7 @@
         <td>&nbsp;</td>
         <td>[% type.name %]</td>
         <td>
-          <select name="flag_type-[% type.id %]">
+          <select name="flag_type-[% type.id %]" onchange="toggleRequesteeField(this);">
             <option value="X"></option>
             <option value="+">+</option>
             <option value="-">-</option>
@@ -67,9 +99,10 @@
           </select>
         </td>
         <td>
-          [% IF type.is_requestable && type.is_requesteeble %]
-            <span style="white-space: nowrap;">(<input type="text" name="requestee-[% type.id %]" size="8" maxlength="255">)</span>
-          [% END %]
+            <span style="white-space: nowrap;">
+              (<input type="text" id="requestee-[% type.id %]" 
+                      name="requestee-[% type.id %]" size="8" maxlength="255">)
+            </span>
         </td>
       </tr>
     [% END %]
@@ -84,7 +117,7 @@
     <tr>
       <td colspan="2">addl. [% type.name %]</td>
       <td>
-        <select name="flag_type-[% type.id %]">
+        <select name="flag_type-[% type.id %]" onchange="toggleRequesteeField(this);">
           <option value="X"></option>
           <option value="+">+</option>
           <option value="-">-</option>
@@ -95,7 +128,10 @@
       </td>
       <td>
         [% IF type.is_requestable && type.is_requesteeble %]
-            <span style="white-space: nowrap;">(<input type="text" name="requestee-[% type.id %]" size="8" maxlength="255">)</span>
+            <span style="white-space: nowrap;">
+              (<input type="text" id="requestee-[% type.id %]" 
+                      name="requestee-[% type.id %]" size="8" maxlength="255">)
+            </span>
         [% END %]
       </td>
     </tr>
