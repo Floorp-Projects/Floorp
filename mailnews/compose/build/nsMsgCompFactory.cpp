@@ -203,10 +203,10 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* serviceMgr, const char
 {
 	nsresult ret;
 
-	ret = nsRepository::RegisterFactory(kCMsgComposeCID, path, PR_TRUE, PR_TRUE);
-	ret = nsRepository::RegisterFactory(kCSmtpServiceCID, path, PR_TRUE, PR_TRUE);
-	ret = nsRepository::RegisterFactory(kCMsgCompFieldsCID, path, PR_TRUE, PR_TRUE);
-	ret = nsRepository::RegisterFactory(kCMsgSendCID, path, PR_TRUE, PR_TRUE);
+	ret = nsRepository::RegisterComponent(kCMsgComposeCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+	ret = nsRepository::RegisterComponent(kCSmtpServiceCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+	ret = nsRepository::RegisterComponent(kCMsgCompFieldsCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+	ret = nsRepository::RegisterComponent(kCMsgSendCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
 
 	return ret;
 }
@@ -216,10 +216,10 @@ NSUnregisterSelf(nsISupports* serviceMgr, const char* path)
 {
 	nsresult ret;
 
-	ret = nsRepository::UnregisterFactory(kCMsgComposeCID, path);
-	ret = nsRepository::UnregisterFactory(kCSmtpServiceCID, path);
-    ret = nsRepository::UnregisterFactory(kCMsgCompFieldsCID, path);
-	ret = nsRepository::UnregisterFactory(kCMsgSendCID, path);
+	ret = nsRepository::UnregisterComponent(kCMsgComposeCID, path);
+	ret = nsRepository::UnregisterComponent(kCSmtpServiceCID, path);
+    ret = nsRepository::UnregisterComponent(kCMsgCompFieldsCID, path);
+	ret = nsRepository::UnregisterComponent(kCMsgSendCID, path);
 
 	return ret;
 }

@@ -29,9 +29,9 @@ static NS_DEFINE_CID(kMsgSendCID, NS_MSGSEND_CID);
 	nsresult res;
 
 	// register our dll
-	nsRepository::RegisterFactory(kMsgComposeCID, "msgcompose.dll", PR_FALSE, PR_FALSE);
-	nsRepository::RegisterFactory(kMsgCompFieldsCID, "msgcompose.dll", PR_FALSE, PR_FALSE);
-	nsRepository::RegisterFactory(kMsgSendCID, "msgcompose.dll", PR_FALSE, PR_FALSE);
+	nsRepository::RegisterComponent(kMsgComposeCID, NULL, NULL, "msgcompose.dll", PR_FALSE, PR_FALSE);
+	nsRepository::RegisterComponent(kMsgCompFieldsCID, NULL, NULL, "msgcompose.dll", PR_FALSE, PR_FALSE);
+	nsRepository::RegisterComponent(kMsgSendCID, NULL, NULL, "msgcompose.dll", PR_FALSE, PR_FALSE);
 
 	res = nsRepository::CreateInstance(kMsgCompFieldsCID, 
                                            NULL, 

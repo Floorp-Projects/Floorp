@@ -184,9 +184,9 @@ extern NET_StreamClass *MIME_MessageConverter(int format_out, void *closure,
 extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* serviceMgr, const char *path)
 {
   printf("*** Mime being registered\n");
-  nsRepository::RegisterFactory(kCMimeMimeObjectClassAccessCID, path, 
+  nsRepository::RegisterComponent(kCMimeMimeObjectClassAccessCID, NULL, NULL, path, 
                                 PR_TRUE, PR_TRUE);
-  nsRepository::RegisterFactory(kCMimeRFC822HTMLConverterCID, path, 
+  nsRepository::RegisterComponent(kCMimeRFC822HTMLConverterCID, NULL, NULL, path, 
                                 PR_TRUE, PR_TRUE);
 
   /*
@@ -202,8 +202,8 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* serviceMgr, const char
 extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* serviceMgr, const char *path)
 {
   printf("*** Mime being unregistered\n");
-  nsRepository::UnregisterFactory(kCMimeMimeObjectClassAccessCID, path);
-  nsRepository::UnregisterFactory(kCMimeRFC822HTMLConverterCID, path);
+  nsRepository::UnregisterComponent(kCMimeMimeObjectClassAccessCID, path);
+  nsRepository::UnregisterComponent(kCMimeRFC822HTMLConverterCID, path);
   return NS_OK;
 }
 

@@ -16,9 +16,9 @@ int main(int argc, char *argv[])
   nsMimeObjectClassAccess	*objAccess;
   
   // register our dll
-  nsRepository::RegisterFactory(kRFC822toHTMLStreamConverterCID, 
+  nsRepository::RegisterComponent(kRFC822toHTMLStreamConverterCID, NULL, NULL,
                                 "mime.dll", PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kMimeObjectClassAccessCID,
+  nsRepository::RegisterComponent(kMimeObjectClassAccessCID, NULL, NULL,
                                 "mime.dll", PR_FALSE, PR_FALSE);
   
   nsresult res = nsRepository::CreateInstance(kRFC822toHTMLStreamConverterCID, 

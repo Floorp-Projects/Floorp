@@ -313,16 +313,19 @@ nsComposeAppCore::SendMessage(const nsString& aAddrFrom, const nsString& aSmtp, 
 
 	// register our dll
     const char* compose_dll = "msgcompose.dll";
-	nsRepository::RegisterFactory(kMsgComposeCID,
+	nsRepository::RegisterComponent(kMsgComposeCID,
                                   "Netscape Mail Composer AppCore",
+				  NULL,
                                   compose_dll,
                                   PR_FALSE, PR_FALSE);
-	nsRepository::RegisterFactory(kMsgCompFieldsCID,
+	nsRepository::RegisterComponent(kMsgCompFieldsCID,
                                   "Netscape Mail Composer Fields",
+  				  NULL,
                                   compose_dll,
                                   PR_FALSE, PR_FALSE);
-	nsRepository::RegisterFactory(kMsgSendCID,
+	nsRepository::RegisterComponent(kMsgSendCID,
                                   "Netscape Mail Sender",
+				  NULL,
                                   compose_dll,
                                   PR_FALSE, PR_FALSE);
 
