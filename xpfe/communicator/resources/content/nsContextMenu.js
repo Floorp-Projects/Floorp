@@ -524,12 +524,12 @@ nsContextMenu.prototype = {
     // Open linked-to URL in a new window.
     openLink : function () {
         // Determine linked-to URL.
-        openNewWindowWith( this.linkURL() );
+        openNewWindowWith( this.linkURL(), true );
     },
     // Open linked-to URL in a new tab.
     openLinkInTab : function () {
         // Determine linked-to URL.
-        openNewTabWith( this.linkURL() );
+        openNewTabWith( this.linkURL(), true, false );
     },
     // Open frame in a new tab.
     openFrameInTab : function () {

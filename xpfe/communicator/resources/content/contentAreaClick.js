@@ -178,24 +178,19 @@
     return true;
   }
 
-  function openNewTabOrWindow(event, href)
+  function openNewTabOrWindow(event, href, sendReferrer)
   {
     // should we open it in a new tab?
     if (pref && pref.getBoolPref("browser.tabs.opentabfor.middleclick") &&
         ("getBrowser" in window) && getBrowser().localName == "tabbrowser") {
-      var loadInBackground = pref.getBoolPref("browser.tabs.loadInBackground");
-      if (event.shiftKey)
-        loadInBackground = !loadInBackground;
-      var theTab = getBrowser().addTab(href, getReferrer(document));
-      if (!loadInBackground)
-        getBrowser().selectedTab = theTab;
+      openNewTabWith(href, sendReferrer, event.shiftKey);
       event.preventBubble();
       return true;
     }
 
     // should we open it in a new window?
     if (pref && pref.getBoolPref("middlemouse.openNewWindow")) {
-      openNewWindowWith(href);
+      openNewWindowWith(href, sendReferrer);
       event.preventBubble();
       return true;
     }
@@ -212,7 +207,7 @@
     switch (event.button) {                                   
       case 0:                                                         // if left button clicked
         if (event.metaKey || event.ctrlKey) {                         // and meta or ctrl are down
-          if (openNewTabOrWindow(event, href))
+          if (openNewTabOrWindow(event, href, true))
             return true;
         } 
         var saveModifier = true;
@@ -233,7 +228,7 @@
           return true;                                                // do nothing
         return false;
       case 1:                                                         // if middle button clicked
-        if (openNewTabOrWindow(event, href))
+        if (openNewTabOrWindow(event, href, true))
           return true;
         break;
     }
@@ -249,11 +244,14 @@
     if (!url)
       return false;
 
-    // On ctrl-middleclick, open in new window or tab.
+    // On ctrl-middleclick, open in new window or tab.  Do not send referrer.
     if (event.ctrlKey)
-      return openNewTabOrWindow(event, url);
+      return openNewTabOrWindow(event, url, false);
 
     // If ctrl wasn't down, then just load the url in the current win/tab.
+    if (url != "about:blank") {
+      gURLBar.value = url;
+    }
     loadURI(url);
     event.preventBubble();
     return true;
