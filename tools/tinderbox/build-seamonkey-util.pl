@@ -114,8 +114,6 @@ sub SetupEnv {
     $ENV{DISPLAY} = $Settings::DisplayServer;
     $ENV{MOZCONFIG} = "$Settings::BaseDir/$Settings::MozConfigFileName" 
       if $Settings::MozConfigFileName ne '' and -e $Settings::MozConfigFileName;
-    $ENV{HOME} = "$Settings::BaseDir/$Settings::DirName"
-
 }
 
 sub SetupPath {

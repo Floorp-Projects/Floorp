@@ -11,7 +11,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::Version = '$Revision: 1.75 $ ';
+$::Version = '$Revision: 1.76 $ ';
 
 sub PrintUsage {
     die <<END_USAGE
@@ -481,12 +481,12 @@ BEGIN {
 
 sub fork_and_log {
     # Fork a sub process and log the output.
-    my ($dir, $cmd, $logfile) = @_;
+    my ($home, $dir, $cmd, $logfile) = @_;
 
     my $pid = fork; # Fork off a child process.
     
     unless ($pid) { # child
-
+        $ENV{HOME} = $home;
         chdir $dir;
         open STDOUT, ">$logfile";
         open STDERR, ">&STDOUT";
@@ -544,7 +544,8 @@ sub AliveTest {
     my $binary_log = "$build_dir/runlog";
     local $_;
 
-    my $pid = fork_and_log($binary_dir, $binary_basename, $binary_log);
+    my $pid = fork_and_log($build_dir, $binary_dir, $binary_basename,
+                           $binary_log);
     my ($timed_out, $exit_value, $sig_name, $dumped_core)
       = wait_for_pid($pid, $timeout_secs);
     print_log "----------- Output from $binary_basename for alive test --------------- \n";
@@ -555,7 +556,7 @@ sub AliveTest {
     if (not $timed_out) {
         print_log "Error: alive test: $binary_basename received"
                   ." SIG$sig_name\n" if $sig_name ne 'ZERO';
-        print_log "Error: alive test: $binary_basename had an exit status of"
+        print_log "Error: alive test: $binary_basename exited with status "
                   ." $exit_value\n";
         if ($dumped_core) {
             print_log "Error: alive test: $binary_basename dumped core.\n";
@@ -594,7 +595,7 @@ sub FileBasedTest {
     my $binary = "$binary_dir/$binary_basename";
     my $binary_log = "$build_dir/$test_name.log";
 
-    my $pid = fork_and_log($binary_dir, $test_command, $binary_log);
+    my $pid = fork_and_log($build_dir, $binary_dir, $test_command, $binary_log);
     my ($timed_out, $exit_value, $sig_name, $dumped_core)
       = wait_for_pid($pid, $timeout_secs);
 
@@ -612,8 +613,7 @@ sub FileBasedTest {
     } else {
         print_log "Error: $test_name received SIG$sig_name\n"
           if $sig_name ne 'ZERO';
-        print_log "Error: $test_name had an exit status of"
-          ." $exit_value\n";
+        print_log "Error: $test_name exited with status $exit_value\n";
         if ($dumped_core) {
             print_log "Error: $test_name dumped core.\n";
         }
@@ -655,7 +655,7 @@ sub BloatTest {
     }
 
     my $cmd = "$binary_basename -f bloaturls.txt";
-    my $pid = fork_and_log($binary_dir, $cmd, $binary_log);
+    my $pid = fork_and_log($build_dir, $binary_dir, $cmd, $binary_log);
     my ($timed_out, $exit_value, $sig_name, $dumped_core)
       = wait_for_pid($pid, $timeout_secs);
     
@@ -671,7 +671,7 @@ sub BloatTest {
         } else {
             print_log "Error: BloatTest received SIG$sig_name\n"
               if $sig_name ne 'ZERO';
-            print_log "Error: BloatTest had an exit status of $exit_value\n";
+            print_log "Error: BloatTest exited with status $exit_value\n";
             if ($dumped_core) {
                 print_log "Error: BloatTest dumped core.\n";
             }
