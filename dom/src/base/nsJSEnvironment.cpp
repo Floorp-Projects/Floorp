@@ -309,12 +309,20 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime)
 #else
   mDefaultJSOptions = 0;
 #endif
+
+  // Let xpconnect resync its JSContext tracker. We do this before creating
+  // a new JSContext just in case the heap manager recycles the JSContext
+  // struct.
+  nsresult rv;
+  NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
+  if (NS_SUCCEEDED(rv))
+    xpc->SyncJSContexts();
+
   mContext = ::JS_NewContext(aRuntime, gStackSize);
   if (mContext) {
     ::JS_SetContextPrivate(mContext, (void *)this);
 
     // Check for the JS strict option, which enables extra error checks
-    nsresult rv;
     NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
     if (NS_SUCCEEDED(rv)) {
       (void) prefs->RegisterCallback(js_options_dot_str,
@@ -365,7 +373,7 @@ nsJSContext::~nsJSContext()
   ::JS_SetGlobalObject(mContext, nsnull);
   ::JS_DestroyContext(mContext);
 
-  // Let xpconnect resync its JSContext tracker (this is optional)
+  // Let xpconnect resync its JSContext tracker.
   NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
   if (NS_SUCCEEDED(rv))
     xpc->SyncJSContexts();
