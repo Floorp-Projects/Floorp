@@ -147,7 +147,7 @@ enum {
 -(IBAction)cut:(id)aSender;
 -(IBAction)copy:(id)aSender;
 -(IBAction)paste:(id)aSender;
--(IBAction)clear:(id)aSender;
+-(IBAction)delete:(id)aSender;
 -(IBAction)selectAll:(id)aSender;
 -(IBAction)undo:(id)aSender;
 
