@@ -8,26 +8,6 @@
     tables to document dependencies. Any takers?</para>
   </note>
 
-  <section id="dbschema">
-    <title>Database Schema Chart</title>
-
-    <para>
-      <mediaobject>
-        <imageobject>
-          <imagedata fileref="../images/dbschema.jpg" format="JPG" />
-        </imageobject>
-
-        <textobject>
-          <phrase>Database Relationships</phrase>
-        </textobject>
-
-        <caption>
-          <para>Bugzilla database relationships chart</para>
-        </caption>
-      </mediaobject>
-    </para>
-  </section>
-
   <section id="dbdoc">
     <title>MySQL Bugzilla Database Introduction</title>
 
