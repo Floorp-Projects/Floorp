@@ -68,6 +68,8 @@
 #include "nsRDFGenericBuilder.h"
 #include "prtime.h"
 
+#include "rdf_qsort.h"
+
 ////////////////////////////////////////////////////////////////////////
 
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, child);
@@ -393,14 +395,193 @@ RDFTreeBuilderImpl::UpdateContainer(nsIContent *container)
 	return(NS_OK);
 }
 
+int		openSortCallback(const void *data1, const void *data2, void *sortData);
 
 nsresult
 RDFTreeBuilderImpl::CheckRDFGraphForUpdates(nsIContent *container)
 {
-	// XXX To do: get resource of container, gets its children,
-	//            sort them based upon the current sort,
-	//            then insert/remove from content model as appropriate
+	nsresult			rv = NS_OK;
 
+	nsCOMPtr<nsIDOMXULElement>	domElement( do_QueryInterface(container) );
+	NS_ASSERTION(domElement, "not a XULTreeElement");
+	if (!domElement)	return(NS_ERROR_UNEXPECTED);
+
+	// get composite db for tree
+	if (!mRoot)	return(NS_ERROR_UNEXPECTED);
+	nsCOMPtr<nsIDOMXULTreeElement>	domXulTree( do_QueryInterface(mRoot) );
+	NS_ASSERTION(domXulTree, "not a nsIDOMXULTreeElement");
+	if (!domXulTree)	return(NS_ERROR_UNEXPECTED);
+
+	nsCOMPtr<nsIRDFCompositeDataSource> db;
+	if (NS_FAILED(rv = domXulTree->GetDatabase(getter_AddRefs(db))))
+	{
+		return(rv);
+	}
+
+	nsVoidArray	childArray;
+
+	nsCOMPtr<nsIRDFResource>	res;
+	if (NS_SUCCEEDED(rv = domElement->GetResource(getter_AddRefs(res))))
+	{
+		nsCOMPtr<nsIRDFArcsOutCursor> arcs;
+		if (NS_FAILED(rv = mDB->ArcLabelsOut(res, getter_AddRefs(arcs))))
+		{
+			NS_ERROR("unable to get arcs out");
+			return (rv);
+		}
+
+		while (PR_TRUE)
+		{
+			rv = arcs->Advance();
+			if (NS_FAILED(rv))		return(rv);
+			if (rv == NS_RDF_CURSOR_EMPTY)	break;
+
+			nsCOMPtr<nsIRDFResource> property;
+			if (NS_FAILED(rv = arcs->GetLabel(getter_AddRefs(property))))
+			{
+				NS_ERROR("unable to get cursor value");
+				return(rv);
+			}
+
+			if (!IsContainmentProperty(container, property))	continue;
+
+			PRInt32 nameSpaceID;
+			nsCOMPtr<nsIAtom> tag;
+			if (NS_FAILED(rv = mDocument->SplitProperty(property, &nameSpaceID, getter_AddRefs(tag))))
+			{
+				NS_ERROR("unable to split property");
+				return(rv);
+			}
+
+			nsCOMPtr<nsIRDFAssertionCursor> assertions;
+			if (NS_FAILED(rv = db->GetTargets(res, property, PR_TRUE, getter_AddRefs(assertions))))
+			{
+				NS_ERROR("unable to get targets for property");
+				return rv;
+			}
+			while (PR_TRUE)
+			{
+				rv = assertions->Advance();
+				if (NS_FAILED(rv))		return rv;
+				if (rv == NS_RDF_CURSOR_EMPTY)	break;
+
+				nsCOMPtr<nsIRDFNode> value;
+				if (NS_FAILED(rv = assertions->GetValue(getter_AddRefs(value))))
+				{
+					NS_ERROR("unable to get cursor value");
+					break;
+				}
+				nsCOMPtr<nsIRDFResource> valueResource;
+				if (NS_SUCCEEDED(rv = value->QueryInterface(kIRDFResourceIID, (void**) getter_AddRefs(valueResource)) &&
+					(rv != NS_RDF_NO_VALUE)))
+				{
+					// Note: hack, storing value then property in array
+					childArray.AppendElement(valueResource.get());
+					childArray.AppendElement(property.get());
+				}
+			}
+		}
+	}
+	
+	unsigned long numElements = childArray.Count();
+	if (numElements > 0)
+	{
+		nsIRDFResource ** flatArray = new nsIRDFResource*[numElements];
+		if (flatArray)
+		{
+			// flatten array of resources, sort them, then add/remove as necessary
+			unsigned long loop;
+		        for (loop=0; loop<numElements; loop++)
+		        {
+				flatArray[loop] = (nsIRDFResource *)childArray.ElementAt(loop);
+			}
+//			rdf_qsort((void *)flatArray, numElements, sizeof(nsIRDFNode *),
+//				openSortCallback, (void *)sortInfo);
+
+			// first, remove any nodes that are stale
+		        nsCOMPtr<nsIContent>	child;
+			if (NS_SUCCEEDED(rv = FindChildByTag(container, kNameSpaceID_XUL, kTreeChildrenAtom, getter_AddRefs(child))))
+			{
+			        // note: enumerate backwards so that indexing is easy
+				PRInt32		numGrandChildren;
+				if (NS_FAILED(rv = child->ChildCount(numGrandChildren)))	numGrandChildren = 0;
+			        nsCOMPtr<nsIContent>	grandChild;
+				for (PRInt32 grandchildIndex=numGrandChildren-1; grandchildIndex >= 0; grandchildIndex--)
+				{
+					if (NS_FAILED(rv = child->ChildAt(grandchildIndex, *getter_AddRefs(grandChild))))	break;
+					PRInt32		nameSpaceID;
+					if (NS_FAILED(rv = grandChild->GetNameSpaceID(nameSpaceID)))	break;
+					if (nameSpaceID == kNameSpaceID_XUL)
+					{
+						nsCOMPtr<nsIRDFResource>	aRes;
+						PRBool				removeNode = PR_TRUE;
+						if (NS_SUCCEEDED(rv = GetElementResource(grandChild, getter_AddRefs(aRes))))
+						{
+							PRInt32			innerLoop;
+							for (innerLoop=0; innerLoop < numElements; innerLoop+=2)
+							{
+								PRBool	equals = PR_FALSE;
+								if (NS_SUCCEEDED(rv = aRes.get()->EqualsNode(flatArray[innerLoop], &equals)))
+								{
+									if (equals == PR_TRUE)
+									{
+										removeNode = PR_FALSE;
+										break;
+									}
+								}
+							}
+							if (removeNode == PR_TRUE)
+							{
+								child->RemoveChildAt(grandchildIndex, PR_TRUE);
+							}
+						}
+					}
+				}
+			}
+
+		        // second, add any nodes that are new
+			for (loop=0; loop<numElements; loop+=2)
+			{
+				nsIRDFResource	*theRes = flatArray[loop];
+				if (NS_SUCCEEDED(rv = FindChildByTag(container, kNameSpaceID_XUL, kTreeChildrenAtom, getter_AddRefs(child))))
+				{
+					PRBool		nodeFound = PR_FALSE;
+					PRInt32		numGrandChildren;
+					if (NS_FAILED(rv = child->ChildCount(numGrandChildren)))	numGrandChildren = 0;
+				        nsCOMPtr<nsIContent>	grandChild;
+					for (PRInt32 grandchildIndex=0; grandchildIndex<numGrandChildren; grandchildIndex++)
+					{
+						if (NS_FAILED(rv = child->ChildAt(grandchildIndex, *getter_AddRefs(grandChild))))	break;
+						PRInt32		nameSpaceID;
+						if (NS_FAILED(rv = grandChild->GetNameSpaceID(nameSpaceID)))	break;
+						if (nameSpaceID == kNameSpaceID_XUL)
+						{
+							nsCOMPtr<nsIRDFResource>	aRes;
+							if (NS_SUCCEEDED(rv = GetElementResource(grandChild, getter_AddRefs(aRes))))
+							{
+								PRBool	equals = PR_FALSE;
+								if (NS_SUCCEEDED(rv = theRes->EqualsNode(aRes, &equals)))
+								{
+									if (equals == PR_TRUE)
+									{
+										nodeFound = PR_TRUE;
+										break;
+									}
+								}
+							}
+						}
+					}
+					if (nodeFound == PR_FALSE)
+					{
+						AddWidgetItem(container, flatArray[loop+1], flatArray[loop], 0);
+					}
+				}
+			}
+
+			delete [] flatArray;
+			flatArray = nsnull;
+		}
+	}
 	return(NS_OK);
 }
 
