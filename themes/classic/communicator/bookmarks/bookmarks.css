@@ -30,6 +30,7 @@
 /**
  * Home button
  **/ 
+
   #home-button
     {
       list-style-image    : url("chrome://communicator/skin/bookmarks/home.gif");

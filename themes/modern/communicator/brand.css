@@ -8,6 +8,7 @@
     cursor                : pointer;
     border                : 0px;
     background-color	  : transparent;
+    -moz-user-focus       : ignore;
   }  
 
 #navigator-throbber[busy="true"]

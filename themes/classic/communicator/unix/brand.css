@@ -6,6 +6,7 @@
     list-style-image      : url("chrome://global/skin/animthrob_single.gif");
     margin                : 0px;
     cursor                : pointer;
+    -moz-user-focus       : ignore;
   }  
   
 #navigator-throbber:hover
