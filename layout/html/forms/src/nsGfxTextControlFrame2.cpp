@@ -1714,8 +1714,21 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
 
     // Now call SetTextControlFrameState() which will make the
     // neccessary editor calls to set the default value.
+    // Make sure to turn off undo before setting the default
+    // value, and turn it back on afterwards. This will make
+    // sure we can't undo past the default value.
+
+    rv = mEditor->EnableUndo(PR_FALSE);
+
+    if (NS_FAILED(rv))
+      return rv;
 
     SetTextControlFrameState(defaultValue);
+
+    rv = mEditor->EnableUndo(PR_TRUE);
+
+    if (NS_FAILED(rv))
+      return rv;
 
     // Now restore the original editor flags.
 
