@@ -135,9 +135,9 @@ private:
 
     static
     PLDHashOperator  CRT_CALL DeactivateAndClearEntry(PLDHashTable *    table,
-                                                          PLDHashEntryHdr * hdr,
-                                                          PRUint32          number,
-                                                          void *            arg);
+                                                      PLDHashEntryHdr * hdr,
+                                                      PRUint32          number,
+                                                      void *            arg);
 
     /**
      *  Data Members
