@@ -178,7 +178,6 @@ protected:
                                      nsIContent*      aContent,
                                      nsIStyleContext* aStyleContext,
                                      nsIAtom*         aPseudoElement,
-                                     PRBool           aMakeFirstLetterFrame,
                                      PRBool           aForBlock,
                                      nsIFrame**       aResult);
 
@@ -671,33 +670,72 @@ InitializeSelectFrame(nsIPresContext*          aPresContext,
                            nsIStyleContext*         aStyleContext,
                            nsIFrame*                aNewFrame);
 
-  nsresult MakeFirstLetterFrame(nsIPresContext* aPresContext,
-                                nsFrameConstructorState& aState,
-                                nsIContent* aContainer,
-                                nsIContent* aChild,
-                                nsIContent* aContainingBlockContent,
-                                nsIFrame* aParentFrame,
-                                nsFrameItems& aFrameItems);
+  //----------------------------------------
 
-  nsresult WrapTextFrame(nsIPresContext* aPresContext,
-                         nsFrameConstructorState& aState,
-                         nsIFrame* aTextFrame,
-                         nsIContent* aParentContent,
-                         nsIContent* aChildContent,
-                         nsIFrame* aParentFrame,
-                         nsFrameItems& aFrameItems,
-                         nsAbsoluteItems& aFloatingItems,
-                         PRBool aForBlock);
+  // Methods support :first-letter style
 
-  void CreateFloatingFirstLetterFrame(nsIPresContext* aPresContext,
-                                      nsIFrameManager* aFrameManager,
-                                      nsIFrame* aTextFrame,
-                                      nsIContent* aContent,
-                                      nsIContent* aChildContent,
-                                      nsIFrame* aParentFrame,
-                                      nsFrameItems& aFrameItems,
-                                      nsFrameItems& aFloatingItems,
-                                      nsIStyleContext* aStyleContext);
+  nsIContent* FindBlockFor(nsIPresContext* aPresContext,
+                           nsFrameConstructorState& aState,
+                           nsIContent* aContainer);
+
+  void CreateFloatingLetterFrame(nsIPresContext* aPresContext,
+                                 nsFrameConstructorState& aState,
+                                 nsIContent* aTextContent,
+                                 nsIFrame* aTextFrame,
+                                 nsIContent* aBlockContent,
+                                 nsIFrame* aParentFrame,
+                                 nsIStyleContext* aStyleContext,
+                                 nsFrameItems& aResult);
+
+  nsresult CreateLetterFrame(nsIPresContext* aPresContext,
+                             nsFrameConstructorState& aState,
+                             nsIContent* aTextContent,
+                             nsIFrame* aParentFrame,
+                             nsFrameItems& aResult);
+
+  nsresult WrapFramesInFirstLetterFrame(nsIPresContext*          aPresContext,
+                                        nsFrameConstructorState& aState,
+                                        nsIContent*              aBlockContent,
+                                        nsIFrame*                aBlockFrame,
+                                        nsFrameItems&            aBlockFrames);
+
+  nsresult WrapFramesInFirstLetterFrame(nsIPresContext*          aPresContext,
+                                        nsFrameConstructorState& aState,
+                                        nsIFrame*                aParentFrame,
+                                        nsIFrame*                aParentFrameList,
+                                        nsIFrame**               aModifiedParent,
+                                        nsIFrame**               aTextFrame,
+                                        nsIFrame**               aPrevFrame,
+                                        nsFrameItems&            aLetterFrame,
+                                        PRBool*                  aStopLooking);
+
+  nsresult RecoverLetterFrames(nsIPresContext* aPresContext,
+                               nsFrameConstructorState& aState,
+                               nsIFrame* aBlockFrame);
+
+  // 
+  nsresult RemoveLetterFrames(nsIPresContext* aPresContext,
+                              nsIPresShell* aPresShell,
+                              nsIFrameManager* aFrameManager,
+                              nsIFrame* aBlockFrame);
+
+  // Recursive helper for RemoveLetterFrames
+  nsresult RemoveFirstLetterFrames(nsIPresContext* aPresContext,
+                                   nsIPresShell* aPresShell,
+                                   nsIFrameManager* aFrameManager,
+                                   nsIFrame* aFrame,
+                                   PRBool* aStopLooking);
+
+  // Special remove method for those pesky floating first-letter frames
+  nsresult RemoveFloatingFirstLetterFrames(nsIPresContext* aPresContext,
+                                           nsIPresShell* aPresShell,
+                                           nsIFrameManager* aFrameManager,
+                                           nsIFrame* aBlockFrame,
+                                           PRBool* aStopLooking);
+
+  //----------------------------------------
+
+  // Methods support :first-line style
 
   nsresult WrapFramesInFirstLineFrame(nsIPresContext*          aPresContext,
                                       nsFrameConstructorState& aState,
