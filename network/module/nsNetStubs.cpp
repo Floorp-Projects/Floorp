@@ -735,6 +735,17 @@ SHIST_GetCurrent(History * hist)
     return NULL;
 }
 
+
+#ifdef XP_MAC
+char *
+WH_TempName(XP_FileType type, const char * prefix)
+{
+    MOZ_FUNCTION_STUB;
+    return NULL;
+}
+#endif
+
+
 /*
  *---------------------------------------------------------------------------
  * From ns/cmd/winfe/fegui.cpp
