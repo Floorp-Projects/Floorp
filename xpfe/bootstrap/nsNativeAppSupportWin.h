@@ -21,14 +21,9 @@
  *   Bill Law       law@netscape.com
  */
 
-// Program icon ID.
-#define IDI_MOZILLA 1
-
 // Splash screen dialog ID.
 #define IDD_SPLASH  100
 
 // Splash screen bitmap ID.
 #define IDB_SPLASH  101
 
-// Splash screen timer ID.
-#define IDT_SPLASH  501

@@ -72,6 +72,7 @@ public:
     static nsSplashScreenWin* GetPointer( HWND dlg );
 
     static BOOL CALLBACK DialogProc( HWND dlg, UINT msg, WPARAM wp, LPARAM lp );
+    static BOOL CALLBACK PhantomDialogProc( HWND dlg, UINT msg, WPARAM wp, LPARAM lp );
     static DWORD WINAPI ThreadProc( LPVOID );
 
     HWND mDlg;
@@ -92,7 +93,31 @@ nsSplashScreenWin::~nsSplashScreenWin() {
 
 NS_IMETHODIMP
 nsSplashScreenWin::Show() {
-    // Spawn new thread to display splash screen.
+    /*
+     * A hack for http://bugzilla.mozilla.org/show_bug.cgi?id=26581
+     *
+     * Windows NT seems to think that the first thread to show a window must 
+     * therefore be our main UI thread. It then seems to want to put the first 
+     * window that shows up on other threads in our application behind the main 
+     * windows of other applications. Since we want to show our splash screen 
+     * on a 'non-main' thread, our browser windows start showing up later on a 
+     * thread that Windows thinks is not our main UI thread. So, (I believe) it 
+     * pushes the first one of our browser windows to the back until the user 
+     * pulls it forward. That is not what we want!
+     * 
+     * This hack attempts to trick Windows by very briefly showing an 
+     * offscreen window on the main thread. This happens before the splash 
+     * screen thread creates its window (which it sets as topmost). So when our
+     * browser windows start showing up on the main thread Windows will see that 
+     * they are on the "first thread with a window" and it will (hopefully!) not
+     * push them to the back.
+     */
+    DialogBox( GetModuleHandle( 0 ),
+               MAKEINTRESOURCE( IDD_SPLASH ),
+               HWND_DESKTOP,
+               (DLGPROC)PhantomDialogProc );
+
+    // Spawn new thread to display real splash screen.
     DWORD threadID = 0;
     CreateThread( 0, 0, (LPTHREAD_START_ROUTINE)ThreadProc, this, 0, &threadID );
     return NS_OK;
@@ -108,12 +133,48 @@ nsSplashScreenWin::Hide() {
     return NS_OK;
 }
 
-BOOL CALLBACK nsSplashScreenWin::DialogProc( HWND dlg, UINT msg, WPARAM wp, LPARAM lp ) {
+BOOL CALLBACK
+nsSplashScreenWin::PhantomDialogProc( HWND dlg, UINT msg, WPARAM wp, LPARAM lp ) {
+    if ( msg == WM_INITDIALOG ) {
+        // Show window for an instant to make this the active thread.
+        ShowWindow( dlg, SW_SHOW );
+        EndDialog( dlg, 0 );
+        return 1;
+    } 
+    return 0;
+}
+
+BOOL CALLBACK
+nsSplashScreenWin::DialogProc( HWND dlg, UINT msg, WPARAM wp, LPARAM lp ) {
     if ( msg == WM_INITDIALOG ) {
         // Store dialog handle.
         nsSplashScreenWin *splashScreen = (nsSplashScreenWin*)lp;
         if ( lp ) {
             splashScreen->SetDialog( dlg );
+        }
+        /* Size and center the splash screen correctly. The flags in the 
+         * dialog template do not do the right thing if the user's 
+         * machine is using large fonts.
+         */ 
+        HWND bitmapControl = GetDlgItem( dlg, IDB_SPLASH );
+        if ( bitmapControl ) {
+            HBITMAP hbitmap = (HBITMAP)SendMessage( bitmapControl,
+                                                    STM_GETIMAGE,
+                                                    IMAGE_BITMAP,
+                                                    0 );
+            if ( hbitmap ) {
+                BITMAP bitmap;
+                if ( GetObject( hbitmap, sizeof bitmap, &bitmap ) ) {
+                    SetWindowPos( dlg,
+                                  NULL,
+                                  GetSystemMetrics(SM_CXSCREEN)/2 - bitmap.bmWidth/2,
+                                  GetSystemMetrics(SM_CYSCREEN)/2 - bitmap.bmHeight/2,
+                                  bitmap.bmWidth,
+                                  bitmap.bmHeight,
+                                  SWP_NOZORDER );
+                    ShowWindow( dlg, SW_SHOW );
+                }
+            }
         }
         return 1;
     }
