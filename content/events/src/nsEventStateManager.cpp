@@ -3559,17 +3559,19 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
           }
         }
         else if (tag == nsHTMLAtoms::img) {
+          PRBool hasImageMap = PR_FALSE;
           // Don't need to set disabled here, because if we
           // match an imagemap, we'll return from there.
-          if (sTabFocusModel & eTabFocus_linksMask) {
-            nsCOMPtr<nsIDOMHTMLImageElement> nextImage(do_QueryInterface(child));
-            nsAutoString usemap;
-            if (nextImage) {
-              nsCOMPtr<nsIDocument> doc = child->GetDocument();
-              if (doc) {
-                nextImage->GetAttribute(NS_LITERAL_STRING("usemap"), usemap);
-                nsCOMPtr<nsIDOMHTMLMapElement> imageMap = nsImageMapUtils::FindImageMap(doc,usemap);
-                if (imageMap) {
+          nsCOMPtr<nsIDOMHTMLImageElement> nextImage(do_QueryInterface(child));
+          nsAutoString usemap;
+          if (nextImage) {
+            nsCOMPtr<nsIDocument> doc = child->GetDocument();
+            if (doc) {
+              nextImage->GetAttribute(NS_LITERAL_STRING("usemap"), usemap);
+              nsCOMPtr<nsIDOMHTMLMapElement> imageMap = nsImageMapUtils::FindImageMap(doc,usemap);
+              if (imageMap) {
+                hasImageMap = PR_TRUE;
+                if (sTabFocusModel & eTabFocus_linksMask) {
                   nsCOMPtr<nsIContent> map(do_QueryInterface(imageMap));
                   if (map) {
                     nsIContent *childArea;
@@ -3615,6 +3617,22 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
               }
             }
           }
+
+          // Might be using -moz-user-focus and imitating a control
+          // Check to see if linked
+          for (nsIContent *findAnchorAncestor = child; findAnchorAncestor; 
+               findAnchorAncestor = findAnchorAncestor->GetParent()) {
+            nsCOMPtr<nsIDOMHTMLAnchorElement> anchor  = 
+              do_QueryInterface(findAnchorAncestor);
+            if (anchor) {
+              break; // Found an anchor
+            }
+          }
+          if (!findAnchorAncestor && !hasImageMap) {
+            // Focusable, but no anchor or image map.
+            // Therefore, this image is imitating a form control
+            disabled = !(sTabFocusModel & eTabFocus_formElementsMask);
+          }
         }
         else if (tag == nsHTMLAtoms::object) {
           // OBJECT is treated as a form element.
@@ -3652,7 +3670,13 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
               }
             }
           }
-        } 
+        }
+        else {
+          // Let any HTML element with -moz-user-focus: normal be tabbable
+          // Without this rule, DHTML form controls made from div or span
+          // cannot be put in the tab order.
+          disabled = !(sTabFocusModel & eTabFocus_formElementsMask);
+        }
       }
       else {
         // Is it disabled?
