@@ -105,6 +105,7 @@ const nsID& nsCSSFont::GetID(void)
   return kCSSFontSID;
 }
 
+#ifdef DEBUG
 void nsCSSFont::List(FILE* out, PRInt32 aIndent) const
 {
   for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
@@ -120,6 +121,7 @@ void nsCSSFont::List(FILE* out, PRInt32 aIndent) const
   mStretch.AppendToString(buffer, eCSSProperty_font_stretch);
   fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
 }
+#endif
 
 // --- support -----------------
 
@@ -176,6 +178,7 @@ const nsID& nsCSSColor::GetID(void)
   return kCSSColorSID;
 }
 
+#ifdef DEBUG
 void nsCSSColor::List(FILE* out, PRInt32 aIndent) const
 {
   for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
@@ -191,6 +194,7 @@ void nsCSSColor::List(FILE* out, PRInt32 aIndent) const
   mBackPositionY.AppendToString(buffer, eCSSProperty_background_y_position);
   fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
 }
+#endif
 
 // --- nsCSSText support -----------------
 
@@ -252,6 +256,7 @@ const nsID& nsCSSText::GetID(void)
   return kCSSTextSID;
 }
 
+#ifdef DEBUG
 void nsCSSText::List(FILE* out, PRInt32 aIndent) const
 {
   for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
@@ -285,6 +290,7 @@ void nsCSSText::List(FILE* out, PRInt32 aIndent) const
   mWhiteSpace.AppendToString(buffer, eCSSProperty_white_space);
   fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
 }
+#endif
 
 // --- nsCSSRect -----------------
 
@@ -308,6 +314,7 @@ nsCSSRect::~nsCSSRect()
 }
 
 
+#ifdef DEBUG
 void nsCSSRect::List(FILE* out, nsCSSProperty aPropID, PRInt32 aIndent) const
 {
   for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
@@ -355,6 +362,7 @@ void nsCSSRect::List(FILE* out, PRInt32 aIndent, const nsCSSProperty aTRBL[]) co
 
   fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
 }
+#endif
 
 // --- nsCSSDisplay -----------------
 
@@ -392,6 +400,7 @@ const nsID& nsCSSDisplay::GetID(void)
   return kCSSDisplaySID;
 }
 
+#ifdef DEBUG
 void nsCSSDisplay::List(FILE* out, PRInt32 aIndent) const
 {
   for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
@@ -416,6 +425,7 @@ void nsCSSDisplay::List(FILE* out, PRInt32 aIndent) const
   mOverflow.AppendToString(buffer, eCSSProperty_overflow);
   fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
 }
+#endif
 
 // --- nsCSSMargin -----------------
 
@@ -484,6 +494,7 @@ const nsID& nsCSSMargin::GetID(void)
   return kCSSMarginSID;
 }
 
+#ifdef DEBUG
 void nsCSSMargin::List(FILE* out, PRInt32 aIndent) const
 {
   if (nsnull != mMargin) {
@@ -547,6 +558,7 @@ void nsCSSMargin::List(FILE* out, PRInt32 aIndent) const
   mFloatEdge.AppendToString(buffer, eCSSProperty_float_edge);
   fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
 }
+#endif
 
 // --- nsCSSPosition -----------------
 
@@ -582,6 +594,7 @@ const nsID& nsCSSPosition::GetID(void)
   return kCSSPositionSID;
 }
 
+#ifdef DEBUG
 void nsCSSPosition::List(FILE* out, PRInt32 aIndent) const
 {
   for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
@@ -608,6 +621,7 @@ void nsCSSPosition::List(FILE* out, PRInt32 aIndent) const
     mOffset->List(out, aIndent, trbl);
   }
 }
+#endif
 
 // --- nsCSSList -----------------
 
@@ -638,6 +652,7 @@ const nsID& nsCSSList::GetID(void)
   return kCSSListSID;
 }
 
+#ifdef DEBUG
 void nsCSSList::List(FILE* out, PRInt32 aIndent) const
 {
   for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
@@ -659,6 +674,7 @@ void nsCSSList::List(FILE* out, PRInt32 aIndent) const
     mImageRegion->List(out, aIndent, trbl);
   }
 }
+#endif
 
 // --- nsCSSTable -----------------
 
@@ -688,6 +704,7 @@ const nsID& nsCSSTable::GetID(void)
   return kCSSTableSID;
 }
 
+#ifdef DEBUG
 void nsCSSTable::List(FILE* out, PRInt32 aIndent) const
 {
   for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
@@ -703,6 +720,7 @@ void nsCSSTable::List(FILE* out, PRInt32 aIndent) const
 
   fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
 }
+#endif
 
 // --- nsCSSBreaks -----------------
 
@@ -732,6 +750,7 @@ const nsID& nsCSSBreaks::GetID(void)
   return kCSSBreaksSID;
 }
 
+#ifdef DEBUG
 void nsCSSBreaks::List(FILE* out, PRInt32 aIndent) const
 {
   for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
@@ -747,6 +766,7 @@ void nsCSSBreaks::List(FILE* out, PRInt32 aIndent) const
 
   fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
 }
+#endif
 
 // --- nsCSSPage -----------------
 
@@ -773,6 +793,7 @@ const nsID& nsCSSPage::GetID(void)
   return kCSSPageSID;
 }
 
+#ifdef DEBUG
 void nsCSSPage::List(FILE* out, PRInt32 aIndent) const
 {
   for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
@@ -785,6 +806,7 @@ void nsCSSPage::List(FILE* out, PRInt32 aIndent) const
 
   fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
 }
+#endif
 
 // --- nsCSSContent support -----------------
 
@@ -869,6 +891,7 @@ const nsID& nsCSSContent::GetID(void)
   return kCSSContentSID;
 }
 
+#ifdef DEBUG
 void nsCSSContent::List(FILE* out, PRInt32 aIndent) const
 {
   for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
@@ -902,6 +925,7 @@ void nsCSSContent::List(FILE* out, PRInt32 aIndent) const
 
   fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
 }
+#endif
 
 // --- nsCSSUserInterface -----------------
 
@@ -937,6 +961,7 @@ const nsID& nsCSSUserInterface::GetID(void)
   return kCSSUserInterfaceSID;
 }
 
+#ifdef DEBUG
 void nsCSSUserInterface::List(FILE* out, PRInt32 aIndent) const
 {
   for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
@@ -962,6 +987,7 @@ void nsCSSUserInterface::List(FILE* out, PRInt32 aIndent) const
   
   fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
 }
+#endif
 
 // --- nsCSSAural -----------------
 
@@ -1004,6 +1030,7 @@ const nsID& nsCSSAural::GetID(void)
   return kCSSAuralSID;
 }
 
+#ifdef DEBUG
 void nsCSSAural::List(FILE* out, PRInt32 aIndent) const
 {
   for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
@@ -1032,6 +1059,7 @@ void nsCSSAural::List(FILE* out, PRInt32 aIndent) const
 
   fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
 }
+#endif
 
 #ifdef INCLUDE_XUL
 // --- nsCSSXUL -----------------
@@ -1059,6 +1087,7 @@ const nsID& nsCSSXUL::GetID(void)
   return kCSSXULSID;
 }
 
+#ifdef DEBUG
 void nsCSSXUL::List(FILE* out, PRInt32 aIndent) const
 {
   for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
@@ -1073,6 +1102,7 @@ void nsCSSXUL::List(FILE* out, PRInt32 aIndent) const
   mBoxOrdinal.AppendToString(buffer, eCSSProperty_box_ordinal_group);
   fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
 }
+#endif
 
 #endif // INCLUDE_XUL
 
@@ -1110,6 +1140,7 @@ const nsID& nsCSSSVG::GetID(void)
   return kCSSSVGSID;
 }
 
+#ifdef DEBUG
 void nsCSSSVG::List(FILE* out, PRInt32 aIndent) const
 {
   for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
@@ -1129,6 +1160,7 @@ void nsCSSSVG::List(FILE* out, PRInt32 aIndent) const
   mStrokeWidth.AppendToString(buffer, eCSSProperty_stroke_width);
   fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
 }
+#endif
 
 #endif // MOZ_SVG
 
