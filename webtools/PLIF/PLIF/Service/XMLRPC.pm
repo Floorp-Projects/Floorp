@@ -94,6 +94,14 @@ sub getOutputHook {
 }
 
 # output.hook
+sub reportFatalError {
+    my $self = shift;
+    my($error) = @_;
+    my $response = RPC::XML::response->new(RPC::XML::fault->new(0, $error));
+    $self->output->XMLRPC($response->as_string);
+}
+
+# output.hook
 sub methodMissing {
     my $self = shift;
     my($method, @arguments) = @_;
@@ -104,15 +112,7 @@ sub methodMissing {
     # have been designed so that there is enough information in the
     # arguments to be useful.
     my $response;
-    foreach my $argument (@arguments) {
-        if (ref($argument) eq 'ARRAY') {
-            $argument = RPC::XML::array->new(@$argument);
-        } elsif (ref($argument) eq 'HASH') {
-            $argument = RPC::XML::struct->new(%$argument);
-        } else {
-            $argument = RPC::XML::string->new($argument);            
-        }
-    }
+    @arguments = RPC::XML::smart_encode(@arguments);
     if (@arguments > 1) {
         $response = RPC::XML::response->new(RPC::XML::array->new(@arguments));
     } elsif (@arguments) {
