@@ -72,10 +72,11 @@ class Type {
 
 class Leak {
 	String mAddress;
+	Type mType;
 	Object[] mReferences;
 	Object[] mCrawl;
 	int mRefCount;
-	Type mType;
+	Leak[] mParents;
 
 	Leak(String addr, Type type, Object[] refs, Object[] crawl) {
 		mAddress = addr;
@@ -83,6 +84,11 @@ class Leak {
 		mCrawl = crawl;
 		mRefCount = 0;
 		mType = type;
+	}
+	
+	void setParents(Vector parents) {
+		mParents = new Leak[parents.size()];
+		parents.copyInto(mParents);
 	}
 
 	public String toString() {
@@ -105,57 +111,6 @@ class Leak {
 			Leak l1 = (Leak) obj1, l2 = (Leak) obj2;
 			return (l2.mType.mSize - l1.mType.mSize);
 		}
-	}
-}
-
-class FileTable {
-	static class Line {
-		int mOffset;
-		int mLength;
-		
-		Line(int offset, int length) {
-			mOffset = offset;
-			mLength = length;
-		}
-	}
-	Line[] mLines;
-
-	FileTable(String path) throws IOException {
-		Vector lines = new Vector();
-		BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(path)));
-		int offset = 0;
-		for (String line = reader.readLine(); line != null; line = reader.readLine()) {
-			// always add 1 for the line feed.
-			int length = 1 + line.length();
-			lines.addElement(new Line(offset, length));
-			offset += length;
-		}
-		reader.close();
-		int size = lines.size();
-		mLines = new Line[size];
-		lines.copyInto(mLines);
-	}
-	
-	public int getLine(int offset) {
-		// use binary search to find the line which spans this offset.
-		int length = mLines.length;
-		int minIndex = 0, maxIndex = length - 1;
-		int index = maxIndex / 2;
-		while (minIndex <= maxIndex) {
-			Line line = mLines[index];
-			if (offset < line.mOffset) {
-				maxIndex = (index - 1);
-				index = (minIndex + maxIndex) / 2;
-			} else {
-				if (offset < (line.mOffset + line.mLength)) {
-					return index;
-				}
-				minIndex = (index + 1);
-				index = (minIndex + maxIndex) / 2;
-			}
-		}
-		// this case shouldn't happen, but provides a helpful value to detect errors.
-		return -1;
 	}
 }
 
@@ -185,7 +140,7 @@ public class leaksoup {
 
 		try {
 			Vector vec = new Vector();
-			Hashtable table = new Hashtable();
+			Hashtable leakTable = new Hashtable();
 			Hashtable types = new Hashtable();
 			Histogram hist = new Histogram();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(inputName)));
@@ -225,7 +180,7 @@ public class leaksoup {
 					vec.copyInto(crawl);
 					
 					// record the leak.
-					table.put(addr, new Leak(addr, type, refs, crawl));
+					leakTable.put(addr, new Leak(addr, type, refs, crawl));
 
 					// count the leak types in a histogram.
 					hist.record(type);
@@ -235,36 +190,58 @@ public class leaksoup {
 			}
 			reader.close();
 			
-			Leak[] leaks = new Leak[table.size()];
+			Leak[] leaks = new Leak[leakTable.size()];
 			int leakCount = 0;
 			long totalSize = 0;
 
+			Hashtable parentTable = new Hashtable();
+
 			// now, we have a table full of leaked objects, lets derive reference counts, and build the graph.
-			Enumeration e = table.elements();
+			Enumeration e = leakTable.elements();
 			while (e.hasMoreElements()) {
 				Leak leak = (Leak) e.nextElement();
 				Object[] refs = leak.mReferences;
 				int count = refs.length;
 				for (int i = 0; i < count; i++) {
 					String addr = (String) refs[i];
-					Leak ref = (Leak) table.get(addr);
+					Leak ref = (Leak) leakTable.get(addr);
 					if (ref != null) {
 						// increase the ref count.
 						ref.mRefCount++;
 						// change string to ref itself.
 						refs[i] = ref;
+						// add leak to ref's parents vector.
+						Vector parents = (Vector) parentTable.get(ref);
+						if (parents == null) {
+							parents = new Vector();
+							parentTable.put(ref, parents);
+						}
+						parents.addElement(leak);
 					}
 				}
 				leaks[leakCount++] = leak;
 				totalSize += leak.mType.mSize;
 			}
+
+			// be nice to the GC.
+			leakTable.clear();
+			leakTable = null;
+			
+			// set the parents of each leak.
+			e = parentTable.keys();
+			while (e.hasMoreElements()) {
+				Leak leak = (Leak) e.nextElement();
+				Vector parents = (Vector) parentTable.get(leak);
+				if (parents != null)
+					leak.setParents(parents);
+			}
 			
 			// be nice to the GC.
-			table.clear();
-			table = null;
+			parentTable.clear();
+			parentTable = null;
 			
 			// store the leak report in inputName + ".html"
-			PrintStream out = new PrintStream(new FileOutputStream(inputName + ".html"));
+			PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(inputName + ".html"))));
 
 			Date now = new Date();
 			out.println("<TITLE>Leaks as of " + now + "</TITLE>");
@@ -306,7 +283,7 @@ public class leaksoup {
 		}
 	}
 
-	static void printHistogram(PrintStream out, Histogram hist) throws IOException {
+	static void printHistogram(PrintWriter out, Histogram hist) throws IOException {
 		// sort the objects by histogram count.
 		Object[] objects = hist.objects();
 		QuickSort sorter = new QuickSort(new HistComparator(hist));
@@ -356,7 +333,7 @@ public class leaksoup {
 		return "<A HREF=\"" + locationURL + "#" + lineNumber + "\"TARGET=\"SOURCE\">" + line.substring(0, leftBracket) + "</A>";
 	}
 	
-	static void printLeaks(PrintStream out, Leak[] leaks) throws IOException {
+	static void printLeaks(PrintWriter out, Leak[] leaks) throws IOException {
 		// sort the leaks by size.
 		QuickSort bySize = new QuickSort(new Leak.BySize());
 		bySize.sort(leaks);
@@ -385,7 +362,12 @@ public class leaksoup {
 				out.println("<H3>" + anchorType + " Leaks</H3>");
 			}
 			out.println("<A NAME=\"" + leak.mAddress + "\"></A>");
-			out.println(leak);
+			if (leak.mParents != null) {
+				out.print(leak);
+				out.println(" <A HREF=\"#" + leak.mAddress + "_parents\">parents</A>");
+			} else {
+				out.println(leak);
+			}
 			// print object's fields:
 			Object[] refs = leak.mReferences;
 			int count = refs.length;
@@ -397,6 +379,15 @@ public class leaksoup {
 			for (int j = 0; j < count; j++) {
 				String location = getFileLocation(fileTables, (String) crawl[j]);
 				out.println(location);
+			}
+			// print object's parents.
+			if (leak.mParents != null) {
+				out.println("<A NAME=\"" + leak.mAddress + "_parents\"></A>");
+				out.println("\nLeak Parents:");
+				Leak[] parents = leak.mParents;
+				count = parents.length;
+				for (int j = 0; j < count; j++)
+					out.println("\t" + parents[j]);
 			}
 		}
 
