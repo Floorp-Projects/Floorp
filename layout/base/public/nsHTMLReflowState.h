@@ -362,7 +362,7 @@ struct nsHTMLReflowState {
 
   static PRBool UseComputedHeight();
 
-  static nsCSSFrameType DetermineFrameType(nsIFrame* aFrame);
+  void InitFrameType();
 
   void ComputeContainingBlockRectangle(nsIPresContext*          aPresContext,
                                        const nsHTMLReflowState* aContainingBlockRS,
@@ -415,9 +415,6 @@ protected:
                                    nsStyleUnit aUnit,
                                    const nsStyleCoord& aCoord,
                                    nscoord& aResult);
-
-  static nsCSSFrameType DetermineFrameType(nsIFrame* aFrame,
-                                           const nsStyleDisplay* aDisplay);
 
   // Computes margin values from the specified margin style information, and
   // fills in the mComputedMargin member
