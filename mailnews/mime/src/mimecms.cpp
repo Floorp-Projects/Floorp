@@ -220,6 +220,8 @@ MimeCMSHeadersAndCertsMatch(MimeObject *obj,
   nsXPIDLCString sender_name;
   nsXPIDLCString cert_addr;
   PRBool match = PR_TRUE;
+  PRBool foundFrom = PR_FALSE;
+  PRBool foundSender = PR_FALSE;
 
   /* Find the name and address in the cert.
    */
@@ -287,9 +289,6 @@ MimeCMSHeadersAndCertsMatch(MimeObject *obj,
 	 consider it a match if the address in the cert matches either the
 	 address in the From or Sender field
    */
-
-  PRBool foundFrom = PR_FALSE;
-  PRBool foundSender = PR_FALSE;
 
   /* If there is no addr in the cert at all, it can not match and we fail. */
   if (!cert_addr)
