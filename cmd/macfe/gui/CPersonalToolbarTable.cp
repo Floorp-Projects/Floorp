@@ -676,13 +676,13 @@ CPersonalToolbarTable :: DrawCell ( const STableCell &inCell, const Rect &inLoca
 	iconRect.bottom = inLocalRect.bottom - 2;
 	iconRect.top = iconRect.bottom - 16;
 	IconTransformType transform = kTransformNone;
-	if ( mDropOn )										// handle drop on folder
+	if ( mDropOn && inCell.col == mDropCol )						// handle drop on folder
 		transform = kTransformSelected;
 	::PlotIconID(&iconRect, atNone, transform, iconAndName.iconID);
 	
 	UTextTraits::SetPortTextTraits(kTextTraitsID);
 	
-	if ( mDropOn ) {									// handle drop on folder
+	if ( mDropOn && inCell.col == mDropCol ) {						// handle drop on folder
 		mTextHiliteRect = ComputeTextRect ( iconAndName, inLocalRect );
 		StColorState savedColorForTextDrawing;
 		::RGBBackColor(&black);
