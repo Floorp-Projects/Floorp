@@ -155,7 +155,7 @@ Contributor(s): ______________________________________. -->
     <command id="cmd_textZoomEnlarge" oncommand="ZoomManager.prototype.getInstance().enlarge();"/>
     <command id="cmd_textZoomReset"   oncommand="ZoomManager.prototype.getInstance().reset();"/>
     <command id="cmd_history" oncommand="toHistory();"/>
-    <command id="cmd_stop" oncommand="BrowserStop();"/>
+    <command id="cmd_stop" oncommand="BrowserStop();" disabled="true"/>
     <command id="cmd_viewnavbar" oncommand="goToggleToolbar( 'nav-bar','cmd_viewnavbar');" checked="true"/>
     <command id="cmd_viewpersonaltoolbar" oncommand="goToggleToolbar('PersonalToolbar','cmd_viewpersonaltoolbar');" checked="true"/>
     <command id="cmd_viewtaskbar" oncommand="goToggleToolbar('status-bar','cmd_viewtaskbar');" checked="true"/>
@@ -290,8 +290,7 @@ Contributor(s): ______________________________________. -->
     <menuitem id="context-stop"
               label="&stopCmd.label;"
               accesskey="&stopCmd.accesskey;"
-              disabled="true"
-              cmd="cmd_stop"/>
+              command="cmd_stop"/>
     <menuseparator id="context-sep-stop"/>
     <menuitem id="context-bookmarkpage"
               label="&bookmarkPageCmd.label;"
@@ -471,7 +470,7 @@ Contributor(s): ______________________________________. -->
                       command="View:FullScreen" hidden="true"/>
             <menuseparator/>
             <menuitem accesskey="&reloadCmd.accesskey;" key="key_reload" label="&reloadCmd.label;" oncommand="BrowserReload();"/>
-            <menuitem label="&stopCmd.label;" accesskey="&stopCmd.accesskey;" id="menuitem-stop" disabled="true" command="cmd_stop" key="key_stop"/>
+            <menuitem label="&stopCmd.label;" accesskey="&stopCmd.accesskey;" command="cmd_stop" key="key_stop"/>
             <menuseparator/>
             <menuitem accesskey="&pageSourceCmd.accesskey;" label="&pageSourceCmd.label;" key="key_viewSource" command="View:PageSource"/>
             <menuitem accesskey="&pageInfoCmd.accesskey;"   label="&pageInfoCmd.label;"   key="key_viewInfo"   command="View:PageInfo"/>
@@ -698,7 +697,7 @@ Contributor(s): ______________________________________. -->
                        
         <toolbarbutton id="stop-button" class="toolbarbutton-1"
                        label="&stopButton.label;"
-                       oncommand="cmd_stop();" disabled="true"
+                       command="cmd_stop"
                        tooltiptext="&stopButton.tooltip;"/>
         <toolbarbutton id="home-button" class="toolbarbutton-1"
                        label="&homeButton.label;" persist="hidden"

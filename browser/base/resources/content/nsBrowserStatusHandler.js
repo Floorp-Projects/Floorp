@@ -104,9 +104,7 @@ nsBrowserStatusHandler.prototype =
     this.urlBar          = document.getElementById("urlbar");
     this.throbberElement = document.getElementById("navigator-throbber");
     this.statusMeter     = document.getElementById("statusbar-icon");
-    this.stopButton      = document.getElementById("stop-button");
-    this.stopMenu        = document.getElementById("menuitem-stop");
-    this.stopContext     = document.getElementById("context-stop");
+    this.stopCmd         = document.getElementById("cmd_stop");
     this.statusTextField = document.getElementById("statusbar-display");
     this.isImage         = document.getElementById("isImage");
     this.securityButton  = document.getElementById("security-button");
@@ -122,9 +120,7 @@ nsBrowserStatusHandler.prototype =
     this.urlBar          = null;
     this.throbberElement = null;
     this.statusMeter     = null;
-    this.stopButton      = null;
-    this.stopMenu        = null;
-    this.stopContext     = null;
+    this.stopCmd         = null;
     this.statusTextField = null;
     this.isImage         = null;
     this.securityButton  = null;
@@ -220,10 +216,8 @@ nsBrowserStatusHandler.prototype =
         // Turn the throbber on.
         this.throbberElement.setAttribute("busy", true);
 
-        // XXX: These need to be based on window activity...
-        this.stopButton.disabled = false;
-        this.stopMenu.removeAttribute('disabled');
-        this.stopContext.removeAttribute('disabled');
+        // XXX: This needs to be based on window activity...
+        this.stopCmd.removeAttribute("disabled");
 
         // Initialize the progress stuff...
         this.useRealProgressFlag = false;
@@ -264,12 +258,8 @@ nsBrowserStatusHandler.prototype =
         this.statusMeter.value = 0;  // be sure to clear the progress bar
         this.throbberElement.removeAttribute("busy");
 
-        // XXX: These need to be based on window activity...
-        // XXXjag: <command id="cmd_stop"/> ?
-        this.stopButton.disabled = true;
-        this.stopMenu.setAttribute('disabled', 'true');
-        this.stopContext.setAttribute('disabled', 'true');
-
+        // XXX: This needs to be based on window activity...
+        this.stopCmd.setAttribute("disabled", "true");
       }
     }
     else if (aStateFlags & nsIWebProgressListener.STATE_TRANSFERRING) {
