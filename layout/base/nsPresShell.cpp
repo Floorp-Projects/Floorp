@@ -715,6 +715,12 @@ PresShell::~PresShell()
     mViewEventListener->SetPresShell((nsIPresShell*)nsnull);
     NS_RELEASE(mViewEventListener);
   }
+
+  // Revoke pending reflow events
+  if (mPendingReflowEvent) {
+    mPendingReflowEvent = PR_FALSE;
+    mEventQueue->RevokeEvents(this);
+  }
 }
 
 /**
@@ -1875,7 +1881,7 @@ ReflowEvent::ReflowEvent(nsIPresShell* aPresShell, nsIEventQueue* aQueue)
     
   mPresShell = getter_AddRefs(NS_GetWeakReference(aPresShell));
 
-  PL_InitEvent(this, nsnull,
+  PL_InitEvent(this, aPresShell,
                (PLHandleEventProc) ::HandlePLEvent,
                (PLDestroyEventProc) ::DestroyPLEvent);
   
