@@ -724,7 +724,7 @@ nsFontMetricsXft::DrawString(const char *aString, PRUint32 aLength,
 
     // go forth and blit!
     if (data.foundGlyph)
-        XftDrawGlyphFontSpec(data.draw, &data.color, data.specBuffer, len);
+        XftDrawGlyphFontSpec(data.draw, &data.color, data.specBuffer, data.specBufferLen);
 
     FreeSpecBuffer(data.specBuffer);
 
