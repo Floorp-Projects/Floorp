@@ -23,7 +23,8 @@
 #if defined(GC_LEAK_DETECTOR)
 
 #include "nsLeakDetector.h"
-#include "nsComponentManager.h"
+#include "nsCOMPtr.h"
+#include "nsIComponentManager.h"
 #include "nsIGenericFactory.h"
 #include "nsILeakDetector.h"
 
