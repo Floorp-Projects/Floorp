@@ -148,7 +148,7 @@ sub flagsArrayToHash($$)
 #-----------------------------------------------
 sub printHash($)
 {
-	my($hash_ref) = @_;
+  my($hash_ref) = @_;
  
   print "Printing hash:\n";
   
@@ -216,8 +216,8 @@ sub SetOptionDefines($)
   my($optiondefines) = @_;
 
   # These should remain unchanged
-  $optiondefines->{"mathml"}{"MOZ_MATHML"}		= 1;
-  $optiondefines->{"svg"}{"MOZ_SVG"}		    	= 1;
+  $optiondefines->{"mathml"}{"MOZ_MATHML"}    = 1;
+  $optiondefines->{"svg"}{"MOZ_SVG"}          = 1;
 }
 
 
@@ -260,23 +260,16 @@ sub setBuildProgressStart($$)
 {
   my($build_array, $name) = @_;
 
-  my($setting) = 0;
   my($index);
   foreach $index (@$build_array)
   {
-    $index->[1] = 0;  # $setting;    
-
+    $index->[1] = 0;
     if ($index->[0] eq $name) {
-      # $setting = 1;
       last;
     }    
   }
 
-  if ($setting == 1) {
-    print "Building from module after $name, as specified by build progress\n";
-  } else {
-    printf "Failed to find buildfrom setting '$name'\n";
-  }
+  print "Building from module after $name, as specified by build progress\n";
 }
 
 #//--------------------------------------------------------------------------------------------------
@@ -300,9 +293,12 @@ sub WriteBuildProgress($)
 
   my($progress_file) = _getBuildProgressFile();
   
-  open(PROGRESS_FILE, ">>$progress_file") || die "Failed to open $progress_file\n";
-  print(PROGRESS_FILE "$module_built\n");
-  close(PROGRESS_FILE);
+  if ($progress_file ne "")
+  {
+    open(PROGRESS_FILE, ">>$progress_file") || die "Failed to open $progress_file\n";
+    print(PROGRESS_FILE "$module_built\n");
+    close(PROGRESS_FILE);
+  }
 }
 
 
@@ -312,7 +308,19 @@ sub WriteBuildProgress($)
 sub ClearBuildProgress()
 {
   my($progress_file) = _getBuildProgressFile();
-  unlink $progress_file;
+  if ($progress_file ne "") {
+    unlink $progress_file;
+  }
+}
+
+#//--------------------------------------------------------------------------------------------------
+#// WipeBuildProgress
+#//--------------------------------------------------------------------------------------------------
+sub WipeBuildProgress()
+{
+  print "Ignoring build progress\n";
+  ClearBuildProgress();
+  $progress_file = "";
 }
 
 #//--------------------------------------------------------------------------------------------------
@@ -386,7 +394,11 @@ sub SetupBuildParams($$$$$$)
   ReadMozUserPrefs($prefs_file, \@build_flags, \@options_flags, \@filepath_flags);
 
   # If build progress exists, this clears flags in the array up to a certain point
-  ReadBuildProgress(\@build_flags);
+  if ($main::USE_BUILD_PROGRESS) {
+    ReadBuildProgress(\@build_flags);
+  } else {
+    WipeBuildProgress();
+  }
   
 #  printBuildArray(\@build_flags);
 #  printBuildArray(\@options_flags);

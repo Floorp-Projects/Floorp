@@ -88,10 +88,11 @@ sub SetupDefaultBuildOptions($$)
     # configuration variables that are preferences for the build,
     # style and do not affect what is built.
     #-------------------------------------------------------------
-    $main::Moz::CodeWarriorLib::CLOSE_PROJECTS_FIRST = 1;
+    $main::CLOSE_PROJECTS_FIRST   = 0;
                                     # 1 = close then make (for development),
                                     # 0 = make then close (for tinderbox).
     $main::USE_TIMESTAMPED_LOGS   = 0;
+    $main::USE_BUILD_PROGRESS     = 1;    # track build progress for restartable builds
     #-------------------------------------------------------------
     # END OF CONFIG SWITCHES
     #-------------------------------------------------------------
@@ -185,7 +186,7 @@ sub AskAndPersistFile($)
             }
             else
             {
-                print STDERR "Could not open storage file\n";
+                print STDERR "Could not open storage file $sessionStorage for saving $cvsfile\n";
             }
         }
     }
