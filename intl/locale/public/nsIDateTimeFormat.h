@@ -24,6 +24,7 @@
 #include "nscore.h"
 #include "nsString.h"
 #include "nsILocale.h"
+#include "prtime.h"
 #include <time.h>
 
 
@@ -32,21 +33,23 @@
 { 0x2bbaa0b0, 0xa591, 0x11d2, \
 { 0x91, 0x19, 0x0, 0x60, 0x8, 0xa6, 0xed, 0xf6 } }
 
-typedef enum {
-    kDateFormatNone,                // do not include the date  in the format string
+typedef PRInt32  nsDateFormatSelector;
+enum {
+    kDateFormatNone = 0,            // do not include the date  in the format string
     kDateFormatLong,                // provides the long date format for the given locale
     kDateFormatShort,               // provides the short date format for the given locale
     kDateFormatYearMonth,           // formats using only the year and month 
     kDateFormatWeekday              // week day (e.g. Mon, Tue)
-} nsDateFormatSelector;
+};
 
-typedef enum {
-    kTimeFormatNone,                // don't include the time in the format string
+typedef PRInt32  nsTimeFormatSelector;
+enum {
+    kTimeFormatNone = 0,            // don't include the time in the format string
     kTimeFormatSeconds,             // provides the time format with seconds in the  given locale 
     kTimeFormatNoSeconds,           // provides the time format without seconds in the given locale 
     kTimeFormatSecondsForce24Hour,  // forces the time format to use the 24 clock, regardless of the locale conventions
     kTimeFormatNoSecondsForce24Hour // forces the time format to use the 24 clock, regardless of the locale conventions
-} nsTimeFormatSelector;
+};
 
 
 // Locale sensitive date and time format interface
@@ -54,7 +57,7 @@ typedef enum {
 class nsIDateTimeFormat : public nsISupports {
 
 public: 
-  static const nsIID& GetIID() { static nsIID iid = NS_IDATETIMEFORMAT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDATETIMEFORMAT_IID)
 
   // performs a locale sensitive date formatting operation on the time_t parameter
   NS_IMETHOD FormatTime(nsILocale* locale, 
@@ -69,6 +72,20 @@ public:
                           const nsTimeFormatSelector timeFormatSelector, 
                           const struct tm*  tmTime, 
                           nsString& stringOut) = 0; 
+
+  // performs a locale sensitive date formatting operation on the PRTime parameter
+  NS_IMETHOD FormatPRTime(nsILocale* locale, 
+                          const nsDateFormatSelector  dateFormatSelector, 
+                          const nsTimeFormatSelector timeFormatSelector, 
+                          const PRTime  prTime, 
+                          nsString& stringOut) = 0;
+
+  // performs a locale sensitive date formatting operation on the PRExplodedTime parameter
+  NS_IMETHOD FormatPRExplodedTime(nsILocale* locale, 
+                                  const nsDateFormatSelector  dateFormatSelector, 
+                                  const nsTimeFormatSelector timeFormatSelector, 
+                                  const PRExplodedTime*  explodedTime, 
+                                  nsString& stringOut) = 0; 
 };
 
 #endif  /* nsIDateTimeFormat_h__ */

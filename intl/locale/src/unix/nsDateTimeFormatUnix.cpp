@@ -167,3 +167,33 @@ nsresult nsDateTimeFormatUnix::FormatTMTime(nsILocale* locale,
   return res;
 }
 
+// performs a locale sensitive date formatting operation on the PRTime parameter
+nsresult nsDateTimeFormatUnix::FormatPRTime(nsILocale* locale, 
+                                           const nsDateFormatSelector  dateFormatSelector, 
+                                           const nsTimeFormatSelector timeFormatSelector, 
+                                           const PRTime  prTime, 
+                                           nsString& stringOut)
+{
+  PRExplodedTime explodedTime;
+  PR_ExplodeTime(prTime, PR_LocalTimeParameters, &explodedTime);
+
+  return FormatPRExplodedTime(locale, dateFormatSelector, timeFormatSelector, &explodedTime, stringOut);
+}
+
+// performs a locale sensitive date formatting operation on the PRExplodedTime parameter
+nsresult nsDateTimeFormatUnix::FormatPRExplodedTime(nsILocale* locale, 
+                                                   const nsDateFormatSelector  dateFormatSelector, 
+                                                   const nsTimeFormatSelector timeFormatSelector, 
+                                                   const PRExplodedTime*  explodedTime, 
+                                                   nsString& stringOut)
+{
+  struct tm  tmTime;
+  tmTime.tm_mon = explodedTime->tm_month;
+  tmTime.tm_mday = explodedTime->tm_mday;
+  tmTime.tm_hour = explodedTime->tm_hour;
+  tmTime.tm_min = explodedTime->tm_min;
+  tmTime.tm_sec = explodedTime->tm_sec;
+
+  return FormatTMTime(locale, dateFormatSelector, timeFormatSelector, &tmTime, stringOut);
+}
+
