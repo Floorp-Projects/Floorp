@@ -23,5 +23,5 @@ browser.jar:
 
 en-US.jar:
   locale/en-US/browser/find/findDialog.dtd               (locale/findDialog.dtd)
-  locale/en-US/browser/find/findDialog.dtd               (locale/findDialog.properties)
+  locale/en-US/browser/find/findDialog.properties               (locale/findDialog.properties)
 
