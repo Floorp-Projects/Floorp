@@ -1924,8 +1924,8 @@ NS_IMETHODIMP nsWebBrowser::SetFocusedElement(nsIDOMElement * aFocusedElement)
 // nsWebBrowser::nsIWebBrowserStream
 //*****************************************************************************   
 
-/* void openStream (in string aBaseURI, in string aContentType); */
-NS_IMETHODIMP nsWebBrowser::OpenStream(const char *aBaseURI, const char *aContentType)
+/* void openStream(in nsIURI aBaseURI, in ACString aContentType); */
+NS_IMETHODIMP nsWebBrowser::OpenStream(nsIURI *aBaseURI, const nsACString& aContentType)
 {
   nsresult rv;
 
@@ -1941,8 +1941,9 @@ NS_IMETHODIMP nsWebBrowser::OpenStream(const char *aBaseURI, const char *aConten
   return mStream->OpenStream(aBaseURI, aContentType);
 }
 
-/* void appendStream (in string aData, in long aLen); */
-NS_IMETHODIMP nsWebBrowser::AppendToStream(const char *aData, PRInt32 aLen)
+/* void appendToStream([const, array, size_is(aLen)] in octet aData,
+ * in unsigned long aLen); */
+NS_IMETHODIMP nsWebBrowser::AppendToStream(const PRUint8 *aData, PRUint32 aLen)
 {
   if (!mStream)
     return NS_ERROR_FAILURE;
