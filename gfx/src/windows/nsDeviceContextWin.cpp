@@ -30,6 +30,7 @@
 #include "nsIScreenManager.h"
 #include "nsIScreen.h"
 #include "nsGfxCIID.h"
+#include "nsReadableutils.h"
 
 // Print Options
 #include "nsIPrintOptions.h"
@@ -832,26 +833,17 @@ NS_IMETHODIMP nsDeviceContextWin :: BeginDocument(PRUnichar * aTitle)
 {
   nsresult rv = NS_OK;
 
-  if (NULL != mDC)
-  {
+  if (NULL != mDC){
     DOCINFO docinfo;
 
-    char * title = nsnull;
-    NS_WITH_SERVICE(nsIPrintOptions, printService, kPrintOptionsCID, &rv);
-    if (NS_SUCCEEDED(rv) && printService) {
-      PRUnichar * uTitle = nsnull;
-      printService->GetTitle(&uTitle);
-      if (uTitle != nsnull) {
-        nsAutoString str;
-        str = uTitle;
-        if (str.Length() > 0) {
-          title = str.ToNewCString();
-          nsMemory::Free(uTitle);
-        }
-      }
+    
+    char *title = nsnull;
+    if( nsnull != aTitle) {
+      title = ToNewCString(nsLiteralString(aTitle));
     }
+
     docinfo.cbSize = sizeof(docinfo);
-    docinfo.lpszDocName = title != nsnull?title:"New Layout Document";
+    docinfo.lpszDocName = title != nsnull?title:"Mozilla Document";
     docinfo.lpszOutput = NULL;
     docinfo.lpszDatatype = NULL;
     docinfo.fwType = 0;
