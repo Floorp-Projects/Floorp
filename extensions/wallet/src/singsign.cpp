@@ -38,7 +38,6 @@
 #pragma profile on
 #endif
 
-#include "prefapi.h"
 #include "nsIPref.h"
 #include "nsFileStream.h"
 #include "nsSpecialSystemDirectory.h"
@@ -114,16 +113,28 @@ Local_SACat(char **destination, const char *source)
   return *destination;
 }
   
-/* temporary */
-static const char *pref_useDialogs =
-    "wallet.useDialogs";
-PRIVATE PRBool si_useDialogs = PR_FALSE;
-
 static PRBool si_PartiallyLoaded = FALSE;
 static PRBool si_FullyLoaded = FALSE;
 
+typedef int (*PrefChangedFunc) (const char *, void *);
+
 PUBLIC void
-SI_SetBoolPref(char * prefname, PRBool prefvalue) {
+SI_RegisterCallback(const char* domain, PrefChangedFunc callback, void* instance_data) {
+  nsresult ret;
+  nsIPref* pPrefService = nsnull;
+  ret = nsServiceManager::GetService(kPrefServiceCID, kIPrefServiceIID,
+    (nsISupports**) &pPrefService);
+  if (!NS_FAILED(ret)) {
+    ret = pPrefService->RegisterCallback(domain, callback, instance_data);
+    if (!NS_FAILED(ret)) {
+      ret = pPrefService->SavePrefFile(); 
+    }
+    nsServiceManager::ReleaseService(kPrefServiceCID, pPrefService);
+  }
+}
+
+PUBLIC void
+SI_SetBoolPref(const char * prefname, PRBool prefvalue) {
   nsresult ret;
   nsIPref* pPrefService = nsnull;
   ret = nsServiceManager::GetService(kPrefServiceCID, kIPrefServiceIID,
@@ -138,7 +149,7 @@ SI_SetBoolPref(char * prefname, PRBool prefvalue) {
 }
 
 PUBLIC PRBool
-SI_GetBoolPref(char * prefname, PRBool defaultvalue) {
+SI_GetBoolPref(const char * prefname, PRBool defaultvalue) {
   nsresult ret;
   PRBool prefvalue = defaultvalue;
   nsIPref* pPrefService = nsnull;
@@ -154,54 +165,16 @@ SI_GetBoolPref(char * prefname, PRBool defaultvalue) {
   return prefvalue;
 }
 
-PRIVATE void
-si_SetUsingDialogsPref(PRBool x)
-{
-    /* do nothing if new value of pref is same as current value */
-    if (x == si_useDialogs) {
-        return;
-    }
+/* temporary */
 
-    /* change the pref */
-    si_useDialogs = x;
-}
-
-MODULE_PRIVATE int PR_CALLBACK
-si_UsingDialogsPrefChanged(const char * newpref, void * data)
-{
-    PRBool x;
-    PREF_GetBoolPref(pref_useDialogs, &x);
-    si_SetUsingDialogsPref(x);
-    return PREF_NOERROR;
-}
-
-void
-si_RegisterUsingDialogsPrefCallbacks(void)
-{
-    PRBool x = PR_FALSE; /* initialize to default value in case PREF_GetBoolPref fails */
-    static PRBool first_time = PR_TRUE;
-
-    if(first_time)
-    {
-        first_time = PR_FALSE;
-        PREF_GetBoolPref(pref_useDialogs, &x);
-        si_SetUsingDialogsPref(x);
-        PREF_RegisterCallback(pref_useDialogs, si_UsingDialogsPrefChanged, NULL);
-    }
-}
+extern PRBool
+Wallet_GetUsingDialogsPref(void);
 
 PRIVATE PRBool
 si_GetUsingDialogsPref(void)
 {
-    si_RegisterUsingDialogsPrefCallbacks();
-    return si_useDialogs;
+    return Wallet_GetUsingDialogsPref();
 }
-
-/*
- * Need these because the normal call to FE_* routines goes through
- * a pointer in the context (context->funcs->confirm) but the context
- * doesn't exist in the new world order
- */
 
 PRBool
 MyFE_PromptUsernameAndPassword
@@ -476,23 +449,23 @@ MODULE_PRIVATE int PR_CALLBACK
 si_SignonRememberingPrefChanged(const char * newpref, void * data)
 {
     PRBool x;
-    PREF_GetBoolPref(pref_rememberSignons, &x);
+    x = SI_GetBoolPref(pref_rememberSignons, PR_TRUE);
     si_SetSignonRememberingPref(x);
-    return PREF_NOERROR;
+    return 0; /* this is PREF_NOERROR but we no longer include prefapi.h */
 }
 
 void
 si_RegisterSignonPrefCallbacks(void)
 {
-    PRBool x = PR_TRUE; /* initialize to default value in case PREF_GetBoolPref fails */
+    PRBool x;
     static PRBool first_time = PR_TRUE;
 
     if(first_time)
     {
         first_time = PR_FALSE;
-        PREF_GetBoolPref(pref_rememberSignons, &x);
+        x = SI_GetBoolPref(pref_rememberSignons, PR_TRUE);
         si_SetSignonRememberingPref(x);
-        PREF_RegisterCallback(pref_rememberSignons, si_SignonRememberingPrefChanged, NULL);
+        SI_RegisterCallback(pref_rememberSignons, si_SignonRememberingPrefChanged, NULL);
     }
 }
 
@@ -1148,9 +1121,10 @@ si_OkToSave(char *URLName, char *userName) {
         SI_SetBoolPref("signon.Notified", PR_TRUE);
         if (!MyFE_Confirm(notification)) {
             XP_FREE (notification);
-            PREF_SetBoolPref(pref_rememberSignons, PR_FALSE);
+            SI_SetBoolPref(pref_rememberSignons, PR_FALSE);
             return PR_FALSE;
         }
+        SI_SetBoolPref(pref_rememberSignons, PR_TRUE); /* this is unnecessary */
         XP_FREE (notification);
     }
 
@@ -3515,8 +3489,13 @@ SINGSIGN_Prompt (char *prompt, char* defaultUsername, char *URLName)
 {
 }
 
+typedef int (*PrefChangedFunc) (const char *, void *);
+void
+SI_RegisterCallback(const char* domain, PrefChangedFunc callback, void* instance_data) {
+}
+
 PRBool
-SI_GetBoolPref(char * prefname, PRBool defaultvalue) {
+SI_GetBoolPref(const char * prefname, PRBool defaultvalue) {
 }
 
 void

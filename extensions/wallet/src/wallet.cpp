@@ -36,7 +36,6 @@
 #include "nsIURL.h"
 
 #include "xp_list.h"
-#include "prefapi.h"
 #include "nsFileStream.h"
 #include "nsSpecialSystemDirectory.h"
 
@@ -260,8 +259,13 @@ wallet_DumpStopwatch() {
 /* The following data and procedures are for preference */
 /********************************************************/
 
+typedef int (*PrefChangedFunc) (const char *, void *);
+
+extern void
+SI_RegisterCallback(const char* domain, PrefChangedFunc callback, void* instance_data);
+
 extern PRBool
-SI_GetBoolPref(char * prefname, PRBool defaultvalue);
+SI_GetBoolPref(const char * prefname, PRBool defaultvalue);
 
 extern void
 SI_SetBoolPref(char * prefname, PRBool prefvalue);
@@ -287,23 +291,23 @@ MODULE_PRIVATE int PR_CALLBACK
 wallet_FormsCapturingPrefChanged(const char * newpref, void * data)
 {
     PRBool x;
-    PREF_GetBoolPref(pref_captureForms, &x);
+    x = SI_GetBoolPref(pref_captureForms, PR_TRUE);
     wallet_SetFormsCapturingPref(x);
-    return PREF_NOERROR;
+    return 0; /* this is PREF_NOERROR but we no longer include prefapi.h */
 }
 
 void
 wallet_RegisterCapturePrefCallbacks(void)
 {
-    PRBool x = PR_TRUE; /* initialize to default value in case PREF_GetBoolPref fails */
+    PRBool x;
     static Bool first_time = PR_TRUE;
 
     if(first_time)
     {
         first_time = PR_FALSE;
-        PREF_GetBoolPref(pref_captureForms, &x);
+        x = SI_GetBoolPref(pref_captureForms, PR_TRUE);
         wallet_SetFormsCapturingPref(x);
-        PREF_RegisterCallback(pref_captureForms, wallet_FormsCapturingPrefChanged, NULL);
+        SI_RegisterCallback(pref_captureForms, wallet_FormsCapturingPrefChanged, NULL);
     }
 }
 
@@ -334,28 +338,28 @@ MODULE_PRIVATE int PR_CALLBACK
 wallet_UsingDialogsPrefChanged(const char * newpref, void * data)
 {
     PRBool x;
-    PREF_GetBoolPref(pref_useDialogs, &x);
+    x = SI_GetBoolPref(pref_useDialogs, PR_TRUE);
     wallet_SetUsingDialogsPref(x);
-    return PREF_NOERROR;
+    return 0; /* this is PREF_NOERROR but we no longer include prefapi.h */
 }
 
 void
 wallet_RegisterUsingDialogsPrefCallbacks(void)
 {
-    PRBool x = PR_FALSE; /* initialize to default value in case PREF_GetBoolPref fails */
+    PRBool x;
     static Bool first_time = PR_TRUE;
 
     if(first_time)
     {
         first_time = PR_FALSE;
-        PREF_GetBoolPref(pref_useDialogs, &x);
+        x = SI_GetBoolPref(pref_useDialogs, PR_FALSE);
         wallet_SetUsingDialogsPref(x);
-        PREF_RegisterCallback(pref_useDialogs, wallet_UsingDialogsPrefChanged, NULL);
+        SI_RegisterCallback(pref_useDialogs, wallet_UsingDialogsPrefChanged, NULL);
     }
 }
 
-PRIVATE Bool
-wallet_GetUsingDialogsPref(void)
+PUBLIC PRBool
+Wallet_GetUsingDialogsPref(void)
 {
     wallet_RegisterUsingDialogsPrefCallbacks();
     return wallet_useDialogs;
@@ -422,7 +426,7 @@ Wallet_Localize(char* genericString) {
 /*********************************************/
 
 PRBool FE_Confirm(char * szMessage) {
-  if (!wallet_GetUsingDialogsPref()) {
+  if (!Wallet_GetUsingDialogsPref()) {
     return PR_TRUE;
   }
   fprintf(stdout, "%c%s  (y/n)?  ", '\007', szMessage); /* \007 is BELL */
@@ -447,7 +451,7 @@ PRBool FE_Confirm(char * szMessage) {
 
 char * FE_GetString(char * szMessage) {
   nsAutoString v("");
-  if (wallet_GetUsingDialogsPref()) {
+  if (Wallet_GetUsingDialogsPref()) {
     fprintf(stdout, "%c%s", '\007', szMessage);
     char c;
     for (;;) {
@@ -732,7 +736,7 @@ Wallet_SetKey(PRBool newkey) {
   Wallet_RestartKey();
 
   /* ask the user for his key */
-  if (!wallet_GetUsingDialogsPref()) {
+  if (!Wallet_GetUsingDialogsPref()) {
     key[keyPosition++] = '~';
   } else {
     char * password;
@@ -1441,7 +1445,7 @@ wallet_Initialize() {
     char * message = Wallet_Localize("IncorrectKey_TryAgain?");
     char * failed = Wallet_Localize("KeyFailure");
     while (!Wallet_SetKey(PR_FALSE)) {
-      if (!FE_Confirm(message) || !wallet_GetUsingDialogsPref()) {
+      if (!FE_Confirm(message) || !Wallet_GetUsingDialogsPref()) {
         FE_Confirm(failed);
         PR_FREEIF(message);
         PR_FREEIF(failed);
