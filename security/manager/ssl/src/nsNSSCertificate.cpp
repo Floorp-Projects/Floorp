@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsNSSCertificate.cpp,v 1.50 2001/08/28 16:45:55 ddrinan%netscape.com Exp $
+ * $Id: nsNSSCertificate.cpp,v 1.51 2001/08/30 05:21:59 kaie%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -1889,7 +1889,7 @@ ProcessSECAlgorithmID(SECAlgorithmID *algID,
   *retSequence = nsnull;
   nsString text;
   GetOIDText(&algID->algorithm, nssComponent, text);
-  if (algID->parameters.data[0] == nsIASN1Object::ASN1_NULL) {
+  if (!algID->parameters.len || algID->parameters.data[0] == nsIASN1Object::ASN1_NULL) {
     sequence->SetDisplayValue(text.get());
     sequence->SetProcessObjects(PR_FALSE);
   } else {
