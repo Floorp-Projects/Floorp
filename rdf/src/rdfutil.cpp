@@ -17,6 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
+#include "nsIRDFCursor.h"
 #include "nsIRDFDataBase.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFResourceManager.h"
@@ -74,13 +75,14 @@ rdf_IsOrdinalProperty(const nsIRDFNode* property)
 
 PRBool
 rdf_IsContainer(nsIRDFResourceManager* mgr,
-                nsIRDFDataBase* db,
+                nsIRDFDataSource* ds,
                 nsIRDFNode* resource)
 {
     PRBool result = PR_FALSE;
 
     nsIRDFNode* RDF_instanceOf = nsnull;
     nsIRDFNode* RDF_Bag        = nsnull;
+    nsIRDFNode* RDF_Seq        = nsnull;
 
     nsresult rv;
     if (NS_FAILED(rv = mgr->GetNode(kURIRDF_instanceOf, RDF_instanceOf)))
@@ -89,9 +91,21 @@ rdf_IsContainer(nsIRDFResourceManager* mgr,
     if (NS_FAILED(rv = mgr->GetNode(kURIRDF_Bag, RDF_Bag)))
         goto done;
 
-    rv = db->HasAssertion(resource, RDF_instanceOf, RDF_Bag, PR_TRUE, result);
+    if (NS_FAILED(rv = ds->HasAssertion(resource, RDF_instanceOf, RDF_Bag, PR_TRUE, result)))
+        goto done;
+
+    if (result)
+        goto done;
+
+    if (NS_FAILED(rv = mgr->GetNode(kURIRDF_Seq, RDF_Seq)))
+        goto done;
+
+    if (NS_FAILED(rv = ds->HasAssertion(resource, RDF_instanceOf, RDF_Seq, PR_TRUE, result)))
+        goto done;
+
 
 done:
+    NS_IF_RELEASE(RDF_Seq);
     NS_IF_RELEASE(RDF_Bag);
     NS_IF_RELEASE(RDF_instanceOf);
     return result;
@@ -318,6 +332,68 @@ done:
 
 
 nsresult
+rdf_CreateSequence(nsIRDFResourceManager* mgr,
+                   nsIRDFDataSource* ds,
+                   nsIRDFNode*& result)
+{
+    NS_ASSERTION(mgr, "null ptr");
+    NS_ASSERTION(ds,  "null ptr");
+
+    nsresult rv;
+    nsIRDFNode* bag = nsnull;
+
+    result = nsnull; // reasonable default
+
+    if (NS_FAILED(rv = rdf_CreateAnonymousNode(mgr, bag)))
+        goto done;
+
+    if (NS_FAILED(rv = rdf_Assert(mgr, ds, bag, kURIRDF_instanceOf, kURIRDF_Seq)))
+        goto done;
+
+    if (NS_FAILED(rv = rdf_Assert(mgr, ds, bag, kURIRDF_nextVal, "1")))
+        goto done;
+
+    result = bag;
+    NS_ADDREF(result);
+
+done:
+    NS_IF_RELEASE(bag);
+    return rv;
+}
+
+
+nsresult
+rdf_CreateAlternation(nsIRDFResourceManager* mgr,
+                      nsIRDFDataSource* ds,
+                      nsIRDFNode*& result)
+{
+    NS_ASSERTION(mgr, "null ptr");
+    NS_ASSERTION(ds,  "null ptr");
+
+    nsresult rv;
+    nsIRDFNode* bag = nsnull;
+
+    result = nsnull; // reasonable default
+
+    if (NS_FAILED(rv = rdf_CreateAnonymousNode(mgr, bag)))
+        goto done;
+
+    if (NS_FAILED(rv = rdf_Assert(mgr, ds, bag, kURIRDF_instanceOf, kURIRDF_Alt)))
+        goto done;
+
+    if (NS_FAILED(rv = rdf_Assert(mgr, ds, bag, kURIRDF_nextVal, "1")))
+        goto done;
+
+    result = bag;
+    NS_ADDREF(result);
+
+done:
+    NS_IF_RELEASE(bag);
+    return rv;
+}
+
+
+static nsresult
 rdf_ContainerGetNextValue(nsIRDFResourceManager* mgr,
                           nsIRDFDataSource* ds,
                           nsIRDFNode* container,
@@ -442,3 +518,4 @@ done:
     NS_IF_RELEASE(that);
     return result;
 }
+
