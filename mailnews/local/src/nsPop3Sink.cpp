@@ -29,6 +29,7 @@ NS_IMPL_ISUPPORTS(nsPop3Sink, kIPop3SinkIID);
 
 nsPop3Sink::nsPop3Sink()
 {
+	NS_INIT_REFCNT();
     m_authed = PR_FALSE;
     m_accountUrl = nsnull;
     m_biffState = 0;
