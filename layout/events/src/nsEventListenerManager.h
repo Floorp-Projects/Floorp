@@ -27,11 +27,13 @@
 #include "jsapi.h"
 
 class nsIDOMEvent;
+class nsIAtom;
 
 typedef struct {
   nsIDOMEventListener* mListener;
   PRUint8 mFlags;
   PRUint8 mSubType;
+  PRUint32 mHandlerIsString;
 } nsListenerStruct;
 
 //Flag must live higher than all event flags in nsGUIEvent.h
@@ -68,13 +70,15 @@ public:
   virtual nsresult AddEventListenerByType(nsIDOMEventListener *aListener, const nsString& type, PRInt32 aFlags);
   virtual nsresult RemoveEventListenerByType(nsIDOMEventListener *aListener, const nsString& type, PRInt32 aFlags) ;
 
-  virtual nsresult AddScriptEventListener(nsIScriptContext* aContext, 
+  virtual nsresult AddScriptEventListener(nsIScriptContext*aContext, 
                                           nsIScriptObjectOwner *aScriptObjectOwner, 
                                           nsIAtom *aName, 
                                           const nsString& aFunc, 
-                                          const nsIID& aIID);
+                                          REFNSIID aIID,
+                                          PRBool aDeferCompilation); 
   virtual nsresult RegisterScriptEventListener(nsIScriptContext *aContext, 
                                                nsIScriptObjectOwner *aScriptObjectOwner, 
+                                               nsIAtom* aName,
                                                const nsIID& aIID);
 
 
@@ -93,9 +97,14 @@ public:
 
   virtual nsresult RemoveAllListeners(PRBool aScriptOnly);
 
+  static nsresult GetIdentifiersForType(nsIAtom* aType, nsIID& aIID, PRInt32* aSubType);
+
 protected:
-  nsresult SetJSEventListener(nsIScriptContext *aContext, JSObject *aObject, REFNSIID aIID);
-  nsresult GetIdentifiersForType(const nsString& aType, nsIID& aIID, PRInt32* aSubType);
+  nsresult HandleEventSubType(nsListenerStruct* aListenerStruct,
+                              nsIDOMEvent* aDOMEvent,
+                              PRUint32 aSubType);
+  nsListenerStruct* FindJSEventListener(REFNSIID aIID);
+  nsresult SetJSEventListener(nsIScriptContext *aContext, nsIScriptObjectOwner *aOwner, nsIAtom* aName, REFNSIID aIID, PRBool aIsString);
   nsresult AddEventListener(nsIDOMEventListener *aListener, const nsIID& aIID, PRInt32 aFlags, PRInt32 aSubType);
   nsresult RemoveEventListener(nsIDOMEventListener *aListener, const nsIID& aIID, PRInt32 aFlags, PRInt32 aSubType);
   void ReleaseListeners(nsVoidArray** aListeners, PRBool aScriptOnly);

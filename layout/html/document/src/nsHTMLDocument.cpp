@@ -2495,6 +2495,52 @@ nsHTMLDocument::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject
   return res;
 }
 
+PRBool    
+nsHTMLDocument::Resolve(JSContext *aContext, jsval aID)
+{
+  nsCOMPtr<nsIDOMElement> element;
+  char* str = JS_GetStringBytes(JS_ValueToString(aContext, aID));
+  nsAutoString name(str); 
+  nsresult result = NS_OK;
+  PRBool ret = PR_TRUE;
+
+  result = NamedItem(name, getter_AddRefs(element));
+  if (NS_SUCCEEDED(result) && element) {
+    nsCOMPtr<nsIScriptObjectOwner> owner = do_QueryInterface(element);
+    
+    if (owner) {
+      nsCOMPtr<nsIScriptContext> scriptContext;
+      nsCOMPtr<nsIScriptContextOwner> contextOwner;
+
+      contextOwner = getter_AddRefs(GetScriptContextOwner());
+      if (contextOwner) {
+        result = contextOwner->GetScriptContext(getter_AddRefs(scriptContext));
+      }
+
+      if (!scriptContext) {
+        scriptContext = dont_AddRef((nsIScriptContext*)JS_GetContextPrivate(aContext));
+      }
+
+      JSObject* obj;
+      if (scriptContext) {
+        result = owner->GetScriptObject(scriptContext, (void**)&obj);
+        if (NS_SUCCEEDED(result) && (nsnull != obj)) {
+          JSObject* myObj;
+          result = GetScriptObject(scriptContext, (void**)&myObj);
+          ret = ::JS_DefineProperty(aContext, myObj,
+                                    str, OBJECT_TO_JSVAL(obj),
+                                    nsnull, nsnull, 0);
+        }
+      }
+    }
+  }
+
+  if (NS_FAILED(result)) {
+    ret = PR_FALSE;
+  }
+
+  return ret;
+}
 
 //----------------------------
 static PRBool IsInline(eHTMLTags aTag)

@@ -72,6 +72,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsIServiceManager.h"
 
+#include "nsLayoutAtoms.h"
 #include "nsLayoutCID.h"
 #include "nsIDOMSelection.h"
 #include "nsIDOMRange.h"
@@ -2499,71 +2500,72 @@ PRBool    nsDocument::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
     mPropName.SetString(JS_GetStringChars(JS_ValueToString(aContext, aID)));
     mPrefix.SetString(mPropName.GetUnicode(), 2);
     if (mPrefix == "on") {
+      nsCOMPtr<nsIAtom> atom = getter_AddRefs(NS_NewAtom(mPropName));
       nsIEventListenerManager *mManager = nsnull;
 
-      if (mPropName == "onmousedown" || mPropName == "onmouseup" || mPropName ==  "onclick" ||
-         mPropName == "onmouseover" || mPropName == "onmouseout") {
+      if (atom == nsLayoutAtoms::onmousedown || atom == nsLayoutAtoms::onmouseup || atom ==  nsLayoutAtoms::onclick ||
+         atom == nsLayoutAtoms::onmouseover || atom == nsLayoutAtoms::onmouseout) {
         if (NS_OK == GetListenerManager(&mManager)) {
           nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-          if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, kIDOMMouseListenerIID)) {
+          if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMMouseListenerIID)) {
             NS_RELEASE(mManager);
             return PR_FALSE;
           }
         }
       }
-      else if (mPropName == "onkeydown" || mPropName == "onkeyup" || mPropName == "onkeypress") {
+      else if (atom == nsLayoutAtoms::onkeydown || atom == nsLayoutAtoms::onkeyup || atom == nsLayoutAtoms::onkeypress) {
         if (NS_OK == GetListenerManager(&mManager)) {
           nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-          if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, kIDOMKeyListenerIID)) {
+          if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMKeyListenerIID)) {
             NS_RELEASE(mManager);
             return PR_FALSE;
           }
         }
       }
-      else if (mPropName == "onmousemove") {
+      else if (atom == nsLayoutAtoms::onmousemove) {
         if (NS_OK == GetListenerManager(&mManager)) {
           nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-          if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, kIDOMMouseMotionListenerIID)) {
+          if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMMouseMotionListenerIID)) {
             NS_RELEASE(mManager);
             return PR_FALSE;
           }
         }
       }
-      else if (mPropName == "onfocus" || mPropName == "onblur") {
+      else if (atom == nsLayoutAtoms::onfocus || atom == nsLayoutAtoms::onblur) {
         if (NS_OK == GetListenerManager(&mManager)) {
           nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-          if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, kIDOMFocusListenerIID)) {
+          if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMFocusListenerIID)) {
             NS_RELEASE(mManager);
             return PR_FALSE;
           }
         }
       }
-      else if (mPropName == "onsubmit" || mPropName == "onreset" || mPropName == "onchange" ||
-               mPropName == "onselect") {
+      else if (atom == nsLayoutAtoms::onsubmit || atom == nsLayoutAtoms::onreset || atom == nsLayoutAtoms::onchange ||
+               atom == nsLayoutAtoms::onselect) {
         if (NS_OK == GetListenerManager(&mManager)) {
           nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-          if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, kIDOMFormListenerIID)) {
+          if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMFormListenerIID)) {
             NS_RELEASE(mManager);
             return PR_FALSE;
           }
         }
       }
-      else if (mPropName == "onload" || mPropName == "onunload" || mPropName == "onabort" ||
-               mPropName == "onerror") {
+      else if (atom == nsLayoutAtoms::onload || atom == nsLayoutAtoms::onunload || atom == nsLayoutAtoms::onabort ||
+               atom == nsLayoutAtoms::onerror) {
         if (NS_OK == GetListenerManager(&mManager)) {
           nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-          if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, kIDOMLoadListenerIID)) {
+          if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMLoadListenerIID)) {
             NS_RELEASE(mManager);
             return PR_FALSE;
           }
         }
       }
-      else if (mPropName == "onpaint") {
+      else if (atom == nsLayoutAtoms::onpaint) {
         if (NS_OK == GetListenerManager(&mManager)) {
           nsIScriptContext *mScriptCX = (nsIScriptContext *)
             JS_GetContextPrivate(aContext);
           if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this,
-                                                      kIDOMPaintListenerIID)) {
+                                                             atom, kIDOMPaintListenerIID)) {
             NS_RELEASE(mManager);
             return PR_FALSE;
           }

@@ -965,7 +965,8 @@ nsGenericElement::GetScriptObject(nsIScriptContext* aContext,
     nsAutoString tag;
     mTag->ToString(tag);
     res = factory->NewScriptElement(tag, aContext, mContent,
-                                    mParent, (void**)&slots->mScriptObject);
+                                    mParent ? (nsISupports*)mParent : (nsISupports*)mDocument,
+                                    (void**)&slots->mScriptObject);
     NS_RELEASE(factory);
     
     char tagBuf[50];
@@ -1112,71 +1113,72 @@ nsGenericElement::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
     propName.SetString(JS_GetStringChars(JS_ValueToString(aContext, aID)));
     prefix.SetString(propName.GetUnicode(), 2);
     if (prefix == "on") {
+      nsCOMPtr<nsIAtom> atom = getter_AddRefs(NS_NewAtom(propName));
       nsIEventListenerManager *manager = nsnull;
 
-      if (propName == "onmousedown" || propName == "onmouseup" || propName ==  "onclick" ||
-         propName == "onmouseover" || propName == "onmouseout") {
+      if (atom == nsLayoutAtoms::onmousedown || atom == nsLayoutAtoms::onmouseup || atom ==  nsLayoutAtoms::onclick ||
+         atom == nsLayoutAtoms::onmouseover || atom == nsLayoutAtoms::onmouseout) {
         if (NS_OK == GetListenerManager(&manager)) {
           nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-          if (NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, kIDOMMouseListenerIID)) {
+          if (NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, atom, kIDOMMouseListenerIID)) {
             NS_RELEASE(manager);
             return PR_FALSE;
           }
         }
       }
-      else if (propName == "onkeydown" || propName == "onkeyup" || propName == "onkeypress") {
+      else if (atom == nsLayoutAtoms::onkeydown || atom == nsLayoutAtoms::onkeyup || atom == nsLayoutAtoms::onkeypress) {
         if (NS_OK == GetListenerManager(&manager)) {
           nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-          if (NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, kIDOMKeyListenerIID)) {
+          if (NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, atom, kIDOMKeyListenerIID)) {
             NS_RELEASE(manager);
             return PR_FALSE;
           }
         }
       }
-      else if (propName == "onmousemove") {
+      else if (atom == nsLayoutAtoms::onmousemove) {
         if (NS_OK == GetListenerManager(&manager)) {
           nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-          if (NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, kIDOMMouseMotionListenerIID)) {
+          if (NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, atom, kIDOMMouseMotionListenerIID)) {
             NS_RELEASE(manager);
             return PR_FALSE;
           }
         }
       }
-      else if (propName == "onfocus" || propName == "onblur") {
+      else if (atom == nsLayoutAtoms::onfocus || atom == nsLayoutAtoms::onblur) {
         if (NS_OK == GetListenerManager(&manager)) {
           nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-          if (NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, kIDOMFocusListenerIID)) {
+          if (NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, atom, kIDOMFocusListenerIID)) {
             NS_RELEASE(manager);
             return PR_FALSE;
           }
         }
       }
-      else if (propName == "onsubmit" || propName == "onreset" || propName == "onchange" ||
-               propName == "onselect") {
+      else if (atom == nsLayoutAtoms::onsubmit || atom == nsLayoutAtoms::onreset || atom == nsLayoutAtoms::onchange ||
+               atom == nsLayoutAtoms::onselect) {
         if (NS_OK == GetListenerManager(&manager)) {
           nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-          if (NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, kIDOMFormListenerIID)) {
+          if (NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, atom, kIDOMFormListenerIID)) {
             NS_RELEASE(manager);
             return PR_FALSE;
           }
         }
       }
-      else if (propName == "onload" || propName == "onunload" || propName == "onabort" ||
-               propName == "onerror") {
+      else if (atom == nsLayoutAtoms::onload || atom == nsLayoutAtoms::onunload || atom == nsLayoutAtoms::onabort ||
+               atom == nsLayoutAtoms::onerror) {
         if (NS_OK == GetListenerManager(&manager)) {
           nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-          if (NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, kIDOMLoadListenerIID)) {
+          if (NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, atom, kIDOMLoadListenerIID)) {
             NS_RELEASE(manager);
             return PR_FALSE;
           }
         }
       }
-      else if (propName == "onpaint") {
+      else if (atom == nsLayoutAtoms::onpaint) {
         if (NS_OK == GetListenerManager(&manager)) {
           nsIScriptContext *mScriptCX = (nsIScriptContext *)
             JS_GetContextPrivate(aContext);
           if (NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner,
-                                                    kIDOMPaintListenerIID)) {
+                                                            atom, kIDOMPaintListenerIID)) {
             NS_RELEASE(manager);
             return PR_FALSE;
           }
@@ -1305,7 +1307,7 @@ nsGenericElement::AddScriptEventListener(nsIAtom* aAttribute,
             if (NS_OK == receiver->GetListenerManager(&manager)) {
               nsIScriptObjectOwner *mObjectOwner;
               if (NS_OK == global->QueryInterface(kIScriptObjectOwnerIID, (void**)&mObjectOwner)) {
-                ret = manager->AddScriptEventListener(context, mObjectOwner, aAttribute, aValue, aIID);
+                ret = manager->AddScriptEventListener(context, mObjectOwner, aAttribute, aValue, aIID, PR_FALSE);
                 NS_RELEASE(mObjectOwner);
               }
               NS_RELEASE(manager);
@@ -1321,7 +1323,7 @@ nsGenericElement::AddScriptEventListener(nsIAtom* aAttribute,
             if (NS_OK == mContent->QueryInterface(kIScriptObjectOwnerIID,
                                                   (void**) &cowner)) {
               ret = manager->AddScriptEventListener(context, cowner,
-                                                    aAttribute, aValue, aIID);
+                                                    aAttribute, aValue, aIID, PR_TRUE);
               NS_RELEASE(cowner);
             }
             NS_RELEASE(manager);
