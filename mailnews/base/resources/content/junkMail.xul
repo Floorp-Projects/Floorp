@@ -1,17 +1,18 @@
 <?xml version="1.0"?>
 
-<?xml-stylesheet href="chrome://messenger/skin/filterDialog.css" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/messenger.css" type="text/css"?>
+
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <?xul-overlay href="chrome://messenger/content/msgFolderPickerOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/junkMail.dtd">
 
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        xmlns:nc="http://home.netscape.com/NC-rdf#"
+<dialog id="junkMail"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:nc="http://home.netscape.com/NC-rdf#"
         windowtype="mailnews:junk"
         title="&window.title;"
-        width="640" height="470"
         onload="onJunkMailLoad()"
         buttons="accept,cancel,help"
         ondialogaccept="return onAccept();"
@@ -28,19 +29,22 @@
     <button label="&viewLog.label;" accesskey="&viewLog.accesskey;" oncommmand="viewLog()"/>
   </hbox>
 
-  <description value="info1.label;"/>
-  <separator class="thin"/>
-  <description value="info2.label;"/>
-  <separator class="thin"/>
+  <separator/>
+  <description value="&info1.label;"/>
+  <separator/>
+  <description value="&info2.label;"/>
+  <separator/>
 
-  <radiogroup orient="horizontal" id="folderGroup">
-    <radio label="&off.label;"/>
-    <radio label="&lowest.label;/>
-    <radio label="&low.label;"/>
-    <radio label="&medium.label;/>
-    <radio label="&high.label;"/>
-    <radio label="&highest.label;/>
+  <radiogroup id="level" orient="horizontal>
+    <radio id="off" value="0" label="&off.label;"/>
+    <radio id="lowest" value="20" label="&lowest.label;"/>
+    <radio id="low" value="40" label="&low.label;"/>
+    <radio id="medium" value="60" label="&medium.label;"/>
+    <radio id="high" value="80" label="&high.label;"/>
+    <radio id="highest" value="100" label="&highest.label;"/>
   </radiogroup>
+
+  <separator/>
 
   <hbox align="center">
     <checkbox label="&move.label;"/>
@@ -60,4 +64,4 @@
 
 </vbox>
 
-</window>
+</dialog>

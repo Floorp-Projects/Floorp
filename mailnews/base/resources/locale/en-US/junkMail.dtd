@@ -3,8 +3,8 @@
 <!ENTITY account.accesskey "A">
 <!ENTITY viewLog.label "Junk Mail Log">
 <!ENTITY viewLog.accesskey "j">
-<!ENTITY info1.label "Junk Mail Controls evaluate your incoming messages and identify those which are most likely to be &quot;junk&quot.">
-<!ENTITY info2.label "Choose a level of control below.  A high level will identify more junk mai lbyt may identify some valid messages as junk, while a low level will identify less junk mail but is less likely to identify some valid messages as junk.">
+<!ENTITY info1.label "Junk Mail Controls evaluate your incoming messages and identify those which are most likely to be junk.">
+<!ENTITY info2.label "Choose a level of control below.  A high level will identify more junk mail but may identify some valid messages as junk, while a low level will identify less junk mail but is less likely to identify some valid messages as junk.">
 <!ENTITY off.label "Off">
 <!ENTITY off.accesskey "O">
 <!ENTITY lowest.label "Lowest">
