@@ -62,8 +62,6 @@ CPPSRCS = \
 
 EXPORTS = \
 	nsDocument.h \
-	nsSelectionRange.h \
-	nsSelectionPoint.h \
 	nsXIFConverter.h \
 	$(NULL)
 
