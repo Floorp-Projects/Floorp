@@ -1069,20 +1069,20 @@ nsMathMLChar::Paint(nsIPresContext*      aPresContext,
     if (eMathMLChar_DONT_STRETCH == mEnum || NS_STRETCH_DIRECTION_UNSUPPORTED == mDirection) {
       // normal drawing if there is nothing special about this char ...
       //printf("Painting %04X like a normal char\n", mData[0]);
-aRenderingContext.SetColor(NS_RGB(255,0,0));
+//aRenderingContext.SetColor(NS_RGB(255,0,0));
       aRenderingContext.DrawString(mData.GetUnicode(), PRUint32(mData.Length()), 
                                    mRect.x, 
                                    mRect.y - (fontAscent - mBoundingMetrics.ascent));
     }
     else if (0 < mGlyph) { // wow, there is a glyph of appropriate size!
      //printf("Painting %04X with a glyph of appropriate size\n", mData[0]);
-aRenderingContext.SetColor(NS_RGB(0,0,255));
+//aRenderingContext.SetColor(NS_RGB(0,0,255));
       mGlyphTable->DrawGlyph(aRenderingContext, mGlyph,
                              mRect.x,
                              mRect.y - (fontAscent - mBoundingMetrics.ascent));
     }
     else { // paint by parts
-aRenderingContext.SetColor(NS_RGB(0,255,0));
+//aRenderingContext.SetColor(NS_RGB(0,255,0));
       if (NS_STRETCH_DIRECTION_VERTICAL == mDirection)
         return PaintVertically(aPresContext, aRenderingContext, fontAscent,
                                mStyleContext, mGlyphTable, mEnum, mRect);
