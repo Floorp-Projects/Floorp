@@ -13,7 +13,7 @@
 
   <script language="javascript">
   <![CDATA[
-    var _elementIDs = ["padCheck", "dirCheck", "showDialogForMultipleMatches", "useAddress"];
+    var _elementIDs = ["padCheck", "dirCheck", "showDialogForMultipleMatches", "useAddress", "emailCollection"];
   ]]>
   </script>  
     
@@ -47,5 +47,13 @@
     <checkbox id="useAddress" value="&useAddress.label;" accesskey="&useAddress.accesskey;"/>
 	
   </titledbox>
+
+	<titledbox orient="vertical">
+    <title><text value="&emailCollectiontitle.label;"/></title>
+	<html>&emailCollectiontext.label;</html>
+		<checkbox id="emailCollection" value="&emailCollectionenable.label;"
+              pref="true" preftype="bool" prefstring="mail.collect_email_address"
+              prefattribute="checked"/>
+	</titledbox>
 
 </window>

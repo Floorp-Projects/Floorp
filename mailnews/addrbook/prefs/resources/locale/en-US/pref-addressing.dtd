@@ -35,4 +35,7 @@ Rights Reserved.
 <!ENTITY oneMatch.label         "If there is one match in your personal address books:">
 <!ENTITY useAddress.label       "Use the address and do not search in the directory">
 <!ENTITY useAddress.accesskey   "u">
+<!ENTITY emailCollectiontitle.label	"Email Address Collection">
+<!ENTITY emailCollectiontext.label	"Email Address Collection saves the email addresses from your incoming and/or outgoing mail and stores them in a local address book, Collected Addresses.">
+<!ENTITY emailCollectionenable.label	"Enable Email Address Collection">
 
