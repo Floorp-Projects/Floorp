@@ -47,26 +47,6 @@
 .timepicker-text-class {
 }
 
-.timepicker-button-class {
-  background-image : url("chrome://calendar/skin/datetimepickers/clock_up.gif");
-  background-repeat: no-repeat;
-  background-position : left center;
-}
-.timepicker-button-class[disabled="true"],
-.timepicker-button-class[disabled="true"]:hover,
-.timepicker-button-class[disabled="true"]:hover:active {
-  background-image: url("chrome://calendar/skin/datetimepickers/clock_disabled.gif");
-}
-.timepicker-button-class:hover {
-  background-image: url("chrome://calendar/skin/datetimepickers/clock_hover.png");
-}
-.timepicker-button-class:hover:active {
-  background-image: url("chrome://calendar/skin/datetimepickers/clock_down.png");
-}
-.menu-right {
-  visibility : hidden;
-}
-
 /*-------------------------------------------------------------------
  *   popup (from timepicker/timepicker.css
  *-------------------------------------------------------------------*/
