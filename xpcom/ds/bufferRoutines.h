@@ -183,8 +183,7 @@ void CopyChars1To1(char* aDest,PRInt32 anDestOffset,const char* aSource,PRUint32
     to++;
     first++;
   }
-  *to=0;
-}
+} 
 
 /**
  * Going 1 to 2 requires a conversion from ascii to unicode. This can be expensive.
@@ -207,9 +206,8 @@ void CopyChars1To2(char* aDest,PRInt32 anDestOffset,const char* aSource,PRUint32
     to++;
     first++;
   }
-  *to=0;
 }
-
+ 
 
 /**
  * Going 2 to 1 requires a conversion from unicode down to ascii. This can be lossy.
@@ -234,7 +232,6 @@ void CopyChars2To1(char* aDest,PRInt32 anDestOffset,const char* aSource,PRUint32
     to++;
     first++;
   }
-  *to=0;
 }
 
 /**
