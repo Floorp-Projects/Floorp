@@ -1552,26 +1552,25 @@ NS_IMETHODIMP nsLocalFile::Reveal()
   err = ::FindRunningAppBySignature ('MACS', process);
   if (err == noErr) { 
     err = ::AECreateDesc(typeProcessSerialNumber, (Ptr)&process, sizeof(process), &myAddressDesc);
-    if (err == noErr)
-    {
+    if (err == noErr) {
       // Create the FinderEvent
       err = ::AECreateAppleEvent(kAEMiscStandards, kAEMakeObjectsVisible, &myAddressDesc,
                         kAutoGenerateReturnID, kAnyTransactionID, &aeEvent);   
       if (err == noErr) {
         // Create the file list
         err = ::AECreateList(nil, 0, false, &fileList);
-        if (err == noErr) 
-        {
-          err = ::AEPutPtr(&fileList, 0, typeFSRef, &fsRefToReveal, sizeof(FSRef));
-          if (err == noErr)
-          {
-            err = ::AEPutParamDesc(&aeEvent, keyDirectObject, &fileList);
-
-            if (err == noErr)
-            {
-              err = ::AESend(&aeEvent, &aeReply, kAENoReply, kAENormalPriority, kAEDefaultTimeout, nil, nil);
-              if (err == noErr)
-                ::SetFrontProcess(&process);
+        if (err == noErr) {
+          FSSpec fsSpecToReveal;
+          err = ::FSRefMakeFSSpec(&fsRefToReveal, &fsSpecToReveal);
+          if (err == noErr) {
+            err = ::AEPutPtr(&fileList, 0, typeFSS, &fsSpecToReveal, sizeof(FSSpec));
+            if (err == noErr) {
+              err = ::AEPutParamDesc(&aeEvent, keyDirectObject, &fileList);
+              if (err == noErr) {
+                err = ::AESend(&aeEvent, &aeReply, kAENoReply, kAENormalPriority, kAEDefaultTimeout, nil, nil);
+                if (err == noErr)
+                  ::SetFrontProcess(&process);
+              }
             }
           }
         }
