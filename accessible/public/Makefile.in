@@ -32,10 +32,18 @@ XPIDL_MODULE= accessibility
 XPIDLSRCS = \
       nsIAccessibilityService.idl \
       nsIAccessible.idl \
+      nsIAccessibleAction.idl \
       nsIAccessibleDocument.idl \
+      nsIAccessibleEditableText.idl \
       nsIAccessibleEventReceiver.idl \
       nsIAccessibleEventListener.idl \
       nsIAccessibleSelectable.idl    \
+      nsIAccessibleSelection.idl \
+      nsIAccessibleHyperLink.idl \
+      nsIAccessibleHyperText.idl \
+      nsIAccessibleTable.idl \
+      nsIAccessibleText.idl \
+      nsIAccessibleValue.idl \
       nsIAccessibleProvider.idl \
       $(NULL)
 
