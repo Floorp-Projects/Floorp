@@ -51,6 +51,9 @@ lm_DOMInitElement(MochaDecoder *decoder);
 JSBool
 lm_DOMInitAttribute(MochaDecoder *decoder);
 
+void
+lm_DestroyDocumentNodes(MWContext *context);
+
 #endif /* DOM */
 
 #endif /* LM_DOM_H */

@@ -103,42 +103,71 @@ static JSBool
 lm_DOMSetAttributes(JSContext *cx, DOM_Element *element, const char *name,
                     const char *value)
 {
-    JSBool ok = JS_FALSE;
+    JSBool matched = JS_FALSE;
     MochaDecoder *decoder;
     MWContext *context;
     DOM_HTMLElementPrivate *priv;
-    LO_Element *ele;
+    void *ele1, *ele2;
 
     decoder = (MochaDecoder *)JS_GetPrivate(cx, JS_GetGlobalObject(cx));
     context = decoder->window_context;
     priv = (DOM_HTMLElementPrivate *)element->node.data;
 
     switch(priv->tagtype) {
-      case P_TABLE_DATA: {
-        lo_TableCell *cell;
-        cell = (lo_TableCell *)priv->ele_start;
-        ele = (LO_Element *)cell;
-        if (!XP_STRCASECMP("valign", name)) {
-            /* tweak vert alignment */
-        } else if (!XP_STRCASECMP("halign", name)) {
-            /* tweak horiz alignment */
-        } else if (!XP_STRCASECMP("bgcolor", name)) {
-            /* tweak bgcolor */
+      case P_TABLE_DATA:
+        if (!XP_STRCASECMP("valign", name) ||
+            !XP_STRCASECMP("halign", name) ||
+            !XP_STRCASECMP("bgcolor", name)) {
+            ele1 = priv->ele_start;
+            matched = JS_TRUE;
         }
-        ok = JS_TRUE;
-      }
-      default:
-        ok = JS_FALSE;
+        break;
+      default:;
     }
 
-    if (ok)
-        ET_DOMReflow(context, ele, PR_TRUE, decoder->doc_id);
+    if (!matched) {
+        DOM_SignalException(cx, DOM_INVALID_NAME_ERR);
+        return JS_FALSE;
+    }
 
-    return ok;
+    ET_DOMSetAttributes(context, priv->tagtype, ele1, ele2,
+                        name, value, decoder->doc_id);
+
+    return JS_TRUE;
+}
+
+static void
+lm_BreakLayoutNodeLinkRecurse(DOM_Node *node)
+{
+    DOM_HTMLElementPrivate *priv;
+    if (node->type == NODE_TYPE_TEXT ||
+        node->type == NODE_TYPE_ELEMENT) {
+        priv = (DOM_HTMLElementPrivate *)node->data;
+        if (priv)
+            priv->ele_start = priv->ele_end = NULL;
+    }
+
+    for (node = node->child; node; node = node->sibling)
+        lm_BreakLayoutNodeLinkRecurse(node);
+}
+
+void
+lm_DestroyDocumentNodes(MWContext *context)
+{
+    JSContext *cx;
+    lo_TopState *top;
+    cx = context->mocha_context;
+    top = lo_FetchTopState(context->doc_id);
+
+    /* XXX LO_LockLayout(); */
+    lm_BreakLayoutNodeLinkRecurse(top->top_node);
+    /* XXX LO_UnlockLayout(); */    
+    DOM_DestroyTree(cx, top->top_node);
+
 }
 
 DOM_ElementOps lm_ElementOps = {
-    DOM_SetAttributeStub, DOM_GetAttributeStub, DOM_GetNumAttrsStub
+    lm_DOMSetAttributes, DOM_GetAttributeStub, DOM_GetNumAttrsStub
 };
 
 /*
@@ -201,7 +230,6 @@ lm_NodeForTag(PA_Tag *tag, DOM_Node *current, MWContext *context, int16 csid)
     DOM_Node *node;
     DOM_Element *element;
     DOM_HTMLElementPrivate *elepriv;
-    DOM_CharacterData *cdata;
 
     if (current->type == NODE_TYPE_TEXT)
         /*
@@ -215,19 +243,10 @@ lm_NodeForTag(PA_Tag *tag, DOM_Node *current, MWContext *context, int16 csid)
         if (current->type != NODE_TYPE_ELEMENT)
             return NULL;
         /* create Text node */
-        node = (DOM_Node *)XP_NEW_ZAP(DOM_Text);
-        node->type = NODE_TYPE_TEXT;
-        node->name = XP_STRDUP("#text");
-        node->ops = &lm_NodeOps;
-        cdata = (DOM_CharacterData *)node;
-        cdata->len = tag->data_len;
-        cdata->data = XP_ALLOC(tag->data_len);
-        cdata->notify = lm_CDataOp;
-        if (!cdata->data) {
-            XP_FREE(node);
+        node = (DOM_Node *)DOM_NewText((char *)tag->data, tag->data_len,
+                                       lm_CDataOp, &lm_NodeOps);
+        if (!node)
             return NULL;
-        }
-        XP_MEMCPY(cdata->data, tag->data, cdata->len);
         break;
 #if 0                           /* Urgh...we don't reflect comments! */
       case P_COMMENT:

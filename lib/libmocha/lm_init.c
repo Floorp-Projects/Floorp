@@ -21,6 +21,9 @@
  * Brendan Eich, 9/8/95
  */
 #include "lm.h"
+#ifdef DOM
+#include "lm_dom.h"
+#endif
 #include "xp.h"
 #include "net.h"
 #include "structs.h"
@@ -1514,6 +1517,14 @@ lm_SendEvent(MWContext *context, JSObject *obj, JSEvent *event, jsval *result)
     argv[0] = OBJECT_TO_JSVAL(eventObj);
     ok = lm_FindEventHandler(context, obj, eventObj, funval, result);
 
+#ifdef DOM
+    /* when firing the onUnload event, destroy the node tree afterwards */
+    if (event->type == EVENT_UNLOAD) {
+        /* XXX should we run GC before, to clean up reflections? */
+        lm_DestroyDocumentNodes(context);
+    }
+#endif
+
 out:
     LM_PutMochaDecoder(decoder);
     return ok;
@@ -1860,6 +1871,8 @@ lm_ClearDecoderStream(MochaDecoder *decoder, JSBool fromDiscard)
     return(stream);
 }
 
+#ifndef DOM
+/* XXX believe that this is dead code, can I remove it? */
 PRIVATE void
 LM_ClearContextStream(MWContext *context)
 {
@@ -1878,6 +1891,7 @@ LM_ClearContextStream(MWContext *context)
     lm_ClearDecoderStream(decoder, JS_FALSE);
     LM_PutMochaDecoder(decoder);
 }
+#endif
 
 JSBool
 lm_SaveParamString(JSContext *cx, PA_Block *bp, const char *str)
