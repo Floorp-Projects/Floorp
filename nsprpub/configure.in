@@ -2256,6 +2256,7 @@ lib/ds/Makefile
 lib/libc/Makefile 
 lib/libc/include/Makefile 
 lib/libc/src/Makefile 
+lib/tests/Makefile
 pr/Makefile 
 pr/include/Makefile 
 pr/include/md/Makefile 

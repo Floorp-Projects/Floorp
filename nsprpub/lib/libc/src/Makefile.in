@@ -57,6 +57,7 @@ CSRCS =\
 	strpbrk.c \
 	strstr.c  \
 	strcstr.c \
+	strtok.c  \
 	base64.c \
 	plerror.c \
 	plgetopt.c \

@@ -3003,6 +3003,59 @@ PRBool test_030(void)
     return PR_TRUE;
 }
 
+/* PL_strtok_r */
+PRBool test_031(void)
+{
+    static const char *tokens[] = {
+        "wtc", "relyea", "nelsonb", "jpierre", "nicolson",
+        "ian.mcgreer", "kirk.erickson", "sonja.mirtitsch", "mhein"
+    };
+
+    static const char *seps[] = {
+        ", ", ",", " ", "\t", ",,,", " ,", "    ", " \t\t", ","
+    };
+
+    static const char s2[] = ", \t";
+
+    char string[ 1024 ];
+    char *s1;
+    char *token;
+    char *lasts;
+    unsigned int i;
+
+    printf("Test 031 (PL_strtok_r)    ..."); fflush(stdout);
+
+    /* Build the string. */
+    string[0] = '\0';
+    for( i = 0; i < sizeof(tokens)/sizeof(tokens[0]); i++ )
+    {
+        PL_strcat(string, tokens[i]);
+        PL_strcat(string, seps[i]);
+    }
+    
+    /* Scan the string for tokens. */
+    i = 0;
+    s1 = string;
+    while( (token = PL_strtok_r(s1, s2, &lasts)) != NULL)
+    {
+        if( strcmp(token, tokens[i]) != 0 )
+        {
+            printf("FAIL wrong token scanned\n");
+            return PR_FALSE;
+        }
+        i++;
+        s1 = NULL;
+    }
+    if( i != sizeof(tokens)/sizeof(tokens[0]) )
+    {
+        printf("FAIL wrong number of tokens scanned\n");
+        return PR_FALSE;
+    }
+
+    printf("PASS\n");
+    return PR_TRUE;
+}
+
 int
 main
 (
@@ -3044,6 +3097,7 @@ main
         && test_028()
         && test_029()
         && test_030()
+        && test_031()
       )
     {
         printf("Suite passed.\n");
