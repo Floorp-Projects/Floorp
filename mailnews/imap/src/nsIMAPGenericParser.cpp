@@ -491,7 +491,7 @@ char *nsIMAPGenericParser::CreateQuoted(PRBool /*skipToEnd*/)
 //			fCurrentTokenPlaceHolder -= charDiff;
 //			if (!nsCRT::strcmp(fCurrentTokenPlaceHolder, CRLF))
 //				fAtEndOfLine = PR_TRUE;
-			AdvanceTokenizerStartingPoint ((fNextToken - fLineOfTokens) + returnString.Length() + 2);
+			AdvanceTokenizerStartingPoint ((fNextToken - fLineOfTokens) + nsCRT::strlen(returnString) + 2);
 			if (!nsCRT::strcmp(fLineOfTokens, CRLF))
 				fAtEndOfLine = PR_TRUE;
 		}
