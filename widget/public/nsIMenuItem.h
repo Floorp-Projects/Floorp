@@ -48,29 +48,9 @@ class nsIMenuItem : public nsISupports {
     * Creates the MenuItem
     *
     */
-    NS_IMETHOD Create(nsIMenu        *aParent, 
-                      const nsString &aLabel, 
-                      PRBool         isSeparator) = 0;
-    
-   /**
-    * Creates the MenuItem
-    *
-    */
-    NS_IMETHOD Create(nsIPopUpMenu   *aParent, 
-                      const nsString &aLabel,  
-                      PRUint32        aCommand) = 0;
-    
-   /**
-    * Creates the MenuItem as a Separator
-    *
-    */
-    NS_IMETHOD Create(nsIMenu *aParent) = 0;
-    
-   /**
-    * Creates the MenuItem as a Separator
-    *
-    */
-    NS_IMETHOD Create(nsIPopUpMenu *aParent) = 0;
+    NS_IMETHOD Create(nsISupports    * aParent, 
+                      const nsString & aLabel, 
+                      PRBool           isSeparator) = 0;
     
    /**
     * Get the MenuItem label

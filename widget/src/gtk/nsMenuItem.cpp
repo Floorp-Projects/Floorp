@@ -203,7 +203,7 @@ nsIWidget * nsMenuItem::GetMenuBarParent(nsISupports * aParent)
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD nsMenuItem::Create(nsIMenu        * aParent, 
+NS_METHOD nsMenuItem::Create(nsISupports    * aParent, 
                              const nsString & aLabel, 
                              PRBool           aIsSeparator)
                             
@@ -212,8 +212,12 @@ NS_METHOD nsMenuItem::Create(nsIMenu        * aParent,
     return NS_ERROR_FAILURE;
   }
 
-  mMenuParent = aParent;
-
+  if(aParent){
+    nsIMenu * menu;
+    aParent->QueryInterface(kIMenuIID, (void**) &menu);
+    mMenuParent = menu;
+    NS_RELEASE(menu);
+  }
   nsIWidget   * widget  = nsnull; // MenuBar's Parent
   nsISupports * sups;
   if (NS_OK == aParent->QueryInterface(kISupportsIID,(void**)&sups)) {
