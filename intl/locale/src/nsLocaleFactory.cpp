@@ -110,6 +110,13 @@ nsLocaleFactory::NewLocale(const nsString* localeName, nsILocale** locale)
 	NS_ASSERTION(newLocale!=NULL,"nsLocaleFactory: failed to create nsLocale");
 	newLocale->AddRef();
 
+	//
+	// delete temporary strings
+	//
+	for(i=0;i<6;i++)
+		delete valueList[i];
+	delete [] valueList;
+
 	*locale = (nsILocale*)newLocale;
 
 	return NS_OK;
