@@ -1399,7 +1399,7 @@ nsXULOutlinerBuilder::CompareMatches(nsTemplateMatch* aLeft, nsTemplateMatch* aR
         if (rindex < 0)
             return 0;
 
-        return rindex - lindex;
+        return lindex - rindex;
     }
 
     // If we get here, then an ascending or descending sort order is
@@ -1448,7 +1448,7 @@ nsXULOutlinerBuilder::CompareMatches(nsTemplateMatch* aLeft, nsTemplateMatch* aR
                 r->GetValue(&rdate);
 
                 PRInt64 delta;
-                LL_SUB(delta, rdate, ldate);
+                LL_SUB(delta, ldate, rdate);
 
                 if (LL_IS_ZERO(delta))
                     result = 0;
@@ -1472,7 +1472,7 @@ nsXULOutlinerBuilder::CompareMatches(nsTemplateMatch* aLeft, nsTemplateMatch* aR
                 l->GetValue(&lval);
                 r->GetValue(&rval);
 
-                result = rval - lval;
+                result = lval - rval;
 
                 return result * mSortDirection;
             }
