@@ -209,7 +209,7 @@ TestListener::IOThread( void *p ) {
 
             // Read the channel.
             printf( "Doing AsyncRead...\n" );
-            nsresult rv = channel->AsyncRead( 0, -1, 0, testListener );
+            nsresult rv = channel->AsyncRead( testListener, 0 );
 
             if ( NS_SUCCEEDED( rv ) ) {
                 printf( "...AsyncRead completed OK\n" );
