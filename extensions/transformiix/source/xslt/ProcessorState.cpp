@@ -50,14 +50,14 @@
 
 DHASH_WRAPPER(txLoadedDocumentsBase, txLoadedDocumentEntry, nsAString&)
 
-txLoadedDocumentsHash::txLoadedDocumentsHash(Document* aSourceDocument,
-                                             Document* aStyleDocument)
-     : mSourceDocument(aSourceDocument),
-       mStyleDocument(aStyleDocument)
+nsresult txLoadedDocumentsHash::init(Document* aSourceDocument,
+                                     Document* aStyleDocument)
 {
-    if (NS_FAILED(Init(8))) {
-        return;
-    }
+    nsresult rv = Init(8);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mSourceDocument = aSourceDocument;
+    mStyleDocument = aStyleDocument;
 
     if (mSourceDocument) {
         Add(mSourceDocument);
@@ -122,21 +122,29 @@ Document* txLoadedDocumentsHash::Get(const nsAString& aURI)
 /**
  * Creates a new ProcessorState for the given XSL document
 **/
-ProcessorState::ProcessorState(Document* aSourceDocument,
-                               Document* aXslDocument)
+ProcessorState::ProcessorState(Node* aSourceNode, Document* aXslDocument)
     : mOutputHandler(0),
       mResultHandler(0),
       mOutputHandlerFactory(0),
-      mLoadedDocuments(aSourceDocument, aXslDocument),
       mXslKeys(MB_TRUE),
       mDecimalFormats(MB_TRUE),
       mEvalContext(0),
       mLocalVariables(0),
       mGlobalVariableValues(MB_TRUE),
-      mRTFDocument(0)
+      mRTFDocument(0),
+      mSourceNode(aSourceNode)
 {
-    NS_ASSERTION(aSourceDocument, "missing source document");
+    NS_ASSERTION(aSourceNode, "missing source node");
     NS_ASSERTION(aXslDocument, "missing xslt document");
+
+    Document* sourceDoc;
+    if (mSourceNode->getNodeType() == Node::DOCUMENT_NODE) {
+        sourceDoc = (Document*)mSourceNode;
+    }
+    else {
+        sourceDoc = mSourceNode->getOwnerDocument();
+    }
+    mLoadedDocuments.init(sourceDoc, aXslDocument);
 
     /* turn object deletion on for some of the Maps (NamedMap) */
     mExprHashes[SelectAttr].setOwnership(Map::eOwnsItems);
@@ -1068,7 +1076,7 @@ nsresult ProcessorState::getVariable(PRInt32 aNamespace, nsIAtom* aLName,
     // Set up the state we have at the beginning of the transformation
     txVariableMap *oldVars = mLocalVariables;
     mLocalVariables = 0;
-    txSingleNodeContext evalContext(mLoadedDocuments.mSourceDocument, this);
+    txSingleNodeContext evalContext(mSourceNode, this);
     txIEvalContext* priorEC = setEvalContext(&evalContext);
     // Compute the variable value
     globVar->mFlags = GlobalVariableValue::evaluating;

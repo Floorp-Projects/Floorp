@@ -62,8 +62,8 @@ DECL_DHASH_WRAPPER(txLoadedDocumentsBase, txLoadedDocumentEntry, nsAString&)
 class txLoadedDocumentsHash : public txLoadedDocumentsBase
 {
 public:
-    txLoadedDocumentsHash(Document* aSourceDocument, Document* aStyleDocument);
     ~txLoadedDocumentsHash();
+    nsresult init(Document* aSourceDocument, Document* aStyleDocument);
     void Add(Document* aDocument);
     Document* Get(const nsAString& aURI);
 
@@ -83,8 +83,7 @@ public:
      * Creates a new ProcessorState for the given XSL document
      * And result Document
      */
-    ProcessorState(Document* aSourceDocument,
-                   Document* aXslDocument);
+    ProcessorState(Node* aSourceNode, Document* aXslDocument);
 
     /**
      * Destroys this ProcessorState
@@ -498,6 +497,11 @@ private:
      * Document used to create RTFs
      */
     Document* mRTFDocument;
+    
+    /**
+     * Source-node where processing started
+     */
+    Node* mSourceNode;
 };
 
 /**
