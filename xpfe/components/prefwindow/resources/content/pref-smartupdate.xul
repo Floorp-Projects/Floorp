@@ -17,24 +17,24 @@
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="return StartUp('smartupdate');"
-        title="&title.label;">
+        align="vertical" 
+	title="&title.label;">
 
   <html:script language="JavaScript" src="chrome://pref/content/PrefsWindow.js">
   </html:script>
 
  	<box align="vertical">
- 	  <box id="header" align="vertical">  
-	    <spring style="width:20px"/>
-		    <html:div>
-		      <html:B>&header;</html:B>
-		    </html:div>
-	  </box>
-
-    <box align="vertical">
-      <spring style="height:20px"/>
-    </box>
-
+ 	  <box id="header" align="horizontal">  
+		  <spring style="width:20px"/>
+		  <html:div style="vertical-align: middle;">
+		  <html:B>&header;</html:B>
+		  </html:div>
+   		  <spring flex="100%"/><spring style="width:60px"/>
+		  <html:div ></html:div><spring style="width:5px"/>
+	</box>
+	
 	  <box align="vertical">
+	  <html:fieldset style="width: 100%;">
       <box align="horizontal">
 			  <html:input type="checkbox" id="pref:0:bool:autoupdate.enabled" />
 			  <html:label for="pref:0:bool:autoupdate.enabled">
@@ -48,34 +48,16 @@
   			  &requireConfirmation.label;
 			  </html:label>
 	    </box>
-
-      <spring style="height:20px"/>
-
-      <box align="vertical">
-        <html:div>
-          &selectUninstall.label;
-        </html:div>
-      </box>
-
-      <spring style="height:10px"/>
-
+	</html:fieldset>
+	  <html:fieldset style="width: 100%;">
       <box align="horizontal">
-        <box>
-        <html:table>
-          <html:tr><html:td>
-            <html:textarea name="textstyle" ROWS="2" COLS="30" id="pref:string:browser.related.disabledForDomains">
+	   &selectUninstall.label;
+            <html:textarea name="textstyle" ROWS="10" COLS="30" id="pref:string:browser.related.disabledForDomains">
             </html:textarea>
-          </html:td></html:tr>
-        </html:table>
-        </box>
-        <box align="vertical">
           <spring flex="15%"/>
-		      <titledbutton id="pref:0:bool:smartupdate" value="&uninstallButton.label;" style="height:20px;" />
-        </box>
-      </box>
-
-
-
+          <titledbutton id="pref:0:bool:smartupdate" value="&uninstallButton.label;" style="height:20px;" />
+	  </box>
+	  </html:fieldset>
     </box>
   </box>
 

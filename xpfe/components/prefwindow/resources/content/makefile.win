@@ -35,7 +35,7 @@ install::
 	$(MAKE_INSTALL) pref-publish.xul  $(DIST)\bin\chrome\pref\content\default
 	$(MAKE_INSTALL) pref-select.html  $(DIST)\bin\chrome\pref\content\default
 	$(MAKE_INSTALL) pref-smart_browsing.xul  $(DIST)\bin\chrome\pref\content\default
-	$(MAKE_INSTALL) pref-smartupdate.html  $(DIST)\bin\chrome\pref\content\default
+	$(MAKE_INSTALL) pref-smartupdate.xul  $(DIST)\bin\chrome\pref\content\default
 	$(MAKE_INSTALL) PrefsWindow.html  $(DIST)\bin\chrome\pref\content\default
 	$(MAKE_INSTALL) PrefsWindow.js  $(DIST)\bin\chrome\pref\content\default
 	$(MAKE_INSTALL) PrefsWindow.xul  $(DIST)\bin\chrome\pref\content\default

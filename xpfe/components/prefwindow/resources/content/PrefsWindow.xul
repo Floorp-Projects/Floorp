@@ -34,20 +34,15 @@
 <html:div flex="100%">
 &categoryHeader;
 <html:br />
-<html:iframe name="preftree" id="preftree" src="preftree.xul" scrolling="auto" resize="yes" width="72%" height="326"/>
+<html:iframe name="preftree" id="preftree" src="preftree.xul" scrolling="auto" resize="yes" width="72%" height="356"/>
 <html:iframe name="pref-appearance" id="pref-appearance"
-	src="pref-appearance.xul" width="72%" height="326" resize="yes" scrolling="auto"/>
-<html:table border="0" width="100%" cellpadding="0" cellspacing="0">
-	<html:tr>
-		<html:td valign="right" width="200">
-			<html:center>					
+	src="pref-appearance.xul" width="72%" height="356" resize="yes" scrolling="auto"/>
+<box>
+   <spring flex="100%" />
 				<titledbutton align="bottom" value="&helpButton.label;" />				
 				<titledbutton align="bottom" value="&cancelButton.label;" onclick="prefwindow.cancelPrefs();" />				
 				<titledbutton align="bottom" value="&okButton.label;" onclick="prefwindow.savePrefs();" />
-			 </html:center>	  
-		  </html:td>
-	  </html:tr>
-</html:table>
+</box>
 </html:div>
 </xul:window>
 
