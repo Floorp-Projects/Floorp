@@ -202,9 +202,9 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
       result = ::GetSaveFileName(&ofn);
       if (!result) {
         // Error, find out what kind.
-        DWORD error = ::GetLastError();
-        if (error == ERROR_INVALID_PARAMETER) {
-          // Parameter error; probably the default file name is too long.
+        if (::GetLastError() == ERROR_INVALID_PARAMETER ||
+            ::CommDlgExtendedError() == FNERR_INVALIDFILENAME) {
+          // probably the default file name is too long or contains illegal characters!
           // Try again, without a starting file name.
           ofn.lpstrFile[0] = 0;
           result = ::GetSaveFileName(&ofn);
@@ -322,6 +322,32 @@ NS_IMETHODIMP nsFilePicker::GetFileURL(nsIFileURL **aFileURL)
 NS_IMETHODIMP nsFilePicker::SetDefaultString(const PRUnichar *aString)
 {
   mDefault = aString;
+
+  //First, make sure the file name is not too long!
+  PRInt32 nameLength;
+  PRInt32 nameIndex = mDefault.RFind("\\");
+  if (nameIndex == kNotFound)
+    nameIndex = 0;
+  else
+    nameIndex ++;
+  nameLength = mDefault.Length() - nameIndex;
+  
+  if (nameLength > _MAX_FNAME) {
+    PRInt32 extIndex = mDefault.RFind(".");
+    if (extIndex == kNotFound)
+      extIndex = mDefault.Length();
+
+    //Let's try to shave the needed characters from the name part
+    PRInt32 charsToRemove = nameLength - _MAX_FNAME;
+    if (extIndex - nameIndex >= charsToRemove) {
+      mDefault.Cut(extIndex - charsToRemove, charsToRemove);
+    }
+  }
+
+  //Then, we need to replace illegal characters.
+  //At this stage, we cannot replace the backslash as the string might represent a file path.
+  mDefault.ReplaceChar(FILE_ILLEGAL_CHARACTERS, '-');
+
   return NS_OK;
 }
 
