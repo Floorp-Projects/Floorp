@@ -37,7 +37,7 @@ class nsStackFrame : public nsBoxFrame
 {
 public:
 
-  friend nsresult NS_NewStackFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+  friend nsresult NS_NewStackFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, nsIBoxLayout* aLayout = nsnull);
 
   NS_IMETHOD GetFrameName(nsString& aResult) const
   {
@@ -68,6 +68,9 @@ private:
                                          const nsRect& aRect,
                                          const nsPoint& aPoint, 
                                          nsIFrame**     aFrame);
+
+  nsStackFrame(nsIPresShell* aPresShell, nsIBoxLayout* aLayout = nsnull);
+
 protected:
 
   nsStackFrame(nsIPresShell* aPresShell);

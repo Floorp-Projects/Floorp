@@ -155,17 +155,21 @@ nsTabFrame::GetChildWithTag(nsIAtom* atom, nsCOMPtr<nsIContent> start, nsCOMPtr<
 nsresult
 nsTabFrame::GetTabControl(nsCOMPtr<nsIContent> content, nsCOMPtr<nsIContent>& tabcontrol)
 {
-   while(nsnull != content)
-   {
-      content->GetParent(*getter_AddRefs(content));
+   nsCOMPtr<nsIContent> parent;
 
-      if (content) {
+   while(content != nsnull)
+   {
+      content->GetParent(*getter_AddRefs(parent));
+
+      if (parent) {
         nsCOMPtr<nsIAtom> atom;
-        if (content->GetTag(*getter_AddRefs(atom)) == NS_OK && atom.get() == nsXULAtoms::tabcontrol) {
-           tabcontrol = content;
+        if (parent->GetTag(*getter_AddRefs(atom)) == NS_OK && atom.get() == nsXULAtoms::tabcontrol) {
+           tabcontrol = parent;
            return NS_OK;
         }
       }
+
+      content = parent;
    }
 
    tabcontrol = nsnull;

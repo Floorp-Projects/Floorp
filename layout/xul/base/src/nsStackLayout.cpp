@@ -46,7 +46,17 @@
 #include "nsBoxLayoutState.h"
 #include "nsIBox.h"
 
-nsStackLayout::nsStackLayout(nsIPresShell* aPresShell)
+nsCOMPtr<nsIBoxLayout> nsStackLayout::gInstance = new nsStackLayout();
+
+nsresult
+NS_NewStackLayout( nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout)
+{
+  // we have not instance variables so just return our static one.
+  aNewLayout = nsStackLayout::gInstance;
+  return NS_OK;
+} 
+
+nsStackLayout::nsStackLayout()
 {
 }
 

@@ -47,16 +47,15 @@
 #include "nsStackLayout.h"
 
 nsresult
-NS_NewDeckFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
+NS_NewDeckFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, nsIBoxLayout* aLayoutManager)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsDeckFrame* it = new (aPresShell) nsDeckFrame(aPresShell);
+  nsDeckFrame* it = new (aPresShell) nsDeckFrame(aPresShell, aLayoutManager);
   if (nsnull == it)
     return NS_ERROR_OUT_OF_MEMORY;
-
 
   *aNewFrame = it;
   return NS_OK;
@@ -66,12 +65,16 @@ NS_NewDeckFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
 
 nsCOMPtr<nsIBoxLayout> nsDeckFrame::gLayout = nsnull;
 
-nsDeckFrame::nsDeckFrame(nsIPresShell* aPresShell):nsBoxFrame(aPresShell)
+nsDeckFrame::nsDeckFrame(nsIPresShell* aPresShell, nsIBoxLayout* aLayoutManager):nsBoxFrame(aPresShell)
 {
-  if (!gLayout)
-    gLayout = new nsStackLayout(aPresShell);
+     // if no layout manager specified us the static sprocket layout
+  nsCOMPtr<nsIBoxLayout> layout = aLayoutManager;
 
-  SetLayoutManager(gLayout);
+  if (layout == nsnull) {
+    NS_NewStackLayout(aPresShell, layout);
+  }
+
+  SetLayoutManager(layout);
 }
 
 NS_IMETHODIMP

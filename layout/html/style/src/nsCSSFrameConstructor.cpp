@@ -157,23 +157,9 @@ nsresult
 NS_NewGfxListControlFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 #endif
 
-// grid
-
-/*
-nsresult
-NS_NewGridFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 
 nsresult
-NS_NewTempleFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsHorizontal);
-
-nsresult
-NS_NewObeliskFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsHorizontal);
-
-// end grid
-*/
-
-nsresult
-NS_NewRootBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
+NS_NewRootBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
 nsresult
 NS_NewThumbFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
@@ -188,13 +174,13 @@ nsresult
 NS_NewTabFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 
 nsresult
-NS_NewDeckFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
+NS_NewDeckFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, nsIBoxLayout* aLayoutManager = nsnull);
 
 nsresult
 NS_NewSpringFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 
 nsresult
-NS_NewStackFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
+NS_NewStackFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, nsIBoxLayout* aLayoutManager = nsnull);
 
 nsresult
 NS_NewProgressMeterFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
@@ -216,9 +202,6 @@ NS_NewTitledBoxInnerFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 
 nsresult
 NS_NewTitleFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
-
-nsresult
-NS_NewBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot);
 
 nsresult
 NS_NewButtonBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame);
@@ -261,6 +244,18 @@ NS_NewMenuFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRUint32 aFlag
 
 nsresult
 NS_NewMenuBarFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
+
+// grid
+nsresult
+NS_NewGridLayout ( nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout );
+
+nsresult
+NS_NewObeliskLayout ( nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout );
+
+nsresult
+NS_NewTempleLayout ( nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout );
+
+// end grid
 
 #endif
 
@@ -5412,13 +5407,13 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
       rv = NS_NewMenuPopupFrame(aPresShell, &newFrame);
     } 
 
-    /*
-    
     // ------- Begin Grid ---------
     else if (aTag == nsXULAtoms::grid) {
       processChildren = PR_TRUE;
       isReplaced = PR_TRUE;
-      rv = NS_NewGridFrame(aPresShell, &newFrame);
+      nsCOMPtr<nsIBoxLayout> layout;
+      NS_NewGridLayout(aPresShell, layout);
+      rv = NS_NewBoxFrame(aPresShell, &newFrame, PR_FALSE, layout);
 
       const nsStyleDisplay* display = (const nsStyleDisplay*)
            aStyleContext->GetStyleData(eStyleStruct_Display);
@@ -5445,7 +5440,10 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
       processChildren = PR_TRUE;
       isReplaced = PR_TRUE;
       PRBool isHorizontal = (aTag == nsXULAtoms::columns);
-      rv = NS_NewTempleFrame(aPresShell, &newFrame, isHorizontal);
+
+      nsCOMPtr<nsIBoxLayout> layout;
+      NS_NewTempleLayout(aPresShell, layout);
+      rv = NS_NewBoxFrame(aPresShell, &newFrame, PR_FALSE, layout,  isHorizontal);
 
       const nsStyleDisplay* display = (const nsStyleDisplay*)
            aStyleContext->GetStyleData(eStyleStruct_Display);
@@ -5472,7 +5470,9 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
       processChildren = PR_TRUE;
       isReplaced = PR_TRUE;
       PRBool isHorizontal = (aTag == nsXULAtoms::row);
-      rv = NS_NewObeliskFrame(aPresShell, &newFrame, isHorizontal);
+      nsCOMPtr<nsIBoxLayout> layout;
+      NS_NewObeliskLayout(aPresShell, layout);
+      rv = NS_NewBoxFrame(aPresShell, &newFrame, PR_FALSE, layout, isHorizontal);
 
       const nsStyleDisplay* display = (const nsStyleDisplay*)
            aStyleContext->GetStyleData(eStyleStruct_Display);
@@ -5493,7 +5493,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
 
       } 
     } //------- End Grid ------
-*/
+
     else if (aTag == nsXULAtoms::title) {
       processChildren = PR_TRUE;
       isReplaced = PR_TRUE;

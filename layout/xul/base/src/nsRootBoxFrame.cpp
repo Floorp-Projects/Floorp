@@ -100,8 +100,6 @@ public:
   NS_IMETHOD GetFrameName(nsString& aResult) const;
   NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
 #endif
-
-
 };
 
 //----------------------------------------------------------------------
@@ -118,13 +116,16 @@ NS_NewRootBoxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  it->SetLayoutManager(new nsStackLayout(aPresShell));
   *aNewFrame = it;
+
   return NS_OK;
 }
 
 nsRootBoxFrame::nsRootBoxFrame(nsIPresShell* aShell):nsBoxFrame(aShell, PR_TRUE)
 {
+  nsCOMPtr<nsIBoxLayout> layout;
+  NS_NewStackLayout(aShell, layout);
+  SetLayoutManager(layout);
 }
 
 NS_IMETHODIMP

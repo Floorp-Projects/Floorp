@@ -44,6 +44,8 @@
 #include "nsXULAtoms.h"
 #include "nsBoxFrame.h"
 
+nsCOMPtr<nsIBoxLayout> nsSprocketLayout::gInstance = new nsSprocketLayout();
+
 class nsBoxSizeSpecial : public nsBoxSize
 {
 public:
@@ -62,7 +64,16 @@ public:
 #define DEBUG_BORDER_SIZE 2
 #define COIL_SIZE 8
 
-nsSprocketLayout::nsSprocketLayout(nsIPresShell* aShell)
+
+nsresult
+NS_NewSprocketLayout( nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout)
+{
+  // we have not instance variables so just return our static one.
+  aNewLayout = nsSprocketLayout::gInstance;
+  return NS_OK;
+} 
+
+nsSprocketLayout::nsSprocketLayout()
 {
 }
 

@@ -52,7 +52,7 @@ nsBoxLayout::GetParentLayout(nsIBox* aBox, nsIBoxLayout** aParent)
   aBox->GetParentBox(&parent);
   if (parent)
   {
-    aBox->GetLayoutManager(aParent);
+    parent->GetLayoutManager(aParent);
     return;
   }
 

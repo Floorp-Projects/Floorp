@@ -21,40 +21,46 @@
  */
 
 /**
-
-  Eric D Vaughan
-  A frame that can have multiple children. Only one child may be displayed at one time. So the
-  can be flipped though like a deck of cards.
  
+  Author:
+  Eric D Vaughan
+
 **/
 
-#ifndef nsStackLayout_h___
-#define nsStackLayout_h___
+#ifndef nsObeliskLayout_h___
+#define nsObeliskLayout_h___
 
-#include "nsBoxLayout.h"
+#include "nsMonumentLayout.h"
 #include "nsCOMPtr.h"
 
-class nsStackLayout : public nsBoxLayout
+class nsObeliskLayout : public nsMonumentLayout
 {
 public:
 
-  friend nsresult NS_NewStackLayout(nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout);
-
-  nsStackLayout();
-
-  NS_IMETHOD Layout(nsIBox* aBox, nsBoxLayoutState& aState);
+  friend nsresult NS_NewObeliskLayout(nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout);
 
   NS_IMETHOD GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
   NS_IMETHOD GetMinSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
   NS_IMETHOD GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
-  NS_IMETHOD GetAscent(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent);
+  NS_IMETHOD CastToObelisk(nsObeliskLayout** aObelisk);
+
+protected:
+
+  void ChildNeedsLayout(nsIBox* aBox, nsIBoxLayout* aChild);
+  virtual void UpdateMonuments(nsIBox* aBox, nsBoxLayoutState& aState);
+
+  virtual void ComputeChildSizes(nsIBox* aBox,
+                         nsBoxLayoutState& aState, 
+                         nscoord& aGivenSize, 
+                         nsBoxSize* aBoxSizes, 
+                         nsComputedBoxSize* aComputedBoxSizes);
+
+nsObeliskLayout(nsIPresShell* aShell);
 
 private:
-  static nsCOMPtr<nsIBoxLayout> gInstance;
+  nsBoxSizeList* mOtherMonumentList;
 
-}; // class nsStackLayout
-
-
+}; // class nsObeliskLayout
 
 #endif
 

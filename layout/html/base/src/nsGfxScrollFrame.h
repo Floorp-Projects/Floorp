@@ -62,6 +62,11 @@ public:
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 
+  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
+                  nsHTMLReflowMetrics&     aDesiredSize,
+                  const nsHTMLReflowState& aReflowState,
+                  nsReflowStatus&          aStatus);
+
   // Because there can be only one child frame, these two function return
   // NS_ERROR_FAILURE
   NS_IMETHOD AppendFrames(nsIPresContext* aPresContext,

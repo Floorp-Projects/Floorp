@@ -44,7 +44,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsXULAtoms.h"
 
-nsBox::nsBox(nsIPresShell* aShell):mParentBox(nsnull),mNextChild(nsnull),mMouseThrough(always)
+nsBox::nsBox(nsIPresShell* aShell):mParentBox(nsnull),mNextChild(nsnull),mMouseThrough(sometimes)
 {
   //mX = 0;
   //mY = 0;

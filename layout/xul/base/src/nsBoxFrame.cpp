@@ -172,7 +172,6 @@ public:
     static PRBool gDebug;
     static nsIBox* mDebugChild;
 
-
 #ifdef DEBUG_REFLOW
     PRInt32 reflowCount;
 #endif
@@ -190,28 +189,33 @@ PRInt32 gReflows = 0;
 #endif
 
 nsresult
-NS_NewBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot)
+NS_NewBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot, nsIBoxLayout* aLayoutManager, PRBool aIsHorizontal)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsBoxFrame* it = new (aPresShell) nsBoxFrame(aPresShell, aIsRoot);
+  nsBoxFrame* it = new (aPresShell) nsBoxFrame(aPresShell, aIsRoot, aLayoutManager, aIsHorizontal);
 
   if (nsnull == it)
     return NS_ERROR_OUT_OF_MEMORY;
 
   *aNewFrame = it;
+
   return NS_OK;
   
 } // NS_NewBoxFrame
 
-nsBoxFrame::nsBoxFrame(nsIPresShell* aPresShell, PRBool aIsRoot):nsContainerBox(aPresShell)
+nsBoxFrame::nsBoxFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager, PRBool aIsHorizontal):nsContainerBox(aPresShell)
 {
   mInner = new (aPresShell) nsBoxFrameInner(aPresShell, this);
 
   // if not otherwise specified boxes by default are horizontal.
-  mState |= NS_STATE_IS_HORIZONTAL;
+  if (aIsHorizontal) {
+     mState |= NS_STATE_IS_HORIZONTAL;
+     mState |= NS_STATE_DEFAULT_HORIZONTAL;
+  }
+
   mState |= NS_STATE_AUTO_STRETCH;
 
   if (aIsRoot) 
@@ -223,8 +227,21 @@ nsBoxFrame::nsBoxFrame(nsIPresShell* aPresShell, PRBool aIsRoot):nsContainerBox(
 
   NeedsRecalc();
 
-  nsSprocketLayout* layout = new nsSprocketLayout(aPresShell);
+
+#ifdef DEBUG_REFLOW
+  mInner->reflowCount = 100;
+#endif
+
+  // if no layout manager specified us the static sprocket layout
+  nsCOMPtr<nsIBoxLayout> layout = aLayoutManager;
+
+  if (layout == nsnull) {
+    NS_NewSprocketLayout(aPresShell, layout);
+  }
+
   SetLayoutManager(layout);
+
+  NeedsRecalc();
 
 #ifdef DEBUG_REFLOW
   mInner->reflowCount = 100;
@@ -302,7 +319,10 @@ nsBoxFrame::Init(nsIPresContext*  aPresContext,
   GetInitialVAlignment(mInner->mValign);
   GetInitialHAlignment(mInner->mHalign);
   
-  PRBool orient = mState & NS_STATE_IS_HORIZONTAL;
+  PRBool orient = PR_FALSE;
+  if (mState & NS_STATE_DEFAULT_HORIZONTAL)
+     orient = PR_TRUE;
+
   GetInitialOrientation(orient); 
   if (orient)
         mState |= NS_STATE_IS_HORIZONTAL;
@@ -605,7 +625,7 @@ nsBoxFrame::Reflow(nsIPresContext*   aPresContext,
   nsBoxLayoutState state(aPresContext, aReflowState, aDesiredSize);
 
   // coelesce reflows if we are root.
-  if (state.HandleReflow(this, (mState & NS_STATE_IS_ROOT))) {
+  if (state.HandleReflow(this, mState & NS_STATE_IS_ROOT)) {
      aDesiredSize.width  = 10;
      aDesiredSize.height = 10;
      aDesiredSize.ascent = 0;
@@ -631,8 +651,8 @@ nsBoxFrame::Reflow(nsIPresContext*   aPresContext,
 
   // if we are told to layout intrinic then get our preferred size.
   if (computedSize.width == NS_INTRINSICSIZE || computedSize.height == NS_INTRINSICSIZE) {
-     nsSize minSize;
-     nsSize maxSize;
+     nsSize minSize(0,0);
+     nsSize maxSize(0,0);
      GetPrefSize(state, prefSize);
      GetMinSize(state,  minSize);
      GetMaxSize(state,  maxSize);
@@ -675,6 +695,20 @@ nsBoxFrame::Reflow(nsIPresContext*   aPresContext,
   aDesiredSize.height = r.height;
   aDesiredSize.ascent = ascent;
   aDesiredSize.descent = 0;
+
+  // max sure the max element size reflects
+  // our min width
+  nsSize* size = nsnull;
+  state.GetMaxElementSize(&size);
+  if (size)
+  {
+     nsSize minSize(0,0);
+     GetMinSize(state,  minSize);   
+     if (mRect.width < minSize.width)
+        size->width = minSize.width;
+     else
+        size->width = mRect.width;
+  }
 
   return NS_OK;
 }

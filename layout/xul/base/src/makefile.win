@@ -28,6 +28,10 @@ REQUIRES=xpcom raptor pref
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS=					\
+        nsGridLayout.cpp \
+        nsTempleLayout.cpp \
+        nsObeliskLayout.cpp \
+        nsMonumentLayout.cpp \
         nsImageBoxFrame.cpp        \
         nsRootBoxFrame.cpp        \
         nsStackLayout.cpp        \
@@ -83,6 +87,10 @@ CPPSRCS=					\
 	$(NULL)
 
 CPP_OBJS=					\
+	.\$(OBJDIR)\nsGridLayout.obj		\
+	.\$(OBJDIR)\nsTempleLayout.obj		\
+	.\$(OBJDIR)\nsObeliskLayout.obj		\
+	.\$(OBJDIR)\nsMonumentLayout.obj		\
 	.\$(OBJDIR)\nsImageBoxFrame.obj		\
 	.\$(OBJDIR)\nsRootBoxFrame.obj		\
 	.\$(OBJDIR)\nsStackLayout.obj		\

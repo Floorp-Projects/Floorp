@@ -37,7 +37,7 @@ class nsDeckFrame : public nsBoxFrame
 {
 public:
 
-  friend nsresult NS_NewDeckFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+  friend nsresult NS_NewDeckFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, nsIBoxLayout* aLayoutManager);
 
  
 
@@ -65,6 +65,8 @@ public:
       aResult = "Deck";
       return NS_OK;
   }
+
+  nsDeckFrame(nsIPresShell* aPresShell, nsIBoxLayout* aLayout = nsnull);
 
 protected:
 

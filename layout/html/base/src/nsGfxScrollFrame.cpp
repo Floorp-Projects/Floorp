@@ -521,6 +521,37 @@ nsGfxScrollFrame::GetMaxSize(nsBoxLayoutState& aState, nsSize& aSize)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsGfxScrollFrame::Reflow(nsIPresContext*   aPresContext,
+                     nsHTMLReflowMetrics&     aDesiredSize,
+                     const nsHTMLReflowState& aReflowState,
+                     nsReflowStatus&          aStatus)
+{
+  nsresult rv = nsBoxFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+
+  /*
+  // max sure the max element size reflects
+  // our min width
+  if (aDesiredSize.maxElementSize)
+  {
+    // get the ara frame is the scrollarea
+    nsIBox* child = nsnull;
+    mInner->mScrollAreaBox->GetChildBox(&child);
+    nsBoxLayoutState state(aPresContext, aReflowState, aDesiredSize);
+    nsSize minSize(0,0);
+    child->GetMinSize(state, minSize);
+    AddMargin(child, minSize);
+    AddBorderAndPadding(mInner->mScrollAreaBox, minSize);
+    AddInset(mInner->mScrollAreaBox, minSize);
+    AddBorderAndPadding(minSize);
+    AddInset(minSize);
+    aDesiredSize.maxElementSize->width += minSize.width;
+  }
+  */
+
+  return rv;
+}
+
 NS_IMETHODIMP_(nsrefcnt) 
 nsGfxScrollFrame::AddRef(void)
 {
