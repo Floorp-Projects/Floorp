@@ -198,7 +198,6 @@ bin/components/xml-rpc.xpt
 bin/components/nsDictionary.js
 bin/components/nsXmlRpcClient.js
 
-bin/chrome/locales/en-US/*
 bin/chrome/packages/widget-toolkit/*
 bin/chrome/packages/core/*
 bin/chrome/skins/*
