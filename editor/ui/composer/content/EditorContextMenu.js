@@ -76,7 +76,7 @@ function EditorFillContextMenu(event, contextMenuNode)
 
   var havePropsOrImage =
     IsMenuItemShowing("objectProperties_cm") ||
-    IsMenuItemShowing("menu_saveImage_cm")
+    IsMenuItemShowing("menu_saveImage_cm");
 
   ShowMenuItem("undoredo-separator", haveUndo && haveEdit);
 
@@ -104,7 +104,7 @@ function EditorFillContextMenu(event, contextMenuNode)
   var showStyleSep = haveStyle && (havePropsOrImage || inCell);
   ShowMenuItem("styles-separator", showStyleSep);
 
-  var showPropSep = (havePropsOrImage && inCell) || !haveStyle;
+  var showPropSep = (havePropsOrImage && inCell);
   ShowMenuItem("property-separator", showPropSep);
 
   // Remove table submenus if not in table
@@ -132,8 +132,8 @@ function HideDisabledItem( item )
   if (!item) return false;
 
   var enabled = (item.getAttribute('disabled') !="true");
-  item.setAttribute("collapsed", enabled ? "" : "true");
-  item.setAttribute('contexthidden', enabled ? "" : "true");
+  item.setAttribute("hidden", enabled ? "" : "true");
+  item.setAttribute("contexthidden", enabled ? "" : "true");
   return enabled;
 }
 
@@ -141,11 +141,11 @@ function ShowHiddenItemOnCleanup( item )
 {
   if (!item) return false;
 
-  var isHidden = (item.getAttribute('contexthidden') == "true");
+  var isHidden = (item.getAttribute("contexthidden") == "true");
   if (isHidden)
   {
-    item.removeAttribute("collapsed");
-    item.removeAttribute('contexthidden');
+    item.removeAttribute("hidden");
+    item.removeAttribute("contexthidden");
     return true;
   }
   return false;
@@ -156,9 +156,8 @@ function ShowMenuItem(id, showItem)
   var item = document.getElementById(id);
   if (item)
   {
-    //var showing = (item.getAttribute("collapsed") !="true");
-    //if(showItem != showing ? "true" : "")
-      item.setAttribute("collapsed", showItem ? "" : "true");
+    item.setAttribute("hidden", showItem ? "" : "true");
+    item.setAttribute("contexthidden", showItem ? "" : "true");
   }
   else
     dump("ShowMenuItem: item id="+id+" not found\n");
@@ -168,9 +167,7 @@ function IsMenuItemShowing(menuID)
 {
   var item = document.getElementById(menuID);
   if(item)
-  {
-    var show = item.getAttribute("collapsed") != "true";
-    return(item.getAttribute("collapsed") !="true");
-  }
+    return(item.getAttribute("contexthidden") != "true");
+
   return false;
 }
