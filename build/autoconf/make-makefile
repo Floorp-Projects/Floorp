@@ -1,5 +1,4 @@
 #! /usr/bin/env perl
-#
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
 # compliance with the NPL.  You may obtain a copy of the NPL at
@@ -23,10 +22,10 @@
 
 # Send comments, improvements, bugs to Steve Lamm (slamm@netscape.com).
 
+$debug = 1;
+
 # Determine various tree path variables
 #
-#$debug = 1;
-
 ($depth, @makefiles) = parse_arguments(@ARGV);
 
 $object_fullpath = `pwd`;
@@ -161,16 +160,15 @@ sub find_srcdir {
   $ac_given_srcdir =~ s|/?build/autoconf/.*$||;
 
   if ($debug) {
-	print "ac_given_srcdir = $ac_given_srcdir\n";
-        print "depth           = $depth\n";
+    print "ac_given_srcdir = $ac_given_srcdir\n";
+    print "depth           = $depth\n";
   }
   if ($ac_given_srcdir =~ /^\./ and $depth ne '.') {
     my $quoted_depth = quotemeta($depth);
-    $ac_given_srcdir =~ s/$quoted_depth//;
-    $ac_given_srcdir =~ s/^\/// if ($ac_given_srcdir =~ /^\//);
+    $ac_given_srcdir =~ s|^$quoted_depth/?||;
   }
   if ($debug) {
-	print "ac_given_srcdir = $ac_given_srcdir\n";
+    print "ac_given_srcdir = $ac_given_srcdir\n";
   }
   $ac_given_srcdir = '.' if $ac_given_srcdir eq '';
   return $ac_given_srcdir;
@@ -211,16 +209,16 @@ sub update_makefiles {
       $srcdir     = "$ac_dots$ac_given_srcdir$ac_dir_suffix";
       $top_srcdir = "$ac_dots$ac_given_srcdir";
     }
- 
+
     if ($debug) {
-	print "ac_dir     = $ac_dir\n";
-	print "ac_file    = $ac_file\n";
-	print "ac_file_in = $ac_file_in\n";
-	print "srcdir     = $srcdir\n";
-	print "top_srcdir = $top_srcdir\n";
- 	print "cwd        = " . `pwd` . "\n";
+      print "ac_dir     = $ac_dir\n";
+      print "ac_file    = $ac_file\n";
+      print "ac_file_in = $ac_file_in\n";
+      print "srcdir     = $srcdir\n";
+      print "top_srcdir = $top_srcdir\n";
+      print "cwd        = " . `pwd` . "\n";
     }
- 
+
     # Copy the file and make substitutions.
     #    @srcdir@     -> value of $srcdir
     #    @top_srcdir@ -> value of $top_srcdir
@@ -231,7 +229,7 @@ sub update_makefiles {
     } else {
       warn "creating $ac_file\n";
     }
-  
+
     open INFILE, "<$ac_file_in" or do {
       warn "$0: Cannot read $ac_file_in: No such file or directory\n";
       next;
@@ -240,17 +238,17 @@ sub update_makefiles {
       warn "$0: Unable to create $ac_file\n";
       next;
     };
-  
+
     while (<INFILE>) {
       if (/\@[_a-zA-Z]*\@.*\@[_a-zA-Z]*\@/) {
         #warn "Two defines on a line:$ac_file:$.:$_";
         push @unhandled, $ac_file;
         last;
       }
-  
+
       s/\@srcdir\@/$srcdir/;
       s/\@top_srcdir\@/$top_srcdir/;
-  
+
       if (/\@[_a-zA-Z]*\@/) {
         #warn "Unknown variable:$ac_file:$.:$_";
         push @unhandled, $ac_file;
