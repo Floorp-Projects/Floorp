@@ -107,6 +107,15 @@ NS_IMETHODIMP nsNewsDatabase::Open(nsIFileSpec *aNewsgroupName, PRBool create, n
 
 nsresult nsNewsDatabase::Close(PRBool forceCommit)
 {
+#ifdef DEBUG_seth
+  if (m_newSet) {
+    char *str = nsnull;
+    str = m_newSet->Output();
+    printf("setStr is %s\n", str);
+    delete [] str;
+    str = nsnull;
+  }
+#endif
   return nsMsgDatabase::Close(forceCommit);
 }
 
@@ -134,19 +143,19 @@ NS_IMETHODIMP nsNewsDatabase::MarkHdrRead(nsIMsgDBHdr *msgHdr, PRBool bRead,
 	nsMsgKey messageKey;
 	rv = msgHdr->GetMessageKey(&messageKey);
 	if (NS_FAILED(rv)) {
-		return rv;
+      return rv;
 	}
-#if 0
+#if 1
 	if (!bRead)
-		rv = AddToNewList(messageKey);
+      rv = AddToNewList(messageKey);
 	else
-		rv = m_newSet->Remove(messageKey);
+      rv = m_newSet->Remove(messageKey);
 #endif
 	// give parent class chance to update data structures
 	rv = nsMsgDatabase::MarkHdrRead(msgHdr, bRead, instigator);
 
 	// sspitzer:
-        // yes, it is expensive to commit every time here.
+    // yes, it is expensive to commit every time here.
 	//
 	// if we crash (the horror!) before we commit, the user will
 	// lose all there mark as read changes.
@@ -154,23 +163,25 @@ NS_IMETHODIMP nsNewsDatabase::MarkHdrRead(nsIMsgDBHdr *msgHdr, PRBool bRead,
 	// since committing every time is expensive if we mark a
 	// whole bunch of headers as read, we should commit after we are
 	// done marking.
-        Commit(kSessionCommit);
+    Commit(kSessionCommit);
 	
 	return rv;
 }
 
-#if 0
 NS_IMETHODIMP nsNewsDatabase::IsRead(nsMsgKey key, PRBool *pRead)
 {
-	NS_ASSERTION(pRead != NULL, "null out param in IsRead");
-	if (pRead == NULL) 
+	NS_ASSERTION(pRead, "null out param in IsRead");
+	if (!pRead) 
 		return NS_ERROR_NULL_POINTER;
 
+    NS_ASSERTION(m_newSet, "set is null!");
+    if (!m_newSet) return NS_ERROR_FAILURE;
+    
 	PRBool isRead = m_newSet->IsMember(key);
 	*pRead = isRead;
-	return 0;
+    
+	return NS_OK;
 }
-#endif
 
 PRBool nsNewsDatabase::IsArticleOffline(nsMsgKey key)
 {

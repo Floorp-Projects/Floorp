@@ -394,7 +394,7 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
 		}
 	}
 #ifdef DEBUG_NEWS
-	printf("GetRangeOfArtsToDownload(first possible = %ld, last possible = %ld, first = %ld, last = %ld maxextra = %ld\n",first_possible, last_possible, *first, *last, maxextra);
+	printf("GetRangeOfArtsToDownload(first possible = %d, last possible = %d, first = %d, last = %d maxextra = %d\n",first_possible, last_possible, *first, *last, maxextra);
 #endif
 	m_firstMsgToDownload = *first;
 	m_lastMsgToDownload = *last;
@@ -565,7 +565,7 @@ nsNNTPNewsgroupList::ParseLine(char *line, PRUint32 * message_number)
 
 	GET_TOKEN ();
 #ifdef DEBUG_NEWS											/* message number */
-	printf("message number = %d\n", atol(line));
+	printf("message number = %ld\n", atol(line));
 #endif
 	*message_number = atol(line);
  
@@ -624,7 +624,7 @@ nsNNTPNewsgroupList::ParseLine(char *line, PRUint32 * message_number)
 	// no reason to store milliseconds, since they aren't specified
 	if (PR_SUCCESS == status) {
 #ifdef DEBUG_NEWS
-		printf("date = %s, %d\n", line, resDate);
+		printf("date = %s, %ld\n", line, resDate);
 #endif
 		newMsgHdr->SetDate(resDate);		/* date */
 	}

@@ -44,9 +44,7 @@ public:
   // methods to get and set docsets for ids.
   NS_IMETHOD				MarkHdrRead(nsIMsgDBHdr *msgHdr, PRBool bRead,
                                         nsIDBChangeListener *instigator = NULL);
-#if 0
   NS_IMETHOD				IsRead(nsMsgKey key, PRBool *pRead);
-#endif
 
   virtual PRBool			IsArticleOffline(nsMsgKey key);
   NS_IMETHOD				MarkAllRead(nsMsgKeyArray *thoseMarked = NULL);

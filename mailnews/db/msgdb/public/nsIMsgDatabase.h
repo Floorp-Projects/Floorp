@@ -160,6 +160,7 @@ public:
   NS_IMETHOD GetThreadContainingMsgHdr(nsIMsgDBHdr *msgHdr, nsIMsgThread **result) = 0;
 
   NS_IMETHOD GetMsgKeySet(nsMsgKeySet **pSet) = 0;
+  NS_IMETHOD SetMsgKeySet(char * setStr) = 0;
 
   NS_IMETHOD                GetHighWaterArticleNum(nsMsgKey *key) =0;
   NS_IMETHOD                GetLowWaterArticleNum(nsMsgKey *key) =0;

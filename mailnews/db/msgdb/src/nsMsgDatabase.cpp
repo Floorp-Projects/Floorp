@@ -1088,6 +1088,7 @@ nsresult nsMsgDatabase::HasAttachments(nsMsgKey key, PRBool *pHasThem)
 NS_IMETHODIMP nsMsgDatabase::MarkHdrReadInDB(nsIMsgDBHdr *msgHdr, PRBool bRead,
                                              nsIDBChangeListener *instigator)
 {
+    nsresult rv;
     nsMsgKey key;
 	PRUint32 oldFlags;
     (void)msgHdr->GetMessageKey(&key);
@@ -1106,7 +1107,9 @@ NS_IMETHODIMP nsMsgDatabase::MarkHdrReadInDB(nsIMsgDBHdr *msgHdr, PRBool bRead,
 	}
 
     PRUint32 flags;
-    (void)msgHdr->GetFlags(&flags);
+    rv = msgHdr->GetFlags(&flags);
+    if (NS_FAILED(rv)) return rv;
+    
 	return NotifyKeyChangeAll(key, oldFlags, flags, instigator);
 }
 
@@ -1390,26 +1393,49 @@ NS_IMETHODIMP nsMsgDatabase::MarkLater(nsMsgKey key, time_t *until)
 
 NS_IMETHODIMP nsMsgDatabase::GetMsgKeySet(nsMsgKeySet **pSet)
 {
-    // if it doesn't exist, try to create it
-	if (!m_newSet) {
-        m_newSet = nsMsgKeySet::Create();
-        if (m_newSet == nsnull) {
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
-	}
+    if (!pSet) return NS_ERROR_NULL_POINTER;
+    
+    NS_ASSERTION(m_newSet,"set doesn't exist yet!");
+    if (!m_newSet) return NS_ERROR_FAILURE;
     
     *pSet = m_newSet;
     return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgDatabase::SetMsgKeySet(char * setStr)
+{
+    NS_ASSERTION(!m_newSet, "set already exists!");
+    if (m_newSet) {
+        delete m_newSet;
+        m_newSet = nsnull;
+    }
+    
+    m_newSet = nsMsgKeySet::Create(setStr /* , this */);
+    if (!m_newSet) return NS_ERROR_OUT_OF_MEMORY;
+    
+#ifdef DEBUG_seth
+    char *str = nsnull;
+    str = m_newSet->Output();
+    if (str) {
+        printf("in str = %s\nout str = %s\n", setStr,str);
+        delete [] str;
+        str = nsnull;
+    }
+#endif
+    
+    return NS_OK;
+}
+
 NS_IMETHODIMP nsMsgDatabase::AddToNewList(nsMsgKey key)
 {
-	if (!m_newSet)
-		m_newSet = nsMsgKeySet::Create();
+    nsresult rv;
 
-	if (m_newSet)
-		m_newSet->Add(key);
-	return (m_newSet) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    NS_ASSERTION(m_newSet,"set doesn't exist yet!");
+    if (!m_newSet) return NS_ERROR_FAILURE;
+
+    rv = m_newSet->Add(key);
+    
+	return rv;
 }
 
 
@@ -1440,6 +1466,9 @@ NS_IMETHODIMP nsMsgDatabase::ClearNewList(PRBool notify /* = FALSE */)
 		delete m_newSet;
 		m_newSet = NULL;
 	}
+    else {
+        NS_ASSERTION(0, "no set!\n");
+    }
     return err;
 }
 
@@ -1452,7 +1481,7 @@ NS_IMETHODIMP nsMsgDatabase::GetFirstNew(nsMsgKey *result)
 {
 	// even though getLength is supposedly for debugging only, it's the only
 	// way I can tell if the set is empty (as opposed to having a member 0.
-	if (HasNew() == NS_OK)
+	if (NS_SUCCEEDED(HasNew()))
 		*result = m_newSet->GetFirstMember();
 	else
 		*result = nsMsgKey_None;

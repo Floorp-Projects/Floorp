@@ -179,8 +179,9 @@ public:
   NS_IMETHOD GetThreadForMsgKey(nsMsgKey msgKey, nsIMsgThread **result);
   NS_IMETHOD GetThreadContainingMsgHdr(nsIMsgDBHdr *msgHdr, nsIMsgThread **result) ;
 
-  NS_IMETHOD GetMsgKeySet(nsMsgKeySet **pSet) ;
-
+  NS_IMETHOD GetMsgKeySet(nsMsgKeySet **pSet);
+  NS_IMETHOD SetMsgKeySet(char * setStr);
+  
   NS_IMETHOD                GetHighWaterArticleNum(nsMsgKey *key);
   NS_IMETHOD                GetLowWaterArticleNum(nsMsgKey *key);
   //////////////////////////////////////////////////////////////////////////////

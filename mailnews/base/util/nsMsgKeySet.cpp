@@ -22,6 +22,10 @@
 #include "nsMsgKeySet.h"
 #include "prprf.h"
 
+#ifdef DEBUG_seth
+#define DEBUG_MSGKEYSET 1
+#endif
+
 /* A compressed encoding for sets of article.  This is usually for lines from
    the newsrc, which have article lists like
 
@@ -207,6 +211,10 @@ nsMsgKeySet::Create(/*MSG_NewsHost* host*/)
 nsMsgKeySet*
 nsMsgKeySet::Create(const char* value /* , MSG_NewsHost* host */)
 {
+#ifdef DEBUG_MSGKEYSET
+    printf("create from %s\n",value);
+#endif
+
 	nsMsgKeySet* set = new nsMsgKeySet(value /* , host */);
 	if (set && set->m_data == NULL) {
 		delete set;
@@ -636,6 +644,10 @@ nsMsgKeySet::Add(PRInt32 number)
 	PRInt32 *tail;
 	PRInt32 *end;
 
+#ifdef DEBUG_MSGKEYSET
+    printf("add %d\n",number);
+#endif
+    
 	size = m_length;
 	head = m_data;
 	tail = head;
@@ -728,6 +740,9 @@ nsMsgKeySet::Remove(PRInt32 number)
 	PRInt32 *head;
 	PRInt32 *tail;
 	PRInt32 *end;
+#ifdef DEBUG_MSGKEYSET
+    printf("remove %d\n",number);
+#endif
 
 	size = m_length;
 	head = m_data;

@@ -132,9 +132,6 @@ protected:
 	nsISupportsArray *mMessages;
   char      *mOptionLines;
   char      *mHostname;
-
-private:
-  nsMsgKeySet *mSet;
 };
 
 #endif // nsMsgNewsFolder_h__

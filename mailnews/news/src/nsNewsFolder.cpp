@@ -67,7 +67,7 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 nsMsgNewsFolder::nsMsgNewsFolder(void) : nsMsgLineBuffer(nsnull, PR_FALSE),
     mPath(nsnull), mExpungedBytes(0), mGettingNews(PR_FALSE),
-    mInitialized(PR_FALSE), mOptionLines(nsnull), mHostname(nsnull), mSet(nsnull)
+    mInitialized(PR_FALSE), mOptionLines(nsnull), mHostname(nsnull)
 {
 //  NS_INIT_REFCNT(); done by superclass
 }
@@ -85,11 +85,6 @@ nsMsgNewsFolder::~nsMsgNewsFolder(void)
     mHostname = nsnull;
   }
 
-  if (mSet) {
-    delete mSet;
-    mSet = nsnull;
-  }
-  
   PR_FREEIF(mOptionLines);
   mOptionLines = nsnull;
 }
@@ -522,8 +517,10 @@ nsresult nsMsgNewsFolder::GetDatabase()
 #endif
 		}
 
-		if(mDatabase) {
-			mDatabase->AddListener(this);
+		if (mDatabase) {
+			rv = mDatabase->AddListener(this);
+      if (NS_FAILED(rv)) return rv;
+       
       UpdateSummaryTotals();
 		}
 	}
@@ -1400,12 +1397,19 @@ nsresult nsMsgNewsFolder::ForgetLine()
 // caller needs to use delete [] to free
 NS_IMETHODIMP nsMsgNewsFolder::GetMsgKeySetStr(char * *aMsgKeySetStr)
 {
-  if (!aMsgKeySetStr) return NS_ERROR_NULL_POINTER;
+  nsresult rv;
   
-  NS_ASSERTION(mSet, "mSet is null");
-  if (!mSet) return NS_ERROR_FAILURE;
+  if (!aMsgKeySetStr) return NS_ERROR_NULL_POINTER;
 
-  *aMsgKeySetStr = mSet->Output();
+  NS_ASSERTION(mDatabase, "no database!");
+  if (!mDatabase) return NS_ERROR_NULL_POINTER;
+
+  nsMsgKeySet * set = nsnull;
+  
+  rv = mDatabase->GetMsgKeySet(&set);
+  if (NS_FAILED(rv)) return rv;
+      
+  *aMsgKeySetStr = set->Output();
 
   if (!*aMsgKeySetStr) return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1414,25 +1418,16 @@ NS_IMETHODIMP nsMsgNewsFolder::GetMsgKeySetStr(char * *aMsgKeySetStr)
 
 NS_IMETHODIMP nsMsgNewsFolder::SetMsgKeySetStr(char * aMsgKeySetStr)
 {
+  nsresult rv;
+    
   if (!aMsgKeySetStr) return NS_ERROR_NULL_POINTER;
 
-  NS_ASSERTION(!mSet, "mSet is not null");
-  if (mSet) {
-    delete mSet;
-    mSet = nsnull;
-  }
+  rv = GetDatabase();
+  if (NS_FAILED(rv)) return rv;
 
-  mSet = nsMsgKeySet::Create(aMsgKeySetStr /* , this */);
-  if (!mSet) return NS_ERROR_OUT_OF_MEMORY;
-
-#ifdef DEBUG_NEWS
-  char *setStr = nsnull;
-  setStr = mSet->Output();
-  if (setStr) {
-    printf("here's the setStr = %s\n", setStr);
-    delete [] setStr;
-  }
-#endif
+  NS_ASSERTION(mDatabase, "no database!");
+  if (!mDatabase) return NS_ERROR_FAILURE;
   
-  return NS_OK;
+  rv = mDatabase->SetMsgKeySet(aMsgKeySetStr);
+  return rv;
 }
