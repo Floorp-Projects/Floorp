@@ -55,17 +55,18 @@ interface nsIAbLDAPProcessReplicationData : nsILDAPMessageListener {
    /**
      * replication states
      */
-    const long kQueryNotStarted       = 0;
+    const long kIdle                  = 0;
     const long kAnonymousBinding      = 1;
     const long kAuthenticatedBinding  = 2;
-    const long kSearchingAuthDN       = 3;
-    const long kDecidingProtocol      = 4;
-    const long kAuthenticating        = 5;
-    const long kReplicatingAll        = 6;
-    const long kSearchingRootDSE      = 7;
-    const long kFindingChanges        = 8;
-    const long kReplicatingChanges    = 9;
-    const long kReplicationDone       = 10;
+    const long kSyncServerBinding     = 3;
+    const long kSearchingAuthDN       = 4;
+    const long kDecidingProtocol      = 5;
+    const long kAuthenticating        = 6;
+    const long kReplicatingAll        = 7;
+    const long kSearchingRootDSE      = 8;
+    const long kFindingChanges        = 9;
+    const long kReplicatingChanges    = 10;
+    const long kReplicationDone       = 11;
 
    /**
      * readonly attribute giving the current protocol used
@@ -90,5 +91,9 @@ interface nsIAbLDAPProcessReplicationData : nsILDAPMessageListener {
      */
     void abort();
    
+   /**
+     * this utility method populates authentication data from Dir Server
+     */
+   void populateAuthData();
 };
 

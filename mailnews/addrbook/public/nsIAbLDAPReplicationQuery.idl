@@ -40,13 +40,12 @@
 %{ C++
 #include "nsDirPrefs.h"
 %}
-[ptr] native DIR_ReplicationInfo(DIR_ReplicationInfo);
+[ptr] native DIR_Server(DIR_Server);
 
 interface nsIWebProgressListener;
 interface nsILDAPURL;
 interface nsILDAPConnection;
 interface nsILDAPOperation;
-
 
 /**
  * this interface provides methods to perform LDAP Replication Queries
@@ -57,7 +56,8 @@ interface nsIAbLDAPReplicationQuery : nsISupports {
    readonly attribute nsILDAPURL replicationURL;
    readonly attribute nsILDAPConnection connection;
    readonly attribute nsILDAPOperation operation;
-   [noscript] readonly attribute DIR_ReplicationInfo replicationInfo;
+
+   [noscript] readonly attribute DIR_Server replicationServerInfo;
 
    /**
      * initialize for the query
@@ -68,6 +68,11 @@ interface nsIAbLDAPReplicationQuery : nsISupports {
      * Starts an LDAP query to do replication as needed
      */
     void doReplicationQuery();
+
+  /**
+     * connects to an LDAP Server using a DN
+	 */
+	void connectToLDAPServer(in nsILDAPURL aURL, in AString aAuthDN);
 
   /**
     * Starts an LDAP query to replicate all entries
@@ -83,5 +88,29 @@ interface nsIAbLDAPReplicationQuery : nsISupports {
      * this method is the callback when query is done, failed or successful
      */
     void done(in boolean aSuccess);
+};
+
+
+[scriptable, uuid(126202D1-4460-11d6-B7C2-00B0D06E5F27)]
+interface nsIAbLDAPChangeLogQuery : nsISupports {
+  /**
+    * Starts an LDAP query to find auth DN
+    */
+    void queryAuthDN(in AString aValueUsedToFindDn);
+
+  /**
+    * Starts an LDAP query to search server's Root DSE
+    */
+    void queryRootDSE();
+
+  /**
+    * Starts an LDAP ChangeLog query to find changelog entries
+    */
+    void queryChangeLog(in AString aChangeLogDN, in PRInt32 aLastChangeNo);
+      
+  /**
+    * Starts an LDAP query to find changed entries
+    */
+    void queryChangedEntries(in AString aChangedEntryDN);
 };
 
