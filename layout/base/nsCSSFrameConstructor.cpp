@@ -1370,6 +1370,17 @@ nsCSSFrameConstructor::Init(nsIDocument* aDocument)
   return NS_OK;
 }
 
+nsIXBLService * nsCSSFrameConstructor::GetXBLService()
+{
+  if (!gXBLService) {
+    nsresult rv = CallGetService("@mozilla.org/xbl;1", &gXBLService);
+    if (NS_FAILED(rv))
+      gXBLService = nsnull;
+  }
+  
+  return gXBLService;
+}
+
 nsresult
 nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContext,
                                                nsIDocument*          aDocument,
@@ -3388,9 +3399,12 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
     nsresult rv;
     PRBool resolveStyle;
     nsCOMPtr<nsIXBLBinding> binding;
-    if (!gXBLService)
+    
+    nsIXBLService * xblService = GetXBLService();
+    if (!xblService)
       return NS_ERROR_FAILURE;
-    rv = gXBLService->LoadBindings(aDocElement, display->mBinding, PR_FALSE, getter_AddRefs(binding), &resolveStyle);
+
+    rv = xblService->LoadBindings(aDocElement, display->mBinding, PR_FALSE, getter_AddRefs(binding), &resolveStyle);
     if (NS_FAILED(rv))
       return NS_OK; // Binding will load asynchronously.
 
@@ -7230,9 +7244,12 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
       nsresult rv;
       // Load the bindings.
       PRBool resolveStyle;
-      if (!gXBLService)
+      
+      nsIXBLService * xblService = GetXBLService();
+      if (!xblService)
         return NS_ERROR_FAILURE;
-      rv = gXBLService->LoadBindings(aContent, display->mBinding, PR_FALSE, getter_AddRefs(binding), &resolveStyle);
+
+      rv = xblService->LoadBindings(aContent, display->mBinding, PR_FALSE, getter_AddRefs(binding), &resolveStyle);
       if (NS_FAILED(rv))
         return NS_OK;
 
@@ -7243,7 +7260,7 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
 
       nsCOMPtr<nsIAtom> baseTag;
       PRInt32 nameSpaceID;
-      gXBLService->ResolveTag(aContent, &nameSpaceID, getter_AddRefs(baseTag));
+      xblService->ResolveTag(aContent, &nameSpaceID, getter_AddRefs(baseTag));
  
       if (baseTag.get() != aTag || aNameSpaceID != nameSpaceID) {
         // Construct the frame using the XBL base tag.
