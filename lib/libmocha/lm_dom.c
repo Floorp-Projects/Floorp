@@ -486,6 +486,7 @@ LM_ReflectTagNode(PA_Tag *tag, void *doc_state, MWContext *context)
     cx = context->mocha_context;
 
     if (!TOP_NODE(doc)) {
+        DOM_HTMLElementPrivate *elepriv;
 #if 0
         node = DOM_NewDocument(context, doc);
 #else
@@ -502,6 +503,15 @@ LM_ReflectTagNode(PA_Tag *tag, void *doc_state, MWContext *context)
                                            NULL, NULL, NULL, &lm_NodeOps);
         if (!node)
             return NULL;
+        elepriv = XP_NEW_ZAP(DOM_HTMLElementPrivate);
+        if (!elepriv) {
+            XP_FREE(node);
+            return NULL;
+        }
+        elepriv->tagtype = P_HTML;
+        elepriv->doc_id = context->doc_id;
+
+        node->data = elepriv;
         TOP_NODE(doc)->child = node;
         node->parent = TOP_NODE(doc);
         CURRENT_NODE(doc) = node;
