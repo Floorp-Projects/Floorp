@@ -29,24 +29,34 @@
 // nsLoadAttribs definition.
 class nsLoadAttribs : public nsILoadAttribs {
 public:
-    nsLoadAttribs();
+  nsLoadAttribs();
 
-    // nsISupports
-    NS_DECL_ISUPPORTS
+  // nsISupports
+  NS_DECL_ISUPPORTS
 
-    // nsILoadAttribs
-    NS_IMETHOD Clone(nsILoadAttribs* aLoadAttribs);
-    NS_IMETHOD SetBypassProxy(PRBool aBypass);
-    NS_IMETHOD GetBypassProxy(PRBool *aBypass);
-    NS_IMETHOD SetLocalIP(const PRUint32 aIP);
-    NS_IMETHOD GetLocalIP(PRUint32 *aIP);
+  // nsILoadAttribs
+  NS_IMETHOD Clone(nsILoadAttribs* aLoadAttribs);
+
+  NS_IMETHOD SetBypassProxy(PRBool aBypass);
+  NS_IMETHOD GetBypassProxy(PRBool *aBypass);
+  
+  NS_IMETHOD SetLocalIP(const PRUint32 aIP);
+  NS_IMETHOD GetLocalIP(PRUint32 *aIP);
+  
+  NS_IMETHOD SetReloadType(nsURLReloadType aType);
+  NS_IMETHOD GetReloadType(nsURLReloadType* aResult);
+
+  NS_IMETHOD SetLoadType(nsURLLoadType aType);
+  NS_IMETHOD GetLoadType(nsURLLoadType* aResult);
 
 protected:
     virtual ~nsLoadAttribs();
 
 private:
-    PRBool mBypass;
-    PRUint32 mLocalIP;
+    PRBool          mBypass;
+    PRUint32        mLocalIP;
+    nsURLLoadType   mLoadType;
+    nsURLReloadType mReloadType;
 };
 
 // nsLoadAttribs Implementation
@@ -54,80 +64,146 @@ private:
 static NS_DEFINE_IID(kILoadAttribsIID, NS_ILOAD_ATTRIBS_IID);
 NS_IMPL_THREADSAFE_ISUPPORTS(nsLoadAttribs, kILoadAttribsIID);
 
-nsLoadAttribs::nsLoadAttribs() {
+nsLoadAttribs::nsLoadAttribs() 
+{
   NS_INIT_REFCNT();
-  mBypass = PR_FALSE;
-  mLocalIP = 0;
+
+  mBypass     = PR_FALSE;
+  mLocalIP    = 0;
+  mLoadType   = nsURLLoadNormal;
+  mReloadType = nsURLReload;
 }
 
-nsLoadAttribs::~nsLoadAttribs() {
+nsLoadAttribs::~nsLoadAttribs() 
+{
 }
 
 NS_IMETHODIMP
 nsLoadAttribs::Clone(nsILoadAttribs* aLoadAttribs)
 {
-    nsresult rv = NS_OK;
+  nsresult rv = NS_OK;
 
-    if (nsnull == aLoadAttribs) {
-        rv = NS_ERROR_NULL_POINTER;
-    } else {
-        PRBool bypass;
-        PRUint32 ip;
-
-        NS_LOCK_INSTANCE();
-        aLoadAttribs->GetBypassProxy(&bypass);
-        SetBypassProxy(bypass);
-
-        aLoadAttribs->GetLocalIP(&ip);
-        SetLocalIP(ip);
-        NS_UNLOCK_INSTANCE();
-    }
-    return rv;
-
-}
-
-NS_IMETHODIMP
-nsLoadAttribs::SetBypassProxy(PRBool aBypass) {
+  if (nsnull == aLoadAttribs) {
+    rv = NS_ERROR_NULL_POINTER;
+  } else {
     NS_LOCK_INSTANCE();
-    mBypass = aBypass;
+    
+    aLoadAttribs->GetBypassProxy(&mBypass);
+    aLoadAttribs->GetLocalIP(&mLocalIP);
+    aLoadAttribs->GetReloadType(&mReloadType);
+
     NS_UNLOCK_INSTANCE();
-    return NS_OK;
+  }
+  return rv;
+
 }
 
 NS_IMETHODIMP
-nsLoadAttribs::GetBypassProxy(PRBool *aBypass) {
-    nsresult rv = NS_OK;
-
-    if (nsnull == aBypass) {
-        rv = NS_ERROR_NULL_POINTER;
-    } else {
-        NS_LOCK_INSTANCE();
-        *aBypass = mBypass;
-        NS_UNLOCK_INSTANCE();
-    }
-    return rv;
+nsLoadAttribs::SetBypassProxy(PRBool aBypass) 
+{
+  NS_LOCK_INSTANCE();
+  mBypass = aBypass;
+  NS_UNLOCK_INSTANCE();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsLoadAttribs::SetLocalIP(const PRUint32 aLocalIP) {
+nsLoadAttribs::GetBypassProxy(PRBool *aBypass) 
+{
+  nsresult rv = NS_OK;
+
+  if (nsnull == aBypass) {
+    rv = NS_ERROR_NULL_POINTER;
+  } else {
     NS_LOCK_INSTANCE();
-    mLocalIP = aLocalIP;
+    *aBypass = mBypass;
     NS_UNLOCK_INSTANCE();
-    return NS_OK;
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
-nsLoadAttribs::GetLocalIP(PRUint32 *aLocalIP) {
-    nsresult rv = NS_OK;
+nsLoadAttribs::SetLocalIP(const PRUint32 aLocalIP) 
+{
+  NS_LOCK_INSTANCE();
+  mLocalIP = aLocalIP;
+  NS_UNLOCK_INSTANCE();
+  return NS_OK;
+}
 
-    if (nsnull == aLocalIP) {
-        rv = NS_ERROR_NULL_POINTER;
-    } else {
-        NS_LOCK_INSTANCE();
-        *aLocalIP = mLocalIP;
-        NS_UNLOCK_INSTANCE();
-    }
-    return rv;
+NS_IMETHODIMP
+nsLoadAttribs::GetLocalIP(PRUint32 *aLocalIP) 
+{
+  nsresult rv = NS_OK;
+
+  if (nsnull == aLocalIP) {
+    rv = NS_ERROR_NULL_POINTER;
+  } else {
+    NS_LOCK_INSTANCE();
+    *aLocalIP = mLocalIP;
+    NS_UNLOCK_INSTANCE();
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
+nsLoadAttribs::SetReloadType(nsURLReloadType aType) 
+{
+  nsresult rv = NS_OK;
+
+  if ((aType < nsURLReload) || (aType >= nsURLReloadMax)) {
+    rv = NS_ERROR_ILLEGAL_VALUE;
+  } else {
+    NS_LOCK_INSTANCE();
+    mReloadType = aType;
+    NS_UNLOCK_INSTANCE();
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
+nsLoadAttribs::GetReloadType(nsURLReloadType* aResult) 
+{
+  nsresult rv = NS_OK;
+
+  if (nsnull == aResult) {
+    rv = NS_ERROR_NULL_POINTER;
+  } else {
+    NS_LOCK_INSTANCE();
+    *aResult = mReloadType;
+    NS_UNLOCK_INSTANCE();
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
+nsLoadAttribs::SetLoadType(nsURLLoadType aType) 
+{
+  nsresult rv = NS_OK;
+
+  if ((aType < nsURLLoadNormal) || (aType >= nsURLLoadMax)) {
+    rv = NS_ERROR_ILLEGAL_VALUE;
+  } else {
+    NS_LOCK_INSTANCE();
+    mLoadType = aType;
+    NS_UNLOCK_INSTANCE();
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
+nsLoadAttribs::GetLoadType(nsURLLoadType* aResult) 
+{
+  nsresult rv = NS_OK;
+
+  if (nsnull == aResult) {
+    rv = NS_ERROR_NULL_POINTER;
+  } else {
+    NS_LOCK_INSTANCE();
+    *aResult = mLoadType;
+    NS_UNLOCK_INSTANCE();
+  }
+  return rv;
 }
 
 // Creation routines
