@@ -32,6 +32,7 @@
 #include "nsIAddrBookSession.h"
 #include "nsICharsetConverterManager.h"
 #include "nsIAbUpgrader.h"
+#include "nsXPIDLString.h"
 
 #include "plstr.h"
 #include "prmem.h"
@@ -2195,10 +2196,10 @@ static char *DIR_GetLocalizedStringPref
 	PL_strcat(scratch, ".");
 	PL_strcat(scratch, prefLeaf);
 
-	PRUnichar *wvalue = nsnull;
-	rv = pPref->GetLocalizedUnicharPref(scratch, &wvalue);
+	nsXPIDLString wvalue;
+	rv = pPref->GetLocalizedUnicharPref(scratch, getter_Copies(wvalue));
 	char *value = nsnull;
-	if (wvalue)
+	if ((const PRUnichar*)wvalue)
 	{
 		nsString descString(wvalue);
 		PRInt32 unicharLength = descString.Length();
