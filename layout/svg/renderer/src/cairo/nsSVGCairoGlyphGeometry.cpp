@@ -86,6 +86,9 @@ public:
   
 protected:
   nsCOMPtr<nsISVGGlyphGeometrySource> mSource;
+
+private:
+  nsCOMPtr<nsISVGRendererRegion> mCoveredRegion;
 };
 
 /** @} */
@@ -164,7 +167,7 @@ nsSVGCairoGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
     metrics = do_QueryInterface(xpmetrics);
     NS_ASSERTION(metrics, "wrong metrics object!");
     if (!metrics)
-	return NS_ERROR_FAILURE;
+      return NS_ERROR_FAILURE;
   }
 
   cairo_font_t *font = metrics->GetFont();
@@ -195,8 +198,6 @@ nsSVGCairoGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
 
   if (!hasFill && !hasStroke) return NS_OK; // nothing to paint
 
-  
-  
   if (hasFill) {
       nscolor rgb;
       mSource->GetFillPaint(&rgb);
@@ -204,9 +205,9 @@ nsSVGCairoGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
       mSource->GetFillOpacity(&opacity);
       
       cairo_set_rgb_color(ctx,
-			  NS_GET_R(rgb)/255.0,
-			  NS_GET_G(rgb)/255.0,
-			  NS_GET_B(rgb)/255.0);
+                          NS_GET_R(rgb)/255.0,
+                          NS_GET_G(rgb)/255.0,
+                          NS_GET_B(rgb)/255.0);
       cairo_set_alpha(ctx, double(opacity));
       
       nsAutoString text;
@@ -318,6 +319,45 @@ nsSVGCairoGlyphGeometry::Update(PRUint32 updatemask, nsISVGRendererRegion **_ret
 {
   *_retval = nsnull;
 
+  const unsigned long strokemask =
+    nsISVGGlyphMetricsSource::UPDATEMASK_FONT           |
+    nsISVGGlyphMetricsSource::UPDATEMASK_CHARACTER_DATA |
+    nsISVGGlyphGeometrySource::UPDATEMASK_METRICS       |
+    nsISVGGlyphGeometrySource::UPDATEMASK_X             |
+    nsISVGGlyphGeometrySource::UPDATEMASK_Y             |
+    nsISVGGeometrySource::UPDATEMASK_STROKE_PAINT_TYPE  |
+    nsISVGGeometrySource::UPDATEMASK_STROKE_WIDTH       |
+    nsISVGGeometrySource::UPDATEMASK_STROKE_LINECAP     |
+    nsISVGGeometrySource::UPDATEMASK_STROKE_LINEJOIN    |
+    nsISVGGeometrySource::UPDATEMASK_STROKE_MITERLIMIT  |
+    nsISVGGeometrySource::UPDATEMASK_STROKE_DASH_ARRAY  |
+    nsISVGGeometrySource::UPDATEMASK_STROKE_DASHOFFSET  |
+    nsISVGGeometrySource::UPDATEMASK_CANVAS_TM;
+  
+  const unsigned long regionsmask =
+    nsISVGGlyphGeometrySource::UPDATEMASK_METRICS |
+    nsISVGGlyphGeometrySource::UPDATEMASK_X       |
+    nsISVGGlyphGeometrySource::UPDATEMASK_Y       |
+    nsISVGGeometrySource::UPDATEMASK_CANVAS_TM;
+
+  if ((updatemask & regionsmask) || (updatemask & strokemask)) {
+    nsCOMPtr<nsISVGRendererRegion> after;
+    GetCoveredRegion(getter_AddRefs(after));
+
+    if (mCoveredRegion) {
+      if (after)
+        after->Combine(mCoveredRegion, _retval);
+    } else {
+      *_retval = after;
+      NS_IF_ADDREF(*_retval);
+    }
+    mCoveredRegion = after;
+  }
+  else if (updatemask != nsISVGGeometrySource::UPDATEMASK_NOTHING) {
+    *_retval = mCoveredRegion;
+    NS_IF_ADDREF(*_retval);
+  }
+
   return NS_OK;
 }
 
@@ -325,7 +365,91 @@ nsSVGCairoGlyphGeometry::Update(PRUint32 updatemask, nsISVGRendererRegion **_ret
 NS_IMETHODIMP
 nsSVGCairoGlyphGeometry::GetCoveredRegion(nsISVGRendererRegion **_retval)
 {
-  return NS_NewSVGCairoRectRegion(_retval, -10000, -10000, 20000, 20000);
+  *_retval = nsnull;
+  cairo_t *ctx = cairo_create();
+
+  /* get the metrics */
+  nsCOMPtr<nsISVGCairoGlyphMetrics> metrics;
+  {
+    nsCOMPtr<nsISVGRendererGlyphMetrics> xpmetrics;
+    mSource->GetMetrics(getter_AddRefs(xpmetrics));
+    metrics = do_QueryInterface(xpmetrics);
+    NS_ASSERTION(metrics, "wrong metrics object!");
+    if (!metrics)
+      return NS_ERROR_FAILURE;
+  }
+
+  cairo_font_t *font = metrics->GetFont();
+  cairo_set_font(ctx, font);
+
+  GetGlobalTransform(ctx);
+  float x,y;
+  mSource->GetX(&x);
+  mSource->GetY(&y);
+  cairo_move_to(ctx, x, y);
+
+  PRUint16 type;  
+  mSource->GetFillPaintType(&type);
+  PRBool hasCoveredFill = type != nsISVGGeometrySource::PAINT_TYPE_NONE;
+  mSource->GetStrokePaintType(&type);
+  bool hasCoveredStroke = type != nsISVGGeometrySource::PAINT_TYPE_NONE;
+
+  if (!hasCoveredFill && !hasCoveredStroke) return NS_OK;
+
+  nsAutoString text;
+  mSource->GetCharacterData(text);
+  cairo_text_path(ctx, (unsigned char*)NS_ConvertUCS2toUTF8(text).get());
+
+  double xmin, ymin, xmax, ymax;
+
+  if (hasCoveredStroke) {
+    float width;
+    mSource->GetStrokeWidth(&width);
+    cairo_set_line_width(ctx, double(width));
+    
+    PRUint16 capStyle;
+    mSource->GetStrokeLinecap(&capStyle);
+    switch (capStyle) {
+    case nsISVGGeometrySource::STROKE_LINECAP_BUTT:
+      cairo_set_line_cap(ctx, CAIRO_LINE_CAP_BUTT);
+      break;
+    case nsISVGGeometrySource::STROKE_LINECAP_ROUND:
+      cairo_set_line_cap(ctx, CAIRO_LINE_CAP_ROUND);
+      break;
+    case nsISVGGeometrySource::STROKE_LINECAP_SQUARE:
+      cairo_set_line_cap(ctx, CAIRO_LINE_CAP_SQUARE);
+      break;
+    }
+    
+    float miterlimit;
+    mSource->GetStrokeMiterlimit(&miterlimit);
+    cairo_set_miter_limit(ctx, double(miterlimit));
+    
+    PRUint16 joinStyle;
+    mSource->GetStrokeLinejoin(&joinStyle);
+    switch(joinStyle) {
+    case nsISVGGeometrySource::STROKE_LINEJOIN_MITER:
+      cairo_set_line_join(ctx, CAIRO_LINE_JOIN_MITER);
+      break;
+    case nsISVGGeometrySource::STROKE_LINEJOIN_ROUND:
+      cairo_set_line_join(ctx, CAIRO_LINE_JOIN_ROUND);
+      break;
+    case nsISVGGeometrySource::STROKE_LINEJOIN_BEVEL:
+      cairo_set_line_join(ctx, CAIRO_LINE_JOIN_BEVEL);
+      break;
+    }
+    
+    cairo_stroke_extents(ctx, &xmin, &ymin, &xmax, &ymax);
+  } else {
+    cairo_fill_extents(ctx, &xmin, &ymin, &xmax, &ymax);
+  }
+
+  cairo_transform_point(ctx, &xmin, &ymin);
+  cairo_transform_point(ctx, &xmax, &ymax);
+
+  cairo_destroy(ctx);
+
+  return NS_NewSVGCairoRectRegion(_retval, xmin, ymin, xmax-xmin, ymax-ymin);
 }
 
 /** Implements boolean containsPoint(in float x, in float y); */
@@ -342,7 +466,7 @@ nsSVGCairoGlyphGeometry::ContainsPoint(float x, float y, PRBool *_retval)
     metrics = do_QueryInterface(xpmetrics);
     NS_ASSERTION(metrics, "wrong metrics object!");
     if (!metrics)
-	return NS_ERROR_FAILURE;
+      return NS_ERROR_FAILURE;
   }
 
   cairo_font_t *font = metrics->GetFont();

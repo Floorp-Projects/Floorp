@@ -394,6 +394,8 @@ nsSVGCairoPathGeometry::Update(PRUint32 updatemask, nsISVGRendererRegion **_retv
 NS_IMETHODIMP
 nsSVGCairoPathGeometry::GetCoveredRegion(nsISVGRendererRegion **_retval)
 {
+  *_retval = nsnull;
+
   cairo_t *ctx = cairo_create();
 
   GeneratePath(ctx);
