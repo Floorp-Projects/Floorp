@@ -119,7 +119,8 @@ sub IssuePasswordToken {
                     LEFT JOIN tokens
                     ON tokens.userid = profiles.userid
                     AND tokens.tokentype = 'password'
-                    AND tokens.issuedate > DATE_SUB(NOW(), INTERVAL 10 MINUTE)
+                    AND tokens.issuedate > DATE_SUB(NOW(), " .
+                    $dbh->sql_interval('10 MINUTE') . ")
                     WHERE login_name = $quotedloginname");
     my ($userid, $toosoon) = &::FetchSQLData();
 

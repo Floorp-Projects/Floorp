@@ -54,7 +54,8 @@ sub DoAccount {
     $vars->{'realname'} = FetchSQLData();
 
     if(Param('allowemailchange')) {
-        SendSQL("SELECT tokentype, issuedate + INTERVAL 3 DAY, eventdata 
+        SendSQL("SELECT tokentype, issuedate + " . $dbh->sql_interval('3 DAY') .
+                ", eventdata
                     FROM tokens
                     WHERE userid = $userid
                     AND tokentype LIKE 'email%' 
