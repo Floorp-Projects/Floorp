@@ -388,7 +388,7 @@ nsCharDetModule::RegisterSelf(nsIComponentManager *aCompMgr,
 
  done:
   if(nsnull != registry) {
-      registry->Close();
+      // registry->Close();
       nsServiceManager::ReleaseService(NS_REGISTRY_PROGID, registry);
   }
 
