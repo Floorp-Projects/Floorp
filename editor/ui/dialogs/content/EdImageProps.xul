@@ -1,0 +1,191 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="xul.css" type="text/css"?> 
+<?xml-stylesheet href="EditorDialog.css" type="text/css"?>
+<!DOCTYPE window>
+<!-- dialog containing a control requiring initial setup -->
+<xul:window width="200" height="200"
+    xmlns:html="http://www.w3.org/TR/REC-html40"
+    xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    onload = "Startup()">
+
+  <html:script>
+    // dialog initialization code
+    function Startup()
+    {
+      dump("Doing Startup...\n");
+      appCore = XPAppCoresManager.Find("EditorAppCore");  
+      if (appCore == null) {
+        dump("EditorAppCore has NOT been created!\n");
+      } else {
+        dump("EditorAppCore was found\n");
+      }
+	  }
+
+    // find and return the DOM element with the given ID
+    // the equivalent of document.getElementById(), but also
+    // works for XML documents (unused in the example)
+    function ElementByID(id) {
+      var element;
+      var ctr;
+      var taglist = document.getElementsByTagName("*");
+
+      element = null;
+      for (ctr = 0; ctr < taglist.length; ctr++)
+        if (taglist[ctr].getAttribute("id") == id) {
+          element = taglist[ctr];
+          break;
+        }
+      return element;
+    }
+  </html:script>
+
+  <table xmlns="http://www.w3.org/TR/REC-html40">
+    <tr>
+      <td width="500">
+        <fieldset><legend align="left"> <xul:checkbox value="Image Location and Name"/>Image Location and Name </legend>
+          <input type="file" value=" Choose File... " size="50" length="50" maxlength="255" name="image.url" />
+          <br/>
+            <xul:checkbox value="Leave Image at Original Location" disabled />
+            Leave Image at Original Location
+
+            <xul:checkbox value="Page Background" disabled />
+            Page Background
+
+            <input type="button" value=" Edit Image " disabled />
+          <br/>
+            Alternative Text
+            <input type="text" size="30" length="30" maxlength="255" name="image.alttext" />
+        </fieldset>
+
+        <table cellspacing="0" cellpadding="0" width="100%">
+          <tr>
+            <td width="55%" valign="top">
+              <fieldset><legend align="left"> Dimensions </legend>
+                  <xul:radio name="image.dimensionType" value="Original Size" checked />
+                  Original Size
+                  <br/>
+                  <xul:radio name="image.dimensionType" value="Custom Size" />
+                  Custom Size
+
+                <table cellspacing="0" cellpadding="2" width="100%" valign="top">
+                  <tr>
+                    <td width="8"></td>
+                    <td width="40" valign="middle" align="right">
+                      <p>Height</p>
+                    </td>
+                    <td valign="middle">
+                      <input type="text" size="4" length="4" maxlength="4" name="image.height" />
+                      <select size="1" name="image.heightType">
+                        <optgroup label="pixels">
+                          <option label="pixels" value="pixels">pixels</option>
+                          <option label="% of window" value="% of window">% of window</option>
+                        </optgroup>
+                      </select>
+                    </td>
+                  </tr>
+                  <tr>
+                  <td/>
+                  <td valign="middle" align="right">
+                    <p>Width</p>
+                  </td>
+                  <td>
+                    <input type="text" size="4" length="4" maxlength="4" name="image.width" />
+                    <select size="1" name="image.widthType">
+                      <optgroup label="pixels">
+                        <option label="pixels" value="pixels">pixels</option>
+                        <option label="% of window" value="% of window">% of window</option>
+                      </optgroup>
+                    </select>
+                  </td>
+                  </tr>
+
+                  <tr>
+                    <td/>
+                    <td/>
+                    <td>
+                      <p>
+                        <xul:checkbox value="Constrain" disabled />
+                        Constrain
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </fieldset>
+
+            </td>
+
+            <td width="45%">
+              <select size="1" name="image.alignType">
+                <optgroup label="alignment">
+                  <option label="top alignment" value="top alignment">top alignment</option>
+                  <option label="center alignment" value="center alignment">center alignment</option>
+                  <option label="bottom alignment" value="bottom alignment">bottom alignment</option>
+                  <option label="text wrap around left-aligned image" value="around left alignment">around left alignment</option>
+                  <option label="text wrap around right-aligned image" value="around right alignment">around right alignment</option>
+                </optgroup>
+              </select>
+
+              <p/>
+
+              <fieldset><legend align="left"> Space Around Image </legend>
+                <table cellspacing="0" cellpadding="2" width="100%">
+                  <tr valign="middle">
+                    <td align="right">
+                      <p>Left and Right</p>
+                    </td>
+                    <td>
+                      <input type="text" size="4" length="4" maxlength="4" name="image.leftRightSpacing" />
+                    </td>
+                    <td>
+                      <p>pixels</p>
+                    </td>
+                  </tr>
+
+                  <tr valign="middle">
+                    <td>
+                      <p>Top and Bottom</p>
+                    </td>
+                    <td>
+                      <input type="text" size="4" length="4" maxlength="4" name="image.topBottomSpacing" />
+                    </td>
+                    <td>
+                      <p>pixels</p>
+                    </td>
+                  </tr>
+
+                  <tr valign="middle">
+                    <td align="right">
+                      <p>Solid Border</p>
+                    </td>
+                    <td>
+                      <input type="text" size="4" length="4" maxlength="4" name="image.borderWidth" />
+                    </td>
+                    <td>
+                      <p>pixels</p>
+                    </td>
+                  </tr>
+                </table>
+              </fieldset>
+
+            </td>
+          </tr>
+
+          <tr>
+            <td>
+              <input type="button" value=" Remove Image Map " disabled />
+            </td>
+            <td align="right">
+              <input type="button"value=" Extra HTML... " disabled />
+            </td>
+          </tr>
+        </table>
+
+        <input type="button" id="helpbutton" value=" Help " disabled />
+        <input type="submit" id="cancelbutton" value=" Cancel " />
+        <input type="button" id="applybutton" value=" Apply " disabled />
+        <input type="submit" id="okbutton" value=" OK " />
+      </td>
+    </tr>
+  </table>
+
+</xul:window>
