@@ -3906,20 +3906,6 @@ void nsTableFrame::SetColumnWidth(PRInt32 aColIndex, nscoord aWidth)
 }
 
 
-PRBool nsTableFrame::ConvertToPixelValue(nsHTMLValue& aValue, PRInt32 aDefault, PRInt32& aResult)
-{
-  if (aValue.GetUnit() == eHTMLUnit_Pixel)
-    aResult = aValue.GetPixelValue();
-  else if (aValue.GetUnit() == eHTMLUnit_Empty)
-    aResult = aDefault;
-  else
-  {
-    NS_ERROR("Unit must be pixel or empty");
-    return PR_FALSE;
-  }
-  return PR_TRUE;
-}
-
 nscoord 
 CalcPercentPadding(nscoord      aBasis,
                    nsStyleCoord aStyleCoord)

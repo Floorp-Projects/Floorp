@@ -300,7 +300,6 @@ protected:
                              PRBool                    aVisibleBackground,
                              PRBool&                   aPaintChildren);
 
-  PRBool    ConvertToPixelValue(nsHTMLValue& aValue, PRInt32 aDefault, PRInt32& aResult);
   nsresult  DecorateForSelection(nsIPresContext* aPresContext,
                                  nsIRenderingContext& aRenderingContext,
                                  const nsStyleBackground* aStyleColor);

@@ -588,11 +588,11 @@ nsSize nsSubDocumentFrame::GetMargin()
   if (NS_SUCCEEDED(rv) && content) {
     nsHTMLValue value;
     content->GetHTMLAttribute(nsHTMLAtoms::marginwidth, value);
-    if (eHTMLUnit_Pixel == value.GetUnit())
-      result.width = value.GetPixelValue();
+    if (eHTMLUnit_Integer == value.GetUnit())
+      result.width = value.GetIntValue();
     content->GetHTMLAttribute(nsHTMLAtoms::marginheight, value);
-    if (eHTMLUnit_Pixel == value.GetUnit())
-      result.height = value.GetPixelValue();
+    if (eHTMLUnit_Integer == value.GetUnit())
+      result.height = value.GetIntValue();
   }
   return result;
 }
