@@ -120,9 +120,10 @@ public:
                             nsIFrame* aTargetFrame,
                             nsIFrameImageLoaderCB aCallBack,
                             void* aClosure,
+                            void* aKey,
                             nsIFrameImageLoader** aResult);
-  NS_IMETHOD StopLoadImage(nsIFrame* aForFrame, nsIFrameImageLoader* aLoader);
-  NS_IMETHOD StopAllLoadImagesFor(nsIFrame* aForFrame);
+  NS_IMETHOD StopLoadImage(void* aKey, nsIFrameImageLoader* aLoader);
+  NS_IMETHOD StopAllLoadImagesFor(nsIFrame* aTargetFrame, void* aKey);
   NS_IMETHOD SetContainer(nsISupports* aContainer);
   NS_IMETHOD GetContainer(nsISupports** aResult);
   NS_IMETHOD SetLinkHandler(nsILinkHandler* aHandler);

@@ -409,7 +409,7 @@ nsFrame::Destroy(nsIPresContext* aPresContext)
 
   //XXX Why is this done in nsFrame instead of some frame class
   // that actually loads images?
-  aPresContext->StopAllLoadImagesFor(this);
+  aPresContext->StopAllLoadImagesFor(this, this);
 
   if (view) {
     // Break association between view and frame

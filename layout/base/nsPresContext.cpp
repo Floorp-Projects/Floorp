@@ -880,6 +880,7 @@ nsPresContext::StartLoadImage(const nsString& aURL,
                               nsIFrame* aTargetFrame,
                               nsIFrameImageLoaderCB aCallBack,
                               void* aClosure,
+                              void* aKey,
                               nsIFrameImageLoader** aResult)
 {
   if (mStopped) {
@@ -916,7 +917,7 @@ nsPresContext::StartLoadImage(const nsString& aURL,
       }
 
       // Add frame to list of interested frames for this loader
-      loader->AddFrame(aTargetFrame, aCallBack, aClosure);
+      loader->AddFrame(aTargetFrame, aCallBack, aClosure, aKey);
       return NS_OK;
     }
   }
@@ -963,7 +964,8 @@ nsPresContext::StartLoadImage(const nsString& aURL,
   }
 
   rv = loader->Init(this, mImageGroup, aURL, aBackgroundColor, aDesiredSize,
-                    aTargetFrame, mImageAnimationMode, aCallBack, aClosure);
+                    aTargetFrame, mImageAnimationMode, aCallBack, aClosure,
+                    aKey);
   if (NS_OK != rv) {
     mImageLoaders.RemoveElement(loader);
     loader->StopImageLoad();
@@ -995,8 +997,7 @@ nsPresContext::Stop(void)
 }
 
 NS_IMETHODIMP
-nsPresContext::StopLoadImage(nsIFrame* aTargetFrame,
-                             nsIFrameImageLoader* aLoader)
+nsPresContext::StopLoadImage(void* aKey, nsIFrameImageLoader* aLoader)
 {
   PRInt32 i, n = mImageLoaders.Count();
   nsIFrameImageLoader* loader;
@@ -1004,7 +1005,7 @@ nsPresContext::StopLoadImage(nsIFrame* aTargetFrame,
     loader = (nsIFrameImageLoader*) mImageLoaders.ElementAt(i);
     if (loader == aLoader) {
       // Remove frame from list of interested frames for this loader
-      loader->RemoveFrame(aTargetFrame);
+      loader->RemoveFrame(aKey);
 
       // If loader is no longer loading for anybody and its safe to
       // nuke it, nuke it.
@@ -1023,7 +1024,7 @@ nsPresContext::StopLoadImage(nsIFrame* aTargetFrame,
 }
 
 NS_IMETHODIMP
-nsPresContext::StopAllLoadImagesFor(nsIFrame* aTargetFrame)
+nsPresContext::StopAllLoadImagesFor(nsIFrame* aTargetFrame, void *aKey)
 {
   nsFrameState state;
   aTargetFrame->GetFrameState(&state);
@@ -1033,7 +1034,7 @@ nsPresContext::StopAllLoadImagesFor(nsIFrame* aTargetFrame)
     for (i = 0; i < n; i++) {
       PRBool safe;
       loader = (nsIFrameImageLoader*) mImageLoaders.ElementAt(i);
-      loader->RemoveFrame(aTargetFrame);
+      loader->RemoveFrame(aKey);
       loader->SafeToDestroy(&safe);
       if (safe) {
         loader->StopImageLoad();

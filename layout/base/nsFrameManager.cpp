@@ -1292,7 +1292,7 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
         if(oldColor.mBackgroundImage.Length() > 0 &&
           oldColor.mBackgroundImage != newColor.mBackgroundImage ){
           // stop the image loading for the frame, the image has changed
-          aPresContext->StopAllLoadImagesFor(aFrame);
+          aPresContext->StopAllLoadImagesFor(aFrame, aFrame);
         }
       }
       else {

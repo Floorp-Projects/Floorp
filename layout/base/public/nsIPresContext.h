@@ -251,18 +251,19 @@ public:
                             nsIFrame* aTargetFrame,
                             nsIFrameImageLoaderCB aCallBack,
                             void* aClosure,
+                            void* aKey,
                             nsIFrameImageLoader** aResult) = 0;
 
   /**
    * Stop a specific image load being done on behalf of the argument frame.
    */
-  NS_IMETHOD StopLoadImage(nsIFrame* aForFrame,
+  NS_IMETHOD StopLoadImage(void* aKey,
                            nsIFrameImageLoader* aLoader) = 0;
 
   /**
    * Stop any image loading being done on behalf of the argument frame.
    */
-  NS_IMETHOD StopAllLoadImagesFor(nsIFrame* aForFrame) = 0;
+  NS_IMETHOD StopAllLoadImagesFor(nsIFrame* aTargetFrame, void* aKey) = 0;
 
   NS_IMETHOD SetContainer(nsISupports* aContainer) = 0;
 

@@ -124,7 +124,8 @@ nsFrameImageLoader::Init(nsIPresContext* aPresContext,
                          nsIFrame* aTargetFrame,
                          nsImageAnimation aAnimationMode,
                          nsIFrameImageLoaderCB aCallBack,
-                         void* aClosure)
+                         void* aClosure,
+                         void* aKey)
 {
   NS_PRECONDITION(nsnull != aPresContext, "null ptr");
   if (nsnull == aPresContext) {
@@ -162,16 +163,17 @@ nsFrameImageLoader::Init(nsIPresContext* aPresContext,
     desiredHeight = NSToCoordRound((mDesiredSize.height * t2p)/devScale);
   }
 
-  if (nsnull != aTargetFrame) {
+  if (aTargetFrame || aCallBack) {
     PerFrameData* pfd = new PerFrameData;
     if (nsnull == pfd) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
     pfd->mFrame = aTargetFrame;
+    pfd->mKey = aKey;
     pfd->mCallBack = aCallBack;
     pfd->mClosure = aClosure;
     pfd->mNext = mFrames;
-    pfd->mNeedSizeUpdate = PR_TRUE;
+    pfd->mNeedSizeUpdate = aTargetFrame ? PR_TRUE : PR_FALSE;
     mFrames = pfd;
   }
 
@@ -187,11 +189,12 @@ nsFrameImageLoader::Init(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsFrameImageLoader::AddFrame(nsIFrame* aFrame,
                              nsIFrameImageLoaderCB aCallBack,
-                             void* aClosure)
+                             void* aClosure,
+                             void* aKey)
 {
   PerFrameData* pfd = mFrames;
   while (pfd) {
-    if (pfd->mFrame == aFrame) {
+    if (pfd->mKey == aKey) {
       pfd->mCallBack = aCallBack;
       pfd->mClosure = aClosure;
       return NS_OK;
@@ -199,42 +202,41 @@ nsFrameImageLoader::AddFrame(nsIFrame* aFrame,
     pfd = pfd->mNext;
   }
 
-  if (nsnull != aFrame) {
-    pfd = new PerFrameData;
-    if (nsnull == pfd) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    pfd->mFrame = aFrame;
-    pfd->mCallBack = aCallBack;
-    pfd->mClosure = aClosure;
-    pfd->mNext = mFrames;
-    pfd->mNeedSizeUpdate = PR_TRUE;
-    mFrames = pfd;
-    if (aCallBack && mPresContext &&
-        ((NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE |
-          NS_IMAGE_LOAD_STATUS_ERROR) & mImageLoadStatus)) {
-      // Fire notification callback right away so that caller doesn't
-      // miss it...
+  pfd = new PerFrameData;
+  if (nsnull == pfd) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  pfd->mFrame = aFrame;
+  pfd->mKey = aKey;
+  pfd->mCallBack = aCallBack;
+  pfd->mClosure = aClosure;
+  pfd->mNext = mFrames;
+  pfd->mNeedSizeUpdate = PR_TRUE;
+  mFrames = pfd;
+  if (aCallBack && mPresContext &&
+      ((NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE |
+        NS_IMAGE_LOAD_STATUS_ERROR) & mImageLoadStatus)) {
+    // Fire notification callback right away so that caller doesn't
+    // miss it...
 #ifdef NOISY_IMAGE_LOADING
-      printf("%p: AddFrame: notify frame=%p status=%x\n",
-             this, pfd->mFrame, mImageLoadStatus);
+    printf("%p: AddFrame: notify frame=%p status=%x\n",
+           this, pfd->mFrame, mImageLoadStatus);
 #endif
-      (*aCallBack)(mPresContext, this, pfd->mFrame, pfd->mClosure,
-                   mImageLoadStatus);
-      pfd->mNeedSizeUpdate = PR_FALSE;
-    }
+    (*aCallBack)(mPresContext, this, pfd->mFrame, pfd->mClosure,
+                 mImageLoadStatus);
+    pfd->mNeedSizeUpdate = PR_FALSE;
   }
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFrameImageLoader::RemoveFrame(nsIFrame* aFrame)
+nsFrameImageLoader::RemoveFrame(void* aKey)
 {
   PerFrameData** pfdp = &mFrames;
   PerFrameData* pfd;
   while (nsnull != (pfd = *pfdp)) {
-    if (pfd->mFrame == aFrame) {
+    if (pfd->mKey == aKey) {
       *pfdp = pfd->mNext;
       delete pfd;
       return NS_OK;
@@ -494,9 +496,11 @@ nsFrameImageLoader::Notify(nsIImageRequest *aImageRequest,
     // XXX this is pretty vile; change this so that we set another frame status bit and then pass on a notification *or* lets just start passing on the notifications directly to the frames and eliminate all of this code.
     pfd = mFrames;
     while (pfd) {
-      pfd->mFrame->GetView(mPresContext, &view);
-      if (view) {
-        view->SetContentTransparency(PR_TRUE);
+      if (pfd->mFrame) {
+        pfd->mFrame->GetView(mPresContext, &view);
+        if (view) {
+          view->SetContentTransparency(PR_TRUE);
+        }
       }
       pfd = pfd->mNext;
     }
@@ -567,52 +571,39 @@ nsFrameImageLoader::DamageRepairFrames(const nsRect* aDamageRect)
   while (nsnull != pfd) {
     nsIFrame* frame = pfd->mFrame;
 
-    // NOTE: It is not sufficient to invalidate only the size of the image:
-    //       the image may be tiled! 
-    //       The best option is to call into the frame, however lacking this
-    //       we have to at least invalidate the frame's bounds, hence
-    //       as long as we have a frame we'll use its size.
-    //
-    // XXX - Add a NotifyImageLoaded to nsIFrame and call that, passing the 
-    //       damage rect (image size)
-
-    NS_ASSERTION(frame, "Frame should not be null and be remembered");
     if (frame) {
+      // NOTE: It is not sufficient to invalidate only the size of the image:
+      //       the image may be tiled! 
+      //       The best option is to call into the frame, however lacking this
+      //       we have to at least invalidate the frame's bounds, hence
+      //       as long as we have a frame we'll use its size.
+      //
+      // XXX - Add a NotifyImageLoaded to nsIFrame and call that, passing the 
+      //       damage rect (image size)
+
       // Invalidate the entire frame
       // XXX We really only need to invalidate the client area of the frame...
       frame->GetRect(bounds);
       bounds.x = bounds.y = 0;
-    }
-    else {
-      // aDamageRect represents the part of the content area that
-      // needs updating.
-      bounds = *aDamageRect;
 
-      // Offset damage origin by border/padding
-      // XXX This is pretty sleazy. See the XXX remark below...
-      const nsStyleSpacing* space;
-      nsMargin  borderPadding;
-      frame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)space);
-      space->CalcBorderPaddingFor(frame, borderPadding);
-      bounds.MoveBy(borderPadding.left, borderPadding.top);
-    }
+      // XXX We should tell the frame the damage area and let it invalidate
+      // itself. Add some API calls to nsIFrame to allow a caller to invalidate
+      // parts of the frame...
+      frame->GetView(mPresContext, &view);
+      if (nsnull == view) {
+        frame->GetOffsetFromView(mPresContext, offset, &view);
+        bounds.x += offset.x;
+        bounds.y += offset.y;
+      }
 
-    // XXX We should tell the frame the damage area and let it invalidate
-    // itself. Add some API calls to nsIFrame to allow a caller to invalidate
-    // parts of the frame...
-    frame->GetView(mPresContext, &view);
-    if (nsnull == view) {
-      frame->GetOffsetFromView(mPresContext, offset, &view);
-      bounds.x += offset.x;
-      bounds.y += offset.y;
+      nsCOMPtr<nsIViewManager> vm = nsnull;
+      nsresult rv = NS_OK;
+      rv = view->GetViewManager(*getter_AddRefs(vm));
+      if (NS_SUCCEEDED(rv) && nsnull != vm) {
+        vm->UpdateView(view, bounds, NS_VMREFRESH_NO_SYNC);    
+      }
     }
 
-    nsCOMPtr<nsIViewManager> vm = nsnull;
-    nsresult rv = NS_OK;
-    rv = view->GetViewManager(*getter_AddRefs(vm));
-    if (NS_SUCCEEDED(rv) && nsnull != vm) {
-      vm->UpdateView(view, bounds, NS_VMREFRESH_NO_SYNC);    
-    }
     pfd = pfd->mNext;
   }
 }

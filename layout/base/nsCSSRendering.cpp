@@ -2096,13 +2096,13 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
     nsCOMPtr<nsIImage> image;
     nsIFrameImageLoader* loader = nsnull;
     nsresult rv = aPresContext->StartLoadImage(aColor.mBackgroundImage,
-                                              transparentBG
-                                              ? nsnull
-                                              : &aColor.mBackgroundColor,
-                                              nsnull,
-                                              pBGFrame, 
-                                              nsnull, nsnull,
-                                              &loader);
+                                               transparentBG
+                                               ? nsnull
+                                               : &aColor.mBackgroundColor,
+                                               nsnull,
+                                               pBGFrame, 
+                                               nsnull, nsnull,
+                                               pBGFrame, &loader);
     if ((NS_OK != rv) || (nsnull == loader) ||
         (loader->GetImage(getter_AddRefs(image)), (!image))) {
       NS_IF_RELEASE(loader);

@@ -71,7 +71,7 @@ public:
                   nsIFrame* aFrame,
                   nsImageAnimation aAnimationMode,
                   nsIFrameImageLoaderCB aCallBack,
-                  void* aClosure) = 0;
+                  void* aClosure, void* aKey) = 0;
 
   NS_IMETHOD StopImageLoad() = 0;
 
@@ -83,9 +83,9 @@ public:
                                 PRBool* aResult) = 0;
 
   NS_IMETHOD AddFrame(nsIFrame* aFrame, nsIFrameImageLoaderCB aCallBack,
-                      void* aClosure) = 0;
+                      void* aClosure, void* aKey) = 0;
 
-  NS_IMETHOD RemoveFrame(nsIFrame* aFrame) = 0;
+  NS_IMETHOD RemoveFrame(void* aKey) = 0;
 
   NS_IMETHOD SafeToDestroy(PRBool* aResult) = 0;
 
