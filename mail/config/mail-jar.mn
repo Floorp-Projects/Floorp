@@ -15,7 +15,8 @@ content/messenger-region,                            msg/content/messenger-regio
 content/messenger-smime,                             msg/content/messenger-smime
 content/messenger-views,                             msg/content/messenger-views
 content/messenger/messengercompose,                  msg/content/messenger/messengercompose
-content/editor/images,				     msg/content/editor/images
+content/messenger/preferences,                       msg/content/messenger/preferences
+content/editor/images,				           msg/content/editor/images
 content/messenger/addressbook,                       msg/content/messenger/addressbook
 content/messenger/migration,                         msg/content/messenger/migration
 
@@ -26,7 +27,7 @@ content/editor,                                       comm/content/editor
 content/editor-region,                                comm/content/editor-region
 content/communicator-region,                          comm/content/communicator-region,
 content/communicator-platform,                        comm/content/communicator-platform
-content/communicator/contents.rdf, 		      comm/content/communicator/contents.rdf
+content/communicator/contents.rdf, 		            comm/content/communicator/contents.rdf
 content/communicator/communicatorOverlay.xul,         comm/content/communicator/communicatorOverlay.xul 
 content/communicator/utilityOverlay.xul,              comm/content/communicator/utilityOverlay.xul 
 content/communicator/utilityOverlay.js,               comm/content/communicator/utilityOverlay.js 
@@ -45,15 +46,6 @@ content/communicator/printing.js,                     comm/content/communicator/
 
 # from xpfe\components jar.mn
 content/communicator/alerts,                          comm/content/communicator/alerts
-content/communicator/pref/pref-themes.xul,            comm/content/communicator/pref/pref-themes.xul
-content/communicator/pref/pref-themes.js,             comm/content/communicator/pref/pref-themes.js
-content/communicator/pref/pref-extensions.xul,        comm/content/communicator/pref/pref-extensions.xul
-content/communicator/pref/pref-extensions.js,         comm/content/communicator/pref/pref-extensions.js
-content/communicator/pref/pref-fonts.js,              comm/content/communicator/pref/pref-fonts.js
-content/communicator/pref/pref-fonts.xul,             comm/content/communicator/pref/pref-fonts.xul
-content/communicator/pref/pref.xul,                   comm/content/communicator/pref/pref.xul
-content/communicator/pref/nsPrefWindow.js,            comm/content/communicator/pref/nsPrefWindow.js
-content/communicator/pref/pref-calibrate-screen.xul,  comm/content/communicator/pref/pref-calibrate-screen.xul
 
 # dummy contextHelp.js file so we don't get a bunch of errors about this file not being found
 content/help/contextHelp.js,                          comm/content/help/contextHelp.js

@@ -15,6 +15,7 @@
 locale/en-US/messenger,                                         en-US/locale/en-US/messenger
 locale/en-US/messenger/addressbook,                             en-US/locale/en-US/messenger/addressbook
 locale/en-US/messenger/messengercompose,                        en-US/locale/en-US/messenger/messengercompose
+locale/en-US/messenger/preferences,                             en-US/locale/en-US/messenger/preferences
 locale/en-US/messenger/migration,                               en-US/locale/en-US/messenger/migration
 locale/en-US/messenger-smime,                                   en-US/locale/en-US/messenger-smime
 locale/en-US/messenger-mapi,                                    en-US/locale/en-US/messenger-mapi

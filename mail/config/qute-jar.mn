@@ -15,6 +15,7 @@ skin/classic/messenger/accountcentral,               classic/skin/classic/messen
 skin/classic/messenger/addressbook,                  classic/skin/classic/messenger/addressbook
 skin/classic/messenger/addressbook/icons,            classic/skin/classic/messenger/addressbook/icons
 skin/classic/messenger/messengercompose,             classic/skin/classic/messenger/messengercompose
+skin/classic/messenger/preferences,                  classic/skin/classic/messenger/preferences
 skin/classic/messenger/smime,                        classic/skin/classic/messenger/smime
 skin/classic/messenger/smime/icons,                  classic/skin/classic/messenger/smime/icons
 skin/classic/messenger-newsblog,                     classic/skin/classic/messenger-newsblog
@@ -50,19 +51,17 @@ skin/classic/communicator/icons/smileys/smiley-cry.png,           classic/skin/c
 skin/classic/communicator/icons/smileys/smiley-smile.png,         classic/skin/classic/communicator/icons/smileys/smiley-smile.png
 skin/classic/communicator/icons/smileys/smiley-sealed.png,        classic/skin/classic/communicator/icons/smileys/smiley-sealed.png
 
-skin/classic/communicator/pref/pref.css,             classic/skin/classic/communicator/pref/pref.css
 skin/classic/communicator/xpinstall/xpinstall.css,   classic/skin/classic/communicator/xpinstall/xpinstall.css 
 
 #################################################################################################
 # mozapps
 #################################################################################################
-skin/classic/mozapps/pref,                            classic/skin/classic/mozapps/pref
 skin/classic/mozapps/contents.rdf,                    classic/skin/classic/mozapps/contents.rdf
 skin/classic/mozapps/downloads,                       classic/skin/classic/mozapps/downloads
 skin/classic/mozapps/profile,                         classic/skin/classic/mozapps/profile
 skin/classic/mozapps/extensions,                      classic/skin/classic/mozapps/extensions
 skin/classic/mozapps/update,                          classic/skin/classic/mozapps/update
-skin/classic/mozapps/xpinstall,                          classic/skin/classic/mozapps/xpinstall
+skin/classic/mozapps/xpinstall,                       classic/skin/classic/mozapps/xpinstall
 skin/classic/mozapps/shared,                          classic/skin/classic/mozapps/shared
 
 #################################################################################################
