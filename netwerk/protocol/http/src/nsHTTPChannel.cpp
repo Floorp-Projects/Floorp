@@ -217,6 +217,8 @@ nsHTTPChannel::SetLoadAttributes(PRUint32 aLoadAttributes)
     return NS_OK;
 }
 
+#define DUMMY_TYPE "text/html"
+
 NS_IMETHODIMP
 nsHTTPChannel::GetContentType(char * *aContentType)
 {
