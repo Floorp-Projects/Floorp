@@ -841,18 +841,18 @@ InMemoryDataSource::InMemoryDataSource(void)
       mLock(nsnull)
 {
     mForwardArcs = PL_NewHashTable(kInitialTableSize,
-                            rdf_HashPointer,
-                            PL_CompareValues,
-                            PL_CompareValues,
-                            nsnull,
-                            nsnull);
+                                   rdf_HashPointer,
+                                   PL_CompareValues,
+                                   PL_CompareValues,
+                                   nsnull,
+                                   nsnull);
 
     mReverseArcs = PL_NewHashTable(kInitialTableSize,
-                            rdf_HashPointer,
-                            rdf_CompareNodes,
-                            PL_CompareValues,
-                            nsnull,
-                            nsnull);
+                                   rdf_HashPointer,
+                                   rdf_CompareNodes,
+                                   PL_CompareValues,
+                                   nsnull,
+                                   nsnull);
 
     mLock = PR_NewLock();
 
@@ -920,13 +920,25 @@ InMemoryDataSource::GetReverseArcs(nsIRDFNode* v)
 void
 InMemoryDataSource::SetForwardArcs(nsIRDFResource* u, Assertion* as)
 {
-    PL_HashTableAdd(mForwardArcs, u, as);
+    NS_PRECONDITION(u != nsnull, "null ptr");
+    if (as) {
+        PL_HashTableAdd(mForwardArcs, u, as);
+    }
+    else {
+        PL_HashTableRemove(mForwardArcs, u);
+    }
 }
 
 void
 InMemoryDataSource::SetReverseArcs(nsIRDFNode* v, Assertion* as)
 {
-    PL_HashTableAdd(mReverseArcs, v, as);
+    NS_PRECONDITION(v != nsnull, "null ptr");
+    if (as) {
+        PL_HashTableAdd(mReverseArcs, v, as);
+    }
+    else {
+        PL_HashTableRemove(mReverseArcs, v);
+    }
 }
 
 NS_IMETHODIMP
@@ -1190,11 +1202,16 @@ InMemoryDataSource::SafeAssert(nsIRDFResource* source,
     }
     
     // Link it in to the "reverse arcs" table
-    prev = nsnull;
 
     // XXX Shouldn't we keep a pointer to the end of the list to make
     // sure this is O(1)?
-    for (next = GetReverseArcs(target); next != nsnull; next = next->mInvNext) {prev = next;}
+    prev = nsnull;
+    next = GetReverseArcs(target);
+    while (next) {
+        prev = next;
+        next = next->mInvNext;
+    }
+
     if (!prev) {
         SetReverseArcs(target, as);
     } else {
@@ -1269,6 +1286,10 @@ InMemoryDataSource::SafeUnassert(nsIRDFResource* source,
     if (!as)
         return NS_OK;
 
+#ifdef DEBUG
+    PRBool foundReverseArc = PR_FALSE;
+#endif
+
     next = prev = GetReverseArcs(target);
     while (next) {
         if (next == as) {
@@ -1277,11 +1298,18 @@ InMemoryDataSource::SafeUnassert(nsIRDFResource* source,
             } else {
                 prev->mInvNext = next->mInvNext;
             }
+#ifdef DEBUG
+            foundReverseArc = PR_TRUE;
+#endif
             break;
         }
         prev = next;
         next = next->mInvNext;
     }
+
+#ifdef DEBUG
+    NS_ASSERTION(foundReverseArc, "in-memory db corrupted: unable to find reverse arc");
+#endif
 
     // Delete the assertion struct & release resources
     NS_RELEASE(as->mSource);
