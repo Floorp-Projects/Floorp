@@ -167,12 +167,14 @@ CComposerAwareURLDragMixin :: ReceiveDragItem ( DragReference inDragRef, DragAtt
 												ItemReference inItemRef, Rect & inItemBounds,
 												SPoint32 & inMouseLoc )
 {
-	try {
+	try
+	{
 		FlavorType useFlavor;
 		FindBestFlavor ( inDragRef, inItemRef, useFlavor );
 		Size theDataSize = 0;
 		
-		switch ( useFlavor ) {
+		switch ( useFlavor )
+		{
 		
 			case emComposerNativeDrag:
 			{				
@@ -200,8 +202,11 @@ CComposerAwareURLDragMixin :: ReceiveDragItem ( DragReference inDragRef, DragAtt
 		
 		} // switch on best flavor
 	}
-	catch ( ... ) {
+	catch ( ... )
+	{
+#ifdef DEBUG
 		DebugStr ( "\pCan't find the flavor we want; g" );	
+#endif
 	}
 
 } // ReceiveDragItem
@@ -460,10 +465,34 @@ Bool CEditView::SaveDocumentAs()
 		if ( pLocalName )
         {
 			int16	saveCsid = (GetContext())->GetWinCSID();
+			char	newName[32];
+			strncpy( newName, (char *)&sfReply.sfFile.name[1], sfReply.sfFile.name[0] );
+			newName[ sfReply.sfFile.name[0] ] = 0;	/* null-terminate */
+
+			EDT_PageData *pagedata;
+			pagedata = EDT_GetPageData( *GetContext() );
+			if ( pagedata )
+			{
+				/* this code assumes that EDT_SetPageData is not going to free the title */
+				if ( ( pagedata->pTitle == NULL ) 
+				|| ( pagedata->pTitle && pagedata->pTitle[0] == 0 ) )
+				{
+					XP_FREEIF( pagedata->pTitle );
+					pagedata->pTitle = newName;
+					
+					if ( pagedata->pTitle )
+					{
+						EDT_SetPageData( *GetContext(), pagedata );
+						/* set to NULL since we didn't malloc this data & don't want it freed in EDT_FreePageData */
+						pagedata->pTitle = NULL;	 
+					}
+				}
+				
+				EDT_FreePageData( pagedata );
+			}
 
 			if (hist_ent->title == NULL)
 			{
-				CStr31 newName( sfReply.sfFile.name );
 				StrAllocCopy( ((MWContext *)*GetContext())->title, newName );
 				SHIST_SetTitleOfCurrentDoc( *GetContext() );
 			}
