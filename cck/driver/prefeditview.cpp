@@ -13,6 +13,7 @@
 #include "DlgEditPrefStr.h"
 #include "DlgFind.h"
 #include "DlgAdd.h"
+#include "Encoding.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -319,7 +320,7 @@ HTREEITEM CPrefEditView::InsertPrefElement(CPrefElement* pe, HTREEITEM group)
     imageIndexSel = imageIndex = bm_lockedPad;
 
   CTreeCtrl &treeCtrl = GetTreeCtrl();
-  HTREEITEM hNewItem = treeCtrl.InsertItem(pe->GetPrettyNameValueString(), imageIndex, imageIndexSel, group, TVI_LAST);
+  HTREEITEM hNewItem = treeCtrl.InsertItem(ConvertUTF8toANSI(pe->GetPrettyNameValueString()), imageIndex, imageIndexSel, group, TVI_LAST);
 
   // Save pointer to this pref element in the tree.
   treeCtrl.SetItemData(hNewItem, (DWORD)pe);
@@ -546,7 +547,7 @@ BOOL CPrefEditView::DoSavePrefsTree(CString strFile)
   if (!fp)
     return FALSE;
 
-  CString strPreamble("<?xml version=\"1.0\"?>\n\n");
+  CString strPreamble("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n");
   if (!fwrite(strPreamble, strPreamble.GetLength(), 1, fp))
   {
     fclose(fp);
@@ -599,7 +600,7 @@ void CPrefEditView::OnFindPref()
   CDlgFind dlg;
   if (dlg.DoModal() == IDOK)
     if (!dlg.m_strFind.IsEmpty())
-      FindFirst(dlg.m_strFind);
+      FindFirst(ConvertANSItoUTF8(dlg.m_strFind));
 }
 
 // "Find Next Pref" context menu command selected.
@@ -656,7 +657,7 @@ void CPrefEditView::OnAddPref()
     // Disallow if the pref name already exists.
     CTreeCtrl &treeCtrl = GetTreeCtrl();
     HTREEITEM hRoot = treeCtrl.GetRootItem();
-    HTREEITEM hTreeCtrlItem = FindTreeItemFromPrefname(hRoot, dlg.m_strPrefName);    
+    HTREEITEM hTreeCtrlItem = FindTreeItemFromPrefname(hRoot, ConvertANSItoUTF8(dlg.m_strPrefName));    
     if (hTreeCtrlItem)
     {
       MessageBox("A pref of this name already exists.", MB_OK);
@@ -664,7 +665,8 @@ void CPrefEditView::OnAddPref()
     }
     else
     {
-      AddPref(dlg.m_strPrefName, dlg.m_strPrefDesc, strPrefType);
+      // Anything in the XML file must be in UTF-8. User might have entered Hi-ASCII and that would throw off XML parser.
+      AddPref(ConvertANSItoUTF8(dlg.m_strPrefName), ConvertANSItoUTF8(dlg.m_strPrefDesc), ConvertANSItoUTF8(strPrefType));
     }
 
 
@@ -715,21 +717,21 @@ void CPrefEditView::EditSelectedPrefsItem()
     return;
 
   CDlgEditPrefStr dlg;
-  dlg.m_strType = pe->GetPrefType();
-  dlg.m_strTitle = pe->GetUIName();
-  dlg.m_strDescription = pe->GetPrefDescription();
-  dlg.m_strPrefName = pe->GetPrefName();
-  dlg.m_strValue = pe->GetPrefValue();
+  dlg.m_strType = pe->GetPrefType();      // internal use only -- always ANSI
+  dlg.m_strTitle = ConvertUTF8toANSI(pe->GetUIName());
+  dlg.m_strDescription = ConvertUTF8toANSI(pe->GetPrefDescription());
+  dlg.m_strPrefName = ConvertUTF8toANSI(pe->GetPrefName());
+  dlg.m_strValue = ConvertUTF8toANSI(pe->GetPrefValue());
   dlg.m_bLocked = pe->IsLocked();
-  dlg.m_pstrChoices = pe->GetChoiceStringArray();
+  dlg.m_pstrChoices = pe->GetChoiceStringArray(); // internal use only -- always ANSI
   dlg.m_strSelectedChoice = pe->GetSelectedChoiceString();
   dlg.m_bChoose = pe->IsChoose();
   dlg.m_bRemoteAdmin = pe->IsRemoteAdmin();
   dlg.m_bLockable = pe->IsLockable();
   if (pe->IsChoose())
-    dlg.m_strDefault = pe->GetDefaultChoiceString();
+    dlg.m_strDefault = pe->GetDefaultChoiceString();  // internal use only -- always ANSI
   else
-    dlg.m_strDefault = pe->GetDefaultValue();
+    dlg.m_strDefault = ConvertUTF8toANSI(pe->GetDefaultValue());
 
   if (dlg.DoModal() == IDOK)
   {
@@ -738,12 +740,12 @@ void CPrefEditView::EditSelectedPrefsItem()
     // sets m_strValue to a string which can go directly into the prefs
     // tree element. For example, bools set 'true' or 'false' and choices
     // set '0' or '1' or whatever the value for the selected choice.
-    pe->SetPrefValue(dlg.m_strValue);
+    pe->SetPrefValue(ConvertANSItoUTF8(dlg.m_strValue));
     pe->SetLocked(dlg.m_bLocked);
     pe->SetRemoteAdmin(dlg.m_bRemoteAdmin);
 
     // Adjust the tree control to reflect the changes.
-    treeCtrl.SetItemText(hTreeCtrlItem, pe->GetPrettyNameValueString());
+    treeCtrl.SetItemText(hTreeCtrlItem, ConvertUTF8toANSI(pe->GetPrettyNameValueString()));
 
     int imageIndex = 0;     // tree ctrl images
     int imageIndexSel = 0;

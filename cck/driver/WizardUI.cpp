@@ -375,7 +375,7 @@ BOOL CWizardUI::OnCommand(WPARAM wParam, LPARAM lParam)
 		}
 		else
 		{
-			if (curWidget->action.onCommand)
+			if (!curWidget->action.onCommand.IsEmpty())
 			{
 				// Save any screen changes to affected widgets
 				w = findWidget(curWidget->target);
