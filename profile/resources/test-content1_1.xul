@@ -1,0 +1,55 @@
+<?xml version="1.0"?> <!-- -*- Mode: SGML; indent-tabs-mode: nil; -*- -->
+<!--
+
+  The contents of this file are subject to the Netscape Public License
+  Version 1.0 (the "NPL"); you may not use this file except in
+  compliance with the NPL.  You may obtain a copy of the NPL at
+  http://www.mozilla.org/NPL/
+
+  Software distributed under the NPL is distributed on an "AS IS" basis,
+  WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+  for the specific language governing rights and limitations under the
+  NPL.
+
+  The Initial Developer of this code under the NPL is Netscape
+  Communications Corporation.  Portions created by Netscape are
+  Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+  Reserved.
+
+-->
+
+<?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?>
+<?xml-stylesheet href="pm.css" type="text/css"?>
+
+<!DOCTYPE window 
+[
+<!ENTITY heading "Communicator Profile Manager">
+<!ENTITY title "Creating a New Profile"> 
+<!ENTITY para.one "Communicator stores information about your settings, preferences, bookmarks and stored messages in your personal profile."> 
+<!ENTITY para.two "If you are sharing this copy of Communicator with other users, you can use profiles to keep each user's information separate. To do this, each user should create his or her own profile and optionally protect it with a password.">
+<!ENTITY para.three "If you are the only person using this copy of Communicator, you must create atleast one profile. If you would like, you can create multiple profiles for yourself to store different sets of setting and preferences. For example, you may want to have separate profiles for business and personal use.">
+<!ENTITY para.four "To begin Creating your profile, click Next.">
+]>
+
+<xul:window 
+xmlns:html="http://www.w3.org/TR/REC-html40"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="dialog"
+		width="500" height="500"
+		onload="parent.wizardPageLoaded('content1_1');"> 
+      	    
+<html:div style="width: 300px;">&heading;</html:div>
+<html:br/>
+
+<html:div>&title;</html:div> 
+<html:div>&para.one;</html:div> 
+<html:br/>
+
+<html:div>&para.two;</html:div>
+<html:br/>
+
+<html:div>&para.three;</html:div>
+<html:br/>
+<html:div>&para.four;</html:div>
+
+
+</xul:window>

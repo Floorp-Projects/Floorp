@@ -1,0 +1,84 @@
+<?xml version="1.0"?> <!-- -*- Mode: SGML; indent-tabs-mode: nil; -*- -->
+<!--
+
+  The contents of this file are subject to the Netscape Public License
+  Version 1.0 (the "NPL"); you may not use this file except in
+  compliance with the NPL.  You may obtain a copy of the NPL at
+  http://www.mozilla.org/NPL/
+
+  Software distributed under the NPL is distributed on an "AS IS" basis,
+  WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+  for the specific language governing rights and limitations under the
+  NPL.
+
+  The Initial Developer of this code under the NPL is Netscape
+  Communications Corporation.  Portions created by Netscape are
+  Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+  Reserved.
+
+-->
+
+<?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?>
+<?xml-stylesheet href="pm.css" type="text/css"?>
+
+<!DOCTYPE window 
+[
+<!ENTITY intro "If you create several profiles you can tell them apart by the profile names. You may use the name provided here or use one of your own."> 
+<!ENTITY profile.name "Enter New Profile name.">
+<!ENTITY profile.dir "Your user settings, preferences, bookmarks and stored messages will be stored in the directory below. We recommend that you use the default directory (by leaving the box blank).">
+<!ENTITY para "Click Finish to create this new profile.">
+]>
+
+<xul:window 
+xmlns:html="http://www.w3.org/TR/REC-html40"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="dialog"
+		width="500" height="500"
+		onload="parent.wizardPageLoaded('content1_2');"> 
+      	    
+<html:script>
+function foo()
+{
+}
+
+function InitializeValues()
+{
+	element = document.getElementById("ProfileName");
+	element.value = parent.profName;
+	
+	element = document.getElementById("ProfileDir");
+	element.value = parent.profDir;
+}
+
+function commit()
+{
+	var element;
+
+	element = document.getElementById("ProfileName");
+	parent.SetValue(element.id, element.value);
+	parent.profName = element.value;
+
+	element = document.getElementById("ProfileDir");
+	data += "ProfileDir="+element.value+"%";
+	parent.SetValue(element.id, element.value);
+	parent.profDir = element.value;
+}
+
+setTimeout("foo()", 0);
+</html:script>
+
+
+<html:div>&intro;</html:div> 
+<html:br/>
+<html:div>&profile.name;</html:div> 
+<html:input type="text" id="ProfileName" value="mozProfile" size="30"/>
+<html:br/>
+<html:br/>
+
+<html:div>&profile.dir;</html:div> 
+<html:input type="text" id="ProfileDir" size="30"/>
+
+<html:br/>
+<html:br/>
+<html:div>&para;</html:div> 
+
+</xul:window>
