@@ -49,8 +49,10 @@ static NS_DEFINE_CID(kSupportsArrayCID, NS_SUPPORTSARRAY_CID);
 // Class nsCharsetConverterManager [declaration]
 
 /**
- * The actual implementation of the nsICharsetConverterManager interface.
+ * The actual implementation of the nsICharsetConverterManager2 interface. It   
+ * alsoimplements the soon to be deprecated nsICharsetConverterManager. 
  *
+ * XXX completely deprecate the nsICharsetConverterManager interface
  * XXX optimise the memory allocations in "scriptable" and "friendly" methods
  *
  * @created         15/Nov/1999
@@ -519,8 +521,16 @@ NS_IMETHODIMP nsCharsetConverterManager::GetCharsetLangGroup(
                                          nsString * aCharset, 
                                          nsIAtom ** aResult)
 {
-  // XXX deprecated
-  return NS_ERROR_UNEXPECTED;
+  if (aCharset == NULL) return NS_ERROR_NULL_POINTER;
+  if (aResult == NULL) return NS_ERROR_NULL_POINTER;
+  *aResult = NULL;
+
+  nsCOMPtr<nsIAtom> atom;
+  nsresult res = GetCharsetAtom(aCharset->GetUnicode(), getter_AddRefs(atom));
+  if (NS_FAILED(res)) return res;
+
+  res = GetCharsetLangGroup(atom, aResult);
+  return res;
 }
 
 //----------------------------------------------------------------------------
