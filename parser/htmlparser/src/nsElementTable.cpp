@@ -465,7 +465,7 @@ nsHTMLElement gHTMLElements[] = {
   { /*tag*/                             eHTMLTag_embed,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
-    /*parent,incl,exclgroups*/          kFlow, kInline, kNone,	
+    /*parent,incl,exclgroups*/          kFlow, kNone, kNone,	
     /*special properties*/              0,
     /*special parents,kids,skip*/       0,&gContainsParam,eHTMLTag_unknown},
 
@@ -1095,7 +1095,7 @@ PRBool nsHTMLElement::IsContainer(eHTMLTags aChild) {
     static eHTMLTags gNonContainers[]={
       eHTMLTag_unknown,
       eHTMLTag_area,    eHTMLTag_base,    eHTMLTag_basefont,
-      eHTMLTag_br,      eHTMLTag_col,     
+      eHTMLTag_br,      eHTMLTag_col,     eHTMLTag_embed,
       eHTMLTag_frame,   eHTMLTag_hr,      eHTMLTag_whitespace,
       eHTMLTag_input,   eHTMLTag_link,    eHTMLTag_isindex,
       eHTMLTag_meta,    eHTMLTag_param,   eHTMLTag_plaintext,

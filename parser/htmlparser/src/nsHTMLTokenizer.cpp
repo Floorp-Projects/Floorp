@@ -532,7 +532,7 @@ nsresult nsHTMLTokenizer::ConsumeEntity(PRUnichar aChar,CToken*& aToken,nsScanne
     }
     else if(kHashsign==theChar) {
        aToken = theRecycler->CreateTokenOfType(eToken_entity,eHTMLTag_entity);
-       result=aToken->Consume(0,aScanner);
+       result=aToken->Consume(theChar,aScanner);
     }
     else {
        //oops, we're actually looking at plain text...
@@ -544,7 +544,7 @@ nsresult nsHTMLTokenizer::ConsumeEntity(PRUnichar aChar,CToken*& aToken,nsScanne
       char cbuf[30];
       nsString& theStr=aToken->GetStringValueXXX();
       theStr.ToCString(cbuf, sizeof(cbuf)-1);
-      if(-1==NS_EntityToUnicode(cbuf)){
+      if((kHashsign!=theChar) && (-1==NS_EntityToUnicode(cbuf))){
         //if you're here we have a bogus entity.
         //convert it into a text token.
         nsAutoString temp("&");
