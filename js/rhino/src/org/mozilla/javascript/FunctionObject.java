@@ -115,8 +115,9 @@ public class FunctionObject extends NativeFunction {
                     types[2] != ScriptRuntime.FunctionClass ||
                     types[3] != Boolean.TYPE)
                 {
+                    String[] args = { methodName };
                     String message = Context.getMessage("msg.varargs.ctor",
-                                                        null);
+                                                        args);
                     throw Context.reportRuntimeError(message);
                 }
                 parmsLength = VARARGS_CTOR;
@@ -127,8 +128,9 @@ public class FunctionObject extends NativeFunction {
                     types[2].getComponentType() != ScriptRuntime.ObjectClass ||
                     types[3] != ScriptRuntime.FunctionClass)
                 {
+                    String[] args = { methodName };
                     String message = Context.getMessage("msg.varargs.fun",
-                                                        null);
+                                                        args);
                     throw Context.reportRuntimeError(message);
                 }
                 parmsLength = VARARGS_METHOD;

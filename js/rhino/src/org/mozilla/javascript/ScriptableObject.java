@@ -825,7 +825,8 @@ public abstract class ScriptableObject implements Scriptable {
 
         FunctionObject ctor = new FunctionObject(className, ctorMember, scope);
         if (ctor.isVarArgsMethod()) {
-            String message = Context.getMessage("msg.varargs.ctor", null);
+            Object[] args = { ctorMember.getName() };
+            String message = Context.getMessage("msg.varargs.ctor", args);
             throw Context.reportRuntimeError(message);
         }
         ctor.addAsConstructor(scope, proto);
@@ -951,8 +952,8 @@ public abstract class ScriptableObject implements Scriptable {
             }
             FunctionObject f = new FunctionObject(name, methods[i], proto);
             if (f.isVarArgsConstructor()) {
-                String message = Context.getMessage("msg.varargs.fun", 
-                                                    null);
+                Object[] args = { ctorMember.getName() };
+                String message = Context.getMessage("msg.varargs.fun", args);
                 throw Context.reportRuntimeError(message);
             }
             Scriptable dest = prefix == staticFunctionPrefix
