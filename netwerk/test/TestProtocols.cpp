@@ -69,10 +69,6 @@
 #include "nsXPIDLString.h"
 #include "nsNetUtil.h"
 
-// this test app handles cookies.
-#include "nsICookieService.h"
-static NS_DEFINE_CID(nsCookieServiceCID, NS_COOKIESERVICE_CID);
-
 static NS_DEFINE_CID(kEventQueueServiceCID,      NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 
@@ -556,17 +552,6 @@ main(int argc, char* argv[])
     if (NS_FAILED(rv)) return rv;
 
     eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &gEventQ);
-
-#if 0 // Jud sez 
-    // fire up an instance of the cookie manager.
-    // I'm doing this using the serviceManager for convenience's sake.
-    // Presumably an application will init it's own cookie service a 
-    // different way (this way works too though).
-    nsCOMPtr<nsICookieService> cookieService = 
-             do_GetService(nsCookieServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-#endif // NECKO
-
 
     int i;
     printf("\nTrying to load:\n");
