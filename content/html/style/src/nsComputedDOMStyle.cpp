@@ -1347,7 +1347,7 @@ nsComputedDOMStyle::GetListStyleType(nsIFrame *aFrame,
   const nsStyleList *list = nsnull;
   GetStyleData(eStyleStruct_List, (const nsStyleStruct*&)list, aFrame);
 
-  if (list && list->mListStyleType != NS_STYLE_LIST_STYLE_BASIC) {
+  if (list) {
     if (list->mListStyleType == NS_STYLE_LIST_STYLE_NONE) {
       val->SetIdent(NS_LITERAL_STRING("none"));
     } else {
