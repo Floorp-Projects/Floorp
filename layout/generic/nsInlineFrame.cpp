@@ -895,15 +895,17 @@ NS_IMETHODIMP nsInlineFrame::GetAccessible(nsIAccessible** aAccessible)
   *aAccessible = nsnull;
   nsCOMPtr<nsIAtom> tagAtom;
   mContent->GetTag(*getter_AddRefs(tagAtom));
-  if (tagAtom == nsHTMLAtoms::img || tagAtom == nsHTMLAtoms::input) {
+  if (tagAtom == nsHTMLAtoms::img || tagAtom == nsHTMLAtoms::input || tagAtom == nsHTMLAtoms::hr) {
     // Only get accessibility service if we're going to use it
     nsCOMPtr<nsIAccessibilityService> accService(do_GetService("@mozilla.org/accessibilityService;1"));
     if (!accService)
       return NS_ERROR_FAILURE;
     if (tagAtom == nsHTMLAtoms::input)  // Broken <input type=image ... />
       return accService->CreateHTML4ButtonAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
-    // Create accessible for broken <img>
-    return accService->CreateHTMLImageAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
+    else if (tagAtom == nsHTMLAtoms::img)  // Create accessible for broken <img>
+      return accService->CreateHTMLImageAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
+    // Create accessible for <hr>
+    return accService->CreateHTMLHRAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
   }
 
   return NS_ERROR_FAILURE;

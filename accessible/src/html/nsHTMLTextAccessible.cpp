@@ -19,9 +19,10 @@
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
+ * Original Author: Eric Vaughan (evaughan@netscape.com)
  * Contributor(s):
- * Author: Eric Vaughan (evaughan@netscape.com)
- *
+ *   Aaron Leventhal (aaronl@netscape.com)
+ *   Kyle Yuan (kyle.yuan@sun.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -44,7 +45,6 @@ nsTextAccessible(aDomNode, aShell)
 { 
 }
 
-/* wstring getAccName (); */
 NS_IMETHODIMP nsHTMLTextAccessible::GetAccName(nsAString& _retval)
 { 
   nsAutoString accName;
@@ -52,5 +52,23 @@ NS_IMETHODIMP nsHTMLTextAccessible::GetAccName(nsAString& _retval)
     return NS_ERROR_FAILURE;
   accName.CompressWhitespace();
   _retval = accName;
+  return NS_OK;
+}
+
+nsHTMLHRAccessible::nsHTMLHRAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
+nsLeafAccessible(aDomNode, aShell)
+{ 
+}
+
+NS_IMETHODIMP nsHTMLHRAccessible::GetAccRole(PRUint32 *_retval)
+{
+  *_retval = ROLE_SEPARATOR;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsHTMLHRAccessible::GetAccState(PRUint32 *_retval)
+{
+  nsLeafAccessible::GetAccState(_retval);
+  *_retval &= ~STATE_FOCUSABLE;
   return NS_OK;
 }

@@ -19,9 +19,10 @@
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
+ * Original Author: John Gaunt (jgaunt@netscape.com)
  * Contributor(s):
- * Author: John Gaunt (jgaunt@netscape.com)
- *
+ *   Aaron Leventhal (aaronl@netscape.com)
+ *   Kyle Yuan (kyle.yuan@sun.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -66,5 +67,34 @@ NS_IMETHODIMP nsXULTextAccessible::GetAccState(PRUint32 *_retval)
   // Labels and description can only have read only state
   // They are not focusable or selectable
   *_retval = STATE_READONLY;
+  return NS_OK;
+}
+
+/**
+  * For XUL tooltip
+  */
+nsXULTooltipAccessible::nsXULTooltipAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
+nsLeafAccessible(aDomNode, aShell)
+{ 
+}
+
+NS_IMETHODIMP nsXULTooltipAccessible::GetAccName(nsAString& _retval)
+{
+  //XXX, kyle.yuan@sun.com, we don't know how to get at this information at the moment,
+  //  because it is not loaded until it shows.
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULTooltipAccessible::GetAccState(PRUint32 *_retval)
+{
+  nsLeafAccessible::GetAccState(_retval);
+  *_retval &= ~STATE_FOCUSABLE;
+  *_retval |= STATE_READONLY;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULTooltipAccessible::GetAccRole(PRUint32 *_retval)
+{
+  *_retval = ROLE_TOOLTIP;
   return NS_OK;
 }
