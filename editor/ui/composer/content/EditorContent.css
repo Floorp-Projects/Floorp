@@ -43,11 +43,20 @@ table {
   empty-cells: show;
 }
 
+/* give a red dotted border to tables and cells with no border
+   otherwise they are invisible
+*/
 table[empty-cells],
-  table[border="0"], 
-  table[border="0"] td, table[border="0"] th,
+  table[border="0"],
+  /* next two selectors on line below for the case where tbody is omitted */
+  table[border="0"] > tr > td, table[border="0"] > tr > th,
+  table[border="0"] > thead > tr > td, table[border="0"] > tbody > tr > td, table[border="0"] > tfoot > tr > td,
+  table[border="0"] > thead > tr > th, table[border="0"] > tbody > tr > th, table[border="0"] > tfoot > tr > th,
   table:not([border]),
-  table:not([border]) td, table:not([border]) th
+  /* next two selectors on line below for the case where tbody is omitted */
+  table:not([border]) > tr > td, table:not([border]) > tr >  th,
+  table:not([border]) > thead > tr > td, table:not([border]) > tbody > tr > td, table:not([border]) > tfoot > tr > td,
+  table:not([border]) > thead > tr > th, table:not([border]) > tbody > tr > th, table:not([border]) > tfoot > tr > th
 {
   border: 1px dotted red;
 }
