@@ -190,6 +190,10 @@ static nsresult NewImageChannel(nsIChannel **aResult,
   // Initialize HTTP-specific attributes
   newHttpChannel = do_QueryInterface(*aResult);
   if (newHttpChannel) {
+    newHttpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
+                                     NS_LITERAL_CSTRING(""));
+    newHttpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
+                                     NS_LITERAL_CSTRING("video/x-mng,image/png,image/jpeg,image/gif;q=0.2,*/*;q=0.1"));
     newHttpChannel->SetDocumentURI(aInitialDocumentURI);
     newHttpChannel->SetReferrer(aReferringURI);
   }

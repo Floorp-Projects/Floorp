@@ -1578,6 +1578,11 @@ CSSLoaderImpl::LoadSheet(URLKey& aKey, SheetLoadData* aData)
           if (document_uri) {
             nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
             if (httpChannel) {
+              // send a minimal Accept header for text/css
+              httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
+                                            NS_LITERAL_CSTRING(""));
+              httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
+                                            NS_LITERAL_CSTRING("text/css,*/*;q=0.1"));
               result = httpChannel->SetReferrer(document_uri);
             }
           }
