@@ -50,8 +50,12 @@ sub fields {
                     bug_file_loc status_whiteboard keywords
                     priority bug_severity target_milestone
                     dependson blocked votes
-                    reporter assigned_to qa_contact cc
+                    reporter assigned_to cc
                    );
+
+    if (Param('useqacontact')) {
+        push @fields, "qa_contact";
+    }
 
     if (Param('timetrackinggroup')) {
         push @fields, qw(estimated_time remaining_time actual_time);
@@ -182,6 +186,8 @@ sub initBug  {
 
   if (Param('useqacontact') && $self->{'qa_contact'} > 0) {
       $self->{'qa_contact'} = new Bugzilla::User($self->{'qa_contact'});
+  } else {
+      $self->{'qa_contact'} = undef;
   }
 
   my $ccSet = new RelationSet;
@@ -376,7 +382,7 @@ sub user {
     # and actually try to make the change.
     $self->{'user'}->{'canedit'} = $::userid == 0
                                    || $::userid == $self->{'reporter'}{'id'}
-                                   || ($self->{'qa_contact'} && $::userid == $self->{'qa_contact'}{'id'})
+                                   || (Param('useqacontact') && $self->{'qa_contact'} && $::userid == $self->{'qa_contact'}{'id'})
                                    || $::userid == $self->{'assigned_to'}{'id'}
                                    || &::UserInGroup("editbugs");
     $self->{'user'}->{'canconfirm'} = $::userid == 0

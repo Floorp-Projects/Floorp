@@ -661,7 +661,7 @@ sub CanSeeBug {
                || (($userid > 0) && 
                   (
                        ($assigned_to == $userid) 
-                    || ($qa_contact == $userid)
+                    || (Param('useqacontact') && $qa_contact == $userid)
                     || (($reporter == $userid) && $rep_access) 
                     || ($found_cc && $cc_access) 
                     || ($found_groups == $found_members)

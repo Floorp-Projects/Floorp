@@ -410,7 +410,7 @@ sub CheckCanChangeField {
     }
     
     # Allow the QA contact to change anything.
-    if ($qacontactid eq $whoid) {
+    if (Param('useqacontact') && ($qacontactid eq $whoid)) {
         return 1;
     }
     
