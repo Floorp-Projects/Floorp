@@ -630,7 +630,7 @@ nsFTPChannel::OnStopRequest(nsIRequest *request, nsISupports* aContext,
         if (NS_SUCCEEDED(mStatus)) {
             (void) mCacheEntry->SetExpirationTime( NowInSeconds() + 900 ); // valid for 15 minutes.
             (void) mCacheEntry->MarkValid();
-	}
+        }
         else {
             (void) mCacheEntry->Doom();
         }
