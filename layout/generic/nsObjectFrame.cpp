@@ -3420,6 +3420,23 @@ nsresult nsPluginInstanceOwner::KeyUp(nsIDOMEvent* aKeyEvent)
 nsresult nsPluginInstanceOwner::KeyPress(nsIDOMEvent* aKeyEvent)
 {
 #if defined(XP_MAC) || defined(XP_MACOSX) // send KeyPress events only on Mac
+
+  // KeyPress events are really synthesized keyDown events.
+  // Here we check the native message of the event so that
+  // we won't send the plugin two keyDown events.
+  nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aKeyEvent));
+  if (privateEvent) {
+    nsEvent *theEvent;
+    privateEvent->GetInternalNSEvent(&theEvent);
+    const nsGUIEvent *guiEvent = (nsGUIEvent*)theEvent;
+    const EventRecord *ev = (EventRecord*)(guiEvent->nativeMsg); 
+    if (guiEvent &&
+        guiEvent->message == NS_KEY_PRESS &&
+        ev &&
+        ev->what == keyDown)
+      return NS_OK;
+  }
+
   // Nasty hack to avoid recursive event dispatching with Java. Java can
   // dispatch key events to a TSM handler, which comes back and calls 
   // [ChildView insertText:] on the cocoa widget, which sends a key
