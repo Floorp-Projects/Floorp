@@ -79,18 +79,16 @@ _FILES	= \
 	$(NULL)
 
 ifeq ($(OS_ARCH),OS2)
-FORMS_CSS	= $(srcdir)/os2/forms.css
-else
-FORMS_CSS	= $(srcdir)/forms.css
+PLATFORM_FORMS_CSS	= $(srcdir)/os2/platform-forms.css
 endif
 
 GARBAGE		+= $(addprefix $(DIST)/bin/res/,$(_FILES)) $(DIST)/bin/res/ua.css
 
-libs:: $(_FILES) $(FORMS_CSS)
+libs:: $(_FILES) $(srcdir)/forms.css  $(PLATFORM_FORMS_CSS)
 	$(INSTALL) $^ $(DIST)/bin/res
 	rm -f $(DIST)/bin/res/ua.css
 	cp $(srcdir)/ua.css $(DIST)/bin/res
 
-install:: $(_FILES) $(FORMS_CSS) ua.css
+install:: $(_FILES) $(srcdir)/forms.css ua.css $(PLATFORM_FORMS_CSS)
 	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/res
 
