@@ -94,7 +94,21 @@ NS_IMETHODIMP CBrowserImpl::OnLocationChange(nsIWebProgress* aWebProgress,
 	if(! m_pBrowserFrameGlue)
 		return NS_ERROR_FAILURE;
 
-	m_pBrowserFrameGlue->UpdateCurrentURI(location);
+  PRBool isSubFrameLoad = PR_FALSE; // Is this a subframe load
+  if (aWebProgress) {
+    nsCOMPtr<nsIDOMWindow>  domWindow;
+    nsCOMPtr<nsIDOMWindow>  topDomWindow;
+    aWebProgress->GetDOMWindow(getter_AddRefs(domWindow));
+    if (domWindow) { // Get root domWindow
+      domWindow->GetTop(getter_AddRefs(topDomWindow));
+    }
+    if (domWindow != topDomWindow)
+      isSubFrameLoad = PR_TRUE;
+
+  }
+
+  if (!isSubFrameLoad) // Update urlbar only if it is not a subframe load
+	  m_pBrowserFrameGlue->UpdateCurrentURI(location);
 
     return NS_OK;
 }
