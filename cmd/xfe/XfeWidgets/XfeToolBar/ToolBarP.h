@@ -106,27 +106,12 @@ typedef struct _XfeToolBarPart
 	Boolean				child_use_pref_width;	/* Child use pref width	*/
 	Boolean				child_use_pref_height;	/* Child use pref height*/
 
-	Boolean				child_force_width;		/* Child force width ?	*/
-	Boolean				child_force_height;		/* Child force height ?	*/
-
-#if 0
-	Dimension			max_child_width;		/* Max Width			*/
-	Dimension			max_child_height;		/* Max Height			*/
-#endif
-
 	/* Wrapping resources */
 	Boolean				allow_wrap;				/* Allow wrap			*/
 	Cardinal			max_num_columns;		/* Max num columns		*/
 	Cardinal			max_num_rows;			/* Max num rows			*/
     
     /* Private data -- Dont even look past this comment -- */
-#if 0
-	Dimension			total_children_width;	/* Total children width	*/
-	Dimension			total_children_height;	/* Total children height*/
-	Cardinal			num_managed;			/* Num managed widgets	*/
-	Cardinal			num_components;			/* Num components		*/
-#endif
-
 	Widget				indicator;				/* Indicator			*/
 	Widget				indicator_target;		/* Indicator target		*/
 	Widget				edit_text;				/* Edit text			*/
@@ -157,7 +142,8 @@ typedef struct _XfeToolBarRec
 /*----------------------------------------------------------------------*/
 typedef struct _XfeToolBarConstraintPart
 {
-    int	dummy;
+	Boolean			force_width_to_max;		/* Force width to max ?		*/
+	Boolean			force_height_to_max;	/* Force height to max ?	*/
 } XfeToolBarConstraintPart;
 
 /*----------------------------------------------------------------------*/
@@ -180,6 +166,14 @@ typedef struct _XfeToolBarConstraintRec
 /*																		*/
 /*----------------------------------------------------------------------*/
 #define _XfeToolBarPart(w) &(((XfeToolBarWidget) w) -> xfe_tool_bar)
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeToolBarPart child constraint part access macro					*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define _XfeToolBarConstraintPart(w) \
+(&(((XfeToolBarConstraintRec *) _XfeConstraints(w)) -> xfe_tool_bar))
 
 /*----------------------------------------------------------------------*/
 /*																		*/

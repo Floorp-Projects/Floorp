@@ -77,6 +77,14 @@ static XtGeometryResult GeometryManager	(Widget,XtWidgetGeometry *,
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* Constraint class methods												*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static void		ConstraintInitialize(Widget,Widget,ArgList,Cardinal *);
+static Boolean	ConstraintSetValues	(Widget,Widget,Widget,ArgList,Cardinal *);
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* XfeManager class methods												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
@@ -293,24 +301,6 @@ static const XtResource resources[] =
 		XmRImmediate, 
 		(XtPointer) True
 	},
-    { 
-		XmNchildForceHeight,
-		XmCChildForceHeight,
-		XmRBoolean,
-		sizeof(Boolean),
-		XtOffsetOf(XfeToolBarRec , xfe_tool_bar . child_force_height),
-		XmRImmediate, 
-		(XtPointer) True
-    },
-    { 
-		XmNchildForceWidth,
-		XmCChildForceWidth,
-		XmRBoolean,
-		sizeof(Boolean),
-		XtOffsetOf(XfeToolBarRec , xfe_tool_bar . child_force_width),
-		XmRImmediate, 
-		(XtPointer) True
-    },
 
 	/* Radio resources */
     { 
@@ -476,6 +466,32 @@ static const XmSyntheticResource syn_resources[] =
     },
 };
 
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeToolBar constraint resources										*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static const XtResource constraint_resources[] = 
+{
+    { 
+		XmNforceWidthToMax,
+		XmCForceWidthToMax,
+		XmRBoolean,
+		sizeof(Boolean),
+		XtOffsetOf(XfeToolBarConstraintRec , xfe_tool_bar . force_width_to_max),
+		XmRImmediate,
+		(XtPointer) True
+    },
+    { 
+		XmNforceHeightToMax,
+		XmCForceHeightToMax,
+		XmRBoolean,
+		sizeof(Boolean),
+		XtOffsetOf(XfeToolBarConstraintRec , xfe_tool_bar . force_height_to_max),
+		XmRImmediate,
+		(XtPointer) True
+    },
+};   
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -547,12 +563,12 @@ _XFE_WIDGET_CLASS_RECORD(toolbar,ToolBar) =
 
     /* Constraint Part */
     {
-		NULL,									/* resource list		*/
-		0,										/* num resources		*/
+		(XtResource *)constraint_resources,		/* constraint res		*/
+		XtNumber(constraint_resources),			/* num constraint res	*/
 		sizeof(XfeToolBarConstraintRec),		/* constraint size		*/
-		NULL,									/* init proc			*/
+		NULL,					/* init proc			*/
 		NULL,                                   /* destroy proc			*/
-		NULL,									/* set values proc		*/
+		ConstraintSetValues,					/* set values proc		*/
 		NULL,                                   /* extension			*/
     },
 
@@ -1165,6 +1181,45 @@ GeometryManager(Widget child,XtWidgetGeometry *request,XtWidgetGeometry *reply)
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* Constraint class methods												*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static void
+ConstraintInitialize(Widget rc,Widget nc,ArgList av,Cardinal * ac)
+{
+/*   	Widget						w = _XfeParent(nc); */
+/*  	XfeToolBarConstraintPart *	cp = _XfeToolBarConstraintPart(nc); */
+
+	/* Finish constraint initialization */
+	_XfeConstraintChainInitialize(rc,nc,xfeToolBarWidgetClass);
+}
+/*----------------------------------------------------------------------*/
+static Boolean
+ConstraintSetValues(Widget oc,Widget rc,Widget nc,ArgList av,Cardinal * ac)
+{
+ 	Widget						w = XtParent(nc);
+ 	XfeToolBarConstraintPart *	ncp = _XfeToolBarConstraintPart(nc);
+ 	XfeToolBarConstraintPart *	ocp = _XfeToolBarConstraintPart(oc);
+	
+	/* XmNforceWidthToMax */
+	if (ncp->force_width_to_max != ocp->force_width_to_max)
+	{
+		_XfemConfigFlags(w) |= XfeConfigGLE;
+	}
+
+	/* XmNforceHeightToMax */
+	if (ncp->force_height_to_max != ocp->force_height_to_max)
+	{
+		_XfemConfigFlags(w) |= XfeConfigGLE;
+	}
+
+	/* Finish constraint set values */
+	return _XfeConstraintChainSetValues(oc,rc,nc,xfeToolBarWidgetClass);
+}
+/*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* XfeDynamicManager class methods										*/
 /*																		*/
 /*----------------------------------------------------------------------*/
@@ -1289,10 +1344,11 @@ LayoutDynamicChildren(Widget w)
 static void
 GetChildDimensions(Widget child,Dimension * width_out,Dimension * height_out)
 {
-	Widget				w = _XfeParent(child);
-    XfeToolBarPart *	tp = _XfeToolBarPart(w);
-	Dimension			width = 0;
-	Dimension			height = 0;
+	Widget						w = _XfeParent(child);
+    XfeToolBarPart *			tp = _XfeToolBarPart(w);
+	Dimension					width = 0;
+	Dimension					height = 0;
+	XfeToolBarConstraintPart *	cp = _XfeToolBarConstraintPart(child);
 
 	assert( width_out != NULL );
 	assert( height_out != NULL );
@@ -1304,13 +1360,13 @@ GetChildDimensions(Widget child,Dimension * width_out,Dimension * height_out)
 		{
 			/* The button's width */
 			width = 
-				tp->child_force_width ? 
+				cp->force_width_to_max ? 
 				_XfemMaxDynamicWidth(w) : 
 				_XfeWidth(child);
 				
 			/* The button's height */
 			height = 
-				tp->child_force_height ? 
+				cp->force_height_to_max ? 
 				(_XfemBoundaryHeight(w) - 2 * tp->raise_border_thickness) : 
 				_XfeHeight(child);
 		}
@@ -1332,13 +1388,13 @@ GetChildDimensions(Widget child,Dimension * width_out,Dimension * height_out)
 		{
 			/* The button's width */
 			width = 
-				tp->child_force_width ? 
+				cp->force_width_to_max ? 
 				(_XfemBoundaryWidth(w) - 2 * tp->raise_border_thickness) : 
 				_XfeWidth(child);
 			
 			/* The button's height */
 			height = 
-				tp->child_force_height ? 
+				cp->force_height_to_max ? 
 				_XfemMaxDynamicHeight(w) : 
 				_XfeHeight(child);
 		}

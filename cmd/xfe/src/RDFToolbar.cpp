@@ -57,8 +57,6 @@ XFE_RDFToolbar::XFE_RDFToolbar(XFE_Frame * frame,
                    m_widget,
                    XmNusePreferredWidth,         False,
                    XmNusePreferredHeight,        True,
-                   XmNchildForceWidth,           False,
-                   XmNchildForceHeight,          True,
                    XmNchildUsePreferredWidth,    True,
                    XmNchildUsePreferredHeight,   True,
                    NULL);
@@ -294,6 +292,7 @@ XFE_RDFToolbar::updateRoot()
 XFE_RDFToolbar::configureXfeButton(Widget item,HT_Resource entry)
 {
     int32 toolbar_style;
+
     int result = PREF_GetIntPref("browser.chrome.toolbar_style", 
                                  &toolbar_style);
 
@@ -417,6 +416,7 @@ XFE_RDFToolbar::createXfeButton(Widget parent,HT_Resource entry)
 
     ac = 0;
     XtSetArg(av[ac],XmNuserData, entry);  ac++;
+    XtSetArg(av[ac],XmNforceWidthToMax, False);  ac++;
 
     button = XfeCreateButton(parent,"bookmarkButton",av,ac);
 
@@ -479,6 +479,7 @@ XFE_RDFToolbar::createXfeCascade(Widget parent,HT_Resource entry)
 
     ac = 0;
     XtSetArg(av[ac],XmNuserData, entry);  ac++;
+    XtSetArg(av[ac],XmNforceWidthToMax, False);  ac++;
 
     cascade = XfeCreateCascade(parent,"bookmarkCascade",av,ac);
 
