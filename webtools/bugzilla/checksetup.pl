@@ -3756,7 +3756,7 @@ if (!$series_exists) {
                 # We prepared this above
                 $seriesdatasth->execute($seriesids{$field},
                                         $dbh->quote($date), 
-                                        $fielddata{$date});
+                                        $fielddata{$date} || 0);
             }
         }        
     }
