@@ -2133,7 +2133,7 @@ cl_front_to_back_event_dispatch(CL_Compositor *compositor, CL_Layer *layer,
 {
     CL_Layer *child;
     PRBool event_grabbed = PR_FALSE;
-    int32 old_gen_id;
+    uint32 old_gen_id;
 
     old_gen_id = compositor->gen_id;
     
@@ -2194,7 +2194,7 @@ PRBool
 CL_DispatchEvent(CL_Compositor *compositor, CL_Event *event)
 {
     CL_Layer *layer;
-    int32 old_gen_id;
+    uint32 old_gen_id;
 
     XP_ASSERT(compositor);
     XP_ASSERT(event);
