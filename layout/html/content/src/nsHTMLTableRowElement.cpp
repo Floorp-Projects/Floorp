@@ -520,9 +520,7 @@ nsHTMLTableRowElement::StringToAttribute(nsIAtom* aAttribute,
     }
   }
   else if (aAttribute == nsHTMLAtoms::background) {
-    nsAutoString href(aValue);
-    href.StripWhitespace();
-    aResult.SetStringValue(href);
+    aResult.SetStringValue(aValue);
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
   else if (aAttribute == nsHTMLAtoms::bgcolor) {

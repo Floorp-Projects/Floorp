@@ -226,9 +226,7 @@ nsHTMLAnchorElement::StringToAttribute(nsIAtom* aAttribute,
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
   if (aAttribute == nsHTMLAtoms::href) {
-    nsAutoString href(aValue);
-    href.StripWhitespace();
-    aResult.SetStringValue(href);
+    aResult.SetStringValue(aValue);
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
   if (aAttribute == nsHTMLAtoms::suppress) {
