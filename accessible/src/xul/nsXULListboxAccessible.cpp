@@ -133,7 +133,7 @@ nsXULColumnItemAccessible::DoAction(PRUint8 aIndex)
 
 nsXULListboxAccessible::
   nsXULListboxAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
-  nsXULSelectableAccessible(aContent, aShell)
+  XULSelectControlAccessible(aContent, aShell)
 {
   nsIContent* parentContent = mContent->GetParent();
   if (parentContent) {
@@ -144,13 +144,13 @@ nsXULListboxAccessible::
   }
 }
 
-NS_IMPL_ADDREF_INHERITED(nsXULListboxAccessible, nsXULSelectableAccessible)
-NS_IMPL_RELEASE_INHERITED(nsXULListboxAccessible, nsXULSelectableAccessible)
+NS_IMPL_ADDREF_INHERITED(nsXULListboxAccessible, XULSelectControlAccessible)
+NS_IMPL_RELEASE_INHERITED(nsXULListboxAccessible, XULSelectControlAccessible)
 
 nsresult
 nsXULListboxAccessible::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-  nsresult rv = nsXULSelectableAccessible::QueryInterface(aIID, aInstancePtr);
+  nsresult rv = XULSelectControlAccessible::QueryInterface(aIID, aInstancePtr);
   if (*aInstancePtr)
     return rv;
 
