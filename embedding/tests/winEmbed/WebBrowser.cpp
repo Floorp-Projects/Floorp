@@ -91,14 +91,6 @@ WebBrowser::GoTo(char* url)
     return webNav->LoadURI(NS_ConvertASCIItoUCS2(url).GetUnicode());
 }
 
-nsresult 
-WebBrowser::Resize(int x, int y, int cx, int cy)
-{
-    nsCOMPtr<nsIBaseWindow> webBrowserWin = do_QueryInterface(mWebBrowser);
-    return webBrowserWin->SetPositionAndSize(x, y, cx, cy, true);
-}
-
-
 
 nsresult 
 WebBrowser::Print(void)
@@ -239,26 +231,14 @@ NS_IMETHODIMP WebBrowser::ShowAsModal(void)
 // WebBrowser::nsIWebProgressListener
 //*****************************************************************************   
 
-NS_IMETHODIMP WebBrowser::OnProgressChange(nsIChannel *channel, PRInt32 curSelfProgress, PRInt32 maxSelfProgress, PRInt32 curTotalProgress, PRInt32 maxTotalProgress)
+NS_IMETHODIMP WebBrowser::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 aStateFlags, PRUint32 aStatus)
 {
-   return NS_OK;
+	return NS_OK;
 }
-
-NS_IMETHODIMP WebBrowser::OnChildProgressChange(nsIChannel *channel, PRInt32 curSelfProgress, PRInt32 curTotalProgress)
+NS_IMETHODIMP WebBrowser::OnProgressChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress, PRInt32 aCurTotalProgress, PRInt32 aMaxTotalProgress)
 {
-   return NS_OK;
+	return NS_OK;
 }
-
-NS_IMETHODIMP WebBrowser::OnStatusChange(nsIChannel *channel, PRInt32 progressStatusFlags)
-{
-   return NS_OK;
-}
-
-NS_IMETHODIMP WebBrowser::OnChildStatusChange(nsIChannel *channel, PRInt32 progressStatusFlags)
-{
-   return NS_OK;
-}
-
 
 NS_IMETHODIMP WebBrowser::OnLocationChange(nsIURI *location)
 {
