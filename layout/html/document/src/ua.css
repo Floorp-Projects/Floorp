@@ -142,9 +142,11 @@ TABLE {
   cell-padding: 2px;
   margin-top: 0;
   margin-bottom: 0;
+  background: transparent;
 }
 TD, TH {
-  vertical-align: middle;
+  vertical-align: inherit;
+  background: inherit;
   text-align: left;
 //  border-style: inset;
   border-color: #C0C0C0;
@@ -161,15 +163,23 @@ CAPTION {
 }
 TR {
   display: table-row;
+  vertical-align: inherit;
+  background: inherit;
 }
 TBODY {
   display: table-row-group;
+  vertical-align: middle;
+  background: inherit;
 }
 THEAD {
   display: table-header-group;
+  vertical-align: middle;
+  background: inherit;
 }
 TFOOT {
   display: table-footer-group;
+  vertical-align: middle;
+  background: inherit;
 }
 COL {
   display: table-column;
