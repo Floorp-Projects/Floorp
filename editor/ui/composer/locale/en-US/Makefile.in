@@ -30,6 +30,7 @@ EXPORT_RESOURCE_CONTENT = \
 	$(srcdir)/EditorAppShell.dtd \
 	$(srcdir)/sidebar-editor-rdf.dtd \
 	$(srcdir)/sidebar-editor.dtd \
+	$(srcdir)/viewSource.dtd \
 	$(NULL)
 
 install:: 
