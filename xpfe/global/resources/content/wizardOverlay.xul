@@ -10,12 +10,12 @@
 	<!-- Wizard Buttons -->
 	 <box id="wizardButtons" align="horizontal">
     <spring flex="100%"/>
-		<button class="dialog" id="wiz-cancel-button" value="&cancelButton.label;" onclick="wizardManager.onCancel()" />
+		<button class="dialog" id="wiz-cancel-button" value="&cancelButton.label;" oncommand="wizardManager.onCancel();" />
     <spring flex="20%"/>
-		<button class="dialog" id="wiz-back-button" value="&backButton.label;" onclick="wizardManager.onBack()" align="left" />
-		<button class="dialog right" id="wiz-next-button" value="&nextButton.label;" onclick="wizardManager.onNext()" align="right" />
+		<button class="dialog" id="wiz-back-button" value="&backButton.label;" oncommand="wizardManager.onBack();" align="left" />
+		<button class="dialog right" id="wiz-next-button" value="&nextButton.label;" oncommand="wizardManager.onNext();" align="right" />
     <spring flex="5%"/>
-		<button class="dialog" id="wiz-finish-button" value="&finishButton.label;" onclick="wizardManager.onFinish()" />
+		<button class="dialog" id="wiz-finish-button" value="&finishButton.label;" oncommand="wizardManager.onFinish();" />
     <spring flex="5%"/>
 	</box>
 	
