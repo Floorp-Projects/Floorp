@@ -22,7 +22,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS	= public src resources defaults
+DIRS	= public src resources defaults idlservices
 
 include $(topsrcdir)/config/config.mk
 
