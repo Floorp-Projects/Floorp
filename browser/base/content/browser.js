@@ -199,6 +199,23 @@ function UpdatePageReport(event)
     gReportButton.removeAttribute("blocked");
 }
 
+function RegisterTabOpenObserver()
+{
+  const observer = {
+    observe: function(subject, topic, data)
+    {
+      if (topic != "open-new-tab-request" || subject != window)
+        return;
+
+      delayedOpenTab(data);
+    }
+  };
+
+  const service = Components.classes["@mozilla.org/observer-service;1"]
+    .getService(Components.interfaces.nsIObserverService);
+  service.addObserver(observer, "open-new-tab-request", false);
+}
+
 function Startup()
 {
   // init globals
