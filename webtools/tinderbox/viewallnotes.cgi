@@ -25,8 +25,11 @@ require 'header.pl';
 use Date::Parse;
 use Date::Format
 
-#$| = 1;
-print "Content-type: text/html\n\n";
+my $TIMEFORMAT = "%D %T";
+
+$| = 1;
+
+À€ l print "Content-type: text/html\n\n<HTML>\n";
 
 print "<H1>Notes log</H1>\n";
 
