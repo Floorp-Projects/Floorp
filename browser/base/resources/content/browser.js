@@ -417,9 +417,6 @@ function UpdateBackForwardButtons()
 
 function Startup()
 {
-  setTimeout(delayedInit, 0);
-}
-function delayedInit() {
   // init globals
   gNavigatorBundle = document.getElementById("bundle_navigator");
   gNavigatorRegionBundle = document.getElementById("bundle_navigator_region");
