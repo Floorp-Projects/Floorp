@@ -207,8 +207,8 @@ nsresult NS_CreateAnonymousNode(nsIContent* aParent, nsIAtom* aTag, PRInt32 aNam
 {
 
     // get the document
-    nsIDocument* document = nsnull;
-    aParent->GetDocument(document);
+    nsCOMPtr<nsIDocument> document;
+    aParent->GetDocument(*getter_AddRefs(document));
     
     // create the xml element
     nsCOMPtr<nsIXMLContent> content;
