@@ -54,7 +54,7 @@
 <PROJECT>
     <TARGETLIST>
         <TARGET>
-            <NAME>msgmdnDebug.shlb</NAME>
+            <NAME>bayesianFilterDebug.shlb</NAME>
             <SETTINGLIST>
 
                 <!-- Settings for "Source Trees" panel -->
@@ -78,16 +78,6 @@
                     <SETTING>
                         <SETTING><NAME>SearchPath</NAME>
                             <SETTING><NAME>Path</NAME><VALUE>::</VALUE></SETTING>
-                            <SETTING><NAME>PathFormat</NAME><VALUE>MacOS</VALUE></SETTING>
-                            <SETTING><NAME>PathRoot</NAME><VALUE>Project</VALUE></SETTING>
-                        </SETTING>
-                        <SETTING><NAME>Recursive</NAME><VALUE>true</VALUE></SETTING>
-                        <SETTING><NAME>FrameworkPath</NAME><VALUE>false</VALUE></SETTING>
-                        <SETTING><NAME>HostFlags</NAME><VALUE>All</VALUE></SETTING>
-                    </SETTING>
-                    <SETTING>
-                        <SETTING><NAME>SearchPath</NAME>
-                            <SETTING><NAME>Path</NAME><VALUE>::::base:util:macbuild:</VALUE></SETTING>
                             <SETTING><NAME>PathFormat</NAME><VALUE>MacOS</VALUE></SETTING>
                             <SETTING><NAME>PathRoot</NAME><VALUE>Project</VALUE></SETTING>
                         </SETTING>
@@ -133,7 +123,7 @@
                 <SETTING><NAME>Linker</NAME><VALUE>MacOS PPC Linker</VALUE></SETTING>
                 <SETTING><NAME>PreLinker</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>PostLinker</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>Targetname</NAME><VALUE>msgmdnDebug.shlb</VALUE></SETTING>
+                <SETTING><NAME>Targetname</NAME><VALUE>bayesianFilterDebug.shlb</VALUE></SETTING>
                 <SETTING><NAME>OutputDirectory</NAME>
                     <SETTING><NAME>Path</NAME><VALUE>:</VALUE></SETTING>
                     <SETTING><NAME>PathFormat</NAME><VALUE>MacOS</VALUE></SETTING>
@@ -517,7 +507,7 @@
                 <!-- Settings for "FTP Panel" panel -->
                 <SETTING><NAME>MWFTP_Post_hostName</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_username</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_remoteDir</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathVersion</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathType</NAME><VALUE>0</VALUE></SETTING>
@@ -782,12 +772,12 @@
                 <SETTING><NAME>MWPEF_olddefversion</NAME><VALUE>100</VALUE></SETTING>
                 <SETTING><NAME>MWPEF_oldimpversion</NAME><VALUE>100</VALUE></SETTING>
                 <SETTING><NAME>MWPEF_currentversion</NAME><VALUE>100</VALUE></SETTING>
-                <SETTING><NAME>MWPEF_fragmentname</NAME><VALUE>MSGMDN_DLL</VALUE></SETTING>
+                <SETTING><NAME>MWPEF_fragmentname</NAME><VALUE>MSGBAYESIAN_DLL</VALUE></SETTING>
                 <SETTING><NAME>MWPEF_collapsereloads</NAME><VALUE>0</VALUE></SETTING>
 
                 <!-- Settings for "PPC Project" panel -->
                 <SETTING><NAME>MWProject_PPC_type</NAME><VALUE>SharedLibrary</VALUE></SETTING>
-                <SETTING><NAME>MWProject_PPC_outfile</NAME><VALUE>msgmdnDebug.shlb</VALUE></SETTING>
+                <SETTING><NAME>MWProject_PPC_outfile</NAME><VALUE>bayesianFilterDebug.shlb</VALUE></SETTING>
                 <SETTING><NAME>MWProject_PPC_filecreator</NAME><VALUE>MOZZ</VALUE></SETTING>
                 <SETTING><NAME>MWProject_PPC_filetype</NAME><VALUE>shlb</VALUE></SETTING>
                 <SETTING><NAME>MWProject_PPC_size</NAME><VALUE>0</VALUE></SETTING>
@@ -964,23 +954,16 @@
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsMsgMdnGenerator.cpp</PATH>
+                    <PATH>nsBayesianFilterFactory.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS></FILEFLAGS>
+                    <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsMsgMdnFactory.cpp</PATH>
+                    <PATH>nsBayesianFilter.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS></FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MsgUtilDebug.lib</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Library</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
             </FILELIST>
@@ -1017,23 +1000,18 @@
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsMsgMdnGenerator.cpp</PATH>
+                    <PATH>nsBayesianFilterFactory.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsMsgMdnFactory.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MsgUtilDebug.lib</PATH>
+                    <PATH>nsBayesianFilter.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
             </LINKORDER>
         </TARGET>
         <TARGET>
-            <NAME>msgmdn.shlb</NAME>
+            <NAME>bayesianFilter.shlb</NAME>
             <SETTINGLIST>
 
                 <!-- Settings for "Source Trees" panel -->
@@ -1057,16 +1035,6 @@
                     <SETTING>
                         <SETTING><NAME>SearchPath</NAME>
                             <SETTING><NAME>Path</NAME><VALUE>::</VALUE></SETTING>
-                            <SETTING><NAME>PathFormat</NAME><VALUE>MacOS</VALUE></SETTING>
-                            <SETTING><NAME>PathRoot</NAME><VALUE>Project</VALUE></SETTING>
-                        </SETTING>
-                        <SETTING><NAME>Recursive</NAME><VALUE>true</VALUE></SETTING>
-                        <SETTING><NAME>FrameworkPath</NAME><VALUE>false</VALUE></SETTING>
-                        <SETTING><NAME>HostFlags</NAME><VALUE>All</VALUE></SETTING>
-                    </SETTING>
-                    <SETTING>
-                        <SETTING><NAME>SearchPath</NAME>
-                            <SETTING><NAME>Path</NAME><VALUE>::::base:util:macbuild:</VALUE></SETTING>
                             <SETTING><NAME>PathFormat</NAME><VALUE>MacOS</VALUE></SETTING>
                             <SETTING><NAME>PathRoot</NAME><VALUE>Project</VALUE></SETTING>
                         </SETTING>
@@ -1112,7 +1080,7 @@
                 <SETTING><NAME>Linker</NAME><VALUE>MacOS PPC Linker</VALUE></SETTING>
                 <SETTING><NAME>PreLinker</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>PostLinker</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>Targetname</NAME><VALUE>msgmdn.shlb</VALUE></SETTING>
+                <SETTING><NAME>Targetname</NAME><VALUE>bayesianFilter.shlb</VALUE></SETTING>
                 <SETTING><NAME>OutputDirectory</NAME>
                     <SETTING><NAME>Path</NAME><VALUE>:</VALUE></SETTING>
                     <SETTING><NAME>PathFormat</NAME><VALUE>MacOS</VALUE></SETTING>
@@ -1496,7 +1464,7 @@
                 <!-- Settings for "FTP Panel" panel -->
                 <SETTING><NAME>MWFTP_Post_hostName</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_username</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_remoteDir</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathVersion</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathType</NAME><VALUE>0</VALUE></SETTING>
@@ -1761,12 +1729,12 @@
                 <SETTING><NAME>MWPEF_olddefversion</NAME><VALUE>100</VALUE></SETTING>
                 <SETTING><NAME>MWPEF_oldimpversion</NAME><VALUE>100</VALUE></SETTING>
                 <SETTING><NAME>MWPEF_currentversion</NAME><VALUE>100</VALUE></SETTING>
-                <SETTING><NAME>MWPEF_fragmentname</NAME><VALUE>MSGMDN_DLL</VALUE></SETTING>
+                <SETTING><NAME>MWPEF_fragmentname</NAME><VALUE>MSGBAYESIAN_DLL</VALUE></SETTING>
                 <SETTING><NAME>MWPEF_collapsereloads</NAME><VALUE>0</VALUE></SETTING>
 
                 <!-- Settings for "PPC Project" panel -->
                 <SETTING><NAME>MWProject_PPC_type</NAME><VALUE>SharedLibrary</VALUE></SETTING>
-                <SETTING><NAME>MWProject_PPC_outfile</NAME><VALUE>msgmdn.shlb</VALUE></SETTING>
+                <SETTING><NAME>MWProject_PPC_outfile</NAME><VALUE>bayesianFilter.shlb</VALUE></SETTING>
                 <SETTING><NAME>MWProject_PPC_filecreator</NAME><VALUE>MOZZ</VALUE></SETTING>
                 <SETTING><NAME>MWProject_PPC_filetype</NAME><VALUE>shlb</VALUE></SETTING>
                 <SETTING><NAME>MWProject_PPC_size</NAME><VALUE>0</VALUE></SETTING>
@@ -1943,23 +1911,16 @@
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsMsgMdnGenerator.cpp</PATH>
+                    <PATH>nsBayesianFilterFactory.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS></FILEFLAGS>
+                    <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsMsgMdnFactory.cpp</PATH>
+                    <PATH>nsBayesianFilter.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS></FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MsgUtil.lib</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Library</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
             </FILELIST>
@@ -1996,17 +1957,12 @@
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsMsgMdnGenerator.cpp</PATH>
+                    <PATH>nsBayesianFilterFactory.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsMsgMdnFactory.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MsgUtil.lib</PATH>
+                    <PATH>nsBayesianFilter.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
             </LINKORDER>
@@ -2014,102 +1970,90 @@
     </TARGETLIST>
 
     <TARGETORDER>
-        <ORDEREDTARGET><NAME>msgmdnDebug.shlb</NAME></ORDEREDTARGET>
-        <ORDEREDTARGET><NAME>msgmdn.shlb</NAME></ORDEREDTARGET>
+        <ORDEREDTARGET><NAME>bayesianFilterDebug.shlb</NAME></ORDEREDTARGET>
+        <ORDEREDTARGET><NAME>bayesianFilter.shlb</NAME></ORDEREDTARGET>
     </TARGETORDER>
 
     <GROUPLIST>
-        <GROUP><NAME>src</NAME>
+        <GROUP><NAME>build</NAME>
             <FILEREF>
-                <TARGETNAME>msgmdnDebug.shlb</TARGETNAME>
+                <TARGETNAME>bayesianFilterDebug.shlb</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
-                <PATH>nsMsgMdnGenerator.cpp</PATH>
+                <PATH>nsBayesianFilterFactory.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
         </GROUP>
-        <GROUP><NAME>build</NAME>
+        <GROUP><NAME>src</NAME>
             <FILEREF>
-                <TARGETNAME>msgmdnDebug.shlb</TARGETNAME>
+                <TARGETNAME>bayesianFilterDebug.shlb</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
-                <PATH>nsMsgMdnFactory.cpp</PATH>
+                <PATH>nsBayesianFilter.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
         </GROUP>
         <GROUP><NAME>NS Libraries</NAME>
             <GROUP><NAME>Optimized</NAME>
                 <FILEREF>
-                    <TARGETNAME>msgmdn.shlb</TARGETNAME>
+                    <TARGETNAME>bayesianFilter.shlb</TARGETNAME>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>NSStdLib.shlb</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <TARGETNAME>msgmdn.shlb</TARGETNAME>
+                    <TARGETNAME>bayesianFilter.shlb</TARGETNAME>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>NSRuntime.shlb</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <TARGETNAME>msgmdn.shlb</TARGETNAME>
+                    <TARGETNAME>bayesianFilter.shlb</TARGETNAME>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>NSPR20.shlb</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <TARGETNAME>msgmdn.shlb</TARGETNAME>
+                    <TARGETNAME>bayesianFilter.shlb</TARGETNAME>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>xpcom.shlb</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <TARGETNAME>msgmdn.shlb</TARGETNAME>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MsgUtil.lib</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
             </GROUP>
             <GROUP><NAME>Debug</NAME>
                 <FILEREF>
-                    <TARGETNAME>msgmdnDebug.shlb</TARGETNAME>
+                    <TARGETNAME>bayesianFilterDebug.shlb</TARGETNAME>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>NSStdLibDebug.shlb</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <TARGETNAME>msgmdnDebug.shlb</TARGETNAME>
+                    <TARGETNAME>bayesianFilterDebug.shlb</TARGETNAME>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>NSRuntimeDebug.shlb</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <TARGETNAME>msgmdnDebug.shlb</TARGETNAME>
+                    <TARGETNAME>bayesianFilterDebug.shlb</TARGETNAME>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>NSPR20Debug.shlb</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <TARGETNAME>msgmdnDebug.shlb</TARGETNAME>
+                    <TARGETNAME>bayesianFilterDebug.shlb</TARGETNAME>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>xpcomDebug.shlb</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <TARGETNAME>msgmdnDebug.shlb</TARGETNAME>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MsgUtilDebug.lib</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
             </GROUP>
         </GROUP>
         <GROUP><NAME>System Libraries</NAME>
             <FILEREF>
-                <TARGETNAME>msgmdnDebug.shlb</TARGETNAME>
+                <TARGETNAME>bayesianFilterDebug.shlb</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>NSComponentStartup.o</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>msgmdnDebug.shlb</TARGETNAME>
+                <TARGETNAME>bayesianFilterDebug.shlb</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>InterfacesStubs</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>

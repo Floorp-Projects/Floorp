@@ -2444,6 +2444,7 @@ sub BuildMailNewsProjects()
     	BuildOneProject(":mozilla:mailnews:extensions:mdn:macbuild:msgmdn.xml",         "msgmdn$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     }
     BuildOneProject(":mozilla:mailnews:extensions:mailviews:macbuild:mailviews.xml",  "mailviews$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:mailnews:extensions:bayesian-spam-filter:macbuild:BayesianFilter.xml", "bayesianFilter$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
 
     if ($main::options{mdn}) {
     	InstallResources(":mozilla:mailnews:extensions:mdn:src:MANIFEST",				 "${dist_dir}Components");
