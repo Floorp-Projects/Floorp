@@ -271,7 +271,7 @@ runItem.prototype =
             if (!refContent) {
                 refContent = this.loadTextFile(this.mRefURL);
             }
-            this.mRefDoc = parser.parseFromString(refContent, 'text/xml');
+            this.mRefDoc = parser.parseFromString(refContent, 'application/xml');
             this.mLoaded += 4;
             break;
         case 'html':

@@ -199,7 +199,7 @@ XBLBindings.prototype =
     if (aURL) {
       var doc = document.implementation.createDocument(null, "", null);
       doc.addEventListener("load", gDocLoadListener, true);
-      doc.load(aURL, "text/xml");
+      doc.load(aURL, "application/xml");
     
       this.mBindingDoc = doc;
       this.mBindingURL = aURL;
