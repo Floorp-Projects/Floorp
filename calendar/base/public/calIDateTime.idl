@@ -150,6 +150,12 @@ interface calIDateTime : nsISupports
 
   [noscript,notxpcom] void toIcalTime(in icaltimetypeptr itt);
 
+  /**
+   * This object as either an iCalendar DATE or DATETIME string, as
+   * appropriate.
+   */
+  readonly attribute ACString icalString;
+
   /* JS only:
    * attribute Date jsDate;
    */

@@ -290,6 +290,23 @@ calDateTime::GetEndOfYear(calIDateTime **aResult)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+calDateTime::GetIcalString(nsACString& aResult)
+{
+    icaltimetype t;
+    ToIcalTime(&t);
+
+    // note that ics is owned by libical, so we don't need to free
+    char *ics = icaltime_as_ical_string(t);
+    
+    if (ics) {
+        aResult.Assign(ics);
+        return NS_OK;
+    }
+
+    return NS_ERROR_OUT_OF_MEMORY;
+}
+
 
 /**
  ** utility/protected methods
