@@ -23,5 +23,5 @@ Rights Reserved.
 <!ENTITY fieldMapImport.next "Next">
 <!ENTITY fieldMapImport.previous "Previous">
 <!ENTITY fieldMapImport.fieldListTitle "Address Book fields:">
-<!ENTITY fieldMapImport.dataTitle "Record to import:">
+<!ENTITY fieldMapImport.dataTitle "Record data to import:">
 

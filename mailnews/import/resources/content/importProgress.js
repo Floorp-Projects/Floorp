@@ -48,7 +48,7 @@ function OnLoadProgressDialog()
 	}
 
 	top.progressInfo.progressWindow = top.window;
-	top.progressInfo.intervalState = setInterval( "Continue()", 500);
+	top.progressInfo.intervalState = setInterval( "Continue()", 100);
 
 }
 

@@ -26,6 +26,7 @@ var importService = 0;
 var successStr = null;
 var errorStr = null;
 var progressInfo = null;
+var selectedModuleName = null;
 
 function OnLoadImportDialog()
 {
@@ -117,6 +118,7 @@ function ImportDialogOKButton()
 		var index = tree.selectedItems[0].getAttribute('list-index');
 		var module = top.importService.GetModule( top.importType, index);
 		var name = top.importService.GetModuleName( top.importType, index);
+		top.selectedModuleName = name;
 		if (module != null) 
 		{
 			switch( top.importType )
@@ -334,17 +336,25 @@ function ContinueImport( info) {
 
 function ShowMailComplete( good)
 {
-	var str;
+	var str = null;
 	if (good == true) {
 		str = top.bundle.GetStringFromName( 'ImportMailSuccess');
-		str += "\nsuccess: " + top.successStr.data + "\nerror:" + top.errorStr.data;
+		if ((top.selectedModuleName != null) && (top.selectedModuleName.length > 0))
+			str += " " + top.selectedModuleName;
+		str += "\n";
+		str += "\n" + top.successStr.data;
+		if ((top.errorStr.data != null) && (top.errorStr.data.length > 0))
+			str += "\n" + "\n" + top.errorStr.data;
 	}
 	else {
-		str = top.bundle.GetStringFromName( 'ImportMailFailed');
-		str += "\nerror: " + top.errorStr.data;
+		if ((top.errorStr.data != null) && (top.errorStr.data.length > 0)) {
+			str = top.bundle.GetStringFromName( 'ImportMailFailed');
+			str += "\n" + top.errorStr.data;
+		}
 	}
 	
-	alert( str);
+	if (str != null)
+		alert( str);
 }
 
 
@@ -353,12 +363,15 @@ function ShowAddressComplete( good)
 	var str = null;
 	if (good == true) {
 		str = top.bundle.GetStringFromName( 'ImportAddressSuccess');
-		str += "\nsuccess: " + top.successStr.data + "\nerror:" + top.errorStr.data;
+		if ((top.selectedModuleName != null) && (top.selectedModuleName.length > 0))
+			str += " " + top.selectedModuleName;
+		str += "\n";
+		str += "\n" + top.successStr.data;
 	}
 	else {
 		if ((top.errorStr.data != null) && (top.errorStr.data.length > 0)) {
 			str = top.bundle.GetStringFromName( 'ImportAddressFailed');
-			str += "\nerror: " + top.errorStr.data;
+			str += "\n" + top.errorStr.data;
 		}
 	}
 	

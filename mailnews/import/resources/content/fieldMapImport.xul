@@ -19,7 +19,7 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
-<?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
@@ -49,52 +49,34 @@ Rights Reserved.
 		<!-- field list -->
 		<box align="vertical">
 			<spring style="height:1em"/>
-			<html:div id="fieldLabel">&fieldMapImport.fieldListTitle;</html:div>
+			<box align="horizontal">
+				<html:div flex="35%" id="fieldLabel">&fieldMapImport.fieldListTitle;</html:div>
+				<!-- <spring flex="35%"/> -->
+				<html:div flex="65%" id="dataLabel">&fieldMapImport.dataTitle;</html:div>
+			</box>
 			<spring style="height:.5em"/>
 				
 			<box align="vertical" style="border: 1px inset white">
-				<html:div style="width:12em; height:200px" flex="1">
-					<tree	id="fieldList" style="width:100%; height:100%" 
-							onselect="FieldSelectionChanged()"
-							ondragover="return DragOverTree(event);"
-							ondraggesture="return BeginDrag( event);"
-							ondragdrop="return DropOnTree( event);">
-						<treecol style="width:20%"/>
-						<treecol style="width:80%"/>
-						<treechildren id="fieldBody"/>
-					</tree>
-				</html:div>
+				<tree	id="fieldList" style="width:32em; height:280px;" 
+						ondragover="return DragOverTree(event);"
+						ondraggesture="return BeginDrag( event);"
+						ondragdrop="return DropOnTree( event);">
+					<treecol style="width:10%"/>
+					<treecol style="width:25%"/>
+					<treecol id="dataColumn" style="width:65%"/>
+					<treechildren id="fieldBody"/>
+				</tree>
 			</box>
 						
 			<spring style="height:1.5em"/>
 			
 		</box>
-		
-		<spring style="width: 1em"/>
-
-		<box align="vertical">
-			<spring style="height:1em"/>
-			<html:div id="fieldLabel">&fieldMapImport.dataTitle;</html:div>
-			<spring style="height:.5em"/>
-				
-			<box align="vertical" style="border: 1px inset white">
-				<html:div style="width:20em; height:200px" flex="1">
-					<tree id="dataList" style="width:100%; height:100%">
-						<treecol style="width:100%"/>
-						<treechildren id="dataBody"/>
-					</tree>
-				</html:div>
-			</box>
-						
-			<spring style="height:1.5em"/>
-			
-		</box>
-	
+					
 		<spring style="width:3em"/>
 
 	</box>
 	
-	<spring style="height: 1em"/>
+	<spring style="height: .5em"/>
 
 	<box align="horizontal">
 		<spring flex="50%"/>
@@ -108,7 +90,7 @@ Rights Reserved.
 		<spring flex="50%"/>		
 	</box>
 
-	<spring style="height: 3em"/>
+	<spring style="height: 2em"/>
 
 	<!-- OK & Cancel buttons -->
 	<box id="okCancelButtons"/>

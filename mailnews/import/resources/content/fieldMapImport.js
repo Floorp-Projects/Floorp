@@ -90,18 +90,8 @@ function ListFields() {
 	}
 }
 
-
-function CheckClick( item)
+function BoxClick( item)
 {
-	if (item.getAttribute( 'isChecked') == "true") {
-		item.setAttribute( 'isChecked', "false");
-		item.firstChild.removeAttribute( 'checked');
-	}
-	else {
-		item.setAttribute( 'isChecked', "true");
-		item.firstChild.setAttribute( 'checked', "true");
-	}
-	
 	return( true);
 }
 
@@ -119,16 +109,20 @@ function CreateField( name, index, on)
 	cBox.setAttribute( 'type', "checkbox");
 	if (on == true)
 		cBox.setAttribute( 'checked', "true");
-	cBox.setAttribute( 'onclick', "return BoxClick();");
+	/* cBox.setAttribute( 'onclick', "return BoxClick( event.target);"); */
 
-	cCell.appendChild( cBox);	
-	cCell.setAttribute( 'onclick', "return CheckClick( event.target);");
-	cCell.setAttribute( 'isChecked', on);
+	cCell.appendChild( cBox);
+	cCell.setAttribute( 'allowevents', "true");	
 
 	row.appendChild( cCell);
-
-
 	row.appendChild(cell);
+
+	cell = document.createElement( 'treecell');
+	cell.setAttribute( 'value', " ");
+	cell.setAttribute( 'noDrag', "true");
+	cell.setAttribute( 'style', "border-left: 5px grey ridge; padding-left: 10px;");
+	row.appendChild( cell);
+
 	item.appendChild(row);
 
 	return( item);
@@ -165,6 +159,9 @@ function BeginDrag( event)
         
 	// the index is on the <treeitem> which is two levels above the <treecell> which is
 	// the target of the event.
+	if (event.target.getAttribute( 'noDrag') == "true")
+		return( false);
+
 	var index = event.target.parentNode.parentNode.getAttribute("field-index");
 	var indexStr = ("" + index);
 	genData.data = indexStr;
@@ -184,6 +181,29 @@ function BeginDrag( event)
 
 	return( false);  // don't propagate the event if a drag has begun
 }
+
+
+function SetRow( row, dstIndex, dstBox, dstField)
+{
+	row.setAttribute( 'field-index', dstIndex);
+	if (dstBox == true) {
+		row.firstChild.firstChild.firstChild.checked = true;
+	}
+	else {
+		row.firstChild.firstChild.firstChild.checked = false;
+	}
+
+	row.firstChild.childNodes[1].setAttribute( "value", dstField);
+}
+
+
+function AssignRow( toRow, fromRow)
+{
+	SetRow( toRow,	fromRow.getAttribute( 'field-index'), 
+					fromRow.firstChild.firstChild.firstChild.checked,
+					fromRow.firstChild.childNodes[1].getAttribute( "value"));
+}
+
 
 function FindRowFromIndex( body, index)
 {
@@ -289,29 +309,46 @@ function DropOnTree( event)
 				}
 			}
 			
-			var name;
-			var	on;
+			var maxIndex = body.childNodes.length - 1;
+			var dstBox = body.childNodes[srcRow].firstChild.firstChild.firstChild.checked;
+			var dstField = body.childNodes[srcRow].firstChild.childNodes[1].getAttribute( "value");
+			var dstIndex = body.childNodes[srcRow].getAttribute( 'field-index');
+			
+			dump( "FieldDrag from " + srcRow + " to " + dstRow + "\n");
 
 			if (dstRow < 0) {
 				// remove the row and append it to the end!
-				var dstItem = body.childNodes[srcRow];
-				body.removeChild( dstItem);
-				body.appendChild( dstItem);
-
+				// Move srcRow to the end!				
+				while (srcRow < maxIndex) {
+					AssignRow( body.childNodes[srcRow], body.childNodes[srcRow + 1]);
+					srcRow++;
+				}
+				
+				SetRow( body.childNodes[maxIndex], dstIndex, dstBox, dstField);
 			}
 			else {
 				if (dstRow == srcRow)
 					continue;
-
-				// insert the row before dstRow
-				var dstItem = body.childNodes[srcRow];
-				// name = dstItem.firstChild.firstChild.getAttribute( 'value');
-				// on = dstItem.getAttribute( 'isChecked');
-				body.removeChild( dstItem);
 				if (srcRow < dstRow)
 					dstRow--;
-				// dstItem = CreateField( name, fIndex, on);
-				body.insertBefore( dstItem, body.childNodes[dstRow]);
+				if (dstRow == srcRow)
+					continue;
+
+				if (dstRow < srcRow) {
+					// move dstRow down to srcRow
+					while (dstRow < srcRow) {
+						AssignRow( body.childNodes[srcRow], body.childNodes[srcRow - 1]);
+						srcRow--;
+					}
+				}
+				else {
+					// move dstRow up to srcRow
+					while (srcRow < dstRow) {
+						AssignRow( body.childNodes[srcRow], body.childNodes[srcRow + 1]);
+						srcRow++;
+					}
+				}
+				SetRow( body.childNodes[dstRow], dstIndex, dstBox, dstField);
 			}
 
 		}
@@ -355,23 +392,15 @@ function DragOverTree( event)
 
 function ShowSampleData( data)
 {
-	var body = document.getElementById( "dataBody");
-	var max = body.childNodes.length - 1;
-	while (max >= 0) {
-		body.removeChild( body.childNodes[max]);
-		max--;
-	}
-	
-	// split up the string into individual str's for the tree nodes
+	var fBody = document.getElementById( "fieldBody");
 	var fields = data.split( "\n");
-	for (var i = 0; i < fields.length; i++) {
-		var item = document.createElement('treeitem');
-		var row = document.createElement('treerow');
-		var cell = document.createElement('treecell');
-		cell.setAttribute('value', fields[i]);
-		row.appendChild(cell);
-		item.appendChild(row);
-		body.appendChild(item);
+	for (var i = 0; i < fBody.childNodes.length; i++) {
+		if (i < fields.length) {
+			fBody.childNodes[i].firstChild.childNodes[2].setAttribute( 'value', fields[i]);
+		}
+		else {
+			fBody.childNodes[i].firstChild.childNodes[2].setAttribute( 'value', " ");
+		}
 	}
 
 }
@@ -429,9 +458,9 @@ function FieldImportOKButton()
 	var on;
 	for (var i = 0; i < max; i++) {
 		fIndex = body.childNodes[i].getAttribute( 'field-index');
-		on = body.childNodes[i].firstChild.firstChild.getAttribute( 'isChecked');
+		on = body.childNodes[i].firstChild.firstChild.firstChild.checked;
 		top.fieldMap.SetFieldMap( i, fIndex);
-		if (on == "true")
+		if (on == true)
 			top.fieldMap.SetFieldActive( i, true);
 		else
 			top.fieldMap.SetFieldActive( i, false);
