@@ -72,6 +72,7 @@ nsProxyObjectCallInfo::SetCompleted()
     PR_AtomicSet(&mCompleted, 1);
 }
 
+#define debug_DOUGT
 
 #ifdef debug_DOUGT
 static PRUint32 totalProxyObjects = 0;
@@ -160,6 +161,11 @@ nsProxyObject::NestedEventLoop(nsProxyObjectCallInfo *proxyInfo)
         
         rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &eventQ);
     }
+    else
+    {
+        NS_RELEASE(eventQ);
+        rv = eventQService->PushThreadEventQueue(&eventQ);
+    }
 
     if (NS_FAILED(rv))
         return rv;
@@ -169,12 +175,21 @@ nsProxyObject::NestedEventLoop(nsProxyObjectCallInfo *proxyInfo)
         rv = eventQ->GetEvent(&event);
         if (NS_FAILED(rv)) break;
         eventQ->HandleEvent(event);
+
+        PR_Sleep( PR_MillisecondsToInterval(5) );
     }  
 
-    NS_RELEASE(eventQ);
+   
 
     if (eventLoopCreated)
-        eventQService->DestroyThreadEventQueue();
+    {
+         NS_RELEASE(eventQ);
+         eventQService->DestroyThreadEventQueue();
+    }
+    else
+    {
+        eventQService->PopThreadEventQueue(eventQ);
+    }
 
     return rv;
 }
@@ -259,9 +274,8 @@ nsProxyObject::Post( PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTCMi
         else
         {
             mDestQueue->PostEvent(event);
-            
             rv = NestedEventLoop(proxyInfo);
-            
+            //mDestQueue->PostSynchronousEvent(event, nsnull);
             if (NS_FAILED(rv))
                 return rv;
         }

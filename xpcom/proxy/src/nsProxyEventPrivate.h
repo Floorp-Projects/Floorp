@@ -55,7 +55,6 @@ public:
 
     REFNSIID                 GetIID() const {return mIID;}
     nsIInterfaceInfo*        GetInterfaceInfo() const {return mInfo;}
-	nsresult				 GetRootProxyObject(nsProxyEventObject* anObject, nsProxyEventObject** result);
 	nsresult				 CallQueryInterfaceOnProxy(nsProxyEventObject* self, REFNSIID aIID, nsProxyEventObject** aInstancePtr);
 
 protected:
@@ -90,14 +89,9 @@ public:
 
 
     REFNSIID              GetIID()             const { return GetClass()->GetIID();}
-    
-    nsIEventQueue*        GetQueue()           const { return mProxyObject->GetQueue(); }
-    nsIEventQueue*        GetPLQueue()         const { return mProxyObject->GetQueue(); }
     nsProxyEventClass*    GetClass()           const { return mClass; }
+    nsIEventQueue*        GetQueue()           const { return mProxyObject->GetQueue(); }
     nsISupports*          GetRealObject()      const { return mProxyObject->GetRealObject(); }
-    nsProxyEventObject*   GetRootProxyObject() const { return mRoot; }
-    
-    nsProxyEventObject*   Find(REFNSIID aIID);
     
 
 protected:
@@ -108,8 +102,11 @@ protected:
                        nsISupports* aObj,
     				   nsProxyEventClass* aClass,
                        nsProxyEventObject* root);
+    
+    nsProxyEventObject*   Find(REFNSIID aIID);
 
 private:
+    nsresult            RootRemoval();
 
     nsProxyObject*      mProxyObject;
     nsProxyEventClass*  mClass;
