@@ -18,7 +18,7 @@
 
 #include "nsNetService.h"
 #include "nsIProtocolHandler.h"
-#include "nsUrl.h"
+#include "nsURL.h"
 #include "nscore.h"
 #include "nsString2.h"
 #include "nsIServiceManager.h"
@@ -49,8 +49,9 @@ NS_IMPL_ISUPPORTS(nsNetService, nsINetService::GetIID());
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
-nsNetService::GetProtocolHandler(nsIUrl* url, nsIProtocolHandler* *result)
+nsNetService::GetProtocolHandler(nsIURL* url, nsIProtocolHandler* *result)
 {
+#if 0 // will fix later... 
     nsresult rv;
     const char* scheme;
     
@@ -70,6 +71,7 @@ nsNetService::GetProtocolHandler(nsIUrl* url, nsIProtocolHandler* *result)
     if (NS_FAILED(rv)) return rv;
 
     *result = handler;
+#endif // fix TODO
     return NS_OK;
 }
 
@@ -90,35 +92,55 @@ nsNetService::NewConnectionGroup(nsIConnectionGroup* *result)
 }
 
 NS_IMETHODIMP
-nsNetService::NewURL(nsIUrl* *result, 
+nsNetService::NewURL(nsIURL* *result, 
                      const char* aSpec,
-                     const nsIUrl* aBaseURL,
+                     const nsIURL* aBaseURL,
                      nsISupports* aContainer)
 {
+#if 0
     nsresult rv;
-    nsUrl* url = new nsUrl();
-    if (url == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    rv = url->Init(aSpec, aBaseURL, aContainer);
-    if (NS_FAILED(rv)) {
-        delete url;
-        return rv;
+    nsURL* url;
+    if (aBaseURL)
+    {
+        aBaseURL->Clone(&url);
+        PR_ASSERT(url);
+        if (!url)
+            return NS_ERROR_OUT_OF_MEMORY;
+        rv = url->MakeAbsoluteFrom(aSpec);
+        if (NS_FAILED(rv))
+        {
+            delete url;
+            url = 0;
+            return rv;
+        }
     }
+    else
+    {
+        url = new nsURL(aSpec);
+        if (nsnull == url)
+            return NS_ERROR_OUT_OF_MEMORY;
+    }
+
     NS_ADDREF(url);
     *result = url;
+#endif // TODO 
     return NS_OK;
 }
 
+
 NS_IMETHODIMP
-nsNetService::Open(nsIUrl* url, nsISupports* eventSink,
+nsNetService::Open(nsIURL* url, nsISupports* eventSink,
                    nsIConnectionGroup* group,
-                   nsIProtocolConnection* *result)
+                   nsIProtocolInstance* *result)
 {
+#if 0
     nsresult rv;
     nsIProtocolHandler* handler;
     rv = GetProtocolHandler(url, &handler);
     if (NS_FAILED(rv)) return rv;
     return handler->Open(url, eventSink, group, result);
+#endif // TODO - there is no open on the handler.
+    return NS_OK;
 }
 
 NS_IMETHODIMP
