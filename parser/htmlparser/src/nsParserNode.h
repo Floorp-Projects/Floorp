@@ -46,27 +46,107 @@ class nsCParserNode :  public nsIParserNode {
             
   public:
 
-                                nsCParserNode(CHTMLToken* aToken);
-                                ~nsCParserNode();
-    virtual const nsString&     GetName() const;  //to get name of tag
-    virtual const nsString&     GetText() const;  //get plain text if available
-    virtual const nsString&     GetSkippedContent() const;
+    /**
+     * Default constructor
+     * @update	gess5/11/98
+     * @param   aToken is the token this node "refers" to
+     */
+    nsCParserNode(CHTMLToken* aToken);
 
-              //methods for determining the type of parser node...            
-    virtual PRInt32             GetNodeType() const;
-    virtual PRInt32             GetTokenType() const;
+    /**
+     * Destructor
+     * @update	gess5/11/98
+     */
+    ~nsCParserNode();
 
-              //methods for accessing key/value pairs
-    virtual PRInt32             GetAttributeCount(void) const;
-    virtual const nsString&     GetKeyAt(PRInt32 anIndex) const;
-    virtual const nsString&     GetValueAt(PRInt32 anIndex) const;
+    /**
+     * Retrieve the name of the node
+     * @update	gess5/11/98
+     * @return  string containing node name
+     */
+    virtual const nsString& GetName() const;
 
-    virtual void                AddAttribute(CHTMLToken* aToken);
-    virtual void                SetSkippedContent(CHTMLToken* aToken);
+    /**
+     * Retrieve the text from the given node
+     * @update	gess5/11/98
+     * @return  string containing node text
+     */
+    virtual const nsString& GetText() const;
 
-              // misc
-    virtual PRInt32             TranslateToUnicodeStr(nsString& aString) const;
+    /**
+     * Retrieve skipped context from node
+     * @update	gess5/11/98
+     * @return  string containing skipped content
+     */
+    virtual const nsString& GetSkippedContent() const;
 
+    /**
+     * Retrieve the type of the parser node.
+     * @update	gess5/11/98
+     * @return  node type.
+     */
+    virtual PRInt32 GetNodeType()  const;
+
+    /**
+     * Retrieve token type of parser node
+     * @update	gess5/11/98
+     * @return  token type
+     */
+    virtual PRInt32 GetTokenType()  const;
+
+    //***************************************
+    //methods for accessing key/value pairs
+    //***************************************
+
+    /**
+     * Retrieve the number of attributes in this node.
+     * @update	gess5/11/98
+     * @return  count of attributes (may be 0)
+     */
+    virtual PRInt32 GetAttributeCount(void) const;
+
+    /**
+     * Retrieve the key (of key/value pair) at given index
+     * @update	gess5/11/98
+     * @param   anIndex is the index of the key you want
+     * @return  string containing key.
+     */
+    virtual const nsString& GetKeyAt(PRInt32 anIndex) const;
+
+    /**
+     * Retrieve the value (of key/value pair) at given index
+     * @update	gess5/11/98
+     * @param   anIndex is the index of the value you want
+     * @return  string containing value.
+     */
+    virtual const nsString& GetValueAt(PRInt32 anIndex) const;
+
+    /**
+     * NOTE: When the node is an entity, this will translate the entity
+     *       to it's unicode value, and store it in aString.
+     * @update	gess5/11/98
+     * @param   aString will contain the resulting unicode string value
+     * @return  int (unicode char or unicode index from table)
+     */
+    virtual PRInt32 TranslateToUnicodeStr(nsString& aString) const;
+
+    /**
+     * 
+     * @update	gess5/11/98
+     * @param 
+     * @return
+     */
+    virtual void AddAttribute(CHTMLToken* aToken);
+
+    /**
+     * 
+     * @update	gess5/11/98
+     * @param 
+     * @return
+     */
+    virtual void SetSkippedContent(CHTMLToken* aToken);
+
+              
   protected:
                   PRInt32       mAttributeCount;    
                   CHTMLToken*   mToken;
