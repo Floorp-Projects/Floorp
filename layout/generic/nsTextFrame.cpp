@@ -3271,7 +3271,7 @@ nsTextFrame::Reflow(nsIPresContext* aPresContext,
       }
     }
   }
-  lineLayout.SetColumn(column);
+  lineLayout.SetColumn(textData.mColumn);
 
   // Inform line layout of how this piece of text ends in whitespace
   // (only text objects do this). Note that if x is zero then this
