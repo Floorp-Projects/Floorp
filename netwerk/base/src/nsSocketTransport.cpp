@@ -348,6 +348,14 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
     mStatus = NS_BINDING_FAILED;
   }
 
+  if (PR_POLL_HUP & aSelectFlags) {
+    PR_LOG(gSocketLog, PR_LOG_ERROR, 
+           ("Operation failed via PR_POLL_HUP. [%s:%d %x].\n", 
+            mHostName, mPort, this));
+    mStatus = NS_OK;
+    mCurrentState = eSocketState_Error;
+  }
+
   while (!done)
   {
     //
