@@ -816,6 +816,7 @@ public:
   NS_IMETHOD_(PRBool) UseForMedium(nsIAtom* aMedium) const;
   NS_IMETHOD AppendMedium(nsIAtom* aMedium);
   NS_IMETHOD ClearMedia(void);
+  NS_IMETHOD_(PRBool) HasRules() const;
   NS_IMETHOD DeleteRuleFromGroup(nsICSSGroupRule* aGroup, PRUint32 aIndex);
   NS_IMETHOD InsertRuleIntoGroup(const nsAString& aRule, nsICSSGroupRule* aGroup, PRUint32 aIndex, PRUint32* _retval);
   NS_IMETHOD ReplaceRuleInGroup(nsICSSGroupRule* aGroup, nsICSSRule* aOld, nsICSSRule* aNew);
@@ -1916,6 +1917,13 @@ CSSStyleSheetImpl::ClearMedia(void)
   return NS_OK;
 }
 
+NS_IMETHODIMP_(PRBool)
+CSSStyleSheetImpl::HasRules() const
+{
+  PRInt32 count;
+  StyleRuleCount(count);
+  return count != 0;
+}
 
 NS_IMETHODIMP
 CSSStyleSheetImpl::GetApplicable(PRBool& aApplicable) const

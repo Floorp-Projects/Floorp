@@ -1047,7 +1047,7 @@ public:
   NS_IMETHOD GetActiveAlternateStyleSheet(nsString& aSheetTitle);
   NS_IMETHOD SelectAlternateStyleSheet(const nsString& aSheetTitle);
   NS_IMETHOD ListAlternateStyleSheets(nsStringArray& aTitleList);
-  NS_IMETHOD ReconstructStyleData(PRBool aRebuildRuleTree);
+  NS_IMETHOD ReconstructStyleData();
   NS_IMETHOD SetPreferenceStyleRules(PRBool aForceReflow);
   NS_IMETHOD EnablePrefStyleRules(PRBool aEnable, PRUint8 aPrefType=0xFF);
   NS_IMETHOD ArePrefStyleRulesEnabled(PRBool& aEnabled);
@@ -2017,11 +2017,8 @@ PresShell::SelectAlternateStyleSheet(const nsString& aSheetTitle)
         }
       }
     }
-    // We don't need to rebuild the
-    // rule tree, since no rule nodes have been rendered invalid by the
-    // addition of new rule content.  They can simply lurk in the tree
-    // until the stylesheet is enabled once more.
-    return ReconstructStyleData(PR_FALSE);
+    
+    return ReconstructStyleData();
   }
   return NS_OK;
 }
@@ -5418,106 +5415,8 @@ PresShell::ReconstructFrames(void)
   return rv;
 }
 
-/*
- * It's better to add stuff to the |DidSetStyleContext| method of the
- * relevant frames than adding it here.  These methods should (ideally,
- * anyway) go away.
- */
-
-// Return value says whether to walk children.
-typedef PRBool (* PR_CALLBACK frameWalkerFn)(nsIFrame *aFrame, void *aClosure);
-   
-PR_STATIC_CALLBACK(PRBool)
-BuildFramechangeList(nsIFrame *aFrame, void *aClosure)
-{
-  nsStyleChangeList *changeList = NS_STATIC_CAST(nsStyleChangeList*, aClosure);
-
-  // Ok, get our binding information.
-  if (!aFrame->GetStyleDisplay()->mBinding.IsEmpty()) {
-    // We had a binding.
-    nsIContent* content = aFrame->GetContent();
-    nsCOMPtr<nsIDocument> doc;
-    content->GetDocument(getter_AddRefs(doc));
-    if (doc) {
-      nsCOMPtr<nsIBindingManager> bm;
-      doc->GetBindingManager(getter_AddRefs(bm));
-      nsCOMPtr<nsIXBLBinding> binding;
-      bm->GetBinding(content, getter_AddRefs(binding));
-      PRBool marked = PR_FALSE;
-      binding->MarkedForDeath(&marked);
-      if (marked) {
-        // Add in a change to process, thus ensuring this binding gets rebuilt.
-        changeList->AppendChange(aFrame, content, NS_STYLE_HINT_FRAMECHANGE);
-        return PR_FALSE;
-      }
-    }
-  }
-
-  return PR_TRUE;
-}
-
-#ifdef MOZ_XUL
-PR_STATIC_CALLBACK(PRBool)
-ReResolveMenusAndTrees(nsIFrame *aFrame, void *aClosure)
-{
-  // Trees have a special style cache that needs to be flushed when
-  // the theme changes.
-  nsCOMPtr<nsITreeBoxObject> treeBox(do_QueryInterface(aFrame));
-  if (treeBox)
-    treeBox->ClearStyleAndImageCaches();
-
-  // We deliberately don't re-resolve style on a menu's popup
-  // sub-content, since doing so slows menus to a crawl.  That means we
-  // have to special-case them on a skin switch, and ensure that the
-  // popup frames just get destroyed completely.
-  nsCOMPtr<nsIMenuFrame> menuFrame(do_QueryInterface(aFrame));
-  if (menuFrame) {
-    menuFrame->UngenerateMenu();  
-    menuFrame->OpenMenu(PR_FALSE);
-  }
-  return PR_TRUE;
-}
-#endif
-
-static void
-WalkFramesThroughPlaceholders(nsIPresContext *aPresContext, nsIFrame *aFrame,
-                              frameWalkerFn aFunc, void *aClosure)
-{
-  PRBool walkChildren = (*aFunc)(aFrame, aClosure);
-  if (!walkChildren)
-    return;
-
-  PRInt32 listIndex = 0;
-  nsCOMPtr<nsIAtom> childList;
-
-  do {
-    nsIFrame *child = nsnull;
-    aFrame->FirstChild(aPresContext, childList, &child);
-    while (child) {
-      if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
-        // only do frames that are in flow
-        nsCOMPtr<nsIAtom> frameType;
-        child->GetFrameType(getter_AddRefs(frameType));
-        if (nsLayoutAtoms::placeholderFrame == frameType) { // placeholder
-          // get out of flow frame and recur there
-          nsIFrame* outOfFlowFrame =
-              NS_STATIC_CAST(nsPlaceholderFrame*, child)->GetOutOfFlowFrame();
-          NS_ASSERTION(outOfFlowFrame, "no out-of-flow frame");
-          WalkFramesThroughPlaceholders(aPresContext, outOfFlowFrame,
-                                        aFunc, aClosure);
-        }
-        else
-          WalkFramesThroughPlaceholders(aPresContext, child, aFunc, aClosure);
-      }
-      child = child->GetNextSibling();
-    }
-
-    aFrame->GetAdditionalChildListName(listIndex++, getter_AddRefs(childList));
-  } while (childList);
-}
-
 NS_IMETHODIMP
-PresShell::ReconstructStyleData(PRBool aRebuildRuleTree)
+PresShell::ReconstructStyleData()
 {
   nsIFrame* rootFrame;
   GetRootFrame(&rootFrame);
@@ -5540,18 +5439,6 @@ PresShell::ReconstructStyleData(PRBool aRebuildRuleTree)
   // Now handle some of our more problematic widgets (and also deal with
   // skin XBL changing).
   nsStyleChangeList changeList;
-  if (aRebuildRuleTree) {
-    // Handle those widgets that have special style contexts cached
-    // that will point to invalid rule nodes following a rule tree
-    // reconstruction.
-    WalkFramesThroughPlaceholders(mPresContext, rootFrame,
-                                  &BuildFramechangeList, &changeList);
-    cssFrameConstructor->ProcessRestyledFrames(changeList, mPresContext);
-    changeList.Clear();
-
-    // Now do a complete re-resolve of our style tree.
-    set->BeginRuleTreeReconstruct();
-  }
 
   nsChangeHint frameChange = NS_STYLE_HINT_NONE;
   frameManager->ComputeStyleChangeFor(rootFrame, kNameSpaceID_Unknown, nsnull,
@@ -5562,17 +5449,7 @@ PresShell::ReconstructStyleData(PRBool aRebuildRuleTree)
     set->ReconstructDocElementHierarchy(mPresContext);
   else {
     cssFrameConstructor->ProcessRestyledFrames(changeList, mPresContext);
-#ifdef MOZ_XUL
-    if (aRebuildRuleTree) {
-      GetRootFrame(&rootFrame);
-      WalkFramesThroughPlaceholders(mPresContext, rootFrame,
-                                    &ReResolveMenusAndTrees, nsnull);
-    }
-#endif
   }
-
-  if (aRebuildRuleTree)
-    set->EndRuleTreeReconstruct();
 
   VERIFY_STYLE_TREE;
   
@@ -5587,14 +5464,12 @@ PresShell::StyleSheetAdded(nsIDocument *aDocument,
   NS_PRECONDITION(aStyleSheet, "Must have a style sheet!");
   PRBool applicable;
   aStyleSheet->GetApplicable(applicable);
-  if (applicable) {
-    // If style information is being added, we don't need to rebuild the
-    // rule tree, since no rule nodes have been rendered invalid by the
-    // addition of new rule content.
-    return ReconstructStyleData(PR_FALSE);
-  }
 
-  return NS_OK;
+  if (!applicable || !aStyleSheet->HasRules()) {
+    return NS_OK;
+  }
+  
+  return ReconstructStyleData();
 }
 
 NS_IMETHODIMP 
@@ -5605,13 +5480,11 @@ PresShell::StyleSheetRemoved(nsIDocument *aDocument,
   NS_PRECONDITION(aStyleSheet, "Must have a style sheet!");
   PRBool applicable;
   aStyleSheet->GetApplicable(applicable);
-  if (applicable) {
-    // XXXdwh We'd like to be able to use ReconstructStyleData in all the
-    // other style sheet calls, but it doesn't quite work because of HTML tables.
-    return ReconstructStyleData(PR_TRUE);
+  if (!applicable || !aStyleSheet->HasRules()) {
+    return NS_OK;
   }
-
-  return NS_OK;
+  
+  return ReconstructStyleData();
 }
 
 NS_IMETHODIMP
@@ -5626,11 +5499,11 @@ PresShell::StyleSheetApplicableStateChanged(nsIDocument *aDocument,
       return rv;
   }
 
-  // We don't need to rebuild the
-  // rule tree, since no rule nodes have been rendered invalid by the
-  // addition of new rule content.  They can simply lurk in the tree
-  // until the stylesheet is enabled once more.
-  return ReconstructStyleData(PR_FALSE);
+  if (!aStyleSheet->HasRules()) {
+    return NS_OK;
+  }
+
+  return ReconstructStyleData();
 }
 
 NS_IMETHODIMP
@@ -5639,7 +5512,7 @@ PresShell::StyleRuleChanged(nsIDocument *aDocument,
                             nsIStyleRule* aOldStyleRule,
                             nsIStyleRule* aNewStyleRule)
 {
-  return ReconstructStyleData(PR_FALSE);
+  return ReconstructStyleData();
 }
 
 NS_IMETHODIMP
@@ -5647,7 +5520,7 @@ PresShell::StyleRuleAdded(nsIDocument *aDocument,
                           nsIStyleSheet* aStyleSheet,
                           nsIStyleRule* aStyleRule) 
 { 
-  return ReconstructStyleData(PR_FALSE);
+  return ReconstructStyleData();
 }
 
 NS_IMETHODIMP
@@ -5655,7 +5528,7 @@ PresShell::StyleRuleRemoved(nsIDocument *aDocument,
                             nsIStyleSheet* aStyleSheet,
                             nsIStyleRule* aStyleRule) 
 { 
-  return ReconstructStyleData(PR_FALSE);
+  return ReconstructStyleData();
 }
 
 NS_IMETHODIMP
