@@ -3410,6 +3410,7 @@ CK_RV NSC_GetAttributeValue(CK_SESSION_HANDLE hSession,
     PK11Object *object;
     PK11Attribute *attribute;
     PRBool sensitive;
+    CK_RV crv;
     int i;
 
     /*
@@ -3433,17 +3434,20 @@ CK_RV NSC_GetAttributeValue(CK_SESSION_HANDLE hSession,
 	return CKR_USER_NOT_LOGGED_IN;
     }
 
+    crv = CKR_OK;
     sensitive = pk11_isTrue(object,CKA_SENSITIVE);
     for (i=0; i < (int) ulCount; i++) {
 	/* Make sure that this attribute is retrievable */
 	if (sensitive && pk11_isSensitive(pTemplate[i].type,object->objclass)) {
-	    pk11_FreeObject(object);
-	    return CKR_ATTRIBUTE_SENSITIVE;
+	    crv = CKR_ATTRIBUTE_SENSITIVE;
+	    pTemplate[i].ulValueLen = -1;
+	    continue;
 	}
 	attribute = pk11_FindAttribute(object,pTemplate[i].type);
 	if (attribute == NULL) {
-	    pk11_FreeObject(object);
-	    return CKR_ATTRIBUTE_TYPE_INVALID;
+	    crv = CKR_ATTRIBUTE_TYPE_INVALID;
+	    pTemplate[i].ulValueLen = -1;
+	    continue;
 	}
 	if (pTemplate[i].pValue != NULL) {
 	    PORT_Memcpy(pTemplate[i].pValue,attribute->attrib.pValue,
@@ -3454,7 +3458,7 @@ CK_RV NSC_GetAttributeValue(CK_SESSION_HANDLE hSession,
     }
 
     pk11_FreeObject(object);
-    return CKR_OK;
+    return crv;
 }
 
 /* NSC_SetAttributeValue modifies the value of one or more object attributes */

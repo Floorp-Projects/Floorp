@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.24 2002/06/28 03:00:08 relyea%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.25 2002/07/02 15:11:27 relyea%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -4054,8 +4054,12 @@ DecodeTrustEntry(NSSLOWCERTCertDBHandle *handle, certDBEntryCert *entry,				SECI
     trust->dbEntry = entry;
     trust->dbKey.data = pkcs11_copyStaticData(dbKey->data,dbKey->len,
 				trust->dbKeySpace, sizeof(trust->dbKeySpace));
+    if (!trust->dbKey.data) {
+	PORT_Free(trust);
+	return NULL;
+    }
     trust->dbKey.len = dbKey->len;
-    SECITEM_CopyItem(NULL, &trust->dbKey , dbKey);
+ 
     trust->trust = &entry->trust;
     trust->derCert = &entry->derCert;
 
@@ -4526,9 +4530,11 @@ nsslowcert_FindTrustByIssuerAndSN(NSSLOWCERTCertDBHandle *handle,
     SECItem *sn = &issuerAndSN->serialNumber;
     SECItem *issuer = &issuerAndSN->derIssuer;
     NSSLOWCERTTrust *trust;
+    unsigned char keyBuf[512];
     int data_left = sn->len-1;
     int data_len = sn->len;
     int index = 0;
+    int len;
 
     /* automatically detect DER encoded serial numbers and remove the der
      * encoding since the database expects unencoded data. 
@@ -4563,8 +4569,13 @@ nsslowcert_FindTrustByIssuerAndSN(NSSLOWCERTCertDBHandle *handle,
     }
 
     certKey.type = 0;
-    certKey.data = (unsigned char*)PORT_Alloc(sn->len + issuer->len);
     certKey.len = data_len + issuer->len;
+    len = sn->len + issuer->len;
+    if (len > sizeof (keyBuf)) {
+	certKey.data = (unsigned char*)PORT_Alloc(len);
+    } else {
+	certKey.data = keyBuf;
+    }
     
     if ( certKey.data == NULL ) {
 	return(0);
@@ -4579,12 +4590,12 @@ nsslowcert_FindTrustByIssuerAndSN(NSSLOWCERTCertDBHandle *handle,
 
     trust = nsslowcert_FindTrustByKey(handle, &certKey);
     if (trust) {
-	PORT_Free(certKey.data);
+	pkcs11_freeStaticData(certKey.data, keyBuf);
 	return (trust);
     }
 
     if (index == 0) {
-	PORT_Free(certKey.data);
+	pkcs11_freeStaticData(certKey.data, keyBuf);
 	return NULL;
     }
 
@@ -4598,7 +4609,7 @@ nsslowcert_FindTrustByIssuerAndSN(NSSLOWCERTCertDBHandle *handle,
 
     trust = nsslowcert_FindTrustByKey(handle, &certKey);
     
-    PORT_Free(certKey.data);
+    pkcs11_freeStaticData(certKey.data, keyBuf);
     
     return(trust);
 }
