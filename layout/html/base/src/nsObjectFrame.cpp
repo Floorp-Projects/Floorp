@@ -1674,7 +1674,12 @@ nsObjectFrame::Paint(nsIPresContext*      aPresContext,
 
     // get a few things
     nsCOMPtr<nsIPrintSettings> printSettings;
-    thePrinterContext->GetPrintSettings(getter_AddRefs(printSettings));
+    if (thePrinterContext)      
+      thePrinterContext->GetPrintSettings(getter_AddRefs(printSettings));
+    else if (thePrintPreviewContext)
+      thePrintPreviewContext->GetPrintSettings(getter_AddRefs(printSettings));
+    
+    NS_ENSURE_TRUE(printSettings, NS_ERROR_FAILURE);
     printSettings->GetMarginInTwips(margin);
 
     aPresContext->GetTwipsToPixels(&t2p);
