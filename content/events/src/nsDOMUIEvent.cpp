@@ -53,7 +53,8 @@
 #include "nsIFrame.h"
 
 nsDOMUIEvent::nsDOMUIEvent(nsPresContext* aPresContext, nsGUIEvent* aEvent)
-  : nsDOMEvent(aPresContext, aEvent)
+  : nsDOMEvent(aPresContext, aEvent ? NS_STATIC_CAST(nsEvent*, aEvent)
+                                    : NS_STATIC_CAST(nsEvent*, new nsUIEvent()))
 {
   if (aEvent) {
     mEventIsInternal = PR_FALSE;
