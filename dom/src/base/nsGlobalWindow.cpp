@@ -2938,7 +2938,6 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext *cx,
 {
   PRUint32 chromeFlags;
   nsAutoString name;
-  JSString *str;
   char *options;
   PRBool nameSpecified = PR_FALSE;
   nsCOMPtr<nsIURI> uriToLoad;
@@ -3020,6 +3019,7 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext *cx,
 
   options = nsnull;
   if (argc > 2) {
+    JSString *str;
     NS_ENSURE_TRUE((str = ::JS_ValueToString(cx, argv[2])), NS_ERROR_FAILURE);
     options = ::JS_GetStringBytes(str);
   }
