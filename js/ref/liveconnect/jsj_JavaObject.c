@@ -305,7 +305,7 @@ lookup_member_by_id(JSContext *cx, JNIEnv *jEnv, JSObject *obj,
     java_wrapper = JS_GetPrivate(cx, obj);
     if (!java_wrapper) {
         if (JS_IdToValue(cx, id, &idval) && JSVAL_IS_STRING(idval) &&
-            (property_name = JS_GetStringBytes(JSVAL_TO_STRING(idval)))) {
+            (property_name = JS_GetStringBytes(JSVAL_TO_STRING(idval))) != NULL) {
             if (!strcmp(property_name, "constructor")) {
                 *java_wrapperp = NULL;
                 *member_descriptorp = NULL;
