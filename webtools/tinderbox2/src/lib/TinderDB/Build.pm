@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.44 $ 
-# $Date: 2002/05/06 17:41:38 $ 
+# $Revision: 1.45 $ 
+# $Date: 2002/05/06 17:53:27 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -918,23 +918,22 @@ sub apply_db_updates {
                          "");
               
               # Remove old entry
-              shift @{ $DATABASE{$tree}{$build}{'recs'} };          
+              shift @{ $DATABASE{$tree}{$build}{'recs'} };
           }
 
-          if ($different_builds) {
-
-              # Some build machines are buggy and new builds appear to
-              # start before old builds finish. Fix the incoming data
-              # here so that builds do not overlap. Do not tamper with
-              # the start time since many different mail messages will
-              # have this new start time.  Instead we fix the end time
-              # of the last build.
-
-              if ($record->{'starttime'} < $previous_rec->{'endtime'}) {
-                  $previous_rec->{'endtime'} = $record->{'starttime'};
-              }
+          # Some build machines are buggy and new builds appear to
+          # start before old builds finish. Fix the incoming data
+          # here so that builds do not overlap. Do not tamper with
+          # the start time since many different mail messages will
+          # have this new start time.  Instead we fix the end time
+          # of the last build.
+          
+          if ($record->{'starttime'} < $previous_rec->{'endtime'}) {
+              $previous_rec->{'endtime'} = $record->{'starttime'};
           }
-    } 
+       } 
+    }
+
     # Is this report for the same build as the [0] entry? If so we do not
     # want two entries for the same build. Must throw out either
     # update or record in the database.
@@ -1044,7 +1043,7 @@ sub apply_db_updates {
   $self->unlink_files(@sorted_files);
   
   return scalar(@sorted_files);
-}
+} # apply_db_updates 
 
 
 # clear data structures in preparation for printing a new table
