@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#import "NSString+Utils.h"
+
 #import "BookmarksDataSource.h"
 #import "BookmarkInfoController.h"
 
@@ -150,12 +152,15 @@
 
   } else {   // Folder
     mCachedHref = nil;
-    title = NS_LITERAL_STRING("New Folder");
+    title = NS_LITERAL_STRING("New Folder");	// XXX localize me
   }
   
-  NSTextField* textField = [mBrowserWindowController getAddBookmarkTitle];
-  [textField setStringValue: [NSString stringWithCharacters: title.get() length: title.Length()]];
+  NSTextField* textField  = [mBrowserWindowController getAddBookmarkTitle];
+  NSString* bookmarkTitle = [NSString stringWithCharacters: title.get() length: title.Length()];
+  NSString* cleanedTitle  = [bookmarkTitle stringByReplacingCharactersInSet:[NSCharacterSet controlCharacterSet] withString:@" "];
 
+  [textField setStringValue: cleanedTitle];
+  
   [mBrowserWindowController cacheBookmarkDS: self];
 
   // Show/hide the bookmark all tabs checkbox as appropriate.
