@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: hashops.c,v $ $Revision: 1.3 $ $Date: 2002/02/06 02:42:08 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: hashops.c,v $ $Revision: 1.4 $ $Date: 2002/02/13 02:26:43 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -52,7 +52,7 @@ nss_arena_hash_alloc_table
   PRSize size
 )
 {
-  NSSArena *arena = (NSSArena *)pool;
+  NSSArena *arena = (NSSArena *)NULL;
 
 #ifdef NSSDEBUG
   if( (void *)NULL != arena ) {
