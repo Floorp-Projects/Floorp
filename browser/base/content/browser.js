@@ -4505,4 +4505,46 @@ function charsetLoadListener (event)
     }
 }
 
+/*
+ * Note that most of this routine has been moved into C++ in order to
+ * be available for all <browser> tags as well as gecko embedding. See
+ * mozilla/content/base/src/nsContentAreaDragDrop.cpp.
+ *
+ * Do not add any new fuctionality here other than what is needed for
+ * a standalone product.
+ */
+
+var contentAreaDNDObserver = {
+  onDrop: function (aEvent, aXferData, aDragSession)
+    {
+      var url = transferUtils.retrieveURLFromData(aXferData.data, aXferData.flavour.contentType);
+
+      // valid urls don't contain spaces ' '; if we have a space it isn't a valid url so bail out
+      if (!url || !url.length || url.indexOf(" ", 0) != -1) 
+        return;
+
+      switch (document.firstChild.getAttribute('windowtype')) {
+        case "navigator:browser":
+          loadURI(getShortcutOrURI(url));
+          break;
+        case "navigator:view-source":
+          viewSource(url);
+          break;
+      }
+      
+      // keep the event from being handled by the dragDrop listeners
+      // built-in to gecko if they happen to be above us.    
+      aEvent.preventDefault();
+    },
+
+  getSupportedFlavours: function ()
+    {
+      var flavourSet = new FlavourSet();
+      flavourSet.appendFlavour("text/x-moz-url");
+      flavourSet.appendFlavour("text/unicode");
+      flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
+      return flavourSet;
+    }
+  
+};
 
