@@ -42,6 +42,8 @@
 #include "nsIConsoleService.h"
 #include "nsIServiceManager.h"
 #include "nsIDNSService.h"
+#include "nsIDNSRecord.h"
+#include "nsICancelable.h"
 #include "nsIRequest.h"
 #include "nsEventQueueUtils.h"
 #include "nsAutoPtr.h"
@@ -249,7 +251,7 @@ nsWSAUtils::GetOfficialHostName(nsIURI* aServiceURI,
   if (NS_FAILED(rv))
     return rv;
 
-  nsCOMPtr<nsIDNSRequest> dummy;
+  nsCOMPtr<nsICancelable> dummy;
   rv = dns->AsyncResolve(host, nsIDNSService::RESOLVE_CANONICAL_NAME,
                          listener, eventQ, getter_AddRefs(dummy));
   
@@ -283,7 +285,7 @@ nsDNSListener::~nsDNSListener()
 }
 
 NS_IMETHODIMP
-nsDNSListener::OnLookupComplete(nsIDNSRequest* aRequest, 
+nsDNSListener::OnLookupComplete(nsICancelable* aRequest, 
                                 nsIDNSRecord* aRecord,
                                 nsresult aStatus)
 {
