@@ -31,7 +31,7 @@
  * GPL.
  *
  */
-#ifndef _SECPKS5_H_
+#ifndef _SECPKCS5_H_
 #define _SECPKCS5_H_
 #include "seccomon.h"
 #include "secmodt.h"
@@ -65,6 +65,23 @@ SECOidTag SEC_PKCS5GetCryptoAlgorithm(SECAlgorithmID *algid);
 PRBool SEC_PKCS5IsAlgorithmPBEAlg(SECAlgorithmID *algid);
 SECOidTag SEC_PKCS5GetPBEAlgorithm(SECOidTag algTag, int keyLen);
 int SEC_PKCS5GetKeyLength(SECAlgorithmID *algid);
+
+/**********************************************************************
+ * Deprecated PBE fucntions.  Use the PBE functions in pk11func.h
+ * instead.
+ **********************************************************************/
+
+PBEBitGenContext *
+PBE_CreateContext(SECOidTag hashAlgorithm, PBEBitGenID bitGenPurpose,
+        SECItem *pwitem, SECItem *salt, unsigned int bitsNeeded,
+        unsigned int iterations);
+
+void
+PBE_DestroyContext(PBEBitGenContext *context);
+
+
+SECItem *
+PBE_GenerateBits(PBEBitGenContext *context);
 
 SEC_END_PROTOS
 
