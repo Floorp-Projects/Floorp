@@ -23,6 +23,8 @@
 
 #include "nsISupports.idl"
 
+interface nsIURI;
+
 /**
  * imgICache interface
  *
@@ -40,4 +42,13 @@ interface imgICache : nsISupports
    *               If FALSE, evict everything except chrome images.
    */
   void clearCache(in boolean chrome);
+
+  /**
+   * Evict images from the cache.
+   *
+   * @param uri The URI to remove.
+   * @return NS_OK if \a uri was removed from the cache.
+   *         NS_ERROR_NOT_AVAILABLE if \a uri was unable to be removed from the cache.
+   */
+  void removeEntry(in nsIURI uri);
 };
