@@ -241,7 +241,6 @@ nsFrameImageLoader::Notify(nsIImageRequest *aImageRequest,
     mTargetFrame->GetView(view);
     if (nsnull != view) {
       view->SetContentTransparency(PR_TRUE);
-      view->Release();
     }
     break;
   }
@@ -324,7 +323,6 @@ nsFrameImageLoader::DamageRepairFrame(const nsRect* aDamageRect)
   bounds.y += offset.y;
   vm->UpdateView(view, bounds, 0);
   NS_RELEASE(vm);
-  NS_RELEASE(view);
 }
 
 void

@@ -156,8 +156,6 @@ void nsTableRowGroupFrame::PaintChildren(nsIPresContext&      aPresContext,
       }
       aRenderingContext.PopState();
     }
-    else
-      NS_RELEASE(pView);
     kid->GetNextSibling(kid);
   }
 }
@@ -1231,7 +1229,6 @@ NS_METHOD nsTableRowGroupFrame::MoveTo(nscoord aX, nscoord aY)
       nsPoint origin;
       GetOffsetFromView(origin, parentWithView);
       view->SetPosition(origin.x, origin.y);
-      NS_IF_RELEASE(parentWithView);
     }
   }
 

@@ -51,7 +51,6 @@
 #define kInsertInAddList    1
 
 
-NS_DEF_PTR(nsIView);
 NS_DEF_PTR(nsIViewManager);
 
 // Kludged Content stuff
@@ -184,7 +183,8 @@ nsFrame::~nsFrame()
   if (nsnull != mView) {
     // Break association between view and frame
     mView->SetFrame(nsnull);
-    NS_RELEASE(mView);
+    mView->Destroy();
+    mView = nsnull;
   }
 
   if (mStartSelectionPoint != nsnull) {
@@ -231,6 +231,9 @@ nsrefcnt nsFrame::Release(void)
 
 NS_METHOD nsFrame::DeleteFrame()
 {
+  // XXX Wow. All this effort just to stop loading images.
+  // Why is this done in nsFrame instead of some frame class
+  // that actually loads images?
   nsIView* view = mView;
   if (nsnull == view) {
     nsIFrame* parent;
@@ -245,8 +248,10 @@ NS_METHOD nsFrame::DeleteFrame()
     nsIPresContext* cx = vm->GetPresContext();
     // XXX Is this a really good ordering for the releases? MMP
     NS_RELEASE(vm);
+#if 0
     if (view != mView)    //if this is the view that we own, let's not release it...
       NS_RELEASE(view);
+#endif
     cx->StopLoadImage(this);
     NS_RELEASE(cx);
   }
@@ -411,7 +416,6 @@ NS_METHOD nsFrame::MoveTo(nscoord aX, nscoord aY)
     nsIViewManager  *vm = mView->GetViewManager();
     vm->MoveViewTo(mView, origin.x, origin.y);
     NS_RELEASE(vm);
-    NS_IF_RELEASE(parentWithView);
   }
 
   return NS_OK;
@@ -1092,7 +1096,6 @@ nsFrame::DidReflow(nsIPresContext& aPresContext,
       vm->ResizeView(mView, mRect.width, mRect.height);
       vm->MoveViewTo(mView, origin.x, origin.y);
       NS_RELEASE(vm);
-      NS_IF_RELEASE(parentWithView);
     }
   }
   return NS_OK;
@@ -1249,17 +1252,14 @@ NS_METHOD nsFrame::BreakFromNextFlow()
 NS_METHOD nsFrame::GetView(nsIView*& aView) const
 {
   aView = mView;
-  NS_IF_ADDREF(aView);
   return NS_OK;
 }
 
 NS_METHOD nsFrame::SetView(nsIView* aView)
 {
-  NS_IF_RELEASE(mView);
   if (nsnull != aView) {
     mView = aView;
     aView->SetFrame(this);
-    NS_ADDREF(aView);
   }
   return NS_OK;
 }
@@ -1274,7 +1274,6 @@ NS_METHOD nsFrame::GetParentWithView(nsIFrame*& aParent) const
      
     aParent->GetView(parView);
     if (nsnull != parView) {
-      NS_RELEASE(parView);
       break;
     }
     aParent->GetGeometricParent(aParent);
@@ -1315,7 +1314,6 @@ NS_METHOD nsFrame::GetWindow(nsIWidget*& aWindow) const
     frame->GetView(view);
     if (nsnull != view) {
       aWindow = view->GetWidget();
-      NS_RELEASE(view);
       if (nsnull != aWindow) {
         break;
       }
@@ -1335,12 +1333,12 @@ void nsFrame::Invalidate(const nsRect& aDamageRect) const
     viewManager->UpdateView(mView, aDamageRect, NS_VMREFRESH_NO_SYNC);
     
   } else {
-    nsRect      rect(aDamageRect);
-    nsPoint     offset;
-    nsIViewPtr  view;
+    nsRect    rect(aDamageRect);
+    nsPoint   offset;
+    nsIView*  view;
   
-    GetOffsetFromView(offset, view.AssignRef());
-    NS_ASSERTION(view.IsNotNull(), "no view");
+    GetOffsetFromView(offset, view);
+    NS_ASSERTION(nsnull != view, "no view");
     rect += offset;
     viewManager = view->GetViewManager();
     viewManager->UpdateView(view, rect, NS_VMREFRESH_NO_SYNC);
@@ -1714,7 +1712,7 @@ void ForceDrawFrame(nsFrame * aFrame)//, PRBool)
   aFrame->GetRect(rect);
   rect.x = pnt.x;
   rect.y = pnt.y;
-  // XXX I sure hope t is code isn't actually used, because the ref counting is
+  // XXX I sure hope this code isn't actually used, because the ref counting is
   // all screwed up...
   if (view != nsnull) {
     nsIViewManager * viewMgr = view->GetViewManager();
@@ -1723,7 +1721,6 @@ void ForceDrawFrame(nsFrame * aFrame)//, PRBool)
       NS_RELEASE(viewMgr);
     }
     //viewMgr->UpdateView(view, rect, NS_VMREFRESH_DOUBLE_BUFFER | NS_VMREFRESH_IMMEDIATE);
-    NS_RELEASE(view);
   }
 
 }

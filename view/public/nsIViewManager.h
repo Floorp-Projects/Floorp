@@ -73,7 +73,7 @@ public:
   virtual nsIView *GetRootView() = 0;
 
   /**
-   * Set the root of the view tree.
+   * Set the root of the view tree. Does not destroy the current root view.
    * @param aView view to set as root
    */
   virtual void SetRootView(nsIView *aView) = 0;

@@ -170,13 +170,8 @@ nsresult DocumentViewerImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 DocumentViewerImpl::~DocumentViewerImpl()
 {
     // Release windows and views
-    if (nsnull != mViewManager) {
-        mViewManager->SetRootView(nsnull);
-        mViewManager->SetRootWindow(nsnull);
-        NS_RELEASE(mViewManager);
-    }
+    NS_IF_RELEASE(mViewManager);
     NS_IF_RELEASE(mWindow);
-    NS_IF_RELEASE(mView);
 
     NS_IF_RELEASE(mDocument);
     
@@ -509,7 +504,6 @@ nsresult DocumentViewerImpl::MakeWindow(nsNativeWidget aNativeParent,
     rv = mView->QueryInterface(kScrollViewIID, (void**)&scrollView);
     if (NS_OK == rv) {
         scrollView->SetScrollPreference(aScrolling);
-        NS_RELEASE(scrollView);
     }
     else {
         NS_ASSERTION(0, "invalid scrolling view");

@@ -33,14 +33,17 @@ class nsView : public nsIView
 public:
   nsView();
 
+  // Overloaded new operator. Initializes the memory to 0
   void* operator new(size_t sz) {
     void* rv = new char[sz];
     nsCRT::zero(rv, sz);
     return rv;
   }
 
-  NS_DECL_ISUPPORTS
+  // nsISupports
+  NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
+  // nsIView
   virtual nsresult Init(nsIViewManager* aManager,
 						const nsRect &aBounds,
 						nsIView *aParent,
@@ -92,6 +95,9 @@ public:
   virtual nsIWidget * GetOffsetFromWidget(nscoord *aDx, nscoord *aDy);
   virtual void GetScrollOffset(nscoord *aDx, nscoord *aDy);
 
+  // Helper function to get the view that's associated with a widget
+  static nsIView*  GetViewFor(nsIWidget* aWidget);
+
 protected:
   virtual ~nsView();
   //
@@ -100,15 +106,6 @@ protected:
 protected:
   nsIViewManager    *mViewManager;
   nsIView           *mParent;
-
-  // a View aggregates an nsIWidget, if any.
-  // mInnerWindow is the pointer to the widget real nsISupports. QueryInterace
-  // should be called on mInnerWindow if any of the widget interface wants to 
-  // be exposed, 
-  // mWindow is a convenience pointer to the widget functionalities.
-  // mWindow is not AddRef'ed or Released otherwise we'll create a circulare
-  // refcount and the view will never go away
-  nsISupports		    *mInnerWindow;
   nsIWidget         *mWindow;
 
   //XXX should there be pointers to last child so backward walking is fast?
@@ -123,6 +120,10 @@ protected:
   nsTransform2D     *mXForm;
   float             mOpacity;
   PRInt32           mVFlags;
+
+private:
+  NS_IMETHOD_(nsrefcnt) AddRef(void);
+  NS_IMETHOD_(nsrefcnt) Release(void);
 };
 
 #define VIEW_FLAG_DYING       0x0001

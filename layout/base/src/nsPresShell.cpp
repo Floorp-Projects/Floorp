@@ -449,7 +449,6 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
           // Bind root frame to root view (and root window)
           nsIView* rootView = mViewManager->GetRootView();
           mRootFrame->SetView(rootView);
-          NS_RELEASE(rootView);
         }
         NS_RELEASE(root);
       }
@@ -843,7 +842,7 @@ CompareTrees(nsIFrame* aA, nsIFrame* aB)
       ShowDiffs(k1, k2, r1, r2);
     }
     else {
-      // Make sure either both have boths or neither have views; if they
+      // Make sure either both have views or neither have views; if they
       // do have views, make sure the views are the same size. If the
       // views have widgets, make sure they both do or neither does. If
       // they do, make sure the widgets are the same size.
@@ -866,9 +865,6 @@ CompareTrees(nsIFrame* aA, nsIFrame* aB)
         else {
           NS_ASSERTION(nsnull == w2, "child widgets are not matched");
         }
-
-        NS_RELEASE(v1);
-        NS_RELEASE(v2);
       }
       else {
         NS_ASSERTION(nsnull == v2, "child views are not matched");
@@ -992,11 +988,9 @@ PresShell::VerifyIncrementalReflow()
   rv = rootView->QueryInterface(kScrollViewIID, (void**)&scrollView);
   if (NS_OK == rv) {
     scrolling = scrollView->GetScrollPreference();
-    NS_RELEASE(scrollView);
   }
   nsIWidget* rootWidget = rootView->GetWidget();
   void* nativeParentWidget = rootWidget->GetNativeData(NS_NATIVE_WIDGET);
-  NS_RELEASE(rootView);
 
   // Create a new view manager.
   rv = NSRepository::CreateInstance(kViewManagerCID, nsnull, kIViewManagerIID,
@@ -1019,7 +1013,6 @@ PresShell::VerifyIncrementalReflow()
   rv = view->QueryInterface(kScrollViewIID, (void**)&scrollView);
   if (NS_OK == rv) {
     scrollView->SetScrollPreference(scrolling);
-    NS_RELEASE(scrollView);
   }
   else {
     NS_ASSERTION(0, "invalid scrolling view");
@@ -1032,7 +1025,6 @@ PresShell::VerifyIncrementalReflow()
     vm->SetRootWindow(window);
     NS_RELEASE(window);
   }
-  NS_RELEASE(view);
 
   // Make the new presentation context the same size as our
   // presentation context.
@@ -1049,8 +1041,6 @@ PresShell::VerifyIncrementalReflow()
   // compare against our frame tree.
   CompareTrees(GetRootFrame(), sh->GetRootFrame());
 
-  vm->SetRootView(nsnull);
-  vm->SetRootWindow(nsnull);
   NS_RELEASE(vm);
 
   NS_RELEASE(cx);

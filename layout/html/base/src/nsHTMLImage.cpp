@@ -897,7 +897,6 @@ ImageFrame::ContentChanged(nsIPresShell*   aShell,
         bounds.height = mRect.height;
         vm->UpdateView(view, bounds, 0);
         NS_RELEASE(vm);
-        NS_RELEASE(view);
       }
 
       return NS_OK;

@@ -214,7 +214,6 @@ BulletFrame::List(FILE* out, PRInt32 aIndent) const
   GetView(view);
   if (nsnull != view) {
     fprintf(out, " [view=%p]", view);
-    NS_RELEASE(view);
   }
 
   out << mRect;

@@ -240,9 +240,7 @@ RootContentFrame::RootContentFrame(nsIContent* aContent, nsIFrame* aParent)
 
     // Remember our view
     SetView(view);
-    NS_RELEASE(view);
   }
-  NS_RELEASE(parView);
 }
 
 void RootContentFrame::CreateFirstChild(nsIPresContext* aPresContext)

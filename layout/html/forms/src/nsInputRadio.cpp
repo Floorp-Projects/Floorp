@@ -184,7 +184,6 @@ nsInputRadioFrame::MouseClicked(nsIPresContext* aPresContext)
       NS_RELEASE(radio);
     } 
   }
-  NS_RELEASE(view);
 }
 
 PRBool

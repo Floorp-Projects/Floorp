@@ -300,7 +300,6 @@ void nsContainerFrame::PaintChildren(nsIPresContext&      aPresContext,
           GetView(view);
           if (nsnull != view) {
             aRenderingContext.SetColor(NS_RGB(0,0,255));
-            NS_RELEASE(view);
           }
           else {
             aRenderingContext.SetColor(NS_RGB(255,0,0));
@@ -310,9 +309,6 @@ void nsContainerFrame::PaintChildren(nsIPresContext&      aPresContext,
 #endif
         aRenderingContext.PopState();
       }
-    }
-    else {
-      NS_RELEASE(pView);
     }
     kid->GetNextSibling(kid);
   }
@@ -955,7 +951,6 @@ NS_METHOD nsContainerFrame::List(FILE* out, PRInt32 aIndent) const
   GetView(view);
   if (nsnull != view) {
     fprintf(out, " [view=%p]", view);
-    NS_RELEASE(view);
   }
 
   // Output the first/last content offset

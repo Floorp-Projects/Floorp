@@ -127,7 +127,6 @@ nsInputFrame::Paint(nsIPresContext& aPresContext,
         mDidInit = PR_TRUE;
       }
 //      SetViewVisiblity(&aPresContext, PR_TRUE);
-      NS_RELEASE(view);
     }
     // Point borders/padding if any
     return nsInputFrameSuper::Paint(aPresContext, aRenderingContext, aDirtyRect);
@@ -157,7 +156,6 @@ nsInputFrame::SetViewVisiblity(nsIPresContext* aPresContext, PRBool aShow)
       }
       NS_IF_RELEASE(widget);
     }
-    NS_RELEASE(view);
   }
 }
 
@@ -219,7 +217,6 @@ nsInputFrame::DidReflow(nsIPresContext& aPresContext,
     GetView(view);
     if (nsnull != view) {
       view->SetVisibility(nsViewVisibility_kShow);
-      NS_RELEASE(view);
     }
   }
   return rv;
@@ -276,8 +273,6 @@ nsInputFrame::Reflow(nsIPresContext&      aPresContext,
     if (NS_OK != result) {
 	    NS_ASSERTION(0, "widget initialization failed"); 
       aStatus = NS_FRAME_NOT_COMPLETE;
-      NS_IF_RELEASE(parView);
-      NS_IF_RELEASE(viewMan);  
       return NS_OK;
 	  }
 
@@ -295,9 +290,6 @@ nsInputFrame::Reflow(nsIPresContext&      aPresContext,
     viewMan->InsertChild(parView, view, 0);
 
     SetView(view);
-    NS_RELEASE(view);
-	  
-    NS_IF_RELEASE(parView);
 	  NS_IF_RELEASE(viewMan);  
   }
   else {
@@ -335,13 +327,24 @@ nsInputFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView)
 nsresult
 nsInputFrame::GetWidget(nsIView* aView, nsIWidget** aWidget)
 {
-  const nsIID id = GetIID();
-  if (NS_OK == aView->QueryInterface(id, (void**)aWidget)) {
-    return NS_OK;
+  nsIWidget*  widget = aView->GetWidget();
+  nsresult    result;
+
+  if (nsnull == widget) {
+    aWidget = nsnull;
+    result = NS_ERROR_FAILURE;
+
   } else {
-	NS_ASSERTION(0, "The widget interface is invalid");  // need to print out more details of the widget
-	return NS_NOINTERFACE;
+    const nsIID id = GetIID();
+
+    result =  widget->QueryInterface(id, (void**)aWidget);
+    if (NS_FAILED(result)) {
+      NS_ASSERTION(0, "The widget interface is invalid");  // need to print out more details of the widget
+    }
+    NS_RELEASE(widget);
   }
+
+  return result;
 }
 
 const nsIID&
@@ -372,7 +375,6 @@ NS_METHOD nsInputFrame::HandleEvent(nsIPresContext& aPresContext,
   nsIView* view;
   GetView(view);
   if (view) {
-    NS_RELEASE(view);
     nsInput* content = (nsInput *)mContent;
     if (content->GetWidgetSupports() != aEvent->widgetSupports) {
       aEventStatus = nsEventStatus_eIgnore;

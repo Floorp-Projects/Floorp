@@ -911,7 +911,6 @@ HTMLContentSink::CloseContainer(const nsIParserNode& aNode)
               rect.x = 0;
               rect.y = 0;
               vm->UpdateView(rootView, rect, NS_VMREFRESH_IMMEDIATE);
-              NS_RELEASE(rootView);
             }
             NS_RELEASE(vm);
             NS_RELEASE(shell);
@@ -1110,9 +1109,7 @@ HTMLContentSink::StartLayout()
                   ? nsScrollPreference_kNeverScroll 
                   : sview->GetScrollPreference();
                 sview->SetScrollPreference(nsScrollPreference_kNeverScroll);
-                NS_RELEASE(sview);
               }
-              NS_RELEASE(rootView);
             }
             NS_RELEASE(vm);
           }
@@ -1162,7 +1159,6 @@ HTMLContentSink::ScrollToRef()
 // XXX write me!
 // printf("view==rootView ");
                 }
-                NS_IF_RELEASE(view);
                 nscoord x = 0;
                 nscoord y = offset.y;
 #if 0
@@ -1176,9 +1172,7 @@ NS_RELEASE(cx);
 
                 // Note that we did this so that we don't bother doing it again
                 mNotAtRef = PR_FALSE;
-                NS_RELEASE(sview);
               }
-              NS_RELEASE(rootView);
             }
             NS_RELEASE(vm);
           }

@@ -610,7 +610,6 @@ void nsBodyFrame::ReflowAbsoluteItems(nsIPresContext*      aPresContext,
         view = CreateAbsoluteView(position, display);
         absoluteFrame->SetView(view);  
       }
-      NS_RELEASE(view);
 
       // See whether this is the frame's initial reflow
       nsFrameState  frameState;
@@ -751,7 +750,6 @@ nsIView* nsBodyFrame::CreateAbsoluteView(const nsStylePosition* aPosition,
                nsnull, nsnull, zIndex, pClip);
     viewManager->InsertChild(containingView, view, 0);
     NS_RELEASE(viewManager);
-    NS_RELEASE(containingView);
   }
 
   return view;
