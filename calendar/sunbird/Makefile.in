@@ -82,9 +82,9 @@ endif
 	cp $(topsrcdir)/dist/bin/$(LIB_PREFIX)plds4$(DLL_SUFFIX) ./MozillaSunbird/
 	cp $(topsrcdir)/dist/bin/$(LIB_PREFIX)softokn3$(DLL_SUFFIX) ./MozillaSunbird/
 	cp $(topsrcdir)/dist/bin/$(LIB_PREFIX)xpcom_compat$(DLL_SUFFIX) ./MozillaSunbird/
-	cp $(topsrcdir)/dist/bin/mangle ./MozillaSunbird/
-	cp $(topsrcdir)/dist/bin/shlibsign ./MozillaSunbird/
-	cp $(topsrcdir)/dist/bin/xpicleanup ./MozillaSunbird/
+	cp $(topsrcdir)/dist/bin/mangle* ./MozillaSunbird/
+	cp $(topsrcdir)/dist/bin/shlibsign* ./MozillaSunbird/
+	cp $(topsrcdir)/dist/bin/xpicleanup* ./MozillaSunbird/
 	cp $(topsrcdir)/dist/bin/chrome/chrome.rdf ./MozillaSunbird/chrome
 	cp $(topsrcdir)/dist/bin/chrome/US.jar ./MozillaSunbird/chrome
 	cp $(topsrcdir)/dist/bin/chrome/classic.jar ./MozillaSunbird/chrome
@@ -280,6 +280,7 @@ endif
 	cp $(topsrcdir)/dist/bin/components/pippki.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/downloads.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/calendar.xpt ./MozillaSunbird/components
+	cp $(topsrcdir)/dist/bin/components/calendarService.js ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/chrome/calendar.jar ./MozillaSunbird/chrome
 	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)xp*$(DLL_SUFFIX) ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/$(LIB_PREFIX)*js*$(DLL_SUFFIX) ./MozillaSunbird/
