@@ -239,6 +239,7 @@ nsresult nsObserverService::Notify( nsISupports *aSubject,
                     // Release the observer.
                     observer->Release();
                 }
+            NS_IF_RELEASE(base);
             }
             // Go on to next observer in list.
             rv = observers->Next();
