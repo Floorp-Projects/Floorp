@@ -221,38 +221,20 @@ class jsdStackFrame : public jsdIStackFrame
 
     /* you'll normally use use FromPtr() instead of directly constructing one */
     jsdStackFrame (JSDContext *aCx, JSDThreadState *aThreadState,
-                   JSDStackFrameInfo *aStackFrameInfo) :
-        mCx(aCx), mThreadState(aThreadState), mStackFrameInfo(aStackFrameInfo)
-    {
-        mValid = (aCx && aThreadState && aStackFrameInfo);
-        NS_INIT_ISUPPORTS();
-    }
+                   JSDStackFrameInfo *aStackFrameInfo);
+    virtual ~jsdStackFrame();
 
-    /* XXX These things are only valid for a short period of time, they reflect
-     * state in the js engine that will go away after stepping past wherever
-     * we were stopped at when this was created.  We could keep a list of every
-     * instance of this we've created, and "invalidate" them before we let the
-     * engine continue.  The next time we need a threadstate, we can search the
-     * list to find an invalidated one, and just reuse it.
-     */
-    static jsdIStackFrame *FromPtr (JSDContext *aCx, 
+    static void InvalidateAll();
+    static jsdIStackFrame* FromPtr (JSDContext *aCx,
                                     JSDThreadState *aThreadState,
-                                    JSDStackFrameInfo *aStackFrameInfo)
-    {
-        if (!aStackFrameInfo)
-            return nsnull;
-        
-        jsdIStackFrame *rv = new jsdStackFrame (aCx, aThreadState,
-                                                aStackFrameInfo);
-        NS_IF_ADDREF(rv);
-        return rv;
-    }
+                                    JSDStackFrameInfo *aStackFrameInfo);
 
   private:
     jsdStackFrame(); /* no implementation */
     jsdStackFrame(const jsdStackFrame&); /* no implementation */
 
     PRBool             mValid;
+    LiveEphemeral      mLiveListEntry;
     JSDContext        *mCx;
     JSDThreadState    *mThreadState;
     JSDStackFrameInfo *mStackFrameInfo;
