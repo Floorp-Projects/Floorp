@@ -159,8 +159,8 @@
 			  <menuitem value="&printPreviewCmd.label;" onaction=""/>
 			  <menuitem value="&printCmd.label;" onaction="BrowserPrint()"/>
 			  <menuseparator />
-			  <menuitem value="closeCmd.label" onaction="BrowserClose();"/>
-			  <menuitem value="quitCmd.label" onaction="BrowserExit();"/>
+			  <menuitem value="&closeCmd.label;" onaction="BrowserClose();"/>
+			  <menuitem value="&quitCmd.label;" onaction="BrowserExit();"/>
 		</menupopup>
     </menu>
 	<menu value="&editMenu.label;">
