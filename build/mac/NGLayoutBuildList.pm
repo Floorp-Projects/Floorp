@@ -1326,6 +1326,9 @@ sub MakeResourceAliases()
 		_InstallResources(":mozilla:xpfe:components:prefwindow:resources:locale:en-US:MANIFEST",		"$pref_chrome_dir:locale:en-US:", 0);
 	}
 
+	# QA Menu
+	_InstallResources(":mozilla:intl:strres:tests:MANIFEST",			"$resource_dir");
+
 	print("--- Resource copying complete ----\n")
 }
 
