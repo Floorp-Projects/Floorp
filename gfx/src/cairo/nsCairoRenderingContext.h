@@ -201,9 +201,13 @@ public:
 
     NS_IMETHOD SetRightToLeftText(PRBool aIsRTL) { return NS_OK; }
 
+    // Cairo specific stuff
+
     cairo_t *GetCairo() { return mCairo; }
 
     nsTransform2D& CurrentTransform();
+
+    void TransformCoord (nscoord *aX, nscoord *aY);
 
 protected:
     PRBool DoCairoDrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);

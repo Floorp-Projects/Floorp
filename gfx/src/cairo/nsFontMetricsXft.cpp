@@ -1487,6 +1487,8 @@ nsFontMetricsXft::PrepareToDraw(nsCairoRenderingContext *aContext,
 
     *aDraw = aSurface->GetXftDraw();
 
+    fprintf (stderr, "+++ PrepareToDraw: %p\n", *aDraw);
+
     nsCOMPtr<nsIRegion> lastRegion;
     nsCOMPtr<nsIRegion> clipRegion;
 
@@ -1532,7 +1534,7 @@ nsFontMetricsXft::DrawStringCallback(const FcChar32 *aString, PRUint32 aLen,
             nscoord y = data->y;
 
             // convert this into device coordinates
-            data->context->CurrentTransform().TransformCoord(&x, &y);
+            data->context->TransformCoord(&x, &y);
 
             DrawUnknownGlyph(ch, x, y + mMiniFontYOffset, &data->color,
                              data->draw);
@@ -2001,11 +2003,13 @@ nsFontXft::DrawStringSpec(FcChar32 *aString, PRUint32 aLen, void *aData)
     const FcChar32 *end = aString + aLen;
 
     while(pstr < end) {
-        nscoord x = data->x + data->xOffset;               
-        nscoord y = data->y;                        
-        /* Convert to device coordinate. */   
-        data->context->CurrentTransform().TransformCoord(&x, &y);
-                                                                 
+        nscoord x = data->x + data->xOffset;
+        nscoord y = data->y;
+        /* Convert to device coordinate. */
+        fprintf (stderr, "[%d %d -> ", x, y);
+        data->context->TransformCoord(&x, &y);
+        fprintf (stderr, "%d %d] ", x, y);
+
         /* position in X is the location offset in the string 
            plus whatever offset is required for the spacing   
            argument                                           
@@ -2025,7 +2029,7 @@ nsFontXft::DrawStringSpec(FcChar32 *aString, PRUint32 aLen, void *aData)
         }
 
         ++pstr;
-    }                                                          
+    }
     return NS_OK;
 }
 
