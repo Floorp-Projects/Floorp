@@ -1,0 +1,9 @@
+test_misc
+Running all tests - use '-h' to see command-line options...
+The netscape sample worked!
+Enumerated all the ContractIDs
+xpcom object hashing tests seemed to work
+Dumping every interface I can find - please wait
+(verbosity is turned off, so Im not actually going to print them)
+Finished dumping all the interfaces.
+The IID tests seemed to work
