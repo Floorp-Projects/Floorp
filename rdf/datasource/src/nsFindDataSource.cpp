@@ -423,7 +423,7 @@ FindDataSource::parseFindURL(nsIRDFResource *u, nsVoidArray *array)
 									if (NS_SUCCEEDED(rv = datasource->GetTarget(source, property, PR_TRUE, &value)))
 									{
 										nsIRDFLiteral	*literal = nsnull;
-										if (NS_SUCCEEDED(rv = value->QueryInterface(kIRDFLiteralIID, &literal)))
+										if (NS_SUCCEEDED(rv = value->QueryInterface(kIRDFLiteralIID, (void **)&literal)))
 										{
 											if (PR_TRUE == doMatch(literal, tokens[2].value, tokens[3].value))
 											{
