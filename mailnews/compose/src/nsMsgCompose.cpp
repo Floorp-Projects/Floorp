@@ -333,7 +333,7 @@ nsMsgCompose::SendMsgEx(MSG_DeliverMode deliverMode,
 #endif //DEBUG
 
 //	nsIMsgCompose *pMsgCompose; 
-	if (m_compFields) 
+	if (m_compFields && identity) 
 	{ 
 		nsString aString;
 		nsString aCharset(msgCompHeaderInternalCharset());
