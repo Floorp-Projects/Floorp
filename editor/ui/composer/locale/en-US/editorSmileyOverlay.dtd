@@ -53,5 +53,23 @@
 <!ENTITY smiley6Cmd.accesskey "E">
 <!ENTITY smiley7Cmd.label "Undecided">
 <!ENTITY smiley7Cmd.accesskey "U">
+<!ENTITY smiley8Cmd.label "Surprise">
+<!ENTITY smiley8Cmd.accesskey "p">
+<!ENTITY smiley9Cmd.label "Kiss">
+<!ENTITY smiley9Cmd.accesskey "K">
+<!ENTITY smiley10Cmd.label "Yell">
+<!ENTITY smiley10Cmd.accesskey "Y">
+<!ENTITY smiley11Cmd.label "Cool">
+<!ENTITY smiley11Cmd.accesskey "C">
+<!ENTITY smiley12Cmd.label "Money-Mouth">
+<!ENTITY smiley12Cmd.accesskey "M">
+<!ENTITY smiley13Cmd.label "Foot-in-Mouth">
+<!ENTITY smiley13Cmd.accesskey "o">
+<!ENTITY smiley14Cmd.label "Innocent">
+<!ENTITY smiley14Cmd.accesskey "I">
+<!ENTITY smiley15Cmd.label "Cry">
+<!ENTITY smiley15Cmd.accesskey "r">
+<!ENTITY smiley16Cmd.label "Lips-are-Sealed">
+<!ENTITY smiley16Cmd.accesskey "a">
 <!ENTITY SmileButton.tooltip "Insert a smiley face">
 
