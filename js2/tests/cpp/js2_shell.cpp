@@ -440,6 +440,96 @@ static float64 testObjects(World &world, int32 n)
     return result.f64;
 }
 
+static float64 testProto(World &world, int32 n)
+{
+    JSObject glob;
+    Context cx(world, &glob);
+
+    Tracer t;
+    cx.addListener(&t);
+    
+    // create some objects, put some properties, and retrieve them.
+    uint32 position = 0;
+    ICodeGenerator initCG;
+    
+    // var proto = new Object();
+    StringAtom& proto = world.identifiers[widenCString("proto")];
+    initCG.beginStatement(position);
+    initCG.saveName(proto, initCG.newObject());
+    
+    // function increment()
+    // {
+    //   this.counter = this.counter + 1;
+    // }
+    ICodeGenerator incrCG;
+    StringAtom& counter = world.identifiers[widenCString("counter")];
+    
+    incrCG.beginStatement(position);
+    Register rthis = incrCG.allocateVariable(world.identifiers[widenCString("counter")]);
+    Register rcounter = incrCG.getProperty(rthis, counter);
+    incrCG.setProperty(rthis, counter, incrCG.op(ADD, rcounter, incrCG.loadImmediate(1.0)));
+    incrCG.returnStatement();
+    
+    StringAtom& increment = world.identifiers[widenCString("increment")];
+    ICodeModule* incrCode = incrCG.complete();
+    glob.defineFunction(increment, incrCode);
+    
+    // proto.increment = increment;
+    initCG.beginStatement(position);
+    initCG.setProperty(initCG.loadName(proto), increment, initCG.loadName(increment));
+
+    // var global = new Object();
+    StringAtom& global = world.identifiers[widenCString("global")];
+    initCG.beginStatement(position);
+    initCG.saveName(global, initCG.newObject());
+        
+    // global.counter = 0;
+    initCG.beginStatement(position);
+    initCG.setProperty(initCG.loadName(global), counter, initCG.loadImmediate(0.0));
+    
+    // global.proto = proto;
+    // initCG.beginStatement(position);
+    // initCG.setProperty(initCG.loadName(global), proto, initCG.loadName(proto));
+    initCG.returnStatement();
+    
+    ICodeModule* initCode = initCG.complete();
+        
+    stdOut << initCG;
+            
+    // run initialization code.
+    JSValues args(1);
+    cx.interpret(initCode, args);
+    
+    // objects now exist, do real prototype chain manipulation.
+    JSObject* globalObject = glob.getProperty(global).object;
+    globalObject->setPrototype(glob.getProperty(proto).object);
+    
+    // generate call to global.increment()
+    ICodeGenerator callCG;
+    callCG.beginStatement(position);
+    RegisterList argList(1);
+    Register rglobal = argList[0] = callCG.loadName(global);
+    callCG.call(callCG.getProperty(rglobal, increment), argList);
+    callCG.returnStatement();
+    
+    ICodeModule* callCode = callCG.complete();
+    
+    // call the increment method some number of times.
+    args[0] = JSValue(globalObject);
+    while (n-- > 0)
+        (void) cx.interpret(callCode, args);
+    
+    JSValue result = glob.getProperty(global).object->getProperty(counter);
+    
+    stdOut << "result = " << result.f64 << "\n";
+        
+    delete initCode;
+    delete incrCode;
+    delete callCode;
+    
+    return result.f64;
+}
+
 } /* namespace Shell */
 } /* namespace JavaScript */
 
@@ -453,6 +543,7 @@ int main(int argc, char **argv)
 #if 1
     assert(JavaScript::Shell::testFactorial(world, 5) == 120);
     assert(JavaScript::Shell::testObjects(world, 5) == 5);
+    assert(JavaScript::Shell::testProto(world, 5) == 5);
 //    JavaScript::Shell::testICG(world);
      assert(JavaScript::Shell::testFunctionCall(world, 5) == 5);
 #endif
