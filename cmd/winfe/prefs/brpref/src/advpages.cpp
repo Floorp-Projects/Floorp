@@ -644,7 +644,7 @@ CSmartUpdatePrefs::InitDialog()
 			    
                 LONG err;
                 void* context = NULL;
-                LPSU_PACKAGEINFO packageInfo = new PACKAGEINFO;
+                LPSU_PACKAGEINFO packageInfo = new SU_PACKAGEINFO;
                 LPSU_PACKAGEINFO pInfo;
                 *(packageInfo->userPackageName) = '\0';
                 *(packageInfo->regPackageName) = '\0';
