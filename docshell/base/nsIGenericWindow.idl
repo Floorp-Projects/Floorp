@@ -162,7 +162,7 @@ interface nsIGenericWindow : nsISupports
 	On controls that don't support setting nativeWindow parents, setting this
 	will return a NS_ERROR_NOT_IMPLEMENTED error.
 	*/
-	attribute nativeWindow *parentNativeWindow;
+	attribute nativeWindow parentNativeWindow;
 
 	/*
 	Attribute controls the visibility of the object behind this interface.
