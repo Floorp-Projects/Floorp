@@ -309,14 +309,18 @@ sub print_configure_form {
     </td><td>
     <input type="checkbox" name="pthreads_userdefined" value="yes">
     NSPR was Built with Pthreads, so build mozilla with Pthreads
-    </td></tr><tr><td>
+    </td></tr>
+    <!-- Reduce clutter. This option was only for nscp folk
+    <tr><td>
     <input type="radio" name="nspr_option" value="rpm">
     NSPR is installed in /usr/lib (NSPR RPM installation)
     </td><td>&nbsp;
     </td><td>
     <input type="checkbox" name="pthreads_rpm" value="yes">
     NSPR was Built with Pthreads, so build mozilla with Pthreads
-    </td></tr></table>
+    </td></tr>
+    -->
+    </table>
     </td></tr></table>
     </td></tr>
 
