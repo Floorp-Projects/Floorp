@@ -93,7 +93,7 @@ public:
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
- protected:
+protected:
   PRPackedBool mIsDoneAddingChildren;
   nsCString mType;
 };
