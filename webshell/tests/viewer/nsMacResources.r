@@ -63,6 +63,7 @@ resource 'MENU' (2000+3, "demo")
 	allEnabled, 
 	enabled, "demo menu",
 	{
+		"demo #0", noicon, nokey, nomark, plain;
 		"demo #1", noicon, nokey, nomark, plain;
 		"demo #2", noicon, nokey, nomark, plain;
 		"demo #3", noicon, nokey, nomark, plain;
