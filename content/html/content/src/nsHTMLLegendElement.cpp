@@ -82,6 +82,9 @@ public:
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
+  NS_IMETHOD GetAttributeChangeHint(const nsIAtom* aAttribute,
+                                    PRInt32 aModType,
+                                    nsChangeHint& aHint) const;
 };
 
 nsresult
@@ -209,6 +212,20 @@ nsHTMLLegendElement::AttributeToString(nsIAtom* aAttribute,
 
   return nsGenericHTMLContainerFormElement::AttributeToString(aAttribute,
                                                               aValue, aResult);
+}
+
+NS_IMETHODIMP
+nsHTMLLegendElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
+                                            PRInt32 aModType,
+                                            nsChangeHint& aHint) const
+{
+  nsresult rv =
+    nsGenericHTMLContainerFormElement::GetAttributeChangeHint(aAttribute,
+                                                              aModType, aHint);
+  if (aAttribute == nsHTMLAtoms::align) {
+    NS_UpdateHint(aHint, NS_STYLE_HINT_REFLOW);
+  }
+  return rv;
 }
 
 nsresult
