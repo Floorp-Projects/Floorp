@@ -152,7 +152,6 @@ public:
 
     virtual void         	StartDraw(nsIRenderingContext* aRenderingContext = nsnull);
     virtual void         	EndDraw();
-    virtual PRBool          OnPaint(nsPaintEvent &event);
 	NS_IMETHOD				Update();
 	virtual void			UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext);
     

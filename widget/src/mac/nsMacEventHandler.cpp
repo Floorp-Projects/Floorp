@@ -32,7 +32,10 @@
 #include <TextServices.h>
 #include <UnicodeConverter.h>
 #include <Script.h>
+#include "nsCarbonHelpers.h"
 #include "nsIRollupListener.h"
+
+
 //#define DEBUG_TSM
 extern nsIRollupListener * gRollupListener;
 extern nsIWidget         * gRollupWidget;
@@ -415,16 +418,10 @@ PRBool nsMacEventHandler::DragEvent ( unsigned int aMessage, Point aMouseGlobal,
 	// convert the mouse to local coordinates. We have to do all the funny port origin
 	// stuff just in case it has been changed.
 	Point hitPointLocal = aMouseGlobal;
-#if TARGET_CARBON
-	GrafPtr grafPort = reinterpret_cast<GrafPtr>(mTopLevelWidget->GetNativeData(NS_NATIVE_GRAPHIC));
-	::SetPort(grafPort);
+	WindowRef wind = reinterpret_cast<WindowRef>(mTopLevelWidget->GetNativeData(NS_NATIVE_DISPLAY));
+	::SetPortWindowPort(wind);
 	Rect savePortRect;
-	::GetPortBounds(grafPort, &savePortRect);
-#else
-	GrafPtr grafPort = static_cast<GrafPort*>(mTopLevelWidget->GetNativeData(NS_NATIVE_GRAPHIC));
-	::SetPort(grafPort);
-	Rect savePortRect = grafPort->portRect;
-#endif
+	::GetWindowPortBounds(wind, &savePortRect);
 	::SetOrigin(0, 0);
 	::GlobalToLocal(&hitPointLocal);
 	::SetOrigin(savePortRect.left, savePortRect.top);
@@ -1050,13 +1047,9 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(
 		case inDrag:
 		{
 			Point macPoint;
-#if TARGET_CARBON
 			Rect portRect;
-			::GetPortBounds(GetWindowPort(whichWindow), &portRect);
+			::GetWindowPortBounds(whichWindow, &portRect);
 			macPoint = topLeft(portRect);
-#else
-			macPoint = topLeft(whichWindow->portRect);
-#endif
 			::LocalToGlobal(&macPoint);
 			mTopLevelWidget->MoveToGlobalPoint(macPoint.h, macPoint.v);
 			if (nsnull != gRollupListener && (nsnull != gRollupWidget) ) {
@@ -1067,12 +1060,8 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(
 
 		case inGrow:
 		{
-#if TARGET_CARBON
 			Rect macRect;
 			::GetWindowPortBounds ( whichWindow, &macRect );
-#else
-			Rect macRect = whichWindow->portRect;
-#endif
 			::LocalToGlobal(&topLeft(macRect));
 			::LocalToGlobal(&botRight(macRect));
 			mTopLevelWidget->Resize(macRect.right - macRect.left + 1, macRect.bottom - macRect.top + 1, PR_FALSE);
@@ -1139,12 +1128,8 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(
 			// Now that we have found the partcode it is ok to actually zoom the window
 			ZoomWindow(whichWindow, partCode, (whichWindow == FrontWindow()));
 			
-#if TARGET_CARBON
 			Rect macRect;
 			::GetWindowPortBounds(whichWindow, &macRect);
-#else
-			Rect macRect = whichWindow->portRect;
-#endif
 			::LocalToGlobal(&topLeft(macRect));
 			::LocalToGlobal(&botRight(macRect));
 			mTopLevelWidget->Resize(macRect.right - macRect.left, macRect.bottom - macRect.top, PR_FALSE);
@@ -1290,16 +1275,10 @@ void nsMacEventHandler::ConvertOSEventToMouseEvent(
 
 	// get the widget hit and the hit point inside that widget
 	Point hitPoint = aOSEvent.where;
-#if TARGET_CARBON
-	GrafPtr grafPort = reinterpret_cast<GrafPtr>(mTopLevelWidget->GetNativeData(NS_NATIVE_GRAPHIC));
-	::SetPort(grafPort);
+	WindowRef wind = reinterpret_cast<WindowRef>(mTopLevelWidget->GetNativeData(NS_NATIVE_DISPLAY));
+	::SetPortWindowPort(wind);
 	Rect savePortRect;
-	::GetPortBounds(grafPort, &savePortRect);
-#else
-	GrafPtr grafPort = static_cast<GrafPort*>(mTopLevelWidget->GetNativeData(NS_NATIVE_GRAPHIC));
-	::SetPort(grafPort);
-	Rect savePortRect = grafPort->portRect;
-#endif
+	::GetWindowPortBounds(wind, &savePortRect);
 	::SetOrigin(0, 0);
 	::GlobalToLocal(&hitPoint);
 	::SetOrigin(savePortRect.left, savePortRect.top);
@@ -1380,16 +1359,10 @@ nsresult nsMacEventHandler::HandleOffsetToPosition(long offset,Point* thePoint)
 	thePoint->v = mIMEPos.y;
 	thePoint->h = mIMEPos.x;
 	printf("local (x,y) = (%d, %d)\n", thePoint->h, thePoint->v);
-#if TARGET_CARBON
-	GrafPtr grafPort = reinterpret_cast<GrafPtr>(mTopLevelWidget->GetNativeData(NS_NATIVE_GRAPHIC));
-	::SetPort(grafPort);
+	WindowRef wind = reinterpret_cast<WindowRef>(mTopLevelWidget->GetNativeData(NS_NATIVE_DISPLAY));
+	::SetPortWindowPort(wind);
 	Rect savePortRect;
-	::GetPortBounds(grafPort, &savePortRect);
-#else
-	GrafPtr grafPort = static_cast<GrafPort*>(mTopLevelWidget->GetNativeData(NS_NATIVE_GRAPHIC));
-	::SetPort(grafPort);
-	Rect savePortRect = grafPort->portRect;
-#endif
+	::GetWindowPortBounds(wind, &savePortRect);
 	::LocalToGlobal(thePoint);
 	printf("global (x,y) = (%d, %d)\n", thePoint->h, thePoint->v);
 

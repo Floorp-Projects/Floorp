@@ -46,6 +46,8 @@
 #include "nsRegionMac.h"
 #include "nsIRollupListener.h"
 
+#include "nsCarbonHelpers.h"
+
 
 ////////////////////////////////////////////////////
 nsIRollupListener * gRollupListener = nsnull;
@@ -64,31 +66,6 @@ static Boolean	gNotificationInstalled = false;
 #ifdef BLINK_DEBUGGING
 static void blinkRect(Rect* r);
 static void blinkRgn(RgnHandle rgn);
-#endif
-
-#if !TARGET_CARBON
-
-// for non-carbon builds, provide various accessors to keep the code below free of ifdefs.
-inline void GetRegionBounds(RgnHandle region, Rect* rect)
-{
-	*rect = (**region).rgnBBox;
-}
-
-inline Boolean IsRegionComplex(RgnHandle region)
-{
-	return (**region).rgnSize != sizeof(MacRegion);
-}
-
-inline void GetWindowPortBounds(WindowRef window, Rect* rect)
-{
-	*rect = window->portRect;
-}
-
-inline void GetPortVisibleRegion(GrafPtr port, RgnHandle visRgn)
-{
-	::CopyRgn(port->visRgn, visRgn);
-}
-
 #endif
 
 
@@ -332,11 +309,7 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
     // Windows and GrafPorts are VERY different under Carbon, and we can no
     // longer pass them interchagably. When we ask for a GrafPort, we cannot
     // return a window or vice versa.
-#if TARGET_CARBON
       retVal = (void*)::GetWindowPort(mWindowPtr);
-#else
-      retVal = (void*)mWindowPtr;
-#endif
       break;
       
     case NS_NATIVE_DISPLAY:
@@ -374,11 +347,7 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
 
 		// for compatibility with 4.X, this origin is what you'd pass
 		// to SetOrigin.
-#if TARGET_CARBON
 		mPluginPort->port = ::GetWindowPort(mWindowPtr);
-#else
-		mPluginPort->port = CGrafPtr(mWindowPtr);
-#endif
 		mPluginPort->portx = -point.x;
 		mPluginPort->porty = -point.y;
 		
@@ -991,31 +960,6 @@ void nsWindow::EndDraw()
 	NS_RELEASE(mTempRenderingContext);
 }
 
-//-------------------------------------------------------------------------
-//
-//
-//-------------------------------------------------------------------------
-PRBool nsWindow::OnPaint(nsPaintEvent &event)
-{
-#ifdef NOTNOW
-    if (debug_WantPaintFlashing() && event.rect ) {
-       Rect flashRect;
-       ::SetRect ( &flashRect, event.rect->x, event.rect->y, event.rect->x + event.rect->width,
-                    event.rect->y + event.rect->height );
-       ::InvertRect ( &flashRect );
-       for (int x = 0; x < 1000000; x++) ;
-       ::InvertRect ( &flashRect );
-       for (int x = 0; x < 1000000; x++) ;    
-       ::InvertRect ( &flashRect );
-       for (int x = 0; x < 1000000; x++) ;    
-       ::InvertRect ( &flashRect );
-       for (int x = 0; x < 1000000; x++) ;    
-    }
-#endif
-
-	// override this
-  return PR_TRUE;
-}
 
 //-------------------------------------------------------------------------
 //
@@ -1024,10 +968,8 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
 void
 nsWindow::Flash(nsPaintEvent	&aEvent)
 {
-Rect flashRect;
-
-
 #ifdef NS_DEBUG
+	Rect flashRect;
 	if (debug_WantPaintFlashing() && aEvent.rect ) {
 		::SetRect ( &flashRect, aEvent.rect->x, aEvent.rect->y, aEvent.rect->x + aEvent.rect->width,
 	          aEvent.rect->y + aEvent.rect->height );
@@ -1071,14 +1013,10 @@ NS_IMETHODIMP	nsWindow::Update()
 		if (!saveUpdateRgn)
 			return NS_ERROR_OUT_OF_MEMORY;
 		if(mWindowPtr)
-#if TARGET_CARBON
-			::GetWindowRegion(mWindowPtr, kWindowUpdateRgn, saveUpdateRgn);
-#else
-			::CopyRgn(((WindowRecord*)mWindowPtr)->updateRgn, saveUpdateRgn);
-#endif
+			GetWindowUpdateRegion ( mWindowPtr, saveUpdateRgn );
 
 		// draw the widget
-		StPortSetter	portSetter(mWindowPtr);
+		StPortSetter portSetter(mWindowPtr);
 
 		::BeginUpdate(mWindowPtr);
 		HandleUpdateEvent();
@@ -1098,11 +1036,8 @@ NS_IMETHODIMP	nsWindow::Update()
 		LocalToWindowCoordinate(bounds);
 		Rect macRect;
 		nsRectToMacRect(bounds, macRect);
-#if TARGET_CARBON
+
 		::ValidWindowRect(mWindowPtr, &macRect);
-#else
-		::ValidRect(&macRect);
-#endif
 
 		reentrant = PR_FALSE;
 	}
@@ -1225,13 +1160,10 @@ void nsWindow::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
 
 	// draw the widget
 	StartDraw(aContext);
-	if (OnPaint(paintEvent)){				// DC flashing support Support
-		nsEventStatus	eventStatus;
-		DispatchWindowEvent(paintEvent,eventStatus);
-		if(eventStatus != nsEventStatus_eIgnore){
-			Flash(paintEvent);
-		}
-	}
+	nsEventStatus	eventStatus;
+	DispatchWindowEvent(paintEvent,eventStatus);
+	if(eventStatus != nsEventStatus_eIgnore)
+		Flash(paintEvent);
 	EndDraw();
 
 	// beard:  Since we clip so aggressively, drawing from front to back should work,
@@ -1368,11 +1300,7 @@ nsWindow :: ScrollBits ( Rect & inRectToScroll, PRInt32 inLeftDelta, PRInt32 inT
 		::UnionRgn(nonVisableRgn, updateRgn, updateRgn);
 	}
 	
-#if TARGET_CARBON
 	::InvalWindowRgn(mWindowPtr, updateRgn);
-#else
-	::InvalRgn(updateRgn);
-#endif
 }
 
 
