@@ -56,21 +56,5 @@ class nsInstallVersion: public nsIScriptObjectOwner, public nsIDOMInstallVersion
 };
 
 
-class nsInstallVersionFactory : public nsIFactory 
-{
-    public:
-        
-        nsInstallVersionFactory();
-        virtual ~nsInstallVersionFactory();
-        
-        NS_DECL_ISUPPORTS
-
-              NS_IMETHOD CreateInstance(nsISupports *aOuter,
-                                        REFNSIID aIID,
-                                        void **aResult);
-
-              NS_IMETHOD LockFactory(PRBool aLock);
-
-};
-
+#define NS_INSTALLVERSIONCOMPONENT_PROGID NS_IXPINSTALLCOMPONENT_PROGID "/installversion"
 #endif

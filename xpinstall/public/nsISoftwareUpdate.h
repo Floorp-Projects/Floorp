@@ -32,6 +32,9 @@
 #include "nsIFileSpec.h"
 
 #include "nsIXPINotifier.h"
+#include "nsCOMPtr.h"
+#include "nsIModule.h"
+#include "nsIGenericFactory.h"
 
 #define NS_IXPINSTALLCOMPONENT_PROGID NS_IAPPSHELLCOMPONENT_PROGID "/xpinstall"
 #define NS_IXPINSTALLCOMPONENT_CLASSNAME "Mozilla XPInstall Component"
@@ -73,21 +76,26 @@ class nsISoftwareUpdate : public nsISupports
 };
 
 
-class nsSoftwareUpdateFactory : public nsIFactory 
+// Module implementation
+class nsSoftwareUpdateModule : public nsIModule
 {
-    public:
-        
-        nsSoftwareUpdateFactory();
-        virtual ~nsSoftwareUpdateFactory();
-        
-        NS_DECL_ISUPPORTS
+public:
+    nsSoftwareUpdateModule();
+    virtual ~nsSoftwareUpdateModule();
 
-              NS_IMETHOD CreateInstance(nsISupports *aOuter,
-                                        REFNSIID aIID,
-                                        void **aResult);
+    NS_DECL_ISUPPORTS
 
-              NS_IMETHOD LockFactory(PRBool aLock);
+    NS_DECL_NSIMODULE
 
+protected:
+    nsresult Initialize();
+
+    void Shutdown();
+
+    PRBool mInitialized;
+    nsCOMPtr<nsIGenericFactory> mSoftwareUpdateFactory;
+    nsCOMPtr<nsIGenericFactory> mInstallTriggerFactory;
+    nsCOMPtr<nsIGenericFactory> mInstallVersionFactory;
 };
 
 
