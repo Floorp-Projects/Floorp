@@ -210,8 +210,16 @@ __CERT_NewTempCertificate(CERTCertDBHandle *handle, SECItem *derCert,
                    &c->issuer, cc->derIssuer.len, cc->derIssuer.data);
     nssItem_Create(arena, 
                    &c->subject, cc->derSubject.len, cc->derSubject.data);
-    nssItem_Create(arena, 
-                   &c->serial, cc->serialNumber.len, cc->serialNumber.data);
+    if (PR_TRUE) {
+	/* CERTCertificate stores serial numbers decoded.  I need the DER
+	* here.  sigh.
+	*/
+	SECItem derSerial = { 0 };
+	CERT_SerialNumberFromDERCert(&cc->derCert, &derSerial);
+	if (!derSerial.data) goto loser;
+	nssItem_Create(arena, &c->serial, derSerial.len, derSerial.data);
+	PORT_Free(derSerial.data);
+    }
     if (nickname) {
 	c->nickname = nssUTF8_Create(arena, 
                                      nssStringType_UTF8String, 
