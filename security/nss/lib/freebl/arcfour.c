@@ -403,6 +403,7 @@ rc4_wordconv(RC4Context *cx, unsigned char *output,
 		/* If buffers are relatively misaligned, shift the bytes in inWord
 		 * to be aligned to the output buffer.
 		 */
+		nextInWord = 0;
 		if (inOffset < outOffset) {
 			/* Have more bytes than needed, shift remainder into nextInWord */
 			nextInWord = inWord LSH 8*(inOffset + byteCount);
@@ -423,10 +424,7 @@ rc4_wordconv(RC4Context *cx, unsigned char *output,
 		/* move to next word of output */
 		pOutWord++;
 		/* inWord has been consumed, but there may be bytes in nextInWord */
-		if (inOffset == outOffset)
-			inWord = 0;
-		else
-			inWord = nextInWord;
+		inWord = nextInWord;
 	} else {
 		/* output is word-aligned */
 		pOutWord = (WORD *)output;
