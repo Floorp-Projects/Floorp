@@ -21,6 +21,8 @@
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 David Gardiner <david.gardiner@unisa.edu.au>
 #                 Matthias Radestock <matthias@sorted.org>
+#                 Chris Lahey <clahey@ximian.com> [javascript fixes]
+#                 Christian Reis <kiko@async.com.br> [javascript rewrite]
 
 use diagnostics;
 use strict;
@@ -324,202 +326,297 @@ foreach my $m (@::legal_target_milestone) {
   }
 }
 
-# javascript
+# SELECT box javascript handling. This is done to make the component,
+# versions and milestone SELECTs repaint automatically when a product is
+# selected. Refactored for bug 96534.
     
-my $jscript = << 'ENDSCRIPT';
-<script language="Javascript1.1" type="text/javascript">
-<!--
-var cpts = new Array();
-var vers = new Array();
-var tms  = new Array();
-ENDSCRIPT
+# make_js_array: iterates through the product array creating a
+# javascript array keyed by product with an alphabetically ordered array
+# for the corresponding elements in the components array passed in.
+# return a string with javascript definitions for the product in a nice
+# arrays which can be linearly appended later on.
 
+# make_js_array ( \@products, \%[components/versions/milestones], $array )
 
-my $p;
-my $v;
-my $c;
-my $m;
-my $i = 0;
-my $j = 0;
+sub make_js_array {
+    my @prods = @{$_[0]};
+    my %data = %{$_[1]};
+    my $arr = $_[2];
 
-foreach $c (@::component_list) {
-    $jscript .= "cpts['$c'] = new Array();\n";
-}
-
-foreach $v (@::version_list) {
-    $jscript .= "vers['$v'] = new Array();\n";
-}
-
-my $tm;
-foreach $tm (@::milestone_list) {
-    $jscript .= "tms['$tm'] = new Array();\n";
-}
-
-for $p (@::product_list) {
-    if ($::components{$p}) {
-        foreach $c (@{$::components{$p}}) {
-            $jscript .= "cpts['$c'][cpts['$c'].length] = '$p';\n";
+    my $ret = "\nvar $arr = new Array();\n";
+    foreach my $p ( @prods ) {
+        # join each element with a "," case-insensitively alpha sorted
+        if ( $data{$p} ) {
+            $ret .= $arr."['$p'] = [";
+            # the SqlQuote() protects our 's.
+            my @tmp = map( SqlQuote( $_ ), @{ $data{$p} } );
+            # do the join on a sorted, quoted list
+            @tmp = sort { lc( $a ) cmp lc( $b ) } @tmp;
+            $ret .= join( ", ", @tmp );
+            $ret .= "];\n";
         }
     }
-
-    if ($::versions{$p}) {
-        foreach $v (@{$::versions{$p}}) {
-            $jscript .= "vers['$v'][vers['$v'].length] = '$p';\n";
-        }
-    }
-
-    if ($::target_milestone{$p}) {
-        foreach $m (@{$::target_milestone{$p}}) {
-            $jscript .= "tms['$m'][tms['$m'].length] = '$p';\n";
-        }
-    }
+    return $ret;
 }
 
-$i = 0;
+my $jscript = '<script language="JavaScript" type="text/javascript">';
+$jscript .= "\n<!--\n\n";
+
+# Add the javascript code for the arrays of components and versions
+# This is used in our javascript functions
+
+$jscript .= "var usetms = 0; // do we have target milestone?\n";
+$jscript .= "var first_load = 1; // is this the first time we load the page?\n";
+$jscript .= "var last_sel = []; // caches last selection\n";
+$jscript .= make_js_array( \@::product_list, \%::components, "cpts" );
+$jscript .= make_js_array( \@::product_list, \%::versions, "vers" );
+
+if ( Param( "usetargetmilestone" ) ) {
+    $jscript .= make_js_array(\@::product_list, \%::target_milestone, "tms");
+    $jscript .= "\nusetms = 1; // hooray, we use target milestones\n";
+}
+
 $jscript .= << 'ENDSCRIPT';
 
-// Only display versions/components valid for selected product(s)
+// Adds to the target select object all elements in array that
+// correspond to the elements selected in source.
+//     - array should be a array of arrays, indexed by product name. the
+//       array should contain the elements that correspont to that
+//       product. Example:
+//         var array = Array();
+//         array['ProductOne'] = [ 'ComponentA', 'ComponentB' ];
+//         updateSelect(array, source, target);
+//     - sel is a list of selected items, either whole or a diff
+//       depending on sel_is_diff.
+//     - sel_is_diff determines if we are sending in just a diff or the
+//       whole selection. a diff is used to optimize adding selections.
+//     - target should be the target select object.
+//     - single specifies if we selected a single item. if we did, no
+//       need to merge.
 
-function selectProduct(f) {
-    // Netscape 4.04 and 4.05 also choke with an "undefined"
-    // error.  if someone can figure out how to "define" the
-    // whatever, we'll remove this hack.  in the mean time, we'll
-    // assume that v4.00-4.03 also die, so we'll disable the neat
-    // javascript stuff for Netscape 4.05 and earlier.
-
-    var cnt = 0;
+function updateSelect( array, sel, target, sel_is_diff, single ) {
+        
     var i;
-    var j;
 
-    if (!f) {
+    // if single, even if it's a diff (happens when you have nothing
+    // selected and select one item alone), skip this.
+    if ( ! single ) {
+
+        // array merging/sorting in the case of multiple selections
+        if ( sel_is_diff ) {
+        
+            // merge in the current options with the first selection
+            comp = merge_arrays( array[sel[0]], target.options, 1 );
+
+            // merge the rest of the selection with the results
+            for ( i = 1 ; i < sel.length ; i++ ) {
+                comp = merge_arrays( array[sel[i]], comp, 0 );
+            }
+        } else {
+            // here we micro-optimize for two arrays to avoid merging with a
+            // null array 
+            comp = merge_arrays( array[sel[0]],array[sel[1]], 0 );
+
+            // merge the arrays. not very good for multiple selections.
+            for ( i = 2; i < sel.length; i++ ) {
+                comp = merge_arrays( comp, array[sel[i]], 0 );
+            }
+        }
+    } else {
+        // single item in selection, just get me the list
+        comp = array[sel[0]];
+    }
+
+    // clear select
+    target.options.length = 0;
+
+    // load elements of list into select
+    for ( i = 0; i < comp.length; i++ ) {
+        target.options[i] = new Option( comp[i], comp[i] );
+    }
+}
+
+// Returns elements in a that are not in b.
+// NOT A REAL DIFF: does not check the reverse.
+//     - a,b: arrays of values to be compare.
+
+function fake_diff_array( a, b ) {
+    var newsel = new Array();
+
+    // do a boring array diff to see who's new
+    for ( ia in a ) {
+        var found = 0;
+        for ( ib in b ) {
+            if ( a[ia] == b[ib] ) {
+                found = 1;
+            }
+        }
+        if ( ! found ) {
+            newsel[newsel.length] = a[ia];
+        }
+        found = 0;
+    }
+    return newsel;
+}
+
+// takes two arrays and sorts them by string, returning a new, sorted
+// array. the merge removes dupes, too.
+//     - a, b: arrays to be merge.
+//     - b_is_select: if true, then b is actually an optionitem and as
+//       such we need to use item.value on it.
+
+function merge_arrays( a, b, b_is_select ) {
+    var pos_a = 0;
+    var pos_b = 0;
+    var ret = new Array();
+
+    // iterate through both arrays and add the larger item to the return
+    // list. remove dupes, too. Use toLowerCase to provide
+    // case-insensitivity.
+
+    while ( ( pos_a < a.length ) && ( pos_b < b.length ) ) {
+
+        if ( b_is_select ) {
+            bitem = b[pos_b].value;
+        } else {
+            bitem = b[pos_b];
+        }
+        aitem = a[pos_a];
+
+        // smaller item in list a
+        if ( aitem.toLowerCase() < bitem.toLowerCase() ) {
+            ret[ret.length] = aitem;
+            pos_a++;
+        } else {
+            // smaller item in list b
+            if ( aitem.toLowerCase() > bitem.toLowerCase() ) {
+                ret[ret.length] = bitem;
+                pos_b++;
+            } else {
+                // list contents are equal, inc both counters. 
+                ret[ret.length] = aitem;
+                pos_a++;
+                pos_b++;
+            }
+        }
+    }
+
+    // catch leftovers here. these sections are ugly code-copying.
+    if ( pos_a < a.length ) {
+        for ( ; pos_a < a.length ; pos_a++ ) {
+            ret[ret.length] = a[pos_a];
+        }
+    }
+
+    if ( pos_b < b.length ) {
+        for ( ; pos_b < b.length; pos_b++ ) {
+            if ( b_is_select ) {
+                bitem = b[pos_b].value;
+            } else {
+                bitem = b[pos_b];
+            }
+            ret[ret.length] = bitem;
+        }
+    }
+    return ret;
+}
+
+// selectProduct reads the selection from f.product and updates
+// f.version, component and target_milestone accordingly.
+//     - f: a form containing product, component, varsion and
+//       target_milestone select boxes. 
+// globals (3vil!):
+//     - cpts, vers, tms: array of arrays, indexed by product name. the
+//       subarrays contain a list of names to be fed to the respective
+//       selectboxes. For bugzilla, these are generated with perl code
+//       at page start.
+//     - usetms: this is a global boolean that is defined if the
+//       bugzilla installation has it turned on. generated in perl too.
+//     - first_load: boolean, specifying if it's the first time we load
+//       the query page.
+//     - last_sel: saves our last selection list so we know what has
+//       changed, and optimize for additions.
+
+function selectProduct( f ) {
+
+    // this is to avoid events that occur before the form itself is
+    // ready. mozilla doesn't seem to trigger this, though.
+
+    if ( !f ) {
         return;
     }
 
-    for (i=0 ; i<f.product.length ; i++) {
-        if (f.product[i].selected) {
-            cnt++;
-        }
+    // if this is the first load and nothing is selected, no need to
+    // merge and sort all components; perl gives it to us sorted.
+
+    if ( ( first_load ) && ( f.product.selectedIndex == -1 ) ) {
+            first_load = 0;
+            return;
     }
-    var doall = (cnt == f.product.length || cnt == 0);
-
-    var csel = new Object();
-    for (i=0 ; i<f.component.length ; i++) {
-        if (f.component[i].selected) {
-            csel[f.component[i].value] = 1;
-        }
-    }
-
-    f.component.options.length = 0;
-
-    for (c in cpts) {
-        if (typeof(cpts[c]) == 'function') continue;
-        var doit = doall;
-        for (i=0 ; !doit && i<f.product.length ; i++) {
-            if (f.product[i].selected) {
-                var p = f.product[i].value;
-                for (j in cpts[c]) {
-                    if (typeof(cpts[c][j]) == 'function') continue;
-                    var p2 = cpts[c][j];
-                    if (p2 == p) {
-                        doit = true;
-                        break;
-                    }
-                }
-            }
-        }
-        if (doit) {
-            var l = f.component.length;
-            f.component[l] = new Option(c, c);
-            if (csel[c]) {
-                f.component[l].selected = true;
-            }
-        }
-    }
-
-    var vsel = new Object();
-    for (i=0 ; i<f.version.length ; i++) {
-        if (f.version[i].selected) {
-            vsel[f.version[i].value] = 1;
-        }
-    }
-
-    f.version.options.length = 0;
-
-    for (v in vers) {
-        if (typeof(vers[v]) == 'function') continue;
-        doit = doall;
-        for (i=0 ; !doit && i<f.product.length ; i++) {
-            if (f.product[i].selected) {
-                p = f.product[i].value;
-                for (j in vers[v]) {
-                    if (typeof(vers[v][j]) == 'function') continue;
-                    p2 = vers[v][j];
-                    if (p2 == p) {
-                        doit = true;
-                        break;
-                    }
-                }
-            }
-        }
-        if (doit) {
-            l = f.version.length;
-            f.version[l] = new Option(v, v);
-            if (vsel[v]) {
-                f.version[l].selected = true;
-            }
-        }
-    }
-
-ENDSCRIPT
-if (Param("usetargetmilestone")) {
-    $jscript .= q{
-      if (f.target_milestone) {
-        var tmsel = new Object();
-        for (i=0 ; i<f.target_milestone.length ; i++) {
-            if (f.target_milestone[i].selected) {
-                tmsel[f.target_milestone[i].value] = 1;
-            }
-        }
     
-        f.target_milestone.options.length = 0;
-    
-        for (tm in tms) {
-            if (typeof(tms[v]) == 'function') continue;
-            doit = doall;
-            for (i=0 ; !doit && i<f.product.length ; i++) {
-                if (f.product[i].selected) {
-                    p = f.product[i].value;
-                    for (j in tms[tm]) {
-                        if (typeof(tms[tm][j]) == 'function') continue;
-                        p2 = tms[tm][j];
-                        if (p2 == p) {
-                            doit = true;
-                            break;
-                        }
-                    }
-                }
-            }
-            if (doit) {
-                l = f.target_milestone.length;
-                f.target_milestone[l] = new Option(tm, tm);
-                if (tmsel[tm]) {
-                    f.target_milestone[l].selected = true;
-                }
+    // turn first_load off. this is tricky, since it seems to be
+    // redundant with the above clause. It's not: if when we first load
+    // the page there is _one_ element selected, it won't fall into that
+    // clause, and first_load will remain 1. Then, if we unselect that
+    // item, selectProduct will be called but the clause will be valid
+    // (since selectedIndex == -1), and we will return - incorrectly -
+    // without merge/sorting.
+
+    first_load = 0;
+
+    // - sel keeps the array of products we are selected. 
+    // - is_diff says if it's a full list or just a list of products that
+    //   were added to the current selection. 
+    // - single indicates if a single item was selected
+    var sel = Array();
+    var is_diff = 0;
+    var single;
+
+    // is nothing selected, pick all
+    if ( f.product.selectedIndex == -1 ) {
+        for ( i=0 ; i<f.product.length ; i++ ) {
+            sel[sel.length] = f.product.options[i].value;
+        }
+        single = 0;
+    } else {
+
+        for ( i=0 ; i<f.product.length ; i++ ) {
+            if ( f.product.options[i].selected ) {
+                sel[sel.length] = f.product.options[i].value;
             }
         }
-      }
-    };
 
+        single = ( sel.length == 1 );
+
+        // save last_sel before we kill it
+        var tmp = last_sel;
+        last_sel = sel;
+    
+        // this is an optimization: if we've added components, no need
+        // to remerge them; just merge the new ones with the existing
+        // options.
+
+        if ( ( tmp ) && ( tmp.length < sel.length ) ) {
+            sel = fake_diff_array(sel, tmp);
+            is_diff = 1;
+        }
+    }
+
+    // do the actual fill/update
+    updateSelect( cpts, sel, f.component, is_diff, single );
+    updateSelect( vers, sel, f.version, is_diff, single );
+    if ( usetms ) {
+        updateSelect( tms, sel, f.target_milestone, is_diff, single );
+    }
 }
 
-$jscript .= << 'ENDSCRIPT';
-}
 // -->
 </script>
-
 ENDSCRIPT
 
-
+#
+# End the fearsome Javascript section. 
+#
 
 # Muck the "legal product" list so that the default one is always first (and
 # is therefore visibly selected.
