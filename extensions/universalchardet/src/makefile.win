@@ -57,7 +57,7 @@ CPP_OBJS= \
         .\$(OBJDIR)\LangHungarianModel.obj \
 	$(NULL)
 
-MODULE=universalchardet
+MODULE=$(LIBRARY_NAME)
 
 REQUIRES=xpcom
 
@@ -65,7 +65,7 @@ LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\chardet  \
      -I$(DEPTH)\public 
 
 MAKE_OBJ_TYPE=DLL
-DLLNAME=universalchrdet
+DLLNAME=$(LIBRARY_NAME)
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 
