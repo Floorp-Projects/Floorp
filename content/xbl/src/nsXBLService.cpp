@@ -78,13 +78,27 @@ static NS_DEFINE_CID(kXMLDocumentCID,             NS_XMLDOCUMENT_CID);
 static NS_DEFINE_CID(kParserCID,                  NS_PARSER_IID); // XXX What's up with this???
 static NS_DEFINE_CID(kChromeRegistryCID,          NS_CHROMEREGISTRY_CID);
 
-static PRBool IsChromeURI(nsIURI* aURI)
+static PRBool IsChromeOrResourceURI(nsIURI* aURI)
 {
   nsresult rv;
   nsXPIDLCString protocol;
   rv = aURI->GetScheme(getter_Copies(protocol));
   if (NS_SUCCEEDED(rv)) {
-    if (!PL_strcmp(protocol, "chrome")) {
+    if (!PL_strcmp(protocol, "chrome") || !PL_strcmp(protocol, "resource")) {
+      return PR_TRUE;
+    }
+  }
+
+  return PR_FALSE;
+}
+
+static PRBool IsResourceURI(nsIURI* aURI)
+{
+  nsresult rv;
+  nsXPIDLCString protocol;
+  rv = aURI->GetScheme(getter_Copies(protocol));
+  if (NS_SUCCEEDED(rv)) {
+    if (!PL_strcmp(protocol, "resource")) {
       return PR_TRUE;
     }
   }
@@ -349,7 +363,7 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
  
     // If the doc is a chrome URI, then we put it into the XUL cache.
     PRBool cached = PR_FALSE;
-    if (IsChromeURI(uri)) {
+    if (IsChromeOrResourceURI(uri)) {
       if (gXULUtils && gXULUtils->UseXULCache()) {
         cached = PR_TRUE;
         gXULCache->PutXBLDocumentInfo(info);
@@ -549,7 +563,6 @@ nsXBLService::nsXBLService(void)
                                       NS_GET_IID(nsIXULPrototypeCache),
                                       (nsISupports**) &gXULCache);
     if (NS_FAILED(rv)) return;
-
   }
 }
 
@@ -1081,7 +1094,7 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement, nsIDocument* aB
   nsresult rv;
 
   *aResult = nsnull;
-  
+
   // We've got a file.  Check our XBL document cache.
   nsCOMPtr<nsIXBLDocumentInfo> info;
   if (gXULUtils && gXULUtils->UseXULCache()) {
@@ -1144,7 +1157,7 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement, nsIDocument* aB
  
         // If the doc is a chrome URI, then we put it into the XUL cache.
         PRBool cached = PR_FALSE;
-        if (IsChromeURI(uri)) {
+        if (IsChromeOrResourceURI(uri)) {
           if (gXULUtils && gXULUtils->UseXULCache()) {
             cached = PR_TRUE;
             gXULCache->PutXBLDocumentInfo(info);
@@ -1217,7 +1230,11 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
   nsCOMPtr<nsIAtom> tagName;
   if (aBoundElement)
     aBoundElement->GetTag(*getter_AddRefs(tagName)); 
-  if ((tagName.get() != kScrollbarAtom) && (tagName.get() != kInputAtom) && !aForceSyncLoad) {
+
+  if (tagName.get() == kScrollbarAtom || IsResourceURI(aURI))
+    aForceSyncLoad = PR_TRUE;
+
+  if (!aForceSyncLoad) {
     // We can be asynchronous
     nsXBLStreamListener* xblListener = new nsXBLStreamListener(listener, aBoundDocument, doc);
     
