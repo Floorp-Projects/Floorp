@@ -34,7 +34,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var kFeedUrlDelimiter = '|'; // the delimiter used to delimit feed urls in the msg folder database "feedUrl" property
 var gRSSServer = null;
 
 function doLoad() {
@@ -74,10 +73,10 @@ function clearStatusInfo()
 }
 
 var feedDownloadCallback = {
-  downloaded: function(feed, aSuccess)
+  downloaded: function(feed, aErrorCode)
   {
     // feed is null if our attempt to parse the feed failed
-    if (aSuccess)
+    if (aErrorCode == kNewsBlogSuccess)
     {
       updateStatusItem('progressMeter', 100);
 
@@ -91,10 +90,10 @@ var feedDownloadCallback = {
       // it also flushes the subscription datasource
       addFeed(feed.url, feed.name, null, folder); 
     } 
-    else 
-    {
-      // Add some code to alert the user that the feed was not something we could understand...  
-    }
+    else if (aErrorCode == kNewsBlogInvalidFeed) //  the feed was bad...
+      window.alert(document.getElementById('bundle_newsblog').getFormattedString('newsblog-invalidFeed', [feed.url]));
+    else // we never even downloaded the feed...(kNewsBlogRequestFailure)
+      window.alert(document.getElementById('bundle_newsblog').getFormattedString('newsblog-networkError', [feed.url]));
 
     // our operation is done...clear out the status text and progressmeter
     setTimeout(clearStatusInfo, 1000);
@@ -114,23 +113,6 @@ var feedDownloadCallback = {
   {
     updateStatusItem('progressMeter', (aProgress * 100) / aProgressMax);
   },
-}
-
-// updates the "feedUrl" property in the message database for the folder in question.
-function updateFolderFeedUrl(aFolder, aFeedUrl, aRemoveUrl)
-{
-  var msgdb = aFolder.QueryInterface(Components.interfaces.nsIMsgFolder).getMsgDatabase(null);
-  var folderInfo = msgdb.dBFolderInfo;
-  var oldFeedUrl = folderInfo.getCharPtrProperty("feedUrl");
-
-  if (aRemoveUrl)
-  { 
-    // remove our feed url string from the list of feed urls
-    var newFeedUrl = oldFeedUrl.replace(kFeedUrlDelimiter + aFeedUrl, "");
-    folderInfo.setCharPtrProperty("feedUrl", newFeedUrl);
-  }  
-  else 
-    folderInfo.setCharPtrProperty("feedUrl", oldFeedUrl + kFeedUrlDelimiter + aFeedUrl);  
 }
 
 function doAdd() {

@@ -46,5 +46,9 @@ interface nsINewsBlogFeedDownloader : nsISupports
   void downloadFeed(in string aUrl, in nsIMsgFolder aFolder,
                      in boolean aQuickMode, in wstring aTitle,  
 					in nsIUrlListener aUrlListener, in nsIMsgWindow aMsgWindow);
+
+  /* A convient method to subscribe to feeds without going through the subscribe UI
+     used by drag and drop */
+  void subscribeToFeed(in string aUrl, in nsIMsgFolder aFolder, in nsIMsgWindow aMsgWindow);
 };
 

@@ -69,6 +69,7 @@ function CanDropOnFolderTree(index, orientation)
 
     trans.addDataFlavor("text/x-moz-message");
     trans.addDataFlavor("text/x-moz-folder");
+    trans.addDataFlavor("text/x-moz-url");
  
     var folderTree = GetFolderTree();
     var targetResource = GetFolderResource(folderTree, index);
@@ -121,33 +122,43 @@ function CanDropOnFolderTree(index, orientation)
             if (hdr.folder == targetFolder)
                 return false;
             break;
+        } else if (dataFlavor.value == "text/x-moz-folder") {
+
+          // we should only get here if we are dragging and dropping folders
+          dragFolder = true;
+          sourceResource = RDF.GetResource(sourceUri);
+          var sourceFolder = sourceResource.QueryInterface(Components.interfaces.nsIMsgFolder);
+          sourceServer = sourceFolder.server;
+
+          if (targetUri == sourceUri)	
+              return false;
+
+          //don't allow drop on different imap servers.
+          if (sourceServer != targetServer && targetServer.type == "imap")
+              return false;
+
+          //don't allow immediate child to be dropped to it's parent
+          if (targetFolder.URI == sourceFolder.parent.URI)
+          {
+              debugDump(targetFolder.URI + "\n");
+              debugDump(sourceFolder.parent.URI + "\n");     
+              return false;
+          }
+
+          var isAncestor = sourceFolder.isAncestorOf(targetFolder);
+          // don't allow parent to be dropped on its ancestors
+          if (isAncestor)
+              return false;
+        } else if (dataFlavor.value == "text/x-moz-url") {
+          // eventually check to make sure this is an http url before doing anything else...
+          var uri = Components.classes["@mozilla.org/network/standard-url;1"].
+                      createInstance(Components.interfaces.nsIURI);
+          var url = sourceUri.split("\n")[0];
+          uri.spec = url;
+
+          if (uri.schemeIs("http") && targetServer && targetServer.type == 'rss')
+            return true;
         }
-
-        // we should only get here if we are dragging and dropping folders
-        dragFolder = true;
-        sourceResource = RDF.GetResource(sourceUri);
-        var sourceFolder = sourceResource.QueryInterface(Components.interfaces.nsIMsgFolder);
-        sourceServer = sourceFolder.server;
-
-        if (targetUri == sourceUri)	
-            return false;
-
-        //don't allow drop on different imap servers.
-        if (sourceServer != targetServer && targetServer.type == "imap")
-            return false;
-
-        //don't allow immediate child to be dropped to it's parent
-        if (targetFolder.URI == sourceFolder.parent.URI)
-        {
-            debugDump(targetFolder.URI + "\n");
-            debugDump(sourceFolder.parent.URI + "\n");     
-            return false;
-        }
-
-        var isAncestor = sourceFolder.isAncestorOf(targetFolder);
-        // don't allow parent to be dropped on its ancestors
-        if (isAncestor)
-            return false;
     }
 
     if (dragFolder)
@@ -198,6 +209,8 @@ function DropOnFolderTree(row, orientation)
 
     var folderTree = GetFolderTree();
     var targetResource = GetFolderResource(folderTree, row);
+    var targetFolder = targetResource.QueryInterface(Components.interfaces.nsIMsgFolder);
+    var targetServer = targetFolder.server;
 
     var targetUri = targetResource.Value;
     debugDump("***targetUri = " + targetUri + "\n");
@@ -209,6 +222,7 @@ function DropOnFolderTree(row, orientation)
     var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(Components.interfaces.nsITransferable);
     trans.addDataFlavor("text/x-moz-message");
     trans.addDataFlavor("text/x-moz-folder");
+    trans.addDataFlavor("text/x-moz-url");
 
     var list = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
 
@@ -248,6 +262,24 @@ function DropOnFolderTree(row, orientation)
           }
           else if (flavor.value == "text/x-moz-message")
             dropMessage = true;
+          else if (flavor.value == "text/x-moz-url")
+          {
+            var uri = Components.classes["@mozilla.org/network/standard-url;1"].
+                        createInstance(Components.interfaces.nsIURI);
+            var url = sourceUri.split("\n")[0];
+            uri.spec = url;
+            
+            if (uri.schemeIs("http") && targetServer && targetServer.type == 'rss')
+            {
+              var rssService = Components.classes["@mozilla.org/newsblog-feed-downloader;1"].getService().
+                               QueryInterface(Components.interfaces.nsINewsBlogFeedDownloader);
+              if (rssService)
+                rssService.subscribeToFeed(url, targetFolder, msgWindow);
+              return true;
+            }
+            else 
+              return false;            
+          }
         }
         else {
            if (!dropMessage)
@@ -273,9 +305,6 @@ function DropOnFolderTree(row, orientation)
 
     var isSourceNews = false;
     isSourceNews = isNewsURI(sourceUri);
-    
-    var targetFolder = targetResource.QueryInterface(Components.interfaces.nsIMsgFolder);
-    var targetServer = targetFolder.server;
 
     if (dropMessage) {
         var sourceMsgHdr = list.GetElementAt(0).QueryInterface(Components.interfaces.nsIMsgDBHdr);

@@ -51,7 +51,7 @@ var nsNewsBlogFeedDownloader =
     var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
         .getService(Components.interfaces.nsIRDFService);
 
-    progressNotifier.init(aMsgWindow.statusFeedback);
+    progressNotifier.init(aMsgWindow.statusFeedback, false);
     
     var index = 0; 
     for (url in feedUrlArray)
@@ -66,6 +66,23 @@ var nsNewsBlogFeedDownloader =
         feed.download(true, progressNotifier);
       }
     }
+  },
+
+  subscribeToFeed: function(aUrl, aFolder, aMsgWindow)
+  {
+    if (!gExternalScriptsLoaded)
+      loadScripts();
+    var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+              .getService(Components.interfaces.nsIRDFService);
+    
+    var itemResource = rdf.GetResource(aUrl);
+    var feed = new Feed(itemResource);
+    feed.server = aFolder.server;
+    if (!aFolder.server.isServer) // if the root server, create a new folder for the feed
+      feed.folder = aFolder; // user must want us to add this subscription url to an existing RSS folder.
+
+    progressNotifier.init(aMsgWindow.statusFeedback, true);
+    feed.download(true, progressNotifier);
   },
 
   QueryInterface: function(aIID)
@@ -222,33 +239,52 @@ function loadScripts()
 var gNumPendingFeedDownloads = 0;
 
 var progressNotifier = {
-
+  mSubscribeMode: false, 
   mStatusFeedback: null,
   mFeeds: new Array,
 
-  init: function(aStatusFeedback)
+  init: function(aStatusFeedback, aSubscribeMode)
   {
     if (!gNumPendingFeedDownloads) // if we aren't already in the middle of downloading feed items...
     {
       this.mStatusFeedback = aStatusFeedback;
+      this.mSubscribeMode = aSubscribeMode;
       this.mStatusFeedback.startMeteors();
-      this.mStatusFeedback.showStatusString(GetString('newsblog-getNewMailCheck'));
+
+      this.mStatusFeedback.showStatusString(aSubscribeMode ? GetNewsBlogStringBundle().GetStringFromName('subscribe-validating') 
+                                            : GetNewsBlogStringBundle().GetStringFromName('newsblog-getNewMailCheck'));
     }
   },
 
-  downloaded: function(feed)
+  downloaded: function(feed, aErrorCode)
   {
+    if (this.mSubscribeMode && aErrorCode == kNewsBlogSuccess)
+    {
+      // if we get here...we should always have a folder by now...either
+      // in feed.folder or FeedItems created the folder for us....
+      var folder = feed.folder ? feed.folder : feed.server.rootMsgFolder.getChildNamed(feed.name);
+      updateFolderFeedUrl(folder, feed.url, false);        
+      addFeed(feed.url, feed.name, null, folder); // add feed just adds the feed to the subscription UI and flushes the datasource
+    } 
+    else if (aErrorCode == kNewsBlogInvalidFeed)
+      this.mStatusFeedback.showStatusString(GetNewsBlogStringBundle().formatStringFromName("newsblog-invalidFeed",
+                                            [feed.url], 1));
+    else if (aErrorCode == kNewsBlogRequestFailure)
+      this.mStatusFeedback.showStatusString(GetNewsBlogStringBundle().formatStringFromName("newsblog-networkError",
+                                            [feed.url], 1));
+      
     this.mStatusFeedback.stopMeteors();
     gNumPendingFeedDownloads--;
     if (!gNumPendingFeedDownloads)
     {
       this.mFeeds = new Array;
 
-      // no more pending actions...clear the status bar text...should we do this on a timer
-      // so the text sticks around for a little while? It doesnt look like we do it on a timer for 
-      // newsgroups so we'll follow that model.
+      this.mSubscribeMode = false;
 
-      this.mStatusFeedback.showStatusString("");
+      // should we do this on a timer so the text sticks around for a little while? 
+      // It doesnt look like we do it on a timer for newsgroups so we'll follow that model.
+      if (aErrorCode == kNewsBlogSuccess) // don't clear the status text if we just dumped an error to the status bar!
+        this.mStatusFeedback.showStatusString("");
     }
   },
 
@@ -259,6 +295,12 @@ var progressNotifier = {
   { 
     // we currently don't do anything here. Eventually we may add
     // status text about the number of new feed articles received.
+
+    if (this.mSubscribeMode) // if we are subscribing to a feed, show feed download progress
+    {
+      this.mStatusFeedback.showStatusString(GetNewsBlogStringBundle().formatStringFromName("subscribe-fetchingFeedItems", [aCurrentFeedItems, aMaxFeedItems], 2));
+      this.onProgress(feed, aCurrentFeedItems, aMaxFeedItems);
+    }
   },
 
   onProgress: function(feed, aProgress, aProgressMax)
@@ -292,10 +334,10 @@ var progressNotifier = {
   }
 }
 
-function GetString(name)
+function GetNewsBlogStringBundle(name)
 {
   var strBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(); 
   strBundleService = strBundleService.QueryInterface(Components.interfaces.nsIStringBundleService);
   var strBundle = strBundleService.createBundle("chrome://messenger-newsblog/locale/newsblog.properties"); 
-  return strBundle.GetStringFromName(name);
+  return strBundle;
 }

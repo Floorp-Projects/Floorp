@@ -14,6 +14,12 @@ var serializer =
     .classes["@mozilla.org/xmlextras/xmlserializer;1"]
       .createInstance(Components.interfaces.nsIDOMSerializer);
 
+// error codes used to inform the consumer about attempts to download a feed
+
+const kNewsBlogSuccess = 0;
+const kNewsBlogInvalidFeed = 1; // usually means there was an error trying to parse the feed...
+const kNewsBlogRequestFailure = 2; // generic networking failure when trying to download the feed.
+
 // Hash of feeds being downloaded, indexed by URL, so the load event listener
 // can access the Feed objects after it finishes downloading the feed files.
 var gFzFeedCache = new Object();
@@ -57,18 +63,26 @@ Feed.prototype.name getter = function() {
 }
 
 Feed.prototype.download = function(parseItems, aCallback) {
+  this.downloadCallback = aCallback; // may be null 
 
   // Whether or not to parse items when downloading and parsing the feed.
   // Defaults to true, but setting to false is useful for obtaining
   // just the title of the feed when the user subscribes to it.
   this.parseItems = parseItems == null ? true : parseItems ? true : false;
 
+  // Before we do anything...make sure the url is an http url. This is just a sanity check
+  // so we don't try opening mailto urls, imap urls, etc. that the user may have tried to subscribe to 
+  // as an rss feed..
+  var uri = Components.classes["@mozilla.org/network/standard-url;1"].
+                      createInstance(Components.interfaces.nsIURI);
+  uri.spec = this.url;
+  if (!uri.schemeIs("http"))
+    return this.onParseError(this); // simulate an invalid feed error
+
   this.request = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
                  .createInstance(Components.interfaces.nsIXMLHttpRequest);
   this.request.onprogress = Feed.onProgress; // must be set before calling .open
   this.request.open("GET", this.url, true);
-
-  this.downloadCallback = aCallback; // may be null 
 
   this.request.overrideMimeType("text/xml");
   this.request.onload = Feed.onDownloaded;
@@ -100,17 +114,13 @@ Feed.onProgress = function(event) {
 }
 
 Feed.onDownloadError = function(event) {
-  // XXX add error message if available and notify the user?
-  var request = event.target;
-  var url = request.channel.originalURI.spec;
-  var feed = gFzFeedCache[url];
-  if (feed)
-  {
-    debug(feed.title + " download failed");
-    if (feed.downloadCallback)
-      feed.downloaded(feed, false);
-  }
-  throw("error downloading feed " + url);
+  if (feed.downloadCallback)
+    feed.downloadCallback.downloaded(feed, kNewsBlogRequestFailure);
+}
+
+Feed.prototype.onParseError = function(feed) {
+  if (feed && feed.downloadCallback)
+    feed.downloadCallback.downloaded(feed, kNewsBlogInvalidFeed);
 }
 
 Feed.prototype.url getter = function() {
@@ -159,8 +169,7 @@ Feed.prototype.parse = function() {
   debug("parsing feed " + this.url);
 
   if (!this.request.responseText) {
-    throw("error parsing feed " + this.url + ": no data");
-    return;
+    return this.onParseError(this);
   }
   else if (this.request.responseText.search(/="http:\/\/purl\.org\/rss\/1\.0\/"/) != -1) {
     debug(this.url + " is an RSS 1.x (RDF-based) feed");
@@ -192,12 +201,12 @@ Feed.prototype.parse = function() {
 
 Feed.prototype.parseAsRSS2 = function() {
   if (!this.request.responseXML || !(this.request.responseXML instanceof Components.interfaces.nsIDOMXMLDocument))
-    throw("error parsing RSS 2.0 feed " + this.url + ": data not parsed into XMLDocument object");
+    return this.onParseError(this);
 
   // Get the first channel (assuming there is only one per RSS File).
   var channel = this.request.responseXML.getElementsByTagName("channel")[0];
   if (!channel)
-    throw("error parsing RSS 2.0 feed " + this.url + ": channel element missing");
+    return this.onParseError(this);
 
   this.title = this.title || getNodeValue(channel.getElementsByTagName("title")[0]);
   this.description = getNodeValue(channel.getElementsByTagName("description")[0]);
@@ -311,12 +320,12 @@ Feed.prototype.parseAsRSS1 = function() {
 
 Feed.prototype.parseAsAtom = function() {
   if (!this.request.responseXML || !(this.request.responseXML instanceof Components.interfaces.nsIDOMXMLDocument))
-    throw("error parsing Atom feed " + this.url + ": data not parsed into XMLDocument object");
+    return this.onParseError(this);
 
   // Get the first channel (assuming there is only one per Atom File).
   var channel = this.request.responseXML.getElementsByTagName("feed")[0];
   if (!channel)
-    throw("channel missing from Atom feed " + request.channel.name);
+    return this.onParseError(this);
 
   this.title = this.title || getNodeValue(channel.getElementsByTagName("title")[0]);
   this.description = getNodeValue(channel.getElementsByTagName("tagline")[0]);
@@ -443,6 +452,7 @@ Feed.prototype.removeInvalidItems = function() {
 
 var gItemsToStore;
 var gItemsToStoreIndex = 0;
+var gStoreItemsTimer;
 
 // gets the next item from gItemsToStore and forces that item to be stored
 // to the folder. If more items are left to be stored, fires a timer for the next one.
@@ -463,20 +473,16 @@ function storeNextItem()
 
   if (gItemsToStoreIndex < gItemsToStore.length)
   {
-    if ('setTimeout' in this)
-      setTimeout(storeNextItem, 50); // fire off a timer for the next item to store
-    else
-    {
-      debug('set timeout is not defined if this call originated from newsblog.js\n');
-      storeNextItem();
-    }
+    if (!gStoreItemsTimer)
+      gStoreItemsTimer = Components.classes["@mozilla.org/timer;1"].createInstance(Components.interfaces.nsITimer);
+    gStoreItemsTimer.initWithCallback(storeNextItemTimerCallback, 50, Components.interfaces.nsITimer.TYPE_ONE_SHOT);
   }
   else
   {    
     item.feed.removeInvalidItems();
 
     if (item.feed.downloadCallback)
-      item.feed.downloadCallback.downloaded(item.feed, true);
+      item.feed.downloadCallback.downloaded(item.feed, kNewsBlogSuccess);
 
     item.feed.request = null; // force the xml http request to go away. This helps reduce some
                               // nasty assertions on shut down of all things.
@@ -484,4 +490,18 @@ function storeNextItem()
     gItemsToStore = "";
     gItemsToStoreIndex = 0;
   }   
+}
+
+var storeNextItemTimerCallback = {
+  notify: function(aTimer) {
+    storeNextItem();
+  },
+  
+  QueryInterface: function(aIID) {
+    if (aIID.equals(Components.interfaces.nsITimerCallback) || aIID.equals(Components.interfaces.nsISupports))
+      return this;
+    
+    Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+    return null;           
+  }
 }
