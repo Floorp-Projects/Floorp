@@ -26,7 +26,7 @@
 #include "nsRDFCID.h"
 #ifdef ClientWallet
 #include "nsIWalletService.h"
-#endif wallet
+#endif /* ClientWallet */
 
 #include "nsIBrowserWindow.h"
 #include "nsIWebShell.h"
@@ -61,6 +61,8 @@
 
 #include "nsIAllocator.h"
 #include "nsIGenericFactory.h"
+
+#include "nsSpecialSystemDirectory.h"	// For exe dir
 
 #ifdef XP_PC
 #define XPCOM_DLL  "xpcom32.dll"
@@ -266,6 +268,22 @@ static NS_DEFINE_IID(kLWBrkCID,                   NS_LWBRK_CID);
 extern "C" void
 NS_SetupRegistry()
 {
+  // Autoregistration happens here. The rest of RegisterComponent() calls should happen
+  // only for dlls not in the components directory.
+#ifdef XP_UNIX
+  nsSpecialSystemDirectory sysdir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+  nsFilePath filePath(sysdir);
+  char *componentsDir = PR_smprintf("%s/components", (char *) filePath);
+  if (componentsDir != NULL)
+    {
+      printf("nsComponentManager: Using components dir: %s\n", componentsDir);
+      nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, componentsDir);
+      PR_Free(componentsDir);
+      // XXX Look for user specific components
+      // XXX UNIX: ~/.mozilla/components
+    }
+#endif /* XP_UNIX */
+
   nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kAllocatorCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kGenericFactoryCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
