@@ -46,7 +46,7 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		= profile
 
-PREF_JS_EXPORTS = $(srcdir)/profile/all.js
+PREF_JS_EXPORTS = $(srcdir)/profile/firebird.js
 
 ifeq ($(USE_SHORT_LIBNAME), 1)
 PROGRAM = MozillaFirebird$(BIN_SUFFIX)
@@ -199,7 +199,7 @@ install:: MozillaFirebird
 	$(SYSINSTALL) $< $(DESTDIR)$(bindir)
 
 GARBAGE += MozillaFirebird
-GARBAGE += $(addprefix $(DIST)/bin/defaults/pref/, all.js)
+GARBAGE += $(addprefix $(DIST)/bin/defaults/pref/, firebird.js)
 
 endif
 
