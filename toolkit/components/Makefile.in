@@ -52,7 +52,6 @@ ifdef MOZ_SUNBIRD
 DIRS = autocomplete console filepicker help printing passwordmgr
 else
 DIRS = 		\
-	startup \
 	autocomplete \
 	console \
 	filepicker \
@@ -69,7 +68,7 @@ ifeq ($(OS_ARCH),WINNT)
 DIRS += alerts
 endif
 
-DIRS += downloads build
+DIRS += startup downloads build
 
 endif
 endif
