@@ -105,6 +105,7 @@ public:
             return;
         }
 
+        LOG(("handle startevent=%8lX\n",(long)this));
         nsresult rv = mProxy->mObserver->OnStartRequest(mRequest, mContext);
         if (NS_FAILED(rv)) {
             LOG(("OnStartRequest failed [rv=%x] canceling request!\n", rv));
@@ -155,6 +156,7 @@ public:
         rv = mRequest->GetStatus(&status);
         NS_ASSERTION(NS_SUCCEEDED(rv), "GetStatus failed for request!");
 
+        LOG(("handle stopevent=%8lX\n",(long)this));
         (void) observer->OnStopRequest(mRequest, mContext, status);
     }
 };
@@ -182,6 +184,7 @@ nsRequestObserverProxy::OnStartRequest(nsIRequest *request,
     if (!ev)
         return NS_ERROR_OUT_OF_MEMORY;
 
+    LOG(("post startevent=%8lX queue=%8lX\n",(long)ev,(long)mEventQ.get()));
     nsresult rv = FireEvent(ev);
     if (NS_FAILED(rv))
         delete ev;
@@ -206,6 +209,7 @@ nsRequestObserverProxy::OnStopRequest(nsIRequest *request,
     if (!ev)
         return NS_ERROR_OUT_OF_MEMORY;
 
+    LOG(("post stopevent=%8lX queue=%8lX\n",(long)ev,(long)mEventQ.get()));
     nsresult rv = FireEvent(ev);
     if (NS_FAILED(rv))
         delete ev;

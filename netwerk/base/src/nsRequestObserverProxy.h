@@ -45,6 +45,10 @@ public:
     nsIRequestObserver *Observer() { return mObserver; }
 
     nsresult FireEvent(nsARequestObserverEvent *);
+#ifdef DEBUG
+    nsIEventQueue *GetEventQueue()
+               { return mEventQ.get(); } // debugging-only; no addref
+#endif
     nsresult SetEventQueue(nsIEventQueue *);
 
 protected:
