@@ -52,6 +52,15 @@ PlaceholderFrame::~PlaceholderFrame()
 {
 }
 
+NS_METHOD PlaceholderFrame::SetIndexInParent(PRInt32 aIndexInParent)
+{
+  if (nsnull != mAnchoredItem) {
+    mAnchoredItem->SetIndexInParent(aIndexInParent);
+  }
+  
+  return nsFrame::SetIndexInParent(aIndexInParent);
+}
+
 NS_METHOD PlaceholderFrame::ResizeReflow(nsIPresContext*  aPresContext,
                                          nsReflowMetrics& aDesiredSize,
                                          const nsSize&    aMaxSize,
