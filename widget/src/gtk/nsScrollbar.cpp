@@ -238,8 +238,9 @@ PRBool nsScrollbar::OnPaint(nsPaintEvent & aEvent)
 PRBool nsScrollbar::OnResize(nsSizeEvent &aEvent)
 {
 #if 0
-  return nsWindow::OnResize(aEvent);
+  return nsWidget::OnResize(aEvent);
 #endif
+    return PR_FALSE;
 }
 
 //-------------------------------------------------------------------------
