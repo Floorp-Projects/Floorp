@@ -20,6 +20,7 @@ use Mac::StandardFile;
 use Moz::Moz;
 use Moz::BuildFlags;
 use Moz::MacCVS;
+#use Moz::ProjectXML;  #optional; required for static build only
 
 use vars qw(@ISA @EXPORT);
 
@@ -217,6 +218,100 @@ sub BuildIDLProject($$)
 }
 
 
+#--------------------------------------------------------------------------------------------------
+# CreateStaticLibTargets
+#
+#--------------------------------------------------------------------------------------------------
+sub CreateXMLStaticLibTargets($)
+{
+    my($xml_path) = @_;
+
+    my (@suffix_list) = (".xml");
+    my ($project_name, $project_dir, $suffix) = fileparse($xml_path, @suffix_list);
+    if ($suffix eq "") { die "XML munging: $xml_path must end in .xml\n"; }
+
+    #sniff the file to see if we need to fix up broken Pro5-exported XML
+    print "Parsing $xml_path\n";
+    
+    my $ide_version = Moz::ProjectXML::SniffProjectXMLIDEVersion($xml_path);
+    if ($ide_version eq "4.0")
+    {
+        my $new_file = $project_dir.$project_name."2.xml";
+        
+        print "Cleaning up Pro 5 xml to $new_file\n";
+        
+        Moz::ProjectXML::CleanupPro5XML($xml_path, $new_file);
+
+        unlink $xml_path;
+        rename ($new_file, $xml_path);
+    }
+    
+    my $doc = Moz::ProjectXML::ParseXMLDocument($xml_path);
+    my @target_list = Moz::ProjectXML::GetTargetsList($doc);
+    my $target;
+    
+    my %target_hash;    # for easy lookups below
+    foreach $target (@target_list) { $target_hash{$target} = 1; }
+    
+    foreach $target (@target_list)
+    {
+        if ($target =~ /(.+).shlb$/)        # if this is a shared lib target
+        {
+            my $target_base = $1;
+            my $static_target = $target_base.".o";
+            
+            # ensure that this does not exist already
+            if ($target_hash{$static_target}) {
+                print "Static target $static_target already exists in project. Not making\n";
+                next;
+            }
+            
+            print "Making static target '$static_target' from target '$target'\n";
+
+            Moz::ProjectXML::CloneTarget($doc, $target, $static_target);
+            Moz::ProjectXML::SetAsStaticLibraryTarget($doc, $static_target, $static_target);
+        }
+    }
+    
+    print "Writing XML file to $xml_path\n";
+    my $temp_path = $project_dir."_".$project_name.".xml";
+    Moz::ProjectXML::WriteXMLDocument($doc, $temp_path, $ide_version);
+    Moz::ProjectXML::DisposeXMLDocument($doc);
+    
+    if (-e $temp_path)
+    {
+        unlink $xml_path;
+        rename ($temp_path, $xml_path);
+    }
+    else
+    {
+        die "Error: Failed to add new targets to XML project\n";
+    }
+}
+
+#//--------------------------------------------------------------------------------------------------
+#// ProcessProjectXML
+#// 
+#// Helper routine to allow for XML pre-processing. This should read in the XML, process it,
+#// and replace the original file with the processed version.
+#//--------------------------------------------------------------------------------------------------
+sub ProcessProjectXML($)
+{
+    my($xml_path) = @_;
+  
+    # we need to manually load Moz::ProjectXML, becaues not everyone will have the
+    # required perl modules in their distro.
+    my($cur_dir) = cwd();
+    
+    chdir(dirname($0));     # change to the script dir
+    eval "require Moz::ProjectXML";
+    if ($@) { die "Error: could not do Project XML munging because you do not have the correct XML modules installed. Error is:\n################\n $@################"; }
+    
+    chdir($cur_dir);
+    
+    CreateXMLStaticLibTargets($xml_path);
+}
+
 #//--------------------------------------------------------------------------------------------------
 #// Build one project, and make the alias. Parameters are project path, target name, shared  library
 #// name, make shlb alias (boolean), make xSYM alias (boolean), and is component (boolean).
@@ -224,19 +319,74 @@ sub BuildIDLProject($$)
 
 sub BuildOneProjectWithOutput($$$$$$)
 {
-    my ($project_path, $target_name, $output_name, $alias_shlb, $alias_xSYM, $component) = @_;
+    my ($project_path, $target_name, $output_name, $alias_lib, $alias_xSYM, $component) = @_;
 
     unless ($project_path =~ m/^$main::BUILD_ROOT.+/) { return; }
+
+    my (@suffix_list) = (".mcp", ".xml");
+    my ($project_name, $project_dir, $suffix) = fileparse($project_path, @suffix_list);
+    if ($suffix eq "") { die "Project: $project_path must end in .xml or .mcp\n"; }
     
-    # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
-    my($D) = $main::DEBUG ? "Debug" : "";
     my($dist_dir) = GetBinDirectory();
     
     # Put libraries in "Essential Files" folder, Components in "Components" folder
-    my($component_dir) = $component ? "Components:" : "Essential Files:";
+    my($output_dir)  = $component ? "Components:" : "Essential Files:";
+    my($output_path) = $dist_dir.$output_dir;
 
-    my($project_dir) = $project_path;
-    $project_dir =~ s/:[^:]+$/:/;           # chop off leaf name
+    if ($main::options{static_build})
+    {      
+      if ($output_name =~ /\.o$/ || $output_name =~ /\.[Ll]ib$/)
+      {
+        $alias_xSYM = 0;
+        $alias_lib  = 1;
+        $output_path = $main::DEBUG ? ":mozilla:dist:static_libs_debug:" : ":mozilla:dist:static_libs:";
+      }
+    }
+
+    # if the flag is on to export projects to XML, export and munge them
+    if ($main::EXPORT_PROJECTS && !($project_path =~ /IDL\.mcp$/))
+    {
+        my $xml_out_path = $project_path;
+
+        $xml_out_path =~ s/\.mcp$/\.xml/;
+
+        # only do this if project is newer?
+        if (! -e $xml_out_path)
+        {
+          ExportProjectToXML(full_path_to($project_path), full_path_to($xml_out_path));
+          ProcessProjectXML($xml_out_path);
+        }
+    }
+        
+    # if the flag is set to use XML projects, default to XML if the file 
+    # is present.
+    if ($main::USE_XML_PROJECTS && !($project_path =~ /IDL\.mcp$/))
+    {
+      my $xml_project_path = $project_dir.$project_name.".xml";
+      if (-e $xml_project_path)
+      {
+        $project_path = $xml_project_path;
+        $suffix = ".xml";
+      }
+    }
+    
+    if ($suffix eq ".xml")
+    {
+        my($xml_path) = $project_path;
+        # Prepend an "_" onto the name of the generated project file so it doesn't conflict
+        $project_path = $project_dir . "_" . $project_name . ".mcp";
+        my($project_modtime) = (-e $project_path ? GetFileModDate($project_path) : 0);
+        my($xml_modtime) = (-e $xml_path ? GetFileModDate($xml_path) : 0);
+
+        if ($xml_modtime > $project_modtime)
+        {
+            print("Importing $project_path from $project_name.xml.\n");
+            unlink($project_path);
+            # Might want to delete the "xxx.mcp Data" dir ???
+            ImportXMLProject(full_path_to($xml_path), full_path_to($project_path));
+        }
+    }
+
 
     if ($main::CLOBBER_LIBS)
     {
@@ -246,8 +396,8 @@ sub BuildOneProjectWithOutput($$$$$$)
     
     BuildProject($project_path, $target_name);
     
-    $alias_shlb ? MakeAlias("$project_dir$output_name", "$dist_dir$component_dir") : 0;
-    $alias_xSYM ? MakeAlias("$project_dir$output_name.xSYM", "$dist_dir$component_dir") : 0;
+    $alias_lib  ? MakeAlias("$project_dir$output_name",      "$output_path") : 0;
+    $alias_xSYM ? MakeAlias("$project_dir$output_name.xSYM", "$output_path") : 0;
 }
 
 #//--------------------------------------------------------------------------------------------------
@@ -259,9 +409,10 @@ sub BuildOneProjectWithOutput($$$$$$)
 
 sub BuildOneProject($$$$$)
 {
-    my ($project_path, $target_name, $alias_shlb, $alias_xSYM, $component) = @_;
+    my ($project_path, $target_name, $alias_lib, $alias_xSYM, $component) = @_;
+    
 	BuildOneProjectWithOutput($project_path, $target_name, $target_name,
-							  $alias_shlb, $alias_xSYM, $component);
+							  $alias_lib, $alias_xSYM, $component);
 }
 
 #//--------------------------------------------------------------------------------------------------

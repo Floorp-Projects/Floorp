@@ -37,6 +37,7 @@ use Cwd;
 
 use File::Copy;
 use File::Path;
+use File::Basename;
 
 use Mac::Types;
 use Mac::Events;
@@ -55,6 +56,7 @@ use Moz::CodeWarriorLib;
                   BuildProject
                   BuildProjectClean
                   ImportXMLProject
+                  ExportProjectToXML
                   OpenErrorLog
                   MakeAlias
                   GetFileModDate
@@ -282,7 +284,8 @@ sub BuildProjectClean($;$)
 sub ImportXMLProject($$)
 {
     my ($xml_path, $project_path) = @_;
-    my ($codewarrior_ide_name) = Moz::CodeWarriorLib::getCodeWarriorIDEName();
+
+#    my ($codewarrior_ide_name) = Moz::CodeWarriorLib::getCodeWarriorIDEName();
 #    my $ascript = <<EOS;
 #      tell application "$codewarrior_ide_name"
 #        make new (project document) as ("$project_path") with data ("$xml_path")
@@ -296,6 +299,30 @@ sub ImportXMLProject($$)
     my($import_error) = Moz::CodeWarriorLib::import_project($xml_path, $project_path);
     if ($import_error ne "") {
       die "Error: ImportXMLProject failed with error $import_error\n";
+    }
+}
+
+sub ExportProjectToXML($$)
+{
+    my ($project_path, $xml_path) = @_;
+
+    my (@suffix_list) = (".mcp");
+    my ($project_name, $project_dir, $suffix) = fileparse($project_path, @suffix_list);
+    if ($suffix eq "") { die "Project: $project_path doesn't look like a project file.\n"; }
+    
+    if (-e $xml_path) {
+        print "$xml_path exists - not exporting $project_path\n";
+    }
+    else {
+        print "Exporting $project_path to $xml_path\n";
+        my($export_error) = Moz::CodeWarriorLib::export_project($project_path, $xml_path);
+        if ($export_error ne "") {
+            die "Error: export_project failed with error '$export_error'\n";
+        }
+        
+        if (! -e $xml_path) {
+          die "Error: XML export to $xml_path failed\n";
+        }
     }
 }
 
