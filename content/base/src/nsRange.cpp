@@ -105,6 +105,22 @@ class nsAutoRangeLock
     ~nsAutoRangeLock() { nsRange::Unlock(); }
 };
 
+// NS_ERROR_DOM_NOT_OBJECT_ERR is not the correct one to throw, but spec doesn't say
+// what is
+#define VALIDATE_ACCESS(node_)                                                     \
+  PR_BEGIN_MACRO                                                                   \
+    if (!node_) {                                                                  \
+      return NS_ERROR_DOM_NOT_OBJECT_ERR;                                          \
+    }                                                                              \
+    if (!nsContentUtils::CanCallerAccess(node_)) {                                 \
+      return NS_ERROR_DOM_SECURITY_ERR;                                            \
+    }                                                                              \
+    if (IsDetached()) {                                                            \
+      return NS_ERROR_DOM_INVALID_STATE_ERR;                                       \
+    }                                                                              \
+  PR_END_MACRO
+
+
 
 // Returns -1 if point1 < point2, 1, if point1 > point2,
 // 0 if error or if point1 == point2. 
@@ -1018,15 +1034,8 @@ nsresult nsRange::GetCommonAncestorContainer(nsIDOMNode** aCommonParent)
 
 nsresult nsRange::SetStart(nsIDOMNode* aParent, PRInt32 aOffset)
 {
-  NS_ENSURE_ARG_POINTER(aParent);
-
-  if (!nsContentUtils::CanCallerAccess(aParent)) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  if(IsDetached())
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
-
+  VALIDATE_ACCESS(aParent);
+  
   PRInt32 len = GetNodeLength(aParent);
   if ( (aOffset < 0) || (len < 0) || (aOffset > len) )
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
@@ -1052,15 +1061,8 @@ nsresult nsRange::SetStart(nsIDOMNode* aParent, PRInt32 aOffset)
 
 nsresult nsRange::SetStartBefore(nsIDOMNode* aSibling)
 {
-  if (!nsContentUtils::CanCallerAccess(aSibling)) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  if(IsDetached())
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
-  if (nsnull == aSibling)// Not the correct one to throw, but spec doesn't say what is
-    return NS_ERROR_DOM_NOT_OBJECT_ERR;
-
+  VALIDATE_ACCESS(aSibling);
+  
   nsCOMPtr<nsIDOMNode> nParent;
   nsresult res = aSibling->GetParentNode(getter_AddRefs(nParent));
   if (NS_FAILED(res) || !nParent) return NS_ERROR_DOM_RANGE_INVALID_NODE_TYPE_ERR;
@@ -1070,14 +1072,7 @@ nsresult nsRange::SetStartBefore(nsIDOMNode* aSibling)
 
 nsresult nsRange::SetStartAfter(nsIDOMNode* aSibling)
 {
-  if (!nsContentUtils::CanCallerAccess(aSibling)) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  if(IsDetached())
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
-  if (nsnull == aSibling)// Not the correct one to throw, but spec doesn't say what is
-    return NS_ERROR_DOM_NOT_OBJECT_ERR;
+  VALIDATE_ACCESS(aSibling);
 
   nsCOMPtr<nsIDOMNode> nParent;
   nsresult res = aSibling->GetParentNode(getter_AddRefs(nParent));
@@ -1088,21 +1083,14 @@ nsresult nsRange::SetStartAfter(nsIDOMNode* aSibling)
 
 nsresult nsRange::SetEnd(nsIDOMNode* aParent, PRInt32 aOffset)
 {
-  if (!nsContentUtils::CanCallerAccess(aParent)) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  if(IsDetached())
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
-
+  VALIDATE_ACCESS(aParent);
+  
   PRInt32 len = GetNodeLength(aParent);
   if ( (aOffset < 0) || (len < 0) || (aOffset > len) )
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
     
   nsresult res;
   
-  if (!aParent) return NS_ERROR_NULL_POINTER;
-
   nsCOMPtr<nsIDOMNode>theParent( do_QueryInterface(aParent) );
   
   // must be in same document as startpoint, else 
@@ -1124,15 +1112,8 @@ nsresult nsRange::SetEnd(nsIDOMNode* aParent, PRInt32 aOffset)
 
 nsresult nsRange::SetEndBefore(nsIDOMNode* aSibling)
 {
-  if (!nsContentUtils::CanCallerAccess(aSibling)) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  if(IsDetached())
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
-  if (nsnull == aSibling)// Not the correct one to throw, but spec doesn't say what is
-    return NS_ERROR_DOM_NOT_OBJECT_ERR;
-
+  VALIDATE_ACCESS(aSibling);
+  
   nsCOMPtr<nsIDOMNode> nParent;
   nsresult res = aSibling->GetParentNode(getter_AddRefs(nParent));
   if (NS_FAILED(res) || !nParent) return NS_ERROR_DOM_RANGE_INVALID_NODE_TYPE_ERR;
@@ -1142,15 +1123,8 @@ nsresult nsRange::SetEndBefore(nsIDOMNode* aSibling)
 
 nsresult nsRange::SetEndAfter(nsIDOMNode* aSibling)
 {
-  if (!nsContentUtils::CanCallerAccess(aSibling)) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  if(IsDetached())
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
-  if (nsnull == aSibling)// Not the correct one to throw, but spec doesn't say what is
-    return NS_ERROR_DOM_NOT_OBJECT_ERR;
-
+  VALIDATE_ACCESS(aSibling);
+  
   nsCOMPtr<nsIDOMNode> nParent;
   nsresult res = aSibling->GetParentNode(getter_AddRefs(nParent));
   if (NS_FAILED(res) || !nParent) return NS_ERROR_DOM_RANGE_INVALID_NODE_TYPE_ERR;
@@ -1173,14 +1147,8 @@ nsresult nsRange::Collapse(PRBool aToStart)
 
 nsresult nsRange::SelectNode(nsIDOMNode* aN)
 {
-  if (!nsContentUtils::CanCallerAccess(aN)) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  if(IsDetached())
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
-
-  if (!aN) return NS_ERROR_NULL_POINTER;
+  VALIDATE_ACCESS(aN);
+  
   nsCOMPtr<nsIDOMNode> parent;
   PRInt32 start, end;
 
@@ -1225,14 +1193,8 @@ nsresult nsRange::SelectNode(nsIDOMNode* aN)
 
 nsresult nsRange::SelectNodeContents(nsIDOMNode* aN)
 {
-  if (!nsContentUtils::CanCallerAccess(aN)) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  if(IsDetached())
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
-  NS_ENSURE_ARG_POINTER(aN);
-
+  VALIDATE_ACCESS(aN);
+  
   nsCOMPtr<nsIDOMNode> theNode( do_QueryInterface(aN) );
   nsCOMPtr<nsIDOMNodeList> aChildNodes;
   
@@ -2096,15 +2058,8 @@ nsresult nsRange::CloneRange(nsIDOMRange** aReturn)
 
 nsresult nsRange::InsertNode(nsIDOMNode* aN)
 {
-  if (!nsContentUtils::CanCallerAccess(aN)) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  if(IsDetached())
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
-
-  NS_ENSURE_ARG_POINTER(aN);
- 
+  VALIDATE_ACCESS(aN);
+  
   nsresult res;
   PRInt32 tStartOffset;
   this->GetStartOffset(&tStartOffset);
@@ -2152,14 +2107,8 @@ nsresult nsRange::InsertNode(nsIDOMNode* aN)
 
 nsresult nsRange::SurroundContents(nsIDOMNode* aN)
 {
-  if (!nsContentUtils::CanCallerAccess(aN)) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  if(IsDetached())
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
-
-  NS_ENSURE_ARG_POINTER(aN);
+  VALIDATE_ACCESS(aN);
+  
   nsresult res;
 
   //get start offset, and start container
