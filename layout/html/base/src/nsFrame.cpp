@@ -1037,7 +1037,7 @@ nsFrame::DidReflow(nsIPresContext& aPresContext,
   NS_FRAME_TRACE_MSG(NS_FRAME_TRACE_CALLS,
                      ("nsFrame::DidReflow: aStatus=%d", aStatus));
   if (NS_FRAME_REFLOW_FINISHED == aStatus) {
-    mState &= ~(NS_FRAME_IN_REFLOW | NS_FRAME_FIRST_REFLOW);
+    mState &= ~(NS_FRAME_IN_REFLOW | NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY);
 
     // Size and position the view if requested
     if ((nsnull != mView) && (NS_FRAME_SYNC_FRAME_AND_VIEW & mState)) {

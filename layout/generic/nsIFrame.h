@@ -130,6 +130,9 @@ typedef PRUint32 nsFrameState;
 // If this bit is set, then the frame reflects content that may be selected
 #define NS_FRAME_SELECTED_CONTENT 0x00000200
 
+// If this bit is set, then the frame is dirty and needs to be reflowed
+#define NS_FRAME_IS_DIRTY 0x00000400
+
 // The low 16 bits of the frame state word are reserved by this API.
 #define NS_FRAME_RESERVED 0x0000FFFF
 
