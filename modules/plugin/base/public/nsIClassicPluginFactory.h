@@ -53,6 +53,7 @@
 #define NS_CLASSIC_PLUGIN_FACTORY_CONTRACTID "@mozilla.org/plugin/classicpluginfactory;1"
 
 struct PRLibrary;
+class nsIServiceManagerObsolete;
 
 class nsIClassicPluginFactory : public nsISupports {
 public:
@@ -63,7 +64,7 @@ public:
     * and initializes an ns4xPlugin object, and returns it in
     * <b>result</b>.
     */
-    NS_IMETHOD CreatePlugin(nsIServiceManager* aServiceMgr, const char* aFileName,
+    NS_IMETHOD CreatePlugin(nsIServiceManagerObsolete* aServiceMgr, const char* aFileName,
                             PRLibrary* aLibrary, nsIPlugin** aResult) = 0;
 };
 

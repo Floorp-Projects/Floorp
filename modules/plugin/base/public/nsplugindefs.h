@@ -338,6 +338,7 @@ struct nsPluginEvent {
 
 /*
  *  Non-standard event types that can be passed to HandleEvent
+ *  (These need to be kept in sync with the events defined in npapi.h.)
  */
 enum nsPluginEventType {
 #if defined(XP_MAC) || defined(XP_MACOSX)
@@ -346,6 +347,8 @@ enum nsPluginEventType {
     nsPluginEventType_AdjustCursorEvent,
     nsPluginEventType_MenuCommandEvent,
     nsPluginEventType_ClippingChangedEvent,
+    nsPluginEventType_ScrollingBeginsEvent,
+    nsPluginEventType_ScrollingEndsEvent,
 #endif /* XP_MAC || XP_MACOSX */
     nsPluginEventType_Idle                 = 0
 };

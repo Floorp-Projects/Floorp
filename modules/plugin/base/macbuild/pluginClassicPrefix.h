@@ -23,3 +23,7 @@
 #define _IMPL_NS_PLUGINS 1
 
 #include "MacSharedPrefix.h"
+
+#undef TARGET_CARBON
+#define TARGET_CARBON 0
+#define PLUGIN_LOGGING 0
