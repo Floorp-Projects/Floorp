@@ -181,10 +181,12 @@ char *stub_Prompt(MWContext *context,
     char buf[256];
 
     printf("%s\n", msg);
-    printf("%cPrompt: ", '\007');
-    scanf("%s", buf);
+    printf("%cPrompt (default=%s): ", '\007', def);
+    gets(buf);
     if (PL_strlen(buf)) {
       result = PL_strdup(buf);
+    } else {
+      result = PL_strdup(def);
     }
   }
 
@@ -202,8 +204,8 @@ stub_PromptUsernameAndPassword(MWContext *context,
     
   if (nsnull != (ins = getNetSupport(context->modular_data))) {
     nsAutoString str(msg);
-    nsAutoString userStr;
-    nsAutoString pwdStr;
+    nsAutoString userStr(*username);
+    nsAutoString pwdStr(*password);
 
     if (ins->PromptUserAndPassword(msg, userStr, pwdStr)) {
       *username = userStr.ToNewCString();
@@ -218,13 +220,18 @@ stub_PromptUsernameAndPassword(MWContext *context,
     char buf[256];
 
     printf("%s\n", msg);
-    printf("%cUsername: ", '\007');
-    scanf("%s", buf);
-    *username = PL_strdup(buf);
+    printf("%cUser (default=%s): ", '\007', *username);
+    gets(buf);
+    if (strlen(buf)) {
+      *username = PL_strdup(buf);
+    }
 
-    printf("%cPassword: ", '\007');
-    scanf("%s", buf);
-    *password = PL_strdup(buf);
+    printf("%cPassword (default=%s): ", '\007', *password);
+    gets(buf);
+    if (strlen(buf)) {
+      *password = PL_strdup(buf);
+    }
+
     if (**username) {
        bResult = TRUE;
     } else {
@@ -258,7 +265,7 @@ char *stub_PromptPassword(MWContext *context,
 
     printf("%s\n", msg);
     printf("%cPassword: ", '\007');
-    scanf("%s", buf);
+    gets(buf);
     if (PL_strlen(buf)) {
       result = PL_strdup(buf);
     }
