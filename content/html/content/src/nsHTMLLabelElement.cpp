@@ -153,7 +153,7 @@ public:
     return nsGenericHTMLContainerFormElement::GetElementsByTagNameNS(aNamespaceURI, aLocalName, aReturn);
   }
   NS_IMETHOD HasAttribute(const nsAString& aName, PRBool* aReturn) {
-    return HasAttribute(aName, aReturn);
+    return nsGenericHTMLContainerFormElement::HasAttribute(aName, aReturn);
   }
   NS_IMETHOD HasAttributeNS(const nsAString& aNamespaceURI,
                             const nsAString& aLocalName,
