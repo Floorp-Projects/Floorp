@@ -19,6 +19,9 @@
 #include "msgCore.h"
 #include "nsAbAutoCompleteSession.h"
 #include "nsString2.h"
+#include "nsIMsgHeaderParser.h"
+
+static NS_DEFINE_CID(kHeaderParserCID, NS_MSGHEADERPARSER_CID);
 
 nsresult NS_NewAbAutoCompleteSession(const nsIID &aIID, void ** aInstancePtrResult)
 {
@@ -46,15 +49,74 @@ nsAbAutoCompleteSession::nsAbAutoCompleteSession()
 nsAbAutoCompleteSession::~nsAbAutoCompleteSession()
 {}
 
+
+typedef struct
+{
+	char * userName;
+	char * emailAddress;
+} nsAbStubEntry;
+
+nsAbStubEntry SearchNameCompletionEntryTable[] =
+{
+    {"Scott MacGregor",		"mscott@netscape.com"},
+    {"Seth Spitzer",		"sspitzer@netscape.com"},
+    {"Scott Putterman",		"scottip@netscape.com"},
+    {"mailnewsstaff",		"mailnewsstaff@netscape.com"},
+    {"David Bienvenu",		"bievenu@netscape.com"},
+    {"Jeff Tsaii",			"jefft@netscape.com"},	
+    {"Alec Flett",			"alecf@netscape.com"},
+    {"Candice Huang",		"chuang@netscape.com"},
+    {"Jean-Francois Ducarroz",		"ducarroz@netscape.com"},
+	{"Lisa Chiang",					"lchiang@netscape.com"},
+    {"Esther Goes",					"esther@netscape.com"},
+    {"Rich Pizzaro",		"rhp@netscape.com"},
+    {"Par Pandit",		"ppandit@netscape.com"},
+    {"mailnewsqa",			"mailnewsqa@netscape.com"},	
+    {"Ninoschka Baca",			"nbaca@netscape.com"},
+    {"Fenella Gor ",		"fenella@netscape.com"},
+	{"Peter Mock",			"pmock@netscape.com"},	
+    {"Suresh Kasinathan",	"suresh@netscape.com"}
+};
+
+const PRInt32 numStubEntries = 18;
+
+
 NS_IMETHODIMP nsAbAutoCompleteSession::AutoComplete(const PRUnichar *aDocId, const PRUnichar *aSearchString, nsIAutoCompleteListener *aResultListener)
 {
 	// mscott - right now I'm not even going to bother to make this synchronous...
 	// I'll beef it up with some test data later but we want to see if this idea works for right now...
 
 	nsresult rv = NS_OK;
-	nsString2 searchResult("Scott MacGregor <mscott@netscape.com>");
 	if (aResultListener)
-		rv = aResultListener->OnAutoCompleteResult(aDocId, aSearchString, searchResult.GetUnicode());
+	{
+		PRUint32 searchStringLen = nsCRT::strlen(aSearchString);
+		PRBool matchFound = PR_FALSE;
+		for (PRInt32 index = 0; index < numStubEntries && !matchFound; index++)
+		{
+			if (nsCRT::strncasecmp(aSearchString, SearchNameCompletionEntryTable[index].userName, searchStringLen) == 0
+				|| nsCRT::strncasecmp(aSearchString, SearchNameCompletionEntryTable[index].emailAddress,searchStringLen) == 0)
+			{
+				matchFound = PR_TRUE; // so we kick out of the loop
+
+				// get a mime header parser to generate a valid address
+				nsCOMPtr<nsIMsgHeaderParser> parser;
+				nsComponentManager::CreateInstance(kHeaderParserCID,
+													nsnull,
+													nsCOMTypeInfo<nsIMsgHeaderParser>::GetIID(),
+													getter_AddRefs(parser));
+
+				char * fullAddress = nsnull;
+				if (parser)
+					parser->MakeFullAddress(nsnull, SearchNameCompletionEntryTable[index].userName, 
+											SearchNameCompletionEntryTable[index].emailAddress, &fullAddress);
+				nsString2 searchResult(fullAddress);
+				// iterate over the table looking for a match
+				rv = aResultListener->OnAutoCompleteResult(aDocId, aSearchString, searchResult.GetUnicode());
+				break;
+			}
+		}
+
+	}
 	else
 		rv = NS_ERROR_NULL_POINTER;
 
