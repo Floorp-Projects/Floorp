@@ -1265,7 +1265,7 @@ nsGenericElement::Release()
 
 //----------------------------------------------------------------------
 
-void
+nsresult
 nsGenericElement::TriggerLink(nsIPresContext* aPresContext,
                               nsLinkVerb aVerb,
                               nsIURI* aBaseURL,
@@ -1273,47 +1273,46 @@ nsGenericElement::TriggerLink(nsIPresContext* aPresContext,
                               const nsString& aTargetSpec,
                               PRBool aClick)
 {
-  nsILinkHandler* handler;
-  nsresult rv = aPresContext->GetLinkHandler(&handler);
-  if (NS_SUCCEEDED(rv) && (nsnull != handler)) {
-    // Resolve url to an absolute url
-    nsAutoString absURLSpec;
-    if (nsnull != aBaseURL) {
-      rv = NS_MakeAbsoluteURI(aURLSpec, aBaseURL, absURLSpec);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "XXX make this function return an nsresult, like it should!");
-    }
-    else {
-      absURLSpec = aURLSpec;
-    }
+  nsCOMPtr<nsILinkHandler> handler;
+  nsresult rv = aPresContext->GetLinkHandler(getter_AddRefs(handler));
+  if (NS_FAILED(rv)) return rv;
+
+  // Resolve url to an absolute url
+  nsAutoString absURLSpec;
+  if (nsnull != aBaseURL) {
+    rv = NS_MakeAbsoluteURI(aURLSpec, aBaseURL, absURLSpec);
+    if (NS_FAILED(rv)) return rv;
+  }
+  else {
+    absURLSpec = aURLSpec;
+  }
 
 	// HACK HACK HACK. If the link clicked is a mailto: url just
-    // pass the aURLSpec. This is because, netlib doesn't recognize
-    // mailto: protocol. Note: This s'd go away after  NECKO lands
+  // pass the aURLSpec. This is because, netlib doesn't recognize
+  // mailto: protocol. Note: This s'd go away after  NECKO lands
   
-    PRInt32 offset = -1;
-    offset = aURLSpec.Find("mailto", PR_TRUE);
-    if (offset >= 0)
-      absURLSpec = aURLSpec;
+  PRInt32 offset = -1;
+  offset = aURLSpec.Find("mailto", PR_TRUE);
+  if (offset >= 0)
+    absURLSpec = aURLSpec;
 
-    // Now pass on absolute url to the click handler
-    if (aClick) {
-      // Check that this page is allowed to load this URI.
-      NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
-                      NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-      nsIURI *absURI = nsnull;
-      if (NS_SUCCEEDED(rv)) 
-        rv = NS_NewURI(&absURI, absURLSpec, aBaseURL);
-      if (NS_SUCCEEDED(rv)) 
-        rv = securityManager->CheckLoadURI(aBaseURL, absURI);
-      if (NS_SUCCEEDED(rv)) 
-        handler->OnLinkClick(mContent, aVerb, absURLSpec.GetUnicode(), aTargetSpec.GetUnicode());
-      NS_IF_RELEASE(absURI);
-    }
-    else {
-      handler->OnOverLink(mContent, absURLSpec.GetUnicode(), aTargetSpec.GetUnicode());
-    }
-    NS_RELEASE(handler);
+  // Now pass on absolute url to the click handler
+  if (aClick) {
+    // Check that this page is allowed to load this URI.
+    NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
+                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+    nsCOMPtr<nsIURI> absURI;
+    if (NS_SUCCEEDED(rv)) 
+      rv = NS_NewURI(getter_AddRefs(absURI), absURLSpec, aBaseURL);
+    if (NS_SUCCEEDED(rv)) 
+      rv = securityManager->CheckLoadURI(aBaseURL, absURI);
+    if (NS_SUCCEEDED(rv)) 
+      handler->OnLinkClick(mContent, aVerb, absURLSpec.GetUnicode(), aTargetSpec.GetUnicode());
   }
+  else {
+    handler->OnOverLink(mContent, absURLSpec.GetUnicode(), aTargetSpec.GetUnicode());
+  }
+  return rv;
 }
 
 nsresult

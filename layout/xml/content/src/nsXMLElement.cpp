@@ -165,7 +165,7 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
           if (nsnull != mInner.mDocument) {
             baseURL = mInner.mDocument->GetDocumentURL();
           }
-          mInner.TriggerLink(aPresContext, verb, baseURL, href, target, PR_TRUE);
+          ret = mInner.TriggerLink(aPresContext, verb, baseURL, href, target, PR_TRUE);
           NS_IF_RELEASE(baseURL);
           *aEventStatus = nsEventStatus_eConsumeDoDefault; 
         }
@@ -185,7 +185,7 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
           baseURL = mInner.mDocument->GetDocumentURL();
         }
 
-        mInner.TriggerLink(aPresContext, eLinkVerb_Replace, baseURL, href, target, PR_FALSE);
+        ret = mInner.TriggerLink(aPresContext, eLinkVerb_Replace, baseURL, href, target, PR_FALSE);
         
         NS_IF_RELEASE(baseURL);
         *aEventStatus = nsEventStatus_eConsumeDoDefault; 
@@ -196,7 +196,7 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
     case NS_MOUSE_EXIT:
       {
         nsAutoString empty;
-        mInner.TriggerLink(aPresContext, eLinkVerb_Replace, nsnull, empty, empty, PR_FALSE);
+        ret = mInner.TriggerLink(aPresContext, eLinkVerb_Replace, nsnull, empty, empty, PR_FALSE);
         *aEventStatus = nsEventStatus_eConsumeDoDefault; 
       }
       break;
