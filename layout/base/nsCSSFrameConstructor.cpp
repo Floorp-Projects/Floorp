@@ -696,16 +696,16 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
     
     NS_NewTextNode(&textContent);
     if (textContent) {
-      // Set aContent as the parent content and set the document object. This
-      // way event handling works
-      textContent->SetParent(aContent);
-      textContent->SetDocument(aDocument, PR_TRUE);
-
       // Set the text
       textContent->QueryInterface(kIDOMCharacterDataIID, (void**)&domData);
       domData->SetData(contentString);
       NS_RELEASE(domData);
   
+      // Set aContent as the parent content and set the document object. This
+      // way event handling works
+      textContent->SetParent(aContent);
+      textContent->SetDocument(aDocument, PR_TRUE);
+      
       // Create a text frame and initialize it
       NS_NewTextFrame(&textFrame);
       textFrame->Init(*aPresContext, textContent, aParentFrame, aStyleContext, nsnull);
@@ -7111,17 +7111,17 @@ nsCSSFrameConstructor::ConstructAlternateImageFrame(nsIPresContext*  aPresContex
     nsCOMPtr<nsIContent> altTextContent;
     NS_NewTextNode(getter_AddRefs(altTextContent));
 
-    // Set aContent as the parent content and set the document object
-    nsCOMPtr<nsIDocument> document;
-    aContent->GetDocument(*getter_AddRefs(document));
-    altTextContent->SetParent(aContent);
-    altTextContent->SetDocument(document, PR_TRUE);
-
     // Set the content's text
     nsIDOMCharacterData* domData;
     altTextContent->QueryInterface(kIDOMCharacterDataIID, (void**)&domData);
     domData->SetData(altText);
     NS_RELEASE(domData);
+    
+    // Set aContent as the parent content and set the document object
+    nsCOMPtr<nsIDocument> document;
+    aContent->GetDocument(*getter_AddRefs(document));
+    altTextContent->SetParent(aContent);
+    altTextContent->SetDocument(document, PR_TRUE);
 
     // Create either an inline frame, block frame, or area frame
     nsIFrame* containerFrame;
