@@ -110,7 +110,7 @@ Rights Reserved.
 <!ENTITY showLocationToolbarCmd.label		".Location Toolbar">
 <!ENTITY showLocationToolbarCmd.accesskey	"l">
 <!ENTITY showMessageCmd.label				"Message">  
-<!ENTITY showMessageCmd.accesskey				"">  
+<!ENTITY showMessageCmd.accesskey                               "e">  
 <!ENTITY sortMenu.label "Sort by"> 
 <!ENTITY sortMenu.accesskey "o"> 
 <!ENTITY sortByDateCmd.label "Date">  
@@ -124,11 +124,11 @@ Rights Reserved.
 <!ENTITY sortBySizeCmd.label "Size">  
 <!ENTITY sortBySizeCmd.accesskey "z">  
 <!ENTITY sortByStatusCmd.label "Status">  
-<!ENTITY sortByStatusCmd.accesskey "Status">  
+<!ENTITY sortByStatusCmd.accesskey "u">  
 <!ENTITY sortBySubjectCmd.label "Subject">  
 <!ENTITY sortBySubjectCmd.accesskey "s">  
 <!ENTITY sortByUnreadCmd.label "Unread">  
-<!ENTITY sortByUnreadCmd.accesskey "u">  
+<!ENTITY sortByUnreadCmd.accesskey "n">  
 <!ENTITY sortByOrderReceivedCmd.label "Order Received">  
 <!ENTITY sortByOrderReceivedCmd.accesskey "o">  
 <!ENTITY msgsMenu.label "Messages"> 

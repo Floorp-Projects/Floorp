@@ -608,7 +608,6 @@ Rights Reserved.
 			<menuitem id="menu_cut"/>
 			<menuitem id="menu_copy"/>
 			<menuitem id="menu_paste"/>
-			<menuseparator/>
 			<menuitem id="menu_delete"/>
 			<menuseparator/>
 			<menuitem id="menu_selectAll"/>
