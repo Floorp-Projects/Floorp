@@ -1427,7 +1427,12 @@ nsresult nsRange::Clone(nsIDOMRange** aReturn)
   if (NS_FAILED(res))
     return res;
 
-  return DoSetRange(mStartParent, mStartOffset, mEndParent, mEndOffset);
+  res = (*aReturn)->SetStart(mStartParent, mStartOffset);
+  if (NS_FAILED(res))
+    return res;
+  
+  res = (*aReturn)->SetEnd(mEndParent, mEndOffset);
+  return res;
 }
 
 nsresult nsRange::InsertNode(nsIDOMNode* aN)
@@ -1598,12 +1603,12 @@ nsresult nsRange::OwnerChildRemoved(nsIContent* aParentNode, PRInt32 aOffset, ns
       if (theRange->mStartParent == domNode)
       {
         // if child deleted before start, move start offset left one
-        if (aOffset <= theRange->mStartOffset) theRange->mStartOffset--;
+        if (aOffset < theRange->mStartOffset) theRange->mStartOffset--;
       }
       if (theRange->mEndParent == domNode)
       {
         // if child deleted before end, move end offset left one
-        if (aOffset <= theRange->mEndOffset) 
+        if (aOffset < theRange->mEndOffset) 
         {
           if (theRange->mEndOffset>0) theRange->mEndOffset--;
         }
