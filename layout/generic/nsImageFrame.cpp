@@ -152,6 +152,7 @@ nsImageFrame::Init(nsIPresContext*  aPresContext,
   mImageLoader.Init(this, UpdateImageFrame, nsnull, baseURL, src);
   NS_IF_RELEASE(baseURL);
 
+  mInitialLoadCompleted = PR_FALSE;
   return rv;
 }
 
@@ -176,9 +177,11 @@ nsImageFrame::UpdateImage(nsIPresContext* aPresContext, PRUint32 aStatus)
   nsCOMPtr<nsIPresShell> presShell;
   aPresContext->GetShell(getter_AddRefs(presShell));
 
-  if (NS_IMAGE_LOAD_STATUS_ERROR & aStatus) {
-    // We failed to load the image. Notify the pres shell
-    if (presShell) {
+  if (NS_IMAGE_LOAD_STATUS_ERROR & aStatus) {    
+    nsAutoString usemap;
+    mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::usemap, usemap);    
+    // We failed to load the image. Notify the pres shell if we aren't an image map
+    if (presShell && usemap.Length() == 0) {
       presShell->CantRenderReplacedElement(aPresContext, this);      
     }
   }
@@ -482,7 +485,8 @@ nsImageFrame::Paint(nsIPresContext* aPresContext,
     if (nsnull == image) {
       // No image yet, or image load failed. Draw the alt-text and an icon
       // indicating the status
-      if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
+      if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer &&
+          !mInitialLoadCompleted) {
         DisplayAltFeedback(aPresContext, aRenderingContext,
                            mImageLoader.GetLoadImageFailed()
                            ? NS_ICON_BROKEN_IMAGE
@@ -490,6 +494,7 @@ nsImageFrame::Paint(nsIPresContext* aPresContext,
       }
     }
     else {
+      mInitialLoadCompleted = PR_TRUE;
       if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
         // Now render the image into our content area (the area inside the
         // borders and padding)
@@ -860,14 +865,16 @@ nsImageFrame::AttributeChanged(nsIPresContext* aPresContext,
         }
       }
       else {
-        // Force a reflow when the image size isn't already known
-        if (nsnull != mContent) {
-          nsIDocument* document = nsnull;
-          mContent->GetDocument(document);
-          if (nsnull != document) {
-            document->ContentChanged(mContent, nsnull);
-            NS_RELEASE(document);
-          }
+        // Dirty the image frame and ask its parent to reflow it 
+        // when the image size isn't already known
+        if (mParent) {
+          nsCOMPtr<nsIPresShell> presShell;
+          aPresContext->GetShell(getter_AddRefs(presShell));
+          mState |= NS_FRAME_IS_DIRTY;
+	        mParent->ReflowDirtyChild(presShell, (nsIFrame*) this);
+        }
+        else {
+          NS_ASSERTION(0, "No parent to pass the reflow request up to.");
         }
       }
     }
