@@ -41,6 +41,7 @@
 resource 'aedt' (kSpyGlass_aedtResID, "World-Wide-Web Suite (Spyglass spec)") {
 	{
 		AE_spy_receive_suite, AE_spy_openURL, 				AE_OpenURL,					// WWW! OURL
+#ifndef MOZILLA_FIVE
 		AE_spy_receive_suite, AE_spy_registerViewer, 		AE_RegisterViewer,			// WWW! RGVW
 		AE_spy_receive_suite, AE_spy_unregisterViewer, 		AE_UnregisterViewer,		// WWW! UNRV
 		AE_spy_receive_suite, AE_spy_showFile, 				AE_ShowFile,				// WWW! SHWF
@@ -56,6 +57,7 @@ resource 'aedt' (kSpyGlass_aedtResID, "World-Wide-Web Suite (Spyglass spec)") {
 		AE_spy_receive_suite, AE_spy_unregister_protocol, 	AE_UnregisterProtocol,		// WWW! UNRP
 		AE_spy_receive_suite, AE_spy_CancelProgress, 		AE_CancelProgress,			// WWW! CNCL
 		AE_spy_receive_suite, AE_spy_findURL, 				AE_FindURL					// WWW! FURL
+#endif // MOZILLA_FIVE
 	}
 };
 
@@ -65,18 +67,23 @@ resource 'aedt' (kSpyGlass_aedtResID, "World-Wide-Web Suite (Spyglass spec)") {
 
 resource 'aedt' (kURLSuite_aedtResID, "Netscape & URL suite") {
 	{
-		AE_www_suite, AE_www_workingURL, 		AE_GetWD,								// MOSS wurl
-		AE_www_suite, AE_www_openBookmark,		AE_OpenBookmark,						// MOSS book
-		AE_www_suite, AE_www_ReadHelpFile, 		AE_ReadHelpFile,						// MOSS help
-		AE_www_suite, AE_www_go, 				AE_Go,									// MOSS gogo
-		AE_url_suite, AE_url_getURL, 			AE_GetURL,								// GURL GURL
-		AE_www_suite, AE_www_ProfileManager,	AE_OpenProfileManager,					// MOSS prfl
-		AE_www_suite, AE_www_openAddressBook,	AE_OpenAddressBook,						// MOSS addr
-		AE_www_suite, AE_www_openComponent,		AE_OpenComponent,						// MOSS cpnt
-		AE_www_suite, AE_www_getActiveProfile,	AE_GetActiveProfile,					// MOSS upro
-		AE_www_suite, AE_www_handleCommand,		AE_HandleCommand,						// MOSS hcmd
-		AE_www_suite, AE_www_getImportData,		AE_GetProfileImportData,				// MOSS Impt
-		AE_www_suite, AE_www_GuestMode,			AE_OpenGuestMode						// MOSS gues
+#ifdef MOZILLA_FIVE
+		AE_url_suite, AE_url_getURL, 			AE_GetURL								// GURL GURL
+	,	AE_www_suite, AE_www_doJavaScript,		AE_DoJavascript							// MOSS jscr
+#else
+		AE_www_suite, AE_www_workingURL, 		AE_GetWD								// MOSS wurl
+	,	AE_www_suite, AE_www_openBookmark,		AE_OpenBookmark							// MOSS book
+	,	AE_www_suite, AE_www_ReadHelpFile, 		AE_ReadHelpFile							// MOSS help
+	,	AE_www_suite, AE_www_go, 				AE_Go									// MOSS gogo
+	,	AE_url_suite, AE_url_getURL, 			AE_GetURL								// GURL GURL
+	,	AE_www_suite, AE_www_ProfileManager,	AE_OpenProfileManager					// MOSS prfl
+	,	AE_www_suite, AE_www_openAddressBook,	AE_OpenAddressBook						// MOSS addr
+	,	AE_www_suite, AE_www_openComponent,		AE_OpenComponent						// MOSS cpnt
+	,	AE_www_suite, AE_www_getActiveProfile,	AE_GetActiveProfile						// MOSS upro
+	,	AE_www_suite, AE_www_handleCommand,		AE_HandleCommand						// MOSS hcmd
+	,	AE_www_suite, AE_www_getImportData,		AE_GetProfileImportData					// MOSS Impt
+	,	AE_www_suite, AE_www_GuestMode,			AE_OpenGuestMode						// MOSS gues
+#endif // MOZILLA_FIVE
 	}
 };
 
@@ -140,21 +147,6 @@ resource 'aedt' (kMisc_aedtResID, "Misc Standards") {
 		'misc', 'undo', 3016
 	}
 };
-
-/*--------------------------------------------------------------------------*/
-/*			PowerPlant Suite, we will leave this hard wired for now			*/
-/*--------------------------------------------------------------------------*/	
-
-resource 'aedt' (kPowerPlant_aedtResID, "PowerPlant") {
-	{
-		'misc', 'slct', 3017,
-		'ppnt', 'sttg', 3018,
-		'aevt', 'rec1', 1098,
-		'aevt', 'rec0', 1099
-	}
-};
-
-
 
 
 
