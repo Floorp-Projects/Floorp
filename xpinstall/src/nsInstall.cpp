@@ -1884,6 +1884,15 @@ nsInstall::FileOpFileIsDirectory(nsInstallFolder& aTarget, PRBool* aReturn)
 }
 
 PRInt32
+nsInstall::FileOpFileIsWritable(nsInstallFolder& aTarget, PRBool* aReturn)
+{
+  nsCOMPtr<nsIFile> localFile = aTarget.GetFileSpec();
+
+  localFile->IsWritable(aReturn);
+  return NS_OK;
+}
+
+PRInt32
 nsInstall::FileOpFileIsFile(nsInstallFolder& aTarget, PRBool* aReturn)
 {
   nsCOMPtr<nsIFile> localFile = aTarget.GetFileSpec();
