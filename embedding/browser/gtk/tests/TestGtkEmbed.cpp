@@ -1,3 +1,24 @@
+/*
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is mozilla.org code.
+ * 
+ * The Initial Developer of the Original Code is Christopher Blizzard.
+ * Portions created by Christopher Blizzard are Copyright (C)
+ * Christopher Blizzard.  All Rights Reserved.
+ * 
+ * Contributor(s):
+ *   Christopher Blizzard <blizzard@mozilla.org>
+ */
+
 #include "gtkmozembed.h"
 #include <gtk/gtk.h>
 #include <string.h>
@@ -48,8 +69,9 @@ static void link_message_cb      (GtkMozEmbed *embed, TestGtkBrowser *browser);
 static void js_status_cb         (GtkMozEmbed *embed, TestGtkBrowser *browser);
 
 // some utility functions
-static void update_status_bar_text(TestGtkBrowser *browser);
-static void update_temp_message(TestGtkBrowser *browser, const char *message);
+static void update_status_bar_text  (TestGtkBrowser *browser);
+static void update_temp_message     (TestGtkBrowser *browser, const char *message);
+static void update_nav_buttons      (TestGtkBrowser *browser);
 
 int
 main(int argc, char **argv)
@@ -209,6 +231,7 @@ new_gtk_browser(void)
 void
 back_clicked_cb (GtkButton *button, TestGtkBrowser *browser)
 {
+  gtk_moz_embed_go_back(GTK_MOZ_EMBED(browser->mozEmbed));
 }
 
 void
@@ -221,12 +244,13 @@ stop_clicked_cb (GtkButton *button, TestGtkBrowser *browser)
 void
 forward_clicked_cb (GtkButton *button, TestGtkBrowser *browser)
 {
+  gtk_moz_embed_go_forward(GTK_MOZ_EMBED(browser->mozEmbed));
 }
 
 void
 reload_clicked_cb  (GtkButton *button, TestGtkBrowser *browser)
 {
-  
+  gtk_moz_embed_reload(GTK_MOZ_EMBED(browser->mozEmbed), gtk_moz_embed_flag_reloadNormal);
 }
 
 void
@@ -268,6 +292,8 @@ location_changed_cb (GtkMozEmbed *embed, TestGtkBrowser *browser)
   // set from the link before a click and we wouldn't have gotten the
   // callback to unset it.
   update_temp_message(browser, 0);
+  // update the nav buttons on a location change
+  update_nav_buttons(browser);
 }
 
 void
@@ -289,6 +315,7 @@ load_started_cb     (GtkMozEmbed *embed, TestGtkBrowser *browser)
 {
   g_print("load_started_cb\n");
   gtk_widget_set_sensitive(browser->stopButton, TRUE);
+  gtk_widget_set_sensitive(browser->reloadButton, FALSE);
   browser->loadPercent = 0;
   browser->bytesLoaded = 0;
   browser->maxBytesLoaded = 0;
@@ -300,6 +327,7 @@ load_finished_cb    (GtkMozEmbed *embed, TestGtkBrowser *browser)
 {
   g_print("load_finished_cb\n");
   gtk_widget_set_sensitive(browser->stopButton, FALSE);
+  gtk_widget_set_sensitive(browser->reloadButton, TRUE);
   browser->loadPercent = 0;
   browser->bytesLoaded = 0;
   browser->maxBytesLoaded = 0;
@@ -431,3 +459,20 @@ update_temp_message(TestGtkBrowser *browser, const char *message)
   update_status_bar_text(browser);
 }
 
+
+void
+update_nav_buttons      (TestGtkBrowser *browser)
+{
+  gboolean can_go_back;
+  gboolean can_go_forward;
+  can_go_back = gtk_moz_embed_can_go_back(GTK_MOZ_EMBED(browser->mozEmbed));
+  can_go_forward = gtk_moz_embed_can_go_forward(GTK_MOZ_EMBED(browser->mozEmbed));
+  if (can_go_back)
+    gtk_widget_set_sensitive(browser->backButton, TRUE);
+  else
+    gtk_widget_set_sensitive(browser->backButton, FALSE);
+  if (can_go_forward)
+    gtk_widget_set_sensitive(browser->forwardButton, TRUE);
+  else
+    gtk_widget_set_sensitive(browser->forwardButton, FALSE);
+}

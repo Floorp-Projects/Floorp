@@ -40,6 +40,7 @@ class GtkMozEmbedPrivate
 {
 public:
   nsCOMPtr<nsIWebBrowser>     webBrowser;
+  nsCOMPtr<nsIWebNavigation>  navigation;
   nsCOMPtr<nsIGtkEmbed>       embed;
   nsCOMPtr<nsISupportsArray>  topLevelWindowWebShells;
   nsVoidArray                 topLevelWindows;
@@ -304,6 +305,10 @@ gtk_moz_embed_init(GtkMozEmbed *embed)
 					    embed);
   embed_private->embed->SetNetCallback((void (*)(void *, gint))gtk_moz_embed_handle_net,
 				       embed);
+  // get our hands on a copy of the nsIWebNavigation interface for later
+  embed_private->navigation = do_QueryInterface(embed_private->webBrowser);
+  g_return_if_fail(embed_private->navigation);
+
 }
 
 GtkWidget *
@@ -329,11 +334,9 @@ gtk_moz_embed_load_url(GtkMozEmbed *embed, const char *url)
     return;
   }
 
-  nsCOMPtr<nsIWebNavigation> navigation = do_QueryInterface(embed_private->webBrowser);
-  g_return_if_fail(navigation);
   nsString URLString;
   URLString.AssignWithConversion(url);
-  navigation->LoadURI(URLString.GetUnicode());
+  embed_private->navigation->LoadURI(URLString.GetUnicode());
 }
 
 void
@@ -346,9 +349,73 @@ gtk_moz_embed_stop_load (GtkMozEmbed *embed)
 
   embed_private = (GtkMozEmbedPrivate *)embed->data;
 
-  nsCOMPtr<nsIWebNavigation> navigation = do_QueryInterface(embed_private->webBrowser);
-  g_return_if_fail(navigation);
-  navigation->Stop();
+  embed_private->navigation->Stop();
+}
+
+gboolean
+gtk_moz_embed_can_go_back      (GtkMozEmbed *embed)
+{
+  PRBool retval = PR_FALSE;
+  GtkMozEmbedPrivate *embed_private;
+
+  g_return_val_if_fail ((embed != NULL), FALSE);
+  g_return_val_if_fail (GTK_IS_MOZ_EMBED(embed), FALSE);
+
+  embed_private = (GtkMozEmbedPrivate *)embed->data;
+  
+  embed_private->navigation->GetCanGoBack(&retval);
+  return retval;
+}
+
+gboolean
+gtk_moz_embed_can_go_forward   (GtkMozEmbed *embed)
+{
+  PRBool retval = PR_FALSE;
+  GtkMozEmbedPrivate *embed_private;
+
+  g_return_val_if_fail ((embed != NULL), FALSE);
+  g_return_val_if_fail (GTK_IS_MOZ_EMBED(embed), FALSE);
+
+  embed_private = (GtkMozEmbedPrivate *)embed->data;
+  
+  embed_private->navigation->GetCanGoForward(&retval);
+  return retval;
+}
+
+void
+gtk_moz_embed_go_back          (GtkMozEmbed *embed)
+{
+  GtkMozEmbedPrivate *embed_private;
+
+  g_return_if_fail (embed != NULL);
+  g_return_if_fail (GTK_IS_MOZ_EMBED(embed));
+
+  embed_private = (GtkMozEmbedPrivate *)embed->data;
+  embed_private->navigation->GoBack();
+}
+
+void
+gtk_moz_embed_go_forward       (GtkMozEmbed *embed)
+{
+  GtkMozEmbedPrivate *embed_private;
+
+  g_return_if_fail (embed != NULL);
+  g_return_if_fail (GTK_IS_MOZ_EMBED(embed));
+
+  embed_private = (GtkMozEmbedPrivate *)embed->data;
+  embed_private->navigation->GoForward();
+}
+
+void
+gtk_moz_embed_reload           (GtkMozEmbed *embed, gint32 flags)
+{
+  GtkMozEmbedPrivate *embed_private;
+
+  g_return_if_fail (embed != NULL);
+  g_return_if_fail (GTK_IS_MOZ_EMBED(embed));
+
+  embed_private = (GtkMozEmbedPrivate *)embed->data;
+  embed_private->navigation->Reload(flags);
 }
 
 char *
@@ -600,8 +667,9 @@ static void
 gtk_moz_embed_handle_location_change(GtkMozEmbed *embed)
 {
   g_return_if_fail (GTK_IS_MOZ_EMBED(embed));
-  
+
   gtk_signal_emit(GTK_OBJECT(embed), moz_embed_signals[LOCATION]);
+
 }
 
 static void
@@ -624,7 +692,7 @@ static void
 gtk_moz_embed_handle_net(GtkMozEmbed *embed, gint32 flags)
 {
   g_return_if_fail (GTK_IS_MOZ_EMBED(embed));
-  
+
   // if we've got the start flag, emit the signal
   if (flags & gtk_moz_embed_flag_win_start)
     gtk_signal_emit(GTK_OBJECT(embed), moz_embed_signals[NET_START]);
@@ -633,4 +701,6 @@ gtk_moz_embed_handle_net(GtkMozEmbed *embed, gint32 flags)
   // and for stop, too
   if (flags & gtk_moz_embed_flag_win_stop)
     gtk_signal_emit(GTK_OBJECT(embed), moz_embed_signals[NET_STOP]);
+
 }
+
