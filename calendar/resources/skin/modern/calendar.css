@@ -1122,6 +1122,7 @@ treechildren:-moz-tree-cell-text(overdue)
 treechildren:-moz-tree-cell-text(completed)
 {
    text-decoration        : line-through;
+   color                  : black;
 }
 
 treechildren:-moz-tree-row(selected) {
@@ -1148,6 +1149,14 @@ treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, inprogress, curr
    list-style-image      : url("chrome://global/skin/checkbox/cbox-act.gif");
 }
 
+treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, overdue) {
+   list-style-image      : url("chrome://global/skin/checkbox/cbox.gif");
+}
+
+treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, overdue, current) {
+   list-style-image      : url("chrome://global/skin/checkbox/cbox-act.gif");
+}
+
 treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, completed) {
    list-style-image      : url("chrome://global/skin/checkbox/cbox-check.gif");
 }
@@ -1166,4 +1175,10 @@ treechildren:-moz-tree-image(unifinder-todo-tree-col-priority, highpriority) {
 
 treechildren:-moz-tree-image(unifinder-todo-tree-col-priority, lowpriority) {
    list-style-image      : url( "chrome://calendar/skin/unifinder/priority_low.png" )
+}
+
+*[Holidays="true"]
+{
+   font-weight    : bold;
+   border         : 1px solid red !important;
 }

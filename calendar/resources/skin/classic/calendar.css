@@ -1113,6 +1113,7 @@ treechildren:-moz-tree-cell-text(overdue)
 treechildren:-moz-tree-cell-text(completed)
 {
    text-decoration        : line-through;
+   color                  : black;
 }
 
 treechildren:-moz-tree-row(selected) {
@@ -1136,6 +1137,14 @@ treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, inprogress) {
 }
 
 treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, inprogress, current) {
+   list-style-image      : url("chrome://global/skin/checkbox/cbox-act.gif");
+}
+
+treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, overdue) {
+   list-style-image      : url("chrome://global/skin/checkbox/cbox.gif");
+}
+
+treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, overdue, current) {
    list-style-image      : url("chrome://global/skin/checkbox/cbox-act.gif");
 }
 

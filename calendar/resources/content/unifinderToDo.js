@@ -340,7 +340,7 @@ function setUnifinderToDoTreeItem( treeItem, calendarToDo )
 
       var tonightMidnight = new Date( now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59 );
 
-      if( now.getTime() > tonightMidnight.getTime() )
+      if( tonightMidnight.getTime() > dueDate.getTime() )
       {
          /* for setting some css */
          textProperties = textProperties + " overdue";
