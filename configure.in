@@ -704,7 +704,6 @@ jpeg/Makefile
 js/Makefile
 js/jsd/Makefile
 js/jsd/classes/Makefile
-js/ref/Makefile
 js/src/Makefile
 js/src/liveconnect/Makefile
 js/src/liveconnect/classes/Makefile
