@@ -861,10 +861,13 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
 
         nsAutoString fixed, hidden;
         content->GetAttr(kNameSpaceID_None, nsXULAtoms::fixed, fixed);
+        // We need to check for hidden attribute too, since treecols with
+        // the hidden="true" attribute are not really hidden, just collapsed
         content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::hidden, hidden);
 
-        if (count < childIndex) {
-            if (!fixed.Equals(NS_LITERAL_STRING("true")) && !hidden.Equals(NS_LITERAL_STRING("true"))) {
+        NS_NAMED_LITERAL_STRING(attrTrue, "true");
+        if (!attrTrue.Equals(fixed) && !attrTrue.Equals(hidden)) {
+            if (count < childIndex) {
                 mChildInfosBefore[mChildInfosBeforeCount].child   = childBox;
                 mChildInfosBefore[mChildInfosBeforeCount].min     = isHorizontal ? minSize.width : minSize.height;
                 mChildInfosBefore[mChildInfosBeforeCount].max     = isHorizontal ? maxSize.width : maxSize.height;
@@ -873,16 +876,14 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
                 mChildInfosBefore[mChildInfosBeforeCount].index   = count;
                 mChildInfosBefore[mChildInfosBeforeCount].changed = mChildInfosBefore[mChildInfosBeforeCount].current;
                 mChildInfosBeforeCount++;
-            }
-        } else if (count > childIndex) {
-            if (!fixed.Equals(NS_LITERAL_STRING("true")) && !hidden.Equals(NS_LITERAL_STRING("true"))) {
+            } else if (count > childIndex) {
                 mChildInfosAfter[mChildInfosAfterCount].child   = childBox;
                 mChildInfosAfter[mChildInfosAfterCount].min     = isHorizontal ? minSize.width : minSize.height;
                 mChildInfosAfter[mChildInfosAfterCount].max     = isHorizontal ? maxSize.width : maxSize.height;
                 mChildInfosAfter[mChildInfosAfterCount].current = isHorizontal ? r.width : r.height;
                 mChildInfosAfter[mChildInfosAfterCount].flex    = flex;
                 mChildInfosAfter[mChildInfosAfterCount].index   = count;
-                mChildInfosAfter[mChildInfosAfterCount].changed   = mChildInfosAfter[mChildInfosAfterCount].current;
+                mChildInfosAfter[mChildInfosAfterCount].changed = mChildInfosAfter[mChildInfosAfterCount].current;
                 mChildInfosAfterCount++;
             }
         } 
