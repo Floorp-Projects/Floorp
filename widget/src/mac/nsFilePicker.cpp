@@ -298,6 +298,10 @@ nsFilePicker::GetLocalFile(Str255 & inTitle, /* filter list here later */ FSSpec
 		// sets up the |mTypeLists| array so the filter proc can use it
 		MapFilterToFileTypes();
 		
+    // allow packages to be chosen if the filter is "*"
+    if ( mAllFilesDisplayed )
+      dialogOptions.dialogOptionFlags |= kNavSupportPackages;		
+
 		// Display the get file dialog. Only use a filter proc if there are any
 		// filters registered.
     nsWatchTask::GetTask().Suspend();  
@@ -496,22 +500,23 @@ nsFilePicker :: MapFilterToFileTypes ( )
 	
 	// grab the IC mappingDB so that it's a little faster looping over the file
 	// types.
-#if !TARGET_CARBON
 	icErr = ICStart(&icInstance, 'MOZZ');
 	if (icErr == noErr)
 	{
-		icErr = ICFindConfigFile(icInstance, 0, nil);
-		if (icErr == noErr)
-		{
-			icErr = ICFindPrefHandle(icInstance, kICMapping, &attr, mappings);
-			if (icErr != noErr)
-				goto bail_w_IC;
-		}
-		else
-			goto bail_w_IC;
+#if !TARGET_CARBON
+    // This routine does nothing under carbon, but is required for non-carbon.
+    // Not sure why.
+    icErr = ICFindConfigFile(icInstance, 0, nil);
+#endif
+    if (icErr == noErr) {
+      icErr = ICFindPrefHandle(icInstance, kICMapping, &attr, mappings);
+      if (icErr != noErr)
+        goto bail_w_IC;
+    }
+    else
+      goto bail_w_IC;
 	}
 	else
-#endif
 		goto bail_wo_IC;
 	
 	

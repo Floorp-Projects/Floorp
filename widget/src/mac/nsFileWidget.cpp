@@ -321,6 +321,7 @@ nsFileWidget :: GetFile ( Str255 & inTitle, /* filter list here later */ FSSpec*
 		dialogOptions.dialogOptionFlags |= kNavNoTypePopup;
 		dialogOptions.dialogOptionFlags |= kNavDontAutoTranslate;
 		dialogOptions.dialogOptionFlags |= kNavDontAddTranslateItems;
+		dialogOptions.dialogOptionFlags |= kNavSupportPackages;		
 		dialogOptions.dialogOptionFlags ^= kNavAllowMultipleFiles;
 		::BlockMoveData(inTitle, dialogOptions.message, *inTitle + 1);
 		
