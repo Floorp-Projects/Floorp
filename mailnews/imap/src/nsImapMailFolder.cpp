@@ -123,63 +123,63 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static
 nsresult RecursiveCopy(nsIFile* srcDir, nsIFile* destDir)
 {
-    nsresult rv;
-    PRBool isDir;
-    
-    rv = srcDir->IsDirectory(&isDir);
-    if (NS_FAILED(rv)) return rv;
-	if (!isDir) return NS_ERROR_INVALID_ARG;
-
-    PRBool exists;
-    rv = destDir->Exists(&exists);
-	if (NS_SUCCEEDED(rv) && !exists)
-		rv = destDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
-	if (NS_FAILED(rv)) return rv;
-
-    PRBool hasMore = PR_FALSE;
-    nsCOMPtr<nsISimpleEnumerator> dirIterator;
-    rv = srcDir->GetDirectoryEntries(getter_AddRefs(dirIterator));
-    if (NS_FAILED(rv)) return rv;
-    
+  nsresult rv;
+  PRBool isDir;
+  
+  rv = srcDir->IsDirectory(&isDir);
+  if (NS_FAILED(rv)) return rv;
+  if (!isDir) return NS_ERROR_INVALID_ARG;
+  
+  PRBool exists;
+  rv = destDir->Exists(&exists);
+  if (NS_SUCCEEDED(rv) && !exists)
+    rv = destDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
+  if (NS_FAILED(rv)) return rv;
+  
+  PRBool hasMore = PR_FALSE;
+  nsCOMPtr<nsISimpleEnumerator> dirIterator;
+  rv = srcDir->GetDirectoryEntries(getter_AddRefs(dirIterator));
+  if (NS_FAILED(rv)) return rv;
+  
+  rv = dirIterator->HasMoreElements(&hasMore);
+  if (NS_FAILED(rv)) return rv;
+  
+  nsCOMPtr<nsIFile> dirEntry;
+  
+  while (hasMore)
+  {
+    rv = dirIterator->GetNext((nsISupports**)getter_AddRefs(dirEntry));
+    if (NS_SUCCEEDED(rv))
+    {
+		    rv = dirEntry->IsDirectory(&isDir);
+                    if (NS_SUCCEEDED(rv))
+                    {
+                      if (isDir)
+                      {
+                        nsCOMPtr<nsIFile> destClone;
+                        rv = destDir->Clone(getter_AddRefs(destClone));
+                        if (NS_SUCCEEDED(rv))
+                        {
+                          nsCOMPtr<nsILocalFile> newChild(do_QueryInterface(destClone));
+                          nsXPIDLCString leafName;
+                          dirEntry->GetLeafName(getter_Copies(leafName));
+                          newChild->AppendRelativePath(leafName);
+                          rv = newChild->Exists(&exists);
+                          if (NS_SUCCEEDED(rv) && !exists)
+                            rv = newChild->Create(nsIFile::DIRECTORY_TYPE, 0775);
+                          rv = RecursiveCopy(dirEntry, newChild);
+                        }
+                      }
+                      else
+                        rv = dirEntry->CopyTo(destDir, nsnull);
+                    }
+                    
+    }
     rv = dirIterator->HasMoreElements(&hasMore);
     if (NS_FAILED(rv)) return rv;
-    
-    nsCOMPtr<nsIFile> dirEntry;
-    
-	while (hasMore)
-	{
-		rv = dirIterator->GetNext((nsISupports**)getter_AddRefs(dirEntry));
-		if (NS_SUCCEEDED(rv))
-		{
-		    rv = dirEntry->IsDirectory(&isDir);
-			if (NS_SUCCEEDED(rv))
-		    {
-		        if (isDir)
-		        {
-		            nsCOMPtr<nsIFile> destClone;
-		            rv = destDir->Clone(getter_AddRefs(destClone));
-		            if (NS_SUCCEEDED(rv))
-		            {
-		                nsCOMPtr<nsILocalFile> newChild(do_QueryInterface(destClone));
-		                nsXPIDLCString leafName;
-		                dirEntry->GetLeafName(getter_Copies(leafName));
-		                newChild->AppendRelativePath(leafName);
-						rv = newChild->Exists(&exists);
-			            if (NS_SUCCEEDED(rv) && !exists)
-				             rv = newChild->Create(nsIFile::DIRECTORY_TYPE, 0775);
-		                rv = RecursiveCopy(dirEntry, newChild);
-		            }
-		        }
-		        else
-		            rv = dirEntry->CopyTo(destDir, nsnull);
-		    }
-		
-		}
-        rv = dirIterator->HasMoreElements(&hasMore);
-        if (NS_FAILED(rv)) return rv;
-	}
-
-	return rv;
+  }
+  
+  return rv;
 }
 
 nsImapMailFolder::nsImapMailFolder() :
@@ -195,22 +195,22 @@ nsImapMailFolder::nsImapMailFolder() :
     m_downloadMessageForOfflineUse(PR_FALSE),
     m_downloadingFolderForOfflineUse(PR_FALSE)
 {
-        MOZ_COUNT_CTOR(nsImapMailFolder); // double count these for now.
-
-    m_appendMsgMonitor = nsnull;  // since we're not using this (yet?) make it null.
-                // if we do start using it, it should be created lazily
-
-  nsresult rv;
-
-    // Get current thread envent queue
-
-  nsCOMPtr<nsIEventQueueService> pEventQService = 
-           do_GetService(kEventQueueServiceCID, &rv); 
-    if (NS_SUCCEEDED(rv) && pEventQService)
+      MOZ_COUNT_CTOR(nsImapMailFolder); // double count these for now.
+      
+      m_appendMsgMonitor = nsnull;  // since we're not using this (yet?) make it null.
+      // if we do start using it, it should be created lazily
+      
+      nsresult rv;
+      
+      // Get current thread envent queue
+      
+      nsCOMPtr<nsIEventQueueService> pEventQService = 
+        do_GetService(kEventQueueServiceCID, &rv); 
+      if (NS_SUCCEEDED(rv) && pEventQService)
         pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
-                                            getter_AddRefs(m_eventQueue));
-  m_moveCoalescer = nsnull;
-  m_boxFlags = 0;
+        getter_AddRefs(m_eventQueue));
+      m_moveCoalescer = nsnull;
+      m_boxFlags = 0;
   m_uidValidity = 0;
   m_hierarchyDelimiter = kOnlineHierarchySeparatorUnknown;
   m_pathName = nsnull;
@@ -643,9 +643,9 @@ nsImapMailFolder::UpdateFolder(nsIMsgWindow *msgWindow)
   }
   rv = GetDatabase(msgWindow);
 
-  PRBool noSelect = PR_FALSE;
-  GetFlag(MSG_FOLDER_FLAG_IMAP_NOSELECT, &noSelect);
-
+  PRBool canOpenThisFolder = PR_TRUE;
+  GetCanIOpenThisFolder(&canOpenThisFolder);
+  
   PRBool hasOfflineEvents = PR_FALSE;
   GetFlag(MSG_FOLDER_FLAG_OFFLINEEVENTS, &hasOfflineEvents);
 
@@ -657,7 +657,7 @@ nsImapMailFolder::UpdateFolder(nsIMsgWindow *msgWindow)
     	return goOnline->ProcessNextOperation();
     }
   }
-  if (noSelect) 
+  if (!canOpenThisFolder) 
     selectFolder = PR_FALSE;
   // don't run select if we're already running a url/select...
   if (NS_SUCCEEDED(rv) && !m_urlRunning && selectFolder)
