@@ -83,6 +83,7 @@ public:
   nsresult GetFullURL(nsIURI*& aFullURL);
   
   void IsSupportedImage(nsIContent* aContent, PRBool* aImage);
+  void IsSupportedDocument(nsIContent* aContent, PRBool* aDoc);
 
   nsIPresContext *mPresContext;  // weak ref
 protected:
@@ -117,11 +118,11 @@ protected:
                                nsHTMLReflowMetrics& aMetrics, 
                                const nsHTMLReflowState& aReflowState);
 
-  nsresult HandleImage(nsIPresContext*          aPresContext,
-					   nsHTMLReflowMetrics&     aMetrics,
-					   const nsHTMLReflowState& aReflowState,
-					   nsReflowStatus&          aStatus,
-					   nsIFrame* child);
+  nsresult HandleChild(nsIPresContext*          aPresContext,
+                       nsHTMLReflowMetrics&     aMetrics,
+                       const nsHTMLReflowState& aReflowState,
+                       nsReflowStatus&          aStatus,
+                       nsIFrame*                child);
  
   nsresult GetBaseURL(nsIURI* &aURL);
 
