@@ -950,6 +950,10 @@ NS_ShutdownNativeCharsetUtils()
 #include <uconv.h>
 #include "nsPromiseFlatString.h"
 
+#ifdef XP_OS2_EMX
+#include <ulserr.h>
+#endif
+
 static UconvObject UnicodeConverter = NULL;
 
 NS_COM nsresult

@@ -108,6 +108,10 @@ ifeq ($(MOZ_OS2_TOOLS),VACPP)
 OS_LIBS += libconv.lib libuls.lib
 endif
 
+ifeq ($(MOZ_OS2_TOOLS),EMX)
+OS_LIBS += -luconv
+endif
+
 # UNIX98 iconv support
 OS_LIBS += $(LIBICONV)
 
