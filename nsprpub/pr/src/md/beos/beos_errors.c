@@ -32,6 +32,11 @@
  * GPL.
  */
 
+#include "prtypes.h"
+#include "md/_unix_errors.h"
+#include "prerror.h"
+#include <errno.h>
+
 void _MD_unix_map_opendir_error(int err)
 {
 	switch (err) {
