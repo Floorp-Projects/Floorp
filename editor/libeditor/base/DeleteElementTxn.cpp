@@ -83,12 +83,12 @@ NS_IMETHODIMP DeleteElementTxn::DoTransaction(void)
   // begin debug output
   nsCOMPtr<nsIDOMElement> element;
   element = do_QueryInterface(mElement);
-  nsAutoString elementTag; elementTag.AssignWithConversion("text node");
+  nsAutoString elementTag(NS_LITERAL_STRING("text node"));
   if (element)
     element->GetTagName(elementTag);
   nsCOMPtr<nsIDOMElement> parentElement;
   parentElement = do_QueryInterface(mParent);
-  nsAutoString parentElementTag; parentElementTag.AssignWithConversion("text node");
+  nsAutoString parentElementTag(NS_LITERAL_STRING("text node"));
   if (parentElement)
     parentElement->GetTagName(parentElementTag);
   char *c, *p;
@@ -122,12 +122,12 @@ NS_IMETHODIMP DeleteElementTxn::UndoTransaction(void)
   // begin debug output
   nsCOMPtr<nsIDOMElement> element;
   element = do_QueryInterface(mElement);
-  nsAutoString elementTag; elementTag.AssignWithConversion("text node");
+  nsAutoString elementTag(NS_LITERAL_STRING("text node"));
   if (element)
     element->GetTagName(elementTag);
   nsCOMPtr<nsIDOMElement> parentElement;
   parentElement = do_QueryInterface(mParent);
-  nsAutoString parentElementTag; parentElementTag.AssignWithConversion("text node");
+  nsAutoString parentElementTag(NS_LITERAL_STRING("text node"));
   if (parentElement)
     parentElement->GetTagName(parentElementTag);
   char *c, *p;

@@ -510,7 +510,7 @@ nsIndentCommand::DoCommand(const nsAReadableString & aCommandName, nsISupports *
   nsresult rv = NS_OK;
   if (editorShell)
   {
-    nsAutoString indentStr; indentStr.AssignWithConversion("indent");
+    nsAutoString indentStr(NS_LITERAL_STRING("indent"));
     rv = editorShell->Indent(indentStr.get());
   }
   
@@ -548,7 +548,7 @@ nsOutdentCommand::DoCommand(const nsAReadableString & aCommandName, nsISupports 
   nsresult rv = NS_OK;
   if (editorShell && EditingHTML(editorShell))
   {
-    nsAutoString indentStr; indentStr.AssignWithConversion("outdent");
+    nsAutoString indentStr(NS_LITERAL_STRING("outdent"));
     rv = editorShell->Indent(indentStr.get());
   }
   
@@ -633,7 +633,7 @@ nsMultiStateCommand::UpdateCommandState(const nsAReadableString & aCommandName, 
       if (NS_FAILED(rv)) return rv;
       
       if (isMixed)
-        curFormat.AssignWithConversion("mixed");
+        curFormat.Assign(NS_LITERAL_STRING("mixed"));
         
       if (!mGotState || (curFormat != mStateString))
       {
@@ -723,7 +723,7 @@ nsFontFaceStateCommand::SetState(nsIEditorShell *aEditorShell, nsString& newStat
   nsCOMPtr<nsIAtom> ttAtom = getter_AddRefs(NS_NewAtom("tt"));
   nsCOMPtr<nsIAtom> fontAtom = getter_AddRefs(NS_NewAtom("font"));
 
-  if (newState.EqualsWithConversion("tt"))
+  if (newState.Equals(NS_LITERAL_STRING("tt")))
   {
     // The old "teletype" attribute  
     rv = htmlEditor->SetInlineProperty(ttAtom, NS_LITERAL_STRING(""), NS_LITERAL_STRING(""));  
@@ -735,7 +735,7 @@ nsFontFaceStateCommand::SetState(nsIEditorShell *aEditorShell, nsString& newStat
     // Remove any existing TT nodes
     rv = htmlEditor->RemoveInlineProperty(ttAtom, NS_LITERAL_STRING(""));  
 
-    if (!newState.Length() || newState.EqualsWithConversion("normal")) {
+    if (!newState.Length() || newState.Equals(NS_LITERAL_STRING("normal"))) {
       rv = htmlEditor->RemoveInlineProperty(fontAtom, NS_LITERAL_STRING("face"));
     } else {
       rv = htmlEditor->SetInlineProperty(fontAtom, NS_LITERAL_STRING("face"), newState);
@@ -783,7 +783,7 @@ nsFontColorStateCommand::SetState(nsIEditorShell *aEditorShell, nsString& newSta
   
   nsCOMPtr<nsIAtom> fontAtom = getter_AddRefs(NS_NewAtom("font"));
 
-  if (!newState.Length() || newState.EqualsWithConversion("normal")) {
+  if (!newState.Length() || newState.Equals(NS_LITERAL_STRING("normal"))) {
     rv = htmlEditor->RemoveInlineProperty(fontAtom, NS_LITERAL_STRING("color"));
   } else {
     rv = htmlEditor->SetInlineProperty(fontAtom, NS_LITERAL_STRING("color"), newState);
@@ -855,19 +855,19 @@ nsAlignCommand::GetCurrentState(nsIEditorShell *aEditorShell, nsString& outState
   {
     default:
     case nsIHTMLEditor::eLeft:
-      outStateString.AssignWithConversion("left");
+      outStateString.Assign(NS_LITERAL_STRING("left"));
       break;
       
     case nsIHTMLEditor::eCenter:
-      outStateString.AssignWithConversion("center");
+      outStateString.Assign(NS_LITERAL_STRING("center"));
       break;
       
     case nsIHTMLEditor::eRight:
-      outStateString.AssignWithConversion("right");
+      outStateString.Assign(NS_LITERAL_STRING("right"));
       break;
 
     case nsIHTMLEditor::eJustify:
-      outStateString.AssignWithConversion("justify");
+      outStateString.Assign(NS_LITERAL_STRING("justify"));
       break;
   }
   
