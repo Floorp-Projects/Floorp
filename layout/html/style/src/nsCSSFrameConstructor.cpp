@@ -3854,7 +3854,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
           PRInt32 scrolling = -1;
           // XXX We should get prefs for X and Y and deal with these independently!
           scrollableContainer->GetCurrentScrollbarPreferences(nsIScrollable::ScrollOrientation_Y,&scrolling);
-          if (NS_STYLE_OVERFLOW_HIDDEN == scrolling) {
+          if (nsIScrollable::Scrollbar_Never == scrolling) {
             isScrollable = PR_FALSE;
           }
           // XXX NS_STYLE_OVERFLOW_SCROLL should create 'always on' scrollbars

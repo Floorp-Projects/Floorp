@@ -689,9 +689,9 @@ DocumentViewerImpl::InitPresentationStuff(PRBool aDoInitialReflow)
         // inside the frameset...
 
         sc->SetCurrentScrollbarPreferences(nsIScrollable::ScrollOrientation_Y,
-                                           NS_STYLE_OVERFLOW_HIDDEN);
+                                           nsIScrollable::Scrollbar_Never);
         sc->SetCurrentScrollbarPreferences(nsIScrollable::ScrollOrientation_X,
-                                           NS_STYLE_OVERFLOW_HIDDEN);
+                                           nsIScrollable::Scrollbar_Never);
       } else {
         sc->ResetScrollbarPreferences();
       }

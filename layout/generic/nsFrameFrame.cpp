@@ -648,23 +648,24 @@ nsSubDocumentFrame::ShowDocShell()
     PRInt32 scrolling = GetStyleDisplay()->mOverflow;
     PRInt32 scrollX, scrollY;
     switch (scrolling) {
+      case NS_STYLE_OVERFLOW_VISIBLE:
+      case NS_STYLE_OVERFLOW_AUTO:
+        scrollX = scrollY = nsIScrollable::Scrollbar_Auto;
+        break;
+      case NS_STYLE_OVERFLOW_HIDDEN:
       case NS_STYLE_OVERFLOW_CLIP:
-        scrollX = NS_STYLE_OVERFLOW_HIDDEN;
-        scrollY = NS_STYLE_OVERFLOW_HIDDEN;
+        scrollX = scrollY = nsIScrollable::Scrollbar_Never;
+        break;
+      case NS_STYLE_OVERFLOW_SCROLL:
+        scrollX = scrollY = nsIScrollable::Scrollbar_Always;
         break;
       case NS_STYLE_OVERFLOW_SCROLLBARS_HORIZONTAL:
-        scrollX = NS_STYLE_OVERFLOW_SCROLL;
-        scrollY = NS_STYLE_OVERFLOW_HIDDEN;
+        scrollX = nsIScrollable::Scrollbar_Always;
+        scrollY = nsIScrollable::Scrollbar_Never;
         break;
       case NS_STYLE_OVERFLOW_SCROLLBARS_VERTICAL:
-        scrollX = NS_STYLE_OVERFLOW_HIDDEN;
-        scrollY = NS_STYLE_OVERFLOW_SCROLL;
-        break;
-      case NS_STYLE_OVERFLOW_VISIBLE:
-        scrollX = scrollY = NS_STYLE_OVERFLOW_AUTO;
-        break;
-      default:
-        scrollX = scrollY = scrolling;
+        scrollX = nsIScrollable::Scrollbar_Never;
+        scrollY = nsIScrollable::Scrollbar_Always;
         break;
     }
 
