@@ -196,13 +196,17 @@ nsFontMetricsXft::Init(const nsFont& aFont, nsIAtom* aLangGroup,
     // Hang onto the device context
     mDeviceContext = aContext;
 
-    float app2dev;
-    mDeviceContext->GetAppUnitsToDevUnits(app2dev);
+    mPointSize = NSTwipsToIntPoints(mFont->size);
 
-    mPixelSize = NSToIntRound(app2dev * mFont->size);
-    // Make sure to clamp the pixel size to something reasonable so we
+    // pixels -> twips ; twips -> points
+    float dev2app;
+    mDeviceContext->GetDevUnitsToAppUnits(dev2app);
+    nscoord screenTwips = NSIntPixelsToTwips(gdk_screen_height(), dev2app);
+    nscoord screenPoints = NSTwipsToIntPoints(screenTwips);
+
+    // Make sure to clamp the point size to something reasonable so we
     // don't make the X server blow up.
-    mPixelSize = PR_MIN(gdk_screen_height() * FONT_MAX_FONT_SCALE, mPixelSize);
+    mPointSize = PR_MIN(screenPoints * FONT_MAX_FONT_SCALE, mPointSize);
 
     // enumerate over the font names passed in
     mFont->EnumerateFamilies(nsFontMetricsXft::EnumFontCallback, this);
@@ -247,11 +251,17 @@ nsFontMetricsXft::Init(const nsFont& aFont, nsIAtom* aLangGroup,
         res = prefService->GetIntPref(name.get(), &minimum);
         if (NS_FAILED(res))
             prefService->GetDefaultIntPref(name.get(), &minimum);
-        
+
         if (minimum < 0)
             minimum = 0;
-        if (mPixelSize < minimum)
-            mPixelSize = minimum;
+
+        // convert the minimum size into points
+        float P2T;
+        mDeviceContext->GetDevUnitsToAppUnits(P2T);
+        minimum = NSTwipsToIntPoints(NSFloatPixelsToTwips(minimum, P2T));
+
+        if (mPointSize < minimum)
+            mPointSize = minimum;
     }
 
     if (NS_FAILED(RealizeFont()))
@@ -948,7 +958,7 @@ nsFontMetricsXft::SetupFCPattern(void)
         AddFFRE(mPattern, mGenericFont, PR_FALSE);
 
     // add the pixel size
-    FcPatternAddInteger(mPattern, FC_PIXEL_SIZE, mPixelSize);
+    FcPatternAddInteger(mPattern, FC_SIZE, mPointSize);
 
     // Add the slant type
     FcPatternAddInteger(mPattern, FC_SLANT,
@@ -1114,8 +1124,8 @@ nsFontMetricsXft::SetupMiniFont(void)
 
     FcPatternAddString(pattern, FC_FAMILY, (FcChar8 *)"monospace");
 
-    FcPatternAddInteger(pattern, FC_PIXEL_SIZE, 
-                        (int)(0.5 * mPixelSize));
+    FcPatternAddInteger(pattern, FC_SIZE, 
+                        (int)(0.5 * mPointSize));
 
     FcPatternAddInteger(pattern, FC_WEIGHT,
                         CalculateWeight(mFont->weight));
