@@ -45,7 +45,7 @@ class XFE_Image{
 public:
 
   XFE_Image(XFE_Component * frame, char * imageUrl, fe_colormap *, Widget);
-  ~XFE_Image();
+  virtual ~XFE_Image();
   virtual Pixmap  getPixmap();
   virtual Pixmap  getMask();
   virtual PRInt32 getImageWidth();

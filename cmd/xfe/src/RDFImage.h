@@ -59,7 +59,7 @@ class XFE_RDFImage : XFE_Image
 
 public:
   XFE_RDFImage(XFE_Component * frame, void * requestedObj, char * imageUrl, fe_colormap *, Widget);
-  ~XFE_RDFImage();
+  virtual ~XFE_RDFImage();
 
   void     setCompleteCallback(completeCallbackPtr    callback, void * callbackData);
   void  RDFDisplayPixmap(IL_Pixmap * image, IL_Pixmap * mask, PRInt32  width, PRInt32  height);

@@ -874,9 +874,6 @@ XFE_URLBar::url_text_selection_cb(Widget, XtPointer closure, XtPointer callData)
 void
 XFE_URLBar::doPopup(XEvent *event)
 {
-  int x, y, clickrow;
-  BM_Entry *entryUnderMouse;
-
   Widget widget = XtWindowToWidget(event->xany.display, event->xany.window);
  
   /* Posting the popup puts focus on the URLBar (needed for paste) */
@@ -928,7 +925,7 @@ XFE_URLBar::bookmarkCascadeTearCB(Widget	/* cascade */,
 /* static */ void
 XFE_URLBar::frameTitleChangedCB(Widget		frame_shell,
 								XtPointer	clientData,
-								XtPointer	callData)
+								XtPointer	/*callData*/)
 {
 	XFE_URLBar *	obj = (XFE_URLBar *) clientData;
 	String			title;
