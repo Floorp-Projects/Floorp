@@ -3972,12 +3972,12 @@ MOZ_COMPONENT_LIBS='$(MOZ_COMPONENT_NSPR_LIBS) $(MOZ_COMPONENT_XPCOM_LIBS)'
 case "$target" in
 *-aix*)
     if test ! "$GNU_CC"; then
-	DSO_LDOPTS='-ldl -bM:SRE -brtl -bso -bexpall -bnoentry'
+	DSO_LDOPTS='-ldl -bM:SRE -p1 -brtl -bso -bexpall -bnoentry'
 	DSO_CFLAGS='-qflag=w:w'
 	DSO_PIC_CFLAGS='-DPIC'
     fi
-    MKSHLIB='$(AIX_SHLIB_BIN) -p1 -brtl -bso'
-    MKCSHLIB='$(AIX_SHLIB_BIN) -p1 -brtl -bso'
+    MKSHLIB='$(AIX_SHLIB_BIN) $(DSO_LDOPTS)'
+    MKCSHLIB='$(AIX_SHLIB_BIN) $(DSO_LDOPTS)'
     cat >> confdefs.h <<\EOF
 #define NSCAP_DISABLE_DEBUG_PTR_TYPES 1
 EOF
