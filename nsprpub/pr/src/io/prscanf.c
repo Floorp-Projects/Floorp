@@ -387,6 +387,7 @@ GetFloat(ScanfState *state)
 
 /*
  * Convert, and return the end of the conversion spec.
+ * Return NULL on error.
  */
 
 static const char *
@@ -544,6 +545,7 @@ DoScanf(ScanfState *state, const char *fmt)
     cPtr = fmt;
     while (1) {
         if (isspace(*cPtr)) {
+            /* white space: skip */
             do {
                 cPtr++;
             } while (isspace(*cPtr));
@@ -551,20 +553,12 @@ DoScanf(ScanfState *state, const char *fmt)
                 ch = GET(state);
             } while (isspace(ch));
             UNGET(state, ch);
-        } else if (*cPtr != '%') {
-            if (*cPtr == '\0') {
-                return nConverted;
-            }
-            ch = GET(state);
-            if (ch != *cPtr) {
-                UNGET(state, ch);
-                return nConverted;
-            }
-            cPtr++;
-        } else {
+        } else if (*cPtr == '%') {
+            /* format spec: convert */
             cPtr++;
             state->assign = PR_TRUE;
             if (*cPtr == '*') {
+                cPtr++;
                 state->assign = PR_FALSE;
             }
             for (state->width = 0; isdigit(*cPtr); cPtr++) {
@@ -592,6 +586,17 @@ DoScanf(ScanfState *state, const char *fmt)
             }
             if (state->converted) {
                 nConverted++;
+            }
+            cPtr++;
+        } else {
+            /* others: must match */
+            if (*cPtr == '\0') {
+                return nConverted;
+            }
+            ch = GET(state);
+            if (ch != *cPtr) {
+                UNGET(state, ch);
+                return nConverted;
             }
             cPtr++;
         }
