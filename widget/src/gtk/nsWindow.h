@@ -139,7 +139,7 @@ protected:
   GtkWidget *mShell;  /* used for toplevel windows */
   GtkWidget *mVBox;
   
-  nsIMenuBar * m_nsIMenuBar;
+  nsIMenuBar *mMenuBar;
 };
 
 //
