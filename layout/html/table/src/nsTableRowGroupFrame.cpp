@@ -754,7 +754,7 @@ nsTableRowGroupFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
 
     // Resolve style
     nsIStyleContextPtr kidSC =
-      aPresContext->ResolveStyleContextFor(kid, this, PR_TRUE);
+      aPresContext->ResolveStyleContextFor(kid, this, PR_FALSE);
     const nsStyleSpacing* kidSpacing = (const nsStyleSpacing*)
       kidSC->GetStyleData(eStyleStruct_Spacing);
     nsMargin kidMargin;
