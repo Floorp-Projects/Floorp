@@ -165,6 +165,8 @@ public:
   NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
   NS_IMETHOD CloseContainer(const nsIParserNode& aNode);
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
+  NS_IMETHOD AddComment(const nsIParserNode& aNode);
+  NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
 
   nsIDocument* mDocument;
   nsIScriptObjectOwner* mDocumentScript;
@@ -1053,6 +1055,7 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
   return rv;
 }
 
+
 nsresult
 SinkContext::End()
 {
@@ -1751,6 +1754,28 @@ HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
     break;
   }
   return rv;
+}
+
+/**
+ * This gets called by the parsing system when we find a comment
+ * @update	gess11/9/98
+ * @param   aNode contains a comment token
+ * @return  error code
+ */
+nsresult HTMLContentSink::AddComment(const nsIParserNode& aNode) {
+  nsresult result= NS_OK;
+  return result;
+}
+
+/**
+ * This gets called by the parsing system when we find a PI
+ * @update	gess11/9/98
+ * @param   aNode contains a comment token
+ * @return  error code
+ */
+nsresult HTMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode) {
+  nsresult result= NS_OK;
+  return result;
 }
 
 void
