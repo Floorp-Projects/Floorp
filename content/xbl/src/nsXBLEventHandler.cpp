@@ -180,7 +180,8 @@ PRBool
 nsXBLEventHandler::KeyEventMatched(nsIDOMKeyEvent* aKeyEvent)
 {
   nsAutoString trueString = "true";
-  
+  nsAutoString falseString = "false";
+
   // Get the keycode and charcode of the key event.
   PRUint32 keyCode, charCode;
   aKeyEvent->GetKeyCode(&keyCode);
@@ -224,12 +225,29 @@ nsXBLEventHandler::KeyEventMatched(nsIDOMKeyEvent* aKeyEvent)
     if (!isModifierPresent)
       return PR_FALSE;
   }
+  else if (modifier == falseString) {
+#ifdef XP_MAC
+    aKeyEvent->GetMetaKey(&isModifierPresent);
+#elif XP_UNIX
+    aKeyEvent->GetAltKey(&isModifierPresent);
+#else
+    aKeyEvent->GetCtrlKey(&isModifierPresent);
+#endif
+
+    if (isModifierPresent)
+      return PR_FALSE;
+  }
 
   // Check for shift.
   mHandlerElement->GetAttribute(kNameSpaceID_None, kShiftAtom, modifier);
   if (modifier == trueString) {
     aKeyEvent->GetShiftKey(&isModifierPresent);
     if (!isModifierPresent)
+      return PR_FALSE;
+  }
+  else if (modifier == falseString) {
+    aKeyEvent->GetShiftKey(&isModifierPresent);
+    if (isModifierPresent)
       return PR_FALSE;
   }
 
@@ -240,6 +258,11 @@ nsXBLEventHandler::KeyEventMatched(nsIDOMKeyEvent* aKeyEvent)
     if (!isModifierPresent)
       return PR_FALSE;
   }
+  else if (modifier == falseString) {
+    aKeyEvent->GetCtrlKey(&isModifierPresent);
+    if (isModifierPresent)
+      return PR_FALSE;
+  }
 
   // Check for meta.
   mHandlerElement->GetAttribute(kNameSpaceID_None, kMetaAtom, modifier);
@@ -248,12 +271,22 @@ nsXBLEventHandler::KeyEventMatched(nsIDOMKeyEvent* aKeyEvent)
     if (!isModifierPresent)
       return PR_FALSE;
   }
+  else if (modifier == falseString) {
+    aKeyEvent->GetMetaKey(&isModifierPresent);
+    if (isModifierPresent)
+      return PR_FALSE;
+  }
 
   // Check for alt.
   mHandlerElement->GetAttribute(kNameSpaceID_None, kAltAtom, modifier);
   if (modifier == trueString) {
     aKeyEvent->GetAltKey(&isModifierPresent);
     if (!isModifierPresent)
+      return PR_FALSE;
+  }
+  else if (modifier == falseString) {
+    aKeyEvent->GetAltKey(&isModifierPresent);
+    if (isModifierPresent)
       return PR_FALSE;
   }
 
