@@ -26,11 +26,17 @@
 <!ENTITY allengines.label            "All Engines">
 <!ENTITY engine.column.label         "Search Engines">
 <!ENTITY category.label              "Category:">
+<!ENTITY category.accesskey          "c">
 <!ENTITY done.label                  "Done">
 
-<!ENTITY add.label                   "&lt;-- Add --">
+<!ENTITY add.label                   "Add">
+<!ENTITY add.accesskey               "a">
 <!ENTITY remove.label                "Remove">
+<!ENTITY remove.accesskey            "r">
 
 <!ENTITY new.category.label          "New...">
+<!ENTITY new.category.accesskey      "n">
 <!ENTITY rename.category.label       "Rename...">
+<!ENTITY rename.category.accesskey   "e">
 <!ENTITY remove.category.label       "Delete">
+<!ENTITY remove.category.accesskey   "d">
