@@ -21,6 +21,8 @@ IGNORE_MANIFEST=1
 
 MODULE=raptor
 
+include <$(DEPTH)\config\config.mak>
+
 EXPORTS =                               \
         nsIBrowserWindow.h              \
         nsIContentViewer.h              \
