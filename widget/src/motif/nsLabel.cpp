@@ -226,6 +226,16 @@ void nsLabel::AggLabel::SetLabel(const nsString& aText)
   GET_OUTER()->SetLabel(aText);
 }
 
+void nsLabel::AggLabel::SetAlignment(nsLabelAlignment aAlignment)
+{
+  GET_OUTER()->SetAlignment(aAlignment);
+}
+
+//void nsLabel::AggLabel::PreCreateWidget(nsWidgetInitData *aInitData)
+//{
+  //GET_OUTER()->PreCreateWidget(aInitData);
+//}
+
 //----------------------------------------------------------------------
 
 BASE_IWIDGET_IMPL(nsLabel, AggLabel);
