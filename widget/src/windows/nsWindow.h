@@ -23,7 +23,6 @@
  *   Robert O'Callahan <roc+moz@cs.cmu.edu>
  *   Dean Tessman <dean_tessman@hotmail.com>
  *   Makoto Kato  <m_kato@ga2.so-net.ne.jp>
- *   Dainis Jonitis <Dainis_Jonitis@swh-t.lv>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -392,20 +391,6 @@ public:
     NS_IMETHOD              GetAttention(PRInt32 aCycleCount);
     NS_IMETHOD              GetLastInputEventTime(PRUint32& aTime);
 
-#ifdef MOZ_XUL
-  NS_IMETHOD              SetWindowTranslucency(PRBool aTransparent);
-  NS_IMETHOD              GetWindowTranslucency(PRBool& aTransparent);
-  NS_IMETHOD              UpdateTranslucentWindowAlpha(const nsRect& aRect, PRUint8* aAlphas);
-private:
-  nsresult                SetWindowTranslucencyInner(PRBool aTransparent);
-  PRBool                  GetWindowTranslucencyInner() { return mIsTranslucent; }
-  void                    UpdateTranslucentWindowAlphaInner(const nsRect& aRect, PRUint8* aAlphas);
-  nsIWidget*              GetTopLevelWidget();
-  void                    ResizeTranslucentWindow(PRInt32 aNewWidth, PRInt32 aNewHeight);
-  nsresult                UpdateTranslucentWindow();
-public:
-#endif
-
     // nsIKBStateControl interface 
 
     NS_IMETHOD ResetInputState();
@@ -414,6 +399,8 @@ public:
     PRBool IMECompositionHitTest(PRUint32 aEventType, POINT * ptPos);
     PRBool HandleMouseActionOfIME(PRInt32 aAction, POINT* ptPos);
     void GetCompositionWindowPos(HIMC hIMC, PRUint32 aEventType, COMPOSITIONFORM *cpForm);
+
+    HWND                    mBorderlessParent;
 
     // nsSwitchToUIThread interface
     virtual BOOL            CallMethod(MethodInfo *info);
@@ -535,19 +522,12 @@ protected:
     static      nsWindow* gCurrentWindow;
     nsPoint     mLastPoint;
     HWND        mWnd;
-  HWND          mBorderlessParent;
 #if 0
     HPALETTE    mPalette;
 #endif
     WNDPROC     mPrevWndProc;
     HBRUSH      mBrush;
 
-#ifdef MOZ_XUL
-  HBITMAP       mMemoryBitmap;
-  HDC           mMemoryDC;
-  PRUint8*      mAlphaMask;
-  PRPackedBool  mIsTranslucent;
-#endif
     PRPackedBool  mIsTopWidgetWindow;
     PRPackedBool  mHas3DBorder;
     PRPackedBool  mIsShiftDown;
