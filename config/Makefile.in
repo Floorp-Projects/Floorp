@@ -84,6 +84,7 @@ $(DEPTH)/build/build_number: FORCE
 	$(RM) $@
 	$(PERL) $(srcdir)/bdate.pl > $@
 	$(PERL) $(srcdir)/aboutime.pl $(topsrcdir)/xpfe/browser/resources/content/navigator.xul $@
+	$(PERL) $(srcdir)/aboutime.pl $(topsrcdir)/xpfe/browser/resources/content/viewSource.xul $@
 
 $(DEPTH)/modules/libpref/src/init/all.js: FORCE
 	$(PERL) $(srcdir)/set-timebomb.pl 0 30
