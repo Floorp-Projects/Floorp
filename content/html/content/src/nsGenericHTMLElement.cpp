@@ -1792,7 +1792,7 @@ nsGenericHTMLElement::SetAttr(PRInt32 aNameSpaceID,
     NS_ENSURE_SUCCESS(result, result);
   }
   result = mAttributes->SetAttributeFor(aAttribute, aValue, mapped,
-                                          this, sheet);
+                                        this, sheet);
   if (mDocument) {
     nsCOMPtr<nsIXBLBinding> binding;
     mDocument->GetBindingManager()->GetBinding(this, getter_AddRefs(binding));
