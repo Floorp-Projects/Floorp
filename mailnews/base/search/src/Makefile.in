@@ -33,8 +33,8 @@ CPPSRCS = \
 	nsMsgFilterList.cpp\
 	nsMsgFilter.cpp\
 	nsMsgSearchTerm.cpp\
-	nsMsgBodyHandler.obj\
-	nsMsgLocalSearch.obj\
+	nsMsgBodyHandler.cpp\
+	nsMsgLocalSearch.cpp\
 	$(NULL)
 
 EXTRA_DSO_LDOPTS = \
