@@ -627,8 +627,11 @@ int CAbstractCX::GetUrl(URL_Struct *pUrl, FO_Present_Types iFormatOut, BOOL bRea
         			}
                 }
                 else if (GetContextType() != IconCX && GetContextType() != Pane) {
-                    MWContext* pNewContext = SwitchToBrowserContext(pUrl);
-                    return MK_CHANGING_CONTEXT;
+                    // Make this conditional like non MOZ_MAIL_NEWS code below.
+                    if( bForceNew && EDT_IS_EDITOR(GetContext()) ) {
+                        MWContext* pNewContext = SwitchToBrowserContext(pUrl);
+                        return MK_CHANGING_CONTEXT;
+                    }
                 }
             }
 #else
