@@ -206,14 +206,14 @@ pref("network.accept_cookies",              0);     // 0 = Always, 1 = warn, 2 =
 pref("network.foreign_cookies",             0); // 0 = Accept, 1 = Don't accept
 pref("network.cookie.cookieBehavior",       0); // 0-Accept, 1-dontAcceptForeign, 2-dontUse
 pref("network.cookie.warnAboutCookies",     false);
-pref("network.signon.rememberSignons",      true);
-pref("network.cookie.filterName",			"");
+pref("signon.rememberSignons",              false);
+pref("signon.Notified",                     false);
 pref("network.sendRefererHeader",           true);
 pref("network.enablePad",                   false); // Allow client to do proxy autodiscovery
 pref("network.padPacURL",                   ""); // The proxy autodiscovery url
 pref("wallet.captureForms",                 true);
-pref("wallet.useDialogs",                   false);
-pref("privacy.warn_no_policy",              false); // Warn when submitting to site without policy
+pref("wallet.notified",                     false);
+pref("wallet.Server",                       "");
 
 pref("messages.new_window",                 true); // ML obsolete; use mailnews.message_in_thread_window
 pref("intl.accept_languages",               "en");

@@ -549,9 +549,11 @@ static const char *pref_captureForms = "wallet.captureForms";
 static const char *pref_WalletNotified = "wallet.Notified";
 static const char *pref_WalletKeyFileName = "wallet.KeyFileName";
 static const char *pref_WalletSchemaValueFileName = "wallet.SchemaValueFileName";
+static const char *pref_WalletServer = "wallet.Server";
 
 PRIVATE PRBool wallet_captureForms = PR_FALSE;
 PRIVATE PRBool wallet_Notified = PR_FALSE;
+PRIVATE char * wallet_Server = nsnull;
 
 PRIVATE void
 wallet_SetFormsCapturingPref(PRBool x)
@@ -3142,28 +3144,37 @@ WLLT_OnSubmit(nsIContent* formNode) {
 PUBLIC void
 WLLT_FetchFromNetCenter() {
 
-  /* temporary patch to avoid bug 11766 */
-  return;
-
   nsresult rv;
+  char * url = nsnull;
 
+  SI_GetCharPref(pref_WalletServer, &wallet_Server);
+  if (!wallet_Server || (*wallet_Server == '\0')) {
+    /* user does not want to download mapping tables */
+    return;
+  }
   nsFileSpec dirSpec;
   rv = Wallet_ResourceDirectory(dirSpec);
   if (NS_FAILED(rv)) {
     return;
   }
-  rv = NS_NewURItoFile("http://people.netscape.com/morse/wallet/URLFieldSchema.tbl",
-                       dirSpec, "URLFieldSchema.tbl");
+  StrAllocCopy(url, wallet_Server);
+  StrAllocCat(url, "URLFieldSchema.tbl");
+  rv = NS_NewURItoFile(url, dirSpec, "URLFieldSchema.tbl");
+  PR_FREEIF(url);
   if (NS_FAILED(rv)) {
     return;
   }
-  rv = NS_NewURItoFile("http://people.netscape.com/morse/wallet/SchemaConcat.tbl",
-                       dirSpec, "SchemaConcat.tbl");
+  StrAllocCopy(url, wallet_Server);
+  StrAllocCat(url, "SchemaConcat.tbl");
+  rv = NS_NewURItoFile(url, dirSpec, "SchemaConcat.tbl");
+  PR_FREEIF(url);
   if (NS_FAILED(rv)) {
     return;
   }
-  rv = NS_NewURItoFile("http://people.netscape.com/morse/wallet/FieldSchema.tbl",
-                       dirSpec, "FieldSchema.tbl");
+  StrAllocCopy(url, wallet_Server);
+  StrAllocCat(url, "FieldSchema.tbl");
+  rv = NS_NewURItoFile(url, dirSpec, "FieldSchema.tbl");
+  PR_FREEIF(url);
   if (NS_FAILED(rv)) {
     return;
   }
