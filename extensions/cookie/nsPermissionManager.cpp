@@ -230,8 +230,8 @@ nsPermissionManager::Add(nsIURI     *aURI,
   NS_ENSURE_ARG_POINTER(aType);
   nsresult rv;
 
-  nsCAutoString hostPort;
-  rv = GetHostPort(aURI, hostPort);
+  nsCAutoString host;
+  rv = GetHost(aURI, host);
   // no host doesn't mean an error. just return the default
   if (NS_FAILED(rv)) return NS_OK;
 
@@ -239,7 +239,7 @@ nsPermissionManager::Add(nsIURI     *aURI,
   if (typeIndex == -1 || aPermission >= NUMBER_OF_PERMISSIONS)
     return NS_ERROR_FAILURE;
 
-  rv = AddInternal(hostPort, typeIndex, aPermission, PR_TRUE);
+  rv = AddInternal(host, typeIndex, aPermission, PR_TRUE);
   if (NS_FAILED(rv)) return rv;
 
   mChangedList = PR_TRUE;
@@ -362,8 +362,8 @@ nsPermissionManager::TestPermission(nsIURI     *aURI,
   // set the default
   *aPermission = nsIPermissionManager::UNKNOWN_ACTION;
 
-  nsCAutoString hostPort;
-  nsresult rv = GetHostPort(aURI, hostPort);
+  nsCAutoString host;
+  nsresult rv = GetHost(aURI, host);
   // no host doesn't mean an error. just return the default
   if (NS_FAILED(rv)) return NS_OK;
   
@@ -374,13 +374,13 @@ nsPermissionManager::TestPermission(nsIURI     *aURI,
 
   PRUint32 offset = 0;
   do {
-    nsHostEntry *entry = mHostTable.GetEntry(hostPort.get() + offset);
+    nsHostEntry *entry = mHostTable.GetEntry(host.get() + offset);
     if (entry) {
       *aPermission = entry->GetPermission(typeIndex);
       if (*aPermission != nsIPermissionManager::UNKNOWN_ACTION)
         break;
     }
-    offset = hostPort.FindChar('.', offset) + 1;
+    offset = host.FindChar('.', offset) + 1;
 
   // walk up the domaintree (we stop as soon as we find a match,
   // which will be the most specific domain we have an entry for).
@@ -826,11 +826,11 @@ nsPermissionManager::Write()
 }
 
 nsresult
-nsPermissionManager::GetHostPort(nsIURI *aURI, nsACString &aResult)
+nsPermissionManager::GetHost(nsIURI *aURI, nsACString &aResult)
 {
   NS_ASSERTION(aURI, "could not get uri");
 
-  aURI->GetHostPort(aResult);
+  aURI->GetHost(aResult);
 
   // If there is no host, use the scheme, and prepend "scheme:",
   // to make sure it isn't a host or something.

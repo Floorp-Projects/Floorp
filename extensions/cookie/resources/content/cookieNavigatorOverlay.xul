@@ -146,7 +146,7 @@
         case "cookieDefault":
           if (permissionmanager.testPermission(uri, "cookie") == nsIPermissionManager.UNKNOWN_ACTION)
             return;
-          permissionmanager.remove(uri.hostPort, "cookie");
+          permissionmanager.remove(uri.host, "cookie");
           element = document.getElementById("UseCookiesDefault");
           break;
         case "cookieBlock":
@@ -164,7 +164,7 @@
         case "imageDefault":
           if (permissionmanager.testPermission(uri, "image") == nsIPermissionManager.UNKNOWN_ACTION)
             return;
-          permissionmanager.remove(uri.hostPort, "image");
+          permissionmanager.remove(uri.host, "image");
           element = document.getElementById("UseImagesDefault");
           break;
         case "imageBlock":
@@ -187,10 +187,10 @@
                         false);
     }
 
-    function OpenManagePopups(hostPort) {
+    function OpenManagePopups(host) {
       window.openDialog("chrome://communicator/content/popupManager.xul", "",
                         "chrome,resizable=yes", 
-                        hostPort);
+                        host);
     }
 
   ]]>
@@ -262,7 +262,7 @@
       <menupopup>
         <menuitem id="AllowPopups" label="&cookieAllowPopupsCmd.label;"
                   accesskey="&cookieAllowPopupsCmd.accesskey;" 
-                  oncommand="OpenManagePopups(getBrowser().currentURI.hostPort);"/>
+                  oncommand="OpenManagePopups(getBrowser().currentURI.host);"/>
         <menuitem id="AboutPopups" label="&cookieAboutPopupBlocking.label;"
                   accesskey="&cookieAboutPopupBlocking.accesskey;"
                   oncommand="OpenAboutPopups();"
