@@ -63,6 +63,7 @@ function nsProgressDialog() {
     this.mMode        = "normal";
     this.mPercent     = 0;
     this.mRate        = 0;
+    this.mBundle      = null;
 }
 
 const nsIProgressDialog = Components.interfaces.nsIProgressDialog;
@@ -229,19 +230,27 @@ nsProgressDialog.prototype = {
     // Look for error notifications and display alert to user.
     onStatusChange: function( aWebProgress, aRequest, aStatus, aMessage ) {
         // Check for error condition (only if dialog is still open).
-        if ( this.dialog && aStatus != Components.results.NS_OK ) {
-this.dump( "nsProgressDialog::onStatusChange, status=" + this.hex( aStatus ) + "\n" );
-            // Get prompt service.
-            var prompter = Components.classes[ "@mozilla.org/embedcomp/prompt-service;1" ]
-                               .getService( Components.interfaces.nsIPromptService );
-            // Display error alert (using text supplied by back-end).
-            var title = this.getString( this.saving ? "savingAlertTitle" : "openingAlertTitle" );
-            this.replaceInsert( title, 1, this.fileName );
-            prompter.alert( this.dialog, title, aMessage );
-
-            // Close the dialog.
-            if ( !this.completed ) {
-                this.onCancel();
+        if ( aStatus != Components.results.NS_OK ) {
+            if ( this.loaded ) {
+                // Get prompt service.
+                var prompter = Components.classes[ "@mozilla.org/embedcomp/prompt-service;1" ]
+                                   .getService( Components.interfaces.nsIPromptService );
+                // Display error alert (using text supplied by back-end).
+                var title = this.getProperty( this.saving ? "savingAlertTitle" : "openingAlertTitle",
+                                              [ this.fileName() ], 
+                                              1 );
+                prompter.alert( this.dialog, title, aMessage );
+    
+                // Close the dialog.
+                if ( !this.completed ) {
+                    this.onCancel();
+                }
+            } else {
+                // Error occurred prior to onload even firing.
+                // We can't handle this error until we're done loading, so
+                // defer the handling of this call.
+                this.dialog.setTimeout( function(obj,wp,req,stat,msg){obj.onStatusChange(wp,req,stat,msg)},
+                                        100, this, aWebProgress, aRequest, aStatus, aMessage );
             }
         }
     },
@@ -445,15 +454,18 @@ this.dump( "nsProgressDialog::onStatusChange, status=" + this.hex( aStatus ) + "
          }
     },
 
+    // Get filename from target file.
+    fileName: function() {
+        return this.target ? this.target.unicodeLeafName : "";
+    },
+
     // Set the dialog title.
     setTitle: function() {
         // Start with saving/opening template.
         var title = this.saving ? this.getString( "savingTitle" ) : this.getString( "openingTitle" );
 
         // Use file name as insert 1.
-        var fname = this.target? this.target.unicodePath : " ";
-        var n = fname.lastIndexOf( "\\" );
-        title = this.replaceInsert( title, 1, fname.substring( n + 1 ) );
+        title = this.replaceInsert( title, 1, this.fileName() );
 
         // Use percentage as insert 2.
         title = this.replaceInsert( title, 2, this.percent );
@@ -684,6 +696,16 @@ this.dump( "nsProgressDialog::onStatusChange, status=" + this.hex( aStatus ) + "
     // Enable dialgo element.
     enable: function( field ) {
         this.dialogElement( field ).removeAttribute( "disabled" );
+    },
+
+    // Get localizable string from properties file.
+    getProperty: function( propertyId, strings, len ) {
+        if ( !this.mBundle ) {
+            this.mBundle = Components.classes[ "@mozilla.org/intl/stringbundle;1" ]
+                             .getService( Components.interfaces.nsIStringBundleService )
+                               .createBundle( "chrome://global/locale/nsProgressDialog.properties");
+        }
+        return this.mBundle.formatStringFromName( propertyId, strings, len );
     },
 
     // Get localizable string (from dialog <data> elements).
