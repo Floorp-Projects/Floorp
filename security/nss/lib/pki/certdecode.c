@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certdecode.c,v $ $Revision: 1.9 $ $Date: 2002/01/08 15:37:39 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certdecode.c,v $ $Revision: 1.10 $ $Date: 2002/01/08 18:51:16 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIT_H
@@ -179,6 +179,9 @@ nssDecodedCert_Destroy
   nssDecodedCert *dc
 )
 {
+    if (!dc) {
+	return PR_FAILURE;
+    }
     switch(dc->type) {
     case NSSCertificateType_PKIX:
 	return nssDecodedPKIXCertificate_Destroy(dc);

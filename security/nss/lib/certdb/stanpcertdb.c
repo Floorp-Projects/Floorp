@@ -435,6 +435,15 @@ CERT_DestroyCertificate(CERTCertificate *cert)
 	PORT_Assert(cert->referenceCount > 0);
 	refCount = --cert->referenceCount;
         CERT_UnlockCertRefCount(cert);
+	if ( ( refCount == 0 ) && !cert->keepSession ) {
+	    PRArenaPool *arena  = cert->arena;
+	    /* zero cert before freeing. Any stale references to this cert
+	     * after this point will probably cause an exception.  */
+	    PORT_Memset(cert, 0, sizeof *cert);
+	    cert = NULL;
+	    /* free the arena that contains the cert. */
+	    PORT_FreeArena(arena, PR_FALSE);
+        }
 #else
 	if (tmp) {
 	    /* delete the NSSCertificate */
@@ -470,15 +479,6 @@ CERT_DestroyCertificate(CERTCertificate *cert)
 	    refCount = 0;
 	}
 #endif
-	if ( ( refCount == 0 ) && !cert->keepSession ) {
-	    PRArenaPool *arena  = cert->arena;
-	    /* zero cert before freeing. Any stale references to this cert
-	     * after this point will probably cause an exception.  */
-	    PORT_Memset(cert, 0, sizeof *cert);
-	    cert = NULL;
-	    /* free the arena that contains the cert. */
-	    PORT_FreeArena(arena, PR_FALSE);
-        }
     }
     return;
 }
