@@ -3185,13 +3185,13 @@ static const uint8 urlCharType[256] =
         world(world),
         engine(new JS2Engine(world)),
         publicNamespace(new Namespace(engine->public_StringAtom)),
+        mn1(new Multiname(NULL, publicNamespace)),
+        mn2(new Multiname(NULL, publicNamespace)),
         bCon(new BytecodeContainer()),
         glob(new GlobalObject(world)),
         env(new Environment(new MetaData::SystemFrame(), glob)),
         flags(JS1),
-        showTrees(false),
-        mn1(new Multiname(NULL, publicNamespace)),
-        mn2(new Multiname(NULL, publicNamespace))
+        showTrees(false)
     {
         engine->meta = this;
 
@@ -3576,7 +3576,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                     && ((checked_cast<PrototypeInstance *>(container))->type == arrayClass)
                     && (*name == *engine->length_StringAtom)) {
                 float64 f = toFloat64(newValue);
-                uint32 newLength = f;
+                uint32 newLength = (uint32)f;
                 if (f != newLength)
                     reportError(Exception::rangeError, "Invalid length value", engine->errorPos());
                 setLength(this, container, newLength);
