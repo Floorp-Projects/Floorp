@@ -49,6 +49,7 @@ CPPSRCS =				\
 	nsXIFConverter.cpp		\
 	nsRangeList.cpp			\
 	nsLayoutAtoms.cpp		\
+	nsCaret.cpp			\
 	nsRange.cpp			\
 	nsTextNode.cpp			\
 	$(NULL)
@@ -83,6 +84,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsXIFConverter.obj		\
 	.\$(OBJDIR)\nsRangeList.obj		\
 	.\$(OBJDIR)\nsLayoutAtoms.obj		\
+	.\$(OBJDIR)\nsCaret.obj			\
 	.\$(OBJDIR)\nsRange.obj			\
 	.\$(OBJDIR)\nsTextNode.obj		\
 	$(NULL)
