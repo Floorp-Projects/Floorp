@@ -56,7 +56,17 @@
     *
     * "profile-change-teardown"
     *   All async activity must be stopped in this phase. Typically,
-    *   the application level observer will close all open windows. 
+    *   the application level observer will close all open windows.
+    *   This is the last phase in which the subject's vetoChange()
+    *   method may still be called. 
+    *   The next notification will be either 
+    *   profile-change-teardown-veto or profile-before-change.
+    *
+    * "profile-change-teardown-veto"
+    *   This notification will only be sent, if the profile change 
+    *   was vetoed during the profile-change-teardown phase.
+    *   This allows components to bring back required resources,
+    *   that were tore down on profile-change-teardown.
     *
     * "profile-before-change"
     *   Called before the profile has changed. Use this notification
