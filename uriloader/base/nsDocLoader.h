@@ -27,6 +27,8 @@
 #define nsDocLoader_h__
 
 #include "nsIDocumentLoader.h"
+#include "nsIWebProgress.h"
+#include "nsIWebProgressListener.h"
 #include "nsIStreamObserver.h"
 #include "nsWeakReference.h"
 #include "nsILoadGroup.h"
@@ -43,7 +45,8 @@
 
 class nsDocLoaderImpl : public nsIDocumentLoader, 
                         public nsIStreamObserver,
-                        public nsSupportsWeakReference
+                        public nsSupportsWeakReference,
+                        public nsIWebProgress
 {
 public:
 
@@ -58,6 +61,7 @@ public:
     NS_DECL_NSIDOCUMENTLOADER
     // nsIStreamObserver methods: (for observing the load group)
     NS_DECL_NSISTREAMOBSERVER
+    NS_DECL_NSIWEBPROGRESS
 
     // Implementation specific methods...
 protected:
@@ -105,6 +109,11 @@ protected:
 
     nsCOMPtr<nsILoadGroup>      mLoadGroup;
     nsCOMPtr<nsISupportsArray>  mChildList;
+
+    // The following member variables are related to the new nsIWebProgress 
+    // feedback interfaces that travis cooked up.
+    nsCOMPtr<nsIWebProgressListener> mProgressListener;
+    PRInt32 mProgressStatusFlags;
 };
 
 #endif /* nsDocLoader_h__ */

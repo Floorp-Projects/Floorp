@@ -80,6 +80,8 @@ nsDocLoaderImpl::nsDocLoaderImpl()
 
     mIsLoadingDocument = PR_FALSE;
 
+    mProgressStatusFlags = 0;
+
     PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
            ("DocLoader:%p: created.\n", this));
 }
@@ -164,6 +166,7 @@ NS_INTERFACE_MAP_BEGIN(nsDocLoaderImpl)
    NS_INTERFACE_MAP_ENTRY(nsIStreamObserver)
    NS_INTERFACE_MAP_ENTRY(nsIDocumentLoader)
    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+   NS_INTERFACE_MAP_ENTRY(nsIWebProgress)
 NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
@@ -538,6 +541,18 @@ void nsDocLoaderImpl::FireOnStartDocumentLoad(nsDocLoaderImpl* aLoadInitiator,
   nsCRT::free(buffer);
 #endif /* DEBUG */
 
+  // if we have a web progress listener, propagate the fact that we are starting to load a url
+  if (mProgressListener)
+  {
+    mProgressStatusFlags |= nsIWebProgress::flag_networkActivity;
+    mProgressStatusFlags |= nsIWebProgress::flag_windowActivity;
+
+    if (aLoadInitiator == this)
+      mProgressListener->OnStatusChange(mDocumentChannel, mProgressStatusFlags);
+    else // the load must be initiated by a child...mscott: I'm passing the WRONG channel here! I need to add a get channel to the doc loader interface
+      mProgressListener->OnChildStatusChange(mDocumentChannel, mProgressStatusFlags);
+  }
+
   /*
    * First notify any observers that the document load has begun...
    *
@@ -596,6 +611,19 @@ void nsDocLoaderImpl::FireOnEndDocumentLoad(nsDocLoaderImpl* aLoadInitiator,
       }
     }
 #endif /* DEBUG */
+
+  // if we have a web progress listener, propagate the fact that we are starting to load a url
+  if (mProgressListener)
+  {
+    mProgressStatusFlags &= ~nsIWebProgress::flag_networkActivity;
+    mProgressStatusFlags &= ~nsIWebProgress::flag_windowActivity;
+
+    if (aLoadInitiator == this)
+      mProgressListener->OnStatusChange(mDocumentChannel, mProgressStatusFlags);
+    else // the load must be initiated by a child...mscott: I'm passing the WRONG channel here! I need to add a get channel to the doc loader interface
+      mProgressListener->OnChildStatusChange(mDocumentChannel, mProgressStatusFlags);
+  }
+
 
   /*
    * First notify any observers that the document load has finished...
@@ -745,4 +773,50 @@ void nsDocLoaderImpl::FireOnEndURLLoad(nsDocLoaderImpl* aLoadInitiator,
   if (mParent) {
     mParent->FireOnEndURLLoad(aLoadInitiator, aChannel, aStatus);
   }
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+// The following section contains support for nsIWebProgress and related stuff
+////////////////////////////////////////////////////////////////////////////////////
+
+NS_IMETHODIMP nsDocLoaderImpl::AddProgressListener(nsIWebProgressListener *listener)
+{
+  // the doc loader only needs to worry about the progress listener for the docshell.
+  // it in turn actually manages the list of web progress listeners...
+  mProgressListener = listener;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDocLoaderImpl::RemoveProgressListener(nsIWebProgressListener *listener)
+{
+  mProgressListener = nsnull; 
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDocLoaderImpl::GetProgressStatusFlags(PRInt32 *aProgressStatusFlags)
+{
+  *aProgressStatusFlags = mProgressStatusFlags;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDocLoaderImpl::GetCurSelfProgress(PRInt32 *aCurSelfProgress)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP nsDocLoaderImpl::GetMaxSelfProgress(PRInt32 *aMaxSelfProgress)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP nsDocLoaderImpl::GetCurTotalProgress(PRInt32 *aCurTotalProgress)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsDocLoaderImpl::GetMaxTotalProgress(PRInt32 *aMaxTotalProgress)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
