@@ -1,66 +1,69 @@
-<?xml version="1.0"?> 
-<?xml-stylesheet href="EditorDialog.css" type="text/css"?> 
-<!DOCTYPE dialog> 
+<?xml version="1.0"?>
+<?xml-stylesheet href="EditorDialog.css" type="text/css"?>
+<!DOCTYPE dialog>
 <window xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        xmlns:html="http://www.w3.org/TR/REC-html40"> 
+        xmlns:html="http://www.w3.org/TR/REC-html40">
 
   <table xmlns="http://www.w3.org/TR/REC-html40" cellspacing=20>
-   <tr>
-     <td>
-			  <table class="tableCenterAlign" cellspacing=0 cellpadding=3>
-			    <tr>
-			      <td>
-			        <p/>Height
-			      </td>
-						<td>
-						  <input type="text" size="4" length="4" maxlength="4" />pixels
-						</td>
-			    </tr>
-
-			    <tr>
-						<td>
-						  <p/>Width
-						</td>
-
-			 			<td>
-						  <input type="text" size="4" length="4" maxlength="4" />
-			          <select size="1" name="image.widthType">
-						    <optgroup label="pixels">
-						    <option label="pixels" value="pixels" />pixels
-						    <option label="% of window" value="% of window" />% of window
-						    </optgroup>
-						  </select>
-					  </td>
-					</tr>
-
-			  </table>
-      </td>
-  
+    <tr>
       <td>
-			  <p/>Alignment 
-			  <select size="1" name="hrule.alignType">
-			    <optgroup label="alignment">
-			    <option label="left alignment" value="left alignment" />left alignment
-			    <option label="center alignment" value="center alignment" />center alignment
-			    <option label="right alignment" value="right alignment" />right alignment
-			    </optgroup>
-			  </select>
+        <table class="tableCenterAlign" cellspacing=0 cellpadding=3>
+          <tr>
+            <td>
+              <xul:label>Height</xul:label>
+            </td>
+            <td>
+              <input type="text" size="4" length="4" maxlength="4" />
+              <xul:label>pixels</xul:label>
+            </td>
+          </tr>
 
-			  <p/>
-			  <xul:checkbox value="3DShading" /> 3-D shading
+          <tr>
+            <td>
+              <xul:label>Width</xul:label>
+            </td>
+
+             <td>
+              <input type="text" size="4" length="4" maxlength="4" />
+              <select size="1" name="hrule.widthType">
+                <optgroup label="pixels">
+                  <option label="pixels" value="pixels">pixels</option>
+                  <option label="% of window" value="% of window">% of window</option>
+                </optgroup>
+              </select>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+
+      <td>
+        <xul:label>Alignment</xul:label>
+        <select size="1" name="hrule.alignType">
+          <optgroup label="alignment">
+            <option label="left alignment" value="left alignment">left alignment</option>
+            <option label="center alignment" value="center alignment">center alignment</option>
+            <option label="right alignment" value="right alignment">right alignment</option>
+          </optgroup>
+        </select>
+
+        <p/>
+        <xul:checkbox value="3DShading" />
+        <xul:label>3-D shading</xul:label>
+      </td>
+    </tr>
+    
+    <tr>
+      <td>
+        <p/>
+        <input type="button" class="genericbutton" id="extrahtmlbutton" value=" Extra HTMLÉ " disabled />
+        <p/>
+        <input type="button" id="helpbutton" value=" Help " disabled />
+        <input type="button" id="cancelbutton" value=" Cancel " />
+        <input type="button" id="applybutton" value=" Apply " disabled />
+        <input type="button" id="okbutton" value=" OK " disabled />
       </td>
     </tr>
   </table>
 
-<table xmlns="http://www.w3.org/TR/REC-html40" > <tr> <td>
-  <p/>
-  <input type="button" class="genericbutton" id="extrahtmlbutton" value=" Extra HTMLÉ " disabled />
-  <p/>
-  <input type="button" id="helpbutton" value=" Help " disabled />
-  <input type="button" id="cancelbutton" value=" Cancel " />
-  <input type="button" id="applybutton" value=" Apply " disabled />
-  <input type="button" id="okbutton" value=" OK " disabled />
-</td> </tr> </table>
-
 </window>
-
