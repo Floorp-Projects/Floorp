@@ -586,7 +586,7 @@ nsStdURL::ReconstructSpec()
         portBuffer[0] = '\0';
     }
     
-    nsString finalSpec;
+    nsAutoString finalSpec;
     if (mScheme)
     {
         finalSpec = mScheme;
@@ -689,7 +689,7 @@ nsStdURL::SetDirectory(char* i_Directory)
     if (mDirectory)
         nsCRT::free(mDirectory);
 
-    nsString dir;
+    nsAutoString dir;
     if ('/' != *i_Directory)
         dir += "/";
     
@@ -788,7 +788,7 @@ nsStdURL::ReconstructPath(void)
 {
     //Take all the elements of the path and construct it
     if (mPath) nsCRT::free(mPath);
-    nsString path;
+    nsAutoString path;
     if (mDirectory)
     {
         path = mDirectory;
@@ -982,7 +982,7 @@ nsStdURL::DirFile(char **o_DirFile)
     if (!o_DirFile)
         return NS_ERROR_NULL_POINTER;
     
-    nsString temp;
+    nsAutoString temp;
     if (mDirectory)
     {
         temp = mDirectory;

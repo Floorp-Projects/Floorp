@@ -2659,12 +2659,12 @@ GlobalWindowImpl::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
 {
   PRBool result = PR_TRUE;
   if (JS_TypeOfValue(aContext, *aVp) == JSTYPE_FUNCTION && JSVAL_IS_STRING(aID)) {
-    nsString mPropName;
-    nsAutoString mPrefix;
-    mPropName.SetString(JS_GetStringChars(JS_ValueToString(aContext, aID)));
-    mPrefix.SetString(mPropName.GetUnicode(), 2);
-    if (mPrefix == "on") {
-      result = CheckForEventListener(aContext, mPropName);
+    nsAutoString propName;
+    nsAutoString prefix;
+    propName.SetString(JS_GetStringChars(JS_ValueToString(aContext, aID)));
+    prefix.SetString(propName.GetUnicode(), 2);
+    if (prefix.EqualsIgnoreCase("on")) {
+      result = CheckForEventListener(aContext, propName);
     }
   }
   else if (JSVAL_IS_STRING(aID)) {

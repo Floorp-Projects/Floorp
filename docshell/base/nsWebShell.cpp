@@ -2230,7 +2230,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
 {
   nsresult rv;
 
-  nsString2 urlStr = aURLSpec;
+  nsAutoString urlStr(aURLSpec);
 
 #ifdef NECKO
   CancelRefreshURITimers();
@@ -4235,7 +4235,7 @@ nsWebShell::SetDefaultCharacterSet (const PRUnichar*  aDefaultCharacterSet)
 NS_IMETHODIMP 
 nsWebShell::GetForceCharacterSet (const PRUnichar** aForceCharacterSet)
 {
-  nsString emptyStr = "";
+  nsAutoString emptyStr;
   if (mForceCharacterSet.Equals(emptyStr)) {
     *aForceCharacterSet = nsnull;
   }
@@ -4244,6 +4244,7 @@ nsWebShell::GetForceCharacterSet (const PRUnichar** aForceCharacterSet)
   }
   return NS_OK;
 }
+
 NS_IMETHODIMP 
 nsWebShell::SetForceCharacterSet (const PRUnichar*  aForceCharacterSet)  
 {

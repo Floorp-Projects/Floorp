@@ -221,7 +221,7 @@ NS_IMETHODIMP
 nsMIMEService::GetTypeFromURI(nsIURI *aURI, char **aContentType) {
     nsresult rv = NS_ERROR_FAILURE;
     char *cStrSpec= nsnull;
-    nsString2 specStr;
+    nsAutoString specStr;
 
     // first try to get a url out of the uri so we can skip post
     // filename stuff (i.e. query string)
@@ -240,7 +240,7 @@ nsMIMEService::GetTypeFromURI(nsIURI *aURI, char **aContentType) {
     // find the file extension (if any)
     specStr.SetString(cStrSpec);
     nsAllocator::Free(cStrSpec);
-    nsString2 extStr;
+    nsAutoString extStr;
     PRInt32 extLoc = specStr.RFindChar('.');
     if (-1 != extLoc) {
         specStr.Right(extStr, specStr.Length() - extLoc - 1);

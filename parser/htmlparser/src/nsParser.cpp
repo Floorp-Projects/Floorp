@@ -441,7 +441,7 @@ eParseMode DetermineParseMode(nsParser& aParser) {
   
   nsScanner* theScanner=aParser.GetScanner();
   if(theScanner){
-    nsString theBufCopy;
+    nsAutoString theBufCopy;
     nsString& theBuffer=theScanner->GetBuffer();
     theBuffer.Left(theBufCopy,125);
     theBufCopy.ToUpperCase();

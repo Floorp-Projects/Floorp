@@ -1325,7 +1325,8 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   NS_CreateButton(mWindow,mBack,r,HandleBackEvent,&font);
   if (NS_OK == mBack->QueryInterface(kIWidgetIID,(void**)&widget))
 	{
-    mBack->SetLabel("Back");
+    nsAutoString back("Back");
+    mBack->SetLabel(back);
 		NS_RELEASE(widget);
 	}
 
@@ -1342,7 +1343,8 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
     widget->Create(mWindow, r, HandleForwardEvent, NULL);
     widget->SetFont(font);
     widget->Show(PR_TRUE);
-    mForward->SetLabel("Forward");
+    nsAutoString forward("Forward");
+    mForward->SetLabel(forward);
 		NS_RELEASE(widget);
 	}
 
@@ -1363,7 +1365,8 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
     widget->SetForegroundColor(NS_RGB(0, 0, 0));
     widget->SetBackgroundColor(NS_RGB(255, 255, 255));
     PRUint32 size;
-    mLocation->SetText("",size);
+    nsAutoString empty;
+    mLocation->SetText(empty, size);
 	 NS_RELEASE(widget);
   }
 
@@ -1697,7 +1700,7 @@ nsBrowserWindow::SetTitle(const PRUnichar* aTitle)
   nsAutoString newTitle(aTitle);
   //newTitle.Append(" - Raptor");
   newTitle.Append(*gTitleSuffix);
-  mWindow->SetTitle(newTitle.GetUnicode());
+  mWindow->SetTitle(newTitle);
   return NS_OK;
 }
 
@@ -1771,7 +1774,8 @@ nsBrowserWindow::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
     if (mThrobber) {
       mThrobber->Start();
       PRUint32 size;
-      mLocation->SetText(aURL,size);
+      nsAutoString tmp(aURL);
+      mLocation->SetText(tmp,size);
     }
   }
   return NS_OK;

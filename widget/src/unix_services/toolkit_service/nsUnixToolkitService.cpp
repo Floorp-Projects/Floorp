@@ -118,8 +118,8 @@ nsUnixToolkitService::GetWidgetDllName(nsString & aWidgetDllNameOut)
   // Set sWidgetDllName only once
   if (nsnull == sWidgetDllName)
   {
-    nsString  name("");
-    nsString  toolkit("");
+    nsAutoString  name;
+    nsAutoString  toolkit;
     
     nsresult rv2 = GlobalGetToolkitName(toolkit);
 
@@ -165,8 +165,8 @@ nsUnixToolkitService::GetGfxDllName(nsString & aGfxDllNameOut)
   // Set sGfxDllName only once
   if (nsnull == sGfxDllName)
   {
-    nsString  name("");
-    nsString  toolkit("");
+    nsAutoString  name;
+    nsAutoString  toolkit;
     
     nsresult rv2 = GlobalGetToolkitName(toolkit);
 
@@ -223,7 +223,7 @@ nsUnixToolkitService::GetTimerCID(nsCID ** aTimerCIDOut)
 
   if (nsnull == sTimerCID)
   {
-    nsString unixToolkitName;
+    nsAutoString unixToolkitName;
     
     GlobalGetToolkitName(unixToolkitName);
     
