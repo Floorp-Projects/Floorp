@@ -42,6 +42,11 @@
 
 class nsSupportsHashtable;
 
+nsresult NS_NewOutlinerColFrame(nsIPresShell* aPresShell, 
+                                nsIFrame** aNewFrame, 
+                                PRBool aIsRoot = PR_FALSE,
+                                nsIBoxLayout* aLayoutManager = nsnull);
+
 // The actual frame that paints the cells and rows.
 class nsOutlinerColFrame : public nsBoxFrame, public nsIOutlinerColFrame
 {
@@ -51,8 +56,8 @@ public:
 
   friend nsresult NS_NewOutlinerColFrame(nsIPresShell* aPresShell, 
                                          nsIFrame** aNewFrame, 
-                                         PRBool aIsRoot = PR_FALSE,
-                                         nsIBoxLayout* aLayoutManager = nsnull);
+                                         PRBool aIsRoot,
+                                         nsIBoxLayout* aLayoutManager);
 
   NS_IMETHODIMP Init(nsIPresContext*  aPresContext,
                      nsIContent*      aContent,

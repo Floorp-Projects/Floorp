@@ -50,6 +50,8 @@
 #include "nsBoxLayout.h"
 #include "nsCOMPtr.h"
 
+nsresult NS_NewStackLayout(nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout);
+
 class nsStackLayout : public nsBoxLayout
 {
 public:

@@ -42,13 +42,18 @@
 class nsXULTreeOuterGroupFrame;
 class nsIPresShell;
 
+nsresult NS_NewXULTreeFrame(nsIPresShell* aPresShell, 
+                            nsIFrame** aNewFrame, 
+                            PRBool aIsRoot = PR_FALSE,
+                            nsIBoxLayout* aLayoutManager = nsnull);
+
 class nsXULTreeFrame : public nsBoxFrame, public nsITreeFrame
 {
 public:
   friend nsresult NS_NewXULTreeFrame(nsIPresShell* aPresShell, 
                                      nsIFrame** aNewFrame, 
-                                     PRBool aIsRoot = PR_FALSE,
-                                     nsIBoxLayout* aLayoutManager = nsnull);
+                                     PRBool aIsRoot,
+                                     nsIBoxLayout* aLayoutManager);
 
   NS_DECL_ISUPPORTS
 

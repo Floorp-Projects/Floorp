@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+nsresult NS_NewTreeIndentationFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+
 class nsTreeIndentationFrame : public nsFrame {
 public:
   friend nsresult NS_NewTreeIndentationFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);

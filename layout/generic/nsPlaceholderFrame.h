@@ -39,6 +39,8 @@
 
 #include "nsFrame.h"
 
+nsresult NS_NewPlaceholderFrame(nsIPresShell* aPresShell, nsIFrame**  aInstancePtrResult);
+
 /**
  * Implementation of a frame that's used as a placeholder for a frame that
  * has been moved out of the flow

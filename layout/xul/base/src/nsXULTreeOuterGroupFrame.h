@@ -94,6 +94,11 @@ public:
 /*-----------------------------------------------------------------*/
 
 
+nsresult NS_NewXULTreeOuterGroupFrame(nsIPresShell* aPresShell, 
+                                      nsIFrame** aNewFrame, 
+                                      PRBool aIsRoot = PR_FALSE,
+                                      nsIBoxLayout* aLayoutManager = nsnull);
+
 class nsXULTreeOuterGroupFrame : public nsXULTreeGroupFrame, public nsIScrollbarMediator,
                                  public nsIReflowCallback /*, public nsITimerCallback */
 {
@@ -107,8 +112,8 @@ public:
   friend class nsDragOverListener;
   friend nsresult NS_NewXULTreeOuterGroupFrame(nsIPresShell* aPresShell, 
                                           nsIFrame** aNewFrame, 
-                                          PRBool aIsRoot = PR_FALSE,
-                                          nsIBoxLayout* aLayoutManager = nsnull);
+                                          PRBool aIsRoot,
+                                          nsIBoxLayout* aLayoutManager);
   
   NS_IMETHOD Init(nsIPresContext* aPresContext, nsIContent* aContent,
                   nsIFrame* aParent, nsIStyleContext* aContext, nsIFrame* aPrevInFlow);

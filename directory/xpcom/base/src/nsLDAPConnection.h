@@ -56,6 +56,8 @@
 { 0x0d871e30, 0x1dd2, 0x11b2, \
  { 0x8e, 0xa9, 0x83, 0x17, 0x78, 0xc7, 0x8e, 0x93 }}
 
+class nsLDAPConnectionLoop;
+
 class nsLDAPConnection : public nsILDAPConnection,
                          public nsSupportsWeakReference,
                          public nsIDNSListener

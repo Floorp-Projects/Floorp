@@ -39,6 +39,11 @@
 #include "nsIXULTreeSlice.h"
 #include "nsGridRowLeafFrame.h"
 
+nsresult NS_NewXULTreeSliceFrame(nsIPresShell* aPresShell, 
+                                 nsIFrame** aNewFrame, 
+                                 PRBool aIsRoot = PR_FALSE,
+                                 nsIBoxLayout* aLayoutManager = nsnull);
+
 class nsXULTreeSliceFrame : public nsGridRowLeafFrame, public nsIXULTreeSlice
 {
 public:
@@ -46,8 +51,8 @@ public:
 
   friend nsresult NS_NewXULTreeSliceFrame(nsIPresShell* aPresShell, 
                                           nsIFrame** aNewFrame, 
-                                          PRBool aIsRoot = PR_FALSE,
-                                          nsIBoxLayout* aLayoutManager = nsnull);
+                                          PRBool aIsRoot,
+                                          nsIBoxLayout* aLayoutManager);
 
   // nsIXULTreeSlice
   NS_IMETHOD IsOutermostFrame(PRBool* aResult) { *aResult = PR_FALSE; return NS_OK; };

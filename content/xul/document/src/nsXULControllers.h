@@ -82,6 +82,8 @@ protected:
 };
 
 
+NS_IMETHODIMP NS_NewXULControllers(nsISupports* aOuter, REFNSIID aIID, void** aResult);
+
 class nsXULControllers : public nsIControllers
 {
 public:
