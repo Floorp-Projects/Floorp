@@ -140,7 +140,7 @@ public:
 
   virtual nsFontWin* LoadGlobalFont(HDC aDC, nsGlobalFont* aGlobalFontItem);
 
-  int SameAsPreviousMap(int aIndex);
+  static int SameAsPreviousMap(int aIndex);
 
   nsFontWin           **mLoadedFonts;
   PRUint16            mLoadedFontsAlloc;
@@ -173,6 +173,8 @@ public:
 
   static void SetFontWeight(PRInt32 aWeight, PRUint16* aWeightTable);
   static PRBool IsFontWeightAvailable(PRInt32 aWeight, PRUint16 aWeightTable);
+
+  static PRUint32* GetCMAP(HDC aDC, const char* aShortName, int* aFontType, PRUint8* aCharset);
 
 protected:
   // @description Font Weights
@@ -222,8 +224,6 @@ protected:
   HFONT               mFontHandle;
 
   static PLHashTable* InitializeFamilyNames(void);
-
-  static PRUint32* GetCMAP(HDC aDC, const char* aShortName, int* aFontType, PRUint8* aCharset);
 };
 
 
