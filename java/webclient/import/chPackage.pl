@@ -61,7 +61,7 @@ if ($ARGV[0] eq "unix") {
   exec $cmd;
 }
 else {
-  $cmd = "move tmp.tmp $ARGV[1]";
+  $cmd = "copy tmp.tmp $ARGV[1]";
   exec $cmd;
   $cmd = "del tmp.tmp";
   exec $cmd;

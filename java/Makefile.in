@@ -40,6 +40,7 @@ ifneq ($(BUILD_WEBCLIENT_ONLY),)
 DIRS = 	external \
 	util \
 	dom \
+	xpcom \
 	webclient
 else
 ifneq ($(BUILD_BLACKCONNECT_ONLY),)
@@ -51,9 +52,9 @@ ifneq ($(BUILD_BLACKWOOD),)
 DIRS =	external \
 	util \
 	dom \
+	xpcom \
 	webclient \
-	plugins \
-	xpcom
+	plugins 
 endif
 endif
 endif

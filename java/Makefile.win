@@ -50,6 +50,7 @@ DIRS =	external \
 DIRS = 	external \
 	util \
 	dom \
+	xpcom \
 	webclient
 !else
 !ifdef BUILD_BLACKCONNECT_ONLY
@@ -61,9 +62,9 @@ DIRS =	external \
 DIRS  = external \
 	util \
 	dom \
+	xpcom \
 	webclient \
-	plugins \
-	xpcom
+	plugins 
 !endif
 !endif
 !endif

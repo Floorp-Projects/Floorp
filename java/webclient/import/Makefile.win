@@ -37,10 +37,10 @@ include ..\config\rules.mak
 import: $(JAVAXPIDLSRCS)
 
 $(JAVAXPIDLSRCS) :
-	cp $(DEPTH)\dist\idl\$(@F) .
+	copy $(DEPTH)\dist\idl\$(@F) .
 
 mvjava2stubs:
-	move *.java ..\classes_spec\org\mozilla\webclient\stubs
+	copy *.java ..\classes_spec\org\mozilla\webclient\stubs
 
 chPackageinStubs:
 	perl.exe chPackage.pl win nsIProfile.java "org.mozilla.webclient.stubs"
