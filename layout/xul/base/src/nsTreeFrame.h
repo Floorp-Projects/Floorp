@@ -100,6 +100,11 @@ public:
   // nsITreeFrame.h
   NS_IMETHOD EnsureRowIsVisible(PRInt32 aRowIndex);
 
+  PRInt32 GetFixedRowSize() { return mFixedRows; };
+  
+  void HaltReflow(PRBool aHalt = PR_TRUE) { mReflowStopped = aHalt; };
+  PRBool IsReflowHalted() { return mReflowStopped; };
+
 protected:
   nsTreeFrame();
   virtual ~nsTreeFrame();
@@ -110,4 +115,6 @@ protected: // Data Members
   PRInt32 mGeneration;
   PRBool mUseGeneration;
   PRBool mSuppressReflow;
+  PRInt32 mFixedRows;
+  PRBool mReflowStopped;
 }; // class nsTreeFrame

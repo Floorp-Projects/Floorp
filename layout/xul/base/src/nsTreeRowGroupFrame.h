@@ -65,7 +65,7 @@ public:
 
   NS_IMETHOD Destroy(nsIPresContext* aPresContext);
 
-  PRBool ContinueReflow(nsIPresContext* aPresContext, nscoord y, nscoord height);
+  PRBool ContinueReflow(nsIFrame* aFrame, nsIPresContext* aPresContext, nscoord y, nscoord height);
 
   PRBool IsFull() { return mIsFull; };
 
@@ -192,6 +192,8 @@ public:
                       nsIContent*     aContent, 
                       nsIFrame*       aCurrentFrame);
   
+  void ClearRowGroupHeight() { mRowGroupHeight = -1; }
+
   static PRBool IsTableRowGroupFrame(nsIFrame*);
   static PRBool IsTableRowFrame(nsIFrame*);
   

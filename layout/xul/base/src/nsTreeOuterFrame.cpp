@@ -32,6 +32,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsXULAtoms.h"
 #include "nsBoxFrame.h"
+#include "nsTreeFrame.h"
 
 //
 // NS_NewTreeOuterFrame
@@ -121,7 +122,26 @@ nsTreeOuterFrame::Reflow(nsIPresContext*          aPresContext,
 
   //printf("TOF Width: %d, TOF Height: %d\n", aReflowState.mComputedWidth, aReflowState.mComputedHeight);
 
-  return nsTableOuterFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+  nsresult rv = nsTableOuterFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+
+  nsITreeFrame* tree = FindTreeFrame();
+  nsTreeFrame* treeFrame = (nsTreeFrame*)tree;
+  if (treeFrame->GetFixedRowSize() != -1) {
+    // The tree had a rows attribute that altered its dimensions.  We
+    // do not want to use the computed width and height passed in in this
+    // case.
+    nsRect rect;
+    treeFrame->GetRect(rect);
+
+    // XXX This is not sufficient. Will eventually have to deal with margins and padding
+    // and also with the presence of captions.  For now, though, punt on those and
+    // hope nobody tries to do this with a row-based tree.
+    aDesiredSize.width = rect.width;
+    aDesiredSize.height = rect.height;
+  }
+
+  treeFrame->HaltReflow(PR_FALSE);
+  return rv;
 }
 
 /**

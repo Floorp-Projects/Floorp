@@ -31,13 +31,12 @@ Rights Reserved.
 	<!-- Addressing Widget -->
 	<box id="addressingWidget"
 		 align="vertical"
-		 style="border:solid black 1px">
+		 >
 
-			<!-- for fixed height:  style="height:5em"  -->
 			<tree id="addressingWidgetTree"		
 				  class="addressingWidget"
-				  style="height:5em"
-				  onclick="awClickRow()">
+				  rows="3"
+				  onclick="awClickRow()" style="width:0px;height:0px;border:solid black 1px">
 				  
 				<treecol style="width:9em"/>
 				<treecol style="width:2em"/>
