@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.45 $ $Date: 2002/11/06 18:53:54 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.46 $ $Date: 2003/01/30 05:12:10 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -90,8 +90,7 @@ nssCertificate_Create (
                                                   &rvCert->encoding,
                                                   &rvCert->issuer,
                                                   &rvCert->serial,
-                                                  &rvCert->subject,
-                                                  &rvCert->email);
+                                                  &rvCert->subject);
     if (status != PR_SUCCESS) {
 	return (NSSCertificate *)NULL;
     }
