@@ -838,12 +838,12 @@ __ptr_t malloc(size_t size)
     allocation *alloc;
 
     ptr = __libc_malloc(size);
+    if (tmmon)
+        PR_EnterMonitor(tmmon);
     tmstats.malloc_calls++;
     if (!ptr) {
         tmstats.malloc_failures++;
     } else if (suppress_tracing == 0) {
-        if (tmmon)
-            PR_EnterMonitor(tmmon);
         site = backtrace(1);
         if (site)
             log_event2(logfp, TM_EVENT_MALLOC, site->serial, size);
@@ -856,9 +856,9 @@ __ptr_t malloc(size_t size)
                 alloc->size = size;
             }
         }
-        if (tmmon)
-            PR_ExitMonitor(tmmon);
     }
+    if (tmmon)
+        PR_ExitMonitor(tmmon);
     return ptr;
 }
 
@@ -870,12 +870,12 @@ __ptr_t calloc(size_t count, size_t size)
     allocation *alloc;
 
     ptr = __libc_calloc(count, size);
+    if (tmmon)
+        PR_EnterMonitor(tmmon);
     tmstats.calloc_calls++;
     if (!ptr) {
         tmstats.calloc_failures++;
     } else if (suppress_tracing == 0) {
-        if (tmmon)
-            PR_EnterMonitor(tmmon);
         site = backtrace(1);
         size *= count;
         if (site)
@@ -889,9 +889,9 @@ __ptr_t calloc(size_t count, size_t size)
                 alloc->size = size;
             }
         }
-        if (tmmon)
-            PR_ExitMonitor(tmmon);
     }
+    if (tmmon)
+        PR_ExitMonitor(tmmon);
     return ptr;
 }
 
@@ -904,14 +904,14 @@ __ptr_t realloc(__ptr_t ptr, size_t size)
     PLHashEntry **hep, *he;
     allocation *alloc;
 
+    if (tmmon)
+        PR_EnterMonitor(tmmon);
     tmstats.realloc_calls++;
     if (suppress_tracing == 0) {
         oldptr = ptr;
         oldsite = NULL;
         oldsize = 0;
         he = NULL;
-        if (tmmon)
-            PR_EnterMonitor(tmmon);
         if (oldptr && get_allocations()) {
             hash = hash_pointer(oldptr);
             hep = PL_HashTableRawLookup(allocations, hash, oldptr);
@@ -922,34 +922,21 @@ __ptr_t realloc(__ptr_t ptr, size_t size)
                 oldsize = alloc->size;
             }
         }
-#ifdef EXIT_TMMON_AROUND_REALLOC
-        /* XXX rusty.lynch@intel.com found that oldsize gets corrupted on
-               his SMP Linux box occasionally, unless tmmon is held across
-               the call to __libc_realloc.  Figure out why that stack var
-               is being trashed, and until then use his workaround. */
-        if (tmmon)
-            PR_ExitMonitor(tmmon);
-#endif
     }
+    if (tmmon)
+        PR_ExitMonitor(tmmon);
 
     ptr = __libc_realloc(ptr, size);
 
+    if (tmmon)
+        PR_EnterMonitor(tmmon);
     if (!ptr && size) {
-        tmstats.realloc_failures++;
-#ifndef EXIT_TMMON_AROUND_REALLOC
-        if (tmmon && suppress_tracing == 0)
-            PR_ExitMonitor(tmmon);
-#endif
-
         /*
          * When realloc() fails, the original block is not freed or moved, so
          * we'll leave the allocation entry untouched.
          */
+        tmstats.realloc_failures++;
     } else if (suppress_tracing == 0) {
-#ifdef EXIT_TMMON_AROUND_REALLOC
-        if (tmmon)
-            PR_EnterMonitor(tmmon);
-#endif
         site = backtrace(1);
         if (site) {
             log_event4(logfp, TM_EVENT_REALLOC, site->serial, size,
@@ -963,7 +950,7 @@ __ptr_t realloc(__ptr_t ptr, size_t size)
                  * null to realloc) and realloc moved the block, free oldptr.
                  */
                 if (he)
-                    PL_HashTableRawRemove(allocations, hep, he);
+                    PL_HashTableRemove(allocations, oldptr);
 
                 /* Record the new allocation now, setting he. */
                 he = PL_HashTableAdd(allocations, ptr, site);
@@ -981,9 +968,9 @@ __ptr_t realloc(__ptr_t ptr, size_t size)
                 alloc->size = size;
             }
         }
-        if (tmmon)
-            PR_ExitMonitor(tmmon);
     }
+    if (tmmon)
+        PR_ExitMonitor(tmmon);
     return ptr;
 }
 
@@ -993,12 +980,12 @@ void free(__ptr_t ptr)
     callsite *site;
     allocation *alloc;
 
+    if (tmmon)
+        PR_EnterMonitor(tmmon);
     tmstats.free_calls++;
     if (!ptr) {
         tmstats.null_free_calls++;
     } else if (suppress_tracing == 0) {
-        if (tmmon)
-            PR_EnterMonitor(tmmon);
         if (get_allocations()) {
             hep = PL_HashTableRawLookup(allocations, hash_pointer(ptr), ptr);
             he = *hep;
@@ -1011,9 +998,9 @@ void free(__ptr_t ptr)
                 PL_HashTableRawRemove(allocations, hep, he);
             }
         }
-        if (tmmon)
-            PR_ExitMonitor(tmmon);
     }
+    if (tmmon)
+        PR_ExitMonitor(tmmon);
     __libc_free(ptr);
 }
 
