@@ -72,17 +72,20 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 nsresult
 NS_NewXMLElement(nsIContent** aInstancePtrResult, nsINodeInfo *aNodeInfo)
 {
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+  *aInstancePtrResult = nsnull;
+
   nsXMLElement* it = new nsXMLElement();
 
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  NS_ADDREF(it);
   nsresult rv = it->Init(aNodeInfo);
 
   if (NS_FAILED(rv)) {
-    delete it;
-
+    NS_RELEASE(it);
     return rv;
   }
 
@@ -620,6 +623,7 @@ NS_IMETHODIMP
 nsXMLElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
 
   nsXMLElement* it = new nsXMLElement();
 
@@ -627,17 +631,21 @@ nsXMLElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  NS_ADDREF(it);
   nsCOMPtr<nsISupports> kungFuDeathGrip(NS_STATIC_CAST(nsIContent *, this));
 
   nsresult rv = it->Init(mNodeInfo);
 
   if (NS_FAILED(rv)) {
+    NS_RELEASE(it);
     return rv;
   }
 
   CopyInnerTo(this, it, aDeep);
 
-  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
+  rv = it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
+  NS_RELEASE(it);
+  return rv;
 }
 
 #if 0
