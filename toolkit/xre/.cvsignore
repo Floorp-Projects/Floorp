@@ -1,7 +1,4 @@
 Makefile
-nsNativeAppSupportBase.cpp
 nsSigHandlers.cpp
 nsWindowCreator.cpp
 showOSAlert.cpp
-nsNativeAppSupportWin.cpp
-nsNativeAppSupportGtkc.cpp
