@@ -134,24 +134,24 @@ void nsInstallDelete::Abort()
 {
 }
 
-PRUnichar* nsInstallDelete::toString()
+char* nsInstallDelete::toString()
 {
-    PRUnichar* buffer = new PRUnichar[1024];
+    char* buffer = new char[1024];
     
     if (buffer == nsnull)
         return nsnull;
 
     if (mDeleteStatus == DELETE_COMPONENT)
     {
-        PRUnichar* temp = (PRUnichar *)mRegistryName.ToNewCString();
-        sprintf( (char *)buffer, nsInstallResources::GetDeleteComponentString(), (char *)temp);
+        char* temp = mRegistryName.ToNewCString();
+        sprintf( buffer, nsInstallResources::GetDeleteComponentString(), temp);
         if (temp)
             delete [] temp;
     }
     else
     {
         if (mFinalFile)
-            sprintf( (char *)buffer, nsInstallResources::GetDeleteFileString(), mFinalFile->GetCString());
+            sprintf( buffer, nsInstallResources::GetDeleteFileString(), mFinalFile->GetCString());
     }
 
     return buffer;

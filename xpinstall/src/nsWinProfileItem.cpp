@@ -48,10 +48,10 @@ PRInt32 nsWinProfileItem::Complete()
 	
     return NS_OK;
 }
-  
-PRUnichar* nsWinProfileItem::toString()
+
+char* nsWinProfileItem::toString()
 {
-  PRUnichar*     resultCString;
+  char*     resultCString;
   
   nsString* filename = new nsString(*mProfile->GetFilename());
   nsString* result = new nsString("Write ");
@@ -67,7 +67,7 @@ PRUnichar* nsWinProfileItem::toString()
   result->Append("=");
   result->Append(*mValue);
 
-  resultCString = (PRUnichar *)result->ToNewCString();
+  resultCString = result->ToNewCString();
   
   delete result;
   delete filename;

@@ -55,7 +55,7 @@ class nsInstallDelete : public nsInstallObject
         PRInt32 Prepare();
         PRInt32 Complete();
         void    Abort();
-        PRUnichar*   toString();
+        char*   toString();
 
         PRBool CanUninstall();
         PRBool RegisterPackageNode();

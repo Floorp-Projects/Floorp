@@ -71,7 +71,7 @@ class nsInstallFileOpItem : public nsInstallObject
 
     PRInt32       Prepare(void);
     PRInt32       Complete();
-    PRUnichar*         toString();
+    char*         toString();
     void          Abort();
     
   /* should these be protected? */

@@ -101,9 +101,9 @@ void nsInstallExecute::Abort()
     DeleteFileNowOrSchedule(*mExecutableFile);
 }
 
-PRUnichar* nsInstallExecute::toString()
+char* nsInstallExecute::toString()
 {
-    PRUnichar* buffer = new PRUnichar[1024];
+    char* buffer = new char[1024];
     
     if (buffer == nsnull)
         return nsnull;
@@ -112,16 +112,16 @@ PRUnichar* nsInstallExecute::toString()
 
     if (mExecutableFile == nsnull)
     {
-        PRUnichar *tempString = (PRUnichar *)mJarLocation.ToNewCString();
+        char *tempString = mJarLocation.ToNewCString();
 
-        sprintf( (char *)buffer, nsInstallResources::GetExecuteString(), (char *)tempString);
+        sprintf( buffer, nsInstallResources::GetExecuteString(), tempString);
         
         if (tempString)
             delete [] tempString;
     }
     else
     {
-        sprintf( (char *)buffer, nsInstallResources::GetExecuteString(), mExecutableFile->GetCString());
+        sprintf( buffer, nsInstallResources::GetExecuteString(), mExecutableFile->GetCString());
     }
     return buffer;
 }

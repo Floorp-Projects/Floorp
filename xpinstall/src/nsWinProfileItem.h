@@ -47,7 +47,7 @@ public:
    * - writes the data into the .INI file
    */
   PRInt32 Complete();
-  PRUnichar* toString();
+  char* toString();
   
   // no need for special clean-up
   void Abort();

@@ -266,26 +266,26 @@ void nsInstallFile::Abort()
         mExtracedFile->Delete(PR_FALSE);
 }
 
-PRUnichar* nsInstallFile::toString()
+char* nsInstallFile::toString()
 {
-    PRUnichar* buffer = new PRUnichar[1024];
+    char* buffer = new char[1024];
     
     if (buffer == nsnull)
         return nsnull;
 
     if (mFinalFile == nsnull)
     {
-        sprintf( (char *)buffer, nsInstallResources::GetInstallFileString(), nsnull);
+        sprintf( buffer, nsInstallResources::GetInstallFileString(), nsnull);
     }
     else if (mReplaceFile)
     {
         // we are replacing this file.
 
-        sprintf( (char *)buffer, nsInstallResources::GetReplaceFileString(), mFinalFile->GetCString());
+        sprintf( buffer, nsInstallResources::GetReplaceFileString(), mFinalFile->GetCString());
     }
     else
     {
-        sprintf( (char *)buffer, nsInstallResources::GetInstallFileString(), mFinalFile->GetCString());
+        sprintf( buffer, nsInstallResources::GetInstallFileString(), mFinalFile->GetCString());
     }
 
     return buffer;

@@ -183,10 +183,10 @@ PRInt32 nsInstallFileOpItem::Complete()
 	return aReturn;
 }
   
-PRUnichar* nsInstallFileOpItem::toString()
+char* nsInstallFileOpItem::toString()
 {
   nsString result;
-  PRUnichar*    resultCString;
+  char*    resultCString;
 
   switch(mCommand)
   {
@@ -195,39 +195,39 @@ PRUnichar* nsInstallFileOpItem::toString()
       result.Append(mSrc->GetNativePathCString());
       result.Append(" to ");
       result.Append(mTarget->GetNativePathCString());
-      resultCString = (PRUnichar *)result.ToNewCString();
+      resultCString = result.ToNewCString();
       break;
     case NS_FOP_FILE_DELETE:
       result = "Delete File: ";
       result.Append(mTarget->GetNativePathCString());
-      resultCString = (PRUnichar *)result.ToNewCString();
+      resultCString = result.ToNewCString();
       break;
     case NS_FOP_FILE_MOVE:
       result = "Move File: ";
       result.Append(mSrc->GetNativePathCString());
       result.Append(" to ");
       result.Append(mTarget->GetNativePathCString());
-      resultCString = (PRUnichar *)result.ToNewCString();
+      resultCString = result.ToNewCString();
       break;
     case NS_FOP_FILE_RENAME:
       result = "Rename File: ";
       result.Append(*mStrTarget);
-      resultCString = (PRUnichar *)result.ToNewCString();
+      resultCString = result.ToNewCString();
       break;
     case NS_FOP_DIR_CREATE:
       result = "Create Folder: ";
       result.Append(mTarget->GetNativePathCString());
-      resultCString = (PRUnichar *)result.ToNewCString();
+      resultCString = result.ToNewCString();
       break;
     case NS_FOP_DIR_REMOVE:
       result = "Remove Folder: ";
       result.Append(mTarget->GetNativePathCString());
-      resultCString = (PRUnichar *)result.ToNewCString();
+      resultCString = result.ToNewCString();
       break;
     case NS_FOP_DIR_RENAME:
       result = "Rename Dir: ";
       result.Append(*mStrTarget);
-      resultCString = (PRUnichar *)result.ToNewCString();
+      resultCString = result.ToNewCString();
       break;
     case NS_FOP_WIN_SHORTCUT_CREATE:
       break;
@@ -237,7 +237,7 @@ PRUnichar* nsInstallFileOpItem::toString()
       break;
     default:
       result = "Unkown file operation command!";
-      resultCString = (PRUnichar *)result.ToNewCString();
+      resultCString = result.ToNewCString();
       break;
   }
   return resultCString;
