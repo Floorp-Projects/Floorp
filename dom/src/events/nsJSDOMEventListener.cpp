@@ -116,8 +116,8 @@ NS_NewScriptEventListener(nsIDOMEventListener ** aInstancePtrResult,
 
   nsJSDOMEventListener* it =
     new nsJSDOMEventListener(aContext,
-                             NS_STATIC_CAST(JSObject*, aTarget),
-                             NS_STATIC_CAST(JSObject*, aHandler));
+                             NS_REINTERPRET_CAST(JSObject*, aTarget),
+                             NS_REINTERPRET_CAST(JSObject*, aHandler));
 
   if (! it) {
     return NS_ERROR_OUT_OF_MEMORY;
