@@ -41,6 +41,8 @@
     0x11d2,                                          \
     {0x93, 0x24, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
 }
+#define NS_PAGEMANAGER_PROGID "component://netscape/page-manager"
+#define NS_PAGEMANAGER_CLASSNAME "Page Manager"
 
 class nsIPageManager : public nsISupports {
 public:

@@ -32,6 +32,9 @@
 #define NS_OBSERVER_CID \
 { 0xdb242e03, 0xe4d9, 0x11d2, { 0x9d, 0xde, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 
+#define NS_OBSERVER_PROGID "component://netscape/observer"
+#define NS_OBSERVER_CLASSNAME "Observer"
+
 class nsIObserver : public nsISupports {
 public:
     static const nsIID& GetIID() { static nsIID iid = NS_IOBSERVER_IID; return iid; }
@@ -39,7 +42,5 @@ public:
 };
 
 extern NS_COM nsresult NS_NewObserver(nsIObserver** anObserver, nsISupports* outer = NULL);
-
-#define NS_OBSERVER_PROGID             "component://netscape/xpcom/observer"
 
 #endif /* nsIObserver_h__ */

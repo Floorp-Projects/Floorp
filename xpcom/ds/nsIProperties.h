@@ -36,6 +36,8 @@
     0x11d3,                                          \
     {0x93, 0x31, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
 }
+#define NS_PROPERTIES_PROGID "component://netscape/properties"
+#define NS_PROPERTIES_CLASSNAME "Properties"
 
 class nsIProperties : public nsISupports {
 public:
@@ -93,6 +95,9 @@ NS_NewIProperties(nsIProperties* *result);
 // {2245E573-9464-11d2-9B8B-00805F8A16D9}
 NS_DECLARE_ID(kPersistentPropertiesCID,
   0x2245e573, 0x9464, 0x11d2, 0x9b, 0x8b, 0x0, 0x80, 0x5f, 0x8a, 0x16, 0xd9);
+
+#define NS_PERSISTENTPROPERTIES_PROGID "component://netscape/persistent-properties"
+#define NS_PERSISTENTPROPERTIES_CLASSNAME "Persistent Properties"
 
 class nsIPersistentProperties : public nsIProperties
 {

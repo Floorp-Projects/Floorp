@@ -32,6 +32,9 @@
 #define NS_EVENTQUEUE_CID \
 { 0x13d86c61, 0xa9, 0x11d3, { 0x9f, 0x2a, 0x0, 0x40, 0x5, 0x53, 0xee, 0xf0 } }
 
+#define NS_EVENTQUEUE_PROGID "component://netscape/event-queue"
+#define NS_EVENTQUEUE_CLASSNAME "Event Queue"
+
 class nsIEventQueue : public nsISupports
 {
 public:
