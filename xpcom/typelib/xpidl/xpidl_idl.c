@@ -326,7 +326,7 @@ NextIsInclude(input_callback_state *callback_state, char **startp,
 {
     input_data *data = callback_state->input_stack;
     input_data *new_data;
-    char *filename, *start, *end;
+    char *filename, *end;
     const char *scratch;
 
     /* process the #include that we're in now */
