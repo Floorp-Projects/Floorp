@@ -110,6 +110,47 @@ peq(nsIRDFResource* r1, nsIRDFResource* r2)
   }
 }
 
+static PRBool
+peqSort(nsIRDFResource* r1, nsIRDFResource* r2, PRBool *isSort)
+{
+	if(!isSort)
+		return PR_FALSE;
+
+	char *r1Str, *r2Str;
+	nsString r1nsStr, r2nsStr, r1nsSortStr;
+
+	r1->GetValue(&r1Str);
+	r2->GetValue(&r2Str);
+
+	r1nsStr = r1Str;
+	r2nsStr = r2Str;
+	r1nsSortStr = r1Str;
+
+	delete[] r1Str;
+	delete[] r2Str;
+
+	//probably need to not assume this will always come directly after property.
+	r1nsSortStr +="?sort=true";
+
+	if(r1nsStr == r2nsStr)
+	{
+		*isSort = PR_FALSE;
+		return PR_TRUE;
+	}
+	else if(r1nsSortStr == r2nsStr)
+	{
+		*isSort = PR_TRUE;
+		return PR_TRUE;
+	}
+  else
+	{
+		//In case the resources are equal but the values are different.  I'm not sure if this
+		//could happen but it is feasible given interface.
+		*isSort = PR_FALSE;
+		return(peq(r1, r2));
+	}
+}
+
 static void createNode(nsString& str, nsIRDFNode **node)
 {
   nsIRDFLiteral * value;
@@ -365,55 +406,72 @@ NS_IMETHODIMP nsMSGFolderDataSource::GetTarget(nsIRDFResource* source,
 
   nsCOMPtr<nsIMessage> message(do_QueryInterface(source, &rv));
   if (NS_SUCCEEDED(rv)) {
-    if (peq(kNC_Name, property) ||
-        peq(kNC_Subject, property)) {
-      nsAutoString subject;
-	  rv = message->GetMime2EncodedSubject(subject);
-	  PRUint32 flags;
-	  message->GetFlags(&flags);
-	  if(flags & MSG_FLAG_HAS_RE)
-	  {
-		nsAutoString reStr="Re: ";
-		reStr +=subject;
-		subject = reStr;
-	  }
-      createNode(subject, target);
-    }
-    else if (peq(kNC_Sender, property))
+		PRBool sort;
+    if (peqSort(kNC_Name, property, &sort) ||
+        peqSort(kNC_Subject, property, &sort)) {
+			nsAutoString subject;
+			if(sort)
+			{
+				message->GetSubjectCollationKey(subject);
+			}
+			else
+			{
+				rv = message->GetMime2EncodedSubject(subject);
+				PRUint32 flags;
+				message->GetFlags(&flags);
+				if(flags & MSG_FLAG_HAS_RE)
+				{
+					nsAutoString reStr="Re: ";
+					reStr +=subject;
+					subject = reStr;
+				}
+			}
+			createNode(subject, target);
+		}
+    else if (peqSort(kNC_Sender, property, &sort))
     {
       nsAutoString sender, senderUserName;
-	  rv = message->GetMime2EncodedAuthor(sender);
-			if(NS_SUCCEEDED(rv = GetSenderName(sender, &senderUserName)))
-				createNode(senderUserName, target);
+			if(sort)
+			{
+				message->GetAuthorCollationKey(sender);
+				createNode(sender, target);
+			}
+			else
+			{
+				rv = message->GetMime2EncodedAuthor(sender);
+				if(NS_SUCCEEDED(rv = GetSenderName(sender, &senderUserName)))
+					createNode(senderUserName, target);
+			}
     }
     else if (peq(kNC_Date, property))
     {
-		nsAutoString date;
-		rv = message->GetProperty("date", date);
-		PRInt32 error;
-		time_t time = date.ToInteger(&error, 16);
-		struct tm* tmTime = localtime(&time);
-		char dateBuf[100];
-		strftime(dateBuf, 100, "%m/%d/%y %I:%M %p", tmTime);
-		date = dateBuf;
-		createNode(date, target);
+			nsAutoString date;
+			rv = message->GetProperty("date", date);
+			PRInt32 error;
+			time_t time = date.ToInteger(&error, 16);
+			struct tm* tmTime = localtime(&time);
+			char dateBuf[100];
+			strftime(dateBuf, 100, "%m/%d/%y %I:%M %p", tmTime);
+			date = dateBuf;
+			createNode(date, target);
     }
-    else if (peq(kNC_Status, property))
+		else if (peq(kNC_Status, property))
     {
-		PRUint32 flags;
-		message->GetFlags(&flags);
-		nsAutoString flagStr = "";
-		if(flags & MSG_FLAG_REPLIED)
-			flagStr = "replied";
-		else if(flags & MSG_FLAG_FORWARDED)
-			flagStr = "forwarded";
-		else if(flags & MSG_FLAG_NEW)
-			flagStr = "new";
-		else if(flags & MSG_FLAG_READ)
-			flagStr = "read";
-		createNode(flagStr, target);
+			PRUint32 flags;
+			message->GetFlags(&flags);
+			nsAutoString flagStr = "";
+			if(flags & MSG_FLAG_REPLIED)
+				flagStr = "replied";
+			else if(flags & MSG_FLAG_FORWARDED)
+				flagStr = "forwarded";
+			else if(flags & MSG_FLAG_NEW)
+				flagStr = "new";
+			else if(flags & MSG_FLAG_READ)
+				flagStr = "read";
+			createNode(flagStr, target);
     }
-    return rv;
+		else
+			return NS_RDF_NO_VALUE;
   }
 	
   return rv;
@@ -553,7 +611,8 @@ NS_IMETHODIMP nsMSGFolderDataSource::AddObserver(nsIRDFObserver* n)
       return NS_ERROR_OUT_OF_MEMORY;
   }
   mObservers->AppendElement(n);
-  return NS_OK;}
+  return NS_OK;
+}
 
 NS_IMETHODIMP nsMSGFolderDataSource::RemoveObserver(nsIRDFObserver* n)
 {
