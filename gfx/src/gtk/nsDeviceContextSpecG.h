@@ -83,6 +83,8 @@ public:
 
   NS_IMETHOD GetPath ( char **aPath );    
 
+  NS_IMETHOD GetPageDimensions (float &aWidth, float &aHeight );
+
   NS_IMETHOD GetUserCancelled( PRBool &aCancel );      
 
 protected:

@@ -248,11 +248,20 @@ NS_IMETHODIMP nsDeviceContextPS :: GetSystemAttribute(nsSystemAttrID anID, Syste
  */
 NS_IMETHODIMP nsDeviceContextPS::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight)
 {
+  nsIDeviceContextSpecPS *psSpec;
+  nsresult res;
+  float width, height;
 
-  aWidth = NSToIntRound((72.0f*8.0f) * mDevUnitsToAppUnits);
-  aHeight = NSToIntRound((72.0f*10.0f) * mDevUnitsToAppUnits);
-
-  return NS_OK;
+  if ( nsnull != mSpec ) {
+    res = mSpec->QueryInterface(kIDeviceContextSpecPSIID, (void **) &psSpec);
+    if ( res == NS_OK ) {
+      psSpec->GetPageDimensions( width, height );
+      aWidth = NSToIntRound((72.0f*width) * mDevUnitsToAppUnits); 
+      aHeight = NSToIntRound((72.0f*height) * mDevUnitsToAppUnits); 
+      return NS_OK;
+    }
+  }
+  return NS_ERROR_FAILURE;
 }
 
 /** ---------------------------------------------------

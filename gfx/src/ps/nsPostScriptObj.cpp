@@ -94,7 +94,6 @@ nsPostScriptObj::~nsPostScriptObj()
 
   if (nsnull != mPrintSetup)
 	  delete mPrintSetup;
-
 }
 
 /** ---------------------------------------------------
@@ -106,7 +105,7 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
 {
   PRBool isGray, isAPrinter, isFirstPageFirst;
   int printSize;
-  float top, bottom, left, right;
+  float top, bottom, left, right, fwidth, fheight;
   char *buf;
 
   PrintInfo* pi = new PrintInfo(); 
@@ -165,8 +164,10 @@ printf( "top %f bottom %f left %f right %f\n", top, bottom, left, right );
     memset(mPrintContext, 0, sizeof(struct PSContext_));
     memset(pi, 0, sizeof(struct PrintInfo_));
 
-    mPrintSetup->width = PAGE_WIDTH;           // Paper size, # of cols for text xlate 
-    mPrintSetup->height = PAGE_HEIGHT;
+    mPrintSetup->dpi = 72.0f;                  // dpi for externally sized items 
+    aSpec->GetPageDimensions( fwidth, fheight );
+    mPrintSetup->width = (int)(fwidth * mPrintSetup->dpi);
+    mPrintSetup->height = (int)(fheight * mPrintSetup->dpi);
     mPrintSetup->header = "header";
     mPrintSetup->footer = "footer";
     mPrintSetup->sizes = NULL;
@@ -174,7 +175,6 @@ printf( "top %f bottom %f left %f right %f\n", top, bottom, left, right );
     mPrintSetup->underline = TRUE;             // underline links 
     mPrintSetup->scale_images = TRUE;          // Scale unsized images which are too big 
     mPrintSetup->scale_pre = FALSE;		        // do the pre-scaling thing 
-    mPrintSetup->dpi = 72.0f;                  // dpi for externally sized items 
     // scale margins (specified in inches) to dots.
 
     mPrintSetup->top = (int) (top * mPrintSetup->dpi);     
@@ -202,9 +202,8 @@ printf( "dpi %f top %d bottom %d left %d right %d\n", mPrintSetup->dpi, mPrintSe
     // font info parsed from "other" afm file 
     mPrintSetup->otherFontCharSetID = 0;	      // charset ID of "other" font 
     //mPrintSetup->cx = NULL;                  // original context, if available 
-
-    pi->page_height=PAGE_HEIGHT * 10;	// Size of printable area on page 
-    pi->page_width = PAGE_WIDTH * 10;	// Size of printable area on page 
+    pi->page_height = mPrintSetup->height * 10;	// Size of printable area on page 
+    pi->page_width = mPrintSetup->width * 10;	// Size of printable area on page 
     pi->page_break = 0;	              // Current page bottom 
     pi->page_topy = 0;	              // Current page top 
     pi->phase = 0;

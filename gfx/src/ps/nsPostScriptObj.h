@@ -43,8 +43,6 @@ class nsIImage;
 #define NS_EXECUTIVE_SIZE 2
 #define NS_A4_SIZE	  3
 
-#define PAGE_WIDTH 612 // Points
-#define PAGE_HEIGHT 792 //Points
 #define N_FONTS 8
 #define INCH_TO_PAGE(f) ((int) (.5 + (f)*720))
 #define PAGE_TO_POINT_I(f) ((int) ((f) / 10.0))
