@@ -529,7 +529,8 @@ BasicTableLayoutStrategy::ComputeNonPctColspanWidths(const nsHTMLReflowState& aR
     return;
   }
   for (colX = numCols - 1; colX >= 0; colX--) { 
-    for (PRInt32 rowX = 0; rowX < numRows; rowX++) {
+    PRInt32 rowX;
+    for (rowX = 0; rowX < numRows; rowX++) {
       numColSpans[rowX] = 0;
       rowIndices[rowX] = 0;
     } 
