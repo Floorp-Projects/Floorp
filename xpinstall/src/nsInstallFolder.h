@@ -38,9 +38,9 @@ class nsInstallFolder
 {
     public:
         
-       nsInstallFolder(const nsString& aFolderID);
-       nsInstallFolder(nsInstallFolder& inFolder, const nsString& subString);
-       nsInstallFolder(const nsString& aFolderID, const nsString& aRelativePath);
+       nsInstallFolder();
+       nsresult Init(nsInstallFolder& inFolder, const nsString& subString);
+       nsresult Init(const nsString& aFolderID, const nsString& aRelativePath);
        virtual ~nsInstallFolder();
 
        void GetDirectoryPath(nsString& aDirectoryPath);

@@ -543,7 +543,8 @@ nsInstallFileOpItem::NativeFileOpFileRenamePrepare()
       nsIFile* target;
 
       mSrc->GetParent(&target);
-      target->Append(mStrTarget->ToNewCString());
+      nsAutoCString tempTargetString(*mStrTarget);
+      target->Append(tempTargetString);
 
       target->Exists(&flagExists);
       if(flagExists)
@@ -579,21 +580,18 @@ nsInstallFileOpItem::NativeFileOpFileRenameComplete()
             mSrc->GetParent(getter_AddRefs(target)); //need target for path assembly to check if the file already exists
 
             if (target)
-                target->Append(mStrTarget->ToNewCString());
+            {
+                nsAutoCString tempTargetString(*mStrTarget);
+                target->Append(tempTargetString);
+            }
             else
                 return nsInstall::UNEXPECTED_ERROR;
 
             target->Exists(&flagExists);
             if(!flagExists)
             {
-                char* cStrTarget = mStrTarget->ToNewCString();
-                if(!cStrTarget)
-                    return nsInstall::OUT_OF_MEMORY;
-
-                mSrc->MoveTo(parent, cStrTarget);
-
-                if (cStrTarget)
-                    Recycle(cStrTarget);
+                nsAutoCString tempTargetString(*mStrTarget);
+                mSrc->MoveTo(parent, tempTargetString);
             }
             else
                 return nsInstall::ALREADY_EXISTS;
@@ -628,7 +626,8 @@ nsInstallFileOpItem::NativeFileOpFileRenameAbort()
       mSrc->GetParent(getter_AddRefs(parent));
       if(parent)
       {
-        newFilename->Append(mStrTarget->ToNewCString());
+        nsAutoCString tempTargetString(*mStrTarget);
+        newFilename->Append(tempTargetString);
     
         mSrc->GetLeafName(&leafName);
 
@@ -797,8 +796,7 @@ PRInt32
 nsInstallFileOpItem::NativeFileOpFileExecuteComplete()
 {
   //mTarget->Execute(*mParams);
-  mTarget->Spawn((const char**)mParams->ToNewCString(), 0);//nsIFileXXX: need to fix this call to Spawn
-                                                           //It's totally bogus.
+  //mTarget->Spawn(nsAutoCString(*mParams), 0);
 
   // We don't care if it succeeded or not since we
   // don't wait for the process to end anyways.
@@ -943,7 +941,7 @@ nsInstallFileOpItem::NativeFileOpDirRenamePrepare()
       nsCOMPtr<nsIFile> target;
 
       mSrc->GetParent(getter_AddRefs(target));
-      target->Append(mStrTarget->ToNewCString());
+      target->Append(nsAutoCString(*mStrTarget));
 
       target->Exists(&flagExists);
       if(flagExists)
@@ -973,21 +971,16 @@ nsInstallFileOpItem::NativeFileOpDirRenameComplete()
       nsCOMPtr<nsIFile> target;
 
       mSrc->GetParent(getter_AddRefs(target));
-      target->Append(mStrTarget->ToNewCString());
+      target->Append(nsAutoCString(*mStrTarget));
 
       target->Exists(&flagExists);
       if(!flagExists)
       {
-        char* cStrTarget = mStrTarget->ToNewCString();
-        if(!cStrTarget)
-          return nsInstall::OUT_OF_MEMORY;
+        nsAutoCString cStrTarget(*mStrTarget);
 
         nsCOMPtr<nsIFile> parent;
         mSrc->GetParent(getter_AddRefs(parent));
         ret = mSrc->MoveTo(parent, cStrTarget);
-
-        if(cStrTarget)
-          Recycle(cStrTarget);
       }
       else
         return nsInstall::ALREADY_EXISTS;
@@ -1014,7 +1007,7 @@ nsInstallFileOpItem::NativeFileOpDirRenameAbort()
   if(!flagExists)
   {
     mSrc->GetParent(getter_AddRefs(newDirName));
-    newDirName->Append(mStrTarget->ToNewCString());
+    newDirName->Append(nsAutoCString(*mStrTarget));
     mSrc->GetLeafName(&leafName);
     mSrc->GetParent(getter_AddRefs(parent));
     ret = newDirName->MoveTo(parent, leafName);
@@ -1080,7 +1073,7 @@ nsInstallFileOpItem::NativeFileOpWindowsShortcutAbort()
   shortcutDescription = *mDescription;
   shortcutDescription.Append(".lnk");
   mShortcutPath->Clone(getter_AddRefs(shortcutTarget));
-  shortcutTarget->Append(shortcutDescription.ToNewCString());
+  shortcutTarget->Append(nsAutoCString(shortcutDescription));
 
   NativeFileOpFileDeleteComplete(shortcutTarget);
 #endif

@@ -36,7 +36,7 @@
 #include "prlock.h"
 #include "NSReg.h"
 #include "VerReg.h"
-#include "nsSpecialSystemDirectory.h"
+#include "nsIDirectoryService.h"
 
 #include "nsInstall.h"
 #include "nsSoftwareUpdateIIDs.h"
@@ -126,9 +126,25 @@ nsSoftwareUpdate::nsSoftwareUpdate()
     /***************************************/
 
     NR_StartupRegistry();   /* startup the registry; if already started, this will essentially be a noop */
+    
 
-    nsSpecialSystemDirectory appDir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-    VR_SetRegDirectory( appDir.GetNativePathCString() );
+    nsresult rv;
+    NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_PROGID, &rv);
+    
+    if(!directoryService) return;
+    
+    nsCOMPtr<nsILocalFile> dir;
+    directoryService->Get("xpcom.currentProcess", NS_GET_IID(nsIFile), getter_AddRefs(dir));
+    if (dir)
+    {
+        char* nativePath;
+        dir->GetPath(&nativePath);
+        // EVIL version registry does not take a nsIFile.;
+        VR_SetRegDirectory( nativePath );
+        if (nativePath)
+            nsAllocator::Free(nativePath);
+            
+    }
 }
 
 
