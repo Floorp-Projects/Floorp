@@ -44,6 +44,8 @@ public:
   static const nsIID& GetIID() { static nsIID iid = NS_ICSS_STYLE_RULE_PROCESSOR_IID; return iid; }
 
   NS_IMETHOD  AppendStyleSheet(nsICSSStyleSheet* aStyleSheet) = 0;
+
+  NS_IMETHOD  ClearRuleCascades(void) = 0;
 };
 
 #endif /* nsICSSStyleRuleProcessor_h___ */
