@@ -51,7 +51,7 @@ class nsCParserNode :  public nsIParserNode {
      * @update	gess5/11/98
      * @param   aToken is the token this node "refers" to
      */
-    nsCParserNode(CToken* aToken);
+    nsCParserNode(CToken* aToken,PRInt32 aLineNumber=1);
 
     /**
      * Destructor
@@ -152,10 +152,11 @@ class nsCParserNode :  public nsIParserNode {
      * @update	gess7/24/98
      * @return  int containing the line number the token was found on
      */
-    virtual PRUint16 GetSourceLineNumber(void);
+    virtual PRInt32 GetSourceLineNumber(void) const;
               
   protected:
     PRInt32   mAttributeCount;    
+    PRInt32   mLineNumber;
     CToken*   mToken;
     CToken*   mAttributes[20]; // XXX Ack! This needs to be dynamic! 
     // nsAutoString  mName;

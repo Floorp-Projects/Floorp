@@ -602,6 +602,7 @@ protected:
     nsDeque             mTokenDeque;
     nsString            mFilename;
     nsIDTDDebug*		    mDTDDebug;
+    PRInt32             mLineNumber;
 };
 
 extern NS_HTMLPARS nsresult NS_NewNavHTMLDTD(nsIDTD** aInstancePtrResult);
