@@ -83,15 +83,6 @@ interface nsIDocumentLoaderObserver : nsISupports
    * Notify the observer that the specified nsIURI has finished loading.
    */
   void onEndURLLoad(in nsIDocumentLoader aLoader, in nsIChannel aChannel, in unsigned long aStatus);
-
-  /**
-   * Notify the observer that some content of unknown type has been
-   * encountered...
-   */
-  void handleUnknownContentType(in nsIDocumentLoader aLoader,
-                                in nsIChannel aChannel,
-                                in string aContentType,
-                                in string aCommand);
 };
 
 /* the following is a transition define. nsIDocumentLoaderObserver wasn't scriptable and now it is.

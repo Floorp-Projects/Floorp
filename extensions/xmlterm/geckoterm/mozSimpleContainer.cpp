@@ -236,15 +236,6 @@ NS_IMETHODIMP mozSimpleContainer::OnEndURLLoad(nsIDocumentLoader *aLoader,
 }
 
 
-NS_IMETHODIMP mozSimpleContainer::HandleUnknownContentType(
-               nsIDocumentLoader *aLoader,
-               nsIChannel *aChannel,
-               const char *aContentType, const char *aCommand)
-{
-  return NS_OK;
-}
-
-
 /** Resizes container to new dimensions
  * @param width new window width (pixels)
  * @param height new window height (pixels)

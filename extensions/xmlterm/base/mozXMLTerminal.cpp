@@ -839,12 +839,3 @@ mozXMLTerminal::OnEndURLLoad(nsIDocumentLoader* loader,
   Activate();
   return NS_OK;
 }
-
-NS_IMETHODIMP
-mozXMLTerminal::HandleUnknownContentType(nsIDocumentLoader* loader, 
-                                           nsIChannel* channel,
-                                           const char *aContentType,
-                                           const char *aCommand )
-{
-   return NS_OK;
-}
