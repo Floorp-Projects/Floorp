@@ -5,7 +5,7 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
           
   <binding id="menubutton-toolbar-top">
-    <content includes="menupopup">
+    <content>
 	   <xul:box class="classic-simplebutton-box" autostretch="never" flex="1">
 	      <xul:button class="classic-simplebutton" allowevents="true" flex="1"
                   inherits="value,src,accesskey,crop,disabled,oncommand=buttonaction" 
@@ -17,6 +17,7 @@
        <xul:box class="classic-dropmarker-box" autostretch="never" valign="middle" inherits="disabled">
     	    <xul:image class="classic-dropmarker" inherits="disabled"/>
        </xul:box>
+	   <children includes="menupopup"/>
     </content>
   </binding>
   

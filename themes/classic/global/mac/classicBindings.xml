@@ -146,18 +146,20 @@
   </binding>  
   
   <binding id="menubutton-icon">
-    <content includes="menupopup">
+    <content>
       <xul:box class="menubutton-icon-box">
         <xul:image inherits="src" class="menubutton-icon-image"/>
       </xul:box>
+	  <children includes="menupopup"/>
     </content>
   </binding>
 
   <binding id="menubutton-icon-nostretch">
-    <content includes="menupopup">
+    <content>
       <xul:box class="menubutton-icon-box" autostretch="never">
         <xul:image inherits="src" class="menubutton-icon-image"/>
       </xul:box>
+	  <children includes="menupopup"/>
     </content>
   </binding>
 

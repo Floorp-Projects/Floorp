@@ -16,7 +16,7 @@
   <!-- new stretchy menulist --> 
    
   <binding id="nine-slice-menulist" extends="chrome://global/content/menulistBindings.xml#menulist">
-  	<content includes="menupopup">
+  	<content>
       <xul:box class="menulist-box-left" inherits="disabled" orient="vertical">
         <xul:spring class="menulist-left-top" inherits="disabled"/>
         <xul:spring class="menulist-left-mid" inherits="disabled" flex="1"/>
@@ -44,23 +44,25 @@
         </xul:box>
         <xul:spring class="menulist-right-btm" inherits="disabled"/>
       </xul:box>
+	  <children includes="menupopup"/>
     </content>
   </binding>
 
   <binding id="menulist-compact" extends="chrome://global/content/menulistBindings.xml#menulist">
-    <content includes="menupopup" flex="1">
+    <content flex="1">
       <xul:box class="menulist-compact-internal-box" flex="1" autostretch="never">
         <xul:image class="menulist-compact-dropmarker" inherits="disabled"/>
         <xul:spring flex="1"/>
         <xul:text class="menulist-compact-text" inherits="value,accesskey,crop,disabled" crop="right"/>
       </xul:box>
+	  <children includes="menupopup"/>
     </content>
   </binding>
    
    
    
   <binding id="menulist-editable" extends="chrome://global/content/menulistBindings.xml#menulist-editable">
-    <content includes="menupopup">
+    <content>
       <xul:box class="menulist-internal-box" flex="1">
         <xul:box class="menulist-display-box" flex="1" valign="middle" autostretch="never">
           <xul:image class="menulist-icon" inherits="src"/>
@@ -72,6 +74,7 @@
           </xul:box>
         </xul:box>
       </xul:box>
+	  <children includes="menupopup"/>
     </content>
   </binding>
 

@@ -115,7 +115,7 @@
   </binding>
 
   <binding id="menuitem-iconic" extends="chrome://global/content/xulBindings.xml#menuitem-iconic">
-    <content includes="menupopup">
+    <content>
       <xul:box class="menu-iconic-left" orient="vertical" autostretch="never" inherits="selected,menuactive,disabled,checked">
         <xul:image/>
       </xul:box>

@@ -75,7 +75,7 @@
   </binding>
 
   <binding id="nine-slice-button" extends="chrome://global/content/xulBindings.xml#basetext">
-    <content includes="menupopup">
+    <content>
       <xul:box class="button-box-left" inherits="default,disabled" orient="vertical">
         <xul:spring class="button-left-top" inherits="default,disabled"/>
         <xul:spring class="button-left-mid" inherits="default,disabled" flex="1"/>
@@ -100,6 +100,7 @@
         <xul:spring class="button-right-mid" inherits="default,disabled" flex="1"/>
         <xul:spring class="button-right-btm" inherits="default,disabled"/>
       </xul:box>
+	  <children includes="menupopup"/>
     </content>
   </binding>
 

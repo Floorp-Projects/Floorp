@@ -29,7 +29,7 @@ Rights Reserved.
 
 mail-emailaddress {
   -moz-binding: url(chrome://messenger/content/mailWidgets.xml#mail-emailaddress);
-  display: inline;
+  display: -moz-xul-inline-box;
 }
 
 [hide] {
@@ -60,10 +60,6 @@ mail-emailaddress {
 .emailDisplayImage
 {
   align: right;
-}
-
-.emailSeparator {
-  display: inline;
 }
 
 .emailDisplayButton {
