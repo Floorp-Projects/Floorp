@@ -151,7 +151,6 @@ embed.jar:
 	locale/en-US/global/intl.css					(en-US/locale/en-US/global/intl.css) 
 	locale/en-US/global/globalOverlay.dtd		   (en-US/locale/en-US/global/globalOverlay.dtd) 
 	locale/en-US/global/dialogOverlay.dtd		   (en-US/locale/en-US/global/dialogOverlay.dtd) 
-	locale/en-US/global/builtinURLs.rdf			 (en-US/locale/en-US/global/builtinURLs.rdf) 
 	locale/en-US/global/commonDialog.dtd			(en-US/locale/en-US/global/commonDialog.dtd) 
 	locale/en-US/global/charsetOverlay.dtd		  (en-US/locale/en-US/global/charsetOverlay.dtd) 
 	locale/en-US/global/charsetDetectorsOverlay.dtd (en-US/locale/en-US/global/charsetDetectorsOverlay.dtd) 
