@@ -160,10 +160,8 @@ nsSocketTransportService::Init(void)
   // Create FDSET list used by PR_Poll(...)
   //
   if (!mSelectFDSet) {
-    mSelectFDSet = (PRPollDesc*)PR_Malloc(sizeof(PRPollDesc)*MAX_OPEN_CONNECTIONS);
-    if (mSelectFDSet) {
-      memset(mSelectFDSet, 0, sizeof(PRPollDesc)*MAX_OPEN_CONNECTIONS);
-    } else {
+    mSelectFDSet = (PRPollDesc*)PR_Calloc(MAX_OPEN_CONNECTIONS, sizeof(PRPollDesc));
+    if (!mSelectFDSet) {
       rv = NS_ERROR_OUT_OF_MEMORY;
     }
   }
@@ -173,10 +171,8 @@ nsSocketTransportService::Init(void)
   // nsSocketTransport corresponding to each PRFileDesc* in the mSelectFDSet
   //
   if (NS_SUCCEEDED(rv) && !mActiveTransportList) {
-    mActiveTransportList = (nsSocketTransport**)PR_Malloc(sizeof(nsSocketTransport*)*MAX_OPEN_CONNECTIONS);
-    if (mActiveTransportList) {
-      memset(mActiveTransportList, 0, sizeof(nsSocketTransport*)*MAX_OPEN_CONNECTIONS);
-    } else {
+    mActiveTransportList = (nsSocketTransport**)PR_Calloc(MAX_OPEN_CONNECTIONS, sizeof(nsSocketTransport*));
+    if (!mActiveTransportList) {
       rv = NS_ERROR_OUT_OF_MEMORY;
     }
   }
