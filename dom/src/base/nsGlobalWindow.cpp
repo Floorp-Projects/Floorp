@@ -1167,11 +1167,16 @@ GlobalWindowImpl::Confirm(JSContext *cx, jsval *argv, PRUint32 argc, PRBool* aRe
     nsIWebShell *rootWebShell;
     ret = mWebShell->GetRootWebShellEvenIfChrome(rootWebShell);
     if (nsnull != rootWebShell) {
-      nsIPrompt *prompter;
-      ret = rootWebShell->QueryInterface(NS_GET_IID(nsIPrompt), (void**)&prompter);
-      if (NS_SUCCEEDED(ret)) {
-        ret = prompter->Confirm(str.GetUnicode(), aReturn);
-        NS_RELEASE(prompter);
+      nsIWebShellContainer *rootContainer;
+      ret = rootWebShell->GetContainer(rootContainer);
+      if (nsnull != rootContainer) {
+        nsIPrompt *prompter;
+        ret = rootContainer->QueryInterface(NS_GET_IID(nsIPrompt), (void**)&prompter);
+        if (NS_SUCCEEDED(ret)) {
+          ret = prompter->Confirm(str.GetUnicode(), aReturn);
+          NS_RELEASE(prompter);
+        }
+        NS_RELEASE(rootContainer);
       }
       NS_RELEASE(rootWebShell);
     }
@@ -1211,6 +1216,9 @@ GlobalWindowImpl::Prompt(JSContext *cx, jsval *argv, PRUint32 argc, nsString& aR
           PRUnichar* uniResult = nsnull;
           ret = prompter->Prompt(str.GetUnicode(), initial.GetUnicode(), &uniResult, &b);
           aReturn = uniResult;
+          if (uniResult) {
+            nsAllocator::Free(uniResult);
+          }
           if (NS_FAILED(ret) || !b) {
             // XXX Need to check return value and return null if the
             // user hits cancel. Currently, we can only return a 
