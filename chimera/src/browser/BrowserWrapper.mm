@@ -42,8 +42,9 @@
 #import "BrowserWindowController.h"
 #import "BookmarksService.h"
 #import "SiteIconProvider.h"
-#import "CHIconTabViewItem.h"
+#import "BrowserTabViewItem.h"
 #import "ToolTip.h"
+#import "CHPageProxyIcon.h"
 
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
@@ -83,51 +84,9 @@ const NSString* kOfflineNotificationName = @"offlineModeChanged";
 
 @implementation CHBrowserWrapper
 
--(void)windowClosed
+- (id)initWithTab:(NSTabViewItem*)aTab andWindow:(NSWindow*)aWindow
 {
-  // Break the cycle.
-  [mBrowserView destroyWebBrowser];
-  [mBrowserView setContainer: nil];
-  [mBrowserView removeListener: self];
-}
-
--(void)dealloc
-{
-#if DEBUG
-  NSLog(@"The browser wrapper died.");
-#endif
-
-  [[NSNotificationCenter defaultCenter] removeObserver: self];
-  
-  [mSiteIconImage release];
-  [mSiteIconURI release];
-  [mDefaultStatusString release];
-  [mLoadingStatusString release];
-  [mToolTip release];
-
-  [super dealloc];
-}
-
-- (IBAction)load:(id)sender
-{
-  [mBrowserView loadURI:[urlbar stringValue] referrer:nil flags:NSLoadFlagsNone];
-}
-
--(void)disconnectView
-{
-  urlbar = nil;
-  status = nil;
-  progress = nil;
-  progressSuper = nil;
-  mIsPrimary = NO;
-  [[NSNotificationCenter defaultCenter] removeObserver:self name:kOfflineNotificationName object:nil];
-
-  [mBrowserView setActive: NO];
-}
-
--(id)initWithTab:(id)aTab andWindow: (NSWindow*)aWindow
-{
-  mTab = aTab;
+  mTabItem = aTab;
   mWindow = aWindow;
   mIsBookmarksImport = NO;
   return [self initWithFrame: NSZeroRect];
@@ -159,26 +118,69 @@ const NSString* kOfflineNotificationName = @"offlineModeChanged";
   return self;
 }
 
+-(void)dealloc
+{
+#if DEBUG
+  NSLog(@"The browser wrapper died.");
+#endif
+
+  [[NSNotificationCenter defaultCenter] removeObserver: self];
+  
+  [mSiteIconImage release];
+  [mSiteIconURI release];
+  [mDefaultStatusString release];
+  [mLoadingStatusString release];
+  [mToolTip release];
+
+  [super dealloc];
+}
+
+
+-(void)windowClosed
+{
+  // Break the cycle.
+  [mBrowserView destroyWebBrowser];
+  [mBrowserView setContainer: nil];
+  [mBrowserView removeListener: self];
+}
+
+- (IBAction)load:(id)sender
+{
+  [mBrowserView loadURI:[mUrlbar stringValue] referrer:nil flags:NSLoadFlagsNone];
+}
+
+-(void)disconnectView
+{
+  mUrlbar = nil;
+  mStatus = nil;
+  mProgress = nil;
+  mProgressSuper = nil;
+  mIsPrimary = NO;
+  [[NSNotificationCenter defaultCenter] removeObserver:self name:kOfflineNotificationName object:nil];
+
+  [mBrowserView setActive: NO];
+}
+
 -(void)setTab: (NSTabViewItem*)tab
 {
-  mTab = tab;
+  mTabItem = tab;
 }
 
 -(void)makePrimaryBrowserView: (id)aUrlbar status: (id)aStatus
         progress: (id)aProgress windowController: (BrowserWindowController*)aWindowController
 {
-  urlbar = aUrlbar;
-  status = aStatus;
-  progress = aProgress;
-  progressSuper = [aProgress superview];
+  mUrlbar = aUrlbar;
+  mStatus = aStatus;
+  mProgress = aProgress;
+  mProgressSuper = [aProgress superview];
   mWindowController = aWindowController;
 
   if (!mIsBusy)
-    [progress removeFromSuperview];
+    [mProgress removeFromSuperview];
   
   mDefaultStatusString = NULL;
   mLoadingStatusString = DOCUMENT_DONE_STRING;
-  [status setStringValue:mLoadingStatusString];
+  [mStatus setStringValue:mLoadingStatusString];
   
   mIsPrimary = YES;
 
@@ -266,15 +268,15 @@ const NSString* kOfflineNotificationName = @"offlineModeChanged";
     mDefaultStatusString = NULL;
   }
 
-  [progressSuper addSubview:progress];
-  [progress setIndeterminate:YES];
-  [progress startAnimation:self];
+  [mProgressSuper addSubview:mProgress];
+  [mProgress setIndeterminate:YES];
+  [mProgress startAnimation:self];
 
   mLoadingStatusString = NSLocalizedString(@"TabLoading", @"");
-  [status setStringValue:mLoadingStatusString];
+  [mStatus setStringValue:mLoadingStatusString];
 
   mIsBusy = YES;
-  [mTab setLabel: NSLocalizedString(@"TabLoading", @"")];
+  [mTabItem setLabel: NSLocalizedString(@"TabLoading", @"")];
 
   if (mWindowController) {
     [mWindowController updateToolbarItems];
@@ -289,16 +291,16 @@ const NSString* kOfflineNotificationName = @"offlineModeChanged";
     mActivateOnLoad = NO;
   }
   
-  [progress setIndeterminate:YES];
-  [progress stopAnimation:self];
-  [progress removeFromSuperview];
+  [mProgress setIndeterminate:YES];
+  [mProgress stopAnimation:self];
+  [mProgress removeFromSuperview];
 
   mLoadingStatusString = DOCUMENT_DONE_STRING;
   if (mDefaultStatusString) {
-    [status setStringValue:mDefaultStatusString];
+    [mStatus setStringValue:mDefaultStatusString];
   }
   else {
-    [status setStringValue:mLoadingStatusString];
+    [mStatus setStringValue:mLoadingStatusString];
   }
 
   mIsBusy = NO;
@@ -327,12 +329,12 @@ const NSString* kOfflineNotificationName = @"offlineModeChanged";
 - (void)onProgressChange:(int)currentBytes outOf:(int)maxBytes 
 {
   if (maxBytes > 0) {
-    BOOL isIndeterminate = [progress isIndeterminate];
+    BOOL isIndeterminate = [mProgress isIndeterminate];
     if (isIndeterminate) {
-      [progress setIndeterminate:NO];
+      [mProgress setIndeterminate:NO];
     }
     double val = ((double)currentBytes / (double)maxBytes) * 100.0;
-    [progress setDoubleValue:val];
+    [mProgress setDoubleValue:val];
   }
 }
 
@@ -368,7 +370,7 @@ const NSString* kOfflineNotificationName = @"offlineModeChanged";
 
 - (void)onStatusChange:(NSString*)aStatusString
 {
-  [status setStringValue: aStatusString];
+  [mStatus setStringValue: aStatusString];
 }
 
 //
@@ -398,14 +400,14 @@ const NSString* kOfflineNotificationName = @"offlineModeChanged";
   }
   else if (!statusString) {
     if (mDefaultStatusString) {
-      [status setStringValue:mDefaultStatusString];
+      [mStatus setStringValue:mDefaultStatusString];
     }
     else {
-      [status setStringValue:mLoadingStatusString];
+      [mStatus setStringValue:mLoadingStatusString];
     }      
   }
   else {
-    [status setStringValue:statusString];
+    [mStatus setStringValue:statusString];
   }
 }
 
@@ -439,9 +441,9 @@ const NSString* kOfflineNotificationName = @"offlineModeChanged";
   
   // Always set the tab.
   if (title && ![title isEqualToString:@""])
-    [mTab setLabel:title];		// tab titles get truncated when setting them to tabs
+    [mTabItem setLabel:title];		// tab titles get truncated when setting them to tabs
   else
-    [mTab setLabel:NSLocalizedString(@"UntitledPageTitle", @"")];
+    [mTabItem setLabel:NSLocalizedString(@"UntitledPageTitle", @"")];
 }
 
 
@@ -493,6 +495,17 @@ const NSString* kOfflineNotificationName = @"offlineModeChanged";
     return mWindow;
   
   return nil;
+}
+
+- (BOOL)shouldAcceptDragFromSource:(id)dragSource
+{
+  if ((dragSource == self) || (dragSource == mTabItem) || (dragSource  == [mWindowController proxyIconView]))
+    return NO;
+  
+  if ([mTabItem isMemberOfClass:[BrowserTabViewItem class]] && (dragSource == [(BrowserTabViewItem*)mTabItem tabItemContentsView]))
+    return NO;
+  
+  return YES;
 }
 
 -(void)setIsBookmarksImport:(BOOL)aIsImport
@@ -630,9 +643,9 @@ const NSString* kOfflineNotificationName = @"offlineModeChanged";
   }
 
   // update the tab icon
-  if ([mTab isMemberOfClass:[CHIconTabViewItem class]])
+  if ([mTabItem isMemberOfClass:[BrowserTabViewItem class]])
   {
-    CHIconTabViewItem* tabItem = (CHIconTabViewItem*)mTab;
+    BrowserTabViewItem* tabItem = (BrowserTabViewItem*)mTabItem;
     if (resetTabIcon || ![tabItem tabIcon])
       [tabItem setTabIcon:mSiteIconImage];
   }
