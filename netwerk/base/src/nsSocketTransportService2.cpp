@@ -568,7 +568,8 @@ nsSocketTransportService::Run()
                     s.mElapsedTime = 0;
                     s.mHandler->OnSocketReady(desc.fd, desc.out_flags);
                 }
-                else {
+                // check for timeout errors unless disabled...
+                else if (s.mHandler->mPollTimeout != PR_UINT16_MAX) {
                     // update elapsed time counter
                     if (NS_UNLIKELY(pollInterval > (PR_UINT16_MAX - s.mElapsedTime)))
                         s.mElapsedTime = PR_UINT16_MAX;

@@ -94,7 +94,9 @@ interface nsISocketTransport : nsITransport
     boolean isAlive();
 
     /**
-     * Socket timeouts in seconds.
+     * Socket timeouts in seconds.  To specify no timeout, pass PR_UINT32_MAX
+     * as aValue to setTimeout.  The implementation may truncate timeout values
+     * to a smaller range of values (e.g., 0 to 0xFFFF).
      */
     unsigned long getTimeout(in unsigned long aType);
     void          setTimeout(in unsigned long aType, in unsigned long aValue);
