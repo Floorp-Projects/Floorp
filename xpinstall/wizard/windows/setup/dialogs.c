@@ -2940,11 +2940,6 @@ void CommitInstall(void)
          * GRE path. */
         //AddGrePathToApplicationAppPathsKey();
 
-        /* POST_LAUNCHAPP process file manipulation functions */
-        ProcessFileOpsForAll(T_POST_LAUNCHAPP);
-        /* DEPEND_REBOOT process file manipulation functions */
-        ProcessFileOpsForAll(T_DEPEND_REBOOT);
-
         // Refresh system icons if necessary
         if(gSystemInfo.bRefreshIcons)
           RefreshIcons();
@@ -2956,6 +2951,11 @@ void CommitInstall(void)
 
         CleanupArgsRegistry();
         CleanupPreviousVersionRegKeys();
+
+        /* POST_LAUNCHAPP process file manipulation functions */
+        ProcessFileOpsForAll(T_POST_LAUNCHAPP);
+        /* DEPEND_REBOOT process file manipulation functions */
+        ProcessFileOpsForAll(T_DEPEND_REBOOT);
       }
 
       CleanupXpcomFile();

@@ -108,15 +108,15 @@ GRE Type=Local
 ; declared in the following format:
 ;
 ;   Software\[company name]\[product name]
-;   (ie: Software\mozilla.org\GRE_PRIVATE)
+;   (ie: Software\mozilla.org\GRE_1.4a_0000000000_PRIVATE)
 ;
 ; If it is not in the above format, the GRE installer/uninstaller can
 ; fail to work properly.
 ; The value to Prodduct Name Internal= (at the beginning of this
 ; config.ini file) will be appended as follows:
 ;
-;   Software\mozilla.org\GRE_PRIVATE_[Product Name Internal]
-GRE Private Key=Software\mozilla.org\GRE_PRIVATE
+;   Software\mozilla.org\GRE_1.4a_0000000000_PRIVATE_[Product Name Internal]
+GRE Private Key=Software\mozilla.org\GRE_$GreUniqueID$_PRIVATE
 
 ; This section contains info on how to send error information in case of
 ; either a download or xpinstall error.
@@ -529,12 +529,13 @@ $InstallSize$:gre
 $InstallSizeSystem$
 $InstallSizeArchive$:gre-win32-installer.zip
 Attributes=SELECTED|UNCOMPRESS|SUPERSEDE|LAUNCHAPP|INVISIBLE
-Parameter=-mmi -ma -app $ProductName$ -app_path "[SETUP PATH]\$MainExeFile$"
+;*** LOCALIZE ME BABY ***
+Parameter=-mmi -ma -app "$ProductNameInternal$ $UserAgent$" -app_path "[SETUP PATH]\$MainExeFile$"
 SupersedeType=GRE
 SupersedeWinReg0=HKEY_LOCAL_MACHINE\Software\mozilla.org\GRE
-SupersedeVersion0=1.3.0.0
-SupersedeMinVersion=1.3.0.0
-SupersedeMaxVersion=1.3.0.0
+SupersedeVersion0=$GreFileVersion$
+SupersedeMinVersion=
+SupersedeMaxVersion=
 
 [Component Navigator]
 Description Short=Navigator
@@ -1004,7 +1005,7 @@ Reg Key Root0=HKEY_LOCAL_MACHINE
 Product Name0=Mozilla
 Product Reg Key0=Software\Mozilla.org\Mozilla
 Current Version0=$UserAgent$
-;
+
 Reg Key Root1=HKEY_CURRENT_USER
 Product Name1=Mozilla
 Product Reg Key1=Software\Mozilla.org\Mozilla

@@ -6180,10 +6180,6 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   if (sgProduct.szProductNameInternal[0] == 0)
     lstrcpy(sgProduct.szProductNameInternal, sgProduct.szProductName);
  
-  /* this is a default value so don't change it if it has already been set */
-  if (sgProduct.szRegPath[0] == 0)
-    wsprintf(sgProduct.szRegPath, "Software\\%s\\%s", sgProduct.szCompanyName, sgProduct.szProductNameInternal);
-
   GetPrivateProfileString("General", "Product Name Previous", "", sgProduct.szProductNamePrevious, MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("General", "Uninstall Filename", "", sgProduct.szUninstallFilename, MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("General", "User Agent",   "", sgProduct.szUserAgent,   MAX_BUF, szFileIniConfig);
@@ -6193,6 +6189,10 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   if(lstrcmpi(szBuf, "TRUE") == 0)
     sgProduct.bLockPath = TRUE;
   
+  /* this is a default value so don't change it if it has already been set */
+  if (sgProduct.szRegPath[0] == 0)
+    wsprintf(sgProduct.szRegPath, "Software\\%s\\%s\\%s", sgProduct.szCompanyName, sgProduct.szProductNameInternal, sgProduct.szUserAgent);
+
   gbRestrictedAccess = VerifyRestrictedAccess();
   if(gbRestrictedAccess)
   {

@@ -64,6 +64,8 @@ $nameProduct      = $ENV{WIZ_nameProduct};
 $nameProductInternal = $ENV{WIZ_nameProductInternal};
 $fileMainExe      = $ENV{WIZ_fileMainExe};
 $fileUninstall    = $ENV{WIZ_fileUninstall};
+$greFileVersion   = $ENV{WIZ_greFileVersion};
+$greUniqueID      = $ENV{WIZ_greUniqueID};
 
 # Get the name of the file replacing the .it extension with a .ini extension
 @inItFileSplit    = split(/\./,$inItFile);
@@ -91,6 +93,8 @@ while($line = <fpInIt>)
   $line =~ s/\$ProductNameInternal\$/$nameProductInternal/gi;
   $line =~ s/\$MainExeFile\$/$fileMainExe/gi;
   $line =~ s/\$UninstallFile\$/$fileUninstall/gi;
+  $line =~ s/\$GreFileVersion\$/$greFileVersion/gi;
+  $line =~ s/\$GreUniqueID\$/$greUniqueID/gi;
   print fpOutIni $line;
 }
 

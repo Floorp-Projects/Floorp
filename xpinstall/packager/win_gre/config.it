@@ -13,14 +13,14 @@ Default AppID=$ProductName$User
 Company Name=$CompanyName$
 Product Name=$ProductName$
 Product NameInternal=$ProductNameInternal$
-User Agent=$UserAgent$
+User Agent=$GreUniqueID$
 
 ; Destination Path values:
 ;   PROGRAMFILESDIR
 ;   WINDISK
 ;   WINDIR
 ;   WINSYSDIR
-Path=[COMMONFILESDIR]\$CompanyName$\$ProductName$\$XPInstallVersion$
+Path=[COMMONFILESDIR]\$CompanyName$\$ProductName$\$GreUniqueID$
 
 ; Sub Path, when set will indicate to Setup to create a subfolder from
 ; what is offered to the user to change.  It will not be shown to the user
@@ -489,6 +489,10 @@ Filename=install_wizard.log
 Source=[SETUP PATH]
 Destination=[SETUP PATH]\Uninstall
 
+[Delete File0]
+Timing=post launchapp
+Destination=[SETUP PATH]\install_wizard.log
+
 ; Legal values for the Overwrite Name key are TRUE, FALSE and ENUMERATE.
 ;   ENUMERATE is used for shared installs and means:
 ;     1) Starting with 01, increment though the NameXX named values in the 
@@ -500,9 +504,9 @@ Destination=[SETUP PATH]\Uninstall
 ;
 [Windows Registry0]
 Root Key=HKEY_LOCAL_MACHINE
-Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\$ProductName$ ($UserAgentShort$)
+Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\$ProductName$ ($GreUniqueID$)
 Name=DisplayName
-Name Value=Gecko Runtime Environment ($UserAgentShort$)
+Name Value=Gecko Runtime Environment ($GreUniqueID$)
 Type=REG_SZ
 Decrypt Key=FALSE
 Decrypt Name=FALSE
@@ -514,10 +518,10 @@ Condition=DefaultApp
 
 [Windows Registry1]
 Root Key=HKEY_LOCAL_MACHINE
-Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\$ProductName$ ($UserAgentShort$)
+Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\$ProductName$ ($GreUniqueID$)
 Name=UninstallString
 ;*** LOCALIZE ME BABY ***
-Name Value=[WINDIR]\$UninstallFile$ /ua "$UserAgent$" /app $ProductName$User
+Name Value=[WINDIR]\$UninstallFile$ /ua "$GreUniqueID$" /app $ProductName$User
 Type=REG_SZ
 Decrypt Key=FALSE
 Decrypt Name=FALSE
@@ -529,9 +533,8 @@ Condition=DefaultApp
 
 [Windows Registry2]
 Root Key=HKEY_LOCAL_MACHINE
-Key=[REGPATH]\$UserAgentShort$\AppList\[APP_ID]
+Key=[REGPATH]\AppList\[APP_ID]
 Name=Name
-;*** LOCALIZE ME BABY ***
 Name Value=[APP_ID]
 Type=REG_SZ
 Decrypt Key=TRUE
@@ -543,9 +546,8 @@ Timing=post smartupdate
 
 [Windows Registry3]
 Root Key=HKEY_LOCAL_MACHINE
-Key=[REGPATH]\$UserAgentShort$\AppList\[APP_ID]
+Key=[REGPATH]\AppList\[APP_ID]
 Name=PathToExe
-;*** LOCALIZE ME BABY ***
 Name Value=[PATH_TO_APP]
 Type=REG_SZ
 Decrypt Key=TRUE
@@ -557,7 +559,7 @@ Timing=post smartupdate
 
 [Windows Registry4]
 Root Key=HKEY_LOCAL_MACHINE
-Key=[REGPATH]\$UserAgentShort$\Installer
+Key=[REGPATH]\Installer
 Name=PathToExe
 ;*** LOCALIZE ME BABY ***
 Name Value=[SETUP PATH]\Setup $ProductNameInternal$\setup.exe
@@ -568,6 +570,32 @@ Decrypt Name Value=TRUE
 Overwrite Key=TRUE
 Overwrite Name=TRUE
 Timing=post smartupdate
+
+[Windows Registry5]
+Root Key=HKEY_LOCAL_MACHINE
+Key=[REGPATH]\Uninstall
+Name=Description
+Name Value=$ProductName$ ($UserAgentShort$)
+Type=REG_SZ
+Decrypt Key=TRUE
+Decrypt Name=FALSE
+Decrypt Name Value=FALSE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=pre smartupdate
+
+[Windows Registry6]
+Root Key=HKEY_LOCAL_MACHINE
+Key=[REGPATH]\Uninstall
+Name=Uninstall Log Folder
+Name Value=[SETUP PATH]\Uninstall
+Type=REG_SZ
+Decrypt Key=TRUE
+Decrypt Name=FALSE
+Decrypt Name Value=TRUE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=pre smartupdate
 
 ; Values for Show Folder:
 ;   HIDE             Hides the window and activates another window.
