@@ -28,6 +28,7 @@
 #include "nsIPresShell.h"
 #include "nsPrivateTextRange.h"
 #include "nsIDocument.h"
+#include "nsIPrivateCompositionEvent.h"
 
 static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
@@ -38,6 +39,7 @@ static NS_DEFINE_IID(kIDOMNSUIEventIID, NS_IDOMNSUIEVENT_IID);
 static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);
 static NS_DEFINE_IID(kIPrivateTextEventIID, NS_IPRIVATETEXTEVENT_IID);
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
+static NS_DEFINE_IID(kIPrivateCompositionEventIID,NS_IPRIVATECOMPOSITIONEVENT_IID);
 
 static char* mEventNames[] = {
   "mousedown", "mouseup", "click", "dblclick", "mouseover",
@@ -127,6 +129,11 @@ nsresult nsDOMEvent::QueryInterface(const nsIID& aIID,
 	*aInstancePtrResult=(void*)((nsIPrivateTextEvent*)this);
 	AddRef();
 	return NS_OK;
+  }
+  if (aIID.Equals(kIPrivateCompositionEventIID)) {
+    *aInstancePtrResult = (void*)((nsIPrivateCompositionEvent*)this);
+    AddRef();
+    return NS_OK;
   }
   return NS_NOINTERFACE;
 }
@@ -267,6 +274,17 @@ NS_METHOD nsDOMEvent::GetEventReply(nsTextEventReply** aReply)
 	}
 
 	return NS_ERROR_FAILURE;
+}
+
+NS_METHOD nsDOMEvent::GetCompositionReply(nsTextEventReply** aReply)
+{
+  if (mEvent->message==NS_COMPOSITION_START) {
+    *aReply = &(((nsCompositionEvent*)mEvent)->theReply);
+    return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
+
 }
 
 NS_METHOD nsDOMEvent::GetScreenX(PRInt32* aScreenX)

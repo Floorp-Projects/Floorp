@@ -6,3 +6,4 @@ nsIEventStateManager.h
 nsIPrivateDOMEvent.h
 nsIPrivateTextEvent.h
 nsIPrivateTextRange.h
+nsIPrivateCompositionEvent.h

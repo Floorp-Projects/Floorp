@@ -166,6 +166,7 @@ struct nsTextEvent : public nsInputEvent {
 
 struct nsCompositionEvent : public nsInputEvent {
 	PRUint32			compositionMessage;
+	nsTextEventReply	theReply;
 };
 
 /**
