@@ -8,7 +8,7 @@ groupbox
     margin                : 5px;
   }
 
-label
+groupbox > label
   {
     margin-left           : 6px;
     padding-left          : 3px;

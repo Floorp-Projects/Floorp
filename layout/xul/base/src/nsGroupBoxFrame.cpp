@@ -235,25 +235,20 @@ nsTitledBoxFrame::GetTitleBox(nsIPresContext* aPresContext, nsRect& aTitleRect)
       return nsnull;
 
     // get the first child in the titled area that is the title
-    box->GetChildBox(&box);
-
-    // nothing in the area? fail
-    if (!box)
-      return nsnull;
-
-    // now get the title itself. It is in the title frame.
-    nsIBox* child = nsnull;
+    nsIBox* child;
     box->GetChildBox(&child);
 
-    if (child) {
-       // convert to our coordinates.
-       nsRect parentRect;
-       box->GetBounds(parentRect);
-       child->GetBounds(aTitleRect);
-       aTitleRect.x += parentRect.x;
-       aTitleRect.y += parentRect.y;
-    }
+    // nothing in the area? fail
+    if (!child)
+      return nsnull;
 
+    // convert to our coordinates.
+    nsRect parentRect;
+    box->GetBounds(parentRect);
+    child->GetBounds(aTitleRect);
+    aTitleRect.x += parentRect.x;
+    aTitleRect.y += parentRect.y;
+   
     return child;
 }
 

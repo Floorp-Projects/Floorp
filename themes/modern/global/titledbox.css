@@ -40,9 +40,3 @@ groupbox {
 .groupbox-body {
   padding: inherit;
 }
-
-label {
-  margin: 0px 6px 2px 6px;
-  padding: 0px 3px 0px 3px;
-  background-color: #C7D0D9; 
-}
