@@ -1333,22 +1333,16 @@ nsWindowWatcher::SizeOpenedDocShellItem(nsIDocShellTreeItem *aDocShellItem,
   if (present)
     positionSpecified = PR_TRUE;
 
-  present = PR_FALSE;
-
   PRBool sizeChrome = PR_FALSE;
   PRBool sizeSpecified = PR_FALSE;
 
-  if ((temp = WinHasOption(aFeatures, "outerWidth", chromeCX, &present)) ||
-      present) {
+  if (temp = WinHasOption(aFeatures, "outerWidth", chromeCX, nsnull)) {
     chromeCX = temp;
     sizeChrome = PR_TRUE;
     sizeSpecified = PR_TRUE;
   }
 
-  present = PR_FALSE;
-
-  if ((temp = WinHasOption(aFeatures, "outerHeight", chromeCY, &present)) ||
-      present) {
+  if (temp = WinHasOption(aFeatures, "outerHeight", chromeCY, nsnull)) {
     chromeCY = temp;
     sizeChrome = PR_TRUE;
     sizeSpecified = PR_TRUE;
@@ -1356,24 +1350,18 @@ nsWindowWatcher::SizeOpenedDocShellItem(nsIDocShellTreeItem *aDocShellItem,
 
   // We haven't switched to chrome sizing so we need to get the content area
   if (!sizeChrome) {
-    if ((temp = WinHasOption(aFeatures, "width", chromeCX, &present)) ||
-        present) {
+    if (temp = WinHasOption(aFeatures, "width", chromeCX, nsnull)) {
       contentCX = temp;
       sizeSpecified = PR_TRUE;
-    }
-    else if ((temp = WinHasOption(aFeatures, "innerWidth", chromeCX, &present))
-             || present) {
+    } else if (temp = WinHasOption(aFeatures, "innerWidth", chromeCX, nsnull)) {
       contentCX = temp;
       sizeSpecified = PR_TRUE;
     }
 
-    if ((temp = WinHasOption(aFeatures, "height", chromeCY, &present)) ||
-        present) {
+    if (temp = WinHasOption(aFeatures, "height", chromeCY, nsnull)) {
       contentCY = temp;
       sizeSpecified = PR_TRUE;
-    }
-    else if ((temp = WinHasOption(aFeatures, "innerHeight", chromeCY, &present))
-             || present) {
+    } else if (temp = WinHasOption(aFeatures, "innerHeight", chromeCY, nsnull)) {
       contentCY = temp;
       sizeSpecified = PR_TRUE;
     }
