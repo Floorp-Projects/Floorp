@@ -31,7 +31,7 @@ class jsScriptable: public jsIScriptable {
 
     void init(jsIContext *, JSObject *);
  public:
-    NS_DECL_ISUPPORTS;
+    NS_DECL_ISUPPORTS
 
     jsScriptable(jsIContext *, JSClass *);
     jsScriptable(jsIContext *, JSObject *);
