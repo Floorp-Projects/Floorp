@@ -58,6 +58,27 @@ extern "C" {
 #define ICALEVENT_VERSION "2.0"
 #define ICALEVENT_PRODID "-//Mozilla.org/NONSGML Mozilla Calendar V1.0//EN"
 
+/* event enumerator */
+class
+oeEventEnumerator : public nsISimpleEnumerator
+{
+  public:
+    oeEventEnumerator();
+    virtual ~oeEventEnumerator();
+
+    // nsISupports interface
+    NS_DECL_ISUPPORTS
+
+    // nsISimpleEnumerator interface
+    NS_DECL_NSISIMPLEENUMERATOR
+
+    NS_IMETHOD AddEvent( nsISupports *event );
+
+  private:
+    PRUint32 mCurrentIndex;
+    std::vector<nsISupports *> mEventVector;
+};
+
 class
 oeDateEnumerator : public nsISimpleEnumerator
 {
@@ -93,6 +114,7 @@ public:
     bool matchId( const char *id );
     icaltimetype GetNextRecurrence( icaltimetype begin );
     icaltimetype GetPreviousOccurrence( icaltimetype beforethis );
+    NS_IMETHODIMP SetParent( oeIICal *parent );
 private:
     char *m_id;
     char *m_syncid;
@@ -129,6 +151,7 @@ private:
     bool IsExcepted( PRTime date );
     nsCOMPtr<nsISupportsArray> m_attachments;
     nsCOMPtr<nsISupportsArray> m_contacts;
+    oeIICal *m_calendar;
 };
 
 /*******************************************************************************************/
@@ -146,7 +169,5 @@ private:
     icaltimetype m_displaydate;
     nsCOMPtr<oeIICalEvent> mEvent;
 };
-
-
 
 #endif

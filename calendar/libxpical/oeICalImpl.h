@@ -33,6 +33,8 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#ifndef _OEICALIMPL_H_
+#define _OEICALIMPL_H_
 
 #include "oeIICal.h"
 #include <vector>
@@ -237,8 +239,9 @@ class oeICalImpl : public oeIICal
         */
         NS_DECL_OEIICAL
         void SetupAlarmManager();
+        icaltimetype GetNextEvent( icaltimetype starting );
+        EventList *GetEventList();
 private:
-    icaltimetype GetNextEvent( icaltimetype starting );
     std::vector<oeIICalObserver*> m_observerlist;
     std::vector<oeIICalTodoObserver*> m_todoobserverlist;
     bool m_batchMode;
@@ -249,3 +252,5 @@ private:
     oeICalFilter *m_filter;
     bool SatisfiesFilter( oeIICalTodo *comp );
 };
+
+#endif

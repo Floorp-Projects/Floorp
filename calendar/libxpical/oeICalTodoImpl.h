@@ -67,37 +67,11 @@ public:
   icalcomponent *AsIcalComponent();
   NS_IMETHOD Clone(oeIICalTodo **_retval);
   bool matchId( const char *id );
+  NS_IMETHODIMP SetParent( oeIICal *parent );
 private:
-/*    char *m_id;
-    char *m_syncid;
-    char *m_title;
-    char *m_description;
-    char *m_location;
-    char *m_category;
-    bool m_isprivate;
-    bool m_allday;
-    bool m_hasalarm;
-    unsigned long m_alarmlength;
-    char *m_alarmunits;
-    char *m_alarmemail;
-    char *m_inviteemail;
-    short m_recurtype;
-    unsigned long m_recurinterval;
-    bool m_recur;
-    bool m_recurforever;
-    char *m_recurunits;
-    short m_recurweekdays;
-    short m_recurweeknumber;
-    oeDateTimeImpl *m_start;
-    oeDateTimeImpl *m_end;
-    oeDateTimeImpl *m_recurend;
-    icaltimetype m_lastalarmack;
-    std::vector<PRTime> m_exceptiondates;
-    std::vector<PRTime> m_snoozetimes;*/
     int m_percent;
     oeDateTimeImpl *m_completed;
     oeDateTimeImpl *m_due;
-//    nsCOMPtr<oeIICalEvent> mEvent;
     oeICalEventImpl *mEvent;
 };
 

@@ -58,6 +58,8 @@ interface nsISimpleEnumerator;
 typedef long eventMethodProperty;
 typedef long eventStatusProperty;
 
+interface oeIICal;
+
 [scriptable, uuid(db180127-cc56-40c6-a8ef-7e329e1c4142)]
 interface oeIDateTime : nsISupports
 {
@@ -93,6 +95,7 @@ interface oeIICalEvent : nsISupports
     readonly attribute oeIDateTime start;
     readonly attribute oeIDateTime end;
     readonly attribute oeIDateTime stamp;
+    readonly attribute oeIICal parent;
     attribute string id;
     attribute AUTF8String title;
     attribute AUTF8String description;
@@ -154,6 +157,8 @@ interface oeIICalTodo : oeIICalEvent
     readonly attribute oeIDateTime due;
     readonly attribute oeIDateTime completed;
     attribute short percent;
+    AUTF8String getTodoIcalString();
+    boolean parseTodoIcalString(in AUTF8String icalstr);
 };
 
 [scriptable, uuid(b8584baa-1507-40d4-b542-5a2758e1c86d)]
@@ -187,8 +192,8 @@ interface oeIICal : nsISupports
 
     attribute boolean batchMode;
     readonly attribute oeIICalTodo filter;
+    attribute string server;
 
-	void setServer( in string str );
     void addObserver( in oeIICalObserver observer );
     void removeObserver( in oeIICalObserver observer );
     void addTodoObserver( in oeIICalTodoObserver observer );
@@ -215,6 +220,39 @@ interface oeIICal : nsISupports
     void resetFilter();
 };
 
+[scriptable, uuid(c89ec938-f690-4f62-a4b3-11e962ba2314)]
+interface oeIICalContainer : nsISupports
+{
+    attribute boolean batchMode;
+    readonly attribute oeIICalTodo filter;
+
+	void addCalendar( in string server );
+	void removeCalendar( in string server );
+    oeIICal getCalendar( in string server );
+    void addObserver( in oeIICalObserver observer );
+    void removeObserver( in oeIICalObserver observer );
+    void addTodoObserver( in oeIICalTodoObserver observer );
+    void removeTodoObserver( in oeIICalTodoObserver observer );
+	string addEvent( in oeIICalEvent icalevent, in string server );
+	string modifyEvent( in oeIICalEvent icalevent );
+	void deleteEvent( in string id );
+	oeIICalEvent fetchEvent( in string id );
+	nsISimpleEnumerator getAllEvents();
+	nsISimpleEnumerator getEventsForMonth(in PRTime date, out nsISimpleEnumerator datelist );
+	nsISimpleEnumerator getEventsForWeek(in PRTime date, out nsISimpleEnumerator datelist );
+	nsISimpleEnumerator getEventsForDay(in PRTime date, out nsISimpleEnumerator datelist );
+	nsISimpleEnumerator getEventsForRange(in PRTime begindate, in PRTime enddate, out nsISimpleEnumerator datelist );
+	nsISimpleEnumerator getNextNEvents(in PRTime begindate, in long count, out nsISimpleEnumerator datelist );
+	nsISimpleEnumerator getFirstEventsForRange(in PRTime begindate, in PRTime enddate );
+
+	string addTodo( in oeIICalTodo icaltodo, in string server );
+	string modifyTodo( in oeIICalTodo icaltodo );
+	void deleteTodo( in string id );
+	oeIICalTodo fetchTodo( in string id );
+	nsISimpleEnumerator getAllTodos();
+
+    void resetFilter();
+};
 
 %{ C++
 extern nsresult

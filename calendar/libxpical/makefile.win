@@ -61,6 +61,7 @@ OBJS            = \
                   .\$(OBJDIR)\oeICalEventImpl.obj \
                   .\$(OBJDIR)\oeICalTodoImpl.obj \
                   .\$(OBJDIR)\oeICalFactory.obj \
+                  .\$(OBJDIR)\oeICalContainerImpl.obj \
                   .\$(OBJDIR)\oeICalImpl.obj \
 		  .\$(OBJDIR)\oeDateTimeImpl.obj \
                   .\$(OBJDIR)\oeICalStartupHandler.obj \

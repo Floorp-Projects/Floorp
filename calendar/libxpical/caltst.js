@@ -103,7 +103,7 @@ function Test()
       iCalLib = iCalLibComponent.QueryInterface(Components.interfaces.oeIICal);
    }
     
-   iCalLib.setServer( DEFAULT_SERVER );
+   iCalLib.server = DEFAULT_SERVER;
    iCalLib.Test();
    alert( "Finished Test" );
 }
@@ -128,7 +128,7 @@ function TestAll()
 	   return;
    }
 
-   iCalLib.setServer( DEFAULT_SERVER );
+   iCalLib.server = DEFAULT_SERVER;
    var id = TestAddEvent();
    if( id == 0 ) {
 	   alert( "Stopped Test" );
@@ -150,6 +150,7 @@ function TestAll()
    id = TestUpdateTodo( iCalTodo );
    TestDeleteTodo( id );
    TestFilterTodo( id );
+   TestIcalString();
    alert( "Finished Test" );
 }
 
@@ -730,3 +731,51 @@ function TestFilterTodo()
 
     iCalLib.deleteTodo( id );
 }
+
+function TestIcalString()
+{
+    var iCalTodoComponent = Components.classes["@mozilla.org/icaltodo;1"].createInstance();
+    
+    var iCalTodo = iCalTodoComponent.QueryInterface(Components.interfaces.oeIICalTodo);
+
+    iCalTodo.title = DEFAULT_TITLE;
+    iCalTodo.description = DEFAULT_DESCRIPTION;
+    iCalTodo.location = DEFAULT_LOCATION;
+    iCalTodo.categories = DEFAULT_CATEGORY;
+    iCalTodo.privateEvent = DEFAULT_PRIVATE;
+
+    iCalTodo.start.year = 2001;
+    iCalTodo.start.month = 10; //November
+    iCalTodo.start.day = 1;
+    iCalTodo.start.hour = 12;
+    iCalTodo.start.minute = 24;
+
+    iCalTodo.due.year = 2001;
+    iCalTodo.due.month = 11; //December
+    iCalTodo.due.day = 1;
+    iCalTodo.due.hour = 23;
+    iCalTodo.due.minute = 59;
+
+    iCalTodo.id = 999999999;
+
+    var icalstring = iCalTodo.getTodoIcalString();
+    iCalTodo.parseTodoIcalString( icalstring );
+    
+    if( iCalTodo.id == null )
+       alert( "TestAddTodo(): Invalid Id" );
+    if( iCalTodo.title != DEFAULT_TITLE )
+       alert( "TestAddTodo(): Invalid Title" );
+    if( iCalTodo.description != DEFAULT_DESCRIPTION )
+       alert( "TestAddTodo(): Invalid Description" );
+    if( iCalTodo.location != DEFAULT_LOCATION )
+       alert( "TestAddTodo(): Invalid Location" );
+    if( iCalTodo.categories != DEFAULT_CATEGORY )
+       alert( "TestAddTodo(): Invalid Category" );
+    if( iCalTodo.privateEvent != DEFAULT_PRIVATE )
+       alert( "TestAddTodo(): Invalid PrivateEvent Setting" );
+
+    //TODO: Check for start and end date
+
+    return true;
+}
+

@@ -35,6 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "oeICalImpl.h"
+#include "oeICalContainerImpl.h"
 #include "oeICalEventImpl.h"
 #include "oeDateTimeImpl.h"
 #include "oeICalStartupHandler.h"
@@ -44,6 +45,7 @@
 
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(oeICalImpl);
+NS_GENERIC_FACTORY_CONSTRUCTOR(oeICalContainerImpl);
 NS_GENERIC_FACTORY_CONSTRUCTOR(oeICalEventImpl);
 NS_GENERIC_FACTORY_CONSTRUCTOR(oeICalTodoImpl);
 NS_GENERIC_FACTORY_CONSTRUCTOR(oeDateTimeImpl);
@@ -55,6 +57,11 @@ static const nsModuleComponentInfo pModuleInfo[] =
     OE_ICAL_CID,
     OE_ICAL_CONTRACTID,
     oeICalImplConstructor,
+  },
+  { "ICal Container",
+    OE_ICALCONTAINER_CID,
+    OE_ICALCONTAINER_CONTRACTID,
+    oeICalContainerImplConstructor,
   },
   { "ICal Event",
     OE_ICALEVENT_CID,

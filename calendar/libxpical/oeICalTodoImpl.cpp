@@ -108,6 +108,11 @@ oeICalTodoImpl::~oeICalTodoImpl()
     mEvent = nsnull;
 }
 
+NS_IMETHODIMP oeICalTodoImpl::SetParent( oeIICal *calendar )
+{
+    return mEvent->SetParent( calendar );
+}
+
 bool oeICalTodoImpl::matchId( const char *id ) {
     return mEvent->matchId( id );
 }
@@ -178,6 +183,49 @@ NS_IMETHODIMP oeICalTodoImpl::Clone( oeIICalTodo **ev )
         return NS_OK;
     }
     *ev = icaltodo;
+    return NS_OK;
+}
+
+NS_IMETHODIMP oeICalTodoImpl::GetTodoIcalString(nsACString& aRetVal)
+{
+#ifdef ICAL_DEBUG_ALL
+    printf( "oeICalTodoImpl::GetTodoIcalString() = " );
+#endif
+    
+    icalcomponent *vcalendar = AsIcalComponent();
+    if ( !vcalendar ) {
+        #ifdef ICAL_DEBUG
+        printf( "oeICalTodoImpl::GetTodoIcalString() failed!\n" );
+        #endif
+        return NS_OK;
+    }
+
+    char *str = icalcomponent_as_ical_string( vcalendar );
+    if( str ) {
+		aRetVal = str;
+    } else
+        aRetVal.Truncate();
+    icalcomponent_free( vcalendar );
+
+#ifdef ICAL_DEBUG_ALL
+    printf( "\"%s\"\n", PromiseFlatCString( aRetVal ).get() );
+#endif
+    return NS_OK;
+}
+
+NS_IMETHODIMP oeICalTodoImpl::ParseTodoIcalString(const nsACString& aNewVal, PRBool *aRetVal)
+{
+#ifdef ICAL_DEBUG_ALL
+    printf( "oeICalTodoImpl::ParseTodoIcalString( %s )\n", PromiseFlatCString( aNewVal ).get() );
+#endif
+    
+    *aRetVal = false;
+    icalcomponent *comp = icalparser_parse_string( PromiseFlatCString( aNewVal ).get() );
+    if( comp ) {
+        if( ParseIcalComponent( comp ) )
+            *aRetVal = true;
+        icalcomponent_free( comp );
+    }
     return NS_OK;
 }
 

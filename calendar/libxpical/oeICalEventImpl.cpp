@@ -303,6 +303,24 @@ oeICalEventImpl::~oeICalEventImpl()
         m_recurend->Release();
 }
 
+NS_IMETHODIMP oeICalEventImpl::SetParent( oeIICal *calendar )
+{
+#ifdef ICAL_DEBUG
+    printf( "oeICalEventImpl::SetParent()\n" );
+#endif
+    m_calendar = calendar;
+    return NS_OK;
+}
+
+NS_IMETHODIMP oeICalEventImpl::GetParent( oeIICal **calendar )
+{
+#ifdef ICAL_DEBUG_ALL
+    printf( "oeICalEventImpl::GetParent()\n" );
+#endif
+    *calendar = m_calendar;
+    return NS_OK;
+}
+
 /* attribute string Id; */
 NS_IMETHODIMP oeICalEventImpl::GetId(char **aRetVal)
 {
@@ -558,7 +576,7 @@ NS_IMETHODIMP oeICalEventImpl::GetStatus(eventStatusProperty *aRetVal)
 NS_IMETHODIMP oeICalEventImpl::SetStatus(eventStatusProperty aNewVal)
 {
 #ifdef ICAL_DEBUG_ALL
-    printf( "SetStatus( %s )\n", aNewVal );
+    printf( "SetStatus( %d )\n", aNewVal );
 #endif
     m_status= aNewVal;
     return NS_OK;

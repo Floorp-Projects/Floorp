@@ -64,6 +64,7 @@ CPPSRCS		= \
 		oeICalTodoImpl.cpp \
 		oeICalFactory.cpp \
 		oeICalImpl.cpp \
+		oeICalContainerImpl.cpp \
 		oeDateTimeImpl.cpp \
       oeICalStartupHandler.cpp \
 		$(NULL)
