@@ -49,7 +49,7 @@
 #include "prtypes.h"
 #endif
 
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(RHAPSODY)
 #   include <Quickdraw.h>
 #   include <Events.h>
 #   include <MacWindows.h>
@@ -226,10 +226,10 @@ enum nsPluginWindowType {
     nsPluginWindowType_Drawable
 };
 
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(RHAPSODY)
 
 struct nsPluginPort {
-    CGrafPtr    port;   /* Grafport */
+    GrafPtr     port;   /* Grafport */
     PRInt32     portx;  /* position inside the topmost window */
     PRInt32     porty;
 };
@@ -296,7 +296,7 @@ struct nsPluginPrint {
 
 struct nsPluginEvent {
 
-#if defined(XP_MAC)
+#if defined(XP_MAC) || defined(RHAPSODY)
     EventRecord*                event;
     nsPluginPlatformWindowRef   window;
 
@@ -321,7 +321,7 @@ struct nsPluginEvent {
  *  Non-standard event types that can be passed to HandleEvent
  */
 enum nsPluginEventType {
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(RHAPSODY)
     nsPluginEventType_GetFocusEvent = (osEvt + 16),
     nsPluginEventType_LoseFocusEvent,
     nsPluginEventType_AdjustCursorEvent,
