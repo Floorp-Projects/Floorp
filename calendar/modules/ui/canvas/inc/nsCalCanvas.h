@@ -35,6 +35,10 @@ public:
   NS_IMETHOD GetUser(nsICalendarUser *& aUser);  
   NS_IMETHOD SetUser(nsICalendarUser * aUser);
 
+  NS_IMETHOD_(nsIModel *)   GetModel();
+  NS_IMETHOD                GetModelInterface(const nsIID &aModelIID, nsISupports * aInterface) ;
+  NS_IMETHOD                SetModel(nsIModel * aModel);
+
 protected:
   ~nsCalCanvas();
 

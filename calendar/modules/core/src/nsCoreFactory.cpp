@@ -123,7 +123,7 @@ nsresult nsCoreFactory::CreateInstance(nsISupports *aOuter,
   } else if (mClassID.Equals(kCCalendarUserCID)) {
     inst = (nsISupports *)new nsCalendarUser(aOuter);
   } else if (mClassID.Equals(kCCalendarModelCID)) {
-    inst = (nsISupports *)new nsCalendarModel(aOuter);
+    inst = (nsISupports *)(nsICalendarModel*)new nsCalendarModel(aOuter);
   } 
 
   if (inst == NULL) {  

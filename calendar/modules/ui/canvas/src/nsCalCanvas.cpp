@@ -73,3 +73,19 @@ nsresult nsCalCanvas :: SetUser(nsICalendarUser * aUser)
   return NS_OK;    
 }
 
+
+nsIModel * nsCalCanvas :: GetModel()
+{
+  return (nsXPFCCanvas::GetModel());
+}
+
+nsresult nsCalCanvas :: GetModelInterface(const nsIID &aModelIID, nsISupports * aInterface)
+{
+  return (nsXPFCCanvas::GetModelInterface(aModelIID,aInterface));
+}
+
+
+nsresult nsCalCanvas :: SetModel(nsIModel * aModel)
+{
+  return (nsXPFCCanvas::SetModel(aModel));
+}

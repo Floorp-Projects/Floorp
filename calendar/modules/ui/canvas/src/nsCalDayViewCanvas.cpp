@@ -25,6 +25,8 @@
 #include "nsIRenderingContext.h"
 #include "nsIFontMetrics.h"
 #include "nsIDeviceContext.h"
+#include "nsICalendarUser.h"
+#include "nsICalendarModel.h"
 
 #include "datetime.h"
 #include "ptrarray.h"
@@ -42,6 +44,8 @@ typedef struct
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kCalDayViewCanvasCID, NS_CAL_DAYVIEWCANVAS_CID);
 static NS_DEFINE_IID(kIXPFCCanvasIID, NS_IXPFC_CANVAS_IID);
+static NS_DEFINE_IID(kICalendarUserIID,     NS_ICALENDAR_USER_IID); 
+static NS_DEFINE_IID(kICalendarModelIID,    NS_ICALENDAR_MODEL_IID); 
 
 nsCalDayViewCanvas :: nsCalDayViewCanvas(nsISupports* outer) : nsCalTimebarComponentCanvas(outer)
 {
@@ -213,12 +217,37 @@ nsEventStatus nsCalDayViewCanvas :: PaintForeground(nsIRenderingContext& aRender
   DateTime * dStart = ((nsDateTime *)GetTimeContext()->GetDTStart())->GetDateTime();
   DateTime * dEnd   = ((nsDateTime *)GetTimeContext()->GetDTEnd())->GetDateTime();
 
-  /*
-   *  XXX.  This looks wrong.  I think we need to store some sort of
-   *        pointer to an associated calendar with this canvas.  It 
-   *        appears to always get the logged in user's canvas.
-   */
-  gCalToolkit->GetNSCalendar()->getEventsByRange(evtVctr, *dStart, *dEnd);
+  nsIModel * model = GetModel();
+  nsICalendarModel * calmodel = nsnull;
+
+  if (nsnull == model)
+    return nsEventStatus_eConsumeNoDefault;  
+
+  nsICalendarUser * user = nsnull;
+
+  nsresult res = model->QueryInterface(kICalendarModelIID, (void**)&calmodel);
+  if (NS_OK != res)
+    return nsEventStatus_eConsumeNoDefault;
+
+  calmodel->GetCalendarUser(user);  
+
+  if (NS_OK != res)
+    return nsEventStatus_eConsumeNoDefault;
+
+  nsILayer * layer;
+
+  user->GetLayer(layer);
+
+  NSCalendar * nscal;
+
+  layer->GetCal(nscal); 
+
+  if (0)
+  {
+    gCalToolkit->GetNSCalendar()->getEventsByRange(evtVctr, *dStart, *dEnd);
+  }
+  nscal->getEventsByRange(evtVctr, *dStart, *dEnd); 
+
   PRUint32 vis_start_min = GetTimeContext()->GetFirstVisibleTime(nsCalPeriodFormat_kHour) * 60 + GetTimeContext()->GetFirstVisibleTime(nsCalPeriodFormat_kMinute);
   PRUint32 vis_end_min   = GetTimeContext()->GetLastVisibleTime(nsCalPeriodFormat_kHour) * 60 + GetTimeContext()->GetLastVisibleTime(nsCalPeriodFormat_kMinute);
   PRFloat64 div_ratio =  ((PRFloat64)(1)) / (PRFloat64)(vis_end_min - vis_start_min) ;
@@ -314,5 +343,8 @@ nsEventStatus nsCalDayViewCanvas :: PaintForeground(nsIRenderingContext& aRender
   }
             
   delete evtVctr;
+
+  NS_RELEASE(calmodel);
+
   return nsEventStatus_eConsumeNoDefault;  
 }

@@ -309,6 +309,7 @@ nsresult nsCalendarShell::Logon()
       NS_ASSERTION(0 != pLayer,"null pLayer");
       pLayer->SetShell(this);
       pLayer->FetchEventsByRange(&d,&d1,&EventList);
+      pLayer->SetCal(mpCalendar);
       mpCalendar->addEventList(&EventList);
     }
     break;

@@ -24,7 +24,8 @@
 #include "nsICalendarModel.h"
 #include "nsICalendarUser.h"
 
-class nsCalendarModel : public nsICalendarModel 
+class nsCalendarModel : public nsICalendarModel,
+                        public nsIModel
 {
 
 public:

@@ -32,6 +32,9 @@
 #include "nsIViewManager.h"
 #include "nsXPFCToolkit.h"
 #include "nsXPFCActionCommand.h"
+#include "nsICalendarUser.h"
+#include "nsICalendarModel.h"
+#include "nsCoreCIID.h"
 
 // XXX: This code should use XML for defining the Root UI. We need to
 //      implement the stream manager first to do this, then lots of
@@ -54,6 +57,11 @@ static NS_DEFINE_IID(kViewCID,                NS_VIEW_CID);
 static NS_DEFINE_IID(kWidgetCID,              NS_CHILD_CID);
 
 static NS_DEFINE_IID(kCCalCanvasCID,          NS_CAL_CANVAS_CID);
+
+static NS_DEFINE_IID(kIModelIID,         NS_IMODEL_IID);
+static NS_DEFINE_IID(kICalendarModelIID, NS_ICALENDAR_MODEL_IID);
+static NS_DEFINE_IID(kCCalendarModelCID, NS_CALENDAR_MODEL_CID);
+
 
 // hardcode names of dll's
 #ifdef NS_WIN32
@@ -176,6 +184,34 @@ nsresult nsCalendarContainer::Init(nsIWidget * aParent,
     mRootCanvas->Init();
 
     gXPFCToolkit->GetCanvasManager()->SetRootCanvas(mRootCanvas);
+
+    /*
+     * Associate the Logged In User's content model with the canvas
+     */
+
+    nsICalendarModel * calmodel = nsnull;
+    nsIModel * model = nsnull;
+
+    res = nsRepository::CreateInstance(kCCalendarModelCID, 
+                                       nsnull, 
+                                       kICalendarModelIID, 
+                                       (void **)&calmodel);
+
+    if (NS_OK != res)
+        return res;
+
+    calmodel->Init();
+
+    calmodel->SetCalendarUser(((nsCalendarShell *)aCalendarShell)->mpLoggedInUser);
+
+    calmodel->QueryInterface(kIModelIID, (void**)&model);
+
+    if (NS_OK != res)
+      return res;
+
+    mRootCanvas->SetModel(model);
+
+    NS_RELEASE(model);
 
     nsNativeWidget native = aParent->GetNativeData(NS_NATIVE_WIDGET);
 

@@ -51,6 +51,11 @@ nsresult nsCalendarModel::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     AddRef();                                                            
     return NS_OK;                                                        
   }                                                                      
+  if (aIID.Equals(kIModelIID)) {                                      
+    *aInstancePtr = (void*) (this);                        
+    AddRef();                                                            
+    return NS_OK;                                                        
+  }                                                                      
 
   return (NS_NOINTERFACE);
 
