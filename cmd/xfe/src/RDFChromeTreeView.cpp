@@ -211,6 +211,8 @@ XFE_RDFChromeTreeView::closeRdfView_cb(Widget /* w */, XtPointer clientData, XtP
 
 
 #ifdef MOZ_SELECTOR_BAR
+
+#if 0
   closeRdfViewCBStruct * obj = (closeRdfViewCBStruct *) clientData; 
   XFE_NavCenterView * ncview = obj->ncview;
 //  Widget nc_base_widget = ncview->getBaseWidget();
@@ -225,6 +227,8 @@ XFE_RDFChromeTreeView::closeRdfView_cb(Widget /* w */, XtPointer clientData, XtP
                           XmNbottomAttachment, XmATTACH_FORM,
                           NULL);
   XtManageChild(selector);
+#endif
+
 #endif /*MOZ_SELECTOR_BAR*/
 }
 
