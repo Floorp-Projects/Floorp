@@ -47,7 +47,6 @@ EXPORT_RESOURCE_SAMPLES = \
 	reload.gif \
 	search.gif \
 	stop.gif \
-	pageInfo.css \
 	navigatorBindings.xml \
     $(NULL)
 

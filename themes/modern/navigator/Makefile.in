@@ -47,7 +47,6 @@ EXPORT_RESOURCE_SAMPLES = \
 	reload.gif \
 	search.gif \
 	stop.gif \
-	pageInfo.css \
 	back-clicked.png \
 	back-disabled.png \
 	back-hover.png \

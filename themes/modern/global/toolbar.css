@@ -1,3 +1,4 @@
+/* this file is not used */
 
 toolbox
   {
@@ -23,6 +24,6 @@ toolbar[collapsed="true"] > toolbargrippy
   
 toolbarseparator 
   { 
-    width                 : 2em; 
+    width                 : 2em;
   }
-  
+

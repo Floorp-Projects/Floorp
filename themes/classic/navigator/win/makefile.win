@@ -30,5 +30,4 @@ clobber::
 
 install:: 
 	$(MAKE_INSTALL) navigator.css $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
-	$(MAKE_INSTALL) pageInfo.css $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 

@@ -40,7 +40,6 @@ install::
 	$(MAKE_INSTALL) mynetscape.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) n-box-persbar.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) navigator.css $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
-	$(MAKE_INSTALL) pageInfo.css $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) print.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) questionl.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) reload.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
