@@ -59,12 +59,13 @@
   <separator/>
 
   <box autostretch="never">
-    <html id="finishtext">&pnl2.finish.text;</html> 
     <spring flex="1"/>
     <button label="&langSelection.label;" oncommand="showLangDialog();"/>
   </box>
 
-  <!--spring flex="1"/-->
+  <spring flex="1"/>
+
+  <html id="finishtext">&pnl2.finish.text;</html> 
 
   <data id="ProfileLocale" />
 </window>
