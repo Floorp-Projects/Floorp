@@ -113,7 +113,7 @@ function loadCalendarServerDialog()
       document.getElementById( "server-path-textbox" ).setAttribute( "readonly", "true" );
    }
    
-   document.getElementById( "calendar-serverwindow" ).setAttribute( "title", titleDataItem.getAttribute( "value" ) );
+   document.getElementById( "calendar-local-serverwindow" ).setAttribute( "title", titleDataItem.getAttribute( "value" ) );
 
    document.getElementById( "server-name-textbox" ).value = gCalendarObject.name;
 
