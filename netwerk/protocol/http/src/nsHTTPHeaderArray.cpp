@@ -117,6 +117,7 @@ nsresult nsHTTPHeaderArray::SetHeader(nsIAtom* aHeader, const char* aValue)
     NS_ADDREF(entry);
     nsresult rv = mHTTPHeaders->AppendElement(entry) ? NS_OK : NS_ERROR_FAILURE;  // XXX this method incorrectly returns a bool
     NS_ASSERTION(NS_SUCCEEDED(rv), "AppendElement failed");
+    NS_RELEASE(entry);
   } 
   // 
   // Append the new value to the existing string
@@ -187,12 +188,13 @@ PRInt32 nsHTTPHeaderArray::GetEntry(nsIAtom* aHeader, nsHeaderEntry** aResult)
     entry   = mHTTPHeaders->ElementAt(i);
     element = NS_STATIC_CAST(nsHeaderEntry*, entry);
     
-    if (aHeader == element->mAtom.get()) 
-    { 
+    if (aHeader == element->mAtom.get()) { 
+      // Does not need to be AddRefed again because the ElementAt() already
+      // did it once...
       *aResult = element;
-      NS_ADDREF(*aResult);
       return i;
     }
+    NS_RELEASE(entry);
   }
   return -1;
 }
