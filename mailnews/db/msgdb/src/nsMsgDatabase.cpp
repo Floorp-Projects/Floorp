@@ -202,7 +202,7 @@ NS_IMETHODIMP nsMsgDatabase::GetMsgHdrCacheSize(PRUint32 *aSize)
 NS_IMETHODIMP nsMsgDatabase::ClearCachedHdrs()
 {
   ClearCachedObjects(PR_FALSE);
-#ifdef DEBUG_bienvenu
+#ifdef DEBUG_bienvenu1
   if (mRefCnt > 1)
   {
     NS_ASSERTION(PR_FALSE, "");
@@ -215,7 +215,7 @@ NS_IMETHODIMP nsMsgDatabase::ClearCachedHdrs()
 void nsMsgDatabase::ClearCachedObjects(PRBool dbGoingAway)
 {
   ClearHdrCache(PR_FALSE);
-#ifdef DEBUG_bienvenu
+#ifdef DEBUG_bienvenu1
   if (m_headersInUse && m_headersInUse->entryCount > 0)
   {
         NS_ASSERTION(PR_FALSE, "leaking headers");
@@ -1310,7 +1310,6 @@ nsresult nsMsgDatabase::InitExistingDB()
     // create new all msg hdrs table, if it doesn't exist.
     if (NS_SUCCEEDED(err) && !m_mdbAllMsgHeadersTable)
     {
-      nsIMdbStore *store = GetStore();
       struct mdbOid allMsgHdrsTableOID;
       allMsgHdrsTableOID.mOid_Scope = m_hdrRowScopeToken;
       allMsgHdrsTableOID.mOid_Id = kAllMsgHdrsTableKey;
@@ -3366,7 +3365,7 @@ nsIMsgThread *	nsMsgDatabase::GetThreadForSubject(nsCString &subject)
       // find thread header for header whose message id we matched.
       thread = GetThreadForThreadId(key);
     }
-#ifdef DEBUG_bienvenu
+#ifdef DEBUG_bienvenu1
     else
     {
       nsresult	rv;
@@ -4152,7 +4151,6 @@ nsresult nsMsgDatabase::PurgeMessagesOlderThan(PRUint32 daysToKeepHdrs, PRBool k
 nsresult nsMsgDatabase::PurgeExcessMessages(PRUint32 numHeadersToKeep, PRBool keepUnreadMessagesOnly)
 {
   nsresult rv = NS_OK;
-  PRInt32 numPurged = 0;
   nsMsgHdr		*pHeader;
   nsCOMPtr <nsISimpleEnumerator> hdrs;
   rv = EnumerateMessages(getter_AddRefs(hdrs));

@@ -149,7 +149,7 @@ NS_IMETHODIMP nsMsgOfflineImapOperation::GetNewFlags(imapMessageFlagsType *aNewF
   PRUint32 flags;
   nsresult rv = m_mdb->GetUint32Property(m_mdbRow, PROP_NEW_FLAGS, &flags, 0);
   *aNewFlags = m_newFlags = (imapMessageFlagsType) flags;
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP nsMsgOfflineImapOperation::SetNewFlags(imapMessageFlagsType aNewFlags)
@@ -180,7 +180,7 @@ NS_IMETHODIMP nsMsgOfflineImapOperation::GetSourceFolderURI(char * *aSourceFolde
   NS_ENSURE_ARG(aSourceFolderURI);
   nsresult rv = m_mdb->GetProperty(m_mdbRow, PROP_SRC_FOLDER_URI, getter_Copies(m_sourceFolder));
   *aSourceFolderURI = nsCRT::strdup(m_sourceFolder);
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP nsMsgOfflineImapOperation::SetSourceFolderURI(const char * aSourceFolderURI)

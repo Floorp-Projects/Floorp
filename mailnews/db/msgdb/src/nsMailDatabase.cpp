@@ -531,16 +531,16 @@ nsresult nsMailDatabase::GetFolderName(nsString &folderName)
 
 NS_IMETHODIMP  nsMailDatabase::RemoveOfflineOp(nsIMsgOfflineImapOperation *op)
 {
-
+  
   nsresult rv = GetAllOfflineOpsTable();
   NS_ENSURE_SUCCESS(rv, rv);
-
-	if (!op || !m_mdbAllOfflineOpsTable)
-		return NS_ERROR_NULL_POINTER;
+  
+  if (!op || !m_mdbAllOfflineOpsTable)
+    return NS_ERROR_NULL_POINTER;
   nsMsgOfflineImapOperation* offlineOp = NS_STATIC_CAST(nsMsgOfflineImapOperation*, op);  // closed system, so this is ok
-	nsIMdbRow* row = offlineOp->GetMDBRow();
-	nsresult ret = m_mdbAllOfflineOpsTable->CutRow(GetEnv(), row);
-	row->CutAllColumns(GetEnv());
+  nsIMdbRow* row = offlineOp->GetMDBRow();
+  rv = m_mdbAllOfflineOpsTable->CutRow(GetEnv(), row);
+  row->CutAllColumns(GetEnv());
   return rv;
 }
 
@@ -651,52 +651,52 @@ NS_IMETHODIMP nsMailDatabase::ListAllOfflineOpIds(nsMsgKeyArray *offlineOpIds)
   NS_ENSURE_ARG(offlineOpIds);
   nsresult rv = GetAllOfflineOpsTable();
   NS_ENSURE_SUCCESS(rv, rv);
-	nsIMdbTableRowCursor *rowCursor;
-	if (m_mdbAllOfflineOpsTable)
-	{
-		nsresult err = m_mdbAllOfflineOpsTable->GetTableRowCursor(GetEnv(), -1, &rowCursor);
-		while (err == NS_OK && rowCursor)
-		{
-			mdbOid outOid;
-			mdb_pos	outPos;
-
-			err = rowCursor->NextRowOid(GetEnv(), &outOid, &outPos);
-			// is this right? Mork is returning a 0 id, but that should valid.
-			if (outPos < 0 || outOid.mOid_Id == (mdb_id) -1)	
-				break;
-			if (err == NS_OK)
-				offlineOpIds->Add(outOid.mOid_Id);
-		}
+  nsIMdbTableRowCursor *rowCursor;
+  if (m_mdbAllOfflineOpsTable)
+  {
+    nsresult err = m_mdbAllOfflineOpsTable->GetTableRowCursor(GetEnv(), -1, &rowCursor);
+    while (err == NS_OK && rowCursor)
+    {
+      mdbOid outOid;
+      mdb_pos	outPos;
+      
+      err = rowCursor->NextRowOid(GetEnv(), &outOid, &outPos);
+      // is this right? Mork is returning a 0 id, but that should valid.
+      if (outPos < 0 || outOid.mOid_Id == (mdb_id) -1)	
+        break;
+      if (err == NS_OK)
+        offlineOpIds->Add(outOid.mOid_Id);
+    }
     rv = (err == NS_OK) ? NS_OK : NS_ERROR_FAILURE;
-		rowCursor->Release();
-	}
-
-	offlineOpIds->QuickSort();
-	return rv;
+    rowCursor->Release();
+  }
+  
+  offlineOpIds->QuickSort();
+  return rv;
 }
 
 NS_IMETHODIMP nsMailDatabase::ListAllOfflineDeletes(nsMsgKeyArray *offlineDeletes)
 {
-	if (!offlineDeletes)
-		return NS_ERROR_NULL_POINTER;
-
+  if (!offlineDeletes)
+    return NS_ERROR_NULL_POINTER;
+  
   nsresult rv = GetAllOfflineOpsTable();
   NS_ENSURE_SUCCESS(rv, rv);
-	nsIMdbTableRowCursor *rowCursor;
-	if (m_mdbAllOfflineOpsTable)
-	{
-		nsresult err = m_mdbAllOfflineOpsTable->GetTableRowCursor(GetEnv(), -1, &rowCursor);
-		while (err == NS_OK && rowCursor)
-		{
-			mdbOid outOid;
-			mdb_pos	outPos;
+  nsIMdbTableRowCursor *rowCursor;
+  if (m_mdbAllOfflineOpsTable)
+  {
+    nsresult err = m_mdbAllOfflineOpsTable->GetTableRowCursor(GetEnv(), -1, &rowCursor);
+    while (err == NS_OK && rowCursor)
+    {
+      mdbOid outOid;
+      mdb_pos	outPos;
       nsIMdbRow* offlineOpRow;
-
-			err = rowCursor->NextRow(GetEnv(), &offlineOpRow, &outPos);
-			// is this right? Mork is returning a 0 id, but that should valid.
-			if (outPos < 0 || offlineOpRow == nsnull)	
-				break;
-			if (err == NS_OK)
+      
+      err = rowCursor->NextRow(GetEnv(), &offlineOpRow, &outPos);
+      // is this right? Mork is returning a 0 id, but that should valid.
+      if (outPos < 0 || offlineOpRow == nsnull)	
+        break;
+      if (err == NS_OK)
       {
         offlineOpRow->GetOid(GetEnv(), &outOid);
         nsIMsgOfflineImapOperation *offlineOp = new nsMsgOfflineImapOperation(this, offlineOpRow);
@@ -705,22 +705,22 @@ NS_IMETHODIMP nsMailDatabase::ListAllOfflineDeletes(nsMsgKeyArray *offlineDelete
           NS_ADDREF(offlineOp);
           imapMessageFlagsType newFlags;
           nsOfflineImapOperationType opType;
-
+          
           offlineOp->GetOperation(&opType);
           offlineOp->GetNewFlags(&newFlags);
           if (opType & nsIMsgOfflineImapOperation::kMsgMoved || 
-              ((opType & nsIMsgOfflineImapOperation::kFlagsChanged) 
-              && (newFlags & nsIMsgOfflineImapOperation::kMsgMarkedDeleted)))
-    				offlineDeletes->Add(outOid.mOid_Id);
+            ((opType & nsIMsgOfflineImapOperation::kFlagsChanged) 
+            && (newFlags & nsIMsgOfflineImapOperation::kMsgMarkedDeleted)))
+            offlineDeletes->Add(outOid.mOid_Id);
           NS_RELEASE(offlineOp);
         }
         offlineOpRow->Release();
       }
-		}
+    }
     rv = (err == NS_OK) ? NS_OK : NS_ERROR_FAILURE;
-		rowCursor->Release();
-	}
-	return rv;
+    rowCursor->Release();
+  }
+  return rv;
 }
 
 /* static */
