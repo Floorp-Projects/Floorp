@@ -1321,6 +1321,13 @@ NS_IMETHODIMP nsWebShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
 }
 
 // nsIURIContentListener support
+NS_IMETHODIMP nsWebShell::OnStartURIOpen(nsIURI* aURI, const char* aWindowTarget,
+   PRBool* aAbortOpen)
+{
+   NS_ENSURE_SUCCESS(EnsureContentListener(), NS_ERROR_FAILURE);
+   return mContentListener->OnStartURIOpen(aURI, aWindowTarget, aAbortOpen);
+}
+
 NS_IMETHODIMP
 nsWebShell::GetProtocolHandler(nsIURI *aURI, nsIProtocolHandler **aProtocolHandler)
 {
