@@ -54,11 +54,11 @@ public:
 
   static nsresult Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
   static nsresult RegisterProc(nsIComponentManager *aCompMgr,
-                               nsIFileSpec *aPath,
+                               nsIFile *aPath,
                                const char *registryLocation,
                                const char *componentType);
   static nsresult UnregisterProc(nsIComponentManager *aCompMgr,
-                                 nsIFileSpec *aPath,
+                                 nsIFile *aPath,
                                  const char *registryLocation);
 
 private:

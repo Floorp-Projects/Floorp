@@ -52,7 +52,7 @@ nsresult nsCookieHTTPNotify::Create(nsISupports *aOuter, REFNSIID aIID, void **a
 }
 
 nsresult nsCookieHTTPNotify::RegisterProc(nsIComponentManager *aCompMgr,
-                                                   nsIFileSpec *aPath,
+                                                   nsIFile *aPath,
                                                    const char *registryLocation,
                                                    const char *componentType)
 {
@@ -73,7 +73,7 @@ nsresult nsCookieHTTPNotify::RegisterProc(nsIComponentManager *aCompMgr,
 }
 
 nsresult nsCookieHTTPNotify::UnregisterProc(nsIComponentManager *aCompMgr,
-                                                     nsIFileSpec *aPath,
+                                                     nsIFile *aPath,
                                                      const char *registryLocation)
 {
     nsresult rv;
