@@ -37,25 +37,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsEditorService_h___
-#define nsEditorService_h___
+#include "nsEditorService.h"
 
-#include "nsIEditorService.h"
-#include "nsICmdLineHandler.h"
-
-class nsEditorService : public nsIEditorService,
-                      public nsICmdLineHandler
+nsEditorService::nsEditorService()
 {
-public:
+    NS_INIT_ISUPPORTS();
+}
 
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIEDITORSERVICE
-  NS_DECL_NSICMDLINEHANDLER
-  
-  nsEditorService();
-  virtual ~nsEditorService();
+nsEditorService::~nsEditorService()
+{
+}
 
-  CMDLINEHANDLER_REGISTERPROC_DECLS
-};
+NS_IMPL_ADDREF(nsEditorService);
+NS_IMPL_RELEASE(nsEditorService);
+NS_IMPL_QUERY_INTERFACE1(nsEditorService, nsICmdLineHandler) 
 
-#endif /* nsEditorService_h___ */
+CMDLINEHANDLER_IMPL(nsEditorService,"-edit","general.startup.editor","chrome://editor/content/editor.xul","Start with editor.","@mozilla.org/commandlinehandler/general-startup;1?type=editor","Editor Startup Handler", PR_TRUE,"about:blank", PR_TRUE)

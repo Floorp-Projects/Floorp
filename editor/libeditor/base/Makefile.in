@@ -40,7 +40,6 @@ REQUIRES	= xpcom \
 		  necko \
 		  pref \
 		  view \
-		  appshell \
 		  gfx \
 		  widget \
 		  xuldoc \
@@ -55,7 +54,6 @@ CPPSRCS		=                           \
 		nsEditor.cpp                \
 		nsEditorCommands.cpp        \
 		nsEditorController.cpp      \
-		nsEditorService.cpp         \
 		nsEditorUtils.cpp           \
 		nsSelectionState.cpp        \
 		$(NULL)

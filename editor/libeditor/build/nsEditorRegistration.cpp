@@ -40,7 +40,6 @@
 
 #include "nsEditorCID.h"
 #include "nsEditor.h"				// for gInstanceCount
-#include "nsEditorService.h" 
 #include "nsHTMLEditor.h"
 #include "nsPlaintextEditor.h"
 
@@ -55,7 +54,6 @@
 // NOTE: This creates an instance of objects by using the default constructor
 //
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsEditorService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPlaintextEditor)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsEditorController)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTextServicesDocument)
@@ -82,16 +80,6 @@ static const nsModuleComponentInfo components[] = {
     { "HTML Editor", NS_HTMLEDITOR_CID,
       "@mozilla.org/editor/htmleditor;1", nsHTMLEditorConstructor, },
 #endif
-    { "Editor Service", NS_EDITORSERVICE_CID,
-      "@mozilla.org/editor/editorservice;1", nsEditorServiceConstructor,},
-    { "Editor Startup Handler", NS_EDITORSERVICE_CID,
-      "@mozilla.org/commandlinehandler/general-startup;1?type=editor",
-      nsEditorServiceConstructor,
-      nsEditorService::RegisterProc,
-      nsEditorService::UnregisterProc, },
-    { "Edit Startup Handler", NS_EDITORSERVICE_CID,
-      "@mozilla.org/commandlinehandler/general-startup;1?type=edit",
-      nsEditorServiceConstructor, },
     { "Editor Controller", NS_EDITORCONTROLLER_CID,
       "@mozilla.org/editor/editorcontroller;1",
       nsEditorControllerConstructor, },

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -36,11 +36,28 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
- 
-#include "nsISupports.idl"
 
-[scriptable, uuid(4c4a7a9a-1dd2-11b2-b8e1-e711f07b7f52)]
-interface nsIEditorService: nsISupports
+#ifndef nsEditorService_h___
+#define nsEditorService_h___
+
+#include "nsICmdLineHandler.h"
+
+class nsEditorService : public nsICmdLineHandler
 {
-    /* nothing yet, but this is the place to put editor service stuff */
+public:
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSICMDLINEHANDLER
+  
+  nsEditorService();
+  virtual ~nsEditorService();
+
+  CMDLINEHANDLER_REGISTERPROC_DECLS
 };
+
+#define NS_EDITORSERVICE_CID \
+{/* {91ea5158-1dd2-11b2-939c-cfe895090b1b}*/ \
+0x91ea5158, 0x1dd2, 0x11b2, \
+{ 0x93, 0x9c, 0xcf, 0xe8, 0x95, 0x09, 0x0b, 0x1b} } 
+
+#endif /* nsEditorService_h___ */

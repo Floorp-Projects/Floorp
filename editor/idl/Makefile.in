@@ -38,7 +38,6 @@ XPIDLSRCS	= \
 		nsIEditorLogging.idl \
 		nsIEditorMailSupport.idl \
 		nsIEditorObserver.idl \
-		nsIEditorService.idl \
 		nsIEditorShell.idl \
 		nsIEditorSpellCheck.idl \
 		nsIEditorStyleSheets.idl \
