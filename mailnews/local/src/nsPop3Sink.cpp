@@ -227,7 +227,8 @@ nsPop3Sink::AbortMailDelivery()
 {
     if (m_outFileStream)
     {
-        m_outFileStream->close();
+        if (m_outFileStream->is_open())
+          m_outFileStream->close();
         delete m_outFileStream;
         m_outFileStream = 0;
     }
@@ -251,20 +252,25 @@ nsPop3Sink::IncorporateBegin(const char* uidlString,
     if (closure)
         *closure = (void*) this;
     
+    m_msgOffset = m_outFileStream->tell();
     char *dummyEnvelope = GetDummyEnvelope();
-
-    WriteLineToMailbox(dummyEnvelope);
+    
+    nsresult rv = WriteLineToMailbox(dummyEnvelope);
+    if (NS_FAILED(rv)) return rv;
     if (uidlString)
     {
         nsCAutoString uidlCString("X-UIDL: ");
         uidlCString += uidlString;
         uidlCString += MSG_LINEBREAK;
-        WriteLineToMailbox(NS_CONST_CAST(char*, uidlCString.get()));
+        rv = WriteLineToMailbox(NS_CONST_CAST(char*, uidlCString.get()));
+        if (NS_FAILED(rv)) return rv;
     }
     // WriteLineToMailbox("X-Mozilla-Status: 8000" MSG_LINEBREAK);
     char *statusLine = PR_smprintf(X_MOZILLA_STATUS_FORMAT MSG_LINEBREAK, flags);
-    WriteLineToMailbox(statusLine);
-    WriteLineToMailbox("X-Mozilla-Status2: 00000000" MSG_LINEBREAK);
+    rv = WriteLineToMailbox(statusLine);
+    if (NS_FAILED(rv)) return rv;
+    rv = WriteLineToMailbox("X-Mozilla-Status2: 00000000" MSG_LINEBREAK);
+    if (NS_FAILED(rv)) return rv;
     PR_smprintf_free(statusLine);
     return NS_OK;
 }
@@ -343,8 +349,7 @@ nsPop3Sink::GetDummyEnvelope(void)
 }
 
 nsresult
-nsPop3Sink::IncorporateWrite(void* closure,
-                             const char* block,
+nsPop3Sink::IncorporateWrite(const char* block,
                              PRInt32 length)
 {
     if(length > 1 && *block == '.' && 
@@ -371,7 +376,8 @@ nsPop3Sink::IncorporateWrite(void* closure,
 			*m_outputBuffer = '>';
     nsCRT::memcpy(m_outputBuffer + blockOffset, block, length - blockOffset);
     *(m_outputBuffer + length) = 0;
-		WriteLineToMailbox (m_outputBuffer);
+		nsresult rv = WriteLineToMailbox (m_outputBuffer);
+        if (NS_FAILED(rv)) return rv;
 		// Is this where we should hook up the new mail parser? Is this block a line, or a real block?
 		// I think it's a real line. We're also not escaping lines that start with "From ", which is
 		// a potentially horrible bug...Should this be done here, or in the mailbox parser? I vote for
@@ -384,23 +390,25 @@ nsPop3Sink::IncorporateWrite(void* closure,
 
 nsresult nsPop3Sink::WriteLineToMailbox(char *buffer)
 {
+    
 	if (buffer)
-	{
+    {
+        PRInt32 bufferLen = PL_strlen(buffer);
 		if (m_newMailParser)
-			m_newMailParser->HandleLine(buffer, PL_strlen(buffer));
+			m_newMailParser->HandleLine(buffer, bufferLen);
     // The following (!m_outFileStream etc) was added to make sure that we don't write somewhere 
     // where for some reason or another we can't write too and lose the messages
     // See bug 62480
         if (!m_outFileStream)
             return NS_ERROR_OUT_OF_MEMORY;
-        *m_outFileStream << buffer;
-
+        PRInt32 bytes = m_outFileStream->write(buffer,bufferLen);
+        if (bytes != bufferLen) return NS_ERROR_FAILURE;
 	}
 	return NS_OK;
 }
 
 nsresult
-nsPop3Sink::IncorporateComplete(void* closure)
+nsPop3Sink::IncorporateComplete()
 {
   if (m_buildMessageUri && m_baseMessageUri)
   {
@@ -409,8 +417,12 @@ nsPop3Sink::IncorporateComplete(void* closure)
       m_messageUri.SetLength(0);
       nsBuildLocalMessageURI(m_baseMessageUri, msgKey, m_messageUri);
   }
-	WriteLineToMailbox(MSG_LINEBREAK);
-        m_newMailParser->PublishMsgHeader();
+
+	nsresult rv = WriteLineToMailbox(MSG_LINEBREAK);
+    if (NS_FAILED(rv)) return rv;
+    rv = m_outFileStream->flush();   //to make sure the message is written to the disk
+    if (NS_FAILED(rv)) return rv;
+    m_newMailParser->PublishMsgHeader();
 
 	// do not take out this printf as it is used by QA 
     // as part of the smoketest process!. They depend on seeing
@@ -420,14 +432,32 @@ nsPop3Sink::IncorporateComplete(void* closure)
 }
 
 nsresult
-nsPop3Sink::IncorporateAbort(void* closure, PRInt32 status)
+nsPop3Sink::IncorporateAbort(PRBool uidlDownload)
 {
-	WriteLineToMailbox(MSG_LINEBREAK);
-
+  nsresult rv;
+  rv = m_outFileStream->close();   //need to close so that the file can be truncated.
+  NS_ENSURE_SUCCESS(rv,rv);
+  if (m_msgOffset >= 0)
+  {
+     nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(m_popServer);
+     NS_ASSERTION(server, "Could not get the pop server !!");
+     nsCOMPtr<nsIFileSpec> mailDirectory;
+     if (uidlDownload)
+        m_folder->GetPath(getter_AddRefs(mailDirectory));
+     else
+     {
+       rv = server->GetLocalPath(getter_AddRefs(mailDirectory));
+       NS_ENSURE_SUCCESS(rv,rv);
+       rv = mailDirectory->AppendRelativeUnixPath("Inbox");
+       NS_ENSURE_SUCCESS(rv,rv);
+     }
+     rv = mailDirectory->Truncate(m_msgOffset);
+     NS_ENSURE_SUCCESS(rv,rv);
+  }
 #ifdef DEBUG
     printf("Incorporate message abort.\n");
 #endif 
-    return NS_OK;
+    return rv;
 }
 
 nsresult
