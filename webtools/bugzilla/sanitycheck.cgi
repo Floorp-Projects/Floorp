@@ -29,6 +29,29 @@ require "CGI.pl";
 
 use vars qw(%FORM $unconfirmedstate);
 
+###########################################################################
+# General subs
+###########################################################################
+
+sub Status {
+    my ($str) = (@_);
+    print "$str <p>\n";
+}
+
+sub Alert {
+    my ($str) = (@_);
+    Status("<font color=\"red\">$str</font>");
+}
+
+sub BugLink {
+    my ($id) = (@_);
+    return "<a href=\"show_bug.cgi?id=$id\">$id</a>";
+}
+
+###########################################################################
+# Start
+###########################################################################
+
 ConnectToDatabase();
 
 confirm_login();
@@ -48,34 +71,7 @@ UserInGroup("editbugs")
 print "Content-type: text/html\n";
 print "\n";
 
-my $offervotecacherebuild = 0;
-
-sub Status {
-    my ($str) = (@_);
-    print "$str <p>\n";
-}
-
-sub Alert {
-    my ($str) = (@_);
-    Status("<font color=\"red\">$str</font>");
-}
-
-sub BugLink {
-    my ($id) = (@_);
-    return "<a href=\"show_bug.cgi?id=$id\">$id</a>";
-}
-
-sub AlertBadVoteCache {
-    my ($id) = (@_);
-    Alert("Bad vote cache for bug " . BugLink($id));
-    $offervotecacherebuild = 1;
-}
-
-my @badbugs;
-
-
 my @row;
-my @checklist;
 
 PutHeader("Bugzilla Sanity Check");
 
@@ -354,6 +350,14 @@ while (my ($id,$email) = (FetchSQLData())) {
 # Perform vote/keyword cache checks
 ###########################################################################
 
+my $offervotecacherebuild = 0;
+
+sub AlertBadVoteCache {
+    my ($id) = (@_);
+    Alert("Bad vote cache for bug " . BugLink($id));
+    $offervotecacherebuild = 1;
+}
+
 SendSQL("SELECT bug_id,votes,keywords FROM bugs " .
         "WHERE votes != 0 OR keywords != ''");
 
@@ -456,7 +460,7 @@ while (1) {
     push(@list, $k);
 }
 
-@badbugs = ();
+my @badbugs = ();
 
 foreach my $b (keys(%keyword)) {
     if (!exists $realk{$b} || $realk{$b} ne $keyword{$b}) {
