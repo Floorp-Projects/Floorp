@@ -159,7 +159,10 @@ Rights Reserved.
   <command id="cmd_selectAll"/>
   <command id="cmd_selectThread" oncommand="goDoCommand('cmd_selectThread')"/>
   <command id="cmd_selectFlagged" oncommand="goDoCommand('cmd_selectFlagged')"/>
-  <command id="cmd_properties" oncommand="goDoCommand('cmd_properties')"/>
+  <command id="cmd_properties" oncommand="goDoCommand('cmd_properties')"
+         valueNewsgroup="&folderPropsNewsgroupCmd.label;"
+         valueFolder="&folderPropsFolderCmd.label;"
+         valueGeneric="&folderPropsCmd.label;"/>
 </commandset>
 
 <commandset id="mailEditContextMenuItems">

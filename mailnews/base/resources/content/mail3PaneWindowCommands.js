@@ -91,7 +91,6 @@ var FolderPaneController =
                                 }
 				else
 					return false;
-
 			default:
 				return false;
 		}
@@ -424,7 +423,7 @@ var DefaultController =
       case "cmd_sendUnsentMsgs":
         return IsSendUnsentMsgsEnabled(null);
       case "cmd_properties":
-        return IsPropertiesEnabled();
+        return IsPropertiesEnabled(command);
       case "button_getNewMessages":
       case "cmd_getNewMessages":
       case "cmd_getMsgsForAuthAccounts":
@@ -875,9 +874,36 @@ function IsFolderCharsetEnabled()
   return IsFolderSelected();
 }
 
-function IsPropertiesEnabled()
+function IsPropertiesEnabled(command)
 {
+   try 
+   {
+      var serverType;
+      var folderOutliner = GetFolderOutliner();
+      var folderResource = GetSelectedFolderResource();
+      
+      serverType = GetFolderAttribute(folderOutliner, folderResource, "ServerType");
+   
+      switch (serverType)
+      {
+        case "none":
+        case "imap":
+        case "pop3":
+          goSetMenuValue(command, 'valueFolder');
+          break;
+        case "nntp":
+          goSetMenuValue(command, 'valueNewsgroup');
+          break
+        default:
+          goSetMenuValue(command, 'valueGeneric');
+      }
+   }
+   catch (ex) 
+   {
+      //properties menu failure
+   }
   return IsFolderSelected();
+  
 }
 
 function IsViewNavigationItemEnabled()

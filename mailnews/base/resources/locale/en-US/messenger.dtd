@@ -104,6 +104,8 @@ Rights Reserved.
 <!ENTITY filtersCmd.label "Message Filters...">
 <!ENTITY filtersCmd.accesskey "i">
 <!ENTITY folderPropsCmd.label "Properties...">
+<!ENTITY folderPropsFolderCmd.label "Folder Properties...">
+<!ENTITY folderPropsNewsgroupCmd.label "Newsgroup Properties...">
 <!ENTITY folderPropsCmd.accesskey "o">
 <!ENTITY accountManagerCmd.label "Mail &amp; Newsgroups Account Settings...">
 <!ENTITY accountManagerCmd.accesskey "M">
