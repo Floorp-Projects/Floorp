@@ -783,6 +783,7 @@
     "nshtmldocument.bgcolor", \
     "nshtmldocument.captureevents", \
     "nshtmldocument.clear", \
+    "nshtmldocument.domainset", \
     "nshtmldocument.embeds", \
     "nshtmldocument.fgcolor", \
     "nshtmldocument.getselection", \

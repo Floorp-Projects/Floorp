@@ -53,6 +53,14 @@
 
 #include "nsCExternalHandlerService.h" // contains contractids for the helper app service
 
+// Following are for Bug 13871: Prevent frameset spoofing
+#include "nsIPref.h"
+#include "nsIWebNavigation.h"
+#include "nsIDocument.h"
+#include "nsIDOMDocument.h"
+#include "nsICodebasePrincipal.h"
+#include "nsIDOMNSHTMLDocument.h"
+
 static NS_DEFINE_CID(kURILoaderCID, NS_URI_LOADER_CID);
 static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 
@@ -463,6 +471,13 @@ nsURILoader::nsURILoader()
 {
   NS_INIT_ISUPPORTS();
   m_listeners = new nsVoidArray();
+ 
+  // Check pref to see if we should prevent frameset spoofing
+  mValidateOrigin = PR_TRUE; // secure by default, pref disables check
+  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
+  NS_ASSERTION(prefs,"nsURILoader: could not get prefs service!\n");
+  if (prefs)
+    prefs->GetBoolPref("browser.frame.validate_origin", &mValidateOrigin);
 }
 
 nsURILoader::~nsURILoader()
@@ -506,7 +521,143 @@ NS_IMETHODIMP nsURILoader::OpenURI(nsIChannel * aChannel,
   return OpenURIVia(aChannel, aCommand, aWindowTarget, aWindowContext, 0 /* ip address */); 
 }
 
-NS_IMETHODIMP nsURILoader::GetTarget(nsIChannel * aChannel, const char * aWindowTarget, 
+//
+// Bug 13871: Prevent frameset spoofing
+// Check if origin document uri is the equivalent to target's principal.
+// This takes into account subdomain checking if document.domain is set for
+// Nav 4.x compatability.
+//
+// The following was derived from nsCodeBasePrincipal::Equals but in addition
+// to the host PL_strcmp, it accepts a subdomain (nsHTMLDocument::SetDomain)
+// if the document.domain was set.
+//
+static
+PRBool SameOrSubdomainOfTarget(nsIURI* aOriginURI, nsIURI* aTargetURI, PRBool aDocumentDomainSet)
+{
+  nsXPIDLCString targetScheme;
+  nsresult rv = aTargetURI->GetScheme(getter_Copies(targetScheme));
+  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && targetScheme, PR_TRUE);
+
+  nsXPIDLCString originScheme;
+  rv = aOriginURI->GetScheme(getter_Copies(originScheme));
+  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && originScheme, PR_TRUE);
+
+  if (PL_strcmp(targetScheme, originScheme))
+    return PR_FALSE; // Different schemes - check fails
+
+  if (! PL_strcmp(targetScheme, "file"))
+    return PR_TRUE; // All file: urls are considered to have the same origin.
+
+  if (! PL_strcmp(targetScheme, "imap") ||
+      ! PL_strcmp(targetScheme, "mailbox") ||
+      ! PL_strcmp(targetScheme, "news"))
+  {
+
+    // Each message is a distinct trust domain; use the whole spec for comparison
+    nsXPIDLCString targetSpec;
+    rv =aTargetURI->GetSpec(getter_Copies(targetSpec));
+    NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && targetSpec, PR_TRUE);
+
+    nsXPIDLCString originSpec;
+    rv = aOriginURI->GetSpec(getter_Copies(originSpec));
+    NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && originSpec, PR_TRUE);
+
+    return (! PL_strcmp(targetSpec, originSpec)); // True if full spec is same, false otherwise
+  }
+
+  // Compare ports.
+  int targetPort, originPort;
+  rv = aTargetURI->GetPort(&targetPort);
+  NS_ENSURE_TRUE(NS_SUCCEEDED(rv), PR_TRUE);
+
+  rv = aOriginURI->GetPort(&originPort);
+  NS_ENSURE_TRUE(NS_SUCCEEDED(rv), PR_TRUE);
+
+  if (targetPort != originPort)
+    return PR_FALSE; // Different port - check fails
+
+  // Need to check the hosts
+  nsXPIDLCString targetHost;
+  rv = aTargetURI->GetHost(getter_Copies(targetHost));
+  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && targetHost, PR_TRUE);
+
+  nsXPIDLCString originHost;
+  rv = aOriginURI->GetHost(getter_Copies(originHost));
+  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && originHost, PR_TRUE);
+
+  if (!PL_strcmp(targetHost, originHost))
+    return PR_TRUE; // Hosts are the same - check passed
+  
+  // If document.domain was set, do the relaxed check
+  // Right align hostnames and compare - ensure preceeding char is . or /
+  if (aDocumentDomainSet)
+  {
+    int targetHostLen = PL_strlen(targetHost);
+    int originHostLen = PL_strlen(originHost);
+    int prefixChar = originHostLen-targetHostLen-1;
+
+    return ((originHostLen > targetHostLen) &&
+            (! PL_strcmp((originHost+prefixChar+1), targetHost)) &&
+            (originHost[prefixChar] == '.' || originHost[prefixChar] == '/'));
+  }
+
+  return PR_FALSE; // document.domain not set and hosts not same - check failed
+}
+
+//
+// Bug 13871: Prevent frameset spoofing
+//
+// This routine answers: 'Is origin's document from same domain as target's document?'
+// Be optimistic that domain is same - error cases all answer 'yes'.
+//
+// We have to compare the URI of the actual document loaded in the origin,
+// ignoring any document.domain that was set, with the principal URI of the
+// target (including any document.domain that was set).  This puts control
+// of loading in the hands of the target, which is more secure. (per Nav 4.x)
+//
+static
+PRBool ValidateOrigin(nsIDocShellTreeItem* aOriginTreeItem, nsIDocShellTreeItem* aTargetTreeItem)
+{
+  // Get origin document uri (ignoring document.domain)
+  nsCOMPtr<nsIWebNavigation> originWebNav(do_QueryInterface(aOriginTreeItem));
+  NS_ENSURE_TRUE(originWebNav, PR_TRUE);
+
+  nsCOMPtr<nsIURI> originDocumentURI;
+  nsresult rv = originWebNav->GetCurrentURI(getter_AddRefs(originDocumentURI));
+  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && originDocumentURI, PR_TRUE);
+
+  // Get target principal uri (including document.domain)
+  nsCOMPtr<nsIDOMDocument> targetDOMDocument(do_GetInterface(aTargetTreeItem));
+  NS_ENSURE_TRUE(targetDOMDocument, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDocument> targetDocument(do_QueryInterface(targetDOMDocument));
+  NS_ENSURE_TRUE(targetDocument, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIPrincipal> targetPrincipal;
+  rv = targetDocument->GetPrincipal(getter_AddRefs(targetPrincipal));
+  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && targetPrincipal, rv);
+
+  nsCOMPtr<nsICodebasePrincipal> targetCodebasePrincipal(do_QueryInterface(targetPrincipal));
+  NS_ENSURE_TRUE(targetCodebasePrincipal, PR_TRUE);
+
+  nsCOMPtr<nsIURI> targetPrincipalURI;
+  rv = targetCodebasePrincipal->GetURI(getter_AddRefs(targetPrincipalURI));
+  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && targetPrincipalURI, PR_TRUE);
+
+  // Find out if document.domain was set
+  nsCOMPtr<nsIDOMNSHTMLDocument> targetDOMNSHTMLDocument(do_QueryInterface(targetDocument));
+  NS_ENSURE_TRUE(targetDOMNSHTMLDocument, NS_ERROR_FAILURE);
+
+  PRBool documentDomainSet;
+  rv = targetDOMNSHTMLDocument->GetDomainSet(&documentDomainSet);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Is origin same principal or a subdomain of target's document.domain
+  // Compare actual URI of origin document, not origin principal's URI. (Per Nav 4.x)
+  return SameOrSubdomainOfTarget(originDocumentURI, targetPrincipalURI, documentDomainSet);
+}
+
+NS_IMETHODIMP nsURILoader::GetTarget(nsIChannel * aChannel, nsCString &aWindowTarget, 
                                      nsISupports * aWindowContext,
                                      nsISupports ** aRetargetedWindowContext)
 {
@@ -549,6 +700,33 @@ NS_IMETHODIMP nsURILoader::GetTarget(nsIChannel * aChannel, const char * aWindow
   else
   {
     windowCtxtAsTreeItem->FindItemWithName(name.GetUnicode(), nsnull, getter_AddRefs(treeItem));
+
+    // Bug 13871: Prevent frameset spoofing
+    //     See BugSplat 336170, 338737 and XP_FindNamedContextInList in the classic codebase
+    //     Per Nav's behaviour:
+    //         - pref controlled: "browser.frame.validate_origin" (mValidateOrigin)
+    //         - allow load if host of target or target's parent is same as host of origin
+    //         - allow load if target is a top level window
+
+    // Check to see if pref is true
+    if (mValidateOrigin && windowCtxtAsTreeItem && treeItem) {
+
+       // Is origin frame from the same domain as target frame?
+       if (! ValidateOrigin(windowCtxtAsTreeItem, treeItem)) {
+
+         // No.  Is origin frame from the same domain as target's parent?
+         nsCOMPtr<nsIDocShellTreeItem> targetParentTreeItem;
+         nsresult rv = treeItem->GetSameTypeParent(getter_AddRefs(targetParentTreeItem));
+         if (NS_SUCCEEDED(rv) && targetParentTreeItem) {
+           if (! ValidateOrigin(windowCtxtAsTreeItem, targetParentTreeItem)) {
+
+             // Neither is from the origin domain, send load to a new window (_blank)
+             *aRetargetedWindowContext = aWindowContext;
+             aWindowTarget.Assign("_blank");
+           } // else (target's parent from origin domain) allow this load
+         } // else (no parent) allow this load since shell is a toplevel window
+       } // else (target from origin domain) allow this load
+     } // else (pref is false) allow this load
   }
 
   nsCOMPtr<nsISupports> treeItemCtxt (do_QueryInterface(treeItem));
@@ -592,8 +770,9 @@ NS_IMETHODIMP nsURILoader::OpenURIVia(nsIChannel * aChannel,
       }   
     }
 
+  nsCAutoString windowTarget(aWindowTarget);
   nsCOMPtr<nsISupports> retargetedWindowContext;
-  NS_ENSURE_SUCCESS(GetTarget(aChannel, aWindowTarget, aOriginalWindowContext, getter_AddRefs(retargetedWindowContext)), NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(GetTarget(aChannel, windowTarget, aOriginalWindowContext, getter_AddRefs(retargetedWindowContext)), NS_ERROR_FAILURE);
 
   NS_NEWXPCOM(loader, nsDocumentOpenInfo);
   if (!loader) return NS_ERROR_OUT_OF_MEMORY;
@@ -605,7 +784,7 @@ NS_IMETHODIMP nsURILoader::OpenURIVia(nsIChannel * aChannel,
   loader->Init(retargetedWindowContext, aOriginalWindowContext);    // Extra Info
 
   // now instruct the loader to go ahead and open the url
-  rv = loader->Open(aChannel, aCommand, aWindowTarget, retargetedWindowContext);
+  rv = loader->Open(aChannel, aCommand, windowTarget, retargetedWindowContext);
   NS_RELEASE(loader);
 
   return rv;

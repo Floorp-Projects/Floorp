@@ -27,6 +27,7 @@
 #include "nsISupportsUtils.h"
 #include "nsCOMPtr.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsString.h"
 
 class nsVoidArray;
 
@@ -45,6 +46,9 @@ protected:
   // when they go away.
   nsVoidArray * m_listeners;
 
+  // If set, we will try to prevent frame spoofing (set by pref in constructor)
+  PRBool mValidateOrigin;
+
   // prepare the load cookie for the window context
   nsresult SetupLoadCookie(nsISupports * aWindowContext, nsIInterfaceRequestor ** aLoadCookie);
 
@@ -55,7 +59,7 @@ protected:
                              const char * aWindowTarget,
                              char ** aContentTypeToUse);
 
-  NS_IMETHOD GetTarget(nsIChannel * aChannel, const char * aWindowTarget, 
+  NS_IMETHOD GetTarget(nsIChannel * aChannel, nsCString &aWindowTarget, 
                        nsISupports * aWindowContext,
                        nsISupports ** aRetargetedWindowContext);
 };

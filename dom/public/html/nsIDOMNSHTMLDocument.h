@@ -63,6 +63,8 @@ public:
 
   NS_IMETHOD    GetEmbeds(nsIDOMHTMLCollection** aEmbeds)=0;
 
+  NS_IMETHOD    GetDomainSet(PRBool* aDomainSet)=0;
+
   NS_IMETHOD    GetSelection(nsAWritableString& aReturn)=0;
 
   NS_IMETHOD    NamedItem(JSContext* cx, jsval* argv, PRUint32 argc, jsval* aReturn)=0;
@@ -98,6 +100,7 @@ public:
   NS_IMETHOD    SetFgColor(const nsAReadableString& aFgColor);  \
   NS_IMETHOD    GetLastModified(nsAWritableString& aLastModified);  \
   NS_IMETHOD    GetEmbeds(nsIDOMHTMLCollection** aEmbeds);  \
+  NS_IMETHOD    GetDomainSet(PRBool* aDomainSet);  \
   NS_IMETHOD    GetSelection(nsAWritableString& aReturn);  \
   NS_IMETHOD    NamedItem(JSContext* cx, jsval* argv, PRUint32 argc, jsval* aReturn);  \
   NS_IMETHOD    Open(JSContext* cx, jsval* argv, PRUint32 argc);  \
@@ -125,6 +128,7 @@ public:
   NS_IMETHOD    SetFgColor(const nsAReadableString& aFgColor) { return _to SetFgColor(aFgColor); } \
   NS_IMETHOD    GetLastModified(nsAWritableString& aLastModified) { return _to GetLastModified(aLastModified); } \
   NS_IMETHOD    GetEmbeds(nsIDOMHTMLCollection** aEmbeds) { return _to GetEmbeds(aEmbeds); } \
+  NS_IMETHOD    GetDomainSet(PRBool* aDomainSet) { return _to GetDomainSet(aDomainSet); } \
   NS_IMETHOD    GetSelection(nsAWritableString& aReturn) { return _to GetSelection(aReturn); }  \
   NS_IMETHOD    NamedItem(JSContext* cx, jsval* argv, PRUint32 argc, jsval* aReturn) { return _to NamedItem(cx, argv, argc, aReturn); }  \
   NS_IMETHOD    Open(JSContext* cx, jsval* argv, PRUint32 argc) { return _to Open(cx, argv, argc); }  \
