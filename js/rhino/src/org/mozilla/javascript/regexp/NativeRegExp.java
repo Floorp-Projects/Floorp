@@ -158,7 +158,6 @@ public class NativeRegExp extends IdScriptable implements Function {
             dumpRegExp(state, ren);
         this.lastIndex = 0;
         this.parenCount = state.parenCount;
-        this.flags = flags;
 
         scope = getTopLevelScope(scope);
         setPrototype(getClassPrototype(scope, "RegExp"));
