@@ -430,12 +430,11 @@ NS_IMPL_ISUPPORTS3(HTMLCSSStyleSheetImpl,
 NS_IMETHODIMP
 HTMLCSSStyleSheetImpl::RulesMatching(ElementRuleProcessorData* aData)
 {
-  nsIStyledContent *styledContent = aData->mStyledContent;
+  nsIStyledContent* styledContent = aData->mStyledContent;
   
   if (styledContent) {
     // just get the one and only style rule from the content's STYLE attribute
-    nsCOMPtr<nsICSSStyleRule> rule;
-    styledContent->GetInlineStyleRule(getter_AddRefs(rule));
+    nsICSSStyleRule* rule = styledContent->GetInlineStyleRule();
     if (rule)
       aData->mRuleWalker->Forward(rule);
   }

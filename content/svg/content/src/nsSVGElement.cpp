@@ -342,18 +342,16 @@ nsSVGElement::SetInlineStyleRule(nsICSSStyleRule* aStyleRule, PRBool aNotify)
                           aNotify);
 }
 
-NS_IMETHODIMP
-nsSVGElement::GetInlineStyleRule(nsICSSStyleRule** aStyleRule)
+nsICSSStyleRule*
+nsSVGElement::GetInlineStyleRule()
 {
-  *aStyleRule = nsnull;
-
   const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(nsSVGAtoms::style);
 
   if (attrVal && attrVal->Type() == nsAttrValue::eCSSStyleRule) {
-    NS_ADDREF(*aStyleRule = attrVal->GetCSSStyleRuleValue());
+    return attrVal->GetCSSStyleRuleValue();
   }
 
-  return NS_OK;
+  return nsnull;
 }
 
 // PresentationAttributes-FillStroke

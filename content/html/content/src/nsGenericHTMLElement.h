@@ -214,7 +214,7 @@ public:
   virtual nsIAtom *GetClassAttributeName() const;
   NS_IMETHOD_(PRBool) HasClass(nsIAtom* aClass, PRBool aCaseSensitive) const;
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
-  NS_IMETHOD GetInlineStyleRule(nsICSSStyleRule** aStyleRule);
+  virtual nsICSSStyleRule* GetInlineStyleRule();
   NS_IMETHOD SetInlineStyleRule(nsICSSStyleRule* aStyleRule, PRBool aNotify);
   already_AddRefed<nsIURI> GetBaseURI() const;
 

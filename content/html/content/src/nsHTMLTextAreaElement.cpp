@@ -121,9 +121,8 @@ public:
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
-  NS_IMETHOD GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                    PRInt32 aModType,
-                                    nsChangeHint& aHint) const;
+  virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
+                                              PRInt32 aModType) const;
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
                                   nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
@@ -506,23 +505,17 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
   nsGenericHTMLFormElement::MapCommonAttributesInto(aAttributes, aData);
 }
 
-NS_IMETHODIMP
+nsChangeHint
 nsHTMLTextAreaElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                              PRInt32 aModType,
-                                              nsChangeHint& aHint) const
+                                              PRInt32 aModType) const
 {
-  // XXX Bug 50280 - It is unclear why we need to do this here for 
-  // rows and cols and why the AttributeChanged method in
-  // nsTextControlFrame does take care of the entire problem, but
-  // it doesn't and this makes things better
-  nsresult rv =
-    nsGenericHTMLFormElement::GetAttributeChangeHint(aAttribute, aModType,
-                                                     aHint);
+  nsChangeHint retval =
+      nsGenericHTMLFormElement::GetAttributeChangeHint(aAttribute, aModType);
   if (aAttribute == nsHTMLAtoms::rows ||
       aAttribute == nsHTMLAtoms::cols) {
-    NS_UpdateHint(aHint, NS_STYLE_HINT_REFLOW);
+    NS_UpdateHint(retval, NS_STYLE_HINT_REFLOW);
   }
-  return rv;
+  return retval;
 }
 
 NS_IMETHODIMP_(PRBool)

@@ -81,9 +81,8 @@ public:
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
-  NS_IMETHOD GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                    PRInt32 aModType,
-                                    nsChangeHint& aHint) const;
+  virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
+                                              PRInt32 aModType) const;
 };
 
 
@@ -166,18 +165,16 @@ nsHTMLLegendElement::AttributeToString(nsIAtom* aAttribute,
                                                      aResult);
 }
 
-NS_IMETHODIMP
+nsChangeHint
 nsHTMLLegendElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                            PRInt32 aModType,
-                                            nsChangeHint& aHint) const
+                                            PRInt32 aModType) const
 {
-  nsresult rv =
-    nsGenericHTMLFormElement::GetAttributeChangeHint(aAttribute, aModType,
-                                                     aHint);
+  nsChangeHint retval =
+      nsGenericHTMLFormElement::GetAttributeChangeHint(aAttribute, aModType);
   if (aAttribute == nsHTMLAtoms::align) {
-    NS_UpdateHint(aHint, NS_STYLE_HINT_REFLOW);
+    NS_UpdateHint(retval, NS_STYLE_HINT_REFLOW);
   }
-  return rv;
+  return retval;
 }
 
 nsresult

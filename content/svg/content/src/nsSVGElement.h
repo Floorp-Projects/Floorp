@@ -91,7 +91,7 @@ public:
   
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
   NS_IMETHOD SetInlineStyleRule(nsICSSStyleRule* aStyleRule, PRBool aNotify);
-  NS_IMETHOD GetInlineStyleRule(nsICSSStyleRule** aStyleRule);
+  virtual nsICSSStyleRule* GetInlineStyleRule();
 
   static const MappedAttributeEntry sFillStrokeMap[];
   static const MappedAttributeEntry sGraphicsMap[];

@@ -80,8 +80,7 @@ nsresult
 nsDOMCSSAttributeDeclaration::DeclarationChanged()
 {
   NS_ASSERTION(mContent, "Must have content node to set the decl!");
-  nsCOMPtr<nsICSSStyleRule> oldRule;
-  mContent->GetInlineStyleRule(getter_AddRefs(oldRule));
+  nsICSSStyleRule* oldRule = mContent->GetInlineStyleRule();
   NS_ASSERTION(oldRule, "content must have rule");
 
   nsCOMPtr<nsICSSStyleRule> newRule = oldRule->DeclarationChanged(PR_FALSE);
@@ -100,8 +99,7 @@ nsDOMCSSAttributeDeclaration::GetCSSDeclaration(nsCSSDeclaration **aDecl,
 
   *aDecl = nsnull;
   if (mContent) {
-    nsCOMPtr<nsICSSStyleRule> cssRule;
-    mContent->GetInlineStyleRule(getter_AddRefs(cssRule));
+    nsICSSStyleRule* cssRule = mContent->GetInlineStyleRule();
     if (cssRule) {
       *aDecl = cssRule->GetDeclaration();
     }
@@ -113,14 +111,15 @@ nsDOMCSSAttributeDeclaration::GetCSSDeclaration(nsCSSDeclaration **aDecl,
         decl->RuleAbort();
         return NS_ERROR_OUT_OF_MEMORY;
       }
-
-      result = NS_NewCSSStyleRule(getter_AddRefs(cssRule), nsnull, decl);
+      
+      nsCOMPtr<nsICSSStyleRule> newRule;
+      result = NS_NewCSSStyleRule(getter_AddRefs(newRule), nsnull, decl);
       if (NS_FAILED(result)) {
         decl->RuleAbort();
         return result;
       }
         
-      result = mContent->SetInlineStyleRule(cssRule, PR_FALSE);
+      result = mContent->SetInlineStyleRule(newRule, PR_FALSE);
       if (NS_SUCCEEDED(result)) {
         *aDecl = decl;
       }

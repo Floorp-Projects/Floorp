@@ -10279,7 +10279,7 @@ nsCSSFrameConstructor::AttributeChanged(nsPresContext* aPresContext,
   nsCOMPtr<nsIStyledContent> styledContent = do_QueryInterface(aContent);
   if (styledContent) { 
     // Get style hint from HTML content object. 
-    styledContent->GetAttributeChangeHint(aAttribute, aModType, hint);
+    hint = styledContent->GetAttributeChangeHint(aAttribute, aModType);
   } 
 
   PRBool reframe = (hint & nsChangeHint_ReconstructFrame) != 0;
