@@ -35,10 +35,3 @@
 # (NULL is not enabled by default)
    TLS    i    TLS RSA WITH NULL MD5
   noTLS   i    SSL3 RSA WITH NULL MD5
-# added on nelson's request
-   TLS    n    TLS RSA WITH RC4 128 SHA
-  noTLS   n    SSL3 RSA WITH RC4 128 SHA
-   TLS    v    TLS RSA WITH AES 128 CBC SHA
-  noTLS   v    SSL3 RSA WITH AES 128 CBC SHA
-   TLS    y    TLS RSA WITH AES 256 CBC SHA
-  noTLS   y    SSL3 RSA WITH AES 256 CBC SHA
