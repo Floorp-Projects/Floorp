@@ -1849,7 +1849,7 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
       rightParent = endNode;
     else
       rightParent = mHTMLEditor->GetBlockNodeParent(endNode);
-    if (leftParent == rightParent) return NS_OK;
+    if (leftParent.get() == rightParent.get()) return NS_OK;
     
     // deleting across blocks
     // are the blocks of same type?
