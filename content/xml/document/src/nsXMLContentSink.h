@@ -120,6 +120,8 @@ protected:
   nsresult LoadXSLStyleSheet(const nsIURL* aUrl);
 #endif
 
+  nsresult AddText(const nsString& aString);
+
   nsIDocument* mDocument;
   nsIURL* mDocumentURL;
   nsIWebShell* mWebShell;
