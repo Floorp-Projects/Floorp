@@ -970,6 +970,43 @@ nsresult testSJISEncoder()
   }
 }
 
+/**
+ * Test the EUC-JP encoder.
+ */
+nsresult testEUCJPEncoder()
+{
+  char * testName = "T203";
+  printf("\n[%s] UnicodeToEUCJP\n", testName);
+
+  // create converter
+  CREATE_ENCODER("euc-jp");
+  enc->SetOutputErrorBehavior(enc->kOnError_Replace, NULL, 0x00cc);
+
+  // test data
+  PRUnichar src[] = {0x0045, 0x0054};
+  char exp[] = {"\x45\x54"};
+
+  // test converter - easy test
+  res = testEncoder(enc, src, ARRAY_SIZE(src), exp, ARRAY_SIZE(exp)-1, testName);
+
+  // reset converter
+  if (NS_SUCCEEDED(res)) res = resetEncoder(enc, testName);
+
+  // test converter - stress test
+  if (NS_SUCCEEDED(res)) 
+    res = testStressEncoder(enc, src, ARRAY_SIZE(src), exp, ARRAY_SIZE(exp)-1, testName);
+
+  // release converter
+  NS_RELEASE(enc);
+
+  if (NS_FAILED(res)) {
+    return res;
+  } else {
+    printf("Test Passed.\n");
+    return NS_OK;
+  }
+}
+
 nsresult  testPlatformCharset()
 {
   nsIPlatformCharset * cinfo;
@@ -1016,6 +1053,7 @@ nsresult testAll()
   // test encoders
   testLatin1Encoder();
   testSJISEncoder();
+  testEUCJPEncoder();
 
   // older tests - XXX to be rewritten in new style
   testSJISDecoder();
