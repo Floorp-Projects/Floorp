@@ -914,15 +914,15 @@ function loadStartFolder(initialUri)
         // the folder. i.e. the user just clicked on a news folder they aren't subscribed to from a browser
         // the news url comes in here.   
 
-        SelectFolder(startFolder.URI);        
-
         // Perform biff on the server to check for new mail, except for imap
         // or a pop3 account that is deferred or deferred to,
         // or the case where initialUri is non-null (non-startup)
         if (!initialUri && isLoginAtStartUpEnabled && gLoadStartFolder
-            && defaultServer.type != "imap" && !defaultServer.isDeferredTo &&
+            && !defaultServer.isDeferredTo &&
             defaultServer.msgFolder == defaultServer.rootMsgFolder)
           defaultServer.PerformBiff(msgWindow);        
+
+        SelectFolder(startFolder.URI);        
 
 
         // because the "open" state persists, we'll call
