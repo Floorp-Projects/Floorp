@@ -82,6 +82,7 @@ NS_METHOD nsTextWidget::Create(nsIWidget *aParent,
   gtk_layout_put(GTK_LAYOUT(parentWidget), mWidget, aRect.x, aRect.y);
   gtk_widget_set_usize(mWidget, aRect.width, aRect.height);
 
+  gtk_object_set_user_data(GTK_OBJECT(mWidget), this);
   gtk_widget_show(mWidget);
 /*
   mWidget = ::XtVaCreateManagedWidget("button",

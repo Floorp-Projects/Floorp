@@ -369,6 +369,7 @@ NS_METHOD nsListBox::Create(nsIWidget *aParent,
   gtk_layout_put(GTK_LAYOUT(parentWidget), scrolled_win, aRect.x, aRect.y);
   gtk_widget_set_usize(scrolled_win, aRect.width, aRect.height);
 
+  gtk_object_set_user_data(GTK_OBJECT(mWidget), this);
   gtk_widget_show_all(scrolled_win);
 /*
   mWidget = ::XtVaCreateManagedWidget("",

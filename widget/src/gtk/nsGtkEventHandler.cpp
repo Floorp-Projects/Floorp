@@ -314,8 +314,9 @@ void nsGtkWidget_LeaveMask_EventHandler(GtkWidget *w, GdkEvent * event, gpointer
 }
 
 //==============================================================
-void nsGtkWidget_Focus_Callback(GtkWidget *w, gpointer p, gpointer call_data)
+void nsGtkWidget_Focus_Callback(GtkWidget *w, gpointer p)
 {
+  nsWindow *widgetWindow = (nsWindow*)gtk_object_get_user_data(GTK_OBJECT(w));
 #if 0
   nsWindow * widgetWindow = (nsWindow *) p ;
 
@@ -328,8 +329,9 @@ void nsGtkWidget_Focus_Callback(GtkWidget *w, gpointer p, gpointer call_data)
 }
 
 //==============================================================
-void nsGtkWidget_Toggle_Callback(GtkWidget *w, gpointer p, gpointer call_data)
+void nsGtkWidget_Toggle_Callback(GtkWidget *w, gpointer p)
 {
+  nsWindow *widgetWindow = (nsWindow*)gtk_object_get_user_data(GTK_OBJECT(w));
 #if 0
   nsWindow * widgetWindow = (nsWindow *) p ;
   if (DBG) fprintf(stderr, "***************** nsGtkWidget_Scrollbar_Callback\n");
@@ -340,32 +342,19 @@ void nsGtkWidget_Toggle_Callback(GtkWidget *w, gpointer p, gpointer call_data)
 }
 
 //==============================================================
-void nsGtkWidget_Toggle_ArmCallback(GtkWidget *w, gpointer p, gpointer call_data)
+void CheckButton_Toggle_Callback(GtkWidget *w, gpointer p)
 {
-#if 0
-  nsCheckButton * checkBtn = (nsCheckButton *) p ;
-
-  XmToggleButtonCallbackStruct * cbs = (XmToggleButtonCallbackStruct*)call_data;
-  
-  if (DBG) fprintf(stderr, "Callback struct 0x%x\n", cbs);fflush(stderr);
-  checkBtn->Armed();
-#endif
+  nsCheckButton *checkBtn = (nsCheckButton*)gtk_object_get_user_data(GTK_OBJECT(w));
+  if (GTK_TOGGLE_BUTTON(w)->active)
+    checkBtn->Armed();
+  else
+    checkBtn->DisArmed();
 }
 
 //==============================================================
-void nsGtkWidget_Toggle_DisArmCallback(GtkWidget *w, gpointer p, gpointer call_data)
+void nsGtkWidget_RadioButton_ArmCallback(GtkWidget *w, gpointer p)
 {
-#if 0
-  nsCheckButton * checkBtn = (nsCheckButton *) p ;
-  nsScrollbarEvent sevent;
-  XmToggleButtonCallbackStruct * cbs = (XmToggleButtonCallbackStruct*)call_data;
-  checkBtn->DisArmed();
-#endif
-}
-
-//==============================================================
-void nsGtkWidget_RadioButton_ArmCallback(GtkWidget *w, gpointer p, gpointer call_data)
-{
+  nsWindow *widgetWindow = (nsWindow*)gtk_object_get_user_data(GTK_OBJECT(w));
 #if 0
   nsRadioButton * radioBtn = (nsRadioButton *) p ;
   XmToggleButtonCallbackStruct * cbs = (XmToggleButtonCallbackStruct*)call_data;
@@ -377,8 +366,9 @@ void nsGtkWidget_RadioButton_ArmCallback(GtkWidget *w, gpointer p, gpointer call
 }
 
 //==============================================================
-void nsGtkWidget_RadioButton_DisArmCallback(GtkWidget *w, gpointer p, gpointer call_data)
+void nsGtkWidget_RadioButton_DisArmCallback(GtkWidget *w, gpointer p)
 {
+  nsWindow *widgetWindow = (nsWindow*)gtk_object_get_user_data(GTK_OBJECT(w));
 #if 0
   nsRadioButton * radioBtn = (nsRadioButton *) p ;
   nsScrollbarEvent sevent;
@@ -392,8 +382,9 @@ void nsGtkWidget_RadioButton_DisArmCallback(GtkWidget *w, gpointer p, gpointer c
 
 
 //==============================================================
-void nsGtkWidget_Scrollbar_Callback(GtkWidget *w, gpointer p, gpointer call_data)
+void nsGtkWidget_Scrollbar_Callback(GtkWidget *w, gpointer p)
 {
+  nsWindow *widgetWindow = (nsWindow*)gtk_object_get_user_data(GTK_OBJECT(w));
 #if 0
   nsWindow * widgetWindow = (nsWindow *) p ;
   nsScrollbarEvent sevent;
@@ -444,8 +435,9 @@ void nsGtkWidget_Scrollbar_Callback(GtkWidget *w, gpointer p, gpointer call_data
 
 
 //==============================================================
-void nsGtkWidget_Expose_Callback(GtkWidget *w, gpointer p, gpointer call_data)
+void nsGtkWidget_Expose_Callback(GtkWidget *w, gpointer p)
 {
+  nsWindow *widgetWindow = (nsWindow*)gtk_object_get_user_data(GTK_OBJECT(w));
 #if 0
   nsWindow * widgetWindow = (nsWindow *) p ;
   if (widgetWindow == nsnull) {
@@ -463,13 +455,14 @@ void nsGtkWidget_Expose_Callback(GtkWidget *w, gpointer p, gpointer call_data)
 }
 
 //==============================================================
-void nsGtkWidget_Resize_Callback(GtkWidget *w, gpointer p, gpointer call_data)
+void nsGtkWidget_Resize_Callback(GtkWidget *w, gpointer p)
 {
 }
 
 //==============================================================
-void nsGtkWidget_Text_Callback(GtkWidget *w, gpointer p, gpointer call_data)
+void nsGtkWidget_Text_Callback(GtkWidget *w, gpointer p)
 {
+  nsWindow *widgetWindow = (nsWindow*)gtk_object_get_user_data(GTK_OBJECT(w));
 #if 0
   nsWindow * widgetWindow = (nsWindow *) p ;
   int len;
@@ -509,6 +502,7 @@ void nsGtkWidget_Text_Callback(GtkWidget *w, gpointer p, gpointer call_data)
 //==============================================================
 void nsGtkWidget_FSBCancel_Callback(GtkWidget *w, gpointer p)
 {
+  nsWindow *widgetWindow = (nsWindow*)gtk_object_get_user_data(GTK_OBJECT(w));
 #if 0
   nsFileWidget * widgetWindow = (nsFileWidget *) p ;
   if (p != nsnull) {
@@ -520,6 +514,7 @@ void nsGtkWidget_FSBCancel_Callback(GtkWidget *w, gpointer p)
 //==============================================================
 void nsGtkWidget_FSBOk_Callback(GtkWidget *w, gpointer p)
 {
+  nsWindow *widgetWindow = (nsWindow*)gtk_object_get_user_data(GTK_OBJECT(w));
 #if 0
   nsFileWidget * widgetWindow = (nsFileWidget *) p;
   if (p != nsnull) {
@@ -584,7 +579,7 @@ void nsGtkWidget_ResetResize_Callback(gpointer call_data)
 }
 
 //==============================================================
-void nsGtkWidget_Menu_Callback(GtkWidget *w, gpointer p, gpointer call_data)
+void nsGtkWidget_Menu_Callback(GtkWidget *w, gpointer p)
 {
 #if 0
   nsIMenuItem * menuItem = (nsIMenuItem *)p;
