@@ -114,9 +114,8 @@
 
 /*
 ** Set the desired resolution of the timevals.
-** Too large, and you'll wrap uint32.
-** A value of 1 would mean report in seconds.
-** A value of 1000 would mean to report in milliseconds.
+** The resolution is just mimicking what is recorded in the trace-malloc
+**  output, and that is currently milliseconds.
 */
 #define ST_TIMEVAL_RESOLUTION 1000
 #define ST_TIMEVAL_FORMAT "%.3f"
