@@ -248,7 +248,10 @@ HTMLContentSink::~HTMLContentSink()
   }
 }
 
-nsresult HTMLContentSink::Init(nsIDocument* aDoc, nsIURL* aDocURL, nsIWebWidget* aWebWidget)
+nsresult
+HTMLContentSink::Init(nsIDocument* aDoc,
+                      nsIURL* aDocURL,
+                      nsIWebWidget* aWebWidget)
 {
   NS_IF_RELEASE(mDocument);
   mDocument = aDoc;
@@ -265,8 +268,35 @@ nsresult HTMLContentSink::Init(nsIDocument* aDoc, nsIURL* aDocURL, nsIWebWidget*
   // Make root part
   NS_IF_RELEASE(mRoot);
   nsresult rv = NS_NewRootPart(&mRoot, aDoc);
-  if (NS_OK == rv) {
+  if (NS_OK != rv) {
+    return rv;
   }
+
+  // Make head container
+  NS_IF_RELEASE(mHead);
+  nsIAtom* atom = NS_NewAtom("HEAD");
+  if (nsnull == atom) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  rv = NS_NewHTMLHead(&mHead, atom);
+  NS_RELEASE(atom);
+  if (NS_OK != rv) {
+    return rv;
+  }
+  mRoot->AppendChild(mHead, PR_FALSE);
+
+  // Make body container
+  NS_IF_RELEASE(mBody);
+  atom = NS_NewAtom("BODY");
+  if (nsnull == atom) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  rv = NS_NewBodyPart(&mBody, atom);
+  NS_RELEASE(atom);
+  if (NS_OK != rv) {
+    return rv;
+  }
+  mRoot->AppendChild(mBody, PR_FALSE);
 
   return rv;
 }
@@ -313,15 +343,6 @@ HTMLContentSink::OpenHead(const nsIParserNode& aNode)
   SINK_TRACE(SINK_TRACE_CALLS,
              ("HTMLContentSink::OpenHead"));
 
-  if (nsnull == mHead) {
-    nsIAtom* atom = NS_NewAtom("HEAD");
-    nsresult rv = NS_NewHTMLHead(&mHead, atom);
-    if (NS_OK == rv) {
-      mRoot->InsertChildAt(mHead, 0, PR_FALSE);
-    }
-    NS_RELEASE(atom);
-  }
-
   mNodeStack[mStackPos] = (eHTMLTags)aNode.GetNodeType();
   mContainerStack[mStackPos] = mHead;
   mStackPos++;
@@ -355,15 +376,6 @@ HTMLContentSink::SetTitle(const nsString& aValue)
   mTitle->CompressWhitespace(PR_TRUE, PR_TRUE);
   ((nsHTMLDocument*)mDocument)->SetTitle(*mTitle);
 
-  if (nsnull == mHead) {
-    nsIAtom* atom = NS_NewAtom("HEAD");
-    nsresult rv = NS_NewHTMLHead(&mHead, atom);
-    if (NS_OK == rv) {
-      mRoot->InsertChildAt(mHead, 0, PR_FALSE);
-    }
-    NS_RELEASE(atom);
-  }
-
   nsIAtom* atom = NS_NewAtom("TITLE");
   nsIHTMLContent* it = nsnull;
   nsresult rv = NS_NewHTMLTitle(&it, atom, aValue);
@@ -382,17 +394,6 @@ HTMLContentSink::OpenBody(const nsIParserNode& aNode)
   SINK_TRACE(SINK_TRACE_CALLS,
              ("HTMLContentSink::OpenBody"));
 
-  PRBool startLayout = PR_FALSE;
-  if (nsnull == mBody) {
-    nsIAtom* atom = NS_NewAtom("BODY");
-    nsresult rv = NS_NewBodyPart(&mBody, atom);
-    if (NS_OK == rv) {
-      mRoot->AppendChild(mBody, PR_FALSE);
-      startLayout = PR_TRUE;
-    }
-    NS_RELEASE(atom);
-  }
-
   mNodeStack[mStackPos] = (eHTMLTags)aNode.GetNodeType();
   mContainerStack[mStackPos] = mBody;
   mStackPos++;
@@ -405,7 +406,7 @@ HTMLContentSink::OpenBody(const nsIParserNode& aNode)
     // then we need to trigger a style change
   }
 
-  if (startLayout) {
+  if (!mLayoutStarted) {
     // XXX This has to be done now that the body is in because we
     // don't know how to handle a content-appended reflow if the
     // root has no children
@@ -1178,7 +1179,6 @@ nsresult HTMLContentSink::ProcessBASETag(const nsIParserNode& aNode)
 nsresult
 HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
 {
-  NS_PRECONDITION(nsnull != mHead, "bad parser: meta before head");
   nsresult rv = NS_OK;
   if (nsnull != mHead) {
     nsAutoString tmp(aNode.GetText());
