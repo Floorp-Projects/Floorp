@@ -102,11 +102,6 @@ struct nsReflowState {
                        availableHeight;   // the available space in which to reflow
   nsIRenderingContext* rendContext;       // rendering context to use for measurement
   PRPackedBool         isTopOfPage;       // is the current context at the top of a page?
-  // the following data members are relevant if nsStyleText.mTextAlign is NS_STYLE_TEXT_ALIGN_CHAR
-  PRPackedBool         useAlignCharOffset;// if true, the reflow honors alignCharOffset and does not
-                                          // set it. if false, the reflow sets alignCharOffset
-  nscoord              alignCharOffset;   // distance from reference edge (as specified in nsStyleDisplay.mDirection) 
-                                          // to the align character (which will be specified in nsStyleTable)
 
   // Note: there is no copy constructor, so the compiler can generate an
   // optimal one.

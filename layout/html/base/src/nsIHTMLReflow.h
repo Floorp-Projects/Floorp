@@ -166,6 +166,12 @@ struct nsHTMLReflowState : nsReflowState {
   // line-height value then this field will be "-1".
   nscoord          mLineHeight;
 
+  // the following data members are relevant if nsStyleText.mTextAlign == NS_STYLE_TEXT_ALIGN_CHAR
+  nscoord          mAlignCharOffset;   // distance from reference edge (as specified in nsStyleDisplay.mDirection) 
+                                       // to the align character (which will be specified in nsStyleTable)
+  PRPackedBool     mUseAlignCharOffset;// if true, the reflow honors alignCharOffset and does not
+                                       // set it. if false, the reflow sets alignCharOffset
+
   // Constructs an initial reflow state (no parent reflow state) for a
   // non-incremental reflow command. Sets reflowType to eReflowType_Block
   nsHTMLReflowState(nsIPresContext&      aPresContext,

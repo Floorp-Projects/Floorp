@@ -238,13 +238,15 @@ nsHTMLTableRowElement::GetRowIndex(PRInt32* aValue)
     table->GetRows(&rows);
     PRUint32 numRows;
     rows->GetLength(&numRows);
-    for (PRUint32 i = 0; i < numRows; i++) {
+	PRBool found = PR_FALSE;
+    for (PRUint32 i = 0; (i < numRows) && !found; i++) {
       nsIDOMNode *node = nsnull;
       rows->Item(i, &node);
       if (this == node) {
         *aValue = i;
-        break;
+        found = PR_TRUE;
       }
+	  NS_IF_RELEASE(node);
     }
     NS_RELEASE(rows);
     NS_RELEASE(table);
@@ -274,28 +276,33 @@ nsHTMLTableRowElement::SetRowIndex(PRInt32 aValue)
   table->GetRows(&rows);
   PRUint32 numRowsU;
   rows->GetLength(&numRowsU);
-  PRInt32 numRows = numRowsU;
+  PRInt32 numRows = numRowsU; // numRows will be > 0 since this must be a row
 
   // check if it really moves
   if ( !(((0 == oldIndex) && (aValue <= 0)) || ((numRows-1 == oldIndex) && (aValue >= numRows-1)))) {
+    nsIDOMNode *section = nsnull;
+    nsIDOMNode* refRow = nsnull;
+	PRInt32 refIndex = aValue;
+    if (aValue < numRows) {
+	  refIndex = 0;
+    } else {
+	  refIndex = numRows-1;
+	}
+	rows->Item(refIndex, &refRow);
+    refRow->GetParentNode(&section);
+
     AddRef(); // don't use NS_ADDREF_THIS
     table->DeleteRow(oldIndex);     // delete this from the table
-    numRows--;
     nsIDOMNode *returnNode;
-    if ((numRows <= 0) || (aValue >= numRows)) {
-      table->AppendChild(this, &returnNode); // add this back into the table
+    if (aValue >= numRows) {
+      section->AppendChild(this, &returnNode); // add this back into the table
     } else {
-      PRInt32 newIndex = aValue;
-      if (aValue <= 0) {
-        newIndex = 0;
-      } else if (aValue > oldIndex) {
-        newIndex--;                   // since this got removed before GetLength was called
-      }
-      nsIDOMNode *refNode;
-      rows->Item(newIndex, &refNode);
-      table->InsertBefore(this, refNode, &returnNode); // add this back into the table
+      section->InsertBefore(this, refRow, &returnNode); // add this back into the table
     }
     Release(); // from addref above, can't use NS_RELEASE
+
+    NS_RELEASE(section);
+    NS_RELEASE(refRow);  // XXX is this right, check nsHTMLTableElement also
   }
 
   NS_RELEASE(rows);
@@ -315,13 +322,15 @@ nsHTMLTableRowElement::GetSectionRowIndex(PRInt32* aValue)
     section->GetRows(&rows);
     PRUint32 numRows;
     rows->GetLength(&numRows);
-    for (PRUint32 i = 0; i < numRows; i++) {
+	PRBool found = PR_FALSE;
+    for (PRUint32 i = 0; (i < numRows) && !found; i++) {
       nsIDOMNode *node = nsnull;
       rows->Item(i, &node);
       if (this == node) {
         *aValue = i;
-        break;
+        found = PR_TRUE;
       }
+	  NS_IF_RELEASE(node);
     } 
     NS_RELEASE(rows);
     NS_RELEASE(section);
@@ -350,7 +359,7 @@ nsHTMLTableRowElement::SetSectionRowIndex(PRInt32 aValue)
   section->GetRows(&rows);
   PRUint32 numRowsU;
   rows->GetLength(&numRowsU);
-  PRInt32 numRows = numRowsU;
+  PRInt32 numRows = numRowsU; 
 
   // check if it really moves
   if ( !(((0 == oldIndex) && (aValue <= 0)) || ((numRows-1 == oldIndex) && (aValue >= numRows-1)))) {
@@ -370,6 +379,7 @@ nsHTMLTableRowElement::SetSectionRowIndex(PRInt32 aValue)
       nsIDOMNode *refNode;
       rows->Item(newIndex, &refNode);
       section->InsertBefore(this, refNode, &returnNode); // add this back into the section
+	  NS_IF_RELEASE(refNode);
     }
     Release(); // from addref above, can't use NS_RELEASE
   }

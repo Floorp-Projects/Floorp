@@ -2242,7 +2242,9 @@ HTMLStyleSheetImpl::GetFrameFor(nsIPresShell* aPresShell, nsIPresContext* aPresC
 
     if (display->IsBlockLevel() && IsScrollable(aPresContext, display)) {
       frame->FirstChild(nsnull, frame);
-    }
+    } else if (NS_STYLE_DISPLAY_TABLE == display->mDisplay) { // we got an outer table frame, need an inner
+      frame->FirstChild(nsnull, frame);                       // the inner frame is always the 1st child
+    }    
   }
 
   return frame;

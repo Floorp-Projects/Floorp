@@ -27,6 +27,7 @@ GenericElementCollection::GenericElementCollection(nsIContent *aParent,
 {
   mParent = aParent;
   mTag = aTag;
+  NS_IF_ADDREF(mTag);
 }
 
 GenericElementCollection::~GenericElementCollection()

@@ -153,7 +153,7 @@ nsHTMLTableSectionElement::GetRows(nsIDOMHTMLCollection** aValue)
 {
   *aValue = nsnull;
   if (nsnull == mRows) {
-    NS_ADDREF(nsHTMLAtoms::tr);
+    //XXX why was this here NS_ADDREF(nsHTMLAtoms::tr);
     mRows = new GenericElementCollection(this, nsHTMLAtoms::tr);
     NS_ADDREF(mRows); // this table's reference, released in the destructor
   }
@@ -187,6 +187,7 @@ nsHTMLTableSectionElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
         nsIDOMNode *refRow;
         rows->Item(refIndex, &refRow);
         rv = InsertBefore(rowNode, refRow, (nsIDOMNode **)aValue);
+		NS_RELEASE(refRow);
       } else {
         rv = AppendChild(rowNode, (nsIDOMNode **)aValue);
       }
