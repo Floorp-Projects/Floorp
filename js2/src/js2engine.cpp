@@ -88,6 +88,7 @@ namespace MetaData {
         retval = JS2VAL_VOID;
         baseVal = JS2VAL_VOID;
         indexVal = JS2VAL_VOID;
+		pFrame = NULL;
         int i = 0;
         while (true) {
             try {
@@ -363,9 +364,14 @@ namespace MetaData {
 
     JS2Engine::JS2Engine(World &world)
                 : meta(NULL),
-		  pc(NULL),
+                  pc(NULL),
                   bCon(NULL),
                   retval(JS2VAL_VOID),
+				  a(JS2VAL_VOID),
+				  b(JS2VAL_VOID),
+				  baseVal(JS2VAL_VOID),
+				  indexVal(JS2VAL_VOID),
+				  pFrame(NULL),
                   INIT_STRINGATOM(true),
                   INIT_STRINGATOM(false),
                   INIT_STRINGATOM(null),
@@ -847,6 +853,7 @@ namespace MetaData {
         GCMARKVALUE(b);
         GCMARKVALUE(baseVal);
         GCMARKVALUE(indexVal);
+        GCMARKOBJECT(pFrame);
         JS2Object::mark(true_StringAtom);
         JS2Object::mark(false_StringAtom);
         JS2Object::mark(null_StringAtom);

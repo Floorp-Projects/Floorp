@@ -159,6 +159,7 @@ enum JS2Op {
 
 
 class Frame;
+class ParameterFrame;
 class JS2Object;
 class JS2Metadata;
 class BytecodeContainer;
@@ -226,6 +227,7 @@ private:
 
     js2val a,b;
     js2val baseVal,indexVal;
+	ParameterFrame *pFrame;
 
 
 public:

@@ -332,11 +332,11 @@
 	    a = meta->toPrimitive(a, NumberHint);
 	    b = meta->toPrimitive(b, NumberHint);
 	    if (JS2VAL_IS_STRING(a) || JS2VAL_IS_STRING(b)) {
-	        const String *astr = meta->toString(a);
-	        const String *bstr = meta->toString(b);
-                String *c = allocStringPtr(astr);
-                *c += *bstr;
-	        push(STRING_TO_JS2VAL(c));
+            const String *astr = meta->toString(a);
+            const String *bstr = meta->toString(b);
+            String c = *astr;
+            c += *bstr;
+            push(STRING_TO_JS2VAL(allocStringPtr(&c)));
 	    }
 	    else {
                 a = meta->toGeneralNumber(a);

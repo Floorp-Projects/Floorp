@@ -61,6 +61,7 @@ js2val String_Constructor(JS2Metadata *meta, const js2val /*thisValue*/, js2val 
     // object gets rooted somewhere - this is a general problem...
     js2val thatValue = OBJECT_TO_JS2VAL(new StringInstance(meta->stringClass->prototype, meta->stringClass));
     StringInstance *strInst = checked_cast<StringInstance *>(JS2VAL_TO_OBJECT(thatValue));
+	JS2Object::RootIterator ri = JS2Object::addRoot(&strInst);
 
     if (argc > 0)
         strInst->mValue = meta->engine->allocStringPtr(meta->toString(argv[0]));
@@ -68,6 +69,7 @@ js2val String_Constructor(JS2Metadata *meta, const js2val /*thisValue*/, js2val 
         strInst->mValue = meta->engine->allocStringPtr("");
     Multiname mn(meta->engine->length_StringAtom, meta->publicNamespace);
     meta->writeDynamicProperty(JS2VAL_TO_OBJECT(thatValue), &mn, true, meta->engine->allocNumber(strInst->mValue->length()), RunPhase);
+	JS2Object::removeRoot(ri);
     return thatValue;
 }
 

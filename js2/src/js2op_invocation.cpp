@@ -85,14 +85,15 @@
                             push(a);
                         }
                         else {
-                            ParameterFrame *runtimeFrame = new ParameterFrame(fWrap->compileFrame);
-                            runtimeFrame->instantiate(meta->env);
+                            pFrame = new ParameterFrame(fWrap->compileFrame);
+                            pFrame->instantiate(meta->env);
                             PrototypeInstance *pInst = new PrototypeInstance(protoObj, meta->objectClass);
                             baseVal = OBJECT_TO_JS2VAL(pInst);
-                            runtimeFrame->thisObject = baseVal;
-                            runtimeFrame->assignArguments(meta, base(argCount), argCount);
+                            pFrame->thisObject = baseVal;
+                            pFrame->assignArguments(meta, base(argCount), argCount);
                             jsr(phase, fWrap->bCon, base(argCount + 1), baseVal);   // seems out of order, but we need to catch the current top frame 
-                            meta->env->addFrame(runtimeFrame);
+                            meta->env->addFrame(pFrame);
+							pFrame = NULL;
                         }
                     }
                     else
@@ -139,14 +140,15 @@
                     push(a);
                 }
                 else {
-                    ParameterFrame *runtimeFrame = new ParameterFrame(fWrap->compileFrame);
-                    runtimeFrame->instantiate(meta->env);
-                    runtimeFrame->thisObject = a;
+                    pFrame = new ParameterFrame(fWrap->compileFrame);
+                    pFrame->instantiate(meta->env);
+                    pFrame->thisObject = a;
     //                assignArguments(runtimeFrame, fWrap->compileFrame->signature);
                     // XXX
-                    runtimeFrame->assignArguments(meta, base(argCount), argCount);
+                    pFrame->assignArguments(meta, base(argCount), argCount);
                     jsr(phase, fWrap->bCon, base(argCount + 2), JS2VAL_VOID);   // seems out of order, but we need to catch the current top frame 
-                    meta->env->addFrame(runtimeFrame);
+                    meta->env->addFrame(pFrame);
+					pFrame = NULL;
                 }
             }
             else
@@ -161,13 +163,14 @@
                     push(a);
                 }
                 else {
-                    ParameterFrame *runtimeFrame = new ParameterFrame(fWrap->compileFrame);
-                    runtimeFrame->instantiate(meta->env);
-                    runtimeFrame->thisObject = mc->thisObject;
+                    pFrame = new ParameterFrame(fWrap->compileFrame);
+                    pFrame->instantiate(meta->env);
+                    pFrame->thisObject = mc->thisObject;
 //                assignArguments(runtimeFrame, fWrap->compileFrame->signature);
                     jsr(phase, fWrap->bCon, base(argCount + 2), JS2VAL_VOID);   // seems out of order, but we need to catch the current top frame 
                     meta->env->addFrame(meta->objectType(mc->thisObject));
-                    meta->env->addFrame(runtimeFrame);
+                    meta->env->addFrame(pFrame);
+					pFrame = NULL;
                 }
 
             }

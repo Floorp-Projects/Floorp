@@ -233,21 +233,23 @@ public:
 // A MULTINAME is the semantic domain of sets of qualified names. Multinames are used internally in property lookup.
 // We keep Multinames as a basename and a list of namespace qualifiers (XXX is that right - would the basename 
 // ever be different for the same multiname?)
+// XXX can nsList ever be null, or could allow null nsList to indicate public?
 typedef std::vector<Namespace *> NamespaceList;
 typedef NamespaceList::iterator NamespaceListIterator;
 class Multiname : public JS2Object {
 public:    
-    Multiname(const String *name) : JS2Object(MultinameKind), name(name) { }
-    Multiname(const String *name, Namespace *ns) : JS2Object(MultinameKind), name(name) { addNamespace(ns); }
+    Multiname(const String *name) : JS2Object(MultinameKind), name(name), nsList(new NamespaceList) { }
+    Multiname(const String *name, Namespace *ns) : JS2Object(MultinameKind), name(name), nsList(new NamespaceList) { addNamespace(ns); }
+    Multiname(const Multiname& m) : JS2Object(MultinameKind), name(m.name), nsList(m.nsList)    { }
 
-    void addNamespace(Namespace *ns)                { nsList.push_back(ns); }
+    void addNamespace(Namespace *ns)                { nsList->push_back(ns); }
     void addNamespace(NamespaceList *ns);
     void addNamespace(Context &cxt);
 
     bool matches(QualifiedName &q)                  { return (*name == *q.id) && listContains(q.nameSpace); }
     bool listContains(Namespace *nameSpace);
 
-    NamespaceList nsList;
+    NamespaceList *nsList;
     const String *name;
 
     virtual void markChildren();
@@ -752,29 +754,29 @@ class LexicalReference : public Reference {
 // of a given set of qualified names. LEXICALREFERENCE tuples arise from evaluating identifiers a and qualified identifiers
 // q::a.
 public:
-    LexicalReference(Multiname *mname, bool strict) : variableMultiname(mname), env(NULL), strict(strict) { }
-    LexicalReference(const String *name, bool strict) : variableMultiname(new Multiname(name)), env(NULL), strict(strict) { }
-    LexicalReference(const String *name, Namespace *nameSpace, bool strict) : variableMultiname(new Multiname(name, nameSpace)), env(NULL), strict(strict) { }
+    LexicalReference(Multiname *mname, bool strict) : variableMultiname(*mname), env(NULL), strict(strict) { }
+    LexicalReference(const String *name, bool strict) : variableMultiname(name), env(NULL), strict(strict) { }
+    LexicalReference(const String *name, Namespace *nameSpace, bool strict) : variableMultiname(name, nameSpace), env(NULL), strict(strict) { }
 
     
-    Multiname *variableMultiname;   // A nonempty set of qualified names to which this reference can refer
+    Multiname variableMultiname;   // A nonempty set of qualified names to which this reference can refer
     Environment *env;               // The environment in which the reference was created.
     bool strict;                    // The strict setting from the context in effect at the point where the reference was created
     
-    void emitInitBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eLexicalInit, pos); bCon->addMultiname(variableMultiname); }
+    void emitInitBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eLexicalInit, pos); bCon->addMultiname(new Multiname(variableMultiname)); }
     
-    virtual void emitReadBytecode(BytecodeContainer *bCon, size_t pos)      { bCon->emitOp(eLexicalRead, pos); bCon->addMultiname(variableMultiname); }
-    virtual void emitWriteBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eLexicalWrite, pos); bCon->addMultiname(variableMultiname); }
-    virtual void emitReadForInvokeBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eLexicalRef, pos); bCon->addMultiname(variableMultiname); }
+    virtual void emitReadBytecode(BytecodeContainer *bCon, size_t pos)      { bCon->emitOp(eLexicalRead, pos); bCon->addMultiname(new Multiname(variableMultiname)); }
+    virtual void emitWriteBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eLexicalWrite, pos); bCon->addMultiname(new Multiname(variableMultiname)); }
+    virtual void emitReadForInvokeBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eLexicalRef, pos); bCon->addMultiname(new Multiname(variableMultiname)); }
     virtual void emitReadForWriteBackBytecode(BytecodeContainer *bCon, size_t pos)  { emitReadBytecode(bCon, pos); }
     virtual void emitWriteBackBytecode(BytecodeContainer *bCon, size_t pos)         { emitWriteBytecode(bCon, pos); }
 
-    virtual void emitPostIncBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(eLexicalPostInc, pos); bCon->addMultiname(variableMultiname); }
-    virtual void emitPostDecBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(eLexicalPostDec, pos); bCon->addMultiname(variableMultiname); }
-    virtual void emitPreIncBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eLexicalPreInc, pos); bCon->addMultiname(variableMultiname); }
-    virtual void emitPreDecBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eLexicalPreDec, pos); bCon->addMultiname(variableMultiname); }
+    virtual void emitPostIncBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(eLexicalPostInc, pos); bCon->addMultiname(new Multiname(variableMultiname)); }
+    virtual void emitPostDecBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(eLexicalPostDec, pos); bCon->addMultiname(new Multiname(variableMultiname)); }
+    virtual void emitPreIncBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eLexicalPreInc, pos); bCon->addMultiname(new Multiname(variableMultiname)); }
+    virtual void emitPreDecBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eLexicalPreDec, pos); bCon->addMultiname(new Multiname(variableMultiname)); }
     
-    virtual void emitDeleteBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eLexicalDelete, pos); bCon->addMultiname(variableMultiname); }
+    virtual void emitDeleteBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eLexicalDelete, pos); bCon->addMultiname(new Multiname(variableMultiname)); }
 };
 
 class DotReference : public Reference {
@@ -782,8 +784,8 @@ class DotReference : public Reference {
 // object with one of a given set of qualified names. DOTREFERENCE tuples arise from evaluating subexpressions such as a.b or
 // a.q::b.
 public:
-    DotReference(const String *name) : propertyMultiname(new Multiname(name)) { }
-    DotReference(Multiname *mn) : propertyMultiname(mn) { }
+    DotReference(const String *name) : propertyMultiname(name) { }
+    DotReference(Multiname *mn) : propertyMultiname(*mn) { }
 
     // In this implementation, the base is established by the execution of the preceding expression and
     // is available on the execution stack, not in the reference object (which is a codegen-time only)
@@ -791,21 +793,21 @@ public:
                                     // object may be a LIMITEDINSTANCE if a is a super expression, in which case
                                     // the property lookup will be restricted to members defined in proper ancestors
                                     // of base.limit.
-    Multiname *propertyMultiname;   // A nonempty set of qualified names to which this reference can refer (b
+    Multiname propertyMultiname;    // A nonempty set of qualified names to which this reference can refer (b
                                     // qualified with the namespace q or all currently open namespaces in the
                                     // example above)
-    virtual void emitReadBytecode(BytecodeContainer *bCon, size_t pos)      { bCon->emitOp(eDotRead, pos); bCon->addMultiname(propertyMultiname); }
-    virtual void emitWriteBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eDotWrite, pos); bCon->addMultiname(propertyMultiname); }
-    virtual void emitReadForInvokeBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eDotRef, pos); bCon->addMultiname(propertyMultiname); }
+    virtual void emitReadBytecode(BytecodeContainer *bCon, size_t pos)      { bCon->emitOp(eDotRead, pos); bCon->addMultiname(new Multiname(propertyMultiname)); }
+    virtual void emitWriteBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eDotWrite, pos); bCon->addMultiname(new Multiname(propertyMultiname)); }
+    virtual void emitReadForInvokeBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eDotRef, pos); bCon->addMultiname(new Multiname(propertyMultiname)); }
     virtual void emitReadForWriteBackBytecode(BytecodeContainer *bCon, size_t pos)  { emitReadForInvokeBytecode(bCon, pos); }
     virtual void emitWriteBackBytecode(BytecodeContainer *bCon, size_t pos)         { emitWriteBytecode(bCon, pos); }
 
-    virtual void emitPostIncBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(eDotPostInc, pos); bCon->addMultiname(propertyMultiname); }
-    virtual void emitPostDecBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(eDotPostDec, pos); bCon->addMultiname(propertyMultiname); }
-    virtual void emitPreIncBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eDotPreInc, pos); bCon->addMultiname(propertyMultiname); }
-    virtual void emitPreDecBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eDotPreDec, pos); bCon->addMultiname(propertyMultiname); }
+    virtual void emitPostIncBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(eDotPostInc, pos); bCon->addMultiname(new Multiname(propertyMultiname)); }
+    virtual void emitPostDecBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(eDotPostDec, pos); bCon->addMultiname(new Multiname(propertyMultiname)); }
+    virtual void emitPreIncBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eDotPreInc, pos); bCon->addMultiname(new Multiname(propertyMultiname)); }
+    virtual void emitPreDecBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eDotPreDec, pos); bCon->addMultiname(new Multiname(propertyMultiname)); }
 
-    virtual void emitDeleteBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eDotDelete, pos); bCon->addMultiname(propertyMultiname); }
+    virtual void emitDeleteBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eDotDelete, pos); bCon->addMultiname(new Multiname(propertyMultiname)); }
 };
 
 class SlotReference : public Reference {

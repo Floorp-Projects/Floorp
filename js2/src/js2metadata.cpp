@@ -1182,7 +1182,7 @@ namespace MetaData {
                             Reference *r = SetupExprNode(env, phase, vb->initializer, &exprType);
                             if (r) r->emitReadBytecode(bCon, p->pos);
                             LexicalReference *lVal = new LexicalReference(vb->name, cxt.strict);
-                            lVal->variableMultiname->addNamespace(publicNamespace);
+                            lVal->variableMultiname.addNamespace(publicNamespace);
                             lVal->emitInitBytecode(bCon, p->pos);                                                        
                         }
                     }
@@ -2030,12 +2030,12 @@ doUnary:
             {
                 IdentifierExprNode *i = checked_cast<IdentifierExprNode *>(p);
                 returnRef = new LexicalReference(&i->name, cxt.strict);
-                ((LexicalReference *)returnRef)->variableMultiname->addNamespace(cxt);
+                ((LexicalReference *)returnRef)->variableMultiname.addNamespace(cxt);
                 
                 // Try to find this identifier at compile time, we have to stop if we reach
                 // a frame that supports dynamic properties - the identifier could be
                 // created at runtime without us finding it here.
-                Multiname *multiname = ((LexicalReference *)returnRef)->variableMultiname;
+                Multiname *multiname = &((LexicalReference *)returnRef)->variableMultiname;
                 FrameListIterator fi = env->getBegin();
                 while (fi != env->getEnd()) {
                     Frame *pf = *fi;
@@ -2165,7 +2165,7 @@ doUnary:
                     if (b->op2->getKind() == ExprNode::qualify) {
                         Reference *rVal = SetupExprNode(env, phase, b->op2, exprType);
                         ASSERT(rVal && checked_cast<LexicalReference *>(rVal));
-                        returnRef = new DotReference(((LexicalReference *)rVal)->variableMultiname);
+                        returnRef = new DotReference(&((LexicalReference *)rVal)->variableMultiname);
                     }
                     // XXX else bracketRef...
                     else
@@ -2505,9 +2505,9 @@ doUnary:
     // return true if the given namespace is on the namespace list
     bool Multiname::listContains(Namespace *nameSpace)
     { 
-        if (nsList.empty())
+        if (nsList->empty())
             return true;
-        for (NamespaceListIterator n = nsList.begin(), end = nsList.end(); (n != end); n++) {
+        for (NamespaceListIterator n = nsList->begin(), end = nsList->end(); (n != end); n++) {
             if (*n == nameSpace)
                 return true;
         }
@@ -2526,13 +2526,13 @@ doUnary:
     {
         for (NamespaceListIterator nli = ns->begin(), end = ns->end();
                 (nli != end); nli++)
-            nsList.push_back(*nli);
+            nsList->push_back(*nli);
     }
 
     // gc-mark all contained JS2Objects and visit contained structures to do likewise
     void Multiname::markChildren()
     {
-        for (NamespaceListIterator n = nsList.begin(), end = nsList.end(); (n != end); n++) {
+        for (NamespaceListIterator n = nsList->begin(), end = nsList->end(); (n != end); n++) {
             GCMARKOBJECT(*n)
         }
     }
@@ -2611,7 +2611,7 @@ doUnary:
         }
 
         // Now insert the id, via all it's namespaces into the local frame
-        for (NamespaceListIterator nli = mn->nsList.begin(), nlend = mn->nsList.end(); (nli != nlend); nli++) {
+        for (NamespaceListIterator nli = mn->nsList->begin(), nlend = mn->nsList->end(); (nli != nlend); nli++) {
             QualifiedName qName(*nli, id);
             LocalBinding *sb = new LocalBinding(qName, m);
             const LocalBindingMap::value_type e(*id, sb);
@@ -2627,7 +2627,7 @@ doUnary:
             fi = env->getBegin();
             Frame *fr = *++fi;
             while (true) {
-                for (NamespaceListIterator nli = mn->nsList.begin(), nlend = mn->nsList.end(); (nli != nlend); nli++) {
+                for (NamespaceListIterator nli = mn->nsList->begin(), nlend = mn->nsList->end(); (nli != nlend); nli++) {
                     if (access & ReadAccess) {
                         bool foundEntry = false;
                         for (b = fr->localReadBindings.lower_bound(*id),
@@ -2726,7 +2726,7 @@ doUnary:
         if ((namespaces == NULL) || namespaces->empty()) {
             os = searchForOverrides(c, id, &cxt->openNamespaces, access, pos);
             if (os->overriddenMember == NULL) {
-                ASSERT(os->multiname.nsList.empty());
+                ASSERT(os->multiname.nsList->empty());
                 os->multiname.addNamespace(publicNamespace);
             }
         }
@@ -2753,7 +2753,7 @@ doUnary:
             }
         }
         // For all the discovered possible overrides, make sure the member doesn't already exist in the class
-        for (NamespaceListIterator nli = os->multiname.nsList.begin(), nlend = os->multiname.nsList.end(); (nli != nlend); nli++) {
+        for (NamespaceListIterator nli = os->multiname.nsList->begin(), nlend = os->multiname.nsList->end(); (nli != nlend); nli++) {
             QualifiedName qname(*nli, id);
             if (access & ReadAccess) {
                 for (InstanceBindingIterator b = c->instanceReadBindings.lower_bound(*id),
@@ -2815,14 +2815,14 @@ doUnary:
         }
 
         NamespaceListIterator nli, nlend;
-        for (nli = readStatus->multiname.nsList.begin(), nlend = readStatus->multiname.nsList.end(); (nli != nlend); nli++) {
+        for (nli = readStatus->multiname.nsList->begin(), nlend = readStatus->multiname.nsList->end(); (nli != nlend); nli++) {
             QualifiedName qName(*nli, id);
             InstanceBinding *ib = new InstanceBinding(qName, m);
             const InstanceBindingMap::value_type e(*id, ib);
             c->instanceReadBindings.insert(e);
         }
         
-        for (nli = writeStatus->multiname.nsList.begin(), nlend = writeStatus->multiname.nsList.end(); (nli != nlend); nli++) {
+        for (nli = writeStatus->multiname.nsList->begin(), nlend = writeStatus->multiname.nsList->end(); (nli != nlend); nli++) {
             QualifiedName qName(*nli, id);
             InstanceBinding *ib = new InstanceBinding(qName, m);
             const InstanceBindingMap::value_type e(*id, ib);
