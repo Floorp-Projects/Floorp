@@ -276,7 +276,6 @@ void CSSStyleSheetImpl::AppendStyleSheet(nsICSSStyleSheet* aSheet)
 void CSSStyleSheetImpl::PrependStyleRule(nsICSSStyleRule* aRule)
 {
   NS_PRECONDITION(nsnull != aRule, "null arg");
-  NS_ADDREF(aRule);
   //XXX replace this with a binary search?
   PRInt32 weight = aRule->GetWeight();
   if (nsnull == mRules) {
@@ -298,7 +297,6 @@ void CSSStyleSheetImpl::PrependStyleRule(nsICSSStyleRule* aRule)
 void CSSStyleSheetImpl::AppendStyleRule(nsICSSStyleRule* aRule)
 {
   NS_PRECONDITION(nsnull != aRule, "null arg");
-  NS_ADDREF(aRule);
 
   //XXX replace this with a binary search?
   PRInt32 weight = aRule->GetWeight();

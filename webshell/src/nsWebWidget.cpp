@@ -446,7 +446,7 @@ nsIDocument* WebWidgetImpl::GetDocument()
 }
 
 NS_IMETHODIMP WebWidgetImpl::SetLinkHandler(nsILinkHandler* aHandler)
-{
+{ // XXX this should probably be a WEAK reference
   NS_IF_RELEASE(mLinkHandler);
   mLinkHandler = aHandler;
   NS_IF_ADDREF(aHandler);
@@ -468,7 +468,7 @@ NS_IMETHODIMP WebWidgetImpl::GetLinkHandler(nsILinkHandler** aResult)
 }
 
 NS_IMETHODIMP WebWidgetImpl::SetContainer(nsISupports* aContainer)
-{
+{ // XXX this should most likely be a WEAK reference
   NS_IF_RELEASE(mContainer);
   mContainer = aContainer;
   NS_IF_ADDREF(aContainer);

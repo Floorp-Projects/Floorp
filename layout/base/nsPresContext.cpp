@@ -425,7 +425,7 @@ void nsPresContext::StopLoadImage(nsIFrame* aForFrame)
 }
 
 NS_IMETHODIMP nsPresContext::SetLinkHandler(nsILinkHandler* aHandler)
-{
+{ // XXX should probably be a WEAK reference
   NS_IF_RELEASE(mLinkHandler);
   mLinkHandler = aHandler;
   NS_IF_ADDREF(aHandler);
@@ -444,7 +444,7 @@ NS_IMETHODIMP nsPresContext::GetLinkHandler(nsILinkHandler** aResult)
 }
 
 NS_IMETHODIMP nsPresContext::SetContainer(nsISupports* aHandler)
-{
+{ // XXX should most likely be a WEAK reference
   NS_IF_RELEASE(mContainer);
   mContainer = aHandler;
   NS_IF_ADDREF(aHandler);
