@@ -2147,9 +2147,9 @@ nsSocketTransport::fireStatus(PRUint32 aCode)
 
   nsAutoString mesg(tempmesg);
   if (mPrintHost)
-    mesg.Append(mPrintHost);
+    mesg.AppendWithConversion(mPrintHost);
   else
-    mesg.Append(mHostName);
+    mesg.AppendWithConversion(mHostName);
 
   if (NS_FAILED(rv)) return rv;
 
@@ -2210,7 +2210,8 @@ nsSocketTransport::GetSocketErrorString(PRUint32 iCode,
         case eSocketState_Created: 
         case eSocketState_WaitDNS:
             {
-                static nsAutoString mesg("Resolving host ");
+                  // STRING USE WARNING: this needs to be looked at -- scc
+                static nsAutoString mesg; mesg.AssignWithConversion("Resolving host ");
                 *oString = mesg.ToNewUnicode();
                 if (!*oString) return NS_ERROR_OUT_OF_MEMORY;
                 rv = NS_OK;
@@ -2218,7 +2219,8 @@ nsSocketTransport::GetSocketErrorString(PRUint32 iCode,
             break;
         case eSocketState_Connected:
             {
-                static nsAutoString mesg("Connected to ");
+                  // STRING USE WARNING: this needs to be looked at -- scc
+                static nsAutoString mesg; mesg.AssignWithConversion("Connected to ");
                 *oString = mesg.ToNewUnicode();
                 if (!*oString) return NS_ERROR_OUT_OF_MEMORY;
                 rv = NS_OK;
@@ -2226,8 +2228,9 @@ nsSocketTransport::GetSocketErrorString(PRUint32 iCode,
             break;
         case eSocketState_WaitReadWrite:
             {
-                static nsAutoString frommesg("Transferring data from ");
-                static nsAutoString tomesg("Sending request to ");
+                  // STRING USE WARNING: this needs to be looked at -- scc
+                static nsAutoString frommesg; frommesg.AssignWithConversion("Transferring data from ");
+                static nsAutoString tomesg; tomesg.AssignWithConversion("Sending request to ");
                 *oString = (mWriteContext == nsnull) ? 
                     frommesg.ToNewUnicode() : tomesg.ToNewUnicode();
                 if (!*oString) return NS_ERROR_OUT_OF_MEMORY;
@@ -2236,7 +2239,8 @@ nsSocketTransport::GetSocketErrorString(PRUint32 iCode,
             break;
         case eSocketState_WaitConnect:
             {
-                static nsAutoString mesg("Connecting to ");
+                  // STRING USE WARNING: this needs to be looked at -- scc
+                static nsAutoString mesg; mesg.AssignWithConversion("Connecting to ");
                 *oString = mesg.ToNewUnicode();
                 if (!*oString) return NS_ERROR_OUT_OF_MEMORY;
                 rv = NS_OK;

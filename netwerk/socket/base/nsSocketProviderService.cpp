@@ -85,9 +85,11 @@ nsSocketProviderService::GetSocketProvider(const char *aSocketType, nsISocketPro
 
   char buf[MAX_SOCKET_TYPE_PROGID_LENGTH];
 
-  nsAutoString progID(NS_NETWORK_SOCKET_PROGID_PREFIX);
+    // STRING USE WARNING: perhaps |progID| should be an |nsCAutoString| -- scc
+  nsAutoString progID;
+  progID.AssignWithConversion(NS_NETWORK_SOCKET_PROGID_PREFIX);
 
-  progID += aSocketType;
+  progID.AppendWithConversion(aSocketType);
   progID.ToCString(buf, MAX_SOCKET_TYPE_PROGID_LENGTH);
 
   rv = nsServiceManager::GetService(buf, NS_GET_IID(nsISocketProvider), (nsISupports **)_result);

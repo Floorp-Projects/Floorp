@@ -71,7 +71,9 @@ NS_IMPL_ISUPPORTS(nsMemCache, NS_GET_IID(nsINetDataCache))
 NS_IMETHODIMP
 nsMemCache::GetDescription(PRUnichar * *aDescription)
 {
-    nsAutoString description("Memory Cache");
+    nsAutoString description;
+    description.AssignWithConversion("Memory Cache");
+
     *aDescription = description.ToNewUnicode();
     if (!*aDescription)
         return NS_ERROR_OUT_OF_MEMORY;

@@ -946,9 +946,10 @@ nsFileTransport::Process(void)
         }
         if (mProgress) {
             // XXX fix up this message for i18n
-            nsAutoString msg = "Read ";
+            nsAutoString msg;
+            msg.AssignWithConversion("Read ");
 #ifdef PR_LOGGING
-            msg += (const char*)mSpec;
+            msg.AppendWithConversion(NS_STATIC_CAST(const char*, mSpec));
 #endif
             (void)mProgress->OnStatus(this, mContext, msg.GetUnicode());
         }
@@ -1090,9 +1091,10 @@ nsFileTransport::Process(void)
         }
         if (mProgress) {
             // XXX fix up this message for i18n
-            nsAutoString msg = "Wrote ";
+            nsAutoString msg;
+            msg.AssignWithConversion("Wrote ");
 #ifdef PR_LOGGING
-            msg += (const char*)mSpec;
+            msg.AppendWithConversion(NS_STATIC_CAST(const char*, mSpec));
 #endif
             (void)mProgress->OnStatus(this, mContext, msg.GetUnicode());
         }

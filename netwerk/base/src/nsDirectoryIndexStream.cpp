@@ -219,7 +219,7 @@ nsDirectoryIndexStream::Read(char* aBuf, PRUint32 aCount, PRUint32* aReadCount)
             }
 
             // The "content-length" field
-            mBuf.Append(fileInfoSize, 10);
+            mBuf.AppendWithConversion(fileInfoSize, 10);
             mBuf.Append(' ');
 
             // The "last-modified" field

@@ -80,9 +80,10 @@ nsSimpleURI::GetSpec(char* *result)
     nsAutoString string;
 //    NS_LOCK_INSTANCE();
 
-    string.Assign(mScheme);
-    string.Append(':');
-    string.Append(mPath);
+      // STRING USE WARNING: perhaps |string| should be |nsCAutoString|? -- scc
+    string.AssignWithConversion(mScheme);
+    string.AppendWithConversion(':');
+    string.AppendWithConversion(mPath);
 
 //    NS_UNLOCK_INSTANCE();
     *result = string.ToNewCString();
@@ -92,7 +93,9 @@ nsSimpleURI::GetSpec(char* *result)
 NS_IMETHODIMP
 nsSimpleURI::SetSpec(const char* aSpec)
 {
-    nsAutoString spec(aSpec);
+    nsAutoString spec;
+    spec.AssignWithConversion(aSpec);
+
     PRInt32 pos = spec.Find(":");
     if (pos == -1)
         return NS_ERROR_FAILURE;
