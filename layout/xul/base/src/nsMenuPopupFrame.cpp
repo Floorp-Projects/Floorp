@@ -1042,8 +1042,11 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
   if (!parentView)
     return NS_OK;
 
+  // Use containingView instead of parentView, to account for the scrollarrows
+  // that a parent menu might have.
+
   nsCOMPtr<nsIWidget> parentViewWidget;
-  GetWidgetForView ( parentView, *getter_AddRefs(parentViewWidget) );
+  GetWidgetForView ( containingView, *getter_AddRefs(parentViewWidget) );
   nsRect localParentWidgetRect(0,0,0,0), screenParentWidgetRect;
   parentViewWidget->WidgetToScreen ( localParentWidgetRect, screenParentWidgetRect );
   PRInt32 screenViewLocX = NSIntPixelsToTwips(screenParentWidgetRect.x,p2t) + (xpos - parentPos.x);
@@ -1062,6 +1065,25 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
     // Popup is anchored to the parent, guarantee that it does not cover the parent. We
     // shouldn't do anything funky if it will already fit on the screen as is.
     //
+
+    ///////////////////////////////////////////////////////////////////////////////
+    //
+    //                +------------------------+          
+    //                |           /\           |
+    // parentPos -> - +------------------------+
+    //              | |                        |
+    //       offset | |                        |
+    //              | |                        |
+    //              | |                        | (screenViewLocX,screenViewLocY)
+    //              - |========================|+--------------
+    //                | parentRect           > ||
+    //                |========================||
+    //                |                        || Submenu 
+    //                +------------------------+|  ( = mRect )
+    //                |           \/           ||
+    //                +------------------------+
+
+
 
     // compute screen coordinates of parent frame so we can play with it. Make sure we put it
     // into twips as everything else is as well.
@@ -1121,7 +1143,24 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
       }
       else {
         // move it up to be on screen, but don't let it go off the screen at the top
+
+        //  |
+        //  |
+        //  |+----  screenViewLocY
+        //  ||
+        //  ||  Submenu ( = mRect )
+        // -+|
+        //   |
+        //   |
+        // - - - - - - - - - - screenBottomTwips (bottom of the screen)
+        //   |    \ 
+        //   |     }  moveDistY
+        //   |    /
+        //   +----  screenViewLocY + mRect.height
+        //
+
         if ( (screenViewLocY + mRect.height) > screenBottomTwips ) {
+          // XXX Bug 84121 comment 48 says the next line has to use screenHeightTwips, why not screenBottomTwips?
           PRInt32 moveDistY = (screenViewLocY + mRect.height) - screenHeightTwips;
           if ( screenViewLocY - moveDistY < screenTopTwips )
             moveDistY = screenViewLocY - screenTopTwips;          
@@ -1133,10 +1172,13 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
       // Resize it to fit on the screen. By this point, we've given the popup as much
       // room as we can w/out covering the parent. If it still can't be as big
       // as it wants to be, well, it just has to suck up and deal. 
+      //
+      // ySpillage is calculated the same way as moveDistY above. see picture there.
+
       PRInt32 xSpillage = (screenViewLocX + mRect.width) - screenRightTwips;
       if ( xSpillage > 0 )
         mRect.width -= xSpillage;
-      PRInt32 ySpillage = (screenViewLocY + mRect.height + parentRect.height) - screenHeightTwips;
+      PRInt32 ySpillage = (screenViewLocY + mRect.height) - screenBottomTwips;
       if ( ySpillage > 0 )
         mRect.height -= ySpillage;
 
