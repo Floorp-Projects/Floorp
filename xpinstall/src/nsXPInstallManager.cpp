@@ -66,6 +66,7 @@
 #include "nsIWindowWatcher.h"
 #include "nsIWindowMediator.h"
 #include "nsIDOMWindowInternal.h"
+#include "nsPIDOMWindow.h"
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -146,34 +147,47 @@ NS_IMPL_THREADSAFE_ISUPPORTS8( nsXPInstallManager,
 NS_IMETHODIMP
 nsXPInstallManager::InitManager(nsIScriptGlobalObject* aGlobalObject, nsXPITriggerInfo* aTriggers, PRUint32 aChromeType)
 {
+    if ( !aTriggers || aTriggers->Size() == 0 )
+    {
+        NS_WARNING("XPInstallManager called with no trigger info!");
+        NS_RELEASE_THIS();
+        return NS_ERROR_INVALID_POINTER;
+    }
+
     nsresult rv = NS_OK;
 
     mTriggers = aTriggers;
     mChromeType = aChromeType;
     mNeedsShutdown = PR_TRUE;
 
-    if ( !mTriggers || mTriggers->Size() == 0 )
+    mParentWindow = do_QueryInterface(aGlobalObject);
+
+    // Don't launch installs while page is still loading
+    PRBool isPageLoading = PR_FALSE;
+    nsCOMPtr<nsPIDOMWindow> piWindow = do_QueryInterface(mParentWindow);
+    if (piWindow)
+        piWindow->IsLoadingOrRunningTimeout(&isPageLoading);
+
+    if (isPageLoading)
+        rv = NS_ERROR_FAILURE;
+    else
     {
-        rv = NS_ERROR_INVALID_POINTER;
-        NS_RELEASE_THIS();
-        return rv;
+        // Start downloading initial chunks looking for signatures,
+        mOutstandingCertLoads = mTriggers->Size();
+
+        nsXPITriggerItem *item = mTriggers->Get(--mOutstandingCertLoads);
+
+        nsCOMPtr<nsIURI> uri;
+        NS_NewURI(getter_AddRefs(uri), NS_ConvertUCS2toUTF8(item->mURL));
+        nsCOMPtr<nsIStreamListener> listener = new CertReader(uri, nsnull, this);
+        if (listener)
+            rv = NS_OpenURI(listener, nsnull, uri);
+        else
+            rv = NS_ERROR_OUT_OF_MEMORY;
     }
 
-    mParentWindow = do_QueryInterface(aGlobalObject);
-    mOutstandingCertLoads = mTriggers->Size();
-
-    nsXPITriggerItem *item = mTriggers->Get(--mOutstandingCertLoads);
-
-    nsCOMPtr<nsIURI> uri;
-    NS_NewURI(getter_AddRefs(uri), NS_ConvertUCS2toUTF8(item->mURL.get()).get());
-    nsIStreamListener* listener = new CertReader(uri, nsnull, this);
-    NS_ADDREF(listener);
-
-    rv = NS_OpenURI(listener, nsnull, uri);
-
-    NS_RELEASE(listener);
     if (NS_FAILED(rv)) {
-        NS_RELEASE_THIS();
+        Shutdown();
     }
     return rv;
 }
