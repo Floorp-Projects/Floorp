@@ -173,7 +173,7 @@ DefCol("version", "substring(bugs.version, 1, 5)", "Vers", "bugs.version");
 DefCol("os", "substring(bugs.op_sys, 1, 4)", "OS", "bugs.op_sys");
 DefCol("target_milestone", "bugs.target_milestone", "TargetM",
        "bugs.target_milestone");
-DefCol("votes", "sum(votes.count) as votesum", "Votes", "votesum");
+DefCol("votes", "bugs.votes", "Votes", "bugs.votes");
 
 my @collist;
 if (defined $::COOKIE{'COLUMNLIST'}) {
@@ -229,7 +229,7 @@ bugs.bug_status";
 
 
 $query .= "
-from   bugs left join votes on bugs.bug_id = votes.bug_id,
+from   bugs,
        profiles assign,
        profiles report
        left join profiles qacont on bugs.qa_contact = qacont.userid,
@@ -248,7 +248,7 @@ if ((defined $::FORM{'emailcc1'} && $::FORM{'emailcc1'}) ||
     # We need to poke into the CC table.  Do weird SQL left join stuff so that
     # we can look in the CC table, but won't reject any bugs that don't have
     # any CC fields.
-    $query =~ s/bugs left join/bugs left join cc on bugs.bug_id = cc.bug_id left join profiles ccname on cc.who = ccname.userid left join/;
+    $query =~ s/bugs,/bugs left join cc on bugs.bug_id = cc.bug_id left join profiles ccname on cc.who = ccname.userid,/;
 }
 
 if (defined $::FORM{'sql'}) {
@@ -366,6 +366,10 @@ if (defined $::FORM{'changedin'}) {
     }
 }
 
+if (defined $minvotes) {
+    $query .= "and votes >= $minvotes ";
+}
+
 
 my $ref = $::MFORM{'chfield'};
 
@@ -407,7 +411,7 @@ if (defined $ref) {
 if (defined $ref && 0 < @$ref) {
     # Do surgery on the query to tell it to patch in the bugs_activity
     # table.
-    $query =~ s/profiles assign,/profiles assign, bugs_activity,/;
+    $query =~ s/bugs,/bugs, bugs_activity,/;
     
     my @list;
     foreach my $f (@$ref) {
@@ -551,11 +555,6 @@ while (@row = FetchSQLData()) {
                                 # buggroupset if all the bugs have exactly
                                 # the same group.  If they don't, we leave
                                 # it alone.
-    }
-    if (defined $minvotes) {
-        if ($row[$votecolnum] < $minvotes) {
-            next;
-        }
     }
     if (!defined $seen{$bug_id}) {
         $seen{$bug_id} = 1;

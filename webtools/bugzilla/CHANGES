@@ -10,6 +10,23 @@ query the CVS tree.  For example,
 will tell you what has been changed in the last week.
 
 
+10/11/99 Restructured voting database to add a cached value in each
+bug recording how many total votes that bug has.  While I'm at it, I
+removed the unused "area" field from the bugs database.  It is
+distressing to realize that the bugs table has reached the maximum
+number of indices allowed by MySQL (16), which may make future
+enhancements awkward.
+
+You must feed the following to MySQL:
+
+	alter table bugs drop column area;
+	alter table bugs add column votes mediumint not null, add index (votes);
+
+If you have been using the voting feature at all, then you will need
+to update the cache.  You can do this by visiting the sanitycheck.cgi
+page, and taking it up on its offer to rebuild the votes stuff.
+
+
 10/7/99 Added voting ability.  You must run the new script
 "makevotestable.sh".  You must also feed the following to mysql:
 

@@ -24,11 +24,14 @@ use strict;
 
 require "CGI.pl";
 
+use vars %::FORM;
+
 print "Content-type: text/html\n";
 print "\n";
 
 ConnectToDatabase();
 
+my $offervotecacherebuild = 0;
 
 sub Status {
     my ($str) = (@_);
@@ -45,13 +48,36 @@ sub BugLink {
     return "<a href='show_bug.cgi?id=$id'>$id</a>";
 }
 
+sub AlertBadVoteCache {
+    my ($id) = (@_);
+    Alert("Bad vote cache for bug " . BugLink($id));
+    $offervotecacherebuild = 1;
+}
 
-PutHeader("Bugzilla Sanity Check");
-
-print "OK, now running sanity checks.<P>\n";
 
 my @row;
 my @checklist;
+
+PutHeader("Bugzilla Sanity Check");
+
+if (exists $::FORM{'rebuildvotecache'}) {
+    Status("OK, now rebuilding vote cache.");
+    SendSQL("lock tables bugs write, votes read");
+    SendSQL("update bugs set votes = 0");
+    SendSQL("select bug_id, sum(count) from votes group by bug_id");
+    my %votes;
+    while (@row = FetchSQLData()) {
+        my ($id, $v) = (@row);
+        $votes{$id} = $v;
+    }
+    foreach my $id (keys %votes) {
+        SendSQL("update bugs set votes = $votes{$id} where bug_id = $id");
+    }
+    SendSQL("unlock tables");
+    Status("Vote cache has been rebuild.");
+}
+
+print "OK, now running sanity checks.<P>\n";
 
 Status("Checking groups");
 SendSQL("select bit from groups where bit != pow(2, round(log(bit) / log(2)))");
@@ -124,12 +150,13 @@ undef $profid{0};
 
 
 Status("Checking reporter/assigned_to/qa_contact ids");
-SendSQL("select bug_id,reporter,assigned_to,qa_contact from bugs");
+SendSQL("select bug_id,reporter,assigned_to,qa_contact,votes from bugs");
 
+my %votes;
 my %bugid;
 
 while (@row = FetchSQLData()) {
-    my($id, $reporter, $assigned_to, $qa_contact) = (@row);
+    my($id, $reporter, $assigned_to, $qa_contact, $v) = (@row);
     $bugid{$id} = 1;
     if (!defined $profid{$reporter}) {
         Alert("Bad reporter $reporter in " . BugLink($id));
@@ -140,7 +167,33 @@ while (@row = FetchSQLData()) {
     if ($qa_contact != 0 && !defined $profid{$qa_contact}) {
         Alert("Bad qa_contact $qa_contact in" . BugLink($id));
     }
+    if ($v != 0) {
+        $votes{$id} = $v;
+    }
 }
+
+Status("Checking cached vote counts");
+SendSQL("select bug_id, sum(count) from votes group by bug_id");
+
+while (@row = FetchSQLData()) {
+    my ($id, $v) = (@row);
+    if ($v <= 0) {
+        Alert("Bad vote sum for bug $id");
+    } else {
+        if (!defined $votes{$id} || $votes{$id} != $v) {
+            AlertBadVoteCache($id);
+        }
+        delete $votes{$id};
+    }
+}
+foreach my $id (keys %votes) {
+    AlertBadVoteCache($id);
+}
+
+if ($offervotecacherebuild) {
+    print qq{<a href="sanitycheck.cgi?rebuildvotecache=1">Click here to rebuild the vote cache</a><p>\n};
+}
+
 
 Status("Checking CC table");
 

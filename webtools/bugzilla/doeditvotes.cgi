@@ -86,12 +86,28 @@ foreach my $prod (keys(%prodcount)) {
     }
 }
 
+my %affected;
+SendSQL("lock tables bugs write, votes write");
+SendSQL("select bug_id from votes where who = $who");
+while (MoreSQLData()) {
+    my $id = FetchOneColumn();
+    $affected{$id} = 1;
+}
 SendSQL("delete from votes where who = $who");
 foreach my $id (@buglist) {
     if ($::FORM{$id} > 0) {
         SendSQL("insert into votes (who, bug_id, count) values ($who, $id, $::FORM{$id})");
     }
+    $affected{$id} = 1;
 }
+foreach my $id (keys %affected) {
+    SendSQL("select sum(count) from votes where bug_id = $id");
+    my $v = FetchOneColumn();
+    SendSQL("update bugs set votes = $v where bug_id = $id");
+}
+SendSQL("unlock tables");
+
+
 
 PutHeader("Voting tabulated", "Voting tabulated", $::COOKIE{'Bugzilla_login'});
 print "Your votes have been recorded.\n";
