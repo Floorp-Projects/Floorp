@@ -80,7 +80,7 @@ Contributor(s): ______________________________________. -->
        it's every bit a copy. 
   -->
 
-    <menubar chromeclass="menubar">
+    <menubar id="main-menubar" chromeclass="menubar">
     	 <menu id="menu_File"/>
 
 		<menu id="menu_Edit">
