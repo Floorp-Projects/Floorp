@@ -177,7 +177,7 @@ namespace ICG {
     
     class ICodeGenerator {
     public:
-        friend ICodeModule;
+        friend class ICodeModule;
         typedef enum { kNoFlags = 0, kIsTopLevel = 0x01, kIsStaticMethod = 0x02, kIsWithinWith = 0x04 } ICodeGeneratorFlags;
     private:
         InstructionStream *iCode;
