@@ -550,6 +550,48 @@ XULElementBlur(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
 
 
 //
+// Native method Click
+//
+PR_STATIC_CALLBACK(JSBool)
+XULElementClick(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMXULElement *nativeThis = (nsIDOMXULElement*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+
+  *rval = JSVAL_NULL;
+
+  {
+    nsresult rv;
+    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
+                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULELEMENT_CLICK, PR_FALSE);
+    }
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
+    }
+  }
+
+
+    result = nativeThis->Click();
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method GetElementsByAttribute
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -645,6 +687,7 @@ static JSFunctionSpec XULElementMethods[] =
   {"doCommand",          XULElementDoCommand,     0},
   {"focus",          XULElementFocus,     0},
   {"blur",          XULElementBlur,     0},
+  {"click",          XULElementClick,     0},
   {"getElementsByAttribute",          XULElementGetElementsByAttribute,     2},
   {0}
 };

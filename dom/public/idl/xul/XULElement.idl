@@ -15,6 +15,7 @@ interface XULElement : Element {
 
 		void focus();
 		void blur();
-
+		void click();
+		
         NodeList getElementsByAttribute(in DOMString name, in DOMString value);
 };

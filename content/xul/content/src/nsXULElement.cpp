@@ -3708,6 +3708,35 @@ nsXULElement::Blur()
   return RemoveFocus(aPresContext);
 }
 
+NS_IMETHODIMP
+nsXULElement::Click()
+{
+  nsCOMPtr<nsIDocument> doc; // Strong
+  GetDocument(*getter_AddRefs(doc));
+  if (doc) {
+    PRInt32 numShells = doc->GetNumberOfShells();
+    nsCOMPtr<nsIPresShell> shell; // Strong
+    nsCOMPtr<nsIPresContext> context;
+    for (PRInt32 i=0; i<numShells; i++) {
+      shell = getter_AddRefs(doc->GetShellAt(i));
+      shell->GetPresContext(getter_AddRefs(context));
+        
+	    nsEventStatus status = nsEventStatus_eIgnore;
+	    nsMouseEvent event;
+	    event.eventStructType = NS_GUI_EVENT;
+	    event.message = NS_MOUSE_LEFT_CLICK;
+      event.isShift = PR_FALSE;
+      event.isControl = PR_FALSE;
+      event.isAlt = PR_FALSE;
+      event.isMeta = PR_FALSE;
+      event.clickCount = 0;
+      event.widget = nsnull;
+      HandleDOMEvent(context, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+    }
+  }
+  
+  return NS_OK;
+}
 
 // nsIFocusableContent interface and helpers
 
