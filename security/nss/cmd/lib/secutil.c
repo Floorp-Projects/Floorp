@@ -2196,7 +2196,7 @@ SECU_PrintCrl (FILE *out, SECItem *der, char *m, int level)
 	if (!c)
 	    break;
 
-	rv = SEC_ASN1DecodeItem(arena, c, SEC_ASN1_GET(CERT_CrlTemplate), der);
+	rv = SEC_QuickDERDecodeItem(arena, c, SEC_ASN1_GET(CERT_CrlTemplate), der);
 	if (rv != SECSuccess)
 	    break;
 	SECU_PrintCRLInfo (out, c, m, level);
