@@ -19,6 +19,8 @@
  *
  * Contributor(s): 
  */
+#include "nsCOMPtr.h"
+#include "nsHTMLUtils.h"
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMNSHTMLAnchorElement.h"
 #include "nsIScriptObjectOwner.h"
@@ -123,6 +125,11 @@ public:
 protected:
   nsresult RegUnRegAccessKey(PRBool aDoReg);
   nsGenericHTMLContainerElement mInner;
+
+  // The "cached" canonical URL that the anchor really points to. This
+  // value is derived on-demand when someone asks for the ".href"
+  // property.
+  char* mCanonicalHref;
 };
 
 nsresult
@@ -139,15 +146,20 @@ NS_NewHTMLAnchorElement(nsIHTMLContent** aInstancePtrResult,
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
-
 nsHTMLAnchorElement::nsHTMLAnchorElement(nsINodeInfo *aNodeInfo)
+  : mCanonicalHref(nsnull)
 {
   NS_INIT_REFCNT();
   mInner.Init(this, aNodeInfo);
+  nsHTMLUtils::AddRef();
 }
 
 nsHTMLAnchorElement::~nsHTMLAnchorElement()
 {
+  if (mCanonicalHref)
+    nsCRT::free(mCanonicalHref);
+
+  nsHTMLUtils::Release();
 }
 
 NS_IMPL_ADDREF(nsHTMLAnchorElement)
@@ -392,7 +404,8 @@ nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                     PRUint32 aFlags,
                                     nsEventStatus* aEventStatus)
 {
-  return mInner.HandleDOMEventForAnchors(aPresContext, 
+  return mInner.HandleDOMEventForAnchors(this,
+                                         aPresContext, 
                                          aEvent, 
                                          aDOMEvent, 
                                          aFlags, 
@@ -402,32 +415,47 @@ nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsHTMLAnchorElement::GetHref(nsString& aValue)
 {
-  // Resolve url to an absolute url
+  // Return the canonical URI that this link refers to.
   nsresult rv = NS_OK;
-  nsAutoString relURLSpec;
-  nsIURI* baseURL = nsnull;
 
-  // Get base URL.
-  mInner.GetBaseURL(baseURL);
+  if (! mCanonicalHref) {
+    // We don't have a cached value: compute it from scratch.
 
-  // Get href= attribute (relative URL).
-  rv = mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, relURLSpec);
+    // Get href= attribute (relative URL).
+    nsAutoString relURLSpec;
+    mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, relURLSpec);
 
-  if (nsnull != baseURL && (rv == NS_CONTENT_ATTR_HAS_VALUE)) {
-    // Get absolute URL.
-    rv = NS_MakeAbsoluteURI(aValue, relURLSpec, baseURL);
+    if (relURLSpec.Length()) {
+      // Get base URL.
+      nsCOMPtr<nsIURI> baseURL;
+      mInner.GetBaseURL(*getter_AddRefs(baseURL));
+
+      if (baseURL) {
+        // Get absolute URL.
+        NS_MakeAbsoluteURIWithCharset(&mCanonicalHref, relURLSpec, mInner.mDocument, baseURL,
+                                      nsHTMLUtils::IOService, nsHTMLUtils::CharsetMgr);
+      }
+      else {
+        // Absolute URL is same as relative URL.
+        mCanonicalHref = relURLSpec.ToNewUTF8String();
+      }
+    }
   }
-  else {
-    // Absolute URL is same as relative URL.
-    aValue = relURLSpec;
-  }
-  NS_IF_RELEASE(baseURL);
+
+  aValue.AssignWithConversion(mCanonicalHref);
   return rv;
 }
 
 NS_IMETHODIMP
 nsHTMLAnchorElement::SetHref(const nsString& aValue)
 {
+  if (mCanonicalHref) {
+    // Clobber our "cache", so we'll recompute it the next time
+    // somebody asks for it.
+    nsCRT::free(mCanonicalHref);
+    mCanonicalHref = nsnull;
+  }
+
   return mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, aValue, PR_TRUE);
 }
 

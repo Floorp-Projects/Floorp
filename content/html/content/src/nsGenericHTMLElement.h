@@ -135,7 +135,8 @@ public:
                                       PRBool aCompileEventHandlers,
                                       nsIFormControl* aControl,
                                       nsIForm* aForm);
-  nsresult HandleDOMEventForAnchors(nsIPresContext* aPresContext,
+  nsresult HandleDOMEventForAnchors(nsIContent* aOuter,
+                                    nsIPresContext* aPresContext,
                                     nsEvent* aEvent,
                                     nsIDOMEvent** aDOMEvent,
                                     PRUint32 aFlags,
