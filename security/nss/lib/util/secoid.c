@@ -1432,7 +1432,7 @@ const static SECOidData oids[] = {
  * All this static data, and the allocated data to which it points,
  * is protected by a global reader/writer lock.  
  * The c language guarantees that global and static data that is not 
- * explicitly initialized will be imiiialized with zeros.  If we 
+ * explicitly initialized will be initialized with zeros.  If we 
  * initialize it with zeros, the data goes into the initialized data
  * secment, and increases the size of the library.  By leaving it 
  * uninitialized, it is allocated in BSS, and does NOT increase the 
@@ -1457,7 +1457,7 @@ secoid_InitDynOidData(void)
     NSSRWLock * lock;
 
     /* This function will create the lock if it doesn't exist,
-    ** and will return the address of the lcok, whether it was 
+    ** and will return the address of the lock, whether it was 
     ** previously created, or was created by the function.
     */
     lock = nssRWLock_AtomicCreate(&dynOidLock, 1, "dynamic OID data");
@@ -1498,17 +1498,16 @@ secoid_HashDynamicOiddata(const SECOidData * oid)
 /*
  * Lookup a Dynamic OID. Dynamic OID's still change slowly, so it's
  * cheaper to rehash the table when it changes than it is to do the loop
- * each time. Worry: what about thread safety here? Global Static data with
- * no locks.... (sigh).
+ * each time. 
  */
 static SECOidData *
 secoid_FindDynamic(const SECItem *key) 
 {
     SECOidData *ret = NULL;
 
-    if (dynOidTable) {
+    if (dynOidHash) {
 	NSSRWLock_LockRead(dynOidLock);
-	if (dynOidTable) { /* must check it again with lock held. */
+	if (dynOidHash) { /* must check it again with lock held. */
 	    ret = (SECOidData *)PL_HashTableLookup(dynOidHash, key);
 	}
 	NSSRWLock_UnlockRead(dynOidLock);
