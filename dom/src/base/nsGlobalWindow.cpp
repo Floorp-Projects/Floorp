@@ -2067,6 +2067,33 @@ GlobalWindowImpl::GetLength(PRUint32* aLength)
   return NS_ERROR_FAILURE;
 }
 
+PRBool
+GlobalWindowImpl::DispatchCustomEvent(const char *aEventName)
+{
+  nsCOMPtr<nsIDOMDocumentEvent> doc(do_QueryInterface(mDocument));
+  nsCOMPtr<nsIDOMEvent> event;
+
+  // Doesn't this seem backwards? Seems like
+  // nsEventStateManager::DispatchNewEvent() screws up on the
+  // logic for its prevent default argument...
+  PRBool preventDefault = PR_TRUE;
+
+  if (doc) {
+    doc->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
+
+    nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
+    if (privateEvent) {
+      event->InitEvent(NS_ConvertASCIItoUTF16(aEventName), PR_TRUE, PR_TRUE);
+
+      privateEvent->SetTrusted(PR_TRUE);
+
+      DispatchEvent(event, &preventDefault);
+    }
+  }
+
+  return preventDefault;
+}
+
 NS_IMETHODIMP GlobalWindowImpl::SetFullScreen(PRBool aFullScreen)
 {
   // Only chrome can change our fullScreen mode.
@@ -2093,25 +2120,13 @@ NS_IMETHODIMP GlobalWindowImpl::SetFullScreen(PRBool aFullScreen)
   if (itemType != nsIDocShellTreeItem::typeChrome)
     return NS_ERROR_FAILURE;
 
-  // dispatch an onfullscreen DOM event so that XUL apps can
+  // dispatch a "fullscreen" DOM event so that XUL apps can
   // respond visually if we are kicked into full screen mode
-  nsCOMPtr<nsIDOMDocumentEvent> doc(do_QueryInterface(mDocument));
-  nsCOMPtr<nsIDOMEvent> event;
-  doc->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
-  if (!event)
-    return NS_ERROR_FAILURE;
+  if (!DispatchCustomEvent("fullscreen")) {
+    // event handlers can prevent us from going into full-screen mode
 
-  event->InitEvent(NS_LITERAL_STRING("fullscreen"), PR_FALSE, PR_TRUE);
-
-  nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
-  privateEvent->SetTrusted(PR_TRUE);
-
-  PRBool allowDefault;
-  DispatchEvent(event, &allowDefault);
-
-  // event handlers can prevent us from going into full-screen mode
-  if (!allowDefault)
     return NS_OK;
+  }
 
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
@@ -2278,7 +2293,20 @@ GlobalWindowImpl::MakeScriptDialogTitle(const nsAString &aInTitle,
 NS_IMETHODIMP
 GlobalWindowImpl::Alert(const nsAString& aString)
 {
-  NS_ENSURE_STATE(mDocShell);
+  nsCOMPtr<nsIPrompt> prompter(do_GetInterface(mDocShell));
+  NS_ENSURE_TRUE(prompter, NS_ERROR_FAILURE);
+
+  // Reset popup state while opening a modal dialog, and firing events
+  // about the dialog, to prevent the current state from being active
+  // the whole time a modal dialog is open.
+  nsAutoPopupStatePusher popupStatePusher(openAbused, PR_TRUE);
+
+  if (!DispatchCustomEvent("DOMWillOpenModalDialog")) {
+    // Someone chose to prevent the default action for this event,
+    // if so, don't show the dialog after all...
+
+    return NS_OK;
+  }
 
   // Special handling for alert(null) in JS for backwards
   // compatibility.
@@ -2286,9 +2314,6 @@ GlobalWindowImpl::Alert(const nsAString& aString)
   NS_NAMED_LITERAL_STRING(null_str, "null");
 
   const nsAString *str = DOMStringIsNull(aString) ? &null_str : &aString;
-
-  nsCOMPtr<nsIPrompt> prompter(do_GetInterface(mDocShell));
-  NS_ENSURE_TRUE(prompter, NS_ERROR_FAILURE);
 
   // Test whether title needs to prefixed with [script]
   nsAutoString newTitle;
@@ -2306,17 +2331,30 @@ GlobalWindowImpl::Alert(const nsAString& aString)
   // pending reflows.
   EnsureReflowFlushAndPaint();
 
-  // Reset popup state while opening a window to prevent the current
-  // state from being active the whole time a modal dialog is open.
-  nsAutoPopupStatePusher popupStatePusher(openAbused, PR_TRUE);
+  nsresult rv = prompter->Alert(title, PromiseFlatString(*str).get());
 
-  return prompter->Alert(title, PromiseFlatString(*str).get());
+  DispatchCustomEvent("DOMModalDialogClosed");
+
+  return rv;
 }
 
 NS_IMETHODIMP
 GlobalWindowImpl::Confirm(const nsAString& aString, PRBool* aReturn)
 {
-  NS_ENSURE_STATE(mDocShell);
+  nsCOMPtr<nsIPrompt> prompter(do_GetInterface(mDocShell));
+  NS_ENSURE_TRUE(prompter, NS_ERROR_FAILURE);
+
+  // Reset popup state while opening a modal dialog, and firing events
+  // about the dialog, to prevent the current state from being active
+  // the whole time a modal dialog is open.
+  nsAutoPopupStatePusher popupStatePusher(openAbused, PR_TRUE);
+
+  if (!DispatchCustomEvent("DOMWillOpenModalDialog")) {
+    // Someone chose to prevent the default action for this event,
+    // if so, don't show the dialog after all...
+
+    return NS_OK;
+  }
 
   *aReturn = PR_FALSE;
 
@@ -2332,18 +2370,16 @@ GlobalWindowImpl::Confirm(const nsAString& aString, PRBool* aReturn)
                  "service");
   }
 
-  nsCOMPtr<nsIPrompt> prompter(do_GetInterface(mDocShell));
-  NS_ENSURE_TRUE(prompter, NS_ERROR_FAILURE);
-
   // Before bringing up the window, unsuppress painting and flush
   // pending reflows.
   EnsureReflowFlushAndPaint();
 
-  // Reset popup state while opening a window to prevent the current
-  // state from being active the whole time a modal dialog is open.
-  nsAutoPopupStatePusher popupStatePusher(openAbused, PR_TRUE);
+  nsresult rv = prompter->Confirm(title, PromiseFlatString(aString).get(),
+                                  aReturn);
 
-  return prompter->Confirm(title, PromiseFlatString(aString).get(), aReturn);
+  DispatchCustomEvent("DOMModalDialogClosed");
+
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -2355,10 +2391,20 @@ GlobalWindowImpl::Prompt(const nsAString& aMessage,
 {
   SetDOMStringToNull(aReturn);
 
-  NS_ENSURE_STATE(mDocShell);
-
   nsCOMPtr<nsIAuthPrompt> prompter(do_GetInterface(mDocShell));
   NS_ENSURE_TRUE(prompter, NS_ERROR_FAILURE);
+
+  // Reset popup state while opening a modal dialog, and firing events
+  // about the dialog, to prevent the current state from being active
+  // the whole time a modal dialog is open.
+  nsAutoPopupStatePusher popupStatePusher(openAbused, PR_TRUE);
+
+  if (!DispatchCustomEvent("DOMWillOpenModalDialog")) {
+    // Someone chose to prevent the default action for this event,
+    // if so, don't show the dialog after all...
+
+    return NS_OK;
+  }
 
   PRBool b;
   nsXPIDLString uniResult;
@@ -2377,15 +2423,14 @@ GlobalWindowImpl::Prompt(const nsAString& aMessage,
       title.Assign(aTitle);
   }
 
-  // Reset popup state while opening a window to prevent the current
-  // state from being active the whole time a modal dialog is open.
-  nsAutoPopupStatePusher popupStatePusher(openAbused, PR_TRUE);
-
   nsresult rv = prompter->Prompt(title.get(),
                                  PromiseFlatString(aMessage).get(), nsnull,
                                  aSavePassword,
                                  PromiseFlatString(aInitial).get(),
                                  getter_Copies(uniResult), &b);
+
+  DispatchCustomEvent("DOMModalDialogClosed");
+
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (uniResult && b) {
@@ -3440,28 +3485,11 @@ GlobalWindowImpl::Close()
   // could be abused by content code, but do we care? I don't think
   // so...
 
-  nsCOMPtr<nsIDOMDocumentEvent> doc(do_QueryInterface(mDocument));
-  nsCOMPtr<nsIDOMEvent> event;
+  if (!DispatchCustomEvent("DOMWindowClose")) {
+    // Someone chose to prevent the default action for this event, if
+    // so, let's not close this window after all...
 
-  if (doc) {
-    doc->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
-  }
-
-  if (event) {
-    event->InitEvent(NS_LITERAL_STRING("DOMWindowClose"), PR_TRUE, PR_TRUE);
-
-    nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
-    privateEvent->SetTrusted(PR_TRUE);
-
-    PRBool executeDefault = PR_TRUE;
-    DispatchEvent(event, &executeDefault);
-
-    if (!executeDefault) {
-      // Someone chose to prevent the default action for this event,
-      // if so, let's not close this window after all...
-
-      return NS_OK;
-    }
+    return NS_OK;
   }
 
   // Flag that we were closed.

@@ -288,7 +288,8 @@ protected:
     return GetParentInternal() != nsnull;
   }
 
-protected:
+  PRBool DispatchCustomEvent(const char *aEventName);
+
   // When adding new member variables, be careful not to create cycles
   // through JavaScript.  If there is any chance that a member variable
   // could own objects that are implemented in JavaScript, then those
