@@ -291,6 +291,7 @@ private:
     nsXULAttributes*  mAttributes;
     PRBool            mContentsMustBeGenerated;
     nsVoidArray*		  mBroadcastListeners;
+    nsIDOMXULElement* mBroadcaster;
 };
 
 
@@ -318,7 +319,8 @@ RDFElementImpl::RDFElementImpl(PRInt32 aNameSpaceID, nsIAtom* aTag)
       mListenerManager(nsnull),
       mAttributes(nsnull),
       mContentsMustBeGenerated(PR_FALSE),
-      mBroadcastListeners(nsnull)
+      mBroadcastListeners(nsnull),
+      mBroadcaster(nsnull)
 {
     NS_INIT_REFCNT();
     NS_ADDREF(aTag);
@@ -368,6 +370,20 @@ RDFElementImpl::~RDFElementImpl()
             XULBroadcastListener* xulListener = (XULBroadcastListener*)mBroadcastListeners->ElementAt(0);
             RemoveBroadcastListener(xulListener->mAttribute, xulListener->mListener);
         }
+    }
+
+    // We might be an observes element. We need to remove our parent from
+    // the broadcaster's array
+    if (mBroadcaster != nsnull)
+    {
+        nsCOMPtr<nsIContent> parentContent;
+        GetParent(*getter_AddRefs(parentContent));
+
+        nsCOMPtr<nsIDOMElement> parentElement;
+        parentElement = do_QueryInterface(parentContent);
+
+        mBroadcaster->RemoveBroadcastListener("*", parentElement);
+        NS_RELEASE(mBroadcaster);
     }
 
     if (--gRefCnt == 0) {
@@ -2148,8 +2164,7 @@ NS_IMETHODIMP
 RDFElementImpl::AddBroadcastListener(const nsString& attr, nsIDOMElement* anElement) 
 { 
 	// Add ourselves to the array.
-	NS_ADDREF(anElement);
-  if (mBroadcastListeners == nsnull)
+	if (mBroadcastListeners == nsnull)
   {
       mBroadcastListeners = new nsVoidArray();
   }
@@ -2199,7 +2214,7 @@ RDFElementImpl::RemoveBroadcastListener(const nsString& attr, nsIDOMElement* anE
 	{
 		XULBroadcastListener* xulListener = (XULBroadcastListener*)mBroadcastListeners->ElementAt(i);
 		
-		if (xulListener->mAttribute == attr &&
+		if ((xulListener->mAttribute == attr || xulListener->mAttribute == "*") &&
 			  xulListener->mListener == nsCOMPtr<nsIDOMElement>( dont_QueryInterface(anElement) ))
 		{
 			// Do the removal.
