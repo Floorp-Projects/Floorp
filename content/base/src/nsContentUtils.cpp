@@ -506,6 +506,20 @@ nsContentUtils::CheckSameOrigin(nsIDOMNode *aTrustedNode,
 {
   NS_PRECONDITION(aTrustedNode, "There must be a trusted node");
 
+  // If there isn't a security manager it is probably because it is not
+  // installed so we don't care about security anyway
+  if (!sSecurityManager) {
+    return NS_OK;
+  }
+
+  PRBool isSystem = PR_FALSE;
+  sSecurityManager->SubjectPrincipalIsSystem(&isSystem);
+  if (isSystem) {
+    // we're running as system, grant access to the node.
+
+    return NS_OK;
+  }
+
   /*
    * Get hold of each node's document or principal
    */
@@ -587,12 +601,6 @@ nsContentUtils::CheckSameOrigin(nsIDOMNode *aTrustedNode,
     }
   }
 
-  // If there isn't a security manager it is probably because it is not
-  // installed so we don't care about security anyway
-  if (!sSecurityManager) {
-    return NS_OK;
-  }
-
   return sSecurityManager->CheckSameOriginPrincipal(trustedPrincipal,
                                                     unTrustedPrincipal);
 }
@@ -611,6 +619,15 @@ nsContentUtils::CanCallerAccess(nsIDOMNode *aNode)
   sSecurityManager->GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));
 
   if (!subjectPrincipal) {
+    // we're running as system, grant access to the node.
+
+    return PR_TRUE;
+  }
+
+  nsCOMPtr<nsIPrincipal> systemPrincipal;
+  sSecurityManager->GetSystemPrincipal(getter_AddRefs(systemPrincipal));
+
+  if (subjectPrincipal == systemPrincipal) {
     // we're running as system, grant access to the node.
 
     return PR_TRUE;
