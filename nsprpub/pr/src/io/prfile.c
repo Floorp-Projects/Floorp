@@ -636,7 +636,7 @@ PR_IMPLEMENT(PRStatus) PR_LockFile(PRFileDesc *fd)
     while (fd->secret->lockCount == -1)
         PR_WaitCondVar(_pr_flock_cv, PR_INTERVAL_NO_TIMEOUT);
     if (fd->secret->lockCount == 0) {
-        fd->secret->lockCount == -1;
+        fd->secret->lockCount = -1;
         PR_Unlock(_pr_flock_lock);
         status = _PR_MD_LOCKFILE(fd->secret->md.osfd);
         PR_Lock(_pr_flock_lock);
