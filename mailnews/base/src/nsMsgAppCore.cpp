@@ -219,41 +219,11 @@ static nsresult AddView(nsIRDFCompositeDataSource *database, nsIMessageView **me
 }
 nsresult nsMsgAppCore::SetDocumentCharset(class nsString const & aCharset) 
 {
-	nsresult res = NS_OK;
-  // This changes a charset of messenger's .xul.
-	if (nsnull != mWindow) 
-	{
-		nsIDOMDocument* domDoc;
-		res = mWindow->GetDocument(&domDoc);
-		if (NS_SUCCEEDED(res) && nsnull != domDoc) 
-		{
-			nsIDocument * doc;
-			res = domDoc->QueryInterface(nsIDocument::GetIID(), (void**)&doc);
-			if (NS_SUCCEEDED(res) && nsnull != doc) 
-			{
-				doc->SetDocumentCharacterSet(aCharset);
-				
-				NS_RELEASE(doc);
-			}
-			
-			NS_RELEASE(domDoc);
-		}
-	}
-  // This changes a charset of nsIDocument for the message view.
+  // Set a default charset of the webshell. 
   if (nsnull != mWebShell) {
-    nsCOMPtr<nsIContentViewer> contentViewer;
-    if (NS_SUCCEEDED(res = mWebShell->GetContentViewer(getter_AddRefs(contentViewer)))) {
-      nsCOMPtr<nsIDocumentViewer> docViewer(do_QueryInterface(contentViewer, &res));
-      if (NS_SUCCEEDED(res)) {
-        // Get the document object
-        nsCOMPtr<nsIDocument> doc;
-        if (NS_SUCCEEDED(res = docViewer->GetDocument(*getter_AddRefs(doc)))) {
-            doc->SetDocumentCharacterSet(aCharset);
-        }
-      }
-    }
+    mWebShell->SetDefaultCharacterSet(aCharset);
   }
-	return res;
+	return NS_OK;
 }
 
 //
