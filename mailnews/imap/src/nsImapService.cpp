@@ -1363,7 +1363,8 @@ nsImapService::GetImapConnectionAndLoadUrl(nsIEventQueue* aClientEventQueue,
 {
     nsresult rv = NS_OK;
     nsCOMPtr<nsIMsgIncomingServer> aMsgIncomingServer;
-    rv = aImapUrl->GetServer(getter_AddRefs(aMsgIncomingServer));
+	nsCOMPtr<nsIMsgMailNewsUrl> msgUrl = do_QueryInterface(aImapUrl);
+    rv = msgUrl->GetServer(getter_AddRefs(aMsgIncomingServer));
     if (NS_SUCCEEDED(rv) && aMsgIncomingServer)
     {
         nsCOMPtr<nsIImapIncomingServer>

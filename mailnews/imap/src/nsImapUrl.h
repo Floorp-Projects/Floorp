@@ -39,8 +39,6 @@ public:
 
 	NS_IMETHOD Initialize(const char * aUserName);
 
-	NS_IMETHOD GetServer(nsIMsgIncomingServer ** aServer);
-
 	NS_IMETHOD GetImapLog(nsIImapLog ** aImapLog);
 	NS_IMETHOD SetImapLog(nsIImapLog  * aImapLog);
 
@@ -95,8 +93,9 @@ public:
 	virtual ~nsImapUrl();
 
 protected:
-
 	virtual nsresult ParseUrl();
+	virtual const char * GetUserName() { return m_userName;}
+
 	char		*m_listOfMessageIds;
 
 	// handle the imap specific parsing
@@ -134,8 +133,6 @@ protected:
     nsCOMPtr<nsIImapMessageSink>	m_imapMessageSink;
     nsCOMPtr<nsIImapExtensionSink>	m_imapExtensionSink;
     nsCOMPtr<nsIImapMiscellaneousSink> m_imapMiscellaneousSink;
-
-	nsCOMPtr<nsIMsgIncomingServer>  m_server;
   
     // online message copy support; i don't have a better solution yet
     nsCOMPtr<nsISupports> m_copyState;

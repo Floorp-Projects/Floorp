@@ -42,8 +42,6 @@ static NS_DEFINE_CID(kCImapHostSessionListCID, NS_IIMAPHOSTSESSIONLIST_CID);
 
 nsImapUrl::nsImapUrl()
 {
-	m_server = nsnull;
-	
 	m_listOfMessageIds = nsnull;
 	m_sourceCanonicalFolderPathSubString = nsnull;
 	m_destinationCanonicalFolderPathSubString = nsnull;
@@ -116,20 +114,6 @@ NS_IMETHODIMP nsImapUrl::GetRequiredImapState(nsImapState * aImapUrlState)
 	}
 
 	return NS_OK;
-}
-
-NS_IMETHODIMP nsImapUrl::GetServer(nsIMsgIncomingServer **aServer)
-{
-    nsresult rv = NS_ERROR_NULL_POINTER;
-	if (aServer) // valid argument to return result in?
-	{
-		*aServer = m_server;
-		NS_IF_ADDREF(*aServer);
-		if (m_server)
-			rv = NS_OK;  // only return ok if we have non null server...
-	} // if aMsgIdentity
-
-	return rv;
 }
 
 NS_IMETHODIMP nsImapUrl::GetImapLog(nsIImapLog ** aImapLog)
@@ -254,27 +238,6 @@ nsresult nsImapUrl::ParseUrl()
 		ParseImapPart(imapPartOfUrl+1);  // GetPath leaves leading '/' in the path!!!
 		nsCRT::free(imapPartOfUrl);
 	}
-	nsXPIDLCString host;
-	rv = GetHost(getter_Copies(host));
-    if (NS_SUCCEEDED(rv) && host)
-    {
-        NS_WITH_SERVICE(nsIMsgMailSession, session, kMsgMailSessionCID, &rv); 
-        if (NS_FAILED(rv)) return rv;
-        
-        nsCOMPtr<nsIMsgAccountManager> accountManager;
-        rv = session->GetAccountManager(getter_AddRefs(accountManager));
-        if(NS_FAILED(rv)) return rv;
-        
-        nsCOMPtr<nsIMsgIncomingServer> server;
-        rv = accountManager->FindServer(m_userName,
-                                        host,
-                                        "imap",
-                                        getter_AddRefs(server));
-        if (NS_FAILED(rv)) return rv;
-        // can't do an addref because it's private to nsIURI, so use
-        // do_QueryInterface instead
-		m_server = do_QueryInterface(server);
-    }
 
     NS_UNLOCK_INSTANCE();
     return NS_OK;
@@ -749,6 +712,7 @@ NS_IMETHODIMP nsImapUrl::AllocateCanonicalPath(const char *serverPath, char onli
     nsString aString;
 	char *currentPath = (char *) serverPath;
     char *onlineDir = nsnull;
+	nsCOMPtr<nsIMsgIncomingServer> server;
 
 	NS_LOCK_INSTANCE();
 
@@ -767,7 +731,11 @@ NS_IMETHODIMP nsImapUrl::AllocateCanonicalPath(const char *serverPath, char onli
 		goto done;
 
     GetHost(getter_Copies(hostName));
-    m_server->GetUsername(&userName);
+	rv = GetServer(getter_AddRefs(server));
+	if (NS_FAILED(rv))
+		goto done;
+
+	server->GetUsername(&userName);
 
     hostSessionList->GetOnlineDirForHost(hostName, userName, aString); 
     // First we have to check to see if we should strip off an online server

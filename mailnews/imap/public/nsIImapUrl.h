@@ -126,8 +126,6 @@ public:
 	// Getters and Setters for the imap specific event sinks to bind to to your url
 	///////////////////////////////////////////////////////////////////////////////
 
-	NS_IMETHOD GetServer(nsIMsgIncomingServer ** aIncomingServer) = 0;
-
 	NS_IMETHOD GetImapLog(nsIImapLog ** aImapLog) = 0;
 	NS_IMETHOD SetImapLog(nsIImapLog  * aImapLog) = 0;
 
