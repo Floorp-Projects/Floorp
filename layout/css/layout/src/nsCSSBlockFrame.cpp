@@ -135,8 +135,10 @@ public:
                             nsIContent*     aContainer,
                             nsIContent*     aChild,
                             PRInt32         aIndexInParent);
+#if XXX
   NS_IMETHOD DidReflow(nsIPresContext& aPresContext,
                        nsDidReflowStatus aStatus);
+#endif
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
   NS_IMETHOD ListTag(FILE* out) const;
   NS_IMETHOD VerifyTree() const;
@@ -267,12 +269,13 @@ protected:
 #define LINE_IS_DIRTY                 0x1
 #define LINE_IS_BLOCK                 0x2
 #define LINE_LAST_CONTENT_IS_COMPLETE 0x4
+#define LINE_NEED_DID_REFLOW          0x8
 
 struct LineData {
   LineData(nsIFrame* aFrame, PRInt32 aCount, PRUint16 flags) {
     mFirstChild = aFrame;
     mChildCount = aCount;
-    mState = LINE_IS_DIRTY | flags;
+    mState = LINE_IS_DIRTY | LINE_NEED_DID_REFLOW | flags;
     mFloaters = nsnull;
     mNext = nsnull;
     mInnerBottomMargin = 0;
@@ -335,6 +338,18 @@ struct LineData {
 
   void ClearDirty() {
     mState &= ~LINE_IS_DIRTY;
+  }
+
+  void SetNeedDidReflow() {
+    mState |= LINE_NEED_DID_REFLOW;
+  }
+
+  void ClearNeedDidReflow() {
+    mState &= ~LINE_NEED_DID_REFLOW;
+  }
+
+  PRBool NeedsDidReflow() {
+    return 0 != (LINE_NEED_DID_REFLOW & mState);
   }
 
   PRBool IsDirty() const {
@@ -1980,6 +1995,7 @@ nsCSSBlockFrame::ReflowLine(nsCSSBlockReflowState& aState,
   nsCSSBlockFrame* nextInFlow;
   aState.mInlineLayoutPrepared = PR_FALSE;
   aLine->ClearDirty();
+  aLine->SetNeedDidReflow();
 
   // Reflow mapped frames in the line
   PRInt32 n = aLine->mChildCount;
@@ -3428,6 +3444,7 @@ nsCSSBlockFrame::RemoveChild(LineData* aLines, nsIFrame* aChild)
   return PR_FALSE;
 }
 
+#if 0
 NS_IMETHODIMP
 nsCSSBlockFrame::DidReflow(nsIPresContext& aPresContext,
                            nsDidReflowStatus aStatus)
@@ -3437,10 +3454,23 @@ nsCSSBlockFrame::DidReflow(nsIPresContext& aPresContext,
       aStatus));
 
   if (NS_FRAME_REFLOW_FINISHED == aStatus) {
-    nsIFrame* kid = (nsnull == mLines) ? nsnull : mLines->mFirstChild;
-    while (nsnull != kid) {
-      kid->DidReflow(aPresContext, aStatus);
-      kid->GetNextSibling(kid);
+    LineData* line = mLines;
+    while (nsnull != line) {
+      // XXX This can't be done because we need to pass on DidReflow's
+      // to things that weren't touched but are moving (like an
+      // embedded view that needs to update its view coordinate)
+
+      // XXX We need a better solution!
+      if (line->NeedsDidReflow()) {
+        line->ClearNeedDidReflow();
+        nsIFrame* kid = line->mFirstChild;
+        PRInt32 n = line->mChildCount;
+        while (--n >= 0) {
+          kid->DidReflow(aPresContext, aStatus);
+          kid->GetNextSibling(kid);
+        }
+      }
+      line = line->mNext;
     }
   }
 
@@ -3450,6 +3480,7 @@ nsCSSBlockFrame::DidReflow(nsIPresContext& aPresContext,
   // the NS_FRAME_IN_REFLOW bit
   return nsFrame::DidReflow(aPresContext, aStatus);
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////
 // Floater support
