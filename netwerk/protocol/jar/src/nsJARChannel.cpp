@@ -474,7 +474,7 @@ nsJARChannel::EnsureJARFileAvailable(OnJARFileAvailableFun onJARFileAvailable,
 
         // use a file transport to serve as a data pump for the download (done
         // on some other thread)
-        rv = fts->CreateTransport(jarCacheFile, PR_WRONLY | PR_CREATE_FILE, 0, 
+        rv = fts->CreateTransport(jarCacheFile, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0664, 
                                   getter_AddRefs(mJarCacheTransport));
         if (NS_FAILED(rv)) goto error;
         rv = mJarCacheTransport->SetBufferSegmentSize(mBufferSegmentSize);

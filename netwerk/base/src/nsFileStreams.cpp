@@ -418,8 +418,8 @@ nsFileOutputStream::Init(nsIFile* file, PRInt32 ioFlags, PRInt32 perm)
     nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(file, &rv);
     if (NS_FAILED(rv)) return rv;
     if (ioFlags == -1)
-        ioFlags = PR_WRONLY | PR_CREATE_FILE;
-    if (perm == -1)
+        ioFlags = PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE;
+    if (perm <= 0)
         perm = 0664;
     return localFile->OpenNSPRFileDesc(ioFlags, perm, &mFD);
 }
