@@ -1381,10 +1381,10 @@ nsMenu::GetNextVisibleMenu(nsIMenu** outNextVisibleMenu)
       nsCOMPtr<nsIDOMElement> menuElement = do_QueryInterface(menuNode);
       if (!menuElement) continue;
       
-      nsAutoString            valueString;
-      menuElement->GetAttribute(NS_ConvertASCIItoUCS2("hidden"), valueString);
-
-      if (! valueString.EqualsWithConversion("true"))
+      nsAutoString hiddenValue, collapsedValue;
+      menuElement->GetAttribute(NS_ConvertASCIItoUCS2("hidden"), hiddenValue);
+      menuElement->GetAttribute(NS_ConvertASCIItoUCS2("collapsed"), collapsedValue);
+      if (! hiddenValue.EqualsWithConversion("true") && ! collapsedValue.EqualsWithConversion("true"))
       {
         NS_IF_ADDREF(*outNextVisibleMenu = thisMenu);
         break;
@@ -1426,6 +1426,7 @@ nsMenu::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom *
   nsCOMPtr<nsIAtom> disabledAtom = NS_NewAtom("disabled");
   nsCOMPtr<nsIAtom> valueAtom = NS_NewAtom("value");
   nsCOMPtr<nsIAtom> hiddenAtom = NS_NewAtom("hidden");
+  nsCOMPtr<nsIAtom> collapsedAtom = NS_NewAtom("collapsed");
   
   nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mDOMNode);
   if(!domElement) {
@@ -1494,11 +1495,12 @@ nsMenu::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom *
 #endif
 
   }
-  else if(aAttribute == hiddenAtom.get())     // hidden
+  else if(aAttribute == hiddenAtom.get() || aAttribute == collapsedAtom.get())     // hidden of collapsed
   {
-      nsAutoString valueString;
-      domElement->GetAttribute(NS_ConvertASCIItoUCS2("hidden"), valueString);
-      if(valueString.EqualsWithConversion("true")) {
+      nsAutoString hiddenValue, collapsedValue;
+      domElement->GetAttribute(NS_ConvertASCIItoUCS2("hidden"), hiddenValue);
+      domElement->GetAttribute(NS_ConvertASCIItoUCS2("collapsed"), collapsedValue);
+      if(hiddenValue.EqualsWithConversion("true") || collapsedValue.EqualsWithConversion("true")) {
         // hide this menu
         ::DeleteMenu(mMacMenuID);
       }
