@@ -603,17 +603,15 @@
     <titledbutton id="newButton"   src="&newEditorIcon.url;"     observes="Editor:NewEditor"/>
     <titledbutton id="openButton"  src="&openEditorIcon.url;"    observes="Editor:Open"/>
     <titledbutton id="saveButton"  src="&saveIcon.url;"          observes="Editor:Save"/>
+    <titledbutton id="printButton" src="&printIcon.url;"         observes="Editor:Print"/>
+    <titledbutton id="findButton"  src="&findIcon.url;"          observes="Editor:Find"/>
 
-    <titledbutton id="printButton" src="&printIcon.url;" value="&printToolbarCmd.label;"/>
-    <titledbutton id="findButton" src="&findIcon.url;" observes="Editor:Find"/>
     <titledbutton id="spellingButton" src="&spellingIcon.url;" value="&spellToolbarCmd.label;" onclick="CheckSpelling()"/>
-
     <titledbutton id="imageButton" src="&imageIcon.url;" value="&imageToolbarCmd.label;" onclick="EditorInsertImage()"/>
     <titledbutton id="hlineButton" src="&hlineIcon.url;" value="&hruleToolbarCmd.label;" onclick="EditorInsertHLine()"/>
     <titledbutton id="tableButton" src="&tableIcon.url;" value="&tableToolbarCmd.label;" onclick="EditorInsertOrEditTable(true)"/>
-
-    <titledbutton id="linkButton" src="&linkIcon.url;" value="&linkToolbarCmd.label;" onclick="EditorInsertLink()"/>
-    <titledbutton id="tagetButton" src="&targetIcon.url;" value="&anchorToolbarCmd.label;" onclick="EditorInsertNamedAnchor()"/>
+    <titledbutton id="linkButton"  src="&linkIcon.url;"  value="&linkToolbarCmd.label;"  onclick="EditorInsertLink()"/>
+    <titledbutton id="namedAnchorButton" src="&targetIcon.url;" value="&anchorToolbarCmd.label;" onclick="EditorInsertNamedAnchor()"/>
 
     <titledbutton id="DisplayStyleButton" src="&previewIcon.url;" value="&previewToolbarCmd.label;" onclick="EditorToggleDisplayStyle()"/>
   
