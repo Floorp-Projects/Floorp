@@ -173,7 +173,7 @@ protected:
   @param replaceAfter (out): Number of chars of URL after pos
   @return URL found
 */
-  static PRBool FindURL(const nsAutoString& text, PRUint32 pos,
+  static PRBool FindURL(const nsAutoString& text, const PRUint32 pos,
        const PRUint32 whathasbeendone, nsAutoString& outputHTML,
        PRInt32& replaceBefore, PRInt32& replaceAfter);
 
