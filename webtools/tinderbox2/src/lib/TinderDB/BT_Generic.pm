@@ -74,7 +74,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.11 $ )[1];
+$VERSION = ( qw $Revision: 1.12 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -86,7 +86,7 @@ push @TinderDB::HTML_COLUMNS, TinderDB::BT->new();
 
 
 # name of the bug tracking system
-$BT_NAME = $TinderDB::BT_NAME || "BT";
+$BT_NAME = $TinderConfig::BT_NAME || "BT";
 
 # remove all records from the database which are older then last_time.
 
