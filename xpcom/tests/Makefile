@@ -31,8 +31,8 @@ DIRS = dynamic
 OBJS	= $(CPPSRCS:.cpp=.o)
 
 EX_LIBS = \
-        $(DIST)/bin/libreg.so	\
-	$(DIST)/bin/libxpcom.so	\
+        $(DIST)/bin/libreg.$(DLL_SUFFIX)	\
+	$(DIST)/bin/libxpcom.$(DLL_SUFFIX)	\
 	$(DIST)/lib/libplc21.a	\
 	$(DIST)/lib/libplds21.a	\
 	$(DIST)/lib/libnspr21.a	\
