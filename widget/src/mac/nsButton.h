@@ -69,7 +69,7 @@ public:
 
 private:
 
-	void DrawWidget(PRBool	aMouseInside);
+	void DrawWidget(PRBool	aMouseInside,nsIRenderingContext	*aRContext);
  
   nsString		  mLabel;
   PRBool				mMouseDownInButton;

@@ -1071,25 +1071,14 @@ nsRect 					rr;
     GetBounds(rr);
     event.rect = &rr;
 
-    event.renderingContext = nsnull;
-    static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
-    static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
-    
-    if (NS_OK == nsRepository::CreateInstance(kRenderingContextCID, 
-					      nsnull, 
-					      kRenderingContextIID, 
-					      (void **)&event.renderingContext))
       {
       PRInt32					offx,offy;
 			GrafPtr					theport;
 			Rect						macrect;
 			nsRect					therect;
 			RgnHandle				thergn;
-			RGBColor				redcolor = {0xff00,0,0};
-			RGBColor				greencolor = {0,0xff00,0};
-
         
-        CalcOffset(offx,offy);
+        CalcTotalOffset(offx,offy);
 				GetPort(&theport);
 				::SetPort(mWindowPtr);
 				::SetOrigin(-offx,-offy);
@@ -1102,8 +1091,8 @@ nsRect 					rr;
 					::GetClip(thergn);
 					::ClipRect(&macrect);
 					::PenNormal();
-					::RGBForeColor(&greencolor);
-	        ::FrameRect(&macrect); 
+					//::RGBForeColor(&greencolor);
+	        //::FrameRect(&macrect); 
 					}
 				else
 					{
@@ -1115,22 +1104,11 @@ nsRect 					rr;
 					thergn = ::NewRgn();
 					::GetClip(thergn);
 					::ClipRect(&macrect);
-					::PenNormal();
-					::RGBForeColor(&redcolor);
-					::EraseRect(&macrect);
-	        ::FrameRect(&macrect); 
-					}		
-					
+					}							
+
+        result = (DispatchWindowEvent(&event));
         SetOrigin(0,0);
         SetPort(theport);
-
-        event.renderingContext->Init(mContext, this);
-        result = (DispatchWindowEvent(&event));
-        NS_RELEASE(event.renderingContext);
-      }
-    else 
-      {
-        result = PR_FALSE;
       }
   }
   return result;
@@ -1311,20 +1289,22 @@ nsWindow::PtInWindow(PRInt32 aX,PRInt32 aY)
 {
 PRBool	result = PR_FALSE;
 nsPoint	hitPt(aX,aY);
-nsRect	bounds;
+nsRect	bounds,newbounds;
 PRInt32	offx,offy;
 	
 	GetBounds(bounds);
+
 	if(this->GetParent())
 		{
 		CalcOffset(offx,offy);
-		bounds.MoveBy(offx,offy);
+		bounds.x +=offx;
+		bounds.y +=offy;
 		}
 	else
 		{
-		offx = bounds.x;
-		offy = bounds.y;
-		bounds.MoveBy(-offx,-offy);
+		// no parent, the bounds in global, so make a local coorinate system at 0,0
+		bounds.x = 0;
+		bounds.y = 0;
 		}
 	
 	if(bounds.Contains(hitPt))
@@ -1377,11 +1357,12 @@ void nsWindow::MacRectToNSRect(const Rect& aMacRect, nsRect& aRect) const
 }
 
 
-//-------------------------------------------------------------------------
-//
-// Locate the widget that contains the point
-//
-//-------------------------------------------------------------------------
+
+//========================================================================
+/*
+ * Find the widget hit
+ @param aThePoint -- a point in local coordinats to test for the hit. 
+ */
 nsWindow* 
 nsWindow::FindWidgetHit(Point aThePoint)
 {
@@ -1423,7 +1404,7 @@ nsRect		rect;
  *  @return  nothing is returned
  */
 void 
-nsWindow::DoPaintWidgets(RgnHandle	aTheRegion)
+nsWindow::DoPaintWidgets(RgnHandle	aTheRegion,nsIRenderingContext	*aRC)
 {
 nsWindow			*child = this;
 nsRect				rect;
@@ -1455,6 +1436,7 @@ nsPaintEvent 	pevent;
           
 					// generate a paint event
 					pevent.message = NS_PAINT;
+					pevent.renderingContext = aRC;
 					pevent.widget = child;
 					pevent.eventStructType = NS_PAINT_EVENT;
 					pevent.point.x = 0;
@@ -1464,7 +1446,7 @@ nsPaintEvent 	pevent;
 			    child->OnPaint(pevent);
 			    
 			    // now go check out the childern
-          child->DoPaintWidgets(aTheRegion);
+          child->DoPaintWidgets(aTheRegion,aRC);
           }
         child = (nsWindow*)mChildren->Next();	
         }
@@ -1558,6 +1540,36 @@ nsRect		therect;
 
 	aX = 0;
 	aY = 0;
+	theparent = this->GetParent();
+	while(theparent)
+		{
+		theparent->GetBounds(therect);
+		child = theparent->GetParent();
+		if(child)
+			{
+			aX += therect.x;
+			aY += therect.y;
+			}
+		theparent = child;
+		}
+
+	return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+/*  Calculate the x and y offsets for this particular widget
+ *  @update  ps 09/22/98
+ *  @param   aX -- x offset amount
+ *  @param   aY -- y offset amount 
+ *  @return  NOTHING
+ */
+NS_IMETHODIMP nsWindow::CalcTotalOffset(PRInt32 &aX,PRInt32 &aY)
+{
+nsIWidget	*theparent,*child;
+nsRect		therect;
+
+	aX = mBounds.x;
+	aY = mBounds.y;
 	theparent = this->GetParent();
 	while(theparent)
 		{

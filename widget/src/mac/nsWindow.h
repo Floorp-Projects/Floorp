@@ -147,7 +147,7 @@ public:
 	  NS_IMETHOD SetBounds(const Rect& aMacRect);
     void MacRectToNSRect(const Rect& aMacRect, nsRect& aRect) const;
     void nsRectToMacRect(const nsRect& aRect, Rect& aMacRect) const;
-    void DoPaintWidgets(RgnHandle	aTheRegion);
+    void DoPaintWidgets(RgnHandle	aTheRegion,nsIRenderingContext	*aRC);
     void DoResizeWidgets(nsSizeEvent &aEvent);
     PRBool RgnIntersects(RgnHandle aTheRegion,RgnHandle aIntersectRgn);
 
@@ -191,6 +191,7 @@ protected:
   NS_IMETHOD      UpdateVisibilityFlag();
   NS_IMETHOD      UpdateDisplay();
   NS_IMETHOD			CalcOffset(PRInt32 &aX,PRInt32 &aY);
+  NS_IMETHOD			CalcTotalOffset(PRInt32 &aX,PRInt32 &aY);
 
 
 protected:
