@@ -1110,7 +1110,15 @@ void StyleTableImpl::ResetFrom(const nsStyleTable* aParent, nsIPresContext* aPre
   }
   else {
     mBorderCollapse = NS_STYLE_BORDER_SEPARATE;
-    mEmptyCells = NS_STYLE_TABLE_EMPTY_CELLS_HIDE;
+
+    nsCompatibility compatMode = eCompatibility_Standard;
+    if (aPresContext) {
+		  aPresContext->GetCompatibilityMode(&compatMode);
+		}
+    mEmptyCells = (compatMode == eCompatibility_NavQuirks
+                    ? NS_STYLE_TABLE_EMPTY_CELLS_HIDE     // bug 33244
+                    : NS_STYLE_TABLE_EMPTY_CELLS_SHOW);
+
     mCaptionSide = NS_SIDE_TOP;
     mBorderSpacingX.Reset();
     mBorderSpacingY.Reset();
