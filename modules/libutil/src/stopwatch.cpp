@@ -187,6 +187,6 @@ void Stopwatch::Print(void) {
    int  min   = int(realt / 60);
    realt -= min * 60;
    int  sec   = int(realt);
-   printf("Real time %d:%d:%d, CP time %.3f", hours, min, sec, CpuTime());
+   RAPTOR_STOPWATCH_TRACE(("Real time %d:%d:%d, CP time %.3f", hours, min, sec, CpuTime()));
 }
 
