@@ -205,7 +205,7 @@ viewer:Components:cache.xpt
 
 viewer:chrome:help.jar
 viewer:chrome:comm.jar
-viewer:chrome:comm.jar
+viewer:chrome:content-packs.jar
 viewer:chrome:toolkit.jar
 viewer:chrome:modern.jar
 viewer:chrome:classic.jar
