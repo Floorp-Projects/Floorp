@@ -192,11 +192,7 @@ function initializeBooleanWidgets()
         booleanAnd = firstTerm.booleanAnd;
 
     // target radio items have value="and" or value="or"
-    var targetValue = booleanAnd ? "and" : "or";
-
-    var targetElement = gSearchBooleanRadiogroup.getElementsByAttribute("value", targetValue)[0];
-
-    gSearchBooleanRadiogroup.selectedItem = targetElement;
+    gSearchBooleanRadiogroup.value = booleanAnd ? "and" : "or";
 
     for (var i=1; i<gSearchTerms.length; i++) 
     {
@@ -296,7 +292,7 @@ function createSearchRow(index, scope, searchTerm)
     boolOp.id = "boolOp" + index;
     if (index == 0)
       boolOp.setAttribute('value', gBooleanInitialText);
-    else if ( gSearchBooleanRadiogroup.selectedItem.value == 'and')
+    else if (gSearchBooleanRadiogroup.value == 'and')
       boolOp.setAttribute('value', gBooleanAndText);
     else
       boolOp.setAttribute('value', gBooleanOrText);
@@ -366,7 +362,7 @@ function initializeTermFromIndex(index)
     // the UI
     else
     {
-      searchTermObj.booleanAnd = getBooleanAnd();
+      searchTermObj.booleanAnd = (gSearchBooleanRadiogroup.value == "and");
       if (index)
       {
         // if we weren't pre-initialized with a searchTerm then steal the search attribute from the 
@@ -433,15 +429,6 @@ function removeSearchRow(index)
     // remove it from the list of terms - XXX this does it?
     // remove the last element
     gSearchTerms.length--;
-}
-
-function getBooleanAnd()
-{
-    if (gSearchBooleanRadiogroup.selectedItem)
-        return (gSearchBooleanRadiogroup.selectedItem.getAttribute("value") == "and") ? true : false;
-
-    // default to false
-    return false;
 }
 
 // save the search terms from the UI back to the actual search terms

@@ -90,20 +90,7 @@ function OnLoadImportDialog()
 function SetUpImportType()
 {
   // set dialog title
-  var typeRadioGroup = document.getElementById("importFields");
-  switch (importType)
-  {
-
-    case "mail":
-      typeRadioGroup.selectedItem = document.getElementById("mailRadio");
-      break;
-    case "addressbook":
-      typeRadioGroup.selectedItem = document.getElementById("addressbookRadio");
-      break;
-    case "settings":
-      typeRadioGroup.selectedItem = document.getElementById("settingsRadio");
-      break;
-  }
+  document.getElementById("importFields").value = importType;
 
   ListModules();
 }
@@ -164,8 +151,7 @@ function ImportDialogOKButton()
 
   if ( listbox && listbox.selectedItems && (listbox.selectedItems.length == 1) )
   {
-    var importTypeRadioGroup = document.getElementById("importFields");
-    importType = importTypeRadioGroup.selectedItem.getAttribute("value");
+    importType = document.getElementById("importFields").value;
     var index = listbox.selectedItems[0].getAttribute('list-index');
     var module = importService.GetModule(importType, index);
     var name = importService.GetModuleName(importType, index);

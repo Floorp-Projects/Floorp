@@ -53,7 +53,6 @@ var gSmtpService = Components.classes["@mozilla.org/messengercompose/smtp;1"].ge
 var gSavedUsername="";
 var gPort;
 var gDefaultPort;
-var gSmtpS;
 
 function initSmtpSettings(server) {
 
@@ -66,22 +65,16 @@ function initSmtpSettings(server) {
     gSmtpTrySSL = document.getElementById("smtp.trySSL");
     gDefaultPort = document.getElementById("smtp.defaultPort");
     gPort = document.getElementById("smtp.port");
-    gSmtpS = document.getElementById("smtp.alwaysSmtpS");
 
     if (server) {
         gSmtpHostname.value = server.hostname;
         gSmtpPort.value = server.port ? server.port : "";
         gSmtpUsername.value = server.username;
         gSmtpAuthMethod.setAttribute("value", server.authMethod);
-
-        var elements = gSmtpTrySSL.getElementsByAttribute("value", server.trySSL);
-        if (!elements.item(0))
-            elements = gSmtpTrySSL.getElementsByAttribute("value", "1");
-        gSmtpTrySSL.selectedItem = elements[0];
+        gSmtpTrySSL.value = (server.trySSL < 4) ? server.trySSL : 1;
     } else {
         gSmtpAuthMethod.setAttribute("value", "1");
-        gSmtpTrySSL.selectedItem =
-            gSmtpTrySSL.getElementsByAttribute("value", "1")[0];
+        gSmtpTrySSL.value = 1;
     }
 
     gSmtpUseUsername.checked = (gSmtpAuthMethod.getAttribute("value") == "1");
@@ -152,7 +145,7 @@ function saveSmtpSettings(server)
         //dump("Saved authmethod = " + server.authMethod +
         //     " but checked = " + gSmtpUseUsername.checked + "\n");
         server.username = gSmtpUsername.value;
-        server.trySSL = gSmtpTrySSL.selectedItem.value;
+        server.trySSL = gSmtpTrySSL.value;
     }
 }
 
@@ -185,7 +178,7 @@ function updateControls() {
 function selectProtocol(init) {
   var prevDefaultPort = gDefaultPort.value;
 
-  if (gSmtpTrySSL.selectedItem == gSmtpS) {
+  if (gSmtpTrySSL.value == 3) {
     gDefaultPort.value = "465";
     if(gPort.value == "" || (!init && gPort.value == "25" && prevDefaultPort != gDefaultPort.value))
         gPort.value = gDefaultPort.value;

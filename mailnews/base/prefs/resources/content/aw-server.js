@@ -201,7 +201,7 @@ function modifyStaticText(smtpMod, smtpBox)
 function setServerType()
 {
   var pageData = parent.GetPageData();
-  var serverType = (document.getElementById("servertype")).selectedItem.value;
+  var serverType = document.getElementById("servertype").value;
   var deferStorageBox = document.getElementById("deferStorageBox");
   deferStorageBox.hidden = serverType == "imap";
   setPageData(pageData, "server", "servertype", serverType);
