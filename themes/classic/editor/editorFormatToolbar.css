@@ -418,91 +418,89 @@
 /* ..... smiley menu ..... */
 
 .insert-smile > .menu-iconic-left {
-  list-style-image: url("chrome://editor/content/images/smile_n.gif");
+  list-style-image: url("chrome://communicator/skin/icons/smileys/smile_n.gif");
   -moz-image-region: auto; /* cut off inheritance */
 }
 
 .insert-tongue > .menu-iconic-left {
-  list-style-image: url("chrome://editor/content/images/tongue_n.gif");
+  list-style-image: url("chrome://communicator/skin/icons/smileys/tongue_n.gif");
   -moz-image-region: auto; /* cut off inheritance */
 }
 
 .insert-frown > .menu-iconic-left {
-  list-style-image: url("chrome://editor/content/images/frown_n.gif"); 
+  list-style-image: url("chrome://communicator/skin/icons/smileys/frown_n.gif"); 
   -moz-image-region: auto; /* cut off inheritance */
 }
 
 .insert-wink > .menu-iconic-left {
-  list-style-image: url("chrome://editor/content/images/wink_n.gif");
+  list-style-image: url("chrome://communicator/skin/icons/smileys/wink_n.gif");
   -moz-image-region: auto; /* cut off inheritance */
 }
 
 .insert-laughing > .menu-iconic-left {
-  list-style-image: url("chrome://editor/content/images/laughing_n.gif"); 
+  list-style-image: url("chrome://communicator/skin/icons/smileys/laughing_n.gif"); 
   -moz-image-region: auto; /* cut off inheritance */
 }
 
 .insert-embarrassed > .menu-iconic-left {
-  list-style-image: url("chrome://editor/content/images/embarrassed_n.gif");
+  list-style-image: url("chrome://communicator/skin/icons/smileys/embarrassed_n.gif");
   -moz-image-region: auto; /* cut off inheritance */
 }
 
 .insert-undecided > .menu-iconic-left {
-  list-style-image: url("chrome://editor/content/images/undecided_n.gif"); 
+  list-style-image: url("chrome://communicator/skin/icons/smileys/undecided_n.gif"); 
   -moz-image-region: auto; /* cut off inheritance */
 }
 
 .insert-surprise > .menu-iconic-left {
-  list-style-image: url("chrome://editor/content/images/surprise_n.gif"); 
+  list-style-image: url("chrome://communicator/skin/icons/smileys/surprise_n.gif"); 
   -moz-image-region: auto; /* cut off inheritance */
 }
 
 .insert-kiss > .menu-iconic-left {
-  list-style-image: url("chrome://editor/content/images/kiss_n.gif"); 
+  list-style-image: url("chrome://communicator/skin/icons/smileys/kiss_n.gif"); 
   -moz-image-region: auto; /* cut off inheritance */
 }
 
 .insert-yell > .menu-iconic-left {
-  list-style-image: url("chrome://editor/content/images/yell_n.gif"); 
+  list-style-image: url("chrome://communicator/skin/icons/smileys/yell_n.gif"); 
   -moz-image-region: auto; /* cut off inheritance */
 }
 
 .insert-cool > .menu-iconic-left {
-  list-style-image: url("chrome://editor/content/images/cool_n.gif"); 
+  list-style-image: url("chrome://communicator/skin/icons/smileys/cool_n.gif"); 
   -moz-image-region: auto; /* cut off inheritance */
 }
 
 .insert-undecided > .menu-iconic-left {
-  list-style-image: url("chrome://editor/content/images/undecided_n.gif"); 
+  list-style-image: url("chrome://communicator/skin/icons/smileys/undecided_n.gif"); 
   -moz-image-region: auto; /* cut off inheritance */
 }
 
 .insert-money > .menu-iconic-left {
-  list-style-image: url("chrome://editor/content/images/money_n.gif"); 
+  list-style-image: url("chrome://communicator/skin/icons/smileys/money_n.gif"); 
   -moz-image-region: auto; /* cut off inheritance */
 }
 
 .insert-foot > .menu-iconic-left {
-  list-style-image: url("chrome://editor/content/images/foot_n.gif"); 
+  list-style-image: url("chrome://communicator/skin/icons/smileys/foot_n.gif"); 
   -moz-image-region: auto; /* cut off inheritance */
 }
 
 .insert-innocent > .menu-iconic-left {
-  list-style-image: url("chrome://editor/content/images/innocent_n.gif"); 
+  list-style-image: url("chrome://communicator/skin/icons/smileys/innocent_n.gif"); 
   -moz-image-region: auto; /* cut off inheritance */
 }
 
 .insert-cry > .menu-iconic-left {
-  list-style-image: url("chrome://editor/content/images/cry_n.gif"); 
+  list-style-image: url("chrome://communicator/skin/icons/smileys/cry_n.gif"); 
   -moz-image-region: auto; /* cut off inheritance */
 }
 
 .insert-sealed > .menu-iconic-left {
-  list-style-image: url("chrome://editor/content/images/sealed_n.gif"); 
+  list-style-image: url("chrome://communicator/skin/icons/smileys/sealed_n.gif"); 
   -moz-image-region: auto; /* cut off inheritance */
 }
-
-
 
 /* ::::: fg/bg color picker ::::: */
 
