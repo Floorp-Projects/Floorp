@@ -9712,20 +9712,7 @@ ApplyRenderingChangeToTree(nsIPresContext* aPresContext,
   }
 
   if (viewManager) {
-    nsCOMPtr<nsIPresShell> presShell;
-    nsresult rv = aPresContext->GetShell(getter_AddRefs(presShell));
-    if (NS_SUCCEEDED(rv)) {
-      PRBool isReflowLocked = PR_FALSE;
-      presShell->IsReflowLocked(&isReflowLocked);
-      if (isReflowLocked) {
-        viewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
-      } else {
-        viewManager->EndUpdateViewBatch(NS_VMREFRESH_IMMEDIATE);
-      }
-    } else {
-      viewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
-    }
-//    viewManager->Composite();
+    viewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
     NS_RELEASE(viewManager);
   }
 }
