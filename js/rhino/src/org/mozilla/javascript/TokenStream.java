@@ -1016,23 +1016,20 @@ public class TokenStream {
                             }
                         } break;
 
-                        default: if (isDigit(c) && c < '8') {
+                        default: if ('0' <= c && c < '8') {
                             val = c - '0';
                             c = in.read();
-                            if (isDigit(c) && c < '8') {
+                            if ('0' <= c && c < '8') {
                                 val = 8 * val + c - '0';
                                 c = in.read();
-                                if (isDigit(c) && c < '8') {
+                                if ('0' <= c && c < '8' && val <= 037) {
+                                    // c is 3rd char of octal sequence only if
+                                    // the resulting val <= 0377
                                     val = 8 * val + c - '0';
                                     c = in.read();
                                 }
                             }
                             in.unread();
-                            if (val > 0377) {
-                                reportSyntaxError("msg.oct.esc.too.large",
-                                                  null);
-                                return ERROR;
-                            }
                             c = val;
                         }
                     }
