@@ -1658,7 +1658,7 @@ JS::ForStmtNode *JS::Parser::parseFor(size_t pos, bool &semicolonWanted)
             ASSERT(initializer->hasKind(StmtNode::Const) || initializer->hasKind(StmtNode::Var));
             const VariableBinding *bindings = checked_cast<VariableStmtNode *>(initializer)->bindings;
             if (!bindings || bindings->next)
-                syntaxError("Only one variable binding can be used in a for-in statement", 0);
+                syntaxError("Only one variable binding can be used in a for-in statement", 1);
         }
         expr2 = parseListExpression(false);
     }
