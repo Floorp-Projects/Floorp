@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+<!-- 
+  The contents of this file are subject to the Netscape Public
+  License Version 1.1 (the "License"); you may not use this file
+  except in compliance with the License. You may obtain a copy of
+  the License at http://www.mozilla.org/NPL/
+  
+  Software distributed under the License is distributed on an "AS
+  IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  implied. See the License for the specific language governing
+  rights and limitations under the License.
+  
+  The Original Code is Mozilla Communicator client code, released
+  March 31, 1998.
+  
+  The Initial Developer of the Original Code is Netscape
+  Communications Corporation. Portions created by Netscape are
+  Copyright (C) 1998-1999 Netscape Communications Corporation. All
+  Rights Reserved.
+  
+  Contributor(s):
+-->
+
+<?xml-stylesheet href="chrome://wallet/skin/" type="text/css"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<!DOCTYPE window SYSTEM "chrome://wallet/locale/SignonViewer.dtd" >
+
+<window id="walletpreview"
+        title="&windowtitle.label;"
+        xmlns:html="http://www.w3.org/TR/REC-html40"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        align="vertical"
+        class="dialog"
+        onload="Startup()">
+
+  <html:script src="chrome://global/content/strres.js" />
+  <html:script src="chrome://wallet/content/WalletPreview.js"/>
+
+  <spring style="height: 10px;"/>
+  <box align="vertical" flex="100%">
+    <title>
+      <text id="heading"/>
+    </title>
+    <tree class="inset" style="height: 275px; width: 440px;" align="vertical">
+      <treecol width="45%"/>
+      <treecol width="55%"/>
+      <treehead>
+        <treerow>
+          <treecell id="fieldHeading"/>
+          <treecell id="valueHeading"/>
+         </treerow>          
+      </treehead>
+      <treechildren id="combolists"/>
+    </tree>
+  
+  </box>
+
+  <spring style="height: 10px;"/>
+  <box align="horizontal">
+    <html:input id="checkbox" type="checkbox"/>
+    <text id="checkboxText"/>
+    <spring flex="100%"/>
+  </box>
+
+  <box id="okCancelButtons"/>
+  <spring style="height: 10px;"/>
+</window>
