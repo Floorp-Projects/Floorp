@@ -91,6 +91,7 @@ public:
   NS_IMETHOD GetDefaultSelected(PRBool* aDefaultSelected);
   NS_IMETHOD SetDefaultSelected(PRBool aDefaultSelected);
   NS_IMETHOD GetText(nsString& aText);
+  NS_IMETHOD SetText(const nsString& aText);
   NS_IMETHOD GetIndex(PRInt32* aIndex);
   NS_IMETHOD SetIndex(PRInt32 aIndex);
   NS_IMETHOD GetDisabled(PRBool* aDisabled);
@@ -431,6 +432,8 @@ nsHTMLOptionElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
 {
   if (aAttribute == nsHTMLAtoms::label) {
     aHint = NS_STYLE_HINT_REFLOW; 
+  } else if (aAttribute == nsHTMLAtoms::text) {
+    aHint = NS_STYLE_HINT_REFLOW; 
   } else if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
     aHint = NS_STYLE_HINT_CONTENT;
   }  
@@ -493,7 +496,70 @@ nsHTMLOptionElement::GetText(nsString& aText)
       NS_RELEASE(node);
     }
   }
-  return NS_OK;
+  return rv;
+}
+
+NS_IMETHODIMP
+nsHTMLOptionElement::SetText(const nsString& aText)
+{
+  PRInt32 numNodes;
+  PRBool usedExistingTextNode = PR_FALSE;  // Do we need to create a text node?
+  nsresult result = mInner.ChildCount(numNodes);
+  if (NS_FAILED(result)) {
+    return result;
+  }
+  nsIDOMText* domText = nsnull;
+  for (PRInt32 i = 0; i < numNodes; i++) {
+    nsIContent* node;
+    result = ChildAt(i, node);
+    if (NS_SUCCEEDED(result)) {
+      result = node->QueryInterface(kIDOMTextIID, (void**)&domText);
+      if (NS_SUCCEEDED(result) && domText) {
+        result = domText->SetData(aText);
+	if (NS_SUCCEEDED(result)) usedExistingTextNode = PR_TRUE;
+        NS_RELEASE(domText);
+	NS_RELEASE(node);
+        break;
+      }
+      NS_RELEASE(node);
+    }
+  }
+  if (!usedExistingTextNode) {
+    nsIContent* text;
+    result = NS_NewTextNode(&text);
+    if (NS_OK == result) {
+      nsIDOMText* domtext;
+      result = text->QueryInterface(kIDOMTextIID, (void**)&tc);
+      if (NS_OK == result) {
+        result = domtext->SetData(aText);
+	if (NS_SUCCEEDED(result)) {
+          result = AppendChildTo(text, PR_FALSE);
+          if (NS_SUCCEEDED(result)) {
+            nsIDocument * doc;
+            result = GetDocument(doc);
+            if (NS_SUCCEEDED(result)) {
+              text->SetDocument(doc, PR_FALSE);
+	      NS_IF_RELEASE(doc);
+	    }
+	  }
+	}
+        NS_RELEASE(domtext);
+      }
+      NS_RELEASE(text);
+    }
+  }
+  if (NS_SUCCEEDED(result)) {
+    nsIFormControlFrame* fcFrame = nsnull;
+    result = GetPrimaryFrame(fcFrame);
+    if (NS_SUCCEEDED(result) && (nsnull != fcFrame)) {
+      nsIComboboxControlFrame* selectFrame = nsnull;
+      result = fcFrame->QueryInterface(nsIComboboxControlFrame::GetIID(),(void **) &selectFrame);
+      if (NS_SUCCEEDED(result) && (nsnull != selectFrame)) {
+        selectFrame->UpdateSelection(PR_FALSE, PR_TRUE, 0);
+      }
+    }
+  }
+  return result;
 }
 
 // Options don't have frames - get the select content node
