@@ -539,7 +539,8 @@ public class Context {
             cx.getErrorReporter().error(message, sourceName, lineno,
                                         lineSource, lineOffset);
         } else {
-            throw new EvaluatorException(message);
+            throw new EvaluatorException(message, sourceName, lineno,
+                                         lineSource, lineOffset);
         }
     }
 
@@ -580,7 +581,8 @@ public class Context {
                             runtimeError(message, sourceName, lineno,
                                          lineSource, lineOffset);
         } else {
-            throw new EvaluatorException(message);
+            throw new EvaluatorException(message, sourceName, lineno,
+                                         lineSource, lineOffset);
         }
     }
 

@@ -529,7 +529,8 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
         // so we throw an EvaluatorException.
         if (script == null) {
             String message = Context.getMessage0("msg.syntax");
-            throw new EvaluatorException(message);
+            throw new EvaluatorException(message, filename, lineNumber,
+                                         null, 0);
         }
 
         InterpretedScript is = (InterpretedScript) script;

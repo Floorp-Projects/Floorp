@@ -2691,10 +2691,12 @@ class BodyCodegen
                       "org/mozilla/javascript/JavaScriptException");
         cfw.add(ByteCode.DUP_X1);
         cfw.add(ByteCode.SWAP);
+        cfw.addPush(scriptOrFn.getSourceName());
+        cfw.addPush(itsLineNumber);
         cfw.addInvoke(ByteCode.INVOKESPECIAL,
                       "org/mozilla/javascript/JavaScriptException",
                       "<init>",
-                      "(Ljava/lang/Object;)V");
+                      "(Ljava/lang/Object;Ljava/lang/String;I)V");
 
         cfw.add(ByteCode.ATHROW);
     }

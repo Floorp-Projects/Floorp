@@ -878,6 +878,7 @@ public class Interpreter
                 iCodeTop = updateLineNumber(node, iCodeTop);
                 iCodeTop = generateICode(child, iCodeTop);
                 iCodeTop = addToken(Token.THROW, iCodeTop);
+                iCodeTop = addShort(itsLineNumber, iCodeTop);
                 itsStackDepth--;
                 break;
 
@@ -1425,7 +1426,6 @@ public class Interpreter
             case Token.ENTERWITH :
             case Token.LEAVEWITH :
             case Token.RETURN :
-            case Token.THROW :
             case Token.GETTHIS :
             case Token.SETELEM :
             case Token.GETELEM :
@@ -1475,6 +1475,10 @@ public class Interpreter
             case Icode_RETUNDEF:
             case Icode_END:
                 return 1;
+
+            case Token.THROW :
+                // source line
+                return 1 + 2;
 
             case Icode_GOSUB :
             case Token.GOTO :
@@ -1835,7 +1839,9 @@ public class Interpreter
         if (value == DBL_MRK) value = doubleWrap(sDbl[stackTop]);
         --stackTop;
 
-        javaException = new JavaScriptException(value);
+        int sourceLine = getShort(iCode, pc + 1);
+        javaException = new JavaScriptException(value, idata.itsSourceFile,
+                                                sourceLine);
         exceptionPC = pc;
 
         if (instructionThreshold != 0) {

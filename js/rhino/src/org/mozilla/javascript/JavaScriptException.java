@@ -51,7 +51,7 @@ public class JavaScriptException extends Exception
      *
      * @param value the JavaScript value thrown.
      */
-    public JavaScriptException(Object value)
+    public JavaScriptException(Object value, String sourceName, int lineNumber)
     {
         super(ScriptRuntime.toString(value));
         this.value = value;
@@ -65,5 +65,25 @@ public class JavaScriptException extends Exception
         return value;
     }
 
+    /**
+     * Get the name of the source containing the error, or null
+     * if that information is not available.
+     */
+    public String getSourceName()
+    {
+        return sourceName;
+    }
+
+    /**
+     * Returns the line number of the statement causing the error,
+     * or zero if not available.
+     */
+    public int getLineNumber()
+    {
+        return lineNumber;
+    }
+
     private Object value;
+    private String sourceName;
+    private int lineNumber;
 }

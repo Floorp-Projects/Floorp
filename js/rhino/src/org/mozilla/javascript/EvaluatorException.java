@@ -39,7 +39,8 @@ package org.mozilla.javascript;
 /**
  * The class of exceptions thrown by the JavaScript engine.
  */
-public class EvaluatorException extends RuntimeException {
+public class EvaluatorException extends RuntimeException 
+{
 
     /**
      * Create an exception with the specified detail message.
@@ -49,8 +50,93 @@ public class EvaluatorException extends RuntimeException {
      *
      * @param detail a message with detail about the exception
      */
-    public EvaluatorException(String detail) {
+    public EvaluatorException(String detail) 
+    {
         super(detail);
     }
 
+    /**
+     * Create an exception with the specified detail message.
+     *
+     * Errors internal to the JavaScript engine will simply throw a
+     * RuntimeException.
+     *
+     * @param nativeError the Scriptable object constructed for this error.
+              Scripts will get it as an argument to catch statement.
+     * @param sourceName the name of the source reponsible for the error
+     * @param lineNumber the line number of the source
+     * @param columnNumber the columnNumber of the source (may be zero if
+     *                     unknown)
+     * @param lineSource the source of the line containing the error (may be
+     *                   null if unknown)
+     */
+    public EvaluatorException(String detail, String sourceName, int lineNumber,
+                              String lineSource, int columnNumber)
+    {
+        super(generateErrorMessage(detail, sourceName, lineNumber));
+        this.sourceName = sourceName;
+        this.lineNumber = lineNumber;
+        this.lineSource = lineSource;
+        this.columnNumber = columnNumber;
+    }
+
+    /**
+     * Get the name of the source containing the error, or null
+     * if that information is not available.
+     */
+    public String getSourceName()
+    {
+        return sourceName;
+    }
+
+    /**
+     * Returns the line number of the statement causing the error,
+     * or zero if not available.
+     */
+    public int getLineNumber()
+    {
+        return lineNumber;
+    }
+
+    /**
+     * The column number of the location of the error, or zero if unknown.
+     */
+    public int getColumnNumber()
+    {
+        return columnNumber;
+    }
+
+    /**
+     * The source of the line causing the error, or zero if unknown.
+     */
+    public String getLineSource()
+    {
+        return lineSource;
+    }
+
+    private static String generateErrorMessage(String message,
+                                               String sourceName,
+                                               int line) 
+    {
+        if (sourceName == null || line <= 0) {
+            return message;
+        }
+        StringBuffer buf = new StringBuffer(message);
+        buf.append(" (");
+        if (sourceName != null) {
+            buf.append(sourceName);
+            buf.append("; ");
+        }
+        if (line > 0) {
+            buf.append("line ");
+            buf.append(line);
+        }
+        buf.append(')');
+        return buf.toString();
+    }
+
+    private String sourceName;
+    private int lineNumber;
+    private String lineSource;
+    private int columnNumber;
 }
