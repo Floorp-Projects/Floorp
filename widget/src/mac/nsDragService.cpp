@@ -133,18 +133,16 @@ nsDragService :: InvokeDragSession (nsISupportsArray * aTransferableArray, nsISc
 void
 nsDragService :: BuildDragRegion ( nsIScriptableRegion* inRegion, Point inGlobalMouseLoc, RgnHandle ioDragRgn )
 {
-  nsCOMPtr<nsIRegion> holder ( do_QueryInterface(inRegion) );
-  if ( !holder )
-    return;
+  nsCOMPtr<nsIRegion> geckoRegion ( do_QueryInterface(inRegion) );
     
   // create the drag region. Pull out the native mac region from the nsIRegion we're
   // given, copy it, inset it one pixel, and subtract them so we're left with just an
   // outline. Too bad we can't do this with gfx api's.
   //
   // At the end, we are left with an outline of the region in global coordinates.
-  if ( inRegion ) {
+  if ( geckoRegion ) {
     RgnHandle dragRegion = nsnull;
-    holder->GetNativeRegion(dragRegion);
+    geckoRegion->GetNativeRegion(dragRegion);
     if ( dragRegion && ioDragRgn ) {
       ::CopyRgn ( dragRegion, ioDragRgn );
       ::InsetRgn ( ioDragRgn, 1, 1 );
