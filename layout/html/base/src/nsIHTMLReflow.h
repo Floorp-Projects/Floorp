@@ -166,10 +166,6 @@ struct nsHTMLReflowState : nsReflowState {
   // Compact margin available space
   nscoord          mCompactMarginWidth;
 
-  // The line-height for the frame. If the frame has no specific
-  // line-height value then this field will be "-1".
-  nscoord          mLineHeight;
-
   // The following data members are relevant if nsStyleText.mTextAlign == NS_STYLE_TEXT_ALIGN_CHAR
   nscoord          mAlignCharOffset;   // distance from reference edge (as specified in nsStyleDisplay.mDirection) 
                                        // to the align character (which will be specified in nsStyleTable)
@@ -296,12 +292,15 @@ struct nsHTMLReflowState : nsReflowState {
                                       nsMargin& aResult);
 
   /**
-   * Calculate the line-height property for the given frame. The return
+   * Calculate the raw line-height property for the given frame. The return
    * value, if line-height was applied and is valid will be >= 0. Otherwise,
    * the return value will be <0 which is illegal (CSS2 spec: section 10.8.1).
    */
   static nscoord CalcLineHeight(nsIPresContext& aPresContext,
                                 nsIFrame* aFrame);
+
+
+  static nsCSSFrameType DetermineFrameType(nsIFrame* aFrame);
 
 protected:
   // This method initializes various data members. It is automatically
@@ -310,11 +309,9 @@ protected:
     mRunInFrame = nsnull;
     mCompactMarginWidth = 0;
     computedWidth = computedHeight = 0;
-    DetermineFrameType(aPresContext);
+    frameType = DetermineFrameType(frame);
     InitConstraints(aPresContext);
   }
-
-  void DetermineFrameType(nsIPresContext& aPresContext);
 
   void InitConstraints(nsIPresContext& aPresContext);
   void InitAbsoluteConstraints(nsIPresContext& aPresContext,
@@ -425,8 +422,11 @@ public:
                                 nsISpaceManager* aSpaceManager,
                                 nscoord aDeltaX, nscoord aDeltaY) = 0;
 
-  NS_IMETHOD VerticalAlignFrames(nscoord aLineHeight,
-                                 nscoord aDistanceFromTopEdge) = 0;
+  NS_IMETHOD VerticalAlignFrames(nsIPresContext& aPresContext,
+                                 const nsHTMLReflowState& aReflowState,
+                                 nscoord aLineHeight,
+                                 nscoord aDistanceFromTopEdge,
+                                 nsRect& aCombinedRect) = 0;
 
 #if 0
   NS_IMETHOD RelativePositionFrames(nsRect& aCombinedArea) = 0;
