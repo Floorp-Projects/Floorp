@@ -3642,6 +3642,9 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
 {
   nsresult rv = NS_OK;
 
+  // Trim extra white-space from the line before placing the frames
+  aLineLayout.TrimTrailingWhiteSpace();
+
   // Vertically align the frames on this line.
   //
   // According to the CSS2 spec, section 12.6.1, the "marker" box
@@ -3695,7 +3698,6 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
 #else
   PRBool allowJustify = PR_FALSE;
 #endif
-  aLineLayout.TrimTrailingWhiteSpace(aLine->mBounds);
   aLineLayout.HorizontalAlignFrames(aLine->mBounds, allowJustify);
   aLineLayout.RelativePositionFrames(aLine->mCombinedArea);
   if (addedBullet) {
