@@ -2141,7 +2141,7 @@ nsTableFrame::AppendFrames(nsIPresContext* aPresContext,
       }
     } else if (IsRowGroup(display->mDisplay)) {
       // insert the rows into the table
-      InsertRowGroups(*aPresContext, aFrameList, GetRowCount());
+      InsertRowGroups(*aPresContext, f, GetRowCount());
 
       // Append the new row group frame to the sibling chain
       mFrames.AppendFrame(nsnull, f);
