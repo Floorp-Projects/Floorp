@@ -19,17 +19,15 @@
 #ifndef _nsIHTTPEventSink_h_
 #define _nsIHTTPEventSink_h_
 
-#include "nsISupports.h"
+#include "nsIStreamListener.h"
 class nsIString;
 /* 
     The nsIHTTPEventSink class is the interface thru which the
     HTTP handler reports specific http events back to a client. 
 
-    TODO- Check if this should derive from nsIStreamListener?
-
     -Gagan Saksena 02/25/99
 */
-class nsIHTTPEventSink : public nsISupports
+class nsIHTTPEventSink : public nsIStreamListener
 {
 
 public:

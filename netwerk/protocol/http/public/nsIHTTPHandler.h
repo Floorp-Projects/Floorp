@@ -19,7 +19,9 @@
 #ifndef _nsIHTTPHandler_h_
 #define _nsIHTTPHandler_h_
 
-#include "nsISupports.h"
+#include "nsIProtocolHandler.h"
+
+class nsITransport;
 
 #ifndef nsIURL
 #define nsIURL nsIUrl // style compatibility hacks... will clean later.
@@ -34,12 +36,22 @@
     -Gagan Saksena 02/25/99
 */
 
-class nsIHTTPHandler : public nsISupports//, public nsIProxy 
+class nsIHTTPHandler : public nsIProtocolHandler//, public nsIProxy 
 // TODO should also have caching interfaces
 // as well as security stuff, etc.
 {
 
 public:
+    /* 
+        Pull out an existing transport from the hashtable, or if none exists
+        create one. 
+    */
+    NS_IMETHOD       GetTransport(const char* i_Host, PRUint32& i_Port, nsITransport* *o_pTrans) = 0;
+    /*
+        Remove this transport from the hashtable.
+    */
+    NS_IMETHOD       ReleaseTransport(const char* i_Host, PRUint32& i_Port, nsITransport* i_pTrans) = 0;
+
 
     static const nsIID& GetIID() { 
         // {A3BE3AF0-CD2D-11d2-B013-006097BFC036}
