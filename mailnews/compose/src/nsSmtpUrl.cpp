@@ -34,6 +34,11 @@
 #include "nsCRT.h"
 #include "nsEscape.h"
 
+// we need this because of an egcs 1.0 (and possibly gcc) compiler bug
+// that doesn't allow you to call ::nsISupports::IID() inside of a class
+// that multiply inherits from nsISupports
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+
 nsSmtpUrl::nsSmtpUrl(nsISupports* aContainer, nsIURLGroup* aGroup)
 {
     NS_INIT_REFCNT();
@@ -105,7 +110,8 @@ nsresult nsSmtpUrl::QueryInterface(const nsIID &aIID, void** aInstancePtr)
         return NS_ERROR_NULL_POINTER;
     }
  
-    if (aIID.Equals(nsISmtpUrl::IID()) || aIID.Equals(::nsISupports::IID())) {
+    if (aIID.Equals(nsISmtpUrl::IID()) ||
+        aIID.Equals(kISupportsIID)) {
         *aInstancePtr = (void*) ((nsISmtpUrl*)this);
         AddRef();
         return NS_OK;
