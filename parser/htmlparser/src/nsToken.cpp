@@ -46,7 +46,9 @@ MOZ_DECL_CTOR_COUNTER(CToken)
 static int TokenCount=0;
 static int DelTokenCount=0;
 
-int CToken::GetTokenCount(){return TokenCount-DelTokenCount;}
+int CToken::GetTokenCount() {
+  return TokenCount-DelTokenCount;
+}
 
 
 /**************************************************************
@@ -116,7 +118,7 @@ nsresult CToken::Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode) {
  * @update	gess5/11/98
  * @return  reference to string containing string value
  */
-void CToken::GetSource(nsString& anOutputString){
+void CToken::GetSource(nsString& anOutputString) {
   anOutputString.Assign(GetStringValue());
 }
 
@@ -124,19 +126,8 @@ void CToken::GetSource(nsString& anOutputString){
  * @update	harishd 3/23/00
  * @return  reference to string containing string value
  */
-void CToken::AppendSourceTo(nsAString& anOutputString){
+void CToken::AppendSourceTo(nsAString& anOutputString) {
   anOutputString.Append(GetStringValue());
-}
-
-/**
- *  Sets the internal ordinal value for this token.
- *  This method is deprecated, and will soon be going away.
- *  
- *  @update gess 3/25/98
- *  @param  value -- new ordinal value for this token
- */
-void CToken::SetTypeID(PRInt32 aTypeID) {
-  mTypeID=aTypeID;
 }
 
 /**
@@ -156,7 +147,7 @@ PRInt32 CToken::GetTypeID(void) {
  *  @update gess 3/25/98
  *  @return int containing attribute count
  */
-PRInt16  CToken::GetAttributeCount(void) {
+PRInt16 CToken::GetAttributeCount(void) {
   return mAttrCount;
 }
 
@@ -168,18 +159,8 @@ PRInt16  CToken::GetAttributeCount(void) {
  *  @update gess 3/25/98
  *  @return int value containing token type.
  */
-PRInt32  CToken::GetTokenType(void) {
+PRInt32 CToken::GetTokenType(void) {
   return -1;
-}
-
-/**
- *  retrieve this tokens classname.  
- *  
- *  @update gess 3/25/98
- *  @return char* containing name of class
- */
-const char*  CToken::GetClassName(void) {
-  return "token";
 }
 
 

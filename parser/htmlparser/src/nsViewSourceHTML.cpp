@@ -201,10 +201,6 @@ class CSharedVSContext {
 public:
 
   CSharedVSContext() : 
-    mEndNode(),
-    mStartNode(),
-    mTokenNode(),
-    mITextToken(),
     mErrorToken(NS_LITERAL_STRING("error")) {
   }
   
