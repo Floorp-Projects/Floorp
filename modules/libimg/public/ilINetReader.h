@@ -40,7 +40,7 @@ public:
 
   NS_IMETHOD WriteReady(PRUint32 *max_read)=0;
   
-  NS_IMETHOD FirstWrite(const unsigned char *str, int32 len)=0;
+  NS_IMETHOD FirstWrite(const unsigned char *str, int32 len, char* url)=0;
 
   NS_IMETHOD Write(const unsigned char *str, int32 len)=0;
 

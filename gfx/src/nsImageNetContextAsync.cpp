@@ -332,6 +332,13 @@ ImageConsumer::OnDataAvailable(nsIChannel* channel, nsISupports* aContext, nsIIn
 
   nsresult err = 0;
   PRUint32 nb;
+  char* uriStr = NULL;
+  nsCOMPtr<nsIURI> uri;
+
+  err = channel->GetURI(getter_AddRefs(uri));
+  if (NS_SUCCEEDED(err)) {
+      err = uri->GetSpec(&uriStr);
+  }
 
   do {
     err = reader->WriteReady(&max_read); //max read is most decoder can handle
@@ -371,7 +378,7 @@ ImageConsumer::OnDataAvailable(nsIChannel* channel, nsISupports* aContext, nsIIn
     bytes_read += nb;
     if (mFirstRead == PR_TRUE) {
             
-      err = reader->FirstWrite((const unsigned char *)mBuffer, nb );
+      err = reader->FirstWrite((const unsigned char *)mBuffer, nb, uriStr);
       mFirstRead = PR_FALSE; //? move after err chk?
       /* 
        * If FirstWrite(...) fails then the image type
@@ -394,6 +401,10 @@ ImageConsumer::OnDataAvailable(nsIChannel* channel, nsISupports* aContext, nsIIn
       return NS_ERROR_ABORT;
     }
   } while(bytes_read < length);
+
+  if (uriStr) {
+	nsCRT::free(uriStr);
+  }
 
   if (NS_FAILED(err)) {
     mStatus = MK_IMAGE_LOSSAGE;
