@@ -65,7 +65,14 @@
 #include "nsDirectoryServiceDefs.h"
 #include "prprf.h"
 #include "nsCRT.h"
+#include "nsPrintfCString.h"
 #include "nsIStringBundle.h"
+
+#include <ole2.h>
+#ifndef __MINGW32__
+#include <urlmon.h>
+#endif
+#include <shlobj.h>
 
 #if 0
 #define PRNTDEBUG(_x) printf(_x);
@@ -1171,58 +1178,75 @@ nsDataObj :: ExtractShortcutTitle ( nsString & outTitle )
 // or <BODY> tags). We'll wrap the fragment with them to make other apps
 // happy.
 //
-// This code is derived from sample code from MSDN. It's ugly, I agree.
-//
 nsresult 
 nsDataObj :: BuildPlatformHTML ( const char* inOurHTML, char** outPlatformHTML ) 
 {
   *outPlatformHTML = nsnull;
-  
-  // Create temporary buffer for HTML header... 
-  char *buf = NS_REINTERPRET_CAST(char*, nsMemory::Alloc(400 + strlen(inOurHTML)));
-  if( !buf )
-    return NS_ERROR_FAILURE;
 
-  // Create a template string for the HTML header...
-  strcpy(buf,
-      "Version:0.9\r\n"
-      "StartHTML:00000000\r\n"
-      "EndHTML:00000000\r\n"
-      "StartFragment:00000000\r\n"
-      "EndFragment:00000000\r\n"
-      "<html><body>\r\n"
-      "<!--StartFragment -->\r\n");
+  nsDependentCString inHTMLString(inOurHTML);
+  const char* const numPlaceholder  = "00000000";
+  const char* const startHTMLPrefix = "Version:0.9\r\nStartHTML:";
+  const char* const endHTMLPrefix   = "\r\nEndHTML:";
+  const char* const startFragPrefix = "\r\nStartFragment:";
+  const char* const endFragPrefix   = "\r\nEndFragment:";
+  const char* const endFragTrailer  = "\r\n";
 
-  // Append the HTML...
-  strcat(buf, inOurHTML);
-  strcat(buf, "\r\n");
-  // Finish up the HTML format...
-  strcat(buf,
+  const PRInt32 kNumberLength       = strlen(numPlaceholder);
+
+  const PRInt32 kTotalHeaderLen     = strlen(startHTMLPrefix) +
+                                      strlen(endHTMLPrefix) +
+                                      strlen(startFragPrefix) + 
+                                      strlen(endFragPrefix) + 
+                                      strlen(endFragTrailer) +
+                                      (4 * kNumberLength);
+
+  NS_NAMED_LITERAL_CSTRING(htmlHeaderString, "<html><body>\r\n");
+
+  NS_NAMED_LITERAL_CSTRING(fragmentHeaderString, "<!--StartFragment-->");
+
+  nsDependentCString trailingString(
       "<!--EndFragment-->\r\n"
       "</body>\r\n"
       "</html>");
 
-  // Now go back, calculate all the lengths, and write out the
-  // necessary header information. Note, wsprintf() truncates the
-  // string when you overwrite it so you follow up with code to replace
-  // the 0 appended at the end with a '\r'...
-  char *ptr = strstr(buf, "StartHTML");
-  wsprintf(ptr+10, "%08u", strstr(buf, "<html>") - buf);
-  *(ptr+10+8) = '\r';
+  // calculate the offsets
+  PRInt32 startHTMLOffset = kTotalHeaderLen;
+  PRInt32 startFragOffset = startHTMLOffset
+                              + htmlHeaderString.Length()
+			      + fragmentHeaderString.Length();
 
-  ptr = strstr(buf, "EndHTML");
-  wsprintf(ptr+8, "%08u", strlen(buf));
-  *(ptr+8+8) = '\r';
+  PRInt32 endFragOffset   = startFragOffset
+                              + inHTMLString.Length();
 
-  ptr = strstr(buf, "StartFragment");
-  wsprintf(ptr+14, "%08u", strstr(buf, "<!--StartFrag") - buf);
-  *(ptr+14+8) = '\r';
+  PRInt32 endHTMLOffset   = endFragOffset
+                              + trailingString.Length();
 
-  ptr = strstr(buf, "EndFragment");
-  wsprintf(ptr+12, "%08u", strstr(buf, "<!--EndFrag") - buf);
-  *(ptr+12+8) = '\r';
+  // now build the final version
+  nsCString clipboardString;
+  clipboardString.SetCapacity(endHTMLOffset);
 
-  *outPlatformHTML = buf;
+  clipboardString.Append(startHTMLPrefix);
+  clipboardString.Append(nsPrintfCString("%08u", startHTMLOffset));
+
+  clipboardString.Append(endHTMLPrefix);  
+  clipboardString.Append(nsPrintfCString("%08u", endHTMLOffset));
+
+  clipboardString.Append(startFragPrefix);
+  clipboardString.Append(nsPrintfCString("%08u", startFragOffset));
+
+  clipboardString.Append(endFragPrefix);
+  clipboardString.Append(nsPrintfCString("%08u", endFragOffset));
+
+  clipboardString.Append(endFragTrailer);
+
+  clipboardString.Append(htmlHeaderString);
+  clipboardString.Append(fragmentHeaderString);
+  clipboardString.Append(inHTMLString);
+  clipboardString.Append(trailingString);
+
+  *outPlatformHTML = ToNewCString(clipboardString);
+  if (!*outPlatformHTML)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   return NS_OK;
 }
