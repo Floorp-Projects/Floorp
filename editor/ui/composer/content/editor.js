@@ -124,7 +124,9 @@ var DocumentStateListener =
     // udpate menu items now that we have an editor to play with
     // Note: This must be AFTER window._content.focus();
     window.updateCommands("create");
-    window.InsertCharWindow = null;
+
+    if (!("InsertCharWindow" in window))
+      window.InsertCharWindow = null;
   },
   
   NotifyDocumentWillBeDestroyed: function() {},
@@ -469,7 +471,7 @@ function EditorCanClose()
   //   or "Quit" (or other paths?)
   //   so we must shift association to another
   //   editor or close any non-modal windows now
-  if (canClose && window.InsertCharWindow)
+  if (canClose && "InsertCharWindow" in window && window.InsertCharWindow)
     SwitchInsertCharToAnotherEditorOrClose();
 
   return canClose;
@@ -2168,7 +2170,11 @@ function EditorInsertOrEditTable(insertAllowed)
 {
   if (IsInTable()) {
     // Edit properties of existing table
-    window.openDialog("chrome://editor/content/EdTableProps.xul", "_blank", "chrome,close,titlebar,modal", "","TablePanel");
+    if (IsInTableCell())
+      window.openDialog("chrome://editor/content/EdTableProps.xul", "_blank", "chrome,close,titlebar,modal", "","CellPanel");
+    else  
+      window.openDialog("chrome://editor/content/EdTableProps.xul", "_blank", "chrome,close,titlebar,modal", "","TablePanel");
+
     window._content.focus();
   } else if(insertAllowed) {
     EditorInsertTable();
@@ -2194,7 +2200,8 @@ function EditorTableCellProperties()
 
 function EditorOnFocus()
 {
-  if (window.InsertCharWindow) return;
+  // Current window already has the InsertCharWindow
+  if ("InsertCharWindow" in window && window.InsertCharWindow) return;
 
   // Find window with an InsertCharsWindow and switch association to this one
   var windowWithDialog = FindEditorWithInsertCharDialog();
@@ -2209,7 +2216,8 @@ function EditorOnFocus()
 
 function SwitchInsertCharToThisWindow(windowWithDialog)
 {
-  if (windowWithDialog && windowWithDialog.InsertCharWindow)
+  if (windowWithDialog && "InsertCharWindow" in windowWithDialog && 
+      windowWithDialog.InsertCharWindow)
   {
 	  // Move dialog association to the current window
     window.InsertCharWindow = windowWithDialog.InsertCharWindow;
@@ -2236,7 +2244,9 @@ function FindEditorWithInsertCharDialog()
 	while ( enumerator.hasMoreElements()  )
 	{
 		var  tempWindow = enumerator.getNext();
-		if (tempWindow != window && tempWindow.InsertCharWindow)
+
+		if (tempWindow != window && "InsertCharWindow" in tempWindow && 
+        tempWindow.InsertCharWindow)
 		{
       return tempWindow;
 		}
@@ -2246,7 +2256,7 @@ function FindEditorWithInsertCharDialog()
 
 function EditorFindOrCreateInsertCharWindow()
 {
-  if (window.InsertCharWindow)
+  if ("InsertCharWindow" in window && window.InsertCharWindow)
     window.InsertCharWindow.focus();
   else
   {
@@ -2269,7 +2279,7 @@ function EditorFindOrCreateInsertCharWindow()
 //   or close it if none found  (May be a mail composer)
 function SwitchInsertCharToAnotherEditorOrClose()
 {
-	if (window.InsertCharWindow)
+	if ("InsertCharWindow" in window && window.InsertCharWindow)
   {
     var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
 	  var	windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
