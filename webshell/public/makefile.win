@@ -45,7 +45,6 @@ EXPORTS =                               \
 !endif
 				nsIContentViewerEdit.h \
 				nsIContentViewerFile.h \
-				nsIMarkupDocumentViewer.h \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
