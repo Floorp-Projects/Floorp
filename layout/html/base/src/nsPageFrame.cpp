@@ -514,7 +514,7 @@ nsPageFrame::DrawHeaderFooter(nsIRenderingContext& aRenderingContext,
     }
     if (addEllipse && str.Length() > 3) {
       str.SetLength(str.Length()-3);
-      str.AppendWithConversion("...");
+      str.Append(NS_LITERAL_STRING("..."));
       aRenderingContext.GetWidth(str, width);
     }
 

@@ -427,9 +427,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   PRBool needsParser=PR_TRUE;
   if (aCommand)
   {
-    nsAutoString command; command.AssignWithConversion(aCommand);
-    nsAutoString delayedView; delayedView.AssignWithConversion("view delayedContentLoad");
-    if (command.Equals(delayedView)) {
+    if (nsDependentCString(aCommand) == NS_LITERAL_CSTRING("view delayedContentLoad")) {
       needsParser = PR_FALSE;
     }
   }
@@ -443,7 +441,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     return rv;
   }
 
-  nsAutoString charset; charset.Assign(NS_LITERAL_STRING("ISO-8859-1")); // fallback value in case webShell return error
+  nsAutoString charset(NS_LITERAL_STRING("ISO-8859-1")); // fallback value in case webShell return error
   nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
   if (prefs) {
     nsXPIDLString defCharset;
@@ -804,7 +802,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 #ifdef IBMBIDI
   // Check if 864 but in Implicit mode !
   if( (mTexttype == IBMBIDI_TEXTTYPE_LOGICAL)&&(charset.EqualsIgnoreCase("ibm864")) )
-    charset.AssignWithConversion("IBM864i");
+    charset.Assign(NS_LITERAL_STRING("IBM864i"));
 #endif // IBMBIDI
 
   rv = this->SetDocumentCharacterSet(charset);
@@ -1738,7 +1736,7 @@ nsHTMLDocument::SetDomain(const nsAReadableString& aDomain)
   if (NS_FAILED(uri->GetPath(getter_Copies(path))))
     return NS_ERROR_FAILURE;
   nsAutoString newURIString; newURIString.AssignWithConversion( NS_STATIC_CAST(const char*, scheme) );
-  newURIString.AppendWithConversion("://");
+  newURIString.Append(NS_LITERAL_STRING("://"));
   newURIString += aDomain;
   newURIString.AppendWithConversion(path);
   nsIURI *newURI;
@@ -1842,7 +1840,7 @@ nsHTMLDocument::SetBody(nsIDOMHTMLElement* aBody)
   }
 
   nsAutoString bodyStr;
-  bodyStr.AssignWithConversion("BODY");
+  bodyStr.Assign(NS_LITERAL_STRING("BODY"));
 
   nsCOMPtr<nsIDOMNode> child;
   root->GetFirstChild(getter_AddRefs(child));
@@ -2283,7 +2281,7 @@ nsHTMLDocument::Close()
   nsresult result = NS_OK;
 
   if (mParser && mIsWriting) {
-    nsAutoString emptyStr; emptyStr.AssignWithConversion("</HTML>");
+    nsAutoString emptyStr(NS_LITERAL_STRING("</HTML>"));
     mWriteLevel++;
     result = mParser->Parse(emptyStr, NS_GENERATE_PARSER_KEY(), 
                             NS_LITERAL_STRING("text/html"), PR_FALSE,
@@ -3559,7 +3557,7 @@ nsHTMLDocument::GetBodyContent()
     return PR_FALSE;
   }
 
-  nsAutoString bodyStr; bodyStr.AssignWithConversion("BODY");
+  nsAutoString bodyStr(NS_LITERAL_STRING("BODY"));
   nsCOMPtr<nsIDOMNode> child;
   root->GetFirstChild(getter_AddRefs(child));
 

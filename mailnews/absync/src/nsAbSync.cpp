@@ -54,6 +54,7 @@
 #include "plstr.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 #include "nsTextFormatter.h"
 #include "nsIStringBundle.h"
 #include "nsMsgI18N.h"
@@ -109,7 +110,7 @@ nsAbSync::InternalInit()
 
   mLastChangeNum = 1;
 
-  mLocale.AssignWithConversion("");
+  mLocale.Assign(NS_LITERAL_STRING(""));
   mDeletedRecordTags = nsnull;
   mDeletedRecordValues = nsnull;
   mNewRecordTags = nsnull;
@@ -2296,11 +2297,11 @@ nsAbSync::DetermineTagType(nsStringArray *aArray)
     if ( (!val) || (val->IsEmpty()) )
       continue;
 
-    if (val->CompareWithConversion("record_id") == 0)
+    if (val->Equals(NS_LITERAL_STRING("record_id")))
       gotRecordID = PR_TRUE;
-    else if (val->CompareWithConversion("list_id") == 0)
+    else if (val->Equals(NS_LITERAL_STRING("list_id")))
       gotListID = PR_TRUE;
-    else if (val->CompareWithConversion("group_id") == 0)
+    else if (val->Equals(NS_LITERAL_STRING("group_id")))
       gotGroupID = PR_TRUE;
   }
 
@@ -2520,7 +2521,7 @@ nsAbSync::HuntForExistingABEntryInServerRecord(PRInt32          aPersonIndex,
     {
       // See if this is the record_id...
       nsString *tagVal = mNewRecordTags->StringAt(j);
-      if (tagVal->CompareWithConversion("record_id") == 0)
+      if (tagVal->Equals(NS_LITERAL_STRING("record_id")))
       {
         PRInt32 errorCode;
         *aServerID = val->ToInteger(&errorCode);
@@ -2652,7 +2653,7 @@ nsAbSync::AddNewUsers()
       {
         // See if this is the record_id, keep it around for later...
         nsString *tagVal = mNewRecordTags->StringAt(j);
-        if (tagVal->CompareWithConversion("record_id") == 0)
+        if (tagVal->Equals(NS_LITERAL_STRING("record_id")))
         {
           PRInt32 errorCode;
           serverID = val->ToInteger(&errorCode);
@@ -2815,30 +2816,30 @@ nsAbSync::GetTypeOfPhoneNumber(nsString tagName)
         continue;
       
       phoneType.Cut(0, loc+1);
-      if (!phoneType.CompareWithConversion(ABSYNC_HOME_PHONE_TYPE, PR_TRUE, nsCRT::strlen(ABSYNC_HOME_PHONE_TYPE)))
+      if (!Compare(phoneType, NS_LITERAL_STRING(ABSYNC_HOME_PHONE_TYPE), nsCaseInsensitiveStringComparator()))
         return ABSYNC_HOME_PHONE_ID;
-      else if (!phoneType.CompareWithConversion(ABSYNC_WORK_PHONE_TYPE, PR_TRUE, nsCRT::strlen(ABSYNC_WORK_PHONE_TYPE)))
+      else if (!Compare(phoneType, NS_LITERAL_STRING(ABSYNC_WORK_PHONE_TYPE), nsCaseInsensitiveStringComparator()))
         return ABSYNC_WORK_PHONE_ID;
-      else if (!phoneType.CompareWithConversion(ABSYNC_FAX_PHONE_TYPE, PR_TRUE, nsCRT::strlen(ABSYNC_FAX_PHONE_TYPE)))
+      else if (!Compare(phoneType, NS_LITERAL_STRING(ABSYNC_FAX_PHONE_TYPE), nsCaseInsensitiveStringComparator()))
         return ABSYNC_FAX_PHONE_ID;
-      else if (!phoneType.CompareWithConversion(ABSYNC_PAGER_PHONE_TYPE, PR_TRUE, nsCRT::strlen(ABSYNC_PAGER_PHONE_TYPE)))
+      else if (!Compare(phoneType, NS_LITERAL_STRING(ABSYNC_PAGER_PHONE_TYPE), nsCaseInsensitiveStringComparator()))
         return ABSYNC_PAGER_PHONE_ID;
-      else if (!phoneType.CompareWithConversion(ABSYNC_CELL_PHONE_TYPE, PR_TRUE, nsCRT::strlen(ABSYNC_CELL_PHONE_TYPE)))
+      else if (!Compare(phoneType, NS_LITERAL_STRING(ABSYNC_CELL_PHONE_TYPE), nsCaseInsensitiveStringComparator()))
         return ABSYNC_CELL_PHONE_ID;
     }
   }
 
   // If we get here...drop back to the defaults...why, oh why is it this way?
   //
-  if (!tagName.CompareWithConversion("phone1"))
+  if (tagName.Equals(NS_LITERAL_STRING("phone1")))
     return ABSYNC_HOME_PHONE_ID;
-  else if (!tagName.CompareWithConversion("phone2"))
+  else if (tagName.Equals(NS_LITERAL_STRING("phone2")))
     return ABSYNC_WORK_PHONE_ID;
-  else if (!tagName.CompareWithConversion("phone3"))
+  else if (tagName.Equals(NS_LITERAL_STRING("phone3")))
     return ABSYNC_FAX_PHONE_ID;
-  else if (!tagName.CompareWithConversion("phone4"))
+  else if (tagName.Equals(NS_LITERAL_STRING("phone4")))
     return ABSYNC_PAGER_PHONE_ID;
-  else if (!tagName.CompareWithConversion("phone5"))
+  else if (tagName.Equals(NS_LITERAL_STRING("phone5")))
     return ABSYNC_CELL_PHONE_ID;
 
   return 0;
@@ -2909,7 +2910,7 @@ nsAbSync::AddValueToNewCard(nsIAbCard *aCard, nsString *aTagName, nsString *aTag
     PR_FREEIF(tValue);
   }
 
-  if (!aTagName->CompareWithConversion("phone", PR_TRUE, 5))
+  if (!Compare(Substring(*aTagName, 0, 5), NS_LITERAL_STRING("phone"), nsCaseInsensitiveStringComparator()))
   {
     nsString      tempVal;
     tempVal.Append(*aTagName +
@@ -2993,9 +2994,9 @@ nsAbSync::AddValueToNewCard(nsIAbCard *aCard, nsString *aTagName, nsString *aTag
   else if (!aTagName->CompareWithConversion(kServerPlainTextColumn))
   {
     // This is plain text pref...have to add a little logic.
-    if (!aTagValue->CompareWithConversion("1"))
+    if (aTagValue->Equals(NS_LITERAL_STRING("1")))
       aCard->SetPreferMailFormat(nsIAbPreferMailFormat::html);
-    else if (!aTagValue->CompareWithConversion("0"))
+    else if (aTagValue->Equals(NS_LITERAL_STRING("0")))
       aCard->SetPreferMailFormat(nsIAbPreferMailFormat::unknown);
   }
 

@@ -415,7 +415,7 @@ char* nsInstallFileOpItem::toString()
       {
         mShortcutPath->GetPath(&temp);
         result.AssignWithConversion(temp);
-        result.AppendWithConversion("\\");
+        result.Append(NS_LITERAL_STRING("\\"));
         result.Append(*mDescription);
         dstPath = ToNewCString(result);
         if(dstPath)
@@ -1349,7 +1349,7 @@ nsInstallFileOpItem::NativeFileOpWindowsShortcutAbort()
   if(mShortcutPath && mDescription)
   {
     shortcutDescription = *mDescription;
-    shortcutDescription.AppendWithConversion(".lnk");
+    shortcutDescription.Append(NS_LITERAL_STRING(".lnk"));
     mShortcutPath->Clone(getter_AddRefs(shortcutTarget));
     shortcutTarget->Append(NS_LossyConvertUCS2toASCII(shortcutDescription).get());
 

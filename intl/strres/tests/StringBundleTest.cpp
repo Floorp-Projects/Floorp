@@ -99,7 +99,7 @@ getCountry(PRUnichar *lc_name_unichar, PRUnichar **aCountry)
 {
 
   nsresult        result = NS_OK;
-  nsAutoString  	category; category.AssignWithConversion("NSILOCALE_MESSAGES");
+  nsAutoString  	category(NS_LITERAL_STRING("NSILOCALE_MESSAGES"));
 
   nsAutoString	  lc_name;
   lc_name.Assign(lc_name_unichar);
@@ -209,7 +209,7 @@ main(int argc, char *argv[])
   }
 
   nsAutoString v;
-  v.AssignWithConversion("");
+  v.Assign(NS_LITERAL_STRING(""));
   PRUnichar *ptrv = nsnull;
   char *value = nsnull;
 
@@ -225,7 +225,7 @@ main(int argc, char *argv[])
 
   // file
   nsString strfile;
-  strfile.AssignWithConversion("file");
+  strfile.Assign(NS_LITERAL_STRING("file"));
   const PRUnichar *ptrFile = strfile.get();
   ret = bundle->GetStringFromName(ptrFile, &ptrv);
   if (NS_FAILED(ret)) {

@@ -279,7 +279,7 @@ BOOL CMapiMessage::IsMultipart( void)
 {
 	nsCString	left;
 	m_mimeContentType.Left( left, 10);
-	if (!left.CompareWithConversion( "multipart/", PR_TRUE))
+	if (left.Equals(NS_LITERAL_CSTRING("multipart/"), nsCaseInsensitiveCStringComparator()))
 		return( TRUE);
 	return( FALSE);
 }
@@ -321,9 +321,9 @@ void CMapiMessage::ProcessHeaderLine( nsCString& line)
 	line.Left( left8, 8);
 	line.Left( left5, 5);
 
-	if (!left13.CompareWithConversion( "Mime-Version:", PR_TRUE))
+	if (left13.Equals(NS_LITERAL_CSTRING("Mime-Version:"), nsCaseInsensitiveCStringComparator()))
 		m_bMimeVersion = TRUE;
-	else if (!left13.CompareWithConversion( "Content-Type:", PR_TRUE)) {
+	else if (left13.Equals(NS_LITERAL_CSTRING("Content-Type:"), nsCaseInsensitiveCStringComparator())) {
 		// Note: this isn't a complete parser, the content type
 		// we extract could have rfc822 comments in it
 		len = 13;
@@ -347,9 +347,9 @@ void CMapiMessage::ProcessHeaderLine( nsCString& line)
 				len++;
 			if (len - start) {
 				line.Mid( tStr, start, len - start);
-				if (!tStr.CompareWithConversion( "boundary", PR_TRUE))
+				if (tStr.Equals(NS_LITERAL_CSTRING("boundary"), nsCaseInsensitiveCStringComparator()))
 					haveB = TRUE;
-				else if (!tStr.CompareWithConversion( "charset", PR_TRUE))
+				else if (tStr.Equals(NS_LITERAL_CSTRING("charset"), nsCaseInsensitiveCStringComparator()))
 					haveC = TRUE;
 			}
 			len++;
@@ -399,14 +399,14 @@ void CMapiMessage::ProcessHeaderLine( nsCString& line)
 
 		}
 	}
-	else if (!left26.CompareWithConversion( "Content-Transfer-Encoding:", PR_TRUE)) {
+	else if (left26.Equals(NS_LITERAL_CSTRING("Content-Transfer-Encoding:"), nsCaseInsensitiveCStringComparator())) {
 		m_bMimeEncoding = TRUE;
 	}
-	else if (!left8.CompareWithConversion( "Subject:", PR_TRUE))
+	else if (left8.Equals(NS_LITERAL_CSTRING("Subject:"), nsCaseInsensitiveCStringComparator()))
 		m_bHasSubject = TRUE;
-	else if (!left5.CompareWithConversion( "From:", PR_TRUE))
+	else if (left5.Equals(NS_LITERAL_CSTRING("From:"), nsCaseInsensitiveCStringComparator()))
 		m_bHasFrom = TRUE;
-	else if (!left5.CompareWithConversion( "Date: ", PR_TRUE))
+	else if (left5.Equals(NS_LITERAL_CSTRING("Date: "), nsCaseInsensitiveCStringComparator()))
 		m_bHasDate = TRUE;
 }
 

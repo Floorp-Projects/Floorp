@@ -4204,7 +4204,7 @@ PRUnichar * nsImapProtocol::CreatePRUnicharStringFromUTF7(const char * aSourceSt
 
   if(NS_SUCCEEDED(res) && (nsnull != ccm))
   {
-    nsAutoString aCharset; aCharset.AssignWithConversion("x-imap4-modified-utf7");
+    nsAutoString aCharset(NS_LITERAL_STRING("x-imap4-modified-utf7"));
     PRUnichar *unichars = nsnull;
     PRInt32 unicharLength;
 

@@ -48,6 +48,7 @@
 #include "rdf.h"
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 
 #include "nsIPref.h"
 #include "nsIAbDirectory.h"
@@ -246,16 +247,16 @@ NS_IMETHODIMP nsAbCardProperty::GetCardValue(const char *attrname, PRUnichar **v
         nsString formatStr;
         switch (format) {
         case nsIAbPreferMailFormat::unknown :
-            formatStr.AssignWithConversion("unknown");
+            formatStr.Assign(NS_LITERAL_STRING("unknown"));
             break;
         case nsIAbPreferMailFormat::plaintext :
-            formatStr.AssignWithConversion("plaintext");
+            formatStr.Assign(NS_LITERAL_STRING("plaintext"));
             break;
         case nsIAbPreferMailFormat::html :
-            formatStr.AssignWithConversion("html");
+            formatStr.Assign(NS_LITERAL_STRING("html"));
             break;
         default :
-            formatStr.AssignWithConversion("unknown");
+            formatStr.Assign(NS_LITERAL_STRING("unknown"));
             break;
         }
         *value = ToNewUnicode(formatStr);
@@ -347,11 +348,11 @@ NS_IMETHODIMP nsAbCardProperty::SetCardValue(const char *attrname, const PRUnich
    	{
         PRUint32 format = nsIAbPreferMailFormat::unknown;
         nsString formatStr(value);
-        if (formatStr.CompareWithConversion("unknown", PR_TRUE))
+        if (Compare(formatStr, NS_LITERAL_STRING("unknown"), nsCaseInsensitiveStringComparator()))
             format = nsIAbPreferMailFormat::unknown;
-        if (formatStr.CompareWithConversion("plaintext", PR_TRUE))
+        if (Compare(formatStr, NS_LITERAL_STRING("plaintext"), nsCaseInsensitiveStringComparator()))
             format = nsIAbPreferMailFormat::plaintext;
-        if (formatStr.CompareWithConversion("html", PR_TRUE))
+        if (Compare(formatStr, NS_LITERAL_STRING("html"), nsCaseInsensitiveStringComparator()))
             format = nsIAbPreferMailFormat::html;
         SetPreferMailFormat(format);
     }
@@ -706,13 +707,13 @@ nsAbCardProperty::GetName(PRUnichar * *aName)
 				if (lastNameFirst == 1)
 				{
 					name = lastName;
-					name.AppendWithConversion(", ");
+					name.Append(NS_LITERAL_STRING(", "));
 					name += firstName;
 				}
 				else
 				{
 					name = firstName;
-					name.AppendWithConversion(" ");
+					name.Append(NS_LITERAL_STRING(" "));
 					name += lastName;
 				}
 			}

@@ -2071,15 +2071,15 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCString& aProviderType,
   // Get the literal for our loc type.
   nsAutoString locstr;
   if (aUseProfile)
-    locstr.AssignWithConversion("profile");
-  else locstr.AssignWithConversion("install");
+    locstr.Assign(NS_LITERAL_STRING("profile"));
+  else locstr.Assign(NS_LITERAL_STRING("install"));
   nsCOMPtr<nsIRDFLiteral> locLiteral;
   rv = mRDFService->GetLiteral(locstr.get(), getter_AddRefs(locLiteral));
   if (NS_FAILED(rv)) return rv;
 
   // Get the literal for our script access.
   nsAutoString scriptstr;
-  scriptstr.AssignWithConversion("false");
+  scriptstr.Assign(NS_LITERAL_STRING("false"));
   nsCOMPtr<nsIRDFLiteral> scriptLiteral;
   rv = mRDFService->GetLiteral(scriptstr.get(), getter_AddRefs(scriptLiteral));
   if (NS_FAILED(rv)) return rv;

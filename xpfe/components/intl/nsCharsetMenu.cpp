@@ -1445,7 +1445,7 @@ nsresult nsCharsetMenu::AddFromStringToMenu(
 nsresult nsCharsetMenu::AddSeparatorToContainer(nsIRDFContainer * aContainer)
 {
   nsAutoString str;
-  str.AssignWithConversion("----");
+  str.Assign(NS_LITERAL_STRING("----"));
 
   // hack to generate unique id's for separators
   static PRInt32 u = 0;
@@ -1498,7 +1498,7 @@ nsresult nsCharsetMenu::WriteCacheToPrefs(nsVoidArray * aArray,
 
   // create together the cache string
   nsAutoString cache;
-  nsAutoString sep; sep.AppendWithConversion(", ");
+  nsAutoString sep(NS_LITERAL_STRING(", "));
   PRInt32 count = aArray->Count();
 
   for (PRInt32 i = aCacheStart; i < count; i++) {

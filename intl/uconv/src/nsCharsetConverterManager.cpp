@@ -114,7 +114,7 @@ nsresult nsCharsetConverterManager::RegisterConverterTitles(
   nsRegistryKey key;
 
   nsAutoString str; str.AssignWithConversion(aRegistryPath);
-  str.AppendWithConversion("defaultFile");
+  str.Append(NS_LITERAL_STRING("defaultFile"));
 
   char * p = ToNewCString(str);
   res = aRegistry->AddSubtree(nsIRegistry::Common, p, &key);
@@ -134,7 +134,7 @@ nsresult nsCharsetConverterManager::RegisterConverterData(
   nsRegistryKey key;
 
   nsAutoString str; str.AssignWithConversion(aRegistryPath);
-  str.AppendWithConversion("defaultFile");
+  str.Append(NS_LITERAL_STRING("defaultFile"));
 
   char * p = ToNewCString(str);
   res = aRegistry->AddSubtree(nsIRegistry::Common, p, &key);

@@ -511,7 +511,7 @@ nsresult nsImageDocument::UpdateTitle( void )
 #endif
       // if we got a valid size (sometimes we do not) then display it
       if (width != 0 && height != 0){
-        key.AssignWithConversion("ImageTitleWithDimensions");
+        key.Assign(NS_LITERAL_STRING("ImageTitleWithDimensions"));
         nsAutoString widthStr; widthStr.AppendInt(width);
         nsAutoString heightStr; heightStr.AppendInt(height);
         const PRUnichar *formatStrings[2]  = {widthStr.get(), heightStr.get()};
@@ -519,7 +519,7 @@ nsresult nsImageDocument::UpdateTitle( void )
       }
     }
     if (!valUni || !valUni[0]) {
-      key.AssignWithConversion("ImageTitleWithoutDimensions");
+      key.Assign(NS_LITERAL_STRING("ImageTitleWithoutDimensions"));
       rv = bundle->GetStringFromName(key.get(), getter_Copies(valUni));
     }
     if (NS_SUCCEEDED(rv) && valUni) {

@@ -259,7 +259,7 @@ NS_IMETHODIMP nsImportService::SystemStringToUnicode(const char *sysStr, nsStrin
 			rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, m_sysCharset);
 
 		if (NS_FAILED(rv)) 
-			m_sysCharset.AssignWithConversion("ISO-8859-1");
+			m_sysCharset.Assign(NS_LITERAL_STRING("ISO-8859-1"));
 	}
 
 	if (!sysStr) {
@@ -328,7 +328,7 @@ NS_IMETHODIMP nsImportService::SystemStringFromUnicode(const PRUnichar *uniStr, 
 			rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, m_sysCharset);
 
 		if (NS_FAILED(rv)) 
-			m_sysCharset.AssignWithConversion("ISO-8859-1");
+			m_sysCharset.Assign(NS_LITERAL_STRING("ISO-8859-1"));
 	}
 
 	if (!uniStr) {
@@ -664,7 +664,7 @@ nsresult nsImportService::LoadModuleInfo( const char *pClsId, const char *pSuppo
 		delete [] pName;
 	}
 	else
-		theTitle.AssignWithConversion("Unknown");
+		theTitle.Assign(NS_LITERAL_STRING("Unknown"));
 		
 	rv = module->GetDescription( &pName);
 	if (NS_SUCCEEDED( rv)) {
@@ -672,7 +672,7 @@ nsresult nsImportService::LoadModuleInfo( const char *pClsId, const char *pSuppo
 		delete [] pName;
 	}
 	else
-		theDescription.AssignWithConversion("Unknown description");
+		theDescription.Assign(NS_LITERAL_STRING("Unknown description"));
 	
 	// call the module to get the info we need
 	m_pModules->AddModule( clsId, pSupports, theTitle.get(), theDescription.get());

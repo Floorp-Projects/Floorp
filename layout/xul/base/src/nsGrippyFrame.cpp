@@ -104,12 +104,12 @@ nsGrippyFrame::MouseClicked (nsIPresContext* aPresContext, nsGUIEvent* aEvent)
     nsCOMPtr<nsIContent> content;
     splitter->GetContent(getter_AddRefs(content));
  
-	nsString a; a.AssignWithConversion("collapsed");
+	nsString a(NS_LITERAL_STRING("collapsed"));
 	nsString value;
     if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsXULAtoms::state, value))
     {
-     if (value.EqualsWithConversion("collapsed"))
-       a.AssignWithConversion("open");
+     if (value.Equals(NS_LITERAL_STRING("collapsed")))
+       a.Assign(NS_LITERAL_STRING("open"));
     }
 
     content->SetAttr(kNameSpaceID_None, nsXULAtoms::state, a, PR_TRUE);

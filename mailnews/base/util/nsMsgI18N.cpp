@@ -98,7 +98,7 @@ nsresult nsMsgI18NConvertFromUnicode(const nsCString& aCharset,
     Recycle(s);
     return NS_OK;
   }
-  nsAutoString convCharset; convCharset.AssignWithConversion("ISO-8859-1");
+  nsAutoString convCharset(NS_LITERAL_STRING("ISO-8859-1"));
   nsresult res;
 
   // Resolve charset alias
@@ -197,7 +197,7 @@ nsresult nsMsgI18NConvertToUnicode(const nsCString& aCharset,
       PRUnichar localbuf[512];
       PRInt32 consumedLen = 0;
 
-      outString.AssignWithConversion("");
+      outString.Assign(NS_LITERAL_STRING(""));
 
       // convert
       while (consumedLen < originalLength) {
@@ -437,7 +437,7 @@ PRBool nsMsgI18Nmultibyte_charset(const char *charset)
     if (NS_SUCCEEDED(res)) {
       res = ccm2->GetCharsetData2(charsetAtom, NS_LITERAL_STRING(".isMultibyte").get(), &charsetData);
       if (NS_SUCCEEDED(res)) {
-        result = charsetData.EqualsWithConversion("true", PR_TRUE);
+        result = !Compare(charsetData, NS_LITERAL_STRING("true"), nsCaseInsensitiveStringComparator());
       }
     }
   }

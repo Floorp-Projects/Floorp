@@ -2220,10 +2220,10 @@ nsXULTemplateBuilder::CompileSimpleRule(nsIContent* aRuleElement,
             if (NS_FAILED(rv)) return rv;
 
             if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-                if (value.EqualsWithConversion("true")) {
+                if (value.Equals(NS_LITERAL_STRING("true"))) {
                     iscontainer = nsRDFConInstanceTestNode::eTrue;
                 }
-                else if (value.EqualsWithConversion("false")) {
+                else if (value.Equals(NS_LITERAL_STRING("false"))) {
                     iscontainer = nsRDFConInstanceTestNode::eFalse;
                 }
             }
@@ -2235,10 +2235,10 @@ nsXULTemplateBuilder::CompileSimpleRule(nsIContent* aRuleElement,
             if (NS_FAILED(rv)) return rv;
 
             if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-                if (value.EqualsWithConversion("true")) {
+                if (value.Equals(NS_LITERAL_STRING("true"))) {
                     isempty = nsRDFConInstanceTestNode::eTrue;
                 }
-                else if (value.EqualsWithConversion("false")) {
+                else if (value.Equals(NS_LITERAL_STRING("false"))) {
                     isempty = nsRDFConInstanceTestNode::eFalse;
                 }
             }

@@ -456,8 +456,8 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
         && lineSource[0] == '-'
         &&
         (
-          lineSource.EqualsWithConversion("-- \r", PR_FALSE, 4) ||
-          lineSource.EqualsWithConversion("-- \n", PR_FALSE, 4)
+          Substring(lineSource, 0, 4).Equals(NS_LITERAL_STRING("-- \r")) ||
+          Substring(lineSource, 0, 4).Equals(NS_LITERAL_STRING("-- \n"))
         )
       )
     {

@@ -75,7 +75,7 @@ nsOutlinerBoxObject::SetDocument(nsIDocument* aDocument)
   NS_ASSERTION(aDocument == nsnull, "SetDocument called with non-null document");
 
   // Drop the view's ref to us.
-  nsAutoString view; view.AssignWithConversion("view");
+  nsAutoString view(NS_LITERAL_STRING("view"));
   nsCOMPtr<nsISupports> suppView;
   GetPropertyAsSupports(view.get(), getter_AddRefs(suppView));
   nsCOMPtr<nsIOutlinerView> outlinerView(do_QueryInterface(suppView));
@@ -131,7 +131,7 @@ static void FindBodyElement(nsIContent* aParent, nsIContent** aResult)
 inline nsIOutlinerBoxObject*
 nsOutlinerBoxObject::GetOutlinerBody()
 {
-  nsAutoString outlinerbody; outlinerbody.AssignWithConversion("outlinerbody");
+  nsAutoString outlinerbody(NS_LITERAL_STRING("outlinerbody"));
 
   nsCOMPtr<nsISupports> supp;
   GetPropertyAsSupports(outlinerbody.get(), getter_AddRefs(supp));

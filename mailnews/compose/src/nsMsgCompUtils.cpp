@@ -1681,7 +1681,7 @@ nsMsgNewURL(nsIURI** aInstancePtrResult, const char * aSpec)
   {
     if (PL_strstr(aSpec, "://") == nsnull)
     {
-      nsAutoString newSpec; newSpec.AssignWithConversion("http://");
+      nsAutoString newSpec(NS_LITERAL_STRING("http://"));
       newSpec.AppendWithConversion(aSpec);
       nsCAutoString newspecC;
       newspecC.AssignWithConversion(newSpec);

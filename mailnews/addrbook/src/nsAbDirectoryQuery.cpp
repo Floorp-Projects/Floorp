@@ -754,7 +754,7 @@ nsresult nsAbDirectoryQuery::queryMatch (nsIAbCard* card,
         n.Assign (properties[i]);
 
         nsAbDirectoryQueryPropertyValue* _propertyValue = 0;
-        if (n.EqualsWithConversion ("card:nsIAbCard"))
+        if (n.Equals(NS_LITERAL_CSTRING("card:nsIAbCard")))
         {
             nsCOMPtr<nsISupports> supports(do_QueryInterface(card, &rv));
             NS_ENSURE_SUCCESS(rv, rv);
@@ -763,7 +763,7 @@ nsresult nsAbDirectoryQuery::queryMatch (nsIAbCard* card,
             if (_propertyValue == NULL)
                 return NS_ERROR_OUT_OF_MEMORY;
         }
-        else if (n.EqualsWithConversion ("card:URI"))
+        else if (n.Equals(NS_LITERAL_CSTRING("card:URI")))
         {
             nsCOMPtr<nsIRDFResource> rdfResource(do_QueryInterface(card, &rv));
             NS_ENSURE_SUCCESS(rv, rv);

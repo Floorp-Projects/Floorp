@@ -60,7 +60,7 @@ CreateUtf7ConvertedString(const char * aSourceString,
 
   if(NS_SUCCEEDED(res) && (nsnull != ccm))
   {
-    nsString aCharset; aCharset.AssignWithConversion("x-imap4-modified-utf7");
+    nsString aCharset(NS_LITERAL_STRING("x-imap4-modified-utf7"));
     PRUnichar *unichars = nsnull;
     PRInt32 unicharLength;
 
@@ -98,7 +98,7 @@ CreateUtf7ConvertedString(const char * aSourceString,
       // convert from 8 bit ascii string to modified utf7
       nsString unicodeStr; unicodeStr.AssignWithConversion(aSourceString);
       nsIUnicodeEncoder* encoder = nsnull;
-      aCharset.AssignWithConversion("x-imap4-modified-utf7");
+      aCharset.Assign(NS_LITERAL_STRING("x-imap4-modified-utf7"));
       res = ccm->GetUnicodeEncoder(&aCharset, &encoder);
       if(NS_SUCCEEDED(res) && (nsnull != encoder)) 
       {
@@ -141,13 +141,13 @@ CreateUtf7ConvertedStringFromUnicode(const PRUnichar * aSourceString)
 
   if(NS_SUCCEEDED(res) && (nsnull != ccm))
   {
-    nsString aCharset; aCharset.AssignWithConversion("x-imap4-modified-utf7");
+    nsString aCharset(NS_LITERAL_STRING("x-imap4-modified-utf7"));
     PRInt32 unicharLength;
 
       // convert from 8 bit ascii string to modified utf7
       nsString unicodeStr(aSourceString);
       nsIUnicodeEncoder* encoder = nsnull;
-      aCharset.AssignWithConversion("x-imap4-modified-utf7");
+      aCharset.Assign(NS_LITERAL_STRING("x-imap4-modified-utf7"));
       res = ccm->GetUnicodeEncoder(&aCharset, &encoder);
       if(NS_SUCCEEDED(res) && (nsnull != encoder)) 
       {
@@ -190,7 +190,7 @@ nsresult CreateUnicodeStringFromUtf7(const char *aSourceString, PRUnichar **aUni
 
   if(NS_SUCCEEDED(res) && (nsnull != ccm))
   {
-    nsString aCharset; aCharset.AssignWithConversion("x-imap4-modified-utf7");
+    nsString aCharset(NS_LITERAL_STRING("x-imap4-modified-utf7"));
     PRUnichar *unichars = nsnull;
     PRInt32 unicharLength;
 

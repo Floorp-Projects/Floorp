@@ -56,7 +56,7 @@ nsPlatformCharset::nsPlatformCharset()
   {
     UINT acp = ::WinQueryCp(HMQ_CURRENT);
     PRInt32 acpint = (PRInt32)(acp & 0x00FFFF);
-    nsAutoString acpKey; acpKey.Assign(NS_LITERAL_STRING("os2."));
+    nsAutoString acpKey(NS_LITERAL_STRING("os2."));
     acpKey.AppendInt(acpint, 10);
 
     nsresult res = gInfo->Get(acpKey, mCharset);

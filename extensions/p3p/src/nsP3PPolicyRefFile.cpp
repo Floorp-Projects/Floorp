@@ -520,7 +520,7 @@ nsP3PPolicyRefFile::ProcessExpiryTagExpiry( nsIP3PTag  *aTag ) {
 
       // "max-age" attribute specified
       mCacheControlValue.AssignWithConversion( P3P_CACHECONTROL_MAXAGE );
-      mCacheControlValue.AppendWithConversion( "=" );
+      mCacheControlValue.Append(NS_LITERAL_STRING("="));
       mCacheControlValue += pExpiryTag->mMaxAge;
     }
 
@@ -677,7 +677,7 @@ nsP3PPolicyRefFile::AddInlinePolicy( nsIP3PTag  *aTag,
                    (void **)&pPolicyTag );
 
   if (NS_SUCCEEDED( rv )) {
-    sPolicyName.AssignWithConversion( "#" );
+    sPolicyName.Assign(NS_LITERAL_STRING("#"));
     sPolicyName += pPolicyTag->mName;
 
     rv = CreatePolicyURISpec( sPolicyName,
@@ -1223,14 +1223,14 @@ nsP3PPolicyRefFile::UnEscapeAsterisks( nsString&  aString ) {
   nsAutoString  sAsterisk,
                 sAsteriskEscapeSequence;
 
-  sAsterisk.AssignWithConversion( "*" );
+  sAsterisk.Assign(NS_LITERAL_STRING("*"));
 
-  sAsteriskEscapeSequence.AssignWithConversion( "%2a" );
+  sAsteriskEscapeSequence.Assign(NS_LITERAL_STRING("%2a"));
   UnEscape( aString,
             sAsteriskEscapeSequence,
             sAsterisk );
 
-  sAsteriskEscapeSequence.AssignWithConversion( "%2A" );
+  sAsteriskEscapeSequence.Assign(NS_LITERAL_STRING("%2A"));
   UnEscape( aString,
             sAsteriskEscapeSequence,
             sAsterisk );

@@ -457,14 +457,14 @@ HTMLCSSStyleSheetImpl::GetURL(nsIURI*& aURL) const
 NS_IMETHODIMP
 HTMLCSSStyleSheetImpl::GetTitle(nsString& aTitle) const
 {
-  aTitle.AssignWithConversion("Internal HTML/CSS Style Sheet");
+  aTitle.Assign(NS_LITERAL_STRING("Internal HTML/CSS Style Sheet"));
   return NS_OK;
 }
 
 NS_IMETHODIMP
 HTMLCSSStyleSheetImpl::GetType(nsString& aType) const
 {
-  aType.AssignWithConversion("text/html");
+  aType.Assign(NS_LITERAL_STRING("text/html"));
   return NS_OK;
 }
 

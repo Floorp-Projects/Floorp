@@ -811,7 +811,7 @@ nsBaseWidget::debug_GuiEventToString(nsGUIEvent * aGuiEvent)
 {
   NS_ASSERTION(nsnull != aGuiEvent,"cmon, null gui event.");
 
-  nsAutoString eventName; eventName.AssignWithConversion("UNKNOWN");
+  nsAutoString eventName(NS_LITERAL_STRING("UNKNOWN"));
 
 #define _ASSIGN_eventName(_value,_name)\
 case _value: eventName.AssignWithConversion(_name) ; break

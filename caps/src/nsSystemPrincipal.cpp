@@ -63,7 +63,7 @@ NS_IMETHODIMP
 nsSystemPrincipal::ToString(char **result)
 {
     nsAutoString buf;
-    buf.AssignWithConversion("[System]");
+    buf.Assign(NS_LITERAL_STRING("[System]"));
 
     *result = ToNewCString(buf);
     return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;

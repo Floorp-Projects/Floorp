@@ -226,12 +226,12 @@ nsXMLElement::GetXMLBaseURI(nsIURI **aURI)
           } else {
             // We do not want to add double / delimiters (although the user is free to do so)
             if (value[value_len - 1] != '/')
-              value.AppendWithConversion('/');
+              value.Append(PRUnichar('/'));
             base.Insert(value, 0);
           }
         } else {
           if (value[value_len - 1] != '/')
-            value.AppendWithConversion('/'); // Add delimiter/make sure we treat this as dir
+            value.Append(PRUnichar('/')); // Add delimiter/make sure we treat this as dir
           base = value;
         }
       }
@@ -391,14 +391,14 @@ nsXMLElement::MaybeTriggerAutoLink(nsIWebShell *aShell)
           break;
 
         // XXX Should probably do this using atoms 
-        if (value.EqualsWithConversion("new")) {
+        if (value.Equals(NS_LITERAL_STRING("new"))) {
           verb = eLinkVerb_New;
-        } else if (value.EqualsWithConversion("replace")) {
+        } else if (value.Equals(NS_LITERAL_STRING("replace"))) {
           // We want to actually stop processing the current document now.
           // We do this by returning the correct value so that the one
           // that called us knows to stop processing.
           verb = eLinkVerb_Replace;
-        } else if (value.EqualsWithConversion("embed")) {
+        } else if (value.Equals(NS_LITERAL_STRING("embed"))) {
           // XXX TODO
           break;
         }
@@ -486,11 +486,11 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                              show);
 
           // XXX Should probably do this using atoms 
-          if (show.EqualsWithConversion("new")) {
+          if (show.Equals(NS_LITERAL_STRING("new"))) {
             verb = eLinkVerb_New;
-          } else if (show.EqualsWithConversion("replace")) {
+          } else if (show.Equals(NS_LITERAL_STRING("replace"))) {
             verb = eLinkVerb_Replace;
-          } else if (show.EqualsWithConversion("embed")) {
+          } else if (show.Equals(NS_LITERAL_STRING("embed"))) {
             verb = eLinkVerb_Embed;
           }
 
@@ -659,7 +659,7 @@ nsXMLElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
               viewCSS->GetComputedStyle(elt, empty, getter_AddRefs(cssDecl));
               if (cssDecl) {
                 nsAutoString behavior;
-                behavior.AssignWithConversion("-moz-binding");
+                behavior.Assign(NS_LITERAL_STRING("-moz-binding"));
 
                 nsAutoString value;
                 cssDecl->GetPropertyValue(behavior, value);

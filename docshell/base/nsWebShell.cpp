@@ -766,7 +766,7 @@ nsWebShell::HandleLinkClickEvent(nsIContent *aContent,
 
   switch(aVerb) {
     case eLinkVerb_New:
-      target.AssignWithConversion("_blank");
+      target.Assign(NS_LITERAL_STRING("_blank"));
       // Fall into replace case
     case eLinkVerb_Undefined:
       // Fall through, this seems like the most reasonable action
@@ -993,7 +993,7 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
 
       if(keywordsEnabled && (-1 == dotLoc)) {
         // only send non-qualified hosts to the keyword server
-        nsAutoString keywordSpec; keywordSpec.AssignWithConversion("keyword:");
+        nsAutoString keywordSpec(NS_LITERAL_STRING("keyword:"));
         keywordSpec.Append(NS_ConvertUTF8toUCS2(host));
 
         return LoadURI(keywordSpec.get(), // URI string

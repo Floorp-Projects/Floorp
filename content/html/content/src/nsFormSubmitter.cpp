@@ -549,7 +549,7 @@ nsFormSubmitter::ProcessAsURLEncoded(nsIForm* form,
                 if (PR_TRUE == firstTime) {
                   firstTime = PR_FALSE;
                 } else {
-                  buf.AppendWithConversion("&");
+                  buf.Append(NS_LITERAL_STRING("&"));
                 }
                 nsString* convName = URLEncode(names[valueX],
                                                encoder,
@@ -558,7 +558,7 @@ nsFormSubmitter::ProcessAsURLEncoded(nsIForm* form,
                                                charset);
                 buf += *convName;
                 delete convName;
-                buf.AppendWithConversion("=");
+                buf.Append(NS_LITERAL_STRING("="));
                 nsAutoString newValue;
                 newValue.Append(values[valueX]);
                 if (aFormProcessor) {
@@ -1400,7 +1400,7 @@ nsFormSubmitter::GetPlatformEncoder(nsIUnicodeEncoder** encoder)
 
      if (NS_FAILED(rv)) {
        NS_ASSERTION(0, "error getting locale charset, using ISO-8859-1");
-       localeCharset.AssignWithConversion("ISO-8859-1");
+       localeCharset.Assign(NS_LITERAL_STRING("ISO-8859-1"));
        rv = NS_OK;
      }
 

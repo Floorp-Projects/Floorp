@@ -101,29 +101,29 @@ SetProperty(OperatorData* aOperatorData,
   // maxsize (default: infinity)
   // minsize (default: 1)
 
-  if (aValue.EqualsWithConversion("true")) {
+  if (aValue.Equals(NS_LITERAL_STRING("true"))) {
     // see if we should enable flags with default value=false
-    if (aName.EqualsWithConversion("fence"))
+    if (aName.Equals(NS_LITERAL_STRING("fence")))
       aOperatorData->mFlags |= NS_MATHML_OPERATOR_FENCE;
-    else if (aName.EqualsWithConversion("accent"))
+    else if (aName.Equals(NS_LITERAL_STRING("accent")))
       aOperatorData->mFlags |= NS_MATHML_OPERATOR_ACCENT;
-    else if (aName.EqualsWithConversion("largeop"))
+    else if (aName.Equals(NS_LITERAL_STRING("largeop")))
       aOperatorData->mFlags |= NS_MATHML_OPERATOR_LARGEOP;
-    else if (aName.EqualsWithConversion("separator"))
+    else if (aName.Equals(NS_LITERAL_STRING("separator")))
       aOperatorData->mFlags |=  NS_MATHML_OPERATOR_SEPARATOR;
-    else if (aName.EqualsWithConversion("movablelimits"))
+    else if (aName.Equals(NS_LITERAL_STRING("movablelimits")))
       aOperatorData->mFlags |= NS_MATHML_OPERATOR_MOVABLELIMITS;
   }
-  else if (aValue.EqualsWithConversion("false")) {
+  else if (aValue.Equals(NS_LITERAL_STRING("false"))) {
     // see if we should disable flags with default value=true
-    if (aName.EqualsWithConversion("symmetric"))
+    if (aName.Equals(NS_LITERAL_STRING("symmetric")))
       aOperatorData->mFlags &= ~NS_MATHML_OPERATOR_SYMMETRIC;
   }
-  else if (aName.EqualsWithConversion("stretchy") &&
+  else if (aName.Equals(NS_LITERAL_STRING("stretchy")) &&
           (1 == aOperatorData->mStr.Length())) {
-    if (aValue.EqualsWithConversion("vertical"))
+    if (aValue.Equals(NS_LITERAL_STRING("vertical")))
       aOperatorData->mFlags |= NS_MATHML_OPERATOR_STRETCHY_VERT;
-    else if (aValue.EqualsWithConversion("horizontal"))
+    else if (aValue.Equals(NS_LITERAL_STRING("horizontal")))
       aOperatorData->mFlags |= NS_MATHML_OPERATOR_STRETCHY_HORIZ;
     else return; // invalid value
     if (kNotFound == nsMathMLOperators::FindStretchyOperator(aOperatorData->mStr[0])) {
@@ -134,9 +134,9 @@ SetProperty(OperatorData* aOperatorData,
     PRInt32 i = 0;
     float space = 0.0f;
     PRBool isLeftSpace;
-    if (aName.EqualsWithConversion("lspace"))
+    if (aName.Equals(NS_LITERAL_STRING("lspace")))
       isLeftSpace = PR_TRUE;
-    else if (aName.EqualsWithConversion("rspace"))
+    else if (aName.Equals(NS_LITERAL_STRING("rspace")))
       isLeftSpace = PR_FALSE;
     else return;  // input is not applicable
 
@@ -147,13 +147,13 @@ SetProperty(OperatorData* aOperatorData,
       if (error) return;
     }
     // See if it is one of the 'namedspace' (ranging 1/18em...7/18em)
-    else if (aValue.EqualsWithConversion("veryverythinmathspace"))  i = 1;
-    else if (aValue.EqualsWithConversion("verythinmathspace"))      i = 2;
-    else if (aValue.EqualsWithConversion("thinmathspace"))          i = 3;
-    else if (aValue.EqualsWithConversion("mediummathspace"))        i = 4;
-    else if (aValue.EqualsWithConversion("thickmathspace"))         i = 5;
-    else if (aValue.EqualsWithConversion("verythickmathspace"))     i = 6;
-    else if (aValue.EqualsWithConversion("veryverythickmathspace")) i = 7;
+    else if (aValue.Equals(NS_LITERAL_STRING("veryverythinmathspace")))  i = 1;
+    else if (aValue.Equals(NS_LITERAL_STRING("verythinmathspace")))      i = 2;
+    else if (aValue.Equals(NS_LITERAL_STRING("thinmathspace")))          i = 3;
+    else if (aValue.Equals(NS_LITERAL_STRING("mediummathspace")))        i = 4;
+    else if (aValue.Equals(NS_LITERAL_STRING("thickmathspace")))         i = 5;
+    else if (aValue.Equals(NS_LITERAL_STRING("verythickmathspace")))     i = 6;
+    else if (aValue.Equals(NS_LITERAL_STRING("veryverythickmathspace"))) i = 7;
 
     if (0 != i) // it was a namedspace value
       space = float(i)/float(18);
@@ -280,7 +280,7 @@ InitOperators(void)
   nsresult rv;
   nsAutoString uriStr;
   nsCOMPtr<nsIURI> uri;
-  uriStr.AssignWithConversion("resource:/res/fonts/mathfont.properties");
+  uriStr.Assign(NS_LITERAL_STRING("resource:/res/fonts/mathfont.properties"));
   rv = NS_NewURI(getter_AddRefs(uri), uriStr);
   if (NS_FAILED(rv)) return rv;
   nsCOMPtr<nsIInputStream> in;

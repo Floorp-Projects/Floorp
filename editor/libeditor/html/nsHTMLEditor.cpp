@@ -3402,7 +3402,7 @@ nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
           {
             nsAutoString href;
             if (NS_SUCCEEDED(anchor->GetHref(href)))
-              if (href.CompareWithConversion("file:", PR_TRUE, 5) == 0)
+              if (Compare(Substring(href, 0, 5), NS_LITERAL_STRING("file:"), nsCaseInsensitiveStringComparator()) == 0)
                 (*aNodeList)->AppendElement(node);
           }
         }

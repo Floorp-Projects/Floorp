@@ -534,7 +534,7 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
                   aMatch->mAssignments.GetAssignmentFor(aMatch->mRule->GetMemberVariable(), &member);
                   aChild = VALUE_TO_IRDFRESOURCE(member);
               }
-              else if (uri.EqualsWithConversion("...") || uri.EqualsWithConversion("rdf:*")) {
+              else if (uri.Equals(NS_LITERAL_STRING("...")) || uri.Equals(NS_LITERAL_STRING("rdf:*"))) {
                   // If we -are- the resource element, then we are no
                   // matter unique.
                   isResourceElement = PR_TRUE;

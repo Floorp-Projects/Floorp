@@ -132,7 +132,7 @@ nsWidget::nsWidget() // : nsBaseWidget()
   mBackground = NS_RGB(192, 192, 192);
   mBorderPixel = xxlib_rgb_xpixel_from_rgb(mXlibRgbHandle, mBorderRGB);
   mParentWidget = nsnull;
-  mName.AssignWithConversion("unnamed");
+  mName.Assign(NS_LITERAL_STRING("unnamed"));
   mIsShown = PR_FALSE;
   mIsToplevel = PR_FALSE;
   mVisibility = VisibilityFullyObscured; // this is an X constant.

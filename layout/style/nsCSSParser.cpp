@@ -436,7 +436,7 @@ CSSParserImpl::CSSParserImpl()
   NS_INIT_REFCNT();
 
   // set the default charset
-  mCharset.AssignWithConversion("ISO-8859-1");
+  mCharset.Assign(NS_LITERAL_STRING("ISO-8859-1"));
 }
 
 NS_IMETHODIMP
@@ -1053,7 +1053,7 @@ PRBool CSSParserImpl::GatherMedia(PRInt32& aErrorCode, nsString& aMedia,
     else if (eCSSToken_Ident == mToken.mType) {
       if (expectIdent) {
         if (! first) {
-          aMedia.AppendWithConversion(',');
+          aMedia.Append(PRUnichar(','));
         }
         ToLowerCase(mToken.mIdent);  // case insensitive from CSS - must be lower cased
         if (aMediaAtoms) {
@@ -1572,14 +1572,14 @@ static PRBool IsSinglePseudoClass(const nsCSSSelector& aSelector)
 #ifdef INCLUDE_XUL
 static PRBool IsOutlinerPseudoElement(const nsString& aPseudo)
 {
-  return !(aPseudo.CompareWithConversion("-moz-outliner-", PR_FALSE, 14));
+  return Substring(aPseudo, 0, 14).Equals(NS_LITERAL_STRING("-moz-outliner-"));
 }
 
 static PRBool IsOutlinerPseudoElement(nsIAtom* aPseudo)
 {
   nsAutoString str;
   aPseudo->ToString(str);
-  return !(str.CompareWithConversion(":-moz-outliner-", PR_FALSE, 15));
+  return Substring(str, 0, 15).Equals(NS_LITERAL_STRING(":-moz-outliner-"));
 }
 #endif
 
@@ -2164,7 +2164,7 @@ void CSSParserImpl::ParsePseudoSelector(PRInt32&  aDataMask,
   }
 
   buffer.Truncate();
-  buffer.AppendWithConversion(':');
+  buffer.Append(PRUnichar(':'));
   buffer.Append(mToken.mIdent);
   ToLowerCase(buffer);
   nsIAtom* pseudo = NS_NewAtom(buffer);
@@ -3086,7 +3086,7 @@ PRBool CSSParserImpl::ParseCounter(PRInt32& aErrorCode, nsCSSValue& aValue)
             return PR_FALSE;
           }
           if (GetToken(aErrorCode, PR_TRUE) && (eCSSToken_String == mToken.mType)) {
-            counter.AppendWithConversion(',');
+            counter.Append(PRUnichar(','));
             counter.Append(mToken.mSymbol); // quote too
             counter.Append(mToken.mIdent);
             counter.Append(mToken.mSymbol); // quote too
@@ -3102,7 +3102,7 @@ PRBool CSSParserImpl::ParseCounter(PRInt32& aErrorCode, nsCSSValue& aValue)
             nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(mToken.mIdent);
             if ((eCSSKeyword_UNKNOWN < keyword) && 
                 (0 < SearchKeywordTable(keyword, nsCSSProps::kListStyleKTable))) {
-              counter.AppendWithConversion(',');
+              counter.Append(PRUnichar(','));
               counter.Append(mToken.mIdent);
             }
             else {
@@ -3148,7 +3148,7 @@ PRBool CSSParserImpl::ParseAttr(PRInt32& aErrorCode, nsCSSValue& aValue)
             return PR_FALSE;
           }
           attr.AppendInt(nameSpaceID, 10);
-          attr.AppendWithConversion('|');
+          attr.Append(PRUnichar('|'));
           if (! GetToken(aErrorCode, PR_FALSE)) {
             return PR_FALSE;
           }
@@ -3178,7 +3178,7 @@ PRBool CSSParserImpl::ParseAttr(PRInt32& aErrorCode, nsCSSValue& aValue)
       else if (mToken.IsSymbol('*')) {  // namespace wildcard
         if (ExpectSymbol(aErrorCode, '|', PR_FALSE)) {
           attr.AppendInt(kNameSpaceID_Unknown, 10);
-          attr.AppendWithConversion('|');
+          attr.Append(PRUnichar('|'));
           if (! GetToken(aErrorCode, PR_FALSE)) {
             return PR_FALSE;
           }

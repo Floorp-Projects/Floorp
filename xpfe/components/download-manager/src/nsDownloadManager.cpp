@@ -473,7 +473,7 @@ DownloadItem::UpdateProgressInfo()
   rv = sbs->CreateBundle(NSDOWNLOADMANAGER_PROPERTIES_URI, getter_AddRefs(bundle));
   if (NS_FAILED(rv)) return rv;
 
-  nsAutoString key; key.AssignWithConversion("progressFormat");
+  nsAutoString key(NS_LITERAL_STRING("progressFormat"));
   nsAutoString curTotalProgressStr; curTotalProgressStr.AppendInt(mCurTotalProgress);
   nsAutoString maxTotalProgressStr; maxTotalProgressStr.AppendInt(mMaxTotalProgress);
   const PRUnichar* formatStrings[2] = { curTotalProgressStr.get(), maxTotalProgressStr.get() };

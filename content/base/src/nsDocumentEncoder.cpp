@@ -185,7 +185,7 @@ nsDocumentEncoder::nsDocumentEncoder()
 {
   NS_INIT_REFCNT();
 
-  mMimeType.AssignWithConversion("text/plain");
+  mMimeType.Assign(NS_LITERAL_STRING("text/plain"));
 
   mFlags = 0;
   mWrapColumn = 72;
@@ -1255,7 +1255,7 @@ nsHTMLCopyEncoder::EncodeToStringWithContext(nsAWritableString& aEncodedString,
   // whitespace info to this.
   nsAutoString infoString;
   infoString.AppendInt(mStartDepth);
-  infoString.AppendWithConversion(',');
+  infoString.Append(PRUnichar(','));
   infoString.AppendInt(mEndDepth);
   aInfoString = infoString;
   
@@ -1550,11 +1550,11 @@ nsHTMLCopyEncoder::IsMozBR(nsIDOMNode* aNode)
     nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(aNode);
     if (elem)
     {
-      nsAutoString typeAttrName; typeAttrName.AssignWithConversion("type");
+      nsAutoString typeAttrName(NS_LITERAL_STRING("type"));
       nsAutoString typeAttrVal;
       nsresult rv = elem->GetAttribute(typeAttrName, typeAttrVal);
       typeAttrVal.ToLowerCase();
-      if (NS_SUCCEEDED(rv) && (typeAttrVal.EqualsWithConversion("_moz")))
+      if (NS_SUCCEEDED(rv) && (typeAttrVal.Equals(NS_LITERAL_STRING("_moz"))))
         return PR_TRUE;
     }
     return PR_FALSE;

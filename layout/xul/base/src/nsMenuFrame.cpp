@@ -1071,40 +1071,40 @@ static void ConvertPosition(nsIContent* aPopupElt, nsString& aAnchor, nsString& 
     return;
 
   if (position.Equals(NS_LITERAL_STRING("before_start"))) {
-    aAnchor.AssignWithConversion("topleft");
-    aAlign.AssignWithConversion("bottomleft");
+    aAnchor.Assign(NS_LITERAL_STRING("topleft"));
+    aAlign.Assign(NS_LITERAL_STRING("bottomleft"));
   }
   else if (position.Equals(NS_LITERAL_STRING("before_end"))) {
-    aAnchor.AssignWithConversion("topright");
-    aAlign.AssignWithConversion("bottomright");
+    aAnchor.Assign(NS_LITERAL_STRING("topright"));
+    aAlign.Assign(NS_LITERAL_STRING("bottomright"));
   }
   else if (position.Equals(NS_LITERAL_STRING("after_start"))) {
-    aAnchor.AssignWithConversion("bottomleft");
-    aAlign.AssignWithConversion("topleft");
+    aAnchor.Assign(NS_LITERAL_STRING("bottomleft"));
+    aAlign.Assign(NS_LITERAL_STRING("topleft"));
   }
   else if (position.Equals(NS_LITERAL_STRING("after_end"))) {
-    aAnchor.AssignWithConversion("bottomright");
-    aAlign.AssignWithConversion("topright");
+    aAnchor.Assign(NS_LITERAL_STRING("bottomright"));
+    aAlign.Assign(NS_LITERAL_STRING("topright"));
   }
   else if (position.Equals(NS_LITERAL_STRING("start_before"))) {
-    aAnchor.AssignWithConversion("topleft");
-    aAlign.AssignWithConversion("topright");
+    aAnchor.Assign(NS_LITERAL_STRING("topleft"));
+    aAlign.Assign(NS_LITERAL_STRING("topright"));
   }
   else if (position.Equals(NS_LITERAL_STRING("start_after"))) {
-    aAnchor.AssignWithConversion("bottomleft");
-    aAlign.AssignWithConversion("bottomright");
+    aAnchor.Assign(NS_LITERAL_STRING("bottomleft"));
+    aAlign.Assign(NS_LITERAL_STRING("bottomright"));
   }
   else if (position.Equals(NS_LITERAL_STRING("end_before"))) {
-    aAnchor.AssignWithConversion("topright");
-    aAlign.AssignWithConversion("topleft");
+    aAnchor.Assign(NS_LITERAL_STRING("topright"));
+    aAlign.Assign(NS_LITERAL_STRING("topleft"));
   }
   else if (position.Equals(NS_LITERAL_STRING("end_after"))) {
-    aAnchor.AssignWithConversion("bottomright");
-    aAlign.AssignWithConversion("bottomleft");
+    aAnchor.Assign(NS_LITERAL_STRING("bottomright"));
+    aAlign.Assign(NS_LITERAL_STRING("bottomleft"));
   }
   else if (position.Equals(NS_LITERAL_STRING("overlap"))) {
-    aAnchor.AssignWithConversion("topleft");
-    aAlign.AssignWithConversion("topleft");
+    aAnchor.Assign(NS_LITERAL_STRING("topleft"));
+    aAlign.Assign(NS_LITERAL_STRING("topleft"));
   }
 }
 
@@ -1692,8 +1692,8 @@ nsMenuFrame::OnCreate()
               else grandChild->SetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, commandAttr, PR_TRUE);
             }
 
-            commandAttr.AssignWithConversion("");
-            menuAttr.AssignWithConversion("");
+            commandAttr.Assign(NS_LITERAL_STRING(""));
+            menuAttr.Assign(NS_LITERAL_STRING(""));
 
             // The menu's label and checked states need to be updated to match the command.
             // Note that (unlike the disabled state) if the command has *no* label for either, we
@@ -1705,8 +1705,8 @@ nsMenuFrame::OnCreate()
                 grandChild->SetAttr(kNameSpaceID_None, nsHTMLAtoms::checked, commandAttr, PR_TRUE);
             }
             
-            commandAttr.AssignWithConversion("");
-            menuAttr.AssignWithConversion("");
+            commandAttr.Assign(NS_LITERAL_STRING(""));
+            menuAttr.Assign(NS_LITERAL_STRING(""));
 
             commandContent->GetAttr(kNameSpaceID_None, nsXULAtoms::label, commandAttr);
             grandChild->GetAttr(kNameSpaceID_None, nsXULAtoms::label, menuAttr);

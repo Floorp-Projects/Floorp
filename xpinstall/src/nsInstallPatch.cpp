@@ -452,7 +452,7 @@ nsInstallPatch::NativePatch(nsIFile *sourceFile, nsIFile *patchFile, nsIFile **n
         char* leafName;
         rv = sourceFile->GetLeafName(&leafName);
 
-        nsString tmpName; tmpName.AssignWithConversion("-src");
+        nsString tmpName(NS_LITERAL_STRING("-src"));
         nsString tmpFileName; tmpFileName.AssignWithConversion(leafName);
 
         PRInt32 i;
@@ -516,7 +516,7 @@ nsInstallPatch::NativePatch(nsIFile *sourceFile, nsIFile *patchFile, nsIFile **n
     goto cleanup;
 
     // make a unique file at the same location of our source file  (FILENAME-ptch.EXT)
-    nsString patchFileName; patchFileName.AssignWithConversion("-ptch");
+    nsString patchFileName(NS_LITERAL_STRING("-ptch"));
     char* leafName;
     sourceFile->GetLeafName(&leafName);
     nsString newFileName; newFileName.AssignWithConversion(leafName);;

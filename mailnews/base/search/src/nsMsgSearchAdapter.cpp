@@ -369,7 +369,7 @@ nsMsgSearchAdapter::GetSearchCharsets(nsString &srcCharset, nsString& dstCharset
 		// If the dest csid is ISO Latin 1 or MacRoman, attempt to convert the 
 		// source text to US-ASCII. (Not for now.)
 		// if ((dst_csid == CS_LATIN1) || (dst_csid == CS_MAC_ROMAN))
-			dstCharset.AssignWithConversion("us-ascii");
+			dstCharset.Assign(NS_LITERAL_STRING("us-ascii"));
 	}
 }
 

@@ -351,37 +351,37 @@ void Area::ToHTML(nsString& aResult)
   }
 
   aResult.Truncate();
-  aResult.AppendWithConversion("<AREA SHAPE=");
+  aResult.Append(NS_LITERAL_STRING("<AREA SHAPE="));
   nsAutoString shape;
   GetShapeName(shape);
   aResult.Append(shape);
-  aResult.AppendWithConversion(" COORDS=\"");
+  aResult.Append(NS_LITERAL_STRING(" COORDS=\""));
   if (nsnull != mCoords) {
     PRInt32 i, n = mNumCoords;
     for (i = 0; i < n; i++) {
       aResult.AppendInt(mCoords[i], 10);
       if (i < n - 1) {
-        aResult.AppendWithConversion(',');
+        aResult.Append(PRUnichar(','));
       }
     }
   }
-  aResult.AppendWithConversion("\" HREF=\"");
+  aResult.Append(NS_LITERAL_STRING("\" HREF=\""));
   aResult.Append(href);
-  aResult.AppendWithConversion("\"");
+  aResult.Append(NS_LITERAL_STRING("\""));
   if (0 < target.Length()) {
-    aResult.AppendWithConversion(" TARGET=\"");
+    aResult.Append(NS_LITERAL_STRING(" TARGET=\""));
     aResult.Append(target);
-    aResult.AppendWithConversion("\"");
+    aResult.Append(NS_LITERAL_STRING("\""));
   }
   if (0 < altText.Length()) {
-    aResult.AppendWithConversion(" ALT=\"");
+    aResult.Append(NS_LITERAL_STRING(" ALT=\""));
     aResult.Append(altText);
-    aResult.AppendWithConversion("\"");
+    aResult.Append(NS_LITERAL_STRING("\""));
   }
   if (mSuppressFeedback) {
-    aResult.AppendWithConversion(" SUPPRESS");
+    aResult.Append(NS_LITERAL_STRING(" SUPPRESS"));
   }
-  aResult.AppendWithConversion('>');
+  aResult.Append(PRUnichar('>'));
 }
 
 void Area::HasFocus(PRBool aHasFocus)
@@ -427,7 +427,7 @@ void DefaultArea::GetRect(nsIPresContext* aCX, nsRect& aRect)
 
 void DefaultArea::GetShapeName(nsString& aResult) const
 {
-  aResult.AppendWithConversion("default");
+  aResult.Append(NS_LITERAL_STRING("default"));
 }
 
 //----------------------------------------------------------------------
@@ -512,7 +512,7 @@ void RectArea::GetRect(nsIPresContext* aCX, nsRect& aRect)
 
 void RectArea::GetShapeName(nsString& aResult) const
 {
-  aResult.AppendWithConversion("rect");
+  aResult.Append(NS_LITERAL_STRING("rect"));
 }
 
 //----------------------------------------------------------------------
@@ -647,7 +647,7 @@ void PolyArea::GetRect(nsIPresContext* aCX, nsRect& aRect)
 
 void PolyArea::GetShapeName(nsString& aResult) const
 {
-  aResult.AppendWithConversion("polygon");
+  aResult.Append(NS_LITERAL_STRING("polygon"));
 }
 
 //----------------------------------------------------------------------
@@ -732,7 +732,7 @@ void CircleArea::GetRect(nsIPresContext* aCX, nsRect& aRect)
 
 void CircleArea::GetShapeName(nsString& aResult) const
 {
-  aResult.AppendWithConversion("circle");
+  aResult.Append(NS_LITERAL_STRING("circle"));
 }
 
 //----------------------------------------------------------------------

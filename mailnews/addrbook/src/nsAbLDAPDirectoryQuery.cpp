@@ -316,7 +316,7 @@ nsresult nsAbQueryLDAPMessageListener::OnLDAPMessageSearchEntry (nsILDAPMessage 
         n.Assign (properties[i]);
 
         nsAbDirectoryQueryPropertyValue* _propertyValue = 0;
-        if (n.EqualsWithConversion ("card:URI"))
+        if (n.Equals(NS_LITERAL_CSTRING("card:URI")))
         {
             // Meta property
             //
@@ -334,7 +334,7 @@ nsresult nsAbQueryLDAPMessageListener::OnLDAPMessageSearchEntry (nsILDAPMessage 
             if (_propertyValue == NULL)
                 return NS_ERROR_OUT_OF_MEMORY;
         }
-        else if (n.EqualsWithConversion ("card:nsIAbCard"))
+        else if (n.Equals(NS_LITERAL_CSTRING("card:nsIAbCard")))
         {
             // Meta property
             //
@@ -672,13 +672,13 @@ nsresult nsAbLDAPDirectoryQuery::getLdapReturnAttributes (
     {
         n.Assign (properties[i]);
 
-        if (n.EqualsWithConversion ("card:URI"))
+        if (n.Equals(NS_LITERAL_CSTRING("card:URI")))
         {
             // Meta property
             //
             continue;
         }
-        else if (n.EqualsWithConversion ("card:nsIAbCard"))
+        else if (n.Equals(NS_LITERAL_CSTRING("card:nsIAbCard")))
         {
             // Meta property
             // require all attributes

@@ -183,7 +183,7 @@ nsPlainTextSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
   // Set the line break character:
   if ((mFlags & nsIDocumentEncoder::OutputCRLineBreak)
       && (mFlags & nsIDocumentEncoder::OutputLFLineBreak)) // Windows
-    mLineBreak.AssignWithConversion("\r\n");
+    mLineBreak.Assign(NS_LITERAL_STRING("\r\n"));
   else if (mFlags & nsIDocumentEncoder::OutputCRLineBreak) // Mac
     mLineBreak.Assign(PRUnichar('\r'));
   else if (mFlags & nsIDocumentEncoder::OutputLFLineBreak) // Unix/DOM
@@ -881,7 +881,7 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
   }
   else if (type == eHTMLTag_a && !IsCurrentNodeConverted() && !mURL.IsEmpty()) {
     nsAutoString temp; 
-    temp.AssignWithConversion(" <");
+    temp.Assign(NS_LITERAL_STRING(" <"));
     temp += mURL;
     temp.Append(PRUnichar('>'));
     Write(temp);
@@ -961,7 +961,7 @@ nsPlainTextSerializer::DoAddLeaf(PRInt32 aTag,
     // ignore the bogus br tags that the editor sticks here and there.
     nsAutoString typeAttr;
     if (NS_FAILED(GetAttributeValue(nsHTMLAtoms::type, typeAttr))
-        || !typeAttr.EqualsWithConversion("_moz")) {
+        || !typeAttr.Equals(NS_LITERAL_STRING("_moz"))) {
       EnsureVerticalSpace(mEmptyLines+1);
     }
   }
@@ -1272,7 +1272,7 @@ nsPlainTextSerializer::AddToLine(const PRUnichar * aLineFragment,
               (
                 restOfLine[0] == '>' ||
                 restOfLine[0] == ' ' ||
-                restOfLine.EqualsWithConversion("From ",PR_FALSE,5)
+                Substring(restOfLine, 0, 5).Equals(NS_LITERAL_STRING("From "))
               )
               && mCiteQuoteLevel == 0  // We space-stuff quoted lines anyway
             )
@@ -1323,7 +1323,7 @@ nsPlainTextSerializer::EndLine(PRBool aSoftlinebreak)
   // (see RFC 2646). We only check for "-- " when it's a hard line
   // break for obvious reasons.
   if(!(mFlags & nsIDocumentEncoder::OutputPreformatted) &&
-     (aSoftlinebreak || !mCurrentLine.EqualsWithConversion("-- "))) {
+     (aSoftlinebreak || !mCurrentLine.Equals(NS_LITERAL_STRING("-- ")))) {
     // Remove SPACE:s from the end of the line.
     while(currentlinelength > 0 &&
           mCurrentLine[currentlinelength-1] == ' ') {

@@ -43,7 +43,7 @@ NS_IMPL_RELEASE(nsButton)
 nsButton::nsButton() : nsWidget() , nsIButton()
 {
   NS_INIT_REFCNT();
-  mName.AssignWithConversion("nsButton");
+  mName.Assign(NS_LITERAL_STRING("nsButton"));
 }
 
 nsButton::~nsButton()

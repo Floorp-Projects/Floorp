@@ -257,7 +257,7 @@ ValidateRealName(nsMsgAttachmentData *aAttach, MimeHeaders *aHdrs)
   //
   if (!aAttach->real_name || *aAttach->real_name == 0)
   {
-    nsString  newAttachName; newAttachName.AssignWithConversion("attachment");
+    nsString  newAttachName(NS_LITERAL_STRING("attachment"));
     nsresult  rv = NS_OK;
     nsCAutoString contentType (aAttach->real_type);
     PRInt32 pos = contentType.FindCharInSet(";");
@@ -275,7 +275,7 @@ ValidateRealName(nsMsgAttachmentData *aAttach, MimeHeaders *aHdrs)
 
         if ( (NS_SUCCEEDED(mimeInfo->FirstExtension(&aFileExtension))) && aFileExtension)
         {
-          newAttachName.AppendWithConversion(".");
+          newAttachName.Append(NS_LITERAL_STRING("."));
           newAttachName.AppendWithConversion(aFileExtension);
           PR_FREEIF(aFileExtension);
         }

@@ -650,7 +650,7 @@ nsViewerApp::ProcessArguments(int argc, char** argv)
     mStartURL.AssignWithConversion(argv[i]);
 #if defined(XP_UNIX) || defined(XP_BEOS)
     if (argv[i][0] == '/') {
-      mStartURL.InsertWithConversion("file:", 0);
+      mStartURL.Assign(NS_LITERAL_STRING("file:") + mStartURL);
     }
 #endif
   }
@@ -1422,9 +1422,9 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
       //mSiteDialog->SetLabel("Top 100 Site Walker");
     }
     //mSiteDialog->SetClientData(this);
-    nsAutoString titleStr; titleStr.AssignWithConversion("Top ");
+    nsAutoString titleStr(NS_LITERAL_STRING("Top "));
     titleStr.AppendInt(gTop100LastPointer);
-    titleStr.AppendWithConversion(" Sites");
+    titleStr.Append(NS_LITERAL_STRING(" Sites"));
     mSiteDialog->SetTitle(titleStr);
 
     nscoord w  = 65;

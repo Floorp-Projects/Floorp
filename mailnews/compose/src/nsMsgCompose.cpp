@@ -2971,11 +2971,11 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
       sigOutput.AppendWithConversion(htmlsigopen);
       sigOutput.AppendWithConversion(dashes);
       sigOutput.AppendWithConversion(htmlBreak);
-      sigOutput.AppendWithConversion("<img src=\"file:///");
+      sigOutput.Append(NS_LITERAL_STRING("<img src=\"file:///"));
            /* XXX pp This gives me 4 slashes on Unix, that's at least one to
               much. Better construct the URL with some service. */
       sigOutput.AppendWithConversion(testSpec);
-      sigOutput.AppendWithConversion("\" border=0>");
+      sigOutput.Append(NS_LITERAL_STRING("\" border=0>"));
       sigOutput.AppendWithConversion(htmlsigclose);
     }
   }
@@ -3799,7 +3799,7 @@ nsresult nsMsgCompose::TagConvertible(nsIDOMNode *node,  PRInt32 *_retval)
           if (NS_SUCCEEDED(pItem->GetNodeValue(typeValue)))
           {
             typeValue.StripChars("\"");
-            if (typeValue.EqualsWithConversion("cite", PR_TRUE))
+            if (!Compare(typeValue, NS_LITERAL_STRING("cite"), nsCaseInsensitiveStringComparator()))
               *_retval = nsIMsgCompConvertible::Plain;
           }
         }

@@ -344,7 +344,7 @@ NS_METHOD nsMenu::AddMenuItem(nsIMenuItem * aMenuItem)
   MenuHelpers::SetMenuItemText(mMacMenuHandle, currItemIndex, label, mUnicodeTextRunConverter);
 	  
 	  // I want to be internationalized too!
-  nsAutoString keyEquivalent; keyEquivalent.AssignWithConversion(" ");
+  nsAutoString keyEquivalent(NS_LITERAL_STRING(" "));
   aMenuItem->GetShortcutChar(keyEquivalent);
   if(keyEquivalent != NS_LITERAL_STRING(" ")) {
     keyEquivalent.ToUpperCase();
@@ -1077,7 +1077,7 @@ nsMenu::LoadMenuItem( nsIMenu* inParentMenu, nsIContent* inMenuItemContent )
       xulDocument->GetElementById(keyValue, getter_AddRefs(keyElement));
     if ( keyElement ) {
       nsCOMPtr<nsIContent> keyContent ( do_QueryInterface(keyElement) );
-      nsAutoString keyChar; keyChar.AssignWithConversion(" ");
+      nsAutoString keyChar(NS_LITERAL_STRING(" "));
       keyContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::key, keyChar);
 	    if(keyChar != NS_LITERAL_STRING(" ")) 
         pnsMenuItem->SetShortcutChar(keyChar);

@@ -219,8 +219,9 @@ nsHTMLImageLoader::StartLoadImage(nsIPresContext* aPresContext)
     urlSpec = &internalImageURLSpec;
     mURLSpec.Mid(internalImageURLSpec, GOPHER_SPEC_SIZE,
                  mURLSpec.Length() - GOPHER_SPEC_SIZE);
-    internalImageURLSpec.InsertWithConversion("resource:/res/html/gopher-", 0);
-    internalImageURLSpec.AppendWithConversion(".gif");
+    internalImageURLSpec = NS_LITERAL_STRING("resource:/res/html/gopher-") +
+                           internalImageURLSpec +
+                           NS_LITERAL_STRING(".gif");
   }
 
   // This is kind of sick, but its possible that we will get a

@@ -1949,7 +1949,7 @@ nsComboboxControlFrame::SelectionChanged()
     }
     if (shouldSetValue) {
       if (mTextStr.Length() == 0) {
-        nsAutoString space; space.AssignWithConversion(" ");
+        nsAutoString space(NS_LITERAL_STRING(" "));
         rv = mDisplayContent->SetText(space.get(), space.Length(), PR_TRUE);
       } else {
         rv = mDisplayContent->SetText(mTextStr.get(), mTextStr.Length(), PR_TRUE);

@@ -723,7 +723,7 @@ nsJAR::ParseOneFile(nsISignatureVerifier* verifier,
 
     //-- Lines to look for:
     // (1) Digest:
-    if (lineName.CompareWithConversion("SHA1-Digest",PR_TRUE) == 0) 
+    if (Compare(lineName, NS_LITERAL_CSTRING("SHA1-Digest"), nsCaseInsensitiveCStringComparator()) == 0) 
     //-- This is a digest line, save the data in the appropriate place 
     {
       if(aFileType == JAR_MF)
@@ -739,7 +739,7 @@ nsJAR::ParseOneFile(nsISignatureVerifier* verifier,
     }
     
     // (2) Name: associates this manifest section with a file in the jar.
-    if (!foundName && lineName.CompareWithConversion("Name", PR_TRUE) == 0) 
+    if (!foundName && Compare(lineName, NS_LITERAL_CSTRING("Name"), nsCaseInsensitiveCStringComparator()) == 0) 
     {
       curItemName = lineData;
       foundName = PR_TRUE;
@@ -749,9 +749,9 @@ nsJAR::ParseOneFile(nsISignatureVerifier* verifier,
     // (3) Magic: this may be an inline Javascript. 
     //     We can't do any other kind of magic.
     if ( aFileType == JAR_MF &&
-         lineName.CompareWithConversion("Magic", PR_TRUE) == 0) 
+         Compare(lineName, NS_LITERAL_CSTRING("Magic"), nsCaseInsensitiveCStringComparator()) == 0) 
     {
-      if(lineData.CompareWithConversion("javascript", PR_TRUE) == 0)
+      if(Compare(lineData, NS_LITERAL_CSTRING("javascript"), nsCaseInsensitiveCStringComparator()) == 0)
         curItemMF->mType = JAR_EXTERNAL;
       else
         curItemMF->mType = JAR_INVALID;
@@ -791,31 +791,31 @@ void nsJAR::ReportError(const char* aFilename, PRInt16 errorCode)
 {
   //-- Generate error message
   nsAutoString message; 
-  message.AssignWithConversion("Signature Verification Error: the signature on ");
+  message.Assign(NS_LITERAL_STRING("Signature Verification Error: the signature on "));
   if (aFilename)
     message.AppendWithConversion(aFilename);
   else
-    message.AppendWithConversion("this .jar archive");
-  message.AppendWithConversion(" is invalid because ");
+    message.Append(NS_LITERAL_STRING("this .jar archive"));
+  message.Append(NS_LITERAL_STRING(" is invalid because "));
   switch(errorCode)
   {
   case nsIJAR::NOT_SIGNED:
-    message.AppendWithConversion("the archive did not contain a valid PKCS7 signature.");
+    message.Append(NS_LITERAL_STRING("the archive did not contain a valid PKCS7 signature."));
     break;
   case nsIJAR::INVALID_SIG:
-    message.AppendWithConversion("the digital signature (*.RSA) file is not a valid signature of the signature instruction file (*.SF).");
+    message.Append(NS_LITERAL_STRING("the digital signature (*.RSA) file is not a valid signature of the signature instruction file (*.SF)."));
     break;
   case nsIJAR::INVALID_UNKNOWN_CA:
-    message.AppendWithConversion("the certificate used to sign this file has an unrecognized issuer.");
+    message.Append(NS_LITERAL_STRING("the certificate used to sign this file has an unrecognized issuer."));
     break;
   case nsIJAR::INVALID_MANIFEST:
-    message.AppendWithConversion("the signature instruction file (*.SF) does not contain a valid hash of the MANIFEST.MF file.");
+    message.Append(NS_LITERAL_STRING("the signature instruction file (*.SF) does not contain a valid hash of the MANIFEST.MF file."));
     break;
   case nsIJAR::INVALID_ENTRY:
-    message.AppendWithConversion("the MANIFEST.MF file does not contain a valid hash of the file being verified.");
+    message.Append(NS_LITERAL_STRING("the MANIFEST.MF file does not contain a valid hash of the file being verified."));
     break;
   default:
-    message.AppendWithConversion("of an unknown problem.");
+    message.Append(NS_LITERAL_STRING("of an unknown problem."));
   }
   
   // Report error in JS console

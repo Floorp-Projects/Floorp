@@ -320,7 +320,7 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
 
   // Look for a compiled handler on the element. 
   // Should be compiled and bound with "on" in front of the name.
-  nsAutoString onEvent; onEvent.AssignWithConversion("onxbl");
+  nsAutoString onEvent(NS_LITERAL_STRING("onxbl"));
   nsAutoString str;
   mEventName->ToString(str);
   onEvent += str;

@@ -686,10 +686,10 @@ nsTextBoxFrame::UpdateAccessTitle()
             if ((mTitle.Find(mAccessKey, PR_TRUE) == kNotFound) 
                 || AlwaysAppendAccessKey()) 
             {
-                nsAutoString tmpstring; tmpstring.AssignWithConversion("(");
+                nsAutoString tmpstring(NS_LITERAL_STRING("("));
                 tmpstring += mAccessKey;
                 tmpstring.ToUpperCase();
-                tmpstring.AppendWithConversion(")");
+                tmpstring.Append(NS_LITERAL_STRING(")"));
                 PRInt32 offset = mTitle.RFind("...");
                 if (offset != kNotFound)
                     mTitle.Insert(tmpstring,NS_STATIC_CAST(PRUint32, offset));

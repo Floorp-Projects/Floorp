@@ -57,7 +57,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsDateTimeFormatWin, nsIDateTimeFormat);
 nsresult nsDateTimeFormatWin::Initialize(nsILocale* locale)
 {
   PRUnichar *aLocaleUnichar = NULL;
-  nsString aCategory; aCategory.AssignWithConversion("NSILOCALE_TIME");
+  nsString aCategory(NS_LITERAL_STRING("NSILOCALE_TIME"));
   nsresult res = NS_OK;
 
   // use cached info if match with stored locale

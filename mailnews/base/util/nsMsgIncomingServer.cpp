@@ -628,7 +628,7 @@ nsMsgIncomingServer::GetConstructedPrettyName(PRUnichar **retval)
   if ((const char*)username &&
       PL_strcmp((const char*)username, "")!=0) {
     prettyName.AssignWithConversion(username);
-    prettyName.AppendWithConversion(" on ");
+    prettyName.Append(NS_LITERAL_STRING(" on "));
   }
   
   nsXPIDLCString hostname;

@@ -164,7 +164,7 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     }
 
     nsString buffer;
-    buffer.AssignWithConversion("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n");    
+    buffer.Assign(NS_LITERAL_STRING("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n"));    
     
     // Anything but a gopher url needs to end in a /,
     // otherwise we end up linking to file:///foo/dirfile

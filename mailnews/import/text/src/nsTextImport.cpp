@@ -644,7 +644,7 @@ NS_IMETHODIMP ImportAddressImpl::GetSampleData( PRInt32 index, PRBool *pFound, P
 		PRInt32		fNum = 0;
 		while (nsTextAddress::GetField( pLine, lineLen, fNum, field, m_delim)) {
 			if (fNum)
-				str.AppendWithConversion( "\n");
+				str.Append(NS_LITERAL_STRING("\n"));
 			SanitizeSampleData( field);
 			if (impSvc)
 				impSvc->SystemStringToUnicode( field.get(), uField);

@@ -297,10 +297,10 @@ nsresult nsMsgNotificationManager::AddNewMailNotification(nsIMsgFolder *folder)
 	nsCOMPtr<nsIRDFLiteral> type, source, description, timeStamp, url;
 	nsString typeString, sourceString, descriptionString, timeStampString, urlString;
 
-	sourceString.AssignWithConversion("Messenger");
-	descriptionString.AssignWithConversion("You have mail");
-	timeStampString.AssignWithConversion("3:33pm");
-	urlString.AssignWithConversion("test");
+	sourceString.Assign(NS_LITERAL_STRING("Messenger"));
+	descriptionString.Assign(NS_LITERAL_STRING("You have mail"));
+	timeStampString.Assign(NS_LITERAL_STRING("3:33pm"));
+	urlString.Assign(NS_LITERAL_STRING("test"));
 
     nsCOMPtr<nsIRDFDataSource> ds = do_QueryInterface(mInMemoryDataSourceISupports);
 
@@ -332,7 +332,7 @@ nsresult nsMsgNotificationManager::AddNewMailNotification(nsIMsgFolder *folder)
 	rv = folder->GetPrettyName(getter_Copies(folderName));
 	if (NS_SUCCEEDED(rv) && folderName)
 	{
-		descriptionString.AppendWithConversion(" in ");
+		descriptionString.Append(NS_LITERAL_STRING(" in "));
 		descriptionString.Append(folderName);
 	}
 

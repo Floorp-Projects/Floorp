@@ -294,9 +294,9 @@ nsXULTreeElement::ToggleItemSelection(nsIDOMXULElement* aTreeItem)
   PRBool suppressSelect = mSuppressOnSelect;
   SetSuppressOnSelect(PR_TRUE);
 
-  if (isSelected.EqualsWithConversion("true"))
+  if (isSelected.Equals(NS_LITERAL_STRING("true")))
     RemoveItemFromSelection(aTreeItem);
-  else if (multiple.EqualsWithConversion("true") || length == 0)
+  else if (multiple.Equals(NS_LITERAL_STRING("true")) || length == 0)
     AddItemToSelection(aTreeItem);
   else 
     return NS_OK;
@@ -313,7 +313,7 @@ nsXULTreeElement::SelectItemRange(nsIDOMXULElement* aStartItem, nsIDOMXULElement
   nsAutoString multiple;
   mOuter->GetAttribute(NS_LITERAL_STRING("multiple"), multiple);
 
-  if (!multiple.EqualsWithConversion("true")) {
+  if (!multiple.Equals(NS_LITERAL_STRING("true"))) {
     // We're a single selection tree only. This
     // is not allowed.
     return NS_OK;
@@ -363,7 +363,7 @@ nsXULTreeElement::SelectItemRange(nsIDOMXULElement* aStartItem, nsIDOMXULElement
   } else
       currentItem = do_QueryInterface(startItem);
 
-  nsAutoString trueString; trueString.AssignWithConversion("true", 4);
+  nsAutoString trueString(NS_LITERAL_STRING("true"));
   nsCOMPtr<nsIContent> content;
   nsCOMPtr<nsIAtom> tag;
 
@@ -452,7 +452,7 @@ nsXULTreeElement::FireOnSelectHandler()
   nsCOMPtr<nsIAtom> kSuppressSelectChange = dont_AddRef(NS_NewAtom("suppressonselect"));
   nsAutoString value;
   content->GetAttr(kNameSpaceID_None, kSuppressSelectChange, value);
-  if (value.EqualsWithConversion("true"))
+  if (value.Equals(NS_LITERAL_STRING("true")))
     return NS_OK;
 
   PRInt32 count = document->GetNumberOfShells();

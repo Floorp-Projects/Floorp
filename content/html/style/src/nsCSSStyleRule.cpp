@@ -2389,9 +2389,9 @@ CSSStyleRuleImpl::List(FILE* out, PRInt32 aIndent) const
   nsAutoString buffer;
   mSelector.ToString(buffer, mSheet, PR_FALSE, 0);
 
-  buffer.AppendWithConversion(" weight: ");
+  buffer.Append(NS_LITERAL_STRING(" weight: "));
   buffer.AppendInt(mWeight, 10);
-  buffer.AppendWithConversion(" ");
+  buffer.Append(NS_LITERAL_STRING(" "));
   fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
   if (nsnull != mDeclaration) {
     mDeclaration->List(out);

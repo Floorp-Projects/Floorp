@@ -72,7 +72,7 @@ static void splitString(nsString& aSource, nsString& aTarget)
         const PRUnichar *source = aSource.get() + offset + 1 ;
         
         while (*source) {
-            if (*source == '\n' || *source == '\r') { aTarget.AppendWithConversion(' ') ; }
+            if (*source == '\n' || *source == '\r') { aTarget.Append(PRUnichar(' ')) ; }
             else { aTarget.Append(*source) ; }
             ++ source ;
         }

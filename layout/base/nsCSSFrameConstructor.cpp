@@ -1388,7 +1388,7 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
   
         } else {
           // XXX Don't assume default. Only use what is in 'quotes' property
-          contentString.AssignWithConversion('\"');
+          contentString.Assign(PRUnichar('\"'));
         }
       }
       break;

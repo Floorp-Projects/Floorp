@@ -334,7 +334,7 @@ nsMsgPrintEngine::InitializeDisplayCharset()
   // libmime always converts to UTF-8 (both HTML and XML)
   if (mDocShell) 
   {
-    nsAutoString aForceCharacterSet; aForceCharacterSet.AssignWithConversion("UTF-8");
+    nsAutoString aForceCharacterSet(NS_LITERAL_STRING("UTF-8"));
     nsCOMPtr<nsIContentViewer> cv;
     mDocShell->GetContentViewer(getter_AddRefs(cv));
     if (cv) 

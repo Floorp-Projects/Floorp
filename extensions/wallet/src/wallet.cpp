@@ -1932,7 +1932,7 @@ wallet_StepForwardOrBack
           return;
         }
       } else {
-        if (NS_SUCCEEDED(result) && (type.CompareWithConversion("hidden", PR_TRUE) != 0)) {
+        if (NS_SUCCEEDED(result) && (Compare(type, NS_LITERAL_STRING("hidden"), nsCaseInsensitiveStringComparator()) != 0)) {
           /* at <input> element and it's type is not "hidden" */
           atInputOrSelect = PR_TRUE;
           return;
@@ -2374,7 +2374,7 @@ wallet_GetPrefills(
   if ((NS_SUCCEEDED(result)) && (nsnull != inputElement)) {
     nsAutoString type;
     result = inputElement->GetType(type);
-    if ((NS_SUCCEEDED(result)) && ((type.IsEmpty()) || (type.CompareWithConversion("text", PR_TRUE) == 0))) {
+    if ((NS_SUCCEEDED(result)) && ((type.IsEmpty()) || (Compare(type, NS_LITERAL_STRING("text"), nsCaseInsensitiveStringComparator()) == 0))) {
       nsAutoString field;
       result = inputElement->GetName(field);
       if (NS_SUCCEEDED(result)) {
@@ -3515,7 +3515,7 @@ wallet_CaptureInputElement(nsIDOMNode* elementNode, nsIDocument* doc) {
     nsAutoString type;
     result = inputElement->GetType(type);
     if ((NS_SUCCEEDED(result)) &&
-        (type.IsEmpty() || (type.CompareWithConversion("text", PR_TRUE) == 0))) {
+        (type.IsEmpty() || (Compare(type, NS_LITERAL_STRING("text"), nsCaseInsensitiveStringComparator()) == 0))) {
       nsAutoString field;
       result = inputElement->GetName(field);
       if (NS_SUCCEEDED(result)) {
@@ -3883,8 +3883,8 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
                 rv = inputElement->GetType(type);
                 if (NS_SUCCEEDED(rv)) {
 
-                  PRBool isText = (type.IsEmpty() || (type.CompareWithConversion("text", PR_TRUE)==0));
-                  PRBool isPassword = (type.CompareWithConversion("password", PR_TRUE)==0);
+                  PRBool isText = (type.IsEmpty() || (Compare(type, NS_LITERAL_STRING("text"), nsCaseInsensitiveStringComparator())==0));
+                  PRBool isPassword = (Compare(type, NS_LITERAL_STRING("password"), nsCaseInsensitiveStringComparator())==0);
 
                   // don't save password if field was left blank
                   if (isPassword) {

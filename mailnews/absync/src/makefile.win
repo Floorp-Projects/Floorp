@@ -39,6 +39,7 @@ REQUIRES	= xpcom \
 		  mork \
 		  mimetype \
 		  windowwatcher \
+		  unicharutil \
 		  $(NULL)
 
 include <$(DEPTH)\config\config.mak>

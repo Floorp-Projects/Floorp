@@ -2322,21 +2322,21 @@ nsFrame::XMLQuote(nsString& aString)
   for (i = 0; i < len; i++) {
     PRUnichar ch = aString.CharAt(i);
     if (ch == '<') {
-      nsAutoString tmp; tmp.AssignWithConversion("&lt;");
+      nsAutoString tmp(NS_LITERAL_STRING("&lt;"));
       aString.Cut(i, 1);
       aString.Insert(tmp, i);
       len += 3;
       i += 3;
     }
     else if (ch == '>') {
-      nsAutoString tmp; tmp.AssignWithConversion("&gt;");
+      nsAutoString tmp(NS_LITERAL_STRING("&gt;"));
       aString.Cut(i, 1);
       aString.Insert(tmp, i);
       len += 3;
       i += 3;
     }
     else if (ch == '\"') {
-      nsAutoString tmp; tmp.AssignWithConversion("&quot;");
+      nsAutoString tmp(NS_LITERAL_STRING("&quot;"));
       aString.Cut(i, 1);
       aString.Insert(tmp, i);
       len += 5;

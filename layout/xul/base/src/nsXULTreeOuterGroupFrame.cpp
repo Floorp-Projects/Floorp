@@ -591,7 +591,7 @@ nsXULTreeOuterGroupFrame::ComputeTotalRowCount(PRInt32& aCount, nsIContent* aPar
       nsCOMPtr<nsIContent> parent;
       childContent->GetParent(*getter_AddRefs(parent));
       parent->GetAttr(kNameSpaceID_None, openAtom, isOpen);
-      if (isOpen.EqualsWithConversion("true"))
+      if (isOpen.Equals(NS_LITERAL_STRING("true")))
         ComputeTotalRowCount(aCount, childContent);
     }
   }
@@ -1070,7 +1070,7 @@ nsXULTreeOuterGroupFrame::FindPreviousRowContent(PRInt32& aDelta, nsIContent* aU
       nsCOMPtr<nsIAtom> openAtom = dont_AddRef(NS_NewAtom("open"));
       nsAutoString isOpen;
       childContent->GetAttr(kNameSpaceID_None, openAtom, isOpen);
-      if (isOpen.EqualsWithConversion("true")) {
+      if (isOpen.Equals(NS_LITERAL_STRING("true"))) {
         // Find the <treechildren> node.
         PRInt32 childContentCount;
         nsCOMPtr<nsIContent> grandChild;
@@ -1166,7 +1166,7 @@ nsXULTreeOuterGroupFrame::FindNextRowContent(PRInt32& aDelta, nsIContent* aUpwar
       nsCOMPtr<nsIAtom> openAtom = dont_AddRef(NS_NewAtom("open"));
       nsAutoString isOpen;
       parentContent->GetAttr(kNameSpaceID_None, openAtom, isOpen);
-      if (isOpen.EqualsWithConversion("true")) {
+      if (isOpen.Equals(NS_LITERAL_STRING("true"))) {
         FindNextRowContent(aDelta, nsnull, childContent, aResult);
         if (aDelta == 0)
           return;
@@ -1293,7 +1293,7 @@ nsXULTreeOuterGroupFrame::IndexOfItem(nsIContent* aRoot, nsIContent* aContent,
       nsAutoString isOpen;
       rv = child->GetAttr(kNameSpaceID_None, nsXULAtoms::open, isOpen);
 
-      if (!isOpen.EqualsWithConversion("true"))
+      if (!isOpen.Equals(NS_LITERAL_STRING("true")))
         parentIsOpen=PR_FALSE;
     }
 

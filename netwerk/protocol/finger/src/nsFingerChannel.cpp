@@ -372,8 +372,8 @@ nsFingerChannel::OnStopRequest(nsIRequest *aRequest, nsISupports* aContext,
                  do_GetService(kStreamConverterServiceCID, &rv);
         if (NS_FAILED(rv)) return rv;
 
-        nsAutoString fromStr; fromStr.AssignWithConversion("text/plain");
-        nsAutoString toStr; toStr.AssignWithConversion("text/html");
+        nsAutoString fromStr(NS_LITERAL_STRING("text/plain"));
+        nsAutoString toStr(NS_LITERAL_STRING("text/html"));
 
         rv = StreamConvService->AsyncConvertData(fromStr.get(),
               toStr.get(), this, mResponseContext,
@@ -382,7 +382,7 @@ nsFingerChannel::OnStopRequest(nsIRequest *aRequest, nsISupports* aContext,
 
         nsCOMPtr<nsITXTToHTMLConv> converter(do_QueryInterface(converterListener));
         if (converter) {
-          nsAutoString title; title.AssignWithConversion("Finger information for ");
+          nsAutoString title(NS_LITERAL_STRING("Finger information for "));
           nsXPIDLCString userHost;
           rv = mUrl->GetPath(getter_Copies(userHost));
           title.AppendWithConversion(userHost);

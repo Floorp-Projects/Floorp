@@ -138,7 +138,7 @@ nsLanguageAtomService::InitLangGroupTable()
 {
   if (!mLangGroups.get()) {
     nsAutoString uriStr;
-    uriStr.AssignWithConversion("resource:/res/langGroups.properties");
+    uriStr.Assign(NS_LITERAL_STRING("resource:/res/langGroups.properties"));
     nsCOMPtr<nsIURI> uri;
     NS_ENSURE_SUCCESS(NS_NewURI(getter_AddRefs(uri), uriStr), NS_ERROR_FAILURE);
     nsCOMPtr<nsIInputStream> in;
@@ -208,7 +208,7 @@ nsLanguageAtomService::LookupLanguage(const PRUnichar* aLanguage,
         truncated.Truncate(hyphen);
         res = mLangGroups->GetStringProperty(truncated, langGroupStr);
         if (NS_FAILED(res)) {
-          langGroupStr.AssignWithConversion("x-western");
+          langGroupStr.Assign(NS_LITERAL_STRING("x-western"));
           }
         }
       }

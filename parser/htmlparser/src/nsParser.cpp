@@ -303,7 +303,7 @@ nsParser::nsParser(nsITokenObserver* anObserver) {
   }
 #endif
 
-  mCharset.AssignWithConversion("ISO-8859-1");
+  mCharset.Assign(NS_LITERAL_STRING("ISO-8859-1"));
   mParserFilter = 0;
   mObserver = 0;
   mSink=0;
@@ -1229,8 +1229,8 @@ NS_IMETHODIMP nsParser::CreateCompatibleDTD(nsIDTD** aDTD,
    *  nsAutoString     theMimeType;
    *  nsAutoString     theDocType;
    *  
-   *  theDocType.AssignWithConversion("<!DOCTYPE>");
-   *  theMimeType.AssignWithConversion("text/html");
+   *  theDocType.Assign(NS_LITERAL_STRING("<!DOCTYPE>"));
+   *  theMimeType.Assign(NS_LITERAL_STRING("text/html"));
    *
    *  result=CreateCompatibleDTD(getter_AddRefs(theDTD),&theDocType,eViewNormal,&theMimeType,eDTDMode_quirks);
    *       
@@ -1619,7 +1619,7 @@ nsresult nsParser::Parse(nsIInputStream& aStream,const nsAReadableString& aMimeT
   nsresult  result=NS_ERROR_OUT_OF_MEMORY;
 
   //ok, time to create our tokenizer and begin the process
-  nsAutoString theUnknownFilename; theUnknownFilename.AssignWithConversion("unknown");
+  nsAutoString theUnknownFilename(NS_LITERAL_STRING("unknown"));
 
   nsInputStream input(&aStream);
     
@@ -1770,12 +1770,12 @@ nsresult nsParser::ParseFragment(const nsAReadableString& aSourceBuffer,
   PRUint32 theIndex = 0;
   
   while (theIndex++ < theCount){
-    theContext.AppendWithConversion("<");
+    theContext.Append(NS_LITERAL_STRING("<"));
     theContext.Append((PRUnichar*)aTagStack.ElementAt(theCount - theIndex));
-    theContext.AppendWithConversion(">");
+    theContext.Append(NS_LITERAL_STRING(">"));
   }
   
-  theContext.AppendWithConversion("<endnote>");       //XXXHack! I'll make this better later.
+  theContext.Append(NS_LITERAL_STRING("<endnote>"));       //XXXHack! I'll make this better later.
     
   //now it's time to try to build the model from this fragment
 
@@ -2494,12 +2494,12 @@ nsresult nsParser::OnStopRequest(nsIRequest *request, nsISupports* aContext,
     //What we'll do (for now at least) is construct a blank HTML document.
     if (!mParserContext->mMimeType.EqualsWithConversion(kPlainTextContentType))
     {
-      temp.AssignWithConversion("<html><body></body></html>");
+      temp.Assign(NS_LITERAL_STRING("<html><body></body></html>"));
     }
     // XXX: until bug #108067 has been fixed we must ensure that *something*
     //      is in the scanner!  so, for now just put in a single space.
     else {
-      temp.AssignWithConversion(" ");
+      temp.Assign(NS_LITERAL_STRING(" "));
     }
     mParserContext->mScanner->Append(temp);
     result=ResumeParse(PR_TRUE,PR_TRUE);    

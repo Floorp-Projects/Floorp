@@ -216,9 +216,9 @@ nsresult nsOutlookMail::GetMailFolders( nsISupportsArray **pArray)
 PRBool nsOutlookMail::IsAddressBookNameUnique( nsString& name, nsString& list)
 {
 	nsString		usedName;
-	usedName.AppendWithConversion("[");
+	usedName.Append(NS_LITERAL_STRING("["));
 	usedName.Append( name);
-	usedName.AppendWithConversion( "],");
+	usedName.Append(NS_LITERAL_STRING("],"));
 
 	return( list.Find( usedName) == -1);
 }
@@ -231,15 +231,15 @@ void nsOutlookMail::MakeAddressBookNameUnique( nsString& name, nsString& list)
 	newName = name;
 	while (!IsAddressBookNameUnique( newName, list)) {
 		newName = name;
-		newName.AppendWithConversion( ' ');
+		newName.Append(PRUnichar(' '));
 		newName.AppendInt( (PRInt32) idx);
 		idx++;
 	}
 	
 	name = newName;
-	list.AppendWithConversion( "[");
+	list.Append(NS_LITERAL_STRING("["));
 	list.Append( name);
-	list.AppendWithConversion( "],");
+	list.Append(NS_LITERAL_STRING("],"));
 }
 
 nsresult nsOutlookMail::GetAddressBooks( nsISupportsArray **pArray)
@@ -955,7 +955,7 @@ nsresult nsOutlookMail::ImportAddresses( PRUint32 *pCount, PRUint32 *pTotal, con
 			if (pVal) {
 				type.Truncate( 0);
 				m_mapi.GetStringFromProp( pVal, type);
-				if (!type.CompareWithConversion( "IPM.Contact")) {
+				if (type.Equals(NS_LITERAL_CSTRING("IPM.Contact"))) {
 					// This is a contact, add it to the address book!
 					subject.Truncate( 0);
 					pVal = m_mapi.GetMapiProperty( lpMsg, PR_SUBJECT);

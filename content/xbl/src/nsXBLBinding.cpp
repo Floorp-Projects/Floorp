@@ -1434,7 +1434,7 @@ nsXBLBinding::AddScriptEventListener(nsIContent* aElement, nsIAtom* aName,
   nsAutoString val;
   aName->ToString(val);
   
-  nsAutoString eventStr; eventStr.AssignWithConversion("on");
+  nsAutoString eventStr(NS_LITERAL_STRING("on"));
   eventStr += val;
 
   nsCOMPtr<nsIAtom> eventName = getter_AddRefs(NS_NewAtom(eventStr));

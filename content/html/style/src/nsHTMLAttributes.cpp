@@ -153,12 +153,12 @@ struct HTMLAttribute {
       mAttribute->ToString(temp);
       aBuffer.Append(temp);
       if (eHTMLUnit_Null != mValue.GetUnit()) {
-        aBuffer.AppendWithConversion(" = ");
+        aBuffer.Append(NS_LITERAL_STRING(" = "));
         mValue.AppendToString(aBuffer);
       }
     }
     else {
-      aBuffer.AppendWithConversion("null");
+      aBuffer.Append(NS_LITERAL_STRING("null"));
     }
   }
 
@@ -167,12 +167,12 @@ struct HTMLAttribute {
     if (nsnull != mAttribute) {
       mAttribute->ToString(aBuffer);
       if (eHTMLUnit_Null != mValue.GetUnit()) {
-        aBuffer.AppendWithConversion(" = ");
+        aBuffer.Append(NS_LITERAL_STRING(" = "));
         mValue.AppendToString(aBuffer);
       }
     }
     else {
-      aBuffer.AssignWithConversion("null");
+      aBuffer.Assign(NS_LITERAL_STRING("null"));
     }
   }
 #endif // DEBUG
@@ -1556,7 +1556,7 @@ HTMLAttributesImpl::List(FILE* out, PRInt32 aIndent) const
     nsAutoString  buffer;
     mAttrNames[index]->ToString(buffer);
     if (eHTMLUnit_Null != value.GetUnit()) {
-      buffer.AppendWithConversion(" = ");
+      buffer.Append(NS_LITERAL_STRING(" = "));
       value.AppendToString(buffer);
     }
     fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);

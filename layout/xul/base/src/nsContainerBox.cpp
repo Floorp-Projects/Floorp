@@ -98,7 +98,7 @@ nsContainerBox::~nsContainerBox()
 void
 nsContainerBox::GetBoxName(nsAutoString& aName)
 {
-  aName.AssignWithConversion("ContainerBox");
+  aName.Assign(NS_LITERAL_STRING("ContainerBox"));
 }
 
 NS_IMETHODIMP 

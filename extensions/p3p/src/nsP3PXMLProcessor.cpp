@@ -492,7 +492,7 @@ nsP3PXMLProcessor::HandleEvent( nsIDOMEvent  *aEvent ) {
   if (NS_SUCCEEDED( rv )) {
     nsAutoLock  lock( mLock );
     
-    if (sEventType.EqualsWithConversion( "load" )) {
+    if (sEventType.Equals(NS_LITERAL_STRING("load"))) {
       // "Load" event
 #ifdef DEBUG_P3P
       { printf( "P3P:  Read complete for %s (read as %s)\n", (const char *)mcsURISpec, (const char *)mcsReadURISpec );

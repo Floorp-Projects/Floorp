@@ -1875,9 +1875,9 @@ CompareFontNames(const void* aArg1, const void* aArg2, void* aClosure)
   const nsString str2( *((const PRUnichar**)aArg2) );
 
    // intermingle vertical fonts (start with '@') with horizontal fonts
-  if( str1.EqualsWithConversion( "@", PR_FALSE, 1 ))
+  if( str1.First() == PRUnichar('@') )
   {
-    if( str2.EqualsWithConversion( "@", PR_FALSE, 1 ))
+    if( str2.First() == PRUnichar('@') )
       return str1.CompareWithConversion( str2 );
     else
     {
@@ -1890,7 +1890,7 @@ CompareFontNames(const void* aArg1, const void* aArg2, void* aClosure)
         return rv;
     }
   }
-  else if( str2.EqualsWithConversion( "@", PR_FALSE, 1 ))
+  else if( str2.First() == PRUnichar('@') )
   {
     nsString temp( str2 );
     temp.Trim( "@", PR_TRUE, PR_FALSE );

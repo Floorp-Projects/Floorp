@@ -260,7 +260,7 @@ LocalSearchDataSource::GetTarget(nsIRDFResource *source,
 		}
 		else if (property == kNC_pulse)
 		{
-			nsAutoString	pulse; pulse.AssignWithConversion("15");
+			nsAutoString	pulse(NS_LITERAL_STRING("15"));
 			nsIRDFLiteral	*pulseLiteral;
 			rv = gRDFService->GetLiteral(pulse.get(), &pulseLiteral);
 			if (NS_FAILED(rv)) return rv;
@@ -708,7 +708,7 @@ LocalSearchDataSource::GetTargets(nsIRDFResource *source,
 		}
 		else if (property == kNC_pulse)
 		{
-			nsAutoString	pulse; pulse.AssignWithConversion("15");
+			nsAutoString	pulse(NS_LITERAL_STRING("15"));
 			nsIRDFLiteral	*pulseLiteral;
 			rv = gRDFService->GetLiteral(pulse.get(), &pulseLiteral);
 			if (NS_FAILED(rv)) return rv;

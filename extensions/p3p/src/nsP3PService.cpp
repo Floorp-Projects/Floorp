@@ -567,7 +567,7 @@ nsP3PService::LoadingObject( nsIURI               *aLoadingURI,
       }
       else {
         // Not the first load
-        if (!sLoadingURISpec.EqualsWithConversion( "about:layout-dummy-request" )) {
+        if (!sLoadingURISpec.Equals(NS_LITERAL_STRING("about:layout-dummy-request"))) {
           // We don't have a dummy layout request
 
           // Make sure a DocShellTreeItemData object exists
@@ -1767,7 +1767,7 @@ nsP3PService::GetURIComponents( nsIURI    *aURI,
   PRInt32         iPort;
 
 
-  aURISpec.AssignWithConversion( "" );
+  aURISpec.Assign(NS_LITERAL_STRING(""));
   rv = aURI->GetSpec( getter_Copies( xcsBuffer ) );
 
   if (NS_SUCCEEDED( rv )) {
@@ -1780,7 +1780,7 @@ nsP3PService::GetURIComponents( nsIURI    *aURI,
   }
 
   if (NS_SUCCEEDED( rv )) {
-    aURIScheme.AssignWithConversion( "" );
+    aURIScheme.Assign(NS_LITERAL_STRING(""));
     rv = aURI->GetScheme( getter_Copies( xcsBuffer ) );
 
     if (NS_SUCCEEDED( rv )) {
@@ -1794,7 +1794,7 @@ nsP3PService::GetURIComponents( nsIURI    *aURI,
   }
 
   if (NS_SUCCEEDED( rv ) && !aURIScheme.EqualsIgnoreCase( "about" )) {
-    aURIHostPort.AssignWithConversion( "" );
+    aURIHostPort.Assign(NS_LITERAL_STRING(""));
     rv = aURI->GetHost( getter_Copies( xcsBuffer ) );
 
     if (NS_SUCCEEDED( rv )) {
@@ -1802,7 +1802,7 @@ nsP3PService::GetURIComponents( nsIURI    *aURI,
       rv = aURI->GetPort(&iPort );
 
       if (NS_SUCCEEDED( rv ) && (iPort >= 0) && (iPort != 80)) {
-        aURIHostPort.AppendWithConversion( ":" );
+        aURIHostPort.Append(NS_LITERAL_STRING(":"));
         aURIHostPort.AppendInt( iPort );
       }
       else if (NS_FAILED( rv )) {
@@ -1819,7 +1819,7 @@ nsP3PService::GetURIComponents( nsIURI    *aURI,
   }
 
   if (NS_SUCCEEDED( rv )) {
-    aURIPath.AssignWithConversion( "" );
+    aURIPath.Assign(NS_LITERAL_STRING(""));
     rv = aURI->GetPath( getter_Copies( xcsBuffer ) );
 
     if (NS_SUCCEEDED( rv )) {
@@ -2805,7 +2805,7 @@ nsP3PService::DeleteCookie( nsIURI    *aURI,
                 iExpiresEnd;
 
 
-  sExpires.AssignWithConversion( "expires=" );
+  sExpires.Assign(NS_LITERAL_STRING("expires="));
   sExpires.AppendWithConversion( mGMTStartTime );
 
   sWork.Trim( " " );
@@ -2832,10 +2832,10 @@ nsP3PService::DeleteCookie( nsIURI    *aURI,
     char  lastChar = (char)sWork.Last( );
 
     if (lastChar != ';') {
-      sWork.AppendWithConversion( ";" );
+      sWork.Append(NS_LITERAL_STRING(";"));
     }
 
-    sWork.AppendWithConversion( " " );
+    sWork.Append(NS_LITERAL_STRING(" "));
     sWork += sExpires;
   }
 
@@ -2964,7 +2964,7 @@ nsP3PService::GetFormRequestMethod( nsIContent  *aFormContent,
   }
 
   if (NS_SUCCEEDED( rv ) && !bAttributeFound) {
-    aURIMethod.AssignWithConversion( "GET" );
+    aURIMethod.Assign(NS_LITERAL_STRING("GET"));
   }
 
   return rv;

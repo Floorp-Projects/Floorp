@@ -580,7 +580,7 @@ nsP3PPolicy::ProcessExpiryTagExpiry( nsIP3PTag  *aTag ) {
     else if (pExpiryTag->mMaxAge.Length( ) > 0) {
       // "max-age" attribute specified
       mCacheControlValue.AssignWithConversion( P3P_CACHECONTROL_MAXAGE );
-      mCacheControlValue.AppendWithConversion( "=" );
+      mCacheControlValue.Append(NS_LITERAL_STRING("="));
       mCacheControlValue += pExpiryTag->mMaxAge;
     }
 
@@ -1282,9 +1282,9 @@ nsP3PPolicy::CreateRDFPolicyDescription( nsIP3PTag  *aEntityTag,
 
   if (csPolicy) {
     // Create a unique "about" attribute
-    mRDFAbout.AssignWithConversion( "#__" );
+    mRDFAbout.Assign(NS_LITERAL_STRING("#__"));
     mRDFAbout += mURISpec;
-    mRDFAbout.AppendWithConversion( " @ " );
+    mRDFAbout.Append(NS_LITERAL_STRING(" @ "));
     mRDFAbout.AppendWithConversion( csPolicy );
     PR_smprintf_free( csPolicy );
 
@@ -1333,7 +1333,7 @@ nsP3PPolicy::CreateRDFPolicyDescription( nsIP3PTag  *aEntityTag,
             if (aEntityTag) {
               // <ENTITY> tag is present, add the entity information
               sName = mRDFAbout;
-              sName.AppendWithConversion( "__Entity" );
+              sName.Append(NS_LITERAL_STRING("__Entity"));
               sValue.Truncate( );
               rv = mP3PService->GetLocaleString( "EntityInformation",
                                                  sTitle );
@@ -1474,7 +1474,7 @@ nsP3PPolicy::CreateRDFPolicyDescription( nsIP3PTag  *aEntityTag,
             if (NS_SUCCEEDED( rv ) && (mFailedDataTagRefs.Count( ) > 0)) {
               // Some <DATA> tags failed the preference comparison
               sName = mRDFAbout;
-              sName.AppendWithConversion( "__DataTags" );
+              sName.Append(NS_LITERAL_STRING("__DataTags"));
               sValue.Truncate( );
               rv = mP3PService->GetLocaleString( "FailedData",
                                                  sTitle );
@@ -1588,7 +1588,7 @@ nsP3PPolicy::CreateRDFEntityDescription( nsIP3PTag  *aEntityTag ) {
 
   // Create a "unique" about attribute
   sName = mRDFAbout;
-  sName.AppendWithConversion( "__Entity" );
+  sName.Append(NS_LITERAL_STRING("__Entity"));
   sTitle.Truncate( );
   sValue.Truncate( );
 
@@ -1775,7 +1775,7 @@ nsP3PPolicy::CreateRDFDataTagsDescription( ) {
 
 
   sName = mRDFAbout;
-  sName.AppendWithConversion( "__DataTags" );
+  sName.Append(NS_LITERAL_STRING("__DataTags"));
   sTitle.Truncate( );
   sValue.Truncate( );
 
@@ -1874,7 +1874,7 @@ nsP3PPolicy::AddRDFDataTag( nsString&       aDescription,
 
   // Create a unique "about" attribute for the data tag information
   sName  = mRDFAbout;
-  sName.AppendWithConversion( "__DataTags__DataTag_" );
+  sName.Append(NS_LITERAL_STRING("__DataTags__DataTag_"));
   sName += aDescription;
   sTitle = aDescription;
   sValue.Truncate( );
@@ -2738,9 +2738,9 @@ nsP3PPolicy::SetFailedPrefsCombination( nsString&   aDataStructName,
   else {
     if (aShortDescription.Length( ) > 0) {
       sDescription  = aShortDescription;
-      sDescription.AppendWithConversion( " (" );
+      sDescription.Append(NS_LITERAL_STRING(" ("));
       sDescription += aDataStructName;
-      sDescription.AppendWithConversion( ")" );
+      sDescription.Append(NS_LITERAL_STRING(")"));
     }
     else {
       sDescription = aDataStructName;
@@ -2771,9 +2771,9 @@ nsP3PPolicy::SetFailedPrefsCombination( nsString&   aDataStructName,
 
   if (NS_SUCCEEDED( rv )) {
     sPrefsCombination  = aCategoryValue;
-    sPrefsCombination.AppendWithConversion( ", " );
+    sPrefsCombination.Append(NS_LITERAL_STRING(", "));
     sPrefsCombination += aPurposeValue;
-    sPrefsCombination.AppendWithConversion( ", " );
+    sPrefsCombination.Append(NS_LITERAL_STRING(", "));
     sPrefsCombination += aRecipientValue;
 
     pDataTagResult->mFailedPrefsCombinations.AppendString( sPrefsCombination );

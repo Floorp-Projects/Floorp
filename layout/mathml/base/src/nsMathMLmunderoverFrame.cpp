@@ -140,7 +140,7 @@ nsMathMLmunderoverFrame::SetInitialChildList(nsIPresContext* aPresContext,
     baseFrame->GetContent(getter_AddRefs(baseContent));
     if (NS_CONTENT_ATTR_HAS_VALUE == baseContent->GetAttr(kNameSpaceID_None, 
                      nsMathMLAtoms::movablelimits_, value)) {
-      if (value.EqualsWithConversion("true")) {
+      if (value.Equals(NS_LITERAL_STRING("true"))) {
         mPresentationData.flags |= NS_MATHML_MOVABLELIMITS;
       }
     }
@@ -170,8 +170,8 @@ nsMathMLmunderoverFrame::SetInitialChildList(nsIPresContext* aPresContext,
           if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, 
                           nsMathMLAtoms::accentunder_, value))
           {
-            if (value.EqualsWithConversion("true")) embellishData.flags |= NS_MATHML_EMBELLISH_ACCENT;
-            else if (value.EqualsWithConversion("false")) embellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENT;
+            if (value.Equals(NS_LITERAL_STRING("true"))) embellishData.flags |= NS_MATHML_EMBELLISH_ACCENT;
+            else if (value.Equals(NS_LITERAL_STRING("false"))) embellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENT;
             mathMLFrame->SetEmbellishData(embellishData);
           }
 
@@ -198,8 +198,8 @@ nsMathMLmunderoverFrame::SetInitialChildList(nsIPresContext* aPresContext,
           if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, 
                           nsMathMLAtoms::accent_, value))
           {
-            if (value.EqualsWithConversion("true")) embellishData.flags |= NS_MATHML_EMBELLISH_ACCENT;
-            else if (value.EqualsWithConversion("false")) embellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENT;
+            if (value.Equals(NS_LITERAL_STRING("true"))) embellishData.flags |= NS_MATHML_EMBELLISH_ACCENT;
+            else if (value.Equals(NS_LITERAL_STRING("false"))) embellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENT;
             mathMLFrame->SetEmbellishData(embellishData);
           }
 

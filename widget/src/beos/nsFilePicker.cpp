@@ -316,7 +316,7 @@ void nsFilePicker::GetFileSystemCharset(nsString & fileSystemCharset)
 
     NS_ASSERTION(NS_SUCCEEDED(rv), "error getting platform charset");
 	  if (NS_FAILED(rv)) 
-		  aCharset.AssignWithConversion("UTF-8");// XXX ok?
+		  aCharset.Assign(NS_LITERAL_STRING("UTF-8"));// XXX ok?
   }
   fileSystemCharset = aCharset;
 }
@@ -403,9 +403,9 @@ NS_IMETHODIMP
 nsFilePicker::AppendFilter(const PRUnichar *aTitle, const PRUnichar *aFilter)
 {
   mFilterList.Append(aTitle);
-  mFilterList.AppendWithConversion('\0');
+  mFilterList.Append(PRUnichar('\0'));
   mFilterList.Append(aFilter);
-  mFilterList.AppendWithConversion('\0');
+  mFilterList.Append(PRUnichar('\0'));
 
   return NS_OK;
 }

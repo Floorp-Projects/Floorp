@@ -37,6 +37,7 @@
 #include "nsEudoraImport.h"
 #include "nsIPop3IncomingServer.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 
 #include "EudoraDebugLog.h"
 
@@ -617,7 +618,7 @@ PRBool nsEudoraMac::ImportSettings( nsIFileSpec *pIniFile, nsIMsgAccount **local
 		pStrs[i] = new nsCString;
 	}
 	
-	nsString accName; accName.AssignWithConversion("Eudora Settings");
+	nsString accName(NS_LITERAL_STRING("Eudora Settings"));
 	nsEudoraStringBundle::GetStringByID( EUDORAIMPORT_ACCOUNTNAME, accName);
 	
 	// This is a little overkill but we're not sure yet how multiple accounts
@@ -1031,7 +1032,7 @@ PRBool nsEudoraMac::IsValidMailboxName( nsCString& fName)
 {
 	if (m_depth > 1)
 		return( PR_TRUE);
-	if (!fName.CompareWithConversion( "Eudora Nicknames", PR_TRUE))
+	if (!Compare(fName, NS_LITERAL_CSTRING("Eudora Nicknames"), nsCaseInsensitiveCStringComparator()))
 		return( PR_FALSE);
 	return( PR_TRUE);
 }

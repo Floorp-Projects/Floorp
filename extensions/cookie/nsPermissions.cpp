@@ -523,7 +523,7 @@ PERMISSION_Read() {
        * a host value of "@@@@" is a special code designating the
        * state of the nag-box's checkmark
        */
-      if (host.EqualsWithConversion("@@@@")) {
+      if (host.Equals(NS_LITERAL_STRING("@@@@"))) {
         if (!permissionString.IsEmpty()) {
           permission_SetRememberChecked(type, permission);
         }

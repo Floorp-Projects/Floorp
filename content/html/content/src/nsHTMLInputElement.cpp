@@ -562,7 +562,7 @@ nsHTMLInputElement::SetValueChanged(PRBool aValueChanged)
 NS_IMETHODIMP 
 nsHTMLInputElement::GetChecked(PRBool* aValue)
 {
-  nsAutoString value; value.AssignWithConversion("0");
+  nsAutoString value(NS_LITERAL_STRING("0"));
 
   // No need to flush here, if there's no frame created for this input
   // yet, we know our own checked state.
@@ -582,7 +582,7 @@ nsHTMLInputElement::GetChecked(PRBool* aValue)
     }
   }
   
-  if (value.EqualsWithConversion("1")) {
+  if (value.Equals(NS_LITERAL_STRING("1"))) {
     *aValue = PR_TRUE;
   } else {
     *aValue = PR_FALSE;

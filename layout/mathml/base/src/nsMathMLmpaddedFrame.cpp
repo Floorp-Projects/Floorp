@@ -232,10 +232,10 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
     return PR_TRUE;
   }
 
-  if (value.EqualsWithConversion("width"))  aPseudoUnit = NS_MATHML_PSEUDO_UNIT_WIDTH;
-  else if (value.EqualsWithConversion("height")) aPseudoUnit = NS_MATHML_PSEUDO_UNIT_HEIGHT;
-  else if (value.EqualsWithConversion("depth"))  aPseudoUnit = NS_MATHML_PSEUDO_UNIT_DEPTH;
-  else if (value.EqualsWithConversion("lspace")) aPseudoUnit = NS_MATHML_PSEUDO_UNIT_LSPACE;
+  if (value.Equals(NS_LITERAL_STRING("width")))  aPseudoUnit = NS_MATHML_PSEUDO_UNIT_WIDTH;
+  else if (value.Equals(NS_LITERAL_STRING("height"))) aPseudoUnit = NS_MATHML_PSEUDO_UNIT_HEIGHT;
+  else if (value.Equals(NS_LITERAL_STRING("depth")))  aPseudoUnit = NS_MATHML_PSEUDO_UNIT_DEPTH;
+  else if (value.Equals(NS_LITERAL_STRING("lspace"))) aPseudoUnit = NS_MATHML_PSEUDO_UNIT_LSPACE;
   else 
   {
     nsCSSValue aCSSNamedSpaceValue;

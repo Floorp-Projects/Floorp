@@ -344,14 +344,14 @@ nsOutlinerBodyFrame::Destroy(nsIPresContext* aPresContext)
   if (mOutlinerBoxObject) {
     nsCOMPtr<nsIBoxObject> box(do_QueryInterface(mOutlinerBoxObject));
     if (mTopRowIndex > 0) {
-      nsAutoString topRowStr; topRowStr.AssignWithConversion("topRow");
+      nsAutoString topRowStr; topRowStr.Assign(NS_LITERAL_STRING("topRow"));
       nsAutoString topRow;
       topRow.AppendInt(mTopRowIndex);
       box->SetProperty(topRowStr.get(), topRow.get());
     }
 
     // Always null out the cached outliner body frame.
-    nsAutoString outlinerBody; outlinerBody.AssignWithConversion("outlinerbody");
+    nsAutoString outlinerBody(NS_LITERAL_STRING("outlinerbody"));
     box->RemoveProperty(outlinerBody.get());
 
     mOutlinerBoxObject = nsnull; // Drop our ref here.
@@ -381,13 +381,13 @@ NS_IMETHODIMP nsOutlinerBodyFrame::Reflow(nsIPresContext* aPresContext,
         nsCOMPtr<nsIOutlinerBoxObject> outlinerBox(do_QueryInterface(box));
         SetBoxObject(outlinerBox);
 
-        nsAutoString view; view.AssignWithConversion("view");
+        nsAutoString view(NS_LITERAL_STRING("view"));
         nsCOMPtr<nsISupports> suppView;
         box->GetPropertyAsSupports(view.get(), getter_AddRefs(suppView));
         nsCOMPtr<nsIOutlinerView> outlinerView(do_QueryInterface(suppView));
 
         if (outlinerView) {
-          nsAutoString topRow; topRow.AssignWithConversion("topRow");
+          nsAutoString topRow(NS_LITERAL_STRING("topRow"));
           nsXPIDLString rowStr;
           box->GetProperty(topRow.get(), getter_Copies(rowStr));
           nsAutoString rowStr2(rowStr);
@@ -481,7 +481,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::SetView(nsIOutlinerView * aView)
     return NS_OK; // Just ignore the call.  An initial reflow when it comes in
                   // will retrieve the view from the box object.
   
-  nsAutoString view; view.AssignWithConversion("view");
+  nsAutoString view(NS_LITERAL_STRING("view"));
   
   if (mView) {
     mView->SetOutliner(nsnull);
@@ -904,7 +904,7 @@ nsOutlinerBodyFrame::GetCoordsForCellItem(PRInt32 aRow, const PRUnichar *aColID,
     nsCOMPtr<nsIStyleContext> cellContext;
     GetPseudoStyleContext(nsXULAtoms::mozoutlinercell, getter_AddRefs(cellContext));
 
-    nsAutoString cell; cell.AssignWithConversion("cell");
+    nsAutoString cell(NS_LITERAL_STRING("cell"));
     if (currCol->IsCycler() || cell.EqualsWithConversion(aCellItem)) {
       // If the current Column is a Cycler, then the Rect is just the cell - the margins. 
       // Similarly, if we're just being asked for the cell rect, provide it. 
@@ -1689,11 +1689,11 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintColumn(nsOutlinerColumn*    aColumn,
   // Read special properties from attributes on the column content node
   nsAutoString attr;
   aColumn->GetElement()->GetAttr(kNameSpaceID_None, nsXULAtoms::insertbefore, attr);
-  if (attr.EqualsWithConversion("true"))
+  if (attr.Equals(NS_LITERAL_STRING("true")))
     mScratchArray->AppendElement(nsXULAtoms::insertbefore);
-  attr.AssignWithConversion("");
+  attr.Assign(NS_LITERAL_STRING(""));
   aColumn->GetElement()->GetAttr(kNameSpaceID_None, nsXULAtoms::insertafter, attr);
-  if (attr.EqualsWithConversion("true"))
+  if (attr.Equals(NS_LITERAL_STRING("true")))
     mScratchArray->AppendElement(nsXULAtoms::insertafter);
   
   // Resolve style for the column.  It contains all the info we need to lay ourselves

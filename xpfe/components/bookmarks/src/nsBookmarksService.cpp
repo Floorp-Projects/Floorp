@@ -72,6 +72,7 @@
 #include "nsIDirectoryService.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 
 #include "nsISound.h"
 #include "nsIPrompt.h"
@@ -935,22 +936,22 @@ BookmarkParser::Unescape(nsString &text)
 		nsAutoString	temp;
 		text.Mid(temp, offset, 6);
 
-		if (temp.CompareWithConversion("&lt;", PR_TRUE, 4) == 0)
+		if (Compare(Substring(temp, 0, 4), NS_LITERAL_STRING("&lt;"), nsCaseInsensitiveStringComparator()) == 0)
 		{
 			text.Cut(offset, 4);
 			text.Insert(PRUnichar('<'), offset);
 		}
-		else if (temp.CompareWithConversion("&gt;", PR_TRUE, 4) == 0)
+		if (Compare(Substring(temp, 0, 4), NS_LITERAL_STRING("&gt;"), nsCaseInsensitiveStringComparator()) == 0)
 		{
 			text.Cut(offset, 4);
 			text.Insert(PRUnichar('>'), offset);
 		}
-		else if (temp.CompareWithConversion("&amp;", PR_TRUE, 5) == 0)
+		if (Compare(Substring(temp, 0, 5), NS_LITERAL_STRING("&amp;"), nsCaseInsensitiveStringComparator()) == 0)
 		{
 			text.Cut(offset, 5);
 			text.Insert(PRUnichar('&'), offset);
 		}
-		else if (temp.CompareWithConversion("&quot;", PR_TRUE, 6) == 0)
+		if (Compare(Substring(temp, 0, 6), NS_LITERAL_STRING("&quot;"), nsCaseInsensitiveStringComparator()) == 0)
 		{
 			text.Cut(offset, 6);
 			text.Insert(PRUnichar('\"'), offset);
@@ -1343,7 +1344,7 @@ BookmarkParser::ParseResource(nsIRDFResource *arc, nsString& url, nsIRDFNode** a
     	// if we don't have a protocol scheme, add "http://" as a default scheme
     	if (url.FindChar(PRUnichar(':')) < 0)
     	{
-    		url.InsertWithConversion("http://", 0);
+    		url.Assign(NS_LITERAL_STRING("http://") + url);
     	}
     }
 
@@ -2422,7 +2423,7 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
 				{
 					nsAutoString	promptStr;
 					getLocaleString("WebPageUpdated", promptStr);
-					if (promptStr.Length() > 0)	promptStr.AppendWithConversion("\n\n");
+					if (!promptStr.IsEmpty())	promptStr.Append(NS_LITERAL_STRING("\n\n"));
 
 					nsCOMPtr<nsIRDFNode>	nameNode;
 					if (NS_SUCCEEDED(mInner->GetTarget(busyResource, kNC_Name,
@@ -2438,12 +2439,12 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
 								nsAutoString	info;
 								getLocaleString("WebPageTitle", info);
 								promptStr += info;
-								promptStr.AppendWithConversion(" ");
+								promptStr.Append(NS_LITERAL_STRING(" "));
 								promptStr += nameUni;
-								promptStr.AppendWithConversion("\n");
+								promptStr.Append(NS_LITERAL_STRING("\n"));
 								getLocaleString("WebPageURL", info);
 								promptStr += info;
-								promptStr.AppendWithConversion(" ");
+								promptStr.Append(NS_LITERAL_STRING(" "));
 							}
 						}
 					}
@@ -2453,7 +2454,7 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
 					getLocaleString("WebPageAskDisplay", temp);
 					if (temp.Length() > 0)
 					{
-						promptStr.AppendWithConversion("\n\n");
+						promptStr.Append(NS_LITERAL_STRING("\n\n"));
 						promptStr += temp;
 					}
 

@@ -1319,11 +1319,11 @@ PRInt32 MimeCharsetConverterClass::Initialize(const char* from_charset, const ch
 
   mInputCharset.AssignWithConversion(from_charset);     // remember input charset for a hint
   if (mInputCharset.IsEmpty()) {
-    mInputCharset.AssignWithConversion("ISO-8859-1");
+    mInputCharset.Assign(NS_LITERAL_STRING("ISO-8859-1"));
   }
   mOutputCharset.AssignWithConversion(to_charset);      // remember output charset
   if (mOutputCharset.IsEmpty()) {
-    mOutputCharset.AssignWithConversion("UTF-8");
+    mOutputCharset.Assign(NS_LITERAL_STRING("UTF-8"));
   }
   mAutoDetect = autoDetect;
   mMaxNumCharsDetect = maxNumCharsDetect;
@@ -1335,14 +1335,14 @@ PRInt32 MimeCharsetConverterClass::Initialize(const char* from_charset, const ch
     if (aAlias.Length()) {
       res = calias->GetPreferred(aAlias, mInputCharset);
       if (NS_FAILED(res)) {
-        mInputCharset.AssignWithConversion("ISO-8859-1");
+        mInputCharset.Assign(NS_LITERAL_STRING("ISO-8859-1"));
       }
     }
     aAlias = mOutputCharset;
     if (aAlias.Length()) {
       res = calias->GetPreferred(aAlias, mOutputCharset);
       if (NS_FAILED(res)) {
-        mOutputCharset.AssignWithConversion("UTF-8");
+        mOutputCharset.Assign(NS_LITERAL_STRING("UTF-8"));
       }
     }
   }

@@ -470,10 +470,10 @@ nsIsIndexFrame::OnSubmit(nsIPresContext* aPresContext)
     // Append the URI encoded variable/value pairs for GET's
     if (!isJSURL) { // Not for JS URIs, see bug 26917
         if (href.FindChar('?', PR_FALSE, 0) == kNotFound) { // Add a ? if needed
-          href.AppendWithConversion('?');
+          href.Append(PRUnichar('?'));
         } else {                              // Adding to existing query string
           if (href.Last() != '&' && href.Last() != '?') {   // Add a & if needed
-            href.AppendWithConversion('&');
+            href.Append(PRUnichar('&'));
           }
         }
         href.Append(data);
@@ -494,7 +494,7 @@ nsIsIndexFrame::OnSubmit(nsIPresContext* aPresContext)
 
 void nsIsIndexFrame::GetSubmitCharset(nsString& oCharset)
 {
-  oCharset.AssignWithConversion("UTF-8"); // default to utf-8
+  oCharset.Assign(NS_LITERAL_STRING("UTF-8")); // default to utf-8
   nsresult rv;
   // XXX
   // We may want to get it from the HTML 4 Accept-Charset attribute first

@@ -238,11 +238,11 @@ PRBool nsOEAddressIterator::BuildCard( const PRUnichar * pName, nsIMdbRow *newRo
 		else {
 			displayName = firstName;
 			if (!middleName.IsEmpty()) {
-				displayName.AppendWithConversion( ' ');
+				displayName.Append(PRUnichar(' '));
 				displayName.Append( middleName);
 			}
 			if (!lastName.IsEmpty()) {
-				displayName.AppendWithConversion( ' ');
+				displayName.Append(PRUnichar(' '));
 				displayName.Append( lastName);
 			}
 		}

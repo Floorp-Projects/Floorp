@@ -716,7 +716,7 @@ NS_IMETHODIMP nsIMAPHostSessionList::GetOnlineInboxPathForHost(const char *serve
 		if (ns)
 		{
 			result.AssignWithConversion(ns->GetPrefix());
-            result.AppendWithConversion("INBOX");
+            result.Append(NS_LITERAL_STRING("INBOX"));
 		}
 	}
 	else

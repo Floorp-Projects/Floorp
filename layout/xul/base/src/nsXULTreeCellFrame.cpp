@@ -91,7 +91,7 @@ nsXULTreeCellFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 {
   nsAutoString value;
   mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::allowevents, value);
-  if (value.EqualsWithConversion("true"))
+  if (value.Equals(NS_LITERAL_STRING("true")))
   {
     return nsBoxFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
   }
@@ -161,7 +161,7 @@ nsXULTreeCellFrame::GetFrameForPoint(nsIPresContext* aPresContext,
       if (content) {
         // This allows selective overriding for subcontent.
         content->GetAttr(kNameSpaceID_None, nsXULAtoms::allowevents, value);
-        if (value.EqualsWithConversion("true"))
+        if (value.Equals(NS_LITERAL_STRING("true")))
           return result;
       }
     }

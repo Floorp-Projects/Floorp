@@ -63,6 +63,7 @@
 #include "nsMsgCopy.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 #include "nsMsgPrompts.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIDOMHTMLLinkElement.h"
@@ -1682,7 +1683,7 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
       nsAutoString attributeValue;
       if (NS_SUCCEEDED(domElement->GetAttribute(NS_LITERAL_STRING("moz-do-not-send"), attributeValue)))
       {
-        if (attributeValue.EqualsWithConversion("true", PR_TRUE))
+        if (!Compare(attributeValue, NS_LITERAL_STRING("true"), nsCaseInsensitiveStringComparator()))
           continue;
       }
     }
@@ -1894,7 +1895,7 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
     nsString      domURL;
     if (m_attachments[i].m_content_id)  
     {
-      nsString   newSpec; newSpec.AssignWithConversion("cid:");
+      nsString   newSpec(NS_LITERAL_STRING("cid:"));
 
         // STRING USE WARNING: this is probably not needed.  Strings are created empty by default.
       domURL.SetLength(0);

@@ -319,10 +319,10 @@ CreateSourceText(const nsParserError* aError, nsString& aSourceString)
   PRInt32 errorPosition = aError->colNumber;
 
   aSourceString.Append(aError->sourceLine);
-  aSourceString.AppendWithConversion("\n");
+  aSourceString.Append(NS_LITERAL_STRING("\n"));
   for (PRInt32 i = 0; i < errorPosition - 1; i++)
-    aSourceString.AppendWithConversion("-");
-  aSourceString.AppendWithConversion("^");  
+    aSourceString.Append(NS_LITERAL_STRING("-"));
+  aSourceString.Append(NS_LITERAL_STRING("^"));  
 
   return NS_OK;
 }
@@ -749,13 +749,13 @@ void Tokenizer_HandleProcessingInstruction(void *userData,
 {
   XMLParserState* state = (XMLParserState*) userData;
   nsAutoString theString;
-  theString.AppendWithConversion("<?");
+  theString.Append(NS_LITERAL_STRING("<?"));
   theString.Append((PRUnichar *) target);
   if(data) {
-    theString.AppendWithConversion(" ");
+    theString.Append(NS_LITERAL_STRING(" "));
     theString.Append((PRUnichar *) data);
   }
-  theString.AppendWithConversion("?>");
+  theString.Append(NS_LITERAL_STRING("?>"));
   
   CToken* theToken = state->tokenAllocator->CreateTokenOfType(eToken_instruction,eHTMLTag_unknown, theString);
   if(theToken) {
@@ -1005,7 +1005,7 @@ void Tokenizer_HandleEndDoctypeDecl(void *userData)
 {
   XMLParserState* state = (XMLParserState*) userData;
 
-  state->doctypeText.AppendWithConversion(">");
+  state->doctypeText.Append(NS_LITERAL_STRING(">"));
   CToken* token = state->tokenAllocator->CreateTokenOfType(eToken_doctypeDecl, eHTMLTag_unknown, state->doctypeText);
   if (token) {
     nsExpatTokenizer::AddToken(token, NS_OK, state->tokenDeque, state->tokenAllocator);

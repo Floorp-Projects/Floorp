@@ -914,7 +914,7 @@ ImportMailThread( void *stuff)
 					nsCRT::free( pName);
 				}
 				else
-					lastName.AssignWithConversion("Unknown!");
+					lastName.Assign(NS_LITERAL_STRING("Unknown!"));
 				
 				ConvertFromUnicode(lastName.get(), strName);
 				exists = PR_FALSE;
@@ -1032,7 +1032,7 @@ PRBool nsImportGenericMail::GetAccount( nsIMsgFolder **ppFolder)
 	if (m_pName)
 		prettyName = m_pName;
 	else
-		prettyName.AssignWithConversion("Imported Mail");
+		prettyName.Assign(NS_LITERAL_STRING("Imported Mail"));
 	
 	nsCOMPtr<nsIMsgIncomingServer> server;
 
@@ -1142,7 +1142,7 @@ void nsImportGenericMail::GetUniquePrettyName( nsIMsgAccountManager *pMgr, nsStr
 		}
 		if (found) {
 			newName = name;
-			newName.AppendWithConversion( " ");
+			newName.Append(NS_LITERAL_STRING(" "));
 			newName.AppendInt( count);
 			count++;
 		}

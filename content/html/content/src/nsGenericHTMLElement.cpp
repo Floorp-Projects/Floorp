@@ -2238,7 +2238,7 @@ nsGenericHTMLElement::ListAttributes(FILE* out) const
     // value
     nsAutoString value;
     GetAttr(nameSpaceID, attr, value);
-    buffer.AppendWithConversion("=");
+    buffer.Append(NS_LITERAL_STRING("="));
     buffer.Append(value);
 
     fputs(" ", out);

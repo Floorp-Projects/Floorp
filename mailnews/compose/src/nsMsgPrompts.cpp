@@ -61,12 +61,12 @@ nsMsgBuildErrorMessageByID(PRInt32 msgID, nsString& retval, nsString* param0, ns
     nsString target;
     if (param0)
     {
-      target.AssignWithConversion("%P0%");
+      target.Assign(NS_LITERAL_STRING("%P0%"));
       retval.ReplaceSubstring(target, *param0);
     }
     if (param1)
     {
-      target.AssignWithConversion("%P1%");
+      target.Assign(NS_LITERAL_STRING("%P1%"));
       retval.ReplaceSubstring(target, *param1);
     }
   }

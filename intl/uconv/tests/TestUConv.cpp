@@ -245,8 +245,8 @@ nsresult nsTestUConv::TestCharsetManager()
   }
 
   // test alias resolving capability
-  nsAutoString csAlias; csAlias.AssignWithConversion("iso-10646-ucs-basic");
-  nsAutoString csName; csName.AssignWithConversion("UTF-16BE");
+  nsAutoString csAlias(NS_LITERAL_STRING("iso-10646-ucs-basic"));
+  nsAutoString csName(NS_LITERAL_STRING("UTF-16BE"));
   res = ccMan->GetCharsetAtom(csAlias.get(), getter_AddRefs(csAtom));
   if (NS_FAILED(res)) {
     mLog.PrintError("GetCharsetAtom()", res);
@@ -263,7 +263,7 @@ nsresult nsTestUConv::TestCharsetManager()
   }
 
   // test self returning if alias was not found
-  nsAutoString csAlias2; csAlias2.AssignWithConversion("Totally_dummy_charset_name");
+  nsAutoString csAlias2(NS_LITERAL_STRING("Totally_dummy_charset_name"));
   res = ccMan->GetCharsetAtom(csAlias2.get(), getter_AddRefs(csAtom));
   if (NS_FAILED(res)) {
     mLog.PrintError("GetCharsetAtom()", res);
@@ -424,22 +424,22 @@ nsresult nsTestUConv::DisplayCharsets()
 
     printf(" ");
 
-    prop.AssignWithConversion(".notForBrowser");
+    prop.Assign(NS_LITERAL_STRING(".notForBrowser"));
     res = ccMan->GetCharsetData2(cs, prop.get(), &str);
     if ((dec != NULL) && (NS_FAILED(res))) printf ("B"); 
     else printf("X");
 
-    prop.AssignWithConversion(".notForComposer");
+    prop.Assign(NS_LITERAL_STRING(".notForComposer"));
     res = ccMan->GetCharsetData2(cs, prop.get(), &str);
     if ((enc != NULL) && (NS_FAILED(res))) printf ("C"); 
     else printf("X");
 
-    prop.AssignWithConversion(".notForMailView");
+    prop.Assign(NS_LITERAL_STRING(".notForMailView"));
     res = ccMan->GetCharsetData2(cs, prop.get(), &str);
     if ((dec != NULL) && (NS_FAILED(res))) printf ("V"); 
     else printf("X");
 
-    prop.AssignWithConversion(".notForMailEdit");
+    prop.Assign(NS_LITERAL_STRING(".notForMailEdit"));
     res = ccMan->GetCharsetData2(cs, prop.get(), &str);
     if ((enc != NULL) && (NS_FAILED(res))) printf ("E"); 
     else printf("X");
@@ -457,7 +457,7 @@ nsresult nsTestUConv::TestTempBug()
   mLog.AddTrace(trace);
   nsresult res = NS_OK;
 
-  nsAutoString charset; charset.AssignWithConversion("ISO-2022-JP");
+  nsAutoString charset(NS_LITERAL_STRING("ISO-2022-JP"));
   PRUnichar src[] = {0x0043, 0x004e, 0x0045, 0x0054, 0x0020, 0x004A, 0x0061, 
     0x0070, 0x0061, 0x006E, 0x0020, 0x7DE8, 0x96C6, 0x5C40};
   PRUnichar * srcEnd = src + ARRAY_SIZE(src);

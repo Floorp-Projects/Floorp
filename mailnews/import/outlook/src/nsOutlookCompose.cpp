@@ -21,6 +21,7 @@
 #include "prthread.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 #include "nsCOMPtr.h"
 #include "nsIFileSpec.h"
 #include "nsIComponentManager.h"
@@ -216,7 +217,7 @@ nsresult nsOutlookCompose::CreateIdentity( void)
     if (NS_FAILED(rv)) return( rv);
 	rv = accMgr->CreateIdentity( &m_pIdentity);
 	nsString	name;
-	name.AssignWithConversion("Import Identity");
+	name.Assign(NS_LITERAL_STRING("Import Identity"));
 	if (m_pIdentity) {
 		m_pIdentity->SetFullName( name.get());
 		m_pIdentity->SetIdentityName( name.get());
@@ -496,7 +497,7 @@ void nsOutlookCompose::ExtractType( nsString& str)
 	// valid multipart!
 	if (str.Length() > 10) {
 		str.Left( tStr, 10);
-		if (!tStr.CompareWithConversion( "multipart/", PR_TRUE))
+		if (tStr.Equals(NS_LITERAL_STRING("multipart/"), nsCaseInsensitiveStringComparator()))
 			str.Truncate();
 	}
 }

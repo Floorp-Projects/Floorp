@@ -445,7 +445,7 @@ nsresult nsMsgDBFolder::ReadDBFolderInfo(PRBool force)
 				PRBool defaultUsed;
 				folderInfo->GetCharacterSet(&mCharset, &defaultUsed);
 				if (defaultUsed)
-					mCharset.AssignWithConversion("");
+					mCharset.Assign(NS_LITERAL_STRING(""));
 				folderInfo->GetCharacterSetOverride(&mCharsetOverride);
         
 				if (db) {

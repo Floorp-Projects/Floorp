@@ -305,7 +305,7 @@ nsMacLocale::GetXPLocale(short scriptCode, short langCode, short regionCode, nsS
 	//
 	for(i=0;strlen(country_list[i].iso_code)!=0;i++) {
 		if (regionCode==country_list[i].mac_region_code) {
-			temp.AppendWithConversion('-');
+			temp.Append(PRUnichar('-'));
 			temp.AppendWithConversion(country_list[i].iso_code);
 			validResultFound = true;
 			break;

@@ -1087,7 +1087,7 @@ nsHTMLFrameInnerFrame::CreateDocShell(nsIPresContext* aPresContext)
         value.Left(valuePiece, 7);
         if (valuePiece.EqualsIgnoreCase("content") &&
            (value.Length() == 7 ||
-              value.Mid(valuePiece, 7, 1) == 1 && valuePiece.EqualsWithConversion("-")))
+              value.Mid(valuePiece, 7, 1) == 1 && valuePiece.Equals(NS_LITERAL_STRING("-"))))
             isContent = PR_TRUE;
       }
       NS_IF_RELEASE(typeAtom);

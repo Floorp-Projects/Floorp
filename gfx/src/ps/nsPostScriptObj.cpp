@@ -1639,7 +1639,7 @@ nsPostScriptObj::InitUnixPrinterProps()
 {
   nsCOMPtr<nsIPersistentProperties> printerprops_tmp;
   nsAutoString propertyURL;
-  propertyURL.AssignWithConversion("resource:/res/unixpsfonts.properties");
+  propertyURL.Assign(NS_LITERAL_STRING("resource:/res/unixpsfonts.properties"));
   nsCOMPtr<nsIURI> uri;
   NS_ENSURE_SUCCESS(NS_NewURI(getter_AddRefs(uri), propertyURL), PR_FALSE);
   nsCOMPtr<nsIInputStream> in;

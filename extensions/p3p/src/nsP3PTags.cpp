@@ -257,7 +257,7 @@ nsP3PTag::GetAttribute( nsString&  aAttributeName,
   nsAutoString  sAttributeNameSpace;
 
 
-  aAttributeValue.AssignWithConversion( "" );
+  aAttributeValue.Assign(NS_LITERAL_STRING(""));
   if (aAttributePresent) {
     *aAttributePresent = PR_FALSE;
   }

@@ -95,7 +95,7 @@ nsSmtpDataSource::initGlobalObjects()
     rdf->GetResource(NC_RDF_ISDEFAULT, getter_AddRefs(kNC_IsDefaultServer));
     rdf->GetResource(NC_RDF_ISSESSIONDEFAULT, getter_AddRefs(kNC_IsSessionDefaultServer));
 
-    nsAutoString trueStr; trueStr.AssignWithConversion("true");
+    nsAutoString trueStr(NS_LITERAL_STRING("true"));
     rdf->GetLiteral(trueStr.get(), getter_AddRefs(kTrueLiteral));
 
     // now create cached arrays for each type we support

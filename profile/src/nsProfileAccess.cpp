@@ -125,7 +125,7 @@ GetPlatformCharset(nsString& aCharset)
         rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, aCharset);
     }
     if (NS_FAILED(rv)) {
-        aCharset.AssignWithConversion("ISO-8859-1");  // use ISO-8859-1 in case of any error
+        aCharset.Assign(NS_LITERAL_STRING("ISO-8859-1"));  // use ISO-8859-1 in case of any error
     }
     return rv;
 }

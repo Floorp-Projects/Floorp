@@ -153,12 +153,12 @@ NS_IMETHODIMP mozXMLTermStream::Open(nsIDOMWindowInternal* aDOMWindow,
 
     if (mMaxResizeHeight > 0) {
       // Set initial IFRAME size to be as wide as the window, but very short
-      nsAutoString attWidth; attWidth.AssignWithConversion("width");
-      nsAutoString valWidth; valWidth.AssignWithConversion("100%");
+      nsAutoString attWidth(NS_LITERAL_STRING("width"));
+      nsAutoString valWidth(NS_LITERAL_STRING("100%"));
       mDOMIFrameElement->SetAttribute(attWidth,valWidth);
 
-      nsAutoString attHeight; attHeight.AssignWithConversion("height");
-      nsAutoString valHeight; valHeight.AssignWithConversion("10");
+      nsAutoString attHeight(NS_LITERAL_STRING("height"));
+      nsAutoString valHeight(NS_LITERAL_STRING("10"));
       mDOMIFrameElement->SetAttribute(attHeight,valHeight);
     }
 
@@ -408,8 +408,8 @@ NS_IMETHODIMP mozXMLTermStream::SizeToContentHeight(PRInt32 maxHeight)
 
   if ((pageHeight > shellHeight) || (pageWidth > shellWidth)) {
     // Page larger than docshell
-    nsAutoString attHeight; attHeight.AssignWithConversion("height");
-    nsAutoString attWidth; attWidth.AssignWithConversion("width");
+    nsAutoString attHeight(NS_LITERAL_STRING("height"));
+    nsAutoString attWidth(NS_LITERAL_STRING("width"));
     nsAutoString attValue; attValue.SetLength(0);
 
     PRInt32 newPageHeight = pageHeight;

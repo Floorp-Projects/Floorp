@@ -83,7 +83,7 @@ nsROCSSPrimitiveValue::GetCssText(nsAWritableString& aCssText)
       {
         PRInt32 px = NSTwipsToIntPixels(mTwips, mT2P);
         tmpStr.AppendInt(px);
-        tmpStr.AppendWithConversion("px");
+        tmpStr.Append(NS_LITERAL_STRING("px"));
 
         break;
       }
@@ -92,7 +92,7 @@ nsROCSSPrimitiveValue::GetCssText(nsAWritableString& aCssText)
         float val = NS_TWIPS_TO_CENTIMETERS(mTwips);
         char buf[64];
         PR_snprintf(buf, 63, "%.2fcm", val);
-        tmpStr.AppendWithConversion("cm");
+        tmpStr.Append(NS_LITERAL_STRING("cm"));
         break;
       }
     case CSS_MM :
@@ -100,7 +100,7 @@ nsROCSSPrimitiveValue::GetCssText(nsAWritableString& aCssText)
         float val = NS_TWIPS_TO_MILLIMETERS(mTwips);
         char buf[64];
         PR_snprintf(buf, 63, "%.2fcm", val);
-        tmpStr.AppendWithConversion("mm");
+        tmpStr.Append(NS_LITERAL_STRING("mm"));
         break;
       }
     case CSS_IN :
@@ -108,7 +108,7 @@ nsROCSSPrimitiveValue::GetCssText(nsAWritableString& aCssText)
         float val = NS_TWIPS_TO_INCHES(mTwips);
         char buf[64];
         PR_snprintf(buf, 63, "%.2fcm", val);
-        tmpStr.AppendWithConversion("in");
+        tmpStr.Append(NS_LITERAL_STRING("in"));
         break;
       }
     case CSS_PT :
@@ -116,7 +116,7 @@ nsROCSSPrimitiveValue::GetCssText(nsAWritableString& aCssText)
         float val = NSTwipsToFloatPoints(mTwips);
         char buf[64];
         PR_snprintf(buf, 63, "%.2fcm", val);
-        tmpStr.AppendWithConversion("pt");
+        tmpStr.Append(NS_LITERAL_STRING("pt"));
         break;
       }
     case CSS_STRING :

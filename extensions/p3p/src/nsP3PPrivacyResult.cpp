@@ -454,7 +454,7 @@ nsP3PPrivacyResult::GetPrivacyInfo( nsIRDFDataSource **aDataSource ) {
                              getter_AddRefs( pDataSource ) );
 
   if (NS_SUCCEEDED( rv )) {
-    sName.AssignWithConversion( "NC:P3PPolicyRoot" );
+    sName.Assign(NS_LITERAL_STRING("NC:P3PPolicyRoot"));
     sTitle.Truncate( );
     sValue.Truncate( );
 
@@ -592,9 +592,9 @@ nsP3PPrivacyResult::CreateRDFDescription( nsString&          aAbout,
 
     if (csPrivacyResult) {
       // Create a unique "about" attribute
-      mRDFAbout.AssignWithConversion( "#__" );
+      mRDFAbout.Assign(NS_LITERAL_STRING("#__"));
       mRDFAbout += mURISpec;
-      mRDFAbout.AppendWithConversion( " @ " );
+      mRDFAbout.Append(NS_LITERAL_STRING(" @ "));
       mRDFAbout.AppendWithConversion( csPrivacyResult );
       PR_smprintf_free( csPrivacyResult );
 
@@ -685,7 +685,7 @@ nsP3PPrivacyResult::CreateRDFDescription( nsString&          aAbout,
                             ("P3PPrivacyResult:  %s CreateRDFDescription, no Policy associated.\n", (const char *)mcsURISpec) );
 
                     sPolicyAbout = mRDFAbout;
-                    sPolicyAbout.AppendWithConversion( "NoPolicy" );
+                    sPolicyAbout.Append(NS_LITERAL_STRING("NoPolicy"));
                     rv = mP3PService->GetLocaleString( "NoPolicy",
                                                        sPolicyTitle );
                   }
@@ -693,7 +693,7 @@ nsP3PPrivacyResult::CreateRDFDescription( nsString&          aAbout,
                   if (NS_FAILED( rv )) {
                     // An error occurred obtaining the Policy information, let it be known
                     sPolicyAbout = mRDFAbout;
-                    sPolicyAbout.AppendWithConversion( "ErrorObtainingPolicy" );
+                    sPolicyAbout.Append(NS_LITERAL_STRING("ErrorObtainingPolicy"));
                     rv = mP3PService->GetLocaleString( "ErrorObtainingPolicy",
                                                        sPolicyTitle );
                   }

@@ -283,7 +283,7 @@ const nsAReadableString& CStartToken::GetStringValue()
  *  @return  nada
  */
 void CStartToken::GetSource(nsString& anOutputString){
-  anOutputString.AppendWithConversion("<");
+  anOutputString.Append(PRUnichar('<'));
   /*
    * Watch out for Bug 15204 
    */
@@ -294,7 +294,7 @@ void CStartToken::GetSource(nsString& anOutputString){
       anOutputString.Append(mTextValue);
     else
      anOutputString.Assign(GetTagName(mTypeID));
-    anOutputString.AppendWithConversion('>');
+    anOutputString.Append(PRUnichar('>'));
   }
 }
 
@@ -306,7 +306,7 @@ void CStartToken::GetSource(nsString& anOutputString){
  *  @return  nada
  */
 void CStartToken::AppendSource(nsString& anOutputString){
-  anOutputString.AppendWithConversion("<");
+  anOutputString.Append(PRUnichar('<'));
   /*
    * Watch out for Bug 15204 
    */
@@ -317,7 +317,7 @@ void CStartToken::AppendSource(nsString& anOutputString){
       anOutputString+=mTextValue;
     else
      anOutputString.Append(GetTagName(mTypeID));
-    anOutputString.AppendWithConversion('>');
+    anOutputString.Append(PRUnichar('>'));
   }
 }
 
@@ -470,12 +470,12 @@ const nsAReadableString& CEndToken::GetStringValue()
  *  @return  nada
  */
 void CEndToken::GetSource(nsString& anOutputString){
-  anOutputString.AppendWithConversion("</");
+  anOutputString.Append(NS_LITERAL_STRING("</"));
   if(mTextValue.Length()>0)
     anOutputString.Append(mTextValue);
   else
     anOutputString.Append(GetTagName(mTypeID));
-  anOutputString.AppendWithConversion(">");
+  anOutputString.Append(NS_LITERAL_STRING(">"));
 }
 
 /*
@@ -486,12 +486,12 @@ void CEndToken::GetSource(nsString& anOutputString){
  *  @return  nada
  */
 void CEndToken::AppendSource(nsString& anOutputString){
-  anOutputString.AppendWithConversion("</");
+  anOutputString.Append(NS_LITERAL_STRING("</"));
   if(mTextValue.Length()>0)
     anOutputString.Append(mTextValue);
   else
     anOutputString.Append(GetTagName(mTypeID));
-  anOutputString.AppendWithConversion(">");
+  anOutputString.Append(NS_LITERAL_STRING(">"));
 }
 
 /*
@@ -827,14 +827,14 @@ nsresult CCDATASectionToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt3
           switch(aChar) {
             case kCR:
               result=aScanner.GetChar(aChar); //strip off the \r
-              mTextValue.AppendWithConversion("\n\n");
+              mTextValue.Append(NS_LITERAL_STRING("\n\n"));
               break;
             case kNewLine:
                //which means we saw \r\n, which becomes \n
               result=aScanner.GetChar(aChar); //strip off the \n
                   //now fall through on purpose...
             default:
-              mTextValue.AppendWithConversion("\n");
+              mTextValue.Append(NS_LITERAL_STRING("\n"));
               break;
           } //switch
         } //if
@@ -1049,7 +1049,7 @@ nsresult ConsumeStrictComment(PRUnichar aChar, nsScanner& aScanner,nsString& aSt
           <!-- xx -- xx --> 
    *********************************************************/
 
-  aString.AssignWithConversion("<!");
+  aString.Assign(NS_LITERAL_STRING("<!"));
   while(NS_OK==result) {
     result=aScanner.GetChar(aChar);
     if(NS_OK==result) {
@@ -1185,7 +1185,7 @@ nsresult ConsumeComment(PRUnichar aChar, nsScanner& aScanner,nsString& aString) 
   if(NS_OK==result) {
      //Read up to the closing '>', unless you already did!  (such as <!>).
     if(kGreaterThan!=aChar) {
-      aString.AppendWithConversion("<!- ");
+      aString.Append(NS_LITERAL_STRING("<!- "));
       result=aScanner.ReadUntil(aString,kGreaterThan,PR_TRUE);
     }
   }
@@ -1482,9 +1482,9 @@ void CAttributeToken::GetSource(nsString& anOutputString){
 void CAttributeToken::AppendSource(nsString& anOutputString){
   anOutputString.Append(mTextKey);
   if(mTextValue.Length() || mHasEqualWithoutValue) 
-    anOutputString.AppendWithConversion("=");
+    anOutputString.Append(NS_LITERAL_STRING("="));
   anOutputString.Append(mTextValue);
-  // anOutputString.AppendWithConversion(";");
+  // anOutputString.Append(NS_LITERAL_STRING(";"));
 }
 
 /*
@@ -2153,7 +2153,7 @@ const nsAReadableString& CEntityToken::GetStringValue(void)
  *  @return  nada
  */
 void CEntityToken::GetSource(nsString& anOutputString){
-  anOutputString.AppendWithConversion("&");
+  anOutputString.Append(NS_LITERAL_STRING("&"));
   anOutputString+=mTextValue;
   //anOutputString+=";";
 }
@@ -2166,7 +2166,7 @@ void CEntityToken::GetSource(nsString& anOutputString){
  *  @return  nada
  */
 void CEntityToken::AppendSource(nsString& anOutputString){
-  anOutputString.AppendWithConversion("&");
+  anOutputString.Append(NS_LITERAL_STRING("&"));
   anOutputString+=mTextValue;
   //anOutputString+=";";
 }
@@ -2312,7 +2312,7 @@ CInstructionToken::CInstructionToken(const nsAReadableString& aString) : CHTMLTo
  *  @return  
  */
 nsresult CInstructionToken::Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aFlag){
-  mTextValue.AssignWithConversion("<?");
+  mTextValue.Assign(NS_LITERAL_STRING("<?"));
   nsresult result=aScanner.ReadUntil(mTextValue,kGreaterThan,PR_TRUE);
   return result;
 }

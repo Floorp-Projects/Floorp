@@ -131,8 +131,8 @@ NS_IMETHODIMP nsAbOutlookDirectory::Init(const char *aUri)
         PRINTF(("Cannot get name.\n")) ;
         return NS_ERROR_FAILURE ;
     }
-    if (mAbWinType == nsAbWinType_Outlook) { prefix.AssignWithConversion("OP ") ; }
-    else { prefix.AssignWithConversion("OE ") ; }
+    if (mAbWinType == nsAbWinType_Outlook) { prefix.Assign(NS_LITERAL_STRING("OP ")) ; }
+    else { prefix.Assign(NS_LITERAL_STRING("OE ")) ; }
     prefix.Append(unichars) ;
     SetDirName(prefix.get()) ; 
     if (objectType == MAPI_DISTLIST) {
@@ -862,37 +862,34 @@ nsresult FillPropertyValues(nsIAbCard *aCard, nsIAbDirectoryQueryArguments *aArg
     retCode = aArguments->GetReturnProperties(properties.GetSizeAddr(), properties.GetArrayAddr()) ;
     NS_ENSURE_SUCCESS(retCode, retCode) ;
     PRUint32 i = 0 ;
-    nsCAutoString cPropName ;
     nsAbDirectoryQueryPropertyValue *newValue = nsnull ;
 	nsCOMPtr<nsIAbDirectoryQueryPropertyValue> propertyValue ;
 
     for (i = 0 ; i < properties.GetSize() ; ++ i) {
+        const char* cPropName = properties[i] ;
         newValue = nsnull ;
-        cPropName.Assign(properties [i]) ;
-		if (cPropName.EqualsWithConversion ("card:nsIAbCard")) {
+		if (!nsCRT::strcmp(cPropName, "card:nsIAbCard")) {
 			nsCOMPtr<nsISupports> bogusInterface (do_QueryInterface(aCard, &retCode)) ;
 
 			NS_ENSURE_SUCCESS(retCode, retCode) ;
-			newValue = new nsAbDirectoryQueryPropertyValue (cPropName.get(), bogusInterface) ;
+			newValue = new nsAbDirectoryQueryPropertyValue (cPropName, bogusInterface) ;
 		}
-		else if (cPropName.EqualsWithConversion ("card:URI")) {
+		else if (!nsCRT::strcmp(cPropName, "card:URI")) {
 			nsCOMPtr<nsIRDFResource> rdfResource (do_QueryInterface(aCard, &retCode)) ;
 			nsXPIDLCString uri;
-			nsAutoString convertedString ;
 
 			NS_ENSURE_SUCCESS(retCode, retCode) ;
 			retCode = rdfResource->GetValue(getter_Copies(uri)) ;
 			NS_ENSURE_SUCCESS(retCode, retCode) ;
-			convertedString.AssignWithConversion(uri.get()) ;
-			newValue = new nsAbDirectoryQueryPropertyValue(cPropName.get(), convertedString.get()) ;
+			newValue = new nsAbDirectoryQueryPropertyValue(cPropName, NS_ConvertASCIItoUCS2(uri).get()) ;
 		}
         else {
 			nsXPIDLString value ;
 
-			retCode = aCard->GetCardValue(cPropName.get(), getter_Copies(value)) ;
+			retCode = aCard->GetCardValue(cPropName, getter_Copies(value)) ;
 			NS_ENSURE_SUCCESS(retCode, retCode) ;
-            if (value.get() && nsCRT::strlen(value.get()) != 0) {
-                newValue = new nsAbDirectoryQueryPropertyValue(cPropName.get(), value.get()) ;
+            if (!value.IsEmpty()) {
+                newValue = new nsAbDirectoryQueryPropertyValue(cPropName, value.get()) ;
             }
 		}
         if (newValue) {

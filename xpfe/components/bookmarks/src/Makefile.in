@@ -42,6 +42,7 @@ REQUIRES	= xpcom \
 		  intl \
 		  webshell \
 		  windowwatcher \
+		  unicharutil \
 		  $(NULL)
 
 CPPSRCS		= nsBookmarksService.cpp

@@ -64,6 +64,7 @@
 #include "nsIWindowWatcher.h"
 #include "nsIWebProgress.h"
 #include "nsXPIDLString.h"
+#include "nsUnicharUtils.h"
 #include "nsReadableUtils.h"
 #include "nsICategoryManager.h"
 
@@ -428,7 +429,7 @@ nsWalletlibService::OnStateChange(nsIWebProgress* aWebProgress,
                         nsAutoString type;
                         rv = inputElement->GetType(type);
                         if (NS_SUCCEEDED(rv)) {
-                          if (type.CompareWithConversion("password", PR_TRUE) == 0) {
+                          if (Compare(type, NS_LITERAL_STRING("password"), nsCaseInsensitiveStringComparator()) == 0) {
                             passwordCount++;
                           }
                         }
@@ -448,8 +449,8 @@ nsWalletlibService::OnStateChange(nsIWebProgress* aWebProgress,
                         nsAutoString type;
                         rv = inputElement->GetType(type);
                         if (NS_SUCCEEDED(rv)) {
-                          if ((type.IsEmpty()) || (type.CompareWithConversion("text", PR_TRUE) == 0) ||
-                            (type.CompareWithConversion("password", PR_TRUE) == 0)) {
+                          if ((type.IsEmpty()) || (Compare(type, NS_LITERAL_STRING("text"), nsCaseInsensitiveStringComparator()) == 0) ||
+                            (Compare(type, NS_LITERAL_STRING("password"), nsCaseInsensitiveStringComparator()) == 0)) {
                             nsAutoString field;
                             rv = inputElement->GetName(field);
                             if (NS_SUCCEEDED(rv)) {

@@ -444,7 +444,7 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
       attrName->ToString(nameStr);
       // XXX We shouldn't need this hack
       if (elementNamespaceID == kNameSpaceID_HTML) {
-        if (nameStr.EqualsWithConversion("xmlns:",PR_FALSE,6)) {
+        if (Substring(nameStr, 0, 6).Equals(NS_LITERAL_STRING("xmlns:"))) {
           nameStr.Cut(0,6);
           hasPrefix = PR_TRUE;
         } else if (!nameStr.Equals(kXMLNS)) {

@@ -438,40 +438,40 @@ static void ConvertPosition(nsIDOMElement* aPopupElt, nsString& aAnchor, nsStrin
     return;
 
   if (position.Equals(NS_LITERAL_STRING("before_start"))) {
-    aAnchor.AssignWithConversion("topleft");
-    aAlign.AssignWithConversion("bottomleft");
+    aAnchor.Assign(NS_LITERAL_STRING("topleft"));
+    aAlign.Assign(NS_LITERAL_STRING("bottomleft"));
   }
   else if (position.Equals(NS_LITERAL_STRING("before_end"))) {
-    aAnchor.AssignWithConversion("topright");
-    aAlign.AssignWithConversion("bottomright");
+    aAnchor.Assign(NS_LITERAL_STRING("topright"));
+    aAlign.Assign(NS_LITERAL_STRING("bottomright"));
   }
   else if (position.Equals(NS_LITERAL_STRING("after_start"))) {
-    aAnchor.AssignWithConversion("bottomleft");
-    aAlign.AssignWithConversion("topleft");
+    aAnchor.Assign(NS_LITERAL_STRING("bottomleft"));
+    aAlign.Assign(NS_LITERAL_STRING("topleft"));
   }
   else if (position.Equals(NS_LITERAL_STRING("after_end"))) {
-    aAnchor.AssignWithConversion("bottomright");
-    aAlign.AssignWithConversion("topright");
+    aAnchor.Assign(NS_LITERAL_STRING("bottomright"));
+    aAlign.Assign(NS_LITERAL_STRING("topright"));
   }
   else if (position.Equals(NS_LITERAL_STRING("start_before"))) {
-    aAnchor.AssignWithConversion("topleft");
-    aAlign.AssignWithConversion("topright");
+    aAnchor.Assign(NS_LITERAL_STRING("topleft"));
+    aAlign.Assign(NS_LITERAL_STRING("topright"));
   }
   else if (position.Equals(NS_LITERAL_STRING("start_after"))) {
-    aAnchor.AssignWithConversion("bottomleft");
-    aAlign.AssignWithConversion("bottomright");
+    aAnchor.Assign(NS_LITERAL_STRING("bottomleft"));
+    aAlign.Assign(NS_LITERAL_STRING("bottomright"));
   }
   else if (position.Equals(NS_LITERAL_STRING("end_before"))) {
-    aAnchor.AssignWithConversion("topright");
-    aAlign.AssignWithConversion("topleft");
+    aAnchor.Assign(NS_LITERAL_STRING("topright"));
+    aAlign.Assign(NS_LITERAL_STRING("topleft"));
   }
   else if (position.Equals(NS_LITERAL_STRING("end_after"))) {
-    aAnchor.AssignWithConversion("bottomright");
-    aAlign.AssignWithConversion("bottomleft");
+    aAnchor.Assign(NS_LITERAL_STRING("bottomright"));
+    aAlign.Assign(NS_LITERAL_STRING("bottomleft"));
   }
   else if (position.Equals(NS_LITERAL_STRING("overlap"))) {
-    aAnchor.AssignWithConversion("topleft");
-    aAlign.AssignWithConversion("topleft");
+    aAnchor.Assign(NS_LITERAL_STRING("topleft"));
+    aAlign.Assign(NS_LITERAL_STRING("topleft"));
   }
   else if (position.Equals(NS_LITERAL_STRING("after_pointer")))
     aY += 21;
@@ -493,9 +493,9 @@ XULPopupListenerImpl::LaunchPopup(PRInt32 aClientX, PRInt32 aClientY)
 {
   nsresult rv = NS_OK;
 
-  nsAutoString type; type.AssignWithConversion("popup");
+  nsAutoString type(NS_LITERAL_STRING("popup"));
   if ( popupType == eXULPopupType_context ) {
-    type.AssignWithConversion("context");
+    type.Assign(NS_LITERAL_STRING("context"));
     
     // position the menu two pixels down and to the right from the current
     // mouse position. This makes it easier to dismiss the menu by just

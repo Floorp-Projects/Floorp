@@ -647,7 +647,7 @@ static int cvt_S(SprintfState *ss, const PRUnichar *s, int width,
 
     /* and away we go */
     nsAutoString nullstr;
-    nullstr.AssignWithConversion("(null)");
+    nullstr.Assign(NS_LITERAL_STRING("(null)"));
 
     return fill2(ss, s ? s : nullstr.get(), slen, width, flags);
 }
@@ -968,10 +968,10 @@ static int dosprintf(SprintfState *ss, const PRUnichar *fmt, va_list ap)
     const PRUnichar *fmt0;
 
     nsAutoString hex;
-    hex.AssignWithConversion("0123456789abcdef");
+    hex.Assign(NS_LITERAL_STRING("0123456789abcdef"));
 
     nsAutoString HEX;
-    HEX.AssignWithConversion("0123456789ABCDEF");
+    HEX.Assign(NS_LITERAL_STRING("0123456789ABCDEF"));
 
     const PRUnichar *hexp;
     int rv, i;
@@ -1518,8 +1518,7 @@ PRUnichar * nsTextFormatter::vsprintf_append(PRUnichar *last, const PRUnichar *f
 PRBool nsTextFormatter::SelfTest()
 { 
     PRBool passed = PR_TRUE ;
-    nsAutoString fmt;
-    fmt.AssignWithConversion("%3$s %4$S %1$d %2$d");
+    nsAutoString fmt(NS_LITERAL_STRING("%3$s %4$S %1$d %2$d"));
 
     char utf8[] = "Hello";
     PRUnichar ucs2[]={'W', 'o', 'r', 'l', 'd', 0x4e00, 0xAc00, 0xFF45, 0x0103};

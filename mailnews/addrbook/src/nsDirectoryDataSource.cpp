@@ -636,9 +636,9 @@ nsAbDirectoryDataSource::createDirectoryIsMailListNode(nsIAbDirectory* directory
 
 nsresult nsAbDirectoryDataSource::CreateLiterals(nsIRDFService *rdf)
 {
-	nsAutoString str; str.AssignWithConversion("true");
+	nsAutoString str(NS_LITERAL_STRING("true"));
 	createNode(str, getter_AddRefs(kTrueLiteral));
-	str.AssignWithConversion("false");
+	str.Assign(NS_LITERAL_STRING("false"));
 	createNode(str, getter_AddRefs(kFalseLiteral));
 	return NS_OK;
 }

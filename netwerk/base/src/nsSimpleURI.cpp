@@ -135,7 +135,7 @@ nsSimpleURI::GetSpec(char* *result)
 
       // STRING USE WARNING: perhaps |string| should be |nsCAutoString|? -- scc
     string.AssignWithConversion(mScheme);
-    string.AppendWithConversion(':');
+    string.Append(PRUnichar(':'));
     string.AppendWithConversion(mPath);
 
 //    NS_UNLOCK_INSTANCE();

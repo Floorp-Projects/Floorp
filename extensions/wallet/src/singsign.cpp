@@ -1144,7 +1144,7 @@ si_GetURLAndUserForChangeForm(nsIPrompt* dialog, const nsString& password)
           nsAutoString userName;
           if (NS_SUCCEEDED(si_Decrypt (data->value, userName))) {
             nsAutoString temp; temp.AssignWithConversion(url->passwordRealm);
-            temp.AppendWithConversion(":");
+            temp.Append(NS_LITERAL_STRING(":"));
             temp.Append(userName);
 
             *list2 = ToNewUnicode(temp);

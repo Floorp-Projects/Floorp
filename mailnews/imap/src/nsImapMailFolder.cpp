@@ -305,7 +305,7 @@ NS_IMETHODIMP nsImapMailFolder::AddSubfolderWithPath(nsAutoString *name, nsIFile
     PRInt32 flags = 0;
   nsAutoString uri;
   uri.AppendWithConversion(mURI);
-  uri.AppendWithConversion('/');
+  uri.Append(PRUnichar('/'));
 
   uri.Append(*name);
   char* uriStr = ToNewCString(uri);

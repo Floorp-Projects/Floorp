@@ -361,9 +361,9 @@ nsMsgAccount::SetKey(const char *accountKey)
 NS_IMETHODIMP
 nsMsgAccount::ToString(PRUnichar **aResult)
 {
-  nsAutoString val; val.AssignWithConversion("[nsIMsgAccount: ");
+  nsAutoString val(NS_LITERAL_STRING("[nsIMsgAccount: "));
   val.AppendWithConversion(m_accountKey);
-  val.AppendWithConversion("]");
+  val.Append(NS_LITERAL_STRING("]"));
   *aResult = ToNewUnicode(val);
   return NS_OK;
 }

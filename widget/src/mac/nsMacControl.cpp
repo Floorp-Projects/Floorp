@@ -630,7 +630,7 @@ void nsMacControl::GetFileSystemCharset(nsString & fileSystemCharset)
 
     NS_ASSERTION(NS_SUCCEEDED(rv), "error getting platform charset");
 	  if (NS_FAILED(rv)) 
-		  aCharset.AssignWithConversion("x-mac-roman");
+		  aCharset.Assign(NS_LITERAL_STRING("x-mac-roman"));
   }
   fileSystemCharset = aCharset;
 }

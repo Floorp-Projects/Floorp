@@ -205,7 +205,7 @@ nsP3PDataStruct::GetFullName( nsString&  aName ) {
     mParent->GetFullName( aName );
 
     if (aName.Length( ) > 0) {
-      aName.AppendWithConversion( "." );
+      aName.Append(NS_LITERAL_STRING("."));
     }
 
     aName += mName;

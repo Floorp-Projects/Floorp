@@ -669,7 +669,7 @@ BOOL nsAbWinHelper::CreateEntry(const nsMapiEntry& aParent, nsMapiEntry& aNewEnt
     nsAutoString tempName ;
 
     displayName.ulPropTag = PR_DISPLAY_NAME_W ;
-    tempName.AssignWithConversion("__MailUser__") ;
+    tempName.Assign(NS_LITERAL_STRING("__MailUser__")) ;
     tempName.AppendInt(mEntryCounter ++) ;
     displayName.Value.lpszW = NS_CONST_CAST(WORD *, tempName.get()) ;
     mLastError = newEntry->SetProps(1, &displayName, &problems) ;
@@ -732,7 +732,7 @@ BOOL nsAbWinHelper::CreateDistList(const nsMapiEntry& aParent, nsMapiEntry& aNew
     nsAutoString tempName ;
 
     displayName.ulPropTag = PR_DISPLAY_NAME_W ;
-    tempName.AssignWithConversion("__MailList__") ;
+    tempName.Assign(NS_LITERAL_STRING("__MailList__")) ;
     tempName.AppendInt(mEntryCounter ++) ;
     displayName.Value.lpszW = NS_CONST_CAST(WORD *, tempName.get()) ;
     mLastError = newEntry->SetProps(1, &displayName, &problems) ;

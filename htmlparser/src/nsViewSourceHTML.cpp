@@ -72,6 +72,7 @@
 #include "nsHTMLTokenizer.h"
 #include "nsHTMLEntities.h"
 #include "nsIPref.h"
+#include "nsUnicharUtils.h"
 
 #include "COtherDTD.h"
 #include "nsElementTable.h"
@@ -643,9 +644,9 @@ nsresult  CViewSourceHTML::GenerateSummary() {
 
   if(mErrorCount && mTagCount) {
 
-    mErrors.AppendWithConversion("\n\n ");
+    mErrors.Append(NS_LITERAL_STRING("\n\n "));
     mErrors.AppendInt(mErrorCount);
-    mErrors.AppendWithConversion(" error(s) detected -- see highlighted portions.\n");
+    mErrors.Append(NS_LITERAL_STRING(" error(s) detected -- see highlighted portions.\n"));
 
     result=WriteTag(mSummaryTag,mErrors,0,PR_FALSE);
   }
@@ -1061,7 +1062,7 @@ void CViewSourceHTML::AddContainmentError(eHTMLTags aChildTag,eHTMLTags aParentT
       mErrors.AppendWithConversion(theMsg);
     }
     else if(gErrorThreshold+1==mErrorCount){
-      mErrors.AppendWithConversion("\n -- Too many errors -- terminating output.");
+      mErrors.Append(NS_LITERAL_STRING("\n -- Too many errors -- terminating output."));
     }
   }
 
@@ -1218,10 +1219,10 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
       {
         nsAutoString theStr;
         theStr.Assign(aToken->GetStringValue());
-        if(!theStr.EqualsWithConversion("XI",IGNORE_CASE)) {
+        if(Compare(theStr, NS_LITERAL_STRING("XI"), nsCaseInsensitiveStringComparator()) != 0) {
           PRUnichar theChar=theStr.CharAt(0);
           if((nsCRT::IsAsciiDigit(theChar)) || ('X'==theChar) || ('x'==theChar)){
-            theStr.InsertWithConversion("#", 0);
+            theStr.Assign(NS_LITERAL_STRING("#") + theStr);
           }
         }
         result=WriteTag(mEntityTag,theStr,0,PR_FALSE);

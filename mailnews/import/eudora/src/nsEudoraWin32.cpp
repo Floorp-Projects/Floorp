@@ -276,7 +276,7 @@ nsresult nsEudoraWin32::IterateMailDir( nsIFileSpec *pFolder, nsISupportsArray *
 					name = fName;
 				}
 				ext.ToLowerCase();
-				if (!ext.CompareWithConversion( ".fol")) {
+				if (ext.Equals(NS_LITERAL_CSTRING(".fol"))) {
 					isFolder = PR_FALSE;
 					entry->IsDirectory( &isFolder);
 					if (isFolder) {
@@ -290,7 +290,7 @@ nsresult nsEudoraWin32::IterateMailDir( nsIFileSpec *pFolder, nsISupportsArray *
 						}
 					}
 				}
-				else if (!ext.CompareWithConversion( ".mbx")) {
+				else if (ext.Equals(NS_LITERAL_CSTRING(".mbx"))) {
 					isFile = PR_FALSE;
 					entry->IsFile( &isFile);
 					if (isFile) {
@@ -698,8 +698,8 @@ void nsEudoraWin32::GetAccountName( const char *pSection, nsString& str)
 
 	nsCString	s(pSection);
 	
-	if (!s.CompareWithConversion( "Settings", PR_TRUE)) {
-		str.AssignWithConversion("Eudora ");
+	if (!Compare(s, NS_LITERAL_CSTRING("Settings"), nsCaseInsensitiveCStringComparator())) {
+		str.Assign(NS_LITERAL_STRING("Eudora "));
 		str.AppendWithConversion( pSection);
 	}
 	else {
@@ -707,7 +707,7 @@ void nsEudoraWin32::GetAccountName( const char *pSection, nsString& str)
 		str.AssignWithConversion(pSection);
 		if (s.Length() > 8) {
 			s.Left( tStr, 8); 
-			if (!tStr.CompareWithConversion( "Persona-", PR_TRUE)) {
+			if (!Compare(tStr, NS_LITERAL_CSTRING("Persona-"), nsCaseInsensitiveCStringComparator())) {
 				s.Right( tStr, s.Length() - 8);
 				str.AssignWithConversion(tStr.get());
 			}
@@ -982,7 +982,7 @@ PRBool nsEudoraWin32::FindMimeIniFile( nsIFileSpec *pSpec)
 					name = fName;
 				}
 				ext.ToLowerCase();
-				if (!ext.CompareWithConversion( ".ini")) {
+				if (ext.Equals(NS_LITERAL_CSTRING(".ini"))) {
 					isFile = PR_FALSE;
 					entry->IsFile( &isFile);
 					if (isFile) {
@@ -1341,7 +1341,7 @@ nsresult nsEudoraWin32::ScanAddressDir( nsIFileSpec *pDir, nsISupportsArray *pAr
 					name = fName;
 				}
 				ext.ToLowerCase();
-				if (!ext.CompareWithConversion( ".txt")) {
+				if (ext.Equals(NS_LITERAL_CSTRING(".txt"))) {
 					isFile = PR_FALSE;
 					entry->IsFile( &isFile);
 					if (isFile) {

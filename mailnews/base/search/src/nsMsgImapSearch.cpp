@@ -152,7 +152,7 @@ nsresult nsMsgSearchOnlineMail::Encode (nsCString& pEncoding,
 	else
 		asciiOnly = PR_FALSE;
 
-  nsAutoString usAsciiCharSet; usAsciiCharSet.AssignWithConversion("us-ascii");
+  nsAutoString usAsciiCharSet(NS_LITERAL_STRING("us-ascii"));
 	// Get the optional CHARSET parameter, in case we need it.
   char *csname = GetImapCharsetParam(asciiOnly ? usAsciiCharSet.get() : destCharset);
 

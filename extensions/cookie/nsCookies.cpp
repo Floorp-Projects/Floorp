@@ -1561,12 +1561,12 @@ COOKIE_Read() {
     new_cookie->cookie = ToNewCString(cookie);
     new_cookie->host = ToNewCString(host);
     new_cookie->path = ToNewCString(path);
-    if (isDomain.EqualsWithConversion("TRUE")) {
+    if (isDomain.Equals(NS_LITERAL_STRING("TRUE"))) {
       new_cookie->isDomain = PR_TRUE;
     } else {
       new_cookie->isDomain = PR_FALSE;
     }
-    if (isSecure.EqualsWithConversion("TRUE")) {
+    if (isSecure.Equals(NS_LITERAL_STRING("TRUE"))) {
       new_cookie->isSecure = PR_TRUE;
     } else {
       new_cookie->isSecure = PR_FALSE;

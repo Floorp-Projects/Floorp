@@ -66,7 +66,7 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetAccState(PRUint32 *_retval)
   // Has Popup?
   nsAutoString tagName;
   element->GetLocalName(tagName);
-  if (tagName.EqualsWithConversion("menu"))
+  if (tagName.Equals(NS_LITERAL_STRING("menu")))
     *_retval |= STATE_HASPOPUP;
 
   nsAutoString menuItemType;
@@ -74,7 +74,7 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetAccState(PRUint32 *_retval)
 
   if (!menuItemType.IsEmpty()) {
     // Selectable?
-    if (menuItemType.EqualsWithConversion("radio"))
+    if (menuItemType.Equals(NS_LITERAL_STRING("radio")))
       *_retval |= STATE_SELECTABLE;
 
     // Checked?

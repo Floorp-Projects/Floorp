@@ -89,13 +89,13 @@ nsresult nsCollationWin::Initialize(nsILocale* locale)
   }
 
   // default charset name
-  mCharset.AssignWithConversion("ISO-8859-1");
+  mCharset.Assign(NS_LITERAL_STRING("ISO-8859-1"));
   
   // default LCID (en-US)
   mLCID = 1033;
 
   PRUnichar *aLocaleUnichar = NULL;
-  nsString aCategory; aCategory.AssignWithConversion("NSILOCALE_COLLATE");
+  nsString aCategory(NS_LITERAL_STRING("NSILOCALE_COLLATE"));
 
   // get locale string, use app default if no locale specified
   if (locale == nsnull) {

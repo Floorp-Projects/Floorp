@@ -453,7 +453,7 @@ nsXULDocument::nsXULDocument(void)
       mBroadcasterMap(nsnull)
 {
     NS_INIT_REFCNT();
-    mCharSetID.AssignWithConversion("UTF-8");
+    mCharSetID.Assign(NS_LITERAL_STRING("UTF-8"));
 
     // Force initialization.
     mBindingManager = do_CreateInstance("@mozilla.org/xbl/binding-manager;1");

@@ -381,7 +381,7 @@ nsP3PObserverXML::Notify( nsISupports          *aDocumentID,
 
       if (NS_SUCCEEDED( rv )) {
         // Extract the DocShell from the ParserBundle
-        sDocumentKey.AssignWithConversion( "docshell" );
+        sDocumentKey.Assign(NS_LITERAL_STRING("docshell"));
         rv = pParserBundle->GetDataFromBundle( sDocumentKey,
                                                getter_AddRefs( pDocShell ) );
 

@@ -243,19 +243,19 @@ printf("String:%s,  Number:%s,  Unit:%s\n", s1, s2, s3);
   if (0 == unit.Length()) {
     cssUnit = eCSSUnit_Number; // no explicit unit, this is a number that will act as a multiplier
   }
-  else if (unit.EqualsWithConversion("%")) {
+  else if (unit.Equals(NS_LITERAL_STRING("%"))) {
     floatValue = floatValue / 100.0f;
     aCSSValue.SetPercentValue(floatValue);
     return PR_TRUE;
   }
-  else if (unit.EqualsWithConversion("em")) cssUnit = eCSSUnit_EM;
-  else if (unit.EqualsWithConversion("ex")) cssUnit = eCSSUnit_XHeight;
-  else if (unit.EqualsWithConversion("px")) cssUnit = eCSSUnit_Pixel;
-  else if (unit.EqualsWithConversion("in")) cssUnit = eCSSUnit_Inch;
-  else if (unit.EqualsWithConversion("cm")) cssUnit = eCSSUnit_Centimeter;
-  else if (unit.EqualsWithConversion("mm")) cssUnit = eCSSUnit_Millimeter;
-  else if (unit.EqualsWithConversion("pt")) cssUnit = eCSSUnit_Point;
-  else if (unit.EqualsWithConversion("pc")) cssUnit = eCSSUnit_Pica;
+  else if (unit.Equals(NS_LITERAL_STRING("em"))) cssUnit = eCSSUnit_EM;
+  else if (unit.Equals(NS_LITERAL_STRING("ex"))) cssUnit = eCSSUnit_XHeight;
+  else if (unit.Equals(NS_LITERAL_STRING("px"))) cssUnit = eCSSUnit_Pixel;
+  else if (unit.Equals(NS_LITERAL_STRING("in"))) cssUnit = eCSSUnit_Inch;
+  else if (unit.Equals(NS_LITERAL_STRING("cm"))) cssUnit = eCSSUnit_Centimeter;
+  else if (unit.Equals(NS_LITERAL_STRING("mm"))) cssUnit = eCSSUnit_Millimeter;
+  else if (unit.Equals(NS_LITERAL_STRING("pt"))) cssUnit = eCSSUnit_Point;
+  else if (unit.Equals(NS_LITERAL_STRING("pc"))) cssUnit = eCSSUnit_Pica;
   else // unexpected unit
     return PR_FALSE;
 
@@ -312,31 +312,31 @@ nsMathMLContainerFrame::ParseNamedSpaceValue(nsIFrame*   aMathMLmstyleFrame,
   // See if it is one of the 'namedspace' (ranging 1/18em...7/18em)
   PRInt32 i = 0;
   nsIAtom* namedspaceAtom;
-  if (aString.EqualsWithConversion("veryverythinmathspace")) {
+  if (aString.Equals(NS_LITERAL_STRING("veryverythinmathspace"))) {
     i = 1;
     namedspaceAtom = nsMathMLAtoms::veryverythinmathspace_;
   }
-  else if (aString.EqualsWithConversion("verythinmathspace")) {
+  else if (aString.Equals(NS_LITERAL_STRING("verythinmathspace"))) {
     i = 2;
     namedspaceAtom = nsMathMLAtoms::verythinmathspace_;
   }
-  else if (aString.EqualsWithConversion("thinmathspace")) {
+  else if (aString.Equals(NS_LITERAL_STRING("thinmathspace"))) {
     i = 3;
     namedspaceAtom = nsMathMLAtoms::thinmathspace_;
   }
-  else if (aString.EqualsWithConversion("mediummathspace")) {
+  else if (aString.Equals(NS_LITERAL_STRING("mediummathspace"))) {
     i = 4;
     namedspaceAtom = nsMathMLAtoms::mediummathspace_;
   }
-  else if (aString.EqualsWithConversion("thickmathspace")) {
+  else if (aString.Equals(NS_LITERAL_STRING("thickmathspace"))) {
     i = 5;
     namedspaceAtom = nsMathMLAtoms::thickmathspace_;
   }
-  else if (aString.EqualsWithConversion("verythickmathspace")) {
+  else if (aString.Equals(NS_LITERAL_STRING("verythickmathspace"))) {
     i = 6;
     namedspaceAtom = nsMathMLAtoms::verythickmathspace_;
   }
-  else if (aString.EqualsWithConversion("veryverythickmathspace")) {
+  else if (aString.Equals(NS_LITERAL_STRING("veryverythickmathspace"))) {
     i = 7;
     namedspaceAtom = nsMathMLAtoms::veryverythickmathspace_;
   }
@@ -824,12 +824,12 @@ nsMathMLContainerFrame::ReResolveScriptStyle(nsIPresContext*  aPresContext,
         gap = NS_MATHML_CSS_NEGATIVE_SCRIPTLEVEL_LIMIT;
       gap = -gap;
       scriptsizemultiplier = 1.0f / scriptsizemultiplier;
-      fontsize.AssignWithConversion("-");
+      fontsize.Assign(NS_LITERAL_STRING("-"));
     }
     else { // the size is going to be decreased
       if (gap > NS_MATHML_CSS_POSITIVE_SCRIPTLEVEL_LIMIT)
         gap = NS_MATHML_CSS_POSITIVE_SCRIPTLEVEL_LIMIT;
-      fontsize.AssignWithConversion("+");
+      fontsize.Assign(NS_LITERAL_STRING("+"));
     }
     fontsize.AppendInt(gap, 10);
     // we want to make sure that the size will stay readable
@@ -840,7 +840,7 @@ nsMathMLContainerFrame::ReResolveScriptStyle(nsIPresContext*  aPresContext,
       newFontSize = (nscoord)((float)(newFontSize) * scriptsizemultiplier);
     }
     if (newFontSize <= scriptminsize) {
-      fontsize.AssignWithConversion("scriptminsize");
+      fontsize.Assign(NS_LITERAL_STRING("scriptminsize"));
     }
 
     // set the -moz-math-font-size attribute without notifying that we want a reflow

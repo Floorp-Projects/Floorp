@@ -62,6 +62,7 @@
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsString.h"
+#include "nsUnicharUtils.h"
 #include "nsIEventStateManager.h"
 #include "nsIDOMEvent.h"
 #include "nsIPrivateDOMEvent.h"
@@ -1055,24 +1056,24 @@ nsGenericElement::InternalIsSupported(const nsAReadableString& aFeature,
   *aReturn = PR_FALSE;
   nsAutoString feature(aFeature);
 
-  if (feature.EqualsWithConversion("XML", PR_TRUE) ||
-      feature.EqualsWithConversion("HTML", PR_TRUE)) {
-    if (!aVersion.Length() ||
+  if (!Compare(feature, NS_LITERAL_STRING("XML"), nsCaseInsensitiveStringComparator()) ||
+      !Compare(feature, NS_LITERAL_STRING("HTML"), nsCaseInsensitiveStringComparator())) {
+    if (aVersion.IsEmpty() ||
         aVersion.Equals(NS_LITERAL_STRING("1.0")) ||
         aVersion.Equals(NS_LITERAL_STRING("2.0"))) {
       *aReturn = PR_TRUE;
     }
-  } else if (feature.EqualsWithConversion("Views", PR_TRUE) ||
-             feature.EqualsWithConversion("StyleSheets", PR_TRUE) ||
-             feature.EqualsWithConversion("CSS", PR_TRUE) ||
-//           feature.EqualsWithConversion("CSS2", PR_TRUE) ||
-             feature.EqualsWithConversion("Events", PR_TRUE) ||
-//           feature.EqualsWithConversion("UIEvents", PR_TRUE) ||
-             feature.EqualsWithConversion("MouseEvents", PR_TRUE) ||
-             feature.EqualsWithConversion("MouseScrollEvents", PR_TRUE) ||
-             feature.EqualsWithConversion("HTMLEvents", PR_TRUE) ||
-             feature.EqualsWithConversion("Range", PR_TRUE)) {
-    if (!aVersion.Length() || aVersion.Equals(NS_LITERAL_STRING("2.0"))) {
+  } else if (!Compare(feature, NS_LITERAL_STRING("Views"), nsCaseInsensitiveStringComparator()) ||
+             !Compare(feature, NS_LITERAL_STRING("StyleSheets"), nsCaseInsensitiveStringComparator()) ||
+             !Compare(feature, NS_LITERAL_STRING("CSS"), nsCaseInsensitiveStringComparator()) ||
+//           !Compare(feature, NS_LITERAL_STRING("CSS2"), nsCaseInsensitiveStringComparator()) ||
+             !Compare(feature, NS_LITERAL_STRING("Events"), nsCaseInsensitiveStringComparator()) ||
+//           !Compare(feature, NS_LITERAL_STRING("UIEvents"), nsCaseInsensitiveStringComparator()) ||
+             !Compare(feature, NS_LITERAL_STRING("MouseEvents"), nsCaseInsensitiveStringComparator()) ||
+             !Compare(feature, NS_LITERAL_STRING("MouseScrollEvents"), nsCaseInsensitiveStringComparator()) ||
+             !Compare(feature, NS_LITERAL_STRING("HTMLEvents"), nsCaseInsensitiveStringComparator()) ||
+             !Compare(feature, NS_LITERAL_STRING("Range"), nsCaseInsensitiveStringComparator())) {
+    if (aVersion.IsEmpty() || aVersion.Equals(NS_LITERAL_STRING("2.0"))) {
       *aReturn = PR_TRUE;
     }
   }
@@ -3496,7 +3497,7 @@ nsGenericContainerElement::ListAttributes(FILE* out) const
     buffer.Append(name);
 
     // value
-    buffer.AppendWithConversion("=");
+    buffer.Append(NS_LITERAL_STRING("="));
     buffer.Append(attr->mValue);
 
     fputs(" ", out);

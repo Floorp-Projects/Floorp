@@ -138,7 +138,7 @@ NS_IMETHODIMP nsAccessProxy::HandleEvent(nsIDOMEvent* aEvent)
   }
   //return  NS_OK;
   /*
-  if (presShell && eventNameStr.EqualsWithConversion("click")) {
+  if (presShell && eventNameStr.Equals(NS_LITERAL_STRING("click"))) {
     nsCOMPtr<nsIFrameSelection> frameSelection;
     presShell->GetFrameSelection(getter_AddRefs(frameSelection));
     if (!frameSelection)

@@ -331,43 +331,43 @@ mozXMLTermKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
         keyChar = U_ESCAPE;
         break;
       case nsIDOMKeyEvent::DOM_VK_HOME:
-        JSCommand.AssignWithConversion("ScrollHomeKey");
+        JSCommand.Assign(NS_LITERAL_STRING("ScrollHomeKey"));
         break;
       case nsIDOMKeyEvent::DOM_VK_END:
-        JSCommand.AssignWithConversion("ScrollEndKey");
+        JSCommand.Assign(NS_LITERAL_STRING("ScrollEndKey"));
         break;
       case nsIDOMKeyEvent::DOM_VK_PAGE_UP:
-        JSCommand.AssignWithConversion("ScrollPageUpKey");
+        JSCommand.Assign(NS_LITERAL_STRING("ScrollPageUpKey"));
         break;
       case nsIDOMKeyEvent::DOM_VK_PAGE_DOWN:
-        JSCommand.AssignWithConversion("ScrollPageDownKey");
+        JSCommand.Assign(NS_LITERAL_STRING("ScrollPageDownKey"));
         break;
       case nsIDOMKeyEvent::DOM_VK_F1:
-        JSCommand.AssignWithConversion("F1Key");
+        JSCommand.Assign(NS_LITERAL_STRING("F1Key"));
         break;
       case nsIDOMKeyEvent::DOM_VK_F2:
-        JSCommand.AssignWithConversion("F2Key");
+        JSCommand.Assign(NS_LITERAL_STRING("F2Key"));
         break;
       case nsIDOMKeyEvent::DOM_VK_F3:
-        JSCommand.AssignWithConversion("F3Key");
+        JSCommand.Assign(NS_LITERAL_STRING("F3Key"));
         break;
       case nsIDOMKeyEvent::DOM_VK_F4:
-        JSCommand.AssignWithConversion("F4Key");
+        JSCommand.Assign(NS_LITERAL_STRING("F4Key"));
         break;
       case nsIDOMKeyEvent::DOM_VK_F5:
-        JSCommand.AssignWithConversion("F5Key");
+        JSCommand.Assign(NS_LITERAL_STRING("F5Key"));
         break;
       case nsIDOMKeyEvent::DOM_VK_F6:
-        JSCommand.AssignWithConversion("F6Key");
+        JSCommand.Assign(NS_LITERAL_STRING("F6Key"));
         break;
       case nsIDOMKeyEvent::DOM_VK_F7:
-        JSCommand.AssignWithConversion("F7Key");
+        JSCommand.Assign(NS_LITERAL_STRING("F7Key"));
         break;
       case nsIDOMKeyEvent::DOM_VK_F8:
-        JSCommand.AssignWithConversion("F8Key");
+        JSCommand.Assign(NS_LITERAL_STRING("F8Key"));
         break;
       case nsIDOMKeyEvent::DOM_VK_F9:
-        JSCommand.AssignWithConversion("F9Key");
+        JSCommand.Assign(NS_LITERAL_STRING("F9Key"));
         break;
       default: 
         if ( (ctrlKey && (keyCode ==nsIDOMKeyEvent::DOM_VK_SPACE)) ||
@@ -399,11 +399,11 @@ mozXMLTermKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
       if (NS_SUCCEEDED(result) && domDocument) {
         nsAutoString JSInput = JSCommand;
         nsAutoString JSOutput; JSOutput.SetLength(0);
-        JSInput.AppendWithConversion("(");
+        JSInput.Append(NS_LITERAL_STRING("("));
         JSInput.AppendInt(shiftKey,10);
-        JSInput.AppendWithConversion(",");
+        JSInput.Append(NS_LITERAL_STRING(","));
         JSInput.AppendInt(ctrlKey,10);
-        JSInput.AppendWithConversion(");");
+        JSInput.Append(NS_LITERAL_STRING(");"));
         result = mozXMLTermUtils::ExecuteScript(domDocument,
                                                 JSInput,
                                                 JSOutput);

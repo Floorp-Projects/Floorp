@@ -652,7 +652,7 @@ nsresult nsWebBrowserPersist::SaveDocumentInternal(
 
         // Save the document
         nsCOMPtr<nsIDiskDocument> diskDoc = do_QueryInterface(docAsNode);
-        nsString contentType; contentType.AssignWithConversion("text/html"); // TODO
+        nsString contentType(NS_LITERAL_STRING("text/html")); // TODO
         nsString charType; // Empty
 
         rv = diskDoc->SaveFile(
@@ -686,7 +686,7 @@ nsresult nsWebBrowserPersist::SaveDocuments()
 
         // Save the document, fixing it up with the new URIs as we do
         nsCOMPtr<nsIDiskDocument> diskDoc = do_QueryInterface(docData->mDocument);
-        nsString contentType; contentType.AssignWithConversion("text/html"); // TODO
+        nsString contentType(NS_LITERAL_STRING("text/html")); // TODO
         nsString charType; // Empty
         
         nsEncoderNodeFixup *nodeFixup;
@@ -1072,7 +1072,7 @@ nsWebBrowserPersist::OnWalkDOMNode(nsIDOMNode *aNode, PRBool *aAbort)
         StoreURIAttribute(aNode, "src", PR_FALSE, &data);
         data->mIsSubFrame = PR_TRUE;
         // TODO how do we get the proper extension (or MIME type) from a DOM document?
-        data->mSubFrameExt.AssignWithConversion(".htm");
+        data->mSubFrameExt.Assign(NS_LITERAL_STRING(".htm"));
         // Save the frame content
         nsCOMPtr<nsIDOMDocument> content;
         nodeAsFrame->GetContentDocument(getter_AddRefs(content));
@@ -1090,7 +1090,7 @@ nsWebBrowserPersist::OnWalkDOMNode(nsIDOMNode *aNode, PRBool *aAbort)
         StoreURIAttribute(aNode, "src", PR_FALSE, &data);
         data->mIsSubFrame = PR_TRUE;
         // TODO how do we get the proper extension (or MIME type) from a DOM document?
-        data->mSubFrameExt.AssignWithConversion(".htm");
+        data->mSubFrameExt.Assign(NS_LITERAL_STRING(".htm"));
         // Save the frame content
         nsCOMPtr<nsIDOMDocument> content;
         nodeAsIFrame->GetContentDocument(getter_AddRefs(content));
@@ -1318,7 +1318,7 @@ nsWebBrowserPersist::FixupAnchor(nsIDOMNode *aNode)
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
     // Make all anchor links absolute so they point off onto the Internet
-    nsString attribute; attribute.AssignWithConversion("href");
+    nsString attribute(NS_LITERAL_STRING("href"));
     rv = attrMap->GetNamedItem(attribute, getter_AddRefs(attrNode));
     if (attrNode)
     {
@@ -1378,7 +1378,7 @@ nsWebBrowserPersist::SaveSubframeContent(
     NS_ENSURE_SUCCESS(rv, PR_FALSE);
     nsCOMPtr<nsILocalFile> frameDatapath = do_QueryInterface(frameDataPathAsFile);
     nsString frameDataPathName = aData->mFilename;
-    frameDataPathName.AppendWithConversion("_data");
+    frameDataPathName.Append(NS_LITERAL_STRING("_data"));
     frameDatapath->AppendUnicode(frameDataPathName.get());
 
     SaveDocumentInternal(aFrameContent, frameFile, frameDatapath);
@@ -1445,7 +1445,7 @@ nsWebBrowserPersist::SaveDocumentToFileWithFixup(
         rv = aDocument->GetDocumentCharacterSet(charsetStr);
         if(NS_FAILED(rv))
         {
-            charsetStr.AssignWithConversion("ISO-8859-1"); 
+            charsetStr.Assign(NS_LITERAL_STRING("ISO-8859-1")); 
         }
     }
     encoder->SetCharset(charsetStr);

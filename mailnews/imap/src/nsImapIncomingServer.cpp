@@ -232,7 +232,7 @@ nsImapIncomingServer::GetConstructedPrettyName(PRUnichar **retval)
     if ((const char*)username && (const char *) hostName &&
         PL_strcmp((const char*)username, "")!=0) {
       emailAddress.AssignWithConversion(username);
-      emailAddress.AppendWithConversion("@");
+      emailAddress.Append(NS_LITERAL_STRING("@"));
       emailAddress.AppendWithConversion(hostName);
 
     }
@@ -2048,7 +2048,7 @@ nsresult nsImapIncomingServer::GetStringBundle()
 
 NS_IMETHODIMP  nsImapIncomingServer::GetImapStringByID(PRInt32 aMsgId, PRUnichar **aString)
 {
-	nsAutoString	resultString; resultString.AssignWithConversion("???");
+	nsAutoString	resultString(NS_LITERAL_STRING("???"));
 	nsresult res = NS_OK;
 
   GetStringBundle();
@@ -2059,9 +2059,9 @@ NS_IMETHODIMP  nsImapIncomingServer::GetImapStringByID(PRInt32 aMsgId, PRUnichar
 
 		if (NS_FAILED(res)) 
 		{
-			resultString.AssignWithConversion("[StringID");
+			resultString.Assign(NS_LITERAL_STRING("[StringID"));
 			resultString.AppendInt(aMsgId, 10);
-			resultString.AssignWithConversion("?]");
+			resultString.Assign(NS_LITERAL_STRING("?]"));
 			*aString = ToNewUnicode(resultString);
 		}
 		else
@@ -3249,12 +3249,12 @@ nsImapIncomingServer::GeneratePrettyNameForMigration(PRUnichar **aPrettyName)
     // Construct pretty name from username and hostname
     nsAutoString constructedPrettyName;
     constructedPrettyName.AssignWithConversion(userName);
-    constructedPrettyName.AppendWithConversion("@");
+    constructedPrettyName.Append(NS_LITERAL_STRING("@"));
     constructedPrettyName.AppendWithConversion(hostName);
 
     // If the port is valid and not default, add port value to the pretty name
     if ((serverPort > 0) && (!isItDefaultPort)) {
-        constructedPrettyName.AppendWithConversion(":");
+        constructedPrettyName.Append(NS_LITERAL_STRING(":"));
         constructedPrettyName.AppendInt(serverPort);
     }
 

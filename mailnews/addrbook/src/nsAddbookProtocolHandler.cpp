@@ -271,18 +271,18 @@ nsAddbookProtocolHandler::AddIndividualUserAttribPair(nsString &aString, const c
 
   if (NS_SUCCEEDED(aCard->GetCardValue(aColumn, &aName)) && (aName) && (*aName))
   {
-    aString.AppendWithConversion("<tr>");
+    aString.Append(NS_LITERAL_STRING("<tr>"));
 
-    aString.AppendWithConversion("<td><b>");
+    aString.Append(NS_LITERAL_STRING("<td><b>"));
     // RICHIE - Should really convert this to some string bundled thing? 
     aString.AppendWithConversion(aColumn);
-    aString.AppendWithConversion("</b></td>");
+    aString.Append(NS_LITERAL_STRING("</b></td>"));
 
-    aString.AppendWithConversion("<td>");
+    aString.Append(NS_LITERAL_STRING("<td>"));
     aString.Append(aName);
-    aString.AppendWithConversion("</td>");
+    aString.Append(NS_LITERAL_STRING("</td>"));
 
-    aString.AppendWithConversion("</tr>");
+    aString.Append(NS_LITERAL_STRING("</tr>"));
   }
 
   return NS_OK;
@@ -452,23 +452,23 @@ nsAddbookProtocolHandler::BuildSingleHTML(nsIAddrDatabase *aDatabase, nsIAbDirec
     return NS_ERROR_FAILURE;
 
   // Ok, build a little HTML for output...
-  workBuffer.AppendWithConversion("<HTML><BODY>");
-  workBuffer.AppendWithConversion("<CENTER>");
-  workBuffer.AppendWithConversion("<TABLE BORDER>");
+  workBuffer.Append(NS_LITERAL_STRING("<HTML><BODY>"));
+  workBuffer.Append(NS_LITERAL_STRING("<CENTER>"));
+  workBuffer.Append(NS_LITERAL_STRING("<TABLE BORDER>"));
 
   if (NS_SUCCEEDED(workCard->GetName(&aName)) && (aName))
   {
-    workBuffer.AppendWithConversion("<caption><b>");
+    workBuffer.Append(NS_LITERAL_STRING("<caption><b>"));
     workBuffer.Append(aName);
-    workBuffer.AppendWithConversion("</b></caption>");
+    workBuffer.Append(NS_LITERAL_STRING("</b></caption>"));
   }
 
   for (PRInt32 i=0; i<kMaxReportColumns; i++)
     AddIndividualUserAttribPair(workBuffer,  mReportColumns[i].abField, workCard);
 
-  workBuffer.AppendWithConversion("</TABLE>");
-  workBuffer.AppendWithConversion("<CENTER>");
-  workBuffer.AppendWithConversion("</BODY></HTML>");
+  workBuffer.Append(NS_LITERAL_STRING("</TABLE>"));
+  workBuffer.Append(NS_LITERAL_STRING("<CENTER>"));
+  workBuffer.Append(NS_LITERAL_STRING("</BODY></HTML>"));
   return rv;
 }
 
@@ -514,9 +514,9 @@ nsAddbookProtocolHandler::BuildAllHTML(nsIAddrDatabase *aDatabase, nsIAbDirector
   // Now, we need to generate some fun output!
   // 
   // Ok, build a little HTML for output...
-  workBuffer.AppendWithConversion("<HTML><BODY>");
-  workBuffer.AppendWithConversion("<CENTER>");
-  workBuffer.AppendWithConversion("<TABLE BORDER>");
+  workBuffer.Append(NS_LITERAL_STRING("<HTML><BODY>"));
+  workBuffer.Append(NS_LITERAL_STRING("<CENTER>"));
+  workBuffer.Append(NS_LITERAL_STRING("<TABLE BORDER>"));
 
   GenerateColumnHeadings(workBuffer);
 
@@ -541,9 +541,9 @@ nsAddbookProtocolHandler::BuildAllHTML(nsIAddrDatabase *aDatabase, nsIAbDirector
 
   // Finish up and get out!
   //
-  workBuffer.AppendWithConversion("</TABLE>");
-  workBuffer.AppendWithConversion("<CENTER>");
-  workBuffer.AppendWithConversion("</BODY></HTML>");
+  workBuffer.Append(NS_LITERAL_STRING("</TABLE>"));
+  workBuffer.Append(NS_LITERAL_STRING("<CENTER>"));
+  workBuffer.Append(NS_LITERAL_STRING("</BODY></HTML>"));
   return rv;
 }
 
@@ -563,14 +563,14 @@ TackOnColumn(nsIAbCard *aCard, const char *aColumn, nsString &aString)
 {
   PRUnichar     *aName = nsnull;
 
-  aString.AppendWithConversion("<td>");
+  aString.Append(NS_LITERAL_STRING("<td>"));
 
   if (NS_SUCCEEDED(aCard->GetCardValue(aColumn, &aName)) && (aName) && (*aName))
   {
     aString.Append(aName);
   }
 
-  aString.AppendWithConversion("</td>");
+  aString.Append(NS_LITERAL_STRING("</td>"));
   return NS_OK;
 }
 
@@ -589,22 +589,22 @@ nsAddbookProtocolHandler::CheckColumnValidity(nsIAbCard *aCard)
 NS_IMETHODIMP    
 nsAddbookProtocolHandler::GenerateColumnHeadings(nsString           &aString)
 {
-  aString.AppendWithConversion("<tr>");
+  aString.Append(NS_LITERAL_STRING("<tr>"));
 
   for (PRInt32 i=0; i<kMaxReportColumns; i++)
   {
     if (mReportColumns[i].includeIt)
     {
-      aString.AppendWithConversion("<td>");
-      aString.AppendWithConversion("<B>");
+      aString.Append(NS_LITERAL_STRING("<td>"));
+      aString.Append(NS_LITERAL_STRING("<B>"));
       // RICHIE - Should really convert this to some string bundled thing? 
       aString.AppendWithConversion(mReportColumns[i].abField);
-      aString.AppendWithConversion("</B>");
-      aString.AppendWithConversion("</td>");
+      aString.Append(NS_LITERAL_STRING("</B>"));
+      aString.Append(NS_LITERAL_STRING("</td>"));
     }
   }
 
-  aString.AppendWithConversion("</tr>");
+  aString.Append(NS_LITERAL_STRING("</tr>"));
   return NS_OK;
 }
 
@@ -612,7 +612,7 @@ NS_IMETHODIMP
 nsAddbookProtocolHandler::GenerateRowForCard(nsString           &aString, 
                                              nsIAbCard          *aCard)
 {
-  aString.AppendWithConversion("<tr>");
+  aString.Append(NS_LITERAL_STRING("<tr>"));
 
   for (PRInt32 i=0; i<kMaxReportColumns; i++)
   {
@@ -620,7 +620,7 @@ nsAddbookProtocolHandler::GenerateRowForCard(nsString           &aString,
       TackOnColumn(aCard, mReportColumns[i].abField, aString);
   }
 
-  aString.AppendWithConversion("</tr>");
+  aString.Append(NS_LITERAL_STRING("</tr>"));
   return NS_OK;
 }
 
