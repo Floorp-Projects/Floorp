@@ -21,12 +21,12 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: XSLProcessor.h,v 1.3 1999/11/15 07:48:36 nisheeth%netscape.com Exp $
+ * $Id: XSLProcessor.h,v 1.4 1999/11/18 04:39:59 kvisco%ziplink.net Exp $
  */
 
 
-#ifndef MITREXSL_XSLPROCESSOR_H
-#define MITREXSL_XSLPROCESSOR_H
+#ifndef TRANSFRMX_XSLPROCESSOR_H
+#define TRANSFRMX_XSLPROCESSOR_H
 
 #ifndef __BORLANDC__
 #ifndef MOZILLA
@@ -34,6 +34,7 @@
 #include <fstream.h>
 #endif
 #endif
+
 
 #ifdef MOZILLA
 #include "nsIDocumentTransformer.h"
@@ -59,6 +60,7 @@
 #include "VariableBinding.h"
 #include "Numbering.h"
 
+
 #ifdef MOZILLA
 /* bacd8ad0-552f-11d3-a9f7-000064657374 */
 #define MITRE_XSL_PROCESSOR_CID   \
@@ -66,10 +68,11 @@
 
 #endif
 
+
 /**
  * A class for Processing XSL Stylesheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.3 $ $Date: 1999/11/15 07:48:36 $
+ * @version $Revision: 1.4 $ $Date: 1999/11/18 04:39:59 $
 **/
 class XSLProcessor 
 #ifdef MOZILLA
@@ -114,11 +117,7 @@ public:
     /**
      * Default destructor for XSLProcessor
     **/
-#ifdef MOZILLA
     virtual ~XSLProcessor();
-#else
-    ~XSLProcessor();
-#endif
 
     /**
      * Registers the given ErrorObserver with this XSLProcessor
@@ -158,6 +157,7 @@ public:
      * @return the result tree.
     **/
     Document* process(Document& xmlDocument, String& documentBase);
+
 #endif
 
     /**
@@ -271,8 +271,18 @@ private:
                       ProcessorState* ps);
 
 #ifndef MOZILLA
-    XMLPrinter* createPrinter(Document& xslDocument, ostream& out);
+
+    /**
+     * Prints the given XML document to the given ostream and uses
+     * the properties specified in the OutputFormat.
+     * This method is used to print the result tree
+     * @param document the XML document to print
+     * @param format the OutputFormat specifying formatting info
+     * @param ostream the Stream to print to
+    **/
+    void print(Document& document, OutputFormat* format, ostream& out);
 #endif
+
 
     /**
      * Processes the xsl:with-param elements of the given xsl action
@@ -380,6 +390,7 @@ public:
         LITERAL,
         NUMBER,
         OTHERWISE,
+        OUTPUT,
         PARAM,
         PI,
         PRESERVE_SPACE,
@@ -401,3 +412,5 @@ public:
 };
 
 #endif
+
+

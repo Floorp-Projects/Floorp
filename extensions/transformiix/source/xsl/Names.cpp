@@ -21,14 +21,14 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: Names.cpp,v 1.2 1999/11/15 07:13:07 nisheeth%netscape.com Exp $
+ * $Id: Names.cpp,v 1.3 1999/11/18 04:39:55 kvisco%ziplink.net Exp $
  */
 
 /**
  * XSL names used throughout the XSLProcessor.
  * Probably should be wrapped in a Namespace
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.2 $ $Date: 1999/11/15 07:13:07 $
+ * @version $Revision: 1.3 $ $Date: 1999/11/18 04:39:55 $
 **/
 #include "Names.h"
 
@@ -59,6 +59,7 @@ const String INCLUDE            = "include";
 const String MESSAGE            = "message";
 const String NUMBER             = "number";
 const String OTHERWISE          = "otherwise";
+const String OUTPUT             = "output";
 const String PARAM              = "param";
 const String PI                 = "processing-instruction";
 const String PRESERVE_SPACE     = "preserve-space";
@@ -72,23 +73,34 @@ const String WITH_PARAM         = "with-param";
 
 
 //-- Attributes
+const String CDATA_ELEMENTS_ATTR     = "cdata-section-elements";
 const String COUNT_ATTR              = "count";
 const String DEFAULT_SPACE_ATTR      = "default-space";
+const String DOCTYPE_PUBLIC_ATTR     = "doctype-public";
+const String DOCTYPE_SYSTEM_ATTR     = "doctype-system";
 const String ELEMENTS_ATTR           = "elements";
+const String ENCODING_ATTR           = "encoding";
 const String EXPR_ATTR               = "expr";
 const String FORMAT_ATTR             = "format";
 const String FROM_ATTR               = "from";
 const String HREF_ATTR               = "href";
+const String INDENT_ATTR             = "indent";
 const String LEVEL_ATTR              = "level";
 const String MATCH_ATTR              = "match";
+const String METHOD_ATTR             = "method";
+const String MEDIA_TYPE_ATTR         = "media-type";
 const String MODE_ATTR               = "mode";
 const String NAME_ATTR               = "name";
 const String NAMESPACE_ATTR          = "namespace";
+const String OMIT_XMLDECL_ATTR       = "omit-xml-declaration"; 
 const String PRIORITY_ATTR           = "priority";
 const String SELECT_ATTR             = "select";
+const String STANDALONE              = "standalone";
 const String TEST_ATTR               = "test";
 const String USE_ATTRIBUTE_SETS_ATTR = "use-attribute-sets";
 const String VALUE_ATTR              = "value";
+const String VERSION_ATTR            = "version";
+
 
 //-- Attribute Values
 const String ANY_VALUE            = "any";

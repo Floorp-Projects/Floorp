@@ -21,14 +21,14 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: ProcessorState.cpp,v 1.2 1999/11/15 07:13:07 nisheeth%netscape.com Exp $
+ * $Id: ProcessorState.cpp,v 1.3 1999/11/18 04:39:57 kvisco%ziplink.net Exp $
  */
 
 /**
  * Implementation of ProcessorState
  * This code was ported from XSL:P
  * @author <a href="kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.2 $ $Date: 1999/11/15 07:13:07 $
+ * @version $Revision: 1.3 $ $Date: 1999/11/18 04:39:57 $
 **/
 
 #include "ProcessorState.h"
@@ -373,9 +373,25 @@ Element* ProcessorState::getNamedTemplate(String& name) {
 } //-- getNamedTemplate
 
 
+/**
+ * Returns the NodeStack which keeps track of where we are in the
+ * result tree
+ * @return the NodeStack which keeps track of where we are in the
+ * result tree
+**/
 NodeStack* ProcessorState::getNodeStack() {
     return nodeStack;
 } //-- getNodeStack
+
+/**
+ * Returns the OutputFormat which contains information on how
+ * to serialize the output. I will be removing this soon, when
+ * change to an event based printer, so that I can serialize
+ * as I go
+**/
+OutputFormat* ProcessorState::getOutputFormat() {
+    return &format;
+} //-- getOutputFormat
 
 PatternExpr* ProcessorState::getPatternExpr(const String& pattern) {
     PatternExpr* pExpr = (PatternExpr*)patternExprHash.get(pattern);
@@ -521,6 +537,12 @@ MBool ProcessorState::isStripSpaceAllowed(Node* node) {
             String name = node->getNodeName();
             if (wsPreserve.contains(name)) return MB_FALSE;
             if (wsStrip.contains(name)) return MB_TRUE;
+            String method;
+            if (format.getMethod(method).isEqual("html")) {
+	        String ucName = name;
+                ucName.toUpperCase();
+	        if (ucName.isEqual("SCRIPT")) return MB_FALSE;
+            }
             break;
         }
         case Node::TEXT_NODE:
@@ -651,6 +673,20 @@ void ProcessorState::initialize() {
                         defaultSpace = STRIP;
                     }
                 }
+                else if ( attName.isEqual(RESULT_NS_ATTR) ) {
+		    if (attValue.length() > 0) { 
+		        if ( attValue.indexOf(HTML_NS) == 0 ) {
+			    format.setMethod("html");
+                        }
+                        else format.setMethod(attValue);
+		    }
+                }
+                else if ( attName.isEqual(INDENT_RESULT_ATTR) ) {
+		    if ( attValue.length() > 0 ) {
+		        format.setIndent(attValue.isEqual(YES_VALUE));
+                    }
+                }
+
             } //-- end for each att
         } //-- end if atts are not null
     } //-- end if document element exists

@@ -21,13 +21,13 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: ProcessorState.h,v 1.2 1999/11/15 07:13:08 nisheeth%netscape.com Exp $
+ * $Id: ProcessorState.h,v 1.3 1999/11/18 04:39:58 kvisco%ziplink.net Exp $
  */
 
 
 
-#ifndef MITREXSL_PROCESSORSTATE_H
-#define MITREXSL_PROCESSORSTATE_H
+#ifndef TRANSFRMX_PROCESSORSTATE_H
+#define TRANSFRMX_PROCESSORSTATE_H
 
 #include "dom.h"
 #include "XMLUtils.h"
@@ -43,11 +43,12 @@
 #include "StringList.h"
 #include "Tokenizer.h"
 #include "VariableBinding.h"
+#include "OutputFormat.h"
 
 /**
  * Class used for keeping the current state of the XSL Processor
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.2 $ $Date: 1999/11/15 07:13:08 $
+ * @version $Revision: 1.3 $ $Date: 1999/11/18 04:39:58 $
 **/
 class ProcessorState : public ContextState
 {
@@ -135,11 +136,27 @@ public:
     **/
     Element* getNamedTemplate(String& name);
 
-     NodeStack* getNodeStack();
-     Stack*     getVariableSetStack();
+    /**
+     * Returns the NodeStack which keeps track of where we are in the
+     * result tree
+     * @return the NodeStack which keeps track of where we are in the
+     * result tree
+    **/
+    NodeStack* getNodeStack();
 
-     Expr*        getExpr(const String& pattern);
-     PatternExpr* getPatternExpr(const String& pattern);
+    /**
+     * Returns the OutputFormat which contains information on how
+     * to serialize the output. I will be removing this soon, when
+     * change to an event based printer, so that I can serialize
+     * as I go
+    **/
+    OutputFormat* getOutputFormat();
+
+    
+    Stack*     getVariableSetStack();
+
+    Expr*        getExpr(const String& pattern);
+    PatternExpr* getPatternExpr(const String& pattern);
 
      /**
       * Returns a pointer to the result document
@@ -201,8 +218,8 @@ public:
      /**
       * Returns the value of a given variable binding within the current scope
       * @param the name to which the desired variable value has been bound
-      * @return the ExprResult which has been bound to the variable with the given
-      * name
+      * @return the ExprResult which has been bound to the variable with
+      *  the given name
      **/
      virtual ExprResult* getVariable(String& name);
 
@@ -257,6 +274,12 @@ private:
      * Current stack of nodes, where we are in the result document tree
     **/
     NodeStack*     nodeStack;
+
+
+    /**
+     * The output format used when serializing the result
+    **/
+    OutputFormat format;
 
     /**
      * The set of whitespace preserving elements
