@@ -35,15 +35,34 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-pref("browser.hiddenWindowChromeURL", "chrome://messenger/content/hiddenWindow.xul");
-pref("network.search.url","http://cgi.netscape.com/cgi-bin/url_search.cgi?search=");
-
 pref("general.useragent.vendor", "Thunderbird");
 pref("general.useragent.vendorSub",
 #expand __APP_VERSION__
 );
+
+/////////////////////////////////////////////////////////////////
+// Overrides of the seamonkey suite mailnews.js prefs
+///////////////////////////////////////////////////////////////// 
+pref("mail.showFolderPaneColumns", false); // setting to true will allow total/unread/size columns
+
+// hidden pref for changing how we present attachments in the message pane
+pref("mailnews.attachments.display.largeView", false); 
+pref("mail.pane_config.dynamic",            0);
+pref("mailnews.display.sanitizeJunkMail", true);
+pref("mail.standalone", true); 
+
+/////////////////////////////////////////////////////////////////
+// End seamonkey suite mailnews.js pref overrides
+///////////////////////////////////////////////////////////////// 
+
+/////////////////////////////////////////////////////////////////
+// Overrides for generic app behavior from the seamonkey suite's all.js
+/////////////////////////////////////////////////////////////////
 pref("signon.rememberSignons",              true);
 pref("signon.expireMasterPassword",         false);
+
+pref("browser.hiddenWindowChromeURL", "chrome://messenger/content/hiddenWindow.xul");
+pref("network.search.url","http://cgi.netscape.com/cgi-bin/url_search.cgi?search=");
 
 pref("general.startup.browser",             false);
 pref("general.startup.mail",                false);
@@ -52,10 +71,39 @@ pref("general.startup.editor",              false);
 pref("general.startup.compose",             false);
 pref("general.startup.addressbook",         false);
 
-pref("general.open_location.last_url",      "");
-pref("general.open_location.last_window_choice", 0);
+pref("offline.startup_state",            2);
+pref("offline.send.unsent_messages",            0);
+pref("offline.download.download_messages",  0);
+pref("offline.prompt_synch_on_exit",            true);
+
+// Expose only select protocol handlers. All others should go                   
+// through the external protocol handler route.                                 
+pref("network.protocol-handler.expose-all", false);                             
+pref("network.protocol-handler.expose.mailto", true);
+pref("network.protocol-handler.expose.news", true);
+pref("network.protocol-handler.expose.snews", true);
+pref("network.protocol-handler.expose.nntp", true);
+pref("network.protocol-handler.expose.imap", true);
+pref("network.protocol-handler.expose.addbook", true);
+pref("network.protocol-handler.expose.pop", true);                                                                                                            
+pref("network.protocol-handler.expose.mailbox", true);  
+pref("network.protocols.useSystemDefaults",   false);  
+pref("network.hosts.smtp_server",           "mail");
+pref("network.hosts.pop_server",            "mail");
 
 pref("general.config.obscure_value", 0); // for MCD .cfg files
+
+/////////////////////////////////////////////////////////////////
+// End seamonkey suite all.js pref overrides
+///////////////////////////////////////////////////////////////// 
+
+/////////////////////////////////////////////////////////////////
+// Generic browser related prefs. 
+// XXX: Need to scrub these to see which ones thunderbird really needs...
+/////////////////////////////////////////////////////////////////
+
+pref("general.open_location.last_url",      "");
+pref("general.open_location.last_window_choice", 0);
 
 // 0 = blank, 1 = home (browser.startup.homepage), 2 = last
 pref("browser.startup.page",                1);
@@ -78,12 +126,6 @@ pref("browser.chrome.favicons", false);
 pref("browser.chrome.toolbar_tips",         true);
 // 0 = Pictures Only, 1 = Text Only, 2 = Pictures and Text
 pref("browser.chrome.toolbar_style",        2);
-
-pref("browser.toolbars.showbutton.bookmarks", true);
-pref("browser.toolbars.showbutton.go",      false);
-pref("browser.toolbars.showbutton.home",    true);
-pref("browser.toolbars.showbutton.print",   true);
-pref("browser.toolbars.showbutton.search",  true);
 
 pref("browser.turbo.enabled", false);
 
@@ -141,26 +183,6 @@ pref("browser.bookmarks.sort.resource", "rdf:http://home.netscape.com/NC-rdf#Nam
 pref("browser.search.defaultenginename", "chrome://communicator-region/locale/region.properties");
 
 pref("javascript.options.showInConsole",    true);
-
-pref("offline.startup_state",            2);
-pref("offline.send.unsent_messages",            0);
-pref("offline.download.download_messages",  0);
-pref("offline.prompt_synch_on_exit",            true);
-
-// Expose only select protocol handlers. All others should go                   
-// through the external protocol handler route.                                 
-pref("network.protocol-handler.expose-all", false);                             
-pref("network.protocol-handler.expose.mailto", true);
-pref("network.protocol-handler.expose.news", true);
-pref("network.protocol-handler.expose.snews", true);
-pref("network.protocol-handler.expose.nntp", true);
-pref("network.protocol-handler.expose.imap", true);
-pref("network.protocol-handler.expose.addbook", true);
-pref("network.protocol-handler.expose.pop", true);                                                                                                            
-pref("network.protocol-handler.expose.mailbox", true);  
-pref("network.protocols.useSystemDefaults",   false);  
-pref("network.hosts.smtp_server",           "mail");
-pref("network.hosts.pop_server",            "mail");
 
 pref("network.enableIDN",                   false); // Turn on/off IDN (Internationalized Domain Name) resolution
 pref("wallet.captureForms",                 true);

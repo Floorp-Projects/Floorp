@@ -45,8 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 DIRS		= profile
 
 PREF_JS_EXPORTS = \
-    $(srcdir)/profile/all.js \
-    $(srcdir)/profile/mailnews.js \
+    $(srcdir)/profile/thunderbird.js \
     $(NULL)
 
 ifeq ($(USE_SHORT_LIBNAME), 1)
