@@ -61,7 +61,6 @@ NS_INTERFACE_MAP_BEGIN(CWebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
-   NS_INTERFACE_MAP_ENTRY(nsIDocumentLoaderObserver)
    NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
    NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
 NS_INTERFACE_MAP_END
@@ -156,43 +155,6 @@ NS_IMETHODIMP CWebBrowserChrome::ShowAsModal(void)
 
 
 //*****************************************************************************
-// CWebBrowserChrome::nsIDocumentLoaderObserver
-//*****************************************************************************   
-
-NS_IMETHODIMP CWebBrowserChrome::OnStartDocumentLoad(nsIDocumentLoader *aLoader, nsIURI *aURL, const char *aCommand)
-{
-	NS_ENSURE_TRUE(mBrowserWindow, NS_ERROR_NOT_INITIALIZED);
-	return mBrowserWindow->BeginDocumentLoad(aLoader, aURL, aCommand);
-}
-
-NS_IMETHODIMP CWebBrowserChrome::OnEndDocumentLoad(nsIDocumentLoader *aLoader, nsIChannel *aChannel, PRUint32 aStatus)
-{
-	NS_ENSURE_TRUE(mBrowserWindow, NS_ERROR_NOT_INITIALIZED);
-	return mBrowserWindow->EndDocumentLoad(aLoader, aChannel, aStatus);
-}
-
-NS_IMETHODIMP CWebBrowserChrome::OnStartURLLoad(nsIDocumentLoader *aLoader, nsIChannel *channel)
-{
-	return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP CWebBrowserChrome::OnProgressURLLoad(nsIDocumentLoader *aLoader, nsIChannel *aChannel, PRUint32 aProgress, PRUint32 aProgressMax)
-{
-	return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP CWebBrowserChrome::OnStatusURLLoad(nsIDocumentLoader *loader, nsIChannel *channel, nsString & aMsg)
-{
-	return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP CWebBrowserChrome::OnEndURLLoad(nsIDocumentLoader *aLoader, nsIChannel *aChannel, PRUint32 aStatus)
-{
-	return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-
-//*****************************************************************************
 // CWebBrowserChrome::nsIWebProgressListener
 //*****************************************************************************   
 
@@ -210,18 +172,12 @@ NS_IMETHODIMP CWebBrowserChrome::OnStatusChange(nsIChannel *channel, PRInt32 pro
 {
 	NS_ENSURE_TRUE(mBrowserWindow, NS_ERROR_NOT_INITIALIZED);
 	
-	switch (progressStatusFlags)
-	{
-	   case nsIWebProgress::flag_net_start:
-	      mBrowserWindow->OnStatusNetStart(channel);
-	      break;
-	   case nsIWebProgress::flag_net_stop:
-	      mBrowserWindow->OnStatusNetStop(channel);
-	      break;
-	   case nsIWebProgress::flag_net_dns:
-	      mBrowserWindow->OnStatusDNS(channel);
-	      break;
-	}
+	if (progressStatusFlags & nsIWebProgress::flag_net_start)
+      mBrowserWindow->OnStatusNetStart(channel);
+	else if (progressStatusFlags & nsIWebProgress::flag_net_stop)
+	   mBrowserWindow->OnStatusNetStop(channel);
+	else if (progressStatusFlags & nsIWebProgress::flag_net_dns)
+      mBrowserWindow->OnStatusDNS(channel);
 
    return NS_OK;
 }
