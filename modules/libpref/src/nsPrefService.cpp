@@ -785,6 +785,29 @@ static nsresult pref_InitInitialObjects()
   // xxxbsmedberg: TODO load default prefs from a category
   // but the architecture is not quite there yet
 
+  static NS_DEFINE_CID(kDirectoryServiceCID, NS_DIRECTORY_SERVICE_CID);
+  nsCOMPtr<nsIProperties> dirSvc(do_GetService(kDirectoryServiceCID, &rv));
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsISimpleEnumerator> dirList;
+  dirSvc->Get(NS_APP_PREFS_DEFAULTS_DIR_LIST,
+              NS_GET_IID(nsISimpleEnumerator),
+              getter_AddRefs(dirList));
+  if (dirList) {
+    PRBool hasMore;
+    while (NS_SUCCEEDED(dirList->HasMoreElements(&hasMore)) && hasMore) {
+      nsCOMPtr<nsISupports> elem;
+      dirList->GetNext(getter_AddRefs(elem));
+      if (elem) {
+        nsCOMPtr<nsIFile> dir = do_QueryInterface(elem);
+        if (dir) {
+          // Do we care if a file provided by this process fails to load?
+          pref_LoadPrefsInDir(dir, nsnull, 0); 
+        }
+      }
+    }
+  }
+
   return NS_OK;
 }
 
