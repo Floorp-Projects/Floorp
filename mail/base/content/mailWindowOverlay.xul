@@ -1000,7 +1000,7 @@
           <menupopup id="menu_FilePopup" onpopupshowing="file_init();">
           <menu id="menu_New">
             <menupopup id="menu_NewPopup" onpopupshowing="menu_new_init();">
-              <menuitem label="&newNewMsgCmd.label;"
+              <menuitem id="newNewMsgCmd" label="&newNewMsgCmd.label;"
                         accesskey="&newNewMsgCmd.accesskey;"
                         key="key_newMessage"
                         oncommand="MsgNewMessage(null);"/>
@@ -1039,7 +1039,7 @@
           <menuitem id="menu_sendunsentmsgs" label="&sendUnsentCmd.label;"
            accesskey="&sendUnsentCmd.accesskey;"
            observes="cmd_sendUnsentMsgs"/>
-          <menuitem label="&subscribeCmd.label;"
+          <menuitem id="menu_subscribe" label="&subscribeCmd.label;"
            accesskey="&subscribeCmd.accesskey;"
            oncommand="MsgSubscribe();"/>
            <menuseparator/>
@@ -1254,7 +1254,7 @@
         <!-- Message -->
         <menu label="&msgMenu.label;" accesskey="&msgMenu.accesskey;">
           <menupopup onpopupshowing="InitMessageMenu();">
-            <menuitem label="&newMsgCmd.label;"
+            <menuitem id="newMsgCmd" label="&newMsgCmd.label;"
               accesskey="&newMsgCmd.accesskey;"
               key="key_newMessage"
               oncommand="MsgNewMessage(null);"/>
@@ -1502,15 +1502,15 @@
       <!-- Tasks -->
       <menu id="tasksMenu" label="&tasksMenu.label;" accesskey="&tasksMenu.accesskey;">
         <menupopup id="taskPopup" onpopupshowing="document.commandDispatcher.updateCommands('create-menu-tasks')">
-        <menuitem label="&searchMailCmd.label;" 
+        <menuitem id="searchMailCmd" label="&searchMailCmd.label;" 
                   key="key_searchMail" 
                   accesskey="&searchMailCmd.accesskey;" 
                   oncommand="MsgSearchMessages();"/>
-        <menuitem label="&searchAddressesCmd.label;" 
+        <menuitem id="searchAddressesCmd" label="&searchAddressesCmd.label;" 
                   accesskey="&searchAddressesCmd.accesskey;" 
                   oncommand="MsgSearchAddresses()"/>
         <menuseparator/>
-        <menuitem label="&filtersCmd.label;"
+        <menuitem id="filtersCmd" label="&filtersCmd.label;"
                   accesskey="&filtersCmd.accesskey;"
                   oncommand="MsgFilters(null);"/>
         <menuitem id="applyFilters"
@@ -1518,7 +1518,7 @@
                   accesskey="&filtersApply.accesskey;"
                   observes="cmd_applyFilters"/>
         <menuseparator/>
-        <menuitem label="&junkMailCmd.label;" 
+        <menuitem id="junkMailCmd" label="&junkMailCmd.label;" 
                   accesskey="&junkMailCmd.accesskey;" 
                   oncommand="MsgJunkMail()"/>
         <menuitem id="runJunkControls"
