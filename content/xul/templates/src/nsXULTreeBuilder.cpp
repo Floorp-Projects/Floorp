@@ -47,6 +47,7 @@
 #include "nsITreeBoxObject.h"
 #include "nsITreeSelection.h"
 #include "nsITreeView.h"
+#include "nsTreeUtils.h"
 #include "nsIServiceManager.h"
 #include "nsReadableUtils.h"
 
@@ -151,13 +152,6 @@ protected:
      */
     nsresult
     GetTemplateActionCellFor(PRInt32 aRow, const PRUnichar* aColID, nsIContent** aResult);
-
-    /**
-     * Parse a whitespace separated list of properties into an array
-     * of atoms.
-     */
-    nsresult
-    TokenizeProperties(const nsAString& aString, nsISupportsArray* aProprerties);
 
     /**
      * Return the resource corresponding to a row in the tree. The
@@ -519,7 +513,7 @@ nsXULTreeBuilder::GetRowProperties(PRInt32 aIndex, nsISupportsArray* aProperties
             nsAutoString cooked;
             SubstituteText(*(mRows[aIndex]->mMatch), raw, cooked);
 
-            TokenizeProperties(cooked, aProperties);
+            nsTreeUtils::TokenizeProperties(cooked, aProperties);
         }
     }
 
@@ -543,7 +537,7 @@ nsXULTreeBuilder::GetCellProperties(PRInt32 aRow, const PRUnichar* aColID, nsISu
             nsAutoString cooked;
             SubstituteText(*(mRows[aRow]->mMatch), raw, cooked);
 
-            TokenizeProperties(cooked, aProperties);
+            nsTreeUtils::TokenizeProperties(cooked, aProperties);
         }
     }
 
@@ -1513,48 +1507,6 @@ nsXULTreeBuilder::GetTemplateActionCellFor(PRInt32 aRow,
         }
     }
     NS_IF_ADDREF(*aResult);
-
-    return NS_OK;
-}
-
-nsresult
-nsXULTreeBuilder::TokenizeProperties(const nsAString& aString,
-                                         nsISupportsArray* aProperties)
-{
-    NS_PRECONDITION(aProperties != nsnull, "null ptr");
-    if (! aProperties)
-        return NS_ERROR_NULL_POINTER;
-
-    nsAString::const_iterator end;
-    aString.EndReading(end);
-
-    nsAString::const_iterator iter;
-    aString.BeginReading(iter);
-
-    do {
-        // Skip whitespace
-        while (iter != end && nsCRT::IsAsciiSpace(*iter))
-            ++iter;
-
-        // If only whitespace, we're done
-        if (iter == end)
-            break;
-
-        // Note the first non-whitespace character
-        nsAString::const_iterator first = iter;
-
-        // Advance to the next whitespace character
-        while (iter != end && ! nsCRT::IsAsciiSpace(*iter))
-            ++iter;
-
-        // XXX this would be nonsensical
-        NS_ASSERTION(iter != first, "eh? something's wrong here");
-        if (iter == first)
-            break;
-
-        nsCOMPtr<nsIAtom> atom = do_GetAtom(Substring(first, iter));
-        aProperties->AppendElement(atom);
-    } while (iter != end);
 
     return NS_OK;
 }
