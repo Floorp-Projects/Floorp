@@ -7,11 +7,6 @@ parser and provide more robust warnings then a traditional
 compiler. IF we need to put it in Tinderbox we should create a special
 library which is called every time the error parser detects a warning.
 
-I did not code shownote.cgi to allow people who deploy the notice
-board but do not have popup windows to see the notices.
-
-I have not updated the client build scripts to work with the new system.
-
 I need a Javascript expert to look over the current versions of CVS
 Blame and Tinderbox1 and ensure that I have the best features of these
 javascript programs in tinderbox2/src/lib/HTMLPopUp/MozillaLayers.pm.
