@@ -169,7 +169,7 @@ xpctest::ConstructXPCTestParentTwo(nsISupports *aOuter, REFNSIID aIID, void **aR
  *	nsIXPCTestChild2 inherits from nsISupports
  */
 
-class xpcTestChild2 : public nsIXPCTestChild2, nsIXPCTestParentOne, nsIXPCTestParentTwo {
+class xpcTestChild2 : public nsIXPCTestChild2, public nsIXPCTestParentOne, public nsIXPCTestParentTwo {
 public: 
   NS_DECL_NSIXPCTESTCHILD2
   NS_DECL_NSIXPCTESTPARENTONE
@@ -391,7 +391,7 @@ xpctest::ConstructXPCTestChild3(nsISupports *aOuter, REFNSIID aIID, void **aResu
  *	directly from nsISupports) and two classes.
  */
 
-class xpcTestChild4 : public nsIXPCTestChild4, xpcTestParentOne, xpcTestParentTwo {
+class xpcTestChild4 : public nsIXPCTestChild4, public xpcTestParentOne, public xpcTestParentTwo {
 public:
 	NS_DECL_ISUPPORTS
 	NS_DECL_NSIXPCTESTCHILD4
@@ -461,7 +461,7 @@ xpctest::ConstructXPCTestChild4(nsISupports *aOuter, REFNSIID aIID, void **aResu
  *	from nsIXPCTestParentOne) and the class xpcTestParentTwo 
  */
 
-class xpcTestChild5 : public nsIXPCTestChild5, xpcTestParentTwo {
+class xpcTestChild5 : public nsIXPCTestChild5, public xpcTestParentTwo {
 public:
 	NS_DECL_ISUPPORTS
 	NS_DECL_NSIXPCTESTCHILD5
