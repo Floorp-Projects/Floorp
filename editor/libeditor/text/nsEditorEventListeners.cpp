@@ -301,6 +301,58 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
           if (mEditor)
             mEditor->Copy();
         }
+        else if (PR_TRUE==altKey)
+        {
+          printf("Getting number of columns\n");
+          aProcessed=PR_TRUE;
+          PRInt32 wrap;
+          if (NS_SUCCEEDED(mEditor->GetBodyWrapWidth(&wrap)))
+            printf("Currently wrapping to %d\n", wrap);
+          else
+            printf("GetBodyWrapWidth returned an error\n");
+        }
+        break;
+
+      case nsIDOMEvent::VK_OPEN_BRACKET:
+        // hard coded "Decrease wrap size"
+        if (PR_TRUE==altKey)
+        {
+          aProcessed=PR_TRUE;
+          PRInt32 wrap;
+          if (!NS_SUCCEEDED(mEditor->GetBodyWrapWidth(&wrap)))
+          {
+            printf("GetBodyWrapWidth returned an error\n");
+            break;
+          }
+          mEditor->SetBodyWrapWidth(wrap - 5);
+          if (!NS_SUCCEEDED(mEditor->GetBodyWrapWidth(&wrap)))
+          {
+            printf("Second GetBodyWrapWidth returned an error\n");
+            break;
+          }
+          else printf("Now wrapping to %d\n", wrap);
+        }
+        break;
+
+      case nsIDOMEvent::VK_CLOSE_BRACKET:
+        // hard coded "Increase wrap size"
+        if (PR_TRUE==altKey)
+        {
+          aProcessed=PR_TRUE;
+          PRInt32 wrap;
+          if (!NS_SUCCEEDED(mEditor->GetBodyWrapWidth(&wrap)))
+          {
+            printf("GetBodyWrapWidth returned an error\n");
+            break;
+          }
+          mEditor->SetBodyWrapWidth(wrap + 5);
+          if (!NS_SUCCEEDED(mEditor->GetBodyWrapWidth(&wrap)))
+          {
+            printf("Second GetBodyWrapWidth returned an error\n");
+            break;
+          }
+          else printf("Now wrapping to %d\n", wrap);
+        }
         break;
 
       // XXX: hard-coded paste

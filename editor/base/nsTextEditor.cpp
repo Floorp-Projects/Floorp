@@ -1044,19 +1044,137 @@ NS_IMETHODIMP nsTextEditor::Insert(nsString& aInputString)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+// Useful helper method for Get/SetBodyWrapWidth:
+static nsCOMPtr<nsIDOMElement>
+findPreElement(nsIDOMDocument* domdoc)
+{
+  nsCOMPtr<nsIDocument> doc (do_QueryInterface(domdoc));
+  if (!doc)
+    return 0;
+
+  nsIContent* rootContent = doc->GetRootContent();
+  if (!rootContent)
+    return 0;
+
+  nsCOMPtr<nsIDOMNode> rootNode (do_QueryInterface(rootContent));
+  if (!rootNode)
+    return 0;
+
+  nsString prestr ("PRE");  // GetFirstNodeOfType requires capitals
+  nsCOMPtr<nsIDOMNode> preNode;
+  if (!NS_SUCCEEDED(nsEditor::GetFirstNodeOfType(rootNode, prestr,
+                                                 getter_AddRefs(preNode))))
+  {
+#ifdef DEBUG_akkana
+    printf("No PRE tag\n");
+#endif
+    return 0;
+  }
+  return do_QueryInterface(preNode);
+}
+
+//
+// Get the wrap width for the first PRE tag in the document.
+// If no PRE tag, throw an error.
+//
 NS_IMETHODIMP nsTextEditor::GetBodyWrapWidth(PRInt32 *aWrapColumn)
+{
+  nsresult res;
+
+  if (! aWrapColumn)
+    return NS_ERROR_NULL_POINTER;
+
+  nsCOMPtr<nsIDOMDocument> domdoc;
+  nsEditor::GetDocument(getter_AddRefs(domdoc));
+  if (!domdoc)
+    return NS_ERROR_UNEXPECTED;
+
+  nsCOMPtr<nsIDOMElement> preElement = findPreElement(domdoc);
+  if (!preElement)
+    return NS_ERROR_UNEXPECTED;
+  nsString colsStr ("cols");
+  nsString numCols;
+  PRBool isSet;
+  res = GetAttributeValue(preElement, colsStr, numCols, isSet);
+  if (!NS_SUCCEEDED(res))
+  {
+#ifdef DEBUG_akkana
+    printf("GetAttributeValue(cols) failed\n");
+#endif
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  if (isSet)
+  {
+    PRInt32 errCode;
+    *aWrapColumn = numCols.ToInteger(&errCode);
+    if (errCode)
+      return NS_ERROR_FAILURE;
+    return NS_OK;
+  }
+
+  // if we get here, cols isn't set, so check whether wrap is set:
+  nsString wrapStr ("wrap");
+  res = GetAttributeValue(preElement, colsStr, numCols, isSet);
+  if (!NS_SUCCEEDED(res))
+  {
+#ifdef DEBUG_akkana
+    printf("GetAttributeValue(cols) failed\n");
+#endif
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  if (isSet)
+    *aWrapColumn = 0;   // wrap to window width
+  else
+    *aWrapColumn = -1;  // no wrap
+
+  return NS_OK;
+}
+
+//
+// Change the wrap width on any top-level <PRE> tags in this document.
+// (Search for more than one in case there are interspersed
+// quoted text blocks.)
+// 
+NS_IMETHODIMP nsTextEditor::SetBodyWrapWidth(PRInt32 aWrapColumn)
 {
   if (! aWrapColumn)
     return NS_ERROR_NULL_POINTER;
-   
-  
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
 
-NS_IMETHODIMP nsTextEditor::SetBodyWrapWidth(PRInt32 aWrapColumn)
-{
+  nsCOMPtr<nsIDOMDocument> domdoc;
+  nsEditor::GetDocument(getter_AddRefs(domdoc));
+  if (!domdoc)
+    return NS_ERROR_UNEXPECTED;
 
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsCOMPtr<nsIDOMElement> preElement = findPreElement(domdoc);
+  if (!preElement)
+    return NS_ERROR_UNEXPECTED;
+
+  nsString wrapStr ("wrap");
+  nsString colsStr ("cols");
+
+  // If wrap col is nonpositive, then we need to remove any existing "cols":
+  if (aWrapColumn <= 0)
+  {
+    nsresult res;
+
+    (void)RemoveAttribute(preElement, colsStr);
+
+    if (aWrapColumn == 0)        // Wrap to window width
+    {
+      nsString oneStr ("1");
+      res = SetAttribute(preElement, wrapStr, oneStr);
+    }
+    else res = NS_OK;
+    return res;
+  }
+
+  // Otherwise we're setting cols, want to remove wrap
+  (void)RemoveAttribute(preElement, wrapStr);
+  nsString numCols;
+  numCols.Append(aWrapColumn, 10);
+  return SetAttribute(preElement, colsStr, numCols);
 }  
 
 NS_IMETHODIMP nsTextEditor::OutputText(nsString& aOutputString)
