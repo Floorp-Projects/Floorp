@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.5 $ $Date: 2001/09/20 22:09:46 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.6 $ $Date: 2001/11/16 18:10:24 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -264,15 +264,6 @@ nssCKFWToken_Create
 
   fwToken->mdObjectHash = nssCKFWHash_Create(fwToken->fwInstance, 
                             arena, pError);
-  if( (nssCKFWHash *)NULL == fwToken->mdObjectHash ) {
-    if( CKR_OK == *pError ) {
-      *pError = CKR_GENERAL_ERROR;
-    }
-    goto loser;
-  }
-
-  fwToken->mdObjectHash = nssCKFWHash_Create(fwToken->fwInstance, 
-                                arena, pError);
   if( (nssCKFWHash *)NULL == fwToken->mdObjectHash ) {
     if( CKR_OK == *pError ) {
       *pError = CKR_GENERAL_ERROR;
