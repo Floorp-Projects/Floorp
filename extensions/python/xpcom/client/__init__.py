@@ -219,15 +219,21 @@ class Component(_XPCOMBase):
         except COMException:
             classinfo = None
         if classinfo is not None:
-            real_cid = classinfo.contractID
+            try:
+                real_cid = classinfo.contractID
+            except COMException:
+                real_cid = None
             if real_cid:
                 self.__dict__['_object_name_'] = real_cid
                 contractid_info = contractid_info_cache.get(real_cid)
             else:
                 contractid_info = None
             if contractid_info is None:
-#               print "YAY - have class info!!", classinfo
-                for nominated_iid in classinfo.getInterfaces():
+                try:
+                    interface_infos = classinfo.getInterfaces()
+                except COMException:
+                    interface_infos = []
+                for nominated_iid in interface_infos:
                     # Interface may appear twice in the class info list, so check this here.
                     if not self.__dict__['_interface_infos_'].has_key(nominated_iid):
                         self._remember_interface_info(nominated_iid)
@@ -327,9 +333,15 @@ class Component(_XPCOMBase):
         raise AttributeError, "XPCOM component '%s' has no attribute '%s'" % (self._object_name_, attr)
     def __repr__(self):
         # We can advantage from nsIClassInfo - use it.
-        if not self._tried_classinfo_:
-            self._build_all_supported_interfaces_()
-        assert self._tried_classinfo_, "Should have tried the class info by now!"
+        try:
+            if not self._tried_classinfo_:
+                self._build_all_supported_interfaces_()
+            assert self._tried_classinfo_, "Should have tried the class info by now!"
+        except COMException:
+            # Error building the info - ignore the error, but ensure that
+            # we are flagged as *not* having built, so the error is seen
+            # by the first caller who actually *needs* this to work.
+            self.__dict__['_tried_classinfo_'] = 0
         infos = self.__dict__['_interface_infos_']
         if infos:
             iface_names = ",".join([iid.name for iid in infos.keys()])
