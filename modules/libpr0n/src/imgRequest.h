@@ -113,6 +113,10 @@ private:
     return mContentType.get();
   }
 
+  // Return true if at least one of our proxies, excluding
+  // aProxyToIgnore, has an observer.  aProxyToIgnore may be null.
+  PRBool HaveProxyWithObserver(imgRequestProxy* aProxyToIgnore) const;
+
 public:
   NS_DECL_IMGILOAD
   NS_DECL_IMGIDECODEROBSERVER
