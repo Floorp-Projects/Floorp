@@ -1202,6 +1202,8 @@
 ;;;                  identifier is a type constructor like '->, 'vector, 'range-set, 'tag, or 'union
 ;;;   :deftype       type if this identifier is a type; nil if this identifier is a forward-referenced type
 ;;;
+;;;   :non-reserved  true if this symbol is usable as an identifier despite being a :special-form, :condition, :primitive, or :type-constructor
+;;;
 ;;;   <value>        value of this identifier if it is a variable of type other than ->
 ;;;   <function>     value of this identifier if it is a variable of type ->
 ;;;   :value-expr    unparsed expression defining the value of this identifier if it is a variable
@@ -1321,7 +1323,12 @@
   (fields nil :type list :read-only t)               ;List of fields after eval-tags-types or (field-name field-type-expression [:const|:var|:opt-const|:opt-var]) before eval-tags-types
   (=-name nil :type symbol)                          ;Lazily computed name of a function that compares two values of this tag for equality; nil if not known yet
   (link nil :type (or null keyword) :read-only t)    ;:reference if this is a local tag, :external if it's a predefined tag, or nil for no cross-references to this tag
-  (base nil :type integer :read-only t))             ;Position of first field in the list; -1 if it's special
+  (base nil :type integer :read-only t)              ;Position of first field in the list; -1 if it's special
+  (appearance nil))                                  ;One of the following:
+;                                                    ;  nil to display the constructor normally
+;                                                    ;  (:suffix . markup) to display the constructor as a suffix (the constructor must be unary)
+;                                                    ;  (:infix . markup) to display the constructor as an infix (the constructor must be binary)
+
 
 ; Return four values:
 ;   the one-based position of the tag's field corresponding to the given label or nil if the label is not present;
@@ -2660,7 +2667,8 @@
   (unless (identifier? name)
     (error "~S should be an identifier" name))
   (let ((symbol (world-intern world name)))
-    (when (get-properties (symbol-plist symbol) '(:special-form :condition :primitive :type-constructor))
+    (when (and (get-properties (symbol-plist symbol) '(:special-form :condition :primitive :type-constructor))
+               (not (get symbol :non-reserved)))
       (error "~A is reserved" symbol))
     symbol))
 
@@ -5458,6 +5466,21 @@
     (export-symbol symbol)))
 
 
+; (definfix <type> <markup> <param1> <param2>)
+; <type> must be a tuple or record tag.  Define the syntax for depicting its constructor to be the infix operator
+; depicted by <markup>.  <param1> and <param2> are used as parameter names for depicting the definfix definition itself.
+(defun scan-definfix (world grammar-info-var type-name markup param1 param2)
+  (declare (ignore grammar-info-var param1 param2))
+  (let* ((symbol (scan-name world type-name))
+         (type (get-type symbol nil)))
+    (unless (eq (type-kind type) :tag)
+      (error "~A should be a tag type" (print-type-to-string type)))
+    (let ((tag (type-tag type)))
+      (when (tag-appearance tag)
+        (error "Duplicate appearance on tag ~S" tag))
+      (setf (tag-appearance tag) (cons :infix markup)))))
+
+
 ; (set-grammar <name>)
 ; Set the current grammar to the grammar or lexer with the given name.
 (defun scan-set-grammar (world grammar-info-var name)
@@ -5561,6 +5584,7 @@
      (defun scan-define depict-defun)    ;Occurs from desugaring a function define
      (defprimitive scan-defprimitive depict-defprimitive)
      (defvar scan-defvar depict-defvar)
+     (definfix scan-definfix depict-definfix)
      (set-grammar scan-set-grammar depict-set-grammar)
      (clear-grammar scan-clear-grammar depict-clear-grammar)
      (declare-action scan-declare-action depict-declare-action)
@@ -5683,19 +5707,22 @@
      (writable-cell scan-writable-cell depict-writable-cell))))
 
 
+(defparameter *default-non-reserved* '(length))
+
+
 (defparameter *default-primitives*
   '((neg (-> (integer) integer) #'- :unary :minus nil %prefix% %prefix%)
     (abs (-> (integer) integer) #'abs :unary "|" "|" %primary% %expr%)
     (* (-> (integer integer) integer) #'* :infix :cartesian-product-10 nil %factor% %factor% %factor%)
-    (mod (-> (integer integer) integer) #'mod :infix ((:semantic-keyword "mod")) t %factor% %factor% %unary%)
+    (mod (-> (integer integer) integer) #'mod :infix ((:semantic-keyword "mod")) t %factor% %factor% %prefix%)
     (+ (-> (integer integer) integer) #'+ :infix "+" t %term% %term% %term%)
     (- (-> (integer integer) integer) #'- :infix :minus t %term% %term% %factor%)
     
     ;(rational-compare (-> (rational rational) order) #'rational-compare)
-    (rat-neg (-> (rational) rational) #'- :unary "-" nil %suffix% %suffix%)
+    (rat-neg (-> (rational) rational) #'- :unary :minus nil %prefix% %prefix%)
     (rat-abs (-> (rational) rational) #'abs :unary "|" "|" %primary% %expr%)
     (rat* (-> (rational rational) rational) #'* :infix :cartesian-product-10 nil %factor% %factor% %factor%)
-    (rat/ (-> (rational rational) rational) #'/ :infix "/" nil %factor% %factor% %unary%)
+    (rat/ (-> (rational rational) rational) #'/ :infix "/" nil %factor% %factor% %prefix%)
     (rat+ (-> (rational rational) rational) #'+ :infix "+" t %term% %term% %term%)
     (rat- (-> (rational rational) rational) #'- :infix :minus t %term% %term% %factor%)
     (floor (-> (rational) integer) #'floor :unary :left-floor-10 :right-floor-10 %primary% %expr%)
@@ -5746,13 +5773,12 @@
 
 ;;; Partial order of primitives for deciding when to depict parentheses.
 (defparameter *primitive-level* (make-partial-order))
-(def-partial-order-element *primitive-level* %primary%)                                          ;id, constant, (e), tag<...>, |e|, action
-(def-partial-order-element *primitive-level* %suffix% %primary%)                                 ;f(...), a[i], a[i...j], a[i<-v], a.l
-(def-partial-order-element *primitive-level* %prefix% %primary%)                                 ;-e, new tag<...>, a^b
+(def-partial-order-element *primitive-level* %primary%)                                          ;id, constant, (e), tag<...>, |e|
+(def-partial-order-element *primitive-level* %suffix% %primary%)                                 ;f(...), a[i], a[i...j], a[i<-v], a.l, action
+(def-partial-order-element *primitive-level* %prefix% %suffix%)                                  ;-e, new tag<...>, a^b
 (def-partial-order-element *primitive-level* %min-max% %prefix%)                                 ;min, max
-(def-partial-order-element *primitive-level* %unary% %suffix% %prefix%)                          ;
-(def-partial-order-element *primitive-level* %not% %unary%)                                      ;not
-(def-partial-order-element *primitive-level* %factor% %unary%)                                   ;/, *, intersection
+(def-partial-order-element *primitive-level* %not% %prefix%)                                     ;not
+(def-partial-order-element *primitive-level* %factor% %prefix%)                                  ;/, *, intersection, tuple-infix
 (def-partial-order-element *primitive-level* %term% %factor%)                                    ;+, -, append, union, set difference
 (def-partial-order-element *primitive-level* %relational% %term% %min-max% %not%)                ;<, <=, >, >=, =, /=, is, member, ...
 (def-partial-order-element *primitive-level* %logical% %relational%)                             ;and, or, xor
@@ -5803,6 +5829,11 @@
             property
             (world-intern world (first special-spec))
             (rest special-spec)))))
+    (dolist (non-reserved *default-non-reserved*)
+      (let ((symbol (world-intern world non-reserved)))
+        (assert (get-properties (symbol-plist symbol) '(:special-form :condition :primitive :type-constructor)))
+        (setf (get symbol :non-reserved) t)
+        (export-symbol symbol)))
     (dolist (primitive-spec *default-primitives*)
       (let ((name (world-intern world (first primitive-spec))))
         (apply #'declare-primitive
@@ -5869,6 +5900,8 @@
         (add-type-name world finite-float64-type (world-intern world 'finite-float64) nil)
         (let ((long-type (scan-deftuple-or-defrecord world nil 'long '((value (integer-range (neg (expt 2 63)) (- (expt 2 63) 1)))) nil))
               (u-long-type (scan-deftuple-or-defrecord world nil 'u-long '((value (integer-range 0 (- (expt 2 64) 1)))) nil)))
+          (setf (tag-appearance (type-tag long-type)) '(:suffix (:subscript (:tag-name "long"))))
+          (setf (tag-appearance (type-tag u-long-type)) '(:suffix (:subscript (:tag-name "ulong"))))
           (add-type-name world (make-union-type world float32-type float64-type long-type u-long-type) (world-intern world 'general-number) nil)
           (add-type-name world (make-union-type world finite-float32-type finite-float64-type long-type u-long-type)
                          (world-intern world 'finite-general-number) nil))))

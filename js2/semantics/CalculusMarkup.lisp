@@ -187,13 +187,13 @@
     (:-zero32 "MinusZero32" (:minus "zero" (:subscript "f32")))
     (:+infinity32 "PlusInfinity32" ("+" :infinity (:subscript "f32")))
     (:-infinity32 "MinusInfinity32" (:minus :infinity (:subscript "f32")))
-    (:nan32 "NaN" ("NaN32" (:subscript "f32")))
+    (:nan32 "NaN" ("NaN" (:subscript "f32")))
     
     (:+zero64 "PlusZero64" ("+zero" (:subscript "f64")))
     (:-zero64 "MinusZero64" (:minus "zero" (:subscript "f64")))
     (:+infinity64 "PlusInfinity64" ("+" :infinity (:subscript "f64")))
     (:-infinity64 "MinusInfinity64" (:minus :infinity (:subscript "f64")))
-    (:nan64 "NaN" ("NaN64" (:subscript "f64")))
+    (:nan64 "NaN" ("NaN" (:subscript "f64")))
     
     (:+infinity "PlusInfinity" ("+" :infinity))
     (:-infinity "MinusInfinity" (:minus :infinity))))
@@ -531,14 +531,15 @@
 
 
 ; Emit markup for the reference to the action on the given general grammar symbol.
-(defun depict-action-reference (markup-stream action-name general-grammar-symbol &optional index)
-  (let ((action-default (default-action? action-name)))
-    (unless action-default
-      (depict-action-name markup-stream action-name)
-      (depict markup-stream :action-begin))
-    (depict-general-grammar-symbol markup-stream general-grammar-symbol :reference index)
-    (unless action-default
-      (depict markup-stream :action-end))))
+(defun depict-action-reference (markup-stream level action-name general-grammar-symbol &optional index)
+  (cond
+   ((default-action? action-name)
+    (depict-general-grammar-symbol markup-stream general-grammar-symbol :reference index))
+   (t (depict-expr-parentheses (markup-stream level %suffix%)
+        (depict-action-name markup-stream action-name)
+        (depict markup-stream :action-begin)
+        (depict-general-grammar-symbol markup-stream general-grammar-symbol :reference index)
+        (depict markup-stream :action-end)))))
 
 
 ; Emit markup for the given annotated value expression. level indicates the binding level imposed
@@ -553,7 +554,7 @@
       (expr-annotation:local (depict-local-variable markup-stream (first args)))
       (expr-annotation:global (depict-global-variable markup-stream (first args) :reference))
       (expr-annotation:call (apply #'depict-call markup-stream world level args))
-      (expr-annotation:action (apply #'depict-action-reference markup-stream args))
+      (expr-annotation:action (apply #'depict-action-reference markup-stream level args))
       (expr-annotation:special-form
        (apply (get (first args) :depict-special-form) markup-stream world level (rest args))))))
 
@@ -947,39 +948,55 @@
 ; A <field-expr> may be :uninit to indicate an uninitialized field, which must have kind :opt-const or :opt-var.
 (defun depict-new (markup-stream world level type type-name &rest annotated-exprs)
   (let* ((tag (type-tag type))
-         (mutable (tag-mutable tag)))
+         (appearance (tag-appearance tag))
+         (mutable (tag-mutable tag))
+         (fields (tag-fields tag))
+         (n-fields (length fields)))
     (flet
       ((depict-tag-and-args (markup-stream)
-         (let ((fields (tag-fields tag)))
-           (assert-true (= (length fields) (length annotated-exprs)))
-           (depict-type-name markup-stream type-name (if (symbol-type-user-defined (world-intern world type-name)) :reference :external))
-           (if (tag-keyword tag)
-             (assert-true (null annotated-exprs))
-             (let ((fields-and-parameters (mapcan #'(lambda (field parameter)
-                                                      (and (not (eq parameter :uninit))
-                                                           (list (cons field parameter))))
-                                                  fields annotated-exprs)))
-               (depict-list markup-stream
-                            #'(lambda (markup-stream field-and-parameter)
-                                (depict-logical-block (markup-stream 4)
-                                  (depict-label-name markup-stream world type (field-label (car field-and-parameter)) nil)
-                                  (depict markup-stream ":")
-                                  (depict-break markup-stream 1)
-                                  (depict-expression markup-stream world (cdr field-and-parameter) %expr%)))
-                            fields-and-parameters
-                            :indent 4
-                            :prefix (if mutable :record-begin :tuple-begin)
-                            :suffix (if mutable :record-end :tuple-end)
-                            :separator ","
-                            :break 1
-                            :empty nil))))))
+         (depict-type-name markup-stream type-name (if (symbol-type-user-defined (world-intern world type-name)) :reference :external))
+         (if (tag-keyword tag)
+           (assert-true (null annotated-exprs))
+           (let ((fields-and-parameters (mapcan #'(lambda (field parameter)
+                                                    (and (not (eq parameter :uninit))
+                                                         (list (cons field parameter))))
+                                                fields annotated-exprs)))
+             (depict-list markup-stream
+                          #'(lambda (markup-stream field-and-parameter)
+                              (depict-logical-block (markup-stream 4)
+                                (depict-label-name markup-stream world type (field-label (car field-and-parameter)) nil)
+                                (depict markup-stream ":")
+                                (depict-break markup-stream 1)
+                                (depict-expression markup-stream world (cdr field-and-parameter) %expr%)))
+                          fields-and-parameters
+                          :indent 4
+                          :prefix (if mutable :record-begin :tuple-begin)
+                          :suffix (if mutable :record-end :tuple-end)
+                          :separator ","
+                          :break 1
+                          :empty nil)))))
       
-      (if mutable
+      (assert-true (= n-fields (length annotated-exprs)))
+      (cond
+       (appearance
+        (ecase (first appearance)
+          (:suffix
+           (assert-true (= n-fields 1))
+           (depict-expr-parentheses (markup-stream level %suffix%)
+             (depict-expression markup-stream world (first annotated-exprs) %primary%)
+             (depict-item-or-group-list markup-stream (rest appearance))))
+          (:infix
+           (assert-true (= n-fields 2))
+           (depict-expr-parentheses (markup-stream level %factor%)
+             (depict-expression markup-stream world (first annotated-exprs) %primary%)
+             (depict-item-or-group-list markup-stream (rest appearance))
+             (depict-expression markup-stream world (second annotated-exprs) %primary%)))))
+       (mutable
         (depict-expr-parentheses (markup-stream level %prefix%)
           (depict-logical-block (markup-stream 4)
             (depict-semantic-keyword markup-stream 'new :after)
-            (depict-tag-and-args markup-stream)))
-        (depict-tag-and-args markup-stream)))))
+            (depict-tag-and-args markup-stream))))
+       (t (depict-tag-and-args markup-stream))))))
 
 
 ; (& <label> <record-expr>)
@@ -1210,7 +1227,7 @@
 ; (&const= <label> <record-expr> <value-expr>)
 (defun depict-&= (markup-stream world semicolon last-paragraph-style record-type label record-annotated-expr value-annotated-expr)
   (depict-paragraph (markup-stream last-paragraph-style)
-    (depict-& markup-stream world %unary% record-type label record-annotated-expr)
+    (depict-& markup-stream world %prefix% record-type label record-annotated-expr)
     (depict markup-stream " " :assign-10)
     (depict-logical-block (markup-stream 6)
       (depict-break markup-stream 1)
@@ -1705,6 +1722,43 @@
             (depict-global-variable markup-stream name :definition)
             (depict-colon-and-type markup-stream world type-expr)
             (depict-equals-and-value markup-stream world value-annotated-expr :assign-10)))))))
+
+
+; (definfix <type> <markup> <param1> <param2>)
+(defun depict-definfix (markup-stream world depict-env type-name markup param1 param2)
+  (let* ((symbol (scan-name world type-name))
+         (type (get-type symbol nil))
+         (tag (type-tag type))
+         (mutable (tag-mutable tag))
+         (fields (tag-fields tag)))
+    (unless (= (length (tag-fields tag)) 2)
+      (error "definfix ~S is used on a tag with other than two fields" symbol))
+    (depict-semantics (markup-stream depict-env)
+      (depict-text-environment world depict-env
+        (depict-logical-block (markup-stream 0)
+          (depict markup-stream "The notation")
+          (depict-break markup-stream 1)
+          (depict-local-variable markup-stream param1)
+          (depict-item-or-group-list markup-stream markup)
+          (depict-local-variable markup-stream param2)
+          (depict-break markup-stream 1)
+          (depict markup-stream "is a shorthand for")
+          (depict-break markup-stream 1)
+          (when mutable
+            (depict-semantic-keyword markup-stream 'new :after))
+          (depict-type-name markup-stream type-name (if (symbol-type-user-defined symbol) :reference :external))
+          (depict markup-stream (if mutable :record-begin :tuple-begin))
+          (depict-label-name markup-stream world type (field-label (first fields)) nil)
+          (depict markup-stream ":")
+          (depict-break markup-stream 1)
+          (depict-local-variable markup-stream param1)
+          (depict markup-stream ",")
+          (depict-break markup-stream 1)
+          (depict-label-name markup-stream world type (field-label (second fields)) nil)
+          (depict markup-stream ":")
+          (depict-break markup-stream 1)
+          (depict-local-variable markup-stream param2)
+          (depict markup-stream (if mutable :record-end :tuple-end) "."))))))
 
 
 ; (defun <name> (-> (<type1> ... <typen>) <result-type>) (lambda ((<arg1> <type1>) ... (<argn> <typen>)) <result-type> . <statements>))
