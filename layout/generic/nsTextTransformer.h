@@ -59,7 +59,8 @@ public:
     return mContentLength;
   }
 
-  PRUnichar* GetNextWord(PRInt32& aWordLenResult,
+  PRUnichar* GetNextWord(PRBool aInWord,
+                         PRInt32& aWordLenResult,
                          PRInt32& aContentLenResult,
                          PRBool& aIsWhitespaceResult);
 
@@ -73,6 +74,15 @@ public:
   PRUnichar* GetTextAt(PRInt32 aOffset);
 
 protected:
+  PRBool GrowBuffer();
+
+  void SimpleTransform(PRBool aIsWhitespace,
+                       PRInt32& aWordLenResult,
+                       PRInt32& aContentLenResult);
+
+  void ComplexTransform(PRBool aIsWhitespace,
+                        PRInt32& aWordLenResult,
+                        PRInt32& aContentLenResult);
 
   PRUnichar* mAutoBuffer;
   PRInt32 mAutoBufferLength;
@@ -89,50 +99,8 @@ protected:
   const nsTextFragment* mCurrentFrag;
   PRInt32 mCurrentFragOffset;
 
-  // XXX temporary
   PRBool mCompressWS;
-
-  PRBool GrowBuffer();
-
-#if 0
-  // For each piece of content in the text-run we keep track of this
-  // state.
-  struct Text {
-    nsIContent* mContent;
-    nsTransformedTextFragment* mFrags;
-    PRInt32 mNumFrags;
-    Text* mNext;
-  };
-
-  Text* mTextList;
-
-  void ReleaseResources();
-#endif
-
-  // A little state object used to do bookeeping between the low level
-  // transform calls.
-  struct TransformerState {
-    PRBool mSkipLeadingWS;
-    PRInt32 mContentOffset;
-  };
-
-  nsresult Transform2b(TransformerState& aState,
-                       const nsTextFragment& frag);
-
-  nsresult Transform1b(TransformerState& aState,
-                       const nsTextFragment& frag);
-
-  nsresult CompressWS2b(TransformerState& aState,
-                        const nsTextFragment& frag);
-
-  nsresult CompressWS1b(TransformerState& aState,
-                        const nsTextFragment& frag);
-
-  nsresult CompressWSAndTransform2b(TransformerState& aState,
-                                    const nsTextFragment& frag);
-
-  nsresult CompressWSAndTransform1b(TransformerState& aState,
-                                    const nsTextFragment& frag);
+  PRUint8 mTextTransform;
 };
 
 #endif /* nsTextTransformer_h___ */
