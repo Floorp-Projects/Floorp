@@ -38,6 +38,11 @@
     { 0x977e418f, 0xe392, 0x11d2, \
     { 0xa2, 0xac, 0x0, 0xa0, 0x24, 0xa7, 0xd1, 0x44 } };
 
+// {F0A8AF16-DCFF-11d2-A411-00805F613C79}
+#define NS_RAW_MIME_EMITTER_CID   \
+    { 0xf0a8af16, 0xdcff, 0x11d2,         \
+    { 0xa4, 0x11, 0x0, 0x80, 0x5f, 0x61, 0x3c, 0x79 } };
+
 class nsIMimeEmitter : public nsISupports {
 public: 
 static const nsIID& GetIID() { static nsIID iid = NS_IMIME_EMITTER_IID; return iid; }
