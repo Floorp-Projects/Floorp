@@ -69,6 +69,7 @@
 #if USE_MOZILLA_TYPES
 /* prtypes contains definitions for uint32/int32 and uint16/int16 */
 #include "prtypes.h"
+#include "prcpucfg.h"
 #else
 typedef unsigned int uint32;
 typedef int int32;
@@ -78,10 +79,24 @@ typedef short int16;
 
 #define ENABLE_GRAYSCALE
 
-/* XXX fix this for an autodetect for endian-ness */
 #define G_LITTLE_ENDIAN 1
 #define G_BIG_ENDIAN 2
+
+/* check our endianness */
+#if USE_MOZILLA_TYPES
+
+#if IS_LITTLE_ENDIAN
 #define G_BYTE_ORDER G_LITTLE_ENDIAN
+#else
+#define G_BYTE_ORDER G_BIG_ENDIAN
+#endif /* IS_LITTLE_ENDIAN */
+
+#else
+
+/* XXX fix this for an autodetect for endian-ness */
+#define G_BYTE_ORDER G_LITTLE_ENDIAN
+
+#endif /* USE_MOZILLA_TYPES */
 
 #ifndef MIN
 #define MIN(a, b)  (((a) < (b)) ? (a) : (b))
