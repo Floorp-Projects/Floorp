@@ -402,7 +402,7 @@ nsMsgMessageDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* a
   rv = aSources->Count(&cnt);
   if (NS_FAILED(rv)) return rv;
   for (PRUint32 i = 0; i < cnt; i++) {
-    nsCOMPtr<nsISupports> source = getter_AddRefs((*aSources)[i]);
+    nsCOMPtr<nsISupports> source = getter_AddRefs(aSources->ElementAt(i));
 		message = do_QueryInterface(source, &rv);
 		if (NS_SUCCEEDED(rv)) {
 
@@ -429,7 +429,7 @@ nsMsgMessageDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources
 	if(NS_FAILED(rv)) return rv;
 	for (PRUint32 i = 0; i < cnt; i++)
 	{
-		nsISupports* source = (*aSources)[i];
+		nsISupports* source = aSources->ElementAt(i);
 		nsCOMPtr<nsIMessage> message = do_QueryInterface(source, &rv);
 		if (NS_SUCCEEDED(rv))
 		{

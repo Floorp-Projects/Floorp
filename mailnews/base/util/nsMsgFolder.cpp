@@ -125,7 +125,7 @@ nsFilterBy(nsISupportsArray* array, nsArrayFilter filter, void* data,
   rv = array->Count(&cnt);
   if (NS_FAILED(rv)) return rv;
   for (PRUint32 i = 0; i < cnt; i++) {
-    nsCOMPtr<nsISupports> element = getter_AddRefs((*array)[i]);
+    nsCOMPtr<nsISupports> element = getter_AddRefs(array->ElementAt(i));
     if (filter(element, data)) {
       rv = f->AppendElement(element);
       if (NS_FAILED(rv)) {

@@ -410,7 +410,7 @@ nsMsgFolderDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aS
   rv = aSources->Count(&cnt);
   if (NS_FAILED(rv)) return rv;
   for (PRUint32 i = 0; i < cnt; i++) {
-    nsCOMPtr<nsISupports> source = getter_AddRefs((*aSources)[i]);
+    nsCOMPtr<nsISupports> source = getter_AddRefs(aSources->ElementAt(i));
 		folder = do_QueryInterface(source, &rv);
     if (NS_SUCCEEDED(rv)) {
       // we don't care about the arguments -- folder commands are always enabled
@@ -439,7 +439,7 @@ nsMsgFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
   rv = aSources->Count(&cnt);
   if (NS_FAILED(rv)) return rv;
   for (PRUint32 i = 0; i < cnt; i++) {
-		nsCOMPtr<nsISupports> supports = getter_AddRefs((*aSources)[i]);
+		nsCOMPtr<nsISupports> supports = getter_AddRefs(aSources->ElementAt(i));
     nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(supports, &rv);
     if (NS_SUCCEEDED(rv)) {
       if (peq(aCommand, kNC_Delete))
@@ -733,7 +733,7 @@ nsresult nsMsgFolderDataSource::DoDeleteFromFolder(nsIMsgFolder *folder, nsISupp
 	//for deletion.
 	for(PRUint32 item = 0; item < itemCount; item++)
 	{
-		nsCOMPtr<nsISupports> supports = getter_AddRefs((*arguments)[item]);
+		nsCOMPtr<nsISupports> supports = getter_AddRefs(arguments->ElementAt(item));
 		nsCOMPtr<nsIMessage> deletedMessage(do_QueryInterface(supports));
 		nsCOMPtr<nsIMsgFolder> deletedFolder(do_QueryInterface(supports));
 		if (deletedMessage)
@@ -762,7 +762,7 @@ nsresult nsMsgFolderDataSource::DoDeleteFromFolder(nsIMsgFolder *folder, nsISupp
 nsresult nsMsgFolderDataSource::DoNewFolder(nsIMsgFolder *folder, nsISupportsArray *arguments)
 {
 	nsresult rv = NS_OK;
-	nsCOMPtr<nsIRDFLiteral> literal(do_QueryInterface((*arguments)[0], &rv));
+	nsCOMPtr<nsIRDFLiteral> literal(do_QueryInterface(arguments->ElementAt(0), &rv));
 	if(NS_SUCCEEDED(rv))
 	{
 		PRUnichar *name;
