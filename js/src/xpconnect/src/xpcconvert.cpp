@@ -1082,7 +1082,7 @@ XPCConvert::JSErrorToXPCException(JSContext* cx,
         nsAutoString bestMessage;
         if(report && report->ucmessage)
         {
-            bestMessage = report->ucmessage;
+            bestMessage = (const PRUnichar *)report->ucmessage;
         }
         else if(message)
         {
@@ -1104,7 +1104,8 @@ XPCConvert::JSErrorToXPCException(JSContext* cx,
 
         data = new nsScriptError();
         NS_ADDREF(data);
-        data->Init(newMessage, newSourceName, report->uclinebuf, report->lineno,
+        data->Init(newMessage, newSourceName,
+                   (const PRUnichar *)report->uclinebuf, report->lineno,
                    report->uctokenptr - report->uclinebuf, report->flags,
                    "XPConnect JavaScript");
         nsMemory::Free((void *)newMessage);
