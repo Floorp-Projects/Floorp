@@ -132,7 +132,7 @@ EXTRA_SHARED_LIBS += \
 	$(NULL)
 else
 EXTRA_SHARED_LIBS += \
-	-L$(DIST)/lib/ \
+	-L$(DIST)/lib \
 	-lplc4 \
 	-lplds4 \
 	-lnspr4 \
@@ -205,7 +205,7 @@ endif
 # $(PROGRAM) has NO explicit dependencies on $(EXTRA_SHARED_LIBS)
 # $(EXTRA_SHARED_LIBS) come before $(OS_LIBS), except on AIX.
 EXTRA_SHARED_LIBS += \
-	-L$(DIST)/lib/ \
+	-L$(DIST)/lib \
 	-lssl3 \
 	-lsmime3 \
 	-lnss3 \
