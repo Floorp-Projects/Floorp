@@ -267,13 +267,13 @@ nsClipboard :: GetDataOffClipboard ( ResType inMacFlavor, void** outData, PRInt3
     return NS_ERROR_FAILURE;
 
   // check if it is on the clipboard
-  PRInt32 offsetUnused = 0;
-  OSErr clipResult = ::GetScrap(NULL, inMacFlavor, NS_REINTERPRET_CAST(long*, &offsetUnused));
+  long offsetUnused = 0;
+  long clipResult = ::GetScrap(NULL, inMacFlavor, &offsetUnused);
   if ( clipResult > 0 ) {
     Handle dataHand = ::NewHandle(0);
     if ( !dataHand )
       return NS_ERROR_OUT_OF_MEMORY;
-    PRInt32 dataSize = ::GetScrap ( dataHand, inMacFlavor, NS_REINTERPRET_CAST(long*, &offsetUnused) );
+    long dataSize = ::GetScrap ( dataHand, inMacFlavor, &offsetUnused );
     if ( dataSize > 0 ) {
       char* dataBuff = NS_REINTERPRET_CAST(char*, nsAllocator::Alloc(dataSize));
       if ( !dataBuff )
@@ -370,8 +370,8 @@ PRBool
 nsClipboard :: CheckIfFlavorPresent ( ResType inMacFlavor )
 {
   PRBool retval = PR_FALSE;
-  PRInt32 offsetUnused = 0;
-  OSErr clipResult = ::GetScrap(NULL, inMacFlavor, NS_REINTERPRET_CAST(long*, &offsetUnused));    
+  long offsetUnused = 0;
+  long clipResult = ::GetScrap(NULL, inMacFlavor, &offsetUnused);    
   if ( clipResult > 0 )   
     retval = PR_TRUE;   // we found one!
     
