@@ -589,7 +589,8 @@ RDFUtil_GetFirstInstance (RDF_Resource type, char* defaultURL)
 					     gCoreVocab->RDF_instanceOf,
 					     RDF_RESOURCE_TYPE, true, true);
   if (bmk == NULL) {
-    bmk = RDF_GetResource(NULL, defaultURL, 1);
+    /* bmk = RDF_GetResource(NULL, defaultURL, 1); */
+    bmk = createContainer(defaultURL);
     nlocalStoreAssert(gLocalStore, bmk, gCoreVocab->RDF_instanceOf, 
 		      type, RDF_RESOURCE_TYPE, 1);
   }

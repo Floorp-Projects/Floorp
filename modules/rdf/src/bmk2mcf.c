@@ -82,6 +82,8 @@ createContainer (char* id)
   return r;
 }
 
+
+
 #ifdef MOZILLA_CLIENT
 
 int16 GetBmCharSetID();
@@ -93,6 +95,8 @@ int16 GetBmCharSetID()
 	gBmCharSetID = INTL_GetCharSetID(INTL_OldBookmarkCsidSel);
    return gBmCharSetID;
 }
+
+
 
 char *
 resourceDescription (RDF rdf, RDF_Resource r)

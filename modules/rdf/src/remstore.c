@@ -537,8 +537,11 @@ DeleteRemStore (RDFT db)
   return 0;
 }
 
+
+
 RDF_Error 
-remStoreUpdate (RDFT db, RDF_Resource u) {
+remStoreUpdate (RDFT db, RDF_Resource u)
+{
   RDFFile f = db->pdata;
   if (f != NULL) {
     int32 n = 0;
@@ -562,10 +565,12 @@ remStoreUpdate (RDFT db, RDF_Resource u) {
       initRDFFile(f);
       f->refreshingp = 1;
       beginReadingRDFFile(f);
+      return 0;
     } else return -1;
   } else return -1;
 }
     
+
 
 void
 gcRDFFile (RDFFile f)

@@ -711,7 +711,8 @@ nodeCompareRtn(HT_Resource *node1, HT_Resource *node2)
 	uint32		sortTokenType;
 	PRBool		descendingFlag;
 	char		*node1Name = NULL, *node2Name = NULL;
-	char		*pos1 = NULL, *pos2 = NULL;
+	char		*id, *pos1 = NULL, *pos2 = NULL;
+	RDF_Resource	pos1Resource, pos2Resource;
 	time_t		date1, date2;
 
 	XP_ASSERT(node1 != NULL);
@@ -815,14 +816,43 @@ nodeCompareRtn(HT_Resource *node1, HT_Resource *node2)
 	}
 	else	/* natural order */
 	{
-		HT_GetNodeData ((*node1), gNavCenter->RDF_ItemPos, HT_COLUMN_STRING, &pos1);
-		HT_GetNodeData ((*node2), gNavCenter->RDF_ItemPos, HT_COLUMN_STRING, &pos2);
+		pos1Resource = pos2Resource = NULL;
+		if ((id = PR_smprintf("pos(%s)", resourceID((*node1)->parent->node))) != NULL)
+		{
+			pos1Resource = RDF_GetResource((*node1)->view->pane->db, id, PR_TRUE);
+			XP_FREE(id);
+		}
+		if ((id = PR_smprintf("pos(%s)", resourceID((*node2)->parent->node))) != NULL)
+		{
+			pos2Resource = RDF_GetResource((*node2)->view->pane->db, id, PR_TRUE);
+			XP_FREE(id);
+		}
+		pos1 = pos2 = NULL;
+		if (pos1Resource != NULL)
+		{
+			HT_GetNodeData ((*node1), pos1Resource, HT_COLUMN_STRING, &pos1);
+		}
+		if (pos2Resource != NULL)
+		{
+			HT_GetNodeData ((*node2), pos2Resource, HT_COLUMN_STRING, &pos2);
+		}
 
 		if ((pos1 != NULL) && (pos2 == NULL))		retVal=-1;
 		else if ((pos1 == NULL) && (pos2 != NULL))	retVal=1;
 		else if ((pos1 !=NULL) && (pos2 != NULL))
 		{
-			retVal = compareStrings(pos1, pos2);
+			if (isdigit(pos1[0]) && isdigit(pos2[0]))
+			{
+				node1Index = atol(pos1);
+				node2Index = atol(pos2);
+				if (node1Index < node2Index)		retVal=-1;
+				else if (node1Index > node2Index)	retVal=1;
+				else					retVal=0;
+			}
+			else
+			{
+				retVal = compareStrings(pos1, pos2);
+			}
 		}
 		else
 		{
@@ -1170,7 +1200,8 @@ paneFromResource(RDF db, RDF_Resource resource, HT_Notification notify,
 			break;
 		}
 
-        if (db == NULL) db = HTRDF_GetDB(pane);
+		if (db == NULL) db = HTRDF_GetDB(pane);
+
 		ev->eventType = HT_EVENT_DEFAULT_NOTIFICATION_MASK;
 
 		pane->rns = RDF_AddNotifiable(db, (autoFlushFlag ? bmkNotifFunc : htrdfNotifFunc), ev, pane);
@@ -1183,9 +1214,9 @@ paneFromResource(RDF db, RDF_Resource resource, HT_Notification notify,
 			break;
 		}
 		pane->db =  db;
-                /*		pane->autoFlushFlag = autoFlushFlag; */
+                /* pane->autoFlushFlag = autoFlushFlag; */
 
-		if ((view = HT_NewView(resource, pane,   useColumns, NULL, autoOpenFlag)) == NULL)
+		if ((view = HT_NewView(resource, pane, useColumns, NULL, autoOpenFlag)) == NULL)
 		{
 			err = true;
 			break;
@@ -2503,10 +2534,11 @@ resynchItem (HT_Resource node, void *token, void *data, PRBool assertAction)
 void
 resynchContainer (HT_Resource container)
 {
-	HT_Resource		parent, tc, nc = NULL;
+	HT_Resource		parent, tc, nc = NULL, *child;
 	RDF_Cursor		c;
-	RDF_Resource		next;
+	RDF_Resource		next, posResource;
 	PRBool			found;
+	char			*id, *pos;
 	uint32			n = 0;
 
 	if ((c = RDF_GetSources(container->view->pane->db, container->node,
@@ -2532,8 +2564,6 @@ resynchContainer (HT_Resource container)
 				{
 					nc->dataSource = RDF_ValueDataSource(c);
 					nc->parent = container;
-					nc->next = container->child;
-					container->child = nc;
 					nc->depth = container->depth + 1;
 					++container->numChildren;
 					nc->unsortedIndex = n;	/* container->numChildren; */
@@ -2542,6 +2572,44 @@ resynchContainer (HT_Resource container)
 					{
 						++(parent->numChildrenTotal);
 						parent=parent->parent;
+					}
+
+					/* attempt to insert new node in appropriate position */
+					pos = NULL;
+					if ((id = PR_smprintf("pos(%s)", resourceID(nc->parent->node))) != NULL)
+					{
+						posResource = RDF_GetResource(gNCDB, id, PR_TRUE);
+						XP_FREE(id);
+						if (posResource != NULL)
+						{
+							HT_GetNodeData (nc, posResource, HT_COLUMN_STRING, &pos);
+						}
+					}
+					if (pos != NULL)
+					{
+						found = PR_FALSE;
+						child = &(container->child);
+						while ((*child) != NULL)
+						{
+							if (nodeCompareRtn(&nc, child) < 0)
+							{
+								found = PR_TRUE;
+								nc->next = *child;
+								*child = nc;
+								break;
+							}
+							child = &((*child)->next);
+						}
+						if (found == PR_FALSE)
+						{
+							*child = nc;
+						}
+
+					}
+					else
+					{
+						nc->next = container->child;
+						container->child = nc;
 					}
 				}
 				break;
@@ -2610,20 +2678,64 @@ refreshContainerIndexes(HT_Resource container)
 HT_Resource
 addContainerItem (HT_Resource container, RDF_Resource item)
 {
-	HT_Resource		nc, ch, parent;
+	HT_Resource		nc, ch, parent, *child;
+	PRBool			found;
+	RDF_Resource		posResource;
 	SBProvider		sb;
+	char			*id, *pos;
 
 	if ((nc = newHTEntry(container->view, item)) != NULL)
 	{
 		ch = container->child;
 		nc->view = container->view;
 		nc->parent = container;
-		nc->next = container->child;
-		container->child = nc;
 		nc->depth = container->depth + 1;
 		++container->numChildren;
 
-		nc->unsortedIndex = container->numChildren;
+		/*
+		nc->next = container->child;
+		container->child = nc;
+		*/
+
+		/* attempt to insert new node in appropriate position */
+		pos = NULL;
+		if ((id = PR_smprintf("pos(%s)", resourceID(nc->parent->node))) != NULL)
+		{
+			posResource = RDF_GetResource(gNCDB, id, PR_TRUE);
+			XP_FREE(id);
+			if (posResource != NULL)
+			{
+				HT_GetNodeData (nc, posResource, HT_COLUMN_STRING, &pos);
+			}
+		}
+		if (pos != NULL)
+		{
+			found = PR_FALSE;
+			child = &(container->child);
+			while ((*child) != NULL)
+			{
+				if (nodeCompareRtn(&nc, child) < 0)
+				{
+					found = PR_TRUE;
+					nc->next = *child;
+					*child = nc;
+					break;
+				}
+				child = &((*child)->next);
+			}
+			if (found == PR_FALSE)
+			{
+				*child = nc;
+			}
+
+		}
+		else
+		{
+			nc->next = container->child;
+			container->child = nc;
+		}
+
+		/* nc->unsortedIndex = container->numChildren; */
 		refreshContainerIndexes(container);
 	  
 		parent = container;
@@ -2868,7 +2980,7 @@ HT_NewCursor (HT_Resource node)
 	XP_ASSERT(node != NULL);
 	XP_ASSERT(node->view != NULL);
 
-	if ((node==NULL) || (!HT_IsContainer(node)))
+	if ((node==NULL) /* || (!HT_IsContainer(node)) */)
 	{
 		return(NULL);
 	}
@@ -5133,6 +5245,7 @@ HT_GetTemplate(int templateType)
 }
 
 
+
 PR_PUBLIC_API(PRBool)
 HT_GetTemplateData(HT_Resource node, void* token, uint32 tokenType, void **nodeData)
 {
@@ -5162,7 +5275,6 @@ HT_GetNodeData (HT_Resource node, void *token, uint32 tokenType, void **nodeData
 	HT_Value		values;
 	PRBool			foundData = false;
 	void			*data = NULL;
-	RDF_Resource tt = (RDF_Resource)token;
 
 	XP_ASSERT(node != NULL);
 
@@ -7065,23 +7177,25 @@ HT_GetRDFResource (HT_Resource node)
 PR_PUBLIC_API(char *)
 HT_GetNodeDisplayURL(HT_Resource node)
 {
-  char		*retVal = NULL;
-  char*         ans;
-  XP_ASSERT(node != NULL);
-  XP_ASSERT(node->node != NULL);
+	char		*retVal = NULL, *ans;
+
+	XP_ASSERT(node != NULL);
+	XP_ASSERT(node->node != NULL);
   
-  ans  = RDF_GetSlotValue(node->view->pane->db, node->node, gNavCenter->displayURL, 
-                          RDF_STRING_TYPE, 0, 1);
-  if (ans) return ans;
-  if (node != NULL)
-    {
-      if (node->node != NULL)
-        {
-          retVal = resourceID(node->node);
-        }
-    }
-  return(retVal);
+	ans = RDF_GetSlotValue(node->view->pane->db, node->node, gNavCenter->displayURL, 
+	          RDF_STRING_TYPE, 0, 1);
+	if (ans) return ans;
+	if (node != NULL)
+	{
+		if (node->node != NULL)
+		{
+			retVal = resourceID(node->node);
+		}
+	}
+	return(retVal);
 }
+
+
 
 PR_PUBLIC_API(char *)
 HT_GetNodeURL(HT_Resource node)
@@ -8153,6 +8267,7 @@ HT_CanDropURLAtPos(HT_Resource dropTarget, char *url, PRBool before)
 
 	dropParent = dropTarget->parent;
 	action = dropURLOn(dropParent, url, NULL, 1);
+	/*
 	if (action &&  nlocalStoreHasAssertion(gLocalStore, dropTarget->node,
 		gCoreVocab->RDF_parent, dropParent->node, RDF_RESOURCE_TYPE, 1))
 	{
@@ -8161,6 +8276,7 @@ HT_CanDropURLAtPos(HT_Resource dropTarget, char *url, PRBool before)
 	{
 		action = DROP_NOT_ALLOWED;
 	}
+	*/
 	return (action);
 }
 
@@ -9387,6 +9503,9 @@ dropURLOn (HT_Resource dropTarget, char* objURL, char *objTitle, PRBool justActi
 		break;
 
 		case LDAP_RT:
+		return DROP_NOT_ALLOWED;
+		break;
+
 		case RDF_RT :
 		if (justAction)
 		{
@@ -9426,8 +9545,9 @@ replacePipeWithColon(char* url)
 HT_DropAction
 copyRDFLinkURL (HT_Resource dropTarget, char* objURL, char *objTitle)
 {
-	RDF_Resource		new, obj;
+	RDF_Resource		new, obj, posResource;
 	RDF			db;
+	char			*id, itemPos[16];
 
 	new = dropTarget->node;
 	db = dropTarget->view->pane->db;
@@ -9437,6 +9557,17 @@ copyRDFLinkURL (HT_Resource dropTarget, char* objURL, char *objTitle)
 	if (objTitle != NULL)
 	{
 		RDF_Assert(db, obj, gCoreVocab->RDF_name, objTitle, RDF_STRING_TYPE);
+	}
+	
+	if (dropTarget->child != NULL)
+	{
+		if ((id = PR_smprintf("pos(%s)", resourceID(new))) != NULL)
+		{
+			posResource = RDF_GetResource(db, id, PR_TRUE);
+			sprintf(itemPos, "%lu", dropTarget->numChildren+1);
+			RDF_Assert(db, obj, posResource, itemPos, RDF_STRING_TYPE);
+			XP_FREE(id);
+		}
 	}
 	RDF_Assert(db, obj, gCoreVocab->RDF_parent, new, RDF_RESOURCE_TYPE);
 	htLookInCacheForMetaTags(objURL);
@@ -9448,9 +9579,14 @@ copyRDFLinkURL (HT_Resource dropTarget, char* objURL, char *objTitle)
 HT_DropAction
 copyRDFLinkURLAt (HT_Resource dropx, char* objURL, char *objTitle, PRBool before)
 {
-	HT_Resource		dropTarget;
+	HT_Resource		dropTarget, child, prev = NULL;
 	RDF			db;
-	RDF_Resource		parent,obj;
+	RDF_Resource		parent, obj, posResource;
+	char			*id, *pos, posString[16];
+	unsigned long		itemNum, itemPos=0;
+
+	XP_ASSERT(dropx != NULL);
+	if (dropx == NULL)	return(DROP_NOT_ALLOWED);
 
 	dropTarget = dropx->parent;
 	db = dropTarget->view->pane->db;
@@ -9462,10 +9598,53 @@ copyRDFLinkURLAt (HT_Resource dropx, char* objURL, char *objTitle, PRBool before
 	{
 		RDF_Assert(db, obj, gCoreVocab->RDF_name, objTitle, RDF_STRING_TYPE);
 	}
+
 	nlocalStoreUnassert(gLocalStore, obj, gCoreVocab->RDF_parent, parent, RDF_RESOURCE_TYPE);
-	nlocalStoreAddChildAt(gLocalStore, parent, dropx->node, obj, before);
+	/* renumber item positions, leaving an open slot for the node being added */
+	if ((id = PR_smprintf("pos(%s)", resourceID(parent))) != NULL)
+	{
+		posResource = RDF_GetResource(db, id, PR_TRUE);
+		itemNum = 1;
+		child = dropTarget->child;
+		while (child != NULL)
+		{
+			pos = NULL;
+			HT_GetNodeData(child, posResource, HT_COLUMN_STRING, &pos);
+			if (pos != NULL)
+			{
+				RDF_Unassert(gNCDB, child->node, posResource, pos, RDF_STRING_TYPE);
+			}
+
+			if ((child == dropx) && (before))
+			{
+				itemPos = itemNum++;
+				sprintf(posString, "%lu", itemNum++);
+				RDF_Assert(gNCDB, child->node, posResource, posString, RDF_STRING_TYPE);
+			}
+			else if ((prev == dropx) && (!before))
+			{
+				sprintf(posString, "%lu", itemNum++);
+				RDF_Assert(gNCDB, child->node, posResource, posString, RDF_STRING_TYPE);
+				itemPos = itemNum++;
+			}
+			else
+			{
+				sprintf(posString, "%lu", itemNum++);
+				RDF_Assert(gNCDB, child->node, posResource, posString, RDF_STRING_TYPE);
+			}
+			prev = child;
+			child = child->next;
+		}
+		sprintf(posString, "%lu", (itemPos > 0) ? itemPos : dropx->parent->numChildren + 1);
+		RDF_Assert(gNCDB, obj, posResource, posString, RDF_STRING_TYPE);
+	/*
+		nlocalStoreAddChildAt(gLocalStore, parent, dropx->node, obj, before);
+	*/
+		RDF_Assert(db, obj, gCoreVocab->RDF_parent, parent, RDF_RESOURCE_TYPE);
+		XP_FREE(id);
+	}
 	htLookInCacheForMetaTags(objURL);
-	return COPY_MOVE_LINK;      
+	return (COPY_MOVE_LINK);
 }
 
 

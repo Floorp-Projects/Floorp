@@ -68,6 +68,7 @@ void *		arcLabelsInNextValue (RDFT mcf, RDF_Cursor c);
 void *		remoteStoreNextValue (RDFT mcf, RDF_Cursor c);
 RDF_Error	remoteStoreDisposeCursor (RDFT mcf, RDF_Cursor c);
 RDF_Error	DeleteRemStore (RDFT db);
+RDF_Error 	remStoreUpdate (RDFT db, RDF_Resource u);
 void		gcRDFFile (RDFFile f);
 void		RDFFilePossiblyAccessFile (RDFT rdf, RDF_Resource u, RDF_Resource s, PRBool inversep);
 void		possiblyRefreshRDFFiles ();
