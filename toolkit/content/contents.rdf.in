@@ -4,14 +4,15 @@
 
   <!-- list all the packages being supplied by this jar -->
   <RDF:Seq about="urn:mozilla:package:root">
-    <RDF:li resource="urn:mozilla:package:global-platform"/>
+    <RDF:li resource="urn:mozilla:package:global"/>
   </RDF:Seq>
 
   <!-- package information -->
-  <RDF:Description about="urn:mozilla:package:global-platform"
-        chrome:displayName="Platform Specific"
+  <RDF:Description about="urn:mozilla:package:global"
+        chrome:displayName="Toolkit"
         chrome:author="mozilla.org"
-        chrome:name="global-platform"
- 	chrome:localeVersion="1.5b">
+        chrome:name="global"
+        chrome:localeVersion="@MOZILLA_VERSION@"
+        chrome:skinVersion="1.5">
   </RDF:Description>
 </RDF:RDF>
