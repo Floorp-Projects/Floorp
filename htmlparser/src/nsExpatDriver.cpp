@@ -173,14 +173,12 @@ Driver_HandleExternalEntityRef(XML_Parser parser,
                                const XML_Char *publicId)
 {
   int result = PR_TRUE;
-
-#ifdef XML_DTD
  
   // Load the external entity into a buffer
   nsCOMPtr<nsIInputStream> in;
   nsAutoString absURL;
 
-  nsresult rv = nsExpatDriver::OpenInputStream(systemId, base, getter_AddRefs(in), absURL);
+  nsresult rv = nsExpatDriver::OpenInputStream(publicId, systemId, base, getter_AddRefs(in), absURL);
 
   if (NS_FAILED(rv)) {
     return result;
@@ -215,10 +213,6 @@ Driver_HandleExternalEntityRef(XML_Parser parser,
       XML_ParserFree(entParser);
     }
   }
-
-#else // ! XML_DTD
-  NS_NOTYETIMPLEMENTED("Error: Driver_HandleExternalEntityRef() not yet implemented.");
-#endif // XML_DTD
   
   return result;
 }
@@ -407,13 +401,48 @@ nsExpatDriver::HandleEndDoctypeDecl()
   return NS_OK;
 }
 
+// Initially added for bug 113400 to switch from the remote "XHTML 1.0 plus
+// MathML 2.0" DTD to the the lightweight customized version that Mozilla uses.
+// Since Mozilla is not validating, no need to fetch a *huge* file at each click.
+// XXX The cleanest solution here would be to fix Bug 98413: Implement XML Catalogs 
+struct nsCatalogEntry {
+  const char* mPublicID;
+  const char* mLocalDTD;
+};
+
+static const nsCatalogEntry kCatalogTable[] = {
+ {"-//W3C//DTD XHTML 1.1 plus MathML 2.0//EN", "mathml.dtd"},
+ {"-//W3C//DTD SVG 20001102//EN", "svg.dtd"},
+ {nsnull, nsnull}
+};
+
+static void
+RemapDTD(const XML_Char* aPublicID, nsAWritableCString& aLocalDTD)
+{
+  nsCAutoString publicID;
+  publicID.AssignWithConversion((const PRUnichar*)aPublicID);
+
+  // linear search for now since the number of entries is going to
+  // be negligible, and the fix for bug 98413 would get rid of this
+  // code anyway
+  aLocalDTD.Truncate();
+  const nsCatalogEntry* data = kCatalogTable;
+  while (data->mPublicID) {
+    if (publicID.Equals(data->mPublicID)) {
+      aLocalDTD = data->mLocalDTD;
+      return;
+    }
+    ++data;
+  }
+}
+
 // aDTD is an in/out parameter.  Returns true if the aDTD is a chrome url or if the
 // filename contained within the url exists in the special DTD directory ("dtd"
 // relative to the current process directory).  For the latter case, aDTD is set
 // to the file: url that points to the DTD file found in the local DTD directory
 // AND the old URI is relased.
 static PRBool
-IsLoadableDTD(nsCOMPtr<nsIURI>* aDTD)
+IsLoadableDTD(const XML_Char* aFPIStr, nsCOMPtr<nsIURI>* aDTD)
 {
   PRBool isLoadable = PR_FALSE;
   nsresult res = NS_OK;
@@ -428,35 +457,46 @@ IsLoadableDTD(nsCOMPtr<nsIURI>* aDTD)
 
   // If the url is not a chrome url, check to see if a DTD file of the same name
   // exists in the special DTD directory
-  if (!isLoadable) {   
-    nsCOMPtr<nsIURL> dtdURL;
-    dtdURL = do_QueryInterface(*aDTD, &res);
-    if (NS_SUCCEEDED(res)) {
-      nsXPIDLCString fileName;    
+  if (!isLoadable) {
+    // try to see if we can map the public ID to a known local DTD
+    nsXPIDLCString fileName;
+    RemapDTD(aFPIStr, fileName);
+    if (fileName.IsEmpty()) {
+      // try to see if the user has installed the DTD file -- we extract the
+      // filename.ext of the DTD here. Hence, for any DTD for which we have
+      // no predefined mapping, users just have to copy the DTD file to our
+      // special DTD directory and it will be picked
+      nsCOMPtr<nsIURL> dtdURL;
+      dtdURL = do_QueryInterface(*aDTD, &res);
+      if (NS_FAILED(res)) {
+        return PR_FALSE;
+      }
       res = dtdURL->GetFileName(getter_Copies(fileName));
-      if (NS_SUCCEEDED(res) && fileName) {
-        nsSpecialSystemDirectory dtdPath(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-        dtdPath += PromiseFlatCString(nsDependentCString(kDTDDirectory) + fileName).get();
-        if (dtdPath.Exists()) {
-          // The DTD was found in the local DTD directory.
-          // Set aDTD to a file: url pointing to the local DTD
-          nsFileURL dtdFile(dtdPath);
-          nsCOMPtr<nsIURI> dtdURI;
-          res = NS_NewURI(getter_AddRefs(dtdURI), dtdFile.GetURLString());
-          if (NS_SUCCEEDED(res) && dtdURI) {
-            *aDTD = dtdURI;
-            isLoadable = PR_TRUE;
-          }
-        }
+      if (NS_FAILED(res) || fileName.IsEmpty()) {
+        return PR_FALSE;
       }
     }
-  }  
+    nsSpecialSystemDirectory dtdPath(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+    dtdPath += PromiseFlatCString(nsDependentCString(kDTDDirectory) + fileName).get();
+    if (dtdPath.Exists()) {
+      // The DTD was found in the local DTD directory.
+      // Set aDTD to a file: url pointing to the local DTD
+      nsFileURL dtdFile(dtdPath);
+      nsCOMPtr<nsIURI> dtdURI;
+      NS_NewURI(getter_AddRefs(dtdURI), dtdFile.GetURLString());
+      if (dtdURI) {
+        *aDTD = dtdURI;
+        isLoadable = PR_TRUE;
+      }
+    }
+  }
 
   return isLoadable;
 }
 
 nsresult
-nsExpatDriver::OpenInputStream(const XML_Char* aURLStr, 
+nsExpatDriver::OpenInputStream(const XML_Char* aFPIStr,
+                               const XML_Char* aURLStr, 
                                const XML_Char* aBaseURL, 
                                nsIInputStream** in, 
                                nsAString& aAbsURL) 
@@ -468,7 +508,7 @@ nsExpatDriver::OpenInputStream(const XML_Char* aURLStr,
     nsCOMPtr<nsIURI> uri;
     rv = NS_NewURI(getter_AddRefs(uri), NS_ConvertUCS2toUTF8((const PRUnichar*)aURLStr).get(), baseURI);
     if (NS_SUCCEEDED(rv) && uri) {
-      if (IsLoadableDTD(address_of(uri))) {
+      if (IsLoadableDTD(aFPIStr, address_of(uri))) {
         rv = NS_OpenURI(in, uri);
         nsXPIDLCString absURL;
         uri->GetSpec(getter_Copies(absURL));
