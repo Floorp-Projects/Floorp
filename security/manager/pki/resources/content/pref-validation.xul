@@ -46,7 +46,7 @@
   <script src="pref-validation.js"/>
 
   <!-- Fancy panel header -->
-  <box class="box-smallheader" title="&validation.title;" description="&validation.description;"/>
+  <box class="box-smallheader" title="&validation.title;"/>
 
   <titledbox orient="vertical">
     <label value="&validation.crl.label;"/>
