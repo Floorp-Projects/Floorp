@@ -69,7 +69,7 @@
 
 #if defined(XP_MAC) || defined(XP_MACOSX)
 #include <Gestalt.h>
-PRBool OnMacOSX();
+static PRBool OnMacOSX();
 #endif
 
 #include "nsWidgetsCID.h"
@@ -1073,7 +1073,7 @@ nsAppShellService::GetNativeAppSupport( nsINativeAppSupport **aResult ) {
 //
 // Return true if we are on Mac OS X, caching the result after the first call
 //
-PRBool
+static PRBool
 OnMacOSX()
 {
 

@@ -192,7 +192,7 @@ ifeq ($(OS_ARCH),Darwin)
 EXTRA_DSO_LDOPTS := $(subst -dynamiclib,-execute,$(EXTRA_DSO_LDOPTS))
 
 ifdef BUILD_STATIC_LIBS
-LDFLAGS	+= -framework QuickTime
+LDFLAGS	+= -framework QuickTime $(TK_LIBS)
 endif
 
 endif
