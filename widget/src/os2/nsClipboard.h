@@ -58,8 +58,9 @@ protected:
     Write
   };
 
-  ULONG    GetFormatID(const char *aMimeStr, FormatRecord **ppRecord);
+  ULONG    GetFormatID(const char *aMimeStr);
   PRBool   GetClipboardData(const char *aFlavour);
+  PRBool   GetClipboardDataByID(ULONG ulFormatID, const char *aFlavor);
   void     SetClipboardData(const char *aFlavour);
   nsresult DoClipboardAction(ClipboardAction aAction);
 };

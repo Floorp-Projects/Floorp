@@ -38,24 +38,35 @@
 // Could be a lot cleverer & use delayed rendering or something to provide
 // a consumer with text when what we've got is unicode, or whatever.
 
-// Okay, I'm not entirely sure why I did this in this way; it just sortof grew
-// like this...
-
-typedef PRUint32 (*ImportDataFn)(void *pData, void **pDataOut);
-typedef PRUint32 (*ExportDataFn)(void *pDataIn, PRUint32 cData, void *pBuffer);
-
-struct FormatRecord
+struct FormatEntry
 {
   const char   *szMimeType;
   ULONG         ulClipboardFmt;
   const char   *szFmtName;
-  ImportDataFn  pfnImport;
-  ExportDataFn  pfnExport;
+};
+
+FormatEntry formatEntries[] = 
+{
+  { kTextMime,      CF_TEXT, 0      },
+  { kUnicodeMime,   0, "CF_UNICODE" },
+  { kHTMLMime,      0, "CF_HTML"    },
+  { kPNGImageMime,  0, "CF_PNG"     },
+  { kGIFImageMime,  0, "CF_GIF"     },
+  { kJPEGImageMime, 0, "CF_JPEG"    },
+  { kAOLMailMime,   0, "CF_AOLMAIL" },
+  { kFileMime,      0, "CF_FILE"    },
+  { kURLMime,       0, "CF_URL"     }
 };
 
 // scaffolding
 nsClipboard::nsClipboard() : nsBaseClipboard()
-{}
+{
+  for (int cnt=0 ; cnt < sizeof(formatEntries) / sizeof(formatEntries[0]) ; cnt++)
+  {
+    if (formatEntries[cnt].ulClipboardFmt == 0)  // Not yet registered
+      formatEntries[cnt].ulClipboardFmt = gModuleData.GetAtom( formatEntries[cnt].szFmtName );
+  }
+}
 
 nsClipboard::~nsClipboard()
 {}
@@ -82,151 +93,203 @@ nsresult nsClipboard::GetNativeClipboardData(nsITransferable *aTransferable, PRI
 }
 
 // Get some data from the clipboard
-PRBool nsClipboard::GetClipboardData(const char *aFlavour)
+PRBool nsClipboard::GetClipboardData(const char *aFlavor)
 {
-  PRBool dataFound = PR_FALSE;
-  FormatRecord *pRecord;
-  ULONG ulFmt = GetFormatID(aFlavour, &pRecord);
+  ULONG ulFormatID = GetFormatID( aFlavor );
+  
+  PRBool found = GetClipboardDataByID( ulFormatID, aFlavor );
 
-  // XXX OS2TODO - images: just handle text until then
-//  if ( (!pRecord || strstr(pRecord->szMimeType, "text") == NULL) )
-//    return PR_FALSE;
+  if (!found) 
+  {
+    if (!strcmp( aFlavor, kUnicodeMime ))
+    {
+      found = GetClipboardDataByID( CF_TEXT, aFlavor );
+    }
+    else if (strstr( aFlavor, "image/" ))
+    {
+      found = GetClipboardDataByID( CF_BITMAP, aFlavor );
+    }
+  }
 
-  void* pData = (void*) WinQueryClipbrdData(0/*hab*/, ulFmt);
+  return found;
+}
 
-  if (pData) {
+PRBool nsClipboard::GetClipboardDataByID(ULONG ulFormatID, const char *aFlavor)
+{
+  PVOID pDataMem;
+  PVOID pTempBuf;
+  PRUint32 NumOfBytes;
+  PRBool TempBufAllocated = PR_FALSE;
 
-    dataFound = PR_TRUE;
+  PVOID pClipboardData = NS_STATIC_CAST(PVOID, WinQueryClipbrdData( 0, ulFormatID ));
 
-    PRUint32 cbData;
+  if (!pClipboardData) 
+    return PR_FALSE;
 
-    if (pRecord) {
-      cbData = pRecord->pfnImport(pData, (void**) &pData);
+  if (strstr( aFlavor, "text/" ))  // All text/.. flavors are null-terminated
+  {
+    pDataMem = pClipboardData;
 
-      if (!strcmp(pRecord->szMimeType, kTextMime)) {
+    if (ulFormatID == CF_TEXT)     // CF_TEXT is one byte character set
+    {
+      PRUint32 NumOfChars = strlen( NS_STATIC_CAST (char*, pDataMem) );
+      NumOfBytes = NumOfChars;
 
-        const char* castText = NS_REINTERPRET_CAST(char*, pData);
-        ULONG txtLen = strlen(castText) + 1;
-        PRUnichar* uniBuf = (PRUnichar*)PR_Malloc(txtLen*sizeof(PRUnichar));
-        PRUnichar* convertedText = gModuleData.ConvertToUcs(castText, uniBuf, txtLen);
+      if (!strcmp( aFlavor, kUnicodeMime ))  // Asked for unicode, but only plain text available.  Convert it!
+      {
+        NumOfBytes *= sizeof(UniChar);
 
-        if (convertedText) {
-          pData = NS_REINTERPRET_CAST(void*, convertedText);
-          cbData = (txtLen-1) * sizeof(PRUnichar);
-        }
+        pTempBuf = nsMemory::Alloc( NumOfBytes + sizeof(UniChar) );
+        TempBufAllocated = PR_TRUE;
+        gModuleData.ConvertToUcs( NS_STATIC_CAST(char*, pDataMem), NS_STATIC_CAST(UniChar*, pTempBuf), NumOfChars + 1 );
+        pDataMem = pTempBuf;
+      }
+
+      // DOM wants LF only, so convert from CRLF
+      nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks( aFlavor, &pDataMem,   // pDataMem could be reallocated !!
+                                                          NS_STATIC_CAST(PRInt32*, &NumOfBytes) );  // yuck
+    }
+    else                           // All other text/.. flavors are in unicode
+    {
+      PRUint32 NumOfChars = UniStrlen( NS_STATIC_CAST(UniChar*, pDataMem) );
+      NumOfBytes = NumOfChars * sizeof(UniChar);
+    }
+  }
+  else                             // Assume rest of flavors are binary data
+  {
+    if (ulFormatID == CF_BITMAP)
+    {
+      if (!strcmp( aFlavor, kJPEGImageMime ))
+      {
+        // OS2TODO  Convert bitmap to jpg
+#ifdef DEBUG
+        printf( "nsClipboard:: No JPG found on clipboard; need to convert BMP\n");
+#endif
+      }
+      else if (!strcmp( aFlavor, kGIFImageMime ))
+      {
+        // OS2TODO  Convert bitmap to gif
+#ifdef DEBUG
+        printf( "nsClipboard:: No GIF found on clipboard; need to convert BMP\n");
+#endif
+      }
+      else if (!strcmp( aFlavor, kPNGImageMime ))
+      {
+        // OS2TODO  Convert bitmap to png
+#ifdef DEBUG
+        printf( "nsClipboard:: No PNG found on clipboard; need to convert BMP\n");
+#endif
       }
     }
     else
     {
-      cbData = *(NS_STATIC_CAST(PRUint32*, pData));
-      pData = NS_STATIC_CAST(void*, NS_STATIC_CAST(PBYTE, pData) + sizeof(PRUint32));
-    }
-
-    if (dataFound == PR_TRUE) {
-
-      // Set converted text as unicode
-      const char* flavorStr = (aFlavour == kTextMime) ? kUnicodeMime : aFlavour;
-
-      // XXX OS2TODO: why does conversion SIGSEGV???
-#if 0
-      // DOM wants LF only, so convert from CRLF
-      PRInt32 signedLen = NS_STATIC_CAST(PRInt32, cbData);
-      nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks(flavorStr, &pData, &signedLen);
-      cbData = NS_STATIC_CAST(PRUint32, signedLen);
-#endif
-
-      nsCOMPtr<nsISupports> genericDataWrapper;
-      nsPrimitiveHelpers::CreatePrimitiveForData(flavorStr, pData, cbData, getter_AddRefs(genericDataWrapper));
-      nsresult errCode = mTransferable->SetTransferData(flavorStr, genericDataWrapper, cbData);
-#ifdef NS_DEBUG
-      if (errCode != NS_OK) printf("nsClipboard:: Error setting data into transferable\n");
-#endif
+      pDataMem = NS_STATIC_CAST(PBYTE, pClipboardData) + sizeof(PRUint32);
+      NumOfBytes = *(NS_STATIC_CAST(PRUint32*, pClipboardData));
     }
   }
 
-  // check for text which, if found, we convert to unicode
-  if (pRecord && !strcmp(pRecord->szMimeType, kUnicodeMime) && (dataFound == PR_FALSE))
-    GetClipboardData(kTextMime);
+  nsCOMPtr<nsISupports> genericDataWrapper;
+  nsPrimitiveHelpers::CreatePrimitiveForData( aFlavor, pDataMem, NumOfBytes, getter_AddRefs(genericDataWrapper) );
+  nsresult errCode = mTransferable->SetTransferData( aFlavor, genericDataWrapper, NumOfBytes );
+#ifdef DEBUG
+  if (errCode != NS_OK)
+    printf( "nsClipboard:: Error setting data into transferable\n" );
+#endif
 
-  return dataFound;
+  if (TempBufAllocated)
+    nsMemory::Free(pDataMem);
+
+  return PR_TRUE;
 }
 
+
 // Set some data onto the clipboard
-void nsClipboard::SetClipboardData(const char *aFlavour)
+void nsClipboard::SetClipboardData(const char *aFlavor)
 {
   void *pMozData = nsnull;
-  void *pData = nsnull;
-  PRUint32  cbMozData = 0, cbData = 0;
+  PRUint32 NumOfBytes = 0;
 
   // Get the data from the transferable
   nsCOMPtr<nsISupports> genericDataWrapper;
-  nsresult errCode = mTransferable->GetTransferData(aFlavour, getter_AddRefs(genericDataWrapper), &cbMozData);
-#ifdef NS_DEBUG
-  if (NS_FAILED(errCode)) printf("nsClipboard:: Error getting data from transferable\n");
+  nsresult errCode = mTransferable->GetTransferData( aFlavor, getter_AddRefs(genericDataWrapper), &NumOfBytes );
+#ifdef DEBUG
+  if (NS_FAILED(errCode)) printf( "nsClipboard:: Error getting data from transferable\n" );
 #endif
-  nsPrimitiveHelpers::CreateDataFromPrimitive(aFlavour, genericDataWrapper, &pMozData, cbMozData);
+  if (NumOfBytes == 0) return;
+  nsPrimitiveHelpers::CreateDataFromPrimitive( aFlavor, genericDataWrapper, &pMozData, NumOfBytes );
 
-  // Figure out how much memory we need to store the native version
-  FormatRecord *pRecord;
-  ULONG ulFmt = GetFormatID(aFlavour, &pRecord);
-//  if (!pRecord)
-//    return;
+  ULONG ulFormatID = GetFormatID( aFlavor );
 
-  if (pRecord)
-    cbData = pRecord->pfnExport(pMozData, cbMozData, 0);
-  else
-    cbData = cbMozData + sizeof(PRUint32);
-
-  // allocate some memory to put the data in
-  APIRET rc = DosAllocSharedMem(&pData, nsnull, cbData,
-                                 PAG_WRITE | PAG_COMMIT | OBJ_GIVEABLE);
-
-  if (!rc) {
-
-    if (pRecord) {
-      // copy across & pin up.
-      pRecord->pfnExport(pMozData, cbMozData, pData);
-
-      if (!WinSetClipbrdData(0/*hab*/, (ULONG)pData, pRecord->ulClipboardFmt, CFI_POINTER))
-        printf("ERROR: nsClipboard setting %s transfer data\n", pRecord->szMimeType);
-    }
-    else
+  if (strstr( aFlavor, "text/" ))  // All text/.. flavors are null-terminated
+  {
+    if (ulFormatID == CF_TEXT)     // CF_TEXT is one byte character set
     {
-      *(NS_STATIC_CAST(PRUint32*, pData)) = cbMozData;
+      char* pByteMem = nsnull;
 
-      memcpy(NS_STATIC_CAST(void*, NS_STATIC_CAST(PBYTE, pData) + sizeof(PRUint32)),
-             pMozData, cbMozData);
+      if (DosAllocSharedMem( NS_STATIC_CAST(PPVOID, &pByteMem), nsnull, NumOfBytes + sizeof(char), 
+                             PAG_WRITE | PAG_COMMIT | OBJ_GIVEABLE ) == NO_ERROR)
+      {
+        memcpy( pByteMem, pMozData, NumOfBytes );       // Copy text string
+        pByteMem[NumOfBytes] = '\0';                    // Append terminator
 
-      if (!WinSetClipbrdData(0/*hab*/, (ULONG)pData, ulFmt, CFI_POINTER))
-        printf("ERROR: nsClipboard setting %s transfer data\n", aFlavour);
-    }
-  }
-
-  // If the flavor is unicode, we also put it on the clipboard as CF_TEXT
-  // after conversion to locale charset.
-  if (pRecord && !strcmp(pRecord->szMimeType, kUnicodeMime)) {
-
-    const PRUnichar* uniData = (PRUnichar*)pMozData;
-    ULONG uniLen = UniStrlen(uniData) + 1;
-    char* uniBuf = (char*)PR_Malloc(uniLen);
-    const char* plainTextData = gModuleData.ConvertFromUcs(uniData, uniBuf, uniLen);
-
-    if (plainTextData) {
-
-      ULONG plainTextLen = strlen(plainTextData) + 1;
-
-      rc = DosAllocSharedMem(&pData, nsnull, plainTextLen,
-                              PAG_WRITE | PAG_COMMIT | OBJ_GIVEABLE);
-
-      if (!rc) {
-
-        pRecord->pfnExport((void*)plainTextData, plainTextLen, pData);
-
-        if (!WinSetClipbrdData(0/*hab*/, (ULONG)pData, CF_TEXT, CFI_POINTER))
-          printf("ERROR: nsClipboard setting CF_TEXT\n");
+        WinSetClipbrdData( 0, NS_STATIC_CAST(ULONG, pByteMem), ulFormatID, CFI_POINTER );
       }
     }
-    PR_Free(uniBuf);
+    else                           // All other text/.. flavors are in unicode
+    {
+      UniChar* pUnicodeMem = nsnull;
+      PRUint32 NumOfChars = NumOfBytes / sizeof(UniChar);
+   
+      if (DosAllocSharedMem( NS_STATIC_CAST(PPVOID, &pUnicodeMem), nsnull, NumOfBytes + sizeof(UniChar), 
+                             PAG_WRITE | PAG_COMMIT | OBJ_GIVEABLE ) == NO_ERROR) 
+      {
+        memcpy( pUnicodeMem, pMozData, NumOfBytes );    // Copy text string
+        pUnicodeMem[NumOfChars] = L'\0';                // Append terminator
+
+        WinSetClipbrdData( 0, NS_STATIC_CAST(ULONG, pUnicodeMem), ulFormatID, CFI_POINTER );
+      }
+
+      // If the flavor is unicode, we also put it on the clipboard as CF_TEXT
+      // after conversion to locale charset.
+
+      if (!strcmp( aFlavor, kUnicodeMime ))
+      {
+        char* pByteMem = nsnull;
+
+        if (DosAllocSharedMem( NS_STATIC_CAST(PPVOID, &pByteMem), nsnull, NumOfChars + 1, 
+                               PAG_WRITE | PAG_COMMIT | OBJ_GIVEABLE ) == NO_ERROR) 
+        {
+          gModuleData.ConvertFromUcs( NS_STATIC_CAST(PRUnichar*, pMozData), pByteMem, NumOfChars );
+          pByteMem [NumOfChars] = '\0';
+
+          WinSetClipbrdData( 0, NS_STATIC_CAST(ULONG, pByteMem), CF_TEXT, CFI_POINTER );
+        }
+      }
+    }
+  }
+  else                             // Assume rest of flavors are binary data
+  {
+    PBYTE pBinaryMem = nsnull;
+
+    if (DosAllocSharedMem( NS_STATIC_CAST(PPVOID, &pBinaryMem), nsnull, NumOfBytes + sizeof(PRUint32), 
+                           PAG_WRITE | PAG_COMMIT | OBJ_GIVEABLE ) == NO_ERROR) 
+    {
+      *(NS_STATIC_CAST(PRUint32*, pBinaryMem)) = NumOfBytes;          // First DWORD contains data length
+      memcpy( pBinaryMem + sizeof(PRUint32), pMozData, NumOfBytes );  // Copy binary data
+
+      WinSetClipbrdData( 0, NS_STATIC_CAST(ULONG, pBinaryMem), ulFormatID, CFI_POINTER );
+    }
+
+    // If the flavor is image, we also put it on clipboard as CF_BITMAP
+    // after conversion to OS2 bitmap
+
+    if (strstr (aFlavor, "image/"))
+    {
+      //  XXX OS2TODO  Convert jpg, gif, png to bitmap
+#ifdef DEBUG
+      printf( "nsClipboard:: Putting image on clipboard; should also convert to BMP\n" );
+#endif
+    }
   }
 }
 
@@ -277,90 +340,18 @@ nsresult nsClipboard::DoClipboardAction(ClipboardAction aAction)
   return rc;
 }
 
-// Converters for various types of data
-static PRUint32 Import8Bit(void *pString, void **pOut)
-{
-  *pOut = pString;
-  return strlen((char*) pString);
-}
-
-static PRUint32 Export8Bit(void *pDataIn, PRUint32 cData, void *pBuffer)
-{
-  if (pBuffer) {
-    memcpy(pBuffer, pDataIn, cData);
-    *(((char*)pBuffer) + cData) = '\0';
-  }
-  return cData + 1;
-}
-
-static PRUint32 Import16Bit(void *pString, void **pOut)
-{
-  *pOut = pString;
-  return UniStrlen((UniChar*) pString) * 2;
-}
-
-static PRUint32 Export16Bit(void *pDataIn, PRUint32 cData, void *pBuffer)
-{
-  if (pBuffer) {
-    memcpy(pBuffer, pDataIn, cData);
-    *((UniChar*)pBuffer + (cData>>1)) = 0;
-  }
-  return cData + sizeof(UniChar);
-}
-
-static PRUint32 ImportBin(void *pData, void **pOut)
-{
-  *pOut = ((PRUint32*)pData) + 1;
-  return *(PRUint32*)pData;
-}
-
-static PRUint32 ExportBin(void *pDataIn, PRUint32 cData, void *pBuffer)
-{
-  if (pBuffer) {
-    *((PRUint32*)pBuffer) = cData;
-    memcpy((PRUint32*)pBuffer + 1, pDataIn, cData);
-  }
-  return cData + sizeof(PRUint32);
-}
-
-static FormatRecord records[] = 
-{
-  { kTextMime,      CF_TEXT, 0,      Import8Bit,  Export8Bit  },
-  { kUnicodeMime,   0, "CF_UNICODE", Import16Bit, Export16Bit },
-  { kHTMLMime,      0, "CF_HTML",    Import16Bit, Export16Bit },
-  { kPNGImageMime,  0, "CF_PNG",     ImportBin,   ExportBin   },
-  { kGIFImageMime,  0, "CF_GIF",     ImportBin,   ExportBin   },
-  { kJPEGImageMime, 0, "CF_JPEG",    ImportBin,   ExportBin   },
-  { kAOLMailMime,   0, "CF_AOLMAIL", Import8Bit,  Export8Bit  },
-  { kFileMime,      0, "CF_FILE",    ImportBin,   ExportBin   },
-  { kURLMime,       0, "CF_URL",     Import16Bit, Export16Bit },
-  { 0, 0, 0, 0, 0 }
-};
-
 // get the format ID for a given mimetype
-ULONG nsClipboard::GetFormatID(const char *aMimeStr, FormatRecord **pFmtRec)
+ULONG nsClipboard::GetFormatID(const char *aMimeStr)
 {
-  ULONG ulFormat = 0;
-  const char *pszFmt = aMimeStr;
-
-  for (FormatRecord *pRecord = records; pRecord->szMimeType; pRecord++)
-    if (!strcmp(pRecord->szMimeType, pszFmt)) {
-      if (!pRecord->ulClipboardFmt)
-        // create an atom for the format
-        pRecord->ulClipboardFmt = gModuleData.GetAtom(pRecord->szFmtName);
-      ulFormat = pRecord->ulClipboardFmt;
-      *pFmtRec = pRecord;
-      break;
+  for (int cnt=0 ; cnt < sizeof(formatEntries) / sizeof(formatEntries[0]) ; cnt++)
+  {
+    if (!strcmp( aMimeStr, formatEntries[cnt].szMimeType ))
+    {
+      return formatEntries[cnt].ulClipboardFmt;  // Found the known flavor
     }
-
-  if (!ulFormat) {
-    ulFormat = gModuleData.GetAtom(pszFmt);
-    *pFmtRec = NULL;
   }
-
-  NS_ASSERTION(ulFormat, "Clipboard besieged by unknown mimetype");
-
-  return ulFormat;
+ 
+  return gModuleData.GetAtom( aMimeStr );        // Unknown flavor. Register it in OS/2 atom table as is
 }
 
 NS_IMETHODIMP nsClipboard::ForceDataToClipboard(PRInt32 aWhichClipboard)
@@ -414,19 +405,31 @@ NS_IMETHODIMP nsClipboard::HasDataMatchingFlavors(nsISupportsArray *aFlavorList,
     if (currentFlavor) {
       nsXPIDLCString flavorStr;
       currentFlavor->ToString(getter_Copies(flavorStr));
-      FormatRecord *pRecord;
       ULONG fmtInfo = 0;
-      ULONG format = GetFormatID(flavorStr, &pRecord);
+      ULONG format = GetFormatID(flavorStr);
 
       if (WinQueryClipbrdFmtInfo(0/*hab*/, format, &fmtInfo)) {
         *_retval = PR_TRUE;
         break;
       }
-      else {
-        // if the client asked for unicode and it wasn't present, check if we have CF_TEXT.
-        if (!strcmp(flavorStr, kUnicodeMime)) {
-          if (WinQueryClipbrdFmtInfo(0/*hab*/, CF_TEXT, &fmtInfo))
-            *_retval = PR_TRUE;
+
+      // if the client asked for unicode and it wasn't present, check if we have CF_TEXT.
+      if (!strcmp( flavorStr, kUnicodeMime )) {
+        if (WinQueryClipbrdFmtInfo( 0/*hab*/, CF_TEXT, &fmtInfo )) {
+          *_retval = PR_TRUE;
+          break;
+        }
+      }
+
+// OS2TODO - Support for Images
+      // if the client asked for image/.. and it wasn't present, check if we have CF_BITMAP.
+      if (strstr (flavorStr, "image/")) {
+        if (WinQueryClipbrdFmtInfo (0, CF_BITMAP, &fmtInfo)) {
+#ifdef DEBUG
+          printf( "nsClipboard:: Image present on clipboard; need to add BMP conversion!\n" );
+#endif
+//          *_retval = PR_TRUE;
+//          break;
         }
       }
     }
