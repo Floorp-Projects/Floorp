@@ -26,6 +26,7 @@
 #define _IFUNCNS_H_
 
 HRESULT     TimingCheck(DWORD dwTiming, LPSTR szSection, LPSTR szFile);
+HRESULT     MeetCondition(LPSTR dwSection);
 HRESULT     FileUncompress(LPSTR szFrom, LPSTR szTo);
 HRESULT     ProcessXpcomFile(void);
 HRESULT     CleanupXpcomFile(void);
