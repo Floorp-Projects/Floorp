@@ -1445,6 +1445,7 @@ PRInt32 CEntityToken::ConsumeEntity(PRUnichar aChar,nsString& aString,nsScanner&
         if(NS_OK==result) {
           if (kSemicolon == theChar) {
             // consume semicolon that stopped the scan
+            aString+=theChar;
             result=aScanner.GetChar(theChar);
           }
         }

@@ -149,6 +149,18 @@ nsHTMLEntities::EntityToUnicode(const nsStr& aEntity)
 {
   NS_ASSERTION(gEntityToCodeTree, "no lookup table, needs addref");
   if (gEntityToCodeTree) {
+
+    //this little piece of code exists because entities may or may not have the terminating ';'.
+    //if we see it, strip if off for this test...
+
+    PRUnichar theLastChar=GetCharAt(aEntity,aEntity.mLength-1);
+    if(';'==theLastChar) {
+      nsCAutoString temp(aEntity);
+      temp.Truncate(aEntity.mLength-1);
+      return EntityToUnicode(temp);
+    }
+      
+
     EntityNode node(aEntity);
     EntityNode*  found = (EntityNode*)gEntityToCodeTree->FindItem(&node);
     if (found) {
