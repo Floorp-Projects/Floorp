@@ -1,0 +1,73 @@
+#!gmake
+#
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+
+DEPTH=../../..
+
+LIBRARY_NAME = raptorlayout_s
+
+DEFINES = -D_IMPL_NS_LAYOUT
+
+CPPSRCS =				\
+	nsContainerFrame.cpp		\
+	nsDocument.cpp			\
+	nsFrame.cpp			\
+	nsGalleyContext.cpp		\
+	nsPresContext.cpp		\
+	nsPresShell.cpp			\
+	nsPrintPreviewContext.cpp	\
+	nsReflowCommand.cpp		\
+	nsSpaceManager.cpp		\
+	nsSplittableFrame.cpp		\
+	nsStyleContext.cpp		\
+	nsStyleSet.cpp			\
+	$(NULL)
+
+EXPORTS =			\
+	nslayout.h		\
+	nsIContent.h		\
+	nsIContentDelegate.h	\
+	nsIDocument.h		\
+	nsIDocumentContainer.h	\
+	nsIDocumentObserver.h	\
+	nsIFrame.h		\
+	nsIPresContext.h	\
+	nsIPresShell.h		\
+	nsIRunaround.h		\
+	nsISpaceManager.h	\
+	nsIStyleContext.h	\
+	nsIStyleRule.h		\
+	nsIStyleSet.h		\
+	nsIStyleSheet.h		\
+	nsITextContent.h	\
+	nsDocument.h		\
+	nsStyleConsts.h		\
+	nsFrame.h		\
+	nsSplittableFrame.h	\
+	nsContainerFrame.h	\
+	nsReflowCommand.h	\
+	nsSpaceManager.h	\
+	$(NULL)
+
+MODULE = raptor
+
+REQUIRES = xpcom raptor dom
+
+include $(DEPTH)/config/config.mk
+
+TARGETS = $(LIBRARY)
+
+include $(DEPTH)/config/rules.mk

@@ -1,0 +1,848 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+#include "nsHTMLParts.h"
+#include "nsHTMLContainer.h"
+#include "nsIDocument.h"
+#include "nsIAtom.h"
+#include "nsIArena.h"
+#include "nsIStyleContext.h"
+#include "nsStyleConsts.h"
+#include "nsBlockFrame.h"
+#include "nsInlineFrame.h"
+#include "nsListItemFrame.h"
+#include "nsIPresContext.h"
+#include "nsHTMLIIDs.h"
+#include "nsHTMLAtoms.h"
+#include "nsIHTMLAttributes.h"
+#include "nsDOMIterator.h"
+#include "nsUnitConversion.h"
+#include "nsIURL.h"
+#include "prprf.h"
+
+static NS_DEFINE_IID(kStyleFontSID, NS_STYLEFONT_SID);
+static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
+static NS_DEFINE_IID(kStyleListSID, NS_STYLELIST_SID);
+
+static NS_DEFINE_IID(kStyleMoleculeSID, NS_STYLEMOLECULE_SID);
+
+nsresult
+NS_NewHTMLContainer(nsIHTMLContent** aInstancePtrResult,
+                    nsIAtom* aTag)
+{
+  nsHTMLContainer* it = new nsHTMLContainer(aTag);
+  if (nsnull == it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return it->QueryInterface(kIHTMLContentIID, (void **) aInstancePtrResult);
+}
+
+nsresult
+NS_NewHTMLContainer(nsIHTMLContent** aInstancePtrResult,
+                    nsIArena* aArena, nsIAtom* aTag)
+{
+  nsHTMLContainer* it = new(aArena) nsHTMLContainer(aTag);
+  if (nsnull == it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return it->QueryInterface(kIHTMLContentIID, (void **) aInstancePtrResult);
+}
+
+nsHTMLContainer::nsHTMLContainer()
+{
+}
+
+nsHTMLContainer::nsHTMLContainer(nsIAtom* aTag)
+  : nsHTMLTagContent(aTag)
+{
+}
+
+nsHTMLContainer::~nsHTMLContainer()
+{
+  PRInt32 n = mChildren.Count();
+  for (PRInt32 i = 0; i < n; i++) {
+    nsIContent* kid = (nsIContent*) mChildren.ElementAt(i);
+    NS_RELEASE(kid);
+  }
+}
+
+PRBool nsHTMLContainer::CanContainChildren() const
+{
+  return PR_TRUE;
+}
+
+PRInt32 nsHTMLContainer::ChildCount() const
+{
+  return mChildren.Count();
+}
+
+nsIContent* nsHTMLContainer::ChildAt(PRInt32 aIndex) const
+{
+  nsIContent *child = (nsIContent*) mChildren.ElementAt(aIndex);
+  if (nsnull != child) {
+    NS_ADDREF(child);
+  }
+  return child;
+}
+
+PRInt32 nsHTMLContainer::IndexOf(nsIContent* aPossibleChild) const
+{
+  NS_PRECONDITION(nsnull != aPossibleChild, "null ptr");
+  return mChildren.IndexOf(aPossibleChild);
+}
+
+PRBool nsHTMLContainer::InsertChildAt(nsIContent* aKid, PRInt32 aIndex)
+{
+  NS_PRECONDITION(nsnull != aKid, "null ptr");
+  PRBool rv = mChildren.InsertElementAt(aKid, aIndex);
+  if (rv) {
+    NS_ADDREF(aKid);
+    aKid->SetParent(this);
+    nsIDocument* doc = mDocument;
+    if (nsnull != doc) {
+      aKid->SetDocument(doc);
+      doc->ContentInserted(this, aKid, aIndex);
+    }
+  }
+  return rv;
+}
+
+PRBool nsHTMLContainer::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex)
+{
+  NS_PRECONDITION(nsnull != aKid, "null ptr");
+  nsIContent* oldKid = (nsIContent*) mChildren.ElementAt(aIndex);
+  PRBool rv = mChildren.ReplaceElementAt(aKid, aIndex);
+  if (rv) {
+    NS_ADDREF(aKid);
+    aKid->SetParent(this);
+    nsIDocument* doc = mDocument;
+    if (nsnull != doc) {
+      aKid->SetDocument(doc);
+      doc->ContentReplaced(this, oldKid, aKid, aIndex);
+    }
+    oldKid->SetDocument(nsnull);
+    oldKid->SetParent(nsnull);
+    NS_RELEASE(oldKid);
+  }
+  return rv;
+}
+
+PRBool nsHTMLContainer::AppendChild(nsIContent* aKid)
+{
+  NS_PRECONDITION(nsnull != aKid, "null ptr");
+  PRBool rv = mChildren.AppendElement(aKid);
+  if (rv) {
+    NS_ADDREF(aKid);
+    aKid->SetParent(this);
+    nsIDocument* doc = mDocument;
+    if (nsnull != doc) {
+      aKid->SetDocument(doc);
+      doc->ContentAppended(this);
+    }
+  }
+  return rv;
+}
+
+PRBool nsHTMLContainer::RemoveChildAt(PRInt32 aIndex)
+{
+  nsIContent* oldKid = (nsIContent*) mChildren.ElementAt(aIndex);
+  if (nsnull != oldKid ) {
+    nsIDocument* doc = mDocument;
+    if (nsnull != doc) {
+      doc->ContentWillBeRemoved(this, oldKid, aIndex);
+    }
+    PRBool rv = mChildren.RemoveElementAt(aIndex);
+    if (nsnull != doc) {
+      doc->ContentHasBeenRemoved(this, oldKid, aIndex);
+    }
+    oldKid->SetDocument(nsnull);
+    oldKid->SetParent(nsnull);
+    NS_RELEASE(oldKid);
+    return rv;
+  }
+  return PR_FALSE;
+}
+
+void nsHTMLContainer::Compact()
+{
+  //XXX I'll turn this on in a bit... mChildren.Compact();
+}
+
+nsIFrame* nsHTMLContainer::CreateFrame(nsIPresContext* aPresContext,
+                                       PRInt32 aIndexInParent,
+                                       nsIFrame* aParentFrame)
+{
+  // Resolve style for the piece of content
+  nsIStyleContext* styleContext =
+    aPresContext->ResolveStyleContextFor(this, aParentFrame);
+  nsStyleMolecule* mol =
+    (nsStyleMolecule*)styleContext->GetData(kStyleMoleculeSID);
+
+  // Use style to choose what kind of frame to create
+  nsIFrame* rv;
+  nsresult fr;
+  switch (mol->display) {
+  case NS_STYLE_DISPLAY_BLOCK:
+    fr = nsBlockFrame::NewFrame(&rv, this, aIndexInParent, aParentFrame);
+    break;
+  case NS_STYLE_DISPLAY_INLINE:
+    fr = nsInlineFrame::NewFrame(&rv, this, aIndexInParent, aParentFrame);
+    break;
+  case NS_STYLE_DISPLAY_LIST_ITEM:
+    fr = nsListItemFrame::NewFrame(&rv, this, aIndexInParent, aParentFrame);
+    break;
+  default:
+    // Create an empty frame for holding content that is not being
+    // reflowed.
+    fr = nsFrame::NewFrame(&rv, this, aIndexInParent, aParentFrame);
+    break;
+  }
+
+  rv->SetStyleContext(styleContext);
+  NS_RELEASE(styleContext);
+  return rv;
+}
+
+//----------------------------------------------------------------------
+
+static nsHTMLTagContent::EnumTable kListTypeTable[] = {
+  { "none", NS_STYLE_LIST_STYLE_NONE },
+  { "disc", NS_STYLE_LIST_STYLE_DISC },
+  { "circle", NS_STYLE_LIST_STYLE_CIRCLE },
+  { "round", NS_STYLE_LIST_STYLE_CIRCLE },
+  { "square", NS_STYLE_LIST_STYLE_SQUARE },
+  { "decimal", NS_STYLE_LIST_STYLE_DECIMAL },
+  { "lower-roman", NS_STYLE_LIST_STYLE_LOWER_ROMAN },
+  { "upper-roman", NS_STYLE_LIST_STYLE_UPPER_ROMAN },
+  { "lower-alpha", NS_STYLE_LIST_STYLE_LOWER_ALPHA },
+  { "upper-alpha", NS_STYLE_LIST_STYLE_UPPER_ALPHA },
+  { "A", NS_STYLE_LIST_STYLE_UPPER_ALPHA },
+  { "a", NS_STYLE_LIST_STYLE_LOWER_ALPHA },
+  { "I", NS_STYLE_LIST_STYLE_UPPER_ROMAN },
+  { "i", NS_STYLE_LIST_STYLE_LOWER_ROMAN },
+  { 0 }
+};
+
+static nsHTMLTagContent::EnumTable kListItemTypeTable[] = {
+  { "circle", NS_STYLE_LIST_STYLE_CIRCLE },
+  { "round", NS_STYLE_LIST_STYLE_CIRCLE },
+  { "square", NS_STYLE_LIST_STYLE_SQUARE },
+  { "A", NS_STYLE_LIST_STYLE_UPPER_ALPHA },
+  { "a", NS_STYLE_LIST_STYLE_LOWER_ALPHA },
+  { "I", NS_STYLE_LIST_STYLE_UPPER_ROMAN },
+  { "i", NS_STYLE_LIST_STYLE_LOWER_ROMAN },
+  { 0 }
+};
+
+void nsHTMLContainer::SetAttribute(nsIAtom* aAttribute,
+                                   const nsString& aValue)
+{
+  // Special handling code for various html container attributes; note
+  // that if an attribute doesn't require special handling then we
+  // fall through and use the default base class implementation.
+
+  nsHTMLValue val;
+  if (mTag == nsHTMLAtoms::p) {
+    if ((aAttribute == nsHTMLAtoms::align) &&
+        ParseDivAlignParam(aValue, val)) {
+      nsHTMLTagContent::SetAttribute(aAttribute, val);
+      return;
+    }
+  }
+  else if (mTag == nsHTMLAtoms::a) {
+    if (aAttribute == nsHTMLAtoms::href) {
+      nsAutoString href(aValue);
+      href.StripWhitespace();
+      nsHTMLTagContent::SetAttribute(aAttribute, href);
+      return;
+    }
+    if (aAttribute == nsHTMLAtoms::suppress) {
+      if (aValue.EqualsIgnoreCase("true")) {
+        nsHTMLValue val;
+        val.Set(1, eHTMLUnit_Absolute);
+        nsHTMLTagContent::SetAttribute(aAttribute, val);
+        return;
+      }
+    }
+    // XXX PRE?
+  }
+  else if (mTag == nsHTMLAtoms::font) {
+    if ((aAttribute == nsHTMLAtoms::size) ||
+        (aAttribute == nsHTMLAtoms::pointSize) ||
+        (aAttribute == nsHTMLAtoms::fontWeight)) {
+      nsAutoString tmp(aValue);
+      PRInt32 ec, v = tmp.ToInteger(&ec);
+      tmp.CompressWhitespace(PR_TRUE, PR_FALSE);
+      PRUnichar ch = tmp.First();
+      val.Set(v, ((ch == '+') || (ch == '-')) ?
+              eHTMLUnit_Absolute : eHTMLUnit_Enumerated);
+      nsHTMLTagContent::SetAttribute(aAttribute, val);
+      return;
+    }
+    if (aAttribute == nsHTMLAtoms::color) {
+      ParseColor(aValue, val);
+      nsHTMLTagContent::SetAttribute(aAttribute, val);
+      return;
+    }
+  }
+  else if ((mTag == nsHTMLAtoms::div) || (mTag == nsHTMLAtoms::multicol)) {
+    if ((mTag == nsHTMLAtoms::div) && (aAttribute == nsHTMLAtoms::align) &&
+        ParseDivAlignParam(aValue, val)) {
+      nsHTMLTagContent::SetAttribute(aAttribute, val);
+      return;
+    }
+    if (aAttribute == nsHTMLAtoms::cols) {
+      ParseValue(aValue, 0, val);
+      nsHTMLTagContent::SetAttribute(aAttribute, val);
+      return;
+    }
+
+    // Note: These attributes only apply when cols > 1
+    if (aAttribute == nsHTMLAtoms::gutter) {
+      ParseValue(aValue, 1, val);
+      nsHTMLTagContent::SetAttribute(aAttribute, val);
+      return;
+    }
+    if (aAttribute == nsHTMLAtoms::width) {
+      ParseValueOrPercent(aValue, val);
+      nsHTMLTagContent::SetAttribute(aAttribute, val);
+      return;
+    }
+  }
+  else if ((mTag == nsHTMLAtoms::h1) || (mTag == nsHTMLAtoms::h2) ||
+           (mTag == nsHTMLAtoms::h3) || (mTag == nsHTMLAtoms::h4) ||
+           (mTag == nsHTMLAtoms::h5) || (mTag == nsHTMLAtoms::h6)) {
+    if ((aAttribute == nsHTMLAtoms::align) &&
+        ParseDivAlignParam(aValue, val)) {
+      nsHTMLTagContent::SetAttribute(aAttribute, val);
+      return;
+    }
+  }
+  else if (mTag == nsHTMLAtoms::pre) {
+    if ((aAttribute == nsHTMLAtoms::wrap) ||
+        (aAttribute == nsHTMLAtoms::variable)) {
+      val.Set(1, eHTMLUnit_Absolute);
+      nsHTMLTagContent::SetAttribute(aAttribute, val);
+      return;
+    }
+    if (aAttribute == nsHTMLAtoms::cols) {
+      ParseValue(aValue, 0, val);
+      nsHTMLTagContent::SetAttribute(aAttribute, val);
+      return;
+    }
+    if (aAttribute == nsHTMLAtoms::tabstop) {
+      PRInt32 ec, tabstop = aValue.ToInteger(&ec);
+      if (tabstop <= 0) {
+        tabstop = 8;
+      }
+      val.Set(tabstop, eHTMLUnit_Absolute);
+      nsHTMLTagContent::SetAttribute(aAttribute, val);
+      return;
+    }
+  }
+  else if (mTag == nsHTMLAtoms::li) {
+    if (aAttribute == nsHTMLAtoms::type) {
+      if (ParseEnumValue(aValue, kListItemTypeTable, val)) {
+        nsHTMLTagContent::SetAttribute(aAttribute, val);
+        return;
+      }
+      // Illegal type values are left as is for the dom
+    }
+    if (aAttribute == nsHTMLAtoms::value) {
+      ParseValue(aValue, 1, val);
+      nsHTMLTagContent::SetAttribute(aAttribute, val);
+      return;
+    }
+  }
+  else if ((mTag == nsHTMLAtoms::ul) || (mTag == nsHTMLAtoms::ol) ||
+           (mTag == nsHTMLAtoms::menu) || (mTag == nsHTMLAtoms::dir)) {
+    if (aAttribute == nsHTMLAtoms::type) {
+      if (!ParseEnumValue(aValue, kListTypeTable, val)) {
+        val.Set(NS_STYLE_LIST_STYLE_BASIC, eHTMLUnit_Enumerated);
+      }
+      nsHTMLTagContent::SetAttribute(aAttribute, val);
+      return;
+    }
+    if (aAttribute == nsHTMLAtoms::start) {
+      ParseValue(aValue, 1, val);
+      nsHTMLTagContent::SetAttribute(aAttribute, val);
+      return;
+    }
+    if (aAttribute == nsHTMLAtoms::compact) {
+      val.Set(1, eHTMLUnit_Absolute);
+      nsHTMLTagContent::SetAttribute(aAttribute, val);
+      return;
+    }
+  }
+  else if (mTag == nsHTMLAtoms::dl) {
+    if (aAttribute == nsHTMLAtoms::compact) {
+      val.Set(1, eHTMLUnit_Absolute);
+      nsHTMLTagContent::SetAttribute(aAttribute, val);
+      return;
+    }
+  }
+  else if (mTag == nsHTMLAtoms::body) {
+    if (aAttribute == nsHTMLAtoms::background) {
+      nsAutoString href(aValue);
+      href.StripWhitespace();
+      nsHTMLTagContent::SetAttribute(aAttribute, href);
+      return;
+    }
+    if (aAttribute == nsHTMLAtoms::bgcolor) {
+      ParseColor(aValue, val);
+      nsHTMLTagContent::SetAttribute(aAttribute, val);
+      return;
+    }
+  }
+
+  // Use default attribute catching code
+  nsHTMLTagContent::SetAttribute(aAttribute, aValue);
+}
+
+nsContentAttr nsHTMLContainer::AttributeToString(nsIAtom* aAttribute,
+                                                 nsHTMLValue& aValue,
+                                                 nsString& aResult) const
+{
+  nsContentAttr ca = eContentAttr_NotThere;
+  if (aValue.GetUnit() == eHTMLUnit_Enumerated) {
+    if (aAttribute == nsHTMLAtoms::align) {
+      DivAlignParamToString(aValue, aResult);
+      ca = eContentAttr_HasValue;
+    }
+    else if (mTag == nsHTMLAtoms::li) {
+      if (aAttribute == nsHTMLAtoms::type) {
+        EnumValueToString(aValue, kListItemTypeTable, aResult);
+        ca = eContentAttr_HasValue;
+      }
+    }
+    else if ((mTag == nsHTMLAtoms::ul) || (mTag == nsHTMLAtoms::ol) ||
+             (mTag == nsHTMLAtoms::menu) || (mTag == nsHTMLAtoms::dir)) {
+      if (aAttribute == nsHTMLAtoms::type) {
+        EnumValueToString(aValue, kListTypeTable, aResult);
+        ca = eContentAttr_HasValue;
+      }
+    }
+    else if (mTag == nsHTMLAtoms::font) {
+      if ((aAttribute == nsHTMLAtoms::size) ||
+          (aAttribute == nsHTMLAtoms::pointSize) ||
+          (aAttribute == nsHTMLAtoms::fontWeight)) {
+        aResult.Truncate();
+        aResult.Append(aValue.GetIntValue(), 10);
+        ca = eContentAttr_HasValue;
+      }
+    }
+  }
+  return ca;
+}
+
+void nsHTMLContainer::MapAttributesInto(nsIStyleContext* aContext, 
+                                        nsIPresContext* aPresContext)
+{
+  if (nsnull != mAttributes) {
+    nsHTMLValue value;
+
+    if (mTag == nsHTMLAtoms::p) {
+      // align: enum
+      GetAttribute(nsHTMLAtoms::align, value);
+      if (value.GetUnit() == eHTMLUnit_Enumerated) {
+        // XXX set align from enum
+      }
+    }
+    else if (mTag == nsHTMLAtoms::a) {
+      // suppress: bool (absolute)
+      GetAttribute(nsHTMLAtoms::suppress, value);
+      if (value.GetUnit() == eHTMLUnit_Absolute) {
+        // XXX set suppress
+      }
+    }
+    else if (mTag == nsHTMLAtoms::font) {
+      nsStyleFont* font = (nsStyleFont*)aContext->GetData(kStyleFontSID);
+      nsStyleFont* parentFont = font;
+      nsIStyleContext* parentContext = aContext->GetParent();
+      if (nsnull != parentContext) {
+        parentFont = (nsStyleFont*)parentContext->GetData(kStyleFontSID);
+      }
+
+      // face: string list
+      GetAttribute(nsHTMLAtoms::face, value);
+      if (value.GetUnit() == eHTMLUnit_String) {
+        nsAutoString familyList;
+        value.GetStringValue(familyList);
+        // XXX needs font support to determine usable fonts
+        // parse up the string & remove the quotes
+        // XXX only does first until we can tell what are installed fonts
+        nsAutoString family;
+        PRInt32 index = familyList.Find(PRUnichar(','));
+        if (-1 < index) {
+          familyList.Left(family, index);
+        }
+        else {
+          family.Append(familyList);
+        }
+        family.StripChars("\"");
+        family.StripWhitespace();
+
+        font->mFont.name = family;
+      }
+
+      // pointSize: abs, enum
+      GetAttribute(nsHTMLAtoms::pointSize, value);
+      if (value.GetUnit() == eHTMLUnit_Absolute) {
+        // XXX should probably sanitize value
+        font->mFont.size = parentFont->mFont.size + NS_POINTS_TO_TWIPS_INT(value.GetIntValue());
+      }
+      else if (value.GetUnit() == eHTMLUnit_Enumerated) {
+        font->mFont.size = NS_POINTS_TO_TWIPS_INT(value.GetIntValue());
+      }
+      else {
+        // size: abs, enum
+        GetAttribute(nsHTMLAtoms::size, value);
+        if ((value.GetUnit() == eHTMLUnit_Absolute) || (value.GetUnit() == eHTMLUnit_Enumerated)) { 
+          static float kFontScale[7] = {
+            0.7f,
+            0.8f,
+            1.0f,
+            1.2f,
+            1.5f,
+            2.0f,
+            3.0f
+          };
+          PRInt32 size = value.GetIntValue();
+        
+          const nsFont& normal = aPresContext->GetDefaultFont();  // XXX should be BASEFONT
+
+          if (value.GetUnit() == eHTMLUnit_Enumerated) {
+            size = ((0 < size) ? ((size < 8) ? size : 7) : 0); 
+            font->mFont.size = (nscoord)((float)normal.size * kFontScale[size - 1]);
+          }
+          else {  // enum (+/-)
+            if ((0 < size) && (size <= 7)) { // +
+              PRInt32 index;
+              for (index = 0; index < 6; index++)
+                if (parentFont->mFont.size < (nscoord)((float)normal.size * kFontScale[index]))
+                  break;
+              size = ((index - 1) + size);
+              if (7 < size) size = 7;
+              font->mFont.size = (nscoord)((float)normal.size * kFontScale[size]);
+            }
+            else if ((-7 <= size) && (size < 0)) {
+              PRInt32 index;
+              for (index = 6; index > 0; index--)
+                if (parentFont->mFont.size > (nscoord)((float)normal.size * kFontScale[index]))
+                  break;
+              size = ((index + 1) + size);
+              if (size < 0) size = 0;
+              font->mFont.size = (nscoord)((float)normal.size * kFontScale[size]);
+            }
+            else if (0 == size) {
+              font->mFont.size = parentFont->mFont.size;
+            }
+          }
+        }
+      }
+
+      // fontWeight: abs, enum
+      GetAttribute(nsHTMLAtoms::fontWeight, value);
+      if (value.GetUnit() == eHTMLUnit_Absolute) { // +/-
+        PRInt32 weight = parentFont->mFont.weight + value.GetIntValue();
+        font->mFont.weight = ((100 < weight) ? ((weight < 700) ? weight : 700) : 100);
+      }
+      else if (value.GetUnit() == eHTMLUnit_Enumerated) {
+        PRInt32 weight = value.GetIntValue();
+        weight = ((100 < weight) ? ((weight < 700) ? weight : 700) : 100);
+        font->mFont.weight = weight;
+      }
+
+      // color: color
+      GetAttribute(nsHTMLAtoms::color, value);
+      if (value.GetUnit() == eHTMLUnit_Color) {
+        nsStyleColor* color = (nsStyleColor*)aContext->GetData(kStyleColorSID);
+        color->mColor = value.GetColorValue();
+      }
+      else if (value.GetUnit() == eHTMLUnit_String) {
+        nsAutoString buffer;
+        value.GetStringValue(buffer);
+        char cbuf[40];
+        buffer.ToCString(cbuf, sizeof(cbuf));
+
+        nsStyleColor* color = (nsStyleColor*)aContext->GetData(kStyleColorSID);
+        NS_ColorNameToRGB(cbuf, &(color->mColor));
+      }
+      
+      NS_IF_RELEASE(parentContext);
+    }
+    else if ((mTag == nsHTMLAtoms::div) || (mTag == nsHTMLAtoms::multicol)) {
+      if (mTag == nsHTMLAtoms::div) {
+        // align: enum
+        GetAttribute(nsHTMLAtoms::align, value);
+        if (value.GetUnit() == eHTMLUnit_Enumerated) {
+          // XXX set align
+        }
+      }
+
+      PRInt32 numCols = 1;
+      // cols: int
+      GetAttribute(nsHTMLAtoms::cols, value);
+      if (value.GetUnit() == eHTMLUnit_Absolute) {
+        numCols = value.GetIntValue();
+        // XXX
+      }
+
+      // Note: These attributes only apply when cols > 1
+      if (1 < numCols) {
+        // gutter: int
+        GetAttribute(nsHTMLAtoms::gutter, value);
+        if (value.GetUnit() == eHTMLUnit_Absolute) {
+          // XXX set
+        }
+
+        // width: int, %
+        GetAttribute(nsHTMLAtoms::width, value);
+        if (value.GetUnit() == eHTMLUnit_Absolute) {
+          // XXX set
+        }
+        else if (value.GetUnit() == eHTMLUnit_Enumerated) {
+          // XXX set
+        }
+      }
+    }
+    else if ((mTag == nsHTMLAtoms::h1) || (mTag == nsHTMLAtoms::h2) ||
+             (mTag == nsHTMLAtoms::h3) || (mTag == nsHTMLAtoms::h4) ||
+             (mTag == nsHTMLAtoms::h5) || (mTag == nsHTMLAtoms::h6)) {
+      // align: enum
+      GetAttribute(nsHTMLAtoms::align, value);
+      if (value.GetUnit() == eHTMLUnit_Enumerated) {
+        // XXX set
+      }
+    }
+    else if (mTag == nsHTMLAtoms::pre) {
+      // wrap: flag (abs==1)
+      GetAttribute(nsHTMLAtoms::wrap, value);
+      if (value.GetUnit() == eHTMLUnit_Absolute) {
+        // XXX set
+      }
+      
+      // variable: flag (abs==1)
+      GetAttribute(nsHTMLAtoms::variable, value);
+      if (value.GetUnit() == eHTMLUnit_Absolute) {
+        // XXX set
+      }
+
+      // cols: int
+      GetAttribute(nsHTMLAtoms::cols, value);
+      if (value.GetUnit() == eHTMLUnit_Absolute) {
+        // XXX set
+      }
+
+      // tabstop: int
+      if (value.GetUnit() == eHTMLUnit_Absolute) {
+        // XXX set
+      }
+    }
+    else if (mTag == nsHTMLAtoms::li) {
+      nsStyleList* list = (nsStyleList*)aContext->GetData(kStyleListSID);
+
+      // type: enum
+      GetAttribute(nsHTMLAtoms::type, value);
+      if (value.GetUnit() == eHTMLUnit_Enumerated) {
+        list->mListStyleType = value.GetIntValue();
+      }
+    }
+    else if ((mTag == nsHTMLAtoms::ul) || (mTag == nsHTMLAtoms::ol) ||
+             (mTag == nsHTMLAtoms::menu) || (mTag == nsHTMLAtoms::dir)) {
+      nsStyleList* list = (nsStyleList*)aContext->GetData(kStyleListSID);
+
+      // type: enum
+      GetAttribute(nsHTMLAtoms::type, value);
+      if (value.GetUnit() == eHTMLUnit_Enumerated) {
+        list->mListStyleType = value.GetIntValue();
+      }
+
+      // compact: flag (abs==1)
+      GetAttribute(nsHTMLAtoms::compact, value);
+      if (value.GetUnit() == eHTMLUnit_Absolute) {
+        // XXX set
+      }
+    }
+    else if (mTag == nsHTMLAtoms::dl) {
+      // compact: flag (abs==1)
+      GetAttribute(nsHTMLAtoms::compact, value);
+      if (value.GetUnit() == eHTMLUnit_Absolute) {
+        // XXX set
+      }
+    }
+    else if (mTag == nsHTMLAtoms::body) {
+      MapBackgroundAttributesInto(aContext, aPresContext);
+    }
+  }
+}
+
+
+void
+nsHTMLContainer::MapBackgroundAttributesInto(nsIStyleContext* aContext,
+                                             nsIPresContext* aPresContext)
+{
+  nsHTMLValue value;
+
+  // background
+  if (eContentAttr_HasValue == GetAttribute(nsHTMLAtoms::background, value)) {
+    if (eHTMLUnit_String == value.GetUnit()) {
+      // Resolve url to an absolute url
+      nsIURL* docURL = nsnull;
+      nsIDocument* doc = mDocument;
+      if (nsnull != doc) {
+        docURL = doc->GetDocumentURL();
+      }
+
+      nsAutoString absURLSpec;
+      nsAutoString spec;
+      value.GetStringValue(spec);
+      nsresult rv = NS_MakeAbsoluteURL(docURL, "", spec, absURLSpec);
+      if (nsnull != docURL) {
+        NS_RELEASE(docURL);
+      }
+      nsStyleColor* color = (nsStyleColor*)aContext->GetData(kStyleColorSID);
+      color->mBackgroundImage = absURLSpec;
+      color->mBackgroundFlags &= ~NS_STYLE_BG_IMAGE_NONE;
+      color->mBackgroundRepeat = NS_STYLE_BG_REPEAT_XY;
+    }
+  }
+
+  // bgcolor
+  if (eContentAttr_HasValue == GetAttribute(nsHTMLAtoms::bgcolor, value)) {
+    if (eHTMLUnit_Color == value.GetUnit()) {
+      nsStyleColor* color = (nsStyleColor*)aContext->GetData(kStyleColorSID);
+      color->mBackgroundColor = value.GetColorValue();
+      color->mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
+    }
+    else if (eHTMLUnit_String == value.GetUnit()) {
+      nsAutoString buffer;
+      value.GetStringValue(buffer);
+      char cbuf[40];
+      buffer.ToCString(cbuf, sizeof(cbuf));
+
+      nsStyleColor* color = (nsStyleColor*)aContext->GetData(kStyleColorSID);
+      NS_ColorNameToRGB(cbuf, &(color->mBackgroundColor));
+      color->mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
+    }
+  }
+}
+
+
+// nsIDOMNode interface
+static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
+static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
+
+nsresult nsHTMLContainer::GetChildNodes(nsIDOMNodeIterator **aIterator)
+{
+  NS_PRECONDITION(nsnull != aIterator, "null pointer");
+  *aIterator = new nsDOMIterator(*this);
+  return NS_OK;
+}
+
+nsresult nsHTMLContainer::HasChildNodes()
+{
+  if (0 != mChildren.Count()) {
+    return NS_OK;
+  } 
+  else {
+    return NS_ERROR_FAILURE;
+  }
+}
+
+nsresult nsHTMLContainer::GetFirstChild(nsIDOMNode **aNode)
+{
+  nsIDOMNode* node = nsnull;
+  nsIContent *child = (nsIContent*) mChildren.ElementAt(0);
+  if (nsnull != child) {
+    nsresult res = child->QueryInterface(kIDOMNodeIID, (void**)aNode);
+    NS_ASSERTION(NS_OK == res, "Must be a DOM Node"); // must be a DOM Node
+
+    return res;
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+nsresult nsHTMLContainer::InsertBefore(nsIDOMNode *newChild, nsIDOMNode *refChild)
+{
+  nsIContent* content = nsnull;
+  nsresult res = refChild->QueryInterface(kIContentIID, (void**)&content);
+  NS_ASSERTION(NS_OK == res, "Must be an nsIContent");
+  if (NS_OK == res) {
+    PRInt32 pos = IndexOf(content);
+    if (pos >= 0) {
+      nsIContent* newContent = nsnull;
+      res = newChild->QueryInterface(kIContentIID, (void**)&newContent);
+      NS_ASSERTION(NS_OK == res, "Must be an nsIContent");
+      if (NS_OK == res) {
+        if (PR_FALSE == InsertChildAt(newContent, pos)) {
+          res = NS_ERROR_FAILURE;
+        }
+        NS_RELEASE(newContent);
+      }
+    }
+    NS_RELEASE(content);
+  }
+
+  return res;
+}
+
+nsresult nsHTMLContainer::ReplaceChild(nsIDOMNode *newChild, 
+                                        nsIDOMNode *oldChild)
+{
+  nsIContent* content = nsnull;
+  nsresult res = oldChild->QueryInterface(kIContentIID, (void**)&content);
+  NS_ASSERTION(NS_OK == res, "Must be an nsIContent");
+  if (NS_OK == res) {
+    PRInt32 pos = IndexOf(content);
+    if (pos >= 0) {
+      nsIContent* newContent = nsnull;
+      nsresult res = newChild->QueryInterface(kIContentIID, (void**)&newContent);
+      NS_ASSERTION(NS_OK == res, "Must be an nsIContent");
+      if (NS_OK == res) {
+        if (PR_FALSE == ReplaceChildAt(newContent, pos)) {
+          res = NS_ERROR_FAILURE;
+        }
+        NS_RELEASE(newContent);
+      }
+    }
+    NS_RELEASE(content);
+  }
+
+  return res;
+}
+
+nsresult nsHTMLContainer::RemoveChild(nsIDOMNode *oldChild)
+{
+  nsIDOMNode* oldNode = nsnull;
+  nsIContent* content = nsnull;
+  nsresult res = oldChild->QueryInterface(kIContentIID, (void**)&content);
+  NS_ASSERTION(NS_OK == res, "Must be an nsIContent");
+  if (NS_OK == res) {
+    PRInt32 pos = IndexOf(content);
+    if (pos >= 0) {
+      if (PR_TRUE == RemoveChildAt(pos)) {
+        res = NS_ERROR_FAILURE;
+      }
+    }
+    NS_RELEASE(content);
+  }
+
+  return res;
+}
+

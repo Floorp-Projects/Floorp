@@ -1,0 +1,80 @@
+<html>
+<head>
+<style>
+PRE {
+  background-image: url(gear1.gif);
+  background-repeat: repeat;
+  font-size: 150%;
+}
+B {
+  background-color: rgb(128, 128, 255);
+  font-size: large;
+}
+I {
+  font-size: larger;
+}
+B I {
+  font-size: smaller;
+}
+LI B {
+  font-size: .25in;
+}
+UL LI {
+  color: green;
+  list-style: square outside url(resource:/res/gear1.gif);	//none;
+}
+UL UL LI {
+  color: red;
+}
+</style>
+</head>
+<body>
+This is some text    which is long enough to word wrap. We
+can          use this text 
+to test out    incremental reflow in addition to other basic layout 
+algorithms. Twas brillig and the slithey tobes doth mobe grath enable 
+which really confused me!
+<I>  italics is here  </I>
+<IMG SRC="raptor.jpg" align=left>
+<B>Now this text will someday   be <I>really</I>bold    </B>
+   But this text will not   be bold    
+<hr>
+<P>Now this text will someday   not be bold     </P>
+<P><FONT size=7>Font size=7</FONT></P>
+<P><FONT size=6>Font size=6</FONT></P>
+<P><FONT size=5>Font size=5</FONT></P>
+<P><FONT size=4>Font size=4</FONT></P>
+<P><FONT size=3>Font size=3</FONT></P>
+<P><FONT size=2>Font size=2</FONT></P>
+<P><FONT size=1>Font size=1</FONT></P>
+<P><FONT point-size=24 font-weight=700>Font point-size=24 font-weight=700</FONT></P>
+<P>
+  <FONT size=4>Size four text <FONT color=green size=-2> size -2 green text </FONT> more text  
+    <FONT color=#FF0000 face="courier" size=5> size five, courrier </FONT> more text 
+    <FONT color=blue size=+1> blue +1 text </FONT>
+  </FONT>      
+</P>
+<UL>
+  <LI type=circle>List Item 1</LI>
+  <LI>List Item 2</LI>
+  <UL type=circle>
+    <LI>List <B>Item</B> 2.1</LI>
+    <LI>List Item 2.2</LI>
+  </UL>
+</UL>
+<H1>Headline 1</H1>
+<H2>Headline 2</H2>
+<H3><FONT COLOR=red>Headline 3</font></H3>
+<H4>Headline 4</H4>
+<H5>Headline 5</H5>
+<H6>Headline 6</H6>
+<PRE>
+One	Two	Three   Four
+---	---	-----   ----
+a	b	c       d
+a	b	c       d
+<A HREF="oink">oink</A>	two	three	four
+</PRE>
+</body>
+</html>
+

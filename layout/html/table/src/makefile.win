@@ -1,0 +1,58 @@
+#!nmake
+#
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+
+DEPTH=..\..\..\.. 
+IGNORE_MANIFEST=1
+
+LIBRARY_NAME=raptorhtmltable_s 
+MODULE=raptor 
+REQUIRES=xpcom raptor 
+
+DEFINES=-D_IMPL_NS_HTML -I..\..\base\src -I..\..\style\src \
+    -I$(PUBLIC)\dom 
+
+CPPSRCS=nsCellLayoutData.cpp nsCellMap.cpp nsColLayoutData.cpp \
+    nsTableCaption.cpp nsTableCaptionFrame.cpp nsTableCell.cpp \
+    nsTableCellFrame.cpp nsTableCol.cpp nsTableColGroup.cpp \
+    nsTableColGroupFrame.cpp nsTableContent.cpp nsTableFrame.cpp \
+    nsTableOuterFrame.cpp nsTablePart.cpp nsTableRow.cpp \
+    nsTableRowFrame.cpp nsTableRowGroup.cpp nsTableRowGroupFrame.cpp 
+
+CPP_OBJS=.\$(OBJDIR)\nsCellLayoutData.obj .\$(OBJDIR)\nsCellMap.obj \
+    .\$(OBJDIR)\nsColLayoutData.obj .\$(OBJDIR)\nsTableCaption.obj \
+    .\$(OBJDIR)\nsTableCaptionFrame.obj .\$(OBJDIR)\nsTableCell.obj \
+    .\$(OBJDIR)\nsTableCellFrame.obj .\$(OBJDIR)\nsTableCol.obj \
+    .\$(OBJDIR)\nsTableColGroup.obj .\$(OBJDIR)\nsTableColGroupFrame.obj \
+    .\$(OBJDIR)\nsTableContent.obj .\$(OBJDIR)\nsTableFrame.obj \
+    .\$(OBJDIR)\nsTableOuterFrame.obj .\$(OBJDIR)\nsTablePart.obj \
+    .\$(OBJDIR)\nsTableRow.obj .\$(OBJDIR)\nsTableRowFrame.obj \
+    .\$(OBJDIR)\nsTableRowGroup.obj .\$(OBJDIR)\nsTableRowGroupFrame.obj 
+
+LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor 
+
+LCFLAGS = \
+        $(LCFLAGS) \
+        $(DEFINES) \
+        $(NULL)
+
+include <$(DEPTH)\config\rules.mak>
+
+libs:: $(LIBRARY)
+	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+
+clobber::
+	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
