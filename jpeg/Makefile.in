@@ -32,7 +32,6 @@ EXPORT_LIBRARY = 1
 
 ifeq ($(OS_ARCH),WINNT)
 LIBRARY_NAME	= jpeg$(MOZ_BITS)$(VERSION_NUMBER)
-MAPFILE=$(LIBRARY_NAME).map
 endif
 
 CSRCS		= \
@@ -108,5 +107,11 @@ ifndef GNU_CC
 #//  -Zi -GM needed to compile mmx functions in assembly.
 CFLAGS	+= -Zi -GM
 endif
+endif
+
+# Using the -Zi flag causes debugging info to be written to the .pdb files,
+# so we cannot do parallel builds here
+ifeq ($(OS_ARCH),WINNT)
+.NOTPARALLEL::
 endif
 

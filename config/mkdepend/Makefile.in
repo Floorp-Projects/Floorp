@@ -57,3 +57,5 @@ _GCCDIR		= $(shell $(CC) -print-file-name=include)
 DEFINES		+= -DPREINCDIR=\"$(_GCCDIR)\"
 endif
 
+export:: $(PROGRAM)
+

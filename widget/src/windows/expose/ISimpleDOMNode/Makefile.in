@@ -54,18 +54,21 @@ MIDL_GENERATED_FILES = \
 		dlldata.c \
 		$(NULL)
 
-GARBAGE += $(MIDL_GENERATED_FILES)
+GARBAGE += $(MIDL_GENERATED_FILES) done_gen
 
 FORCE_SHARED_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
-$(MIDL_GENERATED_FILES):
-	midl $(srcdir)/ISimpleDOMNode.idl
+$(MIDL_GENERATED_FILES): done_gen
+
+done_gen: ISimpleDOMNode.idl
+	midl $<
 	cp ISimpleDOMNode.h ../..
 	cp ISimpleDOMNode_i.c ../../ISimpleDOMNode_iid.h
+	touch $@
 
-export:: $(MIDL_GENERATED_FILES)
+export:: done_gen
 
 libs::
 	regsvr32 /s $(DIST)/bin/$(SHARED_LIBRARY)

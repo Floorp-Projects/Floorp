@@ -91,7 +91,8 @@ OS_LIBS	+= \
 	shell32.lib \
 	$(NULL)
 
-GARBAGE	+= $(DEFFILE) MozillaControl_i.c MozillaControl.h
+MIDL_GENERATED_FILES = MozillaControl_i.c MozillaControl.h
+GARBAGE	+= $(DEFFILE) $(MIDL_GENERATED_FILES) done_gen
 
 include $(topsrcdir)/config/rules.mk
 
@@ -109,10 +110,14 @@ LOCAL_INCLUDES += -I.
 libs:: MozillaControl.html
 	$(INSTALL) $^ $(DIST)/bin/res
 
-export:: $(DEFFILE) MozillaControl_i.c MozillaControl.h
+export:: $(DEFFILE) done_gen
 
 $(DEFFILE): mkctldef.sh
 	$(srcdir)/mkctldef.sh $@
 
-MozillaControl_i.c MozillaControl.h: MozillaControl.idl
-	midl /Oicf /h MozillaControl.h /iid MozillaControl_i.c $(srcdir)/MozillaControl.idl
+done_gen: MozillaControl.idl
+	midl /Oicf /h MozillaControl.h /iid MozillaControl_i.c $<
+	touch $@
+
+$(MIDL_GENERATED_FILES): done_gen
+
