@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -54,123 +54,123 @@ class nsDll;
 
 class nsComponentManagerImpl : public nsIComponentManager {
 public:
-  NS_DECL_ISUPPORTS
+    NS_DECL_ISUPPORTS
 
-  // nsIComponentManager methods:
-  NS_IMETHOD FindFactory(const nsCID &aClass,
-                         nsIFactory **aFactory);
+    // nsIComponentManager methods:
+    NS_IMETHOD FindFactory(const nsCID &aClass,
+                           nsIFactory **aFactory);
 
-  // Finds a class ID for a specific Program ID
-  NS_IMETHOD ProgIDToCLSID(const char *aProgID,
-                           nsCID *aClass);
+    // Finds a class ID for a specific Program ID
+    NS_IMETHOD ProgIDToCLSID(const char *aProgID,
+                             nsCID *aClass);
   
-  // Finds a Program ID for a specific class ID
-  // caller frees the result with delete[]
-  NS_IMETHOD CLSIDToProgID(nsCID *aClass,
-                           char* *aClassName,
-                           char* *aProgID);
+    // Finds a Program ID for a specific class ID
+    // caller frees the result with delete[]
+    NS_IMETHOD CLSIDToProgID(nsCID *aClass,
+                             char* *aClassName,
+                             char* *aProgID);
   
-  // Creates a class instance for a specific class ID
-  NS_IMETHOD CreateInstance(const nsCID &aClass, 
-                            nsISupports *aDelegate,
-                            const nsIID &aIID,
-                            void **aResult);
+    // Creates a class instance for a specific class ID
+    NS_IMETHOD CreateInstance(const nsCID &aClass, 
+                              nsISupports *aDelegate,
+                              const nsIID &aIID,
+                              void **aResult);
 
-  // Convenience routine, creates a class instance for a specific ProgID
-  NS_IMETHOD CreateInstance(const char *aProgID,
-                            nsISupports *aDelegate,
-                            const nsIID &aIID,
-                            void **aResult);
+    // Convenience routine, creates a class instance for a specific ProgID
+    NS_IMETHOD CreateInstance(const char *aProgID,
+                              nsISupports *aDelegate,
+                              const nsIID &aIID,
+                              void **aResult);
 
-  // Creates a class instance for a specific class ID
-  /*
-  NS_IMETHOD CreateInstance2(const nsCID &aClass, 
-                             nsISupports *aDelegate,
-                             const nsIID &aIID,
-                             void *aSignature,
-                             void **aResult);
-  */
+    // Creates a class instance for a specific class ID
+    /*
+      NS_IMETHOD CreateInstance2(const nsCID &aClass, 
+      nsISupports *aDelegate,
+      const nsIID &aIID,
+      void *aSignature,
+      void **aResult);
+    */
 
-  // Manually registry a factory for a class
-  NS_IMETHOD RegisterFactory(const nsCID &aClass,
-                             const char *aClassName,
-                             const char *aProgID,
-                             nsIFactory *aFactory,
-                             PRBool aReplace);
-
-  // Manually register a dynamically loaded component.
-  NS_IMETHOD RegisterComponent(const nsCID &aClass,
+    // Manually registry a factory for a class
+    NS_IMETHOD RegisterFactory(const nsCID &aClass,
                                const char *aClassName,
                                const char *aProgID,
-                               const char *aLibrary,
-                               PRBool aReplace,
-                               PRBool aPersist);
+                               nsIFactory *aFactory,
+                               PRBool aReplace);
 
-  // Manually unregister a factory for a class
-  NS_IMETHOD UnregisterFactory(const nsCID &aClass,
-                               nsIFactory *aFactory);
+    // Manually register a dynamically loaded component.
+    NS_IMETHOD RegisterComponent(const nsCID &aClass,
+                                 const char *aClassName,
+                                 const char *aProgID,
+                                 const char *aLibrary,
+                                 PRBool aReplace,
+                                 PRBool aPersist);
 
-  // Manually unregister a dynamically loaded factory for a class
-  NS_IMETHOD UnregisterFactory(const nsCID &aClass,
-                               const char *aLibrary);
+    // Manually unregister a factory for a class
+    NS_IMETHOD UnregisterFactory(const nsCID &aClass,
+                                 nsIFactory *aFactory);
 
-  // Manually unregister a dynamically loaded component
-  NS_IMETHOD UnregisterComponent(const nsCID &aClass,
+    // Manually unregister a dynamically loaded factory for a class
+    NS_IMETHOD UnregisterFactory(const nsCID &aClass,
                                  const char *aLibrary);
 
-  // Unload dynamically loaded factories that are not in use
-  NS_IMETHOD FreeLibraries(void);
+    // Manually unregister a dynamically loaded component
+    NS_IMETHOD UnregisterComponent(const nsCID &aClass,
+                                   const char *aLibrary);
 
-  //////////////////////////////////////////////////////////////////////////////
-  // DLL registration support
-  /* Autoregistration will try only files with these extensions.
-   * All extensions are case insensitive.
-   * ".dll",    // Windows
-   * ".dso",    // Unix
-   * ".so",     // Unix
-   * ".sl",     // Unix: HP
-   * "_dll",    // Mac
-   * ".dlm",    // new for all platforms
-   */
-  NS_IMETHOD AutoRegister(RegistrationTime when, const char* pathlist);
-  // Pathlist is a semicolon separated list of pathnames
-  NS_IMETHOD AddToDefaultPathList(const char *pathlist);
-  NS_IMETHOD SyncComponentsInPathList(const char *pathlist);
-  NS_IMETHOD SyncComponentsInDir(const char *path);
-  NS_IMETHOD SyncComponentsInFile(const char *fullname);
+    // Unload dynamically loaded factories that are not in use
+    NS_IMETHOD FreeLibraries(void);
 
-  // nsComponentManagerImpl methods:
-  nsComponentManagerImpl();
-  virtual ~nsComponentManagerImpl();
+    //////////////////////////////////////////////////////////////////////////////
+    // DLL registration support
+    /* Autoregistration will try only files with these extensions.
+     * All extensions are case insensitive.
+     * ".dll",    // Windows
+     * ".dso",    // Unix
+     * ".so",     // Unix
+     * ".sl",     // Unix: HP
+     * "_dll",    // Mac
+     * ".dlm",    // new for all platforms
+     */
+    NS_IMETHOD AutoRegister(RegistrationTime when, const char* pathlist);
+    // Pathlist is a semicolon separated list of pathnames
+    NS_IMETHOD AddToDefaultPathList(const char *pathlist);
+    NS_IMETHOD SyncComponentsInPathList(const char *pathlist);
+    NS_IMETHOD SyncComponentsInDir(const char *path);
+    NS_IMETHOD SyncComponentsInFile(const char *fullname);
 
-  static nsComponentManagerImpl* gComponentManager;
-  nsresult Init(void);
+    // nsComponentManagerImpl methods:
+    nsComponentManagerImpl();
+    virtual ~nsComponentManagerImpl();
 
-protected:
-  nsresult LoadFactory(nsFactoryEntry *aEntry, nsIFactory **aFactory);
-  nsresult SelfRegisterDll(nsDll *dll);
-  nsresult SelfUnregisterDll(nsDll *dll);
-
-  nsresult PlatformDeleteKey(HREG hreg, RKEY rootkey, const char *hierarchy);
-  nsresult PlatformVersionCheck();
-  nsresult PlatformCreateDll(const char *fullname, nsDll* *result);
-  nsresult PlatformMarkNoComponents(nsDll *dll);
-  struct QuickRegisterData {
-      const char *CIDString;	// {98765-8776-8958758759-958785}
-      const char *className;	// "Layout Engine"
-      const char *progID;	// "Gecko.LayoutEngine.1"
-  };
-  nsresult PlatformRegister(QuickRegisterData* regd, nsDll *dll);
-  nsresult PlatformUnregister(QuickRegisterData* regd, const char *aLibrary);
-  nsresult PlatformFind(const nsCID &aCID, nsFactoryEntry* *result);
-  nsresult PlatformProgIDToCLSID(const char *aProgID, nsCID *aClass);
-  nsresult PlatformCLSIDToProgID(nsCID *aClass, char* *aClassName, char* *aProgID);
+    static nsComponentManagerImpl* gComponentManager;
+    nsresult Init(void);
 
 protected:
-  nsHashtable*  mFactories;
-  nsHashtable*  mProgIDs;
-  PRMonitor*    mMon;
-  nsDllStore*   mDllStore;
+    nsresult LoadFactory(nsFactoryEntry *aEntry, nsIFactory **aFactory);
+    nsresult SelfRegisterDll(nsDll *dll);
+    nsresult SelfUnregisterDll(nsDll *dll);
+
+    nsresult PlatformDeleteKey(HREG hreg, RKEY rootkey, const char *hierarchy);
+    nsresult PlatformVersionCheck();
+    nsresult PlatformCreateDll(const char *fullname, nsDll* *result);
+    nsresult PlatformMarkNoComponents(nsDll *dll);
+    struct QuickRegisterData {
+        const char *CIDString;	// {98765-8776-8958758759-958785}
+        const char *className;	// "Layout Engine"
+        const char *progID;	// "Gecko.LayoutEngine.1"
+    };
+    nsresult PlatformRegister(QuickRegisterData* regd, nsDll *dll);
+    nsresult PlatformUnregister(QuickRegisterData* regd, const char *aLibrary);
+    nsresult PlatformFind(const nsCID &aCID, nsFactoryEntry* *result);
+    nsresult PlatformProgIDToCLSID(const char *aProgID, nsCID *aClass);
+    nsresult PlatformCLSIDToProgID(nsCID *aClass, char* *aClassName, char* *aProgID);
+
+protected:
+    nsHashtable*  mFactories;
+    nsHashtable*  mProgIDs;
+    PRMonitor*    mMon;
+    nsDllStore*   mDllStore;
 };
 
 #define NS_MAX_FILENAME_LEN	1024
@@ -206,19 +206,19 @@ protected:
 
 class nsFactoryEntry {
 public:
-  nsFactoryEntry();
-  nsFactoryEntry(const nsCID &aClass, nsIFactory *aFactory);
-  ~nsFactoryEntry();
+    nsFactoryEntry();
+    nsFactoryEntry(const nsCID &aClass, nsIFactory *aFactory);
+    ~nsFactoryEntry();
 
-  nsresult Init(nsDllStore* store, const nsCID &aClass, const char *aLibrary,
-                PRTime lastModTime, PRUint32 fileSize);
+    nsresult Init(nsDllStore* store, const nsCID &aClass, const char *aLibrary,
+                  PRTime lastModTime, PRUint32 fileSize);
 
-  nsCID cid;
-  nsIFactory *factory;
+    nsCID cid;
+    nsIFactory *factory;
 
-  // DO NOT DELETE THIS. Many nsFactoryEntry(s) could be sharing the same Dll.
-  // This gets deleted from the dllStore going away.
-  nsDll *dll;	
+    // DO NOT DELETE THIS. Many nsFactoryEntry(s) could be sharing the same Dll.
+    // This gets deleted from the dllStore going away.
+    nsDll *dll;	
 };
 
 ////////////////////////////////////////////////////////////////////////////////
