@@ -47,7 +47,7 @@ treeitem[Priority="Low"] > treerow > treecell.prioritycol > .tree-button
 }
 
 treeitem > treerow > treecell > .tree-icon {
- list-style-image: url("chrome://messenger/skin/mailMessage.gif");
+ list-style-image: url("chrome://messenger/skin/mail-message.gif");
 }
 
 treecell.unreadcol > .tree-button {

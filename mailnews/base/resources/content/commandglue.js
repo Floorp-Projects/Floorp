@@ -141,13 +141,6 @@ function ComposeMessage(type, format)
 		dump("### tree is invalid\n");
 }
 
-function NewMessage()
-{
-
-  dump("\n\nnewMsg from XUL\n\n\n");
-  ComposeMessage(0, 0);
-}
-
 function GetNewMessages()
 {
 	var folderTree = GetFolderTree();

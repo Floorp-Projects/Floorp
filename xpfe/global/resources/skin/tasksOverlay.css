@@ -1,21 +1,21 @@
 titledbutton#mini-nav
 {
-	list-style-image:url(resource:/res/toolbar/TB_MiniNav.gif);
+	list-style-image:url(chrome://global/skin/taskbar-navigator.gif);
 }
 
 titledbutton#mini-mail
 {
-	list-style-image:url(resource:/res/toolbar/TB_MiniMail.gif);
+	list-style-image:url(chrome://global/skin/taskbar-mail.gif);
 }
 
 titledbutton#mini-addr
 {
-	list-style-image:url(resource:/res/toolbar/TB_MiniAddr.gif);
+	list-style-image:url(chrome://global/skin/taskbar-addressbook.gif);
 }
 
 titledbutton#mini-comp
 {
-	list-style-image:url(resource:/res/toolbar/TB_MiniComp.gif);
+	list-style-image:url(chrome://global/skin/taskbar-composer.gif);
 }
 
 

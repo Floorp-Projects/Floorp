@@ -175,12 +175,6 @@ function MsgHome(url)
   window.open( url, "_blank", "chrome,dependent=yes,all" );
 }
 
-function MsgNewMessage() 
-{
-  //dump("\n\nMsgNewMessage from XUL\n");
-  NewMessage();
-} 
-
 function MsgGetMessage() 
 {
   GetNewMessages();
@@ -240,19 +234,24 @@ function MsgDeleteFolder()
 
 }
 
-function MsgReplyMessage()
+function MsgNewMessage(event)
+{
+  ComposeMessage(0, 0);
+} 
+
+function MsgReplyMessage(event)
 {
   dump("\nMsgReplyMessage from XUL\n");
   ComposeMessage(1, 0);
 }
 
-function MsgReplyToAllMessage() 
+function MsgReplyToAllMessage(event) 
 {
   dump("\nMsgReplyToAllMessage from XUL\n");
   ComposeMessage(2, 0);
 }
 
-function MsgForwardMessage()
+function MsgForwardMessage(event)
 {
   dump("\nMsgForwardMessage from XUL\n");
   var tree = GetThreadTree();
@@ -261,7 +260,7 @@ function MsgForwardMessage()
   messenger.forwardMessages(messageList, -1);
 }
 
-function MsgForwardAsAttachment()
+function MsgForwardAsAttachment(event)
 {
   dump("\nMsgForwardAsAttachment from XUL\n");
   var tree = GetThreadTree();
@@ -270,7 +269,7 @@ function MsgForwardAsAttachment()
   messenger.forwardMessages(messageList, 0);
 }
 
-function MsgForwardAsInline()
+function MsgForwardAsInline(event)
 {
   dump("\nMsgForwardAsInline from XUL\n");
   var tree = GetThreadTree();

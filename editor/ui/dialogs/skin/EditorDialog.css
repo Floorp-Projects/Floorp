@@ -42,7 +42,7 @@ tab {
 
 titledbutton.popup {
 
-    list-style-image:           url(resource:/res/toolbar/TB_popup.gif);
+    list-style-image:           url(resource:/res/toolbar/taskbar-popup-arrow.gif);
     width:                      auto;
     display:                    inline;
     text-decoration:            none; 

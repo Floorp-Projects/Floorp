@@ -589,16 +589,16 @@
    
      <menupopup id="AlignmentPopup">
        <menuitem oncommand="EditorAlign('left')">
-         <titledbutton src="chrome://editor/skin/images/ED_Left.gif" align="left" value="&alignLeft.label;"/>
+         <titledbutton src="chrome://editor/skin/images/left.gif" align="left" value="&alignLeft.label;"/>
        </menuitem>
        <menuitem oncommand="EditorAlign('center')">
-         <titledbutton src="chrome://editor/skin/images/ED_Center.gif" align="left" value="&alignCenter.label;"/>
+         <titledbutton src="chrome://editor/skin/images/center.gif" align="left" value="&alignCenter.label;"/>
        </menuitem>
        <menuitem oncommand="EditorAlign('right')">
-         <titledbutton src="chrome://editor/skin/images/ED_Right.gif" align="left" value="&alignRight.label;"/>
+         <titledbutton src="chrome://editor/skin/images/right.gif" align="left" value="&alignRight.label;"/>
        </menuitem>
        <menuitem oncommand="EditorAlign('justify')">
-         <titledbutton src="chrome://editor/skin/images/ED_Justify.gif" align="left" value="&alignJustify.label;"/>
+         <titledbutton src="chrome://editor/skin/images/justify.gif" align="left" value="&alignJustify.label;"/>
        </menuitem>
      </menupopup>
      
@@ -622,8 +622,8 @@
     </titledbutton>
     <titledbutton id="FontFacePopupButton" value="&fontToolbarMenu.label;" class="popup" align="right" popupanchor="bottomleft"/>
     <titledbutton id="FontSizePopupButton" value="&sizeToolbarMenu.label;" class="popup" align="right" popupanchor="bottomleft"/>
-    <titledbutton id="TextColorPopupButton" src="chrome://editor/skin/images/ED_TextColor.gif" class="popup" popupanchor="bottomleft"/>
-    <titledbutton id="BackColorPopupButton" src="chrome://editor/skin/images/ED_BackColor.gif" class="popup" popupanchor="bottomleft"/>
+    <titledbutton id="TextColorPopupButton" src="chrome://editor/skin/images/text-color.gif" class="popup" popupanchor="bottomleft"/>
+    <titledbutton id="BackColorPopupButton" src="chrome://editor/skin/images/backcolor.gif" class="popup" popupanchor="bottomleft"/>
 
     <!-- can't just use observes here because we don't want the value from the broadcaster -->
     <titledbutton id="boldButton" value="&formatToolbar.boldChar;" onclick="EditorToggleStyle('bold')">

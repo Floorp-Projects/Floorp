@@ -82,7 +82,7 @@
     <xul:toolbar>
       <!-- insert the next line should the bug where buttons don't show up
            without an image specified ever return -->
-      <!-- src="resource:/res/toolbar/TB_Stop.gif" align="bottom" -->
+      <!-- src="resource:/res/toolbar/stop.gif" align="bottom" -->
       <xul:titledbutton
          value="URL Dialog" onclick="dialogWindow=MakeURLDialog()"
          style="background-color:rgb(192,192,192);"/>

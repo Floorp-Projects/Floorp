@@ -366,10 +366,10 @@ Rights Reserved.
     </menu>
     <menu value="&msgMenu.label;">
       <menupopup>
-	  <menuitem value="&newMsgCmd.label;" oncommand="MsgNewMessage();"/>
-      <menuitem value="&replyMsgCmd.label;" oncommand="MsgReplyMessage();"/>
-      <menuitem value="&replyToAllMsgCmd.label;" oncommand="MsgReplyToAllMessage();"/>
-      <menuitem value="&forwardMsgCmd.label;" oncommand="MsgForwardMessage();"/>
+	  <menuitem value="&newMsgCmd.label;" oncommand="MsgNewMessage(event);"/>
+      <menuitem value="&replyMsgCmd.label;" oncommand="MsgReplyMessage(event);"/>
+      <menuitem value="&replyToAllMsgCmd.label;" oncommand="MsgReplyToAllMessage(event);"/>
+      <menuitem value="&forwardMsgCmd.label;" oncommand="MsgForwardMessage(event);"/>
       <menu value="&forwardAsMenu.label;">
         <menupopup>
 		<menuitem value="&forwardAsInline.label;" oncommand="MsgForwardAsInline();"/>
@@ -463,11 +463,11 @@ Rights Reserved.
 
         <toolbar id="msgToolbar" persist="collapsed">
 		  <titledbutton src="&getMsgButton.img;" align="top" value="&getMsgButton.label;" onclick="MsgGetMessage()"/>
-		  <titledbutton src="&newMsgButton.img;" align="top" value="&newMsgButton.label;" onclick="MsgNewMessage()"/>
+		  <titledbutton src="&newMsgButton.img;" align="top" value="&newMsgButton.label;" onclick="MsgNewMessage(event)"/>
 		  <html:div class="separator" align="vertical"/> 
-		  <titledbutton src="&replyButton.img;" align="top" value="&replyButton.label;" onclick="MsgReplyMessage()"/>
-		  <titledbutton src="&replyAllButton.img;" align="top" value="&replyAllButton.label;" onclick="MsgReplyToAllMessage()"/>
-		  <titledbutton src="&forwardButton.img;" align="top" value="&forwardButton.label;" onclick="MsgForwardMessage()"/>
+		  <titledbutton src="&replyButton.img;" align="top" value="&replyButton.label;" onclick="MsgReplyMessage(event)"/>
+		  <titledbutton src="&replyAllButton.img;" align="top" value="&replyAllButton.label;" onclick="MsgReplyToAllMessage(event)"/>
+		  <titledbutton src="&forwardButton.img;" align="top" value="&forwardButton.label;" onclick="MsgForwardMessage(event)"/>
 		  <titledbutton src="&nextButton.img;" align="top" value="&nextButton.label;" onclick="MsgNextUnreadMessage()"/>
 		  <titledbutton src="&deleteButton.img;" align="top" value="&deleteButton.label;" onclick="MsgDeleteMessage(true)"/>
 		  <html:div class="separator" align="vertical"/> 

@@ -59,83 +59,83 @@ titledbutton#Throbber[busy="true"] {
 
 
 .folderMenuItem[open="true"] > .menu-left {
- list-style-image: url("chrome://messenger/skin/FolderO.gif");
+ list-style-image: url("chrome://messenger/skin/folder-open.gif");
 }
 
 .folderMenuItem[IsServer="true"] > .menu-left {
- list-style-image: url("chrome://messenger/skin/Server.gif");
+ list-style-image: url("chrome://messenger/skin/server.gif");
 }
 
 /* special folder */
 .folderMenuItem[SpecialFolder="Inbox"] > .menu-left {
- list-style-image: url("chrome://messenger/skin/FolderInbox.gif");
+ list-style-image: url("chrome://messenger/skin/folder-inbox.gif");
 }
 
 .folderMenuItem[SpecialFolder="Inbox"][open="true"] > .menu-left
 {
-    list-style-image: url("chrome://messenger/skin/FolderInboxO.gif");
+    list-style-image: url("chrome://messenger/skin/folder-inbox-open.gif");
 }
 
 .folderMenuItem[SpecialFolder="Trash"] > .menu-left {
- list-style-image: url("chrome://messenger/skin/FolderTrash.gif");
+ list-style-image: url("chrome://messenger/skin/folder-trash.gif");
 }
 
 .folderMenuItem[SpecialFolder="Trash"][open="true"] > .menu-left {
- list-style-image: url("chrome://messenger/skin/FolderTrashO.gif");
+ list-style-image: url("chrome://messenger/skin/folder-trash-open.gif");
 }
 
 .folderMenuItem[SpecialFolder="Sent"] > > .menu-left {
- list-style-image: url("chrome://messenger/skin/FolderSent.gif");
+ list-style-image: url("chrome://messenger/skin/folder-sent.gif");
 }
 
 .folderMenuItem[SpecialFolder="Sent"][open="true"] > .menu-left {
- list-style-image: url("chrome://messenger/skin/FolderSentO.gif");
+ list-style-image: url("chrome://messenger/skin/folder-sent-open.gif");
 }
 
 .folderMenuItem[SpecialFolder="Templates"] > .menu-left {
- list-style-image: url("chrome://messenger/skin/FolderTemplate.gif");
+ list-style-image: url("chrome://messenger/skin/folder-template.gif");
 }
 
 .folderMenuItem[SpecialFolder="Templates"][open="true"] > .menu-left {
- list-style-image: url("chrome://messenger/skin/FolderTemplateO.gif");
+ list-style-image: url("chrome://messenger/skin/folder-template-open.gif");
 }
 
 .folderMenuItem[SpecialFolder="Drafts"] > .menu-left {
- list-style-image: url("chrome://messenger/skin/FolderDraft.gif");
+ list-style-image: url("chrome://messenger/skin/folder-draft.gif");
 }
 
 .folderMenuItem[SpecialFolder="Drafts"][open="true"] > .menu-left {
- list-style-image: url("chrome://messenger/skin/FolderDraftO.gif");
+ list-style-image: url("chrome://messenger/skin/folder-draft-open.gif");
 }
 
 .folderMenuItem[SpecialFolder="Unsent Messages"] > .menu-left {
- list-style-image: url("chrome://messenger/skin/FolderOutbox.gif");
+ list-style-image: url("chrome://messenger/skin/folder-outbox.gif");
 }
 
 .folderMenuItem[BiffState="NewMail"] > .menu-left {
- list-style-image: url("chrome://messenger/skin/FolderNew.gif");
+ list-style-image: url("chrome://messenger/skin/folder-new.gif");
 }
 
 /* IMAP folders */
 .folderMenuItem[ServerType="imap"]  > .menu-left {
-    list-style-image: url("chrome://messenger/skin/FolderServer.gif");
+    list-style-image: url("chrome://messenger/skin/folder-server.gif");
 }
 
 .folderMenuItem[ServerType="imap"][open="true"] > .menu-left {
-    list-style-image: url("chrome://messenger/skin/FolderServerO.gif");
+    list-style-image: url("chrome://messenger/skin/folder-server-open.gif");
 }
 
 .folderMenuItem[IsServer="true"][ServerType="imap"] > .menu-left {
-    list-style-image: url("chrome://messenger/skin/ServerRemote.gif");
+    list-style-image: url("chrome://messenger/skin/server-remote.gif");
 }
 
 
 /* News folders */
 .folderMenuItem[ServerType="nntp"] > .menu-left {
-    list-style-image: url("chrome://messenger/skin/FolderNewsgroup.gif");
+    list-style-image: url("chrome://messenger/skin/folder-newsgroup.gif");
 }
 
 .folderMenuItem[IsServer="true"][ServerType="nntp"] > .menu-left {
-    list-style-image: url("chrome://messenger/skin/ServerNews.gif");
+    list-style-image: url("chrome://messenger/skin/server-news.gif");
 }
 

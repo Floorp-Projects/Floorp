@@ -2,31 +2,31 @@
  **/
 
 titledbutton#print-button {
-	list-style-image:url(http://www.mozillazine.org/toolbar/TB_Home.gif);
+	list-style-image:url(http://www.mozillazine.org/toolbar/home.gif);
 }
 
 titledbutton#back-button {
-	list-style-image:url(http://www.mozillazine.org/toolbar/TB_Back.gif);
+	list-style-image:url(http://www.mozillazine.org/toolbar/back.gif);
 }
 
 titledbutton#forward-button {
-	list-style-image:url(http://www.mozillazine.org/toolbar/TB_Forward.gif);
+	list-style-image:url(http://www.mozillazine.org/toolbar/forward.gif);
 }
 
 titledbutton#stop-button {
-	list-style-image:url(http://www.mozillazine.org/toolbar/TB_Stop.gif);
+	list-style-image:url(http://www.mozillazine.org/toolbar/stop.gif);
 } 
 
 titledbutton#reload-button {
-	list-style-image:url(http://www.mozillazine.org/toolbar/TB_Reload.gif);
+	list-style-image:url(http://www.mozillazine.org/toolbar/reload.gif);
 }
 
 titledbutton#home-button {
-	list-style-image:url(http://www.mozillazine.org/toolbar/TB_Home.gif);
+	list-style-image:url(http://www.mozillazine.org/toolbar/home.gif);
 }
 
 titledbutton#netscape-button {
-	list-style-image:url(http://www.mozillazine.org/toolbar/TB_Netscape.gif);
+	list-style-image:url(http://www.mozillazine.org/toolbar/mynetscape.gif);
 }
 
 titledbutton#security-button {
@@ -106,27 +106,27 @@ toolbar#taskbar titledbutton[pseudoclass~="active"] {
 
 titledbutton[class="popup"]
 {
-	list-style-image:url(resource:/res/toolbar/TB_popup.gif);
+	list-style-image:url(resource:/res/toolbar/taskbar-popup-arrow.gif);
 }
 
 titledbutton#mini-nav
 {
-	list-style-image:url(http://www.mozillazine.org/toolbar/TB_MiniNav.gif);
+	list-style-image:url(http://www.mozillazine.org/toolbar/taskbar-navigator.gif);
 }
 
 titledbutton#mini-mail
 {
-	list-style-image:url(http://www.mozillazine.org/toolbar/TB_MiniMail.gif);
+	list-style-image:url(http://www.mozillazine.org/toolbar/taskbar-mail.gif);
 }
 
 titledbutton#mini-addr
 {
-	list-style-image:url(http://www.mozillazine.org/toolbar/TB_MiniAddr.gif);
+	list-style-image:url(http://www.mozillazine.org/toolbar/taskbar-addressbook.gif);
 }
 
 titledbutton#mini-comp
 {
-	list-style-image:url(http://www.mozillazine.org/toolbar/TB_MiniComp.gif);
+	list-style-image:url(http://www.mozillazine.org/toolbar/taskbar-composer.gif);
 }
 
 box[type="secure"] {

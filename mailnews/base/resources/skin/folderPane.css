@@ -26,105 +26,105 @@ tree.mail-folders treeitem > treerow > treecell > .tree-icon
 
 tree.mail-folders treeitem[open="true"] > treerow > treecell > .tree-icon
 {
- list-style-image: url("chrome://messenger/skin/FolderO.gif");
+ list-style-image: url("chrome://messenger/skin/folder-open.gif");
 }
 
 tree.mail-folders treeitem[IsServer="true"] > treerow > treecell > .tree-icon
 {
- list-style-image: url("chrome://messenger/skin/Server.gif");
+ list-style-image: url("chrome://messenger/skin/server.gif");
 }
 
 /* special folder */
 tree.mail-folders treeitem[SpecialFolder="Inbox"] > treerow > treecell > .tree-icon
 {
- list-style-image: url("chrome://messenger/skin/FolderInbox.gif");
+ list-style-image: url("chrome://messenger/skin/folder-inbox.gif");
 }
 
 tree.mail-folders treeitem[SpecialFolder="Inbox"][open="true"] > treerow > treecell > .tree-icon
 {
-    list-style-image: url("chrome://messenger/skin/FolderInboxO.gif");
+    list-style-image: url("chrome://messenger/skin/folder-inbox-open.gif");
 }
 
 tree.mail-folders treeitem[SpecialFolder="Trash"] > treerow > treecell > .tree-icon
 {
- list-style-image: url("chrome://messenger/skin/FolderTrash.gif");
+ list-style-image: url("chrome://messenger/skin/folder-trash.gif");
 }
 
 tree.mail-folders treeitem[SpecialFolder="Trash"][open="true"] > treerow > treecell > .tree-icon
 {
- list-style-image: url("chrome://messenger/skin/FolderTrashO.gif");
+ list-style-image: url("chrome://messenger/skin/folder-trash-open.gif");
 }
 
 tree.mail-folders treeitem[SpecialFolder="Sent"] > treerow > treecell > .tree-icon
 {
- list-style-image: url("chrome://messenger/skin/FolderSent.gif");
+ list-style-image: url("chrome://messenger/skin/folder-sent.gif");
 }
 
 tree.mail-folders treeitem[SpecialFolder="Sent"][open="true"] > treerow > treecell > .tree-icon
 {
- list-style-image: url("chrome://messenger/skin/FolderSentO.gif");
+ list-style-image: url("chrome://messenger/skin/folder-sent-open.gif");
 }
 
 tree.mail-folders treeitem[SpecialFolder="Templates"] > treerow > treecell > .tree-icon
 {
- list-style-image: url("chrome://messenger/skin/FolderTemplate.gif");
+ list-style-image: url("chrome://messenger/skin/folder-template.gif");
 }
 
 tree.mail-folders treeitem[SpecialFolder="Templates"][open="true"] > treerow > treecell > .tree-icon
 {
- list-style-image: url("chrome://messenger/skin/FolderTemplateO.gif");
+ list-style-image: url("chrome://messenger/skin/folder-template-open.gif");
 }
 
 tree.mail-folders treeitem[SpecialFolder="Drafts"] > treerow > treecell > .tree-icon
 {
- list-style-image: url("chrome://messenger/skin/FolderDraft.gif");
+ list-style-image: url("chrome://messenger/skin/folder-draft.gif");
 }
 
 tree.mail-folders treeitem[SpecialFolder="Drafts"][open="true"] > treerow > treecell > .tree-icon
 {
- list-style-image: url("chrome://messenger/skin/FolderDraftO.gif");
+ list-style-image: url("chrome://messenger/skin/folder-draft-open.gif");
 }
 
 tree.mail-folders treeitem[SpecialFolder="Unsent Messages"] > treerow > treecell > .tree-icon 
 {
- list-style-image: url("chrome://messenger/skin/FolderOutbox.gif");
+ list-style-image: url("chrome://messenger/skin/folder-outbox.gif");
 }
 
 tree.mail-folders treeitem[BiffState="NewMail"] > treerow > treecell > .tree-icon
 {
- list-style-image: url("chrome://messenger/skin/FolderNew.gif");
+ list-style-image: url("chrome://messenger/skin/folder-new.gif");
 }
 
 tree.mail-folders treeitem[SpecialFolder="Inbox"][BiffState="NewMail"] > treerow > treecell > .tree-icon
 {
- list-style-image: url("chrome://messenger/skin/FolderInboxNew.gif");
+ list-style-image: url("chrome://messenger/skin/folder-inbox-new.gif");
 }
 
 /* IMAP folders */
 tree.mail-folders treeitem[ServerType="imap"] > treerow > treecell > .tree-icon
 {
-    list-style-image: url("chrome://messenger/skin/FolderServer.gif");
+    list-style-image: url("chrome://messenger/skin/folder-server.gif");
 }
 
 tree.mail-folders treeitem[ServerType="imap"][open="true"] > treerow > treecell > .tree-icon
 {
-    list-style-image: url("chrome://messenger/skin/FolderServerO.gif");
+    list-style-image: url("chrome://messenger/skin/folder-server-open.gif");
 }
 
 tree.mail-folders treeitem[IsServer="true"][ServerType="imap"] > treerow > treecell > .tree-icon
 {
-    list-style-image: url("chrome://messenger/skin/ServerRemote.gif");
+    list-style-image: url("chrome://messenger/skin/server-remote.gif");
 }
 
 
 /* News folders */
 tree.mail-folders treeitem[ServerType="nntp"] > treerow > treecell > .tree-icon
 {
-    list-style-image: url("chrome://messenger/skin/FolderNewsgroup.gif");
+    list-style-image: url("chrome://messenger/skin/folder-newsgroup.gif");
 }
 
 tree.mail-folders treeitem[IsServer="true"][ServerType="nntp"] > treerow > treecell > .tree-icon
 {
-    list-style-image: url("chrome://messenger/skin/ServerNews.gif");
+    list-style-image: url("chrome://messenger/skin/server-news.gif");
 }
 

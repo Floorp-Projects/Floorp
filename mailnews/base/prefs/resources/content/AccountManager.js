@@ -28,6 +28,12 @@ var RDF;
 var accountManager;
 var smtpService;
 
+// widgets
+var duplicateButton;
+var deleteButton;
+var newAccountButton;
+var setDefaultButton;
+
 // called when the whole document loads
 // perform initialization here
 function onLoad() {
@@ -50,6 +56,12 @@ function onLoad() {
   }
   
   doSetOKCancel(onOk, 0);
+
+  newAccountButton = document.getElementById("newAccountButton");
+  duplicateButton = document.getElementById("duplicateButton");
+  deleteButton = document.getElementById("deleteButton");
+  setDefaultButton = document.getElementById("setDefaultButton");
+  
 }
 
 function onOk() {
@@ -157,6 +169,20 @@ function onPageLoad(event, name) {
   // how do we determine which account we should be using?
 }
 
+
+function updateButtons(tree) {
+  if (tree.selectedItems.length > 0) {
+    if (duplicateButton) duplicateButton.removeAttribute("disabled");
+    if (setDefaultButton) setDefaultButton.removeAttribute("disabled");
+    if (deleteButton) deleteButton.removeAttribute("disabled");
+
+  } else {
+    if (duplicateButton) duplicateButton.setAttribute("disabled", "true");
+    if (setDefaultButton) setDefaultButton.setAttribute("disabled", "true");
+    if (deleteButton) deleteButton.setAttribute("disabled", "true");
+  }
+}
+
 //
 // called when someone clicks on an account
 // figure out context by what they clicked on
@@ -165,6 +191,9 @@ function onAccountClick(tree) {
 
   if (tree.selectedItems.length < 1) return;
   var node = tree.selectedItems[0];
+  
+  updateButtons(tree);
+  
   // get the page to load
   // (stored in the PageTag attribute of this node)
   var pageId = node.getAttribute('PageTag');
@@ -293,7 +322,6 @@ function getAccountValue(account, accountValues, type, slot) {
         source = smtpService.defaultServer;
     
     } catch (ex) {
-      dump("error getting account value: " + ex + "\n");
     }
     
     if (source) {

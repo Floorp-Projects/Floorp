@@ -257,10 +257,12 @@ function UpdateBookmarksLastVisitedDate(event)
   {
     // Position window.
     var win = document.getElementById( "main-window" );
-    var x = win.getAttribute( "x" );
-    var y = win.getAttribute( "y" );
-    // dump(" move to "+x+" "+y+"\n");
-    window.moveTo( x, y );
+    if (win) {
+      var x = win.getAttribute( "x" );
+      var y = win.getAttribute( "y" );
+      // dump(" move to "+x+" "+y+"\n");
+      window.moveTo( x, y );
+    }
 
     //  TileWindow();
     // Make sure window fits on screen initially
@@ -439,7 +441,8 @@ function UpdateBookmarksLastVisitedDate(event)
 		dump("failed to QI pref service\n");
 	    }
 	    dump("startpage = " + startpage + "\n");
-            document.getElementById("args").setAttribute("value", startpage);
+          var args = document.getElementById("args")
+            if (args) args.setAttribute("value", startpage);
         }
         appCore.loadInitialPage();
     } else {
@@ -1053,9 +1056,10 @@ function hiddenWindowStartup()
 						 'cmd_redo', 'cmd_cut', 'cmd_copy','cmd_paste', 'cmd_delete', 'cmd_selectAll'];
 	for ( id in disabledItems )
 	{
-	//	dump("disabling "+disabledItems[id]+"\n");
+         // dump("disabling "+disabledItems[id]+"\n");
 		 var broadcaster = document.getElementById( disabledItems[id]);
-		 broadcaster.setAttribute("disabled","true");
+		 if (broadcaster)
+           broadcaster.setAttribute("disabled","true");
 	}
 }
 

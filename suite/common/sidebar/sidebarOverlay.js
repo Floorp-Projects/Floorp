@@ -164,7 +164,7 @@ function sidebarAddPanel(parent, registry, service, is_last) {
   iframe.setAttribute('class','panel-frame')
 
   sidebarAddPanelTitle(parent, panel_title, is_last)
-  parent.appendChild(iframe)
+  if (parent) parent.appendChild(iframe)
 }
 
 function sidebarAddPanelTitle(parent, titletext, is_last)
@@ -190,7 +190,7 @@ function sidebarAddPanelTitle(parent, titletext, is_last)
   splitter.appendChild(label)
   splitter.appendChild(spring)
   splitter.appendChild(titledbutton)
-  parent.appendChild(splitter)
+    if (parent) parent.appendChild(splitter)
 }
 
 function sidebarGetAttr(registry,service,attr_name) {
