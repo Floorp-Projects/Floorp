@@ -4132,7 +4132,7 @@ nsContextMenu.prototype = {
                                        .call(this.target.ownerDocument);
           const textToSubURI = Components.classes["@mozilla.org/intl/texttosuburi;1"]
                                          .getService(Components.interfaces.nsITextToSubURI);
-          addresses = textToSubURI.unEscapeNonAsciiURI(characterSet, addresses);
+          addresses = textToSubURI.unEscapeURIForUI(characterSet, addresses);
         }
         catch(ex) {
           // Do nothing.
