@@ -100,7 +100,14 @@ public class Main extends ScriptableObject {
         Scriptable argsObj = cx.newArray(global, array);
         global.defineProperty("arguments", argsObj,
                               ScriptableObject.DONTENUM);
-                       
+        
+        // Set up "environment" in the global scope to provide access to the
+        // System environment variables.
+        Environment.defineClass(sharedGlobal);
+        Environment environment = new Environment(global);
+        global.defineProperty("environment", environment,
+                              ScriptableObject.DONTENUM);
+        
         /*
         TODO: enable debugger
         if (global.debug) {
