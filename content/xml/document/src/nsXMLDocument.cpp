@@ -75,6 +75,7 @@
 #include "nsIAggregatePrincipal.h"
 #include "nsLayoutCID.h"
 #include "nsContentCID.h"
+#include "nsDOMAttribute.h"
 static NS_DEFINE_CID(kHTMLStyleSheetCID,NS_HTMLSTYLESHEET_CID);
 
 #include "nsCExternalHandlerService.h"
@@ -239,7 +240,7 @@ nsrefcnt nsXMLDocument::Release()
   return nsDocument::Release();
 }
 
-nsresult
+NS_IMETHODIMP 
 nsXMLDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
 {
   nsresult result = nsDocument::Reset(aChannel, aLoadGroup);
@@ -918,8 +919,21 @@ nsXMLDocument::CreateAttributeNS(const nsAReadableString& aNamespaceURI,
                                  const nsAReadableString& aQualifiedName,
                                  nsIDOMAttr** aReturn)
 {
-  NS_NOTYETIMPLEMENTED("write me");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
+
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+  nsresult rv = mNodeInfoManager->GetNodeInfo(aQualifiedName, aNamespaceURI,
+                                              *getter_AddRefs(nodeInfo));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString value;
+  nsDOMAttribute* attribute;
+
+  attribute = new nsDOMAttribute(nsnull, nodeInfo, value);
+  NS_ENSURE_TRUE(attribute, NS_ERROR_OUT_OF_MEMORY); 
+
+  return attribute->QueryInterface(NS_GET_IID(nsIDOMAttr), (void**)aReturn);
 }
 
 NS_IMETHODIMP
