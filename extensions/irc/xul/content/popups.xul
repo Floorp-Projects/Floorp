@@ -73,26 +73,15 @@
         oncommand="onPopupSimulateCommand('/kick $nick');"/>
     </commandset>
 
-    <!-- xul tooltips -->
-    <popupset id="aTooltipSet"/>
-  
     <!-- html tooltips -->
-    <popupset id="aHTMLTooltipSet">
-      <popup id="aHTMLTooltip" class="tooltip" 
-        onpopupshowing="return fillInTooltip(document.tooltipNode,'htmlTTBox');">
-        <vbox id="htmlTTBox"/>
-      </popup>
-    </popupset>
+    <tooltip id="aHTMLTooltip"
+      onpopupshowing="return fillInTooltip(document.tooltipNode,'aHTMLTooltip');"/>
   
     <!--
      tab tooltips, always show above the tab, so we don't draw over the input box
      -->
-    <popupset id="aTabTooltipSet">
-      <popup id="aTabTooltip" class="tooltip" position="end_after"
-        onpopupshowing="return fillInTooltip(document.tooltipNode,'tabTTBox');">
-        <vbox id="tabTTBox"/>
-      </popup>
-    </popupset>
+    <tooltip id="tabTT" position="end_after"
+      onpopupshowing="return fillInTooltip(document.tooltipNode,'tabTT');"/>
   
     <popupset id="contextMenus">
       <popup id="userlistPopup" oncommand="onUserListPopupClick(event)">

@@ -140,7 +140,7 @@
     </keyset>
 
     <toolbox flex="1">
-      <menubar id="main-menubar" persist="collapsed" grippytooltip="aTooltip"
+      <menubar id="main-menubar" persist="collapsed"
         grippytooltiptext="&menuBar.tooltip;">
 
         <!-- File menu -->
