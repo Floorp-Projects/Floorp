@@ -57,6 +57,7 @@ class HistoryDataSourceObserver;
 - (id)createCellContents:(NSString*)inValue withColumn:(NSString*)inColumn byItem:(id) inItem;
 
 - (NSString *)outlineView:(NSOutlineView *)outlineView tooltipStringForItem:(id)inItem;
+- (void)outlineView:(NSOutlineView *)outlineView willDisplayCell:(NSCell *)cell forTableColumn:(NSTableColumn *)tableColumn item:(id)item;
 
 - (void)enableObserver;
 - (void)disableObserver;

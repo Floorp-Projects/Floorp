@@ -11,13 +11,18 @@
         {CLASS = BookmarkItem; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
         {CLASS = BookmarkManagerView; LANGUAGE = ObjC; SUPERCLASS = NSView; }, 
         {
+            ACTIONS = {changeContainer = id; }; 
             CLASS = BookmarksController; 
             LANGUAGE = ObjC; 
             OUTLETS = {
                 mAddFolderButton = NSButton; 
                 mAddItemButton = NSButton; 
+                mBookmarksSource = BookmarksDataSource; 
+                mContainerPane = NSTableView; 
                 mContainersSplit = NSSplitView; 
-                mItemPane = NSOutlineView; 
+                mHistorySource = HistoryDataSource; 
+                mInfoButton = NSButton; 
+                mItemPane = ExtendedOutlineView; 
                 mItemSearchSplit = NSSplitView; 
                 mSearchPane = NSTableView; 
             }; 
@@ -184,6 +189,7 @@
         }, 
         {CLASS = LocationBar; LANGUAGE = ObjC; SUPERCLASS = NSView; }, 
         {CLASS = MainController; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
+        {CLASS = NSObject; LANGUAGE = ObjC; }, 
         {CLASS = PageProxyIcon; LANGUAGE = ObjC; SUPERCLASS = NSImageView; }, 
         {
             CLASS = RDFOutlineViewDataSource; 

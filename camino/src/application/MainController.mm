@@ -193,7 +193,7 @@ const int kReuseWindowOnAE = 2;
   [mBookmarksMenu setAutoenablesItems: NO];
 
   // menubar bookmarks
-  int firstBookmarkItem = [mBookmarksMenu indexOfItemWithTag:kBookmarksDividerTag];
+  int firstBookmarkItem = [mBookmarksMenu indexOfItemWithTag:kBookmarksDividerTag] + 1;
   mMenuBookmarks = [[BookmarksMenu alloc] initWithMenu: mBookmarksMenu
                                              firstItem: firstBookmarkItem
                                            rootContent: [bmManager getRootContent]

@@ -24,8 +24,7 @@
 #import <AppKit/AppKit.h>
 #import "ExtendedOutlineView.h"
 
-@interface BookmarksOutlineView : ExtendedOutlineView {
-
+@interface BookmarksOutlineView : ExtendedOutlineView
+{
 }
-
 @end

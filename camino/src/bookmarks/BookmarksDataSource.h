@@ -63,6 +63,7 @@
 -(void) windowClosing;
 
 -(void) ensureBookmarks;
+- (void)restoreFolderExpandedStates;
 
 -(IBAction)addBookmark:(id)aSender;
 -(void)endAddBookmark: (int)aCode;

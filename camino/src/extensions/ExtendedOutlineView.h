@@ -24,13 +24,19 @@
 
 #import <AppKit/AppKit.h>
 
-@interface ExtendedOutlineView : NSOutlineView {
+@interface ExtendedOutlineView : NSOutlineView
+{
   SEL mDeleteAction;
 
   NSRect mOldFrameRect;
   int mOldRows;
   BOOL mDelegateTooltipStringForItem;
+
+  int mRowToBeEdited, mColumnToBeEdited;
+  BOOL mAllowsEditing;
 }
+
+-(void)setAllowsEditing:(BOOL)inAllow;
 
 -(void)keyDown:(NSEvent*)aEvent;
 

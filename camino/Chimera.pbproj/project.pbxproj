@@ -732,6 +732,8 @@
 				F583E3C303B8228F01A80166,
 				F5F415CB03B9223E01A80166,
 				F527C90403BCD43601A80166,
+				3F2CF8CD042A88B7005FD42F,
+				3F2CF8D2042A8B30005FD42F,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -886,6 +888,8 @@
 				F583E3C003B8228701A80166,
 				F5F415CC03B9223E01A80166,
 				F527C90503BCD43601A80166,
+				3F2CF8CE042A88B7005FD42F,
+				3F2CF8D5042A8C47005FD42F,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1027,6 +1031,80 @@
 		};
 		3F22CC1503DF42A200026DCE = {
 			fileRef = 3F22CC1303DF42A200026DCE;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3F2CF8CB042A88B7005FD42F = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			path = ImageAndTextCell.h;
+			refType = 2;
+		};
+		3F2CF8CC042A88B7005FD42F = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			path = ImageAndTextCell.m;
+			refType = 2;
+		};
+		3F2CF8CD042A88B7005FD42F = {
+			fileRef = 3F2CF8CB042A88B7005FD42F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3F2CF8CE042A88B7005FD42F = {
+			fileRef = 3F2CF8CC042A88B7005FD42F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3F2CF8CF042A88B7005FD42F = {
+			fileRef = 3F2CF8CB042A88B7005FD42F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3F2CF8D0042A88B7005FD42F = {
+			fileRef = 3F2CF8CC042A88B7005FD42F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3F2CF8D1042A8B30005FD42F = {
+			fileEncoding = 4;
+			isa = PBXFileReference;
+			name = BookmarksController.h;
+			path = src/bookmarks/BookmarksController.h;
+			refType = 4;
+		};
+		3F2CF8D2042A8B30005FD42F = {
+			fileRef = 3F2CF8D1042A8B30005FD42F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3F2CF8D3042A8B30005FD42F = {
+			fileRef = 3F2CF8D1042A8B30005FD42F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3F2CF8D4042A8C47005FD42F = {
+			fileEncoding = 4;
+			isa = PBXFileReference;
+			name = BookmarksController.mm;
+			path = src/bookmarks/BookmarksController.mm;
+			refType = 4;
+		};
+		3F2CF8D5042A8C47005FD42F = {
+			fileRef = 3F2CF8D4042A8C47005FD42F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3F2CF8D6042A8C47005FD42F = {
+			fileRef = 3F2CF8D4042A8C47005FD42F;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -2504,6 +2582,7 @@
 		};
 		F51842F30206168101A966FE = {
 			children = (
+				3F2CF8D1042A8B30005FD42F,
 				F5C8D55203A2A42401A8016F,
 				F5F94B900332532801026D5D,
 				F5DE10E60209DC0601A967DF,
@@ -6344,6 +6423,7 @@
 				F57074BA026BFD0101A80166,
 				F53E012C02AEE93601A967F3,
 				2EEC3E62028138714B000102,
+				3F2CF8D4042A8C47005FD42F,
 			);
 			isa = PBXGroup;
 			name = Bookmarks;
@@ -6996,6 +7076,7 @@
 		};
 		F5B950BA030C833301A96654 = {
 			children = (
+				3F2CF8CB042A88B7005FD42F,
 				F5FDF166031AF47301DE816D,
 				F5D98EBC031AC38601A96654,
 				F558099D02F22168015DF512,
@@ -7025,6 +7106,7 @@
 				F541495B02711A8301A80166,
 				F541495F02711B0001A80166,
 				F5FDF167031AF47301DE816D,
+				3F2CF8CC042A88B7005FD42F,
 			);
 			isa = PBXGroup;
 			name = Source;
@@ -7385,6 +7467,8 @@
 				F583E3C403B8228F01A80166,
 				F5F415CD03B9223E01A80166,
 				F527C90603BCD43601A80166,
+				3F2CF8CF042A88B7005FD42F,
+				3F2CF8D3042A8B30005FD42F,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -7540,6 +7624,8 @@
 				F583E3C103B8228701A80166,
 				F5F415CE03B9223E01A80166,
 				F527C90703BCD43601A80166,
+				3F2CF8D0042A88B7005FD42F,
+				3F2CF8D6042A8C47005FD42F,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;

@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *			Simon Fraser <sfraser@netscape.com>
+ *			Max Horn <max@quendi.de>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -42,6 +43,7 @@
 #import "BookmarksDataSource.h"
 #import "BookmarkInfoController.h"
 #import "SiteIconProvider.h"
+#import "ImageAndTextCell.h"
 
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
@@ -52,7 +54,6 @@
 
 @interface BookmarksDataSource(Private)
 
-- (void)restoreFolderExpandedStates;
 - (void)refreshChildrenOfItem:(nsIContent*)item;
 
 @end
@@ -78,6 +79,19 @@ const int kBookmarksRootItemTag = -2;
 
 -(void) awakeFromNib
 {
+  NSTableColumn *tableColumn = nil;
+  NSButtonCell *imageAndTextCell = nil;
+
+  // Insert custom cell types into the table view, the standard one does text only.
+//XXX take this out when we switch to the in-window bookmarks because it's
+//XXX done by the BookmarksController (as it should be)
+  tableColumn = [mOutlineView tableColumnWithIdentifier: @"Name"];
+  imageAndTextCell = [[[ImageAndTextCell alloc] init] autorelease];
+  [imageAndTextCell setEditable: YES];
+  [imageAndTextCell setWraps: NO];
+  [tableColumn setDataCell:imageAndTextCell];
+  [tableColumn setEditable: YES];
+
   // make sure these are disabled at the start since the outliner
   // starts off with no selection.
   [mEditBookmarkButton setEnabled:NO];
@@ -523,8 +537,8 @@ const int kBookmarksRootItemTag = -2;
 // outlineView:shouldEditTableColumn:item: (delegate method)
 //
 // Called by the outliner to determine whether or not we should allow the 
-// user to edit this item. We're leaving it off for now, becaue there are
-// some usability issues with inline editing (no undo, Escape doesn't work).
+// user to edit this item. We always return NO, because we invoke the
+// edit methods manually.
 //
 - (BOOL)outlineView:(NSOutlineView *)outlineView shouldEditTableColumn:(NSTableColumn *)tableColumn item:(id)item
 {
@@ -579,58 +593,50 @@ const int kBookmarksRootItemTag = -2;
 {
   if (!mRegisteredClient) return nil;
 
-  NSString *columnName = [tableColumn identifier];
   id retValue = nil;
 
-  if ([columnName isEqualToString: @"name"])
-  {
-      NSFileWrapper     *fileWrapper       = [[NSFileWrapper alloc] initRegularFileWithContents:nil];
-      NSTextAttachment  *textAttachment    = [[NSTextAttachment alloc] initWithFileWrapper:fileWrapper];
-
-      //Set cell's textual contents
-      //[cellValue replaceCharactersInRange:NSMakeRange(0, [cellValue length]) withString:[NSString stringWith_nsAString: nameAttr]];
-      NSMutableAttributedString* cellValue = [[[NSMutableAttributedString alloc] initWithString:[item name]] autorelease];
-      
-      //Create an attributed string to hold the empty attachment, then release the components.
-      NSMutableAttributedString* attachmentAttrString = [NSMutableAttributedString attributedStringWithAttachment:textAttachment];
-      [textAttachment release];
-      [fileWrapper release];
-
-      //Get the cell of the text attachment.
-      NSCell* attachmentAttrStringCell = (NSCell *)[(NSTextAttachment *)[attachmentAttrString attribute:NSAttachmentAttributeName atIndex:0 effectiveRange:nil] attachmentCell];
-
-      NSImage* bookmarkImage = [[BookmarksManager sharedBookmarksManager] createIconForBookmarkItem:item useSiteIcon:NO];
-      [attachmentAttrStringCell setImage:bookmarkImage];
-      
-      //Insert the image
-      [cellValue replaceCharactersInRange:NSMakeRange(0, 0) withAttributedString:attachmentAttrString];
-      
-      //Tweak the baseline to vertically center the text.
-      [cellValue addAttribute:NSBaselineOffsetAttributeName
-                        value:[NSNumber numberWithFloat:-3.0]
-                        range:NSMakeRange(0, 1)];
-      retValue = cellValue;
+  NSString *columnName = [tableColumn identifier];
+  if ([columnName isEqualToString: @"Name"]) {
+    // Return data as an NSString. We'll deal with the icon later.
+    retValue = [item name];
   }
-  else if ([columnName isEqualToString: @"url"])
-  {
+  else if ([columnName isEqualToString: @"URL"]) {
+    if ([item isFolder]) {
+#if 0
+      int numKids = [item getNumberOfChildren];
+      NSString* itemCountStr = [NSString stringWithFormat:NSLocalizedString(@"Contains Items", @"%d Items"),
+                                  numKids];
+      NSMutableDictionary* colorAttributes = nil;   //XXXX fill in color attribute
+      retValue = [[NSAttributedString alloc] initWithString:itemCountStr attributes:colorAttributes];
+#endif
+    }
+    else
       retValue = [item url];
   }
   return retValue;
 }
 
+- (void)outlineView:(NSOutlineView *)outlineView willDisplayCell:(NSCell *)cell forTableColumn:(NSTableColumn *)tableColumn item:(id)item
+{
+  // set the image on the name column. the url column doesn't have an image.
+  if ([[tableColumn identifier] isEqualToString: @"Name"]) {
+    NSImage* image = [[BookmarksManager sharedBookmarksManager] createIconForBookmarkItem:item useSiteIcon:YES];
+    [cell setImage:image];
+  }
+}
+
 - (void)outlineView:(NSOutlineView *)outlineView setObjectValue:(id)object forTableColumn:(NSTableColumn *)tableColumn byItem:(id)item
 {
   // object is really an NSString, even though objectValueForTableColumn returns NSAttributedStrings.
+  BookmarkItem* bmItem = (BookmarkItem*)item;
   NSString *columnName = [tableColumn identifier];
-  if ( [columnName isEqualTo:@"name"] )
+  if ( [columnName isEqualTo:@"Name"] )
   {
-    const unichar kAttachmentCharacter = NSAttachmentCharacter;
-    
-    NSMutableString* mutableString = [NSMutableString stringWithString:object];
-    [mutableString replaceOccurrencesOfString:[NSString stringWithCharacters:&kAttachmentCharacter length:1] withString:@"" options:0 range:NSMakeRange(0, [mutableString length])];
-
-    BookmarkItem* bmItem = (BookmarkItem*)item;
-    [bmItem setName:mutableString];
+    [bmItem setName:object];
+    [bmItem itemChanged:YES];
+  }
+  else if ( [columnName isEqualTo:@"URL"] ) {
+    [bmItem setUrl:object];
     [bmItem itemChanged:YES];
   }
 }

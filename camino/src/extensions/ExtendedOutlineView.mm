@@ -19,7 +19,7 @@
 *
 * Contributor(s):
 *   David Hyatt <hyatt@netscape.com> (Original Author)
-*   Max Horn <max@quendi.de> (Context menu & tooltip code)
+*   Max Horn <max@quendi.de> (Context menu, tooltip code, and editing)
 */
 
 #import "ExtendedOutlineView.h"
@@ -33,7 +33,10 @@
 - (id)initWithFrame:(NSRect)frame
 {
   if ( (self = [super initWithFrame:frame]) ) {
-    mDeleteAction = 0;
+    mDeleteAction = nil;
+    mAllowsEditing = YES;
+    mRowToBeEdited = mColumnToBeEdited = 0;
+    
     // FIXME - this method is *never* called for items that are archived in a nib!
     // Luckily, object memory is zeroed, so mDeleteAction will be 0 anyway.
     // I recommend that this method just be removed.
@@ -41,7 +44,8 @@
   return self;
 }
 
-- (void)awakeFromNib {
+- (void)awakeFromNib
+{
   // Setup the initial NSToolTipRects
   [self _updateToolTipRect];
 }
@@ -187,6 +191,140 @@
   
   // Just return the default context menu
   return [self menu];
+}
+
+
+- (void)textDidEndEditing:(NSNotification *)aNotification
+{
+  // Fake our own notification. We pretend that the editing was canceled due to a
+  // mouse click. This prevents outlineviw from selecting another cell for editing.
+  NSDictionary *userInfo = [NSDictionary dictionaryWithObject:[NSNumber numberWithInt:NSIllegalTextMovement] forKey:@"NSTextMovement"];
+  NSNotification *fakeNotification = [NSNotification notificationWithName:[aNotification name] object:[aNotification object] userInfo:userInfo];
+  
+  [super textDidEndEditing:fakeNotification];
+  
+  // Make ourself first responder again
+  [[self window] makeFirstResponder:self];
+}
+
+
+- (void)_cancelEditItem
+{
+  mRowToBeEdited = -1;
+  [[self class] cancelPreviousPerformRequestsWithTarget:self selector:@selector(editItem:) object:nil];
+}
+
+
+//
+// Start editing a given item. Used to start editing delayed.
+//
+- (void)_editItem:(id)dummy
+{
+  int row = mRowToBeEdited;
+
+  // Cancel any other scheduled edits+  [self _cancelEditItem];
+  
+  // Only start the editing if the selection didn't change in the meantime
+  // (e.g. because arrow keys were used to change it).
+  if (row > 0 && row == [self selectedRow])
+    [self editColumn:mColumnToBeEdited row:row withEvent:nil select:YES];    
+}
+
+/*
+ * Handle mouse clicks, allowing them to start inline editing.
+ * We start editing under two conditions:
+ * 1) For clicks together with the alt/option modifier key immediatly
+ * 2) For clicks on already selected items after a short delay
+ * Rule 2 only is enabled if the outline view is first responder of the main
+ * window, otherwise odd behaviour takes placed when the user clicks into 
+ * a background window on a selected item - editing would start, which is
+ * not the correct result (at least if we want to match Finder). 
+ *
+ * There are some other catchfalls and quirks we have to consider, for details
+ * read the comments in the code.
+ */
+- (void)mouseDown:(NSEvent *)theEvent
+{
+  // the data isn't always allowed to be edited (eg, rendevous or history). Bail
+  // if we've been told to not allow editing.
+  if ( !mAllowsEditing ) {
+    [super mouseDown:theEvent];
+    return;
+  }
+    
+  // Record some state information before calling the super implementation,
+  // as these might change. E.g. if we are not yet first repsonder, the click
+  // might make us first responder.
+  BOOL wasFirstResponder = ([[self window] firstResponder] == self);
+  BOOL wasMainWindow = [[self window] isMainWindow];
+  BOOL wasClickInTextPartOfCell = NO;
+  int oldEditRow = [self editedRow];
+  int oldRow = ([self numberOfSelectedRows] == 1) ? [self selectedRow] : -1;
+
+  // Now call the super implementation. It will only return after the mouseUp
+  // occured, since it does drag&drop handling etc.
+  [super mouseDown:theEvent];
+
+  // If this was a double click, we cancel any scheduled edit requests and return
+  if ([theEvent clickCount] > 1) {
+    [self _cancelEditItem];
+    return;
+  }
+  
+  // Detect if the selection changed (ignoring multi-selections)
+  int newRow = ([self numberOfSelectedRows] == 1) ? [self selectedRow] : -1;
+
+  // If the selection did change, we need to cancel any scheduled edit requests.
+  if (oldRow != newRow && oldRow != -1)
+    [self _cancelEditItem];
+
+  // Little trick: if editing was already in progress, then the field editor
+  // will be first responder. For our purposes this is the same as if we 
+  // were first responder, so pretend it were so.
+  if (oldEditRow >= 0)
+    wasFirstResponder = YES;
+
+  // If we already were first responder of the main window, and the click was
+  // inside a row and it was the left mouse button, then we investigate further
+  // and check if we need to start editing.
+  if (wasFirstResponder && wasMainWindow && newRow >= 0 && ([theEvent type] == NSLeftMouseDown)) {
+
+    // Check whether the click was inside the text part of a cell. For now, we do
+    // this a bit hackishly and assume the cell image is set and has width 20,
+    // and there is a gap of 3 pixels between image and label.
+    NSPoint point = [self convertPoint:[theEvent locationInWindow] fromView:nil];
+    int clickedRow = [self rowAtPoint:point];
+    mColumnToBeEdited = [self columnAtPoint:point];
+    if (clickedRow >= 0 && mColumnToBeEdited >= 0)
+    {
+      NSRect rect = [self frameOfCellAtColumn:mColumnToBeEdited row:clickedRow];
+      rect.size.width = 20.0 + 3.0;
+      wasClickInTextPartOfCell = ! NSPointInRect(point, rect);
+    }
+    
+    // Do not start editing for clicks on the icon part (to match Finder's behaviour).
+    if (wasClickInTextPartOfCell) {
+  
+      if ([theEvent modifierFlags] & NSAlternateKeyMask)
+      {
+        // If the alt key was pressed, start editing right away
+        mRowToBeEdited = newRow;
+        [self _editItem:nil];
+      }
+      else if (oldRow == newRow) {
+        // If the click was into an already selected row, start editing
+        // after a short (1 second) delay - unless it gets canceled before
+        // of course, e.g. by a click someplace else.
+        mRowToBeEdited = newRow;
+        [self performSelector:@selector(_editItem:) withObject:nil afterDelay:1.0];
+      }
+    }
+  }
+}
+ 
+-(void)setAllowsEditing:(BOOL)inAllow
+{
+  mAllowsEditing = inAllow;
 }
 
 @end

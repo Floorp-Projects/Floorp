@@ -260,45 +260,14 @@ HistoryDataSourceObserver::OnChange(nsIRDFDataSource*, nsIRDFResource*,
 //
 // createCellContents:withColumn:byItem
 //
-// override to create an NSAttributedString instead of just the string with the
-// given text. We add an icon and adjust the positioning of the text w/in the cell
+// override to look up the URL if the name is empty. We'll obviously always have a
+// name.
 //
 -(id) createCellContents:(NSString*)inValue withColumn:(NSString*)inColumn byItem:(id) inItem
 {
   if ([inValue length] == 0)
     inValue = [self getPropertyString:@"http://home.netscape.com/NC-rdf#URL" forItem:inItem];
-  
-  NSMutableAttributedString *cellValue = [[[NSMutableAttributedString alloc] initWithString:inValue] autorelease];
-  
-  if ([inColumn isEqualToString:@"http://home.netscape.com/NC-rdf#Name"])
-  {
-    NSFileWrapper     *fileWrapper    = [[NSFileWrapper alloc] initRegularFileWithContents:nil];
-    NSTextAttachment  *textAttachment = [[NSTextAttachment alloc] initWithFileWrapper:fileWrapper];
-
-    // Create an attributed string to hold the empty attachment, then release the components.
-    NSMutableAttributedString *attachmentAttrString = [NSMutableAttributedString attributedStringWithAttachment:textAttachment];
-    [textAttachment release];
-    [fileWrapper release];
-
-    //Get the cell of the text attachment.
-    NSCell* attachmentAttrStringCell = (NSCell *)[(NSTextAttachment *)[attachmentAttrString attribute:
-              NSAttachmentAttributeName atIndex:0 effectiveRange:nil] attachmentCell];
-
-    if ([self outlineView:mOutlineView isItemExpandable:inItem])
-      [attachmentAttrStringCell setImage:[NSImage imageNamed:@"folder"]];
-    else
-      [attachmentAttrStringCell setImage:[NSImage imageNamed:@"smallbookmark"]];
-
-    //Insert the image
-    [cellValue replaceCharactersInRange:NSMakeRange(0, 0) withAttributedString:attachmentAttrString];
-
-    //Tweak the baseline to vertically center the text.
-    [cellValue addAttribute:NSBaselineOffsetAttributeName
-                      value:[NSNumber numberWithFloat:-5.0]
-                      range:NSMakeRange(0, 1)];
-  }
-
-  return cellValue;
+  return inValue;
 }
 
 
@@ -455,6 +424,17 @@ HistoryDataSourceObserver::OnChange(nsIRDFDataSource*, nsIRDFResource*,
     return [NSString stringWithFormat:@"%@\n%@", pageTitle, [url stringByTruncatingTo:80 at:kTruncateAtEnd]];
   }
   return nil;
+}
+
+- (void)outlineView:(NSOutlineView *)outlineView willDisplayCell:(NSCell *)inCell forTableColumn:(NSTableColumn *)tableColumn item:(id)item
+{
+  // set the image on the name column. the url column doesn't have an image.
+  if ([[tableColumn identifier] isEqualToString: @"Name"]) {
+    if ( [outlineView isExpandable: item] )
+      [inCell setImage:[NSImage imageNamed:@"folder"]];
+    else
+      [inCell setImage:[NSImage imageNamed:@"globe_ico"]];
+  }
 }
 
 @end

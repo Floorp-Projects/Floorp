@@ -48,6 +48,7 @@
 #import "UserDefaults.h"
 #import "PageProxyIcon.h"
 #import "AutoCompleteTextField.h"
+#import "BookmarksController.h"
 
 #include "nsIWebNavigation.h"
 #include "nsIDOMDocument.h"
@@ -78,7 +79,10 @@
 
 #include <QuickTime/QuickTime.h>
 
-#define USE_DRAWER_FOR_BOOKMARKS 1
+#define USE_DRAWER_FOR_BOOKMARKS 0
+#if USE_DRAWER_FOR_BOOKMARKS
+#import "ImageAndTextCell.h"
+#endif
 
 static NSString *BrowserToolbarIdentifier	= @"Browser Window Toolbar";
 static NSString *BackToolbarItemIdentifier	= @"Back Toolbar Item";
@@ -933,18 +937,18 @@ static NSArray* sToolbarDefaults = nil;
 
 -(IBAction)manageBookmarks: (id)aSender
 {
-  if ([mSidebarDrawer state] == NSDrawerClosedState)
-    [self toggleSidebar: self];
+  if ( ![mContentView isBookmarkManagerVisible] )
+    [self toggleBookmarkManager: self];
 
-  [mSidebarTabView selectFirstTabViewItem:self];
+  [mBookmarksController selectContainer:kBookmarksMenuContainer];
 }
 
 -(IBAction)manageHistory: (id)aSender
 {
-  if ([mSidebarDrawer state] == NSDrawerClosedState)
-    [self toggleSidebar: self];
+  if ( ![mContentView isBookmarkManagerVisible] )
+    [self toggleBookmarkManager: self];
 
-  [mSidebarTabView selectTabViewItemAtIndex:1];
+  [mBookmarksController selectContainer:kHistoryContainer];
 }
 
 - (void)importBookmarks: (NSString*)aURLSpec
@@ -2150,9 +2154,14 @@ static NSArray* sToolbarDefaults = nil;
   
   // swap out between content and bookmarks.
 	[mContentView toggleBookmarkManager:sender];
+  
+#if !USE_DRAWER_FOR_BOOKMARKS
 //XXXXXX needed until we can turn this on full time, since it's a nib change. 
 mSidebarBookmarksDataSource->mOutlineView = mBookmarksController->mItemPane; 
-  [mSidebarBookmarksDataSource ensureBookmarks];
+mHistoryDataSource->mOutlineView = mBookmarksController->mItemPane;
+#endif
+
+  [mBookmarksController selectLastContainer];
   
   // if we're now showing the bm manager, force it to have focus,
   // otherwise give focus back to gecko.
@@ -2298,95 +2307,3 @@ static Boolean movieControllerFilter(MovieController mc, short action, void *par
 }
 
 @end
-
-#pragma mark -
-
-@implementation BookmarksController
-
-#if 0
-- (id) init
-{
-  if ( self = [super init] )
-  {
-    mAddItemButton = nil;
-  }
-  return self;
-}
-#endif
-
-//
-// - splitViewDidResizeSubviews:
-//
-// Called when one of the views got resized. We want to ensure that the "add bookmark
-// item" button gets lined up with the left edge of the item panel. If the container/item
-// split was the one that changed, move it accordingly
-//
-- (void)splitViewDidResizeSubviews:(NSNotification *)notification
-{
-  const int kButtonGutter = 8;
-  
-  if ( [notification object] == mContainersSplit ) {
-    // get the position of the item view relative to the window and set the button
-    // to that X value. Yes, this will fall down if the bookmark view is inset from the window
-    // but i think we can safely assume it won't be.
-    NSRect windowRect = [mItemPane convertRect:[mItemPane bounds] toView:nil];
-    NSRect newButtonLocation = [mAddItemButton frame];
-    newButtonLocation.origin.x = windowRect.origin.x;
-    [mAddItemButton setFrame:newButtonLocation];
-    [mAddItemButton setNeedsDisplay:YES];
-    
-    // offset by the width of the button and the gutter and we've got the location
-    // of the add folder button next to it.
-    newButtonLocation.origin.x += newButtonLocation.size.width + kButtonGutter;
-    [mAddFolderButton setFrame:newButtonLocation];
-    [mAddFolderButton setNeedsDisplay:YES];
-  }
-}
-
-//
-// - splitView:canCollapseSubview:
-//
-// Called when appkit wants to ask if it can collapse a subview. The only subview
-// of our splits that we allow to be hidden is the search panel.
-//
-- (BOOL)splitView:(NSSplitView *)sender canCollapseSubview:(NSView *)subview
-{
-  BOOL retVal = NO;
-  // subview will be a NSScrollView, so we have to get the superview of the
-  // search pane for comparison.
-  if ( sender == mItemSearchSplit && subview == [mSearchPane superview] )
-    retVal = YES;
-  return retVal;
-}
-
-- (void)windowDidLoad
-{
-  // hide the search panel
-  
-  // set up the font on the item view to be smaller
-  NSArray* columns = [mItemPane tableColumns];
-  if ( columns ) {
-    int numColumns = [columns count];
-    NSFont* smallerFont = [NSFont systemFontOfSize:11];
-    for ( int i = 0; i < numColumns; ++i )
-      [[[columns objectAtIndex:i] dataCell] setFont:smallerFont];
-  }
-}
-
-
-- (float)splitView:(NSSplitView *)sender constrainMinCoordinate:(float)proposedCoord ofSubviewAt:(int)offset
-{
-  const int kMinimumContainerSplitWidth = 150;
-  float retVal = proposedCoord;
-  if ( sender == mContainersSplit )
-    retVal = kMinimumContainerSplitWidth;
-  return retVal;
-}
-
-- (void) focus
-{
-  [[mItemPane window] makeFirstResponder:mItemPane];
-}
-
-@end
-

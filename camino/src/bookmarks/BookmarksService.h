@@ -169,7 +169,7 @@ protected:
 
 
 
-@interface BookmarkItem : NSObject
+@interface BookmarkItem : NSObject <NSCopying>
 {
   nsIContent* mContentNode;
   NSImage*    mSiteIcon;

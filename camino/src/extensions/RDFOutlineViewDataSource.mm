@@ -331,9 +331,10 @@
   if (!mDataSource || !aItem)
       return nil;
   
-  // The table column's identifier is the RDF Resource URI of the property being displayed in
-  // that column, e.g. "http://home.netscape.com/NC-rdf#Name"
-  NSString* columnPropertyURI = [aTableColumn identifier];    
+  // The table column's identifier is the last part of the RDF Resource URI of the property
+  // being displayed in that column, e.g. "http://home.netscape.com/NC-rdf#Name"
+  NSString* columnPropertyURI = [NSString stringWithFormat:@"http://home.netscape.com/NC-rdf#%@",
+                                  [aTableColumn identifier]];
   NSString* propString = [self getPropertyString:columnPropertyURI forItem:aItem];
 
   return [self createCellContents:propString withColumn:columnPropertyURI byItem:aItem];
