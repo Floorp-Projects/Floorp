@@ -706,6 +706,7 @@ void nsCSSRendering::DrawDashedSides(PRIntn startSide,
 void nsCSSRendering::DrawDashedSides(PRIntn startSide,
                                      nsIRenderingContext& aContext,
                                      const nsStyleSpacing& aSpacing,
+                                     PRBool aDoOutline,
                                      const nsRect& borderOutside,
                                      const nsRect& borderInside,
                                      PRIntn aSkipSides,
@@ -716,11 +717,11 @@ void nsCSSRendering::DrawDashedSides(PRIntn startSide,
 
   PRBool bSolid = PR_TRUE;
   float over = 0.0f;
-  PRUint8 style = aSpacing.GetBorderStyle(startSide);  
+  PRUint8 style = aDoOutline?aSpacing.GetOutlineStyle():aSpacing.GetBorderStyle(startSide);  
   PRBool skippedSide = PR_FALSE;
   for (PRIntn whichSide = startSide; whichSide < 4; whichSide++) {
     PRUint8 prevStyle = style;
-    style = aSpacing.GetBorderStyle(whichSide);  
+    style = aDoOutline?aSpacing.GetOutlineStyle():aSpacing.GetBorderStyle(whichSide);  
     if ((1<<whichSide) & aSkipSides) {
       // Skipped side
       skippedSide = PR_TRUE;
@@ -743,8 +744,12 @@ void nsCSSRendering::DrawDashedSides(PRIntn startSide,
       }
 
       nscolor sideColor;
-      if (! aSpacing.GetBorderColor(whichSide, sideColor)) {
-        continue; // side is transparent
+      if (aDoOutline) {
+        aSpacing.GetOutlineColor(sideColor);
+      } else {
+        if (!aSpacing.GetBorderColor(whichSide, sideColor)) {
+          continue; // side is transparent
+        }
       }
       aContext.SetColor(sideColor);  
       switch (whichSide) {
@@ -1410,7 +1415,7 @@ void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
     }
   }
   if (cnt < 4) {
-    DrawDashedSides(cnt, aRenderingContext,aBorderStyle,
+    DrawDashedSides(cnt, aRenderingContext,aBorderStyle, PR_FALSE,
                     inside, outside, aSkipSides, aGap);
   }
 
@@ -1459,6 +1464,91 @@ void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
 			         twipsPerPixel, aGap);
     }
   }
+}
+
+// XXX improve this to constrain rendering to the damaged area
+void nsCSSRendering::PaintOutline(nsIPresContext& aPresContext,
+                                 nsIRenderingContext& aRenderingContext,
+                                 nsIFrame* aForFrame,
+                                 const nsRect& aDirtyRect,
+                                 const nsRect& aBorderArea,
+                                 const nsStyleSpacing& aBorderStyle,
+                                 nsIStyleContext* aStyleContext,
+                                 PRIntn aSkipSides,
+                                 nsRect* aGap)
+{
+  PRIntn    cnt;
+  nsMargin  border;
+  const nsStyleColor* bgColor = nsStyleUtil::FindNonTransparentBackground(aStyleContext); 
+  PRInt16       theRadius;
+  nsStyleCoord  borderRadius;
+
+  nscoord width;
+  aBorderStyle.GetOutlineWidth(width);
+
+  if (0 == width) {
+    // Empty outline
+    return;
+  }
+
+  nsRect inside(aBorderArea);
+  nsRect outside(inside);
+  inside.Inflate(width, width);
+
+  nsRect clipRect(aBorderArea);
+  clipRect.Inflate(width, width); // make clip extra big for now
+
+  PRBool clipState = PR_FALSE;
+  aRenderingContext.PushState();
+  aRenderingContext.SetClipRect(clipRect, nsClipCombine_kReplace, clipState);
+
+  PRUint8 outlineStyle = aBorderStyle.GetOutlineStyle();
+  //see if any sides are dotted or dashed
+  if ((outlineStyle == NS_STYLE_BORDER_STYLE_DOTTED) || 
+      (outlineStyle == NS_STYLE_BORDER_STYLE_DASHED))  {
+    DrawDashedSides(0, aRenderingContext, aBorderStyle, PR_TRUE,
+                    inside, outside, aSkipSides, aGap);
+    aRenderingContext.PopState(clipState);
+    return;
+  }
+
+  // Draw all the other sides
+
+  /* XXX something is misnamed here!!!! */
+  nscoord twipsPerPixel;/* XXX */
+  float p2t;/* XXX */
+  aPresContext.GetPixelsToTwips(&p2t);/* XXX */
+  twipsPerPixel = (nscoord) p2t;/* XXX */
+
+  nscolor outlineColor;
+
+  if (aBorderStyle.GetOutlineColor(outlineColor)) {
+    DrawSide(aRenderingContext, NS_SIDE_BOTTOM,
+             outlineStyle,
+             outlineColor,
+             bgColor->mBackgroundColor, inside,outside, aSkipSides,
+             twipsPerPixel, aGap);
+
+    DrawSide(aRenderingContext, NS_SIDE_LEFT,
+             outlineStyle, 
+             outlineColor,
+             bgColor->mBackgroundColor,inside, outside,aSkipSides,
+             twipsPerPixel, aGap);
+
+    DrawSide(aRenderingContext, NS_SIDE_TOP,
+             outlineStyle,
+             outlineColor,
+			       bgColor->mBackgroundColor,inside, outside,aSkipSides,
+			       twipsPerPixel, aGap);
+
+    DrawSide(aRenderingContext, NS_SIDE_RIGHT,
+             outlineStyle,
+             outlineColor,
+      			 bgColor->mBackgroundColor,inside, outside,aSkipSides,
+			       twipsPerPixel, aGap);
+  }
+  // Restore clipping
+  aRenderingContext.PopState(clipState);
 }
 
 /* draw the edges of the border described in aBorderEdges one segment at a time.
