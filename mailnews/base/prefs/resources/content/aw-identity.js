@@ -55,53 +55,6 @@ function identityPageValidate()
   var pageData = parent.GetPageData();
   setPageData(pageData, "identity", "fullName", name);
 
-  setNextPage("accounttype","identitypage");
-
-  // If we need to skip wizardpanels, set the wizard to jump to the
-  // summary page i.e., last page. Otherwise, set the flow based
-  // on type of account (mail or news) user is creating.
-  var skipPanels = "";
-  try {
-    skipPanels = gCurrentAccountData.wizardSkipPanels.toString().toLowerCase();
-  } catch(ex) {}
-
-  // Support old syntax of true/false for wizardSkipPanels
-  if (skipPanels == "true") {
-    setNextPage("identitypage","done");
-  }
-  else {
-    // identitypage and "done" are required panels for all accounts
-    // initialize wizardPanels with the optional mail/news panels
-    var wizardPanels, i;
-    var isMailAccount = pageData.accounttype.mailaccount;
-    if (isMailAccount && isMailAccount.value)
-      wizardPanels = new Array("serverpage", "loginpage", "accnamepage");
-    else
-      wizardPanels = new Array("newsserver", "accnamepage");
-
-    // Create a hash table of the panels to skip
-    skipArray  = skipPanels.split(",");
-    var skipHash = new Array();
-    for (i = 0; i < skipArray.length; i++)
-      skipHash[skipArray[i]] = skipArray[i];
-
-    // Remove skipped panels
-    i = 0;
-    while (i < wizardPanels.length) {
-      if (wizardPanels[i] in skipHash)
-        wizardPanels.splice(i, 1);
-      else
-        i++;
-    }
-
-    // Add required panels to front/back of array
-    wizardPanels.unshift("identitypage");
-    wizardPanels.push("done");
-
-    // Set up order of panels
-    for (i = 0; i < (wizardPanels.length-1); i++)
-      setNextPage(wizardPanels[i], wizardPanels[i+1]);
-  }
   return true;
 }
 

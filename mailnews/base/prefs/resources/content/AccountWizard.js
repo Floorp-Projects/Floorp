@@ -344,9 +344,10 @@ function PageDataToAccountData(pageData, accountData)
     var server = accountData.incomingServer;
     var smtp = accountData.smtp;
 
-    dump("Setting identity for " + pageData.identity.email.value + "\n");
-    identity.email = pageData.identity.email.value;
-    identity.fullName = pageData.identity.fullName.value;
+    if (pageData.identity.email)
+        identity.email = pageData.identity.email.value;
+    if (pageData.identity.fullName)
+        identity.fullName = pageData.identity.fullName.value;
 
     server.type = getCurrentServerType(pageData);
     server.hostName = getCurrentHostname(pageData);
@@ -412,19 +413,24 @@ function createAccount(accountData)
     var server = am.createIncomingServer(username,
                                          server.hostName,
                                          server.type);
-    
-    dump("am.createIdentity()\n");
-    var identity = am.createIdentity();
-    
-    /* new nntp identities should use plain text by default
-     * we want that GNKSA (The Good Net-Keeping Seal of Approval) */
-    if (server.type == "nntp") {
-			identity.composeHtml = false;
-    }
 
     dump("am.createAccount()\n");
     var account = am.createAccount();
-    account.addIdentity(identity);
+    
+    if (accountData.identity.email) // only create an identity for this account if we really have one (use the email address as a check)
+    {
+        dump("am.createIdentity()\n");
+        var identity = am.createIdentity();
+    
+        /* new nntp identities should use plain text by default
+         * we want that GNKSA (The Good Net-Keeping Seal of Approval) */
+        if (server.type == "nntp") {
+			    identity.composeHtml = false;
+        }
+
+        account.addIdentity(identity);
+    }
+
     // we mark the server as invalid so that the account manager won't
     // tell RDF about the new server - it's not quite finished getting
     // set up yet, in particular, the deferred storage pref hasn't been set.
@@ -466,79 +472,82 @@ function finishAccount(account, accountData)
     }
 
     // copy identity info
-    var destIdentity =
-        account.identities.QueryElementAt(0, nsIMsgIdentity);
-    
-    if (accountData.identity && destIdentity) {
+    var destIdentity = account.identities.Count() ? account.identities.QueryElementAt(0, nsIMsgIdentity) : null;
 
-        // fixup the email address if we have a default domain
-        var emailArray = accountData.identity.email.split('@');
-        if (emailArray.length < 2 && accountData.domain) {
-            accountData.identity.email += '@' + accountData.domain;
+    if (destIdentity) // does this account have an identity? 
+    {   
+        if (accountData.identity && accountData.identity.email) {
+            dump('trying to write out an identity: ' + destIdentity + '\n');
+
+            // fixup the email address if we have a default domain
+            var emailArray = accountData.identity.email.split('@');
+            if (emailArray.length < 2 && accountData.domain) {
+                accountData.identity.email += '@' + accountData.domain;
+            }
+
+            copyObjectToInterface(destIdentity,
+                                  accountData.identity);
+            destIdentity.valid=true;
         }
 
-        copyObjectToInterface(destIdentity,
-                              accountData.identity);
-        destIdentity.valid=true;
-    }
-
-    /**
-     * If signature file need to be set, get the path to the signature file.
-     * Signature files, if exist, are placed under default location. Get
-     * default files location for messenger using directory service. Signature 
-     * file name should be extracted from the account data to build the complete
-     * path for signature file. Once the path is built, set the identity's signature pref.
-     */
-    if (destIdentity.attachSignature)
-    {
-        var sigFileName = accountData.signatureFileName;
-      
-        var sigFile = gMailSession.getDataFilesDir("messenger");
-        sigFile.append(sigFileName);
-        destIdentity.signature = sigFile;
-    }
-
-    // don't try to create an smtp server if we already have one.
-    if (!destIdentity.smtpServerKey)
-    {
-        var smtpServer;
-        
         /**
-         * Create a new smtp server if needed. If smtpCreateNewServer pref
-         * is set then createSmtpServer routine() will create one. Otherwise,
-         * default server is returned which is also set to create a new smtp server
-         * (via GetDefaultServer()) if no default server is found.
+         * If signature file need to be set, get the path to the signature file.
+         * Signature files, if exist, are placed under default location. Get
+         * default files location for messenger using directory service. Signature 
+         * file name should be extracted from the account data to build the complete
+         * path for signature file. Once the path is built, set the identity's signature pref.
          */
-        if (accountData.smtp.hostname != null)
-          smtpServer = smtpService.createSmtpServer();
-        else
-          smtpServer = smtpService.defaultServer;
-
-        // may not have a smtp server, see bug #138076
-        if (smtpServer) {
-          dump("Copying smtpServer (" + smtpServer + ") to accountData\n");
-          //set the smtp server to be the default only if it is not a redirectorType
-          if (accountData.smtp.redirectorType == null) 
-          {
-            if ((smtpService.defaultServer.hostname == null) || (smtpService.defaultServer.redirectorType != null))
-              smtpService.defaultServer = smtpServer;
-          }
-
-          copyObjectToInterface(smtpServer, accountData.smtp);
-
-          // refer bug#141314
-          // since we clone the default smtpserver with the new account's username
-          // force every account to use the smtp server that was created or assigned to it in the
-          // case of isps using rdf files
-          try{
-            destIdentity.smtpServerKey = smtpServer.key;
-          }
-          catch(ex)
-          {
-            dump("There is no smtp server assigned to this account: Exception= "+ex+"\n");
-          }
+        if (destIdentity.attachSignature)
+        {
+            var sigFileName = accountData.signatureFileName;
+      
+            var sigFile = gMailSession.getDataFilesDir("messenger");
+            sigFile.append(sigFileName);
+            destIdentity.signature = sigFile;
         }
-     }
+
+        // don't try to create an smtp server if we already have one.
+        if (!destIdentity.smtpServerKey)
+        {
+            var smtpServer;
+        
+            /**
+             * Create a new smtp server if needed. If smtpCreateNewServer pref
+             * is set then createSmtpServer routine() will create one. Otherwise,
+             * default server is returned which is also set to create a new smtp server
+             * (via GetDefaultServer()) if no default server is found.
+             */
+            if (accountData.smtp.hostname != null)
+              smtpServer = smtpService.createSmtpServer();
+            else
+              smtpServer = smtpService.defaultServer;
+
+            // may not have a smtp server, see bug #138076
+            if (smtpServer) {
+              dump("Copying smtpServer (" + smtpServer + ") to accountData\n");
+              //set the smtp server to be the default only if it is not a redirectorType
+              if (accountData.smtp.redirectorType == null) 
+              {
+                if ((smtpService.defaultServer.hostname == null) || (smtpService.defaultServer.redirectorType != null))
+                  smtpService.defaultServer = smtpServer;
+              }
+
+              copyObjectToInterface(smtpServer, accountData.smtp);
+
+              // refer bug#141314
+              // since we clone the default smtpserver with the new account's username
+              // force every account to use the smtp server that was created or assigned to it in the
+              // case of isps using rdf files
+              try{
+                destIdentity.smtpServerKey = smtpServer.key;
+              }
+              catch(ex)
+              {
+                dump("There is no smtp server assigned to this account: Exception= "+ex+"\n");
+              }
+            }
+         }
+     } // if the account has an identity...
 
      if (this.FinishAccountHook != undefined) {
          FinishAccountHook(accountData.domain);

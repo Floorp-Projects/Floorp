@@ -61,11 +61,13 @@ function acctNamePageInit()
         var type = parent.getCurrentServerType(pageData);
         var protocolinfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" + type].getService(Components.interfaces.nsIMsgProtocolInfo);
         var accountName;
-        if (type == "nntp") {
+        
+        if (gCurrentAccountData && gCurrentAccountData.wizardAccountName)
+            accountName = gCurrentAccountData.wizardAccountName;
+        else if (type == "nntp") 
             accountName = pageData.newsserver.hostname.value;
-        } else {
+        else
             accountName = pageData.identity.email.value;
-        }
         accountNameInput.value = accountName;
     }
 }
