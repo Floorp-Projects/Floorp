@@ -143,13 +143,18 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
   PurgeLastSound();
 
   if (string && stringLen > 0) {
-    // XXX this shouldn't be SYNC, but unless we make a copy of the memory, we can't play it async.
-    // We shouldn't have to hold on to this and free it.
+    DWORD flags = SND_MEMORY | SND_NODEFAULT;
+    // We try to make a copy so we can play it async.
+    // XXX Can sharable strings improve this?
     mLastSound = (char *) malloc(stringLen);
-    memcpy(mLastSound, string, stringLen);
+    if (mLastSound) {
+      memcpy(mLastSound, string, stringLen);
+      string = mLastSound;
+      flags |= SND_ASYNC;
+    }
 
     CWinMM& theMM = CWinMM::GetModule();
-    theMM.PlaySound(mLastSound, nsnull, SND_MEMORY | SND_NODEFAULT | SND_ASYNC);
+    theMM.PlaySound(string, 0, flags);
   }
 
   return NS_OK;
