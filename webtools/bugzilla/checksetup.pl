@@ -3472,47 +3472,44 @@ if (TableExists("attachstatuses") && TableExists("attachstatusdefs")) {
 
 # 2002-11-24 - bugreport@peshkin.net - bug 147275 
 #
-if (Param('makeproductgroups')) {
-    # If makeproductgroups is enabled and group_control_map is empty,
-    # backward-compatbility usebuggroups-equivalent records should
-    # be created.
-    my $entry = Param('useentrygroupdefault');
-    $sth = $dbh->prepare("SELECT COUNT(*) FROM group_control_map");
+# If group_control_map is empty, backward-compatbility 
+# usebuggroups-equivalent records should be created.
+my $entry = Param('useentrygroupdefault');
+$sth = $dbh->prepare("SELECT COUNT(*) FROM group_control_map");
+$sth->execute();
+my ($mapcnt) = $sth->fetchrow_array();
+if ($mapcnt == 0) {
+    # Initially populate group_control_map.
+    # First, get all the existing products and their groups.
+    $sth = $dbh->prepare("SELECT groups.id, products.id, groups.name, " .
+                         "products.name FROM groups, products " .
+                         "WHERE isbuggroup != 0 AND isactive != 0");
     $sth->execute();
-    my ($mapcnt) = $sth->fetchrow_array();
-    if ($mapcnt == 0) {
-        # Initially populate group_control_map.
-        # First, get all the existing products and their groups.
-        $sth = $dbh->prepare("SELECT groups.id, products.id, groups.name, " .
-                             "products.name FROM groups, products " .
-                             "WHERE isbuggroup != 0 AND isactive != 0");
-        $sth->execute();
-        while (my ($groupid, $productid, $groupname, $productname) 
-                = $sth->fetchrow_array()) {
-            if ($groupname eq $productname) {
-                # Product and group have same name.
+    while (my ($groupid, $productid, $groupname, $productname) 
+            = $sth->fetchrow_array()) {
+        if ($groupname eq $productname) {
+            # Product and group have same name.
+            $dbh->do("INSERT INTO group_control_map " .
+                     "(group_id, product_id, entry, membercontrol, " .
+                     "othercontrol, canedit) " .
+                     "VALUES ($groupid, $productid, $entry, " .
+                     CONTROLMAPDEFAULT . ", " .
+                     CONTROLMAPNA . ", 0)");
+        } else {
+            # See if this group is a product group at all.
+            my $sth2 = $dbh->prepare("SELECT id FROM products WHERE name = " .
+                                 $dbh->quote($groupname));
+            $sth2->execute();
+            my ($id) = $sth2->fetchrow_array();
+            if (!$id) {
+                # If there is no product with the same name as this
+                # group, then it is permitted for all products.
                 $dbh->do("INSERT INTO group_control_map " .
                          "(group_id, product_id, entry, membercontrol, " .
                          "othercontrol, canedit) " .
-                         "VALUES ($groupid, $productid, $entry, " .
-                         CONTROLMAPDEFAULT . ", " .
+                         "VALUES ($groupid, $productid, 0, " .
+                         CONTROLMAPSHOWN . ", " .
                          CONTROLMAPNA . ", 0)");
-            } else {
-                # See if this group is a product group at all.
-                my $sth2 = $dbh->prepare("SELECT id FROM products WHERE name = " .
-                                     $dbh->quote($groupname));
-                $sth2->execute();
-                my ($id) = $sth2->fetchrow_array();
-                if (!$id) {
-                    # If there is no product with the same name as this
-                    # group, then it is permitted for all products.
-                    $dbh->do("INSERT INTO group_control_map " .
-                             "(group_id, product_id, entry, membercontrol, " .
-                             "othercontrol, canedit) " .
-                             "VALUES ($groupid, $productid, 0, " .
-                             CONTROLMAPSHOWN . ", " .
-                             CONTROLMAPNA . ", 0)");
-                }
             }
         }
     }
