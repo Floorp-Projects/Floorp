@@ -23,6 +23,7 @@
 var gSiteBox;
 var gUnblockButton;
 var gPageReport;
+var gUPMsg;
 
 var popupmanager =
         Components.classes["@mozilla.org/PopupWindowManager;1"]
@@ -33,6 +34,7 @@ function onLoad()
   gSiteBox = document.getElementById("siteBox");
   gUnblockButton = document.getElementById("unblockButton");
   gPageReport = opener.gBrowser.pageReport;
+  gUPMsg = document.getElementById("unblockedPopupMsg");
 
   buildSiteBox();
 }
@@ -74,5 +76,7 @@ function whitelistSite()
   uri.spec = selectedItem.label;
   popupmanager.add(uri, false);
   gSiteBox.removeChild(selectedItem);
+
+  alert(selectedItem.label + gUPMsg.value);
 }
 
