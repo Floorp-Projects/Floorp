@@ -5295,6 +5295,46 @@ DocumentViewerImpl::GetIsFramesetDocument(PRBool *aIsFramesetDocument)
   return NS_OK;
 }
 
+/* readonly attribute boolean isIFrameSelected; */
+NS_IMETHODIMP 
+DocumentViewerImpl::GetIsIFrameSelected(PRBool *aIsIFrameSelected)
+{
+  *aIsIFrameSelected = PR_FALSE;
+
+  // Get the webshell for this documentviewer
+  nsCOMPtr<nsIWebShell> webContainer(do_QueryInterface(mContainer));
+  // Get the currently focused window
+  nsCOMPtr<nsIDOMWindowInternal> currentFocusWin = getter_AddRefs(FindFocusedDOMWindowInternal());
+  if (currentFocusWin && webContainer) {
+    // Get whether the doc contains a frameset 
+    // Also, check to see if the currently focus webshell 
+    // is a child of this webshell
+    PRPackedBool isParentFrameSet;
+    *aIsIFrameSelected = IsThereAnIFrameSelected(webContainer, currentFocusWin, isParentFrameSet);
+  }
+  return NS_OK;
+}
+
+/* readonly attribute boolean isRangeSelection; */
+NS_IMETHODIMP 
+DocumentViewerImpl::GetIsRangeSelection(PRBool *aIsRangeSelection)
+{
+  // Get the currently focused window 
+  nsCOMPtr<nsIDOMWindowInternal> currentFocusWin = getter_AddRefs(FindFocusedDOMWindowInternal());
+  *aIsRangeSelection = IsThereARangeSelection(currentFocusWin);
+  return NS_OK;
+}
+
+/* readonly attribute boolean isFramesetFrameSelected; */
+NS_IMETHODIMP 
+DocumentViewerImpl::GetIsFramesetFrameSelected(PRBool *aIsFramesetFrameSelected)
+{
+  // Get the currently focused window 
+  nsCOMPtr<nsIDOMWindowInternal> currentFocusWin = getter_AddRefs(FindFocusedDOMWindowInternal());
+  *aIsFramesetFrameSelected = currentFocusWin != nsnull;
+  return NS_OK;
+}
+
 /* readonly attribute long printPreviewNumPages; */
 NS_IMETHODIMP 
 DocumentViewerImpl::GetPrintPreviewNumPages(PRInt32 *aPrintPreviewNumPages)
