@@ -130,7 +130,7 @@ sub gcc_parser {
   my ($fh, $cvsroot, $tree, $log_file, $file_bases, $file_fullnames) = @_;
   my $dir = '';
 
-  while (<$fh>) {
+ PARSE_TOP: while (<$fh>) {
     # Directory
     #
     if (/^gmake\[\d\]: Entering directory \`(.*)\'$/) {
@@ -168,21 +168,25 @@ sub gcc_parser {
     }
     my $file = "$dir/$filename";
 
-    unless (defined($warnings{$file}{$line})) {
+    # Special case for "`foo' was hidden\nby `foo2'"
+    $warning_text = "...was hidden " . $warning_text 
+      if $warning_text =~ /^by \`/;
 
-      # Special case for "`foo' was hidden\nby `foo2'"
-      $warning_text = "...was hidden " . $warning_text 
-        if $warning_text =~ /^by \`/;
+    $warnings{$file}{$line}->{first_seen_line} = $.
+      unless defined $warnings{$file}{$line};
 
-      # Remember where in the build log the warning occured
-      $warnings{$file}{$line} = {
-         first_seen_line => $.,
-         log_file        => $log_file,
-         warning_text    => $warning_text,
-      };
-    }
     $warnings{$file}{$line}->{count}++;
     $total_warnings_count++;
+
+    for my $rec (@{ $warnings{$file}{$line}->{list} }) {
+      next PARSE_TOP if $rec->{warning_text} eq $warning_text;
+    }
+
+    # Remember where in the build log the warning occured
+    push @{ $warnings{$file}{$line}->{list} }, {
+         log_file        => $log_file,
+         warning_text    => $warning_text,
+    };
   }
 }
 
@@ -260,6 +264,7 @@ sub print_warnings_as_html {
       </font><p>
     
 __END_HEADER
+  warn "$total_warnings_count warnings from $time_str\n";
 
   for $who (sort { $who_count{$b} <=> $who_count{$a}
                    || $a cmp $b } keys %who_count) {
@@ -354,8 +359,6 @@ sub print_count {
 sub print_warning {
   my ($tree, $br, $file, $linenum, $warn_rec) = @_;
 
-  my $warning = $warn_rec->{warning_text};
-
   print "<td>";
 
   # File link
@@ -373,20 +376,28 @@ sub print_warning {
     print   "$file:$linenum";
     print "</a> ";
   }
-  print "</td></tr><tr><td></td><td>";
-  # Warning text
-  print "\u$warning";
+
   # Build log link
   my $log_line = $warn_rec->{first_seen_line};
   print " (<a href='"
-    .build_url($tree, $br, $log_line)
-      ."'>";
+        .build_url($tree, $br, $log_line)
+        ."'>";
   if ($warn_rec->{count} == 1) {
     print "See build log excerpt";
   } else {
-    print "See 1st of $warn_rec->{count} occurrences in build log";
+    print "See 1st of $warn_rec->{count} warnings in build log";
   }
-  print "</a>)</td></tr>";
+  print "</a>)";
+
+  print "</td></tr><tr><td></td><td>";
+
+  for my $rec (@{ $warn_rec->{list}}) {
+    my $warning  = $rec->{warning_text};
+
+    # Warning text
+    print "\u$warning<br>";
+  }
+  print "</td></tr>";
 }
 
 sub print_source_code {
