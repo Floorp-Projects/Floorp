@@ -1511,6 +1511,14 @@ nsBlockFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
 NS_IMETHODIMP
 nsBlockFrame::DeleteFrame(nsIPresContext& aPresContext)
 {
+  // When we have a bullet frame and it's not in our child list then
+  // we need to delete it ourselves (this is the common case for
+  // list-item's that have outside bullets).
+  if ((nsnull != mBullet) &&
+      ((nsnull == mLines) || (mBullet != mLines->mFirstChild))) {
+    mBullet->DeleteFrame(aPresContext);
+  }
+
   DeleteLineList(aPresContext, mLines);
   DeleteLineList(aPresContext, mOverflowLines);
 
