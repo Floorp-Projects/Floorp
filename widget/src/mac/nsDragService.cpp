@@ -80,6 +80,8 @@
 #include "nsIDOMElement.h"
 #include "nsIImageMac.h"
 #include "nsIImage.h"
+#include "nsMacNativeUnicodeConverter.h"
+#include "nsICharsetConverterManager.h"
 
 
 // we need our own stuff for MacOS because of nsIDragSessionMac.
@@ -495,22 +497,55 @@ printf("looking for data in type %s, mac flavor %ld\n", NS_STATIC_CAST(const cha
 	    // if we are looking for text/unicode and we fail to find it on the clipboard first,
         // try again with text/plain. If that is present, convert it to unicode.
         if ( strcmp(flavorStr, kUnicodeMime) == 0 ) {
-          if ( ::GetFlavorFlags(mDragRef, itemRef, 'TEXT', &unused) == noErr ) {	    
-            nsresult loadResult = ExtractDataFromOS(mDragRef, itemRef, 'TEXT', &dataBuff, &dataSize);
-            if ( NS_SUCCEEDED(loadResult) && dataBuff ) {
-              const char* castedText = NS_REINTERPRET_CAST(char*, dataBuff);          
-              PRUnichar* convertedText = nsnull;
-              PRInt32 convertedTextLen = 0;
-              nsPrimitiveHelpers::ConvertPlatformPlainTextToUnicode ( castedText, dataSize, 
-                                                                        &convertedText, &convertedTextLen );
-              if ( convertedText ) {
-                // out with the old, in with the new 
-                nsMemory::Free(dataBuff);
-                dataBuff = convertedText;
-                dataSize = convertedTextLen * 2;
-                dataFound = PR_TRUE;
+          if ( ::GetFlavorFlags(mDragRef, itemRef, 'TEXT', &unused) == noErr ) {	 
+            
+            // if 'styl' is available, we can get a script of the first run
+            // and use it for converting 'TEXT'
+            nsresult loadResult = ExtractDataFromOS(mDragRef, itemRef, 'styl', &dataBuff, &dataSize);
+            if (NS_SUCCEEDED(loadResult) && 
+                dataBuff &&
+                (dataSize >= (sizeof(ScrpSTElement) + 2))) {
+              StScrpRec *scrpRecP = (StScrpRec *) dataBuff;
+              ScrpSTElement *styl = scrpRecP->scrpStyleTab;
+              ScriptCode script = styl ? ::FontToScript(styl->scrpFont) : smCurrentScript;
+              
+              // free 'styl' and get 'TEXT'
+              nsMemory::Free(dataBuff);
+              loadResult = ExtractDataFromOS(mDragRef, itemRef, 'TEXT', &dataBuff, &dataSize);
+              if ( NS_SUCCEEDED(loadResult) && dataBuff ) {
+                PRUnichar* convertedText = nsnull;
+                PRInt32 convertedTextLen = 0;
+                errCode = nsMacNativeUnicodeConverter::ConvertScripttoUnicode(script, 
+                                                                              (const char *) dataBuff,
+                                                                              dataSize,
+                                                                              &convertedText,
+                                                                              &convertedTextLen);
+                if (NS_SUCCEEDED(errCode) && convertedText) {
+                  nsMemory::Free(dataBuff);
+                  dataBuff = convertedText;
+                  dataSize = convertedTextLen * sizeof(PRUnichar);
+                  dataFound = PR_TRUE;
+                }
               }
-            } // if plain text data on clipboard
+            }          
+          
+            if (!dataFound) {
+              loadResult = ExtractDataFromOS(mDragRef, itemRef, 'TEXT', &dataBuff, &dataSize);
+              if ( NS_SUCCEEDED(loadResult) && dataBuff ) {
+                const char* castedText = NS_REINTERPRET_CAST(char*, dataBuff);          
+                PRUnichar* convertedText = nsnull;
+                PRInt32 convertedTextLen = 0;
+                nsPrimitiveHelpers::ConvertPlatformPlainTextToUnicode ( castedText, dataSize, 
+                                                                          &convertedText, &convertedTextLen );
+                if ( convertedText ) {
+                  // out with the old, in with the new 
+                  nsMemory::Free(dataBuff);
+                  dataBuff = convertedText;
+                  dataSize = convertedTextLen * 2;
+                  dataFound = PR_TRUE;
+                }
+              } // if plain text data on clipboard
+            }
           } // if plain text flavor present
         } // if looking for text/unicode   
       } // else we try one last ditch effort to find our data
@@ -765,8 +800,22 @@ nsDragService :: GetDataForFlavor ( nsISupportsArray* inDragItems, DragReference
           char* plainTextData = nsnull;
           PRUnichar* castedUnicode = NS_REINTERPRET_CAST(PRUnichar*, *outData);
           PRInt32 plainTextLen = 0;
+          nsresult rv =
           nsPrimitiveHelpers::ConvertUnicodeToPlatformPlainText ( castedUnicode, *outDataSize / 2, &plainTextData, &plainTextLen );
-          if ( *outData ) {
+          // if characters are not mapped from Unicode then try native API to convert to 
+          // available script
+          if (rv == NS_ERROR_UENC_NOMAPPING) {
+            if (plainTextData) {
+              nsMemory::Free(plainTextData);
+              plainTextData = nsnull;
+            }
+            rv = nsMacNativeUnicodeConverter::ConvertUnicodetoScript(castedUnicode, 
+                                                                     *outDataSize / sizeof(PRUnichar),
+                                                                     &plainTextData, 
+                                                                     &plainTextLen);
+          }
+          
+          if ( plainTextData && *outData ) {
             nsMemory::Free(*outData);
             *outData = plainTextData;
             *outDataSize = plainTextLen;
