@@ -101,7 +101,7 @@ namespace JavaScript {
 
    /****************************************************************/
 
-#define NotALabel (0xFFFFFFFF)
+    enum { NotALabel = 0xFFFFFFFF };
 
     class Label {
     public:
