@@ -85,12 +85,6 @@ EXPORT_RESOURCE_SAMPLES_1 = \
 	scroll-right-disabled.gif \
 	scroll-right-hover.gif \
 	scroll-right.gif \
-	scroll-thumb-horiz-disabled.gif \
-	scroll-thumb-horiz-hover.gif \
-	scroll-thumb-horiz.gif \
-	scroll-thumb-vert-disabled.gif \
-	scroll-thumb-vert-hover.gif \
-	scroll-thumb-vert.gif \
 	scroll-up-disabled.gif \
 	scroll-up-hover.gif \
 	scroll-up.gif \

@@ -83,12 +83,6 @@ install::
 	$(MAKE_INSTALL) scroll-right-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) scroll-right-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) scroll-right.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) scroll-thumb-horiz-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) scroll-thumb-horiz-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) scroll-thumb-horiz.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) scroll-thumb-vert-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) scroll-thumb-vert-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) scroll-thumb-vert.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) scroll-up-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) scroll-up-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) scroll-up.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
