@@ -601,13 +601,6 @@ nsHTMLButtonControlFrame::GetHorizontalInsidePadding(nsIPresContext* aPresContex
   return 0;
 }
 
-nsresult nsHTMLButtonControlFrame::RequiresWidget(PRBool& aRequiresWidget)
-{
-  aRequiresWidget = PR_FALSE;
-  return NS_OK;
-}
-
-
 NS_IMETHODIMP nsHTMLButtonControlFrame::SetProperty(nsIPresContext* aPresContext,
                                                     nsIAtom* aName, const nsAString& aValue)
 {

@@ -141,9 +141,6 @@ public:
   }
 #endif
 
-  virtual nsresult RequiresWidget(PRBool &aRequiresWidget);
-
-
   NS_IMETHOD_(PRInt32) GetFormControlType() const;
   NS_IMETHOD GetName(nsAString* aName);
   NS_IMETHOD GetValue(nsAString* aName);

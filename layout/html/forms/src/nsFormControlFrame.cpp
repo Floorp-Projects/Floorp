@@ -843,14 +843,6 @@ nsFormControlFrame::GetProperty(nsIAtom* aName, nsAString& aValue)
   return NS_OK;
 }
 
-nsresult
-nsFormControlFrame::RequiresWidget(PRBool & aRequiresWidget)
-{
-  aRequiresWidget = PR_TRUE;
-  return NS_OK;
-}
-
-
 NS_IMETHODIMP
 nsFormControlFrame::SetSuggestedSize(nscoord aWidth, nscoord aHeight)
 {

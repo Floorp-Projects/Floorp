@@ -1975,14 +1975,6 @@ nsComboboxControlFrame::HandleEvent(nsIPresContext* aPresContext,
 }
 
 
-nsresult 
-nsComboboxControlFrame::RequiresWidget(PRBool& aRequiresWidget)
-{
-  aRequiresWidget = PR_FALSE;
-  return NS_OK;
-}
-
-
 NS_IMETHODIMP 
 nsComboboxControlFrame::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAString& aValue)
 {

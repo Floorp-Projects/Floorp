@@ -2126,13 +2126,6 @@ nsTextControlFrame::SetSuggestedSize(nscoord aWidth, nscoord aHeight)
   return NS_OK;
 }
 
-nsresult 
-nsTextControlFrame::RequiresWidget(PRBool& aRequiresWidget)
-{
-  aRequiresWidget = PR_FALSE;
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsTextControlFrame::GetFont(nsIPresContext* aPresContext, 
                             const nsFont*&  aFont)

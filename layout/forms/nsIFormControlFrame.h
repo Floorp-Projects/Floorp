@@ -48,8 +48,8 @@ class nsIAtom;
 
 // IID for the nsIFormControlFrame class
 #define NS_IFORMCONTROLFRAME_IID    \
-{ 0x38eb3980, 0x4d99, 0x11d2,  \
-  { 0x80, 0x3f, 0x0, 0x60, 0x8, 0x15, 0xa7, 0x91 } }
+  { 0xf1911a34, 0xcdf7, 0x4f10, \
+      { 0xbc, 0x2a, 0x77, 0x1f, 0x68, 0xce, 0xbc, 0x54 } }
 
 /** 
   * nsIFormControlFrame is the common interface for frames of form controls. It
@@ -82,23 +82,6 @@ public:
 
   NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight) = 0;
   
-  /**
-   * Determine if the control uses a native widget for rendering
-   * @param aRequiresWidget is set to PR_TRUE if it has a native widget, PR_FALSE otherwise.
-   * @returns NS_OK 
-   */
-
-
-   /**
-   * Determine if the control uses a native widget for rendering
-   * @param aRequiresWidget is set to PR_TRUE if it has a native widget, PR_FALSE otherwise.
-   * @returns NS_OK 
-   */
-
-  virtual nsresult RequiresWidget(PRBool &aRequiresWidget) = 0;
- 
-
-
   NS_IMETHOD GetFont(nsIPresContext* aPresContext, 
                      const nsFont*&  aFont) = 0;
   /**

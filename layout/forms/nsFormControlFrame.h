@@ -252,17 +252,7 @@ protected:
 
   virtual ~nsFormControlFrame();
 
- 
-  /**
-   * Determine if the control uses a native widget for rendering
-   * @param aRequiresWidget is set to PR_TRUE if it has a native widget, PR_FALSE otherwise.
-   * @returns NS_OK 
-   */
-
-  virtual nsresult RequiresWidget(PRBool &aRequiresWidget);
- 
-
-  /**
+  /** 
     * Get the size that this frame would occupy without any constraints
     * @param aPresContext the presentation context
     * @param aDesiredSize the size desired by this frame, to be set by this method
