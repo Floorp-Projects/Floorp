@@ -460,6 +460,11 @@ HRESULT nsPluginHostCtrl::FindPluginPathByContentType(const TCHAR *pszContentTyp
 {
     *ppszPluginPath = NULL;
 
+    if (pszContentType == NULL)
+    {
+        return E_FAIL;
+    }
+
     // Search the list of plugins for one that will handle the content type
     TCHAR szPluginPath[_MAX_PATH + 1];
     unsigned long nContentType = _tcslen(pszContentType);
