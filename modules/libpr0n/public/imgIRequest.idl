@@ -24,6 +24,7 @@
 #include "nsISupports.idl"
 
 interface gfxIImageContainer;
+interface nsIURI;
 
 /**
  * imgIRequest interface
@@ -60,4 +61,6 @@ interface imgIRequest : nsISupports
    * @attention NEED DOCS
    */
   readonly attribute unsigned long imageStatus;
+
+  readonly attribute nsIURI URI;
 };

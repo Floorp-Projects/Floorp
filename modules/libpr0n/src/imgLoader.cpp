@@ -98,6 +98,11 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, imgIDecoderObserver *aObserver,
     request = NS_REINTERPRET_CAST(imgRequest*, req.get());
     NS_ADDREF(request);
 
+
+    nsXPIDLCString spec;
+    aURI->GetSpec(getter_Copies(spec));
+    printf("     Adding %s to cache\n", spec.get());
+
     request->Init(newChannel);
 
     ImageCache::Put(aURI, request);
@@ -125,7 +130,7 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
   imgRequest *request = nsnull;
 
   nsCOMPtr<nsIURI> uri;
-  channel->GetURI(getter_AddRefs(uri));
+  channel->GetOriginalURI(getter_AddRefs(uri));
 
   ImageCache::Get(uri, &request);
   if (request) {
