@@ -34,6 +34,8 @@
 #include "nsNetUtil.h"
 #include "nsIPref.h"
 
+#include "nsDirectoryServiceDefs.h"
+
 NS_IMPL_ISUPPORTS2(nsSound, nsISound, nsIStreamLoaderObserver)
 
 ////////////////////////////////////////////////////////////////////////
@@ -46,21 +48,15 @@ nsSound::~nsSound()
 {
 }
 
-NS_METHOD nsSound::Beep()
-{
-  WinAlarm(HWND_DESKTOP, WA_WARNING);
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
                                         nsISupports *context,
                                         nsresult aStatus,
                                         PRUint32 stringLen,
                                         const char *string)
 {
-  // print a load error on bad status
+
   if (NS_FAILED(aStatus)) {
+#ifdef DEBUG
     if (aLoader) {
       nsCOMPtr<nsIRequest> request;
       aLoader->GetRequest(getter_AddRefs(request));
@@ -72,23 +68,94 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
             if (uri) {
                 nsCAutoString uriSpec;
                 uri->GetSpec(uriSpec);
-#ifdef DEBUG // XXX Shouldn't this |#ifdef| be around more code?
                 printf("Failed to load %s\n", uriSpec.get());
-#endif
             }
         }
       }
     }
+#endif
+    return NS_ERROR_FAILURE;
   }
 
-  if (string && stringLen > 0) {
-    // XXX this shouldn't be SYNC, but unless we make a copy of the memory, we can't play it async.
-    // We shouldn't have to hold on to this and free it.
-    //char *playBuf = (char *) PR_Malloc(stringLen /* * sizeof(char) ?*/  );
-    //memcpy(playBuf, string, stringLen);
-    HOBJECT hobject = WinQueryObject(string);
-    WinSetObjectData(hobject, "OPEN=DEFAULT");
+  if (PL_strncmp(string, "RIFF", 4)) {
+#ifdef DEBUG
+    printf("We only support WAV files currently.\n");
+#endif
+    return NS_ERROR_FAILURE;
   }
+
+  nsresult rv;
+    
+  static const char *kSoundTmpFileName = "mozsound.wav";
+
+  nsCOMPtr<nsIFile> soundTmp;
+  rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(soundTmp));
+  if (NS_FAILED(rv)) return rv;
+  rv = soundTmp->Append(kSoundTmpFileName);
+  nsXPIDLCString soundFilename;
+  (void) soundTmp->GetPath(getter_Copies(soundFilename));
+  FILE *fp = fopen(soundFilename, "wb+");
+  fwrite(string, stringLen, 1, fp);
+  fclose(fp);
+  HOBJECT hobject = WinQueryObject(soundFilename);
+  WinSetObjectData(hobject, "OPEN=DEFAULT");
+
+  return NS_OK;
+
+#ifdef OLDCODE /* Some day we could try to get this working */
+  ULONG ulRC;
+  CHAR errorBuffer[128];
+
+  HMMIO hmmio;
+  MMIOINFO mmioinfo;
+
+  memset(&mmioinfo, 0, sizeof(MMIOINFO));
+  mmioinfo.fccIOProc = FOURCC_MEM;
+  mmioinfo.cchBuffer = stringLen;
+  mmioinfo.pchBuffer = (char*)string;
+  USHORT usDeviceID;
+
+  hmmio = mmioOpen(NULL, &mmioinfo, MMIO_READWRITE);
+
+  MCI_OPEN_PARMS mop;
+  memset(&mop, 0, sizeof(MCI_OPEN_PARMS));
+
+  mop.pszElementName = (char*)hmmio;
+  CHAR DeviceType[] = "waveaudio";
+  mop.pszDeviceType = (PSZ)&DeviceType;
+
+  ulRC = mciSendCommand(0, MCI_OPEN, MCI_OPEN_MMIO | MCI_WAIT, &mop, 0);
+
+  if (ulRC != MCIERR_SUCCESS) {
+     ulRC = mciGetErrorString(ulRC, errorBuffer, 128);
+  }
+
+  usDeviceID = mop.usDeviceID;
+
+  MCI_OPEN_PARMS mpp;
+
+  memset(&mpp, 0, sizeof(MCI_OPEN_PARMS));
+  ulRC = mciSendCommand(usDeviceID, MCI_PLAY, MCI_WAIT, &mpp, 0);
+
+  if (ulRC != MCIERR_SUCCESS) {
+     ulRC = mciGetErrorString(ulRC, errorBuffer, 128);
+  }
+
+  MCI_GENERIC_PARMS mgp;
+  memset(&mgp, 0, sizeof(MCI_GENERIC_PARMS));
+  ulRC = mciSendCommand(usDeviceID, MCI_CLOSE, MCI_WAIT, &mgp, 0);
+
+  if (ulRC != MCIERR_SUCCESS) {
+     ulRC = mciGetErrorString(ulRC, errorBuffer, 128);
+  }
+
+  mmioClose(hmmio, 0);
+#endif
+}
+
+NS_METHOD nsSound::Beep()
+{
+  WinAlarm(HWND_DESKTOP, WA_WARNING);
 
   return NS_OK;
 }
@@ -96,12 +163,6 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
 NS_METHOD nsSound::Play(nsIURL *aURL)
 {
   nsresult rv;
-
-#ifdef DEBUG_SOUND
-  char *url;
-  aURL->GetSpec(&url);
-  printf("%s\n", url);
-#endif
 
   nsCOMPtr<nsIStreamLoader> loader;
   rv = NS_NewStreamLoader(getter_AddRefs(loader), aURL, this);
@@ -125,12 +186,11 @@ NS_IMETHODIMP nsSound::PlaySystemSound(const char *aSoundAlias)
     nsCOMPtr<nsIURI> soundURI;
     rv = NS_NewURI(getter_AddRefs(soundURI), soundPrefValue);
     nsCOMPtr<nsIURL> soundURL = do_QueryInterface(soundURI);
-//    rv = Play(soundURL);
-    rv = Beep();
+    rv = Play(soundURL);
+    if (NS_SUCCEEDED(rv))
+      return NS_OK;
   }
-  else {
-    rv = Beep();
-  }
-  return rv;
+  Beep();
+  return NS_OK;
 }
 
