@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -39,11 +39,20 @@
 #include "nsJAR.h"
 #include "nsIJARFactory.h"
 #include "nsRecyclingAllocator.h"
+#include "nsXPTZipLoader.h"
+
 extern nsRecyclingAllocator *gZlibAllocator;
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsXPTZipLoader)
 
 // The list of components we register
 static const nsModuleComponentInfo components[] = 
 {
+    { "XPT Zip Reader",
+      NS_XPTZIPREADER_CID,
+      NS_XPTLOADER_CONTRACTID_PREFIX "zip",
+      nsXPTZipLoaderConstructor
+    },
     { "Zip Reader", 
        NS_ZIPREADER_CID,
       "@mozilla.org/libjar/zip-reader;1", 

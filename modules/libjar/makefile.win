@@ -52,6 +52,7 @@ OBJS=.\$(OBJDIR)\nsZipArchive.obj \
      .\$(OBJDIR)\nsJARFactory.obj \
      .\$(OBJDIR)\nsJARInputStream.obj \
      .\$(OBJDIR)\nsWildCard.obj	\
+     .\$(OBJDIR)\nsXPTZipReader.obj	\
      $(NULL)
 
 LCFLAGS=-DZLIB_DLL=1
