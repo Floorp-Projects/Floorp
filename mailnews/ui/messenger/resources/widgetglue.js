@@ -1,140 +1,88 @@
+
 function MsgStartUp()
 {
-	dump("StartUp: MsgAppCore\n");
-   var appCore = XPAppCoresManager.Find("MsgAppCore");
-   if (appCore == null) {
-	 dump("StartUp: Creating AppCore\n");
-     appCore = new MsgAppCore();
-   }
-   dump("AppCore probably found\n");
-   if (appCore != null) {
-	  dump("Initializing AppCore and setting Window\n");
-      appCore.Init("MsgAppCore");
-      appCore.SetWindow(window);
-   }
+  dump("StartUp: MsgAppCore\n");
+  var appCore = FindMsgAppCore();
+  if (appCore != null) {
+    dump("Initializing AppCore and setting Window\n");
+    appCore.SetWindow(window);
+  }
 }
 
 function MsgLoadNewsMessage(url)
 {
-	dump("\n\nMsgLoadNewsMessage from XUL\n");
-	OpenURL(url);
+  dump("\n\nMsgLoadNewsMessage from XUL\n");
+  OpenURL(url);
 }
 
 function MsgHome(url)
 {
-    var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
-    if (!toolkitCore) {
+  var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
+  if (!toolkitCore) {
       toolkitCore = new ToolkitCore();
       if (toolkitCore) {
         toolkitCore.Init("ToolkitCore");
       }
     }
-    if (toolkitCore) {
-      toolkitCore.ShowWindow(url, window);
-    }
+  if (toolkitCore) {
+    toolkitCore.ShowWindow(url, window);
+  }
 }
 
 function MsgNewMessage() 
 {
-	dump("\n\nMsgNewMessage from XUL\n");
-	NewMessage();
+  dump("\n\nMsgNewMessage from XUL\n");
+  NewMessage();
 } 
 
 function MsgGetMessage() 
 {
-	GetNewMail();
+  GetNewMail();
 }
 
 function MsgDeleteMessage()
 {
-	dump("\nMsgDeleteMessage from XUL\n");
-	var tree = frames[0].frames[1].document.getElementById('threadTree');
-	if(tree)
-		dump("tree is valid\n");
-	var appCore = new MsgAppCore();
-	if (appCore != null) {
-		appCore.Init("MsgAppCore");
-		appCore.SetWindow(window);
-		dump("\nAppcore isn't null in MsgDeleteMessage\n");
-		var NodeList = tree.getElementsByAttribute("selected", "true");
-		appCore.DeleteMessage(tree, NodeList);
-	}
-}
-
-function ReplyMessageHelper(type)
-{
-  dump("\nMsgReplyMessage from XUL\n");
+  dump("\nMsgDeleteMessage from XUL\n");
   var tree = frames[0].frames[1].document.getElementById('threadTree');
-  if(tree) {
+  if(tree)
     dump("tree is valid\n");
-    var nodeList = tree.getElementsByAttribute("selected", "true");
-    var msgAppCore = XPAppCoresManager.Find("MsgAppCore");
-    if (msgAppCore == null) {
-      dump("ReplyMessageHelper: Creating msgAppCore\n");
-      msgAppCore = new MsgAppCore();
-      msgAppCore.Init("MsgAppCore");
-      msgAppCore.SetWindow(window);
-    }
-    dump("msgAppCore probably found\n");
-    dump("Reply message type ");
-    dump(type);
-    dump("\n");
-    if (msgAppCore && nodeList)
-      ReplyMessage(tree, nodeList, msgAppCore, type);
-  }
-}
-
-function ForwardMessageHelper(type)
-{
-  dump("\nMsgForwardMessage from XUL\n");
-  var tree = frames[0].frames[1].document.getElementById('threadTree');
-  if(tree) {
-    dump("tree is valid\n");
-    var nodeList = tree.getElementsByAttribute("selected", "true");
-    var msgAppCore = XPAppCoresManager.Find("MsgAppCore");
-    if (msgAppCore == null) {
-      dump("ForwardMessageHelper: Creating msgAppCore\n");
-      msgAppCore = new MsgAppCore();
-      msgAppCore.Init("MsgAppCore");
-      msgAppCore.SetWindow(window);
-    }
-    dump("msgAppCore probably found\n");
-    dump("Forward message type ");
-    dump(type);
-    dump("\n");
-    if (msgAppCore && nodeList)
-      ForwardMessage(tree, nodeList, msgAppCore, type);
+  var appCore = FindMsgAppCore();
+  if (appCore != null) {
+    dump("\nAppcore isn't null in MsgDeleteMessage\n");
+    appCore.SetWindow(window);
+    var NodeList = tree.getElementsByAttribute("selected", "true");
+    appCore.DeleteMessage(tree, NodeList);
   }
 }
 
 function MsgReplyMessage()
 {
-  ReplyMessageHelper(0);
+  ComposeMessageWithType(0);
 }
 
 function MsgReplyToAllMessage() 
 {
-  ReplyMessageHelper(1);
+  ComposeMessageWithType(1);
 }
 
 function MsgForwardMessage()
 {
-  ForwardMessageHelper(0);
-}
-
-function MsgForwardAsInline()
-{
-  ForwardMessageHelper(1);
-}
-
-function MsgForwardAsQuoted()
-{
-  ForwardMessageHelper(2);
+  ComposeMessageWithType(3);
 }
 
 function MsgForwardAsAttachment()
 {
-  ForwardMessageHelper(0);
+  ComposeMessageWithType(2);
+}
+
+function MsgForwardAsInline()
+{
+  ComposeMessageWithType(3);
+}
+
+function MsgForwardAsQuoted()
+{
+  ComposeMessageWithType(4);
 }
 
 function MsgNewFolder() {}

@@ -1,76 +1,93 @@
+var msgAppCore;
+var composeAppCore;
+
+function FindMsgAppCore()
+{
+  msgAppCore = XPAppCoresManager.Find("MsgAppCore");
+  if (msgAppCore == null) {
+    dump("FindMsgAppCore: Creating AppCore\n");
+    msgAppCore = new MsgAppCore();
+    dump("Initializing MsgAppCore and setting Window\n");
+    msgAppCore.Init("MsgAppCore");
+  }
+  return msgAppCore;
+}
+
+function FindComposeAppCore()
+{
+  composeAppCore = XPAppCoresManager.Find("ComposeAppCore");
+  if (composeAppCore == null) {
+    dump("FindComposeAppCore: Creating ComposeAppCore\n");
+    composeAppCore = new ComposeAppCore();
+    dump("Initializing ComposeAppCore and setting Window\n");
+    composeAppCore.Init("ComposeAppCore");
+  }
+  return composeAppCore;
+}
 function OpenURL(url)
 {
-	dump("\n\nOpenURL from XUL\n\n\n");
-	var appCore = new MsgAppCore();
-	if (appCore != null) {
-	  dump("Initializing AppCore and setting Window\n");
-      appCore.Init("MsgAppCore");
-      appCore.SetWindow(window);
-	  appCore.OpenURL(url);
-   }
+  dump("\n\nOpenURL from XUL\n\n\n");
+  var appCore = FindMsgAppCore();
+  if (appCore != null) {
+    appCore.SetWindow(window);
+    appCore.OpenURL(url);
+  }
+}
+
+function ComposeMessage(tree, nodeList, msgAppCore, type)
+{
+  dump("\nComposeMessage from XUL\n");
+  var appCore = FindComposeAppCore();
+  if (appCore != null) {
+    appCore.SetWindow(window);
+    appCore.NewMessage("resource:/res/samples/compose.xul", tree,
+		       nodeList, msgAppCore, type); 
+  }
 }
 
 function NewMessage()
 {
-	dump("\n\nnewMsg from XUL\n\n\n");
-	var appCore = new ComposeAppCore();
-	if (appCore != null) {
-		dump("Initializing ComposeAppCore and creating a new Message\n");
-		appCore.Init("ComposeAppCore");
-		appCore.NewMessage("resource:/res/samples/compose.xul");
-	}
+  dump("\n\nnewMsg from XUL\n\n\n");
+  ComposeMessage(null, null, null, 0);
 }
 
 function GetNewMail()
 {
-	var appCore = new MsgAppCore();
-	if (appCore != null) {
-		dump("Initializing MsgAppCore and setting Window\n");
-		appCore.Init("MsgAppCore");
-		appCore.SetWindow(window);
-		appCore.GetNewMail();
-	}
+  var appCore = FindMsgAppCore();
+  if (appCore != null) {
+    appCore.SetWindow(window);
+    appCore.GetNewMail();
+  }
 }
 
 function LoadMessage(messageNode)
 {
-	var uri = messageNode.getAttribute('id');
-	dump(uri);
-	OpenURL(uri);
-
+  var uri = messageNode.getAttribute('id');
+  dump(uri);
+  OpenURL(uri);
 }
 
 function ChangeFolder(folderNode)
 {
-	var uri = folderNode.getAttribute('id');
-	dump(uri);
-	var tree = frames[0].frames[1].document.getElementById('threadTree');
-	tree.childNodes[4].setAttribute('id', uri);
+  var uri = folderNode.getAttribute('id');
+  dump(uri);
+  var tree = frames[0].frames[1].document.getElementById('threadTree');
+  tree.childNodes[4].setAttribute('id', uri);
 }
 
-
-function ReplyMessage(tree, nodeList, msgAppCore, type)
+function ComposeMessageWithType(type)
 {
-  if (msgAppCore != null) {
-    var appCore = new ComposeAppCore();
-    if (appCore != null) {
-      dump("Initializing ComposeAppCore and creating a new Message\n");
-      appCore.Init("ComposeAppCore");
-      appCore.ReplyMessage("resource:/res/samples/compose.xul", tree,
-			   nodeList, msgAppCore, type); 
-    }
-  }
-}
-
-function ForwardMessage(tree, nodeList, msgAppCore, type)
-{
-  if (msgAppCore != null) {
-    var appCore = new ComposeAppCore();
-    if (appCore != null) {
-      dump("Initializing ComposeAppCore and creating a new Message\n");
-      appCore.Init("ComposeAppCore");
-      appCore.ForwardMessage("resource:/res/samples/compose.xul", tree,
-			     nodeList, msgAppCore, type); 
-    }
+  dump("\nMsgReplyMessage from XUL\n");
+  var tree = frames[0].frames[1].document.getElementById('threadTree');
+  if(tree) {
+    dump("tree is valid\n");
+    var nodeList = tree.getElementsByAttribute("selected", "true");
+    var appCore = FindMsgAppCore();
+    dump("message type ");
+    dump(type);
+    dump("\n");
+    if (appCore && nodeList)
+      appCore.SetWindow(window);
+      ComposeMessage(tree, nodeList, appCore, type);
   }
 }
