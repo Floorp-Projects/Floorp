@@ -44,11 +44,10 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_ProcessingInstructionImpl_getData
     return NULL;
   }
 
-  const char* cret = ret.GetBuffer();
-  jstring jret = env->NewStringUTF(cret);
+  jstring jret = env->NewString(ret.GetUnicode(), ret.Length());
   if (!jret) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("ProcessingInstruction.getData: NewStringUTF failed (%s)\n", cret));
+	   ("ProcessingInstruction.getData: NewString failed\n"));
     return NULL;
   }
 
@@ -79,11 +78,10 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_ProcessingInstructionImpl_getTarg
     return NULL;
   }
 
-  const char* cret = ret.GetBuffer();
-  jstring jret = env->NewStringUTF(cret);
+  jstring jret = env->NewString(ret.GetUnicode(), ret.Length());
   if (!jret) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("ProcessingInstruction.getTarget: NewStringUTF failed (%s)\n", cret));
+	   ("ProcessingInstruction.getTarget: NewString failed\n"));
     return NULL;
   }
 

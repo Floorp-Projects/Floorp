@@ -34,7 +34,7 @@ static void dump_document(nsIDOMDocument* dom, const char* urlSpec);
 static void dump_node(FILE* of, nsIDOMNode* node, int indent, 
 		      PRBool isMapNode);
 static void dump_map(FILE* of, nsIDOMNamedNodeMap* map, int indent);
-static char* strip_whitespace(const char* input);
+static char* strip_whitespace(const PRUnichar* input, int length);
 static const char* describe_type(int type);
 #endif
 
@@ -444,8 +444,8 @@ NS_IMETHODIMP nsJavaDOMImpl::OnStatusURLLoad(nsIDocumentLoader* loader,
   jstring jURL = env->NewStringUTF(urlSpec);
   if (!jURL) return NS_ERROR_FAILURE;
 
-  const char* cMsg = aMsg.GetBuffer();
-  jstring jMessage = env->NewStringUTF(cMsg);
+  const PRUnichar* cMsg = aMsg.GetUnicode();
+  jstring jMessage = env->NewString(cMsg, aMsg.Length());
   if (!jMessage) return NS_ERROR_FAILURE;
 
   nsIDOMDocument* domDoc = GetDocument(loader);
@@ -564,9 +564,9 @@ static void dump_node(FILE* of, nsIDOMNode* node, int indent,
   node->GetNodeValue(value);
   node->GetNodeType(&type);
 
-  const char* cname = name.GetBuffer();
-  const char* cvalue = value.GetBuffer();
-  char* cnorm = strip_whitespace(cvalue);
+  const PRUnichar* cname = name.GetUnicode();
+  const PRUnichar* cvalue = value.GetUnicode();
+  char* cnorm = strip_whitespace(cvalue, value.Length());
   fprintf(of, "name=\"%s\" type=%s value=\"%s\"", 
 	  cname, describe_type(type), cnorm);
   delete[] cnorm;
@@ -617,17 +617,22 @@ static void dump_map(FILE* of, nsIDOMNamedNodeMap* map, int indent)
   }
 }
 
-static char* strip_whitespace(const char* input)
+static char* strip_whitespace(const PRUnichar* input, int length)
 {
-  int len = strlen(input);
-  char* out = new char[len];
+  if (!input || length < 1) {
+    char* out = new char[1];
+    out[0] = 0;
+    return out;
+  }
 
+  char* out = new char[length+1];
   char* op = out;
-  const char* ip = input;
-  char c = ' ';
-  char pc = ' ';
+  const PRUnichar* ip = input;
+  PRUnichar c = ' ';
+  PRUnichar pc = ' ';
+  int i = 0;
 
-  for (c = *ip++; c; c = *ip++) {
+  for (c = *ip++; i++<length; c = *ip++) {
     if ((pc == ' ' || pc == '\n' || pc == '\t') &&
 	(c == ' ' || c == '\n' || c == '\t'))
       continue;

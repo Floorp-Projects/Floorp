@@ -384,11 +384,10 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_NodeImpl_getNodeName
     return NULL;
   }
 
-  const char* cret = ret.GetBuffer();
-  jstring jret = env->NewStringUTF(cret);
+  jstring jret = env->NewString(ret.GetUnicode(), ret.Length());
   if (!jret) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Node.getNodeName: NewStringUTF failed (%s)\n", cret));
+	   ("Node.getNodeName: NewString failed\n"));
     return NULL;
   }
 
@@ -517,11 +516,10 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_NodeImpl_getNodeValue
     return NULL;
   }
 
-  const char* cret = ret.GetBuffer();
-  jstring jret = env->NewStringUTF(cret);
+  jstring jret = env->NewString(ret.GetUnicode(), ret.Length());
   if (!jret) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Node.getNodeValue: NewStringUTF failed (%s)\n", cret));
+	   ("Node.getNodeValue: NewString failed\n"));
     return NULL;
   }
 

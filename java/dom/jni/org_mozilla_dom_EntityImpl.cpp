@@ -44,11 +44,10 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_EntityImpl_getNotationName
     return NULL;
   }
 
-  const char* cret = ret.GetBuffer();
-  jstring jret = env->NewStringUTF(cret);
+  jstring jret = env->NewString(ret.GetUnicode(), ret.Length());
   if (!jret) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Entity.getNotationName: NewStringUTF failed (%s)\n", cret));
+	   ("Entity.getNotationName: NewString failed\n"));
     return NULL;
   }
 
@@ -79,11 +78,10 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_EntityImpl_getPublicId
     return NULL;
   }
 
-  const char* cret = ret.GetBuffer();
-  jstring jret = env->NewStringUTF(cret);
+  jstring jret = env->NewString(ret.GetUnicode(), ret.Length());
   if (!jret) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Entity.getPublicId: NewStringUTF failed (%s)\n", cret));
+	   ("Entity.getPublicId: NewString failed\n"));
     return NULL;
   }
 
@@ -114,11 +112,10 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_EntityImpl_getSystemId
     return NULL;
   }
 
-  const char* cret = ret.GetBuffer();
-  jstring jret = env->NewStringUTF(cret);
+  jstring jret = env->NewString(ret.GetUnicode(), ret.Length());
   if (!jret) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Entity.getSystemId: NewStringUTF failed (%s)\n", cret));
+	   ("Entity.getSystemId: NewString failed\n"));
     return NULL;
   }
 
