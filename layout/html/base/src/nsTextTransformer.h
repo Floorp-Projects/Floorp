@@ -349,12 +349,12 @@ protected:
   PRUint8 mFlags;
 
   // prefs used to configure the double-click word selection behavior
-  friend class WordSelectListener;
   class WordSelectListener: public nsIObserver {
   public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER
   };
+  friend class WordSelectListener;
   static WordSelectListener *sWordSelectListener; // have we read the prefs yet?
   static PRBool sWordSelectStopAtPunctuation;     // should we stop at punctuation?
 
