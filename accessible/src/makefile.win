@@ -40,6 +40,8 @@ REQUIRES	= xpcom \
 		  imglib2 \
 		  gfx \
 		  gfx2 \
+		  uriloader \
+		  timer \
 		  $(NULL)
 
 CPP_OBJS=\
