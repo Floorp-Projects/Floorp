@@ -73,9 +73,12 @@ function sidebarOverlayInit()
   var sidebar_menuitem = document.getElementById('menu_sidebar')
   if (sidebar_element.getAttribute('hidden') == 'true') {
     sidebar_element.setAttribute('style', 'display:none')
-    sidebar_menuitem.setAttribute('checked', 'false')
+
+	if (sidebar_menuitem)
+      sidebar_menuitem.setAttribute('checked', 'false')
   } else {
-	sidebar_menuitem.setAttribute('checked', 'true');
+	if (sidebar_menuitem)
+      sidebar_menuitem.setAttribute('checked', 'true');
 
 	debug("sidebar = " + sidebar + "\n");
 	debug("sidebar.resource = " + sidebar.resource + "\n");
