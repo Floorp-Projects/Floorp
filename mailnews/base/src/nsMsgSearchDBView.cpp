@@ -460,14 +460,13 @@ nsresult nsMsgSearchDBView::ProcessRequestsInAllFolders(nsIMsgWindow *window)
 NS_IMETHODIMP nsMsgSearchDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder)
 {
     nsresult rv;
-
-    nsMsgKeyArray preservedSelection;
-    SaveAndClearSelection(&preservedSelection);
-
     PRInt32 rowCountBeforeSort = GetSize();
 
     if (!rowCountBeforeSort)
         return NS_OK;
+
+    nsMsgKeyArray preservedSelection;
+    SaveAndClearSelection(&preservedSelection);
 
     rv = nsMsgDBView::Sort(sortType,sortOrder);
 

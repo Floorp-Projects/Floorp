@@ -219,14 +219,13 @@ nsresult nsMsgThreadedDBView::AddKeys(nsMsgKey *pKeys, PRInt32 *pFlags, const ch
 NS_IMETHODIMP nsMsgThreadedDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder)
 {
   nsresult rv;
-  nsMsgKeyArray preservedSelection;
-  SaveAndClearSelection(&preservedSelection);
-  
-  PRInt32 rowCountBeforeSort = GetSize();
 
+  PRInt32 rowCountBeforeSort = GetSize();
   if (!rowCountBeforeSort)
     return NS_OK;
   
+  nsMsgKeyArray preservedSelection;
+  SaveAndClearSelection(&preservedSelection);
   // if the client wants us to forget our cached id arrays, they
   // should build a new view. If this isn't good enough, we
   // need a method to do that.

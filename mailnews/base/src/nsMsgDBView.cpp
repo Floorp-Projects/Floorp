@@ -689,6 +689,10 @@ nsresult nsMsgDBView::FetchLabel(nsIMsgHdr *aHdr, PRUnichar ** aLabelString)
   return NS_OK;
 }
 
+
+/*if you call SaveAndClearSelection make sure to call RestoreSelection otherwise
+m_saveRestoreSelectionDepth will be incorrect and will lead to selection msg problems*/
+
 nsresult nsMsgDBView::SaveAndClearSelection(nsMsgKeyArray *aMsgKeyArray)
 {
   // we don't do anything on nested Save / Restore calls.
