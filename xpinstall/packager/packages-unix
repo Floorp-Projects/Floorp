@@ -263,6 +263,8 @@ bin/components/libmsgnews.so
 bin/components/libvcard.so
 bin/components/libsigned.so
 bin/components/libsmime.so
+bin/components/libimport.so
+bin/components/libimpText.so
 bin/components/mailnews.xpt
 bin/components/mime.xpt
 bin/components/msgbase.xpt
@@ -273,6 +275,7 @@ bin/components/msglocal.xpt
 bin/components/msgnews.xpt
 bin/components/msgsearch.xpt
 bin/components/txmgr.xpt
+bin/components/import.xpt
 
 bin/chrome/addressbook/*
 bin/chrome/messenger/*
