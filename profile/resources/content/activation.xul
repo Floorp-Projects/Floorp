@@ -35,15 +35,17 @@
 // strings used internally. No need to localize.
 var currURLTitle = "Activation : Frame";
 var serverSideID = "Hello from Activation to Profiles team";
+var intervalID;
+var count = 0;
     
-function CheckURL()
+function VerifyURL()
 {
-    var topFrameTitle = frames[0].document.title;
-
-    // Check if we have reached the url
-    if((topFrameTitle == currURLTitle) || (serverSideID != frames[0].serverSideID))
+    if (count >= 30)
     {
-        // Need to call this to stop the event loop
+        // Clear the interval 
+        clearInterval(intervalID);
+
+        // Time to quit, either we haven't reached the server or right url is not loaded
         try
         {
             var appShell = Components.classes['component://netscape/appshell/appShellService'].getService();
@@ -55,9 +57,20 @@ function CheckURL()
             window.close();
         }
     }
+    else
+    {
+        var topFrameTitle = frames[0].document.title;
+
+        if((topFrameTitle != currURLTitle) && (serverSideID == frames[0].serverSideID))
+        {
+           // Got the url....clear the time interval
+           clearInterval(intervalID);
+        }
+        count++;
+    }
 }
 
-setTimeout("CheckURL()", 30000);
+intervalID = setInterval("VerifyURL()", 1000);
 
 ]]>
 </html:script>
