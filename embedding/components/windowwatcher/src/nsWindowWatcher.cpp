@@ -1060,10 +1060,10 @@ nsWindowWatcher::WinHasOption(const char *aOptions, const char *aName,
     while (nsCRT::IsAsciiSpace(*aOptions))
       aOptions++;
 
-    comma = strchr(aOptions, ',');
+    comma = PL_strchr(aOptions, ',');
     if (comma)
       *comma = '\0';
-    equal = strchr(aOptions, '=');
+    equal = PL_strchr(aOptions, '=');
     if (equal)
       *equal = '\0';
     if (nsCRT::strcasecmp(aOptions, aName) == 0) {
