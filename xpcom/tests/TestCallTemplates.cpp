@@ -68,6 +68,8 @@ int main()
      * when I don't need to.
      */
 
+    NS_NOTREACHED("This test is not intended to run, only to compile!");
+
     /* Test CallQueryInterface */
 
     nsISupports *mySupportsPtr = NS_REINTERPRET_CAST(nsISupports*, 0x1000);
