@@ -67,7 +67,8 @@ var FolderPaneController =
 				if ( command == "cmd_delete" )
 					goSetMenuValue(command, 'valueFolder');
 				var folderTree = GetFolderTree();
-				if ( folderTree && folderTree.selectedItems )
+				if ( folderTree && folderTree.selectedItems &&
+                     folderTree.selectedItems.length > 0)
                 {
 					var specialFolder = null;
 					try {
