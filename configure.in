@@ -486,7 +486,7 @@ AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
 AC_MSG_CHECKING(for old DEC C++ compiler)
 AC_TRY_COMPILE([], [
-#if defined(__DECCXX) && (__DECCXX_VER<60290024)
+#if defined(__DECCXX) && (__DECCXX_VER<60190029)
 #error "Compiler is too old."
 #endif ],
 [AC_MSG_RESULT([no])],
