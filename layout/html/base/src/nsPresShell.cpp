@@ -1714,7 +1714,7 @@ PresShell::ContentStateChanged(nsIDocument* aDocument,
   nsresult rv = mStyleSet->ContentStateChanged(mPresContext, aContent);
   ExitReflowLock();
   if (mSelection)
-    mSelection->ResetSelection(this, mRootFrame);
+    //mSelection->ResetSelection(this, mRootFrame);
 
   return rv;
 }
