@@ -22,6 +22,9 @@
 #define NS_MAILNEWS_MIME_STREAM_CONVERTER_PROGID \
 	NS_ISTREAMCONVERTER_KEY "?from=message/rfc822?to=text/xul"
 
+#define NS_MAILNEWS_MIME_STREAM_CONVERTER_PROGID1 \
+	NS_ISTREAMCONVERTER_KEY "?from=message/rfc822?to=text/html"
+
 #define NS_MAILNEWS_MIME_STREAM_CONVERTER_CID                    \
 { /* FAF4F9A6-60AD-11d3-989A-001083010E9B */         \
  0xfaf4f9a6, 0x60ad, 0x11d3, { 0x98, 0x9a, 0x0, 0x10, 0x83, 0x1, 0xe, 0x9b } }
