@@ -4660,7 +4660,7 @@ HTMLContentSink::ProcessHTTPHeaders(nsIChannel* aChannel) {
   if(aChannel) {
     nsCOMPtr<nsIHttpChannel> httpchannel(do_QueryInterface(aChannel));
     if (httpchannel) {
-      const char *const headers[]={"link","default-style","content-base",0}; // add more http headers if you need
+      const char *const headers[]={"link","default-style",0}; // add more http headers if you need
       const char *const *name=headers;
       nsCAutoString tmp;
 
@@ -4739,9 +4739,6 @@ HTMLContentSink::ProcessHeaderData(nsIAtom* aHeader,const nsAReadableString& aVa
   } // END set-cookie
   else if (aHeader == nsHTMLAtoms::link) {
     rv = ProcessLink(aContent, aValue);
-  }
-  else if (aHeader == nsHTMLAtoms::headerContentBase) {
-    ProcessBaseHref(aValue);
   }
   else if (mParser) {
     // we also need to report back HTTP-EQUIV headers to the channel
