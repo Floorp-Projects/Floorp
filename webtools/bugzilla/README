@@ -26,6 +26,7 @@ First, you need some other things:
    1) MySQL database server.
    2) Perl5.004 or greater, including MySQL support and the Date::Format
       package from CPAN.
+      ftp://ftp.cpan.org/pub/CPAN/authors/id/GBARR/TimeDate-1.08.tar.gz
    3) Some kind of HTTP server so you could use CGI scripts
 
 Earlier versions of Bugzilla required TCL.  THIS IS NO LONGER TRUE.
