@@ -87,7 +87,7 @@ function Startup()
 
   var navbundle = document.getElementById("bundle_navigator");
   var showSkinsDescription = navbundle.getString("showskinsdescription");
-  if( showSkinsDescription == "false" )
+  if (showSkinsDescription == "false")
   {
     gShowDescription = false;
     var description = document.getElementById("description");
