@@ -28,8 +28,8 @@
 <!-- File menu items -->
 <!ENTITY fileMenu.label "File">
 <!ENTITY filemenu.accesskey "f">
-<!ENTITY newBlankPageCmd.label "New Composer Page">
-<!ENTITY newBlankPage.accesskey "n" >
+<!ENTITY newBlankPageCmd.label "Composer Page">
+<!ENTITY newBlankPage.accesskey "P" >
 <!ENTITY newMenu.label "New">
 <!ENTITY openFileCmd.label "Open File...">
 <!ENTITY fileopen.accesskey "o">
@@ -56,7 +56,7 @@
 <!ENTITY saveAsCharsetCmd.label "Save As Charset...">
 <!ENTITY filesaveascharset.accesskey "h">
 <!ENTITY previewCmd.label "Browse Page">
-<!ENTITY filepreview.accesskey "b">
+<!ENTITY filepreview.accesskey "w">
 <!ENTITY sendPageCmd.label "Send Page...">
 <!ENTITY sendPage.accesskey "g">
 <!ENTITY printSetupCmd.label "Page Setup...">
