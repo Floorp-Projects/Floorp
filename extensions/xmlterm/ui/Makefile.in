@@ -52,6 +52,8 @@ CHROME_CONTENT	= \
 		xmlterm.html \
 		xmlterm.xul \
 		xmlterm2.xul \
+		xmltermOverlay.xul \
+		xmltermOverlay.js \
 		XMLTermChrome.js \
 		XMLTermCommands.js \
 		xmltermTips.html \
@@ -75,4 +77,7 @@ include $(topsrcdir)/config/config.mk
 include $(srcdir)/../config/xmlterm_config.mk
 
 include $(topsrcdir)/config/rules.mk
+
+install::
+	$(INSTALL) $(srcdir)/xmlterm-service.js $(DIST)/bin/components
 
