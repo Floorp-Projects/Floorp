@@ -134,43 +134,6 @@
                 <column flex="1"/>
               </columns>
               <rows>
-                <row align="center">
-                  <!-- Item Type -->
-                  <hbox pack="end">
-                    <label for="component-type" value="&newevent.itemType.label;"/>
-                  </hbox>
-                  <hbox>
-                    <menulist id="component-type" crop="none" 
-                              oncommand="processComponentType(this.value)">
-                      <menupopup id="component-menulist-menupopup">
-                        <menuitem label="&newevent.itemType.event.label;"
-                                  value="event"/>
-                        <menuitem label="&newevent.itemType.todo.label;"
-                                  value="todo"/>
-                        <!--<menuitem label="newevent.itemType.journal.label"
-                                  value="journal"
-                                  hidden="true"
-                                  disabled="true"/>-->
-                      </menupopup>
-                    </menulist>
-                    <spacer width="10px"/>
-                    <hbox align="center" flex="1">
-                      <label id="server-field-label" value="&newevent.server.label;"/>
-                      <menulist id="server-field">
-                        <menupopup id="server-menulist-menupopup" datasources="rdf:null"
-                                   ref="urn:calendarcontainer">
-                          <template>
-                            <rule>
-                              <menuitem uri="rdf:*"
-                                        value="rdf:http://home.netscape.com/NC-rdf#path"
-                                        label="rdf:http://home.netscape.com/NC-rdf#name"/>
-                            </rule>
-                          </template>
-                        </menupopup>
-                      </menulist>
-                    </hbox>
-                  </hbox>
-                </row>
                 <!-- Title -->
                 <row align="center">
                   <hbox pack="end">
@@ -198,42 +161,42 @@
                       </menupopup>
                     </menulist>
                     <spacer width="10px"/>
-                    <!-- Status / Priority -->
-                    <hbox align="center">
-                      <label id="event-status-label"
-                             for="event-status-menulist-menupopup"
-                             value="&newevent.status.label;"
-                             hidden-controller="event"
-                             hidden="true"/>
-                      <label id="task-priority-label"
-                             for="priority-levels"
-                             value="&newtodo.priority.label;"
-                             hidden-controller="todo"
-                             hidden="true"/>
-                      <menulist id="event-status-field"
-                                hidden-controller="event"
-                                hidden="true">
-                        <menupopup id="event-status-menulist-menupopup">
-                          <menuitem label="None"/>
-                          <menuitem label="&newevent.status.tentative.label;"
-                                    value="ICAL_STATUS_TENTATIVE"/>
-                          <menuitem label="&newevent.status.confirmed.label;"
-                                    value="ICAL_STATUS_CONFIRMED"/>
-                          <menuitem label="&newevent.status.cancelled.label;"
-                                    value="ICAL_STATUS_CANCELLED"/>
-                        </menupopup>
-                      </menulist>
-                      <menulist id="priority-levels"
-                                hidden-controller="todo"
-                                hidden="true">
-                        <menupopup>
-                          <menuitem label="&priority.level.none;"   value="0"/>
-                          <menuitem label="&priority.level.low;"    value="9"/>
-                          <menuitem label="&priority.level.medium;" value="5"/>
-                          <menuitem label="&priority.level.high;"   value="1"/>
+                    <!-- Server -->
+                    <hbox align="center" flex="1">
+                      <label id="server-field-label" value="&newevent.server.label;"/>
+                      <menulist id="server-field">
+                        <menupopup id="server-menulist-menupopup" datasources="rdf:null"
+                                   ref="urn:calendarcontainer">
+                          <template>
+                            <rule>
+                              <menuitem uri="rdf:*"
+                                        value="rdf:http://home.netscape.com/NC-rdf#path"
+                                        label="rdf:http://home.netscape.com/NC-rdf#name"/>
+                            </rule>
+                          </template>
                         </menupopup>
                       </menulist>
                     </hbox>
+                  </hbox>
+                </row>
+                <!-- Privacy -->
+                <row align="center" flex="1">
+                  <hbox class="field-label-box-class" pack="end">
+                    <!-- XXX Localise this: &newevent.private.label; -->
+                    <label for="privacy-menulist" value="Privacy"/>
+                  </hbox>
+                  <hbox flex="1">
+                    <menulist id="privacy-menulist" crop="none">
+                      <menupopup>
+                        <menuitem label="Public"
+                                  value="PUBLIC"/>
+                        <menuitem label="Private"
+                                  value="PRIVATE"/>
+                        <menuitem label="Confidential"
+                                  value="CONFIDENTIAL"/>
+                      </menupopup>
+                    </menulist>
+                    <spacer flex="1"/>
                   </hbox>
                 </row>
               </rows>
@@ -246,23 +209,35 @@
         <hbox flex="1">
           <!-- Schedule -->
           <groupbox flex="1">
-            <caption label="Schedule"/>
-            <hbox>
-              <checkbox id="all-day-event-checkbox"
-                        label="&newevent.alldayevent.label;"
-                        oncommand="commandAllDay()"
-                        persist="checked"
-                        hidden-controller="event"
-                        hidden="true"/>
-            </hbox>
-            <separator class="thin"/>
-            <hbox>
+            <caption label="Details"/>
+             <hbox>
               <grid>
                 <columns>
                   <column/>
                   <column/>
                 </columns>
                 <rows>
+                  <row>
+                    <hbox pack="end" align="center">
+                      <label for="component-type" value="&newevent.itemType.label;"/>
+                    </hbox>
+                    <hbox flex="1">
+                      <menulist id="component-type" crop="none" 
+                                oncommand="processComponentType(this.value)">
+                        <menupopup id="component-menulist-menupopup">
+                          <menuitem label="&newevent.itemType.event.label;"
+                                    value="event"/>
+                          <menuitem label="&newevent.itemType.todo.label;"
+                                    value="todo"/>
+                          <!--<menuitem label="newevent.itemType.journal.label"
+                                    value="journal"
+                                    hidden="true"
+                                    disabled="true"/>-->
+                        </menupopup>
+                      </menulist>
+                      <spacer flex="1"/>
+                    </hbox>
+                  </row>
                   <row>
                     <hbox pack="end" align="center">
                       <label id="event-start-datetime-label"
@@ -285,6 +260,16 @@
                       <datetimepicker id="start-datetime"
                                       value=""
                                       onchange="onDateTimePick( this );"/>
+                      <spacer width="10px"/>
+                      <hbox pack="end" align="center">
+                        <checkbox id="all-day-event-checkbox"
+                                  label="All Day"
+                                  oncommand="commandAllDay()"
+                                  persist="checked"
+                                  hidden-controller="event"
+                                  hidden="true"/>
+                        <!-- XXX localize &newevent.alldayevent.label; -->
+                      </hbox>
                       <spacer flex="1"/>
                     </hbox>
                   </row>
@@ -406,6 +391,48 @@
                       <spacer flex="1"/>
                     </hbox>
                   </row>
+
+                  <!-- Status / Priority -->
+                  <row>
+                    <hbox pack="end" align="center">
+                      <label id="event-status-label"
+                             for="event-status-menulist-menupopup"
+                             value="&newevent.status.label;"
+                             hidden-controller="event"
+                             hidden="true"/>
+                      <label id="task-priority-label"
+                             for="priority-levels"
+                             value="&newtodo.priority.label;"
+                             hidden-controller="todo"
+                             hidden="true"/>
+                    </hbox>
+                    <hbox flex="1" align="center">
+                      <menulist id="event-status-field"
+                                hidden-controller="event"
+                                hidden="true">
+                        <menupopup id="event-status-menulist-menupopup">
+                          <menuitem label="None"/>
+                          <menuitem label="&newevent.status.tentative.label;"
+                                    value="ICAL_STATUS_TENTATIVE"/>
+                          <menuitem label="&newevent.status.confirmed.label;"
+                                    value="ICAL_STATUS_CONFIRMED"/>
+                          <menuitem label="&newevent.status.cancelled.label;"
+                                    value="ICAL_STATUS_CANCELLED"/>
+                        </menupopup>
+                      </menulist>
+                      <menulist id="priority-levels"
+                                hidden-controller="todo"
+                                hidden="true">
+                        <menupopup>
+                          <menuitem label="&priority.level.none;"   value="0"/>
+                          <menuitem label="&priority.level.low;"    value="9"/>
+                          <menuitem label="&priority.level.medium;" value="5"/>
+                          <menuitem label="&priority.level.high;"   value="1"/>
+                        </menupopup>
+                      </menulist>
+                      <spacer flex="1"/>
+                    </hbox>
+                  </row>
                 </rows>
               </grid>
             </hbox>
@@ -432,7 +459,8 @@
                 </menulist>
               </vbox>
               <vbox>
-                <textbox id="alarm-length-field" size="5" maxlength="3" oninput="alarmLengthKeyDown( this )"/>
+                <textbox id="alarm-length-field" size="5" maxlength="3" 
+                         oninput="alarmLengthKeyDown( this )"/>
               </vbox>
               <vbox>
                 <menulist id="alarm-length-units" crop="none" labelnumber="labelplural">
@@ -493,7 +521,10 @@
             </hbox>
             <hbox id="alarm-box-email" align="center">
               <!-- XXX &newevent.email.label; -->
-              <label class="field-label-box-class" for="alarm-email-field" value="Send email to:"/>
+              <label id="alarm-email-field-label"
+                     class="field-label-box-class"
+                     for="alarm-email-field"
+                     value="Send email to:"/>
               <!-- XXX oncommand="commandAlarmEmail()"/> -->
               <textbox id="alarm-email-field"
 #ifndef MOZ_SUNBIRD
@@ -868,27 +899,6 @@
                                       oncommand="loadURL()"
                                       disabled="true"/>
                           </hbox>
-                       </row>
-
-                       <!-- Privacy -->
-                       <row align="center" flex="1">
-                         <hbox class="field-label-box-class" pack="end">
-                           <!-- XXX Localise this: &newevent.private.label; -->
-                           <label for="privacy-menulist" value="Privacy"/>
-                         </hbox>
-                         <hbox flex="1">
-                           <menulist id="privacy-menulist" crop="none">
-                             <menupopup>
-                               <menuitem label="Public"
-                                         value="PUBLIC"/>
-                               <menuitem label="Private"
-                                         value="PRIVATE"/>
-                               <menuitem label="Confidential"
-                                         value="CONFIDENTIAL"/>
-                             </menupopup>
-                           </menulist>
-                           <spacer flex="1"/>
-                         </hbox>
                        </row>
 
                        <!-- Description -->

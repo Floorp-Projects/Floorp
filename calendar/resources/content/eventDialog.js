@@ -1603,24 +1603,25 @@ function processAlarmType()
         debug("processAlarmType: " + alarmMenu.selectedItem.value );
         switch( alarmMenu.selectedItem.value ) {
         case "none":
-            hideElement("alarm-length-field");
-            hideElement("alarm-length-units");
-            hideElement("alarm-box-email");
+            disableElement("alarm-length-field");
+            disableElement("alarm-length-units");
+            disableElement("alarm-email-field-label");
+            disableElement("alarm-email-field");
             break;
         //case "popupAndSound":
         case "popup":
-            showElement("alarm-length-field");
-            showElement("alarm-length-units");
-            hideElement("alarm-box-email");
+            enableElement("alarm-length-field");
+            enableElement("alarm-length-units");
+            disableElement("alarm-email-field-label");
+            disableElement("alarm-email-field");
             break;
         case "email":
-            showElement("alarm-length-field");
-            showElement("alarm-length-units");
-            showElement("alarm-box-email");
+            enableElement("alarm-length-field");
+            enableElement("alarm-length-units");
+            enableElement("alarm-email-field-label");
+            enableElement("alarm-email-field");
             break;
         }
-        // Make the window big enough for all the fields and widgets
-        window.sizeToContent();
     } else
         dump("processAlarmType: no alarmMenu.selectedItem!\n");
 }
@@ -1628,7 +1629,6 @@ function processAlarmType()
 
 function processComponentType(componentType)
 {
-    var title;
     var componentMenu = document.getElementById("component-type");
 
     debug("processComponentType: " + componentType );
@@ -1672,7 +1672,7 @@ function processComponentType(componentType)
         break;
     }
     // Make the window big enough for all the fields and widgets
-    window.sizeToContent();
+    //window.sizeToContent();
 }
 
 
@@ -1712,6 +1712,7 @@ function changeMenuState(hiddenController, showController, disableController, en
 
 function changeTitleBar(componentType)
 {
+    var title;
     // Sanity check input
     if ( componentType == "event" || componentType == "todo" ) {
         var args = window.arguments[0];
