@@ -2,7 +2,7 @@ $::param{'bannerhtml'} = '<TABLE BGCOLOR="#FFFFFF" WIDTH="100%" BORDER=0 CELLPAD
 <TR><TD><!-- insert imagery here --></TD></TR></TABLE>
 <CENTER><FONT SIZE=-1>Bonsai version %version%
 </FONT></CENTER>';
-$::param{'blurbhtml'} = 'This is <B>Bonsai_pvcs</B>: a query interface to the PVCS source repository';
+$::param{'blurbhtml'} = 'This is <B>Bonsai_PVCS</B>: a query interface to the PVCS source repository';
 $::param{'bonsai-daemon'} = 'bonsai-daemon';
 $::param{'bonsai-hookinterest'} = 'bonsai-hookinterest';
 $::param{'bonsai-messageinterest'} = 'bonsai-messageinterest';

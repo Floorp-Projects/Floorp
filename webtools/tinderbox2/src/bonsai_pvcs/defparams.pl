@@ -182,7 +182,7 @@ DefParam("blurbhtml",
          "A blurb that appears as part of the header of every Bonsai page.  This is a place to put brief warnings, pointers to one or two related pages, etc.",
          "l",
 
-         "This is <B>Bonsai</B>: a query interface to the CVS source repository");
+         "This is <B>Bonsai</B>: a query interface to the PVCS source repository");
 
 
 
