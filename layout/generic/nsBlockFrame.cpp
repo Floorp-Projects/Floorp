@@ -192,6 +192,7 @@ DumpStyleGeneaology(nsIFrame* aFrame, const char* gap)
 {
   fputs(gap, stdout);
   aFrame->ListTag(stdout);
+  fputs(name, out);
   printf(": ");
   nsIStyleContext* sc;
   aFrame->GetStyleContext(sc);
@@ -219,7 +220,7 @@ public:
   NS_IMETHOD Paint(nsIPresContext &aCX,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
-  NS_IMETHOD ListTag(FILE* out) const;
+  NS_IMETHOD GetFrameName(nsString& aResult) const;
   NS_IMETHOD List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const;
 
   // nsIHTMLReflow
@@ -261,10 +262,9 @@ BulletFrame::DeleteFrame(nsIPresContext& aPresContext)
 }
 
 NS_IMETHODIMP
-BulletFrame::ListTag(FILE* out) const
+BulletFrame::GetFrameName(nsString& aResult) const
 {
-  fprintf(out, "Bullet(%d)@%p", ContentIndexInContainer(this), this);
-  return NS_OK;
+  return MakeFrameName("Bullet", aResult);
 }
 
 NS_IMETHODIMP
@@ -802,8 +802,7 @@ ListFloaters(FILE* out, PRInt32 aIndent, nsVoidArray* aFloaters)
     for (j = aIndent; --j >= 0; ) fputs("  ", out);
     nsPlaceholderFrame* ph = (nsPlaceholderFrame*) aFloaters->ElementAt(i);
     if (nsnull != ph) {
-      ph->ListTag(out);
-      fputs("\n", out);
+      fprintf(out, "placeholder@%p\n", ph);
       nsIFrame* frame = ph->GetAnchoredItem();
       if (nsnull != frame) {
         frame->List(out, aIndent + 1, nsnull);
@@ -1121,13 +1120,15 @@ nsBlockReflowState::nsBlockReflowState(nsIPresContext& aPresContext,
 #ifdef NS_DEBUG
   if (!mUnconstrainedWidth && (maxSize.width > 100000)) {
     mBlock->ListTag(stdout);
-    printf(": bad parent: maxSize WAS %d,%d\n", maxSize.width, maxSize.height);
+    printf(": bad parent: maxSize WAS %d,%d\n",
+           maxSize.width, maxSize.height);
     maxSize.width = NS_UNCONSTRAINEDSIZE;
     mUnconstrainedWidth = PR_TRUE;
   }
   if (!mUnconstrainedHeight && (maxSize.height > 100000)) {
     mBlock->ListTag(stdout);
-    printf(": bad parent: maxSize WAS %d,%d\n", maxSize.width, maxSize.height);
+    printf(": bad parent: maxSize WAS %d,%d\n",
+           maxSize.width, maxSize.height);
     maxSize.height = NS_UNCONSTRAINEDSIZE;
     mUnconstrainedHeight = PR_TRUE;
   }
@@ -1394,8 +1395,8 @@ nsBlockFrame::SetInitialChildList(nsIPresContext& aPresContext,
                                   : mStyleContext));
 #ifdef NOISY_FIRST_LETTER
     if (nsnull != mFirstLetterStyle) {
-      ListTag(stdout);
-      printf(": first-letter style found\n");
+      printf("block(%d)@%p: first-letter style found\n",
+             ContentIndexInContainer(this), this);
     }
 #endif
   }
@@ -1447,20 +1448,9 @@ nsBlockFrame::CreateContinuingFrame(nsIPresContext&  aCX,
 }
 
 NS_IMETHODIMP
-nsBlockFrame::ListTag(FILE* out) const
+nsBlockFrame::GetFrameName(nsString& aResult) const
 {
-  fprintf(out, "Block<");
-  if (nsnull != mContent) {
-    nsIAtom* atom;
-    mContent->GetTag(atom);
-    if (nsnull != atom) {
-      nsAutoString tmp;
-      atom->ToString(tmp);
-      fputs(tmp, out);
-    }
-  }
-  fprintf(out, ">(%d)@%p", ContentIndexInContainer(this), this);
-  return NS_OK;
+  return MakeFrameName("Block", aResult);
 }
 
 NS_METHOD

@@ -91,6 +91,10 @@ public:
 
   NS_IMETHOD GetFor(nsString& aFor);
 
+  NS_IMETHOD GetFrameName(nsString& aResult) const {
+    return MakeFrameName("Label", aResult);
+  }
+
 protected:
   PRBool FindFirstControl(nsIFrame* aParentFrame, nsIFormControlFrame*& aResultFrame);
   PRBool FindForControl(nsIFormControlFrame*& aResultFrame);

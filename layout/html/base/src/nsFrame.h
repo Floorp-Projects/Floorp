@@ -24,6 +24,7 @@
 #include "nsISelection.h"
 #include "nsSelectionRange.h"
 #include "nsSelectionPoint.h"
+#include "nsString.h"
 #include "prlog.h"
 
 /**
@@ -183,8 +184,9 @@ public:
   NS_IMETHOD  SetNextSibling(nsIFrame* aNextSibling);
   NS_IMETHOD  IsTransparent(PRBool& aTransparent) const;
   NS_IMETHOD  Scrolled(nsIView *aView);
-  NS_IMETHOD  List(FILE* out = stdout, PRInt32 aIndent = 0, nsIListFilter *aFilter = nsnull) const;
-  NS_IMETHOD  ListTag(FILE* out = stdout) const;
+  NS_IMETHOD  List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const;
+  NS_IMETHOD  GetFrameName(nsString& aResult) const;
+  NS_IMETHOD  DumpRegressionData(FILE* out, PRInt32 aIndent);
   NS_IMETHOD  VerifyTree() const;
 
   // nsIHTMLReflow
@@ -269,6 +271,13 @@ public:
   void TraceMsg(const char* fmt, ...);
 #endif
 
+  void ListTag(FILE* out) const {
+    nsAutoString tmp;
+    GetFrameName(tmp);
+    fputs(tmp, out);
+    fprintf(out, "@%p", this);
+  }
+
 protected:
   virtual void NewContentIsBefore(nsIPresContext& aPresContext,
                           nsIRenderingContext * aRendContext,
@@ -307,6 +316,23 @@ protected:
   virtual ~nsFrame();
 
   void SizeOfWithoutThis(nsISizeOfHandler* aHandler) const;
+
+  /**
+   * Dump out the "base classes" regression data. This should dump
+   * out the interior data, not the "frame" XML container. And it
+   * should call the base classes same named method before doing
+   * anything specific in a derived class. This means that derived
+   * classes need not override DumpRegressionData unless they need
+   * some custom behavior that requires changing how the outer "frame"
+   * XML container is dumped.
+   */
+  virtual void DumpBaseRegressionData(FILE* out, PRInt32 aIndent);
+
+  void IndentBy(FILE* out, PRInt32 aIndent) const {
+    while (--aIndent >= 0) fputs("  ", out);
+  }
+
+  nsresult MakeFrameName(const char* aKind, nsString& aResult) const;
 
   nsRect           mRect;
   nsIContent*      mContent;

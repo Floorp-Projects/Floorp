@@ -70,6 +70,8 @@ public:
                                    nsIStyleContext* aStyleContext,
                                    nsIFrame*&       aContinuingFrame);
 
+  NS_IMETHOD GetFrameName(nsString& aResult) const;
+
   /** return the min width of the caption.  Return 0 if there is no caption. */
   nscoord GetMinCaptionWidth();
 

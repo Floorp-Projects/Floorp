@@ -162,9 +162,8 @@ nsIFrame* nsAbsoluteFrame::GetContainingBlock() const
   return result;
 }
 
-NS_IMETHODIMP nsAbsoluteFrame::ListTag(FILE* out) const
+NS_IMETHODIMP
+nsAbsoluteFrame::GetFrameName(nsString& aResult) const
 {
-  fputs("*absolute", out);
-  fprintf(out, "(%d)@%p", ContentIndexInContainer(this), this);
-  return NS_OK;
+  return MakeFrameName("Absolute", aResult);
 }

@@ -1327,3 +1327,9 @@ NS_METHOD nsTableOuterFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFi
   }
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsTableOuterFrame::GetFrameName(nsString& aResult) const
+{
+  return MakeFrameName("TableOuter", aResult);
+}

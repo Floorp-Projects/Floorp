@@ -67,7 +67,7 @@ public:
                                    nsIFrame* aParent,
                                    nsIStyleContext* aStyleContext,
                                    nsIFrame*& aContinuingFrame);
-  NS_IMETHOD ListTag(FILE* out) const;
+  NS_IMETHOD GetFrameName(nsString& aResult) const;
 
   // nsIHTMLReflow
   NS_IMETHOD FindTextRuns(nsLineLayout& aLineLayout);
@@ -1265,16 +1265,7 @@ nsInlineFrame::DrainOverflowLists(nsIPresContext& aPresContext)
 }
 
 NS_IMETHODIMP
-nsInlineFrame::ListTag(FILE* out) const
+nsInlineFrame::GetFrameName(nsString& aResult) const
 {
-  fprintf(out, "Inline<");
-  nsIAtom* atom;
-  mContent->GetTag(atom);
-  if (nsnull != atom) {
-    nsAutoString tmp;
-    atom->ToString(tmp);
-    fputs(tmp, out);
-  }
-  fprintf(out, ">(%d)@%p", ContentIndexInContainer(this), this);
-  return NS_OK;
+  return MakeFrameName("Inline", aResult);
 }

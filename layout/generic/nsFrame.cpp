@@ -1523,9 +1523,11 @@ PRInt32 nsFrame::ContentIndexInContainer(const nsIFrame* aFrame)
 }
 
 // Debugging
-NS_IMETHODIMP nsFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const
+NS_IMETHODIMP
+nsFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const
 {
-  // if a filter is present, only output this frame if the filter says we should
+  // if a filter is present, only output this frame if the filter says
+  // we should
   nsAutoString tagString;
   if (nsnull != mContent) {
     nsIAtom* tag;
@@ -1536,10 +1538,9 @@ NS_IMETHODIMP nsFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) 
     }
   }
 
-  if ((nsnull==aFilter) || (PR_TRUE==aFilter->OutputTag(&tagString)))
-  {
+  if ((nsnull==aFilter) || aFilter->OutputTag(&tagString)) {
     // Indent
-    for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);
+    IndentBy(out, aIndent);
 
     // Output the tag and rect
     ListTag(out);
@@ -1556,25 +1557,127 @@ NS_IMETHODIMP nsFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) 
   return NS_OK;
 }
 
-// Output the frame's tag
-NS_IMETHODIMP nsFrame::ListTag(FILE* out) const
+NS_IMETHODIMP
+nsFrame::GetFrameName(nsString& aResult) const
 {
+  return MakeFrameName("Frame", aResult);
+}
+
+nsresult
+nsFrame::MakeFrameName(const char* aType, nsString& aResult) const
+{
+  aResult = aType;
+  aResult.Append("<");
   if (nsnull != mContent) {
     nsIAtom* tag;
     mContent->GetTag(tag);
     if (tag != nsnull) {
       nsAutoString buf;
       tag->ToString(buf);
-      fputs(buf, out);
+      aResult.Append(buf);
       NS_RELEASE(tag);
     }
   }
-
-  fprintf(out, "(%d)@%p", ContentIndexInContainer(this), this);
+  char buf[40];
+  PR_snprintf(buf, sizeof(buf), ">(%d)", ContentIndexInContainer(this));
+  aResult.Append(buf);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFrame::VerifyTree() const
+NS_IMETHODIMP
+nsFrame::DumpRegressionData(FILE* out, PRInt32 aIndent)
+{
+  IndentBy(out, aIndent);
+  fprintf(out, "<frame type=\"");
+  nsAutoString name;
+  GetFrameName(name);
+  fputs(name, out);
+  fprintf(out, "\">\n");
+
+  aIndent++;
+  DumpBaseRegressionData(out, aIndent);
+  aIndent--;
+
+  IndentBy(out, aIndent);
+  fprintf(out, "</frame>\n");
+
+  return NS_OK;
+}
+
+void
+nsFrame::DumpBaseRegressionData(FILE* out, PRInt32 aIndent)
+{
+  IndentBy(out, aIndent);
+  fprintf(out, "<ident addr=\"%p\"/>\n", this);
+
+  if (mContentParent != mGeometricParent) {
+    IndentBy(out, aIndent);
+    fprintf(out, "<content-parent addr=\"%p\"/>\n", mContentParent);
+  }
+
+  if (nsnull != mGeometricParent) {
+    IndentBy(out, aIndent);
+    fprintf(out, "<geometric-parent addr=\"%p\"/>\n", mGeometricParent);
+  }
+
+  if (nsnull != mNextSibling) {
+    IndentBy(out, aIndent);
+    fprintf(out, "<next-sibling addr=\"%p\"/>\n", mNextSibling);
+  }
+
+  if (0 != mState) {
+    IndentBy(out, aIndent);
+    fprintf(out, "<flags value=\"%x\"/>\n", mState);
+  }
+
+  if (nsnull != mView) {
+    IndentBy(out, aIndent);
+    fprintf(out, "<view addr=\"%x\">\n", mView);
+    aIndent++;
+    // XXX add in code to dump out view state too...
+    aIndent--;
+    IndentBy(out, aIndent);
+    fprintf(out, "</view>\n");
+  }
+
+  IndentBy(out, aIndent);
+  fprintf(out, "<bbox x=\"%d\" y=\"%d\" width=\"%d\" height=\"%d\"/>\n",
+          mRect.x, mRect.y, mRect.width, mRect.height);
+
+  // Now dump all of the children on all of the child lists
+  nsIFrame* kid;
+  nsIAtom* list = nsnull;
+  PRInt32 listIndex = 0;
+  do {
+    nsresult rv = FirstChild(list, kid);
+    if (NS_SUCCEEDED(rv) && (nsnull != kid)) {
+      IndentBy(out, aIndent);
+      if (nsnull != list) {
+        nsAutoString listName;
+        list->ToString(listName);
+        fprintf(out, "<child-list name=\"");
+        fputs(listName, out);
+        fprintf(out, "\">\n");
+      }
+      else {
+        fprintf(out, "<child-list>\n");
+      }
+      aIndent++;
+      while (nsnull != kid) {
+        kid->DumpRegressionData(out, aIndent);
+        kid->GetNextSibling(kid);
+      }
+      aIndent--;
+      IndentBy(out, aIndent);
+      fprintf(out, "</child-list>\n");
+    }
+    NS_IF_RELEASE(list);
+    GetAdditionalChildListName(listIndex++, list);
+  } while (nsnull != list);
+}
+
+NS_IMETHODIMP
+nsFrame::VerifyTree() const
 {
   NS_ASSERTION(0 == (mState & NS_FRAME_IN_REFLOW), "frame is in reflow");
   return NS_OK;

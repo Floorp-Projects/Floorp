@@ -1106,11 +1106,14 @@ static void
 ShowDiffs(nsIFrame* k1, nsIFrame* k2, const nsRect& r1, const nsRect& r2)
 {
   printf("verifyreflow: ");
-  k1->ListTag(stdout);
+  nsAutoString name;
+  k1->GetFrameName(name);
+  fputs(name, stdout);
   printf(" ");
   stdout << r1;
   printf(" != ");
-  k2->ListTag(stdout);
+  k2->GetFrameName(name);
+  fputs(name, stdout);
   printf(" ");
   stdout << r2;
   printf("\n");

@@ -485,3 +485,8 @@ nsTextControlFrame::GetCursor(nsIPresContext& aPresContext, nsPoint& aPoint, PRI
 }
 
 
+NS_IMETHODIMP
+nsTextControlFrame::GetFrameName(nsString& aResult) const
+{
+  return MakeFrameName("TextControl", aResult);
+}

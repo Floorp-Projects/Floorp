@@ -64,6 +64,8 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
+  NS_IMETHOD GetFrameName(nsString& aResult) const;
+
   /** returns the number of columns represented by this group.
     * if there are col children, count them (taking into account the span of each)
     * else, check my own span attribute.

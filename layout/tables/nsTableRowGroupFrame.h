@@ -89,6 +89,8 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
 
+  NS_IMETHOD GetFrameName(nsString& aResult) const;
+
   /** returns the type of the mapped row group content in aType.
     * caller MUST call release on the returned object if it is not null.
     *

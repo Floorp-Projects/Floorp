@@ -348,7 +348,9 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
   if (kidSize.width > availSize.width)
   {
     printf("WARNING: cell ");
-    mFirstChild->ListTag(stdout);
+    nsAutoString tmp;
+    mFirstChild->GetFrameName(tmp);
+    fputs(tmp, stdout);
     printf(" content returned desired width %d given avail width %d\n",
             kidSize.width, availSize.width);
   }
@@ -1271,3 +1273,8 @@ void nsTableCellFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) 
 
 #endif
 
+NS_IMETHODIMP
+nsTableCellFrame::GetFrameName(nsString& aResult) const
+{
+  return MakeFrameName("TableCell", aResult);
+}

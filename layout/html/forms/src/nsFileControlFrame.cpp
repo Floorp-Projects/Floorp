@@ -332,3 +332,8 @@ nsFileControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
   return status;
 }
 
+NS_IMETHODIMP
+nsFileControlFrame::GetFrameName(nsString& aResult) const
+{
+  return MakeFrameName("FileControl", aResult);
+}

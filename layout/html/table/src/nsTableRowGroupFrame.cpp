@@ -1332,8 +1332,8 @@ NS_METHOD nsTableRowGroupFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *
   return NS_OK;
 }
 
-
-
-
-
-
+NS_IMETHODIMP
+nsTableRowGroupFrame::GetFrameName(nsString& aResult) const
+{
+  return MakeFrameName("TableRowGroup", aResult);
+}

@@ -401,9 +401,27 @@ public:
   NS_IMETHOD Scrolled(nsIView *aView) = 0;
 
   // Debugging
-  NS_IMETHOD  List(FILE* out = stdout, PRInt32 aIndent = 0, nsIListFilter *aFilter = nsnull) const= 0;
-  NS_IMETHOD  ListTag(FILE* out = stdout) const = 0;
+  NS_IMETHOD  List(FILE* out,
+                   PRInt32 aIndent,
+                   nsIListFilter *aFilter) const = 0;
+
+  /**
+   * Get a printable from of the name of the frame type.
+   */
+  NS_IMETHOD  GetFrameName(nsString& aResult) const = 0;
+
+  /**
+   * Called to dump out regression data that describes the layout
+   * of the frame and it's children, and so on. The format of the
+   * data is dictated to be XML (using a specific DTD); the
+   * specific kind of data dumped is up to the frame itself, with
+   * the caveat that some base types are defined.
+   * For more information, see XXX.
+   */
+  NS_IMETHOD  DumpRegressionData(FILE* out, PRInt32 aIndent) = 0;
+
   NS_IMETHOD  VerifyTree() const = 0;
+
   static NS_LAYOUT nsIListFilter * GetFilter(nsString *aFilterName);
 
   /**

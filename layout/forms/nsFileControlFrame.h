@@ -39,6 +39,8 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
+  NS_IMETHOD GetFrameName(nsString& aResult) const;
+
   virtual void MouseClicked(nsIPresContext* aPresContext);
 
   virtual PRInt32 GetMaxNumValues();

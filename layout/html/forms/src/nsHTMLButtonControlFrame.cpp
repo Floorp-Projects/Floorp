@@ -86,6 +86,10 @@ public:
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 
+  NS_IMETHOD GetFrameName(nsString& aResult) const {
+    return MakeFrameName("ButtonControl", aResult);
+  }
+
   virtual PRBool IsSuccessful(nsIFormControlFrame* aSubmitter);
   NS_IMETHOD GetType(PRInt32* aType) const;
   NS_IMETHOD GetName(nsString* aName);
@@ -452,9 +456,6 @@ nsHTMLButtonControlFrame::HandleEvent(nsIPresContext& aPresContext,
       nsIView* grabber;
       viewMan->GetMouseEventGrabber(grabber);
       if ((grabber == view) || (nsnull == grabber)) {
-        nsIWidget* window;
-        PRBool ignore;
-
         switch (aEvent->message) {
         case NS_MOUSE_ENTER:
           if (mLastMouseState == eMouseDown) {

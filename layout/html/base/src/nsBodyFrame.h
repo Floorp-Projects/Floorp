@@ -69,8 +69,8 @@ public:
                                    nsIFrame*&       aContinuingFrame);
 
   NS_IMETHOD DidSetStyleContext(nsIPresContext* aPresContext);
-  NS_METHOD  List(FILE* out, PRInt32 aIndent, nsIListFilter* aFilter) const;
-  NS_IMETHOD ListTag(FILE* out) const;
+  NS_IMETHOD List(FILE* out, PRInt32 aIndent, nsIListFilter* aFilter) const;
+  NS_IMETHOD GetFrameName(nsString& aResult) const;
 
   // nsIAbsoluteItems
   NS_IMETHOD  AddAbsoluteItem(nsAbsoluteFrame* aAnchorFrame);

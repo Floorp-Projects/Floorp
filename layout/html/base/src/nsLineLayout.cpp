@@ -41,7 +41,9 @@ nsTextRun::List(FILE* out, PRInt32 aIndent)
   fprintf(out, "%p: count=%d <", this, n);
   for (i = 0; i < n; i++) {
     nsIFrame* text = (nsIFrame*) mArray.ElementAt(i);
-    text->ListTag(out);
+    nsAutoString tmp;
+    text->GetFrameName(tmp);
+    fputs(tmp, out);
     printf(" ");
   }
   fputs(">\n", out);

@@ -40,6 +40,8 @@ public:
                               nsIAtom*        aAttribute,
                               PRInt32         aHint);
 
+  NS_IMETHOD GetFrameName(nsString& aResult) const;
+
   virtual PRBool GetChecked(PRBool aGetInitialValue);
   virtual void   SetChecked(PRBool aValue, PRBool aSetInitialValue);
 

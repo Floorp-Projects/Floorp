@@ -129,9 +129,7 @@ nsPlaceholderFrame::AttributeChanged(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsPlaceholderFrame::ListTag(FILE* out) const
+nsPlaceholderFrame::GetFrameName(nsString& aResult) const
 {
-  fputs("*placeholder", out);
-  fprintf(out, "(%d)@%p", ContentIndexInContainer(this), this);
-  return NS_OK;
+  return MakeFrameName("Placeholder", aResult);
 }
