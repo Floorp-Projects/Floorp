@@ -1,0 +1,10 @@
+#
+# This is a list of local files which get copied to the mozilla:dist:idl directory
+#
+
+nsIClipboardCommands.idl
+nsIContentViewerContainer.idl
+nsIDocumentLoaderFactory.idl
+nsIRefreshURI.idl
+
+
