@@ -66,5 +66,6 @@ public:
 	nsresult CreateDefaultProfile(void);
 	nsresult TriggerActivation(char *profileName);
 	nsresult CleanUp();
+	nsresult CheckDomain(PRBool *valid, char *domainName);
 };
 
