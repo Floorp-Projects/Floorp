@@ -887,6 +887,9 @@ NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
 	NS_IF_ADDREF(aWidget);
 
   aStatus = nsEventStatus_eIgnore;
+  
+  if (nsnull != mMenuListener)
+  	aStatus = mMenuListener->MenuSelected(*event);
   if (mEventCallback)
     aStatus = (*mEventCallback)(event);
 

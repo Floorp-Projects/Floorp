@@ -1245,6 +1245,9 @@ NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus
   NS_ADDREF(event->widget);
 
   aStatus = nsEventStatus_eIgnore;
+  
+  if (nsnull != mMenuListener)
+  	aStatus = mMenuListener->MenuSelected(*event);
   if (nsnull != mEventCallback) {
     aStatus = (*mEventCallback)(event);
   } 
