@@ -465,6 +465,8 @@ void nsWebShellWindow::LoadCommands(nsIWebShell * aWebShell, nsIDOMDocument * aD
           }*/
 
           
+          if (DEBUGCMDS) printf("Creating cmd [%s]\n",name.ToNewCString());
+
           nsXULCommand * xulCmd = new nsXULCommand();
           xulCmd->SetName(name);//nsIXULCommand
           xulCmd->SetCommand(value);//nsIXULCommand
@@ -840,6 +842,7 @@ nsCOMPtr<nsIDOMDocument> nsWebShellWindow::GetNamedDOMDoc(const nsString & aWebS
 //----------------------------------------
 NS_IMETHODIMP nsWebShellWindow::OnConnectionsComplete()
 {
+  if (DEBUGCMDS) printf("OnConnectionsComplete\n");
   nsCOMPtr<nsIWebShell> contentWebShell;
   mWebShell->FindChildWithName(nsAutoString("browser.webwindow"), *getter_AddRefs(contentWebShell));
 
@@ -855,7 +858,6 @@ NS_IMETHODIMP nsWebShellWindow::OnConnectionsComplete()
     nsCOMPtr<nsIDOMNode> parent(GetParentNodeFromDOMDoc(toolbarDOMDoc));
     if (!parent)
       return NS_ERROR_FAILURE;
-    //LoadCommands(contentWebShell, toolbarDOMDoc);
     LoadCommands(toolbarWebShell, toolbarDOMDoc);
           
     PRInt32 count = 0;
