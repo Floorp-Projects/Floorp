@@ -45,6 +45,7 @@ pref("browser.startup.default_window", 0);
 pref("security.warn_accept_cookie", false);
 pref("editor.disable_spell_checker", false);
 pref("editor.dont_lock_spell_files", true);
+pref("editor.singleLine.pasteNewlines", 0);
 
 // Middle-mouse handling
 pref("middlemouse.paste", true);

@@ -52,4 +52,6 @@ pref("editor.html_editor",                  "");
 pref("editor.use_image_editor",             0);
 pref("editor.image_editor",                 "");
 
+pref("editor.singleLine.pasteNewlines",     1);
+
 pref("editor.history.url_maximum", 10);
