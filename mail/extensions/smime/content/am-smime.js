@@ -429,3 +429,14 @@ function openDeviceManager()
                 'chrome,centerscreen,resizable=yes,dialog=no');
   }
 }
+
+function openOCSPDialog()
+{
+  window.openDialog("chrome://messenger-smime/content/ocsp.xul", "_blank",
+               "chrome,resizable=yes,centerscreen","ocsp");
+}
+
+function openCRLManager ()
+{
+  window.open('chrome://pippki/content/crlManager.xul',  "", 'chrome,width=500,height=400,resizable=1');
+}

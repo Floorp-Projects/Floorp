@@ -40,43 +40,25 @@
 
 <!-- XXX: hack...to avoid duplicate string entries and JS, load am-smime.dtd and am-smime.js
      since we are really just re-exposing part of that UI here in the pref panel. 
-
-     We are turning the Password group in the advanced panel into the Password and Security
-     group and then adding our two security buttons. We could also consider doing this under
-     Privacy and Security instead. I may change my mind later.
   -->
+
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/x-javascript" src="chrome://messenger/content/am-smime.js"/>
 
   <vbox id="expanderCategories">
-
-  <expander id="certs" insertafter="passwordManagement" label="&certs.label;" open="false" persist="open" clearhidden="true">      
-      <!-- Certificate manager -->
-      <groupbox>
-        <caption label="&managecerts.label;"/>
-        <description>&managecerts.text;</description>
-        <hbox align="center">
-            <button label="&managecerts.button;"
-              oncommand="openCertManager();" 
-              id="openCertManagerButton"
-                  accesskey="&managecerts.accesskey;"
-                  prefstring="security.disable_button.openCertManager"/>
-    </hbox>
-      </groupbox>
-    
-      <!-- Device manager -->
-      <groupbox>
-        <caption label="&managedevices.label;"/>
-        <description>&managedevices.text;</description>
-        <hbox align="center">
-      <button label="&managedevices.button;"
-        oncommand="openDeviceManager();"
-        id="openDeviceManagerButton"
-        accesskey="&managedevices.accesskey;"
-        prefstring="security.disable_button.openDeviceManager"/>
-    </hbox>
-      </groupbox>
-  </expander>
+    <expander id="certs" insertafter="passwordManagement" label="&certs.label;" open="false" persist="open" clearhidden="true">
+      <hbox flex="1" align="center">
+        <button label="&managecerts.button;" oncommand="openCertManager();" id="openCertManagerButton"
+                accesskey="&managecerts.accesskey;" prefstring="security.disable_button.openCertManager"/>
+        <button label="&viewCRLs.button;" oncommand="openCRLManager();" id="viewCRLsButton"
+                accesskey="&viewCRLs.accesskey;"/>
+        <button label="&viewOCSP.button;" oncommand="openOCSPDialog();" id="viewOCSPButton"
+                accesskey="&viewOCSP.accesskey;"/>
+        <button label="&managedevices.button;" oncommand="openDeviceManager();" id="openDeviceManagerButton" 
+                accesskey="&managedevices.accesskey;" prefstring="security.disable_button.openDeviceManager"/>
+      </hbox>
+    </expander>
   </vbox>
+
 </overlay>
