@@ -1571,6 +1571,9 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, PRBool save) {
     url->signonUser_list->InsertElementAt(user, 0);
     si_signon_list_changed = PR_TRUE;
     si_SaveSignonDataLocked(PR_TRUE);
+    if (!si_KeySet()) {
+      url->signonUser_list->RemoveElementAt(0);
+    }
     si_unlock_signon_list();
   } else {
     url->signonUser_list->AppendElement(user);
