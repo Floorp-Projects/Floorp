@@ -85,13 +85,103 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
       aColor = NS_RGB(0x00,0x00,0x00);
 	  break;
     case eColor_TextSelectBackground:
-      aColor = NS_RGB(0x00,0x00,0x80);
+      aColor = NS_RGB(0x00,0x00,0x00);
       break;
     case eColor_TextSelectForeground:
       aColor = NS_RGB(0xff,0xff,0xff);
       break;
-    default:
+
+    // New CSS 2 Color definitions
+    case eColor_activeborder:
+      aColor = NS_RGB(0x00,0x00,0xff);
+      break;
+    case eColor_activecaption:
+      aColor = NS_RGB(0x00,0x00,0xff);
+      break;
+    case eColor_appworkspace:
+      aColor = NS_RGB(0xa0,0xa0,0xa0);
+      break;
+    case eColor_background:
+      aColor = NS_RGB(0x80,0x80,0x80);
+      break;
+    case eColor_buttonface:
+      aColor = NS_RGB(0xa0,0xa0,0xa0);
+      break;
+    case eColor_buttonhighlight:
       aColor = NS_RGB(0xff,0xff,0xff);
+      break;
+    case eColor_buttonshadow:
+      aColor = NS_RGB(0x70,0x70,0x70);
+      break;
+    case eColor_buttontext:
+      aColor = NS_RGB(0x00,0x00,0x00);
+      break;
+    case eColor_captiontext:
+      aColor = NS_RGB(0x00,0x00,0x00);
+      break;
+    case eColor_graytext:
+      aColor = NS_RGB(0x50,0x50,0x50);
+      break;
+    case eColor_highlight:
+      aColor = NS_RGB(0xe0,0xc0,0xff);
+      break;
+    case eColor_highlighttext:
+      aColor = NS_RGB(0x00,0x00,0x00);
+      break;
+    case eColor_inactiveborder:
+      aColor = NS_RGB(0x00,0x00,0x00);
+      break;
+    case eColor_inactivecaption:
+      aColor = NS_RGB(0xa0,0xa0,0xa0);
+      break;
+    case eColor_inactivecaptiontext:
+      aColor = NS_RGB(0x00,0x00,0x00);
+      break;
+    case eColor_infobackground:
+      aColor = NS_RGB(0xff,0xff,0xff);
+      break;
+    case eColor_infotext:
+      aColor = NS_RGB(0x00,0x00,0x00);
+      break;
+    case eColor_menu:
+      aColor = NS_RGB(0xa0,0xa0,0xa0);
+      break;
+    case eColor_menutext:
+      aColor = NS_RGB(0x00,0x00,0x00);
+      break;
+    case eColor_scrollbar:
+      aColor = NS_RGB(0xa0,0xa0,0xa0);
+      break;
+    case eColor_threeddarkshadow:
+      aColor = NS_RGB(0x50,0x50,0x50);
+      break;
+    case eColor_threedface:
+      aColor = NS_RGB(0xd8,0xd8,0xd8);
+      break;
+    case eColor_threedhighlight:
+      aColor = NS_RGB(0xf0,0xf0,0xf0);
+      break;
+    case eColor_threedlightshadow:
+      aColor = NS_RGB(0xa0,0xa0,0xa0);
+      break;
+    case eColor_threedshadow:
+      aColor = NS_RGB(0x80,0x80,0x80);
+      break;
+    case eColor_window:
+      aColor = NS_RGB(0xd8,0xd8,0xd8);
+      break;
+    case eColor_windowframe:
+      aColor = NS_RGB(0x00,0x00,0x00);
+      break;
+    case eColor_windowtext:
+      aColor = NS_RGB(0x00,0x00,0x00);
+      break;
+    case eColor__moz_field: /* normal widget background */
+      aColor = NS_RGB(0xff,0xff,0xff);
+      break;  
+ 
+    default:
+      aColor = NS_RGB(0x00,0x00,0x00);
       res    = NS_ERROR_FAILURE;
       break;
   }
@@ -123,6 +213,9 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         break;
     case eMetric_Widget3DBorder:
         aMetric = 0;
+        break;
+    case eMetric_TextFieldBorder:
+        aMetric = 3;
         break;
     case eMetric_TextFieldHeight:
         aMetric = 24;
@@ -167,8 +260,10 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         aMetric = 500;
         break;
     case eMetric_SingleLineCaretWidth:
-    case eMetric_MultiLineCaretWidth:
         aMetric = 1;
+        break;
+    case eMetric_MultiLineCaretWidth:
+        aMetric = 2;
         break;
     case eMetric_SubmenuDelay:
         aMetric = 200;
