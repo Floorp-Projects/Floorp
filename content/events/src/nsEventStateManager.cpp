@@ -460,7 +460,76 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
       // Hold the blur, wait for the focus so we can query the style of the focus
       // target as to what to do with the event. If appropriate we fire the blur
       // at that time.
+#ifdef XP_WIN
+      if(! NS_STATIC_CAST(nsFocusEvent*, aEvent)->isMozWindowTakingFocus) {
+        EnsureDocument(aPresContext);
+
+        // We can get a deactivate on an Ender widget.  In this
+        // case, we would like to obtain the DOM Window to start
+        // with by looking at gLastFocusedContent.
+        nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
+        if (gLastFocusedContent) {
+          nsCOMPtr<nsIDocument> doc;
+          gLastFocusedContent->GetDocument(*getter_AddRefs(doc));
+		      if(doc)
+            doc->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
+          else {
+		        mDocument->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
+		        NS_RELEASE(gLastFocusedContent);
+          }
+        }
+        else mDocument->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
+
+        // Now fire blurs.  We have to fire a blur on the focused window
+        // and on the focused element if there is one.
+        if (gLastFocusedDocument && gLastFocusedPresContext) {
+          // Blur the element.
+          if (gLastFocusedContent) {
+            // Retrieve this content node's pres context. it can be out of sync in
+            // the Ender widget case.
+            nsCOMPtr<nsIDocument> doc;
+            gLastFocusedContent->GetDocument(*getter_AddRefs(doc));
+            if (doc) {
+              nsCOMPtr<nsIPresShell> shell = getter_AddRefs(doc->GetShellAt(0));
+              if (shell) {
+                nsCOMPtr<nsIPresContext> oldPresContext;
+                shell->GetPresContext(getter_AddRefs(oldPresContext));
+
+                nsEventStatus status = nsEventStatus_eIgnore;
+                nsEvent event;
+                event.eventStructType = NS_EVENT;
+                event.message = NS_BLUR_CONTENT;
+                nsCOMPtr<nsIEventStateManager> esm;
+                oldPresContext->GetEventStateManager(getter_AddRefs(esm));
+                esm->SetFocusedContent(gLastFocusedContent);
+                gLastFocusedContent->HandleDOMEvent(oldPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
+                esm->SetFocusedContent(nsnull);
+                NS_IF_RELEASE(gLastFocusedContent);
+              }
+            }
+          }
+
+          nsEventStatus status = nsEventStatus_eIgnore;
+          nsEvent event;
+          event.eventStructType = NS_EVENT;
+          event.message = NS_BLUR_CONTENT;
+    
+          // fire blur on document and window
+          nsCOMPtr<nsIScriptGlobalObject> globalObject;
+          if(gLastFocusedDocument) {
+            gLastFocusedDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
+            gLastFocusedDocument->HandleDOMEvent(gLastFocusedPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+            if(globalObject)
+              globalObject->HandleDOMEvent(gLastFocusedPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+          }
+          // Now clear our our global variables
+          mCurrentTarget = nsnull;
+          NS_IF_RELEASE(gLastFocusedDocument);
+          gLastFocusedPresContext = nsnull;
+        }             
+      } 
     }
+#endif
     break;
 
  case NS_ACTIVATE:

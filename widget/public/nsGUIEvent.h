@@ -296,6 +296,13 @@ struct nsFormEvent : public nsEvent {
   nsIContent *originator;
 };
 
+/**
+* Focus event
+*/
+struct nsFocusEvent : public nsGUIEvent {
+  PRBool isMozWindowTakingFocus;
+};
+
 
 /**
  * Event status for D&D Event
@@ -334,6 +341,7 @@ enum nsDragDropEventStatus {
 #define NS_RECONVERSION_QUERY 19
 #define NS_ACCESSIBLE_EVENT   20
 #define NS_FORM_EVENT         21
+#define NS_FOCUS_EVENT        22
 
  /**
  * GUI MESSAGES
