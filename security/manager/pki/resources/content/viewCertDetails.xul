@@ -1,0 +1,98 @@
+<?xml version="1.0"?>
+<!-- 
+   - The contents of this file are subject to the Mozilla Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/MPL/
+   - 
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   - 
+   - The Original Code is mozilla.org code.
+   - 
+   - The Initial Developer of the Original Code is Netscape
+   - Communications Corp.  Portions created by Netscape are
+   - Copyright (C) 2001 Netscape Communications Corp.  All
+   - Rights Reserved.
+   - 
+   - Contributor(s):
+   -   Bob Lord <lord@netscape.com>
+   -   Ian McGreer <mcgreer@netscape.com>
+  -->
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<!DOCTYPE window SYSTEM "chrome://pippki/locale/certManager.dtd">
+
+<window
+  id="certDetails" 
+  title="&certmgr.certdetail.title;"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  onload="setWindowName();"
+  persist="height width screenX screenY"
+  debug="tru1"
+>
+
+<script src="viewCertDetails.js"/>
+
+<box orient="vertical" flex="1">
+  <box flex="0" height="100">
+    <tree id="CADetailTreeSet" debug="false" width="500" flex="1">
+      <treecols flex="1">
+        <treecol flex="1"/>
+      </treecols>
+      <treechildren flex="1">
+        <treeitem container="true" open="true">
+          <treerow style="border-top: 1px solid black">
+            <treecell class="treecell-indent" value="Foo CA"/>
+          </treerow>
+          <treechildren>
+            <treeitem container="true" open="true">
+              <treerow>
+                <treecell class="treecell-indent" value="Bar CA"/>
+              </treerow>
+              <treechildren>
+                <treeitem>
+                  <treerow>
+                    <treecell class="treecell-indent" 
+                              value="Bob Lord's Personal Cert"/>
+                  </treerow>
+                </treeitem>
+              </treechildren>
+            </treeitem>
+          </treechildren>
+        </treeitem>
+      </treechildren>
+    </tree>
+  </box>
+  <box>
+    <grid style="margin: 5px;border: 1px solid black;"> 
+      <columns>
+        <column width="200"/>
+        <column width="200"/>
+      </columns>
+      <rows>
+        <row>
+          <text value="&certmgr.certdetail.cn;" /> <text id="commonname"/>
+        </row>
+        <row>
+          <text value="&certmgr.certdetail.o;"  /> <text id="organization"/>
+        </row>
+        <row>
+          <text value="&certmgr.certdetail.ou;" /> <text id="orgunit" />
+        </row>
+      </rows>
+    </grid>
+  </box>
+  <box>
+    <button id="closeButton"
+            class="normal"
+            value="&certmgr.close.label;"
+            orient="horizontal"
+            onclick="window.close();" /> 
+  </box>
+</box>
+</window>

@@ -14,37 +14,24 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Copyright (C) 2001 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s):
- *   Terry Hayes <thayes@netscape.com>
+ *  Ian McGreer <mcgreer@netscape.com>
  */
 
-#include "nsIModule.h"
-#include "nsIGenericFactory.h"
+#include "nsISupports.h"
+#include "nsICertificateManager.h"
 
-#include "nsNSSDialogs.h"
-#include "nsCertificateManager.h"
-
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNSSDialogs, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCertificateManager)
-
-static nsModuleComponentInfo components[] =
+class nsCertificateManager : public nsICertificateManager
 {
-  {
-    "NSS Dialogs",
-    NS_NSSDIALOGS_CID,
-    NS_NSSDIALOGS_CONTRACTID,
-    nsNSSDialogsConstructor
-  },
+public:
+  nsCertificateManager();
+  virtual ~nsCertificateManager();
 
-  { "PSM Certificate Manager", 
-    NS_CERTIFICATEMANAGER_CID,
-    NS_CERTIFICATEMANAGER_CONTRACTID,
-    nsCertificateManagerConstructor
-  }
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSICERTIFICATEMANAGER
 
 };
 
-NS_IMPL_NSGETMODULE("PKI", components)

@@ -35,15 +35,83 @@
 
 #include "nsISupports.idl"
 
-interface nsIX509Cert;
+%{C++
+#include "nsString.h"
+%}
 
-[scriptable, uuid(a5b8fb1a-ee62-11d4-998b-00b0d02354a0)]
+interface nsIX509Cert;
+interface nsIPK11Token;
+
+native nsAutoString(nsAutoString);
+[ref] native nsAutoStringRef(nsAutoString);
+
+[scriptable, uuid(da48b3c0-1284-11d5-ac67-000064657374)]
 interface nsIX509CertDB : nsISupports {
 
-  void importCertificate(in nsIX509Cert cert, 
-                         in unsigned long type,
-                         in unsigned long trust,
-                         in wstring nickname); 
+
+  [noscript] nsIX509Cert getCertByName(in nsIPK11Token aToken,
+                                       in string aNickname);
+
+  /*
+   * getCertificateList
+   *
+   * Obtain a list of certificates from the database.
+   *
+   * token - PKCS#11 token to get certs from (null for all tokens)
+   * type - type of certificate to obtain (see nsIX509Cert)
+   * count - number of certs in list
+   * certs - the list
+   */
+/*
+  void getCertificateList(in nsIPK11Token token,
+                          in unsigned long type,
+                          [array, size_is(count)] out nsIX509Cert certs,
+                          [retval] out unsigned long count);
+*/
+
+  /*
+   * getCertificateNames
+   *
+   * Obtain a list of certificate names from the database.
+   * What the name is depends on type:
+   *  user, ca, or server cert - the nickname
+   *  email cert - the email address
+   *
+   * aToken - PKCS#11 token to get certs from (null for all tokens)
+   * aType - type of certificate to obtain (see nsIX509Cert)
+   * rCertNameList - a string of certificate names seperated by a delimiter
+   */
+  [noscript] void getCertificateNames(in nsIPK11Token aToken, 
+                                      in unsigned long aType,
+                                      in nsAutoStringRef rCertNameList);
+
+  /*
+   * importCertificate
+   *
+   * Import a certificate into the database.
+   * XXX For now, this only imports into the default internal slot.
+   *     should there be a importCertificateToSlot?  Or change the sig?
+   */
+  [noscript] void importCertificate(in nsIX509Cert cert, 
+                                    in unsigned long type,
+                                    in unsigned long trust,
+                                    in wstring nickname); 
 
 };
 
+%{C++
+
+#define NS_X509CERTDB_CID { /* da48b3c0-1284-11d5-ac67-000064657374 */ \
+    0xda48b3c0,                                                        \
+    0x1284,                                                            \
+    0x11d5,                                                            \
+    {0xac, 0x67, 0x00, 0x00, 0x64, 0x65, 0x73, 0x74}                   \
+  }
+
+#define NS_X509CERTDB_CONTRACTID "@mozilla.org/security/x509certdb;1"
+
+
+#define NS_CERTIFICATEMGR_DATASOURCE_CONTRACTID \
+    "@mozilla.org/rdf/datasource;1?name=certificatemgr"
+
+%}

@@ -641,3 +641,4 @@ nsNSSDialogs::DownloadCACert(nsIInterfaceRequestor *ctx,
 
   return rv;
 }
+
