@@ -65,17 +65,23 @@ treechildren::-moz-tree-image(FilenameColumn, file) {
 .up-button {
   list-style-image: url("chrome://global/skin/Filepicker.png");
   -moz-image-region: rect(0px 24px 24px 0px);
+  min-width: 0%; // don't let XUL layout min-size override our max-width setting
+  min-height: 0%;
   max-width: 36px;
 }
 
 .home-button {
   list-style-image: url("chrome://global/skin/Filepicker.png");
   -moz-image-region: rect(0px 48px 24px 24px);
+  min-width: 0%; // don't let XUL layout min-size override our max-width setting
+  min-height: 0%;
   max-width: 36px;
 }
 
 .new-dir-button {
   list-style-image: url("chrome://global/skin/Filepicker.png");
   -moz-image-region: rect(0px, 72px, 24x, 48px);
+  min-width: 0%; // don't let XUL layout min-size override our max-width setting
+  min-height: 0%;
   max-width: 36px;
 }
