@@ -370,17 +370,17 @@ void nsFormFrame::DoDefaultSelection(nsIPresContext*          aPresContext,
                                      nsRadioControlGroup *    aGroup,
                                      nsGfxRadioControlFrame * aRadioToIgnore)
 {
-#if 1
+#if 0
   // We do not want to do the default selection when printing
   // The code below ends up calling into the content, which then sets 
   // the state on the "primary" frame the frame being displayed
   // this causes it to be "reset" to the default selection, 
   // then when we go to get the current state of the UI it has been reset back
   // and then the printed state has the wrong value also
-  //nsCOMPtr<nsIPrintContext> printContext = do_QueryInterface(aPresContext);
-  //if (printContext) {
-  //  return;
-  //}
+  nsCOMPtr<nsIPrintContext> printContext = do_QueryInterface(aPresContext);
+  if (printContext) {
+    return;
+  }
   // If in standard mode, then a radio group MUST default 
   // to the first item in the group (it must be selected)
   nsCompatibility mode;
