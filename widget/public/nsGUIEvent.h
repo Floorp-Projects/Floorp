@@ -116,6 +116,16 @@ struct nsGUIEvent : public nsEvent {
 };
 
 /**
+ * Script error event
+ */
+
+struct nsScriptErrorEvent : public nsEvent {
+  PRInt32           lineNr;
+  const PRUnichar*  errorMsg;
+  const PRUnichar*  fileName;
+};
+
+/**
  * Window resize event
  */
 

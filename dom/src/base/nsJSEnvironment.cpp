@@ -113,8 +113,25 @@ NS_ScriptErrorReporter(JSContext *cx,
       nsCOMPtr<nsIScriptGlobalObjectOwner> owner;
       if(NS_FAILED(globalObject->GetGlobalObjectOwner(getter_AddRefs(owner))) ||
          !owner) {
-        NS_WARN_IF_FALSE(PR_FALSE, "Failed to get a global Object Owner");
+        NS_WARNING("Failed to get a global Object Owner");
         return;
+      }
+
+      nsAutoString fileName, msg;
+
+      if (report) {
+        fileName.AssignWithConversion(report->filename);
+
+        const PRUnichar *m = NS_REINTERPRET_CAST(const PRUnichar*,
+                                                 report->ucmessage);
+
+        if (m) {
+          msg.Assign(m);
+        }
+      }
+
+      if (msg.IsEmpty() && message) {
+        msg.AssignWithConversion(message);
       }
 
       //send error event first, then proceed
@@ -128,13 +145,18 @@ NS_ScriptErrorReporter(JSContext *cx,
         docShell->GetPresContext(getter_AddRefs(presContext));
 
         if(presContext && errorDepth < 2) {
-          nsEvent errorevent;
+          nsScriptErrorEvent errorevent;
           errorevent.eventStructType = NS_EVENT;
           errorevent.message = NS_SCRIPT_ERROR;
 
+          errorevent.fileName = fileName.get();
+          errorevent.errorMsg = msg.get();
+          errorevent.lineNr = report ? report->lineno : -1;
+
           // HandleDOMEvent() must be synchronous for the recursion block
           // (errorDepth) to work.
-          globalObject->HandleDOMEvent(presContext, &errorevent, nsnull, NS_EVENT_FLAG_INIT, &status);
+          globalObject->HandleDOMEvent(presContext, &errorevent, nsnull,
+                                       NS_EVENT_FLAG_INIT, &status);
         }
 
         errorDepth--;
@@ -166,30 +188,16 @@ NS_ScriptErrorReporter(JSContext *cx,
           }
 
           if (report) {
-            nsAutoString fileUni, msg;
-            fileUni.AssignWithConversion(report->filename);
             PRUint32 column = report->uctokenptr - report->uclinebuf;
 
-            const PRUnichar *m = NS_REINTERPRET_CAST(const PRUnichar*,
-                                                     report->ucmessage);
-
-            if (!m && message) {
-              msg.AssignWithConversion(message);
-
-              m = msg.get();
-            }
-
-            rv = errorObject->Init(m, fileUni.get(),
+            rv = errorObject->Init(msg.get(), fileName.get(),
                                    NS_REINTERPRET_CAST(const PRUnichar*,
                                                        report->uclinebuf),
                                    report->lineno, column, report->flags,
                                    category);
           } else if (message) {
-            nsAutoString messageUni;
-            messageUni.AssignWithConversion(message);
-
-            rv = errorObject->Init(messageUni.get(), nsnull, nsnull,
-                                   0, 0, 0, category);
+            rv = errorObject->Init(msg.get(), nsnull, nsnull, 0, 0, 0,
+                                   category);
           }
 
           if (NS_SUCCEEDED(rv))
