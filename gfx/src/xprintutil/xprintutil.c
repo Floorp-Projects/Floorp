@@ -49,7 +49,7 @@
 #include "plstr.h"
 #undef strtok_r
 #define strtok_r(s1, s2, x) PL_strtok_r((s1), (s2), (x))
-#endif /* USE_MOZILLA_TYPES */
+#endif /* XPU_USE_NSPR */
 
 /* List of tokens which can be used to separate entries in the 
  * $XPSERVERLIST env var */
@@ -367,7 +367,13 @@ int XpuSetJobTitle( Display *pdpy, XPContext pcontext, const char *title )
 {
   if( XpuGetSupportedJobAttributes(pdpy, pcontext) & XPUATTRIBUTESUPPORTED_JOB_NAME )
   {
-    XpuSetOneAttribute(pdpy, pcontext, XPJobAttr, "*job-name", title, XPAttrMerge);
+    char *encoded_title;
+    
+    encoded_title = XpuResourceEncode(title);
+    if (!encoded_title)
+      return(0);
+    XpuSetOneAttribute(pdpy, pcontext, XPJobAttr, "*job-name", encoded_title, XPAttrMerge);
+    XpuResourceFreeString(encoded_title);
     return(1);
   }
   else
@@ -1202,6 +1208,7 @@ XpuResolutionList XpuGetResolutionList( Display *pdpy, XPContext pcontext, int *
   const char       *s;
   long              default_resolution = -1;
   int               default_resolution_rec_index = -1;
+  char              namebuf[64];
 
   /* Get default document resolution */
   if( XpuGetOneLongAttribute(pdpy, pcontext, XPDocAttr, "default-printer-resolution", &default_resolution) != 1 )
@@ -1236,12 +1243,16 @@ XpuResolutionList XpuGetResolutionList( Display *pdpy, XPContext pcontext, int *
     if( !list )
       return(NULL);
     
-    list[rec_count-2].dpi = tmp;
+    sprintf(namebuf, "%lddpi", tmp);
+    list[rec_count-2].name   = strdup(namebuf);
+    list[rec_count-2].x_dpi  = tmp;
+    list[rec_count-2].y_dpi  = tmp;
 
     if( default_resolution != -1 )
     {
       /* Is this the default resolution ? */
-      if( list[rec_count-2].dpi == default_resolution )
+      if( (list[rec_count-2].x_dpi == default_resolution) &&
+          (list[rec_count-2].y_dpi == default_resolution) )
       {
         default_resolution_rec_index = rec_count-2;
       }
@@ -1253,10 +1264,12 @@ XpuResolutionList XpuGetResolutionList( Display *pdpy, XPContext pcontext, int *
   if( list )
   {
     /* users: DO NOT COUNT ON THIS DETAIL 
-     * (this is only to make current impl. of XpuFreeMediumSourceSizeList() easier)
-     * I may remove this implementation detail in a later revision of
+     * (this is only to make current impl. of XpuGetResolutionList() easier)
+     * We may remove this implementation detail in a later revision of
      * the library! */
-    list[rec_count-1].dpi = -1;
+    list[rec_count-1].name   = NULL;
+    list[rec_count-1].x_dpi  = -1;
+    list[rec_count-1].y_dpi  = -1;
     rec_count--;
   }
   else
@@ -1281,53 +1294,34 @@ void XpuFreeResolutionList( XpuResolutionList list )
 {
   if( list )
   { 
+    XpuResolutionRec *curr = list;
+  
+    /* See the warning abouve about using this implementation detail for
+     * checking for the list's end... */
+    while( curr->name != NULL )
+    {
+      free((void *)curr->name);
+      curr++;
+    }  
+
     free(list);
   }
 }
 
 /* Find resolution in resolution list.
- * Lower resolutions are preferred over larger resolution if |dpi_a| <= |dpi_b|,
- * otherwise larger resolutions are preferred over small resolutions 
  */
-XpuResolutionRec *XpuFindResolution( XpuResolutionList list, int list_count, long dpi_a, long dpi_b )
+XpuResolutionRec *XpuFindResolutionByName( XpuResolutionList list, int list_count, const char *name)
 {
-  XpuResolutionRec *match = NULL;
-  int               i;
+  int i;
   
-  if( dpi_a <= dpi_b )
+  for( i = 0 ; i < list_count ; i++ )
   {
-    /* Search list, lower resolutions are better... */
-    for( i = 0 ; i < list_count ; i++ )
-    {
-      XpuResolutionRec *curr = &list[i];
-    
-      if( curr->dpi >= dpi_a && curr->dpi <= dpi_b )
-      {
-        if( !match || (curr->dpi < match->dpi) )
-        {
-          match = curr;
-        }
-      }
-    }
-  }
-  else
-  {
-    /* Search list, higher resolutions are better... */
-    for( i = 0 ; i < list_count ; i++ )
-    {
-      XpuResolutionRec *curr = &list[i];
-    
-      if( curr->dpi >= dpi_b && curr->dpi <= dpi_a )
-      {
-        if( !match || (curr->dpi > match->dpi) )
-        {
-          match = curr;
-        }
-      }
-    }
+    XpuResolutionRec *curr = &list[i];
+    if (!strcasecmp(curr->name, name))
+      return curr;
   }
 
-  return(match);
+  return NULL;
 }
 
 /* Get default page (if defined) or document resolution
@@ -1335,17 +1329,23 @@ XpuResolutionRec *XpuFindResolution( XpuResolutionList list, int list_count, lon
  * - No default resolution set yet
  * - X DPI != Y DPI (not yet implemented in Xprt)
  */
-Bool XpuGetResolution( Display *pdpy, XPContext pcontext, long *dpi_ptr )
+Bool XpuGetResolution( Display *pdpy, XPContext pcontext, long *x_dpi_ptr, long *y_dpi_ptr )
 {
+  long dpi;
+
   /* Try to get the current page's resolution (pages may differ in resolution if the DDX supports this) */
-  if( XpuGetOneLongAttribute(pdpy, pcontext, XPPageAttr, "default-printer-resolution", dpi_ptr) == 1 )
+  if( XpuGetOneLongAttribute(pdpy, pcontext, XPPageAttr, "default-printer-resolution", &dpi) == 1 )
   {
+    *x_dpi_ptr = dpi;
+    *y_dpi_ptr = dpi;
     return True;
   }
 
   /* Get document resolution */
-  if( XpuGetOneLongAttribute(pdpy, pcontext, XPDocAttr, "default-printer-resolution", dpi_ptr) == 1 )
+  if( XpuGetOneLongAttribute(pdpy, pcontext, XPDocAttr, "default-printer-resolution", &dpi) == 1 )
   {
+    *x_dpi_ptr = dpi;
+    *y_dpi_ptr = dpi;
     return True;
   }
 
@@ -1355,7 +1355,13 @@ Bool XpuGetResolution( Display *pdpy, XPContext pcontext, long *dpi_ptr )
 static
 int XpuSetResolution( Display *pdpy, XPContext pcontext, XPAttributes type, XpuResolutionRec *rec )
 {
-  XpuSetOneLongAttribute(pdpy, pcontext, type, "*default-printer-resolution", rec->dpi, XPAttrMerge); 
+  if( rec->x_dpi != rec->y_dpi )
+  {
+    fprintf(stderr, "XpuSetResolution: internal error: x_dpi != y_dpi not supported yet.\n");
+    return 0;
+  }
+
+  XpuSetOneLongAttribute(pdpy, pcontext, type, "*default-printer-resolution", rec->x_dpi, XPAttrMerge); 
   return( 1 );
 }
 
@@ -1655,6 +1661,205 @@ int XpuSetPagePlex( Display *pdpy, XPContext pcontext, XpuPlexRec *rec )
 }
 
 
+XpuColorspaceList XpuGetColorspaceList( Display *pdpy, XPContext pcontext, int *numEntriesPtr )
+{
+  XpuColorspaceList list = NULL;
+  int               rec_count = 1; /* Allocate one more |XpuColorspaceRec| structure
+                                    * as terminator */
+  char              namebuf[256];  /* Temporary name buffer for colorspace names */
+  int               i;             /* Loop counter */
+  int               nvi;           /* Number of visuals */
+  Screen           *pscreen;       /* Print screen */
+  XVisualInfo       viproto;       /* fill in for getting info */
+  XVisualInfo      *vip;           /* retured info */
+
+  pscreen = XpGetScreenOfContext(pdpy, pcontext);
+
+  nvi = 0;
+  viproto.screen = XScreenNumberOfScreen(pscreen);
+  vip = XGetVisualInfo(pdpy, VisualScreenMask, &viproto, &nvi);
+  if (!vip)
+  {
+    fprintf(stderr, "XpuGetColorspaceList: Internal error: vip == NULL\n");
+    return NULL;
+  }
+  
+  for( i = 0 ; i < nvi ; i++ )
+  {
+    XVisualInfo *vcurr = vip+i;
+    char         cbuff[64];
+    const char  *class = NULL;
+
+#ifdef USE_MOZILLA_TYPES
+    /* Workaround for the current limitation of the gfx/src/xlibrgb code
+     * which cannot handle depths > 24bit yet */
+    if( vcurr->depth > 24 )
+      continue;
+#endif /* USE_MOZILLA_TYPES */
+ 
+    rec_count++;
+    list = (XpuColorspaceRec *)realloc(list, sizeof(XpuColorspaceRec)*rec_count);
+    if( !list )
+      return NULL;
+
+    /* ToDO: This needs to be updated for the COLORSPACE X11 extension
+     * once it is ready and approved by the XOrg arch board. */
+    switch (vcurr->class) {
+      case StaticGray:   class = "StaticGray";  break;
+      case GrayScale:    class = "GrayScale";   break;
+      case StaticColor:  class = "StaticColor"; break;
+      case PseudoColor:  class = "PseudoColor"; break;
+      case TrueColor:    class = "TrueColor";   break;
+      case DirectColor:  class = "DirectColor"; break;
+      default: /* Needed for forward compatibility to the COLORSPACE extension */
+        sprintf (cbuff, "unknown_class_%x", vcurr->class);
+        class = cbuff;
+        break;
+    }
+
+    if (vcurr->bits_per_rgb == 8)
+    {
+      sprintf(namebuf, "%s/%dbit", class, vcurr->depth);
+    }
+    else
+    {
+      sprintf(namebuf, "%s/%dbit/%dbpg", class, vcurr->depth, vcurr->bits_per_rgb);
+    }
+    list[rec_count-2].name       = strdup(namebuf);
+    list[rec_count-2].visualinfo = *vcurr;
+  }  
+ 
+  XFree((char *)vip);
+
+  if( list )
+  {
+    /* users: DO NOT COUNT ON THIS DETAIL 
+     * (this is only to make current impl. of XpuGetResolutionList() easier)
+     * We may remove this implementation detail in a later revision of
+     * the library! */
+    list[rec_count-1].name = NULL;
+    rec_count--;
+  }
+  else
+  {
+    rec_count = 0;
+  }
+
+  *numEntriesPtr = rec_count; 
+  return(list);
+}
+
+void XpuFreeColorspaceList( XpuColorspaceList list )
+{
+  if( list )
+  { 
+    XpuColorspaceRec *curr = list;
+  
+    /* See the warning abouve about using this implementation detail for
+     * checking for the list's end... */
+    while( curr->name != NULL )
+    {
+      free((void *)curr->name);
+      curr++;
+    }  
+
+    free(list);
+  }
+}
+
+XpuColorspaceRec *
+XpuFindColorspaceByName( XpuColorspaceList list, int list_count, const char *name )
+{
+  int i;
+  
+  for( i = 0 ; i < list_count ; i++ )
+  {
+    XpuColorspaceRec *curr = &list[i];
+    if (!strcmp(curr->name, name))
+      return curr;
+  }
+
+  return(NULL);
+}
+
+Bool XpuGetEnableFontDownload( Display *pdpy, XPContext pcontext )
+{
+  Bool  enableFontDownload;
+  char *value;
+  
+  value = XpGetOneAttribute(pdpy, pcontext, XPPrinterAttr, "xp-listfonts-modes-supported"); 
+  if( !value )
+  {
+    fprintf(stderr, "XpuGetEnableFontDownload: xp-listfonts-modes-supported printer attribute not found.\n");
+    return False;
+  }
+  
+  enableFontDownload = (strstr(value, "xp-list-glyph-fonts") != NULL);
+  XFree(value);
+  return enableFontDownload;
+}
+
+int XpuSetEnableFontDownload( Display *pdpy, XPContext pcontext, Bool enableFontDownload )
+{
+  char *value,
+       *newvalue;
+  
+  value = XpGetOneAttribute(pdpy, pcontext, XPPrinterAttr, "xp-listfonts-modes-supported"); 
+  if( !value )
+  {
+    fprintf(stderr, "XpuSetEnableFontDownload: xp-listfonts-modes-supported printer attribute not found.\n");
+    return 0; /* failure */
+  }
+  
+  /* Set "xp-list-glyph-fonts" */
+  if( enableFontDownload )
+  {
+    /* Return success if "xp-list-glyph-fonts" is already set */
+    if( strstr(value, "xp-list-glyph-fonts") != NULL )
+    {
+      XFree(value);
+      return 1; /* success */
+    }
+
+    newvalue = malloc(strlen(value) + 33);
+    if( !newvalue )
+    {
+      XFree(value);
+      return 0; /* failure */
+    }
+
+    sprintf(newvalue, "%s xp-list-glyph-fonts", value);
+    XpuSetOneAttribute(pdpy, pcontext, XPDocAttr, "*xp-listfonts-modes", newvalue, XPAttrMerge);
+
+    free(newvalue);
+    XFree(value);
+    return 1; /* success */
+  }
+  else
+  {
+    char *s, /* copy string "source" */
+         *d; /* copy string "destination" */
+    
+    /* Return success if "xp-list-glyph-fonts" not set */
+    d = strstr(value, "xp-list-glyph-fonts");
+    if( d == NULL )
+    {
+      XFree(value);
+      return 1; /* success */
+    }
+
+    /* strip "xp-list-glyph-fonts" from |value| */
+    s = d+19/*strlen("xp-list-glyph-fonts")*/;
+    while( (*d++ = *s++) != '\0' )
+      ;
+
+    XpuSetOneAttribute(pdpy, pcontext, XPDocAttr, "*xp-listfonts-modes", value, XPAttrMerge);
+
+    XFree(value);
+    return 1; /* success */
+  } 
+}
+
 /* Return flags to indicate which attributes are supported and which not... */
 static
 XpuSupportedFlags XpuGetSupportedAttributes( Display *pdpy, XPContext pcontext, XPAttributes type, const char *attribute_name )
@@ -1687,6 +1892,7 @@ XpuSupportedFlags XpuGetSupportedAttributes( Display *pdpy, XPContext pcontext, 
       else if( !strcmp(s, "default-input-tray") )         flags |= XPUATTRIBUTESUPPORTED_DEFAULT_INPUT_TRAY;
       else if( !strcmp(s, "default-medium") )             flags |= XPUATTRIBUTESUPPORTED_DEFAULT_MEDIUM;
       else if( !strcmp(s, "plex") )                       flags |= XPUATTRIBUTESUPPORTED_PLEX;
+      else if( !strcmp(s, "xp-listfonts-modes") )         flags |= XPUATTRIBUTESUPPORTED_LISTFONTS_MODES;
     }
     
     XpuDisposeEnumerateXpAttributeValue(&tok_lasts);
@@ -1709,6 +1915,195 @@ XpuSupportedFlags XpuGetSupportedDocAttributes(Display *pdpy, XPContext pcontext
 XpuSupportedFlags XpuGetSupportedPageAttributes(Display *pdpy, XPContext pcontext)
 {
   return XpuGetSupportedAttributes(pdpy, pcontext, XPPrinterAttr, "xp-page-attributes-supported");
+}
+
+/* Encode  string  for  usage  in a Xrm  resource  database  as
+ * defined  in  X(7):  [...]  To  allow  a  Value  to  begin
+ * with  whitespace,  the  two-character  sequence   ``\space''
+ * (backslash  followed by space) is recognized and replaced by
+ * a space character, and the two-character  sequence  ``\tab''
+ * (backslash  followed  by  horizontal  tab) is recognized and
+ * replaced by a horizontal tab character.  To allow a Value to
+ * contain   embedded  newline  characters,  the  two-character
+ * sequence ``\n'' is recognized  and  replaced  by  a  newline
+ * character.   To  allow  a Value to be broken across multiple
+ * lines in a text file,  the  two-character  sequence  ``\new-
+ * line''  (backslash  followed  by  newline) is recognized and
+ * removed from the value.  To allow a Value to  contain  arbi-
+ * trary character codes, the four-character sequence ``\nnn'',
+ * where  each  n  is  a  digit  character  in  the  range   of
+ * ``0''-``7'',  is  recognized and replaced with a single byte
+ * that contains the octal value  specified  by  the  sequence.
+ * Finally, the two-character sequence ``\\'' is recognized and
+ * replaced with a single backslash.
+ */
+char *XpuResourceEncode( const char *s )
+{
+  size_t  slen;
+  char   *res;
+  char   *d;
+  int     i,
+          c;
+
+  slen = strlen(s);
+  res  = malloc(slen*4+1);
+  if (!res)
+    return NULL;
+  
+  d = res;
+  i = slen;
+  while (i--) {
+    c = *s++;
+    if (c == '\n') {
+      if (i) {
+        *d++ = '\\';
+        *d++ = 'n';
+        *d++ = '\\';
+        *d++ = '\n';
+      }
+      else {
+        *d++ = '\\';
+        *d++ = 'n';
+      }
+    } else if (c == '\\') {
+        *d++ = '\\';
+        *d++ = '\\';
+    }
+    else if ((c < ' ' && c != '\t') ||
+            ((unsigned char)c >= 0x7F && (unsigned char)c < 0xA0)) {
+        sprintf(d, "\\%03o", (unsigned char)c);
+        d += 4;
+    }
+    else {
+        *d++ = c;
+    }
+  }
+
+  *d = '\0';
+  
+  return res;
+}
+
+#ifdef XXXJULIEN_NOTNOW
+char *XpuResourceDecode( const char *str )
+{
+}
+#endif /* XXXJULIEN_NOTNOW */
+
+void XpuResourceFreeString( char *s )
+{
+  free(s);
+}
+
+const char *XpuXmbToCompoundText(Display *dpy, const char *xmbtext)
+{
+  XTextProperty   xtp;
+  int             xcr;
+  char           *xtl[2];
+  char           *ct;
+
+  if (strlen(xmbtext) == 0)
+    return strdup(xmbtext);
+  
+  memset(&xtp, 0, sizeof(xtp));
+  xtl[0] = (char *)xmbtext;
+  xtl[1] = NULL;
+  
+  xcr = XmbTextListToTextProperty(dpy, xtl, 1, XCompoundTextStyle, &xtp);
+  
+  if (xcr == XNoMemory || xcr == XLocaleNotSupported)
+  {
+    fprintf(stderr, "XpuXmbToCompoundText: XmbTextListToTextProperty failure.\n");
+    return strdup(xmbtext);
+  }
+
+  /* Did conversion succeed (some unconvertible characters
+   * are not a problem) ? */
+  if ( !((xcr == Success) || (xcr > 0)) ||
+       (xtp.value == NULL))
+  {
+    fprintf(stderr, "XpuXmbToCompoundText: XmbTextListToTextProperty failure 2.\n");
+    return strdup(xmbtext);
+  }
+  
+  ct = malloc(xtp.nitems+1);
+  if (!ct)
+  {
+    XFree(xtp.value);
+    return NULL;
+  }
+  memcpy(ct, xtp.value, xtp.nitems);
+  ct[xtp.nitems] = '\0';  
+
+  XFree(xtp.value);
+  
+  return ct;
+}
+
+void XpuFreeCompundTextString( const char *s )
+{
+  free((void *)s);
+}
+
+const char *XpuCompoundTextToXmb(Display *dpy, const char *ct)
+{
+  XTextProperty   xtp;
+  int             xcr;
+  char          **xtl = NULL;
+  int             xtl_count = 0;
+  char           *xmb;
+  int             xmb_len = 0;
+  int             i;
+
+  if (strlen(ct) == 0)
+    return strdup(ct);
+    
+  xtp.value    = (unsigned char *)ct;
+  xtp.nitems   = strlen(ct); 
+  xtp.encoding = XInternAtom(dpy, "COMPOUND_TEXT", False);
+  xtp.format   = 8;
+  
+  xcr = XmbTextPropertyToTextList(dpy, &xtp, &xtl, &xtl_count);
+  
+  if (xcr == XNoMemory || xcr == XLocaleNotSupported)
+  {
+    fprintf(stderr, "XpuCompoundTextToXmb: XmbTextPropertyToTextList failure 1.\n");
+    return strdup(ct);
+  }
+
+  /* Did conversion succeed (some unconvertible characters
+   * are not a problem) ? */
+  if ( !((xcr == Success) || (xcr > 0)) ||
+       (xtl == NULL))
+  {
+    fprintf(stderr, "XpuCompoundTextToXmb: XmbTextPropertyToTextList failure 2.\n");
+    return strdup(ct);
+  }
+   
+  for (i = 0; i < xtl_count; i++)
+  {
+    xmb_len += strlen(xtl[i]);
+  }
+  xmb = malloc (xmb_len + 1);
+  if (!xmb)
+  {
+    XFreeStringList(xtl);
+    return NULL;
+  }
+  xmb[0] = '\0'; /* Catch zero-length case */
+  for (i = 0; i < xtl_count; i++)
+  {
+    strcat(xmb, xtl[i]);
+  }
+  
+  XFreeStringList(xtl); 
+  
+  return xmb;
+}
+
+void XpuFreeXmbString( const char *s )
+{
+  free((void *)s);
 }
 
 /* EOF. */

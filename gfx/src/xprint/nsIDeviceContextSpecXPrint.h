@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
+ *   Julien Lafon <julien.lafon@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -41,7 +42,8 @@
 
 #include "nsISupports.h"
 
-#define NS_IDEVICE_CONTEXT_SPEC_XP_IID { 0xa4ef8910, 0xdd65, 0x11d2, { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 } }
+/* UUID=12ab7845-a341-41ba-bc12-6025e0b11e0e */
+#define NS_IDEVICE_CONTEXT_SPEC_XP_IID { 0x12ab7845, 0xa341, 0x41ba, { 0x60, 0x25, 0xe0, 0xb1, 0x1e, 0x0e } }
 
 class nsIDeviceContextSpecXp : public nsISupports
 {
@@ -153,7 +155,35 @@ public:
    * @return 
    **/
    NS_IMETHOD GetPlexName ( const char **aPlexName ) = 0;   
+
+  /*
+   * Resolution/quality name e.g., "600", "600x300", "high-res",
+   * "med-res"
+   * driver/printer-specific custom value
+   * @update 
+   * @param aResolutionName --
+   * @return 
+   **/
+   NS_IMETHOD GetResolutionName ( const char **aResolutionName ) = 0;   
    
+  /*
+   * Colorspace name e.g., "TrueColor", "Grayscale/10bit", "b/w",
+   * "CYMK"
+   * driver/printer-specific custom value
+   * @update 
+   * @param aColorspace --
+   * @return 
+   **/
+   NS_IMETHOD GetColorspace ( const char **aColorspace ) = 0;   
+
+  /*
+   * If PR_TRUE, enable font download to printer
+   * @update 
+   * @param aDownloadFonts --
+   * @return 
+   **/
+   NS_IMETHOD GetDownloadFonts( PRBool &aDownloadFonts ) = 0;   
+
   /*
    * Return number of copies to print
    * @update 

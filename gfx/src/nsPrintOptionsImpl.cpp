@@ -95,6 +95,9 @@ static const char kPrintPaperData[]     = "print_paper_data";
 static const char kPrintPaperSizeUnit[] = "print_paper_size_unit";
 static const char kPrintPaperWidth[]    = "print_paper_width";
 static const char kPrintPaperHeight[]   = "print_paper_height";
+static const char kPrintColorspace[]    = "print_colorspace";
+static const char kPrintResolutionName[]= "print_resolution_name";
+static const char kPrintDownloadFonts[] = "print_downloadfonts";
 static const char kPrintOrientation[]   = "print_orientation";
 static const char kPrintCommand[]       = "print_command";
 static const char kPrinterName[]        = "print_printer";
@@ -538,6 +541,27 @@ nsPrintOptions::ReadPrefs(nsIPrintSettings* aPS, const nsString& aPrefName, PRUi
     }
   }
 
+  if (aFlags & nsIPrintSettings::kInitSaveColorspace) {
+    if (NS_SUCCEEDED(ReadPrefString(GetPrefName(kPrintColorspace, aPrefName), str))) {
+      aPS->SetColorspace(str.get());
+      DUMP_STR(kReadStr, kPrintColorspace, str.get());
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSaveResolutionName) {
+    if (NS_SUCCEEDED(ReadPrefString(GetPrefName(kPrintResolutionName, aPrefName), str))) {
+      aPS->SetResolutionName(str.get());
+      DUMP_STR(kReadStr, kPrintResolutionName, str.get());
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSaveDownloadFonts) {
+    if (NS_SUCCEEDED(mPrefBranch->GetBoolPref(GetPrefName(kPrintDownloadFonts, aPrefName), &b))) {
+      aPS->SetDownloadFonts(b);
+      DUMP_BOOL(kReadStr, kPrintDownloadFonts, b);
+    }
+  }
+
   if (aFlags & nsIPrintSettings::kInitSaveOrientation) {
     if (NS_SUCCEEDED(mPrefBranch->GetIntPref(GetPrefName(kPrintOrientation, aPrefName), &iVal))) {
       aPS->SetOrientation(iVal);
@@ -767,6 +791,27 @@ nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsString& aPrefName, PRU
     if (NS_SUCCEEDED(aPS->GetPaperHeight(&dbl))) {
       DUMP_DBL(kWriteStr, kPrintPaperHeight, dbl);
       WritePrefDouble(GetPrefName(kPrintPaperHeight, aPrefName), dbl);
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSaveColorspace) {
+    if (NS_SUCCEEDED(aPS->GetColorspace(&uStr))) {
+      DUMP_STR(kWriteStr, kPrintColorspace, uStr);
+      WritePrefString(uStr, GetPrefName(kPrintColorspace, aPrefName));
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSaveResolutionName) {
+    if (NS_SUCCEEDED(aPS->GetResolutionName(&uStr))) {
+      DUMP_STR(kWriteStr, kPrintResolutionName, uStr);
+      WritePrefString(uStr, GetPrefName(kPrintResolutionName, aPrefName));
+    }
+  }
+
+  if (aFlags & nsIPrintSettings::kInitSaveDownloadFonts) {
+    if (NS_SUCCEEDED(aPS->GetDownloadFonts(&b))) {
+      DUMP_BOOL(kWriteStr, kPrintDownloadFonts, b);
+      mPrefBranch->SetBoolPref(GetPrefName(kPrintDownloadFonts, aPrefName), b);
     }
   }
 
@@ -1302,6 +1347,9 @@ Tester::Tester()
       {kPrintPaperHeight, nsIPrintSettings::kInitSavePaperHeight},
       {kPrintReversed, nsIPrintSettings::kInitSaveReversed},
       {kPrintInColor, nsIPrintSettings::kInitSaveInColor},
+      {kPrintColorspace, nsIPrintSettings::kInitSaveColorspace},
+      {kPrintResolutionName, nsIPrintSettings::kInitSaveResolutionName},
+      {kPrintDownloadFonts, nsIPrintSettings::kInitSaveDownloadFonts},
       {kPrintOrientation, nsIPrintSettings::kInitSaveOrientation},
       {kPrintCommand, nsIPrintSettings::kInitSavePrintCommand},
       {kPrinterName, nsIPrintSettings::kInitSavePrinterName},

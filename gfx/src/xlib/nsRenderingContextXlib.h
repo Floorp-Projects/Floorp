@@ -59,6 +59,12 @@
 
 class nsFontXlib;
 
+class nsRenderingContextXlibContext
+{
+public:
+  nsGCCacheXlib mGcCache;
+};
+
 /* Note |nsRenderingContextXp| may override some of these methods here */
 class nsRenderingContextXlib : public nsRenderingContextImpl
 {
@@ -229,7 +235,7 @@ protected:
   nsresult CommonInit(void);
 
   nsCOMPtr<nsIDeviceContext>      mContext;
-  nsCOMPtr<nsIDrawingSurfaceXlib> mOffscreenSurface; /* not supported for printers */
+  nsCOMPtr<nsIDrawingSurfaceXlib> mOffscreenSurface;
   nsCOMPtr<nsIDrawingSurfaceXlib> mSurface;
   nsCOMPtr<nsIFontMetrics>        mFontMetrics;
   nsCOMPtr<nsIRegion>             mClipRegion;

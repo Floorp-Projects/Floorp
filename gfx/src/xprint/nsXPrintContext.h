@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  *   Leon Sha <leon.sha@sun.com>
+ *   Julien Lafon <julien.lafon@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -65,15 +66,16 @@ public:
                   void **aBits, PRInt32 *aStride, PRInt32 *aWidthBytes,
                   PRUint32 aFlags)  { return NS_OK; };
   NS_IMETHOD Unlock(void)  { return NS_OK; };
-  NS_IMETHOD GetDimensions(PRUint32 *aWidth, PRUint32 *aHeight)  { return NS_OK; };
-  NS_IMETHOD IsOffscreen(PRBool *aOffScreen) { return NS_OK; };
-  NS_IMETHOD IsPixelAddressable(PRBool *aAddressable) { return NS_OK; };
-  NS_IMETHOD GetPixelFormat(nsPixelFormat *aFormat) { return NS_OK; };
- 
+  
+  NS_IMETHOD GetDimensions(PRUint32 *aWidth, PRUint32 *aHeight);
+  NS_IMETHOD IsOffscreen(PRBool *aOffScreen);
+  NS_IMETHOD IsPixelAddressable(PRBool *aAddressable);
+  NS_IMETHOD GetPixelFormat(nsPixelFormat *aFormat);
+
   NS_IMETHOD Init(nsDeviceContextXp *dc, nsIDeviceContextSpecXp *aSpec);
   NS_IMETHOD BeginPage();
   NS_IMETHOD EndPage();
-  NS_IMETHOD RenderEPS(const nsRect& aRect, const unsigned char *aData, unsigned long aDatalen);
+  NS_IMETHOD RenderEPS(Drawable aDrawable, const nsRect& aRect, const unsigned char *aData, unsigned long aDatalen);
   NS_IMETHOD BeginDocument(PRUnichar * aTitle, PRUnichar* aPrintToFileName, PRInt32 aStartPage, PRInt32 aEndPage);
   NS_IMETHOD EndDocument();
   NS_IMETHOD AbortDocument();
@@ -88,22 +90,23 @@ public:
   
   void                    SetGC(xGC *aGC) { mGC = aGC; mGC->AddRef(); }
 
-  NS_IMETHOD GetPrintResolution(int &aPrintResolution);
+  NS_IMETHOD GetPrintResolution(int &aXres, int &aYres);
 
-  NS_IMETHOD DrawImage(xGC *gc, nsIImage *aImage,
+  NS_IMETHOD DrawImage(Drawable aDrawable, xGC *gc, nsIImage *aImage,
                 PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                 PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight);
 
-  NS_IMETHOD DrawImage(xGC *gc, nsIImage *aImage,
+  NS_IMETHOD DrawImage(Drawable aDrawable, xGC *gc, nsIImage *aImage,
                  PRInt32 aX, PRInt32 aY,
                  PRInt32 aWidth, PRInt32 aHeight);
 
 private:
-  nsresult DrawImageBitsScaled(xGC *gc, nsIImage *aImage,
+  nsresult DrawImageBitsScaled(Drawable aDrawable,
+                xGC *gc, nsIImage *aImage,
                 PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                 PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight);
                 
-  nsresult DrawImageBits(xGC *gc, 
+  nsresult DrawImageBits(Drawable aDrawable, xGC *gc, 
                          PRUint8 *alphaBits, PRInt32  alphaRowBytes, PRUint8 alphaDepth,
                          PRUint8 *image_bits, PRInt32  row_bytes,
                          PRInt32 aX, PRInt32 aY,
@@ -113,7 +116,8 @@ private:
   Display      *mPDisplay;
   Screen       *mScreen;
   Visual       *mVisual;
-  Drawable      mDrawable; /* window */
+  Drawable      mDrawable; /* window/paper surface */
+  nsPixelFormat mPixFormat;
   xGC          *mGC;
   int           mXpEventBase, /* XpExtension X event base */
                 mXpErrorBase; /* XpExtension X error base */
@@ -127,15 +131,19 @@ private:
   PRBool        mIsAPrinter;  /* destination: printer or file ? */
   const char   *mPrintFile;   /* file to "print" to */
   void         *mXpuPrintToFileHandle; /* handle for XpuPrintToFile/XpuWaitForPrintFileChild when printing to file */
-  long          mPrintResolution;
+  long          mPrintXResolution,
+                mPrintYResolution;
   nsDeviceContextXp *mContext; /* DeviceContext which created this object */
+
+  static PRUint8 ConvertMaskToCount(unsigned long val);
+  static PRUint8 GetShiftForMask(unsigned long val);
 
   nsresult SetupWindow(int x, int y, int width, int height);
   nsresult SetupPrintContext(nsIDeviceContextSpecXp *aSpec);
   nsresult SetMediumSize(const char *paper_name);
   nsresult SetOrientation(int landscape);
   nsresult SetPlexMode(const char *plexname);
-  nsresult SetResolution(void);
+  nsresult SetResolution(const char *resolution_name);
 };
 
 

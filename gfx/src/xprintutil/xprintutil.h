@@ -93,11 +93,12 @@ typedef struct {
 /*
  * Struct for XpuGetResolutionList(), XpuFreeResolutionList(),
  * XpuGetResolution(), XpuSetPageResolution(), XpuSetDocResolution(),
- * XpuFindResolution()
+ * XpuFindResolutionByName()
  */
 typedef struct {
-  long dpi;
-  /* ToDo: Support for Xdpi != Ydpi */
+  const char *name;
+  long        x_dpi;
+  long        y_dpi;
 } XpuResolutionRec, *XpuResolutionList;
 
 /*
@@ -117,6 +118,14 @@ typedef struct {
   const char *plex;
 } XpuPlexRec, *XpuPlexList;
 
+/*
+ * Struct for XpuGetColorspaceList(), XpuFreeColorspaceList()
+ */
+typedef struct
+{
+  const char  *name;
+  XVisualInfo  visualinfo;
+} XpuColorspaceRec, *XpuColorspaceList;
 
 /* XPUATTRIBUTESUPPORTED_*:
  * Flags which indicate whether it is allowed to set/change a specific attribute
@@ -134,6 +143,7 @@ typedef long XpuSupportedFlags;
 #define XPUATTRIBUTESUPPORTED_DEFAULT_INPUT_TRAY           (1L<<7)
 #define XPUATTRIBUTESUPPORTED_DEFAULT_MEDIUM               (1L<<8)
 #define XPUATTRIBUTESUPPORTED_PLEX                         (1L<<9)
+#define XPUATTRIBUTESUPPORTED_LISTFONTS_MODES              (1L<<10)
 
 /* prototypes */
 _XFUNCPROTOBEGIN
@@ -183,10 +193,10 @@ XpuFindMediumSourceSizeByName( XpuMediumSourceSizeList mlist, int mlist_count,
 /* Get/Set resolution */
 XpuResolutionList XpuGetResolutionList( Display *pdpy, XPContext pcontext, int *numEntriesPtr );
 void XpuFreeResolutionList( XpuResolutionList list );
-Bool XpuGetResolution( Display *pdpy, XPContext pcontext, long *dpi );
+Bool XpuGetResolution( Display *pdpy, XPContext pcontext, long *x_dpi, long *y_dpi );
 Bool XpuSetPageResolution( Display *pdpy, XPContext pcontext, XpuResolutionRec * );
 Bool XpuSetDocResolution( Display *pdpy, XPContext pcontext, XpuResolutionRec * );
-XpuResolutionRec *XpuFindResolution( XpuResolutionList list, int list_count, long min_dpi, long max_dpi );
+XpuResolutionRec *XpuFindResolutionByName( XpuResolutionList list, int list_count, const char *resolution_name);
 
 /* Get/Set orientation */
 XpuOrientationList XpuGetOrientationList( Display *pdpy, XPContext pcontext, int *numEntriesPtr );
@@ -203,6 +213,15 @@ XpuPlexRec *XpuFindPlexByName( XpuPlexList list, int list_count, const char *ple
 int XpuSetDocPlex( Display *pdpy, XPContext pcontext, XpuPlexRec *rec );
 int XpuSetPagePlex( Display *pdpy, XPContext pcontext, XpuPlexRec *rec );
 
+/* Set/get usage of fonts */
+Bool XpuGetEnableFontDownload( Display *pdpy, XPContext pcontext );
+int XpuSetEnableFontDownload( Display *pdpy, XPContext pcontext, Bool enableFontDownload );
+
+/* Get per-printer colorspace information */
+XpuColorspaceList XpuGetColorspaceList( Display *pdpy, XPContext pcontext, int *numEntriesPtr );
+void XpuFreeColorspaceList( XpuColorspaceList list );
+XpuColorspaceRec *XpuFindColorspaceByName( XpuColorspaceList list, int list_count, const char *colorspace );
+
 /* Start job to printer (spooler) or file */
 void XpuStartJobToSpooler(Display *pdpy);
 void *XpuStartJobToFile( Display *pdpy, XPContext pcontext, const char *filename );
@@ -212,6 +231,18 @@ XPGetDocStatus XpuWaitForPrintFileChild( void *handle );
 XpuSupportedFlags XpuGetSupportedJobAttributes(Display *pdpy, XPContext pcontext);
 XpuSupportedFlags XpuGetSupportedDocAttributes(Display *pdpy, XPContext pcontext);
 XpuSupportedFlags XpuGetSupportedPageAttributes(Display *pdpy, XPContext pcontext);
+
+/* Encode/decode resource strings */
+char *XpuResourceEncode( const char *str );
+char *XpuResourceDecode( const char *str );
+void XpuResourceFreeString( char *s );
+
+/* COMPOUND_TEXT <----> local encoding string converters */
+const char *XpuXmbToCompoundText(Display *dpy, const char *xmbtext);
+void XpuFreeCompundTextString( const char *s );
+const char *XpuCompoundTextToXmb(Display *dpy, const char *ct);
+void XpuFreeXmbString( const char *s );
+
 
 _XFUNCPROTOEND
 

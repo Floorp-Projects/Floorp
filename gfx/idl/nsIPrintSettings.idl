@@ -23,6 +23,7 @@
  *   Don Cone <dcone@netscape.com>
  *   Rod Spears <rods@netscape.com>
  *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
+ *   Julien Lafon <julien.lafon@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -57,7 +58,7 @@ interface nsIPrintSession;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(83427530-F790-11d4-A869-00105A183419)]
+[scriptable, uuid(f1094df6-ce0e-42c9-9847-2f663172c38d)]
 
 interface nsIPrintSettings : nsISupports
 {
@@ -94,6 +95,9 @@ interface nsIPrintSettings : nsISupports
   const unsigned long kInitSavePlexName       = 0x04000000;
   const unsigned long kInitSaveShrinkToFit    = 0x08000000;
   const unsigned long kInitSaveScaling        = 0x10000000;
+  const unsigned long kInitSaveColorspace     = 0x20000000;
+  const unsigned long kInitSaveResolutionName = 0x40000000;
+  const unsigned long kInitSaveDownloadFonts  = 0x80000000;
   const unsigned long kInitSaveAll            = 0xFFFFFFFF;
 
   /* Print Option Flags for Bit Field*/
@@ -230,13 +234,21 @@ interface nsIPrintSettings : nsISupports
   attribute wstring plexName;      /* name of plex mode (like "simplex", "duplex",
                                     * "tumble" and various custom values) */
 
+  attribute wstring colorspace;    /* device-specific name of colorspace, overrides |printInColor| */
+  attribute wstring resolutionName;/* device-specific identifer of resolution or quality
+                                    * (like "600", "600x300", "600x300x12", "high-res",
+                                    * "med-res". "low-res", etc.) */
+  attribute boolean downloadFonts; /* enable font download to printer? */
+
   attribute boolean printReversed;
   attribute boolean printInColor;  /* a false means grayscale */
   attribute long    paperSize;     /*  see page size consts */
   attribute long    orientation;   /*  see orientation consts */
   attribute wstring printCommand;
   attribute long    numCopies;
-  attribute wstring printerName;
+
+  attribute wstring printerName;   /* name of destination printer */
+
   attribute boolean printToFile;
   attribute wstring toFileName;
 
