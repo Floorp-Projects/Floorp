@@ -305,9 +305,7 @@ nsMenuFrame::Reflow(nsIPresContext&   aPresContext,
    // Reflow child
   nscoord w = aDesiredSize.width;
   nscoord h = aDesiredSize.height;
-  nscoord maxWidth = aDesiredSize.maxElementSize->width;
-  nscoord maxHeight = aDesiredSize.maxElementSize->height;
-
+  
   rv = ReflowChild(frame, aPresContext, aDesiredSize, kidReflowState, aStatus);
 
    // Set the child's width and height to its desired size
@@ -320,9 +318,7 @@ nsMenuFrame::Reflow(nsIPresContext&   aPresContext,
   // Don't let it affect our size.
   aDesiredSize.width = w;
   aDesiredSize.height = h;
-  aDesiredSize.maxElementSize->width = maxWidth;
-  aDesiredSize.maxElementSize->height = maxHeight;
- 
+  
   return rv;
 }
 
