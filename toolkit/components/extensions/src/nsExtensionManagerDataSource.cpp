@@ -46,11 +46,12 @@
 #include "nsIRDFRemoteDataSource.h"
 #include "nsIRDFService.h"
 #include "nsLiteralString.h"
+#include "rdf.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsIRDFDataSource
 
-NS_IMPL_ISUPPORTS1(nsExtensionManagerDataSource, nsIRDFDataSource)
+NS_IMPL_ISUPPORTS2(nsExtensionManagerDataSource, nsIRDFDataSource, nsIRDFRemoteDataSource)
 
 static nsIRDFService* gRDFService = nsnull;
 
@@ -275,9 +276,7 @@ nsExtensionManagerDataSource::InstallExtension(nsIRDFDataSource* aSourceDataSour
   SET_PROPERTY(targetDS, extension, gToBeEnabledArc, gTrueValue)
 
   // Write out the extensions datasource
-  nsCOMPtr<nsIRDFRemoteDataSource> rds(do_QueryInterface(targetDS));
-  if (rds)
-    rv |= rds->Flush();
+  rv |= Flush(aProfile);
 
   return rv;
 }
@@ -304,34 +303,28 @@ nsExtensionManagerDataSource::SetExtensionProperty(const char* aExtensionID,
   nsCOMPtr<nsIRDFDataSource> ds = isProfile ? mProfileExtensions : mAppExtensions;
 
   nsCOMPtr<nsIRDFNode> oldNode;
-  rv |= ds->GetTarget(extension, aPropertyArc, PR_FALSE, getter_AddRefs(oldNode));
-  if (oldNode)
-    rv |= ds->Change(extension, aPropertyArc, oldNode, aPropertyValue);
-  else
-    rv |= ds->Assert(extension, aPropertyArc, aPropertyValue, PR_FALSE);
+  ds->GetTarget(extension, aPropertyArc, PR_FALSE, getter_AddRefs(oldNode));
+  
+  SET_PROPERTY(ds, extension, aPropertyArc, aPropertyValue)
+  if (NS_FAILED(rv) && rv != NS_RDF_NO_VALUE)
+    return rv;
 
   // Write out the extensions datasource
-  nsCOMPtr<nsIRDFRemoteDataSource> rds(do_QueryInterface(ds));
-  if (rds)
-    rv |= rds->Flush();
-
-  return rv;
+  return Flush(isProfile);
 }
 
 nsresult
 nsExtensionManagerDataSource::EnableExtension(const char* aExtensionID)
 {
-  nsresult rv = SetExtensionProperty(aExtensionID, gToBeEnabledArc, gTrueValue);
-  rv |= SetExtensionProperty(aExtensionID, gDisabledArc, gFalseValue);
-  return rv;
+  return SetExtensionProperty(aExtensionID, gToBeEnabledArc, gTrueValue) |
+         SetExtensionProperty(aExtensionID, gDisabledArc, gFalseValue);
 }
 
 nsresult
 nsExtensionManagerDataSource::DisableExtension(const char* aExtensionID)
 {
-  nsresult rv = SetExtensionProperty(aExtensionID, gToBeDisabledArc, gTrueValue);
-  rv |= SetExtensionProperty(aExtensionID, gDisabledArc, gTrueValue);
-  return rv;
+  return SetExtensionProperty(aExtensionID, gToBeDisabledArc, gTrueValue) | 
+         SetExtensionProperty(aExtensionID, gDisabledArc, gTrueValue);
 }
 
 nsresult
@@ -546,5 +539,45 @@ NS_IMETHODIMP
 nsExtensionManagerDataSource::EndUpdateBatch()
 {
   return mComposite->EndUpdateBatch();
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// nsIRDFRemoteDataSource
+
+NS_IMETHODIMP
+nsExtensionManagerDataSource::GetLoaded(PRBool* aResult)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsExtensionManagerDataSource::Init(const char* aURI)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsExtensionManagerDataSource::Refresh(PRBool aBlocking)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsExtensionManagerDataSource::Flush()
+{
+  return Flush(PR_FALSE) | Flush(PR_TRUE);
+}
+
+NS_IMETHODIMP
+nsExtensionManagerDataSource::FlushTo(const char* aURI)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsExtensionManagerDataSource::Flush(PRBool aIsProfile)
+{
+  nsCOMPtr<nsIRDFRemoteDataSource> rds(do_QueryInterface(aIsProfile ? mProfileExtensions : mAppExtensions));
+  return rds ? rds->Flush() : NS_OK;
 }
 

@@ -2,7 +2,6 @@
 
 <!ENTITY cmd.info.commandKey              "i">
 <!ENTITY cmd.options.commandKey           ",">
-
 <!ENTITY cmd.close.commandKey             "w">
 
 <!-- Command Bar items -->
@@ -24,6 +23,8 @@
 <!ENTITY cmd.uninstall.accesskey          "i">
 <!ENTITY cmd.update.label                 "Update">
 <!ENTITY cmd.update.accesskey             "U">
+<!ENTITY cmd.enable.label                 "Enable">
+<!ENTITY cmd.enable.accesskey             "E">
 <!ENTITY cmd.disable.label                "Disable">
 <!ENTITY cmd.disable.accesskey            "D">
 <!ENTITY cmd.moveToTop.label              "Move to Top">
