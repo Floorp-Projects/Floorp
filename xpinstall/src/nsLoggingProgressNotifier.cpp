@@ -69,9 +69,9 @@ nsLoggingProgressNotifier::BeforeJavascriptEvaluation(const PRUnichar *URL)
 
     mLogStream->seek(logFile.GetFileSize());
 
-    *mLogStream << "---------------------------------------------------------------------------" << nsEndl;
-    *mLogStream << nsAutoCString(URL) << "     --     " << time << nsEndl;    
-    *mLogStream << "---------------------------------------------------------------------------" << nsEndl;
+    *mLogStream << "-------------------------------------------------------------------------------" << nsEndl;
+    *mLogStream << nsAutoCString(URL) << "  --  " << time << nsEndl;
+    *mLogStream << "-------------------------------------------------------------------------------" << nsEndl;
     *mLogStream << nsEndl;
 
     PL_strfree(time);
@@ -135,7 +135,7 @@ nsLoggingProgressNotifier::FinalizeProgress(const PRUnichar* message, PRInt32 it
 {
     if (mLogStream == nsnull) return NS_ERROR_NULL_POINTER;
 
-    *mLogStream << "     Item [" << (itemNum) << "/" << totNum << "]\t" << nsAutoCString(message) << nsEndl;
+    *mLogStream << "     [" << (itemNum) << "/" << totNum << "]\t" << nsAutoCString(message) << nsEndl;
     return NS_OK;
 }
 

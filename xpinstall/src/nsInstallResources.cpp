@@ -35,6 +35,7 @@ static nsXPIResourceTableItem XPIResTable[] =
      *---------------------------------------------------------------------*/
     { "InstallFile",        "Installing: %s" },
     { "ReplaceFile",        "Replacing: %s" },
+    { "SkipFile",           "Skipping: %s" },
     { "DeleteFile",         "Deleting file: %s" },
     { "DeleteComponent",    "Deleting component: %s" },
     { "Execute",            "Executing: %s" },
@@ -48,7 +49,6 @@ static nsXPIResourceTableItem XPIResTable[] =
     /*---------------------------------------------------------------------*
      *   Dialog Messages 
      *---------------------------------------------------------------------*/
-    { "ShouldWeInstallMsg",  "Attempting to download and install software. Do you feel lucky punk?" },
     { "FinishingInstallMsg", "Finishing install... please wait." },
 
     /*---------------------------------------------------------------------*

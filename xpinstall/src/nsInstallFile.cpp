@@ -23,6 +23,7 @@
  *     Douglas Turner <dougt@netscape.com>
  */
 
+#include "prprf.h"
 #include "nsInstallFile.h"
 #include "nsFileSpec.h"
 #include "VerReg.h"
@@ -51,28 +52,39 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
                              const nsString& inPartialPath,
                              PRBool forceInstall,
                              PRInt32 *error) 
-: nsInstallObject(inInstall)
+  : nsInstallObject(inInstall),
+    mVersionInfo(nsnull),
+    mJarLocation(nsnull),
+    mExtractedFile(nsnull),
+    mFinalFile(nsnull),
+    mVersionRegistryName(nsnull),
+    mForceInstall(forceInstall),
+    mReplaceFile(PR_FALSE),
+    mChildFile(PR_TRUE),
+    mUpgradeFile(PR_FALSE),
+    mSkipInstall(PR_FALSE)
 {
     MOZ_COUNT_CTOR(nsInstallFile);
 
-    mVersionRegistryName = nsnull;
-    mJarLocation         = nsnull;
-    mExtracedFile        = nsnull;
-    mFinalFile           = nsnull;
-    mVersionInfo         = nsnull;
-
-    mUpgradeFile = PR_FALSE;
-    
     if ((folderSpec == nsnull) || (inInstall == NULL))
     {
         *error = nsInstall::INVALID_ARGUMENTS;
         return;
     }
 
+    *error = nsInstall::SUCCESS;
+    
     /* Check for existence of the newer	version	*/
     
     char* qualifiedRegNameString = inComponentName.ToNewCString();
 
+    // --------------------------------------------------------------------
+    // we always install if forceInstall is true, or the new file's
+    // version is null, or the file doesn't previously exist.
+    //
+    // IFF it's not force, AND the new file has a version, AND it's been
+    // previously installed, THEN we have to do the version comparing foo.
+    // --------------------------------------------------------------------
     if ( (forceInstall == PR_FALSE ) && (inVInfo !=  "") && ( VR_ValidateComponent( qualifiedRegNameString ) == 0 ) ) 
     {
         nsInstallVersion *newVersion = new nsInstallVersion();
@@ -111,14 +123,12 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
         delete oldVersion;
         delete newVersion;
 
-        if (areTheyEqual == nsIDOMInstallVersion::MAJOR_DIFF_MINUS ||
-            areTheyEqual == nsIDOMInstallVersion::MINOR_DIFF_MINUS ||
-            areTheyEqual == nsIDOMInstallVersion::REL_DIFF_MINUS   ||
-            areTheyEqual == nsIDOMInstallVersion::BLD_DIFF_MINUS   )
+        if ( areTheyEqual < 0 )
         {
-            // the file to be installed is OLDER than what is on disk.  Return error
+            // the file to be installed is OLDER than what is on disk.
+            // Don't install it.
             Recycle(qualifiedRegNameString);
-            *error = areTheyEqual;
+            mSkipInstall = PR_TRUE;
             return;
         }
     }
@@ -172,8 +182,6 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
         nsFileSpec makeDirs(parent.GetCString(), PR_TRUE);
     }
 
-    mForceInstall           = forceInstall;
-    
     mVersionRegistryName    = new nsString(inComponentName);
     mJarLocation            = new nsString(inJarLocation);
     mVersionInfo	        = new nsString(inVInfo);
@@ -198,19 +206,9 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
     } 
     else 
     {
-        
-        // there is no "starts with" api in nsString.  LAME!
-        nsString startsWith;
-        mVersionRegistryName->Left(startsWith, regPackageName.Length());
-
-        if (startsWith.Equals(regPackageName))
-        {
-            mChildFile = PR_TRUE;
-        }
-        else
-        {
-            mChildFile = PR_FALSE;
-        }
+        mChildFile = mVersionRegistryName->Equals( regPackageName,
+                                                   PR_FALSE,
+                                                   regPackageName.Length() );
     }
 }
 
@@ -223,8 +221,8 @@ nsInstallFile::~nsInstallFile()
     if (mJarLocation)
         delete mJarLocation;
   
-    if (mExtracedFile)
-        delete mExtracedFile;
+    if (mExtractedFile)
+        delete mExtractedFile;
 
     if (mFinalFile)
         delete mFinalFile;
@@ -240,10 +238,13 @@ nsInstallFile::~nsInstallFile()
  */
 PRInt32 nsInstallFile::Prepare()
 {
-    if (mInstall == nsnull || mFinalFile == nsnull || mJarLocation == nsnull ) 
+    if (mInstall == nsnull || mFinalFile == nsnull || mJarLocation == nsnull )
         return nsInstall::INVALID_ARGUMENTS;
 
-    return mInstall->ExtractFileFromJar(*mJarLocation, mFinalFile, &mExtracedFile);
+    if (mSkipInstall)
+        return nsInstall::SUCCESS;
+
+    return mInstall->ExtractFileFromJar(*mJarLocation, mFinalFile, &mExtractedFile);
 }
 
 /* Complete
@@ -259,6 +260,9 @@ PRInt32 nsInstallFile::Complete()
     {
        return nsInstall::INVALID_ARGUMENTS;
     }
+   
+    if (mSkipInstall)
+        return nsInstall::SUCCESS;
 
     err = CompleteFileMove();
     
@@ -273,48 +277,43 @@ PRInt32 nsInstallFile::Complete()
 
 void nsInstallFile::Abort()
 {
-    if (mExtracedFile != nsnull)
-        mExtracedFile->Delete(PR_FALSE);
+    if (mExtractedFile != nsnull)
+        mExtractedFile->Delete(PR_FALSE);
 }
 
+#define RESBUFSIZE 1024
 char* nsInstallFile::toString()
 {
-    char* buffer = new char[1024];
-    char* rsrcVal = "";
+    char* buffer = new char[RESBUFSIZE];
+    char* rsrcVal = nsnull;
+    const char* fname = nsnull;
 
     if (buffer == nsnull || !mInstall)
         return nsnull;
+    else
+        buffer[0] = '\0';
     
-    if (mFinalFile == nsnull)
+    if (mReplaceFile)
     {
-        rsrcVal = mInstall->GetResourcedString("InstallFile");
-
-        if (rsrcVal)
-        {
-            sprintf( buffer, rsrcVal, nsnull);
-            nsCRT::free(rsrcVal);
-        }
-    }
-    else if (mReplaceFile)
-    {
-        // we are replacing this file.
         rsrcVal = mInstall->GetResourcedString("ReplaceFile");
-
-        if (rsrcVal)
-        {
-            sprintf( buffer, rsrcVal, mFinalFile->GetCString());
-            nsCRT::free(rsrcVal);
-        }
+    }
+    else if (mSkipInstall)
+    {
+        rsrcVal = mInstall->GetResourcedString("SkipFile");
     }
     else
     {
         rsrcVal = mInstall->GetResourcedString("InstallFile");
+    }
 
-        if (rsrcVal)
-        {
-            sprintf( buffer, rsrcVal, mFinalFile->GetCString());
-            nsCRT::free(rsrcVal);
-        }
+    if (rsrcVal)
+    {
+        if (mFinalFile)
+            fname = mFinalFile->GetCString();
+
+        PR_snprintf( buffer, RESBUFSIZE, rsrcVal, fname );
+
+        Recycle(rsrcVal);
     }
 
     return buffer;
@@ -325,19 +324,19 @@ PRInt32 nsInstallFile::CompleteFileMove()
 {
     int result = 0;
     
-    if (mExtracedFile == nsnull) 
+    if (mExtractedFile == nsnull) 
     {
-        return -1;
+        return nsInstall::UNEXPECTED_ERROR;
     }
    	
-    if ( *mExtracedFile == *mFinalFile ) 
+    if ( *mExtractedFile == *mFinalFile ) 
     {
         /* No need to rename, they are the same */
-        result = 0;
+        result = nsInstall::SUCCESS;
     } 
     else 
     {
-        result = ReplaceFileNowOrSchedule(*mExtracedFile, *mFinalFile );
+        result = ReplaceFileNowOrSchedule(*mExtractedFile, *mFinalFile );
     }
 
   return result;  
