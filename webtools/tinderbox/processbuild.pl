@@ -31,32 +31,36 @@ $endsection = 0;
 
 open( LOG, "<$ARGV[0]") || die "cant open $!";
 &parse_mail_header;
-while ($DONE == 0) {
-    %tbx = ();
-    &get_variables;
 
-    # run thru if EOF and we haven't hit our section end marker
+%tbx = ();
+&get_variables;
+
+# run thru if EOF and we haven't hit our section end marker
  
-    if ( !$DONE || !$endsection) {
-        &check_required_vars;
-        $tree = $tbx{'tree'} if (!defined($tree));
-        $logfile = "$builddate.$$.gz" if (!defined($logfile));
-	$building++ if ($tbx{'status'} =~ m/building/);
-        &lock;
-        &write_build_data;
-        &unlock;
-    }
-}
+&check_required_vars;
+$tree = $tbx{'tree'} if (!defined($tree));
+$logfile = "$builddate.$$.gz" if (!defined($logfile));
+$building++ if ($tbx{'status'} =~ m/building/);
+&lock;
+&write_build_data;
+&unlock;
+
 close(LOG);
 
 &compress_log_file;
-&unlink_log_file;
+unlink $ARGV[0];
 
 system "./buildwho.pl $tree";
 
 # Build static pages for Sidebar flash and tinderbox panels.
 $ENV{QUERY_STRING}="tree=$tree&static=1";
 system './showbuilds.cgi';
+
+# Generate build warnings (only for a successful shrike clobber build)
+if ($tbx{build} =~ /shrike.*\b(Clobber|Clbr)\b/ and
+    $tbx{status} eq 'success') {
+  system './warnings.pl';
+}
 
 # end of main
 ######################################################################
@@ -234,8 +238,4 @@ sub compress_log_file {
         # LTNOTE: I'm not sure this is cross platform.
         system("/tools/ns/bin/uudecode --output-file=$bin_dir/$tbx{binaryname} < $ARGV[0]");
     }
-}
-        
-sub unlink_log_file {
-    unlink( $ARGV[0] );
 }
