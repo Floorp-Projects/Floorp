@@ -454,7 +454,7 @@ function EditorExit()
 {
     if (window.editorShell) {
 	    dump("Exiting\n");
-      window.editorShell.exit();
+      window.editorShell.Exit();
     }
 }
 
