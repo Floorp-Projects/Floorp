@@ -491,7 +491,6 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      * Set the attributes of an indexed property.
      *
      * @param index the numeric index for the property
-     * @param start the object in which the lookup began
      * @param attributes the bitset of attributes
      * @exception EvaluatorException if the named property is not found
      * @see org.mozilla.javascript.Scriptable#has

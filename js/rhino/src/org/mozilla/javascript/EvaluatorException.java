@@ -67,8 +67,7 @@ public class EvaluatorException extends RuntimeException
      * Errors internal to the JavaScript engine will simply throw a
      * RuntimeException.
      *
-     * @param nativeError the Scriptable object constructed for this error.
-              Scripts will get it as an argument to catch statement.
+     * @param detail the error message
      * @param sourceName the name of the source reponsible for the error
      * @param lineNumber the line number of the source
      * @param columnNumber the columnNumber of the source (may be zero if

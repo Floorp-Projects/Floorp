@@ -155,7 +155,7 @@ public class ClassCache
      * <p>
      * Caching is enabled by default.
      *
-     * @param cachingEnabled if true, caching is enabled
+     * @param enabled if true, caching is enabled
      *
      * @see #clearCaches()
      */
