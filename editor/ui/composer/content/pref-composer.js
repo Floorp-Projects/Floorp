@@ -78,7 +78,8 @@ function Startup()
   if (backgroundImage)
     dialog.BackgroundImageInput.value = backgroundImage;
 
-  if( document.getElementById( "useCustomColors" ).data == 0 )
+  // Kinda lame, but "data" attribute value is a string conversion of boolean!
+  if( document.getElementById( "useCustomColors" ).data == "true" )
     UseDefaultColors();
   else
     UseCustomColors();
@@ -152,8 +153,6 @@ function GetColorAndUpdate(ColorWellID)
       dialog.BackgroundColorData.setAttribute("value", color);
       break;
   }
-dump(" *** customTextColor="+customTextColor+",customLinkColor="+customLinkColor+",  customActiveColor="+customActiveColor+", customVisitedColor="+customVisitedColor+", customBackgroundColor="+customBackgroundColor+"\n");
-
   setColorWell(ColorWellID, color); 
   SetColorPreview(ColorWellID, color);
 }
@@ -211,7 +210,6 @@ function UseCustomColors()
   setColorWell("visitedCW",       customVisitedColor);
   setColorWell("backgroundCW",    customBackgroundColor);
 
-dump(" *** customTextColor="+customTextColor+",customLinkColor="+customLinkColor+",  customActiveColor="+customActiveColor+", customVisitedColor="+customVisitedColor+", customBackgroundColor="+customBackgroundColor+"\n");
   dialog.NormalData.setAttribute("value",          customTextColor); 
   dialog.LinkData.setAttribute("value",            customLinkColor);
   dialog.ActiveLinkData.setAttribute("value",      customActiveColor);
@@ -300,7 +298,6 @@ function ValidateAndPreviewImage(ShowErrorMessage)
   dialog.ColorPreview.setAttribute(styleStr, styleValue);
   
   // Set the pref data so pref code saves it 
-dump(" *** Setting default image ="+backgroundImage+"\n");
   dialog.BackgroundImageData.setAttribute("value", backgroundImage ? backgroundImage : "");
 }
 
