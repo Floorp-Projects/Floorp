@@ -23,9 +23,13 @@
 #ifndef nsAppShell_h__
 #define nsAppShell_h__
 
+#include "nsCOMPtr.h"
 #include "nsObject.h"
 #include "nsIAppShell.h"
+#include "nsIEventQueue.h"
+#include "nsSwitchToUIThread.h"
 #include <OS.h>
+#include <List.h>
 
 /**
  * Native BeOS Application shell wrapper
@@ -38,25 +42,34 @@ class nsAppShell : public nsIAppShell
     virtual                 ~nsAppShell();
 
     NS_DECL_ISUPPORTS
+    NS_DECL_NSIAPPSHELL
 
-    // nsIAppShellInterface
-  
-    NS_IMETHOD            Create(int* argc, char ** argv);
-    virtual nsresult      Run(); 
-    NS_IMETHOD          Spinup();
-    NS_IMETHOD          Spindown();
-    NS_IMETHOD          ListenToEventQueue(nsIEventQueue *aQueue, PRBool aListen)
-                          { return NS_OK; }
-    NS_IMETHOD          GetNativeEvent(PRBool &aRealEvent, void *&aEvent);
-    NS_IMETHOD          DispatchNativeEvent(PRBool aRealEvent, void * aEvent);
-    NS_IMETHOD		Exit();
-    NS_IMETHOD		SetDispatchListener(nsDispatchListener* aDispatchListener);
     virtual void*	GetNativeData(PRUint32 aDataType);
 
   private:
+    nsCOMPtr<nsIEventQueue> mEventQueue;
+
+    // event priorities
+    enum {
+      PRIORITY_TOP = 0,
+      PRIORITY_SECOND,
+      PRIORITY_THIRD,
+      PRIORITY_NORMAL,
+      PRIORITY_LOW,
+      PRIORITY_LEVELS = 5
+    };
+    
+    void ConsumeRedundantMouseMoveEvent(MethodInfo *pNewEventMInfo);
+    void RetrieveAllEvents(bool blockable);
+    int CountStoredEvents();
+    void *GetNextEvent();
+    
     nsDispatchListener	*mDispatchListener;
-	port_id					eventport;
-	sem_id					syncsem;
+    port_id					eventport;
+    sem_id					syncsem;
+    BList events[PRIORITY_LEVELS];
+
+    bool is_port_error;
 };
 
 #endif // nsAppShell_h__
