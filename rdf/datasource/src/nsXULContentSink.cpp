@@ -262,9 +262,8 @@ protected:
     nsIDocument* mDocument;
     nsIParser*   mParser;
     
-    nsIRDFResource*  mFragmentRoot;
-
-	nsVoidArray*  mOverlayArray;
+	nsVoidArray*       mOverlayArray;
+	nsIXULContentSink* mParentContentSink;
 	
     nsString      mPreferredStyle;
     PRInt32       mStyleSheetCount;
@@ -296,8 +295,8 @@ XULContentSinkImpl::XULContentSinkImpl()
       mHaveSetRootResource(PR_FALSE),
       mDocument(nsnull),
       mParser(nsnull),
-      mFragmentRoot(nsnull),
-	  mOverlayArray(nsnull),
+      mOverlayArray(nsnull),
+	  mParentContentSink(nsnull),
       mStyleSheetCount(0),
       mCSSLoader(nsnull)
 {
@@ -427,7 +426,6 @@ XULContentSinkImpl::~XULContentSinkImpl()
     NS_IF_RELEASE(mDataSource);
     NS_IF_RELEASE(mDocument);
     NS_IF_RELEASE(mParser);
-    NS_IF_RELEASE(mFragmentRoot);
     NS_IF_RELEASE(mCSSLoader);
 
     PR_FREEIF(mText);
@@ -701,7 +699,7 @@ XULContentSinkImpl::CloseContainer(const nsIParserNode& aNode)
 			// Block the parser. It will only be unblocked after all
 			// of our child overlays have finished parsing.
             rv = NS_ERROR_HTMLPARSER_BLOCK;
-		}   
+		} 
     }
 
     PopNameSpaces();
@@ -1079,9 +1077,9 @@ XULContentSinkImpl::Init(nsIDocument* aDocument, nsIRDFDataSource* aDataSource)
     
     nsCOMPtr<nsIXULChildDocument> childDocument;
     childDocument = do_QueryInterface(aDocument);
-    childDocument->GetFragmentRoot(&mFragmentRoot);
-    if (mFragmentRoot) {
-        // We're totally a subdocument. Find the root document's
+    childDocument->GetContentSink(&mParentContentSink);
+    if (mParentContentSink) {
+        // We're an overlay. Find the parent document's
         // data source and make assertions there.
       
         // First of all, find the root document.
@@ -1141,7 +1139,7 @@ XULContentSinkImpl::Init(nsIDocument* aDocument, nsIRDFDataSource* aDataSource)
         return rv;
     }
 
-    if (mFragmentRoot == nsnull) {
+    if (mParentContentSink == nsnull) {
         // XUL Namespace isn't registered if we're a root document.
         // We need to register it.
         rv = mNameSpaceManager->RegisterNameSpace(kXULNameSpaceURI, kNameSpaceID_XUL);
@@ -1474,14 +1472,14 @@ XULContentSinkImpl::OpenTag(const nsIParserNode& aNode)
         // container).
         mHaveSetRootResource = PR_TRUE;
 
-        if (mFragmentRoot) {
+        /*if (mFragmentRoot) {
             // We're a subdocument.  We need to take this fragment
             // node (which is the root of the fragment) and completely
             // discard it.  The fragment root's resource is actually what
             // should become the root of this subtree.
             rdfResource = dont_QueryInterface(mFragmentRoot);
         }
-        else {
+        else*/ {
             nsCOMPtr<nsIRDFDocument> rdfDoc;
             if (NS_SUCCEEDED(mDocument->QueryInterface(nsIRDFDocument::GetIID(),
                                                        (void**) getter_AddRefs(rdfDoc)))) {
