@@ -50,27 +50,32 @@ mySidebar.prototype = {
         var appShell = Components.classes['component://netscape/appshell/appShellService'].getService();
         appShell = appShell.QueryInterface(Components.interfaces.nsIAppShellService);
 
+        // Grab the nsINetSupportDialog. It does not have a prog id
+        // registered, so use the CID instead. Ugly.
+        //var prompt = Components.classes['{05650684-eb9f-11d2-8e19-9ac64aca4d3c}'].getService();
+        var prompt = Components.classes['component://netscape/appshell/netSupportDialog'].getService();
+        prompt = prompt.QueryInterface(Components.interfaces.nsIPrompt);
+
         // Create a "container" wrapper around the
-        // "urn:sidebar:ccurent-panel-list" object. This makes it easier
+        // "urn:sidebar:current-panel-list" object. This makes it easier
         // to manipulate the RDF:Seq correctly.
         var container = Components.classes["component://netscape/rdf/container"].createInstance();
         container = container.QueryInterface(Components.interfaces.nsIRDFContainer);
+        debug("  this.datasource ="+this.datasource);
+        debug("  this.resource ="+this.resource);
+        container.Init(this.datasource, this.rdf.GetResource(this.resource));
+
         // Create a resource for the new panel and add it to the list
         var panel_resource = this.rdf.GetResource("urn:sidebar:3rdparty-panel:"+aContentURL);
         var panel_index = container.IndexOf(panel_resource);
         if (panel_index != -1) {
-          appShell.RunModalDialog(null,null,
-                                  "chrome://sidebar/content/panel-exists.xul")
-          return;
+            dump(prompt);
+            prompt.alert("That panel already exists in your sidebar.")
+            return;
         }
-        // Throw up modal dialog asking for permission to add panel.
-        // Check for "Add Panel", "Cancel" response.
-        hidden_window.openDialog("chrome://sidebar/content/panel-add-confirm.xul",
-                                 "_blank", "chrome,close,titlebar,modal", "");
-
-        debug("  this.datasource ="+this.datasource);
-        debug("  this.resource ="+this.resource);
-        container.Init(this.datasource, this.rdf.GetResource(this.resource));
+        if (!prompt.confirm("Are you sure you want to add this panel to your sidebar?")) {
+            return;
+        }
 
         container.AppendElement(panel_resource);
 
@@ -126,14 +131,15 @@ var myModule = {
      */
     registerSelf: function (compMgr, fileSpec, location, type) {
         if (0 && this.firstTime) {
-            debug("*s** Deferring registration of sidebar JS components");
+            debug("*** Deferring registration of sidebar JS components");
             this.firstTime = false;
             throw Components.results.NS_ERROR_FACTORY_REGISTER_AGAIN;
         }
         debug("*** Registering sidebar JS components");
         compMgr.registerComponentWithType(this.myCID,
                                           "Sidebar JS Component",
-                                          "component://mozilla/sidebar.1", fileSpec,
+                                          "component://mozilla/sidebar.js",
+                                          fileSpec,
                                           location, true, true, 
                                           type);
     },
