@@ -576,6 +576,7 @@ nsresult nsExpatTokenizer::LoadStream(nsIInputStream* in,
   uniBuf = (PRUnichar *) PR_Malloc(retLen*sizeof(PRUnichar));
   nsCRT::memcpy(uniBuf, aBuf, sizeof(PRUnichar) * retLen);
   PR_FREEIF(aBuf);      
+  NS_RELEASE(uniIn);
 
   if (NS_BASE_STREAM_EOF == res)
     res = NS_OK;
