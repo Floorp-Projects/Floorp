@@ -1099,6 +1099,11 @@ NS_IMETHODIMP nsXBLService::GetBindingInternal(nsIContent* aBoundElement,
         // Look up the prefix.
         // We have a base class binding. Load it right now.
         nsCAutoString urlCString; urlCString.AssignWithConversion(value);
+        nsCOMPtr<nsIURI> docURI;
+        doc->GetDocumentURL(getter_AddRefs(docURI));
+        nsXPIDLCString urlStr;
+        docURI->Resolve(urlCString, getter_Copies(urlStr));
+        urlCString = urlStr.get();
         if (NS_FAILED(GetBindingInternal(aBoundElement, urlCString, aPeekOnly, aIsReady, getter_AddRefs(baseBinding))))
           return NS_ERROR_FAILURE; // Binding not yet ready or an error occurred.
         if (!aPeekOnly) {
