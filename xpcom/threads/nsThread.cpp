@@ -101,6 +101,12 @@ nsThread::Exit(void* arg)
 {
     nsThread* self = (nsThread*)arg;
     self->mDead = PR_TRUE;
+
+    if (self->mDead) {
+        NS_ERROR("attempt to Exit() thread twice");
+        return;
+    }
+    
     PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
            ("nsIThread %p exited\n", self));
     NS_RELEASE(self);
