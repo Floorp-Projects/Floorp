@@ -75,6 +75,9 @@ public:
                                          	Str255					outName);
 
    NS_METHOD            GetWidget(nsIWidget** aWidget);
+   CBrowserShell*       GetBrowserShell() const
+                        { return mBrowserShell; }
+                        
 protected:
 
       // Called by both constructors
