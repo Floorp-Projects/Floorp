@@ -20,18 +20,31 @@
 
 <!ENTITY console.title "JavaScript Console">
 
+<!ENTITY menuBar.tooltip      "Menu Bar">
+<!ENTITY modeToolbar.tooltip  "Mode Toolbar">
+<!ENTITY entryToolbar.tooltip "Javascript Entry Toolbar">
 <!ENTITY errFile.label   "Source File:">
 <!ENTITY errLine.label   "Line:">
 <!ENTITY errColumn.label "Column:">
 
 <!ENTITY all.label       "All">
+<!ENTITY all.accesskey   "A">
 <!ENTITY errors.label    "Errors">
+<!ENTITY errors.accesskey "r">
 <!ENTITY warnings.label  "Warnings">
+<!ENTITY warnings.accesskey "n">
 <!ENTITY messages.label  "Messages">
+<!ENTITY messages.accesskey "M">
 <!ENTITY clear.label     "Clear">
+<!ENTITY clear.accesskey "l">
 <!ENTITY evaluate.label  "Evaluate">
 
 <!ENTITY sortFirst.label "First > Last Sort Order">
 <!ENTITY sortFirst.accesskey "f">
 <!ENTITY sortLast.label  "Last > First Sort Order">
 <!ENTITY sortLast.accesskey  "l">
+
+<!ENTITY toolbarsCmd.label "Show/Hide">
+<!ENTITY toolbarsCmd.accesskey "w">
+<!ENTITY toolbarMode.label "Mode">
+<!ENTITY toolbarEval.label "JavaScript Entry">
