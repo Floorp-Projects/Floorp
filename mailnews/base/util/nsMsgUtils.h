@@ -106,6 +106,9 @@ NS_MSG_BASE nsresult IsRFC822HeaderFieldName(const char *aHdr, PRBool *aResult);
    */
 NS_MSG_BASE nsresult GetOrCreateFolder(const nsACString & aURI, nsIUrlListener *aListener);
 
+// Returns true if the nsIURI is a message under an RSS account
+NS_MSG_BASE nsresult IsRSSArticle(nsIURI * aMsgURI, PRBool *aIsRSSArticle);
+
 // digest needs to be a pointer to a 16 byte buffer
 #define DIGEST_LENGTH 16
 

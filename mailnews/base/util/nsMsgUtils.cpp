@@ -67,6 +67,7 @@
 #include "nsISpamSettings.h"
 #include "nsISignatureVerifier.h"
 #include "nsNativeCharsetUtils.h"
+#include "nsIRssIncomingServer.h"
 
 static NS_DEFINE_CID(kImapUrlCID, NS_IMAPURL_CID);
 static NS_DEFINE_CID(kCMailboxUrl, NS_MAILBOXURL_CID);
@@ -795,6 +796,47 @@ GetOrCreateFolder(const nsACString &aURI, nsIUrlListener *aListener)
 
   return NS_OK;
 }
+
+nsresult IsRSSArticle(nsIURI * aMsgURI, PRBool *aIsRSSArticle)
+{
+  nsresult rv;
+  *aIsRSSArticle = PR_FALSE;
+
+  nsCOMPtr<nsIMsgMessageUrl> msgUrl = do_QueryInterface(aMsgURI, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsXPIDLCString resourceURI;
+  msgUrl->GetUri(getter_Copies(resourceURI));
+  
+  // get the msg service for this URI
+  nsCOMPtr<nsIMsgMessageService> msgService;
+  rv = GetMessageServiceFromURI(resourceURI.get(), getter_AddRefs(msgService));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsCOMPtr<nsIMsgDBHdr> msgHdr;
+  rv = msgService->MessageURIToMsgHdr(resourceURI, getter_AddRefs(msgHdr));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(aMsgURI, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // get the folder and the server from the msghdr
+  nsCOMPtr<nsIRssIncomingServer> rssServer;
+  nsCOMPtr<nsIMsgFolder> folder;
+  rv = msgHdr->GetFolder(getter_AddRefs(folder));
+  if (NS_SUCCEEDED(rv) && folder)
+  {
+    nsCOMPtr<nsIMsgIncomingServer> server;
+    folder->GetServer(getter_AddRefs(server));
+    rssServer = do_QueryInterface(server);
+
+    if (rssServer)
+      *aIsRSSArticle = PR_TRUE;
+  }
+
+  return rv;
+}
+
 
 // digest needs to be a pointer to a DIGEST_LENGTH (16) byte buffer
 nsresult MSGCramMD5(const char *text, PRInt32 text_len, const char *key, PRInt32 key_len, unsigned char *digest)

@@ -59,6 +59,10 @@
 #include "nsIMsgHdr.h"
 #include "nsMsgUtils.h"
 
+// needed for the cookie policy manager
+#include "nsICookie2.h"
+#include "nsICookieManager2.h"
+
 static const char kBlockRemoteImages[] = "mailnews.message_display.disable_remote_image";
 static const char kRemoteImagesUseWhiteList[] = "mailnews.message_display.disable_remote_images.useWhitelist";
 static const char kRemoteImagesWhiteListURI[] = "mailnews.message_display.disable_remote_images.whiteListAbURI";
@@ -245,25 +249,17 @@ nsMsgContentPolicy::ShouldLoad(PRUint32          aContentType,
         PRUint32 remoteContentPolicy = kNoRemoteContentPolicy;
         msgHdr->GetUint32Property("remoteContentPolicy", &remoteContentPolicy); 
 
-        // get the folder and the server from the msghdr
-        // an error trying to get the folder shouldn't make us quit...
-        nsCOMPtr<nsIRssIncomingServer> rssServer;
-        nsCOMPtr<nsIMsgFolder> folder;
-        rv = msgHdr->GetFolder(getter_AddRefs(folder));
-        if (NS_SUCCEEDED(rv) && folder)
-        {
-        nsCOMPtr<nsIMsgIncomingServer> server;
-          folder->GetServer(getter_AddRefs(server));
-          rssServer = do_QueryInterface(server);
-        }
-        
+        // Case #2, check if the message is in an RSS folder
+        PRBool isRSS = PR_FALSE;
+        IsRSSArticle(aRequestingLocation, &isRSS);
+    
         // Case #3, author is in our white list..
         PRBool authorInWhiteList = PR_FALSE;
         IsSenderInWhiteList(msgHdr, &authorInWhiteList);
         
         // Case #1 and #2: special case RSS. Allow urls that are RSS feeds to show remote image (Bug #250246)
         // Honor the message specific remote content policy
-        if (rssServer || remoteContentPolicy == kAllowRemoteContent || authorInWhiteList)
+        if (isRSS || remoteContentPolicy == kAllowRemoteContent || authorInWhiteList)
           *aDecision = nsIContentPolicy::ACCEPT;
         else if (mBlockRemoteImages) 
         {
@@ -320,5 +316,44 @@ NS_IMETHODIMP nsMsgContentPolicy::Observe(nsISupports *aSubject, const char *aTo
       prefBranch->GetCharPref(kRemoteImagesWhiteListURI, getter_Copies(mRemoteImageWhiteListURI));
   }
   
+  return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS1(nsMsgCookiePolicy, nsICookiePermission)
+
+
+NS_IMETHODIMP nsMsgCookiePolicy::SetAccess(nsIURI         *aURI,
+                                           nsCookieAccess  aAccess)
+{
+  // we don't support cookie access lists for mail
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgCookiePolicy::CanAccess(nsIURI         *aURI,
+                                            nsIURI         *aFirstURI,
+                                            nsIChannel     *aChannel,
+                                            nsCookieAccess *aResult)
+{
+  // by default we deny all cookies in mail
+  *aResult = ACCESS_DENY;
+  
+  // If aFirstURI is an RSS article, then we do allow cookies. 
+  NS_ENSURE_TRUE(aFirstURI, NS_OK);  
+  PRBool isRSS = PR_FALSE;
+  IsRSSArticle(aFirstURI, &isRSS);
+  if (isRSS)
+    *aResult = ACCESS_DEFAULT;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgCookiePolicy::CanSetCookie(nsIURI     *aURI,
+                                              nsIChannel *aChannel,
+                                              nsICookie2 *aCookie,
+                                              PRBool     *aIsSession,
+                                              PRInt64    *aExpiry,
+                                              PRBool     *aResult)
+{
+  *aResult = PR_TRUE;
   return NS_OK;
 }
