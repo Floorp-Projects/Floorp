@@ -81,8 +81,6 @@ public:
 	nsresult	GetUint32PropertyWithToken(mdb_token aProperty, PRUint32 &propertyValue, PRUint32 defaultValue = 0);
 	nsresult	GetInt32PropertyWithToken(mdb_token aProperty, PRInt32 &propertyValue, PRInt32 defaultValue = 0);
 
-	static void AddPrefObserver();
-	static void RemovePrefObserver();
 
 	nsMsgKeyArray m_lateredKeys;		// list of latered messages
 
