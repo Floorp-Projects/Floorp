@@ -1,35 +1,11 @@
 /*
-The contents of this file are subject to the Mozilla Public License
-Version 1.1 (the "License"); you may not use this file except in
-compliance with the License. You may obtain a copy of the License at
-http://www.mozilla.org/MPL/
-
-Software distributed under the License is distributed on an "AS IS"
-basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
-License for the specific language governing rights and limitations
-under the License.
-
-The Original Code is expat.
-
-The Initial Developer of the Original Code is James Clark.
-Portions created by James Clark are Copyright (C) 1998, 1999
-James Clark. All Rights Reserved.
-
-Contributor(s):
-
-Alternatively, the contents of this file may be used under the terms
-of the GNU General Public License (the "GPL"), in which case the
-provisions of the GPL are applicable instead of those above.  If you
-wish to allow use of your version of this file only under the terms of
-the GPL and not to allow others to use your version of this file under
-the MPL, indicate your decision by deleting the provisions above and
-replace them with the notice and other provisions required by the
-GPL. If you do not delete the provisions above, a recipient may use
-your version of this file under either the MPL or the GPL.
+Copyright (c) 1998, 1999 Thai Open Source Software Center Ltd
+See the file copying.txt for copying permission.
 */
 
 #include "xmldef.h"
 #include "xmlrole.h"
+#include "ascii.h"
 
 /* Doesn't check:
 
@@ -37,6 +13,30 @@ your version of this file under either the MPL or the GPL.
  content of literals
 
 */
+
+static const char KW_ANY[] = { ASCII_A, ASCII_N, ASCII_Y, '\0' };
+static const char KW_ATTLIST[] = { ASCII_A, ASCII_T, ASCII_T, ASCII_L, ASCII_I, ASCII_S, ASCII_T, '\0' };
+static const char KW_CDATA[] = { ASCII_C, ASCII_D, ASCII_A, ASCII_T, ASCII_A, '\0' };
+static const char KW_DOCTYPE[] = { ASCII_D, ASCII_O, ASCII_C, ASCII_T, ASCII_Y, ASCII_P, ASCII_E, '\0' };
+static const char KW_ELEMENT[] = { ASCII_E, ASCII_L, ASCII_E, ASCII_M, ASCII_E, ASCII_N, ASCII_T, '\0' };
+static const char KW_EMPTY[] = { ASCII_E, ASCII_M, ASCII_P, ASCII_T, ASCII_Y, '\0' };
+static const char KW_ENTITIES[] = { ASCII_E, ASCII_N, ASCII_T, ASCII_I, ASCII_T, ASCII_I, ASCII_E, ASCII_S, '\0' };
+static const char KW_ENTITY[] = { ASCII_E, ASCII_N, ASCII_T, ASCII_I, ASCII_T, ASCII_Y, '\0' };
+static const char KW_FIXED[] = { ASCII_F, ASCII_I, ASCII_X, ASCII_E, ASCII_D, '\0' };
+static const char KW_ID[] = { ASCII_I, ASCII_D, '\0' };
+static const char KW_IDREF[] = { ASCII_I, ASCII_D, ASCII_R, ASCII_E, ASCII_F, '\0' };
+static const char KW_IDREFS[] = { ASCII_I, ASCII_D, ASCII_R, ASCII_E, ASCII_F, ASCII_S, '\0' };
+static const char KW_IGNORE[] = { ASCII_I, ASCII_G, ASCII_N, ASCII_O, ASCII_R, ASCII_E, '\0' };
+static const char KW_IMPLIED[] = { ASCII_I, ASCII_M, ASCII_P, ASCII_L, ASCII_I, ASCII_E, ASCII_D, '\0' };
+static const char KW_INCLUDE[] = { ASCII_I, ASCII_N, ASCII_C, ASCII_L, ASCII_U, ASCII_D, ASCII_E, '\0' };
+static const char KW_NDATA[] = { ASCII_N, ASCII_D, ASCII_A, ASCII_T, ASCII_A, '\0' };
+static const char KW_NMTOKEN[] = { ASCII_N, ASCII_M, ASCII_T, ASCII_O, ASCII_K, ASCII_E, ASCII_N, '\0' };
+static const char KW_NMTOKENS[] = { ASCII_N, ASCII_M, ASCII_T, ASCII_O, ASCII_K, ASCII_E, ASCII_N, ASCII_S, '\0' };
+static const char KW_NOTATION[] = { ASCII_N, ASCII_O, ASCII_T, ASCII_A, ASCII_T, ASCII_I, ASCII_O, ASCII_N, '\0' };
+static const char KW_PCDATA[] = { ASCII_P, ASCII_C, ASCII_D, ASCII_A, ASCII_T, ASCII_A, '\0' };
+static const char KW_PUBLIC[] = { ASCII_P, ASCII_U, ASCII_B, ASCII_L, ASCII_I, ASCII_C, '\0' };
+static const char KW_REQUIRED[] = { ASCII_R, ASCII_E, ASCII_Q, ASCII_U, ASCII_I, ASCII_R, ASCII_E, ASCII_D, '\0' };
+static const char KW_SYSTEM[] = { ASCII_S, ASCII_Y, ASCII_S, ASCII_T, ASCII_E, ASCII_M, '\0' };
 
 #ifndef MIN_BYTES_PER_CHAR
 #define MIN_BYTES_PER_CHAR(enc) ((enc)->minBytesPerChar)
@@ -103,7 +103,7 @@ int prolog0(PROLOG_STATE *state,
     if (!XmlNameMatchesAscii(enc,
 			     ptr + 2 * MIN_BYTES_PER_CHAR(enc),
 			     end,
-			     "DOCTYPE"))
+			     KW_DOCTYPE))
       break;
     state->handler = doctype0;
     return XML_ROLE_NONE;
@@ -132,7 +132,7 @@ int prolog1(PROLOG_STATE *state,
     if (!XmlNameMatchesAscii(enc,
 			     ptr + 2 * MIN_BYTES_PER_CHAR(enc),
 			     end,
-			     "DOCTYPE"))
+			     KW_DOCTYPE))
       break;
     state->handler = doctype0;
     return XML_ROLE_NONE;
@@ -198,11 +198,11 @@ int doctype1(PROLOG_STATE *state,
     state->handler = prolog2;
     return XML_ROLE_DOCTYPE_CLOSE;
   case XML_TOK_NAME:
-    if (XmlNameMatchesAscii(enc, ptr, end, "SYSTEM")) {
+    if (XmlNameMatchesAscii(enc, ptr, end, KW_SYSTEM)) {
       state->handler = doctype3;
       return XML_ROLE_NONE;
     }
-    if (XmlNameMatchesAscii(enc, ptr, end, "PUBLIC")) {
+    if (XmlNameMatchesAscii(enc, ptr, end, KW_PUBLIC)) {
       state->handler = doctype2;
       return XML_ROLE_NONE;
     }
@@ -296,28 +296,28 @@ int internalSubset(PROLOG_STATE *state,
     if (XmlNameMatchesAscii(enc,
 			    ptr + 2 * MIN_BYTES_PER_CHAR(enc),
 			    end,
-			    "ENTITY")) {
+			    KW_ENTITY)) {
       state->handler = entity0;
       return XML_ROLE_NONE;
     }
     if (XmlNameMatchesAscii(enc,
 			    ptr + 2 * MIN_BYTES_PER_CHAR(enc),
 			    end,
-			    "ATTLIST")) {
+			    KW_ATTLIST)) {
       state->handler = attlist0;
       return XML_ROLE_NONE;
     }
     if (XmlNameMatchesAscii(enc,
 			    ptr + 2 * MIN_BYTES_PER_CHAR(enc),
 			    end,
-			    "ELEMENT")) {
+			    KW_ELEMENT)) {
       state->handler = element0;
       return XML_ROLE_NONE;
     }
     if (XmlNameMatchesAscii(enc,
 			    ptr + 2 * MIN_BYTES_PER_CHAR(enc),
 			    end,
-			    "NOTATION")) {
+			    KW_NOTATION)) {
       state->handler = notation0;
       return XML_ROLE_NONE;
     }
@@ -429,11 +429,11 @@ int entity2(PROLOG_STATE *state,
   case XML_TOK_PROLOG_S:
     return XML_ROLE_NONE;
   case XML_TOK_NAME:
-    if (XmlNameMatchesAscii(enc, ptr, end, "SYSTEM")) {
+    if (XmlNameMatchesAscii(enc, ptr, end, KW_SYSTEM)) {
       state->handler = entity4;
       return XML_ROLE_NONE;
     }
-    if (XmlNameMatchesAscii(enc, ptr, end, "PUBLIC")) {
+    if (XmlNameMatchesAscii(enc, ptr, end, KW_PUBLIC)) {
       state->handler = entity3;
       return XML_ROLE_NONE;
     }
@@ -492,9 +492,9 @@ int entity5(PROLOG_STATE *state,
     return XML_ROLE_NONE;
   case XML_TOK_DECL_CLOSE:
     setTopLevel(state);
-    return XML_ROLE_NONE;
+    return XML_ROLE_EXTERNAL_GENERAL_ENTITY_NO_NOTATION;
   case XML_TOK_NAME:
-    if (XmlNameMatchesAscii(enc, ptr, end, "NDATA")) {
+    if (XmlNameMatchesAscii(enc, ptr, end, KW_NDATA)) {
       state->handler = entity6;
       return XML_ROLE_NONE;
     }
@@ -531,11 +531,11 @@ int entity7(PROLOG_STATE *state,
   case XML_TOK_PROLOG_S:
     return XML_ROLE_NONE;
   case XML_TOK_NAME:
-    if (XmlNameMatchesAscii(enc, ptr, end, "SYSTEM")) {
+    if (XmlNameMatchesAscii(enc, ptr, end, KW_SYSTEM)) {
       state->handler = entity9;
       return XML_ROLE_NONE;
     }
-    if (XmlNameMatchesAscii(enc, ptr, end, "PUBLIC")) {
+    if (XmlNameMatchesAscii(enc, ptr, end, KW_PUBLIC)) {
       state->handler = entity8;
       return XML_ROLE_NONE;
     }
@@ -609,11 +609,11 @@ int notation1(PROLOG_STATE *state,
   case XML_TOK_PROLOG_S:
     return XML_ROLE_NONE;
   case XML_TOK_NAME:
-    if (XmlNameMatchesAscii(enc, ptr, end, "SYSTEM")) {
+    if (XmlNameMatchesAscii(enc, ptr, end, KW_SYSTEM)) {
       state->handler = notation3;
       return XML_ROLE_NONE;
     }
-    if (XmlNameMatchesAscii(enc, ptr, end, "PUBLIC")) {
+    if (XmlNameMatchesAscii(enc, ptr, end, KW_PUBLIC)) {
       state->handler = notation2;
       return XML_ROLE_NONE;
     }
@@ -728,14 +728,14 @@ int attlist2(PROLOG_STATE *state,
   case XML_TOK_NAME:
     {
       static const char *types[] = {
-	"CDATA",
-        "ID",
-        "IDREF",
-        "IDREFS",
-        "ENTITY",
-        "ENTITIES",
-        "NMTOKEN",
-        "NMTOKENS",
+	KW_CDATA,
+        KW_ID,
+        KW_IDREF,
+        KW_IDREFS,
+        KW_ENTITY,
+        KW_ENTITIES,
+        KW_NMTOKEN,
+        KW_NMTOKENS,
       };
       int i;
       for (i = 0; i < (int)(sizeof(types)/sizeof(types[0])); i++)
@@ -744,7 +744,7 @@ int attlist2(PROLOG_STATE *state,
 	  return XML_ROLE_ATTRIBUTE_TYPE_CDATA + i;
 	}
     }
-    if (XmlNameMatchesAscii(enc, ptr, end, "NOTATION")) {
+    if (XmlNameMatchesAscii(enc, ptr, end, KW_NOTATION)) {
       state->handler = attlist5;
       return XML_ROLE_NONE;
     }
@@ -865,21 +865,21 @@ int attlist8(PROLOG_STATE *state,
     if (XmlNameMatchesAscii(enc,
 			    ptr + MIN_BYTES_PER_CHAR(enc),
 			    end,
-			    "IMPLIED")) {
+			    KW_IMPLIED)) {
       state->handler = attlist1;
       return XML_ROLE_IMPLIED_ATTRIBUTE_VALUE;
     }
     if (XmlNameMatchesAscii(enc,
 			    ptr + MIN_BYTES_PER_CHAR(enc),
 			    end,
-			    "REQUIRED")) {
+			    KW_REQUIRED)) {
       state->handler = attlist1;
       return XML_ROLE_REQUIRED_ATTRIBUTE_VALUE;
     }
     if (XmlNameMatchesAscii(enc,
 			    ptr + MIN_BYTES_PER_CHAR(enc),
 			    end,
-			    "FIXED")) {
+			    KW_FIXED)) {
       state->handler = attlist9;
       return XML_ROLE_NONE;
     }
@@ -937,11 +937,11 @@ int element1(PROLOG_STATE *state,
   case XML_TOK_PROLOG_S:
     return XML_ROLE_NONE;
   case XML_TOK_NAME:
-    if (XmlNameMatchesAscii(enc, ptr, end, "EMPTY")) {
+    if (XmlNameMatchesAscii(enc, ptr, end, KW_EMPTY)) {
       state->handler = declClose;
       return XML_ROLE_CONTENT_EMPTY;
     }
-    if (XmlNameMatchesAscii(enc, ptr, end, "ANY")) {
+    if (XmlNameMatchesAscii(enc, ptr, end, KW_ANY)) {
       state->handler = declClose;
       return XML_ROLE_CONTENT_ANY;
     }
@@ -968,7 +968,7 @@ int element2(PROLOG_STATE *state,
     if (XmlNameMatchesAscii(enc,
 			    ptr + MIN_BYTES_PER_CHAR(enc),
 			    end,
-			    "PCDATA")) {
+			    KW_PCDATA)) {
       state->handler = element3;
       return XML_ROLE_CONTENT_PCDATA;
     }
@@ -1136,11 +1136,11 @@ int condSect0(PROLOG_STATE *state,
   case XML_TOK_PROLOG_S:
     return XML_ROLE_NONE;
   case XML_TOK_NAME:
-    if (XmlNameMatchesAscii(enc, ptr, end, "INCLUDE")) {
+    if (XmlNameMatchesAscii(enc, ptr, end, KW_INCLUDE)) {
       state->handler = condSect1;
       return XML_ROLE_NONE;
     }
-    if (XmlNameMatchesAscii(enc, ptr, end, "IGNORE")) {
+    if (XmlNameMatchesAscii(enc, ptr, end, KW_IGNORE)) {
       state->handler = condSect2;
       return XML_ROLE_NONE;
     }
