@@ -1509,9 +1509,7 @@ nsBrowserAppCore::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL, 
   if (NS_FAILED(rv)) return rv;
 
   nsAutoString urlStr(url);
-#ifdef NECKO
-  nsCRT::free(url);
-#endif
+
 
   nsAutoString kStartDocumentLoad("StartDocumentLoad");
   rv = observer->Notify(mContentWindow,
@@ -1541,7 +1539,14 @@ nsBrowserAppCore::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL, 
 
   //Disable the reload button
   setAttribute(mWebShell, "canReload", "disabled", "true");
-    
+  
+  // set the url string in the urlbar
+  setAttribute( mWebShell, "urlbar", "value", url);  
+
+#ifdef NECKO
+  nsCRT::free(url);
+#endif
+
   //Set the "at-work" protocol icon.
 
   char* scheme;
@@ -1573,7 +1578,6 @@ nsBrowserAppCore::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL, 
 
       NS_RELEASE(chrome);
   }
-
   return NS_OK;
 }
 
@@ -1685,13 +1689,16 @@ end:
 
   setAttribute( mWebShell, "Browser:Throbber", "busy", "false" );
   PRBool result=PR_TRUE;
+
   // Check with sessionHistory if you can go forward
   canForward(result);
   setAttribute(mWebShell, "canGoForward", "disabled", (result == PR_TRUE) ? "" : "true");
 
+
     // Check with sessionHistory if you can go back
   canBack(result);
   setAttribute(mWebShell, "canGoBack", "disabled", (result == PR_TRUE) ? "" : "true");
+
 
     //Disable the Stop button
   setAttribute( mWebShell, "canStop", "disabled", "true" );
