@@ -46,8 +46,8 @@
 
 			        <treehead>
 			            <treerow>
-			                <treecell>&moduleName.label;</treecell>
-			                <treecell>&moduleSource.label;</treecell>
+			                <treecell value="&moduleName.label;" />
+			                <treecell value="&moduleSource.label;"/>
 			            </treerow>
 			        </treehead>
 
