@@ -1013,7 +1013,7 @@ NS_IMETHODIMP PresShell::GetCaret(nsICaret **outCaret)
   return mCaret->QueryInterface(kICaretIID,(void **)outCaret);
 }
 
-NS_METHOD PresShell::RefreshCaret(nsIView *aView, nsIRenderingContext& aRendContext, const nsRect& aDirtyRect)
+nsresult PresShell::RefreshCaret(nsIView *aView, nsIRenderingContext& aRendContext, const nsRect& aDirtyRect)
 {
   if (mCaret)
   	mCaret->Refresh(aView, aRendContext, aDirtyRect);
