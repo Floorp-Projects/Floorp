@@ -654,7 +654,7 @@ GetCharsetFromLocale(char *locale)
        strcpy(buf, line);
        line = CHARCONVTABLE[++i];
  
-       if (strlen(buf) == 0 || buf[0] == '!')
+       if (!*buf || *buf == '!')
        { 
           continue;
        } 
