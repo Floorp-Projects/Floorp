@@ -1021,6 +1021,8 @@ static nsFontCharSetInfo JISX0212 =
   { "jis_0212-1990", DoubleByteConvert, 1 };
 static nsFontCharSetInfo KSC5601 =
   { "ks_c_5601-1987", DoubleByteConvert, 1 };
+static nsFontCharSetInfo X11Johab =
+  { "x-x11johab", DoubleByteConvert, 1 };
 
 static nsFontCharSetInfo ISO106461 =
   { nsnull, ISO10646Convert, 1 };
@@ -1119,6 +1121,9 @@ static nsFontCharSetMap gCharSetMap[] =
   { "jisx0208.1990-0",    &JISX0208      },
   { "jisx0212.1990-0",    &JISX0212      },
   { "koi8-r",             &KOI8R         },
+  { "johab-1",            &X11Johab      },
+  { "johabs-1",           &X11Johab      },
+  { "johabsh-1",          &X11Johab      },
   { "ksc5601.1987-0",     &KSC5601       },
   { "misc-fontspecific",  &Ignore        },
   { "sgi-fontspecific",   &Ignore        },
