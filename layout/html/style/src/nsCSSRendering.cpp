@@ -2696,9 +2696,8 @@ FindCanvasBackground(nsIPresContext* aPresContext,
         node->GetOwnerDocument(getter_AddRefs(doc));
         nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(doc);
         if (htmlDoc) {
-          PRInt32 namespaceID;
-          content->GetNameSpaceID(&namespaceID);
-          if (namespaceID == kNameSpaceID_None) { // HTML, not XHTML
+          nsCOMPtr<nsIDocument> document = do_QueryInterface(doc);
+          if (!document->IsCaseSensitive()) { // HTML, not XHTML
             nsCOMPtr<nsIDOMHTMLElement> body;
             htmlDoc->GetBody(getter_AddRefs(body));
             nsCOMPtr<nsIContent> bodyContent = do_QueryInterface(body);
@@ -2756,11 +2755,6 @@ FindElementBackground(nsIPresContext* aPresContext,
   if (!content || !content->IsContentOfType(nsIContent::eHTML))
     return PR_TRUE;  // not frame for an HTML element
 
-  PRInt32 namespaceID;
-  content->GetNameSpaceID(&namespaceID);
-  if (namespaceID != kNameSpaceID_None)  // This is XHTML, not HTML
-    return PR_TRUE;
-  
   if (!parentFrame)
     return PR_TRUE; // no parent to look at
   
@@ -2777,6 +2771,10 @@ FindElementBackground(nsIPresContext* aPresContext,
   if (!htmlDoc)
     return PR_TRUE;
 
+  nsCOMPtr<nsIDocument> document(do_QueryInterface(doc));
+  if (document->IsCaseSensitive()) // XHTML, not HTML
+    return PR_TRUE;
+  
   const nsStyleBackground* htmlBG = parentFrame->GetStyleBackground();
   return !htmlBG->IsTransparent();
 }
