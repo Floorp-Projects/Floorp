@@ -146,9 +146,10 @@ protected:
 
   void GetFirstRowContent(nsIContent** aRowContent);
 
-  void ComputeVisibleRowCount(PRInt32& rowCount, nsIContent* aParent);
+  void ComputeTotalRowCount(PRInt32& rowCount, nsIContent* aParent);
 
   void PostAppendRow(nsIFrame* aRowFrame, nsIPresContext& aPresContext);
+
 
 public:
   // Helpers that allow access to info. The tree is the primary consumer of this
@@ -178,6 +179,14 @@ public:
 
   PRInt32 GetVisibleRowCount() { return mRowCount; };
 
+  PRInt32 GetInsertionIndex(nsIFrame *aFrame, PRInt32 aCurrentIndex, PRBool& aDone);
+  PRInt32 GetInsertionIndexForContent(nsTableFrame* aTableFrame,
+                                      nsIPresContext& aPresContext,
+                                      nsIContent *aContent);
+
+  void AddRowToMap(nsTableFrame *aTableFrame,
+                   nsIPresContext& aPresContext,
+                   nsIContent *aContent, nsIFrame *aCurrentFrame);
   
   static PRBool IsTableRowGroupFrame(nsIFrame*);
   static PRBool IsTableRowFrame(nsIFrame*);

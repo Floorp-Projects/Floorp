@@ -332,7 +332,7 @@ nsTreeRowFrame::HandleHeaderDragEvent(nsIPresContext& aPresContext,
   // Find our flexing col and note its index and width.
   PRInt32 colX;
   PRInt32 flexWidth = 0;
-  PRInt32 flexIndex;
+  PRInt32 flexIndex = 0;
   for (colX = 0; colX < columnCount; colX++) { 
     // Get column information
     nsTableColFrame* colFrame = tableFrame->GetColFrame(colX);
@@ -353,7 +353,7 @@ nsTreeRowFrame::HandleHeaderDragEvent(nsIPresContext& aPresContext,
   // and give them a percentage of the delta based off their proportions.
   nsCOMPtr<nsIContent> colContent;
   nsTableColFrame* colFrame;
-  PRInt32 colWidth;
+  PRInt32 colWidth = 0;
   PRInt32 remaining = delta;
   for (colX = flexIndex+1; colX < columnCount; colX++) {
     if (colWidths[colX] > 0) {
