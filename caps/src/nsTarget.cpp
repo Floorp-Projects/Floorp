@@ -217,6 +217,11 @@ extern int CAPS_TARGET_URL_ACCOUNT_SETUP;
 extern int CAPS_TARGET_DESC_CONSTELLATION;
 extern int CAPS_TARGET_DETAIL_DESC_CONSTELLATION;
 extern int CAPS_TARGET_URL_CONSTELLATION;
+
+extern int CAPS_TARGET_DESC_ALL_JAVA_PERMISSION;
+extern int CAPS_TARGET_DETAIL_DESC_ALL_JAVA_PERMISSION;
+extern int CAPS_TARGET_URL_ALL_JAVA_PERMISSION;
+
 extern int CAPS_TARGET_RISK_COLOR_HIGH;
 extern int CAPS_TARGET_RISK_COLOR_HIGH;
 
@@ -1124,6 +1129,17 @@ PRBool CreateSystemTargets(nsPrincipal *sysPrin)
                             JavaSecUI_getHelpURL(CAPS_TARGET_URL_CONSTELLATION), 
                             targetPtrArray);
   target->registerTarget();
+
+
+  /* Permission to All privileges in Java */
+  target = new nsUserTarget("AllJavaPermission", sysPrin, 
+                            targetRiskHigh,
+                            targetRiskColorHigh,
+                            JavaSecUI_getString(CAPS_TARGET_DESC_ALL_JAVA_PERMISSION),
+                            JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_ALL_JAVA_PERMISSION),
+                            JavaSecUI_getHelpURL(CAPS_TARGET_URL_ALL_JAVA_PERMISSION));
+  target->registerTarget();
+
   return PR_TRUE;
 }
 

@@ -28,6 +28,7 @@ static NS_DEFINE_CID(kCCapsManagerCID, NS_CCAPSMANAGER_CID);
 static NS_DEFINE_IID(kICapsManagerIID, NS_ICAPSMANAGER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
+#define ALL_JAVA_PERMISSION "AllJavaPermission"
 
 ////////////////////////////////////////////////////////////////////////////
 // from nsISupports and AggregatedQueryInterface:
@@ -125,7 +126,7 @@ nsCCapsManager::GetPermission(nsIPrincipal* pNSIPrincipal,
                               nsITarget* ignoreTarget, 
                               nsPermission *state)
 {
-   nsTarget *target = nsTarget::findTarget("AllPermission");
+   nsTarget *target = nsTarget::findTarget(ALL_JAVA_PERMISSION);
    nsresult result = NS_OK;
    if( target == NULL )
    {
@@ -163,7 +164,7 @@ nsCCapsManager::SetPermission(nsIPrincipal* pNSIPrincipal,
                               nsITarget* ignoreTarget,
                               nsPermission state)
 {  
-   nsTarget *target = nsTarget::findTarget("AllPermission");
+   nsTarget *target = nsTarget::findTarget(ALL_JAVA_PERMISSION);
    nsresult result = NS_OK;
    if( target == NULL )
    {
@@ -197,7 +198,7 @@ nsCCapsManager::AskPermission(nsIPrincipal* pNSIPrincipal,
                               nsITarget* ignoreTarget, 
                               nsPermission *state)
 {
-   nsTarget *target = nsTarget::findTarget("AllPermission");
+   nsTarget *target = nsTarget::findTarget(ALL_JAVA_PERMISSION);
    nsresult result = NS_OK;
    if( target == NULL )
    {
