@@ -100,6 +100,21 @@ nsDrawingSurfaceXlib::Init(Drawable aDrawable, GC aGC) {
   mIsOffscreen = PR_FALSE;
   return NS_OK;
 }
+NS_IMETHODIMP
+nsDrawingSurfaceXlib::Init (GC aGC,
+                            PRUint32 aWidth, PRUint32 aHeight, PRUint32 aFlags) {
+  mGC = aGC;
+  mWidth = aWidth;
+  mHeight = aHeight;
+  mLockFlags = aFlags;
+
+  mIsOffscreen = PR_TRUE;
+  
+  mPixmap = XCreatePixmap(gDisplay, RootWindow(gDisplay, gScreenNum),
+                          mWidth, mHeight, gDepth);
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsDrawingSurfaceXlib::Lock(PRInt32 aX, PRInt32 aY,

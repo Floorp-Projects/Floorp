@@ -206,6 +206,8 @@ NS_IMETHODIMP
 nsRenderingContextXlib::GetDeviceContext(nsIDeviceContext *&aContext)
 {
   printf("nsRenderingContext::GetDeviceContext()\n");
+  NS_IF_ADDREF(mContext);
+  aContext = mContext;
   return NS_OK;
 }
 
@@ -225,6 +227,9 @@ NS_IMETHODIMP
 nsRenderingContextXlib::UnlockDrawingSurface(void)
 {
   printf("nsRenderingContextXlib::UnlockDrawingSurface()\n");
+  PRBool clipstate;
+  PopState(clipstate);
+  mRenderingSurface->Unlock();
   return NS_OK;
 }
 
@@ -232,6 +237,10 @@ NS_IMETHODIMP
 nsRenderingContextXlib::SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
 {
   printf("nsRenderingContextXlib::SelectOffScreenDrawingSurface()\n");
+  if (nsnull == aSurface)
+    mRenderingSurface = mOffscreenSurface;
+  else 
+    mRenderingSurface = (nsDrawingSurfaceXlib *)aSurface;
   return NS_OK;
 }
 
@@ -239,6 +248,7 @@ NS_IMETHODIMP
 nsRenderingContextXlib::GetDrawingSurface(nsDrawingSurface *aSurface)
 {
   printf("nsRenderingContextXlib::GetDrawingSurface()\n");
+  *aSurface = mRenderingSurface;
   return NS_OK;
 }
 
@@ -246,6 +256,12 @@ NS_IMETHODIMP
 nsRenderingContextXlib::GetHints(PRUint32& aResult)
 {
   printf("nsRenderingContextXlib::GetHints()\n");
+  PRUint32 result = 0;
+  // Most X servers implement 8 bit text rendering alot faster than
+  // XChar2b rendering. In addition, we can avoid the PRUnichar to
+  // XChar2b conversion. So we set this bit...
+  result |= NS_RENDERING_HINT_FAST_8BIT_TEXT;
+  aResult = result;
   return NS_OK;
 }
 
@@ -323,16 +339,40 @@ nsRenderingContextXlib::PopState(PRBool &aClipState)
 }
 
 NS_IMETHODIMP
-nsRenderingContextXlib::IsVisibleRect(const nsRect& aRect, PRBool &aClipState)
+nsRenderingContextXlib::IsVisibleRect(const nsRect& aRect, PRBool &aVisible)
 {
   printf("nsRenderingContextXlib::IsVisibleRect()\n");
+  aVisible = PR_TRUE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsRenderingContextXlib::SetClipRect(const nsRect& aRect, nsClipCombine aCombine, PRBool &aCilpState)
+nsRenderingContextXlib::SetClipRect(const nsRect& aRect, nsClipCombine aCombine, PRBool &aClipState)
 {
   printf("nsRenderingContextXlib::SetClipRect()\n");
+  nsRect trect = aRect;
+  Region rgn;
+  mTMatrix->TransformCoord(&trect.x, &trect.y,
+                           &trect.width, &trect.height);
+  switch(aCombine) {
+  case nsClipCombine_kIntersect:
+    mClipRegion->Intersect(trect.x,trect.y,trect.width,trect.height);
+    break;
+  case nsClipCombine_kUnion:
+    mClipRegion->Union(trect.x,trect.y,trect.width,trect.height);
+    break;
+  case nsClipCombine_kSubtract:
+    mClipRegion->Subtract(trect.x,trect.y,trect.width,trect.height);
+    break;
+  case nsClipCombine_kReplace:
+    mClipRegion->SetTo(trect.x,trect.y,trect.width,trect.height);
+    break;
+  }
+  aClipState = mClipRegion->IsEmpty();
+
+  mClipRegion->GetNativeRegion((void*&)rgn);
+  XSetRegion(gDisplay, mRenderingSurface->GetGC(), rgn);
+
   return NS_OK;
 }
 
@@ -340,6 +380,15 @@ NS_IMETHODIMP
 nsRenderingContextXlib::GetClipRect(nsRect &aRect, PRBool &aClipState)
 {
   printf("nsRenderingContextXlib::GetClipRext()\n");
+  PRInt32 x, y, w, h;
+  if (!mClipRegion->IsEmpty()) {
+    mClipRegion->GetBoundingBox(&x,&y,&w,&h);
+    aRect.SetRect(x,y,w,h);
+    aClipState = PR_TRUE;
+  } else {
+    aRect.SetRect(0,0,0,0);
+    aClipState = PR_FALSE;
+  }
   return NS_OK;
 }
 
@@ -347,6 +396,27 @@ NS_IMETHODIMP
 nsRenderingContextXlib::SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine, PRBool &aClipState)
 {
   printf("nsRenderingContextXlib::SetClipRegion()\n");
+  Region rgn;
+  switch(aCombine)
+  {
+    case nsClipCombine_kIntersect:
+      mClipRegion->Intersect(aRegion);
+      break;
+    case nsClipCombine_kUnion:
+      mClipRegion->Union(aRegion);
+      break;
+    case nsClipCombine_kSubtract:
+      mClipRegion->Subtract(aRegion);
+      break;
+    case nsClipCombine_kReplace:
+      mClipRegion->SetTo(aRegion);
+      break;
+  }
+
+  aClipState = mClipRegion->IsEmpty();
+  mClipRegion->GetNativeRegion((void*&)rgn);
+  XSetRegion(gDisplay, mRenderingSurface->GetGC(),rgn);
+
   return NS_OK;
 }
 
@@ -354,7 +424,31 @@ NS_IMETHODIMP
 nsRenderingContextXlib::GetClipRegion(nsIRegion **aRegion)
 {
   printf("nsRenderingContextXlib::GetClipRegion()\n");
-  return NS_OK;
+  nsresult  rv = NS_OK;
+  
+  NS_ASSERTION(!(nsnull == aRegion), "no region ptr");
+  
+  if (nsnull == *aRegion) {
+    nsRegionXlib *rgn = new nsRegionXlib();
+    
+    if (nsnull != rgn) {
+      NS_ADDREF(rgn);
+
+      rv = rgn->Init();
+
+      if (NS_OK == rv)
+        *aRegion = rgn;
+      else
+        NS_RELEASE(rgn);
+    }
+    else
+      rv = NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  if (rv == NS_OK)
+    (*aRegion)->SetTo(*mClipRegion);
+
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -494,6 +588,7 @@ NS_IMETHODIMP
 nsRenderingContextXlib::Translate(nscoord aX, nscoord aY)
 {
   printf("nsRenderingContextXlib::Translate()\n");
+  mTMatrix->AddTranslation((float)aX,(float)aY);
   return NS_OK;
 }
 
@@ -501,6 +596,7 @@ NS_IMETHODIMP
 nsRenderingContextXlib::Scale(float aSx, float aSy)
 {
   printf("nsRenderingContextXlib::Scale()\n");
+  mTMatrix->AddScale(aSx, aSy);
   return NS_OK;
 }
 
@@ -508,6 +604,7 @@ NS_IMETHODIMP
 nsRenderingContextXlib::GetCurrentTransform(nsTransform2D *&aTransform)
 {
   printf("nsRenderingContextXlib::GetCurrentTransform()\n");
+  aTransform = mTMatrix;
   return NS_OK;
 }
 
@@ -515,6 +612,21 @@ NS_IMETHODIMP
 nsRenderingContextXlib::CreateDrawingSurface(nsRect *aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface)
 {
   printf("nsRenderingContextXlib::CreateDrawingSurface()\n");
+  if (nsnull == mRenderingSurface) {
+    aSurface = nsnull;
+    return NS_ERROR_FAILURE;
+  }
+ 
+  nsDrawingSurfaceXlib *surf = new nsDrawingSurfaceXlib();
+
+  if (surf) {
+    NS_ADDREF(surf);
+    surf->Init(mRenderingSurface->GetGC(),
+               aBounds->width, aBounds->height, aSurfFlags);
+  }
+  
+  aSurface = (nsDrawingSurface)surf;
+
   return NS_OK;
 }
 
@@ -522,6 +634,10 @@ NS_IMETHODIMP
 nsRenderingContextXlib::DestroyDrawingSurface(nsDrawingSurface aDS)
 {
   printf("nsRenderingContextXlib::DestroyDrawingSurface()\n");
+  nsDrawingSurfaceXlib *surf = (nsDrawingSurfaceXlib *) aDS;
+
+  NS_IF_RELEASE(surf);
+
   return NS_OK;
 }
 
@@ -534,7 +650,7 @@ nsRenderingContextXlib::DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord 
 
   mTMatrix->TransformCoord(&aX0,&aY0);
   mTMatrix->TransformCoord(&aX1,&aY1);
-
+  
   ::XDrawLine(gDisplay, mRenderingSurface->GetDrawable(),
               mRenderingSurface->GetGC(), aX0, aY0, aX1, aY1);
 
@@ -942,6 +1058,82 @@ nsRenderingContextXlib::DrawString(const char *aString, PRUint32 aLength,
                                    const nscoord* aSpacing)
 {
   printf("nsRenderingContextXlib::DrawString()\n");
+  if (0 != aLength) {
+    if (mTMatrix == nsnull)
+      return NS_ERROR_FAILURE;
+    if (mRenderingSurface == nsnull)
+      return NS_ERROR_FAILURE;
+    if (aString == nsnull)
+      return NS_ERROR_FAILURE;
+    
+    nscoord x = aX;
+    nscoord y = aY;
+    
+    // Substract xFontStruct ascent since drawing specifies baseline
+    if (mFontMetrics) {
+      mFontMetrics->GetMaxAscent(y);
+      y += aY;
+    }
+
+    if (nsnull != aSpacing) {
+      // Render the string, one character at a time...
+      const char* end = aString + aLength;
+      while (aString < end) {
+        char ch = *aString++;
+        nscoord xx = x;
+        nscoord yy = y;
+        mTMatrix->TransformCoord(&xx, &yy);
+        XDrawString(gDisplay,
+                    mRenderingSurface->GetDrawable(),
+                    mRenderingSurface->GetGC(),
+                    xx, yy, &ch, 1);
+        x += *aSpacing++;
+      }
+    }
+    else {
+      mTMatrix->TransformCoord(&x, &y);
+      XDrawString(gDisplay,
+                  mRenderingSurface->GetDrawable(),
+                  mRenderingSurface->GetGC(),
+                  x, y, aString, aLength);
+    }
+  }
+
+#if 0
+  //this is no longer to be done by this API, but another
+  //will take it's place that will need this code again. MMP
+  if (mFontMetrics)
+  {
+    const nsFont *font;
+    mFontMetrics->GetFont(font);
+    PRUint8 deco = font->decorations;
+
+    if (deco & NS_FONT_DECORATION_OVERLINE)
+      DrawLine(aX, aY, aX + aWidth, aY);
+
+    if (deco & NS_FONT_DECORATION_UNDERLINE)
+    {
+      nscoord ascent,descent;
+
+      mFontMetrics->GetMaxAscent(ascent);
+      mFontMetrics->GetMaxDescent(descent);
+
+      DrawLine(aX, aY + ascent + (descent >> 1),
+               aX + aWidth, aY + ascent + (descent >> 1));
+    }
+
+    if (deco & NS_FONT_DECORATION_LINE_THROUGH)
+    {
+      nscoord height;
+
+	  mFontMetrics->GetHeight(height);
+
+      DrawLine(aX, aY + (height >> 1), aX + aWidth, aY + (height >> 1));
+    }
+  }
+#endif
+
+
   return NS_OK;
 }
 
@@ -952,6 +1144,93 @@ nsRenderingContextXlib::DrawString(const PRUnichar *aString, PRUint32 aLength,
                                    const nscoord* aSpacing)
 {
   printf("nsRenderingContextXlib::DrawString()\n");
+    if (aLength && mFontMetrics) {
+      if (mTMatrix == nsnull)
+        return NS_ERROR_FAILURE;
+      if (mRenderingSurface == nsnull)
+        return NS_ERROR_FAILURE;
+      if (aString == nsnull)
+        return NS_ERROR_FAILURE;
+
+    nscoord x = aX;
+    nscoord y;
+
+    // Substract xFontStruct ascent since drawing specifies baseline
+    mFontMetrics->GetMaxAscent(y);
+    y += aY;
+    aY = y;
+
+    mTMatrix->TransformCoord(&x, &y);
+
+    nsFontMetricsXlib* metrics = (nsFontMetricsXlib*) mFontMetrics;
+    nsFontXlib* prevFont = nsnull;
+    PRUint32 start = 0;
+    PRUint32 i;
+    for (i = 0; i < aLength; i++) {
+      PRUnichar c = aString[i];
+      nsFontXlib* currFont = nsnull;
+      nsFontXlib** font = metrics->mLoadedFonts;
+      nsFontXlib** lastFont = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
+      while (font < lastFont) {
+        if (FONT_HAS_GLYPH((*font)->mMap, c)) {
+	  currFont = *font;
+	  goto FoundFont; // for speed -- avoid "if" statement
+	}
+	font++;
+      }
+      currFont = metrics->FindFont(c);
+FoundFont:
+      // XXX avoid this test by duplicating code -- erik
+      if (prevFont) {
+	if (currFont != prevFont) {
+	  if (aSpacing) {
+	    const PRUnichar* str = &aString[start];
+	    const PRUnichar* end = &aString[i];
+	    while (str < end) {
+	      x = aX;
+	      y = aY;
+              mTMatrix->TransformCoord(&x, &y);
+              nsFontMetricsXlib::DrawString(mRenderingSurface, prevFont, x, y, str, 1);
+	      aX += *aSpacing++;
+	      str++;
+	    }
+	  }
+	  else {
+            nsFontMetricsXlib::DrawString(mRenderingSurface, prevFont, x, y,
+	      &aString[start], i - start);
+            x += nsFontMetricsXlib::GetWidth(prevFont, &aString[start],
+	      i - start);
+	  }
+	  prevFont = currFont;
+	  start = i;
+	}
+      }
+      else {
+        prevFont = currFont;
+	start = i;
+      }
+    }
+
+    if (prevFont) {
+      if (aSpacing) {
+	const PRUnichar* str = &aString[start];
+	const PRUnichar* end = &aString[i];
+	while (str < end) {
+	  x = aX;
+	  y = aY;
+          mTMatrix->TransformCoord(&x, &y);
+          nsFontMetricsXlib::DrawString(mRenderingSurface, prevFont, x, y, str, 1);
+	  aX += *aSpacing++;
+	  str++;
+	}
+      }
+      else {
+        nsFontMetricsXlib::DrawString(mRenderingSurface, prevFont, x, y, &aString[start],
+	  i - start);
+      }
+    }
+  }
+
   return NS_OK;
 }
 
@@ -960,6 +1239,8 @@ NS_IMETHODIMP nsRenderingContextXlib::DrawString(const nsString& aString, nscoor
                                                  const nscoord* aSpacing)
 {
   printf("nsRenderingContextXlib::DrawString()\n");
+  return DrawString(aString.GetUnicode(), aString.Length(),
+                    aX, aY, aFontID, aSpacing);
   return NS_OK;
 }
 
@@ -967,6 +1248,13 @@ NS_IMETHODIMP
 nsRenderingContextXlib::DrawImage(nsIImage *aImage, nscoord aX, nscoord aY)
 {
   printf("nsRenderingContextXlib::DrawImage()\n");
+  nscoord width, height;
+
+  // we have to do this here because we are doing a transform below
+  width = NSToCoordRound(mP2T * aImage->GetWidth());
+  height = NSToCoordRound(mP2T * aImage->GetHeight());
+  
+  return DrawImage(aImage, aX, aY, width, height);
   return NS_OK;
 }
 
@@ -975,6 +1263,17 @@ nsRenderingContextXlib::DrawImage(nsIImage *aImage, nscoord aX, nscoord aY,
                                   nscoord aWidth, nscoord aHeight)
 {
   printf("nsRenderingContextXlib::DrawImage()\n");
+  nscoord x, y, w, h;
+  
+  x = aX;
+  y = aY;
+  w = aWidth;
+  h = aHeight;
+
+  mTMatrix->TransformCoord(&x, &y, &w, &h);
+  
+  return aImage->Draw(*this, mRenderingSurface,
+                      x, y, w, h);
   return NS_OK;
 }
 
@@ -982,6 +1281,11 @@ NS_IMETHODIMP
 nsRenderingContextXlib::DrawImage(nsIImage *aImage, const nsRect& aRect)
 {
   printf("nsRenderingContextXlib::DrawImage()\n");
+  return DrawImage(aImage,
+                   aRect.x,
+                   aRect.y,
+                   aRect.width,
+                   aRect.height);
   return NS_OK;
 }
 
@@ -989,6 +1293,21 @@ NS_IMETHODIMP
 nsRenderingContextXlib::DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect)
 {
   printf("nsRenderingContextXlib::DrawImage()\n");
+  nsRect	sr,dr;
+  
+  sr = aSRect;
+  mTMatrix->TransformCoord(&sr.x, &sr.y,
+                           &sr.width, &sr.height);
+  
+  dr = aDRect;
+  mTMatrix->TransformCoord(&dr.x, &dr.y,
+                           &dr.width, &dr.height);
+  
+  return aImage->Draw(*this, mRenderingSurface,
+                      sr.x, sr.y,
+                      sr.width, sr.height,
+                      dr.x, dr.y,
+                      dr.width, dr.height);
   return NS_OK;
 }
 
@@ -997,6 +1316,42 @@ nsRenderingContextXlib::CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSr
                                           const nsRect &aDestBounds, PRUint32 aCopyFlags)
 {
   printf("nsRenderingContextXlib::CopyOffScreenBits()\n");
+  PRInt32               srcX = aSrcX;
+  PRInt32               srcY = aSrcY;
+  nsRect                drect = aDestBounds;
+  nsDrawingSurfaceXlib  *destsurf;
+
+  if (aSrcSurf == nsnull)
+    return NS_ERROR_FAILURE;
+  if (mTMatrix == nsnull)
+    return NS_ERROR_FAILURE;
+  if (mRenderingSurface == nsnull)
+    return NS_ERROR_FAILURE;
+
+  if (aCopyFlags & NS_COPYBITS_TO_BACK_BUFFER) {
+    NS_ASSERTION(!(nsnull == mRenderingSurface), "no back buffer");
+    destsurf = mRenderingSurface;
+  }
+  else
+    destsurf = mOffscreenSurface;
+  
+  if (aCopyFlags & NS_COPYBITS_XFORM_SOURCE_VALUES)
+    mTMatrix->TransformCoord(&srcX, &srcY);
+  
+  if (aCopyFlags & NS_COPYBITS_XFORM_DEST_VALUES)
+    mTMatrix->TransformCoord(&drect.x, &drect.y, &drect.width, &drect.height);
+  
+  //XXX flags are unused. that would seem to mean that there is
+  //inefficiency somewhere... MMP
+
+  XCopyArea(gDisplay,
+            ((nsDrawingSurfaceXlib *)aSrcSurf)->GetDrawable(),
+            destsurf->GetDrawable(),
+            ((nsDrawingSurfaceXlib *)aSrcSurf)->GetGC(),
+            srcX, srcY,
+            drect.width, drect.height,
+            drect.x, drect.height);
+
   return NS_OK;
 }
 
