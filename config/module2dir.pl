@@ -80,7 +80,7 @@ my %map = (
   'intl',               'intl',
   'intlcmpt',           'intl/compatibility',
   'jar',                'modules/libjar',
-  'java',               'sun-java/stubs js/jsd/classes',
+  'java',               'sun-java/stubs',
   'jpeg',               'jpeg',
   'jprof',              'tools/jprof',
   'js',                 'js/src/fdlibm js/src',
