@@ -197,53 +197,30 @@ nsCairoImage::Draw(nsIRenderingContext &aContext, nsIDrawingSurface *aSurface,
 
     cairo_t *dstCairo = cairoContext->GetCairo();
 
-    cairo_pattern_t *prepat = cairo_current_pattern (dstCairo);
-    fprintf (stderr, " IMAGE: pattern: %p ", prepat);
-
     cairo_save(dstCairo);
 
-#if 0
-    {
-        cairo_matrix_t *mat = cairo_matrix_create();
-        cairo_current_matrix (dstCairo, mat);
+    // just in case this needs setting
+    cairo_set_target_surface(dstCairo, dstSurf->GetCairoSurface());
 
-        double a,b,c,d,tx,ty;
-        cairo_matrix_get_affine (mat, &a, &b, &c, &d, &tx, &ty);
-        fprintf (stderr, " [cur tx ty: %g %g %d %d] ", tx, ty, (int) tx, (int) ty);
-    }
-    
-    if (aSWidth == 16 && aSHeight == 16 && aDWidth == 16 && aDHeight == 16)
-        cairo_set_rgb_color (dstCairo, 0.0, 1.0, 0.0);
-    else
-        cairo_set_rgb_color (dstCairo, 1.0, 0.0, 0.0);
-    cairo_rectangle (dstCairo, double(aDX), double(aDY), double(aDWidth), double(aDHeight));
-    cairo_fill (dstCairo);
+    // the coords here are absolute
+    cairo_identity_matrix(dstCairo);
 
-    cairo_pattern_t *postpat = cairo_current_pattern (dstCairo);
-    fprintf (stderr, " ---> %p ", postpat);
+    // clip to target
+    cairo_rectangle(dstCairo, double(aDX), double(aDY), double(aDWidth), double(aDHeight));
+    cairo_clip(dstCairo);
 
-#else
-    cairo_pattern_t *imgpat = cairo_pattern_create_for_surface (mImageSurface);
-    cairo_matrix_t *mat = cairo_matrix_create();
-    cairo_matrix_scale (mat, 1.0/15.0, 1.0/15.0);
-    cairo_matrix_scale (mat, double(aDWidth)/double(aSWidth), double(aDHeight)/double(aSHeight));
-    cairo_matrix_translate (mat, double(aSX), double(aSY));
-    cairo_pattern_set_matrix (imgpat, mat);
-    cairo_set_pattern (dstCairo, imgpat);
+    // scale up to the size difference
+    cairo_scale(dstCairo, double(aDWidth)/double(aSWidth), double(aDHeight)/double(aSHeight));
 
-    cairo_new_path (dstCairo);
-    cairo_rectangle (dstCairo, double(aDX), double(aDY), double(aDWidth), double(aDHeight));
-    cairo_fill (dstCairo);
+    // move to where we need to start the image rectangle, so that
+    // it gets clipped to the right place
+    cairo_translate(dstCairo, double(aDX - aSX), double(aDY - aSY));
 
-    cairo_set_pattern (dstCairo, nsnull);
-    cairo_pattern_destroy (imgpat);
-    cairo_matrix_destroy(mat);
-#endif
+    // show it
+    cairo_show_surface (dstCairo, mImageSurface, mWidth, mHeight);
 
     cairo_restore(dstCairo);
 
-    cairo_pattern_t *endpat = cairo_current_pattern (dstCairo);
-    fprintf (stderr, " ---> %p\n", endpat);
     return NS_OK;
 }
 
@@ -254,7 +231,34 @@ nsCairoImage::DrawTile(nsIRenderingContext &aContext,
                        PRInt32 aPadX, PRInt32 aPadY,
                        const nsRect &aTileRect)
 {
-    NS_WARNING("not implemented");
+    if (aPadX || aPadY)
+        fprintf (stderr, "Warning: nsCairoImage::DrawTile given padX(%d)/padY(%d), ignoring\n", aPadX, aPadY);
+    if (aSXOffset || aSYOffset)
+        fprintf (stderr, "Warning: nsCairoImage::DrawTile given XOffset(%d)/YOffset(%d), ignoring\n", aSXOffset, aSYOffset);
+
+    nsCairoDrawingSurface *dstSurf = NS_STATIC_CAST(nsCairoDrawingSurface*, aSurface);
+    nsCairoRenderingContext *cairoContext = NS_STATIC_CAST(nsCairoRenderingContext*, &aContext);
+
+    cairo_t *dstCairo = cairoContext->GetCairo();
+
+    cairo_save(dstCairo);
+
+    // just in case this needs setting
+    cairo_set_target_surface(dstCairo, dstSurf->GetCairoSurface());
+
+    // coords are absolute again
+    cairo_identity_matrix(dstCairo);
+
+    cairo_pattern_t *pat = cairo_pattern_create_for_surface (mImageSurface);
+    cairo_pattern_set_extend (pat, CAIRO_EXTEND_REPEAT);
+    cairo_set_pattern (dstCairo, pat);
+    cairo_pattern_destroy (pat);
+
+    cairo_rectangle (dstCairo, aTileRect.x, aTileRect.y, aTileRect.width, aTileRect.height);
+    cairo_fill (dstCairo);
+    
+    cairo_restore(dstCairo);
+
     return NS_OK;
 }
 
@@ -263,25 +267,25 @@ nsCairoImage::DrawToImage(nsIImage* aDstImage, PRInt32 aDX, PRInt32 aDY, PRInt32
 {
     nsCairoImage *dstCairoImage = NS_STATIC_CAST(nsCairoImage*, aDstImage);
 
-    cairo_t *cairo = cairo_create ();
+    cairo_t *dstCairo = cairo_create ();
 
-    cairo_set_target_surface (cairo, dstCairoImage->mImageSurface);
+    cairo_set_target_surface(dstCairo, dstCairoImage->mImageSurface);
 
-    cairo_pattern_t *pat = cairo_pattern_create_for_surface (mImageSurface);
-    cairo_matrix_t *mat = cairo_matrix_create ();
-    cairo_matrix_scale (mat, 1.0/15.0, 1.0/15.0);
-    cairo_matrix_scale (mat, double(aDWidth)/double(mWidth), double(aDHeight)/double(mHeight));
-    cairo_pattern_set_matrix (pat, mat);
+    // clip to target
+    cairo_rectangle(dstCairo, double(aDX), double(aDY), double(aDWidth), double(aDHeight));
+    cairo_clip(dstCairo);
 
-    cairo_set_pattern (cairo, pat);
+    // scale up to the size difference
+    cairo_scale(dstCairo, double(aDWidth)/double(mWidth), double(aDHeight)/double(mHeight));
 
-    cairo_new_path (cairo);
-    cairo_rectangle (cairo, double(aDX), double(aDY), double(aDWidth), double(aDHeight));
-    cairo_fill (cairo);
+    // move to where we need to start the image rectangle, so that
+    // it gets clipped to the right place
+    cairo_translate(dstCairo, double(aDX), double(aDY));
 
-    cairo_destroy (cairo);
-    cairo_pattern_destroy (pat);
-    cairo_matrix_destroy (mat);
+    // show it
+    cairo_show_surface (dstCairo, mImageSurface, mWidth, mHeight);
+
+    cairo_destroy (dstCairo);
 
     return NS_OK;
 }
@@ -289,7 +293,7 @@ nsCairoImage::DrawToImage(nsIImage* aDstImage, PRInt32 aDX, PRInt32 aDY, PRInt32
 PRInt8
 nsCairoImage::GetAlphaDepth()
 {
-    return 0;
+    return 8;
 }
 
 void *

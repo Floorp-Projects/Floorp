@@ -1487,7 +1487,7 @@ nsFontMetricsXft::PrepareToDraw(nsCairoRenderingContext *aContext,
 
     *aDraw = aSurface->GetXftDraw();
 
-    fprintf (stderr, "+++ PrepareToDraw: %p\n", *aDraw);
+//    fprintf (stderr, "+++ PrepareToDraw: %p\n", *aDraw);
 
     nsCOMPtr<nsIRegion> lastRegion;
     nsCOMPtr<nsIRegion> clipRegion;
@@ -2006,9 +2006,9 @@ nsFontXft::DrawStringSpec(FcChar32 *aString, PRUint32 aLen, void *aData)
         nscoord x = data->x + data->xOffset;
         nscoord y = data->y;
         /* Convert to device coordinate. */
-        fprintf (stderr, "[%d %d -> ", x, y);
+//        fprintf (stderr, "[%d %d -> ", x, y);
         data->context->TransformCoord(&x, &y);
-        fprintf (stderr, "%d %d] ", x, y);
+//        fprintf (stderr, "%d %d] ", x, y);
 
         /* position in X is the location offset in the string 
            plus whatever offset is required for the spacing   
