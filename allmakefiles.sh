@@ -78,6 +78,11 @@ editor/public/Makefile
 expat/Makefile
 expat/xmlparse/Makefile
 expat/xmltok/Makefile
+extensions/Makefile
+extensions/wallet/Makefile
+extensions/wallet/public/Makefile
+extensions/wallet/src/Makefile
+extensions/wallet/module/Makefile
 gfx/Makefile
 gfx/public/Makefile
 gfx/src/Makefile
