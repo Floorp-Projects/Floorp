@@ -89,6 +89,13 @@ sub ConnectToDatabase {
     }
 }
 
+sub ReconnectToShadowDatabase {
+    if (Param("shadowdb")) {
+        SendSQL("USE " . Param("shadowdb"));
+        $::dbwritesallowed = 0;
+    }
+}
+
 my $dosqllog = (-e "data/sqllog") && (-w "data/sqllog");
 
 sub SqlLog {

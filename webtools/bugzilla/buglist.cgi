@@ -49,9 +49,7 @@ sub sillyness {
 
 my $serverpush = 0;
 
-my $useshadow = Param("queryagainstshadowdb");
-
-ConnectToDatabase($useshadow);
+ConnectToDatabase();
 
 # print "Content-type: text/plain\n\n";    # Handy for debugging.
 # $::FORM{'debug'} = 1;
@@ -874,6 +872,8 @@ query.  You will have to start over at the <A HREF="query.cgi">query page</A>.
 }
 
 
+
+ReconnectToShadowDatabase();
 
 my $query = GenerateSQL(\@fields, undef, undef, $::buffer);
 
