@@ -201,7 +201,9 @@ nsresult nsMsgThreadedDBView::SortThreads(nsMsgViewSortTypeValue sortType, nsMsg
   m_viewFlags |= nsMsgViewFlagsType::kThreadedDisplay;
   DisableChangeUpdates();
   // Loop through the original array, for each thread that's expanded, find it in the new array
-  // and expand the thread.
+  // and expand the thread. We have to update MSG_VIEW_FLAG_HAS_CHILDREN because
+  // we may be going from a flat sort, which doesn't maintain that flag,
+  // to a threaded sort, which requires that flag.
   for (PRUint32 j = 0; j < m_keys.GetSize(); j++)
   {
     PRUint32 flags = m_flags[j];
@@ -211,6 +213,25 @@ nsresult nsMsgThreadedDBView::SortThreads(nsMsgViewSortTypeValue sortType, nsMsg
       m_flags[j] = flags | MSG_FLAG_ELIDED;
       ExpandByIndex(j, &numExpanded);
       j += numExpanded;
+      if (numExpanded > 0)
+        m_flags[j - numExpanded] = flags | MSG_VIEW_FLAG_HASCHILDREN;
+    }
+    else if (flags & MSG_VIEW_FLAG_ISTHREAD && ! (flags & MSG_VIEW_FLAG_HASCHILDREN))
+    {
+      nsCOMPtr <nsIMsgDBHdr> msgHdr;
+      nsCOMPtr <nsIMsgThread> pThread;
+      m_db->GetMsgHdrForKey(m_keys[j], getter_AddRefs(msgHdr));
+      if (msgHdr)
+      {
+        m_db->GetThreadContainingMsgHdr(msgHdr, getter_AddRefs(pThread));
+        if (pThread)
+        {
+          PRUint32 numChildren;
+          pThread->GetNumChildren(&numChildren);
+          if (numChildren > 1)
+            m_flags[j] = flags | MSG_VIEW_FLAG_HASCHILDREN | MSG_FLAG_ELIDED;
+        }
+      }
     }
   }
   EnableChangeUpdates();
