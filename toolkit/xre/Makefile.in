@@ -103,6 +103,10 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
 SHAREDSRCS += nsNativeAppSupportBeOS.cpp
 endif
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
+SHAREDSRCS += nsNativeAppSupportMac.cpp
+endif
+
 CPPSRCS = \
 	$(SHAREDSRCS) \
 	nsAppRunner.cpp \
