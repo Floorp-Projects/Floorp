@@ -468,9 +468,10 @@ print "
 <INPUT TYPE=\"submit\" VALUE=\"Commit\">
 <INPUT TYPE=\"reset\" VALUE=\"Reset\">
 <INPUT TYPE=hidden name=form_name VALUE=process_bug>
-<BR>
+<P>
 <FONT size=\"+1\"><B>
  <A HREF=\"show_activity.cgi?id=$id\">View Bug Activity</A>
+ &nbsp; | &nbsp;
  <A HREF=\"long_list.cgi?buglist=$id\">Format For Printing</A>
 </B></FONT><BR>
 </FORM>
