@@ -457,7 +457,9 @@ RDFTreeBuilderImpl::CheckRDFGraphForUpdates(nsIContent *container)
 		return(rv);
 	}
 
-	nsVoidArray	childArray;
+            nsCOMPtr<nsISupportsArray> childArray;
+            rv = NS_NewISupportsArray(getter_AddRefs(childArray));
+            if (NS_FAILED(rv)) return rv;
 
 	nsCOMPtr<nsIRDFResource>	res;
 	if (NS_SUCCEEDED(rv = domElement->GetResource(getter_AddRefs(res))))
@@ -516,14 +518,14 @@ RDFTreeBuilderImpl::CheckRDFGraphForUpdates(nsIContent *container)
 				nsCOMPtr<nsIRDFResource> valueResource = do_QueryInterface(isupports);
 				if (valueResource) {
 					// Note: hack, storing value then property in array
-					childArray.AppendElement(valueResource.get());
-					childArray.AppendElement(property.get());
+					childArray->AppendElement(valueResource.get());
+					childArray->AppendElement(property.get());
 				}
 			}
 		}
 	}
 	
-	PRInt32 numElements = childArray.Count();
+	PRInt32 numElements = childArray->Count();
 	if (numElements > 0)
 	{
 		nsIRDFResource ** flatArray = new nsIRDFResource*[numElements];
@@ -533,7 +535,7 @@ RDFTreeBuilderImpl::CheckRDFGraphForUpdates(nsIContent *container)
 			PRInt32 loop;
 		        for (loop=0; loop<numElements; loop++)
 		        {
-				flatArray[loop] = (nsIRDFResource *)childArray.ElementAt(loop);
+				flatArray[loop] = (nsIRDFResource *)childArray->ElementAt(loop);
 			}
 //			nsQuickSort((void *)flatArray, numElements, sizeof(nsIRDFNode *),
 //				openSortCallback, (void *)sortInfo);
