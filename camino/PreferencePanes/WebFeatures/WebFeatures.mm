@@ -204,7 +204,7 @@
   if ( mCachedPermissions && mManager ) {
     // ensure url has a http:// on the front or NS_NewURI will fail. The PM
     // really doesn't care what the protocol is, we just need to have something
-    NSString* url = [[mAddField stringValue] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    NSString* url = [[mAddField stringValue] stringByRemovingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
     if ( ![url rangeOfString:@"http://"].length && ![url rangeOfString:@"https://"].length )
       url = [NSString stringWithFormat:@"http://%@", url];
     
