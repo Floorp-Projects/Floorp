@@ -2023,8 +2023,10 @@ PRInt16       borderRadii[4],i;
       scrollFrame = GetNearestScrollFrame(aForFrame);
       
       // Get the viewport size
-      clipView = GetClipView(aPresContext, scrollFrame);
-      clipView->GetDimensions(&viewportArea.width, &viewportArea.height);
+      if (scrollFrame) { // XXX This is a band-aid crash fix, see bug 30317.
+        clipView = GetClipView(aPresContext, scrollFrame);
+        clipView->GetDimensions(&viewportArea.width, &viewportArea.height);
+      }
     }
 
     // Compute the anchor point. If it's a fixed background attachment, then

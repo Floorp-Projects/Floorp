@@ -2391,10 +2391,12 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
         parentFrame->GetView(aPresContext, &view);
       }
 
-      NS_ASSERTION(view, "expected a view");
-      PRUint32  viewFlags;
-      view->GetViewFlags(&viewFlags);
-      view->SetViewFlags(viewFlags | NS_VIEW_PUBLIC_FLAG_DONT_BITBLT);
+      // Not all shells have scroll frames, even in scrollable presContext (bug 30317)
+      if (view) {
+        PRUint32  viewFlags;
+        view->GetViewFlags(&viewFlags);
+        view->SetViewFlags(viewFlags | NS_VIEW_PUBLIC_FLAG_DONT_BITBLT);
+      }
     }
 
     // Set the initial child lists
