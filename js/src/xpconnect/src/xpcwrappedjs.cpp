@@ -226,8 +226,8 @@ nsXPCWrappedJS::GetNewOrUsed(XPCCallContext& ccx,
     }
     if(root)
     {
-        wrapper = root->Find(aIID);
-        if(wrapper)
+        if((nsnull != (wrapper = root->Find(aIID))) ||
+           (nsnull != (wrapper = root->FindInherited(aIID))))
         {
             NS_ADDREF(wrapper);
             goto return_wrapper;
