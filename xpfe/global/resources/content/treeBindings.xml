@@ -79,7 +79,7 @@
               var field = document.createElementNS(kXULNS, "textbox");
               field.className = "textbox-inline-edit";
               field.setAttribute("flex", "1");
-              field.setAttribute("value", box.firstChild.getAttribute("label"));
+              field.setAttribute("value", box.firstChild.getAttribute("value"));
               box.appendChild(field);
               field.addEventListener("keydown", this.fieldKeyDown, false);
               field.addEventListener("change", this.fieldChange, false);
@@ -131,7 +131,7 @@
           if (aEvent.keyCode == 27) {
             cell.valueIsRejected = true;
             for (i = 0; i < cell._observers["reject"].length; ++i) 
-              cell._observers["reject"][i].callback(cell._observers["reject"][i].params.concat(box.lastChild.label), "reject");
+              cell._observers["reject"][i].callback(cell._observers["reject"][i].params.concat(box.lastChild.value), "reject");
             if ("setMode" in cell) 
               cell.setMode("normal");
           }
@@ -149,8 +149,9 @@
           var box = nodes[nodes.length-1];
           if (!cell.valueIsRejected) {
             for (var i = 0; i < cell._observers["accept"].length; ++i)
-              cell._observers["accept"][i].callback(cell._observers["accept"][i].params.concat(box.lastChild.label), "accept");
-            cell.setMode("normal");
+              cell._observers["accept"][i].callback(cell._observers["accept"][i].params.concat(box.lastChild.value), "accept"); 
+            if ("setMode" in cell) 
+              cell.setMode("normal");
           }
         ]]>
         </body>
