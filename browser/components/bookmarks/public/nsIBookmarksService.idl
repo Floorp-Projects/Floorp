@@ -87,6 +87,11 @@ interface nsIBookmarksService : nsISupports
     void importSystemBookmarks(in nsIRDFResource aParentFolder);
 
     readonly attribute nsITransactionManager transactionManager;
+
+    //XXXpch: to be removed.
+    void addBookmarkImmediately(in string aURI, in wstring aTitle, in long bmType, in wstring docCharset);
+    boolean isBookmarked(in string aURL);
+
 };
 
 %{C++
