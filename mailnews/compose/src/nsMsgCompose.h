@@ -58,7 +58,6 @@ class nsMsgCompose : public nsIMsgCompose
 	/* void CloseWindow (); */
 	NS_IMETHOD CloseWindow();
 
-	/* attribute nsIDOMEditorAppCore editor; */
   /* attribute nsIEditorShell editor; */ 
   NS_IMETHOD GetEditor(nsIEditorShell * *aEditor); 
   NS_IMETHOD SetEditor(nsIEditorShell * aEditor); 

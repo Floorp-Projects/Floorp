@@ -30,7 +30,6 @@
 #include "nsIDOMProfileCore.h" 
 #include "nsIDOMRDFCore.h"
 #include "nsIDOMBrowserAppCore.h"
-#include "nsIDOMEditorAppCore.h"
 #include "nsAppCoresCIDs.h" 
 
 
@@ -41,7 +40,6 @@ static NS_DEFINE_IID(kDOMPropsCoreCID,       NS_DOMPROPSCORE_CID);
 static NS_DEFINE_IID(kProfileCoreCID,        NS_PROFILECORE_CID); 
 static NS_DEFINE_IID(kRDFCoreCID,            NS_RDFCORE_CID);
 static NS_DEFINE_IID(kBrowserAppCoreCID,     NS_BROWSERAPPCORE_CID);
-static NS_DEFINE_IID(kEditorAppCoreCID,      NS_EDITORAPPCORE_CID);
 
 nsAppCoresNameSet::nsAppCoresNameSet()
 {
@@ -66,9 +64,8 @@ nsAppCoresNameSet::InitializeClasses(nsIScriptContext* aScriptContext)
     if (NS_OK != result) return result;
 
     result = NS_InitDOMPropsCoreClass(aScriptContext, nsnull);
-      result = NS_InitProfileCoreClass(aScriptContext, nsnull); 
+    result = NS_InitProfileCoreClass(aScriptContext, nsnull); 
     result = NS_InitBrowserAppCoreClass(aScriptContext, nsnull);
-    //result = NS_InitEditorAppCoreClass(aScriptContext, nsnull);
     result = NS_InitToolkitCoreClass(aScriptContext, nsnull);
     result = NS_InitRDFCoreClass(aScriptContext, nsnull);
 
@@ -118,13 +115,7 @@ nsAppCoresNameSet::AddNameSet(nsIScriptContext* aScriptContext)
                                              PR_TRUE);
 
         if (NS_OK != result) return result;
-/*
-        result = manager->RegisterGlobalName("EditorAppCore", 
-                                             kEditorAppCoreCID, 
-                                             PR_TRUE);
 
-        if (NS_OK != result) return result;
-*/
         result = manager->RegisterGlobalName("XPAppCoresManager", 
                                              kAppCoresCID, 
                                              PR_FALSE);
