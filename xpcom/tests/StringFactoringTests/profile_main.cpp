@@ -198,7 +198,7 @@ test_concat_and_assign()
     nsCString s2("This is another string that I will use in the concatenation test.");
     nsCString s3("This is yet a third string that I will use in the concatenation test.");
 
-    nsCString s4 = s1 + s2 + s3 + s1 + s2 + s3;
+    nsCString s4( s1 + s2 + s3 + s1 + s2 + s3 );
     if ( TotalLength(s4) != (71 + 65 + 69 + 71 + 65 + 69) )
       {
         cout << "|test_concat()| FAILED" << endl;
@@ -461,10 +461,8 @@ main()
     cout << "String performance profiling.  Compiled " __DATE__ " " __TIME__ << endl;
 #ifdef TEST_STD_STRING
     cout << "Testing std::string." << endl;
-#elif defined(NEW_STRING_APIS)
-    cout << "Testing factored nsString." << endl;
 #else
-    cout << "Testing raw nsString." << endl;
+    cout << "Testing factored nsString." << endl;
 #endif
 
     int tests_failed = 0;
@@ -487,10 +485,8 @@ main()
 
 #ifdef TEST_STD_STRING
     profiler.Dump("\pStandard String.prof");
-#elif defined(NEW_STRING_APIS)
-    profiler.Dump("\pFactored String.prof");
 #else
-    profiler.Dump("\pRaw String.prof");
+    profiler.Dump("\pFactored String.prof");
 #endif
 
     if ( tests_failed )

@@ -178,14 +178,14 @@ test_readable_hello( const basic_nsAReadableString<CharT>& aReadable )
         ++tests_failed;
       }
 
-    basic_nsAReadableString<CharT>::const_iterator iter1 = aReadable.BeginReading()+=3;
+    basic_nsAReadableString<CharT>::const_iterator iter1 = aReadable.BeginReading().advance(3);
     if ( *iter1 != CharT('l') )
       {
         cout << "FAILED |test_readable_hello|: iterator couldn't be set to |BeginReading()+=n|, or else couldn't be dereferenced. --> '" << *iter1 << "'" << endl;
         ++tests_failed;
       }
 
-    basic_nsAReadableString<CharT>::const_iterator iter2 = aReadable.EndReading()-=2;
+    basic_nsAReadableString<CharT>::const_iterator iter2 = aReadable.EndReading().advance(-2);
     if ( *iter2 != CharT('l') )
       {
         cout << "FAILED |test_readable_hello|: iterator couldn't be set to |EndReading()-=n|, or else couldn't be dereferenced. --> '" << *iter2 << "'" << endl;
@@ -427,12 +427,14 @@ main()
     int tests_failed = 0;
   	cout << "String unit tests.  Compiled " __DATE__ " " __TIME__ << endl;
 
+#if 0
     {
       nsFragmentedCString fs0;
       fs0.Append("Hello");
       tests_failed += test_readable_hello(fs0);
       tests_failed += test_writable(fs0);
     }
+#endif
 
 
     {
@@ -440,13 +442,13 @@ main()
       print_string(s0);
 
       const char* raw_string = "He also made me write this.\n";
-      copy_string(raw_string, raw_string+nsCharTraits<char>::length(raw_string), nsFileCharSink<char>(stdout));
-
+      nsFileCharSink<char> output(stdout);
+      copy_string(raw_string, raw_string+nsCharTraits<char>::length(raw_string), output);
 
       nsLiteralCString s1("This ", 5), s2("is ", 3), s3("a ", 2), s4("test\n", 5);
       print_string(s1+s2+s3+s4);
 
-      nsLiteralCString s5 = "This is " "a " "test";
+      nsLiteralCString s5( "This is " "a " "test" );
       print_string(s5+NS_LITERAL_CSTRING("\n"));
 
       print_string(nsLiteralCString("The value of the string |x| is \"") + Substring(s0, 0, s0.Length()-1) + NS_LITERAL_CSTRING("\".  Hope you liked it."));

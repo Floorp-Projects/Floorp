@@ -86,12 +86,14 @@ class basic_nsStdStringWrapper
     	  }
 #endif
 
+      explicit
       basic_nsStdStringWrapper( const basic_nsAReadableString<CharT>& str )
         {
           Assign(str);
         }
 
 #if 0
+      explicit
     	basic_nsStdStringWrapper( const basic_string_t& str, size_type pos = 0, size_type n = npos )
     	    : mRawString(str, pos, n)
     	  {
@@ -108,6 +110,7 @@ class basic_nsStdStringWrapper
     	  {
     	  }
 
+      explicit
     	basic_nsStdStringWrapper( const CharT* s, const AllocatorT& a = AllocatorT() )
     	    : mRawString(s, a)
     	  {
