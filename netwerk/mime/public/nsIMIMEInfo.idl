@@ -72,13 +72,6 @@ interface nsIMIMEInfo : nsISupports {
 
     boolean ExtensionExists(in string aExtension);
 
-    /* Returns the first extension association in
-     * the internal set of extensions.
-     *
-     * @return The first extension.
-     */
-    string FirstExtension();
-    
     /*
     *	Append a given extension to the set of extensions
     */
@@ -90,6 +83,13 @@ interface nsIMIMEInfo : nsISupports {
      */
 
     nsIMIMEInfo clone();
+    
+    /* Returns the first extension association in
+     * the internal set of extensions.
+     *
+     * @return The first extension.
+     */
+    attribute string primaryExtension;
     
 	/* The MIME type of this MIMEInfo.
      * 

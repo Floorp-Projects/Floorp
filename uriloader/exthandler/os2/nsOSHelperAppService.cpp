@@ -52,7 +52,7 @@ nsresult nsOSHelperAppService::FindOSMimeInfoForType(const char * aMimeContentTy
   if (mimeInfo)
   {
     nsXPIDLCString mimefileExt;
-    mimeInfo->FirstExtension(getter_Copies(mimefileExt));
+    mimeInfo->GetPrimaryExtension(getter_Copies(mimefileExt));
     fileExtension = ".";  
     fileExtension.Append(mimefileExt);
   }

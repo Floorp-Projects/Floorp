@@ -275,9 +275,25 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
   *aStreamListener = nsnull;
   if (mimeInfo)
   {
-    // ensure that the file extension field is always filled in
-    mimeInfo->FirstExtension(getter_Copies(fileExtension));
+    // The primary extension for the mime info may be different from
+    // the URL extension.  If the URL extension matches the mime info,
+    // set it as the primary extension.  In either case, fileExtension
+    // should be the primary extension once we are doen.
+    if (fileExtension.IsEmpty()) {
+      nsCOMPtr<nsIURL> url = do_QueryInterface(aURI);
+      if (url) {
+        url->GetFileExtension(getter_Copies(fileExtension));    
+      }
+    }
 
+    PRBool matches = PR_FALSE;
+    mimeInfo->ExtensionExists(fileExtension.get(), &matches);
+    if (matches) {
+      mimeInfo->SetPrimaryExtension(fileExtension.get());
+    } else {
+      mimeInfo->GetPrimaryExtension(getter_Copies(fileExtension));
+    }
+    
     // this code is incomplete and just here to get things started..
     nsExternalAppHandler * handler = CreateNewExternalHandler(mimeInfo, fileExtension, aWindowContext);
     handler->QueryInterface(NS_GET_IID(nsIStreamListener), (void **) aStreamListener);

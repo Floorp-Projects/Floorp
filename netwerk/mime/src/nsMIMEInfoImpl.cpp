@@ -98,9 +98,10 @@ nsMIMEInfoImpl::ExtensionExists(const char *aExtension, PRBool *_retval) {
 
     if (!aExtension) return NS_ERROR_NULL_POINTER;
 
+    nsDependentCString extension(aExtension);
     for (PRUint8 i=0; i < extCount; i++) {
         nsCString* ext = (nsCString*)mExtensions.CStringAt(i);
-        if (ext->Equals(aExtension)) {
+        if (ext->Equals(extension, nsCaseInsensitiveCStringComparator())) {
             found = PR_TRUE;
             break;
         }
@@ -111,13 +112,36 @@ nsMIMEInfoImpl::ExtensionExists(const char *aExtension, PRBool *_retval) {
 }
 
 NS_IMETHODIMP
-nsMIMEInfoImpl::FirstExtension(char **_retval) {
+nsMIMEInfoImpl::GetPrimaryExtension(char **_retval) {
     PRUint32 extCount = mExtensions.Count();
     if (extCount < 1) return NS_ERROR_NOT_INITIALIZED;
 
     *_retval = ToNewCString(*(mExtensions.CStringAt(0)));
     if (!*_retval) return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;    
+}
+
+NS_IMETHODIMP
+nsMIMEInfoImpl::SetPrimaryExtension(const char *aExtension) {
+  NS_ASSERTION(aExtension, "no extension");
+  PRUint32 extCount = mExtensions.Count();
+  nsCString extension(aExtension);
+  PRUint8 i;
+  PRBool found = PR_FALSE;
+  for (i=0; i < extCount; i++) {
+    nsCString* ext = (nsCString*)mExtensions.CStringAt(i);
+    if (ext->Equals(extension, nsCaseInsensitiveCStringComparator())) {
+      found = PR_TRUE;
+      break;
+    }
+  }
+  if (found) {
+    mExtensions.RemoveCStringAt(i);
+  }
+
+  mExtensions.InsertCStringAt(extension, 0);
+  
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMIMEInfoImpl::AppendExtension(const char *aExtension)
