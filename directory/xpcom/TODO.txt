@@ -67,6 +67,10 @@ housecleaning
 
 features
 --------
+
+* finish XPCOMifying nsLDAP{Message,Connection,Operation} (allowing
+  for use from JS)
+
 * i18n / l10n
 
 * use a rebind_proc?
@@ -74,7 +78,6 @@ features
 * HTMLize nsLDAPChannel output for linkification
 
 * RDF datasource
-  * finish XPCOMifying nsLDAP{Message,Connection,Operation}
   * expose directory entries & attrs via interfaces (cachable?) 
   * nsILDAPURI (see nsIIOService.idl: extractScheme())
   * non-anonymous binding
