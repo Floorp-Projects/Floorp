@@ -50,9 +50,6 @@ OBJS=   \
 	.\$(OBJDIR)\cvjscfg.obj		\
 	.\$(OBJDIR)\txview.obj		\
 	.\$(OBJDIR)\cvmime.obj		\
-!ifndef MODULAR_NETLIB
-	.\$(OBJDIR)\cvpics.obj		\
-!endif
 	$(NULL)
 
 CPPSRCS = \
@@ -65,9 +62,6 @@ TMP_CSRCS =	\
 	cvchunk.c	\
 	cvcolor.c	\
 	cvmime.c	\
-!ifndef MODULAR_NETLIB
-	cvpics.c	\
-!endif
 	cvdisk.c	\
 	cvsimple.c	\
 	cvunzip.c	\

@@ -32,9 +32,7 @@ include <$(DEPTH)\config\config.mak>
 #   proper JS includes
 #
 LCFLAGS     = $(LCFLAGS) -DMOZILLA_CLIENT
-!ifdef MODULAR_NETLIB
 #LCFLAGS        = $(LCFLAGS) -DNO_NETWORK_POLLING
-!endif
 
 !ifdef BUILD_DEBUG_GC
 LCFLAGS     = $(LCFLAGS) -DDEBUG_GC
@@ -87,9 +85,6 @@ CSRCS = \
     mkselect.c  \
     mksockrw.c  \
     mksort.c    \
-!ifndef MODULAR_NETLIB
-    mkstream.c  \
-!endif
     mktrace.c   \
     mkutils.c   \
     prefetch.c  \

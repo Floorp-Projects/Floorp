@@ -33,9 +33,7 @@ DIRS	= \
 	main		\
 	protocol
 
-ifdef MODULAR_NETLIB
 DIRS	+= public module
-endif
 
 ifdef NU_CACHE
 DIRS += cache/nu

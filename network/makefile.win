@@ -36,10 +36,8 @@ DIRS= \
 	protocol \
 	cnvts \
 	client \
-!ifdef MODULAR_NETLIB
 	public \
 	module \
-!endif
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak> 
