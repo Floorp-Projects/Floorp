@@ -412,7 +412,7 @@ FindFont(const nsString& aFamily, PRBool aGeneric, void *aData)
     if (alias) {
       // XXX this might cause a stack-overflow if there are cyclic
       // aliases in sFontAliases
-      retval = FindFont(nsString(*alias), PR_FALSE, aData);      
+      retval = FindFont(*alias, PR_FALSE, aData);      
     }
   }
   
