@@ -379,7 +379,7 @@ var gCookiesWindow = {
         var delta = multiplier * item.cookies.length;
         this._rowCount += delta;
         item.open = !item.open;
-        gCookiesWindow._tree.treeBoxObject.rowCountChanged(aIndex + 1, delta);
+        gCookiesWindow._tree.treeBoxObject.rowCountChanged(aIndex, delta);
         gCookiesWindow._tree.treeBoxObject.invalidateRow(aIndex);
       }
     },    
