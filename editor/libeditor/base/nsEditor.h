@@ -46,6 +46,7 @@
 #include "nsICSSStyleSheet.h"
 #include "nsIDTD.h"
 #include "nsIDOMElement.h"
+#include "nsVoidArray.h"
 
 class nsIEditActionListener;
 class nsIDocumentStateListener;
@@ -70,6 +71,38 @@ class AddStyleSheetTxn;
 class RemoveStyleSheetTxn;
 class nsFileSpec;
 
+/***************************************************************************
+ * class for recording selection info.  stores selection as collection of
+ * { {startnode, startoffset} , {endnode, endoffset} } tuples.  Cant store
+ * ranges since dom gravity will possibly change the ranges.
+ */
+
+// first a helper struct for saving/setting ranges
+struct SelRangeStore 
+{
+  nsresult StoreRange(nsIDOMRange *aRange);
+  nsresult GetRange(nsCOMPtr<nsIDOMRange> *outRange);
+        
+  nsCOMPtr<nsIDOMNode> startNode;
+  PRInt32              startOffset;
+  nsCOMPtr<nsIDOMNode> endNode;
+  PRInt32              endOffset;
+};
+
+class nsSelectionState
+{
+  public:
+      
+    nsSelectionState();
+    ~nsSelectionState();
+  
+    nsresult SaveSelection(nsIDOMSelection *aSel);
+    nsresult RestoreSelection(nsIDOMSelection *aSel);
+    PRBool   IsCollapsed();
+    PRBool   IsEqual(nsSelectionState *aSelState);
+
+    nsVoidArray mArray;
+};
 
 /** implementation of an editor object.  it will be the controler/focal point 
  *  for the main editor services. i.e. the GUIManager, publishing, transaction 
@@ -653,8 +686,7 @@ protected:
   nsWeakPtr       mPlaceHolderTxn;     // weak reference to placeholder for begin/end batch purposes
   nsIAtom        *mPlaceHolderName;    // name of placeholder transaction
   PRInt32         mPlaceHolderBatch;   // nesting count for batching
-  nsCOMPtr<nsIDOMNode> mTxnStartNode;  // saved selection info to pass to placeholder at init time
-  PRInt32         mTxnStartOffset;     //  "  "  "  "
+  nsSelectionState *mSelState;          // saved selection state for placeholder txn batching
   PRBool          mShouldTxnSetSelection;  // turn off for conservative selection adjustment by txns
   nsCOMPtr<nsIDOMElement> mBodyElement;    // cached body node
   //

@@ -785,7 +785,7 @@ nsEditorShell::SetTextProperty(const PRUnichar *prop, const PRUnichar *attr, con
     default:
       err = NS_ERROR_NOT_IMPLEMENTED;
   }
-
+  UpdateInterfaceState();
   NS_RELEASE(styleAtom);
   return err;
 }

@@ -306,7 +306,10 @@ protected:
   PRBool SetCaretInTableCell(nsIDOMElement* aElement);
   PRBool IsElementInBody(nsIDOMElement* aElement);
 
-
+  // inline style caching
+  void CacheInlineStyles(nsIDOMNode *aNode);
+  void ClearInlineStylesCache();
+  
   // key event helpers
   NS_IMETHOD TabInTable(PRBool inIsShift, PRBool *outHandled);
   NS_IMETHOD CreateBR(nsIDOMNode *aNode, PRInt32 aOffset, nsCOMPtr<nsIDOMNode> *outBRNode);
@@ -544,6 +547,17 @@ protected:
   nsCOMPtr<nsIDOMEventListener> mFocusListenerP;
   PRBool 	mIsComposing;
   PRInt32 mMaxTextLength;
+  
+  nsCOMPtr<nsIAtom> mBoldAtom;
+  nsCOMPtr<nsIAtom> mItalicAtom;
+  nsCOMPtr<nsIAtom> mUnderlineAtom;
+  nsCOMPtr<nsIAtom> mFontAtom;
+  nsCOMPtr<nsIDOMNode> mCachedNode;
+  
+  PRBool mCachedBoldStyle;
+  PRBool mCachedItalicStyle;
+  PRBool mCachedUnderlineStyle;
+  nsString mCachedFontName;
 
 public:
   static nsIAtom *gTypingTxnName;

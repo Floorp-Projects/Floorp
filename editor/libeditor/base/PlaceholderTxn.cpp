@@ -39,7 +39,9 @@ PlaceholderTxn::PlaceholderTxn() :  EditAggregateTxn(),
                                     mAbsorb(PR_TRUE), 
                                     mForwarding(nsnull),
                                     mIMETextTxn(nsnull),
-                                    mCommitted(PR_FALSE)
+                                    mCommitted(PR_FALSE),
+                                    mStartSel(nsnull),
+                                    mEndSel()
 {
   SetTransactionDescriptionID( kTransactionID );
   /* log description initialized in parent constructor */
@@ -48,6 +50,7 @@ PlaceholderTxn::PlaceholderTxn() :  EditAggregateTxn(),
 
 PlaceholderTxn::~PlaceholderTxn()
 {
+  delete mStartSel;
 }
 
 NS_IMPL_ADDREF_INHERITED(PlaceholderTxn, EditAggregateTxn)
@@ -72,15 +75,15 @@ NS_IMETHODIMP PlaceholderTxn::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP PlaceholderTxn::Init(nsWeakPtr aPresShellWeak, nsIAtom *aName, 
-                                   nsIDOMNode *aStartNode, PRInt32 aStartOffset)
+                                   nsSelectionState *aSelState)
 {
   NS_ASSERTION(aPresShellWeak, "bad args");
-  if (!aPresShellWeak) return NS_ERROR_NULL_POINTER;
+  if (!aPresShellWeak || !aSelState) return NS_ERROR_NULL_POINTER;
 
   mPresShellWeak = aPresShellWeak;
   mName = aName;
-  mStartNode = do_QueryInterface(aStartNode);
-  mStartOffset = aStartOffset;
+  mStartSel = aSelState;
+  
   return NS_OK;
 }
 
@@ -92,8 +95,38 @@ NS_IMETHODIMP PlaceholderTxn::Do(void)
 
 NS_IMETHODIMP PlaceholderTxn::Undo(void)
 {
-  // using this to debug
-  return EditAggregateTxn::Undo();
+  // undo txns
+  nsresult res = EditAggregateTxn::Undo();
+  if (NS_FAILED(res)) return res;
+  
+  // now restore selection
+  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+  if (!ps) return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsIDOMSelection> selection;
+  res = ps->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
+  if (NS_FAILED(res)) return res;
+  if (!selection) return NS_ERROR_NULL_POINTER;
+  if (!mStartSel) return NS_ERROR_NULL_POINTER;
+  res = mStartSel->RestoreSelection(selection);
+  return res;
+}
+
+
+NS_IMETHODIMP PlaceholderTxn::Redo(void)
+{
+  // redo txns
+  nsresult res = EditAggregateTxn::Redo();
+  if (NS_FAILED(res)) return res;
+  
+  // now restore selection
+  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+  if (!ps) return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsIDOMSelection> selection;
+  res = ps->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
+  if (NS_FAILED(res)) return res;
+  if (!selection) return NS_ERROR_NULL_POINTER;
+  res = mEndSel.RestoreSelection(selection);
+  return res;
 }
 
 
@@ -146,6 +179,10 @@ NS_IMETHODIMP PlaceholderTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransact
       AppendChild(editTxn);
     }
     *aDidMerge = PR_TRUE;
+//  RememberEndingSelection();
+//  efficiency hack: no need to remember selection here, as we haven't yet 
+//  finished the inital batch and we know we will be told when the batch ends.
+//  we can remeber the selection then.
     if (gNoisy) { printf("Placeholder txn assimilated %p\n", aTransaction); }
   }
   else
@@ -155,27 +192,31 @@ NS_IMETHODIMP PlaceholderTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransact
          (mName.get() == nsHTMLEditor::gDeleteTxnName)) 
          && !mCommitted ) 
     {
-      nsCOMPtr<nsIAbsorbingTransaction> plcTxn;// = do_QueryInterface(editTxn);
-      // cant do_QueryInterface() above due to our broken transaction interfaces.
-      // instead have to brute it below. ugh. 
-      editTxn->QueryInterface(NS_GET_IID(nsIAbsorbingTransaction), getter_AddRefs(plcTxn));
-      if (plcTxn)
+      // but only if this placeholder started with a collapsed selection
+      if (mStartSel->IsCollapsed())
       {
-        nsCOMPtr<nsIAtom> atom;
-        plcTxn->GetTxnName(getter_AddRefs(atom));
-        if (atom && (atom == mName))
+        nsCOMPtr<nsIAbsorbingTransaction> plcTxn;// = do_QueryInterface(editTxn);
+        // cant do_QueryInterface() above due to our broken transaction interfaces.
+        // instead have to brute it below. ugh. 
+        editTxn->QueryInterface(NS_GET_IID(nsIAbsorbingTransaction), getter_AddRefs(plcTxn));
+        if (plcTxn)
         {
-          nsCOMPtr<nsIDOMNode> otherTxnStartNode;
-          PRInt32 otherTxnStartOffset;
-          res = plcTxn->GetStartNodeAndOffset(&otherTxnStartNode, &otherTxnStartOffset);
-          if (NS_FAILED(res)) return res;
-            
-          if ((otherTxnStartNode == mEndNode) && (otherTxnStartOffset == mEndOffset))
+          nsCOMPtr<nsIAtom> atom;
+          plcTxn->GetTxnName(getter_AddRefs(atom));
+          if (atom && (atom == mName))
           {
-            mAbsorb = PR_TRUE;  // we need to start absorbing again
-            plcTxn->ForwardEndBatchTo(this);
-            AppendChild(editTxn);
-            *aDidMerge = PR_TRUE;
+            // check if start selection of next placeholder matches
+            // end selection of this placeholder
+            PRBool isSame;
+            plcTxn->StartSelectionEquals(&mEndSel, &isSame);
+            if (isSame)
+            {
+              mAbsorb = PR_TRUE;  // we need to start absorbing again
+              plcTxn->ForwardEndBatchTo(this);
+              AppendChild(editTxn);
+              RememberEndingSelection();
+              *aDidMerge = PR_TRUE;
+            }
           }
         }
       }
@@ -189,11 +230,17 @@ NS_IMETHODIMP PlaceholderTxn::GetTxnName(nsIAtom **aName)
   return GetName(aName);
 }
 
-NS_IMETHODIMP PlaceholderTxn::GetStartNodeAndOffset(nsCOMPtr<nsIDOMNode> *aTxnStartNode, PRInt32 *aTxnStartOffset)
+NS_IMETHODIMP PlaceholderTxn::StartSelectionEquals(nsSelectionState *aSelState, PRBool *aResult)
 {
-  if (!aTxnStartNode || !aTxnStartOffset) return NS_ERROR_NULL_POINTER;
-  *aTxnStartNode = mStartNode;
-  *aTxnStartOffset = mStartOffset;
+  // determine if starting selection matches the given selection state.
+  // note that we only care about collapsed selections.
+  if (!aResult || !aSelState) return NS_ERROR_NULL_POINTER;
+  if (!mStartSel->IsCollapsed() || !aSelState->IsCollapsed())
+  {
+    *aResult = PR_FALSE;
+    return NS_OK;
+  }
+  *aResult = mStartSel->IsEqual(aSelState);
   return NS_OK;
 }
 
@@ -207,21 +254,8 @@ NS_IMETHODIMP PlaceholderTxn::EndPlaceHolderBatch()
     if (plcTxn) plcTxn->EndPlaceHolderBatch();
   }
   
-  // if we are a typing or IME or deleting transaction, remember our selection state
-  if ( (mName.get() == nsHTMLEditor::gTypingTxnName) ||
-       (mName.get() == nsHTMLEditor::gIMETxnName)    || 
-       (mName.get() == nsHTMLEditor::gDeleteTxnName) ) 
-  {
-    nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
-    if (!ps) return NS_ERROR_NOT_INITIALIZED;
-    nsCOMPtr<nsIDOMSelection> selection;
-    nsresult res = ps->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
-    if (NS_FAILED(res)) return res;
-    if (!selection) return NS_ERROR_NULL_POINTER;
-    res = nsEditor::GetStartNodeAndOffset(selection, &mEndNode, &mEndOffset);
-    if (NS_FAILED(res)) return res;
-  }
-  return NS_OK;
+  // remember our selection state.
+  return RememberEndingSelection();
 };
 
 NS_IMETHODIMP PlaceholderTxn::ForwardEndBatchTo(nsIAbsorbingTransaction *aForwardingAddress)
@@ -236,5 +270,17 @@ NS_IMETHODIMP PlaceholderTxn::Commit()
   return NS_OK;
 }
 
+NS_IMETHODIMP PlaceholderTxn::RememberEndingSelection()
+{
+  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+  if (!ps) return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsIDOMSelection> selection;
+  nsresult res = ps->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
+  if (NS_FAILED(res)) return res;
+  if (!selection) return NS_ERROR_NULL_POINTER;
+  res = mEndSel.SaveSelection(selection);
+  
+  return res;
+}
 
 

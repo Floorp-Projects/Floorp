@@ -284,32 +284,14 @@ nsInterfaceState::UpdateFontFace(const char* observerName, const char* attribute
 
   PRBool testBoolean;
   
-  if (SelectionIsCollapsed())
+  rv = mEditor->GetInlineProperty(styleAtom, &faceStr, &thisFace, firstOfSelectionHasProp, anyOfSelectionHasProp, allOfSelectionHasProp);
+  if( !anyOfSelectionHasProp )
   {
-    rv = mEditor->GetTypingStateValue(styleAtom, ioFontString);
-    if (ioFontString.Length() == 0)
-    {
-      // We don't have a font set, so check for "tt" (= "Default Fixed Width")
-      PRBool stateHasProp = PR_FALSE;
-      rv = mEditor->GetTypingState(fixedStyleAtom, testBoolean);
-      testBoolean = stateHasProp;
-      if (stateHasProp)
-        thisFace = faceStr;
-    }
-    else
-      testBoolean = PR_TRUE;
-  }
-  else
-  {
-    rv = mEditor->GetInlineProperty(styleAtom, &faceStr, nsnull, firstOfSelectionHasProp, anyOfSelectionHasProp, allOfSelectionHasProp);
-    if( !anyOfSelectionHasProp )
-    {
-      // No font face set -- check for "tt"
-      rv = mEditor->GetInlineProperty(fixedStyleAtom, nsnull, nsnull, firstOfSelectionHasProp, anyOfSelectionHasProp, allOfSelectionHasProp);
-      testBoolean = anyOfSelectionHasProp;
-      if (anyOfSelectionHasProp)
-        thisFace = "tt";
-    }
+    // No font face set -- check for "tt"
+    rv = mEditor->GetInlineProperty(fixedStyleAtom, nsnull, nsnull, firstOfSelectionHasProp, anyOfSelectionHasProp, allOfSelectionHasProp);
+    testBoolean = anyOfSelectionHasProp;
+    if (anyOfSelectionHasProp)
+      thisFace = "tt";
   }
 
   // TODO: HANDLE "MIXED" STATE
@@ -331,22 +313,13 @@ nsInterfaceState::UpdateTextState(const char* tagName, const char* observerName,
   nsCOMPtr<nsIAtom> styleAtom = getter_AddRefs(NS_NewAtom(tagName));
 
   PRBool testBoolean;
-  if (SelectionIsCollapsed())
-  {
-    PRBool    stateHasProp = PR_FALSE;
-    
-    rv = mEditor->GetTypingState(styleAtom, stateHasProp);
-    testBoolean = stateHasProp;
-  }
-  else
-  {
-    PRBool    firstOfSelectionHasProp = PR_FALSE;
-    PRBool    anyOfSelectionHasProp = PR_FALSE;
-    PRBool    allOfSelectionHasProp = PR_FALSE;
+  PRBool firstOfSelectionHasProp = PR_FALSE;
+  PRBool anyOfSelectionHasProp = PR_FALSE;
+  PRBool allOfSelectionHasProp = PR_FALSE;
 
-    rv = mEditor->GetInlineProperty(styleAtom, nsnull, nsnull, firstOfSelectionHasProp, anyOfSelectionHasProp, allOfSelectionHasProp);
-    testBoolean = allOfSelectionHasProp;			// change this to alter the behaviour
-  }
+  rv = mEditor->GetInlineProperty(styleAtom, nsnull, nsnull, firstOfSelectionHasProp, anyOfSelectionHasProp, allOfSelectionHasProp);
+  testBoolean = allOfSelectionHasProp;			// change this to alter the behaviour
+
   if (NS_FAILED(rv)) return rv;
 
   if (testBoolean != ioState)
