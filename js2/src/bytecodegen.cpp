@@ -2000,7 +2000,7 @@ BinaryOpEquals:
             // and at the script top-level
             if ( ((f == NULL) && theClass)
                     || ((theClass == NULL) && f && !f->isPrototype()) )
-                m_cx->reportError(Exception::referenceError, "Illegal use of 'this'");
+                m_cx->reportError(Exception::referenceError, "Illegal use of 'this'", p->pos);
             addOp(LoadThisOp);
             if (theClass)
                 return theClass;
