@@ -35,7 +35,7 @@
 #define DEVT_H
 
 #ifdef DEBUG
-static const char DEVT_CVS_ID[] = "@(#) $RCSfile: devt.h,v $ $Revision: 1.14 $ $Date: 2002/04/04 20:00:22 $ $Name:  $";
+static const char DEVT_CVS_ID[] = "@(#) $RCSfile: devt.h,v $ $Revision: 1.15 $ $Date: 2002/04/05 15:19:37 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -144,6 +144,10 @@ typedef enum {
     NSSCertificateType_PKIX = 1
 } NSSCertificateType;
 
+#ifdef NSS_3_4_CODE
+/* the current definition of NSSTrust depends on this value being CK_ULONG */
+typedef CK_ULONG nssTrustLevel;
+#else
 typedef enum {
     nssTrustLevel_Unknown = 0,
     nssTrustLevel_NotTrusted = 1,
@@ -152,6 +156,7 @@ typedef enum {
     nssTrustLevel_Valid = 4,
     nssTrustLevel_ValidDelegator = 5
 } nssTrustLevel;
+#endif
 
 typedef struct nssCryptokiInstanceStr nssCryptokiInstance;
 
