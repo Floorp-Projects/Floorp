@@ -24,6 +24,8 @@
 #include "jsprvtd.h"
 #include "jspubtd.h"
 
+JS_BEGIN_EXTERN_C
+
 /*
  * JS stack frame, allocated on the C stack.
  */
@@ -174,10 +176,10 @@ js_FlushPropertyCache(JSContext *cx);
 extern void
 js_FlushPropertyCacheByProp(JSContext *cx, JSProperty *prop);
 
-extern jsval *
+extern JS_FRIEND_API(jsval *)
 js_AllocStack(JSContext *cx, uintN nslots, void **markp);
 
-extern void
+extern JS_FRIEND_API(void)
 js_FreeStack(JSContext *cx, void *mark);
 
 extern JSBool
@@ -192,7 +194,7 @@ js_GetLocalVariable(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
 extern JSBool
 js_SetLocalVariable(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
 
-extern JSBool
+extern JS_FRIEND_API(JSBool)
 js_Invoke(JSContext *cx, uintN argc, JSBool constructing);
 
 extern JSBool
@@ -205,5 +207,7 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script, JSFunction *fun,
 
 extern JSBool
 js_Interpret(JSContext *cx, jsval *result);
+
+JS_END_EXTERN_C
 
 #endif /* jsinterp_h___ */

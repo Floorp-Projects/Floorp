@@ -276,7 +276,7 @@ PopUint(JSContext *cx, jsuint *ip)
 	}                                                                     \
     JS_END_MACRO
 
-jsval *
+JS_FRIEND_API(jsval *)
 js_AllocStack(JSContext *cx, uintN nslots, void **markp)
 {
     jsval *sp;
@@ -293,7 +293,7 @@ js_AllocStack(JSContext *cx, uintN nslots, void **markp)
     return sp;
 }
 
-void
+JS_FRIEND_API(void)
 js_FreeStack(JSContext *cx, void *mark)
 {
     JS_ARENA_RELEASE(&cx->stackPool, mark);
@@ -397,7 +397,7 @@ js_SetLocalVariable(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
  * required arguments, allocate declared local variables, and pop everything
  * when done.  Then push the return value.
  */
-JSBool
+JS_FRIEND_API(JSBool)
 js_Invoke(JSContext *cx, uintN argc, JSBool constructing)
 {
     JSStackFrame *fp, frame;
