@@ -142,8 +142,7 @@ void nsCertTree::InitCompareHash()
 nsCertTree::~nsCertTree()
 {
   ClearCompareHash();
-  if (mTreeArray)
-    nsMemory::Free(mTreeArray);
+  delete [] mTreeArray;
 }
 
 void
@@ -361,7 +360,7 @@ nsCertTree::LoadCertsFromCache(nsINSSCertCache *aCache, PRUint32 aType)
   nsresult rv;
   if (mTreeArray) {
     FreeCertArray();
-    nsMemory::Free(mTreeArray);
+    delete [] mTreeArray;
     mTreeArray = NULL;
     mNumRows = 0;
   }
@@ -379,7 +378,7 @@ nsCertTree::LoadCerts(PRUint32 aType)
   nsresult rv;
   if (mTreeArray) {
     FreeCertArray();
-    nsMemory::Free(mTreeArray);
+    delete [] mTreeArray;
     mTreeArray = NULL;
     mNumRows = 0;
   }
@@ -398,8 +397,7 @@ nsCertTree::UpdateUIContents()
   nsresult rv = mCertArray->Count(&count);
   if (NS_FAILED(rv)) return rv;
   mNumOrgs = CountOrganizations();
-  mTreeArray = (treeArrayEl *)nsMemory::Alloc(
-                                           sizeof(treeArrayEl) * mNumOrgs);
+  mTreeArray = new treeArrayEl[mNumOrgs];
   PRUint32 j = 0;
   nsCOMPtr<nsISupports> isupport = dont_AddRef(mCertArray->ElementAt(j));
   nsCOMPtr<nsIX509Cert> orgCert = do_QueryInterface(isupport);
@@ -447,7 +445,7 @@ nsCertTree::RemoveCert(PRUint32 index)
       nsCOMPtr<nsISupports> isupport = dont_AddRef(mCertArray->ElementAt(certIndex));
       RemoveCacheEntry(isupport);
       mCertArray->RemoveElementAt(certIndex);
-      nsMemory::Free(mTreeArray);
+      delete [] mTreeArray;
       mTreeArray = NULL;
       return UpdateUIContents();
     }
