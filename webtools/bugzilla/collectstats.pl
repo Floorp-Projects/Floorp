@@ -27,11 +27,16 @@
 use DB_File;
 use diagnostics;
 use strict;
-use vars @::legal_product,
-       @::legal_bug_status;
+use vars @::legal_product;
 
 require "globals.pl";
 
+# tidy up after graphing module
+chdir("data/mining");
+unlink <*.gif>; 
+unlink <*.png>;
+chdir("../..");
+ 
 ConnectToDatabase();
 GetVersionTable();
 
@@ -71,32 +76,36 @@ sub collect_stats {
     if (open DATA, ">>$file") {
         push my @row, &today;
 
-        foreach my $status (@::legal_bug_status) {
-	    if( $product eq "-All-" ) {
-                SendSQL("select count(bug_status) from bugs where bug_status='$status'");
-	    } else {
-                SendSQL("select count(bug_status) from bugs where bug_status='$status' and product='$product'");
+		foreach my $status ('NEW', 'ASSIGNED', 'REOPENED', 'UNCONFIRMED', 'RESOLVED', 'VERIFIED', 'CLOSED') {
+		    if( $product eq "-All-" ) {
+				SendSQL("select count(bug_status) from bugs where bug_status='$status'");
+		    } else {
+				SendSQL("select count(bug_status) from bugs where bug_status='$status' and product='$product'");
+		    }
+		
+		    push @row, FetchOneColumn();
 	    }
-            push @row, FetchOneColumn();
-        }
+	  
+	    foreach my $resolution ('FIXED', 'INVALID', 'WONTFIX', 'LATER', 'REMIND', 'DUPLICATE', 'WORKSFORME', 'MOVED') {
+		    if( $product eq "-All-" ) {
+				SendSQL("select count(resolution) from bugs where resolution='$resolution'");
+		    } else {
+				SendSQL("select count(resolution) from bugs where resolution='$resolution' and product='$product'");
+		    }
+		    push @row, FetchOneColumn();
+	    }
 
-        if (! $exists)
-        {
-            print DATA <<FIN;
-# Bugzilla daily bug stats
+	    if (! $exists) {
+		    print DATA <<FIN;
+# Bugzilla Daily Bug Stats
 #
-# do not edit me! this file is generated.
+# Do not edit me! This file is generated.
 # 
-# product: $product
-# created: $when
+# Fields: DATE|NEW|ASSIGNED|REOPENED|UNCONFIRMED|FIXED|INVALID|WONTFIX|LATER|REMIND|DUPLICATE|WORKSFORME|MOVED
+# Product: $product
+# Created: $when
 FIN
-          print DATA "# field: DATE";
-            foreach my $status (@::legal_bug_status) {
-              print DATA "|$status";
-          }
-          print DATA "\n";
-	}
-
+	    }
         print DATA (join '|', @row) . "\n";
         close DATA;
     } else {
