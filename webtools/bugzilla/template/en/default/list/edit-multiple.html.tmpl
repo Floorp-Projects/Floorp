@@ -20,7 +20,7 @@
   #%]
 
 [% dontchange = "--do_not_change--" %]
-<input type="hidden" name="dontchange" value="[% dontchange %]">
+<input type="hidden" name="dontchange" value="[% dontchange FILTER html %]">
 
 <script type="text/javascript" language="JavaScript">
   var numelements = document.forms.changeform.elements.length;
