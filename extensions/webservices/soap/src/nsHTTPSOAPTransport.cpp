@@ -23,6 +23,7 @@
 #include "nsHTTPSOAPTransport.h"
 #include "nsIComponentManager.h"
 #include "nsIDOMDocument.h"
+#include "nsIVariant.h"
 #include "nsString.h"
 #include "nsSOAPUtils.h"
 #include "nsSOAPCall.h"
@@ -72,7 +73,13 @@ NS_IMETHODIMP nsHTTPSOAPTransport::SyncCall(nsISOAPCall *aCall, nsISOAPResponse 
   rv = request->OpenRequest("POST", NS_ConvertUCS2toUTF8(uri).get(), PR_FALSE, nsnull, nsnull);
   if (NS_FAILED(rv)) return rv;
 			    
-  rv = request->Send(messageDocument);
+  nsCOMPtr<nsIWritableVariant> variant = do_CreateInstance(NS_VARIANT_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = variant->SetAsInterface(NS_GET_IID(nsIDOMDocument), messageDocument);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = request->Send(variant);
   if (NS_FAILED(rv)) return rv;
 
   request->GetStatus(&rv);
@@ -170,13 +177,16 @@ NS_IMETHODIMP nsHTTPSOAPTransport::AsyncCall(nsISOAPCall *aCall, nsISOAPResponse
   rv = request->OpenRequest("POST", NS_ConvertUCS2toUTF8(uri).get(), PR_TRUE, nsnull, nsnull);
   if (NS_FAILED(rv)) return rv;
 			    
-  rv = request->Send(messageDocument);
-  if (NS_FAILED(rv)) return rv;
-
   eventTarget->AddEventListener(NS_LITERAL_STRING("load"), listener, PR_FALSE);
   eventTarget->AddEventListener(NS_LITERAL_STRING("error"), listener, PR_FALSE);
-  
-  rv = request->Send(messageDocument);
+
+  nsCOMPtr<nsIWritableVariant> variant = do_CreateInstance(NS_VARIANT_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = variant->SetAsInterface(NS_GET_IID(nsIDOMDocument), messageDocument);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = request->Send(variant);
   if (NS_FAILED(rv)) return rv;
 
   return NS_OK;
