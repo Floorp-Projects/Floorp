@@ -768,7 +768,7 @@ function goNewListDialog(selectedAB)
 {
   window.openDialog("chrome://messenger/content/addressbook/abMailListDialog.xul",
                     "",
-                    "chrome,titlebar,centerscreen,resizable=no",
+                    "chrome,resizable=no,titlebar,modal,centerscreen",
                     {selectedAB:selectedAB});
 }
 
@@ -776,7 +776,7 @@ function goEditListDialog(abURI, abCard, listURI, okCallback)
 {
   window.openDialog("chrome://messenger/content/addressbook/abEditListDialog.xul",
                     "",
-                    "chrome,titlebar,resizable=no",
+                    "chrome,resizable=no,titlebar,modal,centerscreen",
                     {abURI:abURI, abCard:abCard, listURI:listURI, okCallback:okCallback});
 }
 
