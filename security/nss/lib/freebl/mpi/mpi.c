@@ -35,7 +35,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mpi.c,v 1.25 2000/09/28 22:53:45 nelsonb%netscape.com Exp $
+ *  $Id: mpi.c,v 1.26 2000/09/29 19:51:32 nelsonb%netscape.com Exp $
  */
 
 #include "mpi-priv.h"
@@ -369,7 +369,7 @@ mp_err mp_set_int(mp_int *mp, long z)
 
 /* {{{ mp_set_ulong(mp, z) */
 
-mp_err mp_set_ulong(mp_int *mp, ulong z)
+mp_err mp_set_ulong(mp_int *mp, unsigned long z)
 {
   int            ix;
   mp_err         res;
