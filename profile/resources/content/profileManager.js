@@ -184,7 +184,7 @@ function SwitchProfileManagerMode()
     try {
       captionLine = bundle.GetStringFromName( "pm_title" );   // get manager's caption
     } catch(e) {
-      captionLine = "Manage Profiles Yah";
+      captionLine = "Manage Profiles *";
     }
     
     var manage = document.getElementById( "manage" );       // hide the manage profiles button...
@@ -197,7 +197,7 @@ function SwitchProfileManagerMode()
     try {
       captionLine = bundle.GetStringFromName( "ps_title" );
     } catch(e) {
-      captionLine = "Select Profile Yah";
+      captionLine = "Select Profile *";
     }
     profileManagerMode = "selection";
   }
@@ -217,6 +217,7 @@ function ChangeCaption( aCaption )
 {
   var caption = document.getElementById( "header" );
   caption.setAttribute( "value", aCaption );
+  window.title = aCaption;
 }
 
 // do button enabling based on tree selection
