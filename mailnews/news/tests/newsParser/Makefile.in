@@ -46,7 +46,6 @@ LIBS = \
 	-lnetwork \
 	-lnetlib \
 	-lreg	\
-	-lxpcom	\
 	-lpwcac \
 	-lmozdbm	\
 	-lxp	\
@@ -64,8 +63,9 @@ LIBS = \
 	-lraptorgfx	\
 	-lgfxps		\
 	-lmozutil \
-	-lmsgbaseutil \
 	$(DIST)/lib/libmsgnews_s.a	\
+	-lmsgbaseutil \
+	-lxpcom	\
 	$(JPEG_LIBS) \
 	$(PNG_LIBS)  \
 	$(ZLIB_LIBS) \
