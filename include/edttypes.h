@@ -330,7 +330,6 @@ struct _EDT_TableData {
     int32 iBorderWidth;
     int32 iCellSpacing;
     int32 iCellPadding;
-    int32 iInterCellSpace;
     XP_Bool bWidthDefined;
     XP_Bool bWidthPercent;
     int32 iWidth;
