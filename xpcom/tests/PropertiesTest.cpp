@@ -106,10 +106,11 @@ main(int argc, char* argv[])
 
   nsIInputStream* in = nsnull;
 
-  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &ret);
+  nsCOMPtr<nsIIOService> service(do_GetService(kIOServiceCID, &ret));
   if (NS_FAILED(ret)) return ret;
 
-  NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &ret);
+  nsCOMPtr<nsIEventQueueService> eventQService = 
+           do_GetService(kEventQueueServiceCID, &ret);
   if (NS_FAILED(ret)) return ret;
 
   nsIChannel *channel = nsnull;

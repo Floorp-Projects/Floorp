@@ -380,45 +380,6 @@ CallGetService( const char *aContractID,
   }
 
 ////////////////////////////////////////////////////////////////////////////////
-// NS_WITH_SERVICE: macro to make using services easier. 
-// 
-// Services can be used with COMPtrs. GetService() is used to get a service.
-// NS_RELEASE() can be called on the service got to release it.
-//
-// NOTE: ReleaseService() is OBSOLETE.
-//
-// NOTE: NS_WITH_SERVICE is deprecated.  This:
-//  {
-//      nsCOMPtr<nsIMyService> service( do_GetService(NS_MYSERVICE_CONTRACTID, &rv) );
-//      if (NS_FAILED(rv)) return rv;
-//      service->Doit(...);     // use my service
-//  }
-// is preferred over either of the blocks of code below.
-//
-// Back when NS_WITH_SERVICE wasn't deprecated you could replace this:
-//  {
-//      nsIMyService* service;
-//      rv = nsServiceManager::GetService(kMyServiceCID, NS_GET_IID(nsIMyService),
-//                                        &service);
-//      if (NS_FAILED(rv)) return rv;
-//      service->Doit(...);     // use my service
-//      rv = nsServiceManager::ReleaseService(kMyServiceCID, service);
-//  }
-// with this:
-//  {
-//      NS_WITH_SERVICE(nsIMyService, service, kMyServiceCID, &rv);
-//      if (NS_FAILED(rv)) return rv;
-//      service->Doit(...);     // use my service
-//  }
-// and the automatic destructor from COMPtr will take care of releasing the service. 
-////////////////////////////////////////////////////////////////////////////////
-#define NS_WITH_SERVICE(T, var, cid, rvAddr) \
-    nsCOMPtr<T> var = do_GetService(cid, rvAddr);
-
-#define NS_WITH_SERVICE1(T, var, isupportsServMgr, cid, rvAddr)     \
-    nsCOMPtr<T> var = do_GetService(cid, isupportsServMgr, rvAddr);
-    
-////////////////////////////////////////////////////////////////////////////////
 // NS_NewServiceManager: For when you want to create a service manager
 // in a given context.
 

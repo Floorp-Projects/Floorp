@@ -105,7 +105,7 @@ NS_IMETHODIMP
 nsJARURI::SetSpec(const char * aSpec)
 {
     nsresult rv;
-    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+    nsCOMPtr<nsIIOService> serv(do_GetService(kIOServiceCID, &rv));
     if (NS_FAILED(rv)) return rv;
 
     PRUint32 startPos, endPos;
@@ -320,7 +320,7 @@ nsJARURI::Resolve(const char *relativePath, char **result)
 
     if (!relativePath) return NS_ERROR_NULL_POINTER;
 
-    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+    nsCOMPtr<nsIIOService> serv(do_GetService(kIOServiceCID, &rv));
     if (NS_FAILED(rv)) return rv;
 
     nsXPIDLCString scheme;
@@ -383,7 +383,7 @@ NS_IMETHODIMP
 nsJARURI::SetJAREntry(const char* entryPath)
 {
     nsresult rv;
-    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+    nsCOMPtr<nsIIOService> serv(do_GetService(kIOServiceCID, &rv));
     if (NS_FAILED(rv)) return rv;
 
     if (mJAREntry)

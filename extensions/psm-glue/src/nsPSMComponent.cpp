@@ -100,7 +100,8 @@ nsPSMComponent::~nsPSMComponent()
     if (mCertContentListener) {
       nsresult rv = NS_ERROR_FAILURE;
       
-      NS_WITH_SERVICE(nsIURILoader, dispatcher, NS_URI_LOADER_CONTRACTID, &rv);
+      nsCOMPtr<nsIURILoader> dispatcher = 
+               do_GetService(NS_URI_LOADER_CONTRACTID, &rv);
       if (NS_SUCCEEDED(rv)) {
         rv = dispatcher->UnRegisterContentListener(mCertContentListener);
       }
@@ -146,7 +147,8 @@ nsPSMComponent::RegisterCertContentListener()
 {
   nsresult rv = NS_OK;
   if (mCertContentListener == nsnull) {
-    NS_WITH_SERVICE(nsIURILoader, dispatcher, NS_URI_LOADER_CONTRACTID, &rv);
+    nsCOMPtr<nsIURILoader> dispatcher = 
+             do_GetService(NS_URI_LOADER_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
       mCertContentListener = do_CreateInstance(NS_CERTCONTENTLISTEN_CONTRACTID);
       rv = dispatcher->RegisterContentListener(mCertContentListener);
@@ -159,7 +161,8 @@ nsresult
 nsPSMComponent::RegisterProfileChangeObserver()
 {
     nsresult rv; 
-    NS_WITH_SERVICE(nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+    nsCOMPtr<nsIObserverService> observerService = 
+             do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
     NS_ASSERTION(observerService, "could not get observer service");
     if (observerService) {
         // Our refcnt must be > 0 when we call AddObserver or we'll get deleted. 
@@ -520,7 +523,8 @@ nsPSMComponent::GetControlConnection( CMT_CONTROL * *_retval )
         if (mControl == nsnull)
         {
             nsCOMPtr<nsILocalFile> psmAppFile;
-            NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+            nsCOMPtr<nsIProperties> directoryService = 
+                     do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
             if (NS_FAILED(rv)) return rv;
 
             directoryService->Get( NS_XPCOM_CURRENT_PROCESS_DIR,
@@ -549,7 +553,8 @@ nsPSMComponent::GetControlConnection( CMT_CONTROL * *_retval )
         if (mControl == nsnull)
         {
             nsCOMPtr<nsILocalFile> psmAppFile;
-            NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+            nsCOMPtr<nsIProperties> directoryService = 
+                     do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
             if (NS_FAILED(rv)) return rv;
 
             directoryService->Get( NS_XPCOM_CURRENT_PROCESS_DIR,
@@ -612,7 +617,7 @@ nsPSMComponent::GetControlConnection( CMT_CONTROL * *_retval )
         profileSpec->Create(nsIFile::DIRECTORY_TYPE, 0);
 #endif
         
-        NS_WITH_SERVICE(nsIProfile, profile, kProfileCID, &rv);
+        nsCOMPtr<nsIProfile> profile(do_GetService(kProfileCID, &rv));
         if (NS_SUCCEEDED(rv))
           {
             rv = profile->GetCurrentProfile(getter_Copies(profileName));
@@ -1171,8 +1176,8 @@ nsPSMComponent::VerifySignature(const char* aRSABuf, PRUint32 aRSABufLen,
 
   //-- Get a principal
   nsresult rv;
-  NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                  NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv)
+  nsCOMPtr<nsIScriptSecurityManager> secMan = 
+           do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
   rv = secMan->GetCertificatePrincipal((const char*)fingerprint.data,
                                        aPrincipal);

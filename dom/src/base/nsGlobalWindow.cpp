@@ -314,7 +314,8 @@ NS_IMETHODIMP GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument)
       nsCOMPtr<nsIDOMWindowInternal> us(do_QueryInterface(NS_STATIC_CAST(nsIDOMWindow*,this)));
       if (internal == us) {
         nsresult rv;
-        NS_WITH_SERVICE(nsIXBLService, xblService, "@mozilla.org/xbl;1", &rv);
+        nsCOMPtr<nsIXBLService> xblService = 
+                 do_GetService("@mozilla.org/xbl;1", &rv);
         if (xblService) {
           nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(mChromeEventHandler));
           xblService->AttachGlobalKeyHandler(rec);
@@ -4139,7 +4140,7 @@ NavigatorImpl::GetCookieEnabled(PRBool *aCookieEnabled)
   nsresult rv = NS_OK;
   *aCookieEnabled = PR_FALSE;
 
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &rv));
   if (NS_FAILED(rv) || prefs == nsnull)
     return rv;
 

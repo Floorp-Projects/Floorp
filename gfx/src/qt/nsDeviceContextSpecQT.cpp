@@ -122,7 +122,7 @@ NS_IMETHODIMP nsDeviceContextSpecQT::QueryInterface(REFNSIID aIID,
 NS_IMETHODIMP nsDeviceContextSpecQT::Init(PRBool aQuiet)
 {
   nsresult  rv = NS_ERROR_FAILURE;
-  NS_WITH_SERVICE(nsIPrintOptions,printService,kPrintOptionsCID,&rv);
+  nsCOMPtr<nsIPrintOptions> printService(do_GetService(kPrintOptionsCID, &rv));
  
   // if there is a current selection then enable the "Selection" radio button
   if (NS_SUCCEEDED(rv) && printService) {

@@ -118,7 +118,8 @@ NS_IMETHODIMP  nsTextToSubURI::UnEscapeAndConvert(
   NS_ASSERTION(unescaped, "nsUnescape returned null");
 
   // Convert from the charset to unicode
-  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &rv); 
+  nsCOMPtr<nsICharsetConverterManager> ccm = 
+           do_GetService(kCharsetConverterManagerCID, &rv); 
   if (NS_SUCCEEDED(rv)) {
     nsAutoString charsetStr; charsetStr.AssignWithConversion(charset);
     nsIUnicodeDecoder *decoder;

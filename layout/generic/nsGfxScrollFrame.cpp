@@ -396,10 +396,8 @@ nsGfxScrollFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
 
   // create horzontal scrollbar
   nsresult rv;
-  NS_WITH_SERVICE(nsIElementFactory, elementFactory,
-                  NS_ELEMENT_FACTORY_CONTRACTID_PREFIX
-                  "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                  &rv);
+  nsCOMPtr<nsIElementFactory> elementFactory = 
+           do_GetService(NS_ELEMENT_FACTORY_CONTRACTID_PREFIX "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", &rv);
   if (!elementFactory)
     return NS_ERROR_FAILURE;
 

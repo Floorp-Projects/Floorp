@@ -49,7 +49,8 @@ static nsresult DisplayURI(const char *urlStr, PRBool block)
     rv = NS_NewURI(getter_AddRefs(URL), (const char *)urlStr);
     if (NS_FAILED(rv)) return rv;
 
-    NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
+    nsCOMPtr<nsIAppShellService> appShell = 
+             do_GetService(kAppShellServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIXULWindow>  window;

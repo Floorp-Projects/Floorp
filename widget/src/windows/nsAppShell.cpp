@@ -84,7 +84,7 @@ NS_METHOD nsAppShell::Run(void)
   int  keepGoing = 1;
   
   nsresult rv;
-  NS_WITH_SERVICE(nsITimerQueue, queue, kTimerManagerCID, &rv);
+  nsCOMPtr<nsITimerQueue> queue(do_GetService(kTimerManagerCID, &rv));
   if (NS_FAILED(rv)) return rv;
 
   gKeepGoing = 1;
@@ -152,7 +152,7 @@ nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
   BOOL gotMessage = false;
 
   nsresult rv;
-  NS_WITH_SERVICE(nsITimerQueue, queue, kTimerManagerCID, &rv);
+  nsCOMPtr<nsITimerQueue> queue(do_GetService(kTimerManagerCID, &rv));
   if (NS_FAILED(rv)) return rv;
 
   do {

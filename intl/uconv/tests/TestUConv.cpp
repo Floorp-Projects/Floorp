@@ -222,7 +222,8 @@ nsresult nsTestUConv::TestCharsetManager()
   const PRUnichar * name;
   nsCOMPtr<nsIAtom> csAtom;
 
-  NS_WITH_SERVICE(nsICharsetConverterManager2, ccMan, kCharsetConverterManagerCID, &res);
+  nsCOMPtr<nsICharsetConverterManager2> ccMan = 
+           do_GetService(kCharsetConverterManagerCID, &res);
   if (NS_FAILED(res)) {
     mLog.PrintError("NS_WITH_SERVICE", res);
     return res;
@@ -273,7 +274,8 @@ nsresult nsTestUConv::DisplayDetectors()
   mLog.AddTrace(trace);
   nsresult res = NS_OK;
 
-  NS_WITH_SERVICE(nsICharsetConverterManager2, ccMan, kCharsetConverterManagerCID, &res);
+  nsCOMPtr<nsICharsetConverterManager2> ccMan = 
+           do_GetService(kCharsetConverterManagerCID, &res);
   if (NS_FAILED(res)) {
     mLog.PrintError("NS_WITH_SERVICE", res);
     return res;
@@ -338,7 +340,8 @@ nsresult nsTestUConv::DisplayCharsets()
   mLog.AddTrace(trace);
   nsresult res = NS_OK;
 
-  NS_WITH_SERVICE(nsICharsetConverterManager2, ccMan, kCharsetConverterManagerCID, &res);
+  nsCOMPtr<nsICharsetConverterManager2> ccMan = 
+           do_GetService(kCharsetConverterManagerCID, &res);
   if (NS_FAILED(res)) {
     mLog.PrintError("NS_WITH_SERVICE", res);
     return res;
@@ -469,7 +472,8 @@ nsresult nsTestUConv::Encode(PRUnichar ** aSrc, PRUnichar * aSrcEnd,
   mLog.AddTrace(trace);
   nsresult res = NS_OK;
 
-  NS_WITH_SERVICE(nsICharsetConverterManager, ccMan, kCharsetConverterManagerCID, &res);
+  nsCOMPtr<nsICharsetConverterManager> ccMan = 
+           do_GetService(kCharsetConverterManagerCID, &res);
   if (NS_FAILED(res)) {
     mLog.PrintError("NS_WITH_SERVICE", res);
     return res;

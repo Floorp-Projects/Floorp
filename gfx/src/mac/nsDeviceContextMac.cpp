@@ -1040,7 +1040,7 @@ PRUint32 nsDeviceContextMac::GetScreenResolution()
 	initialized = PR_TRUE;
 
     nsresult rv;
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
     if (NS_SUCCEEDED(rv) && prefs) {
 		PRInt32 intVal;
 		if (NS_SUCCEEDED(prefs->GetIntPref("browser.display.screen_resolution", &intVal))) {
@@ -1066,7 +1066,7 @@ PRBool nsDeviceContextMac::DisplayVerySmallFonts()
 	initialized = PR_TRUE;
 
     nsresult rv;
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
     if (NS_SUCCEEDED(rv) && prefs) {
 		PRBool boolVal;
 		if (NS_SUCCEEDED(prefs->GetBoolPref("browser.display_very_small_fonts", &boolVal))) {

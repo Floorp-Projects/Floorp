@@ -3897,7 +3897,8 @@ nsDocShell::NewContentViewerObj(const char *aContentType,
     if (!docLoaderFactory) {
         // try again after loading plugins
         nsresult err;
-        NS_WITH_SERVICE(nsIPluginHost, pluginHost, kPluginManagerCID, &err);
+        nsCOMPtr<nsIPluginHost> pluginHost = 
+                 do_GetService(kPluginManagerCID, &err);
 
         if (NS_FAILED(err))
             return NS_ERROR_FAILURE;

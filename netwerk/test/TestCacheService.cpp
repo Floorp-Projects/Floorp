@@ -62,7 +62,8 @@ MakeCacheSession(const char * clientID, nsICacheSession **session)
     nsresult rv;
 
     if (!gCacheService) {
-        //    NS_WITH_SERVICE(nsICacheService, cacheService, kCacheServiceCID, &rv);
+        //    nsCOMPtr<nsICacheService> cacheService = 
+        //             do_GetService(kCacheServiceCID, &rv);
         gCacheService = do_GetService(kCacheServiceCID, &rv);
         if (NS_FAILED(rv) || !gCacheService) {
             printf("do_GetService(kCacheServiceCID) failed : %x\n", rv);
@@ -188,7 +189,8 @@ main(int argc, char* argv[])
     /**
      * Create event queue for this thread
      */
-    NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
+    nsCOMPtr<nsIEventQueueService> eventQService = 
+             do_GetService(kEventQueueServiceCID, &rv);
     if (NS_FAILED(rv)) goto error_exit;
 
     rv = eventQService->CreateThreadEventQueue();

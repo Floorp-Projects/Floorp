@@ -142,7 +142,8 @@ int main(int argc, char **argv)
     RETURN_IF_FAILED(rv, "NS_AutoregisterComponents");
 
     // Create the Event Queue for this thread...
-    NS_WITH_SERVICE(nsIEventQueueService, eqs, kEventQueueServiceCID, &rv);
+    nsCOMPtr<nsIEventQueueService> eqs = 
+             do_GetService(kEventQueueServiceCID, &rv);
     RETURN_IF_FAILED(rv, "do_GetService(EventQueueService)");
 
     rv = eqs->CreateMonitoredThreadEventQueue();

@@ -162,7 +162,7 @@ nsresult nsCopySupport::HTMLCopy(nsISelection *aSel, nsIDocument *aDoc, PRInt16 
 #endif // IBMBIDI
 
   // Get the Clipboard
-  NS_WITH_SERVICE(nsIClipboard, clipboard, kCClipboardCID, &rv);
+  nsCOMPtr<nsIClipboard> clipboard(do_GetService(kCClipboardCID, &rv));
   if (NS_FAILED(rv)) 
     return rv;
 

@@ -72,8 +72,8 @@ nsLoggingProgressListener::BeforeJavascriptEvaluation(const PRUnichar *URL)
     // Not in stub installer
     if (!nsSoftwareUpdate::GetProgramDirectory()) 
     {
-        NS_WITH_SERVICE(nsIProperties, dirSvc, 
-                        NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+        nsCOMPtr<nsIProperties> dirSvc = 
+                 do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
         if (!dirSvc) return NS_ERROR_FAILURE;
         dirSvc->Get(NS_OS_CURRENT_PROCESS_DIR, NS_GET_IID(nsIFile),
                     getter_AddRefs(iFile));
@@ -123,8 +123,8 @@ nsLoggingProgressListener::BeforeJavascriptEvaluation(const PRUnichar *URL)
     {
         // failed to create the log file in the application directory 
         // so try to create the log file in the user's profile directory
-        NS_WITH_SERVICE(nsIProperties, dirSvc, 
-                        NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+        nsCOMPtr<nsIProperties> dirSvc = 
+                 do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
         if (!dirSvc) return NS_ERROR_FAILURE;
         dirSvc->Get(NS_APP_USER_PROFILE_50_DIR, NS_GET_IID(nsIFile),
                     getter_AddRefs(iFile));

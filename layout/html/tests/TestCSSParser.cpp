@@ -143,7 +143,7 @@ int main(int argc, char** argv)
       char* urlName = argv[i];
       // Create url object
       nsIURI* url;
-      NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+      nsCOMPtr<nsIIOService> service(do_GetService(kIOServiceCID, &rv));
       if (NS_FAILED(rv)) return -1;
 
       nsIURI *uri = nsnull;

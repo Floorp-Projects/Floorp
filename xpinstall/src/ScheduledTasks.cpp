@@ -142,7 +142,8 @@ char* GetRegFilePath()
     nsresult rv;
     nsCOMPtr<nsILocalFile> iFileUtilityPath;
     //Get the program directory
-    NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+    nsCOMPtr<nsIProperties> directoryService = 
+             do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv))
         return nsnull;
 

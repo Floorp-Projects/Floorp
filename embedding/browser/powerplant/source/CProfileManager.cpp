@@ -70,7 +70,8 @@ void CProfileManager::StartUp()
 {
     nsresult rv;
          
-    NS_WITH_SERVICE(nsIProfile, profileService, NS_PROFILE_CONTRACTID, &rv);
+    nsCOMPtr<nsIProfile> profileService = 
+             do_GetService(NS_PROFILE_CONTRACTID, &rv);
     ThrowIfNil_(profileService);
         
     PRInt32 profileCount;
@@ -158,7 +159,8 @@ void CProfileManager::DoManageProfilesDialog()
     StDialogHandler	theHandler(dlog_ManageProfiles, LCommander::GetTopCommander());
     LWindow			 *theDialog = theHandler.GetDialog();
 
-    NS_WITH_SERVICE(nsIProfile, profileService, NS_PROFILE_CONTRACTID, &rv);
+    nsCOMPtr<nsIProfile> profileService = 
+             do_GetService(NS_PROFILE_CONTRACTID, &rv);
     ThrowIfNil_(profileService);
         
     // Set up the dialog by filling the list of current profiles
@@ -313,7 +315,8 @@ void CProfileManager::DoLogout()
     enum { iPersist = 1, iCancel, iCleanse };
 
     nsresult rv;
-    NS_WITH_SERVICE(nsIProfile, profileService, NS_PROFILE_CONTRACTID, &rv);
+    nsCOMPtr<nsIProfile> profileService = 
+             do_GetService(NS_PROFILE_CONTRACTID, &rv);
     ThrowIfNil_(profileService);
     
     nsXPIDLString currentProfile;

@@ -1365,7 +1365,8 @@ nsPIXPIProxy* nsInstall::GetUIThreadProxy()
     if (!mUIThreadProxy)
     {
         nsresult rv;
-        NS_WITH_SERVICE( nsIProxyObjectManager, pmgr, kProxyObjectManagerCID, &rv);
+        nsCOMPtr<nsIProxyObjectManager> pmgr = 
+                 do_GetService(kProxyObjectManagerCID, &rv);
         if (NS_SUCCEEDED(rv))
         {
             nsCOMPtr<nsPIXPIProxy> tmp(do_QueryInterface(new nsXPIProxy()));
@@ -2552,7 +2553,8 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsIFile* aSuggestedName,
 
     if (aSuggestedName == nsnull)
     {
-        NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+        nsCOMPtr<nsIProperties> directoryService = 
+                 do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
 
         directoryService->Get(NS_OS_TEMP_DIR, NS_GET_IID(nsIFile), getter_AddRefs(tempFile));
   

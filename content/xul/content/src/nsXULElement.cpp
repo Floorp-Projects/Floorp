@@ -718,7 +718,8 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
              (NodeInfo()->NamespaceEquals(kNameSpaceID_XUL))){
       nsCOMPtr<nsIAtom> tag;
       PRInt32 dummy;
-      NS_WITH_SERVICE(nsIXBLService, xblService, "@mozilla.org/xbl;1", &rv);
+      nsCOMPtr<nsIXBLService> xblService = 
+               do_GetService("@mozilla.org/xbl;1", &rv);
       xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), &dummy, getter_AddRefs(tag));
       if (tag.get() == nsXULAtoms::tree) {
         // We delegate XULTreeElement APIs to an aggregate object
@@ -744,7 +745,8 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
 
         nsCOMPtr<nsIAtom> tag;
         PRInt32 dummy;
-        NS_WITH_SERVICE(nsIXBLService, xblService, "@mozilla.org/xbl;1", &rv);
+        nsCOMPtr<nsIXBLService> xblService = 
+                 do_GetService("@mozilla.org/xbl;1", &rv);
         xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), &dummy, getter_AddRefs(tag));
         if (tag.get() == nsXULAtoms::tree) {
             inst = nsContentUtils::

@@ -1812,7 +1812,7 @@ PRBool il_PermitLoad(const char * image_url, nsIImageRequestObserver * aObserver
     }
 
     /* check to see if we need to block image from loading */
-    NS_WITH_SERVICE(nsIImgManager, imgmanager, kImgManagerCID, &rv);
+    nsCOMPtr<nsIImgManager> imgmanager(do_GetService(kImgManagerCID, &rv));
     if (NS_FAILED(rv)) {
         Recycle(host);
         Recycle(firstHost);

@@ -237,10 +237,8 @@ nsGopherChannel::Open(nsIInputStream **_retval)
     if (NS_FAILED(rv))
         return rv;
 
-    NS_WITH_SERVICE(nsISocketTransportService,
-                    socketService,
-                    kSocketTransportServiceCID,
-                    &rv);
+    nsCOMPtr<nsISocketTransportService> socketService = 
+             do_GetService(kSocketTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     rv = socketService->CreateTransport(mHost,
@@ -279,10 +277,8 @@ nsGopherChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
     mListener = aListener;
     mResponseContext = ctxt;
 
-    NS_WITH_SERVICE(nsISocketTransportService,
-                    socketService,
-                    kSocketTransportServiceCID,
-                    &rv);
+    nsCOMPtr<nsISocketTransportService> socketService = 
+             do_GetService(kSocketTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     rv = socketService->CreateTransport(mHost,
@@ -503,8 +499,8 @@ nsGopherChannel::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
 
         nsCOMPtr<nsIStreamListener> converterListener;
         
-        NS_WITH_SERVICE(nsIStreamConverterService, StreamConvService,
-                        kStreamConverterServiceCID, &rv);
+        nsCOMPtr<nsIStreamConverterService> StreamConvService = 
+                 do_GetService(kStreamConverterServiceCID, &rv);
         if (NS_FAILED(rv)) return rv;
      
         // What we now do depends on what type of file we have

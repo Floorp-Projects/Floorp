@@ -1567,7 +1567,8 @@ PresShell::Init(nsIDocument* aDocument,
   }
   
   // Cache the event queue of the current UI thread
-  NS_WITH_SERVICE(nsIEventQueueService, eventService, kEventQueueServiceCID, &result);
+  nsCOMPtr<nsIEventQueueService> eventService = 
+           do_GetService(kEventQueueServiceCID, &result);
   if (NS_SUCCEEDED(result))                    // XXX this implies that the UI is the current thread.
     result = eventService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(mEventQueue));
   
@@ -1578,7 +1579,7 @@ PresShell::Init(nsIDocument* aDocument,
     gAsyncReflowDuringDocLoad = PR_TRUE;
 
     // Get the prefs service
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &result);
+    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &result));
     if (NS_SUCCEEDED(result)) {
       prefs->GetIntPref("layout.reflow.timeslice", &gMaxRCProcessingTime);
       prefs->GetBoolPref("layout.reflow.async.duringDocLoad", &gAsyncReflowDuringDocLoad);
@@ -1603,7 +1604,7 @@ PresShell::Init(nsIDocument* aDocument,
 
 #ifdef MOZ_REFLOW_PERF
     // Get the prefs service
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &result);
+    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &result));
     if (NS_SUCCEEDED(result)) {
       if (mReflowCountMgr != nsnull) {
         PRBool paintFrameCounts       = PR_FALSE;

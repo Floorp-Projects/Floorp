@@ -148,7 +148,8 @@ nsStreamXferOp::Start( void ) {
         if ( !mOutputTransport ) {
             // First, get file transport service.
             NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
-            NS_WITH_SERVICE( nsIFileTransportService, fts, kFileTransportServiceCID, &rv );
+            nsCOMPtr<nsIFileTransportService> fts = 
+                     do_GetService( kFileTransportServiceCID, &rv );
     
             if ( NS_SUCCEEDED( rv ) ) {
                 // Next, create output file channel.

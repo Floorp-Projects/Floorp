@@ -696,7 +696,8 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   ForceCompositionEnd();
   
   nsresult rv;
-  NS_WITH_SERVICE(nsIDragService, dragService, "@mozilla.org/widget/dragservice;1", &rv);
+  nsCOMPtr<nsIDragService> dragService = 
+           do_GetService("@mozilla.org/widget/dragservice;1", &rv);
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIDragSession> dragSession;
@@ -941,7 +942,8 @@ NS_IMETHODIMP nsHTMLEditor::DoDrag(nsIDOMEvent *aDragEvent)
     return NS_ERROR_OUT_OF_MEMORY;
 
   /* get the drag service */
-  NS_WITH_SERVICE(nsIDragService, dragService, "@mozilla.org/widget/dragservice;1", &rv);
+  nsCOMPtr<nsIDragService> dragService = 
+           do_GetService("@mozilla.org/widget/dragservice;1", &rv);
   if (NS_FAILED(rv)) return rv;
 
   /* create html flavor transferable */
@@ -1047,7 +1049,7 @@ NS_IMETHODIMP nsHTMLEditor::Paste(PRInt32 aSelectionType)
 
   // Get Clipboard Service
   nsresult rv;
-  NS_WITH_SERVICE ( nsIClipboard, clipboard, kCClipboardCID, &rv );
+  nsCOMPtr<nsIClipboard> clipboard( do_GetService( kCClipboardCID, &rv ) );
   if ( NS_FAILED(rv) )
     return rv;
     
@@ -1115,7 +1117,7 @@ NS_IMETHODIMP nsHTMLEditor::CanPaste(PRInt32 aSelectionType, PRBool *aCanPaste)
     return NS_OK;
     
   nsresult rv;
-  NS_WITH_SERVICE(nsIClipboard, clipboard, kCClipboardCID, &rv);
+  nsCOMPtr<nsIClipboard> clipboard(do_GetService(kCClipboardCID, &rv));
   if (NS_FAILED(rv)) return rv;
   
   // the flavors that we can deal with
@@ -1237,7 +1239,7 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsPlaintextQuotation(PRInt32 aSelectionType)
 {
   // Get Clipboard Service
   nsresult rv;
-  NS_WITH_SERVICE(nsIClipboard, clipboard, kCClipboardCID, &rv);
+  nsCOMPtr<nsIClipboard> clipboard(do_GetService(kCClipboardCID, &rv));
   if (NS_FAILED(rv)) return rv;
 
   // Create generic Transferable for getting the data

@@ -57,7 +57,8 @@ nsresult CProfileMgr::StartUp()
 {
     nsresult rv;
          
-    NS_WITH_SERVICE(nsIProfile, profileService, NS_PROFILE_CONTRACTID, &rv);
+    nsCOMPtr<nsIProfile> profileService = 
+             do_GetService(NS_PROFILE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
         
     PRInt32 profileCount;
@@ -115,7 +116,8 @@ nsresult CProfileMgr::DoManageProfilesDialog(PRBool bAtStartUp)
     {
         SetShowDialogOnStart(dialog.m_bAskAtStartUp);
          
-        NS_WITH_SERVICE(nsIProfile, profileService, NS_PROFILE_CONTRACTID, &rv);
+        nsCOMPtr<nsIProfile> profileService = 
+                 do_GetService(NS_PROFILE_CONTRACTID, &rv);
         if (NS_SUCCEEDED(rv))
                rv = profileService->SetCurrentProfile(dialog.m_SelectedProfile.get());
     }

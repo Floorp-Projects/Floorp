@@ -232,7 +232,7 @@ XULPopupListenerImpl::Init(nsIDOMElement* aElement, const XULPopupType& popup)
 
   // Only the first time, register the callback and get the initial value of the pref
   if ( !prefChangeRegistered ) {
-    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);  
+    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));  
     if ( prefs ) {
       // get the initial value of the pref
       rv = prefs->GetBoolPref("browser.chrome.toolbar_tips", &sShowTooltips);
@@ -257,7 +257,7 @@ int
 XULPopupListenerImpl :: sTooltipPrefChanged (const char *, void * inData )
 {
   nsresult rv = NS_OK;
-  NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
   if ( prefs ) {
     rv = prefs->GetBoolPref("browser.chrome.toolbar_tips", &sShowTooltips);
   }

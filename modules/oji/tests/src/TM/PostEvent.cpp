@@ -112,7 +112,8 @@ TM_OJIAPITest(ThreadManager_PostEvent_6) {
 			nsresult rv, lrc, lrc1;
 			static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 			static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
-			NS_WITH_SERVICE(nsIEventQueueService, eventService, kEventQueueServiceCID, &rv);
+			nsCOMPtr<nsIEventQueueService> eventService = 
+			         do_GetService(kEventQueueServiceCID, &rv);
 			if (NS_FAILED(rv)) nsresult rc = rv;
 			nsIEventQueue *nq;
 
@@ -196,7 +197,8 @@ TM_OJIAPITest(ThreadManager_PostEvent_7) {
 			nsresult rv, lrc, lrc1;
 			static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 			static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
-			NS_WITH_SERVICE(nsIEventQueueService, eventService, kEventQueueServiceCID, &rv);
+			nsCOMPtr<nsIEventQueueService> eventService = 
+			         do_GetService(kEventQueueServiceCID, &rv);
 			if (NS_FAILED(rv)) nsresult rc = rv;
 			nsIEventQueue *nq;
 

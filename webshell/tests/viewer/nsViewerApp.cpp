@@ -261,7 +261,8 @@ nsViewerApp::SetupRegistry()
   NS_RELEASE(bwf);
 
   // register the cookie manager
-  NS_WITH_SERVICE(nsICookieService, cookieService, kCookieServiceCID, &rv);
+  nsCOMPtr<nsICookieService> cookieService = 
+           do_GetService(kCookieServiceCID, &rv);
   if (NS_FAILED(rv) || (nsnull == cookieService)) {
 #ifdef DEBUG
     printf("Unable to instantiate Cookie Manager\n");

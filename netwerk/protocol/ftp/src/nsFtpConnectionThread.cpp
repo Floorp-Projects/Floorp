@@ -315,7 +315,7 @@ nsFtpState::nsFtpState() {
 
     mGenerateRawContent = mGenerateHTMLContent = PR_FALSE;
     nsresult rv;
-    NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
+    nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &rv)); 
     if (NS_SUCCEEDED(rv) || pPref) { 
         pPref->GetBoolPref("network.dir.generate_html", &mGenerateHTMLContent);
         pPref->GetBoolPref("network.ftp.raw_output", &mGenerateRawContent);
@@ -951,7 +951,7 @@ nsFtpState::S_pass() {
 
     if (mAnonymous) {
         char* anonPassword;
-        NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
+        nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &rv)); 
         if (NS_SUCCEEDED(rv) || pPref) 
             rv = pPref->CopyCharPref("network.ftp.anonymous_password", &anonPassword);
         if (NS_SUCCEEDED(rv) && anonPassword && *anonPassword != '\0') {
@@ -1027,7 +1027,8 @@ nsFtpState::R_pass() {
         // kick back out to S_pass() and ask the user again.
         nsresult rv = NS_OK;
 
-        NS_WITH_SERVICE(nsIWalletService, walletService, kWalletServiceCID, &rv);
+        nsCOMPtr<nsIWalletService> walletService = 
+                 do_GetService(kWalletServiceCID, &rv);
         if (NS_FAILED(rv)) return FTP_ERROR;
 
         nsXPIDLCString uri;
@@ -1906,10 +1907,8 @@ nsFtpState::BuildStreamConverter(nsIStreamListener** convertStreamListener)
     nsCOMPtr<nsIStreamListener> converterListener;
     nsCOMPtr<nsIStreamListener> listener = do_QueryInterface(mChannel);
 
-    NS_WITH_SERVICE(nsIStreamConverterService, 
-                    scs, 
-                    kStreamConverterServiceCID, 
-                    &rv);
+    nsCOMPtr<nsIStreamConverterService> scs = 
+             do_GetService(kStreamConverterServiceCID, &rv);
 
     if (NS_FAILED(rv)) 
         return rv;
@@ -1964,10 +1963,8 @@ nsFtpState::CreateTransport(const char * host, PRInt32 port, PRUint32 bufferSegm
 {
     nsresult rv;
     
-    NS_WITH_SERVICE(nsISocketTransportService, 
-                    sts,
-                    kSocketTransportServiceCID,
-                    &rv);
+    nsCOMPtr<nsISocketTransportService> sts = 
+             do_GetService(kSocketTransportServiceCID, &rv);
         
     return sts->CreateTransport(host, port, nsnull, PRUint32(-1),
                                 bufferSegmentSize,

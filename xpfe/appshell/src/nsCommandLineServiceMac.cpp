@@ -323,7 +323,8 @@ OSErr nsMacCommandLine::Quit(TAskSave askSave)
 //----------------------------------------------------------------------------------------
 {
 	nsresult rv;
-	NS_WITH_SERVICE(nsIAppShellService, appShellService, kAppShellServiceCID, &rv);
+	nsCOMPtr<nsIAppShellService> appShellService = 
+	         do_GetService(kAppShellServiceCID, &rv);
 	if (NS_FAILED(rv))
 		return errAEEventNotHandled;
 	

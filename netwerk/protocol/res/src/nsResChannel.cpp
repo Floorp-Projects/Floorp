@@ -273,7 +273,7 @@ nsResChannel::EnsureNextResolvedChannel()
     nsresult rv;
     nsXPIDLCString resolvedURI;
 
-    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+    nsCOMPtr<nsIIOService> serv(do_GetService(kIOServiceCID, &rv));
     if (NS_FAILED(rv)) goto done;
 
     rv = mSubstitutions.Next(getter_Copies(resolvedURI));

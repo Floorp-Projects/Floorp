@@ -339,7 +339,8 @@ nsChromeRegistry::Init()
   rv = mRDFService->GetResource(kURICHROME_packageVersion, getter_AddRefs(mPackageVersion));
   NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
 
-  NS_WITH_SERVICE(nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+  nsCOMPtr<nsIObserverService> observerService = 
+           do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
   if (observerService) {
     observerService->AddObserver(this, NS_LITERAL_STRING("profile-before-change").get());
     observerService->AddObserver(this, NS_LITERAL_STRING("profile-do-change").get());
@@ -1094,7 +1095,8 @@ NS_IMETHODIMP nsChromeRegistry::RefreshSkins()
   if (NS_FAILED(rv)) return rv;
   
   // Get the window mediator
-  NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
+  nsCOMPtr<nsIWindowMediator> windowMediator = 
+           do_GetService(kWindowMediatorCID, &rv);
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
 
@@ -1129,18 +1131,21 @@ nsresult nsChromeRegistry::FlushCaches()
 
   // Flush the style sheet cache completely.
   // XXX For now flush everything.  need a better call that only flushes style sheets.
-  NS_WITH_SERVICE(nsIXULPrototypeCache, xulCache, "@mozilla.org/xul/xul-prototype-cache;1", &rv);
+  nsCOMPtr<nsIXULPrototypeCache> xulCache = 
+           do_GetService("@mozilla.org/xul/xul-prototype-cache;1", &rv);
   if (NS_SUCCEEDED(rv) && xulCache) {
     xulCache->Flush();
   }
   
   // Flush the old image cache.
-  NS_WITH_SERVICE(nsIImageManager, imageManager, kImageManagerCID, &rv);
+  nsCOMPtr<nsIImageManager> imageManager = 
+           do_GetService(kImageManagerCID, &rv);
   if (imageManager)
     rv = imageManager->FlushCache(1);
 
   // Flush the new imagelib image chrome cache.
-  NS_WITH_SERVICE(imgICache, imageCache, "@mozilla.org/image/cache;1", &rv);
+  nsCOMPtr<imgICache> imageCache = 
+           do_GetService("@mozilla.org/image/cache;1", &rv);
   if (NS_SUCCEEDED(rv) && imageCache) {
     imageCache->ClearCache(PR_TRUE);
   }
@@ -2976,7 +2981,8 @@ nsChromeRegistry::CheckForNewChrome()
 
   // open the installed-chrome file
   nsCOMPtr<nsILocalFile> listFile;
-  NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+  nsCOMPtr<nsIProperties> directoryService = 
+           do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv))
     return rv;
   rv = directoryService->Get(NS_APP_CHROME_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(listFile));

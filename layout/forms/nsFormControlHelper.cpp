@@ -885,14 +885,15 @@ nsFormControlHelper::GetLocalizedString(const char * aPropFileName, const char* 
   
   // Create a URL for the string resource file
   // Create a bundle for the localization
-  NS_WITH_SERVICE(nsIIOService, pNetService, kIOServiceCID, &rv);
+  nsCOMPtr<nsIIOService> pNetService(do_GetService(kIOServiceCID, &rv));
   if (NS_SUCCEEDED(rv) && pNetService) {
     nsCOMPtr<nsIURI> uri;
     rv = pNetService->NewURI(aPropFileName, nsnull, getter_AddRefs(uri));
     if (NS_SUCCEEDED(rv) && uri) {
 
       // Create bundle
-      NS_WITH_SERVICE(nsIStringBundleService, stringService, kStringBundleServiceCID, &rv);
+      nsCOMPtr<nsIStringBundleService> stringService = 
+               do_GetService(kStringBundleServiceCID, &rv);
       if (NS_SUCCEEDED(rv) && stringService) {
         nsXPIDLCString spec;
         rv = uri->GetSpec(getter_Copies(spec));

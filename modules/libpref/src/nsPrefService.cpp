@@ -110,7 +110,8 @@ nsresult nsPrefService::Init()
   nsresult rv = NS_OK;
 
   if (PREF_Init(nsnull) == PR_TRUE) {
-    NS_WITH_SERVICE(nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+    nsCOMPtr<nsIObserverService> observerService = 
+             do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
     if (observerService) {
       // Our refcnt must be > 0 when we call this, or we'll get deleted!
       ++mRefCnt;
@@ -713,7 +714,8 @@ extern "C" JSRuntime* PREF_GetJSRuntime()
 {
   nsresult rv;
 
-  NS_WITH_SERVICE(nsIJSRuntimeService, rtsvc, "@mozilla.org/js/xpc/RuntimeService;1", &rv);
+  nsCOMPtr<nsIJSRuntimeService> rtsvc = 
+           do_GetService("@mozilla.org/js/xpc/RuntimeService;1", &rv);
   if (NS_SUCCEEDED(rv)) {
     JSRuntime* rt;
     rv = rtsvc->GetRuntime(&rt);

@@ -46,8 +46,8 @@ nsStreamLoader::Init(nsIURI* aURL,
     // in a recursive situation and breaks the asynchronous
     // semantics of nsIStreamLoader
     nsresult rv2 = NS_OK;
-    NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, 
-                    kProxyObjectManagerCID, &rv2);
+    nsCOMPtr<nsIProxyObjectManager> pIProxyObjectManager = 
+             do_GetService(kProxyObjectManagerCID, &rv2);
     if (NS_FAILED(rv2)) return rv2;
 
     nsCOMPtr<nsIStreamLoaderObserver> pObserver;

@@ -1530,7 +1530,8 @@ nsresult nsCharsetMenu::GetCollation(nsICollation ** aCollation)
   nsCOMPtr<nsILocale> locale = nsnull;
   nsICollationFactory * collationFactory = nsnull;
   
-  NS_WITH_SERVICE(nsILocaleService, localeServ, kLocaleServiceCID, &res);
+  nsCOMPtr<nsILocaleService> localeServ = 
+           do_GetService(kLocaleServiceCID, &res);
   if (NS_FAILED(res)) return res;
 
   res = localeServ->GetApplicationLocale(getter_AddRefs(locale));

@@ -155,7 +155,7 @@ nsresult nsAppShell::Run()
   
 #if 0
    nsresult rv;
-   NS_WITH_SERVICE(nsITimerQueue, queue, kTimerManagerCID, &rv);
+   nsCOMPtr<nsITimerQueue> queue(do_GetService(kTimerManagerCID, &rv));
    if (NS_FAILED(rv)) return rv;
 #endif
 
@@ -245,7 +245,7 @@ nsresult nsAppShell::GetNativeEvent( PRBool &aRealEvent, void *&aEvent)
 
 #if 0
    nsresult rv;
-   NS_WITH_SERVICE(nsITimerQueue, queue, kTimerManagerCID, &rv);
+   nsCOMPtr<nsITimerQueue> queue(do_GetService(kTimerManagerCID, &rv));
    if (NS_FAILED(rv)) return rv;
 #endif
 

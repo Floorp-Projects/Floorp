@@ -336,7 +336,7 @@ int nsAccount::GetNCIValues(nsString MiddleValue)
 	nsString Trial; Trial.AssignWithConversion("resource:/res/acct/NCI_Dir/");
 	Trial = Trial + MiddleValue;
 	printf("this is the trial value %s \n", Trial.ToNewCString());
-  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &ret);
+  nsCOMPtr<nsIIOService> service(do_GetService(kIOServiceCID, &ret));
   if (NS_FAILED(ret)) return ret;
 
 
@@ -418,7 +418,7 @@ int nsAccount::GetConfigValues(nsString fileName)
 	nsString Trial; Trial.AssignWithConversion("resource:/res/acct/NCI_Dir/");
 	Trial = Trial + fileName;
 	printf("this is the trial value %s \n", Trial.ToNewCString());
-  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &ret);
+  nsCOMPtr<nsIIOService> service(do_GetService(kIOServiceCID, &ret));
   if (NS_FAILED(ret)) return ret;
 
 

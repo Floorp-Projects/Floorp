@@ -150,7 +150,7 @@ nsRDFDataSourceDataSource::Init(const char *uri)
 
   // get RDF resources
   
-  NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+  nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
   if (!kNC_Name) {
     rdf->GetResource(NC_RDF_Name, &kNC_Name);
     rdf->GetResource(NC_RDF_Child, &kNC_Child);
@@ -384,7 +384,7 @@ nsRDFDataSourceDataSource::ArcLabelsOut(nsIRDFResource *aSource,
 #ifdef DEBUG_alecf
     printf("Ahah! This is a datasource node. Setting the datasource..");
 #endif
-    NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+    nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
     rv = rdf->GetDataSource((const char*)sourceval, &mDataSource);
     
 #ifdef DEBUG_alecf

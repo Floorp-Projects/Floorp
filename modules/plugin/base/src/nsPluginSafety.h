@@ -33,7 +33,7 @@
 PR_BEGIN_MACRO                                     \
   nsresult res;                                    \
   PRBool dontdoit = PR_FALSE;                      \
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &res);\
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &res));\
   if(NS_SUCCEEDED(res) && (prefs != nsnull))       \
   {                                                \
     res = prefs->GetBoolPref("plugin.dont_try_safe_calls", &dontdoit);\
@@ -50,7 +50,7 @@ PR_BEGIN_MACRO                                     \
     }                                              \
     catch(...)                                     \
     {                                              \
-      NS_WITH_SERVICE(nsIPluginHost, host, kCPluginManagerCID, &res);\
+      nsCOMPtr<nsIPluginHost> host(do_GetService(kCPluginManagerCID, &res));\
       if(NS_SUCCEEDED(res) && (host != nsnull))    \
         host->HandleBadPlugin(library);            \
       ret = (NPError)NS_ERROR_FAILURE;             \
@@ -62,7 +62,7 @@ PR_END_MACRO
 PR_BEGIN_MACRO                              \
   nsresult res;                             \
   PRBool dontdoit = PR_FALSE;               \
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &res);\
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &res));\
   if(NS_SUCCEEDED(res) && (prefs != nsnull))\
   {                                         \
     res = prefs->GetBoolPref("plugin.dont_try_safe_calls", &dontdoit);\
@@ -79,7 +79,7 @@ PR_BEGIN_MACRO                              \
     }                                       \
     catch(...)                              \
     {                                       \
-      NS_WITH_SERVICE(nsIPluginHost, host, kCPluginManagerCID, &res);\
+      nsCOMPtr<nsIPluginHost> host(do_GetService(kCPluginManagerCID, &res));\
       if(NS_SUCCEEDED(res) && (host != nsnull))\
         host->HandleBadPlugin(library);     \
     }                                       \

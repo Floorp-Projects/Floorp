@@ -2667,7 +2667,8 @@ nsOutlinerBodyFrame :: OnDragEnter ( nsIDOMEvent* inEvent )
 
   // cache the drag session
   nsresult rv;
-  NS_WITH_SERVICE(nsIDragService, dragService, "@mozilla.org/widget/dragservice;1", &rv);
+  nsCOMPtr<nsIDragService> dragService = 
+           do_GetService("@mozilla.org/widget/dragservice;1", &rv);
   nsCOMPtr<nsIDragSession> dragSession;
   dragService->GetCurrentSession(getter_AddRefs(mDragSession));
   NS_ASSERTION ( mDragSession, "can't get drag session" );

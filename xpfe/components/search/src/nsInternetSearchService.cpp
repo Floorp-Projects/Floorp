@@ -884,7 +884,8 @@ InternetSearchDataSource::Init()
 	DeferredInit();
 	
 	// Register as a profile change obsevrer
-  NS_WITH_SERVICE(nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+  nsCOMPtr<nsIObserverService> observerService = 
+           do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
   if (observerService) {
     observerService->AddObserver(this, NS_LITERAL_STRING("profile-before-change").get());
     observerService->AddObserver(this, NS_LITERAL_STRING("profile-do-change").get());
@@ -2426,8 +2427,8 @@ InternetSearchDataSource::GetInternetSearchURL(const char *searchEngineURI,
 		char	*utf8data = text.ToNewUTF8String();
 		if (utf8data)
 		{
-			NS_WITH_SERVICE(nsITextToSubURI, textToSubURI,
-				kTextToSubURICID, &rv);
+			nsCOMPtr<nsITextToSubURI> textToSubURI = 
+			         do_GetService(kTextToSubURICID, &rv);
 			if (NS_SUCCEEDED(rv) && (textToSubURI))
 			{
 				PRUnichar	*uni = nsnull;
@@ -3509,8 +3510,8 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 	// "interpret/resultTranslationFont" since we always convert results to Unicode
 	if (resultEncodingStr.Length() > 0)
 	{
-		NS_WITH_SERVICE(nsICharsetConverterManager, charsetConv,
-			kCharsetConverterManagerCID, &rv);
+		nsCOMPtr<nsICharsetConverterManager> charsetConv = 
+		         do_GetService(kCharsetConverterManagerCID, &rv);
 		if (NS_SUCCEEDED(rv) && (charsetConv))
 		{
 			rv = charsetConv->GetUnicodeDecoder(&resultEncodingStr,
@@ -3535,8 +3536,8 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 		char	*utf8data = textTemp.ToNewUTF8String();
 		if (utf8data)
 		{
-			NS_WITH_SERVICE(nsITextToSubURI, textToSubURI,
-				kTextToSubURICID, &rv);
+			nsCOMPtr<nsITextToSubURI> textToSubURI = 
+			         do_GetService(kTextToSubURICID, &rv);
 			if (NS_SUCCEEDED(rv) && (textToSubURI))
 			{
 				PRUnichar	*uni = nsnull;

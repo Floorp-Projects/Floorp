@@ -67,8 +67,8 @@ nsDownloader::Init(nsIURI* aURL,
        // in a recursive situation and breaks the asynchronous
        // semantics of nsIDownloader
        nsresult rv2 = NS_OK;
-       NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, 
-                       kProxyObjectManagerCID, &rv);
+       nsCOMPtr<nsIProxyObjectManager> pIProxyObjectManager = 
+                do_GetService(kProxyObjectManagerCID, &rv);
        if (NS_FAILED(rv2)) return rv2;
            nsCOMPtr<nsIDownloadObserver> pObserver;
            rv2 = pIProxyObjectManager->GetProxyForObject(NS_CURRENT_EVENTQ, 

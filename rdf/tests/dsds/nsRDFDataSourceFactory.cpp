@@ -60,12 +60,8 @@ nsresult
 NSRegisterSelf(nsISupports* aServMgr, const char* aPath)
 {
   nsresult rv;
-  NS_WITH_SERVICE1(nsIComponentManager,
-                   compMgr,
-                   aServMgr,
-                   kComponentManagerCID,
-                   &rv);
-  
+  nsCOMPtr<nsIComponentManager> compMgr =
+           do_GetService(kComponentManagerCID, aServMgr, &rv);
   if (NS_FAILED(rv)) return rv;
 
   rv = compMgr->RegisterComponent(kRDFDataSourceCID,
@@ -80,12 +76,12 @@ NSRegisterSelf(nsISupports* aServMgr, const char* aPath)
 nsresult
 NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
 {
-    nsresult rv;
-    NS_WITH_SERVICE1(nsIComponentManager, compMgr,
-                     aServMgr, kComponentManagerCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+  nsresult rv;
+  nsCOMPtr<nsIComponentManager> compMgr =
+         do_GetService(kComponentManagerCID, aServMgr, &rv);
+  if (NS_FAILED(rv)) return rv;
 
-    rv = compMgr->UnregisterComponent(kRDFDataSourceCID, aPath);
+  rv = compMgr->UnregisterComponent(kRDFDataSourceCID, aPath);
 
-    return rv;
+  return rv;
 }

@@ -956,7 +956,7 @@ nsEditor::GetWrapWidth(PRInt32 *aWrapColumn)
   *aWrapColumn = 72;
 
   nsresult rv;
-  NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
   if (NS_SUCCEEDED(rv) && prefs)
     (void) prefs->GetIntPref("editor.htmlWrapColumn", aWrapColumn);
   return NS_OK;
@@ -990,7 +990,7 @@ nsEditor::SaveFile(nsIFile *aFileSpec, PRBool aReplaceExisting,
   else
   {
     // Should we prettyprint? Check the pref
-    NS_WITH_SERVICE(nsIPref, prefService, kPrefServiceCID, &rv);
+    nsCOMPtr<nsIPref> prefService(do_GetService(kPrefServiceCID, &rv));
     if (NS_SUCCEEDED(rv) && prefService)
     {
       PRBool prettyprint = PR_FALSE;;
@@ -5069,8 +5069,8 @@ nsEditor::CreateHTMLContent(const nsAReadableString& aTag, nsIContent** aContent
 {
   nsresult rv;
 
-  NS_WITH_SERVICE(nsIElementFactory, elementFactory,
-    NS_ELEMENT_FACTORY_CONTRACTID_PREFIX"http://www.w3.org/1999/xhtml" , &rv);
+  nsCOMPtr<nsIElementFactory> elementFactory = 
+           do_GetService(NS_ELEMENT_FACTORY_CONTRACTID_PREFIX"http://www.w3.org/1999/xhtml", &rv);
   if (!elementFactory)
     return NS_ERROR_FAILURE;
 

@@ -294,7 +294,8 @@ void TestCase_NestedLoop(void *arg)
         printf("Getting EventQueue...\n");
 
         nsIEventQueue* eventQ;
-        NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
+        nsCOMPtr<nsIEventQueueService> eventQService = 
+                 do_GetService(kEventQueueServiceCID, &rv);
         if (NS_SUCCEEDED(rv)) 
         {
             rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &eventQ);
@@ -413,7 +414,8 @@ static void PR_CALLBACK EventLoop( void *arg )
     printf("Creating EventQueue...\n");
 
     nsIEventQueue* eventQ;
-    NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
+    nsCOMPtr<nsIEventQueueService> eventQService = 
+             do_GetService(kEventQueueServiceCID, &rv);
     if (NS_SUCCEEDED(rv)) {
       rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &eventQ);
       if (NS_FAILED(rv))

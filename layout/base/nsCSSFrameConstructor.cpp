@@ -3417,7 +3417,8 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
   if (!display->mBinding.IsEmpty()) {
     // Get the XBL loader.
     nsresult rv;
-    NS_WITH_SERVICE(nsIXBLService, xblService, "@mozilla.org/xbl;1", &rv);
+    nsCOMPtr<nsIXBLService> xblService = 
+             do_GetService("@mozilla.org/xbl;1", &rv);
     if (!xblService)
       return rv;
 
@@ -7226,7 +7227,8 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
     if (!display->mBinding.IsEmpty()) {
       // Get the XBL loader.
       nsresult rv;
-      NS_WITH_SERVICE(nsIXBLService, xblService, "@mozilla.org/xbl;1", &rv);
+      nsCOMPtr<nsIXBLService> xblService = 
+               do_GetService("@mozilla.org/xbl;1", &rv);
       if (!xblService)
         return rv;
 

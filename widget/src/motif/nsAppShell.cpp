@@ -82,7 +82,8 @@ NS_METHOD nsAppShell::Create(int* bac, char ** bav)
 
   nsresult rv;
 
-  NS_WITH_SERVICE(nsICmdLineService, cmdLineArgs, kCmdLineServiceCID, &rv);
+  nsCOMPtr<nsICmdLineService> cmdLineArgs = 
+           do_GetService(kCmdLineServiceCID, &rv);
   if (NS_SUCCEEDED(rv))
   {
     rv = cmdLineArgs->GetArgc(&argc);
@@ -140,7 +141,8 @@ NS_METHOD nsAppShell::Run()
   nsIEventQueue * EQueue = nsnull;
 
   // Get the event queue service 
-  NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
+  nsCOMPtr<nsIEventQueueService> eventQService = 
+           do_GetService(kEventQueueServiceCID, &rv);
   if (NS_FAILED(rv)) {
     NS_ASSERTION("Could not obtain event queue service", PR_FALSE);
     return rv;

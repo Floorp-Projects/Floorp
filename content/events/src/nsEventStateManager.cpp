@@ -174,8 +174,8 @@ NS_IMETHODIMP
 nsEventStateManager::Init()
 {
   nsresult rv;
-  NS_WITH_SERVICE(nsIObserverService, observerService,
-                  NS_OBSERVERSERVICE_CONTRACTID, &rv);
+  nsCOMPtr<nsIObserverService> observerService = 
+           do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv))
   {
     nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
@@ -237,8 +237,8 @@ nsEventStateManager::~nsEventStateManager()
 
     nsresult rv;
 
-    NS_WITH_SERVICE (nsIObserverService, observerService,
-                     NS_OBSERVERSERVICE_CONTRACTID, &rv);
+    nsCOMPtr<nsIObserverService> observerService = 
+             do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv))
       {
         nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);

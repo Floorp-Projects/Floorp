@@ -583,7 +583,8 @@ nsresult nsAccessible::GetTranslatedString(PRUnichar *aKey, nsAWritableString *a
   if (firstTime) {
     firstTime = PR_FALSE;
     nsresult rv;
-    NS_WITH_SERVICE(nsIStringBundleService, stringBundleService, kStringBundleServiceCID, &rv);
+    nsCOMPtr<nsIStringBundleService> stringBundleService = 
+             do_GetService(kStringBundleServiceCID, &rv);
     // nsCOMPtr<nsIStringBundleService> stringBundleService(do_GetService(kStringBundleServiceCID, &rv));
     if (!stringBundleService) { 
       NS_WARNING("ERROR: Failed to get StringBundle Service instance.\n");

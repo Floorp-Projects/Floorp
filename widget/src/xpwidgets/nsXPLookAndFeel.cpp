@@ -216,7 +216,7 @@ static int PR_CALLBACK intPrefChanged (const char *newpref, void *data)
   if (np)
   {
     nsresult rv;
-    NS_WITH_SERVICE(nsIPref, prefService, kPrefServiceCID, &rv);
+    nsCOMPtr<nsIPref> prefService(do_GetService(kPrefServiceCID, &rv));
     if (NS_SUCCEEDED(rv) && prefService)
     {
       PRInt32 intpref;
@@ -240,7 +240,7 @@ static int PR_CALLBACK floatPrefChanged (const char *newpref, void *data)
   if (np)
   {
     nsresult rv;
-    NS_WITH_SERVICE(nsIPref, prefService, kPrefServiceCID, &rv);
+    nsCOMPtr<nsIPref> prefService(do_GetService(kPrefServiceCID, &rv));
     if (NS_SUCCEEDED(rv) && prefService)
     {
       PRInt32 intpref;
@@ -264,7 +264,7 @@ static int PR_CALLBACK colorPrefChanged (const char *newpref, void *data)
   if (np)
   {
     nsresult rv;
-    NS_WITH_SERVICE(nsIPref, prefService, kPrefServiceCID, &rv);
+    nsCOMPtr<nsIPref> prefService(do_GetService(kPrefServiceCID, &rv));
     if (NS_SUCCEEDED(rv) && prefService)
     {
       char *colorStr = 0;
@@ -352,7 +352,7 @@ nsXPLookAndFeel::Init()
   sInitialized = PR_TRUE;
 
   nsresult rv;
-  NS_WITH_SERVICE(nsIPref, prefService, kPrefServiceCID, &rv);
+  nsCOMPtr<nsIPref> prefService(do_GetService(kPrefServiceCID, &rv));
   if (NS_FAILED(rv) || !prefService)
     return;
 

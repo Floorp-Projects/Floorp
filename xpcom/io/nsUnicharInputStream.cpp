@@ -151,7 +151,8 @@ NS_NewB2UConverter(nsIUnicodeDecoder** aInstancePtrResult,
 
   if (aCharSet == nsnull) aCharSet = &defaultCharset;
 
-  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res);
+  nsCOMPtr<nsICharsetConverterManager> ccm = 
+           do_GetService(kCharsetConverterManagerCID, &res);
   if (NS_FAILED(res)) return res;
 
   return ccm->GetUnicodeDecoder(aCharSet, aInstancePtrResult);

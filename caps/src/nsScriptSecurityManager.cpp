@@ -1600,7 +1600,8 @@ nsScriptSecurityManager::SetCanEnableCapability(const char* certificateID,
     if (!mSystemCertificate)
     {
         nsCOMPtr<nsIFile> systemCertFile;
-        NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+        nsCOMPtr<nsIProperties> directoryService = 
+                 do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
         if (!directoryService) return NS_ERROR_FAILURE;
         rv = directoryService->Get(NS_XPCOM_CURRENT_PROCESS_DIR, NS_GET_IID(nsIFile), 
                               getter_AddRefs(systemCertFile));
@@ -1862,7 +1863,8 @@ nsScriptSecurityManager::GetScriptSecurityManager()
             return NULL;
         nsresult rv;
 
-        NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
+        nsCOMPtr<nsIXPConnect> xpc = 
+                 do_GetService(nsIXPConnect::GetCID(), &rv);
         if (NS_SUCCEEDED(rv) && xpc)
         {
             rv = xpc->SetDefaultSecurityManager(

@@ -153,7 +153,7 @@ nsresult nsScanner::SetDocumentCharset(const nsString& aCharset , nsCharsetSourc
   if( aSource < mCharsetSource) // priority is lower the the current one , just
     return res;
 
-  NS_WITH_SERVICE(nsICharsetAlias, calias, kCharsetAliasCID, &res);
+  nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID, &res));
   NS_ASSERTION( nsnull != calias, "cannot find charset alias");
   nsAutoString charsetName; charsetName.Assign(aCharset);
   if( NS_SUCCEEDED(res) && (nsnull != calias))
@@ -175,7 +175,8 @@ nsresult nsScanner::SetDocumentCharset(const nsString& aCharset , nsCharsetSourc
     mCharset = charsetName;
     mCharsetSource = aSource;
 
-    NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res);
+    nsCOMPtr<nsICharsetConverterManager> ccm = 
+             do_GetService(kCharsetConverterManagerCID, &res);
     if(NS_SUCCEEDED(res) && (nsnull != ccm))
     {
       nsIUnicodeDecoder * decoder = nsnull;

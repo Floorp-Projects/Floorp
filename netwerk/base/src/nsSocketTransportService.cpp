@@ -528,7 +528,7 @@ nsSocketTransportService::CreateTransportOfTypes(PRUint32 socketTypeCount,
 {
     nsresult rv = NS_OK;
     
-    NS_WITH_SERVICE(nsIIOService, ios, kIOServiceCID, &rv);
+    nsCOMPtr<nsIIOService> ios(do_GetService(kIOServiceCID, &rv));
     if (NS_FAILED(rv)) return rv;
     PRBool offline;
     rv = ios->GetOffline(&offline);

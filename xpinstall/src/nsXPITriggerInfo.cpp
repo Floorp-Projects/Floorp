@@ -168,7 +168,8 @@ void nsXPITriggerInfo::SendStatus(const PRUnichar* URL, PRInt32 status)
 
     if ( mCx && mGlobalWrapper && mCbval )
     {
-        NS_WITH_SERVICE(nsIEventQueueService, EQService, kEventQueueServiceCID, &rv);
+        nsCOMPtr<nsIEventQueueService> EQService = 
+                 do_GetService(kEventQueueServiceCID, &rv);
         if ( NS_SUCCEEDED( rv ) )
         {
             rv = EQService->GetThreadEventQueue(mThread, getter_AddRefs(eq));

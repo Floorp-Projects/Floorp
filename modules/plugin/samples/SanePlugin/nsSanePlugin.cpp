@@ -2515,8 +2515,8 @@ void PR_CALLBACK scanimage_thread_routine( void * arg )
     nsCOMPtr<nsIEventQueue> eventQ;
 
     // Get the event queue of the current thread...
-    NS_WITH_SERVICE(nsIEventQueueService, eventQService, 
-                    kEventQueueService, &rv);
+    nsCOMPtr<nsIEventQueueService> eventQService = 
+             do_GetService(kEventQueueService, &rv);
     if (NS_FAILED(rv)) {
         NS_ERROR("Unable to get event queue service!\n");
         return;

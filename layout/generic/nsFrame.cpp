@@ -827,7 +827,8 @@ nsFrame::HandleEvent(nsIPresContext* aPresContext,
      // if(content) {
          //nsCOMPtr<nsIDOMNode> node = do_QueryInterface(content);
          nsresult rv = NS_OK;
-         NS_WITH_SERVICE(nsIAccessibilityService, accService, "@mozilla.org/accessibilityService;1", &rv);
+         nsCOMPtr<nsIAccessibilityService> accService = 
+                  do_GetService("@mozilla.org/accessibilityService;1", &rv);
          if (accService) {
            // get an accessible for the dom node
            nsISupports* f = (nsISupports*)(nsIFrame*)this;

@@ -467,7 +467,8 @@ nsresult nsImageDocument::UpdateTitle( void )
   nsCOMPtr<nsIStringBundle> bundle;
   nsresult rv; 
   // Create a bundle for the localization
-  NS_WITH_SERVICE(nsIStringBundleService, stringService, kStringBundleServiceCID, &rv);
+  nsCOMPtr<nsIStringBundleService> stringService = 
+           do_GetService(kStringBundleServiceCID, &rv);
   if (NS_SUCCEEDED(rv) && stringService) {
     rv = stringService->CreateBundle(NSIMAGEDOCUMENT_PROPERTIES_URI, getter_AddRefs(bundle));
   }

@@ -93,8 +93,8 @@ netscape_security_isPrivilegeEnabled(JSContext *cx, JSObject *obj, uintN argc,
     char *cap = getStringArgument(cx, obj, 0, argc, argv);
     if (cap) {
         nsresult rv;
-        NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
-                        NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+        nsCOMPtr<nsIScriptSecurityManager> securityManager = 
+                 do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
         if (NS_SUCCEEDED(rv)) {
 
 
@@ -121,8 +121,8 @@ netscape_security_enablePrivilege(JSContext *cx, JSObject *obj, uintN argc,
     if (!cap)
         return JS_FALSE;
     nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
-                    NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    nsCOMPtr<nsIScriptSecurityManager> securityManager = 
+             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) 
         return JS_FALSE;
 
@@ -147,8 +147,8 @@ netscape_security_disablePrivilege(JSContext *cx, JSObject *obj, uintN argc,
     if (!cap)
         return JS_FALSE;
     nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
-                    NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    nsCOMPtr<nsIScriptSecurityManager> securityManager = 
+             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) 
         return JS_FALSE;
 
@@ -174,8 +174,8 @@ netscape_security_revertPrivilege(JSContext *cx, JSObject *obj, uintN argc,
     if (!cap)
         return JS_FALSE;
     nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
-                    NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    nsCOMPtr<nsIScriptSecurityManager> securityManager = 
+             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) 
         return JS_FALSE;
 
@@ -201,8 +201,8 @@ netscape_security_setCanEnablePrivilege(JSContext *cx, JSObject *obj, uintN argc
     if (!principalID || !cap)
         return JS_FALSE;
     nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
-                    NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    nsCOMPtr<nsIScriptSecurityManager> securityManager = 
+             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) 
         return JS_FALSE;
 
@@ -228,8 +228,8 @@ netscape_security_invalidate(JSContext *cx, JSObject *obj, uintN argc,
     if (!principalID)
         return JS_FALSE;
     nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
-                    NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    nsCOMPtr<nsIScriptSecurityManager> securityManager = 
+             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) 
         return JS_FALSE;
 

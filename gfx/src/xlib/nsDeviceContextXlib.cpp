@@ -142,7 +142,7 @@ nsDeviceContextXlib::CommonInit(void)
   if (!initialized) {
     initialized = 1;
     nsresult res;
-    NS_WITH_SERVICE(nsIPref,prefs,kPrefCID,&res);
+    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &res));
     if (NS_SUCCEEDED(res) && prefs) {
       PRInt32 intVal = 96;
       res = prefs->GetIntPref("browser.display.screen_resolution", &intVal);

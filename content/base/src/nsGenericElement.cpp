@@ -2602,8 +2602,8 @@ nsGenericElement::TriggerLink(nsIPresContext* aPresContext,
   if (aClick) {
     nsresult proceed = NS_OK;
     // Check that this page is allowed to load this URI.
-    NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager,
-                    NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    nsCOMPtr<nsIScriptSecurityManager> securityManager = 
+             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     nsCOMPtr<nsIURI> absURI;
     if (NS_SUCCEEDED(rv))
       rv = NS_NewURI(getter_AddRefs(absURI), absURLSpec, aBaseURL);

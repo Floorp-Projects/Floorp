@@ -83,7 +83,7 @@ NS_IMETHODIMP nsXPCToolsCompiler::CompileFile(nsILocalFile *aFile, PRBool strict
     
     // get the xpconnect service
     nsresult rv;
-    NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
+    nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
     if(NS_FAILED(rv))
         return NS_ERROR_FAILURE;
 

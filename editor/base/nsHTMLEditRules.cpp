@@ -210,7 +210,7 @@ nsHTMLEditRules::Init(nsPlaintextEditor *aEditor, PRUint32 aFlags)
   if (NS_FAILED(res)) return res;
 
   // cache any prefs we care about
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &res);
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &res));
   if (NS_FAILED(res)) return res;
 
   char *returnInEmptyLIKillsList = 0;

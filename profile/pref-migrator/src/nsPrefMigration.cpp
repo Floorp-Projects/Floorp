@@ -275,10 +275,11 @@ nsPrefMigration::getPrefService()
   // get the prefs service
   nsresult rv = NS_OK;
 
-  NS_WITH_SERVICE(nsIPref, pIMyService, kPrefServiceCID, &rv);
+  nsCOMPtr<nsIPref> pIMyService(do_GetService(kPrefServiceCID, &rv));
   if(NS_FAILED(rv)) return rv;
 
-  NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, kProxyObjectManagerCID, &rv);
+  nsCOMPtr<nsIProxyObjectManager> pIProxyObjectManager = 
+           do_GetService(kProxyObjectManagerCID, &rv);
   if(NS_FAILED(rv))
     return rv;
   
@@ -364,7 +365,8 @@ extern "C" void ProfileMigrationController(void *data)
       return;
     }
 
-    NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, kProxyObjectManagerCID, &rv);
+    nsCOMPtr<nsIProxyObjectManager> pIProxyObjectManager = 
+             do_GetService(kProxyObjectManagerCID, &rv);
     if(NS_FAILED(rv))
     {
       migrator->mErrorCode = rv;
@@ -2084,7 +2086,8 @@ ConvertStringToUTF8(nsAutoString& aCharset, const char* inString, char** outStri
 
   nsresult rv;
   // convert result to unicode
-  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &rv);
+  nsCOMPtr<nsICharsetConverterManager> ccm = 
+           do_GetService(kCharsetConverterManagerCID, &rv);
 
   if(NS_SUCCEEDED(rv)) {
     nsCOMPtr <nsIUnicodeDecoder> decoder; // this may be cached
@@ -2221,7 +2224,7 @@ nsPrefConverter::ConvertPrefsToUTF8()
 
   nsCStringArray prefsToMigrate;
 
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &rv));
   if(NS_FAILED(rv)) return rv;
   if (!prefs) return NS_ERROR_FAILURE;
 

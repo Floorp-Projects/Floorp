@@ -302,7 +302,7 @@ void PR_CALLBACK nsProtocolProxyService::HandlePACLoadEvent(PLEvent* aEvent)
         return;
     }
 
-    NS_WITH_SERVICE(nsIIOService, pIOService, kIOServiceCID, &rv);
+    nsCOMPtr<nsIIOService> pIOService(do_GetService(kIOServiceCID, &rv));
     if (!pIOService || NS_FAILED(rv)) {
         NS_ERROR("Cannot get IO Service");
         return;

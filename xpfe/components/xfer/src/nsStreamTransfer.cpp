@@ -229,7 +229,8 @@ nsStreamTransfer::SelectFile( nsIDOMWindowInternal *parent, nsILocalFile **aResu
             nsCOMPtr<nsILocalFile> startDir;
 
             // Pull in the user's preferences and get the default download directory.
-            NS_WITH_SERVICE( nsIPref, prefs, NS_PREF_CONTRACTID, &rv );
+            nsCOMPtr<nsIPref> prefs = 
+                     do_GetService( NS_PREF_CONTRACTID, &rv );
             if ( NS_SUCCEEDED( rv ) && prefs ) {
                 prefs->GetFileXPref( "browser.download.dir", getter_AddRefs( startDir ) );
                 if ( startDir ) {
@@ -244,7 +245,8 @@ nsStreamTransfer::SelectFile( nsIDOMWindowInternal *parent, nsILocalFile **aResu
 
             nsAutoString title( NS_ConvertASCIItoUCS2( "Save File" ) );
             nsCID cid = NS_STRINGBUNDLESERVICE_CID;
-            NS_WITH_SERVICE( nsIStringBundleService, bundleService, cid, &rv );
+            nsCOMPtr<nsIStringBundleService> bundleService = 
+                     do_GetService( cid, &rv );
             if ( NS_SUCCEEDED( rv ) ) {
                 nsCOMPtr<nsIStringBundle> bundle;
                 PRUnichar *pString;

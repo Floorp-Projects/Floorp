@@ -286,7 +286,7 @@ int PR_CALLBACK
 nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
 {
   nsresult rv;
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &rv));
   if (NS_SUCCEEDED(rv)) {
     nsJSContext *context = NS_REINTERPRET_CAST(nsJSContext *, data);
     PRUint32 oldDefaultJSOptions = context->mDefaultJSOptions;
@@ -335,7 +335,7 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime)
   // a new JSContext just in case the heap manager recycles the JSContext
   // struct.
   nsresult rv;
-  NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
+  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
   if (NS_SUCCEEDED(rv))
     xpc->SyncJSContexts();
 
@@ -344,7 +344,7 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime)
     ::JS_SetContextPrivate(mContext, (void *)this);
 
     // Check for the JS strict option, which enables extra error checks
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &rv));
     if (NS_SUCCEEDED(rv)) {
       (void) prefs->RegisterCallback(js_options_dot_str,
                                      JSOptionChangedCallback,
@@ -455,7 +455,8 @@ nsJSContext::EvaluateStringWithValue(const nsAReadableString& aScript,
   // from native code via XPConnect uses the right context.  Do this whether
   // or not the SecurityManager said "ok", in order to simplify control flow
   // below where we pop before returning.
-  NS_WITH_SERVICE(nsIJSContextStack, stack, "@mozilla.org/js/xpc/ContextStack;1", &rv);
+  nsCOMPtr<nsIJSContextStack> stack = 
+           do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
   if (NS_FAILED(rv) || NS_FAILED(stack->Push(mContext))) {
     JSPRINCIPALS_DROP(mContext, jsprin);
     return NS_ERROR_FAILURE;
@@ -572,7 +573,8 @@ nsJSContext::EvaluateString(const nsAReadableString& aScript,
   // from native code via XPConnect uses the right context.  Do this whether
   // or not the SecurityManager said "ok", in order to simplify control flow
   // below where we pop before returning.
-  NS_WITH_SERVICE(nsIJSContextStack, stack, "@mozilla.org/js/xpc/ContextStack;1", &rv);
+  nsCOMPtr<nsIJSContextStack> stack = 
+           do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
   if (NS_FAILED(rv) || NS_FAILED(stack->Push(mContext))) {
     JSPRINCIPALS_DROP(mContext, jsprin);
     return NS_ERROR_FAILURE;
@@ -733,7 +735,8 @@ nsJSContext::ExecuteScript(void* aScriptObject,
 
   // Push our JSContext on our thread's context stack, in case native code
   // called from JS calls back into JS via XPConnect.
-  NS_WITH_SERVICE(nsIJSContextStack, stack, "@mozilla.org/js/xpc/ContextStack;1", &rv);
+  nsCOMPtr<nsIJSContextStack> stack = 
+           do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
   if (NS_FAILED(rv) || NS_FAILED(stack->Push(mContext))) {
     return NS_ERROR_FAILURE;
   }
@@ -919,7 +922,8 @@ nsJSContext::CallEventHandler(void *aTarget, void *aHandler, PRUint32 argc,
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
 
-  NS_WITH_SERVICE(nsIJSContextStack, stack, "@mozilla.org/js/xpc/ContextStack;1", &rv);
+  nsCOMPtr<nsIJSContextStack> stack = 
+           do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
   if (NS_FAILED(rv) || NS_FAILED(stack->Push(mContext)))
     return NS_ERROR_FAILURE;
 
@@ -1488,7 +1492,8 @@ nsJSEnvironment::nsJSEnvironment()
   // So that we get deleted on XPCOM shutdown, set up an
   // observer.
   nsresult rv;
-  NS_WITH_SERVICE(nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+  nsCOMPtr<nsIObserverService> observerService = 
+           do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
   NS_ASSERTION(NS_SUCCEEDED(rv), "going to leak a nsJSEnvironment");
   if (NS_SUCCEEDED(rv))
   {
@@ -1527,7 +1532,7 @@ nsJSEnvironment::nsJSEnvironment()
   gOldJSGCCallback = ::JS_SetGCCallbackRT(mRuntime, DOMGCCallback);
 
   // Set these global xpconnect options...
-  NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
+  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
   if (NS_SUCCEEDED(rv)) {
     xpc->SetCollectGarbageOnMainThreadOnly(PR_TRUE); 
     xpc->SetDeferReleasesUntilAfterGarbageCollection(PR_TRUE); 
@@ -1536,8 +1541,8 @@ nsJSEnvironment::nsJSEnvironment()
   }
 
   // Initialize LiveConnect.  XXXbe use contractid rather than GetCID
-  NS_WITH_SERVICE(nsILiveConnectManager, manager,
-                  nsIJVMManager::GetCID(), &rv);
+  nsCOMPtr<nsILiveConnectManager> manager = 
+           do_GetService(nsIJVMManager::GetCID(), &rv);
 
   // Should the JVM manager perhaps define methods for starting up LiveConnect?
   if (NS_SUCCEEDED(rv) && manager != nsnull) {

@@ -1254,8 +1254,8 @@ NS_IMETHODIMP nsDocLoaderImpl::OnRedirect(nsIHttpChannel *aOldChannel, nsIChanne
     if (NS_FAILED(rv)) return rv;
 
     // verify that this is a legal redirect
-    NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager,
-                    NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    nsCOMPtr<nsIScriptSecurityManager> securityManager = 
+             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
     rv = securityManager->CheckLoadURI(oldURI, newURI,
                                        nsIScriptSecurityManager::DISALLOW_FROM_MAIL);

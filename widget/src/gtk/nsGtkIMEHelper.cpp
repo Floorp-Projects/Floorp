@@ -87,8 +87,8 @@ void nsGtkIMEHelper::SetupUnicodeDecoder()
 {
   mDecoder = nsnull;
   nsresult result = NS_ERROR_FAILURE;
-  NS_WITH_SERVICE(nsIPlatformCharset, platform, NS_PLATFORMCHARSET_CONTRACTID,
-                  &result);
+  nsCOMPtr<nsIPlatformCharset> platform = 
+           do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &result);
   if (platform && NS_SUCCEEDED(result)) {
     nsAutoString charset;
     charset.AssignWithConversion("");
@@ -1173,7 +1173,7 @@ nsIMEGtkIC::GetInputStyle() {
   return ret_style;
 #endif
 
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &rv));
   if (!NS_FAILED(rv) && (prefs)) {
     char *input_style;
     rv = prefs->CopyCharPref(PREF_XIM_INPUTSTYLE, &input_style);

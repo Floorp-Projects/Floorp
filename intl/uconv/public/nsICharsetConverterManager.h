@@ -72,7 +72,8 @@ nsUConverterRegSelf( const char* aFromCharset,                          \
   nsRegistryKey key;                                                    \
   char buff[1024];                                                      \
   PRBool isOpen = PR_FALSE;                                             \
-  NS_WITH_SERVICE( nsIRegistry, registry, NS_REGISTRY_CONTRACTID, &res);    \
+  nsCOMPtr<nsIRegistry> registry =                                      \
+           do_GetService(NS_REGISTRY_CONTRACTID, &res);                 \
   if (NS_FAILED(res))                                                   \
     goto done;                                                          \
   res = registry->IsOpen(&isOpen);                                      \

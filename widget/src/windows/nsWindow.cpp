@@ -2955,7 +2955,8 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         case WM_ENTERIDLE:
           {
           nsresult rv;
-          NS_WITH_SERVICE(nsITimerQueue, queue, kTimerManagerCID, &rv);
+          nsCOMPtr<nsITimerQueue> queue = 
+                   do_GetService(kTimerManagerCID, &rv);
           if (!NS_FAILED(rv)) {
 
             if (queue->HasReadyTimers(NS_PRIORITY_LOWEST)) {

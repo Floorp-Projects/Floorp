@@ -266,7 +266,8 @@ PRUnichar *
 CKutil_Localize(const PRUnichar *genericString) {
   nsresult ret;
   PRUnichar *ptrv = nsnull;
-  NS_WITH_SERVICE(nsIStringBundleService, pStringService, kStringBundleServiceCID, &ret); 
+  nsCOMPtr<nsIStringBundleService> pStringService = 
+           do_GetService(kStringBundleServiceCID, &ret); 
   if (NS_SUCCEEDED(ret) && (nsnull != pStringService)) {
     nsCOMPtr<nsIStringBundle> bundle;
     ret = pStringService->CreateBundle(LOCALIZATION, getter_AddRefs(bundle));

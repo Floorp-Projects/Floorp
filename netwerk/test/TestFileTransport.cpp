@@ -179,7 +179,8 @@ TestAsyncRead(const char* fileName, PRUint32 offset, PRInt32 length)
 
     PRINTF(("TestAsyncRead\n"));
 
-    NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
+    nsCOMPtr<nsIFileTransportService> fts = 
+             do_GetService(kFileTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     nsITransport* fileTrans;
@@ -230,7 +231,8 @@ TestAsyncWrite(const char* fileName, PRUint32 offset, PRInt32 length)
 
     PRINTF(("TestAsyncWrite\n"));
 
-    NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
+    nsCOMPtr<nsIFileTransportService> fts = 
+             do_GetService(kFileTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     nsCAutoString outFile(fileName);
@@ -346,7 +348,8 @@ main(int argc, char* argv[])
     rv = NS_AutoregisterComponents();
     if (NS_FAILED(rv)) return rv;
 
-    NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
+    nsCOMPtr<nsIEventQueueService> eventQService = 
+             do_GetService(kEventQueueServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     rv = eventQService->CreateThreadEventQueue();

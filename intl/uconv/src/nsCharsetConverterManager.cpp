@@ -188,7 +188,7 @@ nsresult nsCharsetConverterManager::RegisterConverterManagerData()
 {
   nsresult res = NS_OK;
 
-  NS_WITH_SERVICE(nsIRegistry, registry, kRegistryCID, &res);
+  nsCOMPtr<nsIRegistry> registry(do_GetService(kRegistryCID, &res));
   if (NS_FAILED(res)) return res;
 
   // open registry if necessary
@@ -251,7 +251,8 @@ nsresult nsCharsetConverterManager::LoadExtensibleBundle(
 {
   nsresult res = NS_OK;
 
-  NS_WITH_SERVICE(nsIStringBundleService, sbServ, kStringBundleServiceCID, &res);
+  nsCOMPtr<nsIStringBundleService> sbServ = 
+           do_GetService(kStringBundleServiceCID, &res);
   if (NS_FAILED(res)) return res;
 
   res = sbServ->CreateExtensibleBundle(aRegistryKey, aResult);
@@ -309,7 +310,7 @@ nsresult nsCharsetConverterManager::GetRegistryEnumeration(
   if (NS_FAILED(res)) return res;
 
   // get the registry
-  NS_WITH_SERVICE(nsIRegistry, registry, kRegistryCID, &res);
+  nsCOMPtr<nsIRegistry> registry(do_GetService(kRegistryCID, &res));
   if (NS_FAILED(res)) return res;
 
   // open registry if necessary
@@ -381,7 +382,7 @@ nsresult nsCharsetConverterManager::GetRegistryEnumeration2(
   if (NS_FAILED(res)) return res;
 
   // get the registry
-  NS_WITH_SERVICE(nsIRegistry, registry, kRegistryCID, &res);
+  nsCOMPtr<nsIRegistry> registry(do_GetService(kRegistryCID, &res));
   if (NS_FAILED(res)) return res;
 
   // open registry if necessary
@@ -624,7 +625,7 @@ NS_IMETHODIMP nsCharsetConverterManager::GetCharsetAtom(
   // We try to obtain the preferred name for this charset from the charset 
   // aliases. If we don't get it from there, we just use the original string
   nsAutoString charset(aCharset);
-  NS_WITH_SERVICE(nsICharsetAlias, csAlias, kCharsetAliasCID, &res);
+  nsCOMPtr<nsICharsetAlias> csAlias(do_GetService(kCharsetAliasCID, &res));
   NS_ASSERTION(NS_SUCCEEDED(res), "failed to get the CharsetAlias service");
   if (NS_SUCCEEDED(res)) {
     nsAutoString pref;

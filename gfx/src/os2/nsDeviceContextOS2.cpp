@@ -85,7 +85,7 @@ nsDeviceContextOS2 :: nsDeviceContextOS2()
 
 #ifndef XP_OS2
   nsresult res = NS_ERROR_FAILURE;
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res);
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &res));
   if (NS_SUCCEEDED(res)) {
     static PRBool roundingInitialized = PR_FALSE;
     if (!roundingInitialized) {

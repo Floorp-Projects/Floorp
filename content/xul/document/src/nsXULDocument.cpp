@@ -789,8 +789,8 @@ NS_IMETHODIMP
 nsXULDocument::SetBaseURL(nsIURI* aURL)
 {
   nsresult rv;
-  NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
-                  NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+  nsCOMPtr<nsIScriptSecurityManager> securityManager = 
+           do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) {
     rv = securityManager->CheckLoadURI(mDocumentURL, aURL, nsIScriptSecurityManager::STANDARD);
     if (NS_SUCCEEDED(rv)) {
@@ -1536,7 +1536,7 @@ nsXULDocument::EndLoad()
     PRBool useXULCache;
     gXULCache->GetEnabled(&useXULCache);
 
-    NS_WITH_SERVICE(nsIChromeRegistry, reg, kChromeRegistryCID, &rv);
+    nsCOMPtr<nsIChromeRegistry> reg(do_GetService(kChromeRegistryCID, &rv));
     if (NS_FAILED(rv)) return rv;
     nsCOMPtr<nsISupportsArray> sheets;
     reg->GetStyleSheets(uri, getter_AddRefs(sheets));
@@ -3207,7 +3207,8 @@ nsXULDocument::AddElementToDocumentPost(nsIContent* aElement)
     aElement->GetTag(*getter_AddRefs(tag));
     if (tag.get() == nsXULAtoms::keyset) {
         // Create our XUL key listener and hook it up.    
-        NS_WITH_SERVICE(nsIXBLService, xblService, "@mozilla.org/xbl;1", &rv);
+        nsCOMPtr<nsIXBLService> xblService = 
+                 do_GetService("@mozilla.org/xbl;1", &rv);
         if (xblService) {
             nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(aElement));
             xblService->AttachGlobalKeyHandler(rec);
@@ -4713,7 +4714,7 @@ nsresult
 nsXULDocument::AddChromeOverlays()
 {
     nsresult rv;
-    NS_WITH_SERVICE(nsIChromeRegistry, reg, kChromeRegistryCID, &rv);
+    nsCOMPtr<nsIChromeRegistry> reg(do_GetService(kChromeRegistryCID, &rv));
 
     if (NS_FAILED(rv))
         return NS_ERROR_FAILURE;
@@ -6005,7 +6006,7 @@ nsXULDocument::GetElementFactory(PRInt32 aNameSpaceID, nsIElementFactory** aResu
   contractID.AppendWithConversion(nameSpace);
 
   // Retrieve the appropriate factory.
-  NS_WITH_SERVICE(nsIElementFactory, elementFactory, contractID, &rv);
+  nsCOMPtr<nsIElementFactory> elementFactory(do_GetService(contractID, &rv));
 
   if (!elementFactory)
     elementFactory = gXMLElementFactory; // Nothing found. Use generic XML element.
@@ -6042,7 +6043,8 @@ nsXULDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
 
   PRInt32 namespaceID;
   nsCOMPtr<nsIAtom> tag;
-  NS_WITH_SERVICE(nsIXBLService, xblService, "@mozilla.org/xbl;1", &rv);
+  nsCOMPtr<nsIXBLService> xblService = 
+           do_GetService("@mozilla.org/xbl;1", &rv);
   nsCOMPtr<nsIContent> content(do_QueryInterface(aElement));
   xblService->ResolveTag(content, &namespaceID, getter_AddRefs(tag));
   

@@ -67,7 +67,8 @@ CPlatformUCSConversion::PreparePlatformCharset()
 
    if (mPlatformCharset.Length() == 0)
    { 
-     NS_WITH_SERVICE(nsIPlatformCharset, pcharset, NS_PLATFORMCHARSET_CONTRACTID, &res);
+     nsCOMPtr<nsIPlatformCharset> pcharset = 
+              do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &res);
      if (!(NS_SUCCEEDED(res) && pcharset)) {
        NS_WARNING("cannot get platform charset");
      }
@@ -88,8 +89,8 @@ CPlatformUCSConversion::PrepareEncoder()
    {
        res = PreparePlatformCharset();
        if(NS_SUCCEEDED(res)) {
-           NS_WITH_SERVICE(nsICharsetConverterManager,
-                ucmgr, NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
+           nsCOMPtr<nsICharsetConverterManager> ucmgr = 
+                    do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
            NS_ASSERTION((NS_SUCCEEDED(res) && ucmgr), 
                    "cannot get charset converter manager ");
            if(NS_SUCCEEDED(res) && ucmgr) 
@@ -111,8 +112,8 @@ CPlatformUCSConversion::PrepareDecoder()
    {
        res = PreparePlatformCharset();
        if(NS_SUCCEEDED(res)) {
-           NS_WITH_SERVICE(nsICharsetConverterManager,
-                ucmgr, NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
+           nsCOMPtr<nsICharsetConverterManager> ucmgr = 
+                    do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
            NS_ASSERTION((NS_SUCCEEDED(res) && ucmgr), 
                    "cannot get charset converter manager ");
            if(NS_SUCCEEDED(res) && ucmgr) 

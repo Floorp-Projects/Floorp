@@ -127,7 +127,8 @@ main(int argc, char* argv[])
     nsresult rv;
 
     // Create the Event Queue for this thread...
-    NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
+    nsCOMPtr<nsIEventQueueService> eventQService = 
+             do_GetService(kEventQueueServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     rv = eventQService->CreateThreadEventQueue();
@@ -185,7 +186,8 @@ main(int argc, char* argv[])
         count++;
     }
 
-    NS_WITH_SERVICE(nsIStreamConverterService, StreamConvService, kStreamConverterServiceCID, &rv);
+    nsCOMPtr<nsIStreamConverterService> StreamConvService = 
+             do_GetService(kStreamConverterServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     // Define the *from* content type and *to* content-type for conversion.

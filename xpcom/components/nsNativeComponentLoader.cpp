@@ -665,7 +665,8 @@ nsNativeComponentLoader::AutoUnregisterComponent(PRInt32 when,
     if (NS_FAILED(rv)) return rv;
 
     // Notify observers, if any, of autoregistration work
-    NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+    nsCOMPtr<nsIObserverService> observerService = 
+             do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv))
     {
       nsIServiceManager *mgr;    // NO COMPtr as we dont release the service manager
@@ -821,7 +822,8 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
 
 
         // Notify observers, if any, of autoregistration work
-        NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+        nsCOMPtr<nsIObserverService> observerService = 
+                 do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
         if (NS_SUCCEEDED(rv))
         {
           nsIServiceManager *mgr;    // NO COMPtr as we dont release the service manager

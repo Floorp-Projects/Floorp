@@ -37,7 +37,7 @@ nsresult NS_AutoregisterComponents()
 
 nsresult ServiceMakeAbsolute(nsIURI *baseURI, char *relativeInfo, char **_retval) {
     nsresult rv;
-    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+    nsCOMPtr<nsIIOService> serv(do_GetService(kIOServiceCID, &rv));
     if (NS_FAILED(rv)) return rv;
     
     return serv->MakeAbsolute(relativeInfo, baseURI, _retval);
@@ -63,7 +63,7 @@ main(int argc, char* argv[])
     rv = NS_AutoregisterComponents();
     if (NS_FAILED(rv)) return rv;
 
-    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+    nsCOMPtr<nsIIOService> serv(do_GetService(kIOServiceCID, &rv));
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIURI> uri;

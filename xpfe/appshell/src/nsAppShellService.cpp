@@ -282,7 +282,8 @@ nsAppShellService::EnumerateComponents( EnumeratorMemberFunction function ) {
     nsRegistryKey key;
     nsCOMPtr<nsIEnumerator> components;
     const char *failed = "GetService";
-    NS_WITH_SERVICE(nsIRegistry, registry, NS_REGISTRY_CONTRACTID, &rv);
+    nsCOMPtr<nsIRegistry> registry = 
+             do_GetService(NS_REGISTRY_CONTRACTID, &rv);
     if ( NS_SUCCEEDED(rv) 
          &&
          ( failed = "Open" )

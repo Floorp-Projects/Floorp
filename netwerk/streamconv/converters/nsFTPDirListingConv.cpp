@@ -403,7 +403,8 @@ nsresult
 nsFTPDirListingConv::Init() {
     // Grab the nsILocale for date parsing.
     nsresult rv;
-    NS_WITH_SERVICE(nsILocaleService, localeSvc, kLocaleServiceCID, &rv);
+    nsCOMPtr<nsILocaleService> localeSvc = 
+             do_GetService(kLocaleServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     rv = localeSvc->GetApplicationLocale(&mLocale);

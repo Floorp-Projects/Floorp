@@ -69,7 +69,8 @@ int writeoutto(const char* i_pURL, char** o_Result, PRBool bUseStd = PR_TRUE)
     }
     else 
     {
-        NS_WITH_SERVICE(nsIIOService, pService, kIOServiceCID, &result);
+        nsCOMPtr<nsIIOService> pService = 
+                 do_GetService(kIOServiceCID, &result);
         if (NS_FAILED(result)) 
         {
             cout << "Service failed!" << endl;

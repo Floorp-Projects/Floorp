@@ -1020,7 +1020,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
                                      (nsISupports **)&walletservice);
   if ((NS_OK == res) && (nsnull != walletservice)) {
     nsIURI * url;
-    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &res);
+    nsCOMPtr<nsIIOService> service(do_GetService(kIOServiceCID, &res));
     if (NS_FAILED(res)) return nsEventStatus_eIgnore;
 
     nsIURI *uri = nsnull;
@@ -1280,7 +1280,7 @@ GetTitleSuffix(void)
     return suffix;
   }
   nsIURI* url = nsnull;
-    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &ret);
+    nsCOMPtr<nsIIOService> service(do_GetService(kIOServiceCID, &ret));
     if (NS_FAILED(ret)) return ret;
 
     nsIURI *uri = nsnull;

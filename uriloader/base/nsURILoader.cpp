@@ -380,7 +380,8 @@ nsresult nsDocumentOpenInfo::RetargetOutput(nsIRequest *request, const char * aS
   // because we said we could handle "*/*" in our accept headers
   if (aOutContentType && *aOutContentType && nsCRT::strcasecmp(aSrcContentType, aOutContentType) && nsCRT::strcmp(aSrcContentType, "*/*"))
   {
-      NS_WITH_SERVICE(nsIStreamConverterService, StreamConvService, kStreamConverterServiceCID, &rv);
+      nsCOMPtr<nsIStreamConverterService> StreamConvService = 
+               do_GetService(kStreamConverterServiceCID, &rv);
       if (NS_FAILED(rv)) return rv;
       nsAutoString from_w; from_w.AssignWithConversion (aSrcContentType);
       nsAutoString to_w; to_w.AssignWithConversion (aOutContentType);

@@ -356,7 +356,8 @@ nsJAR::GetCertificatePrincipal(const char* aFilename, nsIPrincipal** aPrincipal)
 
   //-- Get the signature verifier service
   nsresult rv;
-  NS_WITH_SERVICE(nsISignatureVerifier, verifier, SIGNATURE_VERIFIER_CONTRACTID, &rv);
+  nsCOMPtr<nsISignatureVerifier> verifier = 
+           do_GetService(SIGNATURE_VERIFIER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) // No signature verifier available
     return NS_OK;
 
@@ -1137,7 +1138,8 @@ nsZipReaderCache::Init(PRUint32 cacheSize)
 #endif
   
 // Register as a memory pressure observer 
-  NS_WITH_SERVICE(nsIObserverService, os, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+  nsCOMPtr<nsIObserverService> os = 
+           do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv))   
   {
     rv = os->AddObserver(this, NS_MEMORY_PRESSURE_TOPIC);

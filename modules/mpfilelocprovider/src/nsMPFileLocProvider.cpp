@@ -118,7 +118,8 @@ nsresult nsMPFileLocProvider::Initialize(nsIFile* profileParentDir, const char *
     sApp_NewsDirectory50          = NS_NewAtom(NS_APP_NEWS_50_DIR);
     sApp_MessengerFolderCache50   = NS_NewAtom(NS_APP_MESSENGER_FOLDER_CACHE_50_DIR);
 
-    NS_WITH_SERVICE(nsIDirectoryService, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+    nsCOMPtr<nsIDirectoryService> directoryService = 
+             do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv))
     directoryService->RegisterProvider(this);
     

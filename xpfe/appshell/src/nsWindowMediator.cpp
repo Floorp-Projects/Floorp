@@ -983,7 +983,8 @@ nsWindowMediator::Init()
                                                         (void**) &mInner)))
       return rv;
 
-    NS_WITH_SERVICE(nsIRDFContainerUtils, rdfc, kRDFContainerUtilsCID, &rv);
+    nsCOMPtr<nsIRDFContainerUtils> rdfc = 
+             do_GetService(kRDFContainerUtilsCID, &rv);
     if (NS_FAILED(rv))
       return rv;
 

@@ -1565,7 +1565,8 @@ nsresult CNavDTD::HandleKeyGen(nsIParserNode* aNode) {
 
   if(aNode) { 
   
-    NS_WITH_SERVICE(nsIFormProcessor, theFormProcessor, kFormProcessorCID, &result) 
+    nsCOMPtr<nsIFormProcessor> theFormProcessor = 
+             do_GetService(kFormProcessorCID, &result);
   
     if(NS_SUCCEEDED(result)) { 
       PRInt32      theAttrCount=aNode->GetAttributeCount(); 

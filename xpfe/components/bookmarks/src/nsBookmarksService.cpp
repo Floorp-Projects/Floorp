@@ -480,14 +480,16 @@ BookmarkParser::Init(nsFileSpec *fileSpec, nsIRDFDataSource *aDataSource,
 	nsresult		rv;
 
 	// determine default platform charset...
-	NS_WITH_SERVICE(nsIPlatformCharset, platformCharset, kPlatformCharsetCID, &rv);
+	nsCOMPtr<nsIPlatformCharset> platformCharset = 
+	         do_GetService(kPlatformCharsetCID, &rv);
 	if (NS_SUCCEEDED(rv) && (platformCharset))
 	{
 		nsAutoString	defaultCharset;
 		if (NS_SUCCEEDED(rv = platformCharset->GetCharset(kPlatformCharsetSel_4xBookmarkFile, defaultCharset)))
 		{
 			// found the default platform charset, now try and get a decoder from it to Unicode
-			NS_WITH_SERVICE(nsICharsetConverterManager, charsetConv, kCharsetConverterManagerCID, &rv);
+			nsCOMPtr<nsICharsetConverterManager> charsetConv = 
+			         do_GetService(kCharsetConverterManagerCID, &rv);
 			if (NS_SUCCEEDED(rv) && (charsetConv))
 			{
 				rv = charsetConv->GetUnicodeDecoder(&defaultCharset, getter_AddRefs(mUnicodeDecoder));
@@ -1655,7 +1657,7 @@ nsBookmarksService::Init()
 
 	// determine what the name of the Personal Toolbar Folder is...
 	// first from user preference, then string bundle, then hard-coded default
-	NS_WITH_SERVICE(nsIPref, prefServ, kPrefCID, &rv);
+	nsCOMPtr<nsIPref> prefServ(do_GetService(kPrefCID, &rv));
 	if (NS_SUCCEEDED(rv) && (prefServ))
 	{
 		char	*prefVal = nsnull;
@@ -1684,7 +1686,8 @@ nsBookmarksService::Init()
 	}
 
     // Register as an observer of profile changes
-    NS_WITH_SERVICE(nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+    nsCOMPtr<nsIObserverService> observerService = 
+             do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
     NS_ASSERTION(observerService, "Could not get observer service.");
     if (observerService) {
         observerService->AddObserver(this, NS_LITERAL_STRING("profile-before-change").get());
@@ -2385,7 +2388,8 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
 			if ((openURLFlag == PR_TRUE) ||
 				(schedule.Find(NS_ConvertASCIItoUCS2("open"), PR_TRUE, 0) >= 0))
 			{
-				NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
+				nsCOMPtr<nsIAppShellService> appShell = 
+				         do_GetService(kAppShellServiceCID, &rv);
 				if (NS_SUCCEEDED(rv))
 				{
 					nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
@@ -3942,7 +3946,7 @@ nsBookmarksService::GetBookmarksFile(nsFileSpec* aResult)
 
     // First we see if the user has set a pref for the location of the 
     // bookmarks file.
-    NS_WITH_SERVICE(nsIPref, prefServ, kPrefCID, &rv);
+    nsCOMPtr<nsIPref> prefServ(do_GetService(kPrefCID, &rv));
     if (NS_SUCCEEDED(rv)) {
         nsXPIDLCString prefVal;
         rv = prefServ->CopyCharPref("browser.bookmarks.file",

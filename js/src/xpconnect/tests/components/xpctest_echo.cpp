@@ -273,7 +273,7 @@ xpctestEcho::GetStack(nsIStackFrame **_retval)
         return NS_ERROR_NULL_POINTER;
 
     nsresult rv;
-    NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
+    nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
     if(NS_SUCCEEDED(rv))
     {
         nsIStackFrame* jsstack;
@@ -337,7 +337,7 @@ NS_IMETHODIMP
 xpctestEcho::DebugDumpJSStack()
 {
     nsresult rv;
-    NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
+    nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
     if(NS_SUCCEEDED(rv))
     {
         rv = xpc->DebugDumpJSStack(JS_TRUE, JS_TRUE, JS_TRUE);
@@ -378,7 +378,7 @@ xpctestEcho::SetAString(const char * aAString)
 #define GET_CALL_CONTEXT \
   nsresult rv; \
   nsCOMPtr<nsIXPCNativeCallContext> cc; \
-  NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv); \
+  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv)); \
   if(NS_SUCCEEDED(rv)) \
     rv = xpc->GetCurrentNativeCallContext(getter_AddRefs(cc)) /* no ';' */        
 

@@ -39,7 +39,7 @@ static NS_DEFINE_CID(kTimerManagerCID, NS_TIMERMANAGER_CID);
 nsresult NS_DoIdleEmbeddingStuff()
 {
     nsresult rv = NS_ERROR_FAILURE;
-    NS_WITH_SERVICE(nsITimerQueue, timerQueue, kTimerManagerCID, &rv);
+    nsCOMPtr<nsITimerQueue> timerQueue(do_GetService(kTimerManagerCID, &rv));
     if (NS_FAILED(rv))
     {
         return NS_ERROR_FAILURE;

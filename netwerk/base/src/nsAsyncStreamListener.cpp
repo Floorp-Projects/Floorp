@@ -163,7 +163,8 @@ nsAsyncStreamObserver::Init(nsIRequestObserver* aObserver, nsIEventQueue* aEvent
     NS_ASSERTION(aObserver, "null observer");
     mReceiver = aObserver;
         
-    NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueService, &rv);
+    nsCOMPtr<nsIEventQueueService> eventQService = 
+             do_GetService(kEventQueueService, &rv);
     if (NS_FAILED(rv)) 
     return rv;
         

@@ -574,7 +574,7 @@ nsXBLService::nsXBLService(void)
     kInputAtom = NS_NewAtom("input");
 
     // Find out if the XUL cache is on or off
-    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
+    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
     if (NS_SUCCEEDED(rv))
       prefs->GetBoolPref(kDisableChromeCachePref, &gDisableChromeCache);
 

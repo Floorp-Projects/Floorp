@@ -104,7 +104,8 @@ nsresult nsPermissionManager::Init()
   PERMISSION_Read();
 
   nsresult rv;
-  NS_WITH_SERVICE(nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+  nsCOMPtr<nsIObserverService> observerService = 
+           do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
   if (observerService) {
     observerService->AddObserver(this, NS_LITERAL_STRING("profile-before-change").get());
     observerService->AddObserver(this, NS_LITERAL_STRING("profile-do-change").get());

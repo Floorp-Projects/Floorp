@@ -226,7 +226,8 @@ nsFileChannel::EnsureTransport()
     if (!exist)
         return NS_ERROR_FILE_NOT_FOUND;
 
-    NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
+    nsCOMPtr<nsIFileTransportService> fts = 
+             do_GetService(kFileTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     rv = fts->CreateTransport(mFile, mIOFlags, mPerm, 

@@ -565,7 +565,7 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
     // Canonify the "chrome:" URL; e.g., so that we collapse
     // "chrome://navigator/content/navigator.xul" and "chrome://navigator/content"
     // and "chrome://navigator/content/navigator.xul".
-    NS_WITH_SERVICE(nsIChromeRegistry, reg, kChromeRegistryCID, &rv);
+    nsCOMPtr<nsIChromeRegistry> reg(do_GetService(kChromeRegistryCID, &rv));
     if (NS_FAILED(rv)) return rv;
 
     rv = reg->Canonify(aURI);
@@ -573,7 +573,8 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
 
     // Check the prototype cache to see if we've already got the
     // document in the cache.
-    NS_WITH_SERVICE(nsIXULPrototypeCache, cache, kXULPrototypeCacheCID, &rv);
+    nsCOMPtr<nsIXULPrototypeCache> cache = 
+             do_GetService(kXULPrototypeCacheCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIXULPrototypeDocument> proto;
@@ -601,7 +602,7 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
         rv = reg->ConvertChromeURL(chromeURI, getter_Copies(spec));
         if (NS_FAILED(rv)) return rv;
 
-        NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+        nsCOMPtr<nsIIOService> serv(do_GetService(kIOServiceCID, &rv));
         if (NS_FAILED(rv)) return rv;
         
         rv = serv->NewURI(spec, nsnull, getter_AddRefs(chromeURI));
@@ -639,8 +640,8 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
         if (PL_strcasecmp(fileExtension, "xul") == 0 || PL_strcasecmp(fileExtension, "html") == 0 ||
             PL_strcasecmp(fileExtension, "xml") == 0)
         {
-            NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
-                            NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+            nsCOMPtr<nsIScriptSecurityManager> securityManager = 
+                     do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
             if (NS_FAILED(rv)) return rv;
             
             nsCOMPtr<nsIPrincipal> principal;

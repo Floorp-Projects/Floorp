@@ -208,7 +208,7 @@ static PRBool gNavAlgorithmPref = PR_FALSE;
 static int PR_CALLBACK NavAlgorithmPrefChangedCallback(const char * name, void * closure)
 {
 	nsresult rv;
-	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+	nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
 	if (NS_SUCCEEDED(rv) && prefs) {
 		prefs->GetBoolPref(name, &gNavAlgorithmPref);
 	}
@@ -229,7 +229,7 @@ static PRBool UseNewFontAlgorithm()
 		once = PR_FALSE;
 
 		nsresult rv;
-		NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+		nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
 		if (NS_SUCCEEDED(rv) && prefs) {
 			prefs->GetBoolPref("font.size.nav4algorithm", &gNavAlgorithmPref);
 			prefs->RegisterCallback("font.size.nav4algorithm", NavAlgorithmPrefChangedCallback, NULL);

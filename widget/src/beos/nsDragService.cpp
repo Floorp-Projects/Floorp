@@ -112,7 +112,7 @@ void nsDragService::SetTopLevelView(BView *v)
 
   // Get the DragService from the service manager.
   nsresult rv;
-  NS_WITH_SERVICE(nsIDragService, dragService, kCDragServiceCID, &rv);
+  nsCOMPtr<nsIDragService> dragService(do_GetService(kCDragServiceCID, &rv));
 
   if (NS_FAILED(rv)) {
     return;

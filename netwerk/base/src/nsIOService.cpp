@@ -187,7 +187,7 @@ nsIOService::Init()
     }
 
     // Lets make it really easy to block extra ports:
-    NS_WITH_SERVICE(nsIPref, prefService, kPrefServiceCID, &rv);
+    nsCOMPtr<nsIPref> prefService(do_GetService(kPrefServiceCID, &rv));
     if (NS_FAILED(rv) && !prefService) {
         NS_ASSERTION(0, "Prefs not found!");
         return NS_ERROR_FAILURE;

@@ -211,7 +211,7 @@ CBrowserApp::CBrowserApp()
 CBrowserApp::~CBrowserApp()
 {
    nsresult rv;
-   NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
+   nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
    if (NS_SUCCEEDED(rv) && prefs)
       prefs->SavePrefFile(nsnull);
 
@@ -232,7 +232,8 @@ CBrowserApp::StartUp()
 #if USE_PROFILES
 
     // Register for profile changes    
-    NS_WITH_SERVICE(nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+    nsCOMPtr<nsIObserverService> observerService = 
+             do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
     ThrowIfNil_(observerService);
     observerService->AddObserver(this, NS_LITERAL_STRING("profile-approve-change").get());
     observerService->AddObserver(this, NS_LITERAL_STRING("profile-change-teardown").get());
@@ -256,7 +257,7 @@ CBrowserApp::StartUp()
     rv = locationProvider->Initialize(rootDir, "guest");   
     ThrowIfError_(rv);
     
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
     ThrowIfNil_(prefs);
     // Needed because things read default prefs during startup
     prefs->ResetPrefs();
@@ -500,7 +501,7 @@ Boolean CBrowserApp::AttemptQuitSelf(SInt32 inSaveOption)
 nsresult CBrowserApp::InitializePrefs()
 {
    nsresult rv;
-   NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+   nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
    if (NS_SUCCEEDED(rv)) {	  
 
 		// We are using the default prefs from mozilla. If you were

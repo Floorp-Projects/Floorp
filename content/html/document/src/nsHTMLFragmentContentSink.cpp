@@ -483,10 +483,8 @@ nsHTMLFragmentContentSink::OpenContainer(const nsIParserNode& aNode)
     nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
     nsIHTMLContent *content = nsnull;
 
-    NS_WITH_SERVICE(nsIParserService,
-                    parserService, 
-                    kParserServiceCID,
-                    &result);
+    nsCOMPtr<nsIParserService> parserService = 
+             do_GetService(kParserServiceCID, &result);
     NS_ENSURE_SUCCESS(result, result);
 
     nsAutoString tmpName;
@@ -560,10 +558,8 @@ nsHTMLFragmentContentSink::AddLeaf(const nsIParserNode& aNode)
         nsCOMPtr<nsIHTMLContent> content;
         nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
 
-        NS_WITH_SERVICE(nsIParserService,
-                        parserService, 
-                        kParserServiceCID,
-                        &result);
+        nsCOMPtr<nsIParserService> parserService = 
+                 do_GetService(kParserServiceCID, &result);
 
         NS_ENSURE_SUCCESS(result, result);
 

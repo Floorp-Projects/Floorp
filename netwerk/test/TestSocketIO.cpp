@@ -274,7 +274,8 @@ main(int argc, char* argv[])
     int port = 80;
 
     // Create the Event Queue for this thread...
-    NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
+    nsCOMPtr<nsIEventQueueService> eventQService = 
+             do_GetService(kEventQueueServiceCID, &rv);
     if (NS_FAILED(rv)) {
         NS_WARNING("failed to create: event queue service!");
         return rv;
@@ -289,7 +290,8 @@ main(int argc, char* argv[])
     eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &gEventQ);
 
     // Create the Socket transport service...
-    NS_WITH_SERVICE(nsISocketTransportService, sts, kSocketTransportServiceCID, &rv);
+    nsCOMPtr<nsISocketTransportService> sts = 
+             do_GetService(kSocketTransportServiceCID, &rv);
     if (NS_FAILED(rv)) {
         NS_WARNING("failed to create: socket transport service!");
         return rv;

@@ -58,7 +58,7 @@ nsNativeViewerApp::Run()
   int  keepGoing = 1;
 
   nsresult rv;
-  NS_WITH_SERVICE(nsITimerQueue, queue, kTimerManagerCID, &rv);
+  nsCOMPtr<nsITimerQueue> queue(do_GetService(kTimerManagerCID, &rv));
   if (NS_FAILED(rv)) return 0;
 
   // Pump all messages

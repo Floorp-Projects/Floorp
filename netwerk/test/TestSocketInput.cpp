@@ -147,7 +147,8 @@ main(int argc, char* argv[])
   if (NS_FAILED(rv)) return rv;
 
   // Create the Event Queue for this thread...
-  NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
+  nsCOMPtr<nsIEventQueueService> eventQService = 
+           do_GetService(kEventQueueServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   rv = eventQService->CreateThreadEventQueue();
@@ -157,7 +158,8 @@ main(int argc, char* argv[])
   rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(eventQ));
   if (NS_FAILED(rv)) return rv;
 
-  NS_WITH_SERVICE(nsISocketTransportService, sts, kSocketTransportServiceCID, &rv);
+  nsCOMPtr<nsISocketTransportService> sts = 
+           do_GetService(kSocketTransportServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   nsITransport* transport;

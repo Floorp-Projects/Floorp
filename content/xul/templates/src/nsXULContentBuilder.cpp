@@ -1641,7 +1641,7 @@ nsXULContentBuilder::GetElementFactory(PRInt32 aNameSpaceID, nsIElementFactory**
   contractID.AppendWithConversion(nameSpace.get());
 
   // Retrieve the appropriate factory.
-  NS_WITH_SERVICE(nsIElementFactory, elementFactory, contractID, &rv);
+  nsCOMPtr<nsIElementFactory> elementFactory(do_GetService(contractID, &rv));
 
   if (!elementFactory)
     elementFactory = gXMLElementFactory; // Nothing found. Use generic XML element.

@@ -219,7 +219,8 @@ public:
     mBuffer[avail] = '\0';
     mCursor = mBuffer;
 
-    NS_WITH_SERVICE(nsIObserverService, obsServ, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+    nsCOMPtr<nsIObserverService> obsServ = 
+             do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
     rv = obsServ->AddObserver(this, NS_LITERAL_STRING("EndDocumentLoad").get());
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add self to observer service");
@@ -246,9 +247,11 @@ public:
       nsresult rv;
       // make sure our timer is stopped first
       StopTimer();
-      NS_WITH_SERVICE(nsIAppShellService, appShellServ, kAppShellServiceCID, &rv);
+      nsCOMPtr<nsIAppShellService> appShellServ = 
+               do_GetService(kAppShellServiceCID, &rv);
       if(NS_FAILED(rv)) return rv;
-      NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, kProxyObjectManagerCID, &rv);
+      nsCOMPtr<nsIProxyObjectManager> pIProxyObjectManager = 
+               do_GetService(kProxyObjectManagerCID, &rv);
       if(NS_FAILED(rv)) return rv;
       nsCOMPtr<nsIAppShellService> appShellProxy;
       rv = pIProxyObjectManager->GetProxyForObject(NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIAppShellService), 
@@ -635,7 +638,8 @@ nsBrowserInstance::StartPageCycler(PRBool* aIsPageCycling)
 
   *aIsPageCycling = PR_FALSE;
   if (!sCmdLineURLUsed) {
-    NS_WITH_SERVICE(nsICmdLineService, cmdLineArgs, kCmdLineServiceCID, &rv);
+    nsCOMPtr<nsICmdLineService> cmdLineArgs = 
+             do_GetService(kCmdLineServiceCID, &rv);
     if (NS_FAILED(rv)) {
       if (APP_DEBUG) fprintf(stderr, "Could not obtain CmdLine processing service\n");
       return NS_ERROR_FAILURE;

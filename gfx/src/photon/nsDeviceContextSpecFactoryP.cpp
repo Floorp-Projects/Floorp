@@ -63,7 +63,8 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryPh :: CreateDeviceContextSpec(nsIWidget 
 	NS_ENSURE_ARG_POINTER(aWidget);
 
 	nsresult  rv = NS_ERROR_FAILURE;
-	NS_WITH_SERVICE(nsIPrintOptions, printService, kPrintOptionsCID, &rv);
+	nsCOMPtr<nsIPrintOptions> printService = 
+	         do_GetService(kPrintOptionsCID, &rv);
 
 	nsIDeviceContextSpec  *devSpec = nsnull;
 

@@ -70,7 +70,7 @@ MODULE_PRIVATE int PR_CALLBACK
 image_BehaviorPrefChanged(const char * newpref, void * data) {
   PRInt32 n;
   nsresult rv;
-  NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
   if (NS_FAILED(prefs->GetIntPref(image_behaviorPref, &n))) {
     image_SetBehaviorPref(PERMISSION_Accept);
   } else {
@@ -83,7 +83,7 @@ MODULE_PRIVATE int PR_CALLBACK
 image_WarningPrefChanged(const char * newpref, void * data) {
   PRBool x;
   nsresult rv;
-  NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
   if (NS_FAILED(prefs->GetBoolPref(image_warningPref, &x))) {
     x = PR_FALSE;
   }
@@ -96,7 +96,7 @@ IMAGE_RegisterPrefCallbacks(void) {
   PRInt32 n;
   PRBool x;
   nsresult rv;
-  NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
 
   // Initialize for image_behaviorPref
   if (NS_FAILED(prefs->GetIntPref(image_behaviorPref, &n))) {
@@ -120,7 +120,7 @@ IMAGE_CheckForPermission
   /* exit if imageblocker is not enabled */
   nsresult rv;
   PRBool prefvalue = PR_FALSE;
-  NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
   if (NS_FAILED(rv) || 
       NS_FAILED(prefs->GetBoolPref("imageblocker.enabled", &prefvalue)) ||
       !prefvalue) {

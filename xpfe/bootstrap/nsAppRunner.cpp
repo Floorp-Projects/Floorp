@@ -1004,7 +1004,8 @@ static nsresult VerifyInstallation(int argc, char **argv)
   nsresult rv;
   nsCOMPtr<nsILocalFile> registryFile;
 
-  NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+  nsCOMPtr<nsIProperties> directoryService = 
+           do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv))
     return NS_OK;
   rv = directoryService->Get(NS_OS_CURRENT_PROCESS_DIR, 

@@ -222,7 +222,7 @@ nsHTMLContentSinkStream::InitEncoders()
   if (mStream)
   {
     nsAutoString charsetName; charsetName.Assign(mCharsetOverride);
-    NS_WITH_SERVICE(nsICharsetAlias, calias, kCharsetAliasCID, &res);
+    nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID, &res));
     if (NS_SUCCEEDED(res) && calias) {
       nsAutoString temp; temp.Assign(mCharsetOverride);
       res = calias->GetPreferred(temp, charsetName);

@@ -141,7 +141,7 @@ nsAboutProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
     what.BeginReading(begin);
     contractID.Append(Substring(begin, end));
 
-    NS_WITH_SERVICE(nsIAboutModule, aboutMod, contractID.get(), &rv);
+    nsCOMPtr<nsIAboutModule> aboutMod(do_GetService(contractID.get(), &rv));
     if (NS_SUCCEEDED(rv)) {
         // The standard return case:
         return aboutMod->NewChannel(uri, result);

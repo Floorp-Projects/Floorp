@@ -398,7 +398,8 @@ void nsMacControl::StringToStr255(const nsString& aText, Str255& aStr255)
 		nsAutoString fileSystemCharset;
 		GetFileSystemCharset(fileSystemCharset);
 
-		NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &rv); 
+		nsCOMPtr<nsICharsetConverterManager> ccm = 
+		         do_GetService(kCharsetConverterManagerCID, &rv); 
 		if (NS_SUCCEEDED(rv)) {
 			rv = ccm->GetUnicodeEncoder(&fileSystemCharset, &mUnicodeEncoder);
 		}
@@ -436,7 +437,8 @@ void nsMacControl::Str255ToString(const Str255& aStr255, nsString& aText)
 		nsAutoString fileSystemCharset;
 		GetFileSystemCharset(fileSystemCharset);
 
-		NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &rv); 
+		nsCOMPtr<nsICharsetConverterManager> ccm = 
+		         do_GetService(kCharsetConverterManagerCID, &rv); 
 		if (NS_SUCCEEDED(rv)) {
 			rv = ccm->GetUnicodeDecoder(&fileSystemCharset, &mUnicodeDecoder);
 		}

@@ -263,7 +263,8 @@ nsresult
 InitQueue() {
     nsresult rv;
 
-    NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
+    nsCOMPtr<nsIEventQueueService> eventQService = 
+             do_GetService(kEventQueueServiceCID, &rv);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't get event queue service");
 
     rv = eventQService->CreateThreadEventQueue();
@@ -692,7 +693,7 @@ nsresult NS_AutoregisterComponents()
 PRBool initPref ()
 {
     nsresult rv;
-    NS_WITH_SERVICE(nsIPref, prefPtr, kPrefCID, &rv);
+    nsCOMPtr<nsIPref> prefPtr(do_GetService(kPrefCID, &rv));
     if (NS_FAILED(rv))
         return false;
                
