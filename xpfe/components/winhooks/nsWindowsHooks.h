@@ -25,6 +25,10 @@
 
 #include "nsIWindowsHooks.h"
 
+#ifndef MAX_BUF
+#define MAX_BUF 4096
+#endif
+
 /* c09bc130-0a71-11d4-8076-00600811a9c3 */
 #define NS_IWINDOWSHOOKS_CID \
  { 0xc09bc130, 0x0a71, 0x11d4, {0x80, 0x76, 0x00, 0x60, 0x08, 0x11, 0xa9, 0xc3} }
@@ -95,6 +99,10 @@ protected:
 
     // Set registry according to settings.
     NS_IMETHOD SetRegistry();
+    char mShortcutPath[MAX_BUF];
+    char mShortcutName[MAX_BUF];
+    char mShortcutBase[MAX_BUF];
+    char mShortcutProg[MAX_BUF];
 }; // nsWindowsHooksSettings
 
 #endif // nswindowshooks_h____

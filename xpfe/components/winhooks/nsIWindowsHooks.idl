@@ -150,7 +150,25 @@ interface nsIWindowsHooks : nsISupports {
     //   aParent - parent window for any dialogs that
     //             will appear
     void checkSettings( in nsIDOMWindowInternal aParent );
-    
+	// turbo mode
+	// ----------
+	// the following interfaces support turbo mode preferences.
+	// 
+	// IsStartupTurboEnabled() returns true if the shortcut for
+	// turbo mode is in the Windows startup folder, else it 
+	// returns false. The function is called in the onload 
+	// handler of the prefs panel that contains the "use turbo
+	// mode" checkbox to determine if the checkbox should be set
+	// (shortcut is present) or not (shortcut is missing). The
+	// installer is used to initialize state (e.g., it will put
+	// the shortcut in the startup folder initially).
+	boolean isStartupTurboEnabled();
+	// the following function is called by the preferences panel
+	// code if the user checks the "use turbo mode" checkbox.
+	void startupTurboEnable();
+	// the following function is called by the preferences panel
+	// code if the user unchecks the "use turbo mode" checkbox.
+	void startupTurboDisable();
 };
 
 %{C++

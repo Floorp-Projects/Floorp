@@ -19,9 +19,17 @@
  *
  * Contributor(s): 
  *  Bill Law    <law@netscape.com>
+ *  Syd Logan   <syd@netscape.com> added turbo mode stuff
  */
+
+#ifndef MAX_BUF
+#define MAX_BUF 4096
+#endif
+
 #include "nsWindowsHooks.h"
 #include <windows.h>
+#include <shlobj.h>
+#include <shlguid.h>
 
 // Implementation utilities.
 #include "nsWindowsHooksUtil.cpp"
@@ -32,6 +40,8 @@
 #include "nsIAllocator.h"
 #include "nsICmdLineService.h"
 #include "nsXPIDLString.h"
+#include "nsString.h"
+#include "nsMemory.h"
 
 // Objects that describe the Windows registry entries that we need to tweak.
 static ProtocolRegistryEntry
@@ -61,6 +71,11 @@ static EditableFileTypeRegistryEntry
 // Implementation of the nsIWindowsHooksSettings interface.
 // Use standard implementation of nsISupports stuff.
 NS_IMPL_ISUPPORTS1( nsWindowsHooksSettings, nsIWindowsHooksSettings );
+
+static PRBool IsWindowsNT(void);
+static PRBool GetStartupFolder( char *buf );
+static HRESULT CreateALink(LPCSTR lpszPathObj, LPCSTR lpszPathLink, LPCSTR lpszDesc, LPCSTR lpszWorkingPath, LPCSTR lpszArgs, LPCSTR lpszIconFullPath, int iIcon);
+
 
 nsWindowsHooksSettings::nsWindowsHooksSettings() {
     NS_INIT_ISUPPORTS();
@@ -505,3 +520,200 @@ nsWindowsHooks::SetRegistry() {
 
     return NS_OK;
 }
+
+// nsIWindowsHooks.idl for documentation
+
+NS_IMETHODIMP nsWindowsHooks::IsStartupTurboEnabled(PRBool *_retval)
+{
+    DWORD   dwErr;
+    BOOL    bNameExists = FALSE;
+    HANDLE  hnd;
+    char    szBuf[MAX_BUF];
+    char    szName[MAX_BUF];
+
+    *_retval = PR_FALSE;
+
+    // read the windows registry to get the location of the startup folder
+
+    bNameExists = GetStartupFolder( szName );
+
+    // then see if the file mozilla.exe.lnk exists
+
+    if ( bNameExists ) {
+        dwErr = GetModuleFileName( NULL, szBuf, sizeof( szBuf ) );
+        if ( dwErr != 0 ) {
+            nsAutoString baseName;
+            baseName.AssignWithConversion( szBuf );
+            PRInt32 slashOffset = baseName.RFindChar(PRUnichar('\\'));
+            if ( slashOffset >= 0 ) {
+                baseName.Cut(0, slashOffset + 1 );
+            }
+
+            strcpy( mShortcutName, szName );    // remember for creation
+            char *baseNameC = baseName.ToNewCString();
+            strcpy( mShortcutBase, baseNameC ); // remember for creation
+            baseName.AssignWithConversion( szBuf );
+            baseName.Cut(slashOffset, -1);
+            char *progNameC = baseName.ToNewCString();
+            strcpy( mShortcutProg, progNameC ); // remember for creation
+            strcat( szName, "\\" );
+            strcat( szName, baseNameC );
+            strcat( szName, ".lnk" );
+            strcpy( mShortcutPath, szName );   // remember the path for later deletion
+
+            // open the file, if successful, it exists
+
+            hnd = CreateFile( szName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL );
+            if ( hnd != INVALID_HANDLE_VALUE ) {
+                *_retval = PR_TRUE;
+                CloseHandle( hnd );
+            }
+            nsMemory::Free( baseNameC );
+            nsMemory::Free( progNameC );
+       }
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsWindowsHooks::StartupTurboEnable()
+{
+    PRBool startupFound;
+    char buf[ MAX_BUF ];
+    DWORD dwErr, bytesWritten;
+    HANDLE hnd;
+
+    IsStartupTurboEnabled(&startupFound);
+
+    if ( startupFound == PR_TRUE )
+        return NS_OK;               // already enabled, no need to do this
+
+    // create the file
+
+    dwErr = GetModuleFileName( NULL, buf, sizeof( buf ) );
+    if ( dwErr != 0 )
+        CreateALink( buf, mShortcutName, mShortcutBase, mShortcutProg, "-turbo", NULL, 0 );
+ 
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsWindowsHooks::StartupTurboDisable()
+{
+    PRBool startupFound;
+
+    IsStartupTurboEnabled(&startupFound);
+
+    if ( startupFound == PR_FALSE )
+        return NS_OK;               // already disabled
+ 
+    DeleteFile( mShortcutPath );
+    return NS_OK;
+}
+
+static PRBool
+IsWindowsNT( void )
+{
+    PRBool retval = PR_FALSE;
+
+    OSVERSIONINFO osVersionInfo;
+    osVersionInfo.dwOSVersionInfoSize = sizeof( OSVERSIONINFO );
+    if (GetVersionEx(&osVersionInfo)) {
+        retval = (osVersionInfo.dwPlatformId == VER_PLATFORM_WIN32_NT ? PR_TRUE : PR_FALSE);
+    }
+    return retval;
+}
+
+static PRBool 
+GetStartupFolder( char *buf )
+{
+    HKEY  hkResult;
+    HKEY  hkRootKey;
+    DWORD dwErr;
+    DWORD dwSize;
+    char  szKey[MAX_BUF];
+    char  szBuf[MAX_BUF];
+    char  szName[MAX_BUF];
+    BOOL  bNameExists = FALSE;
+
+    // read the windows registry to get the location of the startup folder
+
+    if ( IsWindowsNT() == PR_TRUE ) {
+      hkRootKey = HKEY_LOCAL_MACHINE;
+      strcpy( szKey, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders" );
+      strcpy( szName, "Common Startup" );
+    } else {
+      hkRootKey = HKEY_CURRENT_USER;
+      strcpy( szKey,"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders" );
+      strcpy( szName, "Startup" );
+    }
+
+    if((dwErr = RegOpenKeyEx(hkRootKey, szKey, 0, KEY_READ, &hkResult)) == ERROR_SUCCESS) {
+        dwSize = sizeof(szBuf);
+        dwErr  = RegQueryValueEx(hkResult, (const char *) szName, NULL, NULL, (LPBYTE) szBuf, &dwSize);
+
+        if((*szBuf != '\0') && (dwErr == ERROR_SUCCESS)) {
+            strcpy( buf, szBuf );
+            bNameExists = TRUE;
+        }
+        RegCloseKey(hkResult);
+    }
+    return bNameExists;
+}
+
+#if (_MSC_VER == 1100)
+#define INITGUID
+#include "objbase.h"
+DEFINE_OLEGUID(IID_IPersistFile, 0x0000010BL, 0, 0);
+#endif
+
+
+static HRESULT CreateALink(LPCSTR lpszPathObj, LPCSTR lpszPathLink, LPCSTR lpszDesc, LPCSTR lpszWorkingPath, LPCSTR lpszArgs, LPCSTR lpszIconFullPath, int iIcon)
+{ 
+    HRESULT    hres; 
+    IShellLink *psl;
+    char       lpszFullPath[MAX_BUF];
+
+    lstrcpy(lpszFullPath, lpszPathLink);
+    lstrcat(lpszFullPath, "\\");
+    lstrcat(lpszFullPath, lpszDesc);
+    lstrcat(lpszFullPath, ".lnk");
+
+    CreateDirectory(lpszPathLink, NULL);
+    CoInitialize(NULL);
+
+    // Get a pointer to the IShellLink interface. 
+    hres = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink, (LPVOID *)&psl); 
+    if(SUCCEEDED(hres))
+    { 
+        IPersistFile* ppf; 
+ 
+        // Set the path to the shortcut target, and add the 
+        // description. 
+        psl->SetPath(lpszPathObj);
+        psl->SetDescription(lpszDesc);
+        if(lpszWorkingPath)
+            psl->SetWorkingDirectory(lpszWorkingPath);
+        if(lpszArgs)
+            psl->SetArguments(lpszArgs);
+        if(lpszIconFullPath)
+            psl->SetIconLocation(lpszIconFullPath, iIcon);
+ 
+        // Query IShellLink for the IPersistFile interface for saving the 
+        // shortcut in persistent storage. 
+        hres = psl->QueryInterface(IID_IPersistFile, (LPVOID FAR *)&ppf); 
+        if(SUCCEEDED(hres))
+        { 
+            WORD wsz[MAX_BUF]; 
+ 
+            // Ensure that the string is ANSI. 
+            MultiByteToWideChar(CP_ACP, 0, lpszFullPath, -1, (wchar_t *)wsz, MAX_BUF);
+ 
+            // Save the link by calling IPersistFile::Save. 
+            hres = ppf->Save((wchar_t *)wsz, TRUE); 
+            ppf->Release(); 
+        } 
+        psl->Release(); 
+    } 
+    CoUninitialize();
+
+    return hres;
+} 

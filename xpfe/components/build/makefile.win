@@ -53,6 +53,10 @@ LLIBS=                                   \
         $(DIST)\lib\winhooks_s.lib       \
 	$(NULL)
 
+WIN_LIBS = \
+		ole32.lib \
+		$(NULL)
+
 INCS = $(INCS)                                       \
         -I$(DEPTH)\xpfe\components\autocomplete\src  \
         -I$(DEPTH)\xpfe\components\bookmarks\src     \
