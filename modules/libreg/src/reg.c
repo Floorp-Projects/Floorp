@@ -63,6 +63,7 @@
 #include "prtypes.h"
 #include "prlog.h"
 #include "prerror.h"
+#include "prprf.h"
 
 #endif /*STANDALONE_REGISTRY*/
 
@@ -2050,6 +2051,10 @@ static REGERR nr_RegOpen( char *filename, HREG *hReg )
         /* ...other misc initialization */
         pReg->refCount = 0;
 
+#ifndef STANDALONE_REGISTRY
+        pReg->uniqkey = PR_Now();
+#endif
+
         status = nr_InitStdRkeys( pReg );
         if ( status == REGERR_OK ) {
             /* ...and add it to the list */
@@ -2254,6 +2259,51 @@ VR_INTERFACE(REGERR) NR_RegSetUsername(const char *name)
 
 
 
+#ifndef STANDALONE_REGISTRY
+/* ---------------------------------------------------------------------
+ * NR_RegGetUniqueName
+ * 
+ * Returns a unique name that can be used for anonymous key/value names
+ *
+ * Parameters:
+ *     hReg     - handle of open registry
+ *     outbuf   - where to put the string
+ *     buflen   - how big the buffer is
+ * ---------------------------------------------------------------------
+ */
+VR_INTERFACE(REGERR) NR_RegGetUniqueName(HREG hReg, char* outbuf, uint32 buflen)
+{
+    PRUint64    one;
+    PRUint64    tmp;
+    REGERR      err;
+    REGFILE*    reg;
+
+    /* verify parameters */
+    err = VERIFY_HREG( hReg );
+    if ( err != REGERR_OK )
+        return err;
+
+    reg = ((REGHANDLE*)hReg)->pReg;
+
+    if ( !outbuf )
+        return REGERR_PARAM;
+
+    if ( buflen <= (sizeof(PRUint64)*2) )
+        return REGERR_BUFTOOSMALL;
+
+    PR_snprintf(outbuf,buflen,"%llx",reg->uniqkey);
+
+    one = LL_INIT(0,1);
+    tmp = reg->uniqkey;
+
+    LL_ADD(reg->uniqkey, tmp, one);
+    return REGERR_OK;
+}
+#endif
+
+
+       
+       
 /* ---------------------------------------------------------------------
  * NR_RegOpen - Open a netscape XP registry
  *

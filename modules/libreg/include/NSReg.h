@@ -210,6 +210,25 @@ VR_INTERFACE(REGERR) NR_RegSetUsername(
          const char *name  /* name of current user */
        );
 
+
+/* ---------------------------------------------------------------------
+ * NR_RegGetUniqueName
+ * 
+ * Returns a unique name that can be used for anonymous key/value names
+ *
+ * Parameters:
+ *     hReg     - handle of open registry
+ *     outbuf   - where to put the string
+ *     buflen   - how big the buffer is
+ * ---------------------------------------------------------------------
+ */
+VR_INTERFACE(REGERR) NR_RegGetUniqueName(
+         HREG hReg,     /* handle of open registry */
+         char* outbuf,  /* buffer to hold key name */
+         uint32 buflen  /* size of buffer */
+       );
+
+
 /* ---------------------------------------------------------------------
  * DO NOT USE -- Will be removed 
  * ---------------------------------------------------------------------
