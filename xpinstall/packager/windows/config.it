@@ -376,7 +376,7 @@ no_ads=true
 silent=false
 execution=false
 confirm_install=false
-;extract_msg=Uncompressing Seamonkey.  Please wait...
+;extract_msg=Uncompressing Mozilla.  Please wait...
 
 [SmartDownload-Proxy]
 
@@ -912,48 +912,6 @@ Root Key=HKEY_LOCAL_MACHINE
 Key=Software\Mozilla
 Name=
 Name Value=
-Type=REG_SZ
-Decrypt Key=FALSE
-Decrypt Name=FALSE
-Decrypt Name Value=TRUE
-Overwrite Key=TRUE
-Overwrite Name=TRUE
-Timing=pre smartupdate
-
-[Windows Registry11]
-Root Key=HKEY_LOCAL_MACHINE
-;*** LOCALIZE ME BABY ***
-Key=Software\Mozilla\Seamonkey
-Name=CurrentVersion
-Name Value=$UserAgent$
-Type=REG_SZ
-Decrypt Key=FALSE
-Decrypt Name=FALSE
-Decrypt Name Value=TRUE
-Overwrite Key=TRUE
-Overwrite Name=TRUE
-Timing=pre smartupdate
-
-[Windows Registry12]
-Root Key=HKEY_LOCAL_MACHINE
-;*** LOCALIZE ME BABY ***
-Key=Software\Mozilla\Seamonkey\$UserAgent$
-Name=
-Name Value=
-Type=REG_SZ
-Decrypt Key=FALSE
-Decrypt Name=FALSE
-Decrypt Name Value=TRUE
-Overwrite Key=TRUE
-Overwrite Name=TRUE
-Timing=pre smartupdate
-
-[Windows Registry13]
-Root Key=HKEY_LOCAL_MACHINE
-;*** LOCALIZE ME BABY ***
-Key=Software\Mozilla\Seamonkey\$UserAgent$\Main
-Name=Program Folder Path
-Name Value=[Default Folder]
 Type=REG_SZ
 Decrypt Key=FALSE
 Decrypt Name=FALSE

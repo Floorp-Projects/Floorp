@@ -1,31 +1,21 @@
 function registerProgramFolderKey(winreg, fFolderPath)
 {
   var subkey;
-  var valname;
-  var value;
   var err;
 
   /* set the Program Folder Path in the Mozilla key in the Windows Registry */
-  subkey  = "SOFTWARE\\$CompanyName$";
-  winreg.createKey(subkey,"");
+  winreg.createKey("SOFTWARE\\$CompanyName$","");
 
-  valname = "CurrentVersion";
   subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$";
   winreg.createKey(subkey,"");
-
-  valname = "CurrentVersion";
-  value   = "$UserAgent$";
-  err     = winreg.setValueString(subkey, valname, value);
+  err     = winreg.setValueString(subkey, "CurrentVersion", "$UserAgent$");
 
   subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$";
   winreg.createKey(subkey,"");
 
   subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Main";
   winreg.createKey(subkey,"");
-
-  valname = "Program Folder Path";
-  value   = fFolderPath;
-  err     = winreg.setValueString(subkey, valname, value);
+  err     = winreg.setValueString(subkey, "Program Folder Path", fFolderPath);
 }
 
 function createShortcuts() 
@@ -80,8 +70,7 @@ function createShortcuts()
     /* determine if the script is running under NT or not */
     winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
     subkey              = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
-    valname             = "CurrentVersion";
-    szCurrentVersion    = winreg.getValueString(subkey, valname);
+    szCurrentVersion    = winreg.getValueString(subkey, "CurrentVersion");
     logComment("szCurrentVersion: " + szCurrentVersion);
     if((szCurrentVersion == "") || (szCurrentVersion == null))
     {
@@ -97,37 +86,27 @@ function createShortcuts()
     {
       winreg.setRootKey(winreg.HKEY_CURRENT_USER);
       subkey              = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders";
-      valname             = "Programs";
-      szStartMenuPrograms = winreg.getValueString(subkey, valname);
-      valname             = "Start Menu";
-      szStartMenu         = winreg.getValueString(subkey, valname);
-      valname             = "Desktop";
-      szFolderDesktop     = winreg.getValueString(subkey, valname);
-      valname             = "Startup";
-      szStartupFolder     = winreg.getValueString(subkey, valname);
+      szStartMenuPrograms = winreg.getValueString(subkey, "Programs");
+      szStartMenu         = winreg.getValueString(subkey, "Start Menu");
+      szFolderDesktop     = winreg.getValueString(subkey, "Desktop");
+      szStartupFolder     = winreg.getValueString(subkey, "Startup");
 	}
     else
     {
       winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
       subkey              = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders";
-      valname             = "Common Programs";
-      szStartMenuPrograms = winreg.getValueString(subkey, valname);
-      valname             = "Common Start Menu";
-      szStartMenu         = winreg.getValueString(subkey, valname);
-      valname             = "Common Desktop";
-      szFolderDesktop     = winreg.getValueString(subkey, valname);
-      valname             = "Common Startup";
-      szStartupFolder     = winreg.getValueString(subkey, valname);
+      szStartMenuPrograms = winreg.getValueString(subkey, "Common Programs");
+      szStartMenu         = winreg.getValueString(subkey, "Common Start Menu");
+      szFolderDesktop     = winreg.getValueString(subkey, "Common Desktop");
+      szStartupFolder     = winreg.getValueString(subkey, "Common Startup");
    }
 
     winreg.setRootKey(winreg.HKEY_CURRENT_USER);
     subkey              = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders";
-    valname             = "SendTo";
-    szFolderSendTo      = winreg.getValueString(subkey, valname);
+    szFolderSendTo      = winreg.getValueString(subkey, "SendTo");
 
     subkey              = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders";
-    valname             = "AppData";
-    szFolderAppData     = winreg.getValueString(subkey, valname);
+    szFolderAppData     = winreg.getValueString(subkey, "AppData");
 
     // locate the Quick Launch folder
     szFolderQuickLaunch     = szFolderAppData + "\\Microsoft\\Internet Explorer\\Quick Launch";
@@ -136,8 +115,7 @@ function createShortcuts()
     if(!folderQuickLaunchExists)
     {
       subkey                  = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\GrpConv\\MapGroups";
-      valname                 = "Quick Launch";
-      szFolderQuickLaunch     = winreg.getValueString(subkey, valname);
+      szFolderQuickLaunch     = winreg.getValueString(subkey, "Quick Launch");
       folderQuickLaunchExists = File.isDirectory(fFolderPath);
       if(folderQuickLaunchExists)
         fFolderQuickLaunch = getFolder("file:///", szFolderQuickLaunch);
@@ -145,8 +123,7 @@ function createShortcuts()
     logComment("folderQuickLaunchExists: " + folderQuickLaunchExists);
 
     subkey              = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Main";
-    valname             = "Program Folder Path";
-    fFolderPathStr      = winreg.getValueString(subkey, valname);
+    fFolderPathStr      = winreg.getValueString(subkey, "Program Folder Path");
     if((fFolderPathStr == "") || (fFolderPathStr == null))
     {
       fTemp       = szStartMenuPrograms + "\\" + scFolderName;
@@ -214,8 +191,7 @@ function createShortcuts()
     }
 
     subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Setup";
-    valname = "browserargs";
-    regvalue = winreg.getValueString(subkey, valname);
+    regvalue = winreg.getValueString(subkey, "browserargs");
 
     /* log this so if the user turns on turbo mode in the browser the uninstaller will undo it */
 
@@ -261,13 +237,11 @@ function IsWinnt()
    */
   var winreg = getWinRegistry();
   var subkey;
-  var valname;
   var szCurrentVersion;
 
   winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
   subkey              = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
-  valname             = "CurrentVersion";
-  szCurrentVersion    = winreg.getValueString(subkey, valname);
+  szCurrentVersion    = winreg.getValueString(subkey, "CurrentVersion");
   logComment("szCurrentVersion: " + szCurrentVersion);
   if((szCurrentVersion == "") || (szCurrentVersion == null))
   {
@@ -282,18 +256,14 @@ function IsWinnt()
 function registerMainKeys(winreg)
 {
   var subkey;  //the name of the subkey you are poking around in
-  var valname; //the name of the value you want to look at
-  var value;   //the data in the value you want to look at.
+  var data;
   var err;
 
-  subkey  = "SOFTWARE\\$CompanyName$";
-  winreg.createKey(subkey,"");
+  winreg.createKey("SOFTWARE\\$CompanyName$","");
 
   subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$";
   winreg.createKey(subkey,"");
-  valname = "CurrentVersion";
-  value   = "$UserAgent$";
-  err     = winreg.setValueString(subkey, valname, value);
+  err     = winreg.setValueString(subkey, "CurrentVersion", "$UserAgent$");
 
   subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$";
   winreg.createKey(subkey,"");
@@ -301,9 +271,7 @@ function registerMainKeys(winreg)
   subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Main";
   winreg.createKey(subkey,"");
 
-  valname = "Install Directory";
-  value   = fProgram;
-  err     = winreg.setValueString(subkey, valname, value);
+  err     = winreg.setValueString(subkey, "Install Directory", fProgram);
 
   // The following keys are required to be created to supply information
   // about the location of the Gecko Embedded Client to 3rd party apps.
@@ -314,47 +282,15 @@ function registerMainKeys(winreg)
 
   subkey  = "SOFTWARE\\Mozilla\\$ProductName$ $UserAgentShort$\\Extensions";
   winreg.createKey(subkey,"");
-
-  valname = "Components";
-  value   = fProgram + "Components";
-  err     = winreg.setValueString(subkey, valname, value);
-
-  valname = "Plugins";
-  value   = fProgram + "Plugins";
-  err     = winreg.setValueString(subkey, valname, value);
+  err     = winreg.setValueString(subkey, "Components", fProgram + "Components");
+  err     = winreg.setValueString(subkey, "Plugins", fProgram + "Plugins");
 
   subkey  = "SOFTWARE\\Mozilla\\$ProductName$ $UserAgentShort$\\bin";
   winreg.createKey(subkey,"");
-
-  valname = "PathToExe";
-  value   = fProgram + "$MainExeFile$";
-  err     = winreg.setValueString(subkey, valname, value);
+  err     = winreg.setValueString(subkey, "PathToExe", fProgram + "$MainExeFile$");
 
   subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Main";
-  winreg.setValueString(subkey, valname, value);
-
-  // We need to set HKEY...\Software\Mozilla\Seamonkey\[ua]\Main
-  // because Sun's Java installer keys off of this key to locate mozilla's
-  // installation directory and populate it with java plugins.
-  // "SOFTWARE\\Mozilla\Seamonkey" must not be localized!
-  subkey  = "SOFTWARE\\Mozilla";
-  winreg.createKey(subkey,"");
-
-  subkey  = "SOFTWARE\\Mozilla\\Seamonkey";
-  winreg.createKey(subkey,"");
-  valname = "CurrentVersion";
-  value   = "$UserAgent$";
-  err     = winreg.setValueString(subkey, valname, value);
-
-  subkey  = "SOFTWARE\\Mozilla\\Seamonkey\\$UserAgent$";
-  winreg.createKey(subkey,"");
-
-  subkey  = "SOFTWARE\\Mozilla\\Seamonkey\\$UserAgent$\\Main";
-  winreg.createKey(subkey,"");
-
-  valname = "Install Directory";
-  value   = fProgram;
-  err     = winreg.setValueString(subkey, valname, value);
+  err     = winreg.setValueString(subkey, "PathToExe", fProgram + "$MainExeFile$");
 
   // Register as a windows XP internet browser
   if( IsWinnt() )
@@ -368,34 +304,25 @@ function registerMainKeys(winreg)
     winreg.createKey(subkey + "\\shell\\open", "");
     winreg.createKey(subkey + "\\shell\\open\\command", "");
     winreg.createKey(subkey + "\\InstallInfo", "");
+    winreg.setValueString(subkey, "", "$ProductNameInternal$");
 
-    valname = "";
-    data = "$ProductNameInternal$";
-    winreg.setValueString(subkey, valname, data);
-
-    valname = "";
     // path does not need to be quoted per MS doc
     data = fProgram + "$MainExeFile$,0";
-    winreg.setValueString(subkey + "\\DefaultIcon", valname, data);
+    winreg.setValueString(subkey + "\\DefaultIcon", "", data);
 
-    valname = "";
     data = "\"" + fProgram + "$MainExeFile$\"";
-    winreg.setValueString(subkey + "\\shell\\open\\command", valname, data);
+    winreg.setValueString(subkey + "\\shell\\open\\command", "", data);
 
-    valname = "HideIconsCommand";
-    data = "\"" + fProgram + "uninstall\\NSUninst.exe\" /ms /ua \"$UserAgent$\" /hs browser";
-    winreg.setValueString(subkey + "\\InstallInfo", valname, data);
+    data = "\"" + fProgram + "uninstall\\$UninstallFile$\" /ms /ua \"$UserAgent$\" /hs browser";
+    winreg.setValueString(subkey + "\\InstallInfo", "HideIconsCommand", data);
 
-    valname = "IconsVisible";
-    winreg.setValueNumber(subkey + "\\InstallInfo", valname, 1);
+    winreg.setValueNumber(subkey + "\\InstallInfo", "IconsVisible", 1);
 
-    valname = "ReinstallCommand";
     data = "\"" + fProgram + "$MainExeFile$\" -silent -nosplash -setDefaultBrowser ";
-    winreg.setValueString(subkey + "\\InstallInfo", valname, data);
+    winreg.setValueString(subkey + "\\InstallInfo", "ReinstallCommand", data);
 
-    valname = "ShowIconsCommand";
-    data = "\"" + fProgram + "uninstall\\NSUninst.exe\" /ms /ua \"$UserAgent$\" /ss browser";
-    winreg.setValueString(subkey + "\\InstallInfo", valname, data);
+    data = "\"" + fProgram + "uninstall\\$UninstallFile$\" /ms /ua \"$UserAgent$\" /ss browser";
+    winreg.setValueString(subkey + "\\InstallInfo", "ShowIconsCommand", data);
   }
 }
 
@@ -406,8 +333,6 @@ function updateWinReg()
   // subkeys have to exist before values can be put in.
   var winreg = getWinRegistry();
   var subkey;  //the name of the subkey you are poking around in
-  var valname; //the name of the value you want to look at
-  var value;   //the data in the value you want to look at.
   var err;
   var ikwDefined;
 
@@ -438,13 +363,8 @@ function updateWinReg()
       // set the App Paths key here
       subkey  = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\$MainExeFile$";
       winreg.createKey(subkey,"");
-      valname = "";
-      value   = fProgram + "$MainExeFile$";
-      err     = winreg.setValueString(subkey, valname, value);
-
-      valname = "Path";
-      value   = fProgram;
-      err     = winreg.setValueString(subkey, valname, value);
+      err     = winreg.setValueString(subkey, "", fProgram + "$MainExeFile$");
+      err     = winreg.setValueString(subkey, "Path", fProgram);
     }
 
     winreg.setRootKey(winreg.HKEY_CURRENT_USER);
