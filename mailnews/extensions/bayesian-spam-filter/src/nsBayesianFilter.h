@@ -52,7 +52,8 @@ public:
     ~Tokenizer();
     
     Token* get(const char* word);
-    void remove(const char* word);
+    Token* add(const char* word, PRUint32 count = 1);
+    void remove(const char* word, PRUint32 count = 1);
     
     PRUint32 countTokens() { return mTokens.Count(); }
     Token** getTokens();
