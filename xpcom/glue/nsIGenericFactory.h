@@ -62,7 +62,7 @@ NS_NewGenericFactory(nsIGenericFactory* *result,
                      nsIGenericFactory::DestructorProcPtr destructor = NULL);
 
 #define NS_GENERIC_FACTORY_CONSTRUCTOR(_InstanceClass)                          \
-static nsresult                                                                 \
+static NS_IMETHODIMP                                                            \
 _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID, void **aResult) \
 {                                                                               \
     nsresult rv;                                                                \
