@@ -65,7 +65,6 @@ components/layout_xul.xpt
 components/content_base.xpt
 
 ; Imaging:
-libmozjpeg.so
 libmozz.so
 components/libimglib2.so
 components/imglib2.xpt
