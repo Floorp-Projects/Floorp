@@ -7,7 +7,8 @@
 extern const NSSize buttonSize, iconSize;
 extern const unsigned int titleBaseline, iconBaseline, bottomBorder;
 
-@interface MVPreferencesMultipleIconView : NSView {
+@interface MVPreferencesMultipleIconView : NSView
+{
 	IBOutlet MVPreferencesController *preferencesController;
 	unsigned int pressedIconIndex, focusedIndex;
 	int tag;

@@ -44,6 +44,15 @@
 #import "MainController.h"
 #import "BrowserWindowController.h"
 
+
+@interface BrowserTabViewItem(Private)
+- (void)buildTabContents;
+- (void)relocateTabContents:(NSRect)inRect;
+- (BOOL)draggable;
+@end
+
+#pragma mark -
+
 @interface NSBezierPath (ChimeraBezierPathUtils)
 
 + (NSBezierPath*)bezierPathWithRoundCorneredRect:(NSRect)rect cornerRadius:(float)cornerRadius;
@@ -85,38 +94,80 @@
 
 #pragma mark -
 
-@interface NSTruncatingTextCell : NSCell
+// XXX move this to a new file
+@interface NSTruncatingTextAndImageCell : NSCell
 {
+  NSImage         *mImage;
   NSMutableString *mTruncLabelString;
   int             mLabelStringWidth;      // -1 if not known
+  float           mImagePadding;
+  float           mImageSpace;
+  float           mImageAlpha;
 }
 
 - (id)initTextCell:(NSString*)aString;
 - (void)drawInteriorWithFrame:(NSRect)cellFrame inView:(NSView*)controlView;
 
+- (void)setImagePadding:(float)padding;
+- (void)setImageSpace:(float)space;
+- (void)setImageAlpha:(float)alpha;
+
+- (void)setImage:(NSImage *)anImage;
+- (NSImage *)image;
+
 @end
 
-@implementation NSTruncatingTextCell
+@implementation NSTruncatingTextAndImageCell
 
 - (id)initTextCell:(NSString*)aString
 {
   if ((self = [super initTextCell:aString]))
   {
-    mTruncLabelString = nil;
     mLabelStringWidth = -1;
+    mImagePadding = 0;
+    mImageSpace = 2;
   }
   return self;
 }
 
 - (void)dealloc
 {
+  [mImage release];
   [mTruncLabelString release];
   [super dealloc];
 }
 
+- copyWithZone:(NSZone *)zone
+{
+    NSTruncatingTextAndImageCell *cell = (NSTruncatingTextAndImageCell *)[super copyWithZone:zone];
+    cell->mImage = [mImage retain];
+    cell->mTruncLabelString = nil;
+    cell->mLabelStringWidth = -1;
+    return cell;
+}
+
 - (void)drawInteriorWithFrame:(NSRect)cellFrame inView:(NSView*)controlView
 {
-  int          cellWidth       = (int)NSWidth(cellFrame);
+  NSRect textRect = cellFrame;
+  NSRect imageRect;
+
+  // we always reserve space for the image, even if there isn't one
+  // assume the image rect is always square
+  float imageWidth = NSHeight(cellFrame) - 2 * mImagePadding;
+  NSDivideRect(cellFrame, &imageRect, &textRect, imageWidth, NSMinXEdge);
+  
+  if (mImage)
+  {
+    NSRect imageSrcRect = NSZeroRect;
+    imageSrcRect.size = [mImage size];    
+    [mImage drawInRect:NSInsetRect(imageRect, mImagePadding, mImagePadding)
+          fromRect:imageSrcRect operation:NSCompositeSourceOver fraction:mImageAlpha];
+  }
+  
+  // remove image space
+  NSDivideRect(textRect, &imageRect, &textRect, mImageSpace, NSMinXEdge);
+
+  int          cellWidth       = (int)NSWidth(textRect);
   NSDictionary *cellAttributes = [[self attributedStringValue] attributesAtIndex:0 effectiveRange:nil];
 
   if (mLabelStringWidth != cellWidth || !mTruncLabelString)
@@ -127,7 +178,7 @@
     mLabelStringWidth = cellWidth;
   }
   
-  [mTruncLabelString drawInRect:cellFrame withAttributes:cellAttributes];
+  [mTruncLabelString drawInRect:textRect withAttributes:cellAttributes];
 }
 
 - (void)setStringValue:(NSString *)aString
@@ -150,6 +201,35 @@
   [super setAttributedStringValue:attribStr];
 }
 
+- (void)setImage:(NSImage *)anImage 
+{
+  if (anImage != mImage)
+  {
+    [mImage release];
+    mImage = [anImage retain];
+  }
+}
+
+- (NSImage *)image
+{
+  return mImage;
+}
+
+- (void)setImagePadding:(float)padding
+{
+  mImagePadding = padding;
+}
+
+- (void)setImageSpace:(float)space
+{
+  mImageSpace = space;
+}
+
+- (void)setImageAlpha:(float)alpha
+{
+  mImageAlpha = alpha;
+}
+
 @end
 
 #pragma mark -
@@ -158,15 +238,14 @@
 // NSView to handle drag and drop
 @interface BrowserTabItemContainerView : NSView
 {
-  NSTabViewItem* mTabViewItem;
-  NSImageCell*   mIconCell;
-  NSCell*        mLabelCell;
+  BrowserTabViewItem*           mTabViewItem;
+  NSTruncatingTextAndImageCell* mLabelCell;
   
   BOOL           mIsDropTarget;
+  BOOL           mSelectTabOnMouseUp;
 }
 
-- (NSCell*)iconCell;
-- (NSCell*)labelCell;
+- (NSTruncatingTextAndImageCell*)labelCell;
 
 - (void)showDragDestinationIndicator;
 - (void)hideDragDestinationIndicator;
@@ -181,15 +260,11 @@
   {
     mTabViewItem = tabViewItem;
 
-    mIconCell  = [[NSImageCell alloc] initImageCell:nil];
-    [mIconCell setImageAlignment:NSImageAlignCenter];
-    [mIconCell setImageScaling:NSScaleProportionally];
-
-    mLabelCell = [[NSTruncatingTextCell alloc] init];
+    mLabelCell = [[NSTruncatingTextAndImageCell alloc] init];
     [mLabelCell setControlSize:NSSmallControlSize];		// doesn't work?
+    [mLabelCell setImagePadding:0.0];
+    [mLabelCell setImageSpace:2.0];
     
-    //[mIconCell setCellAttribute:NSChangeBackgroundCell to:(NSChangeGrayCellMask | NSChangeBackgroundCellMask)];
-
     [self registerForDraggedTypes:[NSArray arrayWithObjects:
         @"MozURLType", @"MozBookmarkType", NSStringPboardType, NSFilenamesPboardType, nil]];
   }
@@ -198,37 +273,23 @@
 
 - (void)dealloc
 {
-  NSLog(@"BrowserTabItemContainerView dealloc");
-
-  [mIconCell release];
   [mLabelCell release];
   [super dealloc];
 }
 
-- (NSCell*)iconCell
-{
-  return mIconCell;
-}
-
-- (NSCell*)labelCell
+- (NSTruncatingTextAndImageCell*)labelCell
 {
   return mLabelCell;
 }
 
-
 - (void)drawRect:(NSRect)aRect
 {
-  NSRect tabRect = [self frame];
-  
-  [mIconCell  drawWithFrame: NSMakeRect(1, 1, 14, 14) inView:self];
-  [mLabelCell drawWithFrame: NSMakeRect(18, 0, tabRect.size.width - 18, 16) inView:self];
+  [mLabelCell drawWithFrame:[self bounds] inView:self];
   
   if (mIsDropTarget)
   {
-    NSRect	hilightRect = NSOffsetRect(NSInsetRect(aRect, 1.0, 0), -1.0, 0);
+    NSRect	hilightRect = NSOffsetRect(NSInsetRect([self bounds], 1.0, 0), -1.0, 0);
     NSBezierPath* dropTargetOutline = [NSBezierPath bezierPathWithRoundCorneredRect:hilightRect cornerRadius:4.0];
-
-    //[[[NSColor colorForControlTint:NSDefaultControlTint] colorWithAlphaComponent:0.15] set];
     [[NSColor colorWithCalibratedWhite:0.0 alpha:0.15] set];
     [dropTargetOutline fill];
   }
@@ -309,8 +370,7 @@
     return NO;
 
   // let the tab view handle it
-  BOOL accepted =  [[mTabViewItem tabView] performDragOperation:sender];
-  return accepted;
+  return [[mTabViewItem tabView] performDragOperation:sender];
 }
 
 #pragma mark -
@@ -328,11 +388,29 @@
   NSRect  iconRect   = NSMakeRect(0, 0, 16, 16);
   NSPoint localPoint = [self convertPoint: [theEvent locationInWindow] fromView: nil];
   
+  // this is a bit evil. Because the tab view's mouseDown captures the mouse, we'll
+  // never get to mouseDragged if we allow the next responder (the tab view) to
+  // handle the mouseDown. This prevents dragging from background tabs. So we break
+  // things slightly by intercepting the mouseDown on the icon, so that our mouseDragged
+  // gets called. If the users didn't drag, we select the tab in the mouse up.
+  if (NSPointInRect(localPoint, iconRect) && [mTabViewItem draggable])
+  {
+    mSelectTabOnMouseUp = YES;
+    return;		// we want dragging
+  }
+  
+  mSelectTabOnMouseUp = NO;
   [[self nextResponder] mouseDown:theEvent];
 }
 
 - (void)mouseUp:(NSEvent *)theEvent
 {
+  if (mSelectTabOnMouseUp)
+  {
+    [[mTabViewItem tabView] selectTabViewItem:mTabViewItem];
+    mSelectTabOnMouseUp = NO;
+  }
+  
   [[self nextResponder] mouseUp:theEvent];
 }
 
@@ -341,9 +419,14 @@
   NSRect  iconRect   = NSMakeRect(0, 0, 16, 16);
   NSPoint localPoint = [self convertPoint: [theEvent locationInWindow] fromView: nil];
 
-  if (!NSPointInRect(localPoint, iconRect))
+  if (!NSPointInRect(localPoint, iconRect) || ![mTabViewItem draggable])
+  {
+    [[self nextResponder] mouseDragged:theEvent];
     return;
+  }
   
+  mSelectTabOnMouseUp = NO;
+
   CHBrowserView* browserView = (CHBrowserView*)[mTabViewItem view];
   
   NSString     *url = [browserView getCurrentURLSpec];
@@ -368,7 +451,7 @@
   NSPoint dragOrigin = [self frame].origin;
   dragOrigin.y += [self frame].size.height;
   
-  [self dragImage: [MainController createImageForDragging:[mIconCell image] title:title]
+  [self dragImage: [MainController createImageForDragging:[mLabelCell image] title:title]
                     at:NSMakePoint(0, 0) offset:NSMakeSize(0, 0)
                     event:theEvent pasteboard:pboard source:self slideBack:YES];
 }
@@ -376,11 +459,6 @@
 @end
 
 #pragma mark -
-
-@interface BrowserTabViewItem(Private)
-- (void)buildTabContents;
-- (void)relocateTabContents:(NSRect)inRect;
-@end
 
 @implementation BrowserTabViewItem
 
@@ -390,6 +468,7 @@
   {
     mTabContentsView = [[BrowserTabItemContainerView alloc]
                             initWithFrame:NSMakeRect(0, 0, 100, 16) andTabItem:self];
+    mDraggable = NO;
   }
   return self;
 }
@@ -433,6 +512,11 @@
   [mTabContentsView setFrame:inRect];
 }
 
+- (BOOL)draggable
+{
+  return mDraggable;
+}
+
 -(void)drawLabel:(BOOL)shouldTruncateLabel inRect:(NSRect)tabRect
 {
   [self relocateTabContents:tabRect];
@@ -460,7 +544,14 @@
 -(void)setTabIcon:(NSImage *)newIcon
 {
   [super setTabIcon:newIcon];
-  [[mTabContentsView iconCell] setImage:mTabIcon];  
+  [[mTabContentsView labelCell] setImage:mTabIcon];  
+}
+
+- (void)setTabIcon:(NSImage *)newIcon isDraggable:(BOOL)draggable
+{
+  [self setTabIcon:newIcon];
+  mDraggable = draggable;
+  [[mTabContentsView labelCell] setImageAlpha:(draggable ? 1.0 : 0.6)];  
 }
 
 @end

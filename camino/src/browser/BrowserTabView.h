@@ -24,6 +24,7 @@
 {
   BOOL autoHides;
   BOOL mIsDropTarget;
+  BOOL mLastClickIsPotentialDrag;
   int  maxNumberOfTabs;			// 0 means 'no max'
 }
 

@@ -629,12 +629,16 @@ const NSString* kOfflineNotificationName = @"offlineModeChanged";
 - (void)updateSiteIconImage:(NSImage*)inSiteIcon withURI:(NSString *)inSiteIconURI
 {
   BOOL resetTabIcon = NO;
+  BOOL tabIconDraggable = YES;
   
   if (![mSiteIconURI isEqualToString:inSiteIconURI])
   {
     if (!inSiteIcon)
     {
-      if (![inSiteIconURI isEqualToString:@"about:blank"])
+      if ([inSiteIconURI isEqualToString:@"about:blank"]) {
+        inSiteIcon = [NSImage imageNamed:@"smallDocument"];
+        tabIconDraggable = NO;
+      } else
         inSiteIcon = [NSImage imageNamed:@"globe_ico"];
     }
 
@@ -653,7 +657,7 @@ const NSString* kOfflineNotificationName = @"offlineModeChanged";
   {
     BrowserTabViewItem* tabItem = (BrowserTabViewItem*)mTabItem;
     if (resetTabIcon || ![tabItem tabIcon])
-      [tabItem setTabIcon:mSiteIconImage];
+      [tabItem setTabIcon:mSiteIconImage isDraggable:tabIconDraggable];
   }
   
 }
