@@ -64,9 +64,10 @@ public:
   nsresult Init();
                            
 protected:
-  nsresult notifyObservers(const char *aSubject);
-  nsresult useDefaultPrefFile();
-  nsresult useUserPrefFile();
+  nsresult NotifyServiceObservers(const char *aSubject);
+  nsresult UseDefaultPrefFile();
+  nsresult UseUserPrefFile();
+  nsresult WritePrefFile(nsIFile* aFile);
 
 private:
   nsCOMPtr<nsIPrefBranch> mRootBranch;

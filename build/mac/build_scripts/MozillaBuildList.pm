@@ -131,10 +131,6 @@ sub InstallDefaultsFiles()
     my($default_pref_dir) = "$defaults_dir"."Pref:";
     mkdir($default_pref_dir, 0);
     InstallResources(":mozilla:xpinstall:public:MANIFEST_PREFS",                       "$default_pref_dir", 0);
-    InstallResources(":mozilla:modules:libpref:src:MANIFEST_PREFS",                    "$default_pref_dir", 0);
-    if ($main::DEBUG) {
-        InstallResources(":mozilla:modules:libpref:src:MANIFEST_DEBUG_PREFS",          "$default_pref_dir", 0);
-    }
     InstallResources(":mozilla:modules:libpref:src:init:MANIFEST",                     "$default_pref_dir", 0);
     InstallResources(":mozilla:modules:libpref:src:mac:MANIFEST",                      "$default_pref_dir", 0);
     InstallResources(":mozilla:netwerk:base:public:MANIFEST_PREFS",                    "$default_pref_dir", 0);
@@ -153,6 +149,7 @@ sub InstallDefaultsFiles()
     my($default_autoconfig_dir) = "$defaults_dir"."autoconfig:";
     mkdir($default_autoconfig_dir, 0);
     InstallResources(":mozilla:extensions:pref:autoconfig:src:MANIFEST", "$default_autoconfig_dir");
+    InstallResources(":mozilla:extensions:pref:autoconfig:src:mac:MANIFEST", "$default_autoconfig_dir");
     }
 
     print("--- Defaults copying complete ----\n");

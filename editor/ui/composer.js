@@ -44,11 +44,11 @@ pref("editor.active_link_color",            "#000088");
 pref("editor.followed_link_color",          "#FF0000");
 pref("editor.background_color",             "#FFFFFF");
 pref("editor.use_background_image",         false);
-localDefPref("editor.background_image",     "");
+pref("editor.background_image",             "");
 pref("editor.use_custom_default_colors", 1);
 
-localDefPref("editor.hrule.height",         2);
-localDefPref("editor.hrule.width",          100);
+pref("editor.hrule.height",                 2);
+pref("editor.hrule.width",                  100);
 pref("editor.hrule.width_percent",          true);
 pref("editor.hrule.shading",                true);
 pref("editor.hrule.align",                  1); // center

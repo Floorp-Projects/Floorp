@@ -44,14 +44,3 @@ PLDHashOperator PR_CALLBACK pref_savePref(PLDHashTable*, PLDHashEntryHdr *, PRUi
 
 int PR_CALLBACK pref_CompareStrings(const void *v1, const void *v2, void* unused);
 extern JSBool pref_InitInitialObjects(void);
-
-#include "nsIFileSpec.h"
-
-#ifdef XP_MAC
-#  define LINEBREAK           "\012"
-#elif defined(XP_WIN) || defined(XP_OS2)
-#  define LINEBREAK           "\015\012"
-#elif defined(XP_UNIX) || defined(XP_BEOS)
-#  define LINEBREAK           "\012"
-#endif /* XP_MAC */
-
