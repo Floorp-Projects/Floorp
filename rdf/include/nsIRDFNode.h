@@ -45,9 +45,12 @@
  *
  */
 
-// Guha : would be very useful to declare an Equals method on this
 class nsIRDFNode : public nsISupports {
 public:
+    /**
+     * Determine if two nodes are identical
+     */
+    NS_IMETHOD EqualsNode(nsIRDFNode* that, PRBool* result) const = 0;
 };
 
 
@@ -83,7 +86,7 @@ public:
     /**
      * Determine if two resources are identical.
      */
-    NS_IMETHOD Equals(const nsIRDFLiteral* literal, PRBool* result) const = 0;
+    NS_IMETHOD EqualsLiteral(const nsIRDFLiteral* literal, PRBool* result) const = 0;
 };
 
 // {E0C493D2-9542-11d2-8EB8-00805F29F370}
