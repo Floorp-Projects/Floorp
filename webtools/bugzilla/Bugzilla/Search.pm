@@ -38,6 +38,7 @@ package Bugzilla::Search;
 use Bugzilla::Util;
 
 use Date::Format;
+use Date::Parse;
 
 # Create a new Search
 sub new {
@@ -314,7 +315,7 @@ sub init {
          "^long_?desc," => sub {
              my $table = "longdescs_$chartid";
              push(@supptables, "longdescs $table");
-             if (Param("insidergroup") && !UserInGroup(Param("insidergroup"))) {
+             if (&::Param("insidergroup") && !&::UserInGroup(&::Param("insidergroup"))) {
                  push(@wherepart, "$table.isprivate < 1") ;
              }
              push(@wherepart, "$table.bug_id = bugs.bug_id");
