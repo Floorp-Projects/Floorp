@@ -1204,7 +1204,7 @@ nsresult COtherDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNo
       CParserContext*   pc=mParser->PeekContext();
       void*             theDocID=(pc)? pc->mKey:0;
     
-      result=theService->Notify(aTag,aNode,(PRUint32)theDocID, NS_ConvertToString(kHTMLTextContentType), mParser);                            
+      result=theService->Notify(aTag,aNode,theDocID, NS_ConvertToString(kHTMLTextContentType), mParser);
     }
   }
 

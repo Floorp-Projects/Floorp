@@ -899,8 +899,14 @@ public:
   registering tags.
  **************************************************************/
 
-nsObserverTopic::nsObserverTopic(const nsString& aTopic) : mTopic(aTopic){
-  nsCRT::zero(mObservers,sizeof(mObservers));
+nsObserverTopic::nsObserverTopic(const nsString& aTopic) : mTopic(aTopic),
+                                                           mKeys(0),
+                                                           mValues(0) {
+
+   nsCRT::zero(mObservers,sizeof(mObservers));
+   mCharsetKey.AssignWithConversion("charset");
+   mSourceKey.AssignWithConversion("charsetSource");
+   mDTDKey.AssignWithConversion("X_COMMAND");
 }
 
 nsObserverTopic::~nsObserverTopic() {
@@ -951,7 +957,7 @@ void nsObserverTopic::RegisterObserverForTag(nsIElementObserver *anObserver,eHTM
  * @param  aCharsetSource  -
  * @return if SUCCESS return NS_OK else return ERROR code.
  */
-nsresult nsObserverTopic::Notify(eHTMLTags aTag,nsIParserNode& aNode,PRUint32 aUniqueID,nsIParser* aParser) {
+nsresult nsObserverTopic::Notify(eHTMLTags aTag,nsIParserNode& aNode,void* aUniqueID,nsIParser* aParser) {
   nsresult  result=NS_OK;
 
   nsDeque*  theDeque=GetObserversForTag(aTag);
@@ -964,44 +970,31 @@ nsresult nsObserverTopic::Notify(eHTMLTags aTag,nsIParserNode& aNode,PRUint32 aU
     PRInt32 theAttrCount =aNode.GetAttributeCount(); 
     PRUint32 theDequeSize=theDeque->GetSize(); 
     if(0<theDequeSize){
-      PRInt32 index = 0; 
-      const PRUnichar* theKeys[50]  = {0,0,0,0,0}; // XXX -  should be dynamic
-      const PRUnichar* theValues[50]= {0,0,0,0,0}; // XXX -  should be dynamic
-      for(index=0; index<theAttrCount && index < 50; index++) {
-        theKeys[index]   = aNode.GetKeyAt(index).GetUnicode(); 
-        theValues[index] = aNode.GetValueAt(index).GetUnicode(); 
+      mKeys.Empty();
+      mValues.Empty();
+      int index = 0; 
+      for(index=0; index<theAttrCount; index++) {
+        mKeys.Push((PRUnichar*)aNode.GetKeyAt(index).GetUnicode()); 
+        mValues.Push((PRUnichar*)aNode.GetValueAt(index).GetUnicode()); 
       } 
-      nsAutoString theCharsetKey; theCharsetKey.AssignWithConversion("charset"); 
-      nsAutoString theSourceKey; theSourceKey.AssignWithConversion("charsetSource"); 
+
       nsAutoString intValue;
       
       // Add pseudo attribute in the end
 
-      if(index>=47) index=47;  //XXX HACK HACK HACK!!!!! 
-                               //We really need to do a better job with attributes here.
+      mKeys.Push((PRUnichar*)mCharsetKey.GetUnicode()); 
+      mValues.Push((PRUnichar*)theCharsetValue.GetUnicode());
+      
+        
+      mKeys.Push((PRUnichar*)mSourceKey.GetUnicode()); 
+      intValue.Append(PRInt32(theCharsetSource),10);
+      mValues.Push((PRUnichar*)intValue.GetUnicode());
 
+      mKeys.Push((PRUnichar*)mDTDKey.GetUnicode());
+      mValues.Push((PRUnichar*)mTopic.GetUnicode());
 
-      if(index < 50) {
-        theKeys[index]=theCharsetKey.GetUnicode(); 
-        theValues[index] = theCharsetValue.GetUnicode();
-        index++;
-      }
-      if(index < 50) {
-        theKeys[index]=theSourceKey.GetUnicode(); 
-        PRInt32 sourceInt = theCharsetSource;
-        intValue.AppendWithConversion(sourceInt,10);
-        theValues[index] = intValue.GetUnicode();
-	  	  index++;
-      }
-      nsAutoString theDTDKey; theDTDKey.AssignWithConversion("X_COMMAND");
-      // nsAutoString theDTDValue(aCommand);
-      if(index < 50) {
-        theKeys[index]=theDTDKey.GetUnicode();
-        theValues[index]=mTopic.GetUnicode();
-        index++;
-      }
       nsAutoString theTagStr(nsHTMLTags::GetStringValue(aTag));
-      nsObserverNotifier theNotifier(theTagStr.GetUnicode(),aUniqueID,index,theKeys,theValues);
+      nsObserverNotifier theNotifier(theTagStr.GetUnicode(),(nsISupports*)aUniqueID,&mKeys,&mValues);
       theDeque->FirstThat(theNotifier); 
       result=theNotifier.mResult; 
      }//if 
@@ -1145,7 +1138,7 @@ void CObserverService::UnregisterObservers(const nsString& aTopic) {
  */
 nsresult CObserverService::Notify(  eHTMLTags aTag,
                                     nsIParserNode& aNode,
-                                    PRUint32 aUniqueID, 
+                                    void* aUniqueID, 
                                     const nsString& aTopic,
                                     nsIParser* aParser) {
   nsresult  result=NS_OK;

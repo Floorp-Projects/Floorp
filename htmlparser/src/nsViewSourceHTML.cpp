@@ -902,7 +902,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
           void*             theDocID=(pc)? pc->mKey:0; 
           eHTMLTags         theTag=(eHTMLTags)theToken->GetTypeID();  
 
-          result=theService->Notify(theTag,theContext.mTokenNode,(PRUint32)theDocID, NS_ConvertToString(kViewSourceCommand), mParser);
+          result=theService->Notify(theTag,theContext.mTokenNode,theDocID, NS_ConvertToString(kViewSourceCommand), mParser);
         }
       }
       theContext.mTokenNode.Init(0,0,gTokenRecycler);  //now recycle.

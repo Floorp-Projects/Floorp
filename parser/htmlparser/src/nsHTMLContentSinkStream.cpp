@@ -128,6 +128,7 @@ nsHTMLContentSinkStream::nsHTMLContentSinkStream()
   mBufferSize = 0;
   mBufferLength = 0;
   mFlags = 0;
+  mHasOpenHtmlTag=PR_FALSE;
 }
 
 NS_IMETHODIMP
@@ -512,14 +513,21 @@ nsHTMLContentSinkStream::OpenHTML(const nsIParserNode& aNode)
   eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
   if (tag == eHTMLTag_html)
   {
-    // See bug 20246: the html tag doesn't have "html" in its text,
-    // so AddStartTag will do the wrong thing
-    Write(kLessThan);
-    
-    nsString temp; temp.AssignWithConversion(nsHTMLTags::GetStringValue(tag));
-    nsAutoCString tagname(temp);
-    Write(tagname);
-    Write(kGreaterThan);
+    if(!mHasOpenHtmlTag) {
+      AddStartTag(aNode);
+      mHasOpenHtmlTag=PR_TRUE;
+    }
+    else {
+      PRInt32 ac=aNode.GetAttributeCount();
+      if(ac>0) {
+        Write(kLessThan);
+        nsAutoString tagname;
+        tagname.AssignWithConversion(nsHTMLTags::GetStringValue(tag));
+        Write(tagname);
+        WriteAttributes(aNode);
+        Write(kGreaterThan);
+      }
+    }
   }
   return NS_OK;
 }

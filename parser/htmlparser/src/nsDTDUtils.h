@@ -301,9 +301,14 @@ public:
   PRBool    Matches(const nsString& aTopic);
   void      RegisterObserverForTag(nsIElementObserver *anObserver,eHTMLTags aTag);
   nsDeque*  GetObserversForTag(eHTMLTags aTag);
-  nsresult  Notify(eHTMLTags aTag,nsIParserNode& aNode,PRUint32 aUniqueID,nsIParser* aParser);
+  nsresult  Notify(eHTMLTags aTag,nsIParserNode& aNode,void* aUniqueID,nsIParser* aParser);
 
   nsString  mTopic;
+  nsDeque   mKeys;
+  nsDeque   mValues;
+  nsString  mCharsetKey;
+  nsString  mSourceKey;
+  nsString  mDTDKey;
   nsDeque*  mObservers[NS_HTML_TAG_MAX + 1];
 };
 
@@ -322,7 +327,7 @@ public:
   nsDeque*  GetObserversForTagInTopic(eHTMLTags aTag,const nsString& aTopic);
   nsresult  Notify( eHTMLTags aTag,
                     nsIParserNode& aNode,
-                    PRUint32 aUniqueID, 
+                    void* aUniqueID, 
                     const nsString& aTopic,
                     nsIParser* aParser);
   nsObserverTopic* GetTopic(const nsString& aTopic);
@@ -339,9 +344,8 @@ protected:
  **************************************************************/ 
 class nsObserverNotifier: public nsDequeFunctor{ 
 public: 
-  nsObserverNotifier(const PRUnichar* aTagName,PRUint32 aUniqueKey,PRUint32 aCount=0,
-                     const PRUnichar** aKeys=nsnull,const PRUnichar** aValues=nsnull){ 
-    mCount=aCount; 
+  nsObserverNotifier(const PRUnichar* aTagName,nsISupports* aUniqueKey,
+                     const nsDeque* aKeys=0,const nsDeque* aValues=0){ 
     mKeys=aKeys; 
     mValues=aValues; 
     mUniqueKey=aUniqueKey; 
@@ -351,19 +355,18 @@ public:
   virtual void* operator()(void* anObject) { 
     nsIElementObserver* theObserver= (nsIElementObserver*)anObject; 
     if(theObserver) { 
-      mResult = theObserver->Notify(mUniqueKey,mTagName,mCount,mKeys,mValues); 
+      mResult = theObserver->Notify(mUniqueKey,mTagName,mKeys,mValues); 
     } 
     if(NS_OK==mResult) 
       return 0; 
     return anObject; 
   } 
 
-  const PRUnichar** mKeys; 
-  const PRUnichar** mValues; 
-  PRUint32          mCount; 
-  PRUint32          mUniqueKey; 
-  nsresult          mResult; 
+  const nsDeque*    mKeys; 
+  const nsDeque*    mValues;   
   const PRUnichar*  mTagName; 
+  nsISupports*      mUniqueKey; 
+  nsresult          mResult;
 };
 
 
