@@ -173,10 +173,10 @@ XPCConvert::IsMethodReflectable(const nsXPTMethodInfo& info)
 // types
 
 
-#define JAM_DOUBLE(v,d) (d = (jsdouble)v, DOUBLE_TO_JSVAL(&d))
-#define FIT_32(i,d) (INT_FITS_IN_JSVAL(i) ? INT_TO_JSVAL(i) : JAM_DOUBLE(i,d))
+#define JAM_DOUBLE(cx,v,d) (d=JS_NewDouble(cx,(jsdouble)v),DOUBLE_TO_JSVAL(d))
+#define FIT_32(cx,i,d) (INT_FITS_IN_JSVAL(i)?INT_TO_JSVAL(i):JAM_DOUBLE(cx,i,d))
 // Win32 can't handle uint64 to double conversion
-#define JAM_DOUBLE_U64(v,d) JAM_DOUBLE(((int64)v),d)
+#define JAM_DOUBLE_U64(cx,v,d) JAM_DOUBLE(cx,((int64)v),d)
 
 // static
 JSBool
@@ -186,23 +186,43 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
     NS_PRECONDITION(s, "bad param");
     NS_PRECONDITION(d, "bad param");
 
-    jsdouble dbl;
+    jsdouble* dbl;
 
     switch(type.TagPart())
     {
     case nsXPTType::T_I8    : *d = INT_TO_JSVAL((int32)*((int8*)s));     break;
     case nsXPTType::T_I16   : *d = INT_TO_JSVAL((int32)*((int16*)s));    break;
-    case nsXPTType::T_I32   : *d = FIT_32(*((int32*)s),dbl);             break;
-    case nsXPTType::T_I64   : *d = JAM_DOUBLE(*((int64*)s),dbl);         break;
+    case nsXPTType::T_I32   : *d = FIT_32(cx,*((int32*)s),dbl);          break;
+    case nsXPTType::T_I64   : *d = JAM_DOUBLE(cx,*((int64*)s),dbl);      break;
     case nsXPTType::T_U8    : *d = INT_TO_JSVAL((int32)*((uint8*)s));    break;
     case nsXPTType::T_U16   : *d = INT_TO_JSVAL((int32)*((uint16*)s));   break;
-    case nsXPTType::T_U32   : *d = FIT_32(*((uint32*)s),dbl);            break;
-    case nsXPTType::T_U64   : *d = JAM_DOUBLE_U64(*((uint64*)s),dbl);    break;
-    case nsXPTType::T_FLOAT : *d = JAM_DOUBLE(*((float*)s),dbl);         break;
-    case nsXPTType::T_DOUBLE: *d = DOUBLE_TO_JSVAL(*((double*)s));       break;
+    case nsXPTType::T_U32   : *d = FIT_32(cx,*((uint32*)s),dbl);         break;
+    case nsXPTType::T_U64   : *d = JAM_DOUBLE_U64(cx,*((uint64*)s),dbl); break;
+    case nsXPTType::T_FLOAT : *d = JAM_DOUBLE(cx,*((float*)s),dbl);      break;
+    case nsXPTType::T_DOUBLE: *d = JAM_DOUBLE(cx,*((double*)s),dbl);     break;
     case nsXPTType::T_BOOL  : *d = *((PRBool*)s)?JSVAL_TRUE:JSVAL_FALSE; break;
-    case nsXPTType::T_CHAR  : *d = INT_TO_JSVAL((int32)*((char*)s));     break;
-    case nsXPTType::T_WCHAR : *d = INT_TO_JSVAL((int32)*((wchar_t*)s));  break;
+    case nsXPTType::T_CHAR  : 
+        {
+            char* p = (char*)s;
+            if(!p)
+                break;
+            JSString* str;
+            if(!(str = JS_NewStringCopyN(cx, p, 1)))
+                break;
+            *d = STRING_TO_JSVAL(str);
+            break;
+        }
+    case nsXPTType::T_WCHAR : 
+        {
+            jschar* p = (jschar*)s;
+            if(!p)
+                break;
+            JSString* str;
+            if(!(str = JS_NewUCStringCopyN(cx, p, 1)))
+                break;
+            *d = STRING_TO_JSVAL(str);
+            break;
+        }
     default:
         if(!type.IsPointer())
         {
@@ -381,13 +401,32 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
         r = JS_ValueToBoolean(cx, s, (PRBool*)d);
         break;
     case nsXPTType::T_CHAR   :
-        r = JS_ValueToECMAUint32(cx, s, &tu);
-        *((char*)d)  = (char) tu;
-        break;
+        {
+            char* bytes;
+            JSString* str;
+        
+            if(!(str = JS_ValueToString(cx, s))||
+               !(bytes = JS_GetStringBytes(str)))
+            {
+                // XXX should report error
+                return JS_FALSE;
+            }
+            *((char*)d) = bytes[0];
+            break;
+        }
     case nsXPTType::T_WCHAR  :
-        r = JS_ValueToECMAUint32(cx, s, &tu);
-        *((uint16*)d)  = (uint16) tu;
-        break;
+        {
+            jschar* chars;
+            JSString* str;
+            if(!(str = JS_ValueToString(cx, s))||
+               !(chars = JS_GetStringChars(str)))
+            {
+                // XXX should report error
+                return JS_FALSE;
+            }
+            *((uint16*)d)  = (uint16) chars[0];
+            break;
+        }
     default:
         if(!type.IsPointer())
         {

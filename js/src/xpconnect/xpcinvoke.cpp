@@ -40,7 +40,11 @@ invoke_count_words(uint32 paramCount, nsXPCVariant* s)
         case nsXPTType::T_I8     :
         case nsXPTType::T_I16    :
         case nsXPTType::T_I32    :
+            result++;
+            break;
         case nsXPTType::T_I64    :
+            result+=2;
+            break;
         case nsXPTType::T_U8     :
         case nsXPTType::T_U16    :
         case nsXPTType::T_U32    :
