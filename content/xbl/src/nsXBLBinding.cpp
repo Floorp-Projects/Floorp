@@ -1103,7 +1103,10 @@ NS_IMETHODIMP
 nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocument)
 {
   if (aOldDocument != aNewDocument) {
-    mFirstHandler = nsnull;
+    if (mFirstHandler) {
+      mFirstHandler->MarkForDeath();
+      mFirstHandler = nsnull;
+    }
 
     if (mNextBinding)
       mNextBinding->ChangeDocument(aOldDocument, aNewDocument);

@@ -92,6 +92,10 @@ public:
 
   void RemoveEventHandlers();
 
+  void MarkForDeath() {
+    if (mNextHandler) mNextHandler->MarkForDeath(); mHandlerElement = mBoundElement = nsnull;
+  }
+
 protected:
   inline PRBool KeyEventMatched(nsIDOMKeyEvent* aKeyEvent);
   inline PRBool MouseEventMatched(nsIDOMMouseEvent* aMouseEvent);

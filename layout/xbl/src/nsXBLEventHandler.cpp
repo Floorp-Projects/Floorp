@@ -376,6 +376,9 @@ nsresult nsXBLEventHandler::Destroy(nsIDOMEvent* aEvent)
 PRBool 
 nsXBLEventHandler::KeyEventMatched(nsIDOMKeyEvent* aKeyEvent)
 {
+  if (!mHandlerElement)
+    return PR_FALSE;
+
   nsAutoString trueString; trueString.AssignWithConversion("true");
   nsAutoString falseString; falseString.AssignWithConversion("false");
 
@@ -493,6 +496,9 @@ nsXBLEventHandler::KeyEventMatched(nsIDOMKeyEvent* aKeyEvent)
 PRBool 
 nsXBLEventHandler::MouseEventMatched(nsIDOMMouseEvent* aMouseEvent)
 {
+  if (!mHandlerElement)
+    return PR_FALSE;
+
   nsAutoString trueString; trueString.AssignWithConversion("true");
   nsAutoString falseString; falseString.AssignWithConversion("false");
 
@@ -606,6 +612,9 @@ nsXBLEventHandler::MouseEventMatched(nsIDOMMouseEvent* aMouseEvent)
 NS_IMETHODIMP
 nsXBLEventHandler::ExecuteHandler(const nsString& aEventName, nsIDOMEvent* aEvent)
 {
+  if (!mHandlerElement)
+    return NS_ERROR_FAILURE;
+
   // This is a special-case optimization to make command handling fast.
   // It isn't really a part of XBL, but it helps speed things up.
   nsAutoString command;
