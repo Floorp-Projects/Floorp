@@ -461,6 +461,8 @@ xpfe/components/related/Makefile
 xpfe/components/related/src/Makefile
 xpfe/components/related/public/Makefile
 xpfe/components/related/resources/Makefile
+xpfe/components/sidebar/Makefile
+xpfe/components/sidebar/resources/Makefile
 xpfe/components/xfer/Makefile
 xpfe/components/xfer/public/Makefile
 xpfe/components/xfer/src/Makefile
