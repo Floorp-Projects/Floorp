@@ -899,7 +899,6 @@ toolkit/components/satchel/Makefile
 toolkit/components/satchel/public/Makefile
 toolkit/components/satchel/src/Makefile
 toolkit/components/viewsource/Makefile
-toolkit/content/mac/Makefile
 toolkit/skin/mac/Makefile
 toolkit/skin/unix/Makefile
 toolkit/skin/win/Makefile
