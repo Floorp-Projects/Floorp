@@ -33,23 +33,23 @@ EXPORTS= cnetinit.h
 # Make sure we have MOZILLA_CLIENT defined so we get the
 #   proper JS includes
 #
-LCFLAGS		= $(LCFLAGS)  -DMOZILLA_CLIENT
+LCFLAGS     = $(LCFLAGS)  -DMOZILLA_CLIENT
 
 !ifdef BUILD_DEBUG_GC
-LCFLAGS		= $(LCFLAGS) -DDEBUG_GC
+LCFLAGS     = $(LCFLAGS) -DDEBUG_GC
 !endif
 
 LLIBS=  \
-	$(NULL)
+    $(NULL)
 MISCDEP=$(LLIBS)
 OBJS=   \
-	.\$(OBJDIR)\cnetinit.obj		\
-	$(NULL)
+    .\$(OBJDIR)\cnetinit.obj        \
+    $(NULL)
 
 
-CSRCS =	\
-	cnetinit.c	\
-	$(NULL)
+CSRCS = \
+    cnetinit.c  \
+    $(NULL)
 
 
 LIBRARY_NAME=cnetinit 
@@ -65,17 +65,18 @@ REQUIRES= network security
 # use LINCS on win32 for now since REQUIRES seems to be broken
 #!if "$(MOZ_BITS)" != "16"
 LINCS= \
-    -I$(XPDIST)\public\network 	\
-    -I$(XPDIST)\public\netcache 	\
-    -I$(XPDIST)\public\abouturl 	\
-    -I$(XPDIST)\public\dataurl	\
-    -I$(XPDIST)\public\fileurl	\
-    -I$(XPDIST)\public\ftpurl	\
-    -I$(XPDIST)\public\gophurl	\
-    -I$(XPDIST)\public\httpurl	\
-    -I$(XPDIST)\public\jsurl	\
-    -I$(XPDIST)\public\certurl	\
-    -I$(XPDIST)\public\remoturl	\
+    -I$(XPDIST)\public\network  \
+    -I$(XPDIST)\public\netcache     \
+    -I$(XPDIST)\public\abouturl     \
+    -I$(XPDIST)\public\dataurl  \
+    -I$(XPDIST)\public\fileurl  \
+    -I$(XPDIST)\public\ftpurl   \
+    -I$(XPDIST)\public\gophurl  \
+    -I$(XPDIST)\public\httpurl  \
+    -I$(XPDIST)\public\sockstub \
+    -I$(XPDIST)\public\jsurl    \
+    -I$(XPDIST)\public\certurl  \
+    -I$(XPDIST)\public\remoturl \
     -I$(XPDIST)\public\marimurl \
     -I$(XPDIST)\public\security 
 #!endif
@@ -86,10 +87,10 @@ include <$(DEPTH)\config\rules.mak>
 
 !ifndef MODULAR_NETLIB
 libs:: $(LIBRARY)
-	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+    $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 
 symbols::
-	@echo "LIBRARY_NAME     is $(LIBRARY_NAME)"
-	@echo "LIBRARY          is $(LIBRARY)"
+    @echo "LIBRARY_NAME     is $(LIBRARY_NAME)"
+    @echo "LIBRARY          is $(LIBRARY)"
 
 !endif
