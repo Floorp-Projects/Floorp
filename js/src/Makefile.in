@@ -180,7 +180,7 @@ JSJAVA_CFLAGS	= \
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES		+= -DEXPORT_JS_API
+DEFINES		+= -DEXPORT_JS_API 
 
 INCLUDES	+= -I$(srcdir)
 

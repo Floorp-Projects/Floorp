@@ -52,6 +52,7 @@
 #include "jsapi.h"
 #include "jshash.h"
 #include "jsprf.h"
+#include "jslong.h"
 #include "jsinterp.h"
 #include "jscntxt.h"
 #include "jsdbgapi.h"
@@ -114,8 +115,26 @@ public:
     uintN         GetLineExtent() const {return mLineExtent;}
     void          IncrementCallCount() {++mCallCount;}
     PRUint32      GetCallCount() {return mCallCount;}
+    PRUint32      GetSum() {return mSum;}
     void          IncrementCompileCount() {++mCompileCount;}
     PRUint32      GetCompileCount() {return mCompileCount;}
+    PRUint32      NowInMilliSecs()
+        {PRUint64 now64;
+         PRUint32 now32;
+         JSLL_DIV(now64,PR_Now(),JSLL_INIT(0,1000));
+         JSLL_L2UI(now32, now64);
+         return now32;
+        }
+    void          SetStartTime() {mStartTime = NowInMilliSecs();}
+    void          SetEndTime()
+        {PRUint32 delta = NowInMilliSecs() - mStartTime;
+         if(delta < mQuickTime)
+            mQuickTime = delta;
+         if (delta > mLongTime)
+            mLongTime = delta;
+         mSum += delta;}
+    PRUint32      GetQuickTime() {return mQuickTime;}
+    PRUint32      GetLongTime() {return mLongTime;}
 
     ProfilerFunction(); // not implemented
 
@@ -126,6 +145,10 @@ private:
     ProfilerFile*   mFile;
     PRUint32        mCallCount;
     PRUint32        mCompileCount;
+    PRUint32        mQuickTime;     // quickest delta in msec
+    PRUint32        mLongTime;      // longest delta in msec
+    PRUint32        mStartTime;     // time on enter
+    PRUint32        mSum;
 };
 
 

@@ -18,6 +18,7 @@
 # Rights Reserved.
 #
 # Contributor(s): 
+#   John Bandhauer <jband@netscape.com>
 #
 # Alternatively, the contents of this file may be used under the
 # terms of the GNU Public License (the "GPL"), in which case the
@@ -31,23 +32,41 @@
 # file under either the NPL or the GPL.
 #
 
-DEPTH		= ../../..
+DEPTH		= ../../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= public idl src loader
+MODULE		= xpctools
+LIBRARY_NAME	= xpctools
+SHORT_LIBNAME	= xpctools
 
-ifdef ENABLE_TESTS
-DIRS		+= tests shell
+CPPSRCS		= \
+        	nsXPCToolsCompiler.o \
+        	nsXPCToolsProfiler.o \
+        	nsXPCToolsModule.o \
+		$(NULL)
+
+include $(topsrcdir)/config/config.mk
+
+IS_COMPONENT	= 1
+
+# this is automatically discovered under BeOS
+ifneq ($(OS_ARCH),BeOS)
+LIBS		+= \
+		$(MOZ_JS_LIBS) \
+		$(MOZ_COMPONENT_LIBS) \
+		$(NULL)
 endif
 
-ifdef MOZ_XPC_TOOLS_SUPPORT
-DIRS         +=  tools 
-endif
-
+EXTRA_DSO_LDOPTS += \
+		$(MOZ_COMPONENT_LIBS) \
+		$(MOZ_JS_LIBS) \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
+DEFINES		+= -DJSFILE -DJS_THREADSAFE
 
