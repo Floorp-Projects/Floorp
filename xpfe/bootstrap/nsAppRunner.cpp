@@ -20,11 +20,12 @@
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
+
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
-#include "nsIURL.h"
+
+#include "nsIURI.h"
 #include "nsNetUtil.h"
-#include "nsIWidget.h"
 #include "nsIPref.h"
 #include "plevent.h"
 #include "prmem.h"
@@ -32,21 +33,16 @@
 
 #include "nsIAppShell.h"
 #include "nsICmdLineService.h"
-#include "nsIThread.h"
 #include "nsIAppShellService.h"
 #include "nsIAppShellComponent.h"
 #include "nsIObserverService.h"
 #include "nsAppShellCIDs.h"
 #include "prprf.h"
 #include "nsCRT.h"
-#include "nsFileSpec.h"
-#include "nsIFileSpec.h"
 #include "nsIDirectoryService.h"
 #include "nsAppDirectoryServiceDefs.h"
-#include "nsFileStream.h"
 #include "nsSpecialSystemDirectory.h"
 #include "nsIWalletService.h"
-#include "nsIWebShell.h"
 #include "nsIWindowMediator.h"
 #include "nsIDOMWindow.h"
 #include "nsIClipboard.h"
@@ -71,23 +67,12 @@
 #include "nsTraceMalloc.h"
 #endif
 
-
-#if !defined(XP_MAC) && !defined(RHAPSODY)
-#include "nsTimeBomb.h"
-#endif
-
-#ifdef RHAPSODY
-// XXX hack because we can't link against libraptorwebwidget (pav)
-#undef DETECT_WEBSHELL_LEAKS
-#endif
-
 #if defined(DEBUG_sspitzer) || defined(DEBUG_seth)
 #define DEBUG_CMD_LINE
 #endif
 
 
 static NS_DEFINE_CID(kSoftUpdateCID,     NS_SoftwareUpdate_CID);
-static NS_DEFINE_IID(kIWindowMediatorIID,NS_IWINDOWMEDIATOR_IID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 static NS_DEFINE_CID(kWalletServiceCID,     NS_WALLETSERVICE_CID);
 static NS_DEFINE_CID(kBrowserContentHandlerCID, NS_BROWSERCONTENTHANDLER_CID);
@@ -229,41 +214,45 @@ PrintUsage(void)
 static nsresult OpenWindow( const char*urlstr, const PRUnichar *args )
 {
 #ifdef DEBUG_CMD_LINE
-    printf("OpenWindow(%s,?)\n",urlstr);
+  printf("OpenWindow(%s,?)\n",urlstr);
 #endif /* DEBUG_CMD_LINE */
-    nsresult rv;
-    NS_WITH_SERVICE(nsIAppShellService, appShellService, kAppShellServiceCID, &rv)
-    if ( NS_SUCCEEDED( rv ) ) {
-        nsCOMPtr<nsIDOMWindow> hiddenWindow;
-        JSContext *jsContext;
-        rv = appShellService->GetHiddenWindowAndJSContext( getter_AddRefs( hiddenWindow ),
-                                                           &jsContext );
-        if ( NS_SUCCEEDED( rv ) ) {
-            void *stackPtr;
-            jsval *argv = JS_PushArguments( jsContext,
-                                            &stackPtr,
-                                            "sssW",
-                                            urlstr,
-                                            "_blank",
-                                            "chrome,dialog=no,all",
-                                            args );
-            if( argv ) {
-                nsCOMPtr<nsIDOMWindow> newWindow;
-                rv = hiddenWindow->OpenDialog( jsContext,
-                                               argv,
-                                               4,
-                                               getter_AddRefs( newWindow ) );
-                JS_PopArguments( jsContext, stackPtr );
-            }
+  nsresult rv;
+  nsCOMPtr<nsIAppShellService> appShellService = do_GetService(kAppShellServiceCID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIDOMWindow> hiddenWindow;
+      JSContext *jsContext;
+      rv = appShellService->GetHiddenWindowAndJSContext(getter_AddRefs(hiddenWindow),
+                                                         &jsContext);
+      if (NS_SUCCEEDED(rv)) {
+        void *stackPtr;
+        jsval *argv = JS_PushArguments( jsContext,
+                                        &stackPtr,
+                                        "sssW",
+                                        urlstr,
+                                        "_blank",
+                                        "chrome,dialog=no,all",
+                                        args );
+
+        if( argv ) {
+          nsCOMPtr<nsIDOMWindow> newWindow;
+          rv = hiddenWindow->OpenDialog( jsContext,
+                                         argv,
+                                         4,
+                                         getter_AddRefs( newWindow ) );
+
+          JS_PopArguments( jsContext, stackPtr );
+
         }
+      }
+
     }
-    return rv;
+  return rv;
 }
 
-static nsresult OpenChromURL( const char * urlstr, PRInt32 height = NS_SIZETOCONTENT, PRInt32 width = NS_SIZETOCONTENT )
+static nsresult OpenChromeURL( const char * urlstr, PRInt32 height = NS_SIZETOCONTENT, PRInt32 width = NS_SIZETOCONTENT )
 {
 #ifdef DEBUG_CMD_LINE
-    printf("OpenChromURL(%s,%d,%d)\n",urlstr,height,width);
+    printf("OpenChromeURL(%s,%d,%d)\n",urlstr,height,width);
 #endif /* DEBUG_CMD_LINE */
 
 	nsCOMPtr<nsIURI> url;
@@ -301,8 +290,8 @@ static void DumpArbitraryHelp()
         rv = catEntry->GetData(getter_Copies(entryString));
         if (NS_FAILED(rv) || !((const char *)entryString)) break;
 
-		nsXPIDLCString progidString;
-		rv = catman->GetCategoryEntry(COMMAND_LINE_ARGUMENT_HANDLERS,(const char *)entryString, getter_Copies(progidString));
+        nsXPIDLCString progidString;
+        rv = catman->GetCategoryEntry(COMMAND_LINE_ARGUMENT_HANDLERS,(const char *)entryString, getter_Copies(progidString));
         if (NS_FAILED(rv) || !((const char *)progidString)) break;
 
 #ifdef DEBUG_CMD_LINE
@@ -326,7 +315,7 @@ static void DumpArbitraryHelp()
             PRBool handlesArgs = PR_FALSE;
             rv = handler->GetHandlesArgs(&handlesArgs);
             if (NS_SUCCEEDED(rv) && handlesArgs) {
-                printf(" <url>");
+              printf(" <url>");
             }
             if ((const char *)helpText) {
               printf("%s%s\n",HELP_SPACER_2,(const char *)helpText);
@@ -364,7 +353,7 @@ nsresult LaunchApplication(const char *progID, PRInt32 height, PRInt32 width)
     Recycle(defaultArgs);
   }
   else {
-    rv = OpenChromURL((const char *)chromeUrlForTask, height, width);
+    rv = OpenChromeURL((const char *)chromeUrlForTask, height, width);
   }
 
   return rv;
@@ -413,9 +402,9 @@ static nsresult LaunchApplicationWithArgs(const char *commandLineArg, nsICmdLine
         }
         else {
 #ifdef DEBUG_CMD_LINE
-          printf("opening %s with %s\n",(const char *)cmdResult,"OpenChromURL");
+          printf("opening %s with %s\n",(const char *)cmdResult,"OpenChromeURL");
 #endif /* DEBUG_CMD_LINE */
-          rv = OpenChromURL((const char *)cmdResult,height, width);
+          rv = OpenChromeURL((const char *)cmdResult,height, width);
           if (NS_FAILED(rv)) return rv;
         }
       }
@@ -433,11 +422,11 @@ static nsresult LaunchApplicationWithArgs(const char *commandLineArg, nsICmdLine
   else {
     if (NS_SUCCEEDED(rv) && (const char*)cmdResult) {
       if (PL_strcmp("1",(const char *)cmdResult) == 0) {
-        rv = OpenChromURL((const char *)chromeUrlForTask,height, width);
+        rv = OpenChromeURL((const char *)chromeUrlForTask,height, width);
         if (NS_FAILED(rv)) return rv;
       }
       else {
-        rv = OpenChromURL((const char *)cmdResult, height, width);
+        rv = OpenChromeURL((const char *)cmdResult, height, width);
         if (NS_FAILED(rv)) return rv;
       }
     }
@@ -594,16 +583,14 @@ static nsresult DoCommandLines( nsICmdLineService* cmdLine, PRBool heedGeneralSt
 static nsresult DoOnShutdown()
 {
   nsresult rv;
+
+  // save the prefs, in case they weren't saved
   {
-    // Scoping this in a block to force the pref service to be
-    // released.
-    //
-  	// save the prefs, in case they weren't saved
-  	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
-  	NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get prefs, so unable to save them");
-  	if (NS_SUCCEEDED(rv)) {
-  		prefs->SavePrefFile();
-  	}
+    // scoping this in a block to force release
+    nsCOMPtr<nsIPref> prefs = do_GetService(kPrefCID, &rv);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get prefs, so unable to save them");
+    if (NS_SUCCEEDED(rv))
+      prefs->SavePrefFile();
   }
 
   // at this point, all that is on the clipboard is a proxy object, but that object
@@ -613,10 +600,11 @@ static nsresult DoOnShutdown()
   // has already been shutdown by the time the clipboard is shut down.
   {
     // scoping this in a block to force release
-    NS_WITH_SERVICE(nsIClipboard, clipService, "component://netscape/widget/clipboard", &rv);
-    if ( clipService )
+    nsCOMPtr<nsIClipboard> clipService = do_GetService("component://netscape/widget/clipboard", &rv);
+    if (NS_SUCCEEDED(rv))
       clipService->ForceDataToClipboard(nsIClipboard::kGlobalClipboard);
   }
+
   return rv;
 }
 
@@ -631,7 +619,7 @@ static nsresult OpenBrowserWindow(PRInt32 height, PRInt32 width)
     rv = handler->GetChromeUrlForTask(getter_Copies(chromeUrlForTask));
     if (NS_FAILED(rv)) return rv;
 
-    rv = OpenChromURL((const char *)chromeUrlForTask, height, width );
+    rv = OpenChromeURL((const char *)chromeUrlForTask, height, width );
     if (NS_FAILED(rv)) return rv;
 
     return rv;
@@ -678,7 +666,11 @@ static void	InitCachePrefs()
 static nsresult Ensure1Window( nsICmdLineService* cmdLineArgs)
 {
 	nsresult rv;
-	NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
+  nsCOMPtr<nsIWindowMediator> windowMediator = do_GetService(kWindowMediatorCID, &rv);
+
+  if (NS_FAILED(rv))
+    return rv;
+
 	nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
 
   if (NS_SUCCEEDED(windowMediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator))))
@@ -723,6 +715,34 @@ nsresult CheckForNewChrome(void) {
   if (chromeReg)
     return chromeReg->CheckForNewChrome();
   return NS_ERROR_FAILURE;
+}
+
+
+
+static nsresult CreateAndRegisterDirectoryService()
+{
+  nsresult rv = NS_OK;
+  // Create and register a directory service provider
+  nsAppFileLocationProvider* appFileLocProvider = new nsAppFileLocationProvider;
+
+  if (!appFileLocProvider) {
+    NS_ASSERTION(PR_FALSE, "Could not create nsAppFileLocationProvider\n");
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  nsCOMPtr<nsIDirectoryService> directoryService = do_GetService(NS_DIRECTORY_SERVICE_PROGID, &rv);
+  if (!directoryService) {
+    NS_ASSERTION(PR_FALSE, "failed to get directory service");
+    return rv;
+  }
+  // RegisterProvider will AddRef it and own it - notice we have not AddRef'd it
+  rv = directoryService->RegisterProvider(appFileLocProvider);
+  if (NS_FAILED(rv)) {
+    NS_ASSERTION(PR_FALSE, "Could not register directory service provider\n");
+    return rv;
+  }
+
+  return rv;
 }
 
 #ifdef DEBUG_warren
@@ -781,24 +801,9 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
     }
   }
 
-  // Create and register a directory service provider
-  nsAppFileLocationProvider* appFileLocProvider;
-  appFileLocProvider = new nsAppFileLocationProvider;
-  if (!appFileLocProvider) {
-    NS_ASSERTION(PR_FALSE, "Could not create nsAppFileLocationProvider\n");
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  NS_WITH_SERVICE(nsIDirectoryService, directoryService, NS_DIRECTORY_SERVICE_PROGID, &rv);
-  if (!directoryService) {
-    NS_ASSERTION(PR_FALSE, "failed to get directory service");
+  CreateAndRegisterDirectoryService();
+  if (NS_FAILED(rv))
     return rv;
-  }
-  // RegisterProvider will AddRef it and own it - notice we have not AddRef'd it
-  rv = directoryService->RegisterProvider(appFileLocProvider);
-  if (NS_FAILED(rv)) {
-    NS_ASSERTION(PR_FALSE, "Could not register directory service provider\n");
-    return rv;
-  }
 
   //----------------------------------------------------------------
   // XPInstall needs to clean up after any updates that couldn't
@@ -815,11 +820,10 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   {
     nsCOMPtr<nsISoftwareUpdate> su = do_GetService(kSoftUpdateCID,&rv);
     if (NS_SUCCEEDED(rv))
-    {
       su->StartupTasks( &needAutoreg );
-    }
   }
-//  nsServiceManager::UnregisterService(kSoftUpdateCID);
+
+  //  nsServiceManager::UnregisterService(kSoftUpdateCID);
 
 #if XP_MAC
   stTSMCloser  tsmCloser;
@@ -844,7 +848,7 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   // Start up the core services:
   
   // Initialize the cmd line service
-  NS_WITH_SERVICE(nsICmdLineService, cmdLineArgs, kCmdLineServiceCID, &rv);
+  nsCOMPtr<nsICmdLineService> cmdLineArgs = do_GetService(kCmdLineServiceCID, &rv);
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get command line service");
 
   if (NS_FAILED(rv)) {
@@ -861,38 +865,46 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
 
   CheckForNewChrome();
 
-  // Create the Application Shell instance...
-  NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
+  nsCOMPtr<nsIAppShellService> appShell = do_GetService(kAppShellServiceCID, &rv);
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get the appshell service");
+
+  /* if we couldn't get the nsIAppShellService service, then we should hide the
+     splash screen and return */
   if (NS_FAILED(rv)) {
     // See if platform supports nsINativeAppSupport.
-    nsCOMPtr<nsINativeAppSupport> nativeAppSupport = do_QueryInterface( nativeApp );
-    if ( nativeAppSupport ) {
-        // Use that interface to remove splash screen.
-        nativeAppSupport->HideSplashScreen();
+    nsCOMPtr<nsINativeAppSupport> nativeAppSupport = do_QueryInterface(nativeApp);
+    if (nativeAppSupport) {
+      // Use that interface to remove splash screen.
+      nativeAppSupport->HideSplashScreen();
     } else {
-        // See if platform supports nsISplashScreen, instead.
-        nsCOMPtr<nsISplashScreen> splashScreen = do_QueryInterface( nativeApp );
-        if ( splashScreen ) {
-            splashScreen->Hide();
-        }
+      // See if platform supports nsISplashScreen, instead.
+      nsCOMPtr<nsISplashScreen> splashScreen = do_QueryInterface( nativeApp );
+      if (splashScreen) {
+        splashScreen->Hide();
+      }
     }
 
     // Release argument object.
-    NS_IF_RELEASE( nativeApp );
+    NS_IF_RELEASE(nativeApp);
     return rv;
   }
 
-  rv = appShell->Initialize( cmdLineArgs, nativeApp );
+
+  // Create the Application Shell instance...
+  rv = appShell->Initialize(cmdLineArgs, nativeApp);
+
   // We are done with the native app (or splash screen) object here;
   // the app shell owns it now.
-  NS_IF_RELEASE( nativeApp );
-  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to initialize appshell");
-  if ( NS_FAILED(rv) ) return rv;
+  NS_IF_RELEASE(nativeApp);
 
-  NS_WITH_SERVICE(nsIProfile, profileMgr, kProfileCID, &rv);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to initialize appshell");
+  if (NS_FAILED(rv)) return rv;
+
+
+  /* -- PROFILE stuff -- */
+  nsCOMPtr<nsIProfile> profileMgr = do_GetService(kProfileCID, &rv);
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get profile manager");
-  if ( NS_FAILED(rv) ) return rv;
+  if (NS_FAILED(rv)) return rv;
 
   rv = profileMgr->StartupWithArgs(cmdLineArgs);
   if (NS_FAILED(rv)) return rv;
@@ -912,7 +924,7 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
 
 	// Enumerate AppShellComponenets
 	appShell->EnumerateAndInitializeComponents();
-	
+
 	// This will go away once Components are handling there own commandlines
 	// if we have no command line arguments, we need to heed the
 	// "general.startup.*" prefs
@@ -1109,24 +1121,28 @@ int main(int argc, char* argv[])
   PRBool dosplash = GetWantSplashScreen(argc, argv);
 
   if (dosplash && !nativeApp) {
-      // If showing splash screen and platform doesn't implement
-      // nsINativeAppSupport, then use older nsISplashScreen interface.
-      rv = NS_CreateSplashScreen(&splash);
-      NS_ASSERTION( NS_SUCCEEDED(rv), "NS_CreateSplashScreen failed" );
+    // If showing splash screen and platform doesn't implement
+    // nsINativeAppSupport, then use older nsISplashScreen interface.
+    rv = NS_CreateSplashScreen(&splash);
+    NS_ASSERTION( NS_SUCCEEDED(rv), "NS_CreateSplashScreen failed" );
   }
   // If the platform has a splash screen, show it ASAP.
   if (dosplash && nativeApp) {
-      nativeApp->ShowSplashScreen();
+    nativeApp->ShowSplashScreen();
   } else if (splash) {
-      splash->Show();
+    splash->Show();
   }
+
   rv = NS_InitXPCOM(NULL, NULL);
   NS_ASSERTION( NS_SUCCEEDED(rv), "NS_InitXPCOM failed" );
 
   nsresult mainResult = main1(argc, argv, nativeApp ? (nsISupports*)nativeApp : (nsISupports*)splash);
 
-  rv = DoOnShutdown();
-  NS_ASSERTION(NS_SUCCEEDED(rv), "DoOnShutdown failed");
+  /* if main1() didn't succeed, then don't bother trying to shut down clipboard, etc */
+  if (NS_SUCCEEDED(rv)) {
+    rv = DoOnShutdown();
+    NS_ASSERTION(NS_SUCCEEDED(rv), "DoOnShutdown failed");
+  }
 
   rv = NS_ShutdownXPCOM( NULL );
   NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
