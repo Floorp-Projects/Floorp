@@ -506,6 +506,7 @@ nsresult nsHTTPResponse::ParseDateHeader(nsIAtom *aAtom,
     return NS_OK;
 }
 
+
 // Return the value of the (HTTP 1.1) max-age directive, which itself is a
 // component of the Cache-Control response header
 nsresult nsHTTPResponse::GetMaxAge(PRUint32* aMaxAge, PRBool* aMaxAgeIsPresent)
@@ -558,6 +559,13 @@ PRBool nsHTTPResponse::IsStale(PRBool aUseHeuristicExpiration)
         nsMemory::Free(cacheControlHeader);
         if (header.Find("no-cache", PR_TRUE) != kNotFound)
             return PR_TRUE;
+#ifdef MOZ_NEW_CACHE
+        // If the must-revalidate directive is present in the cached response,
+        // data must always be revalidated with the server, even if the user 
+        // has configured validation to be turned off.
+        if (header.Find("must-revalidate", PR_TRUE) != kNotFound)
+            return PR_TRUE;
+#endif
     }
 
     // Get the value of the 'Date:' header
@@ -615,8 +623,13 @@ PRBool nsHTTPResponse::IsStale(PRBool aUseHeuristicExpiration)
         if (expiresHeaderIsPresent) {
             // Otherwise, if Expires is present in the response, 
             // the calculation is: 
-           if ( ( now > date ? now : date ) < expires )
+#ifdef MOZ_NEW_CACHE
+            if (currentAge < expires - date)
                 return PR_FALSE;
+#else
+            if ( ( now > date ? now : date ) < expires )
+                return PR_FALSE; // XXX "date" should always be less than "expires"
+#endif
         }
     }
 
@@ -877,3 +890,43 @@ nsresult nsHTTPResponse::UpdateHeaders(nsISimpleEnumerator *aEnumerator)
 
   return rv;
 }
+
+#ifdef MOZ_NEW_CACHE
+
+nsresult
+nsHTTPResponse::GetAgeValue(PRUint32 *result, PRBool *isAvail)
+{
+    nsXPIDLCString str;
+    nsresult rv = GetHeader(nsHTTPAtoms::Age, getter_Copies(str));
+    if (NS_FAILED(rv)) return rv;
+
+    if (!str) {
+        *isAvail = PR_FALSE;
+        *result = 0;
+    }
+    else {
+        *isAvail = PR_TRUE;
+        *result = (PRUint32) atol(str.get());
+    }
+    return NS_OK;
+}
+
+nsresult
+nsHTTPResponse::GetDateValue(PRTime *result, PRBool *isAvail)
+{
+    return ParseDateHeader(nsHTTPAtoms::Date, result, isAvail);
+}
+
+nsresult
+nsHTTPResponse::GetLastModifiedValue(PRTime *result, PRBool *isAvail)
+{
+    return ParseDateHeader(nsHTTPAtoms::Last_Modified, result, isAvail);
+}
+
+nsresult
+nsHTTPResponse::GetExpiresValue(PRTime *result, PRBool *isAvail)
+{
+    return ParseDateHeader(nsHTTPAtoms::Expires, result, isAvail);
+}
+
+#endif

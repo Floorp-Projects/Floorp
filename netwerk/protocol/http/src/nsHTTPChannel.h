@@ -139,6 +139,15 @@ protected:
 
 #ifdef MOZ_NEW_CACHE
     nsresult            OpenCacheEntry();
+
+    nsresult            GetRequestTime(PRTime *);
+    nsresult            SetRequestTime(PRTime);
+    nsresult            GetResponseTime(PRTime *);
+    nsresult            SetResponseTime(PRTime);
+
+    nsresult            ComputeCurrentAge(PRTime now, PRUint32 *);
+    nsresult            ComputeFreshnessLifetime(PRUint32 *);
+    nsresult            UpdateExpirationTime();
 #endif
 
     nsresult            CheckCache();
@@ -238,7 +247,9 @@ protected:
     PRPackedBool                        mOpenHasEventQueue;
      
     // Cache-related flags
+#ifndef MOZ_NEW_CACHE 
     PRPackedBool                        mCachedContentIsAvailable;
+#endif
     PRPackedBool                        mCachedContentIsValid;
     
     // Called OnHeadersAvailable()
