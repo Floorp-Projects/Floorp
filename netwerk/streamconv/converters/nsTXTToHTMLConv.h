@@ -59,6 +59,34 @@ typedef struct convToken {
     PRBool   prepend;   // flag indicating how the modText should be used.
 } convToken;
     
+/**
+ * Convert plain text to HTML.
+ *
+ * OVERVIEW OF HOW THIS CLASS WORKS:
+ *
+ * This class stores an array of tokens that should be replaced by something,
+ * or something that should be prepended.
+ * The "token" member of convToken is the text to search for. This is a
+ * substring of the desired token. Tokens are delimited by TOKEN_DELIMITERS.
+ * That entire token will be replaced by modText (if prepend is false); or it
+ * will be linkified and modText will be prepended to the token if prepend is
+ * true.
+ *
+ * Note that all of the text will be in a preformatted block, so there is no
+ * need to emit line-end tags, or set the font face to monospace.
+ *
+ * This works as a stream converter, so data will arrive by
+ * OnStartRequest/OnDataAvailable/OnStopRequest calls.
+ *
+ * OStopR will possibly process a remaining token.
+ *
+ * If the data of one pass contains a part of a token, that part will be stored
+ * in mBuffer. The rest of the data will be sent to the next listener.
+ * 
+ * XXX this seems suboptimal. this means that this design will only work for
+ * links. and it is impossible to append anything to the token. this means that,
+ * for example, making *foo* bold is not possible.
+ */
 class nsTXTToHTMLConv : public nsITXTToHTMLConv {
 public:
     NS_DECL_ISUPPORTS
@@ -98,7 +126,7 @@ protected:
     PRInt32 FindToken(PRInt32 cursor, convToken* *_retval);
 
     // return the cursor location after munging HTML into the 
-    // underlying buffer.
+    // underlying buffer, according to mToken
     PRInt32 CatHTML(PRInt32 front, PRInt32 back);
 
     nsCOMPtr<nsIStreamListener>     mListener; // final listener (consumer)
