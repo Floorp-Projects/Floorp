@@ -22,6 +22,8 @@
 
 #include "nsIFileTransportService.h"
 #include "nsITransport.h"
+#include "nsIProgressEventSink.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsIRequest.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
@@ -44,6 +46,9 @@ static PRLogModuleInfo *gTestFileTransportLog = nsnull;
 #define PRINTF(args)
 #endif
 
+#undef PRINTF
+#define PRINTF(args) printf args
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
@@ -52,6 +57,37 @@ static NS_DEFINE_CID(kEventQueueCID, NS_EVENTQUEUE_CID);
 
 PRBool gDone = PR_FALSE;
 nsIEventQueue* gEventQ = nsnull;
+
+////////////////////////////////////////////////////////////////////////////////
+
+class MyProgressEventSink : public nsIProgressEventSink
+                          , public nsIInterfaceRequestor {
+public:
+    NS_DECL_ISUPPORTS
+
+    MyProgressEventSink() { NS_INIT_ISUPPORTS(); }
+
+    NS_IMETHOD OnProgress(nsIRequest *request, nsISupports *ctxt,
+                          PRUint32 progress, PRUint32 progressMax) {
+        PRINTF(("progress: %u/%u\n", progress, progressMax));
+        return NS_OK;
+    }
+
+    NS_IMETHOD OnStatus(nsIRequest *request, nsISupports *ctxt,
+                        nsresult status, const PRUnichar *statusArg) {
+        return NS_OK;
+    }
+
+    NS_IMETHOD GetInterface(const nsIID &iid, void **result) {
+        if (iid.Equals(NS_GET_IID(nsIProgressEventSink)))
+            return QueryInterface(iid, result);
+        return NS_ERROR_NO_INTERFACE;
+    }
+};
+
+NS_IMPL_THREADSAFE_ISUPPORTS2(MyProgressEventSink,
+                              nsIProgressEventSink,
+                              nsIInterfaceRequestor)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -160,6 +196,13 @@ TestAsyncRead(const char* fileName, PRUint32 offset, PRInt32 length)
     rv = listener->Init(fileName);
     if (NS_FAILED(rv)) return rv;
 
+    MyProgressEventSink* progressSink = new MyProgressEventSink();
+    if (progressSink == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(progressSink);
+    rv = fileTrans->SetNotificationCallbacks(progressSink, PR_FALSE);
+    if (NS_FAILED(rv)) return rv;
+
     gDone = PR_FALSE;
     nsCOMPtr<nsIRequest> request;
     rv = fileTrans->AsyncRead(listener, nsnull, offset, length, 0, getter_AddRefs(request));
@@ -206,6 +249,13 @@ TestAsyncWrite(const char* fileName, PRUint32 offset, PRInt32 length)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(listener);
     rv = listener->Init(outFile);
+    if (NS_FAILED(rv)) return rv;
+
+    MyProgressEventSink* progressSink = new MyProgressEventSink();
+    if (progressSink == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(progressSink);
+    rv = fileTrans->SetNotificationCallbacks(progressSink, PR_FALSE);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsILocalFile> f;
