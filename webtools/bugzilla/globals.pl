@@ -222,7 +222,7 @@ sub GenerateVersionTable {
         push @{$::versions{$p1}}, $v;
         $varray{$v} = 1;
     }
-    SendSQL("select value, program from components");
+    SendSQL("select value, program from components order by value");
     while (@line = FetchSQLData()) {
         my ($c,$p) = (@line);
         if (!defined $::components{$p}) {

@@ -74,7 +74,7 @@ my $colbut1 = $cols - 1;
 
 print "</tr>";
 
-SendSQL("select value, initialowner, initialqacontact, description from components where program = " . SqlQuote($product));
+SendSQL("select value, initialowner, initialqacontact, description from components where program = " . SqlQuote($product) . " order by value");
 
 while (MoreSQLData()) {
     my @row = FetchSQLData();
