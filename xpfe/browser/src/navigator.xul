@@ -59,8 +59,7 @@
     appCore = XPAppCoresManager.Find("BrowserAppCore");  
     if (appCore != null) {
 	    dump("Going Back\n");
-		window.frames[0].frames[1].back();
-      //appCore.back();
+      appCore.back();
       RefreshUrlbar();
     } else {
       dump("BrowserAppCore has not been created!\n");
@@ -72,8 +71,7 @@
     appCore = XPAppCoresManager.Find("BrowserAppCore");  
     if (appCore != null) {
 	    dump("Going Forward\n");
-		window.frames[0].frames[1].forward();
-      //appCore.forward();
+      appCore.forward();
 	  RefreshUrlbar();
     } else {
       dump("BrowserAppCore has not been created!\n");
