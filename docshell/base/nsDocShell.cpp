@@ -154,8 +154,7 @@ NS_IMETHODIMP nsDocShell::GetDocument(nsIDOMDocument** aDocument)
   NS_ENSURE_TRUE(doc, NS_ERROR_NULL_POINTER);
 
   // the result's addref comes from this QueryInterface call
-  NS_ENSURE_SUCCESS(doc->QueryInterface(NS_GET_IID(nsIDOMDocument), 
-   (void**)aDocument), NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(CallQueryInterface(doc.get(), aDocument), NS_ERROR_FAILURE);
 
   return NS_OK;
 }
@@ -554,15 +553,17 @@ NS_IMETHODIMP nsDocShell::AddChild(nsIDocShell *aChild)
 // tiny semantic change from webshell.  aChild is only effected if it was actually a child of this docshell
 NS_IMETHODIMP nsDocShell::RemoveChild(nsIDocShell *aChild)
 {
-  NS_ENSURE_ARG_POINTER(aChild);
+   NS_ENSURE_ARG_POINTER(aChild);
 
-  PRBool childRemoved = mChildren.RemoveElement(aChild);
-  if (PR_TRUE==childRemoved)
-  {
-    NS_ENSURE_SUCCESS(aChild->SetParent(nsnull), NS_ERROR_FAILURE);
-    NS_RELEASE(aChild);
-  }
-  return NS_OK;
+   if(mChildren.RemoveElement(aChild))
+      {
+      NS_ENSURE_SUCCESS(aChild->SetParent(nsnull), NS_ERROR_FAILURE);
+      NS_RELEASE(aChild);
+      }
+   else
+      NS_ENSURE_TRUE(PR_FALSE, NS_ERROR_INVALID_ARG);
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShell::GetChildAt(PRInt32 aIndex, nsIDocShell** aDocShell)
