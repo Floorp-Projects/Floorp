@@ -7517,6 +7517,9 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
                                                nsFrameItems&            aFrameItems,
                                                PRBool                   aXBLBaseTag)
 {
+	if (aTag == nsXULAtoms::menulist) {
+		printf("moo!");
+	}
   // The following code allows the user to specify the base tag
   // of a XUL object using XBL.  XUL objects (like boxes, menus, etc.)
   // can then be extended arbitrarily.
@@ -8291,6 +8294,9 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
         temp->GetParent(*getter_AddRefs(content));
       }
 
+	    if (!content)
+		    return NS_OK;
+
       nsIFrame* outerFrame = GetFrameFor(shell, aPresContext, content);
       if (outerFrame) {
         // We found it.  Get the primary frame.
@@ -8697,6 +8703,9 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
         nsCOMPtr<nsIContent> temp = content;
         temp->GetParent(*getter_AddRefs(content));
       }
+
+      if (!content)
+		    return NS_OK;
 
       nsIFrame* outerFrame = GetFrameFor(shell, aPresContext, content);
       if (outerFrame) {
@@ -9397,6 +9406,9 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
           nsCOMPtr<nsIContent> temp = content;
           temp->GetParent(*getter_AddRefs(content));
         }
+
+        if (!content)
+		      return NS_OK;
 
         nsIFrame* outerFrame = GetFrameFor(shell, aPresContext, content);
         if (outerFrame) {
