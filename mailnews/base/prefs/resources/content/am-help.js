@@ -45,8 +45,8 @@ function doHelpButton()
   // Get the help tag corresponding to the page loaded.
   var helpTag = pageTagPairs[pageSourceURI];
 
-  // If the help tag is generic, check if there is a need to set tags per server type
-  if (helpTag == "mail") {
+  // If the help tag is generic or offline, check if there is a need to set tags per server type
+  if ((helpTag == "mail") || (helpTag == "mail-offline-accounts")) {
     // Get server type, as we may need to set help tags per server type for some pages
     var serverType = GetServerType();
   

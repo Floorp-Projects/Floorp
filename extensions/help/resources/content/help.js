@@ -209,7 +209,7 @@ function getLink(ID) {
   // We have one possible source for an ID for each datasource in the composite datasource.
   // The first ID which matches is returned.
   var tocTree = document.getElementById("help-toc-tree");
-    tocDS = tocTree.database;
+  var tocDS = tocTree.database;
     if (tocDS == null)
       return null;
     var tocDatasources = tocTree.getAttribute("datasources");
