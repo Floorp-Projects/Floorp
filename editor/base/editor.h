@@ -32,6 +32,7 @@
 //#include "nsISelection.h"
 
 class nsIDOMCharacterData;
+class nsIDOMRange;
 class nsIPresShell;
 class nsIViewManager;
 class ChangeAttributeTxn;
@@ -217,6 +218,18 @@ protected:
 
   nsresult CreateTxnForDeleteSelection(nsIEditor::Direction aDir,
                                        EditAggregateTxn  ** aTxn);
+
+  nsresult CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange, 
+                                            nsIEditor::Direction aDir, 
+                                            EditAggregateTxn    *aTxn);
+
+  nsresult GetPriorNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode);
+
+  nsresult GetNextNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode);
+
+  nsresult GetRightmostChild(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode);
+
+  nsresult GetLeftmostChild(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode);
 
 
 };
