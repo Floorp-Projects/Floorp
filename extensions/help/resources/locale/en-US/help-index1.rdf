@@ -11,8 +11,7 @@
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="adding"
-         nc:name="adding"
-         nc:link=""/>
+         nc:name="adding"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="address_books"
@@ -549,8 +548,7 @@
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="email_addresses"
-         nc:name="e-mail addresses"
-         nc:link=""/>
+         nc:name="e-mail addresses"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="encryption"
@@ -729,8 +727,7 @@
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="HTML"
-         nc:name="HTML"
-         nc:link=""/>
+         nc:name="HTML"/>
      </rdf:li><rdf:li>
        <rdf:Description ID="HTTP_Networking"
          nc:name="HTTP Networking"
@@ -763,8 +760,7 @@
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="images"
-         nc:name="images"
-	 nc:link=""/>
+         nc:name="images"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="IMAP"
@@ -874,8 +870,7 @@
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="JavaScript"
-         nc:name="JavaScript"
-         nc:link=""/>
+         nc:name="JavaScript"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="JSConsole"
@@ -1384,8 +1379,7 @@
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Offline"
-         nc:name="Offline"
-         nc:link=""/>
+         nc:name="Offline"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1444,8 +1438,7 @@
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="preferences"
-         nc:name="preferences"
-	 nc:link=""/>
+         nc:name="preferences"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="print"
@@ -1834,13 +1827,11 @@
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="save"
-         nc:name="save"
-	 nc:link=""/>
+         nc:name="save"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="security"
-         nc:name="security"
-	 nc:link=""/>
+         nc:name="security"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="security_devices"
@@ -1854,8 +1845,7 @@
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="settings"
-         nc:name="settings"
-         nc:link=""/>
+         nc:name="settings"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="security_modules"
@@ -1894,8 +1884,7 @@
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="SMTP"
-         nc:name="SMTP"
-         nc:link=""/>
+         nc:name="SMTP"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="software_installation"
@@ -2115,8 +2104,7 @@
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="toolbar"
-         nc:name="toolbar"
-	 nc:link=""/>
+         nc:name="toolbar"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2235,8 +2223,7 @@
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="web_pages"
-         nc:name="web pages"
-	 nc:link=""/>
+         nc:name="web pages"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Working_Offline"
