@@ -166,6 +166,7 @@ protected:
     RKEY    mKey;  // Key this node is under.
     REGENUM mEnum; // Copy of corresponding content of parent enumerator.
     char    mName[MAXREGPATHLEN]; // Buffer to hold name.
+    REGERR mErr; // XXX This causes this class to be NON THREAD SAFE
 }; // nsRegistryNode
 
 
@@ -194,6 +195,7 @@ protected:
     REGENUM mEnum; // Copy of corresponding content of parent enumerator.
     REGINFO mInfo; // Value info.
     char    mName[MAXREGNAMELEN]; // Buffer to hold name.
+    REGERR  mErr; // XXX This causes this class to be NON THREAD SAFE
 }; // nsRegistryValue
 
 
@@ -1202,7 +1204,7 @@ NS_IMETHODIMP nsRegValueEnumerator::advance() {
 | our name.  We use mErr==-1 to indicate we haven't fetched the name yet.      |
 ------------------------------------------------------------------------------*/
 nsRegistryNode::nsRegistryNode( HREG hReg, RKEY key, REGENUM slot )
-    : mReg( hReg ), mKey( key ), mEnum( slot ){
+    : mReg( hReg ), mKey( key ), mEnum( slot ), mErr ( -1 ) {
     NS_INIT_REFCNT();
 
     mregLock = PR_NewLock();
@@ -1220,22 +1222,25 @@ nsRegistryNode::~nsRegistryNode()
 /*-------------------------- nsRegistryNode::GetName ---------------------------
 | If we haven't fetched it yet, get the name of the corresponding subkey now,  |
 | using NR_RegEnumSubkeys.                                                     |
-y------------------------------------------------------------------------------*/
+------------------------------------------------------------------------------*/
 NS_IMETHODIMP nsRegistryNode::GetName( char **result ) {
-    REGERR err = REGERR_OK;
     nsresult rv = NS_OK;
     // Make sure there is a place to put the result.
     if( result ) {
         // Test whether we haven't tried to get it yet.
-        if( err == -1 ) {
+        if( mErr == -1 ) {
             REGENUM temp = mEnum;
             // Get name.
             PR_Lock(mregLock);
-            err = NR_RegEnumSubkeys( mReg, mKey, &temp, mName, sizeof mName, PR_FALSE );
+            mErr = NR_RegEnumSubkeys( mReg, mKey, &temp, mName, sizeof mName, PR_FALSE );
+            // Convert result from prior libreg call.
+            rv = regerr2nsresult( mErr );            
             PR_Unlock(mregLock);
         }
-        // Convert result from prior libreg call.
-        rv = regerr2nsresult( err );            
+        else {
+          // Convert result from prior libreg call.
+          rv = regerr2nsresult( mErr );
+        }
         if( rv == NS_OK || rv == NS_ERROR_REG_NO_MORE ) {
             // worked, return actual result.
             *result = PR_strdup( mName );
@@ -1257,7 +1262,7 @@ NS_IMETHODIMP nsRegistryNode::GetName( char **result ) {
 | Implemented the same way as the nsRegistryNode ctor.                         |
 ------------------------------------------------------------------------------*/
 nsRegistryValue::nsRegistryValue( HREG hReg, RKEY key, REGENUM slot )
-    : mReg( hReg ), mKey( key ), mEnum( slot ) {
+    : mReg( hReg ), mKey( key ), mEnum( slot ), mErr( -1 ) {
     NS_INIT_REFCNT();
     mregLock = PR_NewLock();
     return;
@@ -1342,17 +1347,16 @@ NS_IMETHODIMP nsRegistryValue::GetValueLength( uint32 *result ) {
 | Call NR_RegEnumEntries to set the mInfo/mName data members.                  |
 ------------------------------------------------------------------------------*/
 nsresult nsRegistryValue::getInfo() {
-    REGERR err = REGERR_OK;
     nsresult rv = NS_OK;
     // Test whether we haven't tried to get it yet.
-    if( err == -1 ) {
+    if( mErr == -1 ) {
         REGENUM temp = mEnum;
         // Get name and info.
         PR_Lock(mregLock);
-        err = NR_RegEnumEntries( mReg, mKey, &temp, mName, sizeof mName, &mInfo );
-        PR_Unlock(mregLock);
+        mErr = NR_RegEnumEntries( mReg, mKey, &temp, mName, sizeof mName, &mInfo );
         // Convert result.
-        rv = regerr2nsresult( err );            
+        rv = regerr2nsresult( mErr );            
+        PR_Unlock(mregLock);
     }
     return rv;
 }
