@@ -136,8 +136,7 @@
  *
  * This interface has these attributes:
  *  isServerMode - Boolean attribute indicating whether the application
- *                 is running in "server mode" as a result of the
- *                 browser.turbo.enabled pref. Server mode means the
+ *                 is running in "server mode." Server mode means the
  *                 application was started to pre-load shared-libraries,
  *                 initialize services, and open a hidden Navigator window
  *                 in order to quickly surface that window when the user
@@ -146,8 +145,6 @@
  *                 sense there) and is intended to be initiated from the
  *                 Windows startup folder at system initialization.
  *
- *  isStartupServerMode - Boolean attribute indicated whether the app is in
- *                        "server mode" as a result of the -turbo cmdline arg.
  *
  *  needsProfileUI - Boolean attribute used when running in "server mode."
  *                   If the "server mode" caused profile dialogs to be
@@ -171,7 +168,6 @@ interface nsINativeAppSupport : nsISupports {
 
     // Server mode.
     attribute boolean isServerMode;
-    readonly attribute boolean isStartupServerMode;
     void startServerMode();
     attribute boolean needsProfileUI;
 };
