@@ -812,11 +812,12 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, PRInt32 colIndex, so
 	PRInt32			childIndex = 0, numChildren = 0, nameSpaceID;
         nsCOMPtr<nsIContent>	child;
 	nsresult		rv;
-	nsVoidArray		*childArray;
 
 	if (NS_FAILED(rv = container->ChildCount(numChildren)))	return(rv);
 
-        if ((childArray = new nsVoidArray()) == nsnull)	return (NS_ERROR_OUT_OF_MEMORY);
+	nsCOMPtr<nsISupportsArray> childArray;
+	rv = NS_NewISupportsArray(getter_AddRefs(childArray));
+	if (NS_FAILED(rv))	return(rv);
 
 	for (childIndex=0; childIndex<numChildren; childIndex++)
 	{
@@ -904,6 +905,10 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, PRInt32 colIndex, so
 			flatArray = nsnull;
 		}
 	}
+        for (int i = childArray->Count() - 1; i >= 0; i--)
+        {
+        	childArray->RemoveElementAt(i);
+        }
 	return(NS_OK);
 }
 
