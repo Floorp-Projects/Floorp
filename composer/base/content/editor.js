@@ -168,18 +168,31 @@ const gEditorToolbarPrefListener =
 
 function nsButtonPrefListener()
 {
-  try {
-    var pbi = pref.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
-    pbi.addObserver(this.domain, this, false);
-  } catch(ex) {
-    dump("Failed to observe prefs: " + ex + "\n");
-  }
+  this.startup();
 }
 
 // implements nsIObserver
 nsButtonPrefListener.prototype =
 {
   domain: "editor.use_css",
+  startup: function()
+  {
+    try {
+      var pbi = pref.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+      pbi.addObserver(this.domain, this, false);
+    } catch(ex) {
+      dump("Failed to observe prefs: " + ex + "\n");
+    }
+  },
+  shutdown: function()
+  {
+    try {
+      var pbi = pref.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+      pbi.removeObserver(this.domain, this);
+    } catch(ex) {
+      dump("Failed to remove pref observers: " + ex + "\n");
+    }
+  },
   observe: function(subject, topic, prefName)
   {
     if (!IsHTMLEditor())
@@ -691,6 +704,7 @@ function EditorResetFontAndColorAttributes()
 function EditorShutdown()
 {
   RemoveToolbarPrefListener();
+  gCSSPrefListener.shutdown();
 
   try {
     var commandManager = GetCurrentCommandManager();
