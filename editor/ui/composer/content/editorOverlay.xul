@@ -47,7 +47,7 @@
   <key id="italickb"      xulkey="true" key="&styleitalic.keybinding;"    shift="false" observes="cmd_italic"/>
   <key id="underlinekb"   xulkey="true" key="&styleunderline.keybinding;" shift="false" observes="cmd_underline"/>
 
-  <key id="fontfixedwidthkb" xulkey="true" key="&formatfontfixed.keybinding;" shift="true" oncommand="EditorSetFontFace('cmd_fontFace', 'tt')" />
+  <key id="fontfixedwidthkb" xulkey="true" key="&formatfontfixed.keybinding;" shift="true" oncommand="doStatefulCommand('cmd_fontFace', 'tt')" />
   <key id="increaseindentkb" xulkey="true" key="&formatindent.keybinding;" shift="false" observes="cmd_indent" />
   <key id="decreaseindentkb" xulkey="true" key="&formatoutdent.keybinding;" shift="false" observes="cmd_outdent" />
 
@@ -225,7 +225,7 @@
     <!-- List menu  -->
     <command id="cmd_dt"                  oncommand="goDoCommand('cmd_dt')"/>
     <command id="cmd_dd"                  oncommand="goDoCommand('cmd_dd')"/>
-    <command id="cmd_removeList"      oncommand="goDoCommand('cmd_removeList')"/>
+    <command id="cmd_removeList"          oncommand="goDoCommand('cmd_removeList')"/>
   </commandset>
   <commandset id="composerTableMenuItems" oncommandupdate="goUpdateTableMenuItems(this)">
     <!-- Table menu -->
@@ -373,7 +373,7 @@
     <!-- Font face submenu -->
     <menu id="fontFaceMenu" value="&fontfaceMenu.label;" accesskey="&formatfontmenu.accesskey;" 
           position="1">
-      <menupopup oncommand="EditorSetFontFace('cmd_fontFace', event.target.data)">
+      <menupopup oncommand="doStatefulCommand('cmd_fontFace', event.target.data)">
         <menuitem value="&fontVarWidth.label;"      accesskey="&fontvarwidth.accesskey;"    data=""/>
         <menuitem value="&fontFixedWidth.label;"    accesskey="&fontfixedwidth.accesskey;"  data="tt" key="fontfixedwidthkb"/>
         <menuseparator/>
@@ -507,7 +507,7 @@
     <menu id="headingMenu" value="&headingMenu.label;"
           accesskey="&formatheadingmenu.accesskey;"
           position="9" oncreate="InitHeadingMenu()">
-      <menupopup oncommand="EditorSetParagraphFormat('cmd_paragraphState', event.target.getAttribute('data'))">
+      <menupopup oncommand="doStatefulCommand('cmd_paragraphState', event.target.getAttribute('data'))">
         <menuitem id="menu_noHeading" type="radio" value="&noneCmd.label;"     accesskey="&none.accesskey;"     data=""/>
         <menuitem id="menu_h1"        type="radio" value="&heading1Cmd.label;" accesskey="&heading1.accesskey;" data="h1"/>
         <menuitem id="menu_h2"        type="radio" value="&heading2Cmd.label;" accesskey="&heading2.accesskey;" data="h2"/>
@@ -522,7 +522,7 @@
     <menu id="paragraphMenu" value="&paragraphMenu.label;"
           accesskey="&formatparagraphmenu.accesskey;"
           position="10" oncreate="InitParagraphMenu()">
-      <menupopup oncommand="EditorSetParagraphFormat('cmd_paragraphState', event.target.getAttribute('data'))">
+      <menupopup oncommand="doStatefulCommand('cmd_paragraphState', event.target.getAttribute('data'))">
         <menuitem id="menu_normal"  type="radio" value="&normalCmd.label;"               accesskey="&normal.accesskey;"              data=""/>
         <menuitem id="menu_p"       type="radio" value="&paragraphParagraphCmd.label;"   accesskey="&paragraphparagraph.accesskey;"  data="p"/>
         <menuitem id="menu_address" type="radio" value="&paragraphAddressCmd.label;"     accesskey="&paragraphaddress.accesskey;"    data="address"/>   
@@ -556,7 +556,7 @@
     <menu id="alignMenu" value="&alignMenu.label;" accesskey="&formatalignmenu.accesskey;"
         position="15">
       <!-- Align submenu -->
-      <menupopup oncommand="EditorAlign('cmd_align', event.target.getAttribute('data'))">
+      <menupopup oncommand="doStatefulCommand('cmd_align', event.target.getAttribute('data'))">
         <menuitem value="&alignLeft.label;"    accesskey="&alignleft.accesskey;"    data="left"/>
         <menuitem value="&alignCenter.label;"  accesskey="&aligncenter.accesskey;"  data="center"/>
         <menuitem value="&alignRight.label;"   accesskey="&alignright.accesskey;"   data="right"/>
@@ -663,21 +663,22 @@
     <button class="dialog" value="&colorPicker.default.label;" oncommand="EditorRemoveBackColor('BackColorPopupButton');"/>
   </popup>
 
+  <!-- this is only used in mailnews -->
   <menupopup id="AlignmentPopup">
-    <menuitem oncommand="EditorAlign('cmd_align', 'left')">
+    <menuitem oncommand="doStatefulCommand('cmd_align', 'left')">
      <button class="plain" id="text-align-left" align="left" value="&alignLeft.label;"/>
     </menuitem>
-    <menuitem oncommand="EditorAlign('cmd_align', 'center')">
+    <menuitem oncommand="doStatefulCommand('cmd_align', 'center')">
      <button class="plain" id="text-align-center" align="left" value="&alignCenter.label;"/>
     </menuitem>
-    <menuitem oncommand="EditorAlign('cmd_align', 'right')">
+    <menuitem oncommand="doStatefulCommand('cmd_align', 'right')">
      <button class="plain" id="text-align-right" align="left" value="&alignRight.label;"/>
     </menuitem>
-    <menuitem oncommand="EditorAlign('cmd_align', 'justify')">
+    <menuitem oncommand="doStatefulCommand('cmd_align', 'justify')">
      <button class="plain" id="text-align-justify" align="left" value="&alignJustify.label;"/>
     </menuitem>
   </menupopup>
-  
+
   <!-- InsertPopup is used by messengercompose.xul -->
   <menupopup id="InsertPopup">
     <menuitem oncommand="goDoCommand('cmd_link')">
@@ -748,7 +749,7 @@
   <!-- Formatting toolbar items. "data" are HTML tagnames, don't translate -->
   <menulist id="ParagraphSelect" tooltip="aTooltip" tooltiptext="&ParagraphSelect.tooltip;">
     <observes element="cmd_paragraphState" attribute="state" onbroadcast="onParagraphFormatChange(this.parentNode, 'cmd_paragraphState')"/>
-    <menupopup id="ParagraphPopup" oncommand="EditorSetParagraphFormat('cmd_paragraphState', event.target.data)">
+    <menupopup id="ParagraphPopup" oncommand="doStatefulCommand('cmd_paragraphState', event.target.data)">
       <menuitem value="&normalCmd.label;"              data=""/>
       <menuitem value="&paragraphParagraphCmd.label;"  data="p"/>
       <menuitem value="&heading1Cmd.label;"            data="h1"/>
@@ -768,7 +769,7 @@
   <!-- "data" are HTML tagnames, don't translate -->
   <menulist id="FontFaceSelect" tooltip="aTooltip" tooltiptext="&FontFaceSelect.tooltip;">
     <observes element="cmd_fontFace" attribute="state" onbroadcast="onFontFaceChange(this.parentNode, 'cmd_fontFace')"/>
-    <menupopup id="FontFacePopup" oncommand="EditorSetFontFace('cmd_fontFace', event.target.data)">
+    <menupopup id="FontFacePopup" oncommand="doStatefulCommand('cmd_fontFace', event.target.data)">
       <menuitem value="&fontVarWidth.label;"      data=""/>
       <menuitem value="&fontFixedWidth.label;"    data="tt"/>
       <menuseparator/>
@@ -817,12 +818,12 @@
     <observes element="cmd_underline" attribute="state" onbroadcast="onButtonUpdate(this.parentNode, 'cmd_underline')"/>
   </button>
 
-  <button class="button-toolbar" id="ulButton" oncommand="goDoCommand('cmd_ul')"
+  <button class="button-toolbar" id="ulButton" oncommand="goDoCommand('cmd_ul')" 
           tooltip="aTooltip"     tooltiptext="&bulletListToolbarCmd.tooltip;">
       <observes element="cmd_ul" attribute="state" onbroadcast="onButtonUpdate(this.parentNode, 'cmd_ul')"/>
   </button>
 
-  <button class="button-toolbar" id="olButton" oncommand="goDoCommand('cmd_ol')"
+  <button class="button-toolbar" id="olButton" oncommand="goDoCommand('cmd_ol')" 
           tooltip="aTooltip"     tooltiptext="&numberListToolbarCmd.tooltip;">
       <observes element="cmd_ol" attribute="state" onbroadcast="onButtonUpdate(this.parentNode, 'cmd_ol')"/>
   </button>
@@ -831,8 +832,15 @@
           tooltip="aTooltip"            tooltiptext="&outdentToolbarCmd.tooltip;"/>
   <button class="button-toolbar format" id="indentButton"     observes="cmd_indent"
           tooltip="aTooltip"            tooltiptext="&indentToolbarCmd.tooltip;"/>
-  <button class="button-toolbar format popup" id="AlignPopupButton" disabled="true"
+
+  <button class="button-toolbar format popup" id="AlignPopupButton"
           tooltip="aTooltip"            tooltiptext="&AlignPopupButton.tooltip;"/>
+
+  <!-- alignment buttons -->
+  <button class="button-toolbar" id="align-left-button"     oncommand="doStatefulCommand('cmd_align', 'left')"/>
+  <button class="button-toolbar" id="align-center-button"   oncommand="doStatefulCommand('cmd_align', 'center')"/>
+  <button class="button-toolbar" id="align-right-button"    oncommand="doStatefulCommand('cmd_align', 'right')"/>
+  <button class="button-toolbar" id="align-justify-button"  oncommand="doStatefulCommand('cmd_align', 'justify')"/>
   
   <!-- Edit Mode toolbar -->
   <button id="NormalModeButton"   class="edit-mode _plain" type="text" selected="1" value="&NormalModeTab.label;"  onclick="SetEditMode(1)"
@@ -845,7 +853,7 @@
           tooltip="aTooltip"      tooltiptext="&PreviewMode.tooltip;"/>
 
   <!-- InsertPopupButton is used by messengercompose.xul -->
-  <button class="plain format popup" id="InsertPopupButton"/>
+  <button class="button-toolbar format popup" id="InsertPopupButton"/>
 
 
   <!-- Paste as quotation is used by mail compose,
