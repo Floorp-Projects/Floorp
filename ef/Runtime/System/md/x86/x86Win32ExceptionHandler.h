@@ -62,7 +62,7 @@ struct Context
 	JavaObject* object;
 };
 
-#if !defined( LINUX ) && !defined( FREEBSD )
+#if defined(_WIN32)
 NS_EXTERN EXCEPTION_DISPOSITION win32HardwareThrow(struct _EXCEPTION_RECORD *ExceptionRecord,
 					void * EstablisherFrame,
 					struct _CONTEXT *ContextRecord,
