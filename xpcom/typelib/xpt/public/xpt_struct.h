@@ -21,10 +21,31 @@
  * http://www.mozilla.org/scriptable/typelib_file.html
  */
 
-#include "prtypes.h"
-
 #ifndef __xpt_struct_h__
 #define __xpt_struct_h__
+
+#include "prtypes.h"
+
+/*
+ * The linkage of XPT API functions differs depending on whether the file is
+ * used within the XPT library or not.  Any source file within the XPT
+ * library should define EXPORT_XPT_API whereas any client of the library
+ * should not.
+ */
+#ifdef EXPORT_XPT_API
+#define XPT_PUBLIC_API(t)    PR_IMPLEMENT(t)
+#define XPT_PUBLIC_DATA(t)   PR_IMPLEMENT_DATA(t)
+#else
+#ifdef _WIN32
+#    define XPT_PUBLIC_API(t)    _declspec(dllimport) t
+#    define XPT_PUBLIC_DATA(t)   _declspec(dllimport) t
+#else
+#    define XPT_PUBLIC_API(t)    PR_IMPLEMENT(t)
+#    define XPT_PUBLIC_DATA(t)   t
+#endif
+#endif
+#define XPT_FRIEND_API(t)    XPT_PUBLIC_API(t)
+#define XPT_FRIEND_DATA(t)   XPT_PUBLIC_DATA(t)
 
 PR_BEGIN_EXTERN_C
 
@@ -97,15 +118,15 @@ struct XPTHeader {
 #define XPT_MAJOR_VERSION 0x01
 #define XPT_MINOR_VERSION 0x00
 
-XPTHeader *
+extern XPT_PUBLIC_API(XPTHeader *)
 XPT_NewHeader(uint32 num_interfaces);
 
 /* size of header and annotations */
-uint32
+extern XPT_PUBLIC_API(uint32)
 XPT_SizeOfHeader(XPTHeader *header);
 
 /* size of header and annotations and InterfaceDirectoryEntries */
-uint32
+extern XPT_PUBLIC_API(uint32)
 XPT_SizeOfHeaderBlock(XPTHeader *header);
 
 /*
@@ -125,7 +146,7 @@ struct XPTInterfaceDirectoryEntry {
 #endif
 };
 
-PRBool
+extern XPT_PUBLIC_API(PRBool)
 XPT_FillInterfaceDirectoryEntry(XPTInterfaceDirectoryEntry *ide,
                                 nsID *iid, char *name, char *name_space,
                                 XPTInterfaceDescriptor *descriptor);
@@ -142,15 +163,15 @@ struct XPTInterfaceDescriptor {
     XPTConstDescriptor         *const_descriptors;
 };
 
-PRBool
+extern XPT_PUBLIC_API(PRBool)
 XPT_IndexForInterface(XPTInterfaceDirectoryEntry *ide_block,
                       uint32 num_interfaces, nsID *iid, uint16 *indexp);
 
-XPTInterfaceDescriptor *
+extern XPT_PUBLIC_API(XPTInterfaceDescriptor *)
 XPT_NewInterfaceDescriptor(uint32 parent_interface, uint32 num_methods,
                            uint32 num_constants);
 
-PRBool
+extern XPT_PUBLIC_API(PRBool)
 XPT_InterfaceDescriptorAddMethods(XPTInterfaceDescriptor *id, uint16 num);
 
 /*
@@ -162,10 +183,10 @@ struct XPTString {
     char   *bytes;
 };
 
-XPTString *
+extern XPT_PUBLIC_API(XPTString *)
 XPT_NewString(uint16 length, char *bytes);
 
-XPTString *
+extern XPT_PUBLIC_API(XPTString *)
 XPT_NewStringZ(char *bytes);
 
 /* 
@@ -340,7 +361,7 @@ struct XPTParamDescriptor {
 
 #define XPT_PARAMDESCRIPTOR_SIZE (XPT_TYPEDESCRIPTOR_SIZE + 1)
 
-PRBool
+extern XPT_PUBLIC_API(PRBool)
 XPT_FillParamDescriptor(XPTParamDescriptor *pd, uint8 flags,
                         XPTTypeDescriptor *type);
 
@@ -370,7 +391,7 @@ struct XPTMethodDescriptor {
 #define XPT_MD_IS_CTOR(flags)       (flags & XPT_MD_CTOR)
 #define XPT_MD_IS_HIDDEN(flags)     (flags & XPT_MD_HIDDEN)
 
-PRBool
+extern XPT_PUBLIC_API(PRBool)
 XPT_FillMethodDescriptor(XPTMethodDescriptor *meth, uint8 flags, char *name,
                          uint8 num_args);
 
@@ -406,7 +427,7 @@ struct XPTAnnotation {
 #define XPT_ANN_PRIVATE                 0x40
 #define XPT_ANN_IS_PRIVATE(flags)       (flags & XPT_ANN_PRIVATE)
 
-XPTAnnotation *
+extern XPT_PUBLIC_API(XPTAnnotation *)
 XPT_NewAnnotation(uint8 flags, XPTString *creator, XPTString *private_data);
 
 PR_END_EXTERN_C
