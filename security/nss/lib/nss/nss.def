@@ -94,6 +94,7 @@ NSS_Initialize;
 NSS_InitReadWrite;
 NSS_NoDB_Init;
 NSS_Shutdown;
+NSS_VersionCheck;
 PK11_Authenticate;
 PK11_ChangePW;
 PK11_CheckUserPassword;
