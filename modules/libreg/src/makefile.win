@@ -86,6 +86,9 @@ export:: $(DLL)
     $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
     $(MAKE_INSTALL) $(DLL) $(DIST)\bin
 
+install:: $(DLL)
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
+
 clobber::
     $(RM) $(DIST)\bin\$(LIBNAME).dll
     $(RM) $(DIST)\lib\$(LIBNAME).lib
