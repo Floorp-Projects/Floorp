@@ -53,7 +53,7 @@ endif
 
 ifeq ($(USE_64), 1)
   ifdef NS_USE_GCC
-      ARCHFLAG= UNKNOWN 
+      ARCHFLAG=-m64
   else
       ARCHFLAG=-xarch=v9
   endif
@@ -99,11 +99,10 @@ ifdef NS_USE_GCC
 	CCC        = g++
 	CCC       += -Wall -Wno-format
 	ASFLAGS	  += -x assembler-with-cpp
-	OS_CFLAGS += $(NOMD_OS_CFLAGS)
+	OS_CFLAGS += $(NOMD_OS_CFLAGS) $(ARCHFLAG)
 	ifdef USE_MDUPDATE
 		OS_CFLAGS += -MDupdate $(DEPENDENCIES)
 	endif
-	OS_CFLAGS += $(ARCHFLAG)
 else
 	CC         = cc
 	CCC        = CC
@@ -157,6 +156,9 @@ PROCESS_MAP_FILE = grep -v ';-' $(LIBRARY_NAME).def | \
 # -G: produce a shared object
 # -z defs: no unresolved symbols allowed
 ifdef NS_USE_GCC
+ifeq ($(USE_64), 1)
+	DSO_LDOPTS += -m64
+endif
 	DSO_LDOPTS += -shared -h $(notdir $@)
 else
 ifeq ($(USE_64), 1)
