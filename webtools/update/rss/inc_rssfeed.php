@@ -55,17 +55,18 @@ switch ($type) {
 echo "<rss version=\"2.0\">\n";
 echo "<channel>\n";
 
-echo "  <title>" . htmlentities($sitetitle) . "::" . htmlentities($list) . " " . $listType . "</title>\n";
-echo "  <link>" . htmlentities($siteurl) . "</link>\n";
-echo "  <description>" . htmlentities($description) . "</description>\n";
-echo "  <language>" . htmlentities($sitelanguage) . "</language>\n";
-echo "  <copyright>" . htmlentities($sitecopyright) . "</copyright>\n";
+echo "  <title>" . htmlspecialchars($sitetitle,ENT_NOQUOTES,UTF-8) . "::" . htmlspecialchars($list,ENT_NOQUOTES,UTF-8) . " " . $listType . "</title>\n";
+echo "  <link>" . $siteurl . "</link>\n";
+echo "  <description>" . htmlspecialchars($sitedescription,ENT_NOQUOTES,UTF-8) . 
+"</description>\n";
+echo "  <language>" . $sitelanguage . "</language>\n";
+echo "  <copyright>" . htmlspecialchars($sitecopyright,ENT_NOQUOTES,UTF-8) . "</copyright>\n";
 echo "  <lastBuildDate>" . $currenttime . "</lastBuildDate>\n";
 echo "  <ttl>" . $rssttl . "</ttl>\n";
 echo "  <image>\n";
-echo "    <title>" . htmlentities($sitetitle) . "</title>\n";
-echo "    <link>" . htmlentities($siteurl) . "</link>\n";
-echo "    <url>" . htmlentities($siteicon) . "</url>\n";
+echo "    <title>" . htmlspecialchars($sitetitle,ENT_NOQUOTES,UTF-8) . "</title>\n";
+echo "    <link>" . $siteurl . "</link>\n";
+echo "    <url>" . $siteicon . "</url>\n";
 echo "    <width>16</width>\n";
 echo "    <height>16</height>\n";
 echo "  </image>\n";
@@ -73,12 +74,12 @@ echo "  </image>\n";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   while ($row = mysql_fetch_array($sql_result)) {
     $id = $row["ID"];
-    $title = htmlentities($row["Title"]);
-    $description = htmlentities($row["Description"]);
+    $title = htmlspecialchars($row["Title"],ENT_NOQUOTES,UTF-8);
+    $description = htmlspecialchars($row["Description"],ENT_NOQUOTES,UTF-8);
     $dateupdated = gmdate("r", strtotime($row["DateStamp"]));
-    $version = $row["Version"];
+    $version = htmlspecialchars($row["Version"],ENT_NOQUOTES,UTF-8);
     $vid = $row["vID"];
-    $appname = $row["AppName"];
+    $appname = htmlspecialchars($row["AppName"],ENT_NOQUOTES,UTF-8);
 
     echo "    <item>\n";
     echo "      <pubDate>" . $dateupdated . "</pubDate>\n";
