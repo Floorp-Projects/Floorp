@@ -34,26 +34,42 @@ sub show_data {
   #my ($year2, $mon2, $mday2) = Add_Delta_Days($year, $mon, $mday, -$DAYS);
   #$n_days_ago= sprintf "%04d:%02d:%02d:%02d:%02d:%02d", $year2, $mon2, $mday2, $hour, $min, $sec;
 
-  print "<center><h3>Data for $TBOX $TESTNAME</h3></center>\n";
+  print "<h3>Data for $TBOX $TESTNAME</h3>\n";
+
+  # links
+  print "<li><a href=\"#plot\">plot points</a></li>\n";
+  print "<li><a href=\"#raw\">raw points</a></li>\n";
+  print "<br>\n";
 
   # Print data that got plotted.
-  print "<b>Data in plot form: (t, y)</b><br>\n";
+  print "<a name=\"plot\"><b>Data in plot form: #, (t, y)</b><br>\n";
   open DATA, "$DATAFILE" or die "Couldn't open file, $DATAFILE: $!";
+  my $i = 0;
+  print "<pre>\n";
   while (<DATA>) {
     my @line = split('\t',$_);
-    print "@line[0] @line[1]<br>\n";
+    $line_string = sprintf "%4d %s %s\n", $i, @line[0], @line[1];
+    print "$line_string";
+    $i++;
   }
+  print "</pre>\n";
   close DATA;
 
 
   # Print data again, in raw format.
   print "<br>\n";
   print "<br>\n";
-  print "<b>Data in raw form: (t, y, opaque data, ip, user agent)</b><br>\n";
+  print "<a name=\"raw\"><b>Data in raw form: #, (t, y, opaque data, ip, user agent)</b><br>\n";
   open DATA, "$DATAFILE" or die "Couldn't open file, $DATAFILE: $!";
+  $i = 0;
+  print "<pre>\n";
   while (<DATA>) {
-    print "$_<br>\n";
+    chomp($_);
+    my $line_string = sprintf "%4d %s\n", $i, $_;
+    print "$line_string";
+    $i++;
   }
+  print "</pre>\n";
   close DATA;  
 
 }
