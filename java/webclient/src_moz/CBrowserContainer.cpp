@@ -37,76 +37,6 @@
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
-jlong CBrowserContainer::DocumentLoader_maskValues[] = { -1L };
-char * CBrowserContainer::DocumentLoader_maskNames[] = {
-  "START_DOCUMENT_LOAD_EVENT_MASK",
-  "END_DOCUMENT_LOAD_EVENT_MASK",
-  "START_URL_LOAD_EVENT_MASK",
-  "END_URL_LOAD_EVENT_MASK",
-  "PROGRESS_URL_LOAD_EVENT_MASK",
-  "STATUS_URL_LOAD_EVENT_MASK",
-  "UNKNOWN_CONTENT_EVENT_MASK",
-  "FETCH_INTERRUPT_EVENT_MASK",
-  nsnull
-};
-
-jlong CBrowserContainer::DOMMouseListener_maskValues[] = { -1L };
-char *CBrowserContainer::DOMMouseListener_maskNames[] = {
-    "MOUSE_DOWN_EVENT_MASK",
-    "MOUSE_UP_EVENT_MASK",
-    "MOUSE_CLICK_EVENT_MASK",
-    "MOUSE_DOUBLE_CLICK_EVENT_MASK",
-    "MOUSE_OVER_EVENT_MASK",
-    "MOUSE_OUT_EVENT_MASK",
-    nsnull
-};
-
-static jboolean STRING_CONSTANTS_INITED = JNI_FALSE;
-static jobject SCREEN_X_KEY = nsnull;
-static jobject SCREEN_Y_KEY = nsnull;
-static jobject CLIENT_X_KEY = nsnull;
-static jobject CLIENT_Y_KEY = nsnull;
-static jobject ALT_KEY = nsnull;
-static jobject CTRL_KEY = nsnull;
-static jobject SHIFT_KEY = nsnull;
-static jobject META_KEY = nsnull;
-static jobject BUTTON_KEY = nsnull;
-static jobject CLICK_COUNT_KEY = nsnull;
-static jobject TRUE_VALUE = nsnull;
-static jobject FALSE_VALUE = nsnull;
-static jobject ONE_VALUE = nsnull;
-static jobject TWO_VALUE = nsnull;
-
-/**
-
- * How to create a new listener type on the native side: <P>
-
- * 1. add an entry in the gSupportedListenerInterfaces array defined in
- * ns_util.cpp <P>
-
- * 2. add a corresponding entry in the LISTENER_CLASSES enum in
- * ns_util.h <P>
-
- * 3. add a jstring to the string constant list in
- * CBrowserContainer.cpp, below.
-
- * 4. Initialize this jstring constant in CBrowserContainer.cpp
- * initStringConstants() <P>
-
- * 5. add an entry to the switch statement in NativeEventThread.cpp
- * native{add,remove}Listener <P>
-
- */
-
-/**
-
- * We need one of these for each of the classes in
- * gSupportedListenerInterfaces, defined in ns_util.cpp
-
- */
-static jstring DOCUMENT_LOAD_LISTENER_CLASSNAME;
-static jstring MOUSE_LISTENER_CLASSNAME;
-
 #if defined(XP_UNIX) || defined(XP_MAC) || defined(XP_BEOS)
 
 #define WC_ITOA(intVal, buf, radix) sprintf(buf, "%d", intVal)
@@ -115,14 +45,6 @@ static jstring MOUSE_LISTENER_CLASSNAME;
 #endif
 
 
-/**
-
- * Initialize the above static jobject as jstrings
-
- */ 
-
-jboolean initStringConstants();
-
 CBrowserContainer::CBrowserContainer(nsIWebBrowser *pOwner, JNIEnv *env,
                                      WebShellInitContext *yourInitContext) :
     m_pOwner(pOwner), mJNIEnv(env), mInitContext(yourInitContext), 
@@ -130,12 +52,9 @@ CBrowserContainer::CBrowserContainer(nsIWebBrowser *pOwner, JNIEnv *env,
     inverseDepth(-1), properties(nsnull), currentDOMEvent(nsnull)
 {
   	NS_INIT_REFCNT();
-	if (nsnull == gVm) { // declared in ../src_share/jni_util.h
-        ::util_GetJavaVM(env, &gVm);  // save this vm reference away for the callback!
-    }
     // initialize the string constants (including properties keys)
-    if (!STRING_CONSTANTS_INITED) {
-        initStringConstants();
+    if (!util_StringConstantsAreInitialized()) {
+        util_InitStringConstants(env);
     }
 }
 
@@ -734,6 +653,8 @@ CBrowserContainer::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL,
             ::Recycle(urlStr);
         }
     }  
+
+    // maskValues array comes from ../src_share/jni_util.h
     util_SendEventToJava(mInitContext->env, 
                          mInitContext->nativeEventThread, mDocTarget, 
                          DOCUMENT_LOAD_LISTENER_CLASSNAME,
@@ -1062,7 +983,7 @@ NS_IMETHODIMP CBrowserContainer::AddDocumentLoadListener(jobject target)
         return NS_ERROR_FAILURE;
     }
 
-    if (-1 == CBrowserContainer::DocumentLoader_maskValues[0]) {
+    if (-1 == DocumentLoader_maskValues[0]) {
         util_InitializeEventMaskValuesFromClass("org/mozilla/webclient/DocumentLoadEvent",
                                                 DocumentLoader_maskNames, 
                                                 DocumentLoader_maskValues);
@@ -1182,7 +1103,7 @@ jobject JNICALL CBrowserContainer::getPropertiesFromEvent(nsIDOMEvent *event)
 void JNICALL CBrowserContainer::addMouseEventDataToProperties(nsIDOMEvent *aMouseEvent)
 {
     // if the initialization failed, don't modify the properties
-    if (!properties || !STRING_CONSTANTS_INITED) {
+    if (!properties || !util_StringConstantsAreInitialized()) {
         return;
     }
     nsresult rv;
@@ -1435,93 +1356,4 @@ nsresult JNICALL CBrowserContainer::takeActionOnNode(nsCOMPtr<nsIDOMNode> curren
 // Local functions
 //
 
-jboolean initStringConstants()
-{
-    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION_1_2);
 
-    if (nsnull == (SCREEN_X_KEY = 
-                   ::util_NewGlobalRef(env, (jobject) 
-                                       ::util_NewStringUTF(env, "ScreenX")))) {
-        return JNI_FALSE;
-    }
-    if (nsnull == (SCREEN_Y_KEY = 
-                   ::util_NewGlobalRef(env, (jobject)
-                                       ::util_NewStringUTF(env, "ScreenY")))) {
-        return JNI_FALSE;
-    }
-    if (nsnull == (CLIENT_X_KEY = 
-                   ::util_NewGlobalRef(env, (jobject)
-                                       ::util_NewStringUTF(env, "ClientX")))) {
-        return JNI_FALSE;
-    }
-    if (nsnull == (CLIENT_Y_KEY = 
-                   ::util_NewGlobalRef(env, (jobject)
-                                       ::util_NewStringUTF(env, "ClientY")))) {
-        return JNI_FALSE;
-    }
-    if (nsnull == (ALT_KEY = 
-                   ::util_NewGlobalRef(env, (jobject)
-                                       ::util_NewStringUTF(env, "Alt")))) {
-        return JNI_FALSE;
-    }
-    if (nsnull == (CTRL_KEY = 
-                   ::util_NewGlobalRef(env, (jobject)
-                                       ::util_NewStringUTF(env, "Ctrl")))) {
-        return JNI_FALSE;
-    }
-    if (nsnull == (SHIFT_KEY = 
-                   ::util_NewGlobalRef(env, (jobject)
-                                       ::util_NewStringUTF(env, "Shift")))) {
-        return JNI_FALSE;
-    }
-    if (nsnull == (META_KEY = 
-                   ::util_NewGlobalRef(env, (jobject)
-                                       ::util_NewStringUTF(env, "Meta")))) {
-        return JNI_FALSE;
-    }
-    if (nsnull == (BUTTON_KEY = 
-                   ::util_NewGlobalRef(env, (jobject)
-                                       ::util_NewStringUTF(env, "Button")))) {
-        return JNI_FALSE;
-    }
-    if (nsnull == (CLICK_COUNT_KEY = 
-                   ::util_NewGlobalRef(env, (jobject)
-                                       ::util_NewStringUTF(env, 
-                                                           "ClickCount")))) {
-        return JNI_FALSE;
-    }
-    if (nsnull == (TRUE_VALUE = 
-                   ::util_NewGlobalRef(env, (jobject)
-                                       ::util_NewStringUTF(env, "true")))) {
-        return JNI_FALSE;
-    }
-    if (nsnull == (FALSE_VALUE = 
-                   ::util_NewGlobalRef(env, (jobject)
-                                       ::util_NewStringUTF(env, "false")))) {
-        return JNI_FALSE;
-    }
-    if (nsnull == (ONE_VALUE = 
-                   ::util_NewGlobalRef(env, (jobject)
-                                       ::util_NewStringUTF(env, "1")))) {
-        return JNI_FALSE;
-    }
-    if (nsnull == (TWO_VALUE = 
-                   ::util_NewGlobalRef(env, (jobject)
-                                       ::util_NewStringUTF(env, "2")))) {
-        return JNI_FALSE;
-    }
-    if (nsnull == (DOCUMENT_LOAD_LISTENER_CLASSNAME = (jstring)
-                   ::util_NewGlobalRef(env, (jobject)
-                                       ::util_NewStringUTF(env, 
-                                                           gSupportedListenerInterfaces[DOCUMENT_LOAD_LISTENER])))) {
-        return JNI_FALSE;
-    }
-    if (nsnull == (MOUSE_LISTENER_CLASSNAME = (jstring)
-                   ::util_NewGlobalRef(env, (jobject)
-                                       ::util_NewStringUTF(env, 
-                                                           gSupportedListenerInterfaces[MOUSE_LISTENER])))) {
-        return JNI_FALSE;
-    }
-
-    return STRING_CONSTANTS_INITED = JNI_TRUE;
-}

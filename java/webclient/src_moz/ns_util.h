@@ -120,15 +120,6 @@ enum {
 
 extern const char *gSupportedListenerInterfaces[]; // defined in ns_util.cpp
 
-// these index into the gSupportedListenerInterfaces array
-
-typedef enum {
-    DOCUMENT_LOAD_LISTENER = 0,
-    MOUSE_LISTENER,
-    LISTENER_NOT_FOUND
-} LISTENER_CLASSES;
-
-
 /**
 
  * This method calls PL_PostEvent(),

@@ -39,8 +39,8 @@
  */
 
 const char *gSupportedListenerInterfaces[] = {
-    "org.mozilla.webclient.DocumentLoadListener",
-    "java.awt.event.MouseListener",
+    DOCUMENT_LOAD_LISTENER_CLASSNAME_VALUE,
+    MOUSE_LISTENER_CLASSNAME_VALUE,
     nsnull
 };
 
