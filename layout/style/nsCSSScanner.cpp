@@ -234,7 +234,8 @@ void nsCSSScanner::AddToError(const nsAString& aErrorText)
     mErrorColNumber = mColNumber;
     mError = aErrorText;
   } else {
-    mError.Append(NS_LITERAL_STRING("  ") + aErrorText);
+    // XXX nsAutoString is workaround for string hang bug (bug 74709)!
+    mError.Append(NS_LITERAL_STRING("  ") + nsAutoString(aErrorText));
   }
 }
 
