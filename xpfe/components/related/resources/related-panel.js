@@ -35,13 +35,9 @@ Handler = Handler.QueryInterface(Components.interfaces.nsIRelatedLinksHandler);
 // Our observer object
 var Observer = {
     Observe: function(subject, topic, data) {
-        // Convert the subject to a nsIDOMWindow, which is what it should be.
-        subject = subject.QueryInterface(Components.interfaces.nsIDOMWindow);
-
-        // We can't use '==' until the DOM is converted to XPIDL.
-        if (! subject.Equals(ContentWindow)) {
+        // dump("Observer.Observe(" + subject + ", " + topic + ", " + data + ")\n");
+        if (subject != ContentWindow)
             return;
-        }
 
         // Okay, it's a hit. Before we go out and fetch RL data, make sure that
         // the RelatedLinks folder is open.
