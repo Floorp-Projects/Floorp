@@ -35,7 +35,7 @@
 #define PKI1_H
 
 #ifdef DEBUG
-static const char PKI1_CVS_ID[] = "@(#) $RCSfile: pki1.h,v $ $Revision: 1.1 $ $Date: 2000/03/31 19:16:24 $ $Name:  $";
+static const char PKI1_CVS_ID[] = "@(#) $RCSfile: pki1.h,v $ $Revision: 1.2 $ $Date: 2001/07/19 20:40:42 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -235,7 +235,7 @@ extern const NSSError NSS_ERROR_INVALID_NSSOID;
  */
 
 #ifdef DEBUG
-NSS_EXTERN const char *
+NSS_EXTERN const NSSUTF8 *
 nssOID_getExplanation
 (
   NSSOID *oid

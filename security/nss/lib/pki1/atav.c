@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: atav.c,v $ $Revision: 1.1 $ $Date: 2000/03/31 19:16:16 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: atav.c,v $ $Revision: 1.2 $ $Date: 2001/07/19 20:40:42 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -1204,7 +1204,7 @@ nssATAV_CreateFromUTF8
       return (NSSATAV *)NULL;
     }
 
-    oidder = nssOID_GetDEREncoding(rv->oid, a);
+    oidder = nssOID_GetDEREncoding(rv->oid, (NSSDER *)NULL, a);
     if( (NSSDER *)NULL == oidder ) {
       (void)NSSArena_Destroy(a);
       (void)nss_ZFreeIf(rv->value);
