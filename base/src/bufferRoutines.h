@@ -57,7 +57,7 @@ inline PRUnichar GetCharAt(const char* aString,PRUint32 anIndex) {
  */
 void ShiftCharsLeft(char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint32 aCount) { 
   PRUint32 theMax=aLength-anOffset;
-  PRUint32 theLength=(theMax<aCount) ? theMax : aCount;
+//  PRUint32 theLength=(theMax<aCount) ? theMax : aCount;
 
   char* first= aDest+anOffset+aCount;
   char* last = aDest+aLength;
@@ -102,7 +102,7 @@ void ShiftCharsRight(char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint32 aCo
  */
 void ShiftDoubleCharsLeft(char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint32 aCount) { 
   PRUint32 theMax=aLength-anOffset;
-  PRUint32 theLength=(theMax<aCount) ? theMax : aCount;
+//  PRUint32 theLength=(theMax<aCount) ? theMax : aCount;
 
   PRUnichar* theBuf=(PRUnichar*)aDest;
   PRUnichar* first= theBuf+anOffset+aCount;
@@ -549,7 +549,7 @@ CaseConverters gCaseConverters[]={&ConvertCase1,&ConvertCase2};
  * @return  the new length of the given buffer
  */
 PRInt32 StripChars1(char* aString,PRUint32 anOffset,PRUint32 aCount,const char* aSet){ 
-  PRInt32 result=0;
+//  PRInt32 result=0;
 
   typedef char  chartype;
   chartype*  from = (chartype*)&aString[anOffset];
@@ -581,7 +581,7 @@ PRInt32 StripChars1(char* aString,PRUint32 anOffset,PRUint32 aCount,const char* 
  * @return  the new length of the given buffer
  */
 PRInt32 StripChars2(char* aString,PRUint32 anOffset,PRUint32 aCount,const char* aSet){ 
-  PRInt32 result=0;
+//  PRInt32 result=0;
 
   typedef PRUnichar  chartype;
   chartype*  from = (chartype*)&aString[anOffset];
@@ -622,7 +622,7 @@ StripChars gStripChars[]={&StripChars1,&StripChars2};
  * @return  the new length of the given buffer
  */
 PRInt32 TrimChars1(char* aString,PRUint32 aLength,const char* aSet,PRBool aEliminateLeading,PRBool aEliminateTrailing){ 
-  PRInt32 result=0;
+//  PRInt32 result=0;
 
   typedef char  chartype;
   chartype*  from = (chartype*)aString;
@@ -745,7 +745,7 @@ TrimChars gTrimChars[]={&TrimChars1,&TrimChars2};
  * @return  the new length of the given buffer
  */
 PRInt32 CompressChars1(char* aString,PRUint32 aLength,const char* aSet,PRUint32 aChar,PRBool aEliminateLeading,PRBool aEliminateTrailing){ 
-  PRInt32 result=0;
+//  PRInt32 result=0;
 
   TrimChars1(aString,aLength,aSet,aEliminateLeading,aEliminateTrailing);
 
@@ -791,7 +791,7 @@ PRInt32 CompressChars1(char* aString,PRUint32 aLength,const char* aSet,PRUint32 
  * @return  the new length of the given buffer
  */
 PRInt32 CompressChars2(char* aString,PRUint32 aLength,const char* aSet,PRUint32 aChar,PRBool aEliminateLeading,PRBool aEliminateTrailing){ 
-  PRInt32 result=0;
+//  PRInt32 result=0;
 
   TrimChars2(aString,aLength,aSet,aEliminateLeading,aEliminateTrailing);
 

@@ -124,7 +124,7 @@ HandleCaseConversionShutdown2::OnShutdown(const nsCID& cid, nsISupports* service
 {
     if (cid.Equals(kUnicharUtilCID)) {
         NS_ASSERTION(service == gCaseConv, "wrong service!");
-        nsrefcnt cnt = gCaseConv->Release();
+        gCaseConv->Release();
         gCaseConv = NULL;
     }
     return NS_OK;
@@ -742,7 +742,7 @@ PRInt32 nsString::ToInteger(PRInt32* aErrorCode,PRInt32 aRadix) const {
   PRUnichar*  cp = (-1==decPt) ? mStr + mLength-1 : mStr+decPt-1;
   char        digit=0;
   PRUnichar   theChar;
-  PRInt32     theShift=0;
+//  PRInt32     theShift=0;
   PRInt32     theMult=1;
 
   *aErrorCode = (0<mLength) ? NS_OK : NS_ERROR_ILLEGAL_VALUE;
