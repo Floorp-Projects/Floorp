@@ -45,3 +45,10 @@ DIRS		= public src
 
 include $(topsrcdir)/config/rules.mk
 
+# Needed for preprocessor removal of IE Profile Migrator label - bug 236901
+ifeq ($(OS_ARCH),WINNT))
+ifdef GNU_CXX
+DEFINES += -DNO_IE_MIGRATOR=1
+endif
+endif
+
