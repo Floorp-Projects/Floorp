@@ -203,13 +203,21 @@ nsIOService::MakeAbsolute(const char *aSpec,
                           char **result)
 {
     nsresult rv;
+    NS_ASSERTION(aBaseURI, "It doesn't make sense to not supply a base URI");
+
     char* scheme;
     rv = GetScheme(aSpec, &scheme);
-    if (NS_FAILED(rv)) {
-        if (aBaseURI)
-            rv = aBaseURI->GetScheme(&scheme);
-        if (NS_FAILED(rv)) return rv;
+    if (NS_SUCCEEDED(rv)) {
+        // if aSpec has a scheme, then it's already absolute
+        *result = nsCRT::strdup(aSpec);
+        if (*result == nsnull)
+            return NS_ERROR_OUT_OF_MEMORY;
+        return NS_OK;
     }
+
+    // else ask the protocol handler for the base URI to deal with it
+    rv = aBaseURI->GetScheme(&scheme);
+    if (NS_FAILED(rv)) return rv;
     
     nsCOMPtr<nsIProtocolHandler> handler;
     rv = GetProtocolHandler(scheme, getter_AddRefs(handler));
