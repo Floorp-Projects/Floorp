@@ -162,17 +162,6 @@ button.showMore
    -moz-user-focus     	: ignore !important;
 } 
 
-#advanced-dialog-advanced-toggle.showLess
-{
-	list-style-image        : url("chrome://penglobal/skin/dialog/standard-dialog-command-less.png");
-}
-
-#advanced-dialog-advanced-toggle.showMore
-{
-	list-style-image        : url("chrome://penglobal/skin/dialog/standard-dialog-command-more.png");
-	
-}
-
 /* Standard Dialog Command Button Bars */
 #standard-dialog-command
 {
