@@ -65,6 +65,11 @@ var setDefaultButton;
 // called when the whole document loads
 // perform initialization here
 function onLoad() {
+  
+  var selectedAccount;
+  if (window.arguments && window.arguments[0])
+    selectedServer = window.arguments[0].server;
+  
   accountArray = new Array;
   RDF = Components.classes["component://netscape/rdf/rdf-service"].getService(Components.interfaces.nsIRDFService);
 
@@ -81,19 +86,41 @@ function onLoad() {
   deleteButton = document.getElementById("deleteButton");
   setDefaultButton = document.getElementById("setDefaultButton");
 
-  selectFirstAccount()
+  sortAccountList(accounttree);
+  selectServer(selectedServer)
 }
 
-function selectFirstAccount()
-{ 
-  var tree = document.getElementById("accounttree");
-  var firstItem = findFirstTreeItem(tree);
+function sortAccountList(accounttree)
+{
+  var xulSortService = Components.classes["component://netscape/rdf/xul-sort-service"].getService(Components.interfaces.nsIXULSortService);
+  
+  xulSortService.Sort(accounttree, 'http://home.netscape.com/NC-rdf#FolderTreeName?sort=true', 'ascending');
+}
 
-  if (firstItem) accounttree.selectItem(firstItem);
+function selectServer(server)
+{
+  var selectedItem;
+  
+  if (server)
+    selectedItem = document.getElementById(server.serverURI);
+
+  if (!selectedItem)
+    selectedItem = getFirstAccount();
+  
+  accounttree.selectItem(selectedItem);
+  
   var result = getServerIdAndPageIdFromTree(accounttree);
   if (result) {
     updateButtons(accounttree,result.serverId);
   }
+}
+
+function getFirstAccount()
+{
+  var tree = document.getElementById("accounttree");
+  var firstItem = findFirstTreeItem(tree);
+
+  return firstItem;
 }
 
 function findFirstTreeItem(tree) {

@@ -226,7 +226,6 @@ nsMsgAccountManagerDataSource::Init()
 
 void nsMsgAccountManagerDataSource::Cleanup()
 {
-    printf("*** AccountManager Datasource cleanup\n");
     nsCOMPtr<nsIMsgAccountManager> am =
         do_QueryReferent(mAccountManager);
 
@@ -321,15 +320,37 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
     // only answer for servers!
     if (NS_FAILED(rv) || !server)
         return NS_RDF_NO_VALUE;
+
+    // order is:
+    // - default account
+    // - <other servers>
+    // - Local Folders
+    // - news
     
     PRInt32 accountNum;
     nsCOMPtr<nsIMsgAccountManager> am =
         do_QueryReferent(mAccountManager);
-    rv = am->FindServerIndex(server, &accountNum);
-    if (NS_FAILED(rv)) return rv;
+
+    if (isDefaultServer(server))
+        str = NS_LITERAL_STRING("0000");
+    else {
     
-    accountNum += 1000;
-    str.AppendInt(accountNum);
+        rv = am->FindServerIndex(server, &accountNum);
+        if (NS_FAILED(rv)) return rv;
+        
+        // this is a hack for now - hardcode server order by type
+        nsXPIDLCString serverType;
+        server->GetType(getter_Copies(serverType));
+        
+        if (nsCRT::strcasecmp(serverType, "none")==0)
+            accountNum += 2000;
+        else if (nsCRT::strcasecmp(serverType, "nntp")==0)
+            accountNum += 3000;
+        else
+            accountNum += 1000;     // default is to appear at the top
+        
+        str.AppendInt(accountNum);
+    }
   }
 
   // GetTargets() stuff - need to return a valid answer so that

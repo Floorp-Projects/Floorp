@@ -588,6 +588,7 @@ function GetSelectedMessage()
 
 function GetServer(uri)
 {
+    if (!uri) return null;
 	try {
 		var folder = GetMsgFolderFromUri(uri);
 		return folder.server;

@@ -36,10 +36,12 @@
           <rule>
             <treechildren flex="1">
 			<treeitem uri="..." open="true"
+                sort="rdf:http://home.netscape.com/NC-rdf#FolderTreeName?sort=true"
                 IsDefaultServer="rdf:http://home.netscape.com/NC-rdf#IsDefaultServer"
                 PageTag="rdf:http://home.netscape.com/NC-rdf#PageTag">
 		  		<treerow >
-					<treecell class="treecell-indent" value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+					<treecell class="treecell-indent"
+                              value="rdf:http://home.netscape.com/NC-rdf#Name"/>
 		  		</treerow>
 			</treeitem>
             </treechildren>

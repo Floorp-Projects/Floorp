@@ -123,6 +123,13 @@ function msgOpenAccountWizard()
 
 function MsgAccountManager()
 {
+    var server;
+    try {
+        folderURI = GetSelectedFolderURI();
+        server = GetServer(folderURI);
+    } catch (ex) { /* functions might not be defined */}
+    
     window.openDialog("chrome://messenger/content/AccountManager.xul",
-                      "AccountManager", "chrome,modal,resizable");
+                      "AccountManager", "chrome,modal,resizable",
+                      { server: server });
 }
