@@ -215,7 +215,9 @@ new_input_callback_data(const char *filename, IncludePathEntry *include_path)
     new_data->point = new_data->buf;
     new_data->max = INPUT_BUF_CHUNK;
     new_data->filename = xpidl_strdup(filename);
-    new_data->lineno = 1;
+
+    /* libIDL expects the line number to be that of the *next* line */
+    new_data->lineno = 2;
     return new_data;
 }
 
