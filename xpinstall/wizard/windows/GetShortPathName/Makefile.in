@@ -30,7 +30,7 @@ PROGRAM		= GetShortPathName$(BIN_SUFFIX)
 
 USE_NON_MT_LIBS = 1
 
-CPPSRCS		= GetShortPathName.cpp
+CSRCS		= GetShortPathName.c
 
 NO_DIST_INSTALL	= 1
 
