@@ -775,7 +775,7 @@ NS_IMETHODIMP nsRenderingContextGTK::InvertRect(nscoord aX, nscoord aY, nscoord 
   // Fill the rect
   ::gdk_draw_rectangle(mSurface->GetDrawable(), mSurface->GetGC(),
                        TRUE,
-                       x, y, w+2, h);
+                       x, y, w, h);
 
   // Back to normal copy drawing mode
   ::gdk_gc_set_function(mSurface->GetGC(),GDK_COPY);
