@@ -2247,14 +2247,8 @@ main(int argc, char **argv)
     }
 
     /*  -w warp months  */
-    if (certutil.options[opt_OffsetMonths].activated) {
+    if (certutil.options[opt_OffsetMonths].activated)
 	warpmonths = PORT_Atoi(certutil.options[opt_OffsetMonths].arg);
-	if (warpmonths < 0) {
-	    PR_fprintf(PR_STDERR, "%s -w: incorrect offset months: \"%s\"\n",
-	               progName, certutil.options[opt_OffsetMonths].arg);
-	    return -1;
-	}
-    }
 
     /*  -y public exponent (for RSA)  */
     if (certutil.options[opt_Exponent].activated) {
