@@ -943,9 +943,9 @@ XULContentSinkImpl::HandleEndElement(const PRUnichar *aName)
             nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
 
             script->mOutOfLine = PR_FALSE;
-
-            rv = script->Compile(mText, mTextLength, mDocumentURL,
-                                 script->mLineNo, doc, mPrototype);
+            if (doc)
+                script->Compile(mText, mTextLength, mDocumentURL,
+                                script->mLineNo, doc, mPrototype);
         }
 
         FlushText(PR_FALSE);
