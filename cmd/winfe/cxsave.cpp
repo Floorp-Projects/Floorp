@@ -24,6 +24,7 @@
 #include "cxsave.h"
 #include "extgen.h"
 #include "intl_csi.h"
+#include "netcache.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -529,9 +530,20 @@ BOOL CSaveCX::CanCreate(URL_Struct* pUrl)
 		if (!IsSavingToGlobal()) {
 			// Query for a filename if we don't have one already
 			if(m_csFileName.IsEmpty()) {
+                // If not provided, try to acquire URL struct.
+                BOOL bAcquiredUrl = FALSE;
+                if ( !pUrl ) {
+                    // Try to get URL struct from cache.
+                    pUrl = NET_CreateURLStruct(m_csAnchor, NET_DONT_RELOAD);
+                    if ( pUrl ) {
+                        NET_FindURLInCache(pUrl, GetContext());
+                        bAcquiredUrl = TRUE;
+                    }
+                }
 
 #ifdef MOZ_MAIL_NEWS
 				char * pSuggested = MimeGuessURLContentName(GetContext(),m_csAnchor);
+
   				// get the mime content type 
  				if (pSuggested && *pSuggested) {
  					// check if the file doesn't have an extension
@@ -548,6 +560,12 @@ BOOL CSaveCX::CanCreate(URL_Struct* pUrl)
 				if(pSuggested)  {
 					XP_FREE(pSuggested);
 				}
+
+                // Free URL struct if we acquired it.
+                if ( bAcquiredUrl ) {
+                    NET_FreeURLStruct(pUrl);
+                    pUrl = 0;
+                }
 
 				if(pUserName == NULL) {
 					DestroyContext();
