@@ -32,6 +32,11 @@ CPPSRCS =                           \
     nsTransactionStack.cpp          \
     $(NULL)
 
+EXTRA_DSO_LDOPTS = \
+    -L$(DIST)/lib  \
+    -lraptorbase   \
+    $(NULL)
+
 MODULE = txmgr
 
 REQUIRES = xpcom
