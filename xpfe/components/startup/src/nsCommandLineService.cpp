@@ -50,7 +50,7 @@ nsCmdLineService::Initialize(int aArgc, char ** aArgv)
   mArgc = aArgc;
   mArgv = aArgv;
   //Insert the program name 
-  if (aArgv[0])
+  if (aArgc > 0 && aArgv[0])
   {
     mArgList.AppendElement(NS_REINTERPRET_CAST(void*, nsCRT::strdup("-progname")));
     mArgValueList.AppendElement(NS_REINTERPRET_CAST(void*, nsCRT::strdup(aArgv[0])));
