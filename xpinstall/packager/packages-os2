@@ -400,7 +400,7 @@ bin/components/mdn-service.js
 ;bin/components/nsSetDefaultMail.js
 ;bin/components/nsUnsetDefaultMail.js
 bin/components/bayesflt.dll
-bin/components/msgmailviews.xpt
+bin/components/mailview.xpt
 bin/components/mailview.dll
 
 [chatzilla]

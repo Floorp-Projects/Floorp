@@ -352,9 +352,9 @@ bin/components/smime-service.js
 bin/components/libmsgmdn.so
 bin/components/msgmdn.xpt
 bin/components/mdn-service.js
-bin/components/libbayesfilt.so
-bin/components/msgmailviews.xpt
-bin/components/msgmailviews.so
+bin/components/libbayesflt.so
+bin/components/mailview.xpt
+bin/components/mailview.so
 
 ; window icons
 bin/chrome/icons/default/abcardWindow*.xpm
