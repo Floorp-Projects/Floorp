@@ -435,12 +435,13 @@ protected:
 
   nscoord CalculateHorizBorderPaddingMargin(nscoord aContainingBlockWidth);
 
-  // Adjust Computed sizes for Min/Max Width and box-Sizing
+  // Adjust Computed sizes for Min/Max Width and box-Sizing (if
+  // aAdjustForBoxSizing is true)  
   // - guarantees that the computed height/width will be non-negative
   //   If the value goes negative (because the padding or border is greater than
   //   the width/height and it is removed due to box sizing) then it is driven to 0
-  void AdjustComputedHeight(void);
-  void AdjustComputedWidth(void);
+  void AdjustComputedHeight(PRBool aAdjustForBoxSizing);
+  void AdjustComputedWidth(PRBool aAdjustForBoxSizing);
 
 #ifdef IBMBIDI
   /**
