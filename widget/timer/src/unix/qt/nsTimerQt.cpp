@@ -48,61 +48,35 @@ nsTimerQt::~nsTimerQt()
 
     NS_IF_RELEASE(mCallback);
 
-    if (mEventHandler);
-    {
-	  delete mEventHandler;
-	  mEventHandler = nsnull;
+    if (mEventHandler) {
+      delete mEventHandler;
+      mEventHandler = nsnull;
     }
 
-    if (mTimer)
-    {
+    if (mTimer) {
       delete mTimer;
-	  mTimer = nsnull;
+      mTimer = nsnull;
     }
 }
 
 nsresult 
-nsTimerQt::Init(nsTimerCallbackFunc aFunc,
-                void *aClosure,
-                PRUint32 aDelay,
-                PRUint32 aPriority,
-                PRUint32 aType
-                )
+nsTimerQt::Init(nsTimerCallbackFunc aFunc, void *aClosure, PRUint32 aDelay,
+                PRUint32 aPriority, PRUint32 aType)
 {
     //debug("nsTimerQt::Init called with func + closure with %u delay", aDelay);
     mFunc = aFunc;
     mClosure = aClosure;
-    // mRepeat = aRepeat;
-
-    if ((aDelay > 10000) || (aDelay < 0)) 
-    {
-        printf("Timer::Init() called with bogus value \"%d\"!  Not enabling timer.",
-               aDelay);
-        return Init(aDelay);
-    }
 
     return Init(aDelay);
 }
 
 nsresult 
-nsTimerQt::Init(nsITimerCallback *aCallback,
-                PRUint32 aDelay,
-                PRUint32 aPriority,
-                PRUint32 aType
-                )
+nsTimerQt::Init(nsITimerCallback *aCallback, PRUint32 aDelay,
+                PRUint32 aPriority, PRUint32 aType)
 {
     //debug("nsTimerQt::Init called with callback only with %u delay", aDelay);
     mCallback = aCallback;
     NS_ADDREF(mCallback);
-    // mRepeat = aRepeat;
-    if ((aDelay > 10000) || (aDelay < 0)) 
-    {
-        printf("Timer::Init() called with bogus value \"%d\"!  Not enabling timer.",
-               aDelay);
-        return NS_OK;
-        //return Init(aDelay);
-    }
-
     return Init(aDelay);
 }
 
@@ -113,12 +87,9 @@ nsTimerQt::Init(PRUint32 aDelay)
 
     mEventHandler = new nsTimerEventHandler(this, mFunc, mClosure, mCallback);
 
-//     NS_ADDREF(this);
-
     mTimer = new QTimer();
     
-    if (!mTimer) 
-    {
+    if (!mTimer) {
         return NS_ERROR_NOT_INITIALIZED;
     }
 
@@ -134,15 +105,15 @@ nsTimerQt::Init(PRUint32 aDelay)
     return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(nsTimerQt, kITimerIID)
+NS_IMPL_ISUPPORTS1(nsTimerQt, nsITimer)
+
 
 
 void
 nsTimerQt::Cancel()
 {
     //debug("nsTimerQt::Cancel called for %p", this);
-    if (mTimer) 
-    {
+    if (mTimer) {
         mTimer->stop();
     }
 }
@@ -151,14 +122,12 @@ nsTimerQt::Cancel()
 nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
 {
     NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-    if (nsnull == aInstancePtrResult) 
-    {
+    if (nsnull == aInstancePtrResult) {
         return NS_ERROR_NULL_POINTER;
     }  
 
     nsTimerQt *timer = new nsTimerQt();
-    if (nsnull == timer) 
-    {
+    if (nsnull == timer) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
 

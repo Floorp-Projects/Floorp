@@ -28,6 +28,7 @@
 #include "nsIWidget.h"
 #include "nsIFileWidget.h"
 
+#define FAKE_QSTRINGLIST_H /* Avoid pulling in Corel's qstringlist.h */
 #include <qfiledialog.h>
 
 /**

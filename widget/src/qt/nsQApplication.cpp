@@ -21,45 +21,135 @@
  */
 
 #include "nsQApplication.h"
-#include <qsocketnotifier.h>
+
+#ifdef DEBUG
+/* Required for x11EventFilter debugging hook */
+#include "X11/Xlib.h"
+#endif
+
+nsQApplication *nsQApplication::mInstance = nsnull;
+QIntDict<nsQtEventQueue> nsQApplication::mQueueDict;
+PRUint32 nsQApplication::mRefCnt = 0;
+
+nsQApplication *nsQApplication::Instance(int argc, char ** argv)
+{
+  if (!mInstance)
+    mInstance = new nsQApplication(argc,argv);
+
+  mRefCnt++;
+  return mInstance;
+}
+
+nsQApplication *nsQApplication::Instance(Display * display)
+{
+  if (!mInstance)
+    mInstance = new nsQApplication(display);
+
+  mRefCnt++;
+  return mInstance;
+}
+
+void nsQApplication::Release()
+{
+  mRefCnt--;
+  if (mRefCnt <= 0)
+    delete mInstance;
+}
 
 nsQApplication::nsQApplication(int argc, char ** argv)
 	: QApplication(argc, argv)
 {
-    mEventQueue = nsnull;
+   if (mInstance)
+     NS_ASSERTION(mInstance == nsnull,"Attempt to create duplicate QApplication Object.");
+   mInstance = this;
+   setGlobalMouseTracking(true);
 }
 
 nsQApplication::nsQApplication(Display * display)
 	: QApplication(display)
 {
-    mEventQueue = nsnull;
-    setGlobalMouseTracking(true);
+   if (mInstance)
+     NS_ASSERTION(mInstance == nsnull,"Attempt to create duplicate QApplication Object.");
+   mInstance = this;
+   setGlobalMouseTracking(true);
 }
 
 nsQApplication::~nsQApplication()
 {
     setGlobalMouseTracking(false);
+}
+
+void nsQApplication::AddEventProcessorCallback(nsIEventQueue * EQueue)
+{
+  nsQtEventQueue *que = nsnull;
+
+  if ((que = mQueueDict.find(EQueue->GetEventQueueSelectFD()))) {
+    que->IncRefCnt();
+  }
+  else {
+     mQueueDict.insert(EQueue->GetEventQueueSelectFD(),new nsQtEventQueue(EQueue));
+  }
+}
+
+void nsQApplication::RemoveEventProcessorCallback(nsIEventQueue * EQueue)
+{
+  nsQtEventQueue *que = nsnull;
+
+  if ((que = mQueueDict.find(EQueue->GetEventQueueSelectFD()))) {
+     que->DataReceived();
+     if (que->DecRefCnt() <= 0) {
+       mQueueDict.take(EQueue->GetEventQueueSelectFD());
+       delete que;
+     }
+  }
+}
+
+#ifdef DEBUG
+/* Hook for capturing X11 Events before they are processed by Qt */
+bool nsQApplication::x11EventFilter(XEvent *event)
+{
+  if (event->type == ButtonPress || event->type == ButtonRelease) {
+    int i;
+
+    /* Break here to see Mouse Button Events */
+    i = 0;
+  }
+  return FALSE;
+}
+#endif
+
+nsQtEventQueue::nsQtEventQueue(nsIEventQueue * EQueue)
+{
+    mQSocket = nsnull;
+    mEventQueue = EQueue;
+    NS_IF_ADDREF(mEventQueue);
+    mRefCnt = 1;
+
+    mQSocket = new QSocketNotifier(mEventQueue->GetEventQueueSelectFD(),
+                                   QSocketNotifier::Read,this);
+    if (mQSocket)
+      connect(mQSocket, SIGNAL(activated(int)), this, SLOT(DataReceived()));
+}
+
+nsQtEventQueue::~nsQtEventQueue()
+{
+    if (mQSocket)
+      delete mQSocket;
     NS_IF_RELEASE(mEventQueue);
 }
 
-void nsQApplication::SetEventProcessorCallback(nsIEventQueue * EQueue)
+unsigned long nsQtEventQueue::IncRefCnt()
 {
-    mEventQueue = EQueue;
-    NS_IF_ADDREF(mEventQueue);
-
-    QSocketNotifier * sn = new QSocketNotifier(EQueue->GetEventQueueSelectFD(),
-                                               QSocketNotifier::Read,
-                                               this);
-    connect(sn, 
-            SIGNAL(activated(int)),
-            this, 
-            SLOT(DataReceived()));
+  return --mRefCnt;
 }
 
-void nsQApplication::DataReceived()
+unsigned long nsQtEventQueue::DecRefCnt()
+{
+  return ++mRefCnt;
+}
+
+void nsQtEventQueue::DataReceived()
 {
     if (mEventQueue)
-    {
         mEventQueue->ProcessPendingEvents();
-    }
 }

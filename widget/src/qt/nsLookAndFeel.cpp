@@ -28,12 +28,7 @@
 
 #include "nsXPLookAndFeel.h"
 
-static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
-
-#define GDK_COLOR_TO_NS_RGB(c) \
-  ((nscolor) NS_RGB(c.red, c.green, c.blue))
-
-NS_IMPL_ISUPPORTS(nsLookAndFeel, kILookAndFeelIID);
+NS_IMPL_ISUPPORTS1(nsLookAndFeel, nsILookAndFeel)
 
 //-------------------------------------------------------------------------
 //
@@ -44,6 +39,7 @@ nsLookAndFeel::nsLookAndFeel()
 {
     PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsLookAndFeel::nsLookAndFeel()\n"));
     NS_INIT_REFCNT();
+    (void)NS_NewXPLookAndFeel(getter_AddRefs(mXPLookAndFeel));
 }
 
 nsLookAndFeel::~nsLookAndFeel()
@@ -65,8 +61,9 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
     }
 
     QPalette    palette     = qApp->palette();
-    QColorGroup normalGroup = palette.normal();
+    QColorGroup normalGroup = palette.inactive();
     QColorGroup activeGroup = palette.active();
+    QColorGroup disabledGroup = palette.disabled();
 
     switch (aID) 
     {
@@ -106,8 +103,91 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
     case eColor_TextSelectForeground:
         aColor = activeGroup.foreground().rgb();
         break;
-    default:
+    case eColor_activeborder:
+        aColor = normalGroup.background().rgb();
+        break;
+    case eColor_activecaption:
+        aColor = normalGroup.background().rgb();
+        break;
+    case eColor_appworkspace:
+        aColor = normalGroup.background().rgb();
+        break;
+    case eColor_background:
+        aColor = normalGroup.background().rgb();
+        break;
+
+    case eColor_captiontext:
         aColor = normalGroup.text().rgb();
+        break;
+    case eColor_graytext:
+        aColor = disabledGroup.text().rgb();
+        break;
+    case eColor_highlight:
+        aColor = activeGroup.background().rgb();
+        break;
+    case eColor_highlighttext:
+        aColor = activeGroup.text().rgb();
+        break;
+    case eColor_inactiveborder:
+        aColor = normalGroup.background().rgb();
+        break;
+    case eColor_inactivecaption:
+        aColor = disabledGroup.background().rgb();
+        break;
+    case eColor_inactivecaptiontext:
+        aColor = disabledGroup.text().rgb();
+        break;
+    case eColor_infobackground:
+        aColor = normalGroup.background().rgb();
+        break;
+    case eColor_infotext:
+        aColor = normalGroup.text().rgb();
+        break;
+    case eColor_menu:
+        aColor = normalGroup.background().rgb();
+        break;
+    case eColor_menutext:
+        aColor = normalGroup.text().rgb();
+        break;
+    case eColor_scrollbar:
+        aColor = normalGroup.background().rgb();
+        break;
+
+    case eColor_threedface:
+    case eColor_buttonface:
+        aColor = normalGroup.background().rgb();
+        break;
+
+    case eColor_buttonhighlight:
+    case eColor_threedhighlight:
+        aColor = normalGroup.light().rgb();
+        break;
+
+    case eColor_buttontext:
+        aColor = normalGroup.text().rgb();
+        break;
+
+    case eColor_buttonshadow:
+    case eColor_threeddarkshadow:
+    case eColor_threedshadow: // i think these should be the same
+        aColor = normalGroup.dark().rgb();
+        break;
+
+    case eColor_threedlightshadow:
+        aColor = normalGroup.light().rgb();
+        break;
+
+    case eColor_window:
+    case eColor_windowframe:
+        aColor = normalGroup.background().rgb();
+        break;
+
+    case eColor_windowtext:
+        aColor = normalGroup.text().rgb();
+        break;
+
+    default:
+        aColor = 0;
         res    = NS_ERROR_FAILURE;
         break;
     }
@@ -134,17 +214,12 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         aMetric = 0;
         break;
     case eMetric_WindowBorderWidth:
-        aMetric = 5;
         break;
     case eMetric_WindowBorderHeight:
-        aMetric = 5;
         break;
     case eMetric_Widget3DBorder:
-// XXX look into this
-        aMetric = 4;
         break;
     case eMetric_TextFieldHeight:
-//        aMetric = 10;
         aMetric = 15;
         break;
     case eMetric_TextFieldBorder:
@@ -196,8 +271,12 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     case eMetric_SubmenuDelay:
         aMetric = 200;
         break;
+    case eMetric_MenusCanOverlapOSBar:
+        // we want XUL popups to be able to overlap the task bar.
+        aMetric = 1;
+        break;
     default:
-        aMetric = -1;
+        aMetric = 0;
         res     = NS_ERROR_FAILURE;
     }
 

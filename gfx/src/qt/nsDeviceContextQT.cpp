@@ -24,9 +24,12 @@
 #include <math.h>
 
 #include "nspr.h"
+#include "nsIPref.h"
+#include "nsIServiceManager.h"
 #include "il_util.h"
-
+#include "nsCRT.h"
 #include "nsDeviceContextQT.h"
+#include "nsFontMetricsQT.h"
 #include "nsGfxCIID.h"
 
 #include "nsGfxPSCID.h"
@@ -38,8 +41,13 @@
 #include <qapplication.h>
 #include <qstyle.h>
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
+#include "nsIScreenManager.h"
+
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+
+nscoord nsDeviceContextQT::mDpi = 96;
+
+NS_IMPL_ISUPPORTS1(nsDeviceContextQT, nsIDeviceContext)
 
 nsDeviceContextQT::nsDeviceContextQT()
 {
@@ -53,16 +61,22 @@ nsDeviceContextQT::nsDeviceContextQT()
     mPaletteInfo.numReserved = 0;
     mPaletteInfo.palette = NULL;
     mNumCells = 0;
+    mWidthFloat = 0.0f;
+    mHeightFloat = 0.0f;
+    mWidth = -1;
+    mHeight = -1;
 }
 
 nsDeviceContextQT::~nsDeviceContextQT()
 {
-    PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsDeviceContextQT::~nsDeviceContextQT\n"));
+  PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsDeviceContextQT::~nsDeviceContextQT\n"));
+  nsresult rv;
+  nsCOMPtr<nsIPref> prefs = do_GetService(kPrefCID, &rv);
+  if (NS_SUCCEEDED(rv)) {
+    prefs->UnregisterCallback("browser.display.screen_resolution",
+                              prefChanged, (void *)this);
+  }
 }
-
-NS_IMPL_QUERY_INTERFACE(nsDeviceContextQT, kDeviceContextIID)
-NS_IMPL_ADDREF(nsDeviceContextQT)
-NS_IMPL_RELEASE(nsDeviceContextQT)
 
 NS_IMETHODIMP nsDeviceContextQT::Init(nsNativeWidget aNativeWidget)
 {
@@ -73,48 +87,87 @@ NS_IMETHODIMP nsDeviceContextQT::Init(nsNativeWidget aNativeWidget)
     mWidget = (QWidget *) aNativeWidget;
 
     if (mWidget != nsnull)
-    {
         pWidget = mWidget;
-    }
-    else
-    {
+    else {
         pWidget = new QWidget();
         bCleanUp = PR_TRUE;
     }
+    QPaintDeviceMetrics qPaintMetrics(pWidget);
 
-    QPaintDeviceMetrics pgm(pWidget);
+    nsresult ignore;
+    nsCOMPtr<nsIScreenManager> sm(do_GetService("@mozilla.org/gfx/screenmanager;1",&ignore));
+    if (sm) {
+      nsCOMPtr<nsIScreen> screen;
+      sm->GetPrimaryScreen(getter_AddRefs(screen));
+      if (screen) {
+        PRInt32 x, y, width, height, depth;
+        screen->GetAvailRect(&x,&y,&width,&height);
+        screen->GetPixelDepth(&depth);
+        mWidthFloat = float(width);
+        mHeightFloat = float(height);
+        mDepth = NS_STATIC_CAST(PRUint32,depth);
+      }
+    }
+    static int initialized = 0;
+    if (!initialized) {
+      initialized = 1;
 
-    mDepth = pgm.depth();
+      // Set prefVal the value of the preference "browser.display.screen_resolution"
+      // or -1 if we can't get it.
+      // If it's negative, we pretend it's not set.
+      // If it's 0, it means force use of the operating system's logical resolution.
+      // If it's positive, we use it as the logical resolution
+      PRInt32 prefVal = -1;
+      nsresult res;
 
-    // Compute dpi of display
-    float width = float(pgm.width());
-    float widthIn = float(pgm.widthMM()) / 25.4f;
-    nscoord dpi = nscoord(width / widthIn);
+      NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res);
+      if (NS_SUCCEEDED(res) && prefs) {
+        res = prefs->GetIntPref("browser.display.screen_resolution", &prefVal);
+        if (! NS_SUCCEEDED(res)) {
+          prefVal = -1;
+        }
+        prefs->RegisterCallback("browser.display.screen_resolution", prefChanged,
+                                (void *)this);
+      }
 
+      // Set OSVal to what the operating system thinks the logical resolution is.
+      PRInt32 OSVal = qPaintMetrics.logicalDpiX();
+
+      if (prefVal > 0) {
+        // If there's a valid pref value for the logical resolution,
+        // use it.
+        mDpi = prefVal;
+      } else if ((prefVal == 0) || (OSVal > 96)) {
+        // Either if the pref is 0 (force use of OS value) or the OS
+        // value is bigger than 96, use the OS value.
+        mDpi = OSVal;
+      } else {
+        // if we couldn't get the pref or it's negative, and the OS
+        // value is under 96ppi, then use 96.
+        mDpi = 96;
+      }
+    }
     // Now for some wacky heuristics. 
-    if (dpi < 84) dpi = 72;
-    else if (dpi < 108) dpi = 96;
-    else if (dpi < 132) dpi = 120;
 
-    mTwipsToPixels = float(dpi) / float(NSIntPointsToTwips(72));
-    mPixelsToTwips = 1.0f / mTwipsToPixels;
+    SetDPI(mDpi);
 
+#ifdef DEBUG
     static PRBool once = PR_TRUE;
-    if (once) 
-    {
+    if (once) {
         PR_LOG(QtGfxLM, 
                PR_LOG_DEBUG, 
                ("nsDeviceContextQT::Init dpi=%d, t2p=%d, p2t=%d\n",
-                dpi, 
+                mDpi, 
                 mTwipsToPixels, 
                 mPixelsToTwips));
+        printf("GFX: dpi=%d t2p=%g p2t=%g depth=%d\n",
+               mDpi,mTwipsToPixels,mPixelsToTwips,mDepth);
         once = PR_FALSE;
     }
+#endif
 
     QScrollBar * sb = new QScrollBar(nsnull, nsnull);
-
-    if (sb)
-    {
+    if (sb) {
         sb->setOrientation(QScrollBar::Vertical);
         QSize size = sb->sizeHint();
 
@@ -126,26 +179,69 @@ NS_IMETHODIMP nsDeviceContextQT::Init(nsNativeWidget aNativeWidget)
         mScrollbarHeight = size.height();
     }
     //QSize size = pWidget->frameSize();
-	QRect rect = pWidget->frameGeometry();
+    QRect rect = pWidget->frameGeometry();
 
     mWindowBorderWidth = rect.width();
     mWindowBorderHeight = rect.height();
 
+    DeviceContextImpl::CommonInit();
+
     delete sb;
 
     if (bCleanUp)
-    {
         delete pWidget;
-    }
-
     return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsDeviceContextQT::CreateRenderingContext(nsIRenderingContext *&aContext)
 {
-    PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsDeviceContextQT::CreateRenderingContext\n"));
-    return NS_ERROR_FAILURE;
+  PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsDeviceContextQT::CreateRenderingContext\n"));
+  nsIRenderingContext *pContext;
+  nsresult             rv;
+  nsDrawingSurfaceQT  *surf;
+  QPaintDevice *pDev = nsnull;
+
+  if (mWidget)
+    pDev = (QPaintDevice*)mWidget;
+ 
+  // to call init for this, we need to have a valid nsDrawingSurfaceQT created
+  pContext = new nsRenderingContextQT();
+ 
+  if (nsnull != pContext)
+  {
+    NS_ADDREF(pContext);
+ 
+    // create the nsDrawingSurfaceQT
+    surf = new nsDrawingSurfaceQT();
+ 
+    if (surf)
+    {
+        QPainter *gc = new QPainter();
+ 
+        // init the nsDrawingSurfaceQT
+        if (pDev)
+          rv = surf->Init(pDev,gc);
+        else
+          rv = surf->Init(gc,10,10,0);
+ 
+        if (NS_OK == rv)
+          // Init the nsRenderingContextQT
+          rv = pContext->Init(this, surf);
+    }
+    else
+      rv = NS_ERROR_OUT_OF_MEMORY;
+  }
+  else
+    rv = NS_ERROR_OUT_OF_MEMORY;
+ 
+  if (NS_OK != rv)
+  {
+    NS_IF_RELEASE(pContext);
+  }
+  aContext = pContext;
+
+  return rv;
 }
 
 NS_IMETHODIMP 
@@ -180,8 +276,9 @@ nsDeviceContextQT::GetSystemAttribute(nsSystemAttrID anID,
     PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsDeviceContextQT::GetSystemAttribute\n"));
     nsresult    status      = NS_OK;
     QPalette    palette     = qApp->palette();
-    QColorGroup normalGroup = palette.normal();
+    QColorGroup normalGroup = palette.inactive();
     QColorGroup activeGroup = palette.active();
+    QColorGroup disabledGroup = palette.disabled();
 
     switch (anID) 
     {
@@ -207,12 +304,10 @@ nsDeviceContextQT::GetSystemAttribute(nsSystemAttrID anID,
         *aInfo->mColor = activeGroup.foreground().rgb();
         break;
     case eSystemAttr_Color_Widget3DHighlight:
-        *aInfo->mColor = normalGroup.highlight().rgb();//NS_RGB(0xa0,0xa0,0xa0);
-        //*aInfo->mColor = normalGroup.light().rgb();//NS_RGB(0xa0,0xa0,0xa0);
+        *aInfo->mColor = normalGroup.highlight().rgb();
         break;
     case eSystemAttr_Color_Widget3DShadow:
-        *aInfo->mColor = normalGroup.shadow().rgb();//NS_RGB(0x40,0x40,0x40);
-        //*aInfo->mColor = normalGroup.dark().rgb();//NS_RGB(0x40,0x40,0x40);
+        *aInfo->mColor = normalGroup.shadow().rgb();
         break;
     case eSystemAttr_Color_TextBackground:
         *aInfo->mColor = normalGroup.background().rgb();
@@ -256,13 +351,23 @@ nsDeviceContextQT::GetSystemAttribute(nsSystemAttrID anID,
     case eSystemAttr_Font_MessageBox: 
     case eSystemAttr_Font_SmallCaption: 
     case eSystemAttr_Font_StatusBar: 
+    case eSystemAttr_Font_Window:                   // css3
+    case eSystemAttr_Font_Document:
+    case eSystemAttr_Font_Workspace:
+    case eSystemAttr_Font_Desktop:
+    case eSystemAttr_Font_Info:
+    case eSystemAttr_Font_Dialog:
+    case eSystemAttr_Font_Button:
+    case eSystemAttr_Font_PullDownMenu:
+    case eSystemAttr_Font_List:
+    case eSystemAttr_Font_Field:
     case eSystemAttr_Font_Tooltips: 
     case eSystemAttr_Font_Widget:
         status = NS_ERROR_FAILURE;
         break;
     }
 
-    return NS_OK;
+    return status;
 }
 
 NS_IMETHODIMP 
@@ -289,7 +394,6 @@ NS_IMETHODIMP nsDeviceContextQT::CheckFontExistence(const nsString& aFontName)
 {
     float       t2d;
     GetTwipsToDevUnits(t2d);
-    PRInt32     dpi = NSToIntRound(t2d * 1440);
     nsresult    rv = NS_ERROR_FAILURE;
   
     char* fontName = aFontName.ToNewCString();
@@ -331,20 +435,36 @@ NS_IMETHODIMP nsDeviceContextQT::GetDeviceSurfaceDimensions(PRInt32 &aWidth,
                                                             PRInt32 &aHeight)
 {
     PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsDeviceContextQT::GetDeviceSurfaceDimensions\n"));
-    aWidth = 1;
-    aHeight = 1;
+    if (-1 == mWidth)
+      mWidth =  NSToIntRound(mWidthFloat * mDevUnitsToAppUnits);
 
-    return NS_ERROR_FAILURE;
+    if (-1 == mHeight)
+      mHeight =  NSToIntRound(mHeightFloat * mDevUnitsToAppUnits);
+
+    aWidth = mWidth;
+    aHeight = mHeight;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsDeviceContextQT::GetRect(nsRect &aRect)
+{
+    PRInt32 width, height;
+    nsresult rv;
+ 
+    PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsDeviceContextQT::GetRect\n"));
+    rv = GetDeviceSurfaceDimensions(width, height);
+    aRect.x = 0;
+    aRect.y = 0;
+    aRect.width = width;
+    aRect.height = height;
+    return rv;
 }
 
 NS_IMETHODIMP nsDeviceContextQT::GetClientRect(nsRect &aRect)
 {
     PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsDeviceContextQT::GetClientRect\n"));
-    aRect.x = 0;
-    aRect.y = 0;
-    aRect.width = 0;
-    aRect.height = 0;
-    return NS_ERROR_FAILURE;
+    return GetRect(aRect);
 }
 
 NS_IMETHODIMP 
@@ -405,35 +525,42 @@ NS_IMETHODIMP nsDeviceContextQT::EndPage(void)
 NS_IMETHODIMP nsDeviceContextQT::GetDepth(PRUint32& aDepth)
 {
     PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsDeviceContextQT::GetDepth\n"));
-    aDepth = 32;
+    aDepth = mDepth;
     return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextQT::GetILColorSpace(IL_ColorSpace*& aColorSpace)
+nsresult nsDeviceContextQT::SetDPI(PRInt32 aDpi)
 {
-    PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsDeviceContextQT::GetILColorSpace\n"));
-    if (nsnull == mColorSpace) 
-    {
-        IL_RGBBits colorRGBBits;
-  
-        // Default is to create a 32-bit color space
-        colorRGBBits.red_shift = 24;  
-        colorRGBBits.red_bits = 8;
-        colorRGBBits.green_shift = 16;
-        colorRGBBits.green_bits = 8; 
-        colorRGBBits.blue_shift = 8; 
-        colorRGBBits.blue_bits = 8;  
-  
-        mColorSpace = IL_CreateTrueColorSpace(&colorRGBBits, 32);
-        if (nsnull == mColorSpace) 
-        {
-            aColorSpace = nsnull;
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
-    }
+  mDpi = aDpi;
 
-    NS_POSTCONDITION(nsnull != mColorSpace, "null color space");
-    aColorSpace = mColorSpace;
-    IL_AddRefToColorSpace(aColorSpace);
-    return NS_OK;
+  int pt2t = 72;
+
+  // make p2t a nice round number - this prevents rounding problems
+  mPixelsToTwips = float(NSToIntRound(float(NSIntPointsToTwips(pt2t)) / float(aDpi)));
+  mTwipsToPixels = 1.0f / mPixelsToTwips;
+
+  // XXX need to reflow all documents
+  return NS_OK;
 }
+
+/* For some reason, Qt seems to want to use its own strcmp */
+#define qstrcmp strcmp
+ 
+int nsDeviceContextQT::prefChanged(const char *aPref, void *aClosure)
+{
+  nsDeviceContextQT *context = (nsDeviceContextQT*)aClosure;
+  nsresult rv;
+ 
+  if (nsCRT::strcmp(aPref, "browser.display.screen_resolution") == 0) {
+    PRInt32 dpi;
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+    rv = prefs->GetIntPref(aPref, &dpi);
+    if (NS_SUCCEEDED(rv))
+      context->SetDPI(dpi);
+  }
+  return 0;
+}
+
+/* Just in case, put things back to normal */
+#undef qstrcmp
+ 

@@ -55,9 +55,9 @@ class nsComboBox : public nsWidget,
 
 public:
     nsComboBox();
-    ~nsComboBox();
+    virtual ~nsComboBox();
 
-    NS_DECL_ISUPPORTS
+    NS_DECL_ISUPPORTS_INHERITED
 
     // nsIComboBox interface
     NS_IMETHOD      AddItemAt(nsString &aItem, PRInt32 aPosition);
@@ -80,7 +80,6 @@ public:
     NS_IMETHOD      GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize);
 
 protected:
-    NS_IMETHOD  CreateNative(QWidget *parentWindow);
 
     /*
     QWidget * mCombo;

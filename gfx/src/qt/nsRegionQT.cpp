@@ -25,8 +25,6 @@
 #include "nsRenderingContextQT.h"
 #include <qregion.h>
 
-static NS_DEFINE_IID(kRegionIID, NS_IREGION_IID);
-
 nsRegionQT::nsRegionQT() : mRegion()
 {
     PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsRegionQT::nsRegionQT()\n"));
@@ -40,10 +38,8 @@ nsRegionQT::~nsRegionQT()
     PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsRegionQT::~nsRegionQT()\n"));
 }
 
-NS_IMPL_QUERY_INTERFACE(nsRegionQT, kRegionIID)
-NS_IMPL_ADDREF(nsRegionQT)
-NS_IMPL_RELEASE(nsRegionQT)
-
+NS_IMPL_ISUPPORTS1(nsRegionQT, nsIRegion)
+ 
 nsresult nsRegionQT::Init(void)
 {
     PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsRegionQT::Init()\n"));
@@ -56,8 +52,9 @@ nsresult nsRegionQT::Init(void)
 void nsRegionQT::SetTo(const nsIRegion &aRegion)
 {
     PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsRegionQT::SetTo()\n"));
-    nsRegionQT * pRegion = (nsRegionQT *)&aRegion;
+    nsRegionQT *pRegion = (nsRegionQT*)&aRegion;
 
+    SetRegionEmpty();
     SetTo(pRegion);
 }
 
@@ -82,7 +79,7 @@ void nsRegionQT::SetTo(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 void nsRegionQT::Intersect(const nsIRegion &aRegion)
 {
     PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsRegionQT::Intersect()\n"));
-    nsRegionQT * pRegion = (nsRegionQT *)&aRegion;
+    nsRegionQT *pRegion = (nsRegionQT*)&aRegion;
 
     mRegion.intersect(pRegion->mRegion);
 }
@@ -101,7 +98,7 @@ void nsRegionQT::Intersect(PRInt32 aX,
 void nsRegionQT::Union(const nsIRegion &aRegion)
 {
     PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsRegionQT::Union()\n"));
-    nsRegionQT * pRegion = (nsRegionQT *)&aRegion;
+    nsRegionQT *pRegion = (nsRegionQT*)&aRegion;
  
     mRegion = mRegion.unite(pRegion->mRegion);
 }
@@ -117,7 +114,7 @@ void nsRegionQT::Union(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 void nsRegionQT::Subtract(const nsIRegion &aRegion)
 {
     PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsRegionQT::Subtract()\n"));
-    nsRegionQT * pRegion = (nsRegionQT *)&aRegion;
+    nsRegionQT *pRegion = (nsRegionQT*)&aRegion;
 
     mRegion = mRegion.subtract(pRegion->mRegion);
 }
@@ -142,7 +139,7 @@ PRBool nsRegionQT::IsEmpty(void)
 PRBool nsRegionQT::IsEqual(const nsIRegion &aRegion)
 {
     PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsRegionQT::IsEqual()\n"));
-    nsRegionQT *pRegion = (nsRegionQT *)&aRegion;
+    nsRegionQT *pRegion = (nsRegionQT*)&aRegion;
 
     return (mRegion == pRegion->mRegion);
 }
@@ -185,35 +182,27 @@ NS_IMETHODIMP nsRegionQT::GetRects(nsRegionRectSet **aRects)
 
     QArray<QRect>     array = mRegion.rects();
     PRUint32          size  = array.size();
-    nsRegionRect    * rect  = nsnull;
-    nsRegionRectSet * rects = *aRects;
+    nsRegionRect      *rect  = nsnull;
+    nsRegionRectSet   *rects = *aRects;
 
-    if ((nsnull == rects) || (rects->mRectsLen < (PRUint32)size))
-    {
-        void * buf = PR_Realloc(rects, 
-                                sizeof(nsRegionRectSet) + 
-                                (sizeof(nsRegionRect) * (size - 1)));
+    if (nsnull == rects || rects->mRectsLen < (PRUint32)size) {
+        void *buf = PR_Realloc(rects, 
+                               sizeof(nsRegionRectSet) + 
+                               (sizeof(nsRegionRect) * (size - 1)));
 
-        if (nsnull == buf)
-        {
+        if (nsnull == buf) {
             if (nsnull != rects)
-            {
                 rects->mNumRects = 0;
-            }
-
             return NS_OK;
         }
-
-        rects = (nsRegionRectSet *) buf;
+        rects = (nsRegionRectSet*)buf;
         rects->mRectsLen = size;
     }
-
     rects->mNumRects = size;
     rects->mArea = 0;
     rect = &rects->mRects[0];
 
-    for (PRUint32 i = 0; i < size; i++)
-    {
+    for (PRUint32 i = 0; i < size; i++) {
         QRect qRect = array[i];
 
         rect->x = qRect.x();
@@ -225,27 +214,23 @@ NS_IMETHODIMP nsRegionQT::GetRects(nsRegionRectSet **aRects)
 
         rect++;
     }
-
     *aRects = rects;
-
     return NS_OK;        
 }
 
 NS_IMETHODIMP nsRegionQT::FreeRects(nsRegionRectSet *aRects)
 {
     PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsRegionQT::FreeRects()\n"));
-    if (nsnull != aRects)
-    {
+    if (nsnull != aRects) {
         PR_Free((void *)aRects);
     }
-
     return NS_OK;
 }
 
 NS_IMETHODIMP nsRegionQT::GetNativeRegion(void *&aRegion) const
 {
     PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsRegionQT::GetNativeRegion()\n"));
-    aRegion = (void *) &mRegion;
+    aRegion = (void*)&mRegion;
     return NS_OK;
 }
 
@@ -253,24 +238,27 @@ NS_IMETHODIMP nsRegionQT::GetRegionComplexity(nsRegionComplexity &aComplexity) c
 {
     PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsRegionQT::GetRegionComplexity()\n"));
     // cast to avoid const-ness problems on some compilers
-    if (((nsRegionQT *) this)->IsEmpty())
-    {
+    if (((nsRegionQT*)this)->IsEmpty()) {
         aComplexity = eRegionComplexity_empty;
     }
-    else
-    {
+    else {
         aComplexity = eRegionComplexity_rect;
     }
-
     return NS_OK;
 }
 
 void nsRegionQT::SetRegionEmpty()
 {
     PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsRegionQT::SetRegionEmpty()\n"));
-    if (!IsEmpty()) 
-    {
+    if (!IsEmpty()) {
         QRegion empty;
         mRegion = empty;
     }
+}
+
+NS_IMETHODIMP nsRegionQT::GetNumRects(PRUint32 *aRects) const
+{
+  *aRects = mRegion.rects().size();
+ 
+  return NS_OK;
 }

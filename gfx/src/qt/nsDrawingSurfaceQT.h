@@ -28,6 +28,7 @@
 
 #include <qpainter.h>
 #include <qpixmap.h>
+#include <qimage.h>
 
 class nsDrawingSurfaceQT : public nsIDrawingSurface,
                            public nsIDrawingSurfaceQT
@@ -63,6 +64,7 @@ public:
                     PRUint32 aFlags);
 
     // utility functions.
+    PRInt32 GetDepth() { return mDepth; }
     QPainter * GetGC(void);
     QPaintDevice  * GetPaintDevice(void);
 
@@ -71,23 +73,24 @@ protected:
 
 private:
     /* general */
-    QPaintDevice  * mPaintDevice;
-    QPainter	  * mGC;
-    int		        mDepth;
-    nsPixelFormat	mPixFormat;
-    PRUint32        mWidth;
-    PRUint32        mHeight;
-    PRUint32	    mFlags;
-    PRBool          mIsOffscreen;
+    QPaintDevice  *mPaintDevice;
+    QPixmap       *mPixmap;
+    QPainter	  *mGC;
+    int		  mDepth;
+    nsPixelFormat mPixFormat;
+    PRUint32      mWidth;
+    PRUint32      mHeight;
+    PRUint32	  mFlags;
+    PRBool        mIsOffscreen;
 
     /* for locks */
-    PRInt32	   mLockX;
-    PRInt32	   mLockY;
-    PRUint32   mLockWidth;
-    PRUint32   mLockHeight;
-    PRUint32   mLockFlags;
-    PRBool	   mLocked;
-    PRBool     mCleanup;
+    QImage        mImage;
+    PRInt32	  mLockX;
+    PRInt32	  mLockY;
+    PRUint32      mLockWidth;
+    PRUint32      mLockHeight;
+    PRUint32      mLockFlags;
+    PRBool	  mLocked;
 };
 
 #endif

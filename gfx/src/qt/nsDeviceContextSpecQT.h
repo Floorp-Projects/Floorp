@@ -25,14 +25,16 @@
 
 #include "nsIDeviceContextSpec.h"
 #include "nsDeviceContextSpecQT.h"
+#include "nsIDeviceContextSpecPS.h"
 
 #include "../gtk/nsPrintdGTK.h"
 
-class nsDeviceContextSpecQT : public nsIDeviceContextSpec
+class nsDeviceContextSpecQT : public nsIDeviceContextSpec, 
+                              public nsIDeviceContextSpecPS
 {
 public:
 /**
- * Construct a nsDeviceContextSpecMac, which is an object which contains and manages a mac printrecord
+ * Construct a nsDeviceContextSpecQT, which is an object which contains and manages a printrecord
  * @update  dc 12/02/98
  */
     nsDeviceContextSpecQT();
@@ -40,7 +42,7 @@ public:
     NS_DECL_ISUPPORTS
 
 /**
- * Initialize the nsDeviceContextSpecMac for use.  This will allocate a printrecord for use
+ * Initialize the nsDeviceContextSpecQT for use.  This will allocate a printrecord for use
  * @update   dc 2/16/98
  * @param aQuiet if PR_TRUE, prevent the need for user intervention
  *        in obtaining device context spec. if nsnull is passed in for
@@ -59,9 +61,33 @@ public:
  */
     NS_IMETHOD ClosePrintManager();
 
+    NS_IMETHOD GetToPrinter(PRBool &aToPrinter);
+ 
+    NS_IMETHOD GetFirstPageFirst(PRBool &aFpf);
+ 
+    NS_IMETHOD GetGrayscale(PRBool &aGrayscale);
+ 
+    NS_IMETHOD GetSize(int &aSize);
+ 
+    NS_IMETHOD GetTopMargin(float &value);
+ 
+    NS_IMETHOD GetBottomMargin(float &value);
+ 
+    NS_IMETHOD GetLeftMargin(float &value);
+ 
+    NS_IMETHOD GetRightMargin(float &value);
+ 
+    NS_IMETHOD GetCommand(char **aCommand);
+ 
+    NS_IMETHOD GetPath(char **aPath);
+ 
+    NS_IMETHOD GetPageDimensions(float &aWidth, float &aHeight);
+ 
+    NS_IMETHOD GetUserCancelled(PRBool &aCancel);
+ 
 protected:
 /**
- * Destuct a nsDeviceContextSpecMac, this will release the printrecord
+ * Destuct a nsDeviceContextSpecQT, this will release the printrecord
  * @update  dc 2/16/98
  */
     virtual ~nsDeviceContextSpecQT();

@@ -24,10 +24,15 @@
 #include "nsFontMetricsQT.h"
 #include "nspr.h"
 
+#undef NOISY_FONTS
+#undef REALLY_NOISY_FONTS
+
 static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
 
 nsFontMetricsQT::nsFontMetricsQT()
 {
+printf("JCG: nsFontMetricsQT CTOR.\n");
+
     PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsFontMetricsQT::nsFontMetricsQT\n"));
     NS_INIT_REFCNT();
     mDeviceContext = nsnull;
@@ -52,23 +57,22 @@ nsFontMetricsQT::nsFontMetricsQT()
 
 nsFontMetricsQT::~nsFontMetricsQT()
 {
+printf("JCG: nsFontMetricsQT DTOR.\n");
+
     PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsFontMetricsQT::~nsFontMetricsQT\n"));
-    if (nsnull != mFont) 
-    {
+    if (nsnull != mFont) {
         delete mFont;
         mFont = nsnull;
     }
-
-    if (nsnull != mFontHandle) 
-    {
+    if (nsnull != mFontHandle) {
         delete mFontHandle;
         mFontHandle = nsnull;
     }
 }
 
-NS_IMPL_ISUPPORTS(nsFontMetricsQT, kIFontMetricsIID)
+NS_IMPL_ISUPPORTS1(nsFontMetricsQT, nsIFontMetrics)
 
-NS_IMETHODIMP nsFontMetricsQT::Init(const nsFont& aFont, 
+NS_IMETHODIMP nsFontMetricsQT::Init(const nsFont& aFont, nsIAtom* aLangGroup,
                                     nsIDeviceContext* aContext)
 {
     PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsFontMetricsQT::Init\n"));
@@ -94,18 +98,14 @@ NS_IMETHODIMP nsFontMetricsQT::Init(const nsFont& aFont,
             d2a, 
             cps));
 
-    PRInt32     dpi = NSToIntRound(t2d * 1440);
-    //PRInt32     size = NSTwipsToIntPoints(aFont.size);
-    //PRInt32     size = t2d * aFont.size;
-    PRInt32     size = (PRInt32) (aFont.size * a2d);
+    PRInt32 size = (PRInt32)(aFont.size * a2d);
 
     nsAutoString firstFace;
     if (NS_OK != aContext->FirstExistingFont(aFont, firstFace)) 
-    {
         aFont.GetFirstFamily(firstFace);
-    }
 
     mFont = new nsFont(aFont);
+    mLangGroup = aLangGroup;
     mDeviceContext = aContext;
     mFontHandle = nsnull;
 
@@ -113,20 +113,22 @@ NS_IMETHODIMP nsFontMetricsQT::Init(const nsFont& aFont,
 
     int weight = (aFont.weight <= NS_FONT_WEIGHT_NORMAL) ? QFont::Normal : QFont::Bold;
     bool italic = (aFont.style == NS_FONT_STYLE_ITALIC);
-	QString fontstring(fontname);
+    QString fontstring(fontname);
+
     PR_LOG(QtGfxLM, 
            PR_LOG_DEBUG, 
            ("nsFontMetricsQT::Init: Creating font: %s, %d pt\n", 
             (const char *)fontstring, 
             size));
+
+printf("JCG nsFontMetricsQt Init. FontName: %s, Size: %d, Weight: %d, Italic: %s\n",(const char *)fontstring,size,weight,italic?"yes":"no");
+
     mFontHandle = new QFont(fontstring, size, weight, italic);
 
     RealizeFont();
 
     if (fontname)
-    {
         delete [] fontname;
-    }
 
     return NS_OK;
 }
@@ -134,7 +136,6 @@ NS_IMETHODIMP nsFontMetricsQT::Init(const nsFont& aFont,
 NS_IMETHODIMP nsFontMetricsQT::Destroy()
 {
     PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsFontMetricsQT::Destroy\n"));
-//  NS_IF_RELEASE(mDeviceContext);
     return NS_OK;
 }
 
@@ -154,20 +155,22 @@ void nsFontMetricsQT::RealizeFont()
     mHeight = nscoord(fm.height() * f);
     mMaxAdvance = nscoord(fm.maxWidth() * f);
 
+    mEmHeight = mHeight;
+    mEmAscent = mMaxAscent;  
+    mEmDescent = mMaxDescent;
+ 
     // 56% of ascent, best guess for non-true type
     mXHeight = NSToCoordRound((float) fm.ascent() * f * 0.56f);
 
     mUnderlineOffset = nscoord(fm.underlinePos() * f);
 
     /* mHeight is already multipled by f */
-    float height;
-    height = fm.height();
-    mUnderlineSize = NSToIntRound(MAX(1, floor (0.05 * height + 0.5)) * f);
+    mUnderlineSize = NSToIntRound(fm.lineWidth() * f);
 
     mSuperscriptOffset = mXHeight;
     mSubscriptOffset = mXHeight;
 
-    mStrikeoutOffset = nscoord(fm.underlinePos() * f);
+    mStrikeoutOffset = nscoord(fm.strikeOutPos() * f);
     mStrikeoutSize = mUnderlineSize;
 
     mLeading = nscoord(fm.leading() * f);
@@ -217,6 +220,12 @@ NS_IMETHODIMP nsFontMetricsQT::GetHeight(nscoord &aHeight)
     return NS_OK;
 }
 
+NS_IMETHODIMP  nsFontMetricsQT::GetNormalLineHeight(nscoord &aHeight)
+{
+  aHeight = mEmHeight + mLeading;
+  return NS_OK;
+}
+ 
 NS_IMETHODIMP nsFontMetricsQT::GetLeading(nscoord &aLeading)
 {
     PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsFontMetricsQT::GetLeading\n"));
@@ -224,6 +233,30 @@ NS_IMETHODIMP nsFontMetricsQT::GetLeading(nscoord &aLeading)
     return NS_OK;
 }
 
+NS_IMETHODIMP  nsFontMetricsQT::GetEmHeight(nscoord &aHeight)
+{
+  aHeight = mEmHeight;
+  return NS_OK;
+}
+ 
+NS_IMETHODIMP  nsFontMetricsQT::GetEmAscent(nscoord &aAscent)
+{
+  aAscent = mEmAscent;
+  return NS_OK;
+}
+ 
+NS_IMETHODIMP  nsFontMetricsQT::GetEmDescent(nscoord &aDescent)
+{
+  aDescent = mEmDescent;
+  return NS_OK;
+}
+ 
+NS_IMETHODIMP  nsFontMetricsQT::GetMaxHeight(nscoord &aHeight)
+{
+  aHeight = mMaxHeight;
+  return NS_OK;
+}
+ 
 NS_IMETHODIMP nsFontMetricsQT::GetMaxAscent(nscoord &aAscent)
 {
     PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsFontMetricsQT::GetMaxAscent\n"));
@@ -247,18 +280,22 @@ NS_IMETHODIMP nsFontMetricsQT::GetMaxAdvance(nscoord &aAdvance)
 
 NS_IMETHODIMP nsFontMetricsQT::GetFont(const nsFont*& aFont)
 {
-#if 1
     PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsFontMetricsQT::GetFont\n"));
-#else
-    QFontInfo fi(*mFontHandle);
-
-    debug("nsFontMetricsQT::GetFont family=%s size=%d", 
-          fi.family(), 
-          fi.pointSize());
-#endif
     aFont = mFont;
     return NS_OK;
 }
+
+NS_IMETHODIMP nsFontMetricsQT::GetLangGroup(nsIAtom** aLangGroup)
+{
+  if (!aLangGroup) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  *aLangGroup = mLangGroup;
+  NS_IF_ADDREF(*aLangGroup);
+
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP nsFontMetricsQT::GetFontHandle(nsFontHandle &aHandle)
 {
@@ -267,3 +304,47 @@ NS_IMETHODIMP nsFontMetricsQT::GetFontHandle(nsFontHandle &aHandle)
     return NS_OK;
 }
 
+// The Font Enumerator
+nsFontEnumeratorQT::nsFontEnumeratorQT()
+{
+printf("JCG: nsFontEnumeratorQT CTOR.\n");
+  NS_INIT_REFCNT();
+}
+ 
+NS_IMPL_ISUPPORTS(nsFontEnumeratorQT,
+                  NS_GET_IID(nsIFontEnumerator));
+
+NS_IMETHODIMP
+nsFontEnumeratorQT::EnumerateAllFonts(PRUint32* aCount, PRUnichar*** aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = nsnull;
+  NS_ENSURE_ARG_POINTER(aCount);
+  *aCount = 0;
+
+#ifdef DEBUG
+printf("JCG: nsFontEnumeratorQT::EnumerateAllFonts not implemented!\n");
+#endif
+
+ return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsFontEnumeratorQT::EnumerateFonts(const char* aLangGroup, const char* aGeneric,
+                                   PRUint32* aCount, PRUnichar*** aResult)
+{ 
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = nsnull;
+  NS_ENSURE_ARG_POINTER(aCount);
+  *aCount = 0;
+  NS_ENSURE_ARG_POINTER(aGeneric);
+  NS_ENSURE_ARG_POINTER(aLangGroup);
+
+  nsCOMPtr<nsIAtom> langGroup = getter_AddRefs(NS_NewAtom(aLangGroup));
+
+#ifdef DEBUG
+printf("JCG: nsFontEnumeratorQT::EnumerateFonts not implemented!\n");
+#endif
+
+ return NS_ERROR_FAILURE;
+}

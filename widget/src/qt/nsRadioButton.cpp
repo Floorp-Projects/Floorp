@@ -36,36 +36,11 @@ nsQRadioButton::nsQRadioButton(nsWidget * widget,
                                const char * name)
 	: QRadioButton(parent, name), nsQBaseWidget(widget)
 {
-#if 0
-    connect((QRadioButton *)this,
-            SIGNAL(clicked()),
-            SLOT(ButtonClicked()));
-#endif
 }
 
 nsQRadioButton::~nsQRadioButton()
 {
 }
-
-#if 0
-void nsQRadioButton::ButtonClicked()
-{
-    if (mWidget)
-    {
-        nsMouseEvent nsEvent;
-        
-        nsEvent.message         = NS_MOUSE_LEFT_CLICK;
-        nsEvent.widget          = mWidget;
-        NS_IF_ADDREF(nsEvent.widget);
-        nsEvent.eventStructType = NS_MOUSE_EVENT;
-        nsEvent.clickCount      = 1;
-        
-        ((nsRadioButton *)mWidget)->OnScroll(nsEvent, value);
-    }
-    
-}
-#endif
-
 
 NS_IMPL_ADDREF(nsRadioButton)
 NS_IMPL_RELEASE(nsRadioButton)
@@ -78,7 +53,6 @@ NS_IMPL_RELEASE(nsRadioButton)
 nsRadioButton::nsRadioButton() : nsWidget(), nsIRadioButton()
 {
     PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsRadioButton::nsRadioButton()\n"));
-    //NS_INIT_REFCNT();
 }
 
 
@@ -116,33 +90,6 @@ nsresult nsRadioButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
         result = NS_OK;
     }
     return result;
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Create the native RadioButton widget
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsRadioButton::CreateNative(QWidget *parentWindow)
-{
-    PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsRadioButton::CreateNative()\n"));
-#if 0
-    mWidget = new QRadioButton(parentWindow,
-                               QRadioButton::tr("nsRadioButton"));
-#else
-    mWidget = new nsQRadioButton(this,
-                                 parentWindow, 
-                                 QRadioButton::tr("nsRadioButton"));
-#endif
-
-    if (mWidget)
-    {
-        mWidget->installEventFilter(mWidget);
-    }
-
-    return nsWidget::CreateNative(parentWindow);
-    //return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -189,7 +136,6 @@ NS_METHOD nsRadioButton::SetLabel(const nsString& aText)
 {
     PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsRadioButton::SetLabel()\n"));
     NS_ALLOC_STR_BUF(label, aText, 256);
-//    g_print("nsRadioButton::SetLabel(%s)\n",label);
 
     ((QRadioButton *)mWidget)->setText(label);
 
@@ -209,10 +155,7 @@ NS_METHOD nsRadioButton::GetLabel(nsString& aBuffer)
     PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsRadioButton::GetLabel()\n"));
     QString string = ((QRadioButton *)mWidget)->text();
     aBuffer.SetLength(0);
-    aBuffer.Append((const char *) string);
+    aBuffer.AppendWithConversion((const char *) string);
 
     return NS_OK;
 }
-
-
-

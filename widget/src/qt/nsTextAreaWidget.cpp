@@ -26,7 +26,7 @@
 #include "nsGUIEvent.h"
 #include "nsString.h"
 
-#define DBG 0
+//JCG #define DBG 0
 
 //=============================================================================
 //
@@ -66,25 +66,6 @@ nsTextAreaWidget::nsTextAreaWidget()
 nsTextAreaWidget::~nsTextAreaWidget()
 {
     PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsTextAreaWidget::~nsTextAreaWidget()\n"));
-}
-
-//-------------------------------------------------------------------------
-//
-// Create the native Text widget
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsTextAreaWidget::CreateNative(QWidget *parentWindow)
-{
-    PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsTextAreaWidget::CreateNative()\n"));
-    mWidget = new nsQMultiLineEdit(this,
-                                   parentWindow, 
-                                   QMultiLineEdit::tr("nsTextAreaWidget"));
-
-    PRBool oldIsReadOnly;
-    SetPassword(mIsPassword);
-    SetReadOnly(mIsReadOnly, oldIsReadOnly);
-
-    return nsWidget::CreateNative(parentWindow);
 }
 
 nsresult 
@@ -130,5 +111,3 @@ PRBool nsTextAreaWidget::OnResize(nsRect &aRect)
     PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsTextAreaWidget::OnResize()\n"));
     return PR_FALSE;
 }
-
-

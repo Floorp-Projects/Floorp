@@ -80,7 +80,6 @@ public:
     void DisArmed();
 
 protected:
-    NS_IMETHOD CreateNative(QWidget *parentWindow);
 
 protected:
     QWidget *mLabel;

@@ -57,11 +57,11 @@ public:
     virtual PRUint32 GetDelay() { return mDelay; }
     virtual void SetDelay(PRUint32 aDelay) { mDelay=aDelay; };
 
-    virtual PRUint32 GetPriority() {}
-    virtual void SetPriority(PRUint32 aPriority) {}
+    virtual PRUint32 GetPriority() { return mPriority; }
+    virtual void SetPriority(PRUint32 aPriority) { mPriority=aPriority; }
 
-    virtual PRUint32 GetType() {}
-    virtual void SetType(PRUint32 aType) {}
+    virtual PRUint32 GetType() { return mType; }
+    virtual void SetType(PRUint32 aType) { mType=aType; }
 
     virtual void* GetClosure() { return mClosure; }
 
@@ -72,6 +72,8 @@ private:
     
 private:
     PRUint32            mDelay;
+    PRUint32            mPriority;
+    PRUint32            mType;
     nsTimerCallbackFunc mFunc;
     void              * mClosure;
     nsITimerCallback  * mCallback;

@@ -24,7 +24,7 @@
 #define nsAppShell_h__
 
 #include "nsIAppShell.h"
-#include "plevent.h"
+#include "nsIEventQueue.h"
 
 #include "nsQApplication.h"
 #include <qwindowsstyle.h>
@@ -32,8 +32,6 @@
 /**
  * Native QT Application shell wrapper
  */
-
-class nsIEventQueueService;
 
 class nsAppShell : public nsIAppShell
 {
@@ -43,34 +41,13 @@ public:
 
     NS_DECL_ISUPPORTS
 
-    // nsIAppShellInterface
-    NS_IMETHOD		Create(int* argc, char ** argv);
-    NS_IMETHOD		Run(); 
-    NS_IMETHOD      Spinup();
-    NS_IMETHOD      Spindown();
-    NS_IMETHOD      ListenToEventQueue(nsIEventQueue *aQueue, PRBool aListen)
-                      { return NS_OK; }
-    NS_IMETHOD      GetNativeEvent(PRBool &aRealEvent, void *&aEvent);
-    NS_IMETHOD      DispatchNativeEvent(PRBool aRealEvent, void * aEvent);
-    NS_IMETHOD		Exit();
-    NS_IMETHOD		SetDispatchListener(nsDispatchListener* aDispatchListener);
-    virtual void*	GetNativeData(PRUint32 aDataType);
-
-    enum GfxToolkit
-    {
-        eInvalidGfxToolkit = 0,
-        eQtGfxToolkit      = 1,
-        eXlibGfxToolkit    = 2
-    };
-
-    static GfxToolkit GetGfxToolkit();
-
-protected:
-    static GfxToolkit      mGfxToolkit;
+    NS_DECL_NSIAPPSHELL
 
 private:
-    nsDispatchListener	 * mDispatchListener;
-    nsQApplication       * mApplication;
+    nsDispatchListener	    *mDispatchListener;
+    nsCOMPtr<nsIEventQueue> mEventQueue;
+    nsQApplication          *mApplication;
+    static PRBool           mRunning;
 };
 
 #endif // nsAppShell_h__

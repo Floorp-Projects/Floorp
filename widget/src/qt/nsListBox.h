@@ -56,7 +56,7 @@ public:
     nsListBox();
     virtual ~nsListBox();
 
-    NS_DECL_ISUPPORTS
+    NS_DECL_ISUPPORTS_INHERITED
 
     virtual PRBool OnMove(PRInt32 aX, PRInt32 aY) { return PR_FALSE; }
     virtual PRBool OnPaint(nsPaintEvent & aEvent) { return PR_FALSE; }
@@ -80,7 +80,6 @@ public:
     NS_IMETHOD Deselect() ;
 
 protected:
-    NS_IMETHOD CreateNative(QWidget *parentWindow);
 
     PRBool    mMultiSelect;
 };

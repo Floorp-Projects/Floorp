@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -12,191 +12,153 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
- * Rights Reserved.
+ * The Initial Developer of the Original Code is Christopher
+ * Blizzard.  Portions created by Christopher Blizzard are
+ * Copyright (C) 2000 Christopher Blizzard. All Rights Reserved.
  *
  * Contributor(s): 
+ *   Christopher Blizzzard <blizzard@mozilla.org>
  */
 
-#include "nscore.h"
-#include "nsIFactory.h"
-#include "nsISupports.h"
+#include "nsIGenericFactory.h"
+#include "nsIModule.h"
+#include "nsCOMPtr.h"
 #include "nsGfxCIID.h"
+
+#include "nsBlender.h"
 #include "nsFontMetricsQT.h"
 #include "nsRenderingContextQT.h"
-#include "nsImageQT.h"
-#include "nsDeviceContextQT.h"
-#include "nsRegionQT.h"
 #include "nsDeviceContextSpecQT.h"
-#include "nsDeviceContextSpecFactoryQT.h" 
-#include <qapplication.h>
+#include "nsDeviceContextSpecFactoryQT.h"
+#include "nsScreenManagerQT.h"
+#include "nsScriptableRegion.h"
+#include "nsIImageManager.h"
+#include "nsDeviceContextQT.h"
+#include "nsImageQT.h"
 
-static NS_DEFINE_IID(kCFontMetrics, NS_FONT_METRICS_CID);
-static NS_DEFINE_IID(kCRenderingContext, NS_RENDERING_CONTEXT_CID);
-static NS_DEFINE_IID(kCImage, NS_IMAGE_CID);
-static NS_DEFINE_IID(kCDeviceContext, NS_DEVICE_CONTEXT_CID);
-static NS_DEFINE_IID(kCRegion, NS_REGION_CID);
+// objects that just require generic constructors
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontMetricsQT)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextQT)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsRenderingContextQT)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsImageQT)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsBlender)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsRegionQT)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecQT)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecFactoryQT)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontEnumeratorQT)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerQT)
 
-static NS_DEFINE_IID(kCDeviceContextSpec, NS_DEVICE_CONTEXT_SPEC_CID);
-static NS_DEFINE_IID(kCDeviceContextSpecFactory, NS_DEVICE_CONTEXT_SPEC_FACTORY_CID); 
+// our custom constructors
 
-
-class nsGfxFactoryQT : public nsIFactory
-{   
-public:   
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIFACTORY
-
-    nsGfxFactoryQT(const nsCID &aClass);   
-    virtual ~nsGfxFactoryQT();   
-
-private:   
-    nsCID     mClassID;
-};   
-
-nsGfxFactoryQT::nsGfxFactoryQT(const nsCID &aClass)   
-{   
-    PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsGfxFactoryQT::nsGfxFactoryQT()\n"));
-    NS_INIT_REFCNT();
-    mClassID = aClass;
-}   
-
-nsGfxFactoryQT::~nsGfxFactoryQT()   
-{   
-    PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsGfxFactoryQT::~nsGfxFactoryQT()\n"));
-}   
-
-nsresult nsGfxFactoryQT::QueryInterface(const nsIID &aIID,   
-                                         void **aResult)   
-{   
-    PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsGfxFactoryQT::QueryInterface()\n"));
-    if (aResult == NULL) 
-    {
-        return NS_ERROR_NULL_POINTER;   
-    }   
-
-    // Always NULL result, in case of failure   
-    *aResult = NULL;   
-
-    if (aIID.Equals(kISupportsIID)) 
-    {
-        *aResult = (void *)(nsISupports*)this;
-    }
-    else if (aIID.Equals(kIFactoryIID)) 
-    {
-        *aResult = (void *)(nsIFactory*)this;   
-    }   
-
-    if (*aResult == NULL) 
-    {   
-        return NS_NOINTERFACE;   
-    }   
-    
-    AddRef(); // Increase reference count for caller   
-    return NS_OK;   
-}   
-
-NS_IMPL_ADDREF(nsGfxFactoryQT);
-NS_IMPL_RELEASE(nsGfxFactoryQT);
-
-nsresult nsGfxFactoryQT::CreateInstance(nsISupports *aOuter,  
-                                        const nsIID &aIID,  
-                                        void **aResult)  
-{  
-    PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsGfxFactoryQT::CreateInstance()\n"));
-    if (aResult == NULL) 
-    {  
-        return NS_ERROR_NULL_POINTER;  
-    }  
-
-    *aResult = NULL;  
-  
-    nsISupports *inst = nsnull;
-
-    if (mClassID.Equals(kCFontMetrics)) 
-    {
-        inst = (nsISupports *) new nsFontMetricsQT();
-    }
-    else if (mClassID.Equals(kCDeviceContext)) 
-    {
-        inst = (nsISupports *) new nsDeviceContextQT();
-    }
-    else if (mClassID.Equals(kCRenderingContext)) 
-    {
-        inst = (nsISupports *) new nsRenderingContextQT();
-    }
-    else if (mClassID.Equals(kCImage)) 
-    {
-        inst = (nsISupports *) new nsImageQT();
-    }
-    else if (mClassID.Equals(kCRegion)) 
-    {
-        inst = (nsISupports *) new nsRegionQT();
-    }
-    else if (mClassID.Equals(kCDeviceContextSpec)) 
-    {
-        nsDeviceContextSpecQT* dcs;
-        NS_NEWXPCOM(dcs, nsDeviceContextSpecQT);
-        inst = (nsISupports *)dcs;
-    }
-    else if (mClassID.Equals(kCDeviceContextSpecFactory)) 
-    {
-        nsDeviceContextSpecFactoryQT* dcs;
-        NS_NEWXPCOM(dcs, nsDeviceContextSpecFactoryQT);
-        inst = (nsISupports *)dcs;
-    }          
-	
-    if (inst == NULL) 
-    {  
-        return NS_ERROR_OUT_OF_MEMORY;  
-    }  
-
-    nsresult res = inst->QueryInterface(aIID, aResult);
-
-    if (res != NS_OK) 
-    {  
-        // We didn't get the right interface, so clean up  
-        delete inst;  
-    }  
-//  else 
-//  {
-//    inst->Release();
-//  }
-
-    return res;  
-}  
-
-nsresult nsGfxFactoryQT::LockFactory(PRBool aLock)  
-{  
-    PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsGfxFactoryQT::LockFactory()\n"));
-    // Not implemented in simplest case.  
-    return NS_OK;
-}  
-
-// return the proper factory to the caller
-extern "C" NS_GFXNONXP nsresult NSGetFactory(nsISupports* servMgr,
-                                             const nsCID &aClass,
-                                             const char *aClassName,
-                                             const char *aContractID,
-                                             nsIFactory **aFactory)
+static nsresult nsScriptableRegionConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
-    PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("NSGetFactory()\n"));
-    if (nsnull == aFactory) 
-    {
-        return NS_ERROR_NULL_POINTER;
-    }
+  nsresult rv;
 
-    *aFactory = new nsGfxFactoryQT(aClass);
+  nsIScriptableRegion *inst;
 
-    if (nsnull == aFactory) 
-    {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
+  if ( NULL == aResult )
+  {
+    rv = NS_ERROR_NULL_POINTER;
+    return rv;
+  }
+  *aResult = NULL;
+  if (NULL != aOuter)
+  {
+    rv = NS_ERROR_NO_AGGREGATION;
+    return rv;
+  }
+  // create an nsRegionQT and get the scriptable region from it
+  nsCOMPtr <nsIRegion> rgn;
+  NS_NEWXPCOM(rgn, nsRegionQT);
+  if (rgn != nsnull)
+  {
+    nsCOMPtr<nsIScriptableRegion> scriptableRgn = new nsScriptableRegion(rgn);
+    inst = scriptableRgn;
+  }
+  if (NULL == inst)
+  {
+    rv = NS_ERROR_OUT_OF_MEMORY;
+    return rv;
+  }
+  NS_ADDREF(inst);
+  rv = inst->QueryInterface(aIID, aResult);
+  NS_RELEASE(inst);
 
-    return (*aFactory)->QueryInterface(kIFactoryIID, (void**)aFactory);
+  return rv;
 }
+
+static nsresult nsImageManagerConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+    nsresult rv;
+
+  if ( NULL == aResult )
+  {
+    rv = NS_ERROR_NULL_POINTER;
+    return rv;
+  }
+  *aResult = NULL;
+  if (NULL != aOuter)
+  {
+    rv = NS_ERROR_NO_AGGREGATION;
+    return rv;
+  }
+  // this will return an image manager with a count of 1
+  rv = NS_NewImageManager((nsIImageManager **)aResult);
+  return rv;
+}
+
+static nsModuleComponentInfo components[] =
+{
+  { "Qt Font Metrics",
+    NS_FONT_METRICS_CID,
+    "@mozilla.org/gfx/fontmetrics;1",
+    nsFontMetricsQTConstructor },
+  { "Qt Device Context",
+    NS_DEVICE_CONTEXT_CID,
+    "@mozilla.org/gfx/devicecontext;1",
+    nsDeviceContextQTConstructor },
+  { "Qt Rendering Context",
+    NS_RENDERING_CONTEXT_CID,
+    "@mozilla.org/gfx/renderingcontext;1",
+    nsRenderingContextQTConstructor },
+  { "Qt Image",
+    NS_IMAGE_CID,
+    "@mozilla.org/gfx/image;1",
+    nsImageQTConstructor },
+  { "Qt Region",
+    NS_REGION_CID,
+    "@mozilla.org/gfx/region/qt;1",
+    nsRegionQTConstructor },
+  { "Scriptable Region",
+    NS_SCRIPTABLE_REGION_CID,
+    "@mozilla.org/gfx/region;1",
+    nsScriptableRegionConstructor },
+  { "Blender",
+    NS_BLENDER_CID,
+    "@mozilla.org/gfx/blender;1",
+    nsBlenderConstructor },
+  { "Qt Device Context Spec",
+    NS_DEVICE_CONTEXT_SPEC_CID,
+    "@mozilla.org/gfx/devicecontextspec;1",
+    nsDeviceContextSpecQTConstructor },
+  { "Qt Device Context Spec Factory",
+    NS_DEVICE_CONTEXT_SPEC_FACTORY_CID,
+    "@mozilla.org/gfx/devicecontextspecfactory;1",
+    nsDeviceContextSpecFactoryQTConstructor },
+  { "Image Manager",
+    NS_IMAGEMANAGER_CID,
+    "@mozilla.org/gfx/imagemanager;1",
+    nsImageManagerConstructor },
+   { "Qt Font Enumerator",
+    NS_FONT_ENUMERATOR_CID,
+    "@mozilla.org/gfx/fontenumerator;1",
+    nsFontEnumeratorQTConstructor },
+  { "Qt Screen Manager",
+    NS_SCREENMANAGER_CID,
+    "@mozilla.org/gfx/screenmanager;1",
+    nsScreenManagerQTConstructor }
+};
+
+NS_IMPL_NSGETMODULE("nsGfxQTModule", components)
+

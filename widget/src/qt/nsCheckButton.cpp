@@ -42,8 +42,9 @@ nsQCheckBox::~nsQCheckBox()
 {
 }
 
-NS_IMPL_ADDREF(nsCheckButton)
-NS_IMPL_RELEASE(nsCheckButton)
+NS_IMPL_ADDREF_INHERITED(nsCheckButton, nsWidget)
+NS_IMPL_RELEASE_INHERITED(nsCheckButton, nsWidget)
+NS_IMPL_QUERY_INTERFACE2(nsCheckButton, nsICheckButton, nsIWidget)
 
 //-------------------------------------------------------------------------
 //
@@ -53,7 +54,8 @@ NS_IMPL_RELEASE(nsCheckButton)
 nsCheckButton::nsCheckButton() : nsWidget() , nsICheckButton()
 {
     PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsCheckButton::nsCheckButton()\n"));
-    //NS_INIT_REFCNT();
+    NS_INIT_REFCNT();
+    mWidget = nsnull;
 }
 
 //-------------------------------------------------------------------------
@@ -69,47 +71,6 @@ nsCheckButton::~nsCheckButton()
         delete ((QCheckBox *)mWidget);
         mWidget = nsnull;
     }
-}
-
-//-------------------------------------------------------------------------
-//
-// Create the native CheckButton widget
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsCheckButton::CreateNative(QWidget *parentWindow)
-{
-    PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsCheckButton::CreateNative()\n"));
-    mWidget = new nsQCheckBox(this,
-                              parentWindow, 
-                              QCheckBox::tr("nsCheckButton"));
-    
-    return nsWidget::CreateNative(parentWindow);
-}
-
-/**
- * Implement the standard QueryInterface for NS_IWIDGET_IID and NS_ISUPPORTS_IID
- * @modify gpk 8/4/98
- * @param aIID The name of the class implementing the method
- * @param _classiiddef The name of the #define symbol that defines the IID
- * for the class (e.g. NS_ISUPPORTS_IID)
- *
-*/
-nsresult nsCheckButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-    PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsCheckButton::QueryInterface()\n"));
-    if (NULL == aInstancePtr) 
-    {
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    static NS_DEFINE_IID(kICheckButtonIID, NS_ICHECKBUTTON_IID);
-    if (aIID.Equals(kICheckButtonIID)) 
-    {
-        *aInstancePtr = (void*) ((nsICheckButton*)this);
-        AddRef();
-        return NS_OK;
-    }
-    return nsWidget::QueryInterface(aIID,aInstancePtr);
 }
 
 //-------------------------------------------------------------------------
@@ -170,7 +131,7 @@ NS_METHOD nsCheckButton::GetLabel(nsString& aBuffer)
     QString string = ((QButton *)mWidget)->text();
 
     aBuffer.SetLength(0);
-    aBuffer.Append((const char *) string);
+    aBuffer.AppendWithConversion((const char *) string);
 
     return (NS_OK);
 }

@@ -27,7 +27,7 @@
 #include "nsStringUtil.h"
 #include "nsIDeviceContext.h"
 
-#define DBG 0
+//JCG #define DBG 0
 
 #define INITIAL_MAX_ITEMS 128
 #define ITEMS_GROWSIZE    128
@@ -48,9 +48,10 @@ nsQComboBox::~nsQComboBox()
 {
 }
 
-NS_IMPL_ADDREF(nsComboBox)
-NS_IMPL_RELEASE(nsComboBox)
-
+NS_IMPL_ADDREF_INHERITED(nsComboBox, nsWidget)
+NS_IMPL_RELEASE_INHERITED(nsComboBox, nsWidget)
+NS_IMPL_QUERY_INTERFACE3(nsComboBox, nsIComboBox, nsIListWidget, nsIWidget)
+ 
 //-------------------------------------------------------------------------
 //
 // nsComboBox constructor
@@ -61,9 +62,8 @@ nsComboBox::nsComboBox() : nsWidget(), nsIListWidget(), nsIComboBox()
     PR_LOG(QtWidgetsLM, 
            PR_LOG_DEBUG, 
            ("nsComboBox::nsComboBox()\n"));
-//    NS_INIT_REFCNT();
+    NS_INIT_REFCNT();
     mMultiSelect = PR_FALSE;
-//  mBackground  = NS_RGB(124, 124, 124);
 
     mNumItems = 0;
 }
@@ -185,7 +185,7 @@ PRBool  nsComboBox::RemoveItemAt(PRInt32 aPosition)
     if (aPosition >= 0 && aPosition < mNumItems) 
     {
         ((QComboBox *)mWidget)->removeItem(aPosition);
-
+        mNumItems--;
         return PR_TRUE;
     }
     else
@@ -209,7 +209,7 @@ PRBool nsComboBox::GetItemAt(nsString& anItem, PRInt32 aPosition)
     if (aPosition >= 0 && aPosition < mNumItems) 
     {
         QString string = ((QComboBox *)mWidget)->text(aPosition);
-        anItem = (const char *) string;
+        anItem = NS_ConvertASCIItoUCS2(string).GetUnicode();
 
         PR_LOG(QtWidgetsLM, 
                PR_LOG_DEBUG, 
@@ -240,7 +240,7 @@ NS_METHOD nsComboBox::GetSelectedItem(nsString& aItem)
            ("nsComboBox::GetSelectedItem: %s is selected\n",
             (const char *) string));
 
-    aItem = (const char *) string;
+    aItem = NS_ConvertASCIItoUCS2(string).GetUnicode();
     return NS_OK;
 }
 
@@ -331,49 +331,3 @@ NS_METHOD nsComboBox::Deselect()
 
     return NS_OK;
 }
-
-//-------------------------------------------------------------------------
-//
-// Query interface implementation
-//
-//-------------------------------------------------------------------------
-nsresult nsComboBox::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-    PR_LOG(QtWidgetsLM, 
-           PR_LOG_DEBUG, 
-           ("nsComboBox::QueryInterface()\n"));
-    static NS_DEFINE_IID(kInsComboBoxIID, NS_ICOMBOBOX_IID);
-    static NS_DEFINE_IID(kInsListWidgetIID, NS_ILISTWIDGET_IID);
-
-    if (aIID.Equals(kInsComboBoxIID)) 
-    {
-        *aInstancePtr = (void*) ((nsIComboBox*)this);
-        AddRef();
-        return NS_OK;
-    }
-    else if (aIID.Equals(kInsListWidgetIID)) 
-    {
-        *aInstancePtr = (void*) ((nsIListWidget*)this);
-        AddRef();
-        return NS_OK;
-    }
-
-    return nsWidget::QueryInterface(aIID,aInstancePtr);
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Create the native GtkCombo widget
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsComboBox::CreateNative(QWidget *parentWindow)
-{
-    PR_LOG(QtWidgetsLM, 
-           PR_LOG_DEBUG, 
-           ("nsComboBox::CreateNative()\n"));
-    mWidget = new nsQComboBox(this, parentWindow, QComboBox::tr("nsComboBox"));
-
-    return nsWidget::CreateNative(parentWindow);
-}
-

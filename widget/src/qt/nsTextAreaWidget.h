@@ -58,9 +58,6 @@ public:
 
     virtual PRBool OnPaint(nsPaintEvent & aEvent);
     virtual PRBool OnResize(nsRect &aRect);
-
-protected:
-    NS_METHOD CreateNative(QWidget *parentWindow);
 };
 
 

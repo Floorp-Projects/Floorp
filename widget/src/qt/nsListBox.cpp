@@ -44,8 +44,9 @@ nsQListBox::~nsQListBox()
 {
 }
 
-NS_IMPL_ADDREF(nsListBox)
-NS_IMPL_RELEASE(nsListBox)
+NS_IMPL_ADDREF_INHERITED(nsListBox, nsWidget)
+NS_IMPL_RELEASE_INHERITED(nsListBox, nsWidget)
+NS_IMPL_QUERY_INTERFACE3(nsListBox, nsIListBox, nsIListWidget, nsIWidget)
 
 //-------------------------------------------------------------------------
 //
@@ -55,8 +56,8 @@ NS_IMPL_RELEASE(nsListBox)
 nsListBox::nsListBox() : nsWidget(), nsIListWidget(), nsIListBox()
 {
     PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsListBox::nsListBox()\n"));
+    NS_INIT_REFCNT();
     mMultiSelect = PR_FALSE;
-//  mBackground  = NS_RGB(124, 124, 124);
 }
 
 //-------------------------------------------------------------------------
@@ -68,38 +69,6 @@ nsListBox::~nsListBox()
 {
     PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsListBox::~nsListBox()\n"));
 }
-
-//-------------------------------------------------------------------------
-//
-// Query interface implementation
-//
-//-------------------------------------------------------------------------
-nsresult nsListBox::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-    PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsListBox::QueryInterface()\n"));
-    nsresult result = nsWidget::QueryInterface(aIID, aInstancePtr);
-
-    static NS_DEFINE_IID(kInsListBoxIID, NS_ILISTBOX_IID);
-    static NS_DEFINE_IID(kInsListWidgetIID, NS_ILISTWIDGET_IID);
-    if (result == NS_NOINTERFACE) 
-    {
-        if (aIID.Equals(kInsListBoxIID)) 
-        {
-            *aInstancePtr = (void*) ((nsIListBox*)this);
-            AddRef();
-            result = NS_OK;
-        }
-        else if (aIID.Equals(kInsListWidgetIID)) 
-        {
-            *aInstancePtr = (void*) ((nsIListWidget*)this);
-            AddRef();
-            result = NS_OK;
-        }
-    }
-
-    return result;
-}
-
 
 //-------------------------------------------------------------------------
 //
@@ -226,7 +195,7 @@ PRBool nsListBox::GetItemAt(nsString& anItem, PRInt32 aPosition)
     QString text = ((QListBox *)mWidget)->text(aPosition);
 
     anItem.SetLength(0);
-    anItem.Append((const char *) text);
+    anItem.AppendWithConversion((const char *) text);
     result = PR_TRUE;
 
     PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsListBox::GetItemAt: returning %s\n",
@@ -248,7 +217,7 @@ NS_METHOD nsListBox::GetSelectedItem(nsString& aItem)
     QString text = ((QListBox *) mWidget)->text(item);
 
     aItem.SetLength(0);
-    aItem.Append((const char *) text);
+    aItem.AppendWithConversion((const char *) text);
 
     PR_LOG(QtWidgetsLM, 
            PR_LOG_DEBUG, 
@@ -394,7 +363,7 @@ NS_METHOD nsListBox::Deselect()
 {
     PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsListBox::Deselect()\n"));
     ((QListBox *)mWidget)->clearSelection();
-
+    SelectItem(-1);
     return NS_OK;
 }
 
@@ -411,26 +380,5 @@ NS_METHOD nsListBox::PreCreateWidget(nsWidgetInitData *aInitData)
         nsListBoxInitData* data = (nsListBoxInitData *) aInitData;
         mMultiSelect = data->mMultiSelect;
     }
-    return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// Create the native widget
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsListBox::CreateNative(QWidget *parentWindow)
-{
-    PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsListBox::CreateNative()\n"));
-    // to handle scrolling
-
-    mWidget = new nsQListBox(this, parentWindow, QListBox::tr("nsListBox"));
-
-    if (mWidget)
-    {
-        ((QListBox *)mWidget)->setAutoScrollBar(TRUE);
-        SetMultipleSelection(PR_FALSE);
-    }
-
     return NS_OK;
 }
