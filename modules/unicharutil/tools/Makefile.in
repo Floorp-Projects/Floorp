@@ -1,0 +1,56 @@
+#!gmake
+#
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+
+DEPTH = ../../..
+topsrcdir	= @top_srcdir@
+VPATH		= @srcdir@
+srcdir		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE = ucgendat
+
+CSRCS = \
+	ucgendat.c \
+	$(NULL)
+
+include $(topsrcdir)/config/config.mk
+
+# XXX replace with proper configure test for glib
+CFLAGS += $(shell glib-config --cflags)
+
+# XXX need configure test
+EX_LIBS = $(shell glib-config --libs)
+
+PROGS = $(OBJDIR)/ucgendat
+
+TARGETS= $(PROGS)
+
+include $(topsrcdir)/config/rules.mk
+
+$(PROGS): $(OBJS)
+	@$(MAKE_OBJDIR)
+	$(CC) -o $@ $(OBJS) $(LD_FLAGS) $(EX_LIBS) $(OS_LIBS)
+
+export::
+
+install:: $(TARGETS)
+	$(INSTALL) $(PROGS) $(DIST)/bin
+
+clobber::
+	rm -f $(DIST)/bin/xpidl
+	rm -f $(PROGS) $(OBJS)
