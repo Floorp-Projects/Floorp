@@ -1,0 +1,28 @@
+# Sherlock Plugin for Netscape Open Directory
+# Copyright ©1999 Netscape Communications Corp.
+# Author - Myron Rosmarin
+# 
+
+<search 
+     name        = "Netscape Search - Computing"
+     description = "Netscape Search - Computing"
+     method      = "GET"
+     action      = "http://search.netscape.com/cgi-bin/search"
+>
+
+<INPUT NAME="all=no&cat=Computers&search" user>
+
+<interpret
+     resultListStart = "<B>Reviewed Web Sites</B>"
+     resultListEnd   = "</TABLE>"
+     resultItemStart = "<li>"
+     bannerStart     = "<!--AD_TAG VENDOR=AOL WIDTH=468 HEIGHT=60-->"
+     bannerEnd       = "<!--/AD_TAG-->"
+>
+
+</search>
+
+
+<browser
+	alsomatch="http://search.netscape.com/search.tmpl"
+>

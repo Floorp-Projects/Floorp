@@ -1,0 +1,28 @@
+# Sherlock Plugin for Netscape Open Directory
+# Copyright ©1999 Netscape Communications Corp.
+# Author - Myron Rosmarin
+# 
+
+<search 
+     name        = "Netscape Search - Music"
+     description = "Netscape Search - Music"
+     method      = "GET"
+     action      = "http://search.netscape.com/cgi-bin/search"
+>
+
+<INPUT NAME="all=no&cat=Arts%2FMusic&search" user>
+
+<interpret
+     resultListStart = "<B>Reviewed Web Sites</B>"
+     resultListEnd   = "</TABLE>"
+     resultItemStart = "<li>"
+     bannerStart     = "<!--AD_TAG VENDOR=AOL WIDTH=468 HEIGHT=60-->"
+     bannerEnd       = "<!--/AD_TAG-->"
+>
+
+</search>
+
+
+<browser
+	alsomatch="http://search.netscape.com/search.tmpl"
+>

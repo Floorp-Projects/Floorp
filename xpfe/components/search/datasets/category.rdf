@@ -32,11 +32,67 @@
   <RDF:Seq about="NC:SearchCategoryRoot">
   	<RDF:li>
   		<RDF:Description about="urn:search:category:1">
-			<NC:title>Internet</NC:title>
+			<NC:title>Business</NC:title>
   		</RDF:Description>
 
   		<RDF:Description about="urn:search:category:2">
+			<NC:title>Computing</NC:title>
+  		</RDF:Description>
+
+  		<RDF:Description about="urn:search:category:3">
+			<NC:title>Entertainment</NC:title>
+  		</RDF:Description>
+
+  		<RDF:Description about="urn:search:category:4">
+			<NC:title>Games</NC:title>
+  		</RDF:Description>
+
+  		<RDF:Description about="urn:search:category:5">
+			<NC:title>Health</NC:title>
+  		</RDF:Description>
+
+  		<RDF:Description about="urn:search:category:6">
+			<NC:title>Internet</NC:title>
+  		</RDF:Description>
+
+  		<RDF:Description about="urn:search:category:7">
+			<NC:title>Music</NC:title>
+  		</RDF:Description>
+
+  		<RDF:Description about="urn:search:category:8">
+			<NC:title>Recreation</NC:title>
+  		</RDF:Description>
+
+  		<RDF:Description about="urn:search:category:9">
+			<NC:title>Reference</NC:title>
+  		</RDF:Description>
+
+  		<RDF:Description about="urn:search:category:10">
+			<NC:title>Regional</NC:title>
+  		</RDF:Description>
+
+  		<RDF:Description about="urn:search:category:11">
+			<NC:title>Relationships</NC:title>
+  		</RDF:Description>
+
+  		<RDF:Description about="urn:search:category:12">
 			<NC:title>Shopping</NC:title>
+  		</RDF:Description>
+
+  		<RDF:Description about="urn:search:category:13">
+			<NC:title>Society</NC:title>
+  		</RDF:Description>
+
+  		<RDF:Description about="urn:search:category:14">
+			<NC:title>Sports</NC:title>
+  		</RDF:Description>
+
+  		<RDF:Description about="urn:search:category:15">
+			<NC:title>Travel</NC:title>
+  		</RDF:Description>
+
+  		<RDF:Description about="urn:search:category:16">
+			<NC:title>World</NC:title>
   		</RDF:Description>
   	</RDF:li>
   </RDF:Seq>
@@ -46,7 +102,26 @@
 
 
   <RDF:Seq about="NC:SearchCategory?category=urn:search:category:1">
-  	<RDF:li resource="NC:SearchCategory?engine=urn:search:engine:1" />
+  	<RDF:li resource="NC:SearchCategory?engine=urn:search:engine:10" />
+  </RDF:Seq>
+
+  <RDF:Seq about="NC:SearchCategory?category=urn:search:category:2">
+  	<RDF:li resource="NC:SearchCategory?engine=urn:search:engine:11" />
+  </RDF:Seq>
+
+  <RDF:Seq about="NC:SearchCategory?category=urn:search:category:3">
+  	<RDF:li resource="NC:SearchCategory?engine=urn:search:engine:12" />
+  </RDF:Seq>
+
+  <RDF:Seq about="NC:SearchCategory?category=urn:search:category:4">
+  	<RDF:li resource="NC:SearchCategory?engine=urn:search:engine:13" />
+  </RDF:Seq>
+
+  <RDF:Seq about="NC:SearchCategory?category=urn:search:category:5">
+  	<RDF:li resource="NC:SearchCategory?engine=urn:search:engine:14" />
+  </RDF:Seq>
+
+  <RDF:Seq about="NC:SearchCategory?category=urn:search:category:6">
   	<RDF:li resource="NC:SearchCategory?engine=urn:search:engine:2" />
   	<RDF:li resource="NC:SearchCategory?engine=urn:search:engine:3" />
   	<RDF:li resource="NC:SearchCategory?engine=urn:search:engine:4" />
@@ -57,18 +132,50 @@
   	<RDF:li resource="NC:SearchCategory?engine=urn:search:engine:9" />
   </RDF:Seq>
 
-  <RDF:Seq about="NC:SearchCategory?category=urn:search:category:2">
-  	<RDF:li resource="NC:SearchCategory?engine=urn:search:engine:10" />
+  <RDF:Seq about="NC:SearchCategory?category=urn:search:category:7">
+  	<RDF:li resource="NC:SearchCategory?engine=urn:search:engine:15" />
+  </RDF:Seq>
+
+  <RDF:Seq about="NC:SearchCategory?category=urn:search:category:8">
+  	<RDF:li resource="NC:SearchCategory?engine=urn:search:engine:16" />
+  </RDF:Seq>
+
+  <RDF:Seq about="NC:SearchCategory?category=urn:search:category:9">
+  	<RDF:li resource="NC:SearchCategory?engine=urn:search:engine:17" />
+  </RDF:Seq>
+
+  <RDF:Seq about="NC:SearchCategory?category=urn:search:category:10">
+  	<RDF:li resource="NC:SearchCategory?engine=urn:search:engine:18" />
+  </RDF:Seq>
+
+  <RDF:Seq about="NC:SearchCategory?category=urn:search:category:11">
+  	<RDF:li resource="NC:SearchCategory?engine=urn:search:engine:19" />
+  </RDF:Seq>
+
+  <RDF:Seq about="NC:SearchCategory?category=urn:search:category:12">
+  	<RDF:li resource="NC:SearchCategory?engine=urn:search:engine:20" />
+  </RDF:Seq>
+
+  <RDF:Seq about="NC:SearchCategory?category=urn:search:category:13">
+  	<RDF:li resource="NC:SearchCategory?engine=urn:search:engine:21" />
+  </RDF:Seq>
+
+  <RDF:Seq about="NC:SearchCategory?category=urn:search:category:14">
+  	<RDF:li resource="NC:SearchCategory?engine=urn:search:engine:22" />
+  </RDF:Seq>
+
+  <RDF:Seq about="NC:SearchCategory?category=urn:search:category:15">
+  	<RDF:li resource="NC:SearchCategory?engine=urn:search:engine:23" />
+  </RDF:Seq>
+
+  <RDF:Seq about="NC:SearchCategory?category=urn:search:category:16">
+  	<RDF:li resource="NC:SearchCategory?engine=urn:search:engine:24" />
   </RDF:Seq>
 
 
 <!-- name of each engine (Note: must exactly match name specified in
      dataset file, therefore DO NOT localize these names) -->
 
-
-<RDF:Description about="NC:SearchCategory?engine=urn:search:engine:1">
-	<NC:Name>AOLSearch</NC:Name>
-</RDF:Description>
 
 <RDF:Description about="NC:SearchCategory?engine=urn:search:engine:2">
 	<NC:Name>Excite</NC:Name>
@@ -103,8 +210,63 @@
 </RDF:Description>
 
 <RDF:Description about="NC:SearchCategory?engine=urn:search:engine:10">
-	<NC:Name>eBay</NC:Name>
+	<NC:Name>Netscape Search - Business</NC:Name>
 </RDF:Description>
 
+<RDF:Description about="NC:SearchCategory?engine=urn:search:engine:11">
+	<NC:Name>Netscape Search - Computing</NC:Name>
+</RDF:Description>
+
+<RDF:Description about="NC:SearchCategory?engine=urn:search:engine:12">
+	<NC:Name>Netscape Search - Entertainment</NC:Name>
+</RDF:Description>
+
+<RDF:Description about="NC:SearchCategory?engine=urn:search:engine:13">
+	<NC:Name>Netscape Search - Games</NC:Name>
+</RDF:Description>
+
+<RDF:Description about="NC:SearchCategory?engine=urn:search:engine:14">
+	<NC:Name>Netscape Search - Health</NC:Name>
+</RDF:Description>
+
+<RDF:Description about="NC:SearchCategory?engine=urn:search:engine:15">
+	<NC:Name>Netscape Search - Music</NC:Name>
+</RDF:Description>
+
+<RDF:Description about="NC:SearchCategory?engine=urn:search:engine:16">
+	<NC:Name>Netscape Search - Recreation</NC:Name>
+</RDF:Description>
+
+<RDF:Description about="NC:SearchCategory?engine=urn:search:engine:17">
+	<NC:Name>Netscape Search - Reference</NC:Name>
+</RDF:Description>
+
+<RDF:Description about="NC:SearchCategory?engine=urn:search:engine:18">
+	<NC:Name>Netscape Search - Regional</NC:Name>
+</RDF:Description>
+
+<RDF:Description about="NC:SearchCategory?engine=urn:search:engine:19">
+	<NC:Name>Netscape Search - Relationships</NC:Name>
+</RDF:Description>
+
+<RDF:Description about="NC:SearchCategory?engine=urn:search:engine:20">
+	<NC:Name>Netscape Search - Shopping</NC:Name>
+</RDF:Description>
+
+<RDF:Description about="NC:SearchCategory?engine=urn:search:engine:21">
+	<NC:Name>Netscape Search - Society</NC:Name>
+</RDF:Description>
+
+<RDF:Description about="NC:SearchCategory?engine=urn:search:engine:22">
+	<NC:Name>Netscape Search - Sports</NC:Name>
+</RDF:Description>
+
+<RDF:Description about="NC:SearchCategory?engine=urn:search:engine:23">
+	<NC:Name>Netscape Search - Travel</NC:Name>
+</RDF:Description>
+
+<RDF:Description about="NC:SearchCategory?engine=urn:search:engine:24">
+	<NC:Name>Netscape Search - World</NC:Name>
+</RDF:Description>
 
 </RDF:RDF>
