@@ -70,10 +70,14 @@
       <box id="MoreSection" orient="vertical">
         <spring class="bigspacer"/>
         <text class="label" align="left" value="&NamedAnchorMsg.label;"/>
-        <tree rows="4" class="list" id="NamedAnchorList" onselect="SelectNamedAnchor()" onclick="SelectNamedAnchor()"/>
+        <tree rows="4" class="list" id="NamedAnchorList" onselect="SelectNamedAnchor()" onclick="SelectNamedAnchor()">
+          <treecolgroup><treecol flex="1"/></treecolgroup>
+        </tree>
         <spring class="spacer"/>
         <text class="label" align="left" value="&HeadingMsg.label;"/>
-        <tree rows="4" class="list" id="HeadingsList" onselect="SelectHeading()" onclick="SelectHeading()"/>
+        <tree rows="4" class="list" id="HeadingsList" onselect="SelectHeading()" onclick="SelectHeading()">
+          <treecolgroup><treecol flex="1"/></treecolgroup>
+        </tree>
         <text class="label" flex="1" value="&HeadingMsg2.label;"/>
       </box>
     </titledbox>

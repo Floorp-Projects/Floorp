@@ -41,15 +41,18 @@
 <!ENTITY tableCaptionNone.label           "None">
 <!ENTITY tableInheritColor.label           "(Let page color show through)">
 <!-- Don't translate <html:br/> -->
-<!ENTITY tableUseCheckboxHelp.label       "Use checkboxes to control which properties<html:br/>are applied to the table">
+<!ENTITY tableUseCheckboxHelp.label       "Use checkboxes to determine which properties<html:br/>are applied to the table">
 
 <!ENTITY cellPercent.label                "percent of table">
 <!ENTITY cellSelection.label              "Selection">
-<!ENTITY cellSelectionCell.label          "Cell">
-<!ENTITY cellSelectionRow.label           "Row">
-<!ENTITY cellSelectionColumn.label        "Column">
-<!ENTITY cellSelectionNext.label          "Next">
-<!ENTITY cellSelectionPrevious.label      "Previous">
+<!ENTITY cellSelectCell.label             "Cell">
+<!ENTITY cellSelectRow.label              "Row">
+<!ENTITY cellSelectColumn.label           "Column">
+<!ENTITY cellSelectNext.label             "Next">
+<!ENTITY cellSelectPrevious.label         "Previous">
+<!ENTITY cellChangeSelectionMsg.label     "When moving the selection:">
+<!ENTITY cellApplyBeforeMove.label        "Apply changes before moving">
+<!ENTITY cellKeepCurrentData.label        "Keep current settings">
 <!ENTITY cellSpans.label                  "Cell spans:">
 <!ENTITY cellContentAlignment.label       "Content Alignment">
 <!ENTITY cellHorizontal.label             "Horizontal:">
@@ -69,7 +72,7 @@
 <!ENTITY cellSpanCols.label               "columns">
 <!ENTITY cellInheritColor.label           "(Let table color show through)">
 <!-- Don't translate <html:br/> -->
-<!ENTITY cellUseCheckboxHelp.label        "Use checkboxes to control which properties<html:br/>are applied to all selected cells">
+<!ENTITY cellUseCheckboxHelp.label        "Use checkboxes to determine which properties<html:br/>are applied to all selected cells">
 
 <!-- Used in both Table and Cell panels  -->
 <!ENTITY defaultColor.label               "Don't specify color">

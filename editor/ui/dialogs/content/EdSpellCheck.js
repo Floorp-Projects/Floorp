@@ -284,6 +284,7 @@ function AddToDictionary()
   if (MisspelledWord != "") {
     spellChecker.AddWordToDictionary(MisspelledWord);
   }
+  NextWord();
 }
 
 function EditDictionary()

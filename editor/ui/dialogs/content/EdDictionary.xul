@@ -52,7 +52,9 @@
         <spring/>
       </row>
       <row>
-        <tree rows="8" class="list" id="DictionaryList" flex="1"/>
+        <tree rows="8" class="list" id="DictionaryList" flex="1">
+          <treecolgroup><treecol flex="1"/></treecolgroup>
+        </tree>
         <box orient="vertical" flex="1">
           <button class="dialog"  id="ReplaceWord" oncommand="ReplaceWord()" value="&ReplaceButton.label;"/>
           <spring class="spacer"/>

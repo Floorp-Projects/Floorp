@@ -318,7 +318,7 @@ function InitPixelOrPercentMenulist(elementForAtt, elementInDoc, attribute, menu
   ClearMenulist(menulist);
   pixelItem = AppendStringToMenulist(menulist, GetString("Pixels"));
   percentItem = AppendStringToMenulist(menulist, GetAppropriatePercentString(elementForAtt, elementInDoc));
-
+//dump("**** InitPixelOrPercentMenulist: pixelItem="+pixelItem+", percentItem="+percentItem+", menulistID="+menulistID+"\n");
   // Search for a "%" character
   percentIndex = size.search(/%/);
   if (percentIndex > 0)
@@ -411,6 +411,7 @@ function ClearMenulist(menulist)
 /* These help using a <tree> for simple lists
   Assumes this simple structure:
   <tree>
+    <treecolgroup><treecol flex="1"/></treecolgroup>
     <treechildren>
       <treeitem>
         <treerow>
@@ -424,14 +425,23 @@ function AppendStringToTreelistById(tree, stringID)
 
 function AppendStringToTreelist(tree, string)
 {
+dump("AppendStringToTreelist: string="+string+"\n");
   if (tree)
   {
-    var treechildren = tree.firstChild;
+    var treecols = tree.firstChild;
+    if (!treecols)
+    {
+      dump("Bad XUL: Must have <treecolgroup> as first child\n");
+    }
+    var treechildren = treecols.nextSibling;
     if (!treechildren)
     {
       treechildren = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "treechildren");
       if (treechildren)
+      {
+        treechildren.setAttribute("flex","1");
         tree.appendChild(treechildren);
+      }
       else
       {
         dump("Failed to create <treechildren>\n");
@@ -461,9 +471,17 @@ function ClearTreelist(tree)
   if (tree)
   {
     tree.clearItemSelection();
-    while (tree.firstChild)
-      tree.removeChild(tree.firstChild);
-    
+    // Skip over the first <treecolgroup> child
+    if (tree.firstChild)
+    {
+      nextChild = tree.firstChild.nextSibling;
+      while (nextChild)
+      {
+        var nextTmp = nextChild.nextSibling;
+        tree.removeChild(nextChild);
+        nextChild = nextTmp;
+      }
+    }    
     // Count list items
     tree.setAttribute("length", 0);
   }
@@ -471,8 +489,13 @@ function ClearTreelist(tree)
 
 function GetSelectedTreelistAttribute(tree, attr)
 {
-  if (tree)
+  if (tree && tree.selectedItems && 
+      tree.selectedItems[0] && 
+      tree.selectedItems[0].firstChild &&
+      tree.selectedItems[0].firstChild.firstChild)
+  {
     return tree.selectedItems[0].firstChild.firstChild.getAttribute(attr);
+  }
 
   return "";
 }
