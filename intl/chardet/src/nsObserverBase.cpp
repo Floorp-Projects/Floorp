@@ -59,14 +59,18 @@ NS_IMETHODIMP nsObserverBase::NotifyWebShell(
 
    // XXX nisheeth, uncomment the following two line to see the reent problem
 
-   // if(NS_FAILED(rv = wss->StopDocumentLoad()))
-   //   goto done;
+   if(NS_FAILED(rv = wss->StopDocumentLoad())){
+	  rv = wss->SetRendering(PR_TRUE); // turn on the rendering so at least we will see something.
+      goto done;
+   }
 
-   if(NS_FAILED(rv = wss->ReloadDocument(charset, source)))
-     goto done;
- 
+   if(NS_FAILED(rv = wss->ReloadDocument(charset, source))) {
+	  rv = wss->SetRendering(PR_TRUE); // turn on the rendering so at least we will see something.
+      goto done;
+   }
    res = NS_ERROR_HTMLPARSER_STOPPARSING;
 #endif
+
 done:
    if(docLoader) {
       nsServiceManager::ReleaseService(kDocLoaderServiceCID,docLoader);
