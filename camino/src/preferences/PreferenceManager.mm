@@ -311,6 +311,31 @@ static BOOL gMadePrefManager;
     // as well.
     mPrefs->ClearUserPref("dom.disable_open_click_delay");
     
+    // previous versions set capability.policy.* to turn off some web features regarding
+    // windows, but that caused exceptions to be thrown that webpages weren't ready to 
+    // handle. Clear those prefs with authority if they are set.
+    if ( [[self getStringPref:"capability.policy.default.Window.defaultStatus" withSuccess:nil] length] > 0 ) {
+      mPrefs->ClearUserPref("capability.policy.default.Window.defaultStatus");
+      mPrefs->ClearUserPref("capability.policy.default.Window.status");
+      mPrefs->ClearUserPref("capability.policy.default.Window.focus");
+      mPrefs->ClearUserPref("capability.policy.default.Window.innerHeight.set");
+      mPrefs->ClearUserPref("capability.policy.default.Window.innerWidth.set");
+      mPrefs->ClearUserPref("capability.policy.default.Window.moveBy");
+      mPrefs->ClearUserPref("capability.policy.default.Window.moveTo");
+      mPrefs->ClearUserPref("capability.policy.default.Window.outerHeight.set");
+      mPrefs->ClearUserPref("capability.policy.default.Window.outerWidth.set");
+      mPrefs->ClearUserPref("capability.policy.default.Window.resizeBy");
+      mPrefs->ClearUserPref("capability.policy.default.Window.resizeTo");
+      mPrefs->ClearUserPref("capability.policy.default.Window.screenX.set");
+      mPrefs->ClearUserPref("capability.policy.default.Window.screenY.set");
+      mPrefs->ClearUserPref("capability.policy.default.Window.sizeToContent");
+      
+      // now set the correct prefs
+      [self setPref:"dom.disable_window_move_resize" toBoolean:YES];
+      [self setPref:"dom.disable_window_status_change" toBoolean:YES];
+      [self setPref:"dom.disable_window_flip" toBoolean:YES];
+    }
+
     [self configureProxies];
 }
 

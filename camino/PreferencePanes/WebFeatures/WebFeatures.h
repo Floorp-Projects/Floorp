@@ -32,7 +32,7 @@ class nsISupportsArray;
 -(IBAction) editWhitelist:(id)sender;
 
 -(IBAction) clickEnableAnnoyanceBlocker:(id)sender;
--(void) setAnnoyingWindowPrefsTo:(NSString*)inValue;
+-(void) setAnnoyingWindowPrefsTo:(BOOL)inValue;
 
 // whitelist sheet methods
 -(IBAction) editWhitelistDone:(id)aSender;

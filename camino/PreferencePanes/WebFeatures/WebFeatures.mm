@@ -43,15 +43,13 @@
   // set initial value on annoyance blocker checkbox. out of all the prefs,
   // if the "status" capability is turned off, we use that as an indicator
   // to turn them all off.
-  NSString* val = [self getStringPref:"capability.policy.default.Window.status" withSuccess:&gotPref];
-  BOOL enableAnnoyanceBlocker = [val isEqualToString:@"noAccess"] && gotPref;
+  BOOL enableAnnoyanceBlocker = [self getBooleanPref:"dom.disable_window_status_change" withSuccess:&gotPref];
   [mEnableAnnoyanceBlocker setState:enableAnnoyanceBlocker];
   
   // store permission manager service and cache the enumerator.
   nsCOMPtr<nsIPermissionManager> pm ( do_GetService(NS_PERMISSIONMANAGER_CONTRACTID) );
   mManager = pm.get();
   NS_IF_ADDREF(mManager);
-
 }
 
 
@@ -260,9 +258,9 @@
 -(IBAction) clickEnableAnnoyanceBlocker:(id)sender
 {
   if ( [sender state] ) 
-    [self setAnnoyingWindowPrefsTo:@"noAccess"];
+    [self setAnnoyingWindowPrefsTo:YES];
   else
-    [self setAnnoyingWindowPrefsTo:@"allAccess"];
+    [self setAnnoyingWindowPrefsTo:NO];
 }
 
 //
@@ -271,21 +269,10 @@
 // Set all the prefs that allow webpages to muck with the status bar and window position
 // (ie, be really annoying) to the given value
 //
--(void) setAnnoyingWindowPrefsTo:(NSString*)inValue
+-(void) setAnnoyingWindowPrefsTo:(BOOL)inValue
 {
-  [self setPref:"capability.policy.default.Window.defaultStatus" toString:inValue];
-  [self setPref:"capability.policy.default.Window.status" toString:inValue];
-  [self setPref:"capability.policy.default.Window.focus" toString:inValue];
-  [self setPref:"capability.policy.default.Window.innerHeight.set" toString:inValue];
-  [self setPref:"capability.policy.default.Window.innerWidth.set" toString:inValue];
-  [self setPref:"capability.policy.default.Window.moveBy" toString:inValue];
-  [self setPref:"capability.policy.default.Window.moveTo" toString:inValue];
-  [self setPref:"capability.policy.default.Window.outerHeight.set" toString:inValue];
-  [self setPref:"capability.policy.default.Window.outerWidth.set" toString:inValue];
-  [self setPref:"capability.policy.default.Window.resizeBy" toString:inValue];
-  [self setPref:"capability.policy.default.Window.resizeTo" toString:inValue];
-  [self setPref:"capability.policy.default.Window.screenX.set" toString:inValue];
-  [self setPref:"capability.policy.default.Window.screenY.set" toString:inValue];
-  [self setPref:"capability.policy.default.Window.sizeToContent" toString:inValue];
+    [self setPref:"dom.disable_window_move_resize" toBoolean:inValue];
+    [self setPref:"dom.disable_window_status_change" toBoolean:inValue];
+    [self setPref:"dom.disable_window_flip" toBoolean:inValue];
 }
 @end
