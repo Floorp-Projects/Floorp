@@ -257,6 +257,16 @@ NS_IMETHODIMP nsMacWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRep
 
 //-------------------------------------------------------------------------
 //
+//
+//-------------------------------------------------------------------------
+PRBool nsMacWindow::OnPaint(nsPaintEvent &event)
+{
+										// nothing to draw here
+  return PR_FALSE;	// don't dispatch the update event
+}
+
+//-------------------------------------------------------------------------
+//
 // Set this window's title
 //
 //-------------------------------------------------------------------------
