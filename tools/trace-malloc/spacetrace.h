@@ -654,3 +654,8 @@ extern int categorizeRun(const STRun* aRun, STGlobals* g);
 extern STCategoryNode* findCategoryNode(const char *catName, STGlobals *g);
 extern int freeCategories(STGlobals* g);
 #endif /* spacetrace_h__ */
+
+/*
+** shared globals
+*/
+extern STGlobals globals;
