@@ -20,6 +20,8 @@
 <!ENTITY groupBy.accesskey          "G">
 <!ENTITY groupByDay.label           "Day">
 <!ENTITY groupByDay.accesskey       "D">
+<!ENTITY groupBySite.label          "Site">
+<!ENTITY groupBySite.accesskey      "S">
 <!ENTITY groupByNone.label          "None">
 <!ENTITY groupByNone.accesskey      "N">
 <!ENTITY historyWindowTitle.label   "History">
