@@ -20,6 +20,24 @@
  * Contributor(s): 
  */
 
+var pref = null;
+
+// in case we fail to get the start page, load this
+var startPageDefault = "about:blank";
+
+// in case we fail to get the home page, load this
+var homePageDefault = "http://www.mozilla.org/";
+
+try {
+	pref = Components.classes['component://netscape/preferences'];
+	pref = pref.getService();
+	pref = pref.QueryInterface(Components.interfaces.nsIPref);
+}
+catch (ex) {
+	dump("failed to get prefs service!\n");
+	pref = null;
+}
+
   var appCore = null;
   var defaultStatus = "default status text";
   var explicitURL = false;
@@ -431,27 +449,6 @@ function UpdateBookmarksLastVisitedDate(event)
     // Make sure window fits on screen initially
    // FitToScreen();
 	
-	// Set default home page
-	 var pref = Components.classes['component://netscape/preferences'];
-     if (pref)
-     {
-     	pref = pref.getService();
-     	// dump("QIing for pref interface\n");
-     	
-     	pref = pref.QueryInterface(Components.interfaces.nsIPref);
-      	if ( pref )
-      	{
-         	var homebutton = document.getElementById("home-button")
-      		if ( homebutton )
-      		{
-      			var defaultURL = homebutton.getAttribute("defaultURL" );
-      		//	dump("Set default homepage to +"+defaultURL+" \n");
-      			pref.SetDefaultCharPref( "browser.startup.homepage",defaultURL);
-      		}
-      	}
-      }
-
-	
     // Create the browser instance component.
     createBrowserInstance();
     if (appCore == null) {
@@ -535,29 +532,14 @@ function UpdateBookmarksLastVisitedDate(event)
   }
 
   function tryToSetContentWindow() {
+    var startpage = startPageDefault;
     if ( window.content ) {
-		var pref = 0;
         dump("Setting content window\n");
         appCore.setContentWindow( window.content );
         // Have browser app core load appropriate initial page.
 
         if ( !explicitURL ) {
-            pref = Components.classes['component://netscape/preferences'];
-    
             // if all else fails, use trusty "about:blank" as the start page
-            var startpage = "about:blank";  
-            if (pref) {
-              pref = pref.getService();
-            }
-	    else {
-		dump("failed to get component://netscape/preferences\n");
-	    }
-            if (pref) {
-              pref = pref.QueryInterface(Components.interfaces.nsIPref);
-            }
-	    else {
-		dump("failed to get pref service\n");
-	    }
             if (pref) {
               // from mozilla/modules/libpref/src/init/all.js
               // 0 = blank 
@@ -580,8 +562,8 @@ function UpdateBookmarksLastVisitedDate(event)
                 			startpage = pref.CopyCharPref("browser.startup.homepage");
 				}
 				catch (ex) {
-					dump("failed to get the browser.startup.homepage pref\n");
-					startpage = "about:blank";
+					dump("failed to get the homepage!\n");
+					startpage = startPageDefault;
 				}
           			break;
     		case 2:
@@ -597,7 +579,7 @@ function UpdateBookmarksLastVisitedDate(event)
     	    		}
           			break;
        		default:
-                		startpage = "about:blank";
+                		startpage = startPageDefault;
     	  }
             }
             else {
@@ -775,7 +757,15 @@ function UpdateBookmarksLastVisitedDate(event)
 
   function BrowserHome()
   {
-   window.content.home();
+   var homepage = null;
+   try {
+	homepage = pref.CopyCharPref("browser.startup.homepage");
+   }
+   catch (ex) {
+   	dump("failed to get the homepage!\n");
+	homepage = homePageDefault;
+   }
+   appCore.loadUrl(homepage);
    RefreshUrlbar();
   }
 
