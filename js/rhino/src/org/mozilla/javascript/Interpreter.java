@@ -1047,9 +1047,8 @@ public class Interpreter
             case Token.SPECIAL_REF: {
                 stackDelta = 1;
                 iCodeTop = generateICode(child, iCodeTop);
-                int special = node.getExistingIntProp(Node.SPECIAL_PROP_PROP);
-                iCodeTop = addToken(Token.SPECIAL_REF, iCodeTop);
-                iCodeTop = addByte(special, iCodeTop);
+                String special = (String)node.getProp(Node.SPECIAL_PROP_PROP);
+                iCodeTop = addStringOp(Token.SPECIAL_REF, special, iCodeTop);
                 break;
             }
 
@@ -1697,13 +1696,6 @@ public class Interpreter
                 break;
               }
 
-              case Token.SPECIAL_REF : {
-                int specialType = iCode[pc];
-                out.println(tname + " " + specialType);
-                ++pc;
-                break;
-              }
-
               case Icode_CALLSPECIAL : {
                 int callType = iCode[pc] & 0xFF;
                 boolean isNew =  (iCode[pc + 1] != 0);
@@ -1861,10 +1853,6 @@ public class Interpreter
             case Icode_ELEM_INC_DEC:
             case Icode_REF_INC_DEC:
                 // type of ++/--
-                return 1 + 1;
-
-            case Token.SPECIAL_REF:
-                // type of special property
                 return 1 + 1;
 
             case Icode_SHORTNUMBER :
@@ -2831,11 +2819,11 @@ switch (op) {
         continue Loop;
     }
     case Token.SPECIAL_REF : {
+        //stringReg: name of special property
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.specialReference(lhs, iCode[pc],
+        stack[stackTop] = ScriptRuntime.specialReference(lhs, stringReg,
                                                          cx, scope);
-        ++pc;
         continue Loop;
     }
     case Token.GENERIC_REF : {

@@ -77,11 +77,6 @@ public class Node
         INCRDECR_PROP      = 16, // pre or post type of increment/decerement
         LAST_PROP          = 16;
 
-    // values of SPECIAL_PROP_PROP
-    public static final int
-        SPECIAL_PROP_PROTO  = 1,
-        SPECIAL_PROP_PARENT = 2;
-
     // values of ISNUMBER_PROP to specify
     // which of the children are Number types
     public static final int
@@ -633,18 +628,6 @@ public class Node
                     break;
                   case LOCAL_BLOCK_PROP :     // can't add this as it is dull
                     value = "last local block";
-                    break;
-                  case SPECIAL_PROP_PROP:
-                    switch (x.intValue) {
-                      case SPECIAL_PROP_PROTO:
-                        value = "__proto__";
-                        break;
-                      case SPECIAL_PROP_PARENT:
-                        value = "__parent__";
-                        break;
-                      default:
-                        throw Kit.codeBug();
-                    }
                     break;
                   case ISNUMBER_PROP:
                     switch (x.intValue) {

@@ -3510,13 +3510,14 @@ class BodyCodegen
 
     private void visitSpecialRef(Node node, Node child)
     {
-        int special = node.getExistingIntProp(Node.SPECIAL_PROP_PROP);
+        String special = (String)node.getProp(Node.SPECIAL_PROP_PROP);
         generateCodeFromNode(child, node);
         cfw.addPush(special);
         cfw.addALoad(contextLocal);
         cfw.addALoad(variableObjectLocal);
         addScriptRuntimeInvoke("specialReference",
-            "(Ljava/lang/Object;I"
+            "(Ljava/lang/Object;"
+            +"Ljava/lang/String;"
             +"Lorg/mozilla/javascript/Context;"
             +"Lorg/mozilla/javascript/Scriptable;"
             +")Ljava/lang/Object;");

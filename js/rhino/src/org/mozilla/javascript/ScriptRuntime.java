@@ -1276,20 +1276,30 @@ public class ScriptRuntime {
         ref.set(value);
     }
 
+    static boolean isSpecialProperty(String s)
+    {
+        return s.equals("__proto__") || s.equals("__parent__");
+    }
+
     public static Object specialReference(final Object obj,
-                                          final int specialType,
+                                          String specialProperty,
                                           Context cx,
                                           final Scriptable scope)
     {
-        if (!(specialType == Node.SPECIAL_PROP_PROTO
-              || specialType == Node.SPECIAL_PROP_PARENT))
-        {
+        final int PROTO = 0;
+        final int PARENT = 1;
+        final int id;
+        if (specialProperty.equals("__proto__")) {
+            id = PROTO;
+        } else if (specialProperty.equals("__parent__")) {
+            id = PARENT;
+        } else {
             throw Kit.codeBug();
         }
         return new Reference() {
             public Object get()
             {
-                if (specialType == Node.SPECIAL_PROP_PROTO) {
+                if (id == PROTO) {
                     return getProto(obj, scope);
                 } else {
                     return getParent(obj, scope);
@@ -1298,7 +1308,7 @@ public class ScriptRuntime {
 
             public void set(Object value)
             {
-                if (specialType == Node.SPECIAL_PROP_PROTO) {
+                if (id == PROTO) {
                     setProto(obj, value, scope);
                 } else {
                     setParent(obj, value, scope);
