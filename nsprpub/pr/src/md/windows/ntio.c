@@ -744,7 +744,7 @@ void _PR_Unblock_IO_Wait(PRThread *thr)
 		 * this thread will continue to run on the same cpu until the
 		 * I/O is aborted by closing the FD or calling CancelIO
 		 */
-		thr->md.thr_bound_cpu = me->cpu;
+		thr->md.thr_bound_cpu = cpu;
 
         PR_ASSERT(!(thr->flags & _PR_IDLE_THREAD));
         _PR_AddThreadToRunQ(me, thr);
