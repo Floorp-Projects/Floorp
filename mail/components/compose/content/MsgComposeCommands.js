@@ -1410,6 +1410,18 @@ function ComposeLoad()
   AddMessageComposeOfflineObserver();
   AddDirectoryServerObserver(true);
 
+  try {
+    // XXX: We used to set commentColumn on the initial auto complete column after the document has loaded 
+    // inside of setupAutocomplete. But this happens too late for the first widget and it was never showing
+    // the comment field. Try to set it before the document finishes loading:
+    if (sPrefs.getIntPref("mail.autoComplete.commentColumn"))             
+      document.getElementById('addressCol2#1').showCommentColumn = true;
+  } 
+  catch (ex) { 
+    // do nothing...
+  }
+
+
   if (gLogComposePerformance)
     sMsgComposeService.TimeStamp("Start initializing the compose window (ComposeLoad)", false);
 
@@ -2588,9 +2600,8 @@ function setupAutocomplete()
       // honor it as well
       //
       try {
-          if (sPrefs.getIntPref("mail.autoComplete.commentColumn")) {
-              document.getElementById('addressCol2#1').showCommentColumn =
-                  true;
+          if (sPrefs.getIntPref("mail.autoComplete.commentColumn")) {              
+              document.getElementById('addressCol2#1').showCommentColumn = true;
           }
       } catch (ex) {
           // if we can't get this pref, then don't show the columns (which is
