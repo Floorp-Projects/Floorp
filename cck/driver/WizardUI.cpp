@@ -174,6 +174,7 @@ LRESULT CWizardUI::OnWizardNext()
 		if (isBuildInstaller) {
 			isCDLayoutCreated = FALSE;
 
+			/**
 			VERIFY(hModule = ::LoadLibrary("IBEngine.dll"));
 			VERIFY(
 				pMyDllPath =
@@ -190,7 +191,8 @@ LRESULT CWizardUI::OnWizardNext()
 				(HMODULE) hModule, "BuildInstallers")
 			);
  			(*pMyFunction)();
-			
+			**/
+			MessageBox("CD Image would be created", "OK", MB_OK);
 			isBuildInstaller = FALSE;
 		}
 
@@ -671,6 +673,7 @@ BOOL CWizardUI::OnCommand(WPARAM wParam, LPARAM lParam)
 			}
 			else 
 			{
+				/**
 				CProgressDialog progressDlg(this);
 				progressDlg.Create(IDD_PROGRESS_DLG);
 				CProgressDialog *pProgressDlg = &progressDlg;
@@ -716,6 +719,7 @@ BOOL CWizardUI::OnCommand(WPARAM wParam, LPARAM lParam)
 
 					MessageBox("CD Directory created", "OK", MB_OK);
 				}
+				**/
 			}
 			break;
 		}
