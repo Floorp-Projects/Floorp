@@ -45,6 +45,7 @@
 #include "xp_file.h"
 #include "prio.h"
 #include "prmem.h"
+#include "prenv.h"
 
 #define CRLF "\015\012"   
 
