@@ -790,7 +790,7 @@ nsTextFrame::ContentChanged(nsIPresContext* aPresContext,
   nsCOMPtr<nsIPresShell> shell;
   rv = aPresContext->GetShell(getter_AddRefs(shell));
   if (NS_SUCCEEDED(rv) && shell && mParent) {
-    mParent->ReflowDirtyChild(shell, this);
+    mParent->ReflowDirtyChild(shell, targetTextFrame);
   }
   
 
