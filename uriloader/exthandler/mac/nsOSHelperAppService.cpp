@@ -275,13 +275,13 @@ void nsOSHelperAppService::UpdateCreatorInfo(nsIMIMEInfo * aMIMEInfo)
   if (macFileType == 0 || macCreatorType == 0)
   {
     // okay these values haven't been initialized yet so fetch a mime object from internet config.
-    nsXPIDLCString mimeType;
-    aMIMEInfo->GetMIMEType(getter_Copies(mimeType));
+    nsCAutoString mimeType;
+    aMIMEInfo->GetMIMEType(mimeType);
     nsCOMPtr<nsIInternetConfigService> icService (do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID));
     if (icService)
     {
       nsCOMPtr<nsIMIMEInfo> osMimeObject;
-      icService->FillInMIMEInfo(mimeType, nsnull, getter_AddRefs(osMimeObject));
+      icService->FillInMIMEInfo(mimeType.get(), nsnull, getter_AddRefs(osMimeObject));
       if (osMimeObject)
       {
         osMimeObject->GetMacType(&macFileType);
