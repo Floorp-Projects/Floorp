@@ -72,22 +72,6 @@ nsSimplePopupBlocker::~nsSimplePopupBlocker(void)
 NS_IMPL_ISUPPORTS1(nsSimplePopupBlocker, nsIPopupWindowManager)
 
 NS_IMETHODIMP
-nsSimplePopupBlocker::GetDefaultPermission(PRUint32 *aDefaultPermission)
-{
-  NS_ENSURE_ARG_POINTER(aDefaultPermission);
-  *aDefaultPermission = mPolicy;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSimplePopupBlocker::SetDefaultPermission(PRUint32 aDefaultPermission)
-{
-  mPolicy = aDefaultPermission;
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
 nsSimplePopupBlocker::TestPermission(nsIURI *aURI, PRUint32 *aPermission)
 {
   NS_ENSURE_ARG_POINTER(aURI);
@@ -103,7 +87,7 @@ nsSimplePopupBlocker::TestPermission(nsIURI *aURI, PRUint32 *aPermission)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSimplePopupBlocker)
 
 #define NS_POPUPWINDOWMANAGER_CID \
- {0x4275d3f4, 0x752a, 0x427a, {0xb4, 0x32, 0x14, 0xd5, 0xdd, 0xa1, 0xc2, 0x0b}}
+ {0x822bcd11, 0x6432, 0x48be, {0x9e, 0x9d, 0x36, 0xf7, 0x80, 0x4b, 0x77, 0x47}}
 
 static const nsModuleComponentInfo components[] = {
     { "Simple Popup Blocker",
